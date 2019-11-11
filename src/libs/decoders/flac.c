@@ -40,11 +40,11 @@
 #define DR_FLAC_IMPLEMENTATION
 #define DR_FLAC_NO_STDIO 1
 #define DR_FLAC_NO_WIN32_IO 1
-#define DRFLAC_MALLOC(sz) SDL_malloc((sz))
-#define DRFLAC_REALLOC(p, sz) SDL_realloc((p), (sz))
-#define DRFLAC_FREE(p) SDL_free((p))
-#define DRFLAC_COPY_MEMORY(dst, src, sz) SDL_memcpy((dst), (src), (sz))
-#define DRFLAC_ZERO_MEMORY(p, sz) SDL_memset((p), 0, (sz))
+#define DRFLAC_FREE(p)                    SDL_free((p))
+#define DRFLAC_MALLOC(sz)                 SDL_malloc((sz))
+#define DRFLAC_REALLOC(p, sz)             SDL_realloc((p), (sz))
+#define DRFLAC_ZERO_MEMORY(p, sz)         SDL_memset((p), 0, (sz))
+#define DRFLAC_COPY_MEMORY(dst, src, sz)  SDL_memcpy((dst), (src), (sz))
 #include "dr_flac.h"
 
 static size_t flac_read(void* pUserData, void* pBufferOut, size_t bytesToRead)
@@ -131,14 +131,14 @@ static void FLAC_close(Sound_Sample *sample)
 } /* FLAC_close */
 
 
-static Uint32 FLAC_read(Sound_Sample *sample)
+static Uint32 FLAC_read(Sound_Sample *sample, void* buffer, Uint32 desired_frames)
 {
     Sound_SampleInternal *internal = (Sound_SampleInternal *) sample->opaque;
     drflac *dr = (drflac *) internal->decoder_private;
-    const drflac_uint64 rc = drflac_read_pcm_frames_s16(dr,
-                                                        internal->buffer_size / (dr->channels * sizeof(drflac_int16)),
-                                                        (drflac_int16 *) internal->buffer);
-    return (Uint32) rc * dr->channels * sizeof (drflac_int16);
+    const drflac_uint64 decoded_frames = drflac_read_pcm_frames_s16(dr,
+                                                                    desired_frames,
+                                                                    (drflac_int16 *) buffer);
+    return (Uint32) decoded_frames;
 } /* FLAC_read */
 
 

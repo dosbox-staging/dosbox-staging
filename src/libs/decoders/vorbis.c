@@ -51,20 +51,18 @@
 #  define memset SDL_memset
 #endif
 
-#define memcmp SDL_memcmp
-#define qsort SDL_qsort
-#define malloc SDL_malloc
-#define realloc SDL_realloc
-#define free SDL_free
-#define dealloca(x) SDL_stack_free((x))
+#define free         SDL_free
+#define qsort        SDL_qsort
+#define memcmp       SDL_memcmp
+#define malloc       SDL_malloc
+#define realloc      SDL_realloc
+#define dealloca(x)  SDL_stack_free((x))
 
 /* Configure and include stb_vorbis for compiling... */
 #define STB_VORBIS_NO_STDIO 1
 #define STB_VORBIS_NO_CRT 1
 #define STB_VORBIS_NO_PUSHDATA_API 1
 #define STB_VORBIS_MAX_CHANNELS 2
-// #define STBV_CDECL
-// #define STB_FORCEINLINE SDL_FORCE_INLINE
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define STB_VORBIS_BIG_ENDIAN 1
 #endif
@@ -153,28 +151,28 @@ static void VORBIS_close(Sound_Sample *sample)
 } /* VORBIS_close */
 
 
-static Uint32 VORBIS_read(Sound_Sample *sample)
+static Uint32 VORBIS_read(Sound_Sample *sample, void* buffer, Uint32 desired_frames)
 {
-    Uint32 retval;
-    int rc;
-    int err;
     Sound_SampleInternal *internal = (Sound_SampleInternal *) sample->opaque;
     stb_vorbis *stb = (stb_vorbis *) internal->decoder_private;
     const int channels = (int) sample->actual.channels;
-    const int want_samples = (int) (internal->buffer_size / sizeof (int16_t));
+    const int desired_samples = desired_frames * channels;
+
+    // Note that for interleaved data, you pass in the number of shorts (the
+    // size of your array), but the return value is the number of samples per
+    // channel, not the total number of samples.
 
     stb_vorbis_get_error(stb);  /* clear any error state */
-    rc = stb_vorbis_get_samples_short_interleaved(stb, channels, (int16_t *) internal->buffer, want_samples);
-    retval = (Uint32) (rc * channels * sizeof (int16_t));  /* rc == number of sample frames read */
-    err = stb_vorbis_get_error(stb);
+    const int decoded_frames = stb_vorbis_get_samples_short_interleaved(stb, channels, (int16_t *) buffer, desired_samples);
+    const int err = stb_vorbis_get_error(stb);
 
-    if (retval == 0) {
+    if (decoded_frames == 0) {
         sample->flags |= (err ? SOUND_SAMPLEFLAG_ERROR : SOUND_SAMPLEFLAG_EOF);
     }
-    else if (retval < internal->buffer_size) {
+    else if (decoded_frames < (int) desired_frames) {
         sample->flags |= SOUND_SAMPLEFLAG_EAGAIN;
     }
-    return retval;
+    return decoded_frames;
 } /* VORBIS_read */
 
 

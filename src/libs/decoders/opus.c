@@ -4,19 +4,14 @@
  *
  * This decoders makes use of:
  *   - libopusfile, for .opus file handing and frame decoding
- *   - speexdsp, for resampling to the original input rate, if needed
  *
  * Source links
- *   - libogg:     https://github.com/xiph/ogg
- *   - libopus:    https://github.com/xiph/opus
  *   - opusfile:   https://github.com/xiph/opusfile
- *   - speexdsp:   https://github.com/xiph/speexdsp
  *   - opus-tools: https://github.com/xiph/opus-tools
 
  * Documentation references
  *   - Ogg Opus:  https://www.opus-codec.org/docs
  *   - OpusFile:  https://mf4.xiph.org/jenkins/view/opus/job/opusfile-unix/ws/doc/html/index.html
- *   - Resampler: https://www.speex.org/docs/manual/speex-manual/node7.html
  *
  */
 
@@ -24,31 +19,13 @@
 #  include <config.h>
 #endif
 
-#ifdef _MSC_VER
-// Avoid warning about getenv()
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
-#include <stdlib.h> // getenv
-#include <math.h> // ceilf
-
-// On macOS with GCC, pkg-config only include the opus/ subdirectory
-// itself instead of the parent, so we take this into account:
-#if defined(MACOSX) && ! defined(__clang__) && defined(__GNUC__)
 #include <opusfile.h>
-#else
-#include <opus/opusfile.h>
-#endif
-#include <speex/speex_resampler.h>
 
 #include "SDL_sound.h"
 #define __SDL_SOUND_INTERNAL__
 #include "SDL_sound_internal.h"
 
-// The minimum buffer samples per channel: 120 ms @ 48 samples/ms, defined by opus
-#define OPUS_MIN_BUFFER_SAMPLES_PER_CHANNEL 5760
-
-// Opus's internal sample rates, to which all encoded streams get resampled
+// Opus's internal sampling rates to which all encoded streams get resampled
 #define OPUS_SAMPLE_RATE 48000
 #define OPUS_SAMPLE_RATE_PER_MS 48
 
@@ -56,7 +33,7 @@ static Sint32 opus_init   (void);
 static void   opus_quit   (void);
 static Sint32 opus_open   (Sound_Sample* sample, const char* ext);
 static void   opus_close  (Sound_Sample* sample);
-static Uint32 opus_read   (Sound_Sample* sample);
+static Uint32 opus_read   (Sound_Sample* sample, void* buffer, Uint32 desired_frames);
 static Sint32 opus_rewind (Sound_Sample* sample);
 static Sint32 opus_seek   (Sound_Sample* sample, const Uint32 ms);
 
@@ -79,24 +56,6 @@ const Sound_DecoderFunctions __Sound_DecoderFunctions_OPUS =
     opus_rewind, /* rewind() method */
     opus_seek    /*   seek() method */
 };
-
-
-// Our private-decoder structure where we hold the opusfile, resampler,
-// circular buffer, and buffer tracking variables.
-typedef struct
-{
-    Uint64 of_pcm;                  // absolute position in consumed Opus samples
-    OggOpusFile* of;                // the actual opusfile we open/read/seek within
-    opus_int16* buffer;             // pointer to the start of our circular buffer
-    SpeexResamplerState* resampler; // pointer to an instantiated resampler
-    float rate_ratio;               // OPUS_RATE (48KHz) divided by desired sample rate
-    Uint16 buffer_size;             // maximum number of samples we can hold in our buffer
-    Uint16 decoded;                 // number of samples decoded in our buffer
-    Uint16 consumed;                // number of samples consumed in our buffer
-    Uint16 frame_size;              // number of samples decoded in one opus frame
-    SDL_bool eof;                   // indicates if we've hit end-of-file decoding
-} opus_t;
-
 
 static Sint32 opus_init(void)
 {
@@ -166,11 +125,9 @@ static Sint32 RWops_opus_read(void* stream, unsigned char* ptr, Sint32 nbytes)
 static Sint32 RWops_opus_seek(void* stream, const opus_int64 offset, const Sint32 whence)
 {
     const Sint64 offset_after_seek = SDL_RWseek((SDL_RWops*)stream, (int)offset, whence);
-
     SNDDBG(("Opus ops seek:          "
             "{requested offset: %ld, seeked offset: %ld}\n",
             offset, offset_after_seek));
-
     return (offset_after_seek != -1 ? 0 : -1);
 } /* RWops_opus_seek */
 
@@ -198,10 +155,8 @@ static Sint32 RWops_opus_close(void* stream)
 static opus_int64 RWops_opus_tell(void* stream)
 {
     const Sint64 current_offset = SDL_RWtell((SDL_RWops*)stream);
-
     SNDDBG(("Opus ops tell:          "
             "%ld\n", current_offset));
-
     return current_offset;
 } /* RWops_opus_tell */
 
@@ -219,27 +174,20 @@ static __inline__ void output_opus_info(const OggOpusFile* of, const OpusHead* o
 {
 #if (defined DEBUG_CHATTER)
     const OpusTags* ot = op_tags(of, -1);
-
     // Guard
-    if (    of == NULL
-         || oh == NULL
-         || ot == NULL) {
-        return;
+    if (of != NULL && oh != NULL && ot != NULL) {
+        SNDDBG(("Opus serial number:     %u\n", op_serialno(of, -1)));
+        SNDDBG(("Opus format version:    %d\n", oh->version));
+        SNDDBG(("Opus channel count:     %d\n", oh->channel_count ));
+        SNDDBG(("Opus seekable:          %s\n", op_seekable(of) ? "True" : "False"));
+        SNDDBG(("Opus pre-skip samples:  %u\n", oh->pre_skip));
+        SNDDBG(("Opus input sample rate: %u\n", oh->input_sample_rate));
+        SNDDBG(("Opus logical streams:   %d\n", oh->stream_count));
+        SNDDBG(("Opus vendor:            %s\n", ot->vendor));
+        for (int i = 0; i < ot->comments; i++) {
+            SNDDBG(("Opus: user comment:     '%s'\n", ot->user_comments[i]));
+        }
     }
-
-    // Dump info
-    SNDDBG(("Opus serial number:     %u\n", op_serialno(of, -1)));
-    SNDDBG(("Opus format version:    %d\n", oh->version));
-    SNDDBG(("Opus channel count:     %d\n", oh->channel_count ));
-    SNDDBG(("Opus seekable:          %s\n", op_seekable(of) ? "True" : "False"));
-    SNDDBG(("Opus pre-skip samples:  %u\n", oh->pre_skip));
-    SNDDBG(("Opus input sample rate: %u\n", oh->input_sample_rate));
-    SNDDBG(("Opus logical streams:   %d\n", oh->stream_count));
-    SNDDBG(("Opus vendor:            %s\n", ot->vendor));
-    for (int i = 0; i < ot->comments; i++) {
-        SNDDBG(("Opus: user comment:     '%s'\n", ot->user_comments[i]));
-    }
-
 #endif
 } /* output_opus_comments */
 
@@ -247,19 +195,16 @@ static __inline__ void output_opus_info(const OggOpusFile* of, const OpusHead* o
  * Opus Open
  * ---------
  *  - Creates a new opus file object by using our our callback structure for all IO operations.
- *  - We also intialize and allocate memory for fields in the opus_t decode structure.
  *  - SDL expects a returns of 1 on success
  */
 static Sint32 opus_open(Sound_Sample* sample, const char* ext)
 {
     Sint32 rcode;
     Sound_SampleInternal* internal = (Sound_SampleInternal*)sample->opaque;
-
-    // Open the Opus File and print some info
     OggOpusFile* of = op_open_callbacks(internal->rw, &RWops_opus_callbacks, NULL, 0, &rcode);
+    internal->decoder_private = of;
     if (rcode != 0) {
-        op_free(of);
-        of = NULL;
+        opus_close(sample);
         SNDDBG(("Opus open error:        "
                 "'Could not open opus file: %s'\n", opus_strerror(rcode)));
         BAIL_MACRO("Opus open fatal: 'Not a valid Ogg Opus file'", 0);
@@ -267,65 +212,13 @@ static Sint32 opus_open(Sound_Sample* sample, const char* ext)
     const OpusHead* oh = op_head(of, -1);
     output_opus_info(of, oh);
 
-    // Initialize our decoder struct elements
-    opus_t* decoder = SDL_malloc(sizeof(opus_t));
-    decoder->of = of;
-    decoder->of_pcm = 0;
-    decoder->decoded = 0;
-    decoder->consumed = 0;
-    decoder->frame_size = 0;
-    decoder->eof = SDL_FALSE;
-    decoder->buffer = NULL;
-
-    // Connect our long-lived internal decoder to the one we're building here
-    internal->decoder_private = decoder;
-
-    if (   sample->desired.rate != 0
-        && sample->desired.rate != OPUS_SAMPLE_RATE
-        && getenv("SDL_DONT_RESAMPLE") == NULL) {
-
-        // Opus resamples all inputs to 48kHz. By default (if env-var SDL_DONT_RESAMPLE doesn't exist)
-        // we resample to the desired rate so the recieving SDL_sound application doesn't have to.
-        // This avoids breaking applications that don't expect 48kHz audio and also gives us
-        // quality-control by using the speex resampler, which has a noise floor of -140 dB, which
-        // is ~40dB lower than the -96dB offered by 16-bit CD-quality audio.
-        //
-        sample->actual.rate = sample->desired.rate;
-        decoder->rate_ratio = OPUS_SAMPLE_RATE / (float)(sample->desired.rate);
-        decoder->resampler = speex_resampler_init(oh->channel_count,
-                                                  OPUS_SAMPLE_RATE,
-                                                  sample->desired.rate,
-                                                  // SPEEX_RESAMPLER_QUALITY_VOIP,    // consumes ~20 Mhz
-                                                  SPEEX_RESAMPLER_QUALITY_DEFAULT,    // consumes ~40 Mhz
-                                                  // SPEEX_RESAMPLER_QUALITY_DESKTOP, // consumes ~80 Mhz
-                                                  &rcode);
-
-        // If we failed to initialize the resampler, then tear down
-        if (rcode < 0) {
-            opus_close(sample);
-            BAIL_MACRO("Opus: failed initializing the resampler", 0);
-        }
-
-    // Otherwise use native sampling
-    } else {
-        sample->actual.rate = OPUS_SAMPLE_RATE;
-        decoder->rate_ratio = 1.0;
-        decoder->resampler = NULL;
-    }
-
-    // Allocate our buffer to hold PCM samples from the Opus decoder
-    decoder->buffer_size = (Uint16) (oh->channel_count * OPUS_MIN_BUFFER_SAMPLES_PER_CHANNEL * 1.5);
-    decoder->buffer = SDL_malloc(decoder->buffer_size * sizeof(opus_int16));
-
-    // Gather static properties about our stream (channels, seek-ability, format, and duration)
+    sample->actual.rate = OPUS_SAMPLE_RATE;
     sample->actual.channels = (Uint8)(oh->channel_count);
     sample->flags = op_seekable(of) ? SOUND_SAMPLEFLAG_CANSEEK: 0;
-    sample->actual.format = AUDIO_S16LSB; // returns least-significant-byte order regardless of architecture
-
-    ogg_int64_t total_time = op_pcm_total(of, -1); // total PCM samples in the stream
+    sample->actual.format = AUDIO_S16SYS;
+    ogg_int64_t total_time = op_pcm_total(of, -1);        // total PCM samples in the stream
     internal->total_time = total_time == OP_EINVAL ? -1 : // total milliseconds in the stream
                                          (Sint32)( (double)total_time / OPUS_SAMPLE_RATE_PER_MS);
-
     return 1;
 } /* opus_open */
 
@@ -333,7 +226,7 @@ static Sint32 opus_open(Sound_Sample* sample, const char* ext)
 /*
  * Opus Close
  * ----------
- * Free and NULL all allocated memory pointers.
+ * Free and NULL all heap-allocated codec objects.
  */
 static void opus_close(Sound_Sample* sample)
 {
@@ -341,26 +234,10 @@ static void opus_close(Sound_Sample* sample)
      * then we are still responsible for freeing the OggOpusFile with op_free().
      */
     Sound_SampleInternal* internal = (Sound_SampleInternal*) sample->opaque;
-
-    opus_t* d = internal->decoder_private;
-    if (d != NULL) {
-        if (d->of != NULL) {
-            op_free(d->of);
-            d->of = NULL;
-        }
-
-        if (d->resampler != NULL) {
-            speex_resampler_destroy(d->resampler);
-            d->resampler = NULL;
-        }
-
-        if (d->buffer != NULL) {
-            SDL_free(d->buffer);
-            d->buffer = NULL;
-        }
-
-        SDL_free(d);
-        d = NULL;
+    OggOpusFile* of = internal->decoder_private;
+    if (of != NULL) {
+        op_free(of);
+        internal->decoder_private = NULL;
     }
     return;
 
@@ -370,137 +247,19 @@ static void opus_close(Sound_Sample* sample)
 /*
  * Opus Read
  * ---------
- * Decode, resample (if needed), and write the output to the
- * requested buffer.
  */
-static Uint32 opus_read(Sound_Sample* sample)
+static Uint32 opus_read(Sound_Sample* sample, void* buffer, Uint32 desired_frames)
 {
-    Sound_SampleInternal* internal = (Sound_SampleInternal*) sample->opaque;
-    opus_t* d = internal->decoder_private;
-
-    opus_int16* output_buffer = internal->buffer;
-    const Uint16 requested_output_size = internal->buffer_size / sizeof(opus_int16);
-    const Uint16 derived_consumption_size = (Uint16) ceilf(requested_output_size * d->rate_ratio);
-
-    // Three scenarios in order of probabilty:
-    //
-    // 1. consume: resample (if needed) a chunk from our decoded queue
-    //             sufficient to fill the requested buffer.
-    //
-    //             If the decoder has hit the end-of-file, drain any
-    //             remaining decoded data before setting the EOF flag.
-    //
-    // 2. decode:  decode chunks unil our buffer is full or we hit EOF.
-    //
-    // 3. wrap:    we've decoded and consumed to edge of our buffer
-    //             so wrap any remaining decoded samples back around.
-
-    Sint32 rcode = 1;
-    SDL_bool have_consumed = SDL_FALSE;
-    while (! have_consumed){
-
-        // consume ...
-        const Uint16 unconsumed_size = d->decoded - d->consumed;
-        if (unconsumed_size >= derived_consumption_size || d->eof) {
-
-            // If we're at the start of the stream, ignore 'pre-skip' samples
-            // per-channel.  Pre-skip describes how much data must be decoded
-            // before valid output is obtained.
-            //
-            const OpusHead* oh = op_head(d->of, -1);
-            if (d->of_pcm == 0) {
-                d->consumed += oh->pre_skip * oh->channel_count;
-            }
-
-            // We use these to record the actual consumed and output sizes
-            Uint32 actual_consumed_size = unconsumed_size;
-            Uint32 actual_output_size = requested_output_size;
-
-            // If we need to resample
-            if (d->resampler) {
-                (void) speex_resampler_process_int(d->resampler, 0,
-                                                   d->buffer + d->consumed,
-                                                   &actual_consumed_size,
-                                                   output_buffer,
-                                                   &actual_output_size);
-            }
-            // Otherwise copy the bytes
-            else {
-                if (unconsumed_size < requested_output_size) {
-                    actual_output_size = unconsumed_size;
-                }
-                actual_consumed_size = actual_output_size;
-                SDL_memcpy(output_buffer, d->buffer + d->consumed, actual_output_size * sizeof(opus_int16));
-            }
-
-            // bump our comsumption count and absolute pcm position
-            d->consumed += actual_consumed_size;
-            d->of_pcm += actual_consumed_size;
-
-            SNDDBG(("Opus read consuming:    "
-                    "{output: %u, so_far: %u, remaining_buffer: %u}\n",
-                    actual_output_size, d->consumed, d->decoded - d->consumed));
-
-            // if we wrote less than requested then we're at the end-of-file
-            if (actual_output_size < requested_output_size) {
-                sample->flags |= SOUND_SAMPLEFLAG_EOF;
-                SNDDBG(("Opus read consuming:    "
-                        "{end_of_buffer: True, requested: %u, resampled_output: %u}\n",
-                        requested_output_size, actual_output_size));
-            }
-
-            rcode = actual_output_size * sizeof(opus_int16); // covert from samples to bytes
-            have_consumed = SDL_TRUE;
-        }
-
-        else {
-            // wrap ...
-            if (d->frame_size > 0) {
-                SDL_memcpy(d->buffer,
-                           d->buffer + d->consumed,
-                           (d->decoded - d->consumed)*sizeof(opus_int16));
-
-                d->decoded -= d->consumed;
-                d->consumed = 0;
-
-                SNDDBG(("Opus read wrapping:     "
-                        "{wrapped: %u}\n", d->decoded));
-            }
-
-            // decode ...
-            while (rcode > 0 && d->buffer_size - d->decoded >= d->frame_size) {
-
-                rcode = sample->actual.channels * op_read(d->of,
-                                                          d->buffer      + d->decoded,
-                                                          d->buffer_size - d->decoded, NULL);
-                // Use the largest decoded frame to know when
-                // our buffer is too small to hold a frame, to
-                // avoid constraining the decoder to fill sizes
-                // smaller than the stream's frame-size
-                if (rcode > d->frame_size) {
-
-                    SNDDBG(("Opus read decoding:     "
-                            "{frame_previous: %u, frame_new: %u}\n",
-                            d->frame_size, rcode));
-
-                    d->frame_size = rcode;
-                }
-
-                // assess the validity of the return code
-                if      (rcode  > 0) {       d->decoded += rcode;} // reading
-                else if (rcode == 0) {       d->eof = SDL_TRUE;}   // done
-                else if (rcode == OP_HOLE) { rcode = 1;}           // hole in the data, carry on
-                else { // (rcode  < 0)                             // error
-                    sample->flags |= SOUND_SAMPLEFLAG_ERROR;
-                }
-
-                SNDDBG(("Opus read decoding:     "
-                        "{decoded: %u, remaining buffer: %u, end_of_file: %s}\n",
-                        rcode, d->buffer_size - d->decoded, d->eof ? "True" : "False"));
-            }
-        }
-    } // end while.
-    return rcode;
+    int decoded_frames = 0;
+    if (desired_frames > 0) {
+        Sound_SampleInternal* internal = (Sound_SampleInternal*) sample->opaque;
+        OggOpusFile* of = internal->decoder_private;
+        decoded_frames = op_read(of, (opus_int16*)buffer, desired_frames * sample->actual.channels, NULL);
+        if      (decoded_frames == 0)       { sample->flags |= SOUND_SAMPLEFLAG_EOF; }
+        else if (decoded_frames == OP_HOLE) { sample->flags |= SOUND_SAMPLEFLAG_EAGAIN; }
+        else if (decoded_frames  < 0)       { sample->flags |= SOUND_SAMPLEFLAG_ERROR; }
+    }
+    return decoded_frames;
 } /* opus_read */
 
 
@@ -526,7 +285,7 @@ static Sint32 opus_rewind(Sound_Sample* sample)
 static Sint32 opus_seek(Sound_Sample* sample, const Uint32 ms)
 {
     Sound_SampleInternal* internal = (Sound_SampleInternal*) sample->opaque;
-    opus_t* d = internal->decoder_private;
+    OggOpusFile* of = internal->decoder_private;
     int rcode = -1;
 
     #if (defined DEBUG_CHATTER)
@@ -539,81 +298,17 @@ static Sint32 opus_seek(Sound_Sample* sample, const Uint32 ms)
 
     // convert the desired ms offset into OPUS PCM samples
     const ogg_int64_t desired_pcm = ms * OPUS_SAMPLE_RATE_PER_MS;
+    rcode = op_pcm_seek(of, desired_pcm);
 
-    // Is our stream already positioned at the requested offset?
-    if (d->of_pcm == desired_pcm) {
-
-        SNDDBG(("Opus seek avoided:      "
-                "{requested_time: '%02d:%02d:%.2f', becomes_opus_pcm: %ld, actual_pcm_pos: %ld}\n",
-                hours, minutes, seconds, desired_pcm, d->of_pcm));
-
-        rcode = 1;
+	if (rcode != 0) {
+        SNDDBG(("Opus seek error:        %s\n", opus_strerror(rcode)));
+        sample->flags |= SOUND_SAMPLEFLAG_ERROR;
+	} else {
+        SNDDBG(("Opus seek in file:      "
+                "{requested_time: '%02d:%02d:%.2f', becomes_opus_pcm: %ld}\n",
+                hours, minutes, seconds, desired_pcm));
     }
-
-    // If not, check if we can jump within our circular buffer (and not actually seek!)
-    // In this scenario, we don't have to waste our currently decoded samples
-    // or incur the cost of 80ms of pre-roll decoding behind the scene in libopus.
-    else {
-        Uint64 pcm_start = d->of_pcm - d->consumed;
-        Uint64 pcm_end = pcm_start + d->decoded;
-
-        // In both scenarios below we're going to seek, in which case
-        // our sample flags should be reset and let the read function
-        // re-assess the flag.
-        //
-
-        // Is the requested pcm offset within our decoded range?
-        if ( (Uint64) desired_pcm >= pcm_start && (Uint64) desired_pcm <= pcm_end) {
-
-            SNDDBG(("Opus seek avoided:      "
-                    "{requested_time: '%02d:%02d:%.2f', becomes_opus_pcm: %ld, buffer_start: %ld, buffer_end: %ld}\n",
-                    hours, minutes, seconds, desired_pcm, pcm_start, pcm_end));
-
-            // Yes, so simply adjust our existing pcm offset and consumption position
-            // No seeks or pre-roll needed!
-            d->consumed = (Uint16)(desired_pcm - pcm_start);
-            d->of_pcm = desired_pcm;
-
-            // reset our sample flags and let our consumption state re-apply
-            // the flags per its own rules
-            if (op_seekable(d->of)) {
-                sample->flags = SOUND_SAMPLEFLAG_CANSEEK;
-            }
-
-            // note, we don't reset d->eof because our decode state is unchanged
-            rcode = 1;
-            // rcode is 1, confirming we successfully seeked
-        }
-
-        // No; the requested pcm offset is outside our circular decode buffer,
-        // so actually seek and reset our decode and consumption counters.
-        else {
-            rcode = op_pcm_seek(d->of, desired_pcm) + 1;
-
-            // op_pcm_seek(..) returns 0, to which we add 1, on success
-            // ... or a negative value on error.
-            if (rcode > 0) {
-                d->of_pcm = desired_pcm;
-                d->consumed = 0;
-                d->decoded = 0;
-                d->eof = SDL_FALSE;
-                SNDDBG(("Opus seek in file:      "
-                        "{requested_time: '%02d:%02d:%.2f', becomes_opus_pcm: %ld}\n",
-                        hours, minutes, seconds, desired_pcm));
-
-                // reset our sample flags and let the read function re-apply
-                // sample flags as it hits them from our our offset
-                if (op_seekable(d->of)) {
-                    sample->flags = SOUND_SAMPLEFLAG_CANSEEK;
-                }
-
-            }
-            // otherwise we failed to seek.. so leave everything as-is.
-        }
-    }
-
-    BAIL_IF_MACRO(rcode < 0, ERR_IO_ERROR, 0);
-    return rcode;
+    return (rcode == 0);
 } /* opus_seek */
 
 /* end of ogg_opus.c ... */
