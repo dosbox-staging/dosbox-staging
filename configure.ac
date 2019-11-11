@@ -466,14 +466,10 @@ else
    AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
 fi
 
-# Check for required Opus decoding libraries
+# Check for the Opus file-handling library
 PKG_CHECK_MODULES([OPUSFILE], [opusfile],
   [ LIBS="$LIBS ${OPUSFILE_LIBS}"
     CPPFLAGS="$CPPFLAGS ${OPUSFILE_CFLAGS}" ], [])
-
-PKG_CHECK_MODULES([SPEEXDSP], [speexdsp],
-  [ LIBS="$LIBS ${SPEEXDSP_LIBS}"
-    CPPFLAGS="$CPPFLAGS ${SPEEXDSP_CFLAGS}" ], [])
 
 AH_TEMPLATE(C_X11_XKB,[define to 1 if you have XKBlib.h and X11 lib])
 AC_CHECK_LIB(X11, main, have_x11_lib=yes, have_x11_lib=no, )

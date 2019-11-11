@@ -1,22 +1,23 @@
 noinst_LIBRARIES = libdecoders.a
 
 libdecoders_a_SOURCES = \
-	SDL_sound.c          \
-	SDL_sound.h          \
-	SDL_sound_internal.h \
-	audio_convert.c      \
-	wav.c                \
+	archive.h            \
+	dr_flac.h            \
+	dr_mp3.h             \
 	dr_wav.h             \
 	flac.c               \
-	dr_flac.h            \
-	opus.c               \
-	vorbis.c             \
-	stb_vorbis.h         \
 	mp3.cpp              \
 	mp3_seek_table.cpp   \
 	mp3_seek_table.h     \
-	dr_mp3.h             \
-	archive.h            \
+	opus.c               \
+	SDL_sound.c          \
+	SDL_sound.h          \
+	SDL_sound_internal.h \
+	stb.h                \
+	stb_vorbis.h         \
+	vorbis.c             \
+	wav.c                \
+	xxh3.h               \
 	xxhash.c             \
 	xxhash.h
 
