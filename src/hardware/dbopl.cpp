@@ -37,6 +37,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 #include "dosbox.h"
 #include "dbopl.h"
 
@@ -1430,7 +1431,6 @@ void InitTables( void ) {
 		TremoloTable[TREMOLO_TABLE - 1 - i] = val;
 	}
 	//Create a table with offsets of the channels from the start of the chip
-	DBOPL::Chip* chip = 0;
 	for ( Bitu i = 0; i < 32; i++ ) {
 		Bitu index = i & 0xf;
 		if ( index >= 9 ) {
@@ -1444,8 +1444,7 @@ void InitTables( void ) {
 		//Add back the bits for highest ones
 		if ( i >= 16 )
 			index += 9;
-		Bitu blah = reinterpret_cast<Bitu>( &(chip->chan[ index ]) );
-		ChanOffsetTable[i] = blah;
+		ChanOffsetTable[i] = (Bit16u)(index*sizeof(DBOPL::Channel));
 	}
 	//Same for operators
 	for ( Bitu i = 0; i < 64; i++ ) {
@@ -1458,9 +1457,7 @@ void InitTables( void ) {
 		if ( chNum >= 12 )
 			chNum += 16 - 12;
 		Bitu opNum = ( i % 8 ) / 3;
-		DBOPL::Channel* chan = 0;
-		Bitu blah = reinterpret_cast<Bitu>( &(chan->op[opNum]) );
-		OpOffsetTable[i] = ChanOffsetTable[ chNum ] + blah;
+		OpOffsetTable[i] = ChanOffsetTable[chNum]+(Bit16u)(opNum*sizeof(DBOPL::Operator));
 	}
 #if 0
 	//Stupid checks if table's are correct
