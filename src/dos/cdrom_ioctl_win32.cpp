@@ -470,8 +470,15 @@ bool CDROM_Interface_Ioctl::StopAudio(void) {
 
 void CDROM_Interface_Ioctl::ChannelControl(TCtrl ctrl)
 {
-	player.ctrlUsed = (ctrl.out[0]!=0 || ctrl.out[1]!=1 || ctrl.vol[0]<0xfe || ctrl.vol[1]<0xfe);
-	player.ctrlData = ctrl;
+	if (player.channel == NULL) return;
+
+	// Adjust the volme of our mixer channel as defined by the application
+	player.channel->SetScale(static_cast<float>(ctrl.vol[0]/255.0),  // left vol
+	                         static_cast<float>(ctrl.vol[1]/255.0)); // right vol
+
+	// Map the audio channels in our mixer channel as defined by the application
+	player.channel->MapChannels(ctrl.out[0],  // left map
+	                            ctrl.out[1]); // right map
 }
 
 bool CDROM_Interface_Ioctl::LoadUnloadMedia(bool unload) {
@@ -565,16 +572,6 @@ void CDROM_Interface_Ioctl::dx_CDAudioCallBack(Bitu len) {
 		}
 	}
 	SDL_mutexV(player.mutex);
-	if (player.ctrlUsed) {
-		Bit16s sample0,sample1;
-		Bit16s * samples=(Bit16s *)&player.buffer;
-		for (Bitu pos=0;pos<len/4;pos++) {
-			sample0=samples[pos*2+player.ctrlData.out[0]];
-			sample1=samples[pos*2+player.ctrlData.out[1]];
-			samples[pos*2+0]=(Bit16s)(sample0*player.ctrlData.vol[0]/255.0);
-			samples[pos*2+1]=(Bit16s)(sample1*player.ctrlData.vol[1]/255.0);
-		}
-	}
 	player.channel->AddSamples_s16(len/4,(Bit16s *)player.buffer);
 	memmove(player.buffer, &player.buffer[len], player.bufLen - len);
 	player.bufLen -= len;

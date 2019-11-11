@@ -36,13 +36,11 @@
 #include "mixer.h"
 #include "../libs/decoders/SDL_sound.h"
 
-#define RAW_SECTOR_SIZE		2352
-#define COOKED_SECTOR_SIZE	2048
-#define AUDIO_DECODE_BUFFER_SIZE 16512
-// 16512 is 16384 + 128, which enough for four 4KB decode audio chunks plus 128 bytes extra,
-// which accomodate the leftovers from typically callbacks, which also helps minimize
-// most of the time. This size is also an even multiple of 8-bytes, allowing the compiler to
-// use "large-D" SIMD instructions on it.
+// CDROM data and audio format constants
+#define RAW_SECTOR_SIZE         2352
+#define COOKED_SECTOR_SIZE      2048
+#define BYTES_PER_TRACK_FRAME      4
+#define REDBOOK_FRAMES_PER_SECOND 75
 
 enum { CDROM_USE_SDL, CDROM_USE_ASPI, CDROM_USE_IOCTL_DIO, CDROM_USE_IOCTL_DX, CDROM_USE_IOCTL_MCI };
 
@@ -53,17 +51,16 @@ typedef struct SMSF {
 } TMSF;
 
 typedef struct SCtrl {
-	Bit8u	out[4];			// output channel
-	Bit8u	vol[4];			// channel volume
+	Bit8u	out[4];			// output channel mapping
+	Bit8u	vol[4];			// channel volume (0 to 255)
 } TCtrl;
 
 // Conversion function from frames to Minutes/Second/Frames
 //
 template<typename T>
 inline void frames_to_msf(int frames, T *m, T *s, T *f) {
-	const int cd_fps = 75;
-	*f = frames % cd_fps;
-	frames /= cd_fps;
+	*f = frames % REDBOOK_FRAMES_PER_SECOND;
+	frames /= REDBOOK_FRAMES_PER_SECOND;
 	*s = frames % 60;
 	frames /= 60;
 	*m = frames;
@@ -72,8 +69,7 @@ inline void frames_to_msf(int frames, T *m, T *s, T *f) {
 // Conversion function from Minutes/Second/Frames to frames
 //
 inline int msf_to_frames(int m, int s, int f) {
-	const int cd_fps = 75;
-	return m * 60 * cd_fps + s * cd_fps + f;
+	return m * 60 * REDBOOK_FRAMES_PER_SECOND + s * REDBOOK_FRAMES_PER_SECOND + f;
 }
 
 extern int CDROM_GetMountType(char* path, int force);
@@ -161,7 +157,7 @@ private:
 	public:
 		virtual bool    read(Bit8u *buffer, int seek, int count) = 0;
 		virtual bool    seek(Bit32u offset) = 0;
-		virtual Bit16u  decode(Bit8u *buffer) = 0;
+		virtual Bit32u  decode(Bit16s *buffer, Bit32u desired_track_frames) = 0;
 		virtual Bit16u  getEndian() = 0;
 		virtual Bit32u  getRate() = 0;
 		virtual Bit8u   getChannels() = 0;
@@ -175,7 +171,7 @@ private:
 		BinaryFile      (const char *filename, bool &error);
 		bool            read(Bit8u *buffer, int seek, int count);
 		bool            seek(Bit32u offset);
-		Bit16u          decode(Bit8u *buffer);
+		Bit32u          decode(Bit16s *buffer, Bit32u desired_track_frames);
 		Bit16u          getEndian();
 		Bit32u          getRate() { return 44100; }
 		Bit8u           getChannels() { return 2; }
@@ -191,7 +187,7 @@ private:
 		AudioFile       (const char *filename, bool &error);
 		bool            read(Bit8u *buffer, int seek, int count) { return false; }
 		bool            seek(Bit32u offset);
-		Bit16u          decode(Bit8u *buffer);
+		Bit32u          decode(Bit16s *buffer, Bit32u desired_track_frames);
 		Bit16u          getEndian();
 		Bit32u          getRate();
 		Bit8u           getChannels();
@@ -237,26 +233,21 @@ static	CDROM_Interface_Image* images[26];
 
 private:
 	// player
-static	void	CDAudioCallBack(Bitu len);
+static	void	CDAudioCallBack(Bitu desired_frames);
 	int	GetTrack(int sector);
 
 static  struct imagePlayer {
-		Bit8u                 buffer[AUDIO_DECODE_BUFFER_SIZE];
-		TCtrl                 ctrlData;
+		Bit16s                buffer[MIXER_BUFSIZE * 2]; // 2 channels (max)
 		TrackFile             *trackFile;
 		MixerChannel          *channel;
 		CDROM_Interface_Image *cd;
-		void                  (MixerChannel::*addSamples) (Bitu, const Bit16s*);
-		Bit32u                startFrame;
-		Bit32u                currFrame;
-		Bit32u                numFrames;
-		Bit32u                playbackTotal;
-		Bit32s                playbackRemaining;
-		Bit16u                bufferPos;
-		Bit16u                bufferConsumed;
+		void                  (MixerChannel::*addFrames) (Bitu, const Bit16s*);
+		Bit32u                startRedbookFrame;
+		Bit32u                totalRedbookFrames;
+		Bit32u                playedTrackFrames;
+		Bit32u                totalTrackFrames;
 		bool                  isPlaying;
 		bool                  isPaused;
-		bool                  ctrlUsed;
 	} player;
 	
 	void  ClearTracks();
@@ -407,7 +398,7 @@ private:
 		SDL_mutex		*mutex;
 		Bit8u   buffer[8192];
 		int     bufLen;
-		int     currFrame;	
+		int     currFrame;
 		int     targetFrame;
 		bool    isPlaying;
 		bool    isPaused;
