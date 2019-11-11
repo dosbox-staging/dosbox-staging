@@ -1,6 +1,6 @@
 /*
 MP3 audio decoder. Choice of public domain or MIT-0. See license statements at the end of this file.
-dr_mp3 - v0.5.1 - 2019-10-08
+dr_mp3 - v0.5.2 - 2019-11-02
 
 David Reid - mackron@gmail.com
 
@@ -619,6 +619,7 @@ end:
 }
 #elif defined(__ARM_NEON) || defined(__aarch64__)
 #include <arm_neon.h>
+#define DRMP3_HAVE_SSE 0
 #define DRMP3_HAVE_SIMD 1
 #define DRMP3_VSTORE vst1q_f32
 #define DRMP3_VLD vld1q_f32
@@ -636,6 +637,7 @@ static int drmp3_have_simd()
     return 1;
 }
 #else
+#define DRMP3_HAVE_SSE 0
 #define DRMP3_HAVE_SIMD 0
 #ifdef DR_MP3_ONLY_SIMD
 #error DR_MP3_ONLY_SIMD used, but SSE/NEON not enabled
@@ -4005,6 +4007,9 @@ DIFFERENCES BETWEEN minimp3 AND dr_mp3
 /*
 REVISION HISTORY
 ================
+v0.5.2 - 2019-11-02
+  - Bring up to date with minimp3.
+
 v0.5.1 - 2019-10-08
   - Fix a warning with GCC.
 
