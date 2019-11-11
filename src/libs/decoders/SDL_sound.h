@@ -94,7 +94,6 @@ extern "C" {
  * \sa Sound_SampleNew
  * \sa Sound_SampleNewFromFile
  * \sa Sound_SampleDecode
- * \sa Sound_SampleDecodeAll
  * \sa Sound_SampleSeek
  */
 typedef enum
@@ -174,8 +173,6 @@ typedef struct
     const Sound_DecoderInfo *decoder;  /**< Decoder used for this sample. */
     Sound_AudioInfo desired;  /**< Desired audio format for conversion. */
     Sound_AudioInfo actual;  /**< Actual audio format of sample. */
-    void *buffer;  /**< Decoded sound data lands in here. */
-    Uint32 buffer_size;  /**< Current size of (buffer), in bytes (Uint8). */
     Uint32 flags;  /**< Flags relating to this sample. */
 } Sound_Sample;
 
@@ -440,41 +437,7 @@ SNDDECLSPEC void SDLCALL Sound_ClearError(void);
  */
 SNDDECLSPEC Sound_Sample * SDLCALL Sound_NewSample(SDL_RWops *rw,
                                                    const char *ext,
-                                                   Sound_AudioInfo *desired,
-                                                   Uint32 bufferSize);
-
-/**
- * \fn Sound_Sample *Sound_NewSampleFromMem(const Uint8 *data, Sound_AudioInfo *desired, Uint32 bufferSize)
- * \brief Start decoding a new sound sample from a file on disk.
- *
- * This is identical to Sound_NewSample(), but it creates an SDL_RWops for you
- *  from the (size) bytes of memory referenced by (data).
- *
- * This can pool RWops structures, so it may fragment the heap less over time
- *  than using SDL_RWFromMem().
- *
- *    \param filename file containing sound data.
- *    \param desired Format to convert sound data into. Can usually be NULL,
- *                   if you don't need conversion.
- *    \param bufferSize size, in bytes, of initial read buffer.
- *   \return Sound_Sample pointer, which is used as a handle to several other
- *           SDL_sound APIs. NULL on error. If error, use
- *           Sound_GetError() to see what went wrong.
- *
- * \sa Sound_NewSample
- * \sa Sound_SetBufferSize
- * \sa Sound_Decode
- * \sa Sound_DecodeAll
- * \sa Sound_Seek
- * \sa Sound_Rewind
- * \sa Sound_FreeSample
- */
-SNDDECLSPEC Sound_Sample * SDLCALL Sound_NewSampleFromMem(const Uint8 *data,
-                                                      Uint32 size,
-                                                      const char *ext,
-                                                      Sound_AudioInfo *desired,
-                                                      Uint32 bufferSize);
-
+                                                   Sound_AudioInfo *desired);
 
 /**
  * \fn Sound_Sample *Sound_NewSampleFromFile(const char *filename, Sound_AudioInfo *desired, Uint32 bufferSize)
@@ -507,8 +470,7 @@ SNDDECLSPEC Sound_Sample * SDLCALL Sound_NewSampleFromMem(const Uint8 *data,
  * \sa Sound_FreeSample
  */
 SNDDECLSPEC Sound_Sample * SDLCALL Sound_NewSampleFromFile(const char *fname,
-                                                      Sound_AudioInfo *desired,
-                                                      Uint32 bufferSize);
+                                                      Sound_AudioInfo *desired);
 
 /**
  * \fn void Sound_FreeSample(Sound_Sample *sample)
@@ -551,93 +513,27 @@ SNDDECLSPEC void SDLCALL Sound_FreeSample(Sound_Sample *sample);
  */
 SNDDECLSPEC Sint32 SDLCALL Sound_GetDuration(Sound_Sample *sample);
 
-
 /**
- * \fn int Sound_SetBufferSize(Sound_Sample *sample, Uint32 new_size)
- * \brief Change the current buffer size for a sample.
+ * \fn Uint32 Sound_Decode_Direct(Sound_Sample *sample)
+ * \brief Decode more of the sound data in a Sound_Sample directly into
+ * the supplied buffer.
  *
- * If the buffer size could be changed, then the sample->buffer and
- *  sample->buffer_size fields will reflect that. If they could not be
- *  changed, then your original sample state is preserved. If the buffer is
- *  shrinking, the data at the end of buffer is truncated. If the buffer is
- *  growing, the contents of the new space at the end is undefined until you
- *  decode more into it or initialize it yourself.
- *
- * The buffer size specified must be a multiple of the size of a single
- *  sample point. So, if you want 16-bit, stereo samples, then your sample
- *  point size is (2 channels * 16 bits), or 32 bits per sample, which is four
- *  bytes. In such a case, you could specify 128 or 132 bytes for a buffer,
- *  but not 129, 130, or 131 (although in reality, you'll want to specify a
- *  MUCH larger buffer).
- *
- *    \param sample The Sound_Sample whose buffer to modify.
- *    \param new_size The desired size, in bytes, of the new buffer.
- *   \return non-zero if buffer size changed, zero on failure.
- *
- * \sa Sound_Decode
- * \sa Sound_DecodeAll
- */
-SNDDECLSPEC int SDLCALL Sound_SetBufferSize(Sound_Sample *sample,
-                                            Uint32 new_size);
-
-
-/**
- * \fn Uint32 Sound_Decode(Sound_Sample *sample)
- * \brief Decode more of the sound data in a Sound_Sample.
- *
- * It will decode at most sample->buffer_size bytes into sample->buffer in the
- *  desired format, and return the number of decoded bytes.
- * If sample->buffer_size bytes could not be decoded, then please refer to
+ * It will decode at most desired_frames into buffer, and return the number
+ * frames decoded.
+ * If the number of desired_frames could not be decoded, then please refer to
  *  sample->flags to determine if this was an end-of-stream or error condition.
  *
  *    \param sample Do more decoding to this Sound_Sample.
- *   \return number of bytes decoded into sample->buffer. If it is less than
- *           sample->buffer_size, then you should check sample->flags to see
+ *    \param buffer PCM frames into this buffer.
+ *    \param desired_frames indicates how many PCM should be decoded.
+ *   \return number of frames decoded into buffer. If it is less than
+ *           desired_frames, then you should check sample->flags to see
  *           what the current state of the sample is (EOF, error, read again).
  *
- * \sa Sound_DecodeAll
- * \sa Sound_SetBufferSize
  * \sa Sound_Seek
  * \sa Sound_Rewind
  */
-SNDDECLSPEC Uint32 SDLCALL Sound_Decode(Sound_Sample *sample);
-
-
-/**
- * \fn Uint32 Sound_DecodeAll(Sound_Sample *sample)
- * \brief Decode the remainder of the sound data in a Sound_Sample.
- *
- * This will dynamically allocate memory for the ENTIRE remaining sample.
- *  sample->buffer_size and sample->buffer will be updated to reflect the
- *  new buffer. Please refer to sample->flags to determine if the decoding
- *  finished due to an End-of-stream or error condition.
- *
- * Be aware that sound data can take a large amount of memory, and that
- *  this function may block for quite awhile while processing. Also note
- *  that a streaming source (for example, from a SDL_RWops that is getting
- *  fed from an Internet radio feed that doesn't end) may fill all available
- *  memory before giving up...be sure to use this on finite sound sources
- *  only!
- *
- * When decoding the sample in its entirety, the work is done one buffer at a
- *  time. That is, sound is decoded in sample->buffer_size blocks, and
- *  appended to a continually-growing buffer until the decoding completes.
- *  That means that this function will need enough RAM to hold approximately
- *  sample->buffer_size bytes plus the complete decoded sample at most. The
- *  larger your buffer size, the less overhead this function needs, but beware
- *  the possibility of paging to disk. Best to make this user-configurable if
- *  the sample isn't specific and small.
- *
- *    \param sample Do all decoding for this Sound_Sample.
- *   \return number of bytes decoded into sample->buffer. You should check
- *           sample->flags to see what the current state of the sample is
- *           (EOF, error, read again).
- *
- * \sa Sound_Decode
- * \sa Sound_SetBufferSize
- */
-SNDDECLSPEC Uint32 SDLCALL Sound_DecodeAll(Sound_Sample *sample);
-
+SNDDECLSPEC Uint32 SDLCALL Sound_Decode_Direct(Sound_Sample *sample, void* buffer, Uint32 desired_frames);
 
 /**
  * \fn int Sound_Rewind(Sound_Sample *sample)

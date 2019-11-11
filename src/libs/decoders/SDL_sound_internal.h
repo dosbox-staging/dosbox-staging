@@ -126,9 +126,6 @@ typedef struct __SOUND_DECODERFUNCTIONS__
          *    Sound_Sample *prev;  (offlimits)
          *    SDL_RWops *rw;       (can use, but do NOT close it)
          *    const Sound_DecoderFunctions *funcs; (that's this structure)
-         *    Sound_AudioCVT sdlcvt; (offlimits)
-         *    void *buffer;        (offlimits until read() method)
-         *    Uint32 buffer_size;  (offlimits until read() method)
          *    void *decoder_private; (read and write access)
          *
          * in rest of Sound_Sample:
@@ -136,8 +133,6 @@ typedef struct __SOUND_DECODERFUNCTIONS__
          *    const Sound_DecoderInfo *decoder;  (read only)
          *    Sound_AudioInfo desired; (read only, usually not needed here)
          *    Sound_AudioInfo actual;  (please fill this in)
-         *    void *buffer;            (offlimits)
-         *    Uint32 buffer_size;      (offlimits)
          *    Sound_SampleFlags flags; (set appropriately)
          */
     int (*open)(Sound_Sample *sample, const char *ext);
@@ -157,15 +152,12 @@ typedef struct __SOUND_DECODERFUNCTIONS__
          *   Sound_SampleInternal *internal;
          *   internal = (Sound_SampleInternal *) sample->opaque;
          *
-         *  ...and then start decoding. Fill in up to internal->buffer_size
-         *  bytes of decoded sound in the space pointed to by
-         *  internal->buffer. The encoded data is read in from internal->rw.
-         *  Data should be decoded in the format specified during the
-         *  decoder's open() method in the sample->actual field. The
-         *  conversion to the desired format is done at a higher level.
+         *  ...and then start decoding. Fill in up to desired_frames
+         *  PCM frames of decoded sound into the space pointed to by
+         *  buffer. The encoded data is read in from internal->rw.
          *
-         * The return value is the number of bytes decoded into
-         *  internal->buffer, which can be no more than internal->buffer_size,
+         * The return value is the number of frames decoded into
+         *  buffer, which can be no more than desired_frames,
          *  but can be less. If it is less, you should set a state flag:
          *
          *   If there's just no more data (end of file, etc), then do:
@@ -186,7 +178,7 @@ typedef struct __SOUND_DECODERFUNCTIONS__
          *  SOUND_SAMPLEFLAG_EAGAIN flag is reset before each call to this
          *  method.
          */
-    Uint32 (*read)(Sound_Sample *sample);
+    Uint32 (*read)(Sound_Sample *sample, void* buffer, Uint32 desired_frames);
 
         /*
          * Reset the decoding to the beginning of the stream. Nonzero on
@@ -223,31 +215,6 @@ typedef struct __SOUND_DECODERFUNCTIONS__
     int (*seek)(Sound_Sample *sample, Uint32 ms);
 } Sound_DecoderFunctions;
 
-
-/* A structure to hold a set of audio conversion filters and buffers */
-typedef struct Sound_AudioCVT
-{
-    int    needed;                  /* Set to 1 if conversion possible */
-    Uint16 src_format;              /* Source audio format */
-    Uint16 dst_format;              /* Target audio format */
-    double rate_incr;               /* Rate conversion increment */
-    Uint8  *buf;                    /* Buffer to hold entire audio data */
-    int    len;                     /* Length of original audio buffer */
-    int    len_cvt;                 /* Length of converted audio buffer */
-    int    len_mult;                /* buffer must be len*len_mult big */
-    double len_ratio;       /* Given len, final size is len*len_ratio */
-    void   (*filters[20])(struct Sound_AudioCVT *cvt, Uint16 *format);
-    int    filter_index;            /* Current audio conversion function */
-} Sound_AudioCVT;
-
-extern SNDDECLSPEC int Sound_BuildAudioCVT(Sound_AudioCVT *cvt,
-                        Uint16 src_format, Uint8 src_channels, Uint32 src_rate,
-                        Uint16 dst_format, Uint8 dst_channels, Uint32 dst_rate,
-                        Uint32 dst_size);
-
-extern SNDDECLSPEC int Sound_ConvertAudio(Sound_AudioCVT *cvt);
-
-
 typedef void (*MixFunc)(float *dst, void *src, Uint32 frames, float *gains);
 
 typedef struct __SOUND_SAMPLEINTERNAL__
@@ -256,7 +223,6 @@ typedef struct __SOUND_SAMPLEINTERNAL__
     Sound_Sample *prev;
     SDL_RWops *rw;
     const Sound_DecoderFunctions *funcs;
-    Sound_AudioCVT sdlcvt;
     void *buffer;
     Uint32 buffer_size;
     void *decoder_private;
