@@ -105,31 +105,31 @@ function list_packages() {
 			if [[ "${COMPILER}" == "gcc" ]]; then
 				COMPILER="g++"
 			fi
-			PACKAGES=(libtool build-essential autoconf-archive libsdl1.2-dev libsdl-net1.2-dev libopusfile-dev libspeexdsp-dev)
+			PACKAGES=(libtool build-essential autoconf-archive libsdl1.2-dev libsdl-net1.2-dev libopusfile-dev)
 			;;
 
 		dnf)
 			VERSION_DELIM="-"
-			PACKAGES=(libtool autoconf-archive SDL SDL_net-devel opusfile-devel speexdsp-devel)
+			PACKAGES=(libtool autoconf-archive SDL SDL_net-devel opusfile-devel)
 			;;
 
 		pacman)
-			# Arch offers 32-bit versions of SDL and speexDSP (but not others)
+			# Arch offers 32-bit versions of SDL (but not others)
 			PACKAGES=(libtool autoconf-archive sdl_net opusfile)
 			if [[ "${BITS}" == 32 ]]; then
-				PACKAGES+=(lib32-sdl lib32-speexdsp)
+				PACKAGES+=(lib32-sdl)
 			else
-				PACKAGES+=(sdl speexdsp)
+				PACKAGES+=(sdl)
 			fi
 			;;
 
 		zypper)
-			# OpenSUSE offers 32-bit versions of SDL, SDL_net, and speexDSP (but not others)
+			# OpenSUSE offers 32-bit versions of SDL and SDL_net (but not others)
 			PACKAGES=(devel_basis libtool autoconf-archive opusfile)
 			if [[ "${BITS}" == 32 ]]; then
-				PACKAGES+=(libSDL-devel-32bit libSDL_net-devel-32bit libspeexdsp1-32bit)
+				PACKAGES+=(libSDL-devel-32bit libSDL_net-devel-32bit)
 			else
-				PACKAGES+=(SDL SDL_net speexdsp)
+				PACKAGES+=(SDL SDL_net)
 			fi
 			;;
 
@@ -142,7 +142,7 @@ function list_packages() {
 			echo "   sudo xcodebuild -license  # to accept Apple's license agreement"
 			echo ""
 			echo "Now download, build, and install the following manually to avoid using Homebrew or MacPorts:"
-			echo " - coreutils autogen autoconf automake pkg-config libpng sdl sdl_net opusfile speexdsp"
+			echo " - coreutils autogen autoconf automake pkg-config libpng sdl sdl_net opusfile"
 			;;
 
 		brew)
@@ -151,11 +151,11 @@ function list_packages() {
 			if [[ "${COMPILER}" == "clang" ]]; then
 				COMPILER=""
 			fi
-			PACKAGES=(coreutils autogen autoconf autoconf-archive automake pkg-config libpng sdl sdl_net opusfile speexdsp)
+			PACKAGES=(coreutils autogen autoconf autoconf-archive automake pkg-config libpng sdl sdl_net opusfile)
 			;;
 
 		macports)
-			PACKAGES=(coreutils autogen automake autoconf autoconf-archive pkgconfig libpng libsdl libsdl_net opusfile speexDSP)
+			PACKAGES=(coreutils autogen automake autoconf autoconf-archive pkgconfig libpng libsdl libsdl_net opusfile)
 			;;
 
 		msys2)
@@ -167,7 +167,7 @@ function list_packages() {
 				pkg_type="i686"
 			fi
 			PACKAGES=(autogen autoconf autoconf-archive base-devel automake-wrapper)
-			for pkg in pkg-config libtool libpng zlib SDL SDL_net opusfile speexdsp; do
+			for pkg in pkg-config libtool libpng zlib SDL SDL_net opusfile; do
 				PACKAGES+=("mingw-w64-${pkg_type}-${pkg}")
 			done
 			COMPILER="mingw-w64-${pkg_type}-${COMPILER}"
@@ -176,7 +176,7 @@ function list_packages() {
 		vcpkg)
 			# VCPKG doesn't provide Clang or GCC, so we knock out the compiler and just give packages
 			COMPILER=""
-			PACKAGES=(libpng sdl1 sdl1-net opusfile speexdsp)
+			PACKAGES=(libpng sdl1 sdl1-net opusfile)
 			;;
 		*)
 			usage "Unknown package manager ${1}"
