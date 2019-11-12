@@ -361,8 +361,8 @@ esac
 
 AC_ARG_ENABLE(dynamic-core,AC_HELP_STRING([--disable-dynamic-core],[Disable all dynamic cores]),,enable_dynamic_core=yes)
 
-AH_TEMPLATE(C_DYNAMIC_X86,[Define to 1 to use x86 dynamic cpu core])
-AC_ARG_ENABLE(dynamic-x86,AC_HELP_STRING([--disable-dynamic-x86],[Disable x86 dynamic cpu core]),,enable_dynamic_x86=yes)
+AH_TEMPLATE(C_DYNAMIC_X86,[Define to 1 to use x86/x64 dynamic cpu core])
+AC_ARG_ENABLE(dynamic-x86,AC_HELP_STRING([--disable-dynamic-x86],[Disable x86/x64 dynamic cpu core]),,enable_dynamic_x86=yes)
 AC_MSG_CHECKING(whether x86 dynamic cpu core will be enabled) 
 if test x$enable_dynamic_x86 = xno -o x$enable_dynamic_core = xno; then 
    AC_MSG_RESULT(no)
