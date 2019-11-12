@@ -4,7 +4,7 @@ jobs:
 
   build_msys2_clang_32:
     name: Clang 8 i686 (MSYS2)
-    runs-on: windows-2019
+    runs-on: windows-latest
     env:
       CHERE_INVOKING: yes
     steps:
@@ -25,7 +25,7 @@ jobs:
 
   build_msys2_clang_64:
     name: Clang 8 x86_64 (MSYS2)
-    runs-on: windows-2019
+    runs-on: windows-latest
     env:
       CHERE_INVOKING: yes
     steps:
@@ -46,7 +46,7 @@ jobs:
 
   build_msys2_gcc_32:
     name: GCC 9 i686 (MSYS2)
-    runs-on: windows-2019
+    runs-on: windows-latest
     env:
       CHERE_INVOKING: yes
     steps:
@@ -68,7 +68,7 @@ jobs:
 
   build_msys2_gcc_64:
     name: GCC 9 x86_64 (MSYS2)
-    runs-on: windows-2019
+    runs-on: windows-latest
     env:
       CHERE_INVOKING: yes
     steps:
@@ -88,8 +88,8 @@ jobs:
         run:   .\scripts\count-warnings.py build.log
 
   build_msvc_debug:
-    name: MSVC Debug x86 (win-2019)
-    runs-on: windows-2019
+    name: MSVC Debug x86
+    runs-on: windows-latest
     steps:
       - uses:  actions/checkout@v1
       - name:  Log environment
@@ -110,8 +110,8 @@ jobs:
           MSBuild -m dosbox.sln -p:Configuration=Debug
 
   build_msvc_release:
-    name: MSVC Release x86 (win-2019)
-    runs-on: windows-2019
+    name: MSVC Release x86
+    runs-on: windows-latest
     steps:
       - uses:  actions/checkout@v1
       - name:  Log environment
