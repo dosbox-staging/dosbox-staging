@@ -6,7 +6,15 @@
 # This script prints a summary snippet of information out of reports created
 # by scan-build or analyze-build for Clang's static code analysis.
 #
-# Usage: ./count-warnings.py path/to/report/index.html
+# This script counts the number of reported issues and compares that
+# against provided maximum. if the count exceeds the maximum then the
+# script will return a status of 1 (failure), otherwise the script
+# returns 0 (success).
+#
+# If you prefer to not set a maximum, then supply a negative maximum
+# such as -1.
+#
+# Usage: ./count-warnings.py max-issues path/to/report/index.html
 #
 # This script depends on BeautifulSoup module, if you're distribution is
 # missing it, you can use pipenv to install it for virtualenv spanning only
@@ -18,12 +26,6 @@
 import sys
 
 from bs4 import BeautifulSoup
-
-# Maximum allowed number of issues; if report will include more bugs,
-# then script will return with status 1. Simply change this line if you
-# want to set a different limit.
-#
-MAX_ISSUES = 93
 
 def summary_values(summary_table):
     if not summary_table:
@@ -58,16 +60,24 @@ def print_summary(issues):
 
 
 def main():
-    bug_types = read_soup(sys.argv[1])
+    rcode = 0
+    max_issues = int(sys.argv[1])
+    bug_types = read_soup(sys.argv[2])
     total = bug_types.pop('All Bugs')
     if bug_types:
         print("Bugs grouped by type:\n")
         print_summary(bug_types)
-    print('Total: {} bugs (out of {} allowed)\n'.format(total, MAX_ISSUES))
-    if total > MAX_ISSUES:
-        print('Error: upper limit of allowed bugs is', MAX_ISSUES)
-        sys.exit(1)
+    print('Total: {} bugs'.format(total), end='')
 
+    if max_issues >= 0:
+        print(' (out of {} allowed)\n'.format(max_issues))
+        if total > max_issues:
+            print('Error: upper limit of allowed bugs is', max_issues)
+            rcode = 1
+    else:
+        print('\n')
+
+    return rcode
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

@@ -15,7 +15,7 @@ jobs:
       - name: Build
         run:  ./scripts/build.sh --compiler clang --compiler-version 8 --lto
       - name: Summarize warnings
-        run:  ./scripts/count-warnings.py build.log
+        run:  ./scripts/count-warnings.py 220 build.log
 
   build_ubuntu_matrix_gcc:
     name: GCC
@@ -33,7 +33,7 @@ jobs:
       - name: Build
         run: ./scripts/build.sh --release small --lto
       - name: Summarize warnings
-        run:  ./scripts/count-warnings.py build.log
+        run:  ./scripts/count-warnings.py 404 build.log
 
   build_ubuntu_gcc9:
     name: GCC 9 (ubuntu-18.04)
@@ -48,4 +48,4 @@ jobs:
       - name: Build
         run:  ./scripts/build.sh --compiler-version 9 --lto
       - name: Summarize warnings
-        run:  ./scripts/count-warnings.py build.log
+        run:  ./scripts/count-warnings.py 376 build.log

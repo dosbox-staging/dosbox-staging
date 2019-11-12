@@ -34,7 +34,7 @@ jobs:
           # summary
           echo "Full report is included in build Artifacts"
           echo
-          ./scripts/count-bugs.py report/*/index.html
+          ./scripts/count-bugs.py 92 report/*/index.html
 
 
   dynamic_clang8:

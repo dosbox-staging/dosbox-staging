@@ -14,7 +14,7 @@ jobs:
       - name: Build
         run:  ./scripts/build.sh --compiler clang --lto
       - name: Summarize warnings
-        run:  python3 ./scripts/count-warnings.py build.log
+        run:  python3 ./scripts/count-warnings.py 271 build.log
 
 #  build_macos_brew_gcc9:
 #    name: GCC 9 (Homebrew)

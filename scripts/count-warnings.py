@@ -5,8 +5,15 @@
 
 # This script counts all compiler warnings and prints a summary.
 #
-# Usage: ./count-warnings.py build.log
-# Usage: cat "*.log" | ./count-warnings.py -
+# Usage: ./count-warnings.py max-warnings build.log
+# Usage: cat "*.log" | ./count-warnings.py max-warnings -
+#
+# If the count exceeds the maximum provided then the script will
+# return a status of 1 (failure), otherwise the script returns
+# 0 (success).
+#
+# If you prefer to not set a maximum, then supply a negative maximum
+# such as -1.
 #
 # note: new compilers include additional flag -fdiagnostics-format=[text|json],
 # which could be used instead of parsing using regex, but we want to preserve
@@ -18,12 +25,6 @@
 import os
 import re
 import sys
-
-# Maximum allowed number of issues; if build will include more warnings,
-# then script will return with status 1. Simply change this line if you
-# want to set a different limit.
-#
-MAX_ISSUES = 409
 
 # For recognizing warnings in GCC format in stderr:
 #
@@ -78,18 +79,26 @@ def print_summary(issues):
 
 
 def main():
+    rcode = 0
     total = 0
     warning_types = {}
-    for line in get_input_lines(sys.argv[1]):
+    max_issues = int(sys.argv[1])
+    for line in get_input_lines(sys.argv[2]):
         total += count_warning(line, warning_types)
     if warning_types:
         print("Warnings grouped by type:\n")
         print_summary(warning_types)
-    print('Total: {} warnings (out of {} allowed)\n'.format(total, MAX_ISSUES))
-    if total > MAX_ISSUES:
-        print('Error: upper limit of allowed warnings is', MAX_ISSUES)
-        sys.exit(1)
+    print('Total: {} warnings'.format(total), end = '')
 
+    if max_issues >= 0:
+        print(' (out of {} allowed)\n'.format(max_issues))
+        if total > max_issues:
+            print('Error: upper limit of allowed warnings is', max_issues)
+            rcode = 1
+    else:
+        print('\n')
+
+    return rcode
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

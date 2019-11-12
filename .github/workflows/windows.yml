@@ -21,7 +21,7 @@ jobs:
         shell: python scripts\msys-bash.py {0}
         run:   ./scripts/build.sh --compiler clang --bit-depth 32 --bin-path /mingw32/bin
       - name:  Summarize warnings
-        run:   .\scripts\count-warnings.py build.log
+        run:   .\scripts\count-warnings.py 119 build.log
 
   build_msys2_clang_64:
     name: Clang 8 x86_64 (MSYS2)
@@ -42,7 +42,7 @@ jobs:
         shell: python scripts\msys-bash.py {0}
         run:   ./scripts/build.sh --compiler clang --bin-path /mingw64/bin
       - name:  Summarize warnings
-        run:   .\scripts\count-warnings.py build.log
+        run:   .\scripts\count-warnings.py 199 build.log
 
   build_msys2_gcc_32:
     name: GCC 9 i686 (MSYS2)
@@ -63,7 +63,7 @@ jobs:
         shell: python scripts\msys-bash.py {0}
         run:   ./scripts/build.sh --bit-depth 32 --bin-path /mingw32/bin
       - name:  Summarize warnings
-        run:   .\scripts\count-warnings.py build.log
+        run:   .\scripts\count-warnings.py 42 build.log
 
 
   build_msys2_gcc_64:
@@ -85,7 +85,7 @@ jobs:
         shell: python scripts\msys-bash.py {0}
         run:   ./scripts/build.sh --bin-path /mingw64/bin
       - name:  Summarize warnings
-        run:   .\scripts\count-warnings.py build.log
+        run:   .\scripts\count-warnings.py 61 build.log
 
   build_msvc_debug:
     name: MSVC Debug x86
