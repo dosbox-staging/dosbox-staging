@@ -3,8 +3,8 @@ on: push
 jobs:
 
   build_macos_xcode_clang:
-    name: Clang 10 (Xcode)
-    runs-on: macOS-10.14
+    name: Clang (Xcode)
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
@@ -19,7 +19,7 @@ jobs:
 
 #  build_macos_brew_gcc9:
 #    name: GCC 9 (Homebrew)
-#    runs-on: macOS-10.14
+#    runs-on: macos-latest
 #    steps:
 #      - uses: actions/checkout@v1
 #      - name: Log environment
@@ -34,7 +34,7 @@ jobs:
 
 #  build_macos_macports_gcc9:
 #    name: GCC 9 (MacPorts)
-#    runs-on: macOS-10.14
+#    runs-on: macos-latest
 #    steps:
 #      - uses: actions/checkout@v1
 #      - name: Install MacPorts
