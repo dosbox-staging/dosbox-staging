@@ -16,25 +16,29 @@ jobs:
       - name: Summarize warnings
         run:  python3 ./scripts/count-warnings.py 271 build.log
 
-
   build_macos_brew_gcc9:
-    name: GCC 9 (Homebrew)
+    name: GCC (Homebrew)
     runs-on: macos-latest
+    strategy:
+      matrix:
+        compiler_version: [48, 49, 5, 6, 7, 8, 9]
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Install dependencies
-        run:  brew install $(./scripts/list-build-dependencies.sh -p brew --compiler-version 9)
+        run:  brew install $(./scripts/list-build-dependencies.sh -p brew --compiler-version ${{ matrix.compiler_version }})
       - name: Build
         run:  echo ./scripts/build.sh --compiler-version 9 --lto
       - name: Summarize warnings
         run:  echo python3 ./scripts/count-warnings.py -1 build.log
 
-
   build_macos_macports_gcc48:
-    name: GCC 4.8 (MacPorts)
+    name: GCC (MacPorts)
     runs-on: macos-latest
+    strategy:
+      matrix:
+        compiler_version: [48, 49, 5, 6, 7, 8, 9]
     steps:
       - uses: actions/checkout@v1
       - name: Install MacPorts
@@ -49,10 +53,10 @@ jobs:
         run: |
           PATH="/opt/local/sbin:/opt/local/bin:${PATH}"
           sudo port -q selfupdate || true
-          sudo port -q install $(./scripts/list-build-dependencies.sh -p macports --compiler-version 48)
+          sudo port -q install $(./scripts/list-build-dependencies.sh -p macports --compiler-version ${{ matrix.compiler_version }})
 
       - name: Build
-        run:  echo ./scripts/build.sh --compiler-version mp-48 --bin-path /opt/local/bin
+        run:  echo ./scripts/build.sh --compiler-version mp-${{ matrix.compiler_version }} --bin-path /opt/local/bin
       - name: Summarize warnings
         run:  echo python3 ./scripts/count-warnings.py -1 build.log
 

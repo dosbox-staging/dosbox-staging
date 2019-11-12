@@ -1,8 +1,7 @@
 name: Code analysis
-
-on: [push]
-
+on: push
 jobs:
+
   static_clang_analyser:
     name: Clang static analyzer
     runs-on: ubuntu-18.04
@@ -36,7 +35,6 @@ jobs:
           echo
           ./scripts/count-bugs.py 92 report/*/index.html
 
-
   dynamic_clang8:
     name: Clang analyzer
     runs-on: ubuntu-18.04
@@ -55,14 +53,6 @@ jobs:
       - name: Build
         run:  ./scripts/build.sh --compiler clang --compiler-version 8 --release ${{ matrix.sanitizer }}
 
-      - name: Prepare log
-        run: |
-            echo "
-            Repository: ${GITHUB_REPOSITORY}
-            Branch:     $(git branch | grep \* | cut -d ' ' -f2)
-            Commit:     ${GITHUB_SHA:0:8}
-            -----------------------------------------" >> "${LOG}"
-
       - name: Testcase 1. Enter-Exit
         run:  (xvfb-run ./src/dosbox -c exit || true) | tee -a "${LOG}"
 
@@ -70,7 +60,6 @@ jobs:
         with:
           name: clang-${{ matrix.sanitizer }}.log
           path: clang-${{ matrix.sanitizer }}.log
-
 
   dynamic_gcc9:
     name: GCC analyzer
@@ -89,15 +78,6 @@ jobs:
         run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler-version 9)
       - name: Build
         run:  ./scripts/build.sh --compiler-version 9 --release ${{ matrix.sanitizer }}
-
-      - name: Prepare log
-        run: |
-            echo "
-            Repository: ${GITHUB_REPOSITORY}
-            Branch:     $(git branch | grep \* | cut -d ' ' -f2)
-            Commit:     ${GITHUB_SHA:0:8}
-            -----------------------------------------" >> "${LOG}"
-
       - name: Testcase 1. Enter-Exit
         run:  (xvfb-run ./src/dosbox -c exit || true) | tee -a "${LOG}"
 
