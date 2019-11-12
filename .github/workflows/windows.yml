@@ -34,6 +34,7 @@ jobs:
   build_msvc_matrix:
     name: MSVC x86
     runs-on: windows-latest
+    strategy:
       matrix:
         build_type: [Debug, Release]
     steps:
