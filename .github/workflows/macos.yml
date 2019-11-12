@@ -3,7 +3,7 @@ on: push
 jobs:
 
   build_macos_xcode_clang:
-    name: Clang (Xcode)
+    name: Xcode Clang
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
@@ -17,7 +17,7 @@ jobs:
         run:  python3 ./scripts/count-warnings.py 272 build.log
 
   build_macos_brew_gcc:
-    name: GCC (Homebrew)
+    name: Homebrew GCC
     runs-on: macos-latest
     strategy:
       matrix:
@@ -34,7 +34,7 @@ jobs:
         run:  python3 ./scripts/count-warnings.py -1 build.log
 
   build_macos_macports_gcc:
-    name: GCC (MacPorts)
+    name: MacPorts GCC
     runs-on: macos-latest
     strategy:
       matrix:

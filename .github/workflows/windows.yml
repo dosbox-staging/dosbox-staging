@@ -3,7 +3,7 @@ on: push
 jobs:
 
   build_msys2_matrix:
-    name: (MSYS2)
+    name: MSYS2
     runs-on: windows-latest
     strategy:
       matrix:
@@ -11,10 +11,10 @@ jobs:
         bits: [32, 64]
     env:
       CHERE_INVOKING:        yes
-      MAX_WARNINGS_CLANG_32: 119
-      MAX_WARNINGS_CLANG_64: 199
-      MAX_WARNINGS_GCC_32:    42
-      MAX_WARNINGS_GCC_64:    61
+      max_warnings_clang_32: 119
+      max_warnings_clang_64: 199
+      max_warnings_gcc_32:    42
+      max_warnings_gcc_64:    61
     steps:
       - uses:  actions/checkout@v1
       - name:  Install msys2 environment
@@ -29,7 +29,7 @@ jobs:
         shell: python scripts\msys-bash.py {0}
         run:   ./scripts/build.sh --compiler ${{ matrix.compiler }} --bit-depth ${{ matrix.bits }} --bin-path /mingw${{ matrix.bits }}/bin
       - name:  Summarize warnings
-        run:   .\scripts\count-warnings.py $MAX_WARNINGS_${{ matrix.compiler }}_${{ matrix.bits }}_MAX_WARNINGS build.log
+        run:   .\scripts\count-warnings.py $env:max_warnings_${{ matrix.compiler }}_${{ matrix.bits }} build.log
 
   build_msvc_matrix:
     name: MSVC x86
