@@ -16,44 +16,43 @@ jobs:
       - name: Summarize warnings
         run:  python3 ./scripts/count-warnings.py 271 build.log
 
-#  build_macos_brew_gcc9:
-#    name: GCC 9 (Homebrew)
-#    runs-on: macos-latest
-#    steps:
-#      - uses: actions/checkout@v1
-#      - name: Log environment
-#        run:  ./scripts/log-env.sh
-#      - name: Install dependencies
-#        run:  brew install $(./scripts/list-build-dependencies.sh -p brew --compiler-version 9)
-#      - name: Build
-#        run:  echo ./scripts/build.sh --compiler-version 9 --lto
-#      - name: Summarize warnings
-#        run:  echo python3 ./scripts/count-warnings.py build.log
+
+  build_macos_brew_gcc9:
+    name: GCC 9 (Homebrew)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+      - name: Install dependencies
+        run:  brew install $(./scripts/list-build-dependencies.sh -p brew --compiler-version 9)
+      - name: Build
+        run:  echo ./scripts/build.sh --compiler-version 9 --lto
+      - name: Summarize warnings
+        run:  echo python3 ./scripts/count-warnings.py -1 build.log
 
 
-#  build_macos_macports_gcc9:
-#    name: GCC 9 (MacPorts)
-#    runs-on: macos-latest
-#    steps:
-#      - uses: actions/checkout@v1
-#      - name: Install MacPorts
-#        run: |
-#          # xcode-select --install || true
-#          # sudo xcodebuild -license || true
-#          git clone --quiet --depth=1 https://github.com/macports/macports-base.git
-#          cd macports-base
-#          ./configure
-#          make -j"$(sysctl -n hw.physicalcpu || echo 4)"
-#          sudo make install
-#
-#      - name: Install dependencies
-#        run: |
-#          PATH="/opt/local/sbin:/opt/local/bin:${PATH}"
-#          sudo port -q selfupdate || true
-#          sudo port -q install $(./scripts/list-build-dependencies.sh -p macports --compiler-version 9)
-#
-#      - name: Build
-#        run:  echo ./scripts/build.sh --compiler-version mp-9 --bin-path /opt/local/bin
-#      - name: Summarize warnings
-#        run:  echo python3 ./scripts/count-warnings.py build.log
+  build_macos_macports_gcc48:
+    name: GCC 4.8 (MacPorts)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install MacPorts
+        run: |
+          git clone --quiet --depth=1 https://github.com/macports/macports-base.git
+          cd macports-base
+          ./configure
+          make -j"$(sysctl -n hw.physicalcpu || echo 4)"
+          sudo make install
+
+      - name: Install dependencies
+        run: |
+          PATH="/opt/local/sbin:/opt/local/bin:${PATH}"
+          sudo port -q selfupdate || true
+          sudo port -q install $(./scripts/list-build-dependencies.sh -p macports --compiler-version 48)
+
+      - name: Build
+        run:  echo ./scripts/build.sh --compiler-version mp-48 --bin-path /opt/local/bin
+      - name: Summarize warnings
+        run:  echo python3 ./scripts/count-warnings.py -1 build.log
 
