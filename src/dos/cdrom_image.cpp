@@ -170,7 +170,7 @@ bool CDROM_Interface_Image::SetDevice(char* path, int forceCD)
 	
 	// print error message on dosbox console
 	char buf[MAX_LINE_LENGTH];
-	snprintf(buf, MAX_LINE_LENGTH, "Could not load image file: %s\n", path);
+	snprintf(buf, MAX_LINE_LENGTH, "Could not load image file: %s\r\n", path);
 	Bit16u size = (Bit16u)strlen(buf);
 	DOS_WriteFile(STDOUT, (Bit8u*)buf, &size);
 	return false;
