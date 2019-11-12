@@ -20,6 +20,10 @@
 #ifndef DOSBOX_MIDI_H
 #define DOSBOX_MIDI_H
 
+#ifndef DOSBOX_DOSBOX_H
+#include "dosbox.h"
+#endif
+
 #ifndef DOSBOX_PROGRAMS_H
 #include "programs.h"
 #endif
@@ -27,7 +31,10 @@
 class MidiHandler {
 public:
 	MidiHandler();
-	virtual bool Open(const char * /*conf*/) { return true; };
+	virtual bool Open(const char * /*conf*/) { 
+		LOG_MSG("No working midi device found/selected! Please check your settings and/or compilation environment.");
+		return true; 
+	};
 	virtual void Close(void) {};
 	virtual void PlayMsg(Bit8u * /*msg*/) {};
 	virtual void PlaySysex(Bit8u * /*sysex*/,Bitu /*len*/) {};
