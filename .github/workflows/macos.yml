@@ -14,7 +14,7 @@ jobs:
       - name: Build
         run:  ./scripts/build.sh --compiler clang --lto
       - name: Summarize warnings
-        run:  python3 ./scripts/count-warnings.py 271 build.log
+        run:  python3 ./scripts/count-warnings.py 272 build.log
 
   build_macos_brew_gcc:
     name: GCC (Homebrew)
@@ -29,9 +29,9 @@ jobs:
       - name: Install dependencies
         run:  brew install $(./scripts/list-build-dependencies.sh -p brew --compiler-version ${{ matrix.compiler_version }})
       - name: Build
-        run:  echo ./scripts/build.sh --compiler-version ${{ matrix.compiler_version }} --lto
+        run:  ./scripts/build.sh --compiler-version ${{ matrix.compiler_version }} --lto
       - name: Summarize warnings
-        run:  echo python3 ./scripts/count-warnings.py -1 build.log
+        run:  python3 ./scripts/count-warnings.py -1 build.log
 
   build_macos_macports_gcc:
     name: GCC (MacPorts)
@@ -56,7 +56,7 @@ jobs:
           sudo port -q install $(./scripts/list-build-dependencies.sh -p macports --compiler-version ${{ matrix.compiler_version }})
 
       - name: Build
-        run:  echo ./scripts/build.sh --compiler-version mp-${{ matrix.compiler_version }} --bin-path /opt/local/bin
+        run:  ./scripts/build.sh --compiler-version mp-${{ matrix.compiler_version }} --bin-path /opt/local/bin
       - name: Summarize warnings
-        run:  echo python3 ./scripts/count-warnings.py -1 build.log
+        run:  python3 ./scripts/count-warnings.py -1 build.log
 
