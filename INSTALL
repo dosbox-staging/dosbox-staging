@@ -78,8 +78,8 @@ Some of them are:
 
 --disable-dynamic-x86
         disables the dynamic x86/x64 specific cpu core. Although it might be
-        be a bit unstable, it can greatly improve the speed of dosbox on x86
-        and x64 hosts.
+        a bit unstable, it can greatly improve the speed of dosbox on x86 and
+        x64 hosts.
         Please note that this option on x86/x64 will result in a different
         dynamic/recompiling cpu core being compiled then the default.
         For more information see the option --disable-dynrec
