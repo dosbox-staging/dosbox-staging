@@ -35,53 +35,41 @@ jobs:
           echo
           ./scripts/count-bugs.py 92 report/*/index.html
 
-  dynamic_clang8:
-    name: Clang-8 ${{ matrix.sanitizer }} analyzer
+  dynamic_matrix:
+    name: ${{ matrix.compiler }}-${{ matrix.compiler_version }} ${{ matrix.sanitizer }} analyzer
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        sanitizer: [usan, msan]
+        compiler: [Clang, GCC]
+        compiler_version: [8, 9]
+        sanitizer: [UASAN, USAN, MSAN, TSAN]
+        exclude:
+          - compiler: Clang
+            compiler_version: 9
+          - compiler: GCC
+            compiler_version: 8
+          - compiler: Clang
+            sanitizer: UASAN
+          - compiler: Clang
+            sanitizer: TSAN
+          - compiler: GCC
+            sanitizer: MSAN
+
     env:
-      LOG: clang-${{ matrix.sanitizer }}.log
+      LOG_PREFIX: ${{ matrix.compiler }}-${{ matrix.sanitizer }}
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
         run:  ./scripts/log-env.sh
       - run:  sudo apt update
       - name: Install dependencies
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler clang --compiler-version 8)
+        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler ${{ matrix.compiler }} --compiler-version ${{ matrix.compiler_version }})
       - name: Build
-        run:  ./scripts/build.sh --compiler clang --compiler-version 8 --build-type ${{ matrix.sanitizer }}
-
+        run:  ./scripts/build.sh --compiler ${{ matrix.compiler }} --compiler-version ${{ matrix.compiler_version }} --build-type ${{ matrix.sanitizer }}
       - name: Testcase 1. Enter-Exit
-        run:  (xvfb-run ./src/dosbox -c exit || true) | tee -a "${LOG}"
+        run:  (xvfb-run ./src/dosbox -c exit || true) | tee -a "${LOG_PREFIX}-TestCase-1.log"
 
       - uses: actions/upload-artifact@master
         with:
-          name: clang-${{ matrix.sanitizer }}.log
-          path: clang-${{ matrix.sanitizer }}.log
-
-  dynamic_gcc9:
-    name: GCC-9 ${{ matrix.sanitizer }} analyzer
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        sanitizer: [usan, uasan, tsan]
-    env:
-      LOG: gcc-${{ matrix.sanitizer }}.log
-    steps:
-      - uses: actions/checkout@v1
-      - name: Log environment
-        run:  ./scripts/log-env.sh
-      - run:  sudo apt update
-      - name: Install dependencies
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler-version 9)
-      - name: Build
-        run:  ./scripts/build.sh --compiler-version 9 --build-type ${{ matrix.sanitizer }}
-      - name: Testcase 1. Enter-Exit
-        run:  (xvfb-run ./src/dosbox -c exit || true) | tee -a "${LOG}"
-
-      - uses: actions/upload-artifact@master
-        with:
-          name: gcc-${{ matrix.sanitizer }}.log
-          path: gcc-${{ matrix.sanitizer }}.log
+          name: ${{ matrix.compiler }}-${{ matrix.sanitizer }}-TestCase-1.log
+          path: ${{ matrix.compiler }}-${{ matrix.sanitizer }}-TestCase-1.log

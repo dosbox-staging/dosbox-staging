@@ -66,9 +66,9 @@ function usage() {
 function parse_args() {
 	set_defaults
 	while [[ "${#}" -gt 0 ]]; do case ${1} in
-		-b|--build-type)        BUILD_TYPE="${2}";      shift;shift;;
+		-b|--build-type)        BUILD_TYPE="${2,,}";    shift;shift;;
 		-i|--bit-depth)         BITS="${2}";            shift;shift;;
-		-c|--compiler)          COMPILER="${2}";        shift;shift;;
+		-c|--compiler)          COMPILER="${2,,}";      shift;shift;;
 		-d|--fdo)               FDO="true";             shift;;
 		-f|--force-system)      SYSTEM="${2}";          shift;shift;;
 		-l|--lto)               LTO="true";             shift;;
@@ -84,15 +84,16 @@ function parse_args() {
 }
 
 function set_defaults() {
-	# variables that are directly set via user arguments
+
+	# variables that are set directly from user arguments
 	BITS="64"
+	BUILD_TYPE="release"
 	CLEAN="false"
 	COMPILER="gcc"
 	COMPILER_VERSION="unset"
 	FDO="false"
 	LTO="false"
 	BIN_PATH="unset"
-	BUILD_TYPE="release"
 	SRC_PATH="unset"
 	SYSTEM="auto"
 	THREADS="auto"
@@ -100,15 +101,15 @@ function set_defaults() {
 	# derived variables with initial values
 	EXECUTABLE="unset"
 	VERSION_POSTFIX=""
-	MACHINE="unset"
 	CONFIGURE_OPTIONS=("--enable-core-inline")
 	CFLAGS_ARRAY=("-Wall" "-pipe")
 	LDFLAGS_ARRAY=("")
 	LIBS_ARRAY=("")
 	CALL_CACHE=("")
+	MACHINE="unset"
 
 	# read-only strings
-	readonly SCRIPT_VERSION="1.0"
+	readonly SCRIPT_VERSION="1.1"
 	readonly REPO_URL="https://github.com/dreamer/dosbox-staging"
 
 	# environment variables passed onto the build
@@ -206,11 +207,11 @@ function print_version() {
 function system() {
 	if   [[ "${MACHINE}" == "unset" ]]; then MACHINE="$(uname -m)"; fi
 	if   [[ "${SYSTEM}" == "auto" ]]; then SYSTEM="$(uname -s)"; fi
-	case "$SYSTEM" in
-		Darwin|macos) SYSTEM="macos" ;;
-		MSYS*|msys2)  SYSTEM="msys2" ;;
-		Linux|linux)  SYSTEM="linux" ;;
-		*)            error "Your system, $SYSTEM, is not currently supported" ;;
+	case "${SYSTEM,,}" in
+		Darwin|macos) SYSTEM="macos";;
+		msys*)        SYSTEM="msys2";;
+		linux)        SYSTEM="linux";;
+		*)            error "Your system, ${SYSTEM}, is not currently supported";;
 	esac
 }
 

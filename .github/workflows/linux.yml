@@ -1,58 +1,42 @@
 name: Ubuntu builds
 on: push
+env:
+  MAX_WARNINGS_GCC_6_Debug:      -1
+  MAX_WARNINGS_GCC_6_Release:    -1
+  MAX_WARNINGS_GCC_7_Debug:      -1
+  MAX_WARNINGS_GCC_7_Release:    -1
+  MAX_WARNINGS_GCC_8_Debug:      -1
+  MAX_WARNINGS_GCC_8_Release:    -1
+  MAX_WARNINGS_GCC_9_Debug:      -1
+  MAX_WARNINGS_GCC_9_Release:   376
+  MAX_WARNINGS_Clang_6_Debug:    -1
+  MAX_WARNINGS_Clang_6_Release:  -1
+  MAX_WARNINGS_Clang_7_Debug:    -1
+  MAX_WARNINGS_Clang_7_Release:  -1
+  MAX_WARNINGS_Clang_8_Debug:    -1
+  MAX_WARNINGS_Clang_8_Release: 220
+
 jobs:
 
-  build_clang_8:
-    name: Clang-8 (release)
+  build_matrix:
+    name: ${{ matrix.compiler }}-${{ matrix.compiler_version }} (${{ matrix.build_type }})
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Log environment
-        run:  ./scripts/log-env.sh
-      - run:  sudo apt-get update
-      - name: Install dependencies
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler clang --compiler-version 8)
-      - name: Build
-        run:  ./scripts/build.sh --compiler clang --compiler-version 8 --lto
-      - name: Summarize warnings
-        run:  ./scripts/count-warnings.py 220 build.log
-
-  build_gcc_9:
-    name: GCC-9 (release)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Log environment
-        run:  ./scripts/log-env.sh
-      - run:  sudo apt-get update
-      - name: Install dependencies
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler-version 9)
-      - name: Build
-        run:  ./scripts/build.sh --compiler-version 9 --lto
-      - name: Summarize warnings
-        run:  ./scripts/count-warnings.py 376 build.log
-
-  build_gcc_matrix:
-    name: GCC (${{ matrix.build_type }}, ${{ matrix.os_version_major }}.04)
-    runs-on: ubuntu-${{ matrix.os_version_major }}.04
     strategy:
       matrix:
-        os_version_major: [16, 18]
-        build_type:       [debug, release]
-    env:
-      max_warnings_ubuntu_16_gcc_debug:   329
-      max_warnings_ubuntu_18_gcc_debug:   336
-      max_warnings_ubuntu_16_gcc_release: 404
-      max_warnings_ubuntu_18_gcc_release: 385
+        compiler: [Clang, GCC]
+        compiler_version: [6, 7, 8, 9]
+        build_type: [Debug, Release]
+        exclude:
+          - compiler: Clang
+            compiler_version: 9
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
         run:  ./scripts/log-env.sh
       - run:  sudo apt-get update
       - name: Install dependencies
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt)
+        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler ${{ matrix.compiler }} --compiler-version ${{ matrix.compiler_version }})
       - name: Build
-        run: ./scripts/build.sh --build-type ${{ matrix.build_type}}
+        run:  ./scripts/build.sh --compiler ${{ matrix.compiler }} --compiler-version ${{ matrix.compiler_version }} --build-type ${{ matrix.build_type }}
       - name: Summarize warnings
-        run:  ./scripts/count-warnings.py $max_warnings_ubuntu_${{ matrix.os_version_major }}_gcc_${{ matrix.build_type }} build.log
-
+        run:  ./scripts/count-warnings.py $MAX_WARNINGS_${{ matrix.compiler }}_${{ matrix.compiler_version }}_${{ matrix.build_type }} build.log

@@ -1,5 +1,15 @@
 name: Windows builds
 on: push
+env:
+  MAX_WARNINGS_GCC_32bit_Debug:      29
+  MAX_WARNINGS_GCC_64bit_Debug:      48
+  MAX_WARNINGS_GCC_32bit_Release:    42
+  MAX_WARNINGS_GCC_64bit_Release:    61
+  MAX_WARNINGS_Clang_32bit_Debug:   119
+  MAX_WARNINGS_Clang_64bit_Debug:   199
+  MAX_WARNINGS_Clang_32bit_Release: 119
+  MAX_WARNINGS_Clang_64bit_Release: 199
+
 jobs:
 
   build_msvc_matrix:
@@ -32,20 +42,11 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        compiler:   [gcc, clang]
+        compiler:   [GCC, Clang]
         bits:       [32, 64]
-        build_type: [debug, release]
+        build_type: [Debug, Release]
     env:
       CHERE_INVOKING: yes
-      max_warnings_gcc_32bit_debug:      29
-      max_warnings_gcc_32bit_release:    42
-      max_warnings_gcc_64bit_debug:      48
-      max_warnings_gcc_64bit_release:    61
-      max_warnings_clang_32bit_debug:   119
-      max_warnings_clang_32bit_release: 119
-      max_warnings_clang_64bit_debug:   199
-      max_warnings_clang_64bit_release: 199
-
     steps:
       - uses:  actions/checkout@v1
       - name:  Install msys2 environment
@@ -60,5 +61,5 @@ jobs:
         shell: python scripts\msys-bash.py {0}
         run:   ./scripts/build.sh --compiler ${{ matrix.compiler }} --bit-depth ${{ matrix.bits }} --build-type ${{ matrix.build_type }} --bin-path /mingw${{ matrix.bits }}/bin
       - name:  Summarize warnings
-        run:   .\scripts\count-warnings.py $env:max_warnings_${{ matrix.compiler }}_${{ matrix.bits }}bit_${{ matrix.build_type }} build.log
+        run:   .\scripts\count-warnings.py $env:MAX_WARNINGS_${{ matrix.compiler }}_${{ matrix.bits }}bit_${{ matrix.build_type }} build.log
 

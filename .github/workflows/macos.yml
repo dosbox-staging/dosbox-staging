@@ -1,10 +1,19 @@
 name: macOS builds
 on: push
+env:
+  MAX_WARNINGS_GCC_9_Debug:      -1
+  MAX_WARNINGS_GCC_9_Release:   363
+  MAX_WARNINGS_Clang_8_Debug:    -1
+  MAX_WARNINGS_Clang_8_Release: 272
+
 jobs:
 
-  build_macos_clang_xcode:
-    name: Clang (release, Xcode)
+  build_macos_clang_xcode_matrix:
+    name: Clang (${{ matrix.build_type }}, Xcode)
     runs-on: macos-latest
+    strategy:
+      matrix:
+        build_type: [Debug, Release]
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
@@ -12,59 +21,37 @@ jobs:
       - name: Install dependencies
         run:  brew install $(./scripts/list-build-dependencies.sh -p brew --compiler clang)
       - name: Build
-        run:  ./scripts/build.sh --compiler clang --lto
+        run:  ./scripts/build.sh --compiler clang --build-type ${{ matrix.build_type }}
       - name: Summarize warnings
-        run:  python3 ./scripts/count-warnings.py 272 build.log
+        run:  python3 ./scripts/count-warnings.py $MAX_WARNINGS_Clang_8_${{ matrix.build_type }} build.log
 
-  build_macos_gcc_brew:
-    name: GCC-${{ matrix.compiler_version }} (release, Brew)
+  build_macos_gcc_matrix:
+    name: GCC-${{ matrix.compiler_version }} (${{ matrix.build_type }}, ${{ matrix.package_manager }})
     runs-on: macos-latest
     strategy:
       matrix:
         compiler_version: [9]
-        # gcc 6, 7, 8 builds fail under Darwin 19 due to broken Apple SDK headers
-    env:
-      max_warnings_gcc_9: 363
+        build_type: [Debug, Release]
+        package_manager: [Brew, MacPorts]
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - name: Install dependencies
-        run:  brew install $(./scripts/list-build-dependencies.sh -p brew --compiler-version ${{ matrix.compiler_version }})
-      - name: Build
-        run:  ./scripts/build.sh --compiler-version ${{ matrix.compiler_version }} --lto
-      - name: Summarize warnings
-        run:  python3 ./scripts/count-warnings.py $max_warnings_gcc_${{ matrix.compiler_version }} build.log
-
-  build_macos_gcc_macports:
-    name: GCC-${{ matrix.compiler_version }} (release, MacPorts)
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        compiler_version: [9]
-        # MacPorts gcc 5, 6, 7, 8 fail under Darwin 19 due to install issues https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90835
-    env:
-      max_warnings_gcc_9: 363
-    steps:
-      - uses: actions/checkout@v1
-      - name: Log environment
-        run:  ./scripts/log-env.sh
-      - name: Install MacPorts
+      - name: Install dependencies using ${{ matrix.package_manager }}
+        if: matrix.package_manager == 'MacPorts'
         run: |
+          PATH="/opt/local/sbin:/opt/local/bin:${PATH}"
           git clone --quiet --depth=1 https://github.com/macports/macports-base.git
           cd macports-base
           ./configure
           make -j"$(sysctl -n hw.physicalcpu || echo 4)"
           sudo make install
-
-      - name: Install dependencies
-        run: |
-          PATH="/opt/local/sbin:/opt/local/bin:${PATH}"
           sudo port -q selfupdate || true
-          sudo port -q install $(./scripts/list-build-dependencies.sh -p macports --compiler-version ${{ matrix.compiler_version }})
-
+          sudo port -q install $(./scripts/list-build-dependencies.sh -p ${{ matrix.package_manager }} --compiler-version ${{ matrix.compiler_version }})
+      - name: Install dependencies using ${{ matrix.package_manager }}
+        if: matrix.package_manager == 'Brew'
+        run:  brew install $(./scripts/list-build-dependencies.sh -p ${{ matrix.package_manager }} --compiler-version ${{ matrix.compiler_version }})
       - name: Build
-        run:  ./scripts/build.sh --compiler-version mp-${{ matrix.compiler_version }} --bin-path /opt/local/bin
+        run:  ./scripts/build.sh --compiler-version ${{ matrix.compiler_version }} --build-type ${{ matrix.build_type }}
       - name: Summarize warnings
-        run:  python3 ./scripts/count-warnings.py $max_warnings_gcc_${{ matrix.compiler_version }} build.log
-
+        run:  python3 ./scripts/count-warnings.py $MAX_WARNINGS_GCC_${{ matrix.compiler_version }}_${{ matrix.build_type }} build.log
