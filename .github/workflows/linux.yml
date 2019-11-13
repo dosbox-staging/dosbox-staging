@@ -1,19 +1,17 @@
 name: Ubuntu builds
 on: push
 env:
-  MAX_WARNINGS_GCC_6_Debug:      -1
-  MAX_WARNINGS_GCC_6_Release:    -1
-  MAX_WARNINGS_GCC_7_Debug:      -1
-  MAX_WARNINGS_GCC_7_Release:    -1
-  MAX_WARNINGS_GCC_8_Debug:      -1
-  MAX_WARNINGS_GCC_8_Release:    -1
-  MAX_WARNINGS_GCC_9_Debug:      -1
-  MAX_WARNINGS_GCC_9_Release:   376
-  MAX_WARNINGS_Clang_6_Debug:    -1
-  MAX_WARNINGS_Clang_6_Release:  -1
-  MAX_WARNINGS_Clang_7_Debug:    -1
-  MAX_WARNINGS_Clang_7_Release:  -1
-  MAX_WARNINGS_Clang_8_Debug:    -1
+  MAX_WARNINGS_GCC_6_Debug:     334
+  MAX_WARNINGS_GCC_6_Release:   703
+  MAX_WARNINGS_GCC_7_Debug:     336
+  MAX_WARNINGS_GCC_7_Release:   371
+  MAX_WARNINGS_GCC_8_Debug:     336
+  MAX_WARNINGS_GCC_8_Release:   372
+  MAX_WARNINGS_GCC_9_Debug:     359
+  MAX_WARNINGS_GCC_9_Release:   400
+  MAX_WARNINGS_Clang_7_Debug:   220
+  MAX_WARNINGS_Clang_7_Release: 220
+  MAX_WARNINGS_Clang_8_Debug:   220
   MAX_WARNINGS_Clang_8_Release: 220
 
 jobs:

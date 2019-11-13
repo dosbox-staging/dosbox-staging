@@ -211,12 +211,11 @@ function print_version() {
 function system() {
 	if   [[ "${MACHINE}" == "unset" ]]; then MACHINE="$(uname -m)"; fi
 	if   [[ "${SYSTEM}" == "auto" ]]; then SYSTEM="$(uname -s)"; fi
-	SYSTEM=$(lower "${SYSTEM}")
-	case "${SYSTEM}" in
-		Darwin|macos) SYSTEM="macos";;
-		msys*)        SYSTEM="msys2";;
-		linux*)       SYSTEM="linux";;
-		*)            error "Your system, ${SYSTEM}, is not currently supported";;
+	case $(lower "${SYSTEM}") in
+		darwin*|macos*) SYSTEM="macos";;
+		msys*)          SYSTEM="msys2";;
+		linux*)         SYSTEM="linux";;
+		*)              error "Your system, ${SYSTEM}, is not currently supported";;
 	esac
 }
 
