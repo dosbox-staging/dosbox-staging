@@ -33,7 +33,7 @@ jobs:
         run:  ./scripts/count-warnings.py 376 build.log
 
   build_gcc_matrix:
-    name: GCC ({{ matrix.build_type}}, ubuntu-${{ matrix.os_version_major }}.04)
+    name: GCC (${{ matrix.build_type}}, ubuntu-${{ matrix.os_version_major }}.04)
     runs-on: ubuntu-${{ matrix.os_version_major }}.04
     strategy:
       matrix:
@@ -50,7 +50,7 @@ jobs:
       - name: Install dependencies
         run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt)
       - name: Build
-        run: ./scripts/build.sh --build-type {{ matrix.build_type}}
+        run: ./scripts/build.sh --build-type ${{ matrix.build_type}}
       - name: Summarize warnings
         run:  ./scripts/count-warnings.py $max_warnings_ubuntu_${{ matrix.os_version_major }} build.log
 

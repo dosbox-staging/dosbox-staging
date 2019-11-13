@@ -325,8 +325,10 @@ function build_type_flags() {
 			CFLAGS_ARRAY+=("-Ofast" "-ffunction-sections" "-fdata-sections")
 			if [[ "${SYSTEM}" != "macos" ]]; then LDFLAGS_ARRAY+=("-Wl,--as-needed"); fi
 		else # Clang
-			# https://developer.apple.com/library/archive/documentation/Performance/Conceptual/CodeFootprint/Articles/CompilerOptions.html
 			CFLAGS_ARRAY+=("-Os")
+			# -Os is called _fastest, smallest_ under Clang and is the recommended flag for release builds
+			#  - https://developer.apple.com/library/archive/documentation/Performance/Conceptual/CodeFootprint/Articles/CompilerOptions.html
+			#  - https://dmtopolog.com/code-optimization-for-swift-and-objective-c
 		fi
 
 	##
