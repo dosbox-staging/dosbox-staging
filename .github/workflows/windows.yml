@@ -3,7 +3,7 @@ on: push
 jobs:
 
   build_msvc_matrix:
-    name: MSVC x86 (${{ matrix.build_type }})
+    name: MSVC 32-bit (${{ matrix.build_type }})
     runs-on: windows-latest
     strategy:
       matrix:
@@ -28,7 +28,7 @@ jobs:
           MSBuild -m dosbox.sln -p:Configuration=${{ matrix.build_type }}
 
   build_msys2_matrix:
-    name: ${{ matrix.compiler }} (${{ matrix.build_type }}) with MSYS2-${{ matrix.bits }}-bit
+    name: ${{ matrix.compiler }} ${{ matrix.bits }}-bit (${{ matrix.build_type }}, MSYS2)
     runs-on: windows-latest
     strategy:
       matrix:
