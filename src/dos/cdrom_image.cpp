@@ -709,7 +709,8 @@ bool CDROM_Interface_Image::CanReadPVD(TrackFile *file, int sectorSize, bool mod
 			(pvd[8] == 1 && !strncmp((char*)(&pvd[9]), "CDROM", 5) && pvd[14] == 1));
 }
 
-#if defined(WIN32)
+#if defined(WIN32) && defined(_MSC_VER)
+// dirname() is missing for VisualSudio, but available under MinGW GCC and Clang
 static string dirname(char * file) {
 	char * sep = strrchr(file, '\\');
 	if (sep == nullptr)

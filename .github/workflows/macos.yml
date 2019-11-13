@@ -40,18 +40,17 @@ jobs:
       - name: Install ${{ matrix.package_manager }}
         if: matrix.package_manager == 'MacPorts'
         run: |
-          PATH="/opt/local/sbin:/opt/local/bin:${PATH}"
           git clone --quiet --depth=1 https://github.com/macports/macports-base.git
           (cd macports-base
           ./configure
           make -j"$(sysctl -n hw.physicalcpu || echo 4)"
           sudo make install)
-          sudo port -q selfupdate || true
+          sudo /opt/local/bin/port -q selfupdate || true
       - name: Install dependencies using ${{ matrix.package_manager }}
         run: >
           eval $([[ "${{ matrix.package_manager }}" == "Brew" ]]
           && echo brew
-          || echo sudo /opt/local/sbin/port -q) install
+          || echo sudo /opt/local/bin/port -q) install
           $(./scripts/list-build-dependencies.sh -p ${{ matrix.package_manager }} --compiler-version ${{ matrix.compiler_version }})
       - name: Build
         run: |
