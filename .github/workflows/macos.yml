@@ -1,7 +1,7 @@
 name: macOS builds
 on: push
 env:
-  MAX_WARNINGS_GCC_9_Debug:      -1
+  MAX_WARNINGS_GCC_9_Debug:     331
   MAX_WARNINGS_GCC_9_Release:   363
   MAX_WARNINGS_Clang_8_Debug:   272
   MAX_WARNINGS_Clang_8_Release: 272
