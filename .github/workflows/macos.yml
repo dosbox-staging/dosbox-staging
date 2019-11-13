@@ -31,8 +31,8 @@ jobs:
     strategy:
       matrix:
         compiler_version: [9]
-        build_type: [Debug, Release]
-        package_manager: [Brew, MacPorts]
+        package_manager:  [Brew, MacPorts]
+        build_type:       [Debug, Release]
     steps:
       - uses: actions/checkout@v1
       - name: Log environment

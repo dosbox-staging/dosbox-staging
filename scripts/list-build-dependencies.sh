@@ -51,6 +51,10 @@ function usage() {
 	exit 1
 }
 
+function lower() {
+	echo "$*" | tr '[:upper:]' '[:lower:]'
+}
+
 function defaults() {
 	BITS="64"
 	COMPILER="gcc"
@@ -64,13 +68,13 @@ function defaults() {
 function parse_args() {
 	defaults
 	while [[ "${#}" -gt 0 ]]; do case ${1} in
-		-b|--bit-depth)        BITS="${2}";              shift;shift;;
-		-c|--compiler)         COMPILER="${2,,}";        shift;shift;;
-		-p|--package-manager)  PACKAGE_MANAGER="${2,,}"; shift;shift;;
-		-u|--compiler-version) COMPILER_VERSION="${2}";  shift;shift;;
-		-v|--version)          print_version;            shift;;
-		-h|--help)             usage "Show usage";       shift;;
-		*) usage "Unknown parameter: ${1}";              shift;shift;;
+		-b|--bit-depth)        BITS="${2}";                     shift;shift;;
+		-c|--compiler)         COMPILER=$(lower "${2}");        shift;shift;;
+		-p|--package-manager)  PACKAGE_MANAGER=$(lower "${2}"); shift;shift;;
+		-u|--compiler-version) COMPILER_VERSION="${2}";         shift;shift;;
+		-v|--version)          print_version;                   shift;;
+		-h|--help)             usage "Show usage";              shift;;
+		*) usage "Unknown parameter: ${1}";                     shift;shift;;
 	esac; done
 
 	# Check mandatory arguments

@@ -63,23 +63,27 @@ function usage() {
 	exit 1
 }
 
+function lower() {
+    echo "$*" | tr '[:upper:]' '[:lower:]'
+}
+
 function parse_args() {
 	set_defaults
 	while [[ "${#}" -gt 0 ]]; do case ${1} in
-		-b|--build-type)        BUILD_TYPE="${2,,}";    shift;shift;;
-		-i|--bit-depth)         BITS="${2}";            shift;shift;;
-		-c|--compiler)          COMPILER="${2,,}";      shift;shift;;
-		-d|--fdo)               FDO="true";             shift;;
-		-f|--force-system)      SYSTEM="${2}";          shift;shift;;
-		-l|--lto)               LTO="true";             shift;;
-		-p|--bin-path)          BIN_PATH="${2}";        shift;shift;;
-		-u|--compiler-version)  COMPILER_VERSION="${2}";shift;shift;;
-		-s|--src-path)          SRC_PATH="${2}";        shift;shift;;
-		-t|--threads)           THREADS="${2}";         shift;shift;;
-		-v|--version)           print_version;          shift;;
-		-x|--clean)             CLEAN="true";           shift;;
-		-h|--help)              usage "Show usage";     shift;;
-		*) usage "Unknown parameter: ${1}";             shift;shift;;
+		-b|--build-type)        BUILD_TYPE=$(lower "${2}"); shift;shift;;
+		-i|--bit-depth)         BITS="${2}";                shift;shift;;
+		-c|--compiler)          COMPILER=$(lower "${2}");   shift;shift;;
+		-d|--fdo)               FDO="true";                 shift;;
+		-f|--force-system)      SYSTEM="${2}";              shift;shift;;
+		-l|--lto)               LTO="true";                 shift;;
+		-p|--bin-path)          BIN_PATH="${2}";            shift;shift;;
+		-u|--compiler-version)  COMPILER_VERSION="${2}";    shift;shift;;
+		-s|--src-path)          SRC_PATH="${2}";            shift;shift;;
+		-t|--threads)           THREADS="${2}";             shift;shift;;
+		-v|--version)           print_version;              shift;;
+		-x|--clean)             CLEAN="true";               shift;;
+		-h|--help)              usage "Show usage";         shift;;
+		*) usage "Unknown parameter: ${1}";                 shift;shift;;
 	esac; done
 }
 
@@ -207,7 +211,7 @@ function print_version() {
 function system() {
 	if   [[ "${MACHINE}" == "unset" ]]; then MACHINE="$(uname -m)"; fi
 	if   [[ "${SYSTEM}" == "auto" ]]; then SYSTEM="$(uname -s)"; fi
-	case "${SYSTEM,,}" in
+	case $(lower "${SYSTEM}") in
 		Darwin|macos) SYSTEM="macos";;
 		msys*)        SYSTEM="msys2";;
 		linux)        SYSTEM="linux";;

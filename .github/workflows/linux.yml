@@ -28,6 +28,8 @@ jobs:
         build_type: [Debug, Release]
         exclude:
           - compiler: Clang
+            compiler_version: 6
+          - compiler: Clang
             compiler_version: 9
     steps:
       - uses: actions/checkout@v1
