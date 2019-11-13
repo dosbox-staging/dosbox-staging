@@ -33,10 +33,6 @@ jobs:
         compiler_version: [9]
         package_manager:  [Brew, MacPorts]
         build_type:       [Debug, Release]
-        compiler_prefix:  ''
-        include:
-          - package_manager: MacPorts
-            compiler_prefix: mp-
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
@@ -59,6 +55,7 @@ jobs:
       - name: Build
         run: |
           PATH="/opt/local/sbin:/opt/local/bin:${PATH}"
-          ./scripts/build.sh --compiler-version ${{ matrix.compiler_prefix }}${{ matrix.compiler_version }} --build-type ${{ matrix.build_type }}
+          CC_PREFIX=$([[ "${{ matrix.package_manager }}" == "MacPorts" ]] && echo "mp-" || true)
+          ./scripts/build.sh --compiler-version ${CC_PREFIX}${{ matrix.compiler_version }} --build-type ${{ matrix.build_type }}
       - name: Summarize warnings
         run:  python3 ./scripts/count-warnings.py $MAX_WARNINGS_GCC_${{ matrix.compiler_version }}_${{ matrix.build_type }} build.log
