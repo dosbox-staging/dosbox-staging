@@ -21,7 +21,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        compiler_version: [5, 6, 7, 8, 9]
+        compiler_version: [6, 7, 8, 9]
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
@@ -38,7 +38,8 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        compiler_version: [5, 6, 7, 8, 9]
+        compiler_version: [9]
+        # MacPorts gcc 5, 6, 7, 8 under Darwin 19 are currently broken: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90835
     steps:
       - uses: actions/checkout@v1
       - name: Install MacPorts
