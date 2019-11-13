@@ -3,7 +3,7 @@ on: push
 jobs:
 
   build_macos_clang_xcode:
-    name: Clang (release, Xcode)
+    name: clang (release, xcode)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
@@ -17,7 +17,7 @@ jobs:
         run:  python3 ./scripts/count-warnings.py 272 build.log
 
   build_macos_gcc_brew:
-    name: GCC-${{ matrix.compiler_version }} (release, Brew)
+    name: gcc-${{ matrix.compiler_version }} (release, brew)
     runs-on: macos-latest
     strategy:
       matrix:
@@ -37,7 +37,7 @@ jobs:
         run:  python3 ./scripts/count-warnings.py $max_warnings_gcc_${{ matrix.compiler_version }} build.log
 
   build_macos_gcc_macports:
-    name: GCC-${{ matrix.compiler_version }} (release, MacPorts)
+    name: gcc-${{ matrix.compiler_version }} (release, macports)
     runs-on: macos-latest
     strategy:
       matrix:

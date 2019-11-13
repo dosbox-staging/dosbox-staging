@@ -3,7 +3,7 @@ on: push
 jobs:
 
   build_clang_8:
-    name: Clang-8 (release)
+    name: clang-8 (release)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -18,7 +18,7 @@ jobs:
         run:  ./scripts/count-warnings.py 220 build.log
 
   build_gcc_9:
-    name: GCC-9 (release)
+    name: gcc-9 (release)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -33,7 +33,7 @@ jobs:
         run:  ./scripts/count-warnings.py 376 build.log
 
   build_gcc_matrix:
-    name: GCC (${{ matrix.build_type }}, ${{ matrix.os_version_major }}.04)
+    name: gcc (${{ matrix.build_type }}, ${{ matrix.os_version_major }}.04)
     runs-on: ubuntu-${{ matrix.os_version_major }}.04
     strategy:
       matrix:

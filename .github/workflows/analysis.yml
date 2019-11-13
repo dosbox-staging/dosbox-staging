@@ -3,7 +3,7 @@ on: push
 jobs:
 
   static_clang_analyser:
-    name: Clang static analyzer
+    name: clang static analyzer
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -36,7 +36,7 @@ jobs:
           ./scripts/count-bugs.py 92 report/*/index.html
 
   dynamic_clang8:
-    name: Clang-8 ${{ matrix.sanitizer }} analyzer
+    name: clang-8 ${{ matrix.sanitizer }} analyzer
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -62,7 +62,7 @@ jobs:
           path: clang-${{ matrix.sanitizer }}.log
 
   dynamic_gcc9:
-    name: GCC-9 ${{ matrix.sanitizer }} analyzer
+    name: gcc-9 ${{ matrix.sanitizer }} analyzer
     runs-on: ubuntu-latest
     strategy:
       matrix:
