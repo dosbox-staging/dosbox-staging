@@ -4,7 +4,7 @@ jobs:
 
   static_clang_analyser:
     name: Clang static analyzer
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
@@ -36,8 +36,8 @@ jobs:
           ./scripts/count-bugs.py 92 report/*/index.html
 
   dynamic_clang8:
-    name: Clang analyzer
-    runs-on: ubuntu-18.04
+    name: Clang-8 ${{ matrix.sanitizer }} analyzer
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         sanitizer: [usan, msan]
@@ -62,8 +62,8 @@ jobs:
           path: clang-${{ matrix.sanitizer }}.log
 
   dynamic_gcc9:
-    name: GCC analyzer
-    runs-on: ubuntu-18.04
+    name: GCC-9 ${{ matrix.sanitizer }} analyzer
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         sanitizer: [usan, uasan, tsan]

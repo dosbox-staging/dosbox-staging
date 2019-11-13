@@ -3,7 +3,7 @@ on: push
 jobs:
 
   build_macos_xcode_clang:
-    name: Xcode Clang
+    name: Clang (release) with Xcode
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
@@ -17,11 +17,11 @@ jobs:
         run:  python3 ./scripts/count-warnings.py 272 build.log
 
   build_macos_brew_gcc:
-    name: Homebrew GCC
+    name: GCC-${{ matrix.compiler_version }} (release) with HomeBrew
     runs-on: macos-latest
     strategy:
       matrix:
-        compiler_version: [8, 9]
+        compiler_version: [9]
         # Brew gcc 6, 7, 8 builds fail under Darwin 19 due to broken Apple SDK headers
     env:
       max_warnings_gcc_8: -1
@@ -38,7 +38,7 @@ jobs:
         run:  python3 ./scripts/count-warnings.py $max_warnings_gcc_${{ matrix.compiler_version }} build.log
 
   build_macos_macports_gcc:
-    name: MacPorts GCC
+    name: GCC-${{ matrix.compiler_version }} (release) with MacPorts
     runs-on: macos-latest
     strategy:
       matrix:
