@@ -37,21 +37,25 @@ jobs:
       - uses: actions/checkout@v1
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - name: Install dependencies using ${{ matrix.package_manager }}
+      - name: Install ${{ matrix.package_manager }}
         if: matrix.package_manager == 'MacPorts'
         run: |
           PATH="/opt/local/sbin:/opt/local/bin:${PATH}"
           git clone --quiet --depth=1 https://github.com/macports/macports-base.git
-          cd macports-base
+          (cd macports-base
           ./configure
           make -j"$(sysctl -n hw.physicalcpu || echo 4)"
-          sudo make install
+          sudo make install)
           sudo port -q selfupdate || true
-          sudo port -q install $(./scripts/list-build-dependencies.sh -p ${{ matrix.package_manager }} --compiler-version ${{ matrix.compiler_version }})
       - name: Install dependencies using ${{ matrix.package_manager }}
-        if: matrix.package_manager == 'Brew'
-        run:  brew install $(./scripts/list-build-dependencies.sh -p ${{ matrix.package_manager }} --compiler-version ${{ matrix.compiler_version }})
+        run: >
+          eval $([[ "${{ matrix.package_manager }}" == "Brew" ]]
+          && echo brew
+          || echo sudo /opt/local/sbin/port -q) install
+          $(./scripts/list-build-dependencies.sh -p ${{ matrix.package_manager }} --compiler-version ${{ matrix.compiler_version }})
       - name: Build
-        run:  ./scripts/build.sh --compiler-version ${{ matrix.compiler_version }} --build-type ${{ matrix.build_type }}
+        run: |
+          PATH="/opt/local/sbin:/opt/local/bin:${PATH}"
+          ./scripts/build.sh --compiler-version ${{ matrix.compiler_version }} --build-type ${{ matrix.build_type }}
       - name: Summarize warnings
         run:  python3 ./scripts/count-warnings.py $MAX_WARNINGS_GCC_${{ matrix.compiler_version }}_${{ matrix.build_type }} build.log
