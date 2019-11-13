@@ -6,7 +6,7 @@
 #  SPDX-License-Identifier: GPL-2.0-or-later
 #
 #  This script builds DOSBox within supported environments including
-#  MacOS, Ubuntu Linux, and MSYS2 using specified compilers and release types.
+#  MacOS, Ubuntu Linux, and MSYS2 using specified compilers and build types.
 #
 #  For automation without prompts, Windows should have User Account Control (UAC)
 #  disabled, which matches the configuration of GitHub'Windows VMs, described here:
@@ -30,26 +30,26 @@ function usage() {
 	fi
 	local script
 	script=$(basename "${INVOCATION}")
-	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-d] [-l]"
-	echo "                 [-p /custom/bin] [-u #] [-r fast|small|debug|profile|<sanitizer-type>]"
+	echo "Usage: ${script} [-b release|debug|profile|*san] [-c gcc|clang] [-d] [-f linux|macos|msys2]"
+	echo "                 [-i 32|64] [-l] [-p /custom/bin] [-u #] [-b release|debug|profile|*san]"
 	echo "                 [-s /your/src] [-t #]"
 	echo ""
-	echo "  FLAG                     Description                                           Default"
-	echo "  -----------------------  ----------------------------------------------------- -------"
-	echo "  -b, --bit-depth         Build a 64 or 32 bit binary                            [$(print_var "${BITS}")]"
-	echo "  -c, --compiler          Choose either gcc or clang                             [$(print_var "${COMPILER}")]"
-	echo "  -f, --force-system      Force the system to be linux, macos, or msys2          [$(print_var "${SYSTEM}")]"
+	echo "  FLAG                    Description                                            Default"
+	echo "  ----------------------- -----------------------------------------------------  -------"
+	echo "  -b, --build-type        Choose a build-type: release, debug, profile, or ...   [$(print_var "${BUILD_TYPE}")]"
+	echo "                            usan:  detect undefined behavior and integer overflows"
+	echo "                            asan:  detect out of bounds use, double free, and leaks"
+	echo "                            msan:  detect unitialized reads and use-after-destruction"
+	echo "                            uasan: detect both undefined (usan) and address (asan) "
+	echo "                            tsan:  detect data-race threading bugs"
+	echo ""
+	echo "  -c, --compiler          Choose to compile with gcc or clang                    [$(print_var "${COMPILER}")]"
 	echo "  -d, --fdo               Use Feedback-Directed Optimization (FDO) data          [$(print_var "${FDO}")]"
+	echo "  -f, --force-system      Force the system to be linux, macos, or msys2          [$(print_var "${SYSTEM}")]"
+	echo "  -i, --bit-depth         Choose to build a 64 or 32 bit binary                  [$(print_var "${BITS}")]"
 	echo "  -l, --lto               Perform Link-Time-Optimizations (LTO)                  [$(print_var "${LTO}")]"
 	echo "  -p, --bin-path          Prepend PATH with the one provided to find executables [$(print_var "${BIN_PATH}")]"
 	echo "  -u, --compiler-version  Customize the compiler postfix (ie: 9 -> gcc-9)        [$(print_var "${COMPILER_VERSION}")]"
-	echo ""
-	echo "  -r, --release           One of: fast, small, debug, profile, or a sanitizer:   [$(print_var "${RELEASE}")]"
-	echo "                            usan:  detect undefined behavior and integer overflows"
-	echo "                            asan:  detect out of bounds use, double free, and leaks (broken-on-clang and gcc)"
-	echo "                            msan:  detect unitialized reads and use-after-destruction (clang-only)"
-	echo "                            uasan: detect both undefined (usan) and address (asan) issues (broken-on-clang)"
-	echo "                            tsan:  detect data-race threading bugs (gcc-only)"
 	echo ""
 	echo "  -s, --src-path          Enter a different source directory before building     [$(print_var "${SRC_PATH}")]"
 	echo "  -t, --threads           Override the number of threads with which to compile   [$(print_var "${THREADS}")]"
@@ -66,14 +66,14 @@ function usage() {
 function parse_args() {
 	set_defaults
 	while [[ "${#}" -gt 0 ]]; do case ${1} in
-		-b|--bit-depth)         BITS="${2}";            shift;shift;;
+		-b|--build-type)        BUILD_TYPE="${2}";      shift;shift;;
+		-i|--bit-depth)         BITS="${2}";            shift;shift;;
 		-c|--compiler)          COMPILER="${2}";        shift;shift;;
 		-d|--fdo)               FDO="true";             shift;;
 		-f|--force-system)      SYSTEM="${2}";          shift;shift;;
 		-l|--lto)               LTO="true";             shift;;
 		-p|--bin-path)          BIN_PATH="${2}";        shift;shift;;
 		-u|--compiler-version)  COMPILER_VERSION="${2}";shift;shift;;
-		-r|--release)           RELEASE="${2}";         shift;shift;;
 		-s|--src-path)          SRC_PATH="${2}";        shift;shift;;
 		-t|--threads)           THREADS="${2}";         shift;shift;;
 		-v|--version)           print_version;          shift;;
@@ -92,7 +92,7 @@ function set_defaults() {
 	FDO="false"
 	LTO="false"
 	BIN_PATH="unset"
-	RELEASE="fast"
+	BUILD_TYPE="release"
 	SRC_PATH="unset"
 	SYSTEM="auto"
 	THREADS="auto"
@@ -313,38 +313,32 @@ function compiler_version() {
 	fi
 }
 
-function release_flags() {
+function build_type_flags() {
 	uses compiler_type
     uses system
 
 	##
-	#  Speed-optimization flags
+	#  Release flags
 	#
-	if [[ "${RELEASE}" == "fast" ]]; then
-		CFLAGS_ARRAY+=("-Ofast")
-
-	##
-	#  Size-optimization flags
-	#
-	elif [[ "${RELEASE}" == "small" ]]; then
-		CFLAGS_ARRAY+=("-Os")
+	if [[ "${BUILD_TYPE}" == "release" ]]; then
 		if [[ "${COMPILER}" == "gcc" ]]; then
-			CFLAGS_ARRAY+=("-ffunction-sections" "-fdata-sections")
-			# ld on MacOS doesn't understand --as-needed, so exclude it
-			uses system
+			CFLAGS_ARRAY+=("-Ofast" "-ffunction-sections" "-fdata-sections")
 			if [[ "${SYSTEM}" != "macos" ]]; then LDFLAGS_ARRAY+=("-Wl,--as-needed"); fi
+		else # Clang
+			# https://developer.apple.com/library/archive/documentation/Performance/Conceptual/CodeFootprint/Articles/CompilerOptions.html
+			CFLAGS_ARRAY+=("-Os")
 		fi
 
 	##
 	#  Debug flags
 	#
-	elif [[ "${RELEASE}" == "debug" ]]; then
-		CFLAGS_ARRAY+=("-g" "-O1" "-fno-omit-frame-pointer")
+	elif [[ "${BUILD_TYPE}" == "debug" ]]; then
+		CFLAGS_ARRAY+=("-g" "-O0" "-fno-omit-frame-pointer")
 
 	##
 	#  Profile flags
 	#
-	elif [[ "${RELEASE}" == "profile" ]]; then
+	elif [[ "${BUILD_TYPE}" == "profile" ]]; then
 		CFLAGS_ARRAY+=("-g" "-O0" )
 		if   [[ "${COMPILER}" == "gcc"   ]]; then
 			CFLAGS_ARRAY+=("-pg")
@@ -355,11 +349,11 @@ function release_flags() {
 	##
 	# Sanitizer flags
 	#
-	elif [[ "${RELEASE}" == *"san" && ("${SYSTEM}" == "linux" || "${SYSTEM}" == "macos") ]]; then
+	elif [[ "${BUILD_TYPE}" == *"san" && ("${SYSTEM}" == "linux" || "${SYSTEM}" == "macos") ]]; then
         CFLAGS_ARRAY+=("-g" "-O1")
 		SAN_ARRAY=("")
 
-		if [[ "${COMPILER}" == "clang" ]]; then case "${RELEASE}" in
+		if [[ "${COMPILER}" == "clang" ]]; then case "${BUILD_TYPE}" in
 
 			# working!
 			msan) SAN_ARRAY+=("-fsanitize-recover=all" "-fsanitize=memory" "-fno-omit-frame-pointer");;
@@ -382,10 +376,10 @@ function release_flags() {
 			# 2 0x7f77dc057b6a in __libc_start_main /build/glibc-KRRWSm/glibc-2.29/csu/../csu/libc-start.c:308:16
 
 			tsan) usage "tsan is currently unavailable for clang";;
-	        *) usage "Unknown sanitizer: ${RELEASE}";;
+	        *) usage "Unknown sanitizer: ${BUILD_TYPE}";;
 		    esac
 
-		elif [[ "${COMPILER}" == "gcc" ]]; then case "${RELEASE}" in
+		elif [[ "${COMPILER}" == "gcc" ]]; then case "${BUILD_TYPE}" in
 
 			# Working!
 			usan)  SAN_ARRAY+=("-fsanitize-recover=signed-integer-overflow" "-fsanitize=undefined");;
@@ -400,7 +394,7 @@ function release_flags() {
 			#  1 0x401230 in my_strdup /ssd_backup/src/dosbox-staging/conftest.c:24
 
 			msan) usage "msan is currently unavailable for gcc";;
-	        *) usage "Unknown sanitizer: ${RELEASE}";;
+	        *) usage "Unknown sanitizer: ${BUILD_TYPE}";;
 		esac; fi
 		CFLAGS_ARRAY+=("${SAN_ARRAY[@]}")
 		LDFLAGS_ARRAY+=("${SAN_ARRAY[@]}")
@@ -408,7 +402,7 @@ function release_flags() {
 	##
 	#  Unknown release-type
 	#
-	else usage "The release type of ${RELEASE} is not valid; see the --release options below:"
+	else usage "The release type of ${BUILD_TYPE} is not valid; see the --release options below:"
 	fi
 }
 
@@ -518,7 +512,7 @@ function do_configure() {
 	uses bin_path
 	uses src_path
 	uses tools_and_flags
-	uses release_flags
+	uses build_type_flags
 	uses fdo_flags
 	uses lto_flags
 	uses check_build_tools
@@ -549,7 +543,7 @@ function do_configure() {
 	echo "    LDFLAGS  = ${LDFLAGS}"
 	echo "    THREADS  = ${THREADS}"
 	echo ""
-	echo "Build type: ${SYSTEM}-${MACHINE}-${BITS}bit-${COMPILER}-${RELEASE}${lto_string}${fdo_string}"
+	echo "Build type: ${SYSTEM}-${MACHINE}-${BITS}bit-${COMPILER}-${BUILD_TYPE}${lto_string}${fdo_string}"
 	echo ""
 	"${CC}" --version
 	sleep 5
@@ -589,7 +583,7 @@ function build() {
 }
 
 function strip_binary() {
-	if [[ "${RELEASE}" == "fast" || "${RELEASE}" == "small" ]]; then
+	if [[ "${BUILD_TYPE}" == "release" ]]; then
 		uses bin_path
 		uses executable
 		strip "${EXECUTABLE}"
@@ -616,7 +610,7 @@ function show_binary() {
 }
 
 function show_tips() {
-	if [[ "${RELEASE}" == "profile" ]]; then
+	if [[ "${BUILD_TYPE}" == "profile" ]]; then
 		uses compiler_type
 		uses executable
 		echo ""

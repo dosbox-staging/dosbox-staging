@@ -51,7 +51,7 @@ jobs:
       - name: Install dependencies
         run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler clang --compiler-version 8)
       - name: Build
-        run:  ./scripts/build.sh --compiler clang --compiler-version 8 --release ${{ matrix.sanitizer }}
+        run:  ./scripts/build.sh --compiler clang --compiler-version 8 --build-type ${{ matrix.sanitizer }}
 
       - name: Testcase 1. Enter-Exit
         run:  (xvfb-run ./src/dosbox -c exit || true) | tee -a "${LOG}"
@@ -77,7 +77,7 @@ jobs:
       - name: Install dependencies
         run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler-version 9)
       - name: Build
-        run:  ./scripts/build.sh --compiler-version 9 --release ${{ matrix.sanitizer }}
+        run:  ./scripts/build.sh --compiler-version 9 --build-type ${{ matrix.sanitizer }}
       - name: Testcase 1. Enter-Exit
         run:  (xvfb-run ./src/dosbox -c exit || true) | tee -a "${LOG}"
 

@@ -2,35 +2,6 @@ name: Windows builds
 on: push
 jobs:
 
-  build_msys2_matrix:
-    name: MSYS2
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        compiler: [clang, gcc]
-        bits: [32, 64]
-    env:
-      CHERE_INVOKING:        yes
-      max_warnings_clang_32: 119
-      max_warnings_clang_64: 199
-      max_warnings_gcc_32:    42
-      max_warnings_gcc_64:    61
-    steps:
-      - uses:  actions/checkout@v1
-      - name:  Install msys2 environment
-        run:   choco install msys2 --no-progress
-      - name:  Log environment
-        shell: python scripts\msys-bash.py {0}
-        run:   ./scripts/log-env.sh
-      - name:  Install dependencies
-        shell: python scripts\msys-bash.py {0}
-        run:   ./scripts/list-build-dependencies.sh -p msys2 --compiler ${{ matrix.compiler }} --bit-depth ${{ matrix.bits }} | xargs pacman -S --noconfirm
-      - name:  Build
-        shell: python scripts\msys-bash.py {0}
-        run:   ./scripts/build.sh --compiler ${{ matrix.compiler }} --bit-depth ${{ matrix.bits }} --bin-path /mingw${{ matrix.bits }}/bin
-      - name:  Summarize warnings
-        run:   .\scripts\count-warnings.py $env:max_warnings_${{ matrix.compiler }}_${{ matrix.bits }} build.log
-
   build_msvc_matrix:
     name: MSVC x86
     runs-on: windows-latest
@@ -55,3 +26,34 @@ jobs:
           # build steps
           cd visualc_net
           MSBuild -m dosbox.sln -p:Configuration=${{ matrix.build_type }}
+
+  build_msys2_matrix:
+    name: MSYS2
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        bits: [32, 64]
+        compiler: [gcc, clang]
+        build_type: [debug, release]
+    env:
+      CHERE_INVOKING:        yes
+      max_warnings_gcc_32:    42
+      max_warnings_gcc_64:    61
+      max_warnings_clang_32: 119
+      max_warnings_clang_64: 199
+    steps:
+      - uses:  actions/checkout@v1
+      - name:  Install msys2 environment
+        run:   choco install msys2 --no-progress
+      - name:  Log environment
+        shell: python scripts\msys-bash.py {0}
+        run:   ./scripts/log-env.sh
+      - name:  Install dependencies
+        shell: python scripts\msys-bash.py {0}
+        run:   ./scripts/list-build-dependencies.sh -p msys2 --compiler ${{ matrix.compiler }} --bit-depth ${{ matrix.bits }} | xargs pacman -S --noconfirm
+      - name:  Build
+        shell: python scripts\msys-bash.py {0}
+        run:   ./scripts/build.sh --compiler ${{ matrix.compiler }} --bit-depth ${{ matrix.bits }} --build-type ${{ matrix.build_type }} --bin-path /mingw${{ matrix.bits }}/bin
+      - name:  Summarize warnings
+        run:   .\scripts\count-warnings.py $env:max_warnings_${{ matrix.compiler }}_${{ matrix.bits }} build.log
+

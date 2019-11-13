@@ -1,10 +1,10 @@
-name: Linux builds
+name: Ubuntu builds
 on: push
 jobs:
 
-  build_ubuntu_clang_8:
-    name: Clang 8 (ubuntu-18.04)
-    runs-on: ubuntu-18.04
+  build_clang_8:
+    name: Clang 8
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
@@ -17,27 +17,9 @@ jobs:
       - name: Summarize warnings
         run:  ./scripts/count-warnings.py 220 build.log
 
-  build_ubuntu_matrix_gcc:
-    name: GCC
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-18.04, ubuntu-16.04]
-    steps:
-      - uses: actions/checkout@v1
-      - name: Log environment
-        run:  ./scripts/log-env.sh
-      - run:  sudo apt-get update
-      - name: Install dependencies
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt)
-      - name: Build
-        run: ./scripts/build.sh --release small --lto
-      - name: Summarize warnings
-        run:  ./scripts/count-warnings.py 404 build.log
-
-  build_ubuntu_gcc9:
-    name: GCC 9 (ubuntu-18.04)
-    runs-on: ubuntu-18.04
+  build_gcc_9:
+    name: GCC 9
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
@@ -49,3 +31,26 @@ jobs:
         run:  ./scripts/build.sh --compiler-version 9 --lto
       - name: Summarize warnings
         run:  ./scripts/count-warnings.py 376 build.log
+
+  build_gcc_matrix:
+    name: GCC ({{ matrix.build_type}}, ubuntu-${{ matrix.os_version_major }}.04)
+    runs-on: ubuntu-${{ matrix.os_version_major }}.04
+    strategy:
+      matrix:
+        build_type: [debug, release]
+        os_version_major: [16, 18]
+    env:
+      max_warnings_ubuntu_16: 385
+      max_warnings_ubuntu_18: 353
+    steps:
+      - uses: actions/checkout@v1
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+      - run:  sudo apt-get update
+      - name: Install dependencies
+        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt)
+      - name: Build
+        run: ./scripts/build.sh --build-type {{ matrix.build_type}}
+      - name: Summarize warnings
+        run:  ./scripts/count-warnings.py $max_warnings_ubuntu_${{ matrix.os_version_major }} build.log
+

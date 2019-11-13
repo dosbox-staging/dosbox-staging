@@ -21,7 +21,11 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        compiler_version: [6, 7, 8, 9]
+        compiler_version: [8, 9]
+        # Brew gcc 6, 7, 8 builds fail under Darwin 19 due to broken Apple SDK headers
+    env:
+      max_warnings_gcc_8: -1
+      max_warnings_gcc_9: -1
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
@@ -31,7 +35,7 @@ jobs:
       - name: Build
         run:  ./scripts/build.sh --compiler-version ${{ matrix.compiler_version }} --lto
       - name: Summarize warnings
-        run:  python3 ./scripts/count-warnings.py -1 build.log
+        run:  python3 ./scripts/count-warnings.py $max_warnings_gcc_${{ matrix.compiler_version }} build.log
 
   build_macos_macports_gcc:
     name: MacPorts GCC
@@ -39,9 +43,13 @@ jobs:
     strategy:
       matrix:
         compiler_version: [9]
-        # MacPorts gcc 5, 6, 7, 8 under Darwin 19 are currently broken: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90835
+        # MacPorts gcc 5, 6, 7, 8 fail under Darwin 19 due to install issues https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90835
+    env:
+      max_warnings_gcc_9: 363
     steps:
       - uses: actions/checkout@v1
+      - name: Log environment
+        run:  ./scripts/log-env.sh
       - name: Install MacPorts
         run: |
           git clone --quiet --depth=1 https://github.com/macports/macports-base.git
@@ -59,5 +67,5 @@ jobs:
       - name: Build
         run:  ./scripts/build.sh --compiler-version mp-${{ matrix.compiler_version }} --bin-path /opt/local/bin
       - name: Summarize warnings
-        run:  python3 ./scripts/count-warnings.py -1 build.log
+        run:  python3 ./scripts/count-warnings.py $max_warnings_gcc_${{ matrix.compiler_version }} build.log
 
