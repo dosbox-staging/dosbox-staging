@@ -17,7 +17,7 @@ jobs:
         run:  python3 ./scripts/count-warnings.py 272 build.log
 
   build_macos_gcc_brew:
-    name: GCC-${{ matrix.compiler_version }} (release, HomeBrew)
+    name: GCC-${{ matrix.compiler_version }} (release, Brew)
     runs-on: macos-latest
     strategy:
       matrix:

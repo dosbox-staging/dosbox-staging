@@ -28,23 +28,23 @@ jobs:
           MSBuild -m dosbox.sln -p:Configuration=${{ matrix.build_type }}
 
   build_msys2_matrix:
-    name: ${{ matrix.compiler }} ${{ matrix.bits }}-bit (${{ matrix.build_type }}, MSYS2)
+    name: ${{ matrix.compiler }} ${{ matrix.bits }}-bit (${{ matrix.build_type }})
     runs-on: windows-latest
     strategy:
       matrix:
-        bits:       [32, 64]
         compiler:   [gcc, clang]
+        bits:       [32, 64]
         build_type: [debug, release]
     env:
       CHERE_INVOKING: yes
-      max_warnings_32bit_gcc_debug:      29
-      max_warnings_32bit_gcc_release:    42
-      max_warnings_64bit_gcc_debug:      48
-      max_warnings_64bit_gcc_release:    61
-      max_warnings_32bit_clang_debug:   119
-      max_warnings_32bit_clang_release: 119
-      max_warnings_64bit_clang_debug:   199
-      max_warnings_64bit_clang_release: 199
+      max_warnings_gcc_32bit_debug:      29
+      max_warnings_gcc_32bit_release:    42
+      max_warnings_gcc_64bit_debug:      48
+      max_warnings_gcc_64bit_release:    61
+      max_warnings_clang_32bit_debug:   119
+      max_warnings_clang_32bit_release: 119
+      max_warnings_clang_64bit_debug:   199
+      max_warnings_clang_64bit_release: 199
 
     steps:
       - uses:  actions/checkout@v1
@@ -58,7 +58,7 @@ jobs:
         run:   ./scripts/list-build-dependencies.sh -p msys2 --compiler ${{ matrix.compiler }} --bit-depth ${{ matrix.bits }} | xargs pacman -S --noconfirm
       - name:  Build
         shell: python scripts\msys-bash.py {0}
-        run:   ./scripts/build.sh --bit-depth ${{ matrix.bits }} --compiler ${{ matrix.compiler }} --build-type ${{ matrix.build_type }} --bin-path /mingw${{ matrix.bits }}/bin
+        run:   ./scripts/build.sh --compiler ${{ matrix.compiler }} --bit-depth ${{ matrix.bits }} --build-type ${{ matrix.build_type }} --bin-path /mingw${{ matrix.bits }}/bin
       - name:  Summarize warnings
-        run:   .\scripts\count-warnings.py $env:max_warnings_${{ matrix.bits }}bit_${{ matrix.compiler }}_${{ matrix.build_type }} build.log
+        run:   .\scripts\count-warnings.py $env:max_warnings_${{ matrix.compiler }}_${{ matrix.bits }}bit_${{ matrix.build_type }} build.log
 
