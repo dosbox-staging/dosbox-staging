@@ -2,9 +2,25 @@ name: Static code analysis
 on: push
 jobs:
 
+  run_linters:
+    name: Script linters
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run:  sudo apt-get update
+      - name: Install pylint
+        run: |
+          sudo apt-get install python3-setuptools
+          sudo pip3 install pylint beautifulsoup4 html5lib
+      - name: Run pylint
+        run:  ./scripts/verify-python.sh
+      - name: Run shellcheck
+        run:  ./scripts/verify-bash.sh
+
   build_clang_static_analyser:
     name: Clang static analyzer
     runs-on: ubuntu-18.04
+    needs: run_linters
     steps:
       - uses: actions/checkout@v1
       - name: Log environment
