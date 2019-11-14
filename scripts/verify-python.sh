@@ -8,13 +8,19 @@
 #
 # $ ./verify-python.sh --disable=<msg_ids>
 
-run_pylint () {
+list_python_files () {
 	git ls-files \
 		| xargs file \
 		| grep "Python script" \
-		| cut -d ':' -f 1 \
-		| xargs -L 1000 pylint "$@"
+		| cut -d ':' -f 1
 }
 
-pylint --version
-run_pylint --rcfile="$(git rev-parse --show-toplevel)/.pylint" "$@"
+main () {
+	pylint --version >&2
+	echo "Checking files:" >&2
+	list_python_files >&2
+	local -r rc="$(git rev-parse --show-toplevel)/.pylint"
+	list_python_files | xargs -L 1000 pylint --rcfile="$rc" "$@"
+}
+
+main "$@"

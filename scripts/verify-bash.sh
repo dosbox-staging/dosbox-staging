@@ -8,13 +8,18 @@
 #
 # $ ./verify-bash.sh --format=json
 
-run_shellcheck () {
+list_bash_files () {
 	git ls-files \
 		| xargs file \
 		| grep "Bourne-Again shell script" \
-		| cut -d ':' -f 1 \
-		| xargs -L 1000 shellcheck "$@"
+		| cut -d ':' -f 1
 }
 
-shellcheck --version
-run_shellcheck "$@"
+main () {
+	shellcheck --version >&2
+	echo "Checking files:" >&2
+	list_bash_files >&2
+	list_bash_files | xargs -L 1000 shellcheck "$@"
+}
+
+main "$@"
