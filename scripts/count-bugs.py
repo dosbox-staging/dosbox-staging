@@ -41,7 +41,7 @@ def read_soup(index_html):
         soup = BeautifulSoup(index, 'html5lib')
         tables = soup.find_all('table')
         summary = tables[1]
-        return {bug: count for bug, count in summary_values(summary)}
+        return dict(summary_values(summary))
 
 
 def find_longest_name_length(names):
