@@ -250,9 +250,6 @@ function tools_and_flags() {
 
 		# CLANG on MacOS
 		elif [[ "${SYSTEM}" == "macos" ]]; then LD="ld"; fi
-
-		# CLANG and MSYS2
-		if [[ "${SYSTEM}" == "msys2" ]]; then CFLAGS_ARRAY+=("-DWIN32"); fi
 	fi
 
 	# macOS universal
