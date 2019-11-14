@@ -16,13 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "cdrom.h"
 
 #if defined (WIN32)
 
 #include <ctype.h>
 
-#include "dosbox.h"
-#include "cdrom.h"
 #include "support.h"
 
 //Are actually system includes but leave for now
