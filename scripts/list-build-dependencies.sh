@@ -57,7 +57,6 @@ function defaults() {
 	COMPILER_VERSION=""
 	PACKAGE_MANAGER="unset"
 	readonly SCRIPT_VERSION="0.2"
-	readonly REPO_URL="https://github.com/dreamer/dosbox-staging"
 }
 
 # parse params
