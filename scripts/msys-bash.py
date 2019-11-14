@@ -6,7 +6,7 @@
 # pylint: disable=invalid-name
 # pylint: disable=line-too-long
 
-"""
+r"""
 This is a wrapper for MSYS2 bash inside Windows GitHub CI environment.
 
 Usage:
