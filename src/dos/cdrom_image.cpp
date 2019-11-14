@@ -16,6 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "cdrom.h"
+
 // #define DEBUG 1
 #ifdef DEBUG
 #include <time.h> // time_t, tm, time(), and localtime()
@@ -37,7 +39,6 @@
 #include <string.h>
 #endif
 
-#include "cdrom.h"
 #include "drives.h"
 #include "support.h"
 #include "setup.h"
