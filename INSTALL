@@ -74,14 +74,14 @@ Some of them are:
 --disable-fpu-x86
 --disable-fpu-x64
         disables the assembly fpu core. Although relatively new, the x86/x64
-        fpu core has more accuracy then the regular fpu core.
+        fpu core has more accuracy than the regular fpu core.
 
 --disable-dynamic-x86
         disables the dynamic x86/x64 specific cpu core. Although it might be
         a bit unstable, it can greatly improve the speed of dosbox on x86 and
         x64 hosts.
         Please note that this option on x86/x64 will result in a different
-        dynamic/recompiling cpu core being compiled then the default.
+        dynamic/recompiling cpu core being compiled than the default.
         For more information see the option --disable-dynrec
 
 --disable-dynrec
