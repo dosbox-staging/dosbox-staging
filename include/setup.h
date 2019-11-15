@@ -76,13 +76,13 @@ public:
 	enum Etype { V_NONE, V_HEX, V_BOOL, V_INT, V_STRING, V_DOUBLE,V_CURRENT} type;
 
 	/* Constructors */
-	Value()                      :_string(0),   type(V_NONE)                  { };
-	Value(Hex in)                :_hex(in),     type(V_HEX)                   { };
-	Value(int in)                :_int(in),     type(V_INT)                   { };
-	Value(bool in)               :_bool(in),    type(V_BOOL)                  { };
-	Value(double in)             :_double(in),  type(V_DOUBLE)                { };
-	Value(std::string const& in) :_string(new std::string(in)),type(V_STRING) { };
-	Value(char const * const in) :_string(new std::string(in)),type(V_STRING) { };
+	Value()                      :_hex(0), _bool(false),_int(0), _string(0),                  _double(0), type(V_NONE)   { };
+	Value(Hex in)                :_hex(in),_bool(false),_int(0), _string(0),                  _double(0), type(V_HEX)    { };
+	Value(int in)                :_hex(0), _bool(false),_int(in),_string(0),                  _double(0), type(V_INT)    { };
+	Value(bool in)               :_hex(0), _bool(in)   ,_int(0), _string(0),                  _double(0), type(V_BOOL)   { };
+	Value(double in)             :_hex(0), _bool(false),_int(0), _string(0),                  _double(in),type(V_DOUBLE) { };
+	Value(std::string const& in) :_hex(0), _bool(false),_int(0), _string(new std::string(in)),_double(0), type(V_STRING) { };
+	Value(char const * const in) :_hex(0), _bool(false),_int(0), _string(new std::string(in)),_double(0), type(V_STRING) { };
 	Value(Value const& in):_string(0) {plaincopy(in);}
 	~Value() { destroy();};
 	Value(std::string const& in,Etype _t) :_hex(0),_bool(false),_int(0),_string(0),_double(0),type(V_NONE) {SetValue(in,_t);}

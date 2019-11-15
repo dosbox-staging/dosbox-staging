@@ -62,7 +62,7 @@ class DOS_DTA;
 
 class DOS_File {
 public:
-	DOS_File():flags(0)		{ name=0; refCtr = 0; hdrive=0xff; };
+	DOS_File():flags(0),time(0),date(0),attr(0),refCtr(0),open(false),name(0),hdrive(0xff) { };
 	DOS_File(const DOS_File& orig);
 	DOS_File & operator= (const DOS_File & orig);
 	virtual	~DOS_File(){if(name) delete [] name;};
