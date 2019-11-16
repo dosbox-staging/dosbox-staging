@@ -21,14 +21,6 @@ Opusfile, by Xiph
     video distribution platforms such as YouTube.
     License: three-clause BSD
 
-SpeexDSP, by Xiph
-    Needed to perform on-the-fly resampling of Opus-compressed CDROM
-    audio data in the event DOSBox's mixer sampling rate differs from
-    that of the Opus sampling rate. Sources are available at
-    https://opus-codec.org, however it is also conveniently packages
-    by all popular package managers.
-    License: three-clause BSD
-
 Curses (optional)
     If you want to enable the debugger you need a curses library.
     ncurses should be installed on just about every unix distro.
