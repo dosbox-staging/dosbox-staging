@@ -19,7 +19,7 @@ main () {
 	shellcheck --version >&2
 	echo "Checking files:" >&2
 	list_bash_files >&2
-	list_bash_files | xargs -L 1000 shellcheck "$@"
+	list_bash_files | xargs -L 1000 shellcheck --color "$@"
 }
 
 main "$@"
