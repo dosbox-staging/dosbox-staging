@@ -527,7 +527,7 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 			phys_writeb(physAddress+0x1B,(Bit8u)0xC3);	//A RETN Instruction
 		return (use_cb?32:27);
 	default:
-		E_Exit("CALLBACK:Setup:Illegal type %d",type);
+		E_Exit("CALLBACK:Setup:Illegal type " sBitud,type);
 	}
 	return 0;
 }

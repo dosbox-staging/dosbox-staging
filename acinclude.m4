@@ -388,11 +388,21 @@ typedef         double     Real64;
 #endif
 
 #if SIZEOF_INT_P == 4
-  typedef Bit32u Bitu;
-  typedef Bit32s Bits;
-#else
-  typedef Bit64u Bitu;
-  typedef Bit64s Bits;
+
+typedef Bit32u Bitu;
+typedef Bit32s Bits;
+#define sBitud "%u"
+#define sBitux "%x"
+#define sBituX "%X"
+
+#else //SIZEOF_INT_P 
+
+typedef Bit64u Bitu;
+typedef Bit64s Bits;
+#define sBitud "%lu"
+#define sBitux "%lx"
+#define sBituX "%lX"
+
 #endif
 
 ])
