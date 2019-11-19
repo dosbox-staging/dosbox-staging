@@ -83,17 +83,17 @@ typedef unsigned int      Bit32u;
 typedef signed int        Bit32s;
 typedef unsigned __int64  Bit64u;
 typedef signed __int64    Bit64s;
+#define sBit32t
+#define sBit64t "I64"
+#define sBit32fs(a) sBit32t #a
+#define sBit64fs(a) sBit64t #a
 #ifdef _M_X64
 typedef Bit64u            Bitu;
 typedef Bit64s            Bits;
-#define sBitud            "%I64u"
-#define sBitux            "%I64x"
-#define sBituX            "%I64X"
+#define sBitfs sBit64fs
 #else // _M_IX86
 typedef Bit32u            Bitu;
 typedef Bit32s            Bits;
-#define sBitud            "%u"
-#define sBitux            "%x"
-#define sBituX            "%X"
+#define sBitfs sBit32fs
 #endif
 

@@ -370,38 +370,40 @@ typedef         double     Real64;
 #if SIZEOF_UNSIGNED_INT == 4
   typedef unsigned int Bit32u;
   typedef   signed int Bit32s;
+#define sBit32t
 #elif SIZEOF_UNSIGNED_LONG == 4
   typedef unsigned long Bit32u;
   typedef   signed long Bit32s;
+#define sBit32t "l"
 #else
 #  error "can't find sizeof(type) of 4 bytes!"
 #endif
+#define sBit32fs(a) sBit32t #a
 
 #if SIZEOF_UNSIGNED_LONG == 8
   typedef unsigned long Bit64u;
   typedef   signed long Bit64s;
+#define sBit64t "l"
 #elif SIZEOF_UNSIGNED_LONG_LONG == 8
   typedef unsigned long long Bit64u;
   typedef   signed long long Bit64s;
+#define sBit64t "ll"
 #else
 #  error "can't find data type of 8 bytes"
 #endif
+#define sBit64fs(a) sBit64t #a
 
 #if SIZEOF_INT_P == 4
 
 typedef Bit32u Bitu;
 typedef Bit32s Bits;
-#define sBitud "%u"
-#define sBitux "%x"
-#define sBituX "%X"
+#define sBitfs sBit32fs
 
 #else //SIZEOF_INT_P 
 
 typedef Bit64u Bitu;
 typedef Bit64s Bits;
-#define sBitud "%lu"
-#define sBitux "%lx"
-#define sBituX "%lX"
+#define sBitfs sBit64fs
 
 #endif
 

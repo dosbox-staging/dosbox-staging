@@ -349,7 +349,7 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 	FillFlags();
 	TaskStateSegment new_tss;
 	if (!new_tss.SetSelector(new_tss_selector)) 
-		E_Exit("Illegal TSS for switch, selector=" sBitux ", switchtype=%x",new_tss_selector,tstype);
+		E_Exit("Illegal TSS for switch, selector=%" sBitfs(x) ", switchtype=%x",new_tss_selector,tstype);
 	if (tstype==TSwitch_IRET) {
 		if (!new_tss.desc.IsBusy())
 			E_Exit("TSS not busy for IRET");
@@ -503,7 +503,7 @@ doconforming:
 			Segs.val[cs]=new_cs;
 			break;
 		default:
-			E_Exit("Task switch CS Type " sBitud,cs_desc.Type());
+			E_Exit("Task switch CS Type %" sBitfs(u),cs_desc.Type());
 		}
 	}
 	CPU_SetSegGeneral(es,new_es);
@@ -725,7 +725,7 @@ do_interrupt:
 					}
 					break;		
 				default:
-					E_Exit("INT:Gate Selector points to illegal descriptor with type " sBitux,cs_desc.Type());
+					E_Exit("INT:Gate Selector points to illegal descriptor with type %" sBitfs(x),cs_desc.Type());
 				}
 
 				Segs.val[cs]=(gate_sel&0xfffc) | cpu.cpl;
@@ -755,7 +755,7 @@ do_interrupt:
 			}
 			return;
 		default:
-			E_Exit("Illegal descriptor type " sBituX " for int " sBituX,gate.Type(),num);
+			E_Exit("Illegal descriptor type %" sBitfs(X) " for int %" sBitfs(X),gate.Type(),num);
 		}
 	}
 	assert(1);
@@ -902,7 +902,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 				EXCEPTION_GP,n_cs_sel & 0xfffc)
 			break;
 		default:
-			E_Exit("IRET:Illegal descriptor type " sBituX, n_cs_desc.Type());
+			E_Exit("IRET:Illegal descriptor type %" sBitfs(X), n_cs_desc.Type());
 		}
 		CPU_CHECK_COND(!n_cs_desc.saved.seg.p,
 			"IRET with nonpresent code segment",
@@ -1059,7 +1059,7 @@ CODE_jmp:
 			CPU_SwitchTask(selector,TSwitch_JMP,oldeip);
 			break;
 		default:
-			E_Exit("JMP Illegal descriptor type " sBituX,desc.Type());
+			E_Exit("JMP Illegal descriptor type %" sBitfs(X),desc.Type());
 		}
 	}
 	assert(1);
@@ -1295,7 +1295,7 @@ call_code:
 			CPU_Exception(EXCEPTION_GP,selector & 0xfffc);
 			return;
 		default:
-			E_Exit("CALL:Descriptor type " sBitux " unsupported",call.Type());
+			E_Exit("CALL:Descriptor type %" sBitfs(x) " unsupported",call.Type());
 		}
 	}
 	assert(1);
@@ -1353,7 +1353,7 @@ void CPU_RET(bool use32,Bitu bytes,Bitu oldeip) {
 					EXCEPTION_GP,selector & 0xfffc)
 				break;
 			default:
-				E_Exit("RET from illegal descriptor type " sBituX,desc.Type());
+				E_Exit("RET from illegal descriptor type %" sBitfs(X),desc.Type());
 			}
 RET_same_level:
 			if (!desc.saved.seg.p) {
@@ -1398,7 +1398,7 @@ RET_same_level:
 					EXCEPTION_GP,selector & 0xfffc)
 				break;
 			default:
-				E_Exit("RET from illegal descriptor type " sBituX,desc.Type());		// or #GP(selector)
+				E_Exit("RET from illegal descriptor type %" sBitfs(X),desc.Type());		// or #GP(selector)
 			}
 
 			CPU_CHECK_COND(!desc.saved.seg.p,
@@ -1509,7 +1509,7 @@ bool CPU_LTR(Bitu selector) {
 			LOG(LOG_CPU,LOG_ERROR)("LTR failed, selector=%X (not present)",selector);
 			return CPU_PrepareException(EXCEPTION_NP,selector);
 		}
-		if (!cpu_tss.SetSelector(selector)) E_Exit("LTR failed, selector=" sBituX,selector);
+		if (!cpu_tss.SetSelector(selector)) E_Exit("LTR failed, selector=%" sBitfs(X),selector);
 		cpu_tss.desc.SetBusy(true);
 		cpu_tss.SaveSelector();
 	} else {
