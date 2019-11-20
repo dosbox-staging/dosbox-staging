@@ -34,8 +34,6 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-// prevent the Windows header from clobbering std::min and max
-#define NOMINMAX
 #include <windows.h>
 #include <mmsystem.h>
 #endif
@@ -154,11 +152,6 @@ void MIXER_DelChannel(MixerChannel* delchan) {
 void MixerChannel::UpdateVolume(void) {
 	volmul[0]=(Bits)((1 << MIXER_VOLSHIFT)*scale[0]*volmain[0]*mixer.mastervol[0]);
 	volmul[1]=(Bits)((1 << MIXER_VOLSHIFT)*scale[1]*volmain[1]*mixer.mastervol[1]);
-}
-
-template <typename T>
-T clamp(const T& n, const T& lower, const T& upper) {
-  return std::max(lower, std::min(n, upper));
 }
 
 void MixerChannel::SetVolume(float _left,float _right) {
