@@ -20,6 +20,7 @@
 #ifndef DOSBOX_SUPPORT_H
 #define DOSBOX_SUPPORT_H
 
+#include <algorithm>
 #include <string.h>
 #include <string>
 #include <ctype.h>
@@ -37,6 +38,14 @@
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
+
+// Clamp: given a value that can be compared with the given minimum and maximum
+//        values, this function will:
+//          * return the value if it's in-between or equal to either bounds, or
+//          * return either bound depending on which bound the value is beyond
+template <class T> T clamp(const T& n, const T& lower, const T& upper) {
+	return std::max<T>(lower, std::min<T>(n, upper));
+}
 
 void strreplace(char * str,char o,char n);
 char *ltrim(char *str);

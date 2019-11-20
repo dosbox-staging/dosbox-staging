@@ -574,6 +574,7 @@ case "$host" in
     *-*-cygwin* | *-*-mingw* | *-*-msys*)
        LIBS="$LIBS -lwinmm"
        AC_DEFINE(WIN32, 1, [Compiling on Windows])
+       AC_DEFINE(NOMINMAX, 1, [Prevent <windows.h> from clobbering std::min and std::max])
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2 only).])
        if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
          LIBS="$LIBS -lws2_32"

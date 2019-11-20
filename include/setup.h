@@ -170,7 +170,7 @@ public:
 	}
 	int getMin() { return min;}
 	int getMax() { return max;}
-	void SetMinMax(Value const& min,Value const& max) {this->min = min; this->max=max;}
+	void SetMinMax(Value const& _min,Value const& _max) {this->min = _min; this->max=_max;}
 	bool SetValue(std::string const& in);
 	~Prop_int(){ }
 	virtual bool CheckValue(Value const& in, bool warn);

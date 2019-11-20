@@ -495,18 +495,18 @@ bool CDROM_Interface_Ioctl::ReadSector(Bit8u *buffer, bool raw, unsigned long se
 	BOOL  bStat;
 	DWORD byteCount = 0;
 
-	Bitu	buflen	= raw ? RAW_SECTOR_SIZE : COOKED_SECTOR_SIZE;
+	Bitu	buflen	= raw ? BYTES_PER_RAW_REDBOOK_FRAME : BYTES_PER_COOKED_REDBOOK_FRAME;
 
 	if (!raw) {
 		// Cooked
 		int	  success = 0;
-		DWORD newPos  = SetFilePointer(hIOCTL, sector*COOKED_SECTOR_SIZE, 0, FILE_BEGIN);
+		DWORD newPos  = SetFilePointer(hIOCTL, sector*BYTES_PER_COOKED_REDBOOK_FRAME, 0, FILE_BEGIN);
 		if (newPos != 0xFFFFFFFF) success = ReadFile(hIOCTL, buffer, buflen, &byteCount, NULL);
 		bStat = (success!=0);
 	} else {
 		// Raw
 		RAW_READ_INFO in;
-		in.DiskOffset.LowPart	= sector*COOKED_SECTOR_SIZE;
+		in.DiskOffset.LowPart	= sector*BYTES_PER_COOKED_REDBOOK_FRAME;
 		in.DiskOffset.HighPart	= 0;
 		in.SectorCount			= 1;
 		in.TrackMode			= CDDA;		
@@ -521,19 +521,19 @@ bool CDROM_Interface_Ioctl::ReadSectors(PhysPt buffer, bool raw, unsigned long s
 	BOOL  bStat;
 	DWORD byteCount = 0;
 
-	Bitu	buflen	= raw ? num*RAW_SECTOR_SIZE : num*COOKED_SECTOR_SIZE;
+	Bitu	buflen	= raw ? num*BYTES_PER_RAW_REDBOOK_FRAME : num*BYTES_PER_COOKED_REDBOOK_FRAME;
 	Bit8u*	bufdata = new Bit8u[buflen];
 
 	if (!raw) {
 		// Cooked
 		int	  success = 0;
-		DWORD newPos  = SetFilePointer(hIOCTL, sector*COOKED_SECTOR_SIZE, 0, FILE_BEGIN);
+		DWORD newPos  = SetFilePointer(hIOCTL, sector*BYTES_PER_COOKED_REDBOOK_FRAME, 0, FILE_BEGIN);
 		if (newPos != 0xFFFFFFFF) success = ReadFile(hIOCTL, bufdata, buflen, &byteCount, NULL);
 		bStat = (success!=0);
 	} else {
 		// Raw
 		RAW_READ_INFO in;
-		in.DiskOffset.LowPart	= sector*COOKED_SECTOR_SIZE;
+		in.DiskOffset.LowPart	= sector*BYTES_PER_COOKED_REDBOOK_FRAME;
 		in.DiskOffset.HighPart	= 0;
 		in.SectorCount			= num;
 		in.TrackMode			= CDDA;		
@@ -563,7 +563,7 @@ void CDROM_Interface_Ioctl::dx_CDAudioCallBack(Bitu len) {
 		
 		if (success) {
 			player.currFrame++;
-			player.bufLen += RAW_SECTOR_SIZE;
+			player.bufLen += BYTES_PER_RAW_REDBOOK_FRAME;
 		} else {
 			memset(&player.buffer[player.bufLen], 0, len - player.bufLen);
 			player.bufLen = len;
