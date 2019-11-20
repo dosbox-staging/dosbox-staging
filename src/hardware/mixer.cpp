@@ -612,19 +612,18 @@ public:
 		if (cmd->FindString("MASTER",temp_line,false)) {
 			MakeVolume((char *)temp_line.c_str(),mixer.mastervol[0],mixer.mastervol[1]);
 		}
-		MixerChannel * chan=mixer.channels;
+		MixerChannel * chan = mixer.channels;
 		while (chan) {
 			if (cmd->FindString(chan->name,temp_line,false)) {
 				MakeVolume((char *)temp_line.c_str(),chan->volmain[0],chan->volmain[1]);
 			}
 			chan->UpdateVolume();
-			chan=chan->next;
+			chan = chan->next;
 		}
 		if (cmd->FindExist("/NOSHOW")) return;
-		chan=mixer.channels;
 		WriteOut("Channel  Main    Main(dB)\n");
 		ShowVolume("MASTER",mixer.mastervol[0],mixer.mastervol[1]);
-		for (chan=mixer.channels;chan;chan=chan->next)
+		for (chan = mixer.channels;chan;chan = chan->next)
 			ShowVolume(chan->name,chan->volmain[0],chan->volmain[1]);
 	}
 private:

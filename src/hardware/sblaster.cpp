@@ -707,6 +707,8 @@ static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool autoinit, bool stere
 		autoinit ? "Auto-Init" : "Single-Cycle",
 		freq, sb.dma.rate, sb.dma.left
 		);
+#else
+	type = type;
 #endif
 }
 
