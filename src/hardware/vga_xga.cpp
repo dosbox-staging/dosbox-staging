@@ -574,6 +574,8 @@ void XGA_DrawWait(Bitu val, Bitu len) {
 	if(!xga.waitcmd.wait) return;
 	Bitu mixmode = (xga.pix_cntl >> 6) & 0x3;
 	Bitu srcval;
+	Bitu chunksize = 0;
+	Bitu chunks = 0;
 	switch(xga.waitcmd.cmd) {
 		case 2: /* Rectangle */
 			switch(mixmode) {
@@ -645,8 +647,6 @@ void XGA_DrawWait(Bitu val, Bitu len) {
 					break;
 			
 				case 0x02: // Data from PIX_TRANS selects the mix
-					Bitu chunksize;
-					Bitu chunks;
 					switch(xga.waitcmd.buswidth&0x60) {
 						case 0x0:
 							chunksize=8;
@@ -661,7 +661,7 @@ void XGA_DrawWait(Bitu val, Bitu len) {
 							chunksize=16;
 							if(len==4) chunks=2;
 							else chunks = 1;
-                           	break;
+							break;
 						case 0x60: // undocumented guess (but works)
 							chunksize=8;
 							chunks=4;
