@@ -45,7 +45,6 @@ private:
 	Bit32u fileBegin;
 	Bit32u filePos;
 	Bit32u fileEnd;
-	Bit16u info;
 };
 
 isoFile::isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, Bit32u offset) {
