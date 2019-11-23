@@ -350,6 +350,8 @@ int VideoCodec::FinishCompressFrame( void ) {
 		case ZMBV_FORMAT_32BPP:
 			AddXorFrame<long>();
 			break;
+		default:
+			break;
 		}
 	}
 	/* Create the actual frame with compression */
@@ -471,6 +473,8 @@ bool VideoCodec::DecompressFrame(void * framedata, int size) {
 		case ZMBV_FORMAT_32BPP:
 			UnXorFrame<long>();
 			break;
+		default:
+			break;
 		}
 	}
 	return true;
@@ -515,6 +519,8 @@ void VideoCodec::Output_UpsideDown_24(void *output) {
 				*w++ = r[j*4+1];
 				*w++ = r[j*4+2];
 			}
+			break;
+		default:
 			break;
 		}
 
