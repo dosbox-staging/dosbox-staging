@@ -217,7 +217,6 @@ private:
 	CFileInfo*	dirBase;
 	char		dirPath				[CROSS_LEN];
 	char		basePath			[CROSS_LEN];
-	bool		dirFirstTime;
 	TDirSort	sortDirType;
 	CFileInfo*	save_dir;
 	char		save_path			[CROSS_LEN];
@@ -225,7 +224,6 @@ private:
 
 	Bit16u		srchNr;
 	CFileInfo*	dirSearch			[MAX_OPENDIRS];
-	char		dirSearchName		[MAX_OPENDIRS];
 	CFileInfo*	dirFindFirst		[MAX_OPENDIRS];
 	Bit16u		nextFreeFindFirst;
 
