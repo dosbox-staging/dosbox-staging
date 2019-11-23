@@ -708,7 +708,7 @@ static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool autoinit, bool stere
 		freq, sb.dma.rate, sb.dma.left
 		);
 #else
-	type = type;
+	type = *&type;
 #endif
 }
 
