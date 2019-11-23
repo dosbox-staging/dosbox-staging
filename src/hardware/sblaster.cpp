@@ -631,8 +631,7 @@ static void DSP_RaiseIRQEvent(Bitu /*val*/) {
 	SB_RaiseIRQ(SB_IRQ_8);
 }
 
-static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool autoinit, bool stereo) {
-	char const * type;
+static void DSP_DoDMATransfer(const DMA_MODES mode, Bitu freq, bool autoinit, bool stereo) {
 	//Fill up before changing state?
 	sb.chan->FillUp();
 
@@ -642,32 +641,14 @@ static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool autoinit, bool stere
 	PIC_DeActivateIRQ(sb.hw.irq);
 
 	switch (mode) {
-	case DSP_DMA_2:
-		type="2-bits ADPCM";
-		sb.dma.mul=(1 << SB_SH)/4;
-		break;
-	case DSP_DMA_3:
-		type="3-bits ADPCM";
-		sb.dma.mul=(1 << SB_SH)/3;
-		break;
-	case DSP_DMA_4:
-		type="4-bits ADPCM";
-		sb.dma.mul=(1 << SB_SH)/2;
-		break;
-	case DSP_DMA_8:
-		type="8-bits PCM";
-		sb.dma.mul=(1 << SB_SH);
-		break;
-	case DSP_DMA_16_ALIASED:
-		type="16-bits(aliased) PCM";
-		sb.dma.mul=(1 << SB_SH)*2;
-		break;
-	case DSP_DMA_16:
-		type="16-bits PCM";
-		sb.dma.mul=(1 << SB_SH);
-		break;
+	case DSP_DMA_2:          sb.dma.mul = (1 << SB_SH) / 4; break;
+	case DSP_DMA_3:          sb.dma.mul = (1 << SB_SH) / 3; break;
+	case DSP_DMA_4:          sb.dma.mul = (1 << SB_SH) / 2; break;
+	case DSP_DMA_8:          sb.dma.mul = (1 << SB_SH); break;
+	case DSP_DMA_16:         sb.dma.mul = (1 << SB_SH); break;
+	case DSP_DMA_16_ALIASED: sb.dma.mul = (1 << SB_SH) * 2; break;
 	default:
-		LOG(LOG_SB,LOG_ERROR)("DSP:Illegal transfer mode %d",mode);
+		LOG(LOG_SB,LOG_ERROR)("DSP:Illegal transfer mode %d", mode);
 		return;
 	}
 
@@ -701,14 +682,22 @@ static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool autoinit, bool stere
 	sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
 
 #if (C_DEBUG)
+	const char *type;
+	switch (mode) {
+	case DSP_DMA_2:          type = "2-bits ADPCM"; break;
+	case DSP_DMA_3:          type = "3-bits ADPCM"; break;
+	case DSP_DMA_4:          type = "4-bits ADPCM"; break;
+	case DSP_DMA_8:          type = "8-bits PCM"; break;
+	case DSP_DMA_16:         type = "16-bits PCM"; break;
+	case DSP_DMA_16_ALIASED: type = "16-bits (aliased) PCM"; break;
+	case DSP_DMA_NONE:       type = ""; break;
+	};
 	LOG(LOG_SB, LOG_NORMAL)("DMA Transfer:%s %s %s freq %d rate %d size %d",
 		type,
 		stereo ? "Stereo" : "Mono",
 		autoinit ? "Auto-Init" : "Single-Cycle",
 		freq, sb.dma.rate, sb.dma.left
 		);
-#else
-	type = *&type;
 #endif
 }
 
