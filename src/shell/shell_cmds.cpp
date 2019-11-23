@@ -104,17 +104,22 @@ static char* ExpandDot(char*args, char* buffer , size_t bufsize) {
 
 
 
-bool DOS_Shell::CheckConfig(char* cmd_in,char*line) {
+bool DOS_Shell::CheckConfig(char *cmd_in, char *line) {
 	Section* test = control->GetSectionFromProperty(cmd_in);
-	if(!test) return false;
-	if(line && !line[0]) {
+	if (!test)
+		return false;
+
+	if (line && !line[0]) {
 		std::string val = test->GetPropValue(cmd_in);
-		if(val != NO_SUCH_PROPERTY) WriteOut("%s\n",val.c_str());
+		if (val != NO_SUCH_PROPERTY)
+			WriteOut("%s\n", val.c_str());
 		return true;
 	}
-	char newcom[1024]; newcom[0] = 0; strcpy(newcom,"z:\\config -set ");
-	strcat(newcom,test->GetName());	strcat(newcom," ");
-	strcat(newcom,cmd_in);strcat(newcom,line);
+	char newcom[1024];
+	snprintf(newcom, sizeof(newcom), "z:\\config -set %s %s%s",
+	         test->GetName(),
+	         cmd_in,
+	         line ? line : "");
 	DoCommand(newcom);
 	return true;
 }
