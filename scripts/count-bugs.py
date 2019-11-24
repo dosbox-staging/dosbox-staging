@@ -3,11 +3,19 @@
 # Copyright (c) 2019 Patryk Obara <patryk.obara@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-# This script prints a summary snippet of information out of reports created
-# by scan-build or analyze-build for Clang's static code analysis.
-#
-# Usage: ./count-warnings.py path/to/report/index.html
-#
+"""
+This script prints a summary snippet of information out of reports
+created by scan-build or analyze-build for Clang's static code
+analysis.
+
+It returns success to the shell if the number or bugs encountered
+is less than or equal to the desired maximum bugs. See --help
+for a description of how to set the maximum.
+
+If the count exceeds the maximum then the script will return a
+status of 1 (failure), otherwise the script returns 0 (success).
+
+"""
 # This script depends on BeautifulSoup module, if you're distribution is
 # missing it, you can use pipenv to install it for virtualenv spanning only
 # this repo: pipenv install beautifulsoup4 html5lib
@@ -15,15 +23,11 @@
 # pylint: disable=invalid-name
 # pylint: disable=missing-docstring
 
+import os
+import argparse
 import sys
 
 from bs4 import BeautifulSoup
-
-# Maximum allowed number of issues; if report will include more bugs,
-# then script will return with status 1. Simply change this line if you
-# want to set a different limit.
-#
-MAX_ISSUES = 92
 
 def summary_values(summary_table):
     if not summary_table:
@@ -56,18 +60,52 @@ def print_summary(issues):
             text=warning, count=count, field_size=size))
     print()
 
+def to_int(value):
+    return int(value) if value is not None else None
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter, description=__doc__)
+
+    parser.add_argument(
+        'report',
+        metavar='REPORT',
+        help=("Path to the HTML report file"))
+
+    max_bugs = to_int(os.getenv('MAX_BUGS', None))
+    parser.add_argument(
+        '-m', '--max-bugs',
+        type=int,
+        required=not isinstance(max_bugs, int),
+        default=max_bugs,
+        help='Defines the maximum number of bugs permitted to exist\n'
+             'in the report before returning a failure to the shell.\n'
+             'If not provided, the script will attempt to read it from\n'
+             'the MAX_BUGS environment variable, which is currently\n'
+             'set to: {}.  If a maximum of -1 is set then success is\n'
+             'always returned to the shell.\n\n'.format(str(max_bugs)))
+
+    return parser.parse_args()
 
 def main():
-    bug_types = read_soup(sys.argv[1])
+    rcode = 0
+    args = parse_args()
+    bug_types = read_soup(args.report)
     total = bug_types.pop('All Bugs')
     if bug_types:
         print("Bugs grouped by type:\n")
         print_summary(bug_types)
-    print('Total: {} bugs (out of {} allowed)\n'.format(total, MAX_ISSUES))
-    if total > MAX_ISSUES:
-        print('Error: upper limit of allowed bugs is', MAX_ISSUES)
-        sys.exit(1)
 
+    print('Total: {} bugs'.format(total), end='')
+    if args.max_bugs >= 0:
+        print(' (out of {} allowed)\n'.format(args.max_bugs))
+        if total > args.max_bugs:
+            print('Error: upper limit of allowed bugs is', args.max_bugs)
+            rcode = 1
+    else:
+        print('\n')
+
+    return rcode
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
