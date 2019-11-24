@@ -1,11 +1,8 @@
 name: macOS builds
 on: push
 env:
-  MAX_WARNINGS_Clang_Debug:   243
-  MAX_WARNINGS_GCC_9_Debug:   358
-
-  MAX_WARNINGS_Clang_Release: 243
-  MAX_WARNINGS_GCC_9_Release: 316
+  MAX_WARNINGS_Clang_Debug:   227
+  MAX_WARNINGS_GCC_9_Debug:   326
 
 jobs:
   clang_xcode:
