@@ -1,0 +1,4 @@
+# vcpkg doesn't provide clang or gcc, because it assumes you're using MS VisualStudio.
+# So we knock out the compiler.               
+compiler=""
+

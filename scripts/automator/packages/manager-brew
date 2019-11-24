@@ -1,0 +1,3 @@
+# Package repo: https://formulae.brew.sh/
+delim="@"
+packages+=(coreutils autogen autoconf automake pkg-config libpng sdl sdl_net opusfile)

@@ -53,6 +53,16 @@ stamp-h1
 # Other
 compile
 build.log
+clean.log
+make.log
+.previous_build
+.current_build
 
 # Visual Studio
 .vs
+
+# Common editor temp/backup files
+*~
+*.swp
+*.tmp
+

@@ -1,0 +1,5 @@
+# Tool additions and overrides for Darwin, regardless of compiler
+ar="ar"
+ranlib="ranlib"
+function make_binary() { make -j$(sysctl -n hw.physicalcpu) 2>&1 | tee build.log; }
+dependencies=("otool" "-L" "${executable}")

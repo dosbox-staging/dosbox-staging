@@ -1,0 +1,2 @@
+# Package repo: https://repology.org/projects/?inrepo=vcpkg
+packages+=(libpng sdl1 sdl1-net opusfile)

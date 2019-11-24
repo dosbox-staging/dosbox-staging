@@ -1,0 +1,17 @@
+# Tool overrides
+ar="gcc-ar${postfix}"
+cc="gcc${postfix}"
+cxx="g++${postfix}"
+ld="gcc${postfix}"
+ranlib="gcc-ranlib${postfix}"
+
+# Flag additions
+TYPES+=("debug" "profile")
+cflags+=("-fstack-protector" "-fdiagnostics-color=always")
+cflags_release=("${cflags[@]}" "-Ofast" "-ffunction-sections" "-fdata-sections")
+cflags_debug=("${cflags[@]}" "-g" "-Og" "-fno-omit-frame-pointer")
+cflags_profile=("${cflags_debug[@]}" "-pg")
+
+# Modifier additions
+MODIFIERS=("fdo")
+cflags_fdo=("-fauto-profile=${FDO_FILE:-}")

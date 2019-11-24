@@ -1,0 +1,3 @@
+# Brew does not supply "clang", so exclude it here
+compiler=""
+

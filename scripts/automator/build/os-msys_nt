@@ -1,0 +1,3 @@
+function make_binary() { make -j$(nproc) 2>&1 | tee build.log; }
+executable="src/dosbox.exe"
+

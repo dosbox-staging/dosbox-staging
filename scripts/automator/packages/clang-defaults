@@ -1,0 +1,2 @@
+compiler=(clang${postfix})
+
