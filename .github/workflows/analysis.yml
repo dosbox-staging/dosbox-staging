@@ -46,11 +46,13 @@ jobs:
           name: report
           path: report
       - name: Summarize report
+        env:
+          MAX_BUGS: 81
         run: |
           # summary
           echo "Full report is included in build Artifacts"
           echo
-          ./scripts/count-bugs.py -m 85 report/*/index.html
+          ./scripts/count-bugs.py report/*/index.html
 
   dynamic_matrix:
     name: ${{ matrix.compiler }} dynamic sanitizers

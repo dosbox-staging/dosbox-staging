@@ -1,21 +1,10 @@
 name: Linux builds
 on: push
 env:
-  MAX_WARNINGS_GCC_5_Debug:     370
-  MAX_WARNINGS_GCC_6_Debug:     378
-  MAX_WARNINGS_GCC_7_Debug:     377
-  MAX_WARNINGS_GCC_8_Debug:     380
-  MAX_WARNINGS_GCC_9_Debug:     400
-  MAX_WARNINGS_Clang_7_Debug:   193
-  MAX_WARNINGS_Clang_8_Debug:   191
-
-  MAX_WARNINGS_GCC_5_Release:    -1
-  MAX_WARNINGS_GCC_6_Release:   661
-  MAX_WARNINGS_GCC_7_Release:   329
-  MAX_WARNINGS_GCC_8_Release:   330
-  MAX_WARNINGS_GCC_9_Release:   358
-  MAX_WARNINGS_Clang_7_Release: 193
-  MAX_WARNINGS_Clang_8_Release: 193
+  MAX_WARNINGS_GCC_5_Debug:     309
+  MAX_WARNINGS_GCC_7_Debug:     316
+  MAX_WARNINGS_GCC_9_Debug:     339
+  MAX_WARNINGS_Clang_8_Debug:   175
 
 jobs:
 
