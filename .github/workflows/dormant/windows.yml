@@ -13,11 +13,8 @@ env:
 jobs:
 
   build_msvc_matrix:
-    name: MSVC 32-bit (${{ matrix.type }})
+    name: MSVC 32-bit
     runs-on: windows-latest
-    strategy:
-      matrix:
-        type: [Release, Debug]
     steps:
       - uses:  actions/checkout@v1
       - name:  Install packages
@@ -28,13 +25,20 @@ jobs:
       - name:  Log environment
         shell: pwsh
         run:   .\scripts\log-env.ps1
-      - name:  ${{ matrix.type }} build
+      - name:  Release build
         shell: pwsh
         env:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd visualc_net
-          MSBuild -m dosbox.sln -p:Configuration=${{ matrix.type }}
+          MSBuild -m dosbox.sln -p:Configuration=Release
+      - name:  Debug build
+        shell: pwsh
+        env:
+          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+        run: |
+          cd visualc_net
+          MSBuild -m dosbox.sln -p:Configuration=Debug
 
 
   build_msys2_matrix:
@@ -68,8 +72,13 @@ jobs:
       - name:  Log environment
         shell: python scripts\msys-bash.py {0}
         run:  ./scripts/log-env.sh
-      - name:  Debug Build
+      - name:  Release build
+        shell: python scripts\msys-bash.py {0}
+        run:   ./scripts/build.sh --compiler ${{ matrix.compiler }} --build-type Release --bin-path /mingw${{ matrix.bits }}/bin
+      - name:  Release warnings
+        run:   '.\scripts\count-warnings.py -m $env:MAX_WARNINGS_${{ matrix.compiler }}_${{ matrix.bits }}bit_Release build.log'
+      - name:  Debug build
         shell: python scripts\msys-bash.py {0}
         run:   ./scripts/build.sh --compiler ${{ matrix.compiler }} --build-type Debug --bin-path /mingw${{ matrix.bits }}/bin
-      - name:  Debug Warnings
+      - name:  Debug warnings
         run:   '.\scripts\count-warnings.py -m $env:MAX_WARNINGS_${{ matrix.compiler }}_${{ matrix.bits }}bit_Debug build.log'

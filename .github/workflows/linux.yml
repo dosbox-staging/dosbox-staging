@@ -1,51 +1,80 @@
 name: Linux builds
 on: push
+env:
+  MAX_WARNINGS_GCC_5_Debug:     373
+  MAX_WARNINGS_GCC_5_Release:    -1
+  MAX_WARNINGS_GCC_6_Debug:     378
+  MAX_WARNINGS_GCC_6_Release:   661
+  MAX_WARNINGS_GCC_7_Debug:     380
+  MAX_WARNINGS_GCC_7_Release:   329
+  MAX_WARNINGS_GCC_8_Debug:     380
+  MAX_WARNINGS_GCC_8_Release:   330
+  MAX_WARNINGS_GCC_9_Debug:     403
+  MAX_WARNINGS_GCC_9_Release:   358
+  MAX_WARNINGS_Clang_7_Debug:   193
+  MAX_WARNINGS_Clang_7_Release: 193
+  MAX_WARNINGS_Clang_8_Debug:   193
+  MAX_WARNINGS_Clang_8_Release: 193
+
 jobs:
 
-  build_ubuntu_clang_8:
-    name: Clang 8 (ubuntu-18.04)
-    runs-on: ubuntu-18.04
+  gcc-5_1604:
+    name: GCC-5 (Ubuntu 16.04)
+    runs-on: ubuntu-16.04
     steps:
       - uses: actions/checkout@v1
+      - run:  sudo apt-get update
+      - name: Install C++ compiler and libraries
+        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c gcc)
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - run:  sudo apt-get update
-      - name: Install dependencies
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler clang --compiler-version 8)
-      - name: Build
-        run:  ./scripts/build.sh --compiler clang --compiler-version 8 --lto
-      - name: Summarize warnings
-        run:  ./scripts/count-warnings.py build.log
+      - name: Debug build
+        run:  ./scripts/build.sh --compiler gcc --build-type Debug
+      - name: Debug warnings
+        run:  ./scripts/count-warnings.py -m $MAX_WARNINGS_GCC_5_Debug build.log
 
-  build_ubuntu_matrix_gcc:
-    name: GCC
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-18.04, ubuntu-16.04]
+  gcc-7_latest:
+    name: GCC-7 (Ubuntu-latest)
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
+      - run:  sudo apt-get update
+      - name: Install C++ compiler and libraries
+        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c gcc)
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - run:  sudo apt-get update
-      - name: Install dependencies
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt)
-      - name: Build
-        run:  ./scripts/build.sh
-      - name: Summarize warnings
-        run:  ./scripts/count-warnings.py build.log
+      - name: Debug build
+        run:  ./scripts/build.sh --compiler gcc --build-type Debug
+      - name: Debug warnings
+        run:  ./scripts/count-warnings.py -m $MAX_WARNINGS_GCC_7_Debug build.log
 
-  build_ubuntu_gcc9:
-    name: GCC 9 (ubuntu-18.04)
-    runs-on: ubuntu-18.04
+  gcc-9_latest:
+    name: GCC-9 (Ubuntu-latest)
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
+      - run:  sudo apt-get update
+      - name: Install C++ compiler and libraries
+        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c gcc -v 9)
       - name: Log environment
         run:  ./scripts/log-env.sh
+      - name: Debug build
+        run:  ./scripts/build.sh --compiler gcc --version-postfix 9 --build-type Debug
+      - name: Debug warnings
+        run:  ./scripts/count-warnings.py -m $MAX_WARNINGS_GCC_9_Debug build.log
+
+  clang-8_latest:
+    name: Clang-8 (Ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
       - run:  sudo apt-get update
-      - name: Install dependencies
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler-version 9)
-      - name: Build
-        run:  ./scripts/build.sh --compiler-version 9 --lto
-      - name: Summarize warnings
-        run:  ./scripts/count-warnings.py build.log
+      - name: Install C++ compiler and libraries
+        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c clang -v 8)
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+      - name: Debug build
+        run:  ./scripts/build.sh --compiler clang --version-postfix 8 --build-type Debug
+      - name: Debug warnings
+        run:  ./scripts/count-warnings.py -m $MAX_WARNINGS_Clang_8_Debug build.log
+

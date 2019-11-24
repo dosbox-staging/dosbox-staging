@@ -1,0 +1,76 @@
+name: macOS builds
+on: push
+env:
+  MAX_WARNINGS_GCC_9_Debug:   361
+  MAX_WARNINGS_GCC_9_Release: 321
+  PATH: "${GITHUB_WORKSPACE}/.github/scripts:${PATH}"
+
+jobs:
+  build_macos_gcc_brew:
+    name: GCC-${{ matrix.compiler_version }} (HomeBrew)
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        compiler_version: [9]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Prepare tar-zstd for the cache
+        run:  |
+          brew install zstd gnu-tar
+          cp .github/scripts/tar /usr/local/bin/tar
+      - uses: actions/cache@v1
+        id:   cache-brew
+        with: {path: /usr/local, key: brew-gcc-2019-v18}
+      - name: Install C++ compiler and libraries
+        if:   steps.cache-brew.outputs.cache-hit != 'true'
+        run:  |
+          ./.github/scripts/reset-brew.sh
+          brew install $(./scripts/list-build-dependencies.sh -m brew -c gcc -v ${{ matrix.compiler_version }})
+          sudo ./.github/scripts/shrink-brew.sh
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+      - name: Release build
+        run: ./scripts/build.sh --compiler gcc --version-postfix ${CC_PREFIX}${{ matrix.compiler_version }} --build-type Release
+      - name: Release warnings
+        run:  python3 ./scripts/count-warnings.py -m $MAX_WARNINGS_GCC_${{ matrix.compiler_version }}_Release build.log
+      - name: Debug build
+        run: ./scripts/build.sh --compiler gcc --version-postfix ${CC_PREFIX}${{ matrix.compiler_version }} --build-type Debug
+      - name: Debug warnings
+        run:  python3 ./scripts/count-warnings.py -m $MAX_WARNINGS_GCC_${{ matrix.compiler_version }}_Debug build.log
+
+  build_macos_gcc_macports:
+    name: GCC-${{ matrix.compiler_version }} (MacPorts)
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        compiler_version: [9]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Prepare tar-zstd and /opt/local for the cache
+        run:  |
+          brew install zstd gnu-tar
+          cp .github/scripts/tar /usr/local/bin/tar
+          sudo ./.github/scripts/prepare-for-macports-cachehit.sh
+      - uses: actions/cache@v1
+        id:   cache-macports
+        with: {path: /opt/local, key: macports-gcc-2019-v14}
+      - name: Install MacPorts, C++ compiler, and libraries
+        if:   steps.cache-macports.outputs.cache-hit != 'true'
+        run:  |
+          ./.github/scripts/download-and-build-macports.sh
+          sudo ./.github/scripts/install-and-update-macports.sh
+          sudo /opt/local/bin/port -q -f install $(./scripts/list-build-dependencies.sh -m macports -c gcc -v ${{ matrix.compiler_version }})
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+      - name: Release build
+        run:  ./scripts/build.sh --compiler gcc --version-postfix mp-${{ matrix.compiler_version }} --build-type Release --bin-path /opt/local/bin
+      - name: Release warnings
+        run:  python3 ./scripts/count-warnings.py $MAX_WARNINGS_GCC_${{ matrix.compiler_version }}_Release build.log
+      - name: Debug build
+        run:  ./scripts/build.sh --compiler gcc --version-postfix mp-${{ matrix.compiler_version }} --build-type Debug --bin-path /opt/local/bin
+      - name: Debug warnings
+        run:  python3 ./scripts/count-warnings.py $MAX_WARNINGS_GCC_${{ matrix.compiler_version }}_Debug build.log
+
+      - name: Shrink MacPorts for cache
+        if:   steps.cache-macports.outputs.cache-hit != 'true'
+        run:  sudo ./.github/scripts/shrink-macports.sh

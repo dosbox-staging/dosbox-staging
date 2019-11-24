@@ -1,60 +1,51 @@
 name: macOS builds
 on: push
-jobs:
+env:
+  MAX_WARNINGS_Clang_Debug:   245
+  MAX_WARNINGS_Clang_Release: 245
+  MAX_WARNINGS_GCC_9_Debug:   361
+  MAX_WARNINGS_GCC_9_Release: 321
 
-  build_macos_xcode_clang:
+jobs:
+  clang_xcode:
     name: Clang (Xcode)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
+      - name: Install C++ compiler and libraries
+        run:  brew install $(./scripts/list-build-dependencies.sh -m brew -c clang)
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - name: Install dependencies
-        run:  brew install $(./scripts/list-build-dependencies.sh -p brew --compiler clang)
-      - name: Build
-        run:  ./scripts/build.sh --compiler clang --lto
-      - name: Summarize warnings
-        run:  python3 ./scripts/count-warnings.py build.log
+      - name: Debug build
+        run:  ./scripts/build.sh --compiler clang --build-type Debug
+      - name: Debug warnings
+        run:  python3 ./scripts/count-warnings.py -m $MAX_WARNINGS_Clang_Debug build.log
 
-
-#  build_macos_brew_gcc9:
-#    name: GCC 9 (Homebrew)
-#    runs-on: macos-latest
-#    steps:
-#      - uses: actions/checkout@v1
-#      - name: Log environment
-#        run:  ./scripts/log-env.sh
-#      - name: Install dependencies
-#        run:  brew install $(./scripts/list-build-dependencies.sh -p brew --compiler-version 9)
-#      - name: Build
-#        run:  echo ./scripts/build.sh --compiler-version 9 --lto
-#      - name: Summarize warnings
-#        run:  echo python3 ./scripts/count-warnings.py build.log
-
-
-#  build_macos_macports_gcc9:
-#    name: GCC 9 (MacPorts)
-#    runs-on: macos-latest
-#    steps:
-#      - uses: actions/checkout@v1
-#      - name: Install MacPorts
-#        run: |
-#          # xcode-select --install || true
-#          # sudo xcodebuild -license || true
-#          git clone --quiet --depth=1 https://github.com/macports/macports-base.git
-#          cd macports-base
-#          ./configure
-#          make -j"$(sysctl -n hw.physicalcpu || echo 4)"
-#          sudo make install
-#
-#      - name: Install dependencies
-#        run: |
-#          PATH="/opt/local/sbin:/opt/local/bin:${PATH}"
-#          sudo port -q selfupdate || true
-#          sudo port -q install $(./scripts/list-build-dependencies.sh -p macports --compiler-version 9)
-#
-#      - name: Build
-#        run:  echo ./scripts/build.sh --compiler-version mp-9 --bin-path /opt/local/bin
-#      - name: Summarize warnings
-#        run:  echo python3 ./scripts/count-warnings.py build.log
+  gcc_brew:
+    name: GCC-${{ matrix.compiler_version }} (HomeBrew)
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        compiler_version: [9]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Prepare tar-zstd for the cache
+        run:  |
+          brew install zstd gnu-tar
+          cp .github/scripts/tar /usr/local/bin/tar
+      - uses: actions/cache@v1
+        id:   cache-brew
+        with: {path: /usr/local, key: brew-gcc-2019-v18}
+      - name: Install C++ compiler and libraries
+        if:   steps.cache-brew.outputs.cache-hit != 'true'
+        run:  |
+          ./.github/scripts/reset-brew.sh
+          brew install $(./scripts/list-build-dependencies.sh -m brew -c gcc -v ${{ matrix.compiler_version }})
+          sudo ./.github/scripts/shrink-brew.sh
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+      - name: Debug build
+        run: ./scripts/build.sh --compiler gcc --version-postfix ${CC_PREFIX}${{ matrix.compiler_version }} --build-type Debug
+      - name: Debug warnings
+        run:  python3 ./scripts/count-warnings.py -m $MAX_WARNINGS_GCC_${{ matrix.compiler_version }}_Debug build.log
 
