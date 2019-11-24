@@ -1,0 +1,4 @@
+# Under MSYS2, only the 'default' version is available, so we don't postfix the package
+compiler="mingw-w64-${pkg_type}-${selected_type}"
+
+

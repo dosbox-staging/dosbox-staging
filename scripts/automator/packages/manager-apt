@@ -1,0 +1,2 @@
+# Package repo: https://packages.ubuntu.com/
+packages+=(xvfb libtool build-essential libsdl1.2-dev libsdl-net1.2-dev libopusfile-dev)

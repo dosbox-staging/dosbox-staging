@@ -1,0 +1,2 @@
+# macports doesn't supply Clang, so knock it out here
+compiler=""

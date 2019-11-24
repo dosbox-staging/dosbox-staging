@@ -1,0 +1,8 @@
+ld="ld"
+
+TYPES+=("msan" "usan")
+cflags_msan=("${cflags_debug[@]}" "-fsanitize-recover=all" "-fsanitize=memory" "-fno-omit-frame-pointer")
+cflags_usan=("${cflags_debug[@]}" "-fsanitize-recover=all" "-fsanitize=undefined")
+
+MODIFIERS+=("lto")
+cflags_lto=("-flto=thin")

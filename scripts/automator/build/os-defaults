@@ -1,0 +1,57 @@
+# Steps in-common to all OSes, plus some helper variables and functions.
+
+STEPS=("pre_build" "clean" "autogen" "configure" "make_binary" "strip_binary" "dependencies" "post_build")
+
+executable="src/dosbox"
+dependencies=("ldd" "${executable}")
+
+function pre_build() {
+	cd ../..
+	underline "Environment"
+	echo "[$("${CC}" --version | head -1)]"
+	for v in "${VARIABLES[@]}"; do
+		vupper=$(upper "${v}")
+		echo "${vupper}=\"$(eval echo \$"${vupper}")\""
+	done
+	underline "Launching"
+}
+
+function stamp() {
+	echo "${compiler}-${selected_type}-${modifiers[*]}"
+}
+
+function autogen() {
+	if [[ ! -f configure || configure.ac -nt configure ]]; then
+		./autogen.sh
+	fi
+}
+
+function configure() {
+	if [[ ! -f Makefile || ! -f .previous_build || configure -nt Makefile ]]; then
+		export CXXFLAGS="${CFLAGS}"
+		./configure --enable-core-inline
+	fi
+}
+
+function strip_binary() {
+	if [[ "${selected_type}" == "release" ]]; then
+		strip "${executable}"
+	fi
+}
+
+function post_build() {
+	underline "Binary" "-"
+	ls -1lh "${executable}"
+	stamp > .previous_build
+}
+
+function clean() {
+	stamp > .current_build
+	if [[ -f Makefile ]]; then
+		if [[ ! -f .previous_build ]] || ! diff -q .previous_build .current_build &> /dev/null; then
+			rm -f .previous_build
+			echo "cleaning, this is a different build type"
+			make clean &> clean.log || cat clean.log
+		fi
+	fi
+}

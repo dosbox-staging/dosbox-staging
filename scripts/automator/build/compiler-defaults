@@ -1,0 +1,14 @@
+# Tools and flags for all compilers
+VARIABLES=("ar" "cc" "cxx" "ld" "ranlib" "cflags" "ldflags" "libs")
+ar=""
+cc=""
+cxx=""
+ld=""
+ranlib=""
+cflags=("-Wall" "-pipe")
+ldflags=("")
+libs=("")
+
+# Builds for all compilers
+TYPES=("release")
+cflags_release=("${cflags[@]}")

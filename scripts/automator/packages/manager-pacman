@@ -1,0 +1,4 @@
+# Package repo: https://www.archlinux.org/packages/
+# Arch offers 32-bit versions of SDL (but not others)
+packages+=(xvfb libtool sdl_net opusfile)
+[[ "${bits}" == "32" ]] && packages+=(lib32-sdl) || packages+=(sdl)

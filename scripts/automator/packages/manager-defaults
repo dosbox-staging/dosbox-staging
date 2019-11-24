@@ -1,0 +1,11 @@
+VARIABLES=(packages bits delim compiler)
+TYPES=(gcc clang)
+
+packages=(autoconf-archive zstd)
+delim="-"
+compiler=""
+
+STEPS=(print)
+function print() {
+	echo "${PACKAGES[*]}" "${COMPILER}"
+}
