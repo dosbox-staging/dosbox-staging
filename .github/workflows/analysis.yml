@@ -1,4 +1,4 @@
-name: Static code analysis
+name: Code analysis
 on: push
 jobs:
 
@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v1
       - run:  sudo apt-get update
       - name: Install pylint
-        run: |
+        run:  |
           sudo apt-get install python3-setuptools
           sudo pip3 install pylint beautifulsoup4 html5lib
       - name: Run pylint
@@ -23,15 +23,15 @@ jobs:
     needs: run_linters
     steps:
       - uses: actions/checkout@v1
-      - name: Log environment
-        run:  ./scripts/log-env.sh
       - run:  sudo apt-get update
-      - name: Install dependencies
-        run:  sudo apt-get install python3-setuptools $(./scripts/list-build-dependencies.sh -p apt)
+      - name: Install C++ compiler and libraries
+        run:  sudo apt-get install python3-setuptools $(./scripts/list-build-dependencies.sh -m apt -c gcc)
       - name: Install scan-build (Python version)
         run:  sudo pip3 install scan-build beautifulsoup4 html5lib
+      - name: Log environment
+        run:  ./scripts/log-env.sh
       - name: Build
-        run: |
+        run:  |
           # build steps
           set -x
           g++ --version
@@ -40,7 +40,8 @@ jobs:
           intercept-build make -j "$(nproc)"
       - name: Analyze
         run:  analyze-build -v -o report --html-title="dosbox-staging (${GITHUB_SHA:0:8})"
-      - uses: actions/upload-artifact@master
+      - name: Upload report
+        uses: actions/upload-artifact@master
         with:
           name: report
           path: report
@@ -49,4 +50,40 @@ jobs:
           # summary
           echo "Full report is included in build Artifacts"
           echo
-          ./scripts/count-bugs.py report/*/index.html
+          ./scripts/count-bugs.py -m 92 report/*/index.html
+
+  dynamic_matrix:
+    name: ${{ matrix.compiler }} dynamic sanitizers
+    needs: run_linters
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [Clang, GCC]
+    steps:
+      - uses: actions/checkout@v1
+      - run:  sudo apt-get update
+      - name: Install C++ compiler and libraries
+        env:
+          VERSION_GCC: 9
+          VERSION_Clang: 8
+        run:  >
+          sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt
+          -c ${{ matrix.compiler }} -v $VERSION_${{ matrix.compiler }})
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+      - name: Build and run sanitizers
+        env:
+          VERSION_GCC: 9
+          VERSION_Clang: 8
+          SANITIZERS_GCC: UASAN USAN TSAN
+          SANITIZERS_Clang: USAN MSAN
+        run: |
+          ./.github/scripts/build-and-run-sanitizers.sh \
+          ${{ matrix.compiler }} \
+          $VERSION_${{ matrix.compiler }} \
+          $SANITIZERS_${{ matrix.compiler }}
+      - name: Upload logs
+        uses: actions/upload-artifact@master
+        with:
+          name: ${{ matrix.compiler }}-logs
+          path: ${{ matrix.compiler }}-logs

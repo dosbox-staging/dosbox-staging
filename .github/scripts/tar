@@ -1,0 +1,19 @@
+#!/bin/bash
+set -euo pipefail
+rcode=0
+# If we're running outside of GitHub then run tar normally
+if [[ -z "${GITHUB_WORKFLOW:-}" ]]; then
+	"/usr/local/bin/gtar" "$@"
+	rcode="$?"
+# Otherwise use zstd and ignore tar's return-code
+else
+	first_arg="${1/z/}"
+	shift
+	[[ "${first_arg}" == "-x" ]] && decomp="-d" || decomp=""
+	set +e -x
+	"/usr/local/bin/gtar" \
+		--warning=none \
+		--use-compress-program="zstd -T0 -19 --long=31 --no-progress -v ${decomp}" \
+		"${first_arg}" "$@"
+fi
+exit "${rcode}"
