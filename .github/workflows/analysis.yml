@@ -50,7 +50,7 @@ jobs:
           # summary
           echo "Full report is included in build Artifacts"
           echo
-          ./scripts/count-bugs.py -m 92 report/*/index.html
+          ./scripts/count-bugs.py -m 85 report/*/index.html
 
   dynamic_matrix:
     name: ${{ matrix.compiler }} dynamic sanitizers
