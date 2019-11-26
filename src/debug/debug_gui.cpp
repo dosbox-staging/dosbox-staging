@@ -27,6 +27,7 @@
 #include <curses.h>
 #include <string.h>
 
+#include "cross.h"
 #include "support.h"
 #include "regs.h"
 #include "debug.h"
@@ -56,16 +57,18 @@ void DEBUG_ShowMsg(char const* format,...) {
 	char buf[512];
 	va_list msg;
 	va_start(msg,format);
-	vsprintf(buf,format,msg);
+	vsnprintf(buf,sizeof(buf),format,msg);
 	va_end(msg);
 
+	buf[sizeof(buf) - 1] = '\0';
+
 	/* Add newline if not present */
-	Bitu len=strlen(buf);
-	if(buf[len-1]!='\n') strcat(buf,"\n");
+	size_t len = strlen(buf);
+	if(buf[len - 1] != '\n' && len + 1 < sizeof(buf) ) strcat(buf,"\n");
 
 	if(debuglog) fprintf(debuglog,"%s",buf);
 
-	if (logBuffPos!=logBuff.end()) {
+	if (logBuffPos != logBuff.end()) {
 		logBuffPos=logBuff.end();
 		DEBUG_RefreshPage(0);
 //		mvwprintw(dbg.win_out,dbg.win_out->_maxy-1, 0, "");
