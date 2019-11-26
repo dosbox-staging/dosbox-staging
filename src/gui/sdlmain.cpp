@@ -1716,12 +1716,14 @@ static BOOL WINAPI ConsoleEventHandler(DWORD event) {
 static bool no_stdout = false;
 void GFX_ShowMsg(char const* format,...) {
 	char buf[512];
+
 	va_list msg;
 	va_start(msg,format);
-	vsprintf(buf,format,msg);
-        strcat(buf,"\n");
+	vsnprintf(buf,sizeof(buf),format,msg);
 	va_end(msg);
-	if(!no_stdout) printf("%s",buf); //Else buf is parsed again.
+
+	buf[sizeof(buf) - 1] = '\0';
+	if (!no_stdout) puts(buf); //Else buf is parsed again. (puts adds end of line)
 }
 
 
