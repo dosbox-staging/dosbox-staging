@@ -1,49 +1,29 @@
 name: macOS builds
 on: push
-env:
-  MAX_WARNINGS_Clang_Debug:   227
-  MAX_WARNINGS_GCC_9_Debug:   326
 
 jobs:
-  clang_xcode:
-    name: Clang (Xcode)
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install C++ compiler and libraries
-        run:  brew install $(./scripts/list-build-dependencies.sh -m brew -c clang)
-      - name: Log environment
-        run:  ./scripts/log-env.sh
-      - name: Debug build
-        run:  ./scripts/build.sh --compiler clang --build-type Debug
-      - name: Debug warnings
-        run:  python3 ./scripts/count-warnings.py -m $MAX_WARNINGS_Clang_Debug build.log
 
-  gcc_brew:
-    name: GCC-${{ matrix.compiler_version }} (HomeBrew)
+  build_macos:
+    name: ${{ matrix.conf.name }}
     runs-on: macos-latest
     strategy:
       matrix:
-        compiler_version: [9]
+        conf:
+          - name: Clang
+            flags: -c clang
+            max_warnings: 227
+          - name: GCC-9
+            flags: -c gcc -v 9
+            max_warnings: 326
     steps:
       - uses: actions/checkout@v1
-      - name: Prepare tar-zstd for the cache
-        run:  |
-          brew install zstd gnu-tar
-          cp .github/scripts/tar /usr/local/bin/tar
-      - uses: actions/cache@v1
-        id:   cache-brew
-        with: {path: /usr/local, key: brew-gcc-2019-v18}
       - name: Install C++ compiler and libraries
-        if:   steps.cache-brew.outputs.cache-hit != 'true'
-        run:  |
-          ./.github/scripts/reset-brew.sh
-          brew install $(./scripts/list-build-dependencies.sh -m brew -c gcc -v ${{ matrix.compiler_version }})
-          sudo ./.github/scripts/shrink-brew.sh
+        run:  brew install $(./scripts/list-build-dependencies.sh -m brew ${{ matrix.conf.flags}})
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - name: Debug build
-        run: ./scripts/build.sh --compiler gcc --version-postfix ${CC_PREFIX}${{ matrix.compiler_version }} --build-type Debug
-      - name: Debug warnings
-        run:  python3 ./scripts/count-warnings.py -m $MAX_WARNINGS_GCC_${{ matrix.compiler_version }}_Debug build.log
-
+      - name: Build
+        run:  ./scripts/build.sh --build-type Debug ${{ matrix.conf.flags }}
+      - name: Summarize warnings
+        env:
+          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
+        run:  python3 ./scripts/count-warnings.py build.log
