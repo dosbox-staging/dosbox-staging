@@ -1,2 +1,7 @@
-function make_binary() { make -j$(nproc) 2>&1 | tee build.log; }
-
+#!/bin/bash
+function make_binary() {
+	make \
+		--jobs="$(nproc)" \
+		--output-sync=line \
+		|& tee build.log
+}
