@@ -1,70 +1,40 @@
 name: Linux builds
 on: push
-env:
-  MAX_WARNINGS_GCC_5_Debug:     309
-  MAX_WARNINGS_GCC_7_Debug:     316
-  MAX_WARNINGS_GCC_9_Debug:     339
-  MAX_WARNINGS_Clang_8_Debug:   175
 
 jobs:
 
-  gcc-5_1604:
-    name: GCC-5 (Ubuntu 16.04)
-    runs-on: ubuntu-16.04
+  build_ubuntu:
+    name: ${{ matrix.conf.name }}
+    runs-on: ${{ matrix.conf.os }}
+    strategy:
+      matrix:
+        conf:
+          - name: GCC-5 (Ubuntu 16.04)
+            os: ubuntu-16.04
+            flags: -c gcc
+            max_warnings: 309
+          - name: GCC-7 (Ubuntu 18.04)
+            os: ubuntu-18.04
+            flags: -c gcc
+            max_warnings: 316
+          - name: GCC-9 (Ubuntu 18.04)
+            os: ubuntu-18.04
+            flags: -c gcc -v 9
+            max_warnings: 339
+          - name: Clang-8 (Ubuntu 18.04)
+            os: ubuntu-18.04
+            flags: -c clang -v 8
+            max_warnings: 175
     steps:
       - uses: actions/checkout@v1
       - run:  sudo apt-get update
       - name: Install C++ compiler and libraries
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt ${{ matrix.conf.flags }})
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - name: Debug build
-        run:  ./scripts/build.sh --compiler gcc --build-type Debug
-      - name: Debug warnings
-        run:  ./scripts/count-warnings.py -m $MAX_WARNINGS_GCC_5_Debug build.log
-
-  gcc-7_latest:
-    name: GCC-7 (Ubuntu-latest)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - run:  sudo apt-get update
-      - name: Install C++ compiler and libraries
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c gcc)
-      - name: Log environment
-        run:  ./scripts/log-env.sh
-      - name: Debug build
-        run:  ./scripts/build.sh --compiler gcc --build-type Debug
-      - name: Debug warnings
-        run:  ./scripts/count-warnings.py -m $MAX_WARNINGS_GCC_7_Debug build.log
-
-  gcc-9_latest:
-    name: GCC-9 (Ubuntu-latest)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - run:  sudo apt-get update
-      - name: Install C++ compiler and libraries
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c gcc -v 9)
-      - name: Log environment
-        run:  ./scripts/log-env.sh
-      - name: Debug build
-        run:  ./scripts/build.sh --compiler gcc --version-postfix 9 --build-type Debug
-      - name: Debug warnings
-        run:  ./scripts/count-warnings.py -m $MAX_WARNINGS_GCC_9_Debug build.log
-
-  clang-8_latest:
-    name: Clang-8 (Ubuntu-latest)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - run:  sudo apt-get update
-      - name: Install C++ compiler and libraries
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c clang -v 8)
-      - name: Log environment
-        run:  ./scripts/log-env.sh
-      - name: Debug build
-        run:  ./scripts/build.sh --compiler clang --version-postfix 8 --build-type Debug
-      - name: Debug warnings
-        run:  ./scripts/count-warnings.py -m $MAX_WARNINGS_Clang_8_Debug build.log
-
+      - name: Build
+        run:  ./scripts/build.sh --build-type Debug ${{ matrix.conf.flags }}
+      - name: Summarize warnings
+        env:
+          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
+        run:  ./scripts/count-warnings.py build.log
