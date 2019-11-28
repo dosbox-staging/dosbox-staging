@@ -317,6 +317,7 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 		Bit32u dr=(Bit32u)fread(read_buf, sizeof(Bit8u), 4, tempfile);
 		if ((dr<4) || (read_buf[0]!=0x4b) || (read_buf[1]!=0x4c) || (read_buf[2]!=0x46)) {
 			LOG(LOG_BIOS,LOG_ERROR)("Invalid keyboard layout file %s",keyboard_file_name);
+			fclose(tempfile);
 			return KEYB_INVALIDFILE;
 		}
 		
@@ -670,6 +671,7 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 		Bit32u dr=(Bit32u)fread(read_buf, sizeof(Bit8u), 4, tempfile);
 		if ((dr<4) || (read_buf[0]!=0x4b) || (read_buf[1]!=0x4c) || (read_buf[2]!=0x46)) {
 			LOG(LOG_BIOS,LOG_ERROR)("Invalid keyboard layout file %s",keyboard_file_name);
+			fclose(tempfile);
 			return 437;
 		}
 
