@@ -1,0 +1,10 @@
+include
+lib
+ogg
+opus
+opusfile
+ogg-master.tar.gz
+opusfile-master.tar.gz
+opus-master.tar.gz
+pkg.m4
+
