@@ -1,0 +1,55 @@
+name: Coverity Scan
+env:
+  COVERITY_EMAIL: ${{ secrets.CoverityEmail }}
+  COVERITY_TOKEN: ${{ secrets.CoverityToken }}
+  PACKAGE_VERSION: "2019.03"
+  TARBALL_SHA256: "0bec2d12e7fca3fe4b6df843d9584e2a58e273970a8549c100541f86dbc0da4e"
+  TARBALL_GDRIVE_ID: ${{ secrets.GoogleDriveId }}
+
+on:
+  schedule:
+    # Every day at 415am
+    - cron:  '15 4 * * *'
+jobs:
+  coverity_scan:
+    name: Coverity static analyzer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run:  sudo apt-get update
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+
+      - name: Install C++ compiler and dependencies
+        run:  |
+          sudo apt-get install zstd python3-setuptools $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+          sudo pip3 install gdown
+
+      - name: Fetch the Coverity instrumenteur
+        run:  |
+          set -xeuo pipefail
+          gdown --id "${TARBALL_GDRIVE_ID}" -O - \
+          | tee >(tar -I zstd -C /dev/shm -x) \
+          | sha256sum -c <(echo "${TARBALL_SHA256} -" )
+
+      - name: Build and instrument the project
+        run:  |
+          set -xeu
+          g++ --version
+          ./autogen.sh
+          export CFLAGS="-g -Og"
+          export CXXFLAGS="${CFLAGS}"
+          ./configure
+          PATH="/dev/shm/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
+          cov-build --dir cov-int make -j "$(nproc)"
+          tar -cvaf package.tar.gz cov-int
+
+      - name: Upload the package to Coverity
+        run:  |
+          curl \
+          --form token="${COVERITY_TOKEN}" \
+          --form email="${COVERITY_EMAIL}" \
+          --form file=@package.tar.gz \
+          --form version="${GITHUB_REF}" \
+          --form description="${GITHUB_REPOSITORY}" \
+          "https://scan.coverity.com/builds?project=dosbox-staging"
