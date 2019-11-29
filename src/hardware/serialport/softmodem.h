@@ -23,7 +23,6 @@
 #include "dosbox.h"
 #if C_MODEM
 #include "serialport.h"
-
 #include "misc_util.h"
 
 #define MODEMSPD 57600
@@ -91,7 +90,8 @@ public:
 			static Bits lcount=0;
 			if (lcount<1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO Overflow! (adds len %u)",_len);
+				LOG_MSG("MODEM: FIFO Overflow! (adds len %u)",
+				        static_cast<uint32_t>(_len));
 			}
 			return;
 		}
@@ -125,7 +125,8 @@ public:
 			static Bits lcount=0;
 			if (lcount<1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO UNDERFLOW! (gets len %d)",_len);
+				LOG_MSG("MODEM: FIFO UNDERFLOW! (gets len %u)",
+				        static_cast<uint32_t>(_len));
 			}
 			return;
 		}
