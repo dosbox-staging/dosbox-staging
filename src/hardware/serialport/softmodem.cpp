@@ -145,7 +145,7 @@ void CSerialModem::SendNumber(Bitu val) {
 
 void CSerialModem::SendRes(ResTypes response) {
 	char const * string = nullptr;
-	Bitu code;
+	Bitu code = -1;
 	switch (response)
 	{
 		case ResNONE:		return;
@@ -161,7 +161,7 @@ void CSerialModem::SendRes(ResTypes response) {
 		if(doresponse == 2 && (response == ResRING ||
 			response == ResCONNECT || response == ResNOCARRIER))
 			return;
-		if(numericresponse)
+		if(numericresponse && code != -1)
 			SendNumber(code);
 		else if (string != nullptr)
 			SendLine(string);
