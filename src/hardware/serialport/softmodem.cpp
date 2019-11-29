@@ -144,7 +144,8 @@ void CSerialModem::SendNumber(Bitu val) {
 }
 
 void CSerialModem::SendRes(ResTypes response) {
-	char const * string;Bitu code;
+	char const * string = nullptr;
+	Bitu code;
 	switch (response)
 	{
 		case ResNONE:		return;
@@ -155,12 +156,15 @@ void CSerialModem::SendRes(ResTypes response) {
 		case ResNOCARRIER:	string="NO CARRIER" ;code=3; break;
 		case ResCONNECT:	string="CONNECT 57600"; code=1; break;
 	}
-	
-	if(doresponse!=1) {
-		if(doresponse==2 && (response==ResRING || 
-			response == ResCONNECT || response==ResNOCARRIER)) return;
-		if(numericresponse) SendNumber(code);
-		else SendLine(string);
+
+	if(doresponse != 1) {
+		if(doresponse == 2 && (response == ResRING ||
+			response == ResCONNECT || response == ResNOCARRIER))
+			return;
+		if(numericresponse)
+			SendNumber(code);
+		else if (string != nullptr)
+			SendLine(string);
 
 		//if(CSerial::CanReceiveByte())	// very fast response
 		//	if(rqueue->inuse() && CSerial::getRTS())
@@ -169,7 +173,9 @@ void CSerialModem::SendRes(ResTypes response) {
 		//	LOG_MSG("Modem: sending byte %2x back to UART2",rbyte);
 		//	}
 
-		LOG_MSG("Modem response: %s", string);
+		if (string != nullptr) {
+			LOG_MSG("Modem response: %s", string);
+		}
 	}
 }
 
