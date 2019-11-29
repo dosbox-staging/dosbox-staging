@@ -328,7 +328,7 @@ public:
 					WriteOut(MSG_Get("MSCDEX_WARNING_IOCTL"));
 				}
 				if (cmd->FindExist("-noioctl", false)) {
-					MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
+					MSCDEX_SetCDInterface(0, num);
 				}
 				newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
 				// Check Mscdex, if it worked out...
@@ -1411,7 +1411,7 @@ public:
 				return;
 			}
 
-			MSCDEX_SetCDInterface(CDROM_USE_SDL, -1);
+			MSCDEX_SetCDInterface(0, -1);
 			// create new drives for all images
 			std::vector<DOS_Drive*> isoDisks;
 			std::vector<std::string>::size_type i;

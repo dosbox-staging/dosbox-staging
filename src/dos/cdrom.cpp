@@ -16,10 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-// ******************************************************
-// SDL CDROM 
-// ******************************************************
+#include "cdrom.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -27,8 +24,6 @@
 
 #include "dosbox.h"
 #include "support.h"
-#include "cdrom.h"
-
 
 int CDROM_GetMountType(char* path, int) {
 // 1 - Iso file
