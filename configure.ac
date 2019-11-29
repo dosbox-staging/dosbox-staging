@@ -535,7 +535,7 @@ AC_CHECK_HEADER(ddraw.h, have_ddraw_h=yes , have_ddraw_h=no , )
 AC_MSG_CHECKING(whether ddraw display output will be enabled)
 if test x$enable_ddraw = xyes; then
 case "$host" in
-    *-*-cygwin* | *-*-mingw32*)
+    *-*-cygwin* | *-*-mingw* | *-*-msys*)
        if test x$have_ddraw_h = xyes ; then
          AC_MSG_RESULT(yes)
          AC_DEFINE(C_DDRAW,1)
@@ -609,7 +609,7 @@ esac
 
 dnl Some stuff for the icon.
 case "$host" in
-    *-*-cygwin* | *-*-mingw32*)
+    *-*-cygwin* | *-*-mingw* | *-*-msys*)
        dnl Some stuff for the ico
        AC_CHECK_TOOL(WINDRES, windres, :)
     ;;

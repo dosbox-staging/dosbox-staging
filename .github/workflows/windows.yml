@@ -73,5 +73,6 @@ jobs:
           export MSYSTEM_CARCH="$ARCH_${{ matrix.bits }}"
           export MSYSTEM_CHOST="$ARCH_${{ matrix.bits }}-pc-msys"
           ./scripts/build.sh --compiler ${{ matrix.compiler }} --build-type Debug --bin-path /mingw${{ matrix.bits }}/bin
+          grep '^#define' config.h
       - name:  Debug Warnings
         run:   '.\scripts\count-warnings.py -m $env:MAX_WARNINGS_${{ matrix.compiler }}_${{ matrix.bits }}bit_Debug build.log'

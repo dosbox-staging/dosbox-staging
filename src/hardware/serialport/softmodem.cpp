@@ -148,20 +148,22 @@ void CSerialModem::SendRes(ResTypes response) {
 	Bitu code = -1;
 	switch (response)
 	{
-		case ResNONE:		return;
-		case ResOK:			string="OK"; code=0; break;
-		case ResERROR:		string="ERROR"; code=4; break;
-		case ResRING:		string="RING"; code=2; break;
-		case ResNODIALTONE: string="NO DIALTONE"; code=6; break;
-		case ResNOCARRIER:	string="NO CARRIER" ;code=3; break;
-		case ResCONNECT:	string="CONNECT 57600"; code=1; break;
+		case ResNONE:       return;
+		case ResOK:         string = "OK";            code = 0; break;
+		case ResERROR:      string = "ERROR";         code = 4; break;
+		case ResRING:       string = "RING";          code = 2; break;
+		case ResNODIALTONE: string = "NO DIALTONE";   code = 6; break;
+		case ResNOCARRIER:  string = "NO CARRIER";    code = 3; break;
+		case ResCONNECT:    string = "CONNECT 57600"; code = 1; break;
+		case ResBUSY:       string = "BUSY";          code = 7; break;
+	//  case ResNOANSWER:   string = "NO ANSWER";     code = 8; break;
 	}
 
 	if(doresponse != 1) {
 		if(doresponse == 2 && (response == ResRING ||
 			response == ResCONNECT || response == ResNOCARRIER))
 			return;
-		if(numericresponse && code != -1)
+		if(numericresponse && code != static_cast<Bitu>(-1))
 			SendNumber(code);
 		else if (string != nullptr)
 			SendLine(string);
@@ -190,7 +192,7 @@ bool CSerialModem::Dial(char * host) {
 	}
 	else port=MODEM_DEFAULT_PORT;
 	// Resolve host we're gonna dial
-	LOG_MSG("Connecting to host %s port %d",host,port);
+	LOG_MSG("Connecting to host %s port %u", host, port);
 	clientsocket = new TCPClientSocket(host, port);
 	if(!clientsocket->isopen) {
 		delete clientsocket;
@@ -264,7 +266,7 @@ void CSerialModem::Reset(){
 void CSerialModem::EnterIdleState(void){
 	connected=false;
 	ringing=false;
-	
+
 	if(clientsocket) {
 		delete clientsocket;
 		clientsocket=0;
@@ -279,16 +281,21 @@ void CSerialModem::EnterIdleState(void){
 		while( (waitingclientsocket=serversocket->Accept()) )
 			delete waitingclientsocket;
 	} else if (listenport) {
-		
-		serversocket=new TCPServerSocket(listenport);	
+
+		serversocket=new TCPServerSocket(listenport);
 		if(!serversocket->isopen) {
-			LOG_MSG("Serial%d: Modem could not open TCP port %d.",COMNUMBER,listenport);
+			LOG_MSG("Serial%u: Modem could not open TCP port %u.",
+			        static_cast<uint32_t>(COMNUMBER),
+			        static_cast<uint32_t>(listenport));
 			delete serversocket;
 			serversocket=0;
-		} else LOG_MSG("Serial%d: Modem listening on port %d...",COMNUMBER,listenport);
+		} else
+			LOG_MSG("Serial%u: Modem listening on port %u...",
+		            static_cast<uint32_t>(COMNUMBER),
+			        static_cast<uint32_t>(listenport));
 	}
 	waitingclientsocket=0;
-	
+
 	commandmode = true;
 	CSerial::setCD(false);
 	CSerial::setRI(false);
@@ -533,7 +540,9 @@ void CSerialModem::DoCommand() {
 					SendRes(ResERROR);
 					return;
 				default:
-					LOG_MSG("Modem: Unhandled command: &%c%d",cmdchar,ScanNumber(scanbuf));
+					LOG_MSG("Modem: Unhandled command: &%c%u",
+					        cmdchar,
+					        static_cast<uint32_t>(ScanNumber(scanbuf)));
 					break;
 			}
 			break;
@@ -553,7 +562,9 @@ void CSerialModem::DoCommand() {
 					SendRes(ResERROR);
 					return;
 				default:
-					LOG_MSG("Modem: Unhandled command: \\%c%d",cmdchar, ScanNumber(scanbuf));
+					LOG_MSG("Modem: Unhandled command: \\%c%u",
+					        cmdchar,
+					        static_cast<uint32_t>(ScanNumber(scanbuf)));
 					break;
 			}
 			break;
@@ -562,7 +573,9 @@ void CSerialModem::DoCommand() {
 			SendRes(ResOK);
 			return;
 		default:
-			LOG_MSG("Modem: Unhandled command: %c%d",chr,ScanNumber(scanbuf));
+			LOG_MSG("Modem: Unhandled command: %c%u",
+			        chr,
+			        static_cast<uint32_t>(ScanNumber(scanbuf)));
 			break;
 		}
 	}
@@ -576,7 +589,7 @@ void CSerialModem::TelnetEmulation(Bit8u * data, Bitu size) {
 		if(telClient.inIAC) {
 			if(telClient.recCommand) {
 				if((c != 0) && (c != 1) && (c != 3)) {
-					LOG_MSG("MODEM: Unrecognized option %d", c);
+					LOG_MSG("MODEM: Unrecognized option %u", c);
 					if(telClient.command>250) {
 						/* Reject anything we don't recognize */
 						tqueue->addb(0xff);
@@ -671,7 +684,6 @@ void CSerialModem::TelnetEmulation(Bit8u * data, Bitu size) {
 
 void CSerialModem::Timer2(void) {
 
-	unsigned long args = 1;
 	bool sendbyte = true;
 	Bitu usesize;
 	Bit8u txval;
@@ -794,8 +806,8 @@ void CSerialModem::transmitByte(Bit8u val, bool first) {
 	//LOG_MSG("MODEM: Byte %x to be transmitted",val);
 }
 
-void CSerialModem::updatePortConfig(Bit16u, Bit8u lcr) { 
-// nothing to do here right?
+void CSerialModem::updatePortConfig(Bit16u, Bit8u lcr) {
+	(void) lcr; // deliberately unused by needed to meet the API
 }
 
 void CSerialModem::updateMSR() {
@@ -806,11 +818,12 @@ void CSerialModem::setBreak(bool) {
 	// TODO: handle this
 }
 
-void CSerialModem::setRTSDTR(bool rts, bool dtr) {
-	setDTR(dtr);
+void CSerialModem::setRTSDTR(bool rts_, bool dtr_) {
+	(void) rts_; // deliberately unused but needed to meet the API
+	setDTR(dtr_);
 }
 void CSerialModem::setRTS(bool val) {
-	
+	(void) val; // deliberately unused but needed to meet the API
 }
 void CSerialModem::setDTR(bool val) {
 	if(!val && connected) {
