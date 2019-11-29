@@ -47,8 +47,6 @@
 #define	REQUEST_STATUS_DONE		0x0100
 #define	REQUEST_STATUS_ERROR	0x8000
 
-// Use cdrom Interface
-int useCdromInterface	= CDROM_USE_SDL;
 int forceCD				= -1;
 
 static Bitu MSCDEX_Strategy_Handler(void); 
@@ -1299,8 +1297,7 @@ bool MSCDEX_HasMediaChanged(Bit8u subUnit)
 	return true;
 }
 
-void MSCDEX_SetCDInterface(int intNr, int numCD) {
-	useCdromInterface = intNr;
+void MSCDEX_SetCDInterface(int, int numCD) {
 	forceCD	= numCD;
 }
 

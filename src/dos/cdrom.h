@@ -45,10 +45,6 @@
 #define REDBOOK_PCM_BYTES_PER_MS     176.4f // 44.1 frames/ms * 4 bytes/frame
 #define BYTES_PER_REDBOOK_PCM_FRAME       4 // 2 bytes/sample * 2 samples/frame
 
-enum {
-	CDROM_USE_SDL,
-};
-
 typedef struct SMSF {
 	unsigned char min;
 	unsigned char sec;
