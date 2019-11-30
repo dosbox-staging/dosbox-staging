@@ -4,11 +4,14 @@ cxx="clang++${postfix}"
 
 # Flag additions
 TYPES+=("debug" "profile")
-cflags+=("-fcolor-diagnostics")
 cflags_release=("${cflags[@]}" "-Os")
 cflags_debug=("${cflags[@]}" "-g" "-Og" "-fno-omit-frame-pointer")
 cflags_profile=("${cflags_debug[@]}" "-fprofile-instr-generate" "-fcoverage-mapping")
 
+# Colorize output only for interactive shells
+if [[ $- == *i* ]]; then
+	cflags+=("-fcolor-diagnostics")
+fi
 
 # Modifier additions
 MODIFIERS=("fdo")

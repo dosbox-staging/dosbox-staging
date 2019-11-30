@@ -22,6 +22,19 @@
 #include <cinttypes>
 #include <cstdint>
 
+/* Work around this bug in /mingw64/x86_64-w64-mingw64/include/inttypes.h:
+ * MS runtime does not yet understand C9x standard "ll"
+ * length specifier. It appears to treat "ll" as "l".
+ * The non-standard I64 length specifier understood by MS
+ * runtime functions, so for now we use that.
+ */
+#if defined(__MINGW64__) && !defined(__clang__)
+#ifdef PRIuPTR
+#undef PRIuPTR
+#endif
+#define PRIuPTR "I64u"
+#endif
+
 using Bit8u  = uint8_t;
 using Bit16u = uint16_t;
 using Bit32u = uint32_t;

@@ -7,7 +7,7 @@ ranlib="gcc-ranlib${postfix}"
 
 # Flag additions
 TYPES+=("debug" "profile")
-cflags+=("-fstack-protector" "-fdiagnostics-color=always")
+cflags+=("-fstack-protector" "-fdiagnostics-color=auto")
 cflags_release=("${cflags[@]}" "-Ofast" "-ffunction-sections" "-fdata-sections")
 cflags_debug=("${cflags[@]}" "-g" "-Og" "-fno-omit-frame-pointer")
 cflags_profile=("${cflags_debug[@]}" "-pg")

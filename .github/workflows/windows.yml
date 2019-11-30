@@ -1,10 +1,10 @@
 name: Windows builds
 on: push
 env:
-  MAX_WARNINGS_GCC_32bit_Debug:     234
-  MAX_WARNINGS_GCC_64bit_Debug:     350
-  MAX_WARNINGS_Clang_32bit_Debug:   100
-  MAX_WARNINGS_Clang_64bit_Debug:   155
+  MAX_WARNINGS_GCC_32bit_Debug:     230
+  MAX_WARNINGS_GCC_64bit_Debug:     305
+  MAX_WARNINGS_Clang_32bit_Debug:    99
+  MAX_WARNINGS_Clang_64bit_Debug:   143
 
 jobs:
 
@@ -73,6 +73,5 @@ jobs:
           export MSYSTEM_CARCH="$ARCH_${{ matrix.bits }}"
           export MSYSTEM_CHOST="$ARCH_${{ matrix.bits }}-pc-msys"
           ./scripts/build.sh --compiler ${{ matrix.compiler }} --build-type Debug --bin-path /mingw${{ matrix.bits }}/bin
-          grep '^#define' config.h
       - name:  Debug Warnings
         run:   '.\scripts\count-warnings.py -m $env:MAX_WARNINGS_${{ matrix.compiler }}_${{ matrix.bits }}bit_Debug build.log'
