@@ -2,7 +2,6 @@
 [![](https://github.com/dreamer/dosbox-staging/workflows/Linux%20builds/badge.svg)](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22)
 [![](https://github.com/dreamer/dosbox-staging/workflows/Windows%20builds/badge.svg)](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22)
 [![](https://github.com/dreamer/dosbox-staging/workflows/macOS%20builds/badge.svg)](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22)
-[![](https://img.shields.io/coverity/scan/19891)](https://scan.coverity.com/projects/dosbox-staging)
 
 This repository attempts to modernize the [DOSBox](https://www.dosbox.com/)
 project by using current development practices and tools, fixing issues, adding
