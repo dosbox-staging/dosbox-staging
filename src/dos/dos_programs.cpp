@@ -327,9 +327,7 @@ public:
 				int num = -1;
 				cmd->FindInt("-usecd",num,true);
 				int error = 0;
-				if (cmd->FindExist("-aspi",false)) {
-					MSCDEX_SetCDInterface(CDROM_USE_ASPI, num);
-				} else if (cmd->FindExist("-ioctl_dio",false)) {
+				if (cmd->FindExist("-ioctl_dio", false)) {
 					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
 				} else if (cmd->FindExist("-ioctl_dx",false)) {
 					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
@@ -1698,8 +1696,6 @@ void DOS_SetupPrograms(void) {
 		"The \033[33mlast\033[0m level of support depends on your Operating System:\n"
 		"For \033[1mWindows 2000\033[0m, \033[1mWindows XP\033[0m and \033[1mLinux\033[0m:\n"
 		"\033[34;1mmount d \033[0;31mD:\\\033[34;1m -t cdrom -usecd \033[33m0 \033[34m-ioctl\033[0m\n"
-		"For \033[1mWindows 9x\033[0m with a ASPI layer installed:\n"
-		"\033[34;1mmount d \033[0;31mD:\\\033[34;1m -t cdrom -usecd \033[33m0 \033[34m-aspi\033[0m\n"
 		"\n"
 		"Replace \033[0;31mD:\\\033[0m with the location of your CD-ROM.\n"
 		"Replace the \033[33;1m0\033[0m in \033[34;1m-usecd \033[33m0\033[0m with the number reported for your CD-ROM if you type:\n"

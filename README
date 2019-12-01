@@ -143,8 +143,6 @@ CD-ROM: My CD-ROM doesn't work.
         - mount d f:\ -t cdrom -ioctl_mci
       To force ioctl-only access (Windows-only):
         - mount d f:\ -t cdrom -ioctl_dio
-      To enable low-level aspi-support (win98 with aspi-layer installed):
-        - mount d f:\ -t cdrom -aspi
 
     explanation: - d   driveletter you will get in DOSBox (d is the best,
                           don't change it!)
@@ -161,7 +159,7 @@ CD-ROM: The game/application can't find its CD-ROM.
     MSCDEX interface required by DOS games to interface with CD-ROMs.
     Also try adding the correct label (-label LABEL) to the mount command,
     where LABEL is the CD-label (volume ID) of the CD-ROM.
-    Under Windows you can specify -ioctl, -aspi or -noioctl. Look at the
+    Under Windows you can specify -ioctl or -noioctl. Look at the
     description of the mount command in Section 4: "Internal programs"
     for their meaning and the
     additional audio-CD related options -ioctl_dx, -ioctl_mci, -ioctl_dio.
@@ -484,7 +482,7 @@ To get a list of the internal commands type "HELP" at the prompt.
 In addition, the following commands are available:
 
 MOUNT "Emulated Drive letter" "Real Drive or Directory"
-      [-t type] [-aspi] [-ioctl] [-noioctl] [-usecd number] [-size drivesize]
+      [-t type] [-ioctl] [-noioctl] [-usecd number] [-size drivesize]
       [-label drivelabel] [-freesize size_in_mb]
       [-freesize size_in_kb (floppies)]
 MOUNT -cd
@@ -522,16 +520,12 @@ MOUNT -u "Emulated Drive letter"
         if the CD-ROM label isn't read correctly (useful when a program
         can't find its CD-ROM). If you don't specify a label
         and no lowlevel support is selected (that is omitting the -usecd #
-        and/or -aspi parameters, or specifying -noioctl):
+        parameter, or specifying -noioctl):
           For Windows: label is extracted from "Real Drive".
           For Linux: label is set to NO_LABEL.
 
         If you do specify a label, this label will be kept as long as the drive
         is mounted. It will not be updated !!
-
-  -aspi
-        Forces use of the aspi layer. Only valid if mounting a CD-ROM under
-        Windows systems with an ASPI-Layer.
 
   -ioctl (automatic selection of the CD audio interface)
   -ioctl_dx (digital audio extraction used for CD audio)
