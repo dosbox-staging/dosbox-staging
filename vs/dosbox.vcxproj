@@ -152,7 +152,6 @@
     <ClCompile Include="..\src\debug\debug_win32.cpp" />
     <ClCompile Include="..\src\dosbox.cpp" />
     <ClCompile Include="..\src\dos\cdrom.cpp" />
-    <ClCompile Include="..\src\dos\cdrom_aspi_win32.cpp" />
     <ClCompile Include="..\src\dos\cdrom_image.cpp" />
     <ClCompile Include="..\src\dos\cdrom_ioctl_win32.cpp" />
     <ClCompile Include="..\src\dos\dos.cpp" />
@@ -345,7 +344,6 @@
     <ClInclude Include="..\src\dos\Ntddscsi.h" />
     <ClInclude Include="..\src\dos\Ntddstor.h" />
     <ClInclude Include="..\src\dos\scsidefs.h" />
-    <ClInclude Include="..\src\dos\wnaspi32.h" />
     <ClInclude Include="..\src\fpu\fpu_instructions.h" />
     <ClInclude Include="..\src\fpu\fpu_instructions_x86.h" />
     <ClInclude Include="..\src\gui\midi_win32.h" />
