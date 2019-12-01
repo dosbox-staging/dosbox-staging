@@ -99,35 +99,6 @@ public:
 	virtual void InitNewMedia       (void) {};
 };
 
-class CDROM_Interface_SDL : public CDROM_Interface
-{
-public:
-	CDROM_Interface_SDL             (void);
-	virtual ~CDROM_Interface_SDL    (void);
-	virtual bool SetDevice          (char* path, int forceCD);
-	virtual bool GetUPC             (unsigned char& attr, char* upc) { attr = 0; strcpy(upc,"UPC"); return true; };
-	virtual bool GetAudioTracks     (int& stTrack, int& end, TMSF& leadOut);
-	virtual bool GetAudioTrackInfo  (int track, TMSF& start, unsigned char& attr);
-	virtual bool GetAudioSub        (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
-	virtual bool GetAudioStatus     (bool& playing, bool& pause);
-	virtual bool GetMediaTrayStatus (bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
-	virtual bool PlayAudioSector    (unsigned long start,unsigned long len);
-	virtual bool PauseAudio         (bool resume);
-	virtual bool StopAudio          (void);
-	virtual void ChannelControl     (TCtrl ctrl) { (void)ctrl; // unused but part of the API
-	                                               return; };
-	virtual bool ReadSectors        (PhysPt /*buffer*/, bool /*raw*/, unsigned long /*sector*/, unsigned long /*num*/) { return false; };
-	virtual bool LoadUnloadMedia    (bool unload);
-
-private:
-	bool         Open               (void);
-	void         Close              (void);
-
-	SDL_CD*      cd;
-	int          driveID;
-	Uint32       oldLeadOut;
-};
-
 class CDROM_Interface_Fake : public CDROM_Interface
 {
 public:
@@ -270,22 +241,5 @@ private:
 	static int          refCount;
 	Bit8u               subUnit;
 };
-
-#if defined (LINUX)
-
-class CDROM_Interface_Ioctl : public CDROM_Interface_SDL
-{
-public:
-	CDROM_Interface_Ioctl		(void);
-
-	bool	SetDevice		(char* path, int forceCD);
-	bool	GetUPC			(unsigned char& attr, char* upc);
-	bool	ReadSectors		(PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
-
-private:
-	char	device_name[512];
-};
-
-#endif /* LINUX */
 
 #endif /* __CDROM_INTERFACE__ */

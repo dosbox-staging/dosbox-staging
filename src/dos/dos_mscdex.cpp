@@ -253,18 +253,11 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 	int result = 0;
 	// Get Mounttype and init needed cdrom interface
 	switch (CDROM_GetMountType(physicalPath,forceCD)) {
-	case 0x00: {	
+	case 0x00:
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting physical cdrom: %s"	,physicalPath);
-#if defined (LINUX)
-		// Always use IOCTL in Linux
-		cdrom[numDrives] = new CDROM_Interface_Ioctl();
-		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface.");
-#else
-		// Default case windows and other oses
-		cdrom[numDrives] = new CDROM_Interface_SDL();
-		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: SDL Interface.");
-#endif
-		} break;
+		// TODO: support for mounting physical CD-ROMs removed, provide
+		//       warnings/explanations for users
+		return 2;
 	case 0x01:	// iso cdrom interface	
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting iso file as cdrom: %s", physicalPath);
 		cdrom[numDrives] = new CDROM_Interface_Image((Bit8u)numDrives);
