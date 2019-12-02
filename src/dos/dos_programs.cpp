@@ -51,7 +51,6 @@
 Bitu DEBUG_EnableDebugger(void);
 #endif
 
-void MSCDEX_SetCDInterface(int intNr, int forceCD);
 static Bitu ZDRIVE_NUM = 25;
 
 static const char* UnmountHelper(char umount) {
@@ -323,12 +322,15 @@ public:
 			if (type=="cdrom") {
 				int num = -1;
 				cmd->FindInt("-usecd",num,true);
+				// TODO: 
+				// if (num >= 0)
+				//     WriteOut warning, -usecd ignored, no physical CD support
 				int error = 0;
 				if (cmd->FindExist("-ioctl", false)) {
 					WriteOut(MSG_Get("MSCDEX_WARNING_IOCTL"));
 				}
 				if (cmd->FindExist("-noioctl", false)) {
-					MSCDEX_SetCDInterface(0, num);
+					WriteOut(MSG_Get("MSCDEX_WARNING_IOCTL"));
 				}
 				newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
 				// Check Mscdex, if it worked out...
@@ -1411,7 +1413,6 @@ public:
 				return;
 			}
 
-			MSCDEX_SetCDInterface(0, -1);
 			// create new drives for all images
 			std::vector<DOS_Drive*> isoDisks;
 			std::vector<std::string>::size_type i;

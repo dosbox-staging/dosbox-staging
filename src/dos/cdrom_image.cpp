@@ -263,9 +263,8 @@ void CDROM_Interface_Image::InitNewMedia()
 {
 }
 
-bool CDROM_Interface_Image::SetDevice(char* path, int forceCD)
+bool CDROM_Interface_Image::SetDevice(char* path)
 {
-	(void)forceCD; // unused by part of the API
 	if (LoadCueSheet(path) ||
 	    LoadIsoFile(path)) {
 		return true;
