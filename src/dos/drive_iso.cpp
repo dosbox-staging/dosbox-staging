@@ -187,7 +187,7 @@ int isoDrive::UpdateMscdex(char driveLetter, const char* path, Bit8u& subUnit) {
 		CDROM_Interface* cdrom = new CDROM_Interface_Image(subUnit);
 		char pathCopy[CROSS_LEN];
 		safe_strncpy(pathCopy, path, CROSS_LEN);
-		if (!cdrom->SetDevice(pathCopy, 0)) {
+		if (!cdrom->SetDevice(pathCopy)) {
 			CDROM_Interface_Image::images[subUnit] = oldCdrom;
 			delete cdrom;
 			return 3;

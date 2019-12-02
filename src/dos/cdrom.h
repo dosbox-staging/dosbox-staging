@@ -73,13 +73,13 @@ inline int msf_to_frames(int m, int s, int f) {
 	return m * 60 * REDBOOK_FRAMES_PER_SECOND + s * REDBOOK_FRAMES_PER_SECOND + f;
 }
 
-extern int CDROM_GetMountType(char* path, int force);
+extern int CDROM_GetMountType(char* path);
 
 class CDROM_Interface
 {
 public:
-	virtual ~CDROM_Interface        (void) {};
-	virtual bool SetDevice          (char* path, int forceCD) = 0;
+	virtual ~CDROM_Interface        (void) {}
+	virtual bool SetDevice          (char *path) = 0;
 	virtual bool GetUPC             (unsigned char& attr, char* upc) = 0;
 	virtual bool GetAudioTracks     (int& stTrack, int& end, TMSF& leadOut) = 0;
 	virtual bool GetAudioTrackInfo  (int track, TMSF& start, unsigned char& attr) = 0;
@@ -98,7 +98,7 @@ public:
 class CDROM_Interface_Fake : public CDROM_Interface
 {
 public:
-	bool SetDevice          (char* /*path*/, int /*forceCD*/) { return true; };
+	bool SetDevice          (char *) { return true; }
 	bool GetUPC             (unsigned char& attr, char* upc) { attr = 0; strcpy(upc,"UPC"); return true; };
 	bool GetAudioTracks     (int& stTrack, int& end, TMSF& leadOut);
 	bool GetAudioTrackInfo  (int track, TMSF& start, unsigned char& attr);
@@ -183,7 +183,7 @@ public:
 	CDROM_Interface_Image           (Bit8u _subUnit);
 	virtual ~CDROM_Interface_Image  (void);
 	void	InitNewMedia            (void);
-	bool	SetDevice               (char* path, int forceCD);
+	bool	SetDevice               (char *path);
 	bool	GetUPC                  (unsigned char& attr, char* upc);
 	bool	GetAudioTracks          (int& stTrack, int& end, TMSF& leadOut);
 	bool	GetAudioTrackInfo       (int track, TMSF& start, unsigned char& attr);

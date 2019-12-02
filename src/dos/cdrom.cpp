@@ -25,7 +25,7 @@
 #include "dosbox.h"
 #include "support.h"
 
-int CDROM_GetMountType(char* path, int) {
+int CDROM_GetMountType(char* path) {
 // 1 - Iso file
 // 2 - subdirectory
 
