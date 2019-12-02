@@ -22,17 +22,14 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "dosbox.h"
 #include "support.h"
 
-int CDROM_GetMountType(char* path) {
-// 1 - Iso file
-// 2 - subdirectory
-
-	// Detect ISO
+MountType CDROM_GetMountType(const char *path) {
 	struct stat file_stat;
-	if ((stat(path, &file_stat) == 0) && (file_stat.st_mode & S_IFREG)) return 1; 
-	return 2;
+	if ((stat(path, &file_stat) == 0) && (file_stat.st_mode & S_IFREG))
+		return MountType::ISO_IMAGE; 
+	else
+		return MountType::DIRECTORY;
 }
 
 // ******************************************************
@@ -73,5 +70,3 @@ bool CDROM_Interface_Fake :: GetMediaTrayStatus(bool& mediaPresent, bool& mediaC
 	trayOpen     = false;
 	return true;
 }
-
-

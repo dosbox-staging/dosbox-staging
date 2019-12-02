@@ -249,23 +249,21 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 	int result = 0;
 	// Get Mounttype and init needed cdrom interface
 	switch (CDROM_GetMountType(physicalPath)) {
-	case 0x00:
-		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting physical cdrom: %s"	,physicalPath);
+	case MountType::PHYSICAL_CD:
+		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting physical cdrom: %s", physicalPath);
 		// TODO: support for mounting physical CD-ROMs removed, provide
 		//       warnings/explanations for users
 		return 2;
-	case 0x01:	// iso cdrom interface	
+	case MountType::ISO_IMAGE:
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting iso file as cdrom: %s", physicalPath);
 		cdrom[numDrives] = new CDROM_Interface_Image((Bit8u)numDrives);
 		break;
-	case 0x02:	// fake cdrom interface (directories)
+	case MountType::DIRECTORY:
 		cdrom[numDrives] = new CDROM_Interface_Fake;
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting directory as cdrom: %s",physicalPath);
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: You wont have full MSCDEX support !");
 		result = 5;
 		break;
-	default	:	// weird result
-		return 6;
 	};
 
 	if (!cdrom[numDrives]->SetDevice(physicalPath)) {
