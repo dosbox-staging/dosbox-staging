@@ -1,0 +1,121 @@
+name: Linux configuration guantlet
+on:
+  # push
+  schedule: [cron: '15 4 * * *']
+
+jobs:
+  build_ubuntu:
+    name: ${{ matrix.conf.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        conf:
+          - name:             With ALSA MIDI
+            configure_flags:  --enable-alsa-midi
+            with_packages:    libasound2-dev
+            max_warnings:     5194
+
+          - name:             With debugger
+            configure_flags:  --enable-debug
+            with_packages:    libncurses-dev libsdl-net1.2-dev
+            max_warnings:     6013
+
+          - name:             With debugger-heavy
+            configure_flags:  --enable-debug
+            with_packages:    libncurses-dev libsdl-net1.2-dev
+            max_warnings:     6013
+
+          - name:             Without core-inline
+            configure_flags:  --disable-core-inline
+            max_warnings:     5194
+
+          - name:             Without dynamic-x86
+            configure_flags:  --disable-dynamic-x86
+            max_warnings:     5197
+
+          - name:             Without dynrec
+            configure_flags:  --disable-dynrec
+            max_warnings:     5194
+
+          - name:             Without FPU
+            configure_flags:  --disable-fpu
+            max_warnings:     5182
+
+          - name:             Without FPU-x64
+            configure_flags:  --disable-fpu-x64
+            max_warnings:     5200
+
+          - name:             Without FPU-x86
+            configure_flags:  --disable-fpu-x86
+            max_warnings:     5200
+
+          - name:             Without OpenGL
+            configure_flags:  --disable-opengl
+            max_warnings:     5195
+
+          - name:             Without screenshots
+            configure_flags:  --disable-screenshots
+            max_warnings:     5178
+
+          - name:             Without SDL_Net
+            without_packages: libsdl-net1.2-dev
+            max_warnings:     5194
+
+          - name:             Without unaligned memory
+            configure_flags:  --disable-unaligned-memory
+            max_warnings:     5016
+
+    steps:
+      - uses: actions/checkout@v1
+      - run:  sudo apt-get -y update
+      - name: Install C++ development tools
+        run:  sudo apt-get -y install autoconf-archive libtool build-essential g++ libsdl1.2-dev libopusfile-dev
+      - name: Add libraries
+        if:   matrix.conf.with_packages
+        run:  sudo apt-get -y install ${{ matrix.conf.with_packages }}
+      - name: Remove libraries
+        if:   matrix.conf.without_packages
+        run:  sudo apt-get -y purge ${{ matrix.conf.without_packages }}
+      - name: Build
+        run:  |
+          set -xeu
+          ./autogen.sh
+
+          export CFLAGS="\
+          -g \
+          -Og \
+          -pedantic \
+          -pipe \
+          -Wall \
+          -Wcast-align \
+          -Wdouble-promotion \
+          -Wduplicated-branches \
+          -Wduplicated-cond \
+          -Wextra \
+          -Wformat=2 \
+          -Wlogical-op \
+          -Wmisleading-indentation \
+          -Wnull-dereference \
+          -Wshadow \
+          -Wunused"
+
+          export CXXFLAGS="\
+          ${CFLAGS} \
+          -Weffc++ \
+          -Wnon-virtual-dtor \
+          -Woverloaded-virtual \
+          -Wuseless-cast"
+
+          g++ --version
+          ./configure ${{ matrix.conf.configure_flags }}
+
+          make \
+          --jobs="$(nproc)" \
+          --output-sync=line \
+          |& tr -cd '\11\12\15\40-\176' \
+          | tee build.log
+
+      - name: Summarize warnings
+        env:
+          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
+        run:  ./scripts/count-warnings.py build.log
