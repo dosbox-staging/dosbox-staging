@@ -21,6 +21,7 @@
 #include <cstring>
 #include "cdrom.h"
 #include "dosbox.h"
+#include "dos_mscdex.h"
 #include "dos_system.h"
 #include "support.h"
 #include "drives.h"
@@ -131,13 +132,6 @@ bool isoFile::Close() {
 Bit16u isoFile::GetInformation(void) {
 	return 0x40;		// read-only drive
 }
-
-int   MSCDEX_RemoveDrive(char driveLetter);
-int   MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit);
-void  MSCDEX_ReplaceDrive(CDROM_Interface* cdrom, Bit8u subUnit);
-bool  MSCDEX_HasDrive(char driveLetter);
-bool  MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
-Bit8u MSCDEX_GetSubUnit(char driveLetter);
 
 isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &error)
          :iso(false),

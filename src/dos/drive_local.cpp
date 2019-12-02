@@ -25,11 +25,11 @@
 
 #include "dosbox.h"
 #include "dos_inc.h"
+#include "dos_mscdex.h"
 #include "drives.h"
 #include "support.h"
 #include "cross.h"
 #include "inout.h"
-
 
 bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/) {
 //TODO Maybe care for attributes but not likely
@@ -551,12 +551,6 @@ void localFile::Flush(void) {
 // ********************************************
 // CDROM DRIVE
 // ********************************************
-
-int  MSCDEX_RemoveDrive(char driveLetter);
-int  MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit);
-bool MSCDEX_HasMediaChanged(Bit8u subUnit);
-bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
-
 
 cdromDrive::cdromDrive(const char driveLetter, const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid, int& error)
 		   :localDrive(startdir,_bytes_sector,_sectors_cluster,_total_clusters,_free_clusters,_mediaid),
