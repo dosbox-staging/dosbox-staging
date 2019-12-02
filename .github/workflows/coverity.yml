@@ -50,7 +50,6 @@ jobs:
           --form token="${COVERITY_TOKEN}" \
           --form email="${COVERITY_EMAIL}" \
           --form file=@package.tar.gz \
-          --form version="${GITHUB_SHA}" \
+          --form version="${GITHUB_REF}" \
           --form description="${GITHUB_REPOSITORY}" \
-          --form stream="${GITHUB_REF}" \
           "https://scan.coverity.com/builds?project=dosbox-staging"
