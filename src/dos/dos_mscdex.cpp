@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "dos_mscdex.h"
 
 #include <string.h>
 #include <ctype.h>
@@ -27,8 +28,6 @@
 #include "support.h"
 #include "bios_disk.h"
 #include "cpu.h"
-
-#include "cdrom.h"
 
 #define MSCDEX_LOG LOG(LOG_MISC,LOG_ERROR)
 //#define MSCDEX_LOG

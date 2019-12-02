@@ -338,6 +338,7 @@
     <ClInclude Include="..\src\debug\disasm_tables.h" />
     <ClInclude Include="..\src\dos\cdrom.h" />
     <ClInclude Include="..\src\dos\dev_con.h" />
+    <ClInclude Include="..\src\dos\dos_mscdex.h" />
     <ClInclude Include="..\src\dos\drives.h" />
     <ClInclude Include="..\src\dos\Ntddcdrm.h" />
     <ClInclude Include="..\src\dos\Ntddscsi.h" />
