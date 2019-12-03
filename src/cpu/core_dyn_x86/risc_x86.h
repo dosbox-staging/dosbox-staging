@@ -319,7 +319,7 @@ static void gen_mov_host(void * data,DynReg * dr1,Bitu size,Bit8u di1=0) {
 	case 2:cache_addb(0x66);		//mov word
 	case 4:cache_addb(0x8b);break;	//mov
 	default:
-		IllegalOption("gen_load_host");
+		IllegalOption("gen_mov_host");
 	}
 	cache_addb(0x5+((gr1->index+(di1?4:0))<<3));
 	cache_addd((Bit32u)data);
