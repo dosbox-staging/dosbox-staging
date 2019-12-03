@@ -52,8 +52,8 @@ using track_const_iter = vector<CDROM_Interface_Image::Track>::const_iterator;
 using tracks_size_t    = vector<CDROM_Interface_Image::Track>::size_type;
 
 CDROM_Interface_Image::BinaryFile::BinaryFile(const char *filename, bool &error)
-                                  :TrackFile(BYTES_PER_RAW_REDBOOK_FRAME),
-                                   file(nullptr)
+	: TrackFile(BYTES_PER_RAW_REDBOOK_FRAME),
+	  file(nullptr)
 {
 	file = new ifstream(filename, ios::in | ios::binary);
 	error = (file == nullptr) || (file->fail());
@@ -117,8 +117,8 @@ Bit32u CDROM_Interface_Image::BinaryFile::decode(Bit16s *buffer, Bit32u desired_
 }
 
 CDROM_Interface_Image::AudioFile::AudioFile(const char *filename, bool &error)
-                                 :TrackFile(4096),
-                                  sample(nullptr)
+	: TrackFile(4096),
+	  sample(nullptr)
 {
 	// Use the audio file's actual sample rate and number of channels as opposed to overriding
 	Sound_AudioInfo desired = {AUDIO_S16, 0, 0};
@@ -131,7 +131,7 @@ CDROM_Interface_Image::AudioFile::AudioFile(const char *filename, bool &error)
 		        filename_only.c_str(),
 		        getRate(),
 		        getChannels(),
-		        getLength()/static_cast<float>(REDBOOK_PCM_BYTES_PER_MS * 1000 * 60));
+		        getLength()/static_cast<double>(REDBOOK_PCM_BYTES_PER_MS * 1000 * 60));
 	} else {
 		error = true;
 	}
@@ -215,7 +215,9 @@ CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player = {
 };
 
 CDROM_Interface_Image::CDROM_Interface_Image(Bit8u _subUnit)
-		      :subUnit(_subUnit)
+	: tracks({}),
+	  mcn(""),
+	  subUnit(_subUnit)
 {
 	images[subUnit] = this;
 	if (refCount == 0) {
