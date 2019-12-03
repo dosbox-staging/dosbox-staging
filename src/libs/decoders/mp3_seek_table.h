@@ -54,4 +54,4 @@ struct mp3_t {
     std::vector<drmp3_seek_point_serial> seek_points_vector;
 };
 
-const Uint64 populate_seek_points(struct SDL_RWops* const context, mp3_t* p_mp3, const char* seektable_filename);
+Uint64 populate_seek_points(struct SDL_RWops* const context, mp3_t* p_mp3, const char* seektable_filename);

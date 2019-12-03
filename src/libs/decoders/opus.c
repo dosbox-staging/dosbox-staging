@@ -140,6 +140,7 @@ static Sint32 RWops_opus_seek(void* stream, const opus_int64 offset, const Sint3
  */
 static Sint32 RWops_opus_close(void* stream)
 {
+    (void) stream; // deliberately unused, but present for API compliance
     /* SDL closes this for us */
     // return SDL_RWclose((SDL_RWops*)stream);
     return 0;
@@ -188,6 +189,9 @@ static __inline__ void output_opus_info(const OggOpusFile* of, const OpusHead* o
             SNDDBG(("Opus: user comment:     '%s'\n", ot->user_comments[i]));
         }
     }
+#else
+    (void) of; // unused if DEBUG_CHATTER not defined
+    (void) oh; // unused if DEBUG_CHATTER not defined
 #endif
 } /* output_opus_comments */
 
@@ -199,6 +203,7 @@ static __inline__ void output_opus_info(const OggOpusFile* of, const OpusHead* o
  */
 static Sint32 opus_open(Sound_Sample* sample, const char* ext)
 {
+    (void) ext; // deliberately unused, but present for API compliance
     Sint32 rcode;
     Sound_SampleInternal* internal = (Sound_SampleInternal*)sample->opaque;
     OggOpusFile* of = op_open_callbacks(internal->rw, &RWops_opus_callbacks, NULL, 0, &rcode);

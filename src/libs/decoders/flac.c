@@ -91,6 +91,7 @@ static void FLAC_quit(void)
 
 static int FLAC_open(Sound_Sample *sample, const char *ext)
 {
+    (void) ext; // deliberately unused, but present for API compliance
     Sound_SampleInternal *internal = (Sound_SampleInternal *) sample->opaque;
     drflac *dr = drflac_open(flac_read, flac_seek, sample, NULL);
 
