@@ -115,6 +115,7 @@ static void VORBIS_quit(void)
 
 static int VORBIS_open(Sound_Sample *sample, const char *ext)
 {
+    (void) ext; // deliberately unused, but present for API compliance
     Sound_SampleInternal *internal = (Sound_SampleInternal *) sample->opaque;
     SDL_RWops *rw = internal->rw;
     int err = 0;

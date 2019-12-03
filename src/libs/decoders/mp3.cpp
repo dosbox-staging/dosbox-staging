@@ -47,7 +47,7 @@
 static size_t mp3_read(void* const pUserData, void* const pBufferOut, const size_t bytesToRead)
 {
     Uint8* ptr = static_cast<Uint8*>(pBufferOut);
-    Sound_Sample* const sample = static_cast<Sound_Sample* const>(pUserData);
+    Sound_Sample* const sample = static_cast<Sound_Sample*>(pUserData);
     const Sound_SampleInternal* const internal = static_cast<const Sound_SampleInternal*>(sample->opaque);
     SDL_RWops* rwops = internal->rw;
     size_t retval = 0;
@@ -88,7 +88,7 @@ static void MP3_quit(void)
 
 static void MP3_close(Sound_Sample* const sample)
 {
-    Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal* const>(sample->opaque);
+    Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal*>(sample->opaque);
     mp3_t* p_mp3 = static_cast<mp3_t*>(internal->decoder_private);
     if (p_mp3 != nullptr) {
         if (p_mp3->p_dr != nullptr) {
@@ -103,7 +103,7 @@ static void MP3_close(Sound_Sample* const sample)
 
 static Uint32 MP3_read(Sound_Sample* const sample, void* buffer, Uint32 desired_frames)
 {
-    Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal* const>(sample->opaque);
+    Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal*>(sample->opaque);
     mp3_t* p_mp3 = static_cast<mp3_t*>(internal->decoder_private);
 
     // LOG_MSG("read-while: num_frames: %u", num_frames);
@@ -114,6 +114,7 @@ static Uint32 MP3_read(Sound_Sample* const sample, void* buffer, Uint32 desired_
 
 static Sint32 MP3_open(Sound_Sample* const sample, const char* const ext)
 {
+    (void) ext; // deliberately unused
     Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal*>(sample->opaque);
     Sint32 result(0); // assume failure until proven otherwise
     mp3_t* p_mp3 = (mp3_t*) SDL_calloc(1, sizeof (mp3_t));
@@ -148,7 +149,7 @@ static Sint32 MP3_open(Sound_Sample* const sample, const char* const ext)
         MP3_close(sample);
     }
 
-    return static_cast<Sint32>(result);
+    return result;
 } /* MP3_open */
 
 static Sint32 MP3_rewind(Sound_Sample* const sample)
@@ -160,7 +161,7 @@ static Sint32 MP3_rewind(Sound_Sample* const sample)
 
 static Sint32 MP3_seek(Sound_Sample* const sample, const Uint32 ms)
 {
-    Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal* const>(sample->opaque);
+    Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal*>(sample->opaque);
     mp3_t* p_mp3 = static_cast<mp3_t*>(internal->decoder_private);
     const float frames_per_ms = sample->actual.rate / 1000.0f;
     const drmp3_uint64 frame_offset = static_cast<drmp3_uint64>(frames_per_ms) * ms;

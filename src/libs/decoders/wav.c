@@ -89,6 +89,7 @@ static void WAV_close(Sound_Sample *sample)
 
 static int WAV_open(Sound_Sample *sample, const char *ext)
 {
+    (void) ext; // deliberately unused, but present for API compliance
     Sound_SampleInternal *internal = (Sound_SampleInternal *) sample->opaque;
     drwav* dr = SDL_malloc(sizeof(drwav));
     drwav_result result = drwav_init_ex(dr, wav_read, wav_seek, NULL, sample, NULL, 0, NULL);

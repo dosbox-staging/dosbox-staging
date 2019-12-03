@@ -102,7 +102,7 @@ using std::ofstream;
 #define FRAMES_PER_SEEK_POINT 7
 
 // Returns the size of a file in bytes (if valid), otherwise 0
-const size_t get_file_size(const char* filename) {
+size_t get_file_size(const char* filename) {
     struct stat stat_buf;
     int rc = stat(filename, &stat_buf);
     return rc == 0 ? stat_buf.st_size : -1;
@@ -119,15 +119,14 @@ const size_t get_file_size(const char* filename) {
 // 1. ID3 tag filler content, which might be boiler plate or all empty
 // 2. Trailing silence or similar zero-PCM content
 //
-const Uint64 calculate_stream_hash(struct SDL_RWops* const context) {
-
+Uint64 calculate_stream_hash(struct SDL_RWops* const context) {
     // Save the current stream position, so we can restore it at the end of the function.
     const Sint64 original_pos = SDL_RWtell(context);
 
     // Seek to the end of the file so we can calculate the stream size.
     SDL_RWseek(context, 0, RW_SEEK_END);
 
-    const Sint32 stream_size = (Sint32) SDL_RWtell(context);
+    const Sint32 stream_size = SDL_RWtell(context);
     if (stream_size <= 0) {
         // LOG_MSG("MP3: get_stream_size returned %d, but should be positive", stream_size);
         return 0;
@@ -175,12 +174,12 @@ const Uint64 calculate_stream_hash(struct SDL_RWops* const context) {
 // This function generates a new seek-table for a given mp3 stream and writes
 // the data to the fast-seek file.
 //
-const Uint64 generate_new_seek_points(const char* filename,
-                                      const Uint64& stream_hash,
-                                      drmp3* const p_dr,
-                                      map<Uint64, vector<drmp3_seek_point_serial> >& seek_points_table,
-                                      map<Uint64, drmp3_uint64>& pcm_frame_count_table,
-                                      vector<drmp3_seek_point_serial>& seek_points_vector) {
+Uint64 generate_new_seek_points(const char* filename,
+                                const Uint64& stream_hash,
+                                drmp3* const p_dr,
+                                map<Uint64, vector<drmp3_seek_point_serial> >& seek_points_table,
+                                map<Uint64, drmp3_uint64>& pcm_frame_count_table,
+                                vector<drmp3_seek_point_serial>& seek_points_vector) {
 
     // Initialize our frame counters with zeros.
     drmp3_uint64 mp3_frame_count(0);
@@ -244,11 +243,11 @@ const Uint64 generate_new_seek_points(const char* filename,
 // This function attempts to fetch a seek-table for a given mp3 stream from the fast-seek file.
 // If anything is amiss then this function fails.
 //
-const Uint64 load_existing_seek_points(const char* filename,
-                                       const Uint64& stream_hash,
-                                       map<Uint64, vector<drmp3_seek_point_serial> >& seek_points_table,
-                                       map<Uint64, drmp3_uint64>& pcm_frame_count_table,
-                                       vector<drmp3_seek_point_serial>& seek_points) {
+Uint64 load_existing_seek_points(const char* filename,
+                                 const Uint64& stream_hash,
+                                 map<Uint64, vector<drmp3_seek_point_serial> >& seek_points_table,
+                                 map<Uint64, drmp3_uint64>& pcm_frame_count_table,
+                                 vector<drmp3_seek_point_serial>& seek_points) {
 
     // The below sentinals sanity check and read the incoming
     // file one-by-one until all the data can be trusted.
@@ -301,7 +300,7 @@ const Uint64 load_existing_seek_points(const char* filename,
 // attempting to read it from the fast-seek file and (if it can't be read for any reason), it
 // calculates new data.  It makes use of the above two functions.
 //
-const Uint64 populate_seek_points(struct SDL_RWops* const context, mp3_t* p_mp3, const char* seektable_filename) {
+Uint64 populate_seek_points(struct SDL_RWops* const context, mp3_t* p_mp3, const char* seektable_filename) {
 
     // Calculate the stream's xxHash value.
     Uint64 stream_hash = calculate_stream_hash(context);
