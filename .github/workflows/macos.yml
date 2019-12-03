@@ -14,7 +14,7 @@ jobs:
             max_warnings: 209
           - name: GCC-9
             flags: -c gcc -v 9
-            max_warnings: 302
+            max_warnings: 297
     steps:
       - uses: actions/checkout@v1
       - name: Install C++ compiler and libraries

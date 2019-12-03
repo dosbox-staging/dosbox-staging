@@ -1,10 +1,10 @@
 name: Windows builds
 on: push
 env:
-  MAX_WARNINGS_GCC_32bit_Debug:     230
-  MAX_WARNINGS_GCC_64bit_Debug:     305
-  MAX_WARNINGS_Clang_32bit_Debug:    99
-  MAX_WARNINGS_Clang_64bit_Debug:   143
+  MAX_WARNINGS_GCC_32bit_Debug:     229
+  MAX_WARNINGS_GCC_64bit_Debug:     304
+  MAX_WARNINGS_Clang_32bit_Debug:    98
+  MAX_WARNINGS_Clang_64bit_Debug:   142
 
 jobs:
 

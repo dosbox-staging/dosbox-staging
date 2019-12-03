@@ -12,15 +12,15 @@ jobs:
           - name: GCC-5 (Ubuntu 16.04)
             os: ubuntu-16.04
             flags: -c gcc
-            max_warnings: 289
+            max_warnings: 284
           - name: GCC-7 (Ubuntu 18.04)
             os: ubuntu-18.04
             flags: -c gcc
-            max_warnings: 292
+            max_warnings: 287
           - name: GCC-9 (Ubuntu 18.04)
             os: ubuntu-18.04
             flags: -c gcc -v 9
-            max_warnings: 315
+            max_warnings: 310
           - name: Clang-8 (Ubuntu 18.04)
             os: ubuntu-18.04
             flags: -c clang -v 8
