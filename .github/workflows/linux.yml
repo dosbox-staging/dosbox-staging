@@ -38,3 +38,41 @@ jobs:
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:  ./scripts/count-warnings.py build.log
+
+  build_linux_release_dynamic:
+    name: Release build (dynamic)
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@v1
+      - run:  sudo apt-get update
+      - name: Install C++ compiler and libraries
+        run:  sudo apt-get install -y tree $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+      - name: Build
+        run: |
+          set -x
+          export VERSION=$(git describe --abbrev=4)
+          sed -i "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
+          ./autogen.sh
+          ./configure CXXFLAGS="-O3 -DNDEBUG"
+          make -j "$(nproc)"
+          strip src/dosbox
+          install -DT        src/dosbox    dest/dosbox
+          install -DT -m 644 COPYING       dest/COPYING
+          install -DT -m 644 README        dest/doc/manual.txt
+          install -DT -m 644 docs/dosbox.1 dest/man/dosbox.1
+          mv dest "dosbox-staging-$VERSION"
+          tree --si -p "dosbox-staging-$VERSION"
+          tar -cJf "dosbox-staging-$VERSION.tar.xz" "dosbox-staging-$VERSION"
+          # Inject variable into the surrounding env in workflow,
+          # otherwise it won't be usable in the next step.
+          echo ::set-env name=VERSION::$VERSION
+      - name: Upload tarball artifact
+        uses: actions/upload-artifact@master
+        # GitHub automatically zips the artifacts (there's no way to create
+        # a tarball), and it removes all executable flags while zipping.
+        # Letting it zip a tarball preserves flags in the compressed files.
+        with:
+          name: ${{ env.VERSION }}-linux-x86_64
+          path: dosbox-staging-${{ env.VERSION }}.tar.xz
