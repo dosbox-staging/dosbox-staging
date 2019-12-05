@@ -58,17 +58,28 @@ jobs:
           ./configure CXXFLAGS="-O3 -DNDEBUG"
           make -j "$(nproc)"
           strip src/dosbox
-          install -DT        src/dosbox    dest/dosbox
-          install -DT -m 644 COPYING       dest/COPYING
-          install -DT -m 644 README        dest/doc/manual.txt
-          install -DT -m 644 docs/dosbox.1 dest/man/dosbox.1
+          # Inject variable into the surrounding env in workflow,
+          # otherwise it won't be usable in the following steps.
+          echo ::set-env name=VERSION::$VERSION
+      - name: Package
+        run: |
+          set -x
+          # Prepare content
+          install -DT        src/dosbox           dest/dosbox
+          install -DT -m 644 docs/README.template dest/README
+          install -DT -m 644 COPYING              dest/COPYING
+          install -DT -m 644 README               dest/doc/manual.txt
+          install -DT -m 644 docs/README.video    dest/doc/video.txt
+          install -DT -m 644 docs/dosbox.1        dest/man/dosbox.1
+          # Fill README template file
+          sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README
+          sed -i "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" dest/README
+          sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README
           mv dest "dosbox-staging-$VERSION"
           tree --si -p "dosbox-staging-$VERSION"
+          # Create tarball
           tar -cJf "dosbox-staging-$VERSION.tar.xz" "dosbox-staging-$VERSION"
-          # Inject variable into the surrounding env in workflow,
-          # otherwise it won't be usable in the next step.
-          echo ::set-env name=VERSION::$VERSION
-      - name: Upload tarball artifact
+      - name: Upload tarball
         uses: actions/upload-artifact@master
         # GitHub automatically zips the artifacts (there's no way to create
         # a tarball), and it removes all executable flags while zipping.
