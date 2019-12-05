@@ -1,0 +1,10 @@
+This is the development snapshot build of dosbox-staging project.
+
+Please report any bugs or issues to: https://github.com/%GITHUB_REPO%
+
+You can find detailed instructions on using DOSBox in file: docs/manual.txt
+
+branch: %GIT_BRANCH%
+commit: %GIT_COMMIT%
+
+Have fun!
