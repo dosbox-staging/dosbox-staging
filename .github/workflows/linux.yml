@@ -85,5 +85,5 @@ jobs:
         # a tarball), and it removes all executable flags while zipping.
         # Letting it zip a tarball preserves flags in the compressed files.
         with:
-          name: ${{ env.VERSION }}-linux-x86_64
+          name: dosbox-staging-linux-x86_64
           path: dosbox-staging-${{ env.VERSION }}.tar.xz

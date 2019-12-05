@@ -1,4 +1,8 @@
-#define VERSION "staging"
+/* String appended to the .conf file. */
+#define CONF_BRAND "staging-git"
+
+/* Version number of package */
+#define VERSION "git"
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0
