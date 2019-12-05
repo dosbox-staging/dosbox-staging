@@ -78,13 +78,12 @@ jobs:
           mv dest "dosbox-staging-$VERSION"
           tree --si -p "dosbox-staging-$VERSION"
           # Create tarball
-          #tar -cJf "dosbox-staging-$VERSION.tar.xz" "dosbox-staging-$VERSION"
-          zip -r "dosbox-staging-$VERSION.zip" "dosbox-staging-$VERSION"
+          tar -cJf "dosbox-staging-$VERSION.tar.xz" "dosbox-staging-$VERSION"
       - name: Upload tarball
         uses: actions/upload-artifact@master
         # GitHub automatically zips the artifacts (there's no way to create
         # a tarball), and it removes all executable flags while zipping.
         # Letting it zip a tarball preserves flags in the compressed files.
         with:
-          name: dosbox-staging-${{ env.VERSION }}
-          path: dosbox-staging-${{ env.VERSION }}.zip
+          name: dosbox-staging-linux-x86_64
+          path: dosbox-staging-${{ env.VERSION }}.tar.xz
