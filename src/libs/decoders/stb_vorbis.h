@@ -1333,14 +1333,20 @@ static int STBV_CDECL point_compare(const void *p, const void *q)
 static uint8 get8(vorb *z)
 {
    if (USE_MEMORY(z)) {
-      if (z->stream >= z->stream_end) { z->eof = TRUE; return 0; }
+      if (z->stream >= z->stream_end) {
+          z->eof = TRUE;
+          return 0;
+      }
       return *z->stream++;
    }
 
    #ifdef __SDL_SOUND_INTERNAL__
    {
       uint8 c;
-      if (SDL_RWread(z->rwops, &c, 1, 1) != 1) { z->eof = TRUE; return 0; }
+      if (z->rwops == NULL || SDL_RWread(z->rwops, &c, 1, 1) != 1) {
+          z->eof = TRUE;
+          return 0;
+      }
       return c;
    }
    #endif
