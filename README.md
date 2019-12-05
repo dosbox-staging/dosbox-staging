@@ -50,6 +50,31 @@ Codecs supported for CD Digital Audio emulation (loading CD music via
 [7]:https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/trunk/src/dos/cdrom_image.cpp#l536
 
 
+## Development snapshot builds
+
+*Only Linux snapshots are available at the moment.*
+
+Pre-release builds can be downloaded from CI build artifacts. Go to 
+[Linux builds](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess),
+select a build you are interested in, click "**Artifacts**" button (in the top
+right), and download the package.
+
+Snapshots are dynamically-linked x86\_64 builds, you'll need additional
+packages installed via your package manager. Different dependencies might
+be necessary for specific snapshots (check included README file).
+
+#### Fedora
+
+    $ sudo dnf install SDL SDL_net opusfile
+
+#### Debian, Ubuntu
+
+    $ sudo apt install libsdl1.2 sdl-net1.2 opusfile
+
+#### Arch, Manjaro
+
+    $  sudo pacman -S sdl sdl_net opusfile
+
 ## Build instructions
 
 ### Linux, macOS, MSYS2, MinGW, other OSes
