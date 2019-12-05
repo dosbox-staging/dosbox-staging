@@ -1,5 +1,6 @@
 dnl Init.
 AC_INIT(dosbox,git)
+AC_DEFINE([CONF_BRAND],["staging-git"],[Suffix of the .conf file.])
 AC_PREREQ(2.50)
 AC_CONFIG_SRCDIR(README)
 
