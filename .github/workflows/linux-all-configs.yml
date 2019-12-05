@@ -1,4 +1,4 @@
-name: Linux configuration guantlet
+name: Linux all configurations
 on:
   # push
   schedule: [cron: '15 4 * * *']
