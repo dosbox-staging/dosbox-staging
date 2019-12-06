@@ -98,6 +98,13 @@ jobs:
       - name:  Log environment
         shell: pwsh
         run:   .\scripts\log-env.ps1
+      - name:  Inject version string
+        shell: bash
+        run: |
+          set -x
+          export VERSION=$(git describe --abbrev=4)
+          sed -i "s|VERSION \"git\"|VERSION \"$VERSION\"|" src/platform/visualc/config.h
+          echo ::set-env name=VERSION::$VERSION
       - name:  Build
         shell: pwsh
         env:
