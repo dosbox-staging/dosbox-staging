@@ -61,12 +61,12 @@ jobs:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:   python scripts\count-warnings.py build.log
 
-  build_msvc_matrix:
-    name: MSVC 32-bit (${{ matrix.type }})
+  build_windows_vs:
+    name: MSVC 32-bit
     runs-on: windows-latest
     strategy:
       matrix:
-        type: [Release, Debug]
+        type: [Debug]
     steps:
       - uses:  actions/checkout@v1
       - name:  Install packages
@@ -77,10 +77,55 @@ jobs:
       - name:  Log environment
         shell: pwsh
         run:   .\scripts\log-env.ps1
-      - name:  ${{ matrix.type }} build
+      - name:  Build
         shell: pwsh
         env:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
           MSBuild -m dosbox.sln -p:Configuration=${{ matrix.type }}
+
+  build_windows_vs_release:
+    name: Release build
+    runs-on: windows-latest
+    steps:
+      - uses:  actions/checkout@v1
+      - name:  Install packages
+        shell: pwsh
+        run: |
+          vcpkg install libpng sdl1 sdl1-net opusfile
+          vcpkg integrate install
+      - name:  Log environment
+        shell: pwsh
+        run:   .\scripts\log-env.ps1
+      - name:  Build
+        shell: pwsh
+        env:
+          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+        run: |
+          cd vs
+          MSBuild -m dosbox.sln -p:Configuration=Release
+      - name:  Package
+        run: |
+          # TODO "Windows SmartScreen" complains about unsigned .exe during
+          #      the first start of a build. Maybe self-signed certificate
+          #      will make it a bit more user-friendly.
+          mkdir dest
+          mkdir dest\doc
+          cpi vs\Release\dosbox.exe           dest\
+          cpi COPYING                         dest\COPYING.txt
+          cpi README                          dest\doc\manual.txt
+          cpi vs\Release\libpng16.dll         dest\
+          cpi vs\Release\ogg.dll              dest\
+          cpi vs\Release\opus.dll             dest\
+          cpi vs\Release\SDL.dll              dest\
+          cpi vs\Release\SDL_net.dll          dest\
+          cpi src\libs\zmbv\Release\zlib1.dll dest\
+          cpi src\libs\zmbv\Release\zmbv.dll  dest\
+          mkdir dosbox-staging-windows-x86
+          mi dest dosbox-staging-windows-x86\dosbox-staging-${{ env.VERSION }}
+      - name: Upload package
+        uses: actions/upload-artifact@master
+        with:
+          name: dosbox-staging-windows-x86
+          path: dosbox-staging-windows-x86
