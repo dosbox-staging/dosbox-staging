@@ -52,12 +52,14 @@ Codecs supported for CD Digital Audio emulation (loading CD music via
 
 ## Development snapshot builds
 
-*Only Linux snapshots are available at the moment.*
-
 Pre-release builds can be downloaded from CI build artifacts. Go to 
-[Linux builds](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess),
+[Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess)
+or
+[Windows](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess),
 select a build you are interested in, click "**Artifacts**" button (in the top
 right), and download the package.
+
+## [Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess)
 
 Snapshots are dynamically-linked x86\_64 builds, you'll need additional
 packages installed via your package manager. Different dependencies might
@@ -74,6 +76,25 @@ be necessary for specific snapshots (check included README file).
 #### Arch, Manjaro
 
     $  sudo pacman -S sdl sdl_net opusfile
+
+
+## [Windows](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess)
+
+A dosbox.exe file in a snapshot package is not signed, therefore Windows 10
+might prevent the program from starting.
+
+If Windows displays the message "Windows Defender SmartScreen prevented an
+unrecognised app from starting", you have two options to dismiss it:
+
+1) Click "More info", and button "Run anyway" will appear.
+2) Right-click on dosbox.exe, select: Properties → General → Security → Unblock
+
+Windows packages are built for "x86" architecture (in practice it means i686).
+
+## macOS
+
+macOS snapshots are not available at the moment.
+
 
 ## Build instructions
 
