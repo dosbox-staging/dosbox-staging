@@ -1,7 +1,7 @@
 # Main Makefile for DOSBox
 
 EXTRA_DIST = autogen.sh
-SUBDIRS = src include docs visualc_net
+SUBDIRS = src include docs vs
 
 # Per the auto-tools clean guidelines:
 # https://www.gnu.org/savannah-checkouts/gnu/automake/manual/html_node/Clean.html#Clean
