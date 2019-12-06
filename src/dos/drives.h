@@ -185,6 +185,8 @@ public:
 	imageDisk *loadedDisk;
 	bool created_successfully;
 private:
+	fatDrive(const fatDrive&); // prevent copying
+	fatDrive& operator= (const fatDrive&); // prevent assignment
 	Bit32u getClusterValue(Bit32u clustNum);
 	void setClusterValue(Bit32u clustNum, Bit32u clustValue);
 	Bit32u getClustFirstSect(Bit32u clustNum);
@@ -408,6 +410,8 @@ public:
 	virtual Bits UnMount(void);
 	virtual char const* GetLabel(void);
 private:
+	Virtual_Drive(const Virtual_Drive&); // prevent copying
+	Virtual_Drive& operator= (const Virtual_Drive&); // prevent assignment
 	VFILE_Block * search_file;
 };
 
