@@ -1,12 +1,65 @@
 name: Windows builds
 on: push
-env:
-  MAX_WARNINGS_GCC_32bit_Debug:     229
-  MAX_WARNINGS_GCC_64bit_Debug:     304
-  MAX_WARNINGS_Clang_32bit_Debug:    98
-  MAX_WARNINGS_Clang_64bit_Debug:   142
 
 jobs:
+
+  build_windows_msys2:
+    name: ${{ matrix.conf.compiler }} ${{ matrix.conf.bits }}-bit
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        conf:
+          - compiler: GCC
+            bits: 32
+            arch: i686
+            max_warnings: 229
+          - compiler: GCC
+            bits: 64
+            arch: x86_64
+            max_warnings: 304
+          - compiler: Clang
+            bits: 32
+            arch: i686
+            max_warnings: 98
+          - compiler: Clang
+            bits: 64
+            arch: x86_64
+            max_warnings: 142
+    env:
+      CHERE_INVOKING: yes
+    steps:
+      - uses:  actions/checkout@v1
+      - uses:  actions/cache@v1
+        id:    cache-msys2
+        if:    matrix.conf.compiler == 'GCC'
+        with:
+          path: 'C:/tools/msys64'
+          key: msys2-${{ matrix.conf.compiler }}-${{ matrix.conf.bits }}-2019-v11}
+      - name:  Install MSYS2
+        if:    steps.cache-msys2.outputs.cache-hit != 'true'
+        run:   choco install msys2 --no-progress
+      - name:  Install C++ compiler and libraries
+        if:    steps.cache-msys2.outputs.cache-hit != 'true'
+        shell: python scripts\msys-bash.py {0}
+        run:   ./scripts/list-build-dependencies.sh -m msys2 -c ${{ matrix.conf.compiler }} -b ${{ matrix.conf.bits }} | xargs pacman -S --noconfirm
+      - name:  Shrink MSYS2 for cache
+        if:    matrix.conf.compiler == 'GCC' && steps.cache-msys2.outputs.cache-hit != 'true'
+        shell: python scripts\msys-bash.py {0}
+        run:   ./.github/scripts/shrink-msys2.sh
+      - name:  Log environment
+        shell: python scripts\msys-bash.py {0}
+        run:   ./scripts/log-env.sh
+      - name:  Build
+        shell: python scripts\msys-bash.py {0}
+        run: |
+          # export these two in script to override variables defined by MSYS2 
+          export MSYSTEM_CARCH=${{ matrix.conf.arch }}
+          export MSYSTEM_CHOST=${{ matrix.conf.arch }}-pc-msys
+          ./scripts/build.sh --compiler ${{ matrix.conf.compiler }} --build-type Debug --bin-path /mingw${{ matrix.conf.bits }}/bin
+      - name:  Summarize warnings
+        env:
+          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
+        run:   python scripts\count-warnings.py build.log
 
   build_msvc_matrix:
     name: MSVC 32-bit (${{ matrix.type }})
@@ -31,47 +84,3 @@ jobs:
         run: |
           cd vs
           MSBuild -m dosbox.sln -p:Configuration=${{ matrix.type }}
-
-
-  build_msys2_matrix:
-    name: ${{ matrix.compiler }} ${{ matrix.bits }}-bit
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        compiler: [GCC, Clang]
-        bits:     [32, 64]
-    env:
-      CHERE_INVOKING: yes
-    steps:
-      - uses:  actions/checkout@v1
-      - uses:  actions/cache@v1
-        id:    cache-msys2
-        if:    matrix.compiler == 'GCC'
-        with:
-          path: 'C:/tools/msys64'
-          key: msys2-${{ matrix.compiler }}-${{ matrix.bits }}-2019-v11}
-      - name:  Install MSYS2
-        if:    steps.cache-msys2.outputs.cache-hit != 'true'
-        run:   choco install msys2 --no-progress
-      - name:  Install C++ compiler and libraries
-        if:    steps.cache-msys2.outputs.cache-hit != 'true'
-        shell: python scripts\msys-bash.py {0}
-        run:   ./scripts/list-build-dependencies.sh -m msys2 -c ${{ matrix.compiler }} -b ${{ matrix.bits }} | xargs pacman -S --noconfirm
-      - name:  Shrink MSYS2 for cache
-        if:    matrix.compiler == 'GCC' && steps.cache-msys2.outputs.cache-hit != 'true'
-        shell: python scripts\msys-bash.py {0}
-        run:   ./.github/scripts/shrink-msys2.sh
-      - name:  Log environment
-        shell: python scripts\msys-bash.py {0}
-        run:  ./scripts/log-env.sh
-      - name:  Debug Build
-        shell: python scripts\msys-bash.py {0}
-        env:
-          ARCH_32: i686
-          ARCH_64: x86_64
-        run:  |
-          export MSYSTEM_CARCH="$ARCH_${{ matrix.bits }}"
-          export MSYSTEM_CHOST="$ARCH_${{ matrix.bits }}-pc-msys"
-          ./scripts/build.sh --compiler ${{ matrix.compiler }} --build-type Debug --bin-path /mingw${{ matrix.bits }}/bin
-      - name:  Debug Warnings
-        run:   python scripts\count-warnings.py -m $env:MAX_WARNINGS_${{ matrix.compiler }}_${{ matrix.bits }}bit_Debug build.log
