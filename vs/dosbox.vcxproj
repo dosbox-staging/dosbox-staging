@@ -90,7 +90,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <Optimization>Full</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -116,7 +116,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;winmm.lib;libpng16.lib;sdl_net.lib;sdl.lib;sdlmain.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;opusfile.lib;opus.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Release/dosbox.exe</OutputFile>
+      <OutputFile>.\Release\dosbox.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile />
