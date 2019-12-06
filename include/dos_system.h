@@ -130,6 +130,8 @@ public:
 	void Flush(void);
 	FILE * fhandle; //todo handle this properly
 private:
+	localFile(const localFile&); // prevent copying
+	localFile& operator= (const localFile&); // prevent assignment
 	bool read_only_medium;
 	enum { NONE,READ,WRITE } last_action;
 };
@@ -172,11 +174,17 @@ public:
 
 	class CFileInfo {
 	public:
-		CFileInfo(void) {
-			orgname[0] = shortname[0] = 0;
-			isOverlayDir = isDir = false;
-			id = MAX_OPENDIRS;
-			nextEntry = shortNr = 0;
+		CFileInfo(void)
+			: orgname{0},
+			  shortname{0},
+			  isOverlayDir(false),
+			  isDir(false),
+			  id(MAX_OPENDIRS),
+			  nextEntry(0),
+			  shortNr(0),
+			  fileList(0),
+			  longNameList(0)
+		{
 		}
 		~CFileInfo(void) {
 			for (Bit32u i=0; i<fileList.size(); i++) delete fileList[i];
@@ -196,11 +204,13 @@ public:
 	};
 
 private:
+	DOS_Drive_Cache(const DOS_Drive_Cache&); // prevent copying
+	DOS_Drive_Cache& operator= (const DOS_Drive_Cache&); // prevent assignment
 	void ClearFileInfo(CFileInfo *dir);
 	void DeleteFileInfo(CFileInfo *dir);
 
 	bool		RemoveTrailingDot	(char* shortname);
-	Bits		GetLongName		(CFileInfo* info, char* shortname);
+	Bits		GetLongName		(CFileInfo* info, char* shortname, const size_t shortname_len);
 	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
 	Bitu		CreateShortNameID	(CFileInfo* dir, const char* name);
 	int		CompareShortname	(const char* compareName, const char* shortName);
