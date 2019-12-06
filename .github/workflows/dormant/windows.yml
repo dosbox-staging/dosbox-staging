@@ -30,14 +30,14 @@ jobs:
         env:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
-          cd visualc_net
+          cd vs
           MSBuild -m dosbox.sln -p:Configuration=Release
       - name:  Debug build
         shell: pwsh
         env:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
-          cd visualc_net
+          cd vs
           MSBuild -m dosbox.sln -p:Configuration=Debug
 
 

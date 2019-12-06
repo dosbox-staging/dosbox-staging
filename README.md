@@ -104,8 +104,8 @@ PowerShell, and run:
 
 These two steps will ensure that MSVC finds and links all dependencies.
 
-Start Visual Studio, open file: `visualc_net\dosbox.sln` and build all
-projects (Ctrl+Shift+B).
+Start Visual Studio, open file: `vs\dosbox.sln` and build all projects
+(Ctrl+Shift+B).
 
 
 ## Interop with SVN
