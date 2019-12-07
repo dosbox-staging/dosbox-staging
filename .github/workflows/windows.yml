@@ -112,25 +112,34 @@ jobs:
         run: |
           cd vs
           MSBuild -m dosbox.sln -p:Configuration=Release
-      - name:  Package
-        run: |
           # TODO "Windows SmartScreen" complains about unsigned .exe during
           #      the first start of a build. Maybe self-signed certificate
           #      will make it a bit more user-friendly.
-          mkdir dest
-          mkdir dest\doc
-          cpi vs\Release\dosbox.exe           dest\
-          cpi COPYING                         dest\COPYING.txt
-          cpi README                          dest\doc\manual.txt
-          cpi vs\Release\libpng16.dll         dest\
-          cpi vs\Release\ogg.dll              dest\
-          cpi vs\Release\opus.dll             dest\
-          cpi vs\Release\SDL.dll              dest\
-          cpi vs\Release\SDL_net.dll          dest\
-          cpi src\libs\zmbv\Release\zlib1.dll dest\
-          cpi src\libs\zmbv\Release\zmbv.dll  dest\
+      - name:  Package
+        shell: bash
+        run: |
+          set -x
+          # Prepare content
+          mkdir -p dest/doc
+          cp vs/Release/dosbox.exe           dest/
+          cp COPYING                         dest/COPYING.txt
+          cp docs/README.template            dest/README.txt
+          cp docs/README.video               dest/doc/video.txt
+          cp README                          dest/doc/manual.txt
+          cp vs/Release/libpng16.dll         dest/
+          cp vs/Release/ogg.dll              dest/
+          cp vs/Release/opus.dll             dest/
+          cp vs/Release/SDL.dll              dest/
+          cp vs/Release/SDL_net.dll          dest/
+          cp src/libs/zmbv/Release/zlib1.dll dest/
+          cp src/libs/zmbv/Release/zmbv.dll  dest/
+          # Fill README template file
+          sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README.txt
+          sed -i "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" dest/README.txt
+          sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README.txt
+          # Create dir for zipping
           mkdir dosbox-staging-windows-x86
-          mi dest dosbox-staging-windows-x86\dosbox-staging-${{ env.VERSION }}
+          mv dest dosbox-staging-windows-x86/dosbox-staging-${{ env.VERSION }}
       - name: Upload package
         uses: actions/upload-artifact@master
         with:
