@@ -119,19 +119,19 @@ private:
 
 class localFile : public DOS_File {
 public:
-	localFile(const char* name, FILE * handle);
-	bool Read(Bit8u * data,Bit16u * size);
-	bool Write(Bit8u * data,Bit16u * size);
-	bool Seek(Bit32u * pos,Bit32u type);
-	bool Close();
-	Bit16u GetInformation(void);
-	bool UpdateDateTimeFromHost(void);   
-	void FlagReadOnlyMedium(void);
-	void Flush(void);
+	localFile                   (const char* name, FILE * handle);
+	localFile                   (const localFile&) = delete; // prevent copying
+	localFile& operator=        (const localFile&) = delete; // prevent assignment
+	bool Read                   (Bit8u * data,Bit16u * size);
+	bool Write                  (Bit8u * data,Bit16u * size);
+	bool Seek                   (Bit32u * pos,Bit32u type);
+	bool Close                  (void);
+	Bit16u GetInformation       (void);
+	bool UpdateDateTimeFromHost (void);
+	void FlagReadOnlyMedium     (void);
+	void Flush                  (void);
 	FILE * fhandle; //todo handle this properly
 private:
-	localFile(const localFile&); // prevent copying
-	localFile& operator= (const localFile&); // prevent assignment
 	bool read_only_medium;
 	enum { NONE,READ,WRITE } last_action;
 };
@@ -144,33 +144,34 @@ private:
 
 class DOS_Drive_Cache {
 public:
-	DOS_Drive_Cache					(void);
-	DOS_Drive_Cache					(const char* path);
-	~DOS_Drive_Cache				(void);
-
 	enum TDirSort { NOSORT, ALPHABETICAL, DIRALPHABETICAL, ALPHABETICALREV, DIRALPHABETICALREV };
+	DOS_Drive_Cache            (void);
+	DOS_Drive_Cache            (const char* path);
+	DOS_Drive_Cache            (const DOS_Drive_Cache&); // prevent copying
+	DOS_Drive_Cache& operator= (const DOS_Drive_Cache&); // prevent assignment
+	~DOS_Drive_Cache           (void);
 
-	void		SetBaseDir			(const char* path);
-	void		SetDirSort			(TDirSort sort) { sortDirType = sort; };
-	bool		OpenDir				(const char* path, Bit16u& id);
-	bool		ReadDir				(Bit16u id, char* &result);
+	void  SetBaseDir           (const char* path);
+	void  SetDirSort           (TDirSort sort) { sortDirType = sort; };
+	bool  OpenDir              (const char* path, Bit16u& id);
+	bool  ReadDir              (Bit16u id, char* &result);
 
-	void		ExpandName			(char* path);
-	char*		GetExpandName		(const char* path);
-	bool		GetShortName		(const char* fullname, char* shortname);
+	void  ExpandName           (char* path);
+	char* GetExpandName        (const char* path);
+	bool  GetShortName         (const char* fullname, char* shortname);
 
-	bool		FindFirst			(char* path, Bit16u& id);
-	bool		FindNext			(Bit16u id, char* &result);
+	bool  FindFirst            (char* path, Bit16u& id);
+	bool  FindNext             (Bit16u id, char* &result);
 
-	void		CacheOut			(const char* path, bool ignoreLastDir = false);
-	void		AddEntry			(const char* path, bool checkExist = false);
-	void		AddEntryDirOverlay			(const char* path, bool checkExist = false);
+	void  CacheOut             (const char* path, bool ignoreLastDir = false);
+	void  AddEntry             (const char* path, bool checkExist = false);
+	void  AddEntryDirOverlay   (const char* path, bool checkExist = false);
 
-	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
+	void  DeleteEntry          (const char* path, bool ignoreLastDir = false);
+	void  EmptyCache           (void);
 
-	void		EmptyCache			(void);
-	void		SetLabel			(const char* name,bool cdrom,bool allowupdate);
-	char*		GetLabel			(void) { return label; };
+	void  SetLabel             (const char* name,bool cdrom,bool allowupdate);
+	char* GetLabel             (void) { return label; };
 
 	class CFileInfo {
 	public:
@@ -187,25 +188,25 @@ public:
 		{
 		}
 		~CFileInfo(void) {
-			for (Bit32u i=0; i<fileList.size(); i++) delete fileList[i];
+			for (auto p : fileList) {
+				delete p;
+			}
 			fileList.clear();
 			longNameList.clear();
 		};
-		char		orgname		[CROSS_LEN];
-		char		shortname	[DOS_NAMELENGTH_ASCII];
-		bool		isOverlayDir;
-		bool		isDir;
-		Bit16u		id;
-		Bitu		nextEntry;
-		Bitu		shortNr;
+		char        orgname[CROSS_LEN];
+		char        shortname[DOS_NAMELENGTH_ASCII];
+		bool        isOverlayDir;
+		bool        isDir;
+		Bit16u      id;
+		Bitu        nextEntry;
+		Bitu        shortNr;
 		// contents
-		std::vector<CFileInfo*>	fileList;
-		std::vector<CFileInfo*>	longNameList;
+		std::vector<CFileInfo*> fileList;
+		std::vector<CFileInfo*> longNameList;
 	};
 
 private:
-	DOS_Drive_Cache(const DOS_Drive_Cache&); // prevent copying
-	DOS_Drive_Cache& operator= (const DOS_Drive_Cache&); // prevent assignment
 	void ClearFileInfo(CFileInfo *dir);
 	void DeleteFileInfo(CFileInfo *dir);
 

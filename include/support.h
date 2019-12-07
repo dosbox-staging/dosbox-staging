@@ -51,8 +51,8 @@
 
 template<size_t N>
 char * safe_strcpy(char (& dst)[N], const char * src) noexcept {
-    snprintf(dst, N, "%s", src);
-    return & dst[0];
+	snprintf(dst, N, "%s", src);
+	return & dst[0];
 }
 
 #define safe_strncpy(a,b,n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
