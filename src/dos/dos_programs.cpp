@@ -20,7 +20,7 @@
 #include "dosbox.h"
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <cctype>
 #include <string>
 #include <vector>
 #include "programs.h"
@@ -1036,12 +1036,12 @@ public:
 
 void LOADFIX::Run(void) 
 {
-	Bit16u commandNr	= 1;
-	Bit16u kb			= 64;
-	if (cmd->FindCommand(commandNr,temp_line)) {
-		if (temp_line[0]=='-') {
-			char ch = temp_line[1];
-			if ((*upcase(&ch)=='D') || (*upcase(&ch)=='F')) {
+	Bit16u commandNr = 1;
+	Bit16u kb = 64;
+	if (cmd->FindCommand(commandNr, temp_line)) {
+		if (temp_line[0] == '-') {
+			const auto ch = std::toupper(temp_line[1]);
+			if ((ch == 'D') || (ch == 'F')) {
 				// Deallocate all
 				DOS_FreeProcessMemory(0x40);
 				WriteOut(MSG_Get("PROGRAM_LOADFIX_DEALLOCALL"),kb);
