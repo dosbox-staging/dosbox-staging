@@ -147,8 +147,8 @@ public:
 	enum TDirSort { NOSORT, ALPHABETICAL, DIRALPHABETICAL, ALPHABETICALREV, DIRALPHABETICALREV };
 	DOS_Drive_Cache            (void);
 	DOS_Drive_Cache            (const char* path);
-	DOS_Drive_Cache            (const DOS_Drive_Cache&); // prevent copying
-	DOS_Drive_Cache& operator= (const DOS_Drive_Cache&); // prevent assignment
+	DOS_Drive_Cache            (const DOS_Drive_Cache&) = delete; // prevent copying
+	DOS_Drive_Cache& operator= (const DOS_Drive_Cache&) = delete; // prevent assignment
 	~DOS_Drive_Cache           (void);
 
 	void  SetBaseDir           (const char* path);
