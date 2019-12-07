@@ -49,18 +49,19 @@ jobs:
         run:  sudo apt-get install -y tree $(./scripts/list-build-dependencies.sh -m apt -c gcc)
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - name: Build
+      - name: Inject version string
         run: |
           set -x
           export VERSION=$(git describe --abbrev=4)
           sed -i "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
+          echo ::set-env name=VERSION::$VERSION
+      - name: Build
+        run: |
+          set -x
           ./autogen.sh
           ./configure CXXFLAGS="-O3 -DNDEBUG"
           make -j "$(nproc)"
           strip src/dosbox
-          # Inject variable into the surrounding env in workflow,
-          # otherwise it won't be usable in the following steps.
-          echo ::set-env name=VERSION::$VERSION
       - name: Package
         run: |
           set -x
