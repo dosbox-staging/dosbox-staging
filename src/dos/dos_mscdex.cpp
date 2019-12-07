@@ -900,7 +900,7 @@ static Bit16u MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 					mem_writed(buffer+1,RealMake(mscdex->rootDriverHeaderSeg,0));
 					break;
 		case 0x01 :{/* Get current position */
-					TMSF pos;
+					TMSF pos = {0, 0, 0};
 					mscdex->GetCurrentPos(drive_unit,pos);
 					Bit8u addr_mode = mem_readb(buffer+1);
 					if (addr_mode==0) {			// HSG
@@ -989,8 +989,10 @@ static Bit16u MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 					break;
 				   };
 		case 0x0F :{ /* Get Audio Status */	
-					bool playing,pause;
-					TMSF resStart,resEnd;
+					bool playing = false;
+					bool pause = false;
+					TMSF resStart = {0, 0, 0};
+					TMSF resEnd = {0, 0, 0};
 					mscdex->GetAudioStatus(drive_unit,playing,pause,resStart,resEnd);
 					mem_writeb(buffer+1,pause);
 					mem_writeb(buffer+3,resStart.min);
