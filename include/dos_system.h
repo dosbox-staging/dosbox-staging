@@ -94,9 +94,11 @@ private:
 
 class DOS_Device : public DOS_File {
 public:
-	DOS_Device(const DOS_Device& orig):DOS_File(orig) {
-		devnum=orig.devnum;
-		open=true;
+	DOS_Device(const DOS_Device& orig)
+		: DOS_File(orig),
+		  devnum(orig.devnum)
+	{
+		open = true;
 	}
 	DOS_Device & operator= (const DOS_Device & orig) {
 		DOS_File::operator=(orig);

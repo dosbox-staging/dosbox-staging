@@ -85,7 +85,7 @@ static INLINE void host_writed(HostPt off,Bit32u val) {
 #else
 
 static INLINE Bit8u host_readb(HostPt off) {
-	return *(Bit8u *)off;
+	return *off;
 }
 static INLINE Bit16u host_readw(HostPt off) {
 	return *(Bit16u *)off;
@@ -94,7 +94,7 @@ static INLINE Bit32u host_readd(HostPt off) {
 	return *(Bit32u *)off;
 }
 static INLINE void host_writeb(HostPt off,Bit8u val) {
-	*(Bit8u *)(off)=val;
+	*off = val;
 }
 static INLINE void host_writew(HostPt off,Bit16u val) {
 	*(Bit16u *)(off)=val;
@@ -107,7 +107,7 @@ static INLINE void host_writed(HostPt off,Bit32u val) {
 
 
 static INLINE void var_write(Bit8u * var, Bit8u val) {
-	host_writeb((HostPt)var, val);
+	host_writeb(var, val);
 }
 
 static INLINE void var_write(Bit16u * var, Bit16u val) {

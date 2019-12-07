@@ -279,7 +279,12 @@ protected:
 
 class DOS_PSP :public MemStruct {
 public:
-	DOS_PSP						(Bit16u segment)		{ SetPt(segment);seg=segment;};
+	DOS_PSP(Bit16u segment)
+		: seg(0)
+	{
+		SetPt(segment);
+		seg = segment;
+	}
 	void	MakeNew				(Bit16u memSize);
 	void	CopyFileTable		(DOS_PSP* srcpsp,bool createchildpsp);
 	Bit16u	FindFreeFileEntry	(void);
@@ -311,32 +316,32 @@ private:
 	#pragma pack(1)
 	#endif
 	struct sPSP {
-		Bit8u	exit[2];			/* CP/M-like exit poimt */
-		Bit16u	next_seg;			/* Segment of first byte beyond memory allocated or program */
-		Bit8u	fill_1;				/* single char fill */
-		Bit8u	far_call;			/* far call opcode */
-		RealPt	cpm_entry;			/* CPM Service Request address*/
-		RealPt	int_22;				/* Terminate Address */
-		RealPt	int_23;				/* Break Address */
-		RealPt	int_24;				/* Critical Error Address */
-		Bit16u	psp_parent;			/* Parent PSP Segment */
-		Bit8u	files[20];			/* File Table - 0xff is unused */
-		Bit16u	environment;		/* Segment of evironment table */
-		RealPt	stack;				/* SS:SP Save point for int 0x21 calls */
-		Bit16u	max_files;			/* Maximum open files */
-		RealPt	file_table;			/* Pointer to File Table PSP:0x18 */
-		RealPt	prev_psp;			/* Pointer to previous PSP */
-		Bit8u interim_flag;
-		Bit8u truename_flag;
-		Bit16u nn_flags;
-		Bit16u dos_version;
-		Bit8u	fill_2[14];			/* Lot's of unused stuff i can't care aboue */
-		Bit8u	service[3];			/* INT 0x21 Service call int 0x21;retf; */
-		Bit8u	fill_3[9];			/* This has some blocks with FCB info */
-		Bit8u	fcb1[16];			/* first FCB */
-		Bit8u	fcb2[16];			/* second FCB */
-		Bit8u	fill_4[4];			/* unused */
-		CommandTail cmdtail;		
+		Bit8u   exit[2];     /* CP/M-like exit poimt */
+		Bit16u  next_seg;    /* Segment of first byte beyond memory allocated or program */
+		Bit8u   fill_1;      /* single char fill */
+		Bit8u   far_call;    /* far call opcode */
+		RealPt  cpm_entry;   /* CPM Service Request address*/
+		RealPt  int_22;      /* Terminate Address */
+		RealPt  int_23;      /* Break Address */
+		RealPt  int_24;      /* Critical Error Address */
+		Bit16u  psp_parent;  /* Parent PSP Segment */
+		Bit8u   files[20];   /* File Table - 0xff is unused */
+		Bit16u  environment; /* Segment of evironment table */
+		RealPt  stack;       /* SS:SP Save point for int 0x21 calls */
+		Bit16u  max_files;   /* Maximum open files */
+		RealPt  file_table;  /* Pointer to File Table PSP:0x18 */
+		RealPt  prev_psp;    /* Pointer to previous PSP */
+		Bit8u   interim_flag;
+		Bit8u   truename_flag;
+		Bit16u  nn_flags;
+		Bit16u  dos_version;
+		Bit8u   fill_2[14];  /* Lot's of unused stuff i can't care aboue */
+		Bit8u   service[3];  /* INT 0x21 Service call int 0x21;retf; */
+		Bit8u   fill_3[9];   /* This has some blocks with FCB info */
+		Bit8u   fcb1[16];    /* first FCB */
+		Bit8u   fcb2[16];    /* second FCB */
+		Bit8u   fill_4[4];   /* unused */
+		CommandTail cmdtail;
 	} GCC_ATTRIBUTE(packed);
 	#ifdef _MSC_VER
 	#pragma pack()
@@ -348,7 +353,12 @@ public:
 
 class DOS_ParamBlock:public MemStruct {
 public:
-	DOS_ParamBlock(PhysPt addr) {pt=addr;}
+	DOS_ParamBlock(PhysPt addr)
+		: exec{0, 0, 0, 0, 0, 0},
+		  overlay{0, 0}
+	{
+		pt = addr;
+	}
 	void Clear(void);
 	void LoadData(void);
 	void SaveData(void);		/* Save it as an exec block */
@@ -376,7 +386,9 @@ public:
 
 class DOS_InfoBlock:public MemStruct {
 public:
-	DOS_InfoBlock			() {};
+	DOS_InfoBlock()
+		: seg(0)
+	{}
 	void SetLocation(Bit16u  seg);
 	void SetFirstMCB(Bit16u _first_mcb);
 	void SetBuffers(Bit16u x,Bit16u y);

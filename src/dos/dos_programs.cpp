@@ -69,7 +69,7 @@ static const char* UnmountHelper(char umount) {
 	if (i_drive >= DOS_DRIVES || i_drive < 0)
 		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
 
-	if (i_drive < MAX_DISK_IMAGES && Drives[i_drive] == NULL && imageDiskList[i_drive] == NULL)
+	if (i_drive < MAX_DISK_IMAGES && Drives[i_drive] == NULL && !imageDiskList[i_drive])
 		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
 
 	if (i_drive >= MAX_DISK_IMAGES && Drives[i_drive] == NULL)
@@ -89,8 +89,7 @@ static const char* UnmountHelper(char umount) {
 	}
 
 	if (i_drive < MAX_DISK_IMAGES && imageDiskList[i_drive]) {
-		delete imageDiskList[i_drive];
-		imageDiskList[i_drive] = NULL;
+		imageDiskList[i_drive].reset(nullptr);
 	}
 
 	return MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS");
@@ -717,8 +716,7 @@ public:
 				Bit32u rombytesize;
 				FILE *usefile = getFSFile(temp_line.c_str(), &floppysize, &rombytesize);
 				if(usefile != NULL) {
-					if(diskSwap[i] != NULL) delete diskSwap[i];
-					diskSwap[i] = new imageDisk(usefile, temp_line.c_str(), floppysize, false);
+					diskSwap[i].reset(new imageDisk(usefile, temp_line.c_str(), floppysize, false));
 					if (usefile_1==NULL) {
 						usefile_1=usefile;
 						rombytesize_1=rombytesize;
@@ -739,7 +737,7 @@ public:
 
 		swapInDisks();
 
-		if(imageDiskList[drive-65]==NULL) {
+		if(!imageDiskList[drive-65]) {
 			WriteOut(MSG_Get("PROGRAM_BOOT_UNABLE"), drive);
 			return;
 		}
@@ -778,10 +776,7 @@ public:
 							WriteOut(MSG_Get("PROGRAM_BOOT_CART_NO_CMDS"));
 						}
 						for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
-							if(diskSwap[dct]!=NULL) {
-								delete diskSwap[dct];
-								diskSwap[dct]=NULL;
-							}
+							diskSwap[dct].reset(nullptr);
 						}
 						//fclose(usefile_1); //delete diskSwap closes the file
 						return;
@@ -810,10 +805,7 @@ public:
 								WriteOut(MSG_Get("PROGRAM_BOOT_CART_NO_CMDS"));
 							}
 							for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
-								if(diskSwap[dct]!=NULL) {
-									delete diskSwap[dct];
-									diskSwap[dct]=NULL;
-								}
+								diskSwap[dct].reset(nullptr);
 							}
 							//fclose(usefile_1); //Delete diskSwap closes the file
 							return;
@@ -866,10 +858,7 @@ public:
 
 				//Close cardridges
 				for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
-					if(diskSwap[dct]!=NULL) {
-						delete diskSwap[dct];
-						diskSwap[dct]=NULL;
-					}
+					diskSwap[dct].reset(nullptr);
 				}
 
 
@@ -1450,15 +1439,13 @@ public:
 				case 0:
 				case 1:
 					if(!((fatDrive *)newdrive)->loadedDisk->hardDrive) {
-						if(imageDiskList[drive - 'A'] != NULL) delete imageDiskList[drive - 'A'];
-						imageDiskList[drive - 'A'] = ((fatDrive *)newdrive)->loadedDisk;
+						imageDiskList[drive - 'A'].reset(((fatDrive *)newdrive)->loadedDisk.get());
 					}
 					break;
 				case 2:
 				case 3:
 					if(((fatDrive *)newdrive)->loadedDisk->hardDrive) {
-						if(imageDiskList[drive - 'A'] != NULL) delete imageDiskList[drive - 'A'];
-						imageDiskList[drive - 'A'] = ((fatDrive *)newdrive)->loadedDisk;
+						imageDiskList[drive - 'A'].reset(((fatDrive *)newdrive)->loadedDisk.get());
 						updateDPT();
 					}
 					break;
@@ -1534,8 +1521,7 @@ public:
 			imageDisk * newImage = new imageDisk(newDisk, temp_line.c_str(), imagesize, hdd);
 
 			if (hdd) newImage->Set_Geometry(sizes[2],sizes[3],sizes[1],sizes[0]);
-			if(imageDiskList[drive - '0'] != NULL) delete imageDiskList[drive - '0'];
-			imageDiskList[drive - '0'] = newImage;
+			imageDiskList[drive - '0'].reset(newImage);
 			updateDPT();
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER"),drive - '0',temp_line.c_str());
 		}

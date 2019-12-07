@@ -55,6 +55,13 @@ char * safe_strcpy(char (& dst)[N], const char * src) noexcept {
 	return & dst[0];
 }
 
+template<size_t N>
+char * safe_strcat(char (& dst)[N], const char * src) noexcept {
+	const size_t dst_size = sizeof(dst);
+	strncat(dst, src, dst_size - strnlen(dst, dst_size) - 1);
+	return & dst[0];
+}
+
 #define safe_strncpy(a,b,n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
 
 #ifdef HAVE_STRINGS_H

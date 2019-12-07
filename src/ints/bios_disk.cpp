@@ -17,6 +17,7 @@
  */
 
 
+#include <utility>
 #include "dosbox.h"
 #include "callback.h"
 #include "bios.h"
@@ -56,13 +57,13 @@ static bool swapping_requested;
 void CMOS_SetRegister(Bitu regNr, Bit8u val); //For setting equipment word
 
 /* 2 floppys and 2 harddrives, max */
-imageDisk *imageDiskList[MAX_DISK_IMAGES];
-imageDisk *diskSwap[MAX_SWAPPABLE_DISKS];
+std::vector<std::unique_ptr<imageDisk>> imageDiskList(MAX_DISK_IMAGES);
+std::vector<std::unique_ptr<imageDisk>> diskSwap(MAX_SWAPPABLE_DISKS);
 Bit32s swapPosition;
 
 void updateDPT(void) {
 	Bit32u tmpheads, tmpcyl, tmpsect, tmpsize;
-	if(imageDiskList[2] != NULL) {
+	if(imageDiskList[2]) {
 		PhysPt dp0physaddr=CALLBACK_PhysPointer(diskparm0);
 		imageDiskList[2]->Get_Geometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
 		phys_writew(dp0physaddr,(Bit16u)tmpcyl);
@@ -77,7 +78,7 @@ void updateDPT(void) {
 		phys_writew(dp0physaddr+0xc,(Bit16u)tmpcyl);
 		phys_writeb(dp0physaddr+0xe,(Bit8u)tmpsect);
 	}
-	if(imageDiskList[3] != NULL) {
+	if(imageDiskList[3]) {
 		PhysPt dp1physaddr=CALLBACK_PhysPointer(diskparm1);
 		imageDiskList[3]->Get_Geometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
 		phys_writew(dp1physaddr,(Bit16u)tmpcyl);
@@ -107,7 +108,7 @@ void swapInDisks(void) {
 
 	/* Check to make sure that  there is at least one setup image */
 	for(i=0;i<MAX_SWAPPABLE_DISKS;i++) {
-		if(diskSwap[i]!=NULL) {
+		if(diskSwap[i]) {
 			allNull = false;
 			break;
 		}
@@ -118,13 +119,14 @@ void swapInDisks(void) {
 
 	/* If only one disk is loaded, this loop will load the same disk in dive A and drive B */
 	while(diskcount<2) {
-		if(diskSwap[swapPos] != NULL) {
+		if(diskSwap[swapPos]) {
 			LOG_MSG("Loaded disk %d from swaplist position %d - \"%s\"", diskcount, swapPos, diskSwap[swapPos]->diskname);
-			imageDiskList[diskcount] = diskSwap[swapPos];
+			imageDiskList[diskcount] = std::move(diskSwap[swapPos]);
 			diskcount++;
 		}
 		swapPos++;
-		if(swapPos>=MAX_SWAPPABLE_DISKS) swapPos=0;
+		if(swapPos >= MAX_SWAPPABLE_DISKS)
+			swapPos=0;
 	}
 }
 
@@ -144,7 +146,9 @@ void swapInNextDisk(bool pressed) {
 		if (Drives[i]) Drives[i]->EmptyCache();
 	}
 	swapPosition++;
-	if(diskSwap[swapPosition] == NULL) swapPosition = 0;
+	if(!diskSwap[swapPosition]) {
+		swapPosition = 0;
+	}
 	swapInDisks();
 	swapping_requested = true;
 }
@@ -286,7 +290,7 @@ static bool driveInactive(Bit8u driveNum) {
 		CALLBACK_SCF(true);
 		return true;
 	}
-	if(imageDiskList[driveNum] == NULL) {
+	if(!imageDiskList[driveNum]) {
 		LOG(LOG_BIOS,LOG_ERROR)("Disk %d not active", driveNum);
 		last_status = 0x01;
 		CALLBACK_SCF(true);
@@ -494,12 +498,12 @@ static Bitu INT13_DiskHandler(void) {
 		last_status = 0x00;
 		if (reg_dl&0x80) {	// harddisks
 			reg_dl = 0;
-			if(imageDiskList[2] != NULL) reg_dl++;
-			if(imageDiskList[3] != NULL) reg_dl++;
+			if(imageDiskList[2]) reg_dl++;
+			if(imageDiskList[3]) reg_dl++;
 		} else {		// floppy disks
 			reg_dl = 0;
-			if(imageDiskList[0] != NULL) reg_dl++;
-			if(imageDiskList[1] != NULL) reg_dl++;
+			if(imageDiskList[0]) reg_dl++;
+			if(imageDiskList[1]) reg_dl++;
 		}
 		CALLBACK_SCF(false);
 		break;
@@ -571,11 +575,11 @@ void BIOS_SetupDisks(void) {
 	RealSetVec(0x13,CALLBACK_RealPointer(call_int13));
 	int i;
 	for(i=0;i<4;i++) {
-		imageDiskList[i] = NULL;
+		imageDiskList[i].reset(nullptr);
 	}
 
 	for(i=0;i<MAX_SWAPPABLE_DISKS;i++) {
-		diskSwap[i] = NULL;
+		diskSwap[i].reset(nullptr);
 	}
 
 	diskparm0 = CALLBACK_Allocate();

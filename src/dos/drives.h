@@ -20,8 +20,9 @@
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
 
-#include <vector>
+#include <memory>
 #include <string>
+#include <vector>
 #include <sys/types.h>
 #include "dos_system.h"
 #include "shell.h" /* for DOS_Shell */
@@ -152,6 +153,8 @@ class imageDisk;
 class fatDrive : public DOS_Drive {
 public:
 	fatDrive(const char * sysFilename, Bit32u bytesector, Bit32u cylsector, Bit32u headscyl, Bit32u cylinders, Bit32u startSector);
+	fatDrive(const fatDrive&) = delete; // prevent copying
+	fatDrive& operator= (const fatDrive&) = delete; // prevent assignment
 	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
 	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
 	virtual bool FileUnlink(char * name);
@@ -182,11 +185,9 @@ public:
 	Bit32u getFirstFreeClust(void);
 	bool directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum, Bit32s start=0);
 	bool directoryChange(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum);
-	imageDisk *loadedDisk;
+	std::unique_ptr<imageDisk> loadedDisk;
 	bool created_successfully;
 private:
-	fatDrive(const fatDrive&); // prevent copying
-	fatDrive& operator= (const fatDrive&); // prevent assignment
 	Bit32u getClusterValue(Bit32u clustNum);
 	void setClusterValue(Bit32u clustNum, Bit32u clustValue);
 	Bit32u getClustFirstSect(Bit32u clustNum);

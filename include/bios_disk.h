@@ -19,7 +19,9 @@
 #ifndef DOSBOX_BIOS_DISK_H
 #define DOSBOX_BIOS_DISK_H
 
+#include <memory>
 #include <stdio.h>
+#include <vector>
 #ifndef DOSBOX_MEM_H
 #include "mem.h"
 #endif
@@ -55,6 +57,8 @@ public:
 	Bit8u GetBiosType(void);
 	Bit32u getSectSize(void);
 	imageDisk(FILE *imgFile, const char *imgName, Bit32u imgSizeK, bool isHardDisk);
+	imageDisk(const imageDisk&) = delete; // prevent copy
+	imageDisk& operator=(const imageDisk&) = delete; // prevent assignment
 	~imageDisk() { if(diskimg != NULL) { fclose(diskimg); }	};
 
 	bool hardDrive;
@@ -77,8 +81,8 @@ void incrementFDD(void);
 
 #define MAX_DISK_IMAGES (2 + MAX_HDD_IMAGES)
 
-extern imageDisk *imageDiskList[MAX_DISK_IMAGES];
-extern imageDisk *diskSwap[MAX_SWAPPABLE_DISKS];
+extern std::vector<std::unique_ptr<imageDisk>> imageDiskList;
+extern std::vector<std::unique_ptr<imageDisk>> diskSwap;
 extern Bit32s swapPosition;
 extern Bit16u imgDTASeg; /* Real memory location of temporary DTA pointer for fat image disk access */
 extern RealPt imgDTAPtr; /* Real memory location of temporary DTA pointer for fat image disk access */

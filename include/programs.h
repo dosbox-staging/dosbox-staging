@@ -68,6 +68,8 @@ private:
 class Program {
 public:
 	Program();
+	Program(const Program&) = delete; // prevent copy
+	Program& operator=(const Program&) = delete; // prevent assignment
 	virtual ~Program(){
 		delete cmd;
 		delete psp;
