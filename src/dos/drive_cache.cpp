@@ -622,7 +622,15 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 		// Create number
 		char buffer[8];
 		info->shortNr = CreateShortNameID(curDir,tmpName);
-		sprintf(buffer,"%" PRIuPTR, info->shortNr);
+
+		// If processing a directory containing 10 million or more long files,
+		// then ten duplicate short filenames will be named ~1000000.ext,
+		// another 10 duplicates will be named ~1000001.ext, and so on, back
+		// through to ~9999999.ext if 999,999,999 files are present.
+		// Yes, this is a broken corner-case, but is still memory-safe.
+		// TODO: modify MOUNT/IMGMOUNT to exit with an error when encountering
+		// a directory having more than 65534 files, which is FAT32's limit.
+		snprintf(buffer, sizeof(buffer), "%" PRIuPTR, info->shortNr);
 		// Copy first letters
 		Bits tocopy = 0;
 		size_t buflen = strlen(buffer);
@@ -941,7 +949,7 @@ bool DOS_Drive_Cache::FindFirst(char* path, Bit16u& id) {
 	}
 	assert(dirFindFirst[dirFindFirstID] == nullptr);
 	dirFindFirst[dirFindFirstID] = new CFileInfo();
-	dirFindFirst[dirFindFirstID]-> nextEntry = 0;
+	dirFindFirst[dirFindFirstID]->nextEntry = 0;
 
 	// Copy entries to use with FindNext
 	for (Bitu i=0; i<dirSearch[dirID]->fileList.size(); i++) {
