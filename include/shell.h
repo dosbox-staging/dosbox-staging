@@ -45,6 +45,8 @@ extern DOS_Shell * first_shell;
 class BatchFile {
 public:
 	BatchFile(DOS_Shell * host,char const* const resolved_name,char const* const entered_name, char const * const cmd_line);
+	BatchFile(const BatchFile&) = delete; // prevent copying
+	BatchFile& operator=(const BatchFile&) = delete; // prevent assignment
 	virtual ~BatchFile();
 	virtual bool ReadLine(char * line);
 	bool Goto(char * where);
@@ -70,7 +72,8 @@ private:
 public:
 
 	DOS_Shell();
-
+	DOS_Shell(const DOS_Shell&) = delete; // prevent copy
+	DOS_Shell& operator=(const DOS_Shell&) = delete; // prevent assignment
 	void Run(void);
 	void RunInternal(void); //for command /C
 /* A load of subfunctions */
@@ -136,7 +139,10 @@ private:
 	bool installed;
 	std::string buf;
 public:
-	AutoexecObject():installed(false){ };
+	AutoexecObject()
+		: installed(false),
+		  buf("")
+	{}
 	void Install(std::string const &in);
 	void InstallBefore(std::string const &in);
 	~AutoexecObject();
