@@ -59,7 +59,7 @@ jobs:
         run: |
           set -x
           ./autogen.sh
-          ./configure CXXFLAGS="-O3 -DNDEBUG"
+          ./configure CFLAGS="-O3 -DNDEBUG -pipe" CXXFLAGS="-O3 -DNDEBUG -pipe"
           make -j "$(nproc)"
           strip src/dosbox
       - name: Package
