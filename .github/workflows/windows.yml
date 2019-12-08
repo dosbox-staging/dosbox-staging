@@ -29,12 +29,18 @@ jobs:
       CHERE_INVOKING: yes
     steps:
       - uses:  actions/checkout@v1
+      - name:  Get Date
+        id:    get-date
+        shell: bash
+        run:   echo ::set-output name=date::$(date +%Y-%W)
       - uses:  actions/cache@v1
         id:    cache-msys2
+        # As of December 2019, GitHub cache size is not big enough to hold
+        # whole MSYS2 Clang installation.
         if:    matrix.conf.compiler == 'GCC'
         with:
           path: 'C:/tools/msys64'
-          key: msys2-${{ matrix.conf.compiler }}-${{ matrix.conf.bits }}-2019-v11}
+          key: msys2-${{ matrix.conf.compiler }}-${{ matrix.conf.bits }}-${{ steps.get-date.outputs.date }}
       - name:  Install MSYS2
         if:    steps.cache-msys2.outputs.cache-hit != 'true'
         run:   choco install msys2 --no-progress
