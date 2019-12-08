@@ -204,7 +204,7 @@ char* DOS_Drive_Cache::GetExpandName(const char* path) {
 		// Last Entry = File
 		safe_strcpy(dir, pos+1);
 		(void) GetLongName(dirInfo, dir, sizeof(dir)); // ignore the return code
-		strncat(work, dir, sizeof(work) - strlen(work) - 1);
+		safe_strcat(work, dir);
 	}
 
 	if (*work) {
@@ -790,7 +790,7 @@ bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, Bit16u& id) {
 	// Add "/"
 	char end[2]={CROSS_FILESPLIT,0};
 	if (expandcopy[strlen(expandcopy)-1] != CROSS_FILESPLIT) {
-		strncat(expandcopy, end, sizeof(expandcopy) - strlen(expandcopy) - 1);
+		safe_strcat(expandcopy, end);
 	}
 	// open dir
 	if (dirSearch[id]) {
