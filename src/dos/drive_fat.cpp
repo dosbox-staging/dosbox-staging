@@ -746,7 +746,7 @@ fatDrive::fatDrive(const char *sysFilename,
 	}
 
 	diskfile = fopen_wrap(sysFilename, "rb+");
-	if(!diskfile) {
+	if (!diskfile) {
 		created_successfully = false;
 		return;
 	}
@@ -932,8 +932,8 @@ bool fatDrive::AllocationInfo(Bit16u *_bytes_sector, Bit8u *_sectors_cluster, Bi
 		*_total_clusters = 65535;
 	}
 
-	for(i=0;i<CountOfClusters;i++) {
-		if(!getClusterValue(i+2)) {
+	for (i=0; i<CountOfClusters; i++) {
+		if (!getClusterValue(i + 2)) {
 			countFree++;
 		}
 	}
