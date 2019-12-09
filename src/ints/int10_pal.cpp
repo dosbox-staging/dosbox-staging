@@ -294,6 +294,7 @@ void INT10_GetDACPage(Bit8u* mode,Bit8u* page) {
 		*page&=0xc;
 		*page>>=2;
 	}
+	IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
 }
 
 void INT10_SetPelMask(Bit8u mask) {
