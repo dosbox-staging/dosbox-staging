@@ -16,7 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include <utility>
 #include "dosbox.h"
 #include "callback.h"
@@ -57,8 +56,8 @@ static bool swapping_requested;
 void CMOS_SetRegister(Bitu regNr, Bit8u val); //For setting equipment word
 
 /* 2 floppys and 2 harddrives, max */
-std::vector<std::unique_ptr<imageDisk>> imageDiskList(MAX_DISK_IMAGES);
-std::vector<std::unique_ptr<imageDisk>> diskSwap(MAX_SWAPPABLE_DISKS);
+std::array<std::unique_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList;
+std::array<std::unique_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap;
 Bit32s swapPosition;
 
 void updateDPT(void) {

@@ -21,7 +21,7 @@
 
 #include <memory>
 #include <stdio.h>
-#include <vector>
+#include <array>
 #ifndef DOSBOX_MEM_H
 #include "mem.h"
 #endif
@@ -81,8 +81,9 @@ void incrementFDD(void);
 
 #define MAX_DISK_IMAGES (2 + MAX_HDD_IMAGES)
 
-extern std::vector<std::unique_ptr<imageDisk>> imageDiskList;
-extern std::vector<std::unique_ptr<imageDisk>> diskSwap;
+extern std::array<std::unique_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList;
+extern std::array<std::unique_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap;
+
 extern Bit32s swapPosition;
 extern Bit16u imgDTASeg; /* Real memory location of temporary DTA pointer for fat image disk access */
 extern RealPt imgDTAPtr; /* Real memory location of temporary DTA pointer for fat image disk access */
