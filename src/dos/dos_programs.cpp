@@ -143,10 +143,10 @@ public:
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_FORMAT"),"Drive","Type","Label");
 		for(int p = 0;p < 8;p++) WriteOut("----------");
 
-		for (int d = 0;d < DOS_DRIVES;d++) {
+		for (int d = 0; d < DOS_DRIVES; d++) {
 			if (!Drives[d]) continue;
 
-			char root[7] = {static_cast<char>('A'+d),':','\\','*','.','*',0};
+			char root[7] = {static_cast<char>('A' + d),':','\\','*','.','*',0};
 			bool ret = DOS_FindFirst(root,DOS_ATTR_VOLUME);
 			if (ret) {
 				dta.GetResult(name,size,date,time,attr);
@@ -274,18 +274,31 @@ public:
 			cmd->FindCommand(1,temp_line);
 			if ((temp_line.size() > 2) || ((temp_line.size()>1) && (temp_line[1]!=':'))) goto showusage;
 			int i_drive = toupper(temp_line[0]);
-			if (!isalpha(i_drive)) goto showusage;
-			if ((i_drive - 'A') >= DOS_DRIVES || (i_drive-'A') < 0 ) goto showusage;
+
+			if (!isalpha(i_drive)) {
+				goto showusage;
+			}
+			if ((i_drive - 'A') >= DOS_DRIVES || (i_drive - 'A') < 0 ) {
+				goto showusage;
+			}
 			drive = static_cast<char>(i_drive);
 
-			if (!cmd->FindCommand(2,temp_line)) goto showusage;
-			if (!temp_line.size()) goto showusage;
+			if (!cmd->FindCommand(2,temp_line)) {
+				goto showusage;
+			}
+			if (!temp_line.size()) {
+				goto showusage;
+			}
 			if(path_relative_to_last_config && control->configfiles.size() && !Cross::IsPathAbsolute(temp_line)) {
 				std::string lastconfigdir(control->configfiles[control->configfiles.size()-1]);
 				std::string::size_type pos = lastconfigdir.rfind(CROSS_FILESPLIT);
-				if(pos == std::string::npos) pos = 0; //No directory then erase string
+				if(pos == std::string::npos) {
+					pos = 0; //No directory then erase string
+				}
 				lastconfigdir.erase(pos);
-				if (lastconfigdir.length())	temp_line = lastconfigdir + CROSS_FILESPLIT + temp_line;
+				if (lastconfigdir.length()) {
+					temp_line = lastconfigdir + CROSS_FILESPLIT + temp_line;
+				}
 			}
 			struct stat test;
 			//Win32 : strip tailing backslashes
@@ -409,12 +422,12 @@ public:
 #endif
 				if(type == "overlay") {
 					//Ensure that the base drive exists:
-					if (!Drives[drive-'A']) { 
+					if (!Drives[drive - 'A']) {
 						WriteOut("No basedrive mounted yet!");
 						return;
 					}
-					localDrive* ldp = dynamic_cast<localDrive*>(Drives[drive-'A']);
-					cdromDrive* cdp = dynamic_cast<cdromDrive*>(Drives[drive-'A']);
+					localDrive* ldp = dynamic_cast<localDrive*>(Drives[drive - 'A']);
+					cdromDrive* cdp = dynamic_cast<cdromDrive*>(Drives[drive - 'A']);
 					if (!ldp || cdp) {
 						WriteOut("Basedrive not compatible");
 						return;
@@ -431,8 +444,8 @@ public:
 							delete newdrive;
 							return;
 						}
-						delete Drives[drive-'A'];
-						Drives[drive-'A'] = 0;
+						delete Drives[drive - 'A'];
+						Drives[drive - 'A'] = 0;
 					} else { 
 						WriteOut("overlaydrive construction failed.");
 						return;
@@ -445,15 +458,15 @@ public:
 			WriteOut(MSG_Get("PROGRAM_MOUNT_ILL_TYPE"),type.c_str());
 			return;
 		}
-		if (Drives[drive-'A']) {
-			WriteOut(MSG_Get("PROGRAM_MOUNT_ALREADY_MOUNTED"),drive,Drives[drive-'A']->GetInfo());
+		if (Drives[drive - 'A']) {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_ALREADY_MOUNTED"),drive,Drives[drive - 'A']->GetInfo());
 			if (newdrive) delete newdrive;
 			return;
 		}
 		if (!newdrive) E_Exit("DOS:Can't create drive");
-		Drives[drive-'A']=newdrive;
+		Drives[drive - 'A'] = newdrive;
 		/* Set the correct media byte in the table */
-		mem_writeb(Real2Phys(dos.tables.mediaid)+(drive-'A')*9,newdrive->GetMediaByte());
+		mem_writeb(Real2Phys(dos.tables.mediaid) + (drive - 'A') * 9, newdrive->GetMediaByte());
 		if (type != "overlay") WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,newdrive->GetInfo());
 		else WriteOut("Overlay %s on drive %c mounted.\n",temp_line.c_str(),drive);
 		/* check if volume label is given and don't allow it to updated in the future */
@@ -737,13 +750,13 @@ public:
 
 		swapInDisks();
 
-		if(!imageDiskList[drive-65]) {
+		if (!imageDiskList[drive - 'A']) {
 			WriteOut(MSG_Get("PROGRAM_BOOT_UNABLE"), drive);
 			return;
 		}
 
 		bootSector bootarea;
-		imageDiskList[drive-65]->Read_Sector(0,0,1,(Bit8u *)&bootarea);
+		imageDiskList[drive - 'A']->Read_Sector(0, 0, 1, (Bit8u *)&bootarea);
 		if ((bootarea.rawdata[0]==0x50) && (bootarea.rawdata[1]==0x43) && (bootarea.rawdata[2]==0x6a) && (bootarea.rawdata[3]==0x72)) {
 			if (machine!=MCH_PCJR) WriteOut(MSG_Get("PROGRAM_BOOT_CART_WO_PCJR"));
 			else {
@@ -1136,8 +1149,14 @@ void RESCAN::Run(void)
 	Bit8u drive = DOS_GetDefaultDrive();
 	
 	if(cmd->FindCommand(1,temp_line)) {
-		//-A -All /A /All 
-		if(temp_line.size() >= 2 && (temp_line[0] == '-' ||temp_line[0] =='/')&& (temp_line[1] == 'a' || temp_line[1] =='A') ) all = true;
+		//-A -All /A /All
+		if (temp_line.size() >= 2
+			&& (temp_line[0] == '-' ||
+			    temp_line[0] == '/')
+			&& (temp_line[1] == 'a' ||
+			    temp_line[1] == 'A') ) {
+	 		all = true;
+		}
 		else if(temp_line.size() == 2 && temp_line[1] == ':') {
 			lowcase(temp_line);
 			drive  = temp_line[0] - 'a';
@@ -1385,7 +1404,7 @@ public:
 				LOG_MSG("autosized image file: %d:%d:%d:%d",sizes[0],sizes[1],sizes[2],sizes[3]);
 			}
 
-			if (Drives[drive-'A']) {
+			if (Drives[drive - 'A']) {
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED"));
 				return;
 			}
@@ -1438,13 +1457,13 @@ public:
 				switch (drive - 'A') {
 				case 0:
 				case 1:
-					if(!((fatDrive *)newdrive)->loadedDisk->hardDrive) {
+					if (!((fatDrive *)newdrive)->loadedDisk->hardDrive) {
 						imageDiskList[drive - 'A'].reset(((fatDrive *)newdrive)->loadedDisk.get());
 					}
 					break;
 				case 2:
 				case 3:
-					if(((fatDrive *)newdrive)->loadedDisk->hardDrive) {
+					if (((fatDrive *)newdrive)->loadedDisk->hardDrive) {
 						imageDiskList[drive - 'A'].reset(((fatDrive *)newdrive)->loadedDisk.get());
 						updateDPT();
 					}
@@ -1453,7 +1472,7 @@ public:
 			}
 		} else if (fstype=="iso") {
 
-			if (Drives[drive-'A']) {
+			if (Drives[drive - 'A']) {
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED"));
 				return;
 			}

@@ -57,8 +57,7 @@ char * safe_strcpy(char (& dst)[N], const char * src) noexcept {
 
 template<size_t N>
 char * safe_strcat(char (& dst)[N], const char * src) noexcept {
-	const size_t dst_size = sizeof(dst);
-	strncat(dst, src, dst_size - strnlen(dst, dst_size) - 1);
+	strncat(dst, src, N - strnlen(dst, N) - 1);
 	return & dst[0];
 }
 
