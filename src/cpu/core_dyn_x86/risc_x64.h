@@ -469,7 +469,11 @@ static void gen_discardflags(void) {
 }
 
 static void gen_needcarry(void) {
-	gen_needflags();
+	if (!x64gen.flagsactive) {
+		x64gen.flagsactive=true;
+		opcode(4).setea(4,-1,0,CALLSTACK+8).setimm(0,1).Emit16(0xBA0F);  // bt [rsp+8/40], 0
+		opcode(4).set64().setea(4,-1,0,CALLSTACK+16).Emit8(0x8D);       // lea rsp, [rsp+16/48]
+	}
 }
 
 static void gen_setzeroflag(void) {
