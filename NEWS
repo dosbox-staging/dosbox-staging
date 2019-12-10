@@ -1,3 +1,17 @@
+0.74-3
+A security release for DOSBox 0.74:
+- Fixed that a very long line inside a bat file would overflow the parsing 
+  buffer (CVE-2019-7165 by Alexandre Bartel)
+- Added a basic permission system so that a program running inside DOSBox 
+  can't access the contents of /proc (e.g. /proc/self/mem) when / or /proc
+  were (to be) mounted (CVE-2019-12594 by Alexandre Bartel)  
+- Several other fixes for out of bounds access and buffer overflows.
+- Some fixes to the OpenGL rendering.
+
+It's recommended to use config -securemode when dealing with untrusted
+files. 
+See the Changelog for all the changes.
+
 0.74-2
 A maintenance release for DOSBox 0.74, which solves the following problems:
 
