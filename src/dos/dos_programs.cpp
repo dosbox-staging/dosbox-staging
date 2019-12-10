@@ -327,31 +327,8 @@ public:
 				int num = -1;
 				cmd->FindInt("-usecd",num,true);
 				int error = 0;
-				if (cmd->FindExist("-ioctl_dio", false)) {
-					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
-				} else if (cmd->FindExist("-ioctl_dx",false)) {
-					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
-#if defined (WIN32)
-				} else if (cmd->FindExist("-ioctl_mci",false)) {
-					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_MCI, num);
-#endif
-				} else if (cmd->FindExist("-noioctl",false)) {
+				if (cmd->FindExist("-noioctl",false)) {
 					MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
-				} else {
-#if defined (WIN32)
-					// Check OS
-					OSVERSIONINFO osi;
-					osi.dwOSVersionInfoSize = sizeof(osi);
-					GetVersionEx(&osi);
-					if ((osi.dwPlatformId==VER_PLATFORM_WIN32_NT) && (osi.dwMajorVersion>5)) {
-						// Vista/above
-						MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
-					} else {
-						MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
-					}
-#else
-					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
-#endif
 				}
 				newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
 				// Check Mscdex, if it worked out...
