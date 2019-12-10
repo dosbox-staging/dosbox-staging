@@ -42,16 +42,19 @@ def remove_colors(line):
     return re.sub(ANSI_COLOR_PATTERN, '', line)
 
 
-def count_warning(line, warning_types):
+def count_warning(line, warning_types, warning_files):
     line = remove_colors(line)
     match = WARNING_PATTERN.match(line)
     if not match:
         return 0
-    # file = match.group(1)
+    file = match.group(1)
     # line = match.group(2)
     wtype = match.group(3)
-    count = warning_types.get(wtype) or 0
-    warning_types[wtype] = count + 1
+    _, fname = os.path.split(file)
+    type_count = warning_types.get(wtype) or 0
+    file_count = warning_files.get(fname) or 0
+    warning_types[wtype] = type_count + 1
+    warning_files[fname] = file_count + 1
     return 1
 
 
@@ -95,15 +98,24 @@ def parse_args():
         help='Override the maximum number of warnings.\n'
              'Use value -1 to disable the check.')
 
+    parser.add_argument(
+        '-f', '--files',
+        action='store_true',
+        help='Group warnings by filename.')
+
     return parser.parse_args()
 
 def main():
     rcode = 0
     total = 0
     warning_types = {}
+    warning_files = {}
     args = parse_args()
     for line in get_input_lines(args.logfile):
-        total += count_warning(line, warning_types)
+        total += count_warning(line, warning_types, warning_files)
+    if args.files and warning_files:
+        print("Warnings grouped by file:\n")
+        print_summary(warning_files)
     if warning_types:
         print("Warnings grouped by type:\n")
         print_summary(warning_types)
