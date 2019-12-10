@@ -312,7 +312,7 @@ static void gen_load_host(void * data,DynReg * dr1,Bitu size) {
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_mov_host(void * data,DynReg * dr1,Bitu size,Bit8u di1=0) {
+static void gen_mov_host(void * data,DynReg * dr1,Bitu size,Bitu di1=0) {
 	GenReg * gr1=FindDynReg(dr1,(size==4));
 	switch (size) {
 	case 1:cache_addb(0x8a);break;	//mov byte
@@ -321,7 +321,7 @@ static void gen_mov_host(void * data,DynReg * dr1,Bitu size,Bit8u di1=0) {
 	default:
 		IllegalOption("gen_mov_host");
 	}
-	cache_addb(0x5+((gr1->index+(di1?4:0))<<3));
+	cache_addb(0x5+((gr1->index+di1)<<3));
 	cache_addd((Bit32u)data);
 	dr1->flags|=DYNFLG_CHANGED;
 }
