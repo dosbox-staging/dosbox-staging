@@ -39,14 +39,14 @@ enum {
 static const int reg_args[4] = {X64_REG_RCX, X64_REG_RDX, X64_REG_R8, X64_REG_R9};
 #define ARG0_REG 1
 #define ARG1_REG 2
-#define CALLSTACK 32
+#define CALLSTACK 40
 #else
 enum {
 	// (high)byte-accessible
-	X64_REG_RAX,
 	X64_REG_RBX,
 	X64_REG_RCX,
 	X64_REG_RDX,
+	X64_REG_RAX,
 	// volatiles
 	X64_REG_RSI,
 	X64_REG_RDI,
@@ -65,7 +65,7 @@ enum {
 static const int reg_args[4] = {X64_REG_RDI, X64_REG_RSI, X64_REG_RDX, X64_REG_RCX};
 #define ARG0_REG 7
 #define ARG1_REG 6
-#define CALLSTACK 0
+#define CALLSTACK 8
 #endif
 
 static struct {
@@ -77,7 +77,7 @@ static struct {
 class opcode {
 public:
 	opcode(void) : is_word(false), imm_size(0), rex(0) {}
-	opcode(int reg,bool dword=true,Bit8u acc=1) : is_word(!dword), imm_size(0), rex(0) {
+	opcode(int reg,bool dword=true,Bitu acc=1) : is_word(!dword), imm_size(0), rex(0) {
 		setreg(reg, acc);
 	}
 
@@ -85,10 +85,10 @@ public:
 	opcode& set64(void) {rex|=0x48;return *this;}
 	opcode& setimm(Bit64u _imm, int size) {imm=_imm;imm_size=size;return *this;}
 
-	opcode& setreg(int r, Bit8u acc=1); // acc: 0=low byte, 1=word/dword, 4=high byte
-	opcode& setrm(int r, Bit8u acc=1);
+	opcode& setreg(int r, Bitu acc=1); // acc: 0=low byte, 1=word/dword, 4=high byte
+	opcode& setrm(int r, Bitu acc=1);
 	opcode& setabsaddr(void* addr);
-	opcode& setea(int rbase, int rscale=-1, int scale=0, Bit32s off=0);
+	opcode& setea(int rbase, int rscale=-1, Bitu scale=0, Bits off=0);
 
 	void Emit8Reg(Bit8u op);
 	void Emit8(Bit8u op);
@@ -160,7 +160,7 @@ void opcode::Emit16(Bit16u op) {
 	EmitSibOffImm();
 }
 
-opcode& opcode::setreg(int r, Bit8u acc) {
+opcode& opcode::setreg(int r, Bitu acc) {
 	if (acc==4) {
 		if (r>3 || rex) IllegalOption("opcode::setreg: cannot encode high byte");
 		r += 4;
@@ -170,7 +170,7 @@ opcode& opcode::setreg(int r, Bit8u acc) {
 	return *this;
 }
 
-opcode& opcode::setrm(int r, Bit8u acc) {
+opcode& opcode::setrm(int r, Bitu acc) {
 	if (reg>=8) rex |= 0x44;
 	if (r>=8) rex |= 0x41;
 	if (acc==4) {
@@ -202,7 +202,7 @@ opcode& opcode::setabsaddr(void* addr) {
 	return *this;
 }
 
-opcode& opcode::setea(int rbase, int rscale, int scale, Bit32s off) {
+opcode& opcode::setea(int rbase, int rscale, Bitu scale, Bits off) {
 	if (reg>=8) rex |= 0x44;
 	if (rbase>=8) rex |= 0x41, rbase &= 7;
 	if (rscale>=8) rex |= 0x42, rscale &= 7;
@@ -211,7 +211,7 @@ opcode& opcode::setea(int rbase, int rscale, int scale, Bit32s off) {
 
 	if (rbase<0 || rscale>=0 || rbase==4) { // sib required
 		modrm += 4;
-		if (rscale>=0) sib = (scale<<6)+(rscale<<3);
+		if (rscale>=0) sib = (Bit8u)((scale<<6)+(rscale<<3));
 		else sib = 4<<3;
 		if (rbase>=0) sib += rbase;
 		else sib += 5;
@@ -299,8 +299,8 @@ static BlockReturn gen_runcodeInit(Bit8u *code) {
 	opcode(4).set64().setrm(4).setimm(~15,1).Emit8(0x83); // and rsp, ~15
 	opcode(15).Emit8Reg(0x50);  // push r15
 	opcode(2).Emit8Reg(0x50);   // push rdx
-	opcode(5).set64().setrm(4).setimm(CALLSTACK*2+16,1).Emit8(0x83); // sub rsp, 16/80
-	opcode(0).setea(4,-1,0,CALLSTACK+8).Emit8(0x89);  // mov [rsp+8/40], eax
+	opcode(5).set64().setrm(4).setimm(CALLSTACK*2,1).Emit8(0x83); // sub rsp, 16/80
+	opcode(0).setea(4,-1,0,CALLSTACK).Emit8(0x89);  // mov [rsp+8/40], eax
 	opcode(4).setrm(ARG0_REG).Emit8(0xFF);   // jmp ARG0
 
 	*(Bit32u*)diff = (Bit32u)(cache.pos - diff - 4);
@@ -309,7 +309,7 @@ static BlockReturn gen_runcodeInit(Bit8u *code) {
 	opcode(4).setrm(1).setimm(FMASK_TEST,4).Emit8(0x81);          // and ecx,FMASK_TEST
 	opcode(1).setea(5,-1,0,offsetof(CPU_Regs,flags)).Emit8(0x31); // xor reg_flags, ecx
 
-	opcode(4).set64().setea(4,-1,0,CALLSTACK+8).Emit8(0x8B); // mov rsp, [rsp+8/40]
+	opcode(4).set64().setea(4,-1,0,CALLSTACK).Emit8(0x8B); // mov rsp, [rsp+8/40]
 #if defined(_WIN64)
 	opcode(6).Emit8Reg(0x58);  // pop rsi
 	opcode(7).Emit8Reg(0x58);  // pop rdi
@@ -447,7 +447,7 @@ static void gen_synchreg(DynReg * dnew,DynReg * dsynch) {
 static void gen_needflags(void) {
 	if (!x64gen.flagsactive) {
 		x64gen.flagsactive=true;
-		opcode(0).set64().setrm(4).setimm(CALLSTACK+8,1).Emit8(0x83); // add rsp,8/40
+		opcode(0).set64().setrm(4).setimm(CALLSTACK,1).Emit8(0x83); // add rsp,8/40
 		cache_addb(0x9d);		//POPFQ
 	}
 }
@@ -456,29 +456,33 @@ static void gen_protectflags(void) {
 	if (x64gen.flagsactive) {
 		x64gen.flagsactive=false;
 		cache_addb(0x9c);		//PUSHFQ
-		opcode(4).set64().setea(4,-1,0,-(CALLSTACK+8)).Emit8(0x8D); // lea rsp, [rsp-8/40]
+		opcode(4).set64().setea(4,-1,0,-(CALLSTACK)).Emit8(0x8D); // lea rsp, [rsp-8/40]
 	}
 }
 
 static void gen_discardflags(void) {
 	if (!x64gen.flagsactive) {
 		x64gen.flagsactive=true;
-		opcode(0).set64().setrm(4).setimm(CALLSTACK+16,1).Emit8(0x83); // add rsp,16/48
+		opcode(0).set64().setrm(4).setimm(CALLSTACK+8,1).Emit8(0x83); // add rsp,16/48
 	}
 }
 
 static void gen_needcarry(void) {
-	gen_needflags();
+	if (!x64gen.flagsactive) {
+		x64gen.flagsactive=true;
+		opcode(4).setea(4,-1,0,CALLSTACK).setimm(0,1).Emit16(0xBA0F);  // bt [rsp+8/40], 0
+		opcode(4).set64().setea(4,-1,0,CALLSTACK+8).Emit8(0x8D);       // lea rsp, [rsp+16/48]
+	}
 }
 
 static void gen_setzeroflag(void) {
 	if (x64gen.flagsactive) IllegalOption("gen_setzeroflag");
-	opcode(1).setea(4,-1,0,CALLSTACK+8).setimm(0x40,1).Emit8(0x83); // or dword [rsp+8/40],0x40
+	opcode(1).setea(4,-1,0,CALLSTACK).setimm(0x40,1).Emit8(0x83); // or dword [rsp+8/40],0x40
 }
 
 static void gen_clearzeroflag(void) {
 	if (x64gen.flagsactive) IllegalOption("gen_clearzeroflag");
-	opcode(4).setea(4,-1,0,CALLSTACK+8).setimm(~0x40,1).Emit8(0x83); // and dword [rsp+8/40],~0x40
+	opcode(4).setea(4,-1,0,CALLSTACK).setimm(~0x40,1).Emit8(0x83); // and dword [rsp+8/40],~0x40
 }
 
 static bool skip_flags=false;
@@ -514,7 +518,7 @@ static void gen_load_host(void * data,DynReg * dr1,Bitu size) {
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_mov_host(void * data,DynReg * dr1,Bitu size,Bit8u di1=0) {
+static void gen_mov_host(void * data,DynReg * dr1,Bitu size,Bitu di1=0) {
 	int idx = FindDynReg(dr1,size==4)->index;
 	opcode op;
 	Bit8u tmp;
@@ -582,13 +586,13 @@ static void gen_load_imm(int index,Bitu imm) {
 		opcode(index).setrm(index).Emit8(0x33); // xor r32,r32
 	else if ((Bit32u)imm==imm)
 		opcode(index).setimm(imm,4).Emit8Reg(0xB8); // MOV r32, imm32
-	else if ((Bit32s)imm==imm)
+	else if ((Bit32s)imm==(Bits)imm)
 		opcode(0).set64().setimm(imm,4).setrm(index).Emit8(0xC7); // mov r64, simm32
 	else
 		opcode(index).set64().setabsaddr((void*)imm).Emit8(0x8D); // lea r64, [imm]
 }
 
-static void gen_dop_byte(DualOps op,DynReg * dr1,Bit8u di1,DynReg * dr2,Bit8u di2) {
+static void gen_dop_byte(DualOps op,DynReg * dr1,Bitu di1,DynReg * dr2,Bitu di2) {
 	Bit8u tmp;
 	opcode i(FindDynReg(dr1)->index,true,di1);
 	i.setrm(FindDynReg(dr2)->index,di2);
@@ -613,7 +617,7 @@ nochange:
 	i.Emit8(tmp);
 }
 
-static void gen_dop_byte_imm(DualOps op,DynReg * dr1,Bit8u di1,Bitu imm) {
+static void gen_dop_byte_imm(DualOps op,DynReg * dr1,Bitu di1,Bitu imm) {
 	Bit8u tmp=0x80;
 	int dst = FindDynReg(dr1)->index;
 	opcode i;
@@ -641,7 +645,7 @@ nochange:
 	i.setrm(dst,di1).Emit8(tmp);
 }
 
-static void gen_dop_byte_imm_mem(DualOps op,DynReg * dr1,Bit8u di1,void* data) {
+static void gen_dop_byte_imm_mem(DualOps op,DynReg * dr1,Bitu di1,void* data) {
 	opcode i;
 	Bits addr = (Bits)data;
 	Bits rbpdiff = addr - (Bits)&cpu_regs;
@@ -652,7 +656,7 @@ static void gen_dop_byte_imm_mem(DualOps op,DynReg * dr1,Bit8u di1,void* data) {
 	else {
 		GenReg* dst = FindDynReg(dr1);
 		dst->notusable=true;
-		int src = GetNextReg(di1);
+		int src = GetNextReg(di1!=0);
 		dst->notusable=false;
 		if ((Bit32u)addr == (Bitu)addr) opcode(src).setimm(addr,4).Emit8Reg(0xB8);
 		else opcode(src).setimm(addr,8).set64().Emit8Reg(0xB8);
@@ -679,7 +683,7 @@ nochange:
 	i.Emit8(tmp);
 }
 
-static void gen_sop_byte(SingleOps op,DynReg * dr1,Bit8u di1) {
+static void gen_sop_byte(SingleOps op,DynReg * dr1,Bitu di1) {
 	Bit8u tmp;
 	int dst = FindDynReg(dr1)->index;
 	opcode i;
@@ -709,7 +713,7 @@ static void gen_extend_word(bool sign,DynReg * ddr,DynReg * dsr) {
 	ddr->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_extend_byte(bool sign,bool dword,DynReg * ddr,DynReg * dsr,Bit8u dsi) {
+static void gen_extend_byte(bool sign,bool dword,DynReg * ddr,DynReg * dsr,Bitu dsi) {
 	if (ddr==dsr && dword && dsr->genreg==NULL) {
 		opcode op = opcode(FindDynReg(ddr,true)->index);
 		if (dsi) op.setabsaddr((void*)(((Bit8u*)dsr->data)+1));
@@ -734,7 +738,7 @@ static void gen_extend_byte(bool sign,bool dword,DynReg * ddr,DynReg * dsr,Bit8u
 	ddr->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_lea(DynReg * ddr,DynReg * dsr1,DynReg * dsr2,Bitu scale,Bit32s imm) {
+static void gen_lea(DynReg * ddr,DynReg * dsr1,DynReg * dsr2,Bitu scale,Bits imm) {
 	if (ddr==dsr1 && dsr2==NULL && !imm)
 		return;
 	if (ddr==dsr2 && dsr1==NULL) {
@@ -764,11 +768,6 @@ static void gen_lea(DynReg * ddr,DynReg * dsr1,DynReg * dsr2,Bitu scale,Bit32s i
 
 	opcode(gdr->index).setea(idx1, idx2, scale, imm).Emit8(0x8D);
 	ddr->flags|=DYNFLG_CHANGED;
-}
-
-static void gen_lea_imm_mem(DynReg * ddr,DynReg * dsr,void* data) {
-	gen_load_host(data, ddr, 4);
-	gen_lea(ddr, ddr, dsr, 0, 0);
 }
 
 static void gen_dop_word(DualOps op,bool dword,DynReg * dr1,DynReg * dr2) {
@@ -809,7 +808,10 @@ static void gen_dop_word_imm(DualOps op,bool dword,DynReg * dr1,Bits imm) {
 	Bit8u tmp=0x81;
 	int dst = FindDynReg(dr1,dword && op==DOP_MOV)->index;
 	opcode i;
-	if (!dword) i.setword();
+	if (!dword) {
+		i.setword();
+		imm = (Bit16s)imm;
+	} else imm = (Bit32s)imm;
 	if (op <= DOP_OR && (Bit8s)imm==imm) {
 		i.setimm(imm, 1);
 		tmp = 0x83;
@@ -890,6 +892,11 @@ static void gen_dop_word_imm_mem(DualOps op,bool dword,DynReg * dr1,void* data) 
 	gen_dop_word(op,dr1,i);
 }
 
+static void gen_lea_imm_mem(DynReg * ddr,DynReg * dsr,void* data) {
+	gen_dop_word_imm_mem(DOP_MOV,true,ddr,data);
+	gen_lea(ddr, ddr, dsr, 0, 0);
+}
+
 static void gen_imul_word(bool dword,DynReg * dr1,DynReg * dr2) {
 	// dr1 = dr1*dr2
 	opcode(FindDynReg(dr1)->index,dword).setrm(FindDynReg(dr2)->index).Emit16(0xAF0F);
@@ -925,14 +932,14 @@ static void gen_sop_word(SingleOps op,bool dword,DynReg * dr1) {
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_shift_byte_cl(Bitu op,DynReg * dr1,Bit8u di1,DynReg * drecx) {
+static void gen_shift_byte_cl(Bitu op,DynReg * dr1,Bitu di1,DynReg * drecx) {
 	ForceDynReg(x64gen.regs[X64_REG_RCX],drecx);
-	opcode(op).setrm(FindDynReg(dr1)->index,di1).Emit8(0xD2);
+	opcode((int)op).setrm(FindDynReg(dr1)->index,di1).Emit8(0xD2);
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_shift_byte_imm(Bitu op,DynReg * dr1,Bit8u di1,Bit8u imm) {
-	opcode inst = opcode(op).setrm(FindDynReg(dr1)->index,di1);
+static void gen_shift_byte_imm(Bitu op,DynReg * dr1,Bitu di1,Bit8u imm) {
+	opcode inst = opcode((int)op).setrm(FindDynReg(dr1)->index,di1);
 	if (imm==1) inst.Emit8(0xD0);
 	else inst.setimm(imm,1).Emit8(0xC0);
 	dr1->flags|=DYNFLG_CHANGED;
@@ -940,12 +947,12 @@ static void gen_shift_byte_imm(Bitu op,DynReg * dr1,Bit8u di1,Bit8u imm) {
 
 static void gen_shift_word_cl(Bitu op,bool dword,DynReg * dr1,DynReg * drecx) {
 	ForceDynReg(x64gen.regs[X64_REG_RCX],drecx);
-	opcode(op,dword).setrm(FindDynReg(dr1)->index).Emit8(0xD3);
+	opcode((int)op,dword).setrm(FindDynReg(dr1)->index).Emit8(0xD3);
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
 static void gen_shift_word_imm(Bitu op,bool dword,DynReg * dr1,Bit8u imm) {
-	opcode inst = opcode(op,dword).setrm(FindDynReg(dr1)->index);
+	opcode inst = opcode((int)op,dword).setrm(FindDynReg(dr1)->index);
 	if (imm==1) inst.Emit8(0xD1);
 	else inst.setimm(imm,1).Emit8(0xC1);
 	dr1->flags|=DYNFLG_CHANGED;
@@ -969,7 +976,7 @@ static void gen_cwd(bool dword,DynReg * dyn_ax,DynReg * dyn_dx) {
 	else cache_addb(0x99);
 }
 
-static void gen_mul_byte(bool imul,DynReg * dyn_ax,DynReg * dr1,Bit8u di1) {
+static void gen_mul_byte(bool imul,DynReg * dyn_ax,DynReg * dr1,Bitu di1) {
 	ForceDynReg(x64gen.regs[X64_REG_RAX],dyn_ax);
 	opcode(imul?5:4).setrm(FindDynReg(dr1)->index,di1).Emit8(0xF6);
 	dyn_ax->flags|=DYNFLG_CHANGED;
@@ -1000,7 +1007,7 @@ static void gen_dshift_cl(bool dword,bool left,DynReg * dr1,DynReg * dr2,DynReg 
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_call_ptr(void *func=NULL) {
+static void gen_call_ptr(void *func=NULL, Bit8u ptr=0) {
 	x64gen.regs[X64_REG_RAX]->Clear();
 	x64gen.regs[X64_REG_RCX]->Clear();
 	x64gen.regs[X64_REG_RDX]->Clear();
@@ -1014,19 +1021,19 @@ static void gen_call_ptr(void *func=NULL) {
 	x64gen.regs[X64_REG_R11]->Clear();
 
 	/* Do the actual call to the procedure */
-	if (func==NULL) cache_addw(0xD0FF); // call rax
-	else {
+	if (func!=NULL) {
 		Bits diff = (Bits)func - (Bits)cache.pos - 5;
-		if ((Bit32s)diff == diff) opcode(0).setimm(diff,4).Emit8Reg(0xE8); // call rel32
-		else {
-			gen_load_imm(0, (Bitu)func);
-			cache_addw(0xD0FF);
+		if ((Bit32s)diff == diff) {
+			opcode(0).setimm(diff,4).Emit8Reg(0xE8); // call rel32
+			return;
 		}
+		gen_load_imm(ptr, (Bitu)func);
 	}
+	opcode(2).setrm(ptr).Emit8(0xFF); // call ptr
 }
 
 static void gen_call_function(void * func,const char* ops,...) {
-	Bits paramcount=0;
+	Bitu paramcount=0;
 	va_list params;
 	DynReg *dynret=NULL;
 	char rettype;
@@ -1046,7 +1053,7 @@ static void gen_call_function(void * func,const char* ops,...) {
 				else gen_load_imm(gen->index,va_arg(params,Bitu));
 				break;
 			case 'D':       /* Dynamic register */
-				gen_load_arg_reg(paramcount++, va_arg(params,DynReg*), ops++);
+				gen_load_arg_reg((int)paramcount++, va_arg(params,DynReg*), ops++);
 				break;
 			case 'R':       /* Dynamic register for returned value */
 				dynret = va_arg(params,DynReg*);
@@ -1055,8 +1062,9 @@ static void gen_call_function(void * func,const char* ops,...) {
 			case 'F':       /* arg is flags, release */
 				gen = x64gen.regs[reg_args[paramcount++]];
 				gen->Clear();
-				opcode(gen->index).setea(4,-1,0,CALLSTACK+8).Emit8(0x8B); // mov reg, [rsp+8/40]
-				opcode(0).set64().setimm(CALLSTACK+16,1).setrm(4).Emit8(0x83); // add rsp,16/48
+				gen_protectflags();
+				opcode(gen->index).setea(4,-1,0,CALLSTACK).Emit8(0x8B); // mov reg, [rsp+8/40]
+				opcode(0).set64().setimm(CALLSTACK+8,1).setrm(4).Emit8(0x83); // add rsp,16/48
 				break;
 			default:
 				IllegalOption("gen_call_function unknown param");
@@ -1128,7 +1136,7 @@ static void gen_fill_branch(Bit8u * data,Bit8u * from=cache.pos) {
 	if (len>127)
 		LOG_MSG("Big jump %d",len);
 #endif
-	*data=(from-data-1);
+	*data=(Bit8u)(from-data-1);
 }
 
 static Bit8u * gen_create_branch_long(BranchTypes type) {
@@ -1138,18 +1146,18 @@ static Bit8u * gen_create_branch_long(BranchTypes type) {
 }
 
 static void gen_fill_branch_long(Bit8u * data,Bit8u * from=cache.pos) {
-	*(Bit32u*)data=(from-data-4);
+	*(Bit32u*)data=(Bit32u)(from-data-4);
 }
 
 static Bit8u * gen_create_jump(Bit8u * to=0) {
 	/* First free all registers */
 	cache_addb(0xe9);
-	cache_addd(to-(cache.pos+4));
+	cache_addd((Bit32u)(to-(cache.pos+4)));
 	return (cache.pos-4);
 }
 
 static void gen_fill_jump(Bit8u * data,Bit8u * to=cache.pos) {
-	*(Bit32u*)data=(to-data-4);
+	*(Bit32u*)data=(Bit32u)(to-data-4);
 }
 
 static Bit8u * gen_create_short_jump(void) {
@@ -1164,7 +1172,7 @@ static void gen_fill_short_jump(Bit8u * data, Bit8u * to=cache.pos) {
 	if (len>127)
 		LOG_MSG("Big jump %d",len);
 #endif
-	data[0] = to-data-1;
+	data[0] = (Bit8u)(to-data-1);
 }
 
 static void gen_jmp_ptr(void * _ptr,Bit32s imm=0) {
@@ -1178,17 +1186,17 @@ static void gen_jmp_ptr(void * _ptr,Bit32s imm=0) {
 
 static void gen_save_flags(DynReg * dynreg) {
 	if (GCC_UNLIKELY(x64gen.flagsactive)) IllegalOption("gen_save_flags");
-	opcode(FindDynReg(dynreg)->index).setea(4,-1,0,CALLSTACK+8).Emit8(0x8B); // mov reg32, [rsp+8/40]
+	opcode(FindDynReg(dynreg)->index).setea(4,-1,0,CALLSTACK).Emit8(0x8B); // mov reg32, [rsp+8/40]
 	dynreg->flags|=DYNFLG_CHANGED;
 }
 
 static void gen_load_flags(DynReg * dynreg) {
 	if (GCC_UNLIKELY(x64gen.flagsactive)) IllegalOption("gen_load_flags");
-	opcode(FindDynReg(dynreg)->index).setea(4,-1,0,CALLSTACK+8).Emit8(0x89); // mov [rsp+8/40],reg32
+	opcode(FindDynReg(dynreg)->index).setea(4,-1,0,CALLSTACK).Emit8(0x89); // mov [rsp+8/40],reg32
 }
 
 static void gen_save_host_direct(void *data,Bitu imm) {
-	if ((Bit32s)imm != imm) {
+	if ((Bit32s)imm != (Bits)imm) {
 		opcode(0).setimm(imm,4).setabsaddr(data).Emit8(0xC7); // mov dword[], imm32 (low dword)
 		opcode(0).setimm(imm>>32,4).setabsaddr((Bit8u*)data+4).Emit8(0xC7); // high dword
 	} else
@@ -1197,28 +1205,28 @@ static void gen_save_host_direct(void *data,Bitu imm) {
 
 static void gen_return(BlockReturn retcode) {
 	gen_protectflags();
-	opcode(1).setea(4,-1,0,CALLSTACK+8).Emit8(0x8B); // mov ecx, [rsp+8/40]
-	opcode(0).set64().setrm(4).setimm(CALLSTACK+16,1).Emit8(0x83); // add rsp,16/48
+	opcode(1).setea(4,-1,0,CALLSTACK).Emit8(0x8B); // mov ecx, [rsp+8/40]
+	opcode(0).set64().setrm(4).setimm(CALLSTACK+8,1).Emit8(0x83); // add rsp,16/48
 	if (retcode==0) cache_addw(0xc033);		// xor eax,eax
 	else {
 		cache_addb(0xb8);		//MOV EAX, retcode
 		cache_addd(retcode);
 	}
-	opcode(4).setea(4,-1,0,CALLSTACK).Emit8(0xFF); // jmp [rsp+CALLSTACK]
+	opcode(4).setea(4,-1,0,CALLSTACK-8).Emit8(0xFF); // jmp [rsp+CALLSTACK-8]
 }
 
 static void gen_return_fast(BlockReturn retcode,bool ret_exception=false) {
 	if (GCC_UNLIKELY(x64gen.flagsactive)) IllegalOption("gen_return_fast");
 	opcode(1).setabsaddr(&reg_flags).Emit8(0x8B); // mov ECX, [cpu_regs.flags]
 	if (!ret_exception) {
-		opcode(0).set64().setrm(4).setimm(CALLSTACK+16,1).Emit8(0x83); // add rsp,16/48
+		opcode(0).set64().setrm(4).setimm(CALLSTACK+8,1).Emit8(0x83); // add rsp,16/48
 		if (retcode==0) cache_addw(0xc033);		// xor eax,eax
 		else {
 			cache_addb(0xb8);		//MOV EAX, retcode
 			cache_addd(retcode);
 		}
 	}
-	opcode(4).setea(4,-1,0,CALLSTACK).Emit8(0xFF); // jmp [rsp+CALLSTACK]
+	opcode(4).setea(4,-1,0,CALLSTACK-8).Emit8(0xFF); // jmp [rsp+CALLSTACK]
 }
 
 static void gen_init(void) {

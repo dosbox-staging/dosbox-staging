@@ -158,9 +158,7 @@ static struct {
 	Bit32u ea,tmpb,tmpd,stack,shift,newesp;
 } extra_regs;
 
-static void IllegalOption(const char* msg) {
-	E_Exit("DynCore: illegal option in %s",msg);
-}
+#define IllegalOption(msg) E_Exit("DYNX86: illegal option in " msg)
 
 #include "core_dyn_x86/cache.h" 
 

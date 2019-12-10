@@ -432,13 +432,13 @@ static void dyn_fill_blocks(void) {
 
 
 #if !defined(X86_INLINED_MEMACCESS)
-static void dyn_read_byte(DynReg * addr,DynReg * dst,Bitu high) {
+static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high) {
 	gen_protectflags();
 	gen_call_function((void *)&mem_readb_checked,"%Dd%Ip",addr,&core_dyn.readdata);
 	dyn_check_bool_exception_al();
-	gen_mov_host(&core_dyn.readdata,dst,1,high);
+	gen_mov_host(&core_dyn.readdata,dst,1,high?4:0);
 }
-static void dyn_write_byte(DynReg * addr,DynReg * val,Bitu high) {
+static void dyn_write_byte(DynReg * addr,DynReg * val,bool high) {
 	gen_protectflags();
 	if (high) gen_call_function((void *)&mem_writeb_checked,"%Dd%Dh",addr,val);
 	else gen_call_function((void *)&mem_writeb_checked,"%Dd%Dd",addr,val);
@@ -457,13 +457,13 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword) {
 	else gen_call_function((void *)&mem_writew_checked,"%Dd%Dd",addr,val);
 	dyn_check_bool_exception_al();
 }
-static void dyn_read_byte_release(DynReg * addr,DynReg * dst,Bitu high) {
+static void dyn_read_byte_release(DynReg * addr,DynReg * dst,bool high) {
 	gen_protectflags();
 	gen_call_function((void *)&mem_readb_checked,"%Drd%Ip",addr,&core_dyn.readdata);
 	dyn_check_bool_exception_al();
-	gen_mov_host(&core_dyn.readdata,dst,1,high);
+	gen_mov_host(&core_dyn.readdata,dst,1,high?4:0);
 }
-static void dyn_write_byte_release(DynReg * addr,DynReg * val,Bitu high) {
+static void dyn_write_byte_release(DynReg * addr,DynReg * val,bool high) {
 	gen_protectflags();
 	if (high) gen_call_function((void *)&mem_writeb_checked,"%Drd%Dh",addr,val);
 	else gen_call_function((void *)&mem_writeb_checked,"%Drd%Dd",addr,val);
@@ -514,7 +514,7 @@ static bool mem_readb_checked_dcx86(PhysPt address) {
 	return get_tlb_readhandler(address)->readb_checked(address, (Bit8u*)(&core_dyn.readdata));
 }
 
-static void dyn_read_byte(DynReg * addr,DynReg * dst,Bitu high,bool release=false) {
+static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high,bool release=false) {
 	dyn_read_intro(addr,release);
 
 	cache_addw(0xe8c1);		// shr eax,0x0c
@@ -550,10 +550,6 @@ static void dyn_read_byte(DynReg * addr,DynReg * dst,Bitu high,bool release=fals
 	x86gen.regs[X86_REG_EAX]->notusable=false;
 	cache_addw(0xc08a+(genreg->index<<11)+(high?0x2000:0));
 	dst->flags|=DYNFLG_CHANGED;
-}
-
-static void dyn_read_byte_release(DynReg * addr,DynReg * dst,Bitu high) {
-	dyn_read_byte(addr,dst,high,true);
 }
 
 static bool mem_readd_checked_dcx86(PhysPt address) {
@@ -634,10 +630,6 @@ static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword,bool release=fal
 	gen_fill_jump(jmp_loc);
 }
 
-static void dyn_read_word_release(DynReg * addr,DynReg * dst,bool dword) {
-	dyn_read_word(addr,dst,dword,true);
-}
-
 static void dyn_write_intro(DynReg * addr,bool release_addr=true) {
 	gen_protectflags();
 
@@ -708,10 +700,6 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 	gen_fill_jump(jmp_loc);
 }
 
-static void dyn_write_byte_release(DynReg * addr,DynReg * val,bool high) {
-	dyn_write_byte(addr,val,high,true);
-}
-
 static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=false) {
 	dyn_write_intro(addr,release);
 
@@ -757,9 +745,6 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=fa
 	gen_fill_jump(jmp_loc);
 }
 
-static void dyn_write_word_release(DynReg * addr,DynReg * val,bool dword) {
-	dyn_write_word(addr,val,dword,true);
-}
 #else // X86_64
 static bool mem_readd_checked_dcx64(PhysPt address, Bit32u* dst) {
 	return get_tlb_readhandler(address)->readd_checked(address, dst);
@@ -780,54 +765,60 @@ static bool mem_writeb_checked_dcx64(PhysPt address, Bitu val) {
 	return get_tlb_writehandler(address)->writeb_checked(address, val);
 }
 
-static void dyn_read_word_internal(DynReg * addr,DynReg * dst,bool dword,bool release) {
+static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword,bool release=false) {
 	DynState callstate;
-	gen_protectflags();
+	Bit8u tmp;
 
-	x64gen.regs[X64_REG_RAX]->Clear();
-	x64gen.regs[X64_REG_RAX]->notusable = true;
+	gen_protectflags();
 	GenReg *gensrc = FindDynReg(addr);
 	if (dword && release) gen_releasereg(addr);
 	GenReg *gendst = FindDynReg(dst,dword);
 	if (!dword && release) gen_releasereg(addr);
-	x64gen.regs[X64_REG_RAX]->notusable = false;
+	gensrc->notusable = true;
+	x64gen.regs[reg_args[0]]->notusable=true;
+	x64gen.regs[reg_args[1]]->notusable=true;
+	tmp = GetNextReg();
+	gensrc->notusable = false;
+	x64gen.regs[reg_args[0]]->notusable=false;
+	x64gen.regs[reg_args[1]]->notusable=false;
 	dyn_savestate(&callstate);
 
 	Bit8u *page_brk;
-	opcode(0).set64().setea(gensrc->index,-1,0,dword?3:1).Emit8(0x8D); // lea rax, [dst+(dword?3:1)]
+	opcode(tmp).set64().setea(gensrc->index,-1,0,dword?3:1).Emit8(0x8D); // lea tmp, [dst+(dword?3:1)]
 	if (dword) {
-		opcode(0).set64().setimm(~0xFFF,4).Emit8Reg(0x25); // and rax, ~0xFFF
-		opcode(gensrc->index).set64().setrm(0).Emit8(0x39); // cmp rax,src
+		opcode(4).set64().setimm(~0xFFF,4).setrm(tmp).Emit8(0x81); // and tmp, ~0xFFF
+		opcode(gensrc->index).set64().setrm(tmp).Emit8(0x39); // cmp tmp,src
 		page_brk=gen_create_branch(BR_NBE);
 	} else {
-		opcode(0,false).setimm(0xFFF,2).Emit8Reg(0xA9); // test ax,0xFFF
+		opcode(0,false).setimm(0xFFF,2).setrm(tmp).Emit8(0xF7); // test tmpw,0xFFF
 		page_brk=gen_create_branch(BR_Z);
 	}
 
-	opcode(5).setrm(0).setimm(12,1).Emit8(0xC1); // shr eax,12
-	// mov rax, [8*rax+paging.tlb.read(rbp)]
-	opcode(0).set64().setea(5,0,3,(Bits)paging.tlb.read-(Bits)&cpu_regs).Emit8(0x8B);
-	opcode(0).set64().setrm(0).Emit8(0x85); // test rax,rax
+	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
+	// mov tmp, [8*tmp+paging.tlb.read(rbp)]
+	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.read-(Bits)&cpu_regs).Emit8(0x8B);
+	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	Bit8u *nomap=gen_create_branch(BR_Z);
-	//mov dst, [RAX+src]
-	opcode(gendst->index,dword).setea(0,gensrc->index).Emit8(0x8B);
+	//mov dst, [tmp+src]
+	opcode(gendst->index,dword).setea(tmp,gensrc->index).Emit8(0x8B);
 	Bit8u* jmp_loc = gen_create_short_jump();
 
 	gen_fill_branch(page_brk);
-	gen_load_imm(0, (Bitu)(dword?(void*)mem_unalignedreadd_checked:(void*)mem_unalignedreadw_checked));
+	gen_load_imm(tmp, (Bitu)(dword?(void*)mem_unalignedreadd_checked:(void*)mem_unalignedreadw_checked));
 	Bit8u* page_jmp = gen_create_short_jump();
+
 	gen_fill_branch(nomap);
-	gen_load_imm(0, (Bitu)(dword?(void*)mem_readd_checked_dcx64:(void*)mem_readw_checked_dcx64));
+	gen_load_imm(tmp, (Bitu)(dword?(void*)mem_readd_checked_dcx64:(void*)mem_readw_checked_dcx64));
 	gen_fill_short_jump(page_jmp);
 
 	if (gensrc->index != ARG0_REG) {
 		x64gen.regs[reg_args[0]]->Clear();
 		opcode(ARG0_REG).setrm(gensrc->index).Emit8(0x8B);
 	}
+	gendst->Clear();
 	x64gen.regs[reg_args[1]]->Clear();
 	gen_load_imm(ARG1_REG, (Bitu)dst->data);
-	gendst->Clear();
-	gen_call_ptr();
+	gen_call_ptr(NULL, tmp);
 	dyn_check_bool_exception_al();
 
 	dyn_synchstate(&callstate);
@@ -835,40 +826,33 @@ static void dyn_read_word_internal(DynReg * addr,DynReg * dst,bool dword,bool re
 	gen_fill_short_jump(jmp_loc);
 }
 
-static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword) {
-	dyn_read_word_internal(addr,dst,dword,false);
-}
-static void dyn_read_word_release(DynReg * addr,DynReg * dst,bool dword) {
-	dyn_read_word_internal(addr,dst,dword,true);
-}
-static void dyn_read_byte_internal(DynReg * addr,DynReg * dst,bool high,bool release) {
+static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high,bool release=false) {
 	DynState callstate;
-	gen_protectflags();
+	Bit8u tmp;
 
-	x64gen.regs[X64_REG_RAX]->Clear();
-	x64gen.regs[X64_REG_RAX]->notusable = true;
+	gen_protectflags();
 	GenReg *gensrc = FindDynReg(addr);
 	GenReg *gendst = FindDynReg(dst);
+	tmp = GetNextReg(high);
 	if (release) gen_releasereg(addr);
-	x64gen.regs[X64_REG_RAX]->notusable = false;
 	dyn_savestate(&callstate);
 
 	if (gendst->index>3) IllegalOption("dyn_read_byte");
 
-	opcode(0).setrm(gensrc->index).Emit8(0x8B); // mov eax, src
-	opcode(5).setrm(0).setimm(12,1).Emit8(0xC1); // shr eax,12
-	// mov rax, [8*rax+paging.tlb.read(rbp)]
-	opcode(0).set64().setea(5,0,3,(Bits)paging.tlb.read-(Bits)&cpu_regs).Emit8(0x8B);
-	opcode(0).set64().setrm(0).Emit8(0x85); // test rax,rax
+	opcode(tmp).setrm(gensrc->index).Emit8(0x8B); // mov tmp, src
+	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmp,12
+	// mov tmp, [8*tmp+paging.tlb.read(rbp)]
+	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.read-(Bits)&cpu_regs).Emit8(0x8B);
+	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	Bit8u *nomap=gen_create_branch(BR_Z);
 
 	int src = gensrc->index;
 	if (high && src>=8) { // can't use REX prefix with high-byte reg
-		opcode(0).set64().setrm(src).Emit8(0x03); // add rax, src
+		opcode(tmp).set64().setrm(src).Emit8(0x03); // add tmp, src
 		src = -1;
 	}
-	// mov dst, byte [rax+src]
-	opcode(gendst->index,true,high?4:0).setea(0,src).Emit8(0x8A);
+	// mov dst, byte [tmp+src]
+	opcode(gendst->index,true,high?4:0).setea(tmp,src).Emit8(0x8A);
 	Bit8u* jmp_loc=gen_create_short_jump();
 
 	gen_fill_branch(nomap);
@@ -886,49 +870,47 @@ static void dyn_read_byte_internal(DynReg * addr,DynReg * dst,bool high,bool rel
 	dst->flags |= DYNFLG_CHANGED;
 	gen_fill_short_jump(jmp_loc);
 }
-static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high) {
-	dyn_read_byte_internal(addr,dst,high,false);
-}
-static void dyn_read_byte_release(DynReg * addr,DynReg * dst,bool high) {
-	dyn_read_byte_internal(addr,dst,high,true);
-}
-static void dyn_write_word_internal(DynReg * addr,DynReg * val,bool dword,bool release) {
-	DynState callstate;
-	gen_protectflags();
 
-	x64gen.regs[X64_REG_RAX]->Clear();
-	x64gen.regs[X64_REG_RAX]->notusable = true;
+static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=false) {
+	DynState callstate;
+	Bit8u tmp;
+
+	gen_protectflags();
 	GenReg *gendst = FindDynReg(addr);
 	GenReg *genval = FindDynReg(val);
+	x64gen.regs[reg_args[0]]->notusable=true;
+	x64gen.regs[reg_args[1]]->notusable=true;
+	tmp = GetNextReg();
+	x64gen.regs[reg_args[0]]->notusable=false;
+	x64gen.regs[reg_args[1]]->notusable=false;
 	if (release) gen_releasereg(addr);
-	x64gen.regs[X64_REG_RAX]->notusable = false;
 	dyn_savestate(&callstate);
 
 	Bit8u *page_brk;
-	opcode(0).set64().setea(gendst->index,-1,0,dword?3:1).Emit8(0x8D); // lea rax, [dst+(dword?3:1)]
+	opcode(tmp).set64().setea(gendst->index,-1,0,dword?3:1).Emit8(0x8D); // lea tmp, [dst+(dword?3:1)]
 	if (dword) {
-		opcode(0).set64().setimm(~0xFFF,4).Emit8Reg(0x25); // and rax, ~0xFFF
-		opcode(gendst->index).set64().setrm(0).Emit8(0x39); // cmp rax,dst
+		opcode(4).set64().setimm(~0xFFF,4).setrm(tmp).Emit8(0x81); // and tmp, ~0xFFF
+		opcode(gendst->index).set64().setrm(tmp).Emit8(0x39); // cmp tmp,dst
 		page_brk=gen_create_branch(BR_NBE);
 	} else {
-		opcode(0,false).setimm(0xFFF,2).Emit8Reg(0xA9); // test ax,0xFFF
+		opcode(0,false).setimm(0xFFF,2).setrm(tmp).Emit8(0xF7); // test tmpw,0xFFF
 		page_brk=gen_create_branch(BR_Z);
 	}
 
-	opcode(5).setrm(0).setimm(12,1).Emit8(0xC1); // shr eax,12
-	// mov rax, [8*rax+paging.tlb.write(rbp)]
-	opcode(0).set64().setea(5,0,3,(Bits)paging.tlb.write-(Bits)&cpu_regs).Emit8(0x8B);
-	opcode(0).set64().setrm(0).Emit8(0x85); // test rax,rax
+	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
+	// mov tmp, [8*tmp+paging.tlb.write(rbp)]
+	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.write-(Bits)&cpu_regs).Emit8(0x8B);
+	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	Bit8u *nomap=gen_create_branch(BR_Z);
-	//mov [RAX+src], dst
-	opcode(genval->index,dword).setea(0,gendst->index).Emit8(0x89);
+	//mov [tmp+src], dst
+	opcode(genval->index,dword).setea(tmp,gendst->index).Emit8(0x89);
 	Bit8u* jmp_loc = gen_create_short_jump();
 
 	gen_fill_branch(page_brk);
-	gen_load_imm(0, (Bitu)(dword?(void*)mem_unalignedwrited_checked:(void*)mem_unalignedwritew_checked));
+	gen_load_imm(tmp, (Bitu)(dword?(void*)mem_unalignedwrited_checked:(void*)mem_unalignedwritew_checked));
 	Bit8u* page_jmp = gen_create_short_jump();
 	gen_fill_branch(nomap);
-	gen_load_imm(0, (Bitu)(dword?(void*)mem_writed_checked_dcx64:(void*)mem_writew_checked_dcx64));
+	gen_load_imm(tmp, (Bitu)(dword?(void*)mem_writed_checked_dcx64:(void*)mem_writew_checked_dcx64));
 	gen_fill_short_jump(page_jmp);
 
 	if (gendst->index != ARG0_REG) {
@@ -936,45 +918,39 @@ static void dyn_write_word_internal(DynReg * addr,DynReg * val,bool dword,bool r
 		opcode(ARG0_REG).setrm(gendst->index).Emit8(0x8B);
 	}
 	gen_load_arg_reg(1, val, dword ? "d":"w");
-	gen_call_ptr();
+	gen_call_ptr(NULL, tmp);
 	dyn_check_bool_exception_al();
 	dyn_synchstate(&callstate);
 	gen_fill_short_jump(jmp_loc);
 }
-static void dyn_write_word(DynReg * addr,DynReg * val,bool dword) {
-	dyn_write_word_internal(addr, val, dword, false);
-}
-static void dyn_write_word_release(DynReg * addr,DynReg * val,bool dword) {
-	dyn_write_word_internal(addr, val, dword, true);
-}
-static void dyn_write_byte_internal(DynReg * addr,DynReg * val,bool high,bool release) {
-	DynState callstate;
-	gen_protectflags();
 
-	x64gen.regs[X64_REG_RAX]->Clear();
-	x64gen.regs[X64_REG_RAX]->notusable = true;
+static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=false) {
+	DynState callstate;
+	Bit8u tmp;
+
+	gen_protectflags();
 	GenReg *gendst = FindDynReg(addr);
 	GenReg *genval = FindDynReg(val);
+	tmp = GetNextReg(high);
 	if (release) gen_releasereg(addr);
-	x64gen.regs[X64_REG_RAX]->notusable = false;
 	dyn_savestate(&callstate);
 
 	if (genval->index>3) IllegalOption("dyn_write_byte");
 
-	opcode(0).setrm(gendst->index).Emit8(0x8B); // mov eax, dst
-	opcode(5).setrm(0).setimm(12,1).Emit8(0xC1); // shr eax,12
-	// mov rax, [8*rax+paging.tlb.write(rbp)]
-	opcode(0).set64().setea(5,0,3,(Bits)paging.tlb.write-(Bits)&cpu_regs).Emit8(0x8B);
-	opcode(0).set64().setrm(0).Emit8(0x85); // test rax,rax
+	opcode(tmp).setrm(gendst->index).Emit8(0x8B); // mov tmpd, dst
+	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
+	// mov tmp, [8*tmp+paging.tlb.write(rbp)]
+	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.write-(Bits)&cpu_regs).Emit8(0x8B);
+	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	Bit8u *nomap=gen_create_branch(BR_Z);
 
 	int dst = gendst->index;
 	if (high && dst>=8) { // can't use REX prefix with high-byte reg
-		opcode(0).set64().setrm(dst).Emit8(0x03); // add rax, dst
+		opcode(tmp).set64().setrm(dst).Emit8(0x03); // add tmp, dst
 		dst = -1;
 	}
-	// mov byte [rax+src], val
-	opcode(genval->index,true,high?4:0).setea(0,dst).Emit8(0x88);
+	// mov byte [tmp+src], val
+	opcode(genval->index,true,high?4:0).setea(tmp,dst).Emit8(0x88);
 
 	Bit8u* jmp_loc=gen_create_short_jump();
 	gen_fill_branch(nomap);
@@ -990,13 +966,20 @@ static void dyn_write_byte_internal(DynReg * addr,DynReg * val,bool high,bool re
 	dyn_synchstate(&callstate);
 	gen_fill_short_jump(jmp_loc);
 }
-static void dyn_write_byte(DynReg * addr,DynReg * src,bool high) {
-	dyn_write_byte_internal(addr,src,high,false);
+
+#endif
+static void dyn_read_word_release(DynReg * addr,DynReg * dst,bool dword) {
+	dyn_read_word(addr,dst,dword,addr!=dst);
+}
+static void dyn_read_byte_release(DynReg * addr,DynReg * dst,bool high) {
+	dyn_read_byte(addr,dst,high,addr!=dst);
+}
+static void dyn_write_word_release(DynReg * addr,DynReg * val,bool dword) {
+	dyn_write_word(addr,val,dword,true);
 }
 static void dyn_write_byte_release(DynReg * addr,DynReg * src,bool high) {
-	dyn_write_byte_internal(addr,src,high,true);
+	dyn_write_byte(addr,src,high,true);
 }
-#endif
 #endif
 
 
@@ -1323,7 +1306,7 @@ static void dyn_mov_ebgb(void) {
 	DynReg * rm_reg=&DynRegs[decode.modrm.reg&3];Bitu rm_regi=decode.modrm.reg&4;
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
-		dyn_write_byte_release(DREG(EA),rm_reg,rm_regi==4);
+		dyn_write_byte_release(DREG(EA),rm_reg,rm_regi!=0);
 	} else {
 		gen_dop_byte(DOP_MOV,&DynRegs[decode.modrm.rm&3],decode.modrm.rm&4,rm_reg,rm_regi);
 	}
@@ -1334,7 +1317,7 @@ static void dyn_mov_gbeb(void) {
 	DynReg * rm_reg=&DynRegs[decode.modrm.reg&3];Bitu rm_regi=decode.modrm.reg&4;
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
-		dyn_read_byte_release(DREG(EA),rm_reg,rm_regi);
+		dyn_read_byte_release(DREG(EA),rm_reg,rm_regi!=0);
 	} else {
 		gen_dop_byte(DOP_MOV,rm_reg,rm_regi,&DynRegs[decode.modrm.rm&3],decode.modrm.rm&4);
 	}
