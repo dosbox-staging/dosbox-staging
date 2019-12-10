@@ -47,9 +47,6 @@
 
 enum {
 	CDROM_USE_SDL,
-	CDROM_USE_IOCTL_DIO,
-	CDROM_USE_IOCTL_DX,
-	CDROM_USE_IOCTL_MCI
 };
 
 typedef struct SMSF {
@@ -273,102 +270,6 @@ private:
 	static int          refCount;
 	Bit8u               subUnit;
 };
-
-#if defined (WIN32)	/* Win 32 */
-
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
-
-#ifndef NOMINMAX
-#define NOMINMAX                // Don't clobber std::max and std::min
-#endif
-
-#include <windows.h>
-
-
-class CDROM_Interface_Ioctl : public CDROM_Interface
-{
-public:
-	enum cdioctl_cdatype { CDIOCTL_CDA_DIO, CDIOCTL_CDA_MCI, CDIOCTL_CDA_DX };
-	cdioctl_cdatype cdioctl_cda_selected;
-
-	CDROM_Interface_Ioctl		(CDROM_Interface_Ioctl::cdioctl_cdatype ioctl_cda);
-	virtual ~CDROM_Interface_Ioctl(void);
-
-	bool	SetDevice			(char* path, int forceCD);
-
-	bool	GetUPC				(unsigned char& attr, char* upc);
-
-	bool	GetAudioTracks		(int& stTrack, int& end, TMSF& leadOut);
-	bool	GetAudioTrackInfo	(int track, TMSF& start, unsigned char& attr);
-	bool	GetAudioSub			(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
-	bool	GetAudioStatus		(bool& playing, bool& pause);
-	bool	GetMediaTrayStatus	(bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
-
-	bool	PlayAudioSector		(unsigned long start,unsigned long len);
-	bool	PauseAudio			(bool resume);
-	bool	StopAudio			(void);
-	void	ChannelControl		(TCtrl ctrl);
-	
-	bool	ReadSector			(Bit8u *buffer, bool raw, unsigned long sector);
-	bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
-
-	bool	LoadUnloadMedia		(bool unload);
-
-	void	InitNewMedia		(void) { Close(); Open(); };
-private:
-
-	bool	Open				(void);
-	void	Close				(void);
-
-	char	pathname[32];
-	HANDLE	hIOCTL;
-	TMSF	oldLeadOut;
-
-
-	/* track start/length data */
-	bool	track_start_valid;
-	int		track_start_first,track_start_last;
-	int		track_start[128];
-
-	bool	GetAudioTracksAll	(void);
-
-
-	/* mci audio cd interface */
-	bool	use_mciplay;
-	int		mci_devid;
-
-	bool	mci_CDioctl				(UINT msg, DWORD flags, void *arg);
-	bool	mci_CDOpen				(char drive);
-	bool	mci_CDClose				(void);
-	bool	mci_CDPlay				(int start, int length);
-	bool	mci_CDPause				(void);
-	bool	mci_CDResume			(void);
-	bool	mci_CDStop				(void);
-	int		mci_CDStatus			(void);
-	bool	mci_CDPosition			(int *position);
-
-
-	/* digital audio extraction cd interface */
-	static void dx_CDAudioCallBack(Bitu len);
-
-	bool	use_dxplay;
-	static  struct dxPlayer {
-		CDROM_Interface_Ioctl *cd;
-		MixerChannel	*channel;
-		SDL_mutex		*mutex;
-		Bit8u   buffer[8192];
-		int     bufLen;
-		int     currFrame;
-		int     targetFrame;
-		bool    isPlaying;
-		bool    isPaused;
-		bool    ctrlUsed;
-		TCtrl   ctrlData;
-	} player;
-
-};
-
-#endif /* WIN 32 */
 
 #if defined (LINUX)
 

@@ -46,7 +46,7 @@ Type INTRO in DOSBox for a quick tour.
 It is essential that you get familiar with the idea of mounting, DOSBox does not
 automatically make any drive (or a part of it) accessible to the emulation. See
 the FAQ entry "How to start?" as well as the description of the MOUNT command
-(Section 4: "Internal Programs"). If you have your game on a cdrom you may try
+(Section 4: "Internal Programs"). If you have your game on a CD-ROM you may try
 this guide: https://www.vogons.org/viewtopic.php?t=8933
 
 
@@ -134,23 +134,14 @@ CD-ROM: My CD-ROM doesn't work.
 
     In some cases you might want to use a different CD-ROM interface,
     for example if CD audio does not work:
-      To enable SDL-support (does not include low-level CD access!):
-        - mount d f:\ -t cdrom -usecd 0 -noioctl
-      To enable ioctl access using digital audio extraction for CD audio
-      (Windows-only, useful for Vista):
-        - mount d f:\ -t cdrom -ioctl_dx
-      To enable ioctl access using MCI for CD audio (Windows-only):
-        - mount d f:\ -t cdrom -ioctl_mci
-      To force ioctl-only access (Windows-only):
-        - mount d f:\ -t cdrom -ioctl_dio
+      - mount d f:\ -t cdrom -usecd 0 -noioctl
 
     explanation: - d   driveletter you will get in DOSBox (d is the best,
                           don't change it!)
                  - f:\ location of CD-ROM on your PC. In most cases it will
                           be d:\ or e:\
                  - 0   The number of the CD-ROM drive, reported by "mount -cd"
-                          (note that this value is only needed when using SDL
-                          for CD audio, otherwise it is ignored)
+
     See also the next question: The game/application can't find its CD-ROM.
 
 
@@ -159,10 +150,6 @@ CD-ROM: The game/application can't find its CD-ROM.
     MSCDEX interface required by DOS games to interface with CD-ROMs.
     Also try adding the correct label (-label LABEL) to the mount command,
     where LABEL is the CD-label (volume ID) of the CD-ROM.
-    Under Windows you can specify -ioctl or -noioctl. Look at the
-    description of the mount command in Section 4: "Internal programs"
-    for their meaning and the
-    additional audio-CD related options -ioctl_dx, -ioctl_mci, -ioctl_dio.
 
     Try creating a CD-ROM image (preferably CUE/BIN pair) and use the
     DOSBox's internal IMGMOUNT tool to mount the image (the CUE sheet).
@@ -482,7 +469,7 @@ To get a list of the internal commands type "HELP" at the prompt.
 In addition, the following commands are available:
 
 MOUNT "Emulated Drive letter" "Real Drive or Directory"
-      [-t type] [-ioctl] [-noioctl] [-usecd number] [-size drivesize]
+      [-t type] [-noioctl] [-usecd number] [-size drivesize]
       [-label drivelabel] [-freesize size_in_mb]
       [-freesize size_in_kb (floppies)]
 MOUNT -cd
@@ -526,16 +513,6 @@ MOUNT -u "Emulated Drive letter"
 
         If you do specify a label, this label will be kept as long as the drive
         is mounted. It will not be updated !!
-
-  -ioctl (automatic selection of the CD audio interface)
-  -ioctl_dx (digital audio extraction used for CD audio)
-  -ioctl_dio (ioctl calls used for CD audio)
-  -ioctl_mci (MCI used for CD audio)
-        Forces use of ioctl commands. Only valid if mounting a CD-ROM under
-        a Windows OS which support them (Win2000/XP/NT).
-        The various choices only differ in the way CD audio is handled,
-        preferably -ioctl_dio is used (lowest workload), but this might not
-        work on all systems, so -ioctl_dx (or -ioctl_mci) can be used.
 
   -noioctl
         Forces use of the SDL CD-ROM layer. Valid on all systems.
@@ -816,7 +793,7 @@ MIXER
   channel
      Can be one of the following: MASTER, DISNEY, SPKR, GUS, SB, FM [, CDAUDIO].
      CDAUDIO is only available if a CD-ROM interface with volume control is
-     enabled (CD image, ioctl_dx).
+     enabled (CD image).
 
   left:right
      The volume levels in percentages. If you put a D in front it will be
@@ -1466,16 +1443,16 @@ Running a certain game closes DOSBox, crashes with some message or hangs:
   - use loadfix before starting the game
 
 The game exits to the DOSBox prompt with some error message:
+
   - read the error message closely and try to locate the error
   - try the hints at the above sections
   - mount differently as some games are picky about the locations,
     for example if you used "mount d d:\oldgames\game" try
     "mount c d:\oldgames\game" and "mount c d:\oldgames"
-  - if the game requires a CD-ROM be sure you used "-t cdrom" when
-    mounting and try different additional parameters (the ioctl,
-    usecd and label switches, see the appropriate section)
-  - check the file permissions of the game files (remove read-only
-    attributes, add write permissions etc.)
+  - if the game requires a CD-ROM be sure you used "-t cdrom" when mounting and
+    refer to the above section "CD-ROM: My CD-ROM doesn't work" for more help.
+  - check the file permissions of the game files (remove read-only attributes,
+    add write permissions etc.)
   - try reinstalling the game within DOSBox
 
 
