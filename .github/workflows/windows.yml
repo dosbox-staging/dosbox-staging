@@ -16,15 +16,15 @@ jobs:
           - compiler: GCC
             bits: 64
             arch: x86_64
-            max_warnings: 292
+            max_warnings: 285
           - compiler: Clang
             bits: 32
             arch: i686
-            max_warnings: 97
+            max_warnings: 93
           - compiler: Clang
             bits: 64
             arch: x86_64
-            max_warnings: 141
+            max_warnings: 136
     env:
       CHERE_INVOKING: yes
     steps:
