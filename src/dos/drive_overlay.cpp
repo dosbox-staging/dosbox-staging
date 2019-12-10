@@ -201,30 +201,29 @@ bool Overlay_Drive::TestDir(char * dir) {
 class OverlayFile: public localFile {
 public:
 	OverlayFile(const char* name, FILE * handle):localFile(name,handle){
+		overlay_active = false;
 		if (logoverlay) LOG_MSG("constructing OverlayFile: %s",name);
 	}
 	bool Write(Bit8u * data,Bit16u * size) {
-		Bit32u f = real_flags&0xf;
+		Bit32u f = flags&0xf;
 		if (!overlay_active && (f == OPEN_READWRITE || f == OPEN_WRITE)) {
 			if (logoverlay) LOG_MSG("write detected, switching file for %s",GetName());
 			if (*data == 0) {
 				if (logoverlay) LOG_MSG("OPTIMISE: truncate on switch!!!!");
 			}
-			Bitu a = GetTicks();
+			Bit32u a = GetTicks();
 			bool r = create_copy();
 			if (GetTicks()-a >2) {
 				if (logoverlay) LOG_MSG("OPTIMISE: switching took %d",GetTicks()-a);
 			}
 			if (!r) return false;
 			overlay_active = true;
-			flags = real_flags;
 			
 		}
 		return localFile::Write(data,size);
 	}
 	bool create_copy();
 //private:
-	Bit32u real_flags;
 	bool overlay_active;
 };
 
@@ -298,6 +297,7 @@ static OverlayFile* ccc(DOS_File* file) {
 	//Create an overlayFile
 	OverlayFile* ret = new OverlayFile(l->GetName(),l->fhandle);
 	ret->flags = l->flags;
+	ret->refCtr = l->refCtr;
 	delete l;
 	return ret;
 }
@@ -441,14 +441,13 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	//TODO take care of file being marked deleted.
 
 	if (!fileopened && !is_deleted_file(name)) fileopened = localDrive::FileOpen(file,name, OPEN_READ);
-	
-	
+
+
 	if (fileopened) {
 		if (logoverlay) LOG_MSG("file opened %s",name);
 		//Convert file to OverlayFile
 		OverlayFile* f = ccc(*file);
-		//Store original flags, as with overlay the files are opened read only and they switch on write
-		f->real_flags = flags; 
+		f->flags = flags; //ccc copies the flags of the localfile, which were not correct in this case
 		f->overlay_active = overlayed; //No need to switch if already in overlayed.
 		*file = f;
 	}
@@ -472,7 +471,7 @@ bool Overlay_Drive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes
 	(*file)->flags = OPEN_READWRITE;
 	OverlayFile* of = ccc(*file);
 	of->overlay_active = true;
-	of->real_flags = OPEN_READWRITE;
+	of->flags = OPEN_READWRITE;
 	*file = of;
 	//create fake name for the drive cache
 	char fakename[CROSS_LEN];
@@ -544,7 +543,7 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 	return true;
 }
 void Overlay_Drive::update_cache(bool read_directory_contents) {
-	Bitu a = GetTicks();
+	Bit32u a = GetTicks();
 	std::vector<std::string> specials;
 	std::vector<std::string> dirnames;
 	std::vector<std::string> filenames;
@@ -822,7 +821,7 @@ again:
 
 bool Overlay_Drive::FileUnlink(char * name) {
 //TODO check the basedir for file existence in order if we need to add the file to deleted file list.
-	Bitu a = GetTicks();
+	Bit32u a = GetTicks();
 	if (logoverlay) LOG_MSG("calling unlink on %s",name);
 	char basename[CROSS_LEN];
 	strcpy(basename,basedir);
@@ -1089,7 +1088,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		E_Exit("renaming directory %s to %s . Not yet supported in Overlay",oldname,newname); //TODO
 	}
 
-	Bitu a = GetTicks();
+	Bit32u a = GetTicks();
 	//First generate overlay names.
 	char overlaynameold[CROSS_LEN];
 	strcpy(overlaynameold,overlaydir);
@@ -1112,7 +1111,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		//TODO CHECK if base has a file with same oldname!!!!! if it does mark it as deleted!!
 		if (localDrive::FileExists(oldname)) add_deleted_file(oldname,true);
 	} else {
-		Bitu aa = GetTicks();
+		Bit32u aa = GetTicks();
 		//File exists in the basedrive. Make a copy and mark old one as deleted.
 		char newold[CROSS_LEN];
 		strcpy(newold,basedir);
