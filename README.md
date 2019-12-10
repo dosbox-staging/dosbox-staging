@@ -135,11 +135,16 @@ This repository is (deliberately) NOT git-svn compatible, this is a pure
 Git repo.
 
 Commits landing in SVN upstream are imported to this repo in a timely manner,
-to the branches matching `svn/*` pattern, e.g.
-[`svn/trunk`](https://github.com/dreamer/dosbox-staging/tree/svn/trunk).
+to the branches matching
+[`svn/*`](https://github.com/dreamer/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F)
+pattern.
 You can safely use those branches to rebase your changes, and prepare patches
 using Git [format-patch](https://git-scm.com/docs/git-format-patch) for sending
 upstream (it is easier and faster, than preparing patches manually).
+
+Other branch name patterns are also in use, e.g.
+[`vogons/*`](https://github.com/dreamer/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F)
+for various patches posted on the Vogons forum.
 
 Git tags matching pattern `svn/*` are pointing to the commits referenced by SVN
 "tag" paths at the time of creation.
