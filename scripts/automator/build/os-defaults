@@ -29,7 +29,9 @@ function autogen() {
 function configure() {
 	if [[ ! -f Makefile || ! -f .previous_build || configure -nt Makefile ]]; then
 		export CXXFLAGS="${CFLAGS} ${CXXONLY}"
+		set -x
 		./configure --enable-core-inline ${configure_additions[*]}
+		set +x
 	fi
 }
 
