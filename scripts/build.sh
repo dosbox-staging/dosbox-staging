@@ -29,13 +29,14 @@ function parse_args() {
 	# Gather the parameters that define this build
 	postfix=""
 	modifiers=("")
+	configure_additions=("")
 	while [[ "${#}" -gt 0 ]]; do case ${1} in
-		-c|--compiler)          compiler="${2}";        shift 2;;
-		-v|--version-postfix)   postfix="-${2}";        shift 2;;
-		-t|--build-type)        selected_type="${2}";   shift 2;;
-		-m|--modifier)          modifiers+=("${2}");    shift 2;;
-		-p|--bin-path)          PATH="${2}:${PATH}";    shift 2;;
-		*) >&2 echo "Unknown parameter: ${1}"; exit 1;  shift 2;;
+		-c|--compiler)          compiler="${2}";               shift 2;;
+		-v|--version-postfix)   postfix="-${2}";               shift 2;;
+		-t|--build-type)        selected_type="${2}";          shift 2;;
+		-m|--modifier)          modifiers+=("${2}");           shift 2;;
+		-p|--bin-path)          PATH="${2}:${PATH}";           shift 2;;
+		*)                      configure_additions+=("${1}"); shift;;
 	esac; done
 
 	# Import our settings and report missing values
