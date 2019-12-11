@@ -1,0 +1,89 @@
+name: Config heavy
+on:
+  # push
+  schedule: [cron: '15 5 * * *']
+
+jobs:
+  config_all:
+    name: ${{ matrix.system.name }} ${{ matrix.conf.configure_flags }} ${{ matrix.conf.without_packages }}
+    runs-on: ${{ matrix.system.os }}
+    strategy:
+      # max-parallel: 1
+      matrix:
+        system:
+          - name: Windows
+            os: windows-latest
+            compiler: gcc
+          - name: macOS
+            os: macos-latest
+            compiler: clang
+          - name: Linux
+            os: ubuntu-latest
+            compiler: gcc
+
+        # Disabled temporarily due to https://github.com/dreamer/dosbox-staging/issues/86
+        # - configure_flags:  --enable-debug
+        # - configure_flags:  --enable-debug-heavy
+        conf:
+          - configure_flags:  --enable-alsa-midi
+          - configure_flags:  --disable-core-inline
+          - configure_flags:  --disable-dynamic-x86
+          - configure_flags:  --disable-dynrec
+          - configure_flags:  --disable-fpu
+          - configure_flags:  --disable-fpu-x64
+          - configure_flags:  --disable-fpu-x86
+          - configure_flags:  --disable-opengl
+          - configure_flags:  --disable-screenshots
+          - configure_flags:  --disable-unaligned-memory
+          - without_packages: -x net
+          - without_packages: -x curses
+          - without_packages: -x net -x curses
+    env:
+      CHERE_INVOKING: yes
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name:  Get Date
+        if:    matrix.system.name == 'Windows'
+        id:    get-date
+        shell: bash
+        run:   echo ::set-output name=date::$(date +%Y-%W)
+
+      - uses:  actions/cache@v1
+        if:    matrix.system.name == 'Windows'
+        id:    cache-msys2
+        with:
+          path: 'C:/tools/msys64'
+          key: msys2-GCC-64-${{ steps.get-date.outputs.date }}-1
+
+      - name:  Install MSYS2 (Windows)
+        if:    matrix.system.name == 'Windows' && steps.cache-msys2.outputs.cache-hit != 'true'
+        run:   choco install msys2 --no-progress
+
+      - name:  Install dependencies ${{ matrix.conf.without_packages }} (Windows)
+        if:    matrix.system.name == 'Windows' && steps.cache-msys2.outputs.cache-hit != 'true'
+        shell: python scripts\msys-bash.py {0}
+        run:   |
+           scripts/list-build-dependencies.sh -m msys2 -c gcc ${{ matrix.conf.without_packages }} | xargs pacman -S --noconfirm
+           .github/scripts/shrink-msys2.sh
+
+      - name:  Install dependencies ${{ matrix.conf.without_packages }} (Linux)
+        if:    matrix.system.name == 'Linux'
+        run:   |
+          sudo apt-get -y update
+          sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c gcc ${{ matrix.conf.without_packages }})
+
+      - name:  Install dependencies ${{ matrix.conf.without_packages }} (macOS)
+        if:    matrix.system.name == 'macOS'
+        run:   brew install $(./scripts/list-build-dependencies.sh -m brew -c clang ${{ matrix.conf.without_packages }})
+
+      - name:  Build ${{ matrix.conf.configure_flags }} (Windows)
+        if:    matrix.system.name == 'Windows'
+        shell: python scripts\msys-bash.py {0}
+        run:   scripts/build.sh -c ${{ matrix.system.compiler }} -t debug --bin-path /mingw64/bin ${{ matrix.conf.configure_flags }}
+
+      - name:  Build ${{ matrix.conf.configure_flags }} (non-Windows)
+        if:    matrix.system.name != 'Windows'
+        run:   ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug ${{ matrix.conf.configure_flags }}
