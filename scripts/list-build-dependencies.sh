@@ -28,6 +28,7 @@ function parse_args() {
 	# Gather the parameters that define this build
 	bits="64"
 	modifiers=("")
+	excludes=("")
 	# shellcheck disable=SC2034
 	while [[ "${#}" -gt 0 ]]; do case ${1} in
 		-m|--manager)           manager="${2}";                shift 2;;
@@ -35,7 +36,8 @@ function parse_args() {
 		-b|--bit-depth)         bits="${2}";                   shift 2;;
 		-v|--compiler-version)  version="${2}";                shift 2;;
 		-a|--addon)             modifiers+=("${2}");           shift 2;;
-		*) >&2 echo "Unknown parameter: ${1}"; exit 1;         shift 2;;
+		-x|--exclude)           excludes+=("${2}");            shift 2;;
+		*) >&2 echo "Unknown parameter: ${1}"; exit 1;
 	esac; done
 
 	# Import our settings and report missing values
