@@ -7,5 +7,9 @@ compiler=""
 
 STEPS=(print)
 function print() {
-	echo "${PACKAGES[*]}" "${COMPILER}"
+	filtered=(${PACKAGES[@]})
+	for exclude in ${excludes[@]}; do
+		filtered=(${filtered[@]//*"${exclude}"*/})
+	done
+	echo "${filtered[*]}" "${COMPILER}"
 }
