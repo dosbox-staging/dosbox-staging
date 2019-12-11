@@ -3,13 +3,13 @@ ar="ar"
 ranlib="ranlib"
 
 # Build additions
-TYPES+=("asan" "uasan" "usan" "tsan")
-cflags_asan=("${cflags_debug[@]}" "-fsanitize=address")
-cflags_uasan=("${cflags_debug[@]}" "-fsanitize=address,undefined" "-fsanitize-recover=signed-integer-overflow")
-cflags_usan=("${cflags_debug[@]}" "-fsanitize=undefined" "-fsanitize-recover=signed-integer-overflow")
-cflags_tsan=("${cflags_debug[@]}" "-fsanitize=thread")
+TYPES+=(asan uasan usan tsan)
+cflags_asan=("${cflags_debug[@]}" -fsanitize=address)
+cflags_uasan=("${cflags_debug[@]}" -fsanitize=address,undefined -fsanitize-recover=signed-integer-overflow)
+cflags_usan=("${cflags_debug[@]}" -fsanitize=undefined -fsanitize-recover=signed-integer-overflow)
+cflags_tsan=("${cflags_debug[@]}" -fsanitize=thread)
 
 # Modifier additions
-MODIFIERS+=("lto")
-cflags_lto=("-flto")
-ldflags_lto=("${cflags[@]}" "-flto")
+MODIFIERS+=(lto)
+cflags_lto=(-flto)
+ldflags_lto=("${cflags[@]}" -flto)
