@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
       - run:  sudo apt-get update
       - name: Install pylint
         run:  |
@@ -23,6 +25,8 @@ jobs:
     needs: run_linters
     steps:
       - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
       - run:  sudo apt-get update
       - name: Install C++ compiler and libraries
         run:  sudo apt-get install python3-setuptools $(./scripts/list-build-dependencies.sh -m apt -c gcc)
@@ -63,6 +67,8 @@ jobs:
         compiler: [Clang, GCC]
     steps:
       - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
       - run:  sudo apt-get update
       - name: Install C++ compiler and libraries
         env:

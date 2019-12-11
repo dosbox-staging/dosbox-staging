@@ -29,6 +29,8 @@ jobs:
       CHERE_INVOKING: yes
     steps:
       - uses:  actions/checkout@v1
+        with:
+          fetch-depth: 1
       - name:  Get Date
         id:    get-date
         shell: bash
@@ -75,6 +77,8 @@ jobs:
         type: [Debug]
     steps:
       - uses:  actions/checkout@v1
+        with:
+          fetch-depth: 1
       - name:  Install packages
         shell: pwsh
         run: |
@@ -96,6 +100,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses:  actions/checkout@v1
+        with:
+          fetch-depth: 1
       - name:  Install packages
         shell: pwsh
         run: |
