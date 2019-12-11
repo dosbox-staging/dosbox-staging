@@ -4,10 +4,10 @@ ld="llvm-link${postfix}"
 ranlib="llvm-ranlib${postfix}"
 
 # Build additions
-TYPES+=("msan" "usan")
-cflags_msan=("${cflags_debug[@]}" "-fsanitize-recover=all" "-fsanitize=memory" "-fno-omit-frame-pointer")
-cflags_usan=("${cflags_debug[@]}" "-fsanitize-recover=all" "-fsanitize=undefined")
+TYPES+=(msan usan)
+cflags_msan=("${cflags_debug[@]}" -fsanitize-recover=all -fsanitize=memory -fno-omit-frame-pointer)
+cflags_usan=("${cflags_debug[@]}" -fsanitize-recover=all -fsanitize=undefined)
 
 # Modifier additions
-MODIFIERS+=("lto")
-cflags_lto=("-O2" "-flto=thin")
+MODIFIERS+=(lto)
+cflags_lto=(-O2 -flto=thin)
