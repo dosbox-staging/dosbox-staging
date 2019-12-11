@@ -1899,7 +1899,7 @@ static void GUI_StartUp(Section * sec) {
 		SDL_FillRect(splash_surf, NULL, SDL_MapRGB(splash_surf->format, 0, 0, 0));
 
 		Bit8u* tmpbufp = new Bit8u[640*400*3];
-		GIMP_IMAGE_RUN_LENGTH_DECODE(tmpbufp,gimp_image.rle_pixel_data,640*400,3);
+		DOSBOX_SPLASH_RUN_LENGTH_DECODE(tmpbufp,dosbox_splash.rle_pixel_data,640*400,3);
 		for (Bitu y=0; y<400; y++) {
 
 			Bit8u* tmpbuf = tmpbufp + y*640*3;
