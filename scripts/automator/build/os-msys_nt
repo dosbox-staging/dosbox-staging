@@ -1,4 +1,6 @@
 function make_binary() {
+    # Limit GCC to ASCII-only characters
+    LC_ALL=C LANG=en_US LANGUAGE=en_US \
 	make \
 		--jobs=$(nproc) \
 		--output-sync=line \
