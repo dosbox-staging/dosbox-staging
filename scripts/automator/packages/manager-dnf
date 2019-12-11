@@ -1,2 +1,2 @@
 # Package repo: https://apps.fedoraproject.org/packages/
-packages+=(xvfb libtool SDL SDL_net-devel opusfile-devel)
+packages+=(xvfb libtool ncurses-devel SDL SDL_net-devel opusfile-devel)

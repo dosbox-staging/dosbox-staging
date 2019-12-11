@@ -1,3 +1,3 @@
 # Package repo: https://www.macports.org/ports.php?by=name
 delim=""
-packages+=(coreutils autogen autoconf automake pkgconfig libpng libsdl libsdl_net opusfile)
+packages+=(coreutils autogen autoconf automake pkgconfig libpng ncurses libsdl libsdl_net opusfile)
