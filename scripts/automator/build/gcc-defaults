@@ -6,12 +6,18 @@ ld="gcc${postfix}"
 ranlib="gcc-ranlib${postfix}"
 
 # Flag additions
-TYPES+=("debug" "profile")
-cflags+=("-fstack-protector" "-fdiagnostics-color=auto")
-cflags_release=("${cflags[@]}" "-Ofast" "-ffunction-sections" "-fdata-sections")
-cflags_debug=("${cflags[@]}" "-g" "-Og" "-fno-omit-frame-pointer")
-cflags_profile=("${cflags_debug[@]}" "-pg")
+TYPES+=(debug warnmore profile)
+
+cflags+=(-fstack-protector -fdiagnostics-color=auto)
+cflags_debug=("${cflags[@]}" -g -Og	-fno-omit-frame-pointer)
+cflags_release=("${cflags[@]}" -Ofast -ffunction-sections -fdata-sections)
+cflags_profile=("${cflags_debug[@]}" -pg)
+cflags_warnmore=("${cflags_debug[@]}" -pedantic -Wcast-align -Wdouble-promotion
+                 -Wduplicated-branches -Wduplicated-cond -Wextra -Wformat=2
+                 -Wlogical-op -Wmisleading-indentation -Wnull-dereference
+                 -Wshadow -Wunused)
+cxxonly_warnmore=(-Weffc++ -Wnon-virtual-dtor -Woverloaded-virtual -Wuseless-cast)
 
 # Modifier additions
-MODIFIERS=("fdo")
+MODIFIERS=(fdo)
 cflags_fdo=("-fauto-profile=${FDO_FILE:-}")

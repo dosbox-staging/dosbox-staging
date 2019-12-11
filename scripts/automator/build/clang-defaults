@@ -3,17 +3,21 @@ cc="clang${postfix}"
 cxx="clang++${postfix}"
 
 # Flag additions
-TYPES+=("debug" "profile")
-cflags_release=("${cflags[@]}" "-Os")
-cflags_debug=("${cflags[@]}" "-g" "-Og" "-fno-omit-frame-pointer")
-cflags_profile=("${cflags_debug[@]}" "-fprofile-instr-generate" "-fcoverage-mapping")
+TYPES+=(debug warnmore profile)
+cflags_release=("${cflags[@]}" -Os)
+cflags_debug=("${cflags[@]}" -g -Og -fno-omit-frame-pointer)
+cflags_profile=("${cflags_debug[@]}" -fprofile-instr-generate -fcoverage-mapping)
+cflags_warnmore=("${cflags_debug[@]}" -Wextra -Wshadow -Wcast-align -Wunused
+                 -Woverloaded-virtual -Wpedantic -Wconversion -Wsign-conversion
+                 -Wdouble-promotion -Wformat=2)
+cxxonly_warnmore=(-Wnon-virtual-dtor -Woverloaded-virtual)
 
 # Colorize output only for interactive shells
 if [[ $- == *i* ]]; then
-	cflags+=("-fcolor-diagnostics")
+	cflags+=(-fcolor-diagnostics)
 fi
 
 # Modifier additions
-MODIFIERS=("fdo")
-ldflags_fdo=("-fprofile-instr-generate")
+MODIFIERS=(fdo)
+ldflags_fdo=(-fprofile-instr-generate)
 cflags_fdo=("-fprofile-sample-use=${FDO_FILE:-}")

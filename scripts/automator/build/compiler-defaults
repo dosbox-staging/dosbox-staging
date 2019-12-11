@@ -1,14 +1,15 @@
 # Tools and flags for all compilers
-VARIABLES=("ar" "cc" "cxx" "ld" "ranlib" "cflags" "ldflags" "libs")
+VARIABLES=(ar cc cxx ld ranlib cflags cxxonly ldflags libs)
 ar=""
 cc=""
 cxx=""
 ld=""
 ranlib=""
-cflags=("-Wall" "-pipe")
+cflags=(-Wall -pipe)
+cxxonly=("")
 ldflags=("")
 libs=("")
 
 # Builds for all compilers
-TYPES=("release")
+TYPES=(release)
 cflags_release=("${cflags[@]}" -DNDEBUG)
