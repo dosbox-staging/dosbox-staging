@@ -1047,12 +1047,15 @@ void DOS_Shell::CMD_REM(char * args) {
 	HELP("REM");
 }
 
-void DOS_Shell::CMD_PAUSE(char * args){
+void DOS_Shell::CMD_PAUSE(char *args) {
 	HELP("PAUSE");
 	WriteOut(MSG_Get("SHELL_CMD_PAUSE"));
-	Bit8u c;Bit16u n=1;
-	DOS_ReadFile(STDIN,&c,&n);
-	if (c==0) DOS_ReadFile(STDIN,&c,&n); // read extended key
+	uint8_t c;
+	uint16_t n = 1;
+	DOS_ReadFile(STDIN, &c, &n);
+	if (c == 0)
+		DOS_ReadFile(STDIN, &c, &n); // read extended key
+	WriteOut_NoParsing("\n");
 }
 
 void DOS_Shell::CMD_CALL(char * args){
