@@ -953,6 +953,27 @@ static Bitu INT15_Handler(void) {
 		LOG(LOG_BIOS,LOG_NORMAL)("INT15:Function %X called, bios mouse not supported",reg_ah);
 		CALLBACK_SCF(true);
 		break;
+	case 0xe8:
+		switch (reg_al) {
+		case 0x01: { /* E801: memory size */
+			    Bitu sz = MEM_TotalPages()*4;
+			    if (sz >= 1024) sz -= 1024;
+			    else sz = 0;
+			    reg_ax = reg_cx = (sz > 0x3C00) ? 0x3C00 : sz; /* extended memory between 1MB and 16MB in KBs */
+			    sz -= reg_ax;
+			    sz /= 64;	/* extended memory size from 16MB in 64KB blocks */
+			    if (sz > 65535) sz = 65535;
+			    reg_bx = reg_dx = sz;
+			    CALLBACK_SCF(false);
+			}
+			break;
+		default:
+			LOG(LOG_BIOS,LOG_ERROR)("INT15:Unknown call %4X",reg_ax);
+			reg_ah=0x86;
+			CALLBACK_SCF(true);
+		}
+		break;
+
 	default:
 		LOG(LOG_BIOS,LOG_ERROR)("INT15:Unknown call %4X",reg_ax);
 		reg_ah=0x86;
