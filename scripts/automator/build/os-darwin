@@ -2,9 +2,11 @@
 ar="ar"
 ranlib="ranlib"
 function make_binary() {
+    # Limit GCC to ASCII-only characters
+    LC_ALL=C LANG=en_US LANGUAGE=en_US \
 	gmake \
 		--jobs="$(sysctl -n hw.physicalcpu)" \
 		--output-sync=line \
 		2>&1 | tee build.log
 }
-dependencies=("otool" "-L" "${executable}")
+dependencies=(otool -L "${executable}")

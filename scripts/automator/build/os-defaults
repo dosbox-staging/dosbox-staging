@@ -1,9 +1,9 @@
 # Steps in-common to all OSes, plus some helper variables and functions.
 
-STEPS=("pre_build" "clean" "autogen" "configure" "make_binary" "strip_binary" "dependencies" "post_build")
+STEPS=(pre_build clean autogen configure make_binary strip_binary dependencies post_build)
 
 executable="src/dosbox"
-dependencies=("ldd" "${executable}")
+dependencies=(ldd "${executable}")
 
 function pre_build() {
 	cd ../..
@@ -28,8 +28,8 @@ function autogen() {
 
 function configure() {
 	if [[ ! -f Makefile || ! -f .previous_build || configure -nt Makefile ]]; then
-		export CXXFLAGS="${CFLAGS}"
-		./configure --enable-core-inline
+		export CXXFLAGS="${CFLAGS} ${CXXONLY}"
+		./configure --enable-core-inline ${configure_additions[*]}
 	fi
 }
 
