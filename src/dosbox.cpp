@@ -641,6 +641,10 @@ void DOSBOX_Init(void) {
 	Pint->Set_values(oplrates);
 	Pint->Set_help("Sample rate of OPL music emulation. Use 49716 for highest quality (set the mixer rate accordingly).");
 
+	Pint = secprop->Add_int("fmstrength",Property::Changeable::WhenIdle,150);
+	Pint->SetMinMax(1,1000);
+	Pint->Set_help("Strength of the FM playback volume in percent, in relation to PCM playback volume. Default is 150.\n"
+	"Possible Values: 1 to 1000 (0.01x to 10x)");
 
 	secprop=control->AddSection_prop("gus",&GUS_Init,true); //done
 	Pbool = secprop->Add_bool("gus",Property::Changeable::WhenIdle,false);

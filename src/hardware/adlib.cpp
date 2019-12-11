@@ -817,6 +817,7 @@ Module::Module( Section* configuration ) : Module_base(configuration) {
 	Section_prop * section=static_cast<Section_prop *>(configuration);
 	Bitu base = section->Get_hex("sbbase");
 	Bitu rate = section->Get_int("oplrate");
+	Bitu strength = section->Get_int("fmstrength");
 	//Make sure we can't select lower than 8000 to prevent fixed point issues
 	if ( rate < 8000 )
 		rate = 8000;
@@ -825,7 +826,8 @@ Module::Module( Section* configuration ) : Module_base(configuration) {
 
 	mixerChan = mixerObject.Install(OPL_CallBack,rate,"FM");
 	//Used to be 2.0, which was measured to be too high. Exact value depends on card/clone.
-	mixerChan->SetScale( 1.5f );  
+	float scale = ((float)strength)/100.0;
+	mixerChan->SetScale( scale );
 
 	if (oplemu == "fast") {
 		handler = new DBOPL::Handler();
