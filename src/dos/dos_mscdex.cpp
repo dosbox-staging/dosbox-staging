@@ -60,9 +60,9 @@ static Bitu MSCDEX_Strategy_Handler(void);
 static Bitu MSCDEX_Interrupt_Handler(void);
 static MountType MSCDEX_GetMountType(const char *path);
 
-class DOS_DeviceHeader:public MemStruct {
+class DOS_DeviceHeader : public MemStruct {
 public:
-	DOS_DeviceHeader(PhysPt ptr)				{ pt = ptr; };
+	DOS_DeviceHeader(PhysPt ptr) { pt = ptr; }
 	
 	void	SetNextDeviceHeader	(RealPt ptr)	{ sSave(sDeviceHeader,nextDeviceHeader,ptr);	};
 	RealPt	GetNextDeviceHeader	(void)			{ return sGet(sDeviceHeader,nextDeviceHeader);	};
@@ -78,7 +78,7 @@ public:
 	#ifdef _MSC_VER
 	#pragma pack(1)
 	#endif
-	struct sDeviceHeader{
+	struct sDeviceHeader {
 		RealPt	nextDeviceHeader;
 		Bit16u	devAttributes;
 		Bit16u	strategy;
@@ -87,7 +87,7 @@ public:
 		Bit16u  wReserved;
 		Bit8u	driveLetter;
 		Bit8u	numSubUnits;
-	} GCC_ATTRIBUTE(packed) TDeviceHeader;
+	} GCC_ATTRIBUTE(packed);
 	#ifdef _MSC_VER
 	#pragma pack()
 	#endif
@@ -95,11 +95,14 @@ public:
 
 class CMscdex {
 public:
-	CMscdex		(void);
-	~CMscdex	(void);
+	CMscdex  ();
+	~CMscdex ();
+
+	CMscdex            (const CMscdex&) = delete; // prevent copying
+	CMscdex& operator= (const CMscdex&) = delete; // prevent assignment
 
 	Bit16u		GetVersion			(void)	{ return (MSCDEX_VERSION_HIGH<<8)+MSCDEX_VERSION_LOW; };
-	Bit16u		GetNumDrives		(void)	{ return numDrives;			};
+	Bit16u   GetNumDrives (void) const { return numDrives; }
 	Bit16u		GetFirstDrive		(void)	{ return dinfo[0].drive; };
 	Bit8u		GetSubUnit			(Bit16u _drive);
 	bool		GetUPC				(Bit8u subUnit, Bit8u& attr, char* upc);
@@ -158,32 +161,33 @@ private:
 		TCtrl	audioCtrl;		// audio channel control
 	} TDriveInfo;
 
-	Bit16u				defaultBufSeg;
-	TDriveInfo			dinfo[MSCDEX_MAX_DRIVES];
-	CDROM_Interface*	cdrom[MSCDEX_MAX_DRIVES];
+	Bit16u            defaultBufSeg;
+	TDriveInfo        dinfo[MSCDEX_MAX_DRIVES];
+	CDROM_Interface * cdrom[MSCDEX_MAX_DRIVES];
 	
 public:
-	Bit16u		rootDriverHeaderSeg;
+	Bit16u rootDriverHeaderSeg;
 
-	bool		ChannelControl		(Bit8u subUnit, TCtrl ctrl);
-	bool		GetChannelControl	(Bit8u subUnit, TCtrl& ctrl);
+	bool ChannelControl(Bit8u subUnit, TCtrl ctrl);
+	bool GetChannelControl(Bit8u subUnit, TCtrl &ctrl);
 };
 
-CMscdex::CMscdex(void) {
-	numDrives			= 0;
-	rootDriverHeaderSeg	= 0;
-	defaultBufSeg		= 0;
-
-	memset(dinfo,0,sizeof(dinfo));
-	for (Bit32u i=0; i<MSCDEX_MAX_DRIVES; i++) cdrom[i] = 0;
+CMscdex::CMscdex()
+	: numDrives(0),
+	  defaultBufSeg(0),
+	  rootDriverHeaderSeg(0)
+{
+	memset(dinfo, 0, sizeof(dinfo));
+	for (auto &drive : cdrom)
+		drive = nullptr;
 }
 
-CMscdex::~CMscdex(void) {
-	defaultBufSeg = 0;
-	for (Bit16u i=0; i<GetNumDrives(); i++) {
-		delete (cdrom)[i];
+CMscdex::~CMscdex()
+{
+	for (size_t i = 0; i < GetNumDrives(); i++) {
+		delete cdrom[i];
 		cdrom[i] = 0;
-	};
+	}
 }
 
 void CMscdex::GetDrives(PhysPt data)
