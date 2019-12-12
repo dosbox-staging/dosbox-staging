@@ -358,7 +358,6 @@ void DOS_Shell::Run(void) {
 			if (echo) ShowPrompt();
 			InputCommand(input_line);
 			ParseLine(input_line);
-			if (echo && !bf) WriteOut_NoParsing("\n");
 		}
 	} while (!exit);
 }
