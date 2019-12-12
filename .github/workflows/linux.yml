@@ -58,10 +58,15 @@ jobs:
           sed -i "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
           echo ::set-env name=VERSION::$VERSION
       - name: Build
+        env:
+          FLAGS: -O3 -DNDEBUG -pipe
         run: |
           set -x
           ./autogen.sh
-          ./configure CFLAGS="-O3 -DNDEBUG -pipe" CXXFLAGS="-O3 -DNDEBUG -pipe"
+          ./configure \
+              --disable-screenshots \
+              CFLAGS="$FLAGS" \
+              CXXFLAGS="$FLAGS"
           make -j "$(nproc)"
           strip src/dosbox
       - name: Package
