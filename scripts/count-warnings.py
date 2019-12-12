@@ -10,8 +10,11 @@
 This script counts all compiler warnings and prints a summary.
 
 It returns success to the shell if the number or warnings encountered
-is less than or equal to the desired maximum warnings. See --help
-for a description of how to set the maximum.
+is less than or equal to the desired maximum warnings (default: 0).
+
+You can override the default limit with MAX_WARNINGS environment variable or
+using --max-warnings option (see the description of argument in --help for
+details).
 
 note: new compilers include additional flag -fdiagnostics-format=[text|json],
 which could be used instead of parsing using regex, but we want to preserve
@@ -74,8 +77,6 @@ def print_summary(issues):
             text=warning, count=count, field_size=size))
     print()
 
-def to_int(value):
-    return int(value) if value is not None else None
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -86,18 +87,13 @@ def parse_args():
         metavar='LOGFILE',
         help=("Path to the logfile, or use - to read from stdin"))
 
-    max_warnings = to_int(os.getenv('MAX_WARNINGS', None))
+    max_warnings = int(os.getenv('MAX_WARNINGS', '0'))
     parser.add_argument(
         '-m', '--max-warnings',
         type=int,
-        required=not isinstance(max_warnings, int),
         default=max_warnings,
-        help='Defines the maximum number of warnings permitted to exist\n'
-             'in the log file before returning a failure to the shell.\n'
-             'If not provided, the script will attempt to read it from\n'
-             'the MAX_WARNINGS environment variable, which is currently\n'
-             'set to: {}.  If a maximum of -1 is set then success is\n'
-             'always returned to the shell.\n\n'.format(str(max_warnings)))
+        help='Override the maximum number of warnings.\n'
+             'Use value -1 to disable the check.')
 
     return parser.parse_args()
 
