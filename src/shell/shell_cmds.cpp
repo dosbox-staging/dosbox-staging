@@ -489,11 +489,9 @@ void DOS_Shell::CMD_DIR(char * args) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		return;
 	}
-	Bit32u byte_count,file_count,dir_count;
-	Bitu w_count=0;
-	Bitu p_count=0;
+	Bitu w_count = 0;
+	Bitu p_count = 0;
 	Bitu w_size = optW?5:1;
-	byte_count=file_count=dir_count=0;
 
 	char buffer[CROSS_LEN];
 	args = trim(args);
@@ -529,7 +527,11 @@ void DOS_Shell::CMD_DIR(char * args) {
 		return;
 	}
 	*(strrchr(path,'\\')+1)=0;
-	if (!optB) WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),path);
+	if (!optB) {
+		WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"), path);
+		WriteOut_NoParsing("\n");
+		p_count += 2;
+	}
 
 	/* Command uses dta so set it to our internal dta */
 	RealPt save_dta=dos.dta();
@@ -573,6 +575,10 @@ void DOS_Shell::CMD_DIR(char * args) {
 		std::reverse(results.begin(), results.end());
 	}
 
+	uint32_t byte_count = 0;
+	uint32_t file_count = 0;
+	uint32_t dir_count = 0;
+
 	for (std::vector<DtaResult>::iterator iter = results.begin(); iter != results.end(); iter++) {
 
 		char * name = iter->name;
@@ -586,6 +592,10 @@ void DOS_Shell::CMD_DIR(char * args) {
 			// this overrides pretty much everything
 			if (strcmp(".",name) && strcmp("..",name)) {
 				WriteOut("%s\n",name);
+			} else {
+				// skip to the next file, otherwise this file
+				// will be counted as printed for pause cmd
+				continue;
 			}
 		} else {
 			char * ext = empty_string;
@@ -625,7 +635,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 				w_count++;
 			}
 		}
-		if (optP && !(++p_count%(22*w_size))) {
+		if (optP && !(++p_count % (24 * w_size))) {
 			CMD_PAUSE(empty_string);
 		}
 	}
