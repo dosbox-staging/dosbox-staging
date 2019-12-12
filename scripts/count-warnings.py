@@ -7,7 +7,7 @@
 # pylint: disable=missing-docstring
 
 """
-This script counts all compiler warnings and prints a summary.
+Count all compiler warnings and print a summary.
 
 It returns success to the shell if the number or warnings encountered
 is less than or equal to the desired maximum warnings (default: 0).
@@ -42,11 +42,12 @@ def remove_colors(line):
     return re.sub(ANSI_COLOR_PATTERN, '', line)
 
 
-def count_warning(line, warning_types, warning_files):
+def count_warning(line, warning_types, warning_files, warning_lines):
     line = remove_colors(line)
     match = WARNING_PATTERN.match(line)
     if not match:
         return 0
+    warning_lines.append(line.strip())
     file = match.group(1)
     # line = match.group(2)
     wtype = match.group(3)
@@ -103,16 +104,30 @@ def parse_args():
         action='store_true',
         help='Group warnings by filename.')
 
+    parser.add_argument(
+        '-l', '--list',
+        action='store_true',
+        help='Display sorted list of all warnings.')
+
     return parser.parse_args()
+
 
 def main():
     rcode = 0
     total = 0
     warning_types = {}
     warning_files = {}
+    warning_lines = []
     args = parse_args()
     for line in get_input_lines(args.logfile):
-        total += count_warning(line, warning_types, warning_files)
+        total += count_warning(line,
+                               warning_types,
+                               warning_files,
+                               warning_lines)
+    if args.list:
+        for line in sorted(warning_lines):
+            print(line)
+        print()
     if args.files and warning_files:
         print("Warnings grouped by file:\n")
         print_summary(warning_files)
