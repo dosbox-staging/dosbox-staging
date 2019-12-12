@@ -74,11 +74,11 @@ def find_longest_name_length(names):
 
 
 def print_summary(issues):
-    summary = list(issues.items())
     size = find_longest_name_length(issues.keys()) + 1
-    for warning, count in sorted(summary, key=lambda x: -x[1]):
+    items = list(issues.items())
+    for name, count in sorted(items, key=lambda x: (x[1], x[0]), reverse=True):
         print('  {text:{field_size}s}: {count}'.format(
-            text=warning, count=count, field_size=size))
+            text=name, count=count, field_size=size))
     print()
 
 
