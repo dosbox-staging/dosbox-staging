@@ -20,12 +20,13 @@
 #ifndef __CDROM_INTERFACE__
 #define __CDROM_INTERFACE__
 
-#include <string.h>
-#include <string>
-#include <iostream>
-#include <vector>
+#include <cstring>
 #include <fstream>
+#include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
+
 #include <SDL.h>
 #include <SDL_thread.h>
 
@@ -120,6 +121,7 @@ private:
 	protected:
 		TrackFile(Bit16u _chunkSize) : chunkSize(_chunkSize) {}
 	public:
+		virtual         ~TrackFile() = default;
 		virtual bool    read(Bit8u *buffer, int seek, int count) = 0;
 		virtual bool    seek(Bit32u offset) = 0;
 		virtual Bit32u  decode(Bit16s *buffer, Bit32u desired_track_frames) = 0;
@@ -127,12 +129,18 @@ private:
 		virtual Bit32u  getRate() = 0;
 		virtual Bit8u   getChannels() = 0;
 		virtual int     getLength() = 0;
-		virtual         ~TrackFile() {}
 		const Bit16u    chunkSize;
 	};
+
 	class BinaryFile : public TrackFile {
 	public:
 		BinaryFile      (const char *filename, bool &error);
+		~BinaryFile     ();
+
+		BinaryFile      () = delete;
+		BinaryFile      (const BinaryFile&) = delete; // prevent copying
+		BinaryFile&     operator= (const BinaryFile&) = delete; // prevent assignment
+
 		bool            read(Bit8u *buffer, int seek, int count);
 		bool            seek(Bit32u offset);
 		Bit32u          decode(Bit16s *buffer, Bit32u desired_track_frames);
@@ -140,15 +148,19 @@ private:
 		Bit32u          getRate() { return 44100; }
 		Bit8u           getChannels() { return 2; }
 		int             getLength();
-		~BinaryFile();
 	private:
 		std::ifstream   *file;
-		BinaryFile();
 	};
 
 	class AudioFile : public TrackFile {
 	public:
 		AudioFile       (const char *filename, bool &error);
+		~AudioFile      ();
+
+		AudioFile       () = delete;
+		AudioFile       (const AudioFile&) = delete; // prevent copying
+		AudioFile&      operator= (const AudioFile&) = delete; // prevent assignment
+
 		bool            read(Bit8u *buffer, int seek, int count) {
 		                    (void)buffer; // unused but part of the API
 		                    (void)seek;   // ...
@@ -160,10 +172,8 @@ private:
 		Bit32u          getRate();
 		Bit8u           getChannels();
 		int             getLength();
-		~AudioFile();
 	private:
 		Sound_Sample    *sample;
-		AudioFile();
 	};
 
 public:
