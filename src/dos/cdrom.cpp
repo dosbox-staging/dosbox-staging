@@ -18,24 +18,6 @@
 
 #include "cdrom.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include "support.h"
-
-MountType CDROM_GetMountType(const char *path) {
-	struct stat file_stat;
-	if ((stat(path, &file_stat) == 0) && (file_stat.st_mode & S_IFREG))
-		return MountType::ISO_IMAGE; 
-	else
-		return MountType::DIRECTORY;
-}
-
-// ******************************************************
-// Fake CDROM
-// ******************************************************
-
 bool CDROM_Interface_Fake :: GetAudioTracks(int& stTrack, int& end, TMSF& leadOut) {
 	stTrack = end = 1;
 	leadOut.min	= 60;
