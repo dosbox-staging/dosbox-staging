@@ -327,7 +327,10 @@ public:
 				int num = -1;
 				cmd->FindInt("-usecd",num,true);
 				int error = 0;
-				if (cmd->FindExist("-noioctl",false)) {
+				if (cmd->FindExist("-ioctl", false)) {
+					WriteOut(MSG_Get("MSCDEX_WARNING_IOCTL"));
+				}
+				if (cmd->FindExist("-noioctl", false)) {
 					MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
 				}
 				newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
@@ -1604,6 +1607,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("MSCDEX_LIMITED_SUPPORT","MSCDEX: Mounted subdirectory: limited support.\n");
 	MSG_Add("MSCDEX_INVALID_FILEFORMAT","MSCDEX: Failure: File is either no ISO/CUE image or contains errors.\n");
 	MSG_Add("MSCDEX_UNKNOWN_ERROR","MSCDEX: Failure: Unknown error.\n");
+	MSG_Add("MSCDEX_WARNING_IOCTL", "MSCDEX: Warning: Ignoring unsupported option -ioctl.\n");
 
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
 
