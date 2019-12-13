@@ -23,9 +23,13 @@ Opusfile, by Xiph
 
 Curses (optional)
     If you want to enable the debugger you need a curses library.
-    ncurses should be installed on just about every unix distro.
-    For win32 get pdcurses at https://pdcurses.org/
-    License: Public Domain
+    On Linux, install ncurses-devel via your distro package manager.
+    On macOS, install ncurses via brew or macports.
+    On Windows, install pdcurses at https://pdcurses.org/, or ncurses
+    via package-manager such as pacman within an MSYS2 environment.
+    Licenses:
+      ncurses - MIT License
+      pdcurses - Public Domain
 
 Libpng (optional)
     Needed for the screenshots.

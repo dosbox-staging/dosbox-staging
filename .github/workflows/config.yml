@@ -20,11 +20,9 @@ jobs:
           - name: Linux
             os: ubuntu-latest
             compiler: gcc
-
-        # Disabled temporarily due to https://github.com/dreamer/dosbox-staging/issues/86
-        # - configure_flags:  --enable-debug
-        # - configure_flags:  --enable-debug-heavy
         conf:
+          - configure_flags:  --enable-debug
+          - configure_flags:  --enable-debug=heavy
           - configure_flags:  --enable-alsa-midi
           - configure_flags:  --disable-core-inline
           - configure_flags:  --disable-dynamic-x86
@@ -56,7 +54,7 @@ jobs:
         id:    cache-msys2
         with:
           path: 'C:/tools/msys64'
-          key: msys2-GCC-64-${{ steps.get-date.outputs.date }}-1
+          key: msys2-GCC-64-${{ steps.get-date.outputs.date }}-2
 
       - name:  Install MSYS2 (Windows)
         if:    matrix.system.name == 'Windows' && steps.cache-msys2.outputs.cache-hit != 'true'
@@ -84,6 +82,12 @@ jobs:
         shell: python scripts\msys-bash.py {0}
         run:   scripts/build.sh -c ${{ matrix.system.compiler }} -t debug --bin-path /mingw64/bin ${{ matrix.conf.configure_flags }}
 
-      - name:  Build ${{ matrix.conf.configure_flags }} (non-Windows)
-        if:    matrix.system.name != 'Windows'
+      - name:  Build ${{ matrix.conf.configure_flags }} (macOS)
+        if:    matrix.system.name == 'macOS'
+        run:   |
+          export PKG_CONFIG_PATH="/usr/local/opt/ncurses/lib/pkgconfig:$PKG_CONFIG_PATH"
+          ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug ${{ matrix.conf.configure_flags }}
+
+      - name:  Build ${{ matrix.conf.configure_flags }} (Linux)
+        if:    matrix.system.name == 'Linux'
         run:   ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug ${{ matrix.conf.configure_flags }}

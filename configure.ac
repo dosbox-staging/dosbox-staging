@@ -4,6 +4,9 @@ AC_DEFINE([CONF_BRAND],["staging-git"],[Suffix of the .conf file.])
 AC_PREREQ(2.50)
 AC_CONFIG_SRCDIR(README)
 
+dnl Check for pkg-config
+PKG_PROG_PKG_CONFIG
+
 dnl Detect the canonical host and target build environment
 AC_CANONICAL_HOST
 AC_CANONICAL_BUILD
@@ -230,38 +233,35 @@ fi
 AC_C_BIGENDIAN
 
 #Features to enable/disable
-AH_TEMPLATE(C_DEBUG,[Define to 1 to enable internal debugger, requires libcurses])
-AH_TEMPLATE(C_HEAVY_DEBUG,[Define to 1 to enable heavy debugging, also have to enable C_DEBUG])
-AC_ARG_ENABLE(debug,AC_HELP_STRING([--enable-debug],[Enable debug mode]),[
-   AC_CHECK_HEADER(curses.h,have_curses_h=yes,)
-   AC_CHECK_LIB(curses, initscr, have_curses_lib=yes, , )
-   AC_CHECK_LIB(ncurses, initscr, have_ncurses_lib=yes, , )
-   AC_CHECK_LIB(pdcurses, initscr, have_pdcurses_lib=yes, , )
-
-   if test x$enable_debug = xno; then
-     AC_MSG_RESULT([Debugger not enabled])
-   elif test x$have_ncurses_lib = xyes -a x$have_curses_h = xyes ; then
-     LIBS="$LIBS -lncurses"
-     AC_DEFINE(C_DEBUG,1)
-     if test x$enable_debug = xheavy ; then 
-       AC_DEFINE(C_HEAVY_DEBUG,1)
-     fi
-   elif test x$have_curses_lib = xyes -a x$have_curses_h = xyes ; then
-     LIBS="$LIBS -lcurses"
-     AC_DEFINE(C_DEBUG,1)
-     if test x$enable_debug = xheavy ; then 
-       AC_DEFINE(C_HEAVY_DEBUG,1)
-     fi
-   elif test x$have_pdcurses_lib = xyes -a x$have_curses_h = xyes ; then
-     LIBS="$LIBS -lpdcurses"
-     AC_DEFINE(C_DEBUG,1)
-     if test x$enable_debug = xheavy ; then 
-       AC_DEFINE(C_HEAVY_DEBUG,1)
-     fi
-   else 
-     AC_MSG_ERROR([Can't find curses, which is required for debug mode])
-   fi
-],)
+AH_TEMPLATE(C_DEBUG,[Define to 1 to enable internal debugger, requires ncurses or pdcurses])
+AH_TEMPLATE(C_HEAVY_DEBUG,[Define to 1 to enable heavy debugging, requires C_DEBUG])
+AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug], [Enable internal debugger]),,)
+AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug=heavy], [Enable internal debugger with heavy debugging]),,)
+if test x$enable_debug = xyes -o x$enable_debug = xheavy; then
+    AC_MSG_NOTICE([debugger was requested, finding curses library ...])
+    PKG_CHECK_MODULES(NCURSES, ncurses, [
+        curses=ncurses
+        LIBS="$LIBS ${NCURSES_LIBS}"
+        CPPFLAGS="$CPPFLAGS ${NCURSES_CFLAGS}"], [
+    PKG_CHECK_MODULES(NCURSESW, ncursesw, [
+        curses=ncursesw
+        LIBS="$LIBS ${NCURSESW_LIBS}"
+        CPPFLAGS="$CPPFLAGS ${NCURSESW_CFLAGS}"], [
+    PKG_CHECK_MODULES(PDCURSES, pdcurses, [
+        curses=pdcurses
+        LIBS="$LIBS ${PDCURSES_LIBS}"
+        CPPFLAGS="$CPPFLAGS ${PDCURSES_CFLAGS}"],[]) ]) ])
+    if test x$enable_debug = xyes; then
+        AC_DEFINE(C_DEBUG,1)
+        AC_MSG_NOTICE([debugger enabled using the $curses library])
+    else
+        AC_DEFINE(C_DEBUG,1)
+        AC_DEFINE(C_HEAVY_DEBUG,1)
+        AC_MSG_NOTICE([debugger with heavy debugging enabled using the $curses library])
+    fi
+elif test empty$enable_debug != empty -a x$enable_debug != xno; then
+    AC_MSG_ERROR(--enable-debug=$enable_debug was requested but the value "$enable_debug" is invalid)
+fi
 
 AH_TEMPLATE(C_CORE_INLINE,[Define to 1 to use inlined memory functions in cpu core])
 AC_ARG_ENABLE(core-inline,AC_HELP_STRING([--disable-core-inline],[Disable inlined memory handling in CPU Core]),,enable_core_inline=yes)
