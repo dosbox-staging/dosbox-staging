@@ -303,10 +303,7 @@ bool CDROM_Interface_Image::GetAudioTracks(int& start_track_num, int& lead_out_n
 	start_track_num = tracks.begin()->number;
 	track_const_iter lead_out(prev(tracks.end()));
 	lead_out_num = lead_out->number;
-	frames_to_msf(lead_out->start + 150,
-	              &lead_out_msf.min,
-	              &lead_out_msf.sec,
-	              &lead_out_msf.fr);
+	lead_out_msf = frames_to_msf(lead_out->start + 150);
 #ifdef DEBUG
 	LOG_MSG("CDROM: GetAudioTracks => start track is %2d, lead out track is %2d, "
 	        "and lead out MSF is %02d:%02d:%02d",
@@ -337,7 +334,7 @@ bool CDROM_Interface_Image::GetAudioTrackInfo(int requested_track_num,
 
 	const tracks_size_t	requested_track_index(requested_track_num - 1);
 	track_const_iter track(tracks.begin() + requested_track_index);
-	frames_to_msf(track->start + 150, &start_msf.min, &start_msf.sec, &start_msf.fr);
+	start_msf = frames_to_msf(track->start + 150);
 	attr = track->attr;
 #ifdef DEBUG
 	LOG_MSG("CDROM: GetAudioTrackInfo for track %d => "
@@ -346,7 +343,7 @@ bool CDROM_Interface_Image::GetAudioTrackInfo(int requested_track_num,
 	        start_msf.min,
 	        start_msf.sec,
 	        start_msf.fr,
-	        msf_to_frames(start_msf.min, start_msf.sec, start_msf.fr));
+	        msf_to_frames(start_msf));
 #endif
 	return true;
 }
@@ -388,14 +385,8 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr, unsigned char& trac
 	track_num = track->number;
 	attr = track->attr;
 	index = 1;
-	frames_to_msf(currentSector + 150,
-	              &absPos.min,
-	              &absPos.sec,
-	              &absPos.fr);
-	frames_to_msf(currentSector - track->start,
-	              &relPos.min,
-	              &relPos.sec,
-	              &relPos.fr);
+	absPos = frames_to_msf(currentSector + 150);
+	relPos = frames_to_msf(currentSector - track->start);
 #ifdef DEBUG
 	LOG_MSG("CDROM: GetAudioSub => playing at %02d:%02d:%02d (on sector %u) "
 	        "in track %u at its %02d:%02d:%02d (at its sector %d)",
@@ -1193,11 +1184,11 @@ bool CDROM_Interface_Image::GetCueKeyword(string &keyword, istream &in)
 
 bool CDROM_Interface_Image::GetCueFrame(int &frames, istream &in)
 {
-	string msf;
+	std::string msf;
 	in >> msf;
-	int min, sec, fr;
-	bool success = sscanf(msf.c_str(), "%d:%d:%d", &min, &sec, &fr) == 3;
-	frames = msf_to_frames(min, sec, fr);
+	TMSF tmp = {0, 0, 0};
+	bool success = sscanf(msf.c_str(), "%hhu:%hhu:%hhu", &tmp.min, &tmp.sec, &tmp.fr) == 3;
+	frames = msf_to_frames(tmp);
 	return success;
 }
 
