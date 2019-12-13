@@ -18,8 +18,12 @@
 
 #include "dos_mscdex.h"
 
-#include <string.h>
-#include <ctype.h>
+#include <cctype>
+#include <cstring>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "regs.h"
 #include "callback.h"
 #include "dos_system.h"
@@ -46,8 +50,15 @@
 #define	REQUEST_STATUS_DONE		0x0100
 #define	REQUEST_STATUS_ERROR	0x8000
 
+enum class MountType {
+	PHYSICAL_CD,
+	ISO_IMAGE,
+	DIRECTORY,
+};
+
 static Bitu MSCDEX_Strategy_Handler(void); 
 static Bitu MSCDEX_Interrupt_Handler(void);
+static MountType MSCDEX_GetMountType(const char *path);
 
 class DOS_DeviceHeader:public MemStruct {
 public:
@@ -247,7 +258,7 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 	// Set return type to ok
 	int result = 0;
 	// Get Mounttype and init needed cdrom interface
-	switch (CDROM_GetMountType(physicalPath)) {
+	switch (MSCDEX_GetMountType(physicalPath)) {
 	case MountType::PHYSICAL_CD:
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting physical cdrom: %s", physicalPath);
 		// TODO: support for mounting physical CD-ROMs removed, provide
@@ -1002,6 +1013,15 @@ static Bit16u MSCDEX_IOCTL_Optput(PhysPt buffer,Bit8u drive_unit) {
 					return 0x03;	// invalid function
 	}
 	return 0x00;	// success
+}
+
+static MountType MSCDEX_GetMountType(const char *path)
+{
+	struct stat file_stat;
+	if ((stat(path, &file_stat) == 0) && (file_stat.st_mode & S_IFREG))
+		return MountType::ISO_IMAGE; 
+	else
+		return MountType::DIRECTORY;
 }
 
 static Bitu MSCDEX_Strategy_Handler(void) {

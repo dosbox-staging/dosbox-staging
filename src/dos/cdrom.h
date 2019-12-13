@@ -56,12 +56,6 @@ typedef struct SCtrl {
 	Bit8u	vol[4];			// channel volume (0 to 255)
 } TCtrl;
 
-enum class MountType {
-	PHYSICAL_CD,
-	ISO_IMAGE,
-	DIRECTORY,
-};
-
 // Conversion function from frames to Minutes/Second/Frames
 //
 template<typename T>
@@ -78,8 +72,6 @@ inline void frames_to_msf(int frames, T *m, T *s, T *f) {
 inline int msf_to_frames(int m, int s, int f) {
 	return m * 60 * REDBOOK_FRAMES_PER_SECOND + s * REDBOOK_FRAMES_PER_SECOND + f;
 }
-
-MountType CDROM_GetMountType(const char *path);
 
 class CDROM_Interface
 {
