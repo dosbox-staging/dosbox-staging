@@ -46,11 +46,12 @@
 #define REDBOOK_PCM_BYTES_PER_MS     176.4f // 44.1 frames/ms * 4 bytes/frame
 #define BYTES_PER_REDBOOK_PCM_FRAME       4 // 2 bytes/sample * 2 samples/frame
 
-typedef struct SMSF {
+struct TMSF
+{
 	unsigned char min;
 	unsigned char sec;
 	unsigned char fr;
-} TMSF;
+};
 
 typedef struct SCtrl {
 	Bit8u	out[4];			// output channel mapping
@@ -59,19 +60,22 @@ typedef struct SCtrl {
 
 // Conversion function from frames to Minutes/Second/Frames
 //
-template<typename T>
-inline void frames_to_msf(int frames, T *m, T *s, T *f) {
-	*f = frames % REDBOOK_FRAMES_PER_SECOND;
+inline TMSF frames_to_msf(int frames)
+{
+	TMSF msf = {0, 0, 0};
+	msf.fr = frames % REDBOOK_FRAMES_PER_SECOND;
 	frames /= REDBOOK_FRAMES_PER_SECOND;
-	*s = frames % 60;
+	msf.sec = frames % 60;
 	frames /= 60;
-	*m = frames;
+	msf.min = frames;
+	return msf;
 }
 
 // Conversion function from Minutes/Second/Frames to frames
 //
-inline int msf_to_frames(int m, int s, int f) {
-	return m * 60 * REDBOOK_FRAMES_PER_SECOND + s * REDBOOK_FRAMES_PER_SECOND + f;
+inline int msf_to_frames(const TMSF &msf)
+{
+	return msf.min * 60 * REDBOOK_FRAMES_PER_SECOND + msf.sec * REDBOOK_FRAMES_PER_SECOND + msf.fr;
 }
 
 class CDROM_Interface

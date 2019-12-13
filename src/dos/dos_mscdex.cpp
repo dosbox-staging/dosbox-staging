@@ -878,10 +878,12 @@ static Bit16u MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 					TMSF pos = {0, 0, 0};
 					mscdex->GetCurrentPos(drive_unit,pos);
 					Bit8u addr_mode = mem_readb(buffer+1);
-					if (addr_mode==0) {			// HSG
-						Bit32u frames = msf_to_frames(pos.min, pos.sec, pos.fr);
-						if (frames<150) MSCDEX_LOG("MSCDEX: Get position: invalid position %d:%d:%d", pos.min, pos.sec, pos.fr);
-						else frames-=150;
+					if (addr_mode == 0) { // HSG
+						Bit32u frames = static_cast<Bit32u>(msf_to_frames(pos));
+						if (frames < 150)
+							MSCDEX_LOG("MSCDEX: Get position: invalid position %d:%d:%d", pos.min, pos.sec, pos.fr);
+						else
+							frames -= 150;
 						mem_writed(buffer+2,frames);
 					} else if (addr_mode==1) {	// Red book
 						mem_writeb(buffer+2,pos.fr);
