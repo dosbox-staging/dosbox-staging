@@ -37,8 +37,9 @@ for dir in /usr /mingw32 /mingw64; do
 	| xargs -0 ./bin/strip.exe --strip-unneeded
 done
 
-# Delete MinGW's share directories
-rm -rf /mingw*/share
+# Delete documentation directories
+rm -rf /mingw*/share/man
+rm -rf /mingw*/share/doc
 
 # This entire script is best-effort, so always return success
 exit 0
