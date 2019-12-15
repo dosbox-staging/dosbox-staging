@@ -712,17 +712,36 @@ bool fatDrive::allocateCluster(Bit32u useCluster, Bit32u prevCluster) {
 	return true;
 }
 
+imageDisk* fatDrive::handOffLoadedDisk() {
+	responsibleForLoadedDisk = false;
+	return loadedDisk;
+}
+
+const imageDisk* fatDrive::getLoadedDisk() const {
+	return loadedDisk;
+}
+
+fatDrive::~fatDrive()
+{
+	// only delete loadedDisk if we're responsible for it
+	if (loadedDisk && responsibleForLoadedDisk) {
+		delete loadedDisk;
+	}
+	loadedDisk = nullptr;
+}
+
 fatDrive::fatDrive(const char *sysFilename,
                    Bit32u bytesector,
                    Bit32u cylsector,
                    Bit32u headscyl,
                    Bit32u cylinders,
                    Bit32u startSector)
-	: loadedDisk(nullptr),
-	  created_successfully(true),
+	: created_successfully(true),
 	  srchInfo{ {0} },
 	  allocation{0, 0, 0, 0, 0},
 	  bootbuffer{{0}, {0}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}, 0, 0},
+	  loadedDisk(nullptr),
+	  responsibleForLoadedDisk(true),
 	  absolute(false),
 	  fattype(0),
 	  CountOfClusters(0),
@@ -755,7 +774,7 @@ fatDrive::fatDrive(const char *sysFilename,
 	is_hdd = (filesize > 2880);
 
 	/* Load disk image */
-	loadedDisk.reset(new imageDisk(diskfile, sysFilename, filesize, is_hdd));
+	loadedDisk = new imageDisk(diskfile, sysFilename, filesize, is_hdd);
 	if(!loadedDisk) {
 		created_successfully = false;
 		return;

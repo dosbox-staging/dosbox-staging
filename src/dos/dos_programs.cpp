@@ -1353,6 +1353,7 @@ public:
 			for (i = 0; i < paths.size(); i++) {
 				DOS_Drive* newDrive = new fatDrive(paths[i].c_str(),sizes[0],sizes[1],sizes[2],sizes[3],0);
 				imgDisks.push_back(newDrive);
+
 				if(!(dynamic_cast<fatDrive*>(newDrive))->created_successfully) {
 					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
 					for(ct = 0; ct < imgDisks.size(); ct++) {
@@ -1394,14 +1395,14 @@ public:
 				switch (drive - 'A') {
 				case 0:
 				case 1:
-					if (!((fatDrive *)newdrive)->loadedDisk->hardDrive) {
-						imageDiskList[drive - 'A'].reset(((fatDrive *)newdrive)->loadedDisk.get());
+					if (!((fatDrive *)newdrive)->getLoadedDisk()->hardDrive) {
+						imageDiskList[drive - 'A'].reset(((fatDrive *)newdrive)->handOffLoadedDisk());
 					}
 					break;
 				case 2:
 				case 3:
-					if (((fatDrive *)newdrive)->loadedDisk->hardDrive) {
-						imageDiskList[drive - 'A'].reset(((fatDrive *)newdrive)->loadedDisk.get());
+					if (((fatDrive *)newdrive)->getLoadedDisk()->hardDrive) {
+						imageDiskList[drive - 'A'].reset(((fatDrive *)newdrive)->handOffLoadedDisk());
 						updateDPT();
 					}
 					break;

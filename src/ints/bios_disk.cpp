@@ -199,14 +199,15 @@ Bit8u imageDisk::Write_AbsoluteSector(Bit32u sectnum, void *data) {
 
 }
 
-imageDisk::imageDisk(FILE *imgFile, const char *imgName, Bit32u imgSizeK, bool isHardDisk) {
+imageDisk::imageDisk(FILE *imgFile, const char *imgName, Bit32u imgSizeK, bool isHardDisk)
+	: diskimg(imgFile)
+{
 	heads = 0;
 	cylinders = 0;
 	sectors = 0;
 	sector_size = 512;
 	current_fpos = 0;
 	last_action = NONE;
-	diskimg = imgFile;
 	fseek(diskimg,0,SEEK_SET);
 	memset(diskname,0,512);
 	safe_strncpy(diskname, imgName, sizeof(diskname));

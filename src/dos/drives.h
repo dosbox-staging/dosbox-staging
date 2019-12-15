@@ -153,6 +153,8 @@ class imageDisk;
 class fatDrive : public DOS_Drive {
 public:
 	fatDrive(const char * sysFilename, Bit32u bytesector, Bit32u cylsector, Bit32u headscyl, Bit32u cylinders, Bit32u startSector);
+	~fatDrive();
+	fatDrive() = delete; // prevent default construction
 	fatDrive(const fatDrive&) = delete; // prevent copying
 	fatDrive& operator= (const fatDrive&) = delete; // prevent assignment
 	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
@@ -172,7 +174,7 @@ public:
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
 	virtual Bits UnMount(void);
-public:
+
 	Bit8u readSector(Bit32u sectnum, void * data);
 	Bit8u writeSector(Bit32u sectnum, void * data);
 	Bit32u getAbsoluteSectFromBytePos(Bit32u startClustNum, Bit32u bytePos);
@@ -185,7 +187,8 @@ public:
 	Bit32u getFirstFreeClust(void);
 	bool directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum, Bit32s start=0);
 	bool directoryChange(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum);
-	std::unique_ptr<imageDisk> loadedDisk;
+	imageDisk* handOffLoadedDisk();
+	const imageDisk* getLoadedDisk() const;
 	bool created_successfully;
 private:
 	Bit32u getClusterValue(Bit32u clustNum);
@@ -211,6 +214,8 @@ private:
 	} allocation;
 	
 	bootstrap bootbuffer;
+	imageDisk* loadedDisk;
+	bool responsibleForLoadedDisk;
 	bool absolute;
 	Bit8u fattype;
 	Bit32u CountOfClusters;
