@@ -130,17 +130,12 @@ CD-ROM: My CD-ROM doesn't work.
     To enable CD-ROM support (includes MSCDEX) in Windows:
       - mount d f:\ -t cdrom
     in Linux:
-      - mount d /media/cdrom -t cdrom
-
-    In some cases you might want to use a different CD-ROM interface,
-    for example if CD audio does not work:
-      - mount d f:\ -t cdrom -usecd 0 -noioctl
+      - mount d /path/to/cdrom -t cdrom
 
     explanation: - d   driveletter you will get in DOSBox (d is the best,
                           don't change it!)
                  - f:\ location of CD-ROM on your PC. In most cases it will
                           be d:\ or e:\
-                 - 0   The number of the CD-ROM drive, reported by "mount -cd"
 
     See also the next question: The game/application can't find its CD-ROM.
 
@@ -469,10 +464,8 @@ To get a list of the internal commands type "HELP" at the prompt.
 In addition, the following commands are available:
 
 MOUNT "Emulated Drive letter" "Real Drive or Directory"
-      [-t type] [-noioctl] [-usecd number] [-size drivesize]
-      [-label drivelabel] [-freesize size_in_mb]
+      [-t type] [-size drivesize] [-label drivelabel] [-freesize size_in_mb]
       [-freesize size_in_kb (floppies)]
-MOUNT -cd
 MOUNT -u "Emulated Drive letter"
 
   Program to mount local directories as drives inside DOSBox.
@@ -506,27 +499,12 @@ MOUNT -u "Emulated Drive letter"
         Sets the name of the drive to "drivelabel". Needed on some systems
         if the CD-ROM label isn't read correctly (useful when a program
         can't find its CD-ROM). If you don't specify a label
-        and no lowlevel support is selected (that is omitting the -usecd #
-        parameter, or specifying -noioctl):
+        and no lowlevel support is selected:
           For Windows: label is extracted from "Real Drive".
           For Linux: label is set to NO_LABEL.
 
         If you do specify a label, this label will be kept as long as the drive
         is mounted. It will not be updated !!
-
-  -noioctl
-        Forces use of the SDL CD-ROM layer. Valid on all systems.
-
-  -usecd number
-        Valid on all systems, under Windows the -noioctl switch has to be
-        present to make use of the -usecd switch.
-        Enables to select the drive that should be used by SDL. Use this if
-        the wrong or no CD-ROM drive is mounted while using the SDL CD-ROM
-        interface. "number" can be found by "MOUNT -cd".
-
-  -cd
-        Displays all CD-ROM drives detected by SDL, and their numbers.
-        See the information at the -usecd entry above.
 
   -u
         Removes the mount. Doesn't work for Z:\.
@@ -540,8 +518,7 @@ MOUNT -u "Emulated Drive letter"
   directory as drive C: in DOSBox.
 
   Mounting your entire C drive with MOUNT C C:\ is NOT recommended! The same
-  is true for mounting the root of any other drive, except for CD-ROMs (due to
-  their read-only nature).
+  is true for mounting the root of any other drive.
   Otherwise if you or DOSBox make a mistake you may lose all your files.
   Also never mount a "Windows" or "Program Files" folders or their subfolders
   in Windows Vista/7 as DOSBox may not work correctly, or will stop working
@@ -557,41 +534,46 @@ MOUNT -u "Emulated Drive letter"
 
   Basic MOUNT Examples for normal usage (Windows):
 
-   1. To mount a folder as a harddisk drive:
-          mount c d:\dosgames
+   1. To mount a directory as a harddisk drive:
 
-   3. To mount your CD-ROM drive E as CD-ROM drive D in DOSBox:
-          mount d e:\ -t cdrom
+        mount C D:\dosgames
 
-   2. To mount your drive a: as a floppy:
-          mount a a:\ -t floppy
+   2. To mount a directory E:\CD as CD-ROM drive D in DOSBox:
+
+        mount D E:\CD -t cdrom
+
+   3. To mount your drive A: as a floppy:
+
+        mount A A:\ -t floppy
 
   Advanced MOUNT examples (Windows):
 
    4. To mount a hard disk drive with ~870 mb free diskspace (simple version):
-          mount c d:\dosgames -freesize 870
+
+        mount C D:\dosgames -freesize 870
 
    5. To mount a drive with ~870 mb free diskspace (experts only, full control):
-          mount c d:\dosgames -size 512,127,16513,13500
 
-   1. To mount c:\dosgames\floppy as a floppy:
-          mount a c:\dosgames\floppy -t floppy
+        mount C D:\dosgames -size 512,127,16513,13500
+
+   6. To mount C:\dosgames\floppy as a floppy:
+
+        mount A C:\dosgames\floppy -t floppy
 
 
   Other MOUNT examples:
 
-   3. To mount system CD-ROM drive at mountpoint /media/cdrom as CD-ROM drive D
-      in DOSBox:
-          mount d /media/cdrom -t cdrom -usecd 0
+   7. To mount /home/user/dosgames as drive C in DOSBox:
 
-   6. To mount /home/user/dosgames as drive C in DOSBox:
-          mount c /home/user/dosgames
+        mount C /home/user/dosgames
 
-   7. To mount the directory where DOSBox was started as C in DOSBox:
-          mount c .
-          (note the . which represents the directory where DOSBox was started,
-          on Windows Vista/7 don't use this if you installed DOSBox
-          to your "Program Files" folder)
+   9. To mount the directory where DOSBox was started as C in DOSBox:
+
+        mount C .
+
+      Note the . which represents the directory where DOSBox was started,
+      on Windows Vista/7 don't use this if you installed DOSBox
+      to your "Program Files" folder.
 
   If you want to mount a CD image or floppy image, check IMGMOUNT.
   MOUNT also works with images but only if you use external program,
