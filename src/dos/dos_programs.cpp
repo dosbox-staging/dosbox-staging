@@ -196,10 +196,8 @@ public:
 			return;
 		}
 
-		/* Show list of cdroms */
-		if (cmd->FindExist("-cd",false)) {
-			// TODO: implement write out
-   			// WriteOut("Physical CD-ROMs not supported any more");
+		if (cmd->FindExist("-cd", false)) {
+   			WriteOut(MSG_Get("PROGRAM_MOUNT_NO_OPTION"), "-cd");
 			return;
 		}
 
@@ -319,19 +317,15 @@ public:
 
 			if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
 			Bit8u bit8size=(Bit8u) sizes[1];
-			if (type=="cdrom") {
-				int num = -1;
-				cmd->FindInt("-usecd",num,true);
-				// TODO: 
-				// if (num >= 0)
-				//     WriteOut warning, -usecd ignored, no physical CD support
+
+			if (type == "cdrom") {
+				// Following options were relevant only for physical CD-ROM support:
+				for (auto opt : {"-usecd", "-noioctl", "-ioctl", "-ioctl_dx", "-ioctl_mci", "-ioctl_dio"}) {
+					if (cmd->FindExist(opt, false))
+						WriteOut(MSG_Get("MSCDEX_WARNING_NO_OPTION"), opt);
+				}
+
 				int error = 0;
-				if (cmd->FindExist("-ioctl", false)) {
-					WriteOut(MSG_Get("MSCDEX_WARNING_IOCTL"));
-				}
-				if (cmd->FindExist("-noioctl", false)) {
-					WriteOut(MSG_Get("MSCDEX_WARNING_IOCTL"));
-				}
 				newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
 				// Check Mscdex, if it worked out...
 				switch (error) {
@@ -1585,6 +1579,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL","Virtual Drives can not be unMOUNTed.\n");
 	MSG_Add("PROGRAM_MOUNT_WARNING_WIN","\033[31;1mMounting c:\\ is NOT recommended. Please mount a (sub)directory next time.\033[0m\n");
 	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER","\033[31;1mMounting / is NOT recommended. Please mount a (sub)directory next time.\033[0m\n");
+	MSG_Add("PROGRAM_MOUNT_NO_OPTION", "Warning: Ignoring unsupported option '%s'.\n");
 
 	MSG_Add("PROGRAM_MEM_CONVEN","%10d Kb free conventional memory\n");
 	MSG_Add("PROGRAM_MEM_EXTEND","%10d Kb free extended memory\n");
@@ -1605,7 +1600,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("MSCDEX_LIMITED_SUPPORT","MSCDEX: Mounted subdirectory: limited support.\n");
 	MSG_Add("MSCDEX_INVALID_FILEFORMAT","MSCDEX: Failure: File is either no ISO/CUE image or contains errors.\n");
 	MSG_Add("MSCDEX_UNKNOWN_ERROR","MSCDEX: Failure: Unknown error.\n");
-	MSG_Add("MSCDEX_WARNING_IOCTL", "MSCDEX: Warning: Ignoring unsupported option -ioctl.\n");
+	MSG_Add("MSCDEX_WARNING_NO_OPTION", "MSCDEX: Warning: Ignoring unsupported option '%s'.\n");
 
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
 
