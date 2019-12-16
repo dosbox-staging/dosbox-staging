@@ -260,9 +260,7 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 	// Get Mounttype and init needed cdrom interface
 	switch (MSCDEX_GetMountType(physicalPath)) {
 	case MountType::PHYSICAL_CD:
-		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting physical cdrom: %s", physicalPath);
-		// TODO: support for mounting physical CD-ROMs removed, provide
-		//       warnings/explanations for users
+		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: No physical CD-ROM support: %s", physicalPath);
 		return 2;
 	case MountType::ISO_IMAGE:
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting iso file as cdrom: %s", physicalPath);
