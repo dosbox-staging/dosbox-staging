@@ -16,18 +16,19 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "bios_disk.h"
+
+#include <algorithm>
+#include <cassert>
 #include <utility>
+
 #include "dosbox.h"
 #include "callback.h"
-#include "bios.h"
-#include "bios_disk.h"
 #include "regs.h"
 #include "mem.h"
 #include "dos_inc.h" /* for Drives[] */
 #include "../dos/drives.h"
 #include "mapper.h"
-
-
 
 diskGeo DiskGeometryList[] = {
 	{ 160,  8, 1, 40, 0},
@@ -99,34 +100,33 @@ void incrementFDD(void) {
 	CMOS_SetRegister(0x14, (Bit8u)(equipment&0xff));
 }
 
-void swapInDisks(void) {
-	bool allNull = true;
-	Bit32s diskcount = 0;
-	Bit32s swapPos = swapPosition;
-	Bit32s i;
-
-	/* Check to make sure that  there is at least one setup image */
-	for(i=0;i<MAX_SWAPPABLE_DISKS;i++) {
-		if(diskSwap[i]) {
-			allNull = false;
+template<typename T, size_t N>
+static size_t disk_array_prefix_size(const std::array<T, N> &images) {
+	size_t num = 0;
+	for (const auto &disk : images) {
+		if (!disk)
 			break;
-		}
+		num++;
 	}
+	return num;
+}
 
-	/* No disks setup... fail */
-	if (allNull) return;
+void swapInDisks(void) {
+	const size_t boot_disks_num = disk_array_prefix_size(diskSwap);
+	if (boot_disks_num == 0)
+		return;
 
-	/* If only one disk is loaded, this loop will load the same disk in dive A and drive B */
-	while(diskcount<2) {
-		if(diskSwap[swapPos]) {
-			LOG_MSG("Loaded disk %d from swaplist position %d - \"%s\"", diskcount, swapPos, diskSwap[swapPos]->diskname);
-			imageDiskList[diskcount] = diskSwap[swapPos];
-			diskcount++;
-		}
-		swapPos++;
-		if(swapPos >= MAX_SWAPPABLE_DISKS)
-			swapPos=0;
-	}
+	assert(swapPosition < boot_disks_num);
+	const unsigned int pos_1 = swapPosition;
+	const unsigned int pos_2 = (swapPosition + 1) % boot_disks_num;
+
+	imageDiskList[0] = diskSwap[pos_1];
+	LOG_MSG("Loaded disk A from swaplist position %u - \"%s\"",
+	        pos_1, diskSwap[pos_1]->diskname);
+
+	imageDiskList[1] = diskSwap[pos_2];
+	LOG_MSG("Loaded disk B from swaplist position %u - \"%s\"",
+	        pos_2, diskSwap[pos_2]->diskname);
 }
 
 bool getSwapRequest(void) {
@@ -304,18 +304,20 @@ static bool driveInactive(Bit8u driveNum) {
 	return false;
 }
 
+template<typename T, size_t N>
+static bool has_image(const std::array<T, N> &arr) {
+	auto to_bool = [](const T &x) { return bool(x); };
+	return std::any_of(std::begin(arr), std::end(arr), to_bool);
+}
 
 static Bitu INT13_DiskHandler(void) {
 	Bit16u segat, bufptr;
 	Bit8u sectbuf[512];
 	Bit8u  drivenum;
-	Bitu  i,t;
+	Bitu t;
 	last_drive = reg_dl;
 	drivenum = GetDosDriveNumber(reg_dl);
-	bool any_images = false;
-	for(i = 0;i < MAX_DISK_IMAGES;i++) {
-		if(imageDiskList[i]) any_images=true;
-	}
+	const bool any_images = has_image(imageDiskList);
 
 	// unconditionally enable the interrupt flag
 	CALLBACK_SIF(true);
@@ -391,7 +393,7 @@ static Bitu INT13_DiskHandler(void) {
 
 		segat = SegValue(es);
 		bufptr = reg_bx;
-		for(i=0;i<reg_al;i++) {
+		for (Bitu i = 0; i < reg_al; i++) {
 			last_status = imageDiskList[drivenum]->Read_Sector((Bit32u)reg_dh, (Bit32u)(reg_ch | ((reg_cl & 0xc0)<< 2)), (Bit32u)((reg_cl & 63)+i), sectbuf);
 			if((last_status != 0x00) || (killRead)) {
 				LOG_MSG("Error in disk read");
@@ -409,30 +411,26 @@ static Bitu INT13_DiskHandler(void) {
 		CALLBACK_SCF(false);
 		break;
 	case 0x3: /* Write sectors */
-		
 		if(driveInactive(drivenum)) {
 			reg_ah = 0xff;
 			CALLBACK_SCF(true);
 			return CBRET_NONE;
-        }                     
-
-
+		}
 		bufptr = reg_bx;
-		for(i=0;i<reg_al;i++) {
+		for (Bitu i = 0; i < reg_al; i++) {
 			for(t=0;t<imageDiskList[drivenum]->getSectSize();t++) {
 				sectbuf[t] = real_readb(SegValue(es),bufptr);
 				bufptr++;
 			}
-
 			last_status = imageDiskList[drivenum]->Write_Sector((Bit32u)reg_dh, (Bit32u)(reg_ch | ((reg_cl & 0xc0) << 2)), (Bit32u)((reg_cl & 63) + i), &sectbuf[0]);
 			if(last_status != 0x00) {
-            CALLBACK_SCF(true);
+				CALLBACK_SCF(true);
 				return CBRET_NONE;
 			}
-        }
+		}
 		reg_ah = 0x00;
 		CALLBACK_SCF(false);
-        break;
+		break;
 	case 0x04: /* Verify sectors */
 		if (reg_al==0) {
 			reg_ah = 0x01;
