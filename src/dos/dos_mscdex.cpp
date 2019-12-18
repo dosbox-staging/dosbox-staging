@@ -51,7 +51,6 @@
 #define	REQUEST_STATUS_ERROR	0x8000
 
 enum class MountType {
-	PHYSICAL_CD,
 	ISO_IMAGE,
 	DIRECTORY,
 };
@@ -263,17 +262,14 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 	int result = 0;
 	// Get Mounttype and init needed cdrom interface
 	switch (MSCDEX_GetMountType(physicalPath)) {
-	case MountType::PHYSICAL_CD:
-		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: No physical CD-ROM support: %s", physicalPath);
-		return 2;
 	case MountType::ISO_IMAGE:
 		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting iso file as cdrom: %s", physicalPath);
 		cdrom[numDrives] = new CDROM_Interface_Image((Bit8u)numDrives);
 		break;
 	case MountType::DIRECTORY:
+		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting directory as cdrom: %s", physicalPath);
+		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: You wont have full MSCDEX support!");
 		cdrom[numDrives] = new CDROM_Interface_Fake;
-		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting directory as cdrom: %s",physicalPath);
-		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: You wont have full MSCDEX support !");
 		result = 5;
 		break;
 	};
