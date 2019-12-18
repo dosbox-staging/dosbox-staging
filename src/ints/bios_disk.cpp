@@ -56,8 +56,8 @@ static bool swapping_requested;
 void CMOS_SetRegister(Bitu regNr, Bit8u val); //For setting equipment word
 
 /* 2 floppys and 2 harddrives, max */
-std::array<std::unique_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList;
-std::array<std::unique_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap;
+std::array<std::shared_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList;
+std::array<std::shared_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap;
 Bit32s swapPosition;
 
 void updateDPT(void) {
@@ -120,7 +120,7 @@ void swapInDisks(void) {
 	while(diskcount<2) {
 		if(diskSwap[swapPos]) {
 			LOG_MSG("Loaded disk %d from swaplist position %d - \"%s\"", diskcount, swapPos, diskSwap[swapPos]->diskname);
-			imageDiskList[diskcount] = std::move(diskSwap[swapPos]);
+			imageDiskList[diskcount] = diskSwap[swapPos];
 			diskcount++;
 		}
 		swapPos++;
@@ -572,15 +572,10 @@ void BIOS_SetupDisks(void) {
 	call_int13=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_int13,&INT13_DiskHandler,CB_INT13,"Int 13 Bios disk");
 	RealSetVec(0x13,CALLBACK_RealPointer(call_int13));
-	int i;
-	for(i=0;i<4;i++) {
-		imageDiskList[i].reset(nullptr);
-	}
-
-	for(i=0;i<MAX_SWAPPABLE_DISKS;i++) {
-		diskSwap[i].reset(nullptr);
-	}
-
+	for (auto &disk : imageDiskList)
+		disk.reset();
+	for (auto &disk : diskSwap)
+		disk.reset();
 	diskparm0 = CALLBACK_Allocate();
 	diskparm1 = CALLBACK_Allocate();
 	swapPosition = 0;
@@ -590,7 +585,7 @@ void BIOS_SetupDisks(void) {
 
 	PhysPt dp0physaddr=CALLBACK_PhysPointer(diskparm0);
 	PhysPt dp1physaddr=CALLBACK_PhysPointer(diskparm1);
-	for(i=0;i<16;i++) {
+	for (int i = 0; i < 16; i++) {
 		phys_writeb(dp0physaddr+i,0);
 		phys_writeb(dp1physaddr+i,0);
 	}

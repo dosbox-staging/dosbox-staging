@@ -185,7 +185,7 @@ public:
 	Bit32u getFirstFreeClust(void);
 	bool directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum, Bit32s start=0);
 	bool directoryChange(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum);
-	std::unique_ptr<imageDisk> loadedDisk;
+	std::shared_ptr<imageDisk> loadedDisk;
 	bool created_successfully;
 private:
 	Bit32u getClusterValue(Bit32u clustNum);
