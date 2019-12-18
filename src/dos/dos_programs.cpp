@@ -83,7 +83,7 @@ static const char* UnmountHelper(char umount) {
 	}
 
 	if (i_drive < MAX_DISK_IMAGES && imageDiskList[i_drive]) {
-		imageDiskList[i_drive].reset(nullptr);
+		imageDiskList[i_drive].reset();
 	}
 
 	return MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS");
@@ -718,9 +718,8 @@ public:
 						} else {
 							WriteOut(MSG_Get("PROGRAM_BOOT_CART_NO_CMDS"));
 						}
-						for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
-							diskSwap[dct].reset(nullptr);
-						}
+						for (auto &disk : diskSwap)
+							disk.reset();
 						//fclose(usefile_1); //delete diskSwap closes the file
 						return;
 					} else {
@@ -747,9 +746,8 @@ public:
 							} else {
 								WriteOut(MSG_Get("PROGRAM_BOOT_CART_NO_CMDS"));
 							}
-							for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
-								diskSwap[dct].reset(nullptr);
-							}
+							for (auto &disk : diskSwap)
+								disk.reset();
 							//fclose(usefile_1); //Delete diskSwap closes the file
 							return;
 						}
@@ -800,10 +798,8 @@ public:
 				for(i=0;i<rombytesize_1-0x200;i++) phys_writeb((romseg<<4)+i,rombuf[i]);
 
 				//Close cardridges
-				for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
-					diskSwap[dct].reset(nullptr);
-				}
-
+				for (auto &disk : diskSwap)
+					disk.reset();
 
 				if (cart_cmd=="") {
 					Bit32u old_int18=mem_readd(0x60);
@@ -1383,21 +1379,11 @@ public:
 			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), drive, tmp.c_str());
 
 			if (paths.size() == 1) {
-				DOS_Drive * newdrive = imgDisks[0];
-				switch (drive - 'A') {
-				case 0:
-				case 1:
-					if (!((fatDrive *)newdrive)->loadedDisk->hardDrive) {
-						imageDiskList[drive - 'A'].reset(((fatDrive *)newdrive)->loadedDisk.get());
-					}
-					break;
-				case 2:
-				case 3:
-					if (((fatDrive *)newdrive)->loadedDisk->hardDrive) {
-						imageDiskList[drive - 'A'].reset(((fatDrive *)newdrive)->loadedDisk.get());
-						updateDPT();
-					}
-					break;
+				auto *newdrive = static_cast<fatDrive*>(imgDisks[0]);
+				if ('A' <= drive && drive <= 'D' && !(newdrive->loadedDisk->hardDrive)) {
+					const size_t idx = drive - 'A';
+					imageDiskList[idx] = newdrive->loadedDisk;
+					updateDPT();
 				}
 			}
 		} else if (fstype=="iso") {

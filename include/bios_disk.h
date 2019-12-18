@@ -81,8 +81,8 @@ void incrementFDD(void);
 
 #define MAX_DISK_IMAGES (2 + MAX_HDD_IMAGES)
 
-extern std::array<std::unique_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList;
-extern std::array<std::unique_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap;
+extern std::array<std::shared_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList;
+extern std::array<std::shared_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap;
 
 extern Bit32s swapPosition;
 extern Bit16u imgDTASeg; /* Real memory location of temporary DTA pointer for fat image disk access */
