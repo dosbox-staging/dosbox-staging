@@ -676,9 +676,7 @@ public:
 			i++;
 		}
 
-		swapPosition = 0;
-
-		swapInDisks();
+		swapInDisks(0);
 
 		if (!imageDiskList[drive - 'A']) {
 			WriteOut(MSG_Get("PROGRAM_BOOT_UNABLE"), drive);

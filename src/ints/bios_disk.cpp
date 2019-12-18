@@ -59,7 +59,8 @@ void CMOS_SetRegister(Bitu regNr, Bit8u val); //For setting equipment word
 /* 2 floppys and 2 harddrives, max */
 std::array<std::shared_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList;
 std::array<std::shared_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap;
-Bit32s swapPosition;
+
+unsigned int swapPosition;
 
 void updateDPT(void) {
 	Bit32u tmpheads, tmpcyl, tmpsect, tmpsize;
@@ -111,14 +112,14 @@ static size_t disk_array_prefix_size(const std::array<T, N> &images) {
 	return num;
 }
 
-void swapInDisks(void) {
+void swapInDisks(unsigned int swap_position) {
 	const size_t boot_disks_num = disk_array_prefix_size(diskSwap);
 	if (boot_disks_num == 0)
 		return;
 
-	assert(swapPosition < boot_disks_num);
-	const unsigned int pos_1 = swapPosition;
-	const unsigned int pos_2 = (swapPosition + 1) % boot_disks_num;
+	assert(swap_position < boot_disks_num);
+	const unsigned int pos_1 = swap_position;
+	const unsigned int pos_2 = (swap_position + 1) % boot_disks_num;
 
 	imageDiskList[0] = diskSwap[pos_1];
 	LOG_MSG("Loaded disk A from swaplist position %u - \"%s\"",
@@ -145,10 +146,10 @@ void swapInNextDisk(bool pressed) {
 		if (Drives[i]) Drives[i]->EmptyCache();
 	}
 	swapPosition++;
-	if(!diskSwap[swapPosition]) {
+	if (!diskSwap[swapPosition]) {
 		swapPosition = 0;
 	}
-	swapInDisks();
+	swapInDisks(swapPosition);
 	swapping_requested = true;
 }
 
