@@ -20,11 +20,11 @@ jobs:
           - compiler: Clang
             bits: 32
             arch: i686
-            max_warnings: 93
+            max_warnings: 92
           - compiler: Clang
             bits: 64
             arch: x86_64
-            max_warnings: 136
+            max_warnings: 135
     env:
       CHERE_INVOKING: yes
     steps:
