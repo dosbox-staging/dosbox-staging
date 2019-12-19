@@ -1,7 +1,7 @@
 name: Config heavy
 on:
   # push
-  schedule: [cron: '15 5 * * *']
+  schedule: [cron: '0 16 * * *']
 
 jobs:
   config_all:
