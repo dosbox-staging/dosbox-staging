@@ -20,14 +20,13 @@ Read more at
 | **Static analysis**            | Yes<sup>[2],[3]</sup>       | No
 | **Dynamic analysis**           | Yes                         | No
 | **Automated regression tests** | No (planned)<sup>[4]</sup>  | No
-| **SDL**                        | 1.2 (2.0 WIP)<sup>[5]</sup> | 1.2<sup>＊</sup>
+| **SDL**                        | 2.0                         | 1.2<sup>＊</sup>
 
 [SVN]:https://sourceforge.net/projects/dosbox/
 [1]:https://sourceforge.net/p/dosbox/patches/283/
 [2]:https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
 [3]:https://scan.coverity.com/projects/dosbox-staging
 [4]:https://github.com/dreamer/dosbox-staging/issues/23
-[5]:https://github.com/dreamer/dosbox-staging/issues/29
 
 Codecs supported for CD Digital Audio emulation (loading CD music via
 [cue sheets](https://en.wikipedia.org/wiki/Cue_sheet_(computing))):
@@ -35,19 +34,19 @@ Codecs supported for CD Digital Audio emulation (loading CD music via
 |                | dosbox-staging<sup>†</sup> | DOSBox<sup>‡</sup>
 |-               |-                           |-
 | **Opus**       | Yes (libopus)              | No
-| **OGG/Vorbis** | Yes (built-in)             | Yes - SDL\_sound 1.2 (libvorbis)<sup>[6],＊</sup>
-| **MP3**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (libmpg123)<sup>[6],＊,§</sup>
+| **OGG/Vorbis** | Yes (built-in)             | Yes - SDL\_sound 1.2 (libvorbis)<sup>[5],＊</sup>
+| **MP3**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (libmpg123)<sup>[5],＊,§</sup>
 | **FLAC**       | Yes (built-in)             | No<sup>§</sup>
-| **WAV**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (internal)<sup>[7],＊</sup>
-| **AIFF**       | No                         | Yes - SDL\_sound 1.2 (internal)<sup>[7],＊</sup>
+| **WAV**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (internal)<sup>[6],＊</sup>
+| **AIFF**       | No                         | Yes - SDL\_sound 1.2 (internal)<sup>[6],＊</sup>
 
 <sup>＊ - SDL 1.2 is not actively maintained any more.</sup>  
 <sup>† - 22.05 kHz, 44.1 kHz, 48 kHz; mono, stereo</sup>  
 <sup>‡ - 44.1 kHz stereo only</sup>  
 <sup>§ - SDL\_sound supports it, but the feature might be broken or DOSBox does not indicate support.</sup>  
 
-[6]:https://www.dosbox.com/wiki/MOUNT#Mounting_a_CUE.2FBIN-Pair_as_volume
-[7]:https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/trunk/src/dos/cdrom_image.cpp#l536
+[5]:https://www.dosbox.com/wiki/MOUNT#Mounting_a_CUE.2FBIN-Pair_as_volume
+[6]:https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/trunk/src/dos/cdrom_image.cpp#l536
 
 
 ## Development snapshot builds
@@ -67,15 +66,15 @@ be necessary for specific snapshots (check included README file).
 
 #### Fedora
 
-    $ sudo dnf install SDL SDL_net opusfile
+    $ sudo dnf install SDL2 SDL2_net opusfile
 
 #### Debian, Ubuntu
 
-    $ sudo apt install libsdl1.2 sdl-net1.2 opusfile
+    $ sudo apt install libsdl2-2.0 libsdl2-net-2.0 opusfile
 
 #### Arch, Manjaro
 
-    $  sudo pacman -S sdl sdl_net opusfile
+    $  sudo pacman -S sdl2 sdl2_net opusfile
 
 
 ## [Windows](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess)
@@ -121,7 +120,7 @@ install build dependencies. Once vcpkg is installed and bootstrapped, open
 PowerShell, and run:
 
     PS> .\vcpkg integrate install
-    PS> .\vcpkg install libpng sdl1 sdl1-net opusfile
+    PS> .\vcpkg install libpng sdl2 sdl2-net opusfile
 
 These two steps will ensure that MSVC finds and links all dependencies.
 
