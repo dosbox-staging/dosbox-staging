@@ -88,6 +88,7 @@ static std::vector<CEvent *> events;
 static std::vector<CButton *> buttons;
 static std::vector<CBindGroup *> bindgroups;
 static std::vector<CHandlerEvent *> handlergroup;
+
 typedef std::list<CBind *> CBindList;
 typedef std::list<CEvent *>::iterator CEventList_it;
 typedef std::list<CBind *>::iterator CBindList_it;
@@ -101,15 +102,16 @@ static CBindList holdlist;
 
 class CEvent {
 public:
-	CEvent(char const * const _entry) {
-		safe_strncpy(entry,_entry,16);
+	CEvent(char const * const _entry)
+		: bindlist{}
+	{
+		safe_strncpy(entry, _entry, sizeof(entry));
 		events.push_back(this);
-		bindlist.clear();
-		activity=0;
-		current_value=0;
 	}
+
+	virtual ~CEvent() = default;
+
 	void AddBind(CBind * bind);
-	virtual ~CEvent() {}
 	virtual void Active(bool yesno)=0;
 	virtual void ActivateEvent(bool ev_trigger,bool skip_action)=0;
 	virtual void DeActivateEvent(bool ev_trigger)=0;
@@ -124,9 +126,9 @@ public:
 	virtual bool IsTrigger(void)=0;
 	CBindList bindlist;
 protected:
-	Bitu activity;
-	char entry[16];
-	Bits current_value;
+	Bitu activity = 0;
+	char entry[16] = {0};
+	Bits current_value = 0;
 };
 
 /* class for events which can be ON/OFF only: key presses, joystick buttons, joystick hat */
@@ -193,23 +195,28 @@ public:
 
 class CBind {
 public:
-	virtual ~CBind () {
-		list->remove(this);
-//		event->bindlist.remove(this);
-	}
-	CBind(CBindList * _list) {
-		list=_list;
-		_list->push_back(this);
-		mods=flags=0;
+	CBind(CBindList *binds)
+		: list(binds)
+	{
+		list->push_back(this);
 		event=0;
-		active=holding=false;
 	}
+
+	virtual ~CBind()
+	{
+		list->remove(this);
+	}
+
+	CBind(const CBind&) = delete; // prevent copy
+	CBind& operator=(const CBind&) = delete; // prevent assignment
+
 	void AddFlags(char * buf) {
 		if (mods & BMOD_Mod1) strcat(buf," mod1");
 		if (mods & BMOD_Mod2) strcat(buf," mod2");
 		if (mods & BMOD_Mod3) strcat(buf," mod3");
 		if (flags & BFLG_Hold) strcat(buf," hold");
 	}
+
 	void SetFlags(char * buf) {
 		char * word;
 		while (*(word=StripWord(buf))) {
@@ -262,14 +269,14 @@ public:
 	}
 	virtual void ConfigName(char * buf)=0;
 	virtual void BindName(char * buf)=0;
-   
-	Bitu mods,flags;
-	Bit16s value;
-	CEvent * event;
-	CBindList * list;
-	bool active,holding;
-};
 
+	Bitu mods = 0;
+	Bitu flags = 0;
+	CEvent *event = nullptr;
+	CBindList *list;
+	bool active = false;
+	bool holding = false;
+};
 
 void CEvent::AddBind(CBind * bind) {
 	bindlist.push_front(bind);
@@ -328,14 +335,22 @@ public:
 
 class CKeyBindGroup : public  CBindGroup {
 public:
-	CKeyBindGroup(Bitu _keys) : CBindGroup (){
-		lists=new CBindList[_keys];
-		for (Bitu i=0;i<_keys;i++) lists[i].clear();
-		keys=_keys;
-		configname="key";
+	CKeyBindGroup(Bitu _keys)
+		: CBindGroup(),
+		  lists(new CBindList[_keys]),
+		  keys(_keys)
+	{
+		for (size_t i = 0; i < keys; i++)
+			lists[i].clear();
 	}
 
-	~CKeyBindGroup() { delete[] lists; }
+	~CKeyBindGroup()
+	{
+		delete[] lists;
+	}
+
+	CKeyBindGroup(const CKeyBindGroup&) = delete; // prevent copy
+	CKeyBindGroup& operator=(const CKeyBindGroup&) = delete; // prevent assignment
 
 	CBind * CreateConfigBind(char *& buf)
 	{
@@ -370,8 +385,8 @@ private:
 		return "Key";
 	}
 protected:
-	const char * configname;
-	CBindList * lists;
+	const char *configname = "key";
+	CBindList *lists;
 	Bitu keys;
 };
 
@@ -397,6 +412,9 @@ public:
 		  axis(_axis),
 		  positive(_positive)
 	{}
+
+	CJAxisBind(const CJAxisBind&) = delete; // prevent copy
+	CJAxisBind& operator=(const CJAxisBind&) = delete; // prevent assignment
 
 	void ConfigName(char *buf)
 	{
@@ -427,6 +445,9 @@ public:
 		  group(_group),
 		  button(_button)
 	{}
+
+	CJButtonBind(const CJButtonBind&) = delete; // prevent copy
+	CJButtonBind& operator=(const CJButtonBind&) = delete; // prevent assignment
 
 	void ConfigName(char *buf)
 	{
@@ -463,6 +484,9 @@ public:
 		else
 			E_Exit("MAPPER:JOYSTICK:Invalid hat position");
 	}
+
+	CJHatBind(const CJHatBind&) = delete; // prevent copy
+	CJHatBind& operator=(const CJHatBind&) = delete; // prevent assignment
 
 	void ConfigName(char *buf)
 	{
@@ -559,6 +583,9 @@ public:
 		delete[] button_lists;
 		delete[] hat_lists;
 	}
+
+	CStickBindGroup(const CStickBindGroup&) = delete; // prevent copy
+	CStickBindGroup& operator=(const CStickBindGroup&) = delete; // prevent assignment
 
 	CBind * CreateConfigBind(char *& buf)
 	{
@@ -785,10 +812,10 @@ private:
 	}
 
 protected:
-	CBindList * pos_axis_lists;
-	CBindList * neg_axis_lists;
-	CBindList * button_lists;
-	CBindList * hat_lists;
+	CBindList *pos_axis_lists = nullptr;
+	CBindList *neg_axis_lists = nullptr;
+	CBindList *button_lists = nullptr;
+	CBindList *hat_lists = nullptr;
 	int axes = 0;
 	int axes_cap = 0;
 	int emulated_axes = 0;
@@ -881,10 +908,11 @@ public:
 
 class CFCSBindGroup : public  CStickBindGroup {
 public:
-	CFCSBindGroup(Bitu _stick,Bitu _emustick) : CStickBindGroup (_stick,_emustick){
+	CFCSBindGroup(Bitu _stick, Bitu _emustick)
+		: CStickBindGroup(_stick, _emustick)
+	{
 		emulated_axes=4;
 		emulated_buttons=4;
-		old_hat_position=0;
 		emulated_hats=1;
 		if (button_wrapping_enabled) button_wrap=emulated_buttons;
 
@@ -968,7 +996,7 @@ public:
 	}
 
 private:
-	Uint8 old_hat_position;
+	uint8_t old_hat_position = 0;
 
 	void DecodeHatPosition(Uint8 hat_pos) {
 		switch(hat_pos) {
@@ -1015,9 +1043,11 @@ private:
 	}
 };
 
-class CCHBindGroup : public  CStickBindGroup {
+class CCHBindGroup : public CStickBindGroup {
 public:
-	CCHBindGroup(Bitu _stick,Bitu _emustick) : CStickBindGroup (_stick,_emustick){
+	CCHBindGroup(Bitu _stick, Bitu _emustick)
+		: CStickBindGroup(_stick, _emustick)
+	{
 		emulated_axes=4;
 		emulated_buttons=6;
 		emulated_hats=1;
@@ -1029,7 +1059,6 @@ public:
 		if (hats_cap>hats) hats_cap=hats;
 
 		JOYSTICK_Enable(1,true);
-		button_state=0;
 	}
 
 	bool CheckEvent(SDL_Event * event) {
@@ -1140,27 +1169,27 @@ public:
 	}
 
 protected:
-	Bit16u button_state;
+	uint16_t button_state = 0;
 };
 
 static struct CMapper {
-	SDL_Window *window;
-	SDL_Rect draw_rect;
-	SDL_Surface *draw_surface_nonpaletted; // Needed for SDL_BlitScaled
-	SDL_Surface *surface;
-	SDL_Surface *draw_surface;
-	bool exit;
-	CEvent * aevent;				//Active Event
-	CBind * abind;					//Active Bind
-	CBindList_it abindit;			//Location of active bind in list
-	bool redraw;
-	bool addbind;
-	Bitu mods;
+	SDL_Window *window = nullptr;
+	SDL_Rect draw_rect = {0, 0, 0, 0};
+	SDL_Surface *draw_surface_nonpaletted = nullptr; // Needed for SDL_BlitScaled
+	SDL_Surface *surface = nullptr;
+	SDL_Surface *draw_surface = nullptr;
+	bool exit = false;
+	CEvent *aevent = nullptr; // Active Event
+	CBind *abind = nullptr; // Active Bind
+	CBindList_it abindit; //Location of active bind in list
+	bool redraw = false;
+	bool addbind = false;
+	Bitu mods = 0;
 	struct {
 		Bitu num_groups,num;
 		CStickBindGroup * stick[MAXSTICKS];
 	} sticks;
-	std::string filename;
+	std::string filename = "";
 } mapper;
 
 void CBindGroup::ActivateBindList(CBindList * list,Bits value,bool ev_trigger) {
@@ -1203,13 +1232,19 @@ static void DrawText(Bitu x,Bitu y,const char * text,Bit8u color) {
 
 class CButton {
 public:
-	virtual ~CButton(){};
-	CButton(Bitu _x,Bitu _y,Bitu _dx,Bitu _dy) {
-		x=_x;y=_y;dx=_dx;dy=_dy;
+	CButton(Bitu p_x, Bitu p_y, Bitu p_dx, Bitu p_dy)
+		: x(p_x),
+		  y(p_y),
+		  dx(p_dx),
+		  dy(p_dy),
+		  color(CLR_WHITE),
+		  enabled(true)
+	{
 		buttons.push_back(this);
-		color=CLR_WHITE;
-		enabled=true;
 	}
+
+	virtual ~CButton() = default;
+
 	virtual void Draw(void) {
 		if (!enabled)
 			return;
@@ -1241,14 +1276,24 @@ protected:
 
 class CTextButton : public CButton {
 public:
-	CTextButton(Bitu _x,Bitu _y,Bitu _dx,Bitu _dy,const char * _text) : CButton(_x,_y,_dx,_dy) { text=_text;}
-	void Draw(void) {
-		if (!enabled) return;
+	CTextButton(Bitu  x, Bitu y, Bitu dx, Bitu dy, const char *txt)
+		: CButton(x, y, dx, dy),
+		  text(txt)
+	{}
+
+	CTextButton(const CTextButton&) = delete; // prevent copy
+	CTextButton& operator=(const CTextButton&) = delete; // prevent assignment
+
+	void Draw(void)
+	{
+		if (!enabled)
+			return;
 		CButton::Draw();
-		DrawText(x+2,y+2,text,color);
+		DrawText(x + 2, y + 2, text, color);
 	}
+
 protected:
-	const char * text;
+	const char *text;
 };
 
 class CClickableTextButton : public CTextButton {
@@ -1268,10 +1313,14 @@ static CEventButton * last_clicked = NULL;
 
 class CEventButton : public CClickableTextButton {
 public:
-	CEventButton(Bitu _x,Bitu _y,Bitu _dx,Bitu _dy,const char * _text,CEvent * _event) 
-	: CClickableTextButton(_x,_y,_dx,_dy,_text) 	{ 
-		event=_event;	
-	}
+	CEventButton(Bitu x, Bitu y, Bitu dx, Bitu dy, const char *text, CEvent *ev)
+		: CClickableTextButton(x, y, dx, dy, text),
+		  event(ev)
+	{}
+
+	CEventButton(const CEventButton&) = delete; // prevent copy
+	CEventButton& operator=(const CEventButton&) = delete; // prevent assignment
+
 	void BindColor(void) {
 		this->SetColor(event->bindlist.begin()==event->bindlist.end() ? CLR_GREY : CLR_WHITE);
 	}
@@ -1356,11 +1405,12 @@ protected:
 };
 
 class CCheckButton : public CClickableTextButton {
-public:	
-	CCheckButton(Bitu _x,Bitu _y,Bitu _dx,Bitu _dy,const char * _text,BC_Types _type) 
-	: CClickableTextButton(_x,_y,_dx,_dy,_text) 	{ 
-		type=_type;
-	}
+public:
+	CCheckButton(Bitu x, Bitu y, Bitu dx, Bitu dy, const char *text, BC_Types t)
+		: CClickableTextButton(x, y, dx, dy, text),
+		  type(t)
+	{}
+
 	void Draw(void) {
 		if (!enabled) return;
 		bool checked=false;
@@ -1410,26 +1460,34 @@ protected:
 
 class CKeyEvent : public CTriggeredEvent {
 public:
-	CKeyEvent(char const * const _entry,KBD_KEYS _key) : CTriggeredEvent(_entry) {
-		key=_key;
-	}
+	CKeyEvent(char const * const entry, KBD_KEYS k)
+		: CTriggeredEvent(entry),
+		  key(k)
+	{}
+
 	void Active(bool yesno) {
 		KEYBOARD_AddKey(key,yesno);
-	};
+	}
+
 	KBD_KEYS key;
 };
 
 class CJAxisEvent : public CContinuousEvent {
 public:
-	CJAxisEvent(char const * const _entry,Bitu _stick,Bitu _axis,bool _positive,CJAxisEvent * _opposite_axis) : CContinuousEvent(_entry) {
-		stick=_stick;
-		axis=_axis;
-		positive=_positive;
-		opposite_axis=_opposite_axis;
-		if (_opposite_axis) {
-			_opposite_axis->SetOppositeAxis(this);
-		}
+	CJAxisEvent(char const * const entry, Bitu s, Bitu a, bool p, CJAxisEvent *op_axis)
+		: CContinuousEvent(entry),
+		  stick(s),
+		  axis(a),
+		  positive(p),
+		  opposite_axis(op_axis)
+	{
+		if (opposite_axis)
+			opposite_axis->SetOppositeAxis(this);
 	}
+
+	CJAxisEvent(const CJAxisEvent&) = delete; // prevent copy
+	CJAxisEvent& operator=(const CJAxisEvent&) = delete; // prevent assignment
+
 	void Active(bool /*moved*/) {
 		virtual_joysticks[stick].axis_pos[axis]=(Bit16s)(GetValue()*(positive?1:-1));
 	}
@@ -1451,31 +1509,38 @@ protected:
 
 class CJButtonEvent : public CTriggeredEvent {
 public:
-	CJButtonEvent(char const * const _entry,Bitu _stick,Bitu _button) : CTriggeredEvent(_entry) {
-		stick=_stick;
-		button=_button;
-	}
-	void Active(bool pressed) {
+	CJButtonEvent(char const * const entry, Bitu s, Bitu btn)
+		: CTriggeredEvent(entry),
+		  stick(s),
+		  button(btn)
+	{}
+
+	void Active(bool pressed)
+	{
 		virtual_joysticks[stick].button_pressed[button]=pressed;
 	}
+
 protected:
 	Bitu stick,button;
 };
 
 class CJHatEvent : public CTriggeredEvent {
 public:
-	CJHatEvent(char const * const _entry,Bitu _stick,Bitu _hat,Bitu _dir) : CTriggeredEvent(_entry) {
-		stick=_stick;
-		hat=_hat;
-		dir=_dir;
-	}
-	void Active(bool pressed) {
+	CJHatEvent(char const * const entry, Bitu s, Bitu h, Bitu d)
+		: CTriggeredEvent(entry),
+		  stick(s),
+		  hat(h),
+		  dir(d)
+	{}
+
+	void Active(bool pressed)
+	{
 		virtual_joysticks[stick].hat_pressed[(hat<<2)+dir]=pressed;
 	}
+
 protected:
 	Bitu stick,hat,dir;
 };
-
 
 class CModEvent : public CTriggeredEvent {
 public:
@@ -1498,17 +1563,25 @@ protected:
 
 class CHandlerEvent : public CTriggeredEvent {
 public:
-	CHandlerEvent(char const * const _entry,MAPPER_Handler * _handler,MapKeys _key,Bitu _mod,char const * const _buttonname) : CTriggeredEvent(_entry) {
-		handler=_handler;
-		defmod=_mod;
-		defkey=_key;
-		buttonname=_buttonname;
+	CHandlerEvent(char const * const entry, MAPPER_Handler *handle, MapKeys k, Bitu mod, char const * const bname)
+		: CTriggeredEvent(entry),
+		  defkey(k),
+		  defmod(mod),
+		  handler(handle),
+		  buttonname(bname)
+	{
 		handlergroup.push_back(this);
 	}
+
+	CHandlerEvent(const CHandlerEvent&) = delete; // prevent copy
+	CHandlerEvent& operator=(const CHandlerEvent&) = delete; // prevent assignment
+
 	void Active(bool yesno) {
 		(*handler)(yesno);
 	};
-	const char * ButtonName(void) {
+
+	const char * ButtonName(void)
+	{
 		return buttonname;
 	}
 
