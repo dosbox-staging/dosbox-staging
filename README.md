@@ -66,15 +66,15 @@ be necessary for specific snapshots (check included README file).
 
 #### Fedora
 
-    $ sudo dnf install SDL2 SDL2_net opusfile
+    $ sudo dnf install libpng SDL2 SDL2_net opusfile
 
 #### Debian, Ubuntu
 
-    $ sudo apt install libsdl2-2.0 libsdl2-net-2.0 opusfile
+    $ sudo apt install libpng16-16 libsdl2-2.0 libsdl2-net-2.0 libopusfile0
 
 #### Arch, Manjaro
 
-    $  sudo pacman -S sdl2 sdl2_net opusfile
+    $  sudo pacman -S libpng sdl2 sdl2_net opusfile
 
 
 ## [Windows](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess)
