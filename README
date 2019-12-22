@@ -108,7 +108,7 @@ FULLSCREEN: My fullscreen is too large.
     This is can be a problem on Windows 10, if you have display scaling
     set to a value above 100%. Windows in that case will resize the screen
     on top of dosbox resizing the screen, which can happen for the output:
-    ddraw, opengl, openglnb, overlay. You can disable this Windows behaviour
+    texture, texturenb, opengl, openglnb. You can disable this Windows behaviour
     by enabling a specific compatibility setting:
  
     - Right-click the DOSBox icon and select "Properties".
