@@ -16,11 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "mapper.h"
+#include "dosbox.h"
 
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cinttypes>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
@@ -31,13 +32,13 @@
 #include "SDL.h"
 #include "SDL_thread.h"
 
-#include "dosbox.h"
-#include "video.h"
-#include "keyboard.h"
 #include "joystick.h"
-#include "support.h"
-#include "setup.h"
+#include "keyboard.h"
+#include "mapper.h"
 #include "pic.h"
+#include "setup.h"
+#include "support.h"
+#include "video.h"
 
 enum {
 	CLR_BLACK=0,
