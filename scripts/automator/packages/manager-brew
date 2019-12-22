@@ -1,3 +1,3 @@
 # Package repo: https://formulae.brew.sh/
 delim="@"
-packages+=(coreutils autogen autoconf automake make pkg-config libpng ncurses sdl sdl_net opusfile)
+packages+=(coreutils autogen autoconf automake make pkg-config libpng ncurses sdl2 sdl2_net opusfile)
