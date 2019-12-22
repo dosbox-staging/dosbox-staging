@@ -42,7 +42,7 @@ jobs:
         if:    matrix.conf.compiler == 'GCC'
         with:
           path: 'C:/tools/msys64'
-          key: msys2-${{ matrix.conf.compiler }}-${{ matrix.conf.bits }}-${{ steps.get-date.outputs.date }}
+          key: msys2-${{ matrix.conf.compiler }}-${{ matrix.conf.bits }}-${{ steps.get-date.outputs.date }}-sdl2
       - name:  Install MSYS2
         if:    steps.cache-msys2.outputs.cache-hit != 'true'
         run:   choco install msys2 --no-progress
@@ -82,7 +82,7 @@ jobs:
       - name:  Install packages
         shell: pwsh
         run: |
-          vcpkg install libpng sdl1 sdl1-net opusfile
+          vcpkg install libpng sdl2 sdl2-net opusfile
           vcpkg integrate install
       - name:  Log environment
         shell: pwsh
@@ -103,7 +103,7 @@ jobs:
       - name:  Install packages
         shell: pwsh
         run: |
-          vcpkg install libpng sdl1 sdl1-net opusfile
+          vcpkg install libpng sdl2 sdl2-net opusfile
           vcpkg integrate install
       - name:  Log environment
         shell: pwsh
@@ -139,8 +139,8 @@ jobs:
           cp vs/Release/libpng16.dll         dest/
           cp vs/Release/ogg.dll              dest/
           cp vs/Release/opus.dll             dest/
-          cp vs/Release/SDL.dll              dest/
-          cp vs/Release/SDL_net.dll          dest/
+          cp vs/Release/SDL2.dll             dest/
+          cp vs/Release/SDL2_net.dll         dest/
           cp src/libs/zmbv/Release/zlib1.dll dest/
           cp src/libs/zmbv/Release/zmbv.dll  dest/
           # Fill README template file
