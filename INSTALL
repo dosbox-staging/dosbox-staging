@@ -1,10 +1,10 @@
 DOSBox uses the following libraries:
 
-SDL
-    The Simple DirectMedia Library available at https://www.libsdl.org/
-    Note that only version 1.2 and its subversions (1.2.8, 1.2.13 etc.)
-    are currently supported.
-    License: LGPLv2+
+SDL 2.0
+    The Simple DirectMedia Layer available at https://www.libsdl.org/
+    SDL provides many essential cross-platform functionalities and
+    hardware accelerated rendering via OpenGL or Direct3D.
+    License: zlib
 
 Opusfile, by Xiph
     For compressed audio tracks (.opus) used with CDROM images.
@@ -39,10 +39,10 @@ Zlib (optional)
     See https://www.zlib.net/ for more details.
     License: zlib
 
-SDL_Net (optional)
+SDL_net (optional)
     For modem/ipx support.
-    Get it from https://www.libsdl.org/projects/SDL_net/release-1.2.html
-    License: LGPLv2+
+    Get it from https://www.libsdl.org/projects/SDL_net/
+    License: zlib
 
 alsa-lib (optional)
     For ALSA audio support under linux. Get it from https://www.alsa-project.org/
