@@ -49,7 +49,6 @@ static void Check_Palette(void) {
 	Bitu i;
 	switch (render.scale.outMode) {
 	case scalerMode8:
-		GFX_SetPalette(render.pal.first,render.pal.last-render.pal.first+1,(GFX_PalEntry *)&render.pal.rgb[render.pal.first]);
 		break;
 	case scalerMode15:
 	case scalerMode16:

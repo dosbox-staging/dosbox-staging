@@ -30,13 +30,6 @@ typedef enum {
 
 typedef void (*GFX_CallBack_t)( GFX_CallBackFunctions_t function );
 
-struct GFX_PalEntry {
-	Bit8u r;
-	Bit8u g;
-	Bit8u b;
-	Bit8u unused;
-};
-
 #define GFX_CAN_8		0x0001
 #define GFX_CAN_15		0x0002
 #define GFX_CAN_16		0x0004
@@ -55,7 +48,6 @@ struct GFX_PalEntry {
 #define GFX_CAN_RANDOM	0x4000		//If the interface can also do random access surface
 
 void GFX_Events(void);
-void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries);
 Bitu GFX_GetBestMode(Bitu flags);
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t cb);
