@@ -89,6 +89,8 @@ static struct {
 	bool nosound;
 	Bit32u freq;
 	Bit32u blocksize;
+	//Note: As stated earlier, all sdl code shall rather be in sdlmain
+	SDL_AudioDeviceID sdldevice;
 } mixer;
 
 Bit8u MixTemp[MIXER_BUFSIZE];
@@ -149,6 +151,14 @@ void MIXER_DelChannel(MixerChannel* delchan) {
 	}
 }
 
+static void MIXER_LockAudioDevice(void) {
+	SDL_LockAudioDevice(mixer.sdldevice);
+}
+
+static void MIXER_UnlockAudioDevice(void) {
+	SDL_UnlockAudioDevice(mixer.sdldevice);
+}
+
 void MixerChannel::UpdateVolume(void) {
 	volmul[0]=(Bits)((1 << MIXER_VOLSHIFT)*scale[0]*volmain[0]*mixer.mastervol[0]);
 	volmul[1]=(Bits)((1 << MIXER_VOLSHIFT)*scale[1]*volmain[1]*mixer.mastervol[1]);
@@ -205,9 +215,9 @@ void MixerChannel::Enable(bool _yesno) {
 	enabled=_yesno;
 	if (enabled) {
 		freq_counter = 0;
-		SDL_LockAudio();
+		MIXER_LockAudioDevice();
 		if (done<mixer.done) done=mixer.done;
-		SDL_UnlockAudio();
+		MIXER_UnlockAudioDevice();
 	}
 }
 
@@ -450,14 +460,14 @@ void MixerChannel::AddSamples_s32_nonnative(Bitu len,const Bit32s * data) {
 }
 
 void MixerChannel::FillUp(void) {
-	SDL_LockAudio();
+	MIXER_LockAudioDevice();
 	if (!enabled || done<mixer.done) {
-		SDL_UnlockAudio();
+		MIXER_UnlockAudioDevice();
 		return;
 	}
 	float index=PIC_TickIndex();
 	Mix((Bitu)(index*mixer.needed));
-	SDL_UnlockAudio();
+	MIXER_UnlockAudioDevice();
 }
 
 extern bool ticksLocked;
@@ -507,12 +517,12 @@ static void MIXER_MixData(Bitu needed) {
 }
 
 static void MIXER_Mix(void) {
-	SDL_LockAudio();
+	MIXER_LockAudioDevice();
 	MIXER_MixData(mixer.needed);
 	mixer.tick_counter += mixer.tick_add;
 	mixer.needed+=(mixer.tick_counter >> TICK_SHIFT);
 	mixer.tick_counter &= TICK_MASK;
-	SDL_UnlockAudio();
+	MIXER_UnlockAudioDevice();
 }
 
 static void MIXER_Mix_NoSound(void) {
@@ -536,6 +546,7 @@ static void MIXER_Mix_NoSound(void) {
 }
 
 static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
+	memset(stream, 0, len);
 	Bitu need=(Bitu)len/MIXER_SSIZE;
 	Bit16s * output=(Bit16s *)stream;
 	Bitu reduce;
@@ -763,7 +774,7 @@ void MIXER_Init(Section* sec) {
 		LOG_MSG("MIXER: No Sound Mode Selected.");
 		mixer.tick_add=calc_tickadd(mixer.freq);
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
-	} else if (SDL_OpenAudio(&spec, &obtained) <0 ) {
+	} else if ((mixer.sdldevice = SDL_OpenAudioDevice(NULL, 0, &spec, &obtained, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE)) ==0 ) {
 		mixer.nosound = true;
 		LOG_MSG("MIXER: Can't open audio: %s , running in nosound mode.",SDL_GetError());
 		mixer.tick_add=calc_tickadd(mixer.freq);
@@ -775,7 +786,7 @@ void MIXER_Init(Section* sec) {
 		mixer.blocksize=obtained.samples;
 		mixer.tick_add=calc_tickadd(mixer.freq);
 		TIMER_AddTickHandler(MIXER_Mix);
-		SDL_PauseAudio(0);
+		SDL_PauseAudioDevice(mixer.sdldevice, 0);
 	}
 	mixer.min_needed=section->Get_int("prebuffer");
 	if (mixer.min_needed>100) mixer.min_needed=100;
@@ -783,4 +794,13 @@ void MIXER_Init(Section* sec) {
 	mixer.max_needed=mixer.blocksize * 2 + 2*mixer.min_needed;
 	mixer.needed=mixer.min_needed+1;
 	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
+}
+
+void MIXER_CloseAudioDevice(void) {
+	if (!mixer.nosound) {
+		if (mixer.sdldevice != 0) {
+			SDL_CloseAudioDevice(mixer.sdldevice);
+			mixer.sdldevice = 0;
+		}
+	}
 }
