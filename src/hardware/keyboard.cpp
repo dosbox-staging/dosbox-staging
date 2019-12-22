@@ -25,6 +25,7 @@
 #include "mem.h"
 #include "mixer.h"
 #include "timer.h"
+#include <math.h>
 
 #define KEYBUFSIZE 32
 #define KEYDELAY 0.300f			//Considering 20-30 khz serial clock and 11 bits/char
@@ -172,18 +173,17 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 }
 
 static Bit8u port_61_data = 0;
-static Bitu read_p61(Bitu port,Bitu iolen) {
-	port_61_data^=0x20;
-	port_61_data^=0x10;
-	return port_61_data;
+
+static Bitu read_p61(Bitu, Bitu) {
+	return	(port_61_data & 0xF) |
+			(TIMER_GetOutput2()? 0x20:0) |
+			((fmod(PIC_FullIndex(),0.030) > 0.015)? 0x10:0);
 }
 
-extern void TIMER_SetGate2(bool);
-static void write_p61(Bitu port,Bitu val,Bitu iolen) {
-	if ((port_61_data ^ val) & 3) {
-		if((port_61_data ^ val) & 1) TIMER_SetGate2(val&0x1);
-		PCSPEAKER_SetType(val & 3);
-	}
+static void write_p61(Bitu, Bitu val, Bitu) {
+	Bit8u diff = port_61_data ^ (Bit8u)val;
+	if (diff & 0x1) TIMER_SetGate2(val & 0x1);
+	if (diff & 0x3) PCSPEAKER_SetType(val & 0x3);
 	port_61_data = val;
 }
 

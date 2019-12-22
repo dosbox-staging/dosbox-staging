@@ -27,7 +27,7 @@
 #include "pic.h"
 #include "inout.h"
 #include "setup.h"
-
+#include "cpu.h"
 
 #ifndef C_VGARAM_CHECKED
 #define C_VGARAM_CHECKED 1
@@ -491,6 +491,30 @@ public:
 	}
 };
 
+class VGA_Slow_CGA_Handler : public PageHandler {
+public:
+	VGA_Slow_CGA_Handler() {
+		flags=PFLAG_NOCODE;
+	}
+	void delay() {
+		Bits delaycyc = CPU_CycleMax/((Bit32u)(1024/2.80)); 
+		if(GCC_UNLIKELY(CPU_Cycles < 3*delaycyc)) delaycyc=0;
+		CPU_Cycles -= delaycyc;
+		CPU_IODelayRemoved += delaycyc;
+	}
+
+	Bitu readb(PhysPt addr) {
+		delay();
+		return vga.tandy.mem_base[addr - 0xb8000];
+	}
+	void writeb(PhysPt addr,Bitu val){
+		delay();
+		vga.tandy.mem_base[addr - 0xb8000] = (Bit8u) val;
+	}
+	
+};
+
+
 class VGA_Changes_Handler : public PageHandler {
 public:
 	VGA_Changes_Handler() {
@@ -729,6 +753,7 @@ public:
 
 static struct vg {
 	VGA_Map_Handler				map;
+	VGA_Slow_CGA_Handler		slow;
 	VGA_Changes_Handler			changes;
 	VGA_TEXT_PageHandler		text;
 	VGA_TANDY_PageHandler		tandy;
@@ -761,6 +786,8 @@ void VGA_SetupHandlers(void) {
 	PageHandler *newHandler;
 	switch (machine) {
 	case MCH_CGA:
+		MEM_SetPageHandler( VGA_PAGE_B8, 8, &vgaph.slow );
+		goto range_done;
 	case MCH_PCJR:
 		MEM_SetPageHandler( VGA_PAGE_B8, 8, &vgaph.pcjr );
 		goto range_done;
@@ -916,9 +943,11 @@ void VGA_SetupMemory(Section* sec) {
 	Bit32u vga_allocsize=vga.vmemsize;
 	// Keep lower limit at 512k
 	if (vga_allocsize<512*1024) vga_allocsize=512*1024;
-	// We reserve extra 2K for one scan line
-	vga_allocsize+=2048;
-	vga.mem.linear_orgptr = new Bit8u[vga_allocsize+16];
+	
+	vga_allocsize += 4096 * 4;	// We reserve an extra scan line (max S3 scanline 4096)
+	vga_allocsize += 16;		// for memory alignment	
+
+	vga.mem.linear_orgptr = new Bit8u[vga_allocsize];
 	vga.mem.linear=(Bit8u*)(((Bitu)vga.mem.linear_orgptr + 16-1) & ~(16-1));
 	memset(vga.mem.linear,0,vga_allocsize);
 

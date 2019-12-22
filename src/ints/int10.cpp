@@ -526,7 +526,8 @@ graphics_chars:
 		}
 		break;
 	case 0x4f:								/* VESA Calls */
-		if ((!IS_VGA_ARCH) || (svgaCard!=SVGA_S3Trio)) break;
+		if ((!IS_VGA_ARCH) || (svgaCard!=SVGA_S3Trio))
+			break;
 		switch (reg_al) {
 		case 0x00:							/* Get SVGA Information */
 			reg_al=0x4f;
@@ -587,6 +588,7 @@ graphics_chars:
 		case 0x07:
 			switch (reg_bl) {
 			case 0x80:						/* Set Display Start during retrace ?? */
+				LOG(LOG_INT10,LOG_ERROR)("Unhandled VESA Function %X Subfunction %X",reg_al,reg_bh);
 			case 0x00:						/* Set display Start */
 				reg_al=0x4f;
 				reg_ah=VESA_SetDisplayStart(reg_cx,reg_dx);

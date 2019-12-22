@@ -1,0 +1,242 @@
+<html>
+<body bgcolor="d0d0d0">
+
+<table border="0">
+
+
+<tr>
+<td align="center" bgcolor="90ffff">
+<font><a href="index.html" target="_top">[Home]</b></font>
+</td>
+</tr>
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<tr>
+<td bgcolor="e0e0e0">
+	<font size=4><b>NE2000 Ethernet Patch</b></font>
+</td>
+
+</tr>
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<tr>
+<td bgcolor="e0e0e0">
+	<b>Contents</b><br/>
+<ol>
+<li><A HREF="db_ne2000.html#Overview">Overview</a></li>
+<li><A HREF="db_ne2000.html#Configuring">Configuring the device</a></li>
+<li><A HREF="db_ne2000.html#InstallationWin95">Installation under Windows 95</a></li>
+<li><A HREF="db_ne2000.html#InstallationODI">Use with Novell's ODI drivers</a></li>
+<li><A HREF="db_ne2000.html#InstallationArachne">Usage with Arachne DOS Webbrowser</a></li>
+<li><A HREF="db_ne2000.html#InstallationWin31">Windows 3.1 Note</a></li>
+<li><A HREF="db_ne2000.html#changelog">Changelog</a></li>
+</ol>
+</td>
+
+</tr>
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+
+<td bgcolor="e0e0e0">
+<A NAME="Overview"><b>Overview</b><br/></A>
+	The patch adds a Network card (old-style NE2000 model) to DOSBox's hardware. Since this card was quite popular at it's time it is supported by many operating systems. It uses the Pcap library to gain access to the host's ethernet connection. The code is originally taken from Bochs, was modified to work with DOSBox by a DOSBox developer for an old DOSBox version,  and got a few bugs fixed.
+<br><br>
+	Requirements:
+<ul>
+	<li>The <a href="http://www.winpcap.org">Pcap Library</a></li>
+	<li>Windows or Linux as host operating system (Builds on Mac but doesn't work)</li>
+</ul>	
+	Use:
+<ul>
+	<li>Adding Network functionality (file transfer, network printer access, Internet) to guest programs and operating systems</li>
+	<li>Playing network games between new computers with DOSBox and old DOS PCs</li>
+</ul>
+
+</td>
+</tr>
+
+<!-- Limiter -->
+<tr><td><br/></td></tr>
+<!-- / Limiter -->
+
+<tr><td bgcolor="e0e0e0">
+
+<A NAME="Configuring"><b>Configuring the ethernet device through dosbox.conf</b><br/></A>
+The patch adds the following parameters to the dosbox.conf:
+<ul>
+<li>	<b>ne2000</b> <br/>
+	true enables the virtual network card, false completely disables it.		
+</li>
+<li>
+	<b>nicbase</b><br/>
+	The base address of the virtual network card. Normally there is no need to change this but it is good to know for driver installation.
+</li>
+<li>
+	<b>nicirq</b><br/>
+	Interrupt of the network card. 3 is a default value expected by many drivers, however if you attempt to use the serial port COM2  simultaneously you need to change it.<br/>
+</li>
+<li>
+	<b>macaddr</b><br/>
+	The physical node address of the card. This is used to identify the computer on the network on the lowest level and has to be unique for every instance of DOSBox running on the same LAN. AC:DE:48 is a special reserved address range not used by commercial network cards. If you run only one Instance of the virtual network card there is no need to change this. Otherwise change the 88:99:AB part.
+</li>	
+<li>
+	<b>realnic</b><br/>
+	This parameter chooses which of your host's NICs the virtual network card is bound to. It can either be identified by number or by a part of it's name (i.e. VIA).
+</li>
+</ul>
+The first time you run DOSBox with this patch, set the 'realnic' value to 'list'. The list of interfaces will appear in the DOSBox Status Window:
+<br/>
+<br/>
+<image src="images/db_ne2000patch_cfg1.png">
+<br/>
+<br/>
+Make your choice and set the <b>realnic</b> parameter accordingly:
+
+<br/>
+<br/>
+<image src="images/db_ne2000patch_cfg2.png">
+<br/>
+<br/>
+The DOSBox Status Window also displays status information, i.e. that everything went well. Look here first if you encounter difficulties.
+<br/>
+<br/>
+</td>
+
+</tr>
+
+<!-- Limiter -->
+<tr><td><br/></td></tr>
+<!-- / Limiter -->
+
+<tr><td bgcolor="e0e0e0">
+
+<A NAME="InstallationWin95"><b>Installing under Windows 95</b><br/></A>
+The virtual network card, once properly configured, is painlessly detected at installation time or by the hardware detection run of Windows 95. If you changed the interrupt you probably have to change it for Win95's driver too.
+<br/><br/>
+<image src="images/db_ne2000patch_1.png">
+<br/>
+<br/>
+<image src="images/db_ne2000patch_2.png">
+<br/>
+<br/>
+<image src="images/db_ne2000patch_3.png">
+
+</td>
+
+</tr>
+
+<!-- Limiter -->
+<tr><td><br/></td></tr>
+<!-- / Limiter -->
+
+<tr><td bgcolor="e0e0e0">
+
+<A NAME="InstallationODI"><b>Novells IPX</b><br/></A>
+This patch can be used to play IPX / Netbios games between new computers with DOSBox and old DOS machines.<br/>
+Files needed:
+<ul>
+<li><b>lsl.com</b> 	-- Link Support Layer</li>
+<li><b>ne2000.com</b> -- ODI driver for the NE2000 card</li>
+<li><b>ipxodi.com</b> -- ODI IPX protocol provider</li>
+<li><b>net.cfg</b> -- configuration file containing hardware and protocol settings</li>
+<li><b>netbios.com</b> -- optional - required by games using the NETBIOS protocol</li>
+</ul>
+These files (excluding the net.cfg) can either be downloaded from Novell from this site: <br/>
+<a href="http://www.novell.com/coolsolutions/tools/13555.html">http://www.novell.com/coolsolutions/tools/13555.html</a> They are distributed in the vlm121_x.exe files which are compressed DOS archives.<br/>
+
+Or you can download them from here: <a href="dosodi.zip">DOSODI files</a>
+<br/>
+Therein a <b>net.cfg</b> with the proper settings for this patch is included. The IPX frame type 'Ethernet_802.2' set in this config file appears to be the default on many systems, however if your other computers use a different type you need to change it. The other most common value is 'Ethernet_802.3'.<br/>
+Put those files tohether in a folder, make it availible in DOSBox (mount) and then execute the files in this order:
+<ul>
+<li><b>lsl</b></li>
+<li><b>ne2000</b></li>
+<li><b>ipxodi</b></li>
+<li><b>netbios</b> (optional, only few games need this)</li>
+</ul>
+The output should look like in the following screenshot:<br/>
+<br/>
+<image src="images/db_ne2000patch_dosodi.png">
+<br/>
+<br/>
+You are now ready to play your game.
+
+
+</td>
+
+</tr>
+
+<!-- Limiter -->
+<tr><td><br/></td></tr>
+<!-- / Limiter -->
+
+<tr><td bgcolor="e0e0e0">
+
+<A NAME="InstallationArachne"><b>Usage with Arachne DOS Webbrowser</b><br/></A>
+For Use with Arachne (<a href="http://sourceforge.net/projects/arachne-browser/">http://sourceforge.net/projects/arachne-browser/</a>), the packet driver needs to be loaded before Arachne is started. It comes with Arachne and is located in \system\pktdrvrs. It needs to be started before the main program every time with the parameters '0x60 3 0x300', if the NE2000 settings are at default. See the screenshot below:<br/>
+<image src="images/db_ne2000patch_arachne.png">
+<br/>
+<br/>
+In Arachne, choose 'packet driver' and DHCP (if you have one).
+
+</td>
+
+</tr>
+
+<!-- Limiter -->
+<tr><td><br/></td></tr>
+<!-- / Limiter -->
+
+<tr><td bgcolor="e0e0e0">
+
+<A NAME="InstallationWin31"><b>Windows 3.1 Note</b><br/></A>
+To get it to work you need to create a bootable image with MS-DOS and Windows 3.1(1).
+This is because the DOSBox-internal DOS emulation doesn't support the required MS-DOS
+networking functionality.
+</td>
+</tr>
+
+<!-- Limiter -->
+<tr><td><br/></td></tr>
+<!-- / Limiter -->
+
+<tr><td bgcolor="e0e0e0">
+<A NAME="changelog"><b>Changelog</b><br/></A>
+<ul>
+<li>9/12/08 - add Arachne documentation</li>
+<li>6/22/08 - add this documentation page, make the patch compile on Linux</li>
+<li>4/30/08 - improve NE2000 diagnostic loopback to make Novell's ODI driver v2.10 work</li>
+<li>earlier - make patch work with current DOSBox code, delay-load wpcap.dll on Windows, fix NE2000 for Win95 / 3.11</li>
+</ul>
+
+</td>
+
+</tr>
+
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<tr>
+<td align="center" bgcolor="90ffff">
+<font><a href="index.html" target="_top">[Home]</b></font>
+</td>
+</tr>
+
+<!-- end of page -->
+
+</table>
+
+</body>
+
+</html>

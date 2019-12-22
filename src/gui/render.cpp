@@ -275,7 +275,7 @@ static void RENDER_Reset( void ) {
 			gfx_scalew = 1;
 			gfx_scaleh = render.src.ratio;
 		} else {
-			gfx_scalew = (1/render.src.ratio);
+			gfx_scalew = (1.0/render.src.ratio);
 			gfx_scaleh = 1;
 		}
 	} else {
@@ -514,12 +514,28 @@ static void RENDER_CallBack( GFX_CallBackFunctions_t function ) {
 	}
 }
 
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh) {
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double scrn_ratio) {
 	RENDER_Halt( );
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) { 
 		return;	
 	}
-	if ( ratio > 1 ) {
+
+	// figure out doublewidth/height values
+	bool dblw = false;
+	bool dblh = false;
+	double ratio = (((double)width)/((double)height))/scrn_ratio;
+	if(ratio > 1.6) {
+		dblh=true;
+		ratio /= 2.0;
+	} else if(ratio < 0.75) {
+		dblw=true;
+		ratio *= 2.0;
+	} else if(!dblw && !dblh && (width < 370) && (height < 280)) {
+		dblw=true; dblh=true;
+	}
+	//LOG_MSG("pixratio %1.3f, dw %s, dh %s",ratio,dblw?"true":"false",dblh?"true":"false");
+
+	if ( ratio > 1.0 ) {
 		double target = height * ratio + 0.1;
 		ratio = target / height;
 	} else {
@@ -540,7 +556,6 @@ static void IncreaseFrameSkip(bool pressed) {
 	if (!pressed)
 		return;
 	if (render.frameskip.max<10) render.frameskip.max++;
-	LOG_MSG("Frame Skip at %d",render.frameskip.max);
 	GFX_SetTitle(-1,render.frameskip.max,false);
 }
 
@@ -548,7 +563,6 @@ static void DecreaseFrameSkip(bool pressed) {
 	if (!pressed)
 		return;
 	if (render.frameskip.max>0) render.frameskip.max--;
-	LOG_MSG("Frame Skip at %d",render.frameskip.max);
 	GFX_SetTitle(-1,render.frameskip.max,false);
 }
 /* Disabled as I don't want to waste a keybind for that. Might be used in the future (Qbix)
@@ -564,8 +578,15 @@ static void ChangeScaler(bool pressed) {
 	RENDER_CallBack( GFX_CallBackReset );
 } */
 
+#include "vga.h"
+
 void RENDER_Init(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
+	
+	// line-by-line emulation
+	vga.draw.linewise_set=section->Get_bool("linewise");
+	vga.draw.multiscan_set=section->Get_bool("multiscan");
+	vga.draw.char9_set=section->Get_bool("char9");
 
 	//For restarting the renderer.
 	static bool running = false;

@@ -1,0 +1,180 @@
+<html>
+<body bgcolor="d0d0d0">
+
+<table border="0">
+
+<tr>
+<td bgcolor="e0e0e0">
+	<font size=4><b>DOSBox Megabuild 6</b></font><br>
+</td>
+</tr>
+
+<tr>
+<td bgcolor="e0e0e0">
+This build was obtained from <a href="http://home.arcor.de/h-a-l-9000">http://home.arcor.de/h-a-l-9000</a><br/>
+</td>
+</tr>
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<tr>
+<td bgcolor="e0e0e0">
+<a href="../readme.txt"><b>DOSBox readme file</b></a><br/>
+</td>
+</tr>
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<tr>
+<td bgcolor="e0e0e0">
+	<b>Dependencies</b> - These programs are needed for certain features of this build:<br><br>
+</td>
+</tr>
+
+<tr>
+<td bgcolor="e0e0e0">
+	<b>Porttalk</b> - <a href="http://www.beyondlogic.org/porttalk/porttalk.htm"> http://www.beyondlogic.org/porttalk/porttalk.htm</a> <br>
+	needed by Parallel Port Passthrough, OPL Passthrough
+</a>
+</td>
+</tr>
+
+<tr>
+<td bgcolor="e0e0e0">
+	<b>WinPCap</b> - <a href="http://www.winpcap.org/"> http://www.winpcap.org/</a> <br>
+needed by NE2000 Ethernet Passthrough
+</a>
+</td>
+</tr>
+
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<tr>
+<td bgcolor="e0e0e0">
+	<b>Modifications in this build:</b><br/>
+<ul>
+<li>Don't exit on unsupported fullscreen mode</li>
+<li>Console beep support</li>
+<li>Paging improvements (experimental)</li>
+<li>Timer and interrupt latency patch, fixes certain games</li>
+<li>Reduced CPU usage when idling in command line</li>
+<li>Add the 'IMGMAKE' command (creates disk images, type <b>imgmake -?</b> in DOSBox for info on this)</li>
+<li><a href="index.html#LINESCAN">Make vgaonly features availible to other graphics cards, allow scalers to work in scanline emulation modes when possible</a></li>
+<li>Free choice of wether 9-pixel wide characters should be used</li>
+<li>Add back config option for video memory size - up to 8MB = 1600x1200@32bpp</li>
+<li>Add <b>DATE</b> and <b>TIME</b> commands, midnight overflow, and host time synchronization (type <b>date /s</b> to activate)</li>
+<li>Add /B parameter support for the DIR command</li>
+<li><a href="db_ne2000.html">NE2000 Ethernet passthrough</a></li>
+<li><a href="index.html#OPLPASSTHROUGH">Real hardware OPL chip passthrough</a></li>
+<li><a href="pppatch.html">Parallel Port passthrough, file rediredtion and Virtual Printer patch, logging enabled</a></li>
+<li>Restart capability - ctrl+alt+POS1 or config -r [params] or FJMP F000:FFF0</li>
+<li>APM poweroff (Win95)</li>
+<li><a href="index.html#SERIAL">Serial FIFO support and logging capability enabled</a></li>
+<li><a href="index.html#VESA">Increase maximum resolution to 1600x1200, add lot's of highres VESA modes</a></li> <li>Fixes to S3 resolution handling, aspect ratio, enable LDGFXROM (loads video BIOSes, only useful for debugging)</li>
+<li>Weird video DAC support for the Transgression 2 Demo (tgr2 -hc), in vgaonly mode</li>
+<li>CGA video memory slowdown</li>
+<li>DOSBox can load while the splash screen displays</li>
+<li>FILES= adjustable by Kippesoep</li>
+</ul>
+</td>
+</tr>
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<tr>
+<td bgcolor="e0e0e0">
+<A NAME="LINESCAN"><b>Make vgaonly features availible to other graphics cards, allow scalers to work in scanline emulation modes when possible</b></a><br/>
+Adds the <b>linewise</b> and <b>multiscan</b> to the <b>[render]</b> section in dosbox.conf. They both control how many special display tricks will be supported by DOSBox, independent of the <b>machine</b> setting.<br>
+<table border=2>
+<tr><th>linewise</th><th>multiscan</th><th>scalers supported</th><th>output depth</th><th>realtime offset,<br/>raster palette</th><th>zooming /<br/>multiple resolutions</th></tr>
+<tr><td>false</td><td>false</td><td>yes</td><td>8bpp</td><td>no</td><td>no</td></tr>
+<tr><td>true</td><td>false</td><td>yes</td><td>16bpp</td><td>yes</td><td>no</td></tr>
+<tr><td>true</td><td>true</td><td>no</td><td>16bpp</td><td>yes</td><td>yes</td><td>same as machine=vgaonly</td></tr>
+
+</table>
+<br/>
+<b>realtime offset,raster palette</b> is used by
+Lemmings,
+<a href="http://www.pouet.net/prod.php?which=479">Panic Demo</a>,
+<a href="http://www.pouet.net/prod.php?which=3544">DoWhackaDo Demo</a>,
+Kelloggs,
+Psycho Pinball,
+<a href="http://www.pouet.net/prod.php?which=2997">Worldcharts</a>,
+<a href="http://www.pouet.net/prod.php?which=2074">Wish Demo</a> (use with <b>machine=svga_paradise</b>),
+... <br/>
+<b>zooming / multiple resolutions</b> used by
+<a href="http://www.pouet.net/prod.php?which=1355">GBU Demo</a>,
+<a href="http://www.pouet.net/prod.php?which=4220">Plasma Demo</a>,
+Party91 Demo,
+<a href="http://www.pouet.net/prod.php?which=2048">Copper Demo</a>,
+<a href="http://www.pouet.net/prod.php?which=1158">Magic Show Demo</a>,
+<a href="http://www.pouet.net/prod.php?which=3869">Magic Circle Demo</a>,
+... (most of these also use the mechanisms above too)
+
+</td>
+</tr>
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<tr>
+<td bgcolor="e0e0e0">
+<A NAME="OPLPASSTHROUGH"><b>Real hardware OPL chip passthrough</b></a><br/>
+Allows you to use a real hardware OPL chip. To activate, set <b>oplmode=hardware</b> and <b>hardwarebase=</b> to the address value of your real soundblaster in dosbox.conf. On Windows this feature reqires the porttalk driver, see the top of this page. 
+</td>
+</tr>
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<tr>
+<td bgcolor="e0e0e0">
+<A NAME="SERIAL"><b>Serial FIFO support and logging capability enabled</b></a><br/>
+It provides logging for the serial port. The log is stored in the subdirectory <b>capture</b>. It's useful for finding bugs in the emulation and for reverse-engineering old serial protocols.</li>
+To activate, add some of the following terms to the serialx config options:
+<ul>
+<li>dbgtr - adds traffic-related messages to the log</li>
+<li>dbgirq - interrupt messages</li>
+<li>dbgreg - register accesses from the DOS application</li>
+<li>dbgmd - changes on the modem control lines</li>
+<li>dbgaux - serial device specific messages</li>
+</ul>
+</li>
+Example: <br> <b>serial1=directserial reaport:com1 dbgirq dbgreg dbgtr dbgmd</b>
+
+</td>
+</tr>
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<tr>
+<td bgcolor="e0e0e0">
+<A NAME="VESA"><b>Increase maximum resolution to 1600x1200, add lot's of highres VESA modes</b></a><br/>
+Video memory size is increased to <b>4 Megabytes</b>.
+<br/>
+A list of supported VESA modes for <b>machine=SVGA_S3</b>:<br>
+<image src="images/db_vesamodes.png">
+</td>
+</tr>
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<!-- end of page -->
+
+</table>
+
+</body>
+
+</html>

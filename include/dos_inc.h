@@ -72,7 +72,8 @@ union bootSector {
 enum { MCB_FREE=0x0000,MCB_DOS=0x0008 };
 enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 
-#define DOS_FILES 127
+extern Bitu DOS_FILES;
+
 #define DOS_DRIVES 26
 #define DOS_DEVICES 10
 
@@ -93,7 +94,7 @@ enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 
 /* internal Dos Tables */
 
-extern DOS_File * Files[DOS_FILES];
+extern DOS_File ** Files;
 extern DOS_Drive * Drives[DOS_DRIVES];
 extern DOS_Device * Devices[DOS_DEVICES];
 
@@ -605,6 +606,7 @@ extern DOS_InfoBlock dos_infoblock;
 
 struct DOS_Block {
 	DOS_Date date;
+	bool hostdate;
 	DOS_Version version;
 	Bit16u firstMCB;
 	Bit16u errorcode;

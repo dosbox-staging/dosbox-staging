@@ -89,7 +89,7 @@ typedef struct {
 
 extern Render_t render;
 extern ScalerLineHandler_t RENDER_DrawLine;
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh);
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double scrn_ratio);
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);

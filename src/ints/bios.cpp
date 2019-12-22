@@ -31,6 +31,9 @@
 #include "mouse.h"
 #include "setup.h"
 #include "serialport.h"
+#include "parport.h"
+#include <time.h>
+#include <sys/timeb.h>
 
 
 /* if mem_systems 0 then size_extended is reported as the real size else 
@@ -38,6 +41,7 @@
  * counter using the BIOS_ZeroExtendedSize call */
 static Bit16u size_extended;
 static Bits other_memsystems=0;
+static bool apm_realmode_connected = false;
 void CMOS_SetRegister(Bitu regNr, Bit8u val); //For setting equipment word
 
 static Bitu INT70_Handler(void) {
@@ -308,11 +312,13 @@ static void TandyDAC_Handler(Bit8u tfunction) {
 }
 
 static Bitu INT1A_Handler(void) {
+	CALLBACK_SIF(true);
 	switch (reg_ah) {
 	case 0x00:	/* Get System time */
 		{
 			Bit32u ticks=mem_readd(BIOS_TIMER);
-			reg_al=0;		/* Midnight never passes :) */
+			reg_al=mem_readb(BIOS_24_HOURS_FLAG);
+			mem_writeb(BIOS_24_HOURS_FLAG,0); // reset the "flag"
 			reg_cx=(Bit16u)(ticks >> 16);
 			reg_dx=(Bit16u)(ticks & 0xffff);
 			break;
@@ -372,31 +378,69 @@ static Bitu INT11_Handler(void) {
 #ifndef DOSBOX_CLOCKSYNC
 #define DOSBOX_CLOCKSYNC 0
 #endif
-static Bitu INT8_Handler(void) {
-	/* Increase the bios tick counter */
-	Bit32u value = mem_readd(BIOS_TIMER) + 1;
-#if DOSBOX_CLOCKSYNC
-	static bool check = false;
-	if((value %50)==0) {
-		if(((value %100)==0) && check) {
-			check = false;
-			time_t curtime;struct tm *loctime;
-			curtime = time (NULL);loctime = localtime (&curtime);
-			Bit32u ticksnu = (Bit32u)((loctime->tm_hour*3600+loctime->tm_min*60+loctime->tm_sec)*(float)PIT_TICK_RATE/65536.0);
-			Bit32s bios = value;Bit32s tn = ticksnu;
-			Bit32s diff = tn - bios;
-			if(diff>0) {
-				if(diff < 18) { diff  = 0; } else diff = 9;
-			} else {
-				if(diff > -18) { diff = 0; } else diff = -9;
-			}
-	     
-			value += diff;
-		} else if((value%100)==50) check = true;
-	}
-#endif
-	mem_writed(BIOS_TIMER,value);
 
+static void BIOS_HostTimeSync() {
+	/* Setup time and date */
+	struct timeb timebuffer;
+	ftime(&timebuffer);
+	
+	struct tm *loctime;
+	loctime = localtime (&timebuffer.time);
+
+	/*
+	loctime->tm_hour = 23;
+	loctime->tm_min = 59;
+	loctime->tm_sec = 45;
+	loctime->tm_mday = 28;
+	loctime->tm_mon = 2-1;
+	loctime->tm_year = 2007 - 1900;
+	*/
+
+	dos.date.day=(Bit8u)loctime->tm_mday;
+	dos.date.month=(Bit8u)loctime->tm_mon+1;
+	dos.date.year=(Bit16u)loctime->tm_year+1900;
+
+	Bit32u ticks=(Bit32u)(((double)(
+		loctime->tm_hour*3600*1000+
+		loctime->tm_min*60*1000+
+		loctime->tm_sec*1000+
+		timebuffer.millitm))*(((double)PIT_TICK_RATE/65536.0)/1000.0));
+	mem_writed(BIOS_TIMER,ticks);
+}
+
+static Bitu INT8_Handler(void) {
+	if(dos.hostdate) BIOS_HostTimeSync();
+	else {
+		/* Increase the bios tick counter */
+		Bit32u value = mem_readd(BIOS_TIMER) + 1;
+		if(value >= 0x1800B0) {
+			// time wrap at midnight
+			mem_writeb(BIOS_24_HOURS_FLAG,mem_readb(BIOS_24_HOURS_FLAG)+1);
+			value=0;
+		}
+
+#if DOSBOX_CLOCKSYNC
+		static bool check = false;
+		if((value %50)==0) {
+			if(((value %100)==0) && check) {
+				check = false;
+				time_t curtime;struct tm *loctime;
+				curtime = time (NULL);loctime = localtime (&curtime);
+				Bit32u ticksnu = (Bit32u)((loctime->tm_hour*3600+loctime->tm_min*60+loctime->tm_sec)*(float)PIT_TICK_RATE/65536.0);
+				Bit32s bios = value;Bit32s tn = ticksnu;
+				Bit32s diff = tn - bios;
+				if(diff>0) {
+					if(diff < 18) { diff  = 0; } else diff = 9;
+				} else {
+					if(diff > -18) { diff = 0; } else diff = -9;
+				}
+		     
+				value += diff;
+			} else if((value%100)==50) check = true;
+		}
+#endif
+		mem_writed(BIOS_TIMER,value);
+	}
 	/* decrease floppy motor timer */
 	Bit8u val = mem_readb(BIOS_DISK_MOTOR_TIMEOUT);
 	if (val) mem_writeb(BIOS_DISK_MOTOR_TIMEOUT,val-1);
@@ -416,20 +460,31 @@ static Bitu INT12_Handler(void) {
 }
 
 static Bitu INT17_Handler(void) {
-	LOG(LOG_BIOS,LOG_NORMAL)("INT17:Function %X",reg_ah);
+	if (reg_ah > 0x2 || reg_dx > 0x2) {	// 0-2 printer port functions
+										// and no more than 3 parallel ports
+		LOG_MSG("BIOS INT17: Unhandled call AH=%2X DX=%4x",reg_ah,reg_dx);
+		return CBRET_NONE;
+	}
+
 	switch(reg_ah) {
-	case 0x00:		/* PRINTER: Write Character */
-		reg_ah=1;	/* Report a timeout */
+	case 0x00:		// PRINTER: Write Character
+		if(parallelPortObjects[reg_dx]!=0) {
+			if(parallelPortObjects[reg_dx]->Putchar(reg_al))
+				reg_ah=parallelPortObjects[reg_dx]->getPrinterStatus();
+			else reg_ah=1;
+		}
 		break;
-	case 0x01:		/* PRINTER: Initialize port */
+	case 0x01:		// PRINTER: Initialize port
+		if(parallelPortObjects[reg_dx]!= 0) {
+			parallelPortObjects[reg_dx]->initialize();
+			reg_ah=parallelPortObjects[reg_dx]->getPrinterStatus();
+		}
 		break;
-	case 0x02:		/* PRINTER: Get Status */
-		reg_ah=0;	
+	case 0x02:		// PRINTER: Get Status
+		if(parallelPortObjects[reg_dx] != 0)
+			reg_ah=parallelPortObjects[reg_dx]->getPrinterStatus();
+		//LOG_MSG("printer status: %x",reg_ah);
 		break;
-	case 0x20:		/* Some sort of printerdriver install check*/
-		break;
-	default:
-		E_Exit("Unhandled INT 17 call %2X",reg_ah);
 	};
 	return CBRET_NONE;
 }
@@ -788,6 +843,118 @@ static Bitu INT15_Handler(void) {
 		LOG(LOG_BIOS,LOG_NORMAL)("INT15:Function %X called, bios mouse not supported",reg_ah);
 		CALLBACK_SCF(true);
 		break;
+	case 0x53: // APM BIOS
+		switch(reg_al) {
+		case 0x00: // installation check
+			reg_ah = 1;			// APM 1.2
+			reg_al = 2;
+			reg_bx = 0x504d;	// 'PM'
+			reg_cx = 0;			// about no capabilities 
+			// 32-bit interface seems to be needed for standby in win95
+			break;
+		case 0x01: // connect real mode interface
+			if(reg_bx != 0x0) {
+				reg_ah = 0x09;	// unrecognized device ID
+				CALLBACK_SCF(true);			
+				break;
+			}
+			if(!apm_realmode_connected) { // not yet connected
+				CALLBACK_SCF(false);
+				apm_realmode_connected=true;
+			} else {
+				reg_ah = 0x02;	// interface connection already in effect
+				CALLBACK_SCF(true);			
+			}
+			break;
+		case 0x04: // DISCONNECT INTERFACE
+			if(reg_bx != 0x0) {
+				reg_ah = 0x09;	// unrecognized device ID
+				CALLBACK_SCF(true);			
+				break;
+			}
+			if(apm_realmode_connected) {
+				CALLBACK_SCF(false);
+				apm_realmode_connected=false;
+			} else {
+				reg_ah = 0x03;	// interface not connected
+				CALLBACK_SCF(true);			
+			}
+			break;
+		case 0x07:
+			if(reg_bx != 0x1) {
+				reg_ah = 0x09;	// wrong device ID
+				CALLBACK_SCF(true);			
+				break;
+			}
+			if(!apm_realmode_connected) {
+				reg_ah = 0x03;
+				CALLBACK_SCF(true);
+				break;
+			}
+			switch(reg_cx) {
+			case 0x3: // power off
+				throw(0);
+				break;
+			default:
+				reg_ah = 0x0A; // invalid parameter value in CX
+				CALLBACK_SCF(true);
+				break;
+			}
+			break;
+		case 0x08: // ENABLE/DISABLE POWER MANAGEMENT
+			if(reg_bx != 0x0 && reg_bx != 0x1) {
+				reg_ah = 0x09;	// unrecognized device ID
+				CALLBACK_SCF(true);			
+				break;
+			} else if(!apm_realmode_connected) {
+				reg_ah = 0x03;
+				CALLBACK_SCF(true);
+				break;
+			}
+			if(reg_cx==0x0) LOG_MSG("disable APM for device %4x",reg_bx);
+			else if(reg_cx==0x1) LOG_MSG("enable APM for device %4x",reg_bx);
+			else {
+				reg_ah = 0x0A; // invalid parameter value in CX
+				CALLBACK_SCF(true);
+			}
+			break;
+		case 0x0e:
+			if(reg_bx != 0x0) {
+				reg_ah = 0x09;	// unrecognized device ID
+				CALLBACK_SCF(true);			
+				break;
+			} else if(!apm_realmode_connected) {
+				reg_ah = 0x03;	// interface not connected
+				CALLBACK_SCF(true);
+				break;
+			}
+			if(reg_ah < 1) reg_ah = 1;
+			if(reg_al < 2) reg_al = 2;
+			CALLBACK_SCF(false);
+			break;
+		case 0x0f:
+			if(reg_bx != 0x0 && reg_bx != 0x1) {
+				reg_ah = 0x09;	// unrecognized device ID
+				CALLBACK_SCF(true);			
+				break;
+			} else if(!apm_realmode_connected) {
+				reg_ah = 0x03;
+				CALLBACK_SCF(true);
+				break;
+			}
+			if(reg_cx==0x0) LOG_MSG("disengage APM for device %4x",reg_bx);
+			else if(reg_cx==0x1) LOG_MSG("engage APM for device %4x",reg_bx);
+			else {
+				reg_ah = 0x0A; // invalid parameter value in CX
+				CALLBACK_SCF(true);
+			}
+			break;
+		default:
+			LOG(LOG_BIOS,LOG_NORMAL)("unknown APM BIOS call %x",reg_ax);
+			break;
+		}
+		CALLBACK_SCF(false);
+		break;
 	default:
 		LOG(LOG_BIOS,LOG_ERROR)("INT15:Unknown call %4X",reg_ax);
 		reg_ah=0x86;
@@ -800,9 +967,11 @@ static Bitu INT15_Handler(void) {
 	return CBRET_NONE;
 }
 
+void restart_program(std::vector<std::string> & parameters);
+
 static Bitu Reboot_Handler(void) {
 	// switch to text mode, notify user (let's hope INT10 still works)
-	const char* const text = "\n\n   Reboot requested, quitting now.";
+	const char* const text = "\n\n   Restart requested by application.";
 	reg_ax = 0;
 	CALLBACK_RunRealInt(0x10);
 	reg_ah = 0xe;
@@ -814,7 +983,8 @@ static Bitu Reboot_Handler(void) {
 	LOG_MSG(text);
 	double start = PIC_FullIndex();
 	while((PIC_FullIndex()-start)<3000) CALLBACK_Idle();
-	throw 1;
+	control->startup_params.insert(control->startup_params.begin(),control->cmdline->GetFileName());
+	restart_program(control->startup_params);
 	return CBRET_NONE;
 }
 
@@ -834,6 +1004,9 @@ public:
 	BIOS(Section* configuration):Module_base(configuration){
 		/* tandy DAC can be requested in tandy_sound.cpp by initializing this field */
 		bool use_tandyDAC=(real_readb(0x40,0xd4)==0xff);
+
+		// Disney workaround
+		Bit16u disney_port = mem_readw(BIOS_ADDRESS_LPT1);
 
 		/* Clear the Bios Data Area (0x400-0x5ff, 0x600- is accounted to DOS) */
 		for (Bit16u i=0;i<0x200;i++) real_writeb(0x40,i,0);
@@ -944,6 +1117,13 @@ public:
 		for(Bitu i = 0; i < strlen(b_date); i++) phys_writeb(0xffff5+i,b_date[i]);
 		phys_writeb(0xfffff,0x55); // signature
 
+		// program system timer
+		// timer 2
+		IO_Write(0x43,0xb6);
+		IO_Write(0x42,1320&0xff);
+		IO_Write(0x42,1320>>8);
+
+		// tandy DAC setup
 		tandy_sb.port=0;
 		tandy_dac.port=0;
 		if (use_tandyDAC) {
@@ -991,48 +1171,12 @@ public:
 		
 		// port timeouts
 		// always 1 second even if the port does not exist
-		mem_writeb(BIOS_LPT1_TIMEOUT,1);
-		mem_writeb(BIOS_LPT2_TIMEOUT,1);
-		mem_writeb(BIOS_LPT3_TIMEOUT,1);
+		BIOS_SetLPTPort(0, disney_port);
+		for(Bitu i = 1; i < 3; i++) BIOS_SetLPTPort(i, 0);
 		mem_writeb(BIOS_COM1_TIMEOUT,1);
 		mem_writeb(BIOS_COM2_TIMEOUT,1);
 		mem_writeb(BIOS_COM3_TIMEOUT,1);
 		mem_writeb(BIOS_COM4_TIMEOUT,1);
-		
-		/* detect parallel ports */
-		Bitu ppindex=0; // number of lpt ports
-		if ((IO_Read(0x378)!=0xff)|(IO_Read(0x379)!=0xff)) {
-			// this is our LPT1
-			mem_writew(BIOS_ADDRESS_LPT1,0x378);
-			ppindex++;
-			if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
-				// this is our LPT2
-				mem_writew(BIOS_ADDRESS_LPT2,0x278);
-				ppindex++;
-				if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
-					// this is our LPT3
-					mem_writew(BIOS_ADDRESS_LPT3,0x3bc);
-					ppindex++;
-				}
-			} else if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
-				// this is our LPT2
-				mem_writew(BIOS_ADDRESS_LPT2,0x3bc);
-				ppindex++;
-			}
-		} else if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
-			// this is our LPT1
-			mem_writew(BIOS_ADDRESS_LPT1,0x3bc);
-			ppindex++;
-			if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
-				// this is our LPT2
-				mem_writew(BIOS_ADDRESS_LPT2,0x278);
-				ppindex++;
-			}
-		} else if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
-			// this is our LPT1
-			mem_writew(BIOS_ADDRESS_LPT1,0x278);
-			ppindex++;
-		}
 
 		/* Setup equipment list */
 		// look http://www.bioscentral.com/misc/bda.htm
@@ -1040,11 +1184,6 @@ public:
 		//Bit16u config=0x4400;	//1 Floppy, 2 serial and 1 parallel 
 		Bit16u config = 0x0;
 		
-		// set number of parallel ports
-		// if(ppindex == 0) config |= 0x8000; // looks like 0 ports are not specified
-		//else if(ppindex == 1) config |= 0x0000;
-		if(ppindex == 2) config |= 0x4000;
-		else config |= 0xc000;	// 3 ports
 #if (C_FPU)
 		//FPU
 		config|=0x2;
@@ -1076,6 +1215,8 @@ public:
 		size_extended=IO_Read(0x71);
 		IO_Write(0x70,0x31);
 		size_extended|=(IO_Read(0x71) << 8);
+
+		BIOS_HostTimeSync();
 	}
 	~BIOS(){
 		/* abort DAC playing */
@@ -1126,6 +1267,33 @@ void BIOS_SetComPorts(Bit16u baseaddr[]) {
 	CMOS_SetRegister(0x14,(Bit8u)(equipmentword&0xff)); //Should be updated on changes
 }
 
+void BIOS_SetLPTPort(Bitu port, Bit16u baseaddr) {
+	switch(port) {
+	case 0:
+		mem_writew(BIOS_ADDRESS_LPT1,baseaddr);
+		mem_writeb(BIOS_LPT1_TIMEOUT, 10);
+		break;
+	case 1:
+		mem_writew(BIOS_ADDRESS_LPT2,baseaddr);
+		mem_writeb(BIOS_LPT2_TIMEOUT, 10);
+		break;
+	case 2:
+		mem_writew(BIOS_ADDRESS_LPT3,baseaddr);
+		mem_writeb(BIOS_LPT3_TIMEOUT, 10);
+		break;
+	}
+
+	// set equipment word: count ports
+	Bit16u portcount=0;
+	if(mem_readw(BIOS_ADDRESS_LPT1) != 0) portcount++;
+	if(mem_readw(BIOS_ADDRESS_LPT2) != 0) portcount++;
+	if(mem_readw(BIOS_ADDRESS_LPT3) != 0) portcount++;
+	
+	Bit16u equipmentword = mem_readw(BIOS_CONFIGURATION);
+	equipmentword &= (~0xC000);
+	equipmentword |= (portcount << 14);
+	mem_writew(BIOS_CONFIGURATION,equipmentword);
+}
 
 static BIOS* test;
 

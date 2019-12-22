@@ -702,6 +702,7 @@ static void DSP_Reset(void) {
 	DSP_FlushData();
 	sb.dsp.cmd_len=0;
 	sb.dsp.in.pos=0;
+	sb.dsp.out.pos=0;
 	sb.dsp.write_busy=0;
 	PIC_RemoveEvents(DSP_FinishReset);
 
@@ -1474,6 +1475,8 @@ static void SBLASTER_CallBack(Bitu len) {
 	}
 }
 
+extern void HARDOPL_Init(Bitu hardwareaddr, Bitu sbbase, bool isCMS);
+
 class SBLASTER: public Module_base {
 private:
 	/* Data */
@@ -1506,6 +1509,8 @@ private:
 		else if (!strcasecmp(omode,"opl2")) opl_mode=OPL_opl2;
 		else if (!strcasecmp(omode,"dualopl2")) opl_mode=OPL_dualopl2;
 		else if (!strcasecmp(omode,"opl3")) opl_mode=OPL_opl3;
+		else if (!strcasecmp(omode,"hardware")) opl_mode=OPL_hardware;
+		else if (!strcasecmp(omode,"hardwaregb")) opl_mode=OPL_hardwareCMS;
 		/* Else assume auto */
 		else {
 			switch (type) {
@@ -1545,8 +1550,9 @@ public:
 
 		sb.mixer.enabled=section->Get_bool("sbmixer");
 		sb.mixer.stereo=false;
-
+		OPL_Mode opl_mode = OPL_none;
 		Find_Type_And_Opl(section,sb.type,oplmode);
+		bool isCMSpassthrough = false;
 	
 		switch (oplmode) {
 		case OPL_none:
@@ -1562,6 +1568,12 @@ public:
 		case OPL_dualopl2:
 		case OPL_opl3:
 			OPL_Init(section,oplmode);
+			break;
+		case OPL_hardwareCMS:
+			isCMSpassthrough = true;
+		case OPL_hardware:
+			Bitu base = section->Get_hex("hardwarebase");
+			HARDOPL_Init(base, sb.hw.base, isCMSpassthrough);
 			break;
 		}
 		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
@@ -1626,9 +1638,11 @@ public:
 	}	
 }; //End of SBLASTER class
 
+extern void HWOPL_Cleanup();
 
 static SBLASTER* test;
 void SBLASTER_ShutDown(Section* /*sec*/) {
+	HWOPL_Cleanup();
 	delete test;	
 }
 

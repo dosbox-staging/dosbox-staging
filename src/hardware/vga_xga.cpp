@@ -896,6 +896,7 @@ void XGA_DrawPattern(Bitu val) {
 void XGA_DrawCmd(Bitu val, Bitu len) {
 	Bit16u cmd;
 	cmd = val >> 13;
+	if (val & 0x800) cmd |= 0x8; // S3 CMD bit 3
 #if XGA_SHOW_COMMAND_TRACE == 1
 	//LOG_MSG("XGA: Draw command %x", cmd);
 #endif

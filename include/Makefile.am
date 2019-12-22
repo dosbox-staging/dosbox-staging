@@ -23,6 +23,7 @@ mem.h \
 mixer.h \
 modules.h \
 mouse.h \
+parport.h \
 paging.h \
 pic.h \
 programs.h \
@@ -35,5 +36,7 @@ shell.h \
 support.h \
 timer.h \
 vga.h \
-video.h
+video.h \
+ne2000.h
+
 

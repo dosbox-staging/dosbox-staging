@@ -29,7 +29,7 @@
 #include "mapper.h"
 
 static void write_crtc_index_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
-	vga.other.index=(Bit8u)val;
+	vga.other.index=(Bit8u)(val & 0x1f);
 }
 
 static Bitu read_crtc_index_other(Bitu /*port*/,Bitu /*iolen*/) {
@@ -56,7 +56,7 @@ static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		break;
 	case 0x04:		//Vertical total
 		if (vga.other.vtotal ^ val) VGA_StartResize();
-		vga.other.vtotal=(Bit8u)val;
+		vga.other.vtotal=(Bit8u)(val&0x7f);
 		break;
 	case 0x05:		//Vertical display adjust
 		if (vga.other.vadjust ^ val) VGA_StartResize();
@@ -64,7 +64,7 @@ static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		break;
 	case 0x06:		//Vertical rows
 		if (vga.other.vdend ^ val) VGA_StartResize();
-		vga.other.vdend=(Bit8u)val;
+		vga.other.vdend=(Bit8u)(val&0x7f);
 		break;
 	case 0x07:		//Vertical sync position
 		vga.other.vsyncp=(Bit8u)val;
@@ -98,6 +98,7 @@ static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		vga.config.cursor_start|=(Bit8u)val;
 		break;
 	case 0x10:	/* Light Pen High */
+		// MC6845 datasheet says the light pen registers are only readable
 		vga.other.lightpen &= 0xff;
 		vga.other.lightpen |= (val & 0x3f)<<8;		// only 6 bits
 		break;

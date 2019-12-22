@@ -59,6 +59,7 @@ enum VGAModes {
 #define S3_XGA_640		0x40
 #define S3_XGA_800		0x80
 #define S3_XGA_1280		0xc0
+#define S3_XGA_1600		0x81
 #define S3_XGA_WMASK	(S3_XGA_640|S3_XGA_800|S3_XGA_1024|S3_XGA_1152|S3_XGA_1280)
 
 #define S3_XGA_8BPP  0x00
@@ -134,7 +135,6 @@ typedef struct {
 	Bitu lines_total;
 	Bitu vblank_skip;
 	Bitu lines_done;
-	Bitu lines_scaled;
 	Bitu split_line;
 	Bitu parts_total;
 	Bitu parts_lines;
@@ -149,11 +149,11 @@ typedef struct {
 		double vdend, vtotal;
 		double hdend, htotal;
 		double parts;
+		float singleline_delay;
 	} delay;
-	Bitu bpp;
-	double aspect_ratio;
-	bool double_scan;
-	bool doublewidth,doubleheight;
+	double screen_ratio;
+	double refresh;
+	bool doublescan_merging;
 	Bit8u font[64*1024];
 	Bit8u * font_tables[2];
 	Bitu blinking;
@@ -167,6 +167,12 @@ typedef struct {
 	} cursor;
 	Drawmode mode;
 	bool vret_triggered;
+	bool linewise_set;
+	bool linewise_effect;
+	bool multiscan_set;
+	bool multiscan_effect;
+	bool char9_set;
+	Bitu bpp;
 } VGA_Draw;
 
 typedef struct {
@@ -189,6 +195,7 @@ typedef struct {
 	Bit8u reg_3a; // 4/8/doublepixel bit in there
 	Bit8u reg_40; // 8415/A functionality register
 	Bit8u reg_41; // BIOS flags 
+	Bit8u reg_42; // CR42 Mode Control
 	Bit8u reg_43;
 	Bit8u reg_45; // Hardware graphics cursor
 	Bit8u reg_50;
@@ -341,6 +348,8 @@ typedef struct {
 	Bit8u combine[16];
 	RGBEntry rgb[0x100];
 	Bit16u xlat16[256];
+	Bit8u hidac_counter;
+	Bit8u reg02;
 } VGA_Dac;
 
 typedef struct {
@@ -382,6 +391,7 @@ typedef struct {
 
 typedef struct {
 	VGAModes mode;								/* The mode the vga system is in */
+	VGAModes lastmode;
 	Bit8u misc_output;
 	VGA_Draw draw;
 	VGA_Config config;

@@ -66,6 +66,12 @@ static void VGA_DAC_UpdateColor( Bitu index ) {
 }
 
 static void write_p3c6(Bitu port,Bitu val,Bitu iolen) {
+	if((IS_VGA_ARCH) && (svgaCard==SVGA_None) && (vga.dac.hidac_counter>3)) {
+		vga.dac.reg02=val;
+		vga.dac.hidac_counter=0;
+		VGA_StartResize();
+		return;
+	}
 	if ( vga.dac.pel_mask != val ) {
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:DCA:Pel Mask set to %X", val);
 		vga.dac.pel_mask = val;
@@ -76,11 +82,13 @@ static void write_p3c6(Bitu port,Bitu val,Bitu iolen) {
 
 
 static Bitu read_p3c6(Bitu port,Bitu iolen) {
+	vga.dac.hidac_counter++;
 	return vga.dac.pel_mask;
 }
 
 
 static void write_p3c7(Bitu port,Bitu val,Bitu iolen) {
+	vga.dac.hidac_counter=0;
 	vga.dac.read_index=val;
 	vga.dac.pel_index=0;
 	vga.dac.state=DAC_READ;
@@ -88,21 +96,25 @@ static void write_p3c7(Bitu port,Bitu val,Bitu iolen) {
 }
 
 static Bitu read_p3c7(Bitu port,Bitu iolen) {
+	vga.dac.hidac_counter=0;
 	if (vga.dac.state==DAC_READ) return 0x3;
 	else return 0x0;
 }
 
 static void write_p3c8(Bitu port,Bitu val,Bitu iolen) {
+	vga.dac.hidac_counter=0;
 	vga.dac.write_index=val;
 	vga.dac.pel_index=0;
 	vga.dac.state=DAC_WRITE;
 }
 
 static Bitu read_p3c8(Bitu port, Bitu iolen){
+	vga.dac.hidac_counter=0;
 	return vga.dac.write_index;
 }
 
 static void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
+	vga.dac.hidac_counter=0;
 	val&=0x3f;
 	switch (vga.dac.pel_index) {
 	case 0:
@@ -147,6 +159,7 @@ static void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
 }
 
 static Bitu read_p3c9(Bitu port,Bitu iolen) {
+	vga.dac.hidac_counter=0;
 	Bit8u ret;
 	switch (vga.dac.pel_index) {
 	case 0:
@@ -178,8 +191,9 @@ void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal) {
 	case M_LIN8:
 		break;
 	case M_VGA:
-		// used by copper demo; almost no video card seems to suport it
-		if(!IS_VGA_ARCH || (svgaCard!=SVGA_None)) break;
+		// used by copper demo; almost no video card seems to support it
+		// Update: supported by ET4000AX (and not by ET4000AF)
+		if(!vga.draw.linewise_effect) break;
 	default:
 		VGA_DAC_SendColor( attr, pal );
 	}
@@ -203,6 +217,8 @@ void VGA_SetupDAC(void) {
 	vga.dac.state=DAC_READ;
 	vga.dac.read_index=0;
 	vga.dac.write_index=0;
+	vga.dac.hidac_counter=0;
+	vga.dac.reg02=0;
 	if (IS_VGA_ARCH) {
 		/* Setup the DAC IO port Handlers */
 		IO_RegisterWriteHandler(0x3c6,write_p3c6,IO_MB);

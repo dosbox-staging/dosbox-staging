@@ -144,7 +144,7 @@
 		break;
 	CASE_0F_B(0x08)												/* INVD */
 	CASE_0F_B(0x09)												/* WBINVD */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 		if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 		break;
 	CASE_0F_B(0x20)												/* MOV Rd.CRx */
@@ -227,7 +227,7 @@
 		break;
 	CASE_0F_B(0x31)												/* RDTSC */
 		{
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW) goto illegal_opcode;
+			if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUM) goto illegal_opcode;
 			Bit64s tsc=(Bit64s)(PIC_FullIndex()*(double)CPU_CycleMax);
 			reg_edx=(Bit32u)(tsc>>32);
 			reg_eax=(Bit32u)(tsc&0xffffffff);
@@ -358,7 +358,7 @@
 		break;
 	CASE_0F_B(0xb0) 										/* cmpxchg Eb,Gb */
 		{
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 			FillFlags();
 			GetRMrb;
 			if (rm >= 0xc0 ) {
@@ -386,7 +386,7 @@
 		}
 	CASE_0F_W(0xb1) 									/* cmpxchg Ew,Gw */
 		{
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 			FillFlags();
 			GetRMrw;
 			if (rm >= 0xc0 ) {
@@ -574,7 +574,7 @@
 		}
 	CASE_0F_B(0xc0)												/* XADD Gb,Eb */
 		{
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 			GetRMrb;Bit8u oldrmrb=*rmrb;
 			if (rm >= 0xc0 ) {GetEArb;*rmrb=*earb;*earb+=oldrmrb;}
 			else {GetEAa;*rmrb=LoadMb(eaa);SaveMb(eaa,LoadMb(eaa)+oldrmrb);}
@@ -582,34 +582,34 @@
 		}
 	CASE_0F_W(0xc1)												/* XADD Gw,Ew */
 		{
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 			GetRMrw;Bit16u oldrmrw=*rmrw;
 			if (rm >= 0xc0 ) {GetEArw;*rmrw=*earw;*earw+=oldrmrw;}
 			else {GetEAa;*rmrw=LoadMw(eaa);SaveMw(eaa,LoadMw(eaa)+oldrmrw);}
 			break;
 		}
 	CASE_0F_W(0xc8)												/* BSWAP AX */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 		BSWAPW(reg_ax);break;
 	CASE_0F_W(0xc9)												/* BSWAP CX */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 		BSWAPW(reg_cx);break;
 	CASE_0F_W(0xca)												/* BSWAP DX */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 		BSWAPW(reg_dx);break;
 	CASE_0F_W(0xcb)												/* BSWAP BX */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 		BSWAPW(reg_bx);break;
 	CASE_0F_W(0xcc)												/* BSWAP SP */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 		BSWAPW(reg_sp);break;
 	CASE_0F_W(0xcd)												/* BSWAP BP */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 		BSWAPW(reg_bp);break;
 	CASE_0F_W(0xce)												/* BSWAP SI */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 		BSWAPW(reg_si);break;
 	CASE_0F_W(0xcf)												/* BSWAP DI */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegal_opcode;
 		BSWAPW(reg_di);break;
 		

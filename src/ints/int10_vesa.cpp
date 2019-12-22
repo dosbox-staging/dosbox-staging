@@ -143,7 +143,6 @@ foundit:
 	switch (mblock->type) {
 	case M_LIN4:
 		pageSize = mblock->sheight * mblock->swidth/2;
-		pageSize = (pageSize | 15) & ~ 15;
 		var_write(&minfo.BytesPerScanLine,mblock->swidth/8);
 		var_write(&minfo.NumberOfPlanes,0x4);
 		var_write(&minfo.BitsPerPixel,4);
@@ -152,7 +151,6 @@ foundit:
 		break;
 	case M_LIN8:
 		pageSize = mblock->sheight * mblock->swidth;
-		pageSize = (pageSize | 15) & ~ 15;
 		var_write(&minfo.BytesPerScanLine,mblock->swidth);
 		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,8);
@@ -162,7 +160,6 @@ foundit:
 		break;
 	case M_LIN15:
 		pageSize = mblock->sheight * mblock->swidth*2;
-		pageSize = (pageSize | 15) & ~ 15;
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
 		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,15);
@@ -180,7 +177,6 @@ foundit:
 		break;
 	case M_LIN16:
 		pageSize = mblock->sheight * mblock->swidth*2;
-		pageSize = (pageSize | 15) & ~ 15;
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
 		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,16);
@@ -196,7 +192,6 @@ foundit:
 		break;
 	case M_LIN32:
 		pageSize = mblock->sheight * mblock->swidth*4;
-		pageSize = (pageSize | 15) & ~ 15;
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*4);
 		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,32);
@@ -214,7 +209,6 @@ foundit:
 		break;
 /*	case M_TEXT:
 		pageSize = mblock->sheight/8 * mblock->swidth*2/8;
-		pageSize = (pageSize | 15) & ~ 15;
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*2/8);
 		var_write(&minfo.NumberOfPlanes,0x4);
 		var_write(&minfo.BitsPerPixel,4);
@@ -225,7 +219,11 @@ foundit:
 		return 0x1;
 	}
 	var_write(&minfo.WinAAttributes,0x7);	// Exists/readable/writable
-	
+	if(pageSize & 0xFFFF) {
+		// UniVBE likes it 64k-aligned
+		pageSize += 0x10000;
+		pageSize &= ~0xFFFF;
+	}
 	if(pageSize > vga.vmemsize) {
 		// Mode not supported by current hardware configuration
 		var_write(&minfo.ModeAttributes, modeAttributes & ~0x1);
@@ -453,6 +451,8 @@ static Bitu VESA_PMSetPalette(void) {
 	return 0;
 }
 static Bitu VESA_PMSetStart(void) {
+	// Note this function has a second part in the callback:
+	// wait for retrace in case bl==0x80
 	Bit32u start = (reg_dx << 16) | reg_cx;
 	vga.config.display_start = start;
 	return 0;
@@ -508,7 +508,7 @@ void INT10_SetupVESA(void) {
 	int10.rom.pmode_interface_start = int10.rom.used - RealOff( int10.rom.pmode_interface );
 	phys_writew( Real2Phys(int10.rom.pmode_interface) + 2, int10.rom.pmode_interface_start);
 	callback.pmStart=CALLBACK_Allocate();
-	int10.rom.used += (Bit16u)CALLBACK_Setup(callback.pmStart, VESA_PMSetStart, CB_RETN, PhysMake(0xc000,int10.rom.used), "VESA PM Set Start");
+	int10.rom.used += (Bit16u)CALLBACK_Setup(callback.pmStart, VESA_PMSetStart, CB_VESA_START, PhysMake(0xc000,int10.rom.used), "VESA PM Set Start");
 	/* PM Set Palette call */
 	int10.rom.pmode_interface_palette = int10.rom.used - RealOff( int10.rom.pmode_interface );
 	phys_writew( Real2Phys(int10.rom.pmode_interface) + 4, int10.rom.pmode_interface_palette);

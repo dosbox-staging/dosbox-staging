@@ -746,6 +746,10 @@ public:
 				}
 			}
 		} else {
+			if((bootarea.rawdata[0]==0) && (bootarea.rawdata[1]==0)) {
+				WriteOut_NoParsing("PROGRAM_BOOT_UNABLE");
+				return;
+			}
 			disable_umb_ems_xms();
 			void RemoveEMSPageFrame(void);
 			RemoveEMSPageFrame();
@@ -778,7 +782,7 @@ static void BOOT_ProgramStart(Program * * make) {
 }
 
 
-#if C_DEBUG
+//#if C_DEBUG
 class LDGFXROM : public Program {
 public:
 	void Run(void) {
@@ -831,8 +835,544 @@ public:
 static void LDGFXROM_ProgramStart(Program * * make) {
 	*make=new LDGFXROM;
 }
+//#endif
+
+const Bit8u freedos_mbr[] = {
+	0x33,0xC0,0x8E,0xC0,0x8E,0xD8,0x8E,0xD0,0xBC,0x00,0x7C,0xFC,0x8B,0xF4,0xBF,0x00, 
+	0x06,0xB9,0x00,0x01,0xF2,0xA5,0xEA,0x67,0x06,0x00,0x00,0x8B,0xD5,0x58,0xA2,0x4F, // 10h
+	0x07,0x3C,0x35,0x74,0x23,0xB4,0x10,0xF6,0xE4,0x05,0xAE,0x04,0x8B,0xF0,0x80,0x7C, // 20h
+	0x04,0x00,0x74,0x44,0x80,0x7C,0x04,0x05,0x74,0x3E,0xC6,0x04,0x80,0xE8,0xDA,0x00, 
+	0x8A,0x74,0x01,0x8B,0x4C,0x02,0xEB,0x08,0xE8,0xCF,0x00,0xB9,0x01,0x00,0x32,0xD1, // 40h
+	0xBB,0x00,0x7C,0xB8,0x01,0x02,0xCD,0x13,0x72,0x1E,0x81,0xBF,0xFE,0x01,0x55,0xAA, 
+	0x75,0x16,0xEA,0x00,0x7C,0x00,0x00,0x80,0xFA,0x81,0x74,0x02,0xB2,0x80,0x8B,0xEA, 
+	0x42,0x80,0xF2,0xB3,0x88,0x16,0x41,0x07,0xBF,0xBE,0x07,0xB9,0x04,0x00,0xC6,0x06, 
+	0x34,0x07,0x31,0x32,0xF6,0x88,0x2D,0x8A,0x45,0x04,0x3C,0x00,0x74,0x23,0x3C,0x05, // 80h
+	0x74,0x1F,0xFE,0xC6,0xBE,0x31,0x07,0xE8,0x71,0x00,0xBE,0x4F,0x07,0x46,0x46,0x8B, 
+	0x1C,0x0A,0xFF,0x74,0x05,0x32,0x7D,0x04,0x75,0xF3,0x8D,0xB7,0x7B,0x07,0xE8,0x5A, 
+	0x00,0x83,0xC7,0x10,0xFE,0x06,0x34,0x07,0xE2,0xCB,0x80,0x3E,0x75,0x04,0x02,0x74, 
+	0x0B,0xBE,0x42,0x07,0x0A,0xF6,0x75,0x0A,0xCD,0x18,0xEB,0xAC,0xBE,0x31,0x07,0xE8, 
+	0x39,0x00,0xE8,0x36,0x00,0x32,0xE4,0xCD,0x1A,0x8B,0xDA,0x83,0xC3,0x60,0xB4,0x01, 
+	0xCD,0x16,0xB4,0x00,0x75,0x0B,0xCD,0x1A,0x3B,0xD3,0x72,0xF2,0xA0,0x4F,0x07,0xEB, 
+	0x0A,0xCD,0x16,0x8A,0xC4,0x3C,0x1C,0x74,0xF3,0x04,0xF6,0x3C,0x31,0x72,0xD6,0x3C, 
+	0x35,0x77,0xD2,0x50,0xBE,0x2F,0x07,0xBB,0x1B,0x06,0x53,0xFC,0xAC,0x50,0x24,0x7F, //100h
+	0xB4,0x0E,0xCD,0x10,0x58,0xA8,0x80,0x74,0xF2,0xC3,0x56,0xB8,0x01,0x03,0xBB,0x00, //110h
+	0x06,0xB9,0x01,0x00,0x32,0xF6,0xCD,0x13,0x5E,0xC6,0x06,0x4F,0x07,0x3F,0xC3,0x0D, //120h
+	0x8A,0x0D,0x0A,0x46,0x35,0x20,0x2E,0x20,0x2E,0x20,0x2E,0xA0,0x64,0x69,0x73,0x6B, 
+	0x20,0x32,0x0D,0x0A,0x0A,0x44,0x65,0x66,0x61,0x75,0x6C,0x74,0x3A,0x20,0x46,0x31, //140h
+	0xA0,0x00,0x01,0x00,0x04,0x00,0x06,0x03,0x07,0x07,0x0A,0x0A,0x63,0x0E,0x64,0x0E, 
+	0x65,0x14,0x80,0x19,0x81,0x19,0x82,0x19,0x83,0x1E,0x93,0x24,0xA5,0x2B,0x9F,0x2F, 
+	0x75,0x33,0x52,0x33,0xDB,0x36,0x40,0x3B,0xF2,0x41,0x00,0x44,0x6F,0xF3,0x48,0x70, 
+	0x66,0xF3,0x4F,0x73,0xB2,0x55,0x6E,0x69,0xF8,0x4E,0x6F,0x76,0x65,0x6C,0xEC,0x4D, //180h
+	0x69,0x6E,0x69,0xF8,0x4C,0x69,0x6E,0x75,0xF8,0x41,0x6D,0x6F,0x65,0x62,0xE1,0x46, 
+	0x72,0x65,0x65,0x42,0x53,0xC4,0x42,0x53,0x44,0xE9,0x50,0x63,0x69,0xF8,0x43,0x70, 
+	0xED,0x56,0x65,0x6E,0x69,0xF8,0x44,0x6F,0x73,0x73,0x65,0xE3,0x3F,0xBF,0x00,0x00, //1B0h
+	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 
+	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 
+	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 
+	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x55,0xAA
+	};
+#ifdef WIN32
+#include <winioctl.h>
 #endif
 
+class IMGMAKE : public Program {
+public:
+#ifdef WIN32
+	bool OpenDisk(HANDLE* f, OVERLAPPED* o, Bit8u* name) {
+		o->hEvent = INVALID_HANDLE_VALUE;
+		*f = CreateFile( (LPCSTR)name, GENERIC_READ | GENERIC_WRITE,
+			0,    // exclusive access 
+			NULL, // default security attributes 
+			OPEN_EXISTING,
+			FILE_FLAG_OVERLAPPED,
+			NULL );
+
+		if (*f == INVALID_HANDLE_VALUE) return false;
+
+		// init OVERLAPPED 
+		o->Internal = 0;
+		o->InternalHigh = 0;
+		o->Offset = 0;
+		o->OffsetHigh = 0;
+		o->hEvent = CreateEvent(
+			NULL,   // default security attributes 
+			TRUE,   // manual-reset event 
+			FALSE,  // not signaled 
+			NULL    // no name
+			);
+		return true;
+	}
+
+	void CloseDisk(HANDLE f, OVERLAPPED* o) {
+		if(f != INVALID_HANDLE_VALUE) CloseHandle(f);
+		if(o->hEvent != INVALID_HANDLE_VALUE) CloseHandle(o->hEvent);
+	}
+
+	bool StartReadDisk(HANDLE f, OVERLAPPED* o, Bit8u* buffer, Bitu offset, Bitu size) { 
+		o->Offset = offset;
+		if (!ReadFile(f, buffer, size, NULL, o) && 
+			(GetLastError()==ERROR_IO_PENDING)) return true;
+		return false;
+	}
+
+	// 0=still waiting, 1=catastrophic faliure, 2=success, 3=sector not found, 4=crc error 
+	Bitu CheckDiskReadComplete(HANDLE f, OVERLAPPED* o) {
+		DWORD numret;
+		BOOL b = GetOverlappedResult( f, o, &numret,false); 
+		if(b) return 2;
+		else {
+			int error = GetLastError();
+			if(error==ERROR_IO_INCOMPLETE)			return 0;
+			if(error==ERROR_FLOPPY_UNKNOWN_ERROR)	return 5;
+			if(error==ERROR_CRC)					return 4;
+			if(error==ERROR_SECTOR_NOT_FOUND)		return 3;
+			return 1;	
+		}
+	}
+
+	Bitu ReadDisk(FILE* f, Bit8u driveletter, Bitu retries_max) {
+		unsigned char data[36*2*512];
+		HANDLE hFloppy;
+		DWORD numret;
+		OVERLAPPED o;
+		DISK_GEOMETRY geom;
+
+		Bit8u drivestring[] = "\\\\.\\x:"; drivestring[4]=driveletter;
+		if(!OpenDisk(&hFloppy, &o, drivestring)) return false;
+
+		// get drive geom
+		DeviceIoControl( hFloppy, IOCTL_DISK_GET_DRIVE_GEOMETRY,NULL,0,
+		&geom,sizeof(DISK_GEOMETRY),&numret,NULL);
+
+		switch(geom.MediaType) {
+			case F5_1Pt2_512: case F3_1Pt44_512: case F3_2Pt88_512:	case F3_720_512:
+			case F5_360_512: case F5_320_512: case F5_180_512: case F5_160_512:
+				break;
+			default:
+				CloseDisk(hFloppy,&o);
+				return false;
+		}
+		Bitu total_sect_per_cyl = geom.SectorsPerTrack * geom.TracksPerCylinder;
+		Bitu cyln_size = 512 * total_sect_per_cyl;
+		
+		WriteOut(MSG_Get("PROGRAM_IMGMAKE_FLREAD"),
+			geom.Cylinders.LowPart,geom.TracksPerCylinder,
+			geom.SectorsPerTrack,(cyln_size*geom.Cylinders.LowPart)/1024);
+		WriteOut(MSG_Get("PROGRAM_IMGMAKE_FLREAD2"));
+			
+		for(Bitu i = 0; i < geom.Cylinders.LowPart; i++) {
+			Bitu result;
+			// for each cylinder
+			WriteOut("%2u",i);
+
+			if(!StartReadDisk(hFloppy, &o, &data[0], cyln_size*i, cyln_size)){
+				CloseDisk(hFloppy,&o);
+				return false;
+			}
+			do {
+				result = CheckDiskReadComplete(hFloppy, &o);
+				CALLBACK_Idle();
+			}
+			while (result==0);
+
+			switch(result) {
+			case 1:
+				CloseDisk(hFloppy,&o);
+				return false;
+			case 2: // success
+				for(Bitu m=0; m < cyln_size/512; m++) WriteOut("\xdb");
+				break;
+			case 3:
+			case 4: // data errors
+			case 5:
+				for(Bitu k=0; k < total_sect_per_cyl; k++) {
+					Bitu retries=retries_max;
+restart_int:
+					StartReadDisk(hFloppy, &o, &data[512*k], cyln_size*i + 512*k, 512);
+					do {
+						result = CheckDiskReadComplete(hFloppy, &o);
+						CALLBACK_Idle();
+					}
+					while (result==0);
+										
+					switch(result) {
+					case 1: // bad error
+						CloseDisk(hFloppy,&o);
+						return false;
+					case 2: // success
+						if(retries==retries_max) WriteOut("\xdb");
+						else WriteOut("\b\b\b\xb1");
+						break;
+					case 3:
+					case 4: // read errors
+					case 5:
+						if(retries!=retries_max) WriteOut("\b\b\b");
+						retries--;
+						switch(result) {
+							case 3: WriteOut("x");
+							case 4: WriteOut("!");
+							case 5: WriteOut("?");
+						}
+						WriteOut("%2d",retries);
+
+						if(retries)	goto restart_int;
+						const Bit8u badfood[]="IMGMAKE BAD FLOPPY SECTOR \xBA\xAD\xF0\x0D";
+						for(Bitu z = 0; z < 512/32; z++)
+							memcpy(&data[512*k+z*32],badfood,32);
+						WriteOut("\b\b");
+						break;
+					}
+				}
+				break;
+			}
+			fwrite(data, 512, total_sect_per_cyl, f);
+			WriteOut("%2x%2x\n", data[0], data[1]);
+		}
+		// seek to 0
+		StartReadDisk(hFloppy, &o, &data[0], 0, 512);
+		CloseDisk(hFloppy,&o);
+		return true;
+	}
+#endif
+
+	void Run(void) {
+		std::string disktype;
+		std::string src;
+		std::string filename;
+		std::string path = "";
+		std::string dpath;
+
+		Bitu c, h, s, sectors; 
+		Bit64u size = 0;
+
+		if(cmd->FindExist("-?")) {
+			printHelp();
+			return;
+		}
+
+		// temp_line is the filename
+		if (!(cmd->FindCommand(1, temp_line))) {
+			printHelp();
+			return;
+		}
+/*
+		this stuff is too frustrating
+
+		// when only a filename is passed try to create the file on the current DOS path
+		// if directory+filename are passed first see if directory is a host path, if not
+		// maybe it is a DOSBox path.
+		
+		// split filename and path
+		Bitu spos = temp_line.rfind('\\');
+		if(spos==std::string::npos) {
+			temp_line.rfind('/');
+		}
+
+		if(spos==std::string::npos) {
+			// no path separator
+			filename=temp_line;
+		} else {
+			path=temp_line.substr(0,spos);
+			filename=temp_line.substr(spos+1,std::string::npos);
+		}
+		if(filename=="") 
+
+		char tbuffer[DOS_PATHLENGTH]= { 0 };
+		if(path=="") {
+			if(!DOS_GetCurrentDir(DOS_GetDefaultDrive()+1,tbuffer)){
+				printHelp();
+				return;
+			}
+			dpath=(std::string)tbuffer;
+		}		
+		WriteOut("path %s, filename %s, dpath %s",
+			path.c_str(),filename.c_str(),dpath.c_str());
+		return;
+*/
+			
+		// don't trash user's files
+		FILE* f = fopen(temp_line.c_str(),"r");
+		if(f) {
+			fclose(f);
+			WriteOut(MSG_Get("PROGRAM_IMGMAKE_FILE_EXISTS"),temp_line.c_str());
+			return;
+		}
+#ifdef WIN32
+		// read from real floppy?
+		if(cmd->FindString("-source",src)) {
+			Bits retries = 10;
+			cmd->FindInt("-retries",retries);
+			if((retries < 1)||(retries > 99))  {
+				printHelp();
+				return;
+			}
+			if((src.length()!=1) || !isalpha(src.c_str()[0])) {
+				// only one letter allowed
+				printHelp();
+				return;
+			}
+			f = fopen(temp_line.c_str(),"wb+");
+			if (!f) {
+				WriteOut(MSG_Get("PROGRAM_IMGMAKE_CANNOT_WRITE"),temp_line.c_str());
+				return;
+			}
+			// maybe delete f if it failed?
+			if(!ReadDisk(f, src.c_str()[0],retries))
+				WriteOut(MSG_Get("PROGRAM_IMGMAKE_CANT_READ_FLOPPY"));
+            fclose(f);
+			return;
+		}
+#endif
+		// disk type
+		if (!(cmd->FindString("-t",disktype))) {
+			printHelp();
+			return;
+		}
+
+		Bit8u mediadesc = 0xF8; // media descriptor byte; also used to differ fd and hd
+		Bitu root_ent = 512; // FAT root directory entries: 512 is for harddisks
+		if(disktype=="fd_160") {
+			c = 40; h = 1; s = 8; mediadesc = 0xFE; root_ent = 56; // root_ent?
+		} else if(disktype=="fd_180") {
+			c = 40; h = 1; s = 9; mediadesc = 0xFC; root_ent = 56; // root_ent?
+		} else if(disktype=="fd_200") {
+			c = 40; h = 1; s = 10; mediadesc = 0xFC; root_ent = 56; // root_ent?
+		} else if(disktype=="fd_320") {
+			c = 40; h = 2; s = 8; mediadesc = 0xFF; root_ent = 112; // root_ent?
+		} else if(disktype=="fd_360") {
+			c = 40; h = 2; s = 9; mediadesc = 0xFD; root_ent = 112;
+		} else if(disktype=="fd_400") {
+			c = 40; h = 2; s = 10; mediadesc = 0xFD; root_ent = 112; // root_ent?
+		} else if(disktype=="fd_720") {
+			c = 80; h = 2; s = 9; mediadesc = 0xF9; root_ent = 112;
+		} else if(disktype=="fd_1200") {
+			c = 80; h = 2; s = 15; mediadesc = 0xF9; root_ent = 224;
+		} else if(disktype=="fd_1440") {
+			c = 80; h = 2; s = 18; mediadesc = 0xF0; root_ent = 224;
+		} else if(disktype=="fd_2880") {
+			c = 80; h = 2; s = 36; mediadesc = 0xF0; root_ent = 512; // root_ent?
+		} else if(disktype=="hd_520") {
+			c = 1023; h = 16; s = 63;
+		} else if(disktype=="hd_2gig") {
+			c = 1023; h = 64; s = 63;
+		//} else if(disktype=="hd_4gig") { // fseek only supports 2gb
+		//	c = 1023; h = 130; s = 63;
+		} else if(disktype=="hd_st251") { // old 40mb drive
+			c = 820; h = 6; s = 17;
+		} else if(disktype=="hd_st225") { // even older 20mb drive
+			c = 615; h = 4; s = 17;
+		} else if(disktype=="hd") { 
+			// get size from parameter
+			std::string isize;
+			if (!(cmd->FindString("-size",isize))) {
+				// maybe -chs?
+				if (!(cmd->FindString("-chs",isize))){
+						// user forgot -size and -chs
+						printHelp();
+						return;
+					}
+				else {
+					// got chs data: -chs 1023,16,63
+					if(sscanf(isize.c_str(),"%u,%u,%u",&c,&h,&s) != 3) {
+						printHelp();
+						return;
+					}
+					// sanity-check chs values
+					if((h>256)||(c>1023)||(s>63)) {
+						printHelp();
+						return;
+					}
+					size = c*h*s*512;
+					if((size < 3*1024*1024) || (size > 0x7FFFFFFF)) {
+						// user picked geometry resulting in wrong size
+						printHelp();
+						return;
+					}
+				}
+			} else {
+				// got -size
+				std::istringstream stream(isize);
+				stream >> size;
+				size *= 1024*1024; // size in megabytes
+				// low limit: 3 megs, high limit: 2 gigs
+				// Int13 limit would be 8 gigs
+				if((size < 3*1024*1024) || (size > 0x7FFFFFFF)) {
+					// wrong size
+					printHelp();
+					return;
+				}
+				sectors = (Bitu)(size / 512);
+
+				// Now that we finally have the proper size, figure out good CHS values
+				h=2;
+				while(h*1023*63 < sectors) h <<= 1;
+				if(h==256) h=130;
+				s=8;
+				while(h*s*1023 < sectors) s *= 2;
+				if(s==64) s=63;
+				c=sectors/(h*s);
+			}
+		} else {
+			// user passed a wrong -t argument
+			printHelp();
+			return;
+		}
+
+		WriteOut(MSG_Get("PROGRAM_IMGMAKE_PRINT_CHS"),c,h,s);
+		WriteOut("%s\r\n",temp_line.c_str());
+		// do it again for fixed chs values
+		size = c*h*s*512;
+		sectors = (Bitu)(size / 512);
+
+		// create the image file
+		f = fopen(temp_line.c_str(),"wb+");
+		if (!f) {
+			WriteOut(MSG_Get("PROGRAM_IMGMAKE_CANNOT_WRITE"),temp_line.c_str());
+			return;
+		}
+		if(fseek(f,(Bitu)size-1,SEEK_SET)) {
+			WriteOut(MSG_Get("PROGRAM_IMGMAKE_NOT_ENOUGH_SPACE"),size);
+			return;
+		}
+		Bit8u bufferbyte=0;
+		if(fwrite(&bufferbyte,1,1,f)!=1) {
+			WriteOut(MSG_Get("PROGRAM_IMGMAKE_NOT_ENOUGH_SPACE"),size);
+			return;
+		}
+		
+		// Format the image if not unrequested
+		Bitu bootsect_pos = 0; // offset of the boot sector in clusters
+		if(!cmd->FindExist("-nofs")) {
+			Bit8u sbuf[512];
+			if(mediadesc == 0xF8) {
+				// is a harddisk: write MBR
+				memcpy(sbuf,freedos_mbr,512);
+				// active partition
+				sbuf[0x1be]=0x80;
+				// start head - head 0 has the partition table, head 1 first partition
+				sbuf[0x1bf]=1;
+				// start sector with bits 8-9 of start cylinder in bits 6-7
+				sbuf[0x1c0]=1;
+				// start cylinder bits 0-7
+				sbuf[0x1c1]=0;
+				// OS indicator: DOS what else ;)
+				sbuf[0x1c2]=0x06;
+				// end head (0-based)
+				sbuf[0x1c3]= h-1;
+				// end sector with bits 8-9 of end cylinder in bits 6-7
+				sbuf[0x1c4]=s|((c&0x300)>>2);
+				// start cylinder bits 0-7
+				sbuf[0x1c5]=c&0xFF;
+				// sectors preceding partition1 (one head)
+				host_writed(&sbuf[0x1c6],s);
+				// length of partition1
+				host_writed(&sbuf[0x1ca],sectors-s);
+				
+				// write partition table
+				fseek(f,0,SEEK_SET);
+				fwrite(&sbuf,512,1,f);
+				bootsect_pos = s;
+			}
+
+			// set boot sector values
+			memset(sbuf,0,512);
+			// TODO boot code jump
+			sbuf[0]=0xEB; sbuf[1]=0x3c; sbuf[2]=0x90;
+			// OEM
+			sprintf((char*)&sbuf[0x03],"MSDOS5.0");
+			// bytes per sector: always 512
+			host_writew(&sbuf[0x0b],512);
+			// sectors per cluster: 1,2,4,8,16,...
+			if(mediadesc == 0xF8) {
+				Bitu cval = 1;
+				while((sectors/cval) >= 65525) cval <<= 1;
+				sbuf[0x0d]=cval;
+			} else sbuf[0x0d]=sectors/0x1000 + 1; // FAT12 can hold 0x1000 entries TODO
+			// TODO small floppys have 2 sectors per cluster?
+			// reserverd sectors: 1 ( the boot sector)
+			host_writew(&sbuf[0x0e],1);
+			// Number of FATs - always 2
+			sbuf[0x10] = 2;
+			// Root entries - how are these made up? - TODO
+			host_writew(&sbuf[0x11],root_ent);
+			// sectors (under 32MB) - will OSes be sore if all HD's use large size?
+			if(mediadesc != 0xF8) host_writew(&sbuf[0x13],c*h*s);
+			// media descriptor
+			sbuf[0x15]=mediadesc;
+			// sectors per FAT
+			// needed entries: (sectors per cluster)
+			Bitu sect_per_fat=0;
+			Bitu clusters = (sectors-1)/sbuf[0x0d]; // TODO subtract root dir too maybe
+			if(mediadesc == 0xF8) sect_per_fat = (clusters*2)/512+1;
+			else sect_per_fat = ((clusters*3)/2)/512+1;
+			host_writew(&sbuf[0x16],sect_per_fat);
+			// sectors per track
+			host_writew(&sbuf[0x18],s);
+			// heads
+			host_writew(&sbuf[0x1a],h);
+			// hidden sectors
+			host_writed(&sbuf[0x1c],bootsect_pos);
+			// sectors (large disk) - this is the same as partition length in MBR
+			if(mediadesc == 0xF8) host_writed(&sbuf[0x20],sectors-s);
+			// BIOS drive
+			if(mediadesc == 0xF8) sbuf[0x24]=0x80;
+			else sbuf[0x24]=0x00;
+			// ext. boot signature
+			sbuf[0x26]=0x29;
+			// volume serial number
+			// let's use the BIOS time (cheap, huh?)
+			host_writed(&sbuf[0x27],mem_readd(BIOS_TIMER));
+			// Volume label
+			sprintf((char*)&sbuf[0x2b],"NO NAME    ");
+			// file system type
+			if(mediadesc == 0xF8) sprintf((char*)&sbuf[0x36],"FAT16   ");
+			else sprintf((char*)&sbuf[0x36],"FAT12   ");
+			// boot sector signature
+			host_writew(&sbuf[0x1fe],0xAA55);
+
+			// write the boot sector
+			fseek(f,bootsect_pos*512,SEEK_SET);
+			fwrite(&sbuf,512,1,f);
+			// write FATs
+			memset(sbuf,0,512);
+			if(mediadesc == 0xF8) host_writed(&sbuf[0],0xFFFFFFF8);
+			else host_writed(&sbuf[0],0xFFFFF0);
+			// 1st FAT
+			fseek(f,(bootsect_pos+1)*512,SEEK_SET);
+			fwrite(&sbuf,512,1,f);
+			// 2nd FAT
+			fseek(f,(bootsect_pos+1+sect_per_fat)*512,SEEK_SET);
+			fwrite(&sbuf,512,1,f);
+		}
+		fclose(f);
+		// create the batch file
+		if(cmd->FindExist("-bat")) {
+			std::string t2;
+			if(temp_line.length() > 3) {
+				t2 = temp_line.substr(0,temp_line.length()-4);
+				t2 = t2.append(".bat");
+			} else {
+				t2 = temp_line.append(".bat");
+			}
+			WriteOut("%s\n",t2.c_str());
+			f = fopen(t2.c_str(),"wb+");
+			if (!f) {
+				WriteOut(MSG_Get("PROGRAM_IMGMAKE_CANNOT_WRITE"),t2.c_str());
+				return;
+			}
+			fprintf(f,"imgmount c %s -size 512,%u,%u,%u\r\n",temp_line.c_str(),s,h,c);
+			fclose(f);
+		}
+		return;
+	}
+	void printHelp() { // maybe hint parameter?
+		WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SYNTAX"));
+	}
+};
+
+static void IMGMAKE_ProgramStart(Program * * make) {
+	*make=new IMGMAKE;
+}
 
 // LOADFIX
 
@@ -1009,8 +1549,16 @@ public:
 			return;
 		}
 
-
 		std::string type="hdd";
+		// default to floppy for drive letters A and B and numbers 0 and 1
+		if (!cmd->FindCommand(1,temp_line) || (temp_line.size() > 2) ||
+			((temp_line.size()>1) && (temp_line[1]!=':'))) {
+			// drive not valid
+		} else {
+			Bit8u tdr = toupper(temp_line[0]);
+			if(tdr=='A'||tdr=='B'||tdr=='0'||tdr=='1') type="floppy";
+		}
+
 		std::string fstype="fat";
 		cmd->FindString("-t",type,true);
 		cmd->FindString("-fs",fstype,true);
@@ -1130,6 +1678,7 @@ public:
 
 			if(fstype=="fat") {
 				if (imgsizedetect) {
+					bool yet_detected = false;
 					FILE * diskfile = fopen(temp_line.c_str(), "rb+");
 					if(!diskfile) {
 						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
@@ -1145,17 +1694,65 @@ public:
 						return;
 					}
 					fclose(diskfile);
+					// check MBR signature
 					if ((buf[510]!=0x55) || (buf[511]!=0xaa)) {
 						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_GEOMETRY"));
 						return;
 					}
-					Bitu sectors=(Bitu)(fcsize/(16*63));
-					if (sectors*16*63!=fcsize) {
+					// check MBR partition entry 1
+					Bitu starthead = buf[0x1bf];
+					Bitu startsect = buf[0x1c0]&0x3f-1;
+					Bitu startcyl = buf[0x1c1]|((buf[0x1c0]&0xc0)<<2);
+					Bitu endcyl = buf[0x1c5]|((buf[0x1c4]&0xc0)<<2);
+					
+					Bitu heads = buf[0x1c3]+1;
+					Bitu sectors = buf[0x1c4]&0x3f;
+
+					Bitu pe1_size = host_readd(&buf[0x1ca]);
+					if(pe1_size!=0) {
+						Bitu part_start = startsect + sectors*starthead +
+							startcyl*sectors*heads;
+						Bitu part_end = heads*sectors*endcyl;
+						Bits part_len = part_end - part_start;
+						// partition start/end sanity check
+						// partition length should not exceed file length
+						// real partition size can be a few cylinders less than pe1_size
+						// if more than 1023 cylinders see if first partition fits
+						// into 1023, else bail.
+						if((part_len<0)||((Bitu)part_len > pe1_size)||(pe1_size > fcsize)||
+							((pe1_size-part_len)/(sectors*heads)>2)||
+							((pe1_size/(heads*sectors))>1023)) {
+							//LOG_MSG("start(c,h,s) %u,%u,%u",startcyl,starthead,startsect);
+							//LOG_MSG("endcyl %u heads %u sectors %u",endcyl,heads,sectors);
+							//LOG_MSG("psize %u start %u end %u",pe1_size,part_start,part_end);
+						} else {
+							sizes[0]=512; sizes[1]=sectors;
+							sizes[2]=heads; sizes[3]=(Bit16u)(fcsize/(heads*sectors));
+							if(sizes[3]>1023) sizes[3]=1023;
+							yet_detected = true;
+						}
+					}
+					if(!yet_detected) {
+						// Try bximage disk geometry
+						Bitu cylinders=(Bitu)(fcsize/(16*63));
+						// Int13 only supports up to 1023 cylinders
+						// For mounting unknown images we could go up with the heads to 255
+						if ((cylinders*16*63==fcsize)&&(cylinders<1024)) {
+							yet_detected=true;
+							sizes[0]=512; sizes[1]=63; sizes[2]=16; sizes[3]=cylinders;
+						}
+					}
+
+					if(yet_detected)
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_AUTODET_VALUES"),sizes[0],sizes[1],sizes[2],sizes[3]);
+						
+						
+						//"Image geometry auto detection: -size %u,%u,%u,%u\r\n",
+							//sizes[0],sizes[1],sizes[2],sizes[3]);
+					else {
 						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_GEOMETRY"));
 						return;
 					}
-					sizes[0]=512;	sizes[1]=63;	sizes[2]=16;	sizes[3]=sectors;
-					LOG_MSG("autosized image file: %d:%d:%d:%d",sizes[0],sizes[1],sizes[2],sizes[3]);
 				}
 
 				newdrive=new fatDrive(temp_line.c_str(),sizes[0],sizes[1],sizes[2],sizes[3],0);
@@ -1513,6 +2110,7 @@ void DOS_SetupPrograms(void) {
 		"Check that the path is correct and the image is accessible.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_INVALID_GEOMETRY","Could not extract drive geometry from image.\n"
 		"Use parameter -size bps,spc,hpc,cyl to specify the geometry.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_AUTODET_VALUES","Image geometry auto detection: -size %u,%u,%u,%u\n");
 	MSG_Add("PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED","Type \"%s\" is unsupported. Specify \"hdd\" or \"floppy\" or\"iso\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED","Format \"%s\" is unsupported. Specify \"fat\" or \"iso\" or \"none\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_FILE","Must specify file-image to mount.\n");
@@ -1523,6 +2121,47 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_IMGMOUNT_MOUNT_NUMBER","Drive number %d mounted as %s\n");
 	MSG_Add("PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE", "The image must be on a host or local drive.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES", "Using multiple files is only supported for cue/iso images.\n");
+		
+	MSG_Add("PROGRAM_IMGMOUNT_SYNTAX",
+		"Creates floppy or harddisk images.\n"
+		"Syntax: IMGMAKE file [-t type] [[-size size] | [-chs geometry]] [-nofs]\n"
+		"  [-source source] [-r retries] [-bat]\n"
+		"  file: The image file that is to be created - !path on the host!\n"
+		"  -type: Type of image.\n"
+		"    Floppy templates (names resolve to floppy sizes in kilobytes):\n"
+		"     fd_160 fd_180 fd_200 fd_320 fd_360 fd_400 fd_720 fd_1200 fd_1440 fd_2880\n"
+		"    Harddisk templates:\n"
+		"     hd_520: 520MB image, hd_2gig: 2GB image (maximum size)\n"
+		"     hd_st251: 40MB image, hd_st225: 20MB image (geometry from old drives)\n"
+		"    Custom harddisk images:\n"
+		"     hd (requires -size or -chs)\n"
+		"  size: size of a custom harddisk image in MB.\n"
+		"  geometry: disk geometry in cylinders(1-1023),heads(1-255),sectors(1-63).\n"
+		"  -nofs: add this parameter if a blank image should be created.\n"
+		"  -bat: creates a .bat file with the IMGMOUNT command required for this image.\n"
+#ifdef WIN32
+		"  source: drive letter - if specified the image is read from a floppy disk.\n"
+		"  retries: how often to retry when attempting to read a bad floppy disk(1-99).\n"
+#endif
+		" Examples:\n"
+		"    imgmake c:\\image.img -t fd_1440          - create a 1.44MB floppy image\n"
+		"    imgmake c:\\image.img -t hd -size 100     - create a 100MB hdd image\n"
+		"    imgmake c:\\image.img -t hd -chs 130,2,17 - create a special hd image"
+#ifdef WIN32
+		"    \nimgmake c:\\image.img -source a           - read image from physical drive A"
+#endif
+		);
+#ifdef WIN32
+	MSG_Add("PROGRAM_IMGMAKE_FLREAD",
+		"Disk geometry: %d Cylinders, %d Heads, %d Sectors, %d Kilobytes\n\n");
+	MSG_Add("PROGRAM_IMGMAKE_FLREAD2",
+		"\xdb =good, \xb1 =good after retries, ! =CRC error, x =sector not found, ? =unknown\n\n");
+#endif
+	MSG_Add("PROGRAM_IMGMAKE_FILE_EXISTS","The file \"%s\" already exists.\n");
+	MSG_Add("PROGRAM_IMGMAKE_CANNOT_WRITE","The file \"%s\" cannot be opened for writing.\n");
+	MSG_Add("PROGRAM_IMGMAKE_NOT_ENOUGH_SPACE","Not enough space availible for the image file. Need %u bytes.\n");
+	MSG_Add("PROGRAM_IMGMAKE_PRINT_CHS","Creating an image file with %u cylinders, %u heads and %u sectors\n");
+	MSG_Add("PROGRAM_IMGMAKE_CANT_READ_FLOPPY","\n\nUnable to read floppy.");
 
 	MSG_Add("PROGRAM_KEYB_INFO","Codepage %i has been loaded\n");
 	MSG_Add("PROGRAM_KEYB_INFO_LAYOUT","Codepage %i has been loaded for layout %s\n");
@@ -1546,9 +2185,10 @@ void DOS_SetupPrograms(void) {
 	PROGRAMS_MakeFile("RESCAN.COM",RESCAN_ProgramStart);
 	PROGRAMS_MakeFile("INTRO.COM",INTRO_ProgramStart);
 	PROGRAMS_MakeFile("BOOT.COM",BOOT_ProgramStart);
-#if C_DEBUG
+//#if C_DEBUG
 	PROGRAMS_MakeFile("LDGFXROM.COM", LDGFXROM_ProgramStart);
-#endif
+//#endif
+	PROGRAMS_MakeFile("IMGMAKE.COM", IMGMAKE_ProgramStart);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
 	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);
 }

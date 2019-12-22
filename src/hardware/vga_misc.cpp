@@ -57,6 +57,7 @@ Bitu vga_read_p3da(Bitu port,Bitu iolen) {
 }
 
 static void write_p3c2(Bitu port,Bitu val,Bitu iolen) {
+	if((machine==MCH_EGA) && ((vga.misc_output^val)&0xc)) VGA_StartResize();
 	vga.misc_output=val;
 	if (val & 0x1) {
 		IO_RegisterWriteHandler(0x3d4,vga_write_p3d4,IO_MB);
@@ -118,8 +119,16 @@ static Bitu read_p3c2(Bitu port,Bitu iolen) {
 
 	if (machine==MCH_EGA) retval = 0x0F;
 	else if (IS_VGA_ARCH) retval = 0x60;
-	if ((machine==MCH_VGA) || (((vga.misc_output>>2)&3)==0) || (((vga.misc_output>>2)&3)==3)) {
-		retval |= 0x10;
+
+	if(IS_EGAVGA_ARCH) {
+		switch((vga.misc_output>>2)&3) {
+			case 0:
+			case 3:
+				retval |= 0x10; // 0110 switch positions
+				break;
+			default:
+				break;
+		}
 	}
 
 	if (vga.draw.vret_triggered) retval |= 0x80;

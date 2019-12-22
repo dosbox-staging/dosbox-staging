@@ -42,11 +42,10 @@
 
 
 #define CPU_ARCHTYPE_MIXED			0xff
-#define CPU_ARCHTYPE_386SLOW		0x30
-#define CPU_ARCHTYPE_386FAST		0x35
-#define CPU_ARCHTYPE_486OLDSLOW		0x40
-#define CPU_ARCHTYPE_486NEWSLOW		0x45
-#define CPU_ARCHTYPE_PENTIUMSLOW	0x50
+#define CPU_ARCHTYPE_386			0x35
+#define CPU_ARCHTYPE_486OLD			0x40
+#define CPU_ARCHTYPE_486NEW			0x45
+#define CPU_ARCHTYPE_PENTIUM		0x50
 
 /* CPU Cycle Timing */
 extern Bit32s CPU_Cycles;
@@ -89,6 +88,7 @@ void CPU_Reset_AutoAdjust(void);
 
 extern Bit16u parity_lookup[256];
 
+void CPU_SetCPL(Bitu newcpl);
 bool CPU_LLDT(Bitu selector);
 bool CPU_LTR(Bitu selector);
 void CPU_LIDT(Bitu limit,Bitu base);
@@ -181,6 +181,7 @@ void CPU_SetFlags(Bitu word,Bitu mask);
 #define CR0_FPUEMULATION		0x00000004
 #define CR0_TASKSWITCH			0x00000008
 #define CR0_FPUPRESENT			0x00000010
+#define CR0_WRITEPROTECT		0x00010000
 #define CR0_PAGING				0x80000000
 
 
@@ -456,6 +457,11 @@ struct CPUBlock {
 	bool pmode;							/* Is Protected mode enabled */
 	GDTDescriptorTable gdt;
 	DescriptorTable idt;
+	struct {
+		Bitu cr0_and;
+		Bitu cr0_or;
+		Bitu eflags;
+	} masks;
 	struct {
 		Bitu mask,notmask;
 		bool big;

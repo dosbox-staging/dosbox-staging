@@ -31,8 +31,10 @@ static void DOS_CompressMemory(void) {
 	Bit16u mcb_segment=dos.firstMCB;
 	DOS_MCB mcb(mcb_segment);
 	DOS_MCB mcb_next(0);
+	Bitu counter=0;
 
-	while (mcb.GetType()!=0x5a) {
+	while (mcb.GetType()!='Z') {
+		if(counter++ > 10000000) E_Exit("DOS MCB list corrupted.");
 		mcb_next.SetPt((Bit16u)(mcb_segment+mcb.GetSize()+1));
 		if ((mcb.GetPSPSeg()==0) && (mcb_next.GetPSPSeg()==0)) {
 			mcb.SetSize(mcb.GetSize()+mcb_next.GetSize()+1);
@@ -47,7 +49,9 @@ static void DOS_CompressMemory(void) {
 void DOS_FreeProcessMemory(Bit16u pspseg) {
 	Bit16u mcb_segment=dos.firstMCB;
 	DOS_MCB mcb(mcb_segment);
+	Bitu counter = 0;
 	for (;;) {
+		if(counter++ > 10000000) E_Exit("DOS MCB list corrupted.");
 		if (mcb.GetPSPSeg()==pspseg) {
 			mcb.SetPSPSeg(MCB_FREE);
 		}

@@ -45,7 +45,8 @@ Bitu vga_read_p3d4(Bitu port,Bitu iolen) {
 }
 
 void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
-//	if (crtc(index)>0x18) LOG_MSG("VGA CRCT write %X to reg %X",val,crtc(index));
+//	if((crtc(index)!=0xe)&&(crtc(index)!=0xf)) 
+//		LOG_MSG("CRTC w #%2x val %2x",crtc(index),val);
 	switch(crtc(index)) {
 	case 0x00:	/* Horizontal Total Register */
 		if (crtc(read_only)) break;
@@ -138,27 +139,22 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 		*/
 		break;
 	case 0x09: /* Maximum Scan Line Register */
-		if (IS_VGA_ARCH)
-			vga.config.line_compare=(vga.config.line_compare & 0x5ff)|(val&0x40)<<3;
-
-		if (IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA)) {
-			// in vgaonly mode we take special care of line repeats (excluding CGA modes)
-			if ((vga.crtc.maximum_scan_line ^ val) & 0x20) {
-				crtc(maximum_scan_line)=val;
-				VGA_StartResize();
-			} else {
-				crtc(maximum_scan_line)=val;
-			}
-			vga.draw.address_line_total = (val &0x1F) + 1;
-			if (val&0x80) vga.draw.address_line_total*=2;
-		} else {
-			if ((vga.crtc.maximum_scan_line ^ val) & 0xbf) {
-				crtc(maximum_scan_line)=val;
-				VGA_StartResize();
-			} else {
-				crtc(maximum_scan_line)=val;
-			}
+	{
+		if (IS_VGA_ARCH) {
+			vga.config.line_compare &= 0x5ff;
+			vga.config.line_compare |= (val&0x40)<<3;
+		} else if(machine==MCH_EGA) {
+			val &= 0x7f; // EGA ignores the doublescan bit
 		}
+		Bit8u old = crtc(maximum_scan_line);
+		crtc(maximum_scan_line) = val;
+
+		if(!vga.draw.doublescan_merging) {
+			if ((old ^ val) & 0x20) VGA_StartResize();
+			vga.draw.address_line_total = (val &0x1F) + 1;
+			if (val & 0x80) vga.draw.address_line_total*=2;
+		} else if ((old ^ val) & 0xbf)
+			VGA_StartResize();
 		/*
 			0-4	Number of scan lines in a character row -1. In graphics modes this is
 				the number of times (-1) the line is displayed before passing on to
@@ -170,6 +166,7 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 			7	Doubles each scan line if set. I.e. displays 200 lines on a 400 display.
 		*/
 		break;
+	}
 	case 0x0A:	/* Cursor Start Register */
 		crtc(cursor_start)=val;
 		vga.draw.cursor.sline=val&0x1f;
@@ -302,10 +299,14 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 		*/
 		break;
 	case 0x16:	/*  End Vertical Blank Register */
-		crtc(end_vertical_blanking)=val;
-		 /*
+		if (val!=crtc(end_vertical_blanking)) {
+			crtc(end_vertical_blanking)=val;
+			VGA_StartResize();
+		}
+		/*
 			0-6	Vertical blanking stops when the lower 7 bits of the line counter
 				equals this field. Some SVGA chips uses all 8 bits!
+				IBM actually says bits 0-7.
 		*/
 		break;
 	case 0x17:	/* Mode Control Register */
@@ -364,8 +365,15 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
+
+Bitu vga_read_p3d5x(Bitu port,Bitu iolen);
 Bitu vga_read_p3d5(Bitu port,Bitu iolen) {
-//	LOG_MSG("VGA CRCT read from reg %X",crtc(index));
+	Bitu retval = vga_read_p3d5x(port,iolen);
+//	LOG_MSG("CRTC r #%2x val %2x",crtc(index),retval);
+	return retval;
+}
+
+Bitu vga_read_p3d5x(Bitu port,Bitu iolen) {
 	switch(crtc(index)) {
 	case 0x00:	/* Horizontal Total Register */
 		return crtc(horizontal_total);

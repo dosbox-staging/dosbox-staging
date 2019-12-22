@@ -1,4 +1,4 @@
-#define VERSION "SVN"
+#define VERSION "SVN_MB6"
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0
@@ -6,11 +6,18 @@
 /* Define to 1 to enable screenshots, requires libpng */
 #define C_SSHOT 1
 
+#if C_SSHOT
+#define C_LIBPNG
+#endif
+
 /* Define to 1 to use opengl display output support */
 #define C_OPENGL 1
 
 /* Define to 1 to enable internal modem support, requires SDL_net */
 #define C_MODEM 1
+
+/* Define to 1 to enable NE2000 ethernet passthrough, requires libpcap */
+#define C_NE2000 1
 
 /* Define to 1 to enable IPX networking support, requires SDL_net */
 #define C_IPX 1
@@ -51,6 +58,10 @@
 
 /* Define to 1 if you want serial passthrough support (Win32 only). */
 #define C_DIRECTSERIAL 1
+
+#define C_DIRECTLPT 1
+
+#define C_PRINTER 1
 
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 #define GCC_UNLIKELY(x) (x)

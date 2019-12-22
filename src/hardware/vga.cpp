@@ -19,7 +19,7 @@
 /* $Id: vga.cpp,v 1.36 2009-05-27 09:15:41 qbix79 Exp $ */
 
 #include "dosbox.h"
-//#include "setup.h"
+#include "setup.h"
 #include "video.h"
 #include "pic.h"
 #include "vga.h"
@@ -65,7 +65,7 @@ void VGA_DetermineMode(void) {
 	switch (vga.s3.misc_control_2 >> 4) {
 	case 0:
 		if (vga.attr.mode_control & 1) { // graphics mode
-			if (IS_VGA_ARCH && (vga.gfx.mode & 0x40)) {
+			if (IS_VGA_ARCH && ((vga.gfx.mode & 0x40)||(vga.s3.reg_3a&0x10))) {
 				// access above 256k?
 				if (vga.s3.reg_31 & 0x8) VGA_SetMode(M_LIN8);
 				else VGA_SetMode(M_VGA);
@@ -96,6 +96,31 @@ void VGA_StartResize(Bitu delay /*=50*/) {
 		if (delay==0) VGA_SetupDrawing(0);
 		else PIC_AddEvent(VGA_SetupDrawing,(float)delay);
 	}
+}
+
+#define IS_RESET ((vga.seq.reset&0x3)!=0x3)
+#define IS_SCREEN_ON ((vga.seq.clocking_mode&0x20)==0)
+static bool hadReset = false;
+
+// disabled for later improvement
+// Idea behind this: If the sequencer was reset and screen off we can
+// Problem is some programs measure the refresh rate after switching mode,
+// and get it wrong because of the 50ms guard time.
+// On the other side, buggers like UniVBE switch the screen mode several
+// times so the window is flickering.
+// Also the demos that switch display end on screen (Dowhackado)
+// would need some attention
+
+void VGA_SequReset(bool reset) {
+	//if(!reset && !IS_SCREEN_ON) hadReset=true;
+}
+
+void VGA_Screenstate(bool enabled) {
+	/*if(enabled && hadReset) {
+		hadReset=false;
+		PIC_RemoveEvents(VGA_SetupDrawing);
+		VGA_SetupDrawing(0);
+	}*/
 }
 
 void VGA_SetClock(Bitu which,Bitu target) {
@@ -174,11 +199,12 @@ void VGA_SetCGA4Table(Bit8u val0,Bit8u val1,Bit8u val2,Bit8u val3) {
 }
 
 void VGA_Init(Section* sec) {
-//	Section_prop * section=static_cast<Section_prop *>(sec);
+	Section_prop * section=static_cast<Section_prop *>(sec);
 	vga.draw.resizing=false;
 	vga.mode=M_ERROR;			//For first init
-	SVGA_Setup_Driver();
-	VGA_SetupMemory(sec);
+	vga.vmemsize=section->Get_int("vmemsize")*1024*1024;
+	SVGA_Setup_Driver();		// svga video memory size is set here
+	VGA_SetupMemory(sec);		// memory is allocated here
 	VGA_SetupMisc();
 	VGA_SetupDAC();
 	VGA_SetupGFX();

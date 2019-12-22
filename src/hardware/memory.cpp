@@ -509,6 +509,10 @@ void mem_writed(PhysPt address,Bit32u val) {
 	mem_writed_inline(address,val);
 }
 
+void phys_writes(PhysPt addr, const char* string, Bitu length) {
+	for(Bitu i = 0; i < length; i++) host_writeb(MemBase+addr+i,string[i]);
+}
+
 static void write_p92(Bitu port,Bitu val,Bitu iolen) {	
 	// Bit 0 = system reset (switch back to real mode)
 	if (val&1) E_Exit("XMS: CPU reset via port 0x92 not supported.");

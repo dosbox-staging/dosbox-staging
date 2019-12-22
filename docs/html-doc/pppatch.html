@@ -1,0 +1,280 @@
+<html>
+<body bgcolor="d0d0d0">
+
+<table border="0">
+
+
+<tr>
+<td align="center" bgcolor="90ffff">
+<font><a href="index.html" target="_top">[Home]</b></font>
+</td>
+</tr>
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<tr>
+<td bgcolor="e0e0e0">
+	<font size=4><b>Parallel Port Passthrough and Virtual Printer Patch</b></font>
+</td>
+
+</tr>
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+<tr>
+<td bgcolor="e0e0e0">
+	<b>Contents</b><br/>
+<ol>
+<li><A HREF="pppatch.html#About">Introduction to parallel port emulation</a></li>
+<li><A HREF="pppatch.html#Assign">Assigning a device to a LPT port</a></li>
+<li><A HREF="pppatch.html#Passthrough">Parallel Port Passthrough</a></li>
+<li><A HREF="pppatch.html#Vprinter">Virtual Printer</a></li>
+<li><A HREF="pppatch.html#Fileredirect">File redirection</a></li>
+</ol>
+</td>
+</tr>
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+
+<td bgcolor="e0e0e0">
+<A NAME="About"><b>Introduction to parallel port emulation</b><br/><br/></A>
+Three features are provided by this patch:
+<ol>
+<li>
+<b>A virtual color dot-matrix printer.</b>
+It parses ESC/P text and graphics data (not laser printer data) from the program and draws an image thereof. The image can be printed to PNG, BMP or Postscript files. It can also be forwarded to a Windows printer, however black-and-white only so far. Options for page size and resolution are availible
+</li>
+<li>
+<b>Redirection to a file or host LPTx interface.</b>
+The data is written, after optional simple translation, to a file
+This mode has three sub-modes. The most simple one writes the data to files in DOSBox' capture directory. The second option is to append the data of several subsequent printouts to a specified file. Third, data can be forwarded to a parallel port device such as LPT1 on the host.
+</li>
+<li>
+<b>Parallel port passthrough.</b>
+This feature is currently implemented for Windows (requires Porttalk) and Linux. Before the file redirection was implemented, this was useful for accessing parallel printers. Now it is still useful for software protection dongles and LPT I/O hardware, as long as it is not very timing critical.
+</li>
+</ol>
+
+</td>
+</tr>
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+
+<td bgcolor="e0e0e0">
+<A NAME="Assign"><b>Emulated LPT ports</b><br/><br/></A>
+The parallel ports provided by DOSBox are controlled through the <b>[parallel]</b> section in the configuration file. Each port can be assigned one of the three modes, however there can only be one virtual printer.
+<ul>
+<li>parallelx=disabled</li>
+Disables this port.
+<li>parallelx=reallpt</li>
+Parallel Port Passthrough - additional parameters can be added on the line.
+<li>parallelx=file</li>
+File redirection - additional parameters can be added on the line.
+<li>parallelx=printer</li>
+Virtual Printer - parameters are set in the [printer] section.
+</ul>
+If you activate the disney sound device, LPT1 is overridden. So if you want to use the passthrough or virtual printer leave disney disabled.
+<br/><br/>
+	Emulated interfaces for all types of devices:
+<ul>
+	<li>I/O at 378h/278h/3BCh</li>
+	<li>BIOS INT17</li>
+	<li>DOS INT21</li>
+	<li>DOS file (PRN/LPTx) access</li>
+	<li>DOS handle #4 access</li>
+</ul>
+
+</td>
+</tr>
+
+<!-- Limiter -->
+<tr><td><br></td></tr>
+<!-- / Limiter -->
+
+
+<td bgcolor="e0e0e0">
+<A NAME="Passthrough"><b>Parallel Port Passthrough</b><br/><br/></A>
+	Requirements:
+<ul>
+	<li>Windows (Win9x, NT, Win2000, XP32, Vista32) or Linux as host operating system </li>
+	<li>For Windows, a ECP/EPP or SPP register compatible parallel port is required</li>
+	<li>For Windows, the Porttalk driver has to be installed on the system</li>
+</ul>	
+	Limitations:
+<ul>
+	<li>Interrupt from parallel port is not supported</li>
+	<li>Parallel Port to USB adapters are not supported</li>
+	<li>Some modern parallel ports may not be compatible with older hardware</li>
+	<li>Timing issues with emulation can give improper results or cause failure with certain applications</li>
+	<li>Does not work nonstandard parallel ports (Windows)</li>
+	<li>Unlikely to work with USB-Parallel adapter cables</li>
+</ul>
+<p><font size=4 color=blue>Windows</font><br/>
+First you need to install the <a href="http://www.beyondlogic.org/porttalk/porttalk.htm">PortTalk</a>
+driver and once run allowio <some executable> to get PortTalk installed. It is not
+required to use allowio every time you start DOSBox.<br/>
+Set <b>parallel1=reallpt</b> in dosbox.conf. If you use a parallel port different from
+the standard LPT1 built on mainboards, you need to specify the port's base address.
+This can be looked up in the Windows device manager. Usually LPT2 is at 278.<br/>
+Example: <b>parallel1=reallpt realbase:cc00</b><br/>
+Entering a wrong I/O port address can mess up your system, so doublecheck what you
+write there.<br/><br/>
+PCI parallel port cards may use a different addressing scheme for the ECP control ports.
+DOSBox uses the ECP registers to switch the port into bidirectional SPP (normal 
+parallel port) mode. To make this work on the PCI card you can specify the ECP address
+through the ecpbase keyword. Consult your device manager and/or the datasheet of the PCI
+port for the actual value.<br/>
+Example: <b>parallel1=reallpt realbase:cc00 ecpbase:cc08</b><br/>
+<br/><br/>
+</p>
+<p><font size=4 color=blue>Linux</font><br/>
+The parallel port device is passed. Security attributes may have to be changed.<br/>
+Example: <b>parallel1=reallpt realport:/dev/parport0</b><br/>
+</p>
+<b>Debug Log</b></br/>
+Thi build has parallel port debugging enabled which is useful for reverse-engineering old communication protocols. The actions a program performs on the parallel port are recorded in a text or binary files located in the <b>capture</b> subdirectory. The different types of actions can be filtered in the following categories:
+<ul>
+<li>dbgdata - write a info line (timing, value) when the parallel port's data port is written</li>
+<li>dbgput - write a line when data is written to LPT1/PRN</li>
+<li>dbgregs - write a line when any registers of the parallel port are accessed</li>
+<li>dbgputplain - only write bytes that are written to LPT1/PRN as file</li>
+<li>dbgdataplain - only write bytes that are written to the data register</li>
+<li>dbgall - all debugging parameters except plain</li>
+</ul>
+The desired categories are added to the <b>parallelx</b> configuration parameter, i.e.:<br/><br/>
+<b>parallel1 reallpt dbgput dbgregs</b><br/>
+<b>parallel1 reallpt dbgputplain</b>
+<br/>
+</td>
+</tr>
+
+<!-- Limiter -->
+<tr><td><br/></td></tr>
+<!-- / Limiter -->
+
+<tr><td bgcolor="e0e0e0">
+
+<A NAME="Vprinter"><b>Virtual Printer</b><br/></A>
+The Virtual Printer emulates a color dot-matrix printer that follows the ESC/P2 printing standard. <br/>
+<b>Features:</b>
+<ul>
+<li>Many of the ESC/P and ESC/P2 instructions supported</li>
+<li>Graphics printing for 24-pin and 48-pin modes supported, up to 360dpi</li>
+<li>Color output, use "Generic ESC/P 24pin wide" printer on Windows 3.11 or "Epson SQ 860" on Win95</li>
+<li>Data can be output as Windows bitmap, PNG file, Postscript file, or sent to a Windows</li>
+<li>Some older non-conflicting IBM control codes are supported</li>
+</ul>
+<b>Limitations:</b>
+<ul>
+<li>Windows printer output in black & white only</li>
+<li>Not all ESC/P commands are supported, like custom fonts</li>
+<li>The default font (roman.ttf) is ugly and characters are misplaced, you may want to replace it with one of the others</li>
+<li>Due to overexact graphics emulation 360dpi printing from Windows (guest) graphics rastering might not look as expected</li>
+<li>When set to use a Windows printer, the printer dialog will only show up once at start
+</li>
+<li>Country code setup and other configuration buttons found on a printer are not availible, this may be overcome by sending special ESC/P commands to the printer before printing</li>
+</ul>
+
+The virtual printer adds the following parameters in the dosbox.conf under [printer]:
+<ul>
+<li>	<b>printer</b> <br/>
+	true enables the virtual printer. Handy if you'd like to use it.
+</li>
+<li>	<b>dpi</b> <br/>
+	Resolution of printer (default 360). 180 is another one that makes sence.
+</li>
+<li>	<b>width</b> <br/>
+	Width of paper in 1/10 inch (default 85 = 8.5')
+</li>
+<li>	<b>height</b> <br/>
+	Height of paper in 1/10 inch (default 110 = 11.0' US Letter)<br/>
+For other paper formats, see <a href="http://en.wikipedia.org/wiki/Paper_format">Paper size on Wikipedia</a>
+</li>
+<li>	<b>printoutput</b> <br/>
+	Specifies how to save the output of the printer.
+<ul>
+	<li><b>png</b> <br/>Saves to a PNG file (default)</li>
+	<li><b>ps</b> <br/>Saves to a Postscript file</li>
+	<li><b>bmp</b> <br/>Creates BMP images (very huge files, not recommend)</li>
+	<li><b>printer</b> <br/>Send to an actual printer (Print dialog will appear)</li>
+</ul>
+</li>
+<li>	<b>multipage</b><br/>
+	Adds all pages to one Postscript file or printer job until CTRL-F2 is pressed.
+</li>
+<li>	<b>docpath</b><br/>
+	The path where the output files are stored. Default is the DOSBox program directory.
+</li>
+<li>	<b>timeout</b><br/>
+	(in milliseconds) if nonzero: the time the page will be ejected automatically after when no more data arrives at the printer. Useful when the DOS program does not do that itself.
+</li>
+</ul>
+<br/>
+<b>Convincing the printer to produce output</b><br/><br/>
+There are several conditions under which the virtual printer will output a page. 
+<ul>
+<li>No more text fits on the current page</li>
+<li>The DOS program sends a formfeed character or toggles autofeed on the parallel port</li>
+<li><b>The user presses CTRL+F2</b></li>
+<li>If the timeout value is set and no more data has arrived in the timespan</li>
+
+</ul>
+
+<!-- Limiter -->
+<tr><td><br/></td></tr>
+<!-- / Limiter -->
+
+<tr><td bgcolor="e0e0e0">
+
+<A NAME="Fileredirect"><b>File redirection</b><br/></A>
+The modes of operation are chosen by adding parameters like this:
+<ul>
+<li>dev:<devname></li>
+Example: <b>parallel1=file dev:LPT1</b><br/>
+This forwards the data to the host printer on LPT1.
+<li>append:<filename></li>
+Example: <b>parallel1=file append:text.txt</b><br/>
+The printouts will be added to 'text.txt'.
+<li>None of the two above:</li>
+Example: <b>parallel1=file</b><br/>
+A capture file [appname]###.prt will be created in the DOSBox capture directory for every print-out.
+</ul>
+
+Further optional parameters:
+<ul>
+<li>timeout</li>
+Example: <b>parallel1=file dev:LPT1 timeout:1000</b><br/>
+How long to gather data before writing it.<br/>
+As soon as data is sent to the port by the emulated application, the file/device is opened and the timeout starts counting. Every time data is sent the timeout is reset. If eventually the application will stop sending data, the timeout will be reached and the file closed. The value is passed in milliseconds.
+<li>addFF</li>
+Example: <b>parallel1=file dev:LPT1 addFF</b><br/>
+Adds a formfeed when the timeout is reached before closing the file. This is useful when printing plain text to laser printers 'page printers' to persuade them to print the page immediately.
+<li>addLF</li>
+Example: <b>parallel1=file dev:LPT1 addLF</b><br/>
+Adds a linefeed character at the end of a text line if the application doesn't.
+<li>cp:###</li>
+Example: <b>parallel1=file dev:LPT1 cp:437</b><br/>
+Performs character translation to ANSI code. The number of the code page the emulated application is using is appended and can be one of the following: 437,737,775,850,852,855,857,860,861,863,864,865,866.<br/>
+No guarantee of them all being correct ;).
+</ul>
+
+<!-- Limiter -->
+<tr><td><br/></td></tr>
+<!-- / Limiter -->
+
+
+<!-- end of page -->
+
+</table>
+
+</body>
+</html>

@@ -42,6 +42,12 @@
 #include "mapper.h"
 #include "ints/int10.h"
 #include "render.h"
+#include "parport.h"
+
+#ifdef C_NE2000
+//#include "ne2000.h"
+void NE2K_Init(Section* sec);
+#endif
 
 Config * control;
 MachineType machine;
@@ -86,6 +92,9 @@ void TANDYSOUND_Init(Section*);
 void DISNEY_Init(Section*);
 void SERIAL_Init(Section*); 
 
+#if C_PRINTER
+void PRINTER_Init(Section*);
+#endif
 
 #if C_IPX
 void IPX_Init(Section*);
@@ -342,6 +351,21 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(machines);
 	Pstring->Set_help("The type of machine DOSBox tries to emulate.");
 
+	Pint = secprop->Add_int("vmemsize", Property::Changeable::WhenIdle,4);
+	Pint->SetMinMax(0,8);
+	Pint->Set_help(
+		"Amount of video memory in megabytes.\n"
+		"  The maximum resolution and color depth the svga_s3 will be able to display\n"
+		"  is determined by this value.\n "
+		"  0: 512k (800x600  at 256 colors)\n"
+		"  1: 1024x768  at 256 colors or 800x600  at 64k colors\n"
+		"  2: 1600x1200 at 256 colors or 1024x768 at 64k colors or 640x480 at 16M colors\n"
+		"  4: 1600x1200 at 64k colors or 1024x768 at 16M colors\n"
+		"  8: up to 1600x1200 at 16M colors\n"
+		"For build engine games, use more memory than in the list above so it can\n"
+		"use triple buffering and thus won't flicker.\n"
+		);
+
 	Pstring = secprop->Add_path("captures",Property::Changeable::Always,"capture");
 	Pstring->Set_help("Directory where things like wave, midi, screenshot get captured.");
 
@@ -365,6 +389,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&PROGRAMS_Init);
 	secprop->AddInitFunction(&TIMER_Init);//done
 	secprop->AddInitFunction(&CMOS_Init);//done
+	secprop->AddInitFunction(&VGA_Init);
 
 	secprop=control->AddSection_prop("render",&RENDER_Init,true);
 	Pint = secprop->Add_int("frameskip",Property::Changeable::Always,0);
@@ -373,6 +398,15 @@ void DOSBOX_Init(void) {
 
 	Pbool = secprop->Add_bool("aspect",Property::Changeable::Always,false);
 	Pbool->Set_help("Do aspect correction, if your output method doesn't support scaling this can slow things down!.");
+
+	Pbool = secprop->Add_bool("linewise",Property::Changeable::Always,false);
+	Pbool->Set_help("Draw the display line by line. Needed for certain special graphics effects in games and demos. Can be changed at runtime but will be put in effect at the next mode switch.");
+
+	Pbool = secprop->Add_bool("char9",Property::Changeable::Always,false);
+	Pbool->Set_help("Allow 9-pixel wide text mode fonts.");
+
+	Pbool = secprop->Add_bool("multiscan",Property::Changeable::Always,false);
+	Pbool->Set_help("Set this value to true to allow zooming gfx effects used in demos. It will disable several options such as scalers though.");
 
 	Pmulti = secprop->Add_multi("scaler",Property::Changeable::Always," ");
 	Pmulti->SetValue("normal2x");
@@ -406,11 +440,10 @@ void DOSBOX_Init(void) {
 	Pstring->Set_help("CPU Core used in emulation. auto will switch to dynamic if available and\n"
 		"appropriate.");
 
-	const char* cputype_values[] = { "auto", "386", "386_slow", "486_slow", "pentium_slow", "386_prefetch", 0};
-	Pstring = secprop->Add_string("cputype",Property::Changeable::Always,"auto");
+	const char* cputype_values[] = {"auto", "386", "486", "pentium", "386_prefetch", 0};
+	Pstring = secprop->Add_string("cputype",Property::Changeable::Always, "auto");
 	Pstring->Set_values(cputype_values);
-	Pstring->Set_help("CPU Type used in emulation. auto is the fastest choice.");
-
+	Pstring->Set_help("CPU Type used in emulation. auto emulates a 486 which tolerates Pentium instructions.");
 
 	Pmulti_remain = secprop->Add_multiremain("cycles",Property::Changeable::Always," ");
 	Pmulti_remain->Set_help(
@@ -443,7 +476,6 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&FPU_Init);
 #endif
 	secprop->AddInitFunction(&DMA_Init);//done
-	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
 
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
@@ -512,10 +544,12 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("sbmixer",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("Allow the soundblaster mixer to modify the DOSBox mixer.");
 
-	const char* oplmodes[]={ "auto", "cms", "opl2", "dualopl2", "opl3", "none", 0};
+	const char* oplmodes[]={ "auto", "cms", "opl2", "dualopl2", "opl3", "none", "hardware", "hardwaregb", 0};
 	Pstring = secprop->Add_string("oplmode",Property::Changeable::WhenIdle,"auto");
 	Pstring->Set_values(oplmodes);
-	Pstring->Set_help("Type of OPL emulation. On 'auto' the mode is determined by sblaster type. All OPL modes are Adlib-compatible, except for 'cms'.");
+	Pstring->Set_help("Type of OPL emulation. On 'auto' the mode is determined by sblaster type.\n"
+		"All OPL modes are Adlib-compatible, except for 'cms'. sbtype=none\n"
+		"together with oplmode=cms will emulate a Gameblaster.");
 
 	const char* oplemus[]={ "default", "compat", "fast", 0};
 	Pstring = secprop->Add_string("oplemu",Property::Changeable::WhenIdle,"default");
@@ -525,6 +559,10 @@ void DOSBOX_Init(void) {
 	Pint = secprop->Add_int("oplrate",Property::Changeable::WhenIdle,44100);
 	Pint->Set_values(oplrates);
 	Pint->Set_help("Sample rate of OPL music emulation. Use 49716 for highest quality (set the mixer rate accordingly).");
+	
+	Phex = secprop->Add_hex("hardwarebase",Property::Changeable::WhenIdle,0x220);
+	Phex->Set_help("base address of the real hardware soundblaster:\n"\
+		"210,220,230,240,250,260,280");
 
 
 	secprop=control->AddSection_prop("gus",&GUS_Init,true); //done
@@ -574,7 +612,7 @@ void DOSBOX_Init(void) {
 
 	secprop->AddInitFunction(&DISNEY_Init,true);//done
 	
-	Pbool = secprop->Add_bool("disney",Property::Changeable::WhenIdle,true);
+	Pbool = secprop->Add_bool("disney",Property::Changeable::WhenIdle,false);
 	Pbool->Set_help("Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).");
 
 	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
@@ -648,6 +686,77 @@ void DOSBOX_Init(void) {
 	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::WhenIdle,"");
 	Pmulti_remain->Set_help("see serial1");
 
+#if C_PRINTER
+	secprop=control->AddSection_prop("printer",&PRINTER_Init); 
+	Pbool = secprop->Add_bool("printer",Property::Changeable::WhenIdle,true);
+	Pbool->Set_help("Enable printer emulation.");
+	//secprop->Add_string("fontpath","%%windir%%\\fonts");
+	Pint = secprop->Add_int("dpi",Property::Changeable::WhenIdle,360); 
+	Pint->Set_help("Resolution of printer (default 360).");
+	Pint = secprop->Add_int("width",Property::Changeable::WhenIdle,85);
+	Pint->Set_help("Width of paper in 1/10 inch (default 85 = 8.5'').");
+	Pint = secprop->Add_int("height",Property::Changeable::WhenIdle,110);
+	Pint->Set_help("Height of paper in 1/10 inch (default 110 = 11.0'').");
+#ifdef C_LIBPNG
+	Pstring = secprop->Add_string("printoutput",Property::Changeable::WhenIdle, "png");
+#else
+	Pstring = secprop->Add_string("printoutput",Property::Changeable::WhenIdle, "ps");
+#endif
+	Pstring->Set_help("Output method for finished pages: \n"
+#ifdef C_LIBPNG
+		"  png     : Creates PNG images (default)\n"
+#endif
+		"  ps      : Creates Postscript\n"
+		"  bmp     : Creates BMP images (very huge files, not recommend)\n"
+#if defined (WIN32)
+		"  printer : Send to an actual printer (Print dialog will appear)"
+#endif
+		);
+
+	Pbool = secprop->Add_bool("multipage",Property::Changeable::WhenIdle, false);
+	Pbool->Set_help("Adds all pages to one Postscript file or printer job until CTRL-F2 is pressed.");
+
+	Pstring = secprop->Add_string("docpath",Property::Changeable::WhenIdle,".");
+	Pstring->Set_help("The path where the output files are stored.");
+
+	Pint = secprop->Add_int("timeout",Property::Changeable::WhenIdle,0);
+	Pint->Set_help("(in milliseconds) if nonzero: the time the page will\n"
+					"be ejected automatically after when no more data\n"
+					"arrives at the printer.");
+#endif
+
+	// parallel ports
+	secprop=control->AddSection_prop("parallel",&PARALLEL_Init,true);
+	Pstring = secprop->Add_string("parallel1",Property::Changeable::WhenIdle,"disabled");
+	Pstring->Set_help(
+	        "parallel1-3 -- set type of device connected to lpt port.\n"
+			"Can be:\n"
+			"	reallpt (direct parallel port passthrough using Porttalk),\n"
+			"	file (records data to a file or passes it to a device),\n"
+			"	printer (virtual dot-matrix printer, see [printer] section)\n"
+	        "Additional parameters must be in the same line in the form of\n"
+	        "parameter:value.\n"
+	        "  for reallpt:\n"
+	        "  Windows:\n"
+			"    realbase (the base address of your real parallel port).\n"
+			"      Default: 378\n"
+			"    ecpbase (base address of the ECP registers, optional).\n"
+			"  Linux: realport (the parallel port device i.e. /dev/parport0).\n"
+			"  for file: \n"
+			"    dev:<devname> (i.e. dev:lpt1) to forward data to a device,\n"
+			"    or append:<file> appends data to the specified file.\n"
+			"    Without the above parameters data is written to files in the capture dir.\n"
+			"    Additional parameters: timeout:<milliseconds> = how long to wait before\n"
+			"    closing the file on inactivity (default:500), addFF to add a formfeed when\n"
+			"    closing, addLF to add a linefeed if the app doesn't, cp:<codepage number>\n"
+			"    to perform codepage translation, i.e. cp:437\n"
+			"  for printer:\n"
+			"    printer still has it's own configuration section above."
+	);
+	Pstring = secprop->Add_string("parallel2",Property::Changeable::WhenIdle,"disabled");
+	Pstring->Set_help("see parallel1");
+	Pstring = secprop->Add_string("parallel3",Property::Changeable::WhenIdle,"disabled");
+	Pstring->Set_help("see parallel1");
 
 	/* All the DOS Related stuff, which will eventually start up in the shell */
 	secprop=control->AddSection_prop("dos",&DOS_Init,false);//done
@@ -671,6 +780,9 @@ void DOSBOX_Init(void) {
 	Pstring = secprop->Add_string("keyboardlayout",Property::Changeable::WhenIdle, "auto");
 	Pstring->Set_help("Language code of the keyboard layout (or none).");
 
+	Pint = secprop->Add_int("files",Property::Changeable::OnlyAtStart,127);
+	Pint->Set_help("Number of file handles available to DOS programs. (equivalent to \"files=\" in config.sys)");
+
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
 	secprop->AddInitFunction(&DRIVES_Init);
@@ -680,6 +792,45 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("ipx",Property::Changeable::WhenIdle, false);
 	Pbool->Set_help("Enable ipx over UDP/IP emulation.");
 #endif
+
+#ifdef C_NE2000
+	secprop=control->AddSection_prop("ne2000",&NE2K_Init,true);
+	MSG_Add("NE2000_CONFIGFILE_HELP",
+		"macaddr -- The physical address the emulator will use on your network.\n"
+		"           If you have multiple DOSBoxes running on your network,\n"
+		"           this has to be changed. Modify the last three number blocks.\n"
+		"           I.e. AC:DE:48:88:99:AB.\n"
+		"realnic -- Specifies which of your network interfaces is used.\n"
+		"           Write \'list\' here to see the list of devices in the\n"
+		"           Status Window. Then make your choice and put either the\n"
+		"           interface number (2 or something) or a part of your adapters\n"
+		"           name, e.g. VIA here.\n"
+
+	);
+
+	Pbool = secprop->Add_bool("ne2000", Property::Changeable::WhenIdle, true);
+	Pbool->Set_help("Enable Ethernet passthrough. Requires [Win]Pcap.");
+
+	Phex = secprop->Add_hex("nicbase", Property::Changeable::WhenIdle, 0x300);
+	Phex->Set_help("The base address of the NE2000 board.");
+
+	Pint = secprop->Add_int("nicirq", Property::Changeable::WhenIdle, 3);
+	Pint->Set_help("The interrupt it uses. Note serial2 uses IRQ3 as default.");
+
+	Pstring = secprop->Add_string("macaddr", Property::Changeable::WhenIdle,"AC:DE:48:88:99:AA");
+	Pstring->Set_help("The physical address the emulator will use on your network.\n"
+		"If you have multiple DOSBoxes running on your network,\n"
+		"this has to be changed for each. AC:DE:48 is an address range reserved for\n"
+		"private use, so modify the last three number blocks.\n"
+		"I.e. AC:DE:48:88:99:AB.");
+	
+	Pstring = secprop->Add_string("realnic", Property::Changeable::WhenIdle,"list");
+	Pstring->Set_help("Specifies which of your network interfaces is used.\n"
+		"Write \'list\' here to see the list of devices in the\n"
+		"Status Window. Then make your choice and put either the\n"
+		"interface number (2 or something) or a part of your adapters\n"
+		"name, e.g. VIA here.");
+#endif // C_NE2000
 //	secprop->AddInitFunction(&CREDITS_Init);
 
 	//TODO ?

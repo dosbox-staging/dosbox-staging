@@ -40,8 +40,8 @@
 #define FCB_ERR_EOF     3
 #define FCB_ERR_WRITE   1
 
-
-DOS_File * Files[DOS_FILES];
+Bitu DOS_FILES = 127;
+DOS_File ** Files;
 DOS_Drive * Drives[DOS_DRIVES];
 
 Bit8u DOS_GetDefaultDrive(void) {
@@ -1251,6 +1251,7 @@ bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate) {
 
 void DOS_SetupFiles (void) {
 	/* Setup the File Handles */
+	Files = new DOS_File * [DOS_FILES];
 	Bit32u i;
 	for (i=0;i<DOS_FILES;i++) {
 		Files[i]=0;

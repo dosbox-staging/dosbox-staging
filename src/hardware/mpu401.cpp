@@ -241,10 +241,10 @@ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 		case 0xff:	/* Reset MPU-401 */
 			LOG(LOG_MISC,LOG_NORMAL)("MPU-401:Reset %X",val);
 			mpu.state.reset=1;
-			if (CPU_Cycles > 5) { //It came from the desert wants a fast irq
-				CPU_CycleLeft += CPU_Cycles;
-				CPU_Cycles = 5;
-			}
+//			if (CPU_Cycles > 5) { //It came from the desert wants a fast irq
+//				CPU_CycleLeft += CPU_Cycles;
+//				CPU_Cycles = 5;
+//			}
 			MPU401_Reset();
 			break;
 		case 0x3f:	/* UART mode */

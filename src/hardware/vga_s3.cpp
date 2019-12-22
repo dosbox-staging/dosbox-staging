@@ -84,6 +84,18 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 	case 0x41:  /* CR41 BIOS flags */
 		vga.s3.reg_41 = val;
 		break;
+	case 0x42:  /* CR42 Mode Control */
+		if ((val ^ vga.s3.reg_42) & 0x20) {
+			vga.s3.reg_42=val;
+			VGA_StartResize();
+		} else vga.s3.reg_42=val;
+		/*
+		3d4h index 42h (R/W):  CR42 Mode Control
+		bit  0-3  DCLK Select. These bits are effective when the VGA Clock Select
+				  (3C2h/3CCh bit 2-3) is 3.
+		       5  Interlaced Mode if set.
+	   */
+		break;
 	case 0x43:	/* CR43 Extended Mode */
 		vga.s3.reg_43=val & ~0x4;
 		if (((val & 0x4) ^ (vga.config.scan_len >> 6)) & 0x4) {
@@ -156,6 +168,7 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 			case S3_XGA_640:  vga.s3.xga_screen_width = 640; break;
 			case S3_XGA_800:  vga.s3.xga_screen_width = 800; break;
 			case S3_XGA_1280: vga.s3.xga_screen_width = 1280; break;
+			case S3_XGA_1600: vga.s3.xga_screen_width = 1600; break;
 			default:  vga.s3.xga_screen_width = 1024; break;
 		}
 		break;
@@ -470,6 +483,10 @@ void SVGA_S3_WriteSEQ(Bitu reg,Bitu val,Bitu iolen) {
 	}
 }
 
+// to make the S3 Trio64 BIOS work
+const Bit8u reg17ret[] ={0x7b, 0xc0, 0x0, 0xda};
+Bit8u reg17index=0;
+
 Bitu SVGA_S3_ReadSEQ(Bitu reg,Bitu iolen) {
 	/* S3 specific group */
 	if (reg>0x8 && vga.s3.pll.lock!=0x6) {
@@ -489,6 +506,12 @@ Bitu SVGA_S3_ReadSEQ(Bitu reg,Bitu iolen) {
 		return vga.s3.clk[3].m;
 	case 0x15:
 		return vga.s3.pll.cmd;
+	case 0x17: {
+			Bit8u retval = reg17ret[reg17index];
+			reg17index++;
+			if(reg17index>3)reg17index=0;
+			return retval;
+		}
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:S3:SEQ:Read from illegal index %2X", reg);
 		return 0;
@@ -531,8 +554,8 @@ void SVGA_Setup_S3Trio(void) {
 	svga.hardware_cursor_active = &SVGA_S3_HWCursorActive;
 	svga.accepts_mode = &SVGA_S3_AcceptsMode;
 
-	if (vga.vmemsize == 0)
-		vga.vmemsize = 2*1024*1024; // the most common S3 configuration
+	//if (vga.vmemsize == 0)
+	//	vga.vmemsize = 2*1024*1024; // the most common S3 configuration
 
 	// Set CRTC 36 to specify amount of VRAM and PCI
 	if (vga.vmemsize < 1024*1024) {
@@ -547,20 +570,14 @@ void SVGA_Setup_S3Trio(void) {
 	} else if (vga.vmemsize < 4096*1024)	{
 		vga.vmemsize = 3072*1024;
 		vga.s3.reg_36 = 0x5a;		// 3mb fast page mode
-	} else {	// Trio64 supported only up to 4M
+	} else if (vga.vmemsize < 8192*1024) {	// Trio64 supported only up to 4M
 		vga.vmemsize = 4096*1024;
 		vga.s3.reg_36 = 0x1a;		// 4mb fast page mode
+	} else {	// 8M
+		vga.vmemsize = 8192*1024;
+		vga.s3.reg_36 = 0x7a;		// 8mb fast page mode
 	}
 
 	// S3 ROM signature
-	PhysPt rom_base=PhysMake(0xc000,0);
-	phys_writeb(rom_base+0x003f,'S');
-	phys_writeb(rom_base+0x0040,'3');
-	phys_writeb(rom_base+0x0041,' ');
-	phys_writeb(rom_base+0x0042,'8');
-	phys_writeb(rom_base+0x0043,'6');
-	phys_writeb(rom_base+0x0044,'C');
-	phys_writeb(rom_base+0x0045,'7');
-	phys_writeb(rom_base+0x0046,'6');
-	phys_writeb(rom_base+0x0047,'4');
+	phys_writes(PhysMake(0xc000,0)+0x003f, "S3 86C764", 10);
 }

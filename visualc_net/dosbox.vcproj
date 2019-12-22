@@ -12,8 +12,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\Debug"
-			IntermediateDirectory=".\Debug"
+			OutputDirectory="..\bin\Debug"
+			IntermediateDirectory="..\bin\Debug"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -26,10 +26,10 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				RuntimeTypeInfo="TRUE"
-				PrecompiledHeaderFile=".\Debug/dosbox.pch"
-				AssemblerListingLocation=".\Debug/"
-				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
+				PrecompiledHeaderFile="..\bin\Debug/dosbox.pch"
+				AssemblerListingLocation="..\bin\Debug/"
+				ObjectFile="..\bin\Debug/"
+				ProgramDataBaseFileName="..\bin\Debug/"
 				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="opengl32.lib sdl_net.lib winmm.lib zlib.lib libpng.lib sdlmain.lib sdl.lib curses.lib odbc32.lib odbccp32.lib ws2_32.lib"
-				OutputFile=".\Debug/dosbox.exe"
+				OutputFile="..\bin\dosbox_debug.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
@@ -74,8 +74,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\Release"
-			IntermediateDirectory=".\Release"
+			OutputDirectory="..\bin\Release"
+			IntermediateDirectory="..\bin\Release"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -92,7 +92,7 @@
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
-				AdditionalIncludeDirectories="../include,../src/platform/visualc"
+				AdditionalIncludeDirectories="E:\Programmierumgebungen\pcap\WpdPack\Include;&quot;E:\Programmierumgebungen\SDL-1.2.13\include&quot;;&quot;E:\Programmierumgebungen\freetype-2.1.10\include&quot;;E:\Programmierumgebungen\dlls\zlib;E:\Programmierumgebungen\dlls\lpng1216;&quot;E:\Programmierumgebungen\Projekte\SDL_net-1.2.5\include&quot;;E:\Programmierumgebungen\Projekte\pdcurse34;../include;../src/platform/visualc"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -101,9 +101,9 @@
 				RuntimeTypeInfo="TRUE"
 				PrecompiledHeaderFile=".\Release/dosbox.pch"
 				AssemblerOutput="4"
-				AssemblerListingLocation=".\Release/"
-				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
+				AssemblerListingLocation="..\bin\Release/"
+				ObjectFile="..\bin\Release/"
+				ProgramDataBaseFileName="..\bin\Release/"
 				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
@@ -113,10 +113,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib winmm.lib zlib.lib libpng.lib sdl_net.lib sdlmain.lib sdl.lib curses.lib odbc32.lib odbccp32.lib ws2_32.lib"
-				OutputFile=".\Release/dosbox.exe"
+				AdditionalDependencies="opengl32.lib winmm.lib zlib.lib libpng.lib sdl_net.lib sdl.lib sdlmain.lib pdcurses.lib odbc32.lib odbccp32.lib Ws2_32.lib freetype2110.lib"
+				OutputFile="..\bin\dosbox.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="E:\Programmierumgebungen\Projekte\pdcurse34;&quot;E:\Programmierumgebungen\Projekte\SDL_net-1.2.5\lib&quot;;E:\Programmierumgebungen\dlls\lpng1216\projects\visualc71\Win32_LIB_Release\ZLib;&quot;E:\Programmierumgebungen\sdl-1.2.13\VisualC\SDLmain\Release&quot;;&quot;E:\Programmierumgebungen\SDL-1.2.13\VisualC\SDL\Release&quot;;E:\Programmierumgebungen\dlls\lpng1216\projects\visualc71\Win32_LIB_Release;&quot;E:\Programmierumgebungen\freetype-2.1.10\objs&quot;"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=""
 				GenerateMapFile="TRUE"
@@ -339,112 +340,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="dos"
-				Filter="">
-				<File
-					RelativePath="..\src\dos\dev_con.h">
-				</File>
-				<File
-					RelativePath="..\src\dos\dos.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\dos_classes.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\dos_devices.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\dos_execute.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\dos_files.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\dos_ioctl.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\dos_keyboard_layout.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\dos_memory.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\dos_misc.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\dos_mscdex.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\dos_programs.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\dos_tables.cpp">
-				</File>
-				<Filter
-					Name="win32headers"
-					Filter="">
-					<File
-						RelativePath="..\src\dos\drives.h">
-					</File>
-					<File
-						RelativePath="..\src\dos\Ntddcdrm.h">
-					</File>
-					<File
-						RelativePath="..\src\dos\Ntddscsi.h">
-					</File>
-					<File
-						RelativePath="..\src\dos\Ntddstor.h">
-					</File>
-					<File
-						RelativePath="..\src\dos\scsidefs.h">
-					</File>
-					<File
-						RelativePath="..\src\dos\wnaspi32.h">
-					</File>
-				</Filter>
-				<Filter
-					Name="cdrom"
-					Filter="">
-					<File
-						RelativePath="..\src\dos\cdrom.cpp">
-					</File>
-					<File
-						RelativePath="..\src\dos\cdrom.h">
-					</File>
-					<File
-						RelativePath="..\src\dos\cdrom_aspi_win32.cpp">
-					</File>
-					<File
-						RelativePath="..\src\dos\cdrom_image.cpp">
-					</File>
-					<File
-						RelativePath="..\src\dos\cdrom_ioctl_win32.cpp">
-					</File>
-				</Filter>
-				<Filter
-					Name="drives"
-					Filter="">
-					<File
-						RelativePath="..\src\dos\drive_cache.cpp">
-					</File>
-					<File
-						RelativePath="..\src\dos\drive_fat.cpp">
-					</File>
-					<File
-						RelativePath="..\src\dos\drive_iso.cpp">
-					</File>
-					<File
-						RelativePath="..\src\dos\drive_local.cpp">
-					</File>
-					<File
-						RelativePath="..\src\dos\drive_virtual.cpp">
-					</File>
-					<File
-						RelativePath="..\src\dos\drives.cpp">
-					</File>
-				</Filter>
-			</Filter>
-			<Filter
 				Name="hardware"
 				Filter="">
 				<File
@@ -455,6 +350,9 @@
 				</File>
 				<File
 					RelativePath="..\src\hardware\font-switch.h">
+				</File>
+				<File
+					RelativePath="..\src\hardware\hardopl.cpp">
 				</File>
 				<File
 					RelativePath="..\src\hardware\hardware.cpp">
@@ -479,6 +377,9 @@
 				</File>
 				<File
 					RelativePath="..\src\hardware\mixer.cpp">
+				</File>
+				<File
+					RelativePath="..\src\hardware\ne2000.cpp">
 				</File>
 				<File
 					RelativePath="..\src\hardware\pic.cpp">
@@ -606,10 +507,62 @@
 						RelativePath="..\src\hardware\serialport\softmodem.h">
 					</File>
 				</Filter>
+				<Filter
+					Name="parport"
+					Filter="">
+					<File
+						RelativePath="..\src\hardware\parport\directlpt_linux.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\directlpt_linux.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\directlpt_win32.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\directlpt_win32.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\filelpt.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\filelpt.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\parport.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer_charmaps.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer_charmaps.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer_if.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer_redir.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\parport\printer_redir.h">
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="gui"
 				Filter="">
+				<File
+					RelativePath="..\src\gui\dosbox_logo.h">
+				</File>
+				<File
+					RelativePath="..\src\gui\dosbox_splash.h">
+				</File>
 				<File
 					RelativePath="..\src\libs\gui_tk\gui_tk.cpp">
 				</File>
@@ -623,13 +576,31 @@
 					RelativePath="..\src\gui\render.cpp">
 				</File>
 				<File
+					RelativePath="..\src\gui\render_loops.h">
+				</File>
+				<File
 					RelativePath="..\src\gui\render_scalers.cpp">
 				</File>
 				<File
 					RelativePath="..\src\gui\render_scalers.h">
 				</File>
 				<File
+					RelativePath="..\src\gui\render_simple.h">
+				</File>
+				<File
 					RelativePath="..\src\gui\render_templates.h">
+				</File>
+				<File
+					RelativePath="..\src\gui\render_templates_hq.h">
+				</File>
+				<File
+					RelativePath="..\src\gui\render_templates_hq2x.h">
+				</File>
+				<File
+					RelativePath="..\src\gui\render_templates_hq3x.h">
+				</File>
+				<File
+					RelativePath="..\src\gui\render_templates_sai.h">
 				</File>
 				<File
 					RelativePath="..\src\gui\sdl_gui.cpp">
@@ -761,6 +732,129 @@
 					RelativePath="..\src\fpu\fpu_instructions_x86.h">
 				</File>
 			</Filter>
+			<Filter
+				Name="libs"
+				Filter="">
+				<Filter
+					Name="porttalk"
+					Filter="">
+					<File
+						RelativePath="..\src\libs\porttalk\porttalk.cpp">
+					</File>
+					<File
+						RelativePath="..\src\libs\porttalk\porttalk.h">
+					</File>
+					<File
+						RelativePath="..\src\libs\porttalk\PortTalk_IOCTL.h">
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="dos"
+				Filter="">
+				<File
+					RelativePath="..\src\dos\dev_con.h">
+				</File>
+				<File
+					RelativePath="..\src\dos\dos.cpp">
+				</File>
+				<File
+					RelativePath="..\src\dos\dos_classes.cpp">
+				</File>
+				<File
+					RelativePath="..\src\dos\dos_devices.cpp">
+				</File>
+				<File
+					RelativePath="..\src\dos\dos_execute.cpp">
+				</File>
+				<File
+					RelativePath="..\src\dos\dos_files.cpp">
+				</File>
+				<File
+					RelativePath="..\src\dos\dos_ioctl.cpp">
+				</File>
+				<File
+					RelativePath="..\src\dos\dos_keyboard_layout.cpp">
+				</File>
+				<File
+					RelativePath="..\src\dos\dos_memory.cpp">
+				</File>
+				<File
+					RelativePath="..\src\dos\dos_misc.cpp">
+				</File>
+				<File
+					RelativePath="..\src\dos\dos_mscdex.cpp">
+				</File>
+				<File
+					RelativePath="..\src\dos\dos_programs.cpp">
+				</File>
+				<File
+					RelativePath="..\src\dos\dos_tables.cpp">
+				</File>
+				<Filter
+					Name="win32headers"
+					Filter="">
+					<File
+						RelativePath="..\src\dos\drives.h">
+					</File>
+					<File
+						RelativePath="..\src\dos\Ntddcdrm.h">
+					</File>
+					<File
+						RelativePath="..\src\dos\Ntddscsi.h">
+					</File>
+					<File
+						RelativePath="..\src\dos\Ntddstor.h">
+					</File>
+					<File
+						RelativePath="..\src\dos\scsidefs.h">
+					</File>
+					<File
+						RelativePath="..\src\dos\wnaspi32.h">
+					</File>
+				</Filter>
+				<Filter
+					Name="cdrom"
+					Filter="">
+					<File
+						RelativePath="..\src\dos\cdrom.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\cdrom.h">
+					</File>
+					<File
+						RelativePath="..\src\dos\cdrom_aspi_win32.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\cdrom_image.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\cdrom_ioctl_win32.cpp">
+					</File>
+				</Filter>
+				<Filter
+					Name="drives"
+					Filter="">
+					<File
+						RelativePath="..\src\dos\drive_cache.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\drive_fat.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\drive_iso.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\drive_local.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\drive_virtual.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\drives.cpp">
+					</File>
+				</Filter>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -808,6 +902,9 @@
 				RelativePath="..\include\inout.h">
 			</File>
 			<File
+				RelativePath="..\include\ipx.h">
+			</File>
+			<File
 				RelativePath="..\include\joystick.h">
 			</File>
 			<File
@@ -815,6 +912,9 @@
 			</File>
 			<File
 				RelativePath="..\include\logging.h">
+			</File>
+			<File
+				RelativePath="..\include\mapper.h">
 			</File>
 			<File
 				RelativePath="..\include\mem.h">
@@ -829,7 +929,13 @@
 				RelativePath="..\include\mouse.h">
 			</File>
 			<File
+				RelativePath="..\include\ne2000.h">
+			</File>
+			<File
 				RelativePath="..\include\paging.h">
+			</File>
+			<File
+				RelativePath="..\include\parport.h">
 			</File>
 			<File
 				RelativePath="..\include\pic.h">
@@ -865,6 +971,341 @@
 				RelativePath="..\include\video.h">
 			</File>
 		</Filter>
+		<Filter
+			Name="deps"
+			Filter="">
+			<Filter
+				Name="wpcap"
+				Filter="">
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\bittypes.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\bucket_lookup.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\count_packets.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\Devioctl.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\Gnuc.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\ip6_misc.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\memory_t.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\normal_lookup.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\Ntddndis.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\Ntddpack.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\Packet32.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\pcap-bpf.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\pcap-int.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\pcap-stdinc.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\pcap.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\pthread.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\remote-ext.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\sched.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\semaphore.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\tcp_session.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\time_calls.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\tme.h">
+				</File>
+				<File
+					RelativePath="..\..\..\pcap\WpdPack\Include\Win32-Extensions.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="sdl"
+				Filter="">
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\begin_code.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\close_code.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_active.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_audio.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_byteorder.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_cdrom.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_copying.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_cpuinfo.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_endian.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_error.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_events.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_getenv.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_joystick.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_keyboard.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_keysym.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_loadso.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_main.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_mouse.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_mutex.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_name.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_opengl.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_quit.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_rwops.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_syswm.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_thread.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_timer.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_types.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_version.h">
+				</File>
+				<File
+					RelativePath="..\..\SDL-1.2.8\include\SDL_video.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="freetype"
+				Filter="">
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\freetype.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\ft2build.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftbbox.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftbdf.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftbitmap.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftcache.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftchapters.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\fterrdef.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\fterrors.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftglyph.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftgzip.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftimage.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftincrem.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftlist.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftlzw.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftmac.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftmm.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftmodapi.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftmoderr.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftotval.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftoutln.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftpfr.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftrender.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftsizes.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftsnames.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftstroke.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftsynth.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftsysio.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftsysmem.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftsystem.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\fttrigon.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\fttypes.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftwinfnt.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ftxf86.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\t1tables.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ttnameid.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\tttables.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\tttags.h">
+				</File>
+				<File
+					RelativePath="..\..\..\freetype-2.1.10\include\freetype\ttunpat.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="zlib"
+				Filter="">
+				<File
+					RelativePath="..\..\..\dlls\zlib\zlib.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="png"
+				Filter="">
+				<File
+					RelativePath="..\..\..\dlls\lpng1216\png.h">
+				</File>
+				<File
+					RelativePath="..\..\..\dlls\lpng1216\pngconf.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="sdlnet"
+				Filter="">
+				<File
+					RelativePath="..\..\SDL_net-1.2.5\include\SDL_net.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="pdcurse"
+				Filter="">
+				<File
+					RelativePath="..\..\pdcurse\curses.h">
+				</File>
+				<File
+					RelativePath="..\..\pdcurse\curspriv.h">
+				</File>
+				<File
+					RelativePath="..\..\pdcurse\panel.h">
+				</File>
+				<File
+					RelativePath="..\..\pdcurse\xcurses.h">
+				</File>
+			</Filter>
+		</Filter>
+		<File
+			RelativePath=".\dosbox.conf">
+		</File>
 		<File
 			RelativePath="..\src\dosbox.ico">
 		</File>

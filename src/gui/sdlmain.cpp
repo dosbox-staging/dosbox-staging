@@ -406,7 +406,10 @@ static SDL_Surface * GFX_SetupSurfaceScaled(Bit32u sdl_flags, Bit32u bpp) {
 	}
 }
 
+static void EndSplashScreen();
+
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t callback) {
+	EndSplashScreen();
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
@@ -434,20 +437,23 @@ dosurface:
 		sdl.clip.w=width;
 		sdl.clip.h=height;
 		if (sdl.desktop.fullscreen) {
+			Uint32 flags = SDL_FULLSCREEN | SDL_HWPALETTE |
+				((flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE) |
+				(sdl.desktop.doublebuf ? SDL_DOUBLEBUF|SDL_ASYNCBLIT : 0);
 			if (sdl.desktop.full.fixed) {
 				sdl.clip.x=(Sint16)((sdl.desktop.full.width-width)/2);
 				sdl.clip.y=(Sint16)((sdl.desktop.full.height-height)/2);
-				sdl.surface=SDL_SetVideoMode(sdl.desktop.full.width,sdl.desktop.full.height,bpp,
-					SDL_FULLSCREEN | ((flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE) |
-					(sdl.desktop.doublebuf ? SDL_DOUBLEBUF|SDL_ASYNCBLIT : 0) | SDL_HWPALETTE);
-				if (sdl.surface == NULL) E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",sdl.desktop.full.width,sdl.desktop.full.height,bpp,SDL_GetError());
+				sdl.surface=SDL_SetVideoMode(sdl.desktop.full.width,
+					sdl.desktop.full.height, bpp, flags);
 			} else {
-				sdl.clip.x=0;sdl.clip.y=0;
-				sdl.surface=SDL_SetVideoMode(width,height,bpp,
-					SDL_FULLSCREEN | ((flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE) |
-					(sdl.desktop.doublebuf ? SDL_DOUBLEBUF|SDL_ASYNCBLIT  : 0)|SDL_HWPALETTE);
-				if (sdl.surface == NULL)
-					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",width,height,bpp,SDL_GetError());
+				sdl.clip.x=0; sdl.clip.y=0;
+				sdl.surface=SDL_SetVideoMode(width, height, bpp, flags);
+			}
+			if (sdl.surface == NULL) {
+				LOG_MSG("Fullscreen not supported: %s", SDL_GetError());
+				sdl.desktop.fullscreen=false;
+				GFX_CaptureMouse();
+				goto dosurface;
 			}
 		} else {
 			sdl.clip.x=0;sdl.clip.y=0;
@@ -988,6 +994,72 @@ static unsigned char logo[32*32*4]= {
 };
 #include "dosbox_splash.h"
 
+/* The endian part is intentionally disabled as somehow it produces correct results without according to rhoenie*/
+//#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+//    Bit32u rmask = 0xff000000;
+//    Bit32u gmask = 0x00ff0000;
+//    Bit32u bmask = 0x0000ff00;
+//#else
+    Bit32u rmask = 0x000000ff;
+    Bit32u gmask = 0x0000ff00;
+    Bit32u bmask = 0x00ff0000;
+//#endif
+
+static SDL_Surface* splash_surf;
+static bool			splash_active;
+static Bit8u*		splash_tmpbuf;
+static Bit32u		splash_startticks;
+
+static void ShowSplashScreen() {
+	splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0);
+	if (splash_surf) {
+		splash_active=true;
+		SDL_FillRect(splash_surf, NULL, SDL_MapRGB(splash_surf->format, 0, 0, 0));
+		splash_tmpbuf = new Bit8u[640*400*3];
+		GIMP_IMAGE_RUN_LENGTH_DECODE(splash_tmpbuf,gimp_image.rle_pixel_data,640*400,3);
+		for (Bitu y=0; y<400; y++) {
+
+			Bit8u* tmpbuf = splash_tmpbuf + y*640*3;
+			Bit32u * draw=(Bit32u*)(((Bit8u *)splash_surf->pixels)+((y)*splash_surf->pitch));
+			for (Bitu x=0; x<640; x++) {
+//#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+//				*draw++ = tmpbuf[x*3+2]+tmpbuf[x*3+1]*0x100+tmpbuf[x*3+0]*0x10000+0x00000000;
+//#else
+				*draw++ = tmpbuf[x*3+0]+tmpbuf[x*3+1]*0x100+tmpbuf[x*3+2]*0x10000+0x00000000;
+//#endif
+			}
+		}
+		Bit32u lasttick=GetTicks();
+		for(Bitu i = 0; i <=5; i++) {
+			if((GetTicks()-lasttick)>20) i++;
+			while((GetTicks()-lasttick)<15) SDL_Delay(5);
+			lasttick = GetTicks();
+			SDL_SetAlpha(splash_surf, SDL_SRCALPHA,(Bit8u)(51*i));
+			SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
+			SDL_Flip(sdl.surface);
+		}
+
+		splash_startticks=GetTicks();
+	} else {
+		splash_active=false;
+		splash_startticks=0;
+
+	}
+}
+
+static void EndSplashScreen() {
+	if(!splash_active) return;
+	SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
+	SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
+	SDL_Flip(sdl.surface);
+	while((GetTicks()-splash_startticks)< 500) SDL_Delay(10);
+	
+	SDL_FreeSurface(splash_surf);
+	delete [] splash_tmpbuf;
+	splash_active=false;
+
+}
+
 //extern void UI_Run(bool);
 void Restart(bool pressed);
 
@@ -1160,77 +1232,8 @@ static void GUI_StartUp(Section * sec) {
 	GFX_Stop();
 	SDL_WM_SetCaption("DOSBox",VERSION);
 
-/* The endian part is intentionally disabled as somehow it produces correct results without according to rhoenie*/
-//#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-//    Bit32u rmask = 0xff000000;
-//    Bit32u gmask = 0x00ff0000;
-//    Bit32u bmask = 0x0000ff00;
-//#else
-    Bit32u rmask = 0x000000ff;
-    Bit32u gmask = 0x0000ff00;
-    Bit32u bmask = 0x00ff0000;
-//#endif
-
-/* Please leave the Splash screen stuff in working order in DOSBox. We spend a lot of time making DOSBox. */
-	SDL_Surface* splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0);
-	if (splash_surf) {
-		SDL_FillRect(splash_surf, NULL, SDL_MapRGB(splash_surf->format, 0, 0, 0));
-
-		Bit8u* tmpbufp = new Bit8u[640*400*3];
-		GIMP_IMAGE_RUN_LENGTH_DECODE(tmpbufp,gimp_image.rle_pixel_data,640*400,3);
-		for (Bitu y=0; y<400; y++) {
-
-			Bit8u* tmpbuf = tmpbufp + y*640*3;
-			Bit32u * draw=(Bit32u*)(((Bit8u *)splash_surf->pixels)+((y)*splash_surf->pitch));
-			for (Bitu x=0; x<640; x++) {
-//#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-//				*draw++ = tmpbuf[x*3+2]+tmpbuf[x*3+1]*0x100+tmpbuf[x*3+0]*0x10000+0x00000000;
-//#else
-				*draw++ = tmpbuf[x*3+0]+tmpbuf[x*3+1]*0x100+tmpbuf[x*3+2]*0x10000+0x00000000;
-//#endif
-			}
-		}
-
-		bool exit_splash = false;
-
-		static Bitu max_splash_loop = 600;
-		static Bitu splash_fade = 100;
-		static bool use_fadeout = true;
-
-		for (Bit32u ct = 0,startticks = GetTicks();ct < max_splash_loop;ct = GetTicks()-startticks) {
-			SDL_Event evt;
-			while (SDL_PollEvent(&evt)) {
-				if (evt.type == SDL_QUIT) {
-					exit_splash = true;
-					break;
-				}
-			}
-			if (exit_splash) break;
-
-			if (ct<1) {
-				SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
-				SDL_SetAlpha(splash_surf, SDL_SRCALPHA,255);
-				SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
-				SDL_Flip(sdl.surface);
-			} else if (ct>=max_splash_loop-splash_fade) {
-				if (use_fadeout) {
-					SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
-					SDL_SetAlpha(splash_surf, SDL_SRCALPHA, (Bit8u)((max_splash_loop-1-ct)*255/(splash_fade-1)));
-					SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
-					SDL_Flip(sdl.surface);
-				}
-			}
-
-		}
-
-		if (use_fadeout) {
-			SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
-			SDL_Flip(sdl.surface);
-		}
-		SDL_FreeSurface(splash_surf);
-		delete [] tmpbufp;
-
-	}
+	/* Please leave the Splash screen stuff in working order in DOSBox. We spend a lot of time making DOSBox. */
+	ShowSplashScreen();
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(KillSwitch,MK_f9,MMOD1,"shutdown","ShutDown");
@@ -1767,6 +1770,31 @@ int main(int argc, char* argv[]) {
 	LOG_MSG("DOSBox version %s",VERSION);
 	LOG_MSG("Copyright 2002-2010 DOSBox Team, published under GNU GPL.");
 	LOG_MSG("---");
+	LOG_MSG("SVN build compiled on %s - http://home.arcor.de/h-a-l-9000", __DATE__);
+	LOG_MSG("featuring:");
+	LOG_MSG("  Try not to exit on unsupported fullscreen mode");
+	LOG_MSG("  \\a bell support");
+	LOG_MSG("  Paging patch - Later Win9x becomes more stable");
+	LOG_MSG("  Reduced CPU usage when idling in command line");
+	LOG_MSG("  Timer and interrupt latency patch, fixes certain games");
+	LOG_MSG("  Add the 'IMGMAKE' command (creates disk images)");
+	LOG_MSG("  Make vgaonly features availible to other graphics cards - see [render]");
+	LOG_MSG("  Free choice wether 9-pixel wide characters should be used");
+	LOG_MSG("  Add DATE and TIME commands, midnight overflow, and host time synchronization");
+	LOG_MSG("  NE2000 Ethernet passthrough");
+	LOG_MSG("  OPL chip passthrough");
+	LOG_MSG("  Parallel Port passthrough and Virtual Printer patch, logging enabled");
+	LOG_MSG("  Parallel Port data redircetion to file/device");
+	LOG_MSG("  Add restart capability, Win95 can shutdown DOSBox through APM");
+	LOG_MSG("  Serial logging capability enabled");
+	LOG_MSG("  Increase maximum resolution to 1600x1200, add lot's of highres VESA modes");
+	LOG_MSG("  Add back selection of video memory size - up to 8MB = 1600x1200@32bpp");
+	LOG_MSG("  EGA / SVGA_S3 compatibility, enable LDGFXROM");
+	LOG_MSG("  CGA video memory slowdown");
+	LOG_MSG("  DOSBox can load while the splash screen displays");
+	LOG_MSG("  FILES= adjustable by Kippesoep");
+	LOG_MSG("  Restart capability - ctrl+alt+POS1 or config -r [params] or FJMP F000:FFF0");
+	LOG_MSG("---");
 
 	/* Init SDL */
 #if SDL_VERSION_ATLEAST(1, 2, 14)
@@ -1915,12 +1943,12 @@ int main(int argc, char* argv[]) {
 	catch (int){
 		;//nothing pressed killswitch
 	}
-	catch(...){
+//	catch(...){
 		//Force visible mouse to end user. Somehow this sometimes doesn't happen
-		SDL_WM_GrabInput(SDL_GRAB_OFF);
-		SDL_ShowCursor(SDL_ENABLE);
-		throw;//dunno what happened. rethrow for sdl to catch
-	}
+//		SDL_WM_GrabInput(SDL_GRAB_OFF);
+//		SDL_ShowCursor(SDL_ENABLE);
+//		throw;//dunno what happened. rethrow for sdl to catch
+//	}
 	//Force visible mouse to end user. Somehow this sometimes doesn't happen
 	SDL_WM_GrabInput(SDL_GRAB_OFF);
 	SDL_ShowCursor(SDL_ENABLE);
