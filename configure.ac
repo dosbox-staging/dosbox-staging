@@ -499,26 +499,6 @@ else
    AC_MSG_RESULT(no)
 fi
 
-AH_TEMPLATE(C_DDRAW,[Define to 1 to enable output=ddraw (Win32)])
-AC_ARG_ENABLE(ddraw,AC_HELP_STRING([--disable-ddraw],[Disable ddraw support]),,enable_ddraw=yes)
-AC_CHECK_HEADER(ddraw.h, have_ddraw_h=yes , have_ddraw_h=no , )
-AC_MSG_CHECKING(whether ddraw display output will be enabled)
-if test x$enable_ddraw = xyes; then
-case "$host" in
-    *-*-cygwin* | *-*-mingw* | *-*-msys*)
-       if test x$have_ddraw_h = xyes ; then
-         AC_MSG_RESULT(yes)
-         AC_DEFINE(C_DDRAW,1)
-       else
-         AC_MSG_RESULT(no)
-       fi
-       ;;
-    *)
-       AC_MSG_RESULT(no)
-       ;;
-esac
-fi
-
 dnl Check for mprotect. Needed for 64 bits linux
 AH_TEMPLATE(C_HAVE_MPROTECT,[Define to 1 if you have the mprotect function])
 AC_CHECK_HEADER([sys/mman.h], [
