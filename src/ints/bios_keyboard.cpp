@@ -27,15 +27,6 @@
 #include "dos_inc.h"
 #include "SDL.h"
 
-/* SDL by default treats numlock and scrolllock different from all other keys.
- * In recent versions this can disabled by a environment variable which we set in sdlmain.cpp
- * Define the following if this is the case */
-#if SDL_VERSION_ATLEAST(1, 2, 14)
-#define CAN_USE_LOCK 1
-/* For lower versions of SDL we also use a slight hack to get the startup states of numclock and capslock right.
- * The proper way is in the mapper, but the repeating key is an unwanted side effect for lower versions of SDL */
-#endif
-
 static Bitu call_int16,call_irq1,call_irq6;
 
 /* Nice table from BOCHS i should feel bad for ripping this */
@@ -241,11 +232,6 @@ static Bitu IRQ1_Handler(void) {
 	flags2=mem_readb(BIOS_KEYBOARD_FLAGS2);
 	flags3=mem_readb(BIOS_KEYBOARD_FLAGS3);
 	leds  =mem_readb(BIOS_KEYBOARD_LEDS); 
-#ifdef CAN_USE_LOCK
-	/* No hack anymore! */
-#else
-	flags2&=~(0x40+0x20);//remove numlock/capslock pressed (hack for sdl only reporting states)
-#endif
 	if (DOS_LayoutKey(scancode,flags1,flags2,flags3)) return CBRET_NONE;
 //LOG_MSG("key input %d %d %d %d",scancode,flags1,flags2,flags3);
 	switch (scancode) {
@@ -308,14 +294,8 @@ static Bitu IRQ1_Handler(void) {
 			}
 		}
 		break;
-
-#ifdef CAN_USE_LOCK
 	case 0x3a:flags2 |=0x40;break;//CAPSLOCK
 	case 0xba:flags1 ^=0x40;flags2 &=~0x40;leds ^=0x04;break;
-#else
-	case 0x3a:flags2 |=0x40;flags1 |=0x40;leds |=0x04;break; //SDL gives only the state instead of the toggle					/* Caps Lock */
-	case 0xba:flags1 &=~0x40;leds &=~0x04;break;
-#endif
 	case 0x45:
 		if (flags3 &0x01) {
 			/* last scancode of pause received; first remove 0xe1-prefix */
@@ -336,13 +316,7 @@ static Bitu IRQ1_Handler(void) {
 			}
 		} else {
 			/* Num Lock */
-#ifdef CAN_USE_LOCK
 			flags2 |=0x20;
-#else
-			flags2 |=0x20;
-			flags1 |=0x20;
-			leds |=0x02;
-#endif
 		}
 		break;
 	case 0xc5:
@@ -350,15 +324,9 @@ static Bitu IRQ1_Handler(void) {
 			/* pause released */
 			flags3 &=~0x01;
 		} else {
-#ifdef CAN_USE_LOCK
 			flags1^=0x20;
 			leds^=0x02;
 			flags2&=~0x20;
-#else
-			/* Num Lock released */
-			flags1 &=~0x20;
-			leds &=~0x02;
-#endif
 		}
 		break;
 	case 0x46:flags2 |=0x10;break;				/* Scroll Lock SDL Seems to do this one fine (so break and make codes) */
@@ -605,14 +573,6 @@ static void InitBiosSegment(void) {
 	mem_writew(BIOS_KEYBOARD_BUFFER_TAIL,0x1e);
 	Bit8u flag1 = 0;
 	Bit8u leds = 16; /* Ack received */
-
-#if SDL_VERSION_ATLEAST(1, 2, 14)
-//Nothing, mapper handles all.
-#else
-	if (startup_state_capslock) { flag1|=0x40; leds|=0x04;}
-	if (startup_state_numlock)  { flag1|=0x20; leds|=0x02;}
-#endif
-
 	mem_writeb(BIOS_KEYBOARD_FLAGS1,flag1);
 	mem_writeb(BIOS_KEYBOARD_FLAGS2,0);
 	mem_writeb(BIOS_KEYBOARD_FLAGS3,16); /* Enhanced keyboard installed */	
