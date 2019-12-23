@@ -230,7 +230,8 @@ void DOS_Shell::CMD_HELP(char * args){
 	while (cmd_list[cmd_index].name) {
 		if (optall || !cmd_list[cmd_index].flags) {
 			WriteOut("<\033[34;1m%-8s\033[0m> %s",cmd_list[cmd_index].name,MSG_Get(cmd_list[cmd_index].help));
-			if(!(++write_count%22)) CMD_PAUSE(empty_string);
+			if (!(++write_count % 24))
+				CMD_PAUSE(empty_string);
 		}
 		cmd_index++;
 	}
