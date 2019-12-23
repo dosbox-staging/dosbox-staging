@@ -9,9 +9,7 @@ cd "$(git rev-parse --show-toplevel)" || exit
 
 git ls-files ./*.{h,cpp} | xargs unifdef \
 	-U WIN32 \
-	-U OS2 \
 	-U _WIN32 \
 	-U _WIN64 \
 	-U MACOSX \
-	-U C_DDRAW \
 	-m
