@@ -28,8 +28,13 @@ Read more at
 [3]:https://scan.coverity.com/projects/dosbox-staging
 [4]:https://github.com/dreamer/dosbox-staging/issues/23
 
-Codecs supported for CD Digital Audio emulation (loading CD music via
-[cue sheets](https://en.wikipedia.org/wiki/Cue_sheet_(computing))):
+**dosbox-staging** does not support audio playback using physical CDs.
+Using CD Digital Audio emulation (loading CD music via
+[cue sheets](https://en.wikipedia.org/wiki/Cue_sheet_(computing)) or
+mounting [ISO images](https://en.wikipedia.org/wiki/ISO_image)) is
+preferred instead.
+
+Codecs supported for CD-DA emulation:
 
 |                | dosbox-staging<sup>†</sup> | DOSBox<sup>‡</sup>
 |-               |-                           |-
