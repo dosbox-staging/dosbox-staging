@@ -156,14 +156,18 @@ AutoexecObject::~AutoexecObject(){
 	this->CreateAutoexec();
 }
 
-DOS_Shell::DOS_Shell():Program(){
-	input_handle=STDIN;
-	echo=true;
-	exit=false;
-	bf=0;
-	call=false;
-	completion_start = NULL;
-}
+DOS_Shell::DOS_Shell()
+	: Program(),
+	  l_history{},
+	  l_completion{},
+	  completion_start(nullptr),
+	  completion_index(0),
+	  input_handle(STDIN),
+	  bf(nullptr),
+	  echo(true),
+	  exit(false),
+	  call(false)
+{}
 
 Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 
@@ -371,7 +375,10 @@ private:
 	AutoexecObject autoexec[17];
 	AutoexecObject autoexec_echo;
 public:
-	AUTOEXEC(Section* configuration):Module_base(configuration) {
+	AUTOEXEC(Section* configuration)
+		: Module_base(configuration),
+		  autoexec_echo()
+	{
 		/* Register a virtual AUOEXEC.BAT file */
 		std::string line;
 		Section_line * section=static_cast<Section_line *>(configuration);
