@@ -23,17 +23,22 @@
 #include "shell.h"
 #include "support.h"
 
-BatchFile::BatchFile(DOS_Shell * host,char const * const resolved_name,char const * const entered_name, char const * const cmd_line) {
-	location = 0;
-	prev=host->bf;
-	echo=host->echo;
-	shell=host;
+BatchFile::BatchFile(DOS_Shell *host,
+                     char const * const resolved_name,
+                     char const * const entered_name,
+                     char const * const cmd_line)
+	: file_handle(0),
+	  location(0),
+	  echo(host->echo),
+	  shell(host),
+	  prev(host->bf),
+	  cmd(new CommandLine(entered_name, cmd_line)),
+	  filename("")
+{
 	char totalname[DOS_PATHLENGTH+4];
 	DOS_Canonicalize(resolved_name,totalname); // Get fullname including drive specificiation
-	cmd = new CommandLine(entered_name,cmd_line);
 	filename = totalname;
-
-	//Test if file is openable
+	// Test if file is openable
 	if (!DOS_OpenFile(totalname,(DOS_NOT_INHERIT|OPEN_READ),&file_handle)) {
 		//TODO Come up with something better
 		E_Exit("SHELL:Can't open BatchFile %s",totalname);
