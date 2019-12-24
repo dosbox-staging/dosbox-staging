@@ -76,10 +76,10 @@ public:
 	static bool IsPathAbsolute(std::string const& in);
 };
 
-
 #if defined (WIN32)
-
-#define WIN32_LEAN_AND_MEAN        // Exclude rarely-used stuff from 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 
 typedef struct dir_struct {
