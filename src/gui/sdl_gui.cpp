@@ -18,7 +18,7 @@
 
 
 #if 0
-#include "SDL.h"
+#include <SDL.h>
 #include "../libs/gui_tk/gui_tk.h"
 
 #include "dosbox.h"

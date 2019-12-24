@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <SDL.h>
 
 #include "dosbox.h"
 #include "callback.h"
@@ -25,7 +26,6 @@
 #include "regs.h"
 #include "inout.h"
 #include "dos_inc.h"
-#include "SDL.h"
 
 static Bitu call_int16,call_irq1,call_irq6;
 
