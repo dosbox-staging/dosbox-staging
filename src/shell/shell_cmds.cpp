@@ -526,8 +526,28 @@ void DOS_Shell::CMD_DIR(char * args) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 		return;
 	}
-	*(strrchr(path,'\\')+1)=0;
+
+	// DIR cmd in DOS and cmd.exe format 'Directory of <path>'
+	// accordingly:
+	// - only directory part of pattern passed as an argument
+	// - do not append '\' to the directory name
+	// - for root directories/drives: append '\' to the name
+	char *last_dir_sep = strrchr(path, '\\');
+	if (last_dir_sep == path + 2)
+		*(last_dir_sep + 1) = '\0';
+	else
+		*last_dir_sep = '\0';
+
+	const char drive_letter = path[0];
+	const size_t drive_idx = drive_letter - 'A';
+	const bool print_label = (drive_letter >= 'A') && Drives[drive_idx];
+
 	if (!optB) {
+		if (print_label) {
+			const char *label = Drives[drive_idx]->GetLabel();
+			WriteOut(MSG_Get("SHELL_CMD_DIR_VOLUME"), drive_letter, label);
+			p_count += 1;
+		}
 		WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"), path);
 		WriteOut_NoParsing("\n");
 		p_count += 2;

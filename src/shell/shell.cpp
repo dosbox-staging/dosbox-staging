@@ -581,6 +581,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_GOTO_LABEL_NOT_FOUND","GOTO: Label %s not found.\n");
 	MSG_Add("SHELL_CMD_FILE_NOT_FOUND","File %s not found.\n");
 	MSG_Add("SHELL_CMD_FILE_EXISTS","File %s already exists.\n");
+	MSG_Add("SHELL_CMD_DIR_VOLUME"," Volume in drive %c is %s\n");
 	MSG_Add("SHELL_CMD_DIR_INTRO"," Directory of %s\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%16d file(s) %17s bytes\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%16d dir(s)  %17s bytes free\n");
