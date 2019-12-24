@@ -29,8 +29,8 @@
 #include <list>
 #include <vector>
 
-#include "SDL.h"
-#include "SDL_thread.h"
+#include <SDL.h>
+#include <SDL_thread.h>
 
 #include "joystick.h"
 #include "keyboard.h"
@@ -2556,11 +2556,7 @@ void MAPPER_Init(void) {
 		}
 	}
 }
-//Somehow including them at the top conflicts with something in setup.h
-#ifdef C_X11_XKB
-#include "SDL_syswm.h"
-#include <X11/XKBlib.h>
-#endif
+
 void MAPPER_StartUp(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	mapper.sticks.num=0;

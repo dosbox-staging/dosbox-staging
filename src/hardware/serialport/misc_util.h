@@ -16,7 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef SDLNETWRAPPER_H
 #define SDLNETWRAPPER_H
 
@@ -58,12 +57,9 @@
  #define CAPWORD NETWRAPPER_TCP
 #endif
 
-#include "SDL_net.h"
-
-
+#include <SDL_net.h>
 
 Bit32u Netwrapper_GetCapabilities();
-
 
 class TCPClientSocket {
 	public:

@@ -21,6 +21,8 @@
 #define _GNU_SOURCE
 #endif
 
+#include "dosbox.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -32,10 +34,12 @@
 #include <process.h>
 #endif
 
-#include "cross.h"
-#include "SDL.h"
+#include <SDL.h>
+#if C_OPENGL
+#include <SDL_opengl.h>
+#endif
 
-#include "dosbox.h"
+#include "cross.h"
 #include "video.h"
 #include "mouse.h"
 #include "pic.h"
@@ -47,18 +51,17 @@
 #include "vga.h"
 #include "keyboard.h"
 #include "cpu.h"
-#include "cross.h"
 #include "control.h"
 
 #define MAPPERFILE "mapper-sdl2-" VERSION ".map"
 //#define DISABLE_JOYSTICK
 
 #if C_OPENGL
-#include "SDL_opengl.h"
 
 #ifndef APIENTRY
 #define APIENTRY
 #endif
+
 #ifndef APIENTRYP
 #define APIENTRYP APIENTRY *
 #endif
@@ -88,7 +91,7 @@ PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;
 PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL;
 PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;
 
-#endif //C_OPENGL
+#endif // C_OPENGL
 
 #if !(ENVIRON_INCLUDED)
 extern char** environ;

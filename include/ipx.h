@@ -16,7 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef DOSBOX_IPX_H
 #define DOSBOX_IPX_H
 
@@ -70,7 +69,7 @@
 #endif
 
 // For Uint8 type
-#include "SDL_net.h"
+#include <SDL_net.h>
 
 struct PackedIP {
 	Uint32 host;
