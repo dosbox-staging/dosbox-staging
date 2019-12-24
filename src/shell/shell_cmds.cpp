@@ -489,9 +489,6 @@ void DOS_Shell::CMD_DIR(char * args) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		return;
 	}
-	Bitu w_count = 0;
-	Bitu p_count = 0;
-	Bitu w_size = optW?5:1;
 
 	char buffer[CROSS_LEN];
 	args = trim(args);
@@ -541,6 +538,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	const char drive_letter = path[0];
 	const size_t drive_idx = drive_letter - 'A';
 	const bool print_label = (drive_letter >= 'A') && Drives[drive_idx];
+	unsigned p_count = 0; // line counter for 'pause' command
 
 	if (!optB) {
 		if (print_label) {
@@ -553,6 +551,19 @@ void DOS_Shell::CMD_DIR(char * args) {
 		p_count += 2;
 	}
 
+	// Helper function to handle 'Press any key to continue' message
+	// regardless of specific formatting below.
+	// Call it whenever a newline gets printed.
+	//
+	// TODO: DIR code assumes, that terminal size is 80x25
+	auto show_press_any_key = [&]() {
+		p_count += 1;
+		if (optP && (p_count % 24) == 0)
+			CMD_PAUSE(empty_string);
+	};
+
+	const bool is_root = strnlen(path, sizeof(path)) == 3;
+
 	/* Command uses dta so set it to our internal dta */
 	RealPt save_dta=dos.dta();
 	dos.dta(dos.tables.tempdta);
@@ -563,8 +574,10 @@ void DOS_Shell::CMD_DIR(char * args) {
 		dos.dta(save_dta);
 		return;
 	}
- 
+
 	std::vector<DtaResult> results;
+	// TODO OS should be asked for a number of files and appropriate
+	// vector capacity should be set
 
 	do {    /* File name and extension */
 		DtaResult result;
@@ -598,86 +611,114 @@ void DOS_Shell::CMD_DIR(char * args) {
 	uint32_t byte_count = 0;
 	uint32_t file_count = 0;
 	uint32_t dir_count = 0;
+	unsigned w_count = 0;
 
-	for (std::vector<DtaResult>::iterator iter = results.begin(); iter != results.end(); iter++) {
+	for (auto &entry : results) {
 
-		char * name = iter->name;
-		Bit32u size = iter->size;
-		Bit16u date = iter->date;
-		Bit16u time = iter->time;
-		Bit8u attr = iter->attr;
+		char *name = entry.name;
+		const uint32_t size = entry.size;
+		const uint16_t date = entry.date;
+		const uint16_t time = entry.time;
+		const bool is_dir = entry.attr & DOS_ATTR_DIRECTORY;
 
-		/* output the file */
-		if (optB) {
-			// this overrides pretty much everything
-			if (strcmp(".",name) && strcmp("..",name)) {
-				WriteOut("%s\n",name);
-			} else {
-				// skip to the next file, otherwise this file
-				// will be counted as printed for pause cmd
+		// Skip listing . and .. from toplevel directory, to simulate
+		// DIR output correctly.
+		// Bare format never lists .. nor . as directories.
+		if (is_root || optB) {
+			if (strcmp(".", name) == 0 || strcmp("..", name) == 0)
 				continue;
-			}
+		}
+
+		if (is_dir) {
+			dir_count += 1;
 		} else {
-			char * ext = empty_string;
-			if (!optW && (name[0] != '.')) {
-				ext = strrchr(name, '.');
-				if (!ext) ext = empty_string;
-				else *ext++ = 0;
-			}
-			Bit8u day	= (Bit8u)(date & 0x001f);
-			Bit8u month	= (Bit8u)((date >> 5) & 0x000f);
-			Bit16u year = (Bit16u)((date >> 9) + 1980);
-			Bit8u hour	= (Bit8u)((time >> 5 ) >> 6);
-			Bit8u minute = (Bit8u)((time >> 5) & 0x003f);
+			file_count += 1;
+			byte_count += size;
+		}
 
-			if (attr & DOS_ATTR_DIRECTORY) {
-				if (optW) {
-					WriteOut("[%s]",name);
-					size_t namelen = strlen(name);
-					if (namelen <= 14) {
-						for (size_t i=14-namelen;i>0;i--) WriteOut(" ");
-					}
-				} else {
-					WriteOut("%-8s %-3s   %-16s %02d-%02d-%04d %2d:%02d\n",name,ext,"<DIR>",day,month,year,hour,minute);
-				}
-				dir_count++;
+		// 'Bare' format: just the name, one per line, nothing else
+		//
+		if (optB) {
+			WriteOut("%s\n", name);
+			show_press_any_key();
+			continue;
+		}
+
+		// 'Wide list' format: using several columns
+		//
+		if (optW) {
+			if (is_dir) {
+				const size_t namelen = strlen(name);
+				WriteOut("[%s]%*s", name, (14 - namelen), "");
 			} else {
-				if (optW) {
-					WriteOut("%-16s",name);
-				} else {
-					FormatNumber(size,numformat);
-					WriteOut("%-8s %-3s   %16s %02d-%02d-%04d %2d:%02d\n",name,ext,numformat,day,month,year,hour,minute);
-				}
-				file_count++;
-				byte_count+=size;
+				WriteOut("%-16s", name);
 			}
-			if (optW) {
-				w_count++;
+			w_count += 1;
+			if ((w_count % 5) == 0)
+				show_press_any_key();
+			continue;
+		}
+
+		// default format: one detailed entry per line
+		//
+		const auto year   = static_cast<uint16_t>((date >> 9) + 1980);
+		const auto month  = static_cast<uint8_t>((date >> 5) & 0x000f);
+		const auto day    = static_cast<uint8_t>(date & 0x001f);
+		const auto hour   = static_cast<uint8_t>((time >> 5) >> 6);
+		const auto minute = static_cast<uint8_t>((time >> 5) & 0x003f);
+
+		char *ext = empty_string;
+		if ((name[0] != '.')) {
+			ext = strrchr(name, '.');
+			if (ext) {
+				*ext = '\0';
+				ext++;
+			} else {
+				// prevent (null) from appearing
+				ext = empty_string;
 			}
 		}
-		if (optP && !(++p_count % (24 * w_size))) {
-			CMD_PAUSE(empty_string);
+
+		if (is_dir) {
+			WriteOut("%-8s %-3s   %-16s %02d-%02d-%04d %2d:%02d\n",
+			         name, ext, "<DIR>", day, month, year, hour, minute);
+		} else {
+			FormatNumber(size, numformat);
+			WriteOut("%-8s %-3s   %16s %02d-%02d-%04d %2d:%02d\n",
+			         name, ext, numformat, day, month, year, hour, minute);
 		}
+		show_press_any_key();
 	}
 
-
-	if (optW) {
-		if (w_count%5)	WriteOut("\n");
+	// Additional newline in case last line in 'Wide list` format was
+	// not wrapped automatically.
+	if (optW && (w_count % 5)) {
+		WriteOut("\n");
+		show_press_any_key();
 	}
+
+	// Show the summary of results
 	if (!optB) {
-		/* Show the summary of results */
-		FormatNumber(byte_count,numformat);
-		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_USED"),file_count,numformat);
-		Bit8u drive=dta.GetSearchDrive();
-		//TODO Free Space
-		Bitu free_space=1024*1024*100;
+		FormatNumber(byte_count, numformat);
+		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_USED"), file_count, numformat);
+		show_press_any_key();
+
+		Bit8u drive = dta.GetSearchDrive();
+		Bitu free_space = 1024 * 1024 * 100;
 		if (Drives[drive]) {
-			Bit16u bytes_sector;Bit8u sectors_cluster;Bit16u total_clusters;Bit16u free_clusters;
-			Drives[drive]->AllocationInfo(&bytes_sector,&sectors_cluster,&total_clusters,&free_clusters);
-			free_space=bytes_sector*sectors_cluster*free_clusters;
+			Bit16u bytes_sector;
+			Bit8u  sectors_cluster;
+			Bit16u total_clusters;
+			Bit16u free_clusters;
+			Drives[drive]->AllocationInfo(&bytes_sector,
+			                              &sectors_cluster,
+			                              &total_clusters,
+			                              &free_clusters);
+			free_space = bytes_sector * sectors_cluster * free_clusters;
 		}
-		FormatNumber(free_space,numformat);
-		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"),dir_count,numformat);
+		FormatNumber(free_space, numformat);
+		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"), dir_count, numformat);
+		show_press_any_key();
 	}
 	dos.dta(save_dta);
 }
