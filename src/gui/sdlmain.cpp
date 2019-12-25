@@ -1731,6 +1731,21 @@ void GFX_ShowMsg(char const* format,...) {
 	if (!no_stdout) puts(buf); //Else buf is parsed again. (puts adds end of line)
 }
 
+static std::vector<std::string> Get_SDL_TextureRenderers()
+{
+	const int n = SDL_GetNumRenderDrivers();
+	std::vector<std::string> drivers;
+	drivers.reserve(n + 1);
+	drivers.push_back("auto");
+	SDL_RendererInfo info;
+	for (int i = 0; i < n; i++) {
+		if (SDL_GetRenderDriverInfo(i, &info))
+			continue;
+		if (info.flags & SDL_RENDERER_TARGETTEXTURE)
+			drivers.push_back(info.name);
+	}
+	return drivers;
+}
 
 void Config_Add_SDL() {
 	Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
@@ -1772,25 +1787,12 @@ void Config_Add_SDL() {
 	Pstring->Set_help("What video system to use for output.");
 	Pstring->Set_values(outputs);
 
-	const char *renderers[] = {
-		"auto",
-#ifdef WIN32
-		"direct3d",
-#endif
-		"opengl",
-#ifdef MACOSX
-		"metal",
-#endif
-		"software",
-		0
-	};
-
 	Pstring = sdl_sec->Add_string("texture_renderer",
 	                              Property::Changeable::Always,
 	                              "auto");
 	Pstring->Set_help("Choose a renderer driver if output=texture or texturenb.\n"
 	                  "Use output=auto for an automatic choice.");
-	Pstring->Set_values(renderers);
+	Pstring->Set_values(Get_SDL_TextureRenderers());
 
 	Pbool = sdl_sec->Add_bool("autolock",Property::Changeable::Always,true);
 	Pbool->Set_help("Mouse will automatically lock, if you click on the screen. (Press CTRL-F10 to unlock)");

@@ -508,6 +508,14 @@ void Property::Set_values(const char * const *in) {
 	}
 }
 
+void Property::Set_values(const std::vector<std::string> & in) {
+	Value::Etype type = default_value.type;
+	for (auto &str : in) {
+		Value val(str, type);
+		suggested_values.push_back(val);
+	}
+}
+
 Prop_int* Section_prop::Add_int(string const& _propname, Property::Changeable::Value when, int _value) {
 	Prop_int* test=new Prop_int(_propname,when,_value);
 	properties.push_back(test);

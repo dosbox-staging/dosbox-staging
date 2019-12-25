@@ -123,6 +123,7 @@ public:
 
 	Property(std::string const& _propname, Changeable::Value when):propname(_propname),change(when) { }
 	void Set_values(const char * const * in);
+	void Set_values(const std::vector<std::string> &in);
 	void Set_help(std::string const& str);
 	char const* Get_help();
 	virtual	bool SetValue(std::string const& str)=0;
