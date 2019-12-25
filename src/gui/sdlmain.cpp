@@ -98,17 +98,8 @@ extern char** environ;
 #endif
 
 #ifdef WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
-#define STDOUT_FILE	TEXT("stdout.txt")
-#define STDERR_FILE	TEXT("stderr.txt")
-#define DEFAULT_CONFIG_FILE "/dosbox.conf"
-#elif defined(MACOSX)
-#define DEFAULT_CONFIG_FILE "/Library/Preferences/DOSBox Preferences"
-#else /*linux freebsd*/
-#define DEFAULT_CONFIG_FILE "/.dosboxrc"
+#define STDOUT_FILE "stdout.txt"
+#define STDERR_FILE "stderr.txt"
 #endif
 
 #if C_SET_PRIORITY
