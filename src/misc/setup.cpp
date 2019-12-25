@@ -715,7 +715,7 @@ bool Config::PrintConfig(char const * const configfilename) const {
 			}
 			i=0;
 			char prefix[80];
-			snprintf(prefix,80, "\n# %*s    ", (int)maxwidth, "");
+			snprintf(prefix,80, "\n# %*s  ", (int)maxwidth, "");
 			while ((p = sec->Get_prop(i++))) {
 				std::string help = p->Get_help();
 				std::string::size_type pos = std::string::npos;
@@ -749,7 +749,7 @@ bool Config::PrintConfig(char const * const configfilename) const {
 				*helpwrite++=*helpstr;
 				if (*helpstr == '\n') {
 					*helpwrite=0;
-					fprintf(outfile,"# %s",helpline);
+					fprintf(outfile,"# %s", helpline);
 					helpwrite=helpline;
 				}
 				helpstr++;
