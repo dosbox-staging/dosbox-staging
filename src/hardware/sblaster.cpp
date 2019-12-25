@@ -1706,11 +1706,12 @@ public:
 
 		// Create set blaster line
 		ostringstream temp;
-		temp << "SET BLASTER=A" << setw(3)<< hex << sb.hw.base
-		     << " I" << dec << (Bitu)sb.hw.irq << " D" << (Bitu)sb.hw.dma8;
-		if (sb.type==SBT_16) temp << " H" << (Bitu)sb.hw.dma16;
+		temp << "@SET BLASTER=A" << setw(3) << hex << sb.hw.base << dec
+		     << " I" << (Bitu)sb.hw.irq
+		     << " D" << (Bitu)sb.hw.dma8;
+		if (sb.type == SBT_16)
+			temp << " H" << (Bitu)sb.hw.dma16;
 		temp << " T" << static_cast<unsigned int>(sb.type) << ends;
-
 		autoexecline.Install(temp.str());
 
 		/* Soundblaster midi interface */
