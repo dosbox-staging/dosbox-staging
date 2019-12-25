@@ -697,7 +697,7 @@ dosurface:
 		retFlags |= GFX_SCALING;
 		SDL_RendererInfo rendererInfo;
 		SDL_GetRendererInfo(sdl.renderer, &rendererInfo);
-		LOG_MSG("Using driver \"%s\" for renderer", rendererInfo.name);
+		LOG_MSG("Using driver \"%s\" for texture renderer", rendererInfo.name);
 		if (rendererInfo.flags & SDL_RENDERER_ACCELERATED)
 			retFlags |= GFX_HARDWARE;
 		break;
@@ -1291,7 +1291,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.texture.pixelFormat = 0;
 	sdl.window = 0;
 	sdl.renderer = 0;
-	sdl.rendererDriver = section->Get_string("renderer");
+	sdl.rendererDriver = section->Get_string("texture_renderer");
 
 #if C_OPENGL
    if(sdl.desktop.want_type==SCREEN_OPENGL){ /* OPENGL is requested */
@@ -1784,8 +1784,12 @@ void Config_Add_SDL() {
 		"software",
 		0
 	};
-	Pstring = sdl_sec->Add_string("renderer",Property::Changeable::Always,"auto");
-	Pstring->Set_help("Choose a renderer driver if output=texture or output=texturenb. Use output=auto for an automatic choice.");
+
+	Pstring = sdl_sec->Add_string("texture_renderer",
+	                              Property::Changeable::Always,
+	                              "auto");
+	Pstring->Set_help("Choose a renderer driver if output=texture or texturenb.\n"
+	                  "Use output=auto for an automatic choice.");
 	Pstring->Set_values(renderers);
 
 	Pbool = sdl_sec->Add_bool("autolock",Property::Changeable::Always,true);
