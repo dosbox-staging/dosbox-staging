@@ -66,8 +66,7 @@ right), and download the package.
 ## [Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess)
 
 Snapshots are dynamically-linked x86\_64 builds, you'll need additional
-packages installed via your package manager. Different dependencies might
-be necessary for specific snapshots (check included README file).
+packages installed via your package manager.
 
 #### Fedora
 
