@@ -400,7 +400,7 @@ static int init_sample(const Sound_DecoderFunctions *funcs,
 {
     Sound_SampleInternal *internal = (Sound_SampleInternal *) sample->opaque;
     Sound_AudioInfo desired;
-    int pos = SDL_RWtell(internal->rw);
+    const Sint64 pos = SDL_RWtell(internal->rw);
 
         /* fill in the funcs for this decoder... */
     sample->decoder = &funcs->info;
