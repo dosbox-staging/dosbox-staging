@@ -160,7 +160,7 @@ int x=10;if( __builtin_expect ((x==1),0) ) ;
 #switch language back
 AC_LANG_POP(C++)
 
-dnl test if compiler supports -mno-ms-bitfields as it is bugged 
+dnl test if compiler supports -mno-ms-bitfields as it is bugged
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=52991
 BACKUP_CFLAGS="$CFLAGS"
 CFLAGS="-mno-ms-bitfields"
@@ -182,7 +182,7 @@ case "$host" in
    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
    #include <CoreMIDI/MIDIServices.h>
    int blah() { return 0; }
-   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework CoreMIDI";AC_DEFINE([C_SUPPORTS_COREMIDI], [],
+   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework CoreMIDI -framework CoreFoundation";AC_DEFINE([C_SUPPORTS_COREMIDI], [],
    [Compiler supports Core MIDI headers])],
    AC_MSG_RESULT(no);AC_MSG_WARN([Compiler can't compile Apple headers. CoreMIDI functionality disabled. Please use the Apple compiler!]))
 
@@ -192,7 +192,7 @@ case "$host" in
    #include <CoreServices/CoreServices.h>
    int blah() { return 0; }
    ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework AudioUnit -framework AudioToolbox";AC_DEFINE([C_SUPPORTS_COREAUDIO], [],
-   [Compiler supports Core Audio headers])], 
+   [Compiler supports Core Audio headers])],
    AC_MSG_RESULT(no);AC_MSG_WARN([Compiler can't compile Apple headers. CoreAudio functionality disabled. Please use the Apple compiler!]))
    ;;
 
@@ -210,7 +210,7 @@ AC_HELP_STRING([--enable-alsa-midi],[compile with alsa midi support (default yes
  no)  alsa_midi=false;;
 esac],
 [alsa_midi=true])
-if test x$alsa_midi = xtrue ; then 
+if test x$alsa_midi = xtrue ; then
   AM_PATH_ALSA(0.9.0, AC_DEFINE(HAVE_ALSA,1,[Define to 1 to use ALSA for MIDI]) , : )
   CXXFLAGS="$CXXFLAGS $ALSA_CFLAGS"
 fi
@@ -312,7 +312,7 @@ case "$host_cpu" in
     ;;
 esac
 
-dnl check for size of pointer being 4 
+dnl check for size of pointer being 4
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #if SIZEOF_INT_P != 4
 #error size intp is not 4, this not something to worry about
@@ -327,7 +327,7 @@ dnl automake 1.14 and upwards rewrite the host to have always 64 bit unless i386
 dnl this can make building a 32 bit executable a bit tricky, as dosbox relies on the host to select the
 dnl dynamic/dynrec core
 AC_MSG_CHECKING([whether Apple user wants to override the build process to produce a 32 bit binary])
-case "$host" in 
+case "$host" in
   *-*-darwin*)
    if test x$c_targetcpu = xx86_64 -a x$c_sizep = x4 ; then
      AC_MSG_RESULT(yes)
@@ -360,8 +360,8 @@ fi
 
 AH_TEMPLATE(C_DYNREC,[Define to 1 to use recompiling cpu core. Can not be used together with the dynamic-x86 core])
 AC_ARG_ENABLE(dynrec,AC_HELP_STRING([--disable-dynrec],[Disable recompiling cpu core]),,enable_dynrec=yes)
-AC_MSG_CHECKING(whether recompiling cpu core will be enabled) 
-if test x$enable_dynrec = xno -o x$enable_dynamic_core = xno; then 
+AC_MSG_CHECKING(whether recompiling cpu core will be enabled)
+if test x$enable_dynrec = xno -o x$enable_dynamic_core = xno; then
    AC_MSG_RESULT(no)
 else
 dnl x86 only enable it if dynamic-x86 is disabled.
@@ -372,11 +372,11 @@ dnl x86 only enable it if dynamic-x86 is disabled.
     else
         AC_MSG_RESULT([no, using dynamic-x86])
     fi
-  else 
+  else
     if test x$c_targetcpu = xarm ; then
       AC_DEFINE(C_DYNREC,1)
       AC_MSG_RESULT(yes)
-    else 
+    else
       AC_MSG_RESULT(no)
     fi
   fi
@@ -384,19 +384,19 @@ fi
 
 AH_TEMPLATE(C_FPU,[Define to 1 to enable floating point emulation])
 AC_ARG_ENABLE(fpu,AC_HELP_STRING([--disable-fpu],[Disable fpu support]),,enable_fpu=yes)
-AC_MSG_CHECKING(whether fpu emulation will be enabled) 
-if test x$enable_fpu = xyes ; then 
+AC_MSG_CHECKING(whether fpu emulation will be enabled)
+if test x$enable_fpu = xyes ; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(C_FPU,1)
-else 
+else
   AC_MSG_RESULT(no)
-fi 
+fi
 
 AH_TEMPLATE(C_FPU_X86,[Define to 1 to use a x86/x64 assembly fpu core])
 AC_ARG_ENABLE(fpu-x86,AC_HELP_STRING([--disable-fpu-x86],[Disable x86 assembly fpu core]),,enable_fpu_x86=yes)
 AC_ARG_ENABLE(fpu-x64,AC_HELP_STRING([--disable-fpu-x64],[Disable x64 assembly fpu core]),,enable_fpu_x64=yes)
-AC_MSG_CHECKING(whether the x86/x64 assembly fpu core will be enabled) 
-if test x$enable_fpu_x86 = xno -o x$enable_fpu_x64 = xno; then 
+AC_MSG_CHECKING(whether the x86/x64 assembly fpu core will be enabled)
+if test x$enable_fpu_x86 = xno -o x$enable_fpu_x64 = xno; then
    AC_MSG_RESULT(no)
 else
   if test x$enable_fpu = xyes; then
@@ -413,8 +413,8 @@ fi
 
 AH_TEMPLATE(C_UNALIGNED_MEMORY,[Define to 1 to use a unaligned memory access])
 AC_ARG_ENABLE(unaligned_memory,AC_HELP_STRING([--disable-unaligned-memory],[Disable unaligned memory access]),,enable_unaligned_memory=yes)
-AC_MSG_CHECKING(whether to enable unaligned memory access) 
-if test x$enable_unaligned_memory = xyes -a x$c_unalignedmemory = xyes; then 
+AC_MSG_CHECKING(whether to enable unaligned memory access)
+if test x$enable_unaligned_memory = xyes -a x$c_unalignedmemory = xyes; then
   AC_DEFINE(C_UNALIGNED_MEMORY,1)
   AC_MSG_RESULT(yes)
 else
@@ -426,7 +426,7 @@ AC_ARG_ENABLE(screenshots,AC_HELP_STRING([--disable-screenshots],[Disable screen
 AC_CHECK_HEADER(png.h,have_png_h=yes,)
 AC_CHECK_LIB(png, png_get_io_ptr, have_png_lib=yes, ,-lz)
 AC_MSG_CHECKING([whether screenshots will be enabled])
-if test x$enable_screenshots = xyes; then 
+if test x$enable_screenshots = xyes; then
     if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
     LIBS="$LIBS -lpng -lz"
     AC_DEFINE(C_SSHOT,1)
@@ -447,7 +447,7 @@ if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
    LIBS="$LIBS -lSDL2_net"
    AC_DEFINE(C_MODEM,1)
    AC_DEFINE(C_IPX,1)
-else 
+else
    AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
 fi
 
@@ -473,7 +473,7 @@ AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
 AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
 AC_CHECK_HEADER(GL/gl.h, have_gl_h=yes , have_gl_h=no , )
 AC_ARG_ENABLE(opengl,AC_HELP_STRING([--disable-opengl],[Disable opengl support]),,enable_opengl=yes)
-AC_MSG_CHECKING(whether opengl display output will be enabled) 
+AC_MSG_CHECKING(whether opengl display output will be enabled)
 if test x$enable_opengl = xyes; then
 case "$host" in
     *-*-darwin*)
@@ -482,11 +482,11 @@ case "$host" in
        AC_DEFINE(C_OPENGL,1)
        ;;
     *)
-       if test x$have_gl_h = xyes -a x$have_gl_lib = xyes ; then 
+       if test x$have_gl_h = xyes -a x$have_gl_lib = xyes ; then
          AC_MSG_RESULT(yes)
          LIBS="$LIBS -lGL"
          AC_DEFINE(C_OPENGL,1)
-       elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes ; then 
+       elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes ; then
          AC_MSG_RESULT(yes)
          LIBS="$LIBS -lopengl32"
          AC_DEFINE(C_OPENGL,1)
@@ -531,7 +531,7 @@ case "$host" in
        fi
        ;;
     *-*-darwin*)
-       dnl We have a problem here: both Mac OS X and Darwin report 
+       dnl We have a problem here: both Mac OS X and Darwin report
        dnl the same signature "powerpc-apple-darwin*" - so we have
        dnl to do more to distinguish them.
        dnl For now I am lazy and do not add proper detection code.
@@ -546,7 +546,7 @@ case "$host" in
        dnl Disabled directserial for now. It doesn't do anything without
        dnl specifying an extra ifdef in directserial_posix.*
        dnl directserial detection should be rewritten to test for the needed
-       dnl functions and headers. I currently do not know 
+       dnl functions and headers. I currently do not know
        dnl which ones are needed for BSD
        AC_DEFINE(BSD, 1, [Compiling on BSD])
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32 and Posix).])
@@ -567,7 +567,7 @@ esac
        AC_SUBST(WINDRES)
 
 
-AC_CONFIG_FILES([ 
+AC_CONFIG_FILES([
 Makefile
 src/Makefile
 src/cpu/Makefile
