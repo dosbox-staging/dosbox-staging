@@ -11,10 +11,8 @@ jobs:
         conf:
           - name: Clang
             flags: -c clang
-            max_warnings: 128
           - name: GCC-9
             flags: -c gcc -v 9
-            max_warnings: 253
     steps:
       - uses: actions/checkout@v1
         with:
@@ -25,7 +23,3 @@ jobs:
         run:  ./scripts/log-env.sh
       - name: Build
         run:  ./scripts/build.sh --build-type Debug ${{ matrix.conf.flags }} --disable-opengl
-      - name: Summarize warnings
-        env:
-          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run:  python3 ./scripts/count-warnings.py build.log
