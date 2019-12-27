@@ -1367,7 +1367,8 @@ void DOS_Shell::CMD_CHOICE(char * args){
 		DOS_ReadFile (STDIN,&c,&n);
 	} while (!c || !(ptr = strchr(rem,(optS?c:toupper(c)))));
 	c = optS?c:(Bit8u)toupper(c);
-	DOS_WriteFile (STDOUT,&c, &n);
+	DOS_WriteFile(STDOUT, &c, &n);
+	WriteOut_NoParsing("\n");
 	dos.return_code = (Bit8u)(ptr-rem+1);
 }
 
