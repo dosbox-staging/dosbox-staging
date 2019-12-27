@@ -16,22 +16,23 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include "dosbox.h"
 #include "shell.h"
+
+#include <algorithm>
+#include <cassert>
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <string>
+#include <vector>
+
 #include "callback.h"
 #include "regs.h"
 #include "bios.h"
 #include "../dos/drives.h"
 #include "support.h"
 #include "control.h"
-#include <algorithm>
-#include <cstring>
-#include <cctype>
-#include <cstdlib>
-#include <vector>
-#include <string>
-#include <time.h>
 
 static SHELL_Cmd cmd_list[]={
 {	"DIR",		0,			&DOS_Shell::CMD_DIR,		"SHELL_CMD_DIR_HELP"},
@@ -1329,7 +1330,10 @@ void DOS_Shell::CMD_CHOICE(char * args){
 			WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 			return;
 		}
-		if (args == rem) args = strchr(rem,0)+1;
+		if (args == rem) {
+			assert(args);
+			args = strchr(rem, '\0') + 1;
+		}
 		if (rem) rem += 2;
 		if(rem && rem[0]==':') rem++; /* optional : after /c */
 		if (args > last) args = NULL;
