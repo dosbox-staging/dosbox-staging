@@ -709,6 +709,7 @@ void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
 /*
 	Save the current state of the operators as instruments in an reality adlib tracker file
 */
+#if 0
 static void SaveRad() {
 	char b[16 * 1024];
 	int w = 0;
@@ -747,7 +748,7 @@ static void SaveRad() {
 	fwrite( b, 1, w, handle );
 	fclose( handle );
 };
-
+#endif // 0
 
 static void OPL_SaveRawEvent(bool pressed) {
 	if (!pressed)
