@@ -1,5 +1,6 @@
 name: Code analysis
 on: push
+
 jobs:
 
   run_linters:
@@ -51,7 +52,7 @@ jobs:
           path: report
       - name: Summarize report
         env:
-          MAX_BUGS: 77
+          MAX_BUGS: 76
         run: |
           # summary
           echo "Full report is included in build Artifacts"
