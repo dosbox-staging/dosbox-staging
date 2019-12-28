@@ -671,8 +671,11 @@ void Section_prop::PrintData(FILE* outfile) const {
 			len = (*tel)->propname.length();
 	}
 
-	for(const_it tel = properties.begin();tel != properties.end();tel++) {
-		fprintf(outfile,"%-*s = %s\n", len, (*tel)->propname.c_str(), (*tel)->GetValue().ToString().c_str());
+	for (const auto &tel : properties) {
+		fprintf(outfile, "%-*s = %s\n",
+		        static_cast<int>(len),
+		        tel->propname.c_str(),
+		        tel->GetValue().ToString().c_str());
 	}
 }
 
