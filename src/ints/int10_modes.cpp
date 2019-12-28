@@ -557,10 +557,9 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 	IO_WriteW(crtc_base,0x06 | (CurMode->vdispend) << 8);
 	//Vertical sync position
 	IO_WriteW(crtc_base,0x07 | (CurMode->vdispend + ((CurMode->vtotal - CurMode->vdispend)/2)-1) << 8);
-	//Maximum scanline
-	Bit8u scanline,crtpage;
-	scanline=8;
-	switch(CurMode->type) {
+	// Maximum scanline
+	uint8_t scanline;
+	switch (CurMode->type) {
 	case M_TEXT:
 		if (machine==MCH_HERC) scanline=14;
 		else scanline=8;
@@ -575,6 +574,9 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 	case M_TANDY16:
 		if (CurMode->mode!=0x9) scanline=2;
 		else scanline=4;
+		break;
+	default:
+		scanline = 8;
 		break;
 	}
 	IO_WriteW(crtc_base,0x09 | (scanline-1) << 8);
@@ -594,6 +596,7 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 		0x1a,0x1b,0x0b			//8-a
 	};
 	Bit8u mode_control,color_select;
+	uint8_t crtpage;
 	switch (machine) {
 	case MCH_HERC:
 		IO_WriteB(0x3b8,0x28);	// TEXT mode and blinking characters
