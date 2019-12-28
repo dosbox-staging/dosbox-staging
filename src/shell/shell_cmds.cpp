@@ -1389,11 +1389,10 @@ void DOS_Shell::CMD_PATH(char *args){
 		return;
 	} else {
 		std::string line;
-		if(GetEnvStr("PATH",line)) {
-        		WriteOut("%s",line.c_str());
-		} else {
-			WriteOut("PATH=(null)");
-		}
+		if (GetEnvStr("PATH", line))
+			WriteOut("%s\n", line.c_str());
+		else
+			WriteOut("PATH=(null)\n");
 	}
 }
 
