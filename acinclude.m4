@@ -335,17 +335,8 @@ AH_BOTTOM([#if C_ATTRIBUTE_FASTCALL
 #define DB_FASTCALL
 #endif])
 
-
 AH_BOTTOM([#if C_HAS_ATTRIBUTE
 #define GCC_ATTRIBUTE(x) __attribute__ ((x))
 #else
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
-#endif])
-
-AH_BOTTOM([#if C_HAS_BUILTIN_EXPECT
-#define GCC_UNLIKELY(x) __builtin_expect((x),0)
-#define GCC_LIKELY(x) __builtin_expect((x),1)
-#else
-#define GCC_UNLIKELY(x) (x)
-#define GCC_LIKELY(x) (x)
 #endif])
