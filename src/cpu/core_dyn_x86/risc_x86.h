@@ -270,6 +270,7 @@ static void gen_needcarry(void) {
 	}
 }
 
+#if 0
 static void gen_setzeroflag(void) {
 	if (x86gen.flagsactive) IllegalOption("gen_setzeroflag");
 	cache_addw(0x0c83);			//OR DWORD [ESP],0x40
@@ -281,6 +282,7 @@ static void gen_clearzeroflag(void) {
 	cache_addw(0x2483);			//AND DWORD [ESP],~0x40
 	cache_addw(0xbf24);
 }
+#endif
 
 static bool skip_flags=false;
 

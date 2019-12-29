@@ -476,6 +476,7 @@ static void gen_needcarry(void) {
 	}
 }
 
+#if 0
 static void gen_setzeroflag(void) {
 	if (x64gen.flagsactive) IllegalOption("gen_setzeroflag");
 	opcode(1).setea(4,-1,0,CALLSTACK).setimm(0x40,1).Emit8(0x83); // or dword [rsp+8/40],0x40
@@ -485,6 +486,7 @@ static void gen_clearzeroflag(void) {
 	if (x64gen.flagsactive) IllegalOption("gen_clearzeroflag");
 	opcode(4).setea(4,-1,0,CALLSTACK).setimm(~0x40,1).Emit8(0x83); // and dword [rsp+8/40],~0x40
 }
+#endif
 
 static bool skip_flags=false;
 
@@ -1157,9 +1159,11 @@ static Bit8u * gen_create_jump(Bit8u * to=0) {
 	return (cache.pos-4);
 }
 
+#if 0
 static void gen_fill_jump(Bit8u * data,Bit8u * to=cache.pos) {
 	*(Bit32u*)data=(Bit32u)(to-data-4);
 }
+#endif
 
 static Bit8u * gen_create_short_jump(void) {
 	cache_addw(0x00EB);
