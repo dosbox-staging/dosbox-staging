@@ -65,7 +65,3 @@
 
 #define INLINE __forceinline
 #define DB_FASTCALL __fastcall
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1400) 
-#pragma warning(disable : 4996) 
-#endif
