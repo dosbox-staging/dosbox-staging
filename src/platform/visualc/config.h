@@ -63,8 +63,6 @@
 /* Define to 1 if you want serial passthrough support. */
 #define C_DIRECTSERIAL 1
 
-#define GCC_ATTRIBUTE(x) /* attribute not supported */
-
 #define INLINE __forceinline
 #define DB_FASTCALL __fastcall
 

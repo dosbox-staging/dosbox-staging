@@ -334,9 +334,3 @@ AH_BOTTOM([#if C_ATTRIBUTE_FASTCALL
 #else
 #define DB_FASTCALL
 #endif])
-
-AH_BOTTOM([#if C_HAS_ATTRIBUTE
-#define GCC_ATTRIBUTE(x) __attribute__ ((x))
-#else
-#define GCC_ATTRIBUTE(x) /* attribute not supported */
-#endif])
