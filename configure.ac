@@ -456,18 +456,6 @@ PKG_CHECK_MODULES([OPUSFILE], [opusfile],
   [ LIBS="$LIBS ${OPUSFILE_LIBS}"
     CPPFLAGS="$CPPFLAGS ${OPUSFILE_CFLAGS}" ], [])
 
-AH_TEMPLATE(C_X11_XKB,[define to 1 if you have XKBlib.h and X11 lib])
-AC_CHECK_LIB(X11, main, have_x11_lib=yes, have_x11_lib=no, )
-AC_CHECK_HEADER(X11/XKBlib.h, have_x11_h=yes, have_x11_h=no, )
-AC_MSG_CHECKING(for XKBlib support)
-if test x$have_x11_lib = xyes -a x$have_x11_h = xyes ; then
-   LIBS="$LIBS -lX11"
-   AC_DEFINE(C_X11_XKB,1)
-   AC_MSG_RESULT(yes)
-else
-   AC_MSG_RESULT(no)
-fi
-
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
 AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
 AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
