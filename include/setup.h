@@ -16,14 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
-
-#ifdef _MSC_VER
-#pragma warning ( disable : 4786 )
-#endif
-
 
 #ifndef CH_LIST
 #define CH_LIST
