@@ -1450,64 +1450,40 @@ static void dyn_mov_ev_gw(bool sign) {
 
 static void dyn_cmpxchg_evgv(void) {
 	dyn_get_modrm();
-	DynReg * rm_reg=&DynRegs[decode.modrm.reg];
-	gen_protectflags();
 	if (decode.modrm.mod<3) {
-		gen_releasereg(DREG(EAX));
-		gen_releasereg(DREG(TMPB));
-		gen_releasereg(rm_reg);
-
 		dyn_fill_ea();
-		dyn_read_word(DREG(EA),DREG(TMPB),decode.big_op);
-		gen_dop_word(DOP_CMP,decode.big_op,DREG(EAX),DREG(TMPB));
-		Bit8u * branch=gen_create_branch(BR_NZ);
-
-		// eax==mem -> mem:=rm_reg
-		dyn_write_word_release(DREG(EA),rm_reg,decode.big_op);
-		gen_setzeroflag();
-		gen_releasereg(DREG(EAX));
-		gen_releasereg(DREG(TMPB));
-		gen_releasereg(rm_reg);
-
-		Bit8u * jump=gen_create_jump();
-
-		gen_fill_branch(branch);
-		// eax!=mem -> eax:=mem
-		dyn_write_word_release(DREG(EA),DREG(TMPB),decode.big_op);	// cmpxchg always issues write
-		gen_dop_word(DOP_MOV,decode.big_op,DREG(EAX),DREG(TMPB));
-		gen_clearzeroflag();
-		gen_releasereg(DREG(EAX));
-		gen_releasereg(DREG(TMPB));
-		gen_releasereg(rm_reg);
-
-		gen_fill_jump(jump);
+		dyn_read_word(DREG(EA),DREG(TMPW),decode.big_op);
+		// update flags after write
+		gen_protectflags();
 	} else {
-		gen_releasereg(DREG(EAX));
-		gen_releasereg(&DynRegs[decode.modrm.rm]);
-		gen_releasereg(rm_reg);
-
-		gen_dop_word(DOP_CMP,decode.big_op,DREG(EAX),&DynRegs[decode.modrm.rm]);
-		Bit8u * branch=gen_create_branch(BR_NZ);
-
-		// eax==rm -> rm:=rm_reg
-		gen_dop_word(DOP_MOV,decode.big_op,&DynRegs[decode.modrm.rm],rm_reg);
-		gen_setzeroflag();
-		gen_releasereg(DREG(EAX));
-		gen_releasereg(&DynRegs[decode.modrm.rm]);
-		gen_releasereg(rm_reg);
-
-		Bit8u * jump=gen_create_jump();
-
-		gen_fill_branch(branch);
-		// eax!=rm -> eax:=rm
-		gen_dop_word(DOP_MOV,decode.big_op,DREG(EAX),&DynRegs[decode.modrm.rm]);
-		gen_clearzeroflag();
-		gen_releasereg(DREG(EAX));
-		gen_releasereg(&DynRegs[decode.modrm.rm]);
-		gen_releasereg(rm_reg);
-
-		gen_fill_jump(jump);
+		gen_dop_word(DOP_MOV,decode.big_op,DREG(TMPW),&DynRegs[decode.modrm.rm]);
+		// immediate dest can't fault, update flags from initial cmp
+		gen_discardflags();
 	}
+	gen_dop_word(DOP_MOV,decode.big_op,DREG(TMPB),&DynRegs[decode.modrm.reg]);
+	// TMPB=src,TMPW=temp
+	gen_dop_word(DOP_CMP,decode.big_op,DREG(EAX),DREG(TMPW));
+	Bit8u * branch=gen_create_branch(BR_Z);
+	// if eax!=temp: TMPB=temp
+	gen_dop_word(DOP_MOV,decode.big_op,DREG(TMPB),DREG(TMPW));
+	gen_fill_branch(branch);
+	// dest=TMPB,eax=TMPW
+	if (decode.modrm.mod<3) {
+		dyn_write_word_release(DREG(EA),DREG(TMPB),decode.big_op);
+		gen_releasereg(DREG(TMPB));
+		// safe to update flags now
+		gen_discardflags();
+		gen_dop_word(DOP_CMP,decode.big_op,DREG(EAX),DREG(TMPW));
+		gen_dop_word(DOP_MOV,decode.big_op,DREG(EAX),DREG(TMPW));
+		gen_releasereg(DREG(TMPW));
+		return;
+	}
+	// if eax and dest are same register, skip eax output
+	if (decode.modrm.rm != G_EAX)
+		gen_dop_word(DOP_MOV,decode.big_op,DREG(EAX),DREG(TMPW));
+	gen_releasereg(DREG(TMPW));
+	gen_dop_word(DOP_MOV,decode.big_op,&DynRegs[decode.modrm.rm],DREG(TMPB));
+	gen_releasereg(DREG(TMPB));
 }
 
 static void dyn_dshift_ev_gv(bool left,bool immediate) {
@@ -2177,7 +2153,9 @@ restart_prefix:
 			/* Imul Ev,Gv */
 			case 0xaf:dyn_imul_gvev(0);break;
 			/* CMPXCHG */
-			case 0xb1:dyn_cmpxchg_evgv();break;
+			case 0xb1:
+				if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegalopcode;
+				dyn_cmpxchg_evgv();break;
 			/* LFS,LGS */
 			case 0xb4:
 				dyn_get_modrm();
