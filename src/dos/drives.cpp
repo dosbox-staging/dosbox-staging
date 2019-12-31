@@ -103,15 +103,11 @@ void Set_Label(char const * const input, char * const output, bool cdrom) {
 		output[labelPos-1] = 0;
 }
 
-
-
-DOS_Drive::DOS_Drive() {
-	curdir[0]=0;
-	info[0]=0;
-}
-
-char * DOS_Drive::GetInfo(void) {
-	return info;
+DOS_Drive::DOS_Drive()
+	: dirCache()
+{
+	curdir[0] = '\0';
+	info[0] = '\0';
 }
 
 // static members variables

@@ -268,7 +268,8 @@ public:
 	virtual bool isRemovable(void)=0;
 	virtual Bits UnMount(void)=0;
 
-	char * GetInfo(void);
+	const char * GetInfo() const { return info; }
+
 	char curdir[DOS_PATHLENGTH];
 	char info[256];
 	/* Can be overridden for example in iso images */
