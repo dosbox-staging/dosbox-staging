@@ -11,6 +11,7 @@ dma.h \
 dosbox.h \
 dos_inc.h \
 dos_system.h \
+drives.h \
 fpu.h \
 hardware.h \
 inout.h \

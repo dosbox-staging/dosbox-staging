@@ -27,7 +27,7 @@
 #include "regs.h"
 #include "mem.h"
 #include "dos_inc.h" /* for Drives[] */
-#include "../dos/drives.h"
+#include "drives.h"
 #include "mapper.h"
 
 diskGeo DiskGeometryList[] = {
