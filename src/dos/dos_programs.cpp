@@ -16,14 +16,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "programs.h"
 
-#include "dosbox.h"
-#include <stdlib.h>
-#include <string.h>
 #include <cctype>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 #include <vector>
-#include "programs.h"
+
 #include "support.h"
 #include "drives.h"
 #include "cross.h"
@@ -31,15 +31,13 @@
 #include "callback.h"
 #include "cdrom.h"
 #include "dos_system.h"
-#include "dos_inc.h"
 #include "bios.h"
 #include "bios_disk.h" 
 #include "setup.h"
 #include "control.h"
 #include "inout.h"
 #include "dma.h"
-
-
+#include "shell.h"
 
 #if defined(WIN32)
 #ifndef S_ISDIR

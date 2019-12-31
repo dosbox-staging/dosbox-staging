@@ -720,8 +720,6 @@ fatDrive::fatDrive(const char *sysFilename,
                    Bit32u startSector)
 	: loadedDisk(nullptr),
 	  created_successfully(true),
-	  srchInfo{ {0} },
-	  allocation{0, 0, 0, 0, 0},
 	  bootbuffer{{0}, {0}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}, 0, 0},
 	  absolute(false),
 	  fattype(0),
@@ -730,10 +728,9 @@ fatDrive::fatDrive(const char *sysFilename,
 	  firstDataSector(0),
 	  firstRootDirSect(0),
 	  cwdDirCluster(0),
-	  dirPosition(0),
 	  fatSectBuffer{0},
 	  curFatSect(0)
- {
+{
 	FILE *diskfile;
 	Bit32u filesize;
 	bool is_hdd;
