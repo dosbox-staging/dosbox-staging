@@ -1275,7 +1275,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
 	
 		if( ( ldp=dynamic_cast<localDrive*>(Drives[drive])) == 0 ) throw 0;
 		char newname[CROSS_LEN];   
-		strcpy(newname, ldp->basedir);	   
+		strcpy(newname, ldp->getBasedir());
 		strcat(newname,fulldir);
 		CROSS_FILENAME(newname);
 		ldp->dirCache.ExpandName(newname);

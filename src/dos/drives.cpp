@@ -16,11 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include "dosbox.h"
-#include "dos_system.h"
 #include "drives.h"
-#include "mapper.h"
+
 #include "support.h"
 
 bool WildFileCmp(const char * file, const char * wild) 

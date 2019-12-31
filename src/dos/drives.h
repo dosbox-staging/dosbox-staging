@@ -16,16 +16,17 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef DOSBOX_DRIVES_H
+#define DOSBOX_DRIVES_H
 
-#ifndef _DRIVES_H__
-#define _DRIVES_H__
+#include "dosbox.h"
 
 #include <memory>
 #include <string>
 #include <vector>
-#include <sys/types.h>
+
+#include "dos_inc.h"
 #include "dos_system.h"
-#include "shell.h" /* for DOS_Shell */
 
 bool WildFileCmp(const char * file, const char * wild);
 void Set_Label(char const * const input, char * const output, bool cdrom);
@@ -75,9 +76,6 @@ public:
 	const char* getBasedir() {return basedir;};
 protected:
 	char basedir[CROSS_LEN];
-private:
-	friend void DOS_Shell::CMD_SUBST(char* args);
-protected:
 	struct {
 		char srch_dir[CROSS_LEN];
 	} srchInfo[MAX_OPENDIRS];
@@ -197,18 +195,6 @@ private:
 	bool addDirectoryEntry(Bit32u dirClustNumber, direntry useEntry);
 	void zeroOutCluster(Bit32u clustNumber);
 	bool getEntryName(char *fullname, char *entname);
-	friend void DOS_Shell::CMD_SUBST(char* args); 	
-	struct {
-		char srch_dir[CROSS_LEN];
-	} srchInfo[MAX_OPENDIRS];
-
-	struct {
-		Bit16u bytes_sector;
-		Bit8u sectors_cluster;
-		Bit16u total_clusters;
-		Bit16u free_clusters;
-		Bit8u mediaid;
-	} allocation;
 	
 	bootstrap bootbuffer;
 	bool absolute;
@@ -219,12 +205,10 @@ private:
 	Bit32u firstRootDirSect;
 
 	Bit32u cwdDirCluster;
-	Bit32u dirPosition; /* Position in directory search */
 
 	Bit8u fatSectBuffer[1024];
 	Bit32u curFatSect;
 };
-
 
 class cdromDrive : public localDrive
 {
