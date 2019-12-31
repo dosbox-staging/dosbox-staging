@@ -30,7 +30,7 @@
 #include "callback.h"
 #include "regs.h"
 #include "bios.h"
-#include "../dos/drives.h"
+#include "drives.h"
 #include "support.h"
 #include "control.h"
 
