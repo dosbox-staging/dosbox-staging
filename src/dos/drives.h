@@ -44,8 +44,8 @@ public:
 	
 private:
 	static struct DriveInfo {
-		std::vector<DOS_Drive*> disks;
-		Bit32u currentDisk;
+		std::vector<DOS_Drive*> disks = {};
+		int currentDisk = 0;
 	} driveInfos[DOS_DRIVES];
 	
 	static int currentDrive;
