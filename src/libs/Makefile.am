@@ -1,4 +1,3 @@
 AM_CPPFLAGS = -I$(top_srcdir)/include
 
-SUBDIRS = zmbv gui_tk decoders
-
+SUBDIRS = zmbv gui_tk decoders nuked

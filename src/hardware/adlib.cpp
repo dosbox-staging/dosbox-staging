@@ -16,7 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -27,11 +26,12 @@
 #include "mapper.h"
 #include "mem.h"
 #include "dbopl.h"
-#include "nukedopl.h"
+#include "../libs/nuked/nukedopl.h"
 
 #include "mame/emu.h"
 #include "mame/fmopl.h"
 #include "mame/ymf262.h"
+
 
 #define OPL2_INTERNAL_FREQ    3600000   // The OPL2 operates at 3.6MHz
 #define OPL3_INTERNAL_FREQ    14400000  // The OPL3 operates at 14.4MHz
