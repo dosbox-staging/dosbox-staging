@@ -95,7 +95,7 @@ namespace OPL3 {
 namespace MAMEOPL2 {
 
 struct Handler : public Adlib::Handler {
-	void* chip;
+	void *chip = nullptr;
 
 	virtual void WriteReg(Bit32u reg, Bit8u val) {
 		ym3812_write(chip, 0, reg);
@@ -127,7 +127,7 @@ struct Handler : public Adlib::Handler {
 namespace MAMEOPL3 {
 
 struct Handler : public Adlib::Handler {
-	void* chip;
+	void *chip = nullptr;
 
 	virtual void WriteReg(Bit32u reg, Bit8u val) {
 		ymf262_write(chip, 0, reg);
@@ -211,24 +211,18 @@ struct RawHeader {
 
 //Table to map the opl register to one <127 for dro saving
 class Capture {
-	//127 entries to go from raw data to registers
-	Bit8u ToReg[127];
-	//How many entries in the ToPort are used
-	Bit8u RawUsed;
-	//256 entries to go from port index to raw data
-	Bit8u ToRaw[256];
-	Bit8u delay256;
-	Bit8u delayShift8;
+	Bit8u ToReg[127];       // 127 entries to go from raw data to registers
+	Bit8u RawUsed = 0;      // How many entries in the ToPort are used
+	Bit8u ToRaw[256];       // 256 entries to go from port index to raw data
+	Bit8u delay256 = 0;
+	Bit8u delayShift8 = 0;
 	RawHeader header;
 
-	FILE*	handle;				//File used for writing
-	Bit32u	startTicks;			//Start used to check total raw length on end
-	Bit32u	lastTicks;			//Last ticks when last last cmd was added
-	Bit8u	buf[1024];	//16 added for delay commands and what not
-	Bit32u	bufUsed;
-	Bit8u	cmd[2];				//Last cmd's sent to either ports
-	bool	doneOpl3;
-	bool	doneDualOpl2;
+	FILE*  handle = nullptr;  // File used for writing
+	Bit32u startTicks = 0;    // Start used to check total raw length on end
+	Bit32u lastTicks = 0;     // Last ticks when last last cmd was added
+	Bit8u  buf[1024];         // 16 added for delay commands and what not
+	Bit32u bufUsed = 0;
 
 	RegisterCache* cache;
 
@@ -414,16 +408,21 @@ skipWrite:
 		startTicks = PIC_Ticks;
 		return true;
 	}
-	Capture( RegisterCache* _cache ) {
-		cache = _cache;
-		handle = 0;
-		bufUsed = 0;
+
+	Capture(RegisterCache *_cache)
+		: header(),
+		  cache(_cache)
+	{
 		MakeTables();
 	}
-	~Capture() {
+
+	virtual ~Capture()
+	{
 		CloseFile();
 	}
 
+	Capture(const Capture&) = delete; // prevent copy
+	Capture& operator=(const Capture&) = delete; // prevent assignment
 };
 
 /*
@@ -767,17 +766,17 @@ static void OPL_SaveRawEvent(bool pressed) {
 
 namespace Adlib {
 
-Module::Module( Section* configuration ) : Module_base(configuration) {
-	reg.dual[0] = 0;
-	reg.dual[1] = 0;
-	reg.normal = 0;
-	ctrl.active = false;
-	ctrl.index = 0;
-	ctrl.lvol = 0xff;
-	ctrl.rvol = 0xff;
-	handler = 0;
-	capture = 0;
-
+Module::Module(Section *configuration)
+	: Module_base(configuration),
+	  mixerObject(),
+	  mode(MODE_OPL2), // TODO this is set in Init and there's no good default
+	  reg{0}, // union
+	  ctrl{false, 0, 0xff, 0xff},
+	  mixerChan(nullptr),
+	  lastUsed(0),
+	  handler(nullptr),
+	  capture(nullptr)
+{
 	Section_prop * section=static_cast<Section_prop *>(configuration);
 	Bitu base = section->Get_hex("sbbase");
 	Bitu rate = section->Get_int("oplrate");
