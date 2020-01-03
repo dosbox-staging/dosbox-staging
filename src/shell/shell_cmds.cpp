@@ -649,8 +649,8 @@ void DOS_Shell::CMD_DIR(char * args) {
 		//
 		if (optW) {
 			if (is_dir) {
-				const size_t namelen = strlen(name);
-				WriteOut("[%s]%*s", name, (14 - namelen), "");
+				const int length = static_cast<int>(strlen(name));
+				WriteOut("[%s]%*s", name, (14 - length), "");
 			} else {
 				WriteOut("%-16s", name);
 			}
