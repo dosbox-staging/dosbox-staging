@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2019 Patryk Obara <patryk.obara@gmail.com>
+# Copyright (C) 2019-2020  Patryk Obara <patryk.obara@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # This script exists only to easily run python static checker on all files in
