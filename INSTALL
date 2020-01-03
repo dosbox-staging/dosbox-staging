@@ -50,7 +50,7 @@ alsa-lib (optional)
 
 If you want compile from developer sources (SVN) under a unix system, you will need:
  - Subversion to checkout the sources, or gzip and tar to unpack them from archive
- - GCC (>=4.8.1) or Clang (>=3.3)
+ - GCC (>=4.8.1) or Clang (>=3.4)
  - automake (>=1.6)
  - autoconf (>=2.50)
  - autoconf-archive (>=2009.x)

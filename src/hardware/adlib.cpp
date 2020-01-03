@@ -328,10 +328,10 @@ class Capture {
 		if ( handle ) {
 			ClearBuf();
 			/* Endianize the header and write it to beginning of the file */
-			var_write( &header.versionHigh, header.versionHigh );
-			var_write( &header.versionLow, header.versionLow );
-			var_write( &header.commands, header.commands );
-			var_write( &header.milliseconds, header.milliseconds );
+			header.versionHigh  = host_to_le(header.versionHigh);
+			header.versionLow   = host_to_le(header.versionLow);
+			header.commands     = host_to_le(header.commands);
+			header.milliseconds = host_to_le(header.milliseconds);
 			fseek( handle, 0, SEEK_SET );
 			fwrite( &header, 1, sizeof( header ), handle );
 			fclose( handle );
