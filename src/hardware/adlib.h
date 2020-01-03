@@ -32,17 +32,15 @@
 namespace Adlib {
 
 struct Timer {
-	double start;
-	double delay;
-	bool enabled, overflow, masked;
-	Bit8u counter;
-	Timer() {
-		masked = false;
-		overflow = false;
-		enabled = false;
-		counter = 0;
-		delay = 0;
-	}
+	double start = 0.0;
+	double delay = 0.0;
+	bool enabled = false;
+	bool overflow = false;
+	bool masked = false;
+	Bit8u counter = 0;
+
+	Timer() = default;
+
 	//Call update before making any further changes
 	void Update( double time ) {
 		if ( !enabled || !delay ) 
@@ -153,11 +151,13 @@ public:
 	Bitu PortRead( Bitu port, Bitu iolen );
 	void Init( Mode m );
 
-	Module( Section* configuration); 
-	~Module();
+	Module(Section *configuration);
+	~Module() override;
+
+	Module(const Module&) = delete; // prevent copy
+	Module& operator=(const Module&) = delete; // prevent assignment
 };
 
-
-}		//Adlib namespace
+} // namespace Adlib
 
 #endif
