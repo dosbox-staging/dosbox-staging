@@ -396,10 +396,6 @@ void DOSBOX_Init(void) {
 
 	// Some frequently used option sets
 	const char *rates[] = {  "44100", "48000", "32000","22050", "16000", "11025", "8000", "49716", 0 };
-	const char *oplrates[] = {   "44100", "49716", "48000", "32000","22050", "16000", "11025", "8000", 0 };
-	const char *ios[] = { "220", "240", "260", "280", "2a0", "2c0", "2e0", "300", 0 };
-	const char *irqssb[] = { "7", "5", "3", "9", "10", "11", "12", 0 };
-	const char *dmassb[] = { "1", "5", "0", "3", "6", "7", 0 };
 	const char *iosgus[] = { "240", "220", "260", "280", "2a0", "2c0", "2e0", "300", 0 };
 	const char *irqsgus[] = { "5", "3", "7", "9", "10", "11", "12", 0 };
 	const char *dmasgus[] = { "3", "0", "1", "5", "6", "7", 0 };
@@ -573,46 +569,53 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
 #endif
 
-	secprop=control->AddSection_prop("sblaster",&SBLASTER_Init,true);//done
+	secprop = control->AddSection_prop("sblaster", &SBLASTER_Init, true);
 
-	const char* sbtypes[] = { "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none", 0 };
-	Pstring = secprop->Add_string("sbtype",Property::Changeable::WhenIdle,"sb16");
+	const char* sbtypes[] = {"sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none", 0};
+	Pstring = secprop->Add_string("sbtype", Property::Changeable::WhenIdle, "sb16");
 	Pstring->Set_values(sbtypes);
-	Pstring->Set_help("Type of Soundblaster to emulate. gb is Gameblaster.");
+	Pstring->Set_help("Type of Sound Blaster to emulate. 'gb' is Game Blaster.");
 
-	Phex = secprop->Add_hex("sbbase",Property::Changeable::WhenIdle,0x220);
+	const char *ios[] = {"220", "240", "260", "280", "2a0", "2c0", "2e0", "300", 0};
+	Phex = secprop->Add_hex("sbbase", Property::Changeable::WhenIdle, 0x220);
 	Phex->Set_values(ios);
-	Phex->Set_help("The IO address of the soundblaster.");
+	Phex->Set_help("The IO address of the Sound Blaster.");
 
-	Pint = secprop->Add_int("irq",Property::Changeable::WhenIdle,7);
+	const char *irqssb[] = {"7", "5", "3", "9", "10", "11", "12", 0};
+	Pint = secprop->Add_int("irq", Property::Changeable::WhenIdle, 7);
 	Pint->Set_values(irqssb);
-	Pint->Set_help("The IRQ number of the soundblaster.");
+	Pint->Set_help("The IRQ number of the Sound Blaster.");
 
-	Pint = secprop->Add_int("dma",Property::Changeable::WhenIdle,1);
+	const char *dmassb[] = {"1", "5", "0", "3", "6", "7", 0};
+	Pint = secprop->Add_int("dma", Property::Changeable::WhenIdle, 1);
 	Pint->Set_values(dmassb);
-	Pint->Set_help("The DMA number of the soundblaster.");
+	Pint->Set_help("The DMA number of the Sound Blaster.");
 
-	Pint = secprop->Add_int("hdma",Property::Changeable::WhenIdle,5);
+	Pint = secprop->Add_int("hdma", Property::Changeable::WhenIdle, 5);
 	Pint->Set_values(dmassb);
-	Pint->Set_help("The High DMA number of the soundblaster.");
+	Pint->Set_help("The High DMA number of the Sound Blaster.");
 
-	Pbool = secprop->Add_bool("sbmixer",Property::Changeable::WhenIdle,true);
-	Pbool->Set_help("Allow the soundblaster mixer to modify the DOSBox mixer.");
+	Pbool = secprop->Add_bool("sbmixer", Property::Changeable::WhenIdle, true);
+	Pbool->Set_help("Allow the Sound Blaster mixer to modify the DOSBox mixer.");
 
-	const char* oplmodes[]={ "auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none", 0};
-	Pstring = secprop->Add_string("oplmode",Property::Changeable::WhenIdle,"auto");
+	const char* oplmodes[] = {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none", 0};
+	Pstring = secprop->Add_string("oplmode", Property::Changeable::WhenIdle, "auto");
 	Pstring->Set_values(oplmodes);
-	Pstring->Set_help("Type of OPL emulation. On 'auto' the mode is determined by sblaster type. All OPL modes are Adlib-compatible, except for 'cms'.");
+	Pstring->Set_help("Type of OPL emulation. On 'auto' the mode is determined by 'sbtype'.\n"
+	                  "All OPL modes are AdLib-compatible, except for 'cms'.");
 
-	const char* oplemus[]={ "default", "compat", "fast", "mame", "nuked", 0};
-	Pstring = secprop->Add_string("oplemu",Property::Changeable::WhenIdle,"default");
+	const char* oplemus[] = {"default", "compat", "fast", "mame", "nuked", 0};
+	Pstring = secprop->Add_string("oplemu", Property::Changeable::WhenIdle, "default");
 	Pstring->Set_values(oplemus);
-	Pstring->Set_help("Provider for the OPL emulation. compat might provide better quality (see oplrate as well).");
+	Pstring->Set_help("Provider for the OPL emulation. 'compat' provides better quality,\n"
+	                  "'nuked' is the most accurate (but the most CPU-intensive).\n"
+	                  "See sblaster.oplrate as well.");
 
-	Pint = secprop->Add_int("oplrate",Property::Changeable::WhenIdle,44100);
+	const char *oplrates[] = {"44100", "49716", "48000", "32000", "22050", "16000", "11025", "8000", 0};
+	Pint = secprop->Add_int("oplrate", Property::Changeable::WhenIdle, 44100);
 	Pint->Set_values(oplrates);
-	Pint->Set_help("Sample rate of OPL music emulation. Use 49716 for highest quality (set the mixer rate accordingly).");
-
+	Pint->Set_help("Sample rate of OPL music emulation. Use 49716 for the highest\n"
+	               "quality (set the mixer.rate accordingly).");
 
 	secprop=control->AddSection_prop("gus",&GUS_Init,true); //done
 	Pbool = secprop->Add_bool("gus",Property::Changeable::WhenIdle,false);
