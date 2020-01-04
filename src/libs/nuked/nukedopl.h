@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2013-2018 Alexey Khokholov (Nuke.YKT)
+// Copyright (C) 2013-2020 Alexey Khokholov (Nuke.YKT)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -31,7 +31,7 @@
 #define OPL_WRITEBUF_SIZE   1024
 #define OPL_WRITEBUF_DELAY  1
 
-#include "dosbox.h"
+#include "types.h"
 
 typedef struct _opl3_slot opl3_slot;
 typedef struct _opl3_channel opl3_channel;
@@ -135,4 +135,5 @@ void OPL3_Reset(opl3_chip *chip, Bit32u samplerate);
 void OPL3_WriteReg(opl3_chip *chip, Bit16u reg, Bit8u v);
 void OPL3_WriteRegBuffered(opl3_chip *chip, Bit16u reg, Bit8u v);
 void OPL3_GenerateStream(opl3_chip *chip, Bit16s *sndptr, Bit32u numsamples);
+
 #endif
