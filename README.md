@@ -53,6 +53,15 @@ Codecs supported for CD-DA emulation:
 [5]:https://www.dosbox.com/wiki/MOUNT#Mounting_a_CUE.2FBIN-Pair_as_volume
 [6]:https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/trunk/src/dos/cdrom_image.cpp#l536
 
+Other features:
+
+|                     | dosbox-staging                          | DOSBox
+|-                    |-                                        |-
+| **[OPL] emulators** | compat, fast, mame, nuked<sup>[7]</sup> | compat, fast, mame
+
+[OPL]:https://en.wikipedia.org/wiki/Yamaha_YMF262
+[7]:https://www.vogons.org/viewtopic.php?f=9&t=37782
+
 ## Development snapshot builds
 
 Pre-release builds can be downloaded from CI build artifacts. Go to
