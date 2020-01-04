@@ -166,15 +166,20 @@ struct Handler : public Adlib::Handler {
 }
 
 namespace NukedOPL {
+
 struct Handler : public Adlib::Handler {
-	opl3_chip chip;
-	Bit8u newm;
-	virtual void WriteReg( Bit32u reg, Bit8u val ) {
+	opl3_chip chip = {};
+	Bit8u newm = 0;
+
+	void WriteReg(Bit32u reg, Bit8u val) override
+	{
 		OPL3_WriteRegBuffered(&chip, (Bit16u)reg, val);
 		if (reg == 0x105)
 			newm = reg & 0x01;
 	}
-	virtual Bit32u WriteAddr( Bit32u port, Bit8u val ) {
+
+	Bit32u WriteAddr(Bit32u port, Bit8u val) override
+	{
 		Bit16u addr;
 		addr = val;
 		if ((port & 2) && (addr == 0x05 || newm)) {
@@ -182,26 +187,26 @@ struct Handler : public Adlib::Handler {
 		}
 		return addr;
 	}
-	virtual void Generate( MixerChannel* chan, Bitu samples ) {
-		Bit16s buf[1024*2];
-		while( samples > 0 ) {
-			Bitu todo = samples > 1024 ? 1024 : samples;
-			samples -= todo;
+
+	void Generate(MixerChannel *chan, Bitu samples) override
+	{
+		int16_t buf[1024 * 2];
+		while (samples > 0) {
+			uint32_t todo = samples > 1024 ? 1024 : samples;
 			OPL3_GenerateStream(&chip, buf, todo);
-			chan->AddSamples_s16( todo, buf );
+			chan->AddSamples_s16(todo, buf);
+			samples -= todo;
 		}
 	}
-	virtual void Init( Bitu rate ) {
+
+	void Init(Bitu rate) override
+	{
 		newm = 0;
 		OPL3_Reset(&chip, rate);
 	}
-	~Handler() {
-	}
 };
 
-}
-
-
+} // namespace NukedOPL
 
 #define RAW_SIZE 1024
 
