@@ -808,6 +808,29 @@ static void OPL_SaveRawEvent(bool pressed) {
 
 namespace Adlib {
 
+static Handler * make_opl_handler(const std::string &oplemu, OPL_Mode mode)
+{
+	if (oplemu == "fast") {
+		return new DBOPL::Handler();
+	}
+	if (oplemu == "compat") {
+		if (mode == OPL_opl2)
+			return new OPL2::Handler();
+		else
+			return new OPL3::Handler();
+	}
+	if (oplemu == "mame") {
+		if (mode == OPL_opl2)
+			return new MAMEOPL2::Handler();
+		else
+			return new MAMEOPL3::Handler();
+	}
+	if (oplemu == "nuked") {
+		return new NukedOPL::Handler();
+	}
+	return new DBOPL::Handler();
+}
+
 Module::Module(Section *configuration)
 	: Module_base(configuration),
 	  mixerObject(),
@@ -825,36 +848,15 @@ Module::Module(Section *configuration)
 	//Make sure we can't select lower than 8000 to prevent fixed point issues
 	if ( rate < 8000 )
 		rate = 8000;
-	std::string oplemu( section->Get_string( "oplemu" ) );
 	ctrl.mixer = section->Get_bool("sbmixer");
 
 	mixerChan = mixerObject.Install(OPL_CallBack,rate,"FM");
 	//Used to be 2.0, which was measured to be too high. Exact value depends on card/clone.
 	mixerChan->SetScale( 1.5f );  
 
-	if (oplemu == "fast") {
-		handler = new DBOPL::Handler();
-	} else if (oplemu == "compat") {
-		if ( oplmode == OPL_opl2 ) {
-			handler = new OPL2::Handler();
-		} else {
-			handler = new OPL3::Handler();
-		}
-	}
-	else if (oplemu == "mame") {
-		if (oplmode == OPL_opl2) {
-			handler = new MAMEOPL2::Handler();
-		}
-		else {
-			handler = new MAMEOPL3::Handler();
-		}
-	}
-	else if (oplemu == "nuked") {
-		handler = new NukedOPL::Handler();
-	} else {
-		handler = new DBOPL::Handler();
-	}
-	handler->Init( rate );
+	handler = make_opl_handler(section->Get_string("oplemu"), oplmode);
+	handler->Init(rate);
+
 	bool single = false;
 	switch ( oplmode ) {
 	case OPL_opl2:
