@@ -364,14 +364,14 @@ void FPU_ESC3_EA(Bitu rm,PhysPt addr) {
 }
 
 void FPU_ESC3_Normal(Bitu rm) {
-	Bitu group=(rm >> 3) & 7;
-	Bitu sub=(rm & 7);
+	const auto group = static_cast<unsigned>((rm >> 3) & 7);
+	const auto sub = static_cast<unsigned>(rm & 7);
 	switch (group) {
 	case 0x04:
 		switch (sub) {
 		case 0x00:				//FNENI
 		case 0x01:				//FNDIS
-			LOG(LOG_FPU,LOG_ERROR)("8087 only fpu code used esc 3: group 4: subfuntion :%d",sub);
+			LOG(LOG_FPU,LOG_ERROR)("8087 only fpu code used ESC 3: group 4: subfunction: %u", sub);
 			break;
 		case 0x02:				//FNCLEX FCLEX
 			FPU_FCLEX();
@@ -381,20 +381,18 @@ void FPU_ESC3_Normal(Bitu rm) {
 			break;
 		case 0x04:				//FNSETPM
 		case 0x05:				//FRSTPM
-//			LOG(LOG_FPU,LOG_ERROR)("80267 protected mode (un)set. Nothing done");
+			// LOG(LOG_FPU,LOG_ERROR)("80267 protected mode (un)set. Nothing done");
 			FPU_FNOP();
 			break;
 		default:
-			E_Exit("ESC 3:ILLEGAL OPCODE group %d subfunction %d",group,sub);
+			E_Exit("ESC 3: ILLEGAL OPCODE group %u subfunction %u", group, sub);
 		}
 		break;
 	default:
-		LOG(LOG_FPU,LOG_WARN)("ESC 3:Unhandled group %d subfunction %d",group,sub);
+		LOG(LOG_FPU,LOG_WARN)("ESC 3: Unhandled group %u subfunction %u", group, sub);
 		break;
 	}
-	return;
 }
-
 
 void FPU_ESC4_EA(Bitu rm,PhysPt addr) {
 	/* REGULAR TREE WITH 64 BITS REALS */
