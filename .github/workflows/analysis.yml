@@ -170,3 +170,38 @@ jobs:
         with:
           name: ${{ matrix.compiler }}-sanitizer-logs
           path: ${{ matrix.compiler }}-logs
+
+  code_coverage:
+    name: Test coverage
+    runs-on: ubuntu-latest
+    needs: run_linters
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: Install dependencies
+        run:  |
+          sudo apt-get update -q
+          echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
+          sudo apt-get -q -y install \
+          $(./scripts/list-build-dependencies.sh -m apt -c gcc -v 7) \
+          zstd python3-setuptools parallel pulseaudio alsa-utils dbus-x11 lcov
+          sudo pip3 install gdown cpp-coveralls
+      - name: Build
+        run:  ./scripts/build.sh -c gcc -v 7 -t coverage
+      - name: Setup test-cases
+        run:  ./scripts/setup-tests.sh
+      - name: Run tests
+        run:  xvfb-run -s "-screen 0 640x480x24" ./scripts/run-tests.sh
+      - name: Generate report
+        run:  ./scripts/generate-coverage-report.sh gcov-7
+      - name: Upload report
+        uses: actions/upload-artifact@master
+        with:
+          name: coverage-report
+          path: coverage-report
+      - name: Push to Codecov
+        env:
+          CODECOV_TOKEN: ${{ secrets.CodecovToken }}
+        run:  bash <(curl -s https://codecov.io/bash) -x gcov-7 -Z
+

@@ -7,6 +7,16 @@
 *.o
 *.obj
 
+# Derived profiling and coverage files
+*.cov
+*.gcda
+*.gcna
+*.gcno
+*.gcov
+*.pro.user
+*.info
+coverage-report
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -70,3 +80,12 @@ make.log
 pvs-*
 strace_out
 suppress_base.json
+
+# Test-cases
+/contrib/test-cases/*/*
+!/contrib/test-cases/*/dosbox.conf
+!/contrib/test-cases/*/*.bat
+!/contrib/test-cases/*/*.conf
+!/contrib/test-cases/*/*.vars
+!/contrib/test-cases/setup*.sh
+!/contrib/test-cases/*/setup*.sh
