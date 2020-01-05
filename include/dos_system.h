@@ -78,6 +78,7 @@ public:
 	virtual void	AddRef()					{ refCtr++; };
 	virtual Bits	RemoveRef()					{ return --refCtr; };
 	virtual bool	UpdateDateTimeFromHost()	{ return true; }
+	virtual void SetFlagReadOnlyMedium() {}
 	void SetDrive(Bit8u drv) { hdrive=drv;}
 	Bit8u GetDrive(void) { return hdrive;}
 	Bit32u flags;
@@ -130,8 +131,8 @@ public:
 	bool Close                  (void);
 	Bit16u GetInformation       (void);
 	bool UpdateDateTimeFromHost (void);
-	void FlagReadOnlyMedium     (void);
 	void Flush                  (void);
+	void SetFlagReadOnlyMedium  () { read_only_medium = true; }
 	FILE * fhandle; //todo handle this properly
 private:
 	bool read_only_medium;

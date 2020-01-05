@@ -522,10 +522,6 @@ localFile::localFile(const char* _name, FILE * handle) {
 	SetName(_name);
 }
 
-void localFile::FlagReadOnlyMedium(void) {
-	read_only_medium = true;
-}
-
 bool localFile::UpdateDateTimeFromHost(void) {
 	if(!open) return false;
 	struct stat temp_stat;
@@ -574,9 +570,10 @@ bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-	bool retcode = localDrive::FileOpen(file,name,flags);
-	if(retcode) (dynamic_cast<localFile*>(*file))->FlagReadOnlyMedium();
-	return retcode;
+	bool success = localDrive::FileOpen(file, name, flags);
+	if (success)
+		(*file)->SetFlagReadOnlyMedium();
+	return success;
 }
 
 bool cdromDrive::FileCreate(DOS_File * * /*file*/,char * /*name*/,Bit16u /*attributes*/) {
