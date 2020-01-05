@@ -98,6 +98,7 @@ extern char** environ;
 #endif
 
 #ifdef WIN32
+#include <winuser.h>
 #define STDOUT_FILE "stdout.txt"
 #define STDERR_FILE "stderr.txt"
 #endif
@@ -2002,10 +2003,22 @@ static void erasemapperfile() {
 	exit(0);
 }
 
+void Disable_OS_Scaling() {
+#if defined (WIN32)
+	typedef BOOL (*function_set_dpi_pointer)();
+	function_set_dpi_pointer function_set_dpi;
+	function_set_dpi = (function_set_dpi_pointer) GetProcAddress(LoadLibrary("user32.dll"), "SetProcessDPIAware");
+	if (function_set_dpi) {
+		function_set_dpi();
+	}
+#endif
+}
 
 //extern void UI_Init(void);
 int main(int argc, char* argv[]) {
 	try {
+		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
+
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
 		control=&myconf;
