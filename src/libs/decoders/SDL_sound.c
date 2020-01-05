@@ -145,7 +145,10 @@ int Sound_Quit(void)
     BAIL_IF_MACRO(!initialized, ERR_NOT_INITIALIZED, 0);
 
     while (((volatile Sound_Sample *) sample_list) != NULL)
-        Sound_FreeSample(sample_list);
+    {
+        Sound_Sample *sample = sample_list;
+        Sound_FreeSample(sample); /* Updates sample_list. */
+    }
 
     initialized = 0;
 
