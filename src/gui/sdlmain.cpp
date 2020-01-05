@@ -99,6 +99,7 @@ extern char** environ;
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
+#include <winuser.h>
 #if C_DDRAW
 #include <ddraw.h>
 struct private_hwdata {
@@ -1978,10 +1979,22 @@ static void erasemapperfile() {
 	exit(0);
 }
 
+void Disable_OS_Scaling() {
+#if defined (WIN32)
+	typedef BOOL (*function_set_dpi_pointer)();
+	function_set_dpi_pointer function_set_dpi;
+	function_set_dpi = (function_set_dpi_pointer) GetProcAddress(LoadLibrary("user32.dll"), "SetProcessDPIAware");
+	if (function_set_dpi) {
+		function_set_dpi();
+	}
+#endif
+}
 
 //extern void UI_Init(void);
 int main(int argc, char* argv[]) {
 	try {
+		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
+
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
 		control=&myconf;
