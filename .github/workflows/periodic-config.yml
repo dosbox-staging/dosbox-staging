@@ -1,6 +1,6 @@
 name: Config heavy ⏰
-on:
-  schedule: [cron: '0 16 * * *']
+on: push
+  # schedule: [cron: '0 16 * * *']
 strategy:
   max-parallel: 8
 jobs:
