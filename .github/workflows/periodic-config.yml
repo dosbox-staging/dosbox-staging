@@ -1,8 +1,8 @@
-name: Config heavy
+name: Config heavy ⏰
 on:
-  # push
   schedule: [cron: '0 16 * * *']
-
+strategy:
+  max-parallel: 8
 jobs:
   config_all:
     name: ${{ matrix.system.name }} ${{ matrix.conf.configure_flags }} ${{ matrix.conf.without_packages }}
@@ -43,51 +43,62 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Check for commits
+        id:   has-commits
+        run:  'echo ::set-output result=::$(./scripts/has-commits-since.sh "24 hours ago")'
+      - run:  sudo apt-get update
+
       - name:  Get Date
-        if:    matrix.system.name == 'Windows'
+        if:    matrix.system.name == 'Windows' && steps.has-commits.outputs.result == 'true'
         id:    get-date
         shell: bash
         run:   echo ::set-output name=date::$(date +%Y-%W)
 
       - uses:  actions/cache@v1
-        if:    matrix.system.name == 'Windows'
+        if:    matrix.system.name == 'Windows' && steps.has-commits.outputs.result == 'true'
         id:    cache-msys2
         with:
           path: 'C:/tools/msys64'
           key: msys2-GCC-64-${{ steps.get-date.outputs.date }}-2
 
       - name:  Install MSYS2 (Windows)
-        if:    matrix.system.name == 'Windows' && steps.cache-msys2.outputs.cache-hit != 'true'
+        if:    >
+          matrix.system.name == 'Windows' &&
+          steps.cache-msys2.outputs.cache-hit != 'true' &&
+          steps.has-commits.outputs.result == 'true'
         run:   choco install msys2 --no-progress
 
       - name:  Install dependencies ${{ matrix.conf.without_packages }} (Windows)
-        if:    matrix.system.name == 'Windows' && steps.cache-msys2.outputs.cache-hit != 'true'
+        if:    >
+          matrix.system.name == 'Windows' &&
+          steps.cache-msys2.outputs.cache-hit != 'true' &&
+          steps.has-commits.outputs.result == 'true'
         shell: python scripts\msys-bash.py {0}
         run:   |
            scripts/list-build-dependencies.sh -m msys2 -c gcc ${{ matrix.conf.without_packages }} | xargs pacman -S --noconfirm
            .github/scripts/shrink-msys2.sh
 
       - name:  Install dependencies ${{ matrix.conf.without_packages }} (Linux)
-        if:    matrix.system.name == 'Linux'
+        if:    matrix.system.name == 'Linux' && steps.has-commits.outputs.result == 'true'
         run:   |
           sudo apt-get -y update
           sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c gcc ${{ matrix.conf.without_packages }})
 
       - name:  Install dependencies ${{ matrix.conf.without_packages }} (macOS)
-        if:    matrix.system.name == 'macOS'
+        if:    matrix.system.name == 'macOS' && steps.has-commits.outputs.result == 'true'
         run:   brew install $(./scripts/list-build-dependencies.sh -m brew -c clang ${{ matrix.conf.without_packages }})
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Windows)
-        if:    matrix.system.name == 'Windows'
+        if:    matrix.system.name == 'Windows' && steps.has-commits.outputs.result == 'true'
         shell: python scripts\msys-bash.py {0}
         run:   scripts/build.sh -c ${{ matrix.system.compiler }} -t debug --bin-path /mingw64/bin ${{ matrix.conf.configure_flags }}
 
       - name:  Build ${{ matrix.conf.configure_flags }} (macOS)
-        if:    matrix.system.name == 'macOS'
+        if:    matrix.system.name == 'macOS' && steps.has-commits.outputs.result == 'true'
         run:   |
           export PKG_CONFIG_PATH="/usr/local/opt/ncurses/lib/pkgconfig:$PKG_CONFIG_PATH"
           ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug ${{ matrix.conf.configure_flags }}
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Linux)
-        if:    matrix.system.name == 'Linux'
+        if:    matrix.system.name == 'Linux' && steps.has-commits.outputs.result == 'true'
         run:   ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug ${{ matrix.conf.configure_flags }}
