@@ -1,0 +1,112 @@
+name: Code analysis ⏰
+on:
+  schedule: [cron: '0 10 * * *']
+jobs:
+  dynamic_matrix:
+    name: ${{ matrix.compiler }} dynamic sanitizers
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [Clang, GCC]
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: Check for commits
+        id:   repo-meta
+        run:  'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
+      - run:  sudo apt-get update
+        if:   steps.repo-meta.outputs.has-commits == 'true'
+      - name: Install C++ compiler and libraries
+        if:   steps.repo-meta.outputs.has-commits == 'true'
+        env:
+          VERSION_GCC: 9
+          VERSION_Clang: 8
+        run:  >
+          sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt
+          -c ${{ matrix.compiler }} -v $VERSION_${{ matrix.compiler }})
+      - name: Log environment
+        if:   steps.repo-meta.outputs.has-commits == 'true'
+        run:  ./scripts/log-env.sh
+      - name: Build and run sanitizers
+        if:   steps.repo-meta.outputs.has-commits == 'true'
+        env:
+          VERSION_GCC: 9
+          VERSION_Clang: 8
+          SANITIZERS_GCC: UASAN USAN TSAN
+          SANITIZERS_Clang: USAN MSAN
+        run: |
+          ./.github/scripts/build-and-run-sanitizers.sh \
+          ${{ matrix.compiler }} \
+          $VERSION_${{ matrix.compiler }} \
+          $SANITIZERS_${{ matrix.compiler }}
+      - name: Upload logs
+        if:   steps.repo-meta.outputs.has-commits == 'true'
+        uses: actions/upload-artifact@master
+        with:
+          name: ${{ matrix.compiler }}-logs
+          path: ${{ matrix.compiler }}-logs
+
+  coverity_scan:
+  # -----------
+  # Updates:   See coverity.md for instructions on how to update the Coverity software.
+  # Security:  Sensitive environment variables are scoped on an as-needed basis to
+  #            improve security.  For example, the 'gdown' python program should not
+  #            be able to harvest the COVERITY_TOKEN and COVERITY_EMAIL environment
+  #            variables and exfiltrate them during its download process.
+    name: Coverity static analyzer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: Check for commits
+        id:   repo-meta
+        run:  'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
+      - run:  sudo apt-get update
+        if:   steps.repo-meta.outputs.has-commits == 'true'
+      - name: Log environment
+        if:   steps.repo-meta.outputs.has-commits == 'true'
+        run:  ./scripts/log-env.sh
+      - name: Install C++ compiler and dependencies
+        if:   steps.repo-meta.outputs.has-commits == 'true'
+        run:  |
+          sudo apt-get install zstd python3-setuptools $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+          sudo pip3 install gdown
+      - name: Fetch the Coverity instrumenteur
+        if:   steps.repo-meta.outputs.has-commits == 'true'
+        env:
+          TARBALL_SHA256: "0bec2d12e7fca3fe4b6df843d9584e2a58e273970a8549c100541f86dbc0da4e"
+          TARBALL_GDRIVE_ID: ${{ secrets.GoogleDriveId }}
+        run:  |
+          set -xeuo pipefail
+          gdown --id "${TARBALL_GDRIVE_ID}" -O - \
+          | tee >(tar -I zstd -C /dev/shm -x) \
+          | sha256sum -c <(echo "${TARBALL_SHA256} -" )
+      - name: Build and instrument the project
+        if:   steps.repo-meta.outputs.has-commits == 'true'
+        env:
+          PACKAGE_VERSION: "2019.03"
+        run:  |
+          set -xeu
+          g++ --version
+          ./autogen.sh
+          export CFLAGS="-g -Og"
+          export CXXFLAGS="${CFLAGS}"
+          ./configure
+          PATH="/dev/shm/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
+          cov-build --dir cov-int make -j "$(nproc)"
+          tar -cvaf package.tar.gz cov-int
+      - name: Upload the package to Coverity
+        if:   steps.repo-meta.outputs.has-commits == 'true'
+        env:
+          COVERITY_EMAIL: ${{ secrets.CoverityEmail }}
+          COVERITY_TOKEN: ${{ secrets.CoverityToken }}
+        run:  |
+          curl \
+          --form token="${COVERITY_TOKEN}" \
+          --form email="${COVERITY_EMAIL}" \
+          --form file=@package.tar.gz \
+          --form version="${GITHUB_REF}" \
+          --form description="${GITHUB_REPOSITORY}" \
+          "https://scan.coverity.com/builds?project=dosbox-staging"
