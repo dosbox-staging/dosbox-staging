@@ -1,14 +1,13 @@
 name: Config heavy ⏰
 on: push
   # schedule: [cron: '0 16 * * *']
-strategy:
-  max-parallel: 8
+
 jobs:
   config_all:
     name: ${{ matrix.system.name }} ${{ matrix.conf.configure_flags }} ${{ matrix.conf.without_packages }}
     runs-on: ${{ matrix.system.os }}
     strategy:
-      # max-parallel: 1
+      max-parallel: 8
       matrix:
         system:
           - name: Windows
@@ -45,7 +44,7 @@ jobs:
 
       - name: Check for commits
         id:   has-commits
-        run:  'echo ::set-output result=::$(./scripts/has-commits-since.sh "24 hours ago")'
+        run:  'echo ::set-output name=result::$(./scripts/has-commits-since.sh "24 hours ago")'
       - run:  sudo apt-get update
 
       - name:  Get Date

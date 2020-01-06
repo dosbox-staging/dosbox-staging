@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 1
       - name: Check for commits
         id:   has-commits
-        run:  'echo ::set-output result=::$(./scripts/has-commits-since.sh "24 hours ago")'
+        run:  'echo ::set-output name=result::$(./scripts/has-commits-since.sh "24 hours ago")'
       - run:  sudo apt-get update
         if:   steps.has-commits.outputs.result == 'true'
       - name: Install C++ compiler and libraries
@@ -64,7 +64,7 @@ jobs:
           fetch-depth: 1
       - name: Check for commits
         id:   has-commits
-        run:  'echo ::set-output result=::$(./scripts/has-commits-since.sh "24 hours ago")'
+        run:  'echo ::set-output name=result::$(./scripts/has-commits-since.sh "24 hours ago")'
       - run:  sudo apt-get update
         if:   steps.has-commits.outputs.result == 'true'
       - name: Log environment
