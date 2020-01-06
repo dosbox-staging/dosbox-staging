@@ -23,6 +23,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -183,14 +184,14 @@ private:
 public:
 	// Nested struct definition
 	struct Track {
-		TrackFile *file;
-		int       number;
-		int       attr;
-		int       start;
-		int       length;
-		int       skip;
-		int       sectorSize;
-		bool      mode2;
+		std::shared_ptr<TrackFile> file       = nullptr;
+		int                        number     = 0;
+		int                        attr       = 0;
+		int                        start      = 0;
+		int                        length     = 0;
+		int                        skip       = 0;
+		int                        sectorSize = 0;
+		bool                       mode2      = false;
 	};
 	CDROM_Interface_Image           (Bit8u _subUnit);
 	virtual ~CDROM_Interface_Image  (void);

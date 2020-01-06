@@ -463,7 +463,7 @@ bool CDROM_Interface_Image::PlayAudioSector(unsigned long start, unsigned long l
 	                    + clamp(relative_start, 0, track->length - 1)
 	                    * track->sectorSize);
 
-	TrackFile* trackFile = track->file;
+	TrackFile* trackFile = track->file.get();
 	// Guard: Bail if our track could not be seeked
 	if (!trackFile->seek(offset)) {
 		LOG_MSG("CDROM: Track %d failed to seek to byte %u, so cancelling playback",
@@ -792,47 +792,31 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 bool CDROM_Interface_Image::LoadIsoFile(char* filename)
 {
 	tracks.clear();
-
-	// data track
-	Track track = {nullptr, // TrackFile*
-	               0,       // number
-	               0,       // attr
-	               0,       // start
-	               0,       // length
-	               0,       // skip
-	               0,       // sectorSize
-	               false};  // mode2
-
+	// data track (track 1)
+	Track track;
 	bool error;
-	track.file = new BinaryFile(filename, error);
+	track.file = make_shared<BinaryFile>(filename, error);
+
 	if (error) {
-		if (track.file != nullptr) {
-			delete track.file;
-			track.file = nullptr;
-		}
 		return false;
 	}
 	track.number = 1;
 	track.attr = 0x40;//data
 
 	// try to detect iso type
-	if (CanReadPVD(track.file, BYTES_PER_COOKED_REDBOOK_FRAME, false)) {
+	if (CanReadPVD(track.file.get(), BYTES_PER_COOKED_REDBOOK_FRAME, false)) {
 		track.sectorSize = BYTES_PER_COOKED_REDBOOK_FRAME;
 		track.mode2 = false;
-	} else if (CanReadPVD(track.file, BYTES_PER_RAW_REDBOOK_FRAME, false)) {
+	} else if (CanReadPVD(track.file.get(), BYTES_PER_RAW_REDBOOK_FRAME, false)) {
 		track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
 		track.mode2 = false;
-	} else if (CanReadPVD(track.file, 2336, true)) {
+	} else if (CanReadPVD(track.file.get(), 2336, true)) {
 		track.sectorSize = 2336;
 		track.mode2 = true;
-	} else if (CanReadPVD(track.file, BYTES_PER_RAW_REDBOOK_FRAME, true)) {
+	} else if (CanReadPVD(track.file.get(), BYTES_PER_RAW_REDBOOK_FRAME, true)) {
 		track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
 		track.mode2 = true;
 	} else {
-		if (track.file != nullptr) {
-			delete track.file;
-			track.file = nullptr;
-		}
 		return false;
 	}
 	track.length = track.file->getLength() / track.sectorSize;
@@ -845,13 +829,11 @@ bool CDROM_Interface_Image::LoadIsoFile(char* filename)
 
 	tracks.push_back(track);
 
-	// leadout track
-	track.number = 2;
-	track.attr = 0;
-	track.start = track.length;
-	track.length = 0;
-	track.file = nullptr;
-	tracks.push_back(track);
+	// leadout track (track 2)
+	Track leadout_track;
+	leadout_track.number = 2;
+	leadout_track.start = track.length;
+	tracks.push_back(leadout_track);
 	return true;
 }
 
@@ -891,14 +873,7 @@ static string dirname(char * file) {
 
 bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 {
-	Track track = {nullptr, // TrackFile*
-	               0,       // number
-	               0,       // attr
-	               0,       // start
-	               0,       // length
-	               0,       // skip
-	               0,       // sectorSize
-	               false};  // mode2
+	Track track;
 	tracks.clear();
 	int shift = 0;
 	int currPregap = 0;
@@ -985,22 +960,17 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 			string type;
 			GetCueKeyword(type, line);
 
-			track.file = nullptr;
 			bool error = true;
 			if (type == "BINARY") {
-				track.file = new BinaryFile(filename.c_str(), error);
+				track.file = make_shared<BinaryFile>(filename.c_str(), error);
 			}
 			else {
-				track.file = new AudioFile(filename.c_str(), error);
+				track.file = make_shared<AudioFile>(filename.c_str(), error);
 				// SDL_Sound first tries using a decoder having a matching registered extension
 				// as the filename, and then falls back to trying each decoder before finally
 				// giving up.
 			}
 			if (error) {
-				if (track.file != nullptr) {
-					delete track.file;
-					track.file = nullptr;
-				}
 				success = false;
 			}
 		}
@@ -1014,17 +984,9 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 		}
 		// failure
 		else {
-			if (track.file != nullptr) {
-				delete track.file;
-				track.file = nullptr;
-			}
 			success = false;
 		}
 		if (!success) {
-			if (track.file != nullptr) {
-				delete track.file;
-				track.file = nullptr;
-			}
 			return false;
 		}
 	}
@@ -1038,7 +1000,7 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 	track.attr = 0;//sync with load iso
 	track.start = 0;
 	track.length = 0;
-	track.file = nullptr;
+	track.file.reset();
 	if (!AddTrack(track, shift, -1, totalPregap, 0)) {
 		return false;
 	}
@@ -1212,12 +1174,6 @@ bool CDROM_Interface_Image::GetCueString(string &str, istream &in)
 
 void CDROM_Interface_Image::ClearTracks()
 {
-	for (auto &track : tracks) {
-		if (track.file) {
-			delete track.file;
-			track.file = nullptr;
-		}
-	}
 	tracks.clear();
 }
 
