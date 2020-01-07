@@ -19,6 +19,7 @@
 // #define DEBUG 1
 
 #include "cdrom.h"
+#include <cassert>
 #include <cctype>
 #include <cmath>
 #include <cstdio>
@@ -242,7 +243,7 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 	if (player.cd == this) {
 		player.cd = nullptr;
 	}
-	ClearTracks();
+	tracks.clear();
 	if (refCount == 0) {
 		StopAudio();
 		if (player.channel != nullptr) {
@@ -439,10 +440,6 @@ bool CDROM_Interface_Image::PlayAudioSector(unsigned long start, unsigned long l
 	    track->attr == 0x40 ||
 	    track->file == nullptr ||
 	    player.channel == nullptr) {
-		LOG_MSG("CDROM: PlayAudioSector at start sector %lu for %lu "
-		        " number of frames => bad request, skipping",
-		        start,
-		        len);
 		StopAudio();
 		return false;
 	}
@@ -1034,7 +1031,9 @@ bool CDROM_Interface_Image::AddTrack(Track &curr, int &shift, const int prestart
 		return true;
 	}
 
-	Track &prev = *(tracks.end() - 1);
+	// Guard against undefined behavior in subsequent tracks.back() call
+	assert(!tracks.empty());
+	Track &prev{ tracks.back() };
 
 	// current track consumes data from the same file as the previous
 	if (prev.file == curr.file) {
@@ -1170,11 +1169,6 @@ bool CDROM_Interface_Image::GetCueString(string &str, istream &in)
 		}
 	}
 	return true;
-}
-
-void CDROM_Interface_Image::ClearTracks()
-{
-	tracks.clear();
 }
 
 void CDROM_Image_Destroy(Section*) {
