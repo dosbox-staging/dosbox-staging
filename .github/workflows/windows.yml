@@ -7,16 +7,12 @@ jobs:
     name: ${{ matrix.conf.compiler }} ${{ matrix.conf.bits }}-bit
     runs-on: windows-latest
     strategy:
+      # Because Clang depends on GCC, we run the Clang-32/64bit jobs
+      # first to create combined caches that include both Clang and GCC.
+      # Running 2-jobs at once ensure the GCC jobs start after Clang.
+      max-parallel: 2
       matrix:
         conf:
-          - compiler: GCC
-            bits: 32
-            arch: i686
-            max_warnings: 202
-          - compiler: GCC
-            bits: 64
-            arch: x86_64
-            max_warnings: 245
           - compiler: Clang
             bits: 32
             arch: i686
@@ -25,6 +21,14 @@ jobs:
             bits: 64
             arch: x86_64
             max_warnings: 128
+          - compiler: GCC
+            bits: 32
+            arch: i686
+            max_warnings: 202
+          - compiler: GCC
+            bits: 64
+            arch: x86_64
+            max_warnings: 245
     env:
       CHERE_INVOKING: yes
     steps:
@@ -37,12 +41,9 @@ jobs:
         run:   echo ::set-output name=date::$(date +%Y-%W)
       - uses:  actions/cache@v1
         id:    cache-msys2
-        # As of December 2019, GitHub cache size is not big enough to hold
-        # whole MSYS2 Clang installation.
-        if:    matrix.conf.compiler == 'GCC'
         with:
           path: 'C:/tools/msys64'
-          key: msys2-${{ matrix.conf.compiler }}-${{ matrix.conf.bits }}-${{ steps.get-date.outputs.date }}-sdl2
+          key: msys2-${{ matrix.conf.bits }}-${{ steps.get-date.outputs.date }}
       - name:  Install MSYS2
         if:    steps.cache-msys2.outputs.cache-hit != 'true'
         run:   choco install msys2 --no-progress
@@ -51,7 +52,7 @@ jobs:
         shell: python scripts\msys-bash.py {0}
         run:   ./scripts/list-build-dependencies.sh -m msys2 -c ${{ matrix.conf.compiler }} -b ${{ matrix.conf.bits }} | xargs pacman -S --noconfirm
       - name:  Shrink MSYS2 for cache
-        if:    matrix.conf.compiler == 'GCC' && steps.cache-msys2.outputs.cache-hit != 'true'
+        if:    steps.cache-msys2.outputs.cache-hit != 'true'
         shell: python scripts\msys-bash.py {0}
         run:   ./.github/scripts/shrink-msys2.sh
       - name:  Log environment
@@ -60,7 +61,8 @@ jobs:
       - name:  Build
         shell: python scripts\msys-bash.py {0}
         run: |
-          # export these two in script to override variables defined by MSYS2 
+          # The following two MSYSTEM variables are used by auto-tools to determine host
+          # architecture so we override them to match the current build type (32-bit or 64-bit)
           export MSYSTEM_CARCH=${{ matrix.conf.arch }}
           export MSYSTEM_CHOST=${{ matrix.conf.arch }}-pc-msys
           ./scripts/build.sh --compiler ${{ matrix.conf.compiler }} --build-type Debug --bin-path /mingw${{ matrix.conf.bits }}/bin
