@@ -230,7 +230,6 @@ private:
 	} player;
 
 	// Private utility functions
-	void  ClearTracks();
 	bool  LoadIsoFile(char *filename);
 	bool  CanReadPVD(TrackFile *file, int sectorSize, bool mode2);
 	std::vector<Track>::iterator GetTrack(int sector);
