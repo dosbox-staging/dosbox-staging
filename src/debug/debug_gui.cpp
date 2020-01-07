@@ -66,7 +66,10 @@ void DEBUG_ShowMsg(char const* format,...) {
 	size_t len = strlen(buf);
 	if(buf[len - 1] != '\n' && len + 1 < sizeof(buf) ) strcat(buf,"\n");
 
-	if(debuglog) fprintf(debuglog,"%s",buf);
+	if (debuglog) {
+		fprintf(debuglog,"%s",buf);
+		fflush(debuglog);
+	}
 
 	if (logBuffPos != logBuff.end()) {
 		logBuffPos=logBuff.end();

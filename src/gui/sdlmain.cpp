@@ -1286,41 +1286,43 @@ static void GUI_StartUp(Section * sec) {
 	sdl.rendererDriver = section->Get_string("texture_renderer");
 
 #if C_OPENGL
-   if(sdl.desktop.want_type==SCREEN_OPENGL){ /* OPENGL is requested */
-	if (!GFX_SetSDLOpenGLWindow(640, 400)) {
-		LOG_MSG("Could not create OpenGL window, switching back to surface");
-		sdl.desktop.want_type=SCREEN_SURFACE;
-	} else {
-		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
-		if (sdl.opengl.context == 0) {
-			LOG_MSG("Could not create OpenGL context, switching back to surface");
-			sdl.desktop.want_type=SCREEN_SURFACE;
+	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
+		if (!GFX_SetSDLOpenGLWindow(640, 400)) {
+			LOG_MSG("Could not create OpenGL window, switching back to surface");
+			sdl.desktop.want_type = SCREEN_SURFACE;
+		} else {
+			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
+			if (sdl.opengl.context == 0) {
+				LOG_MSG("Could not create OpenGL context, switching back to surface");
+				sdl.desktop.want_type = SCREEN_SURFACE;
+			}
 		}
-	}
-	if (sdl.desktop.want_type==SCREEN_OPENGL) {
-	sdl.opengl.buffer=0;
-	sdl.opengl.framebuf=0;
-	sdl.opengl.texture=0;
-	sdl.opengl.displaylist=0;
-
-	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
-	glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
-	glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
-	glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
-	glBufferDataARB = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress("glBufferDataARB");
-	glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
-	glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
-	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
-	if(gl_ext && *gl_ext){
-		sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") != NULL);
-		sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") != NULL);
-		sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") != NULL ) &&
-		    glGenBuffersARB && glBindBufferARB && glDeleteBuffersARB && glBufferDataARB &&
-		    glMapBufferARB && glUnmapBufferARB;
-    	} else {
-		sdl.opengl.packed_pixel=sdl.opengl.paletted_texture=false;
-	}
-	}
+		if (sdl.desktop.want_type == SCREEN_OPENGL) {
+			sdl.opengl.buffer=0;
+			sdl.opengl.framebuf=0;
+			sdl.opengl.texture=0;
+			sdl.opengl.displaylist=0;
+			glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
+			glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
+			glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
+			glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
+			glBufferDataARB = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress("glBufferDataARB");
+			glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
+			glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
+			const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
+			if(gl_ext && *gl_ext){
+				sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") != NULL);
+				sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") != NULL);
+				sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") != NULL ) &&
+				    glGenBuffersARB && glBindBufferARB && glDeleteBuffersARB && glBufferDataARB &&
+				    glMapBufferARB && glUnmapBufferARB;
+    			} else {
+				sdl.opengl.packed_pixel = false;
+				sdl.opengl.paletted_texture = false;
+				sdl.opengl.pixel_buffer_object = false;
+			}
+			LOG_MSG("OpenGL extensions: packed pixel %d, paletted_texture %d, pixel_bufer_object %d",sdl.opengl.packed_pixel,sdl.opengl.paletted_texture,sdl.opengl.pixel_buffer_object);
+		}
 	} /* OPENGL is requested end */
 
 #endif	//OPENGL
