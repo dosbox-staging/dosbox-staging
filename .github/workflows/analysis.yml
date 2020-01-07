@@ -55,7 +55,7 @@ jobs:
       - name: Upload report
         uses: actions/upload-artifact@master
         with:
-          name: report
+          name: clang-analysis-report
           path: report
       - name: Summarize report
         env:
@@ -65,6 +65,39 @@ jobs:
           echo "Full report is included in build Artifacts"
           echo
           ./scripts/count-bugs.py report/*/index.html
+
+  build_pvs_studio_analyzer:
+    name: PVS-Studio static analyzer
+    runs-on: ubuntu-latest
+    needs: run_linters
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - run:  sudo apt-get update
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+      - name: Install packages
+        run:  |
+          set -xeu
+          wget -nv "https://files.viva64.com/pvs-studio-7.05.35582.25-amd64.deb" -O "pvs.deb" &
+          sudo apt-get install strace $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+          wait && sudo dpkg -i "pvs.deb"
+          pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
+      - name: Build
+        run:  pvs-studio-analyzer trace -- ./scripts/build.sh -c gcc -t debug
+      - name: Analyze
+        run:  |
+          set -xeu
+          pvs-studio-analyzer analyze -o pvs-analysis.log -j "$(nproc)"
+          plog-converter -a "64:1;OP:1,2,3;CS:1;MISRA:1,2" \
+          -p "dosbox-staging" -v "${GITHUB_SHA:0:8}" -t "fullhtml" \
+          -d "V1042" -o "pvs-analysis-report" "pvs-analysis.log"
+      - name: Upload report
+        uses: actions/upload-artifact@master
+        with:
+          name: pvs-analysis-report
+          path: pvs-analysis-report
 
   dynamic_matrix:
     name: ${{ matrix.compiler }} dynamic sanitizers
@@ -101,5 +134,5 @@ jobs:
       - name: Upload logs
         uses: actions/upload-artifact@master
         with:
-          name: ${{ matrix.compiler }}-logs
+          name: ${{ matrix.compiler }}-sanitizer-logs
           path: ${{ matrix.compiler }}-logs
