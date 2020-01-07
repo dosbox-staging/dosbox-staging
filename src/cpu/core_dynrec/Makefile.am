@@ -3,4 +3,4 @@ noinst_HEADERS = cache.h decoder.h decoder_basic.h decoder_opcodes.h \
                  risc_armv4le.h risc_armv4le-common.h \
                  risc_armv4le-o3.h risc_armv4le-thumb.h \
                  risc_armv4le-thumb-iw.h risc_armv4le-thumb-niw.h risc_armv8le.h \
-                 risc_ppc.h
+                 risc_ppc.h risc_ppc64le.h

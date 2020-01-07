@@ -284,9 +284,16 @@ case "$host_cpu" in
     c_targetcpu="x86"
     c_unalignedmemory=yes
     ;;
+   powerpc64le*)
+    AC_DEFINE(C_TARGETCPU,PPC64LE)
+    AC_DEFINE(PAGESIZE,65536,Non-4K page size; currently ppc64le only)
+    AC_MSG_RESULT(OpenPOWER)
+    c_targetcpu="ppc64le"
+    c_unalignedmemory=yes
+    ;;
    powerpc*)
     AC_DEFINE(C_TARGETCPU,POWERPC)
-    AC_MSG_RESULT(Power PC)
+    AC_MSG_RESULT(PowerPC)
     c_targetcpu="powerpc"
     c_unalignedmemory=yes
     ;;
@@ -381,8 +388,8 @@ dnl x86 only enable it if dynamic-x86 is disabled.
     else
         AC_MSG_RESULT([no, using dynamic-x86])
     fi
-  else
-    if test x$c_targetcpu = xarm ; then
+  else 
+    if test x$c_targetcpu = xarm -o x$c_targetcpu = xppc64le ; then
       AC_DEFINE(C_DYNREC,1)
       AC_MSG_RESULT(yes)
     else

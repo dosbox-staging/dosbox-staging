@@ -157,6 +157,7 @@ static_assert(offsetof(core_dynrec_t, readdata) % sizeof(uint32_t) == 0,
 #define ARMV7LE		0x05
 #define POWERPC		0x06
 #define ARMV8LE		0x07
+#define PPC64LE		0x08
 
 #if C_TARGETCPU == X86_64
 #include "core_dynrec/risc_x64.h"
@@ -170,6 +171,8 @@ static_assert(offsetof(core_dynrec_t, readdata) % sizeof(uint32_t) == 0,
 #include "core_dynrec/risc_ppc.h"
 #elif C_TARGETCPU == ARMV8LE
 #include "core_dynrec/risc_armv8le.h"
+#elif C_TARGETCPU == PPC64LE
+#include "core_dynrec/risc_ppc64le.h"
 #endif
 
 #if !defined(WORDS_BIGENDIAN)
