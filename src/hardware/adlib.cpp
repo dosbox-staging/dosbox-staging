@@ -208,9 +208,6 @@ struct Handler : public Adlib::Handler {
 
 } // namespace NukedOPL
 
-#define RAW_SIZE 1024
-
-
 /*
 	Main Adlib implementation
 
