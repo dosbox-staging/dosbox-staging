@@ -29,9 +29,9 @@
 #include "dosbox.h"
 #endif
 
-#if defined (_MSC_VER)						/* MS Visual C++ */
-#define	strcasecmp(a,b) stricmp(a,b)
-#define strncasecmp(a,b,n) _strnicmp(a,b,n)
+#ifdef _MSC_VER
+#define strcasecmp(a, b) _stricmp(a, b)
+#define strncasecmp(a, b, n) _strnicmp(a, b, n)
 #endif
 
 /// Copy a string into C array
