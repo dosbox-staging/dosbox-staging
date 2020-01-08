@@ -57,6 +57,10 @@
 //#define DISABLE_JOYSTICK
 
 #if C_OPENGL
+//Define to disable the usage of the pixel buffer object
+//#define DB_DISABLE_DBO
+//Define to report opengl errors
+//#define DB_OPENGL_ERROR
 
 #ifndef APIENTRY
 #define APIENTRY
@@ -209,6 +213,23 @@ struct SDL_Block {
 };
 
 static SDL_Block sdl;
+
+#if C_OPENGL
+#ifdef DB_OPENGL_ERROR
+void OPENGL_ERROR(const char* message) {
+	GLenum r = glGetError();
+	if (r == GL_NO_ERROR) return;
+	LOG_MSG("errors from %s",message);
+	do {
+		LOG_MSG("%X",r);
+	} while ( (r=glGetError()) != GL_NO_ERROR);
+}
+#else 
+void OPENGL_ERROR(const char*) {
+	return;
+}
+#endif
+#endif
 
 static int SDL_Init_Wrapper(void)
 {
@@ -759,7 +780,10 @@ dosurface:
 		}
 
 		glMatrixMode (GL_PROJECTION);
-		glDeleteTextures(1,&sdl.opengl.texture);
+
+		if (sdl.opengl.texture > 0) {
+			glDeleteTextures(1,&sdl.opengl.texture);
+		}
  		glGenTextures(1,&sdl.opengl.texture);
 		glBindTexture(GL_TEXTURE_2D,sdl.opengl.texture);
 		// No borders
@@ -806,6 +830,9 @@ dosurface:
 		glEnd();
 
 		glEndList();
+
+		OPENGL_ERROR("End of setsize");
+
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
 		if (sdl.opengl.pixel_buffer_object)
@@ -939,6 +966,8 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 		} else {
 		    pixels=(Bit8u *)sdl.opengl.framebuf;
 		}
+		OPENGL_ERROR("end of start update");
+		if (pixels == NULL) return false;
 		pitch=sdl.opengl.pitch;
 		sdl.updating=true;
 		return true;
@@ -1217,6 +1246,7 @@ static void GUI_StartUp(Section * sec) {
 			}
 		}
 	}
+	Bit16u windowspercentage  = 0;
 	sdl.desktop.window.width  = 0;
 	sdl.desktop.window.height = 0;
 	const char* windowresolution=section->Get_string("windowresolution");
@@ -1230,6 +1260,13 @@ static void GUI_StartUp(Section * sec) {
 				*height = 0;
 				sdl.desktop.window.height = (Bit16u)atoi(height+1);
 				sdl.desktop.window.width  = (Bit16u)atoi(res);
+			} else {
+				char* percentage = const_cast<char*>(strchr(windowresolution,'%'));
+				if(percentage && *percentage) {
+					*percentage = 0;
+					windowspercentage = (Bit16u) atoi(res);
+					if (windowspercentage) putenv(const_cast<char*>("SDL_VIDEO_CENTERED=1"));
+				}
 			}
 		}
 	}
@@ -1321,7 +1358,10 @@ static void GUI_StartUp(Section * sec) {
 				sdl.opengl.paletted_texture = false;
 				sdl.opengl.pixel_buffer_object = false;
 			}
-			LOG_MSG("OpenGL extensions: packed pixel %d, paletted_texture %d, pixel_bufer_object %d",sdl.opengl.packed_pixel,sdl.opengl.paletted_texture,sdl.opengl.pixel_buffer_object);
+#ifdef DB_DISABLE_DBO
+			sdl.opengl.pixel_buffer_object = false;
+#endif
+			LOG_MSG("OpenGL extension: pixel_bufer_object %d",sdl.opengl.pixel_buffer_object);
 		}
 	} /* OPENGL is requested end */
 
