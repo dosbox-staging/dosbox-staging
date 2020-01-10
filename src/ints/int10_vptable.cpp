@@ -16,12 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include "dosbox.h"
-#include "mem.h"
-#include "inout.h"
 #include "int10.h"
 
+#include "mem.h"
+#include "inout.h"
 
 const Bit8u vparams[] = {
 	// 40x25 mode 0 and 1 crtc registers

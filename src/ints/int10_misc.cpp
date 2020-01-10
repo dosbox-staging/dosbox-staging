@@ -16,13 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include "dosbox.h"
-#include "mem.h"
-#include "inout.h"
 #include "int10.h"
 
-
+#include "mem.h"
+#include "inout.h"
 
 #pragma pack(1)
 struct Dynamic_Functionality {

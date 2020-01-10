@@ -16,12 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include "dosbox.h"
-#include "mem.h"
-#include "inout.h"
 #include "int10.h"
 
+#include "mem.h"
+#include "inout.h"
 
 static Bit8u static_functionality[0x10]=
 {

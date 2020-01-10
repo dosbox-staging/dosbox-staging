@@ -16,11 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "int10.h"
 
-#include "dosbox.h"
 #include "mem.h"
 #include "inout.h"
-#include "int10.h"
 
 static Bit8u cga_masks[4]={0x3f,0xcf,0xf3,0xfc};
 static Bit8u cga_masks2[8]={0x7f,0xbf,0xdf,0xef,0xf7,0xfb,0xfd,0xfe};
@@ -257,4 +256,3 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 		break;
 	}	
 }
-
