@@ -16,10 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "dosbox.h"
+#include "int10.h"
+
 #include "mem.h"
 #include "inout.h"
-#include "int10.h"
 
 #define ACTL_MAX_REG   0x14
 

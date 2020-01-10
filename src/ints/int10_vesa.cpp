@@ -16,16 +16,15 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "int10.h"
 
 #include <string.h>
 #include <stddef.h>
 
-#include "dosbox.h"
 #include "callback.h"
 #include "regs.h"
 #include "mem.h"
 #include "inout.h"
-#include "int10.h"
 #include "dos_inc.h"
 
 #define VESA_SUCCESS          0x00
@@ -605,4 +604,3 @@ void INT10_SetupVESA(void) {
 	phys_writew( Real2Phys(int10.rom.pmode_interface) + 6, 0);
 	int10.rom.pmode_interface_size=int10.rom.used - RealOff( int10.rom.pmode_interface );
 }
-

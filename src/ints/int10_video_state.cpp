@@ -16,11 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "int10.h"
 
-#include "dosbox.h"
 #include "mem.h"
 #include "inout.h"
-#include "int10.h"
 
 Bitu INT10_VideoState_GetSize(Bitu state) {
 	// state: bit0=hardware, bit1=bios data, bit2=color regs/dac state
