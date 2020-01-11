@@ -457,14 +457,12 @@ bool localFile::Write(Bit8u * data,Bit16u * size) {
 	}
 	if (last_action==READ) fseek(fhandle,ftell(fhandle),SEEK_SET);
 	last_action=WRITE;
-	if(*size==0){  
-        return (!ftruncate(fileno(fhandle),ftell(fhandle)));
-    }
-    else 
-    {
-		*size=(Bit16u)fwrite(data,1,*size,fhandle);
+	if (*size == 0) {
+		return !ftruncate(cross_fileno(fhandle), ftell(fhandle));
+	} else {
+		*size = (Bit16u)fwrite(data, 1, *size, fhandle);
 		return true;
-    }
+	}
 }
 
 bool localFile::Seek(Bit32u * pos,Bit32u type) {
@@ -529,7 +527,7 @@ void localFile::FlagReadOnlyMedium(void) {
 bool localFile::UpdateDateTimeFromHost(void) {
 	if(!open) return false;
 	struct stat temp_stat;
-	fstat(fileno(fhandle),&temp_stat);
+	fstat(cross_fileno(fhandle), &temp_stat);
 	struct tm * ltime;
 	if((ltime=localtime(&temp_stat.st_mtime))!=0) {
 		time=DOS_PackTime((Bit16u)ltime->tm_hour,(Bit16u)ltime->tm_min,(Bit16u)ltime->tm_sec);
