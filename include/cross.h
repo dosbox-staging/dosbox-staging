@@ -16,18 +16,15 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef DOSBOX_CROSS_H
 #define DOSBOX_CROSS_H
 
-#ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
-#endif
 
-#include <stdio.h>
+#include <cstdio>
+#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <string>
 
 #if defined (_MSC_VER)						/* MS Visual C++ */
 #include <direct.h>
@@ -56,8 +53,20 @@
 #define CROSS_NONE	0
 #define CROSS_FILE	1
 #define CROSS_DIR	2
+
 #if defined (WIN32)
 #define ftruncate(blah,blah2) chsize(blah,blah2)
+#endif
+
+// fileno is a POSIX function (not mentioned in ISO/C++), which means old
+// versions of various Windows compilers (old MSVC or old MinGW) might be
+// missing it when using C++11; New MSVC issues "deprecation" warning when
+// fileno is used and recommends using (platform-specific) _fileno.
+// Provide our own redefines to avoid this mess.
+#if defined(WIN32)
+#define cross_fileno(s) _fileno(s)
+#else
+#define cross_fileno(s) fileno(s)
 #endif
 
 //Solaris maybe others
@@ -106,4 +115,5 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 void close_directory(dir_information* dirp);
 
 FILE *fopen_wrap(const char *path, const char *mode);
+
 #endif
