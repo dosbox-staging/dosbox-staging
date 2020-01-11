@@ -1,8 +1,6 @@
 name: Code analysis
 on: push
-
 jobs:
-
   run_linters:
     name: Script linters
     runs-on: ubuntu-18.04
@@ -70,19 +68,30 @@ jobs:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-latest
     needs: run_linters
+    env:
+      debfile: pvs-studio-7.05.35582.25-amd64.deb
     steps:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
       - run:  sudo apt-get update
-      - name: Log environment
-        run:  ./scripts/log-env.sh
+      - name: Log and setup environment
+        run:  |
+          ./scripts/log-env.sh
+          mkdir -p pvs-package
+      - uses: actions/cache@v1
+        id: cache-pvs
+        with:
+          path: pvs-package
+          key: ${{ env.debfile }}
+      - name:  Fetch PVS-Studio package
+        if:    steps.cache-pvs.outputs.cache-hit != 'true'
+        run:   wget "https://files.viva64.com/${debfile}" -O "pvs-package/pvs.deb"
       - name: Install packages
         run:  |
           set -xeu
-          wget -nv "https://files.viva64.com/pvs-studio-7.05.35582.25-amd64.deb" -O "pvs.deb" &
           sudo apt-get install strace $(./scripts/list-build-dependencies.sh -m apt -c gcc)
-          wait && sudo dpkg -i "pvs.deb"
+          sudo dpkg -i "pvs-package/pvs.deb"
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
       - name: Build
         run:  pvs-studio-analyzer trace -- ./scripts/build.sh -c gcc -t debug
