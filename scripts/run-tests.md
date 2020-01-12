@@ -35,15 +35,14 @@ A test-case sub-directory contains:
   the specific batch-file. For example: `vga.conf`, `adlib-1.conf`, and `longname.conf`.
 - (optional) correspondingly-named `*.vars` files.
   For example: `vga.vars`, `adlib-1.vars`, and `longname.vars`
-  
+
   If present, a vars-file may contain the following in `KEY=value` notation
-  (default values are shown and used if a *.vars file is not present):
+  (default values are shown and used if a `*.vars` file is not present):
   - `RUNNING_AFTER=true` (or `false`), if the batch file is expected to be
     running after RUNTIME.
   - `RUNTIME=15`, the maximum number of seconds for which the test should
-    be run. Reasonable values start around 5 (to allow DOSBox some time to start
-    through to hundreds of seconds if the test needs that long to exercise the
-    desired functionality.
+    be run. Reasonable values start around five (to DOSBox time to start)
+    through to hundreds of seconds if need be for the test.
   - `GRACETIME=3`, the number of seconds we should wait to kill the process,
     after first trying to elegantly stop the process.
   - `ARGS=""`, any additional arguments to be passed to the batch file
@@ -66,19 +65,19 @@ We would create the following directories and files:
   containing one line: `testvesa.exe`
 - **Conf file**: `contrib/test-cases/vesa-nolfb/run.conf`,
   containing the following:
-  
+
   ``` text
   [dosbox]
   machine  = vesa_nolfb
   ```
-  
+
 - The `run.vars` file is absent because we are happy with the defaults.
   That is, we expect `testvesa.exe` to still be running after 15 seconds of
   runtime.  If `testvesa.exe` happens to fail (or DOSBox fails to set the
   video mode), then it will terminate before the expected 15s
   and the run-tests script will consider the test a failure.
 
-### Thorough Test-Case Example
+### Thorough Test-case Example
 
 This examples tests DOSBox's `vgaonly` mode using *good* and *bad*
 permutations.  We would create the following directory and files:
@@ -93,7 +92,7 @@ permutations.  We would create the following directory and files:
 **Conf files**:
 
 - `contrib/test-cases/vgaonly/dosbox.conf` containing:
-  
+
   ``` text
   [dosbox]
   machine  = vgaonly
@@ -115,7 +114,7 @@ has gone wrong (so would consider that a failure and want the test terminated).
 - `contrib/test-cases/vgaonly/good.vars` is not present, we are
   happy with the defaults.
 - `contrib/test-cases/vgaonly/bad.vars` would contain:
-  
+
   ``` ini
   RUNNING_AFTER=false
   RUNTIME=10
@@ -126,25 +125,26 @@ has gone wrong (so would consider that a failure and want the test terminated).
 Binaries that support these tests (such as the hypothetical `testvesa.exe`)
 are not present in source-control, therefore they must be downloaded,
 generated (perhaps compiled), or derived (such as encoding an mp3 from a wav)
-using a setup Bash script, in the form of `setup-*.sh`.
+using a setup Bash script, in the form of `setup*.sh`.
 
-These `setup-*.sh` scripts can exist inside a given test-case directory,
+These `setup*.sh` scripts can exist inside a given test-case directory,
 however in the case where a DOS program can support more than one theme of
 testing, we have opted to download and extract them in the `contrib/test-cases/common`
 directory and use relative symlinks to those directories in the specific test-case
 directory.
 
 If you're working with the source tree, simply launch
-`contrib/test-cases/common/setup-tests.sh` to setup the existing binary packages and
-work with them, or add your own `setup-*.sh` script in `contrib/test-cases/common`.
+`contrib/test-cases/common/setup-tests.sh` to setup the existing binary packages
+and work with them, or add your own `setup*.sh` script in
+`contrib/test-cases/common`.
 
 ## Source Control
 
 The `contrib/test-cases/*` sub-directories are largely excluded in the repository's
-root `.gitignore` because testing may generate ephemeral files or biniaries not suitable
-for tracking in SCM, Therefore, please explicitly add any source files, text files,
-scripts, or documentation that've written in your test-case sub-directory to ensure it's
-part of your commit/PR.
+root `.gitignore` because testing may generate ephemeral files or biniaries not
+suitable for tracking in SCM, Therefore, please explicitly add any source files,
+text files, scripts, or documentation that've written in your test-case
+sub-directory to ensure it's part of your commit/PR.
 
-For example, if you've added a directory symlink to `../common/<some-package>`, then
-please explicitly add your symlink.
+For example, if you've added a directory symlink to `../common/<some-package>`,
+then please explicitly add your symlink.

@@ -171,6 +171,9 @@ jobs:
           name: ${{ matrix.compiler }}-sanitizer-logs
           path: ${{ matrix.compiler }}-logs
 
+  # As of Jan-2020, the package-managed version of LCOV is compatible
+  # with GCC 7.x's gcov output, and cannot reliably support newer versions
+  # of GCC.  Therefore, we use gcc-7 exclusively here.
   code_coverage:
     name: Test coverage
     runs-on: ubuntu-latest

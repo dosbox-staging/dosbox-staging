@@ -11,9 +11,9 @@ shopt -s nullglob
 function print_usage() {
 	echo "Usage: $0 [-d dosbox-binary] [-j N] [-t my-test-case-1 [-t my-test-case-2 [...] ] ]"
 	echo "Where:"
-	echo "  -d | --dosbox   test with a specific DOSBox binary instead of the repo's binary"
-	echo "  -j | --jobs     only launch N jobs in parallel instead of auto-determined"
-	echo "  -t | --testcase run a specific test-case intead of all of them, can use multiple times"
+	echo "  -d | --dosbox   (optional) use a specific DOSBox binary instead of the repo's binary"
+	echo "  -j | --jobs     (optional) launch N jobs in parallel instead of auto-determined"
+	echo "  -t | --testcase (optional) run specific test-case(s) intead of all of them"
 	echo ""
 }
 
