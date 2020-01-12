@@ -9,8 +9,3 @@ Release
 
 # DOSBox
 *.conf
-
-# autoconf
-.deps
-Makefile
-Makefile.in

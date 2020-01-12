@@ -1,7 +1,7 @@
 # Main Makefile for DOSBox
 
 EXTRA_DIST = autogen.sh
-SUBDIRS = src include docs vs
+SUBDIRS = src include docs
 
 # Per the auto-tools clean guidelines:
 # https://www.gnu.org/savannah-checkouts/gnu/automake/manual/html_node/Clean.html#Clean

@@ -612,7 +612,6 @@ src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile
 src/platform/visualc/Makefile
-vs/Makefile
 include/Makefile
 docs/Makefile
 ])
