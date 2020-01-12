@@ -1,7 +1,7 @@
 VARIABLES=(packages bits delim compiler)
 TYPES=(gcc clang)
 
-packages=(autoconf-archive zstd)
+packages=(zstd)
 delim="-"
 compiler=""
 

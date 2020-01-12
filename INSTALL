@@ -53,7 +53,6 @@ If you want compile from developer sources (SVN) under a unix system, you will n
  - GCC (>=4.8.1) or Clang (>=3.4)
  - automake (>=1.6)
  - autoconf (>=2.50)
- - autoconf-archive (>=2009.x)
  - make (>= 3.8)
  - pkg-config (>= 0.25)
 
