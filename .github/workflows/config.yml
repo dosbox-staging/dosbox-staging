@@ -60,7 +60,7 @@ jobs:
           steps.repo-meta.outputs.has-commits == 'true'
         with:
           path: 'C:/tools/msys64'
-          key: msys2-GCC-64-${{ steps.get-date.outputs.date }}-2
+          key: msys2-64-${{ steps.get-date.outputs.date }}-2
 
       - name:  Install MSYS2 (Windows)
         if:    >
@@ -76,7 +76,7 @@ jobs:
           steps.repo-meta.outputs.has-commits == 'true'
         shell: python scripts\msys-bash.py {0}
         run:   |
-           scripts/list-build-dependencies.sh -m msys2 -c gcc ${{ matrix.conf.without_packages }} | xargs pacman -S --noconfirm
+           scripts/list-build-dependencies.sh -m msys2 -c clang ${{ matrix.conf.without_packages }} | xargs pacman -S --noconfirm
            .github/scripts/shrink-msys2.sh
 
       - name:  Install dependencies ${{ matrix.conf.without_packages }} (Linux)
