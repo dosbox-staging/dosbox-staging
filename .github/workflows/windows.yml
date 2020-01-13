@@ -50,7 +50,7 @@ jobs:
       - name:  Install C++ compiler and libraries
         if:    steps.cache-msys2.outputs.cache-hit != 'true'
         shell: python scripts\msys-bash.py {0}
-        run:   ./scripts/list-build-dependencies.sh -m msys2 -c ${{ matrix.conf.compiler }} -b ${{ matrix.conf.bits }} | xargs pacman -S --noconfirm
+        run:   ./scripts/list-build-dependencies.sh -m msys2 -c clang -b ${{ matrix.conf.bits }} | xargs pacman -S --noconfirm
       - name:  Shrink MSYS2 for cache
         if:    steps.cache-msys2.outputs.cache-hit != 'true'
         shell: python scripts\msys-bash.py {0}
