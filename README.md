@@ -55,11 +55,13 @@ Codecs supported for CD-DA emulation:
 
 Other features:
 
-|                     | dosbox-staging                          | DOSBox
-|-                    |-                                        |-
-| **[OPL] emulators** | compat, fast, mame, nuked<sup>[7]</sup> | compat, fast, mame
+|                       | dosbox-staging                               | DOSBox
+|-                      |-                                             |-
+| **[OPL] emulators**   | compat, fast, mame, nuked<sup>[7]</sup>      | compat, fast, mame
+| **[Wayland] support** | experimental (use `SDL_VIDEODRIVER=wayland`) | N/A
 
 [OPL]:https://en.wikipedia.org/wiki/Yamaha_YMF262
+[Wayland]:https://en.wikipedia.org/wiki/Wayland_(display_server_protocol)
 [7]:https://www.vogons.org/viewtopic.php?f=9&t=37782
 
 ## Development snapshot builds
