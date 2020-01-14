@@ -10,10 +10,22 @@ OPUS_URL = https://github.com/xiph/opus/archive/master.tar.gz
 OPUSFILE_ARCHIVE = opusfile-master.tar.gz
 OPUSFILE_URL = https://github.com/xiph/opusfile/archive/master.tar.gz
 
-# We use speex's pkg.m4 to work around a bug in opusfile's autotools config
-# that still depends on pkgconfig even if DEPS_ env flags are present.
-# Mingw 1.0 (Windows) does not provide pkg-config, so we need to avoid it.
+##
+#  We use speex's pkg.m4 to work around a bug in opusfile's autotools config
+#  that still depends on pkgconfig even if DEPS_ env flags are present.
+#  Mingw 1.0 (Windows) does not provide pkg-config, so we need to avoid it.
+#
 OPUSFILE_PKG_URL = https://raw.githubusercontent.com/xiph/speex/master/m4/pkg.m4
+
+##
+#  Common commands and arguments
+#  -----------------------------
+THREADS = $(shell nproc || echo 4)
+CURL_FLAGS = --progress-bar
+CURL = curl --location $(CURL_FLAGS)
+WGET_FLAGS = --no-verbose --progress=bar
+WGET = wget --no-clobber $(WGET_FLAGS)
+EXTRACT = tar --strip 1 -zxof
 
 ##
 #  The audio-codecs rely on accurate floating-point calculations
@@ -33,21 +45,46 @@ LDFLAGS:= $(subst -Ofast,-O3,$(LDLAGS))
 LDFLAGS:= $(filter-out -ffast-math,$(LDFLAGS))
 LDFLAGS:= $(filter-out -funsafe-math-optimizations,$(LDFLAGS))
 
-##
-#  Common commands and arguments
-#  -----------------------------
-THREADS = $(shell nproc || echo 4)
-CURL = curl -s -L
-EXTRACT = tar --strip 1 -zxof
 
 ##
 #  Everything-targets
 #  ------------------
-.PHONY: all clean dist-clean
+.PHONY: all clean distclean
 all: ogg opus opusfile
 clean: ogg/clean opus/clean opusfile/clean
-dist-clean:
+distclean:
 	rm -rf ogg opus opusfile include lib share pkg.m4 *.gz
+
+##
+#  Re-useable download function that tries curl, then wget, and then
+#  prompts the user to manually download the files.  Note that if
+#  one download fails then we assume they all will and therefore
+#  give the user the full list up-front.
+#
+define download =
+	echo "Downloading $(URL) to ./$@"                                        \
+	&& $(CURL) "$(URL)" -o "$@"                                              \
+	|| $(WGET) "$(URL)" -O "$@"                                              \
+	|| ( rm -f "$@"                                                          \
+	     && echo ""                                                          \
+	     && echo "DOWNLOAD FAILURE"                                          \
+	     && echo "~~~~~~~~~~~~~~~~"                                          \
+	     && echo "Please manually download the following, then re-run make:" \
+	     && echo "  - $(OGG_URL) to ./$(OGG_ARCHIVE)"                        \
+	     && echo "  - $(OPUS_URL) to ./$(OPUS_ARCHIVE)"                      \
+	     && echo "  - $(OPUSFILE_URL) to ./$(OPUSFILE_ARCHIVE)"              \
+	     && echo "  - $(OPUSFILE_PKG_URL) to ./pkg.m4"                       \
+	     && echo ""                                                          \
+	     && echo "Alternatively, you can use your own curl or wget"          \
+	     && echo "arguments by passing CURL_FLAGS=\"--my-args\" and"         \
+	     && echo "WGET_FLAGS=\"--my-flags\" to the make command."            \
+	     && echo ""                                                          \
+	     && echo "For example, disable certificate checking:"                \
+	     && echo "    make CURL_FLAGS=\"-k\""                                \
+	     && echo "    make WGET_FLAGS=\"--no-check-certificate\""            \
+	     && echo ""                                                          \
+	   )
+endef
 
 ##
 #  Ogg Library
@@ -55,7 +92,8 @@ dist-clean:
 ogg: lib/libogg.a
 
 $(OGG_ARCHIVE):
-	$(CURL) "$(OGG_URL)" -o "$(OGG_ARCHIVE)"
+	$(eval URL := $(OGG_URL))
+	@$(download)
 
 ogg/autogen.sh: $(OGG_ARCHIVE)
 	@test -f $@ \
@@ -89,7 +127,8 @@ ogg/clean:
 opus: lib/libopus.a
 
 $(OPUS_ARCHIVE):
-	$(CURL) "$(OPUS_URL)" -o "$(OPUS_ARCHIVE)"
+	$(eval URL := $(OPUS_URL))
+	@$(download)
 
 opus/autogen.sh: $(OPUS_ARCHIVE)
 	@test -f $@ \
@@ -123,10 +162,12 @@ opus/clean:
 opusfile: opusfile-message
 
 pkg.m4:
-	$(CURL) "$(OPUSFILE_PKG_URL)" -o "pkg.m4"
+	$(eval URL := $(OPUSFILE_PKG_URL))
+	@$(download)
 
 $(OPUSFILE_ARCHIVE):
-	$(CURL) "$(OPUSFILE_URL)" -o "$(OPUSFILE_ARCHIVE)"
+	$(eval URL := $(OPUSFILE_URL))
+	@$(download)
 
 opusfile/autogen.sh: $(OPUSFILE_ARCHIVE)
 	@test -f $@ \
@@ -163,10 +204,10 @@ lib/libopusfile.a: opusfile/Makefile
 	&& cp -v include/*.h ../include/opus \
 	&& cp -v .libs/*.a ../lib
 
-define OPUSFILE_EXPORTS=
+define OPUSFILE_EXPORTS =
 
 Export the following to configure DOSBox without pkg-config
------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 export OPUSFILE_CFLAGS="-I$(CURDIR)/include -I$(CURDIR)/include/opus"
 export OPUSFILE_LIBS="$(CURDIR)/lib/libopusfile.a $(CURDIR)/lib/libogg.a $(CURDIR)/lib/libopus.a -lm"
 endef
