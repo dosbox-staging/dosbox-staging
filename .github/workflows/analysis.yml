@@ -94,19 +94,32 @@ jobs:
           sudo dpkg -i "pvs-package/pvs.deb"
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
       - name: Build
-        run:  pvs-studio-analyzer trace -- ./scripts/build.sh -c gcc -t debug
+        run:  |
+          set -xeu
+          ./autogen.sh
+          export FLAGS="-Og"
+          ./configure CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS}"
+          pvs-studio-analyzer trace -- make
       - name: Analyze
         run:  |
           set -xeu
           pvs-studio-analyzer analyze -o pvs-analysis.log -j "$(nproc)"
-          plog-converter -a "64:1;OP:1,2,3;CS:1;MISRA:1,2" \
-          -p "dosbox-staging" -v "${GITHUB_SHA:0:8}" -t "fullhtml" \
-          -d "V1042" -o "pvs-analysis-report" "pvs-analysis.log"
+          criteria="GA:1,2;64:1;OP:1,2,3;CS:1;MISRA:1,2"
+          plog-converter -a "${criteria}" -d V1042 -t csv -o pvs-report.csv pvs-analysis.log
+          plog-converter -a "${criteria}" -d V1042 -t fullhtml -p dosbox-staging \
+          -v "${GITHUB_SHA:0:8}" -o pvs-analysis-report pvs-analysis.log
       - name: Upload report
         uses: actions/upload-artifact@master
         with:
           name: pvs-analysis-report
           path: pvs-analysis-report
+      - name: Summarize report
+        env:
+          MAX_BUGS: 356
+        run: |
+          echo "Full report is included in build Artifacts"
+          echo
+          ./scripts/count-pvs-bugs.py pvs-report.csv "${MAX_BUGS}"
 
   dynamic_matrix:
     name: ${{ matrix.compiler }} dynamic sanitizers
