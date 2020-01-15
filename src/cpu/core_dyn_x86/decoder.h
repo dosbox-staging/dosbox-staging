@@ -86,16 +86,21 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 		cph=0;		return false;
 	}
 	/* Find a free CodePage */
-	if (!cache.free_pages) {
-		if (cache.used_pages!=decode.page.code) cache.used_pages->ClearRelease();
+	if (!cache.free_pages && cache.used_pages) {
+		if (cache.used_pages != decode.page.code)
+			cache.used_pages->ClearRelease();
 		else {
-			if ((cache.used_pages->next) && (cache.used_pages->next!=decode.page.code))
+			if ((cache.used_pages->next) && (cache.used_pages->next != decode.page.code))
 				cache.used_pages->next->ClearRelease();
 			else {
 				LOG_MSG("DYNX86:Invalid cache links");
 				cache.used_pages->ClearRelease();
 			}
 		}
+	}
+	if (!cache.free_pages) {
+		LOG_MSG("DYNX86:cache.free_pages is not useable");
+		return false;
 	}
 	CodePageHandler * cpagehandler=cache.free_pages;
 	cache.free_pages=cache.free_pages->next;
@@ -176,6 +181,10 @@ static INLINE void decode_increase_wmapmask(Bitu size) {
 			Bitu newmasklen=activecb->cache.masklen*4;
 			if (newmasklen<mapidx+size) newmasklen=((mapidx+size)&~3)*2;
 			Bit8u* tempmem=(Bit8u*)malloc(newmasklen);
+			if (tempmem == nullptr) {
+				LOG_MSG("Unable to allocate %" PRIuPTR " bytes for tempmem", newmasklen);
+				return;
+			}
 			memset(tempmem,0,newmasklen);
 			memcpy(tempmem,activecb->cache.wmapmask,activecb->cache.masklen);
 			free(activecb->cache.wmapmask);
