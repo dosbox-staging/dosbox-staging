@@ -57,7 +57,8 @@ CDROM_Interface_Image::BinaryFile::BinaryFile(const char *filename, bool &error)
 	  file(nullptr)
 {
 	file = new ifstream(filename, ios::in | ios::binary);
-	error = (file == nullptr) || (file->fail());
+	// If new fails, an exception is generated and scope leaves this constructor
+	error = file->fail();
 }
 
 CDROM_Interface_Image::BinaryFile::~BinaryFile()
@@ -803,10 +804,10 @@ bool CDROM_Interface_Image::LoadIsoFile(char* filename)
 	// try to detect iso type
 	if (CanReadPVD(track.file.get(), BYTES_PER_COOKED_REDBOOK_FRAME, false)) {
 		track.sectorSize = BYTES_PER_COOKED_REDBOOK_FRAME;
-		track.mode2 = false;
+		// track.mode2 = false (comment only, because this is the default value)
 	} else if (CanReadPVD(track.file.get(), BYTES_PER_RAW_REDBOOK_FRAME, false)) {
 		track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
-		track.mode2 = false;
+		// track.mode2 = false (comment only, because this is the default value)
 	} else if (CanReadPVD(track.file.get(), 2336, true)) {
 		track.sectorSize = 2336;
 		track.mode2 = true;
