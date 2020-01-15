@@ -121,6 +121,9 @@ public:
 			return;
 		} else if (!invalidation_map) {
 			invalidation_map=(Bit8u*)malloc(4096);
+			if (!invalidation_map) {
+				E_Exit("wb:failed to allocate invalidation_map's memory");
+			}
 			memset(invalidation_map,0,4096);
 		}
 		invalidation_map[addr]++;
@@ -141,6 +144,9 @@ public:
 			return;
 		} else if (!invalidation_map) {
 			invalidation_map=(Bit8u*)malloc(4096);
+			if (!invalidation_map) {
+				E_Exit("ww:failed to allocate invalidation_map's memory");
+			}
 			memset(invalidation_map,0,4096);
 		}
 		(*(Bit16u*)&invalidation_map[addr])+=0x101;
@@ -161,6 +167,9 @@ public:
 			return;
 		} else if (!invalidation_map) {
 			invalidation_map=(Bit8u*)malloc(4096);
+			if (!invalidation_map) {
+				E_Exit("wd:failed to allocate invalidation_map's memory");
+			}
 			memset(invalidation_map,0,4096);
 		}
 		(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
@@ -181,6 +190,9 @@ public:
 		} else {
 			if (!invalidation_map) {
 				invalidation_map=(Bit8u*)malloc(4096);
+				if (!invalidation_map) {
+					E_Exit("cb:failed to allocate invalidation_map's memory");
+				}
 				memset(invalidation_map,0,4096);
 			}
 			invalidation_map[addr]++;
@@ -207,6 +219,9 @@ public:
 		} else {
 			if (!invalidation_map) {
 				invalidation_map=(Bit8u*)malloc(4096);
+				if (!invalidation_map) {
+					E_Exit("cw:failed to allocate invalidation_map's memory");
+				}
 				memset(invalidation_map,0,4096);
 			}
 			(*(Bit16u*)&invalidation_map[addr])+=0x101;
@@ -233,6 +248,9 @@ public:
 		} else {
 			if (!invalidation_map) {
 				invalidation_map=(Bit8u*)malloc(4096);
+				if (!invalidation_map) {
+					E_Exit("cd:failed to allocate invalidation_map's memory");
+				}
 				memset(invalidation_map,0,4096);
 			}
 			(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
@@ -428,10 +446,10 @@ static void cache_closeblock(void) {
 	if (written>block->cache.size) {
 		if (!block->cache.next) {
 			if (written>block->cache.size+CACHE_MAXSIZE)
-				E_Exit("CacheBlock overrun 1 %lu",
+				E_Exit("CacheBlock overrun 1 %" PRIuPTR,
 				       written-block->cache.size);
 		} else {
-			E_Exit("CacheBlock overrun 2 written %lu size %lu",
+			E_Exit("CacheBlock overrun 2 written %" PRIuPTR " size %" PRIuPTR,
 			       written, block->cache.size);
 		}
 	} else {
