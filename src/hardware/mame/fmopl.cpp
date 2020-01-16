@@ -1958,23 +1958,23 @@ static void OPL_clock_changed(FM_OPL *OPL, uint32_t clock, uint32_t rate)
 /* 'rate'  is sampling rate  */
 static FM_OPL *OPLCreate(device_t *device, uint32_t clock, uint32_t rate, int type)
 {
-	char *ptr;
-	FM_OPL *OPL;
-	int state_size;
-
 	if (FM_OPL::LockTable(device) == -1) return 0;
 
 	/* calculate OPL state size */
-	state_size  = sizeof(FM_OPL);
+	int state_size  = sizeof(FM_OPL);
 
 #if BUILD_Y8950
 	if (type&OPL_TYPE_ADPCM) state_size+= sizeof(YM_DELTAT);
 #endif
 
 	/* allocate memory block */
-	ptr = (char *)auto_alloc_array_clear(device->machine(), uint8_t, state_size);
+	char *ptr = (char *)auto_alloc_array_clear(device->machine(), uint8_t, state_size);
+	if (!ptr) {
+		device->logerror("Could not allocate memory during device creation");
+		return 0;
+	}
 
-	OPL  = (FM_OPL *)ptr;
+	FM_OPL *OPL = (FM_OPL *)ptr;
 
 	ptr += sizeof(FM_OPL);
 
