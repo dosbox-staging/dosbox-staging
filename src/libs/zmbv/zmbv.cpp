@@ -97,10 +97,6 @@ bool VideoCodec::SetupBuffers(zmbv_format_t _format, int blockwidth, int blockhe
 	blockcount=yblocks*xblocks;
 	blocks=new FrameBlock[blockcount];
 
-	if (!buf1 || !buf2 || !work || !blocks) {
-		FreeBuffers();
-		return false;
-	}
 	int y,x,i;
 	i=0;
 	for (y=0;y<yblocks;y++) {
