@@ -753,10 +753,6 @@ fatDrive::fatDrive(const char *sysFilename,
 
 	/* Load disk image */
 	loadedDisk.reset(new imageDisk(diskfile, sysFilename, filesize, is_hdd));
-	if(!loadedDisk) {
-		created_successfully = false;
-		return;
-	}
 
 	if(is_hdd) {
 		/* Set user specified harddrive parameters */

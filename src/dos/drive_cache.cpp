@@ -876,8 +876,9 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result) {
 			LOG_DEBUG(buffer);
 		};*/
 	};
-	if (SetResult(dirSearch[id], result, dirSearch[id]->nextEntry)) return true;
 	if (dirSearch[id]) {
+		if (SetResult(dirSearch[id], result, dirSearch[id]->nextEntry))
+			return true;
 		dirSearch[id]->id = MAX_OPENDIRS;
 		dirSearch[id] = nullptr;
 	}
