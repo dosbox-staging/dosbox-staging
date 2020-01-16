@@ -1179,7 +1179,8 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 	}
 }
 
-#include "dosbox_splash.h"
+// #include "dosbox_splash.h"
+#include "dosbox_staging_splash.c"
 
 //extern void UI_Run(bool);
 void Restart(bool pressed);
@@ -1420,7 +1421,7 @@ static void GUI_StartUp(Section * sec) {
 
 		bool exit_splash = false;
 
-		static Bitu max_splash_loop = 600;
+		static Bitu max_splash_loop = 1000;
 		static Bitu splash_fade = 100;
 		static bool use_fadeout = true;
 
