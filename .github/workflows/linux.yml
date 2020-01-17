@@ -63,7 +63,7 @@ jobs:
         run: |
           set -x
           ./autogen.sh
-          ./configure CFLAGS="$FLAGS" CXXFLAGS="$FLAGS"
+          ./configure CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" --disable-screenshots
           make -j "$(nproc)"
           strip src/dosbox
       - name: Package
