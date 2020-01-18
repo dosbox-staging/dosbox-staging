@@ -254,11 +254,11 @@ void DOS_Shell::InputCommand(char * line) {
 
 					// build the completion list
 					char mask[DOS_PATHLENGTH] = {0};
-					if (strlen(p_completion_start) + 3 >= DOS_PATHLENGTH) {
-						//Beep;
-						break;
-					}
 					if (p_completion_start) {
+						if (strlen(p_completion_start) + 3 >= DOS_PATHLENGTH) {
+							//Beep;
+							break;
+						}
 						safe_strncpy(mask, p_completion_start,DOS_PATHLENGTH);
 						char* dot_pos=strrchr(mask,'.');
 						char* bs_pos=strrchr(mask,'\\');
