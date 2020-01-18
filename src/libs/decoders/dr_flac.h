@@ -10361,11 +10361,11 @@ drflac_bool32 drflac_seek_to_pcm_frame(drflac* pFlac, drflac_uint64 pcmFrameInde
 #define DRFLAC_DEFINE_FULL_READ_AND_CLOSE(extension, type) \
 static type* drflac__full_read_and_close_ ## extension (drflac* pFlac, unsigned int* channelsOut, unsigned int* sampleRateOut, drflac_uint64* totalPCMFrameCountOut)\
 {                                                                                                                                                                   \
+    if (pFlac == NULL) { \
+        goto on_error; \
+    } \
     type* pSampleData = NULL;                                                                                                                                       \
     drflac_uint64 totalPCMFrameCount;                                                                                                                               \
-                                                                                                                                                                    \
-    DRFLAC_ASSERT(pFlac != NULL);                                                                                                                                   \
-                                                                                                                                                                    \
     totalPCMFrameCount = pFlac->totalPCMFrameCount;                                                                                                                 \
                                                                                                                                                                     \
     if (totalPCMFrameCount == 0) {                                                                                                                                  \
