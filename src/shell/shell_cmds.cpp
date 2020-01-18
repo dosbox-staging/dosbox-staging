@@ -1319,20 +1319,25 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	HELP("CHOICE");
 	static char defchoice[3] = {'y','n',0};
 	char *rem = NULL, *ptr;
-	bool optN = ScanCMDBool(args,"N");
-	bool optS = ScanCMDBool(args,"S"); //Case-sensitive matching
-	ScanCMDBool(args,"T"); //Default Choice after timeout
+	bool optN = false;
+	bool optS = false;
 	if (args) {
+		optN = ScanCMDBool(args,"N");
+		optS = ScanCMDBool(args,"S"); //Case-sensitive matching
+		ScanCMDBool(args,"T"); //Default Choice after timeout
 		char *last = strchr(args,0);
 		StripSpaces(args);
 		rem = ScanCMDRemain(args);
+
 		if (rem && *rem && (tolower(rem[1]) != 'c')) {
 			WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 			return;
 		}
 		if (args == rem) {
 			assert(args);
-			args = strchr(rem, '\0') + 1;
+			if (rem != nullptr) {
+				args = strchr(rem, '\0') + 1;
+			}
 		}
 		if (rem) rem += 2;
 		if(rem && rem[0]==':') rem++; /* optional : after /c */
@@ -1379,10 +1384,10 @@ void DOS_Shell::CMD_ATTRIB(char *args){
 
 void DOS_Shell::CMD_PATH(char *args){
 	HELP("PATH");
-	if(args && *args && strlen(args)){
+	if(args && strlen(args)){
 		char pathstring[DOS_PATHLENGTH+CROSS_LEN+20]={ 0 };
 		strcpy(pathstring,"set PATH=");
-		while(args && *args && (*args=='='|| *args==' ')) 
+		while(args && *args && (*args=='='|| *args==' '))
 		     args++;
 		strcat(pathstring,args);
 		this->ParseLine(pathstring);
@@ -1398,7 +1403,7 @@ void DOS_Shell::CMD_PATH(char *args){
 
 void DOS_Shell::CMD_VER(char *args) {
 	HELP("VER");
-	if(args && *args) {
+	if(args && strlen(args)) {
 		char* word = StripWord(args);
 		if(strcasecmp(word,"set")) return;
 		word = StripWord(args);

@@ -202,6 +202,11 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 //			else
 //				*lr=0;
 			t = (char*)malloc(lr-*ofn+1);
+			if (t == nullptr) {
+				E_Exit("SHELL: Could not allocate %u bytes in parser",
+				       static_cast<unsigned int>(lr-*ofn+1));
+			}
+
 			safe_strncpy(t,*ofn,lr-*ofn+1);
 			*ofn=t;
 			continue;
@@ -216,6 +221,10 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 //			else
 //				*lr=0;
 			t = (char*)malloc(lr-*ifn+1);
+			if (t == nullptr) {
+				E_Exit("SHELL: Could not allocate %u bytes in parser",
+				       static_cast<unsigned int>(lr-*ifn+1));
+			}
 			safe_strncpy(t,*ifn,lr-*ifn+1);
 			*ifn=t;
 			continue;
