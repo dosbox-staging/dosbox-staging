@@ -53,6 +53,11 @@ static std::vector<PROGRAMS_Main*> internal_progs;
 
 void PROGRAMS_MakeFile(char const * const name,PROGRAMS_Main * main) {
 	Bit8u * comdata=(Bit8u *)malloc(32); //MEM LEAK
+
+	if (comdata == nullptr) {
+		E_Exit("Could not allocate memory for com-file data.");
+	}
+
 	memcpy(comdata,&exe_block,sizeof(exe_block));
 	comdata[CB_POS]=(Bit8u)(call_program&0xff);
 	comdata[CB_POS+1]=(Bit8u)((call_program>>8)&0xff);
@@ -429,7 +434,7 @@ void CONFIG::Run(void) {
 				// sanity check
 				Section* sec = control->GetSection(pvars[0].c_str());
 				Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
-				if (sec != sec2) {
+				if (!sec || !sec2 || sec != sec2) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"));
 				}
 				break;
@@ -520,6 +525,10 @@ void CONFIG::Run(void) {
 		case P_AUTOEXEC_CLEAR: {
 			Section_line* sec = dynamic_cast <Section_line*>
 				(control->GetSection(std::string("autoexec")));
+			if (!sec) {
+				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
+				return;
+			}
 			sec->data.clear();
 			break;
 		}
@@ -530,13 +539,22 @@ void CONFIG::Run(void) {
 			}
 			Section_line* sec = dynamic_cast <Section_line*>
 				(control->GetSection(std::string("autoexec")));
-
-			for(Bitu i = 0; i < pvars.size(); i++) sec->HandleInputline(pvars[i]);
+			if (!sec) {
+				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
+				return;
+			}
+			for(Bitu i = 0; i < pvars.size(); i++) {
+				sec->HandleInputline(pvars[i]);
+			}
 			break;
 		}
 		case P_AUTOEXEC_TYPE: {
 			Section_line* sec = dynamic_cast <Section_line*>
 				(control->GetSection(std::string("autoexec")));
+			if (!sec) {
+				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
+				return;
+			}
 			WriteOut("\n%s",sec->data.c_str());
 			break;
 		}
