@@ -24,6 +24,13 @@ AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 
+dnl Prevent autoconf from leaking non-understood tokens into the configure script
+m4_pattern_forbid([PKG_PROG_PKG_CONFIG])
+m4_pattern_forbid([PKG_CHECK_MODULES])
+m4_pattern_forbid([^AC_])
+m4_pattern_forbid([^AH_])
+m4_pattern_forbid([^AX_])
+
 dnl Check for SDL
 SDL_VERSION=2.0.0
 AM_PATH_SDL($SDL_VERSION,
