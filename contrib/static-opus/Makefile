@@ -61,7 +61,7 @@ distclean:
 #  one download fails then we assume they all will and therefore
 #  give the user the full list up-front.
 #
-define download =
+define download
 	echo "Downloading $(URL) to ./$@"                                        \
 	&& $(CURL) "$(URL)" -o "$@"                                              \
 	|| $(WGET) "$(URL)" -O "$@"                                              \
@@ -204,7 +204,7 @@ lib/libopusfile.a: opusfile/Makefile
 	&& cp -v include/*.h ../include/opus \
 	&& cp -v .libs/*.a ../lib
 
-define OPUSFILE_EXPORTS =
+define OPUSFILE_EXPORTS
 
 Export the following to configure DOSBox without pkg-config
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
