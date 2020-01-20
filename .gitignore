@@ -66,3 +66,7 @@ make.log
 *.swp
 *.tmp
 
+# PVS static analysis outputs or ephemerals
+pvs-*
+strace_out
+suppress_base.json

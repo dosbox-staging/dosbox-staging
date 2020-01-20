@@ -1,0 +1,150 @@
+{
+    "version": 1,
+    "warnings": [
+        {
+            "CodeCurrent": 4109900279,
+            "CodeNext": 355817,
+            "CodePrev": 1212132082,
+            "ErrorCode": "V512",
+            "FileName": "xxhash.c",
+            "Message": "A call of the 'memcpy' function will lead to underflow of the buffer 'statePtr'."
+        },
+        {
+            "CodeCurrent": 4109900279,
+            "CodeNext": 355817,
+            "CodePrev": 1212132082,
+            "ErrorCode": "V512",
+            "FileName": "xxhash.c",
+            "Message": "A call of the 'memcpy' function will lead to underflow of the buffer '& state'."
+        },
+        {
+            "CodeCurrent": 3924832320,
+            "CodeNext": 355817,
+            "CodePrev": 1162686117,
+            "ErrorCode": "V512",
+            "FileName": "xxhash.c",
+            "Message": "A call of the 'memcpy' function will lead to underflow of the buffer 'statePtr'."
+        },
+        {
+            "CodeCurrent": 3924832320,
+            "CodeNext": 355817,
+            "CodePrev": 1162686117,
+            "ErrorCode": "V512",
+            "FileName": "xxhash.c",
+            "Message": "A call of the 'memcpy' function will lead to underflow of the buffer '& state'."
+        },
+        {
+            "CodeCurrent": 2009695132,
+            "CodeNext": 17733,
+            "CodePrev": 3053,
+            "ErrorCode": "V547",
+            "FileName": "dr_flac.h",
+            "Message": "Expression 'result == - _' is always false."
+        },
+        {
+            "CodeCurrent": 297803,
+            "CodeNext": 123,
+            "CodePrev": 100,
+            "ErrorCode": "V1008",
+            "FileName": "dr_mp3.h",
+            "Message": "Consider inspecting the 'for' operator. No more than one iteration of the loop will be performed."
+        },
+        {
+            "CodeCurrent": 2405264725,
+            "CodeNext": 2337,
+            "CodePrev": 3887730028,
+            "ErrorCode": "V547",
+            "FileName": "dr_mp3.h",
+            "Message": "Expression is always false."
+        },
+        {
+            "CodeCurrent": 2405264725,
+            "CodeNext": 2337,
+            "CodePrev": 4148287113,
+            "ErrorCode": "V547",
+            "FileName": "dr_mp3.h",
+            "Message": "Expression is always false."
+        },
+        {
+            "CodeCurrent": 3210175261,
+            "CodeNext": 11069,
+            "CodePrev": 2952291276,
+            "ErrorCode": "V547",
+            "FileName": "dr_wav.h",
+            "Message": "Expression 'bytesToWrite > (_UL)' is always false."
+        },
+        {
+            "CodeCurrent": 3210175261,
+            "CodeNext": 11069,
+            "CodePrev": 2952291276,
+            "ErrorCode": "V547",
+            "FileName": "dr_wav.h",
+            "Message": "Expression 'bytesToWrite > (_UL)' is always false."
+        },
+        {
+            "CodeCurrent": 4053293179,
+            "CodeNext": 1281436681,
+            "CodePrev": 1315862117,
+            "ErrorCode": "V547",
+            "FileName": "dr_wav.h",
+            "Message": "Expression is always false."
+        },
+        {
+            "CodeCurrent": 4130149219,
+            "CodeNext": 2064091136,
+            "CodePrev": 1315862117,
+            "ErrorCode": "V547",
+            "FileName": "dr_wav.h",
+            "Message": "Expression is always false."
+        },
+        {
+            "CodeCurrent": 2514112691,
+            "CodeNext": 720070676,
+            "CodePrev": 1315862117,
+            "ErrorCode": "V547",
+            "FileName": "dr_wav.h",
+            "Message": "Expression is always false."
+        },
+        {
+            "CodeCurrent": 4130149219,
+            "CodeNext": 2064091136,
+            "CodePrev": 1315862117,
+            "ErrorCode": "V547",
+            "FileName": "dr_wav.h",
+            "Message": "Expression is always false."
+        },
+        {
+            "CodeCurrent": 2835309445,
+            "CodeNext": 18933961,
+            "CodePrev": 1964014948,
+            "ErrorCode": "V547",
+            "FileName": "dr_wav.h",
+            "Message": "Expression is always false."
+        },
+        {
+            "CodeCurrent": 2835309445,
+            "CodeNext": 18933961,
+            "CodePrev": 2343076287,
+            "ErrorCode": "V547",
+            "FileName": "dr_wav.h",
+            "Message": "Expression is always false."
+        },
+        {
+            "CodeCurrent": 2835309445,
+            "CodeNext": 18933961,
+            "CodePrev": 1964014948,
+            "ErrorCode": "V547",
+            "FileName": "dr_wav.h",
+            "Message": "Expression is always false."
+        },
+        {
+            "CodeCurrent": 2405264725,
+            "CodeNext": 2337,
+            "CodePrev": 3887730028,
+            "ErrorCode": "V547",
+            "FileName": "dr_mp3.h",
+            "Message": "Expression is always false."
+        }
+    ]
+}
+
