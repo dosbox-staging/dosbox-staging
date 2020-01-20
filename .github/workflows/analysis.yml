@@ -103,7 +103,7 @@ jobs:
       - name: Analyze
         run:  |
           set -xeu
-          pvs-studio-analyzer analyze -o pvs-analysis.log -j "$(nproc)"
+          pvs-studio-analyzer analyze -s .pvs-suppress -o pvs-analysis.log -j "$(nproc)"
           criteria="GA:1,2;64:1;OP:1,2,3;CS:1;MISRA:1,2"
           plog-converter -a "${criteria}" -d V1042 -t csv -o pvs-report.csv pvs-analysis.log
           plog-converter -a "${criteria}" -d V1042 -t fullhtml -p dosbox-staging \
@@ -115,7 +115,7 @@ jobs:
           path: pvs-analysis-report
       - name: Summarize report
         env:
-          MAX_BUGS: 356
+          MAX_BUGS: 339
         run: |
           echo "Full report is included in build Artifacts"
           echo
