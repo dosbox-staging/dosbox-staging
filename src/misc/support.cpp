@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <cctype>
 #include <ctype.h>
+#include <functional>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,6 +50,15 @@ void trim(std::string &str) {
 	if (loc != std::string::npos) str.erase(0,loc);
 	loc = str.find_last_not_of(" \r\t\f\n");
 	if (loc != std::string::npos) str.erase(loc+1);
+}
+
+void strip_punctuation(std::string &str) {
+	str.erase(
+		std::remove_if(
+			str.begin(),
+			str.end(),
+			[](unsigned char c){ return std::ispunct(c); }),
+		str.end());
 }
 
 /* 

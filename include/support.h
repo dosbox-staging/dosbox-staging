@@ -93,5 +93,7 @@ Bits ConvHexWord(char * word);
 void trim(std::string& str);
 void upcase(std::string &str);
 void lowcase(std::string &str);
+void strip_punctuation(std::string &str);
+
 
 #endif
