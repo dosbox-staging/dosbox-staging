@@ -144,16 +144,13 @@ public:
 			if (ret) {
 				dta.GetResult(name,size,date,time,attr);
 				DOS_FindNext(); //Mark entry as invalid
-			} else name[0] = 0;
-
-			/* Change 8.3 to 11.0 */
-			char* dot = strchr(name,'.');
-			if(dot && (dot - name == 8) ) {
-				name[8] = name[9];name[9] = name[10];name[10] = name[11];name[11] = 0;
+			} else {
+				name[0] = 0;
 			}
-
+			std::string label = To_Label(name);
 			root[1] = 0; //This way, the format string can be reused.
-			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_FORMAT"),root, Drives[d]->GetInfo(),name);
+			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_FORMAT"),
+			                 root, Drives[d]->GetInfo(), label.c_str());
 		}
 		dos.dta(save_dta);
 	}
