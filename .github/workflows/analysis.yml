@@ -1,6 +1,8 @@
 name: Code analysis
-on: push
+on: [push, pull_request]
+
 jobs:
+
   run_linters:
     name: Script linters
     runs-on: ubuntu-18.04

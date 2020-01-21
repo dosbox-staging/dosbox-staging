@@ -1,5 +1,5 @@
 name: macOS builds
-on: push
+on: [push, pull_request]
 
 jobs:
 
