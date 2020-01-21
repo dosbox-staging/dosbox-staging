@@ -58,12 +58,13 @@
 #define ftruncate(blah,blah2) chsize(blah,blah2)
 #endif
 
-// fileno is a POSIX function (not mentioned in ISO/C++), which means old
-// versions of various Windows compilers (old MSVC or old MinGW) might be
-// missing it when using C++11; New MSVC issues "deprecation" warning when
-// fileno is used and recommends using (platform-specific) _fileno.
-// Provide our own redefines to avoid this mess.
-#if defined(WIN32)
+// fileno is a POSIX function (not mentioned in ISO/C++), which means it might
+// be missing when when using C++11 with strict ANSI compatibility.
+// New MSVC issues "deprecation" warning when fileno is used and recommends
+// using (platform-specific) _fileno. On other platforms we can use fileno
+// because it's either a POSIX-compliant system, or the function is available
+// when compiling with GNU extensions.
+#if defined (_MSC_VER)
 #define cross_fileno(s) _fileno(s)
 #else
 #define cross_fileno(s) fileno(s)
