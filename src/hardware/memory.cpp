@@ -551,25 +551,39 @@ public:
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 	
 		/* Setup the Physical Page Links */
-		Bitu memsize=section->Get_int("memsize");
+		uint16_t memsize = section->Get_int("memsize");
 	
 		if (memsize < 1) memsize = 1;
 		/* max 63 to solve problems with certain xms handlers */
-		if (memsize > MAX_MEMORY-1) {
+		if (memsize > MAX_MEMORY - 1) {
 			LOG_MSG("Maximum memory size is %d MB",MAX_MEMORY - 1);
-			memsize = MAX_MEMORY-1;
+			memsize = MAX_MEMORY - 1;
 		}
-		if (memsize > SAFE_MEMORY-1) {
+		if (memsize > SAFE_MEMORY - 1) {
 			LOG_MSG("Memory sizes above %d MB are NOT recommended.",SAFE_MEMORY - 1);
 			LOG_MSG("Stick with the default values unless you are absolutely certain.");
 		}
-		MemBase = new Bit8u[memsize*1024*1024];
-		memset((void*)MemBase,0,memsize*1024*1024);
-		memory.pages = (memsize*1024*1024)/4096;
+		MemBase = new (std::nothrow) Bit8u[memsize * 1024 * 1024];
+		if (!MemBase) {
+			E_Exit("Can't allocate main memory of %u MB", memsize);
+		}
+		memset((void*)MemBase, 0, memsize * 1024 * 1024);
+		memory.pages = (memsize * 1024 * 1024) / 4096;
+
 		/* Allocate the data for the different page information blocks */
-		memory.phandlers=new  PageHandler * [memory.pages];
-		memory.mhandles=new MemHandle [memory.pages];
-		for (i = 0;i < memory.pages;i++) {
+		memory.phandlers = new (std::nothrow) PageHandler * [memory.pages];
+		if (!memory.phandlers) {
+			E_Exit("Can't allocate %" PRIuPTR " bytes for the PageHandler array",
+			       sizeof(PageHandler*) * memory.pages);
+		}
+
+		memory.mhandles = new (std::nothrow) MemHandle [memory.pages];
+		if (!memory.mhandles) {
+			E_Exit("Can't allocate %" PRIuPTR " bytes worth of memory handles",
+			       sizeof(MemHandle) * memory.pages);
+		}
+
+		for (i = 0; i < memory.pages; i++) {
 			memory.phandlers[i] = &ram_page_handler;
 			memory.mhandles[i] = 0;				//Set to 0 for memory allocation
 		}

@@ -106,7 +106,7 @@ Revision History:
 #define SIN_BITS        10
 #define SIN_LEN         (1<<SIN_BITS)
 #define SIN_MASK        (SIN_LEN-1)
-#define DV				(0.1875 / 2.0 )
+#define DV				(0.1875 / 2.0)
 
 #define TL_RES_LEN      (256)   /* 8 bits addressing (real chip) */
 #define TL_TAB_LEN		(12 * 2 * TL_RES_LEN)
@@ -118,7 +118,7 @@ Revision History:
 */
 
 
-#define ENV_QUIET      ( TL_TAB_LEN >> 4 )
+#define ENV_QUIET      (TL_TAB_LEN >> 4)
 #define LFO_AM_TAB_ELEMENTS 210
 
 
@@ -257,7 +257,7 @@ struct OPL_SLOT
 
 	void KEYON(uint32_t key_set)
 	{
-		if( !key )
+		if(!key)
 		{
 			/* restart Phase Generator */
 			Cnt = 0;
@@ -269,11 +269,11 @@ struct OPL_SLOT
 
 	void KEYOFF(uint32_t key_clr)
 	{
-		if( key )
+		if(key)
 		{
 			key &= key_clr;
 
-			if( !key )
+			if(!key)
 			{
 				/* phase -> Release */
 				if (state>EG_REL)
@@ -300,7 +300,7 @@ struct OPL_CH
 		SLOT.Incr = fc * SLOT.mul;
 		int const ksr = kcode >> SLOT.KSR;
 
-		if( SLOT.ksr != ksr )
+		if(SLOT.ksr != ksr)
 		{
 			SLOT.ksr = ksr;
 
@@ -424,7 +424,7 @@ struct FM_OPL
 		status &=~flag;
 		if(status & 0x80)
 		{
-			if (!(status & statusmask) )
+			if (!(status & statusmask))
 			{
 				status &= 0x7f;
 				/* callback user interrupt handler (IRQ is ON to OFF) */
@@ -479,7 +479,7 @@ struct FM_OPL
 				switch(op.state)
 				{
 				case EG_ATT:        /* attack phase */
-					if ( !(eg_cnt & ((1<<op.eg_sh_ar)-1) ) )
+					if (!(eg_cnt & ((1<<op.eg_sh_ar)-1)))
 					{
 						op.volume += (~op.volume *
 													(eg_inc[op.eg_sel_ar + ((eg_cnt>>op.eg_sh_ar)&7)])
@@ -495,11 +495,11 @@ struct FM_OPL
 					break;
 
 				case EG_DEC:    /* decay phase */
-					if ( !(eg_cnt & ((1<<op.eg_sh_dr)-1) ) )
+					if (!(eg_cnt & ((1<<op.eg_sh_dr)-1)))
 					{
 						op.volume += eg_inc[op.eg_sel_dr + ((eg_cnt>>op.eg_sh_dr)&7)];
 
-						if ( op.volume >= op.sl )
+						if (op.volume >= op.sl)
 							op.state = EG_SUS;
 
 					}
@@ -518,11 +518,11 @@ struct FM_OPL
 					else                /* percussive mode */
 					{
 						/* during sustain phase chip adds Release Rate (in percussive mode) */
-						if ( !(eg_cnt & ((1<<op.eg_sh_rr)-1) ) )
+						if (!(eg_cnt & ((1<<op.eg_sh_rr)-1)))
 						{
 							op.volume += eg_inc[op.eg_sel_rr + ((eg_cnt>>op.eg_sh_rr)&7)];
 
-							if ( op.volume >= MAX_ATT_INDEX )
+							if (op.volume >= MAX_ATT_INDEX)
 								op.volume = MAX_ATT_INDEX;
 						}
 						/* else do nothing in sustain phase */
@@ -530,11 +530,11 @@ struct FM_OPL
 					break;
 
 				case EG_REL:    /* release phase */
-					if ( !(eg_cnt & ((1<<op.eg_sh_rr)-1) ) )
+					if (!(eg_cnt & ((1<<op.eg_sh_rr)-1)))
 					{
 						op.volume += eg_inc[op.eg_sel_rr + ((eg_cnt>>op.eg_sh_rr)&7)];
 
-						if ( op.volume >= MAX_ATT_INDEX )
+						if (op.volume >= MAX_ATT_INDEX)
 						{
 							op.volume = MAX_ATT_INDEX;
 							op.state = EG_OFF;
@@ -597,7 +597,7 @@ struct FM_OPL
 		{
 			/*
 			uint32_t j;
-			j = ( (noise_rng) ^ (noise_rng>>14) ^ (noise_rng>>15) ^ (noise_rng>>22) ) & 1;
+			j = ((noise_rng) ^ (noise_rng>>14) ^ (noise_rng>>15) ^ (noise_rng>>22)) & 1;
 			noise_rng = (j<<22) | (noise_rng>>1);
 			*/
 
@@ -632,17 +632,17 @@ struct FM_OPL
 		SLOT->op1_out[0] = SLOT->op1_out[1];
 		*SLOT->connect1 += SLOT->op1_out[0];
 		SLOT->op1_out[1] = 0;
-		if( env < ENV_QUIET )
+		if(env < ENV_QUIET)
 		{
 			if (!SLOT->FB)
 				out = 0;
-			SLOT->op1_out[1] = op_calc1(SLOT->Cnt, env, (out<<SLOT->FB), SLOT->wavetable );
+			SLOT->op1_out[1] = op_calc1(SLOT->Cnt, env, (out<<SLOT->FB), SLOT->wavetable);
 		}
 
 		/* SLOT 2 */
 		SLOT++;
 		env = volume_calc(*SLOT);
-		if( env < ENV_QUIET )
+		if(env < ENV_QUIET)
 			output[0] += op_calc(SLOT->Cnt, env, phase_modulation, SLOT->wavetable);
 	}
 
@@ -712,17 +712,17 @@ struct FM_OPL
 		/* else ignore output of operator 1 */
 
 		SLOT->op1_out[1] = 0;
-		if( env < ENV_QUIET )
+		if(env < ENV_QUIET)
 		{
 			if (!SLOT->FB)
 				out = 0;
-			SLOT->op1_out[1] = op_calc1(SLOT->Cnt, env, (out<<SLOT->FB), SLOT->wavetable );
+			SLOT->op1_out[1] = op_calc1(SLOT->Cnt, env, (out<<SLOT->FB), SLOT->wavetable);
 		}
 
 		/* SLOT 2 */
 		SLOT++;
 		env = volume_calc(*SLOT);
-		if( env < ENV_QUIET )
+		if(env < ENV_QUIET)
 			output[0] += op_calc(SLOT->Cnt, env, phase_modulation, SLOT->wavetable) * 2;
 
 
@@ -747,7 +747,7 @@ struct FM_OPL
 		OPL_SLOT const &SLOT7_1 = P_CH[7].SLOT[SLOT1];
 		OPL_SLOT const &SLOT8_2 = P_CH[8].SLOT[SLOT2];
 		env = volume_calc(SLOT7_1);
-		if( env < ENV_QUIET )
+		if(env < ENV_QUIET)
 		{
 			/* high hat phase generation:
 			    phase = d0 or 234 (based on frequency only)
@@ -798,7 +798,7 @@ struct FM_OPL
 		/* Snare Drum (verified on real YM3812) */
 		OPL_SLOT const &SLOT7_2 = P_CH[7].SLOT[SLOT2];
 		env = volume_calc(SLOT7_2);
-		if( env < ENV_QUIET )
+		if(env < ENV_QUIET)
 		{
 			/* base frequency derived from operator 1 in channel 7 */
 			unsigned char const bit8 = BIT(SLOT7_1.Cnt >> FREQ_SH, 8);
@@ -820,12 +820,12 @@ struct FM_OPL
 		/* Tom Tom (verified on real YM3812) */
 		OPL_SLOT const &SLOT8_1 = P_CH[8].SLOT[SLOT1];
 		env = volume_calc(SLOT8_1);
-		if( env < ENV_QUIET )
+		if(env < ENV_QUIET)
 			output[0] += op_calc(SLOT8_1.Cnt, env, 0, SLOT8_1.wavetable) * 2;
 
 		/* Top Cymbal (verified on real YM3812) */
 		env = volume_calc(SLOT8_2);
-		if( env < ENV_QUIET )
+		if(env < ENV_QUIET)
 		{
 			/* base frequency derived from operator 1 in channel 7 */
 			unsigned char const bit7 = BIT(SLOT7_1.Cnt >> FREQ_SH, 7);
@@ -934,7 +934,7 @@ struct FM_OPL
 		/* first time */
 
 		/* allocate total level table (128kb space) */
-		if( !init_tables() )
+		if(!init_tables())
 		{
 			num_lock--;
 			return -1;
@@ -960,14 +960,14 @@ private:
 
 	static inline signed int op_calc(uint32_t phase, unsigned int env, signed int pm, unsigned int wave_tab)
 	{
-		uint32_t const p = (env<<4) + sin_tab[wave_tab + ((((signed int)((phase & ~FREQ_MASK) + (pm<<16))) >> FREQ_SH ) & SIN_MASK) ];
+		uint32_t const p = (env<<4) + sin_tab[wave_tab + ((((signed int)((phase & ~FREQ_MASK) + (pm<<16))) >> FREQ_SH) & SIN_MASK) ];
 
 		return (p >= TL_TAB_LEN) ? 0 : tl_tab[p];
 	}
 
 	static inline signed int op_calc1(uint32_t phase, unsigned int env, signed int pm, unsigned int wave_tab)
 	{
-		uint32_t const p = (env<<4) + sin_tab[wave_tab + ((((signed int)((phase & ~FREQ_MASK) + pm      )) >> FREQ_SH ) & SIN_MASK) ];
+		uint32_t const p = (env<<4) + sin_tab[wave_tab + ((((signed int)((phase & ~FREQ_MASK) + pm     )) >> FREQ_SH) & SIN_MASK) ];
 
 		return (p >= TL_TAB_LEN) ? 0 : tl_tab[p];
 	}
@@ -1063,8 +1063,8 @@ const uint32_t FM_OPL::ksl_shift[4] = { 31, 1, 2, 0 };
 /* 0 - 15: 0, 3, 6, 9,12,15,18,21,24,27,30,33,36,39,42,93 (dB)*/
 #define SC(db)			int32_t(db * (2.0 / ENV_STEP))
 const int32_t FM_OPL::sl_tab[16]={
-	SC( 0),SC( 1),SC( 2),SC( 3),SC( 4),SC( 5),SC( 6),SC( 7),
-	SC( 8),SC( 9),SC(10),SC(11),SC(12),SC(13),SC(14),SC(31)
+	SC(0),SC(1),SC(2),SC(3),SC(4),SC(5),SC(6),SC(7),
+	SC(8),SC(9),SC(10),SC(11),SC(12),SC(13),SC(14),SC(31)
 };
 
 
@@ -1101,25 +1101,25 @@ O(14),O(14),O(14),O(14),O(14),O(14),O(14),O(14),
 O(14),O(14),O(14),O(14),O(14),O(14),O(14),O(14),
 
 /* rates 00-12 */
-O( 0),O( 1),O( 2),O( 3),
-O( 0),O( 1),O( 2),O( 3),
-O( 0),O( 1),O( 2),O( 3),
-O( 0),O( 1),O( 2),O( 3),
-O( 0),O( 1),O( 2),O( 3),
-O( 0),O( 1),O( 2),O( 3),
-O( 0),O( 1),O( 2),O( 3),
-O( 0),O( 1),O( 2),O( 3),
-O( 0),O( 1),O( 2),O( 3),
-O( 0),O( 1),O( 2),O( 3),
-O( 0),O( 1),O( 2),O( 3),
-O( 0),O( 1),O( 2),O( 3),
-O( 0),O( 1),O( 2),O( 3),
+O(0),O(1),O(2),O(3),
+O(0),O(1),O(2),O(3),
+O(0),O(1),O(2),O(3),
+O(0),O(1),O(2),O(3),
+O(0),O(1),O(2),O(3),
+O(0),O(1),O(2),O(3),
+O(0),O(1),O(2),O(3),
+O(0),O(1),O(2),O(3),
+O(0),O(1),O(2),O(3),
+O(0),O(1),O(2),O(3),
+O(0),O(1),O(2),O(3),
+O(0),O(1),O(2),O(3),
+O(0),O(1),O(2),O(3),
 
 /* rate 13 */
-O( 4),O( 5),O( 6),O( 7),
+O(4),O(5),O(6),O(7),
 
 /* rate 14 */
-O( 8),O( 9),O(10),O(11),
+O(8),O(9),O(10),O(11),
 
 /* rate 15 */
 O(12),O(12),O(12),O(12),
@@ -1145,29 +1145,29 @@ O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
 O(12),O(12),O(12),O(12),
 O(11),O(11),O(11),O(11),
 O(10),O(10),O(10),O(10),
-O( 9),O( 9),O( 9),O( 9),
-O( 8),O( 8),O( 8),O( 8),
-O( 7),O( 7),O( 7),O( 7),
-O( 6),O( 6),O( 6),O( 6),
-O( 5),O( 5),O( 5),O( 5),
-O( 4),O( 4),O( 4),O( 4),
-O( 3),O( 3),O( 3),O( 3),
-O( 2),O( 2),O( 2),O( 2),
-O( 1),O( 1),O( 1),O( 1),
-O( 0),O( 0),O( 0),O( 0),
+O(9),O(9),O(9),O(9),
+O(8),O(8),O(8),O(8),
+O(7),O(7),O(7),O(7),
+O(6),O(6),O(6),O(6),
+O(5),O(5),O(5),O(5),
+O(4),O(4),O(4),O(4),
+O(3),O(3),O(3),O(3),
+O(2),O(2),O(2),O(2),
+O(1),O(1),O(1),O(1),
+O(0),O(0),O(0),O(0),
 
 /* rate 13 */
-O( 0),O( 0),O( 0),O( 0),
+O(0),O(0),O(0),O(0),
 
 /* rate 14 */
-O( 0),O( 0),O( 0),O( 0),
+O(0),O(0),O(0),O(0),
 
 /* rate 15 */
-O( 0),O( 0),O( 0),O( 0),
+O(0),O(0),O(0),O(0),
 
 /* 16 dummy rates (same as 15 3) */
-O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),
-O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),
+O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
+O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
 
 };
 #undef O
@@ -1298,10 +1298,10 @@ int FM_OPL::num_lock = 0;
 
 
 
-static inline int limit( int val, int max, int min ) {
-	if ( val > max )
+static inline int limit(int val, int max, int min) {
+	if (val > max)
 		val = max;
-	else if ( val < min )
+	else if (val < min)
 		val = min;
 
 	return val;
@@ -1343,7 +1343,7 @@ int FM_OPL::init_tables()
 	#if 0
 			logerror("tl %04i", x*2);
 			for (i=0; i<12; i++)
-				logerror(", [%02i] %5i", i*2, tl_tab[ x*2 /*+1*/ + i*2*TL_RES_LEN ] );
+				logerror(", [%02i] %5i", i*2, tl_tab[ x*2 /*+1*/ + i*2*TL_RES_LEN ]);
 			logerror("\n");
 	#endif
 	}
@@ -1353,7 +1353,7 @@ int FM_OPL::init_tables()
 	for (i=0; i<SIN_LEN; i++)
 	{
 		/* non-standard sinus */
-		m = sin( ((i*2)+1) * M_PI / SIN_LEN ); /* checked against the real chip */
+		m = sin(((i*2)+1) * M_PI / SIN_LEN); /* checked against the real chip */
 
 		/* we never reach zero here due to ((i*2)+1) */
 
@@ -1370,9 +1370,9 @@ int FM_OPL::init_tables()
 		else
 			n = n>>1;
 
-		sin_tab[ i ] = n*2 + (m>=0.0? 0: 1 );
+		sin_tab[ i ] = n*2 + (m>=0.0? 0: 1);
 
-		/*logerror("FMOPL.C: sin [%4i (hex=%03x)]= %4i (tl_tab value=%5i)\n", i, i, sin_tab[i], tl_tab[sin_tab[i]] );*/
+		/*logerror("FMOPL.C: sin [%4i (hex=%03x)]= %4i (tl_tab value=%5i)\n", i, i, sin_tab[i], tl_tab[sin_tab[i]]);*/
 	}
 
 	for (i=0; i<SIN_LEN; i++)
@@ -1381,7 +1381,7 @@ int FM_OPL::init_tables()
 		/*             /  \____/  \____*/
 		/* output only first half of the sinus waveform (positive one) */
 
-		if (i & (1<<(SIN_BITS-1)) )
+		if (i & (1<<(SIN_BITS-1)))
 			sin_tab[1*SIN_LEN+i] = TL_TAB_LEN;
 		else
 			sin_tab[1*SIN_LEN+i] = sin_tab[i];
@@ -1396,16 +1396,16 @@ int FM_OPL::init_tables()
 		/*             / |_/ |_/ |_/ |_*/
 		/* abs(output only first quarter of the sinus waveform) */
 
-		if (i & (1<<(SIN_BITS-2)) )
+		if (i & (1<<(SIN_BITS-2)))
 			sin_tab[3*SIN_LEN+i] = TL_TAB_LEN;
 		else
 			sin_tab[3*SIN_LEN+i] = sin_tab[i & (SIN_MASK>>2)];
 
-		/*logerror("FMOPL.C: sin1[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[1*SIN_LEN+i], tl_tab[sin_tab[1*SIN_LEN+i]] );
-		logerror("FMOPL.C: sin2[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[2*SIN_LEN+i], tl_tab[sin_tab[2*SIN_LEN+i]] );
-		logerror("FMOPL.C: sin3[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[3*SIN_LEN+i], tl_tab[sin_tab[3*SIN_LEN+i]] );*/
+		/*logerror("FMOPL.C: sin1[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[1*SIN_LEN+i], tl_tab[sin_tab[1*SIN_LEN+i]]);
+		logerror("FMOPL.C: sin2[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[2*SIN_LEN+i], tl_tab[sin_tab[2*SIN_LEN+i]]);
+		logerror("FMOPL.C: sin3[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[3*SIN_LEN+i], tl_tab[sin_tab[3*SIN_LEN+i]]);*/
 	}
-	/*logerror("FMOPL.C: ENV_QUIET= %08x (dec*8=%i)\n", ENV_QUIET, ENV_QUIET*8 );*/
+	/*logerror("FMOPL.C: ENV_QUIET= %08x (dec*8=%i)\n", ENV_QUIET, ENV_QUIET*8);*/
 
 
 #ifdef SAVE_SAMPLE
@@ -1433,29 +1433,29 @@ void FM_OPL::initialize()
 	//TimerBase = attotime::from_hz(clock) * 72;
 
 	/* make fnumber -> increment counter table */
-	for( i=0 ; i < 1024 ; i++ )
+	for(i=0 ; i < 1024 ; i++)
 	{
 		/* opn phase increment counter = 20bit */
-		fn_tab[i] = (uint32_t)( (double)i * 64 * freqbase * (1<<(FREQ_SH-10)) ); /* -10 because chip works with 10.10 fixed point, while we use 16.16 */
+		fn_tab[i] = (uint32_t)((double)i * 64 * freqbase * (1<<(FREQ_SH-10))); /* -10 because chip works with 10.10 fixed point, while we use 16.16 */
 #if 0
 		logerror("FMOPL.C: fn_tab[%4i] = %08x (dec=%8i)\n",
-					i, fn_tab[i]>>6, fn_tab[i]>>6 );
+					i, fn_tab[i]>>6, fn_tab[i]>>6);
 #endif
 	}
 
 #if 0
-	for( i=0 ; i < 16 ; i++ )
+	for(i=0 ; i < 16 ; i++)
 	{
 		logerror("FMOPL.C: sl_tab[%i] = %08x\n",
-			i, sl_tab[i] );
+			i, sl_tab[i]);
 	}
-	for( i=0 ; i < 8 ; i++ )
+	for(i=0 ; i < 8 ; i++)
 	{
 		int j;
 		logerror("FMOPL.C: ksl_tab[oct=%2i] =",i);
 		for (j=0; j<16; j++)
 		{
-			logerror("%08x ", static_cast<uint32_t>(ksl_tab[i*16+j]) );
+			logerror("%08x ", static_cast<uint32_t>(ksl_tab[i*16+j]));
 		}
 		logerror("\n");
 	}
@@ -1464,7 +1464,7 @@ void FM_OPL::initialize()
 
 	/* Amplitude modulation: 27 output levels (triangle waveform); 1 level takes one of: 192, 256 or 448 samples */
 	/* One entry from LFO_AM_TABLE lasts for 64 samples */
-	lfo_am_inc = (1.0 / 64.0 ) * (1<<LFO_SH) * freqbase;
+	lfo_am_inc = (1.0 / 64.0) * (1<<LFO_SH) * freqbase;
 
 	/* Vibrato: 8 output levels (triangle waveform); 1 level takes 1024 samples */
 	lfo_pm_inc = (1.0 / 1024.0) * (1<<LFO_SH) * freqbase;
@@ -1475,7 +1475,7 @@ void FM_OPL::initialize()
 	noise_f = (1.0 / 1.0) * (1<<FREQ_SH) * freqbase;
 
 	eg_timer_add  = (1<<EG_SH)  * freqbase;
-	eg_timer_overflow = ( 1 ) * (1<<EG_SH);
+	eg_timer_overflow = (1) * (1<<EG_SH);
 	/*logerror("OPLinit eg_timer_add=%8x eg_timer_overflow=%8x\n", eg_timer_add, eg_timer_overflow);*/
 }
 
@@ -1646,16 +1646,16 @@ void FM_OPL::WriteReg(int r, int v)
 					P_CH[6].SLOT[SLOT2].KEYOFF(~2);
 				}
 				/* HH key on/off */
-				if(v&0x01) P_CH[7].SLOT[SLOT1].KEYON ( 2);
+				if(v&0x01) P_CH[7].SLOT[SLOT1].KEYON (2);
 				else       P_CH[7].SLOT[SLOT1].KEYOFF(~2);
 				/* SD key on/off */
-				if(v&0x08) P_CH[7].SLOT[SLOT2].KEYON ( 2);
+				if(v&0x08) P_CH[7].SLOT[SLOT2].KEYON (2);
 				else       P_CH[7].SLOT[SLOT2].KEYOFF(~2);
 				/* TOM key on/off */
-				if(v&0x04) P_CH[8].SLOT[SLOT1].KEYON ( 2);
+				if(v&0x04) P_CH[8].SLOT[SLOT1].KEYON (2);
 				else       P_CH[8].SLOT[SLOT1].KEYOFF(~2);
 				/* TOP-CY key on/off */
-				if(v&0x02) P_CH[8].SLOT[SLOT2].KEYON ( 2);
+				if(v&0x02) P_CH[8].SLOT[SLOT2].KEYON (2);
 				else       P_CH[8].SLOT[SLOT2].KEYOFF(~2);
 			}
 			else
@@ -1675,7 +1675,7 @@ void FM_OPL::WriteReg(int r, int v)
 			return;
 		}
 		/* keyon,block,fnum */
-		if( (r&0x0f) > 8) return;
+		if((r&0x0f) > 8) return;
 		CH = &P_CH[r&0x0f];
 		if(!(r&0x10))
 		{   /* a0-a8 */
@@ -1687,8 +1687,8 @@ void FM_OPL::WriteReg(int r, int v)
 
 			if(v&0x20)
 			{
-				CH->SLOT[SLOT1].KEYON ( 1);
-				CH->SLOT[SLOT2].KEYON ( 1);
+				CH->SLOT[SLOT1].KEYON (1);
+				CH->SLOT[SLOT2].KEYON (1);
 			}
 			else
 			{
@@ -1728,7 +1728,7 @@ void FM_OPL::WriteReg(int r, int v)
 		break;
 	case 0xc0:
 		/* FB,C */
-		if( (r&0x0f) > 8) return;
+		if((r&0x0f) > 8) return;
 		CH = &P_CH[r&0x0f];
 		CH->SLOT[SLOT1].FB  = (v>>1)&7 ? ((v>>1)&7) + 7 : 0;
 		CH->SLOT[SLOT1].CON = v&1;
@@ -1763,15 +1763,15 @@ void FM_OPL::ResetChip()
 	WriteReg(0x02,0); /* Timer1 */
 	WriteReg(0x03,0); /* Timer2 */
 	WriteReg(0x04,0); /* IRQ mask clear */
-	for(int i = 0xff ; i >= 0x20 ; i-- ) WriteReg(i,0);
+	for(int i = 0xff ; i >= 0x20 ; i--) WriteReg(i,0);
 
 	/* reset operator parameters */
 //	for(OPL_CH &CH : P_CH)
-	for(int ch = 0; ch < sizeof( P_CH )/ sizeof(P_CH[0]); ch++)
+	for(int ch = 0; ch < sizeof(P_CH)/ sizeof(P_CH[0]); ch++)
 	{
 		OPL_CH &CH = P_CH[ch];
 //		for(OPL_SLOT &SLOT : CH.SLOT)
-		for(int slot = 0; slot < sizeof( CH.SLOT ) / sizeof( CH.SLOT[0]); slot++)
+		for(int slot = 0; slot < sizeof(CH.SLOT) / sizeof(CH.SLOT[0]); slot++)
 		{
 		    
 			OPL_SLOT &SLOT = CH.SLOT[slot];
@@ -1798,7 +1798,7 @@ void FM_OPL::ResetChip()
 
 void FM_OPL::postload()
 {
-	for(int ch = 0; ch < sizeof( P_CH )/ sizeof(P_CH[0]); ch++)
+	for(int ch = 0; ch < sizeof(P_CH)/ sizeof(P_CH[0]); ch++)
 	{
 		OPL_CH &CH = P_CH[ch];
 		/* Look up key scale level */
@@ -1806,7 +1806,7 @@ void FM_OPL::postload()
 		CH.ksl_base = static_cast<uint32_t>(ksl_tab[block_fnum >> 6]);
 		CH.fc       = fn_tab[block_fnum & 0x03ff] >> (7 - (block_fnum >> 10));
 
-		for(int slot = 0; slot < sizeof( CH.SLOT ) / sizeof( CH.SLOT[0]); slot++)
+		for(int slot = 0; slot < sizeof(CH.SLOT) / sizeof(CH.SLOT[0]); slot++)
 		{
 			OPL_SLOT &SLOT = CH.SLOT[slot];
 			/* Calculate key scale rate */
@@ -1839,7 +1839,7 @@ void FM_OPL::postload()
 		}
 	}
 #if BUILD_Y8950
-	if ( (type & OPL_TYPE_ADPCM) && (deltat) )
+	if ((type & OPL_TYPE_ADPCM) && (deltat))
 	{
 		// We really should call the postlod function for the YM_DELTAT, but it's hard without registers
 		// (see the way the YM2610 does it)
@@ -1856,13 +1856,13 @@ static void OPLsave_state_channel(device_t *device, OPL_CH *CH)
 {
 	int slot, ch;
 
-	for( ch=0 ; ch < 9 ; ch++, CH++ )
+	for(ch=0 ; ch < 9 ; ch++, CH++)
 	{
 		/* channel */
 		device->save_item(NAME(CH->block_fnum), ch);
 		device->save_item(NAME(CH->kcode), ch);
 		/* slots */
-		for( slot=0 ; slot < 2 ; slot++ )
+		for(slot=0 ; slot < 2 ; slot++)
 		{
 			OPL_SLOT *SLOT = &CH->SLOT[slot];
 
@@ -1912,7 +1912,7 @@ static void OPL_save_state(FM_OPL *OPL, device_t *device)
 	device->save_item(NAME(OPL->noise_rng));
 	device->save_item(NAME(OPL->noise_p));
 
-	if( OPL->type & OPL_TYPE_WAVESEL )
+	if(OPL->type & OPL_TYPE_WAVESEL)
 	{
 		device->save_item(NAME(OPL->wavesel));
 	}
@@ -1921,12 +1921,12 @@ static void OPL_save_state(FM_OPL *OPL, device_t *device)
 	device->save_item(NAME(OPL->st));
 
 #if BUILD_Y8950
-	if ( (OPL->type & OPL_TYPE_ADPCM) && (OPL->deltat) )
+	if ((OPL->type & OPL_TYPE_ADPCM) && (OPL->deltat))
 	{
 		OPL->deltat->savestate(device);
 	}
 
-	if ( OPL->type & OPL_TYPE_IO )
+	if (OPL->type & OPL_TYPE_IO)
 	{
 		device->save_item(NAME(OPL->portDirection));
 		device->save_item(NAME(OPL->portLatch));
@@ -1961,10 +1961,10 @@ static FM_OPL *OPLCreate(device_t *device, uint32_t clock, uint32_t rate, int ty
 	if (FM_OPL::LockTable(device) == -1) return 0;
 
 	/* calculate OPL state size */
-	int state_size  = sizeof(FM_OPL);
+	int state_size = sizeof(FM_OPL);
 
 #if BUILD_Y8950
-	if (type&OPL_TYPE_ADPCM) state_size+= sizeof(YM_DELTAT);
+	if (type & OPL_TYPE_ADPCM) state_size += sizeof(YM_DELTAT);
 #endif
 
 	/* allocate memory block */
@@ -2020,7 +2020,7 @@ static void OPLSetUpdateHandler(FM_OPL *OPL,OPL_UPDATEHANDLER UpdateHandler,devi
 
 static int OPLWrite(FM_OPL *OPL,int a,int v)
 {
-	if( !(a&1) )
+	if(!(a&1))
 	{   /* address port */
 		OPL->address = v & 0xff;
 	}
@@ -2034,7 +2034,7 @@ static int OPLWrite(FM_OPL *OPL,int a,int v)
 
 static unsigned char OPLRead(FM_OPL *OPL,int a)
 {
-	if( !(a&1) )
+	if(!(a&1))
 	{
 		/* status port */
 
@@ -2112,7 +2112,7 @@ static inline void CSMKeyControll(OPL_CH *CH)
 
 static int OPLTimerOver(FM_OPL *OPL,int c)
 {
-	if( c )
+	if(c)
 	{   /* Timer B */
 		OPL->STATUS_SET(0x20);
 	}
@@ -2120,12 +2120,12 @@ static int OPLTimerOver(FM_OPL *OPL,int c)
 	{   /* Timer A */
 		OPL->STATUS_SET(0x40);
 		/* CSM mode key,TL controll */
-		if( OPL->mode & 0x80 )
+		if(OPL->mode & 0x80)
 		{   /* CSM mode total level latch and auto key on */
 			int ch;
 			if(OPL->UpdateHandler) OPL->UpdateHandler(OPL->UpdateParam,0);
 			for(ch=0; ch<9; ch++)
-				CSMKeyControll( &OPL->P_CH[ch] );
+				CSMKeyControll(&OPL->P_CH[ch]);
 		}
 	}
 	/* reload timer */
@@ -2216,7 +2216,7 @@ void ym3812_update_one(void *chip, OPLSAMPLE *buffer, int length)
 	OPLSAMPLE   *buf = buffer;
 	int i;
 
-	for( i=0; i < length ; i++ )
+	for(i=0; i < length ; i++)
 	{
 		int lt;
 
@@ -2248,7 +2248,7 @@ void ym3812_update_one(void *chip, OPLSAMPLE *buffer, int length)
 		lt >>= FINAL_SH;
 
 		/* limit check */
-		lt = limit( lt , MAXOUT, MINOUT );
+		lt = limit(lt , MAXOUT, MINOUT);
 
 		#ifdef SAVE_SAMPLE
 		if (which==0)
@@ -2348,7 +2348,7 @@ void ym3526_update_one(void *chip, OPLSAMPLE *buffer, int length)
 	OPLSAMPLE   *buf = buffer;
 	int i;
 
-	for( i=0; i < length ; i++ )
+	for(i=0; i < length ; i++)
 	{
 		int lt;
 
@@ -2380,7 +2380,7 @@ void ym3526_update_one(void *chip, OPLSAMPLE *buffer, int length)
 		lt >>= FINAL_SH;
 
 		/* limit check */
-		lt = limit( lt , MAXOUT, MINOUT );
+		lt = limit(lt , MAXOUT, MINOUT);
 
 		#ifdef SAVE_SAMPLE
 		if (which==0)
@@ -2481,7 +2481,7 @@ void y8950_set_update_handler(void *chip,OPL_UPDATEHANDLER UpdateHandler,device_
 	OPLSetUpdateHandler(Y8950, UpdateHandler, device);
 }
 
-void y8950_set_delta_t_memory(void *chip, void * deltat_mem_ptr, int deltat_mem_size )
+void y8950_set_delta_t_memory(void *chip, void * deltat_mem_ptr, int deltat_mem_size)
 {
 	FM_OPL      *OPL = (FM_OPL *)chip;
 	OPL->deltat->memory = (uint8_t *)(deltat_mem_ptr);
@@ -2503,7 +2503,7 @@ void y8950_update_one(void *chip, OPLSAMPLE *buffer, int length)
 	YM_DELTAT   *DELTAT = OPL->deltat;
 	OPLSAMPLE   *buf    = buffer;
 
-	for( i=0; i < length ; i++ )
+	for(i=0; i < length ; i++)
 	{
 		int lt;
 
@@ -2513,7 +2513,7 @@ void y8950_update_one(void *chip, OPLSAMPLE *buffer, int length)
 		OPL->advance_lfo();
 
 		/* deltaT ADPCM */
-		if( DELTAT->portstate&0x80 )
+		if(DELTAT->portstate&0x80)
 			DELTAT->ADPCM_CALC();
 
 		/* FM part */
@@ -2540,7 +2540,7 @@ void y8950_update_one(void *chip, OPLSAMPLE *buffer, int length)
 		lt >>= FINAL_SH;
 
 		/* limit check */
-		lt = limit( lt , MAXOUT, MINOUT );
+		lt = limit(lt , MAXOUT, MINOUT);
 
 		#ifdef SAVE_SAMPLE
 		if (which==0)

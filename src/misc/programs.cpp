@@ -63,7 +63,7 @@ void PROGRAMS_MakeFile(char const * const name,PROGRAMS_Main * main) {
 	comdata[CB_POS+1]=(Bit8u)((call_program>>8)&0xff);
 
 	/* Copy save the pointer in the vector and save it's index */
-	if (internal_progs.size()>255) E_Exit("PROGRAMS_MakeFile program size too large (%d)",static_cast<int>(internal_progs.size()));
+	if (internal_progs.size() > 255) E_Exit("PROGRAMS_MakeFile program size too large (%d)",static_cast<int>(internal_progs.size()));
 	Bit8u index = (Bit8u)internal_progs.size();
 	internal_progs.push_back(main);
 
@@ -144,7 +144,7 @@ void Program::WriteOut(const char * format,...) {
 
 	Bit16u size = (Bit16u)strlen(buf);
 	dos.internal_output=true;
-	for(Bit16u i = 0; i < size;i++) {
+	for (Bit16u i = 0; i < size; i++) {
 		Bit8u out;Bit16u s=1;
 		if (buf[i] == 0xA && last_written_character != 0xD) {
 			out = 0xD;DOS_WriteFile(STDOUT,&out,&s);
@@ -161,7 +161,7 @@ void Program::WriteOut_NoParsing(const char * format) {
 	Bit16u size = (Bit16u)strlen(format);
 	char const* buf = format;
 	dos.internal_output=true;
-	for(Bit16u i = 0; i < size;i++) {
+	for (Bit16u i = 0; i < size; i++) {
 		Bit8u out;Bit16u s=1;
 		if (buf[i] == 0xA && last_written_character != 0xD) {
 			out = 0xD;DOS_WriteFile(STDOUT,&out,&s);
@@ -228,7 +228,7 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 	PhysPt env_read = PhysMake(psp->GetEnvironment(),0);
 	
 	//Get size of environment.
-	DOS_MCB mcb(psp->GetEnvironment()-1);
+	DOS_MCB mcb(psp->GetEnvironment() - 1);
 	Bit16u envsize = mcb.GetSize()*16;
 
 
@@ -315,7 +315,7 @@ void CONFIG::Run(void) {
 	bool first = true;
 	std::vector<std::string> pvars;
 	// Loop through the passed parameters
-	while(presult != P_NOPARAMS) {
+	while (presult != P_NOPARAMS) {
 		presult = (enum prs)cmd->GetParameterFromList(params, pvars);
 		switch(presult) {
 		
@@ -325,7 +325,7 @@ void CONFIG::Run(void) {
 			else {
 				std::vector<std::string> restart_params;
 				restart_params.push_back(control->cmdline->GetFileName());
-				for(size_t i = 0; i < pvars.size(); i++) {
+				for (size_t i = 0; i < pvars.size(); i++) {
 					restart_params.push_back(pvars[i]);
 					if (pvars[i].find(' ') != std::string::npos) {
 						pvars[i] = "\""+pvars[i]+"\""; // add back spaces
@@ -347,13 +347,13 @@ void CONFIG::Run(void) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PRIMARY_CONF"),control->configfiles.front().c_str());
 				if (size > 1) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_ADDITIONAL_CONF"));
-					for(Bitu i = 1; i < size; i++)
+					for (Bitu i = 1; i < size; i++)
 						WriteOut("%s\n",control->configfiles[i].c_str());
 				}
 			}
 			if (control->startup_params.size() > 0) {
 				std::string test;
-				for(size_t k = 0; k < control->startup_params.size(); k++)
+				for (size_t k = 0; k < control->startup_params.size(); k++)
 					test += control->startup_params[k] + " ";
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PRINT_STARTUP"), test.c_str());
 			}
@@ -410,7 +410,7 @@ void CONFIG::Run(void) {
 					// list the sections
 					WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTLIST"));
 					Bitu i = 0;
-					while(true) {
+					while (true) {
 						Section* sec = control->GetSection(i++);
 						if (!sec) break;
 						WriteOut("%s\n",sec->GetName());
@@ -466,7 +466,7 @@ void CONFIG::Run(void) {
 			if (pvars.size()==1) {
 				size_t i = 0;
 				WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTHLP"),pvars[0].c_str());
-				while(true) {
+				while (true) {
 					// list the properties
 					Property* p = psec->Get_prop(i++);
 					if (p==NULL) break;
@@ -498,7 +498,7 @@ void CONFIG::Run(void) {
 								propvalues += oss.str();
 							}
 						}
-						for(Bitu k = 0; k < pv.size(); k++) {
+						for (Bitu k = 0; k < pv.size(); k++) {
 							if (pv[k].ToString() =="%u")
 								propvalues += MSG_Get("PROGRAM_CONFIG_HLP_POSINT");
 							else propvalues += pv[k].ToString();
@@ -543,7 +543,7 @@ void CONFIG::Run(void) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
 				return;
 			}
-			for(Bitu i = 0; i < pvars.size(); i++) {
+			for (Bitu i = 0; i < pvars.size(); i++) {
 				sec->HandleInputline(pvars[i]);
 			}
 			break;
@@ -590,7 +590,7 @@ void CONFIG::Run(void) {
 						WriteOut("%s",pline->data.c_str());
 						break;
 					}
-					while(true) {
+					while (true) {
 						// list the properties
 						Property* p = psec->Get_prop(i++);
 						if (p==NULL) break;
@@ -723,7 +723,7 @@ void CONFIG::Run(void) {
 					}
 				}
 			}
-			if(pvars.size() < 3) {
+			if (pvars.size() < 3) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
 				return;
 			}
@@ -740,7 +740,7 @@ void CONFIG::Run(void) {
 			std::string value(pvars[2]);
 			//Due to parsing there can be a = at the start of value.
 			while (value.size() && (value.at(0) ==' ' ||value.at(0) =='=') ) value.erase(0,1);
-			for(Bitu i = 3; i < pvars.size(); i++) value += (std::string(" ") + pvars[i]);
+			for (Bitu i = 3; i < pvars.size(); i++) value += (std::string(" ") + pvars[i]);
 			if (value.empty() ) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
 				return;
