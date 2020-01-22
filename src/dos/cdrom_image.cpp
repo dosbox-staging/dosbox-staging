@@ -624,7 +624,7 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer, bool raw, unsigned long s
 	Bit8u* buf = new Bit8u[buflen];
 
 	bool success = true; //Gobliiins reads 0 sectors
-	for(unsigned long i = 0; i < num; i++) {
+	for (unsigned long i = 0; i < num; i++) {
 		success = ReadSector(&buf[i * sectorSize], raw, sector + i);
 		if (!success) {
 			break;
@@ -661,7 +661,7 @@ track_iter CDROM_Interface_Image::GetTrack(const int sector)
 	// (start + length).
 	track_iter track(tracks.begin());
 	int lower_bound = track->start;
-	while(track != tracks.end()) {
+	while (track != tracks.end()) {
 		const int upper_bound = track->start + track->length;
 		if (lower_bound <= sector && sector < upper_bound) {
 			break;
@@ -804,10 +804,10 @@ bool CDROM_Interface_Image::LoadIsoFile(char* filename)
 	// try to detect iso type
 	if (CanReadPVD(track.file.get(), BYTES_PER_COOKED_REDBOOK_FRAME, false)) {
 		track.sectorSize = BYTES_PER_COOKED_REDBOOK_FRAME;
-		// track.mode2 = false (comment only, because this is the default value)
+		assert(track.mode2 == false);
 	} else if (CanReadPVD(track.file.get(), BYTES_PER_RAW_REDBOOK_FRAME, false)) {
 		track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
-		// track.mode2 = false (comment only, because this is the default value)
+		assert(track.mode2 == false);
 	} else if (CanReadPVD(track.file.get(), 2336, true)) {
 		track.sectorSize = 2336;
 		track.mode2 = true;
@@ -888,7 +888,7 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 		return false;
 	}
 
-	while(!in.eof()) {
+	while (!in.eof()) {
 		// get next line
 		char buf[MAX_LINE_LENGTH];
 		in.getline(buf, MAX_LINE_LENGTH);
@@ -1071,7 +1071,7 @@ bool CDROM_Interface_Image::AddTrack(Track &curr, int &shift, const int prestart
 bool CDROM_Interface_Image::HasDataTrack(void)
 {
 	//Data track has attribute 0x40
-	for(const auto &track : tracks) {
+	for (const auto &track : tracks) {
 		if (track.attr == 0x40) {
 			return true;
 		}
@@ -1139,8 +1139,9 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 bool CDROM_Interface_Image::GetCueKeyword(string &keyword, istream &in)
 {
 	in >> keyword;
-	for(Bitu i = 0; i < keyword.size(); i++) keyword[i] = toupper(keyword[i]);
-
+	for (Bitu i = 0; i < keyword.size(); i++) {
+		keyword[i] = toupper(keyword[i]);
+	}
 	return true;
 }
 

@@ -103,7 +103,7 @@ public:
 			std::string line = "";
 			char ppp[2] = {newz_drive,0};
 			std::string tempenv = ppp; tempenv += ":\\";
-			if (first_shell->GetEnvStr("PATH",line)){
+			if (first_shell->GetEnvStr("PATH",line)) {
 				std::string::size_type idx = line.find('=');
 				std::string value = line.substr(idx +1 , std::string::npos);
 				while ( (idx = value.find("Z:\\")) != std::string::npos ||
@@ -117,9 +117,9 @@ public:
 			first_shell->SetEnv("COMSPEC",tempenv.c_str());
 
 			/* Update batch file if running from Z: (very likely: autoexec) */
-			if(first_shell->bf) {
+			if (first_shell->bf) {
 				std::string &name = first_shell->bf->filename;
-				if(name.length() >2 &&  name[0] == 'Z' && name[1] == ':') name[0] = newz_drive;
+				if (name.length() > 2 &&  name[0] == 'Z' && name[1] == ':') name[0] = newz_drive;
 			}
 			/* Change the active drive */
 			if (DOS_GetDefaultDrive() == 25) DOS_SetDrive(i_newz);
@@ -134,7 +134,7 @@ public:
 
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_FORMAT"),"Drive","Type","Label");
-		for(int p = 0;p < 8;p++) WriteOut("----------");
+		for (int p = 0;p < 8;p++) WriteOut("----------");
 
 		for (int d = 0; d < DOS_DRIVES; d++) {
 			if (!Drives[d]) continue;
@@ -172,7 +172,7 @@ public:
 
 		/* In secure mode don't allow people to change mount points.
 		 * Neither mount nor unmount */
-		if(control->SecureMode()) {
+		if (control->SecureMode()) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
 			return;
 		}
@@ -221,7 +221,7 @@ public:
 			}
 			/* Parse the free space in mb's (kb's for floppies) */
 			std::string mb_size;
-			if(cmd->FindString("-freesize",mb_size,true)) {
+			if (cmd->FindString("-freesize",mb_size,true)) {
 				char teststr[1024];
 				Bit16u freesize = static_cast<Bit16u>(atoi(mb_size.c_str()));
 				if (type=="floppy") {
@@ -257,7 +257,7 @@ public:
 
 			// get the drive letter
 			cmd->FindCommand(1,temp_line);
-			if ((temp_line.size() > 2) || ((temp_line.size()>1) && (temp_line[1]!=':'))) goto showusage;
+			if ((temp_line.size() > 2) || ((temp_line.size() > 1) && (temp_line[1]!=':'))) goto showusage;
 			int i_drive = toupper(temp_line[0]);
 
 			if (!isalpha(i_drive)) {
@@ -284,10 +284,10 @@ public:
 			if (!temp_line.size()) {
 				goto showusage;
 			}
-			if(path_relative_to_last_config && control->configfiles.size() && !Cross::IsPathAbsolute(temp_line)) {
-				std::string lastconfigdir(control->configfiles[control->configfiles.size()-1]);
+			if (path_relative_to_last_config && control->configfiles.size() && !Cross::IsPathAbsolute(temp_line)) {
+				std::string lastconfigdir(control->configfiles[control->configfiles.size() - 1]);
 				std::string::size_type pos = lastconfigdir.rfind(CROSS_FILESPLIT);
-				if(pos == std::string::npos) {
+				if (pos == std::string::npos) {
 					pos = 0; //No directory then erase string
 				}
 				lastconfigdir.erase(pos);
@@ -301,16 +301,16 @@ public:
 			bool failed = false;
 #if defined (WIN32)
 			/* Removing trailing backslash if not root dir so stat will succeed */
-			if(temp_line.size() > 3 && temp_line[temp_line.size()-1]=='\\') temp_line.erase(temp_line.size()-1,1);
+			if (temp_line.size() > 3 && temp_line[temp_line.size() - 1]=='\\') temp_line.erase(temp_line.size() - 1, 1);
 			if (stat(temp_line.c_str(),&test)) {
 #else
 			if (stat(temp_line.c_str(),&test)) {
 				failed = true;
 				Cross::ResolveHomedir(temp_line);
 				//Try again after resolving ~
-				if(!stat(temp_line.c_str(),&test)) failed = false;
+				if (!stat(temp_line.c_str(),&test)) failed = false;
 			}
-			if(failed) {
+			if (failed) {
 #endif
 				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_1"),temp_line.c_str());
 				return;
@@ -321,7 +321,7 @@ public:
 				return;
 			}
 
-			if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
+			if (temp_line[temp_line.size() - 1] != CROSS_FILESPLIT) temp_line += CROSS_FILESPLIT;
 			Bit8u bit8size=(Bit8u) sizes[1];
 
 			if (type == "cdrom") {
@@ -350,13 +350,13 @@ public:
 			} else {
 				/* Give a warning when mount c:\ or the / */
 #if defined (WIN32)
-				if( (temp_line == "c:\\") || (temp_line == "C:\\") ||
+				if ( (temp_line == "c:\\") || (temp_line == "C:\\") ||
 				    (temp_line == "c:/") || (temp_line == "C:/")    )
 					WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_WIN"));
 #else
-				if(temp_line == "/") WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
+				if (temp_line == "/") WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
 #endif
-				if(type == "overlay") {
+				if (type == "overlay") {
 					localDrive* ldp = dynamic_cast<localDrive*>(Drives[drive - 'A']);
 					cdromDrive* cdp = dynamic_cast<cdromDrive*>(Drives[drive - 'A']);
 					if (!ldp || cdp) {
@@ -399,14 +399,14 @@ public:
 		/* For hard drives set the label to DRIVELETTER_Drive.
 		 * For floppy drives set the label to DRIVELETTER_Floppy.
 		 * This way every drive except cdroms should get a label.*/
-		else if(type == "dir" || type == "overlay") {
+		else if (type == "dir" || type == "overlay") {
 			label = drive; label += "_DRIVE";
 			newdrive->dirCache.SetLabel(label.c_str(),iscdrom,false);
-		} else if(type == "floppy") {
+		} else if (type == "floppy") {
 			label = drive; label += "_FLOPPY";
 			newdrive->dirCache.SetLabel(label.c_str(),iscdrom,true);
 		}
-		if(type == "floppy") incrementFDD();
+		if (type == "floppy") incrementFDD();
 		return;
 showusage:
 #if defined (WIN32)
@@ -508,10 +508,10 @@ private:
 
 		try {
 			ldp=dynamic_cast<localDrive*>(Drives[drive]);
-			if(!ldp) return NULL;
+			if (!ldp) return NULL;
 
 			tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
-			if(tmpfile == NULL) {
+			if (tmpfile == NULL) {
 				if (!tryload) *error=1;
 				return NULL;
 			}
@@ -523,12 +523,12 @@ private:
 			fclose(tmpfile);
 
 			tmpfile = ldp->GetSystemFilePtr(fullname, "rb+");
-			if(tmpfile == NULL) {
+			if (tmpfile == NULL) {
 //				if (!tryload) *error=2;
 //				return NULL;
 				WriteOut(MSG_Get("PROGRAM_BOOT_WRITE_PROTECTED"));
 				tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
-				if(tmpfile == NULL) {
+				if (tmpfile == NULL) {
 					if (!tryload) *error=1;
 					return NULL;
 				}
@@ -544,16 +544,16 @@ private:
 	FILE *getFSFile(char const * filename, Bit32u *ksize, Bit32u *bsize,bool tryload=false) {
 		Bit8u error = tryload?1:0;
 		FILE* tmpfile = getFSFile_mounted(filename,ksize,bsize,&error);
-		if(tmpfile) return tmpfile;
+		if (tmpfile) return tmpfile;
 		//File not found on mounted filesystem. Try regular filesystem
 		std::string filename_s(filename);
 		Cross::ResolveHomedir(filename_s);
 		tmpfile = fopen_wrap(filename_s.c_str(),"rb+");
-		if(!tmpfile) {
-			if( (tmpfile = fopen_wrap(filename_s.c_str(),"rb")) ) {
+		if (!tmpfile) {
+			if ( (tmpfile = fopen_wrap(filename_s.c_str(),"rb")) ) {
 				//File exists; So can't be opened in correct mode => error 2
 //				fclose(tmpfile);
-//				if(tryload) error = 2;
+//				if (tryload) error = 2;
 				WriteOut(MSG_Get("PROGRAM_BOOT_WRITE_PROTECTED"));
 				fseek(tmpfile,0L, SEEK_END);
 				*ksize = (ftell(tmpfile) / 1024);
@@ -561,8 +561,8 @@ private:
 				return tmpfile;
 			}
 			// Give the delayed errormessages from the mounted variant (or from above)
-			if(error == 1) WriteOut(MSG_Get("PROGRAM_BOOT_NOT_EXIST"));
-			if(error == 2) WriteOut(MSG_Get("PROGRAM_BOOT_NOT_OPEN"));
+			if (error == 1) WriteOut(MSG_Get("PROGRAM_BOOT_NOT_EXIST"));
+			if (error == 2) WriteOut(MSG_Get("PROGRAM_BOOT_NOT_OPEN"));
 			return NULL;
 		}
 		fseek(tmpfile,0L, SEEK_END);
@@ -595,7 +595,7 @@ public:
 		ChangeToLongCmd();
 		/* In secure mode don't allow people to boot stuff.
 		 * They might try to corrupt the data on it */
-		if(control->SecureMode()) {
+		if (control->SecureMode()) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
 			return;
 		}
@@ -609,16 +609,16 @@ public:
 		Bit8u drive = 'A';
 		std::string cart_cmd="";
 
-		if(!cmd->GetCount()) {
+		if (!cmd->GetCount()) {
 			printError();
 			return;
 		}
-		while(i<cmd->GetCount()) {
-			if(cmd->FindCommand(i+1, temp_line)) {
-				if((temp_line == "-l") || (temp_line == "-L")) {
+		while (i<cmd->GetCount()) {
+			if (cmd->FindCommand(i+1, temp_line)) {
+				if ((temp_line == "-l") || (temp_line == "-L")) {
 					/* Specifying drive... next argument then is the drive */
 					i++;
-					if(cmd->FindCommand(i+1, temp_line)) {
+					if (cmd->FindCommand(i+1, temp_line)) {
 						drive=toupper(temp_line[0]);
 						if ((drive != 'A') && (drive != 'C') && (drive != 'D')) {
 							printError();
@@ -633,11 +633,11 @@ public:
 					continue;
 				}
 
-				if((temp_line == "-e") || (temp_line == "-E")) {
+				if ((temp_line == "-e") || (temp_line == "-E")) {
 					/* Command mode for PCJr cartridges */
 					i++;
-					if(cmd->FindCommand(i + 1, temp_line)) {
-						for(size_t ct = 0;ct < temp_line.size();ct++) temp_line[ct] = toupper(temp_line[ct]);
+					if (cmd->FindCommand(i + 1, temp_line)) {
+						for (size_t ct = 0;ct < temp_line.size();ct++) temp_line[ct] = toupper(temp_line[ct]);
 						cart_cmd = temp_line;
 					} else {
 						printError();
@@ -653,7 +653,7 @@ public:
 				WriteOut(MSG_Get("PROGRAM_BOOT_IMAGE_OPEN"), temp_line.c_str());
 				Bit32u rombytesize;
 				FILE *usefile = getFSFile(temp_line.c_str(), &floppysize, &rombytesize);
-				if(usefile != NULL) {
+				if (usefile != NULL) {
 					diskSwap[i].reset(new imageDisk(usefile, temp_line.c_str(), floppysize, false));
 					if (usefile_1==NULL) {
 						usefile_1=usefile;
@@ -762,7 +762,7 @@ public:
 					fseek(tfile, 0x3000L, SEEK_SET);
 					Bit32u drd=(Bit32u) fread(rombuf, 1, 0xb000, tfile);
 					if (drd==0xb000) {
-						for(i=0;i<0xb000;i++) phys_writeb(0xf3000+i,rombuf[i]);
+						for ( i = 0; i < 0xb000; i++) phys_writeb(0xf3000 + i, rombuf[i]);
 					}
 					fclose(tfile);
 				}
@@ -788,7 +788,7 @@ public:
 					//fclose(usefile_2); //usefile_2 is in diskSwap structure which should be deleted to close the file
 
 					/* write cartridge data into ROM */
-					for(i=0;i<rombytesize_2-0x200;i++) phys_writeb(romseg_pt+i,rombuf[i]);
+					for (i = 0; i < rombytesize_2 - 0x200; i++) phys_writeb(romseg_pt + i, rombuf[i]);
 				}
 
 				fseek(usefile_1, 0x0L, SEEK_SET);
@@ -810,7 +810,7 @@ public:
 				//fclose(usefile_1); //usefile_1 is in diskSwap structure which should be deleted to close the file
 
 				/* write cartridge data into ROM */
-				for(i=0;i<rombytesize_1-0x200;i++) phys_writeb((romseg<<4)+i,rombuf[i]);
+				for (i = 0; i < rombytesize_1 - 0x200; i++) phys_writeb((romseg << 4) + i, rombuf[i]);
 
 				//Close cardridges
 				for (auto &disk : diskSwap)
@@ -845,7 +845,7 @@ public:
 			void RemoveEMSPageFrame(void);
 			RemoveEMSPageFrame();
 			WriteOut(MSG_Get("PROGRAM_BOOT_BOOT"), drive);
-			for(i=0;i<512;i++) real_writeb(0, 0x7c00 + i, bootarea.rawdata[i]);
+			for (i = 0; i < 512; i++) real_writeb(0, 0x7c00 + i, bootarea.rawdata[i]);
 
 			/* create appearance of floppy drive DMA usage (Demon's Forge) */
 			if (!IS_TANDY_ARCH && floppysize!=0) GetDMAChannel(2)->tcount=true;
@@ -892,10 +892,10 @@ public:
 		try {
 			/* try to read ROM file into buffer */
 			ldp=dynamic_cast<localDrive*>(Drives[drive]);
-			if(!ldp) return;
+			if (!ldp) return;
 
 			FILE *tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
-			if(tmpfile == NULL) {
+			if (tmpfile == NULL) {
 				WriteOut(MSG_Get("PROGRAM_LOADROM_CANT_OPEN"));
 				return;
 			}
@@ -1056,7 +1056,7 @@ void LOADFIX::Run(void)
 			args[0] = 0;
 			do {
 				ok = cmd->FindCommand(commandNr++,temp_line);
-				if(sizeof(args)-strlen(args)-1 < temp_line.length()+1)
+				if (sizeof(args) - strlen(args) - 1 < temp_line.length() + 1)
 					break;
 				strcat(args,temp_line.c_str());
 				strcat(args," ");
@@ -1089,7 +1089,7 @@ void RESCAN::Run(void)
 
 	Bit8u drive = DOS_GetDefaultDrive();
 
-	if(cmd->FindCommand(1,temp_line)) {
+	if (cmd->FindCommand(1,temp_line)) {
 		//-A -All /A /All
 		if (temp_line.size() >= 2
 			&& (temp_line[0] == '-' ||
@@ -1098,14 +1098,14 @@ void RESCAN::Run(void)
 			    temp_line[1] == 'A') ) {
 	 		all = true;
 		}
-		else if(temp_line.size() == 2 && temp_line[1] == ':') {
+		else if (temp_line.size() == 2 && temp_line[1] == ':') {
 			lowcase(temp_line);
 			drive  = temp_line[0] - 'a';
 		}
 	}
 	// Get current drive
 	if (all) {
-		for(Bitu i =0; i<DOS_DRIVES;i++) {
+		for (Bitu i =0; i<DOS_DRIVES; i++) {
 			if (Drives[i]) Drives[i]->EmptyCache();
 		}
 		WriteOut(MSG_Get("PROGRAM_RESCAN_SUCCESS"));
@@ -1137,17 +1137,17 @@ public:
 
 	void Run(void) {
 		/* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */
-		if(DOS_PSP(dos.psp()).GetParent() != DOS_PSP(DOS_PSP(dos.psp()).GetParent()).GetParent()) return;
-		if(cmd->FindExist("cdrom",false)) {
+		if (DOS_PSP(dos.psp()).GetParent() != DOS_PSP(DOS_PSP(dos.psp()).GetParent()).GetParent()) return;
+		if (cmd->FindExist("cdrom",false)) {
 			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));
 			return;
 		}
-		if(cmd->FindExist("mount",false)) {
+		if (cmd->FindExist("mount",false)) {
 			WriteOut("\033[2J");//Clear screen before printing
 			DisplayMount();
 			return;
 		}
-		if(cmd->FindExist("special",false)) {
+		if (cmd->FindExist("special",false)) {
 			WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"));
 			return;
 		}
@@ -1174,7 +1174,7 @@ public:
 		ChangeToLongCmd();
 		/* In secure mode don't allow people to change imgmount points.
 		 * Neither mount nor unmount */
-		if(control->SecureMode()) {
+		if (control->SecureMode()) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
 			return;
 		}
@@ -1194,7 +1194,7 @@ public:
 		std::string fstype = "fat";
 		cmd->FindString("-t",type,true);
 		cmd->FindString("-fs",fstype,true);
-		if(type == "cdrom") type = "iso"; //Tiny hack for people who like to type -t cdrom
+		if (type == "cdrom") type = "iso"; //Tiny hack for people who like to type -t cdrom
 
 		//Check type and exit early.
 		if (type != "floppy" && type != "hdd" && type != "iso") {
@@ -1237,9 +1237,9 @@ public:
 			}
 		}
 
-		if(fstype=="fat" || fstype=="iso") {
+		if (fstype=="fat" || fstype=="iso") {
 			// get the drive letter
-			if (!cmd->FindCommand(1,temp_line) || (temp_line.size() > 2) || ((temp_line.size()>1) && (temp_line[1]!=':'))) {
+			if (!cmd->FindCommand(1,temp_line) || (temp_line.size() > 2) || ((temp_line.size() > 1) && (temp_line[1]!=':'))) {
 				WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
 				return;
 			}
@@ -1266,14 +1266,14 @@ public:
 		}
 
 		// find all file parameters, assuming that all option parameters have been removed
-		while(cmd->FindCommand((unsigned int)(paths.size() + 2), temp_line) && temp_line.size()) {
+		while (cmd->FindCommand((unsigned int)(paths.size() + 2), temp_line) && temp_line.size()) {
 
 			struct stat test;
 			if (stat(temp_line.c_str(),&test)) {
 				//See if it works if the ~ are written out
 				std::string homedir(temp_line);
 				Cross::ResolveHomedir(homedir);
-				if(!stat(homedir.c_str(),&test)) {
+				if (!stat(homedir.c_str(),&test)) {
 					temp_line = homedir;
 				} else {
 					// convert dosbox filename to system filename
@@ -1314,7 +1314,7 @@ public:
 		if (paths.size() == 1)
 			temp_line = paths[0];
 
-		if(fstype=="fat") {
+		if (fstype=="fat") {
 			if (imgsizedetect) {
 				FILE * diskfile = fopen_wrap(temp_line.c_str(), "rb+");
 				if (!diskfile) {
@@ -1363,7 +1363,7 @@ public:
 				} else {
 					// Tear-down all prior drives when we hit a problem
 					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
-					for(auto pImgDisk : imgDisks) {
+					for (auto pImgDisk : imgDisks) {
 						if (pImgDisk) {
 							delete pImgDisk;
 						}
@@ -1373,7 +1373,7 @@ public:
 			}
 
 			// Update DriveManager
-			for(ct = 0; ct < imgDisks.size(); ct++) {
+			for (ct = 0; ct < imgDisks.size(); ct++) {
 				DriveManager::AppendDisk(drive - 'A', imgDisks[ct]);
 			}
 			DriveManager::InitializeDrive(drive - 'A');
@@ -1385,7 +1385,7 @@ public:
 			RealPt save_dta = dos.dta();
 			dos.dta(dos.tables.tempdta);
 
-			for(ct = 0; ct < imgDisks.size(); ct++) {
+			for (ct = 0; ct < imgDisks.size(); ct++) {
 				DriveManager::CycleDisks(drive - 'A', (ct == (imgDisks.size() - 1)));
 
 				char root[7] = {drive,':','\\','*','.','*',0};
@@ -1434,14 +1434,14 @@ public:
 				}
 				// error: clean up and leave
 				if (error) {
-					for(ct = 0; ct < isoDisks.size(); ct++) {
+					for (ct = 0; ct < isoDisks.size(); ct++) {
 						delete isoDisks[ct];
 					}
 					return;
 				}
 			}
 			// Update DriveManager
-			for(ct = 0; ct < isoDisks.size(); ct++) {
+			for (ct = 0; ct < isoDisks.size(); ct++) {
 				DriveManager::AppendDisk(drive - 'A', isoDisks[ct]);
 			}
 			DriveManager::InitializeDrive(drive - 'A');
