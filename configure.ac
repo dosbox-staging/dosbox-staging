@@ -459,10 +459,23 @@ else
    AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
 fi
 
-# Check for the Opus file-handling library
-PKG_CHECK_MODULES([OPUSFILE], [opusfile],
-  [ LIBS="$LIBS ${OPUSFILE_LIBS}"
-    CPPFLAGS="$CPPFLAGS ${OPUSFILE_CFLAGS}" ], [])
+dnl Ogg Opus handling
+dnl -----------------
+dnl    We want Opus tracks supported by default, and we also want the user
+dnl    to be aware if there's a problem finding the Opus dependencies.
+dnl    If there's a problem, we want the user to either a) install the opus
+dnl    library or b) explicitly disable Opus.
+
+dnl    To achieve this, we provide a --disable-opus-cdda configure option
+dnl    but by default we look for Opus and fail if we can't find it.
+dnl    We only skip supporting Opus if the user explicitly passes the
+dnl    --disable-opus-cdda argument.
+
+AC_ARG_ENABLE([opus-cdda], AS_HELP_STRING([--disable-opus-cdda],
+            [Disable support for Opus-compressed CD-Audio tracks]))
+AS_IF([test "x$enable_opus_cdda" != "xno"],
+      [PKG_CHECK_MODULES([OPUSFILE], [opusfile], [HAVE_OPUSFILE=1])])
+AM_CONDITIONAL([USE_OPUS], [test "$HAVE_OPUSFILE" == "1"])
 
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
 AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )

@@ -90,15 +90,11 @@ static void MP3_close(Sound_Sample* const sample)
 {
     Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal*>(sample->opaque);
     mp3_t* p_mp3 = static_cast<mp3_t*>(internal->decoder_private);
-    if (p_mp3 != nullptr) {
-        if (p_mp3->p_dr != nullptr) {
-            drmp3_uninit(p_mp3->p_dr);
-            SDL_free(p_mp3->p_dr);
-        }
-        // maps and vector destructors free their memory
+    if (p_mp3) {
+        SDL_free(p_mp3->p_dr);
         SDL_free(p_mp3);
-        internal->decoder_private = nullptr;
     }
+    internal->decoder_private = nullptr;
 } /* MP3_close */
 
 static Uint32 MP3_read(Sound_Sample* const sample, void* buffer, Uint32 desired_frames)

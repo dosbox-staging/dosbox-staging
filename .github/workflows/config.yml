@@ -29,6 +29,7 @@ jobs:
           - configure_flags:  --disable-fpu-x64
           - configure_flags:  --disable-fpu-x86
           - configure_flags:  --disable-opengl
+          - configure_flags:  --disable-opus-cdda
           - configure_flags:  --disable-screenshots
           - configure_flags:  --disable-unaligned-memory
           - without_packages: -x net

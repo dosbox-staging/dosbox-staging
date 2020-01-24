@@ -125,16 +125,17 @@ CDROM_Interface_Image::AudioFile::AudioFile(const char *filename, bool &error)
 	// Use the audio file's actual sample rate and number of channels as opposed to overriding
 	Sound_AudioInfo desired = {AUDIO_S16, 0, 0};
 	sample = Sound_NewSampleFromFile(filename, &desired);
+	std::string filename_only(filename);
+	filename_only = filename_only.substr(filename_only.find_last_of("\\/") + 1);
 	if (sample) {
 		error = false;
-		std::string filename_only(filename);
-		filename_only = filename_only.substr(filename_only.find_last_of("\\/") + 1);
 		LOG_MSG("CDROM: Loaded %s [%d Hz, %d-channel, %2.1f minutes]",
 		        filename_only.c_str(),
 		        getRate(),
 		        getChannels(),
 		        getLength()/static_cast<double>(REDBOOK_PCM_BYTES_PER_MS * 1000 * 60));
 	} else {
+		LOG_MSG("CDROM: Failed adding '%s' as CDDA track!", filename_only.c_str());
 		error = true;
 	}
 }

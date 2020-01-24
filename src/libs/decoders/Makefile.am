@@ -9,7 +9,6 @@ libdecoders_a_SOURCES = \
 	mp3.cpp              \
 	mp3_seek_table.cpp   \
 	mp3_seek_table.h     \
-	opus.c               \
 	SDL_sound.c          \
 	SDL_sound.h          \
 	SDL_sound_internal.h \
@@ -20,6 +19,12 @@ libdecoders_a_SOURCES = \
 	xxh3.h               \
 	xxhash.c             \
 	xxhash.h
+
+if USE_OPUS
+	libdecoders_a_SOURCES += opus.c
+	AM_CFLAGS += -DUSE_OPUS $(OPUSFILE_CFLAGS)
+	LDADD += $(OPUSFILE_LIBS)
+endif
 
 libdecoders_a_CXXFLAGS = \
 	$(AM_CXXFLAGS) \
