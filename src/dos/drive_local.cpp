@@ -62,8 +62,14 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/)
 	return true;
 }
 
-bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
-	const char* type;
+bool localDrive::isNewWriteProtectedFile(const std::string& filename){
+	const std::pair<std::set<std::string>::iterator, bool> \
+		ret(write_protected_files.insert(filename));
+	return ret.second;
+}
+
+bool localDrive::FileOpen(DOS_File** file, char * name, Bit32u flags) {
+	const char* type = nullptr;
 	switch (flags&0xf) {
 	case OPEN_READ:        type = "rb" ; break;
 	case OPEN_WRITE:       type = "rb+"; break;
@@ -81,37 +87,46 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 
 	//Flush the buffer of handles for the same file. (Betrayal in Antara)
 	Bit8u i,drive=DOS_DRIVES;
-	localFile *lfp;
-	for (i=0;i<DOS_DRIVES;i++) {
-		if (Drives[i]==this) {
-			drive=i;
+	localFile *lfp = nullptr;
+	for (i = 0; i < DOS_DRIVES; i++) {
+		if (Drives[i] == this) {
+			drive = i;
 			break;
 		}
 	}
-	for (i=0;i<DOS_FILES;i++) {
+	for (i = 0; i < DOS_FILES; i++) {
 		if (Files[i] && Files[i]->IsOpen() && Files[i]->GetDrive()==drive && Files[i]->IsName(name)) {
 			lfp=dynamic_cast<localFile*>(Files[i]);
 			if (lfp) lfp->Flush();
 		}
 	}
 
-	FILE * hand = fopen_wrap(newname,type);
-//	Bit32u err=errno;
-	if (!hand) { 
-		if((flags&0xf) != OPEN_READ) {
-			FILE * hmm = fopen_wrap(newname,"rb");
-			if (hmm) {
-				fclose(hmm);
-				LOG_MSG("Warning: file %s exists and failed to open in write mode.\nPlease Remove write-protection",newname);
+	FILE* fhandle = fopen(newname, type);
+	// Was the file was opened with the desired type?
+	if (!fhandle) {
+		// No; but do the requested flags require write-access?
+		if ((flags & 0xf) != OPEN_READ) {
+			// Yes; maybe the local file is simply be protected, so try again with read-only
+			fhandle = fopen_wrap(newname, "rb");
+			if (fhandle) {
+				// Ok! so the file is protected file; fool the DOS program into thinking its OK
+				flags &= ~OPEN_READWRITE;
+				// Inform the user that the file is being protected against modification.
+				// If the DOS program /really/ needs to write to the file, it will crash/exit
+				// and this will be one of the last messages on the screen, so the user can
+				// decide to un-write-protect the file if they wish.
+				if (isNewWriteProtectedFile(newname)) {
+					LOG_MSG("FILESYSTEM: protected from modification: %s", newname);
+				}
 			}
 		}
-		return false;
 	}
 
-	*file=new localFile(name,hand);
-	(*file)->flags=flags;  //for the inheritance flag and maybe check for others.
-//	(*file)->SetFileName(newname);
-	return true;
+	if (fhandle) {
+		*file = new localFile(name, fhandle);
+		(*file)->flags=flags;  //for the inheritance flag and maybe check for others.
+	}
+	return (fhandle != NULL);
 }
 
 FILE * localDrive::GetSystemFilePtr(char const * const name, char const * const type) {

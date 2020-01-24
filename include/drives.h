@@ -22,6 +22,7 @@
 #include "dosbox.h"
 
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -75,6 +76,7 @@ public:
 	virtual bool isRemovable(void);
 	virtual Bits UnMount(void);
 	const char* getBasedir() {return basedir;};
+	virtual bool isNewWriteProtectedFile(const std::string& filename);
 protected:
 	char basedir[CROSS_LEN];
 	struct {
@@ -82,6 +84,7 @@ protected:
 	} srchInfo[MAX_OPENDIRS];
 
 private:
+	std::set<std::string> write_protected_files;
 	struct {
 		Bit16u bytes_sector;
 		Bit8u sectors_cluster;
