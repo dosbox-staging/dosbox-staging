@@ -217,7 +217,7 @@ private:
 class cdromDrive : public localDrive
 {
 public:
-	cdromDrive(const char driveLetter, const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid, int& error);
+	cdromDrive(const char _driveLetter, const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid, int& error);
 	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
 	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
 	virtual bool FileUnlink(char * name);
