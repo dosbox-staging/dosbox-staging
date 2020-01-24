@@ -54,7 +54,12 @@ protected:
 	bool installed;
 	Bitu m_port, m_mask,m_range;
 public:
-	IO_Base():installed(false){};
+	IO_Base()
+	: installed(false),
+	  m_port(0),
+	  m_mask(0),
+	  m_range(0)
+{}
 };
 class IO_ReadHandleObject: private IO_Base{
 public:
