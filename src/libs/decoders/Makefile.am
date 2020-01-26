@@ -20,12 +20,6 @@ libdecoders_a_SOURCES = \
 	xxhash.c             \
 	xxhash.h
 
-if USE_OPUS
-	libdecoders_a_SOURCES += opus.c
-	AM_CFLAGS += -DUSE_OPUS $(OPUSFILE_CFLAGS)
-	LDADD += $(OPUSFILE_LIBS)
-endif
-
 libdecoders_a_CXXFLAGS = \
 	$(AM_CXXFLAGS) \
 	$(CXXFLAGS) \
@@ -37,3 +31,8 @@ libdecoders_a_CFLAGS = \
 	$(CFLAGS) \
 	-Wpedantic \
 	-Wall
+
+if USE_OPUS
+libdecoders_a_SOURCES += opus.c
+libdecoders_a_CFLAGS += -DUSE_OPUS $(OPUSFILE_CFLAGS)
+endif
