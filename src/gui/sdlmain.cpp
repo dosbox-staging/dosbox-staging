@@ -23,6 +23,7 @@
 
 #include "dosbox.h"
 
+#include <cassert>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -112,6 +113,11 @@ extern char** environ;
 #define PRIO_TOTAL (PRIO_MAX-PRIO_MIN)
 #endif
 
+enum class MouseCaptureType {
+	OnStart,
+	OnClick,
+	Never
+};
 
 enum SCREEN_TYPES	{
 	SCREEN_SURFACE,
@@ -192,10 +198,7 @@ struct SDL_Block {
 	} texture;
 	SDL_cond *cond;
 	struct {
-		bool autolock;
-		bool autoenable;
-		bool requestlock;
-		bool locked;
+		MouseCaptureType capture_choice;
 		int xsensitivity;
 		int ysensitivity;
 		Bitu sensitivity;
@@ -846,28 +849,21 @@ dosurface:
 	}//CASE
 	if (retFlags)
 		GFX_Start();
-	if (!sdl.mouse.autoenable) SDL_ShowCursor(sdl.mouse.autolock?SDL_DISABLE:SDL_ENABLE);
 	return retFlags;
 }
 
-
-void GFX_CaptureMouse(void) {
-	sdl.mouse.locked=!sdl.mouse.locked;
-	if (sdl.mouse.locked) {
-		SDL_SetRelativeMouseMode(SDL_TRUE);
-		SDL_ShowCursor(SDL_DISABLE);
-	} else {
-		SDL_SetRelativeMouseMode(SDL_FALSE);
-		if (sdl.mouse.autoenable || !sdl.mouse.autolock) SDL_ShowCursor(SDL_ENABLE);
-	}
-        mouselocked=sdl.mouse.locked;
+SDL_bool mouse_is_captured = SDL_FALSE; // global for mapper
+void GFX_ToggleMouseCapture(void) {
+	SDL_ShowCursor(mouse_is_captured);
+	mouse_is_captured = mouse_is_captured ? SDL_FALSE : SDL_TRUE;
+	SDL_SetRelativeMouseMode(mouse_is_captured);
+	LOG_MSG("SDL: mouse is %s", mouse_is_captured ? "captured" : "released");
 }
 
-bool mouselocked; //Global variable for mapper
-static void CaptureMouse(bool pressed) {
+static void ToggleMouseCapture(bool pressed) {
 	if (!pressed)
 		return;
-	GFX_CaptureMouse();
+	GFX_ToggleMouseCapture();
 }
 
 #if defined (WIN32)
@@ -894,13 +890,18 @@ void sticky_keys(bool restore){
 
 void GFX_SwitchFullScreen(void) {
 	sdl.desktop.fullscreen=!sdl.desktop.fullscreen;
-	if (sdl.desktop.fullscreen) {
-		if (!sdl.mouse.locked) GFX_CaptureMouse();
+	if (sdl.desktop.fullscreen) { // entering fullscreen mode
+		if (!mouse_is_captured) { // we always capture the mouse
+			GFX_ToggleMouseCapture();
+		}
 #if defined (WIN32)
 		sticky_keys(false); //disable sticky keys in fullscreen mode
 #endif
-	} else {
-		if (sdl.mouse.locked) GFX_CaptureMouse();
+	} else { // leaving fullscreen mode
+		// only un-capture if they never wanted mouse captured
+		if (sdl.mouse.capture_choice == MouseCaptureType::Never) {
+			GFX_ToggleMouseCapture();
+		}
 #if defined (WIN32)
 		sticky_keys(true); //restore sticky keys to default state in windowed mode.
 #endif
@@ -1102,8 +1103,8 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 static void GUI_ShutDown(Section * /*sec*/) {
 	GFX_Stop();
 	if (sdl.draw.callback) (sdl.draw.callback)( GFX_CallBackStop );
-	if (sdl.mouse.locked) GFX_CaptureMouse();
 	if (sdl.desktop.fullscreen) GFX_SwitchFullScreen();
+	if (mouse_is_captured) GFX_ToggleMouseCapture();
 }
 
 
@@ -1224,9 +1225,6 @@ static void GUI_StartUp(Section * sec) {
 	}
 
 	SetPriority(sdl.priority.focus); //Assume focus on startup
-	sdl.mouse.locked=false;
-	mouselocked=false; //Global for mapper
-	sdl.mouse.requestlock=false;
 	sdl.desktop.full.fixed=false;
 	const char* fullresolution=section->Get_string("fullresolution");
 	sdl.desktop.full.width  = 0;
@@ -1283,18 +1281,7 @@ static void GUI_StartUp(Section * sec) {
 		GFX_ObtainDisplayDimensions();
 	}
 
-	sdl.mouse.autoenable=section->Get_bool("autolock");
-	if (!sdl.mouse.autoenable) SDL_ShowCursor(SDL_DISABLE);
-	sdl.mouse.autolock=false;
-
-	Prop_multival* p3 = section->Get_multival("sensitivity");
-	sdl.mouse.xsensitivity = p3->GetSection()->Get_int("xsens");
-	sdl.mouse.ysensitivity = p3->GetSection()->Get_int("ysens");
 	std::string output=section->Get_string("output");
-
-	/* Setup Mouse correctly if fullscreen */
-	if(sdl.desktop.fullscreen) GFX_CaptureMouse();
-
 	if (output == "surface") {
 		sdl.desktop.want_type=SCREEN_SURFACE;
 	} else if (output == "texture") {
@@ -1461,9 +1448,33 @@ static void GUI_StartUp(Section * sec) {
 
 	}
 
+	// Setup the mouse
+	const std::string capturemouse = section->Get_string("capturemouse");
+	if (capturemouse == "onstart") {
+		sdl.mouse.capture_choice = MouseCaptureType::OnStart;
+	} else if (capturemouse == "onclick") {
+		sdl.mouse.capture_choice = MouseCaptureType::OnClick;
+	} else if (capturemouse == "never") {
+		sdl.mouse.capture_choice = MouseCaptureType::Never;
+	} else {
+		// If an invalid value is provided, the section handle
+		// will automatically set the default, so we should never
+		// be here.
+		assert(capturemouse == "onclick");
+	}
+	Prop_multival* p3 = section->Get_multival("sensitivity");
+	sdl.mouse.xsensitivity = p3->GetSection()->Get_int("xsens");
+	sdl.mouse.ysensitivity = p3->GetSection()->Get_int("ysens");
+
+	if (sdl.desktop.fullscreen || sdl.mouse.capture_choice == MouseCaptureType::OnStart) {
+		GFX_ToggleMouseCapture();
+	} else {
+		SDL_ShowCursor(1);
+	}
+
 	/* Get some Event handlers */
 	MAPPER_AddHandler(KillSwitch,MK_f9,MMOD1,"shutdown","ShutDown");
-	MAPPER_AddHandler(CaptureMouse,MK_f10,MMOD1,"capmouse","Cap Mouse");
+	MAPPER_AddHandler(ToggleMouseCapture,MK_f10,MMOD1,"capmouse","Cap Mouse");
 	MAPPER_AddHandler(SwitchFullScreen,MK_return,MMOD2,"fullscr","Fullscreen");
 	MAPPER_AddHandler(Restart,MK_home,MMOD1|MMOD2,"restart","Restart");
 #if C_DEBUG
@@ -1477,34 +1488,22 @@ static void GUI_StartUp(Section * sec) {
 	if(keystate&KMOD_CAPS) startup_state_capslock = true;
 }
 
-void Mouse_AutoLock(bool enable) {
-	sdl.mouse.autolock=enable;
-	if (sdl.mouse.autoenable) sdl.mouse.requestlock=enable;
-	else {
-		SDL_ShowCursor(enable?SDL_DISABLE:SDL_ENABLE);
-		sdl.mouse.requestlock=false;
-	}
-}
-
 static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
-	if (sdl.mouse.locked || !sdl.mouse.autoenable)
+	if (mouse_is_captured)
 		Mouse_CursorMoved((float)motion->xrel*sdl.mouse.xsensitivity/100.0f,
 						  (float)motion->yrel*sdl.mouse.ysensitivity/100.0f,
 						  (float)(motion->x-sdl.clip.x)/(sdl.clip.w-1)*sdl.mouse.xsensitivity/100.0f,
 						  (float)(motion->y-sdl.clip.y)/(sdl.clip.h-1)*sdl.mouse.ysensitivity/100.0f,
-						  sdl.mouse.locked);
+						  mouse_is_captured);
 }
 
 static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 	switch (button->state) {
 	case SDL_PRESSED:
-		if (sdl.mouse.requestlock && !sdl.mouse.locked) {
-			GFX_CaptureMouse();
+		if ((sdl.mouse.capture_choice != MouseCaptureType::Never && !mouse_is_captured)
+		    || (button->button == SDL_BUTTON_MIDDLE && mouse_is_captured)) {
+			GFX_ToggleMouseCapture();
 			// Don't pass click to mouse handler
-			break;
-		}
-		if (!sdl.mouse.autoenable && sdl.mouse.autolock && button->button == SDL_BUTTON_MIDDLE) {
-			GFX_CaptureMouse();
 			break;
 		}
 		switch (button->button) {
@@ -1619,21 +1618,16 @@ void GFX_Events() {
 					if (sdl.draw.callback) sdl.draw.callback( GFX_CallBackRedraw );
 					continue;
 				case SDL_WINDOWEVENT_FOCUS_GAINED:
-					if (sdl.desktop.fullscreen && !sdl.mouse.locked)
-						GFX_CaptureMouse();
 					SetPriority(sdl.priority.focus);
 					CPU_Disable_SkipAutoAdjust();
 					break;
 				case SDL_WINDOWEVENT_FOCUS_LOST:
-					if (sdl.mouse.locked) {
 #ifdef WIN32
-						if (sdl.desktop.fullscreen) {
-							VGA_KillDrawing();
-							GFX_ForceFullscreenExit();
-						}
-#endif
-						GFX_CaptureMouse();
+					if (sdl.desktop.fullscreen) {
+						VGA_KillDrawing();
+						GFX_ForceFullscreenExit();
 					}
+#endif
 					SetPriority(sdl.priority.nofocus);
 					GFX_LosingFocus();
 					CPU_Enable_SkipAutoAdjust();
@@ -1829,8 +1823,22 @@ void Config_Add_SDL() {
 	                  "Use output=auto for an automatic choice.");
 	Pstring->Set_values(Get_SDL_TextureRenderers());
 
-	Pbool = sdl_sec->Add_bool("autolock",Property::Changeable::Always,true);
-	Pbool->Set_help("Mouse will automatically lock, if you click on the screen. (Press CTRL-F10 to unlock)");
+	const char *mouse_capture_choices[] = {
+		"onstart",
+		"onclick",
+		"never",
+		0
+	};
+	Pstring = sdl_sec->Add_string("capturemouse",Property::Changeable::Always,"onclick");
+	Pstring->Set_help("Choose when the mouse will be captured {onstart, onclick, or never}:\n"
+	                  "  - onstart: will capture immediately on starting DOSBox\n"
+	                  "  - onclick: will capture after clicking inside the DOSBox window\n"
+	                  "  - never:   will never capture the mouse in windowed-mode\n"
+	                  "  Note 1: The mouse will always be captured when fullscreen, even if set to never\n"
+	                  "  Note 2: Capture-state is retained for 'onstart' and 'onclick' between full and window modes\n"
+	                  "  Note 3: Release with a middle-mouse-click or pressing CTRL-F10");
+
+	Pstring->Set_values(mouse_capture_choices);
 
 	Pmulti = sdl_sec->Add_multi("sensitivity",Property::Changeable::Always, ",");
 	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).");

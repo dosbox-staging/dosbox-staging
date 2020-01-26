@@ -80,6 +80,10 @@ class CButton;
 class CBind;
 class CBindGroup;
 
+/* Mouse related */
+void GFX_ToggleMouseCapture(void);
+extern SDL_bool mouse_is_captured; //true if mouse is confined to window
+
 static void SetActiveEvent(CEvent * event);
 static void SetActiveBind(CBind * _bind);
 extern Bit8u int10_font_14[256 * 14];
@@ -2478,9 +2482,9 @@ void MAPPER_RunInternal() {
 	int cursor = SDL_ShowCursor(SDL_QUERY);
 	SDL_ShowCursor(SDL_ENABLE);
 	bool mousetoggle=false;
-	if(mouselocked) {
+	if(mouse_is_captured) {
 		mousetoggle=true;
-		GFX_CaptureMouse();
+		GFX_ToggleMouseCapture();
 	}
 
 	/* Be sure that there is no update in progress */
@@ -2530,7 +2534,7 @@ void MAPPER_RunInternal() {
 #if defined (REDUCE_JOYSTICK_POLLING)
 	SDL_JoystickEventState(SDL_DISABLE);
 #endif
-	if(mousetoggle) GFX_CaptureMouse();
+	if(mousetoggle) GFX_ToggleMouseCapture();
 	SDL_ShowCursor(cursor);
 	GFX_ResetScreen();
 }
