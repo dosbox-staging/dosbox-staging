@@ -106,8 +106,11 @@ jobs:
           pvs-studio-analyzer analyze -s .pvs-suppress -o pvs-analysis.log -j "$(nproc)"
           criteria="GA:1,2;64:1;OP:1,2,3;CS:1;MISRA:1,2"
           plog-converter -a "${criteria}" -d V1042 -t csv -o pvs-report.csv pvs-analysis.log
+          mkdir -p pvs-analysis-report
+          stamp="$(date +'%Y-%m-%d_T%H%M')-${GITHUB_SHA:0:8}"
           plog-converter -a "${criteria}" -d V1042 -t fullhtml -p dosbox-staging \
-          -v "${GITHUB_SHA:0:8}" -o pvs-analysis-report pvs-analysis.log
+          -v "${GITHUB_SHA:0:8}" -o "pvs-analysis-report/pvs-analysis-report-${stamp}" \
+          pvs-analysis.log
       - name: Upload report
         uses: actions/upload-artifact@master
         with:
