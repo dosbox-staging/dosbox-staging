@@ -120,7 +120,7 @@ public:
 	virtual void ActivateEvent(bool ev_trigger,bool skip_action)=0;
 	virtual void DeActivateEvent(bool ev_trigger)=0;
 	void DeActivateAll(void);
-	void SetValue(Bits value){
+	void SetValue(Bits value) {
 		current_value=value;
 	}
 	Bits GetValue(void) {
@@ -538,7 +538,7 @@ public:
 			button_autofire[i]=0;
 			old_button_state[i]=0;
 		}
-		for(i=0;i<16;i++) old_hat_state[i]=0;
+		for (i=0;i<16;i++) old_hat_state[i]=0;
 		for (i=0; i<4; i++) {
 			old_pos_axis_state[i]=false;
 			old_neg_axis_state[i]=false;
@@ -647,10 +647,10 @@ public:
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
-				if(jaxis->which == stick) {
-					if(jaxis->axis == 0)
+				if (jaxis->which == stick) {
+					if (jaxis->axis == 0)
 						JOYSTICK_Move_X(emustick,(float)(jaxis->value/32768.0));
-					else if(jaxis->axis == 1)
+					else if (jaxis->axis == 1)
 						JOYSTICK_Move_Y(emustick,(float)(jaxis->value/32768.0));
 				}
 				break;
@@ -844,7 +844,7 @@ protected:
 
 class C4AxisBindGroup : public  CStickBindGroup {
 public:
-	C4AxisBindGroup(Bitu _stick,Bitu _emustick) : CStickBindGroup (_stick,_emustick){
+	C4AxisBindGroup(Bitu _stick,Bitu _emustick) : CStickBindGroup (_stick,_emustick) {
 		emulated_axes=4;
 		emulated_buttons=4;
 		if (button_wrapping_enabled) button_wrap=emulated_buttons;
@@ -865,8 +865,8 @@ public:
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
-				if(jaxis->which == stick && jaxis->axis < 4) {
-					if(jaxis->axis & 1)
+				if (jaxis->which == stick && jaxis->axis < 4) {
+					if (jaxis->axis & 1)
 						JOYSTICK_Move_Y(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
 					else
 						JOYSTICK_Move_X(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
@@ -938,18 +938,18 @@ public:
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
-				if(jaxis->which == stick) {
-					if(jaxis->axis == 0)
+				if (jaxis->which == stick) {
+					if (jaxis->axis == 0)
 						JOYSTICK_Move_X(0,(float)(jaxis->value/32768.0));
-					else if(jaxis->axis == 1)
+					else if (jaxis->axis == 1)
 						JOYSTICK_Move_Y(0,(float)(jaxis->value/32768.0));
-					else if(jaxis->axis == 2)
+					else if (jaxis->axis == 2)
 						JOYSTICK_Move_X(1,(float)(jaxis->value/32768.0));
 				}
 				break;
 			case SDL_JOYHATMOTION:
 				jhat = &event->jhat;
-				if(jhat->which == stick) DecodeHatPosition(jhat->value);
+				if (jhat->which == stick) DecodeHatPosition(jhat->value);
 				break;
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
@@ -1020,25 +1020,25 @@ private:
 				JOYSTICK_Move_Y(1,0.5);
 				break;
 			case SDL_HAT_LEFTUP:
-				if(JOYSTICK_GetMove_Y(1) < 0)
+				if (JOYSTICK_GetMove_Y(1) < 0)
 					JOYSTICK_Move_Y(1,0.5);
 				else
 					JOYSTICK_Move_Y(1,-1.0);
 				break;
 			case SDL_HAT_RIGHTUP:
-				if(JOYSTICK_GetMove_Y(1) < -0.7)
+				if (JOYSTICK_GetMove_Y(1) < -0.7)
 					JOYSTICK_Move_Y(1,-0.5);
 				else
 					JOYSTICK_Move_Y(1,-1.0);
 				break;
 			case SDL_HAT_RIGHTDOWN:
-				if(JOYSTICK_GetMove_Y(1) < -0.2)
+				if (JOYSTICK_GetMove_Y(1) < -0.2)
 					JOYSTICK_Move_Y(1,0.0);
 				else
 					JOYSTICK_Move_Y(1,-0.5);
 				break;
 			case SDL_HAT_LEFTDOWN:
-				if(JOYSTICK_GetMove_Y(1) > 0.2)
+				if (JOYSTICK_GetMove_Y(1) > 0.2)
 					JOYSTICK_Move_Y(1,0.0);
 				else
 					JOYSTICK_Move_Y(1,0.5);
@@ -1076,8 +1076,8 @@ public:
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
-				if(jaxis->which == stick && jaxis->axis < 4) {
-					if(jaxis->axis & 1)
+				if (jaxis->which == stick && jaxis->axis < 4) {
+					if (jaxis->axis & 1)
 						JOYSTICK_Move_Y(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
 					else
 						JOYSTICK_Move_X(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
@@ -1085,16 +1085,16 @@ public:
 				break;
 			case SDL_JOYHATMOTION:
 				jhat = &event->jhat;
-				if(jhat->which == stick && jhat->hat < 2) {
-					if(jhat->value == SDL_HAT_CENTERED)
+				if (jhat->which == stick && jhat->hat < 2) {
+					if (jhat->value == SDL_HAT_CENTERED)
 						button_state&=~hat_magic[jhat->hat][0];
-					if(jhat->value & SDL_HAT_UP)
+					if (jhat->value & SDL_HAT_UP)
 						button_state|=hat_magic[jhat->hat][1];
-					if(jhat->value & SDL_HAT_RIGHT)
+					if (jhat->value & SDL_HAT_RIGHT)
 						button_state|=hat_magic[jhat->hat][2];
-					if(jhat->value & SDL_HAT_DOWN)
+					if (jhat->value & SDL_HAT_DOWN)
 						button_state|=hat_magic[jhat->hat][3];
-					if(jhat->value & SDL_HAT_LEFT)
+					if (jhat->value & SDL_HAT_LEFT)
 						button_state|=hat_magic[jhat->hat][4];
 				}
 				break;
@@ -1115,7 +1115,7 @@ public:
 		unsigned i;
 		Bit16u j;
 		j=button_state;
-		for(i=0;i<16;i++) if (j & 1) break; else j>>=1;
+		for (i=0;i<16;i++) if (j & 1) break; else j>>=1;
 		JOYSTICK_Button(0,0,i&1);
 		JOYSTICK_Button(0,1,(i>>1)&1);
 		JOYSTICK_Button(1,0,(i>>2)&1);
@@ -1263,7 +1263,7 @@ public:
 		}
 	}
 	virtual bool OnTop(Bitu _x,Bitu _y) {
-		return ( enabled && (_x>=x) && (_x<x+dx) && (_y>=y) && (_y<y+dy));
+		return (enabled && (_x>=x) && (_x<x+dx) && (_y>=y) && (_y<y+dy));
 	}
 	virtual void BindColor(void) {}
 	virtual void Click(void) {}
@@ -1340,7 +1340,7 @@ protected:
 
 class CCaptionButton : public CButton {
 public:
-	CCaptionButton(Bitu _x,Bitu _y,Bitu _dx,Bitu _dy) : CButton(_x,_y,_dx,_dy){
+	CCaptionButton(Bitu _x,Bitu _y,Bitu _dx,Bitu _dy) : CButton(_x,_y,_dx,_dy) {
 		caption[0]=0;
 	}
 	void Change(const char * format,...) GCC_ATTRIBUTE(__format__(__printf__,2,3));
@@ -1826,7 +1826,7 @@ static void CreateLayout(void) {
 #define PY(_Y_) (10+(_Y_)*BH)
 	AddKeyButtonEvent(PX(0),PY(0),BW,BH,"ESC","esc",KBD_esc);
 	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(0),BW,BH,combo_f[i].title,combo_f[i].entry,combo_f[i].key);
-	for (i=0;i<14;i++) AddKeyButtonEvent(PX(  i),PY(1),BW,BH,combo_1[i].title,combo_1[i].entry,combo_1[i].key);
+	for (i=0;i<14;i++) AddKeyButtonEvent(PX(i),PY(1),BW,BH,combo_1[i].title,combo_1[i].entry,combo_1[i].key);
 
 	AddKeyButtonEvent(PX(0),PY(2),BW*2,BH,"TAB","tab",KBD_tab);
 	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(2),BW,BH,combo_2[i].title,combo_2[i].entry,combo_2[i].key);
@@ -1961,20 +1961,20 @@ static void CreateLayout(void) {
 		new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Joystick 2");
 		btn=new CTextButton(PX(XO+8),PY(YO-1),3*BW,20,"Disabled");
 		btn->SetColor(CLR_GREY);
-	} else if(joytype ==JOY_4AXIS || joytype == JOY_4AXIS_2) {
+	} else if (joytype ==JOY_4AXIS || joytype == JOY_4AXIS_2) {
 		new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Axis 1/2");
 		new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Axis 3/4");
 		btn=new CTextButton(PX(XO+8),PY(YO-1),3*BW,20,"Disabled");
 		btn->SetColor(CLR_GREY);
-	} else if(joytype == JOY_CH) {
+	} else if (joytype == JOY_CH) {
 		new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Axis 1/2");
 		new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Axis 3/4");
 		new CTextButton(PX(XO+8),PY(YO-1),3*BW,20,"Hat/D-pad");
-	} else if ( joytype==JOY_FCS) {
+	} else if (joytype==JOY_FCS) {
 		new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Axis 1/2");
 		new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Axis 3");
 		new CTextButton(PX(XO+8),PY(YO-1),3*BW,20,"Hat/D-pad");
-	} else if(joytype == JOY_NONE) {
+	} else if (joytype == JOY_NONE) {
 		btn=new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Disabled");
 		btn->SetColor(CLR_GREY);
 		btn=new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Disabled");
@@ -2199,8 +2199,8 @@ static void CreateDefaultBinds(void) {
 
 void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char const * const eventname,char const * const buttonname) {
 	//Check if it already exists=> if so return.
-	for(CHandlerEventVector_it it=handlergroup.begin();it!=handlergroup.end();it++)
-		if(strcmp((*it)->buttonname,buttonname) == 0) return;
+	for (CHandlerEventVector_it it=handlergroup.begin();it!=handlergroup.end();it++)
+		if (strcmp((*it)->buttonname,buttonname) == 0) return;
 
 	char tempname[17];
 	strcpy(tempname,"hand_");
@@ -2439,7 +2439,7 @@ static void CreateBindGroups(void) {
 		case JOY_2AXIS:
 		default:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno,joyno);
-			if((joyno+1U) < mapper.sticks.num) {
+			if ((joyno+1U) < mapper.sticks.num) {
 				mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno+1U,joyno+1U);
 			} else {
 				new CStickBindGroup(joyno+1U,joyno+1U,true);
@@ -2459,7 +2459,7 @@ void MAPPER_UpdateJoysticks(void) {
 
 void MAPPER_LosingFocus(void) {
 	for (CEventVector_it evit=events.begin();evit!=events.end();evit++) {
-		if(*evit != caps_lock_event && *evit != num_lock_event)
+		if (*evit != caps_lock_event && *evit != num_lock_event)
 			(*evit)->DeActivateAll();
 	}
 }
@@ -2482,13 +2482,13 @@ void MAPPER_RunInternal() {
 	int cursor = SDL_ShowCursor(SDL_QUERY);
 	SDL_ShowCursor(SDL_ENABLE);
 	bool mousetoggle=false;
-	if(mouse_is_captured) {
+	if (mouse_is_captured) {
 		mousetoggle=true;
 		GFX_ToggleMouseCapture();
 	}
 
 	/* Be sure that there is no update in progress */
-	GFX_EndUpdate( 0 );
+	GFX_EndUpdate(0);
 	mapper.window = GFX_SetSDLSurfaceWindow(640, 480);
 	if (mapper.window == nullptr)
 		E_Exit("Could not initialize video mode for mapper: %s", SDL_GetError());
@@ -2534,7 +2534,7 @@ void MAPPER_RunInternal() {
 #if defined (REDUCE_JOYSTICK_POLLING)
 	SDL_JoystickEventState(SDL_DISABLE);
 #endif
-	if(mousetoggle) GFX_ToggleMouseCapture();
+	if (mousetoggle) GFX_ToggleMouseCapture();
 	SDL_ShowCursor(cursor);
 	GFX_ResetScreen();
 }

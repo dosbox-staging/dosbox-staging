@@ -225,7 +225,7 @@ void OPENGL_ERROR(const char* message) {
 	LOG_MSG("errors from %s",message);
 	do {
 		LOG_MSG("%X",r);
-	} while ( (r=glGetError()) != GL_NO_ERROR);
+	} while ((r=glGetError()) != GL_NO_ERROR);
 }
 #else 
 void OPENGL_ERROR(const char*) {
@@ -253,13 +253,13 @@ extern bool CPU_CycleAutoAdjust;
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
 
-void GFX_SetTitle(Bit32s cycles,int frameskip,bool paused){
+void GFX_SetTitle(Bit32s cycles,int frameskip,bool paused) {
 	char title[200] = { 0 };
 	static Bit32s internal_cycles = 0;
 	static int internal_frameskip = 0;
 	if (cycles != -1) internal_cycles = cycles;
 	if (frameskip != -1) internal_frameskip = frameskip;
-	if(CPU_CycleAutoAdjust) {
+	if (CPU_CycleAutoAdjust) {
 		sprintf(title,"DOSBox %s, CPU speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
 	} else {
 		sprintf(title,"DOSBox %s, CPU speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
@@ -319,7 +319,7 @@ static void PauseDOSBox(bool pressed) {
 				break;
 			case SDL_KEYDOWN:   // Must use Pause/Break Key to resume.
 			case SDL_KEYUP:
-			if(event.key.keysym.sym == SDLK_PAUSE) {
+			if (event.key.keysym.sym == SDLK_PAUSE) {
 
 				paused = false;
 				GFX_SetTitle(-1,-1,false);
@@ -380,7 +380,7 @@ check_surface:
 void GFX_ResetScreen(void) {
 	GFX_Stop();
 	if (sdl.draw.callback)
-		(sdl.draw.callback)( GFX_CallBackReset );
+		(sdl.draw.callback)(GFX_CallBackReset);
 	GFX_Start();
 	CPU_Reset_AutoAdjust();
 }
@@ -533,7 +533,7 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType)
 	if (fixedWidth && fixedHeight) {
 		double ratio_w=(double)fixedWidth/(sdl.draw.width*sdl.draw.scalex);
 		double ratio_h=(double)fixedHeight/(sdl.draw.height*sdl.draw.scaley);
-		if ( ratio_w < ratio_h) {
+		if (ratio_w < ratio_h) {
 			sdl.clip.w=fixedWidth;
 			sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley*ratio_w + 0.1); //possible rounding issues
 		} else {
@@ -580,7 +580,7 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType)
 
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t callback) {
 	if (sdl.updating)
-		GFX_EndUpdate( 0 );
+		GFX_EndUpdate(0);
 
 	sdl.draw.width=width;
 	sdl.draw.height=height;
@@ -792,7 +792,7 @@ dosurface:
 		// No borders
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		if (!sdl.opengl.bilinear || ( (sdl.clip.h % height) == 0 && (sdl.clip.w % width) == 0) ) {
+		if (!sdl.opengl.bilinear || ((sdl.clip.h % height) == 0 && (sdl.clip.w % width) == 0)) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		} else {
@@ -868,9 +868,9 @@ static void ToggleMouseCapture(bool pressed) {
 
 #if defined (WIN32)
 STICKYKEYS stick_keys = {sizeof(STICKYKEYS), 0};
-void sticky_keys(bool restore){
+void sticky_keys(bool restore) {
 	static bool inited = false;
-	if (!inited){
+	if (!inited) {
 		inited = true;
 		SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(STICKYKEYS), &stick_keys, 0);
 	}
@@ -881,7 +881,7 @@ void sticky_keys(bool restore){
 	//Get current sticky keys layout:
 	STICKYKEYS s = {sizeof(STICKYKEYS), 0};
 	SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(STICKYKEYS), &s, 0);
-	if ( !(s.dwFlags & SKF_STICKYKEYSON)) { //Not on already
+	if (!(s.dwFlags & SKF_STICKYKEYSON)) { //Not on already
 		s.dwFlags &= ~SKF_HOTKEYACTIVE;
 		SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(STICKYKEYS), &s, 0);
 	}
@@ -961,7 +961,7 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 	}
 #if C_OPENGL
 	case SCREEN_OPENGL:
-		if(sdl.opengl.pixel_buffer_object) {
+		if (sdl.opengl.pixel_buffer_object) {
 		    glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
 		    pixels=(Bit8u *)glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY);
 		} else {
@@ -980,7 +980,7 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 }
 
 
-void GFX_EndUpdate( const Bit16u *changedLines ) {
+void GFX_EndUpdate(const Bit16u *changedLines) {
 	if (!sdl.update_display_contents)
 		return;
 	if (!sdl.updating)
@@ -1039,7 +1039,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 					Bitu height = changedLines[index];
 					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
 						sdl.draw.width, height, GL_BGRA_EXT,
-						GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
+						GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
 					y += height;
 				}
 				index++;
@@ -1068,7 +1068,7 @@ Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
 
 void GFX_Stop() {
 	if (sdl.updating)
-		GFX_EndUpdate( 0 );
+		GFX_EndUpdate(0);
 	sdl.active=false;
 }
 
@@ -1102,7 +1102,7 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 
 static void GUI_ShutDown(Section * /*sec*/) {
 	GFX_Stop();
-	if (sdl.draw.callback) (sdl.draw.callback)( GFX_CallBackStop );
+	if (sdl.draw.callback) (sdl.draw.callback)(GFX_CallBackStop);
 	if (sdl.desktop.fullscreen) GFX_SwitchFullScreen();
 	if (mouse_is_captured) GFX_ToggleMouseCapture();
 }
@@ -1114,8 +1114,8 @@ static void SetPriority(PRIORITY_LEVELS level) {
 // Do nothing if priorties are not the same and not root, else the highest
 // priority can not be set as users can only lower priority (not restore it)
 
-	if((sdl.priority.focus != sdl.priority.nofocus ) &&
-		(getuid()!=0) ) return;
+	if ((sdl.priority.focus != sdl.priority.nofocus) &&
+		(getuid()!=0)) return;
 
 #endif
 	switch (level) {
@@ -1149,10 +1149,10 @@ static void SetPriority(PRIORITY_LEVELS level) {
 		setpriority (PRIO_PGRP, 0,PRIO_MAX-(PRIO_TOTAL/2));
 		break;
 	case PRIORITY_LEVEL_HIGHER:
-		setpriority (PRIO_PGRP, 0,PRIO_MAX-((3*PRIO_TOTAL)/5) );
+		setpriority (PRIO_PGRP, 0,PRIO_MAX-((3*PRIO_TOTAL)/5));
 		break;
 	case PRIORITY_LEVEL_HIGHEST:
-		setpriority (PRIO_PGRP, 0,PRIO_MAX-((3*PRIO_TOTAL)/4) );
+		setpriority (PRIO_PGRP, 0,PRIO_MAX-((3*PRIO_TOTAL)/4));
 		break;
 #endif
 	default:
@@ -1229,9 +1229,9 @@ static void GUI_StartUp(Section * sec) {
 	const char* fullresolution=section->Get_string("fullresolution");
 	sdl.desktop.full.width  = 0;
 	sdl.desktop.full.height = 0;
-	if(fullresolution && *fullresolution) {
+	if (fullresolution && *fullresolution) {
 		char res[100];
-		safe_strncpy( res, fullresolution, sizeof( res ));
+		safe_strncpy(res, fullresolution, sizeof(res));
 		fullresolution = lowcase (res);//so x and X are allowed
 		if (strcmp(fullresolution,"original")) {
 			sdl.desktop.full.fixed = true;
@@ -1249,19 +1249,19 @@ static void GUI_StartUp(Section * sec) {
 	sdl.desktop.window.width  = 0;
 	sdl.desktop.window.height = 0;
 	const char* windowresolution=section->Get_string("windowresolution");
-	if(windowresolution && *windowresolution) {
+	if (windowresolution && *windowresolution) {
 		char res[100];
-		safe_strncpy( res,windowresolution, sizeof( res ));
+		safe_strncpy(res,windowresolution, sizeof(res));
 		windowresolution = lowcase (res);//so x and X are allowed
-		if(strcmp(windowresolution,"original")) {
+		if (strcmp(windowresolution,"original")) {
 			char* height = const_cast<char*>(strchr(windowresolution,'x'));
-			if(height && *height) {
+			if (height && *height) {
 				*height = 0;
 				sdl.desktop.window.height = (Bit16u)atoi(height+1);
 				sdl.desktop.window.width  = (Bit16u)atoi(res);
 			} else {
 				char* percentage = const_cast<char*>(strchr(windowresolution,'%'));
-				if(percentage && *percentage) {
+				if (percentage && *percentage) {
 					*percentage = 0;
 					windowspercentage = (Bit16u) atoi(res);
 					if (windowspercentage) putenv(const_cast<char*>("SDL_VIDEO_CENTERED=1"));
@@ -1335,10 +1335,10 @@ static void GUI_StartUp(Section * sec) {
 			glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
 			glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
 			const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
-			if(gl_ext && *gl_ext){
+			if (gl_ext && *gl_ext) {
 				sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") != NULL);
 				sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") != NULL);
-				sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") != NULL ) &&
+				sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") != NULL) &&
 				    glGenBuffersARB && glBindBufferARB && glDeleteBuffersARB && glBufferDataARB &&
 				    glMapBufferARB && glUnmapBufferARB;
     			} else {
@@ -1484,8 +1484,8 @@ static void GUI_StartUp(Section * sec) {
 #endif
 	/* Get Keyboard state of numlock and capslock */
 	SDL_Keymod keystate = SDL_GetModState();
-	if(keystate&KMOD_NUM) startup_state_numlock = true;
-	if(keystate&KMOD_CAPS) startup_state_capslock = true;
+	if (keystate&KMOD_NUM) startup_state_numlock = true;
+	if (keystate&KMOD_CAPS) startup_state_capslock = true;
 }
 
 static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
@@ -1615,7 +1615,7 @@ void GFX_Events() {
 					GFX_HandleVideoResize(event.window.data1, event.window.data2);
 					continue;
 				case SDL_WINDOWEVENT_EXPOSED:
-					if (sdl.draw.callback) sdl.draw.callback( GFX_CallBackRedraw );
+					if (sdl.draw.callback) sdl.draw.callback(GFX_CallBackRedraw);
 					continue;
 				case SDL_WINDOWEVENT_FOCUS_GAINED:
 					SetPriority(sdl.priority.focus);
@@ -1707,7 +1707,7 @@ void GFX_Events() {
 			if (((event.key.keysym.sym==SDLK_TAB)) && ((sdl.laltstate==SDL_KEYDOWN) || (sdl.raltstate==SDL_KEYDOWN)))
 				break;
 			// This can happen as well.
-			if (((event.key.keysym.sym == SDLK_TAB )) && (event.key.keysym.mod & KMOD_ALT)) break;
+			if (((event.key.keysym.sym == SDLK_TAB)) && (event.key.keysym.mod & KMOD_ALT)) break;
 			// ignore tab events that arrive just after regaining focus. (likely the result of alt-tab)
 			if ((event.key.keysym.sym == SDLK_TAB) && (GetTicks() - sdl.focus_ticks < 2)) break;
 #endif
@@ -1872,16 +1872,16 @@ static void show_warning(char const * const message) {
 	bool textonly = true;
 #ifdef WIN32
 	textonly = false;
-	if ( !sdl.inited && SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) < 0 ) textonly = true;
+	if (!sdl.inited && SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) < 0) textonly = true;
 	sdl.inited = true;
 #endif
 	printf("%s",message);
-	if(textonly) return;
+	if (textonly) return;
 	if (!sdl.window)
 		if (!GFX_SetSDLSurfaceWindow(640, 400))
 			return;
 	sdl.surface = SDL_GetWindowSurface(sdl.window);
-	if(!sdl.surface)
+	if (!sdl.surface)
 		return;
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -1900,11 +1900,11 @@ static void show_warning(char const * const message) {
 	std::string m(message),m2;
 	std::string::size_type a,b,c,d;
 
-	while(m.size()) { //Max 50 characters. break on space before or on a newline
+	while (m.size()) { //Max 50 characters. break on space before or on a newline
 		c = m.find('\n');
 		d = m.rfind(' ',50);
-		if(c>d) a=b=d; else a=b=c;
-		if( a != std::string::npos) b++;
+		if (c>d) a=b=d; else a=b=c;
+		if (a != std::string::npos) b++;
 		m2 = m.substr(0,a); m.erase(0,b);
 		OutputString(x,y,m2.c_str(),0xffffffff,0,splash_surf);
 		y += 20;
@@ -1921,17 +1921,17 @@ static void launcheditor() {
 	Cross::GetPlatformConfigName(file);
 	path += file;
 	FILE* f = fopen(path.c_str(),"r");
-	if(!f && !control->PrintConfig(path.c_str())) {
+	if (!f && !control->PrintConfig(path.c_str())) {
 		printf("tried creating %s. but failed.\n",path.c_str());
 		exit(1);
 	}
-	if(f) fclose(f);
-/*	if(edit.empty()) {
+	if (f) fclose(f);
+/*	if (edit.empty()) {
 		printf("no editor specified.\n");
 		exit(1);
 	}*/
 	std::string edit;
-	while(control->cmdline->FindString("-editconf",edit,true)) //Loop until one succeeds
+	while (control->cmdline->FindString("-editconf",edit,true)) //Loop until one succeeds
 		execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) 0);
 	//if you get here the launching failed!
 	printf("can't find editor(s) specified at the command line.\n");
@@ -1948,7 +1948,7 @@ void restart_program(std::vector<std::string> & parameters) {
 	// parameter 0 is the executable path
 	// contents of the vector follow
 	// last one is NULL
-	for(Bitu i = 0; i < parameters.size(); i++) newargs[i] = (char*)parameters[i].c_str();
+	for (Bitu i = 0; i < parameters.size(); i++) newargs[i] = (char*)parameters[i].c_str();
 	newargs[parameters.size()] = NULL;
 	MIXER_CloseAudioDevice();
 	SDL_Delay(50);
@@ -1958,14 +1958,14 @@ void restart_program(std::vector<std::string> & parameters) {
 	DEBUG_ShutDown(NULL);
 #endif
 
-	if(execvp(newargs[0], newargs) == -1) {
+	if (execvp(newargs[0], newargs) == -1) {
 #ifdef WIN32
-		if(newargs[0][0] == '\"') {
+		if (newargs[0][0] == '\"') {
 			//everything specifies quotes around it if it contains a space, however my system disagrees
 			std::string edit = parameters[0];
 			edit.erase(0,1);edit.erase(edit.length() - 1,1);
 			//However keep the first argument of the passed argv (newargs) with quotes, as else repeated restarts go wrong.
-			if(execvp(edit.c_str(), newargs) == -1) E_Exit("Restarting failed");
+			if (execvp(edit.c_str(), newargs) == -1) E_Exit("Restarting failed");
 		}
 #endif
 		E_Exit("Restarting failed");
@@ -1979,8 +1979,8 @@ void Restart(bool pressed) { // mapper handler
 static void launchcaptures(std::string const& edit) {
 	std::string path,file;
 	Section* t = control->GetSection("dosbox");
-	if(t) file = t->GetPropValue("captures");
-	if(!t || file == NO_SUCH_PROPERTY) {
+	if (t) file = t->GetPropValue("captures");
+	if (!t || file == NO_SUCH_PROPERTY) {
 		printf("Config system messed up.\n");
 		exit(1);
 	}
@@ -1988,11 +1988,11 @@ static void launchcaptures(std::string const& edit) {
 	path += file;
 	Cross::CreateDir(path);
 	struct stat cstat;
-	if(stat(path.c_str(),&cstat) || (cstat.st_mode & S_IFDIR) == 0) {
+	if (stat(path.c_str(),&cstat) || (cstat.st_mode & S_IFDIR) == 0) {
 		printf("%s doesn't exists or isn't a directory.\n",path.c_str());
 		exit(1);
 	}
-/*	if(edit.empty()) {
+/*	if (edit.empty()) {
 		printf("no editor specified.\n");
 		exit(1);
 	}*/
@@ -2010,18 +2010,18 @@ static void printconfiglocation() {
 	path += file;
 
 	FILE* f = fopen(path.c_str(),"r");
-	if(!f && !control->PrintConfig(path.c_str())) {
+	if (!f && !control->PrintConfig(path.c_str())) {
 		printf("tried creating %s. but failed",path.c_str());
 		exit(1);
 	}
-	if(f) fclose(f);
+	if (f) fclose(f);
 	printf("%s\n",path.c_str());
 	exit(0);
 }
 
 static void eraseconfigfile() {
 	FILE* f = fopen("dosbox.conf","r");
-	if(f) {
+	if (f) {
 		fclose(f);
 		show_warning("Warning: dosbox.conf exists in current working directory.\nThis will override the configuration file at runtime.\n");
 	}
@@ -2030,7 +2030,7 @@ static void eraseconfigfile() {
 	Cross::GetPlatformConfigName(file);
 	path += file;
 	f = fopen(path.c_str(),"r");
-	if(!f) exit(0);
+	if (!f) exit(0);
 	fclose(f);
 	unlink(path.c_str());
 	exit(0);
@@ -2038,7 +2038,7 @@ static void eraseconfigfile() {
 
 static void erasemapperfile() {
 	FILE* g = fopen("dosbox.conf","r");
-	if(g) {
+	if (g) {
 		fclose(g);
 		show_warning("Warning: dosbox.conf exists in current working directory.\nKeymapping might not be properly reset.\n"
 		             "Please reset configuration as well and delete the dosbox.conf.\n");
@@ -2048,7 +2048,7 @@ static void erasemapperfile() {
 	Cross::GetPlatformConfigDir(path);
 	path += file;
 	FILE* f = fopen(path.c_str(),"r");
-	if(!f) exit(0);
+	if (!f) exit(0);
 	fclose(f);
 	unlink(path.c_str());
 	exit(0);
@@ -2078,19 +2078,19 @@ int main(int argc, char* argv[]) {
 		DOSBOX_Init();
 
 		std::string editor;
-		if(control->cmdline->FindString("-editconf",editor,false)) launcheditor();
-		if(control->cmdline->FindString("-opencaptures",editor,true)) launchcaptures(editor);
-		if(control->cmdline->FindExist("-eraseconf")) eraseconfigfile();
-		if(control->cmdline->FindExist("-resetconf")) eraseconfigfile();
-		if(control->cmdline->FindExist("-erasemapper")) erasemapperfile();
-		if(control->cmdline->FindExist("-resetmapper")) erasemapperfile();
+		if (control->cmdline->FindString("-editconf",editor,false)) launcheditor();
+		if (control->cmdline->FindString("-opencaptures",editor,true)) launchcaptures(editor);
+		if (control->cmdline->FindExist("-eraseconf")) eraseconfigfile();
+		if (control->cmdline->FindExist("-resetconf")) eraseconfigfile();
+		if (control->cmdline->FindExist("-erasemapper")) erasemapperfile();
+		if (control->cmdline->FindExist("-resetmapper")) erasemapperfile();
 
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
 		if (control->cmdline->FindExist("-noconsole")) {
 			FreeConsole();
 			/* Redirect standard input and standard output */
-			if(freopen(STDOUT_FILE, "w", stdout) == NULL)
+			if (freopen(STDOUT_FILE, "w", stdout) == NULL)
 				no_stdout = true; // No stdout so don't write messages
 			freopen(STDERR_FILE, "w", stderr);
 			setvbuf(stdout, NULL, _IOLBF, BUFSIZ);	/* Line buffered */
@@ -2108,7 +2108,7 @@ int main(int argc, char* argv[]) {
 		}
 #endif  //defined(WIN32) && !(C_DEBUG)
 		if (control->cmdline->FindExist("-version") ||
-		    control->cmdline->FindExist("--version") ) {
+		    control->cmdline->FindExist("--version")) {
 			printf("\nDOSBox version %s, copyright 2002-2019 DOSBox Team.\n\n",VERSION);
 			printf("DOSBox is written by the DOSBox Team (See AUTHORS file))\n");
 			printf("DOSBox comes with ABSOLUTELY NO WARRANTY.  This is free software,\n");
@@ -2116,7 +2116,7 @@ int main(int argc, char* argv[]) {
 			printf("please read the COPYING file thoroughly before doing so.\n\n");
 			return 0;
 		}
-		if(control->cmdline->FindExist("-printconf")) printconfiglocation();
+		if (control->cmdline->FindExist("-printconf")) printconfiglocation();
 
 #if C_DEBUG
 		DEBUG_SetupConsole();
@@ -2145,7 +2145,7 @@ int main(int argc, char* argv[]) {
 #ifndef DISABLE_JOYSTICK
 	//Initialise Joystick separately. This way we can warn when it fails instead
 	//of exiting the application
-	if( SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 ) LOG_MSG("Failed to init joystick support");
+	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0) LOG_MSG("Failed to init joystick support");
 #endif
 
 	sdl.laltstate = SDL_KEYUP;
@@ -2158,19 +2158,19 @@ int main(int argc, char* argv[]) {
 	Cross::GetPlatformConfigDir(config_path);
 
 	//First parse -userconf
-	if(control->cmdline->FindExist("-userconf",true)){
+	if (control->cmdline->FindExist("-userconf",true)) {
 		config_file.clear();
 		Cross::GetPlatformConfigDir(config_path);
 		Cross::GetPlatformConfigName(config_file);
 		config_combined = config_path + config_file;
 		control->ParseConfigFile(config_combined.c_str());
-		if(!control->configfiles.size()) {
+		if (!control->configfiles.size()) {
 			//Try to create the userlevel configfile.
 			config_file.clear();
 			Cross::CreatePlatformConfigDir(config_path);
 			Cross::GetPlatformConfigName(config_file);
 			config_combined = config_path + config_file;
-			if(control->PrintConfig(config_combined.c_str())) {
+			if (control->PrintConfig(config_combined.c_str())) {
 				LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_combined.c_str());
 				//Load them as well. Makes relative paths much easier
 				control->ParseConfigFile(config_combined.c_str());
@@ -2179,7 +2179,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	//Second parse -conf switches
-	while(control->cmdline->FindString("-conf",config_file,true)) {
+	while (control->cmdline->FindString("-conf",config_file,true)) {
 		if (!control->ParseConfigFile(config_file.c_str())) {
 			// try to load it from the user directory
 			if (!control->ParseConfigFile((config_path + config_file).c_str())) {
@@ -2188,22 +2188,22 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	// if none found => parse localdir conf
-	if(!control->configfiles.size()) control->ParseConfigFile("dosbox.conf");
+	if (!control->configfiles.size()) control->ParseConfigFile("dosbox.conf");
 
 	// if none found => parse userlevel conf
-	if(!control->configfiles.size()) {
+	if (!control->configfiles.size()) {
 		config_file.clear();
 		Cross::GetPlatformConfigName(config_file);
 		control->ParseConfigFile((config_path + config_file).c_str());
 	}
 
-	if(!control->configfiles.size()) {
+	if (!control->configfiles.size()) {
 		//Try to create the userlevel configfile.
 		config_file.clear();
 		Cross::CreatePlatformConfigDir(config_path);
 		Cross::GetPlatformConfigName(config_file);
 		config_combined = config_path + config_file;
-		if(control->PrintConfig(config_combined.c_str())) {
+		if (control->PrintConfig(config_combined.c_str())) {
 			LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_combined.c_str());
 			//Load them as well. Makes relative paths much easier
 			control->ParseConfigFile(config_combined.c_str());
@@ -2224,7 +2224,7 @@ int main(int argc, char* argv[]) {
 		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
 
 		if (control->cmdline->FindExist("-fullscreen") || sdl_sec->Get_bool("fullscreen")) {
-			if(!sdl.desktop.fullscreen) { //only switch if not already in fullscreen
+			if (!sdl.desktop.fullscreen) { //only switch if not already in fullscreen
 				GFX_SwitchFullScreen();
 			}
 		}
@@ -2241,7 +2241,7 @@ int main(int argc, char* argv[]) {
 #endif
 		GFX_ShowMsg("Exit to error: %s",error);
 		fflush(NULL);
-		if(sdl.wait_on_error) {
+		if (sdl.wait_on_error) {
 			//TODO Maybe look for some way to show message in linux?
 #if (C_DEBUG)
 			GFX_ShowMsg("Press enter to continue");
@@ -2253,10 +2253,10 @@ int main(int argc, char* argv[]) {
 		}
 
 	}
-	catch (int){
+	catch (int) {
 		; //nothing, pressed killswitch
 	}
-	catch(...){
+	catch(...) {
 		; // Unknown error, let's just exit.
 	}
 #if defined (WIN32)

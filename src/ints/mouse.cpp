@@ -214,7 +214,7 @@ INLINE void Mouse_AddEvent(Bit8u type) {
 			/* Always put the newest element in the front as that the events are
 			 * handled backwards (prevents doubleclicks while moving)
 			 */
-			for(Bitu i = mouse.events ; i ; i--)
+			for (Bitu i = mouse.events ; i ; i--)
 				mouse.event_queue[i] = mouse.event_queue[i-1];
 		}
 		mouse.event_queue[0].type=type;
@@ -464,8 +464,8 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 	float dx = xrel * mouse.pixelPerMickey_x;
 	float dy = yrel * mouse.pixelPerMickey_y;
 
-	if((fabs(xrel) > 1.0f) || (mouse.senv_x < 1.0f)) dx *= mouse.senv_x;
-	if((fabs(yrel) > 1.0f) || (mouse.senv_y < 1.0f)) dy *= mouse.senv_y;
+	if ((fabs(xrel) > 1.0f) || (mouse.senv_x < 1.0f)) dx *= mouse.senv_x;
+	if ((fabs(yrel) > 1.0f) || (mouse.senv_y < 1.0f)) dy *= mouse.senv_y;
 	if (useps2callback) dy *= 2;
 
 	mouse.mickey_x += (dx * mouse.mickeysPerPixel_x);
@@ -580,7 +580,7 @@ void Mouse_ButtonReleased(Bit8u button) {
 	mouse.last_released_y[button]=POS_Y;
 }
 
-static void Mouse_SetMickeyPixelRate(Bit16s px, Bit16s py){
+static void Mouse_SetMickeyPixelRate(Bit16s px, Bit16s py) {
 	if ((px!=0) && (py!=0)) {
 		mouse.mickeysPerPixel_x	 = (float)px/X_MICKEY;
 		mouse.mickeysPerPixel_y  = (float)py/Y_MICKEY;
@@ -589,10 +589,10 @@ static void Mouse_SetMickeyPixelRate(Bit16s px, Bit16s py){
 	}
 }
 
-static void Mouse_SetSensitivity(Bit16u px, Bit16u py, Bit16u dspeed){
-	if(px>100) px=100;
-	if(py>100) py=100;
-	if(dspeed>100) dspeed=100;
+static void Mouse_SetSensitivity(Bit16u px, Bit16u py, Bit16u dspeed) {
+	if (px>100) px=100;
+	if (py>100) py=100;
+	if (dspeed>100) dspeed=100;
 	// save values
 	mouse.senv_x_val=px;
 	mouse.senv_y_val=py;
@@ -606,7 +606,7 @@ static void Mouse_SetSensitivity(Bit16u px, Bit16u py, Bit16u dspeed){
 }
 
 
-static void Mouse_ResetHardware(void){
+static void Mouse_ResetHardware(void) {
 	PIC_SetIRQMask(MOUSE_IRQ,false);
 }
 
@@ -731,7 +731,7 @@ static Bitu INT33_Handler(void) {
 		Mouse_Reset();
 		break;
 	case 0x01:	/* Show Mouse */
-		if(mouse.hidden) mouse.hidden--;
+		if (mouse.hidden) mouse.hidden--;
 		mouse.updateRegion_y[1] = -1; //offscreen
 		DrawCursor();
 		break;
@@ -792,8 +792,8 @@ static Bitu INT33_Handler(void) {
 			mouse.min_x=min;
 			mouse.max_x=max;
 			/* Battlechess wants this */
-			if(mouse.x > mouse.max_x) mouse.x = mouse.max_x;
-			if(mouse.x < mouse.min_x) mouse.x = mouse.min_x;
+			if (mouse.x > mouse.max_x) mouse.x = mouse.max_x;
+			if (mouse.x < mouse.min_x) mouse.x = mouse.min_x;
 			/* Or alternatively this:
 			mouse.x = (mouse.max_x - mouse.min_x + 1)/2;*/
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Hortizontal range min:%d max:%d",min,max);
@@ -809,8 +809,8 @@ static Bitu INT33_Handler(void) {
 			mouse.min_y=min;
 			mouse.max_y=max;
 			/* Battlechess wants this */
-			if(mouse.y > mouse.max_y) mouse.y = mouse.max_y;
-			if(mouse.y < mouse.min_y) mouse.y = mouse.min_y;
+			if (mouse.y > mouse.max_y) mouse.y = mouse.max_y;
+			if (mouse.y < mouse.min_y) mouse.y = mouse.min_y;
 			/* Or alternatively this:
 			mouse.y = (mouse.max_y - mouse.min_y + 1)/2;*/
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Vertical range min:%d max:%d",min,max);
@@ -1059,7 +1059,7 @@ static Bitu INT74_Handler(void) {
 			CPU_Push16(mouse.sub_seg);
 			CPU_Push16(mouse.sub_ofs);
 			mouse.in_UIR = true;
-			//LOG(LOG_MOUSE,LOG_ERROR)("INT 74 %X",mouse.event_queue[mouse.events].type );
+			//LOG(LOG_MOUSE,LOG_ERROR)("INT 74 %X",mouse.event_queue[mouse.events].type);
 		} else if (useps2callback) {
 			CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 			CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
