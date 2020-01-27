@@ -49,13 +49,19 @@ Bitu IO_ReadD(Bitu port);
 
 /* Classes to manage the IO objects created by the various devices.
  * The io objects will remove itself on destruction.*/
-class IO_Base{
+class IO_Base {
 protected:
 	bool installed;
 	Bitu m_port, m_mask,m_range;
 public:
-	IO_Base():installed(false){};
+	IO_Base()
+		: installed(false),
+		  m_port(0),
+		  m_mask(0),
+		  m_range(0)
+	{ }
 };
+
 class IO_ReadHandleObject: private IO_Base{
 public:
 	void Install(Bitu port,IO_ReadHandler * handler,Bitu mask,Bitu range=1);

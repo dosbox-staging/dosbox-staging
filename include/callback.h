@@ -87,9 +87,13 @@ private:
 		bool installed;
 	} vectorhandler;
 public:
-	CALLBACK_HandlerObject():installed(false),m_type(NONE) {
-		vectorhandler.installed=false;
-	}
+	CALLBACK_HandlerObject()
+		: installed(false),
+		  m_callback(0),
+		  m_type(NONE),
+		  vectorhandler{0, 0, false}
+	{ }
+
 	~CALLBACK_HandlerObject();
 
 	//Install and allocate a callback.
