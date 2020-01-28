@@ -889,24 +889,29 @@ void sticky_keys(bool restore) {
 #endif
 
 void GFX_SwitchFullScreen(void) {
-	sdl.desktop.fullscreen=!sdl.desktop.fullscreen;
+#if defined (WIN32)
+	// We are about to switch to the opposite of our current mode
+	// (ie: opposite of whatever sdl.desktop.fullscreen holds).
+	// Sticky-keys should be set to the opposite of fullscreen,
+	// so we simply apply the bool of the mode we're switching out-of.
+	sticky_keys(sdl.desktop.fullscreen);
+#endif
+	sdl.desktop.fullscreen = !sdl.desktop.fullscreen;
+	GFX_ResetScreen();
+
+	// Adjust the mouse state only *after* we've finished performing
+	// screen/resolution adjustments.  This order-of-operations affects
+	// Mac OSX, but isn't critical on Linux and Windows.
 	if (sdl.desktop.fullscreen) { // entering fullscreen mode
-		if (!mouse_is_captured) { // we always capture the mouse
+		if (!mouse_is_captured) { // always capture the mouse
 			GFX_ToggleMouseCapture();
 		}
-#if defined (WIN32)
-		sticky_keys(false); //disable sticky keys in fullscreen mode
-#endif
 	} else { // leaving fullscreen mode
-		// only un-capture if they never wanted mouse captured
+		// only un-capture if the user requested to never capture the mouse
 		if (sdl.mouse.capture_choice == MouseCaptureType::Never) {
 			GFX_ToggleMouseCapture();
 		}
-#if defined (WIN32)
-		sticky_keys(true); //restore sticky keys to default state in windowed mode.
-#endif
 	}
-	GFX_ResetScreen();
 }
 
 static void SwitchFullScreen(bool pressed) {
@@ -1448,7 +1453,7 @@ static void GUI_StartUp(Section * sec) {
 
 	}
 
-	// Setup the mouse
+	// Read and setup the intial mouse capture state
 	const std::string capturemouse = section->Get_string("capturemouse");
 	if (capturemouse == "onstart") {
 		sdl.mouse.capture_choice = MouseCaptureType::OnStart;
@@ -1457,24 +1462,27 @@ static void GUI_StartUp(Section * sec) {
 	} else if (capturemouse == "never") {
 		sdl.mouse.capture_choice = MouseCaptureType::Never;
 	} else {
-		// If an invalid value is provided, the section handle
-		// will automatically set the default, so we should never
-		// be here.
-		assert(capturemouse == "onclick");
+		// If an invalid value is provided, the section handler
+		// should have automatically set the default to 'onclick'
+		assert(sdl.mouse.capture_choice == MouseCaptureType::OnClick);
+	}
+	// Capture the mouse straight away ...
+	if (sdl.desktop.fullscreen || sdl.mouse.capture_choice == MouseCaptureType::OnStart) {
+		GFX_ToggleMouseCapture();
+	// Otherwise simply entire the cursor is visible
+	} else {
+		SDL_ShowCursor(1);
+	}
+	// Only setup the Ctrl+F10 capture-toggle if the use wants to capture
+	if (sdl.mouse.capture_choice != MouseCaptureType::Never) {
+		MAPPER_AddHandler(ToggleMouseCapture,MK_f10,MMOD1,"capmouse","Cap Mouse");
 	}
 	Prop_multival* p3 = section->Get_multival("sensitivity");
 	sdl.mouse.xsensitivity = p3->GetSection()->Get_int("xsens");
 	sdl.mouse.ysensitivity = p3->GetSection()->Get_int("ysens");
 
-	if (sdl.desktop.fullscreen || sdl.mouse.capture_choice == MouseCaptureType::OnStart) {
-		GFX_ToggleMouseCapture();
-	} else {
-		SDL_ShowCursor(1);
-	}
-
 	/* Get some Event handlers */
 	MAPPER_AddHandler(KillSwitch,MK_f9,MMOD1,"shutdown","ShutDown");
-	MAPPER_AddHandler(ToggleMouseCapture,MK_f10,MMOD1,"capmouse","Cap Mouse");
 	MAPPER_AddHandler(SwitchFullScreen,MK_return,MMOD2,"fullscr","Fullscreen");
 	MAPPER_AddHandler(Restart,MK_home,MMOD1|MMOD2,"restart","Restart");
 #if C_DEBUG
