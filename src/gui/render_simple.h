@@ -16,6 +16,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#if SCALER_MAX_MUL_HEIGHT < SCALERHEIGHT 
+#error "Scaler goes too high"
+#endif
+
+#if SCALER_MAX_MUL_WIDTH < SCALERWIDTH 
+#error "Scaler goes too wide"
+#endif
 
 #if defined (SCALERLINEAR)
 static void conc4d(SCALERNAME,SBPP,DBPP,L)(const void *s) {
@@ -67,12 +74,18 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 #if (SCALERHEIGHT > 2) 
 			PTYPE *line2 = WC[1];
 #endif
+#if (SCALERHEIGHT > 3) 
+			PTYPE *line3 = WC[2];
+#endif
 #else
 #if (SCALERHEIGHT > 1) 
 		PTYPE *line1 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch);
 #endif
 #if (SCALERHEIGHT > 2) 
 		PTYPE *line2 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 2);
+#endif
+#if (SCALERHEIGHT > 3) 
+		PTYPE *line3 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 3);
 #endif
 #endif //defined(SCALERLINEAR)
 			hadChange = 1;
@@ -89,6 +102,9 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 #if (SCALERHEIGHT > 2) 
 				line2 += SCALERWIDTH;
 #endif
+#if (SCALERHEIGHT > 3) 
+				line3 += SCALERWIDTH;
+#endif
 			}
 #if defined(SCALERLINEAR)
 #if (SCALERHEIGHT > 1)
@@ -97,6 +113,9 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 #endif
 #if (SCALERHEIGHT > 2) 
 			BituMove(((Bit8u*)line0)-copyLen+render.scale.outPitch*2,WC[1], copyLen );
+#endif
+#if (SCALERHEIGHT > 3) 
+			BituMove(((Bit8u*)line0)-copyLen+render.scale.outPitch*3,WC[2], copyLen );
 #endif
 #endif //defined(SCALERLINEAR)
 		}
