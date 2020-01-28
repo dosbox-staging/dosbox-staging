@@ -25,20 +25,20 @@ import sys
 
 def parse_issues(filename):
     """
-    Returns a dict of int keys and a list of string values, where the:
-    - keys are V### PVS-Studio error codes
-    - values are the message of the issue as found in a specific file
+    Returns a dict of source filename keys having occurrence-count values
 
     """
-    issues = collections.defaultdict(list)
+    cwd = os.getcwd()
+    issues = collections.defaultdict(int)
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            full = row['ErrorCode'] # extract the full code as an URL string
-            code = full[full.rfind('V'):full.rfind('"')] # get the trailing "V###" code
-            if code.startswith('V'):
-                # Convert the V### string into an integer for easy sorting
-                issues[int(code[1:])].append(row['Message'])
+            sourcefile = os.path.realpath(row['FilePath'])
+            # Skip non-file lines
+            if not sourcefile.startswith('/'):
+                continue
+            sourcefile = os.path.relpath(sourcefile, cwd)
+            issues[sourcefile] += 1
     return issues
 
 
@@ -48,20 +48,16 @@ def main(argv):
 
     # Get the issues and the total tally
     issues = parse_issues(argv[1])
-    tally = sum(len(messages) for messages in issues.values())
+    tally = sum(issues.values())
 
     if tally > 0:
-        # Step through the codes and summarize
-        print("Issues are tallied and sorted by code:\n")
-        print("   code | issue-string in common to all instances       | tally")
-        print("  -----   ---------------------------------------------   -----")
+        # find the longest source filename
+        longest_name = max(len(sourcefile) for sourcefile in issues.keys())
+        # Print the source filenames and their issue counts
+        print("Sorted by issue count:\n")
 
-    for code in sorted(issues.keys()):
-        messages = issues[code]
-        in_common = os.path.commonprefix(messages)[:45]
-        if len(in_common.split(' ')) < 4:
-            in_common = 'N/A (too little in-common between issues)'
-        print(f'  [{code:4}]  {in_common:45} : {len(messages)}')
+        for sourcefile in sorted(issues, key=issues.get, reverse=True):
+            print(f'  {sourcefile:{longest_name}} : {issues[sourcefile]}')
 
     # Print the tally against the desired maximum
     if len(sys.argv) == 3:

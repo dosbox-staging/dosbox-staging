@@ -103,22 +103,31 @@ jobs:
       - name: Analyze
         run:  |
           set -xeu
-          pvs-studio-analyzer analyze -s .pvs-suppress -o pvs-analysis.log -j "$(nproc)"
-          criteria="GA:1,2;64:1;OP:1,2,3;CS:1;MISRA:1,2"
-          plog-converter -a "${criteria}" -d V1042 -t csv -o pvs-report.csv pvs-analysis.log
-          mkdir -p pvs-analysis-report
+          log="pvs-analysis.log"
+          mirsa_criteria="MISRA:1,2"
+          general_criteria="GA:1,2;64:1;OP:1,2,3;CS:1"
           stamp="$(date +'%Y-%m-%d_T%H%M')-${GITHUB_SHA:0:8}"
-          plog-converter -a "${criteria}" -d V1042 -t fullhtml -p dosbox-staging \
-          -v "${GITHUB_SHA:0:8}" -o "pvs-analysis-report/pvs-analysis-report-${stamp}" \
-          pvs-analysis.log
+          reportdir="pvs-report/pvs-report-${stamp}"
+          mkdir -p "${reportdir}"
+          pvs-studio-analyzer analyze -a 63 -s .pvs-suppress -o "${log}" -j "$(nproc)"
+          plog-converter -a "${general_criteria}" -d V1042 -t fullhtml -p dosbox-staging \
+          -v "${GITHUB_SHA:0:8}" -o "${reportdir}" "${log}"
+          mv "${reportdir}/fullhtml" "${reportdir}/general"
+          plog-converter -a "${mirsa_criteria}" -d V1042 -t fullhtml -p dosbox-staging \
+          -v "${GITHUB_SHA:0:8}" -o "${reportdir}" "${log}"
+          mv "${reportdir}/fullhtml" "${reportdir}/mirsa"
+          plog-converter -a "${general_criteria}" -d V1042 -t csv -o pvs-report.csv "${log}"
+          cp -l pvs-report.csv "${reportdir}/general/"
+          pvs-studio-analyzer suppress -a "${general_criteria}" \
+          -o "${reportdir}/general/supressible-list.json" "${log}"
       - name: Upload report
         uses: actions/upload-artifact@master
         with:
           name: pvs-analysis-report
-          path: pvs-analysis-report
+          path: pvs-report
       - name: Summarize report
         env:
-          MAX_BUGS: 304
+          MAX_BUGS: 627
         run: |
           echo "Full report is included in build Artifacts"
           echo
