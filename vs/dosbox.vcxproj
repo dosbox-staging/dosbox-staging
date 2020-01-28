@@ -252,6 +252,7 @@
     <ClCompile Include="..\src\libs\decoders\vorbis.c" />
     <ClCompile Include="..\src\libs\decoders\wav.c" />
     <ClCompile Include="..\src\libs\nuked\nukedopl.cpp" />
+    <ClCompile Include="..\src\libs\ppscale\ppscale.c" />
     <ClCompile Include="..\src\misc\cross.cpp" />
     <ClCompile Include="..\src\misc\messages.cpp" />
     <ClCompile Include="..\src\misc\programs.cpp" />
@@ -375,6 +376,7 @@
     <ClInclude Include="..\src\libs\decoders\xxh3.h" />
     <ClInclude Include="..\src\libs\decoders\xxhash.h" />
     <ClInclude Include="..\src\libs\nuked\nukedopl.h" />
+    <ClInclude Include="..\src\libs\ppscale\ppscale.h" />
     <ClInclude Include="..\src\platform\visualc\config.h" />
     <ClInclude Include="..\src\platform\visualc\unistd.h" />
   </ItemGroup>

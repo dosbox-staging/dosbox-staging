@@ -30,28 +30,34 @@ typedef enum {
 
 typedef void (*GFX_CallBack_t)( GFX_CallBackFunctions_t function );
 
-#define GFX_CAN_8		0x0001
-#define GFX_CAN_15		0x0002
-#define GFX_CAN_16		0x0004
-#define GFX_CAN_32		0x0008
+#define GFX_CAN_8   0x0001
+#define GFX_CAN_15  0x0002
+#define GFX_CAN_16  0x0004
+#define GFX_CAN_32  0x0008
 
-#define GFX_LOVE_8		0x0010
-#define GFX_LOVE_15		0x0020
-#define GFX_LOVE_16		0x0040
-#define GFX_LOVE_32		0x0080
+#define GFX_LOVE_8  0x0010
+#define GFX_LOVE_15 0x0020
+#define GFX_LOVE_16 0x0040
+#define GFX_LOVE_32 0x0080
 
-#define GFX_RGBONLY		0x0100
+#define GFX_RGBONLY 0x0100
+#define GFX_DBL_H   0x0200 /* double-width  flag */
+#define GFX_DBL_W   0x0400 /* double-height flag */
 
 #define GFX_SCALING		0x1000
 #define GFX_HARDWARE	0x2000
 
-#define GFX_CAN_RANDOM	0x4000		//If the interface can also do random access surface
+#define GFX_CAN_RANDOM  0x4000 //If the interface can also do random access surface
+#define GFX_UNITY_SCALE 0x8000 /* turn of all scaling in render.cpp */
 
 void GFX_Events(void);
 Bitu GFX_GetBestMode(Bitu flags);
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
-Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t cb);
 void GFX_SetShader(const char* src);
+Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
+                 double scalex, double scaley,
+                 GFX_CallBack_t callback,
+                 double pixel_aspect);
 
 void GFX_ResetScreen(void);
 void GFX_Start(void);
