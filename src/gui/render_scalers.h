@@ -21,6 +21,10 @@
 
 //#include "render.h"
 #include "video.h"
+
+#define SCALER_MAX_MUL_WIDTH  3
+#define SCALER_MAX_MUL_HEIGHT 3
+
 #if RENDER_USE_ADVANCED_SCALERS>0
 #define SCALER_MAXWIDTH		1280 
 #define SCALER_MAXHEIGHT	1024
