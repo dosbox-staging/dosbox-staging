@@ -34,6 +34,14 @@
             "Message": "A call of the 'memcpy' function will lead to underflow of the buffer '& state'."
         },
         {
+            "CodeCurrent": 3039254062,
+            "CodeNext": 3404253786,
+            "CodePrev": 3282303307,
+            "ErrorCode": "V560",
+            "FileName": "dr_flac.h",
+            "Message": "A part of conditional expression is always true: blockSize >= _."
+        },
+        {
             "CodeCurrent": 2009695132,
             "CodeNext": 17733,
             "CodePrev": 3053,
