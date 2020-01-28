@@ -412,7 +412,18 @@ forcenormal:
 			gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
 			break;
 	}
-	gfx_flags=GFX_GetBestMode(gfx_flags);
+	gfx_flags=GFX_GetBestMode(gfx_flags); 
+	if(
+		gfx_flags & GFX_UNITY_SCALE &&
+		complexBlock == 0 &&
+		strstr( simpleBlock->name, "Normal" ) == simpleBlock->name) { 
+	// Ant_222 simply setting GFX_SCALING doesn't work
+	// Ant_222: bad idea to set UNITY_SCALE here, because later, in SetSize(),
+	//          we may have to revert to the simple surface mode, but it will be late.
+		gfx_scalew = 1.0; gfx_scaleh = 1.0;
+		xscale     = 1  ; yscale     = 1;
+		simpleBlock = &ScaleNormal1x;
+	}
 	if (!gfx_flags) {
 		if (!complexBlock && simpleBlock == &ScaleNormal1x) 
 			E_Exit("Failed to create a rendering output");
@@ -433,10 +444,29 @@ forcenormal:
 		}
 	}
 /* Setup the scaler variables */
-#if C_OPENGL
-	GFX_SetShader(render.shader_src);
-#endif
-	gfx_flags=GFX_SetSize(width,height,gfx_flags,gfx_scalew,gfx_scaleh,&RENDER_CallBack);
+	double par;  /* the pixel aspect ratio of the source pixel array */
+	double parn; /* normalised PAR, always > 1.0 */
+	par = (double)width / height / 4 * 3; /* MS-DOS screen is always 4:3 */
+
+	/* Enforce square pixels if aspect correction is off. Prevent absurd */
+	/* distortions by rounding to the nearest integer PAR:               */
+	if (!render.aspect) {
+		if ( par > 1.0 ) parn =       par;
+		else             parn = 1.0 / par;
+		parn = round( parn );
+		if ( par > 1.0 ) par =       parn;
+		else             par = 1.0 / parn;
+	}
+
+	if (dblh)
+		gfx_flags |= GFX_DBL_H;
+	if (dblw)
+		gfx_flags |= GFX_DBL_W;
+
+	#if C_OPENGL
+		GFX_SetShader(render.shader_src);
+	#endif
+	gfx_flags=GFX_SetSize(width,height,gfx_flags,gfx_scalew,gfx_scaleh,&RENDER_CallBack,par);
 	if (gfx_flags & GFX_CAN_8)
 		render.scale.outMode = scalerMode8;
 	else if (gfx_flags & GFX_CAN_15)

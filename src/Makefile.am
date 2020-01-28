@@ -17,6 +17,7 @@ dosbox_LDADD = cpu/libcpu.a debug/libdebug.a dos/libdos.a fpu/libfpu.a  hardware
                hardware/serialport/libserial.a \
                libs/decoders/libdecoders.a \
                libs/gui_tk/libgui_tk.a \
-               libs/nuked/libnuked.a
+               libs/nuked/libnuked.a \
+               libs/ppscale/libppscale.a
 
 EXTRA_DIST = winres.rc dosbox.ico
