@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <sys/types.h>
+#include <math.h>
 #ifdef WIN32
 #include <signal.h>
 #include <process.h>
@@ -54,6 +55,10 @@
 #include "cpu.h"
 #include "control.h"
 #include "render.h"
+
+extern "C" {
+#include "../libs/ppscale/ppscale.h"
+}
 
 #define MAPPERFILE "mapper-sdl2-" VERSION ".map"
 //#define DISABLE_JOYSTICK
@@ -203,6 +208,9 @@ enum SCREEN_TYPES	{
 	SCREEN_OPENGL
 };
 
+/* Modes of simple pixel scaling, currently encoded in the output type: */
+enum ScalingMode {SmNone, SmNearest, SmPerfect};
+
 enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_PAUSE,
 	PRIORITY_LEVEL_LOWEST,
@@ -212,18 +220,19 @@ enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_HIGHEST
 };
 
-
 struct SDL_Block {
 	bool inited;
 	bool active;							//If this isn't set don't draw
 	bool updating;
 	bool update_display_contents;
 	bool resizing_window;
+	ScalingMode scaling_mode;
 	struct {
-		Bit32u width;
-		Bit32u height;
-		Bitu flags;
-		double scalex,scaley;
+		Bit32u         width;
+		Bit32u         height;
+		double         pixel_aspect;
+		Bitu           flags;
+		double         scalex, scaley;
 		GFX_CallBack_t callback;
 	} draw;
 	bool wait_on_error;
@@ -294,6 +303,8 @@ struct SDL_Block {
 		MouseControlType control_choice;
 		bool middle_will_release;
 	} mouse;
+	int  ppscale_x, ppscale_y; /* x and y scales for pixel-perfect     */
+	bool double_h, double_w;   /* double-height and double-width flags */
 	SDL_Rect updateRects[1024];
 	Bitu num_joysticks;
 #if defined (WIN32)
@@ -441,7 +452,10 @@ static void PauseDOSBox(bool pressed) {
 }
 
 /* Reset the screen with current values in the sdl structure */
-Bitu GFX_GetBestMode(Bitu flags) {
+Bitu GFX_GetBestMode(Bitu flags)
+{
+	if (sdl.scaling_mode == SmPerfect)
+		flags |= GFX_UNITY_SCALE;
 	switch (sdl.desktop.want_type) {
 	case SCREEN_SURFACE:
 check_surface:
@@ -773,17 +787,111 @@ static bool LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
 }
 #endif
 
-Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t callback) {
+/* Get the maximum area available for drawing: */
+/* TODO: The current implementation will not let the pixel-perfect mode to  */
+/*       to apply even the simplest 1:2 and 2:1 corrections at the original */
+/*       window resolution, therefore: consider a special case for PP mode. */
+static void GetAvailableArea(int &width, int &height)
+{
+	bool   fixed;
+	double par;
+
+	fixed = false;
+	if (sdl.desktop.fullscreen) {
+		if (sdl.desktop.full.fixed) {
+			width  = sdl.desktop.full.width;
+			height = sdl.desktop.full.height;
+			fixed   = true;
+		}
+	}
+	else {
+		if (sdl.desktop.window.width > 0) {
+			width  = sdl.desktop.window.width;
+			height = sdl.desktop.window.height;
+			fixed   = true;
+		}
+	}
+	if (!fixed) {
+		par = sdl.draw.pixel_aspect;
+		if (par > 1.0)
+			height = static_cast<int>(round(height * par));
+		if (par < 1.0)
+			width  = static_cast<int>(round(width  / par)); 
+	}
+}
+
+// ATT: aspect is the final aspect ratio of the image including its pixel dimensions and PAR
+/*static void GetActualArea( Bit16u av_w, Bit16u av_h, Bit16u *w, Bit16u *h, double aspect )
+{	double as_x, as_y;
+
+	if( aspect > 1.0 )
+	{	as_y =     aspect; as_x = 1.0;  } else
+	{	as_x = 1.0/aspect; as_y = 1.0;  }
+
+	if( av_h / as_y < av_w / as_x )
+	{	*h = av_h; *w = round( (double)av_h / aspect );  } else
+	{	*w = av_w; *h = round( (double)av_w * aspect );  }
+}*/
+
+/* Initialise pixel-perfect mode: */
+static bool InitPp(Bit16u avw, Bit16u avh)
+{
+	bool   ok;
+	double newpar;
+	/* TODO: consider reading apsect importance from the .ini-file */
+	ok = pp_getscale(
+		sdl.draw.width, sdl.draw.height,
+		sdl.draw.pixel_aspect,
+		avw, avh,
+		1.14, /* relative importance of aspect ratio */
+		&sdl.ppscale_x,
+		&sdl.ppscale_y
+	) == 0;
+	if (ok) {
+		newpar = ( double )sdl.ppscale_y / sdl.ppscale_x;
+		LOG_MSG( "Pixel-perfect scaling:\n"
+			"%ix%i (%#4.3g) --[%ix%i]--> %ix%i (%#4.3g)",
+			sdl.draw.width, sdl.draw.height, sdl.draw.pixel_aspect,
+			sdl.ppscale_x,  sdl.ppscale_y,
+			sdl.ppscale_x * sdl.draw.width, sdl.ppscale_y * sdl.draw.height,
+			newpar);
+	}
+	return ok;
+}
+
+Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
+                 double scalex, double scaley,
+                 GFX_CallBack_t callback,
+                 double pixel_aspect)
+{
+	int avw, avh; /* available width and height */
+	Bitu retFlags = 0;
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
+	sdl.draw.pixel_aspect = pixel_aspect;
 	sdl.draw.width=width;
 	sdl.draw.height=height;
 	sdl.draw.callback=callback;
 	sdl.draw.scalex=scalex;
 	sdl.draw.scaley=scaley;
 
-	Bitu retFlags = 0;
+	sdl.double_h = (flags & GFX_DBL_H) > 0;
+	sdl.double_w = (flags & GFX_DBL_W) > 0;
+
+	avw = width;
+	avh = height;
+	GetAvailableArea(avw, avh);	
+	LOG_MSG("Input image: %ix%i DW: %i DH: %i PAR: %5.3g",
+	        (int)width, (int)height, sdl.double_h, sdl.double_w, pixel_aspect );
+	LOG_MSG("Available area: %ix%i", avw, avh);
+	if (sdl.scaling_mode == SmPerfect) {
+		if (!InitPp(avw, avh)) {
+			LOG_MSG("Failed to initialise pixel-perfect mode, reverting to surface.");
+			goto dosurface;
+		}
+	}
+
 	switch (sdl.desktop.want_type) {
 	case SCREEN_SURFACE:
 dosurface:
@@ -860,11 +968,35 @@ dosurface:
 		SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
 		SDL_UpdateWindowSurface(sdl.window);
 		break;
-	case SCREEN_TEXTURE:
-	{
-		if (!GFX_SetupWindowScaled(sdl.desktop.want_type)) {
-			LOG_MSG("SDL:Can't set video mode, falling back to surface");
-			goto dosurface;
+	case SCREEN_TEXTURE: {
+		int imgw, imgh, wndw, wndh; /* image and window width and height  */
+		/* TODO: set up all ScalingMode-related settings here. Currently, the */
+		/*       interpolation hint is set at the reading of settings.    */
+		if (sdl.scaling_mode != SmPerfect) {
+			if (!GFX_SetupWindowScaled(sdl.desktop.want_type)) {
+				LOG_MSG("SDL:Can't set video mode, falling back to surface");
+				goto dosurface;
+			}
+		} else {
+			imgw = sdl.ppscale_x * sdl.draw.width;
+			imgh = sdl.ppscale_y * sdl.draw.height;
+
+			if (sdl.desktop.fullscreen) {
+				wndh = avh;  wndw = avw;
+			} else {
+				wndh = imgh; wndw = imgw; 
+			}
+
+			sdl.clip.w = imgw;
+			sdl.clip.h = imgh;
+			sdl.clip.x = (wndw - imgw) / 2;
+			sdl.clip.y = (wndh - imgh) / 2;
+
+
+			sdl.window = GFX_SetSDLWindowMode(
+				wndw, wndh, sdl.desktop.fullscreen, 
+				SCREEN_TEXTURE);
+
 		}
 		if (strcmp(sdl.rendererDriver, "auto"))
 			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.rendererDriver); 
@@ -1077,7 +1209,11 @@ dosurface:
 		// No borders
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		if (!sdl.opengl.bilinear || ( (sdl.clip.h % height) == 0 && (sdl.clip.w % width) == 0) ) {
+		if(
+			sdl.scaling_mode != SmNone || (
+				sdl.clip.h % height == 0 &&
+				sdl.clip.w % width  == 0 )
+		) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		} else {
@@ -1648,18 +1784,26 @@ static void GUI_StartUp(Section * sec) {
 		sdl.desktop.want_type=SCREEN_SURFACE;
 	} else if (output == "texture") {
 		sdl.desktop.want_type=SCREEN_TEXTURE;
+		sdl.scaling_mode = SmNone;
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 	} else if (output == "texturenb") {
 		sdl.desktop.want_type=SCREEN_TEXTURE;
+		sdl.scaling_mode = SmNearest;
 		// Currently the default, but... oh well
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+	} else if (output == "texturepp") {
+		sdl.desktop.want_type=SCREEN_TEXTURE;
+		sdl.scaling_mode = SmPerfect;
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 #if C_OPENGL
 	} else if (output == "opengl") {
 		sdl.desktop.want_type=SCREEN_OPENGL;
-		sdl.opengl.bilinear=true;
+		sdl.scaling_mode = SmNone;
+		sdl.opengl.bilinear = true;
 	} else if (output == "openglnb") {
 		sdl.desktop.want_type=SCREEN_OPENGL;
-		sdl.opengl.bilinear=false;
+		sdl.scaling_mode = SmNearest;
+		sdl.opengl.bilinear = false;
 #endif
 	} else {
 		LOG_MSG("SDL: Unsupported output device %s, switching back to surface",output.c_str());
@@ -2212,6 +2356,7 @@ void Config_Add_SDL() {
 		"surface",
 		"texture",
 		"texturenb",
+		"texturepp",
 #if C_OPENGL
 		"opengl",
 		"openglnb",

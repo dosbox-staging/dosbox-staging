@@ -19,7 +19,7 @@
 
 #include <sys/types.h>
 #include <assert.h>
-#include <math.h>
+#include <cmath>
 #include <fstream>
 #include <sstream>
 #include <stdlib.h>
@@ -413,10 +413,19 @@ forcenormal:
 			break;
 	}
 	gfx_flags=GFX_GetBestMode(gfx_flags);
+	if (gfx_flags & GFX_UNITY_SCALE &&
+		simpleBlock != NULL &&
+		strstr( simpleBlock->name, "Normal" ) == simpleBlock->name ) {
+		gfx_scalew  = 1.0;
+		gfx_scaleh  = 1.0;
+		xscale      = 1  ;
+		yscale      = 1  ;
+		simpleBlock = &ScaleNormal1x;
+	}
 	if (!gfx_flags) {
-		if (!complexBlock && simpleBlock == &ScaleNormal1x) 
+		if (!complexBlock && simpleBlock == &ScaleNormal1x)
 			E_Exit("Failed to create a rendering output");
-		else 
+		else
 			goto forcenormal;
 	}
 	width *= xscale;
@@ -433,10 +442,18 @@ forcenormal:
 		}
 	}
 /* Setup the scaler variables */
-#if C_OPENGL
-	GFX_SetShader(render.shader_src);
-#endif
-	gfx_flags=GFX_SetSize(width,height,gfx_flags,gfx_scalew,gfx_scaleh,&RENDER_CallBack);
+	double par;  /* the pixel aspect ratio of the source pixel array */
+	par = (double)width / height / 4 * 3; /* MS-DOS screen is always 4:3 */
+
+	if (dblh)
+		gfx_flags |= GFX_DBL_H;
+	if (dblw)
+		gfx_flags |= GFX_DBL_W;
+
+	#if C_OPENGL
+		GFX_SetShader(render.shader_src);
+	#endif
+	gfx_flags=GFX_SetSize(width,height,gfx_flags,gfx_scalew,gfx_scaleh,&RENDER_CallBack,par);
 	if (gfx_flags & GFX_CAN_8)
 		render.scale.outMode = scalerMode8;
 	else if (gfx_flags & GFX_CAN_15)
@@ -445,7 +462,7 @@ forcenormal:
 		render.scale.outMode = scalerMode16;
 	else if (gfx_flags & GFX_CAN_32)
 		render.scale.outMode = scalerMode32;
-	else 
+	else
 		E_Exit("Failed to create a rendering output");
 	ScalerLineBlock_t *lineBlock;
 	if (gfx_flags & GFX_HARDWARE) {
@@ -532,7 +549,7 @@ static void RENDER_CallBack( GFX_CallBackFunctions_t function ) {
 
 void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh) {
 	RENDER_Halt( );
-	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) { 
+	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {
 		return;	
 	}
 	if ( ratio > 1 ) {
@@ -641,7 +658,7 @@ static bool RENDER_GetShader(std::string& shader_path) {
 		if (render.shader_src==NULL || s != render.shader_src) {
 			src = strdup(s.c_str());
 			if (src==NULL) LOG_MSG("WARNING: Couldn't copy shader source");
-		} else { 
+		} else {
 			src = render.shader_src;
 			render.shader_src = NULL;
 		}
