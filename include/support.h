@@ -34,6 +34,11 @@
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
 #endif
 
+// Include a message in assert, similar to static_assert:
+#define assertm(exp, msg) assert(((void)msg, exp))
+// Use (void) to silent unused warnings.
+// https://en.cppreference.com/w/cpp/error/assert
+
 /// Copy a string into C array
 ///
 /// This function copies string pointed by src to fixed-size buffer dst.

@@ -18,6 +18,7 @@
 
 #include "dos_mscdex.h"
 
+#include <cassert>
 #include <cctype>
 #include <cstring>
 #include <sys/stat.h>
@@ -174,11 +175,10 @@ public:
 CMscdex::CMscdex()
 	: numDrives(0),
 	  defaultBufSeg(0),
+	  cdrom{nullptr},
 	  rootDriverHeaderSeg(0)
 {
 	memset(dinfo, 0, sizeof(dinfo));
-	for (auto &drive : cdrom)
-		drive = nullptr;
 }
 
 CMscdex::~CMscdex()
@@ -282,10 +282,11 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 
 	if (rootDriverHeaderSeg==0) {
 		
-		Bit16u driverSize = sizeof(DOS_DeviceHeader::sDeviceHeader) + 10; // 10 = Bytes for 3 callbacks
+		constexpr uint16_t driverSize = sizeof(DOS_DeviceHeader::sDeviceHeader) + 10; // 10 = Bytes for 3 callbacks
 		
 		// Create Device Header
-		Bit16u seg = DOS_GetMemory(driverSize/16+((driverSize%16)>0));
+		static_assert((driverSize % 16) == 0, "should always be zero");
+		Bit16u seg = DOS_GetMemory(driverSize / 16);
 		DOS_DeviceHeader devHeader(PhysMake(seg,0));
 		devHeader.SetNextDeviceHeader	(0xFFFFFFFF);
 		devHeader.SetAttribute(0xc800);
@@ -710,8 +711,7 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 					LOG(LOG_MISC,LOG_WARN)("MSCDEX: GetDirEntry: Copyflag structure not entirely accurate maybe");
 					Bit8u readBuf[256];
 					Bit8u writeBuf[256];
-					if (entryLength > 256)
-						return false;
+					assertm(entryLength <= 256, "entryLength should never exceed 256");
 					MEM_BlockRead( defBuffer+index, readBuf, entryLength );
 					writeBuf[0] = readBuf[1];						// 00h	BYTE	length of XAR in Logical Block Numbers
 					memcpy( &writeBuf[1], &readBuf[0x2], 4);		// 01h	DWORD	Logical Block Number of file start
