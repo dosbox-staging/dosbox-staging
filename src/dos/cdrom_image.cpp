@@ -667,7 +667,7 @@ track_iter CDROM_Interface_Image::GetTrack(const int sector)
 		if (lower_bound <= sector && sector < upper_bound) {
 			break;
 		}
-		track++;
+		++track;
 		lower_bound = upper_bound;
 	} // If we made it here without breaking, then the track
 	  // wasn't found and the iterator is now the end() item.
@@ -978,7 +978,7 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 		// ignored commands
 		else if (command == "CDTEXTFILE" || command == "FLAGS"   || command == "ISRC" ||
 		         command == "PERFORMER"  || command == "POSTGAP" || command == "REM" ||
-		         command == "SONGWRITER" || command == "TITLE"   || command == "") {
+		         command == "SONGWRITER" || command == "TITLE"   || command.empty()) {
 			success = true;
 		}
 		// failure

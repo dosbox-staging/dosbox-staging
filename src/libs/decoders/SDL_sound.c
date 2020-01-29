@@ -345,28 +345,24 @@ static Sound_Sample *alloc_sample(SDL_RWops *rw, Sound_AudioInfo *desired)
      * !!! FIXME: We're going to need to pool samples, since the mixer
      * !!! FIXME:  might be allocating tons of these on a regular basis.
      */
-    Sound_Sample *retval = malloc(sizeof (Sound_Sample));
+    Sound_Sample *retval = NULL;
+    Sound_Sample *sample = malloc(sizeof (Sound_Sample));
     Sound_SampleInternal *internal = malloc(sizeof (Sound_SampleInternal));
-    if ((retval == NULL) || (internal == NULL))
-    {
+    if (sample && internal) {
+        memset(sample, '\0', sizeof (Sound_Sample));
+        memset(internal, '\0', sizeof (Sound_SampleInternal));
+        if (desired != NULL) {
+            memcpy(&sample->desired, desired, sizeof (Sound_AudioInfo));
+        }
+        internal->rw = rw;
+        sample->opaque = internal;
+        retval = sample;
+    } else {
         __Sound_SetError(ERR_OUT_OF_MEMORY);
-        if (retval)
-            free(retval);
-        if (internal)
-            free(internal);
-
-        return(NULL);
-    } /* if */
-
-    memset(retval, '\0', sizeof (Sound_Sample));
-    memset(internal, '\0', sizeof (Sound_SampleInternal));
-
-    if (desired != NULL)
-        memcpy(&retval->desired, desired, sizeof (Sound_AudioInfo));
-
-    internal->rw = rw;
-    retval->opaque = internal;
-    return(retval);
+        free(sample);
+        free(internal);
+    }
+    return retval;
 } /* alloc_sample */
 
 
