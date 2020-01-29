@@ -198,10 +198,11 @@ struct SDL_Block {
 	} texture;
 	SDL_cond *cond;
 	struct {
-		MouseCaptureType capture_choice;
+		Bitu sensitivity;
 		int xsensitivity;
 		int ysensitivity;
-		Bitu sensitivity;
+		MouseCaptureType capture_choice;
+		bool release_on_middle;
 	} mouse;
 	SDL_Rect updateRects[1024];
 	Bitu num_joysticks;
@@ -542,7 +543,7 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType)
 			 * (partly caused by the rounding issues fix in RENDER_SetSize)
 			 */
 			sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex*ratio_h + 0.4);
-			sdl.clip.h=(Bit16u)fixedHeight;
+			sdl.clip.h = fixedHeight;
 		}
 
 		if (sdl.desktop.fullscreen) {
@@ -854,9 +855,14 @@ dosurface:
 
 SDL_bool mouse_is_captured = SDL_FALSE; // global for mapper
 void GFX_ToggleMouseCapture(void) {
-	SDL_ShowCursor(mouse_is_captured);
 	mouse_is_captured = mouse_is_captured ? SDL_FALSE : SDL_TRUE;
-	SDL_SetRelativeMouseMode(mouse_is_captured);
+	// Toggling SetRelativeMouseMode will hide (or show) the mouse cursor
+	if (SDL_SetRelativeMouseMode(mouse_is_captured) != 0) {
+		// but if it fails, then force the cursor visible and quit
+		SDL_ShowCursor(SDL_ENABLE);
+		E_Exit("SDL: failed to %s relative-mode [BUG!]",
+		       mouse_is_captured ? "put the mouse in" : "take the mouse out of");
+	}
 	LOG_MSG("SDL: mouse is %s", mouse_is_captured ? "captured" : "released");
 }
 
@@ -1166,22 +1172,27 @@ static void SetPriority(PRIORITY_LEVELS level) {
 }
 
 extern Bit8u int10_font_14[256 * 14];
-static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u color2,SDL_Surface * output_surface) {
-	Bit32u * draw=(Bit32u*)(((Bit8u *)output_surface->pixels)+((y)*output_surface->pitch))+x;
+static void OutputString(const Bitu x,
+                         const Bitu y,
+                         const char * text,
+                         const Bit32u color,
+                         const Bit32u color2,
+                         const SDL_Surface * output_surface) {
+	Bit32u * draw = (Bit32u*)((Bit8u*)output_surface->pixels +
+	                           y * output_surface->pitch) + x;
 	while (*text) {
-		Bit8u * font=&int10_font_14[(*text)*14];
-		Bitu i,j;
-		Bit32u * draw_line=draw;
-		for (i=0;i<14;i++) {
-			Bit8u map=*font++;
-			for (j=0;j<8;j++) {
-				if (map & 0x80) *((Bit32u*)(draw_line+j))=color; else *((Bit32u*)(draw_line+j))=color2;
-				map<<=1;
+		Bit8u * font = &int10_font_14[(*text) * 14];
+		Bit32u * draw_line = draw;
+		for (Bitu i = 0; i < 14; i++) {
+			Bit8u map = *font++;
+			for (Bitu j = 0; j < 8; j++) {
+				*(draw_line+j) = map & 0x80 ? color : color2;
+				map <<= 1;
 			}
-			draw_line+=output_surface->pitch/4;
+			draw_line += output_surface->pitch / 4;
 		}
 		text++;
-		draw+=8;
+		draw += 8;
 	}
 }
 
@@ -1453,7 +1464,7 @@ static void GUI_StartUp(Section * sec) {
 
 	}
 
-	// Read and setup the intial mouse capture state
+	// Apply the user's mouse capture and release preferences
 	const std::string capturemouse = section->Get_string("capturemouse");
 	if (capturemouse == "onstart") {
 		sdl.mouse.capture_choice = MouseCaptureType::OnStart;
@@ -1466,17 +1477,18 @@ static void GUI_StartUp(Section * sec) {
 		// should have automatically set the default to 'onclick'
 		assert(sdl.mouse.capture_choice == MouseCaptureType::OnClick);
 	}
-	// Capture the mouse straight away ...
+	// Capture the mouse straight away if fullscreen or configured
 	if (sdl.desktop.fullscreen || sdl.mouse.capture_choice == MouseCaptureType::OnStart) {
 		GFX_ToggleMouseCapture();
-	// Otherwise simply entire the cursor is visible
+	// Otherwise simply ensure the cursor is visible
 	} else {
-		SDL_ShowCursor(1);
+		SDL_ShowCursor(SDL_ENABLE);
 	}
 	// Only setup the Ctrl+F10 capture-toggle if the use wants to capture
 	if (sdl.mouse.capture_choice != MouseCaptureType::Never) {
 		MAPPER_AddHandler(ToggleMouseCapture,MK_f10,MMOD1,"capmouse","Cap Mouse");
 	}
+	sdl.mouse.release_on_middle = section->Get_bool("middlerelease");
 	Prop_multival* p3 = section->Get_multival("sensitivity");
 	sdl.mouse.xsensitivity = p3->GetSection()->Get_int("xsens");
 	sdl.mouse.ysensitivity = p3->GetSection()->Get_int("ysens");
@@ -1508,8 +1520,15 @@ static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
 static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 	switch (button->state) {
 	case SDL_PRESSED:
-		if ((sdl.mouse.capture_choice != MouseCaptureType::Never && !mouse_is_captured)
-		    || (button->button == SDL_BUTTON_MIDDLE && mouse_is_captured)) {
+		// Capture the mouse on any click, if configured
+		// Release the mouse on middle-click if windowed and configured
+		// (Both of the above only apply if the user allows mouse capturing)
+		if (sdl.mouse.capture_choice != MouseCaptureType::Never &&
+		       (!mouse_is_captured ||
+		           (button->button == SDL_BUTTON_MIDDLE &&
+		               !sdl.desktop.fullscreen &&
+		               mouse_is_captured &&
+		               sdl.mouse.release_on_middle))) {
 			GFX_ToggleMouseCapture();
 			// Don't pass click to mouse handler
 			break;
@@ -1842,11 +1861,14 @@ void Config_Add_SDL() {
 	                  "  - onstart: will capture immediately on starting DOSBox\n"
 	                  "  - onclick: will capture after clicking inside the DOSBox window\n"
 	                  "  - never:   will never capture the mouse in windowed-mode\n"
-	                  "  Note 1: The mouse will always be captured when fullscreen, even if set to never\n"
-	                  "  Note 2: Capture-state is retained for 'onstart' and 'onclick' between full and window modes\n"
-	                  "  Note 3: Release with a middle-mouse-click or pressing CTRL-F10");
-
+	                  "  Note 1: The mouse will always be captured in fullscreen, even if set to never.\n"
+	                  "  Note 2: The Capture-state is retained for 'onstart' and 'onclick' between full and window modes.\n"
+	                  "  Note 3: CTRL-F10 can always be used to release the mouse in window-mode.");
 	Pstring->Set_values(mouse_capture_choices);
+
+	Pbool = sdl_sec->Add_bool("middlerelease",Property::Changeable::Always, false);
+	Pbool->Set_help("Allow the middle-mouse button to also release the mouse when in window-mode.\n"
+	                "Set this to false for games that use the middle-mouse button.");
 
 	Pmulti = sdl_sec->Add_multi("sensitivity",Property::Changeable::Always, ",");
 	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).");
@@ -1981,6 +2003,7 @@ void restart_program(std::vector<std::string> & parameters) {
 	delete [] newargs;
 }
 void Restart(bool pressed) { // mapper handler
+	(void) pressed; // deliberately unused but needed for API compliance
 	restart_program(control->startup_params);
 }
 
