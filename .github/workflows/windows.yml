@@ -150,10 +150,9 @@ jobs:
           sed -i "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" dest/README.txt
           sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README.txt
           # Create dir for zipping
-          mkdir dosbox-staging-windows-x86
-          mv dest dosbox-staging-windows-x86/dosbox-staging-${{ env.VERSION }}
+          mv dest dosbox-staging-windows-${{ env.VERSION }}
       - name: Upload package
         uses: actions/upload-artifact@master
         with:
-          name: dosbox-staging-windows-x86
-          path: dosbox-staging-windows-x86
+          name: dosbox-staging-windows-${{ env.VERSION }}
+          path: dosbox-staging-windows-${{ env.VERSION }}

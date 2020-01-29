@@ -80,10 +80,10 @@ jobs:
           sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README
           sed -i "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" dest/README
           sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README
-          mv dest "dosbox-staging-$VERSION"
-          tree --si -p "dosbox-staging-$VERSION"
+          mv dest "dosbox-staging-linux-$VERSION"
+          tree --si -p "dosbox-staging-linux-$VERSION"
           # Create tarball
-          tar -cJf "dosbox-staging-$VERSION.tar.xz" "dosbox-staging-$VERSION"
+          tar -cJf "dosbox-staging-linux-$VERSION.tar.xz" "dosbox-staging-linux-$VERSION"
       - name: Upload tarball
         uses: actions/upload-artifact@master
         # GitHub automatically zips the artifacts (there's no way to create
@@ -91,4 +91,4 @@ jobs:
         # Letting it zip a tarball preserves flags in the compressed files.
         with:
           name: dosbox-staging-linux-x86_64
-          path: dosbox-staging-${{ env.VERSION }}.tar.xz
+          path: dosbox-staging-linux-${{ env.VERSION }}.tar.xz
