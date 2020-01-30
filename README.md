@@ -70,8 +70,8 @@ Pre-release builds can be downloaded from CI build artifacts. Go to
 [Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess)
 or
 [Windows](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess),
-select a build you are interested in, click "**Artifacts**" button (in the top
-right), and download the package.
+select a build you are interested in, and download the package linked in
+the "**Artifacts**" section.
 
 ### [Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess)
 
