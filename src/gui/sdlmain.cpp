@@ -1477,10 +1477,12 @@ static void GUI_StartUp(Section * sec) {
 		// should have automatically set the default to 'onclick'
 		assert(sdl.mouse.capture_choice == MouseCaptureType::OnClick);
 	}
-	// Capture the mouse straight away if fullscreen or configured
+	// Capture the mouse straight-away if fullscreen or configured
 	if (sdl.desktop.fullscreen || sdl.mouse.capture_choice == MouseCaptureType::OnStart) {
+		SDL_RaiseWindow(sdl.window); // ensure DOSBox is in-focus before capturing the mouse
 		GFX_ToggleMouseCapture();
-	// Otherwise simply ensure the cursor is visible
+		/* We don't RaiseWindow for the other capture events because the user needs
+           to click or press Ctrl-F10 to capture, which implicitly focuses the window. */
 	} else {
 		SDL_ShowCursor(SDL_ENABLE);
 	}
