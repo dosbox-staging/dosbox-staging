@@ -1,0 +1,471 @@
+#!/bin/bash
+
+# Copyright (C) 2020  Kevin R Croft <krcroft@gmail.com>
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+##
+#  This script craws the current repo's GitHub workflow content.
+#  It fetches assets and logs from the most recent successful master
+#  run followed by the most recent (and possibly failing) current
+#  branch, which can also be a master branch.
+#  The goal of this script is two fold:
+#    - Provide a mechanized an automated way to fetch CI records.
+#    - Provide a rapid way to diff bad CI runs against master.
+#
+#  This script requires a GitHub account in order to generate an
+#  auth-token. Simply run the script, it will provide instructions.
+#
+set -euo pipefail
+shopt -s nullglob
+
+# Fixed portion of the URL
+declare -gr scheme="https://"
+declare -gr authority="api.github.com"
+
+# Colors
+declare -gr bold="\\e[1m"
+declare -gr red="\\e[31m"
+declare -gr green="\\e[32m"
+declare -gr yellow="\\e[33m"
+declare -gr cyan="\\e[36m"
+declare -gr reset="\\e[0m"
+
+##
+#  Changes the working directory to that of the
+#  repository's root.
+#
+function cd_repo_root() {
+	if [[ "${in_root:-}" != "true" ]]; then
+		script_path="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+		pushd "$script_path" > /dev/null
+		pushd "$(git rev-parse --show-toplevel)" > /dev/null
+		in_root=true
+	fi
+}
+
+##
+#  Determines the full GitHub repo name using the
+#  remote origin set in the repository's configuration
+#
+function init_baseurl() {
+	cd_repo_root
+	# Extract the full GitHub repo name from the origin
+	repo="$(git config --get remote.origin.url | sed 's/.*://;s/\.git$//;s^//[^/]*/^^')"
+	baseurl="$scheme/$authority/repos/$repo/actions"
+	declare -gr repo
+	declare -gr baseurl
+}
+
+##
+#  Determines the local branch name
+#
+function init_local_branch() {
+	cd_repo_root
+	local_branch="$(git rev-parse --abbrev-ref HEAD)"
+	declare -gr local_branch
+}
+
+##
+#  Sets up NETRC credentials for GitHub's v3 API server.
+#  NETRC is currently the most secure way to provide
+#  credentials to CURL, because it prevents other processes
+#  from inspect the process environment and cmd arguments;
+#  both of which can be found in /proc).
+#
+function init_netrc() {
+	# Check and setup the GitHub personal access token
+	local netrc="$HOME/.netrc"
+	if grep -q "^machine $authority" "$netrc"; then
+		echo "Found credentials for $authority in $netrc"
+		return
+	fi
+	# Get the username
+	clear
+	echo ""
+	echo "1. Enter your GitHub account email address, example: jcousteau@scuba.fr"
+	echo ""
+	read -r -p "GitHub account email: " username
+
+	# Get the token
+	clear
+	echo ""
+	echo "2. Login to GitHub and visit https://github.com/settings/tokens"
+	echo ""
+	echo "3. Click 'Generate new token' and set the 'public_repo' permission:"
+	echo ""
+	echo "    [ ]  repo                  Full control of private repos"
+	echo "        [ ] repo:status        Access commit status"
+	echo "        [ ] repo_deployment    Access deployment status"
+	echo "        [X] public_repo        Access public repositories"
+	echo "        [ ] repo:invite        Access repository invitations"
+	echo ""
+	echo "   Type a name for the token then scroll down and click 'Generate Token'."
+	echo ""
+	echo "4. Copy & paste your token, for example: f7e6b2344bd2c1487597b61d77703527a692a072"
+	echo ""
+	# Deliberately echo the token so the user can verify its correctness
+	read -r -p "Personal Access Token: " token
+
+	# Add the credential to netrc
+	clear
+	if [[ -n "${username:-}" && -n "${token:-}" ]]; then
+		{
+			echo "machine $authority"
+			echo "login $username"
+			echo "password $token"
+			echo ""
+		} >> "$netrc"
+		echo "Added your credentials to $netrc"
+		# Ensure netrc is only readable by the user
+		chmod 600 "$netrc"
+	else
+		echo "Failed to setup $netrc or some of the credentials were empty!"
+		exit 1
+	fi
+}
+
+##
+#  Makes strings suitable for directory and filenames
+#   - spaces => underscores
+#   - upper-case => lower-case
+#   - slashes => dashes
+#   - parenthesis => stripped
+#   - equals  => dashes
+#
+function sanitize_name() {
+	local name="$1"
+	echo "$name" | sed 's/\(.*\)/\L\1/;s/ /_/g;s^/^-^g;s/[()]//g;s/=/-/g'
+}
+
+##
+#  Returns how old a file or directory is, in seconds.
+#
+function seconds_old() {
+	echo $(( "$(date +%s)" - "$(stat -L --format %Y "$1")" ))
+}
+
+##
+#  Creates a storage area for all content fetched by the script.
+#  This include cached JSON output (valid for 5 minutes), along
+#  with zip assets, log files, and diffs.
+#
+declare -g parent # used by the trap
+function init_dirs() {
+	local repo_postfix
+	repo_postfix="$(basename "$repo")"
+	parent="/tmp/$repo_postfix-workflows-$USER"
+	assets_dir="$parent/assets"
+	cache_dir="$parent/cache"
+	diffs_dir="$parent/diffs"
+	logs_dir="$parent/logs"
+	declare -gr assets_dir
+	declare -gr cache_dir
+	declare -gr diffs_dir
+	declare -gr logs_dir
+	echo "Initializing storage area: $parent"
+
+	# Don't trust content from a prior interrupted run
+	if [[ -f "$parent/.interrupted" ]]; then
+		rm -rf "$parent"
+	fi
+
+	# Make the directories if they don't exist
+	for dir in "$assets_dir" "$cache_dir" "$diffs_dir" "$logs_dir"; do
+		if [[ ! -d "$dir" ]]; then
+			mkdir -p "$dir"
+		# Otherwise, purge content older than 5-minutes
+		else
+			for filename in "$dir"/*; do
+				if [[ "$(seconds_old "$filename")" -gt 300 ]]; then
+					rm -rf "$filename"
+				fi
+			done
+		fi
+	done
+	# If the user Ctrl-C'd the job, then some files might be
+	# partially written, so drop a breadcrumb to clean up next run.
+	# (we could just blow away the content here, but we want to
+	# let the user inspect content after interrupting the run.)
+	trap 'touch $parent/.interrupted' INT
+}
+
+##
+#  Ensures all pre-requisites are setup and have passed
+#  before we start making REST queries and writing files.
+#
+function init() {
+	init_baseurl
+	init_local_branch
+	init_netrc
+	init_dirs
+}
+
+##
+#  Downloads a file if we otherwise don't have it.
+#  (Note that the script on launch cleans up files older than
+#  5 minutes, so most of the time we'll be downloading.)
+#
+function download() {
+	local url="$1"
+	local outfile="$2"
+	if [[ ! -f "$outfile" ]]; then
+		curl --silent     \
+		     --location   \
+		     --netrc      \
+		     "$url"       \
+		     -o "$outfile"
+	fi
+}
+
+##
+#  Unzips files inside their containing directory.
+#  Clobbers existing files.
+#
+function unpack() {
+	local zipfile="$1"
+	local zipdir
+	zipdir="$(dirname "$zipfile")"
+	pushd "$zipdir" > /dev/null
+	unzip -qq -o "$zipfile"
+	rm -f "$zipfile"
+	popd > /dev/null
+}
+
+##
+#  Constructs and fetches REST urls using our personal access
+#  token. Files are additionally hashed based on the REST URL
+#  and cached.  This allows for rapid-rerunning without needing
+#  to hit GitHub's API again (for duplicate requests). This
+#  avoid us exceeding our repo limit on API calls/day.
+#
+function pull() {
+	# Buildup the REST URL by appending arguments
+	local url="$baseurl"
+	for element in "$@"; do
+		url="$url/$element"
+	done
+	local url_hash
+	url_hash="$(echo "$url" | md5sum | cut -f1 -d' ')"
+	local outfile="${cache_dir}/${url_hash}.json"
+	if [[ ! -f "$outfile" ]]; then
+		download "$url" "$outfile"
+	fi
+	cat "$outfile"
+}
+
+##
+#  Gets one or more keys from all records
+#
+function get_all() {
+	local container="$1"
+	local return_keys="$2"
+	jq -r '.'"$container"'[] | '"${return_keys}"
+}
+
+##
+#  Gets one or more return_key(s) from records that have
+#  matching search_key and search_value hits
+#
+function query() {
+	local container="$1"
+	local search_key="$2"
+	local search_value="$3"
+	local return_keys="$4"
+	jq -r --arg value "$search_value"\
+	'.'"${container}"'[] | if .'"${search_key}"' == $value then '"${return_keys}"' else empty end'
+}
+
+##
+#  Pulls the subset of active workflows from GitHub having
+#  path values that match the local repos filenames inside
+#  .github/workflows (otherwise there are 30+ workflows).
+#
+#  The workflow numeric ID and textual name are stored
+#  in an associated array, respectively.
+#
+#  API References:
+#   - https://developer.github.com/v3/actions/workflows/
+#   - GET /repos/:owner/:repo/actions/workflows
+#
+function fetch_workflows() {
+	unset workflows
+	declare -gA workflows
+	for workflow_path in ".github/workflows/"*.yml; do
+		local result
+		result="$(pull workflows \
+	            | query workflows path "$workflow_path" '.id,.name')"
+		local id
+		id="${result%$'\n'*}"
+		local name
+		name="${result#*$'\n'}"
+
+		# Skip empty values and a couple master-only workflows
+		if [[ -z "${id:-}" \
+		   || -z "${name:-}" \
+		   || "$name" == "Config heavy" \
+		   || "$name" == "Coverity Scan" ]]; then
+			continue
+		fi
+		workflows["$id"]="$(sanitize_name "$name")"
+	done
+}
+
+##
+#  Fetches the first run identifier for a given workflow ID
+#  and branch name. The run ID is stored in the run_id variable.
+#
+#  API References:
+#   - https://developer.github.com/v3/actions/workflow_runs
+#   - GET /repos/:owner/:repo/actions/runs/:run_id
+#
+function fetch_workflow_run() {
+	declare -g run_id
+	local workflow_id="$1"
+	local branch="$2"
+	# GET /repos/:owner/:repo/actions/workflows/:workflow_id/runs
+	run_id="$(pull workflows "$workflow_id" runs \
+	       | query workflow_runs head_branch "$branch" '.id' \
+	       | head -1)"
+}
+
+##
+#  Fetches artifact names and download URLs for a given run ID,
+#  and stored them in an assiciative array, respectively.
+#
+#  API References:
+#   - https://developer.github.com/v3/actions/artifacts
+#   - GET /repos/:owner/:repo/actions/runs/:run_id/artifacts
+#
+function fetch_run_artifacts() {
+	unset artifacts
+	declare -gA artifacts
+	while read -r name; do
+		read -r url
+		sanitized_name="$(sanitize_name "$name")"
+		artifacts["$sanitized_name"]="$url"
+	done < <(pull runs "$run_id" artifacts \
+	         | get_all artifacts '.name,.archive_download_url')
+}
+
+##
+#  Fetches the job IDs and job names for a given run ID.
+#  The job IDs and names are stored in an associative array,
+#  respectively.
+#
+#  API References:
+#   - https://developer.github.com/v3/actions/workflow_jobs
+#   - GET /repos/:owner/:repo/actions/runs/:run_id/jobs
+#
+function fetch_run_jobs() {
+	unset jobs_array
+	declare -gA jobs_array
+	local conclusion="$1" # success or failure
+	while read -r id; do
+		read -r name
+		jobs_array["$id"]="$(sanitize_name "$name")"
+	done < <(pull runs "$run_id" jobs \
+	         | query jobs conclusion "$conclusion" '.id,.name')
+}
+
+##
+#  Fetches a job's log, and saves it in the provided output
+#  filename. The logs prefix time-stamps are filtered for easier
+#  text processing.
+#
+#  API References:
+#   - https://developer.github.com/v3/actions/workflow_jobs
+#   - GET /repos/:owner/:repo/actions/jobs/:job_id/logs
+#
+function fetch_job_log() {
+	local jid="$1"
+	local outfile="$2"
+	pull jobs "$jid" logs \
+	| sed 's/^.*Z[ \t]*//;s/:[[:digit:]]*:[[:digit:]]*://;s/\[/./g;s/\]/./g' \
+	> "$outfile"
+}
+
+##
+#  Crawl workflows, runs, and jobs for the master and current branch.
+#  While crawling, download assets and logs, and if a run failed, diff
+#  that log against the last successful master-equivalent having the same
+#  workflow and job type.
+#
+#  TODO - Refactor into smaller functions and trying to flatten the loop depth.
+#  TODO - Improve the log differ to something that can lift out just the
+#         gcc/clang/vistual-studio warnings and errors, and diff them.
+#
+function main() {
+	# Setup all pre-requisites
+	init
+	echo "Comparing branch $local_branch with master"
+	echo ""
+
+	# Fetch the workflows, to be used throughout the run
+	fetch_workflows
+
+	# Step through each workflow
+	for workflow_id in "${!workflows[@]}"; do
+		workflow_name="${workflows[$workflow_id]}"
+		echo -e "${bold}${workflow_name}${reset} workflow [$workflow_id]"
+
+		# Within the workflows, we're interested in finding the newest subset of
+		# runs that match our current branch as well as the master branch.
+		for branch in master current; do
+			if [[ "$branch" == "current" ]]; then
+				branch_name="$local_branch"
+			else
+				branch_name="master"
+			fi
+
+			# Get the run identifier for the given workflow and branch
+			fetch_workflow_run "$workflow_id" "$branch_name"
+			if [[ -z "${run_id:-}" ]]; then
+				echo "  \`- no runs found for $branch_name"
+				continue
+			fi
+			[[ "$branch" == "master" ]] && joiner="|-" || joiner="\`-"
+			echo "  $joiner found latest $branch_name run [$run_id]"
+
+			# Download the artifacts produced during the selected run
+			fetch_run_artifacts
+			[[ "$branch" == "master" ]] && joiner="|" || joiner=" "
+			for artifact_name in "${!artifacts[@]}"; do
+				artifact_url="${artifacts[$artifact_name]}"
+				asset_file="$assets_dir/$workflow_name-$artifact_name-$branch.zip"
+				download "$artifact_url" "$asset_file"
+				unpack "$asset_file"
+				echo -e "  $joiner     - unpacking ${cyan}${artifact_name}${reset} asset"
+			done
+
+			# Download the logs for the jobs within the selected run
+			for conclusion in failure success; do
+				if ! fetch_run_jobs "$conclusion"; then
+					echo "      \`- skipped $job_id $conclusion"
+					continue
+				fi
+				[[ "$conclusion" == "success" ]] && color="${green}" || color="${red}"
+				for job_id in "${!jobs_array[@]}"; do
+					job_name="${jobs_array[$job_id]}"
+					echo -e "  $joiner     - fetching  ${color}${job_name}${reset} ${conclusion} log"
+					log_file="$logs_dir/$workflow_name-$job_name-$branch-$conclusion.log"
+					successful_master_log="$logs_dir/$workflow_name-$job_name-master-success.log"
+					fetch_job_log "$job_id" "$log_file"
+
+					# In the event we've found a failed job, try to diff it against a prior
+					# successful master job of the equivalent workflow and job-type.
+					if [[ "$conclusion" == "failure"
+					&& -f "$log_file"
+					&& -f "$successful_master_log" ]]; then
+						sanitized_branch_name="$(sanitize_name "$branch_name")"
+						diff_file="$diffs_dir/$workflow_name-$job_name-$sanitized_branch_name-vs-master.log"
+						diff "$log_file" "$successful_master_log" > "$diff_file" || true
+						echo -e "        - diffed    ${yellow}$diff_file${reset}"
+					fi
+				done # jobs_array
+			done # conclusion types
+			echo "  $joiner"
+		done # branch types
+	done # workflows
+}
+
+main
