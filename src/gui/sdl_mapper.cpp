@@ -112,6 +112,7 @@ public:
 	virtual ~CEvent() = default;
 
 	void AddBind(CBind * bind);
+	void ClearBinds();
 	virtual void Active(bool yesno)=0;
 	virtual void ActivateEvent(bool ev_trigger,bool skip_action)=0;
 	virtual void DeActivateEvent(bool ev_trigger)=0;
@@ -281,6 +282,12 @@ public:
 void CEvent::AddBind(CBind * bind) {
 	bindlist.push_front(bind);
 	bind->event=this;
+}
+void CEvent::ClearBinds() {
+	for (CBind *bind : bindlist) {
+		delete bind;
+	}
+	bindlist.clear();
 }
 void CEvent::DeActivateAll(void) {
 	for (CBindList_it bit=bindlist.begin();bit!=bindlist.end();bit++) {
@@ -2137,7 +2144,14 @@ static struct {
 	{0, SDL_SCANCODE_UNKNOWN}
 };
 
+static void ClearAllBinds(void) {
+	for (CEvent *event : events) {
+		event->ClearBinds();
+	}
+}
+
 static void CreateDefaultBinds(void) {
+	ClearAllBinds();
 	char buffer[512];
 	Bitu i=0;
 	while (DefaultKeys[i].eventend) {
@@ -2230,6 +2244,7 @@ static void MAPPER_SaveBinds(void) {
 static bool MAPPER_LoadBinds(void) {
 	FILE * loadfile=fopen(mapper.filename.c_str(),"rt");
 	if (!loadfile) return false;
+	ClearAllBinds();
 	char linein[512];
 	while (fgets(linein,512,loadfile)) {
 		CreateStringBind(linein);
@@ -2537,8 +2552,8 @@ void MAPPER_RunInternal() {
 
 void MAPPER_Init(void) {
 	InitializeJoysticks();
-	CreateLayout();
-	CreateBindGroups();
+	if (buttons.empty()) CreateLayout();
+	if (bindgroups.empty()) CreateBindGroups();
 	if (!MAPPER_LoadBinds()) CreateDefaultBinds();
 	for (CButton_it but_it = buttons.begin();but_it!=buttons.end();but_it++) {
 		(*but_it)->BindColor();
@@ -2557,12 +2572,19 @@ void MAPPER_Init(void) {
 	}
 }
 
+static void ReloadMapper(Section *sec) {
+	Section_prop const *const section=static_cast<Section_prop *>(sec);
+	Prop_path const *const pp = section->Get_path("mapperfile");
+	mapper.filename = pp->realpath;
+	GFX_LosingFocus(); //Release any keys pressed, or else they'll get stuck.
+	MAPPER_Init();
+}
+
 void MAPPER_StartUp(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
+	section->AddInitFunction(&ReloadMapper, true); //runs immediately after this function ends
 	mapper.sticks.num=0;
 	mapper.sticks.num_groups=0;
 	memset(&virtual_joysticks,0,sizeof(virtual_joysticks));
-	Prop_path* pp = section->Get_path("mapperfile");
-	mapper.filename = pp->realpath;
 	MAPPER_AddHandler(&MAPPER_Run,MK_f1,MMOD1,"mapper","Mapper");
 }
