@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -113,10 +113,15 @@ extern char** environ;
 #define PRIO_TOTAL (PRIO_MAX-PRIO_MIN)
 #endif
 
-enum class MouseCaptureType {
+SDL_bool mouse_is_captured = SDL_FALSE; // global for mapper
+enum class MouseCaptureEvent {
 	OnStart,
 	OnClick,
 	Never
+};
+enum class MouseCaptureType {
+	Bounded,
+	Seamless
 };
 
 enum SCREEN_TYPES	{
@@ -201,8 +206,9 @@ struct SDL_Block {
 		Bitu sensitivity;
 		int xsensitivity;
 		int ysensitivity;
-		MouseCaptureType capture_choice;
-		bool release_on_middle;
+		MouseCaptureEvent capture_event;
+		MouseCaptureType capture_type;
+		bool middle_release;
 	} mouse;
 	SDL_Rect updateRects[1024];
 	Bitu num_joysticks;
@@ -228,7 +234,7 @@ void OPENGL_ERROR(const char* message) {
 		LOG_MSG("%X",r);
 	} while ((r=glGetError()) != GL_NO_ERROR);
 }
-#else 
+#else
 void OPENGL_ERROR(const char*) {
 	return;
 }
@@ -673,7 +679,7 @@ dosurface:
 			goto dosurface;
 		}
 		if (strcmp(sdl.rendererDriver, "auto"))
-			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.rendererDriver); 
+			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.rendererDriver);
 		sdl.renderer = SDL_CreateRenderer(sdl.window, -1,
 		                                  SDL_RENDERER_ACCELERATED |
 		                                  (sdl.desktop.vsync ? SDL_RENDERER_PRESENTVSYNC : 0));
@@ -853,17 +859,19 @@ dosurface:
 	return retFlags;
 }
 
-SDL_bool mouse_is_captured = SDL_FALSE; // global for mapper
 void GFX_ToggleMouseCapture(void) {
+	if (sdl.mouse.capture_event == MouseCaptureEvent::Never) {
+		return;
+	}
 	mouse_is_captured = mouse_is_captured ? SDL_FALSE : SDL_TRUE;
-	// Toggling SetRelativeMouseMode will hide (or show) the mouse cursor
 	if (SDL_SetRelativeMouseMode(mouse_is_captured) != 0) {
-		// but if it fails, then force the cursor visible and quit
 		SDL_ShowCursor(SDL_ENABLE);
 		E_Exit("SDL: failed to %s relative-mode [BUG!]",
-		       mouse_is_captured ? "put the mouse in" : "take the mouse out of");
+   		       mouse_is_captured ? "put the mouse in" : "take the mouse out of");
 	}
-	LOG_MSG("SDL: mouse is %s", mouse_is_captured ? "captured" : "released");
+	LOG_MSG("SDL: %s mouse in %s-mode",
+	        mouse_is_captured ? "captured" : "released",
+	        sdl.mouse.capture_type == MouseCaptureType::Bounded ? "bounded" : "seamless");
 }
 
 static void ToggleMouseCapture(bool pressed) {
@@ -914,7 +922,7 @@ void GFX_SwitchFullScreen(void) {
 		}
 	} else { // leaving fullscreen mode
 		// only un-capture if the user requested to never capture the mouse
-		if (sdl.mouse.capture_choice == MouseCaptureType::Never) {
+		if (sdl.mouse.capture_type == MouseCaptureType::Seamless) {
 			GFX_ToggleMouseCapture();
 		}
 	}
@@ -1464,33 +1472,46 @@ static void GUI_StartUp(Section * sec) {
 
 	}
 
-	// Apply the user's mouse capture and release preferences
-	const std::string capturemouse = section->Get_string("capturemouse");
-	if (capturemouse == "onstart") {
-		sdl.mouse.capture_choice = MouseCaptureType::OnStart;
-	} else if (capturemouse == "onclick") {
-		sdl.mouse.capture_choice = MouseCaptureType::OnClick;
-	} else if (capturemouse == "never") {
-		sdl.mouse.capture_choice = MouseCaptureType::Never;
+	// Apply the user's mouse capture settings
+	Section_prop* s = section->Get_multival("capture_mouse")->GetSection();
+	const std::string mouse_capture_event = s->Get_string("event");
+	if (mouse_capture_event == "onstart") {
+		sdl.mouse.capture_event = MouseCaptureEvent::OnStart;
+	} else if (mouse_capture_event == "onclick") {
+		sdl.mouse.capture_event = MouseCaptureEvent::OnClick;
+	} else if (mouse_capture_event == "never") {
+		sdl.mouse.capture_event = MouseCaptureEvent::Never;
 	} else {
-		// If an invalid value is provided, the section handler
-		// should have automatically set the default to 'onclick'
-		assert(sdl.mouse.capture_choice == MouseCaptureType::OnClick);
+		assert(sdl.mouse.capture_event == MouseCaptureEvent::OnClick);
 	}
+	const std::string mouse_capture_type = s->Get_string("type");
+	if (mouse_capture_type == "bounded") {
+		sdl.mouse.capture_type = MouseCaptureType::Bounded;
+	} else if (mouse_capture_type == "seamless") {
+        sdl.mouse.capture_type = MouseCaptureType::Seamless;
+	} else {
+		assert(sdl.mouse.capture_type == MouseCaptureType::Bounded);
+	}
+	sdl.mouse.middle_release = std::string(s->Get_string("middle_release")) == "middle_release";
+	LOG_MSG("middle = %s", sdl.mouse.middle_release ? "true" : "false");
+
+
 	// Capture the mouse straight-away if fullscreen or configured
-	if (sdl.desktop.fullscreen || sdl.mouse.capture_choice == MouseCaptureType::OnStart) {
+	if (sdl.desktop.fullscreen || (
+		sdl.mouse.capture_event == MouseCaptureEvent::OnStart &&
+		sdl.mouse.capture_type == MouseCaptureType::Bounded)) {
 		SDL_RaiseWindow(sdl.window); // ensure DOSBox is in-focus before capturing the mouse
 		GFX_ToggleMouseCapture();
 		/* We don't RaiseWindow for the other capture events because the user needs
            to click or press Ctrl-F10 to capture, which implicitly focuses the window. */
-	} else {
-		SDL_ShowCursor(SDL_ENABLE);
+	} else if (sdl.mouse.capture_type != MouseCaptureType::Bounded) {
+		SDL_ShowCursor(SDL_DISABLE);
 	}
+
 	// Only setup the Ctrl+F10 capture-toggle if the use wants to capture
-	if (sdl.mouse.capture_choice != MouseCaptureType::Never) {
+	if (sdl.mouse.capture_event != MouseCaptureEvent::Never) {
 		MAPPER_AddHandler(ToggleMouseCapture,MK_f10,MMOD1,"capmouse","Cap Mouse");
 	}
-	sdl.mouse.release_on_middle = section->Get_bool("middlerelease");
 	Prop_multival* p3 = section->Get_multival("sensitivity");
 	sdl.mouse.xsensitivity = p3->GetSection()->Get_int("xsens");
 	sdl.mouse.ysensitivity = p3->GetSection()->Get_int("ysens");
@@ -1511,12 +1532,16 @@ static void GUI_StartUp(Section * sec) {
 }
 
 static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
-	if (mouse_is_captured)
+	if (mouse_is_captured ||
+	    (sdl.mouse.capture_event != MouseCaptureEvent::Never &&
+		 sdl.mouse.capture_type == MouseCaptureType::Seamless)) {
+
 		Mouse_CursorMoved((float)motion->xrel*sdl.mouse.xsensitivity/100.0f,
 						  (float)motion->yrel*sdl.mouse.ysensitivity/100.0f,
 						  (float)(motion->x-sdl.clip.x)/(sdl.clip.w-1)*sdl.mouse.xsensitivity/100.0f,
 						  (float)(motion->y-sdl.clip.y)/(sdl.clip.h-1)*sdl.mouse.ysensitivity/100.0f,
 						  mouse_is_captured);
+	}
 }
 
 static void HandleMouseButton(SDL_MouseButtonEvent * button) {
@@ -1525,12 +1550,13 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 		// Capture the mouse on any click, if configured
 		// Release the mouse on middle-click if windowed and configured
 		// (Both of the above only apply if the user allows mouse capturing)
-		if (sdl.mouse.capture_choice != MouseCaptureType::Never &&
+		if (sdl.mouse.capture_event != MouseCaptureEvent::Never &&
+		    sdl.mouse.capture_type == MouseCaptureType::Bounded &&
 		       (!mouse_is_captured ||
 		           (button->button == SDL_BUTTON_MIDDLE &&
 		               !sdl.desktop.fullscreen &&
 		               mouse_is_captured &&
-		               sdl.mouse.release_on_middle))) {
+		               sdl.mouse.middle_release))) {
 			GFX_ToggleMouseCapture();
 			// Don't pass click to mouse handler
 			break;
@@ -1812,6 +1838,7 @@ void Config_Add_SDL() {
 	Prop_string* Pstring;
 	Prop_int* Pint;
 	Prop_multival* Pmulti;
+	Section_prop* Psection;
 
 	Pbool = sdl_sec->Add_bool("fullscreen",Property::Changeable::Always,false);
 	Pbool->Set_help("Start dosbox directly in fullscreen. (Press ALT-Enter to go back)");
@@ -1852,25 +1879,14 @@ void Config_Add_SDL() {
 	                  "Use output=auto for an automatic choice.");
 	Pstring->Set_values(Get_SDL_TextureRenderers());
 
-	const char *mouse_capture_choices[] = {
-		"onstart",
-		"onclick",
-		"never",
-		0
-	};
-	Pstring = sdl_sec->Add_string("capturemouse",Property::Changeable::Always,"onclick");
-	Pstring->Set_help("Choose when the mouse will be captured {onstart, onclick, or never}:\n"
-	                  "  - onstart: will capture immediately on starting DOSBox\n"
-	                  "  - onclick: will capture after clicking inside the DOSBox window\n"
-	                  "  - never:   will never capture the mouse in windowed-mode\n"
-	                  "  Note 1: The mouse will always be captured in fullscreen, even if set to never.\n"
-	                  "  Note 2: The Capture-state is retained for 'onstart' and 'onclick' between full and window modes.\n"
-	                  "  Note 3: CTRL-F10 can always be used to release the mouse in window-mode.");
-	Pstring->Set_values(mouse_capture_choices);
 
-	Pbool = sdl_sec->Add_bool("middlerelease",Property::Changeable::Always, false);
-	Pbool->Set_help("Allow the middle-mouse button to also release the mouse when in window-mode.\n"
-	                "Set this to false for games that use the middle-mouse button.");
+	const char *mouse_capture_events[] = { "onstart", "onclick", "never", 0	};
+	const char *mouse_capture_types[] = { "bounded", "seamless", 0 };
+	const char *mouse_middle_release[] = { "no_middle_release",	"middle_release", 0 };
+	Psection = sdl_sec->Add_multi("capture_mouse", Property::Changeable::Always, " ")->GetSection();
+    Psection->Add_string("event", Property::Changeable::Always, "onclick")->Set_values(mouse_capture_events);
+    Psection->Add_string("type", Property::Changeable::Always, "bounded")->Set_values(mouse_capture_types);
+    Psection->Add_string("middle_release", Property::Changeable::Always, "no_middle_release")->Set_values(mouse_middle_release);
 
 	Pmulti = sdl_sec->Add_multi("sensitivity",Property::Changeable::Always, ",");
 	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).");
@@ -2162,7 +2178,7 @@ int main(int argc, char* argv[]) {
 
 	/* Display Welcometext in the console */
 	LOG_MSG("DOSBox version %s",VERSION);
-	LOG_MSG("Copyright 2002-2019 DOSBox Team, published under GNU GPL.");
+	LOG_MSG("Copyright 2002-2020 DOSBox Team, published under GNU GPL.");
 	LOG_MSG("---");
 
 	/* Init SDL */
@@ -2295,8 +2311,7 @@ int main(int argc, char* argv[]) {
 #if defined (WIN32)
 	sticky_keys(true); //Might not be needed if the shutdown function switches to windowed mode, but it doesn't hurt
 #endif
-	//Force visible mouse to end user. Somehow this sometimes doesn't happen
-	SDL_SetRelativeMouseMode(SDL_FALSE);
+	//Force visible mouse to end user, because sometimes this doesn't happen automatically
 	SDL_ShowCursor(SDL_ENABLE);
 
 	SDL_Quit_Wrapper(); // Let's hope sdl will quit as well when it catches an exception
