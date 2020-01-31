@@ -135,7 +135,6 @@ bool Mouse_SetPS2State(bool use) {
 		return false;
 	}
 	useps2callback = use;
-	Mouse_AutoLock(useps2callback);
 	PIC_SetIRQMask(MOUSE_IRQ,!useps2callback);
 	return true;
 }
@@ -143,13 +142,11 @@ bool Mouse_SetPS2State(bool use) {
 void Mouse_ChangePS2Callback(Bit16u pseg, Bit16u pofs) {
 	if ((pseg==0) && (pofs==0)) {
 		ps2callbackinit = false;
-		Mouse_AutoLock(false);
 	} else {
 		ps2callbackinit = true;
 		ps2cbseg = pseg;
 		ps2cbofs = pofs;
 	}
-	Mouse_AutoLock(ps2callbackinit);
 }
 
 void DoPS2Callback(Bit16u data, Bit16s mouseX, Bit16s mouseY) {
@@ -731,12 +728,10 @@ static Bitu INT33_Handler(void) {
 		reg_ax=0xffff;
 		reg_bx=MOUSE_BUTTONS;
 		Mouse_Reset();
-		Mouse_AutoLock(true);
 		break;
 	case 0x01:	/* Show Mouse */
 		if(mouse.hidden) mouse.hidden--;
 		mouse.updateRegion_y[1] = -1; //offscreen
-		Mouse_AutoLock(true);
 		DrawCursor();
 		break;
 	case 0x02:	/* Hide Mouse */
@@ -853,7 +848,6 @@ static Bitu INT33_Handler(void) {
 		mouse.sub_mask=reg_cx;
 		mouse.sub_seg=SegValue(es);
 		mouse.sub_ofs=reg_dx;
-		Mouse_AutoLock(true); //Some games don't seem to reset the mouse before using
 		break;
 	case 0x0f:	/* Define mickey/pixel rate */
 		Mouse_SetMickeyPixelRate(reg_cx,reg_dx);

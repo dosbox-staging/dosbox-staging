@@ -69,8 +69,4 @@ bool GFX_SDLUsingWinDIB(void);
 void MAPPER_UpdateJoysticks(void);
 #endif
 
-/* Mouse related */
-void GFX_CaptureMouse(void);
-extern bool mouselocked; //true if mouse is confined to window
-
 #endif
