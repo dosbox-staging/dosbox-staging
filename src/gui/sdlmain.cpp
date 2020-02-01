@@ -546,7 +546,7 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType)
 			 * (partly caused by the rounding issues fix in RENDER_SetSize)
 			 */
 			sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex*ratio_h + 0.4);
-			sdl.clip.h=(Bit16u)fixedHeight;
+			sdl.clip.h = fixedHeight;
 		}
 
 		if (sdl.desktop.fullscreen) {
@@ -728,7 +728,7 @@ dosurface:
 		if (sdl.opengl.pixel_buffer_object) {
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 			if (sdl.opengl.buffer) glDeleteBuffersARB(1, &sdl.opengl.buffer);
-		} else if (sdl.opengl.framebuf) {
+		} else {
 			free(sdl.opengl.framebuf);
 		}
 		sdl.opengl.framebuf=0;
@@ -1205,7 +1205,7 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 		for (i=0;i<14;i++) {
 			Bit8u map=*font++;
 			for (j=0;j<8;j++) {
-				if (map & 0x80) *((Bit32u*)(draw_line+j))=color; else *((Bit32u*)(draw_line+j))=color2;
+				*(draw_line + j) = map & 0x80 ? color : color2;
 				map<<=1;
 			}
 			draw_line+=output_surface->pitch/4;
@@ -1897,7 +1897,7 @@ void Config_Add_SDL() {
 	std::string mouse_control_defaults(mouse_controls[0]);
 	mouse_control_defaults += " ";
 	mouse_control_defaults += middle_controls[0];
-	Pmulti->SetValue(mouse_control_defaults.c_str());
+	Pmulti->SetValue(mouse_control_defaults);
 
 	// Add the mouse and middle control as sub-sections
 	Psection = Pmulti->GetSection();
@@ -1918,7 +1918,7 @@ void Config_Add_SDL() {
 		"                   or when seamless control is set. Ctrl-F10 will also uncapture the mouse.\n"
 		"Defaults (if not present or incorrect): ");
 	mouse_control_help += mouse_control_defaults;
-	Pmulti->Set_help(mouse_control_help.c_str());
+	Pmulti->Set_help(mouse_control_help);
 
 	Pmulti = sdl_sec->Add_multi("sensitivity",Property::Changeable::Always, ",");
 	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).");
@@ -2053,6 +2053,7 @@ void restart_program(std::vector<std::string> & parameters) {
 	delete [] newargs;
 }
 void Restart(bool pressed) { // mapper handler
+	(void) pressed; // deliberately unused but required for API compliance
 	restart_program(control->startup_params);
 }
 
