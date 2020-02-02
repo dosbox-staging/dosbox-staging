@@ -70,3 +70,6 @@ make.log
 pvs-*
 strace_out
 suppress_base.json
+
+# macOS directory prefs
+.DS_Store
