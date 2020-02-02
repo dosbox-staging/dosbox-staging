@@ -16,11 +16,11 @@ jobs:
           - compiler: Clang
             bits: 32
             arch: i686
-            max_warnings: 73
+            max_warnings: 62
           - compiler: Clang
             bits: 64
             arch: x86_64
-            max_warnings: 110
+            max_warnings: 100
           - compiler: GCC
             bits: 32
             arch: i686
