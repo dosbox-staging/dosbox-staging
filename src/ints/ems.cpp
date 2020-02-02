@@ -1306,7 +1306,7 @@ private:
 	/* location in protected unfreeable memory where the ems name and callback are
 	 * stored  32 bytes.*/
 	static Bit16u ems_baseseg;
-	RealPt old4b_pointer,old67_pointer;
+	RealPt old67_pointer;
 	CALLBACK_HandlerObject call_vdma,call_vcpi,call_v86mon;
 	Bitu call_int67;
 
