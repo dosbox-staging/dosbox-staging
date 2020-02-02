@@ -403,14 +403,14 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 			case 15:
 				if (flags & CAPTURE_FLAG_DBLW) {
 					for (Bitu x=0;x<countWidth;x++) {
-						Bitu pixel = ((Bit16u *)srcLine)[x];
+						const Bitu pixel = host_to_le(static_cast<uint16_t *>(srcLine)[x]);
 						doubleRow[x*6+0] = doubleRow[x*6+3] = ((pixel& 0x001f) * 0x21) >>  2;
 						doubleRow[x*6+1] = doubleRow[x*6+4] = ((pixel& 0x03e0) * 0x21) >>  7;
 						doubleRow[x*6+2] = doubleRow[x*6+5] = ((pixel& 0x7c00) * 0x21) >>  12;
 					}
 				} else {
 					for (Bitu x=0;x<countWidth;x++) {
-						Bitu pixel = ((Bit16u *)srcLine)[x];
+						const Bitu pixel = host_to_le(static_cast<uint16_t *>(srcLine)[x]);
 						doubleRow[x*3+0] = ((pixel& 0x001f) * 0x21) >>  2;
 						doubleRow[x*3+1] = ((pixel& 0x03e0) * 0x21) >>  7;
 						doubleRow[x*3+2] = ((pixel& 0x7c00) * 0x21) >>  12;
@@ -421,14 +421,14 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 			case 16:
 				if (flags & CAPTURE_FLAG_DBLW) {
 					for (Bitu x=0;x<countWidth;x++) {
-						Bitu pixel = ((Bit16u *)srcLine)[x];
+						const Bitu pixel = host_to_le(static_cast<uint16_t *>(srcLine)[x]);
 						doubleRow[x*6+0] = doubleRow[x*6+3] = ((pixel& 0x001f) * 0x21) >> 2;
 						doubleRow[x*6+1] = doubleRow[x*6+4] = ((pixel& 0x07e0) * 0x41) >> 9;
 						doubleRow[x*6+2] = doubleRow[x*6+5] = ((pixel& 0xf800) * 0x21) >> 13;
 					}
 				} else {
 					for (Bitu x=0;x<countWidth;x++) {
-						Bitu pixel = ((Bit16u *)srcLine)[x];
+						const Bitu pixel = host_to_le(static_cast<uint16_t *>(srcLine)[x]);
 						doubleRow[x*3+0] = ((pixel& 0x001f) * 0x21) >>  2;
 						doubleRow[x*3+1] = ((pixel& 0x07e0) * 0x41) >>  9;
 						doubleRow[x*3+2] = ((pixel& 0xf800) * 0x21) >>  13;
