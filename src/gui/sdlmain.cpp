@@ -24,7 +24,7 @@
 #include "dosbox.h"
 
 #include <cassert>
-#include <stdlib.h>
+#include <cstdlib>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -244,11 +244,6 @@ static int SDL_Init_Wrapper(void)
 	// a fair amount of power (Macs again).
 	// Please report problems with audio and other things.
 	return SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
-}
-
-static void SDL_Quit_Wrapper(void)
-{
-	SDL_Quit();
 }
 
 extern const char* RunningProgram;
@@ -1949,19 +1944,20 @@ void Config_Add_SDL() {
 }
 
 static void show_warning(char const * const message) {
-	bool textonly = true;
-#ifdef WIN32
-	textonly = false;
-	if ( !sdl.inited && SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) < 0 ) textonly = true;
-	sdl.inited = true;
+#ifndef WIN32
+	printf("%s", message);
+	return;
 #endif
-	printf("%s",message);
-	if(textonly) return;
-	if (!sdl.window)
-		if (!GFX_SetSDLSurfaceWindow(640, 400))
-			return;
+	if (!sdl.inited && SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) < 0) {
+		sdl.inited = true;
+		printf("%s",message);
+		return;
+	}
+	if (!sdl.window && !GFX_SetSDLSurfaceWindow(640, 400))
+		return;
+
 	sdl.surface = SDL_GetWindowSurface(sdl.window);
-	if(!sdl.surface)
+	if (!sdl.surface)
 		return;
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -2032,7 +2028,7 @@ void restart_program(std::vector<std::string> & parameters) {
 	newargs[parameters.size()] = NULL;
 	MIXER_CloseAudioDevice();
 	SDL_Delay(50);
-	SDL_Quit_Wrapper();
+	SDL_Quit();
 #if C_DEBUG
 	// shutdown curses
 	DEBUG_ShutDown(NULL);
@@ -2148,6 +2144,7 @@ void Disable_OS_Scaling() {
 
 //extern void UI_Init(void);
 int main(int argc, char* argv[]) {
+	int rcode = 0; // assume good until proven otherwise
 	try {
 		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
 
@@ -2222,11 +2219,14 @@ int main(int argc, char* argv[]) {
 	if (SDL_Init_Wrapper() < 0)
 		E_Exit("Can't init SDL %s", SDL_GetError());
 	sdl.inited = true;
+	// Once initialized, ensure we clean up SDL for all exit conditions
+	atexit(SDL_Quit);
 
 #ifndef DISABLE_JOYSTICK
 	//Initialise Joystick separately. This way we can warn when it fails instead
 	//of exiting the application
-	if( SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 ) LOG_MSG("Failed to init joystick support");
+	if( SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 )
+		LOG_MSG("Failed to init joystick support");
 #endif
 
 	sdl.laltstate = SDL_KEYUP;
@@ -2317,9 +2317,7 @@ int main(int argc, char* argv[]) {
 		control->StartUp();
 		/* Shutdown everything */
 	} catch (char * error) {
-#if defined (WIN32)
-		sticky_keys(true);
-#endif
+		rcode = 1;
 		GFX_ShowMsg("Exit to error: %s",error);
 		fflush(NULL);
 		if(sdl.wait_on_error) {
@@ -2332,23 +2330,15 @@ int main(int argc, char* argv[]) {
 			Sleep(5000);
 #endif
 		}
-
 	}
-	catch (int){
-		; //nothing, pressed killswitch
-	}
-	catch(...){
-		; // Unknown error, let's just exit.
+	catch (...) {
+		// just exit
+		rcode = 1;
 	}
 #if defined (WIN32)
 	sticky_keys(true); //Might not be needed if the shutdown function switches to windowed mode, but it doesn't hurt
 #endif
-	// Release the mouse if it's still captured
-	if (mouse_is_captured) {
-		GFX_ToggleMouseCapture();
-	}
-	SDL_Quit_Wrapper(); // Let's hope sdl will quit as well when it catches an exception
-	return 0;
+	return rcode;
 }
 
 void GFX_GetSize(int &width, int &height, bool &fullscreen) {

@@ -1716,8 +1716,8 @@ static void DrawButtons(void) {
 
 static CKeyEvent * AddKeyButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,char const * const entry,KBD_KEYS key) {
 	char buf[64];
-	strcpy(buf,"key_");
-	strcat(buf,entry);
+	safe_strcpy(buf, "key_");
+	safe_strcat(buf, entry);
 	CKeyEvent * event=new CKeyEvent(buf,key);
 	new CEventButton(x,y,dx,dy,title,event);
 	return event;
@@ -2217,8 +2217,8 @@ void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char const
 		if(strcmp((*it)->buttonname,buttonname) == 0) return;
 
 	char tempname[17];
-	strcpy(tempname,"hand_");
-	strcat(tempname,eventname);
+	safe_strcpy(tempname, "hand_");
+	safe_strcat(tempname, eventname);
 	new CHandlerEvent(tempname,handler,key,mods,buttonname);
 	return ;
 }
