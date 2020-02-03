@@ -11,10 +11,10 @@ jobs:
         conf:
           - name: Clang
             flags: -c clang
-            max_warnings: 100
+            max_warnings: 99
           - name: GCC-9
             flags: -c gcc -v 9
-            max_warnings: 188
+            max_warnings: 187
     steps:
       - uses: actions/checkout@v1
         with:

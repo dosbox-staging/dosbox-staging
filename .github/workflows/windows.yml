@@ -28,7 +28,7 @@ jobs:
           - compiler: GCC
             bits: 64
             arch: x86_64
-            max_warnings: 193
+            max_warnings: 192
     env:
       CHERE_INVOKING: yes
     steps:
