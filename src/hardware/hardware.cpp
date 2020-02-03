@@ -86,7 +86,6 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 		return 0;
 	}
 
-	Bitu last=0;
 	char file_start[16];
 	dir_information * dir;
 	/* Find a filename to open */
@@ -107,18 +106,21 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	bool is_directory;
 	char tempname[CROSS_LEN];
 	bool testRead = read_directory_first(dir, tempname, is_directory );
+	int last = 0;
 	for ( ; testRead; testRead = read_directory_next(dir, tempname, is_directory) ) {
 		char * test=strstr(tempname,ext);
 		if (!test || strlen(test)!=strlen(ext)) 
 			continue;
 		*test=0;
 		if (strncasecmp(tempname,file_start,strlen(file_start))!=0) continue;
-		Bitu num=atoi(&tempname[strlen(file_start)]);
-		if (num>=last) last=num+1;
+		const int num = atoi(&tempname[strlen(file_start)]);
+		if (num >= last)
+			last = num + 1;
 	}
 	close_directory( dir );
 	char file_name[CROSS_LEN];
-	sprintf(file_name,"%s%c%s%03d%s",capturedir.c_str(),CROSS_FILESPLIT,file_start,last,ext);
+	sprintf(file_name, "%s%c%s%03d%s",
+	        capturedir.c_str(), CROSS_FILESPLIT, file_start, last, ext);
 	/* Open the actual file */
 	FILE * handle=fopen(file_name,"wb");
 	if (handle) {
