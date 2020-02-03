@@ -106,6 +106,7 @@ Windows packages are built for "x86" architecture (in practice it means i686).
 ### macOS
 
 macOS snapshots are not available at the moment.
+See [#148](https://github.com/dreamer/dosbox-staging/issues/148).
 
 ## Build instructions
 
