@@ -418,8 +418,10 @@ int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* short
 }
 
 Bitu DOS_Drive_Cache::CreateShortNameID(CFileInfo* curDir, const char* name) {
-	std::vector<CFileInfo*>::size_type filelist_size = curDir->longNameList.size();
-	if (GCC_UNLIKELY(filelist_size<=0)) return 1;	// shortener IDs start with 1
+	assert(curDir);
+	const auto filelist_size = curDir->longNameList.size();
+	if (filelist_size == 0)
+		return 1; // short name IDs start with 1
 
 	Bitu foundNr	= 0;	
 	Bits low		= 0;
