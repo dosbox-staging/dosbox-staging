@@ -411,33 +411,34 @@ int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* short
 	return strcmp(compareName,shortName);
 }
 
-Bitu DOS_Drive_Cache::CreateShortNameID(CFileInfo* curDir, const char* name) {
+unsigned DOS_Drive_Cache::CreateShortNameID(CFileInfo *curDir, const char *name)
+{
 	assert(curDir);
 	const auto filelist_size = curDir->longNameList.size();
 	if (filelist_size == 0)
 		return 1; // short name IDs start with 1
 
-	Bitu foundNr	= 0;	
-	Bits low		= 0;
-	Bits high		= (Bits)(filelist_size-1);
-	Bits mid, res;
+	unsigned found_nr = 0;
+	Bits low = 0;
+	Bits high = (Bits)(filelist_size - 1);
 
-	while (low<=high) {
-		mid = (low+high)/2;
-		res = CompareShortname(name,curDir->longNameList[mid]->shortname);
+	while (low <= high) {
+		auto mid = (low + high) / 2;
+		const char *other_shortname = curDir->longNameList[mid]->shortname;
+		const int res = CompareShortname(name, other_shortname);
 		
 		if (res>0)	low  = mid+1; else
 		if (res<0)	high = mid-1; 
 		else {
 			// any more same x chars in next entries ?	
 			do {
-				foundNr = curDir->longNameList[mid]->shortNr;
+				found_nr = curDir->longNameList[mid]->shortNr;
 				mid++;
-			} while((Bitu)mid<curDir->longNameList.size() && (CompareShortname(name,curDir->longNameList[mid]->shortname)==0));
+			} while((Bitu)mid < filelist_size && (CompareShortname(name, curDir->longNameList[mid]->shortname) == 0));
 			break;
 		};
 	}
-	return foundNr+1;
+	return found_nr + 1;
 }
 
 bool DOS_Drive_Cache::RemoveTrailingDot(char* shortname) {
@@ -598,8 +599,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 
 	if (createShort) {
 		// Create number
-		char buffer[8];
-		info->shortNr = CreateShortNameID(curDir,tmpName);
+		info->shortNr = CreateShortNameID(curDir, tmpName);
 
 		// If processing a directory containing 10 million or more long files,
 		// then ten duplicate short filenames will be named ~1000000.ext,
@@ -608,20 +608,24 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 		// Yes, this is a broken corner-case, but is still memory-safe.
 		// TODO: modify MOUNT/IMGMOUNT to exit with an error when encountering
 		// a directory having more than 65534 files, which is FAT32's limit.
-		snprintf(buffer, sizeof(buffer), "%" PRIuPTR, info->shortNr);
+		char short_nr[8] = {'\0'};
+		snprintf(short_nr, sizeof(short_nr), "%u", info->shortNr);
+
 		// Copy first letters
 		Bits tocopy = 0;
-		size_t buflen = strlen(buffer);
+		size_t buflen = strlen(short_nr);
 		if (len + buflen + 1 > 8)
 			tocopy = (Bits)(8 - buflen - 1);
 		else
 			tocopy = len;
+
 		// Copy the lesser of "DOS_NAMELENGTH_ASCII" or "tocopy + 1" characters.
 		safe_strncpy(info->shortname, tmpName,
 		             tocopy < DOS_NAMELENGTH_ASCII ? tocopy + 1 : DOS_NAMELENGTH_ASCII);
 		// Copy number
 		strncat(info->shortname, "~", DOS_NAMELENGTH_ASCII - strlen(info->shortname) - 1);
-		strncat(info->shortname, buffer, DOS_NAMELENGTH_ASCII - strlen(info->shortname) - 1);
+		strncat(info->shortname, short_nr, DOS_NAMELENGTH_ASCII - strlen(info->shortname) - 1);
+
 		// Add (and cut) Extension, if available
 		if (pos) {
 			// Step to last extension...
