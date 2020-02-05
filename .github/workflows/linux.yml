@@ -12,19 +12,19 @@ jobs:
           - name: GCC-5 (Ubuntu 16.04)
             os: ubuntu-16.04
             flags: -c gcc
-            max_warnings: 173
+            max_warnings: 140
           - name: GCC-7 (Ubuntu 18.04)
             os: ubuntu-18.04
             flags: -c gcc
-            max_warnings: 176
+            max_warnings: 142
           - name: GCC-9 (Ubuntu 18.04)
             os: ubuntu-18.04
             flags: -c gcc -v 9
-            max_warnings: 195
+            max_warnings: 161
           - name: Clang-8 (Ubuntu 18.04)
             os: ubuntu-18.04
             flags: -c clang -v 8
-            max_warnings: 95
+            max_warnings: 63
     steps:
       - uses: actions/checkout@v1
         with:
