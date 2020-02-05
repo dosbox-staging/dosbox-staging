@@ -1795,7 +1795,7 @@ void FM_OPL::ResetChip()
 #endif
 }
 
-
+#if 0
 void FM_OPL::postload()
 {
 	for(int ch = 0; ch < sizeof(P_CH)/ sizeof(P_CH[0]); ch++)
@@ -1847,6 +1847,7 @@ void FM_OPL::postload()
 	}
 #endif
 }
+#endif
 
 } // anonymous namespace
 
