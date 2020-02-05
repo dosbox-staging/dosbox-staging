@@ -16,23 +16,17 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "dos_system.h"
 
-#include "drives.h"
-#include "dos_inc.h"
-#include "support.h"
-#include "cross.h"
-
-// System includes
-#include <assert.h>
-#include <vector>
-#include <iterator>
 #include <algorithm>
+#include <cassert>
+#include <iterator>
+#include <vector>
 
-#if defined (WIN32)   /* Win 32 */
-#define WIN32_LEAN_AND_MEAN        // Exclude rarely-used stuff from 
-#include <windows.h>
-#endif
-
+#include "cross.h"
+#include "dos_inc.h"
+#include "drives.h"
+#include "support.h"
 
 int fileInfoCounter = 0;
 
