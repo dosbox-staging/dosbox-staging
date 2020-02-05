@@ -623,8 +623,8 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 		safe_strncpy(info->shortname, tmpName,
 		             tocopy < DOS_NAMELENGTH_ASCII ? tocopy + 1 : DOS_NAMELENGTH_ASCII);
 		// Copy number
-		strncat(info->shortname, "~", DOS_NAMELENGTH_ASCII - strlen(info->shortname) - 1);
-		strncat(info->shortname, short_nr, DOS_NAMELENGTH_ASCII - strlen(info->shortname) - 1);
+		safe_strcat(info->shortname, "~");
+		safe_strcat(info->shortname, short_nr);
 
 		// Add (and cut) Extension, if available
 		if (pos) {
