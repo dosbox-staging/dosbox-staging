@@ -181,6 +181,7 @@
 #define D5 fc[+2 + SCALER_COMPLEXWIDTH]
 #define D6 fc[+2 + 2*SCALER_COMPLEXWIDTH]
 
+#if (SBPP != 9) || (DBPP != 8)
 
 #if RENDER_USE_ADVANCED_SCALERS>1
 static void conc3d(Cache,SBPP,DBPP) (const void * s) {
@@ -240,7 +241,6 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 	render.scale.complexHandler();
 }
 #endif
-
 
 /* Simple scalers */
 #define SCALERNAME		Normal1x
@@ -310,6 +310,8 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 #undef SCALERWIDTH
 #undef SCALERHEIGHT
 #undef SCALERFUNC
+
+#endif // (SBPP != 9) || (DBPP != 8)
 
 #if (DBPP > 8)
 
@@ -437,6 +439,8 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 
 #if (DBPP > 8)
 
+#if (DBPP != 15)
+
 #include "render_templates_hq.h"
 
 #define SCALERNAME		HQ2x
@@ -493,6 +497,8 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 #undef SCALERHEIGHT
 #undef SCALERFUNC
 
+#endif // (DBPP != 15)
+
 #define SCALERNAME		AdvInterp2x
 #define SCALERWIDTH		2
 #define SCALERHEIGHT	2
@@ -540,6 +546,8 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 
 #endif // #if (DBPP > 8)
 
+#if (DBPP != 15)
+
 #define SCALERNAME		AdvMame2x
 #define SCALERWIDTH		2
 #define SCALERHEIGHT	2
@@ -585,6 +593,7 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 #undef SCALERHEIGHT
 #undef SCALERFUNC
 
+#endif // (DBPP != 15)
 
 #endif // (SBPP == DBPP) && !defined (CACHEWITHPAL)
 
