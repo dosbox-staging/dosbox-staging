@@ -196,7 +196,7 @@ public:
 		bool        isDir;
 		Bit16u      id;
 		Bitu        nextEntry;
-		Bitu        shortNr;
+		unsigned    shortNr;
 		// contents
 		std::vector<CFileInfo*> fileList;
 		std::vector<CFileInfo*> longNameList;
@@ -209,7 +209,7 @@ private:
 	bool		RemoveTrailingDot	(char* shortname);
 	Bits		GetLongName		(CFileInfo* info, char* shortname, const size_t shortname_len);
 	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
-	Bitu		CreateShortNameID	(CFileInfo* dir, const char* name);
+	unsigned        CreateShortNameID       (CFileInfo* dir, const char* name);
 	int		CompareShortname	(const char* compareName, const char* shortName);
 	bool		SetResult		(CFileInfo* dir, char * &result, Bitu entryNr);
 	bool		IsCachedIn		(CFileInfo* dir);
