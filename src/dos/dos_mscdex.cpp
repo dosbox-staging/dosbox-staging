@@ -920,7 +920,16 @@ static Bit16u MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 					break;
 		case 0x0A : /* Get Audio Disk info */	
 					Bit8u tr1,tr2; TMSF leadOut;
-					if (!mscdex->GetCDInfo(drive_unit,tr1,tr2,leadOut)) return 0x05;
+					if (!mscdex->GetCDInfo(drive_unit,tr1,tr2,leadOut)) {
+						// The MSCDEX spec says that tracks return values
+						// must be bounded inclusively between 1 and 99, so
+						// set acceptable defaults if GetCDInfo fails.
+						tr1 = 1;
+						tr2 = 1;
+						leadOut.min = 0;
+						leadOut.sec = 0;
+						leadOut.fr = 0;
+					}
 					mem_writeb(buffer+1,tr1);
 					mem_writeb(buffer+2,tr2);
 					mem_writeb(buffer+3,leadOut.fr);
