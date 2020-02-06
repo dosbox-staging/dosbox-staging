@@ -105,12 +105,13 @@ private:
 		INLINE void CopyBlock(int vx, int vy,FrameBlock * block);
 public:
 	VideoCodec();
+	~VideoCodec();
 	bool SetupCompress( int _width, int _height);
 	bool SetupDecompress( int _width, int _height);
 	zmbv_format_t BPPFormat( int bpp );
 	int NeededSize( int _width, int _height, zmbv_format_t _format);
 
-	void CompressLines(int lineCount, void *lineData[]);
+	void CompressLines(int lineCount, const void *lineData[]);
 	bool PrepareCompressFrame(int flags,  zmbv_format_t _format, char * pal, void *writeBuf, int writeSize);
 	int FinishCompressFrame( void );
 	bool DecompressFrame(void * framedata, int size);

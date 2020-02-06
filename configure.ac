@@ -439,17 +439,36 @@ else
 fi
 
 AH_TEMPLATE(C_SSHOT,[Define to 1 to enable screenshots, requires libpng])
-AC_ARG_ENABLE(screenshots,AC_HELP_STRING([--disable-screenshots],[Disable screenshots and movie recording]),,enable_screenshots=yes)
-AC_CHECK_HEADER(png.h,have_png_h=yes,)
-AC_CHECK_LIB(png, png_get_io_ptr, have_png_lib=yes, ,-lz)
+AC_ARG_ENABLE(screenshots,AC_HELP_STRING([--disable-screenshots],[Disable screenshots]),enable_screenshots=no,enable_screenshots=yes)
+AC_CHECK_HEADER(png.h,have_png_h=yes,have_png_h=no)
+AC_CHECK_LIB(png, png_get_io_ptr, have_png_lib=yes, have_png_lib=no,-lz)
 AC_MSG_CHECKING([whether screenshots will be enabled])
 if test x$enable_screenshots = xyes; then 
-    if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
+  if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
     LIBS="$LIBS -lpng -lz"
     AC_DEFINE(C_SSHOT,1)
     AC_MSG_RESULT([yes])
   else
     AC_MSG_RESULT([no, can't find libpng.])
+  fi
+else
+  AC_MSG_RESULT([no])
+fi
+
+AH_TEMPLATE(C_SRECORD,[Define to 1 to enable movie recording, requires zlib built without Z_SOLO])
+AC_ARG_ENABLE(recording,AC_HELP_STRING([--disable-recording],[Disable movie recording]),,enable_recording=yes)
+AC_CHECK_HEADER(zlib.h,have_zlib_h=yes)
+AC_CHECK_LIB(z,compress,have_z_lib=yes,,)
+AC_MSG_CHECKING([whether recording will be enabled])
+if test x$enable_recording = xyes; then
+  if test x$have_z_lib = xyes -a x$have_zlib_h = xyes ; then
+    if test x$enable_screenshots = xno -o x$have_png_h = xno -o x$have_png_lib = xno ; then
+      LIBS="$LIBS -lz"
+    fi
+    AC_DEFINE(C_SRECORD,1)
+    AC_MSG_RESULT([yes])
+  else
+    AC_MSG_RESULT([no, can't find zlib.])
   fi
 else
   AC_MSG_RESULT([no])
