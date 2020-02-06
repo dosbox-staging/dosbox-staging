@@ -18,14 +18,14 @@
 
 #include "cdrom.h"
 
-bool CDROM_Interface_Fake :: GetAudioTracks(int& stTrack, int& end, TMSF& leadOut) {
+bool CDROM_Interface_Fake::GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) {
 	stTrack = end = 1;
 	leadOut.min	= 60;
 	leadOut.sec = leadOut.fr = 0;
 	return true;
 }
 
-bool CDROM_Interface_Fake :: GetAudioTrackInfo(int track, TMSF& start, unsigned char& attr) {
+bool CDROM_Interface_Fake::GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr) {
 	if (track>1) return false;
 	start.min = start.fr = 0;
 	start.sec = 2;

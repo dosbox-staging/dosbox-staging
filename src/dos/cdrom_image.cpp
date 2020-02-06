@@ -108,14 +108,13 @@ bool CDROM_Interface_Image::BinaryFile::seek(Bit32u offset)
 	return !file->fail();
 }
 
-Bit32u CDROM_Interface_Image::BinaryFile::decode(Bit16s *buffer, Bit32u desired_track_frames)
+uint64_t CDROM_Interface_Image::BinaryFile::decode(Bit16s *buffer, Bit32u desired_track_frames)
 {
 	// Guard: only proceed with a valid file
 	if (file == nullptr) return 0;
 
 	file->read((char*)buffer, desired_track_frames * BYTES_PER_REDBOOK_PCM_FRAME);
-	return static_cast<Bit32u>(ceil(
-		static_cast<float>(file->gcount()) / BYTES_PER_REDBOOK_PCM_FRAME));
+	return (file->gcount() + BYTES_PER_REDBOOK_PCM_FRAME - 1) / BYTES_PER_REDBOOK_PCM_FRAME;
 }
 
 CDROM_Interface_Image::AudioFile::AudioFile(const char *filename, bool &error)
@@ -172,7 +171,7 @@ bool CDROM_Interface_Image::AudioFile::seek(Bit32u offset)
 	return result;
 }
 
-Bit32u CDROM_Interface_Image::AudioFile::decode(Bit16s *buffer, Bit32u desired_track_frames)
+uint64_t CDROM_Interface_Image::AudioFile::decode(Bit16s *buffer, Bit32u desired_track_frames)
 {
 	return Sound_Decode_Direct(sample, (void*)buffer, desired_track_frames);
 }
@@ -291,7 +290,9 @@ bool CDROM_Interface_Image::GetUPC(unsigned char& attr, char* upc)
 	return true;
 }
 
-bool CDROM_Interface_Image::GetAudioTracks(int& start_track_num, int& lead_out_num, TMSF& lead_out_msf)
+bool CDROM_Interface_Image::GetAudioTracks(uint8_t& start_track_num,
+                                           uint8_t& end_track_num,
+                                           TMSF& lead_out_msf)
 {
 	// Guard: A valid CD has atleast two tracks: the first plus the lead-out, so bail
 	//        out if we have fewer than 2 tracks
@@ -303,10 +304,9 @@ bool CDROM_Interface_Image::GetAudioTracks(int& start_track_num, int& lead_out_n
 #endif
 		return false;
 	}
-	start_track_num = tracks.begin()->number;
-	track_const_iter lead_out(prev(tracks.end()));
-	lead_out_num = lead_out->number;
-	lead_out_msf = frames_to_msf(lead_out->start + 150);
+	start_track_num = tracks.front().number;
+	end_track_num = next(tracks.crbegin())->number; // next(crbegin) == [vec.size - 2]
+	lead_out_msf = frames_to_msf(tracks.back().start + 150);
 #ifdef DEBUG
 	LOG_MSG("CDROM: GetAudioTracks => start track is %2d, lead out track is %2d, "
 	        "and lead out MSF is %02d:%02d:%02d",
@@ -432,7 +432,7 @@ bool CDROM_Interface_Image::GetMediaTrayStatus(bool& mediaPresent, bool& mediaCh
 	return true;
 }
 
-bool CDROM_Interface_Image::PlayAudioSector(unsigned long start, unsigned long len)
+bool CDROM_Interface_Image::PlayAudioSector(uint64_t start, uint64_t len)
 {
 	track_const_iter track(GetTrack(start));
 
@@ -443,6 +443,9 @@ bool CDROM_Interface_Image::PlayAudioSector(unsigned long start, unsigned long l
 	    track->file == nullptr ||
 	    player.channel == nullptr) {
 		StopAudio();
+#ifdef DEBUG
+		LOG_MSG("CDROM: PlayAudioSector => sanity check failed");
+#endif
 		return false;
 	}
 
@@ -457,12 +460,14 @@ bool CDROM_Interface_Image::PlayAudioSector(unsigned long start, unsigned long l
 	if (relative_start < 0) {
 		len -= relative_start;
 	}
+
 	// Seek to the calculated byte offset, bounded to the valid byte offsets
-	const int offset = (track->skip +
-	                    + clamp(relative_start, 0, track->length - 1)
+	const int offset = (track->skip
+	                    + clamp(relative_start, 0, static_cast<int>(track->length - 1))
 	                    * track->sectorSize);
 
 	TrackFile* trackFile = track->file.get();
+
 	// Guard: Bail if our track could not be seeked
 	if (!trackFile->seek(offset)) {
 		LOG_MSG("CDROM: Track %d failed to seek to byte %u, so cancelling playback",
@@ -474,7 +479,7 @@ bool CDROM_Interface_Image::PlayAudioSector(unsigned long start, unsigned long l
 
 	// Get properties about the current track
 	const Bit8u track_channels = trackFile->getChannels();
-	const Bit32u track_rate = trackFile->getRate();
+	const uint64_t track_rate = trackFile->getRate();
 
 	// Guard:
 	//   Before we update our player object with new track details, we lock access
@@ -642,17 +647,14 @@ bool CDROM_Interface_Image::LoadUnloadMedia(bool unload)
 	return true;
 }
 
-track_iter CDROM_Interface_Image::GetTrack(const int sector)
+track_iter CDROM_Interface_Image::GetTrack(const uint32_t sector)
 {
-	// Guard if we have no tracks or the sector is out of bounds
-	if (sector < 0 ||
-	    sector > MAX_REDBOOK_SECTOR ||
+	// Guard if we have no tracks or the sector is beyond the lead-out
+	if (sector > MAX_REDBOOK_SECTOR ||
 	    tracks.size() < MIN_REDBOOK_TRACKS ||
-	    sector >= tracks.back().start + tracks.back().length) {
-		LOG_MSG("CDROM: GetTrack at sector %d => "
-		        "is outside the bounds of our CD having %u tracks",
-		        sector,
-		        static_cast<unsigned int>(tracks.size()));
+	    sector >= tracks.back().start) {
+		LOG_MSG("CDROM: GetTrack at sector %u is outside the"
+		        " playable range", sector);
 		return tracks.end();
 	}
 
@@ -660,10 +662,10 @@ track_iter CDROM_Interface_Image::GetTrack(const int sector)
 	// inside of a given track's range, which starts at the
 	// end of the prior track and goes to the current track's
 	// (start + length).
-	track_iter track(tracks.begin());
-	int lower_bound = track->start;
+	track_iter track = tracks.begin();
+	uint32_t lower_bound = track->start;
 	while (track != tracks.end()) {
-		const int upper_bound = track->start + track->length;
+		const uint32_t upper_bound = track->start + track->length;
 		if (lower_bound <= sector && sector < upper_bound) {
 			break;
 		}
@@ -754,7 +756,7 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 		return;
 	}
 
-	const Bit32u decoded_track_frames =
+	const uint64_t decoded_track_frames =
 	             player.trackFile->decode(player.buffer, desired_track_frames);
 	player.playedTrackFrames += decoded_track_frames;
 
@@ -1015,17 +1017,17 @@ bool CDROM_Interface_Image::AddTrack(Track &curr, int &shift, const int prestart
 
 	// frames between index 0(prestart) and 1(curr.start) must be skipped
 	if (prestart >= 0) {
-		if (prestart > curr.start) {
+		if (prestart > static_cast<int>(curr.start)) {
+			LOG_MSG("CDROM: AddTrack => prestart %d cannot be > curr.start %u",
+			        prestart, curr.start);
 			return false;
 		}
 		skip = curr.start - prestart;
 	}
 
-	// first track (track number must be 1)
+	// Add the first track, if our vector is empty
 	if (tracks.empty()) {
-		if (curr.number != 1) {
-			return false;
-		}
+		assertm(curr.number == 1, "The first track must be labelled number 1 [BUG!]");
 		curr.skip = skip * curr.sectorSize;
 		curr.start += currPregap;
 		totalPregap = currPregap;
