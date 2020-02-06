@@ -573,45 +573,25 @@ bool CDROM_Interface_Image::PlayAudioSector(uint64_t start, uint64_t len)
 
 bool CDROM_Interface_Image::PauseAudio(bool resume)
 {
-	// Guard: Bail if our mixer channel hasn't been allocated
-	if (player.channel == nullptr) {
-#ifdef DEBUG
-		LOG_MSG("CDROM: PauseAudio => game toggled before playing audio");
-#endif
-		return false;
-	}
-
-	// Only switch states if needed
-	if (player.isPaused == resume) {
+	player.isPaused = !resume;
+	if (player.channel)
 		player.channel->Enable(resume);
-		player.isPaused = !resume;
 #ifdef DEBUG
-		LOG_MSG("CDROM: PauseAudio => audio is now %s",
-		        resume ? "unpaused" : "paused");
+	LOG_MSG("CDROM: PauseAudio => audio is now %s",
+	        resume ? "unpaused" : "paused");
 #endif
-	}
 	return true;
 }
 
 bool CDROM_Interface_Image::StopAudio(void)
 {
-	// Guard: Bail if our mixer channel hasn't been allocated
-	if (player.channel == nullptr) {
-#ifdef DEBUG
-		LOG_MSG("CDROM: StopAudio => game tried stopping the CD before playing audio");
-#endif
-		return false;
-	}
-
-	// Only switch states if needed
-	if (player.isPlaying) {
+	player.isPlaying = false;
+	player.isPaused = false;
+	if (player.channel)
 		player.channel->Enable(false);
-		player.isPlaying = false;
-		player.isPaused = false;
 #ifdef DEBUG
 	LOG_MSG("CDROM: StopAudio => stopped playback and halted the mixer");
 #endif
-	}
 	return true;
 }
 
