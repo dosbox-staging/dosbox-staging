@@ -406,18 +406,9 @@ void CMscdex::GetDriverInfo	(PhysPt data) {
 
 bool CMscdex::GetCDInfo(Bit8u subUnit, Bit8u& tr1, Bit8u& tr2, TMSF& leadOut) {
 	if (subUnit>=numDrives) return false;
-	uint8_t tr1i;
-	uint8_t tr2i;
 	// Assume Media change
 	cdrom[subUnit]->InitNewMedia();
-	dinfo[subUnit].lastResult = cdrom[subUnit]->GetAudioTracks(tr1i,tr2i,leadOut);
-	if (!dinfo[subUnit].lastResult) {
-		tr1 = tr2 = 0;
-		memset(&leadOut,0,sizeof(leadOut));
-	} else {
-		tr1 = tr1i;
-		tr2 = tr2i;
-	}
+	dinfo[subUnit].lastResult = cdrom[subUnit]->GetAudioTracks(tr1, tr2, leadOut);
 	return dinfo[subUnit].lastResult;
 }
 
