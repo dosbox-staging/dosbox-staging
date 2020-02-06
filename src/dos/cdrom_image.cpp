@@ -120,7 +120,8 @@ bool CDROM_Interface_Image::BinaryFile::seek(Bit32u offset)
 uint64_t CDROM_Interface_Image::BinaryFile::decode(Bit16s *buffer, Bit32u desired_track_frames)
 {
 	// Guard: only proceed with a valid file
-	if (file == nullptr) return 0;
+	if (file == nullptr)
+		return 0;
 
 	file->read((char*)buffer, desired_track_frames * BYTES_PER_REDBOOK_PCM_FRAME);
 	return (file->gcount() + BYTES_PER_REDBOOK_PCM_FRAME - 1) / BYTES_PER_REDBOOK_PCM_FRAME;
@@ -203,9 +204,10 @@ Bit8u CDROM_Interface_Image::AudioFile::getChannels()
 
 int CDROM_Interface_Image::AudioFile::getLength()
 {
-	// Sound_GetDuration returns milliseconds so we covert to bytes
-	return sample ? static_cast<int>(round(
-		Sound_GetDuration(sample) * REDBOOK_PCM_BYTES_PER_MS)) : -1;
+	// Sound_GetDuration returns milliseconds but getLength()
+	// needs to return bytes, so we covert using PCM bytes/s
+	return sample ?
+		Sound_GetDuration(sample) * REDBOOK_PCM_BYTES_PER_MS : -1;
 }
 
 // initialize static members
@@ -516,32 +518,36 @@ bool CDROM_Interface_Image::PlayAudioSector(uint64_t start, uint64_t len)
 		                                         : &MixerChannel::AddSamples_m16_nonnative;
 	}
 
-	// Convert Redbook frames to Track frames, rounding up to whole integer frames.
-	// Round up to whole track frames because the content originated from whole redbook frames,
-	// which will require the last fractional frames to be represented by a whole PCM frame.
+	// Convert Redbook frames (len) to Track PCM frames, rounding up to whole integer frames.
+	// Note: the intermediate numerator in the calculation below can overflow uint32_t, so
+	//       the variable types used must stay 64-bit.
 	player.playedTrackFrames = 0;
-	player.totalTrackFrames = static_cast<Bit32u>(ceil(static_cast<float>
-	                          (track_rate * player.totalRedbookFrames)
-	                          / REDBOOK_FRAMES_PER_SECOND));
+	player.totalTrackFrames = (track_rate
+	                           * player.totalRedbookFrames
+	                           + REDBOOK_FRAMES_PER_SECOND - 1) / REDBOOK_FRAMES_PER_SECOND;
 
 #ifdef DEBUG
-	if (static_cast<int>(start) < track->start) {
-		LOG_MSG("CDROM: PlayAudioSector from sector %lu to %lu => "
-		        "starting in the pregap of track %d [pregap %d, start %u, end %u]",
+	if (start < track->start) { // 
+		LOG_MSG("CDROM: Play sector %lu to %lu in the pregap of track %d [pregap %d,"
+		        " start %u, end %u] for %lu PCM frames at rate %lu",
 		        start,
 		        start + len,
 		        track->number,
 		        prev(track)->start - prev(track)->length,
 		        track->start,
-		        track->start + track->length);
+		        track->start + track->length,
+		        player.totalTrackFrames,
+		        track_rate);
 	} else {
-		LOG_MSG("CDROM: PlayAudioSector from sector %lu to %lu => "
-		        "in track %d [start %u, end %u]",
+		LOG_MSG("CDROM: Play sector %lu to %lu in track %d [start %u, end %u],"
+		        " for %lu PCM frames at rate %lu",
 		        start,
 		        start + len,
 		        track->number,
 		        track->start,
-		        track->start + track->length);
+		        track->start + track->length,
+		        player.totalTrackFrames,
+		        track_rate);
 	}
 #endif
 
