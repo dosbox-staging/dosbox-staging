@@ -537,7 +537,7 @@ bool CMscdex::ResumeAudio(Bit8u subUnit) {
 
 Bit32u CMscdex::GetVolumeSize(Bit8u subUnit) {
 	if (subUnit>=numDrives) return false;
-	Bit8u tr1,tr2;
+	Bit8u tr1,tr2; // <== place-holders (use lead-out for size calculation)
 	TMSF leadOut;
 	dinfo[subUnit].lastResult = GetCDInfo(subUnit,tr1,tr2,leadOut);
 	if (dinfo[subUnit].lastResult) return (leadOut.min*60*75)+(leadOut.sec*75)+leadOut.fr;
@@ -1294,7 +1294,7 @@ bool MSCDEX_HasMediaChanged(Bit8u subUnit)
 	static TMSF leadOut[MSCDEX_MAX_DRIVES];
 
 	TMSF leadnew;
-	Bit8u tr1,tr2;
+	Bit8u tr1,tr2; // <== place-holders (use lead-out for change status)
 	if (mscdex->GetCDInfo(subUnit,tr1,tr2,leadnew)) {
 		bool changed = (leadOut[subUnit].min!=leadnew.min) || (leadOut[subUnit].sec!=leadnew.sec) || (leadOut[subUnit].fr!=leadnew.fr);
 		if (changed) {
