@@ -83,13 +83,19 @@ bool CDROM_Interface_Image::BinaryFile::read(Bit8u *buffer, int seek, int count)
 int CDROM_Interface_Image::BinaryFile::getLength()
 {
 	// Guard: only proceed with a valid file
-	if (file == nullptr) return -1;
+	if (file == nullptr)
+		return -1;
 
-	std::streampos original_pos = file->tellg();
+	// All read operations involve an absolute position and
+	// this function isn't called in other threads, therefore
+	// we don't need to retain the original read position.
 	file->seekg(0, ios::end);
 	const int length = static_cast<int>(file->tellg());
-	file->seekg(original_pos, ios::end);
+#ifdef DEBUG
+	LOG_MSG("CDROM: BinaryLength (in milliseconds) = %d", length);
+#endif
 	return length;
+
 }
 
 Bit16u CDROM_Interface_Image::BinaryFile::getEndian()
