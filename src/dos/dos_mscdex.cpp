@@ -1300,26 +1300,27 @@ bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name)
 
 bool MSCDEX_HasMediaChanged(Bit8u subUnit)
 {
+	bool has_changed = true;
 	static TMSF leadOut[MSCDEX_MAX_DRIVES];
-
 	TMSF leadnew;
 	Bit8u tr1,tr2; // <== place-holders (use lead-out for change status)
 	if (mscdex->GetCDInfo(subUnit,tr1,tr2,leadnew)) {
-		bool changed = (leadOut[subUnit].min!=leadnew.min) || (leadOut[subUnit].sec!=leadnew.sec) || (leadOut[subUnit].fr!=leadnew.fr);
-		if (changed) {
+		has_changed = (leadOut[subUnit].min != leadnew.min
+		               || leadOut[subUnit].sec != leadnew.sec
+		               || leadOut[subUnit].fr != leadnew.fr);
+		if (has_changed) {
 			leadOut[subUnit].min = leadnew.min;
 			leadOut[subUnit].sec = leadnew.sec;
 			leadOut[subUnit].fr	 = leadnew.fr;
 			mscdex->InitNewMedia(subUnit);
 		}
-		return changed;
-	};
-	if (subUnit<MSCDEX_MAX_DRIVES) {
+	// fail-safe assumes the media has changed (if a valid drive is selected)
+	} else if (subUnit<MSCDEX_MAX_DRIVES) {
 		leadOut[subUnit].min = 0;
 		leadOut[subUnit].sec = 0;
 		leadOut[subUnit].fr	 = 0;
 	}
-	return true;
+	return has_changed;
 }
 
 void MSCDEX_ShutDown(Section* /*sec*/) {
