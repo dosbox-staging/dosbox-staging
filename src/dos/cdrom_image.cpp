@@ -884,6 +884,7 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 	int currPregap = 0;
 	int totalPregap = 0;
 	int prestart = -1;
+	int track_number;
 	bool success;
 	bool canAddTrack = false;
 	char tmp[MAX_FILENAME_LENGTH];  // dirname can change its argument
@@ -916,8 +917,9 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 			currPregap = 0;
 			prestart = -1;
 
-			line >> track.number;
-			string type;
+			line >> track_number; // (cin) read into a true int first
+			track.number = track_number; // then assign to the uint8_t
+			string type;   
 			GetCueKeyword(type, line);
 
 			if (type == "AUDIO") {

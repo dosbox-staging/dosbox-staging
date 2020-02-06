@@ -188,8 +188,8 @@ public:
 		uint32_t                   start      = 0;
 		uint32_t                   length     = 0;
 		uint32_t                   skip       = 0;
-		uint16_t                   number     = 0;
 		uint16_t                   sectorSize = 0;
+		uint8_t                    number     = 0;
 		uint8_t                    attr       = 0;
 		bool                       mode2      = false;
 	};
