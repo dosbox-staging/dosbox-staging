@@ -362,57 +362,63 @@ bool CDROM_Interface_Image::GetAudioTrackInfo(uint8_t requested_track_num,
 	return true;
 }
 
-bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr, unsigned char& track_num,
-                                        unsigned char& index, TMSF& relPos, TMSF& absPos)
-{
-	// Guard 1: bail if the game requests playback status before actually playing
-	if (player.trackFile == nullptr) {
-#ifdef DEBUG
-		LOG_MSG("CDROM: GetAudioSub => game asked for playback position "
-		        "before playing audio (ignoring)");
-#endif
-		return false;
-	}
-
-	// Convert our running tally of played *track* frames to *Redbook* frames.
-	// We 'ceil' because if our track-frame tally lands in the middle of a (fractional)
-	// Redbook frame, then that Redbook frame would have to be considered played to produce
-	// even the smallest amount of track-frames played.  This also accurately represents
-	// the very end of a sequence where the last Redbook frame might only contain a couple
-	// PCM samples - but the entire last 2352-byte Redbook frame is needed to cover those samples.
-	const Bit32u playedRedbookFrames = static_cast<Bit32u>(
-	    ceil(static_cast<float>(REDBOOK_FRAMES_PER_SECOND * player.playedTrackFrames)
-	    / player.trackFile->getRate()) );
-
-	// Add that to the track's starting sector to determine our absolute current sector
-	const Bit32u currentSector = player.startSector + playedRedbookFrames;
-	track_const_iter track(GetTrack(currentSector));
-
-	// Guard 2: bail if the track is invalid
-	if (track == tracks.end()) {
-#ifdef DEBUG
-		LOG_MSG("CDROM: GetAudioSub => playback position lands outside of our tracks");
-#endif
-		return false;
-	}
-
-	track_num = track->number;
-	attr = track->attr;
+bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
+                                        unsigned char& track_num,
+                                        unsigned char& index,
+                                        TMSF& relative_msf,
+                                        TMSF& absolute_msf) {
+	// Setup valid defaults to handle all scenarios
+	attr = 0;
+	track_num = 1;
 	index = 1;
-	absPos = frames_to_msf(currentSector + 150);
-	relPos = frames_to_msf(currentSector - track->start);
+	uint32_t absolute_sector = 0;
+	uint32_t relative_sector = 0;
+
+	if (!tracks.empty()) { 	// We have a useable CD; get a valid play-position
+		track_iter track = tracks.begin();
+		// the CDs has been played and is at a valid position
+		if (player.trackFile && player.startSector) {
+			const uint32_t sample_rate = player.trackFile->getRate();
+			const uint32_t played_frames = (player.playedTrackFrames
+			                                * REDBOOK_FRAMES_PER_SECOND
+			                                + sample_rate - 1) / sample_rate;
+			absolute_sector = player.startSector + played_frames;
+			track_iter current_track = GetTrack(absolute_sector);
+			if (current_track != tracks.end()) {
+				track = current_track;
+				relative_sector = absolute_sector >= track->start ? 
+				                  absolute_sector - track->start : 0;
+			} else { // otherwise fallback to the beginning track
+				absolute_sector = track->start;
+				// relative_sector is zero because we're at the start of the track
+			}
+		// the CD hasn't been played yet or has an invalid position
+		} else {
+			for (track_iter it = tracks.begin(); it != tracks.end(); ++it) {
+				if (it->attr == 0) {	// Found an audio track
+					track = it;
+					absolute_sector = it->start;
+					break;
+				} // otherwise fallback to the beginning track 
+			}
+		}
+		attr = track->attr;
+		track_num = track->number;
+	}
+	absolute_msf = frames_to_msf(absolute_sector + 150);
+	relative_msf = frames_to_msf(relative_sector);
 #ifdef DEBUG
-	LOG_MSG("CDROM: GetAudioSub => playing at %02d:%02d:%02d (on sector %u) "
-	        "in track %u at its %02d:%02d:%02d (at its sector %d)",
-	        absPos.min,
-	        absPos.sec,
-	        absPos.fr,
-	        currentSector + 150,
-	        track->number,
-	        relPos.min,
-	        relPos.sec,
-	        relPos.fr,
-	        static_cast<int>(currentSector) - track->start);
+		LOG_MSG("CDROM: GetAudioSub => position at %02d:%02d:%02d (on sector %u) "
+		        "within track %u at %02d:%02d:%02d (at its sector %u)",
+		        absolute_msf.min,
+		        absolute_msf.sec,
+		        absolute_msf.fr,
+		        absolute_sector + 150,
+		        track_num,
+		        relative_msf.min,
+		        relative_msf.sec,
+		        relative_msf.fr,
+		        relative_sector);
 #endif
 	return true;
 }
