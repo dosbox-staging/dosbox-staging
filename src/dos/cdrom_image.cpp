@@ -321,7 +321,7 @@ bool CDROM_Interface_Image::GetAudioTracks(uint8_t& start_track_num,
 	LOG_MSG("CDROM: GetAudioTracks => start track is %2d, last playable track is %2d, "
 	        "and lead-out MSF is %02d:%02d:%02d",
 	        start_track_num,
-	        lead_out_num,
+	        end_track_num,
 	        lead_out_msf.min,
 	        lead_out_msf.sec,
 	        lead_out_msf.fr);
@@ -329,28 +329,29 @@ bool CDROM_Interface_Image::GetAudioTracks(uint8_t& start_track_num,
 	return true;
 }
 
-bool CDROM_Interface_Image::GetAudioTrackInfo(int requested_track_num,
+bool CDROM_Interface_Image::GetAudioTrackInfo(uint8_t requested_track_num,
                                               TMSF& start_msf,
                                               unsigned char& attr)
 {
-	if (tracks.size() < MIN_REDBOOK_TRACKS ||
-	   (requested_track_num < 1 &&
-	   static_cast<tracks_size_t>(requested_track_num) > tracks.size())) {
+	if (tracks.size() < MIN_REDBOOK_TRACKS
+	    || requested_track_num < 1
+	    || requested_track_num > 99
+	    || requested_track_num >= tracks.size()) {
 #ifdef DEBUG
-		LOG_MSG("CDROM: GetAudioTrackInfo for track %d => "
-		        "outside our valid track numbers: 1 to %u",
-	            requested_track_num,
-	            static_cast<unsigned int>(tracks.size()));
+		LOG_MSG("CDROM: GetAudioTrackInfo for track %u => "
+		        "outside the CD's track range [1 to %" PRIuPTR ")",
+		        requested_track_num,
+		        tracks.size());
 #endif
 		return false;
 	}
 
-	const tracks_size_t	requested_track_index(requested_track_num - 1);
-	track_const_iter track(tracks.begin() + requested_track_index);
+	const tracks_size_t requested_track_index = requested_track_num - 1;
+	track_const_iter track = tracks.begin() + requested_track_index;
 	start_msf = frames_to_msf(track->start + 150);
 	attr = track->attr;
 #ifdef DEBUG
-	LOG_MSG("CDROM: GetAudioTrackInfo for track %d => "
+	LOG_MSG("CDROM: GetAudioTrackInfo for track %u => "
 	        "MSF %02d:%02d:%02d, which is sector %d",
 	        requested_track_num,
 	        start_msf.min,
@@ -1054,7 +1055,7 @@ bool CDROM_Interface_Image::AddTrack(Track &curr, int &shift, const int prestart
 
 	// Guard against undefined behavior in subsequent tracks.back() call
 	assert(!tracks.empty());
-	Track &prev{ tracks.back() };
+	Track &prev = tracks.back();
 
 	// current track consumes data from the same file as the previous
 	if (prev.file == curr.file) {
