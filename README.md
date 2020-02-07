@@ -58,7 +58,7 @@ Other feature differences:
 |                        | dosbox-staging                               | DOSBox
 |-                       |-                                             |-
 | **[OPL] emulators**    | compat, fast, mame, nuked<sup>[7]</sup>      | compat, fast, mame
-| **[CGA]/mono support** | Yes (`machine=cga_mono`)<sup>[8]</sup>       | N/A
+| **[CGA]/mono support** | Yes (`machine=cga_mono`)<sup>[8]</sup>       | Only CGA with colour
 | **[Wayland] support**  | Experimental (use `SDL_VIDEODRIVER=wayland`) | N/A
 
 [OPL]:https://en.wikipedia.org/wiki/Yamaha_YMF262
