@@ -281,6 +281,11 @@ static void RENDER_Reset( void ) {
 		gfx_scalew = 1;
 		gfx_scaleh = 1;
 	}
+
+	/* Don't do software scaler sizes larger than 4k */
+	Bitu maxsize_current_input = SCALER_MAXLINE_WIDTH/width;
+	if (render.scale.size > maxsize_current_input) render.scale.size = maxsize_current_input;
+
 	if ((dblh && dblw) || (render.scale.forced && !dblh && !dblw)) {
 		/* Initialize always working defaults */
 		if (render.scale.size == 2)
@@ -348,6 +353,10 @@ static void RENDER_Reset( void ) {
 #endif
 	} else if (dblw) {
 		simpleBlock = &ScaleNormalDw;
+		if (width * simpleBlock->xscale > SCALER_MAXLINE_WIDTH) {
+			// This should only happen if you pick really bad values... but might be worth adding selecting a scaler that fits
+			simpleBlock = &ScaleNormal1x;
+		}
 	} else if (dblh) {
 		simpleBlock = &ScaleNormalDh;
 	} else  {
