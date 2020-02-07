@@ -720,16 +720,24 @@ dosurface:
 	case SCREEN_OVERLAY:
 		if (sdl.overlay) {
 			SDL_FreeYUVOverlay(sdl.overlay);
-			sdl.overlay=0;
+			sdl.overlay = 0;
 		}
-		if (!(flags&GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface;
+		if (!(flags & GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface;
 		if (!GFX_SetupSurfaceScaled(0,0)) goto dosurface;
-		sdl.overlay=SDL_CreateYUVOverlay(width*2,height,SDL_UYVY_OVERLAY,sdl.surface);
+		sdl.overlay = SDL_CreateYUVOverlay(width * 2, height, SDL_UYVY_OVERLAY, sdl.surface);
+
+		if (sdl.overlay && sdl.overlay->pitches[0] < 4 * width) {
+			// We get a distorted image in this case. Cleanup and go to surface.
+			LOG_MSG("SDL: overlay pitch is too small. (%u < %u)", sdl.overlay->pitches[0], width * 4);
+			SDL_FreeYUVOverlay(sdl.overlay);
+			sdl.overlay = 0;
+		}
 		if (!sdl.overlay) {
-			LOG_MSG("SDL: Failed to create overlay, switching back to surface");
+			LOG_MSG("SDL: Failed to create overlay, switching back to surface.");
 			goto dosurface;
 		}
-		sdl.desktop.type=SCREEN_OVERLAY;
+
+		sdl.desktop.type = SCREEN_OVERLAY;
 		retFlags = GFX_CAN_32 | GFX_SCALING | GFX_HARDWARE;
 		break;
 #if C_OPENGL
