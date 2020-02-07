@@ -53,16 +53,19 @@ Codecs supported for CD-DA emulation:
 [5]:https://www.dosbox.com/wiki/MOUNT#Mounting_a_CUE.2FBIN-Pair_as_volume
 [6]:https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/trunk/src/dos/cdrom_image.cpp#l536
 
-Other features:
+Other feature differences:
 
-|                       | dosbox-staging                               | DOSBox
-|-                      |-                                             |-
-| **[OPL] emulators**   | compat, fast, mame, nuked<sup>[7]</sup>      | compat, fast, mame
-| **[Wayland] support** | experimental (use `SDL_VIDEODRIVER=wayland`) | N/A
+|                        | dosbox-staging                               | DOSBox
+|-                       |-                                             |-
+| **[OPL] emulators**    | compat, fast, mame, nuked<sup>[7]</sup>      | compat, fast, mame
+| **[CGA]/mono support** | Yes (`machine=cga_mono`)<sup>[8]</sup>       | N/A
+| **[Wayland] support**  | Experimental (use `SDL_VIDEODRIVER=wayland`) | N/A
 
 [OPL]:https://en.wikipedia.org/wiki/Yamaha_YMF262
+[CGA]:https://en.wikipedia.org/wiki/Color_Graphics_Adapter
 [Wayland]:https://en.wikipedia.org/wiki/Wayland_(display_server_protocol)
 [7]:https://www.vogons.org/viewtopic.php?f=9&t=37782
+[8]:https://github.com/dreamer/dosbox-staging/commit/ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
 
 ## Development snapshot builds
 
@@ -171,3 +174,4 @@ run:
 ``` shell
 git fetch origin "refs/notes/*:refs/notes/*"
 ```
+
