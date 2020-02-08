@@ -153,8 +153,7 @@ INLINE int VideoCodec::PossibleBlock(int vx,int vy,FrameBlock * block) {
 	P * pnew=((P*)newframe)+block->start;;	
 	for (int y=0;y<block->dy;y+=4) {
 		for (int x=0;x<block->dx;x+=4) {
-			int test=pold[x]-pnew[x];
-			test |= -test;
+			int test=0-((pold[x]-pnew[x])&0x00ffffff);
 			ret-=(test>>31);
 		}
 		pold+=pitch*4;
@@ -170,8 +169,7 @@ INLINE int VideoCodec::CompareBlock(int vx,int vy,FrameBlock * block) {
 	P * pnew=((P*)newframe)+block->start;;	
 	for (int y=0;y<block->dy;y++) {
 		for (int x=0;x<block->dx;x++) {
-			int test=pold[x]-pnew[x];
-			test |= -test;
+			int test=0-((pold[x]-pnew[x])&0x00ffffff);
 			ret-=(test>>31);
 		}
 		pold+=pitch;
@@ -316,7 +314,7 @@ bool VideoCodec::PrepareCompressFrame(int flags,  zmbv_format_t _format, char * 
 	return true;
 }
 
-void VideoCodec::CompressLines(int lineCount, const void *lineData[]) {
+void VideoCodec::CompressLines(int lineCount, void *lineData[]) {
 	int linePitch = pitch * pixelsize;
 	int lineWidth = width * pixelsize;
 	int i = 0;
@@ -350,7 +348,7 @@ int VideoCodec::FinishCompressFrame( void ) {
 			AddXorFrame<short>();
 			break;
 		case ZMBV_FORMAT_32BPP:
-			AddXorFrame<int>();
+			AddXorFrame<long>();
 			break;
 		}
 	}
@@ -471,7 +469,7 @@ bool VideoCodec::DecompressFrame(void * framedata, int size) {
 			UnXorFrame<short>();
 			break;
 		case ZMBV_FORMAT_32BPP:
-			UnXorFrame<int>();
+			UnXorFrame<long>();
 			break;
 		}
 	}
@@ -526,10 +524,18 @@ void VideoCodec::Output_UpsideDown_24(void *output) {
 }
 
 void VideoCodec::FreeBuffers(void) {
-	delete[] blocks;blocks=NULL;
-	delete[] buf1;buf1=NULL;
-	delete[] buf2;buf2=NULL;
-	delete[] work;work=NULL;
+	if (blocks) {
+		delete[] blocks;blocks=0;
+	}
+	if (buf1) {
+		delete[] buf1;buf1=0;
+	}
+	if (buf2) {
+		delete[] buf2;buf2=0;
+	}
+	if (work) {
+		delete[] work;work=0;
+	}
 }
 
 
@@ -540,8 +546,4 @@ VideoCodec::VideoCodec() {
 	buf2 = 0;
 	work = 0;
 	memset( &zstream, 0, sizeof(zstream));
-}
-
-VideoCodec::~VideoCodec() {
-	FreeBuffers();
 }
