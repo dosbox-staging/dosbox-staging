@@ -116,6 +116,10 @@ static INLINE void host_writed(HostPt off,Bit32u val) {
 
 #if defined(WORDS_BIGENDIAN)
 
+constexpr static INLINE int16_t host_to_le(int16_t val) {
+	return __builtin_bswap16(val);
+}
+
 constexpr static INLINE uint16_t host_to_le(uint16_t val) {
 	return __builtin_bswap16(val);
 }
@@ -125,6 +129,10 @@ constexpr static INLINE uint32_t host_to_le(uint32_t val) {
 }
 
 #else
+
+constexpr static INLINE int16_t host_to_le(int16_t val) {
+	return val;
+}
 
 constexpr static INLINE uint16_t host_to_le(uint16_t val) {
 	return val;

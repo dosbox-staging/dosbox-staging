@@ -78,7 +78,7 @@ static INLINE Bit16s MIXER_CLIP(Bits SAMP) {
 }
 
 static struct {
-	Bit32s work[MIXER_BUFSIZE][2];
+	int32_t work[MIXER_BUFSIZE][2];
 	//Write/Read pointers for the buffer
 	Bitu pos,done;
 	Bitu needed, min_needed, max_needed;
@@ -497,19 +497,17 @@ static void MIXER_MixData(Bitu needed) {
 		chan=chan->next;
 	}
 	if (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)) {
-		Bit16s convert[1024][2];
-		Bitu added=needed-mixer.done;
-		if (added>1024)
-			added=1024;
-		Bitu readpos=(mixer.pos+mixer.done)&MIXER_BUFMASK;
-		for (Bitu i=0;i<added;i++) {
-			Bits sample=mixer.work[readpos][0] >> MIXER_VOLSHIFT;
-			convert[i][0]=MIXER_CLIP(sample);
-			sample=mixer.work[readpos][1] >> MIXER_VOLSHIFT;
-			convert[i][1]=MIXER_CLIP(sample);
-			readpos=(readpos+1)&MIXER_BUFMASK;
+		int16_t convert[1024][2];
+		const size_t added = std::min<size_t>(needed - mixer.done, 1024);
+		size_t readpos = (mixer.pos + mixer.done) & MIXER_BUFMASK;
+		for (size_t i = 0; i < added; i++) {
+			const int32_t sample_1 = mixer.work[readpos][0] >> MIXER_VOLSHIFT;
+			const int32_t sample_2 = mixer.work[readpos][1] >> MIXER_VOLSHIFT;
+			convert[i][0] = host_to_le(MIXER_CLIP(sample_1));
+			convert[i][1] = host_to_le(MIXER_CLIP(sample_2));
+			readpos = (readpos + 1) & MIXER_BUFMASK;
 		}
-		CAPTURE_AddWave( mixer.freq, added, (Bit16s*)convert );
+		CAPTURE_AddWave(mixer.freq, added, reinterpret_cast<int16_t*>(convert));
 	}
 	//Reset the the tick_add for constant speed
 	if( Mixer_irq_important() )
