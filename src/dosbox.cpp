@@ -472,6 +472,14 @@ void DOSBOX_Init(void) {
 	const char* force[] = { "", "forced", 0 };
 	Pstring = Pmulti->GetSection()->Add_string("force",Property::Changeable::Always,"");
 	Pstring->Set_values(force);
+#if C_OPENGL
+	Pstring = secprop->Add_path("glshader",Property::Changeable::Always,"none");
+	Pstring->Set_help("Path to GLSL shader source to use with OpenGL output (\"none\" to disable).\n"
+					  "Can be either an absolute path, a file in the \"glshaders\" subdirectory\n"
+					  "of the DOSBox configuration directory, or one of the built-in shaders:\n"
+					  "advinterp2x, advinterp3x, advmame2x, advmame3x, rgb2x, rgb3x, scan2x,\n"
+					  "scan3x, tv2x, tv3x, sharp.");
+#endif
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init,true);//done
 	const char* cores[] = { "auto",

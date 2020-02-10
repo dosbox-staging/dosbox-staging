@@ -20,6 +20,8 @@
 #include <sys/types.h>
 #include <assert.h>
 #include <math.h>
+#include <fstream>
+#include <sstream>
 
 #include "dosbox.h"
 #include "video.h"
@@ -30,8 +32,10 @@
 #include "cross.h"
 #include "hardware.h"
 #include "support.h"
+#include "shell.h"
 
 #include "render_scalers.h"
+#include "render_glsl.h"
 
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
@@ -229,6 +233,7 @@ void RENDER_EndUpdate( bool abort ) {
 			total += render.frameskip.hadSkip[i];
 		LOG_MSG( "Skipped frame %d %d", PIC_Ticks, (total * 100) / RENDER_SKIP_CACHE );
 #endif
+		if (RENDER_GetForceUpdate()) GFX_EndUpdate(0);
 	}
 	render.frameskip.index = (render.frameskip.index + 1) & (RENDER_SKIP_CACHE - 1);
 	render.updating=false;
@@ -428,6 +433,9 @@ forcenormal:
 		}
 	}
 /* Setup the scaler variables */
+#if C_OPENGL
+	GFX_SetShader(render.shader_src);
+#endif
 	gfx_flags=GFX_SetSize(width,height,gfx_flags,gfx_scalew,gfx_scaleh,&RENDER_CallBack);
 	if (gfx_flags & GFX_CAN_8)
 		render.scale.outMode = scalerMode8;
@@ -572,6 +580,76 @@ static void ChangeScaler(bool pressed) {
 	RENDER_CallBack( GFX_CallBackReset );
 } */
 
+bool RENDER_GetForceUpdate(void) {
+	return render.forceUpdate;
+}
+
+void RENDER_SetForceUpdate(bool f) {
+	render.forceUpdate = f;
+}
+
+#if C_OPENGL
+static bool RENDER_GetShader(std::string& shader_path) {
+	char* src;
+	std::stringstream buf;
+	std::ifstream fshader(shader_path.c_str(), std::ios_base::binary);
+	if (!fshader.is_open()) fshader.open((shader_path + ".glsl").c_str(), std::ios_base::binary);
+	if (fshader.is_open()) {
+		buf << fshader.rdbuf();
+		fshader.close();
+	}
+	else if (shader_path == "advinterp2x") buf << advinterp2x_glsl;
+	else if (shader_path == "advinterp3x") buf << advinterp3x_glsl;
+	else if (shader_path == "advmame2x")   buf << advmame2x_glsl;
+	else if (shader_path == "advmame3x")   buf << advmame3x_glsl;
+	else if (shader_path == "rgb2x")       buf << rgb2x_glsl;
+	else if (shader_path == "rgb3x")       buf << rgb3x_glsl;
+	else if (shader_path == "scan2x")      buf << scan2x_glsl;
+	else if (shader_path == "scan3x")      buf << scan3x_glsl;
+	else if (shader_path == "tv2x")        buf << tv2x_glsl;
+	else if (shader_path == "tv3x")        buf << tv3x_glsl;
+	else if (shader_path == "sharp")       buf << sharp_glsl;
+
+	if (!buf.str().empty()) {
+		std::string s = buf.str();
+		if (first_shell) {
+			std::string pre_defs;
+			Bitu count = first_shell->GetEnvCount();
+			for (Bitu i=0; i < count; i++) {
+				std::string env;
+				if (!first_shell->GetEnvNum(i, env))
+					continue;
+				if (env.compare(0, 9, "GLSHADER_")==0) {
+					size_t brk = s.find('=');
+					if (brk == std::string::npos) continue;
+					env[brk] = ' ';
+					pre_defs += "#define " + env.substr(0) + '\n';
+				}
+			}
+			if (!pre_defs.empty()) {
+				// if "#version" occurs it must be before anything except comments and whitespace
+				size_t pos = buf.str().find("#version ");
+				if (pos != std::string::npos) pos = buf.str().find('\n', pos+9);
+				if (pos == std::string::npos) pos = 0;
+				else ++pos;
+				s = buf.str().insert(pos, pre_defs);
+			}
+		}
+		// keep the same buffer if contents aren't different
+		if (render.shader_src==NULL || s != render.shader_src) {
+			src = strdup(s.c_str());
+			if (src==NULL) LOG_MSG("WARNING: Couldn't copy shader source");
+		} else { 
+			src = render.shader_src;
+			render.shader_src = NULL;
+		}
+	} else src = NULL;
+	free(render.shader_src);
+	render.shader_src = src;
+	return src != NULL;
+}
+#endif
+
 void RENDER_Init(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 
@@ -625,10 +703,31 @@ void RENDER_Init(Section * sec) {
 	else if (scaler == "scan3x"){ render.scale.op = scalerOpScan;render.scale.size = 3; }
 #endif
 
+#if C_OPENGL
+	char* shader_src = render.shader_src;
+	Prop_path *sh = section->Get_path("glshader");
+	f = (std::string)sh->GetValue();
+	if (f.empty() || f=="none") {
+		free(render.shader_src);
+		render.shader_src = NULL;
+	} else if (!RENDER_GetShader(sh->realpath)) {
+		std::string path;
+		Cross::GetPlatformConfigDir(path);
+		path = path + "glshaders" + CROSS_FILESPLIT + f;
+		if (!RENDER_GetShader(path) && (sh->realpath==f || !RENDER_GetShader(f))) {
+			sh->SetValue("none");
+			LOG_MSG("Shader file \"%s\" not found", f.c_str());
+		}
+	}
+#endif
+
 	//If something changed that needs a ReInit
 	// Only ReInit when there is a src.bpp (fixes crashes on startup and directly changing the scaler without a screen specified yet)
 	if(running && render.src.bpp && ((render.aspect != aspect) || (render.scale.op != scaleOp) || 
 				  (render.scale.size != scalersize) || (render.scale.forced != scalerforced) ||
+#if C_OPENGL
+				  (render.shader_src != shader_src) ||
+#endif
 				   render.scale.forced))
 		RENDER_CallBack( GFX_CallBackReset );
 
