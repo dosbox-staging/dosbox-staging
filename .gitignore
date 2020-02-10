@@ -65,6 +65,8 @@ make.log
 *~
 *.swp
 *.tmp
+*.orig
+*.rej
 
 # PVS static analysis outputs or ephemerals
 pvs-*
