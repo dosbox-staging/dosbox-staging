@@ -1067,9 +1067,8 @@ static INLINE void dyn_get_modrm(void) {
 static void dyn_fill_ea(bool addseg=true, DynReg * reg_ea=DREG(EA)) {
 	DynReg * segbase;
 	if (!decode.big_addr) {
-		Bits imm;
+		Bits imm = 0;
 		switch (decode.modrm.mod) {
-		case 0:imm=0;break;
 		case 1:imm=(Bit8s)decode_fetchb();break;
 		case 2:imm=(Bit16s)decode_fetchw();break;
 		}
