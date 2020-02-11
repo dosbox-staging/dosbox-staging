@@ -693,14 +693,13 @@ static GLuint BuildShader ( GLenum type, const char *shaderSrc ) {
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
 
 	if (!compiled) {
-		GLint infoLen = 0;
-		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
+		GLint info_len = 0;
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_len);
 
-		if (infoLen>1) {
-			char* infoLog = (char*)malloc(infoLen);
-			glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
-			LOG_MSG("Error compiling shader: %s", infoLog);
-			free(infoLog);
+		if (info_len > 1) {
+			std::vector<GLchar> info_log(info_len);
+			glGetShaderInfoLog(shader, info_len, NULL, info_log.data());
+			LOG_MSG("Error compiling shader: %s", info_log.data());
 		}
 
 		glDeleteShader(shader);
@@ -709,6 +708,7 @@ static GLuint BuildShader ( GLenum type, const char *shaderSrc ) {
 
 	return shader;
 }
+
 static bool GFX_LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
 	GLuint s = BuildShader(GL_VERTEX_SHADER, src);
 	if (s) {
@@ -946,14 +946,13 @@ dosurface:
 					GLint isProgramLinked;
 					glGetProgramiv(sdl.opengl.program_object, GL_LINK_STATUS, &isProgramLinked);
 					if (!isProgramLinked) {
-						GLint infoLen = 0;
+						GLint info_len = 0;
+						glGetProgramiv(sdl.opengl.program_object, GL_INFO_LOG_LENGTH, &info_len);
 
-						glGetProgramiv(sdl.opengl.program_object, GL_INFO_LOG_LENGTH, &infoLen);
-						if (infoLen>1) {
-							char *infoLog = (char*)malloc(infoLen);
-							glGetProgramInfoLog(sdl.opengl.program_object, infoLen, NULL, infoLog);
-							LOG_MSG("SDL:OPENGL:Error link prograram:\n %s", infoLog);
-							free(infoLog);
+						if (info_len > 1) {
+							std::vector<GLchar> info_log(info_len);
+							glGetProgramInfoLog(sdl.opengl.program_object, info_len, NULL, info_log.data());
+							LOG_MSG("SDL:OPENGL:Error link program:\n %s", info_log.data());
 						}
 
 						glDeleteProgram(sdl.opengl.program_object);
