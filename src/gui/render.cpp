@@ -609,8 +609,8 @@ static bool RENDER_GetShader(std::string& shader_path) {
 	else if (shader_path == "tv3x")        buf << tv3x_glsl;
 	else if (shader_path == "sharp")       buf << sharp_glsl;
 
-	if (!buf.str().empty()) {
-		std::string s = buf.str();
+	std::string s = buf.str();
+	if (!s.empty()) {
 		if (first_shell) {
 			std::string pre_defs;
 			Bitu count = first_shell->GetEnvCount();
@@ -627,11 +627,13 @@ static bool RENDER_GetShader(std::string& shader_path) {
 			}
 			if (!pre_defs.empty()) {
 				// if "#version" occurs it must be before anything except comments and whitespace
-				size_t pos = buf.str().find("#version ");
-				if (pos != std::string::npos) pos = buf.str().find('\n', pos+9);
-				if (pos == std::string::npos) pos = 0;
-				else ++pos;
-				s = buf.str().insert(pos, pre_defs);
+				size_t pos = s.find("#version ");
+
+				if (pos != std::string::npos)
+					pos = s.find('\n', pos + 9);
+
+				pos = (pos == std::string::npos) ? 0 : pos + 1;
+				s.insert(pos, pre_defs);
 			}
 		}
 		// keep the same buffer if contents aren't different
