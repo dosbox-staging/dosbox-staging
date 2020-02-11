@@ -30,3 +30,5 @@ dosbox_LDADD = cpu/libcpu.a \
                shell/libshell.a
 
 EXTRA_DIST = winres.rc
+
+LIBS +=  -lmt32emu

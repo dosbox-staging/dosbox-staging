@@ -118,6 +118,9 @@ struct DB_Midi {
 	MidiHandler * handler;
 };
 
+#include "midi_mt32.h"
+static MidiHandler_mt32 &Midi_mt32 = MidiHandler_mt32::GetInstance();
+
 DB_Midi midi;
 
 /* When using a physical Roland MT-32 rev. 0 as MIDI output device,
