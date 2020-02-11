@@ -1471,6 +1471,7 @@ static void SetPriority(PRIORITY_LEVELS level) {
 	}
 }
 
+#ifdef WIN32
 extern Bit8u int10_font_14[256 * 14];
 static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u color2,SDL_Surface * output_surface) {
 	Bit32u * draw=(Bit32u*)(((Bit8u *)output_surface->pixels)+((y)*output_surface->pitch))+x;
@@ -1490,6 +1491,7 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 		draw+=8;
 	}
 }
+#endif
 
 // #include "dosbox_splash.h"
 #include "dosbox_staging_splash.c"
@@ -2251,9 +2253,9 @@ void Config_Add_SDL() {
 
 static void show_warning(char const * const message) {
 #ifndef WIN32
-	printf("%s", message);
+	fprintf(stderr, "%s", message);
 	return;
-#endif
+#else
 	if (!sdl.inited && SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) < 0) {
 		sdl.inited = true;
 		printf("%s",message);
@@ -2295,6 +2297,7 @@ static void show_warning(char const * const message) {
 	SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
 	SDL_UpdateWindowSurface(sdl.window);
 	SDL_Delay(12000);
+#endif // WIN32
 }
 
 static void launcheditor() {
