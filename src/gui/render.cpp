@@ -22,6 +22,7 @@
 #include <math.h>
 #include <fstream>
 #include <sstream>
+#include <stdlib.h>
 
 #include "dosbox.h"
 #include "video.h"

@@ -704,9 +704,12 @@ static GLuint BuildShader ( GLenum type, const char *shaderSrc ) {
 
 		if (infoLen>1) {
 			char* infoLog = (char*)malloc(infoLen);
-			glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
-			LOG_MSG("Error compiling shader: %s", infoLog);
-			free(infoLog);
+			if (infoLog==NULL) LOG_MSG("Error getting shader compilation log");
+			else {
+				glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
+				LOG_MSG("Error compiling shader: %s", infoLog);
+				free(infoLog);
+			}
 		}
 
 		glDeleteShader(shader);
@@ -968,9 +971,12 @@ dosurface:
 						glGetProgramiv(sdl.opengl.program_object, GL_INFO_LOG_LENGTH, &infoLen);
 						if (infoLen>1) {
 							char *infoLog = (char*)malloc(infoLen);
-							glGetProgramInfoLog(sdl.opengl.program_object, infoLen, NULL, infoLog);
-							LOG_MSG("SDL:OPENGL:Error link prograram:\n %s", infoLog);
-							free(infoLog);
+							if (infoLog==NULL) LOG_MSG("SDL:OPENGL:Failed to retrieve program link log");
+							else {
+								glGetProgramInfoLog(sdl.opengl.program_object, infoLen, NULL, infoLog);
+								LOG_MSG("SDL:OPENGL:Error linking program:\n %s", infoLog);
+								free(infoLog);
+							}
 						}
 
 						glDeleteProgram(sdl.opengl.program_object);
