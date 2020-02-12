@@ -984,7 +984,7 @@ dosurface:
 					sdl.opengl.ruby.output_size = glGetUniformLocation(sdl.opengl.program_object, "rubyOutputSize");
 					sdl.opengl.ruby.frame_count = glGetUniformLocation(sdl.opengl.program_object, "rubyFrameCount");
 					// Don't force updating unless a shader depends on frame_count
-					RENDER_SetForceUpdate(sdl.opengl.ruby.frame_count != (GLint)-1);
+					RENDER_SetForceUpdate(sdl.opengl.ruby.frame_count != -1);
 				}
 			}
 		}
