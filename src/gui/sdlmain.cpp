@@ -93,8 +93,9 @@ PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;
 PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL;
 PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;
 
-#ifndef GL_VERSION_2_0
-#define GL_VERSION_2_0 1
+/* Don't guard these with GL_VERSION_2_0 - Apple defines it but not these typedefs.
+ * If they're already defined they should match these definitions, so no conflicts.
+ */
 typedef void (APIENTRYP PFNGLATTACHSHADERPROC) (GLuint program, GLuint shader);
 typedef void (APIENTRYP PFNGLCOMPILESHADERPROC) (GLuint shader);
 typedef GLuint (APIENTRYP PFNGLCREATEPROGRAMPROC) (void);
@@ -109,13 +110,18 @@ typedef void (APIENTRYP PFNGLGETSHADERIVPROC) (GLuint shader, GLenum pname, GLin
 typedef void (APIENTRYP PFNGLGETSHADERINFOLOGPROC) (GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
 typedef GLint (APIENTRYP PFNGLGETUNIFORMLOCATIONPROC) (GLuint program, const GLchar *name);
 typedef void (APIENTRYP PFNGLLINKPROGRAMPROC) (GLuint program);
-typedef void (APIENTRYP PFNGLSHADERSOURCEPROC) (GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length);
+typedef void (APIENTRYP PFNGLSHADERSOURCEPROC) (GLuint shader, GLsizei count, const GLchar **string, const GLint *length);
 typedef void (APIENTRYP PFNGLUNIFORM2FPROC) (GLint location, GLfloat v0, GLfloat v1);
 typedef void (APIENTRYP PFNGLUNIFORM1IPROC) (GLint location, GLint v0);
 typedef void (APIENTRYP PFNGLUSEPROGRAMPROC) (GLuint program);
 typedef void (APIENTRYP PFNGLVERTEXATTRIBPOINTERPROC) (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid *pointer);
-#endif
 
+/* Apple defines these functions in their GL header (as core functions)
+ * so we can't use their names as function pointers. We can't link
+ * directly as some platforms may not have them. So they get their own 
+ * namespace here to keep the official names but avoid collisions.
+ */
+namespace gl2 {
 PFNGLATTACHSHADERPROC glAttachShader = NULL;
 PFNGLCOMPILESHADERPROC glCompileShader = NULL;
 PFNGLCREATEPROGRAMPROC glCreateProgram = NULL;
@@ -135,10 +141,30 @@ PFNGLUNIFORM2FPROC glUniform2f = NULL;
 PFNGLUNIFORM1IPROC glUniform1i = NULL;
 PFNGLUSEPROGRAMPROC glUseProgram = NULL;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
+}
 
-#ifndef GL_SHADER_COMPILER
-#define GL_SHADER_COMPILER 0x8DFA
-#endif
+/* "using" is meant to hide identical names declared in outer scope
+ * but is unreliable, so just redefine instead.
+ */
+#define glAttachShader            gl2::glAttachShader
+#define glCompileShader           gl2::glCompileShader
+#define glCreateProgram           gl2::glCreateProgram
+#define glCreateShader            gl2::glCreateShader
+#define glDeleteProgram           gl2::glDeleteProgram
+#define glDeleteShader            gl2::glDeleteShader
+#define glEnableVertexAttribArray gl2::glEnableVertexAttribArray
+#define glGetAttribLocation       gl2::glGetAttribLocation
+#define glGetProgramiv            gl2::glGetProgramiv
+#define glGetProgramInfoLog       gl2::glGetProgramInfoLog
+#define glGetShaderiv             gl2::glGetShaderiv
+#define glGetShaderInfoLog        gl2::glGetShaderInfoLog
+#define glGetUniformLocation      gl2::glGetUniformLocation
+#define glLinkProgram             gl2::glLinkProgram
+#define glShaderSource            gl2::glShaderSource
+#define glUniform2f               gl2::glUniform2f
+#define glUniform1i               gl2::glUniform1i
+#define glUseProgram              gl2::glUseProgram
+#define glVertexAttribPointer     gl2::glVertexAttribPointer
 
 #endif //C_OPENGL
 
@@ -699,18 +725,16 @@ static GLuint BuildShader ( GLenum type, const char *shaderSrc ) {
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
 
 	if (!compiled) {
+		char* infoLog = NULL;
 		GLint infoLen = 0;
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
 
-		if (infoLen>1) {
-			char* infoLog = (char*)malloc(infoLen);
-			if (infoLog==NULL) LOG_MSG("Error getting shader compilation log");
-			else {
-				glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
-				LOG_MSG("Error compiling shader: %s", infoLog);
-				free(infoLog);
-			}
-		}
+		if (infoLen>1) infoLog = (char*)malloc(infoLen);
+		if (infoLog) {
+			glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
+			LOG_MSG("Error compiling shader: %s", infoLog);
+			free(infoLog);
+		} else LOG_MSG("Error getting shader compilation log");
 
 		glDeleteShader(shader);
 		return 0;
@@ -718,7 +742,7 @@ static GLuint BuildShader ( GLenum type, const char *shaderSrc ) {
 
 	return shader;
 }
-static bool GFX_LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
+static bool LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
 	GLuint s = BuildShader(GL_VERTEX_SHADER, src);
 	if (s) {
 		*vertex = s;
@@ -918,14 +942,14 @@ dosurface:
 		}
 
 		if (sdl.opengl.use_shader) {
-			GLboolean t;
-			// confirm current context supports shaders
-			glGetBooleanv(GL_SHADER_COMPILER, &t);
-			if (t) {
+			GLuint prog=0;
+			// reset error
+			glGetError();
+			glGetIntegerv(GL_CURRENT_PROGRAM, (GLint*)&prog);
+			// if there was an error this context doesn't support shaders
+			if (glGetError()==GL_NO_ERROR && (sdl.opengl.program_object==0 || prog!=sdl.opengl.program_object)) {
 				// check if existing program is valid
 				if (sdl.opengl.program_object) {
-					// reset error
-					glGetError();
 					glUseProgram(sdl.opengl.program_object);
 					if (glGetError() != GL_NO_ERROR) {
 						// program is not usable (probably new context), purge it
@@ -938,11 +962,11 @@ dosurface:
 				if (sdl.opengl.program_object == 0) {
 					GLuint vertexShader, fragmentShader;
 					const char *src = sdl.opengl.shader_src;
-					if (src && !GFX_LoadGLShaders(src, &vertexShader, &fragmentShader)) {
+					if (src && !LoadGLShaders(src, &vertexShader, &fragmentShader)) {
 						LOG_MSG("SDL:OPENGL:Failed to compile shader, falling back to default");
 						src = NULL;
 					}
-					if (src == NULL && !GFX_LoadGLShaders(shader_src_default, &vertexShader, &fragmentShader)) {
+					if (src == NULL && !LoadGLShaders(shader_src_default, &vertexShader, &fragmentShader)) {
 						LOG_MSG("SDL:OPENGL:Failed to compile default shader!");
 						goto dosurface;
 					}
@@ -966,18 +990,16 @@ dosurface:
 					GLint isProgramLinked;
 					glGetProgramiv(sdl.opengl.program_object, GL_LINK_STATUS, &isProgramLinked);
 					if (!isProgramLinked) {
+						char * infoLog = NULL;
 						GLint infoLen = 0;
 
 						glGetProgramiv(sdl.opengl.program_object, GL_INFO_LOG_LENGTH, &infoLen);
-						if (infoLen>1) {
-							char *infoLog = (char*)malloc(infoLen);
-							if (infoLog==NULL) LOG_MSG("SDL:OPENGL:Failed to retrieve program link log");
-							else {
-								glGetProgramInfoLog(sdl.opengl.program_object, infoLen, NULL, infoLog);
-								LOG_MSG("SDL:OPENGL:Error linking program:\n %s", infoLog);
-								free(infoLog);
-							}
-						}
+						if (infoLen>1) infoLog = (char*)malloc(infoLen);
+						if (infoLog) {
+							glGetProgramInfoLog(sdl.opengl.program_object, infoLen, NULL, infoLog);
+							LOG_MSG("SDL:OPENGL:Error linking program:\n %s", infoLog);
+							free(infoLog);
+						} else LOG_MSG("SDL:OPENGL:Failed to retrieve program link log");
 
 						glDeleteProgram(sdl.opengl.program_object);
 						sdl.opengl.program_object = 0;
@@ -1100,7 +1122,7 @@ dosurface:
 		if (sdl.opengl.pixel_buffer_object)
 			retFlags |= GFX_HARDWARE;
 		break;
-		}//OPENGL
+	}//OPENGL
 #endif	//C_OPENGL
 	default:
 		goto dosurface;
