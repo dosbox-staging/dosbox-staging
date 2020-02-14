@@ -825,7 +825,7 @@ static Handler * make_opl_handler(const std::string &oplemu, OPL_Mode mode)
 	if (oplemu == "nuked") {
 		return new NukedOPL::Handler();
 	}
-	return new DBOPL::Handler();
+	return new NukedOPL::Handler();
 }
 
 Module::Module(Section *configuration)
