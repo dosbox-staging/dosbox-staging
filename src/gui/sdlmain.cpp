@@ -2199,7 +2199,12 @@ void Config_Add_SDL() {
 #endif
 		0
 	};
-	Pstring = sdl_sec->Add_string("output",Property::Changeable::Always,"texture");
+
+#if C_OPENGL
+	Pstring = sdl_sec->Add_string("output", Property::Changeable::Always, "opengl");
+#else
+	Pstring = sdl_sec->Add_string("output", Property::Changeable::Always, "texture");
+#endif
 	Pstring->Set_help("What video system to use for output.");
 	Pstring->Set_values(outputs);
 
