@@ -2073,6 +2073,8 @@ void GFX_Events() {
 								if (ev.active.gain) {
 									paused = false;
 									GFX_SetTitle(-1,-1,false);
+									SetPriority(sdl.priority.focus);
+									CPU_Disable_SkipAutoAdjust();
 								}
 
 								/* Now poke a "release ALT" command into the keyboard buffer
