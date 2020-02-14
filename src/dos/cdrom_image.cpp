@@ -71,14 +71,16 @@ CDROM_Interface_Image::BinaryFile::~BinaryFile()
 	file = nullptr;
 }
 
-bool CDROM_Interface_Image::BinaryFile::read(Bit8u *buffer, int seek, int count)
+bool CDROM_Interface_Image::BinaryFile::read(uint8_t *buffer,
+                                             const uint32_t offset,
+                                             const uint32_t requested_bytes)
 {
 	// Guard: only proceed with a valid file
 	if (file == nullptr)
 		return false;
 
-	file->seekg(seek, ios::beg);
-	file->read((char*)buffer, count);
+	file->seekg(offset, ios::beg);
+	file->read((char*)buffer, requested_bytes);
 	return !file->fail();
 }
 
@@ -107,7 +109,7 @@ Bit16u CDROM_Interface_Image::BinaryFile::getEndian()
 }
 
 
-bool CDROM_Interface_Image::BinaryFile::seek(Bit32u offset)
+bool CDROM_Interface_Image::BinaryFile::seek(const uint32_t offset)
 {
 	// Guard: only proceed with a valid file
 	if (file == nullptr)
@@ -129,7 +131,8 @@ uint64_t CDROM_Interface_Image::BinaryFile::decode(Bit16s *buffer, Bit32u desire
 
 CDROM_Interface_Image::AudioFile::AudioFile(const char *filename, bool &error)
 	: TrackFile(4096),
-	  sample(nullptr)
+	  sample(nullptr),
+	  position(0)
 {
 	// Use the audio file's actual sample rate and number of channels as opposed to overriding
 	Sound_AudioInfo desired = {AUDIO_S16, 0, 0};
@@ -159,7 +162,7 @@ CDROM_Interface_Image::AudioFile::~AudioFile()
 	sample = nullptr;
 }
 
-bool CDROM_Interface_Image::AudioFile::seek(Bit32u offset)
+bool CDROM_Interface_Image::AudioFile::seek(const uint32_t offset)
 {
 #ifdef BENCHMARK
 #include <ctime>
@@ -172,6 +175,9 @@ bool CDROM_Interface_Image::AudioFile::seek(Bit32u offset)
 #endif
 	// Convert the byte-offset to a time offset (milliseconds)
 	const bool result = Sound_Seek(sample, lround(offset / REDBOOK_PCM_BYTES_PER_MS));
+#ifdef DEBUG
+	LOG_MSG("CDROM: seek to byte-offset %u", offset);
+#endif
 
 #ifdef BENCHMARK
 	const auto end = std::chrono::steady_clock::now();
@@ -180,6 +186,58 @@ bool CDROM_Interface_Image::AudioFile::seek(Bit32u offset)
 	        chrono::duration <double, milli> (end - begin).count());
 #endif
 	return result;
+}
+
+bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
+                                            const uint32_t offset,
+                                            const uint32_t requested_bytes)
+{
+	// Check for logic bugs
+	assertm(buffer != nullptr, "buffer needs to be allocated but is the nullptr [Bug]");
+	assertm(sample != nullptr, "Audio sample needs to be valid, but is the nullptr [Bug]");
+
+	// Guard again valid but no-op case
+	if (requested_bytes == 0)
+		return true;
+
+	// We support DAE from 16-bit, stereo, 44 kHz tracks. If the track doesn't conform to
+	// this, then inform the user. Also, we allow up to 10 DAE-attempts before informing
+	// the user - because some CD Player software will query this interface before using
+	// CDROM-directed playback (not DAE), therefore we don't want to fail in those cases.
+	if (getRate() != REDBOOK_PCM_FRAMES_PER_SECOND || getChannels() != REDBOOK_CHANNELS) {
+		static uint8_t dae_attempts = 0;
+		if (dae_attempts++ > 10) {
+			E_Exit("\n"
+			       "CDROM: Digital Audio Extration (DAE) was attempted with a %s %u kHz\n"
+			       "       track, but DAE is currently only compatible with stereo %u kHz\n"
+			       "       tracks.",
+			       getChannels() == 2 ? "stereo" : "mono",
+			       getRate(),
+			       REDBOOK_PCM_FRAMES_PER_SECOND);
+		}
+		return false; // we always correctly return false to the application in this case. 
+	}
+
+	// Seek, but only if we have to
+	if (position != (offset - requested_bytes))
+		if (!seek(offset))
+			return false;
+	position = offset;
+
+	uint32_t decoded_frames = 0;
+	const uint32_t requested_frames = requested_bytes / BYTES_PER_REDBOOK_PCM_FRAME;
+	while (decoded_frames < requested_frames) {
+		if (sample->flags & (SOUND_SAMPLEFLAG_ERROR | SOUND_SAMPLEFLAG_EOF))
+			break;
+		decoded_frames += Sound_Decode_Direct(sample,
+		                                      buffer + decoded_frames * BYTES_PER_REDBOOK_PCM_FRAME,
+		                                      requested_frames - decoded_frames);
+	}
+	if (decoded_frames < requested_frames)
+		memset(buffer + decoded_frames * BYTES_PER_REDBOOK_PCM_FRAME,
+		       0,
+		       (requested_frames - decoded_frames) * BYTES_PER_REDBOOK_PCM_FRAME);
+	return !(sample->flags & SOUND_SAMPLEFLAG_ERROR);
 }
 
 uint64_t CDROM_Interface_Image::AudioFile::decode(Bit16s *buffer, Bit32u desired_track_frames)
