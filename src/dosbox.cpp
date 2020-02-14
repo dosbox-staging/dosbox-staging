@@ -446,8 +446,13 @@ void DOSBOX_Init(void) {
 	Pint->SetMinMax(0,10);
 	Pint->Set_help("How many frames DOSBox skips before drawing one.");
 
-	Pbool = secprop->Add_bool("aspect",Property::Changeable::Always,false);
-	Pbool->Set_help("Do aspect correction, if your output method doesn't support scaling this can slow things down!");
+	Pbool = secprop->Add_bool("aspect", Property::Changeable::Always, true);
+	Pbool->Set_help("Scales the vertical resolution to produce a 4:3 display aspect\n"
+	                "ratio, matching that of the original standard-definition monitors\n"
+	                "for which the majority of DOS games were designed. This setting\n"
+	                "only affects video modes that use non-square pixels, such as\n"
+	                "320x200 or 640x400; where as square-pixel modes, such as 640x480\n"
+	                "and 800x600, will be displayed as-is.");
 
 	Pmulti = secprop->Add_multi("scaler",Property::Changeable::Always," ");
 	Pmulti->SetValue("normal2x");
