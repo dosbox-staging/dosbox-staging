@@ -247,7 +247,7 @@ void JOYSTICK_Button(Bitu which,Bitu num,bool pressed) {
 }
 
 void JOYSTICK_Move_X(Bitu which,float x) {
-	if(which > 2) return;
+	if (which > 1) return;
 	if (stick[which].xpos == x) return;
 	stick[which].xpos = x;
 	stick[which].transformed = false;
@@ -256,7 +256,7 @@ void JOYSTICK_Move_X(Bitu which,float x) {
 }
 
 void JOYSTICK_Move_Y(Bitu which,float y) {
-	if(which > 2) return;
+	if (which > 1) return;
 	if (stick[which].ypos == y) return;
 	stick[which].ypos = y;
 	stick[which].transformed = false;
