@@ -628,7 +628,7 @@ void DOSBOX_Init(void) {
 	Pstring = secprop->Add_string("oplemu", Property::Changeable::WhenIdle, "default");
 	Pstring->Set_values(oplemus);
 	Pstring->Set_help("Provider for the OPL emulation. 'compat' provides better quality,\n"
-	                  "'nuked' is the most accurate (but the most CPU-intensive).\n"
+	                  "'nuked' is the default and most accurate (but the most CPU-intensive).\n"
 	                  "See sblaster.oplrate as well.");
 
 	const char *oplrates[] = {"44100", "49716", "48000", "32000", "22050", "16000", "11025", "8000", 0};
