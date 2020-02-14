@@ -806,7 +806,7 @@ void PROGRAMS_Init(Section* /*sec*/) {
 	
 	// writeconf
 	MSG_Add("PROGRAM_CONFIG_FILE_ERROR","\nCan't open file %s\n");
-	MSG_Add("PROGRAM_CONFIG_FILE_WHICH","Writing config file %s");
+	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing config file %s\n");
 	
 	// help
 	MSG_Add("PROGRAM_CONFIG_USAGE", "Config tool:\n"
