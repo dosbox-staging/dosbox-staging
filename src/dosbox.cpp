@@ -454,12 +454,16 @@ void DOSBOX_Init(void) {
 	                "320x200 or 640x400; where as square-pixel modes, such as 640x480\n"
 	                "and 800x600, will be displayed as-is.");
 
-	Pmulti = secprop->Add_multi("scaler",Property::Changeable::Always," ");
+	Pmulti = secprop->Add_multi("scaler", Property::Changeable::Always, " ");
 	Pmulti->SetValue("normal2x");
-	Pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes. If 'forced' is appended,\n"
-	                 "then the scaler will be used even if the result might not be desired.\n"
-					 "To fit a scaler in the resolution used at full screen may require a border or side bars,\n"
-					 "to fill the screen entirely, depending on your hardware, a different scaler/fullresolution might work.");
+	Pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes.\n"
+	                 "If 'forced' is appended, then the scaler will be used even if\n"
+	                 "the result might not be desired.\n"
+	                 "Note that some scalers may use black borders to fit the image\n"
+	                 "within your configured display resolution. If this is\n"
+	                 "undesirable, try either a different scaler or enabling\n"
+	                 "fullresolution output.");
+
 	Pstring = Pmulti->GetSection()->Add_string("type",Property::Changeable::Always,"normal2x");
 
 	const char *scalers[] = {
