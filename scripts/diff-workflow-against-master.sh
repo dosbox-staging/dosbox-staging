@@ -15,10 +15,12 @@
 #  This script requires a GitHub account in order to generate an
 #  auth-token. Simply run the script, it will provide instructions.
 #
+
+# Bash strict-mode
 set -euo pipefail
 shopt -s nullglob
 
-# Fixed portion of the URL
+# Fixed portion of GitHub's v3 REST API URL
 declare -gr scheme="https://"
 declare -gr authority="api.github.com"
 
@@ -48,6 +50,10 @@ function cd_repo_root() {
 #  remote origin set in the repository's configuration
 #
 function init_baseurl() {
+	# Guard against subsequent calls
+	if [[ -n "${baseurl:-}" ]]; then
+		return 0
+	fi
 	cd_repo_root
 	# Extract the full GitHub repo name from the origin
 	repo="$(git config --get remote.origin.url | sed 's/.*://;s/\.git$//;s^//[^/]*/^^')"
@@ -66,28 +72,79 @@ function init_local_branch() {
 }
 
 ##
-#  Sets up NETRC credentials for GitHub's v3 API server.
-#  NETRC is currently the most secure way to provide
-#  credentials to CURL, because it prevents other processes
-#  from inspect the process environment and cmd arguments;
-#  both of which can be found in /proc).
+#  Returns the path to Git's configuration file
+#  specifically holding the user's credentials.
 #
-function init_netrc() {
-	# Check and setup the GitHub personal access token
-	local netrc="$HOME/.netrc"
-	if grep -q "^machine $authority" "$netrc"; then
-		echo "Found credentials for $authority in $netrc"
-		return
+function get_credential_file() {
+	init_baseurl
+	git config --show-origin "credential.$baseurl.username" \
+	| sed 's/.*://;s/\t.*$//'
+}
+
+##
+#  Gets or sets credentials, depending on the action
+#  Action can be "global" or "get", and value can be empty.
+#
+function manage_credential() {
+	init_baseurl
+	local action="$1"
+	local key="$2"
+	local value="${3:-}"
+	git config --"${action}" "credential.$baseurl.$key" "$value"
+}
+
+##
+#  Test if the credentials work with GitHub
+#
+function test_credentials() {
+	if pull workflows | grep -q "Bad credentials"; then
+		local test_url="https://api.github.com/repos/octo-org/octo-repo/actions/workflows"
+		echo "The provided credentials failed; please test them with this command:"
+		echo ""
+		echo "  curl -l -u \"EMAIL:TOKEN\" \""$test_url"\""
+		echo ""
+		exit 1
 	fi
-	# Get the username
-	clear
+}
+
+##
+#  Initializes credentials for GitHub's v3 API server.
+#
+#  We use Git's recommended credential mechanism described here:
+#  https://git-scm.com/docs/gitcredentials, along with protecting
+#  their Git configuration file. 
+#
+#  We store the credentially globally for two reasons:
+#  - auth-tokens are not repo-specific, and can be used github-wide
+#  - auto-tokens are not recoverable from the website, 
+#    so storing globally ensure that if the user clones the
+#    repo again, their token will still be useable (and not lost).
+#
+function init_credentials() {
+	# Attempt to fetch previously setup credentials
+	if username="$(manage_credential get username)" && \
+	   token="$(manage_credential get token)"; then
+	   return 0
+	fi
+
+	# Otherwise ask the user for their email and token;
+	# One-time setup.
+
+	# Check if we can pre-populate the username field with
+	# their existing email address, but only if it's valid:
+	username="$(git config --get user.email)"
+	if [[ -z "$username" || "$username" == *"noreply"* ]]; then
+		username=""
+	fi
+
+	# Prompt the user for their account email address:
 	echo ""
 	echo "1. Enter your GitHub account email address, example: jcousteau@scuba.fr"
+	echo "   Note, this is your real signup address, not GitHub's no-reply address."
 	echo ""
-	read -r -p "GitHub account email: " username
+	read -r -e -i "$username" -p "GitHub account email: " username
 
-	# Get the token
-	clear
+	# Help the user generate and enter a minimal-access token:
 	echo ""
 	echo "2. Login to GitHub and visit https://github.com/settings/tokens"
 	echo ""
@@ -103,23 +160,24 @@ function init_netrc() {
 	echo ""
 	echo "4. Copy & paste your token, for example: f7e6b2344bd2c1487597b61d77703527a692a072"
 	echo ""
-	# Deliberately echo the token so the user can verify its correctness
+	# Note: We deliberately echo the token so the user can verify its correctness
 	read -r -p "Personal Access Token: " token
+	echo ""
 
-	# Add the credential to netrc
-	clear
+	# Add the credentials per Git's recommended mechanism
 	if [[ -n "${username:-}" && -n "${token:-}" ]]; then
-		{
-			echo "machine $authority"
-			echo "login $username"
-			echo "password $token"
-			echo ""
-		} >> "$netrc"
-		echo "Added your credentials to $netrc"
-		# Ensure netrc is only readable by the user
-		chmod 600 "$netrc"
+		test_credentials
+		manage_credential global username "$username"
+		manage_credential global token "$token"
+		local credential_file="$(get_credential_file)"
+		echo "Added your credentials to $credential_file"
+
+		# If we made it here, then the above commands succeeded and the credentials
+		# are added. It's now our responsibility to lock-down the file:
+		chmod 600 "$credential_file"
+		echo "Applied user-access-only RW (600) permissions to $credential_file"
 	else
-		echo "Failed to setup $netrc or some of the credentials were empty!"
+		echo "Failed to setup credentials or some of the credentials were empty!"
 		exit 1
 	fi
 }
@@ -190,17 +248,6 @@ function init_dirs() {
 }
 
 ##
-#  Ensures all pre-requisites are setup and have passed
-#  before we start making REST queries and writing files.
-#
-function init() {
-	init_baseurl
-	init_local_branch
-	init_netrc
-	init_dirs
-}
-
-##
 #  Downloads a file if we otherwise don't have it.
 #  (Note that the script on launch cleans up files older than
 #  5 minutes, so most of the time we'll be downloading.)
@@ -209,11 +256,11 @@ function download() {
 	local url="$1"
 	local outfile="$2"
 	if [[ ! -f "$outfile" ]]; then
-		curl --silent     \
-		     --location   \
-		     --netrc      \
-		     "$url"       \
-		     -o "$outfile"
+		curl -u "$username:$token" \
+		     --silent              \
+		     --location            \
+		     --output "$outfile"   \
+		     "$url"
 	fi
 }
 
@@ -382,6 +429,17 @@ function fetch_job_log() {
 	pull jobs "$jid" logs \
 	| sed 's/^.*Z[ \t]*//;s/:[[:digit:]]*:[[:digit:]]*://;s/\[/./g;s/\]/./g' \
 	> "$outfile"
+}
+
+##
+#  Ensures all pre-requisites are setup and have passed
+#  before we start making REST queries and writing files.
+#
+function init() {
+	init_baseurl
+	init_local_branch
+	init_dirs
+	init_credentials
 }
 
 ##
