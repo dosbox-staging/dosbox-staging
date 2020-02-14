@@ -613,19 +613,22 @@ void CONFIG::Run(void) {
 			}
 			case 2: {
 				// section + property
-				Section* sec = control->GetSection(pvars[0].c_str());
+				const char *sec_name = pvars[0].c_str();
+				const char *prop_name = pvars[1].c_str();
+				const Section *sec = control->GetSection(sec_name);
 				if (!sec) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
+					WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"),
+					         sec_name);
 					return;
 				}
-				std::string val = sec->GetPropValue(pvars[1].c_str());
+				const std::string val = sec->GetPropValue(prop_name);
 				if (val == NO_SUCH_PROPERTY) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
-						pvars[1].c_str(),pvars[0].c_str());   
+					         prop_name, sec_name);
 					return;
 				}
-				WriteOut("%s",val.c_str());
-				first_shell->SetEnv("CONFIG",val.c_str());
+				WriteOut("%s\n", val.c_str());
+				first_shell->SetEnv("CONFIG", val.c_str());
 				break;
 			}
 			default:
@@ -832,10 +835,10 @@ void PROGRAMS_Init(Section* /*sec*/) {
 
 	MSG_Add("PROGRAM_CONFIG_SECURE_ON","Switched to secure mode.\n");
 	MSG_Add("PROGRAM_CONFIG_SECURE_DISALLOW","This operation is not permitted in secure mode.\n");
-	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR","Section %s doesn't exist.\n");
+	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", "Section \"%s\" doesn't exist.\n");
 	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR","\"%s\" is not a valid value for property %s.\n");
 	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR","No such section or property.\n");
-	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY","There is no property %s in section %s.\n");
+	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY", "There is no property \"%s\" in section \"%s\".\n");
 	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX","Correct syntax: config -set \"section property\".\n");
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX","Correct syntax: config -get \"section property\".\n");
 	MSG_Add("PROGRAM_CONFIG_PRINT_STARTUP","\nDOSBox was started with the following command line parameters:\n%s");
