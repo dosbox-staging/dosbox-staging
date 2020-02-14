@@ -40,6 +40,8 @@
 #define BYTES_PER_RAW_REDBOOK_FRAME    2352
 #define BYTES_PER_COOKED_REDBOOK_FRAME 2048
 #define REDBOOK_FRAMES_PER_SECOND        75
+#define REDBOOK_CHANNELS                  2
+#define REDBOOK_PCM_FRAMES_PER_SECOND 44100
 #define MAX_REDBOOK_FRAMES           400000 // frames are Redbook's data unit
 #define MAX_REDBOOK_SECTOR           399999 // a sector is the index to a frame
 #define MAX_REDBOOK_TRACKS               99
@@ -127,8 +129,10 @@ private:
 		TrackFile(Bit16u _chunkSize) : chunkSize(_chunkSize) {}
 	public:
 		virtual          ~TrackFile() = default;
-		virtual bool     read(Bit8u *buffer, int seek, int count) = 0;
-		virtual bool     seek(Bit32u offset) = 0;
+		virtual bool     read(uint8_t *buffer,
+		                      const uint32_t offset,
+		                      const uint32_t requested_bytes) = 0;
+		virtual bool     seek(const uint32_t offset) = 0;
 		virtual uint64_t decode(Bit16s *buffer, uint32_t desired_track_frames) = 0;
 		virtual Bit16u   getEndian() = 0;
 		virtual Bit32u   getRate() = 0;
@@ -146,8 +150,10 @@ private:
 		BinaryFile      (const BinaryFile&) = delete; // prevent copying
 		BinaryFile&     operator= (const BinaryFile&) = delete; // prevent assignment
 
-		bool            read(Bit8u *buffer, int seek, int count);
-		bool            seek(Bit32u offset);
+		bool            read(uint8_t *buffer,
+		                     const uint32_t offset,
+		                     const uint32_t requested_bytes);
+		bool            seek(const uint32_t offset);
 		uint64_t        decode(Bit16s *buffer, Bit32u desired_track_frames);
 		Bit16u          getEndian();
 		Bit32u          getRate() { return 44100; }
@@ -166,12 +172,10 @@ private:
 		AudioFile       (const AudioFile&) = delete; // prevent copying
 		AudioFile&      operator= (const AudioFile&) = delete; // prevent assignment
 
-		bool            read(Bit8u *buffer, int seek, int count) {
-		                    (void)buffer; // unused but part of the API
-		                    (void)seek;   // ...
-		                    (void)count;  // ...
-		                    return false; }
-		bool            seek(Bit32u offset);
+		bool            read(uint8_t *buffer,
+		                     const uint32_t offset,
+		                     const uint32_t requested_bytes);
+		bool            seek(const uint32_t offset);
 		uint64_t        decode(Bit16s *buffer, Bit32u desired_track_frames);
 		Bit16u          getEndian();
 		Bit32u          getRate();
@@ -179,6 +183,7 @@ private:
 		int             getLength();
 	private:
 		Sound_Sample    *sample;
+		uint32_t        position;
 	};
 
 public:
