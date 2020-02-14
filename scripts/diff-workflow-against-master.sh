@@ -33,11 +33,28 @@ declare -gr cyan="\\e[36m"
 declare -gr reset="\\e[0m"
 
 ##
+#  Checks if script dependencies are available
+#
+function check_dependencies() {
+	local missing=0
+	for prog in git jq curl unzip chmod date stat dirname basename diff; do
+		if ! command -v "$prog" &> /dev/null; then
+			echo -e "The command-line tool \"${bold}${red}${prog}${reset}\" is needed but could not be run; please install it."
+			(( missing++ ))
+		fi
+	done
+	if [[ "$missing" -gt 0 ]]; then
+		exit 1
+	fi
+}
+
+##
 #  Changes the working directory to that of the
 #  repository's root.
 #
 function cd_repo_root() {
 	if [[ "${in_root:-}" != "true" ]]; then
+		local script_path
 		script_path="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 		pushd "$script_path" > /dev/null
 		pushd "$(git rev-parse --show-toplevel)" > /dev/null
@@ -101,7 +118,7 @@ function test_credentials() {
 		local test_url="https://api.github.com/repos/octo-org/octo-repo/actions/workflows"
 		echo "The provided credentials failed; please test them with this command:"
 		echo ""
-		echo "  curl -l -u \"EMAIL:TOKEN\" \""$test_url"\""
+		echo "  curl -l -u \"EMAIL:TOKEN\" \"$test_url\""
 		echo ""
 		exit 1
 	fi
@@ -124,6 +141,7 @@ function init_credentials() {
 	# Attempt to fetch previously setup credentials
 	if username="$(manage_credential get username)" && \
 	   token="$(manage_credential get token)"; then
+	   echo "Credentials loaded from: $(get_credential_file)"
 	   return 0
 	fi
 
@@ -169,7 +187,8 @@ function init_credentials() {
 		test_credentials
 		manage_credential global username "$username"
 		manage_credential global token "$token"
-		local credential_file="$(get_credential_file)"
+		local credential_file
+		credential_file="$(get_credential_file)"
 		echo "Added your credentials to $credential_file"
 
 		# If we made it here, then the above commands succeeded and the credentials
@@ -184,11 +203,11 @@ function init_credentials() {
 
 ##
 #  Makes strings suitable for directory and filenames
-#   - spaces => underscores
-#   - upper-case => lower-case
-#   - slashes => dashes
+#   - spaces      => underscores
+#   - upper-case  => lower-case
+#   - slashes     => dashes
 #   - parenthesis => stripped
-#   - equals  => dashes
+#   - equals      => dashes
 #
 function sanitize_name() {
 	local name="$1"
@@ -207,24 +226,24 @@ function seconds_old() {
 #  This include cached JSON output (valid for 5 minutes), along
 #  with zip assets, log files, and diffs.
 #
-declare -g parent # used by the trap
+declare -g storage_dir # used by the trap
 function init_dirs() {
 	local repo_postfix
 	repo_postfix="$(basename "$repo")"
-	parent="/tmp/$repo_postfix-workflows-$USER"
-	assets_dir="$parent/assets"
-	cache_dir="$parent/cache"
-	diffs_dir="$parent/diffs"
-	logs_dir="$parent/logs"
+	storage_dir="/tmp/$repo_postfix-workflows-$USER"
+	assets_dir="$storage_dir/assets"
+	cache_dir="$storage_dir/cache"
+	diffs_dir="$storage_dir/diffs"
+	logs_dir="$storage_dir/logs"
 	declare -gr assets_dir
 	declare -gr cache_dir
 	declare -gr diffs_dir
 	declare -gr logs_dir
-	echo "Initializing storage area: $parent"
+	echo "Initializing storage area: $storage_dir"
 
 	# Don't trust content from a prior interrupted run
-	if [[ -f "$parent/.interrupted" ]]; then
-		rm -rf "$parent"
+	if [[ -f "$storage_dir/.interrupted" ]]; then
+		rm -rf "$storage_dir"
 	fi
 
 	# Make the directories if they don't exist
@@ -240,11 +259,21 @@ function init_dirs() {
 			done
 		fi
 	done
-	# If the user Ctrl-C'd the job, then some files might be
-	# partially written, so drop a breadcrumb to clean up next run.
-	# (we could just blow away the content here, but we want to
-	# let the user inspect content after interrupting the run.)
-	trap 'touch $parent/.interrupted' INT
+	trap 'interrupt' INT
+}
+
+##
+#  Perform post-exit actions if the user Ctrl-C'd the job.
+#  Some files might be partially written, so drop a breadcrumb
+#  to clean up next run.
+#
+function interrupt() {
+	touch "$storage_dir/.interrupted"
+	echo " <== OK, stopping."
+	echo ""
+	echo -e "Partial logs available in: ${bold}${storage_dir}${bold}${reset}"
+	echo "They will be purged next run."
+	echo ""
 }
 
 ##
@@ -436,6 +465,7 @@ function fetch_job_log() {
 #  before we start making REST queries and writing files.
 #
 function init() {
+	check_dependencies
 	init_baseurl
 	init_local_branch
 	init_dirs
@@ -524,6 +554,8 @@ function main() {
 			echo "  $joiner"
 		done # branch types
 	done # workflows
+	echo -e "Copy of logs in: ${bold}${storage_dir}${bold}"
+	echo ""
 }
 
-main
+main "$@"
