@@ -1361,14 +1361,13 @@ To host a DOS-based BBS:
     [serial]
     serial1 = modem listenport:2323
 
- 2) Configure your DOSBox machine to have a static IP address or always
-    receive the sample IP via DHCP.  Typically this is done via your
-    LAN router.
+ 2) Configure your DOSBox machine to use a static IP address or be assigned
+    a static IP via DHCP, which can typically be configured in your router.
 
  3) If your DOSBox machine is behind a router/firewall, add a port-
     fowarding entry to listen on TCP port 23 and pass it through to
-    port 2323 on DOSBox machine's LAN IP address.  This allows Internet
-    users to dial your BBS using Telnet's default port.
+    port 2323 to your DOSBox machine's IP address.  This allows Internet
+    users to "dial" your BBS using the default Telnet port.
 
 =====================================
 10. How to speed up/slow down DOSBox:
