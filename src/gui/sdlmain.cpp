@@ -686,7 +686,7 @@ static GLuint BuildShader ( GLenum type, const char *shaderSrc ) {
 	}
 
 	top += (type==GL_VERTEX_SHADER) ? "#define VERTEX 1\n":"#define FRAGMENT 1\n";
-	if (!sdl.opengl.bilinear)
+	if (!sdl.kind == OkNone) // bilinear, the default output of OpenGL
 		top += "#define OPENGLNB 1\n";
 
 	src_strings[0] = top.c_str();
