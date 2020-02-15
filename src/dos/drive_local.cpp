@@ -62,7 +62,7 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/)
 	return true;
 }
 
-bool localDrive::isNewWriteProtectedFile(const std::string& filename) {
+bool localDrive::IsFirstEncounter(const std::string& filename) {
 	const std::pair<std::set<std::string>::iterator, bool> \
 		ret(write_protected_files.insert(filename));
 	return ret.second;
@@ -102,30 +102,36 @@ bool localDrive::FileOpen(DOS_File** file, char * name, Bit32u flags) {
 	}
 
 	FILE* fhandle = fopen(newname, type);
-	// Was the file opened with the desired type?
-	if (!fhandle) {
-		// No; but do the requested flags require write-access?
-		if ((flags & 0xf) != OPEN_READ) {
-			// Yes; then maybe the local file is simply write-protected, so try again.
-			fhandle = fopen_wrap(newname, "rb");
-			if (fhandle) {
-				// Ok! so the file is protected file; update the flags to indicate a normal open.
-				flags &= ~OPEN_READWRITE;
 
-				// Inform the user that the file is being protected against modification.
-				// If the DOS program /really/ needs to write to the file, it will crash/exit
-				// and this will be one of the last messages on the screen, so the user can
-				// decide to un-write-protect the file if they wish.
-				if (isNewWriteProtectedFile(newname)) {
-					LOG_MSG("FILESYSTEM: protected from modification: %s", newname);
-				}
+	// If we couldn't open the file, then it's possibile that
+	// the file is simply write-protected and the flags requested
+	// RW access.  So check if this is the case:
+	if (!fhandle && flags & (OPEN_READWRITE | OPEN_WRITE)) {
+		// If yes, check if the file can be opened with Read-only access:
+		fhandle = fopen_wrap(newname, "rb");
+		if (fhandle) {
+			// Ok! so the file is present but write-protected file.
+			// Re-apply the same flag DOS program requested:
+			flags &= ~(OPEN_READWRITE | OPEN_WRITE);
+			// Inform the user that the file is being protected against modification.
+			// If the DOS program /really/ needs to write to the file, it will
+			// crash/exit and this will be one of the last messages on the screen,
+			// so the user can decide to un-write-protect the file if they wish.
+			// We only print one message per file to eliminate redundant messaging.
+			if (IsFirstEncounter(newname)) {
+				// For brevity and clarity to the user, we show just the
+				// filename instead of the more cluttered absolute path.
+				const uint16_t delim = std::string(newname).find_last_of("/\\") + 1;
+				LOG_MSG("FILESYSTEM: protected from modification: %s", newname + delim);
 			}
 		}
 	}
-
 	if (fhandle) {
 		*file = new localFile(name, fhandle);
-		(*file)->flags=flags;  //for the inheritance flag and maybe check for others.
+		(*file)->flags = flags;  // for the inheritance flag and maybe check for others.
+	} else {
+		// Otherwise we really can't open the file.
+		DOS_SetError(DOSERR_INVALID_HANDLE);
 	}
 	return (fhandle != NULL);
 }
@@ -223,7 +229,7 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 		}
 	} else {
 		if (sAttr == DOS_ATTR_VOLUME) {
-			if (strcmp(dirCache.GetLabel(), "") == 0) {
+			if (strlen(dirCache.GetLabel()) == 0) {
 //				LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
 //				dta.SetResult("NO_LABEL",0,0,0,DOS_ATTR_VOLUME);
 //				return true;

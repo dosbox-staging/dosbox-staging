@@ -58,7 +58,8 @@ public:
 	: installed(false),
 	  m_port(0),
 	  m_mask(0),
-	  m_range(0) {};
+	  m_range(0)
+{}
 };
 class IO_ReadHandleObject: private IO_Base{
 public:
