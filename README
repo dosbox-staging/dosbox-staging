@@ -26,7 +26,7 @@ INDEX:
 6. Joystick/Gamepad
 7. KeyMapper
 8. Keyboard Layout
-9. Serial Multiplayer feature
+9. Serial Modem: Multiplayer and BBS Gaming
 10. How to speed up/slow down DOSBox
 11. Troubleshooting
 12. DOSBox Status Window
@@ -1271,9 +1271,9 @@ by DOSBox.
 
 
 
-==============================
-9. Serial Multiplayer feature:
-==============================
+===========================================
+9. Serial Modem: Multiplayer and BBS Gaming
+===========================================
 
 DOSBox can emulate a serial nullmodem cable over network and internet.
 It can be configured through the [serialports] section in the DOSBox
@@ -1316,7 +1316,59 @@ of the nullmodem connection. These are all parameters:
 Example: Be a server listening on TCP port 5000.
    serial1=nullmodem server:<IP or name of the server> port:5000 rxdelay:1000
 
+BBS Gaming
+----------
+DOSBox's serial interface can emulate a telephone modem, which allows original
+DOS terminal applications to either dial or host a BBS on the Internet 
+via the Telnet protocol.
 
+First, configure DOSBox with a serial port emulating a modem:
+
+   [serial]
+   serial1 = modem listenport:2323
+
+Next, launch your favorite DOS terminal or BBS hosting software and configure
+its corresponding serial port with default settings, as follows:
+
+  COM1:
+    - COM port 1
+    - 8N1 data-bits, stop-bits, and parity
+    - 57600 baud
+    - 03F8 address
+    - IRQ4 interrupt
+    - 16550 fifo enabled
+    - Software flow control (Xon/Xoff) enabled
+    - Hardware flow control (CTS/RTS) enabled
+    - Hardware flow control (DSR/DTR) disabled
+
+To dial BBSes on the Internet:
+
+  1) Set your dialing prefix to: ATNET1^MATDT to ensure file-transfers
+     and command mode transitions and handled properly.
+
+  2) Set the phone number of the BBS to its hostname or IP, optionally
+     followed by the Telnet port number, for example:
+
+      - Phone number on non-standard port: remote.bbs.com:2323
+      - Phone number on standard port 23: remote.bbs.com
+
+To host a DOS-based BBS:
+
+ 1) Configure your DOSBox serial port to listen on a Telnet port greater
+    than 1024. This allows you to run DOSbox with normal user privileges
+    as opposed to granting it root or administrator privileges, for example:
+ 
+    [serial]
+    serial1 = modem listenport:2323
+
+ 2) Configure your DOSBox machine to have a static IP address or always
+    receive the sample IP via DHCP.  Typically this is done via your
+    LAN router.
+
+ 3) If your DOSBox machine is behind a router/firewall, add a port-
+    fowarding entry to listen on TCP port 23 and pass it through to
+    port 2323 on DOSBox machine's LAN IP address.  This allows Internet
+    users to dial your BBS using Telnet's default port.
 
 =====================================
 10. How to speed up/slow down DOSBox:
