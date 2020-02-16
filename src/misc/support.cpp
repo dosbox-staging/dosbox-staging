@@ -34,6 +34,24 @@
 #include "support.h"
 #include "video.h"
 
+std::string get_basename(const std::string& filename) {
+	// Guard against corner cases: '', '/', '\', 'a'
+	if (filename.length() <= 1)
+		return filename;
+
+	// Find the last slash, but if not is set to zero
+	size_t slash_pos = filename.find_last_of("/\\");
+
+	// If the slash is the last character
+	if (slash_pos == filename.length() - 1)
+		slash_pos = 0;
+
+	// Otherwise if the slash is found mid-string
+	else if (slash_pos > 0)
+		slash_pos++;
+	return filename.substr(slash_pos);
+}
+
 
 void upcase(std::string &str) {
 	int (*tf)(int) = std::toupper;
