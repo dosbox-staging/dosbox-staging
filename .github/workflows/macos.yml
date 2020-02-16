@@ -29,3 +29,79 @@ jobs:
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:  python3 ./scripts/count-warnings.py build.log
+
+  build_macos_release:
+    name: Release build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install C++ compiler and libraries
+        run:  brew install librsvg $(./scripts/list-build-dependencies.sh -m brew -c clang)
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+      - name: Inject version string
+        run: |
+          set -x
+          export VERSION=$(git describe --abbrev=5)
+          sed -i -e "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
+          echo ::set-env name=VERSION::$VERSION
+      - name: Build
+        env:
+          FLAGS: -O3 -DNDEBUG -pipe
+        run: |
+          set -x
+          ./autogen.sh
+          # FIXME temporarily disable everything aside SDL2 due to linking issues
+          ./configure \
+            --enable-sdl-static \
+            --disable-opus-cdda \
+            --disable-screenshots \
+            --disable-network \
+            CFLAGS="$FLAGS" CXXFLAGS="$FLAGS"
+          gmake -j "$(sysctl -n hw.physicalcpu)"
+          strip src/dosbox
+          otool -L src/dosbox
+
+      - name: Package
+        run: |
+          set -x
+
+          # Generate icon
+          make -C contrib/icons/ dosbox-staging.icns
+
+          dst=dist/dosbox-staging.app/Contents/
+
+          # Prepare content
+          install -d "$dst/MacOS/"
+          install -d "$dst/Resources/"
+          install -d "$dst/SharedSupport/"
+
+          install        "src/dosbox"                        "$dst/MacOS/"
+          install -m 644 "contrib/macos/Info.plist.template" "$dst/Info.plist"
+          install -m 644 "contrib/macos/PkgInfo"             "$dst/PkgInfo"
+          install -m 644 "contrib/icons/dosbox-staging.icns" "$dst/Resources/"
+          install -m 644 "docs/README.template"              "$dst/SharedSupport/README"
+          install -m 644 "COPYING"                           "$dst/SharedSupport/COPYING"
+          install -m 644 "README"                            "$dst/SharedSupport/manual.txt"
+          install -m 644 "docs/README.video"                 "$dst/SharedSupport/video.txt"
+
+          # Fill README template file
+          sed -i -e "s|%VERSION%|${{ env.VERSION }}|"           "$dst/Info.plist"
+          sed -i -e "s|%GIT_COMMIT%|$GITHUB_SHA|"               "$dst/SharedSupport/README"
+          sed -i -e "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" "$dst/SharedSupport/README"
+          sed -i -e "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       "$dst/SharedSupport/README"
+
+          ln -s /Applications dist/
+
+          hdiutil create \
+              -volname "dosbox-staging" \
+              -srcfolder dist \
+              -ov -format UDZO "dosbox-staging-macOS-${{ env.VERSION }}.dmg"
+
+      - name: Upload disk image
+        uses: actions/upload-artifact@master
+        # GitHub automatically zips the artifacts, and there's no option
+        # to skip it or upload a file only.
+        with:
+          name: dosbox-staging-macOS-x86_64
+          path: dosbox-staging-macOS-${{ env.VERSION }}.dmg
