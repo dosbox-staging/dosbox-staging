@@ -32,6 +32,8 @@
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
 #endif
 
+std::string get_basename(const std::string& filename);
+
 // Include a message in assert, similar to static_assert:
 #define assertm(exp, msg) assert(((void)msg, exp))
 // Use (void) to silent unused warnings.

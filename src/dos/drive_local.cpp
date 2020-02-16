@@ -16,6 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+// Uncomment to enable file-open diagnostic messages
+// #define DEBUG 1
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -103,6 +105,18 @@ bool localDrive::FileOpen(DOS_File** file, char * name, Bit32u flags) {
 
 	FILE* fhandle = fopen(newname, type);
 
+#ifdef DEBUG
+	std::string open_msg;
+	std::string flags_str;
+	switch (flags & 0xf) {
+		case OPEN_READ:        flags_str = "R";  break;
+		case OPEN_WRITE:       flags_str = "W";  break;
+		case OPEN_READWRITE:   flags_str = "RW"; break;
+		case OPEN_READ_NO_MOD: flags_str = "RN"; break;
+		default:               flags_str = "--";
+	}
+#endif
+
 	// If we couldn't open the file, then it's possibile that
 	// the file is simply write-protected and the flags requested
 	// RW access.  So check if this is the case:
@@ -110,9 +124,10 @@ bool localDrive::FileOpen(DOS_File** file, char * name, Bit32u flags) {
 		// If yes, check if the file can be opened with Read-only access:
 		fhandle = fopen_wrap(newname, "rb");
 		if (fhandle) {
-			// Ok! so the file is present but write-protected file.
-			// Re-apply the same flag DOS program requested:
-			flags &= ~(OPEN_READWRITE | OPEN_WRITE);
+
+#ifdef DEBUG
+			open_msg = "wanted writes but opened read-only";
+#else
 			// Inform the user that the file is being protected against modification.
 			// If the DOS program /really/ needs to write to the file, it will
 			// crash/exit and this will be one of the last messages on the screen,
@@ -121,11 +136,29 @@ bool localDrive::FileOpen(DOS_File** file, char * name, Bit32u flags) {
 			if (IsFirstEncounter(newname)) {
 				// For brevity and clarity to the user, we show just the
 				// filename instead of the more cluttered absolute path.
-				const uint16_t delim = std::string(newname).find_last_of("/\\") + 1;
-				LOG_MSG("FILESYSTEM: protected from modification: %s", newname + delim);
+				LOG_MSG("FILESYSTEM: protected from modification: %s",
+				        get_basename(newname).c_str());
 			}
+#endif
 		}
+
+#ifdef DEBUG
+		else {
+			open_msg += "failed desired and with read-only";
+		}
+#endif
 	}
+
+#ifdef DEBUG
+	else {
+		open_msg = "succeeded with desired flags";
+	}
+	LOG_MSG("FILESYSTEM: flags=%2s, %-12s %s",
+	        flags_str.c_str(),
+	        get_basename(newname).c_str(),
+	        open_msg.c_str());
+#endif
+
 	if (fhandle) {
 		*file = new localFile(name, fhandle);
 		(*file)->flags = flags;  // for the inheritance flag and maybe check for others.
