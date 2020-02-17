@@ -291,7 +291,7 @@ private:
 	bool AddChunk(const AVIChunk &ck, const AVIIndexEntry &entry, const void *data, size_t length) {
 		long pos = ftell(handle); // in case writing fails
 		if (fwrite(&ck,sizeof(ck),1,handle)==1 && \
-		    fwrite(data,length,1,handle)==1)
+		    fwrite(data,1,length,handle)==length)
 		{
 			if (length&1) { // chunks must be aligned to 2-bytes
 				fseek(handle,1,SEEK_CUR);
@@ -446,6 +446,7 @@ static struct {
 		float		fps;
 		int			bufSize;
 		void		*buf;
+		int		gop;
 	} video;
 #endif
 } capture;
@@ -749,56 +750,64 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 			capture.video.height = height;
 			capture.video.bpp = bpp;
 			capture.video.fps = fps;
+			capture.video.gop = 0;
+			flags &= ~CAPTURE_FLAG_DUPLICATE;
 		}
-		int codecFlags;
-		if (capture.video.avi_out->frames % 300 == 0)
-			codecFlags = 1;
-		else codecFlags = 0;
-		if (!capture.video.codec->PrepareCompressFrame( codecFlags, format, (char *)pal, capture.video.buf, capture.video.bufSize))
-			goto skip_video;
+		int codecFlags,written;
+		codecFlags = 0;
+		if (flags & CAPTURE_FLAG_DUPLICATE) written = 0;
+		else {
+			if (capture.video.gop >= 300)
+				capture.video.gop = 0;
+			if (capture.video.gop==0)
+				codecFlags = 1;
+			if (!capture.video.codec->PrepareCompressFrame( codecFlags, format, (char *)pal, capture.video.buf, capture.video.bufSize))
+				goto skip_video;
 
-		for (i=0;i<height;i++) {
-			const void *srcLine;
-			if (flags & CAPTURE_FLAG_DBLH)
-				srcLine=(data+(i >> 1)*pitch);
-			else
-				srcLine=(data+(i >> 0)*pitch);
-			if (flags & CAPTURE_FLAG_DBLW) {
-				Bitu x;
-				Bitu countWidth = width >> 1;
-				switch ( bpp) {
-				case 8:
-					for (x=0;x<countWidth;x++)
-						((Bit8u *)doubleRow)[x*2+0] =
-						((Bit8u *)doubleRow)[x*2+1] = ((Bit8u *)srcLine)[x];
-					break;
-				case 15:
-				case 16:
-					for (x=0;x<countWidth;x++)
-						((Bit16u *)doubleRow)[x*2+0] =
-						((Bit16u *)doubleRow)[x*2+1] = ((Bit16u *)srcLine)[x];
-					break;
-				case 32:
-					for (x=0;x<countWidth;x++)
-						((Bit32u *)doubleRow)[x*2+0] =
-						((Bit32u *)doubleRow)[x*2+1] = ((Bit32u *)srcLine)[x];
-					break;
+			for (i=0;i<height;i++) {
+				const void *srcLine;
+				if (flags & CAPTURE_FLAG_DBLH)
+					srcLine=(data+(i >> 1)*pitch);
+				else
+					srcLine=(data+(i >> 0)*pitch);
+				if (flags & CAPTURE_FLAG_DBLW) {
+					Bitu x;
+					Bitu countWidth = width >> 1;
+					switch ( bpp) {
+					case 8:
+						for (x=0;x<countWidth;x++)
+							((Bit8u *)doubleRow)[x*2+0] =
+							((Bit8u *)doubleRow)[x*2+1] = ((Bit8u *)srcLine)[x];
+						break;
+					case 15:
+					case 16:
+						for (x=0;x<countWidth;x++)
+							((Bit16u *)doubleRow)[x*2+0] =
+							((Bit16u *)doubleRow)[x*2+1] = ((Bit16u *)srcLine)[x];
+						break;
+					case 32:
+						for (x=0;x<countWidth;x++)
+							((Bit32u *)doubleRow)[x*2+0] =
+							((Bit32u *)doubleRow)[x*2+1] = ((Bit32u *)srcLine)[x];
+						break;
+					}
+					srcLine=doubleRow;
 				}
-				srcLine=doubleRow;
+				if (flags & CAPTURE_FLAG_DBLH) {
+					const void *rowPointer[2];
+					rowPointer[0]=rowPointer[1]=srcLine;
+					capture.video.codec->CompressLines(2, rowPointer);
+					i++;
+				} else
+					capture.video.codec->CompressLines(1, &srcLine);
 			}
-			if (flags & CAPTURE_FLAG_DBLH) {
-				const void *rowPointer[2];
-				rowPointer[0]=rowPointer[1]=srcLine;
-				capture.video.codec->CompressLines(2, rowPointer);
-				i++;
-			} else
-				capture.video.codec->CompressLines(1, &srcLine);
+			written = capture.video.codec->FinishCompressFrame();
+			if (written < 0)
+				goto skip_video;
 		}
-		int written = capture.video.codec->FinishCompressFrame();
-		if (written < 0)
-			goto skip_video;
 		if (capture.video.avi_out->AddVideo(capture.video.buf, written, codecFlags & 1 ? AVII_KEYFRAME : 0)) {
 //			LOG_MSG("Frame %d video %d audio %d",capture.video.avi_out->frames, written, capture.video.audioused *4 );
+			capture.video.gop++;
 			if (!capture.video.audioused) return;
 			Bitu samples = capture.video.audioused;
 			capture.video.audioused = 0;

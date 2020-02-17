@@ -216,6 +216,7 @@ void RENDER_EndUpdate( bool abort ) {
 			if (render.src.dblw) flags|=CAPTURE_FLAG_DBLW;
 			if (render.src.dblh) flags|=CAPTURE_FLAG_DBLH;
 		}
+		if (render.scale.outWrite==NULL) flags|=CAPTURE_FLAG_DUPLICATE;
 		float fps = render.src.fps;
 		pitch = render.scale.cachePitch;
 		if (render.frameskip.max)

@@ -48,6 +48,7 @@ FILE * OpenCaptureFile(const char * type,const char * ext);
 void CAPTURE_AddWave(Bit32u freq, Bitu len, Bit16s * data);
 #define CAPTURE_FLAG_DBLW	0x1
 #define CAPTURE_FLAG_DBLH	0x2
+#define CAPTURE_FLAG_DUPLICATE	0x4
 void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags, float fps, const Bit8u * data, const Bit8u * pal);
 void CAPTURE_AddMidi(bool sysex, Bitu len, Bit8u * data);
 
