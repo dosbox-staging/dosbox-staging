@@ -134,6 +134,10 @@ function init_baseurl() {
 #  Determines the local branch name
 #
 function init_local_branch() {
+	# Guard against subsequent calls
+	if [[ -n "${local_branch:-}" ]]; then
+		return 0
+	fi
 	cd_repo_root
 	local_branch="$(git rev-parse --abbrev-ref HEAD)"
 	declare -gr local_branch
@@ -419,6 +423,13 @@ function fetch_workflows() {
 	unset workflows
 	declare -gA workflows
 	for workflow_path in ".github/workflows/"*.yml; do
+
+		# Guard: skip our Config heavy and Coverity analysis workflows
+		if [[ "$workflow_path" == *"config.yml"*
+		   || "$workflow_path" == *"coverity.yml"* ]]; then
+			continue
+		fi
+
 		local result
 		result="$(pull workflows \
 	            | query workflows path "$workflow_path" '.id,.name')"
@@ -427,11 +438,8 @@ function fetch_workflows() {
 		local name
 		name="${result#*$'\n'}"
 
-		# Skip empty values and a couple master-only workflows
-		if [[ -z "${id:-}" \
-		   || -z "${name:-}" \
-		   || "$name" == "Config heavy" \
-		   || "$name" == "Coverity Scan" ]]; then
+		# Guard: skip any workflows that result in empty values
+		if [[ -z "${id:-}" || -z "${name:-}" ]]; then
 			continue
 		fi
 		workflows["$id"]="$(sanitize_name "$name")"
@@ -547,33 +555,53 @@ function main() {
 		workflow_name="${workflows[$workflow_id]}"
 		echo -e "${bold}${workflow_name}${reset} workflow [$workflow_id]"
 
+		# Create state-tracking variables
+		first="true"
+		prior_run_dir=""
+		prior_branch_name=""
+
 		# Within the workflows, we're interested in finding the newest subset of
-		# runs that match our current branch as well as the master branch.
-		for branch in master current; do
-			if [[ "$branch" == "current" ]]; then
-				branch_name="$local_branch"
+		# runs that match the given branch
+		for branch in "${branches[@]}"; do
+			branch_name="$(sanitize_name "$branch")"
+
+			if [[ "$first" == "true" && "${#branches[@]}" == "2" ]]; then
+				run_joiner="|-"
+				job_joiner="|"
+				first="false"
 			else
-				branch_name="master"
+				run_joiner="\`-"
+				job_joiner=" "
 			fi
 
-			# Get the run identifier for the given workflow and branch
-			fetch_workflow_run "$workflow_id" "$branch_name"
+			# Get the run identifier for the given workflow ID and branch name
+			echo -ne "  $run_joiner ${bold}${branch}${reset} "
+			fetch_workflow_run "$workflow_id" "$branch"
 			if [[ -z "${run_id:-}" ]]; then
-				echo "  \`- no runs found for $branch_name"
+				echo "no runs found [skipping]"
 				continue
 			fi
-			[[ "$branch" == "master" ]] && joiner="|-" || joiner="\`-"
-			echo "  $joiner found latest $branch_name run [$run_id]"
+
+			# Create the branch's run directory, if needed
+			run_dir="$storage_dir/$branch_name-$workflow_name-$run_id"
+			if [[ ! -d "$run_dir" ]]; then
+				mkdir -p "$run_dir"
+				echo "run [$run_id, fetching]"
+			else
+				echo "run [$run_id, already fetched]"
+				prior_branch_name="$branch_name"
+				prior_run_dir="$run_dir"
+				continue
+			fi
 
 			# Download the artifacts produced during the selected run
 			fetch_run_artifacts
-			[[ "$branch" == "master" ]] && joiner="|" || joiner=" "
 			for artifact_name in "${!artifacts[@]}"; do
 				artifact_url="${artifacts[$artifact_name]}"
-				asset_file="$assets_dir/$workflow_name-$artifact_name-$branch.zip"
+				asset_file="$run_dir/$artifact_name.zip"
 				download "$artifact_url" "$asset_file"
 				unpack "$asset_file"
-				echo -e "  $joiner     - unpacking ${cyan}${artifact_name}${reset} asset"
+				echo -e "  $job_joiner     - unpacking ${cyan}${artifact_name}${reset} asset"
 			done
 
 			# Download the logs for the jobs within the selected run
@@ -585,26 +613,28 @@ function main() {
 				[[ "$conclusion" == "success" ]] && color="${green}" || color="${red}"
 				for job_id in "${!jobs_array[@]}"; do
 					job_name="${jobs_array[$job_id]}"
-					echo -e "  $joiner     - fetching  ${color}${job_name}${reset} ${conclusion} log"
-					log_file="$logs_dir/$workflow_name-$job_name-$branch-$conclusion.log"
-					successful_master_log="$logs_dir/$workflow_name-$job_name-master-success.log"
+					echo -e "  $job_joiner     - fetching  ${color}${job_name}${reset} ${conclusion} log"
+					log_file="$run_dir/$job_name-$conclusion.txt"
+					successful_prior_log="$prior_run_dir/$job_name-success.txt"
 					fetch_job_log "$job_id" "$log_file"
 
 					# In the event we've found a failed job, try to diff it against a prior
 					# successful master job of the equivalent workflow and job-type.
 					if [[ "$conclusion" == "failure"
 					&& -f "$log_file"
-					&& -f "$successful_master_log" ]]; then
-						sanitized_branch_name="$(sanitize_name "$branch_name")"
-						diff_file="$diffs_dir/$workflow_name-$job_name-$sanitized_branch_name-vs-master.log"
-						diff "$log_file" "$successful_master_log" > "$diff_file" || true
+					&& -f "$successful_prior_log" ]]; then
+						diff_file="$run_dir/$job_name-$branch_name-vs-$prior_branch_name.txt"
+						diff "$log_file" "$successful_prior_log" > "$diff_file" || true
 						echo -e "        - diffed    ${yellow}$diff_file${reset}"
 					fi
-				done # jobs_array
-			done # conclusion types
-			echo "  $joiner"
-		done # branch types
-	done # workflows
+				done # jobs_array loop
+			done # conclusion loop
+			echo "  $job_joiner"
+			prior_branch_name="$branch_name"
+			prior_run_dir="$run_dir"
+		done # branch loop
+		echo ""
+	done # workflow loop
 	echo -e "Copy of logs in: ${bold}${storage_dir}${bold}"
 	echo ""
 }
