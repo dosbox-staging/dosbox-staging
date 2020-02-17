@@ -24,6 +24,10 @@ shopt -s nullglob
 declare -gr scheme="https://"
 declare -gr authority="api.github.com"
 
+# File purge thresholds
+max_asset_age_days="2"
+max_cache_age_minutes="5"
+
 # Colors
 declare -gr bold="\\e[1m"
 declare -gr red="\\e[31m"
@@ -278,34 +282,32 @@ function init_dirs() {
 	local repo_postfix
 	repo_postfix="$(basename "$repo")"
 	storage_dir="/tmp/$repo_postfix-workflows-$USER"
-	assets_dir="$storage_dir/assets"
 	cache_dir="$storage_dir/cache"
-	diffs_dir="$storage_dir/diffs"
-	logs_dir="$storage_dir/logs"
-	declare -gr assets_dir
 	declare -gr cache_dir
-	declare -gr diffs_dir
-	declare -gr logs_dir
 	echo "Initializing storage area: $storage_dir"
 
-	# Don't trust content from a prior interrupted run
-	if [[ -f "$storage_dir/.interrupted" ]]; then
-		rm -rf "$storage_dir"
-	fi
-
-	# Make the directories if they don't exist
-	for dir in "$assets_dir" "$cache_dir" "$diffs_dir" "$logs_dir"; do
-		if [[ ! -d "$dir" ]]; then
-			mkdir -p "$dir"
-		# Otherwise, purge content older than 5-minutes
-		else
-			for filename in "$dir"/*; do
-				if [[ "$(seconds_old "$filename")" -gt 300 ]]; then
-					rm -rf "$filename"
-				fi
-			done
+	# Cleanup run directories, if they exist
+	for run_dir in "$storage_dir/"*-*-*; do
+		if [[ -f "$run_dir/interrupted"
+		   || "$(days_old "$run_dir")" -gt "$max_asset_age_days" ]]; then
+			rm -rf "$run_dir"
 		fi
 	done
+	unset run_dir
+
+	# Clean up the cache directory and content
+	if [[ -f "$cache_dir/interrupted" ]]; then
+		rm -rf "$cache_dir"
+	fi
+	if [[ -d "$cache_dir" ]]; then
+		for filename in "$cache_dir"/*; do
+			if [[ "$(minutes_old "$filename")" -gt "$max_cache_age_minutes" ]]; then
+				rm -f "$filename"
+			fi
+		done
+	else
+		mkdir -p "$cache_dir"
+	fi
 	trap 'interrupt' INT
 }
 
@@ -315,7 +317,10 @@ function init_dirs() {
 #  to clean up next run.
 #
 function interrupt() {
-	touch "$storage_dir/.interrupted"
+	if [[ -n "${run_dir:-}" ]]; then
+		touch "$run_dir/interrupted"
+	fi
+	touch "$cache_dir/interrupted"
 	echo " <== OK, stopping."
 	echo ""
 	echo -e "Partial logs available in: ${bold}${storage_dir}${bold}${reset}"
