@@ -5,9 +5,9 @@
 
 ##
 #  This script craws the current repo's GitHub workflow content.
-#  It fetches assets and logs from the most recent successful master
-#  run followed by the most recent (and possibly failing) current
-#  branch, which can also be a master branch.
+#  It fetches CI records for the provided branches, or by default
+#  the latest CI runs for the master and currently-set branches.
+#
 #  The goal of this script is two fold:
 #    - Provide a mechanized an automated way to fetch CI records.
 #    - Provide a rapid way to diff bad CI runs against master.
@@ -32,14 +32,61 @@ declare -gr yellow="\\e[33m"
 declare -gr cyan="\\e[36m"
 declare -gr reset="\\e[0m"
 
+
 ##
-#  Checks if script dependencies are available
+#  Parse the command line arguments that will determine
+#  which branches to pull and diff
+#
+function parse_args() {
+	branches=()
+
+	if [[ "$*" == *"help"* || "${#}" -gt "2" ]]; then
+		echo ""
+		echo "Usage: $0 [BRANCH_A] [BRANCH_B]"
+		echo ""
+		echo " - If only BRANCH_A is provided, then just download its records"
+		echo " - If both BRANCH_A and B are provided, then fetch and diff them"
+		echo " - If neither are provided, then fetch and diff good-master vs current branch"
+		echo " - 'current' can be used in-place of the repo's currently set branch name"
+		echo " - Note: BRANCH_A and B can be the same; the tool will try to diff"
+		echo "         the last *good* run versus latest run (which might differ)"
+		echo ""
+		exit 1
+	elif [[ "${#}" == "1" ]]; then
+		branches+=( "$(get_branch "$1")" )
+	elif [[ "${#}" == "2" ]]; then
+		branches+=( "$(get_branch "$1")" )
+		branches+=( "$(get_branch "$2")" )
+	else
+		branches+=( "master" )
+		branches+=( "$(get_branch current)" )
+	fi
+}
+
+##
+#  Returns the branch name either as-is or gets the current
+#  actual branch name, if the keyword 'current' is provided
+#
+function get_branch() {
+	local branch
+	if [[ "$1" == "current" ]]; then
+		init_local_branch
+		branch="$local_branch"
+	else
+		branch="$1"
+	fi
+	echo "$branch"
+}
+
+##
+#  Checks if the script's dependencies are available
 #
 function check_dependencies() {
 	local missing=0
 	for prog in git jq curl unzip chmod date stat dirname basename diff; do
 		if ! command -v "$prog" &> /dev/null; then
-			echo -e "The command-line tool \"${bold}${red}${prog}${reset}\" is needed but could not be run; please install it."
+			echo -e "The command-line tool \"${bold}${red}${prog}${reset}\" "\
+			        "is needed but could not be run; please install it."
 			(( missing++ ))
 		fi
 	done
@@ -129,11 +176,11 @@ function test_credentials() {
 #
 #  We use Git's recommended credential mechanism described here:
 #  https://git-scm.com/docs/gitcredentials, along with protecting
-#  their Git configuration file. 
+#  their Git configuration file.
 #
 #  We store the credentially globally for two reasons:
 #  - auth-tokens are not repo-specific, and can be used github-wide
-#  - auto-tokens are not recoverable from the website, 
+#  - auto-tokens are not recoverable from the website,
 #    so storing globally ensure that if the user clones the
 #    repo again, their token will still be useable (and not lost).
 #
@@ -215,11 +262,11 @@ function sanitize_name() {
 }
 
 ##
-#  Returns how old a file or directory is, in seconds.
+#  Return how old a file or directory is, respectively
 #
-function seconds_old() {
-	echo $(( "$(date +%s)" - "$(stat -L --format %Y "$1")" ))
-}
+function seconds_old() { echo $(( "$(date +%s)" - "$(stat -L --format %Y "$1")" )); }
+function minutes_old() { echo $(( "$(seconds_old "$1")" / 60 )); }
+function days_old() { echo $(( "$(seconds_old "$1")" / 86400 )); }
 
 ##
 #  Creates a storage area for all content fetched by the script.
@@ -465,18 +512,17 @@ function fetch_job_log() {
 #  before we start making REST queries and writing files.
 #
 function init() {
+	parse_args "$@"
 	check_dependencies
 	init_baseurl
-	init_local_branch
 	init_dirs
 	init_credentials
 }
 
 ##
-#  Crawl workflows, runs, and jobs for the master and current branch.
+#  Crawl workflows, runs, and jobs for provided branches.
 #  While crawling, download assets and logs, and if a run failed, diff
-#  that log against the last successful master-equivalent having the same
-#  workflow and job type.
+#  that log against the other branch's.
 #
 #  TODO - Refactor into smaller functions and trying to flatten the loop depth.
 #  TODO - Improve the log differ to something that can lift out just the
@@ -484,11 +530,11 @@ function init() {
 #
 function main() {
 	# Setup all pre-requisites
-	init
-	echo "Comparing branch $local_branch with master"
+	init "$@"
+	echo "Operating on branches: ${branches[*]}"
 	echo ""
 
-	# Fetch the workflows, to be used throughout the run
+	# Fetch the workflows to be used throughout the run
 	fetch_workflows
 
 	# Step through each workflow
