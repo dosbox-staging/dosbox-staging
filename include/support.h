@@ -16,18 +16,16 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef DOSBOX_SUPPORT_H
 #define DOSBOX_SUPPORT_H
+
+#include "dosbox.h"
 
 #include <algorithm>
 #include <cstdio>
 #include <ctype.h>
 #include <string.h>
 #include <string>
-#ifndef DOSBOX_DOSBOX_H
-#include "dosbox.h"
-#endif
 
 #ifdef _MSC_VER
 #define strcasecmp(a, b) _stricmp(a, b)
@@ -99,6 +97,5 @@ void trim(std::string& str);
 void upcase(std::string &str);
 void lowcase(std::string &str);
 void strip_punctuation(std::string &str);
-
 
 #endif
