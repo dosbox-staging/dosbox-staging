@@ -62,7 +62,7 @@
 Bit32u Netwrapper_GetCapabilities();
 
 class TCPClientSocket {
-	public:
+public:
 	TCPClientSocket(TCPsocket source);
 	TCPClientSocket(const char* destination, Bit16u port);
 #ifdef NATIVESOCKETS
@@ -70,47 +70,45 @@ class TCPClientSocket {
 	TCPClientSocket(int platformsocket);
 #endif
 	~TCPClientSocket();
-	
+
 	// return:
 	// -1: no data
 	// -2: socket closed
 	// >0: data char
 	Bits GetcharNonBlock();
-	
-	
+
 	bool Putchar(Bit8u data);
 	bool SendArray(Bit8u* data, Bitu bufsize);
 	bool ReceiveArray(Bit8u* data, Bitu* size);
-	bool isopen;
+
+	bool isopen = false;
 
 	bool GetRemoteAddressString(Bit8u* buffer);
 
 	void FlushBuffer();
 	void SetSendBufferSize(Bitu bufsize);
-	
+
 	// buffered send functions
 	bool SendByteBuffered(Bit8u data);
 
-	private:
-	TCPsocket mysock;
-	SDLNet_SocketSet listensocketset;
+private:
+	TCPsocket mysock = 0;
+	SDLNet_SocketSet listensocketset = nullptr;
 
 	// Items for send buffering
-	Bitu sendbuffersize;
-	Bitu sendbufferindex;
-	
-	Bit8u* sendbuffer;
+	Bitu sendbuffersize = 0;
+	Bitu sendbufferindex = 0;
+	Bit8u *sendbuffer = nullptr;
 };
 
-class TCPServerSocket {
-	public:
-	bool isopen;
-	TCPsocket mysock;
+struct TCPServerSocket {
+	bool isopen = false;
+	TCPsocket mysock = 0;
+
 	TCPServerSocket(Bit16u port);
 	~TCPServerSocket();
 	TCPClientSocket* Accept();
 };
-
 
 #endif //C_MODEM
 
