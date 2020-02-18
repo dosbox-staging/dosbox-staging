@@ -16,18 +16,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef SDLNETWRAPPER_H
-#define SDLNETWRAPPER_H
+#ifndef DOSBOX_MISC_UTIL_H
+#define DOSBOX_MISC_UTIL_H
 
-#ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
-#endif
 
 #if C_MODEM
 
-# ifndef DOSBOX_SUPPORT_H
 #include "support.h"
-#endif
 
 // Netwrapper Capabilities
 #define NETWRAPPER_TCP 1
@@ -110,6 +106,6 @@ struct TCPServerSocket {
 	TCPClientSocket* Accept();
 };
 
-#endif //C_MODEM
+#endif // C_MODEM
 
-#endif //# SDLNETWRAPPER_H
+#endif

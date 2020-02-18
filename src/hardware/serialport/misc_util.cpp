@@ -290,4 +290,4 @@ TCPClientSocket* TCPServerSocket::Accept() {
 	return new TCPClientSocket(new_tcpsock);
 }
 
-#endif // #if C_MODEM
+#endif // C_MODEM
