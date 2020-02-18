@@ -62,9 +62,11 @@ public:
 	TCPClientSocket(TCPsocket source);
 	TCPClientSocket(const char* destination, Bit16u port);
 #ifdef NATIVESOCKETS
-	Bit8u* nativetcpstruct;
 	TCPClientSocket(int platformsocket);
 #endif
+	TCPClientSocket(const TCPClientSocket&) = delete; // prevent copying
+	TCPClientSocket& operator=(const TCPClientSocket&) = delete; // prevent assignment
+
 	~TCPClientSocket();
 
 	// return:
@@ -88,6 +90,11 @@ public:
 	bool SendByteBuffered(Bit8u data);
 
 private:
+
+#ifdef NATIVESOCKETS
+	Bit8u *nativetcpstruct = nullptr;
+#endif
+
 	TCPsocket mysock = 0;
 	SDLNet_SocketSet listensocketset = nullptr;
 

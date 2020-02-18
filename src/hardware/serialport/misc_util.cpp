@@ -93,9 +93,6 @@ TCPClientSocket::TCPClientSocket(int platformsocket)
 
 TCPClientSocket::TCPClientSocket(TCPsocket source)
 {
-#ifdef NATIVESOCKETS
-	nativetcpstruct=0;
-#endif
 	if (!SDLNetInited) {
 		if (SDLNet_Init() == -1) {
 			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
@@ -116,9 +113,6 @@ TCPClientSocket::TCPClientSocket(TCPsocket source)
 
 TCPClientSocket::TCPClientSocket(const char* destination, Bit16u port)
 {
-#ifdef NATIVESOCKETS
-	nativetcpstruct=0;
-#endif
 	if (!SDLNetInited) {
 		if (SDLNet_Init() == -1) {
 			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
