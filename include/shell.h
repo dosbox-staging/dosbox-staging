@@ -41,7 +41,6 @@ class DOS_Shell;
  * by "external" programs. (config) */
 extern DOS_Shell * first_shell;
 
-
 class BatchFile {
 public:
 	BatchFile(DOS_Shell * host,char const* const resolved_name,char const* const entered_name, char const * const cmd_line);
@@ -75,7 +74,7 @@ public:
 	void RunInternal(void); //for command /C
 /* A load of subfunctions */
 	void ParseLine(char * line);
-	Bitu GetRedirection(char *s, char **ifn, char **ofn,bool * append);
+	Bitu GetRedirection(char *s, char **ifn, char **ofn, char **toc, bool * append);
 	void InputCommand(char * line);
 	void ShowPrompt();
 	void DoCommand(char * cmd);
@@ -99,6 +98,7 @@ public:
 	void CMD_RMDIR(char * args);
 	void CMD_SET(char * args);
 	void CMD_IF(char * args);
+	void CMD_FOR(char * args);
 	void CMD_GOTO(char * args);
 	void CMD_TYPE(char * args);
 	void CMD_REM(char * args);
@@ -110,6 +110,7 @@ public:
 	void CMD_LOADHIGH(char* args);
 	void CMD_CHOICE(char * args);
 	void CMD_ATTRIB(char * args);
+	void CMD_PROMPT(char * args);
 	void CMD_PATH(char * args);
 	void CMD_SHIFT(char * args);
 	void CMD_VER(char * args);

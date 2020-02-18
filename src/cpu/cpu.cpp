@@ -349,7 +349,7 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 	FillFlags();
 	TaskStateSegment new_tss;
 	if (!new_tss.SetSelector(new_tss_selector)) 
-		E_Exit("Illegal TSS for switch, selector=%" sBitfs(x) ", switchtype=%x",new_tss_selector,tstype);
+		E_Exit("Illegal TSS for switch, selector=%x, switchtype=%x",new_tss_selector,tstype);
 	if (tstype==TSwitch_IRET) {
 		if (!new_tss.desc.IsBusy())
 			E_Exit("TSS not busy for IRET");
@@ -503,7 +503,7 @@ doconforming:
 			Segs.val[cs]=new_cs;
 			break;
 		default:
-			E_Exit("Task switch CS Type %" sBitfs(u),cs_desc.Type());
+			E_Exit("Task switch CS Type %d",cs_desc.Type());
 		}
 	}
 	CPU_SetSegGeneral(es,new_es);
@@ -725,7 +725,7 @@ do_interrupt:
 					}
 					break;		
 				default:
-					E_Exit("INT:Gate Selector points to illegal descriptor with type %" sBitfs(x),cs_desc.Type());
+					E_Exit("INT:Gate Selector points to illegal descriptor with type %x",cs_desc.Type());
 				}
 
 				Segs.val[cs]=(gate_sel&0xfffc) | cpu.cpl;
@@ -755,7 +755,7 @@ do_interrupt:
 			}
 			return;
 		default:
-			E_Exit("Illegal descriptor type %" sBitfs(X) " for int %" sBitfs(X),gate.Type(),num);
+			E_Exit("Illegal descriptor type %x for int %x",gate.Type(),num);
 		}
 	}
 	assert(1);
@@ -891,6 +891,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 		switch (n_cs_desc.Type()) {
 		case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:
 		case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+		case 18:
 			CPU_CHECK_COND(n_cs_rpl!=n_cs_desc.DPL(),
 				"IRET:NC:DPL!=RPL",
 				EXCEPTION_GP,n_cs_sel & 0xfffc)
@@ -902,7 +903,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 				EXCEPTION_GP,n_cs_sel & 0xfffc)
 			break;
 		default:
-			E_Exit("IRET:Illegal descriptor type %" sBitfs(X), n_cs_desc.Type());
+			E_Exit("IRET:Illegal descriptor type %x", n_cs_desc.Type());
 		}
 		CPU_CHECK_COND(!n_cs_desc.saved.seg.p,
 			"IRET with nonpresent code segment",
@@ -1021,6 +1022,7 @@ void CPU_JMP(bool use32,Bitu selector,Bitu offset,Bitu oldeip) {
 		switch (desc.Type()) {
 		case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
 		case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
+		case 18:
 			CPU_CHECK_COND(rpl>cpu.cpl,
 				"JMP:NC:RPL>CPL",
 				EXCEPTION_GP,selector & 0xfffc)
@@ -1059,7 +1061,7 @@ CODE_jmp:
 			CPU_SwitchTask(selector,TSwitch_JMP,oldeip);
 			break;
 		default:
-			E_Exit("JMP Illegal descriptor type %" sBitfs(X),desc.Type());
+			E_Exit("JMP Illegal descriptor type %x",desc.Type());
 		}
 	}
 	assert(1);
@@ -1295,7 +1297,7 @@ call_code:
 			CPU_Exception(EXCEPTION_GP,selector & 0xfffc);
 			return;
 		default:
-			E_Exit("CALL:Descriptor type %" sBitfs(x) " unsupported",call.Type());
+			E_Exit("CALL:Descriptor type %x unsupported",call.Type());
 		}
 	}
 	assert(1);
@@ -1342,6 +1344,7 @@ void CPU_RET(bool use32,Bitu bytes,Bitu oldeip) {
 			switch (desc.Type()) {
 			case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
 			case DESC_CODE_R_NC_A:case DESC_CODE_R_NC_NA:
+			case 18:
 				CPU_CHECK_COND(cpu.cpl!=desc.DPL(),
 					"RET to NC segment of other privilege",
 					EXCEPTION_GP,selector & 0xfffc)
@@ -1353,7 +1356,7 @@ void CPU_RET(bool use32,Bitu bytes,Bitu oldeip) {
 					EXCEPTION_GP,selector & 0xfffc)
 				break;
 			default:
-				E_Exit("RET from illegal descriptor type %" sBitfs(X),desc.Type());
+				E_Exit("RET from illegal descriptor type %x",desc.Type());
 			}
 RET_same_level:
 			if (!desc.saved.seg.p) {
@@ -1398,7 +1401,7 @@ RET_same_level:
 					EXCEPTION_GP,selector & 0xfffc)
 				break;
 			default:
-				E_Exit("RET from illegal descriptor type %" sBitfs(X),desc.Type());		// or #GP(selector)
+				E_Exit("RET from illegal descriptor type %x",desc.Type());		// or #GP(selector)
 			}
 
 			CPU_CHECK_COND(!desc.saved.seg.p,
@@ -1509,7 +1512,7 @@ bool CPU_LTR(Bitu selector) {
 			LOG(LOG_CPU,LOG_ERROR)("LTR failed, selector=%X (not present)",selector);
 			return CPU_PrepareException(EXCEPTION_NP,selector);
 		}
-		if (!cpu_tss.SetSelector(selector)) E_Exit("LTR failed, selector=%" sBitfs(X),selector);
+		if (!cpu_tss.SetSelector(selector)) E_Exit("LTR failed, selector=%x",selector);
 		cpu_tss.desc.SetBusy(true);
 		cpu_tss.SaveSelector();
 	} else {

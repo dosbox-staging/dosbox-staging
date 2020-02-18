@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: LFN and AUTO MOUNT support, MISC FIX
  */
 
 
@@ -26,9 +28,10 @@
 #include "shell.h"
 #include "callback.h"
 #include "support.h"
-
+#include "../ints/int10.h"
 
 Bitu call_shellstop;
+bool insert;
 /* Larger scope so shell_del autoexec can use it to
  * remove things from the environment */
 DOS_Shell * first_shell = 0;
@@ -45,7 +48,6 @@ static void SHELL_ProgramStart(Program * * make) {
 static void SHELL_ProgramStart_First_shell(DOS_Shell * * make) {
 	*make = new DOS_Shell;
 }
-
 #define AUTOEXEC_SIZE 4096
 static char autoexec_data[AUTOEXEC_SIZE] = { 0 };
 static std::list<std::string> autoexec_strings;
@@ -165,7 +167,7 @@ DOS_Shell::DOS_Shell():Program(){
 	completion_start = NULL;
 }
 
-Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
+Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, char **toc, bool * append) {
 
 	char * lr=s;
 	char * lw=s;
@@ -173,6 +175,7 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 	Bitu num=0;
 	bool quote = false;
 	char* t;
+	int q;
 
 	while ( (ch=*lr++) ) {
 		if(quote && ch != '"') { /* don't parse redirection within quotes. Not perfect yet. Escaped quotes will mess the count up */
@@ -190,7 +193,12 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 			lr=ltrim(lr);
 			if (*ofn) free(*ofn);
 			*ofn=lr;
-			while (*lr && *lr!=' ' && *lr!='<' && *lr!='|') lr++;
+			q = 0;
+			while (*lr && (q/2*2!=q || *lr != ' ') && *lr!='<' && *lr!='|') {
+				if (*lr=='"')
+					q++;
+				lr++;
+			}
 			//if it ends on a : => remove it.
 			if((*ofn != lr) && (lr[-1] == ':')) lr[-1] = 0;
 //			if(*lr && *(lr+1))
@@ -205,7 +213,12 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 			if (*ifn) free(*ifn);
 			lr=ltrim(lr);
 			*ifn=lr;
-			while (*lr && *lr!=' ' && *lr!='>' && *lr != '|') lr++;
+			q = 0;
+			while (*lr && (q/2*2!=q || *lr != ' ') && *lr!='>' && *lr != '|') {
+				if (*lr=='"')
+					q++;
+				lr++;
+			}
 			if((*ifn != lr) && (lr[-1] == ':')) lr[-1] = 0;
 //			if(*lr && *(lr+1))
 //				*lr++=0;
@@ -216,9 +229,20 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 			*ifn=t;
 			continue;
 		case '|':
-			ch=0;
-			num++;
-		}
+			if (*toc)
+				free(*toc);
+			lr = ltrim(lr);
+			*toc = lr;
+			q = 0;
+			while (*lr)
+				lr++;
+			if ((*toc != lr) && (lr[-1] == ':'))
+				lr[-1] = 0;
+			t = (char*)malloc(lr-*toc+1);
+			safe_strncpy(t, *toc, lr-*toc+1);
+			*toc = t;
+			continue;
+			}
 		*lw++=ch;
 	}
 	*lw=0;
@@ -235,7 +259,8 @@ void DOS_Shell::ParseLine(char * line) {
 
 	char * in  = 0;
 	char * out = 0;
-
+	char * toc = 0;
+	
 	Bit16u dummy,dummy2;
 	Bit32u bigdummy = 0;
 	Bitu num = 0;		/* Number of commands in this line */
@@ -243,9 +268,9 @@ void DOS_Shell::ParseLine(char * line) {
 	bool normalstdin  = false;	/* wether stdin/out are open on start. */
 	bool normalstdout = false;	/* Bug: Assumed is they are "con"      */
 
-	num = GetRedirection(line,&in, &out,&append);
+	num = GetRedirection(line, &in, &out, &toc, &append);
 	if (num>1) LOG_MSG("SHELL: Multiple command on 1 line not supported");
-	if (in || out) {
+	if (in || out || toc) {
 		normalstdin  = (psp->GetFileHandle(0) != 0xff);
 		normalstdout = (psp->GetFileHandle(1) != 0xff);
 	}
@@ -257,20 +282,35 @@ void DOS_Shell::ParseLine(char * line) {
 			DOS_OpenFile(in,OPEN_READ,&dummy);	//Open new stdin
 		}
 	}
-	if (out){
-		LOG_MSG("SHELL: Redirect output to %s",out);
+	char pipetmp[15];
+	bool fail = false;
+	if (toc) {
+#if defined (WIN32)
+		srand(GetTickCount());
+#else
+		struct timespec tp;
+		srand(clock_gettime(CLOCK_MONOTONIC, &tp));
+#endif
+		sprintf(pipetmp, "pipe%d.tmp", rand()%10000);
+	}
+	if (out||toc){
+		if (out) LOG_MSG("SHELL: Redirect output to %s",out);
+		if (toc) LOG_MSG("SHELL: Piping output to %s",pipetmp);
 		if(normalstdout) DOS_CloseFile(1);
 		if(!normalstdin && !in) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
 		bool status = true;
 		/* Create if not exist. Open if exist. Both in read/write mode */
-		if(append) {
+		if(!toc&&append) {
 			if( (status = DOS_OpenFile(out,OPEN_READWRITE,&dummy)) ) {
 				 DOS_SeekFile(1,&bigdummy,DOS_SEEK_END);
 			} else {
 				status = DOS_CreateFile(out,DOS_ATTR_ARCHIVE,&dummy);	//Create if not exists.
 			}
 		} else {
-			status = DOS_OpenFileExtended(out,OPEN_READWRITE,DOS_ATTR_ARCHIVE,0x12,&dummy,&dummy2);
+			if (toc&&DOS_FindFirst(pipetmp, ~DOS_ATTR_VOLUME))
+				if (!DOS_UnlinkFile(pipetmp))
+					fail=true;
+			status = DOS_OpenFileExtended(toc?pipetmp:out,OPEN_READWRITE,DOS_ATTR_ARCHIVE,0x12,&dummy,&dummy2);
 		}
 
 		if(!status && normalstdout) DOS_OpenFile("con",OPEN_READWRITE,&dummy); //Read only file, open con again
@@ -284,13 +324,31 @@ void DOS_Shell::ParseLine(char * line) {
 		if(normalstdin) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
 		free(in);
 	}
-	if(out) {
+	if(out||toc) {
 		DOS_CloseFile(1);
 		if(!normalstdin) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
 		if(normalstdout) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
 		if(!normalstdin) DOS_CloseFile(0);
 		free(out);
 	}
+	if (toc)
+		{
+		if (!fail&&DOS_OpenFile(pipetmp, OPEN_READ, &dummy))					// Test if file can be opened for reading
+			{
+			DOS_CloseFile(dummy);
+			if (normalstdin)
+				DOS_CloseFile(0);												// Close stdin
+			DOS_OpenFile(pipetmp, OPEN_READ, &dummy);							// Open new stdin
+			ParseLine(toc);
+			DOS_CloseFile(0);
+			if (normalstdin)
+				DOS_OpenFile("con", OPEN_READWRITE, &dummy);
+			}
+		else
+			WriteOut("Failed to create or open a temporary file for piping.\n");
+		free(toc);
+		if (DOS_FindFirst(pipetmp, ~DOS_ATTR_VOLUME)) DOS_UnlinkFile(pipetmp);
+		}
 }
 
 
@@ -356,7 +414,11 @@ void DOS_Shell::Run(void) {
 			}
 		} else {
 			if (echo) ShowPrompt();
+			insert=true;
+			if (CurMode->type==M_TEXT) INT10_SetCursorShape(6,7);
 			InputCommand(input_line);
+			insert=true;
+			if (CurMode->type==M_TEXT) INT10_SetCursorShape(6,7);
 			ParseLine(input_line);
 			if (echo && !bf) WriteOut_NoParsing("\n");
 		}
@@ -514,9 +576,9 @@ static Bitu INT2E_Handler(void) {
 
 	/* Read and fix up command string */
 	CommandTail tail;
-	MEM_BlockRead(PhysMake(dos.psp(),128),&tail,128);
-	if (tail.count<127) tail.buffer[tail.count]=0;
-	else tail.buffer[126]=0;
+	MEM_BlockRead(PhysMake(dos.psp(),CTBUF+1),&tail,CTBUF+1);
+	if (tail.count<CTBUF) tail.buffer[tail.count]=0;
+	else tail.buffer[CTBUF-1]=0;
 	char* crlf=strpbrk(tail.buffer,"\r\n");
 	if (crlf) *crlf=0;
 
@@ -536,6 +598,7 @@ static Bitu INT2E_Handler(void) {
 }
 
 static char const * const path_string="PATH=Z:\\";
+static char const * const prompt_string="PROMPT=$P$G";
 static char const * const comspec_string="COMSPEC=Z:\\COMMAND.COM";
 static char const * const full_name="Z:\\COMMAND.COM";
 static char const * const init_line="/INIT AUTOEXEC.BAT";
@@ -550,7 +613,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_MISSING_PARAMETER","Required parameter missing.\n");
 	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT","Hint: To change to different drive type \033[31m%c:\033[0m\n");
-	MSG_Add("SHELL_CMD_CHDIR_HINT_2","directoryname is longer than 8 characters and/or contains spaces.\nTry \033[31mcd %s\033[0m\n");
+	MSG_Add("SHELL_CMD_CHDIR_HINT_2","directoryname contains unquoted spaces.\nTry \033[31mcd %s\033[0m or properly quote them with quotation marks.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT_3","You are still on drive Z:, change to a mounted drive with \033[31mC:\033[0m.\n");
 	MSG_Add("SHELL_CMD_DATE_HELP","Displays or changes the internal date.\n");
 	MSG_Add("SHELL_CMD_DATE_ERROR","The specified date is not correct.\n");
@@ -571,6 +634,7 @@ void SHELL_Init() {
 									"  /H:         Synchronize with host\n");
 	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s.\n");
 	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %s.\n");
+	MSG_Add("SHELL_CMD_RENAME_ERROR","Unable to rename: %s.\n");
 	MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s.\n");
 	MSG_Add("SHELL_SYNTAXERROR","The syntax of the command is incorrect.\n");
 	MSG_Add("SHELL_CMD_SET_NOT_SET","Environment variable %s not defined.\n");
@@ -586,9 +650,16 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%5d File(s) %17s Bytes.\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%5d Dir(s)  %17s Bytes free.\n");
 	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must \033[31mmount\033[0m it first. Type \033[1;33mintro\033[0m or \033[1;33mintro mount\033[0m for more information.\n");
+	MSG_Add("SHELL_EXECUTE_AUTOMOUNT","Automatic drive mounting is turned on.");
+	MSG_Add("SHELL_EXECUTE_DRIVE_ACCESS_REMOVABLE","Do you want to give DOSBox access to your real removable drive %c [Y/N]?");
+	MSG_Add("SHELL_EXECUTE_DRIVE_ACCESS_NETWORK","Do you want to give DOSBox access to your real network drive %c [Y/N]?");
+	MSG_Add("SHELL_EXECUTE_DRIVE_ACCESS_OPTICAL","Do you want to give DOSBox access to your real optical drive %c [Y/N]?");
+	MSG_Add("SHELL_EXECUTE_DRIVE_ACCESS_LOCAL","Do you want to give DOSBox access to your real local drive %c [Y/N]?");
+	MSG_Add("SHELL_EXECUTE_DRIVE_ACCESS_WARNING_WIN"," But mounting c:\\ is NOT recommended.");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
 	MSG_Add("SHELL_CMD_PAUSE","Press any key to continue.\n");
 	MSG_Add("SHELL_CMD_PAUSE_HELP","Waits for 1 keystroke to continue.\n");
+	MSG_Add("SHELL_CMD_PROMPT_HELP","Changes the DOSBox SVN-lfn command prompt.\n");
 	MSG_Add("SHELL_CMD_COPY_FAILURE","Copy failure : %s.\n");
 	MSG_Add("SHELL_CMD_COPY_SUCCESS","   %d File(s) copied.\n");
 	MSG_Add("SHELL_CMD_SUBST_NO_REMOVE","Unable to remove, drive not in use.\n");
@@ -598,7 +669,7 @@ void SHELL_Init() {
 		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
-		"\xBA \033[32mWelcome to DOSBox %-8s\033[37m                                         \xBA\n"
+		"\xBA \033[32mWelcome to DOSBox %s-lfn\033[37m (Updated: \033[33mFebruary 17, 2020\033[37m)             \xBA\n"
 		"\xBA                                                                    \xBA\n"
 //		"\xBA DOSBox runs real and protected mode games.                         \xBA\n"
 		"\xBA For a short introduction for new users type: \033[33mINTRO\033[37m                 \xBA\n"
@@ -622,14 +693,15 @@ void SHELL_Init() {
 	        "\xBA                                                                    \xBA\n"
 	);
 	MSG_Add("SHELL_STARTUP_END",
-	        "\xBA \033[32mHAVE FUN!\033[37m                                                          \xBA\n"
+	        "\xBA \033[32mDOSBox SVN-lfn: \033[33mhttp://www.wpdos.org/dosbox-vdos-lfn.html\033[37m          \xBA\n"
 	        "\xBA \033[32mThe DOSBox Team \033[33mhttp://www.dosbox.com\033[37m                              \xBA\n"
+	        "\xBA \033[32mHAVE FUN!\033[37m                                                          \xBA\n"
 	        "\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 	        "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 	        "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
 	        //"\n" //Breaks the startup message if you type a mount and a drive change.
 	);
-	MSG_Add("SHELL_STARTUP_SUB","\n\n\033[32;1mDOSBox %s Command Shell\033[0m\n\n");
+	MSG_Add("SHELL_STARTUP_SUB","\n\n\033[32;1mDOSBox %s-lfn Command Shell\033[0m\n\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Displays/changes the current directory.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG","CHDIR [drive:][path]\n"
 	        "CHDIR [..]\n"
@@ -651,6 +723,7 @@ void SHELL_Init() {
 	        "RD [drive:][path]\n");
 	MSG_Add("SHELL_CMD_SET_HELP","Change environment variables.\n");
 	MSG_Add("SHELL_CMD_IF_HELP","Performs conditional processing in batch programs.\n");
+	MSG_Add("SHELL_CMD_FOR_HELP","Runs a specified command for each item in a set of items.\n");
 	MSG_Add("SHELL_CMD_GOTO_HELP","Jump to a labeled line in a batch script.\n");
 	MSG_Add("SHELL_CMD_SHIFT_HELP","Leftshift commandline parameters in a batch script.\n");
 	MSG_Add("SHELL_CMD_TYPE_HELP","Display the contents of a text-file.\n");
@@ -676,7 +749,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_ATTRIB_HELP","Does nothing. Provided for compatibility.\n");
 	MSG_Add("SHELL_CMD_PATH_HELP","Provided for compatibility.\n");
 	MSG_Add("SHELL_CMD_VER_HELP","View and set the reported DOS version.\n");
-	MSG_Add("SHELL_CMD_VER_VER","DOSBox version %s. Reported DOS version %d.%02d.\n");
+	MSG_Add("SHELL_CMD_VER_VER","DOSBox version %s-lfn. Reported DOS version %d.%02d. LFN support %s.\n");
 
 	/* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
@@ -723,6 +796,8 @@ void SHELL_Init() {
 	PhysPt env_write=PhysMake(env_seg,0);
 	MEM_BlockWrite(env_write,path_string,(Bitu)(strlen(path_string)+1));
 	env_write += (PhysPt)(strlen(path_string)+1);
+	MEM_BlockWrite(env_write,prompt_string,(Bitu)(strlen(prompt_string)+1));
+	env_write += (PhysPt)(strlen(prompt_string)+1);
 	MEM_BlockWrite(env_write,comspec_string,(Bitu)(strlen(comspec_string)+1));
 	env_write += (PhysPt)(strlen(comspec_string)+1);
 	mem_writeb(env_write++,0);
@@ -753,12 +828,12 @@ void SHELL_Init() {
 	/* Set the command line for the shell start up */
 	CommandTail tail;
 	tail.count=(Bit8u)strlen(init_line);
-	memset(&tail.buffer,0,127);
+	memset(&tail.buffer,0,CTBUF);
 	strcpy(tail.buffer,init_line);
-	MEM_BlockWrite(PhysMake(psp_seg,128),&tail,128);
+	MEM_BlockWrite(PhysMake(psp_seg,CTBUF+1),&tail,CTBUF+1);
 
 	/* Setup internal DOS Variables */
-	dos.dta(RealMake(psp_seg,0x80));
+	dos.dta(RealMake(psp_seg,CTBUF+1));
 	dos.psp(psp_seg);
 
 

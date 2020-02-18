@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: LPT support
  */
 
 #ifndef DOSBOX_BIOS_H
@@ -132,5 +134,6 @@ bool BIOS_AddKeyToBuffer(Bit16u code);
 void INT10_ReloadRomFonts();
 
 void BIOS_SetComPorts (Bit16u baseaddr[]);
+void BIOS_SetLPTPort (Bitu port, Bit16u baseaddr);
 
 #endif

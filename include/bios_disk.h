@@ -60,7 +60,7 @@ public:
 	bool hardDrive;
 	bool active;
 	FILE *diskimg;
-	char diskname[512];
+	char diskname[512];	
 	Bit8u floppytype;
 
 	Bit32u sector_size;

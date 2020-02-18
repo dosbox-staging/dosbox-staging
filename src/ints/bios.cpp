@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: LPT support
  */
 
 
@@ -756,6 +758,28 @@ static Bitu INT15_Handler(void) {
 		/* Carry should be set but let's just set it just in case */
 		CALLBACK_SCF(true);
 		break;
+	case 0x53:																		// Only shutdown is supported
+		if (reg_al==0&&reg_bx==0)
+			{
+			reg_ah=2;
+			reg_bx=0x504d;
+			reg_cx=0;
+			}
+		else if (reg_al==7&&reg_bx==1&&reg_cx==3)
+			{
+			SDL_Quit();
+			exit(0);
+			}
+		else
+			{
+			LOG(LOG_BIOS,LOG_NORMAL)("Int 15 unhandled APM call %4X", reg_ax);
+			if ((reg_al!=1&&reg_al!=4&&reg_al!=0xe||reg_bx>0)&&(reg_al!=0xd&&reg_al!=0xf||reg_bx!=1))
+				{
+				reg_ah = 0x86;
+				CALLBACK_SCF(true);
+				}
+			}
+		break;
 	case 0x83:	/* BIOS - SET EVENT WAIT INTERVAL */
 		{
 			if(reg_al == 0x01) { /* Cancel it */
@@ -1022,6 +1046,9 @@ public:
 		/* tandy DAC can be requested in tandy_sound.cpp by initializing this field */
 		bool use_tandyDAC=(real_readb(0x40,0xd4)==0xff);
 
+		// Disney workaround
+		Bit16u disney_port = mem_readw(BIOS_ADDRESS_LPT1);
+
 		/* Clear the Bios Data Area (0x400-0x5ff, 0x600- is accounted to DOS) */
 		for (Bit16u i=0;i<0x200;i++) real_writeb(0x40,i,0);
 
@@ -1208,9 +1235,8 @@ public:
 		
 		// port timeouts
 		// always 1 second even if the port does not exist
-		mem_writeb(BIOS_LPT1_TIMEOUT,1);
-		mem_writeb(BIOS_LPT2_TIMEOUT,1);
-		mem_writeb(BIOS_LPT3_TIMEOUT,1);
+		BIOS_SetLPTPort(0, disney_port);
+		for(Bitu i = 1; i < 3; i++) BIOS_SetLPTPort(i, 0);
 		mem_writeb(BIOS_COM1_TIMEOUT,1);
 		mem_writeb(BIOS_COM2_TIMEOUT,1);
 		mem_writeb(BIOS_COM3_TIMEOUT,1);
@@ -1348,6 +1374,33 @@ void BIOS_SetComPorts(Bit16u baseaddr[]) {
 	CMOS_SetRegister(0x14,(Bit8u)(equipmentword&0xff)); //Should be updated on changes
 }
 
+void BIOS_SetLPTPort(Bitu port, Bit16u baseaddr) {
+	switch(port) {
+	case 0:
+		mem_writew(BIOS_ADDRESS_LPT1,baseaddr);
+		mem_writeb(BIOS_LPT1_TIMEOUT, 10);
+		break;
+	case 1:
+		mem_writew(BIOS_ADDRESS_LPT2,baseaddr);
+		mem_writeb(BIOS_LPT2_TIMEOUT, 10);
+		break;
+	case 2:
+		mem_writew(BIOS_ADDRESS_LPT3,baseaddr);
+		mem_writeb(BIOS_LPT3_TIMEOUT, 10);
+		break;
+	}
+
+	// set equipment word: count ports
+	Bit16u portcount=0;
+	if(mem_readw(BIOS_ADDRESS_LPT1) != 0) portcount++;
+	if(mem_readw(BIOS_ADDRESS_LPT2) != 0) portcount++;
+	if(mem_readw(BIOS_ADDRESS_LPT3) != 0) portcount++;
+	
+	Bit16u equipmentword = mem_readw(BIOS_CONFIGURATION);
+	equipmentword &= (~0xC000);
+	equipmentword |= (portcount << 14);
+	mem_writew(BIOS_CONFIGURATION,equipmentword);
+}
 
 static BIOS* test;
 

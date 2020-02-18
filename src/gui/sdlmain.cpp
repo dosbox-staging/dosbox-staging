@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: MOUSE CLIPBOARD and TITLEBAR support
  */
 
 
@@ -50,6 +52,10 @@
 #include "cross.h"
 #include "control.h"
 #include "render.h"
+#include "bios.h"
+#if C_CLIPBOARD
+#include <curses.h>
+#endif
 
 #define MAPPERFILE "mapper-" VERSION ".map"
 //#define DISABLE_JOYSTICK
@@ -314,6 +320,7 @@ struct SDL_Block {
 };
 
 static SDL_Block sdl;
+const char *titlebar;
 
 #if C_OPENGL
 static char const shader_src_default[] =
@@ -451,17 +458,23 @@ extern bool CPU_CycleAutoAdjust;
 //Globals for keyboard initialisation
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
+int mouse_start_x=-1, mouse_start_y=-1, mouse_end_x=-1, mouse_end_y=-1, fx=-1, fy=-1;
+const char *modifier;
 
 void GFX_SetTitle(Bit32s cycles,int frameskip,bool paused){
-	char title[200] = { 0 };
+	char title[200] = { 0 }, titlestr[200];
 	static Bit32s internal_cycles = 0;
 	static int internal_frameskip = 0;
 	if (cycles != -1) internal_cycles = cycles;
 	if (frameskip != -1) internal_frameskip = frameskip;
+	strcpy(titlestr,"(");
+	strcat(titlestr,titlebar);
+	strcat(titlestr,")");
+	if (strlen(titlebar)<1) strcpy(titlestr,"");
 	if(CPU_CycleAutoAdjust) {
-		sprintf(title,"DOSBox %s, CPU speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %s-lfn %s, CPU speed: max %3d%% cycles, Frameskip %2d, LFN %s",VERSION,titlestr,internal_cycles,internal_frameskip,autolfn?"auto":(uselfn?"enabled":"disabled"));
 	} else {
-		sprintf(title,"DOSBox %s, CPU speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %s-lfn %s, CPU speed: %8d cycles, Frameskip %2d, LFN %s",VERSION,titlestr,internal_cycles,internal_frameskip,autolfn?"auto":(uselfn?"enabled":"disabled"));
 	}
 
 	if (paused) strcat(title," PAUSED");
@@ -1559,6 +1572,9 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 
 //extern void UI_Run(bool);
 void Restart(bool pressed);
+#if C_CLIPBOARD
+void ClipboardPaste(bool pressed);
+#endif
 
 static void GUI_StartUp(Section * sec) {
 	sec->AddDestroyFunction(&GUI_ShutDown);
@@ -1573,6 +1589,7 @@ static void GUI_StartUp(Section * sec) {
 
 	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
 	sdl.wait_on_error=section->Get_bool("waitonerror");
+	titlebar = section->Get_string("titlebar");
 
 	Prop_multival* p=section->Get_multival("priority");
 	std::string focus = p->GetSection()->Get_string("active");
@@ -1645,6 +1662,7 @@ static void GUI_StartUp(Section * sec) {
 		}
 	}
 	sdl.desktop.doublebuf=section->Get_bool("fulldouble");
+	modifier=section->Get_string("clipboardmodifier");
 #if SDL_VERSION_ATLEAST(1, 2, 10)
 	const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
 #ifdef WIN32
@@ -1886,6 +1904,9 @@ static void GUI_StartUp(Section * sec) {
 	MAPPER_AddHandler(CaptureMouse,MK_f10,MMOD1,"capmouse","Cap Mouse");
 	MAPPER_AddHandler(SwitchFullScreen,MK_return,MMOD2,"fullscr","Fullscreen");
 	MAPPER_AddHandler(Restart,MK_home,MMOD1|MMOD2,"restart","Restart");
+#if C_CLIPBOARD
+	MAPPER_AddHandler(ClipboardPaste,MK_f10,MMOD2,"paste","Clipboard Paste");
+#endif
 #if C_DEBUG
 	/* Pause binds with activate-debugger */
 #else
@@ -1896,6 +1917,86 @@ static void GUI_StartUp(Section * sec) {
 	if(keystate&KMOD_NUM) startup_state_numlock = true;
 	if(keystate&KMOD_CAPS) startup_state_capslock = true;
 }
+
+struct KeyValue {
+	char name;
+	KBD_KEYS key;
+};
+
+#if C_CLIPBOARD
+#if C_NOPDCLIP && (defined(MACOSX) || defined(LINUX) || defined(BSD))
+std::string exec(const char* cmd, bool getres)
+{
+  FILE* pipe = popen(cmd, "r");
+  if (!pipe||!getres) return "";
+  char buffer[128];
+  std::string result = "";
+  while(!feof(pipe))
+    if(fgets(buffer, 128, pipe) != NULL)
+      result += buffer;
+  pclose(pipe);
+  return result;
+}
+#endif
+
+void ClipboardPaste(bool pressed) {
+	if (!pressed) return;
+	char *text = NULL;
+	long len = 0;
+#if C_NOPDCLIP && (defined(MACOSX) || defined(LINUX) || defined(BSD))
+#if defined (MACOSX)
+	std::string result=exec("pbpaste",true);
+#else
+	std::string result=exec("xclip -o -selection \"clipboard\"",true);
+#endif
+	text=new char[result.length()+1];
+	strcpy(text, result.c_str());
+	{
+#elif C_NOPDCLIP && defined(WIN32)
+	if (OpenClipboard(NULL)) {
+		text = (char*)GetClipboardData(CF_OEMTEXT);
+#else
+	if (PDC_getclipboard(&text,&len) == PDC_CLIP_SUCCESS && text != NULL) {
+#endif
+	if (text!=NULL)
+		for (unsigned int i=0;i<strlen(text);i++)
+			BIOS_AddKeyToBuffer(text[i]);
+	}
+#if C_NOPDCLIP && defined(WIN32)
+	CloseClipboard();
+#elif !(C_NOPDCLIP && (defined(MACOSX) || defined(LINUX) || defined(BSD)))
+	PDC_freeclipboard(text);
+#endif
+}
+
+void ClipboardCopy(void) {
+	const char* text = Mouse_GetSelected(mouse_start_x,mouse_start_y,mouse_end_x,mouse_end_y,sdl.draw.width,sdl.draw.height);
+#if C_NOPDCLIP && defined(WIN32)
+	if (OpenClipboard(NULL)) {
+		HGLOBAL clipbuffer;
+		char * buffer;
+		EmptyClipboard();
+		clipbuffer = GlobalAlloc(GMEM_DDESHARE, strlen(text)+1);
+		buffer = (char*)GlobalLock(clipbuffer);
+		strcpy(buffer, text);
+		GlobalUnlock(clipbuffer);
+		SetClipboardData(CF_OEMTEXT,clipbuffer);
+		CloseClipboard();
+	}
+#elif C_NOPDCLIP && (defined(MACOSX) || defined(LINUX) || defined(BSD))
+	std::string cmd="echo \"";
+	cmd += text;
+#if defined (MACOSX)
+	cmd += "\" | pbcopy";
+#else
+	cmd += "\" | xclip -selection \"clipboard\"";
+#endif
+	exec(cmd.c_str(),false);
+#else
+	PDC_setclipboard(text,strlen(text));
+#endif
+}
+#endif
 
 void Mouse_AutoLock(bool enable) {
 	sdl.mouse.autolock=enable;
@@ -1913,11 +2014,27 @@ static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
 						  (float)(motion->x-sdl.clip.x)/(sdl.clip.w-1)*sdl.mouse.xsensitivity/100.0f,
 						  (float)(motion->y-sdl.clip.y)/(sdl.clip.h-1)*sdl.mouse.ysensitivity/100.0f,
 						  sdl.mouse.locked);
+#if C_CLIPBOARD
+	else if (mouse_start_x >= 0 && &mouse_start_y >= 0) {
+		if (fx>=0 && fy>=0)
+			Restore_Text(mouse_start_x,mouse_start_y,fx,fy,sdl.draw.width,sdl.draw.height);
+		Mouse_Select(mouse_start_x,mouse_start_y,motion->x,motion->y,sdl.draw.width,sdl.draw.height);
+		fx=motion->x;
+		fy=motion->y;
+	}
+#endif
 }
 
-static void HandleMouseButton(SDL_MouseButtonEvent * button) {
+static void HandleMouseButton(SDL_MouseButtonEvent * button, SDL_MouseMotionEvent * motion) {
 	switch (button->state) {
 	case SDL_PRESSED:
+#if C_CLIPBOARD
+		if (!sdl.mouse.locked && button->button == SDL_BUTTON_RIGHT && (!strcmp(modifier,"none") || (!strcmp(modifier,"alt") || !strcmp(modifier,"lalt")) && sdl.laltstate==SDL_KEYDOWN || (!strcmp(modifier,"alt") || !strcmp(modifier,"ralt")) && sdl.raltstate==SDL_KEYDOWN)) {
+			mouse_start_x=motion->x;
+			mouse_start_y=motion->y;
+			break;
+		} else
+#endif
 		if (sdl.mouse.requestlock && !sdl.mouse.locked) {
 			GFX_CaptureMouse();
 			// Don't pass click to mouse handler
@@ -1940,6 +2057,25 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 		}
 		break;
 	case SDL_RELEASED:
+#if C_CLIPBOARD
+		if (!sdl.mouse.locked && button->button == SDL_BUTTON_RIGHT && mouse_start_x >= 0 && &mouse_start_y >= 0) {
+			mouse_end_x=motion->x;
+			mouse_end_y=motion->y;
+			if (mouse_start_x == mouse_end_x && mouse_start_y == mouse_end_y)
+				ClipboardPaste(true);
+			else {
+				Restore_Text(mouse_start_x,mouse_start_y,fx,fy,sdl.draw.width,sdl.draw.height);
+				ClipboardCopy();
+			}
+			mouse_start_x = -1;
+			mouse_start_y = -1;
+			mouse_end_x = -1;
+			mouse_end_y = -1;
+			fx = -1;
+			fy = -1;
+			break;
+		}
+#endif
 		switch (button->button) {
 		case SDL_BUTTON_LEFT:
 			Mouse_ButtonReleased(0);
@@ -2095,7 +2231,7 @@ void GFX_Events() {
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
-			HandleMouseButton(&event.button);
+			HandleMouseButton(&event.button,&event.motion);
 			break;
 		case SDL_VIDEORESIZE:
 //			HandleVideoResize(&event.resize);
@@ -2238,6 +2374,14 @@ void Config_Add_SDL() {
 
 	Pbool = sdl_sec->Add_bool("usescancodes",Property::Changeable::Always,true);
 	Pbool->Set_help("Avoid usage of symkeys, might not work on all operating systems.");
+
+	Pstring = sdl_sec->Add_string("titlebar",Property::Changeable::Always,"GNU GPL");
+	Pstring->Set_help("Change the string displayed in the DOSBox title bar.");
+
+	const char* clipboardmodifier[] = { "none", "alt", "lalt", "ralt", "disabled", 0};
+	Pstring = sdl_sec->Add_string("clipboardmodifier",Property::Changeable::Always,"none");
+	Pstring->Set_values(clipboardmodifier);
+	Pstring->Set_help("Change the keyboard modifier for the right mouse button clipboard copy/paste function.");
 }
 
 static void show_warning(char const * const message) {
@@ -2452,7 +2596,9 @@ int main(int argc, char* argv[]) {
 
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
+#ifdef _MSC_VER
 		if (control->cmdline->FindExist("-noconsole")) {
+#endif
 			FreeConsole();
 			/* Redirect standard input and standard output */
 			if(freopen(STDOUT_FILE, "w", stdout) == NULL)
@@ -2460,6 +2606,7 @@ int main(int argc, char* argv[]) {
 			freopen(STDERR_FILE, "w", stderr);
 			setvbuf(stdout, NULL, _IOLBF, BUFSIZ);	/* Line buffered */
 			setbuf(stderr, NULL);					/* No buffering */
+#ifdef _MSC_VER
 		} else {
 			if (AllocConsole()) {
 				fclose(stdin);
@@ -2471,10 +2618,11 @@ int main(int argc, char* argv[]) {
 			}
 			SetConsoleTitle("DOSBox Status Window");
 		}
+#endif
 #endif  //defined(WIN32) && !(C_DEBUG)
 		if (control->cmdline->FindExist("-version") ||
 		    control->cmdline->FindExist("--version") ) {
-			printf("\nDOSBox version %s, copyright 2002-2019 DOSBox Team.\n\n",VERSION);
+			printf("\nDOSBox version %s-lfn, copyright DOSBox Team and Wengier.\n\n",VERSION);
 			printf("DOSBox is written by the DOSBox Team (See AUTHORS file))\n");
 			printf("DOSBox comes with ABSOLUTELY NO WARRANTY.  This is free software,\n");
 			printf("and you are welcome to redistribute it under certain conditions;\n");
@@ -2501,8 +2649,9 @@ int main(int argc, char* argv[]) {
 #endif
 
 	/* Display Welcometext in the console */
-	LOG_MSG("DOSBox version %s",VERSION);
+	LOG_MSG("DOSBox version %s-lfn",VERSION);
 	LOG_MSG("Copyright 2002-2019 DOSBox Team, published under GNU GPL.");
+	LOG_MSG("Long File Name (LFN), mouse copy/paste and other support, by Wengier, 2014-2020.");
 	LOG_MSG("---");
 
 	/* Init SDL */

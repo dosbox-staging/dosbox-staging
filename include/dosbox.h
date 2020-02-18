@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: LFN support
  */
 
 
@@ -59,7 +61,7 @@ enum SVGACards {
 
 extern SVGACards svgaCard;
 extern MachineType machine;
-extern bool SDLNetInited;
+extern bool SDLNetInited, uselfn, autolfn;
 
 #define IS_TANDY_ARCH ((machine==MCH_TANDY) || (machine==MCH_PCJR))
 #define IS_EGAVGA_ARCH ((machine==MCH_EGA) || (machine==MCH_VGA))
@@ -71,5 +73,11 @@ extern bool SDLNetInited;
 #ifndef DOSBOX_LOGGING_H
 #include "logging.h"
 #endif // the logging system.
+
+#if !defined (WIN32)
+	typedef unsigned int DWORD;
+	typedef   signed int HANDLE;
+#define INVALID_HANDLE_VALUE -1
+#endif
 
 #endif /* DOSBOX_DOSBOX_H */

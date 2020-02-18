@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: LFN and AUTO MOUNT support
  */
 
 
@@ -134,7 +136,8 @@ public:
 		}
 	}
 	void ListMounts(void) {
-		char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
+		char name[DOS_NAMELENGTH_ASCII],lname[LFN_NAMELENGTH];
+		Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
 		/* Command uses dta so set it to our internal dta */
 		RealPt save_dta = dos.dta();
 		dos.dta(dos.tables.tempdta);
@@ -150,7 +153,7 @@ public:
 			char root[7] = {static_cast<char>('A'+d),':','\\','*','.','*',0};
 			bool ret = DOS_FindFirst(root,DOS_ATTR_VOLUME);
 			if (ret) {
-				dta.GetResult(name,size,date,time,attr);
+				dta.GetResult(name,lname,size,date,time,attr);
 				DOS_FindNext(); //Mark entry as invalid
 			} else name[0] = 0;
 

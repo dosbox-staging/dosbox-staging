@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: LFN and MOUSE CLIPBOARD support
  */
 
 
@@ -89,7 +91,7 @@ void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void DISNEY_Init(Section*);
 void SERIAL_Init(Section*);
-
+void LPT_Init(Section*);
 
 #if C_IPX
 void IPX_Init(Section*);
@@ -429,13 +431,13 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&PAGING_Init);//done
 	secprop->AddInitFunction(&MEM_Init);//done
 	secprop->AddInitFunction(&HARDWARE_Init);//done
-	Pint = secprop->Add_int("memsize", Property::Changeable::WhenIdle,16);
+	Pint = secprop->Add_int("memsize", Property::Changeable::WhenIdle,30);
 	Pint->SetMinMax(1,63);
 	Pint->Set_help(
 		"Amount of memory DOSBox has in megabytes.\n"
-		"This value is best left at its default to avoid problems with some games,\n"
-		"though few games might require a higher value.\n"
-		"There is generally no speed advantage when raising this value.");
+		"  The default value is 30, but it might be set to a different value like 16 to avoid problems with certain games,\n"
+		"  though few games might require a higher value.\n"
+		"  There is generally no speed advantage when raising this value.");
 	secprop->AddInitFunction(&CALLBACK_Init);
 	secprop->AddInitFunction(&PIC_Init);//done
 	secprop->AddInitFunction(&PROGRAMS_Init);
@@ -751,6 +753,15 @@ void DOSBOX_Init(void) {
 	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::WhenIdle,"");
 	Pmulti_remain->Set_help("see serial1");
 
+	secprop=control->AddSection_prop("parallel",&LPT_Init,true);   
+	Pbool = secprop->Add_bool("lpt1pass",Property::Changeable::WhenIdle,true);
+	Pbool->Set_help("Enable direct LPT1 port passthrough.");
+	Pbool = secprop->Add_bool("lpt2pass",Property::Changeable::WhenIdle,false);
+	Pbool->Set_help("Enable direct LPT2 port passthrough.");
+	Pbool = secprop->Add_bool("lpt3pass",Property::Changeable::WhenIdle,false);
+	Pbool->Set_help("Enable direct LPT3 port passthrough.");
+	Pbool = secprop->Add_bool("prnpass",Property::Changeable::WhenIdle,true);
+	Pbool->Set_help("Enable direct PRN port passthrough.");
 
 	/* All the DOS Related stuff, which will eventually start up in the shell */
 	secprop=control->AddSection_prop("dos",&DOS_Init,false);//done
@@ -769,6 +780,19 @@ void DOSBOX_Init(void) {
 
 	Pbool = secprop->Add_bool("umb",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("Enable UMB support.");
+
+	Pstring = secprop->Add_string("ver",Property::Changeable::WhenIdle,"7.10");
+	Pstring->Set_help("Set DOS version. The default value is 7.10.");
+	
+	const char* lfn_settings[] = { "true", "auto", "false", 0};
+	Pstring = secprop->Add_string("lfn",Property::Changeable::WhenIdle,"auto");
+	Pstring->Set_values(lfn_settings);
+	Pstring->Set_help("Enable LFN support. The default (=auto) means that LFN support\n"
+		"will be enabled if and only if the major DOS version is set to\n"
+		"at least 7.");
+
+	Pbool = secprop->Add_bool("automount",Property::Changeable::WhenIdle,true);
+	Pbool->Set_help("Enable automatic drive mounting.");
 
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init,true);
 	Pstring = secprop->Add_string("keyboardlayout",Property::Changeable::WhenIdle, "auto");
@@ -789,10 +813,17 @@ void DOSBOX_Init(void) {
 	secline=control->AddSection_line("autoexec",&AUTOEXEC_Init);
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
 		"Lines in this section will be run at startup.\n"
-		"You can put your MOUNT lines here.\n"
-	);
+		"You can put your MOUNT lines here.\n");
+	MSG_Add("AUTOEXEC_EXAMPLE",
+		"@ECHO OFF\n"
+		"ECHO.\n"
+		"MOUNT Y: .\n"
+		"IF EXIST Z:\\COMMAND.COM ECHO Drive Z is mounted as virtual internal drive.\n"
+		"ECHO.\n"
+		"Y:\\KEYBUF 1024\n"
+		"ECHO ON");
 	MSG_Add("CONFIGFILE_INTRO",
-	        "# This is the configuration file for DOSBox %s. (Please use the latest version of DOSBox)\n"
+	        "# This is the configuration file for DOSBox %s-lfn. (Please use its latest version)\n"
 	        "# Lines starting with a # are comment lines and are ignored by DOSBox.\n"
 	        "# They are used to (briefly) document the effect of each option.\n");
 	MSG_Add("CONFIG_SUGGESTED_VALUES", "Possible values");

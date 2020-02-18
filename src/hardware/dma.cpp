@@ -50,7 +50,7 @@ static void DMA_BlockRead(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8u
 	Bit32u dma_wrap = ((0xffff<<dma16)+dma16) | dma_wrapping;
 	for ( ; size ; size--, offset++) {
 		if (offset>(dma_wrapping<<dma16)) {
-			LOG_MSG("DMA segbound wrapping (read): %x:%x size %" sBitfs(x) " [%x] wrap %x",spage,offset,size,dma16,dma_wrapping);
+			//LOG_MSG("DMA segbound wrapping (read): %x:%x size %" sBitfs(x) " [%x] wrap %x",spage,offset,size,dma16,dma_wrapping);
 		}
 		offset &= dma_wrap;
 		Bitu page = highpart_addr_page+(offset >> 12);
@@ -71,7 +71,7 @@ static void DMA_BlockWrite(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8
 	Bit32u dma_wrap = ((0xffff<<dma16)+dma16) | dma_wrapping;
 	for ( ; size ; size--, offset++) {
 		if (offset>(dma_wrapping<<dma16)) {
-			LOG_MSG("DMA segbound wrapping (write): %x:%x size %" sBitfs(x) " [%x] wrap %x",spage,offset,size,dma16,dma_wrapping);
+			//LOG_MSG("DMA segbound wrapping (write): %x:%x size %" sBitfs(x) " [%x] wrap %x",spage,offset,size,dma16,dma_wrapping);
 		}
 		offset &= dma_wrap;
 		Bitu page = highpart_addr_page+(offset >> 12);
@@ -258,7 +258,7 @@ Bitu DmaController::ReadControllerReg(Bitu reg,Bitu /*len*/) {
 		}
 		return ret;
 	default:
-		LOG(LOG_DMACONTROL,LOG_NORMAL)("Trying to read undefined DMA port %" sBitfs(x),reg);
+		//LOG(LOG_DMACONTROL,LOG_NORMAL)("Trying to read undefined DMA port %" sBitfs(x),reg);
 		break;
 	}
 	return 0xffffffff;

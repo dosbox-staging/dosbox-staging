@@ -8,14 +8,21 @@
 
 /* Define to 1 to enable screenshots, requires libpng */
 #define C_SSHOT 1
+
 /* Define to 1 to enable movie recording, requires zlib built without Z_SOLO */
 #define C_SRECORD 1
+
+/* Define to 1 to enable clipboard copy/paste, may require pdcurses (see also C_NOPDCLIP below) */
+#define C_CLIPBOARD 1
 
 /* Define to 1 to use opengl display output support */
 #define C_OPENGL 1
 
 /* Define to 1 to enable internal modem support, requires SDL_net */
 #define C_MODEM 1
+
+/* Define to 1 to not use pdcurses for the clipboard feature (Win32 and Mac OS X only) */
+#define C_NOPDCLIP 1
 
 /* Define to 1 to enable IPX networking support, requires SDL_net */
 #define C_IPX 1
@@ -24,11 +31,7 @@
 #define C_HEAVY_DEBUG 0
 
 /* The type of cpu this host has */
-#ifdef _M_X64
-#define C_TARGETCPU X86_64
-#else // _M_IX86
 #define C_TARGETCPU X86
-#endif
 //#define C_TARGETCPU X86_64
 
 /* Define to 1 to use x86 dynamic cpu core */
@@ -44,13 +47,7 @@
 #define C_FPU 1
 
 /* Define to 1 to use a x86 assembly fpu core */
-#ifdef _M_X64
-//No support for inline asm with visual studio in x64 bit mode.
-//This means that non-dynamic cores can't use the better fpu emulation.
-#define C_FPU_X86 0
-#else // _M_IX86
 #define C_FPU_X86 1
-#endif
 
 /* Define to 1 to use a unaligned memory access */
 #define C_UNALIGNED_MEMORY 1
@@ -61,7 +58,10 @@
 /* environ can be linked */
 #define ENVIRON_LINKED 1
 
-/* Define to 1 if you want serial passthrough support. */
+/* Define to 1 if you have the <ddraw.h> header file. */
+#define HAVE_DDRAW_H 1
+
+/* Define to 1 if you want serial passthrough support (Win32 only). */
 #define C_DIRECTSERIAL 1
 
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
@@ -75,27 +75,16 @@
 #pragma warning(disable : 4996) 
 #endif
 
-typedef double            Real64;
+typedef         double		Real64;
 /* The internal types */
-typedef unsigned char     Bit8u;
-typedef signed char       Bit8s;
-typedef unsigned short    Bit16u;
-typedef signed short      Bit16s;
-typedef unsigned int      Bit32u;
-typedef signed int        Bit32s;
-typedef unsigned __int64  Bit64u;
-typedef signed __int64    Bit64s;
-#define sBit32t
-#define sBit64t "I64"
-#define sBit32fs(a) sBit32t #a
-#define sBit64fs(a) sBit64t #a
-#ifdef _M_X64
-typedef Bit64u            Bitu;
-typedef Bit64s            Bits;
-#define sBitfs sBit64fs
-#else // _M_IX86
-typedef Bit32u            Bitu;
-typedef Bit32s            Bits;
-#define sBitfs sBit32fs
-#endif
+typedef  unsigned char		Bit8u;
+typedef    signed char		Bit8s;
+typedef unsigned short		Bit16u;
+typedef   signed short		Bit16s;
+typedef  unsigned long		Bit32u;
+typedef    signed long		Bit32s;
+typedef unsigned __int64	Bit64u;
+typedef   signed __int64	Bit64s;
+typedef unsigned int		Bitu;
+typedef signed int			Bits;
 

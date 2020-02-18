@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: LFN support
  */
 
 
@@ -476,9 +478,9 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	lowcase(file_start);
 	strcat(file_start,"_");
 	bool is_directory;
-	char tempname[CROSS_LEN];
-	bool testRead = read_directory_first(dir, tempname, is_directory );
-	for ( ; testRead; testRead = read_directory_next(dir, tempname, is_directory) ) {
+	char tempname[CROSS_LEN], sname[12];
+	bool testRead = read_directory_first(dir, tempname, sname, is_directory );
+	for ( ; testRead; testRead = read_directory_next(dir, tempname, sname, is_directory) ) {
 		char * test=strstr(tempname,ext);
 		if (!test || strlen(test)!=strlen(ext)) 
 			continue;
@@ -489,7 +491,7 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	}
 	close_directory( dir );
 	char file_name[CROSS_LEN];
-	sprintf(file_name,"%s%c%s%03" sBitfs(u) "%s",capturedir.c_str(),CROSS_FILESPLIT,file_start,last,ext);
+	sprintf(file_name,"%s%c%s%03d%s",capturedir.c_str(),CROSS_FILESPLIT,file_start,last,ext);
 	/* Open the actual file */
 	FILE * handle=fopen(file_name,"wb");
 	if (handle) {
@@ -563,6 +565,8 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 		if (info_ptr) {
 			/* Finalize the initing of png library */
 			png_init_io(png_ptr, fp);
+#define Z_DEFAULT_STRATEGY 0
+#define Z_BEST_COMPRESSION 9
 			png_set_compression_level(png_ptr,Z_BEST_COMPRESSION);
 
 			/* set other zlib parameters */

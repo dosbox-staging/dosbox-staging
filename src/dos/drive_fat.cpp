@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: LFN support
  */
 
 
@@ -456,8 +458,9 @@ bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry,
 			if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) break;
 			else {
 				//Found something. See if it's a directory (findfirst always finds regular files)
-				char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;Bit8u find_attr;
-				imgDTA->GetResult(find_name,find_size,find_date,find_time,find_attr);
+				char find_name[DOS_NAMELENGTH_ASCII],lfind_name[LFN_NAMELENGTH];
+				Bit16u find_date,find_time;Bit32u find_size;Bit8u find_attr;
+				imgDTA->GetResult(find_name,lfind_name,find_size,find_date,find_time,find_attr);
 				if(!(find_attr & DOS_ATTR_DIRECTORY)) break;
 			}
 
@@ -497,11 +500,12 @@ bool fatDrive::getDirClustNum(char *dir, Bit32u *clustNum, bool parDir) {
 			findDir = strtok(NULL,"\\");
 			if(parDir && (findDir == NULL)) break;
 
-			char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;Bit8u find_attr;
+			char find_name[DOS_NAMELENGTH_ASCII],lfind_name[LFN_NAMELENGTH];
+			Bit16u find_date,find_time;Bit32u find_size;Bit8u find_attr;
 			if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) {
 				return false;
 			} else {
-				imgDTA->GetResult(find_name,find_size,find_date,find_time,find_attr);
+				imgDTA->GetResult(find_name,lfind_name,find_size,find_date,find_time,find_attr);
 				if(!(find_attr &DOS_ATTR_DIRECTORY)) return false;
 			}
 			currentClust = foundEntry.loFirstClust;
@@ -999,8 +1003,8 @@ bool fatDrive::FileUnlink(char * name) {
 bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) {
 	direntry dummyClust;
 #if 0
-	Bit8u attr;char pattern[DOS_NAMELENGTH_ASCII];
-	dta.GetSearchParams(attr,pattern);
+	Bit8u attr;char pattern[CROSS_LEN];
+	dta.GetSearchParams(attr,pattern,false);
 	if(attr==DOS_ATTR_VOLUME) {
 		if (strcmp(GetLabel(), "") == 0 ) {
 			DOS_SetError(DOSERR_NO_MORE_FILES);
@@ -1046,11 +1050,12 @@ bool fatDrive::FindNextInternal(Bit32u dirClustNumber, DOS_DTA &dta, direntry *f
 	Bit32u tmpsector;
 	Bit8u attrs;
 	Bit16u dirPos;
-	char srch_pattern[DOS_NAMELENGTH_ASCII];
+	char srch_pattern[CROSS_LEN];
 	char find_name[DOS_NAMELENGTH_ASCII];
+	char lfind_name[LFN_NAMELENGTH+1];
 	char extension[4];
 
-	dta.GetSearchParams(attrs, srch_pattern);
+	dta.GetSearchParams(attrs, srch_pattern, false);
 	dirPos = dta.GetDirID();
 
 nextfile:
@@ -1085,15 +1090,20 @@ nextfile:
 	}
 	memset(find_name,0,DOS_NAMELENGTH_ASCII);
 	memset(extension,0,4);
+	memset(lfind_name,0,LFN_NAMELENGTH);
 	memcpy(find_name,&sectbuf[entryoffset].entryname[0],8);
 	memcpy(extension,&sectbuf[entryoffset].entryname[8],3);
+	memcpy(lfind_name,&sectbuf[entryoffset].entryname[0],8);
 	trimString(&find_name[0]);
 	trimString(&extension[0]);
+	trimString(&lfind_name[0]);
 	
 	//if(!(sectbuf[entryoffset].attrib & DOS_ATTR_DIRECTORY))
 	if (extension[0]!=0) {
 		strcat(find_name, ".");
 		strcat(find_name, extension);
+		strcat(lfind_name, ".");
+		strcat(lfind_name, extension);
 	}
 
 	/* Compare attributes to search attributes */
@@ -1108,11 +1118,11 @@ nextfile:
 
 
 	/* Compare name to search pattern */
-	if(!WildFileCmp(find_name,srch_pattern)) goto nextfile;
+	if(!WildFileCmp(find_name,srch_pattern)&&!LWildFileCmp(lfind_name,srch_pattern)) goto nextfile;
 
 	//dta.SetResult(find_name, sectbuf[entryoffset].entrysize, sectbuf[entryoffset].crtDate, sectbuf[entryoffset].crtTime, sectbuf[entryoffset].attrib);
 
-	dta.SetResult(find_name, sectbuf[entryoffset].entrysize, sectbuf[entryoffset].modDate, sectbuf[entryoffset].modTime, sectbuf[entryoffset].attrib);
+	dta.SetResult(find_name, lfind_name, sectbuf[entryoffset].entrysize, sectbuf[entryoffset].modDate, sectbuf[entryoffset].modTime, sectbuf[entryoffset].attrib);
 
 	memcpy(foundEntry, &sectbuf[entryoffset], sizeof(direntry));
 
@@ -1154,6 +1164,19 @@ bool fatDrive::GetFileAttr(char *name, Bit16u *attr) {
 		return false;
 	} else *attr=fileEntry.attrib;
 	return true;
+}
+
+bool fatDrive::GetFileAttrEx(char* name, struct stat *status) {
+	return false;
+}
+
+DWORD fatDrive::GetCompressedSize(char* name) {
+	return 0;
+}
+
+HANDLE fatDrive::CreateOpenFile(const char* name) {
+	DOS_SetError(1);
+	return INVALID_HANDLE_VALUE;
 }
 
 bool fatDrive::directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum, Bit32s start/*=0*/) {

@@ -14,9 +14,9 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: MOUSE CLIPBOARD support
  */
-
-
 
 #ifndef DOSBOX_MOUSE_H
 #define DOSBOX_MOUSE_H
@@ -31,6 +31,11 @@ void Mouse_ChangePS2Callback(Bit16u pseg, Bit16u pofs);
 
 
 void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate);
+#if C_CLIPBOARD
+const char* Mouse_GetSelected(int x1, int y1, int x2, int y2, int w, int h);
+void Mouse_Select(int x1, int y1, int x2, int y2, int w, int h);
+void Restore_Text(int x1, int y1, int x2, int y2, int w, int h);
+#endif
 void Mouse_CursorSet(float x,float y);
 void Mouse_ButtonPressed(Bit8u button);
 void Mouse_ButtonReleased(Bit8u button);

@@ -266,6 +266,16 @@ AC_ARG_ENABLE(debug,AC_HELP_STRING([--enable-debug],[Enable debug mode]),[
    fi
 ],)
 
+AH_TEMPLATE(C_CLIPBOARD,[Define to 1 to enable clipboard copy/paste, may require pdcurses unless C_NOPDCLIP is set below])
+AH_TEMPLATE(C_NOPDCLIP,[Define to 1 to not use pdcurses for the clipboard feature (xclip will be required for Linux/BSD)])
+AC_ARG_ENABLE(clipboard,AC_HELP_STRING([--enable-clipbord],[Enable mouse copy & paste support]),[
+  if test x$enable_clipboard = xyes ; then 
+    AC_MSG_RESULT([enabling mouse copy & paste support])
+    AC_DEFINE(C_CLIPBOARD,1)
+    AC_DEFINE(C_NOPDCLIP,1)
+  fi
+],)
+
 AH_TEMPLATE(C_CORE_INLINE,[Define to 1 to use inlined memory functions in cpu core])
 AC_ARG_ENABLE(core-inline,AC_HELP_STRING([--disable-core-inline],[Disable inlined memory handling in CPU Core]),,enable_core_inline=yes)
 AC_MSG_CHECKING(whether memory handling in the CPU Core will be inlined)

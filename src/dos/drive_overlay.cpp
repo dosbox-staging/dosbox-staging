@@ -114,8 +114,9 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 		}
 		bool empty = true;
 		do {
-			char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
-			dta.GetResult(name,size,date,time,attr);
+			char name[DOS_NAMELENGTH_ASCII], lname[LFN_NAMELENGTH]
+			;Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
+			dta.GetResult(name,lname,size,date,time,attr);
 			if (logoverlay) LOG_MSG("RemoveDir found %s",name);
 			if (empty && strcmp(".",name ) && strcmp("..",name)) 
 				empty = false; //Neither . or .. so directory not empty.
@@ -581,13 +582,13 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 		dir_information* dirp = open_directory(overlaydir);
 		if (dirp == NULL) return;
 		// Read complete directory
-		char dir_name[CROSS_LEN];
+		char dir_name[CROSS_LEN], dir_sname[DOS_NAMELENGTH+1];
 		bool is_directory;
-		if (read_directory_first(dirp, dir_name, is_directory)) {
+		if (read_directory_first(dirp, dir_name, dir_sname, is_directory)) {
 			if ((strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(dir_name);
 			else if (is_directory) dirnames.push_back(dir_name);
 			else filenames.push_back(dir_name);
-			while (read_directory_next(dirp, dir_name, is_directory)) {
+			while (read_directory_next(dirp, dir_name, dir_sname, is_directory)) {
 				if ((strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(dir_name);
 				else if (is_directory) dirnames.push_back(dir_name);
 				else filenames.push_back(dir_name);
@@ -631,13 +632,13 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 
 			std::string backupi(*i);
 			// Read complete directory
-			char dir_name[CROSS_LEN];
+			char dir_name[CROSS_LEN], dir_sname[DOS_NAMELENGTH+1];
 			bool is_directory; 
-			if (read_directory_first(dirp, dir_name, is_directory)) {
+			if (read_directory_first(dirp, dir_name, dir_sname, is_directory)) {
 				if ((strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(string(dirpush)+dir_name);
 				else if (is_directory) dirnames.push_back(string(dirpush)+dir_name);
 				else filenames.push_back(string(dirpush)+dir_name);
-				while (read_directory_next(dirp, dir_name, is_directory)) {
+				while (read_directory_next(dirp, dir_name, dir_sname, is_directory)) {
 					if ((strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(string(dirpush)+dir_name);
 					else if (is_directory) dirnames.push_back(string(dirpush)+dir_name);
 					else filenames.push_back(string(dirpush)+dir_name);
@@ -725,23 +726,23 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 
 bool Overlay_Drive::FindNext(DOS_DTA & dta) {
 
-	char * dir_ent;
+	char * dir_ent, *ldir_ent;
 	struct stat stat_block;
 	char full_name[CROSS_LEN];
-	char dir_entcopy[CROSS_LEN];
+	char dir_entcopy[CROSS_LEN], ldir_entcopy[CROSS_LEN];
 
 	Bit8u srch_attr;char srch_pattern[DOS_NAMELENGTH_ASCII];
 	Bit8u find_attr;
 
-	dta.GetSearchParams(srch_attr,srch_pattern);
+	dta.GetSearchParams(srch_attr,srch_pattern,false);
 	Bit16u id = dta.GetDirID();
 
 again:
-	if (!dirCache.FindNext(id,dir_ent)) {
+	if (!dirCache.FindNext(id,dir_ent,ldir_ent)) {
 		DOS_SetError(DOSERR_NO_MORE_FILES);
 		return false;
 	}
-	if(!WildFileCmp(dir_ent,srch_pattern)) goto again;
+	if(!WildFileCmp(dir_ent,srch_pattern)&&!LWildFileCmp(ldir_ent,srch_pattern)) goto again;
 
 	strcpy(full_name,srchInfo[id].srch_dir);
 	strcat(full_name,dir_ent);
@@ -750,6 +751,7 @@ again:
 	//and due to its design dir_ent might be lost.)
 	//Copying dir_ent first
 	strcpy(dir_entcopy,dir_ent);
+	strcpy(ldir_entcopy,ldir_ent);
 	
 	//First try overlay:
 	char ovname[CROSS_LEN];
@@ -796,12 +798,15 @@ again:
 
 	
 	/* file is okay, setup everything to be copied in DTA Block */
-	char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;
+	char find_name[DOS_NAMELENGTH_ASCII], lfind_name[LFN_NAMELENGTH+1];
+	Bit16u find_date,find_time;Bit32u find_size;
 
 	if(strlen(dir_entcopy)<DOS_NAMELENGTH_ASCII){
 		strcpy(find_name,dir_entcopy);
 		upcase(find_name);
 	} 
+	strcpy(lfind_name,ldir_entcopy);
+	lfind_name[LFN_NAMELENGTH]=0;
 
 	find_size=(Bit32u) stat_block.st_size;
 	struct tm *time;
@@ -812,7 +817,7 @@ again:
 		find_time=6; 
 		find_date=4;
 	}
-	dta.SetResult(find_name,find_size,find_date,find_time,find_attr);
+	dta.SetResult(find_name,lfind_name,find_size,find_date,find_time,find_attr);
 	return true;
 }
 

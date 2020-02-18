@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: LPT support
  */
 
 
@@ -24,7 +26,9 @@
 #include "mem.h"
 #include "bios.h"
 #include "dos_inc.h"
+#include "setup.h"
 #include "support.h"
+#include "control.h"
 #include "drives.h" //Wildcmp
 /* Include all the devices */
 
@@ -58,6 +62,36 @@ public:
 class device_LPT1 : public device_NUL {
 public:
    	device_LPT1() { SetName("LPT1");}
+	Bit16u GetInformation(void) { return 0x80A0; }
+	bool Read(Bit8u* data,Bit16u * size){
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}	
+};
+
+class device_LPT2 : public device_NUL {
+public:
+   	device_LPT2() { SetName("LPT2");}
+	Bit16u GetInformation(void) { return 0x80A0; }
+	bool Read(Bit8u* data,Bit16u * size){
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}	
+};
+
+class device_LPT3 : public device_NUL {
+public:
+   	device_LPT3() { SetName("LPT3");}
+	Bit16u GetInformation(void) { return 0x80A0; }
+	bool Read(Bit8u* data,Bit16u * size){
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}	
+};
+
+class device_PRN : public device_NUL {
+public:
+   	device_PRN() { SetName("PRN");}
 	Bit16u GetInformation(void) { return 0x80A0; }
 	bool Read(Bit8u* data,Bit16u * size){
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -183,6 +217,14 @@ void DOS_DelDevice(DOS_Device * dev) {
 	}
 }
 
+void LPT_Init(Section* sec) {
+	Section_prop * secp=static_cast<Section_prop *>(sec);
+	if (!secp->Get_bool("lpt1pass")) DOS_AddDevice(new device_LPT1());
+	if (!secp->Get_bool("lpt2pass")) DOS_AddDevice(new device_LPT2());
+	if (!secp->Get_bool("lpt3pass")) DOS_AddDevice(new device_LPT3());
+	if (!secp->Get_bool("prnpass")) DOS_AddDevice(new device_PRN());
+}
+
 void DOS_SetupDevices(void) {
 	DOS_Device * newdev;
 	newdev=new device_CON();
@@ -190,7 +232,4 @@ void DOS_SetupDevices(void) {
 	DOS_Device * newdev2;
 	newdev2=new device_NUL();
 	DOS_AddDevice(newdev2);
-	DOS_Device * newdev3;
-	newdev3=new device_LPT1();
-	DOS_AddDevice(newdev3);
 }

@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: MS-DOS 7 support
  */
 
 
@@ -57,6 +59,7 @@ static Bitu INT2A_Handler(void) {
 }
 
 static bool DOS_MultiplexFunctions(void) {
+	char name[256];
 	switch (reg_ax) {
 	case 0x1216:	/* GET ADDRESS OF SYSTEM FILE TABLE ENTRY */
 		// reg_bx is a system file table entry, should coincide with
@@ -188,6 +191,77 @@ static bool DOS_MultiplexFunctions(void) {
 	case 0x168f:	/*  Close awareness crap */
 	   /* Removing warning */
 		return true;
+#ifdef WIN32
+	case 0xb800:																	// Network - installation check
+		reg_al = 1;																	// Installed
+		reg_bx = 8;																	// Bit 3 - redirector
+		return true;
+	case 0xb809:																	// Network - get version
+		reg_ax = 0x0201;															// Major-minor version as returned by NTVDM-Windows XP
+		return true;
+	case 0x1700:
+		reg_al = 1;
+		reg_ah = 1;
+		return true;
+	case 0x1701:
+		reg_ax=OpenClipboard(NULL)?1:0;
+		return true;
+	case 0x1702:
+		reg_ax=0;
+		if (OpenClipboard(NULL))
+			{
+			reg_ax=EmptyClipboard()?1:0;
+			CloseClipboard();
+			}
+		return true;
+	case 0x1703:
+		reg_ax=0;
+		if ((reg_dx==1||reg_dx==7)&&OpenClipboard(NULL))
+			{
+			char *text, *buffer;
+			text = new char[reg_cx];
+			MEM_StrCopy(SegPhys(es)+reg_bx,text,reg_cx);
+			*(text+reg_cx-1)=0;
+			HGLOBAL clipbuffer;
+			EmptyClipboard();
+			clipbuffer = GlobalAlloc(GMEM_DDESHARE, strlen(text)+1);
+			buffer = (char*)GlobalLock(clipbuffer);
+			strcpy(buffer, text);
+			delete[] text;
+			GlobalUnlock(clipbuffer);
+			SetClipboardData(reg_dx==1?CF_TEXT:CF_OEMTEXT,clipbuffer);
+			reg_ax++;
+			CloseClipboard();
+			}
+		return true;
+	case 0x1704:
+		reg_ax=0;
+		if ((reg_dx==1||reg_dx==7)&&OpenClipboard(NULL))
+			{
+			if (HANDLE text = GetClipboardData(reg_dx==1?CF_TEXT:CF_OEMTEXT))
+				{
+				reg_ax=(Bit16u)strlen((char *)text)+1;
+				reg_dx=(Bit16u)((strlen((char *)text)+1)/65536);
+				}
+			CloseClipboard();
+			}
+		return true;
+	case 0x1705:
+		reg_ax=0;
+		if ((reg_dx==1||reg_dx==7)&&OpenClipboard(NULL))
+			{
+			if (HANDLE text = GetClipboardData(reg_dx==1?CF_TEXT:CF_OEMTEXT))
+				{
+				MEM_BlockWrite(SegPhys(es)+reg_bx,text,(Bitu)(strlen((char *)text)+1));
+				reg_ax++;
+				}
+			CloseClipboard();
+			}
+		return true;
+	case 0x1708:
+		reg_ax=CloseClipboard()?1:0;
+		return true;
+#endif
 	case 0x4a01:	/* Query free hma space */
 	case 0x4a02:	/* ALLOCATE HMA SPACE */
 		LOG(LOG_DOSMISC,LOG_WARN)("INT 2f:4a HMA. DOSBox reports none available.");
@@ -195,6 +269,33 @@ static bool DOS_MultiplexFunctions(void) {
 		//ESDI=ffff:ffff Location of HMA/Allocated memory
 		SegSet16(es,0xffff);
 		reg_di=0xffff;
+		return true;
+	case 0x1300:
+	case 0x1302:
+		reg_ax=0;
+		return true;
+	case 0x1605:
+		return true;
+	case 0x1612:
+		reg_ax=0;
+		name[0]=1;
+		name[1]=0;
+		MEM_BlockWrite(SegPhys(es)+reg_bx,name,0x20);
+		return true;
+	case 0x1613:	/* Get SYSTEM.DAT path */
+		strcpy(name,"C:\\WINDOWS\\SYSTEM.DAT");
+		MEM_BlockWrite(SegPhys(es)+reg_di,name,(Bitu)(strlen(name)+1));
+		reg_ax=0;
+		reg_cx=strlen(name);
+		return true;
+	case 0x4a16:	/* Open bootlog */
+		return true;
+	case 0x4a17:	/* Write bootlog */
+		MEM_StrCopy(SegPhys(ds)+reg_dx,name,255);
+		LOG(LOG_DOSMISC,LOG_NORMAL)("BOOTLOG: %s\n",name);
+		return true;
+	case 0x4a33:	/* Check MS-DOS Version 7 */
+		reg_ax=0;
 		return true;
 	}
 
