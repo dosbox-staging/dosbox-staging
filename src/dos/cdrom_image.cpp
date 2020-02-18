@@ -210,7 +210,7 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
 			E_Exit("\n"
 			       "CDROM: Digital Audio Extration (DAE) was attempted with a %s %u kHz\n"
 			       "       track, but DAE is currently only compatible with stereo %u kHz\n"
-				   "       tracks.",
+			       "       tracks.",
 			       getChannels() == 2 ? "stereo" : "mono",
 			       getRate(),
 			       REDBOOK_PCM_FRAMES_PER_SECOND);
@@ -226,13 +226,14 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
 
 	uint32_t decoded_frames = 0;
 	const uint32_t requested_frames = requested_bytes / BYTES_PER_REDBOOK_PCM_FRAME;
-	while (decoded_frames < requested_frames
-	       && !(sample->flags & (SOUND_SAMPLEFLAG_ERROR | SOUND_SAMPLEFLAG_EOF))) {
+	while (decoded_frames < requested_frames) {
+		if (sample->flags & (SOUND_SAMPLEFLAG_ERROR | SOUND_SAMPLEFLAG_EOF))
+			break;
 		decoded_frames += Sound_Decode_Direct(sample,
 		                                      buffer + decoded_frames * BYTES_PER_REDBOOK_PCM_FRAME,
 		                                      requested_frames - decoded_frames);
 	}
-	if (decoded_frames != requested_frames)
+	if (decoded_frames < requested_frames)
 		memset(buffer + decoded_frames * BYTES_PER_REDBOOK_PCM_FRAME,
 		       0,
 		       (requested_frames - decoded_frames) * BYTES_PER_REDBOOK_PCM_FRAME);
