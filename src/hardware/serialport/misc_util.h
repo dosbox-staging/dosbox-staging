@@ -95,7 +95,7 @@ private:
 	Bit8u *nativetcpstruct = nullptr;
 #endif
 
-	TCPsocket mysock = 0;
+	TCPsocket mysock = nullptr;
 	SDLNet_SocketSet listensocketset = nullptr;
 
 	// Items for send buffering
@@ -106,10 +106,14 @@ private:
 
 struct TCPServerSocket {
 	bool isopen = false;
-	TCPsocket mysock = 0;
+	TCPsocket mysock = nullptr;
 
 	TCPServerSocket(Bit16u port);
+	TCPServerSocket(const TCPServerSocket&) = delete; // prevent copying
+	TCPServerSocket& operator=(const TCPServerSocket&) = delete; // prevent assignment
+
 	~TCPServerSocket();
+
 	TCPClientSocket* Accept();
 };
 
