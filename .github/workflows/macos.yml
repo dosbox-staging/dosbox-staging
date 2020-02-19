@@ -14,7 +14,7 @@ jobs:
             max_warnings: 67
           - name: GCC-9
             flags: -c gcc -v 9
-            max_warnings: 152
+            max_warnings: 149
     steps:
       - uses: actions/checkout@v1
         with:
