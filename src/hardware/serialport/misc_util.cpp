@@ -21,17 +21,6 @@
 #if C_MODEM
 
 #include "misc_util.h"
-
-struct _TCPsocketX {
-	int ready;
-#ifdef NATIVESOCKETS
-	SOCKET channel;
-#endif
-	IPaddress remoteAddress;
-	IPaddress localAddress;
-	int sflag;
-};
-
 Bit32u Netwrapper_GetCapabilities()
 {
 	Bit32u retval=0;
@@ -42,8 +31,7 @@ Bit32u Netwrapper_GetCapabilities()
 #ifdef NATIVESOCKETS
 TCPClientSocket::TCPClientSocket(int platformsocket)
 {
-	nativetcpstruct = new Bit8u[sizeof(struct _TCPsocketX)];
-	
+	nativetcpstruct = new _TCPsocketX;
 	mysock = (TCPsocket)nativetcpstruct;
 	if (!SDLNetInited) {
 		if (SDLNet_Init() == -1) {
@@ -53,20 +41,18 @@ TCPClientSocket::TCPClientSocket(int platformsocket)
 		SDLNetInited = true;
 	}
 	// fill the SDL socket manually
-	((struct _TCPsocketX*)nativetcpstruct)->ready=0;
-	((struct _TCPsocketX*)nativetcpstruct)->sflag=0;
-	((struct _TCPsocketX*)nativetcpstruct)->channel=(SOCKET) platformsocket;
+	nativetcpstruct->ready = 0;
+	nativetcpstruct->sflag = 0;
+	nativetcpstruct->channel = (SOCKET) platformsocket;
 	sockaddr_in		sa;
 	socklen_t		sz;
 	sz=sizeof(sa);
 	if(getpeername(platformsocket, (sockaddr *)(&sa), &sz)==0) {
-		((struct _TCPsocketX*)nativetcpstruct)->
-			remoteAddress.host=/*ntohl(*/sa.sin_addr.s_addr;//);
-		((struct _TCPsocketX*)nativetcpstruct)->
-			remoteAddress.port=/*ntohs(*/sa.sin_port;//);
+		nativetcpstruct->remoteAddress.host = /*ntohl(*/sa.sin_addr.s_addr;//);
+		nativetcpstruct->remoteAddress.port = /*ntohs(*/sa.sin_port;//);
 	}
 	else {
-		mysock=0;
+		mysock = nullptr;
 		return;
 	}
 	sz=sizeof(sa);
@@ -77,10 +63,10 @@ TCPClientSocket::TCPClientSocket(int platformsocket)
 			localAddress.port=/*ntohs(*/sa.sin_port;//);
 	}
 	else {
-		mysock=0;
+		mysock = nullptr;
 		return;
 	}
-	if(mysock!=0) {
+	if(mysock) {
 		listensocketset = SDLNet_AllocSocketSet(1);
 		if(!listensocketset) return;
 		SDLNet_TCP_AddSocket(listensocketset, mysock);
@@ -127,7 +113,8 @@ TCPClientSocket::TCPClientSocket(const char* destination, Bit16u port)
 		listensocketset = SDLNet_AllocSocketSet(1);
 		if(!listensocketset) return;
 		mysock = SDLNet_TCP_Open(&openip);
-		if(!mysock) return;
+		if (!mysock)
+			return;
 		SDLNet_TCP_AddSocket(listensocketset, mysock);
 		isopen=true;
 	}
@@ -247,7 +234,7 @@ void TCPClientSocket::SetSendBufferSize(Bitu bufsize)
 TCPServerSocket::TCPServerSocket(Bit16u port)
 {
 	isopen = false;
-	mysock = 0;
+	mysock = nullptr;
 	if(!SDLNetInited) {
         if(SDLNet_Init()==-1) {
 			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
