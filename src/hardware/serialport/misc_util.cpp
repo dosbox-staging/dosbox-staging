@@ -122,13 +122,16 @@ TCPClientSocket::TCPClientSocket(const char* destination, Bit16u port)
 
 TCPClientSocket::~TCPClientSocket()
 {
-	if(sendbuffer) delete [] sendbuffer;
+	if(sendbuffer)
+		delete [] sendbuffer;
 #ifdef NATIVESOCKETS
-	if(nativetcpstruct) delete [] nativetcpstruct;
+	if(nativetcpstruct)
+		delete nativetcpstruct;
 	else
 #endif
 	if(mysock) {
-		if(listensocketset) SDLNet_TCP_DelSocket(listensocketset,mysock);
+		if(listensocketset)
+			SDLNet_TCP_DelSocket(listensocketset, mysock);
 		SDLNet_TCP_Close(mysock);
 	}
 
@@ -245,8 +248,9 @@ TCPServerSocket::TCPServerSocket(Bit16u port)
 	if (port) {
 		IPaddress listen_ip;
 		SDLNet_ResolveHost(&listen_ip, NULL, port);
-		mysock=SDLNet_TCP_Open(&listen_ip);
-		if(!mysock) return;
+		mysock = SDLNet_TCP_Open(&listen_ip);
+		if (!mysock)
+			return;
 	}
 	else return;
 	isopen = true;
