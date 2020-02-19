@@ -154,13 +154,13 @@ bool TCPClientSocket::GetRemoteAddressString(Bit8u* buffer) {
 bool TCPClientSocket::ReceiveArray(Bit8u* data, Bitu* size) {
 	if(SDLNet_CheckSockets(listensocketset,0))
 	{
-		Bits retval = SDLNet_TCP_Recv(mysock, data, *size);
+		Bits retval = SDLNet_TCP_Recv(mysock, data, static_cast<int>(*size));
 		if(retval<1) {
 			isopen=false;
-			*size=0;
+			*size = 0;
 			return false;
 		} else {
-			*size=retval;
+			*size = static_cast<Bitu>(retval);
 			return true;
 		}
 	}
@@ -175,15 +175,17 @@ Bits TCPClientSocket::GetcharNonBlock() {
 // -1: no data
 // -2: socket closed
 // 0..255: data
+	Bits rvalue = -1;
 	if(SDLNet_CheckSockets(listensocketset,0))
 	{
-		Bitu retval =0;
-		if(SDLNet_TCP_Recv(mysock, &retval, 1)!=1) {
-			isopen=false;
-			return -2;
-		} else return retval;
+		char data = 0;
+		if (SDLNet_TCP_Recv(mysock, &data, 1) != 1) {
+			isopen = false;
+			rvalue = -2;
+		} else
+			rvalue = static_cast<Bits>(data);
 	}
-	else return -1;
+	return rvalue;
 }
 
 bool TCPClientSocket::Putchar(Bit8u data)
@@ -193,7 +195,8 @@ bool TCPClientSocket::Putchar(Bit8u data)
 
 bool TCPClientSocket::SendArray(Bit8u* data, Bitu bufsize)
 {
-	if (SDLNet_TCP_Send(mysock, data, bufsize) != (int)bufsize) {
+	if (SDLNet_TCP_Send(mysock, data, static_cast<int>(bufsize))
+	    != (int)bufsize) {
 		isopen = false;
 		return false;
 	}
