@@ -57,6 +57,16 @@
 
 Bit32u Netwrapper_GetCapabilities();
 
+struct _TCPsocketX {
+	int ready;
+#ifdef NATIVESOCKETS
+	SOCKET channel;
+#endif
+	IPaddress remoteAddress;
+	IPaddress localAddress;
+	int sflag;
+};
+
 class TCPClientSocket {
 public:
 	TCPClientSocket(TCPsocket source);
@@ -92,7 +102,7 @@ public:
 private:
 
 #ifdef NATIVESOCKETS
-	Bit8u *nativetcpstruct = nullptr;
+	_TCPsocketX *nativetcpstruct = nullptr;
 #endif
 
 	TCPsocket mysock = nullptr;
