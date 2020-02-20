@@ -505,6 +505,32 @@ static int int_log2 (int val) {
     return log;
 }
 
+struct window_pos {
+	int x;
+	int y;
+};
+
+static window_pos get_default_pos(bool fullscreen)
+{
+	// When the initial window is created in fullscreen (when requested
+	// window size matches the desktop, which is always the case for
+	// fullresolution=desktop), the position is forced to (0,0).
+	// In result, when leaving fullscreen the window is placed in top/left
+	// corner.
+	//                                                                        
+	// To work around this problem, center the window manually based on
+	// the original drawing size, and not window size.
+
+	if (fullscreen) {
+		const int x = (sdl.desktop.full.width - sdl.draw.width) / 2;
+		const int y = (sdl.desktop.full.height - sdl.draw.height) / 2;
+		return { x, y };
+	} else {
+		const int sdl_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber);
+		return { sdl_pos, sdl_pos };
+	}
+}
+
 static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fullscreen, SCREEN_TYPES screenType)
 {
 	static SCREEN_TYPES lastType = SCREEN_SURFACE;
@@ -532,6 +558,7 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		sdl.update_display_contents = ((width <= currWidth) && (height <= currHeight));
 		return sdl.window;
 	}
+
 	/* If we change screen type, recreate the window. Furthermore, if
 	 * it is our very first time then we simply create a new window.
 	 */
@@ -548,14 +575,9 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		 * 2. It's a bit less glitchy to set a custom display mode for a
 		 * full screen, albeit it's still not perfect (at least on X11).
 		 */
-		sdl.window = SDL_CreateWindow(
-			"",
-			SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
-			SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
-			width,
-			height,
-			((screenType == SCREEN_OPENGL) ? SDL_WINDOW_OPENGL : 0) | SDL_WINDOW_SHOWN
-		);
+		const auto pos = get_default_pos(fullscreen);
+		const uint32_t flags = (screenType == SCREEN_OPENGL) ? SDL_WINDOW_OPENGL : 0;
+		sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
 
 		if (!sdl.window) {
 			return sdl.window;
