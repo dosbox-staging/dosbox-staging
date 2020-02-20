@@ -584,8 +584,8 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		SDL_SetWindowFullscreen(sdl.window,
 		                        sdl.desktop.full.display_res ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN);
 	} else {
-		SDL_SetWindowFullscreen(sdl.window, 0);
 		SDL_SetWindowSize(sdl.window, width, height);
+		SDL_SetWindowFullscreen(sdl.window, 0);
 	}
 	// Maybe some requested fullscreen resolution is unsupported?
 finish:
