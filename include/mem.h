@@ -57,19 +57,38 @@ MemHandle MEM_NextHandleAt(MemHandle handle,Bitu where);
 	Working on big or little endian machines 
 */
 
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-
 static INLINE Bit8u host_readb(HostPt off) {
 	return off[0];
 }
+
+static INLINE void host_writeb(HostPt off,Bit8u val) {
+	off[0]=val;
+}
+
+// use __builtin_bswap* for gcc >= 4.3
+#if defined(WORDS_BIGENDIAN) && defined(__GNUC__) && \
+	(__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
+
+static INLINE Bit16u host_readw(HostPt off) {
+	return __builtin_bswap16(*(Bit16u *)off);
+}
+static INLINE Bit32u host_readd(HostPt off) {
+	return __builtin_bswap32(*(Bit32u *)off);
+}
+static INLINE void host_writew(HostPt off, Bit16u val) {
+	*(Bit16u *)off = __builtin_bswap16(val);
+}
+static INLINE void host_writed(HostPt off, Bit32u val) {
+	*(Bit32u *)off = __builtin_bswap32(val);
+}
+
+#elif defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
+
 static INLINE Bit16u host_readw(HostPt off) {
 	return off[0] | (off[1] << 8);
 }
 static INLINE Bit32u host_readd(HostPt off) {
 	return off[0] | (off[1] << 8) | (off[2] << 16) | (off[3] << 24);
-}
-static INLINE void host_writeb(HostPt off,Bit8u val) {
-	off[0]=val;
 }
 static INLINE void host_writew(HostPt off,Bit16u val) {
 	off[0]=(Bit8u)(val);
@@ -84,17 +103,11 @@ static INLINE void host_writed(HostPt off,Bit32u val) {
 
 #else
 
-static INLINE Bit8u host_readb(HostPt off) {
-	return *(Bit8u *)off;
-}
 static INLINE Bit16u host_readw(HostPt off) {
 	return *(Bit16u *)off;
 }
 static INLINE Bit32u host_readd(HostPt off) {
 	return *(Bit32u *)off;
-}
-static INLINE void host_writeb(HostPt off,Bit8u val) {
-	*(Bit8u *)(off)=val;
 }
 static INLINE void host_writew(HostPt off,Bit16u val) {
 	*(Bit16u *)(off)=val;
@@ -116,6 +129,14 @@ static INLINE void var_write(Bit16u * var, Bit16u val) {
 
 static INLINE void var_write(Bit32u * var, Bit32u val) {
 	host_writed((HostPt)var, val);
+}
+
+static INLINE Bit16u var_read(Bit16u * var) {
+	return host_readw((HostPt)var);
+}
+
+static INLINE Bit32u var_read(Bit32u * var) {
+	return host_readd((HostPt)var);
 }
 
 /* The Folowing six functions are slower but they recognize the paged memory system */
