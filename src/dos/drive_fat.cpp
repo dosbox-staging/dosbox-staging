@@ -759,8 +759,8 @@ fatDrive::fatDrive(const char *sysFilename,
 		for(m=0;m<4;m++) {
 			/* Pick the first available partition */
 			if(mbrData.pentry[m].partSize != 0x00) {
-				mbrData.pentry[m].absSectStart = var_read(&mbrData.pentry[m].absSectStart);
-				mbrData.pentry[m].partSize = var_read(&mbrData.pentry[m].partSize);
+				mbrData.pentry[m].absSectStart = host_to_le(mbrData.pentry[m].absSectStart);
+				mbrData.pentry[m].partSize     = host_to_le(mbrData.pentry[m].partSize);
 				LOG_MSG("Using partition %d on drive; skipping %d sectors", m, mbrData.pentry[m].absSectStart);
 				startSector = mbrData.pentry[m].absSectStart;
 				break;
@@ -785,15 +785,15 @@ fatDrive::fatDrive(const char *sysFilename,
 
 	loadedDisk->Read_AbsoluteSector(0+partSectOff,&bootbuffer);
 
-	bootbuffer.bytespersector = var_read(&bootbuffer.bytespersector);
-	bootbuffer.reservedsectors = var_read(&bootbuffer.reservedsectors);
-	bootbuffer.rootdirentries = var_read(&bootbuffer.rootdirentries);
-	bootbuffer.totalsectorcount = var_read(&bootbuffer.totalsectorcount);
-	bootbuffer.sectorsperfat = var_read(&bootbuffer.sectorsperfat);
-	bootbuffer.sectorspertrack = var_read(&bootbuffer.sectorspertrack);
-	bootbuffer.headcount = var_read(&bootbuffer.headcount);
-	bootbuffer.hiddensectorcount = var_read(&bootbuffer.hiddensectorcount);
-	bootbuffer.totalsecdword = var_read(&bootbuffer.totalsecdword);
+	bootbuffer.bytespersector    = host_to_le(bootbuffer.bytespersector);
+	bootbuffer.reservedsectors   = host_to_le(bootbuffer.reservedsectors);
+	bootbuffer.rootdirentries    = host_to_le(bootbuffer.rootdirentries);
+	bootbuffer.totalsectorcount  = host_to_le(bootbuffer.totalsectorcount);
+	bootbuffer.sectorsperfat     = host_to_le(bootbuffer.sectorsperfat);
+	bootbuffer.sectorspertrack   = host_to_le(bootbuffer.sectorspertrack);
+	bootbuffer.headcount         = host_to_le(bootbuffer.headcount);
+	bootbuffer.hiddensectorcount = host_to_le(bootbuffer.hiddensectorcount);
+	bootbuffer.totalsecdword     = host_to_le(bootbuffer.totalsecdword);
 
 	if (!is_hdd) {
 		/* Identify floppy format */
@@ -1099,14 +1099,14 @@ char* trimString(char* str, const size_t max_len) {
 
 static void copyDirEntry(const direntry *src, direntry *dst) {
 	memcpy(dst, src, 14); // single byte fields
-	var_write(&dst->crtTime, src->crtTime);
-	var_write(&dst->crtDate, src->crtDate);
-	var_write(&dst->accessDate, src->accessDate);
-	var_write(&dst->hiFirstClust, src->hiFirstClust);
-	var_write(&dst->modTime, src->modTime);
-	var_write(&dst->modDate, src->modDate);
-	var_write(&dst->loFirstClust, src->loFirstClust);
-	var_write(&dst->entrysize, src->entrysize);
+	dst->crtTime      = host_to_le(src->crtTime);
+	dst->crtDate      = host_to_le(src->crtDate);
+	dst->accessDate   = host_to_le(src->accessDate);
+	dst->hiFirstClust = host_to_le(src->hiFirstClust);
+	dst->modTime      = host_to_le(src->modTime);
+	dst->modDate      = host_to_le(src->modDate);
+	dst->loFirstClust = host_to_le(src->loFirstClust);
+	dst->entrysize    = host_to_le(src->entrysize);
 }
 
 bool fatDrive::FindNextInternal(Bit32u dirClustNumber, DOS_DTA &dta, direntry *foundEntry) {
