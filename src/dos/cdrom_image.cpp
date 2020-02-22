@@ -314,7 +314,17 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 	if (player.cd == this) {
 		player.cd = nullptr;
 	}
+
+	// Empty our tracks and the now-invalid player pointer
 	tracks.clear();
+	player.trackFile = nullptr;
+
+	// Note: the player's channel and mutex objects are
+	// useable for all CDROM drives, therefore we leave
+	// them until we have no more CDROM drives left (when
+	// refCount falls to zero), at which point we finally
+	// purge them. 
+	//
 	if (refCount == 0) {
 		StopAudio();
 		if (player.channel != nullptr) {
@@ -512,11 +522,12 @@ bool CDROM_Interface_Image::PlayAudioSector(uint64_t start, uint64_t len)
 	track_const_iter track(GetTrack(start));
 
 	// Guard: sanity check the request beyond what GetTrack already checks
-	if (len == 0 ||
-	    track == tracks.end() ||
-	    track->attr == 0x40 ||
-	    track->file == nullptr ||
-	    player.channel == nullptr) {
+	if (len == 0
+	   || track == tracks.end()
+	   || track->attr == 0x40
+	   || !track->file
+	   || !player.channel
+	   || !player.mutex) {
 		StopAudio();
 #ifdef DEBUG
 		LOG_MSG("CDROM: PlayAudioSector => sanity check failed");
@@ -797,11 +808,20 @@ bool CDROM_Interface_Image::ReadSector(Bit8u *buffer, bool raw, unsigned long se
 void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 {
 	// Guards: Bail if the request or our player is invalid
-	if (desired_track_frames == 0 || player.trackFile == nullptr || player.cd == nullptr) {
+	if (desired_track_frames == 0
+	   || !player.cd
+	   || !player.mutex
+	   || !player.trackFile) {
 #ifdef DEBUG
-		LOG_MSG("CDROM: CDAudioCallBack for %u frames => empty request, "
-		        "file pointer, or CD pointer (skipping for now)",
-		        static_cast<unsigned int>(desired_track_frames));
+		LOG_MSG("CDROM: CDAudioCallBack called with one more empty dependencies:\n"
+		        "\t - frames to play (%" PRIuPTR ")\n"
+				"\t - pointer to the CD object (%p)\n"
+				"\t - pointer to the mutex object (%p)\n"
+				"\t - pointer to the track's file (%p)\n",
+		        desired_track_frames,
+				player.cd,
+				player.mutex,
+				player.trackFile);
 #endif
 		return;
 	}
@@ -854,7 +874,10 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 
 bool CDROM_Interface_Image::LoadIsoFile(char* filename)
 {
+	// Empty our tracks and the now-invalid player pointer
 	tracks.clear();
+	player.trackFile = nullptr;
+
 	// data track (track 1)
 	Track track;
 	bool error;
@@ -936,8 +959,11 @@ static string dirname(char * file) {
 
 bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 {
-	Track track;
+	// Empty our tracks and the now-invalid player pointer
 	tracks.clear();
+	player.trackFile = nullptr;
+
+	Track track;
 	int shift = 0;
 	int currPregap = 0;
 	int totalPregap = 0;
