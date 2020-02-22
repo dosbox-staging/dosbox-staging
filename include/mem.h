@@ -127,6 +127,10 @@ static INLINE void host_writed(HostPt off,Bit32u val) {
 //
 // __builtin_bswap* is supported since GCC 4.3 and Clang 3.4
 
+constexpr static INLINE uint8_t host_to_le(uint8_t val) {
+	return val;
+}
+
 #if defined(WORDS_BIGENDIAN)
 
 constexpr static INLINE int16_t host_to_le(int16_t val) {

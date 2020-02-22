@@ -1098,15 +1098,18 @@ char* trimString(char* str, const size_t max_len) {
 }
 
 static void copyDirEntry(const direntry *src, direntry *dst) {
-	memcpy(dst, src, 14); // single byte fields
-	dst->crtTime      = host_to_le(src->crtTime);
-	dst->crtDate      = host_to_le(src->crtDate);
-	dst->accessDate   = host_to_le(src->accessDate);
-	dst->hiFirstClust = host_to_le(src->hiFirstClust);
-	dst->modTime      = host_to_le(src->modTime);
-	dst->modDate      = host_to_le(src->modDate);
-	dst->loFirstClust = host_to_le(src->loFirstClust);
-	dst->entrysize    = host_to_le(src->entrysize);
+	memcpy(dst->entryname, src->entryname, sizeof(src->entryname));
+	dst->attrib           = host_to_le(src->attrib);
+	dst->NTRes            = host_to_le(src->NTRes);
+	dst->milliSecondStamp = host_to_le(src->milliSecondStamp);
+	dst->crtTime          = host_to_le(src->crtTime);
+	dst->crtDate          = host_to_le(src->crtDate);
+	dst->accessDate       = host_to_le(src->accessDate);
+	dst->hiFirstClust     = host_to_le(src->hiFirstClust);
+	dst->modTime          = host_to_le(src->modTime);
+	dst->modDate          = host_to_le(src->modDate);
+	dst->loFirstClust     = host_to_le(src->loFirstClust);
+	dst->entrysize        = host_to_le(src->entrysize);
 }
 
 bool fatDrive::FindNextInternal(Bit32u dirClustNumber, DOS_DTA &dta, direntry *foundEntry) {
