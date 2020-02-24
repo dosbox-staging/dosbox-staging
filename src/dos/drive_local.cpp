@@ -65,9 +65,9 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/)
 }
 
 bool localDrive::IsFirstEncounter(const std::string& filename) {
-	const std::pair<std::set<std::string>::iterator, bool> \
-		ret(write_protected_files.insert(filename));
-	return ret.second;
+	const auto ret = write_protected_files.insert(filename);
+	const bool was_inserted = ret.second;
+	return was_inserted;
 }
 
 bool localDrive::FileOpen(DOS_File** file, char * name, Bit32u flags) {

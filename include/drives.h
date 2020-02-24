@@ -22,7 +22,7 @@
 #include "dosbox.h"
 
 #include <memory>
-#include <set>
+#include <unordered_set>
 #include <string>
 #include <vector>
 
@@ -83,8 +83,8 @@ protected:
 	} srchInfo[MAX_OPENDIRS];
 
 private:
-	virtual bool IsFirstEncounter(const std::string& filename);
-	std::set<std::string> write_protected_files;
+	bool IsFirstEncounter(const std::string& filename);
+	std::unordered_set<std::string> write_protected_files;
 	struct {
 		Bit16u bytes_sector;
 		Bit8u sectors_cluster;
