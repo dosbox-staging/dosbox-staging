@@ -608,7 +608,8 @@ static void gen_dop_byte(DualOps op,DynReg * dr1,Bitu di1,DynReg * dr2,Bitu di2)
 	case DOP_OR:	tmp=0x0a; if ((dr1==dr2) && (di1==di2)) goto nochange; break;
 	case DOP_TEST:	tmp=0x84; goto nochange;
 	case DOP_MOV:	if ((dr1==dr2) && (di1==di2)) return; tmp=0x8a; break;
-	case DOP_XCHG:	tmp=0x86; dr2->flags|=DYNFLG_CHANGED; break;
+	case DOP_XCHG:	if ((dr1==dr2) && (di1==di2)) return;
+		tmp=0x86; dr2->flags|=DYNFLG_CHANGED; break;
 	default:
 		IllegalOption("gen_dop_byte");
 	}
@@ -786,7 +787,7 @@ static void gen_dop_word(DualOps op,bool dword,DynReg * dr1,DynReg * dr2) {
 	case DOP_OR:	tmp=0x0b; if (dr1==dr2) goto nochange; break;
 	case DOP_TEST:	tmp=0x85; goto nochange;
 	case DOP_MOV:	if (dr1==dr2) return; tmp=0x8b; break;
-	case DOP_XCHG:
+	case DOP_XCHG:	if (dr1==dr2) return;
 		dr2->flags|=DYNFLG_CHANGED;
 		if (dword && !((dr1->flags&DYNFLG_HAS8) ^ (dr2->flags&DYNFLG_HAS8))) {
 			dr1->genreg=gr2;gr2->dynreg=dr1;
