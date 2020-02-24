@@ -447,12 +447,12 @@ public:
 		while (control->cmdline->FindCommand(dummy++,line) && !command_found) {
 			struct stat test;
 			if (line.length() > CROSS_LEN) continue;
-			strcpy(buffer,line.c_str());
+			safe_strcpy(buffer, line.c_str());
 			if (stat(buffer,&test)) {
 				if (getcwd(buffer,CROSS_LEN) == NULL) continue;
 				if (strlen(buffer) + line.length() + 1 > CROSS_LEN) continue;
-				strcat(buffer,cross_filesplit);
-				strcat(buffer,line.c_str());
+				safe_strcat(buffer, cross_filesplit);
+				safe_strcat(buffer, line.c_str());
 				if (stat(buffer,&test)) continue;
 			}
 			if (test.st_mode & S_IFDIR) {
@@ -466,8 +466,8 @@ public:
 					line = buffer;
 					if (getcwd(buffer,CROSS_LEN) == NULL) continue;
 					if (strlen(buffer) + line.length() + 1 > CROSS_LEN) continue;
-					strcat(buffer,cross_filesplit);
-					strcat(buffer,line.c_str());
+					safe_strcat(buffer, cross_filesplit);
+					safe_strcat(buffer, line.c_str());
 					if(stat(buffer,&test)) continue;
 					name = strrchr(buffer,CROSS_FILESPLIT);
 					if(!name) continue;
@@ -477,7 +477,7 @@ public:
 				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
 				autoexec[13].Install("C:");
 				/* Save the non-modified filename (so boot and imgmount can use it (long filenames, case sensivitive)) */
-				strcpy(orig,name);
+				safe_strcpy(orig, name);
 				upcase(name);
 				if(strstr(name,".BAT") != 0) {
 					if(secure) autoexec[14].Install("z:\\config.com -securemode");
