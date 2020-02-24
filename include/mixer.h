@@ -106,6 +106,18 @@ MixerChannel * MIXER_FindChannel(const char * name);
 /* Find the device you want to delete with findchannel "delchan gets deleted" */
 void MIXER_DelChannel(MixerChannel* delchan); 
 
+// A smart pointer deleter for MixerChannel objects
+// Use-case:
+// std::unique_ptr<MixerChannel, MixerChannelDeleter> myChannel;
+// myChannel.reset(MIXER_AddChannel(...));
+//
+struct MixerChannelDeleter {
+	void operator()(MixerChannel *channel) {
+		if (channel)
+			MIXER_DelChannel(channel);
+	}
+};
+
 /* Object to maintain a mixerchannel; As all objects it registers itself with create
  * and removes itself when destroyed. */
 class MixerObject{

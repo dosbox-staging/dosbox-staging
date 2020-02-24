@@ -32,6 +32,7 @@
 #include <SDL_thread.h>
 
 #include "dosbox.h"
+#include "support.h"
 #include "mem.h"
 #include "mixer.h"
 #include "../libs/decoders/SDL_sound.h"
@@ -220,18 +221,18 @@ public:
 
 private:
 	static struct imagePlayer {
-		Bit16s                buffer[MIXER_BUFSIZE * 2]; // 2 channels (max)
-		SDL_mutex             *mutex;
-		TrackFile             *trackFile;
-		MixerChannel          *channel;
-		CDROM_Interface_Image *cd;
-		void                  (MixerChannel::*addFrames) (Bitu, const Bit16s*);
-		uint32_t              startSector;
-		uint32_t              totalRedbookFrames;
-		uint64_t              playedTrackFrames;
-		uint64_t              totalTrackFrames;
-		bool                  isPlaying;
-		bool                  isPaused;
+		Bit16s                                             buffer[MIXER_BUFSIZE * 2] = {0};
+		std::unique_ptr<SDL_mutex, SdlMutexDeleter>        mutex = nullptr;
+		std::unique_ptr<MixerChannel, MixerChannelDeleter> channel = nullptr;
+		std::weak_ptr<TrackFile>                           trackFile;
+		CDROM_Interface_Image                              *cd = nullptr;
+		void (MixerChannel::*addFrames) (Bitu, const Bit16s*) = nullptr;
+		uint64_t                                           playedTrackFrames = 0;
+		uint64_t                                           totalTrackFrames = 0;
+		uint32_t                                           startSector = 0;
+		uint32_t                                           totalRedbookFrames = 0;
+		bool                                               isPlaying = false;
+		bool                                               isPaused = false;
 	} player;
 
 	// Private utility functions

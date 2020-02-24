@@ -271,20 +271,7 @@ int CDROM_Interface_Image::AudioFile::getLength()
 // initialize static members
 int CDROM_Interface_Image::refCount = 0;
 CDROM_Interface_Image* CDROM_Interface_Image::images[26] = {};
-CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player = {
-	{0},        // buffer[]
-	nullptr,    // SDL_Mutex*
-	nullptr,    // TrackFile*
-	nullptr,    // MixerChannel*
-	nullptr,    // CDROM_Interface_Image*
-	nullptr,    // addFrames
-	0,          // startSector
-	0,          // totalRedbookFrames
-	0,          // playedTrackFrames
-	0,          // totalTrackFrames
-	false,      // isPlaying
-	false       // isPaused
-};
+CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player;
 
 CDROM_Interface_Image::CDROM_Interface_Image(Bit8u _subUnit)
 	: tracks({}),
@@ -293,17 +280,13 @@ CDROM_Interface_Image::CDROM_Interface_Image(Bit8u _subUnit)
 {
 	images[subUnit] = this;
 	if (refCount == 0) {
-		if (player.mutex == nullptr) {
-			player.mutex = SDL_CreateMutex();
-		}
-		if (player.channel == nullptr) {
-			// channel is kept dormant except during cdrom playback periods
-			player.channel = MIXER_AddChannel(&CDAudioCallBack, 0, "CDAUDIO");
-			player.channel->Enable(false);
+		player.mutex.reset(SDL_CreateMutex());
+		// channel is kept dormant except during cdrom playback periods
+		player.channel.reset(MIXER_AddChannel(&CDAudioCallBack, 0, "CDAUDIO"));
+		player.channel->Enable(false);
 #ifdef DEBUG
 			LOG_MSG("CDROM: Initialized the CDAUDIO mixer channel and mutex");
 #endif
-		}
 	}
 	refCount++;
 }
@@ -311,34 +294,18 @@ CDROM_Interface_Image::CDROM_Interface_Image(Bit8u _subUnit)
 CDROM_Interface_Image::~CDROM_Interface_Image()
 {
 	refCount--;
+
+	// Ensure the global player and mixer states are stopped
+	// before we drop our last CD drive.
+	if (refCount == 0 && player.cd) {
+		StopAudio();
+	}
 	if (player.cd == this) {
 		player.cd = nullptr;
 	}
-
-	// Empty our tracks and the now-invalid player pointer
-	tracks.clear();
-	player.trackFile = nullptr;
-
-	// Note: the player's channel and mutex objects are
-	// useable for all CDROM drives, therefore we leave
-	// them until we have no more CDROM drives left (when
-	// refCount falls to zero), at which point we finally
-	// purge them. 
-	//
-	if (refCount == 0) {
-		StopAudio();
-		if (player.channel != nullptr) {
-			MIXER_DelChannel(player.channel);
-			player.channel = nullptr;
-		}
-		if (player.mutex != nullptr) {
-			SDL_DestroyMutex(player.mutex);
-			player.mutex = nullptr;
-		}
 #ifdef DEBUG
-		LOG_MSG("CDROM: Released the CDAUDIO mixer channel and mutex");
+		LOG_MSG("CDROM: Released and cleared resources");
 #endif
-	}
 }
 
 void CDROM_Interface_Image::InitNewMedia()
@@ -445,8 +412,8 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
 	if (!tracks.empty()) { 	// We have a useable CD; get a valid play-position
 		track_iter track = tracks.begin();
 		// the CD's current track is valid
-		if (player.trackFile) {
-			const uint32_t sample_rate = player.trackFile->getRate();
+		if (player.trackFile.lock()) {
+			const uint32_t sample_rate = player.trackFile.lock()->getRate();
 			const uint32_t played_frames = (player.playedTrackFrames
 			                                * REDBOOK_FRAMES_PER_SECOND
 			                                + sample_rate - 1) / sample_rate;
@@ -552,7 +519,7 @@ bool CDROM_Interface_Image::PlayAudioSector(uint64_t start, uint64_t len)
 	                    + clamp(relative_start, 0, static_cast<int>(track->length - 1))
 	                    * track->sectorSize);
 
-	TrackFile* trackFile = track->file.get();
+	std::shared_ptr<TrackFile> trackFile(track->file);
 
 	// Guard: Bail if our track could not be seeked
 	if (!trackFile->seek(offset)) {
@@ -571,7 +538,7 @@ bool CDROM_Interface_Image::PlayAudioSector(uint64_t start, uint64_t len)
 	//   Before we update our player object with new track details, we lock access
 	//   to it to prevent the Callback (which runs in a separate thread) from
 	//   getting inconsistent or partial values.
-	if (SDL_LockMutex(player.mutex) < 0) {
+	if (SDL_LockMutex(player.mutex.get()) < 0) {
 		LOG_MSG("CDROM: PlayAudioSector couldn't lock our player for exclusive access");
 		StopAudio();
 		return false;
@@ -632,7 +599,7 @@ bool CDROM_Interface_Image::PlayAudioSector(uint64_t start, uint64_t len)
 	player.channel->Enable(true);
 
 	// Guard: release the lock in this data
-    if (SDL_UnlockMutex(player.mutex) < 0) {
+    if (SDL_UnlockMutex(player.mutex.get()) < 0) {
         LOG_MSG("CDROM: PlayAudioSector couldn't unlock this thread");
 		StopAudio();
 		return false;
@@ -667,7 +634,7 @@ bool CDROM_Interface_Image::StopAudio(void)
 void CDROM_Interface_Image::ChannelControl(TCtrl ctrl)
 {
 	// Guard: Bail if our mixer channel hasn't been allocated
-	if (player.channel == nullptr) {
+	if (!player.channel) {
 #ifdef DEBUG
 		LOG_MSG("CDROM: ChannelControl => game tried applying channel controls "
 		        "before playing audio");
@@ -811,34 +778,36 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 	if (desired_track_frames == 0
 	   || !player.cd
 	   || !player.mutex
-	   || !player.trackFile) {
+	   || player.trackFile.expired()) {
 #ifdef DEBUG
 		LOG_MSG("CDROM: CDAudioCallBack called with one more empty dependencies:\n"
 		        "\t - frames to play (%" PRIuPTR ")\n"
 				"\t - pointer to the CD object (%p)\n"
 				"\t - pointer to the mutex object (%p)\n"
-				"\t - pointer to the track's file (%p)\n",
+				"\t - pointer to the track's file (%s)\n",
 		        desired_track_frames,
 				player.cd,
-				player.mutex,
-				player.trackFile);
+				player.mutex.get(),
+				player.trackFile.expired() ? "nullptr" : "valid" );
 #endif
+		if (player.cd)
+			player.cd->StopAudio();
 		return;
 	}
 
 	// Ensure we have exclusive access to update our player members
-	if (SDL_LockMutex(player.mutex) < 0) {
+	if (SDL_LockMutex(player.mutex.get()) < 0) {
 		LOG_MSG("CDROM: CDAudioCallBack couldn't lock this thread");
 		return;
 	}
 
 	const uint64_t decoded_track_frames =
-	             player.trackFile->decode(player.buffer, desired_track_frames);
+	             player.trackFile.lock()->decode(player.buffer, desired_track_frames);
 	player.playedTrackFrames += decoded_track_frames;
 
 	// uses either the stereo or mono and native or
 	// nonnative AddSamples call assigned during construction
-	(player.channel->*player.addFrames)(decoded_track_frames, player.buffer);
+	(player.channel.get()->*player.addFrames)(decoded_track_frames, player.buffer);
 
 	if (player.playedTrackFrames >= player.totalTrackFrames) {
 #ifdef DEBUG
@@ -860,23 +829,21 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 		                                       + played_redbook_frames;
 		const Bit32u remaining_redbook_frames = player.totalRedbookFrames
 		                                        - played_redbook_frames;
-		if (SDL_UnlockMutex(player.mutex) < 0) {
+		if (SDL_UnlockMutex(player.mutex.get()) < 0) {
 			LOG_MSG("CDROM: CDAudioCallBack couldn't unlock to move to next track");
 			return;
 		}
 		player.cd->PlayAudioSector(new_redbook_start_frame, remaining_redbook_frames);
 		return;
 	}
-	if (SDL_UnlockMutex(player.mutex) < 0) {
+	if (SDL_UnlockMutex(player.mutex.get()) < 0) {
 		LOG_MSG("CDROM: CDAudioCallBack couldn't unlock our player before returning");
 	}
 }
 
 bool CDROM_Interface_Image::LoadIsoFile(char* filename)
 {
-	// Empty our tracks and the now-invalid player pointer
 	tracks.clear();
-	player.trackFile = nullptr;
 
 	// data track (track 1)
 	Track track;
@@ -959,9 +926,7 @@ static string dirname(char * file) {
 
 bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 {
-	// Empty our tracks and the now-invalid player pointer
 	tracks.clear();
-	player.trackFile = nullptr;
 
 	Track track;
 	int shift = 0;
