@@ -1384,13 +1384,12 @@ void DOS_Shell::CMD_ATTRIB(char *args){
 
 void DOS_Shell::CMD_PATH(char *args){
 	HELP("PATH");
-	if (args && strlen(args)){
-		char pathstring[DOS_PATHLENGTH+CROSS_LEN+20]={ 0 };
-		strcpy(pathstring,"set PATH=");
+	if (args && strlen(args)) {
+		char set_path[DOS_PATHLENGTH + CROSS_LEN + 20] = {0};
 		while (args && *args && (*args == '='|| *args == ' '))
-		     args++;
-		strcat(pathstring,args);
-		this->ParseLine(pathstring);
+			args++;
+		snprintf(set_path, sizeof(set_path), "set PATH=%s", args);
+		this->ParseLine(set_path);
 		return;
 	} else {
 		std::string line;
