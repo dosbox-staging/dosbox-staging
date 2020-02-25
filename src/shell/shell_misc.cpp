@@ -16,12 +16,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <stdlib.h>
-#include <string.h>
-#include <algorithm> //std::copy
-#include <iterator>  //std::front_inserter
 #include "shell.h"
+
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iterator>
+
 #include "regs.h"
 #include "callback.h"
 #include "support.h"
@@ -557,33 +559,26 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	return true; //Executable started
 }
 
-
-
-
-static const char * bat_ext=".BAT";
-static const char * com_ext=".COM";
-static const char * exe_ext=".EXE";
 static char which_ret[DOS_PATHLENGTH+4];
 
-char * DOS_Shell::Which(char * name) {
-	size_t name_len = strlen(name);
-	if(name_len >= DOS_PATHLENGTH) return 0;
+char * DOS_Shell::Which(char * name)
+{
+	const size_t name_len = strlen(name);
+	if (name_len >= DOS_PATHLENGTH)
+		return 0;
 
 	/* Parse through the Path to find the correct entry */
 	/* Check if name is already ok but just misses an extension */
 
-	if (DOS_FileExists(name)) return name;
-	/* try to find .com .exe .bat */
-	strcpy(which_ret,name);
-	strcat(which_ret,com_ext);
-	if (DOS_FileExists(which_ret)) return which_ret;
-	strcpy(which_ret,name);
-	strcat(which_ret,exe_ext);
-	if (DOS_FileExists(which_ret)) return which_ret;
-	strcpy(which_ret,name);
-	strcat(which_ret,bat_ext);
-	if (DOS_FileExists(which_ret)) return which_ret;
+	if (DOS_FileExists(name))
+		return name;
 
+	/* try to find .com .exe .bat */
+	for (const char *ext_fmt : {"%s.COM", "%s.EXE", "%s.BAT"}) {
+		snprintf(which_ret, sizeof(which_ret), ext_fmt, name);
+		if (DOS_FileExists(which_ret))
+			return which_ret;
+	}
 
 	/* No Path in filename look through path environment string */
 	char path[DOS_PATHLENGTH];std::string temp;
@@ -623,19 +618,17 @@ char * DOS_Shell::Which(char * name) {
 
 			//If name too long =>next
 			if((name_len + len + 1) >= DOS_PATHLENGTH) continue;
-			strcat(path,name);
 
-			strcpy(which_ret,path);
-			if (DOS_FileExists(which_ret)) return which_ret;
-			strcpy(which_ret,path);
-			strcat(which_ret,com_ext);
-			if (DOS_FileExists(which_ret)) return which_ret;
-			strcpy(which_ret,path);
-			strcat(which_ret,exe_ext);
-			if (DOS_FileExists(which_ret)) return which_ret;
-			strcpy(which_ret,path);
-			strcat(which_ret,bat_ext);
-			if (DOS_FileExists(which_ret)) return which_ret;
+			safe_strcat(path, name);
+			safe_strcpy(which_ret, path);
+			if (DOS_FileExists(which_ret))
+				return which_ret;
+
+			for (const char *ext_fmt : {"%s.COM", "%s.EXE", "%s.BAT"}) {
+				snprintf(which_ret, sizeof(which_ret), ext_fmt, path);
+				if (DOS_FileExists(which_ret))
+					return which_ret;
+			}
 		}
 	}
 	return 0;
