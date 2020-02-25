@@ -16,10 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "setup.h"
+
+#include <algorithm>
 
 #include "dosbox.h"
 #include "cross.h"
-#include "setup.h"
 #include "control.h"
 #include "support.h"
 #include <fstream>
@@ -80,7 +82,7 @@ Value::operator char const* () const {
 	return _string->c_str();
 }
 
-bool Value::operator==(Value const& other) {
+bool Value::operator==(Value const& other) const {
 	if(this == &other) return true;
 	if(type != other.type) return false;
 	switch(type){
@@ -221,8 +223,8 @@ string Value::ToString() const {
 }
 
 bool Property::CheckValue(Value const& in, bool warn){
-	if(suggested_values.empty()) return true;
-	for(iter it = suggested_values.begin();it != suggested_values.end();it++) {
+	if (suggested_values.empty()) return true;
+	for(const_iter it = suggested_values.begin();it != suggested_values.end();++it) {
 		if ( (*it) == in) { //Match!
 			return true;
 		}
@@ -318,12 +320,12 @@ bool Prop_string::SetValue(std::string const& input) {
 }
 bool Prop_string::CheckValue(Value const& in, bool warn) {
 	if (suggested_values.empty()) return true;
-	for(iter it = suggested_values.begin();it != suggested_values.end();it++) {
+	for(const_iter it = suggested_values.begin();it != suggested_values.end();++it) {
 		if ( (*it) == in) { //Match!
 			return true;
 		}
 		if ((*it).ToString() == "%u") {
-			Bit32u value;
+			unsigned int value;
 			if(sscanf(in.ToString().c_str(),"%u",&value) == 1) {
 				return true;
 			}
@@ -340,7 +342,7 @@ bool Prop_path::SetValue(std::string const& input) {
 	bool retval = SetVal(val,false,true);
 
 	if (input.empty()) {
-		realpath = "";
+		realpath.clear();
 		return false;
 	}
 	std::string workcopy(input);
@@ -371,7 +373,7 @@ void Prop_multival::make_default_value() {
 	std::string result = p->Get_Default_Value().ToString();
 	while( (p = section->Get_prop(i++)) ) {
 		std::string props = p->Get_Default_Value().ToString();
-		if (props == "") continue;
+		if (props.empty()) continue;
 		result += separator; result += props;
 	}
 	Value val(result,Value::V_STRING);
@@ -406,7 +408,7 @@ bool Prop_multival_remain::SetValue(std::string const& input) {
 			local.erase(0,loc+1);
 		} else if (local.size()) { //last argument or last property
 			in = local;
-			local = "";
+			local.clear();
 		}
 		//Test Value. If it fails set default
 		Value valtest (in,p->Get_type());
@@ -444,7 +446,7 @@ bool Prop_multival::SetValue(std::string const& input) {
 			local.erase(0,loc+1);
 		} else if (local.size()) { //last argument
 			in = local;
-			local = "";
+			local.clear();
 		}
 		
 		if (p->Get_type() == Value::V_STRING) {
@@ -568,8 +570,8 @@ int Section_prop::Get_int(string const&_propname) const {
 }
 
 bool Section_prop::Get_bool(string const& _propname) const {
-	for(const_it tel=properties.begin();tel!=properties.end();tel++){
-		if ((*tel)->propname==_propname){
+	for(const_it tel = properties.begin();tel != properties.end();++tel){
+		if ((*tel)->propname == _propname){
 			return ((*tel)->GetValue());
 		}
 	}
@@ -577,8 +579,8 @@ bool Section_prop::Get_bool(string const& _propname) const {
 }
 
 double Section_prop::Get_double(string const& _propname) const {
-	for(const_it tel=properties.begin();tel!=properties.end();tel++){
-		if ((*tel)->propname==_propname){
+	for(const_it tel = properties.begin();tel != properties.end();++tel){
+		if ((*tel)->propname == _propname){
 			return ((*tel)->GetValue());
 		}
 	}
@@ -586,8 +588,8 @@ double Section_prop::Get_double(string const& _propname) const {
 }
 
 Prop_path* Section_prop::Get_path(string const& _propname) const {
-	for(const_it tel=properties.begin();tel!=properties.end();tel++){
-		if ((*tel)->propname==_propname){
+	for(const_it tel = properties.begin();tel != properties.end();++tel){
+		if ((*tel)->propname == _propname){
 			Prop_path* val = dynamic_cast<Prop_path*>((*tel));
 			if (val) return val; else return NULL;
 		}
@@ -596,8 +598,8 @@ Prop_path* Section_prop::Get_path(string const& _propname) const {
 }
 
 Prop_multival* Section_prop::Get_multival(string const& _propname) const {
-	for(const_it tel=properties.begin();tel!=properties.end();tel++){
-		if((*tel)->propname==_propname){
+	for(const_it tel = properties.begin();tel != properties.end();++tel){
+		if ((*tel)->propname == _propname){
 			Prop_multival* val = dynamic_cast<Prop_multival*>((*tel));
 			if(val) return val; else return NULL;
 		}
@@ -606,8 +608,8 @@ Prop_multival* Section_prop::Get_multival(string const& _propname) const {
 }
 
 Prop_multival_remain* Section_prop::Get_multivalremain(string const& _propname) const {
-	for(const_it tel=properties.begin();tel!=properties.end();tel++){
-		if ((*tel)->propname==_propname){
+	for(const_it tel = properties.begin();tel != properties.end();++tel){
+		if ((*tel)->propname == _propname){
 			Prop_multival_remain* val = dynamic_cast<Prop_multival_remain*>((*tel));
 			if (val) return val; else return NULL;
 		}
@@ -615,23 +617,23 @@ Prop_multival_remain* Section_prop::Get_multivalremain(string const& _propname) 
 	return NULL;
 }
 Property* Section_prop::Get_prop(int index){
-	for(it tel=properties.begin();tel!=properties.end();tel++){
+	for(it tel = properties.begin();tel != properties.end();++tel){
 		if (!index--) return (*tel);
 	}
 	return NULL;
 }
 
 const char* Section_prop::Get_string(string const& _propname) const {
-	for(const_it tel=properties.begin();tel!=properties.end();tel++){
-		if((*tel)->propname==_propname){
+	for(const_it tel = properties.begin();tel != properties.end();++tel){
+		if ((*tel)->propname == _propname){
 			return ((*tel)->GetValue());
 		}
 	}
 	return "";
 }
 Hex Section_prop::Get_hex(string const& _propname) const {
-	for(const_it tel=properties.begin();tel!=properties.end();tel++){
-		if((*tel)->propname==_propname){
+	for(const_it tel = properties.begin();tel != properties.end();++tel){
+		if ((*tel)->propname == _propname){
 			return ((*tel)->GetValue());
 		}
 	}
@@ -654,8 +656,8 @@ bool Section_prop::HandleInputline(string const& gegevens){
 	   ) val = val.substr(1,length - 2);
 	/* trim the results incase there were spaces somewhere */
 	trim(name);trim(val);
-	for(it tel = properties.begin();tel != properties.end();tel++){
-		if(!strcasecmp((*tel)->propname.c_str(),name.c_str())){
+	for(it tel = properties.begin();tel != properties.end();++tel){
+		if (!strcasecmp((*tel)->propname.c_str(),name.c_str())){
 			return (*tel)->SetValue(val);
 		}
 	}
@@ -664,23 +666,22 @@ bool Section_prop::HandleInputline(string const& gegevens){
 
 void Section_prop::PrintData(FILE* outfile) const {
 	/* Now print out the individual section entries */
-	size_t len = 0;
+
 	// Determine maximum length of the props in this section
-	for(const_it tel = properties.begin();tel != properties.end();tel++) {
-		if ((*tel)->propname.length() > len)
-			len = (*tel)->propname.length();
-	}
+	int len = 0;
+	for (const auto &tel : properties)
+		len = std::max<int>(len, tel->propname.length());
 
 	for (const auto &tel : properties) {
 		fprintf(outfile, "%-*s = %s\n",
-		        static_cast<int>(len),
+		        std::min<int>(40, len),
 		        tel->propname.c_str(),
 		        tel->GetValue().ToString().c_str());
 	}
 }
 
 string Section_prop::GetPropValue(string const& _property) const {
-	for(const_it tel=properties.begin();tel!=properties.end();tel++){
+	for(const_it tel = properties.begin();tel != properties.end();++tel){
 		if (!strcasecmp((*tel)->propname.c_str(),_property.c_str())){
 			return (*tel)->GetValue().ToString();
 		}
@@ -703,16 +704,17 @@ string Section_line::GetPropValue(string const& /* _property*/) const {
 }
 
 bool Config::PrintConfig(char const * const configfilename) const {
-	char temp[50];char helpline[256];
-	FILE* outfile=fopen(configfilename,"w+t");
-	if(outfile==NULL) return false;
+	char temp[50];
+	char helpline[256];
+	FILE* outfile = fopen(configfilename,"w+t");
+	if (outfile == NULL) return false;
 
 	/* Print start of configfile and add a return to improve readibility. */
 	fprintf(outfile,MSG_Get("CONFIGFILE_INTRO"),VERSION);
 	fprintf(outfile,"\n");
-	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
+	for (const_it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
 		/* Print out the Section header */
-		strcpy(temp,(*tel)->GetName());
+		safe_strncpy(temp,(*tel)->GetName(),sizeof(temp));
 		lowcase(temp);
 		fprintf(outfile,"[%s]\n",temp);
 
@@ -726,20 +728,21 @@ bool Config::PrintConfig(char const * const configfilename) const {
 			}
 			i=0;
 			char prefix[80];
-			snprintf(prefix,80, "\n# %*s  ", (int)maxwidth, "");
+			int intmaxwidth = std::min<int>(60, maxwidth);
+			snprintf(prefix, sizeof(prefix), "\n# %*s  ", intmaxwidth , "");
 			while ((p = sec->Get_prop(i++))) {
 				std::string help = p->Get_help();
 				std::string::size_type pos = std::string::npos;
-				while ((pos = help.find("\n", pos+1)) != std::string::npos) {
+				while ((pos = help.find('\n', pos+1)) != std::string::npos) {
 					help.replace(pos, 1, prefix);
 				}
 
-				fprintf(outfile, "# %*s: %s", (int)maxwidth, p->propname.c_str(), help.c_str());
+				fprintf(outfile, "# %*s: %s", intmaxwidth, p->propname.c_str(), help.c_str());
 
 				std::vector<Value> values = p->GetValues();
 				if (!values.empty()) {
 					fprintf(outfile, "%s%s:", prefix, MSG_Get("CONFIG_SUGGESTED_VALUES"));
-					std::vector<Value>::iterator it = values.begin();
+					std::vector<Value>::const_iterator it = values.begin();
 					while (it != values.end()) {
 						if((*it).ToString() != "%u") { //Hack hack hack. else we need to modify GetValues, but that one is const...
 							if (it != values.begin()) fputs(",", outfile);
@@ -754,16 +757,19 @@ bool Config::PrintConfig(char const * const configfilename) const {
 		} else {
 			upcase(temp);
 			strcat(temp,"_CONFIGFILE_HELP");
-			const char * helpstr=MSG_Get(temp);
-			char * helpwrite=helpline;
-			while (*helpstr) {
-				*helpwrite++=*helpstr;
+			const char * helpstr = MSG_Get(temp);
+			const char * linestart = helpstr;
+			char * helpwrite = helpline;
+			while (*helpstr && static_cast<size_t>(helpstr - linestart) < sizeof(helpline)) {
+				*helpwrite++ = *helpstr;
 				if (*helpstr == '\n') {
-					*helpwrite=0;
-					fprintf(outfile,"# %s", helpline);
-					helpwrite=helpline;
+					*helpwrite = 0;
+					fprintf(outfile, "# %s", helpline);
+					helpwrite = helpline;
+					linestart = ++helpstr;
+				} else {
+					++helpstr;
 				}
-				helpstr++;
 			}
 		}
 
@@ -787,7 +793,7 @@ Section_prop::~Section_prop() {
 	//ExecuteDestroy should be here else the destroy functions use destroyed properties
 	ExecuteDestroy(true);
 	/* Delete properties themself (properties stores the pointer of a prop */
-	for(it prop = properties.begin(); prop != properties.end(); prop++)
+	for(it prop = properties.begin(); prop != properties.end(); ++prop)
 		delete (*prop);
 }
 
@@ -801,7 +807,7 @@ Section_line* Config::AddSection_line(char const * const _name,void (*_initfunct
 
 
 void Config::Init() {
-	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++) {
+	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); ++tel) {
 		(*tel)->ExecuteInit();
 	}
 }
@@ -817,45 +823,45 @@ void Section::AddDestroyFunction(SectionFunction func,bool canchange) {
 
 void Section::ExecuteInit(bool initall) {
 	typedef std::list<Function_wrapper>::iterator func_it;
-	for (func_it tel=initfunctions.begin(); tel!=initfunctions.end(); tel++) {
-		if(initall || (*tel).canchange) (*tel).function(this);
+	for (func_it tel = initfunctions.begin(); tel != initfunctions.end(); ++tel) {
+		if (initall || (*tel).canchange) (*tel).function(this);
 	}
 }
 
 void Section::ExecuteDestroy(bool destroyall) {
 	typedef std::list<Function_wrapper>::iterator func_it;
-	for (func_it tel=destroyfunctions.begin(); tel!=destroyfunctions.end(); ) {
-		if(destroyall || (*tel).canchange) {
+	for (func_it tel = destroyfunctions.begin(); tel != destroyfunctions.end(); ) {
+		if (destroyall || (*tel).canchange) {
 			(*tel).function(this);
-			tel=destroyfunctions.erase(tel); //Remove destroyfunction once used
-		} else tel++;
+			tel = destroyfunctions.erase(tel); //Remove destroyfunction once used
+		} else ++tel;
 	}
 }
 
 Config::~Config() {
-	reverse_it cnt=sectionlist.rbegin();
-	while (cnt!=sectionlist.rend()) {
+	reverse_it cnt = sectionlist.rbegin();
+	while (cnt != sectionlist.rend()) {
 		delete (*cnt);
 		cnt++;
 	}
 }
 
 Section* Config::GetSection(int index) {
-	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
+	for (it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
 		if (!index--) return (*tel);
 	}
 	return NULL;
 }
 
 Section* Config::GetSection(string const& _sectionname) const {
-	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
+	for (const_it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
 		if (!strcasecmp((*tel)->GetName(),_sectionname.c_str())) return (*tel);
 	}
 	return NULL;
 }
 
 Section* Config::GetSectionFromProperty(char const * const prop) const {
-   	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
+   	for (const_it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
 		if ((*tel)->GetPropValue(prop) != NO_SUCH_PROPERTY) return (*tel);
 	}
 	return NULL;
@@ -959,10 +965,10 @@ bool CommandLine::FindExist(char const * const name,bool remove) {
 	return true;
 }
 
-bool CommandLine::FindHex(char const * const name,int & value,bool remove) {
+bool CommandLine::FindHex(char const * const name,unsigned int & value,bool remove) {
 	cmd_it it,it_next;
 	if (!(FindEntry(name,it,true))) return false;
-	it_next=it;it_next++;
+	it_next=it;++it_next;
 	sscanf((*it_next).c_str(),"%X",&value);
 	if (remove) cmds.erase(it,++it_next);
 	return true;
@@ -971,7 +977,7 @@ bool CommandLine::FindHex(char const * const name,int & value,bool remove) {
 bool CommandLine::FindInt(char const * const name,int & value,bool remove) {
 	cmd_it it,it_next;
 	if (!(FindEntry(name,it,true))) return false;
-	it_next=it;it_next++;
+	it_next=it;++it_next;
 	value=atoi((*it_next).c_str());
 	if (remove) cmds.erase(it,++it_next);
 	return true;
@@ -980,7 +986,7 @@ bool CommandLine::FindInt(char const * const name,int & value,bool remove) {
 bool CommandLine::FindString(char const * const name,std::string & value,bool remove) {
 	cmd_it it,it_next;
 	if (!(FindEntry(name,it,true))) return false;
-	it_next=it;it_next++;
+	it_next=it;++it_next;
 	value=*it_next;
 	if (remove) cmds.erase(it,++it_next);
 	return true;
@@ -996,9 +1002,9 @@ bool CommandLine::FindCommand(unsigned int which,std::string & value) {
 }
 
 bool CommandLine::FindEntry(char const * const name,cmd_it & it,bool neednext) {
-	for (it=cmds.begin();it!=cmds.end();it++) {
+	for (it = cmds.begin(); it != cmds.end(); ++it) {
 		if (!strcasecmp((*it).c_str(),name)) {
-			cmd_it itnext=it;itnext++;
+			cmd_it itnext=it;++itnext;
 			if (neednext && (itnext==cmds.end())) return false;
 			return true;
 		}
@@ -1008,7 +1014,7 @@ bool CommandLine::FindEntry(char const * const name,cmd_it & it,bool neednext) {
 
 bool CommandLine::FindStringBegin(char const* const begin,std::string & value, bool remove) {
 	size_t len = strlen(begin);
-	for (cmd_it it=cmds.begin();it!=cmds.end();it++) {
+	for (cmd_it it = cmds.begin(); it != cmds.end();++it) {
 		if (strncmp(begin,(*it).c_str(),len)==0) {
 			value=((*it).c_str() + len);
 			if (remove) cmds.erase(it);
@@ -1019,12 +1025,12 @@ bool CommandLine::FindStringBegin(char const* const begin,std::string & value, b
 }
 
 bool CommandLine::FindStringRemain(char const * const name,std::string & value) {
-	cmd_it it;value="";
+	cmd_it it;value.clear();
 	if (!FindEntry(name,it)) return false;
-	it++;
-	for (;it!=cmds.end();it++) {
-		value+=" ";
-		value+=(*it);
+	++it;
+	for (;it != cmds.end();++it) {
+		value += " ";
+		value += (*it);
 	}
 	return true;
 }
@@ -1034,27 +1040,27 @@ bool CommandLine::FindStringRemain(char const * const name,std::string & value) 
  * Restoring quotes back into the commands so command /C mount d "/tmp/a b" works as intended
  */
 bool CommandLine::FindStringRemainBegin(char const * const name,std::string & value) {
-	cmd_it it;value="";
+	cmd_it it;value.clear();
 	if (!FindEntry(name,it)) {
 		size_t len = strlen(name);
-			for (it=cmds.begin();it!=cmds.end();it++) {
+			for (it = cmds.begin();it != cmds.end();++it) {
 				if (strncasecmp(name,(*it).c_str(),len)==0) {
 					std::string temp = ((*it).c_str() + len);
 					//Restore quotes for correct parsing in later stages
-					if(temp.find(" ") != std::string::npos)
+					if(temp.find(' ') != std::string::npos)
 						value = std::string("\"") + temp + std::string("\"");
 					else
 						value = temp;
 					break;
 				}
 			}
-		if( it == cmds.end()) return false;
+		if (it == cmds.end()) return false;
 	}
-	it++;
-	for (;it!=cmds.end();it++) {
+	++it;
+	for (;it != cmds.end();++it) {
 		value += " ";
 		std::string temp = (*it);
-		if(temp.find(" ") != std::string::npos)
+		if(temp.find(' ') != std::string::npos)
 			value += std::string("\"") + temp + std::string("\"");
 		else
 			value += temp;
@@ -1065,10 +1071,10 @@ bool CommandLine::FindStringRemainBegin(char const * const name,std::string & va
 bool CommandLine::GetStringRemain(std::string & value) {
 	if (!cmds.size()) return false;
 
-	cmd_it it=cmds.begin();value=(*it++);
-	for(;it != cmds.end();it++) {
-		value+=" ";
-		value+=(*it);
+	cmd_it it = cmds.begin();value = (*it++);
+	for(;it != cmds.end();++it) {
+		value += " ";
+		value += (*it);
 	}
 	return true;
 }
@@ -1079,7 +1085,7 @@ unsigned int CommandLine::GetCount(void) {
 }
 
 void CommandLine::FillVector(std::vector<std::string> & vector) {
-	for(cmd_it it=cmds.begin(); it != cmds.end(); it++) {
+	for(cmd_it it = cmds.begin(); it != cmds.end(); ++it) {
 		vector.push_back((*it));
 	}
 	// add back the \" if the parameter contained a space
@@ -1099,7 +1105,7 @@ int CommandLine::GetParameterFromList(const char* const params[], std::vector<st
 		P_START, P_FIRSTNOMATCH, P_FIRSTMATCH
 	} parsestate = P_START;
 	cmd_it it = cmds.begin();
-	while(it!=cmds.end()) {
+	while(it != cmds.end()) {
 		bool found = false;
 		for(Bitu i = 0; *params[i]!=0; i++) {
 			if (!strcasecmp((*it).c_str(),params[i])) {
@@ -1129,7 +1135,7 @@ int CommandLine::GetParameterFromList(const char* const params[], std::vector<st
 				break;
 			}
 		cmd_it itold = it;
-		it++;
+		++it;
 		cmds.erase(itold);
 
 	}
@@ -1175,7 +1181,7 @@ CommandLine::CommandLine(int argc,char const * const argv[]) {
 Bit16u CommandLine::Get_arglength() {
 	if (cmds.empty()) return 0;
 	Bit16u i=1;
-	for(cmd_it it=cmds.begin();it != cmds.end();it++)
+	for(cmd_it it = cmds.begin();it != cmds.end(); ++it)
 		i+=(*it).size() + 1;
 	return --i;
 }
