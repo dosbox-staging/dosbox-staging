@@ -47,7 +47,14 @@ def count_warning(line, warning_types, warning_files, warning_lines):
     match = WARNING_PATTERN.match(line)
     if not match:
         return 0
-    warning_lines.append(line.strip())
+
+    # Some warnings (e.g. effc++) are reported multiple times, once
+    # for every usage; ignore duplicates.
+    line = line.strip()
+    if line in warning_lines:
+        return 0
+    warning_lines.add(line)
+
     file = match.group(1)
     # line = match.group(2)
     wtype = match.group(3)
@@ -117,7 +124,7 @@ def main():
     total = 0
     warning_types = {}
     warning_files = {}
-    warning_lines = []
+    warning_lines = set()
     args = parse_args()
     for line in get_input_lines(args.logfile):
         total += count_warning(line,
