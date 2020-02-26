@@ -16,14 +16,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include "dosbox.h"
-//#include "setup.h"
-#include "video.h"
-#include "pic.h"
 #include "vga.h"
 
-#include <string.h>
+#include <cassert>
+#include <cstring>
+
+#include "pic.h"
+#include "video.h"
 
 VGA_Type vga;
 SVGA_Driver svga;
