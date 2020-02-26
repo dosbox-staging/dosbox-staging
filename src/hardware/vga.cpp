@@ -128,11 +128,13 @@ void VGA_SetClock(Bitu which,Bitu target) {
 				best.n = n;
 			}
 		}
-    }
+	}
 	/* Program the s3 clock chip */
-	vga.s3.clk[which].m=best.m;
-	vga.s3.clk[which].r=r;
-	vga.s3.clk[which].n=best.n;
+	constexpr size_t vga_s3_clk_len = sizeof(vga.s3.clk) / sizeof(*vga.s3.clk);
+	assert(which < vga_s3_clk_len);
+	vga.s3.clk[which].m = best.m;
+	vga.s3.clk[which].r = r;
+	vga.s3.clk[which].n = best.n;
 	VGA_StartResize();
 }
 
