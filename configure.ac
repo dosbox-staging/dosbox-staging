@@ -449,15 +449,24 @@ fi
 
 AH_TEMPLATE(C_MODEM,[Define to 1 to enable internal modem support, requires SDL2_net])
 AH_TEMPLATE(C_IPX,[Define to 1 to enable IPX over Internet networking, requires SDL2_net])
+AC_ARG_ENABLE(network,
+              AS_HELP_STRING([--disable-network],
+                             [Disable networking features (modem, ipx)]),,
+              enable_network=yes)
 AC_CHECK_HEADER(SDL_net.h,have_sdl_net_h=yes,)
-
 AC_CHECK_LIB(SDL2_net, SDLNet_Init, have_sdl_net_lib=yes, , )
-if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
-   LIBS="$LIBS -lSDL2_net"
-   AC_DEFINE(C_MODEM,1)
-   AC_DEFINE(C_IPX,1)
+AC_MSG_CHECKING([whether networking features will be enabled])
+if test x$enable_network = xyes ; then
+  if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
+    LIBS="$LIBS -lSDL2_net"
+    AC_DEFINE(C_MODEM,1)
+    AC_DEFINE(C_IPX,1)
+    AC_MSG_RESULT([yes])
+  else
+    AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
+  fi
 else
-   AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
+  AC_MSG_RESULT([no])
 fi
 
 dnl Ogg Opus handling
