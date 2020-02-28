@@ -1,16 +1,26 @@
 dnl AM_PATH_SDL([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
 dnl Test for SDL, and define SDL_CFLAGS and SDL_LIBS
-dnl
-AC_DEFUN([AM_PATH_SDL],
-[dnl
-dnl Get the cflags and libraries from the sdl2-config script
-dnl
-AC_ARG_WITH(sdl-prefix,[  --with-sdl-prefix=PFX   Prefix where SDL is installed (optional)],
-            sdl_prefix="$withval", sdl_prefix="")
-AC_ARG_WITH(sdl-exec-prefix,[  --with-sdl-exec-prefix=PFX Exec prefix where SDL is installed (optional)],
-            sdl_exec_prefix="$withval", sdl_exec_prefix="")
-AC_ARG_ENABLE(sdltest, [  --disable-sdltest       Do not try to compile and run a test SDL program],
-		    , enable_sdltest=yes)
+
+AC_DEFUN([AM_PATH_SDL], [dnl
+
+  dnl Get the cflags and libraries from the sdl2-config script
+
+  AC_ARG_WITH(sdl-prefix,
+              AS_HELP_STRING([--with-sdl-prefix=PFX],
+                             [Prefix where SDL is installed (optional)]),
+              sdl_prefix="$withval",
+              sdl_prefix="")
+
+  AC_ARG_WITH(sdl-exec-prefix,
+              AS_HELP_STRING([--with-sdl-exec-prefix=PFX],
+                             [Exec prefix where SDL is installed (optional)]),
+              sdl_exec_prefix="$withval",
+              sdl_exec_prefix="")
+
+  AC_ARG_ENABLE(sdltest,
+                AS_HELP_STRING([--disable-sdltest],
+                               [Do not try to compile and run a test SDL program]),,
+                enable_sdltest=yes)
 
   if test x$sdl_exec_prefix != x ; then
      sdl_args="$sdl_args --exec-prefix=$sdl_exec_prefix"
