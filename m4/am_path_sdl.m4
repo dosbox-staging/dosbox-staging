@@ -22,6 +22,11 @@ AC_DEFUN([AM_PATH_SDL], [dnl
                                [Do not try to compile and run a test SDL program]),,
                 enable_sdltest=yes)
 
+  AC_ARG_ENABLE(sdl-static,
+                AS_HELP_STRING([--enable-sdl-static],
+                               [Link SDL2 statically]),
+                force_sdl_static=yes,)
+
   if test x$sdl_exec_prefix != x ; then
      sdl_args="$sdl_args --exec-prefix=$sdl_exec_prefix"
      if test x${SDL_CONFIG+set} != xset ; then
@@ -43,7 +48,24 @@ AC_DEFUN([AM_PATH_SDL], [dnl
     no_sdl=yes
   else
     SDL_CFLAGS=`$SDL_CONFIG $sdlconf_args --cflags`
-    SDL_LIBS=`$SDL_CONFIG $sdlconf_args --libs`
+
+    if test "x$force_sdl_static" = "xyes" ; then
+
+      # Selectively static linking SDL2 requires more flags than the ones
+      # returned by sdl2-config program.
+      # TODO: replace hardcoded flags with a better solution
+      case "$host" in
+        *-*-darwin*)
+          SDL_LIBS="/usr/local/lib/libSDL2.a -lm -liconv -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,ForceFeedback -lobjc -Wl,-framework,CoreVideo -Wl,-framework,Cocoa -Wl,-framework,Carbon -Wl,-framework,IOKit -Wl,-weak_framework,QuartzCore -Wl,-weak_framework,Metal"
+          ;;
+        *)
+          SDL_LIBS=$($SDL_CONFIG $sdlconf_args --static-libs)
+          ;;
+      esac
+
+    else
+      SDL_LIBS=$($SDL_CONFIG $sdlconf_args --libs)
+    fi
 
     sdl_major_version=`$SDL_CONFIG $sdl_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
