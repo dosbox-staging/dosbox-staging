@@ -322,10 +322,13 @@ static int32_t opus_seek(Sound_Sample * sample, const uint32_t ms)
 #if (defined DEBUG_CHATTER)
     const float total_seconds = static_cast<float>(ms) / 1000;
     uint8_t minutes = total_seconds / 60;
-    const float seconds = ((int)total_seconds % 60) + (total_seconds - (int)total_seconds);
+    const double seconds =
+        static_cast<int>(total_seconds) % 60
+        + total_seconds
+        - static_cast<int>(total_seconds);
     const uint8_t hours = minutes / 60;
     minutes = minutes % 60;
-    #endif
+#endif
 
     // convert the desired ms offset into OPUS PCM samples
     const ogg_int64_t desired_pcm = ms * OPUS_SAMPLE_RATE_PER_MS;
