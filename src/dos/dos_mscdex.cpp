@@ -445,7 +445,10 @@ bool CMscdex::PlayAudioMSF(Bit8u subUnit, Bit32u start, Bit32u length) {
 	Bit8u min		= (Bit8u)(start>>16) & 0xFF;
 	Bit8u sec		= (Bit8u)(start>> 8) & 0xFF;
 	Bit8u fr		= (Bit8u)(start>> 0) & 0xFF;
-	Bit32u sector	= min*60*75+sec*75+fr - 150;
+	Bit32u sector	= min * 60 * REDBOOK_FRAMES_PER_SECOND
+	                  + sec * REDBOOK_FRAMES_PER_SECOND
+	                  + fr
+	                  - REDBOOK_FRAME_PADDING;
 	return dinfo[subUnit].lastResult = PlayAudioSector(subUnit,sector,length);
 }
 
@@ -466,15 +469,17 @@ bool CMscdex::GetAudioStatus(Bit8u subUnit, bool& playing, bool& pause, TMSF& st
 	if (dinfo[subUnit].lastResult) {
 		if (playing) {
 			// Start
-			Bit32u addr	= dinfo[subUnit].audioStart + 150;
-			start.fr	= (Bit8u)(addr%75);	addr/=75;
-			start.sec	= (Bit8u)(addr%60); 
-			start.min	= (Bit8u)(addr/60);
+			Bit32u addr = dinfo[subUnit].audioStart + REDBOOK_FRAME_PADDING;
+			start.fr    = (Bit8u)(addr % REDBOOK_FRAMES_PER_SECOND);
+			addr       /= REDBOOK_FRAMES_PER_SECOND;
+			start.sec   = (Bit8u)(addr % 60);
+			start.min   = (Bit8u)(addr / 60);
 			// End
-			addr		= dinfo[subUnit].audioEnd + 150;
-			end.fr		= (Bit8u)(addr%75);	addr/=75;
-			end.sec		= (Bit8u)(addr%60); 
-			end.min		= (Bit8u)(addr/60);
+			addr        = dinfo[subUnit].audioEnd + REDBOOK_FRAME_PADDING;
+			end.fr      = (Bit8u)(addr % REDBOOK_FRAMES_PER_SECOND);
+			addr       /= REDBOOK_FRAMES_PER_SECOND;
+			end.sec     = (Bit8u)(addr % 60);
+			end.min     = (Bit8u)(addr / 60);
 		} else {
 			memset(&start,0,sizeof(start));
 			memset(&end,0,sizeof(end));
@@ -509,12 +514,15 @@ bool CMscdex::StopAudio(Bit8u subUnit) {
 		if (dinfo[subUnit].audioPlay) {
 			TMSF pos;
 			GetCurrentPos(subUnit,pos);
-			dinfo[subUnit].audioStart	= pos.min*60*75+pos.sec*75+pos.fr - 150;
+			dinfo[subUnit].audioStart = pos.min * 60 * REDBOOK_FRAMES_PER_SECOND
+			                            + pos.sec * REDBOOK_FRAMES_PER_SECOND
+			                            + pos.fr
+			                            - REDBOOK_FRAME_PADDING;
 			dinfo[subUnit].audioPaused  = true;
 		} else {	
 			dinfo[subUnit].audioPaused  = false;
-			dinfo[subUnit].audioStart	= 0;
-			dinfo[subUnit].audioEnd		= 0;
+			dinfo[subUnit].audioStart   = 0;
+			dinfo[subUnit].audioEnd     = 0;
 		}
 		dinfo[subUnit].audioPlay = false;
 	}
@@ -531,7 +539,10 @@ Bit32u CMscdex::GetVolumeSize(Bit8u subUnit) {
 	Bit8u tr1,tr2; // <== place-holders (use lead-out for size calculation)
 	TMSF leadOut;
 	dinfo[subUnit].lastResult = GetCDInfo(subUnit,tr1,tr2,leadOut);
-	if (dinfo[subUnit].lastResult) return (leadOut.min*60*75)+(leadOut.sec*75)+leadOut.fr;
+	if (dinfo[subUnit].lastResult)
+		return leadOut.min * 60 * REDBOOK_FRAMES_PER_SECOND
+		       + leadOut.sec * REDBOOK_FRAMES_PER_SECOND
+		       + leadOut.fr;
 	return 0;
 }
 
@@ -614,7 +625,10 @@ bool CMscdex::ReadSectorsMSF(Bit8u subUnit, bool raw, Bit32u start, Bit16u num, 
 	Bit8u min		= (Bit8u)(start>>16) & 0xFF;
 	Bit8u sec		= (Bit8u)(start>> 8) & 0xFF;
 	Bit8u fr		= (Bit8u)(start>> 0) & 0xFF;
-	Bit32u sector	= min*60*75+sec*75+fr - 150;
+	Bit32u sector	= min * 60 * REDBOOK_FRAMES_PER_SECOND
+	                  + sec * REDBOOK_FRAMES_PER_SECOND
+	                  + fr
+	                  - REDBOOK_FRAME_PADDING;
 	return ReadSectors(subUnit,raw,sector,num,data);
 }
 
@@ -868,10 +882,10 @@ static Bit16u MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 					Bit8u addr_mode = mem_readb(buffer+1);
 					if (addr_mode == 0) { // HSG
 						Bit32u frames = static_cast<Bit32u>(msf_to_frames(pos));
-						if (frames < 150)
+						if (frames < REDBOOK_FRAME_PADDING)
 							MSCDEX_LOG("MSCDEX: Get position: invalid position %d:%d:%d", pos.min, pos.sec, pos.fr);
 						else
-							frames -= 150;
+							frames -= REDBOOK_FRAME_PADDING;
 						mem_writed(buffer+2,frames);
 					} else if (addr_mode==1) {	// Red book
 						mem_writeb(buffer+2,pos.fr);
