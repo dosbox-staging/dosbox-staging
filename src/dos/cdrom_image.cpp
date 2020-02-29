@@ -21,6 +21,7 @@
 #include "cdrom.h"
 #include <cassert>
 #include <cctype>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
@@ -75,9 +76,10 @@ bool CDROM_Interface_Image::BinaryFile::read(uint8_t *buffer,
                                              const uint32_t offset,
                                              const uint32_t requested_bytes)
 {
-	// Guard: only proceed with a valid file
-	if (file == nullptr)
-		return false;
+	// Check for logic bugs and illegal values
+	assertm(file && buffer, "The file and/or buffer pointer is invalid [Bug]");
+	assertm(offset <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size [Bug]");
+	assertm(requested_bytes <= MAX_REDBOOK_BYTES, "Requested bytes exceeds CDROM size [Bug]");
 
 	file->seekg(offset, ios::beg);
 	file->read((char*)buffer, requested_bytes);
@@ -86,17 +88,21 @@ bool CDROM_Interface_Image::BinaryFile::read(uint8_t *buffer,
 
 int CDROM_Interface_Image::BinaryFile::getLength()
 {
-	// Guard: only proceed with a valid file
-	if (file == nullptr)
-		return -1;
+	// Check for logic bugs and illegal values
+	assertm(file, "The file pointer is invalid [Bug]");
 
-	// All read operations involve an absolute position and
-	// this function isn't called in other threads, therefore
-	// we don't need to retain the original read position.
+	/**
+	 *  All read operations involve an absolute position and
+	 *  this function isn't called in other threads, therefore
+	 *  we don't need to retain the original read position.
+	 */
 	file->seekg(0, ios::end);
 	const int length = static_cast<int>(file->tellg());
+	assertm(length == -1 // allow the length to fail, which is valid
+	        || static_cast<uint32_t>(length) <= MAX_REDBOOK_BYTES,
+	        "Length exceeds the maximum CDROM size [Bug]");
 #ifdef DEBUG
-	LOG_MSG("CDROM: BinaryLength (in milliseconds) = %d", length);
+	LOG_MSG("CDROM: Length of image is %d bytes", length);
 #endif
 	return length;
 
@@ -111,9 +117,9 @@ Bit16u CDROM_Interface_Image::BinaryFile::getEndian()
 
 bool CDROM_Interface_Image::BinaryFile::seek(const uint32_t offset)
 {
-	// Guard: only proceed with a valid file
-	if (file == nullptr)
-		return false;
+	// Check for logic bugs and illegal values
+	assertm(file, "The file pointer needs to be valid, but is the nullptr [Bug]");
+	assertm(offset <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size [Bug]");
 
 	file->seekg(offset, ios::beg);
 	return !file->fail();
@@ -122,9 +128,10 @@ bool CDROM_Interface_Image::BinaryFile::seek(const uint32_t offset)
 uint32_t CDROM_Interface_Image::BinaryFile::decode(int16_t *buffer,
                                                    const uint32_t desired_track_frames)
 {
-	// Guard: only proceed with a valid file
-	if (file == nullptr)
-		return 0;
+	// Guard against logic bugs and illegal values
+	assertm(buffer && file, "The file pointer or buffer are invalid [bug]");
+	assertm(desired_track_frames <= MAX_REDBOOK_FRAMES,
+	        "Requested number of frames exceeds the maximum for a CDROM [Bug]");
 
 	file->read((char*)buffer, desired_track_frames * BYTES_PER_REDBOOK_PCM_FRAME);
 	return (file->gcount() + BYTES_PER_REDBOOK_PCM_FRAME - 1) / BYTES_PER_REDBOOK_PCM_FRAME;
@@ -340,8 +347,10 @@ bool CDROM_Interface_Image::GetAudioTracks(uint8_t& start_track_num,
                                            uint8_t& end_track_num,
                                            TMSF& lead_out_msf)
 {
-	// Guard: A valid CD has atleast two tracks: the first plus the lead-out, so bail
-	//        out if we have fewer than 2 tracks
+	/**
+	 *  Guard: A valid CD has atleast two tracks: the first plus the lead-out,
+	 *  so bail out if we have fewer than 2 tracks
+	 */
 	if (tracks.size() < MIN_REDBOOK_TRACKS) {
 #ifdef DEBUG
 		LOG_MSG("CDROM: GetAudioTracks: game wanted to dump track "
@@ -430,7 +439,7 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
 				absolute_sector = track->start;
 				// relative_sector is zero because we're at the start of the track
 			}
-		// the CD hasn't been played yet or has an invalid position
+		// the CD hasn't been played yet or has an invalid track_pos
 		} else {
 			for (track_iter it = tracks.begin(); it != tracks.end(); ++it) {
 				if (it->attr == 0) {	// Found an audio track
@@ -535,10 +544,11 @@ bool CDROM_Interface_Image::PlayAudioSector(const uint32_t start, uint32_t len)
 	const uint8_t track_channels = track_file->getChannels();
 	const uint32_t track_rate = track_file->getRate();
 
-	// Guard:
-	//   Before we update our player object with new track details, we lock access
-	//   to it to prevent the Callback (which runs in a separate thread) from
-	//   getting inconsistent or partial values.
+	/**
+	 *  Guard: Before we update our player object with new track details, we
+	 *  lock access to it to prevent the Callback (which runs in a separate
+	 *  thread) from getting inconsistent or partial values.
+	 */
 	if (SDL_LockMutex(player.mutex) < 0) {
 		LOG_MSG("CDROM: PlayAudioSector couldn't lock our player for exclusive access");
 		StopAudio();
@@ -562,18 +572,20 @@ bool CDROM_Interface_Image::PlayAudioSector(const uint32_t start, uint32_t len)
 		                                         : &MixerChannel::AddSamples_m16_nonnative;
 	}
 
-	// Convert Redbook frames (len) to Track PCM frames, rounding up to whole integer frames.
-	// Note: the intermediate numerator in the calculation below can overflow uint32_t, so
-	//       the variable types used must stay 64-bit.
+	/**
+	 *  Convert Redbook frames (len) to Track PCM frames, rounding up to whole
+	 *  integer frames. Note: the intermediate numerator in the calculation
+	 *  below can overflow uint32_t, so the variable types used must stay
+	 *  64-bit.
+	 */
 	player.playedTrackFrames = 0;
-	player.totalTrackFrames = (track_rate
-	                           * player.totalRedbookFrames
-	                           + REDBOOK_FRAMES_PER_SECOND - 1) / REDBOOK_FRAMES_PER_SECOND;
+	player.totalTrackFrames = ceil_divide(track_rate * player.totalRedbookFrames,
+	                                      REDBOOK_FRAMES_PER_SECOND);
 
 #ifdef DEBUG
-	if (start < track->start) { // 
-		LOG_MSG("CDROM: Play sector %lu to %lu in the pregap of track %d [pregap %d,"
-		        " start %u, end %u] for %lu PCM frames at rate %lu",
+	if (start < track->start) {
+		LOG_MSG("CDROM: Play sector %u to %u in the pregap of track %d [pregap %d,"
+		        " start %u, end %u] for %u PCM frames at rate %u",
 		        start,
 		        start + len,
 		        track->number,
@@ -583,8 +595,8 @@ bool CDROM_Interface_Image::PlayAudioSector(const uint32_t start, uint32_t len)
 		        player.totalTrackFrames,
 		        track_rate);
 	} else {
-		LOG_MSG("CDROM: Play sector %lu to %lu in track %d [start %u, end %u],"
-		        " for %lu PCM frames at rate %lu",
+		LOG_MSG("CDROM: Play sector %u to %u in track %d [start %u, end %u],"
+		        " for %u PCM frames at rate %u",
 		        start,
 		        start + len,
 		        track->number,
@@ -699,10 +711,11 @@ track_iter CDROM_Interface_Image::GetTrack(const uint32_t sector)
 		return tracks.end();
 	}
 
-	// Walk the tracks checking if the desired sector falls
-	// inside of a given track's range, which starts at the
-	// end of the prior track and goes to the current track's
-	// (start + length).
+	/**
+	 *  Walk the tracks checking if the desired sector falls inside of a given
+	 *  track's range, which starts at the end of the prior track and goes to
+	 *  the current track's (start + length).
+	 */
 	track_iter track = tracks.begin();
 	uint32_t lower_bound = track->start;
 	while (track != tracks.end()) {
@@ -818,8 +831,10 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 	                                                         static_cast<uint32_t>(desired_track_frames));
 	player.playedTrackFrames += decoded_track_frames;
 
-	// uses either the stereo or mono and native or
-	// nonnative AddSamples call assigned during construction
+	/**
+	 *  Uses either the stereo or mono and native or nonnative
+	 *  AddSamples call assigned during construction
+	 */
 	(player.channel->*player.addFrames)(decoded_track_frames, player.buffer);
 
 	if (player.playedTrackFrames >= player.totalTrackFrames) {
@@ -1042,9 +1057,11 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 			}
 			else {
 				track.file = make_shared<AudioFile>(filename.c_str(), error);
-				// SDL_Sound first tries using a decoder having a matching registered extension
-				// as the filename, and then falls back to trying each decoder before finally
-				// giving up.
+				/**
+				 *  SDL_Sound first tries using a decoder having a matching
+				 *  registered extension as the filename, and then falls back to
+				 *  trying each decoder before finally giving up.
+				 */
 			}
 			if (error) {
 				success = false;
@@ -1201,9 +1218,11 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 	}
 
 #if !defined (WIN32)
-	//Consider the possibility that the filename has a windows directory seperator (inside the CUE file)
-	//which is common for some commercial rereleases of DOS games using DOSBox
-
+	/**
+	 *  Consider the possibility that the filename has a windows directory
+	 *  seperator (inside the CUE file) which is common for some commercial
+	 *  rereleases of DOS games using DOSBox
+	 */
 	string copy = filename;
 	size_t l = copy.size();
 	for (size_t i = 0; i < l;i++) {
