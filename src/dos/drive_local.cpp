@@ -19,16 +19,16 @@
 // Uncomment to enable file-open diagnostic messages
 // #define DEBUG 1
 
-#include <stdio.h>
+#include "drives.h"
+
+#include <cstdio>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <errno.h>
 
-#include "dosbox.h"
 #include "dos_inc.h"
 #include "dos_mscdex.h"
-#include "drives.h"
 #include "support.h"
 #include "cross.h"
 #include "inout.h"
