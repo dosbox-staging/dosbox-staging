@@ -249,51 +249,102 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
                                             const uint32_t requested_pos,
                                             const uint32_t requested_bytes)
 {
-	// Check for logic bugs
+	// Guard again logic bugs and the no-op case
 	assertm(buffer != nullptr, "buffer needs to be allocated but is the nullptr [Bug]");
 	assertm(sample != nullptr, "Audio sample needs to be valid, but is the nullptr [Bug]");
-
-	// Guard again valid but no-op case
+	assertm(requested_pos <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size [Bug]");
+	assertm(requested_bytes <= MAX_REDBOOK_BYTES, "Requested bytes exceeds CDROM size [Bug]");
 	if (requested_bytes == 0)
 		return true;
 
-	// We support DAE from 16-bit, stereo, 44 kHz tracks. If the track doesn't conform to
-	// this, then inform the user. Also, we allow up to 10 DAE-attempts before informing
-	// the user - because some CD Player software will query this interface before using
-	// CDROM-directed playback (not DAE), therefore we don't want to fail in those cases.
-	if (getRate() != REDBOOK_PCM_FRAMES_PER_SECOND || getChannels() != REDBOOK_CHANNELS) {
+	/**
+	 *  Support DAE for stereo and mono 44.1 kHz tracks, otherwise inform the user.
+	 *  Also, we allow up to 10 DAE-attempts because some CD Player software will query
+	 *  this interface before using CDROM-directed playback (not DAE), therefore we
+	 *  don't want to fail in those cases.
+	 */
+	if (getRate() != REDBOOK_PCM_FRAMES_PER_SECOND) {
 		static uint8_t dae_attempts = 0;
 		if (dae_attempts++ > 10) {
 			E_Exit("\n"
-			       "CDROM: Digital Audio Extration (DAE) was attempted with a %s %u kHz\n"
-			       "       track, but DAE is currently only compatible with stereo %u kHz\n"
-			       "       tracks.",
-			       getChannels() == 2 ? "stereo" : "mono",
+			       "CDROM: Digital Audio Extration (DAE) was attempted with a %u kHz\n"
+			       "       track, but DAE is only compatible with %u kHz tracks.",
 			       getRate(),
 			       REDBOOK_PCM_FRAMES_PER_SECOND);
 		}
-		return false; // we always correctly return false to the application in this case. 
+		return false; // we always correctly return false to the application in this case.
 	}
 
-	// Seek, but only if we have to
-	if (position != (offset - requested_bytes))
-		if (!seek(offset))
-			return false;
-	position = offset;
+	if (!seek(requested_pos))
+		return false;
 
+	// Setup characteristics about our track and the request 
+	const uint8_t channels = getChannels();
+	const uint8_t bytes_per_frame = channels * REDBOOK_BPS;
+	const uint32_t requested_frames = ceil_divide(requested_bytes, BYTES_PER_REDBOOK_PCM_FRAME);
+
+	uint32_t decoded_bytes = 0;
 	uint32_t decoded_frames = 0;
-	const uint32_t requested_frames = requested_bytes / BYTES_PER_REDBOOK_PCM_FRAME;
 	while (decoded_frames < requested_frames) {
-		if (sample->flags & (SOUND_SAMPLEFLAG_ERROR | SOUND_SAMPLEFLAG_EOF))
+		const uint32_t decoded = Sound_Decode_Direct(sample,
+		                                             buffer + decoded_bytes,
+		                                             requested_frames - decoded_frames);
+		if (sample->flags & (SOUND_SAMPLEFLAG_ERROR | SOUND_SAMPLEFLAG_EOF) || !decoded)
 			break;
-		decoded_frames += Sound_Decode_Direct(sample,
-		                                      buffer + decoded_frames * BYTES_PER_REDBOOK_PCM_FRAME,
-		                                      requested_frames - decoded_frames);
+		decoded_frames += decoded;
+		decoded_bytes = decoded_frames * bytes_per_frame;
 	}
+	// Zero out any remainining frames that we didn't fill
 	if (decoded_frames < requested_frames)
-		memset(buffer + decoded_frames * BYTES_PER_REDBOOK_PCM_FRAME,
-		       0,
-		       (requested_frames - decoded_frames) * BYTES_PER_REDBOOK_PCM_FRAME);
+		memset(buffer + decoded_bytes, 0, requested_bytes - decoded_bytes);
+
+	// If the track is mono, convert to stereo
+	if (channels == 1 && decoded_frames) {
+#ifdef DEBUG
+		using namespace std::chrono;
+		using clock = std::chrono::steady_clock;
+		clock::time_point begin = clock::now(); // start the timer
+#endif
+		/**
+		 *  Convert to stereo in-place:
+		 *  The current buffer is half full of mono samples:
+		 *  0. [mmmmmmmm00000000]
+		 * 
+		 *  We walk backward from the last mono sample to the first,
+		 *  duplicating them to left and right samples at the rear
+		 *  of the buffer:
+		 *  1. [mmmmmmm(m)000000(LR)]
+		 *              ^________\/
+		 * 
+		 *  2. [mmmmmm(m)m0000(LR)LR]
+		 *             ^_______\/
+		 * 
+		 *  Eventually the left and right samples overwrite the prior
+		 *  mono samples until the buffer is full of LR samples (where
+		 *  the first mono samples is simply the 'left' value):
+		 * 
+		 *  (N - 1). [(m)(R)LRLRLRLRLRLRLR]
+		 *             ^_/
+		 */
+		int16_t* pcm_buffer = reinterpret_cast<int16_t*>(buffer);
+		const uint32_t mono_samples = decoded_frames;
+		for (uint32_t i = mono_samples - 1; i > 0; --i) {
+			pcm_buffer[i * REDBOOK_CHANNELS + 1] = pcm_buffer[i]; // right
+			pcm_buffer[i * REDBOOK_CHANNELS + 0] = pcm_buffer[i]; // left
+		}
+
+#ifdef DEBUG
+		clock::time_point end = clock::now(); // stop the timer
+		const int32_t elapsed_us = static_cast<int32_t>
+		    (duration_cast<microseconds>(end - begin).count());
+		LOG_MSG("CDROM: converted %u mono to %u samples in %d us",
+	             mono_samples, mono_samples * REDBOOK_CHANNELS, elapsed_us);
+#endif
+		// Taken into account that we've now fill both (stereo) channels
+		decoded_bytes *= REDBOOK_CHANNELS;
+	}
+	// Increment the track's position by the Redbook-sized decoded bytes
+	track_pos += decoded_bytes;
 	return !(sample->flags & SOUND_SAMPLEFLAG_ERROR);
 }
 
