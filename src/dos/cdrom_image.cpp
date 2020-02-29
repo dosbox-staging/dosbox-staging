@@ -413,8 +413,9 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
 	if (!tracks.empty()) { 	// We have a useable CD; get a valid play-position
 		track_iter track = tracks.begin();
 		// the CD's current track is valid
-		if (player.trackFile.lock()) {
-			const uint32_t sample_rate = player.trackFile.lock()->getRate();
+		const auto track_file = player.trackFile.lock(); // lock() creates a shared_ptr!
+		if (track_file) {
+			const uint32_t sample_rate = track_file->getRate();
 			const uint32_t played_frames = (player.playedTrackFrames
 			                                * REDBOOK_FRAMES_PER_SECOND
 			                                + sample_rate - 1) / sample_rate;
