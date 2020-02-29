@@ -854,11 +854,9 @@ track_iter CDROM_Interface_Image::GetTrack(const uint32_t sector)
 		}
 		++track;
 		lower_bound = upper_bound;
-	} // If we made it here without breaking, then the track
-	  // wasn't found and the iterator is now the end() item.
-
+	}
 #ifdef DEBUG
-	if (track != tracks.end()) {
+	if (track != tracks.end() && track->number != 1) {
 		if (sector < track->start) {
 			LOG_MSG("CDROM: GetTrack at sector %d => in the pregap of "
 			        "track %d [pregap %d, start %d, end %d]",
@@ -874,11 +872,6 @@ track_iter CDROM_Interface_Image::GetTrack(const uint32_t sector)
 			        track->start,
 			        track->start + track->length);
 		}
-	} else if (track == tracks.end()) {
-		LOG_MSG("CDROM: GetTrack at sector %d => fell outside "
-		        "the bounds of our %u tracks",
-		        sector,
-		        static_cast<unsigned int>(tracks.size()));
 	}
 #endif
 	return track;
