@@ -788,19 +788,38 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer,
                                         const uint32_t sector,
                                         const uint16_t num)
 {
-	int sectorSize = (raw ? BYTES_PER_RAW_REDBOOK_FRAME : BYTES_PER_COOKED_REDBOOK_FRAME);
-	Bitu buflen = num * sectorSize;
-	Bit8u* buf = new Bit8u[buflen];
+	const uint16_t sectorSize = (raw ? BYTES_PER_RAW_REDBOOK_FRAME
+	                                 : BYTES_PER_COOKED_REDBOOK_FRAME);
+	const uint32_t requested_bytes = num * sectorSize;
 
+	// Resize our underlying vector if it's not big enough
+	if (readBuffer.size() < requested_bytes)
+		readBuffer.resize(requested_bytes);
+
+	// Setup state-tracking variables to be used in the read-loop
 	bool success = true; //Gobliiins reads 0 sectors
-	for (unsigned long i = 0; i < num; i++) {
-		success = ReadSector(&buf[i * sectorSize], raw, sector + i);
-		if (!success) {
+	uint32_t bytes_read = 0;
+	uint32_t current_sector = sector;
+	uint8_t* buffer_position = readBuffer.data();
+
+	// Read until we have enough or fail
+	while(bytes_read < requested_bytes) {
+		success = ReadSector(buffer_position, raw, current_sector);
+		if (!success)
 			break;
-		}
+		current_sector++;
+		bytes_read += sectorSize;
+		buffer_position += sectorSize;
 	}
-	MEM_BlockWrite(buffer, buf, buflen);
-	delete[] buf;
+	// Write only the successfully read bytes
+	MEM_BlockWrite(buffer, readBuffer.data(), bytes_read);
+#ifdef DEBUG
+	LOG_MSG("CDROM: Read %u %s sectors at sector %u: "
+	        "%s after %u sectors (%u bytes)",
+	        num, raw ? "raw" : "cooked", sector,
+	        success ? "Succeeded" : "Failed",
+	        ceil_divide(bytes_read, sectorSize), bytes_read);
+#endif
 	return success;
 }
 
