@@ -175,29 +175,73 @@ CDROM_Interface_Image::AudioFile::~AudioFile()
 	sample = nullptr;
 }
 
-bool CDROM_Interface_Image::AudioFile::seek(const uint32_t offset)
+/**
+ *  Seek takes in a Redbook CD-DA byte offset relative to the track's start
+ *  time and returns true if the seek succeeded.
+ * 
+ *  When dealing with a raw bin/cue file, this requested byte position maps
+ *  one-to-one with the bytes in raw binary image, as we see used in the
+ *  BinaryTrack::seek() function.  However, when dealing with codec-based
+ *  tracks, we need the codec's help to seek to the equivalent redbook position
+ *  within the track, regardless of the track's sampling rate, bit-depth,
+ *  or number of channels.  To do this, we convert the byte offset to a
+ *  time-offset, and use the Sound_Seek() function to move the read position.
+ */
+bool CDROM_Interface_Image::AudioFile::seek(const uint32_t requested_pos)
 {
-#ifdef BENCHMARK
-#include <ctime>
-	// This benchmarking block requires C++11 to create a trivial ANSI sub-second timer
-	// that's portable across Windows, Linux, and macOS. Otherwise, to do so using lesser
-	// standards requires a combination of very lengthly solutions for each operating system:
-	// https://stackoverflow.com/questions/361363/how-to-measure-time-in-milliseconds-using-ansi-c
-	// Leave this in place (but #ifdef'ed away) for development and regression testing purposes.
-	const auto begin = std::chrono::steady_clock::now();
-#endif
-	// Convert the byte-offset to a time offset (milliseconds)
-	const bool result = Sound_Seek(sample, lround(offset / REDBOOK_PCM_BYTES_PER_MS));
+	// Check for logic bugs and if the track is already positioned as requested
+	assertm(sample, "Audio sample needs to be valid, but is the nullptr [Bug]");
+	assertm(requested_pos <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size [Bug]");
+	if (track_pos == requested_pos) {
 #ifdef DEBUG
-	LOG_MSG("CDROM: seek to byte-offset %u", offset);
+		LOG_MSG("CDROM: seek to %u avoided with position-tracking", requested_pos);
+#endif
+		return true;
+	}
+
+	// Convert the position from a byte offset to time offset, in milliseconds.
+	const uint32_t ms_per_s = 1000;
+	const uint32_t pos_in_frames = ceil_divide(requested_pos, BYTES_PER_RAW_REDBOOK_FRAME);
+	const uint32_t pos_in_ms = ceil_divide(pos_in_frames * ms_per_s, REDBOOK_FRAMES_PER_SECOND);
+
+#ifdef DEBUG
+	/**
+	 *  In DEBUG mode, we additionally measure the seek latency, which can
+	 *  be an issue for some codecs. 
+	 */
+	using namespace std::chrono;
+	using clock = std::chrono::steady_clock;
+	clock::time_point begin = clock::now(); // start the timer
 #endif
 
-#ifdef BENCHMARK
-	const auto end = std::chrono::steady_clock::now();
-	LOG_MSG("CDROM: seek to sector %u => took %f ms",
-	        offset,
-	        chrono::duration <double, milli> (end - begin).count());
+	// Perform the seek
+	const bool result = Sound_Seek(sample, pos_in_ms);
+
+#ifdef DEBUG
+	clock::time_point end = clock::now(); // stop the timer
+	const int32_t elapsed_ms = static_cast<int32_t>
+	    (duration_cast<milliseconds>(end - begin).count());
+
+	// Report general seek diagnostics
+	const double pos_in_min = static_cast<double>(pos_in_ms) / 60000.0;
+	LOG_MSG("CDROM: seeked to byte %u (frame %u at %.2f min), and took %u ms",
+	        requested_pos, pos_in_frames, pos_in_min, elapsed_ms);
+
+	/**
+	 *  Inform the user if the seek took longer than that of a physical
+	 *  CDROM drive, which might have caused in-game symptoms like pauses
+	 *  or stuttering.
+	 */
+	const int32_t average_cdrom_seek_ms = 200;
+	if (elapsed_ms > average_cdrom_seek_ms)
+		LOG_MSG("CDROM: seek took %d ms, which is slower than an average "
+		        "physical CDROM drive's seek time of %d ms.",
+		        elapsed_ms, average_cdrom_seek_ms);
 #endif
+
+	// Only store the track's new position if the seek was successful
+	if (result)
+		track_pos = requested_pos;
 	return result;
 }
 
@@ -256,7 +300,15 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
 uint32_t CDROM_Interface_Image::AudioFile::decode(int16_t *buffer,
                                                   const uint32_t desired_track_frames)
 {
-	return Sound_Decode_Direct(sample, (void*)buffer, desired_track_frames);
+	// Sound_Decode_Direct returns frames (agnostic of bitrate and channels)
+	const uint32_t frames_decoded =
+	    Sound_Decode_Direct(sample, (void*)buffer, desired_track_frames);
+
+	// Increment the track's in terms of Redbook-equivalent bytes
+	const uint32_t redbook_bytes = frames_decoded * BYTES_PER_REDBOOK_PCM_FRAME;
+	track_pos += redbook_bytes;
+
+	return frames_decoded;
 }
 
 Bit16u CDROM_Interface_Image::AudioFile::getEndian()
