@@ -38,17 +38,24 @@
 #include "../libs/decoders/SDL_sound.h"
 
 // CDROM data and audio format constants
-#define BYTES_PER_RAW_REDBOOK_FRAME    2352
-#define BYTES_PER_COOKED_REDBOOK_FRAME 2048
-#define REDBOOK_FRAMES_PER_SECOND        75
-#define REDBOOK_CHANNELS                  2
-#define REDBOOK_PCM_FRAMES_PER_SECOND 44100
-#define MAX_REDBOOK_FRAMES           400000 // frames are Redbook's data unit
-#define MAX_REDBOOK_SECTOR           399999 // a sector is the index to a frame
-#define MAX_REDBOOK_TRACKS               99
-#define MIN_REDBOOK_TRACKS                2 // One track plus the lead-out track
-#define REDBOOK_PCM_BYTES_PER_MS     176.4f // 44.1 frames/ms * 4 bytes/frame
-#define BYTES_PER_REDBOOK_PCM_FRAME       4 // 2 bytes/sample * 2 samples/frame
+#define BYTES_PER_RAW_REDBOOK_FRAME    2352u
+#define BYTES_PER_COOKED_REDBOOK_FRAME 2048u
+#define REDBOOK_FRAMES_PER_SECOND        75u
+#define REDBOOK_CHANNELS                  2u
+#define REDBOOK_BPS                       2u // bytes per sample
+#define REDBOOK_PCM_FRAMES_PER_SECOND 44100u // also CD Audio sampling rate
+#define REDBOOK_FRAME_PADDING           150u // The relationship between High Sierra sectors and Redbook
+                                             // frames is described by the equation:
+                                             // Sector = Minute * 60 * 75 + Second * 75 + Frame - 150
+#define MAX_REDBOOK_FRAMES           400000u // frames are Redbook's data unit
+#define MAX_REDBOOK_SECTOR           399999u // a sector is the index to a frame
+#define MAX_REDBOOK_TRACKS               99u // a CD can contain 99 playable tracks plus the remaining leadout
+#define MIN_REDBOOK_TRACKS                2u // One track plus the lead-out track
+#define REDBOOK_PCM_BYTES_PER_MS      176.4f // 44.1 frames/ms * 4 bytes/frame
+#define BYTES_PER_REDBOOK_PCM_FRAME       4u // 2 bytes/sample * 2 samples/frame
+#define MAX_REDBOOK_BYTES (MAX_REDBOOK_FRAMES * BYTES_PER_RAW_REDBOOK_FRAME) // length of a CDROM in bytes
+#define MAX_REDBOOK_DURATION_MS (99 * 60 * 1000) // 99 minute CDROM in milliseconds
+
 
 struct TMSF
 {
