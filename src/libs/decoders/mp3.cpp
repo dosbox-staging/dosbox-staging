@@ -51,20 +51,20 @@ static size_t mp3_read(void* const pUserData, void* const pBufferOut, const size
     Sound_Sample* const sample = static_cast<Sound_Sample*>(pUserData);
     const Sound_SampleInternal* const internal = static_cast<const Sound_SampleInternal*>(sample->opaque);
     SDL_RWops* rwops = internal->rw;
-    size_t retval = 0;
+    size_t bytes_read = 0;
 
-    while (retval < bytesToRead)
+    while (bytes_read < bytesToRead)
     {
-        const size_t rc = SDL_RWread(rwops, ptr, 1, bytesToRead);
+        const size_t rc = SDL_RWread(rwops, ptr, 1, bytesToRead - bytes_read);
         if (rc == 0) {
             sample->flags |= SOUND_SAMPLEFLAG_EOF;
             break;
         } /* if */
-        retval += rc;
+        bytes_read += rc;
         ptr += rc;
     } /* while */
 
-    return retval;
+    return bytes_read;
 } /* mp3_read */
 
 static drmp3_bool32 mp3_seek(void* const pUserData, const Sint32 offset, const drmp3_seek_origin origin)

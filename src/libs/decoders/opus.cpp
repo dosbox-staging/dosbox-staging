@@ -64,14 +64,29 @@ static void opus_quit(void)
  *      size_t            size    --> the size of each object to read, in bytes
  *      size_t            maxnum  --> the maximum number of objects to be read
  */
-static Sint32 RWops_opus_read(void* stream, unsigned char* ptr, Sint32 nbytes)
+static int RWops_opus_read(void * stream, uint8_t * buffer, int32_t requested_bytes)
 {
-    const Sint32 bytes_read = SDL_RWread((SDL_RWops*)stream,
-                                         (void*)ptr,
-                                         sizeof(unsigned char),
-                                         (size_t)nbytes);
-    SNDDBG(("Opus ops read:          "
-            "{wanted: %d, returned: %ld}\n", nbytes, bytes_read));
+    // Guard against invalid inputs and the no-op scenario
+    assertm(stream && buffer, "OPUS: Inputs are not initialized [bug]");
+    if (requested_bytes <= 0)
+        return 0;
+    
+    uint8_t *buf_pos = buffer;
+    int32_t bytes_read = 0;
+    Sound_Sample *sample = static_cast<Sound_Sample*>(stream);
+    while (bytes_read < requested_bytes) {
+        const size_t rc = SDL_RWread(static_cast<SDL_RWops*>(stream),
+                                     static_cast<void*>(buf_pos),
+                                     1,
+                                     static_cast<size_t>(requested_bytes - bytes_read));
+
+        if (rc == 0) {
+            sample->flags |= SOUND_SAMPLEFLAG_EOF;
+            break;
+        }
+        buf_pos += rc;
+        bytes_read += rc;
+    } /* while */
 
     return bytes_read;
 } /* RWops_opus_read */
@@ -252,7 +267,7 @@ static int32_t opus_open(Sound_Sample * sample, const char * ext)
     int64_t pcm_result = op_pcm_total(of, -1); // If positive, holds total PCM samples
     internal->total_time = pcm_result == OP_EINVAL ? -1 : // total milliseconds in the stream
         static_cast<int32_t>
-		(ceil_divide(static_cast<uint64_t>(pcm_result), OPUS_SAMPLE_RATE_PER_MS));
+        (ceil_divide(static_cast<uint64_t>(pcm_result), OPUS_SAMPLE_RATE_PER_MS));
     return rcode;
 } /* opus_open */
 
@@ -266,39 +281,38 @@ static uint32_t opus_read(Sound_Sample * sample, void * buffer, uint32_t request
     assertm(sample && buffer, "OPUS: Inputs are not initialized [bug]");
     if (requested_frames == 0)
         return 0u;
-    Sound_SampleInternal* internal =
-        reinterpret_cast<Sound_SampleInternal*>(sample->opaque);
-    OggOpusFile* of =
-        reinterpret_cast<OggOpusFile*>(internal->decoder_private);
-    opus_int16 *sample_buffer =
-        reinterpret_cast<opus_int16*>(buffer);
 
+    Sound_SampleInternal* internal = static_cast<Sound_SampleInternal*>(sample->opaque);
+    OggOpusFile* of = static_cast<OggOpusFile*>(internal->decoder_private);
     const uint32_t channels = sample->actual.channels;
-    const uint32_t requested_samples = requested_frames * channels;
-    uint32_t decoded_samples = 0;
-    int result = 0;
-    while(decoded_samples < requested_samples) {
-        result = op_read(
-            of,                                  // pointer to the opusfile object
-            sample_buffer + decoded_samples,     // buffer offset to save decoded samples
-            requested_samples - decoded_samples, // remaining samples to decode
-            nullptr);                               // link index, which we don't use
-        // Check the result code
+
+    // Initial state-tracking variables
+    uint32_t total_decoded_samples = 0;
+    opus_int16 *buf_pos = static_cast<opus_int16*>(buffer);
+    int32_t remaining_samples = static_cast<int32_t>(requested_frames * channels);
+
+    // Start the decode loop, incrementing as we go
+    while(remaining_samples > 0) {
+        const int result = op_read(of, buf_pos, remaining_samples, nullptr);
         if (result == 0) {
             sample->flags |= SOUND_SAMPLEFLAG_EOF;
             break;
-        } else if (result == OP_HOLE) { // hole in the data
-            continue;
-            // sample->flags |= SOUND_SAMPLEFLAG_EAGAIN;
-            // break;
+        } else if (result == OP_HOLE) {
+            continue;  // hole in the data; keeping going!
         } else if (result  < 0) {
             sample->flags |= SOUND_SAMPLEFLAG_ERROR;
             break;
         }
-        // If good, result is number of samples decoded per channel (ie: frames)
-        decoded_samples += static_cast<uint32_t>(result) * channels;
+        // If good, the result contains the number samples decoded per channel (ie: frames)
+        const uint32_t decoded_samples = static_cast<uint32_t>(result) * channels;
+        buf_pos               += decoded_samples;
+        remaining_samples     -= decoded_samples;
+        total_decoded_samples += decoded_samples;
     }
-    return ceil_divide(decoded_samples, channels);
+
+    // Finally, we return the number of frames decoded 
+    const uint32_t decoded_frames = ceil_divide(total_decoded_samples, channels);
+    return decoded_frames;
 } /* opus_read */
 
 /*
