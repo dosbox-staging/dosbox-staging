@@ -309,7 +309,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 			if (imagesize+headersize<512) imagesize = 512-headersize;
 		}
 	}
-	Bit8u * loadbuf=(Bit8u *)new Bit8u[0x10000];
+	uint8_t *loadbuf = new uint8_t[0x10000];
 	if (flags!=OVERLAY) {
 		/* Create an environment block */
 		envseg=block.exec.envseg;
@@ -347,6 +347,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 				DOS_CloseFile(fhandle);
 				DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
 				DOS_FreeMemory(envseg);
+				delete [] loadbuf;
 				return false;
 			}
 		}
@@ -398,7 +399,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 			mem_writew(address,mem_readw(address)+relocate);
 		}
 	}
-	delete[] loadbuf;
+	delete [] loadbuf;
 	DOS_CloseFile(fhandle);
 
 	/* Setup a psp */
