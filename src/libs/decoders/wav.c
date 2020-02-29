@@ -40,19 +40,19 @@ static size_t wav_read(void* pUserData, void* pBufferOut, size_t bytesToRead)
     Sound_Sample *sample = (Sound_Sample *) pUserData;
     Sound_SampleInternal *internal = (Sound_SampleInternal *) sample->opaque;
     SDL_RWops *rwops = internal->rw;
-    size_t retval = 0;
+    size_t bytes_read = 0;
 
-    while (retval < bytesToRead) {
-        const size_t rc = SDL_RWread(rwops, ptr, 1, bytesToRead);
+    while (bytes_read < bytesToRead) {
+        const size_t rc = SDL_RWread(rwops, ptr, 1, bytesToRead - bytes_read);
         if (rc == 0) {
             sample->flags |= SOUND_SAMPLEFLAG_EOF;
             break;
         } /* if */
-        retval += rc;
+        bytes_read += rc;
         ptr += rc;
     } /* while */
 
-    return retval;
+    return bytes_read;
 } /* wav_read */
 
 static drwav_bool32 wav_seek(void* pUserData, int offset, drwav_seek_origin origin)
