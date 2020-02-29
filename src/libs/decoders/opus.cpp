@@ -1,5 +1,6 @@
 /*
- * This DOSBox Ogg Opus decoder backend is written and copyright 2019 Kevin R Croft (krcroft@gmail.com)
+ * This DOSBox Ogg Opus decoder backend is written and
+ * copyright 2019-2020 Kevin R Croft (krcroft@gmail.com)
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * This decoders makes use of:
@@ -15,56 +16,35 @@
  *
  */
 
+// #define DEBUG_CHATTER 1
+
 #if HAVE_CONFIG_H
 #  include <config.h>
 #endif
 
+#include <cassert>
 #include <opusfile.h>
+#include <SDL.h>
+
+#include "support.h"
 
 #include "SDL_sound.h"
 #define __SDL_SOUND_INTERNAL__
 #include "SDL_sound_internal.h"
 
 // Opus's internal sampling rates to which all encoded streams get resampled
-#define OPUS_SAMPLE_RATE 48000
-#define OPUS_SAMPLE_RATE_PER_MS 48
+#define OPUS_SAMPLE_RATE        48000u
+#define OPUS_SAMPLE_RATE_PER_MS    48u
 
-static Sint32 opus_init   (void);
-static void   opus_quit   (void);
-static Sint32 opus_open   (Sound_Sample* sample, const char* ext);
-static void   opus_close  (Sound_Sample* sample);
-static Uint32 opus_read   (Sound_Sample* sample, void* buffer, Uint32 desired_frames);
-static Sint32 opus_rewind (Sound_Sample* sample);
-static Sint32 opus_seek   (Sound_Sample* sample, const Uint32 ms);
-
-static const char* extensions_opus[] = { "OPUS", NULL };
-
-const Sound_DecoderFunctions __Sound_DecoderFunctions_OPUS =
-{
-    {
-        extensions_opus,
-        "Ogg Opus audio using libopusfile",
-        "Kevin R Croft <krcroft@gmail.com>",
-        "https://www.opus-codec.org/"
-    },
-
-    opus_init,   /*   init() method */
-    opus_quit,   /*   quit() method */
-    opus_open,   /*   open() method */
-    opus_close,  /*  close() method */
-    opus_read,   /*   read() method */
-    opus_rewind, /* rewind() method */
-    opus_seek    /*   seek() method */
-};
-
-static Sint32 opus_init(void)
+static int32_t opus_init(void)
 {
     SNDDBG(("Opus init:              done\n"));
     return 1; /* always succeeds. */
 } /* opus_init */
 
 
-static void opus_quit(void){
+static void opus_quit(void)
+{
     SNDDBG(("Opus quit:              done\n"));
 } // no-op
 
@@ -122,9 +102,16 @@ static Sint32 RWops_opus_read(void* stream, unsigned char* ptr, Sint32 nbytes)
  *      RW_SEEK_CUR   1
  *      RW_SEEK_END   2
  */
-static Sint32 RWops_opus_seek(void* stream, const opus_int64 offset, const Sint32 whence)
+static int32_t RWops_opus_seek(void * stream, const opus_int64 offset, const int32_t whence)
 {
-    const Sint64 offset_after_seek = SDL_RWseek((SDL_RWops*)stream, (int)offset, whence);
+    // Guard against invalid inputs
+    assertm(stream, "OPUS: Input is not initialized [bug]");
+    assertm(whence == SEEK_SET || whence == SEEK_CUR || whence == SEEK_END,
+            "OPUS: The position from where to seek is invalid [bug]");
+
+    const int64_t offset_after_seek = SDL_RWseek(static_cast<SDL_RWops*>(stream),
+                                                 static_cast<int32_t>(offset),
+                                                 whence);
     SNDDBG(("Opus ops seek:          "
             "{requested offset: %ld, seeked offset: %ld}\n",
             offset, offset_after_seek));
@@ -138,7 +125,7 @@ static Sint32 RWops_opus_seek(void* stream, const opus_int64 offset, const Sint3
  * OPUS: typedef int(* op_close_func)(void *_stream)
  * SDL:  Sint32 SDL_RWclose(struct SDL_RWops* context)
  */
-static Sint32 RWops_opus_close(void* stream)
+static int32_t RWops_opus_close(void * stream)
 {
     (void) stream; // deliberately unused, but present for API compliance
     /* SDL closes this for us */
@@ -153,30 +140,35 @@ static Sint32 RWops_opus_close(void* stream)
  * OPUS: typedef opus_int64(* op_tell_func)(void *_stream)
  * SDL:  Sint64 SDL_RWtell(struct SDL_RWops* context)
  */
-static opus_int64 RWops_opus_tell(void* stream)
+static opus_int64 RWops_opus_tell(void * stream)
 {
-    const Sint64 current_offset = SDL_RWtell((SDL_RWops*)stream);
+    // Guard against invalid input
+    assertm(stream, "OPUS: Input is not initialized [bug]");
+
+    const int64_t current_offset = SDL_RWtell(static_cast<SDL_RWops*>(stream));
     SNDDBG(("Opus ops tell:          "
             "%ld\n", current_offset));
     return current_offset;
 } /* RWops_opus_tell */
 
 
-// Populate the opus callback object (in perscribed order), with our callback functions.
+// Populate the opus IO callback object (in prescribed order)
 static const OpusFileCallbacks RWops_opus_callbacks =
 {
-    .read =  RWops_opus_read,
-    .seek =  RWops_opus_seek,
-    .tell =  RWops_opus_tell,
-    .close = RWops_opus_close
+    RWops_opus_read, // .read member
+    RWops_opus_seek, // .seek member
+    RWops_opus_tell, // .tell member
+    RWops_opus_close // .close member
 };
 
-static __inline__ void output_opus_info(const OggOpusFile* of, const OpusHead* oh)
+static __inline__ void output_opus_info(const OggOpusFile * of, const OpusHead * oh)
 {
 #if (defined DEBUG_CHATTER)
+    // Guard against invalid input
+    assertm(of && oh, "OPUS: Inputs are not initialized [bug]");
+
     const OpusTags* ot = op_tags(of, -1);
-    // Guard
-    if (of != NULL && oh != NULL && ot != NULL) {
+    if (ot != nullptr) {
         SNDDBG(("Opus serial number:     %u\n", op_serialno(of, -1)));
         SNDDBG(("Opus format version:    %d\n", oh->version));
         SNDDBG(("Opus channel count:     %d\n", oh->channel_count ));
@@ -196,90 +188,118 @@ static __inline__ void output_opus_info(const OggOpusFile* of, const OpusHead* o
 } /* output_opus_comments */
 
 /*
- * Opus Open
- * ---------
- *  - Creates a new opus file object by using our our callback structure for all IO operations.
- *  - SDL expects a returns of 1 on success
- */
-static Sint32 opus_open(Sound_Sample* sample, const char* ext)
-{
-    (void) ext; // deliberately unused, but present for API compliance
-    Sint32 rcode;
-    Sound_SampleInternal* internal = (Sound_SampleInternal*)sample->opaque;
-    OggOpusFile* of = op_open_callbacks(internal->rw, &RWops_opus_callbacks, NULL, 0, &rcode);
-    internal->decoder_private = of;
-    if (rcode != 0) {
-        opus_close(sample);
-        SNDDBG(("Opus open error:        "
-                "'Could not open opus file: %s'\n", opus_strerror(rcode)));
-        BAIL_MACRO("Opus open fatal: 'Not a valid Ogg Opus file'", 0);
-    }
-    const OpusHead* oh = op_head(of, -1);
-    output_opus_info(of, oh);
-
-    sample->actual.rate = OPUS_SAMPLE_RATE;
-    sample->actual.channels = (Uint8)(oh->channel_count);
-    sample->flags = op_seekable(of) ? SOUND_SAMPLEFLAG_CANSEEK: 0;
-    sample->actual.format = AUDIO_S16SYS;
-    ogg_int64_t total_time = op_pcm_total(of, -1);        // total PCM samples in the stream
-    internal->total_time = total_time == OP_EINVAL ? -1 : // total milliseconds in the stream
-                                         (Sint32)( (double)total_time / OPUS_SAMPLE_RATE_PER_MS);
-    return 1;
-} /* opus_open */
-
-
-/*
  * Opus Close
  * ----------
- * Free and NULL all heap-allocated codec objects.
+ * Free and nullptr all heap-allocated codec objects.
  */
-static void opus_close(Sound_Sample* sample)
+static void opus_close(Sound_Sample * sample)
 {
+    // Guard against the no-op case
+    if (!sample
+       || !sample->opaque
+       || !static_cast<Sound_SampleInternal*>(sample->opaque)->decoder_private)
+        return;
+
     /* From the Opus docs: if opening a stream/file/or using op_test_callbacks() fails
      * then we are still responsible for freeing the OggOpusFile with op_free().
      */
-    Sound_SampleInternal* internal = (Sound_SampleInternal*) sample->opaque;
-    OggOpusFile* of = internal->decoder_private;
-    if (of != NULL) {
+    Sound_SampleInternal* internal =
+        static_cast<Sound_SampleInternal*>(sample->opaque);
+    OggOpusFile* of =
+        static_cast<OggOpusFile*>(internal->decoder_private);
+    if (of != nullptr) {
         op_free(of);
-        internal->decoder_private = NULL;
+        internal->decoder_private = nullptr;
     }
     return;
 
 } /* opus_close */
 
+/*
+ * Opus Open
+ * ---------
+ *  - Creates a new opus file object by using our our callback structure for all IO operations.
+ *  - SDL expects a returns of 1 on success
+ */
+static int32_t opus_open(Sound_Sample * sample, const char * ext)
+{
+    // Guard against invalid input
+    assertm(sample, "OPUS: Input is not initialized [bug]");
+    (void) ext; // deliberately unused, but present for API compliance
+
+    int32_t rcode = 0; // assume failure until determined otherwise
+    Sound_SampleInternal* internal =
+        static_cast<Sound_SampleInternal*>(sample->opaque);
+    OggOpusFile* of = op_open_callbacks(internal->rw, &RWops_opus_callbacks, nullptr, 0, &rcode);
+    internal->decoder_private = of;
+
+    // Had a problem during the open
+    if (rcode != 0) { // op_open will set rcode to non-zero
+        opus_close(sample);
+        SNDDBG(("OPUS: open error:        "
+                "'Could not open file due errno: %d'\n", rcode));
+        return 0; // We return 0 to indicate failure from opus_open
+    } else
+        rcode = 1; // Otherwise open succeeded, so set rcode to 1
+
+    const OpusHead* oh = op_head(of, -1);
+    output_opus_info(of, oh);
+
+    sample->actual.rate = OPUS_SAMPLE_RATE;
+    sample->actual.channels = static_cast<Uint8>(oh->channel_count);
+    sample->flags = op_seekable(of) ? SOUND_SAMPLEFLAG_CANSEEK: 0;
+    sample->actual.format = AUDIO_S16SYS;
+    int64_t pcm_result = op_pcm_total(of, -1); // If positive, holds total PCM samples
+    internal->total_time = pcm_result == OP_EINVAL ? -1 : // total milliseconds in the stream
+        static_cast<int32_t>
+		(ceil_divide(static_cast<uint64_t>(pcm_result), OPUS_SAMPLE_RATE_PER_MS));
+    return rcode;
+} /* opus_open */
 
 /*
  * Opus Read
  * ---------
  */
-static Uint32 opus_read(Sound_Sample* sample, void* buffer, Uint32 desired_frames)
+static uint32_t opus_read(Sound_Sample * sample, void * buffer, uint32_t requested_frames)
 {
-    int decoded_frames = 0;
-    if (desired_frames > 0) {
-        Sound_SampleInternal* internal = (Sound_SampleInternal*) sample->opaque;
-        OggOpusFile* of = internal->decoder_private;
-        decoded_frames = op_read(of, (opus_int16*)buffer, desired_frames * sample->actual.channels, NULL);
-        if      (decoded_frames == 0)       { sample->flags |= SOUND_SAMPLEFLAG_EOF; }
-        else if (decoded_frames == OP_HOLE) { sample->flags |= SOUND_SAMPLEFLAG_EAGAIN; }
-        else if (decoded_frames  < 0)       { sample->flags |= SOUND_SAMPLEFLAG_ERROR; }
+    // Guard against invalid inputs and the no-op case
+    assertm(sample && buffer, "OPUS: Inputs are not initialized [bug]");
+    if (requested_frames == 0)
+        return 0u;
+    Sound_SampleInternal* internal =
+        reinterpret_cast<Sound_SampleInternal*>(sample->opaque);
+    OggOpusFile* of =
+        reinterpret_cast<OggOpusFile*>(internal->decoder_private);
+    opus_int16 *sample_buffer =
+        reinterpret_cast<opus_int16*>(buffer);
+
+    const uint32_t channels = sample->actual.channels;
+    const uint32_t requested_samples = requested_frames * channels;
+    uint32_t decoded_samples = 0;
+    int result = 0;
+    while(decoded_samples < requested_samples) {
+        result = op_read(
+            of,                                  // pointer to the opusfile object
+            sample_buffer + decoded_samples,     // buffer offset to save decoded samples
+            requested_samples - decoded_samples, // remaining samples to decode
+            nullptr);                               // link index, which we don't use
+        // Check the result code
+        if (result == 0) {
+            sample->flags |= SOUND_SAMPLEFLAG_EOF;
+            break;
+        } else if (result == OP_HOLE) { // hole in the data
+            continue;
+            // sample->flags |= SOUND_SAMPLEFLAG_EAGAIN;
+            // break;
+        } else if (result  < 0) {
+            sample->flags |= SOUND_SAMPLEFLAG_ERROR;
+            break;
+        }
+        // If good, result is number of samples decoded per channel (ie: frames)
+        decoded_samples += static_cast<uint32_t>(result) * channels;
     }
-    return decoded_frames;
+    return ceil_divide(decoded_samples, channels);
 } /* opus_read */
-
-
-/*
- * Opus Rewind
- * -----------
- * Sets the current position of the stream to 0.
- */
-static Sint32 opus_rewind(Sound_Sample* sample)
-{
-    const Sint32 rcode = opus_seek(sample, 0);
-    BAIL_IF_MACRO(rcode < 0, ERR_IO_ERROR, 0);
-    return rcode;
-} /* opus_rewind */
-
 
 /*
  * Opus Seek
@@ -287,14 +307,20 @@ static Sint32 opus_rewind(Sound_Sample* sample)
  * Set the current position of the stream to the indicated
  * integer offset in milliseconds.
  */
-static Sint32 opus_seek(Sound_Sample* sample, const Uint32 ms)
+static int32_t opus_seek(Sound_Sample * sample, const uint32_t ms)
 {
-    Sound_SampleInternal* internal = (Sound_SampleInternal*) sample->opaque;
-    OggOpusFile* of = internal->decoder_private;
+    // Guard against invalid input
+    assertm(sample, "OPUS: Input is not initialized [bug]");
+
     int rcode = -1;
 
-    #if (defined DEBUG_CHATTER)
-    const float total_seconds = (float)ms/1000;
+    Sound_SampleInternal* internal =
+        static_cast<Sound_SampleInternal*>(sample->opaque);
+    OggOpusFile* of =
+        static_cast<OggOpusFile*>(internal->decoder_private);
+
+#if (defined DEBUG_CHATTER)
+    const float total_seconds = static_cast<float>(ms) / 1000;
     uint8_t minutes = total_seconds / 60;
     const float seconds = ((int)total_seconds % 60) + (total_seconds - (int)total_seconds);
     const uint8_t hours = minutes / 60;
@@ -305,10 +331,10 @@ static Sint32 opus_seek(Sound_Sample* sample, const Uint32 ms)
     const ogg_int64_t desired_pcm = ms * OPUS_SAMPLE_RATE_PER_MS;
     rcode = op_pcm_seek(of, desired_pcm);
 
-	if (rcode != 0) {
-        SNDDBG(("Opus seek error:        %s\n", opus_strerror(rcode)));
+    if (rcode != 0) {
+        SNDDBG(("Opus seek problem, see errno:        %d\n", rcode));
         sample->flags |= SOUND_SAMPLEFLAG_ERROR;
-	} else {
+    } else {
         SNDDBG(("Opus seek in file:      "
                 "{requested_time: '%02d:%02d:%.2f', becomes_opus_pcm: %ld}\n",
                 hours, minutes, seconds, desired_pcm));
@@ -316,4 +342,39 @@ static Sint32 opus_seek(Sound_Sample* sample, const Uint32 ms)
     return (rcode == 0);
 } /* opus_seek */
 
-/* end of ogg_opus.c ... */
+/*
+ * Opus Rewind
+ * -----------
+ * Sets the current position of the stream to 0.
+ */
+static int32_t opus_rewind(Sound_Sample* sample)
+{
+    // Guard against invalid input
+    assertm(sample, "OPUS: Input is not initialized [bug]");
+    const int32_t rcode = opus_seek(sample, 0);
+    assertm(rcode >= 0, "OPUS: seek failed [bug or corrupt Opus track]");
+    return rcode;
+} /* opus_rewind */
+
+
+
+static const char* extensions_opus[] = { "OPUS", nullptr };
+
+extern const Sound_DecoderFunctions __Sound_DecoderFunctions_OPUS =
+{
+    {
+        extensions_opus,
+        "Ogg Opus audio using libopusfile",
+        "Kevin R Croft <krcroft@gmail.com>",
+        "https://www.opus-codec.org/"
+    },
+
+    opus_init,   /*   init() method */
+    opus_quit,   /*   quit() method */
+    opus_open,   /*   open() method */
+    opus_close,  /*  close() method */
+    opus_read,   /*   read() method */
+    opus_rewind, /* rewind() method */
+    opus_seek    /*   seek() method */
+}; }
+/* end of opus.cpp ... */
