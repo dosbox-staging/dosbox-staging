@@ -281,11 +281,12 @@ CDROM_Interface_Image::CDROM_Interface_Image(Bit8u _subUnit)
 	images[subUnit] = this;
 	if (refCount == 0) {
 		player.mutex.reset(SDL_CreateMutex());
-		// channel is kept dormant except during cdrom playback periods
-		player.channel.reset(MIXER_AddChannel(&CDAudioCallBack, 0, "CDAUDIO"));
-		player.channel->Enable(false);
+		if (!player.channel) {
+			player.channel = player.channelManager.Install(&CDAudioCallBack, 0, "CDAUDIO");
+			player.channel->Enable(false); // only enabled during playback periods
+		}
 #ifdef DEBUG
-			LOG_MSG("CDROM: Initialized the CDAUDIO mixer channel and mutex");
+		LOG_MSG("CDROM: Initialized the CDAUDIO mixer channel and mutex");
 #endif
 	}
 	refCount++;
@@ -807,7 +808,7 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 
 	// uses either the stereo or mono and native or
 	// nonnative AddSamples call assigned during construction
-	(player.channel.get()->*player.addFrames)(decoded_track_frames, player.buffer);
+	(player.channel->*player.addFrames)(decoded_track_frames, player.buffer);
 
 	if (player.playedTrackFrames >= player.totalTrackFrames) {
 #ifdef DEBUG
