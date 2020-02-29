@@ -1,3 +1,5 @@
+AM_CPPFLAGS = -I$(top_srcdir)/include
+
 noinst_LIBRARIES = libdecoders.a
 
 libdecoders_a_SOURCES = \
@@ -33,6 +35,7 @@ libdecoders_a_CFLAGS = \
 	-Wall
 
 if USE_OPUS
-libdecoders_a_SOURCES += opus.c
-libdecoders_a_CFLAGS += -DUSE_OPUS $(OPUSFILE_CFLAGS)
+libdecoders_a_SOURCES += opus.cpp
+libdecoders_a_CFLAGS += -DUSE_OPUS # Ensures Opus is registered in SDL_sound.c
+libdecoders_a_CXXFLAGS += $(OPUSFILE_CFLAGS) # Ensures opus.cpp find the header
 endif

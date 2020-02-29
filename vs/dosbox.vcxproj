@@ -247,7 +247,7 @@
     <ClCompile Include="..\src\libs\decoders\flac.c" />
     <ClCompile Include="..\src\libs\decoders\mp3.cpp" />
     <ClCompile Include="..\src\libs\decoders\mp3_seek_table.cpp" />
-    <ClCompile Include="..\src\libs\decoders\opus.c" />
+    <ClCompile Include="..\src\libs\decoders\opus.cpp" />
     <ClCompile Include="..\src\libs\decoders\SDL_sound.c" />
     <ClCompile Include="..\src\libs\decoders\vorbis.c" />
     <ClCompile Include="..\src\libs\decoders\wav.c" />
