@@ -134,7 +134,15 @@ uint32_t CDROM_Interface_Image::BinaryFile::decode(int16_t *buffer,
 	        "Requested number of frames exceeds the maximum for a CDROM [Bug]");
 
 	file->read((char*)buffer, desired_track_frames * BYTES_PER_REDBOOK_PCM_FRAME);
-	return (file->gcount() + BYTES_PER_REDBOOK_PCM_FRAME - 1) / BYTES_PER_REDBOOK_PCM_FRAME;
+	/**
+	 *  Note: gcount returns a signed type, but according to specification:
+	 *  "Except in the constructors of std::strstreambuf, negative values of
+	 *  std::streamsize are never used."; so we store it as unsigned.
+	 */
+	const uint32_t bytes_read = static_cast<uint32_t>(file->gcount());
+
+	// Return the number of decoded Redbook frames
+	return ceil_divide(bytes_read, BYTES_PER_REDBOOK_PCM_FRAME);
 }
 
 CDROM_Interface_Image::AudioFile::AudioFile(const char *filename, bool &error)
