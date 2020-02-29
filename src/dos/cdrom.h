@@ -71,20 +71,20 @@ typedef struct SCtrl {
 
 // Conversion function from frames to Minutes/Second/Frames
 //
-inline TMSF frames_to_msf(int frames)
+inline TMSF frames_to_msf(uint32_t frames)
 {
 	TMSF msf = {0, 0, 0};
 	msf.fr = frames % REDBOOK_FRAMES_PER_SECOND;
 	frames /= REDBOOK_FRAMES_PER_SECOND;
 	msf.sec = frames % 60;
 	frames /= 60;
-	msf.min = frames;
+	msf.min = static_cast<uint8_t>(frames);
 	return msf;
 }
 
 // Conversion function from Minutes/Second/Frames to frames
 //
-inline int msf_to_frames(const TMSF &msf)
+inline uint32_t msf_to_frames(const TMSF &msf)
 {
 	return msf.min * 60 * REDBOOK_FRAMES_PER_SECOND + msf.sec * REDBOOK_FRAMES_PER_SECOND + msf.fr;
 }
@@ -100,11 +100,11 @@ public:
 	virtual bool GetAudioSub        (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos) = 0;
 	virtual bool GetAudioStatus     (bool& playing, bool& pause) = 0;
 	virtual bool GetMediaTrayStatus (bool& mediaPresent, bool& mediaChanged, bool& trayOpen) = 0;
-	virtual bool PlayAudioSector    (uint64_t start, uint64_t len) = 0;
+	virtual bool PlayAudioSector    (const uint32_t start, uint32_t len) = 0;
 	virtual bool PauseAudio         (bool resume) = 0;
 	virtual bool StopAudio          (void) = 0;
 	virtual void ChannelControl     (TCtrl ctrl) = 0;
-	virtual bool ReadSectors        (PhysPt buffer, bool raw, unsigned long sector, unsigned long num) = 0;
+	virtual bool ReadSectors        (PhysPt buffer, const bool raw, const uint32_t sector, const uint16_t num) = 0;
 	virtual bool LoadUnloadMedia    (bool unload) = 0;
 	virtual void InitNewMedia       (void) {};
 };
@@ -119,12 +119,14 @@ public:
 	bool GetAudioSub        (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
 	bool GetAudioStatus     (bool& playing, bool& pause);
 	bool GetMediaTrayStatus (bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
-	bool PlayAudioSector    (uint64_t start, uint64_t len) { (void)start; (void)len; return true; };
+	bool PlayAudioSector    (const uint32_t start, uint32_t len) { (void)start; (void)len; return true; };
 	bool PauseAudio         (bool /*resume*/) { return true; };
 	bool StopAudio          (void) { return true; };
-	void ChannelControl     (TCtrl ctrl) { (void)ctrl; // unused by part of the API
-	                                       return; };
-	bool ReadSectors        (PhysPt /*buffer*/, bool /*raw*/, unsigned long /*sector*/, unsigned long /*num*/) { return true; };
+	void ChannelControl     (TCtrl ctrl) {
+		(void) ctrl; // unused by part of the API
+		return; 
+	};
+	bool ReadSectors        (PhysPt /*buffer*/, const bool /*raw*/, const uint32_t /*sector*/, const uint16_t /*num*/) { return true; };
 	bool LoadUnloadMedia    (bool /*unload*/) { return true; };
 };
 
@@ -141,7 +143,7 @@ private:
 		                      const uint32_t offset,
 		                      const uint32_t requested_bytes) = 0;
 		virtual bool     seek(const uint32_t offset) = 0;
-		virtual uint64_t decode(Bit16s *buffer, uint32_t desired_track_frames) = 0;
+		virtual uint32_t decode(int16_t *buffer, const uint32_t desired_track_frames) = 0;
 		virtual Bit16u   getEndian() = 0;
 		virtual Bit32u   getRate() = 0;
 		virtual Bit8u    getChannels() = 0;
@@ -162,7 +164,7 @@ private:
 		                     const uint32_t offset,
 		                     const uint32_t requested_bytes);
 		bool            seek(const uint32_t offset);
-		uint64_t        decode(Bit16s *buffer, Bit32u desired_track_frames);
+		uint32_t        decode(int16_t *buffer, const uint32_t desired_track_frames);
 		Bit16u          getEndian();
 		Bit32u          getRate() { return 44100; }
 		Bit8u           getChannels() { return 2; }
@@ -184,14 +186,14 @@ private:
 		                     const uint32_t offset,
 		                     const uint32_t requested_bytes);
 		bool            seek(const uint32_t offset);
-		uint64_t        decode(Bit16s *buffer, Bit32u desired_track_frames);
+		uint32_t        decode(int16_t *buffer, const uint32_t desired_track_frames);
 		Bit16u          getEndian();
 		Bit32u          getRate();
 		Bit8u           getChannels();
 		int             getLength();
 	private:
-		Sound_Sample    *sample;
-		uint32_t        position;
+		Sound_Sample    *sample = nullptr;
+		uint32_t        track_pos = 0;
 	};
 
 public:
@@ -208,7 +210,7 @@ public:
 	};
 	CDROM_Interface_Image           (Bit8u _subUnit);
 	virtual ~CDROM_Interface_Image  (void);
-	void	InitNewMedia            (void);
+	void	InitNewMedia            (void) {};
 	bool	SetDevice               (char *path);
 	bool	GetUPC                  (unsigned char& attr, char* upc);
 	bool	GetAudioTracks          (uint8_t& stTrack, uint8_t& end, TMSF& leadOut);
@@ -216,13 +218,13 @@ public:
 	bool	GetAudioSub             (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
 	bool	GetAudioStatus          (bool& playing, bool& pause);
 	bool	GetMediaTrayStatus      (bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
-	bool	PlayAudioSector         (uint64_t start, uint64_t len);
+	bool	PlayAudioSector         (const uint32_t start, uint32_t len);
 	bool	PauseAudio              (bool resume);
 	bool	StopAudio               (void);
 	void	ChannelControl          (TCtrl ctrl);
-	bool	ReadSectors             (PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
+	bool	ReadSectors             (PhysPt buffer, const bool raw, const uint32_t sector, const uint16_t num);
 	bool	LoadUnloadMedia         (bool unload);
-	bool	ReadSector              (Bit8u *buffer, bool raw, unsigned long sector);
+	bool	ReadSector              (uint8_t *buffer, const bool raw, const uint32_t sector);
 	bool	HasDataTrack            (void);
 	static CDROM_Interface_Image* images[26];
 
@@ -235,8 +237,8 @@ private:
 		MixerChannel             *channel           = nullptr;
 		CDROM_Interface_Image    *cd                = nullptr;
 		void (MixerChannel::*addFrames) (Bitu, const Bit16s*) = nullptr;
-		uint64_t                 playedTrackFrames  = 0;
-		uint64_t                 totalTrackFrames   = 0;
+		uint32_t                 playedTrackFrames  = 0;
+		uint32_t                 totalTrackFrames   = 0;
 		uint32_t                 startSector        = 0;
 		uint32_t                 totalRedbookFrames = 0;
 		int16_t                  buffer[MIXER_BUFSIZE * REDBOOK_CHANNELS] = {0};
@@ -246,7 +248,9 @@ private:
 
 	// Private utility functions
 	bool  LoadIsoFile(char *filename);
-	bool  CanReadPVD(TrackFile *file, int sectorSize, bool mode2);
+	bool  CanReadPVD(TrackFile *file,
+	                 const uint16_t sectorSize,
+	                 const bool mode2);
 	std::vector<Track>::iterator GetTrack(const uint32_t sector);
 	static void CDAudioCallBack (Bitu desired_frames);
 
@@ -254,15 +258,19 @@ private:
 	bool  LoadCueSheet(char *cuefile);
 	bool  GetRealFileName(std::string& filename, std::string& pathname);
 	bool  GetCueKeyword(std::string &keyword, std::istream &in);
-	bool  GetCueFrame(int &frames, std::istream &in);
+	bool  GetCueFrame(uint32_t &frames, std::istream &in);
 	bool  GetCueString(std::string &str, std::istream &in);
-	bool  AddTrack(Track &curr, int &shift, int prestart, int &totalPregap, int currPregap);
-
+	bool  AddTrack(Track         &curr,
+	               uint32_t      &shift,
+	               const int32_t prestart,
+	               uint32_t      &totalPregap,
+	               uint32_t      currPregap);
 	// member variables
-	std::vector<Track>  tracks;
-	std::string         mcn;
-	static int          refCount;
-	Bit8u               subUnit;
+	std::vector<Track>   tracks;
+	std::vector<uint8_t> readBuffer;
+	std::string          mcn;
+	static int           refCount;
+	uint8_t              subUnit;
 };
 
 #endif /* __CDROM_INTERFACE__ */
