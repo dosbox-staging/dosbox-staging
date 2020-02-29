@@ -488,13 +488,16 @@ bool CDROM_Interface_Image::GetMediaTrayStatus(bool& mediaPresent, bool& mediaCh
 
 bool CDROM_Interface_Image::PlayAudioSector(uint64_t start, uint64_t len)
 {
+	// Find the track that holds the requested sector
 	track_const_iter track(GetTrack(start));
+	std::shared_ptr<TrackFile> trackFile;
+	if (track != tracks.end() && track->file)
+		trackFile = track->file;
 
 	// Guard: sanity check the request beyond what GetTrack already checks
 	if (len == 0
-	   || track == tracks.end()
+	   || !trackFile
 	   || track->attr == 0x40
-	   || !track->file
 	   || !player.channel
 	   || !player.mutex) {
 		StopAudio();
@@ -520,8 +523,6 @@ bool CDROM_Interface_Image::PlayAudioSector(uint64_t start, uint64_t len)
 	const int offset = (track->skip
 	                    + clamp(relative_start, 0, static_cast<int>(track->length - 1))
 	                    * track->sectorSize);
-
-	std::shared_ptr<TrackFile> trackFile(track->file);
 
 	// Guard: Bail if our track could not be seeked
 	if (!trackFile->seek(offset)) {
