@@ -231,15 +231,15 @@ static void dh_fpu_esc2(){
 
 static void dh_fpu_esc3(){
 	dyn_get_modrm();  
+	const unsigned group = (decode.modrm.val >> 3) & 7;
+	const unsigned sub = (decode.modrm.val & 7);
 	if (decode.modrm.val >= 0xc0) { 
-		Bitu group=(decode.modrm.val >> 3) & 7;
-		Bitu sub=(decode.modrm.val & 7);
 		switch (group) {
 		case 0x04:
 			switch (sub) {
 			case 0x00:				//FNENI
 			case 0x01:				//FNDIS
-				LOG(LOG_FPU,LOG_ERROR)("8087 only fpu code used esc 3: group 4: subfunction: %lu", sub);
+				LOG(LOG_FPU,LOG_ERROR)("8087 only fpu code used esc 3: group 4: subfunction: %u", sub);
 				break;
 			case 0x02:				//FNCLEX FCLEX
 				cache_addb(0xdb);
@@ -252,27 +252,25 @@ static void dh_fpu_esc3(){
 				break;
 			case 0x04:				//FNSETPM
 			case 0x05:				//FRSTPM
-//				LOG(LOG_FPU,LOG_ERROR)("80267 protected mode (un)set. Nothing done");
+				// LOG(LOG_FPU,LOG_ERROR)("80267 protected mode (un)set. Nothing done");
 				break;
 			default:
-				E_Exit("ESC 3:ILLEGAL OPCODE group %lu subfunction %lu", group, sub);
+				E_Exit("ESC 3:ILLEGAL OPCODE group %u subfunction %u", group, sub);
 			}
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 3:Unhandled group %lu subfunction %lu", group, sub);
+			LOG(LOG_FPU,LOG_WARN)("ESC 3:Unhandled group %u subfunction %u", group, sub);
 			break;
 		}
 	} else {
-		Bitu group=(decode.modrm.val >> 3) & 7;
-		Bitu sub=(decode.modrm.val & 7);
 		dyn_fill_ea(); 
-		switch(group){
+		switch (group) {
 		case 0x00:	/* FILD */
 			gen_call_function((void*)&FPU_FLD_32,"%Drd",DREG(EA));
 			dh_fpu_mem(0xdb);
 			break;
 		case 0x01:	/* FISTTP */
-			LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %lu subfunction %lu", group, sub);
+			LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %u subfunction %u", group, sub);
 			break;
 		case 0x02:	/* FIST */
 			dh_fpu_mem(0xdb);
@@ -291,7 +289,7 @@ static void dh_fpu_esc3(){
 			gen_call_function((void*)&FPU_FST_80,"%Drd",DREG(EA));
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %lu subfunction %lu", group, sub);
+			LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %u subfunction %u", group, sub);
 		}
 	}
 }
@@ -365,7 +363,7 @@ static void dh_fpu_esc6(){
 }
 
 static void dh_fpu_esc7(){
-	dyn_get_modrm();  
+	dyn_get_modrm();
 	Bitu group=(decode.modrm.val >> 3) & 7;
 	Bitu sub=(decode.modrm.val & 7);
 	if (decode.modrm.val >= 0xc0) { 
