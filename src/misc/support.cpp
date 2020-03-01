@@ -123,11 +123,13 @@ char * lowcase(char * str) {
 	return str;
 }
 
-
-
-bool ScanCMDBool(char * cmd,char const * const check) {
-	char * scan=cmd;size_t c_len=strlen(check);
-	while ((scan=strchr(scan,'/'))) {
+bool ScanCMDBool(char * cmd, char const * const check)
+{
+	if (cmd == nullptr)
+		return false;
+	char *scan = cmd;
+	const size_t c_len = strlen(check);
+	while ((scan = strchr(scan,'/'))) {
 		/* found a / now see behind it */
 		scan++;
 		if (strncasecmp(scan,check,c_len)==0 && (scan[c_len]==' ' || scan[c_len]=='\t' || scan[c_len]=='/' || scan[c_len]==0)) {
