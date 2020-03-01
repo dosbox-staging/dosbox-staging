@@ -519,11 +519,18 @@ static Bitu INT13_DiskHandler(void) {
 				CALLBACK_SCF(true);
 				return CBRET_NONE;
 			}
-			Bit32u tmpheads, tmpcyl, tmpsect, tmpsize;
-			imageDiskList[drivenum]->Get_Geometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
-			Bit64u largesize = tmpheads*tmpcyl*tmpsect*tmpsize;
-			largesize/=512;
-			Bit32u ts = static_cast<Bit32u>(largesize);
+
+			uint32_t tmpheads, tmpcyl, tmpsect, tmpsize;
+			imageDiskList[drivenum]->Get_Geometry(&tmpheads, &tmpcyl,
+			                                      &tmpsect, &tmpsize);
+			// Store intermediate calculations in 64-bit to avoid
+			// accidental integer overflow on temporary value:
+			uint64_t largesize = tmpheads;
+			largesize *= tmpcyl;
+			largesize *= tmpsect;
+			largesize *= tmpsize;
+			const uint32_t ts = static_cast<uint32_t>(largesize / 512);
+
 			reg_ah = (drivenum <2)?1:3; //With 2 for floppy MSDOS starts calling int 13 ah 16
 			if(reg_ah == 3) {
 				reg_cx = static_cast<Bit16u>(ts >>16);
