@@ -16,14 +16,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
  
-
-#include <math.h>
-#include "dosbox.h"
 #include "mixer.h"
+
+#include <algorithm>
+#include <cmath>
+
 #include "timer.h"
 #include "setup.h"
 #include "pic.h"
-
 
 #ifndef PI
 #define PI 3.14159265358979323846
@@ -331,14 +331,14 @@ public:
 		spkr.mode=SPKR_OFF;
 		spkr.last_ticks=0;
 		spkr.last_index=0;
-		spkr.rate=section->Get_int("pcrate");
+		spkr.rate = std::max(section->Get_int("pcrate"), 8000);
 		spkr.pit_mode=3;
 		spkr.pit_max=(1000.0f/PIT_TICK_RATE)*1320;
 		spkr.pit_half=spkr.pit_max/2;
 		spkr.pit_new_max=spkr.pit_max;
 		spkr.pit_new_half=spkr.pit_half;
 		spkr.pit_index=0;
-		spkr.min_tr=(PIT_TICK_RATE+spkr.rate/2-1)/(spkr.rate/2);
+		spkr.min_tr = (PIT_TICK_RATE + spkr.rate/2 - 1) / (spkr.rate / 2);
 		spkr.used=0;
 		/* Register the sound channel */
 		spkr.chan=MixerChan.Install(&PCSPEAKER_CallBack,spkr.rate,"SPKR");
