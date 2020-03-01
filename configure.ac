@@ -476,7 +476,7 @@ AC_ARG_ENABLE(opus-cdda,
 AS_IF([test "x${enable_opus_cdda}" != "xno"],
       [PKG_CHECK_MODULES([OPUSFILE],
                          [opusfile],
-                         [LIBS+=" $OPUSFILE_LIBS"])])
+                         [LIBS="$LIBS $OPUSFILE_LIBS"])])
 AM_CONDITIONAL([USE_OPUS],
                [test "x${OPUSFILE_LIBS}" != "x"])
 
