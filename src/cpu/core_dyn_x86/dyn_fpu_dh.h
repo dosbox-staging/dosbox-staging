@@ -230,7 +230,7 @@ static void dh_fpu_esc2(){
 }
 
 static void dh_fpu_esc3(){
-	dyn_get_modrm();  
+	dyn_get_modrm();
 	const unsigned group = (decode.modrm.val >> 3) & 7;
 	const unsigned sub = (decode.modrm.val & 7);
 	if (decode.modrm.val >= 0xc0) { 
