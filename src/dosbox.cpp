@@ -640,27 +640,28 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("gus",&GUS_Init,true); //done
 	Pbool = secprop->Add_bool("gus",Property::Changeable::WhenIdle,false);
-	Pbool->Set_help("Enable the Gravis Ultrasound emulation.");
+	Pbool->Set_help("Enable the Gravis UltraSound emulation.");
 
 	Pint = secprop->Add_int("gusrate",Property::Changeable::WhenIdle,44100);
-	Pint->Set_values(rates);
-	Pint->Set_help("Sample rate of Ultrasound emulation.");
+	const char *gusrates[] = {"44100", "22050", "11025", 0};
+	Pint->Set_values(gusrates);
+	Pint->Set_help("The playback frequency of the Gravis UltraSound.");
 
 	Phex = secprop->Add_hex("gusbase",Property::Changeable::WhenIdle,0x240);
 	Phex->Set_values(iosgus);
-	Phex->Set_help("The IO base address of the Gravis Ultrasound.");
+	Phex->Set_help("The IO base address of the Gravis UltraSound.");
 
 	Pint = secprop->Add_int("gusirq",Property::Changeable::WhenIdle,5);
 	Pint->Set_values(irqsgus);
-	Pint->Set_help("The IRQ number of the Gravis Ultrasound.");
+	Pint->Set_help("The IRQ number of the Gravis UltraSound.");
 
 	Pint = secprop->Add_int("gusdma",Property::Changeable::WhenIdle,3);
 	Pint->Set_values(dmasgus);
-	Pint->Set_help("The DMA channel of the Gravis Ultrasound.");
+	Pint->Set_help("The DMA channel of the Gravis UltraSound.");
 
 	Pstring = secprop->Add_string("ultradir",Property::Changeable::WhenIdle,"C:\\ULTRASND");
 	Pstring->Set_help(
-		"Path to Ultrasound directory. In this directory\n"
+		"Path to UltraSound directory. In this directory\n"
 		"there should be a MIDI directory that contains\n"
 		"the patch files for GUS playback. Patch sets used\n"
 		"with Timidity should work fine.");
