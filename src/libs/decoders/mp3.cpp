@@ -24,8 +24,9 @@
 #endif
 
 #include <assert.h>
-
 #include <SDL.h> // provides: SDL_malloc, SDL_realloc, SDL_free, SDL_memcpy, and SDL_memset
+#include <support.h>
+
 #define DR_MP3_IMPLEMENTATION
 #define DR_MP3_NO_STDIO 1
 #define DRMP3_FREE(p)                    SDL_free((p))
@@ -108,31 +109,30 @@ static Uint32 MP3_read(Sound_Sample* const sample, void* buffer, Uint32 desired_
                                                          static_cast<drmp3_int16*>(buffer)));
 } /* MP3_read */
 
-static Sint32 MP3_open(Sound_Sample* const sample, const char* const ext)
+static int32_t MP3_open(Sound_Sample* const sample, const char* const ext)
 {
     (void) ext; // deliberately unused
     Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal*>(sample->opaque);
-    Sint32 result(0); // assume failure until proven otherwise
+    bool result = false; // assume failure until proven otherwise
     mp3_t* p_mp3 = (mp3_t*) SDL_calloc(1, sizeof (mp3_t));
-    if (p_mp3 != nullptr) {
+    if (p_mp3) {
         p_mp3->p_dr = (drmp3*) SDL_calloc(1, sizeof (drmp3));
-        if (p_mp3->p_dr != nullptr) {
-            result = drmp3_init(p_mp3->p_dr, mp3_read, mp3_seek, sample, nullptr, nullptr);
-            if (result == DRMP3_TRUE) {
+        if (p_mp3->p_dr) {
+            if (drmp3_init(p_mp3->p_dr, mp3_read, mp3_seek, sample, nullptr, nullptr) == DRMP3_TRUE) {
                 SNDDBG(("MP3: Accepting data stream.\n"));
                 sample->flags = SOUND_SAMPLEFLAG_CANSEEK;
-                sample->actual.channels = p_mp3->p_dr->channels;
+                sample->actual.channels = static_cast<uint8_t>(p_mp3->p_dr->channels);
                 sample->actual.rate = p_mp3->p_dr->sampleRate;
-                sample->actual.format = AUDIO_S16SYS;  // returns native byte-order based on architecture
-                const Uint64 num_frames = populate_seek_points(internal->rw, p_mp3, MP3_FAST_SEEK_FILENAME); // status will be 0 or pcm_frame_count
-                if (num_frames != 0) {
-                    const unsigned int rate = p_mp3->p_dr->sampleRate;
-                    internal->total_time = ( static_cast<Sint32>(num_frames) / rate) * 1000;
-                    internal->total_time += (num_frames % rate) * 1000 / rate;
-                    result = 1;
-                } else {
-                    internal->total_time = -1;
-                }
+                sample->actual.format = AUDIO_S16SYS;  // native byte-order based on architecture
+
+                // frame count is agnostic of sample size and number of channels
+                const uint64_t num_frames =
+                    populate_seek_points(internal->rw, p_mp3, MP3_FAST_SEEK_FILENAME, result);
+
+                // total_time needs milliseconds
+                internal->total_time = (num_frames != 0) ? 
+                    static_cast<int32_t>(ceil_divide(num_frames * 1000u, sample->actual.rate))
+                    : -1;
             }
         }
     }
@@ -141,11 +141,12 @@ static Sint32 MP3_open(Sound_Sample* const sample, const char* const ext)
     internal->decoder_private = p_mp3;
 
     // if anything went wrong then tear down our private structure
-    if (result == 0) {
+    if (!result) {
+        SNDDBG(("MP3: Failed to open the data stream.\n"));
         MP3_close(sample);
     }
 
-    return result;
+    return static_cast<int32_t>(result);
 } /* MP3_open */
 
 static Sint32 MP3_rewind(Sound_Sample* const sample)
@@ -159,9 +160,9 @@ static Sint32 MP3_seek(Sound_Sample* const sample, const Uint32 ms)
 {
     Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal*>(sample->opaque);
     mp3_t* p_mp3 = static_cast<mp3_t*>(internal->decoder_private);
-    const float frames_per_ms = sample->actual.rate / 1000.0f;
-    const drmp3_uint64 frame_offset = static_cast<drmp3_uint64>(frames_per_ms) * ms;
-    const Sint32 result = drmp3_seek_to_pcm_frame(p_mp3->p_dr, frame_offset);
+    const uint64_t sample_rate = sample->actual.rate;
+    const drmp3_uint64 pcm_frame = ceil_divide(sample_rate * ms, 1000u);
+    const drmp3_bool32 result = drmp3_seek_to_pcm_frame(p_mp3->p_dr, pcm_frame);
     return (result == DRMP3_TRUE);
 } /* MP3_seek */
 

@@ -80,6 +80,7 @@
 #include <map>
 
 // Local headers
+#include "support.h"
 #include "xxhash.h"
 // #include "../../../include/logging.h"
 #include "mp3_seek_table.h"
@@ -99,13 +100,13 @@ using std::ofstream;
 // time point.  The trade-off is as follows:
 //   - a large number means slower in-game seeking but a smaller fast-seek file.
 //   - a smaller numbers (below 10) results in fast seeks on slow hardware.
-#define FRAMES_PER_SEEK_POINT 7
+#define FRAMES_PER_SEEK_POINT 7u
 
 // Returns the size of a file in bytes (if valid), otherwise 0
-size_t get_file_size(const char* filename) {
+uint64_t get_file_size(const char* filename) {
     struct stat stat_buf;
     int rc = stat(filename, &stat_buf);
-    return rc == 0 ? stat_buf.st_size : -1;
+    return rc == 0 ? static_cast<uint64_t>(stat_buf.st_size) : 0u;
 }
 
 
@@ -147,7 +148,7 @@ Uint64 calculate_stream_hash(struct SDL_RWops* const context) {
     // have the same trailing 32KB of content.  The different seeds will produce
     // unique hashes.
     XXH64_state_t* const state = XXH64_createState();
-    const Uint64 seed = stream_size;
+    const uint64_t seed = static_cast<uint64_t>(stream_size);
     XXH64_reset(state, seed);
 
     while (total_bytes_read < static_cast<size_t>(tail_size)) {
@@ -186,9 +187,9 @@ Uint64 generate_new_seek_points(const char* filename,
     drmp3_uint64 pcm_frame_count(0);
 
     // Get the number of compressed MP3 frames and the number of uncompressed PCM frames.
-    drmp3_bool8 result = drmp3_get_mp3_and_pcm_frame_count(p_dr,
-                                                           &mp3_frame_count,
-                                                           &pcm_frame_count);
+    drmp3_bool32 result = drmp3_get_mp3_and_pcm_frame_count(p_dr,
+                                                            &mp3_frame_count,
+                                                            &pcm_frame_count);
 
     if (   result != DRMP3_TRUE
         || mp3_frame_count < FRAMES_PER_SEEK_POINT
@@ -202,11 +203,13 @@ Uint64 generate_new_seek_points(const char* filename,
     // the decoded PCM times.
     // We also take into account the desired number of "FRAMES_PER_SEEK_POINT",
     // which is defined above.
-    drmp3_uint32 num_seek_points = static_cast<drmp3_uint32>(mp3_frame_count)/FRAMES_PER_SEEK_POINT + 1;
+    drmp3_uint32 num_seek_points = static_cast<drmp3_uint32>
+        (ceil_divide(mp3_frame_count, FRAMES_PER_SEEK_POINT));
+
     seek_points_vector.resize(num_seek_points);
     result = drmp3_calculate_seek_points(p_dr,
-                     &num_seek_points,
-                     reinterpret_cast<drmp3_seek_point*>(seek_points_vector.data()));
+                                         &num_seek_points,
+                                         reinterpret_cast<drmp3_seek_point*>(seek_points_vector.data()));
 
     if (result != DRMP3_TRUE || num_seek_points == 0) {
         // LOG_MSG("MP3: failed to calculate sufficient seek points for stream");
@@ -300,7 +303,13 @@ Uint64 load_existing_seek_points(const char* filename,
 // attempting to read it from the fast-seek file and (if it can't be read for any reason), it
 // calculates new data.  It makes use of the above two functions.
 //
-Uint64 populate_seek_points(struct SDL_RWops* const context, mp3_t* p_mp3, const char* seektable_filename) {
+uint64_t populate_seek_points(struct SDL_RWops* const context,
+                              mp3_t* p_mp3,
+                              const char* seektable_filename,
+                              bool &result) {
+
+    // assume failure until proven otherwise
+    result = false;
 
     // Calculate the stream's xxHash value.
     Uint64 stream_hash = calculate_stream_hash(context);
@@ -334,12 +343,13 @@ Uint64 populate_seek_points(struct SDL_RWops* const context, mp3_t* p_mp3, const
 
     // Finally, regardless of which scenario succeeded above, we now have our seek points!
     // We bind our seek points to the dr_mp3 object which will be used for fast seeking.
-    drmp3_bool8 result = drmp3_bind_seek_table(p_mp3->p_dr,
-                                 p_mp3->seek_points_vector.size(),
-                                 reinterpret_cast<drmp3_seek_point*>(p_mp3->seek_points_vector.data()));
-    if (result != DRMP3_TRUE) {
-        // LOG_MSG("MP3: could not bind the seek points to the dr_mp3 object");
+    if(drmp3_bind_seek_table(p_mp3->p_dr,
+                             static_cast<uint32_t>(p_mp3->seek_points_vector.size()),
+                             reinterpret_cast<drmp3_seek_point*>(p_mp3->seek_points_vector.data()))
+                             != DRMP3_TRUE) {
         return 0;
     }
+
+    result = true;
     return pcm_frame_count;
 }
