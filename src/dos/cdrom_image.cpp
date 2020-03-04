@@ -502,6 +502,7 @@ bool CDROM_Interface_Image::PlayAudioSector(uint64_t start, uint64_t len)
 
 	// Guard: sanity check the request beyond what GetTrack already checks
 	if (len == 0
+	   || track == tracks.end()
 	   || !track_file
 	   || track->attr == 0x40
 	   || !player.channel
