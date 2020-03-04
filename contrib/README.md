@@ -6,6 +6,8 @@ itself.
 
 ## Inventory
 
+- **icons**: Vector graphics and makefiles to re-create icons in .ico
+  and .icns formats; read icons.md file for details
 - **static-opus**: Compiles a static Opusfile library that can be used
   by `./configure` in the absense of `pkg-config`
 
