@@ -221,19 +221,20 @@ public:
 
 private:
 	static struct imagePlayer {
-		std::unique_ptr<SDL_mutex, SdlMutexDeleter>        mutex = nullptr;
-		std::weak_ptr<TrackFile>                           trackFile;
-		MixerObject                                        channelManager;
-		MixerChannel                                       *channel = nullptr;
-		CDROM_Interface_Image                              *cd = nullptr;
+		// Objects, pointers, and then scalars; in descending size-order.
+		MixerObject              mixerChannel       = {};
+		std::weak_ptr<TrackFile> trackFile          = {};
+		SDL_mutex                *mutex             = nullptr;
+		MixerChannel             *channel           = nullptr;
+		CDROM_Interface_Image    *cd                = nullptr;
 		void (MixerChannel::*addFrames) (Bitu, const Bit16s*) = nullptr;
-		uint64_t                                           playedTrackFrames = 0;
-		uint64_t                                           totalTrackFrames = 0;
-		uint32_t                                           startSector = 0;
-		uint32_t                                           totalRedbookFrames = 0;
-		int16_t                                            buffer[MIXER_BUFSIZE * REDBOOK_CHANNELS] = {0};
-		bool                                               isPlaying = false;
-		bool                                               isPaused = false;
+		uint64_t                 playedTrackFrames  = 0;
+		uint64_t                 totalTrackFrames   = 0;
+		uint32_t                 startSector        = 0;
+		uint32_t                 totalRedbookFrames = 0;
+		int16_t                  buffer[MIXER_BUFSIZE * REDBOOK_CHANNELS] = {0};
+		bool                     isPlaying          = false;
+		bool                     isPaused           = false;
 	} player;
 
 	// Private utility functions
