@@ -34,18 +34,6 @@
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
 #endif
 
-// A smart-pointer deleter for SDL-Mutex objects.
-// Use-case example:
-// std::unique_ptr<SDL_mutex, SdlMutexDeleter> myMutex;
-// myMutex.reset(SDL_CreateMutex());
-//
-struct SdlMutexDeleter {
-	void operator()(SDL_mutex* mutex) {
-		if (mutex)
-			SDL_DestroyMutex(mutex);
-	}
-};
-
 // Returns the filename with the prior path stripped.
 // Works with both \ and / directory delimeters.
 std::string get_basename(const std::string& filename);
