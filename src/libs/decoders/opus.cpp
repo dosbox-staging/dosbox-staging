@@ -73,7 +73,7 @@ static int RWops_opus_read(void * stream, uint8_t * buffer, int32_t requested_by
     
     uint8_t *buf_pos = buffer;
     int32_t bytes_read = 0;
-    Sound_Sample *sample = static_cast<Sound_Sample*>(stream);
+    auto *sample = static_cast<Sound_Sample*>(stream);
     while (bytes_read < requested_bytes) {
         const size_t rc = SDL_RWread(static_cast<SDL_RWops*>(stream),
                                      static_cast<void*>(buf_pos),
@@ -218,10 +218,8 @@ static void opus_close(Sound_Sample * sample)
     /* From the Opus docs: if opening a stream/file/or using op_test_callbacks() fails
      * then we are still responsible for freeing the OggOpusFile with op_free().
      */
-    Sound_SampleInternal* internal =
-        static_cast<Sound_SampleInternal*>(sample->opaque);
-    OggOpusFile* of =
-        static_cast<OggOpusFile*>(internal->decoder_private);
+    auto *internal = static_cast<Sound_SampleInternal*>(sample->opaque);
+    auto *of = static_cast<OggOpusFile*>(internal->decoder_private);
     if (of != nullptr) {
         op_free(of);
         internal->decoder_private = nullptr;
@@ -243,9 +241,8 @@ static int32_t opus_open(Sound_Sample * sample, const char * ext)
     (void) ext; // deliberately unused, but present for API compliance
 
     int32_t rcode = 0; // assume failure until determined otherwise
-    Sound_SampleInternal* internal =
-        static_cast<Sound_SampleInternal*>(sample->opaque);
-    OggOpusFile* of = op_open_callbacks(internal->rw, &RWops_opus_callbacks, nullptr, 0, &rcode);
+    auto *internal = static_cast<Sound_SampleInternal*>(sample->opaque);
+    OggOpusFile *of = op_open_callbacks(internal->rw, &RWops_opus_callbacks, nullptr, 0, &rcode);
     internal->decoder_private = of;
 
     // Had a problem during the open
@@ -282,13 +279,13 @@ static uint32_t opus_read(Sound_Sample * sample, void * buffer, uint32_t request
     if (requested_frames == 0)
         return 0u;
 
-    Sound_SampleInternal* internal = static_cast<Sound_SampleInternal*>(sample->opaque);
-    OggOpusFile* of = static_cast<OggOpusFile*>(internal->decoder_private);
+    auto *internal = static_cast<Sound_SampleInternal*>(sample->opaque);
+    auto *of = static_cast<OggOpusFile*>(internal->decoder_private);
     const uint32_t channels = sample->actual.channels;
 
     // Initial state-tracking variables
     uint32_t total_decoded_samples = 0;
-    opus_int16 *buf_pos = static_cast<opus_int16*>(buffer);
+    auto *buf_pos = static_cast<opus_int16*>(buffer);
     int32_t remaining_samples = static_cast<int32_t>(requested_frames * channels);
 
     // Start the decode loop, incrementing as we go
@@ -328,10 +325,8 @@ static int32_t opus_seek(Sound_Sample * sample, const uint32_t ms)
 
     int rcode = -1;
 
-    Sound_SampleInternal* internal =
-        static_cast<Sound_SampleInternal*>(sample->opaque);
-    OggOpusFile* of =
-        static_cast<OggOpusFile*>(internal->decoder_private);
+    auto *internal = static_cast<Sound_SampleInternal*>(sample->opaque);
+    auto *of = static_cast<OggOpusFile*>(internal->decoder_private);
 
 #if (defined DEBUG_CHATTER)
     const float total_seconds = static_cast<float>(ms) / 1000;
