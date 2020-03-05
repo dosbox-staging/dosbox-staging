@@ -67,7 +67,7 @@ static void opus_quit(void)
 static int RWops_opus_read(void * stream, uint8_t * buffer, int32_t requested_bytes)
 {
     // Guard against invalid inputs and the no-op scenario
-    assertm(stream && buffer, "OPUS: Inputs are not initialized [bug]");
+    assertm(stream && buffer, "OPUS: Inputs are not initialized");
     if (requested_bytes <= 0)
         return 0;
     
@@ -120,9 +120,9 @@ static int RWops_opus_read(void * stream, uint8_t * buffer, int32_t requested_by
 static int32_t RWops_opus_seek(void * stream, const opus_int64 offset, const int32_t whence)
 {
     // Guard against invalid inputs
-    assertm(stream, "OPUS: Input is not initialized [bug]");
+    assertm(stream, "OPUS: Input is not initialized");
     assertm(whence == SEEK_SET || whence == SEEK_CUR || whence == SEEK_END,
-            "OPUS: The position from where to seek is invalid [bug]");
+            "OPUS: The position from where to seek is invalid");
 
     const int64_t offset_after_seek = SDL_RWseek(static_cast<SDL_RWops*>(stream),
                                                  static_cast<int32_t>(offset),
@@ -158,7 +158,7 @@ static int32_t RWops_opus_close(void * stream)
 static opus_int64 RWops_opus_tell(void * stream)
 {
     // Guard against invalid input
-    assertm(stream, "OPUS: Input is not initialized [bug]");
+    assertm(stream, "OPUS: Input is not initialized");
 
     const int64_t current_offset = SDL_RWtell(static_cast<SDL_RWops*>(stream));
     SNDDBG(("Opus ops tell:          "
@@ -180,7 +180,7 @@ static __inline__ void output_opus_info(const OggOpusFile * of, const OpusHead *
 {
 #if (defined DEBUG_CHATTER)
     // Guard against invalid input
-    assertm(of && oh, "OPUS: Inputs are not initialized [bug]");
+    assertm(of && oh, "OPUS: Inputs are not initialized");
 
     const OpusTags* ot = op_tags(of, -1);
     if (ot != nullptr) {
@@ -239,7 +239,7 @@ static void opus_close(Sound_Sample * sample)
 static int32_t opus_open(Sound_Sample * sample, const char * ext)
 {
     // Guard against invalid input
-    assertm(sample, "OPUS: Input is not initialized [bug]");
+    assertm(sample, "OPUS: Input is not initialized");
     (void) ext; // deliberately unused, but present for API compliance
 
     int32_t rcode = 0; // assume failure until determined otherwise
@@ -278,7 +278,7 @@ static int32_t opus_open(Sound_Sample * sample, const char * ext)
 static uint32_t opus_read(Sound_Sample * sample, void * buffer, uint32_t requested_frames)
 {
     // Guard against invalid inputs and the no-op case
-    assertm(sample && buffer, "OPUS: Inputs are not initialized [bug]");
+    assertm(sample && buffer, "OPUS: Inputs are not initialized");
     if (requested_frames == 0)
         return 0u;
 
@@ -324,7 +324,7 @@ static uint32_t opus_read(Sound_Sample * sample, void * buffer, uint32_t request
 static int32_t opus_seek(Sound_Sample * sample, const uint32_t ms)
 {
     // Guard against invalid input
-    assertm(sample, "OPUS: Input is not initialized [bug]");
+    assertm(sample, "OPUS: Input is not initialized");
 
     int rcode = -1;
 
@@ -367,7 +367,7 @@ static int32_t opus_seek(Sound_Sample * sample, const uint32_t ms)
 static int32_t opus_rewind(Sound_Sample* sample)
 {
     // Guard against invalid input
-    assertm(sample, "OPUS: Input is not initialized [bug]");
+    assertm(sample, "OPUS: Input is not initialized");
     const int32_t rcode = opus_seek(sample, 0);
     assertm(rcode >= 0, "OPUS: seek failed [bug or corrupt Opus track]");
     return rcode;
