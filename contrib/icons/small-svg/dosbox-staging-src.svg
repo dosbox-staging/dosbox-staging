@@ -7,8 +7,8 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   inkscape:version="1.0beta2 (unknown)"
-   sodipodi:docname="dosbox-staging.svg"
+   inkscape:version="0.92.4 (unknown)"
+   sodipodi:docname="dosbox-staging-src.svg"
    id="svg5155"
    version="1.1"
    viewBox="0 0 33.866666 33.866666"
@@ -21,17 +21,17 @@
      showguides="true"
      inkscape:window-maximized="1"
      inkscape:window-y="27"
-     inkscape:window-x="1920"
-     inkscape:window-height="1016"
-     inkscape:window-width="1920"
+     inkscape:window-x="0"
+     inkscape:window-height="704"
+     inkscape:window-width="1366"
      inkscape:pagecheckerboard="true"
      units="px"
      showgrid="true"
      inkscape:current-layer="layer3"
-     inkscape:document-units="mm"
+     inkscape:document-units="px"
      inkscape:cy="69.820904"
-     inkscape:cx="22.983373"
-     inkscape:zoom="5.6"
+     inkscape:cx="64.170475"
+     inkscape:zoom="1"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
      borderopacity="1.0"
@@ -46,40 +46,36 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-sa/4.0/" />
       </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-sa/4.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#ShareAlike" />
+      </cc:License>
     </rdf:RDF>
   </metadata>
-  <g
-     style="display:none"
-     sodipodi:insensitive="true"
-     transform="translate(0,-263.13334)"
-     id="layer1"
-     inkscape:groupmode="layer"
-     inkscape:label="Gnome Icon Template">
-    <rect
-       inkscape:label="512x512"
-       y="263.13333"
-       x="-2.0751955e-08"
-       height="33.866665"
-       width="33.866665"
-       id="rect13805"
-       style="display:inline;overflow:visible;visibility:visible;fill:#f0f0f0;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.13229166;marker:none;enable-background:accumulate" />
-    <circle
-       style="display:inline;opacity:0.1;vector-effect:none;fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.2619375;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.2619375, 0.2619375;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none;paint-order:normal;enable-background:new"
-       id="circle2892"
-       r="15.743801"
-       cy="280.06665"
-       cx="16.933342" />
-  </g>
   <g
      sodipodi:insensitive="true"
      inkscape:label="Background"
      id="layer2"
-     inkscape:groupmode="layer">
+     inkscape:groupmode="layer"
+     style="display:inline">
     <circle
        r="16.933332"
-       style="display:inline;opacity:1;vector-effect:none;fill:#241f31;fill-opacity:1;stroke:none;stroke-width:0.281792;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none;paint-order:normal;enable-background:new"
+       style="display:inline;opacity:1;vector-effect:none;fill:#241f31;fill-opacity:1;stroke:none;stroke-width:0.28179201;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none;paint-order:normal;enable-background:new"
        id="circle2892-3"
        cy="16.933332"
        cx="16.933332" />
@@ -87,40 +83,41 @@
   <g
      inkscape:label="Icon"
      id="layer3"
-     inkscape:groupmode="layer">
+     inkscape:groupmode="layer"
+     sodipodi:insensitive="true">
     <g
        transform="matrix(1.205909,0,0,1.205909,-3.9502492,-3.5210881)"
        id="g866">
       <path
          inkscape:connector-curvature="0"
          id="path860"
-         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          d="M 8.9058843,8.3128729 V 24.929464 L 21.106189,23.292089 V 9.9115723 Z" />
       <path
          inkscape:connector-curvature="0"
          id="path862"
-         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          d="M 8.9058843,24.929464 13.395305,26.80532 26.458333,24.495475 21.106189,23.292089 Z" />
       <path
          inkscape:connector-curvature="0"
          id="path864"
-         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          d="M 21.106189,9.9115723 26.458333,9.0628262 V 24.495475 l -5.352144,-1.203386 z" />
       <path
          inkscape:connector-curvature="0"
          id="path866"
-         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          d="M 8.9058843,8.3128729 13.395305,6.9020407 26.458333,9.0628262 21.106189,9.9115723 Z" />
       <path
          inkscape:connector-curvature="0"
          id="path870"
-         style="display:inline;fill:#f2f2f2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#f2f2f2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          d="M 8.9058843,8.3128729 13.395305,6.9020407 V 26.80532 L 8.9058843,24.929464 Z" />
       <g
          id="g852">
         <path
            d="M 13.395305,6.9020407 V 26.80532 L 26.458333,24.495475 V 9.0628262 Z"
-           style="display:inline;fill:#f2f2f2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+           style="display:inline;fill:#f2f2f2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
            id="path868"
            inkscape:connector-curvature="0" />
         <path
