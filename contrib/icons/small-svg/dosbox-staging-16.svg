@@ -7,7 +7,7 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   inkscape:version="1.0beta2 (unknown)"
+   inkscape:version="0.92.4 (unknown)"
    sodipodi:docname="dosbox-staging-16.svg"
    id="svg5155"
    version="1.1"
@@ -20,18 +20,18 @@
      inkscape:document-rotation="0"
      showguides="true"
      inkscape:window-maximized="1"
-     inkscape:window-y="0"
+     inkscape:window-y="27"
      inkscape:window-x="0"
-     inkscape:window-height="1016"
-     inkscape:window-width="1920"
+     inkscape:window-height="704"
+     inkscape:window-width="1366"
      inkscape:pagecheckerboard="true"
      units="px"
      showgrid="true"
      inkscape:current-layer="layer3"
      inkscape:document-units="px"
-     inkscape:cy="8.6947787"
-     inkscape:cx="4.5636817"
-     inkscape:zoom="44.8"
+     inkscape:cy="6.643002"
+     inkscape:cx="8.2681056"
+     inkscape:zoom="22.627417"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
      borderopacity="1.0"
@@ -47,7 +47,24 @@
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
         <dc:title></dc:title>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-sa/4.0/" />
       </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-sa/4.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#ShareAlike" />
+      </cc:License>
     </rdf:RDF>
   </metadata>
   <g
@@ -65,41 +82,42 @@
   <g
      inkscape:label="Icon"
      id="layer3"
-     inkscape:groupmode="layer">
+     inkscape:groupmode="layer"
+     sodipodi:insensitive="true">
     <g
        transform="matrix(0.15827555,0,0,0.15952145,-0.61583227,-0.57185688)"
        id="g866">
       <path
          inkscape:connector-curvature="0"
          id="path860"
-         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          d="M 8.9058843,8.3128729 V 24.929464 L 21.106189,23.292089 V 9.9115723 Z" />
       <path
          inkscape:connector-curvature="0"
          id="path862"
-         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          d="M 8.9058843,24.929464 13.395305,26.80532 26.458333,24.495475 21.106189,23.292089 Z" />
       <path
          inkscape:connector-curvature="0"
          id="path864"
-         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          d="M 21.106189,9.9115723 26.458333,9.0628262 V 24.495475 l -5.352144,-1.203386 z" />
       <path
          inkscape:connector-curvature="0"
          id="path866"
-         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          d="M 8.9058843,8.3128729 13.395305,6.9020407 26.458333,9.0628262 21.106189,9.9115723 Z" />
       <path
          inkscape:connector-curvature="0"
          id="path870"
-         style="display:inline;fill:#f2f2f2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#f2f2f2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          d="M 8.9058843,8.3128729 13.920863,5.2434341 V 28.463927 L 8.9058843,24.929464 Z"
          sodipodi:nodetypes="ccccc" />
       <g
          id="g852">
         <path
            d="M 13.920863,5.2434341 V 28.463927 L 27.015116,25.525451 V 8.599827 Z"
-           style="display:inline;fill:#f2f2f2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+           style="display:inline;fill:#f2f2f2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
            id="path868"
            inkscape:connector-curvature="0"
            sodipodi:nodetypes="ccccc" />

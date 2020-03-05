@@ -13,7 +13,7 @@
    version="1.1"
    id="svg5155"
    sodipodi:docname="dosbox-staging-24.svg"
-   inkscape:version="1.0beta2 (unknown)">
+   inkscape:version="0.92.4 (unknown)">
   <defs
      id="defs5149" />
   <sodipodi:namedview
@@ -23,18 +23,18 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="90.509668"
-     inkscape:cx="15.439736"
-     inkscape:cy="16.112563"
-     inkscape:document-units="mm"
-     inkscape:current-layer="layer3"
+     inkscape:zoom="16"
+     inkscape:cx="13.230027"
+     inkscape:cy="10.948589"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer2"
      showgrid="true"
      units="px"
      inkscape:pagecheckerboard="true"
-     inkscape:window-width="1920"
-     inkscape:window-height="1016"
+     inkscape:window-width="1366"
+     inkscape:window-height="704"
      inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-y="27"
      inkscape:window-maximized="1"
      showguides="true"
      inkscape:document-rotation="0" />
@@ -47,35 +47,31 @@
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
         <dc:title />
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-sa/4.0/" />
       </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-sa/4.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#ShareAlike" />
+      </cc:License>
     </rdf:RDF>
   </metadata>
   <g
-     inkscape:label="Gnome Icon Template"
-     inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(0,-263.13334)"
-     sodipodi:insensitive="true"
-     style="display:none">
-    <rect
-       style="display:inline;overflow:visible;visibility:visible;fill:#f0f0f0;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.132292;marker:none;enable-background:accumulate"
-       id="rect13805"
-       width="33.866665"
-       height="33.866665"
-       x="-2.0751955e-08"
-       y="263.13333"
-       inkscape:label="512x512" />
-    <circle
-       cx="16.933342"
-       cy="280.06665"
-       r="15.743801"
-       id="circle2892"
-       style="display:inline;opacity:0.1;vector-effect:none;fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.261937;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.261937, 0.261937;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none;paint-order:normal;enable-background:new" />
-  </g>
-  <g
      inkscape:groupmode="layer"
      id="layer2"
-     inkscape:label="Background">
+     inkscape:label="Background"
+     sodipodi:insensitive="true">
     <circle
        r="3.175"
        cx="3.175"
@@ -86,34 +82,35 @@
   <g
      inkscape:groupmode="layer"
      id="layer3"
-     inkscape:label="Icon">
+     inkscape:label="Icon"
+     sodipodi:insensitive="true">
     <g
        id="g866"
        transform="matrix(0.22610795,0,0,0.22610795,-0.69077245,-0.66020405)">
       <path
          d="M 8.9058843,8.3128729 V 24.929464 L 21.106189,23.292089 V 9.9115723 Z"
-         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          id="path860"
          inkscape:connector-curvature="0" />
       <path
          d="M 8.9058843,24.929464 13.395305,26.80532 26.458333,24.495475 21.106189,23.292089 Z"
-         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          id="path862"
          inkscape:connector-curvature="0" />
       <path
          d="M 21.106189,9.9115723 26.458333,9.0628262 V 24.495475 l -5.352144,-1.203386 z"
-         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          id="path864"
          inkscape:connector-curvature="0" />
       <path
          d="M 8.9058843,8.3128729 13.395305,6.9020407 26.458333,9.0628262 21.106189,9.9115723 Z"
-         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#1f1f1f;fill-opacity:0.1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          id="path866"
          inkscape:connector-curvature="0" />
       <path
          sodipodi:nodetypes="ccccc"
          d="M 8.9058843,8.3128729 13.58653,6.9020407 V 26.80532 L 8.9058843,24.929464 Z"
-         style="display:inline;fill:#f2f2f2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.150237;stroke-linejoin:round"
+         style="display:inline;fill:#f2f2f2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.15023699;stroke-linejoin:round"
          id="path870"
          inkscape:connector-curvature="0" />
       <path
