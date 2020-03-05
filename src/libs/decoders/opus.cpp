@@ -294,9 +294,11 @@ static uint32_t opus_read(Sound_Sample * sample, void * buffer, uint32_t request
         if (result == 0) {
             sample->flags |= SOUND_SAMPLEFLAG_EOF;
             break;
-        } else if (result == OP_HOLE) {
+        }
+        if (result == OP_HOLE)
             continue;  // hole in the data; keeping going!
-        } else if (result  < 0) {
+
+        if (result  < 0) {
             sample->flags |= SOUND_SAMPLEFLAG_ERROR;
             break;
         }
