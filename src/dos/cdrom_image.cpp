@@ -77,9 +77,9 @@ bool CDROM_Interface_Image::BinaryFile::read(uint8_t *buffer,
                                              const uint32_t requested_bytes)
 {
 	// Check for logic bugs and illegal values
-	assertm(file && buffer, "The file and/or buffer pointer is invalid [Bug]");
-	assertm(offset <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size [Bug]");
-	assertm(requested_bytes <= MAX_REDBOOK_BYTES, "Requested bytes exceeds CDROM size [Bug]");
+	assertm(file && buffer, "The file and/or buffer pointer is invalid");
+	assertm(offset <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size");
+	assertm(requested_bytes <= MAX_REDBOOK_BYTES, "Requested bytes exceeds CDROM size");
 
 	file->seekg(offset, ios::beg);
 	file->read((char*)buffer, requested_bytes);
@@ -89,7 +89,7 @@ bool CDROM_Interface_Image::BinaryFile::read(uint8_t *buffer,
 int CDROM_Interface_Image::BinaryFile::getLength()
 {
 	// Check for logic bugs and illegal values
-	assertm(file, "The file pointer is invalid [Bug]");
+	assertm(file, "The file pointer is invalid");
 
 	/**
 	 *  All read operations involve an absolute position and
@@ -100,7 +100,7 @@ int CDROM_Interface_Image::BinaryFile::getLength()
 	const int length = static_cast<int>(file->tellg());
 	assertm(length == -1 // allow the length to fail, which is valid
 	        || static_cast<uint32_t>(length) <= MAX_REDBOOK_BYTES,
-	        "Length exceeds the maximum CDROM size [Bug]");
+	        "Length exceeds the maximum CDROM size");
 #ifdef DEBUG
 	LOG_MSG("CDROM: Length of image is %d bytes", length);
 #endif
@@ -118,8 +118,8 @@ Bit16u CDROM_Interface_Image::BinaryFile::getEndian()
 bool CDROM_Interface_Image::BinaryFile::seek(const uint32_t offset)
 {
 	// Check for logic bugs and illegal values
-	assertm(file, "The file pointer needs to be valid, but is the nullptr [Bug]");
-	assertm(offset <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size [Bug]");
+	assertm(file, "The file pointer needs to be valid, but is the nullptr");
+	assertm(offset <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size");
 
 	file->seekg(offset, ios::beg);
 	return !file->fail();
@@ -129,9 +129,9 @@ uint32_t CDROM_Interface_Image::BinaryFile::decode(int16_t *buffer,
                                                    const uint32_t desired_track_frames)
 {
 	// Guard against logic bugs and illegal values
-	assertm(buffer && file, "The file pointer or buffer are invalid [bug]");
+	assertm(buffer && file, "The file pointer or buffer are invalid");
 	assertm(desired_track_frames <= MAX_REDBOOK_FRAMES,
-	        "Requested number of frames exceeds the maximum for a CDROM [Bug]");
+	        "Requested number of frames exceeds the maximum for a CDROM");
 
 	file->read((char*)buffer, desired_track_frames * BYTES_PER_REDBOOK_PCM_FRAME);
 	/**
@@ -190,8 +190,8 @@ CDROM_Interface_Image::AudioFile::~AudioFile()
 bool CDROM_Interface_Image::AudioFile::seek(const uint32_t requested_pos)
 {
 	// Check for logic bugs and if the track is already positioned as requested
-	assertm(sample, "Audio sample needs to be valid, but is the nullptr [Bug]");
-	assertm(requested_pos <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size [Bug]");
+	assertm(sample, "Audio sample needs to be valid, but is the nullptr");
+	assertm(requested_pos <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size");
 	if (track_pos == requested_pos) {
 #ifdef DEBUG
 		LOG_MSG("CDROM: seek to %u avoided with position-tracking", requested_pos);
@@ -250,10 +250,10 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
                                             const uint32_t requested_bytes)
 {
 	// Guard again logic bugs and the no-op case
-	assertm(buffer != nullptr, "buffer needs to be allocated but is the nullptr [Bug]");
-	assertm(sample != nullptr, "Audio sample needs to be valid, but is the nullptr [Bug]");
-	assertm(requested_pos <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size [Bug]");
-	assertm(requested_bytes <= MAX_REDBOOK_BYTES, "Requested bytes exceeds CDROM size [Bug]");
+	assertm(buffer != nullptr, "buffer needs to be allocated but is the nullptr");
+	assertm(sample != nullptr, "Audio sample needs to be valid, but is the nullptr");
+	assertm(requested_pos <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size");
+	assertm(requested_bytes <= MAX_REDBOOK_BYTES, "Requested bytes exceeds CDROM size");
 	if (requested_bytes == 0)
 		return true;
 
