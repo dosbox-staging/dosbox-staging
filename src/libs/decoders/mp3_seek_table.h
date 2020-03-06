@@ -1,25 +1,30 @@
-/**
- * DOSBox MP3 Seek Table handler, Copyright 2018-2020 Kevin R. Croft (krcroft@gmail.com)
+/*
+ * DOSBox MP3 Seek Table Handler
+ * -----------------------------
  * See mp3_seek_table.cpp for more documentation.
  *
- * The seek table handler makes use of the following single-header public libraries:
+ * The seek table handler makes use of the following single-header
+ * public libraries:
  *   - dr_mp3: http://mackron.github.io/dr_mp3.html, by David Reid
  *   - archive: https://github.com/voidah/archive, by Arthur Ouellet
  *   - xxHash: http://cyan4973.github.io/xxHash, by Yann Collet
  *
- *  This seek table handler is free software: you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation, either version 3 of the License, or
+ *  Copyright (C) 2020       The DOSBox Team
+ *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
  *
- *  This software is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty
- *  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with DOSBox.  If not, see <http://www.gnu.org/licenses/>.
- *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include <vector>    // provides: vector

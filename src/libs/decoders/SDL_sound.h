@@ -1,31 +1,7 @@
-/** \file SDL_sound.h */
-
 /*
- * SDL_sound -- An abstract sound format decoding API.
- * Copyright (C) 2001  Ryan C. Gordon.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-
-/**
- * \mainpage SDL_sound
- *
- * The latest version of SDL_sound can be found at:
- *     http://icculus.org/SDL_sound/
- *
- * The basic gist of SDL_sound is that you use an SDL_RWops to get sound data
+ *  Modified SDL Sound API
+ *  ----------------------
+ *  The basic gist of SDL_sound is that you use an SDL_RWops to get sound data
  *  into this library, and SDL_sound will take that data, in one of several
  *  popular formats, and decode it into raw waveform data in the format of
  *  your choice. This gives you a nice abstraction for getting sound into your
@@ -35,7 +11,7 @@
  *  the initial sound data from any number of sources: file, memory buffer,
  *  network connection, etc.
  *
- * As the name implies, this library depends on SDL: Simple Directmedia Layer,
+ *  As the name implies, this library depends on SDL2: Simple Directmedia Layer,
  *  which is a powerful, free, and cross-platform multimedia library. It can
  *  be found at http://www.libsdl.org/
  *
@@ -46,10 +22,23 @@
  *   - .OPUS (Ogg Opus support via the Opusfile and SpeexDSP libraries)
  *   - .FLAC (Free Lossless Audio Codec support via the dr_flac single-header decoder)
  *
- * Please see the file src/libs/decoders/docs/LICENSE.txt.
+ *  Copyright (C) 2020       The DOSBox Team
+ *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
+ *  Copyright (C) 2001-2017  Ryan C. Gordon <icculus@icculus.org>
  *
- * \author Ryan C. Gordon (icculus@icculus.org)
- * \author many others, please see CREDITS in the source's root directory.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #ifndef _INCLUDE_SDL_SOUND_H_
