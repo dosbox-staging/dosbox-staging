@@ -1,30 +1,26 @@
 /*
- * DOSBox FLAC decoder is maintained by Kevin R. Croft (krcroft@gmail.com)
- * This decoder makes use of the excellent dr_flac library by David Reid (mackron@gmail.com)
+ *  DOSBox FLAC decoder API implementation
+ *  --------------------------------------
+ *  This decoder makes use of the dr_flac library by David Reid (mackron@gmail.com)
+ *    - dr_libs: https://github.com/mackron/dr_libs (source)
+ *    - dr_flac: http://mackron.github.io/dr_flac.html (website)
  *
- * Source links
- *   - dr_libs: https://github.com/mackron/dr_libs (source)
- *   - dr_flac: http://mackron.github.io/dr_flac.html (website)
+ *  Copyright (C) 2018-2020  The DOSBox Team
+ *  Copyright (C) 2001-2017  Ryan C. Gordon <icculus@icculus.org>
  *
- * The upstream SDL2 Sound 1.9.x FLAC decoder is written and copyright by Ryan C. Gordon. (icculus@icculus.org)
- *
- * Please see the file src/libs/decoders/docs/LICENSE.txt.
- *
- *  This file is part of the SDL Sound Library.
- *
- *  This SDL_sound FLAC decoder backend is free software: you can redistribute
- *  it and/or modify it under the terms of the GNU General Public License as
- *  published by the Free Software Foundation, either version 3 of the License, or
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
  *
- *  This SDL_sound FLAC decoder backend is distributed in the hope that it
- *  will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
- *  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with the SDL Sound Library.  If not, see <http://www.gnu.org/licenses/>.
- *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #if HAVE_CONFIG_H
@@ -165,9 +161,8 @@ const Sound_DecoderFunctions __Sound_DecoderFunctions_FLAC =
 {
     {
         extensions_flac,
-        "Free Lossless Audio Codec",
-        "Ryan C. Gordon <icculus@icculus.org>",
-        "https://icculus.org/SDL_sound/"
+        "Free Lossless Audio Codec (FLAC)",
+        "The DOSBox Team"
     },
 
     FLAC_init,       /*   init() method */

@@ -1,16 +1,28 @@
 /*
- * DOSBox WAV decoder is maintained by Kevin R. Croft (krcroft@gmail.com)
- * This decoder makes use of the excellent dr_wav library by David Reid (mackron@gmail.com)
- *
- * Source links
+ *  DOSBox MP3 decoder API implementation
+ *  -------------------------------------
+ *  It makes use of the dr_wav library by David Reid (mackron@gmail.com)
+ *  Source links:
  *   - dr_libs: https://github.com/mackron/dr_libs (source)
  *   - dr_wav: http://mackron.github.io/dr_wav.html (website)
  *
- * Please see the file src/libs/decoders/docs/LICENSE.txt.
+ *  Copyright (C) 2020       The DOSBox Team
+ *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
+ *  Copyright (C) 2001-2017  Ryan C. Gordon <icculus@icculus.org>
  *
- *  You should have received a copy of the GNU General Public License
- *  along with the SDL Sound Library.  If not, see <http://www.gnu.org/licenses/>.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #if HAVE_CONFIG_H
@@ -155,8 +167,7 @@ const Sound_DecoderFunctions __Sound_DecoderFunctions_WAV =
     {
         extensions_wav,
         "WAV Audio Codec",
-        "Kevin R. Croft <krcroft@gmail.com>",
-        "github.com/mackron/dr_libs/blob/master/dr_wav.h"
+        "The DOSBox Team"
     },
 
     WAV_init,       /*   init() method */

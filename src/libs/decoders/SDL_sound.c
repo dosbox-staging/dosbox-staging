@@ -1,31 +1,31 @@
 /*
- * SDL_sound -- An abstract sound format decoding API.
- * Copyright (C) 2001  Ryan C. Gordon.
+ *  Modified SDL Sound API implementation
+ *  -------------------------------------
+ *  This file implements the API, the documentation for which can
+ *  be found in SDL_sound.h.  This API has been changed from its
+ *  original implementation as follows:
+ *    - Cut down in size; most notably exclusion of the conversion routines
+ *    - Small bug fixes and warnings cleaned up
+ *    - Elimination of intermediate buffers, allowing direct decoding
+ *    - Moved from sample-based logic to frame-based (channel-agnostic)
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ *  Copyright (C) 2020       The DOSBox Team
+ *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
+ *  Copyright (C) 2001-2017  Ryan C. Gordon <icculus@icculus.org>
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-
-/**
- * This file implements the core API, which is relatively simple.
- *   The real meat of SDL_sound is in the decoders directory.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- * Documentation is in SDL_sound.h ... It's verbose, honest.  :)
- *
- * Please see the file src/libs/decoders/docs/LICENSE.txt.
- *
- *  This file written by Ryan C. Gordon. (icculus@icculus.org)
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 #include <stdio.h>
