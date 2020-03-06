@@ -1,5 +1,5 @@
 /**
- * DOSBox MP3 Seek Table handler, Copyright 2018-2019 Kevin R. Croft (krcroft@gmail.com)
+ * DOSBox MP3 Seek Table handler, Copyright 2018-2020 Kevin R. Croft (krcroft@gmail.com)
  * See mp3_seek_table.cpp for more documentation.
  *
  * The seek table handler makes use of the following single-header public libraries:

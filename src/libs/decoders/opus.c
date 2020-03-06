@@ -1,5 +1,5 @@
 /*
- * This DOSBox Ogg Opus decoder backend is written and copyright 2019 Kevin R Croft (krcroft@gmail.com)
+ * This DOSBox Ogg Opus decoder backend is written and copyright 2019-2020 Kevin R Croft (krcroft@gmail.com)
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * This decoders makes use of:

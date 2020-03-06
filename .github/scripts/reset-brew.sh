@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2019 Kevin R Croft <krcroft@gmail.com>
+# Copyright (c) 2019-2020 Kevin R Croft <krcroft@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # This script removes all existing brew packages, and then
