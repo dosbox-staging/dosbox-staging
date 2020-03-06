@@ -338,7 +338,7 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
 		const int32_t elapsed_us = static_cast<int32_t>
 		    (duration_cast<microseconds>(end - begin).count());
 		LOG_MSG("CDROM: converted %u mono to %u samples in %d us",
-	             mono_samples, mono_samples * REDBOOK_CHANNELS, elapsed_us);
+		         mono_samples, mono_samples * REDBOOK_CHANNELS, elapsed_us);
 #endif
 		// Taken into account that we've now fill both (stereo) channels
 		decoded_bytes *= REDBOOK_CHANNELS;
@@ -803,7 +803,7 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer,
 	uint8_t* buffer_position = readBuffer.data();
 
 	// Read until we have enough or fail
-	while(bytes_read < requested_bytes) {
+	while (bytes_read < requested_bytes) {
 		success = ReadSector(buffer_position, raw, current_sector);
 		if (!success)
 			break;
