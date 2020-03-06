@@ -81,6 +81,8 @@
 
 // Local headers
 #include "support.h"
+
+#define XXH_INLINE_ALL
 #include "xxhash.h"
 // #include "../../../include/logging.h"
 #include "mp3_seek_table.h"
