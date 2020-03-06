@@ -150,6 +150,10 @@ Uint64 calculate_stream_hash(struct SDL_RWops* const context) {
     // have the same trailing 32KB of content.  The different seeds will produce
     // unique hashes.
     XXH64_state_t* const state = XXH64_createState();
+    if(!state) {
+        return 0;
+    }
+
     const uint64_t seed = static_cast<uint64_t>(stream_size);
     XXH64_reset(state, seed);
 

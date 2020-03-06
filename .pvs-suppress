@@ -6,7 +6,7 @@
             "CodeNext": 355817,
             "CodePrev": 1212132082,
             "ErrorCode": "V512",
-            "FileName": "xxhash.c",
+            "FileName": "xxhash.h",
             "Message": "A call of the 'memcpy' function will lead to underflow of the buffer 'statePtr'."
         },
         {
@@ -14,7 +14,7 @@
             "CodeNext": 355817,
             "CodePrev": 1212132082,
             "ErrorCode": "V512",
-            "FileName": "xxhash.c",
+            "FileName": "xxhash.h",
             "Message": "A call of the 'memcpy' function will lead to underflow of the buffer '& state'."
         },
         {
@@ -22,7 +22,7 @@
             "CodeNext": 355817,
             "CodePrev": 1162686117,
             "ErrorCode": "V512",
-            "FileName": "xxhash.c",
+            "FileName": "xxhash.h",
             "Message": "A call of the 'memcpy' function will lead to underflow of the buffer 'statePtr'."
         },
         {
@@ -30,7 +30,7 @@
             "CodeNext": 355817,
             "CodePrev": 1162686117,
             "ErrorCode": "V512",
-            "FileName": "xxhash.c",
+            "FileName": "xxhash.h",
             "Message": "A call of the 'memcpy' function will lead to underflow of the buffer '& state'."
         },
         {
