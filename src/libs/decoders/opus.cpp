@@ -331,7 +331,7 @@ static int32_t opus_seek(Sound_Sample * sample, const uint32_t ms)
     auto *of = static_cast<OggOpusFile*>(internal->decoder_private);
 
 #if (defined DEBUG_CHATTER)
-    const float total_seconds = static_cast<float>(ms) / 1000;
+    const float total_seconds = ms / 1000.0;
     uint8_t minutes = total_seconds / 60;
     const double seconds =
         static_cast<int>(total_seconds) % 60
@@ -365,9 +365,7 @@ static int32_t opus_rewind(Sound_Sample* sample)
 {
     // Guard against invalid input
     assertm(sample, "OPUS: Input is not initialized");
-    const int32_t rcode = opus_seek(sample, 0);
-    assertm(rcode >= 0, "OPUS: seek failed [bug or corrupt Opus track]");
-    return rcode;
+    return opus_seek(sample, 0);
 } /* opus_rewind */
 
 

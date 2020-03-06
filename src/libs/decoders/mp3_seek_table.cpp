@@ -100,13 +100,13 @@ using std::ofstream;
 // time point.  The trade-off is as follows:
 //   - a large number means slower in-game seeking but a smaller fast-seek file.
 //   - a smaller numbers (below 10) results in fast seeks on slow hardware.
-#define FRAMES_PER_SEEK_POINT 7u
+constexpr uint32_t FRAMES_PER_SEEK_POINT = 7;
 
-// Returns the size of a file in bytes (if valid), otherwise 0
-uint64_t get_file_size(const char* filename) {
+// Returns the size of a file in bytes (if valid), otherwise -1
+off_t get_file_size(const char* filename) {
     struct stat stat_buf;
     int rc = stat(filename, &stat_buf);
-    return rc == 0 ? static_cast<uint64_t>(stat_buf.st_size) : 0u;
+    return (rc >= 0) ? stat_buf.st_size : -1;
 }
 
 
@@ -261,18 +261,17 @@ Uint64 load_existing_seek_points(const char* filename,
         return 0;
     }
 
-    // Sentinal 2: Bail if the file isn't even big enough to hold our 4-byte header string.
-    const string expected_identifier(SEEK_TABLE_IDENTIFIER);
-    if (get_file_size(filename) < 4 + expected_identifier.length()) {
+    // Sentinal 2: Bail if the file isn't big enough to hold our identifier.
+    if (get_file_size(filename) < static_cast<int64_t>(sizeof(SEEK_TABLE_IDENTIFIER))) {
         return 0;
     }
 
-    // Sentinal 3: Bail if we don't get a match on our ID string.
+    // Sentinal 3: Bail if we don't get a matching identifier.
     string fetched_identifier;
     ifstream infile(filename, ios_base::binary);
     Archive<ifstream> deserialize(infile);
     deserialize >> fetched_identifier;
-    if (fetched_identifier != expected_identifier) {
+    if (fetched_identifier != SEEK_TABLE_IDENTIFIER) {
         infile.close();
         return 0;
     }
