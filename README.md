@@ -76,7 +76,7 @@ or
 select a build you are interested in, and download the package linked in
 the "**Artifacts**" section.
 
-### [Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess)
+### [Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess+branch%3Amaster)
 
 Snapshots are dynamically-linked x86\_64 builds, you'll need additional
 packages installed via your package manager.
@@ -93,7 +93,7 @@ packages installed via your package manager.
 
     sudo pacman -S sdl2 sdl2_net opusfile
 
-### [Windows](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess)
+### [Windows](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster)
 
 A dosbox.exe file in a snapshot package is not signed, therefore Windows 10
 might prevent the program from starting.
