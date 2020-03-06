@@ -38,13 +38,20 @@
 // Works with both \ and / directory delimeters.
 std::string get_basename(const std::string& filename);
 
-// Unsigned integer division with ceiling
-// There is no risk of signed types being used here because the template is unsigned
+// Unsigned-only integer division with ceiling
 template<typename T1, class = typename std::enable_if<std::is_unsigned<T1>::value>::type,
          typename T2, class = typename std::enable_if<std::is_unsigned<T2>::value>::type>
-inline const T1 ceil_divide(const T1 x, const T2 y) noexcept {
+inline const T1 ceil_udivide(const T1 x, const T2 y) noexcept {
 	return (x != 0) ? 1 + ((x - 1) / y) : 0;
 	// https://stackoverflow.com/a/2745086
+}
+
+// Signed-only integer division with ceiling
+template<typename T1, class = typename std::enable_if<std::is_signed<T1>::value>::type,
+         typename T2, class = typename std::enable_if<std::is_signed<T2>::value>::type>
+inline const T1 ceil_sdivide(const T1 x, const T2 y) noexcept {
+	return x / y + (((x < 0) ^ (y > 0)) && (x % y));
+	// https://stackoverflow.com/a/33790603
 }
 
 // Include a message in assert, similar to static_assert:

@@ -131,7 +131,7 @@ static int32_t MP3_open(Sound_Sample* const sample, const char* const ext)
 
                 // total_time needs milliseconds
                 internal->total_time = (num_frames != 0) ? 
-                    static_cast<int32_t>(ceil_divide(num_frames * 1000u, sample->actual.rate))
+                    static_cast<int32_t>(ceil_udivide(num_frames * 1000u, sample->actual.rate))
                     : -1;
             }
         }
@@ -161,7 +161,7 @@ static Sint32 MP3_seek(Sound_Sample* const sample, const Uint32 ms)
     Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal*>(sample->opaque);
     mp3_t* p_mp3 = static_cast<mp3_t*>(internal->decoder_private);
     const uint64_t sample_rate = sample->actual.rate;
-    const drmp3_uint64 pcm_frame = ceil_divide(sample_rate * ms, 1000u);
+    const drmp3_uint64 pcm_frame = ceil_udivide(sample_rate * ms, 1000u);
     const drmp3_bool32 result = drmp3_seek_to_pcm_frame(p_mp3->p_dr, pcm_frame);
     return (result == DRMP3_TRUE);
 } /* MP3_seek */

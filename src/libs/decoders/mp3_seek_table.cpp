@@ -204,7 +204,7 @@ Uint64 generate_new_seek_points(const char* filename,
     // We also take into account the desired number of "FRAMES_PER_SEEK_POINT",
     // which is defined above.
     drmp3_uint32 num_seek_points = static_cast<drmp3_uint32>
-        (ceil_divide(mp3_frame_count, FRAMES_PER_SEEK_POINT));
+        (ceil_udivide(mp3_frame_count, FRAMES_PER_SEEK_POINT));
 
     seek_points_vector.resize(num_seek_points);
     result = drmp3_calculate_seek_points(p_dr,
