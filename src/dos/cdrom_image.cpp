@@ -142,7 +142,7 @@ uint32_t CDROM_Interface_Image::BinaryFile::decode(int16_t *buffer,
 	const uint32_t bytes_read = static_cast<uint32_t>(file->gcount());
 
 	// Return the number of decoded Redbook frames
-	return ceil_divide(bytes_read, BYTES_PER_REDBOOK_PCM_FRAME);
+	return ceil_udivide(bytes_read, BYTES_PER_REDBOOK_PCM_FRAME);
 }
 
 CDROM_Interface_Image::AudioFile::AudioFile(const char *filename, bool &error)
@@ -201,8 +201,8 @@ bool CDROM_Interface_Image::AudioFile::seek(const uint32_t requested_pos)
 
 	// Convert the position from a byte offset to time offset, in milliseconds.
 	const uint32_t ms_per_s = 1000;
-	const uint32_t pos_in_frames = ceil_divide(requested_pos, BYTES_PER_RAW_REDBOOK_FRAME);
-	const uint32_t pos_in_ms = ceil_divide(pos_in_frames * ms_per_s, REDBOOK_FRAMES_PER_SECOND);
+	const uint32_t pos_in_frames = ceil_udivide(requested_pos, BYTES_PER_RAW_REDBOOK_FRAME);
+	const uint32_t pos_in_ms = ceil_udivide(pos_in_frames * ms_per_s, REDBOOK_FRAMES_PER_SECOND);
 
 #ifdef DEBUG
 	/**
@@ -281,7 +281,7 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
 	// Setup characteristics about our track and the request 
 	const uint8_t channels = getChannels();
 	const uint8_t bytes_per_frame = channels * REDBOOK_BPS;
-	const uint32_t requested_frames = ceil_divide(requested_bytes, BYTES_PER_REDBOOK_PCM_FRAME);
+	const uint32_t requested_frames = ceil_udivide(requested_bytes, BYTES_PER_REDBOOK_PCM_FRAME);
 
 	uint32_t decoded_bytes = 0;
 	uint32_t decoded_frames = 0;
@@ -537,7 +537,7 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
 		const auto track_file = player.trackFile.lock();
 		if (track_file) {
 			const uint32_t sample_rate = track_file->getRate();
-			const uint32_t played_frames = ceil_divide(player.playedTrackFrames
+			const uint32_t played_frames = ceil_udivide(player.playedTrackFrames
 			                               * REDBOOK_FRAMES_PER_SECOND, sample_rate);
 			absolute_sector = player.startSector + played_frames;
 			track_iter current_track = GetTrack(absolute_sector);
@@ -689,7 +689,7 @@ bool CDROM_Interface_Image::PlayAudioSector(const uint32_t start, uint32_t len)
 	 *  64-bit.
 	 */
 	player.playedTrackFrames = 0;
-	player.totalTrackFrames = ceil_divide(track_rate * player.totalRedbookFrames,
+	player.totalTrackFrames = ceil_udivide(track_rate * player.totalRedbookFrames,
 	                                      REDBOOK_FRAMES_PER_SECOND);
 
 #ifdef DEBUG
@@ -818,7 +818,7 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer,
 	        "%s after %u sectors (%u bytes)",
 	        num, raw ? "raw" : "cooked", sector,
 	        success ? "Succeeded" : "Failed",
-	        ceil_divide(bytes_read, sectorSize), bytes_read);
+	        ceil_udivide(bytes_read, sectorSize), bytes_read);
 #endif
 	return success;
 }

@@ -257,14 +257,20 @@ static int32_t opus_open(Sound_Sample * sample, const char * ext)
     const OpusHead* oh = op_head(of, -1);
     output_opus_info(of, oh);
 
+    // Populate track properties
     sample->actual.rate = OPUS_SAMPLE_RATE;
     sample->actual.channels = static_cast<Uint8>(oh->channel_count);
     sample->flags = op_seekable(of) ? SOUND_SAMPLEFLAG_CANSEEK: 0;
     sample->actual.format = AUDIO_S16SYS;
-    int64_t pcm_result = op_pcm_total(of, -1); // If positive, holds total PCM samples
-    internal->total_time = pcm_result == OP_EINVAL ? -1 : // total milliseconds in the stream
-        static_cast<int32_t>
-        (ceil_divide(static_cast<uint64_t>(pcm_result), OPUS_SAMPLE_RATE_PER_MS));
+
+    // Populate the track's duration in milliseconds (or -1 if bad)
+    const auto pcm_result = static_cast<int32_t>(op_pcm_total(of, -1)); 
+    if (pcm_result == OP_EINVAL)
+        internal->total_time = -1;
+    else {
+        constexpr auto frames_per_ms = static_cast<int32_t>(OPUS_SAMPLE_RATE_PER_MS);
+        internal->total_time = ceil_sdivide(pcm_result, frames_per_ms);
+    }
     return rcode;
 } /* opus_open */
 
@@ -310,7 +316,7 @@ static uint32_t opus_read(Sound_Sample * sample, void * buffer, uint32_t request
     }
 
     // Finally, we return the number of frames decoded 
-    const uint32_t decoded_frames = ceil_divide(total_decoded_samples, channels);
+    const uint32_t decoded_frames = ceil_udivide(total_decoded_samples, channels);
     return decoded_frames;
 } /* opus_read */
 
