@@ -106,10 +106,13 @@ unrecognised app from starting", you have two options to dismiss it:
 
 Windows packages are built for "x86" architecture (in practice it means i686).
 
-### macOS
+### [macOS](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster)
 
-macOS snapshots are not available at the moment.
-See [#148](https://github.com/dreamer/dosbox-staging/issues/148).
+Due to GitHub CI and Apple SDKs limitations, the snapshots work only on
+macOS Catalina (10.15).
+
+dosbox-staging app bundle is **unsigned** - click on app with right mouse
+button, select "Open" and the dialog will show a button to run and unsigned app.
 
 ## Build instructions
 
