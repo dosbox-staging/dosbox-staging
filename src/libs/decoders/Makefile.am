@@ -19,7 +19,6 @@ libdecoders_a_SOURCES = \
 	vorbis.c             \
 	wav.c                \
 	xxh3.h               \
-	xxhash.c             \
 	xxhash.h
 
 libdecoders_a_CXXFLAGS = \

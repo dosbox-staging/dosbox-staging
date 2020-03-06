@@ -251,7 +251,6 @@
     <ClCompile Include="..\src\libs\decoders\SDL_sound.c" />
     <ClCompile Include="..\src\libs\decoders\vorbis.c" />
     <ClCompile Include="..\src\libs\decoders\wav.c" />
-    <ClCompile Include="..\src\libs\decoders\xxhash.c" />
     <ClCompile Include="..\src\libs\nuked\nukedopl.cpp" />
     <ClCompile Include="..\src\misc\cross.cpp" />
     <ClCompile Include="..\src\misc\messages.cpp" />
