@@ -39,17 +39,19 @@
 std::string get_basename(const std::string& filename);
 
 // Unsigned-only integer division with ceiling
-template<typename T1, class = typename std::enable_if<std::is_unsigned<T1>::value>::type,
-         typename T2, class = typename std::enable_if<std::is_unsigned<T2>::value>::type>
-inline const T1 ceil_udivide(const T1 x, const T2 y) noexcept {
+template<typename T1, typename T2>
+inline constexpr T1 ceil_udivide(const T1 x, const T2 y) noexcept {
+	static_assert(std::is_unsigned<T1>::value, "First parameter should be unsigned");
+	static_assert(std::is_unsigned<T2>::value, "Second parameter should be unsigned");
 	return (x != 0) ? 1 + ((x - 1) / y) : 0;
 	// https://stackoverflow.com/a/2745086
 }
 
 // Signed-only integer division with ceiling
-template<typename T1, class = typename std::enable_if<std::is_signed<T1>::value>::type,
-         typename T2, class = typename std::enable_if<std::is_signed<T2>::value>::type>
-inline const T1 ceil_sdivide(const T1 x, const T2 y) noexcept {
+template<typename T1, typename T2>
+inline constexpr T1 ceil_sdivide(const T1 x, const T2 y) noexcept {
+	static_assert(std::is_signed<T1>::value, "First parameter should be signed");
+	static_assert(std::is_signed<T2>::value, "Second parameter should be signed.");
 	return x / y + (((x < 0) ^ (y > 0)) && (x % y));
 	// https://stackoverflow.com/a/33790603
 }
