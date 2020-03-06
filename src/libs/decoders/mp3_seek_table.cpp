@@ -1,5 +1,5 @@
 /**
- * DOSBox MP3 Seek Table handler, Copyright 2018 Kevin R. Croft (krcroft@gmail.com)
+ * DOSBox MP3 Seek Table handler, Copyright 2018-2020 Kevin R. Croft (krcroft@gmail.com)
  *
  * Problem:
  *          Seeking within an MP3 file to an exact time-offset, such as is expected
