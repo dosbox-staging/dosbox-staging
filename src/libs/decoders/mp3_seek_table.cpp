@@ -96,7 +96,7 @@ using std::ifstream;
 using std::ofstream;
 
 // Identifies a valid versioned seek-table
-#define SEEK_TABLE_IDENTIFIER "st-v3"
+#define SEEK_TABLE_IDENTIFIER "st-v4"
 
 // How many compressed MP3 frames should we skip between each recorded
 // time point.  The trade-off is as follows:
