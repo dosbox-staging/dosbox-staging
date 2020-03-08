@@ -52,7 +52,7 @@ jobs:
           echo ::set-env name=VERSION::$VERSION
       - name: Build
         env:
-          FLAGS: -O3 -DNDEBUG -pipe
+          FLAGS: -O3 -DNDEBUG -pipe -march=nehalem
           OPUSFILE_CFLAGS: -I${{ github.workspace }}/contrib/static-opus/include -I${{ github.workspace }}/contrib/static-opus/include/opus
           OPUSFILE_LIBS: ${{ github.workspace }}/contrib/static-opus/lib/libopusfile.a ${{ github.workspace }}/contrib/static-opus/lib/libogg.a ${{ github.workspace }}/contrib/static-opus/lib/libopus.a -lm
         run: |
