@@ -39,6 +39,11 @@ jobs:
         run:  brew install librsvg $(./scripts/list-build-dependencies.sh -m brew -c clang)
       - name: Log environment
         run:  ./scripts/log-env.sh
+      - name: Build Opus libraries
+        run: |
+          set -x
+          cd contrib/static-opus
+          gmake -j "$(sysctl -n hw.physicalcpu)"
       - name: Inject version string
         run: |
           set -x
@@ -48,13 +53,14 @@ jobs:
       - name: Build
         env:
           FLAGS: -O3 -DNDEBUG -pipe
+          OPUSFILE_CFLAGS: -I${{ github.workspace }}/contrib/static-opus/include -I${{ github.workspace }}/contrib/static-opus/include/opus
+          OPUSFILE_LIBS: ${{ github.workspace }}/contrib/static-opus/lib/libopusfile.a ${{ github.workspace }}/contrib/static-opus/lib/libogg.a ${{ github.workspace }}/contrib/static-opus/lib/libopus.a -lm
         run: |
           set -x
           ./autogen.sh
           # FIXME temporarily disable everything aside SDL2 due to linking issues
           ./configure \
             --enable-sdl-static \
-            --disable-opus-cdda \
             --disable-screenshots \
             --disable-network \
             CFLAGS="$FLAGS" CXXFLAGS="$FLAGS"
