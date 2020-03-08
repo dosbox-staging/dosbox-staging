@@ -70,11 +70,13 @@ Other feature differences:
 ## Development snapshot builds
 
 Pre-release builds can be downloaded from CI build artifacts. Go to
-[Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess)
-or
-[Windows](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess),
-select a build you are interested in, and download the package linked in
-the "**Artifacts**" section.
+[Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess+branch%3Amaster),
+[Windows](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster)
+or [macOS](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster),
+select the newest build and download the package linked in the
+"**Artifacts**" section.
+
+You need to be logged-in on GitHub to access these snapshot builds.
 
 ### [Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess+branch%3Amaster)
 
