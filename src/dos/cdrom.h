@@ -23,6 +23,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -193,7 +194,8 @@ private:
 		int             getLength();
 	private:
 		Sound_Sample    *sample = nullptr;
-		uint32_t        track_pos = 0;
+		// ensure the first seek isn't cached by starting with an impossibly-large position
+		uint32_t        track_pos = (std::numeric_limits<uint32_t>::max)();
 	};
 
 public:
