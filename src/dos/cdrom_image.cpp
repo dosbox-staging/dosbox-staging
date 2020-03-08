@@ -936,7 +936,7 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 				desired_track_frames,
 				static_cast<void*>(player.cd),
 				static_cast<void*>(player.mutex),
-				static_cast<void*>(track_file.get());
+				static_cast<void*>(track_file.get()));
 #endif
 		if (player.cd)
 			player.cd->StopAudio();
