@@ -486,9 +486,9 @@ AC_ARG_ENABLE(opus-cdda,
 AS_IF([test "x${enable_opus_cdda}" != "xno"],
       [PKG_CHECK_MODULES([OPUSFILE],
                          [opusfile],
-                         [LIBS="$LIBS $OPUSFILE_LIBS"])])
-AM_CONDITIONAL([USE_OPUS],
-               [test "x${OPUSFILE_LIBS}" != "x"])
+                         [LIBS="$LIBS $OPUSFILE_LIBS" HAVE_OPUS=yes])])
+
+AM_CONDITIONAL(USE_OPUS, test "${HAVE_OPUS}" = "yes")
 
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
 AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
