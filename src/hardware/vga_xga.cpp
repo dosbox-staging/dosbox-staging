@@ -244,7 +244,7 @@ static Bitu GetMixResult(uint32_t mixmode, Bitu srcval, Bitu dstdata)
 
 void XGA_DrawLineVector(Bitu val) {
 	Bits xat, yat;
-	Bitu srcval;
+	Bitu srcval = 0;
 	Bits i;
 
 	Bits dx, sx, sy;
@@ -336,7 +336,7 @@ void XGA_DrawLineVector(Bitu val) {
 
 void XGA_DrawLineBresenham(Bitu val) {
 	Bits xat, yat;
-	Bitu srcval;
+	Bitu srcval = 0;
 	Bits i;
 	Bits tmpswap;
 	bool steep;
@@ -451,7 +451,7 @@ void XGA_DrawLineBresenham(Bitu val) {
 
 void XGA_DrawRectangle(Bitu val) {
 	Bit32u xat, yat;
-	Bitu srcval;
+	Bitu srcval = 0;
 
 	Bits srcx, srcy, dx, dy;
 
@@ -716,8 +716,6 @@ void XGA_BlitRect(Bitu val) {
 	Bitu srcdata;
 	Bitu dstdata;
 
-	Bitu srcval;
-
 	Bits srcx, srcy, tarx, tary, dx, dy;
 
 	dx = -1;
@@ -771,6 +769,7 @@ void XGA_BlitRect(Bitu val) {
 				}
 			}
 
+			Bitu srcval = 0;
 			switch ((mixmode >> 5) & 0x03) {
 				case 0x00: /* Src is background color */
 					srcval = xga.backcolor;
@@ -786,7 +785,6 @@ void XGA_BlitRect(Bitu val) {
 					break;
 				default:
 					LOG_MSG("XGA: DrawPattern: Shouldn't be able to get here!");
-					srcval = 0;
 					break;
 			}
 
@@ -807,7 +805,6 @@ void XGA_DrawPattern(Bitu val) {
 	Bitu srcdata;
 	Bitu dstdata;
 
-	Bitu srcval;
 
 	Bits xat, yat, srcx, srcy, tarx, tary, dx, dy;
 
@@ -856,6 +853,7 @@ void XGA_DrawPattern(Bitu val) {
 					mixmode = xga.backmix;
 			}
 
+			Bitu srcval = 0;
 			switch ((mixmode >> 5) & 0x03) {
 				case 0x00: /* Src is background color */
 					srcval = xga.backcolor;
@@ -871,7 +869,6 @@ void XGA_DrawPattern(Bitu val) {
 					break;
 				default:
 					LOG_MSG("XGA: DrawPattern: Shouldn't be able to get here!");
-					srcval = 0;
 					break;
 			}
 
