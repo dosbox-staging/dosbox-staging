@@ -134,12 +134,22 @@ jobs:
           ./scripts/count-pvs-bugs.py pvs-report.csv "${MAX_BUGS}"
 
   dynamic_matrix:
-    name: ${{ matrix.compiler }} dynamic sanitizers
+    name: ${{ matrix.conf.name }} dynamic sanitizers
     needs: run_linters
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        compiler: [Clang, GCC]
+        conf:
+          - name: Clang
+            usan:  -1
+            msan:  -1
+            tsan:  -1
+            uasan: -1
+          - name: GCC
+            usan:  -1
+            msan:  -1
+            tsan:  -1
+            uasan: -1
     steps:
       - uses: actions/checkout@v1
         with:
@@ -151,7 +161,7 @@ jobs:
           VERSION_Clang: 8
         run:  >
           sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt
-          -c ${{ matrix.compiler }} -v $VERSION_${{ matrix.compiler }})
+          -c ${{ matrix.conf.name }} -v $VERSION_${{ matrix.conf.name }})
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Build and run sanitizers
@@ -162,11 +172,47 @@ jobs:
           SANITIZERS_Clang: USAN MSAN
         run: |
           ./.github/scripts/build-and-run-sanitizers.sh \
-          ${{ matrix.compiler }} \
-          $VERSION_${{ matrix.compiler }} \
-          $SANITIZERS_${{ matrix.compiler }}
+          ${{ matrix.conf.name }} \
+          $VERSION_${{ matrix.conf.name }} \
+          $SANITIZERS_${{ matrix.conf.name }}
       - name: Upload logs
         uses: actions/upload-artifact@master
         with:
-          name: ${{ matrix.compiler }}-sanitizer-logs
-          path: ${{ matrix.compiler }}-logs
+          name: ${{ matrix.conf.name }}-sanitizer-logs
+          path: ${{ matrix.conf.name }}-logs
+      - name: Summarize issues
+        env:
+          USAN_LOG:  ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-USAN-EnterExit.log.xz
+          TSAN_LOG:  ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-TSAN-EnterExit.log.xz
+          MSAN_LOG:  ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-MSAN-EnterExit.log.xz
+          UASAN_LOG: ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-UASAN-EnterExit.log.xz
+        run: |
+          # summary
+
+          echo_bold () {
+            echo -e "\\033[1m$*\\033[0m"
+          }
+
+          if [[ -f "$USAN_LOG" ]] ; then
+            echo_bold "Undefined Behaviour sanitizer:"
+            echo
+            xzcat "$USAN_LOG" | MAX_ISSUES=${{ matrix.conf.usan }} ./scripts/count-xsan-issues.py -
+          fi
+
+          if [[ -f "$TSAN_LOG" ]] ; then
+            echo_bold "Thread sanitizer:"
+            echo
+            xzcat "$TSAN_LOG" | MAX_ISSUES=${{ matrix.conf.tsan }} ./scripts/count-xsan-issues.py -
+          fi
+
+          if [[ -f "$MSAN_LOG" ]] ; then
+            echo_bold "Memory sanitizer:"
+            echo
+            xzcat "$MSAN_LOG" | MAX_ISSUES=${{ matrix.conf.msan }} ./scripts/count-xsan-issues.py -
+          fi
+
+          if [[ -f "$UASAN_LOG" ]] ; then
+            echo_bold "Undefined Behaviour + Address sanitizers:"
+            echo
+            xzcat "$UASAN_LOG" | MAX_ISSUES=${{ matrix.conf.uasan }} ./scripts/count-xsan-issues.py -
+          fi
