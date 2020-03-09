@@ -183,10 +183,10 @@ Bitu XGA_GetPoint(Bitu x, Bitu y) {
 	return 0;
 }
 
-static Bitu GetMixResult(Bitu mixmode, Bitu srcval, Bitu dstdata)
+static Bitu GetMixResult(uint32_t mixmode, Bitu srcval, Bitu dstdata)
 {
 	Bitu destval = 0;
-	switch(mixmode &  0xf) {
+	switch (mixmode & 0xf) {
 		case 0x00: /* not DST */
 			destval = ~dstdata;
 			break;
@@ -245,8 +245,6 @@ static Bitu GetMixResult(Bitu mixmode, Bitu srcval, Bitu dstdata)
 void XGA_DrawLineVector(Bitu val) {
 	Bits xat, yat;
 	Bitu srcval;
-	Bitu destval;
-	Bitu dstdata;
 	Bits i;
 
 	Bits dx, sx, sy;
@@ -294,12 +292,14 @@ void XGA_DrawLineVector(Bitu val) {
 			break;
 	}
 
-	for (i=0;i<=dx;i++) {
-		Bitu mixmode = (xga.pix_cntl >> 6) & 0x3;
+	for (i = 0; i <= dx; ++i) {
+		uint32_t mixmode = (xga.pix_cntl >> 6) & 0x3;
+		Bitu dstdata;
+		Bitu destval;
 		switch (mixmode) {
 			case 0x00: /* FOREMIX always used */
 				mixmode = xga.foremix;
-				switch((mixmode >> 5) & 0x03) {
+				switch ((mixmode >> 5) & 0x03) {
 					case 0x00: /* Src is background color */
 						srcval = xga.backcolor;
 						break;
@@ -318,11 +318,9 @@ void XGA_DrawLineVector(Bitu val) {
 						LOG_MSG("XGA: DrawRect: Shouldn't be able to get here!");
 						break;
 				}
-				dstdata = XGA_GetPoint(xat,yat);
-
+				dstdata = XGA_GetPoint(xat, yat);
 				destval = GetMixResult(mixmode, srcval, dstdata);
-
-                XGA_DrawPoint(xat,yat, destval);
+				XGA_DrawPoint(xat, yat, destval);
 				break;
 			default: 
 				LOG_MSG("XGA: DrawLine: Needs mixmode %x", mixmode);
@@ -339,8 +337,6 @@ void XGA_DrawLineVector(Bitu val) {
 void XGA_DrawLineBresenham(Bitu val) {
 	Bits xat, yat;
 	Bitu srcval;
-	Bitu destval;
-	Bitu dstdata;
 	Bits i;
 	Bits tmpswap;
 	bool steep;
@@ -388,12 +384,14 @@ void XGA_DrawLineBresenham(Bitu val) {
     
 	//LOG_MSG("XGA: Bresenham: ASC %d, LPDSC %d, sx %d, sy %d, err %d, steep %d, length %d, dmajor %d, dminor %d, xstart %d, ystart %d", dx, dy, sx, sy, e, steep, xga.MAPcount, dmajor, dminor,xat,yat);
 
-	for (i=0;i<=xga.MAPcount;i++) { 
-			Bitu mixmode = (xga.pix_cntl >> 6) & 0x3;
+	for (i = 0; i <= xga.MAPcount; ++i) {
+			uint32_t mixmode = (xga.pix_cntl >> 6) & 0x3;
+			Bitu dstdata;
+			Bitu destval;
 			switch (mixmode) {
 				case 0x00: /* FOREMIX always used */
 					mixmode = xga.foremix;
-					switch((mixmode >> 5) & 0x03) {
+					switch ((mixmode >> 5) & 0x03) {
 						case 0x00: /* Src is background color */
 							srcval = xga.backcolor;
 							break;
@@ -413,11 +411,10 @@ void XGA_DrawLineBresenham(Bitu val) {
 							break;
 					}
 
-					if(steep) {
-						dstdata = XGA_GetPoint(xat,yat);
-					} else {
-						dstdata = XGA_GetPoint(yat,xat);
-					}
+					if (steep)
+						dstdata = XGA_GetPoint(xat, yat);
+					else
+						dstdata = XGA_GetPoint(yat, xat);
 
 					destval = GetMixResult(mixmode, srcval, dstdata);
 
@@ -455,8 +452,6 @@ void XGA_DrawLineBresenham(Bitu val) {
 void XGA_DrawRectangle(Bitu val) {
 	Bit32u xat, yat;
 	Bitu srcval;
-	Bitu destval;
-	Bitu dstdata;
 
 	Bits srcx, srcy, dx, dy;
 
@@ -470,12 +465,14 @@ void XGA_DrawRectangle(Bitu val) {
 
 	for(yat=0;yat<=xga.MIPcount;yat++) {
 		srcx = xga.curx;
-		for(xat=0;xat<=xga.MAPcount;xat++) {
-			Bitu mixmode = (xga.pix_cntl >> 6) & 0x3;
+		for (xat = 0; xat <= xga.MAPcount; ++xat) {
+			uint32_t mixmode = (xga.pix_cntl >> 6) & 0x3;
+			Bitu dstdata;
+			Bitu destval;
 			switch (mixmode) {
 				case 0x00: /* FOREMIX always used */
 					mixmode = xga.foremix;
-					switch((mixmode >> 5) & 0x03) {
+					switch ((mixmode >> 5) & 0x03) {
 						case 0x00: /* Src is background color */
 							srcval = xga.backcolor;
 							break;
@@ -494,11 +491,9 @@ void XGA_DrawRectangle(Bitu val) {
 							LOG_MSG("XGA: DrawRect: Shouldn't be able to get here!");
 							break;
 					}
-					dstdata = XGA_GetPoint(srcx,srcy);
-
+					dstdata = XGA_GetPoint(srcx, srcy);
 					destval = GetMixResult(mixmode, srcval, dstdata);
-
-                    XGA_DrawPoint(srcx,srcy, destval);
+					XGA_DrawPoint(srcx, srcy, destval);
 					break;
 				default: 
 					LOG_MSG("XGA: DrawRect: Needs mixmode %x", mixmode);
@@ -559,10 +554,8 @@ bool XGA_CheckX(void) {
 
 static void DrawWaitSub(uint32_t mixmode, Bitu srcval)
 {
-	Bitu destval;
-	Bitu dstdata;
-	dstdata = XGA_GetPoint(xga.waitcmd.curx, xga.waitcmd.cury);
-	destval = GetMixResult(mixmode, srcval, dstdata);
+	const Bitu dstdata = XGA_GetPoint(xga.waitcmd.curx, xga.waitcmd.cury);
+	const Bitu destval = GetMixResult(mixmode, srcval, dstdata);
 	//LOG_MSG("XGA: DrawPattern: Mixmode: %x srcval: %x", mixmode, srcval);
 
 	XGA_DrawPoint(xga.waitcmd.curx, xga.waitcmd.cury, destval);
@@ -724,7 +717,6 @@ void XGA_BlitRect(Bitu val) {
 	Bitu dstdata;
 
 	Bitu srcval;
-	Bitu destval;
 
 	Bits srcx, srcy, tarx, tary, dx, dy;
 
@@ -740,7 +732,7 @@ void XGA_BlitRect(Bitu val) {
 	tary = xga.desty;
 
 	Bitu mixselect = (xga.pix_cntl >> 6) & 0x3;
-	Bitu mixmode = 0x67; /* Source is bitmap data, mix mode is src */
+	uint32_t mixmode = 0x67; /* Source is bitmap data, mix mode is src */
 	switch(mixselect) {
 		case 0x00: /* Foreground mix is always used */
 			mixmode = xga.foremix;
@@ -766,11 +758,11 @@ void XGA_BlitRect(Bitu val) {
 			srcdata = XGA_GetPoint(srcx, srcy);
 			dstdata = XGA_GetPoint(tarx, tary);
 
-			if(mixselect == 0x3) {
-				if(srcdata == xga.forecolor) {
+			if (mixselect == 0x3) {
+				if (srcdata == xga.forecolor) {
 					mixmode = xga.foremix;
 				} else {
-					if(srcdata == xga.backcolor) {
+					if (srcdata == xga.backcolor) {
 						mixmode = xga.backmix;
 					} else {
 						/* Best guess otherwise */
@@ -779,7 +771,7 @@ void XGA_BlitRect(Bitu val) {
 				}
 			}
 
-			switch((mixmode >> 5) & 0x03) {
+			switch ((mixmode >> 5) & 0x03) {
 				case 0x00: /* Src is background color */
 					srcval = xga.backcolor;
 					break;
@@ -798,7 +790,7 @@ void XGA_BlitRect(Bitu val) {
 					break;
 			}
 
-			destval = GetMixResult(mixmode, srcval, dstdata);
+			const Bitu destval = GetMixResult(mixmode, srcval, dstdata);
 			//LOG_MSG("XGA: DrawPattern: Mixmode: %x Mixselect: %x", mixmode, mixselect);
 
 			XGA_DrawPoint(tarx, tary, destval);
@@ -816,7 +808,6 @@ void XGA_DrawPattern(Bitu val) {
 	Bitu dstdata;
 
 	Bitu srcval;
-	Bitu destval;
 
 	Bits xat, yat, srcx, srcy, tarx, tary, dx, dy;
 
@@ -832,8 +823,8 @@ void XGA_DrawPattern(Bitu val) {
 	tary = xga.desty;
 
 	Bitu mixselect = (xga.pix_cntl >> 6) & 0x3;
-	Bitu mixmode = 0x67; /* Source is bitmap data, mix mode is src */
-	switch(mixselect) {
+	uint32_t mixmode = 0x67; /* Source is bitmap data, mix mode is src */
+	switch (mixselect) {
 		case 0x00: /* Foreground mix is always used */
 			mixmode = xga.foremix;
 			break;
@@ -865,7 +856,7 @@ void XGA_DrawPattern(Bitu val) {
 					mixmode = xga.backmix;
 			}
 
-			switch((mixmode >> 5) & 0x03) {
+			switch ((mixmode >> 5) & 0x03) {
 				case 0x00: /* Src is background color */
 					srcval = xga.backcolor;
 					break;
@@ -884,8 +875,7 @@ void XGA_DrawPattern(Bitu val) {
 					break;
 			}
 
-			destval = GetMixResult(mixmode, srcval, dstdata);
-
+			const Bitu destval = GetMixResult(mixmode, srcval, dstdata);
 			XGA_DrawPoint(tarx, tary, destval);
 			
 			tarx += dx;
