@@ -62,7 +62,7 @@ jobs:
           # summary
           echo "Full report is included in build Artifacts"
           echo
-          ./scripts/count-bugs.py report/*/index.html
+          ./scripts/count-clang-bugs.py report/*/index.html
 
   build_pvs_studio_analyzer:
     name: PVS-Studio static analyzer
