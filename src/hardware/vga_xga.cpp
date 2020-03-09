@@ -557,7 +557,8 @@ bool XGA_CheckX(void) {
 	return newline;
 }
 
-void XGA_DrawWaitSub(Bitu mixmode, Bitu srcval) {
+static void DrawWaitSub(Bitu mixmode, Bitu srcval)
+{
 	Bitu destval;
 	Bitu dstdata;
 	dstdata = XGA_GetPoint(xga.waitcmd.curx, xga.waitcmd.cury);
@@ -598,17 +599,18 @@ void XGA_DrawWait(Bitu val, Bitu len) {
 					}
 					switch(xga.waitcmd.buswidth) {
 						case M_LIN8:		//  8 bit
-							XGA_DrawWaitSub(mixmode, val);
+							DrawWaitSub(mixmode, val);
 							break;
 						case 0x20 | M_LIN8: // 16 bit 
-							for(Bitu i = 0; i < len; i++) {
-								XGA_DrawWaitSub(mixmode, (val>>(8*i))&0xff);
-								if(xga.waitcmd.newline) break;
+							for (Bitu i = 0; i < len; ++i) {
+								DrawWaitSub(mixmode, (val >> (8 * i)) & 0xff);
+								if (xga.waitcmd.newline)
+									break;
 							}
 							break;
 						case 0x40 | M_LIN8: // 32 bit
-                            for(int i = 0; i < 4; i++)
-								XGA_DrawWaitSub(mixmode, (val>>(8*i))&0xff);
+							for (int i = 0; i < 4; ++i)
+								DrawWaitSub(mixmode, (val >> (8 * i)) & 0xff);
 							break;
 						case (0x20 | M_LIN32):
 							if(len!=4) { // Win 3.11 864 'hack?'
@@ -621,22 +623,22 @@ void XGA_DrawWait(Bitu val, Bitu len) {
 									srcval = (val<<16)|xga.waitcmd.data;
 									xga.waitcmd.data = 0;
 									xga.waitcmd.datasize = 0;
-									XGA_DrawWaitSub(mixmode, srcval);
+									DrawWaitSub(mixmode, srcval);
 								}
 								break;
 							} // fall-through
 						case 0x40 | M_LIN32: // 32 bit
-							XGA_DrawWaitSub(mixmode, val);
+							DrawWaitSub(mixmode, val);
 							break;
 						case 0x20 | M_LIN15: // 16 bit 
 						case 0x20 | M_LIN16: // 16 bit 
-							XGA_DrawWaitSub(mixmode, val);
+							DrawWaitSub(mixmode, val);
 							break;
 						case 0x40 | M_LIN15: // 32 bit 
 						case 0x40 | M_LIN16: // 32 bit 
-							XGA_DrawWaitSub(mixmode, val&0xffff);
-							if(!xga.waitcmd.newline)
-								XGA_DrawWaitSub(mixmode, val>>16);
+							DrawWaitSub(mixmode, val & 0xffff);
+							if (!xga.waitcmd.newline)
+								DrawWaitSub(mixmode, val >> 16);
 							break;
 						default:
 							// Let's hope they never show up ;)
@@ -691,7 +693,7 @@ void XGA_DrawWait(Bitu val, Bitu len) {
 									srcval=0;
 									break;
 							}
-                            XGA_DrawWaitSub(mixmode, srcval);
+							DrawWaitSub(mixmode, srcval);
 
 							if((xga.waitcmd.cury<2048) &&
 							  (xga.waitcmd.cury >= xga.waitcmd.y2)) {
