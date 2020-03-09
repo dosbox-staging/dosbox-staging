@@ -16,26 +16,28 @@ set +e
 # Clean all the package archives from pacman
 pacman -Scc --noconfirm
 
+# TODO Stripping part is temporarily disabled due to GitHub CI problems
+#
 # Strip binaries using their associated striping tool
-for dir in /usr /mingw32 /mingw64; do
-
-	# Enter our directory if we have it
-	cd "${dir}" || continue
-
-	# Check if we have an associated stripping tool
-	if [[ ! -f "bin/strip.exe" ]]; then continue; fi
-
-	# Start stripping
-	find . -type f              \
-		\( -iname '*.exe'       \
-		   -or -iname '*.a'     \
-		   -or -iname '*.dll'   \
-		   -or -iname '*.so'    \
-		\)                      \
-		-a ! -iname 'strip.exe' \
-		-print0                 \
-	| xargs -0 ./bin/strip.exe --strip-unneeded
-done
+# for dir in /usr /mingw32 /mingw64; do
+# 
+# 	# Enter our directory if we have it
+# 	cd "${dir}" || continue
+# 
+# 	# Check if we have an associated stripping tool
+# 	if [[ ! -f "bin/strip.exe" ]]; then continue; fi
+# 
+# 	# Start stripping
+# 	find . -type f              \
+# 		\( -iname '*.exe'       \
+# 		   -or -iname '*.a'     \
+# 		   -or -iname '*.dll'   \
+# 		   -or -iname '*.so'    \
+# 		\)                      \
+# 		-a ! -iname 'strip.exe' \
+# 		-print0                 \
+# 	| xargs -0 ./bin/strip.exe --strip-unneeded
+# done
 
 # Delete documentation directories
 rm -rf /mingw*/share/man
