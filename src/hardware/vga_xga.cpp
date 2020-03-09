@@ -183,8 +183,8 @@ Bitu XGA_GetPoint(Bitu x, Bitu y) {
 	return 0;
 }
 
-
-Bitu XGA_GetMixResult(Bitu mixmode, Bitu srcval, Bitu dstdata) {
+static Bitu GetMixResult(Bitu mixmode, Bitu srcval, Bitu dstdata)
+{
 	Bitu destval = 0;
 	switch(mixmode &  0xf) {
 		case 0x00: /* not DST */
@@ -320,7 +320,7 @@ void XGA_DrawLineVector(Bitu val) {
 				}
 				dstdata = XGA_GetPoint(xat,yat);
 
-				destval = XGA_GetMixResult(mixmode, srcval, dstdata);
+				destval = GetMixResult(mixmode, srcval, dstdata);
 
                 XGA_DrawPoint(xat,yat, destval);
 				break;
@@ -419,7 +419,7 @@ void XGA_DrawLineBresenham(Bitu val) {
 						dstdata = XGA_GetPoint(yat,xat);
 					}
 
-					destval = XGA_GetMixResult(mixmode, srcval, dstdata);
+					destval = GetMixResult(mixmode, srcval, dstdata);
 
 					if(steep) {
 						XGA_DrawPoint(xat,yat, destval);
@@ -496,7 +496,7 @@ void XGA_DrawRectangle(Bitu val) {
 					}
 					dstdata = XGA_GetPoint(srcx,srcy);
 
-					destval = XGA_GetMixResult(mixmode, srcval, dstdata);
+					destval = GetMixResult(mixmode, srcval, dstdata);
 
                     XGA_DrawPoint(srcx,srcy, destval);
 					break;
@@ -561,7 +561,7 @@ void XGA_DrawWaitSub(Bitu mixmode, Bitu srcval) {
 	Bitu destval;
 	Bitu dstdata;
 	dstdata = XGA_GetPoint(xga.waitcmd.curx, xga.waitcmd.cury);
-	destval = XGA_GetMixResult(mixmode, srcval, dstdata);
+	destval = GetMixResult(mixmode, srcval, dstdata);
 	//LOG_MSG("XGA: DrawPattern: Mixmode: %x srcval: %x", mixmode, srcval);
 
 	XGA_DrawPoint(xga.waitcmd.curx, xga.waitcmd.cury, destval);
@@ -796,7 +796,7 @@ void XGA_BlitRect(Bitu val) {
 					break;
 			}
 
-			destval = XGA_GetMixResult(mixmode, srcval, dstdata);
+			destval = GetMixResult(mixmode, srcval, dstdata);
 			//LOG_MSG("XGA: DrawPattern: Mixmode: %x Mixselect: %x", mixmode, mixselect);
 
 			XGA_DrawPoint(tarx, tary, destval);
@@ -882,7 +882,7 @@ void XGA_DrawPattern(Bitu val) {
 					break;
 			}
 
-			destval = XGA_GetMixResult(mixmode, srcval, dstdata);
+			destval = GetMixResult(mixmode, srcval, dstdata);
 
 			XGA_DrawPoint(tarx, tary, destval);
 			
