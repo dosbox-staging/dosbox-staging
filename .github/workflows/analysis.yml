@@ -141,15 +141,15 @@ jobs:
       matrix:
         conf:
           - name: Clang
-            usan:  -1
-            msan:  -1
+            usan:  93
+            msan:  -1 # unstable; does not work with pre-compiled STL
             tsan:  -1
             uasan: -1
           - name: GCC
-            usan:  -1
+            usan:  44
             msan:  -1
-            tsan:  -1
-            uasan: -1
+            tsan:  0  # our test does not trigger multiple threads yet
+            uasan: 177
     steps:
       - uses: actions/checkout@v1
         with:
