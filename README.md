@@ -72,7 +72,7 @@ Other feature differences:
 Pre-release builds can be downloaded from CI build artifacts. Go to
 [Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess+branch%3Amaster),
 [Windows](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster)
-or [macOS](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster),
+or [macOS](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22+is%3Asuccess+branch%3Amaster),
 select the newest build and download the package linked in the
 "**Artifacts**" section.
 
@@ -108,7 +108,7 @@ unrecognised app from starting", you have two options to dismiss it:
 
 Windows packages are built for "x86" architecture (in practice it means i686).
 
-### [macOS](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster)
+### [macOS](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22+is%3Asuccess+branch%3Amaster)
 
 Due to GitHub CI and Apple SDKs limitations, the snapshots work only on
 macOS Catalina (10.15).
