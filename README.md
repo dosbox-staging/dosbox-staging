@@ -19,7 +19,7 @@ Read more at
 | **CI**                         | Yes                         | No
 | **Static analysis**            | Yes<sup>[2],[3]</sup>       | No
 | **Dynamic analysis**           | Yes                         | No
-| **Automated regression tests** | No (planned)<sup>[4]</sup>  | No
+| **Automated regression tests** | No (WIP)                    | No
 | **SDL**                        | 2.0                         | 1.2<sup>＊</sup>
 
 [SVN]:https://sourceforge.net/projects/dosbox/
@@ -57,15 +57,17 @@ Other feature differences:
 
 |                        | dosbox-staging                               | DOSBox
 |-                       |-                                             |-
-| **[OPL] emulators**    | compat, fast, mame, nuked<sup>[7]</sup>      | compat, fast, mame
-| **[CGA]/mono support** | Yes (`machine=cga_mono`)<sup>[8]</sup>       | Only CGA with colour
+| **Pixel-perfect mode** | Yes (`output=texturepp`)<sup>[7]</sup>       | N/A
+| **[OPL] emulators**    | compat, fast, mame, nuked<sup>[8]</sup>      | compat, fast, mame
+| **[CGA]/mono support** | Yes (`machine=cga_mono`)<sup>[9]</sup>       | Only CGA with colour
 | **[Wayland] support**  | Experimental (use `SDL_VIDEODRIVER=wayland`) | N/A
 
 [OPL]:https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]:https://en.wikipedia.org/wiki/Color_Graphics_Adapter
 [Wayland]:https://en.wikipedia.org/wiki/Wayland_(display_server_protocol)
-[7]:https://www.vogons.org/viewtopic.php?f=9&t=37782
-[8]:https://github.com/dreamer/dosbox-staging/commit/ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
+[7]:https://github.com/dreamer/dosbox-staging/commit/d1be65b105de714924947df4a7909e684d283385
+[8]:https://www.vogons.org/viewtopic.php?f=9&t=37782
+[9]:https://github.com/dreamer/dosbox-staging/commit/ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
 
 ## Development snapshot builds
 
