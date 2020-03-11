@@ -141,15 +141,13 @@ jobs:
       matrix:
         conf:
           - name: Clang
-            sanitizers: USAN MSAN
+            sanitizers: USAN
             usan:  93
-            msan:  -1 # unstable; does not work with pre-compiled STL
             tsan:  -1
             uasan: -1
           - name: GCC
-            sanitizers: USAN TSAN UASAN
-            usan:  44
-            msan:  -1
+            sanitizers: TSAN UASAN
+            usan:  -1
             tsan:  0  # our test does not trigger multiple threads yet
             uasan: 177
     steps:
@@ -184,7 +182,6 @@ jobs:
         env:
           USAN_LOG:  ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-USAN-EnterExit.log.xz
           TSAN_LOG:  ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-TSAN-EnterExit.log.xz
-          MSAN_LOG:  ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-MSAN-EnterExit.log.xz
           UASAN_LOG: ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-UASAN-EnterExit.log.xz
         run: |
           # summary
@@ -203,12 +200,6 @@ jobs:
             echo_bold "Thread sanitizer:"
             echo
             xzcat "$TSAN_LOG" | MAX_ISSUES=${{ matrix.conf.tsan }} ./scripts/count-xsan-issues.py -
-          fi
-
-          if [[ -f "$MSAN_LOG" ]] ; then
-            echo_bold "Memory sanitizer:"
-            echo
-            xzcat "$MSAN_LOG" | MAX_ISSUES=${{ matrix.conf.msan }} ./scripts/count-xsan-issues.py -
           fi
 
           if [[ -f "$UASAN_LOG" ]] ; then
