@@ -141,11 +141,13 @@ jobs:
       matrix:
         conf:
           - name: Clang
+            sanitizers: USAN MSAN
             usan:  93
             msan:  -1 # unstable; does not work with pre-compiled STL
             tsan:  -1
             uasan: -1
           - name: GCC
+            sanitizers: USAN TSAN UASAN
             usan:  44
             msan:  -1
             tsan:  0  # our test does not trigger multiple threads yet
@@ -168,13 +170,11 @@ jobs:
         env:
           VERSION_GCC: 9
           VERSION_Clang: 8
-          SANITIZERS_GCC: UASAN USAN TSAN
-          SANITIZERS_Clang: USAN MSAN
         run: |
           ./.github/scripts/build-and-run-sanitizers.sh \
-          ${{ matrix.conf.name }} \
-          $VERSION_${{ matrix.conf.name }} \
-          $SANITIZERS_${{ matrix.conf.name }}
+            ${{ matrix.conf.name }} \
+            $VERSION_${{ matrix.conf.name }} \
+            ${{ matrix.conf.sanitizers }}
       - name: Upload logs
         uses: actions/upload-artifact@master
         with:
