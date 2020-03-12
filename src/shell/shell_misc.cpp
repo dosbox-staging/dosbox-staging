@@ -33,7 +33,9 @@ void DOS_Shell::ShowPrompt(void) {
 	char dir[DOS_PATHLENGTH];
 	dir[0] = 0; //DOS_GetCurrentDir doesn't always return something. (if drive is messed up)
 	DOS_GetCurrentDir(0,dir);
-	WriteOut("%c:\\%s>",drive,dir);
+	InjectMissingNewline();
+	WriteOut("%c:\\%s>", drive, dir);
+	ResetLastWrittenChar('\n'); // prevents excessive newline if cmd prints nothing
 }
 
 static void outc(Bit8u c) {
