@@ -26,6 +26,7 @@
 #include "callback.h"
 #include "debug.h"
 #include "cpu.h"
+#include "programs.h"
 
 const char * RunningProgram="DOSBOX";
 
@@ -422,6 +423,8 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		csip=RealMake(loadseg+head.initCS,head.initIP);
 		sssp=RealMake(loadseg+head.initSS,head.initSP);
 		if (head.initSP<4) LOG(LOG_EXEC,LOG_ERROR)("stack underflow/wrap at EXEC");
+
+		Program::ResetLastWrittenChar('\0'); // triggers newline injection after DOS programs
 	}
 
 	if ((flags==LOAD) || (flags==LOADNGO)) {

@@ -174,6 +174,23 @@ void Program::WriteOut_NoParsing(const char * format) {
 //	DOS_WriteFile(STDOUT,(Bit8u *)format,&size);
 }
 
+void Program::ResetLastWrittenChar(char c)
+{
+	last_written_character = c;
+}
+
+void Program::InjectMissingNewline()
+{
+	if (last_written_character == '\n')
+		return;
+
+	uint16_t n = 2;
+	uint8_t dos_nl[] = "\r\n";
+	dos.internal_output = true;
+	DOS_WriteFile(STDOUT, dos_nl, &n);
+	dos.internal_output = false;
+	last_written_character = '\n';
+}
 
 bool Program::GetEnvStr(const char * entry,std::string & result) {
 	/* Walk through the internal environment and see for a match */

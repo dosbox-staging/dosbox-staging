@@ -82,10 +82,12 @@ public:
 	bool GetEnvNum(Bitu num,std::string & result);
 	Bitu GetEnvCount(void);
 	bool SetEnv(const char * entry,const char * new_string);
-	void WriteOut(const char * format,...);				/* Write to standard output */
-	void WriteOut_NoParsing(const char * format);				/* Write to standard output, no parsing */
+	void WriteOut(const char *format, ...);	// printf to DOS stdout
+	void WriteOut_NoParsing(const char *str); // write string to DOS stdout
+	void InjectMissingNewline();
 	void ChangeToLongCmd();
 
+	static void ResetLastWrittenChar(char c);
 };
 
 typedef void (PROGRAMS_Main)(Program * * make);
