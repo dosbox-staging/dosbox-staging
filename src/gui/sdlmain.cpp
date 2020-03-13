@@ -221,6 +221,7 @@ enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_HIGHEST
 };
 
+
 struct SDL_Block {
 	bool inited;
 	bool active;							//If this isn't set don't draw
@@ -293,6 +294,7 @@ struct SDL_Block {
 	const char *rendererDriver;
 	int displayNumber;
 	struct {
+		SDL_Surface *input_surface = nullptr;
 		SDL_Texture *texture = nullptr;
 		SDL_PixelFormat *pixelFormat = nullptr;
 	} texture;
@@ -988,6 +990,7 @@ dosurface:
 		rendering drivers, "opengles" being a notable exception */
 		sdl.texture.texture = SDL_CreateTexture(sdl.renderer, SDL_PIXELFORMAT_ARGB8888,
 		                                        SDL_TEXTUREACCESS_STREAMING, width, height);
+
 		/* SDL_PIXELFORMAT_ABGR8888 (not RGB) is the
 		only supported format for the "opengles" driver */
 		if (!sdl.texture.texture) {
@@ -1001,6 +1004,13 @@ dosurface:
 			LOG_MSG("SDL:Can't create texture, falling back to surface");
 			goto dosurface;
 		}
+
+		sdl.texture.input_surface = SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0);
+		if (!sdl.texture.input_surface) {
+			LOG_MSG("SDL: Error while preparing texture input");
+			goto dosurface;
+		}
+
 		SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 		sdl.desktop.type=SCREEN_TEXTURE;
 		Uint32 pixelFormat;
@@ -1408,7 +1418,6 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 	if (!sdl.active || sdl.updating)
 		return false;
 
-	void *tex_pixels = nullptr;
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
 		pixels = static_cast<uint8_t *>(sdl.surface->pixels);
@@ -1420,9 +1429,9 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 		sdl.updating = true;
 		return true;
 	case SCREEN_TEXTURE:
-		if (SDL_LockTexture(sdl.texture.texture, nullptr, &tex_pixels, &pitch) < 0)
-			return false;
-		pixels = static_cast<uint8_t *>(tex_pixels);
+		assert(sdl.texture.input_surface);
+		pixels = static_cast<uint8_t *>(sdl.texture.input_surface->pixels);
+		pitch = sdl.texture.input_surface->pitch;
 		sdl.updating = true;
 		return true;
 #if C_OPENGL
@@ -1475,7 +1484,11 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		}
 		break;
 	case SCREEN_TEXTURE:
-		SDL_UnlockTexture(sdl.texture.texture);
+		assert(sdl.texture.input_surface);
+		SDL_UpdateTexture(sdl.texture.texture,
+		                  nullptr, // update entire texture
+		                  sdl.texture.input_surface->pixels,
+		                  sdl.texture.input_surface->pitch);
 		SDL_RenderClear(sdl.renderer);
 		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, NULL, &sdl.clip);
 		SDL_RenderPresent(sdl.renderer);
@@ -1591,6 +1604,10 @@ static void CleanupSDLResources()
 	if (sdl.texture.texture) {
 		SDL_DestroyTexture(sdl.texture.texture);
 		sdl.texture.texture = nullptr;
+	}
+	if (sdl.texture.input_surface) {
+		SDL_FreeSurface(sdl.texture.input_surface);
+		sdl.texture.input_surface = nullptr;
 	}
 	if (sdl.renderer) {
 		SDL_DestroyRenderer(sdl.renderer);
