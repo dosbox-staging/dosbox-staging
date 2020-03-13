@@ -57,6 +57,7 @@ clean.log
 make.log
 .previous_build
 .current_build
+*.defines
 
 # Visual Studio
 .vs
