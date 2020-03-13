@@ -546,13 +546,16 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 			SDL_DestroyWindow(sdl.window);
 		}
 
-		/* Don't create a fullscreen immediately. Reasons:
-		 * 1. This theoretically allows us to set window resolution and
-		 * then let SDL2 remember it for later (even if not actually done).
-		 * 2. It's a bit less glitchy to set a custom display mode for a
-		 * full screen, albeit it's still not perfect (at least on X11).
-		 */
-		const uint32_t flags = (screenType == SCREEN_OPENGL) ? SDL_WINDOW_OPENGL : 0;
+		uint32_t flags = 0;
+		if (screenType == SCREEN_OPENGL)
+			flags |= SDL_WINDOW_OPENGL;
+#if defined (WIN32)
+		// This is a hack for Windows 10 to prevent a crash in AMD OpenGL
+		// driver when window is being re-created by SDL2 internally to
+		// support OpenGL.
+		else if (screenType == SCREEN_TEXTURE && starts_with("opengl", sdl.render_driver))
+			flags |= SDL_WINDOW_OPENGL;
+#endif
 
 		// Using undefined position will take care of placing and restoring the
 		// window by WM.
@@ -1915,6 +1918,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.texture.texture = 0;
 	sdl.texture.pixelFormat = 0;
 	sdl.render_driver = section->Get_string("texture_renderer");
+	lowcase(sdl.render_driver);
 
 #if C_OPENGL
 	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
@@ -1983,7 +1987,6 @@ static void GUI_StartUp(Section * sec) {
 			LOG_MSG("OpenGL extension: pixel_bufer_object %d",sdl.opengl.pixel_buffer_object);
 		}
 	} /* OPENGL is requested end */
-
 #endif	//OPENGL
 
 	if (!SetDefaultWindowMode())
