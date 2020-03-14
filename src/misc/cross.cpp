@@ -55,6 +55,17 @@ static void W32_ConfDir(std::string& in,bool create) {
 }
 #endif
 
+static std::string GetXdgConfigHome() {
+	char * xdg_config_home = getenv("XDG_CONFIG_HOME");
+		if(xdg_config_home) {
+			return std::string(xdg_config_home);
+		} else {
+			std::string in = "~/.config";
+			Cross::ResolveHomedir(in);
+			return in;
+		}
+}
+
 void Cross::GetPlatformConfigDir(std::string& in) {
 #ifdef WIN32
 	W32_ConfDir(in,false);
@@ -63,8 +74,7 @@ void Cross::GetPlatformConfigDir(std::string& in) {
 	in = "~/Library/Preferences";
 	ResolveHomedir(in);
 #else
-	in = "~/.dosbox";
-	ResolveHomedir(in);
+	in = GetXdgConfigHome() + "/dosbox";
 #endif
 	in += CROSS_FILESPLIT;
 }
@@ -90,8 +100,7 @@ void Cross::CreatePlatformConfigDir(std::string& in) {
 	ResolveHomedir(in);
 	//Don't create it. Assume it exists
 #else
-	in = "~/.dosbox";
-	ResolveHomedir(in);
+	in = GetXdgConfigHome() + "/dosbox";
 	mkdir(in.c_str(),0700);
 #endif
 	in += CROSS_FILESPLIT;
