@@ -5,5 +5,6 @@ Comment=A modernized DOSBox
 Exec=dosbox
 Icon=dosbox-staging
 Type=Application
-Keywords=DOS,gaming,games,game,emulator
+Terminal=false
+Keywords=dos;gaming;game;games;emulator;
 Categories=Game
