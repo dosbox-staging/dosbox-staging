@@ -11,4 +11,5 @@ itself.
 - **static-opus**: Compiles a static Opusfile library that can be used
   by `./configure` in the absense of `pkg-config`
 - **macos**: Files required for creating macOS App bundle
+- **linux**: Desktop file for Linux
 

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=dosbox-staging
+GenericName=DOS emulator
+Comment=A modernized DOSBox
+Exec=dosbox
+Icon=dosbox-staging
+Type=Application
+Keywords=DOS,gaming,games,game,emulator
+Categories=Game
