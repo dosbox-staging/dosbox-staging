@@ -21,16 +21,37 @@ declare -gr green="\\e[32m"
 declare -gr cyan="\\e[36m"
 declare -gr reset="\\e[0m"
 
-# Round up defines files
-# shellcheck disable=SC2207
-defines=( $(find . -name '*.defines') )
+# Path to our define script
+write_defines="./scripts/dump-preprocessor-defines.sh"
 
-# Ensure we have the expected quantity
-actual="${#defines[@]}"
-expected="$(find . -name '*.cpp' -o -name '*.c' | wc -l)"
-if (( "$actual" != "$expected" )); then
-    echo "We should have $expected .defines files but $actual were found"
-	exit 1
+# Round up defines files
+if [[ "$#" == "0" ]]; then
+	"$write_defines"
+
+	# shellcheck disable=SC2207
+	defines=( $(find . -name '*.defines') )
+
+	# Ensure we have as many as we have source files
+	actual="${#defines[@]}"
+	expected="$(find . -name '*.cpp' -o -name '*.c' | wc -l)"
+	if (( "$actual" != "$expected" )); then
+		echo "We should have $expected .defines files but $actual were found"
+		exit 1
+	fi
+
+# Otherwise verify only those files specified
+else
+	defines=( )
+	for f in "$@"; do
+		extension="${f##*.}"
+		if [[ "$extension" == "defines" ]]; then
+			"$write_defines" "${f%.*}"
+			defines+=( "$f" )
+		else
+			"$write_defines" "$f"
+			defines+=( "${f}.defines" )
+		fi
+	done
 fi
 
 # The header strings that we're looking for

@@ -23,11 +23,16 @@ gcc_includes="$(gcc -xc++ -E -v - < /dev/null 2>&1 | grep '^ ' | tail -n +2 | se
 sdl_includes="$(sdl2-config --cflags)"
 
 # Round up our source files
-sources=( "$(find . -name '*.cpp' -o -name '*.c')" )
+if [[ "$#" == "0" ]]; then
+	sources=( "$(find . -name '*.cpp' -o -name '*.c')" )
+else
+	sources=( "$@" )
+fi
 
 # Run it
-parallel \
-	"g++ -std=gnu++11 \
+parallel "\
+	[[ ! -f {}.defines || {} -nt {}.defines ]] \
+	&& g++ -std=gnu++11 \
 	    $gcc_includes \
 	    $sdl_includes \
 	    -I$root_dir \
@@ -35,5 +40,6 @@ parallel \
 	    -I{//} \
 	    -DHAVE_CONFIG_H \
 	    -E -dM -include '{}' - < /dev/null 2> /dev/null \
-	    | grep '^#define' > '{.}.defines' \
-	    ; echo '{} to {.}.defines'" ::: "${sources[@]}"
+	| grep '^#define' > '{}.defines' \
+	&& echo '{} to {}.defines' \
+	|| true" ::: "${sources[@]}"
