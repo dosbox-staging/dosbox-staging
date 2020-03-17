@@ -26,7 +26,7 @@ bar for ourselves.
   working towards consensus and achieving the project's technical goals.
 - **educate and illuminate** others with something we know more about. We were
   all beginners once, and can teach and learn through feedback and sharing.
-- **are open to feedback** from others, be it technical points,  interpersonal
+- **are open to feedback** from others, be it technical points, interpersonal
   tips, or language/wording suggestions.
 - **use words carefully**, because we may not understand irony or negative
   sarcasm. We communicate plainly, and we justify our positions objectively and
