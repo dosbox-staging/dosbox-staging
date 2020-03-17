@@ -245,6 +245,7 @@ struct SDL_Block {
 		} full;
 		struct {
 			Bit16u width, height;
+			bool use_original_size = true;
 		} window;
 		Bit8u bpp;
 		bool fullscreen;
@@ -518,32 +519,6 @@ static int int_log2 (int val) {
     return log;
 }
 
-struct window_pos {
-	int x;
-	int y;
-};
-
-static window_pos get_default_pos(bool fullscreen)
-{
-	// When the initial window is created in fullscreen (when requested
-	// window size matches the desktop, which is always the case for
-	// fullresolution=desktop), the position is forced to (0,0).
-	// In result, when leaving fullscreen the window is placed in top/left
-	// corner.
-	//                                                                        
-	// To work around this problem, center the window manually based on
-	// the original drawing size, and not window size.
-
-	if (fullscreen) {
-		const int x = (sdl.desktop.full.width - sdl.draw.width) / 2;
-		const int y = (sdl.desktop.full.height - sdl.draw.height) / 2;
-		return { x, y };
-	} else {
-		const int sdl_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber);
-		return { sdl_pos, sdl_pos };
-	}
-}
-
 static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fullscreen, SCREEN_TYPES screenType)
 {
 	static SCREEN_TYPES lastType = SCREEN_SURFACE;
@@ -572,10 +547,13 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		return sdl.window;
 	}
 
+	const bool first_window = !sdl.window;
+
 	/* If we change screen type, recreate the window. Furthermore, if
 	 * it is our very first time then we simply create a new window.
 	 */
-	if (!sdl.window || (lastType != screenType)) {
+	if (first_window || (lastType != screenType)) {
+
 		lastType = screenType;
 
 		if (sdl.window) {
@@ -588,13 +566,36 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		 * 2. It's a bit less glitchy to set a custom display mode for a
 		 * full screen, albeit it's still not perfect (at least on X11).
 		 */
-		const auto pos = get_default_pos(fullscreen);
 		const uint32_t flags = (screenType == SCREEN_OPENGL) ? SDL_WINDOW_OPENGL : 0;
-		sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
+
+		// Using undefined position will take care of placing and restoring the
+		// window by WM.
+		const int sdl_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber);
+		sdl.window = SDL_CreateWindow("", sdl_pos, sdl_pos, width, height, flags);
 
 		if (!sdl.window) {
 			return sdl.window;
 		}
+
+#if defined (WIN32)
+		// Force window position when going straight to fullscreen.
+		// Otherwise, SDL will reset window position to 0,0 when
+		// switching to a window for the first time. This is happening
+		// on every OS, but only on Windows it's a really big problem
+		// (because window decorations are rendered off-screen).
+		//
+		// To work around this problem, center the window manually based on
+		// the original drawing size, and not window size.
+		//
+		// On Linux this workaround breaks window position on
+		// multi-monitor setups, so let's use it on Windows only.
+
+		if (first_window && fullscreen) {
+			const int x = (sdl.desktop.full.width - sdl.draw.width) / 2;
+			const int y = (sdl.desktop.full.height - sdl.draw.height) / 2;
+			SDL_SetWindowPosition(sdl.window, x, y);
+		}
+#endif
 
 		GFX_SetTitle(-1, -1, false); // refresh title.
 
@@ -645,14 +646,6 @@ SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height)
 	rect.w = width;
 	rect.h = height;
 	return rect;
-}
-
-// Currently used for an initial test here
-static SDL_Window * GFX_SetSDLOpenGLWindow(Bit16u width, Bit16u height)
-{
-	// Android part used:
-	// return GFX_SetSDLWindowMode(sdl.desktop.full.width, sdl.desktop.full.height, true, SCREEN_OPENGL);
-	return GFX_SetSDLWindowMode(width, height, false, SCREEN_OPENGL);
 }
 
 static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType)
@@ -1687,8 +1680,35 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 }
 #endif
 
-// #include "dosbox_splash.h"
 #include "dosbox_staging_splash.c"
+
+static SDL_Window * SetDefaultWindowMode()
+{
+	if (sdl.window)
+		return sdl.window;
+
+	sdl.draw.width = gimp_image.width;
+	sdl.draw.height = gimp_image.height;
+
+	if (sdl.desktop.fullscreen) {
+		return GFX_SetSDLWindowMode(sdl.desktop.full.width,
+		                            sdl.desktop.full.height,
+		                            sdl.desktop.fullscreen,
+		                            sdl.desktop.want_type);
+	}
+
+	if (sdl.desktop.window.use_original_size) {
+		return GFX_SetSDLWindowMode(sdl.draw.width,
+		                            sdl.draw.height,
+		                            false,
+		                            sdl.desktop.want_type);
+	}
+
+	return GFX_SetSDLWindowMode(sdl.desktop.window.width,
+	                            sdl.desktop.window.height,
+	                            false,
+	                            sdl.desktop.want_type);
+}
 
 /* 
  * Please leave the Splash screen stuff in working order.
@@ -1807,6 +1827,7 @@ static void GUI_StartUp(Section * sec) {
 		safe_strncpy( res,windowresolution, sizeof( res ));
 		windowresolution = lowcase (res);//so x and X are allowed
 		if(strcmp(windowresolution,"original")) {
+			sdl.desktop.window.use_original_size = false;
 			char* height = const_cast<char*>(strchr(windowresolution,'x'));
 			if(height && *height) {
 				*height = 0;
@@ -1874,7 +1895,7 @@ static void GUI_StartUp(Section * sec) {
 
 #if C_OPENGL
 	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
-		if (!GFX_SetSDLOpenGLWindow(640, 400)) {
+		if (!SetDefaultWindowMode()) {
 			LOG_MSG("Could not create OpenGL window, switching back to surface");
 			sdl.desktop.want_type = SCREEN_SURFACE;
 		} else {
@@ -1942,7 +1963,7 @@ static void GUI_StartUp(Section * sec) {
 
 #endif	//OPENGL
 
-	if (!GFX_SetSDLSurfaceWindow(gimp_image.width, gimp_image.height))
+	if (!SetDefaultWindowMode())
 		E_Exit("Could not initialize video: %s", SDL_GetError());
 
 	// FIXME the code updated sdl.desktop.bpp in here (has effect in setting up scalers)
