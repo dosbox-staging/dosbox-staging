@@ -74,7 +74,7 @@ typedef struct {
 		ScalerLineHandler_t linePalHandler;
 		ScalerComplexHandler_t complexHandler;
 		Bitu blocks, lastBlock;
-		Bitu outPitch;
+		int outPitch;
 		Bit8u *outWrite;
 		Bitu cachePitch;
 		Bit8u *cacheRead;
