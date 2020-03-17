@@ -2438,6 +2438,12 @@ static void CreateBindGroups(void) {
 		if (mapper.sticks.num) SDL_JoystickEventState(SDL_ENABLE);
 		else return;
 #endif
+		// Free up our previously assigned joystick slot before assinging below
+		if (joytype != JOY_NONE && mapper.sticks.stick[mapper.sticks.num_groups]) {
+			delete mapper.sticks.stick[mapper.sticks.num_groups];
+			mapper.sticks.stick[mapper.sticks.num_groups] = nullptr;
+		}
+
 		Bit8u joyno=0;
 		switch (joytype) {
 		case JOY_NONE:
@@ -2474,6 +2480,7 @@ static void CreateBindGroups(void) {
 #if defined (REDUCE_JOYSTICK_POLLING)
 void MAPPER_UpdateJoysticks(void) {
 	for (Bitu i=0; i<mapper.sticks.num_groups; i++) {
+		assert(mapper.sticks.stick[i]);
 		mapper.sticks.stick[i]->UpdateJoystick();
 	}
 }
