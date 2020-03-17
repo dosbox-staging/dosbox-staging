@@ -19,30 +19,15 @@
 #ifndef DOSBOX_CONTROL_H
 #define DOSBOX_CONTROL_H
 
-#ifndef DOSBOX_PROGRAMS_H
-#include "programs.h"
-#endif
-#ifndef DOSBOX_SETUP_H
-#include "setup.h"
-#endif
+#include "dosbox.h"
 
-#ifndef CH_LIST
-#define CH_LIST
+#include <cassert>
 #include <list>
-#endif
-
-#ifndef CH_VECTOR
-#define CH_VECTOR
-#include <vector>
-#endif
-
-#ifndef CH_STRING
-#define CH_STRING
 #include <string>
-#endif
+#include <vector>
 
-
-
+#include "programs.h"
+#include "setup.h"
 
 class Config{
 public:
@@ -56,14 +41,25 @@ private:
 	void (* _start_function)(void);
 	bool secure_mode; //Sandbox mode
 public:
-	bool initialised;
 	std::vector<std::string> startup_params;
 	std::vector<std::string> configfiles;
-	Config(CommandLine * cmd):cmdline(cmd),secure_mode(false) {
+
+	Config(CommandLine *cmd)
+		: cmdline(cmd),
+		  sectionlist{},
+		  _start_function(nullptr),
+		  secure_mode(false),
+		  startup_params{},
+		  configfiles{}
+	{
+		assert(cmdline);
 		startup_params.push_back(cmdline->GetFileName());
 		cmdline->FillVector(startup_params);
-		initialised=false;
 	}
+
+	Config(const Config&) = delete; // prevent copying
+	Config& operator=(const Config&) = delete; // prevent assignment
+
 	~Config();
 
 	Section_line * AddSection_line(char const * const _name,void (*_initfunction)(Section*));
