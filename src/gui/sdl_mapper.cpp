@@ -405,9 +405,9 @@ protected:
 #define MAX_VJOY_HAT 16
 #define MAX_VJOY_AXIS 8
 static struct {
-	bool button_pressed[MAX_VJOY_BUTTONS];
-	Bit16s axis_pos[MAX_VJOY_AXIS];
-	bool hat_pressed[MAX_VJOY_HAT];
+	int16_t axis_pos[MAX_VJOY_AXIS] = {0};
+	bool hat_pressed[MAX_VJOY_HAT] = {false};
+	bool button_pressed[MAX_VJOY_BUTTONS] = {false};
 } virtual_joysticks[2];
 
 
@@ -1197,8 +1197,9 @@ static struct CMapper {
 	bool addbind = false;
 	Bitu mods = 0;
 	struct {
-		Bitu num_groups,num;
-		CStickBindGroup * stick[MAXSTICKS];
+		CStickBindGroup * stick[MAXSTICKS] = {nullptr};
+		unsigned int num = 0;
+		unsigned int num_groups = 0;
 	} sticks;
 	std::string filename = "";
 } mapper;
@@ -2577,19 +2578,10 @@ void MAPPER_Init(void) {
 	}
 }
 
-static void ReloadMapper(Section *sec) {
+void MAPPER_StartUp(Section * sec) {
+	// Set the user-defined mapper file, or the default (if not specified)
 	Section_prop const *const section=static_cast<Section_prop *>(sec);
 	Prop_path const *const pp = section->Get_path("mapperfile");
 	mapper.filename = pp->realpath;
-	GFX_LosingFocus(); //Release any keys pressed, or else they'll get stuck.
-	MAPPER_Init();
-}
-
-void MAPPER_StartUp(Section * sec) {
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	section->AddInitFunction(&ReloadMapper, true); //runs immediately after this function ends
-	mapper.sticks.num=0;
-	mapper.sticks.num_groups=0;
-	memset(&virtual_joysticks,0,sizeof(virtual_joysticks));
 	MAPPER_AddHandler(&MAPPER_Run,MK_f1,MMOD1,"mapper","Mapper");
 }
