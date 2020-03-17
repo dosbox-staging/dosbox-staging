@@ -386,21 +386,19 @@ void GFX_SetTitle(Bit32s cycles,int frameskip,bool paused){
 static unsigned char logo[32*32*4]= {
 #include "dosbox_logo.h"
 };
-static void GFX_SetIcon() {
+
+static void SetIcon()
+{
+	// Don't set it on macOS, as we use a nicer external icon there.
 #if !defined(MACOSX)
-	/* Set Icon (must be done before any sdl_setvideomode call) */
-	/* But don't set it on OS X, as we use a nicer external icon there. */
-	/* Made into a separate call, so it can be called again when we restart the graphics output on win32 */
 #ifdef WORDS_BIGENDIAN
 	SDL_Surface* logos= SDL_CreateRGBSurfaceFrom((void*)logo,32,32,32,128,0xff000000,0x00ff0000,0x0000ff00,0);
 #else
 	SDL_Surface* logos= SDL_CreateRGBSurfaceFrom((void*)logo,32,32,32,128,0x000000ff,0x0000ff00,0x00ff0000,0);
 #endif
-
 	SDL_SetWindowIcon(sdl.window, logos);
 #endif // !defined(MACOSX)
 }
-
 
 static void KillSwitch(bool pressed) {
 	if (!pressed)
@@ -1767,8 +1765,6 @@ static void GUI_StartUp(Section * sec) {
 	sdl.resizing_window = false;
 	sdl.update_display_contents = true;
 
-	GFX_SetIcon();
-
 	sdl.desktop.lazy_fullscreen=false;
 	sdl.desktop.lazy_fullscreen_req=false;
 
@@ -1969,6 +1965,7 @@ static void GUI_StartUp(Section * sec) {
 	// FIXME the code updated sdl.desktop.bpp in here (has effect in setting up scalers)
 
 	SDL_SetWindowTitle(sdl.window, "DOSBox");
+	SetIcon();
 
 	GFX_Start();
 	DisplaySplash(1000);
