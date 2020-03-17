@@ -22,7 +22,7 @@
       } else { __l *= 2; memcpy (__ip, __rd, __l); \
                __ip += __l; __rd += __l; } } \
   } } while (0)
-static const struct {
+static constexpr struct {
   unsigned int 	 width;
   unsigned int 	 height;
   unsigned int 	 bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */ 

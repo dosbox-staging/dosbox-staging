@@ -23,6 +23,7 @@
 
 #include "dosbox.h"
 
+#include <array>
 #include <cassert>
 #include <cstdlib>
 #include <string.h>
@@ -246,7 +247,6 @@ struct SDL_Block {
 			Bit16u width, height;
 		} window;
 		Bit8u bpp;
-		Bit32u sdl2pixelFormat;
 		bool fullscreen;
 		bool lazy_fullscreen;
 		bool lazy_fullscreen_req;
@@ -1690,6 +1690,52 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 // #include "dosbox_splash.h"
 #include "dosbox_staging_splash.c"
 
+/* 
+ * Please leave the Splash screen stuff in working order.
+ * We spend a lot of time making DOSBox.
+ */
+static void DisplaySplash(uint32_t time_ms)
+{
+	assert(sdl.window);
+
+	constexpr int src_w = gimp_image.width;
+	constexpr int src_h = gimp_image.height;
+	constexpr int src_bpp = gimp_image.bytes_per_pixel;
+	static_assert(src_bpp == 3, "Source image expected in RGB format.");
+
+	const auto flags = GFX_SetSize(src_w, src_h, GFX_CAN_32, 1.0, 1.0, nullptr, 1.0);
+	if (!(flags & GFX_CAN_32)) {
+		LOG_MSG("Can't show 32bpp splash.");
+		return;
+	}
+
+	uint8_t *out = nullptr;
+	int pitch = 0;
+	if (!GFX_StartUpdate(out, pitch))
+		E_Exit("%s", SDL_GetError());
+
+	std::array<uint8_t, (src_w * src_h * src_bpp)> splash;
+	GIMP_IMAGE_RUN_LENGTH_DECODE(splash.data(), gimp_image.rle_pixel_data,
+	                             src_w * src_h, src_bpp);
+
+	assertm(out, "GFX_StartUpdate is supposed to give us buffer.");
+	uint32_t *pixels = reinterpret_cast<uint32_t *>(out);
+
+	size_t i = 0;
+	size_t j = 0;
+	static_assert(splash.size() % 3 == 0, "Reading 3 bytes at a time.");
+	while (i < splash.size()) {
+		const uint32_t r = splash[i++];
+		const uint32_t g = splash[i++];
+		const uint32_t b = splash[i++];
+		pixels[j++] = (r << 16) | (g << 8) | b;
+	}
+
+	const uint16_t lines[2] = {0, src_h}; // output=surface won't work otherwise
+	GFX_EndUpdate(lines);
+	SDL_Delay(time_ms);
+}
+
 //extern void UI_Run(bool);
 void Restart(bool pressed);
 
@@ -1895,98 +1941,17 @@ static void GUI_StartUp(Section * sec) {
 	} /* OPENGL is requested end */
 
 #endif	//OPENGL
-	/* Initialize screen for first time */
-	if (!GFX_SetSDLSurfaceWindow(640, 400))
+
+	if (!GFX_SetSDLSurfaceWindow(gimp_image.width, gimp_image.height))
 		E_Exit("Could not initialize video: %s", SDL_GetError());
-	sdl.surface = SDL_GetWindowSurface(sdl.window);
-	if (sdl.surface == NULL)
-		E_Exit("Could not retrieve window surface: %s", SDL_GetError());
-	SDL_Rect splash_rect = GFX_GetSDLSurfaceSubwindowDims(640, 400);
-	sdl.desktop.sdl2pixelFormat = sdl.surface->format->format;
-	LOG_MSG("SDL:Current window pixel format: %s",
-	        SDL_GetPixelFormatName(sdl.desktop.sdl2pixelFormat));
-	/* Do NOT use SDL_BITSPERPIXEL here - It returns 24 for
-	SDL_PIXELFORMAT_RGB888, while SDL_BYTESPERPIXEL returns 4.
-	To compare, with SDL 1.2 the detected desktop color depth is 32 bpp. */
-	sdl.desktop.bpp=8*SDL_BYTESPERPIXEL(sdl.desktop.sdl2pixelFormat);
-	if (sdl.desktop.bpp==24) {
-		LOG_MSG("SDL: You are running in 24 bpp mode, this will slow down things!");
-	}
-	GFX_Stop();
+
+	// FIXME the code updated sdl.desktop.bpp in here (has effect in setting up scalers)
+
 	SDL_SetWindowTitle(sdl.window, "DOSBox");
 
-/* The endian part is intentionally disabled as somehow it produces correct results without according to rhoenie*/
-//#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-//    Bit32u rmask = 0xff000000;
-//    Bit32u gmask = 0x00ff0000;
-//    Bit32u bmask = 0x0000ff00;
-//#else
-    Bit32u rmask = 0x000000ff;
-    Bit32u gmask = 0x0000ff00;
-    Bit32u bmask = 0x00ff0000;
-//#endif
-
-/* Please leave the Splash screen stuff in working order in DOSBox. We spend a lot of time making DOSBox. */
-	SDL_Surface* splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0);
-	if (splash_surf) {
-		SDL_SetSurfaceBlendMode(splash_surf, SDL_BLENDMODE_BLEND);
-		SDL_FillRect(splash_surf, NULL, SDL_MapRGB(splash_surf->format, 0, 0, 0));
-
-		Bit8u* tmpbufp = new Bit8u[640*400*3];
-		GIMP_IMAGE_RUN_LENGTH_DECODE(tmpbufp,gimp_image.rle_pixel_data,640*400,3);
-		for (Bitu y=0; y<400; y++) {
-
-			Bit8u* tmpbuf = tmpbufp + y*640*3;
-			Bit32u * draw=(Bit32u*)(((Bit8u *)splash_surf->pixels)+((y)*splash_surf->pitch));
-			for (Bitu x=0; x<640; x++) {
-//#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-//				*draw++ = tmpbuf[x*3+2]+tmpbuf[x*3+1]*0x100+tmpbuf[x*3+0]*0x10000+0x00000000;
-//#else
-				*draw++ = tmpbuf[x*3+0]+tmpbuf[x*3+1]*0x100+tmpbuf[x*3+2]*0x10000+0x00000000;
-//#endif
-			}
-		}
-
-		bool exit_splash = false;
-
-		static Bitu max_splash_loop = 1000;
-		static Bitu splash_fade = 100;
-		static bool use_fadeout = true;
-
-		for (Bit32u ct = 0,startticks = GetTicks();ct < max_splash_loop;ct = GetTicks()-startticks) {
-			SDL_Event evt;
-			while (SDL_PollEvent(&evt)) {
-				if (evt.type == SDL_QUIT) {
-					exit_splash = true;
-					break;
-				}
-			}
-			if (exit_splash) break;
-
-			if (ct<1) {
-				SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
-				SDL_SetSurfaceAlphaMod(splash_surf, 255);
-				SDL_BlitScaled(splash_surf, NULL, sdl.surface, &splash_rect);
-				SDL_UpdateWindowSurface(sdl.window);
-			} else if (ct>=max_splash_loop-splash_fade) {
-				if (use_fadeout) {
-					SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
-					SDL_SetSurfaceAlphaMod(splash_surf, (Bit8u)((max_splash_loop-1-ct)*255/(splash_fade-1)));
-					SDL_BlitScaled(splash_surf, NULL, sdl.surface, &splash_rect);
-					SDL_UpdateWindowSurface(sdl.window);
-				}
-			} else { // Fix a possible glitch
-				SDL_UpdateWindowSurface(sdl.window);
-			}
-		}
-
-		if (use_fadeout) {
-			SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
-			SDL_UpdateWindowSurface(sdl.window);
-		}
-		SDL_FreeSurface(splash_surf);
-		delete [] tmpbufp;
-	}
+	GFX_Start();
+	DisplaySplash(1000);
+	GFX_Stop();
 
 	// Apply the user's mouse settings
 	Section_prop* s = section->Get_multival("capture_mouse")->GetSection();
