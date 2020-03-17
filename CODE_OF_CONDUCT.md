@@ -3,9 +3,9 @@
 In order to foster a welcoming, positive, and rewarding experience, we as
 community members pledge to uphold this code of conduct.
 
-*Isn't decent behavior is already expected?* We want to bring the best we can
-to each other as peers, and explicitly documenting our expectations lets us set
-the bar high for ourselves.
+*Isn't decent behavior is already expected?* We want to bring our best to each
+other as peers, and explicitly documenting our expectations lets us set a high
+bar for ourselves.
 
 ## Be excellent to each other
 
