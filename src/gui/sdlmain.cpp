@@ -1422,15 +1422,6 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 		return false;
 
 	switch (sdl.desktop.type) {
-	case SCREEN_SURFACE:
-		pixels = static_cast<uint8_t *>(sdl.surface->pixels);
-		pixels += sdl.clip.y * sdl.surface->pitch;
-		pixels += sdl.clip.x * sdl.surface->format->BytesPerPixel;
-		static_assert(std::is_same<decltype(pitch), decltype((sdl.surface->pitch))>::value,
-		              "SDL internal surface pitch type should match our type.");
-		pitch = sdl.surface->pitch;
-		sdl.updating = true;
-		return true;
 	case SCREEN_TEXTURE:
 		assert(sdl.texture.input_surface);
 		pixels = static_cast<uint8_t *>(sdl.texture.input_surface->pixels);
@@ -1454,6 +1445,16 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 		sdl.updating = true;
 		return true;
 #endif
+	case SCREEN_SURFACE:
+		assert(sdl.surface);
+		pixels = static_cast<uint8_t *>(sdl.surface->pixels);
+		pixels += sdl.clip.y * sdl.surface->pitch;
+		pixels += sdl.clip.x * sdl.surface->format->BytesPerPixel;
+		static_assert(std::is_same<decltype(pitch), decltype((sdl.surface->pitch))>::value,
+		              "SDL internal surface pitch type should match our type.");
+		pitch = sdl.surface->pitch;
+		sdl.updating = true;
+		return true;
 	}
 	return false;
 }
@@ -1466,26 +1467,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 	bool actually_updating = sdl.updating;
 	sdl.updating=false;
 	switch (sdl.desktop.type) {
-	case SCREEN_SURFACE:
-		if (changedLines) {
-			Bitu y = 0, index = 0, rectCount = 0;
-			while (y < sdl.draw.height) {
-				if (!(index & 1)) {
-					y += changedLines[index];
-				} else {
-					SDL_Rect *rect = &sdl.updateRects[rectCount++];
-					rect->x = sdl.clip.x;
-					rect->y = sdl.clip.y + y;
-					rect->w = (Bit16u)sdl.draw.width;
-					rect->h = changedLines[index];
-					y += changedLines[index];
-				}
-				index++;
-			}
-			if (rectCount)
-				SDL_UpdateWindowSurfaceRects(sdl.window, sdl.updateRects, rectCount);
-		}
-		break;
 	case SCREEN_TEXTURE:
 		assert(sdl.texture.input_surface);
 		SDL_UpdateTexture(sdl.texture.texture,
@@ -1547,7 +1528,25 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		SDL_GL_SwapWindow(sdl.window);
 		break;
 #endif
-	default:
+	case SCREEN_SURFACE:
+		if (changedLines) {
+			Bitu y = 0, index = 0, rectCount = 0;
+			while (y < sdl.draw.height) {
+				if (!(index & 1)) {
+					y += changedLines[index];
+				} else {
+					SDL_Rect *rect = &sdl.updateRects[rectCount++];
+					rect->x = sdl.clip.x;
+					rect->y = sdl.clip.y + y;
+					rect->w = (Bit16u)sdl.draw.width;
+					rect->h = changedLines[index];
+					y += changedLines[index];
+				}
+				index++;
+			}
+			if (rectCount)
+				SDL_UpdateWindowSurfaceRects(sdl.window, sdl.updateRects, rectCount);
+		}
 		break;
 	}
 }
