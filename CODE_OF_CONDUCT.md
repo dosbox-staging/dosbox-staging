@@ -1,0 +1,51 @@
+---
+layout: post
+title: Code of Conduct
+permalink: /code-of-conduct/
+---
+
+# Code of Conduct
+
+In order to foster a welcoming, positive, and rewarding experience, we as community members take an oath to uphold this code of conduct.
+
+*Isn't decent behavior is already expected?* We want to bring the best we can to each other as peers, and explicitly documenting our expectations lets us set the bar high for ourselves.
+
+## Be excellent to each other
+
+"Excellent" means we:
+
+- **are radically inclusive** to existing members and newcomers looking to learn or participate. Some may raise questions that have been addressed before. Kindly point them to existing discussions. Everyone is new to a project once.
+- **respect** your abilities, interests, and personal differences.  Our different talents documenting, testing, coding, reviewing, reporting, and/or evagenlizing are all valuable to the project.
+- **make concise and actionable points** to respect your time as a volunteer. We respect each other's time by keeping the signal-to-noise ratio high, staying on-topic, and being a good house-guest: every visit we strive to leave the place in better shape than when we arrived.
+- **are kind** and **assume positive intent**, even when we disagree while working towards consensus and achieving the project's technical goals.
+- **educate and illuminate** others with something we know more about. We were all beginners once, and can teach and learn through feedback and sharing.
+- **are open to feedback** from others, be it technical points,  interpersonal tips, or language/wording suggestions.
+- **use words carefully**, because we may not understand irony or negative sarcasm. We communicate plainly, and we justify our positions objectively and explicitly.
+- **leave with class** If we wish to resign for any reason. We champion your rights under the GPL to fork the code and create a competitive project, just as we stand on the shoulders of those who gave us the right to create this project.  Your exit should not be dramatic or bitter.
+
+## This isn't your work environment
+
+Many of us have been or currently are employed along side toxic coleagues - and we might have been one ourselves. Aggression,  hostility, and defensive language are unfortunately still common practices we endure to put food on the table.
+
+This isn't that place; you can let your guard down. The only currency we can put in your pocket is a rewarding experience and personal growth. We don't know what you've been through, but we will give you the benefit of the doubt and treat you with care and respect, else we risk fueling the same toxic tendencies in ourselves.
+
+## Reporting Issues
+
+Please bring up issues by contacting @dreamer_ or @krcroft who will handle your report with discretion. Your report should include:
+
+- Your preferred contact information. We cannot process anonymous reports.
+- Names (real or usernames) of those involved in the incident.
+- Your description of what occurred, and if the incident is ongoing. Please provide links to or transcripts of the publicly available records (e.g. a mailing list archive, GitHub issue, or a public IRC logger), so that we can review it.
+- Any additional information that may be helpful to achieve resolution.
+
+After filing a report, a representative will contact you directly to review the incident. All reports are confidential.
+
+### Scope
+
+This goal of this document is to preserve the well being of the project and its community, and we will will restrict or remove participation from those who disrupt the project and its participants.
+
+This code does not replace the terms of service or acceptable use policies that are provided by the websites used to support this community. Nor does this code apply to communications or actions that take place outside of the context of this community. Many participants in this project are also subject to codes of conduct based on their employment. This code is a social-contract that informs participants of our social expectations. It is not a terms of service or legal contract.
+
+## License and Acknowledgement
+
+This text is shared under the [CC-BY-4.0 license](https://creativecommons.org/licenses/by/4.0/).
