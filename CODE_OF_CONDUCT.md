@@ -1,7 +1,7 @@
 # Code of Conduct
 
 In order to foster a welcoming, positive, and rewarding experience, we as
-community members take an oath to uphold this code of conduct.
+community members pledge to uphold this code of conduct.
 
 *Isn't decent behavior is already expected?* We want to bring the best we can
 to each other as peers, and explicitly documenting our expectations lets us set
