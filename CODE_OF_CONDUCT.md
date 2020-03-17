@@ -69,5 +69,5 @@ contract.
 
 ## License and Acknowledgement
 
-This text is shared under the [CC-BY-4.0
-license](https://creativecommons.org/licenses/by/4.0/).
+This text is shared under the [CC0 - No Rights Reserved
+license](https://creativecommons.org/share-your-work/public-domain/cc0/).
