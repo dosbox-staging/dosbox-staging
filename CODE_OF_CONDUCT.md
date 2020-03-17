@@ -17,7 +17,7 @@ bar for ourselves.
   project once.
 - **respect** your abilities, interests, and personal differences.  Our
   different talents documenting, testing, coding, reviewing, reporting, and/or
-  evagenlizing are all valuable to the project.
+  evangelizing are all valuable to the project.
 - **make concise and actionable points** to respect your time as a volunteer.
   We respect each other's time by keeping the signal-to-noise ratio high,
   staying on-topic, and being a good house-guest: every visit we strive to
