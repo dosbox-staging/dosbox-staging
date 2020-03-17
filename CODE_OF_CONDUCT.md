@@ -11,9 +11,9 @@ bar for ourselves.
 
 "Excellent" means we:
 
-- **are radically inclusive** to existing members and newcomers looking to
+- **are wholly inclusive** to existing members and newcomers looking to
   learn or participate. Some may raise questions that have been addressed
-  before. Kindly point them to existing discussions. Everyone is new to a
+  before. Kindly point them to existing discussions. Everyone was new to a
   project once.
 - **respect** your abilities, interests, and personal differences.  Our
   different talents documenting, testing, coding, reviewing, reporting, and/or
