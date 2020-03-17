@@ -248,18 +248,6 @@ KEYBOARD: I can't type \ or : in DOSBox.
     "enter" and "L".
 
 
-KEYBOARD: Right Shift and "\" doesn't work in DOSBox. (Windows only)
-    This may happen if Windows thinks that you have more than one keyboard
-    connected to your PC when you use some remote control devices.
-    To verity this problem run cmd.exe, navigate to DOSBox program folder
-    and type:
-    set sdl_videodriver=windib
-    dosbox.exe
-    check whether keyboard started to work properly. As windib is slower it is
-    best to use one of the two solutions provided here:
-    https://www.vogons.org/viewtopic.php?t=24072
-
-
 KEYBOARD: The keyboard lags.
     Lower the priority setting in the DOSBox configuration file, for example
     set "priority=normal,normal". You might also want to try lowering the
