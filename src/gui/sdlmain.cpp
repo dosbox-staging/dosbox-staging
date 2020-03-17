@@ -257,8 +257,8 @@ struct SDL_Block {
 #if C_OPENGL
 	struct {
 		SDL_GLContext context;
-		Bitu pitch;
-		void * framebuf; // TODO Use unique_ptr to prevent leak
+		int pitch = 0;
+		void *framebuf = nullptr;
 		GLuint buffer;
 		GLuint texture;
 		GLuint displaylist;
@@ -1413,50 +1413,61 @@ bool GFX_LazyFullscreenRequested(void) {
 	return false;
 }
 
-bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
+// This function returns write'able buffer for user to draw upon. Successful
+// return depends on properly initialized SDL_Block structure (which generally
+// can be achieved via GFX_SetSize call), and specifically - properly initialized
+// output-specific bits (sdl.surface, sdl.texture, sdl.opengl.framebuf, or
+// sdl.openg.pixel_buffer_object fields).
+// 
+// If everything is prepared correctly, this function returns true, assigns 
+// 'pixels' output parameter to to a buffer (with format specified via earlier
+// GFX_SetSize call), and assigns 'pitch' to a number of bytes used for a single
+// pixels row in 'pixels' buffer.
+//
+bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
+{
 	if (!sdl.update_display_contents)
 		return false;
 	if (!sdl.active || sdl.updating)
 		return false;
+
+	void *tex_pixels = nullptr;
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
-		pixels = (Bit8u *)sdl.surface->pixels;
+		pixels = static_cast<uint8_t *>(sdl.surface->pixels);
 		pixels += sdl.clip.y * sdl.surface->pitch;
 		pixels += sdl.clip.x * sdl.surface->format->BytesPerPixel;
+		static_assert(std::is_same<decltype(pitch), decltype((sdl.surface->pitch))>::value,
+		              "SDL internal surface pitch type should match our type.");
 		pitch = sdl.surface->pitch;
 		sdl.updating = true;
 		return true;
 	case SCREEN_TEXTURE:
-	{
-		void * texPixels;
-		int texPitch;
-		if (SDL_LockTexture(sdl.texture.texture, NULL, &texPixels, &texPitch) < 0)
+		if (SDL_LockTexture(sdl.texture.texture, nullptr, &tex_pixels, &pitch) < 0)
 			return false;
-		pixels = (Bit8u *)texPixels;
-		pitch = texPitch;
-		sdl.updating=true;
+		pixels = static_cast<uint8_t *>(tex_pixels);
+		sdl.updating = true;
 		return true;
-	}
 #if C_OPENGL
 	case SCREEN_OPENGL:
-		if(sdl.opengl.pixel_buffer_object) {
-		    glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-		    pixels=(Bit8u *)glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY);
+		if (sdl.opengl.pixel_buffer_object) {
+			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
+			pixels = static_cast<uint8_t *>(glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY));
 		} else {
-		    pixels=(Bit8u *)sdl.opengl.framebuf;
+			pixels = static_cast<uint8_t *>(sdl.opengl.framebuf);
 		}
 		OPENGL_ERROR("end of start update");
-		if (pixels == NULL) return false;
-		pitch=sdl.opengl.pitch;
-		sdl.updating=true;
+		if (pixels == nullptr)
+			return false;
+		static_assert(std::is_same<decltype(pitch), decltype((sdl.opengl.pitch))>::value,
+		              "Our internal pitch types should be the same.");
+		pitch = sdl.opengl.pitch;
+		sdl.updating = true;
 		return true;
 #endif
-	default:
-		break;
 	}
 	return false;
 }
-
 
 void GFX_EndUpdate( const Bit16u *changedLines ) {
 	if (!sdl.update_display_contents)
