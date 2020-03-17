@@ -289,9 +289,9 @@ struct SDL_Block {
 	} priority;
 	SDL_Rect clip;
 	SDL_Surface *surface;
-	SDL_Window *window;
-	SDL_Renderer *renderer;
-	const char *rendererDriver;
+	SDL_Window *window = nullptr;
+	SDL_Renderer *renderer = nullptr;
+	std::string render_driver = "";
 	int displayNumber;
 	struct {
 		SDL_Surface *input_surface = nullptr;
@@ -976,8 +976,8 @@ dosurface:
 				SCREEN_TEXTURE);
 
 		}
-		if (strcmp(sdl.rendererDriver, "auto"))
-			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.rendererDriver); 
+		if (sdl.render_driver != "auto")
+			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.render_driver.c_str());
 		sdl.renderer = SDL_CreateRenderer(sdl.window, -1,
 		                                  SDL_RENDERER_ACCELERATED |
 		                                  (sdl.desktop.vsync ? SDL_RENDERER_PRESENTVSYNC : 0));
@@ -1914,9 +1914,7 @@ static void GUI_StartUp(Section * sec) {
 
 	sdl.texture.texture = 0;
 	sdl.texture.pixelFormat = 0;
-	sdl.window = 0;
-	sdl.renderer = 0;
-	sdl.rendererDriver = section->Get_string("texture_renderer");
+	sdl.render_driver = section->Get_string("texture_renderer");
 
 #if C_OPENGL
 	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
@@ -2396,9 +2394,7 @@ void Config_Add_SDL() {
 	Pstring->Set_help("What video system to use for output.");
 	Pstring->Set_values(outputs);
 
-	Pstring = sdl_sec->Add_string("texture_renderer",
-	                              Property::Changeable::Always,
-	                              "auto");
+	Pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
 	Pstring->Set_help("Choose a renderer driver if output=texture or texturenb.\n"
 	                  "Use output=auto for an automatic choice.");
 	Pstring->Set_values(Get_SDL_TextureRenderers());
