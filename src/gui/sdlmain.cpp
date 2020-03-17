@@ -293,10 +293,9 @@ struct SDL_Block {
 	const char *rendererDriver;
 	int displayNumber;
 	struct {
-		SDL_Texture *texture;
-		SDL_PixelFormat *pixelFormat;
+		SDL_Texture *texture = nullptr;
+		SDL_PixelFormat *pixelFormat = nullptr;
 	} texture;
-	SDL_cond *cond;
 	struct {
 		int xsensitivity;
 		int ysensitivity;
@@ -318,6 +317,8 @@ struct SDL_Block {
 };
 
 static SDL_Block sdl;
+
+static void CleanupSDLResources();
 
 #if C_OPENGL
 static char const shader_src_default[] =
@@ -520,24 +521,9 @@ static int int_log2 (int val) {
 static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fullscreen, SCREEN_TYPES screenType)
 {
 	static SCREEN_TYPES lastType = SCREEN_SURFACE;
-	if (sdl.renderer) {
-		SDL_DestroyRenderer(sdl.renderer);
-		sdl.renderer = 0;
-	}
-	if (sdl.texture.pixelFormat) {
-		SDL_FreeFormat(sdl.texture.pixelFormat);
-		sdl.texture.pixelFormat = 0;
-	}
-	if (sdl.texture.texture) {
-		SDL_DestroyTexture(sdl.texture.texture);
-		sdl.texture.texture = 0;
-	}
-#if C_OPENGL
-	if (sdl.opengl.context) {
-		SDL_GL_DeleteContext(sdl.opengl.context);
-		sdl.opengl.context = 0;
-	}
-#endif
+
+	CleanupSDLResources();
+
 	int currWidth, currHeight;
 	if (sdl.window && sdl.resizing_window) {
 		SDL_GetWindowSize(sdl.window, &currWidth, &currHeight);
@@ -1596,13 +1582,39 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 	}
 }
 
-static void GUI_ShutDown(Section * /*sec*/) {
-	GFX_Stop();
-	if (sdl.draw.callback) (sdl.draw.callback)( GFX_CallBackStop );
-	if (sdl.desktop.fullscreen) GFX_SwitchFullScreen();
-	if (mouse_is_captured) GFX_ToggleMouseCapture();
+static void CleanupSDLResources()
+{
+	if (sdl.texture.pixelFormat) {
+		SDL_FreeFormat(sdl.texture.pixelFormat);
+		sdl.texture.pixelFormat = nullptr;
+	}
+	if (sdl.texture.texture) {
+		SDL_DestroyTexture(sdl.texture.texture);
+		sdl.texture.texture = nullptr;
+	}
+	if (sdl.renderer) {
+		SDL_DestroyRenderer(sdl.renderer);
+		sdl.renderer = nullptr;
+	}
+#if C_OPENGL
+	if (sdl.opengl.context) {
+		SDL_GL_DeleteContext(sdl.opengl.context);
+		sdl.opengl.context = 0;
+	}
+#endif
 }
 
+static void GUI_ShutDown(Section *)
+{
+	GFX_Stop();
+	if (sdl.draw.callback)
+		(sdl.draw.callback)( GFX_CallBackStop );
+	if (sdl.desktop.fullscreen)
+		GFX_SwitchFullScreen();
+	if (mouse_is_captured)
+		GFX_ToggleMouseCapture();
+	CleanupSDLResources();
+}
 
 static void SetPriority(PRIORITY_LEVELS level) {
 
