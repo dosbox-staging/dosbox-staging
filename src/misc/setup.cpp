@@ -952,9 +952,8 @@ void Config::SetStartUp(void (*_function)(void)) {
 	_start_function=_function;
 }
 
-
-void Config::StartUp(void) {
-	initialised=true;
+void Config::StartUp()
+{
 	(*_start_function)();
 }
 
