@@ -28,6 +28,9 @@ bar for ourselves.
   all beginners once, and can teach and learn through feedback and sharing.
 - **are open to feedback** from others, be it technical points, interpersonal
   tips, or language/wording suggestions.
+- **accept responsibility** by applogizing to those affected by our mistakes,
+  and we graciously accept applogies knowing that mistakes are simply part of
+  the change process.
 - **use words carefully**, because we may not understand irony or negative
   sarcasm. We communicate plainly, and we justify our positions objectively and
   explicitly.
