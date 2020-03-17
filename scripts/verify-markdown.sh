@@ -17,10 +17,11 @@ list_markdown_files () {
 }
 
 main () {
+	repo_root="$(git rev-parse --show-toplevel)"
 	mdl --version
 	echo "Checking files:"
 	list_markdown_files
-	list_markdown_files | xargs -L 1000 mdl "$@"
+	list_markdown_files | xargs -L 1000 mdl --style "$repo_root/.mdl-styles" "$@"
 }
 
 >&2 main "$@"
