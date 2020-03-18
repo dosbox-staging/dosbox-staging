@@ -2824,7 +2824,6 @@ int main(int argc, char* argv[]) {
 		}
 
 		/* Init the keyMapper */
-		MAPPER_Init();
 		if (control->cmdline->FindExist("-startmapper")) MAPPER_RunInternal();
 		/* Start up main machine */
 		control->StartUp();
