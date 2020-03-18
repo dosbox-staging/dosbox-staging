@@ -29,7 +29,7 @@ bar for ourselves.
 - **are open to feedback** from others, be it technical points, interpersonal
   tips, or language/wording suggestions.
 - **accept responsibility** by apologizing to those affected by our mistakes
-  and graciously accepting apologies knowing that mistakes are part of the
+  and graciously accept apologies knowing that mistakes are part of the
   process.
 - **use words carefully**, because we may not understand irony or negative
   sarcasm. We communicate plainly, and we justify our positions objectively and
