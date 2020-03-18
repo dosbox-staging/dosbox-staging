@@ -589,7 +589,7 @@ public:
 		hats_cap = emulated_hats;
 		if (hats_cap > hats)
 			hats_cap=hats;
-		LOG_MSG("Using joystick %s with %d axes, %d buttons and %d hat(s)",
+		LOG_MSG("SDL: Using joystick %s with %d axes, %d buttons and %d hat(s)",
 		        SDL_JoystickNameForIndex(stick), axes, buttons, hats);
 	}
 
@@ -2379,61 +2379,52 @@ void BIND_MappingEvents(void) {
 	}
 }
 
-static void InitializeJoysticks(void) {
-	mapper.sticks.num=0;
-	mapper.sticks.num_groups=0;
-	if (joytype != JOY_NONE) {
-		mapper.sticks.num=SDL_NumJoysticks();
-		if (joytype==JOY_AUTO) {
-			// try to figure out what joystick type to select
-			// depending on the number of physically attached joysticks
-			if (mapper.sticks.num>1) {
-				// more than one joystick present; if all are acceptable use 2axis
-				// to allow emulation of two joysticks
-				bool first_usable=false;
-				SDL_Joystick* tmp_stick1=SDL_JoystickOpen(0);
-				if (tmp_stick1) {
-					if ((SDL_JoystickNumAxes(tmp_stick1)>1) || (SDL_JoystickNumButtons(tmp_stick1)>0)) {
-						first_usable=true;
-					}
-					SDL_JoystickClose(tmp_stick1);
-				}
-				bool second_usable=false;
-				SDL_Joystick* tmp_stick2=SDL_JoystickOpen(1);
-				if (tmp_stick2) {
-					if ((SDL_JoystickNumAxes(tmp_stick2)>1) || (SDL_JoystickNumButtons(tmp_stick2)>0)) {
-						second_usable=true;
-					}
-					SDL_JoystickClose(tmp_stick2);
-				}
-				// choose joystick type now that we know which physical joysticks are usable
-				if (first_usable) {
-					if (second_usable) {
-						joytype=JOY_2AXIS;
-						LOG_MSG("Two or more joysticks reported, initializing with 2axis");
-					} else {
-						joytype=JOY_4AXIS;
-						LOG_MSG("One joystick reported, initializing with 4axis");
-					}
-				} else if (second_usable) {
-					joytype=JOY_4AXIS_2;
-					LOG_MSG("One joystick reported, initializing with 4axis_2");
-				}
-			} else if (mapper.sticks.num) {
-				// one joystick present; if it is acceptable use 4axis
-				joytype=JOY_NONE;
-				SDL_Joystick* tmp_stick1=SDL_JoystickOpen(0);
-				if (tmp_stick1) {
-					if ((SDL_JoystickNumAxes(tmp_stick1)>0) || (SDL_JoystickNumButtons(tmp_stick1)>0)) {
-						joytype=JOY_4AXIS;
-						LOG_MSG("One joystick reported, initializing with 4axis");
-					}
-				}
-			} else {
-				joytype=JOY_NONE;
-			}
-		}
+/**
+ *  Queries SDL's joysticks and sets joytype accordingly.
+ *  If no joysticks are valid then joytype is left at JOY_NONE.
+ *  Also resets mapper.sticks.num_groups to 0 and
+ *  mapper.sticks.num to the number of found SDL joysticks.
+ */
+static void QueryJoysticks() {
+	// Initialize SDL's Joystick and Event subsystems, if needed
+	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
+		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+
+	// Record how many joysticks are present and set our desired minimum axis
+	const int num_joysticks = SDL_NumJoysticks();
+	const int req_min_axis = num_joysticks > 1 ? 2 : 1;
+
+	// Check which, if any, of the first two joysticks are useable
+	bool useable[2] = {false};
+	for (int i = 0; i < std::min(num_joysticks, 2); ++i) {
+		SDL_Joystick *stick = SDL_JoystickOpen(i);
+		useable[i] = (SDL_JoystickNumAxes(stick) >= req_min_axis) ||
+		             (SDL_JoystickNumButtons(stick) > 0) ? true : false;
+		SDL_JoystickClose(stick);
 	}
+
+	// Set the type of joystick based which are useable
+	const bool first_usable = useable[0];
+	const bool second_usable = useable[1];	
+	if (first_usable) {
+		if (second_usable) {
+			joytype = JOY_2AXIS;
+			LOG_MSG("SDL: Two or more joysticks found, initializing with 2axis");
+		} else {
+			joytype = JOY_4AXIS;
+			LOG_MSG("SDL: One joystick found, initializing with 4axis");
+		}
+	} else if (second_usable) {
+		joytype = JOY_4AXIS_2;
+		LOG_MSG("SDL: One joystick found, initializing with 4axis_2");
+	} else {
+		joytype = JOY_NONE;
+		LOG_MSG("SDL: No joysticks found");
+	}
+
+	// If we made it here, then update the other two external variables
+	mapper.sticks.num_groups = 0;
+	mapper.sticks.num = num_joysticks;
 }
 
 static void CreateBindGroups(void) {
@@ -2582,7 +2573,7 @@ void MAPPER_RunInternal() {
 }
 
 void MAPPER_Init(void) {
-	InitializeJoysticks();
+	QueryJoysticks();
 	if (buttons.empty()) CreateLayout();
 	if (bindgroups.empty()) CreateBindGroups();
 	if (!MAPPER_LoadBinds()) CreateDefaultBinds();
@@ -2604,6 +2595,7 @@ void MAPPER_Init(void) {
 }
 
 static void ReloadMapper(Section *sec) {
+	(void) sec; // unused but present for API compliance
 	Section_prop const *const section=static_cast<Section_prop *>(sec);
 	Prop_path const *const pp = section->Get_path("mapperfile");
 	mapper.filename = pp->realpath;
@@ -2649,6 +2641,6 @@ static void Destroy_Mapper(Section *sec) {
 void MAPPER_StartUp(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	section->AddInitFunction(&ReloadMapper, true); //runs immediately after this function ends
-	section->AddDestroyFunction(Destroy_Mapper, false);
+	section->AddDestroyFunction(&Destroy_Mapper, false);
 	MAPPER_AddHandler(&MAPPER_Run,MK_f1,MMOD1,"mapper","Mapper");
 }
