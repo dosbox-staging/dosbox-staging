@@ -92,6 +92,7 @@ static std::vector<CEvent *> events;
 static std::vector<CButton *> buttons;
 static std::vector<CBindGroup *> bindgroups;
 static std::vector<CHandlerEvent *> handlergroup;
+static std::list<CBind *> all_binds;
 
 typedef std::list<CBind *> CBindList;
 typedef std::list<CEvent *>::iterator CEventList_it;
@@ -205,11 +206,13 @@ public:
 	{
 		list->push_back(this);
 		event=0;
+		all_binds.push_back(this);
 	}
 
 	virtual ~CBind()
 	{
-		list->remove(this);
+		if (list)
+			list->remove(this);
 	}
 
 	CBind(const CBind&) = delete; // prevent copy
@@ -290,6 +293,8 @@ void CEvent::AddBind(CBind * bind) {
 void CEvent::ClearBinds() {
 	for (CBind *bind : bindlist) {
 		delete bind;
+		all_binds.remove(bind);
+		bind = nullptr;
 	}
 	bindlist.clear();
 }
@@ -306,6 +311,7 @@ public:
 	CBindGroup() {
 		bindgroups.push_back(this);
 	}
+	virtual ~CBindGroup() = default;
 	void ActivateBindList(CBindList * list,Bits value,bool ev_trigger);
 	void DeactivateBindList(CBindList * list,bool ev_trigger);
 	virtual CBind * CreateConfigBind(char *&buf)=0;
@@ -314,7 +320,6 @@ public:
 	virtual bool CheckEvent(SDL_Event * event)=0;
 	virtual const char * ConfigStart(void)=0;
 	virtual const char * BindStart(void)=0;
-	virtual ~CBindGroup (void) { }
 
 protected:
 
@@ -358,6 +363,7 @@ public:
 	~CKeyBindGroup()
 	{
 		delete[] lists;
+		lists = nullptr;
 	}
 
 	CKeyBindGroup(const CKeyBindGroup&) = delete; // prevent copy
@@ -400,6 +406,7 @@ protected:
 	CBindList *lists;
 	Bitu keys;
 };
+static std::list<CKeyBindGroup *> keybindgroups;
 
 #define MAX_VJOY_BUTTONS 8
 #define MAX_VJOY_HAT 16
@@ -589,10 +596,19 @@ public:
 	~CStickBindGroup()
 	{
 		SDL_JoystickClose(sdl_joystick);
+		sdl_joystick = nullptr;
+
 		delete[] pos_axis_lists;
+		pos_axis_lists = nullptr;
+
 		delete[] neg_axis_lists;
+		neg_axis_lists = nullptr;
+
 		delete[] button_lists;
+		button_lists = nullptr;
+
 		delete[] hat_lists;
+		hat_lists = nullptr;
 	}
 
 	CStickBindGroup(const CStickBindGroup&) = delete; // prevent copy
@@ -1583,7 +1599,7 @@ public:
 	{
 		handlergroup.push_back(this);
 	}
-
+	~CHandlerEvent() = default;
 	CHandlerEvent(const CHandlerEvent&) = delete; // prevent copy
 	CHandlerEvent& operator=(const CHandlerEvent&) = delete; // prevent assignment
 
@@ -2421,7 +2437,9 @@ static void InitializeJoysticks(void) {
 
 static void CreateBindGroups(void) {
 	bindgroups.clear();
-	new CKeyBindGroup(SDL_NUM_SCANCODES);
+	CKeyBindGroup* key_bind_group = new CKeyBindGroup(SDL_NUM_SCANCODES);
+	keybindgroups.push_back(key_bind_group);
+
 	if (joytype != JOY_NONE) {
 #if defined (REDUCE_JOYSTICK_POLLING)
 		// direct access to the SDL joystick, thus removed from the event handling
@@ -2431,6 +2449,12 @@ static void CreateBindGroups(void) {
 		if (mapper.sticks.num) SDL_JoystickEventState(SDL_ENABLE);
 		else return;
 #endif
+		// Free up our previously assigned joystick slot before assinging below
+		if (mapper.sticks.stick[mapper.sticks.num_groups]) {
+			delete mapper.sticks.stick[mapper.sticks.num_groups];
+			mapper.sticks.stick[mapper.sticks.num_groups] = nullptr;
+		}
+
 		Bit8u joyno=0;
 		switch (joytype) {
 		case JOY_NONE:
@@ -2467,6 +2491,7 @@ static void CreateBindGroups(void) {
 #if defined (REDUCE_JOYSTICK_POLLING)
 void MAPPER_UpdateJoysticks(void) {
 	for (Bitu i=0; i<mapper.sticks.num_groups; i++) {
+		assert(mapper.sticks.stick[i]);
 		mapper.sticks.stick[i]->UpdateJoystick();
 	}
 }
@@ -2585,11 +2610,44 @@ static void ReloadMapper(Section *sec) {
 	MAPPER_Init();
 }
 
+static void Destroy_Mapper(Section *sec) {
+	(void) sec; // unused but present for API compliance
+
+	// Release all the accumulated allocations by the mapper 
+ 	for (auto & ptr : events)
+		delete ptr;
+	events.clear();
+
+	for (auto & ptr : all_binds)
+		delete ptr;
+	all_binds.clear();
+
+	for (auto & ptr : buttons)
+		delete ptr;
+	buttons.clear();
+
+	for (auto & ptr : keybindgroups)
+		delete ptr;
+	keybindgroups.clear();
+
+	// Free any allocated sticks
+	for (int i = 0; i < MAXSTICKS; ++i) {
+		delete mapper.sticks.stick[i];
+		mapper.sticks.stick[i] = nullptr;
+	}
+
+	// Empty the remaining lists now that their pointers are defunct
+	bindgroups.clear();
+	handlergroup.clear();
+	holdlist.clear();
+
+	// Decrement our reference pointer to the Joystick subsystem
+	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+}
+
 void MAPPER_StartUp(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	section->AddInitFunction(&ReloadMapper, true); //runs immediately after this function ends
-	mapper.sticks.num=0;
-	mapper.sticks.num_groups=0;
-	memset(&virtual_joysticks,0,sizeof(virtual_joysticks));
+	section->AddDestroyFunction(Destroy_Mapper, false);
 	MAPPER_AddHandler(&MAPPER_Run,MK_f1,MMOD1,"mapper","Mapper");
 }
