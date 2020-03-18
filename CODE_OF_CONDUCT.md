@@ -28,9 +28,9 @@ bar for ourselves.
   all beginners once, and can teach and learn through feedback and sharing.
 - **are open to feedback** from others, be it technical points, interpersonal
   tips, or language/wording suggestions.
-- **accept responsibility** by applogizing to those affected by our mistakes,
-  and we graciously accept applogies knowing that mistakes are simply part of
-  the change process.
+- **accept responsibility** by apologizing to those affected by our mistakes
+  and graciously accepting apologies knowing that mistakes are part of the
+  process.
 - **use words carefully**, because we may not understand irony or negative
   sarcasm. We communicate plainly, and we justify our positions objectively and
   explicitly.
@@ -46,15 +46,18 @@ Please bring up issues by contacting
 [krcroft](mailto:k.r.croft+coc@gmail.com) who will handle your report with
 discretion. Your report should include:
 
-- Your preferred contact information. We cannot process anonymous reports.
 - Names (real or usernames) of those involved in the incident.
 - Your description of what occurred, and if the incident is ongoing. Please
   provide links to or transcripts of the publicly available records (e.g. a
-  mailing list archive, GitHub issue, or a public IRC logger), so that we can
-  review it.
+  mailing list archive, GitHub issue, public IRC log, or Discord transcript),
+  so that we can review it.
 - Any additional information that may be helpful to achieve resolution.
 
-All reports are confidential.
+We will assume you as the reporter wish to remain confidential unless otherwise
+requested. We will first attempt to resolve the issue by indicating the concern
+and suggest corrective action via the same public medium where it occured.
+If extended discussion is needed, we will redirect it to another medium to
+minimize distraction within the original topic.
 
 ### Scope
 
