@@ -412,9 +412,9 @@ static std::list<CKeyBindGroup *> keybindgroups;
 #define MAX_VJOY_HAT 16
 #define MAX_VJOY_AXIS 8
 static struct {
-	bool button_pressed[MAX_VJOY_BUTTONS];
-	Bit16s axis_pos[MAX_VJOY_AXIS];
-	bool hat_pressed[MAX_VJOY_HAT];
+	int16_t axis_pos[MAX_VJOY_AXIS] = {0};
+	bool hat_pressed[MAX_VJOY_HAT] = {false};
+	bool button_pressed[MAX_VJOY_BUTTONS] = {false};
 } virtual_joysticks[2];
 
 
@@ -1213,8 +1213,9 @@ static struct CMapper {
 	bool addbind = false;
 	Bitu mods = 0;
 	struct {
-		Bitu num_groups,num;
-		CStickBindGroup * stick[MAXSTICKS];
+		CStickBindGroup * stick[MAXSTICKS] = {nullptr};
+		unsigned int num = 0;
+		unsigned int num_groups = 0;
 	} sticks;
 	std::string filename = "";
 } mapper;
