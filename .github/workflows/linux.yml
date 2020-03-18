@@ -56,22 +56,25 @@ jobs:
           sudo update-alternatives --config gcc
           sudo apt-get install -y libelf-dev libssl-dev parallel
       - name: Log and setup environment
-        run: |
-          ./scripts/log-env.sh
-          mkdir -p afdo
+        run: ./scripts/log-env.sh
       - name: Inject version string
         run: |
           set -x
           export VERSION=$(git describe --abbrev=4)
           sed -i "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
           echo ::set-env name=VERSION::$VERSION
+      - name: Prepare for AutoFDO installation
+        id: prep-afdo
+        run: |
+          mkdir -p afdo
+          echo ::set-output name=gcc-version::$(gcc --version | grep ^gcc | sed 's/^.* //g')
       - uses: actions/cache@v1
-        id: cache-autofdo
+        id: restore-afdo
         with:
           path: afdo
-          key: autofdo-0.19_gcc-9.2.1-3
+          key: afdo-for-gcc-${{ steps.prep-afdo.outputs.gcc-version }}
       - name: Install AutoFDO package
-        if:   steps.cache-autofdo.outputs.cache-hit != 'true'
+        if:   steps.restore-afdo.outputs.cache-hit != 'true'
         run:  ./.github/scripts/build-autofdo.sh
       - name: Convert AutoFDO profiles
         run: ./.github/scripts/fetch-and-merge-afdo.sh
