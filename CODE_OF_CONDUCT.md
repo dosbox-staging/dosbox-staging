@@ -47,17 +47,16 @@ Please bring up issues by contacting
 discretion. Your report should include:
 
 - Names (real or usernames) of those involved in the incident.
-- Your description of what occurred, and if the incident is ongoing. Please
-  provide links to or transcripts of the publicly available records (e.g. a
+- Please provide links or transcripts of the publicly available records (e.g. a
   mailing list archive, GitHub issue, public IRC log, or Discord transcript),
-  so that we can review it.
+  so that we can review the evidence. Private communication is outside our
+  scope, we suggest utilizing the blocking features on the platform in
+  question.
 - Any additional information that may be helpful to achieve resolution.
 
-We will assume you as the reporter wish to remain confidential unless otherwise
-requested. We will first attempt to resolve the issue by indicating the concern
-and suggest corrective action via the same public medium where it occured.
-If extended discussion is needed, we will redirect it to another medium to
-minimize distraction within the original topic.
+We will attempt to resolve the issue publically by refering to the CoC and
+suggesting corrective actions. We will also try to reduce the distraction and
+impact to those affected.
 
 ### Scope
 
