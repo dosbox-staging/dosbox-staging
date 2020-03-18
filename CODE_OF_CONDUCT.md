@@ -41,33 +41,16 @@ bar for ourselves.
 
 ## Reporting Issues
 
-Please bring up issues by contacting
-[dreamer](mailto:patryk.obara+coc@gmail.com) or
-[krcroft](mailto:k.r.croft+coc@gmail.com) who will handle your report with
-discretion. Your report should include:
+Instances of abusive, harassing, or otherwise unacceptable behavior may be
+reported by contacting the project team (see below). All complaints will be
+reviewed and investigated and will result in a response that is deemed
+necessary and appropriate to the circumstances. The project team is obligated
+to maintain confidentiality with regard to the reporter of an incident. Further
+details of specific enforcement policies may be posted separately.
 
-- Names (real or usernames) of those involved in the incident.
-- Please provide links or transcripts of the publicly available records (e.g. a
-  mailing list archive, GitHub issue, public IRC log, or Discord transcript),
-  so that we can review the evidence. Private communication is outside our
-  scope, we suggest utilizing the blocking features on the platform in
-  question.
-- Any additional information that may be helpful to achieve resolution.
-
-We will attempt to resolve the issue publically by refering to the CoC and
-suggesting corrective actions. We will also try to reduce the distraction and
-impact to those affected.
-
-### Scope
-
-This goal of this document is to preserve the well being of the project and its
-participants and we will restrict or remove those who disrupt them.
-
-This code does not replace the terms of service or acceptable use policies that
-are provided by the websites used to support this community. Nor does this code
-apply to communications or actions that take place outside of the context of
-this community. This code is a social-contract that informs participants of our
-social expectations. It is not a terms of service or legal contract.
+The project leadership team can be contacted by email:
+- [@dreamer](mailto:patryk.obara+coc@gmail.com)
+- [@krcroft](mailto:k.r.croft+coc@gmail.com)
 
 ## License and Acknowledgement
 
