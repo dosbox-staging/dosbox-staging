@@ -3,7 +3,7 @@
 In order to foster a welcoming, positive, and rewarding experience, we as
 community members pledge to uphold this code of conduct.
 
-*Isn't decent behavior is already expected?* We want to bring our best to each
+*Isn't decent behavior already expected?* We want to bring our best to each
 other as peers, and explicitly documenting our expectations lets us set a high
 bar for ourselves.
 
@@ -61,16 +61,13 @@ impact to those affected.
 ### Scope
 
 This goal of this document is to preserve the well being of the project and its
-community, and we will will restrict or remove participation from those who
-disrupt the project and its participants.
+participants and we will restrict or remove those who disrupt them.
 
 This code does not replace the terms of service or acceptable use policies that
 are provided by the websites used to support this community. Nor does this code
 apply to communications or actions that take place outside of the context of
-this community. Many participants in this project are also subject to codes of
-conduct based on their employment. This code is a social-contract that informs
-participants of our social expectations. It is not a terms of service or legal
-contract.
+this community. This code is a social-contract that informs participants of our
+social expectations. It is not a terms of service or legal contract.
 
 ## License and Acknowledgement
 
