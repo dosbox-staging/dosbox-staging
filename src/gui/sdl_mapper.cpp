@@ -292,8 +292,8 @@ void CEvent::AddBind(CBind * bind) {
 }
 void CEvent::ClearBinds() {
 	for (CBind *bind : bindlist) {
-		delete bind;
 		all_binds.remove(bind);
+		delete bind;
 		bind = nullptr;
 	}
 	bindlist.clear();
@@ -1924,6 +1924,7 @@ static void CreateLayout(void) {
 	cjaxis=AddJAxisButton  (PX(XO),PY(YO+1),BW,BH,"X-",0,0,false,NULL);
 	AddJAxisButton  (PX(XO+2),PY(YO+1),BW,BH,"X+",0,0,true,cjaxis);
 
+	CJAxisEvent * tmp_ptr;
 	if (joytype==JOY_2AXIS) {
 		/* Buttons 1+2 of 2nd Joystick */
 		AddJButtonButton(PX(XO+4),PY(YO),BW,BH,"1" ,1,0);
@@ -1933,15 +1934,19 @@ static void CreateLayout(void) {
 		AddJButtonButton_hidden(0,3);
 
 		/* Axes 1+2 (X+Y) of 2nd Joystick */
-		cjaxis=	AddJAxisButton(PX(XO+4),PY(YO+1),BW,BH,"X-",1,0,false,NULL);
-				AddJAxisButton(PX(XO+4+2),PY(YO+1),BW,BH,"X+",1,0,true,cjaxis);
-		cjaxis=	AddJAxisButton(PX(XO+4+1),PY(YO+0),BW,BH,"Y-",1,1,false,NULL);
-				AddJAxisButton(PX(XO+4+1),PY(YO+1),BW,BH,"Y+",1,1,true,cjaxis);
+		cjaxis  = AddJAxisButton(PX(XO+4),PY(YO+1),BW,BH,"X-",1,0,false,NULL);
+		tmp_ptr = AddJAxisButton(PX(XO+4+2),PY(YO+1),BW,BH,"X+",1,0,true,cjaxis);
+		(void)tmp_ptr;
+		cjaxis  = AddJAxisButton(PX(XO+4+1),PY(YO+0),BW,BH,"Y-",1,1,false,NULL);
+		tmp_ptr = AddJAxisButton(PX(XO+4+1),PY(YO+1),BW,BH,"Y+",1,1,true,cjaxis);
+		(void)tmp_ptr;
 		/* Axes 3+4 (X+Y) of 1st Joystick, not accessible */
-		cjaxis=	AddJAxisButton_hidden(0,2,false,NULL);
-				AddJAxisButton_hidden(0,2,true,cjaxis);
-		cjaxis=	AddJAxisButton_hidden(0,3,false,NULL);
-				AddJAxisButton_hidden(0,3,true,cjaxis);
+		cjaxis  = AddJAxisButton_hidden(0,2,false,NULL);
+		tmp_ptr = AddJAxisButton_hidden(0,2,true,cjaxis);
+		(void)tmp_ptr;
+		cjaxis  = AddJAxisButton_hidden(0,3,false,NULL);
+		tmp_ptr = AddJAxisButton_hidden(0,3,true,cjaxis);
+		(void)tmp_ptr;
 	} else {
 		/* Buttons 3+4 of 1st Joystick */
 		AddJButtonButton(PX(XO+4),PY(YO),BW,BH,"3" ,0,2);
@@ -1951,15 +1956,19 @@ static void CreateLayout(void) {
 		AddJButtonButton_hidden(1,1);
 
 		/* Axes 3+4 (X+Y) of 1st Joystick */
-		cjaxis=	AddJAxisButton(PX(XO+4),PY(YO+1),BW,BH,"X-",0,2,false,NULL);
-				AddJAxisButton(PX(XO+4+2),PY(YO+1),BW,BH,"X+",0,2,true,cjaxis);
-		cjaxis=	AddJAxisButton(PX(XO+4+1),PY(YO+0),BW,BH,"Y-",0,3,false,NULL);
-				AddJAxisButton(PX(XO+4+1),PY(YO+1),BW,BH,"Y+",0,3,true,cjaxis);
+		cjaxis  = AddJAxisButton(PX(XO+4),PY(YO+1),BW,BH,"X-",0,2,false,NULL);
+		tmp_ptr = AddJAxisButton(PX(XO+4+2),PY(YO+1),BW,BH,"X+",0,2,true,cjaxis);
+		(void)tmp_ptr;
+		cjaxis  = AddJAxisButton(PX(XO+4+1),PY(YO+0),BW,BH,"Y-",0,3,false,NULL);
+		tmp_ptr = AddJAxisButton(PX(XO+4+1),PY(YO+1),BW,BH,"Y+",0,3,true,cjaxis);
+		(void)tmp_ptr;
 		/* Axes 1+2 (X+Y) of 2nd Joystick , not accessible*/
-		cjaxis=	AddJAxisButton_hidden(1,0,false,NULL);
-				AddJAxisButton_hidden(1,0,true,cjaxis);
-		cjaxis=	AddJAxisButton_hidden(1,1,false,NULL);
-				AddJAxisButton_hidden(1,1,true,cjaxis);
+		cjaxis  = AddJAxisButton_hidden(1,0,false,NULL);
+		tmp_ptr = AddJAxisButton_hidden(1,0,true,cjaxis);
+		(void)tmp_ptr;
+		cjaxis  = AddJAxisButton_hidden(1,1,false,NULL);
+		tmp_ptr = AddJAxisButton_hidden(1,1,true,cjaxis);
+		(void)tmp_ptr;
 	}
 
 	if (joytype==JOY_CH) {
