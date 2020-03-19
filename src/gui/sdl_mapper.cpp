@@ -386,7 +386,7 @@ public:
 	};
 	bool CheckEvent(SDL_Event * event) {
 		if (event->type!=SDL_KEYDOWN && event->type!=SDL_KEYUP) return false;
-		Bitu key = event->key.keysym.scancode;
+		uintptr_t key = static_cast<uintptr_t>(event->key.keysym.scancode);
 		if (event->type==SDL_KEYDOWN) ActivateBindList(&lists[key],0x7fff,true);
 		else DeactivateBindList(&lists[key],true);
 		return 0;
@@ -1580,9 +1580,9 @@ public:
 	void Active(bool yesno)
 	{
 		if (yesno)
-			mapper.mods |= (1 << (wmod-1));
+			mapper.mods |= (static_cast<Bitu>(1) << (wmod-1));
 		else
-			mapper.mods &= ~(1 << (wmod-1));
+			mapper.mods &= ~(static_cast<Bitu>(1) << (wmod-1));
 	}
 
 protected:
@@ -2228,7 +2228,7 @@ static void CreateDefaultBinds(void) {
 	sprintf(buffer,"jhat_0_0_3 \"stick_0 hat 0 8\" ");CreateStringBind(buffer);
 }
 
-void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char const * const eventname,char const * const buttonname) {
+void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key, Bitu mods,char const * const eventname,char const * const buttonname) {
 	//Check if it already exists=> if so return.
 	for(CHandlerEventVector_it it=handlergroup.begin();it!=handlergroup.end();it++)
 		if(strcmp((*it)->buttonname,buttonname) == 0) return;
