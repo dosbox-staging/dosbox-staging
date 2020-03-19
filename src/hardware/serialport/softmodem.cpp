@@ -246,9 +246,10 @@ void CSerialModem::Reset(){
 	EnterIdleState();
 	cmdpos = 0;
 	cmdbuf[0] = 0;
-	oldDTRstate = getDTR();
 	flowcontrol = 0;
 	plusinc = 0;
+	oldDTRstate = getDTR();
+	dtrmode = 2;
 	clientsocket.reset(nullptr);
 
 	memset(&reg,0,sizeof(reg));
@@ -259,6 +260,7 @@ void CSerialModem::Reset(){
 	reg[MREG_LF_CHAR]          = '\n';
 	reg[MREG_BACKSPACE_CHAR]   = '\b';
 	reg[MREG_GUARD_TIME]       = 50;
+	reg[MREG_DTR_DELAY]        = 5;
 
 	cmdpause = 0;
 	echo = true;
@@ -272,6 +274,7 @@ void CSerialModem::Reset(){
 void CSerialModem::EnterIdleState(void){
 	connected = false;
 	ringing = false;
+	dtrofftimer = -1;
 	clientsocket.reset(nullptr);
 	waitingclientsocket.reset(nullptr);
 
@@ -313,6 +316,7 @@ void CSerialModem::EnterConnectedState(void) {
 	memset(&telClient, 0, sizeof(telClient));
 	connected = true;
 	ringing = false;
+	dtrofftimer = -1;
 	CSerial::setCD(true);
 	CSerial::setRI(false);
 }
@@ -535,6 +539,15 @@ void CSerialModem::DoCommand() {
 					Bitu val = ScanNumber(scanbuf);
 					if(val < 5)
 						flowcontrol = val;
+					else {
+						SendRes(ResERROR);
+						return;
+					}
+					break;
+				}
+				case 'D': {
+					Bitu val = ScanNumber(scanbuf);
+					if (val<4) dtrmode=val;
 					else {
 						SendRes(ResERROR);
 						return;
@@ -773,7 +786,7 @@ void CSerialModem::Timer2(void) {
 	if (!connected && !waitingclientsocket && serversocket) {
 		waitingclientsocket.reset(serversocket->Accept());
 		if (waitingclientsocket) {
-			if (!CSerial::getDTR()) {
+			if (!CSerial::getDTR() && dtrmode != 0) {
 				// accept no calls with DTR off; TODO: AT &Dn
 				EnterIdleState();
 			} else {
@@ -800,6 +813,40 @@ void CSerialModem::Timer2(void) {
 			ringtimer = 3000;
 		}
 		--ringtimer;
+	}
+
+	if (connected && !getDTR()) {
+		if (dtrofftimer == 0) {
+			switch (dtrmode) {
+				case 0:
+					// Do nothing.
+					//LOG_MSG("Modem: Dropped DTR.");
+					break;
+				case 1:
+					// Go back to command mode.
+					LOG_MSG("Modem: Entering command mode due to dropped DTR.");
+					commandmode = true;
+					SendRes(ResOK);
+					break;
+				case 2:
+					// Hang up.
+					LOG_MSG("Modem: Hanging up due to dropped DTR.");
+					SendRes(ResNOCARRIER);
+					EnterIdleState();
+					break;
+				case 3:
+					// Reset.
+					LOG_MSG("Modem: Resetting due to dropped DTR.");
+					SendRes(ResNOCARRIER);
+					Reset();
+					break;
+			}
+		}
+
+		// Set the timer to -1 once it's expired to turn it off.
+		if (dtrofftimer >= 0) {
+			dtrofftimer--;
+		}
 	}
 }
 
@@ -842,12 +889,16 @@ void CSerialModem::setRTS(bool val) {
 	(void) val; // deliberately unused but but needed for API compliance
 }
 void CSerialModem::setDTR(bool val) {
-	if (!val && connected) {
-		// If DTR goes low, hang up.
-		SendRes(ResNOCARRIER);
-		EnterIdleState();
-		LOG_MSG("Modem: Hang up due to dropped DTR.");
+	if (val != oldDTRstate) {
+		if (connected && !val) {
+			// Start the timer upon losing DTR.
+			dtrofftimer = reg[MREG_DTR_DELAY];
+		} else {
+			dtrofftimer = -1;
+		}
 	}
+
+	oldDTRstate = val;
 }
 /*
 void CSerialModem::updateModemControlLines() {

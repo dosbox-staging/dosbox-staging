@@ -166,6 +166,7 @@ private:
 #define MREG_LF_CHAR 4
 #define MREG_BACKSPACE_CHAR 5
 #define MREG_GUARD_TIME 12
+#define MREG_DTR_DELAY 25
 
 
 class CSerialModem : public CSerial {
@@ -230,6 +231,8 @@ protected:
 	Bitu plusinc;
 	Bitu cmdpos;
 	Bitu flowcontrol;
+	Bitu dtrmode;
+	Bits dtrofftimer;
 	Bit8u tmpbuf[MODEM_BUFFER_QUEUE_SIZE];
 	Bitu listenport;
 	Bit8u reg[SREGS];
