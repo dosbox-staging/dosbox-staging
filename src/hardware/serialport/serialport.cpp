@@ -1225,6 +1225,11 @@ public:
 		Bit16u biosParameter[4] = { 0, 0, 0, 0 };
 		Section_prop *section = static_cast <Section_prop*>(configuration);
 
+#if C_MODEM
+		Prop_path *pbFilename = section->Get_path("phonebookfile");
+		MODEM_ReadPhonebook(pbFilename->realpath.c_str());
+#endif
+
 		char s_property[] = "serialx"; 
 		for(Bitu i = 0; i < 4; i++) {
 			// get the configuration property
