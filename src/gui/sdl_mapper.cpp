@@ -299,7 +299,7 @@ void CEvent::ClearBinds() {
 	bindlist.clear();
 }
 void CEvent::DeActivateAll(void) {
-	for (CBindList_it bit=bindlist.begin();bit!=bindlist.end();bit++) {
+	for (CBindList_it bit = bindlist.begin() ; bit != bindlist.end(); ++bit) {
 		(*bit)->DeActivateBind(true);
 	}
 }
@@ -1223,19 +1223,19 @@ static struct CMapper {
 void CBindGroup::ActivateBindList(CBindList * list,Bits value,bool ev_trigger) {
 	Bitu validmod=0;
 	CBindList_it it;
-	for (it=list->begin();it!=list->end();it++) {
+	for (it = list->begin(); it != list->end(); ++it) {
 		if (((*it)->mods & mapper.mods) == (*it)->mods) {
 			if (validmod<(*it)->mods) validmod=(*it)->mods;
 		}
 	}
-	for (it=list->begin();it!=list->end();it++) {
+	for (it = list->begin(); it != list->end(); ++it) {
 		if (validmod==(*it)->mods) (*it)->ActivateBind(value,ev_trigger);
 	}
 }
 
 void CBindGroup::DeactivateBindList(CBindList * list,bool ev_trigger) {
 	CBindList_it it;
-	for (it=list->begin();it!=list->end();it++) {
+	for (it = list->begin(); it != list->end(); ++it) {
 		(*it)->DeActivateBind(ev_trigger);
 	}
 }
@@ -1302,6 +1302,8 @@ protected:
 	bool enabled;
 };
 
+// Inform PVS-Studio that new CTextButtons won't be leaked when they go out of scope
+//+V773:SUPPRESS, class:CTextButton
 class CTextButton : public CButton {
 public:
 	CTextButton(Bitu  x, Bitu y, Bitu dx, Bitu dy, const char *txt)
@@ -1415,7 +1417,7 @@ public:
 			break;
 		case BB_Next:
 			if (mapper.abindit!=mapper.aevent->bindlist.end()) 
-				mapper.abindit++;
+				++mapper.abindit;
 			if (mapper.abindit==mapper.aevent->bindlist.end()) 
 				mapper.abindit=mapper.aevent->bindlist.begin();
 			SetActiveBind(*(mapper.abindit));
@@ -1721,7 +1723,7 @@ extern void GFX_UpdateDisplayDimensions(int width, int height);
 
 static void DrawButtons(void) {
 	SDL_FillRect(mapper.draw_surface,0,CLR_BLACK);
-	for (CButton_it but_it = buttons.begin();but_it!=buttons.end();but_it++) {
+	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
 		(*but_it)->Draw();
 	}
 	// We can't just use SDL_BlitScaled (say for Android) in one step
@@ -2024,7 +2026,7 @@ static void CreateLayout(void) {
 	AddModButton(PX(4),PY(14),50,20,"Mod3",3);
 	/* Create Handler buttons */
 	Bitu xpos=3;Bitu ypos=11;
-	for (CHandlerEventVector_it hit=handlergroup.begin();hit!=handlergroup.end();hit++) {
+	for (CHandlerEventVector_it hit = handlergroup.begin(); hit != handlergroup.end(); ++hit) {
 		new CEventButton(PX(xpos*3),PY(ypos),BW*3,BH,(*hit)->ButtonName(),(*hit));
 		xpos++;
 		if (xpos>6) {
@@ -2071,7 +2073,7 @@ static void CreateStringBind(char * line) {
 	line=trim(line);
 	char * eventname=StripWord(line);
 	CEvent * event;
-	for (CEventVector_it ev_it=events.begin();ev_it!=events.end();ev_it++) {
+	for (CEventVector_it ev_it = events.begin(); ev_it != events.end(); ++ev_it) {
 		if (!strcasecmp((*ev_it)->GetName(),eventname)) {
 			event=*ev_it;
 			goto foundevent;
@@ -2082,7 +2084,7 @@ static void CreateStringBind(char * line) {
 foundevent:
 	CBind * bind;
 	for (char * bindline=StripWord(line);*bindline;bindline=StripWord(line)) {
-		for (CBindGroup_it it=bindgroups.begin();it!=bindgroups.end();it++) {
+		for (CBindGroup_it it = bindgroups.begin(); it != bindgroups.end(); ++it) {
 			bind=(*it)->CreateConfigBind(bindline);
 			if (bind) {
 				event->AddBind(bind);
@@ -2199,7 +2201,7 @@ static void CreateDefaultBinds(void) {
 	CreateStringBind(buffer);
 	sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_LALT);
 	CreateStringBind(buffer);
-	for (CHandlerEventVector_it hit=handlergroup.begin();hit!=handlergroup.end();hit++) {
+	for (CHandlerEventVector_it hit = handlergroup.begin(); hit != handlergroup.end(); ++hit) {
 		(*hit)->MakeDefaultBind(buffer);
 		CreateStringBind(buffer);
 	}
@@ -2239,7 +2241,7 @@ static void CreateDefaultBinds(void) {
 
 void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key, Bitu mods,char const * const eventname,char const * const buttonname) {
 	//Check if it already exists=> if so return.
-	for(CHandlerEventVector_it it=handlergroup.begin();it!=handlergroup.end();it++)
+	for(CHandlerEventVector_it it=handlergroup.begin(); it != handlergroup.end(); ++it)
 		if(strcmp((*it)->buttonname,buttonname) == 0) return;
 
 	char tempname[17];
@@ -2256,10 +2258,10 @@ static void MAPPER_SaveBinds(void) {
 		return;
 	}
 	char buf[128];
-	for (CEventVector_it event_it=events.begin();event_it!=events.end();event_it++) {
+	for (CEventVector_it event_it = events.begin(); event_it != events.end(); ++event_it) {
 		CEvent * event=*(event_it);
 		fprintf(savefile,"%s ",event->GetName());
-		for (CBindList_it bind_it=event->bindlist.begin();bind_it!=event->bindlist.end();bind_it++) {
+		for (CBindList_it bind_it = event->bindlist.begin(); bind_it != event->bindlist.end(); ++bind_it) {
 			CBind * bind=*(bind_it);
 			bind->ConfigName(buf);
 			bind->AddFlags(buf);
@@ -2285,7 +2287,7 @@ static bool MAPPER_LoadBinds(void) {
 }
 
 void MAPPER_CheckEvent(SDL_Event * event) {
-	for (CBindGroup_it it=bindgroups.begin();it!=bindgroups.end();it++) {
+	for (CBindGroup_it it = bindgroups.begin(); it != bindgroups.end(); ++it) {
 		if ((*it)->CheckEvent(event)) return;
 	}
 }
@@ -2323,7 +2325,7 @@ void BIND_MappingEvents(void) {
 				lastHoveredButton = nullptr;
 			}
 			/* Check which button are we currently pointing at */
-			for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); but_it++) {
+			for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
 				if (dynamic_cast<CClickableTextButton *>(*but_it) && (*but_it)->OnTop(event.button.x,event.button.y)) {
 					(*but_it)->SetColor(CLR_RED);
 					mapper.redraw = true;
@@ -2348,7 +2350,7 @@ void BIND_MappingEvents(void) {
 			if ((event.button.y < 0) || (event.button.y>=mapper.draw_surface->h))
 				break;
 			/* Check the press */
-			for (CButton_it but_it = buttons.begin();but_it!=buttons.end();but_it++) {
+			for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
 				if (dynamic_cast<CClickableTextButton *>(*but_it) && (*but_it)->OnTop(event.button.x,event.button.y)) {
 					(*but_it)->Click();
 					break;
@@ -2376,7 +2378,7 @@ void BIND_MappingEvents(void) {
 			mapper.exit=true;
 			break;
 		default:
-			if (mapper.addbind) for (CBindGroup_it it=bindgroups.begin();it!=bindgroups.end();it++) {
+			if (mapper.addbind) for (CBindGroup_it it = bindgroups.begin(); it != bindgroups.end(); ++it) {
 				CBind * newbind=(*it)->CreateEventBind(&event);
 				if (!newbind) continue;
 				mapper.aevent->AddBind(newbind);
@@ -2497,7 +2499,7 @@ void MAPPER_UpdateJoysticks(void) {
 #endif
 
 void MAPPER_LosingFocus(void) {
-	for (CEventVector_it evit=events.begin();evit!=events.end();evit++) {
+	for (CEventVector_it evit = events.begin(); evit != events.end(); ++evit) {
 		if(*evit != caps_lock_event && *evit != num_lock_event)
 			(*evit)->DeActivateAll();
 	}
@@ -2584,17 +2586,17 @@ void MAPPER_Init(void) {
 	if (buttons.empty()) CreateLayout();
 	if (bindgroups.empty()) CreateBindGroups();
 	if (!MAPPER_LoadBinds()) CreateDefaultBinds();
-	for (CButton_it but_it = buttons.begin();but_it!=buttons.end();but_it++) {
+	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
 		(*but_it)->BindColor();
 	}
 	if (SDL_GetModState()&KMOD_CAPS) {
-		for (CBindList_it bit=caps_lock_event->bindlist.begin();bit!=caps_lock_event->bindlist.end();bit++) {
+		for (CBindList_it bit = caps_lock_event->bindlist.begin(); bit != caps_lock_event->bindlist.end(); ++bit) {
 			(*bit)->ActivateBind(32767,true,false);
 			(*bit)->DeActivateBind(false);
 		}
 	}
 	if (SDL_GetModState()&KMOD_NUM) {
-		for (CBindList_it bit=num_lock_event->bindlist.begin();bit!=num_lock_event->bindlist.end();bit++) {
+		for (CBindList_it bit = num_lock_event->bindlist.begin(); bit != num_lock_event->bindlist.end(); ++bit) {
 			(*bit)->ActivateBind(32767,true,false);
 			(*bit)->DeActivateBind(false);
 		}
