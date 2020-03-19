@@ -2406,14 +2406,12 @@ static void QueryJoysticks() {
 	// Set the type of joystick based which are useable
 	const bool first_usable = useable[0];
 	const bool second_usable = useable[1];	
-	if (first_usable) {
-		if (second_usable) {
-			joytype = JOY_2AXIS;
-			LOG_MSG("SDL: Two or more joysticks found, initializing with 2axis");
-		} else {
-			joytype = JOY_4AXIS;
-			LOG_MSG("SDL: One joystick found, initializing with 4axis");
-		}
+	if (first_usable && second_usable) {
+		joytype = JOY_2AXIS;
+		LOG_MSG("SDL: Two or more joysticks found, initializing with 2axis");
+	} else if (first_usable) {
+		joytype = JOY_4AXIS;
+		LOG_MSG("SDL: One joystick found, initializing with 4axis");
 	} else if (second_usable) {
 		joytype = JOY_4AXIS_2;
 		LOG_MSG("SDL: One joystick found, initializing with 4axis_2");
