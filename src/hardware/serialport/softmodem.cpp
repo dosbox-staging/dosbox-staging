@@ -23,11 +23,84 @@
 #include <stdlib.h>
 #include <string.h>
 #include <utility>
+#include <fstream>
+#include <sstream>
 
 #include "support.h"
 #include "serialport.h"
 #include "softmodem.h"
 #include "misc_util.h"
+
+class PhonebookEntry {
+public:
+	PhonebookEntry(const std::string &_phone, const std::string &_address) :
+		phone(_phone),
+		address(_address) {
+	}
+
+	bool IsMatchingPhone(const std::string &input) const {
+		return (input == phone);
+	}
+
+	const std::string &GetAddress() const {
+		return address;
+	}
+
+private:
+	std::string phone;
+	std::string address;
+};
+
+static std::vector<PhonebookEntry *> phones;
+static const char phoneValidChars[] = "01234567890*=,;#+>";
+
+static bool MODEM_IsPhoneValid(const std::string &input) {
+	size_t found = input.find_first_not_of(phoneValidChars);
+	if (found != std::string::npos) {
+		LOG_MSG("SERIAL: Phone %s contains invalid character %c", input.c_str(), input[found]);
+		return false;
+	}
+
+	return true;
+}
+
+bool MODEM_ReadPhonebook(const std::string &filename) {
+	std::ifstream loadfile(filename);
+	if (!loadfile)
+		return false;
+
+	LOG_MSG("SERIAL: Loading phonebook from %s", filename.c_str());
+
+	std::string linein;
+	while (std::getline(loadfile, linein)) {
+		std::istringstream iss(linein);
+		std::string phone, address;
+
+		if (!(iss >> phone >> address)) {
+			LOG_MSG("SERIAL: Skipped a bad line in %s", filename.c_str());
+			continue;
+		}
+
+		// Check phone number for characters ignored by Hayes modems.
+		if (!MODEM_IsPhoneValid(phone))
+			continue;
+
+		LOG_MSG("SERIAL: Mapped phone %s to address %s", phone.c_str(), address.c_str());
+		PhonebookEntry *pbEntry = new PhonebookEntry(phone, address);
+		phones.push_back(pbEntry);
+	}
+
+	return true;
+}
+
+static const char *MODEM_GetAddressFromPhone(const char *input) {
+	for (const auto entry : phones) {
+		if (entry->IsMatchingPhone(input))
+			return entry->GetAddress().c_str();
+	}
+
+	return nullptr;
+}
 
 CSerialModem::CSerialModem(Bitu id, CommandLine* cmd)
 	: CSerial(id, cmd),
@@ -187,21 +260,26 @@ void CSerialModem::SendRes(const ResTypes response) {
 	}
 }
 
-bool CSerialModem::Dial(char * host) {
+bool CSerialModem::Dial(const char * host) {
+	char buf[128] = "";
+	safe_strcpy(buf, host);
+
+	const char *destination = buf;
 
 	// Scan host for port
 	Bit16u port;
-	char * hasport = strrchr(host,':');
+	char * hasport = strrchr(buf,':');
 	if (hasport) {
 		*hasport++ = 0;
 		port = (Bit16u)atoi(hasport);
 	}
-	else
+	else {
 		port = MODEM_DEFAULT_PORT;
+	}
 
 	// Resolve host we're gonna dial
-	LOG_MSG("Connecting to host %s port %u", host, port);
-	clientsocket.reset(new TCPClientSocket(host, port));
+	LOG_MSG("Connecting to host %s port %u", destination, port);
+	clientsocket.reset(new TCPClientSocket(destination, port));
 	if (!clientsocket->isopen) {
 		clientsocket.reset(nullptr);
 		LOG_MSG("Failed to connect.");
@@ -379,6 +457,12 @@ void CSerialModem::DoCommand() {
 			while(helper[0] == ' ') {
 				helper[0] = 0;
 				helper--;
+			}
+
+			const char *mappedaddr = MODEM_GetAddressFromPhone(foundstr);
+			if (mappedaddr) {
+				Dial(mappedaddr);
+				return;
 			}
 
 			//Large enough scope, so the buffers are still valid when reaching Dail.
