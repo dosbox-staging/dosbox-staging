@@ -328,7 +328,7 @@ void CSerialModem::DoCommand() {
 	LOG_MSG("Command sent to modem: ->%s<-\n", cmdbuf);
 	/* Check for empty line, stops dialing and autoanswer */
 	if (!cmdbuf[0]) {
-		reg[0] = 0;	// autoanswer off
+		reg[MREG_AUTOANSWER_COUNT] = 0;	// autoanswer off
 		return;
 	}
 	//else {
@@ -795,14 +795,15 @@ void CSerialModem::Timer2(void) {
 				CSerial::setRI(!CSerial::getRI());
 				//MIXER_Enable(mhd.chan,true);
 				ringtimer = 3000;
-				reg[1] = 0; //Reset ring counter reg
+				reg[MREG_RING_COUNT] = 0; //Reset ring counter reg
 			}
 		}
 	}
 	if (ringing) {
 		if (ringtimer <= 0) {
-			reg[1]++;
-			if ((reg[0] > 0) && (reg[0] >= reg[1])) {
+			reg[MREG_RING_COUNT]++;
+			if ((reg[MREG_AUTOANSWER_COUNT] > 0) &&
+				(reg[MREG_RING_COUNT] >= reg[MREG_AUTOANSWER_COUNT])) {
 				AcceptIncomingCall();
 				return;
 			}
