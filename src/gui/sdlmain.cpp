@@ -57,9 +57,7 @@
 #include "control.h"
 #include "render.h"
 
-extern "C" {
 #include "../libs/ppscale/ppscale.h"
-}
 
 #define MAPPERFILE "mapper-sdl2-" VERSION ".map"
 //#define DISABLE_JOYSTICK

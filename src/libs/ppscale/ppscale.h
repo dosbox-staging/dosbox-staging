@@ -9,6 +9,10 @@
 #ifndef PPSCALE_H
 #define PPSCALE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int pp_getscale /* calculate integer scales for pixel-perfect magnification */
 (	int    win,  int hin,  /* input dimensions                  */
 	double par,            /* input pixel aspect ratio          */
@@ -29,5 +33,9 @@ int pp_scale /* magnify an image in a pixel-perfect manner */
 	int   bypp,             /* bytes per pixel                  */
 	int   sx,   int sy      /* horisontal and vertical scales   */
 ); /* return -1 on error and 0 on success */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* PPSCALE_H */
