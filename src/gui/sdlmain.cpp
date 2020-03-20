@@ -410,6 +410,7 @@ static void SetIcon()
 	SDL_Surface *s = SDL_CreateRGBSurfaceFrom((void*)logo, 32, 32, 32, 128,
 	                                          RMASK, GMASK, BMASK, 0);
 	SDL_SetWindowIcon(sdl.window, s);
+	SDL_FreeSurface(s);
 #endif // !defined(MACOSX)
 }
 
