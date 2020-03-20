@@ -243,7 +243,8 @@ struct SDL_Block {
 			bool display_res;
 		} full;
 		struct {
-			Bit16u width, height;
+			uint16_t width = 0; // TODO convert to int
+			uint16_t height = 0; // TODO convert to int
 			bool use_original_size = true;
 		} window;
 		Bit8u bpp;
@@ -1844,8 +1845,6 @@ static void GUI_StartUp(Section * sec) {
 		}
 	}
 	Bit16u windowspercentage  = 0;
-	sdl.desktop.window.width  = 0;
-	sdl.desktop.window.height = 0;
 	const char* windowresolution=section->Get_string("windowresolution");
 	if(windowresolution && *windowresolution) {
 		char res[100];
