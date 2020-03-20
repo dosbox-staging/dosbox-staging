@@ -194,6 +194,20 @@ extern char** environ;
 
 SDL_bool mouse_is_captured = SDL_FALSE; // global for mapper
 
+// Masks to be passed when creating SDL_Surface.
+// Remove ifndef if they'll be needed for MacOS X builds.
+#ifndef MACOSX
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+constexpr uint32_t RMASK = 0xff000000;
+constexpr uint32_t GMASK = 0x00ff0000;
+constexpr uint32_t BMASK = 0x0000ff00;
+#else
+constexpr uint32_t RMASK = 0x000000ff;
+constexpr uint32_t GMASK = 0x0000ff00;
+constexpr uint32_t BMASK = 0x00ff0000;
+#endif
+#endif // !MACOSX
+
 enum MouseControlType {
 	CaptureOnClick = 1 << 0,
 	CaptureOnStart = 1 << 1,
@@ -393,12 +407,9 @@ static void SetIcon()
 {
 	// Don't set it on macOS, as we use a nicer external icon there.
 #if !defined(MACOSX)
-#ifdef WORDS_BIGENDIAN
-	SDL_Surface* logos= SDL_CreateRGBSurfaceFrom((void*)logo,32,32,32,128,0xff000000,0x00ff0000,0x0000ff00,0);
-#else
-	SDL_Surface* logos= SDL_CreateRGBSurfaceFrom((void*)logo,32,32,32,128,0x000000ff,0x0000ff00,0x00ff0000,0);
-#endif
-	SDL_SetWindowIcon(sdl.window, logos);
+	SDL_Surface *s = SDL_CreateRGBSurfaceFrom((void*)logo, 32, 32, 32, 128,
+	                                          RMASK, GMASK, BMASK, 0);
+	SDL_SetWindowIcon(sdl.window, s);
 #endif // !defined(MACOSX)
 }
 
@@ -2491,16 +2502,8 @@ static void show_warning(char const * const message) {
 	if (!sdl.surface)
 		return;
 
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-	Bit32u rmask = 0xff000000;
-	Bit32u gmask = 0x00ff0000;
-	Bit32u bmask = 0x0000ff00;
-#else
-	Bit32u rmask = 0x000000ff;
-	Bit32u gmask = 0x0000ff00;
-	Bit32u bmask = 0x00ff0000;
-#endif
-	SDL_Surface* splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0);
+	SDL_Surface *splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32,
+	                                                RMASK, GMASK, BMASK, 0);
 	if (!splash_surf) return;
 
 	int x = 120,y = 20;
