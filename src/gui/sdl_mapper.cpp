@@ -864,6 +864,7 @@ protected:
 	Uint8 old_hat_state[16];
 	bool is_dummy;
 };
+std::list<CStickBindGroup *> stickbindgroups;
 
 class C4AxisBindGroup : public  CStickBindGroup {
 public:
@@ -2469,27 +2470,28 @@ static void CreateBindGroups(void) {
 			break;
 		case JOY_4AXIS:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new C4AxisBindGroup(joyno,joyno);
-			new CStickBindGroup(joyno+1U,joyno+1U,true);
+			stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
 			break;
 		case JOY_4AXIS_2:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new C4AxisBindGroup(joyno+1U,joyno);
-			new CStickBindGroup(joyno,joyno+1U,true);
+			stickbindgroups.push_back(new CStickBindGroup(joyno,joyno+1U,true));
 			break;
 		case JOY_FCS:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new CFCSBindGroup(joyno,joyno);
-			new CStickBindGroup(joyno+1U,joyno+1U,true);
+			stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
 			break;
 		case JOY_CH:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new CCHBindGroup(joyno,joyno);
-			new CStickBindGroup(joyno+1U,joyno+1U,true);
+			stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
 			break;
 		case JOY_2AXIS:
 		default:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno,joyno);
 			if((joyno+1U) < mapper.sticks.num) {
+				delete mapper.sticks.stick[mapper.sticks.num_groups];
 				mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno+1U,joyno+1U);
 			} else {
-				new CStickBindGroup(joyno+1U,joyno+1U,true);
+				stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
 			}
 			break;
 		}
@@ -2617,6 +2619,10 @@ static void MAPPER_Destroy(Section *sec) {
 	for (auto & ptr : keybindgroups)
 		delete ptr;
 	keybindgroups.clear();
+
+	for (auto & ptr : stickbindgroups)
+		delete ptr;
+	stickbindgroups.clear();
 
 	// Free any allocated sticks
 	for (int i = 0; i < MAXSTICKS; ++i) {
