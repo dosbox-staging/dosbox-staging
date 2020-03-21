@@ -263,8 +263,6 @@ struct SDL_Block {
 		} window;
 		Bit8u bpp;
 		bool fullscreen;
-		bool lazy_fullscreen;
-		bool lazy_fullscreen_req;
 		bool vsync;
 		SCREEN_TYPES type;
 		SCREEN_TYPES want_type;
@@ -514,14 +512,10 @@ void GFX_ResetScreen(void) {
 	CPU_Reset_AutoAdjust();
 }
 
-void GFX_ForceFullscreenExit(void) {
-	if (sdl.desktop.lazy_fullscreen) {
-//		sdl.desktop.lazy_fullscreen_req=true;
-		LOG_MSG("GFX LF: invalid screen change");
-	} else {
-		sdl.desktop.fullscreen=false;
-		GFX_ResetScreen();
-	}
+void GFX_ForceFullscreenExit()
+{
+	sdl.desktop.fullscreen = false;
+	GFX_ResetScreen();
 }
 
 static int int_log2 (int val) {
@@ -1388,30 +1382,10 @@ void GFX_SwitchFullScreen(void) {
  	GFX_ResetScreen();
 }
 
-static void SwitchFullScreen(bool pressed) {
-	if (!pressed)
-		return;
-
-	if (sdl.desktop.lazy_fullscreen) {
-//		sdl.desktop.lazy_fullscreen_req=true;
-		LOG_MSG("GFX LF: fullscreen switching not supported");
-	} else {
+static void SwitchFullScreen(bool pressed)
+{
+	if (pressed)
 		GFX_SwitchFullScreen();
-	}
-}
-
-void GFX_SwitchLazyFullscreen(bool lazy) {
-	sdl.desktop.lazy_fullscreen=lazy;
-	sdl.desktop.lazy_fullscreen_req=false;
-}
-
-void GFX_SwitchFullscreenNoReset(void) {
-	sdl.desktop.fullscreen=!sdl.desktop.fullscreen;
-}
-
-bool GFX_LazyFullscreenRequested(void) {
-	if (sdl.desktop.lazy_fullscreen) return sdl.desktop.lazy_fullscreen_req;
-	return false;
 }
 
 // This function returns write'able buffer for user to draw upon. Successful
@@ -1806,9 +1780,6 @@ static void GUI_StartUp(Section * sec) {
 	sdl.updating=false;
 	sdl.resizing_window = false;
 	sdl.update_display_contents = true;
-
-	sdl.desktop.lazy_fullscreen=false;
-	sdl.desktop.lazy_fullscreen_req=false;
 
 	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
 	sdl.wait_on_error=section->Get_bool("waitonerror");
