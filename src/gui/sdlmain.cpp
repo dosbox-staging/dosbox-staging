@@ -1985,9 +1985,13 @@ static void GUI_StartUp(Section * sec) {
 	SDL_SetWindowTitle(sdl.window, "DOSBox");
 	SetIcon();
 
-	GFX_Start();
-	DisplaySplash(1000);
-	GFX_Stop();
+	const bool tiny_fullresolution = splash_image.width > sdl.desktop.full.width ||
+	                                 splash_image.height > sdl.desktop.full.height;
+	if (!(sdl.desktop.fullscreen && tiny_fullresolution)) {
+		GFX_Start();
+		DisplaySplash(1000);
+		GFX_Stop();
+	}
 
 	// Apply the user's mouse settings
 	Section_prop* s = section->Get_multival("capture_mouse")->GetSection();
