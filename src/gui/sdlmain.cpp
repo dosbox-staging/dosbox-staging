@@ -1701,8 +1701,8 @@ static SDL_Window * SetDefaultWindowMode()
 	if (sdl.window)
 		return sdl.window;
 
-	sdl.draw.width = gimp_image.width;
-	sdl.draw.height = gimp_image.height;
+	sdl.draw.width = splash_image.width;
+	sdl.draw.height = splash_image.height;
 
 	if (sdl.desktop.fullscreen) {
 		return GFX_SetSDLWindowMode(sdl.desktop.full.width,
@@ -1732,9 +1732,9 @@ static void DisplaySplash(uint32_t time_ms)
 {
 	assert(sdl.window);
 
-	constexpr int src_w = gimp_image.width;
-	constexpr int src_h = gimp_image.height;
-	constexpr int src_bpp = gimp_image.bytes_per_pixel;
+	constexpr int src_w = splash_image.width;
+	constexpr int src_h = splash_image.height;
+	constexpr int src_bpp = splash_image.bytes_per_pixel;
 	static_assert(src_bpp == 3, "Source image expected in RGB format.");
 
 	const auto flags = GFX_SetSize(src_w, src_h, GFX_CAN_32, 1.0, 1.0, nullptr, 1.0);
@@ -1754,7 +1754,7 @@ static void DisplaySplash(uint32_t time_ms)
 	assertm(buf_width >= src_w, "Row length needs to be big enough.");
 
 	std::array<uint8_t, (src_w * src_h * src_bpp)> splash;
-	GIMP_IMAGE_RUN_LENGTH_DECODE(splash.data(), gimp_image.rle_pixel_data,
+	GIMP_IMAGE_RUN_LENGTH_DECODE(splash.data(), splash_image.rle_pixel_data,
 	                             src_w * src_h, src_bpp);
 	size_t i = 0;
 	size_t j = 0;
