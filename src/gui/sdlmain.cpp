@@ -1748,21 +1748,30 @@ static void DisplaySplash(uint32_t time_ms)
 	if (!GFX_StartUpdate(out, pitch))
 		E_Exit("%s", SDL_GetError());
 
+	uint32_t *pixels = reinterpret_cast<uint32_t *>(out);
+	assertm(pixels, "GFX_StartUpdate is supposed to give us buffer.");
+	const int buf_width = pitch / 4;
+	assertm(buf_width >= src_w, "Row length needs to be big enough.");
+
 	std::array<uint8_t, (src_w * src_h * src_bpp)> splash;
 	GIMP_IMAGE_RUN_LENGTH_DECODE(splash.data(), gimp_image.rle_pixel_data,
 	                             src_w * src_h, src_bpp);
-
-	assertm(out, "GFX_StartUpdate is supposed to give us buffer.");
-	uint32_t *pixels = reinterpret_cast<uint32_t *>(out);
-
 	size_t i = 0;
 	size_t j = 0;
+
 	static_assert(splash.size() % 3 == 0, "Reading 3 bytes at a time.");
-	while (i < splash.size()) {
-		const uint32_t r = splash[i++];
-		const uint32_t g = splash[i++];
-		const uint32_t b = splash[i++];
-		pixels[j++] = (r << 16) | (g << 8) | b;
+	for (int y = 0; y < src_h; y++) {
+		// copy a row of pixels to output buffer
+		for (int x = 0; x < src_w; x++) {
+			const uint32_t r = splash[i++];
+			const uint32_t g = splash[i++];
+			const uint32_t b = splash[i++];
+			pixels[j++] = (r << 16) | (g << 8) | b;
+		}
+		// pad with black until the end of row
+		// only output=surface actually needs this
+		for (int x = src_w; x < buf_width; x++)
+			pixels[j++] = 0;
 	}
 
 	const uint16_t lines[2] = {0, src_h}; // output=surface won't work otherwise
