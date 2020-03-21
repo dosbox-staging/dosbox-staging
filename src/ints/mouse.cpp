@@ -468,13 +468,15 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 	if((fabs(yrel) > 1.0) || (mouse.senv_y < 1.0)) dy *= mouse.senv_y;
 	if (useps2callback) dy *= 2;	
 
-	mouse.mickey_x += (dx * mouse.mickeysPerPixel_x);
-	mouse.mickey_y += (dy * mouse.mickeysPerPixel_y);
-	if (mouse.mickey_x >= 32768.0) mouse.mickey_x -= 65536.0;
-	else if (mouse.mickey_x <= -32769.0) mouse.mickey_x += 65536.0;
-	if (mouse.mickey_y >= 32768.0) mouse.mickey_y -= 65536.0;
-	else if (mouse.mickey_y <= -32769.0) mouse.mickey_y += 65536.0;
 	if (emulate) {
+		/* Send relative motion only if captured, else there is no point */
+		mouse.mickey_x += (dx * mouse.mickeysPerPixel_x);
+		mouse.mickey_y += (dy * mouse.mickeysPerPixel_y);
+		if (mouse.mickey_x >= 32768.0) mouse.mickey_x -= 65536.0;
+		else if (mouse.mickey_x <= -32769.0) mouse.mickey_x += 65536.0;
+		if (mouse.mickey_y >= 32768.0) mouse.mickey_y -= 65536.0;
+		else if (mouse.mickey_y <= -32769.0) mouse.mickey_y += 65536.0;
+
 		mouse.x += dx;
 		mouse.y += dy;
 	} else {
