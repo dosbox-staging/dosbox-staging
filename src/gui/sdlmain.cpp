@@ -2823,8 +2823,12 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		/* Init the keyMapper */
-		if (control->cmdline->FindExist("-startmapper")) MAPPER_RunInternal();
+		// Apply key bindings only after all subsystems have added them
+		MAPPER_BindKeys();
+		// With the default key binds in place, render the mapper UI if requested
+		if (control->cmdline->FindExist("-startmapper"))
+			MAPPER_DisplayUI();
+
 		/* Start up main machine */
 		control->StartUp();
 		/* Shutdown everything */

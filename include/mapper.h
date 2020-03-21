@@ -27,10 +27,10 @@ enum MapKeys {
 
 typedef void (MAPPER_Handler)(bool pressed);
 void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char const * const eventname,char const * const buttonname);
-void MAPPER_Init(void);
+void MAPPER_BindKeys();
 void MAPPER_StartUp(Section * sec);
 void MAPPER_Run(bool pressed);
-void MAPPER_RunInternal();
+void MAPPER_DisplayUI();
 void MAPPER_LosingFocus(void);
 
 

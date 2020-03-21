@@ -589,7 +589,7 @@ public:
 		hats_cap = emulated_hats;
 		if (hats_cap > hats)
 			hats_cap=hats;
-		LOG_MSG("SDL: Using joystick %s with %d axes, %d buttons and %d hat(s)",
+		LOG_MSG("MAPPER: Initialized %s with %d axes, %d buttons, and %d hat(s)",
 		        SDL_JoystickNameForIndex(stick), axes, buttons, hats);
 	}
 
@@ -2079,7 +2079,7 @@ static void CreateStringBind(char * line) {
 			goto foundevent;
 		}
 	}
-	LOG_MSG("Can't find matching event for %s",eventname);
+	LOG_MSG("MAPPER: Can't find key binding for %s event", eventname);
 	return ;
 foundevent:
 	CBind * bind;
@@ -2237,6 +2237,7 @@ static void CreateDefaultBinds(void) {
 	sprintf(buffer,"jhat_0_0_1 \"stick_0 hat 0 2\" ");CreateStringBind(buffer);
 	sprintf(buffer,"jhat_0_0_2 \"stick_0 hat 0 4\" ");CreateStringBind(buffer);
 	sprintf(buffer,"jhat_0_0_3 \"stick_0 hat 0 8\" ");CreateStringBind(buffer);
+	LOG_MSG("MAPPER: Loaded default key bindings");
 }
 
 void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key, Bitu mods,char const * const eventname,char const * const buttonname) {
@@ -2252,9 +2253,10 @@ void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key, Bitu mods,char cons
 }
 
 static void MAPPER_SaveBinds(void) {
-	FILE * savefile=fopen(mapper.filename.c_str(),"wt+");
+	const char *filename = mapper.filename.c_str();
+	FILE * savefile=fopen(filename,"wt+");
 	if (!savefile) {
-		LOG_MSG("Can't open %s for saving the mappings",mapper.filename.c_str());
+		LOG_MSG("MAPPER: Can't open %s for saving the key bindings", filename);
 		return;
 	}
 	char buf[128];
@@ -2271,18 +2273,23 @@ static void MAPPER_SaveBinds(void) {
 	}
 	fclose(savefile);
 	change_action_text("Mapper file saved.",CLR_WHITE);
+	LOG_MSG("MAPPER: Wrote key bindings to %s", filename);
 }
 
-static bool MAPPER_LoadBinds(void) {
-	FILE * loadfile=fopen(mapper.filename.c_str(),"rt");
-	if (!loadfile) return false;
+static bool MAPPER_CreateBindsFromFile(void) {
+	const char* filename = mapper.filename.c_str();
+	FILE * loadfile = fopen(filename,"rt");
+	if (!loadfile)
+		return false;
 	ClearAllBinds();
+	uint32_t bind_tally = 0;
 	char linein[512];
 	while (fgets(linein,512,loadfile)) {
 		CreateStringBind(linein);
+		++bind_tally;
 	}
 	fclose(loadfile);
-	LOG_MSG("MAPPER: Loading mapper settings from %s", mapper.filename.c_str());
+	LOG_MSG("MAPPER: Loaded %d key bindings from %s", bind_tally, filename);
 	return true;
 }
 
@@ -2419,16 +2426,16 @@ static void QueryJoysticks() {
 	const bool second_usable = useable[1];	
 	if (first_usable && second_usable) {
 		joytype = JOY_2AXIS;
-		LOG_MSG("SDL: Two or more joysticks found, initializing with 2axis");
+		LOG_MSG("MAPPER: Found two or more joysticks");
 	} else if (first_usable) {
 		joytype = JOY_4AXIS;
-		LOG_MSG("SDL: One joystick found, initializing with 4axis");
+		LOG_MSG("MAPPER: Found one joystick");
 	} else if (second_usable) {
 		joytype = JOY_4AXIS_2;
-		LOG_MSG("SDL: One joystick found, initializing with 4axis_2");
+		LOG_MSG("MAPPER: Found second joystick is usable");
 	} else {
 		joytype = JOY_NONE;
-		LOG_MSG("SDL: No joysticks found");
+		LOG_MSG("MAPPER: Found no joysticks");
 	}
 
 	// If we made it here, then update the other two external variables
@@ -2508,7 +2515,7 @@ void MAPPER_LosingFocus(void) {
 void MAPPER_RunEvent(Bitu /*val*/) {
 	KEYBOARD_ClrBuffer();	//Clear buffer
 	GFX_LosingFocus();		//Release any keys pressed (buffer gets filled again).
-	MAPPER_RunInternal();
+	MAPPER_DisplayUI();
 }
 
 void MAPPER_Run(bool pressed) {
@@ -2519,7 +2526,7 @@ void MAPPER_Run(bool pressed) {
 
 SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags);
 
-void MAPPER_RunInternal() {
+void MAPPER_DisplayUI() {
 	int cursor = SDL_ShowCursor(SDL_QUERY);
 	SDL_ShowCursor(SDL_ENABLE);
 	bool mousetoggle = false;
@@ -2581,38 +2588,17 @@ void MAPPER_RunInternal() {
 	GFX_ResetScreen();
 }
 
-void MAPPER_Init(void) {
-	QueryJoysticks();
-	if (buttons.empty()) CreateLayout();
-	if (bindgroups.empty()) CreateBindGroups();
-	if (!MAPPER_LoadBinds()) CreateDefaultBinds();
-	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
-		(*but_it)->BindColor();
-	}
-	if (SDL_GetModState()&KMOD_CAPS) {
-		for (CBindList_it bit = caps_lock_event->bindlist.begin(); bit != caps_lock_event->bindlist.end(); ++bit) {
-			(*bit)->ActivateBind(32767,true,false);
-			(*bit)->DeActivateBind(false);
-		}
-	}
-	if (SDL_GetModState()&KMOD_NUM) {
-		for (CBindList_it bit = num_lock_event->bindlist.begin(); bit != num_lock_event->bindlist.end(); ++bit) {
-			(*bit)->ActivateBind(32767,true,false);
-			(*bit)->DeActivateBind(false);
-		}
-	}
-}
-
-static void ReloadMapper(Section *sec) {
+static void MAPPER_Init(Section *sec) {
 	(void) sec; // unused but present for API compliance
-	Section_prop const *const section=static_cast<Section_prop *>(sec);
-	Prop_path const *const pp = section->Get_path("mapperfile");
-	mapper.filename = pp->realpath;
-	GFX_LosingFocus(); //Release any keys pressed, or else they'll get stuck.
-	MAPPER_Init();
+	// LOG_MSG("MAPPER: Initialized");
+	QueryJoysticks();
+	if (buttons.empty())
+		CreateLayout();
+	if (bindgroups.empty())
+		CreateBindGroups();
 }
 
-static void Destroy_Mapper(Section *sec) {
+static void MAPPER_Destroy(Section *sec) {
 	(void) sec; // unused but present for API compliance
 
 	// Release all the accumulated allocations by the mapper 
@@ -2645,11 +2631,59 @@ static void Destroy_Mapper(Section *sec) {
 
 	// Decrement our reference pointer to the Joystick subsystem
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+	// LOG_MSG("MAPPER: release resources");
+
+}
+
+void MAPPER_BindKeys() {
+	//Release any keys pressed, or else they'll get stuck
+	GFX_LosingFocus(); 
+
+	// Create binds from file or fallback to internals
+	if (!MAPPER_CreateBindsFromFile())
+		CreateDefaultBinds();
+
+	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
+		(*but_it)->BindColor();
+	}
+	if (SDL_GetModState()&KMOD_CAPS) {
+		for (CBindList_it bit = caps_lock_event->bindlist.begin(); bit != caps_lock_event->bindlist.end(); ++bit) {
+			(*bit)->ActivateBind(32767,true,false);
+			(*bit)->DeActivateBind(false);
+		}
+	}
+	if (SDL_GetModState()&KMOD_NUM) {
+		for (CBindList_it bit = num_lock_event->bindlist.begin(); bit != num_lock_event->bindlist.end(); ++bit) {
+			(*bit)->ActivateBind(32767,true,false);
+			(*bit)->DeActivateBind(false);
+		}
+	}
+}
+
+// Activate user-specified or default binds
+static void MAPPER_LoadFile(Section *sec) {
+	Section_prop const *const section=static_cast<Section_prop *>(sec);
+	Prop_path const *const pp = section->Get_path("mapperfile");
+	mapper.filename = pp->realpath;
+
+	static bool init_phase = true;
+	if (init_phase) {
+		init_phase = false;
+		return;
+	}
+	MAPPER_BindKeys();
 }
 
 void MAPPER_StartUp(Section * sec) {
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	section->AddInitFunction(&ReloadMapper, true); //runs immediately after this function ends
-	section->AddDestroyFunction(&Destroy_Mapper, false);
+	Section_prop * section = static_cast<Section_prop *>(sec);
+
+	 //runs one-time on startup
+	section->AddInitFunction(&MAPPER_Init, false);
+
+	 //runs after this function ends and for subsequent config -set "sdl mapperfile=file.map" commands
+	section->AddInitFunction(&MAPPER_LoadFile, true);
+
+	// runs one-time on shutdown
+	section->AddDestroyFunction(&MAPPER_Destroy, false);
 	MAPPER_AddHandler(&MAPPER_Run,MK_f1,MMOD1,"mapper","Mapper");
 }
