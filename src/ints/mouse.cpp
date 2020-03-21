@@ -854,14 +854,6 @@ static Bitu INT33_Handler(void) {
 			mouse.y = (mouse.max_y - mouse.min_y + 1)/2;*/
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Vertical range min:%d max:%d",min,max);
 
-			/* NTS: The mouse in VESA BIOS modes would ideally start with the x and y ranges
-			 *      that fit the screen, but I'm not so sure mouse drivers even pay attention
-			 *      to VESA BIOS modes so it's not certain what comes out. However some
-			 *      demoscene productions like "Aqua" will set their own mouse range and draw
-			 *      their own cursor. The menu in "Aqua" will set up 640x480 256-color mode
-			 *      and then set a mouse range of x=0-1279 and y=0-479. Using the FIRST range
-			 *      set after mode set is the only way to make sure mouse pointer integration
-			 *      tracks the guest pointer properly. */
 			if (mouse.buttons == 0) {
 				if (mouse.min_y == 0 && mouse.max_y > 0) {
 					// most games redefine the range so they can use a saner range matching the screen
