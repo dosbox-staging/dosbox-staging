@@ -88,6 +88,7 @@ static struct {
 	Bit16u hidden;
 	float add_x,add_y;
 	Bit16s min_x,max_x,min_y,max_y;
+	Bit16s max_screen_x,max_screen_y;
 	float mickey_x,mickey_y;
 	float x,y;
 	button_event event_queue[QUEUE_SIZE];
@@ -485,8 +486,8 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 			mouse.y = y*(real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS)+1)*8;
 		} else if ((mouse.max_x < 2048) || (mouse.max_y < 2048) || (mouse.max_x != mouse.max_y)) {
 			if ((mouse.max_x > 0) && (mouse.max_y > 0)) {
-				mouse.x = x*mouse.max_x;
-				mouse.y = y*mouse.max_y;
+				mouse.x = x*mouse.max_screen_x;
+				mouse.y = y*mouse.max_screen_y;
 			} else {
 				mouse.x += xrel;
 				mouse.y += yrel;
@@ -688,6 +689,9 @@ void Mouse_AfterNewVideoMode(bool setmode) {
 	mouse.cursorType = 0; //Test
 	mouse.enabled=true;
 
+	mouse.max_screen_x = mouse.max_x;
+	mouse.max_screen_y = mouse.max_y;
+
 	oldmouseX = static_cast<Bit16s>(mouse.x);
 	oldmouseY = static_cast<Bit16s>(mouse.y);
 
@@ -798,6 +802,40 @@ static Bitu INT33_Handler(void) {
 			/* Or alternatively this: 
 			mouse.x = (mouse.max_x - mouse.min_x + 1)/2;*/
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Hortizontal range min:%d max:%d",min,max);
+
+			if (mouse.buttons == 0) {
+				if (mouse.min_x == 0 && mouse.max_x > 0) {
+					// most games redefine the range so they can use a saner range matching the screen
+					Bit16s nval = mouse.max_x;
+
+					if (CurMode->type == M_TEXT) {
+						// Text is reported as if each row is 8 lines high (CGA compat) even if EGA 14-line
+						// or VGA 16-line, and 8 pixels wide even if EGA/VGA 9-pixels/char is enabled.
+						//
+						// Apply sanity rounding.
+						//
+						// FreeDOS EDIT: The max is set to just under 640x400, so that the cursor only has
+						//               room for ONE PIXEL in the last row and column.
+						if (nval >= ((Bit16s)(CurMode->twidth*8) - 32) && nval <= ((Bit16s)(CurMode->twidth*8) + 32))
+							nval = (Bit16s)CurMode->twidth*8;
+					}
+					else {
+						// Apply sanity rounding.
+						//
+						// Daggerfall: Sets max to 310 instead of 320, probably to prevent drawing the cursor
+						//             partially offscreen. */
+						if (nval >= ((Bit16s)CurMode->swidth - 32) && nval <= ((Bit16s)CurMode->swidth + 32))
+							nval = (Bit16s)CurMode->swidth;
+						else if (nval >= (((Bit16s)CurMode->swidth - 32) * 2) && nval <= (((Bit16s)CurMode->swidth + 32) * 2))
+							nval = (Bit16s)CurMode->swidth * 2;
+					}
+
+					if (mouse.max_screen_x != nval) {
+						mouse.max_screen_x = nval;
+						LOG(LOG_MOUSE, LOG_NORMAL)("Define Horizontal range min:%d max:%d defines the bounds of the screen", min, max);
+					}
+				}
+			}
 		}
 		break;
 	case 0x08:	/* Define vertical cursor range */
@@ -815,6 +853,48 @@ static Bitu INT33_Handler(void) {
 			/* Or alternatively this: 
 			mouse.y = (mouse.max_y - mouse.min_y + 1)/2;*/
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Vertical range min:%d max:%d",min,max);
+
+			/* NTS: The mouse in VESA BIOS modes would ideally start with the x and y ranges
+			 *      that fit the screen, but I'm not so sure mouse drivers even pay attention
+			 *      to VESA BIOS modes so it's not certain what comes out. However some
+			 *      demoscene productions like "Aqua" will set their own mouse range and draw
+			 *      their own cursor. The menu in "Aqua" will set up 640x480 256-color mode
+			 *      and then set a mouse range of x=0-1279 and y=0-479. Using the FIRST range
+			 *      set after mode set is the only way to make sure mouse pointer integration
+			 *      tracks the guest pointer properly. */
+			if (mouse.buttons == 0) {
+				if (mouse.min_y == 0 && mouse.max_y > 0) {
+					// most games redefine the range so they can use a saner range matching the screen
+					Bit16s nval = mouse.max_y;
+
+					if (CurMode->type == M_TEXT) {
+						// Text is reported as if each row is 8 lines high (CGA compat) even if EGA 14-line
+						// or VGA 16-line, and 8 pixels wide even if EGA/VGA 9-pixels/char is enabled.
+						//
+						// Apply sanity rounding.
+						//
+						// FreeDOS EDIT: The max is set to just under 640x400, so that the cursor only has
+						//               room for ONE PIXEL in the last row and column.
+						if (nval >= ((Bit16s)(CurMode->theight*8) - 32) && nval <= ((Bit16s)(CurMode->theight*8) + 32))
+							nval = (Bit16s)CurMode->theight*8;
+					}
+					else {
+						// Apply sanity rounding.
+						//
+						// Daggerfall: Sets max to 310 instead of 320, probably to prevent drawing the cursor
+						//             partially offscreen. */
+						if (nval >= ((Bit16s)CurMode->sheight - 32) && nval <= ((Bit16s)CurMode->sheight + 32))
+							nval = (Bit16s)CurMode->sheight;
+						else if (nval >= (((Bit16s)CurMode->sheight - 32) * 2) && nval <= (((Bit16s)CurMode->sheight + 32) * 2))
+							nval = (Bit16s)CurMode->sheight * 2;
+					}
+
+					if (mouse.max_screen_y != nval) {
+						mouse.max_screen_y = nval;
+						LOG(LOG_MOUSE, LOG_NORMAL)("Define Vertical range min:%d max:%d defines the bounds of the screen", min, max);
+					}
+				}
+			}
 		}
 		break;
 	case 0x09:	/* Define GFX Cursor */
