@@ -2357,15 +2357,16 @@ void Config_Add_SDL() {
 	constexpr auto always = Property::Changeable::Always;
 	constexpr auto deprecated = Property::Changeable::Deprecated;
 
-	Pbool = sdl_sec->Add_bool("fullscreen",Property::Changeable::Always,false);
-	Pbool->Set_help("Start dosbox directly in fullscreen. (Press ALT-Enter to go back)");
+	Pbool = sdl_sec->Add_bool("fullscreen", always, false);
+	Pbool->Set_help("Start DOSBox directly in fullscreen.\n"
+	                "Press Alt-Enter to switch back to window.");
 
 	Pbool = sdl_sec->Add_bool("vsync", deprecated, false);
 	Pbool->Set_help("Vertical sync setting not implemented (setting ignored)");
 
-	Pstring = sdl_sec->Add_string("fullresolution", Property::Changeable::Always, "desktop");
-	Pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop' or\n"
-	                  "a fixed size (e.g. 1024x768).");
+	Pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
+	Pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop'\n"
+	                  "or a fixed size (e.g. 1024x768).");
 
 	Pstring = sdl_sec->Add_string("windowresolution", always, "original");
 	Pstring->Set_help("Scale the window to this size. Value 'original' will resize\n"
