@@ -1,7 +1,7 @@
 # Tool overrides
 ar="gcc-ar${postfix}"
-cc="gcc${postfix}"
-cxx="g++${postfix}"
+cc="${ccache}gcc${postfix}"
+cxx="${ccache}g++${postfix}"
 ld="gcc${postfix}"
 ranlib="gcc-ranlib${postfix}"
 

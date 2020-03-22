@@ -8,7 +8,7 @@ dependencies=(ldd "${executable}")
 function pre_build() {
 	cd ../..
 	underline "Environment"
-	echo "[$("${CC}" --version | head -1)]"
+	echo "[$(${CC} --version | head -1)]"
 	for v in "${VARIABLES[@]}"; do
 		vupper=$(upper "${v}")
 		echo "${vupper}=\"$(eval echo \$"${vupper}")\""
