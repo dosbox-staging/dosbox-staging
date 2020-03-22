@@ -31,31 +31,19 @@
 #include "softmodem.h"
 #include "misc_util.h"
 
-static const char phoneValidChars[] = "01234567890*=,;#+>";
-
-class CPhonebookEntry {
+class PhonebookEntry {
 public:
-	CPhonebookEntry(const std::string &_phone, const std::string &_address) :
+	PhonebookEntry(const std::string &_phone, const std::string &_address) :
 		phone(_phone),
 		address(_address) {
 	}
 
-	bool IsMatchingPhone(const std::string &input) {
+	bool IsMatchingPhone(const std::string &input) const {
 		return (input == phone);
 	}
 
-	const std::string &GetAddress() {
+	const std::string &GetAddress() const {
 		return address;
-	}
-
-	static bool IsPhoneValid(const std::string &input) {
-		size_t found = input.find_first_not_of(phoneValidChars);
-		if (found != std::string::npos) {
-			LOG_MSG("SERIAL: Phone %s contains invalid character %c", input.c_str(), input[found]);
-			return false;
-		}
-
-		return true;
 	}
 
 private:
@@ -63,13 +51,26 @@ private:
 	std::string address;
 };
 
-static std::vector<CPhonebookEntry *> phones;
+static std::vector<PhonebookEntry *> phones;
+static const char phoneValidChars[] = "01234567890*=,;#+>";
+
+static bool MODEM_IsPhoneValid(const std::string &input) {
+	size_t found = input.find_first_not_of(phoneValidChars);
+	if (found != std::string::npos) {
+		LOG_MSG("SERIAL: Phone %s contains invalid character %c", input.c_str(), input[found]);
+		return false;
+	}
+
+	return true;
+}
 
 bool MODEM_ReadPhonebook(const std::string &filename) {
 	LOG_MSG("SERIAL: Loading phonebook from %s", filename.c_str());
 
 	std::ifstream loadfile(filename);
-	if (!loadfile) return false;
+	if (!loadfile)
+		return false;
+
 	std::string linein;
 	while (std::getline(loadfile, linein)) {
 		std::istringstream iss(linein);
@@ -81,11 +82,11 @@ bool MODEM_ReadPhonebook(const std::string &filename) {
 		}
 
 		// Check phone number for characters ignored by Hayes modems.
-		if (!CPhonebookEntry::IsPhoneValid(phone))
+		if (!MODEM_IsPhoneValid(phone))
 			continue;
 
 		LOG_MSG("SERIAL: Mapped phone %s to address %s", phone.c_str(), address.c_str());
-		CPhonebookEntry *pbEntry = new CPhonebookEntry(phone, address);
+		PhonebookEntry *pbEntry = new PhonebookEntry(phone, address);
 		phones.push_back(pbEntry);
 	}
 
@@ -93,7 +94,7 @@ bool MODEM_ReadPhonebook(const std::string &filename) {
 }
 
 static const char *MODEM_GetAddressFromPhone(const char *input) {
-	for (auto entry : phones) {
+	for (const auto entry : phones) {
 		if (entry->IsMatchingPhone(input))
 			return entry->GetAddress().c_str();
 	}
@@ -260,8 +261,8 @@ void CSerialModem::SendRes(const ResTypes response) {
 }
 
 bool CSerialModem::Dial(const char * host) {
-	char buf[128];
-	strcpy(buf, host);
+	char buf[128] = "";
+	safe_strcpy(buf, host);
 
 	const char *destination = buf;
 
@@ -272,8 +273,9 @@ bool CSerialModem::Dial(const char * host) {
 		*hasport++ = 0;
 		port = (Bit16u)atoi(hasport);
 	}
-	else
+	else {
 		port = MODEM_DEFAULT_PORT;
+	}
 
 	// Resolve host we're gonna dial
 	LOG_MSG("Connecting to host %s port %u", destination, port);
@@ -813,13 +815,17 @@ void CSerialModem::Timer2(void) {
 				rqueue->addb(txval);
 				//LOG_MSG("Echo back to queue: %x",txval);
 			}
-			if (txval == '\n') continue; // Real modem doesn't seem to skip this?
-			else if (txval == '\b') { // backspace
-				if (cmdpos > 0) cmdpos--;
-			}
-			else if (txval == '\r') DoCommand(); // return
-			else if (txval != '+') {
-				if(cmdpos<99) {
+
+			if (txval == '\n')
+				continue; // Real modem doesn't seem to skip this?
+
+			if (txval == '\b') {
+				if (cmdpos > 0)
+					cmdpos--;
+			} else if (txval == '\r') {
+				DoCommand();
+			} else if (txval != '+') {
+				if (cmdpos < 99) {
 					cmdbuf[cmdpos] = txval;
 					cmdpos++;
 				}
