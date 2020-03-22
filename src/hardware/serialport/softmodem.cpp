@@ -65,11 +65,11 @@ static bool MODEM_IsPhoneValid(const std::string &input) {
 }
 
 bool MODEM_ReadPhonebook(const std::string &filename) {
-	LOG_MSG("SERIAL: Loading phonebook from %s", filename.c_str());
-
 	std::ifstream loadfile(filename);
 	if (!loadfile)
 		return false;
+
+	LOG_MSG("SERIAL: Loading phonebook from %s", filename.c_str());
 
 	std::string linein;
 	while (std::getline(loadfile, linein)) {
