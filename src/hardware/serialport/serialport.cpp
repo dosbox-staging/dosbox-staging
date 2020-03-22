@@ -1214,8 +1214,7 @@ bool CSerial::Putchar(Bit8u data, bool wait_dsr, bool wait_cts, Bitu timeout) {
 
 #if SERIAL_DEBUG
 	log_ser(dbg_aux,"Putchar 0x%x",data);
-#endif
-
+#endif 
 	return true;
 }
 
@@ -1226,8 +1225,8 @@ public:
 		Section_prop *section = static_cast <Section_prop*>(configuration);
 
 #if C_MODEM
-		Prop_path *pbFilename = section->Get_path("phonebookfile");
-		MODEM_ReadPhonebook(pbFilename->realpath.c_str());
+		const Prop_path *pbFilename = section->Get_path("phonebookfile");
+		MODEM_ReadPhonebook(pbFilename->realpath);
 #endif
 
 		char s_property[] = "serialx"; 
