@@ -1,6 +1,6 @@
 # Steps in-common to all OSes, plus some helper variables and functions.
 
-STEPS=(pre_build clean autogen configure make_binary strip_binary dependencies post_build)
+STEPS=(pre_build clean autogen configure make_binary strip_binary dependencies ccache_stats post_build)
 
 executable="src/dosbox"
 dependencies=(ldd "${executable}")
@@ -32,6 +32,13 @@ function configure() {
 		set -x
 		./configure --enable-core-inline ${configure_additions[*]}
 		set +x
+	fi
+}
+
+function ccache_stats() {
+	if [[ -n "${ccache}" ]]; then
+		underline "Cache statistics" "-"
+		ccache -s | grep --color=never 'hit\|size'
 	fi
 }
 
