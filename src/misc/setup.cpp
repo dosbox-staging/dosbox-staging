@@ -239,8 +239,9 @@ void Property::Set_help(string const& in) {
 	MSG_Add(result.c_str(),in.c_str());
 }
 
-char const* Property::Get_help() {
-	string result = string("CONFIG_") + propname;
+const char * Property::GetHelp() const
+{
+	std::string result = "CONFIG_" + propname;
 	upcase(result);
 	return MSG_Get(result.c_str());
 }
@@ -654,13 +655,24 @@ bool Section_prop::HandleInputline(string const& gegevens){
 	     ((val[0] == '\"'  && val[length - 1] == '\"' ) ||
 	      (val[0] == '\'' && val[length - 1] == '\''))
 	   ) val = val.substr(1,length - 2);
+
 	/* trim the results incase there were spaces somewhere */
-	trim(name);trim(val);
-	for(it tel = properties.begin();tel != properties.end();++tel){
-		if (!strcasecmp((*tel)->propname.c_str(),name.c_str())){
-			return (*tel)->SetValue(val);
+	trim(name);
+	trim(val);
+	for (auto &p : properties) {
+
+		if (strcasecmp(p->propname.c_str(), name.c_str()) != 0)
+			continue;
+
+		if (p->IsDeprecated()) {
+			LOG_MSG("CONFIG: Deprecated option '%s'", name.c_str());
+			LOG_MSG("CONFIG: %s", p->GetHelp());
+			return false;
 		}
+
+		return p->SetValue(val);
 	}
+	LOG_MSG("CONFIG: Unknown option %s", name.c_str());
 	return false;
 }
 
@@ -673,6 +685,10 @@ void Section_prop::PrintData(FILE* outfile) const {
 		len = std::max<int>(len, tel->propname.length());
 
 	for (const auto &tel : properties) {
+
+		if (tel->IsDeprecated())
+			continue;
+
 		fprintf(outfile, "%-*s = %s\n",
 		        std::min<int>(40, len),
 		        tel->propname.c_str(),
@@ -731,7 +747,11 @@ bool Config::PrintConfig(char const * const configfilename) const {
 			int intmaxwidth = std::min<int>(60, maxwidth);
 			snprintf(prefix, sizeof(prefix), "\n# %*s  ", intmaxwidth , "");
 			while ((p = sec->Get_prop(i++))) {
-				std::string help = p->Get_help();
+
+				if (p->IsDeprecated())
+					continue;
+
+				std::string help = p->GetHelp();
 				std::string::size_type pos = std::string::npos;
 				while ((pos = help.find('\n', pos+1)) != std::string::npos) {
 					help.replace(pos, 1, prefix);
@@ -871,11 +891,11 @@ bool Config::ParseConfigFile(char const * const configfilename) {
 	//static bool first_configfile = true;
 	ifstream in(configfilename);
 	if (!in) return false;
-	const char * settings_type;
-	settings_type = (configfiles.size() == 0)? "primary":"additional";
 	configfiles.push_back(configfilename);
 
-	LOG_MSG("CONFIG: Loading %s settings from config file %s", settings_type,configfilename);
+	LOG_MSG("CONFIG: Loading %s config file %s",
+	        configfiles.size() == 1 ? "primary" : "additional",
+	        configfilename);
 
 	//Get directory from configfilename, used with relative paths.
 	current_config_dir=configfilename;
