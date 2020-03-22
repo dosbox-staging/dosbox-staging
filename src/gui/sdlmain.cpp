@@ -263,7 +263,7 @@ struct SDL_Block {
 		} window;
 		Bit8u bpp;
 		bool fullscreen;
-		bool vsync;
+		bool vsync = false;
 		SCREEN_TYPES type;
 		SCREEN_TYPES want_type;
 	} desktop;
@@ -1860,7 +1860,10 @@ static void GUI_StartUp(Section * sec) {
 		}
 	}
 
-	sdl.desktop.vsync = section->Get_bool("vsync");
+	// TODO vsync option is disabled for the time being, as it does not work
+	//      correctly and is causing serious bugs.
+	// sdl.desktop.vsync = section->Get_bool("vsync");
+
 	sdl.displayNumber = section->Get_int("display");
 	if ((sdl.displayNumber < 0) || (sdl.displayNumber >= SDL_GetNumVideoDisplays())) {
 		sdl.displayNumber = 0;
@@ -2352,13 +2355,13 @@ void Config_Add_SDL() {
 	Section_prop* Psection;
 
 	constexpr auto always = Property::Changeable::Always;
+	constexpr auto deprecated = Property::Changeable::Deprecated;
 
 	Pbool = sdl_sec->Add_bool("fullscreen",Property::Changeable::Always,false);
 	Pbool->Set_help("Start dosbox directly in fullscreen. (Press ALT-Enter to go back)");
 
-	Pbool = sdl_sec->Add_bool("vsync", Property::Changeable::Always, false);
-	Pbool->Set_help("Sync to Vblank IF supported by the output device and renderer.\n"
-	                "It can reduce screen flickering, but it can also result in a slow DOSBox.");
+	Pbool = sdl_sec->Add_bool("vsync", deprecated, false);
+	Pbool->Set_help("Vertical sync setting not implemented (setting ignored)");
 
 	Pstring = sdl_sec->Add_string("fullresolution", Property::Changeable::Always, "desktop");
 	Pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop' or\n"
