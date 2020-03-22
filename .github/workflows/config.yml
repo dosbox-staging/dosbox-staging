@@ -62,7 +62,7 @@ jobs:
           steps.repo-meta.outputs.has-commits == 'true'
         with:
           path: 'C:/tools/msys64'
-          key: msys2-64-${{ steps.get-date.outputs.date }}-2
+          key: msys2-64-${{ steps.get-date.outputs.date }}-3
 
       - name:  Install MSYS2 (Windows)
         if:    >
@@ -77,7 +77,7 @@ jobs:
           steps.cache-msys2.outputs.cache-hit != 'true' &&
           steps.repo-meta.outputs.has-commits == 'true'
         shell: python scripts\msys-bash.py {0}
-        run:   |
+        run: |
            scripts/list-build-dependencies.sh -m msys2 -c clang ${{ matrix.conf.without_packages }} | xargs pacman -S --noconfirm
            .github/scripts/shrink-msys2.sh
 
@@ -85,7 +85,7 @@ jobs:
         if:    >
           matrix.system.name == 'Linux' &&
           steps.repo-meta.outputs.has-commits == 'true'
-        run:   |
+        run: |
           sudo apt-get -y update
           sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c gcc ${{ matrix.conf.without_packages }})
 
@@ -106,7 +106,7 @@ jobs:
         if:    >
           matrix.system.name == 'macOS' &&
           steps.repo-meta.outputs.has-commits == 'true'
-        run:   |
+        run: |
           export PKG_CONFIG_PATH="/usr/local/opt/ncurses/lib/pkgconfig:$PKG_CONFIG_PATH"
           ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug ${{ matrix.conf.configure_flags }}
 

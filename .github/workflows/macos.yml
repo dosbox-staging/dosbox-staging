@@ -1,8 +1,13 @@
 name: macOS builds
+
 on: [push, pull_request]
 
-jobs:
+env:
+  CCACHE_DIR:      "${{ github.workspace }}/.ccache"
+  CCACHE_MAXSIZE:  "64M"
+  CCACHE_COMPRESS: "true"
 
+jobs:
   build_macos:
     name: ${{ matrix.conf.name }}
     runs-on: macos-latest
@@ -22,6 +27,21 @@ jobs:
           fetch-depth: 1
       - name: Install C++ compiler and libraries
         run:  brew install $(./scripts/list-build-dependencies.sh -m brew ${{ matrix.conf.flags}})
+      - name:  Prepare compiler cache
+        id:    prep-ccache
+        shell: bash
+        run: |
+          mkdir -p "${CCACHE_DIR}"
+          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date +%Y%M%d)"
+          echo "::set-output name=yesterday::$(date --date=yesterday +%Y%M%d)"
+      - uses:  actions/cache@v1
+        id:    cache-ccache
+        with:
+          path: ${{ steps.prep-ccache.outputs.dir }}
+          key:  ccache-macos-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.today }}
+          restore-keys: |
+            ccache-macos-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.yesterday }}
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Build
@@ -35,16 +55,37 @@ jobs:
     name: Release build
     runs-on: macos-latest
     if: github.event_name != 'pull_request' || contains('dreamer,krcroft,ant-222', github.actor) == false
+    env:
+      CC: ccache clang
+      CXX: ccache clang++
+      FLAGS: -O3 -DNDEBUG -pipe -march=nehalem
     steps:
       - uses: actions/checkout@v1
       - name: Install C++ compiler and libraries
         run:  brew install librsvg $(./scripts/list-build-dependencies.sh -m brew -c clang)
+      - name:  Prepare compiler cache
+        id:    prep-ccache
+        shell: bash
+        run: |
+          mkdir -p "${CCACHE_DIR}"
+          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date +%Y%M%d)"
+          echo "::set-output name=yesterday::$(date --date=yesterday +%Y%M%d)"
+      - uses:  actions/cache@v1
+        id:    cache-ccache
+        with:
+          path: ${{ steps.prep-ccache.outputs.dir }}
+          key:  ccache-macos-release-${{ steps.prep-ccache.outputs.today }}
+          restore-keys: |
+            ccache-macos-release-${{ steps.prep-ccache.outputs.yesterday }}
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Build Opus libraries
         run: |
           set -x
           cd contrib/static-opus
+          export CFLAGS="$FLAGS"
+          export CXXFLAGS="$FLAGS"
           gmake -j "$(sysctl -n hw.physicalcpu)"
       - name: Inject version string
         run: |
@@ -54,7 +95,6 @@ jobs:
           echo ::set-env name=VERSION::$VERSION
       - name: Build
         env:
-          FLAGS: -O3 -DNDEBUG -pipe -march=nehalem
           OPUSFILE_CFLAGS: -I${{ github.workspace }}/contrib/static-opus/include -I${{ github.workspace }}/contrib/static-opus/include/opus
           OPUSFILE_LIBS: ${{ github.workspace }}/contrib/static-opus/lib/libopusfile.a ${{ github.workspace }}/contrib/static-opus/lib/libogg.a ${{ github.workspace }}/contrib/static-opus/lib/libopus.a -lm
         run: |
@@ -69,7 +109,6 @@ jobs:
           gmake -j "$(sysctl -n hw.physicalcpu)"
           strip src/dosbox
           otool -L src/dosbox
-
       - name: Package
         run: |
           set -x

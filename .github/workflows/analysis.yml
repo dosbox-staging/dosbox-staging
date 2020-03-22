@@ -1,8 +1,13 @@
 name: Code analysis
+
 on: [push, pull_request]
 
-jobs:
+env:
+  CCACHE_DIR:      "/dev/shm/.ccache"
+  CCACHE_MAXSIZE:  "64M"
+  CCACHE_COMPRESS: "true"
 
+jobs:
   run_linters:
     name: Script linters
     runs-on: ubuntu-18.04
@@ -15,13 +20,13 @@ jobs:
       - name: Run shellcheck
         run:  ./scripts/verify-bash.sh
       - name: Install pylint
-        run:  |
+        run: |
           sudo apt-get install python3-setuptools
           sudo pip3 install pylint beautifulsoup4 html5lib
       - name: Run pylint
         run:  ./scripts/verify-python.sh
       - name: Install markdownlint
-        run:  |
+        run: |
           sudo apt-get install ruby
           sudo gem install mdl
           sudo chmod go-w /usr/share/rust/.cargo/bin
@@ -41,15 +46,31 @@ jobs:
         run:  sudo apt-get install python3-setuptools $(./scripts/list-build-dependencies.sh -m apt -c gcc)
       - name: Install scan-build (Python version)
         run:  sudo pip3 install scan-build beautifulsoup4 html5lib
+
+      - name:  Prepare compiler cache
+        id:    prep-ccache
+        shell: bash
+        run: |
+          mkdir -p "${CCACHE_DIR}"
+          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date +%Y%M%d)"
+          echo "::set-output name=yesterday::$(date --date=yesterday +%Y%M%d)"
+      - uses:  actions/cache@v1
+        id:    cache-ccache
+        with:
+          path: ${{ steps.prep-ccache.outputs.dir }}
+          key:  ccache-static-clang-${{ steps.prep-ccache.outputs.today }}
+          restore-keys: |
+            ccache-static-clang-${{ steps.prep-ccache.outputs.yesterday }}
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Build
-        run:  |
+        run: |
           # build steps
           set -x
           g++ --version
           ./autogen.sh
-          ./configure
+          ./configure CC="ccache gcc" CXX="ccache g++"
           intercept-build make -j "$(nproc)"
       - name: Analyze
         run:  analyze-build -v -o report --html-title="dosbox-staging (${GITHUB_SHA:0:8})"
@@ -79,7 +100,7 @@ jobs:
           fetch-depth: 1
       - run:  sudo apt-get update
       - name: Log and setup environment
-        run:  |
+        run: |
           ./scripts/log-env.sh
           mkdir -p pvs-package
       - uses: actions/cache@v1
@@ -91,20 +112,20 @@ jobs:
         if:    steps.cache-pvs.outputs.cache-hit != 'true'
         run:   wget "https://files.viva64.com/${debfile}" -O "pvs-package/pvs.deb"
       - name: Install packages
-        run:  |
+        run: |
           set -xeu
           sudo apt-get install strace $(./scripts/list-build-dependencies.sh -m apt -c gcc)
           sudo dpkg -i "pvs-package/pvs.deb"
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
       - name: Build
-        run:  |
+        run: |
           set -xeu
           ./autogen.sh
           export FLAGS="-Og"
           ./configure CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS}"
           pvs-studio-analyzer trace -- make
       - name: Analyze
-        run:  |
+        run: |
           set -xeu
           log="pvs-analysis.log"
           mirsa_criteria="MISRA:1,2"
@@ -165,6 +186,21 @@ jobs:
         run:  >
           sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt
           -c ${{ matrix.conf.name }} -v $VERSION_${{ matrix.conf.name }})
+      - name:  Prepare compiler cache
+        id:    prep-ccache
+        shell: bash
+        run: |
+          mkdir -p "${CCACHE_DIR}"
+          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date +%Y%M%d)"
+          echo "::set-output name=yesterday::$(date --date=yesterday +%Y%M%d)"
+      - uses:  actions/cache@v1
+        id:    cache-ccache
+        with:
+          path: ${{ steps.prep-ccache.outputs.dir }}
+          key:  ccache-sanitizers-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.today }}
+          restore-keys: |
+            ccache-sanitizers-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.yesterday }}
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Build and run sanitizers

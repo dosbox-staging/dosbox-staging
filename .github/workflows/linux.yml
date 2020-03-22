@@ -1,8 +1,13 @@
 name: Linux builds
+
 on: [push, pull_request]
 
-jobs:
+env:
+  CCACHE_DIR:      "/dev/shm/.ccache"
+  CCACHE_MAXSIZE:  "64M"
+  CCACHE_COMPRESS: "true"
 
+jobs:
   build_ubuntu:
     name: ${{ matrix.conf.name }}
     runs-on: ${{ matrix.conf.os }}
@@ -33,6 +38,21 @@ jobs:
       - run:  sudo apt-get update
       - name: Install C++ compiler and libraries
         run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt ${{ matrix.conf.flags }})
+      - name:  Prepare compiler cache
+        id:    prep-ccache
+        shell: bash
+        run: |
+          mkdir -p "${CCACHE_DIR}"
+          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date +%Y%M%d)"
+          echo "::set-output name=yesterday::$(date --date=yesterday +%Y%M%d)"
+      - uses:  actions/cache@v1
+        id:    cache-ccache
+        with:
+          path: ${{ steps.prep-ccache.outputs.dir }}
+          key:  ccache-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.today }}
+          restore-keys: |
+            ccache-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.yesterday }}
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Build
@@ -51,6 +71,21 @@ jobs:
       - run:  sudo apt-get update
       - name: Install C++ compiler and libraries
         run:  sudo apt-get install -y tree libpng16-dev $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+      - name:  Prepare compiler cache
+        id:    prep-ccache
+        shell: bash
+        run: |
+          mkdir -p "${CCACHE_DIR}"
+          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date +%Y%M%d)"
+          echo "::set-output name=yesterday::$(date --date=yesterday +%Y%M%d)"
+      - uses:  actions/cache@v1
+        id:    cache-ccache
+        with:
+          path: ${{ steps.prep-ccache.outputs.dir }}
+          key:  ccache-linux-release-${{ steps.prep-ccache.outputs.today }}
+          restore-keys: |
+            ccache-linux-release-${{ steps.prep-ccache.outputs.yesterday }}
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Inject version string
@@ -65,7 +100,7 @@ jobs:
         run: |
           set -x
           ./autogen.sh
-          ./configure CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" --disable-screenshots
+          ./configure CC="ccache gcc" CXX="ccache g++" CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" --disable-screenshots
           make -j "$(nproc)"
           strip src/dosbox
       - name: Package

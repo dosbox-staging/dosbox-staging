@@ -1,8 +1,8 @@
 name: Windows builds
+
 on: [push, pull_request]
 
 jobs:
-
   build_windows_msys2:
     name: ${{ matrix.conf.compiler }} ${{ matrix.conf.bits }}-bit
     runs-on: windows-latest
@@ -31,7 +31,10 @@ jobs:
             arch: x86_64
             max_warnings: 82
     env:
-      CHERE_INVOKING: yes
+      CHERE_INVOKING:  yes
+      CCACHE_DIR:      "${{ github.workspace }}/.ccache"
+      CCACHE_MAXSIZE:  "64M"
+      CCACHE_COMPRESS: "true"
     steps:
       - uses:  actions/checkout@v1
         with:
@@ -39,12 +42,12 @@ jobs:
       - name:  Get Date
         id:    get-date
         shell: bash
-        run:   echo ::set-output name=date::$(date +%Y-%W)
+        run:   echo "::set-output name=date::$(date +%Y-%W)"
       - uses:  actions/cache@v1
         id:    cache-msys2
         with:
           path: 'C:/tools/msys64'
-          key: msys2-${{ matrix.conf.bits }}-${{ steps.get-date.outputs.date }}-2
+          key: msys2-${{ matrix.conf.bits }}-${{ steps.get-date.outputs.date }}-3
       - name:  Install MSYS2
         if:    steps.cache-msys2.outputs.cache-hit != 'true'
         run:   choco install msys2 --no-progress
@@ -56,6 +59,21 @@ jobs:
         if:    steps.cache-msys2.outputs.cache-hit != 'true'
         shell: python scripts\msys-bash.py {0}
         run:   ./.github/scripts/shrink-msys2.sh
+      - name:  Prepare compiler cache
+        id:    prep-ccache
+        shell: bash
+        run: |
+          mkdir -p "${CCACHE_DIR}"
+          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date +%Y%M%d)"
+          echo "::set-output name=yesterday::$(date --date=yesterday +%Y%M%d)"
+      - uses:  actions/cache@v1
+        id:    cache-ccache
+        with:
+          path: ${{ steps.prep-ccache.outputs.dir }}
+          key:  ccache-msys2-${{ matrix.conf.compiler }}-${{ matrix.conf.bits }}-${{ steps.prep-ccache.outputs.today }}
+          restore-keys: |
+            ccache-msys2-${{ matrix.conf.compiler }}-${{ matrix.conf.bits }}-${{ steps.prep-ccache.outputs.yesterday }}
       - name:  Log environment
         shell: python scripts\msys-bash.py {0}
         run:   ./scripts/log-env.sh
