@@ -1,6 +1,6 @@
 # Tool overrides
-cc="clang${postfix}"
-cxx="clang++${postfix}"
+cc="${ccache}clang${postfix}"
+cxx="${ccache}clang++${postfix}"
 
 # Flag additions
 TYPES+=(debug warnmore profile)
