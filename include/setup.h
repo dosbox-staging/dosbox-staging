@@ -111,14 +111,20 @@ private:
 
 class Property {
 public:
-	struct Changeable { enum Value {Always, WhenIdle,OnlyAtStart};};
+	struct Changeable {
+		enum Value { Always, WhenIdle, OnlyAtStart, Deprecated };
+	};
 	const std::string propname;
 
 	Property(std::string const& _propname, Changeable::Value when):propname(_propname),change(when) { }
+	virtual ~Property() = default;
+
 	void Set_values(const char * const * in);
 	void Set_values(const std::vector<std::string> &in);
 	void Set_help(std::string const& str);
-	char const* Get_help();
+
+	const char* GetHelp() const;
+
 	virtual	bool SetValue(std::string const& str)=0;
 	Value const& GetValue() const { return value;}
 	Value const& Get_Default_Value() const { return default_value; }
@@ -126,11 +132,12 @@ public:
 	//Type specific properties are encouraged to override this and check for type
 	//specific features.
 	virtual bool CheckValue(Value const& in, bool warn);
-public:
-	virtual ~Property(){ }
+
+	Changeable::Value GetChange() const { return change; }
+	bool IsDeprecated() const { return (change == Changeable::Value::Deprecated); }
+
 	virtual const std::vector<Value>& GetValues() const;
 	Value::Etype Get_type(){return default_value.type;}
-	Changeable::Value getChange() {return change;}
 
 protected:
 	//Set interval value to in or default if in is invalid. force always sets the value.
