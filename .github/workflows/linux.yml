@@ -1,11 +1,12 @@
 name: Linux builds
-on: push
+on: [push, pull_request]
 
 jobs:
 
   build_ubuntu:
     name: ${{ matrix.conf.name }}
     runs-on: ${{ matrix.conf.os }}
+    if: github.event_name != 'pull_request' || contains('dreamer,krcroft,ant-222', github.actor) == false
     strategy:
       matrix:
         conf:
@@ -44,6 +45,7 @@ jobs:
   build_linux_release_dynamic:
     name: Release build (dynamic)
     runs-on: ubuntu-16.04
+    if: github.event_name != 'pull_request' || contains('dreamer,krcroft,ant-222', github.actor) == false
     steps:
       - uses: actions/checkout@v1
       - run:  sudo apt-get update

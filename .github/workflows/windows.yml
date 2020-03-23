@@ -1,11 +1,12 @@
 name: Windows builds
-on: push
+on: [push, pull_request]
 
 jobs:
 
   build_windows_msys2:
     name: ${{ matrix.conf.compiler }} ${{ matrix.conf.bits }}-bit
     runs-on: windows-latest
+    if: github.event_name != 'pull_request' || contains('dreamer,krcroft,ant-222', github.actor) == false
     strategy:
       # Because Clang depends on GCC, we run the Clang-32/64bit jobs
       # first to create combined caches that include both Clang and GCC.
@@ -74,6 +75,7 @@ jobs:
   build_windows_vs:
     name: MSVC 32-bit
     runs-on: windows-latest
+    if: github.event_name != 'pull_request' || contains('dreamer,krcroft,ant-222', github.actor) == false
     strategy:
       matrix:
         type: [Debug]
@@ -100,6 +102,7 @@ jobs:
   build_windows_vs_release:
     name: Release build
     runs-on: windows-latest
+    if: github.event_name != 'pull_request' || contains('dreamer,krcroft,ant-222', github.actor) == false
     steps:
       - uses:  actions/checkout@v1
       - name:  Install packages

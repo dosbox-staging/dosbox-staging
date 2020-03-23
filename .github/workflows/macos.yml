@@ -1,11 +1,12 @@
 name: macOS builds
-on: push
+on: [push, pull_request]
 
 jobs:
 
   build_macos:
     name: ${{ matrix.conf.name }}
     runs-on: macos-latest
+    if: github.event_name != 'pull_request' || contains('dreamer,krcroft,ant-222', github.actor) == false
     strategy:
       matrix:
         conf:
@@ -33,6 +34,7 @@ jobs:
   build_macos_release:
     name: Release build
     runs-on: macos-latest
+    if: github.event_name != 'pull_request' || contains('dreamer,krcroft,ant-222', github.actor) == false
     steps:
       - uses: actions/checkout@v1
       - name: Install C++ compiler and libraries

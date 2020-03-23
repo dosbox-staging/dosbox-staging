@@ -1,9 +1,12 @@
 name: Code analysis
-on: push
+on: [push, pull_request]
+
 jobs:
+
   run_linters:
     name: Script linters
     runs-on: ubuntu-18.04
+    if: github.event_name != 'pull_request' || contains('dreamer,krcroft,ant-222', github.actor) == false
     steps:
       - uses: actions/checkout@v1
         with:
