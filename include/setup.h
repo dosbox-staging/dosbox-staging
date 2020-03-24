@@ -114,9 +114,17 @@ public:
 	struct Changeable {
 		enum Value { Always, WhenIdle, OnlyAtStart, Deprecated };
 	};
+
 	const std::string propname;
 
-	Property(std::string const& _propname, Changeable::Value when):propname(_propname),change(when) { }
+	Property(const std::string &name, Changeable::Value when)
+		: propname(name),
+		  value(),
+		  suggested_values{},
+		  default_value(),
+		  change(when)
+	{}
+
 	virtual ~Property() = default;
 
 	void Set_values(const char * const * in);
