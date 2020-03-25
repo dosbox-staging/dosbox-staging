@@ -879,8 +879,12 @@ static Bitu DOS_21Handler(void) {
 				CALLBACK_SCF(true);
 			}
 		} else if (reg_al==0x01) {
-			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:57:Set File Date Time Faked");
-			CALLBACK_SCF(false);		
+			/* FIXME: verify if AX needs to be updated here */
+			if (DOS_SetFileDate(reg_bx, reg_cx, reg_dx)) {
+				CALLBACK_SCF(false);
+			} else {
+				CALLBACK_SCF(true);
+			}
 		} else {
 			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:57:Unsupported subtion %X",reg_al);
 		}

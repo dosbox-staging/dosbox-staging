@@ -64,6 +64,7 @@ public:
 	          refCtr(0),
 	          open(false),
 	          name(""),
+	          newtime(false),
 	          hdrive(0xff)
 	{}
 
@@ -102,7 +103,8 @@ public:
 	Bits refCtr;
 	bool open;
 	std::string name;
-/* Some Device Specific Stuff */
+	bool newtime;
+	/* Some Device Specific Stuff */
 private:
 	Bit8u hdrive;
 };
@@ -140,7 +142,7 @@ private:
 
 class localFile : public DOS_File {
 public:
-	localFile(const char *name, FILE *handle);
+	localFile(const char *name, FILE *handle, const char *basedir);
 	localFile(const localFile &) = delete;            // prevent copying
 	localFile &operator=(const localFile &) = delete; // prevent assignment
 	bool Read(uint8_t *data, uint16_t *size);
@@ -151,8 +153,10 @@ public:
 	bool UpdateDateTimeFromHost();
 	void Flush();
 	void SetFlagReadOnlyMedium() { read_only_medium = true; }
+	const char *GetBaseDir() const { return basedir; }
 	FILE *fhandle = nullptr; // todo handle this properly
 private:
+	const char *basedir;
 	long stream_pos = 0;
 	bool ftell_and_check();
 	void fseek_and_check(int whence);

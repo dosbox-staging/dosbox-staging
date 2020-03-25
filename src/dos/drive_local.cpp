@@ -27,7 +27,14 @@
 #include <limits>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <time.h>
+
+#ifdef _MSC_VER
+#include <sys/utime.h>
+#else
+#include <utime.h>
+#endif
 
 #include "dos_inc.h"
 #include "dos_mscdex.h"
@@ -60,7 +67,7 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/)
    
 	if (!existing_file) dirCache.AddEntry(newname, true);
 	/* Make the 16 bit device information */
-	*file=new localFile(name,hand);
+	*file = new localFile(name, hand, basedir);
 	(*file)->flags=OPEN_READWRITE;
 
 	return true;
@@ -179,7 +186,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, Bit32u flags)
 #endif
 
 	if (fhandle) {
-		*file = new localFile(name, fhandle);
+		*file = new localFile(name, fhandle, basedir);
 		(*file)->flags = flags;  // for the inheritance flag and maybe check for others.
 	} else {
 		// Otherwise we really can't open the file.
@@ -669,18 +676,48 @@ bool localFile::Close() {
 		fhandle = 0;
 		open = false;
 	};
+
+	if (newtime) {
+		// backport from DOS_PackDate() and DOS_PackTime()
+		tm tim = {0};
+		tim.tm_sec = (time & 0x1f) * 2;
+		tim.tm_min = (time >> 5) & 0x3f;
+		tim.tm_hour = (time >> 11) & 0x1f;
+		tim.tm_mday = date & 0x1f;
+		tim.tm_mon = ((date >> 5) & 0x0f) - 1;
+		tim.tm_year = (date >> 9) + 1980 - 1900;
+		//  have the C run-time library code compute whether standard
+		//  time or daylight saving time is in effect.
+		tim.tm_isdst = -1;
+		// serialize time
+		mktime(&tim);
+
+		utimbuf ftim;
+		ftim.actime = ftim.modtime = mktime(&tim);
+
+		char fullname[CROSS_LEN];
+		snprintf(fullname, sizeof(fullname), "%s%s", basedir, name.c_str());
+		CROSS_FILENAME(fullname);
+
+		// FIXME: utime is deprecated, need a modern cross-platform
+		// implementation.
+		if (utime(fullname, &ftim)) {
+			return false;
+		}
+	}
+
 	return true;
 }
 
 Bit16u localFile::GetInformation(void) {
 	return read_only_medium?0x40:0;
 }
-	
 
-localFile::localFile(const char* _name, FILE * handle)
-	: fhandle(handle),
-	  read_only_medium(false),
-	  last_action(NONE)
+localFile::localFile(const char *_name, FILE *handle, const char *_basedir)
+        : fhandle(handle),
+          basedir(_basedir),
+          read_only_medium(false),
+          last_action(NONE)
 {
 	open=true;
 	UpdateDateTimeFromHost();

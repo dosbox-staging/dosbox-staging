@@ -101,6 +101,7 @@ DOS_File & DOS_File::operator= (const DOS_File & orig) {
 	attr=orig.attr;
 	refCtr=orig.refCtr;
 	open=orig.open;
+	newtime = orig.newtime;
 	hdrive=orig.hdrive;
 	name = orig.name;
 	return *this;

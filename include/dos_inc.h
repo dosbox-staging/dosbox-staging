@@ -116,6 +116,7 @@ bool DOS_FlushFile(Bit16u handle);
 bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry);
 bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry);
 bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate);
+bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate);
 
 /* Routines for Drive Class */
 bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry,bool fcb = false);

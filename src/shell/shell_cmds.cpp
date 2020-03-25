@@ -1055,6 +1055,14 @@ void DOS_Shell::CMD_COPY(char * args) {
 								DOS_ReadFile(sourceHandle, buffer, &toread);
 								DOS_WriteFile(targetHandle, buffer, &toread);
 							} while (toread == 0x8000);
+							if (!oldsource.concat) {
+								DOS_GetFileDate(sourceHandle,
+								                &time,
+								                &date);
+								DOS_SetFileDate(targetHandle,
+								                time,
+								                date);
+							}
 							DOS_CloseFile(sourceHandle);
 							DOS_CloseFile(targetHandle);
 							WriteOut(" %s\n",name);
