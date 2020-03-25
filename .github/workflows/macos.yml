@@ -33,8 +33,8 @@ jobs:
         run: |
           mkdir -p "${CCACHE_DIR}"
           echo "::set-output name=dir::$CCACHE_DIR"
-          echo "::set-output name=today::$(date +%Y%M%d)"
-          echo "::set-output name=yesterday::$(date --date=yesterday +%Y%M%d)"
+          echo "::set-output name=today::$(date -I)"
+          echo "::set-output name=yesterday::$(date --date=yesterday -I)"
       - uses:  actions/cache@v1
         id:    cache-ccache
         with:
@@ -69,8 +69,8 @@ jobs:
         run: |
           mkdir -p "${CCACHE_DIR}"
           echo "::set-output name=dir::$CCACHE_DIR"
-          echo "::set-output name=today::$(date +%Y%M%d)"
-          echo "::set-output name=yesterday::$(date --date=yesterday +%Y%M%d)"
+          echo "::set-output name=today::$(date -I)"
+          echo "::set-output name=yesterday::$(date --date=yesterday -I)"
       - uses:  actions/cache@v1
         id:    cache-ccache
         with:
