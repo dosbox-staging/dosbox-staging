@@ -22,6 +22,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cstdio>
 #include <ctype.h>
 #include <string.h>

@@ -19,26 +19,12 @@
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
 
-#ifndef CH_LIST
-#define CH_LIST
+#include <cstdio>
 #include <list>
-#endif
-
-#ifndef CH_VECTOR
-#define CH_VECTOR
-#include <vector>
-#endif
-
-#ifndef CH_STRING
-#define CH_STRING
 #include <string>
-#endif
+#include <vector>
 
-#ifndef CH_CSTDIO
-#define CH_CSTDIO
-#include <stdio.h>
-#endif
-
+#include "support.h"
 
 class Hex {
 private:
@@ -123,7 +109,9 @@ public:
 		  suggested_values{},
 		  default_value(),
 		  change(when)
-	{}
+	{
+		assertm(!name.empty(), "Property name can't be empty.");
+	}
 
 	virtual ~Property() = default;
 
@@ -354,4 +342,5 @@ public:
 	/* Returns true if succesful.*/
 	virtual bool Change_Config(Section* /*newconfig*/) {return false;} ;
 };
+
 #endif
