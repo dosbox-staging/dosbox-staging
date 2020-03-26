@@ -39,6 +39,7 @@
 #include "inout.h"
 #include "dma.h"
 #include "shell.h"
+#include "program_autotype.h"
 
 #if defined(WIN32)
 #ifndef S_ISDIR
@@ -1564,7 +1565,6 @@ static void KEYB_ProgramStart(Program * * make) {
 	*make=new KEYB;
 }
 
-
 void DOS_SetupPrograms(void) {
 	/*Add Messages */
 
@@ -1771,6 +1771,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n\n");
 
 	/*regular setup*/
+	PROGRAMS_MakeFile("AUTOTYPE.COM", AUTOTYPE_ProgramStart);
 	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
 	PROGRAMS_MakeFile("MEM.COM",MEM_ProgramStart);
 	PROGRAMS_MakeFile("LOADFIX.COM",LOADFIX_ProgramStart);

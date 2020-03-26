@@ -1012,6 +1012,34 @@ KEYB [keyboardlayoutcode [codepage [codepagefile]]]
          keyb
 
 
+AUTOTYPE [-list] [-w WAIT] [-p PACE] button_1 [button_2 [...]]
+
+  Types the button sequence on your behalf, as if entered manually.
+
+  It can be used to reliably skip intros, answer Q&A style questions that
+  some games ask on startup, or to script a simple demo.
+  
+  Typing is initially delayed by the WAIT time, which defaults to 2 seconds.
+  The delay between keystrokes is defined by the PACE time, which defaults
+  to 0.5 seconds.
+  
+  The comma character "," adds an extra delay similar to modern phone numbers.
+
+  -list: prints all available button names.
+
+  Examples:
+    autotype -w 3 -p 0.7 up enter , right enter
+    autotype -w 1.3 esc esc esc enter p l a y e r enter
+    autotype -p 1 e x i t enter
+
+  Sample batch file for Microprose F-19 Steath Fighter:
+
+    autotype n 1
+    f19.com
+
+  It types 'n' when asked if you have a joystick and '1' to select VGA mode.
+  The game then proceeds to load with these settings applied.
+
 
 For more information use the /? command line switch with the programs.
 

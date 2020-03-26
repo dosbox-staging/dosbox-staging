@@ -35,6 +35,9 @@
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
 #endif
 
+// Convert a string to double, returning true or false depending on susccess
+bool str_to_double(const std::string& input, double &value);
+
 // Returns the filename with the prior path stripped.
 // Works with both \ and / directory delimeters.
 std::string get_basename(const std::string& filename);
