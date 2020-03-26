@@ -21,18 +21,30 @@
 #include <assert.h>
 #include <cctype>
 #include <ctype.h>
+#include <cstring>
 #include <functional>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include <cstring>
-  
+#include <stdexcept>
+
 #include "dosbox.h"
 #include "cross.h"
 #include "debug.h"
 #include "support.h"
 #include "video.h"
+
+bool str_to_double(const std::string& input, double &value) {
+    bool result = false;
+    size_t bytes_read = 0;
+    try {
+        value = std::stod(input, &bytes_read);
+        if (bytes_read == input.size())
+            result = true;
+    } catch (std::invalid_argument &) {}
+    return result;
+}
 
 std::string get_basename(const std::string& filename) {
 	// Guard against corner cases: '', '/', '\', 'a'

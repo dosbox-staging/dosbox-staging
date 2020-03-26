@@ -174,6 +174,7 @@
     <ClCompile Include="..\src\dos\drive_local.cpp" />
     <ClCompile Include="..\src\dos\drive_overlay.cpp" />
     <ClCompile Include="..\src\dos\drive_virtual.cpp" />
+    <ClCompile Include="..\src\dos\program_autotype.cpp" />
     <ClCompile Include="..\src\fpu\fpu.cpp" />
     <ClCompile Include="..\src\gui\midi.cpp" />
     <ClCompile Include="..\src\gui\render.cpp" />
@@ -346,6 +347,7 @@
     <ClInclude Include="..\src\dos\Ntddcdrm.h" />
     <ClInclude Include="..\src\dos\Ntddscsi.h" />
     <ClInclude Include="..\src\dos\Ntddstor.h" />
+    <ClInclude Include="..\src\dos\program_autotype.h" />
     <ClInclude Include="..\src\fpu\fpu_instructions.h" />
     <ClInclude Include="..\src\fpu\fpu_instructions_x86.h" />
     <ClInclude Include="..\src\gui\midi_win32.h" />
