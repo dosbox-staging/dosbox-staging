@@ -310,11 +310,12 @@ struct SDL_Block {
 		SDL_PixelFormat *pixelFormat = nullptr;
 	} texture;
 	struct {
-		int xsensitivity;
-		int ysensitivity;
-		Bitu sensitivity;
-		MouseControlType control_choice;
-		bool middle_will_release;
+		int xsensitivity = 0;
+		int ysensitivity = 0;
+		int sensitivity = 0;
+		MouseControlType control_choice = Seamless;
+		bool middle_will_release = true;
+		bool has_focus = false;
 	} mouse;
 	int  ppscale_x, ppscale_y; /* x and y scales for pixel-perfect     */
 	bool double_h, double_w;   /* double-height and double-width flags */
@@ -1295,6 +1296,14 @@ void GFX_SetShader(const char* src) {
 }
 
 void GFX_ToggleMouseCapture(void) {
+	/*
+	 * Only process mouse events when we have focus.
+	 * This protects against out-of-order event issues such
+	 * as acting on clicks before the window is drawn.
+	 */
+	if (!sdl.mouse.has_focus)
+		return;
+	
 	assertm(sdl.mouse.control_choice != NoMouse,
 	        "SDL: Mouse capture is invalid when NoMouse is configured [Logic Bug]");
 
@@ -1313,30 +1322,50 @@ static void ToggleMouseCapture(bool pressed) {
 	GFX_ToggleMouseCapture();
 }
 
-void GFX_UpdateMouseAfterExposure(void) {
+/*  
+ *  Assesses the following:
+ *   - current window size (full or not),
+ *   - mouse capture state, (yes or no).
+ *   - desired capture type (start, click, seamless), and
+ *   - if we're starting up for the first time,
+ *  to determine if the mouse-capture state should be toggled.
+ *  Note that this also acts a filter: we don't want to repeatedly
+ *  re-apply the same mouse capture state over and over again, so most
+ *  of the time this function will (or should) decide to do nothing.
+ */
+void GFX_UpdateMouseState(void) {
+
+	// This function is only be run when the window is shown or has focus
+	sdl.mouse.has_focus = true;
 
 	// Used below
 	static bool has_run_once = false;
 
-	// We've switched to or started in fullscreen, so capture the mouse
-	// This is valid for all modes except for nomouse.
+	/*
+	 *  We've switched to or started in fullscreen, so capture the mouse
+	 *  This is valid for all modes except for nomouse.
+	 */
 	if (sdl.desktop.fullscreen
 	    && !mouse_is_captured
 	    && sdl.mouse.control_choice != NoMouse) {
 		GFX_ToggleMouseCapture();
 
-	// If we've switched-back from fullscreen, then released the mouse
-	// if it's captured and in seamless-mode.
+	/*
+	 * If we've switched-back from fullscreen, then release the mouse
+	 * if it's captured and in seamless-mode.
+	 */
 	} else if (!sdl.desktop.fullscreen
 	           && mouse_is_captured
 	           && sdl.mouse.control_choice == Seamless) {
 			GFX_ToggleMouseCapture();
 			SDL_ShowCursor(SDL_DISABLE);
 
-	// If none of the above are true /and/ has_run_once is false,
-	// then we're starting up the first time, so we:
-	//  - Capture the mouse if configured onstart is set.
-	//  - Hide the mouse if seamless or nomouse are set.
+	/*
+	 *  If none of the above are true /and/ we're starting
+	 *  up the first time, then:
+	 *  - Capture the mouse if configured onstart is set.
+	 *  - Hide the mouse if seamless or nomouse are set.
+	 */
 	} else if (!has_run_once) {
 		if (sdl.mouse.control_choice == CaptureOnStart) {
 			SDL_RaiseWindow(sdl.window);
@@ -2179,13 +2208,16 @@ void GFX_Events() {
 				case SDL_WINDOWEVENT_RESIZED:
 					GFX_HandleVideoResize(event.window.data1, event.window.data2);
 					continue;
+				// window has been exposed and needs to be redrawn
 				case SDL_WINDOWEVENT_EXPOSED:
-					if (sdl.draw.callback) sdl.draw.callback( GFX_CallBackRedraw );
-					GFX_UpdateMouseAfterExposure();
+					if (sdl.draw.callback)
+						sdl.draw.callback(GFX_CallBackRedraw);
+					GFX_UpdateMouseState();
 					continue;
 				case SDL_WINDOWEVENT_FOCUS_GAINED:
 					SetPriority(sdl.priority.focus);
 					CPU_Disable_SkipAutoAdjust();
+					GFX_UpdateMouseState();
 					break;
 				case SDL_WINDOWEVENT_FOCUS_LOST:
 #ifdef WIN32
@@ -2197,6 +2229,7 @@ void GFX_Events() {
 					SetPriority(sdl.priority.nofocus);
 					GFX_LosingFocus();
 					CPU_Enable_SkipAutoAdjust();
+					sdl.mouse.has_focus = false;
 					break;
 				default: ;
 			}
