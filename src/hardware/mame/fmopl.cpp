@@ -1485,8 +1485,7 @@ void FM_OPL::WriteReg(int r, int v)
 {
 	OPL_CH *CH;
 	int slot;
-	int block_fnum;
-
+	uint32_t block_fnum;
 
 	/* adjust bus to 8 bits */
 	r &= 0xff;
