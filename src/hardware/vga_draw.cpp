@@ -1334,8 +1334,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	bool doubleheight=false;
 	bool doublewidth=false;
 
-	//Set the bpp
-	Bitu bpp;
+	unsigned bpp;
 	switch (vga.mode) {
 	case M_LIN15:
 		bpp = 15;
@@ -1357,7 +1356,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		doublewidth=true;
 		width<<=2;
 		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) {
-			bpp=16;
+			bpp = 16;
 			VGA_DrawLine = VGA_Draw_Xlat16_Linear_Line;
 		} else VGA_DrawLine = VGA_Draw_Linear_Line;
 		break;
@@ -1408,7 +1407,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		width<<=3;
 		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) {
 			// This would also be required for EGA in Spacepigs Megademo
-			bpp=16;
+			bpp = 16;
 			VGA_DrawLine = VGA_Draw_Xlat16_Linear_Line;
 		} else VGA_DrawLine=VGA_Draw_Linear_Line;
 
@@ -1448,7 +1447,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 				aspect_ratio*=1.125;
 			}
 			VGA_DrawLine=VGA_TEXT_Xlat16_Draw_Line;
-			bpp=16;
+			bpp = 16;
 		} else {
 			// not vgaonly: force 8-pixel wide fonts
 			width*=8; // 8 bit wide text font
@@ -1603,9 +1602,9 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		LOG(LOG_VGA,LOG_NORMAL)("%s width, %s height aspect %f",
 			doublewidth ? "double":"normal",doubleheight ? "double":"normal",aspect_ratio);
 #endif
-		if (!vga.draw.vga_override) 
+		if (!vga.draw.vga_override)
 			RENDER_SetSize(width, height, bpp, (float)fps, aspect_ratio,
-			doublewidth, doubleheight);
+			               doublewidth, doubleheight);
 	}
 }
 
