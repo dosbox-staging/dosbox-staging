@@ -122,6 +122,13 @@ bool CDROM_Interface_Image::BinaryFile::seek(const uint32_t offset)
 	assertm(offset <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size");
 
 	file->seekg(offset, ios::beg);
+
+	// If the seek failed, then let's try harder
+	if (file->fail()) {
+		file->clear();                 // clear fail and eof bits
+		file->seekg(0, std::ios::beg); // "I have returned." 
+		file->seekg(offset, ios::beg); // "It will be done."
+	}
 	return !file->fail();
 }
 
