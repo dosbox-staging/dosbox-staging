@@ -52,7 +52,7 @@ typedef struct {
 	struct {
 		Bitu width, start;
 		Bitu height;
-		Bitu bpp;
+		unsigned bpp;
 		bool dblw,dblh;
 		double ratio;
 		float fps;
@@ -93,12 +93,12 @@ typedef struct {
 
 extern Render_t render;
 extern ScalerLineHandler_t RENDER_DrawLine;
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh);
+void RENDER_SetSize(Bitu width, Bitu height, unsigned bpp, float fps,
+                    double ratio, bool dblw, bool dblh);
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);
 bool RENDER_GetForceUpdate(void);
 void RENDER_SetForceUpdate(bool);
-
 
 #endif
