@@ -1766,19 +1766,12 @@ void FM_OPL::ResetChip()
 	for(int i = 0xff ; i >= 0x20 ; i--) WriteReg(i,0);
 
 	/* reset operator parameters */
-//	for(OPL_CH &CH : P_CH)
-	for(int ch = 0; ch < sizeof(P_CH)/ sizeof(P_CH[0]); ch++)
-	{
-		OPL_CH &CH = P_CH[ch];
-//		for(OPL_SLOT &SLOT : CH.SLOT)
-		for(int slot = 0; slot < sizeof(CH.SLOT) / sizeof(CH.SLOT[0]); slot++)
-		{
-		    
-			OPL_SLOT &SLOT = CH.SLOT[slot];
+	for (OPL_CH &ch : P_CH) {
+		for (OPL_SLOT &slot : ch.SLOT) {
 			/* wave table */
-			SLOT.wavetable = 0;
-			SLOT.state     = EG_OFF;
-			SLOT.volume    = MAX_ATT_INDEX;
+			slot.wavetable = 0;
+			slot.state     = EG_OFF;
+			slot.volume    = MAX_ATT_INDEX;
 		}
 	}
 #if BUILD_Y8950
