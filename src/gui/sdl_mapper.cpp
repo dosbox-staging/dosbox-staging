@@ -41,7 +41,7 @@
 #include "video.h"
 
 /* Mouse related */
-void GFX_ToggleMouseCapture(void);
+void GFX_ToggleMouseCapture();
 extern SDL_bool mouse_is_captured; //true if mouse is confined to window
 
 enum {
@@ -121,15 +121,15 @@ public:
 	virtual void Active(bool yesno)=0;
 	virtual void ActivateEvent(bool ev_trigger,bool skip_action)=0;
 	virtual void DeActivateEvent(bool ev_trigger)=0;
-	void DeActivateAll(void);
+	void DeActivateAll();
 	void SetValue(Bits value){
 		current_value=value;
 	}
-	Bits GetValue(void) {
+	Bits GetValue() {
 		return current_value;
 	}
-	char * GetName(void) { return entry; }
-	virtual bool IsTrigger(void)=0;
+	char * GetName() { return entry; }
+	virtual bool IsTrigger() = 0;
 	CBindList bindlist;
 protected:
 	Bitu activity = 0;
@@ -141,7 +141,7 @@ protected:
 class CTriggeredEvent : public CEvent {
 public:
 	CTriggeredEvent(char const * const _entry) : CEvent(_entry) {}
-	virtual bool IsTrigger(void) {
+	virtual bool IsTrigger() {
 		return true;
 	}
 	void ActivateEvent(bool ev_trigger,bool skip_action) {
@@ -167,7 +167,7 @@ public:
 class CContinuousEvent : public CEvent {
 public:
 	CContinuousEvent(char const * const _entry) : CEvent(_entry) {}
-	virtual bool IsTrigger(void) {
+	virtual bool IsTrigger() {
 		return false;
 	}
 	void ActivateEvent(bool ev_trigger,bool skip_action) {
@@ -193,10 +193,10 @@ public:
 			if (!GetActivityCount()) Active(false);
 		}
 	}
-	virtual Bitu GetActivityCount(void) {
+	virtual Bitu GetActivityCount() {
 		return activity;
 	}
-	virtual void RepostActivity(void) {}
+	virtual void RepostActivity() {}
 };
 
 class CBind {
@@ -298,7 +298,7 @@ void CEvent::ClearBinds() {
 	}
 	bindlist.clear();
 }
-void CEvent::DeActivateAll(void) {
+void CEvent::DeActivateAll() {
 	for (CBindList_it bit = bindlist.begin() ; bit != bindlist.end(); ++bit) {
 		(*bit)->DeActivateBind(true);
 	}
@@ -318,8 +318,8 @@ public:
 	virtual CBind * CreateEventBind(SDL_Event * event)=0;
 
 	virtual bool CheckEvent(SDL_Event * event)=0;
-	virtual const char * ConfigStart(void)=0;
-	virtual const char * BindStart(void)=0;
+	virtual const char * ConfigStart() = 0;
+	virtual const char * BindStart() = 0;
 
 protected:
 
@@ -395,10 +395,10 @@ public:
 		return new CKeyBind(&lists[(Bitu)_key],_key);
 	}
 private:
-	const char * ConfigStart(void) {
+	const char * ConfigStart() {
 		return configname;
 	}
-	const char * BindStart(void) {
+	const char * BindStart() {
 		return "Key";
 	}
 protected:
@@ -825,12 +825,12 @@ private:
 		                     this, hat, value);
 	}
 
-	const char * ConfigStart(void)
+	const char * ConfigStart()
 	{
 		return configname;
 	}
 
-	const char * BindStart(void)
+	const char * BindStart()
 	{
 		if (sdl_joystick)
 			return SDL_JoystickNameForIndex(stick);
@@ -1274,7 +1274,7 @@ public:
 
 	virtual ~CButton() = default;
 
-	virtual void Draw(void) {
+	virtual void Draw() {
 		if (!enabled)
 			return;
 		Bit8u * point = ((Bit8u *)mapper.draw_surface->pixels) + (y * mapper.draw_surface->w) + x;
@@ -1290,8 +1290,8 @@ public:
 	virtual bool OnTop(Bitu _x,Bitu _y) {
 		return ( enabled && (_x>=x) && (_x<x+dx) && (_y>=y) && (_y<y+dy));
 	}
-	virtual void BindColor(void) {}
-	virtual void Click(void) {}
+	virtual void BindColor() {}
+	virtual void Click() {}
 	void Enable(bool yes) { 
 		enabled=yes; 
 		mapper.redraw=true;
@@ -1315,7 +1315,7 @@ public:
 	CTextButton(const CTextButton&) = delete; // prevent copy
 	CTextButton& operator=(const CTextButton&) = delete; // prevent assignment
 
-	void Draw(void)
+	void Draw()
 	{
 		if (!enabled)
 			return;
@@ -1333,7 +1333,7 @@ public:
 		: CTextButton(_x, _y, _dx, _dy, _text)
 	{}
 
-	void BindColor(void)
+	void BindColor()
 	{
 		this->SetColor(CLR_WHITE);
 	}
@@ -1352,10 +1352,10 @@ public:
 	CEventButton(const CEventButton&) = delete; // prevent copy
 	CEventButton& operator=(const CEventButton&) = delete; // prevent assignment
 
-	void BindColor(void) {
+	void BindColor() {
 		this->SetColor(event->bindlist.begin()==event->bindlist.end() ? CLR_GREY : CLR_WHITE);
 	}
-	void Click(void) {
+	void Click() {
 		if (last_clicked) last_clicked->BindColor();
 		this->SetColor(CLR_GREEN);
 		SetActiveEvent(event);
@@ -1372,7 +1372,7 @@ public:
 	}
 	void Change(const char * format,...) GCC_ATTRIBUTE(__format__(__printf__,2,3));
 
-	void Draw(void) {
+	void Draw() {
 		if (!enabled) return;
 		DrawText(x+2,y+2,caption,color);
 	}
@@ -1390,7 +1390,7 @@ void CCaptionButton::Change(const char * format,...) {
 
 static void change_action_text(const char* text,Bit8u col);
 
-static void MAPPER_SaveBinds(void);
+static void MAPPER_SaveBinds();
 
 class CBindButton : public CClickableTextButton {
 public:	
@@ -1399,7 +1399,7 @@ public:
 		  type(_type)
 	{}
 
-	void Click(void) {
+	void Click() {
 		switch (type) {
 		case BB_Add: 
 			mapper.addbind=true;
@@ -1442,7 +1442,7 @@ public:
 		  type(t)
 	{}
 
-	void Draw(void) {
+	void Draw() {
 		if (!enabled) return;
 		bool checked=false;
 		switch (type) {
@@ -1468,7 +1468,7 @@ public:
 		}
 		CClickableTextButton::Draw();
 	}
-	void Click(void) {
+	void Click() {
 		switch (type) {
 		case BC_Mod1:
 			mapper.abind->mods^=BMOD_Mod1;
@@ -1522,10 +1522,10 @@ public:
 	void Active(bool /*moved*/) {
 		virtual_joysticks[stick].axis_pos[axis]=(Bit16s)(GetValue()*(positive?1:-1));
 	}
-	virtual Bitu GetActivityCount(void) {
+	virtual Bitu GetActivityCount() {
 		return activity|opposite_axis->activity;
 	}
-	virtual void RepostActivity(void) {
+	virtual void RepostActivity() {
 		/* caring for joystick movement into the opposite direction */
 		opposite_axis->Active(true);
 	}
@@ -1611,7 +1611,7 @@ public:
 		(*handler)(yesno);
 	};
 
-	const char * ButtonName(void)
+	const char * ButtonName()
 	{
 		return buttonname;
 	}
@@ -1722,7 +1722,7 @@ extern SDL_Window * GFX_SetSDLSurfaceWindow(Bit16u width, Bit16u height);
 extern SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height);
 extern void GFX_UpdateDisplayDimensions(int width, int height);
 
-static void DrawButtons(void) {
+static void DrawButtons() {
 	SDL_FillRect(mapper.draw_surface,0,CLR_BLACK);
 	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
 		(*but_it)->Draw();
@@ -1843,7 +1843,7 @@ static KeyBlock combo_4[11]={
 static CKeyEvent * caps_lock_event=NULL;
 static CKeyEvent * num_lock_event=NULL;
 
-static void CreateLayout(void) {
+static void CreateLayout() {
 	Bitu i;
 	/* Create the buttons for the Keyboard */
 #define BW 28
@@ -2177,13 +2177,13 @@ static struct {
 	{0, SDL_SCANCODE_UNKNOWN}
 };
 
-static void ClearAllBinds(void) {
+static void ClearAllBinds() {
 	for (CEvent *event : events) {
 		event->ClearBinds();
 	}
 }
 
-static void CreateDefaultBinds(void) {
+static void CreateDefaultBinds() {
 	ClearAllBinds();
 	char buffer[512];
 	Bitu i=0;
@@ -2253,7 +2253,7 @@ void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key, Bitu mods,char cons
 	return ;
 }
 
-static void MAPPER_SaveBinds(void) {
+static void MAPPER_SaveBinds() {
 	const char *filename = mapper.filename.c_str();
 	FILE * savefile=fopen(filename,"wt+");
 	if (!savefile) {
@@ -2277,7 +2277,7 @@ static void MAPPER_SaveBinds(void) {
 	LOG_MSG("MAPPER: Wrote key bindings to %s", filename);
 }
 
-static bool MAPPER_CreateBindsFromFile(void) {
+static bool MAPPER_CreateBindsFromFile() {
 	const char* filename = mapper.filename.c_str();
 	FILE * loadfile = fopen(filename,"rt");
 	if (!loadfile)
@@ -2300,7 +2300,7 @@ void MAPPER_CheckEvent(SDL_Event * event) {
 	}
 }
 
-void BIND_MappingEvents(void) {
+void BIND_MappingEvents() {
 	SDL_Event event;
 	static bool isButtonPressed = false;
 	static CButton *lastHoveredButton = NULL;
@@ -2444,7 +2444,7 @@ static void QueryJoysticks() {
 	mapper.sticks.num = num_joysticks;
 }
 
-static void CreateBindGroups(void) {
+static void CreateBindGroups() {
 	bindgroups.clear();
 	CKeyBindGroup* key_bind_group = new CKeyBindGroup(SDL_NUM_SCANCODES);
 	keybindgroups.push_back(key_bind_group);
@@ -2499,7 +2499,7 @@ static void CreateBindGroups(void) {
 }
 
 #if defined (REDUCE_JOYSTICK_POLLING)
-void MAPPER_UpdateJoysticks(void) {
+void MAPPER_UpdateJoysticks() {
 	for (Bitu i=0; i<mapper.sticks.num_groups; i++) {
 		assert(mapper.sticks.stick[i]);
 		mapper.sticks.stick[i]->UpdateJoystick();
@@ -2507,7 +2507,7 @@ void MAPPER_UpdateJoysticks(void) {
 }
 #endif
 
-void MAPPER_LosingFocus(void) {
+void MAPPER_LosingFocus() {
 	for (CEventVector_it evit = events.begin(); evit != events.end(); ++evit) {
 		if(*evit != caps_lock_event && *evit != num_lock_event)
 			(*evit)->DeActivateAll();
