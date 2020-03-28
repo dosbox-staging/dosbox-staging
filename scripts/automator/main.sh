@@ -109,7 +109,10 @@ function perform_steps() {
 }
 
 function main() {
-	cd "$(dirname "$0")/automator"
+	cd "$(dirname "$0")"/..
+	export repo_root
+	repo_root="$PWD"
+	cd scripts/automator
 	if [[ -z "${data_dir:-}" ]]; then data_dir="$(basename "$0" '.sh')"; fi
 	parse_args "$@"
 	construct_environment
