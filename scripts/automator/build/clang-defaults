@@ -3,10 +3,10 @@ cc="${ccache}clang${postfix}"
 cxx="${ccache}clang++${postfix}"
 
 # Flag additions
-TYPES+=(debug warnmore profile)
-cflags_release=("${cflags[@]}" -Os)
+TYPES+=(debug warnmore pgotrain)
+cflags_release=("${cflags[@]}" -O3)
 cflags_debug=("${cflags[@]}" -g -fno-omit-frame-pointer)
-cflags_profile=("${cflags_debug[@]}" -fprofile-instr-generate -fcoverage-mapping)
+cflags_pgotrain=("${cflags_debug[@]}" -fprofile-instr-generate -fcoverage-mapping)
 cflags_warnmore=("${cflags_debug[@]}" -Wextra -Wshadow -Wcast-align -Wunused
                  -Woverloaded-virtual -Wpedantic -Wconversion -Wsign-conversion
                  -Wdouble-promotion -Wformat=2)
@@ -19,5 +19,4 @@ fi
 
 # Modifier additions
 MODIFIERS=(fdo)
-ldflags_fdo=(-fprofile-instr-generate)
-cflags_fdo=("-fprofile-sample-use=${FDO_FILE:-}")
+cflags_fdo=("-fprofile-sample-use=${FDO_FILE:-${repo_root}/current.afdo}")

@@ -6,18 +6,20 @@ ld="gcc${postfix}"
 ranlib="gcc-ranlib${postfix}"
 
 # Flag additions
-TYPES+=(debug warnmore profile)
+TYPES+=(debug warnmore pgotrain fdotrain)
 
 cflags+=(-fstack-protector -fdiagnostics-color=auto)
 cflags_debug=("${cflags[@]}" -g -fno-omit-frame-pointer)
-cflags_release=("${cflags[@]}" -Ofast -ffunction-sections -fdata-sections)
-cflags_profile=("${cflags_debug[@]}" -pg)
+cflags_release=("${cflags[@]}" -DNDEBUG -O3 -ffunction-sections -fdata-sections)
+cflags_pgotrain=("${cflags_debug[@]}" -pg)
 cflags_warnmore=("${cflags_debug[@]}" -pedantic -Wcast-align -Wdouble-promotion
                  -Wduplicated-branches -Wduplicated-cond -Wextra -Wformat=2
                  -Wlogical-op -Wmisleading-indentation -Wnull-dereference
                  -Wshadow -Wunused)
 cxxonly_warnmore=(-Weffc++ -Wnon-virtual-dtor -Woverloaded-virtual -Wuseless-cast)
+cflags_fdotrain=("${cflags[@]}" -DNDEBUG -g1 -fno-omit-frame-pointer)
 
 # Modifier additions
 MODIFIERS=(fdo)
-cflags_fdo=("-fauto-profile=${FDO_FILE:-}")
+# Override the prior optimization flag because O2 does better w/ feedback 
+cflags_fdo=("-O2 -fauto-profile=${FDO_FILE:-${repo_root}/current.afdo}")

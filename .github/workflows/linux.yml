@@ -96,11 +96,17 @@ jobs:
           echo ::set-env name=VERSION::$VERSION
       - name: Build
         env:
-          FLAGS: -O3 -DNDEBUG -pipe
+          AR: gcc-ar
+          CC: ccache gcc
+          CXX: ccache g++
+          LD: gcc
+          RANLIB: gcc-ranlib
+          FLAGS: -O3 -flto -ffunction-sections -fdata-sections -DNDEBUG -pipe
+          LINKFLAGS: -Wl,--as-needed
         run: |
           set -x
           ./autogen.sh
-          ./configure CC="ccache gcc" CXX="ccache g++" CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" --disable-screenshots
+          ./configure CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" LDFLAGS="$FLAGS $LINKFLAGS -flto=$(nproc)" --disable-screenshots
           make -j "$(nproc)"
           strip src/dosbox
       - name: Package

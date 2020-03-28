@@ -77,3 +77,10 @@ suppress_base.json
 
 # macOS directory prefs
 .DS_Store
+
+# Profiling data
+*.prof
+*.profraw
+*.profraw.imports
+*.afdo
+*.afdo.imports
