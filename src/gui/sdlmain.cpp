@@ -2208,7 +2208,14 @@ void GFX_Events() {
 				case SDL_WINDOWEVENT_RESIZED:
 					GFX_HandleVideoResize(event.window.data1, event.window.data2);
 					continue;
-				// window has been exposed and needs to be redrawn
+				/*
+				 *  EXPOSED indicates that the window needs to be redrawn.
+				 *  Note that on Windows/Linux-X11/Wayland/macOS, the EXPOSED event
+				 *  is fired after toggling between full vs windowed modes. However this is
+				 *  never fired on the Raspberry Pi (when rendering to the Framebuffer);
+				 *  therefore we rely on the FOCUS_GAINED event to catch window startup
+				 *  and size toggles.
+				 */ 
 				case SDL_WINDOWEVENT_EXPOSED:
 					if (sdl.draw.callback)
 						sdl.draw.callback(GFX_CallBackRedraw);
