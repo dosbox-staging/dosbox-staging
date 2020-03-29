@@ -3197,6 +3197,8 @@ int main(int argc, char* argv[]) {
 	LOG_MSG("dosbox-staging version %s", VERSION);
 	LOG_MSG("---");
 
+	static_assert(SDL_VERSION_ATLEAST(2, 0, 2),
+		      "SDL needs to be at least version 2.0.2.");
 	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0)
 		E_Exit("Can't init SDL %s", SDL_GetError());
 	sdl.initialized = true;
