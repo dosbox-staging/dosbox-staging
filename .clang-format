@@ -1,0 +1,283 @@
+# This file uses configuration options available in clang-format 8.0.
+#
+# More detailed description of all options:
+# https://releases.llvm.org/8.0.0/tools/clang/docs/ClangFormatStyleOptions.html
+# 
+# Note that version of clang-format provided by your distribution might be
+# newer and provide additional options, that won't work in 8.x.
+#
+# This style definition should only be understood as a hint
+# for writing new code. The rules are still work-in-progress and do
+# not yet exactly match the style we have in the existing code.
+
+
+# Use tabs, but only for indentation (lining up blocks of code).
+# Use space for indenting continuations (lining up long statements broken
+# into several lines.
+#
+UseTab: ForIndentation
+TabWidth: 8
+IndentWidth: 8
+ContinuationIndentWidth: 8
+
+ColumnLimit: 80
+
+# C/C++ Language specifics
+#
+Language: Cpp
+Standard: Cpp11 # in clang-format 11.x: c++11
+
+# The extra indent or outdent of class access modifiers, e.g. public:
+#
+AccessModifierOffset: -8
+
+# Align parameters on the open bracket
+#
+# someLongFunction(argument1,
+#                  argument2);
+#
+AlignAfterOpenBracket: Align
+
+# If true, aligns consecutive C/C++ preprocessor macros.
+#
+# This will align the C/C++ preprocessor macros of consecutive lines. This will
+# result in formattings like
+#
+#    #define SHORT_NAME       42
+#    #define LONGER_NAME      0x007f
+#    #define EVEN_LONGER_NAME (2)
+#    #define foo(x)           (x * x)
+#    #define bar(y, z)        (y + z)
+#
+# TODO Uncomment this line during update to clang-format 9.0
+# AlignConsecutiveMacros: true
+
+# Allow short functions defined inside a class to be put on a single line
+#
+# class Foo {
+# 	void f() { foo(); }
+# };
+#
+AllowShortFunctionsOnASingleLine: InlineOnly
+
+# Short case labels in switch can be contracted to a single line
+#
+# switch (x) {
+# case 42: return x;
+# };
+#
+AllowShortCaseLabelsOnASingleLine: true
+
+# Always place parameter declarations in a separate line:
+#
+# template <typename T>
+# T foo() …
+#
+# NOT:
+#
+# template <typename T> T foo() …
+#
+AlwaysBreakTemplateDeclarations: Yes
+
+# If true, always break before multiline string literals.
+#
+# This option means to make multiline string assignments nicely
+# lined-up and reduce unnecessary breaks in string literal, e.g.:
+#
+# // true:
+# very_long_var_name =
+#         "bbbb"
+#         "cccc";
+# shortname =
+#         "dddd"
+#         "eeee";
+#
+# // false:
+# very_long_var_name = "bbbb"
+#                      "cccc";
+# shortname = "dddd"
+#             "eeee";
+#
+# TODO Test interaction with C++11 raw string literals
+#
+# AlwaysBreakBeforeMultilineStrings: true
+
+# Attach braces to surrounding context except break before braces on function
+# definitions (also known as K&R indentation style). This is C-derived style,
+# but it works very well in C++ edge cases (C++ constructors).
+#
+# void foo()
+# {
+# 	if (true) {
+# 	} else {
+# 	}
+# }
+#
+# Our custom rules are the same as "BreakBeforeBraces: Linux", except
+# additional customization for C++ constructs.
+#
+# Classes are formatted the same way as structs.
+# Multiline C++11 lambda expressions are formatted like blocks of code.
+#
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: true
+
+# When set to false, a function declaration's or function definition's
+# parameters (but not function calls) will either all be on the same line
+# or will have one line each.
+#
+# void f(int xxxxxxxxxxxxxxxxxxx,
+#        int yyyyyyyyyyyyyyyyyyyy,
+#        int zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz)
+# {
+# 	// …
+# }
+#
+# void g(int x, int y, int z)
+# {
+# 	// …
+# }
+#
+BinPackParameters: false
+
+# Emulates dosbox-staging constructor formatting rules; initializer list
+# is treated as continuation, therefore initializers are indented with spaces.
+#
+# Constructor()
+#         : initializer1(),
+#           initializer2()
+# {}
+#
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ConstructorInitializerIndentWidth: 8
+
+# Use the same indentation level as for the switch statement.
+# Switch statement body is always indented one level more than case labels;
+# this is followin K&R C-style (case labels are really just goto labels).
+#
+# switch (foo) {
+# case 1:
+# 	bar();
+# 	break;
+# default:
+# 	baz();
+# }
+#
+IndentCaseLabels: false
+
+# Don't insert a space after a cast
+#
+# x = (int32)y;    NOT    x = (int32) y;
+#
+SpaceAfterCStyleCast: false
+
+# Insert spaces before and after assignment operators
+#
+# int a = 5;    NOT    int a=5;
+# a += 42;             a+=42;
+#
+SpaceBeforeAssignmentOperators: true
+
+# Put a space before opening parentheses only after control statement keywords.
+#
+# void f()
+# {
+#         if (true) {
+#                 f();
+#         }
+# }
+#
+SpaceBeforeParens: ControlStatements
+
+# Don't insert spaces inside empty '()'
+#
+SpaceInEmptyParentheses: false
+
+# The number of spaces before trailing line comments (// - comments).
+# This does not affect trailing block comments (/* - comments).
+#
+SpacesBeforeTrailingComments: 1
+
+# Don't insert spaces in casts
+#
+# x = (int32) y;  NOT   x = ( int32 ) y;
+#
+SpacesInCStyleCastParentheses: false
+
+# Don't insert spaces after '(' or before ')'
+#
+# f(arg);         NOT    f( arg );
+#
+SpacesInParentheses: false
+
+# Don't insert spaces after '[' or before ']'
+#
+# int a[5];       NOT    int a[ 5 ];
+#
+SpacesInSquareBrackets: false
+
+# Insert a space after '{' and before '}' in struct initializers
+#
+# This is native C++11 style, but it looks very weird.
+# TODO Investigate if it has any tangible benefits.
+#
+# Cpp11BracedListStyle: false
+
+# A list of macros that should be interpreted as foreach loops instead of as
+# function calls.
+#
+# TODO Currently unused, but left as an example in case we'll need such macros.
+#
+# ForEachMacros:
+#   - 'for_each_abbrev'
+#   - 'list_for_each_dir'
+
+# The maximum number of consecutive empty lines to keep.
+#
+MaxEmptyLinesToKeep: 1
+
+# No empty line at the start of a block.
+#
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+# Line breaking penalties
+#
+# This decides what order things should be done if a line is too long
+#
+# clang-format iterates through various versions the long line can be formatted 
+# and selects the one with smallest penalty score.
+#
+# Small ExcessCharacter penalty prevents breaking line is longer than
+# column limit by only few characters.
+#
+PenaltyBreakAssignment: 100
+PenaltyBreakBeforeFirstCallParameter: 100
+PenaltyBreakComment: 10
+PenaltyBreakFirstLessLess: 0
+PenaltyBreakString: 110
+PenaltyExcessCharacter: 3
+PenaltyReturnTypeOnItsOwnLine: 200
+
+# Don't sort "#include" declarations.
+#
+# clang-format has very rich customization options for grouping and sorting
+# "include" directives, but there are still edge cases, so we still need to
+# rely on developers doing this manually.
+#
+# See https://github.com/dreamer/dosbox-staging/issues/196 for details.
+#
+SortIncludes: false
