@@ -1,6 +1,11 @@
 name: Code analysis
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+    paths-ignore:
+      - '.github/**'
+
 
 env:
   CCACHE_DIR:      "/dev/shm/.ccache"

@@ -1,6 +1,10 @@
 name: macOS builds
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+    paths-ignore:
+      - '.github/**'
 
 env:
   CCACHE_DIR:      "${{ github.workspace }}/.ccache"
