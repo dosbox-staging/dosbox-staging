@@ -1,5 +1,8 @@
 name: Coverity Scan
 env:
+  # Note: secrets are vulerable to exfiltration attack if you allow untrusted
+  #       users to both *modify* and *run* this CI workflow within the repository
+  #       that defines those secrets.
   COVERITY_EMAIL: ${{ secrets.CoverityEmail }}
   COVERITY_TOKEN: ${{ secrets.CoverityToken }}
   # Latest package: https://scan.coverity.com/download

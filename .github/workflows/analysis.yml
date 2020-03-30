@@ -88,6 +88,10 @@ jobs:
           echo
           ./scripts/count-clang-bugs.py report/*/index.html
 
+
+  # Note: secrets are vulerable to exfiltration attack if you allow untrusted
+  #       users to both *modify* and *run* this CI workflow within the repository
+  #       that defines those secrets.
   build_pvs_studio_analyzer:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-latest
