@@ -57,6 +57,8 @@ enum ResTypes {
 #define TEL_CLIENT 0
 #define TEL_SERVER 1
 
+bool MODEM_ReadPhonebook(const std::string &filename);
+
 class CFifo {
 public:
 	CFifo(Bitu _size)
@@ -166,6 +168,7 @@ private:
 #define MREG_LF_CHAR 4
 #define MREG_BACKSPACE_CHAR 5
 #define MREG_GUARD_TIME 12
+#define MREG_DTR_DELAY 25
 
 
 class CSerialModem : public CSerial {
@@ -180,9 +183,7 @@ public:
 
 	void EnterIdleState();
 	void EnterConnectedState();
-
-	void openConnection(void);
-	bool Dial(char * host);
+	bool Dial(const char *host);
 	void AcceptIncomingCall(void);
 	Bitu ScanNumber(char * & scan) const;
 	char GetChar(char * & scan) const;
@@ -230,6 +231,8 @@ protected:
 	Bitu plusinc;
 	Bitu cmdpos;
 	Bitu flowcontrol;
+	Bitu dtrmode;
+	Bits dtrofftimer;
 	Bit8u tmpbuf[MODEM_BUFFER_QUEUE_SIZE];
 	Bitu listenport;
 	Bit8u reg[SREGS];

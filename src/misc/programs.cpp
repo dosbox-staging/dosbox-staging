@@ -525,11 +525,11 @@ void CONFIG::Run(void) {
 						WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
 							p->propname.c_str(),
 							sec->GetName(),
-							p->Get_help(),propvalues.c_str(),
+							p->GetHelp(), propvalues.c_str(),
 							p->Get_Default_Value().ToString().c_str(),
 							p->GetValue().ToString().c_str());
 						// print 'changability'
-						if (p->getChange()==Property::Changeable::OnlyAtStart) {
+						if (p->GetChange() == Property::Changeable::OnlyAtStart) {
 							WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_NOCHANGE"));
 						}
 						return;

@@ -1,30 +1,36 @@
 name: Linux builds
-on: push
+
+on: [push, pull_request]
+
+env:
+  CCACHE_DIR:      "/dev/shm/.ccache"
+  CCACHE_MAXSIZE:  "64M"
+  CCACHE_COMPRESS: "true"
 
 jobs:
-
   build_ubuntu:
     name: ${{ matrix.conf.name }}
     runs-on: ${{ matrix.conf.os }}
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
     strategy:
       matrix:
         conf:
           - name: GCC-5 (Ubuntu 16.04)
             os: ubuntu-16.04
             flags: -c gcc
-            max_warnings: 60
+            max_warnings: 56
           - name: GCC-7 (Ubuntu 18.04)
             os: ubuntu-18.04
             flags: -c gcc
-            max_warnings: 62
+            max_warnings: 58
           - name: GCC-9 (Ubuntu 18.04)
             os: ubuntu-18.04
             flags: -c gcc -v 9
-            max_warnings: 81
+            max_warnings: 77
           - name: Clang-8 (Ubuntu 18.04)
             os: ubuntu-18.04
             flags: -c clang -v 8
-            max_warnings: 58
+            max_warnings: 57
     steps:
       - uses: actions/checkout@v1
         with:
@@ -32,6 +38,21 @@ jobs:
       - run:  sudo apt-get update
       - name: Install C++ compiler and libraries
         run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt ${{ matrix.conf.flags }})
+      - name:  Prepare compiler cache
+        id:    prep-ccache
+        shell: bash
+        run: |
+          mkdir -p "${CCACHE_DIR}"
+          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date -I)"
+          echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+      - uses:  actions/cache@v1
+        id:    cache-ccache
+        with:
+          path: ${{ steps.prep-ccache.outputs.dir }}
+          key:  ccache-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.today }}
+          restore-keys: |
+            ccache-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.yesterday }}
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Build
@@ -44,11 +65,27 @@ jobs:
   build_linux_release_dynamic:
     name: Release build (dynamic)
     runs-on: ubuntu-16.04
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
     steps:
       - uses: actions/checkout@v1
       - run:  sudo apt-get update
       - name: Install C++ compiler and libraries
         run:  sudo apt-get install -y tree libpng16-dev $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+      - name:  Prepare compiler cache
+        id:    prep-ccache
+        shell: bash
+        run: |
+          mkdir -p "${CCACHE_DIR}"
+          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date -I)"
+          echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+      - uses:  actions/cache@v1
+        id:    cache-ccache
+        with:
+          path: ${{ steps.prep-ccache.outputs.dir }}
+          key:  ccache-linux-release-${{ steps.prep-ccache.outputs.today }}
+          restore-keys: |
+            ccache-linux-release-${{ steps.prep-ccache.outputs.yesterday }}
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Inject version string
@@ -63,7 +100,7 @@ jobs:
         run: |
           set -x
           ./autogen.sh
-          ./configure CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" --disable-screenshots
+          ./configure CC="ccache gcc" CXX="ccache g++" CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" --disable-screenshots
           make -j "$(nproc)"
           strip src/dosbox
       - name: Package

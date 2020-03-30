@@ -118,7 +118,7 @@ public:
 			break;
 		default:
 			//Maybe filter out FC as it leads for at least one user to crash, but the entire midi stream has not yet been checked.
-			LOG(LOG_MISC,LOG_WARN)("ALSA:Unknown Command: %02X %02X %02X", msg[0],msg[1],msg[2]);
+			LOG(LOG_MISC,LOG_WARN)("ALSA: Unknown Command: %02X %02X %02X", msg[0],msg[1],msg[2]);
 			send_event(1);
 			break;
 		}
@@ -138,19 +138,19 @@ public:
 		if (conf && conf[0]) { 
 			safe_strncpy(var, conf, 10);
 			if (!parse_addr(var, &seq_client, &seq_port)) {
-				LOG_MSG("ALSA:Invalid alsa port %s", var);
+				LOG_MSG("ALSA: Invalid alsa port %s", var);
 				return false;
 			}
 			defaultport = false;
 		}
 		// default port if none specified
 		else if (!parse_addr("65:0", &seq_client, &seq_port)) {
-				LOG_MSG("ALSA:Invalid alsa port 65:0");
+				LOG_MSG("ALSA: Invalid alsa port 65:0");
 				return false;
 		}
 
 		if (my_snd_seq_open(&seq_handle)) {
-			LOG_MSG("ALSA:Can't open sequencer");
+			LOG_MSG("ALSA: Can't open sequencer");
 			return false;
 		}
 	
@@ -166,7 +166,7 @@ public:
 		          SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
 		if (my_port < 0) {
 			snd_seq_close(seq_handle);
-			LOG_MSG("ALSA:Can't create ALSA port");
+			LOG_MSG("ALSA: Can't create ALSA port");
 			return false;
 		}
 	
@@ -179,19 +179,19 @@ public:
 //						seq_client = 128; seq_port = 0; //Update reported values
 //						if(snd_seq_connect_to(seq_handle,my_port,seq_client,seq_port) < 0) {
 							snd_seq_close(seq_handle);
-							LOG_MSG("ALSA:Can't subscribe to MIDI port (65:0) nor (17:0)");
+							LOG_MSG("ALSA: Can't subscribe to MIDI port (65:0) nor (17:0)");
 							return false;
 //						}
 					}
 				} else {
 					snd_seq_close(seq_handle);
-					LOG_MSG("ALSA:Can't subscribe to MIDI port (%d:%d)", seq_client, seq_port);
+					LOG_MSG("ALSA: Can't subscribe to MIDI port (%d:%d)", seq_client, seq_port);
 					return false;
 				}
 			}
 		}
 
-		LOG_MSG("ALSA:Client initialised [%d:%d]", seq_client, seq_port);
+		LOG_MSG("ALSA: Client initialised [%d:%d]", seq_client, seq_port);
 		return true;
 	}
 

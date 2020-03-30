@@ -22,6 +22,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cstdio>
 #include <ctype.h>
 #include <string.h>
@@ -121,5 +122,10 @@ void trim(std::string& str);
 void upcase(std::string &str);
 void lowcase(std::string &str);
 void strip_punctuation(std::string &str);
+
+template<size_t N>
+bool starts_with(const char (& pfx)[N], const std::string &str) noexcept {
+	return (strncmp(pfx, str.c_str(), N) == 0);
+}
 
 #endif

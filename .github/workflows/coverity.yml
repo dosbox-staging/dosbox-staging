@@ -22,19 +22,19 @@ jobs:
         run:  ./scripts/log-env.sh
 
       - name: Install C++ compiler and dependencies
-        run:  |
+        run: |
           sudo apt-get install zstd python3-setuptools $(./scripts/list-build-dependencies.sh -m apt -c gcc)
           sudo pip3 install gdown
 
       - name: Fetch the Coverity instrumenteur
-        run:  |
+        run: |
           set -xeuo pipefail
           gdown --id "${TARBALL_GDRIVE_ID}" -O - \
           | tee >(tar -I zstd -C /dev/shm -x) \
           | sha256sum -c <(echo "${TARBALL_SHA256} -" )
 
       - name: Build and instrument the project
-        run:  |
+        run: |
           set -xeu
           g++ --version
           ./autogen.sh
@@ -46,7 +46,7 @@ jobs:
           tar -cvaf package.tar.gz cov-int
 
       - name: Upload the package to Coverity
-        run:  |
+        run: |
           curl \
           --form token="${COVERITY_TOKEN}" \
           --form email="${COVERITY_EMAIL}" \

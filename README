@@ -248,18 +248,6 @@ KEYBOARD: I can't type \ or : in DOSBox.
     "enter" and "L".
 
 
-KEYBOARD: Right Shift and "\" doesn't work in DOSBox. (Windows only)
-    This may happen if Windows thinks that you have more than one keyboard
-    connected to your PC when you use some remote control devices.
-    To verity this problem run cmd.exe, navigate to DOSBox program folder
-    and type:
-    set sdl_videodriver=windib
-    dosbox.exe
-    check whether keyboard started to work properly. As windib is slower it is
-    best to use one of the two solutions provided here:
-    https://www.vogons.org/viewtopic.php?t=24072
-
-
 KEYBOARD: The keyboard lags.
     Lower the priority setting in the DOSBox configuration file, for example
     set "priority=normal,normal". You might also want to try lowering the
@@ -1368,6 +1356,21 @@ To host a DOS-based BBS:
     fowarding entry to listen on TCP port 23 and pass it through to
     port 2323 to your DOSBox machine's IP address.  This allows Internet
     users to "dial" your BBS using the default Telnet port.
+	
+Phone book
+----------
+You can map fake phone numbers to Internet addresses which is useful for programs
+where limitations on phone number input field are too strict.
+Create a text file with the name specified in "phonebookfile" entry in [serial]
+section in the DOSBox configuration file and add phone-address pairs per line,
+for example:
+
+5551234 towel.blinkenlights.nl:23
+
+Now you can dial the specified phone number and the emulated modem will connect
+to the address it's mapped to. Note that phone book does not allow any
+characters in the phone number that are ignored or denied by a real Hayes
+compatible modem.
 
 =====================================
 10. How to speed up/slow down DOSBox:

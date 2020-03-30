@@ -547,7 +547,9 @@ static void RENDER_CallBack( GFX_CallBackFunctions_t function ) {
 	}
 }
 
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh) {
+void RENDER_SetSize(Bitu width, Bitu height, unsigned bpp, float fps,
+                    double ratio, bool dblw, bool dblh)
+{
 	RENDER_Halt( );
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {
 		return;	
@@ -558,13 +560,13 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool 
 	} else {
 		//This would alter the width of the screen, we don't care about rounding errors here
 	}
-	render.src.width=width;
-	render.src.height=height;
-	render.src.bpp=bpp;
-	render.src.dblw=dblw;
-	render.src.dblh=dblh;
-	render.src.fps=fps;
-	render.src.ratio=ratio;
+	render.src.width = width;
+	render.src.height = height;
+	render.src.bpp = bpp;
+	render.src.dblw = dblw;
+	render.src.dblh = dblh;
+	render.src.fps = fps;
+	render.src.ratio = ratio;
 	RENDER_Reset( );
 }
 
