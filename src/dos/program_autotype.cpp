@@ -46,8 +46,8 @@ void AUTOTYPE::PrintKeys() {
 		}
 
 		// Setup our rows and columns
-		const size_t console_width = 72;
-		const size_t columns = console_width / max_length;
+		const size_t wrap_width = 72; // confortable columns not pushed to the edge
+		const size_t columns = wrap_width / max_length;
 		const size_t rows = ceil_udivide(names.size(), columns);
 
 		// Build the string output by rows and columns
