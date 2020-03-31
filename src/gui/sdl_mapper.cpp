@@ -130,7 +130,9 @@ public:
 	Bits GetValue() {
 		return current_value;
 	}
-	const char * GetName() const { return entry; }
+	const char * GetName(void) const {
+		 return entry;
+	}
 	virtual bool IsTrigger() = 0;
 	CBindList bindlist;
 protected:
