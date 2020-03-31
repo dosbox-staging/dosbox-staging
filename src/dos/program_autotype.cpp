@@ -13,7 +13,7 @@
 #include "program_autotype.h"
 
 void AUTOTYPE::PrintUsage() {
-	WriteOut(
+	WriteOut_NoParsing(
 		"\033[32;1mAUTOTYPE\033[0m [-list] [-w WAIT] [-p PACE] button_1 [button_2 [...]] \n\n"
 		"Where:\n"
 		"  -list:   prints all available button names.\n"
@@ -41,7 +41,7 @@ void AUTOTYPE::PrintKeys() {
 
 		// Sanity check to avoid dividing by 0
 		if (!max_length) {
-			WriteOut("AUTOTYPE: The mapper has no key bindings\n");
+			WriteOut_NoParsing("AUTOTYPE: The mapper has no key bindings\n");
 			return;
 		}
 
@@ -51,15 +51,12 @@ void AUTOTYPE::PrintKeys() {
 		const size_t rows = ceil_udivide(names.size(), columns);
 
 		// Build the string output by rows and columns
-		std::stringstream ss;
 		auto name = names.begin();
 		for (size_t row = 0; row < rows; ++row) {
 			for (size_t i = row; i < names.size(); i += rows)
-				ss << std::setw(max_length + 1) << name[i];
-			ss << std::endl;
+				WriteOut("  %-*s", max_length, name[i].c_str());
+			WriteOut_NoParsing("\n");
 		}
-			
-		WriteOut(ss.str().c_str());
 }
 
 /*
@@ -147,7 +144,7 @@ void AUTOTYPE::Run() {
 	std::vector<std::string> sequence;
 	cmd->FillVector(sequence);
 	if (sequence.empty()) {
-		WriteOut("AUTOTYPE: button sequence is empty\n");
+		WriteOut_NoParsing("AUTOTYPE: button sequence is empty\n");
 		return;
 	}
 	MAPPER_AutoType(sequence, wait_ms, pace_ms);
