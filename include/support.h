@@ -46,6 +46,7 @@
  */
 template<typename T>
 T to_finite(const std::string& input) {
+	// Defensively set NaN from the get-go
 	T result = std::numeric_limits<T>::quiet_NaN();
 	size_t bytes_read = 0;
 	try {
@@ -53,9 +54,9 @@ T to_finite(const std::string& input) {
 		if (!input.empty() && bytes_read == input.size())
 			result = static_cast<T>(interim);
 	}
-	// handle exceptions that stod may throw
-	catch (std::invalid_argument e) {}
-	catch (std::out_of_range e) {}
+	// Capture expected exceptions stod may throw
+	catch (std::invalid_argument &e) {}
+	catch (std::out_of_range &e) {}
 	return result;
 }
 
