@@ -1,4 +1,10 @@
-name: Coverity Scan
+name: Coverity Scan analysis
+
+on:
+  push:
+    branches:
+      - master
+
 env:
   COVERITY_EMAIL: ${{ secrets.CoverityEmail }}
   COVERITY_TOKEN: ${{ secrets.CoverityToken }}
@@ -7,10 +13,6 @@ env:
   TARBALL_SHA256: "0bec2d12e7fca3fe4b6df843d9584e2a58e273970a8549c100541f86dbc0da4e"
   TARBALL_GDRIVE_ID: ${{ secrets.GoogleDriveId }}
 
-on:
-  push:
-    branches:
-      - master
 jobs:
   coverity_scan:
     name: Coverity static analyzer

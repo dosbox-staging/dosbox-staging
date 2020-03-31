@@ -1,6 +1,8 @@
 name: Config heavy
+
 on:
   schedule: [cron: '0 16 * * *']
+
 jobs:
   config_all:
     name: ${{ matrix.system.name }} ${{ matrix.conf.configure_flags }} ${{ matrix.conf.without_packages }}

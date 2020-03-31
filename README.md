@@ -17,16 +17,17 @@ Read more at
 | **Version control**            | Git                         | [SVN]
 | **Language**                   | C++11                       | C++03<sup>[1]</sup>
 | **CI**                         | Yes                         | No
-| **Static analysis**            | Yes<sup>[2],[3]</sup>       | No
+| **Static analysis**            | Yes<sup>[C],[P],[S]</sup>   | No
 | **Dynamic analysis**           | Yes                         | No
 | **Automated regression tests** | No (WIP)                    | No
 | **SDL**                        | 2.0                         | 1.2<sup>＊</sup>
 
 [SVN]:https://sourceforge.net/projects/dosbox/
 [1]:https://sourceforge.net/p/dosbox/patches/283/
-[2]:https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
-[3]:https://scan.coverity.com/projects/dosbox-staging
 [4]:https://github.com/dreamer/dosbox-staging/issues/23
+[C]:https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
+[P]:https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
+[S]:https://scan.coverity.com/projects/dosbox-staging
 
 **dosbox-staging** does not support audio playback using physical CDs.
 Using CD Digital Audio emulation (loading CD music via
