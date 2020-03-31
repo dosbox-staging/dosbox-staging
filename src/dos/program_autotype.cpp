@@ -83,15 +83,15 @@ bool AUTOTYPE::ReadDoubleArg(const std::string &name,
 	std::string str_value;
 	// Is the user trying to set this flag?
 	if (cmd->FindString(flag, str_value, true)) {
-		double user_value;
 
 		// Can the user's value be parsed?
-		if (str_to_double(str_value, user_value)) {
+		const double user_value = to_finite<double>(str_value);
+		if (std::isfinite(user_value)) {
 			result = true;
 			// Clamp the user's value if needed
 			value = clamp(user_value, min_value, max_value);
 
-			// If we had to clamp the users value, then inform them
+			// Inform them if we had to clamp their value 
 			if (std::fabs(user_value - value) > std::numeric_limits<double>::epsilon())
 				WriteOut("AUTOTYPE: bounding %s value of %.2f to %.2f\n",
 				         name.c_str(), user_value, value);
