@@ -1,0 +1,77 @@
+name: PVS-Studio analysis
+
+on: push
+
+env:
+  CCACHE_DIR:      "/dev/shm/.ccache"
+  CCACHE_MAXSIZE:  "64M"
+  CCACHE_COMPRESS: "true"
+
+jobs:
+  pvs_studio_analyzer:
+    name: PVS-Studio static analyzer
+    runs-on: ubuntu-latest
+    env:
+      debfile: pvs-studio-7.06.37052.34-amd64.deb
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - run:  sudo apt-get update
+      - name: Log and setup environment
+        run: |
+          ./scripts/log-env.sh
+          mkdir -p pvs-package
+      - uses: actions/cache@v1
+        id: cache-pvs
+        with:
+          path: pvs-package
+          key: ${{ env.debfile }}
+      - name:  Fetch PVS-Studio package
+        if:    steps.cache-pvs.outputs.cache-hit != 'true'
+        run:   wget "https://files.viva64.com/${debfile}" -O "pvs-package/pvs.deb"
+      - name: Install packages
+        run: |
+          set -xeu
+          sudo apt-get install strace $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+          sudo dpkg -i "pvs-package/pvs.deb"
+          pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
+      - name: Build
+        run: |
+          set -xeu
+          ./autogen.sh
+          export FLAGS="-Og"
+          ./configure CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS}"
+          pvs-studio-analyzer trace -- make
+      - name: Analyze
+        run: |
+          set -xeu
+          log="pvs-analysis.log"
+          mirsa_criteria="MISRA:1,2"
+          general_criteria="GA:1,2;64:1;OP:1,2,3;CS:1"
+          stamp="$(date +'%Y-%m-%d_T%H%M')-${GITHUB_SHA:0:8}"
+          reportdir="pvs-report/pvs-report-${stamp}"
+          mkdir -p "${reportdir}"
+          pvs-studio-analyzer analyze -a 63 -s .pvs-suppress -o "${log}" -j "$(nproc)"
+          plog-converter -a "${general_criteria}" -d V1042 -t fullhtml -p dosbox-staging \
+          -v "${GITHUB_SHA:0:8}" -o "${reportdir}" "${log}"
+          mv "${reportdir}/fullhtml" "${reportdir}/general"
+          plog-converter -a "${mirsa_criteria}" -d V1042 -t fullhtml -p dosbox-staging \
+          -v "${GITHUB_SHA:0:8}" -o "${reportdir}" "${log}"
+          mv "${reportdir}/fullhtml" "${reportdir}/mirsa"
+          plog-converter -a "${general_criteria}" -d V1042 -t csv -o pvs-report.csv "${log}"
+          cp -l pvs-report.csv "${reportdir}/general/"
+          pvs-studio-analyzer suppress -a "${general_criteria}" \
+          -o "${reportdir}/general/supressible-list.json" "${log}"
+      - name: Upload report
+        uses: actions/upload-artifact@master
+        with:
+          name: pvs-analysis-report
+          path: pvs-report
+      - name: Summarize report
+        env:
+          MAX_BUGS: 510
+        run: |
+          echo "Full report is included in build Artifacts"
+          echo
+          ./scripts/count-pvs-bugs.py pvs-report.csv "${MAX_BUGS}"
