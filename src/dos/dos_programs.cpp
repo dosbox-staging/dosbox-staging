@@ -110,7 +110,7 @@ public:
 				while ( (idx = value.find("Z:\\")) != std::string::npos ||
 					(idx = value.find("z:\\")) != std::string::npos  )
 					value.replace(idx,3,tempenv);
-				line = value;
+				line = std::move(value);
 			}
 			if (!line.size()) line = tempenv;
 			first_shell->SetEnv("PATH",line.c_str());
@@ -1275,7 +1275,7 @@ public:
 				std::string homedir(temp_line);
 				Cross::ResolveHomedir(homedir);
 				if (!stat(homedir.c_str(),&test)) {
-					temp_line = homedir;
+					temp_line = std::move(homedir);
 				} else {
 					// convert dosbox filename to system filename
 					char fullname[CROSS_LEN];
