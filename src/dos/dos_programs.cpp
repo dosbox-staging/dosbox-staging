@@ -686,7 +686,7 @@ public:
 			else {
 				Bit8u rombuf[65536];
 				Bits cfound_at=-1;
-				if (cart_cmd!="") {
+				if (!cart_cmd.empty()) {
 					/* read cartridge data into buffer */
 					fseek(usefile_1,0x200L, SEEK_SET);
 					if (fread(rombuf, 1, rombytesize_1-0x200, usefile_1) < rombytesize_1 - 0x200) {
@@ -817,7 +817,7 @@ public:
 				for (auto &disk : diskSwap)
 					disk.reset();
 
-				if (cart_cmd=="") {
+				if (cart_cmd.empty()) {
 					Bit32u old_int18=mem_readd(0x60);
 					/* run cartridge setup */
 					SegSet16(ds,romseg);
