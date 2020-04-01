@@ -1181,7 +1181,6 @@ public:
 		}
 
 		char drive;
-		std::string label;
 		std::vector<std::string> paths;
 		std::string umount;
 		/* Check for unmounting */
@@ -1365,9 +1364,7 @@ public:
 					// Tear-down all prior drives when we hit a problem
 					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
 					for (auto pImgDisk : imgDisks) {
-						if (pImgDisk) {
-							delete pImgDisk;
-						}
+						delete pImgDisk;
 					}
 					return;
 				}
