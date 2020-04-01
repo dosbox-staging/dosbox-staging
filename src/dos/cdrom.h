@@ -53,6 +53,7 @@
 #define MAX_REDBOOK_TRACKS               99u // a CD can contain 99 playable tracks plus the remaining leadout
 #define MIN_REDBOOK_TRACKS                2u // One track plus the lead-out track
 #define REDBOOK_PCM_BYTES_PER_MS      176.4f // 44.1 frames/ms * 4 bytes/frame
+#define REDBOOK_PCM_BYTES_PER_MIN  10584000u // 44.1 frames/ms * 4 bytes/frame * 1000 ms/s * 60 s/min
 #define BYTES_PER_REDBOOK_PCM_FRAME       4u // 2 bytes/sample * 2 samples/frame
 #define MAX_REDBOOK_BYTES (MAX_REDBOOK_FRAMES * BYTES_PER_RAW_REDBOOK_FRAME) // length of a CDROM in bytes
 #define MAX_REDBOOK_DURATION_MS (99 * 60 * 1000) // 99 minute CDROM in milliseconds
@@ -138,6 +139,11 @@ private:
 	class TrackFile {
 	protected:
 		TrackFile(Bit16u _chunkSize) : chunkSize(_chunkSize) {}
+		bool offsetInsideTrack(const uint32_t offset);
+		uint32_t adjustOverRead(const uint32_t offset,
+		                        const uint32_t requested_bytes);
+		int length_redbook_bytes = -1;
+
 	public:
 		virtual          ~TrackFile() = default;
 		virtual bool     read(uint8_t *buffer,
@@ -149,7 +155,7 @@ private:
 		virtual Bit32u   getRate() = 0;
 		virtual Bit8u    getChannels() = 0;
 		virtual int      getLength() = 0;
-		const Bit16u     chunkSize;
+		const Bit16u chunkSize = 0;
 	};
 
 	class BinaryFile : public TrackFile {
