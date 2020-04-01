@@ -252,17 +252,18 @@ struct SDL_Block {
 	bool wait_on_error;
 	struct {
 		struct {
-			Bit16u width, height;
-			bool fixed;
-			bool display_res;
+			Bit16u width = 0;
+			Bit16u height = 0;
+			bool fixed = false;
+			bool display_res = false;
 		} full;
 		struct {
 			uint16_t width = 0; // TODO convert to int
 			uint16_t height = 0; // TODO convert to int
 			bool use_original_size = true;
 		} window;
-		Bit8u bpp;
-		bool fullscreen;
+		Bit8u bpp = 0;
+		bool fullscreen = false;
 		bool vsync = false;
 		SCREEN_TYPES type;
 		SCREEN_TYPES want_type;
