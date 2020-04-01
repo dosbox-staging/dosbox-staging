@@ -70,7 +70,7 @@ jobs:
           path: pvs-report
       - name: Summarize report
         env:
-          MAX_BUGS: 510
+          MAX_BUGS: 505
         run: |
           echo "Full report is included in build Artifacts"
           echo
