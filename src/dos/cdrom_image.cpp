@@ -53,9 +53,46 @@ using track_iter       = vector<CDROM_Interface_Image::Track>::iterator;
 using track_const_iter = vector<CDROM_Interface_Image::Track>::const_iterator;
 using tracks_size_t    = vector<CDROM_Interface_Image::Track>::size_type;
 
+// Report bad seeks that would go beyond the end of the track
+bool CDROM_Interface_Image::TrackFile::offsetInsideTrack(const uint32_t offset)
+{
+	if (static_cast<int>(offset) >= getLength()) {
+		LOG_MSG("CDROM: attempted to seek to byte %u, beyond the "
+		        "track's %d byte-length",
+		        offset, length_redbook_bytes);
+		return false;
+	}
+	return true;
+}
+
+// Trim requested read sizes that will spill beyond the track ending
+uint32_t CDROM_Interface_Image::TrackFile::adjustOverRead(const uint32_t offset,
+                                                          const uint32_t requested_bytes)
+{
+	// The most likely scenario is read is valid and no adjustment is needed
+	uint32_t adjusted_bytes = requested_bytes;
+
+	// If we seek beyond the end of the track, then we can't read any bytes...
+	if (static_cast<int>(offset) >= getLength()) {
+		adjusted_bytes = 0;
+		LOG_MSG("CDROM: can't read audio because requested offset %u "
+		        "is beyond the track length, %u",
+		        offset, getLength());
+	}
+	// Otherwise if our seek + requested bytes goes beyond, then prune back
+	// the request
+	else if (static_cast<int>(offset + requested_bytes) > getLength()) {
+		adjusted_bytes = static_cast<uint32_t>(getLength()) - offset;
+		LOG_MSG("CDROM: reducing read-length by %u bytes to avoid "
+		        "reading beyond track.",
+		        requested_bytes - adjusted_bytes);
+	}
+	return adjusted_bytes;
+}
+
 CDROM_Interface_Image::BinaryFile::BinaryFile(const char *filename, bool &error)
-	: TrackFile(BYTES_PER_RAW_REDBOOK_FRAME),
-	  file(nullptr)
+        : TrackFile(BYTES_PER_RAW_REDBOOK_FRAME),
+          file(nullptr)
 {
 	file = new ifstream(filename, ios::in | ios::binary);
 	// If new fails, an exception is generated and scope leaves this constructor
@@ -81,31 +118,38 @@ bool CDROM_Interface_Image::BinaryFile::read(uint8_t *buffer,
 	assertm(offset <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size");
 	assertm(requested_bytes <= MAX_REDBOOK_BYTES, "Requested bytes exceeds CDROM size");
 
-	file->seekg(offset, ios::beg);
-	file->read((char*)buffer, requested_bytes);
+	if (!seek(offset))
+		return false;
+
+	const uint32_t adjusted_bytes = adjustOverRead(offset, requested_bytes);
+	if (adjusted_bytes == 0) // no work to do!
+		return true;
+
+	file->read((char *)buffer, adjusted_bytes);
 	return !file->fail();
 }
 
 int CDROM_Interface_Image::BinaryFile::getLength()
 {
-	// Check for logic bugs and illegal values
-	assertm(file, "The file pointer is invalid");
+	// Return our cached result if we've already been asked before
+	if (length_redbook_bytes < 0 && file) {
+		file->seekg(0, ios::end);
+		/**
+		 *  All read(..) operations involve an absolute position and
+		 *  this function isn't called in other threads, therefore
+		 *  we don't need to restore the original file position.
+		 */
+		length_redbook_bytes = static_cast<int>(file->tellg());
 
-	/**
-	 *  All read operations involve an absolute position and
-	 *  this function isn't called in other threads, therefore
-	 *  we don't need to retain the original read position.
-	 */
-	file->seekg(0, ios::end);
-	const int length = static_cast<int>(file->tellg());
-	assertm(length == -1 // allow the length to fail, which is valid
-	        || static_cast<uint32_t>(length) <= MAX_REDBOOK_BYTES,
-	        "Length exceeds the maximum CDROM size");
+		assertm(length_redbook_bytes >= 0,
+		        "Track length could not be determined");
+		assertm(static_cast<uint32_t>(length_redbook_bytes) <= MAX_REDBOOK_BYTES,
+		        "Track length exceeds the maximum CDROM size");
 #ifdef DEBUG
-	LOG_MSG("CDROM: Length of image is %d bytes", length);
+		LOG_MSG("CDROM: Length of image is %d bytes", length_redbook_bytes);
 #endif
-	return length;
-
+	}
+	return length_redbook_bytes;
 }
 
 Bit16u CDROM_Interface_Image::BinaryFile::getEndian()
@@ -114,19 +158,21 @@ Bit16u CDROM_Interface_Image::BinaryFile::getEndian()
 	return AUDIO_S16LSB;
 }
 
-
 bool CDROM_Interface_Image::BinaryFile::seek(const uint32_t offset)
 {
 	// Check for logic bugs and illegal values
 	assertm(file, "The file pointer needs to be valid, but is the nullptr");
 	assertm(offset <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size");
 
+	if (!offsetInsideTrack(offset))
+		return false;
+
 	file->seekg(offset, ios::beg);
 
-	// If the seek failed, then let's try harder
+	// If the first seek attempt failed, then try harder
 	if (file->fail()) {
 		file->clear();                 // clear fail and eof bits
-		file->seekg(0, std::ios::beg); // "I have returned." 
+		file->seekg(0, std::ios::beg); // "I have returned."
 		file->seekg(offset, ios::beg); // "It will be done."
 	}
 	return !file->fail();
@@ -162,10 +208,8 @@ CDROM_Interface_Image::AudioFile::AudioFile(const char *filename, bool &error)
 	if (sample) {
 		error = false;
 		LOG_MSG("CDROM: Loaded %s [%d Hz, %d-channel, %2.1f minutes]",
-		        filename_only.c_str(),
-		        getRate(),
-		        getChannels(),
-		        getLength()/static_cast<double>(REDBOOK_PCM_BYTES_PER_MS * 1000 * 60));
+		        filename_only.c_str(), getRate(), getChannels(),
+		        getLength() / static_cast<double>(REDBOOK_PCM_BYTES_PER_MIN));
 	} else {
 		LOG_MSG("CDROM: Failed adding '%s' as CDDA track!", filename_only.c_str());
 		error = true;
@@ -199,6 +243,10 @@ bool CDROM_Interface_Image::AudioFile::seek(const uint32_t requested_pos)
 	// Check for logic bugs and if the track is already positioned as requested
 	assertm(sample, "Audio sample needs to be valid, but is the nullptr");
 	assertm(requested_pos <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size");
+
+	if (!offsetInsideTrack(requested_pos))
+		return false;
+
 	if (track_pos == requested_pos) {
 #ifdef DEBUG
 		LOG_MSG("CDROM: seek to %u avoided with position-tracking", requested_pos);
@@ -260,9 +308,8 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
 	assertm(buffer != nullptr, "buffer needs to be allocated but is the nullptr");
 	assertm(sample != nullptr, "Audio sample needs to be valid, but is the nullptr");
 	assertm(requested_pos <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size");
-	assertm(requested_bytes <= MAX_REDBOOK_BYTES, "Requested bytes exceeds CDROM size");
-	if (requested_bytes == 0)
-		return true;
+	assertm(requested_bytes <= MAX_REDBOOK_BYTES,
+	        "Requested bytes exceeds CDROM size");
 
 	/**
 	 *  Support DAE for stereo and mono 44.1 kHz tracks, otherwise inform the user.
@@ -285,10 +332,15 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
 	if (!seek(requested_pos))
 		return false;
 
-	// Setup characteristics about our track and the request 
+	const uint32_t adjusted_bytes = adjustOverRead(requested_pos, requested_bytes);
+	if (adjusted_bytes == 0) // no work to do!
+		return true;
+
+	// Setup characteristics about our track and the request
 	const uint8_t channels = getChannels();
 	const uint8_t bytes_per_frame = channels * REDBOOK_BPS;
-	const uint32_t requested_frames = ceil_udivide(requested_bytes, BYTES_PER_REDBOOK_PCM_FRAME);
+	const uint32_t requested_frames = ceil_udivide(adjusted_bytes,
+	                                               BYTES_PER_REDBOOK_PCM_FRAME);
 
 	uint32_t decoded_bytes = 0;
 	uint32_t decoded_frames = 0;
@@ -303,7 +355,7 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
 	}
 	// Zero out any remainining frames that we didn't fill
 	if (decoded_frames < requested_frames)
-		memset(buffer + decoded_bytes, 0, requested_bytes - decoded_bytes);
+		memset(buffer + decoded_bytes, 0, adjusted_bytes - decoded_bytes);
 
 	// If the track is mono, convert to stereo
 	if (channels == 1 && decoded_frames) {
@@ -386,11 +438,20 @@ Bit8u CDROM_Interface_Image::AudioFile::getChannels()
 
 int CDROM_Interface_Image::AudioFile::getLength()
 {
-	// Sound_GetDuration returns milliseconds but getLength()
-	// needs to return bytes, so we covert using PCM bytes/s
-	return sample ?
-		static_cast<int>
-		(Sound_GetDuration(sample) * REDBOOK_PCM_BYTES_PER_MS) : -1;
+	if (length_redbook_bytes < 0 && sample) {
+		/*
+		 *  Sound_GetDuration returns milliseconds but getLength()
+		 *  needs to return bytes, so we covert using PCM bytes/s
+		 */
+		length_redbook_bytes = static_cast<int>(
+		        static_cast<float>(Sound_GetDuration(sample)) *
+		        REDBOOK_PCM_BYTES_PER_MS);
+	}
+	assertm(length_redbook_bytes >= 0,
+	        "Track length could not be determined");
+	assertm(static_cast<uint32_t>(length_redbook_bytes) <= MAX_REDBOOK_BYTES,
+	        "Track length exceeds the maximum CDROM size");
+	return length_redbook_bytes;
 }
 
 // initialize static members
