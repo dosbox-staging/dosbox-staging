@@ -4,30 +4,32 @@
 [![Windows build status](https://img.shields.io/github/workflow/status/dreamer/dosbox-staging/Windows%20builds?label=Windows%20builds)](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22)
 [![macOS build status](https://img.shields.io/github/workflow/status/dreamer/dosbox-staging/macOS%20builds?label=macOS%20builds)](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22)
 
-This repository attempts to modernize the [DOSBox](https://www.dosbox.com/)
-project by using current development practices and tools, fixing issues, adding
-features that better support today's systems, and sending patches upstream.
-Read more at
-[Vogons thread](https://www.vogons.org/viewtopic.php?p=790065#p790065).
+This repository attempts to modernize the DOSBox codebase by using current
+development practices and tools, fixing issues, and adding features that better
+support today's systems.
 
 ## Summary of differences compared to upstream
+
+### For developers
 
 |                                | dosbox-staging              | DOSBox
 |-                               |-                            |-
 | **Version control**            | Git                         | [SVN]
 | **Language**                   | C++11                       | C++03<sup>[1]</sup>
-| **CI**                         | Yes                         | No
-| **Static analysis**            | Yes<sup>[C],[P],[S]</sup>   | No
-| **Dynamic analysis**           | Yes                         | No
-| **Automated regression tests** | No (WIP)                    | No
 | **SDL**                        | 2.0                         | 1.2<sup>＊</sup>
+| **CI**                         | Yes                         | No
+| **Static analysis**            | Yes<sup>[2],[3],[4]</sup>   | No
+| **Dynamic analysis**           | Yes                         | No
+| **clang-format**               | Yes                         | No
+| **Automated regression tests** | No (WIP)                    | No
 
 [SVN]:https://sourceforge.net/projects/dosbox/
 [1]:https://sourceforge.net/p/dosbox/patches/283/
-[4]:https://github.com/dreamer/dosbox-staging/issues/23
-[C]:https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
-[P]:https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
-[S]:https://scan.coverity.com/projects/dosbox-staging
+[2]:https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
+[3]:https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
+[4]:https://scan.coverity.com/projects/dosbox-staging
+
+### Feature differences
 
 **dosbox-staging** does not support audio playback using physical CDs.
 Using CD Digital Audio emulation (loading CD music via
@@ -37,14 +39,14 @@ preferred instead.
 
 Codecs supported for CD-DA emulation:
 
-|                | dosbox-staging<sup>†</sup> | DOSBox<sup>‡</sup>
+|                | dosbox-staging<sup>†</sup> | DOSBox SVN<sup>‡</sup>
 |-               |-                           |-
 | **Opus**       | Yes (libopus)              | No
 | **OGG/Vorbis** | Yes (built-in)             | Yes - SDL\_sound 1.2 (libvorbis)<sup>[5],＊</sup>
 | **MP3**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (libmpg123)<sup>[5],＊,§</sup>
 | **FLAC**       | Yes (built-in)             | No<sup>§</sup>
-| **WAV**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (internal)<sup>[6],＊</sup>
-| **AIFF**       | No                         | Yes - SDL\_sound 1.2 (internal)<sup>[6],＊</sup>
+| **WAV**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (built-in)<sup>[6],＊</sup>
+| **AIFF**       | No                         | Yes - SDL\_sound 1.2 (built-in)<sup>[6],＊</sup>
 
 <sup>＊- SDL 1.2 was last updated 2013-08-17 and SDL\_sound 2008-04-20</sup>\
 <sup>† - 22.05 kHz, 44.1 kHz, 48 kHz; mono, stereo</sup>\
@@ -54,9 +56,9 @@ Codecs supported for CD-DA emulation:
 [5]:https://www.dosbox.com/wiki/MOUNT#Mounting_a_CUE.2FBIN-Pair_as_volume
 [6]:https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/trunk/src/dos/cdrom_image.cpp#l536
 
-Other feature differences:
+Other differences:
 
-|                        | dosbox-staging                               | DOSBox
+|                        | dosbox-staging                               | DOSBox SVN
 |-                       |-                                             |-
 | **Pixel-perfect mode** | Yes (`output=texturepp`)<sup>[7]</sup>       | N/A
 | **[OPL] emulators**    | compat, fast, mame, nuked<sup>[8]</sup>      | compat, fast, mame
@@ -182,4 +184,7 @@ run:
 ``` shell
 git fetch origin "refs/notes/*:refs/notes/*"
 ```
+
+For some historical context of why this repo exists you can read
+[Vogons thread](https://www.vogons.org/viewtopic.php?p=790065#p790065).
 
