@@ -603,9 +603,6 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 	 * some window managers. For now, the following may work up to some
 	 * level. On X11, SDL_VIDEO_X11_LEGACY_FULLSCREEN=1 can also help,
 	 * although it has its own issues.
-	 * Suggestion: Use the desktop res if possible, with output=surface
-	 * if one is not interested in scaling.
-	 * On Android, desktop res is the only way.
 	 */
 	if (fullscreen) {
 		SDL_DisplayMode displayMode;
