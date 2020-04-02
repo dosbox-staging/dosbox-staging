@@ -1,7 +1,7 @@
 # This file uses configuration options available in clang-format 8.0.
 #
 # More detailed description of all options:
-# https://releases.llvm.org/8.0.0/tools/clang/docs/ClangFormatStyleOptions.html
+# https://releases.llvm.org/9.0.0/tools/clang/docs/ClangFormatStyleOptions.html
 # 
 # Note that version of clang-format provided by your distribution might be
 # newer and provide additional options, that won't work in 8.x.
@@ -43,14 +43,13 @@ AlignAfterOpenBracket: Align
 # This will align the C/C++ preprocessor macros of consecutive lines. This will
 # result in formattings like
 #
-#    #define SHORT_NAME       42
-#    #define LONGER_NAME      0x007f
-#    #define EVEN_LONGER_NAME (2)
-#    #define foo(x)           (x * x)
-#    #define bar(y, z)        (y + z)
+# #define SHORT_NAME       42
+# #define LONGER_NAME      0x007f
+# #define EVEN_LONGER_NAME (2)
+# #define foo(x)           (x * x)
+# #define bar(y, z)        (y + z)
 #
-# TODO Uncomment this line during update to clang-format 9.0
-# AlignConsecutiveMacros: true
+AlignConsecutiveMacros: true
 
 # Allow short functions defined inside a class to be put on a single line
 #
@@ -161,6 +160,7 @@ BinPackParameters: false
 #           initializer2()
 # {}
 #
+AllowAllConstructorInitializersOnNextLine: false
 BreakConstructorInitializers: BeforeColon
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 8
