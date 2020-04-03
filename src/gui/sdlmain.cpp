@@ -280,8 +280,7 @@ struct SDL_Block {
 		bool bilinear;
 		bool packed_pixel;
 		bool paletted_texture;
-		bool pixel_buffer_object;
-
+		bool pixel_buffer_object = false;
 		bool use_shader;
 		GLuint program_object;
 		const char *shader_src;
@@ -1991,6 +1990,9 @@ static void GUI_StartUp(Section * sec) {
 			glBufferDataARB = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress("glBufferDataARB");
 			glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
 			glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
+
+			// FIXME: according to Khronos documentation, the correct way to
+			//        query GL_EXTENSIONS is using glGetStringi from OpenGL 3.0
 			const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
 			if(gl_ext && *gl_ext){
 				sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") != NULL);
@@ -2006,7 +2008,9 @@ static void GUI_StartUp(Section * sec) {
 #ifdef DB_DISABLE_DBO
 			sdl.opengl.pixel_buffer_object = false;
 #endif
-			LOG_MSG("OpenGL extension: pixel_bufer_object %d",sdl.opengl.pixel_buffer_object);
+			LOG_MSG("OPENGL: Pixel buffer object extension: %s",
+			        sdl.opengl.pixel_buffer_object ? "available"
+			                                       : "missing");
 		}
 	} /* OPENGL is requested end */
 #endif	//OPENGL
