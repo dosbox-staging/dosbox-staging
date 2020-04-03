@@ -617,7 +617,7 @@ void SHELL_Init() {
 		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
-		"\xBA \033[32mWelcome to DOSBox %-48s\033[37m \xBA\n"
+		"\xBA \033[32mWelcome to dosbox-staging %-40s\033[37m \xBA\n"
 		"\xBA                                                                    \xBA\n"
 //		"\xBA DOSBox runs real and protected mode games.                         \xBA\n"
 		"\xBA For a short introduction for new users type: \033[33mINTRO\033[37m                 \xBA\n"
@@ -651,7 +651,7 @@ void SHELL_Init() {
 	        "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
 	        //"\n" //Breaks the startup message if you type a mount and a drive change.
 	);
-	MSG_Add("SHELL_STARTUP_SUB","\n\n\033[32;1mDOSBox %s Command Shell\033[0m\n\n");
+	MSG_Add("SHELL_STARTUP_SUB","\033[32;1mdosbox-staging %s\033[0m\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Displays/changes the current directory.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG","CHDIR [drive:][path]\n"
 	        "CHDIR [..]\n"
