@@ -395,20 +395,19 @@ extern bool CPU_CycleAutoAdjust;
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
 
-void GFX_SetTitle(Bit32s cycles,int frameskip,bool paused){
-	char title[200] = { 0 };
+void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
+{
+	char title[200] = {0};
 	static Bit32s internal_cycles = 0;
-	static int internal_frameskip = 0;
-	if (cycles != -1) internal_cycles = cycles;
-	if (frameskip != -1) internal_frameskip = frameskip;
-	if(CPU_CycleAutoAdjust) {
-		sprintf(title,"DOSBox %s, CPU speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
-	} else {
-		sprintf(title,"DOSBox %s, CPU speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
-	}
+	if (cycles != -1)
+		internal_cycles = cycles;
 
-	if (paused) strcat(title," PAUSED");
-	SDL_SetWindowTitle(sdl.window,title);
+	const char *msg = CPU_CycleAutoAdjust
+	                          ? "%8s, max %d%%, dosbox-staging%s"
+	                          : "%8s, %d cycles/ms, dosbox-staging%s";
+	snprintf(title, sizeof(title), msg, RunningProgram, internal_cycles,
+	         paused ? " (PAUSED)" : "");
+	SDL_SetWindowTitle(sdl.window, title);
 }
 
 static unsigned char logo[32*32*4]= {
@@ -2033,7 +2032,7 @@ static void GUI_StartUp(Section * sec) {
 
 	// FIXME the code updated sdl.desktop.bpp in here (has effect in setting up scalers)
 
-	SDL_SetWindowTitle(sdl.window, "DOSBox");
+	SDL_SetWindowTitle(sdl.window, "dosbox-staging");
 	SetIcon();
 
 	const bool tiny_fullresolution = splash_image.width > sdl.desktop.full.width ||
