@@ -334,6 +334,19 @@ static SDL_Block sdl;
 
 static void CleanupSDLResources();
 
+static constexpr char version_msg[] = R"(dosbox (dosbox-staging), version %s
+Copyright (C) 2020 The dosbox-staging team.
+License GPLv2+: GNU GPL version 2 or later <https://www.gnu.org/licenses/gpl-2.0.html>
+
+This is free software, and you are welcome to change and redistribute it
+under certain conditions; please read the COPYING file thoroughly before
+doing so.  There is NO WARRANTY, to the extent permitted by law.
+
+This program (dosbox-staging) is modified version of DOSBox.
+Copyright (C) 2020 The DOSBox Team, published under GNU GPLv2+
+Read AUTHORS file for more details.
+)";
+
 #if C_OPENGL
 static char const shader_src_default[] =
 	"varying vec2 v_texCoord;\n"
@@ -2761,16 +2774,15 @@ int main(int argc, char* argv[]) {
 			SetConsoleTitle("DOSBox Status Window");
 		}
 #endif  //defined(WIN32) && !(C_DEBUG)
+
 		if (control->cmdline->FindExist("-version") ||
-		    control->cmdline->FindExist("--version") ) {
-			printf("\nDOSBox version %s, copyright 2002-2020 DOSBox Team.\n\n",VERSION);
-			printf("DOSBox is written by the DOSBox Team (See AUTHORS file))\n");
-			printf("DOSBox comes with ABSOLUTELY NO WARRANTY.  This is free software,\n");
-			printf("and you are welcome to redistribute it under certain conditions;\n");
-			printf("please read the COPYING file thoroughly before doing so.\n\n");
+		    control->cmdline->FindExist("--version")) {
+			printf(version_msg, VERSION);
 			return 0;
 		}
-		if(control->cmdline->FindExist("-printconf")) printconfiglocation();
+
+		if (control->cmdline->FindExist("-printconf"))
+			printconfiglocation();
 
 #if C_DEBUG
 		DEBUG_SetupConsole();
@@ -2780,10 +2792,7 @@ int main(int argc, char* argv[]) {
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
 #endif
 
-
-	/* Display Welcometext in the console */
-	LOG_MSG("DOSBox version %s",VERSION);
-	LOG_MSG("Copyright 2002-2020 DOSBox Team, published under GNU GPL.");
+	LOG_MSG("dosbox-staging version %s", VERSION);
 	LOG_MSG("---");
 
 	if (SDL_Init_Wrapper() < 0)
