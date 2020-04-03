@@ -18,6 +18,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef DOSBOX_PROGRAM_AUTOTYPE_H
+#define DOSBOX_PROGRAM_AUTOTYPE_H
+
+#include <string>
+
 #include "programs.h"
 
 class AUTOTYPE : public Program {
@@ -36,3 +41,5 @@ private:
 };
 
 void AUTOTYPE_ProgramStart(Program **make);
+
+#endif /* DOSBOX_PROGRAM_AUTOTYPE_H */
