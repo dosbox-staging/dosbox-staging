@@ -2781,12 +2781,6 @@ int main(int argc, char* argv[]) {
 	LOG_MSG("Copyright 2002-2020 DOSBox Team, published under GNU GPL.");
 	LOG_MSG("---");
 
-	/* Init SDL */
-	/* Or debian/ubuntu with older libsdl version as they have done this themselves, but then differently.
-	 * with this variable they will work correctly. I've only tested the 1.2.14 behaviour against the windows version
-	 * of libsdl
-	 */
-	putenv(const_cast<char*>("SDL_DISABLE_LOCK_KEYS=1"));
 	if (SDL_Init_Wrapper() < 0)
 		E_Exit("Can't init SDL %s", SDL_GetError());
 	sdl.inited = true;
