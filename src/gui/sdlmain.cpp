@@ -1032,10 +1032,10 @@ dosurface:
 			case 32: retFlags = GFX_CAN_32; break;
 		}
 		retFlags |= GFX_SCALING;
-		SDL_RendererInfo rendererInfo;
-		SDL_GetRendererInfo(sdl.renderer, &rendererInfo);
-		LOG_MSG("Using driver \"%s\" for texture renderer", rendererInfo.name);
-		if (rendererInfo.flags & SDL_RENDERER_ACCELERATED)
+		SDL_RendererInfo rinfo;
+		SDL_GetRendererInfo(sdl.renderer, &rinfo);
+		LOG_MSG("SDL: Using driver \"%s\" for texture renderer", rinfo.name);
+		if (rinfo.flags & SDL_RENDERER_ACCELERATED)
 			retFlags |= GFX_HARDWARE;
 		break;
 	}
