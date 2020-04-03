@@ -304,7 +304,7 @@ struct SDL_Block {
 	SDL_Window *window = nullptr;
 	SDL_Renderer *renderer = nullptr;
 	std::string render_driver = "";
-	int displayNumber;
+	int display_number = 0;
 	struct {
 		SDL_Surface *input_surface = nullptr;
 		SDL_Texture *texture = nullptr;
@@ -566,7 +566,7 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 
 		// Using undefined position will take care of placing and restoring the
 		// window by WM.
-		const int sdl_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber);
+		const int sdl_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
 		sdl.window = SDL_CreateWindow("", sdl_pos, sdl_pos, width, height, flags);
 
 		if (!sdl.window) {
@@ -1587,7 +1587,7 @@ void GFX_Start() {
 
 void GFX_ObtainDisplayDimensions() {
 	SDL_Rect displayDimensions;
-	SDL_GetDisplayBounds(sdl.displayNumber, &displayDimensions);
+	SDL_GetDisplayBounds(sdl.display_number, &displayDimensions);
 	sdl.desktop.full.width = displayDimensions.w;
 	sdl.desktop.full.height = displayDimensions.h;
 }
@@ -1891,11 +1891,14 @@ static void GUI_StartUp(Section * sec) {
 	//      correctly and is causing serious bugs.
 	// sdl.desktop.vsync = section->Get_bool("vsync");
 
-	sdl.displayNumber = section->Get_int("display");
-	if ((sdl.displayNumber < 0) || (sdl.displayNumber >= SDL_GetNumVideoDisplays())) {
-		sdl.displayNumber = 0;
-		LOG_MSG("SDL:Display number out of bounds, switching back to 0");
+	const int display = section->Get_int("display");
+	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {
+		sdl.display_number = display;
+	} else {
+		LOG_MSG("SDL: Display number out of bounds, using display 0");
+		sdl.display_number = 0;
 	}
+
 	sdl.desktop.full.display_res = sdl.desktop.full.fixed && (!sdl.desktop.full.width || !sdl.desktop.full.height);
 	if (sdl.desktop.full.display_res) {
 		GFX_ObtainDisplayDimensions();
@@ -2388,16 +2391,22 @@ void Config_Add_SDL() {
 	sdl_sec->AddInitFunction(&MAPPER_StartUp);
 	Prop_bool* Pbool;
 	Prop_string* Pstring;
-	Prop_int* Pint;
+	Prop_int *Pint; // use pint for new properties
+	Prop_int *pint;
 	Prop_multival* Pmulti;
 	Section_prop* Psection;
 
 	constexpr auto always = Property::Changeable::Always;
 	constexpr auto deprecated = Property::Changeable::Deprecated;
+	constexpr auto on_start = Property::Changeable::OnlyAtStart;
 
 	Pbool = sdl_sec->Add_bool("fullscreen", always, false);
 	Pbool->Set_help("Start DOSBox directly in fullscreen.\n"
 	                "Press Alt-Enter to switch back to window.");
+
+	pint = sdl_sec->Add_int("display", on_start, 0);
+	pint->Set_help("Number of display to use; values depend on OS and user "
+	               "settings.");
 
 	Pbool = sdl_sec->Add_bool("vsync", deprecated, false);
 	Pbool->Set_help("Vertical sync setting not implemented (setting ignored)");
@@ -2813,9 +2822,11 @@ int main(int argc, char* argv[]) {
 			Cross::CreatePlatformConfigDir(config_path);
 			Cross::GetPlatformConfigName(config_file);
 			config_combined = config_path + config_file;
-			if(control->PrintConfig(config_combined.c_str())) {
-				LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_combined.c_str());
-				//Load them as well. Makes relative paths much easier
+			if (control->PrintConfig(config_combined.c_str())) {
+				LOG_MSG("CONFIG: Generating default configuration.\n"
+					"CONFIG: Writing it to %s",
+					config_combined.c_str());
+				// Load them as well. Makes relative paths much easier
 				control->ParseConfigFile(config_combined.c_str());
 			}
 		}
@@ -2846,9 +2857,11 @@ int main(int argc, char* argv[]) {
 		Cross::CreatePlatformConfigDir(config_path);
 		Cross::GetPlatformConfigName(config_file);
 		config_combined = config_path + config_file;
-		if(control->PrintConfig(config_combined.c_str())) {
-			LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_combined.c_str());
-			//Load them as well. Makes relative paths much easier
+		if (control->PrintConfig(config_combined.c_str())) {
+			LOG_MSG("CONFIG: Generating default configuration.\n"
+				"CONFIG: Writing it to %s",
+				config_combined.c_str());
+			// Load them as well. Makes relative paths much easier
 			control->ParseConfigFile(config_combined.c_str());
 		} else {
 			LOG_MSG("CONFIG: Using default settings. Create a configfile to change them");
