@@ -822,7 +822,6 @@ static void GetAvailableArea(int &width, int &height)
 static bool InitPp(Bit16u avw, Bit16u avh)
 {
 	bool   ok;
-	double newpar;
 	/* TODO: consider reading apsect importance from the .ini-file */
 	ok = pp_getscale(
 		sdl.draw.width, sdl.draw.height,
@@ -833,13 +832,12 @@ static bool InitPp(Bit16u avw, Bit16u avh)
 		&sdl.ppscale_y
 	) == 0;
 	if (ok) {
-		newpar = ( double )sdl.ppscale_y / sdl.ppscale_x;
-		LOG_MSG( "Pixel-perfect scaling:\n"
-			"%ix%i (%#4.3g) --[%ix%i]--> %ix%i (%#4.3g)",
-			sdl.draw.width, sdl.draw.height, sdl.draw.pixel_aspect,
-			sdl.ppscale_x,  sdl.ppscale_y,
-			sdl.ppscale_x * sdl.draw.width, sdl.ppscale_y * sdl.draw.height,
-			newpar);
+		const double newpar = (double)sdl.ppscale_y / sdl.ppscale_x;
+		LOG_MSG("MAIN: Pixel-perfect scaling (%dx%d): "
+		        "%dx%d (PAR %#.3g) -> %dx%d (PAR %#.3g)",
+		        sdl.ppscale_x, sdl.ppscale_y, sdl.draw.width, sdl.draw.height,
+		        sdl.draw.pixel_aspect, sdl.ppscale_x * sdl.draw.width,
+		        sdl.ppscale_y * sdl.draw.height, newpar);
 	}
 	return ok;
 }
@@ -866,10 +864,13 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 
 	avw = width;
 	avh = height;
-	GetAvailableArea(avw, avh);	
-	LOG_MSG("Input image: %ix%i DW: %i DH: %i PAR: %5.3g",
-	        (int)width, (int)height, sdl.double_h, sdl.double_w, pixel_aspect );
-	LOG_MSG("Available area: %ix%i", avw, avh);
+	GetAvailableArea(avw, avh);
+	LOG_MSG("MAIN: Emulated resolution: %dx%d,%s%s pixel aspect ratio: %#.2f",
+	        (int)width, (int)height,
+	        sdl.double_w ? " double-width," : "",
+		sdl.double_h ? " double-height," : "",
+		pixel_aspect);
+	LOG_MSG("MAIN: Emulator resolution: %dx%d", avw, avh);
 	if (sdl.scaling_mode == SmPerfect) {
 		if (!InitPp(avw, avh)) {
 			LOG_MSG("Failed to initialise pixel-perfect mode, reverting to surface.");
