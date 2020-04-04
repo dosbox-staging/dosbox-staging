@@ -73,7 +73,7 @@ public:
 	void Init();
 	void ShutDown();
 	void StartUp();
-	bool PrintConfig(char const * const configfilename) const;
+	bool PrintConfig(const std::string &filename) const;
 	bool ParseConfigFile(char const * const configfilename);
 	void ParseEnv(char ** envp);
 	bool SecureMode() const { return secure_mode; }

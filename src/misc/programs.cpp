@@ -297,8 +297,8 @@ private:
 			name = config_path + name;
 		}
 		WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_WHICH"),name.c_str());
-		if (!control->PrintConfig(name.c_str())) {
-			WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),name.c_str());
+		if (!control->PrintConfig(name)) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"), name.c_str());
 		}
 		return;
 	}

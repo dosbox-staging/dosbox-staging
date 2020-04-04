@@ -719,10 +719,11 @@ string Section_line::GetPropValue(string const& /* _property*/) const {
 	return NO_SUCH_PROPERTY;
 }
 
-bool Config::PrintConfig(char const * const configfilename) const {
+bool Config::PrintConfig(const std::string &filename) const
+{
 	char temp[50];
 	char helpline[256];
-	FILE* outfile = fopen(configfilename,"w+t");
+	FILE *outfile = fopen(filename.c_str(), "w+t");
 	if (outfile == NULL) return false;
 
 	/* Print start of configfile and add a return to improve readibility. */
@@ -800,7 +801,6 @@ bool Config::PrintConfig(char const * const configfilename) const {
 	fclose(outfile);
 	return true;
 }
-
 
 Section_prop* Config::AddSection_prop(char const * const _name,void (*_initfunction)(Section*),bool canchange) {
 	Section_prop* blah = new Section_prop(_name);
