@@ -387,13 +387,15 @@ static void DOSBOX_RealInit(Section * sec) {
 
 void DOSBOX_Init(void) {
 	Section_prop * secprop;
-	Section_line * secline;
 	Prop_int* Pint;
 	Prop_hex* Phex;
-	Prop_string* Pstring;
+	Prop_string* Pstring; // use pstring when touching properties
+	Prop_string *pstring;
 	Prop_bool* Pbool;
-	Prop_multival* Pmulti;
+	Prop_multival *pmulti;
 	Prop_multival_remain* Pmulti_remain;
+
+	constexpr auto always = Property::Changeable::Always;
 
 	SDLNetInited = false;
 
@@ -454,9 +456,9 @@ void DOSBOX_Init(void) {
 	                "320x200 or 640x400; where as square-pixel modes, such as 640x480\n"
 	                "and 800x600, will be displayed as-is.");
 
-	Pmulti = secprop->Add_multi("scaler", Property::Changeable::Always, " ");
-	Pmulti->SetValue("normal2x");
-	Pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes.\n"
+	pmulti = secprop->Add_multi("scaler", always, " ");
+	pmulti->SetValue("none");
+	pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes.\n"
 	                 "If 'forced' is appended, then the scaler will be used even if\n"
 	                 "the result might not be desired.\n"
 	                 "Note that some scalers may use black borders to fit the image\n"
@@ -464,7 +466,7 @@ void DOSBOX_Init(void) {
 	                 "undesirable, try either a different scaler or enabling\n"
 	                 "fullresolution output.");
 
-	Pstring = Pmulti->GetSection()->Add_string("type",Property::Changeable::Always,"normal2x");
+	pstring = pmulti->GetSection()->Add_string("type", always, "none");
 
 	const char *scalers[] = {
 		"none", "normal2x", "normal3x",
@@ -475,11 +477,12 @@ void DOSBOX_Init(void) {
 		"tv2x", "tv3x", "rgb2x", "rgb3x", "scan2x", "scan3x",
 #endif
 		0 };
-	Pstring->Set_values(scalers);
+	pstring->Set_values(scalers);
 
-	const char* force[] = { "", "forced", 0 };
-	Pstring = Pmulti->GetSection()->Add_string("force",Property::Changeable::Always,"");
-	Pstring->Set_values(force);
+	const char *force[] = {"", "forced", 0};
+	pstring = pmulti->GetSection()->Add_string("force", always, "");
+	pstring->Set_values(force);
+
 #if C_OPENGL
 	Pstring = secprop->Add_path("glshader", Property::Changeable::Always, "sharp");
 	Pstring->Set_help("Path to GLSL shader source to use with OpenGL output (\"none\" to disable).\n"
@@ -806,7 +809,7 @@ void DOSBOX_Init(void) {
 //	secprop->AddInitFunction(&CREDITS_Init);
 
 	//TODO ?
-	secline=control->AddSection_line("autoexec",&AUTOEXEC_Init);
+	control->AddSection_line("autoexec", &AUTOEXEC_Init);
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
 		"Lines in this section will be run at startup.\n"
 		"You can put your MOUNT lines here.\n"
