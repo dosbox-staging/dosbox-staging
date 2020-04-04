@@ -2408,7 +2408,8 @@ void Config_Add_SDL() {
 	Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
 	sdl_sec->AddInitFunction(&MAPPER_StartUp);
 	Prop_bool* Pbool;
-	Prop_string* Pstring;
+	Prop_string *Pstring; // use pstring for new properties
+	Prop_string *pstring;
 	Prop_int *Pint; // use pint for new properties
 	Prop_int *pint;
 	Prop_multival* Pmulti;
@@ -2535,8 +2536,9 @@ void Config_Add_SDL() {
 	Pstring = Pmulti->GetSection()->Add_string("inactive",Property::Changeable::Always,"normal");
 	Pstring->Set_values(inactt);
 
-	Pstring = sdl_sec->Add_path("mapperfile",Property::Changeable::Always,MAPPERFILE);
-	Pstring->Set_help("File used to load/save the key/event mappings from. Resetmapper only works with the default value.");
+	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
+	pstring->Set_help("File used to load/save the key/event mappings from.\n"
+	                  "Resetmapper only works with the default value.");
 }
 
 static void show_warning(char const * const message) {
