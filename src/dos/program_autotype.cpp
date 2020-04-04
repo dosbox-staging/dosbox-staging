@@ -86,7 +86,7 @@ void AUTOTYPE::PrintKeys()
 	auto name = names.begin();
 	for (size_t row = 0; row < rows; ++row) {
 		for (size_t i = row; i < names.size(); i += rows)
-			WriteOut("  %-*s", max_length, name[i].c_str());
+			WriteOut("  %-*s", static_cast<int>(max_length), name[i].c_str());
 		WriteOut_NoParsing("\n");
 	}
 }
