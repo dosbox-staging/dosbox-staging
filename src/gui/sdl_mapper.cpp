@@ -1772,7 +1772,6 @@ static void change_action_text(const char* text,Bit8u col) {
 
 
 static void SetActiveBind(CBind * _bind) {
-	assert(_bind);
 	mapper.abind=_bind;
 	if (_bind) {
 		bind_but.bind_title->Enable(true);
@@ -1796,7 +1795,6 @@ static void SetActiveBind(CBind * _bind) {
 }
 
 static void SetActiveEvent(CEvent * event) {
-	assert(event);
 	mapper.aevent=event;
 	mapper.redraw=true;
 	mapper.addbind=false;
