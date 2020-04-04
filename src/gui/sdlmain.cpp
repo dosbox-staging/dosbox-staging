@@ -2584,8 +2584,8 @@ static void launcheditor() {
 	Cross::GetPlatformConfigName(file);
 	path += file;
 	FILE* f = fopen(path.c_str(),"r");
-	if(!f && !control->PrintConfig(path.c_str())) {
-		printf("tried creating %s. but failed.\n",path.c_str());
+	if (!f && !control->PrintConfig(path)) {
+		printf("tried creating %s. but failed.\n", path.c_str());
 		exit(1);
 	}
 	if(f) fclose(f);
@@ -2674,8 +2674,8 @@ static void printconfiglocation() {
 	path += file;
 
 	FILE* f = fopen(path.c_str(),"r");
-	if(!f && !control->PrintConfig(path.c_str())) {
-		printf("tried creating %s. but failed",path.c_str());
+	if (!f && !control->PrintConfig(path)) {
+		printf("tried creating %s. but failed", path.c_str());
 		exit(1);
 	}
 	if(f) fclose(f);
@@ -2828,7 +2828,7 @@ int main(int argc, char* argv[]) {
 			Cross::CreatePlatformConfigDir(config_path);
 			Cross::GetPlatformConfigName(config_file);
 			config_combined = config_path + config_file;
-			if (control->PrintConfig(config_combined.c_str())) {
+			if (control->PrintConfig(config_combined)) {
 				LOG_MSG("CONFIG: Generating default configuration.\n"
 					"CONFIG: Writing it to %s",
 					config_combined.c_str());
@@ -2863,7 +2863,7 @@ int main(int argc, char* argv[]) {
 		Cross::CreatePlatformConfigDir(config_path);
 		Cross::GetPlatformConfigName(config_file);
 		config_combined = config_path + config_file;
-		if (control->PrintConfig(config_combined.c_str())) {
+		if (control->PrintConfig(config_combined)) {
 			LOG_MSG("CONFIG: Generating default configuration.\n"
 				"CONFIG: Writing it to %s",
 				config_combined.c_str());
