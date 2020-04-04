@@ -2163,7 +2163,7 @@ bool GFX_IsFullscreen(void) {
 #define DB_POLLSKIP 1
 #endif
 
-void GFX_HandleVideoResize(int width, int height)
+static void HandleVideoResize(int width, int height)
 {
 	/* Maybe a screen rotation has just occurred, so we simply resize.
 	There may be a different cause for a forced resized, though.    */
@@ -2224,8 +2224,9 @@ void GFX_Events() {
 					GFX_ResetScreen();
 					continue;
 				case SDL_WINDOWEVENT_RESIZED:
-					GFX_HandleVideoResize(event.window.data1, event.window.data2);
-					continue;
+				        HandleVideoResize(event.window.data1,
+				                          event.window.data2);
+				        continue;
 				/*
 				 *  EXPOSED indicates that the window needs to be redrawn.
 				 *  Note that on Windows/Linux-X11/Wayland/macOS, the EXPOSED event
