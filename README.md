@@ -74,16 +74,13 @@ Other differences:
 
 ## Development snapshot builds
 
-Pre-release builds can be downloaded from CI build artifacts. Go to
-[Linux](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess+branch%3Amaster),
-[Windows](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster)
-or [macOS](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22+is%3Asuccess+branch%3Amaster),
-select the newest build and download the package linked in the
-"**Artifacts**" section.
+Pre-release builds can be downloaded from CI build artifacts. Go to [Linux],
+[Windows] or [macOS], select the newest build and download the package linked
+in the "**Artifacts**" section.
 
 You need to be logged-in on GitHub to access these snapshot builds.
 
-### [Linux](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess+branch%3Amaster)
+### [Linux]
 
 Snapshots are dynamically-linked x86\_64 builds, you'll need additional
 packages installed via your package manager.
@@ -100,7 +97,7 @@ packages installed via your package manager.
 
     sudo pacman -S sdl2 sdl2_net opusfile
 
-### [Windows](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster)
+### [Windows]
 
 A dosbox.exe file in a snapshot package is not signed, therefore Windows 10
 might prevent the program from starting.
@@ -113,13 +110,17 @@ unrecognised app from starting", you have two options to dismiss it:
 
 Windows packages are built for "x86" architecture (in practice it means i686).
 
-### [macOS](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22+is%3Asuccess+branch%3Amaster)
+### [macOS]
 
 Due to GitHub CI and Apple SDKs limitations, the snapshots work only on
 macOS Catalina (10.15).
 
 dosbox-staging app bundle is **unsigned** - click on app with right mouse
 button, select "Open" and the dialog will show a button to run and unsigned app.
+
+[Linux]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess+branch%3Amaster
+[Windows]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster
+[macOS]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22+is%3Asuccess+branch%3Amaster
 
 ## Build instructions
 
@@ -163,16 +164,13 @@ This repository is (deliberately) NOT git-svn compatible, this is a pure
 Git repo.
 
 Commits landing in SVN upstream are imported to this repo in a timely manner,
-to the branches matching
-[`svn/*`](https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F)
-pattern.
+to the branches matching [`svn/*`] pattern.
 You can safely use those branches to rebase your changes, and prepare patches
 using Git [format-patch](https://git-scm.com/docs/git-format-patch) for sending
 upstream (it is easier and faster, than preparing patches manually).
 
-Other branch name patterns are also in use, e.g.
-[`vogons/*`](https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F)
-for various patches posted on the Vogons forum.
+Other branch name patterns are also in use, e.g. [`vogons/*`] for various
+patches posted on the Vogons forum.
 
 Git tags matching pattern `svn/*` are pointing to the commits referenced by SVN
 "tag" paths at the time of creation.
@@ -187,3 +185,6 @@ git fetch origin "refs/notes/*:refs/notes/*"
 
 For some historical context of why this repo exists you can read
 [Vogons thread](https://www.vogons.org/viewtopic.php?p=790065#p790065).
+
+[`svn/*`]:https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F
+[`vogons/*`]:https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F
