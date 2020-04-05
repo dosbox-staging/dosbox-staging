@@ -1,8 +1,8 @@
 # dosbox-staging
 
-[![Linux build status](https://img.shields.io/github/workflow/status/dreamer/dosbox-staging/Linux%20builds?label=Linux%20builds)](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22)
-[![Windows build status](https://img.shields.io/github/workflow/status/dreamer/dosbox-staging/Windows%20builds?label=Windows%20builds)](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22)
-[![macOS build status](https://img.shields.io/github/workflow/status/dreamer/dosbox-staging/macOS%20builds?label=macOS%20builds)](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22)
+[![Linux build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Linux%20builds?label=Linux%20builds)](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22)
+[![Windows build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Windows%20builds?label=Windows%20builds)](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22)
+[![macOS build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/macOS%20builds?label=macOS%20builds)](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22)
 
 This repository attempts to modernize the DOSBox codebase by using current
 development practices and tools, fixing issues, and adding features that better
@@ -25,8 +25,8 @@ support today's systems.
 
 [SVN]:https://sourceforge.net/projects/dosbox/
 [1]:https://sourceforge.net/p/dosbox/patches/283/
-[2]:https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
-[3]:https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
+[2]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
+[3]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
 [4]:https://scan.coverity.com/projects/dosbox-staging
 
 ### Feature differences
@@ -68,22 +68,22 @@ Other differences:
 [OPL]:https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]:https://en.wikipedia.org/wiki/Color_Graphics_Adapter
 [Wayland]:https://en.wikipedia.org/wiki/Wayland_(display_server_protocol)
-[7]:https://github.com/dreamer/dosbox-staging/commit/d1be65b105de714924947df4a7909e684d283385
+[7]:https://github.com/dosbox-staging/dosbox-staging/commit/d1be65b105de714924947df4a7909e684d283385
 [8]:https://www.vogons.org/viewtopic.php?f=9&t=37782
-[9]:https://github.com/dreamer/dosbox-staging/commit/ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
+[9]:https://github.com/dosbox-staging/dosbox-staging/commit/ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
 
 ## Development snapshot builds
 
 Pre-release builds can be downloaded from CI build artifacts. Go to
-[Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess+branch%3Amaster),
-[Windows](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster)
-or [macOS](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22+is%3Asuccess+branch%3Amaster),
+[Linux](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess+branch%3Amaster),
+[Windows](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster)
+or [macOS](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22+is%3Asuccess+branch%3Amaster),
 select the newest build and download the package linked in the
 "**Artifacts**" section.
 
 You need to be logged-in on GitHub to access these snapshot builds.
 
-### [Linux](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess+branch%3Amaster)
+### [Linux](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess+branch%3Amaster)
 
 Snapshots are dynamically-linked x86\_64 builds, you'll need additional
 packages installed via your package manager.
@@ -100,7 +100,7 @@ packages installed via your package manager.
 
     sudo pacman -S sdl2 sdl2_net opusfile
 
-### [Windows](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster)
+### [Windows](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster)
 
 A dosbox.exe file in a snapshot package is not signed, therefore Windows 10
 might prevent the program from starting.
@@ -113,7 +113,7 @@ unrecognised app from starting", you have two options to dismiss it:
 
 Windows packages are built for "x86" architecture (in practice it means i686).
 
-### [macOS](https://github.com/dreamer/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22+is%3Asuccess+branch%3Amaster)
+### [macOS](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22+is%3Asuccess+branch%3Amaster)
 
 Due to GitHub CI and Apple SDKs limitations, the snapshots work only on
 macOS Catalina (10.15).
@@ -130,7 +130,7 @@ configure options. Read [build.md](scripts/build.md) for the comprehensive
 compilation guide.
 
 ``` shell
-git clone https://github.com/dreamer/dosbox-staging.git
+git clone https://github.com/dosbox-staging/dosbox-staging.git
 cd dosbox-staging
 ./autogen.sh
 ./configure
@@ -164,14 +164,14 @@ Git repo.
 
 Commits landing in SVN upstream are imported to this repo in a timely manner,
 to the branches matching
-[`svn/*`](https://github.com/dreamer/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F)
+[`svn/*`](https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F)
 pattern.
 You can safely use those branches to rebase your changes, and prepare patches
 using Git [format-patch](https://git-scm.com/docs/git-format-patch) for sending
 upstream (it is easier and faster, than preparing patches manually).
 
 Other branch name patterns are also in use, e.g.
-[`vogons/*`](https://github.com/dreamer/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F)
+[`vogons/*`](https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F)
 for various patches posted on the Vogons forum.
 
 Git tags matching pattern `svn/*` are pointing to the commits referenced by SVN
@@ -187,4 +187,3 @@ git fetch origin "refs/notes/*:refs/notes/*"
 
 For some historical context of why this repo exists you can read
 [Vogons thread](https://www.vogons.org/viewtopic.php?p=790065#p790065).
-
