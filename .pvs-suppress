@@ -58,6 +58,30 @@
             "Message": "Expression 'result == - _' is always false."
         },
         {
+            "CodeCurrent": 220072429,
+            "CodeNext": 220072429,
+            "CodePrev": 0,
+            "ErrorCode": "V1004",
+            "FileName": "dr_flac.h",
+            "Message": "The 'pFlac' pointer was used unsafely after it was verified against nullptr."
+        },
+        {
+            "CodeCurrent": 220072429,
+            "CodeNext": 2822007974,
+            "CodePrev": 220072429,
+            "ErrorCode": "V1004",
+            "FileName": "dr_flac.h",
+            "Message": "The 'pFlac' pointer was used unsafely after it was verified against nullptr."
+        },
+        {
+            "CodeCurrent": 2822007974,
+            "CodeNext": 0,
+            "CodePrev": 220072429,
+            "ErrorCode": "V1004",
+            "FileName": "dr_flac.h",
+            "Message": "The 'pFlac' pointer was used unsafely after it was verified against nullptr."
+        },
+        {
             "CodeCurrent": 297803,
             "CodeNext": 123,
             "CodePrev": 100,
