@@ -16,9 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <algorithm>
+#include <cstring>
+#include <cstdlib>
 
-#include <string.h>
-#include <stdlib.h>
 #include "dosbox.h"
 #include "callback.h"
 #include "mem.h"
@@ -596,10 +597,10 @@ static void LoadMoveRegion(PhysPt data,MoveRegion & region) {
 	region.dest_page_seg=mem_readw(data+0x10);
 }
 
-static Bit8u MemoryRegion(void) {
+static uint8_t MemoryRegion()
+{
 	MoveRegion region;
-	Bit8u buf_src[MEM_PAGE_SIZE];
-	Bit8u buf_dest[MEM_PAGE_SIZE];
+
 	if (reg_al>1) {
 		LOG(LOG_MISC,LOG_ERROR)("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 		return EMM_FUNC_NOSUP;
@@ -631,15 +632,19 @@ static Bit8u MemoryRegion(void) {
 		dest_off=region.dest_offset&(MEM_PAGE_SIZE-1);
 		dest_remain=MEM_PAGE_SIZE-dest_off;
 	}
-	Bitu toread;
-	while (region.bytes>0) {
-		if (region.bytes>MEM_PAGE_SIZE) toread=MEM_PAGE_SIZE;
-		else toread=region.bytes;
+
+	uint8_t buf_src[MEM_PAGE_SIZE];
+	uint8_t buf_dest[MEM_PAGE_SIZE];
+
+	while (region.bytes > 0) {
+		const size_t toread = std::min<size_t>(region.bytes, MEM_PAGE_SIZE);
+
 		/* Read from the source */
 		if (!region.src_type) {
 			MEM_BlockRead(src_mem,buf_src,toread);
 		} else {
-			if (toread<src_remain) {
+			assert(toread <= MEM_PAGE_SIZE);
+			if (toread <= src_remain) {
 				MEM_BlockRead((src_handle*MEM_PAGE_SIZE)+src_off,buf_src,toread);
 			} else {
 				MEM_BlockRead((src_handle*MEM_PAGE_SIZE)+src_off,buf_src,src_remain);
@@ -652,7 +657,8 @@ static Bit8u MemoryRegion(void) {
 			if (!region.dest_type) {
 				MEM_BlockRead(dest_mem,buf_dest,toread);
 			} else {
-				if (toread<dest_remain) {
+				assert(toread <= MEM_PAGE_SIZE);
+				if (toread <= dest_remain) {
 					MEM_BlockRead((dest_handle*MEM_PAGE_SIZE)+dest_off,buf_dest,toread);
 				} else {
 					MEM_BlockRead((dest_handle*MEM_PAGE_SIZE)+dest_off,buf_dest,dest_remain);
@@ -663,7 +669,8 @@ static Bit8u MemoryRegion(void) {
 			if (!region.src_type) {
 				MEM_BlockWrite(src_mem,buf_dest,toread);
 			} else {
-				if (toread<src_remain) {
+				assert(toread <= MEM_PAGE_SIZE);
+				if (toread <= src_remain) {
 					MEM_BlockWrite((src_handle*MEM_PAGE_SIZE)+src_off,buf_dest,toread);
 				} else {
 					MEM_BlockWrite((src_handle*MEM_PAGE_SIZE)+src_off,buf_dest,src_remain);
@@ -675,7 +682,8 @@ static Bit8u MemoryRegion(void) {
 		if (!region.dest_type) {
 			MEM_BlockWrite(dest_mem,buf_src,toread);
 		} else {
-			if (toread<dest_remain) {
+			assert(toread <= MEM_PAGE_SIZE);
+			if (toread <= dest_remain) {
 				MEM_BlockWrite((dest_handle*MEM_PAGE_SIZE)+dest_off,buf_src,toread);
 			} else {
 				MEM_BlockWrite((dest_handle*MEM_PAGE_SIZE)+dest_off,buf_src,dest_remain);
@@ -691,7 +699,6 @@ static Bit8u MemoryRegion(void) {
 	}
 	return EMM_NO_ERROR;
 }
-
 
 static Bitu INT67_Handler(void) {
 	Bitu i;
