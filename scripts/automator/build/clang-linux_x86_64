@@ -10,4 +10,4 @@ cflags_usan=("${cflags_debug[@]}" -fsanitize-recover=all -fsanitize=undefined)
 
 # Modifier additions
 MODIFIERS+=(lto)
-cflags_lto=(-O2 -flto=thin)
+cflags_lto+=(-O2 -flto=thin)

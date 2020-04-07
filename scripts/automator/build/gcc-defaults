@@ -31,4 +31,5 @@ cflags_optinfo+=("${cflags_release[@]}" -fopt-info-missed
 # Modifier additions
 MODIFIERS=(fdo)
 # Override the prior optimization flag because O2 does better w/ feedback 
-cflags_fdo=("-O2 -fauto-profile=${FDO_FILE:-${repo_root}/current.afdo}")
+cflags_fdo+=("-O2 -ftree-vectorize
+              -fauto-profile=${FDO_FILE:-${repo_root}/current.afdo}")
