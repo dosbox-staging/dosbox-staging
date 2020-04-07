@@ -24,4 +24,4 @@ cflags_optinfo+=("${cflags_release[@]}" -Rpass-analysis=loop-vectorize
 
 # Modifier additions
 MODIFIERS=(fdo)
-cflags_fdo=("-fprofile-sample-use=${FDO_FILE:-${repo_root}/current.afdo}")
+cflags_fdo+=("-fprofile-sample-use=${FDO_FILE:-${repo_root}/current.afdo}")

@@ -1,8 +1,13 @@
 ld="ld"
 
+# OS-and-processor customizations
+cflags_release+=(-march=nehalem)
+
+# Build additions
 TYPES+=(msan usan)
 cflags_msan=("${cflags_debug[@]}" -fsanitize-recover=all -fsanitize=memory -fno-omit-frame-pointer)
 cflags_usan=("${cflags_debug[@]}" -fsanitize-recover=all -fsanitize=undefined)
 
+# Modifier additions
 MODIFIERS+=(lto)
 cflags_lto=(-flto=thin)
