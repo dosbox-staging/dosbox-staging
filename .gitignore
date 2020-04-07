@@ -58,6 +58,7 @@ make.log
 .previous_build
 .current_build
 *.defines
+missed.txt
 
 # Visual Studio
 .vs
