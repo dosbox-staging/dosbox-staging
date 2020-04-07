@@ -2,6 +2,11 @@
 ar="ar"
 ranlib="ranlib"
 
+# The oldest processor supported by macOS is nehalem, so we can safely
+# enable its full instruction set give all subsequent processors support it.
+cflags_release+=(-march=nehalem)
+cflags_optinfo+=(-march=nehalem)
+
 # Build additions
 TYPES+=(asan uasan usan tsan)
 cflags_asan=("${cflags_debug[@]}" -fsanitize=address)

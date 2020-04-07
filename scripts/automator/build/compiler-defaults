@@ -10,10 +10,6 @@ cxxonly=("")
 ldflags=("")
 libs=("")
 
-# Builds for all compilers
-TYPES=(release)
-cflags_release=("${cflags[@]}" -DNDEBUG)
-
 # Use ccache if it's available
 if command -v ccache &> /dev/null; then
 	ccache="ccache "

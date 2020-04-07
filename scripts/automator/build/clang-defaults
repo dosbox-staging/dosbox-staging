@@ -2,20 +2,25 @@
 cc="${ccache}clang${postfix}"
 cxx="${ccache}clang++${postfix}"
 
-# Flag additions
-TYPES+=(debug warnmore pgotrain)
-cflags_release=("${cflags[@]}" -O3)
-cflags_debug=("${cflags[@]}" -g -fno-omit-frame-pointer)
-cflags_pgotrain=("${cflags_debug[@]}" -fprofile-instr-generate -fcoverage-mapping)
-cflags_warnmore=("${cflags_debug[@]}" -Wextra -Wshadow -Wcast-align -Wunused
-                 -Woverloaded-virtual -Wpedantic -Wconversion -Wsign-conversion
-                 -Wdouble-promotion -Wformat=2)
-cxxonly_warnmore=(-Wnon-virtual-dtor -Woverloaded-virtual)
-
 # Colorize output only for interactive shells
 if [[ $- == *i* ]]; then
 	cflags+=(-fcolor-diagnostics)
 fi
+
+# Release-type additions
+TYPES+=(release debug warnmore pgotrain optinfo)
+
+# Note: -fno-math-errno allows better optimization of C/C++ math library functions
+cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -fno-math-errno -fno-strict-aliasing)
+
+cflags_debug+=("${cflags[@]}" -g -fno-omit-frame-pointer)
+cflags_pgotrain+=("${cflags_debug[@]}" -fprofile-instr-generate -fcoverage-mapping)
+cflags_warnmore+=("${cflags_debug[@]}" -Wextra -Wshadow -Wcast-align -Wunused
+                  -Woverloaded-virtual -Wpedantic -Wconversion -Wsign-conversion
+                  -Wdouble-promotion -Wformat=2)
+cxxonly_warnmore+=(-Wnon-virtual-dtor -Woverloaded-virtual)
+cflags_optinfo+=("${cflags_release[@]}" -Rpass-analysis=loop-vectorize
+                 -gline-tables-only -gcolumn-info)
 
 # Modifier additions
 MODIFIERS=(fdo)
