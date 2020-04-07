@@ -1,6 +1,6 @@
 /*
 MP3 audio decoder. Choice of public domain or MIT-0. See license statements at the end of this file.
-dr_mp3 - v0.6.1 - 2020-04-05
+dr_mp3 - v0.6.4 - 2020-04-19
 
 David Reid - mackron@gmail.com
 
@@ -610,7 +610,7 @@ static __inline__ __attribute__((always_inline)) void drmp3_cpuid(int CPUInfo[],
 #endif
 }
 #endif
-static int drmp3_have_simd()
+static int drmp3_have_simd(void)
 {
 #ifdef DR_MP3_ONLY_SIMD
     return 1;
@@ -651,7 +651,7 @@ end:
 #define DRMP3_VMUL_S(x, s)  vmulq_f32(x, vmovq_n_f32(s))
 #define DRMP3_VREV(x) vcombine_f32(vget_high_f32(vrev64q_f32(x)), vget_low_f32(vrev64q_f32(x)))
 typedef float32x4_t drmp3_f4;
-static int drmp3_have_simd()
+static int drmp3_have_simd(void)
 {   /* TODO: detect neon for !DR_MP3_ONLY_SIMD */
     return 1;
 }
@@ -668,6 +668,17 @@ static int drmp3_have_simd()
 #define DRMP3_HAVE_SIMD 0
 
 #endif
+
+#if defined(__ARM_ARCH) && (__ARM_ARCH >= 6) && !defined(__aarch64__)
+#define DRMP3_HAVE_ARMV6 1
+static __inline__ __attribute__((always_inline)) drmp32_int32 drmp3_clip_int16_arm(int32_t a)
+{
+    drmp3_int32 x = 0;
+    __asm__ ("ssat %0, #16, %1" : "=r"(x) : "r"(a));
+    return x;
+}
+#endif
+
 
 typedef struct
 {
@@ -1888,11 +1899,17 @@ typedef drmp3_int16 drmp3d_sample_t;
 static drmp3_int16 drmp3d_scale_pcm(float sample)
 {
     drmp3_int16 s;
+#if DRMP3_HAVE_ARMV6
+    drmp3_int32 s32 = (drmp3_int32)(sample + .5f);
+    s32 -= (s32 < 0);
+    s = (drmp3_int16)drmp3_clip_int16_arm(s32);
+#else
     if (sample >=  32766.5) return (drmp3_int16) 32767;
     if (sample <= -32767.5) return (drmp3_int16)-32768;
     s = (drmp3_int16)(sample + .5f);
     s -= (s < 0);   /* away from zero, to be compliant */
-    return (drmp3_int16)s;
+#endif
+    return s;
 }
 #else
 typedef float drmp3d_sample_t;
@@ -4050,9 +4067,6 @@ static float* drmp3__full_read_and_close_f32(drmp3* pMP3, drmp3_config* pConfig,
 
     DRMP3_ASSERT(pMP3 != NULL);
 
-    pConfig->channels   = pMP3->channels;
-    pConfig->sampleRate = pMP3->sampleRate;
-
     for (;;) {
         drmp3_uint64 framesToReadRightNow = DRMP3_COUNTOF(temp) / pMP3->channels;
         drmp3_uint64 framesJustRead = drmp3_read_pcm_frames_f32(pMP3, framesToReadRightNow, temp);
@@ -4098,7 +4112,7 @@ static float* drmp3__full_read_and_close_f32(drmp3* pMP3, drmp3_config* pConfig,
     }
 
     if (pConfig != NULL) {
-        pConfig->channels = pMP3->channels;
+        pConfig->channels   = pMP3->channels;
         pConfig->sampleRate = pMP3->sampleRate;
     }
 
@@ -4119,9 +4133,6 @@ static drmp3_int16* drmp3__full_read_and_close_s16(drmp3* pMP3, drmp3_config* pC
     drmp3_int16 temp[4096];
 
     DRMP3_ASSERT(pMP3 != NULL);
-
-    pConfig->channels   = pMP3->channels;
-    pConfig->sampleRate = pMP3->sampleRate;
 
     for (;;) {
         drmp3_uint64 framesToReadRightNow = DRMP3_COUNTOF(temp) / pMP3->channels;
@@ -4168,7 +4179,7 @@ static drmp3_int16* drmp3__full_read_and_close_s16(drmp3* pMP3, drmp3_config* pC
     }
 
     if (pConfig != NULL) {
-        pConfig->channels = pMP3->channels;
+        pConfig->channels   = pMP3->channels;
         pConfig->sampleRate = pMP3->sampleRate;
     }
 
@@ -4349,6 +4360,15 @@ counts rather than sample counts.
 /*
 REVISION HISTORY
 ================
+v0.6.4 - 2020-04-19
+  - Bring up to date with changes to minimp3.
+
+v0.6.3 - 2020-04-13
+  - Fix some pedantic warnings.
+
+v0.6.2 - 2020-04-10
+  - Fix a crash in drmp3_open_*_and_read_pcm_frames_*() if the output config object is NULL.
+
 v0.6.1 - 2020-04-05
   - Fix warnings.
 
