@@ -2434,8 +2434,8 @@ void Config_Add_SDL() {
 	Pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop'\n"
 	                  "or a fixed size (e.g. 1024x768).");
 
-	Pstring = sdl_sec->Add_string("windowresolution", always, "original");
-	Pstring->Set_help("Scale the window to this size. Value 'original' will resize\n"
+	pstring = sdl_sec->Add_string("windowresolution", on_start, "original");
+	pstring->Set_help("Scale the window to this size. Value 'original' will resize\n"
 	                  "window to the resolution picked by the emulated program.\n"
 	                  "Not supported when 'output' is set to 'surface'.");
 
