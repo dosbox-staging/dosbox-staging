@@ -1818,6 +1818,49 @@ static void DisplaySplash(uint32_t time_ms)
 	SDL_Delay(time_ms);
 }
 
+/* For some preference values, we can safely remove comment after # character
+ */
+static std::string NormalizeConfValue(const char *val)
+{
+	std::string pref = val;
+	const auto comment_pos = pref.find('#');
+	if (comment_pos != std::string::npos)
+		pref.erase(comment_pos);
+	trim(pref);
+	lowcase(pref);
+	return pref;
+}
+
+static void SetupWindowResolution(const char *val)
+{
+	assert(sdl.display_number >= 0);
+	std::string pref = NormalizeConfValue(val);
+
+	if (pref == "original" || pref.empty()) {
+		sdl.desktop.window.use_original_size = true;
+		return;
+	}
+
+	int w = 0;
+	int h = 0;
+	// sscanf won't parse suffix after second integer
+	if (sscanf(pref.c_str(), "%dx%d", &w, &h) == 2) {
+		SDL_Rect bounds;
+		SDL_GetDisplayBounds(sdl.display_number, &bounds);
+		if (w > 0 && h > 0 && w <= bounds.w && h <= bounds.h) {
+			sdl.desktop.window.use_original_size = false;
+			sdl.desktop.window.width = w;
+			sdl.desktop.window.height = h;
+			return;
+		}
+	}
+
+	LOG_MSG("MAIN: 'windowresolution = %s' is not a valid setting, using "
+	        "'original' instead",
+	        pref.c_str());
+	sdl.desktop.window.use_original_size = true;
+}
+
 //extern void UI_Run(bool);
 void Restart(bool pressed);
 
@@ -1875,29 +1918,6 @@ static void GUI_StartUp(Section * sec) {
 			}
 		}
 	}
-	Bit16u windowspercentage  = 0;
-	const char* windowresolution=section->Get_string("windowresolution");
-	if(windowresolution && *windowresolution) {
-		char res[100];
-		safe_strncpy( res,windowresolution, sizeof( res ));
-		windowresolution = lowcase (res);//so x and X are allowed
-		if(strcmp(windowresolution,"original")) {
-			sdl.desktop.window.use_original_size = false;
-			char* height = const_cast<char*>(strchr(windowresolution,'x'));
-			if(height && *height) {
-				*height = 0;
-				sdl.desktop.window.height = (Bit16u)atoi(height+1);
-				sdl.desktop.window.width  = (Bit16u)atoi(res);
-			} else {
-				char* percentage = const_cast<char*>(strchr(windowresolution,'%'));
-				if(percentage && *percentage) {
-					*percentage = 0;
-					windowspercentage = (Bit16u) atoi(res);
-					if (windowspercentage) putenv(const_cast<char*>("SDL_VIDEO_CENTERED=1"));
-				}
-			}
-		}
-	}
 
 	// TODO vsync option is disabled for the time being, as it does not work
 	//      correctly and is causing serious bugs.
@@ -1910,6 +1930,8 @@ static void GUI_StartUp(Section * sec) {
 		LOG_MSG("SDL: Display number out of bounds, using display 0");
 		sdl.display_number = 0;
 	}
+
+	SetupWindowResolution(section->Get_string("windowresolution"));
 
 	sdl.desktop.full.display_res = sdl.desktop.full.fixed && (!sdl.desktop.full.width || !sdl.desktop.full.height);
 	if (sdl.desktop.full.display_res) {
