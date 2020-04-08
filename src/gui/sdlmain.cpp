@@ -264,6 +264,15 @@ struct SDL_Block {
 		} window;
 		Bit8u bpp = 0;
 		bool fullscreen = false;
+		// This flag indicates, that we are in the process of switching
+		// between fullscreen or window (as oppososed to changing
+		// rendering size due to rotating screen, emulation state, or
+		// user resizing the window).
+		bool switching_fullscreen = false;
+		// Lazy window size init triggers updating window size and
+		// position when leaving fullscreen for the first time.
+		// See FinalizeWindowState function for details.
+		bool lazy_init_window_size = false;
 		bool vsync = false;
 		SCREEN_TYPES type;
 		SCREEN_TYPES want_type;
@@ -551,12 +560,7 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		return sdl.window;
 	}
 
-	const bool first_window = !sdl.window;
-
-	/* If we change screen type, recreate the window. Furthermore, if
-	 * it is our very first time then we simply create a new window.
-	 */
-	if (first_window || (lastType != screenType)) {
+	if (!sdl.window || (lastType != screenType)) {
 
 		lastType = screenType;
 
@@ -584,26 +588,6 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 			return sdl.window;
 		}
 
-#if defined (WIN32)
-		// Force window position when going straight to fullscreen.
-		// Otherwise, SDL will reset window position to 0,0 when
-		// switching to a window for the first time. This is happening
-		// on every OS, but only on Windows it's a really big problem
-		// (because window decorations are rendered off-screen).
-		//
-		// To work around this problem, center the window manually based on
-		// the original drawing size, and not window size.
-		//
-		// On Linux this workaround breaks window position on
-		// multi-monitor setups, so let's use it on Windows only.
-
-		if (first_window && fullscreen) {
-			const int x = (sdl.desktop.full.width - sdl.draw.width) / 2;
-			const int y = (sdl.desktop.full.height - sdl.draw.height) / 2;
-			SDL_SetWindowPosition(sdl.window, x, y);
-		}
-#endif
-
 		GFX_SetTitle(-1, -1, false); // refresh title.
 
 		if (!fullscreen) {
@@ -624,7 +608,15 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		SDL_SetWindowFullscreen(sdl.window,
 		                        sdl.desktop.full.display_res ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN);
 	} else {
-		SDL_SetWindowSize(sdl.window, width, height);
+		// If you feel inclined to remove this SDL_SetWindowSize call
+		// (or further modify when it is being invoked), then make sure
+		// window size is updated AND content is correctly clipped when
+		// emulated program changes resolution with various
+		// windowresolution settings (!).
+		if (sdl.desktop.window.use_original_size &&
+		    !sdl.desktop.switching_fullscreen)
+			SDL_SetWindowSize(sdl.window, width, height);
+
 		SDL_SetWindowFullscreen(sdl.window, 0);
 	}
 	// Maybe some requested fullscreen resolution is unsupported?
@@ -1409,7 +1401,9 @@ void sticky_keys(bool restore){
 }
 #endif
 
-void GFX_SwitchFullScreen(void) {
+void GFX_SwitchFullScreen()
+{
+	sdl.desktop.switching_fullscreen = true;
 #if defined (WIN32)
 	// We are about to switch to the opposite of our current mode
 	// (ie: opposite of whatever sdl.desktop.fullscreen holds).
@@ -1419,6 +1413,7 @@ void GFX_SwitchFullScreen(void) {
 #endif
 	sdl.desktop.fullscreen = !sdl.desktop.fullscreen;
  	GFX_ResetScreen();
+	sdl.desktop.switching_fullscreen = false;
 }
 
 static void SwitchFullScreen(bool pressed)
@@ -1744,19 +1739,22 @@ static SDL_Window * SetDefaultWindowMode()
 	sdl.draw.height = splash_image.height;
 
 	if (sdl.desktop.fullscreen) {
+		sdl.desktop.lazy_init_window_size = true;
 		return GFX_SetSDLWindowMode(sdl.desktop.full.width,
 		                            sdl.desktop.full.height,
-		                            sdl.desktop.fullscreen,
+		                            true,
 		                            sdl.desktop.want_type);
 	}
 
 	if (sdl.desktop.window.use_original_size) {
+		sdl.desktop.lazy_init_window_size = false;
 		return GFX_SetSDLWindowMode(sdl.draw.width,
 		                            sdl.draw.height,
 		                            false,
 		                            sdl.desktop.want_type);
 	}
 
+	sdl.desktop.lazy_init_window_size = false;
 	return GFX_SetSDLWindowMode(sdl.desktop.window.width,
 	                            sdl.desktop.window.height,
 	                            false,
@@ -2212,6 +2210,57 @@ static void HandleVideoResize(int width, int height)
 	sdl.resizing_window = false;
 }
 
+/* This function is triggered after window is shown to fixup sdl.window
+ * properties in predictable manner on all platforms.
+ *
+ * In specific usecases, certain sdl.window properties might be left unitialized
+ * when starting in fullscreen, which might trigger severe problems for end
+ * users (e.g. placing window partially off-screen, or using fullscreen
+ * resolution for window size).
+ */
+static void FinalizeWindowState()
+{
+	assert(sdl.window);
+
+	if (!sdl.desktop.lazy_init_window_size)
+		return;
+
+	// Don't change window position or size when state changed to
+	// fullscreen.
+	if (sdl.desktop.fullscreen)
+		return;
+
+	// Once window is fixed up once, OS or Window Manager will deal with it
+	// on future expose events.
+	sdl.desktop.lazy_init_window_size = false;
+
+	int w, h;
+	if (sdl.desktop.window.use_original_size) {
+		w = sdl.draw.width * sdl.draw.scalex;
+		h = sdl.draw.height * sdl.draw.scaley;
+	} else {
+		w = sdl.desktop.window.width;
+		h = sdl.desktop.window.height;
+	}
+	SDL_SetWindowSize(sdl.window, w, h);
+
+	// Force window position when dosbox is configured to start in
+	// fullscreen.  Otherwise SDL will reset window position to 0,0 when
+	// switching to a window for the first time. This is happening on every
+	// OS, but only on Windows it's a really big problem (because window
+	// decorations are rendered off-screen).
+	//
+	// To work around this problem, tell SDL to center the window on current
+	// screen (we want center, as undefined position could still result in
+	// placing part of the window off-screen).
+	const int pos = SDL_WINDOWPOS_CENTERED_DISPLAY(sdl.display_number);
+	SDL_SetWindowPosition(sdl.window, pos, pos);
+
+	// In some cases (not always), leaving fullscreen breaks window content,
+	// screen reset restores rendering to the working state.
+	GFX_ResetScreen();
+}
+
 void GFX_Events() {
 	//Don't poll too often. This can be heavy on the OS, especially Macs.
 	//In idle mode 3000-4000 polls are done per second without this check.
@@ -2269,8 +2318,7 @@ void GFX_Events() {
 				 * FOCUS_GAINED event to catch window startup
 				 * and size toggles.
 				 */
-				if (sdl.draw.callback)
-					sdl.draw.callback(GFX_CallBackRedraw);
+				GFX_ResetScreen();
 				GFX_UpdateMouseState();
 				continue;
 
@@ -2324,6 +2372,7 @@ void GFX_Events() {
 				// The window size has changed either as a
 				// result of an API call or through the system
 				// or user changing the window size.
+				FinalizeWindowState();
 				continue;
 
 			case SDL_WINDOWEVENT_MINIMIZED:
