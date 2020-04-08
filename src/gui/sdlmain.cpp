@@ -2238,48 +2238,121 @@ void GFX_Events() {
 		switch (event.type) {
 		case SDL_WINDOWEVENT:
 			switch (event.window.event) {
-				case SDL_WINDOWEVENT_RESTORED:
-					/* We may need to re-create a texture
-					 * and more on Android. Another case:
-					 * Update surface while using X11.
-					 */
-					GFX_ResetScreen();
-					continue;
-				case SDL_WINDOWEVENT_RESIZED:
-				        HandleVideoResize(event.window.data1,
-				                          event.window.data2);
-				        continue;
-				/*
-				 *  EXPOSED indicates that the window needs to be redrawn.
-				 *  Note that on Windows/Linux-X11/Wayland/macOS, the EXPOSED event
-				 *  is fired after toggling between full vs windowed modes. However this is
-				 *  never fired on the Raspberry Pi (when rendering to the Framebuffer);
-				 *  therefore we rely on the FOCUS_GAINED event to catch window startup
-				 *  and size toggles.
-				 */ 
-				case SDL_WINDOWEVENT_EXPOSED:
-					if (sdl.draw.callback)
-						sdl.draw.callback(GFX_CallBackRedraw);
-					GFX_UpdateMouseState();
-					continue;
-				case SDL_WINDOWEVENT_FOCUS_GAINED:
-					SetPriority(sdl.priority.focus);
-					CPU_Disable_SkipAutoAdjust();
-					GFX_UpdateMouseState();
-					break;
-				case SDL_WINDOWEVENT_FOCUS_LOST:
+			case SDL_WINDOWEVENT_RESTORED:
+				DEBUG_LOG_MSG("SDL: Window has been restored");
+				/* We may need to re-create a texture
+				 * and more on Android. Another case:
+				 * Update surface while using X11.
+				 */
+				GFX_ResetScreen();
+				continue;
+
+			case SDL_WINDOWEVENT_RESIZED:
+				DEBUG_LOG_MSG("SDL: Window has been resized to %dx%d",
+				              event.window.data1,
+				              event.window.data2);
+				HandleVideoResize(event.window.data1,
+				                  event.window.data2);
+				continue;
+
+			case SDL_WINDOWEVENT_EXPOSED:
+				DEBUG_LOG_MSG("SDL: Window has been exposed "
+				              "and should be redrawn");
+				/* FIXME: below is not consistently true :(
+				 * seems incorrect on KDE and sometimes on MATE
+				 *
+				 * Note that on Windows/Linux-X11/Wayland/macOS,
+				 * event is fired after toggling between full vs
+				 * windowed modes. However this is never fired
+				 * on the Raspberry Pi (when rendering to the
+				 * Framebuffer); therefore we rely on the
+				 * FOCUS_GAINED event to catch window startup
+				 * and size toggles.
+				 */
+				if (sdl.draw.callback)
+					sdl.draw.callback(GFX_CallBackRedraw);
+				GFX_UpdateMouseState();
+				continue;
+
+			case SDL_WINDOWEVENT_FOCUS_GAINED:
+				DEBUG_LOG_MSG("SDL: Window has gained keyboard focus");
+				SetPriority(sdl.priority.focus);
+				CPU_Disable_SkipAutoAdjust();
+				GFX_UpdateMouseState();
+				continue;
+
+			case SDL_WINDOWEVENT_FOCUS_LOST:
+				DEBUG_LOG_MSG("SDL: Window has lost keyboard focus");
 #ifdef WIN32
-					if (sdl.desktop.fullscreen) {
-						VGA_KillDrawing();
-						GFX_ForceFullscreenExit();
-					}
+				if (sdl.desktop.fullscreen) {
+					VGA_KillDrawing();
+					GFX_ForceFullscreenExit();
+				}
 #endif
-					SetPriority(sdl.priority.nofocus);
-					GFX_LosingFocus();
-					CPU_Enable_SkipAutoAdjust();
-					sdl.mouse.has_focus = false;
-					break;
-				default: ;
+				SetPriority(sdl.priority.nofocus);
+				GFX_LosingFocus();
+				CPU_Enable_SkipAutoAdjust();
+				sdl.mouse.has_focus = false;
+				break;
+
+			case SDL_WINDOWEVENT_ENTER:
+				DEBUG_LOG_MSG("SDL: Window has gained mouse focus");
+				continue;
+
+			case SDL_WINDOWEVENT_LEAVE:
+				DEBUG_LOG_MSG("SDL: Window has lost mouse focus");
+				continue;
+
+			case SDL_WINDOWEVENT_SHOWN:
+				DEBUG_LOG_MSG("SDL: Window has been shown");
+				continue;
+
+			case SDL_WINDOWEVENT_HIDDEN:
+				DEBUG_LOG_MSG("SDL: Window has been hidden");
+				continue;
+
+#if 0 // ifdefed out only because it's too noisy
+			case SDL_WINDOWEVENT_MOVED:
+				DEBUG_LOG_MSG("SDL: Window has been moved to %d, %d",
+				              event.window.data1,
+				              event.window.data2);
+				continue;
+#endif
+
+			case SDL_WINDOWEVENT_SIZE_CHANGED:
+				DEBUG_LOG_MSG("SDL: The window size has changed");
+				// The window size has changed either as a
+				// result of an API call or through the system
+				// or user changing the window size.
+				continue;
+
+			case SDL_WINDOWEVENT_MINIMIZED:
+				DEBUG_LOG_MSG("SDL: Window has been minimized");
+				break;
+
+			case SDL_WINDOWEVENT_MAXIMIZED:
+				DEBUG_LOG_MSG("SDL: Window has been maximized");
+				continue;
+
+			case SDL_WINDOWEVENT_CLOSE:
+				DEBUG_LOG_MSG("SDL: The window manager "
+				              "requests that the window be "
+				              "closed");
+				continue;
+
+#if SDL_VERSION_ATLEAST(2, 0, 5)
+			case SDL_WINDOWEVENT_TAKE_FOCUS:
+				DEBUG_LOG_MSG("SDL: Window is being offered a focus");
+				// should SetWindowInputFocus() on itself or a
+				// subwindow, or ignore
+				continue;
+
+			case SDL_WINDOWEVENT_HIT_TEST:
+				DEBUG_LOG_MSG("SDL: Window had a hit test that "
+				              "wasn't SDL_HITTEST_NORMAL");
+				continue;
+#endif
+			default: break;
 			}
 
 			/* Non-focus priority is set to pause; check to see if we've lost window or input focus
@@ -2334,7 +2407,8 @@ void GFX_Events() {
 					}
 				}
 			}
-			break;
+			break; // end of SDL_WINDOWEVENT
+
 		case SDL_MOUSEMOTION:
 			HandleMouseMotion(&event.motion);
 			break;
