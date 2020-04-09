@@ -2359,11 +2359,13 @@ void GFX_Events() {
 				DEBUG_LOG_MSG("SDL: Window has been hidden");
 				continue;
 
+#if 0 // ifdefed out only because it's too noisy
 			case SDL_WINDOWEVENT_MOVED:
 				DEBUG_LOG_MSG("SDL: Window has been moved to %d, %d",
 				              event.window.data1,
 				              event.window.data2);
 				continue;
+#endif
 
 			case SDL_WINDOWEVENT_SIZE_CHANGED:
 				DEBUG_LOG_MSG("SDL: The window size has changed");
