@@ -248,7 +248,8 @@ struct SDL_Block {
 		Bit32u         height;
 		double         pixel_aspect;
 		Bitu           flags;
-		double         scalex, scaley;
+		double scalex = 1.0;
+		double scaley = 1.0;
 		GFX_CallBack_t callback;
 	} draw;
 	bool wait_on_error;
@@ -263,6 +264,7 @@ struct SDL_Block {
 			uint16_t width = 0; // TODO convert to int
 			uint16_t height = 0; // TODO convert to int
 			bool use_original_size = true;
+			bool resizable = false;
 		} window;
 		Bit8u bpp = 0;
 		bool fullscreen = false;
@@ -422,6 +424,7 @@ void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
 	SDL_SetWindowTitle(sdl.window, title);
 }
 
+#if SDL_VERSION_ATLEAST(2, 0, 5)
 /* This function is SDL_EventFilter which is being called when event is
  * pushed into the SDL event queue.
  *
@@ -452,6 +455,7 @@ static int watch_sdl_events(void *userdata, SDL_Event *e)
 	}
 	return 0;
 }
+#endif
 
 static unsigned char logo[32*32*4]= {
 #include "dosbox_logo.h"
@@ -622,9 +626,19 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		const int sdl_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
 		sdl.window = SDL_CreateWindow("", sdl_pos, sdl_pos, width, height, flags);
 
-		if (resizable)
+#if SDL_VERSION_ATLEAST(2, 0, 5)
+		if (resizable) {
 			SDL_AddEventWatch(watch_sdl_events, sdl.window);
+			SDL_SetWindowResizable(sdl.window, SDL_TRUE);
+			const int w = iround(sdl.draw.width * sdl.draw.scalex);
+			const int h = iround(sdl.draw.height * sdl.draw.scaley);
+			SDL_SetWindowMinimumSize(sdl.window, w, h);
 
+			sdl.desktop.window.resizable = true;
+		} else {
+			sdl.desktop.window.resizable = false;
+		}
+#endif
 		if (!sdl.window) {
 			return sdl.window;
 		}
@@ -655,7 +669,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		// emulated program changes resolution with various
 		// windowresolution settings (!).
 		if (sdl.desktop.window.use_original_size &&
-		    !sdl.desktop.switching_fullscreen)
+		    !sdl.desktop.window.resizable && !sdl.desktop.switching_fullscreen)
 			SDL_SetWindowSize(sdl.window, width, height);
 
 		SDL_SetWindowFullscreen(sdl.window, 0);
@@ -2304,7 +2318,7 @@ static void FinalizeWindowState()
 	sdl.desktop.lazy_init_window_size = false;
 
 	int w, h;
-	if (sdl.desktop.window.use_original_size) {
+	if (sdl.desktop.window.use_original_size || sdl.desktop.window.resizable) {
 		w = sdl.draw.width * sdl.draw.scalex;
 		h = sdl.draw.height * sdl.draw.scaley;
 	} else {
