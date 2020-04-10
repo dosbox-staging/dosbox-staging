@@ -627,3 +627,32 @@ void MEM_Init(Section * sec) {
 	test = new MEMORY(sec);
 	sec->AddDestroyFunction(&MEM_ShutDown);
 }
+
+void host_addw(uint8_t *arr, uint16_t incr)
+{
+	const uint16_t val = host_readw(arr) + incr;
+	host_writew(arr, val);
+}
+
+void host_addd(uint8_t *arr, uint32_t incr)
+{
+	const uint32_t val = host_readd(arr) + incr;
+	host_writed(arr, val);
+}
+
+// Read and write using 64-bit quad-words
+uint64_t host_readq(const uint8_t *arr)
+{
+	uint64_t val;
+	memcpy(reinterpret_cast<void *>(&val),
+	       reinterpret_cast<const void *>(arr), sizeof(val));
+	// array sequence was DOS little-endian, so convert value to host-type
+	return le_to_host(val);
+}
+void host_writeq(uint8_t *arr, uint64_t val)
+{
+	// Convert the host-type value to little-endian before filling array
+	val = host_to_le(val);
+	memcpy(reinterpret_cast<void *>(arr),
+	       reinterpret_cast<const void *>(&val), sizeof(val));
+}

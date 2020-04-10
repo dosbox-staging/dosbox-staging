@@ -137,8 +137,10 @@ public:
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return;
 		host_writew(hostmem+addr,val);
-		if (!*(Bit16u*)&write_map[addr]) {
-			if (active_blocks) return;
+		const uint16_t is_active = host_readw(write_map + addr);
+		if (!is_active) {
+			if (active_blocks)
+				return;
 			active_count--;
 			if (!active_count) Release();
 			return;
@@ -160,8 +162,10 @@ public:
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return;
 		host_writed(hostmem+addr,val);
-		if (!*(Bit32u*)&write_map[addr]) {
-			if (active_blocks) return;
+		const uint32_t is_active = host_readd(write_map + addr);
+		if (!is_active) {
+			if (active_blocks)
+				return;
 			active_count--;
 			if (!active_count) Release();
 			return;
@@ -211,7 +215,9 @@ public:
 		}
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return false;
-		if (!*(Bit16u*)&write_map[addr]) {
+
+		const uint16_t is_active = host_readw(write_map + addr);
+		if (!is_active) {
 			if (!active_blocks) {
 				active_count--;
 				if (!active_count) Release();
@@ -240,7 +246,9 @@ public:
 		}
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return false;
-		if (!*(Bit32u*)&write_map[addr]) {
+
+		const uint32_t is_active = host_readd(write_map + addr);
+		if (!is_active) {
 			if (!active_blocks) {
 				active_count--;
 				if (!active_count) Release();
@@ -479,19 +487,22 @@ static INLINE void cache_addb(Bit8u val) {
 	*cache.pos++=val;
 }
 
-static INLINE void cache_addw(Bit16u val) {
-	*(Bit16u*)cache.pos=val;
-	cache.pos+=2;
+static INLINE void cache_addw(const uint16_t &val)
+{
+	host_writew(cache.pos, val);
+	cache.pos += sizeof(val);
 }
 
-static INLINE void cache_addd(Bit32u val) {
-	*(Bit32u*)cache.pos=val;
-	cache.pos+=4;
+static INLINE void cache_addd(const uint32_t &val)
+{
+	host_writed(cache.pos, val);
+	cache.pos += sizeof(val);
 }
 
-static INLINE void cache_addq(Bit64u val) {
-	*(Bit64u*)cache.pos=val;
-	cache.pos+=8;
+static INLINE void cache_addq(uint64_t val)
+{
+	host_writeq(cache.pos, val);
+	cache.pos += sizeof(val);
 }
 
 static void gen_return(BlockReturn retcode);

@@ -221,39 +221,44 @@ static void decode_advancepage(void) {
 }
 
 // fetch the next byte of the instruction stream
-static Bit8u decode_fetchb(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4096)) {
+static uint8_t decode_fetchb()
+{
+	if (GCC_UNLIKELY(decode.page.index >= 4096)) {
 		decode_advancepage();
 	}
-	decode.page.wmap[decode.page.index]+=0x01;
+	decode.page.wmap[decode.page.index] += 0x01;
 	decode.page.index++;
-	decode.code+=1;
-	return mem_readb(decode.code-1);
+	decode.code += 1;
+	return mem_readb(decode.code - 1);
 }
 // fetch the next word of the instruction stream
-static Bit16u decode_fetchw(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4095)) {
-   		Bit16u val=decode_fetchb();
-		val|=decode_fetchb() << 8;
+static uint16_t decode_fetchw()
+{
+	if (GCC_UNLIKELY(decode.page.index >= 4095)) {
+		Bit16u val = decode_fetchb();
+		val |= decode_fetchb() << 8;
 		return val;
 	}
-	*(Bit16u *)&decode.page.wmap[decode.page.index]+=0x0101;
-	decode.code+=2;decode.page.index+=2;
-	return mem_readw(decode.code-2);
+	host_addw(decode.page.wmap + decode.page.index, 0x0101);
+	decode.code += sizeof(uint16_t);
+	decode.page.index += sizeof(uint16_t);
+	return mem_readw(decode.code - sizeof(uint16_t));
 }
 // fetch the next dword of the instruction stream
-static Bit32u decode_fetchd(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4093)) {
-   		Bit32u val=decode_fetchb();
-		val|=decode_fetchb() << 8;
-		val|=decode_fetchb() << 16;
-		val|=decode_fetchb() << 24;
+static uint32_t decode_fetchd()
+{
+	if (GCC_UNLIKELY(decode.page.index >= 4093)) {
+		Bit32u val = decode_fetchb();
+		val |= decode_fetchb() << 8;
+		val |= decode_fetchb() << 16;
+		val |= decode_fetchb() << 24;
 		return val;
-        /* Advance to the next page */
+		/* Advance to the next page */
 	}
-	*(Bit32u *)&decode.page.wmap[decode.page.index]+=0x01010101;
-	decode.code+=4;decode.page.index+=4;
-	return mem_readd(decode.code-4);
+	host_addd(decode.page.wmap + decode.page.index, 0x01010101);
+	decode.code += sizeof(uint32_t);
+	decode.page.index += sizeof(uint32_t);
+	return mem_readd(decode.code - sizeof(uint32_t));
 }
 
 #define START_WMMEM 64
@@ -287,9 +292,14 @@ static void INLINE decode_increase_wmapmask(Bitu size) {
 	// update mask entries
 	switch (size) {
 		case 1 : activecb->cache.wmapmask[mapidx]+=0x01; break;
-		case 2 : (*(Bit16u*)&activecb->cache.wmapmask[mapidx])+=0x0101; break;
-		case 4 : (*(Bit32u*)&activecb->cache.wmapmask[mapidx])+=0x01010101; break;
-	}
+	        case 2:
+		        host_addw(activecb->cache.wmapmask + mapidx, 0x0101);
+		        break;
+
+	        case 4:
+		        host_addd(activecb->cache.wmapmask + mapidx, 0x01010101);
+		        break;
+	        }
 }
 
 // fetch a byte, val points to the code location if possible,
@@ -720,7 +730,8 @@ bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) {
 	if ((address & 0xfff)<0xfff) {
 		HostPt tlb_addr=get_tlb_read(address);
 		if (tlb_addr) {
-			*((Bit16u*)(&core_dynrec.readdata))=host_readw(tlb_addr+address);
+			host_writew(&core_dynrec.readdata,
+			            host_readw(tlb_addr + address));
 			return false;
 		} else return get_tlb_readhandler(address)->readw_checked(address, (Bit16u*)(&core_dynrec.readdata));
 	} else return mem_unalignedreadw_checked(address, ((Bit16u*)(&core_dynrec.readdata)));
@@ -731,7 +742,8 @@ bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) {
 	if ((address & 0xfff)<0xffd) {
 		HostPt tlb_addr=get_tlb_read(address);
 		if (tlb_addr) {
-			*((Bit32u*)(&core_dynrec.readdata))=host_readd(tlb_addr+address);
+			host_writed(&core_dynrec.readdata,
+			            host_readd(tlb_addr + address));
 			return false;
 		} else return get_tlb_readhandler(address)->readd_checked(address, (Bit32u*)(&core_dynrec.readdata));
 	} else return mem_unalignedreadd_checked(address, ((Bit32u*)(&core_dynrec.readdata)));
