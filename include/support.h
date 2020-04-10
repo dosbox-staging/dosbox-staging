@@ -82,6 +82,13 @@ inline constexpr T1 ceil_sdivide(const T1 x, const T2 y) noexcept {
 	// https://stackoverflow.com/a/33790603
 }
 
+inline int iround(double x) {
+	assert(std::isfinite(x));
+	assert(x >= (std::numeric_limits<int>::min)());
+	assert(x <= (std::numeric_limits<int>::max)());
+	return static_cast<int>(round(x));
+}
+
 // Include a message in assert, similar to static_assert:
 #define assertm(exp, msg) assert(((void)msg, exp))
 // Use (void) to silent unused warnings.
