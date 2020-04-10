@@ -1898,6 +1898,36 @@ static void SetupWindowResolution(const char *val)
 	sdl.desktop.window.use_original_size = true;
 }
 
+static SDL_Rect CalculateViewport(int win_width, int win_height)
+{
+	assert(sdl.draw.width > 0);
+	assert(sdl.draw.height > 0);
+	assert(sdl.draw.scalex > 0.0);
+	assert(sdl.draw.scaley > 0.0);
+	assert(std::isfinite(sdl.draw.scalex));
+	assert(std::isfinite(sdl.draw.scaley));
+
+	const double prog_aspect_ratio = (sdl.draw.width * sdl.draw.scalex) /
+	                                 (sdl.draw.height * sdl.draw.scaley);
+	const double win_aspect_ratio = double(win_width) / double(win_height);
+
+	if (prog_aspect_ratio > win_aspect_ratio) {
+		// match window width
+		const int w = win_width;
+		const int h = iround(win_width / prog_aspect_ratio);
+		assert(win_height >= h);
+		const int y = (win_height - h) / 2;
+		return {0, y, w, h};
+	} else {
+		// match window height
+		const int w = iround(win_height * prog_aspect_ratio);
+		const int h = win_height;
+		assert(win_width >= w);
+		const int x = (win_width - w) / 2;
+		return {x, 0, w, h};
+	}
+}
+
 //extern void UI_Run(bool);
 void Restart(bool pressed);
 
