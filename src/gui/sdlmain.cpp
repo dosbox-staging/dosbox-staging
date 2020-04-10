@@ -422,6 +422,37 @@ void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
 	SDL_SetWindowTitle(sdl.window, title);
 }
 
+/* This function is SDL_EventFilter which is being called when event is
+ * pushed into the SDL event queue.
+ *
+ * WARNING: Be very careful of what you do in this function, as it may run in
+ * a different thread!
+ *
+ * Read documentation for SDL_AddEventWatch for more details.
+ */
+static int watch_sdl_events(void *userdata, SDL_Event *e)
+{
+	/* There's a significant difference in handling of window resize
+	 * events in different OSes. When handling resize in main event loop
+	 * we receive continuous stream of events (as expected) on Linux,
+	 * but only single event after user stopped dragging cursor on Windows
+	 * and macOS.
+	 *
+	 * Watching resize events here gives us continuous stream on
+	 * every OS.
+	 */
+	if (e->type == SDL_WINDOWEVENT && e->window.event == SDL_WINDOWEVENT_RESIZED) {
+		SDL_Window *win = SDL_GetWindowFromID(e->window.windowID);
+		if (win == (SDL_Window *)userdata) {
+			const int w = e->window.data1;
+			const int h = e->window.data2;
+			DEBUG_LOG_MSG("SDL: Resizing window %d to %dx%d",
+			              e->window.windowID, w, h);
+		}
+	}
+	return 0;
+}
+
 static unsigned char logo[32*32*4]= {
 #include "dosbox_logo.h"
 };
@@ -590,6 +621,9 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		// window by WM.
 		const int sdl_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
 		sdl.window = SDL_CreateWindow("", sdl_pos, sdl_pos, width, height, flags);
+
+		if (resizable)
+			SDL_AddEventWatch(watch_sdl_events, sdl.window);
 
 		if (!sdl.window) {
 			return sdl.window;
