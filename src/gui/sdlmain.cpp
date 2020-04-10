@@ -2401,7 +2401,8 @@ void GFX_Events() {
 				 * FOCUS_GAINED event to catch window startup
 				 * and size toggles.
 				 */
-				GFX_ResetScreen();
+				if (sdl.draw.callback)
+					sdl.draw.callback(GFX_CallBackRedraw);
 				GFX_UpdateMouseState();
 				continue;
 
