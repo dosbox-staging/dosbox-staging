@@ -276,6 +276,7 @@ struct SDL_Block {
 		// See FinalizeWindowState function for details.
 		bool lazy_init_window_size = false;
 		bool vsync = false;
+		bool want_resizable_window = false;
 		SCREEN_TYPES type;
 		SCREEN_TYPES want_type;
 	} desktop;
@@ -1064,7 +1065,7 @@ dosurface:
 			goto dosurface;
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		SetupWindowScaled(SCREEN_OPENGL, false);
+		SetupWindowScaled(SCREEN_OPENGL, sdl.desktop.want_resizable_window);
 
 		/* We may simply use SDL_BYTESPERPIXEL
 		here rather than SDL_BITSPERPIXEL   */
@@ -1734,7 +1735,7 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 
 #include "dosbox_staging_splash.c"
 
-static SDL_Window * SetDefaultWindowMode()
+static SDL_Window *SetDefaultWindowMode()
 {
 	if (sdl.window)
 		return sdl.window;
@@ -1742,21 +1743,27 @@ static SDL_Window * SetDefaultWindowMode()
 	sdl.draw.width = splash_image.width;
 	sdl.draw.height = splash_image.height;
 
+	// TODO detect based on user settings
+	sdl.desktop.want_resizable_window = true;
+
 	if (sdl.desktop.fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;
 		return SetWindowMode(sdl.desktop.want_type, sdl.desktop.full.width,
-		                     sdl.desktop.full.height, true, false);
+		                     sdl.desktop.full.height, true,
+		                     sdl.desktop.want_resizable_window);
 	}
 
 	if (sdl.desktop.window.use_original_size) {
 		sdl.desktop.lazy_init_window_size = false;
 		return SetWindowMode(sdl.desktop.want_type, sdl.draw.width,
-		                     sdl.draw.height, false, false);
+		                     sdl.draw.height, false,
+		                     sdl.desktop.want_resizable_window);
 	}
 
 	sdl.desktop.lazy_init_window_size = false;
 	return SetWindowMode(sdl.desktop.want_type, sdl.desktop.window.width,
-	                     sdl.desktop.window.height, false, false);
+	                     sdl.desktop.window.height, false,
+	                     sdl.desktop.want_resizable_window);
 }
 
 /* 
