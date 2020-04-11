@@ -632,10 +632,6 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		if (resizable) {
 			SDL_AddEventWatch(watch_sdl_events, sdl.window);
 			SDL_SetWindowResizable(sdl.window, SDL_TRUE);
-			const int w = iround(sdl.draw.width * sdl.draw.scalex);
-			const int h = iround(sdl.draw.height * sdl.draw.scaley);
-			SDL_SetWindowMinimumSize(sdl.window, w, h);
-
 			sdl.desktop.window.resizable = true;
 		} else {
 			sdl.desktop.window.resizable = false;
@@ -678,6 +674,13 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 	}
 	// Maybe some requested fullscreen resolution is unsupported?
 finish:
+
+	if (sdl.desktop.window.resizable && !sdl.desktop.switching_fullscreen) {
+		const int w = iround(sdl.draw.width * sdl.draw.scalex);
+		const int h = iround(sdl.draw.height * sdl.draw.scaley);
+		SDL_SetWindowMinimumSize(sdl.window, w, h);
+	}
+
 	HandleVideoResize(width, height);
 	sdl.update_display_contents = true;
 	return sdl.window;
