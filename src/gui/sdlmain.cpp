@@ -244,13 +244,12 @@ struct SDL_Block {
 	bool resizing_window;
 	ScalingMode scaling_mode;
 	struct {
-		Bit32u         width;
-		Bit32u         height;
-		double         pixel_aspect;
-		Bitu           flags;
+		int width = 0;
+		int height = 0;
 		double scalex = 1.0;
 		double scaley = 1.0;
-		GFX_CallBack_t callback;
+		double pixel_aspect = 1.0;
+		GFX_CallBack_t callback = nullptr;
 	} draw;
 	bool wait_on_error;
 	struct {
@@ -907,12 +906,12 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
+	sdl.draw.width = width;
+	sdl.draw.height = height;
+	sdl.draw.scalex = scalex;
+	sdl.draw.scaley = scaley;
 	sdl.draw.pixel_aspect = pixel_aspect;
-	sdl.draw.width=width;
-	sdl.draw.height=height;
-	sdl.draw.callback=callback;
-	sdl.draw.scalex=scalex;
-	sdl.draw.scaley=scaley;
+	sdl.draw.callback = callback;
 
 	sdl.double_h = (flags & GFX_DBL_H) > 0;
 	sdl.double_w = (flags & GFX_DBL_W) > 0;
@@ -1567,22 +1566,25 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		if (sdl.opengl.pixel_buffer_object) {
 			glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
 			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-					sdl.draw.width, sdl.draw.height, GL_BGRA_EXT,
-					GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sdl.draw.width,
+			                sdl.draw.height, GL_BGRA_EXT,
+			                GL_UNSIGNED_INT_8_8_8_8_REV, 0);
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 		} else if (changedLines) {
-			Bitu y = 0, index = 0;
+			int y = 0;
+			size_t index = 0;
 			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 			while (y < sdl.draw.height) {
 				if (!(index & 1)) {
 					y += changedLines[index];
 				} else {
 					Bit8u *pixels = (Bit8u *)sdl.opengl.framebuf + y * sdl.opengl.pitch;
-					Bitu height = changedLines[index];
+					int height = changedLines[index];
 					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
-						sdl.draw.width, height, GL_BGRA_EXT,
-						GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
+					                sdl.draw.width, height,
+					                GL_BGRA_EXT,
+					                GL_UNSIGNED_INT_8_8_8_8_REV,
+					                pixels);
 					y += height;
 				}
 				index++;
@@ -1602,7 +1604,8 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 #endif
 	case SCREEN_SURFACE:
 		if (changedLines) {
-			Bitu y = 0, index = 0, rectCount = 0;
+			int y = 0;
+			Bitu index = 0, rectCount = 0;
 			while (y < sdl.draw.height) {
 				if (!(index & 1)) {
 					y += changedLines[index];
@@ -1610,7 +1613,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 					SDL_Rect *rect = &sdl.updateRects[rectCount++];
 					rect->x = sdl.clip.x;
 					rect->y = sdl.clip.y + y;
-					rect->w = (Bit16u)sdl.draw.width;
+					rect->w = sdl.draw.width;
 					rect->h = changedLines[index];
 					y += changedLines[index];
 				}
