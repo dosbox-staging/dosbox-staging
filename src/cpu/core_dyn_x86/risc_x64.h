@@ -1155,11 +1155,12 @@ static void gen_fill_branch_long(uint8_t *data, uint8_t *from = cache.pos)
 	host_writed(data, from - data - sizeof(uint32_t));
 }
 
-static Bit8u * gen_create_jump(Bit8u * to=0) {
+static uint8_t *gen_create_jump(uint8_t *to = 0)
+{
 	/* First free all registers */
 	cache_addb(0xe9);
-	cache_addd((Bit32u)(to-(cache.pos+4)));
-	return (cache.pos-4);
+	cache_addd(to - cache.pos - sizeof(uint32_t));
+	return cache.pos - sizeof(uint32_t);
 }
 
 #if 0
