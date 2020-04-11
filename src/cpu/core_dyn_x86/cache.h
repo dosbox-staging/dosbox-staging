@@ -114,7 +114,7 @@ public:
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return;
 		host_writeb(hostmem+addr,val);
-		if (!*(Bit8u*)&write_map[addr]) {
+		if (!write_map[addr]) {
 			if (active_blocks) return;
 			active_count--;
 			if (!active_count) Release();
@@ -186,7 +186,7 @@ public:
 		}
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return false;
-		if (!*(Bit8u*)&write_map[addr]) {
+		if (!write_map[addr]) {
 			if (!active_blocks) {
 				active_count--;
 				if (!active_count) Release();
