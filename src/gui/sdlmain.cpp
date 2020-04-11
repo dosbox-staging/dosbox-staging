@@ -345,7 +345,9 @@ struct SDL_Block {
 
 static SDL_Block sdl;
 
+static SDL_Rect CalculateViewport(int win_width, int win_height);
 static void CleanupSDLResources();
+static void HandleVideoResize(int width, int height);
 
 static constexpr char version_msg[] = R"(dosbox (dosbox-staging), version %s
 Copyright (C) 2020 The dosbox-staging team.
@@ -448,8 +450,9 @@ static int watch_sdl_events(void *userdata, SDL_Event *e)
 		if (win == (SDL_Window *)userdata) {
 			const int w = e->window.data1;
 			const int h = e->window.data2;
-			DEBUG_LOG_MSG("SDL: Resizing window %d to %dx%d",
-			              e->window.windowID, w, h);
+			const int id = e->window.windowID;
+			DEBUG_LOG_MSG("SDL: Resizing window %d to %dx%d", id, w, h);
+			HandleVideoResize(w, h);
 		}
 	}
 	return 0;
@@ -675,8 +678,8 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 	}
 	// Maybe some requested fullscreen resolution is unsupported?
 finish:
-	SDL_GetWindowSize(sdl.window, &currWidth, &currHeight);
-	sdl.update_display_contents = ((width <= currWidth) && (height <= currHeight));
+	HandleVideoResize(width, height);
+	sdl.update_display_contents = true;
 	return sdl.window;
 }
 
@@ -1241,6 +1244,9 @@ dosurface:
 			           (windowHeight - sdl.clip.h) / 2,
 			           sdl.clip.w,
 			           sdl.clip.h);
+		} else if (sdl.desktop.window.resizable) {
+			sdl.clip = CalculateViewport(windowWidth, windowHeight);
+			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		} else {
 			/* We don't just pass sdl.clip.y as-is, so we cover the case of non-vertical
 			 * centering on Android (in order to leave room for the on-screen keyboard)
@@ -2280,6 +2286,13 @@ static void HandleVideoResize(int width, int height)
 		sdl.desktop.full.width = width;
 		sdl.desktop.full.height = height;
 	}
+
+	if (sdl.desktop.window.resizable && sdl.desktop.type == SCREEN_OPENGL) {
+		sdl.clip = CalculateViewport(width, height);
+		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
+		return;
+	}
+
 	/* Even if the new window's dimensions are actually the desired ones
 	 * we may still need to re-obtain a new window surface or do
 	 * a different thing. So we basically reset the screen, but without
