@@ -148,77 +148,90 @@ foundit:
 	switch (mblock->type) {
 	case M_LIN4:
 		pageSize = mblock->sheight * mblock->swidth/2;
-		var_write(&minfo.BytesPerScanLine,mblock->swidth/8);
-		var_write(&minfo.NumberOfPlanes,0x4);
-		var_write(&minfo.BitsPerPixel,4);
-		var_write(&minfo.MemoryModel,3);	//ega planar mode
-		modeAttributes = 0x1b;	// Color, graphics, no linear buffer
+		minfo.BytesPerScanLine = host_to_le(
+		        static_cast<uint16_t>(mblock->swidth / 8));
+		minfo.NumberOfPlanes = host_to_le(static_cast<uint8_t>(0x4));
+		minfo.BitsPerPixel = host_to_le(static_cast<uint8_t>(4));
+		minfo.MemoryModel = host_to_le(static_cast<uint8_t>(3)); // ega
+		                                                         // planar
+		                                                         // mode
+		modeAttributes = 0x1b; // Color, graphics, no linear buffer
 		break;
 	case M_LIN8:
 		pageSize = mblock->sheight * mblock->swidth;
-		var_write(&minfo.BytesPerScanLine,mblock->swidth);
-		var_write(&minfo.NumberOfPlanes,0x1);
-		var_write(&minfo.BitsPerPixel,8);
-		var_write(&minfo.MemoryModel,4);		//packed pixel
-		modeAttributes = 0x1b;	// Color, graphics
-		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
+		minfo.BytesPerScanLine = host_to_le(
+		        static_cast<uint16_t>(mblock->swidth));
+		minfo.NumberOfPlanes = host_to_le(static_cast<uint8_t>(0x1));
+		minfo.BitsPerPixel = host_to_le(static_cast<uint8_t>(8));
+		minfo.MemoryModel = host_to_le(static_cast<uint8_t>(4)); // packed
+		                                                         // pixel
+		modeAttributes = 0x1b; // Color, graphics
+		if (!int10.vesa_nolfb)
+			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN15:
 		pageSize = mblock->sheight * mblock->swidth*2;
-		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
-		var_write(&minfo.NumberOfPlanes,0x1);
-		var_write(&minfo.BitsPerPixel,15);
-		var_write(&minfo.MemoryModel,6);	//HiColour
-		var_write(&minfo.RedMaskSize,5);
-		var_write(&minfo.RedMaskPos,10);
-		var_write(&minfo.GreenMaskSize,5);
-		var_write(&minfo.GreenMaskPos,5);
-		var_write(&minfo.BlueMaskSize,5);
-		var_write(&minfo.BlueMaskPos,0);
-		var_write(&minfo.ReservedMaskSize,0x01);
-		var_write(&minfo.ReservedMaskPos,0x0f);
-		modeAttributes = 0x1b;	// Color, graphics
-		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
+		minfo.BytesPerScanLine = host_to_le(
+		        static_cast<uint16_t>(mblock->swidth * 2));
+		minfo.NumberOfPlanes = host_to_le(static_cast<uint8_t>(0x1));
+		minfo.BitsPerPixel = host_to_le(static_cast<uint8_t>(15));
+		minfo.MemoryModel = host_to_le(static_cast<uint8_t>(6)); // HiColour
+		minfo.RedMaskSize = host_to_le(static_cast<uint8_t>(5));
+		minfo.RedMaskPos = host_to_le(static_cast<uint8_t>(10));
+		minfo.GreenMaskSize = host_to_le(static_cast<uint8_t>(5));
+		minfo.GreenMaskPos = host_to_le(static_cast<uint8_t>(5));
+		minfo.BlueMaskSize = host_to_le(static_cast<uint8_t>(5));
+		minfo.BlueMaskPos = host_to_le(static_cast<uint8_t>(0));
+		minfo.ReservedMaskSize = host_to_le(static_cast<uint8_t>(0x01));
+		minfo.ReservedMaskPos = host_to_le(static_cast<uint8_t>(0x0f));
+		modeAttributes = 0x1b; // Color, graphics
+		if (!int10.vesa_nolfb)
+			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN16:
 		pageSize = mblock->sheight * mblock->swidth*2;
-		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
-		var_write(&minfo.NumberOfPlanes,0x1);
-		var_write(&minfo.BitsPerPixel,16);
-		var_write(&minfo.MemoryModel,6);	//HiColour
-		var_write(&minfo.RedMaskSize,5);
-		var_write(&minfo.RedMaskPos,11);
-		var_write(&minfo.GreenMaskSize,6);
-		var_write(&minfo.GreenMaskPos,5);
-		var_write(&minfo.BlueMaskSize,5);
-		var_write(&minfo.BlueMaskPos,0);
-		modeAttributes = 0x1b;	// Color, graphics
-		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
+		minfo.BytesPerScanLine = host_to_le(
+		        static_cast<uint16_t>(mblock->swidth * 2));
+		minfo.NumberOfPlanes = host_to_le(static_cast<uint8_t>(0x1));
+		minfo.BitsPerPixel = host_to_le(static_cast<uint8_t>(16));
+		minfo.MemoryModel = host_to_le(static_cast<uint8_t>(6)); // HiColour
+		minfo.RedMaskSize = host_to_le(static_cast<uint8_t>(5));
+		minfo.RedMaskPos = host_to_le(static_cast<uint8_t>(11));
+		minfo.GreenMaskSize = host_to_le(static_cast<uint8_t>(6));
+		minfo.GreenMaskPos = host_to_le(static_cast<uint8_t>(5));
+		minfo.BlueMaskSize = host_to_le(static_cast<uint8_t>(5));
+		minfo.BlueMaskPos = host_to_le(static_cast<uint8_t>(0));
+		modeAttributes = 0x1b; // Color, graphics
+		if (!int10.vesa_nolfb)
+			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN32:
 		pageSize = mblock->sheight * mblock->swidth*4;
-		var_write(&minfo.BytesPerScanLine,mblock->swidth*4);
-		var_write(&minfo.NumberOfPlanes,0x1);
-		var_write(&minfo.BitsPerPixel,32);
-		var_write(&minfo.MemoryModel,6);	//HiColour
-		var_write(&minfo.RedMaskSize,8);
-		var_write(&minfo.RedMaskPos,0x10);
-		var_write(&minfo.GreenMaskSize,0x8);
-		var_write(&minfo.GreenMaskPos,0x8);
-		var_write(&minfo.BlueMaskSize,0x8);
-		var_write(&minfo.BlueMaskPos,0x0);
-		var_write(&minfo.ReservedMaskSize,0x8);
-		var_write(&minfo.ReservedMaskPos,0x18);
-		modeAttributes = 0x1b;	// Color, graphics
-		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
+		minfo.BytesPerScanLine = host_to_le(
+		        static_cast<uint16_t>(mblock->swidth * 4));
+		minfo.NumberOfPlanes = host_to_le(static_cast<uint8_t>(0x1));
+		minfo.BitsPerPixel = host_to_le(static_cast<uint8_t>(32));
+		minfo.MemoryModel = host_to_le(static_cast<uint8_t>(6)); // HiColour
+		minfo.RedMaskSize = host_to_le(static_cast<uint8_t>(8));
+		minfo.RedMaskPos = host_to_le(static_cast<uint8_t>(0x10));
+		minfo.GreenMaskSize = host_to_le(static_cast<uint8_t>(0x8));
+		minfo.GreenMaskPos = host_to_le(static_cast<uint8_t>(0x8));
+		minfo.BlueMaskSize = host_to_le(static_cast<uint8_t>(0x8));
+		minfo.BlueMaskPos = host_to_le(static_cast<uint8_t>(0x0));
+		minfo.ReservedMaskSize = host_to_le(static_cast<uint8_t>(0x8));
+		minfo.ReservedMaskPos = host_to_le(static_cast<uint8_t>(0x18));
+		modeAttributes = 0x1b; // Color, graphics
+		if (!int10.vesa_nolfb)
+			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_TEXT:
 		pageSize = 0;
-		var_write(&minfo.BytesPerScanLine, mblock->twidth * 2);
-		var_write(&minfo.NumberOfPlanes,0x4);
-		var_write(&minfo.BitsPerPixel,4);
-		var_write(&minfo.MemoryModel,0);	// text
-		modeAttributes = 0x0f;	//Color, text, bios output
+		minfo.BytesPerScanLine = host_to_le(
+		        static_cast<uint16_t>(mblock->twidth * 2));
+		minfo.NumberOfPlanes = host_to_le(static_cast<uint8_t>(0x4));
+		minfo.BitsPerPixel = host_to_le(static_cast<uint8_t>(4));
+		minfo.MemoryModel = host_to_le(static_cast<uint8_t>(0)); // text
+		modeAttributes = 0x0f; // Color, text, bios output
 		break;
 	default:
 		return VESA_FAIL;
@@ -236,29 +249,30 @@ foundit:
 	} else if (pageSize) {
 		pages = (vga.vmemsize / pageSize)-1;
 	}
-	var_write(&minfo.NumberOfImagePages, pages);
-	var_write(&minfo.ModeAttributes, modeAttributes);
-	var_write(&minfo.WinAAttributes, 0x7);	// Exists/readable/writable
+	minfo.NumberOfImagePages = host_to_le(static_cast<uint8_t>(pages));
+	minfo.ModeAttributes = host_to_le(static_cast<uint16_t>(modeAttributes));
+	minfo.WinAAttributes = host_to_le(static_cast<uint8_t>(0x7)); // Exists/readable/writable
 
 	if (mblock->type==M_TEXT) {
-		var_write(&minfo.WinGranularity,32);
-		var_write(&minfo.WinSize,32);
-		var_write(&minfo.WinASegment,0xb800);
-		var_write(&minfo.XResolution,mblock->twidth);
-		var_write(&minfo.YResolution,mblock->theight);
+		minfo.WinGranularity = host_to_le(static_cast<uint16_t>(32));
+		minfo.WinSize = host_to_le(static_cast<uint16_t>(32));
+		minfo.WinASegment = host_to_le(static_cast<uint16_t>(0xb800));
+		minfo.XResolution = host_to_le(static_cast<uint16_t>(mblock->twidth));
+		minfo.YResolution = host_to_le(static_cast<uint16_t>(mblock->theight));
 	} else {
-		var_write(&minfo.WinGranularity,64);
-		var_write(&minfo.WinSize,64);
-		var_write(&minfo.WinASegment,0xa000);
-		var_write(&minfo.XResolution,mblock->swidth);
-		var_write(&minfo.YResolution,mblock->sheight);
+		minfo.WinGranularity = host_to_le(static_cast<uint16_t>(64));
+		minfo.WinSize = host_to_le(static_cast<uint16_t>(64));
+		minfo.WinASegment = host_to_le(static_cast<uint16_t>(0xa000));
+		minfo.XResolution = host_to_le(static_cast<uint16_t>(mblock->swidth));
+		minfo.YResolution = host_to_le(static_cast<uint16_t>(mblock->sheight));
 	}
-	var_write(&minfo.WinFuncPtr,int10.rom.set_window);
-	var_write(&minfo.NumberOfBanks,0x1);
-	var_write(&minfo.Reserved_page,0x1);
-	var_write(&minfo.XCharSize,mblock->cwidth);
-	var_write(&minfo.YCharSize,mblock->cheight);
-	if (!int10.vesa_nolfb) var_write(&minfo.PhysBasePtr,S3_LFB_BASE);
+	minfo.WinFuncPtr = host_to_le(static_cast<uint32_t>(int10.rom.set_window));
+	minfo.NumberOfBanks = host_to_le(static_cast<uint8_t>(0x1));
+	minfo.Reserved_page = host_to_le(static_cast<uint8_t>(0x1));
+	minfo.XCharSize = host_to_le(static_cast<uint8_t>(mblock->cwidth));
+	minfo.YCharSize = host_to_le(static_cast<uint8_t>(mblock->cheight));
+	if (!int10.vesa_nolfb)
+		minfo.PhysBasePtr = host_to_le(static_cast<uint32_t>(S3_LFB_BASE));
 
 	MEM_BlockWrite(buf,&minfo,sizeof(MODE_INFO));
 	return VESA_SUCCESS;
