@@ -47,7 +47,7 @@ jobs:
         id:    cache-msys2
         with:
           path: 'C:/tools/msys64'
-          key: msys2-${{ matrix.conf.bits }}-${{ steps.get-date.outputs.date }}-3
+          key: msys2-${{ matrix.conf.bits }}-${{ steps.get-date.outputs.date }}
       - name:  Install MSYS2
         if:    steps.cache-msys2.outputs.cache-hit != 'true'
         run:   choco install msys2 --no-progress
