@@ -151,7 +151,7 @@ public:
 			}
 			memset(invalidation_map,0,4096);
 		}
-		(*(Bit16u*)&invalidation_map[addr])+=0x101;
+		host_addw(invalidation_map + addr, 0x101);
 		InvalidateRange(addr,addr+1);
 	}
 	void writed(PhysPt addr,Bitu val){
@@ -176,7 +176,7 @@ public:
 			}
 			memset(invalidation_map,0,4096);
 		}
-		(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
+		host_addd(invalidation_map + addr, 0x1010101);
 		InvalidateRange(addr,addr+3);
 	}
 	bool writeb_checked(PhysPt addr,Bitu val) {
@@ -230,7 +230,7 @@ public:
 				}
 				memset(invalidation_map,0,4096);
 			}
-			(*(Bit16u*)&invalidation_map[addr])+=0x101;
+			host_addw(invalidation_map + addr, 0x101);
 			if (InvalidateRange(addr,addr+1)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
@@ -261,7 +261,7 @@ public:
 				}
 				memset(invalidation_map,0,4096);
 			}
-			(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
+			host_addd(invalidation_map + addr, 0x1010101);
 			if (InvalidateRange(addr,addr+3)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
