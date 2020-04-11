@@ -221,39 +221,46 @@ static void decode_advancepage(void) {
 }
 
 // fetch the next byte of the instruction stream
-static Bit8u decode_fetchb(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4096)) {
+static uint8_t decode_fetchb()
+{
+	if (GCC_UNLIKELY(decode.page.index >= 4096)) {
 		decode_advancepage();
 	}
-	decode.page.wmap[decode.page.index]+=0x01;
+	decode.page.wmap[decode.page.index] += 0x01;
 	decode.page.index++;
-	decode.code+=1;
-	return mem_readb(decode.code-1);
+	decode.code += 1;
+	return mem_readb(decode.code - 1);
 }
+
 // fetch the next word of the instruction stream
-static Bit16u decode_fetchw(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4095)) {
-   		Bit16u val=decode_fetchb();
-		val|=decode_fetchb() << 8;
+static uint16_t decode_fetchw()
+{
+	if (GCC_UNLIKELY(decode.page.index >= 4095)) {
+		Bit16u val = decode_fetchb();
+		val |= decode_fetchb() << 8;
 		return val;
 	}
-	*(Bit16u *)&decode.page.wmap[decode.page.index]+=0x0101;
-	decode.code+=2;decode.page.index+=2;
-	return mem_readw(decode.code-2);
+	host_addw(decode.page.wmap + decode.page.index, 0x0101);
+	decode.code += sizeof(uint16_t);
+	decode.page.index += sizeof(uint16_t);
+	return mem_readw(decode.code - sizeof(uint16_t));
 }
+
 // fetch the next dword of the instruction stream
-static Bit32u decode_fetchd(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4093)) {
-   		Bit32u val=decode_fetchb();
-		val|=decode_fetchb() << 8;
-		val|=decode_fetchb() << 16;
-		val|=decode_fetchb() << 24;
+static uint32_t decode_fetchd()
+{
+	if (GCC_UNLIKELY(decode.page.index >= 4093)) {
+		Bit32u val = decode_fetchb();
+		val |= decode_fetchb() << 8;
+		val |= decode_fetchb() << 16;
+		val |= decode_fetchb() << 24;
 		return val;
-        /* Advance to the next page */
+		/* Advance to the next page */
 	}
-	*(Bit32u *)&decode.page.wmap[decode.page.index]+=0x01010101;
-	decode.code+=4;decode.page.index+=4;
-	return mem_readd(decode.code-4);
+	host_addd(decode.page.wmap + decode.page.index, 0x01010101);
+	decode.code += sizeof(uint32_t);
+	decode.page.index += sizeof(uint32_t);
+	return mem_readd(decode.code - sizeof(uint32_t));
 }
 
 #define START_WMMEM 64
