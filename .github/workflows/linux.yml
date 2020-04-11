@@ -26,11 +26,11 @@ jobs:
           - name: GCC-9 (Ubuntu 18.04)
             os: ubuntu-18.04
             flags: -c gcc -v 9
-            max_warnings: 76
+            max_warnings: 57
           - name: Clang-8 (Ubuntu 18.04)
             os: ubuntu-18.04
             flags: -c clang -v 8
-            max_warnings: 57
+            max_warnings: 38
     steps:
       - uses: actions/checkout@v1
         with:

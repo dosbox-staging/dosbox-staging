@@ -17,19 +17,19 @@ jobs:
           - compiler: Clang
             bits: 32
             arch: i686
-            max_warnings: 28
+            max_warnings: 9
           - compiler: Clang
             bits: 64
             arch: x86_64
-            max_warnings: 60
+            max_warnings: 41
           - compiler: GCC
             bits: 32
             arch: i686
-            max_warnings: 45
+            max_warnings: 26
           - compiler: GCC
             bits: 64
             arch: x86_64
-            max_warnings: 77
+            max_warnings: 58
     env:
       CHERE_INVOKING:  yes
       CCACHE_DIR:      "${{ github.workspace }}/.ccache"

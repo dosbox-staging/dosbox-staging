@@ -97,14 +97,14 @@ jobs:
         conf:
           - name: Clang
             sanitizers: USAN
-            usan:  93
+            usan:  86
             tsan:  -1
             uasan: -1
           - name: GCC
             sanitizers: TSAN UASAN
             usan:  -1
             tsan:  0  # our test does not trigger multiple threads yet
-            uasan: 80
+            uasan: 36
     steps:
       - uses: actions/checkout@v1
         with:
