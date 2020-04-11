@@ -58,7 +58,7 @@ jobs:
     env:
       CC: ccache clang
       CXX: ccache clang++
-      FLAGS: -O3 -DNDEBUG -pipe -march=nehalem
+      FLAGS: -DNDEBUG -O3 -fno-math-errno -fstrict-aliasing -march=nehalem -flto=thin -pipe
     steps:
       - uses: actions/checkout@v1
       - name: Install C++ compiler and libraries
