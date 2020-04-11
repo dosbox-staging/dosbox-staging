@@ -272,7 +272,8 @@ public:
 static BlockReturn gen_runcodeInit(Bit8u *code);
 static BlockReturn (*gen_runcode)(Bit8u *code) = gen_runcodeInit;
 
-static BlockReturn gen_runcodeInit(Bit8u *code) {
+static BlockReturn gen_runcodeInit(uint8_t *code)
+{
 	Bit8u* oldpos = cache.pos;
 	cache.pos = &cache_code_link_blocks[128];
 	gen_runcode = (BlockReturn(*)(Bit8u*))cache.pos;
@@ -303,7 +304,7 @@ static BlockReturn gen_runcodeInit(Bit8u *code) {
 	opcode(0).setea(4,-1,0,CALLSTACK).Emit8(0x89);  // mov [rsp+8/40], eax
 	opcode(4).setrm(ARG0_REG).Emit8(0xFF);   // jmp ARG0
 
-	*(Bit32u*)diff = (Bit32u)(cache.pos - diff - 4);
+	host_writed(diff, cache.pos - diff - sizeof(uint32_t));
 	// eax = return value, ecx = flags
 	opcode(1).setea(5,-1,0,offsetof(CPU_Regs,flags)).Emit8(0x33); // xor ecx, reg_flags
 	opcode(4).setrm(1).setimm(FMASK_TEST,4).Emit8(0x81);          // and ecx,FMASK_TEST
