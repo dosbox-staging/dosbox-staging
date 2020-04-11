@@ -1803,9 +1803,6 @@ static SDL_Window *SetDefaultWindowMode()
 	sdl.draw.width = splash_image.width;
 	sdl.draw.height = splash_image.height;
 
-	// TODO detect based on user settings
-	sdl.desktop.want_resizable_window = true;
-
 	if (sdl.desktop.fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;
 		return SetWindowMode(sdl.desktop.want_type, sdl.desktop.full.width,
@@ -1894,12 +1891,56 @@ static std::string NormalizeConfValue(const char *val)
 	return pref;
 }
 
+static bool DetectResizableWindow()
+{
+#if C_OPENGL
+	if (sdl.desktop.want_type != SCREEN_OPENGL) {
+		LOG_MSG("MAIN: Disabling resizable window, because it's not "
+		        "compatible with selected sdl.output");
+		return false;
+	}
+
+	assert(control);
+	const Section *rs = control->GetSection("render");
+	assert(rs);
+	const std::string sname = rs->GetPropValue("glshader");
+
+	if (sname != "sharp" && sname != "none") {
+		LOG_MSG("MAIN: Disabling resizable window, because it's not "
+		        "compatible with selected render.glshader\n"
+		        "MAIN: Use 'sharp' or 'none' to keep resizable window.");
+		return false;
+	}
+
+	return true;
+#else
+	return false;
+#endif // C_OPENGL
+}
+
 static void SetupWindowResolution(const char *val)
 {
 	assert(sdl.display_number >= 0);
 	std::string pref = NormalizeConfValue(val);
 
-	if (pref == "original" || pref.empty()) {
+	if (pref == "default" || pref.empty()) {
+#if defined(LINUX)
+		sdl.desktop.want_resizable_window = DetectResizableWindow();
+#else
+		sdl.desktop.want_resizable_window = false;
+#endif
+		sdl.desktop.window.use_original_size = true;
+		return;
+	}
+
+	if (pref == "resizable") {
+		sdl.desktop.want_resizable_window = DetectResizableWindow();
+		sdl.desktop.window.use_original_size = true;
+		return;
+	}
+
+	if (pref == "original") {
+		sdl.desktop.want_resizable_window = false;
 		sdl.desktop.window.use_original_size = true;
 		return;
 	}
@@ -1911,6 +1952,7 @@ static void SetupWindowResolution(const char *val)
 		SDL_Rect bounds;
 		SDL_GetDisplayBounds(sdl.display_number, &bounds);
 		if (w > 0 && h > 0 && w <= bounds.w && h <= bounds.h) {
+			sdl.desktop.want_resizable_window = false;
 			sdl.desktop.window.use_original_size = false;
 			sdl.desktop.window.width = w;
 			sdl.desktop.window.height = h;
@@ -1919,8 +1961,8 @@ static void SetupWindowResolution(const char *val)
 	}
 
 	LOG_MSG("MAIN: 'windowresolution = %s' is not a valid setting, using "
-	        "'original' instead",
-	        pref.c_str());
+	        "'original' instead", pref.c_str());
+	sdl.desktop.want_resizable_window = false;
 	sdl.desktop.window.use_original_size = true;
 }
 
@@ -2024,8 +2066,6 @@ static void GUI_StartUp(Section * sec) {
 		sdl.display_number = 0;
 	}
 
-	SetupWindowResolution(section->Get_string("windowresolution"));
-
 	sdl.desktop.full.display_res = sdl.desktop.full.fixed && (!sdl.desktop.full.width || !sdl.desktop.full.height);
 	if (sdl.desktop.full.display_res) {
 		GFX_ObtainDisplayDimensions();
@@ -2067,6 +2107,8 @@ static void GUI_StartUp(Section * sec) {
 	sdl.texture.pixelFormat = 0;
 	sdl.render_driver = section->Get_string("texture_renderer");
 	lowcase(sdl.render_driver);
+
+	SetupWindowResolution(section->Get_string("windowresolution"));
 
 #if C_OPENGL
 	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
@@ -2682,10 +2724,21 @@ void Config_Add_SDL() {
 	Pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop'\n"
 	                  "or a fixed size (e.g. 1024x768).");
 
-	pstring = sdl_sec->Add_string("windowresolution", on_start, "original");
-	pstring->Set_help("Scale the window to this size. Value 'original' will resize\n"
-	                  "window to the resolution picked by the emulated program.\n"
-	                  "Not supported when 'output' is set to 'surface'.");
+	pstring = sdl_sec->Add_string("windowresolution", on_start, "default");
+	pstring->Set_help(
+	        "Set window size to be used when running in windowed mode:\n"
+	        "  default:   Select the best option based on your\n"
+	        "             environment and other settings.\n"
+	        "  original:  Resize window to the resolution picked by\n"
+	        "             the emulated program.\n"
+#if SDL_VERSION_ATLEAST(2, 0, 5)
+	        "  resizable: Make the emulator window resizable.\n"
+	        "             This is an experimental option, works only with\n"
+	        "             output=opengl and glshader=sharp (or none)\n"
+#endif
+	        "  <custom>:  Scale the window content to the indicated\n"
+	        "             dimensions, in WxH format. For example: 1024x768.\n"
+	        "             Scaling is not performed for output=surface.");
 
 	const char *outputs[] = {
 		"surface",
