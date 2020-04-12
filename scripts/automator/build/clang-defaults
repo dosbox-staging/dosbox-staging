@@ -22,7 +22,7 @@ cflags_warnmore+=("${cflags_debug[@]}" -Wextra -Wshadow -Wcast-align
 cxxonly_warnmore+=(-Wnon-virtual-dtor -Woverloaded-virtual)
 cflags_optinfo+=("${cflags_release[@]}" -Rpass-analysis=loop-vectorize
                  -gline-tables-only -gcolumn-info)
-cflags_msan=("${cflags_debug[@]}" -fsanitize-recover=all
+cflags_msan=("${cflags_debug[@]}" -fsanitize-recover=all -fPIE -pie
              -fsanitize=memory -fno-omit-frame-pointer)
 cflags_usan=("${cflags_debug[@]}" -fsanitize-recover=all
              -fsanitize=undefined)
