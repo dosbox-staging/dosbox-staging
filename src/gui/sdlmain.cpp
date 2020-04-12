@@ -681,7 +681,6 @@ finish:
 		SDL_SetWindowMinimumSize(sdl.window, w, h);
 	}
 
-	HandleVideoResize(width, height);
 	sdl.update_display_contents = true;
 	return sdl.window;
 }
