@@ -6,7 +6,8 @@ ld="gcc${postfix}"
 ranlib="gcc-ranlib${postfix}"
 
 # Release-type additions
-TYPES+=(release debug warnmore pgotrain fdotrain optinfo)
+TYPES+=(release debug warnmore pgotrain fdotrain optinfo
+        asan uasan usan tsan)
 
 cflags+=(-fstack-protector -fdiagnostics-color=auto)
 cflags_debug+=("${cflags[@]}" -g -fno-omit-frame-pointer)
@@ -17,16 +18,23 @@ cflags_debug+=("${cflags[@]}" -g -fno-omit-frame-pointer)
 cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -fno-strict-aliasing
                  -fno-signed-zeros -fno-trapping-math -fassociative-math
                  -frename-registers -ffunction-sections -fdata-sections)
-
 cflags_pgotrain+=("${cflags_debug[@]}" -pg -ftree-vectorize)
-cflags_warnmore+=("${cflags_debug[@]}" -pedantic -Wcast-align -Wdouble-promotion
-                  -Wduplicated-branches -Wduplicated-cond -Wextra -Wformat=2
-                  -Wlogical-op -Wmisleading-indentation -Wnull-dereference
-                  -Wshadow -Wunused)
-cxxonly_warnmore+=(-Weffc++ -Wnon-virtual-dtor -Woverloaded-virtual -Wuseless-cast)
+cflags_warnmore+=("${cflags_debug[@]}" -pedantic -Wcast-align
+                  -Wdouble-promotion -Wduplicated-branches
+                  -Wduplicated-cond -Wextra -Wformat=2 -Wlogical-op
+                  -Wmisleading-indentation -Wnull-dereference -Wshadow
+                  -Wunused)
+cxxonly_warnmore+=(-Weffc++ -Wnon-virtual-dtor -Woverloaded-virtual
+                   -Wuseless-cast)
 cflags_fdotrain+=("${cflags[@]}" -DNDEBUG -g1 -fno-omit-frame-pointer)
 cflags_optinfo+=("${cflags_release[@]}" -fopt-info-missed
                  -ftree-vectorizer-verbose=6)
+cflags_asan+=("${cflags_debug[@]}" -fsanitize=address)
+cflags_uasan+=("${cflags_debug[@]}" -fsanitize=address,undefined
+              -fsanitize-recover=signed-integer-overflow)
+cflags_usan+=("${cflags_debug[@]}" -fsanitize=undefined
+              -fsanitize-recover=signed-integer-overflow)
+cflags_tsan+=("${cflags_debug[@]}" -fsanitize=thread)
 
 # Modifier additions
 MODIFIERS=(fdo)

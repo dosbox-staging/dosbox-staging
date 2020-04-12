@@ -8,19 +8,24 @@ if [[ $- == *i* ]]; then
 fi
 
 # Release-type additions
-TYPES+=(release debug warnmore pgotrain optinfo)
+TYPES+=(release debug warnmore pgotrain optinfo msan usan)
 
-# Note: -fno-math-errno allows better optimization of C/C++ math library functions
-cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -fno-math-errno -fno-strict-aliasing)
-
+# Note: no-math-errno improves optimization of C/C++ math functions
+cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -fno-math-errno
+                 -fno-strict-aliasing)
 cflags_debug+=("${cflags[@]}" -g -fno-omit-frame-pointer)
-cflags_pgotrain+=("${cflags_debug[@]}" -fprofile-instr-generate -fcoverage-mapping)
-cflags_warnmore+=("${cflags_debug[@]}" -Wextra -Wshadow -Wcast-align -Wunused
-                  -Woverloaded-virtual -Wpedantic -Wconversion -Wsign-conversion
-                  -Wdouble-promotion -Wformat=2)
+cflags_pgotrain+=("${cflags_debug[@]}" -fprofile-instr-generate
+                  -fcoverage-mapping)
+cflags_warnmore+=("${cflags_debug[@]}" -Wextra -Wshadow -Wcast-align
+                  -Wunused -Woverloaded-virtual -Wpedantic -Wconversion
+                  -Wsign-conversion -Wdouble-promotion -Wformat=2)
 cxxonly_warnmore+=(-Wnon-virtual-dtor -Woverloaded-virtual)
 cflags_optinfo+=("${cflags_release[@]}" -Rpass-analysis=loop-vectorize
                  -gline-tables-only -gcolumn-info)
+cflags_msan=("${cflags_debug[@]}" -fsanitize-recover=all
+             -fsanitize=memory -fno-omit-frame-pointer)
+cflags_usan=("${cflags_debug[@]}" -fsanitize-recover=all
+             -fsanitize=undefined)
 
 # Modifier additions
 MODIFIERS=(fdo)
