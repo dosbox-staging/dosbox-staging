@@ -5,10 +5,10 @@ cc=""
 cxx=""
 ld=""
 ranlib=""
-cflags=(-Wall -pipe)
-cxxonly=("")
-ldflags=("")
-libs=("")
+cflags+=(-Wall -pipe)
+cxxonly+=("")
+ldflags+=("")
+libs+=("")
 
 # Use ccache if it's available
 if command -v ccache &> /dev/null; then
