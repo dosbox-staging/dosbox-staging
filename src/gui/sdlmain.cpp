@@ -623,24 +623,22 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 			flags |= SDL_WINDOW_OPENGL;
 #endif
 
-		// Using undefined position will take care of placing and restoring the
-		// window by WM.
-		const int sdl_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
-		sdl.window = SDL_CreateWindow("", sdl_pos, sdl_pos, width, height, flags);
+		// Using undefined position will take care of placing and
+		// restoring the window by WM.
+		const int pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
+		sdl.window = SDL_CreateWindow("", pos, pos, width, height, flags);
+		if (!sdl.window) {
+			LOG_MSG("SDL: %s", SDL_GetError());
+			return nullptr;
+		}
 
 #if SDL_VERSION_ATLEAST(2, 0, 5)
 		if (resizable) {
 			SDL_AddEventWatch(watch_sdl_events, sdl.window);
 			SDL_SetWindowResizable(sdl.window, SDL_TRUE);
-			sdl.desktop.window.resizable = true;
-		} else {
-			sdl.desktop.window.resizable = false;
 		}
+		sdl.desktop.window.resizable = resizable;
 #endif
-		if (!sdl.window) {
-			return sdl.window;
-		}
-
 		GFX_SetTitle(-1, -1, false); // refresh title.
 
 		if (!fullscreen) {
