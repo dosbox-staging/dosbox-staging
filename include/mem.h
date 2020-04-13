@@ -19,10 +19,11 @@
 #ifndef DOSBOX_MEM_H
 #define DOSBOX_MEM_H
 
-#include <cstring>
-#ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
-#endif
+
+#include <cstring>
+
+#include "types.h"
 
 #include "byteorder.h"
 
@@ -147,19 +148,19 @@ constexpr static INLINE uint64_t le_to_host(uint64_t val)
 static INLINE uint16_t host_readw(const uint8_t *arr)
 {
 	uint16_t val;
-	memcpy(reinterpret_cast<void *>(&val),
-	       reinterpret_cast<const void *>(arr), sizeof(val));
+	memcpy(&val, arr, sizeof(val));
 	// array sequence was DOS little-endian, so convert value to host-type
 	return le_to_host(val);
 }
+
 static INLINE void host_writew(uint8_t *arr, uint16_t val)
 {
 	// Convert the host-type value to little-endian before filling array
 	val = host_to_le(val);
-	memcpy(reinterpret_cast<void *>(arr),
-	       reinterpret_cast<const void *>(&val), sizeof(val));
+	memcpy(arr, &val, sizeof(val));
 }
-static INLINE void host_addw(uint8_t *arr, const uint16_t &incr)
+
+static INLINE void host_addw(uint8_t *arr, const uint16_t incr)
 {
 	const uint16_t val = host_readw(arr) + incr;
 	host_writew(arr, val);
@@ -169,19 +170,19 @@ static INLINE void host_addw(uint8_t *arr, const uint16_t &incr)
 static INLINE uint32_t host_readd(const uint8_t *arr)
 {
 	uint32_t val;
-	memcpy(reinterpret_cast<void *>(&val),
-	       reinterpret_cast<const void *>(arr), sizeof(val));
+	memcpy(&val, arr, sizeof(val));
 	// array sequence was DOS little-endian, so convert value to host-type
 	return le_to_host(val);
 }
+
 static INLINE void host_writed(uint8_t *arr, uint32_t val)
 {
 	// Convert the host-type value to little-endian before filling array
 	val = host_to_le(val);
-	memcpy(reinterpret_cast<void *>(arr),
-	       reinterpret_cast<const void *>(&val), sizeof(val));
+	memcpy(arr, &val, sizeof(val));
 }
-static INLINE void host_addd(uint8_t *arr, const uint32_t &incr)
+
+static INLINE void host_addd(uint8_t *arr, const uint32_t incr)
 {
 	const uint32_t val = host_readd(arr) + incr;
 	host_writed(arr, val);
@@ -191,19 +192,17 @@ static INLINE void host_addd(uint8_t *arr, const uint32_t &incr)
 static INLINE uint64_t host_readq(const uint8_t *arr)
 {
 	uint64_t val;
-	memcpy(reinterpret_cast<void *>(&val),
-	       reinterpret_cast<const void *>(arr), sizeof(val));
+	memcpy(&val, arr, sizeof(val));
 	// array sequence was DOS little-endian, so convert value to host-type
 	return le_to_host(val);
 }
+
 static INLINE void host_writeq(uint8_t *arr, uint64_t val)
 {
 	// Convert the host-type value to little-endian before filling array
 	val = host_to_le(val);
-	memcpy(reinterpret_cast<void *>(arr),
-	       reinterpret_cast<const void *>(&val), sizeof(val));
+	memcpy(arr, &val, sizeof(val));
 }
-
 
 static INLINE void var_write(uint8_t *var, uint8_t val)
 {
