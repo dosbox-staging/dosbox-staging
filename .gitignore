@@ -50,6 +50,10 @@ missing
 mkinstalldirs
 stamp-h1
 
+# autotools configuration ephemerals
+confdefs.h
+conftest.dir
+
 # Other
 compile
 build.log
