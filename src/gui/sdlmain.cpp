@@ -1613,12 +1613,13 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 	case SCREEN_SURFACE:
 		if (changedLines) {
 			int y = 0;
-			Bitu index = 0, rectCount = 0;
+			size_t index = 0;
+			size_t rect_count = 0;
 			while (y < sdl.draw.height) {
 				if (!(index & 1)) {
 					y += changedLines[index];
 				} else {
-					SDL_Rect *rect = &sdl.updateRects[rectCount++];
+					SDL_Rect *rect = &sdl.updateRects[rect_count++];
 					rect->x = sdl.clip.x;
 					rect->y = sdl.clip.y + y;
 					rect->w = sdl.draw.width;
@@ -1627,8 +1628,10 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				}
 				index++;
 			}
-			if (rectCount)
-				SDL_UpdateWindowSurfaceRects(sdl.window, sdl.updateRects, rectCount);
+			if (rect_count)
+				SDL_UpdateWindowSurfaceRects(sdl.window,
+				                             sdl.updateRects,
+				                             rect_count);
 		}
 		break;
 	}
