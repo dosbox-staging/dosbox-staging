@@ -622,13 +622,15 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		}
 
 		uint32_t flags = 0;
+#if C_OPENGL
 		if (screen_type == SCREEN_OPENGL)
 			flags |= SDL_WINDOW_OPENGL;
+#endif
 #if defined (WIN32)
 		// This is a hack for Windows 10 to prevent a crash in AMD OpenGL
 		// driver when window is being re-created by SDL2 internally to
 		// support OpenGL.
-		else if (screen_type == SCREEN_TEXTURE && starts_with("opengl", sdl.render_driver))
+		if (screen_type == SCREEN_TEXTURE && starts_with("opengl", sdl.render_driver))
 			flags |= SDL_WINDOW_OPENGL;
 #endif
 
@@ -1543,7 +1545,12 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 void GFX_EndUpdate( const Bit16u *changedLines ) {
 	if (!sdl.update_display_contents)
 		return;
-	if (((sdl.desktop.type != SCREEN_OPENGL) || !RENDER_GetForceUpdate()) && !sdl.updating)
+#if C_OPENGL
+	const bool using_opengl = (sdl.desktop.type == SCREEN_OPENGL);
+#else
+	const bool using_opengl = false;
+#endif
+	if ((!using_opengl || !RENDER_GetForceUpdate()) && !sdl.updating)
 		return;
 	bool actually_updating = sdl.updating;
 	sdl.updating=false;
@@ -1645,8 +1652,10 @@ Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
 		return SDL_MapRGB(sdl.surface->format,red,green,blue);
 	case SCREEN_TEXTURE:
 		return SDL_MapRGB(sdl.texture.pixelFormat, red, green, blue);
+#if C_OPENGL
 	case SCREEN_OPENGL:
 		return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
+#endif
 	}
 	return 0;
 }
@@ -2340,11 +2349,13 @@ static void HandleVideoResize(int width, int height)
 		sdl.desktop.full.height = height;
 	}
 
+#if C_OPENGL
 	if (sdl.desktop.window.resizable && sdl.desktop.type == SCREEN_OPENGL) {
 		sdl.clip = CalculateViewport(width, height);
 		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		return;
 	}
+#endif
 
 	/* Even if the new window's dimensions are actually the desired ones
 	 * we may still need to re-obtain a new window surface or do
