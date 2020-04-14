@@ -61,7 +61,7 @@ static INLINE uint8_t host_readb(const uint8_t *var)
 {
 	return *var;
 }
-static INLINE void host_writeb(uint8_t *var, const uint8_t &val)
+static INLINE void host_writeb(uint8_t *var, const uint8_t val)
 {
 	*var = val;
 }
