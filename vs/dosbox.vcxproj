@@ -272,6 +272,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\bios.h" />
     <ClInclude Include="..\include\bios_disk.h" />
+    <ClInclude Include="..\include\byteorder.h" />
     <ClInclude Include="..\include\callback.h" />
     <ClInclude Include="..\include\control.h" />
     <ClInclude Include="..\include\cpu.h" />
