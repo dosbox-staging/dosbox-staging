@@ -1,6 +1,7 @@
 noinst_HEADERS =  \
 bios_disk.h \
 bios.h \
+byteorder.h \
 callback.h \
 compiler.h \
 control.h \

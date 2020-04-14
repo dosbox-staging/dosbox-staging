@@ -390,6 +390,9 @@
     <ClInclude Include="..\include\bios_disk.h" >
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\byteorder.h" >
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\callback.h" >
       <Filter>include</Filter>
     </ClInclude>

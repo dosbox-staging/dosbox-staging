@@ -23,6 +23,8 @@
 #include "dosbox.h"
 #endif
 
+#include "byteorder.h"
+
 typedef Bit32u PhysPt;
 typedef Bit8u * HostPt;
 typedef Bit32u RealPt;
@@ -114,49 +116,6 @@ static INLINE void host_writew(HostPt off,Bit16u val) {
 }
 static INLINE void host_writed(HostPt off,Bit32u val) {
 	*(Bit32u *)(off)=val;
-}
-
-#endif
-
-// host_to_le functions allow for byte order conversion on big endian
-// architectures while respecting memory alignment on low endian.
-//
-// It is extremely unlikely that we'll ever try to compile on big endian arch
-// with a compiler missing __builtin_bswap*, so let's not overcomplicate
-// things.
-//
-// __builtin_bswap* is supported since GCC 4.3 and Clang 3.4
-
-constexpr static INLINE uint8_t host_to_le(uint8_t val) {
-	return val;
-}
-
-#if defined(WORDS_BIGENDIAN)
-
-constexpr static INLINE int16_t host_to_le(int16_t val) {
-	return __builtin_bswap16(val);
-}
-
-constexpr static INLINE uint16_t host_to_le(uint16_t val) {
-	return __builtin_bswap16(val);
-}
-
-constexpr static INLINE uint32_t host_to_le(uint32_t val) {
-	return __builtin_bswap32(val);
-}
-
-#else
-
-constexpr static INLINE int16_t host_to_le(int16_t val) {
-	return val;
-}
-
-constexpr static INLINE uint16_t host_to_le(uint16_t val) {
-	return val;
-}
-
-constexpr static INLINE uint32_t host_to_le(uint32_t val) {
-	return val;
 }
 
 #endif

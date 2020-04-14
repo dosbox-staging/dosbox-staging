@@ -503,8 +503,10 @@ static void MIXER_MixData(Bitu needed) {
 		for (size_t i = 0; i < added; i++) {
 			const int32_t sample_1 = mixer.work[readpos][0] >> MIXER_VOLSHIFT;
 			const int32_t sample_2 = mixer.work[readpos][1] >> MIXER_VOLSHIFT;
-			convert[i][0] = host_to_le(MIXER_CLIP(sample_1));
-			convert[i][1] = host_to_le(MIXER_CLIP(sample_2));
+			const int16_t s1 = MIXER_CLIP(sample_1);
+			const int16_t s2 = MIXER_CLIP(sample_2);
+			convert[i][0] = host_to_le(static_cast<uint16_t>(s1));
+			convert[i][1] = host_to_le(static_cast<uint16_t>(s2));
 			readpos = (readpos + 1) & MIXER_BUFMASK;
 		}
 		CAPTURE_AddWave(mixer.freq, added, reinterpret_cast<int16_t*>(convert));
