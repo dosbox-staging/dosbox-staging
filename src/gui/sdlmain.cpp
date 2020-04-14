@@ -237,6 +237,9 @@ enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_HIGHEST
 };
 
+/* Alias for indicating, that new window should not be user-resizable: */
+constexpr bool FIXED_SIZE = false;
+
 struct Dimensions {
 	int width;
 	int height;
@@ -693,7 +696,8 @@ finish:
 // on Android, and a non-fullscreen window with the input dimensions otherwise.
 SDL_Window * GFX_SetSDLSurfaceWindow(Bit16u width, Bit16u height)
 {
-	return SetWindowMode(SCREEN_SURFACE, width, height, false, false);
+	constexpr bool fullscreen = false;
+	return SetWindowMode(SCREEN_SURFACE, width, height, fullscreen, FIXED_SIZE);
 }
 
 // Returns the rectangle in the current window to be used for scaling a
@@ -947,7 +951,7 @@ dosurface:
 				                           sdl.desktop.full.width,
 				                           sdl.desktop.full.height,
 				                           sdl.desktop.fullscreen,
-				                           false);
+				                           FIXED_SIZE);
 				if (sdl.window == NULL)
 					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",
 					       sdl.desktop.full.width,
@@ -966,7 +970,7 @@ dosurface:
 				sdl.window = SetWindowMode(SCREEN_SURFACE,
 				                           width, height,
 				                           sdl.desktop.fullscreen,
-				                           false);
+				                           FIXED_SIZE);
 				if (sdl.window == NULL)
 					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",
 					       (int)width,
@@ -978,7 +982,8 @@ dosurface:
 			sdl.clip.x = 0;
 			sdl.clip.y = 0;
 			sdl.window = SetWindowMode(SCREEN_SURFACE, width, height,
-			                           sdl.desktop.fullscreen, false);
+			                           sdl.desktop.fullscreen,
+			                           FIXED_SIZE);
 			if (sdl.window == NULL)
 				E_Exit("Could not set windowed video mode %ix%i-%i: %s",
 				       (int)width,
@@ -1038,7 +1043,8 @@ dosurface:
 			sdl.clip.y = (wndh - imgh) / 2;
 
 			sdl.window = SetWindowMode(SCREEN_TEXTURE, wndw, wndh,
-			                           sdl.desktop.fullscreen, false);
+			                           sdl.desktop.fullscreen,
+			                           FIXED_SIZE);
 		}
 		if (sdl.render_driver != "auto")
 			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.render_driver.c_str());
@@ -1804,20 +1810,20 @@ static SDL_Window *SetDefaultWindowMode()
 	if (sdl.desktop.fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;
 		return SetWindowMode(sdl.desktop.want_type, sdl.desktop.full.width,
-		                     sdl.desktop.full.height, true,
+		                     sdl.desktop.full.height, sdl.desktop.fullscreen,
 		                     sdl.desktop.want_resizable_window);
 	}
 
 	if (sdl.desktop.window.use_original_size) {
 		sdl.desktop.lazy_init_window_size = false;
 		return SetWindowMode(sdl.desktop.want_type, sdl.draw.width,
-		                     sdl.draw.height, false,
+		                     sdl.draw.height, sdl.desktop.fullscreen,
 		                     sdl.desktop.want_resizable_window);
 	}
 
 	sdl.desktop.lazy_init_window_size = false;
 	return SetWindowMode(sdl.desktop.want_type, sdl.desktop.window.width,
-	                     sdl.desktop.window.height, false,
+	                     sdl.desktop.window.height, sdl.desktop.fullscreen,
 	                     sdl.desktop.want_resizable_window);
 }
 
