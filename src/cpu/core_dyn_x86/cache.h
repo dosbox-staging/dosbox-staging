@@ -487,19 +487,19 @@ static INLINE void cache_addb(Bit8u val) {
 	*cache.pos++=val;
 }
 
-static INLINE void cache_addw(const uint16_t &val)
+static INLINE void cache_addw(const uint16_t val)
 {
 	host_writew(cache.pos, val);
 	cache.pos += sizeof(val);
 }
 
-static INLINE void cache_addd(const uint32_t &val)
+static INLINE void cache_addd(const uint32_t val)
 {
 	host_writed(cache.pos, val);
 	cache.pos += sizeof(val);
 }
 
-static INLINE void cache_addq(const uint64_t &val)
+static INLINE void cache_addq(const uint64_t val)
 {
 	host_writeq(cache.pos, val);
 	cache.pos += sizeof(val);
