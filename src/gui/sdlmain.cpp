@@ -1961,6 +1961,10 @@ static void SetupWindowResolution(const char *val)
 			sdl.desktop.window.width = w;
 			sdl.desktop.window.height = h;
 			return;
+		} else {
+			LOG_MSG("MAIN: dimensions %dx%d are out of display "
+			        "bounds (%dx%d)",
+			        w, h, bounds.w, bounds.h);
 		}
 	}
 
