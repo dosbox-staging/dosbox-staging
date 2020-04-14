@@ -237,6 +237,10 @@ enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_HIGHEST
 };
 
+struct Dimensions {
+	int width;
+	int height;
+};
 
 struct SDL_Block {
 	bool inited;
@@ -838,30 +842,23 @@ static bool LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
 /* TODO: The current implementation will not let the pixel-perfect mode to  */
 /*       to apply even the simplest 1:2 and 2:1 corrections at the original */
 /*       window resolution, therefore: consider a special case for PP mode. */
-static void GetAvailableArea(int &width, int &height)
+static Dimensions GetAvailableArea(int width, int height)
 {
-	bool fixed = false;
-
 	if (sdl.desktop.fullscreen) {
-		if (sdl.desktop.full.fixed) {
-			width  = sdl.desktop.full.width;
-			height = sdl.desktop.full.height;
-			fixed   = true;
-		}
+		if (sdl.desktop.full.fixed)
+			return {sdl.desktop.full.width, sdl.desktop.full.height};
 	} else {
-		if (sdl.desktop.window.width > 0) {
-			width  = sdl.desktop.window.width;
-			height = sdl.desktop.window.height;
-			fixed   = true;
-		}
+		if (sdl.desktop.window.width > 0 && sdl.desktop.window.height > 0)
+			return {sdl.desktop.window.width, sdl.desktop.window.height};
 	}
-	if (!fixed) {
-		const double par = sdl.draw.pixel_aspect;
-		if (par > 1.0)
-			height = iround(height * par);
-		if (par < 1.0)
-			width = iround(width / par);
-	}
+
+	const double par = sdl.draw.pixel_aspect;
+	if (par > 1.0)
+		height = iround(height * par);
+	if (par < 1.0)
+		width = iround(width / par);
+
+	return {width, height};
 }
 
 // ATT: aspect is the final aspect ratio of the image including its pixel dimensions and PAR
@@ -906,13 +903,12 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
                  GFX_CallBack_t callback,
                  double pixel_aspect)
 {
-	int avw, avh; /* available width and height */
 	Bitu retFlags = 0;
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
-	sdl.draw.width = width;
-	sdl.draw.height = height;
+	sdl.draw.width = static_cast<int>(width);
+	sdl.draw.height = static_cast<int>(height);
 	sdl.draw.scalex = scalex;
 	sdl.draw.scaley = scaley;
 	sdl.draw.pixel_aspect = pixel_aspect;
@@ -921,22 +917,22 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 	sdl.double_h = (flags & GFX_DBL_H) > 0;
 	sdl.double_w = (flags & GFX_DBL_W) > 0;
 
-	avw = width;
-	avh = height;
-	GetAvailableArea(avw, avh);
-	LOG_MSG("MAIN: Emulated resolution: %dx%d,%s%s pixel aspect ratio: %#.2f",
-	        (int)width, (int)height,
+	const Dimensions available = GetAvailableArea(sdl.draw.width, sdl.draw.height);
+
+	LOG_MSG("MAIN: Draw resolution: %dx%d,%s%s pixel aspect ratio: %#.2f",
+	        sdl.draw.width, sdl.draw.height,
 	        sdl.double_w ? " double-width," : "",
-		sdl.double_h ? " double-height," : "",
-		pixel_aspect);
-	LOG_MSG("MAIN: Emulator resolution: %dx%d", avw, avh);
+	        sdl.double_h ? " double-height," : "",
+	        pixel_aspect);
+	LOG_MSG("MAIN: Emulator resolution: %dx%d",
+	        available.width, available.height);
+
 	if (sdl.scaling_mode == SmPerfect) {
-		if (!InitPp(avw, avh)) {
+		if (!InitPp(available.width, available.height)) {
 			LOG_MSG("Failed to initialise pixel-perfect mode, reverting to surface.");
 			goto dosurface;
 		}
 	}
-
 
 	switch (sdl.desktop.want_type) {
 dosurface:
@@ -1029,8 +1025,8 @@ dosurface:
 
 			int wndw, wndh;
 			if (sdl.desktop.fullscreen) {
-				wndh = avh;
-				wndw = avw;
+				wndw = available.width;
+				wndh = available.height;
 			} else {
 				wndh = imgh;
 				wndw = imgw;
