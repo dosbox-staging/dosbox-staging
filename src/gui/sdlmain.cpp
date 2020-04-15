@@ -203,10 +203,12 @@ SDL_bool mouse_is_captured = SDL_FALSE; // global for mapper
 constexpr uint32_t RMASK = 0xff000000;
 constexpr uint32_t GMASK = 0x00ff0000;
 constexpr uint32_t BMASK = 0x0000ff00;
+constexpr uint32_t AMASK = 0x000000ff;
 #else
 constexpr uint32_t RMASK = 0x000000ff;
 constexpr uint32_t GMASK = 0x0000ff00;
 constexpr uint32_t BMASK = 0x00ff0000;
+constexpr uint32_t AMASK = 0xff000000;
 #endif
 #endif // !MACOSX
 
@@ -468,20 +470,30 @@ static int watch_sdl_events(void *userdata, SDL_Event *e)
 }
 #endif
 
-static unsigned char logo[32*32*4]= {
-#include "dosbox_logo.h"
-};
+#if defined(MACOSX)
+
+// On macOS, as we use a nicer external icon packaged in App bundle.
+static void SetIcon() {}
+
+#else
+#include "icon.c"
 
 static void SetIcon()
 {
-	// Don't set it on macOS, as we use a nicer external icon there.
-#if !defined(MACOSX)
-	SDL_Surface *s = SDL_CreateRGBSurfaceFrom((void*)logo, 32, 32, 32, 128,
-	                                          RMASK, GMASK, BMASK, 0);
+	constexpr int src_w = icon_data.width;
+	constexpr int src_h = icon_data.height;
+	constexpr int src_bpp = icon_data.bytes_per_pixel;
+	static_assert(src_bpp == 4, "Source image expected in RGBA format.");
+	std::array<uint8_t, (src_w * src_h * src_bpp)> icon;
+	ICON_DATA_RUN_LENGTH_DECODE(icon.data(), icon_data.rle_pixel_data,
+	                            src_w * src_h, src_bpp);
+	SDL_Surface *s = SDL_CreateRGBSurfaceFrom(icon.data(), src_w, src_h,
+	                                          src_bpp * 8, src_w * src_bpp,
+	                                          RMASK, GMASK, BMASK, AMASK);
 	SDL_SetWindowIcon(sdl.window, s);
 	SDL_FreeSurface(s);
-#endif // !defined(MACOSX)
 }
+#endif // !defined(MACOSX)
 
 static void KillSwitch(bool pressed) {
 	if (!pressed)
