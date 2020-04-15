@@ -2,6 +2,30 @@
     "version": 1,
     "warnings": [
         {
+            "CodeCurrent": 99146737,
+            "CodeNext": 3299936121,
+            "CodePrev": 2974951853,
+            "ErrorCode": "V570",
+            "FileName": "mem.h",
+            "Message": "The 'val' variable is assigned to itself."
+        },
+        {
+            "CodeCurrent": 99146737,
+            "CodeNext": 3299936121,
+            "CodePrev": 2974951853,
+            "ErrorCode": "V570",
+            "FileName": "mem.h",
+            "Message": "The 'val' variable is assigned to itself."
+        },
+        {
+            "CodeCurrent": 99146737,
+            "CodeNext": 3299936121,
+            "CodePrev": 2974951853,
+            "ErrorCode": "V570",
+            "FileName": "mem.h",
+            "Message": "The 'val' variable is assigned to itself."
+        },
+        {
             "CodeCurrent": 432032057,
             "CodeNext": 36027430,
             "CodePrev": 0,
