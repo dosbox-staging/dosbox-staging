@@ -75,11 +75,22 @@ static INLINE uint16_t host_readw(const uint8_t *arr)
 	return le_to_host(val);
 }
 
+// Like the above, but allows index-style access assuming a 16-bit array
+static INLINE uint16_t host_readw_at(const uint8_t *arr, const uintptr_t index)
+{
+	return host_readw(arr + index * sizeof(uint16_t));
+}
+
 static INLINE void host_writew(uint8_t *arr, uint16_t val)
 {
 	// Convert the host-type value to little-endian before filling array
 	val = host_to_le(val);
 	memcpy(arr, &val, sizeof(val));
+}
+
+static INLINE void host_writew_at(uint8_t *arr, const uintptr_t index, const uint16_t val)
+{
+	host_writew(arr + index * sizeof(uint16_t), val);
 }
 
 static INLINE void host_addw(uint8_t *arr, const uint16_t incr)
@@ -97,11 +108,22 @@ static INLINE uint32_t host_readd(const uint8_t *arr)
 	return le_to_host(val);
 }
 
+// Like the above, but allows index-style access assuming a 32-bit array
+static INLINE uint32_t host_readd_at(const uint8_t *arr, const uintptr_t index)
+{
+	return host_readd(arr + index * sizeof(uint32_t));
+}
+
 static INLINE void host_writed(uint8_t *arr, uint32_t val)
 {
 	// Convert the host-type value to little-endian before filling array
 	val = host_to_le(val);
 	memcpy(arr, &val, sizeof(val));
+}
+
+static INLINE void host_writed_at(uint8_t *arr, const uintptr_t index, const uint32_t val)
+{
+	host_writed(arr + index * sizeof(uint32_t), val);
 }
 
 static INLINE void host_addd(uint8_t *arr, const uint32_t incr)
