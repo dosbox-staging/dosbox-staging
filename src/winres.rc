@@ -2,8 +2,7 @@
 #include "winresrc.h"
 
 // icon resource
-dosbox_ico ICON "dosbox.ico"
-
+DOSBOX_ICO ICON "..\\contrib\\icons\\dosbox-staging.ico"
 
 // version resource
 VS_VERSION_INFO VERSIONINFO

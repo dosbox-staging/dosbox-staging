@@ -470,12 +470,18 @@ static int watch_sdl_events(void *userdata, SDL_Event *e)
 }
 #endif
 
-#if defined(MACOSX)
-
-// On macOS, as we use a nicer external icon packaged in App bundle.
+/* On macOS, as we use a nicer external icon packaged in App bundle.
+ *
+ * Visual Studio bundles .ico file specified in winres.rc into the
+ * dosbox.exe file.
+ *
+ * Other OSes will either use svg icon bundled in the native package, or
+ * the window uploaded via SDL_SetWindowIcon below.
+ */
+#if defined(MACOSX) || defined(_MSC_VER)
 static void SetIcon() {}
-
 #else
+
 #include "icon.c"
 
 static void SetIcon()
@@ -493,7 +499,8 @@ static void SetIcon()
 	SDL_SetWindowIcon(sdl.window, s);
 	SDL_FreeSurface(s);
 }
-#endif // !defined(MACOSX)
+
+#endif
 
 static void KillSwitch(bool pressed) {
 	if (!pressed)
