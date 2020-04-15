@@ -148,89 +148,80 @@ foundit:
 	switch (mblock->type) {
 	case M_LIN4:
 		pageSize = mblock->sheight * mblock->swidth/2;
-		minfo.BytesPerScanLine = host_to_le(
-		        static_cast<uint16_t>(mblock->swidth / 8));
-		minfo.NumberOfPlanes = host_to_le(static_cast<uint8_t>(0x4));
-		minfo.BitsPerPixel = host_to_le(static_cast<uint8_t>(4));
-		minfo.MemoryModel = host_to_le(static_cast<uint8_t>(3)); // ega
-		                                                         // planar
-		                                                         // mode
+		minfo.BytesPerScanLine = host_to_le16(mblock->swidth / 8);
+		minfo.NumberOfPlanes = 0x4;
+		minfo.BitsPerPixel = 4u;
+		minfo.MemoryModel = 3u; // ega planar mode
 		modeAttributes = 0x1b; // Color, graphics, no linear buffer
 		break;
 	case M_LIN8:
 		pageSize = mblock->sheight * mblock->swidth;
-		minfo.BytesPerScanLine = host_to_le(
-		        static_cast<uint16_t>(mblock->swidth));
-		minfo.NumberOfPlanes = host_to_le(static_cast<uint8_t>(0x1));
-		minfo.BitsPerPixel = host_to_le(static_cast<uint8_t>(8));
-		minfo.MemoryModel = host_to_le(static_cast<uint8_t>(4)); // packed
-		                                                         // pixel
+		minfo.BytesPerScanLine = host_to_le16(mblock->swidth);
+		minfo.NumberOfPlanes = 0x1;
+		minfo.BitsPerPixel = 8u;
+		minfo.MemoryModel = 4u; // packed pixel
 		modeAttributes = 0x1b; // Color, graphics
 		if (!int10.vesa_nolfb)
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN15:
 		pageSize = mblock->sheight * mblock->swidth*2;
-		minfo.BytesPerScanLine = host_to_le(
-		        static_cast<uint16_t>(mblock->swidth * 2));
-		minfo.NumberOfPlanes = host_to_le(static_cast<uint8_t>(0x1));
-		minfo.BitsPerPixel = host_to_le(static_cast<uint8_t>(15));
-		minfo.MemoryModel = host_to_le(static_cast<uint8_t>(6)); // HiColour
-		minfo.RedMaskSize = host_to_le(static_cast<uint8_t>(5));
-		minfo.RedMaskPos = host_to_le(static_cast<uint8_t>(10));
-		minfo.GreenMaskSize = host_to_le(static_cast<uint8_t>(5));
-		minfo.GreenMaskPos = host_to_le(static_cast<uint8_t>(5));
-		minfo.BlueMaskSize = host_to_le(static_cast<uint8_t>(5));
-		minfo.BlueMaskPos = host_to_le(static_cast<uint8_t>(0));
-		minfo.ReservedMaskSize = host_to_le(static_cast<uint8_t>(0x01));
-		minfo.ReservedMaskPos = host_to_le(static_cast<uint8_t>(0x0f));
+		minfo.BytesPerScanLine = host_to_le16(mblock->swidth * 2);
+		minfo.NumberOfPlanes = 0x1;
+		minfo.BitsPerPixel = 15u;
+		minfo.MemoryModel = 6u; // HiColour
+		minfo.RedMaskSize = 5u;
+		minfo.RedMaskPos = 10u;
+		minfo.GreenMaskSize = 5u;
+		minfo.GreenMaskPos = 5u;
+		minfo.BlueMaskSize = 5u;
+		minfo.BlueMaskPos = 0u;
+		minfo.ReservedMaskSize = 0x01;
+		minfo.ReservedMaskPos = 0x0f;
 		modeAttributes = 0x1b; // Color, graphics
 		if (!int10.vesa_nolfb)
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN16:
 		pageSize = mblock->sheight * mblock->swidth*2;
-		minfo.BytesPerScanLine = host_to_le(
-		        static_cast<uint16_t>(mblock->swidth * 2));
-		minfo.NumberOfPlanes = host_to_le(static_cast<uint8_t>(0x1));
-		minfo.BitsPerPixel = host_to_le(static_cast<uint8_t>(16));
-		minfo.MemoryModel = host_to_le(static_cast<uint8_t>(6)); // HiColour
-		minfo.RedMaskSize = host_to_le(static_cast<uint8_t>(5));
-		minfo.RedMaskPos = host_to_le(static_cast<uint8_t>(11));
-		minfo.GreenMaskSize = host_to_le(static_cast<uint8_t>(6));
-		minfo.GreenMaskPos = host_to_le(static_cast<uint8_t>(5));
-		minfo.BlueMaskSize = host_to_le(static_cast<uint8_t>(5));
-		minfo.BlueMaskPos = host_to_le(static_cast<uint8_t>(0));
+		minfo.BytesPerScanLine = host_to_le16(mblock->swidth * 2);
+		minfo.NumberOfPlanes = 0x1;
+		minfo.BitsPerPixel = 16u;
+		minfo.MemoryModel = 6u; // HiColour
+		minfo.RedMaskSize = 5u;
+		minfo.RedMaskPos = 11u;
+		minfo.GreenMaskSize = 6u;
+		minfo.GreenMaskPos = 5u;
+		minfo.BlueMaskSize = 5u;
+		minfo.BlueMaskPos = 0u;
 		modeAttributes = 0x1b; // Color, graphics
 		if (!int10.vesa_nolfb)
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN32:
 		pageSize = mblock->sheight * mblock->swidth*4;
-		minfo.BytesPerScanLine = host_to_le(
-		        static_cast<uint16_t>(mblock->swidth * 4));
-		minfo.NumberOfPlanes = host_to_le(static_cast<uint8_t>(0x1));
-		minfo.BitsPerPixel = host_to_le(static_cast<uint8_t>(32));
-		minfo.MemoryModel = host_to_le(static_cast<uint8_t>(6)); // HiColour
-		minfo.RedMaskSize = host_to_le(static_cast<uint8_t>(8));
-		minfo.RedMaskPos = host_to_le(static_cast<uint8_t>(0x10));
-		minfo.GreenMaskSize = host_to_le(static_cast<uint8_t>(0x8));
-		minfo.GreenMaskPos = host_to_le(static_cast<uint8_t>(0x8));
-		minfo.BlueMaskSize = host_to_le(static_cast<uint8_t>(0x8));
-		minfo.BlueMaskPos = host_to_le(static_cast<uint8_t>(0x0));
-		minfo.ReservedMaskSize = host_to_le(static_cast<uint8_t>(0x8));
-		minfo.ReservedMaskPos = host_to_le(static_cast<uint8_t>(0x18));
+		minfo.BytesPerScanLine = host_to_le16(mblock->swidth * 4);
+		minfo.NumberOfPlanes = 0x1u;
+		minfo.BitsPerPixel = 32u;
+		minfo.MemoryModel = 6u; // HiColour
+		minfo.RedMaskSize = 8u;
+		minfo.RedMaskPos = 0x10;
+		minfo.GreenMaskSize = 0x8;
+		minfo.GreenMaskPos = 0x8;
+		minfo.BlueMaskSize = 0x8;
+		minfo.BlueMaskPos = 0x0;
+		minfo.ReservedMaskSize = 0x8;
+		minfo.ReservedMaskPos = 0x18;
 		modeAttributes = 0x1b; // Color, graphics
 		if (!int10.vesa_nolfb)
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_TEXT:
 		pageSize = 0;
-		minfo.BytesPerScanLine = host_to_le(
-		        static_cast<uint16_t>(mblock->twidth * 2));
-		minfo.NumberOfPlanes = host_to_le(static_cast<uint8_t>(0x4));
-		minfo.BitsPerPixel = host_to_le(static_cast<uint8_t>(4));
-		minfo.MemoryModel = host_to_le(static_cast<uint8_t>(0)); // text
+		minfo.BytesPerScanLine = host_to_le16(mblock->twidth * 2);
+		minfo.NumberOfPlanes = 0x4;
+		minfo.BitsPerPixel = 4u;
+		minfo.MemoryModel = 0u; // text
 		modeAttributes = 0x0f; // Color, text, bios output
 		break;
 	default:
@@ -249,30 +240,30 @@ foundit:
 	} else if (pageSize) {
 		pages = (vga.vmemsize / pageSize)-1;
 	}
-	minfo.NumberOfImagePages = host_to_le(static_cast<uint8_t>(pages));
-	minfo.ModeAttributes = host_to_le(static_cast<uint16_t>(modeAttributes));
-	minfo.WinAAttributes = host_to_le(static_cast<uint8_t>(0x7)); // Exists/readable/writable
+	minfo.NumberOfImagePages = pages;
+	minfo.ModeAttributes = host_to_le16(modeAttributes);
+	minfo.WinAAttributes = 0x7; // Exists/readable/writable
 
 	if (mblock->type==M_TEXT) {
-		minfo.WinGranularity = host_to_le(static_cast<uint16_t>(32));
-		minfo.WinSize = host_to_le(static_cast<uint16_t>(32));
-		minfo.WinASegment = host_to_le(static_cast<uint16_t>(0xb800));
-		minfo.XResolution = host_to_le(static_cast<uint16_t>(mblock->twidth));
-		minfo.YResolution = host_to_le(static_cast<uint16_t>(mblock->theight));
+		minfo.WinGranularity = host_to_le16(32u);
+		minfo.WinSize = host_to_le16(32u);
+		minfo.WinASegment = host_to_le16(0xb800);
+		minfo.XResolution = host_to_le16(mblock->twidth);
+		minfo.YResolution = host_to_le16(mblock->theight);
 	} else {
-		minfo.WinGranularity = host_to_le(static_cast<uint16_t>(64));
-		minfo.WinSize = host_to_le(static_cast<uint16_t>(64));
-		minfo.WinASegment = host_to_le(static_cast<uint16_t>(0xa000));
-		minfo.XResolution = host_to_le(static_cast<uint16_t>(mblock->swidth));
-		minfo.YResolution = host_to_le(static_cast<uint16_t>(mblock->sheight));
+		minfo.WinGranularity = host_to_le16(64u);
+		minfo.WinSize = host_to_le16(64u);
+		minfo.WinASegment = host_to_le16(0xa000);
+		minfo.XResolution = host_to_le16(mblock->swidth);
+		minfo.YResolution = host_to_le16(mblock->sheight);
 	}
-	minfo.WinFuncPtr = host_to_le(static_cast<uint32_t>(int10.rom.set_window));
-	minfo.NumberOfBanks = host_to_le(static_cast<uint8_t>(0x1));
-	minfo.Reserved_page = host_to_le(static_cast<uint8_t>(0x1));
-	minfo.XCharSize = host_to_le(static_cast<uint8_t>(mblock->cwidth));
-	minfo.YCharSize = host_to_le(static_cast<uint8_t>(mblock->cheight));
+	minfo.WinFuncPtr = host_to_le32(int10.rom.set_window);
+	minfo.NumberOfBanks = 0x1;
+	minfo.Reserved_page = 0x1;
+	minfo.XCharSize = mblock->cwidth;
+	minfo.YCharSize = mblock->cheight;
 	if (!int10.vesa_nolfb)
-		minfo.PhysBasePtr = host_to_le(static_cast<uint32_t>(S3_LFB_BASE));
+		minfo.PhysBasePtr = host_to_le32(S3_LFB_BASE);
 
 	MEM_BlockWrite(buf,&minfo,sizeof(MODE_INFO));
 	return VESA_SUCCESS;
