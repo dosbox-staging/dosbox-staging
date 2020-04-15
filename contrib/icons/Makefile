@@ -4,6 +4,7 @@ help:
 	@echo "Re-generate icons in platform specific formats."
 	@echo
 	@echo "Available targets:"
+	@echo "  hicolor             - Freedesktop icon directory structure"
 	@echo "  dosbox-staging.ico  - Windows format"
 	@echo "  dosbox-staging.icns - macOS format"
 	@echo "  icon_<size>.png     - render icon in specific size, e.g. icon_24.png"
@@ -55,11 +56,37 @@ dosbox-staging.iconset: \
 	cp icon_512.png  $@/icon_512x512.png
 	cp icon_1024.png $@/icon_512x512@2x.png
 
+##
+# Freedesktop icons (for Linux or other OSes) often are placed in 'hicolor'
+# directory in /usr/share/icons/ or /usr/local/share/icons/.
+#
+# Users can override them by placing icons in ~/.local/share/icons/
+#
+# This is not strictly necessary (just placing scalable icon is enough,
+# but some there are some corner cases where small raster icon looks better).
+#
+hicolor: \
+		dosbox-staging.svg \
+		icon_32.png \
+		icon_24.png \
+		icon_22.png \
+		icon_16.png
+	install -DT -m 644 $<          $@/scalable/apps/dosbox-staging.svg
+	install -DT -m 644 icon_32.png $@/32x32/apps/dosbox-staging.png
+	install -DT -m 644 icon_24.png $@/24x24/apps/dosbox-staging.png
+	install -DT -m 644 icon_22.png $@/22x22/apps/dosbox-staging.png
+	install -DT -m 644 icon_16.png $@/16x16/apps/dosbox-staging.png
+
 icon_16.png: small-svg/dosbox-staging-16.svg
 	rsvg-convert -h 16 $< > $@
 
 icon_24.png: small-svg/dosbox-staging-24.svg
 	rsvg-convert -h 24 $< > $@
+
+# Some desktop environments expect 22x22 icon (e.g. KDE Plasma).
+# Rendering 24px source to 22px looks good enough.
+icon_22.png: small-svg/dosbox-staging-24.svg
+	rsvg-convert -h 22 $< > $@
 
 icon_32.png: small-svg/dosbox-staging-32.svg
 	rsvg-convert -h 32 $< > $@
@@ -84,4 +111,5 @@ icon_1024.png: dosbox-staging.svg
 
 clean:
 	rm -rf dosbox-staging.iconset
+	rm -rf hicolor
 	rm -f icon_*.png
