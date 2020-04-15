@@ -70,7 +70,7 @@ jobs:
       - uses: actions/checkout@v1
       - run:  sudo apt-get update
       - name: Install C++ compiler and libraries
-        run:  sudo apt-get install -y tree libpng16-dev $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+        run:  sudo apt-get install -y tree libpng16-dev librsvg2-bin $(./scripts/list-build-dependencies.sh -m apt -c gcc)
       - name:  Prepare compiler cache
         id:    prep-ccache
         shell: bash
@@ -115,6 +115,7 @@ jobs:
       - name: Package
         run: |
           set -x
+
           # Prepare content
           install -DT        src/dosbox           dest/dosbox
           install -DT -m 644 docs/README.template dest/README
@@ -122,14 +123,23 @@ jobs:
           install -DT -m 644 README               dest/doc/manual.txt
           install -DT -m 644 docs/README.video    dest/doc/video.txt
           install -DT -m 644 docs/dosbox.1        dest/man/dosbox.1
+
+          # Generate .desktop entry and icon files
+          install -DT contrib/linux/dosbox-staging.desktop dest/desktop/dosbox-staging.desktop
+          make -C contrib/icons/ hicolor
+          mkdir -p dest/icons
+          mv contrib/icons/hicolor dest/icons
+
           # Fill README template file
           sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README
           sed -i "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" dest/README
           sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README
           mv dest "dosbox-staging-linux-$VERSION"
           tree --si -p "dosbox-staging-linux-$VERSION"
+
           # Create tarball
           tar -cJf "dosbox-staging-linux-$VERSION.tar.xz" "dosbox-staging-linux-$VERSION"
+
       - name: Upload tarball
         uses: actions/upload-artifact@master
         # GitHub automatically zips the artifacts (there's no way to create
