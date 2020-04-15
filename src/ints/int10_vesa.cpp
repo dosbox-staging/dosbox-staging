@@ -200,7 +200,7 @@ foundit:
 		break;
 	case M_LIN32:
 		pageSize = mblock->sheight * mblock->swidth*4;
-		minfo.BytesPerScanLine = host_to_le(mblock->swidth * 4);
+		minfo.BytesPerScanLine = host_to_le16(mblock->swidth * 4);
 		minfo.NumberOfPlanes = 0x1u;
 		minfo.BitsPerPixel = 32u;
 		minfo.MemoryModel = 6u; // HiColour
@@ -245,14 +245,14 @@ foundit:
 	minfo.WinAAttributes = 0x7; // Exists/readable/writable
 
 	if (mblock->type==M_TEXT) {
-		minfo.WinGranularity = host_to_le16(32);
-		minfo.WinSize = host_to_le16(32);
+		minfo.WinGranularity = host_to_le16(32u);
+		minfo.WinSize = host_to_le16(32u);
 		minfo.WinASegment = host_to_le16(0xb800);
 		minfo.XResolution = host_to_le16(mblock->twidth);
 		minfo.YResolution = host_to_le16(mblock->theight);
 	} else {
-		minfo.WinGranularity = host_to_le16(64);
-		minfo.WinSize = host_to_le16(64);
+		minfo.WinGranularity = host_to_le16(64u);
+		minfo.WinSize = host_to_le16(64u);
 		minfo.WinASegment = host_to_le16(0xa000);
 		minfo.XResolution = host_to_le16(mblock->swidth);
 		minfo.YResolution = host_to_le16(mblock->sheight);
