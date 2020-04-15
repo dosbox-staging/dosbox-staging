@@ -3072,11 +3072,20 @@ void Disable_OS_Scaling() {
 #endif
 }
 
+void OverrideWMClass()
+{
+#if !defined(WIN32)
+	constexpr int overwrite = 0; // don't overwrite
+	setenv("SDL_VIDEO_X11_WMCLASS", "dosbox-staging", overwrite);
+#endif
+}
+
 //extern void UI_Init(void);
 int main(int argc, char* argv[]) {
 	int rcode = 0; // assume good until proven otherwise
 	try {
 		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
+		OverrideWMClass(); // Before SDL2 video subsystem is initialized
 
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);

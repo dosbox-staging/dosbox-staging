@@ -8,3 +8,4 @@ Type=Application
 Terminal=false
 Keywords=dos;gaming;game;games;emulator;
 Categories=Game;Emulator;
+StartupWMClass=dosbox-staging
