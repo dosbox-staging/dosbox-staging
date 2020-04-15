@@ -429,8 +429,8 @@ void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
 		internal_cycles = cycles;
 
 	const char *msg = CPU_CycleAutoAdjust
-	                          ? "%8s, max %d%%, dosbox-staging%s"
-	                          : "%8s, %d cycles/ms, dosbox-staging%s";
+	                          ? "%8s - max %d%% - dosbox-staging%s"
+	                          : "%8s - %d cycles/ms - dosbox-staging%s";
 	snprintf(title, sizeof(title), msg, RunningProgram, internal_cycles,
 	         paused ? " (PAUSED)" : "");
 	SDL_SetWindowTitle(sdl.window, title);
