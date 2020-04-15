@@ -240,7 +240,8 @@ foundit:
 	} else if (pageSize) {
 		pages = (vga.vmemsize / pageSize)-1;
 	}
-	minfo.NumberOfImagePages = pages;
+	assert(pages <= 255);
+	minfo.NumberOfImagePages = static_cast<uint8_t>(pages);
 	minfo.ModeAttributes = host_to_le16(modeAttributes);
 	minfo.WinAAttributes = 0x7; // Exists/readable/writable
 
@@ -260,15 +261,14 @@ foundit:
 	minfo.WinFuncPtr = host_to_le32(int10.rom.set_window);
 	minfo.NumberOfBanks = 0x1;
 	minfo.Reserved_page = 0x1;
-	minfo.XCharSize = mblock->cwidth;
-	minfo.YCharSize = mblock->cheight;
+	minfo.XCharSize = static_cast<uint8_t>(mblock->cwidth);
+	minfo.YCharSize = static_cast<uint8_t>(mblock->cheight);
 	if (!int10.vesa_nolfb)
 		minfo.PhysBasePtr = host_to_le32(S3_LFB_BASE);
 
 	MEM_BlockWrite(buf,&minfo,sizeof(MODE_INFO));
 	return VESA_SUCCESS;
 }
-
 
 Bit8u VESA_SetSVGAMode(Bit16u mode) {
 	if (INT10_SetVideoMode(mode)) {
