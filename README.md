@@ -67,7 +67,7 @@ Other differences:
 | **[CGA]/mono support**   | Yes (`machine=cga_mono`)<sup>[9]</sup>       | Only CGA with colour
 | **[Wayland] support**    | Experimental (use `SDL_VIDEODRIVER=wayland`) | N/A
 | **Modem phonebook file** | Yes (`phonebookfile=<name>`)                 | N/A
-| **Autotype command**     | Yes<sup>10</sup>                             | N/A
+| **Autotype command**     | Yes<sup>[10]</sup>                           | N/A
 
 [OPL]:https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]:https://en.wikipedia.org/wiki/Color_Graphics_Adapter
