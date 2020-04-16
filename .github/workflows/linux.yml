@@ -64,13 +64,13 @@ jobs:
 
   build_linux_release_dynamic:
     name: Release build (dynamic)
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-18.04
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
     steps:
       - uses: actions/checkout@v1
       - run:  sudo apt-get update
       - name: Install C++ compiler and libraries
-        run:  sudo apt-get install -y tree libpng16-dev librsvg2-bin $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+        run:  sudo apt-get install -y tree libpng-dev librsvg2-bin $(./scripts/list-build-dependencies.sh -m apt -c gcc)
       - name:  Prepare compiler cache
         id:    prep-ccache
         shell: bash
@@ -109,7 +109,10 @@ jobs:
         run: |
           set -x
           ./autogen.sh
-          ./configure CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" LDFLAGS="$FLAGS $LINKFLAGS -flto=$(nproc)" --disable-screenshots
+          ./configure \
+              CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" \
+              LDFLAGS="$FLAGS $LINKFLAGS -flto=$(nproc)" \
+              --enable-png-static
           make -j "$(nproc)"
           strip src/dosbox
       - name: Package
