@@ -58,12 +58,16 @@ Codecs supported for CD-DA emulation:
 
 Other differences:
 
-|                        | dosbox-staging                               | DOSBox SVN
-|-                       |-                                             |-
-| **Pixel-perfect mode** | Yes (`output=texturepp`)<sup>[7]</sup>       | N/A
-| **[OPL] emulators**    | compat, fast, mame, nuked<sup>[8]</sup>      | compat, fast, mame
-| **[CGA]/mono support** | Yes (`machine=cga_mono`)<sup>[9]</sup>       | Only CGA with colour
-| **[Wayland] support**  | Experimental (use `SDL_VIDEODRIVER=wayland`) | N/A
+|                          | dosbox-staging                               | DOSBox SVN
+|-                         |-                                             |-
+| **Pixel-perfect mode**   | Yes (`output=texturepp`)<sup>[7]</sup>       | N/A
+| **Resizable window**     | Experimental (`windowresolution=resizable`)  | N/A
+| **Relative window size** | N/A                                          | `windowresolution=X%`
+| **[OPL] emulators**      | compat, fast, mame, nuked<sup>[8]</sup>      | compat, fast, mame
+| **[CGA]/mono support**   | Yes (`machine=cga_mono`)<sup>[9]</sup>       | Only CGA with colour
+| **[Wayland] support**    | Experimental (use `SDL_VIDEODRIVER=wayland`) | N/A
+| **Modem phonebook file** | Yes (`phonebookfile=<name>`)                 | N/A
+| **Autotype command**     | Yes<sup>[10]</sup>                           | N/A
 
 [OPL]:https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]:https://en.wikipedia.org/wiki/Color_Graphics_Adapter
@@ -71,6 +75,7 @@ Other differences:
 [7]:https://github.com/dosbox-staging/dosbox-staging/commit/d1be65b105de714924947df4a7909e684d283385
 [8]:https://www.vogons.org/viewtopic.php?f=9&t=37782
 [9]:https://github.com/dosbox-staging/dosbox-staging/commit/ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
+[10]:https://github.com/dosbox-staging/dosbox-staging/commit/239396fec83dbba6a1eb1a0f4461f4a427d2be38
 
 ## Development snapshot builds
 
