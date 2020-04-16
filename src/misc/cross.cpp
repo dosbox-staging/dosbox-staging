@@ -16,25 +16,107 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include "dosbox.h"
 #include "cross.h"
-#include "support.h"
+
 #include <string>
+#include <vector>
+
 #include <limits.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #ifdef WIN32
 #ifndef _WIN32_IE
 #define _WIN32_IE 0x0400
 #endif
 #include <shlobj.h>
+#else
+#include <libgen.h>
 #endif
 
-#if defined HAVE_SYS_TYPES_H && defined HAVE_PWD_H
-#include <sys/types.h>
+#if defined HAVE_PWD_H
 #include <pwd.h>
 #endif
+
+#include "support.h"
+
+#ifndef WIN32
+
+std::string cached_conf_path;
+
+static bool CreateDirectories(const std::string &path)
+{
+	struct stat sb;
+	if (stat(path.c_str(), &sb) == 0) {
+		const bool is_dir = ((sb.st_mode & S_IFMT) == S_IFDIR);
+		return is_dir;
+	}
+
+	std::vector<char> tmp(path.begin(), path.end());
+	std::string dname = dirname(tmp.data());
+
+	// Create parent directories recursively
+	if (!CreateDirectories(dname))
+		return false;
+
+	return (mkdir(path.c_str(), 0700) == 0);
+}
+
+static std::string GetConfigName()
+{
+	std::string file_name;
+	Cross::GetPlatformConfigName(file_name);
+	return file_name;
+}
+
+static std::string ResolveHome(std::string tilde_path)
+{
+	Cross::ResolveHomedir(tilde_path);
+	return tilde_path;
+}
+
+static bool PathExists(const std::string &path)
+{
+	return (access(path.c_str(), F_OK) == 0);
+}
+
+static std::string DetermineConfigPath()
+{
+	const char *xdg_conf_home = getenv("XDG_CONFIG_HOME");
+	const std::string conf_home = xdg_conf_home ? xdg_conf_home : "~/.config";
+	const std::string conf_path = ResolveHome(conf_home + "/dosbox");
+	const std::string old_conf_path = ResolveHome("~/.dosbox");
+
+	if (PathExists(conf_path + "/" + GetConfigName())) {
+		return conf_path;
+	}
+
+	if (PathExists(old_conf_path + "/" + GetConfigName())) {
+		LOG_MSG("WARNING: Config file found in deprecated path! (~/.dosbox)\n"
+		        "Backup/remove this dir and restart to generate updated config file.\n"
+		        "---");
+		return old_conf_path;
+	}
+
+	if (!CreateDirectories(conf_path)) {
+		LOG_MSG("ERROR: Directory '%s' cannot be created",
+		        conf_path.c_str());
+		return old_conf_path;
+	}
+
+	return conf_path;
+}
+
+#endif // !WIN32
+
+void CROSS_DetermineConfigPaths()
+{
+#if !defined(WIN32) && !defined(MACOSX)
+	if (cached_conf_path.empty())
+		cached_conf_path = DetermineConfigPath();
+#endif
+}
 
 #ifdef WIN32
 static void W32_ConfDir(std::string& in,bool create) {
@@ -63,10 +145,11 @@ void Cross::GetPlatformConfigDir(std::string& in) {
 	in = "~/Library/Preferences";
 	ResolveHomedir(in);
 #else
-	in = "~/.dosbox";
-	ResolveHomedir(in);
+	assert(!cached_conf_path.empty());
+	in = cached_conf_path;
 #endif
-	in += CROSS_FILESPLIT;
+	if (in.back() != CROSS_FILESPLIT)
+		in += CROSS_FILESPLIT;
 }
 
 void Cross::GetPlatformConfigName(std::string& in) {
@@ -80,7 +163,8 @@ void Cross::GetPlatformConfigName(std::string& in) {
 	in = DEFAULT_CONFIG_FILE;
 }
 
-void Cross::CreatePlatformConfigDir(std::string& in) {
+void Cross::CreatePlatformConfigDir(std::string &in)
+{
 #ifdef WIN32
 	W32_ConfDir(in,true);
 	in += "\\DOSBox";
@@ -90,11 +174,12 @@ void Cross::CreatePlatformConfigDir(std::string& in) {
 	ResolveHomedir(in);
 	//Don't create it. Assume it exists
 #else
-	in = "~/.dosbox";
-	ResolveHomedir(in);
-	mkdir(in.c_str(),0700);
+	assert(!cached_conf_path.empty());
+	in = cached_conf_path.c_str();
+	mkdir(in.c_str(), 0700);
 #endif
-	in += CROSS_FILESPLIT;
+	if (in.back() != CROSS_FILESPLIT)
+		in += CROSS_FILESPLIT;
 }
 
 void Cross::ResolveHomedir(std::string & temp_line) {
@@ -300,5 +385,3 @@ FILE *fopen_wrap(const char *path, const char *mode) {
 
 	return fopen(path,mode);
 }
-
-

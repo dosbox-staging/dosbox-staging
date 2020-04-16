@@ -3163,6 +3163,8 @@ int main(int argc, char* argv[]) {
 
 	sdl.num_joysticks=SDL_NumJoysticks();
 
+	CROSS_DetermineConfigPaths();
+
 	/* Parse configuration files */
 	std::string config_file, config_path, config_combined;
 	Cross::GetPlatformConfigDir(config_path);
