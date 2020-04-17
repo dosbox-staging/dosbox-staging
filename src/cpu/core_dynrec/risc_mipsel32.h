@@ -570,82 +570,86 @@ static void gen_return_function(void) {
 #ifdef DRC_FLAGS_INVALIDATION
 // called when a call to a function can be replaced by a
 // call to a simpler function
-static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
+static void gen_fill_function_ptr(uint8_t *pos, void *fct_ptr, Bitu flags_type)
+{
 #ifdef DRC_FLAGS_INVALIDATION_DCODE
 	// try to avoid function calls but rather directly fill in code
 	switch (flags_type) {
 		case t_ADDb:
 		case t_ADDw:
 		case t_ADDd:
-			*(Bit32u*)pos=0x00851021;					// addu $v0, $a0, $a1
-			break;
+		        write_uint32(pos, 0x00851021); // addu $v0, $a0, $a1
+		        break;
 		case t_ORb:
 		case t_ORw:
 		case t_ORd:
-			*(Bit32u*)pos=0x00851025;					// or $v0, $a0, $a1
-			break;
+		        write_uint32(pos, 0x00851025); // or $v0, $a0, $a1
+		        break;
 		case t_ANDb:
 		case t_ANDw:
 		case t_ANDd:
-			*(Bit32u*)pos=0x00851024;					// and $v0, $a0, $a1
-			break;
+		        write_uint32(pos, 0x00851024); // and $v0, $a0, $a1
+		        break;
 		case t_SUBb:
 		case t_SUBw:
 		case t_SUBd:
-			*(Bit32u*)pos=0x00851023;					// subu $v0, $a0, $a1
-			break;
+		        write_uint32(pos, 0x00851023); // subu $v0, $a0, $a1
+		        break;
 		case t_XORb:
 		case t_XORw:
 		case t_XORd:
-			*(Bit32u*)pos=0x00851026;					// xor $v0, $a0, $a1
-			break;
+		        write_uint32(pos, 0x00851026); // xor $v0, $a0, $a1
+		        break;
 		case t_CMPb:
 		case t_CMPw:
 		case t_CMPd:
 		case t_TESTb:
 		case t_TESTw:
 		case t_TESTd:
-			*(Bit32u*)pos=0;							// nop
-			break;
+		        write_uint32(pos, 0); // nop
+		        break;
 		case t_INCb:
 		case t_INCw:
 		case t_INCd:
-			*(Bit32u*)pos=0x24820001;					// addiu $v0, $a0, 1
-			break;
+		        write_uint32(pos, 0x24820001); // addiu $v0, $a0, 1
+		        break;
 		case t_DECb:
 		case t_DECw:
 		case t_DECd:
-			*(Bit32u*)pos=0x2482ffff;					// addiu $v0, $a0, -1
-			break;
+		        write_uint32(pos, 0x2482ffff); // addiu $v0, $a0, -1
+		        break;
 		case t_SHLb:
 		case t_SHLw:
 		case t_SHLd:
-			*(Bit32u*)pos=0x00a41004;					// sllv $v0, $a0, $a1
-			break;
+		        write_uint32(pos, 0x00a41004); // sllv $v0, $a0, $a1
+		        break;
 		case t_SHRb:
 		case t_SHRw:
 		case t_SHRd:
-			*(Bit32u*)pos=0x00a41006;					// srlv $v0, $a0, $a1
-			break;
+		        write_uint32(pos, 0x00a41006); // srlv $v0, $a0, $a1
+		        break;
 		case t_SARd:
-			*(Bit32u*)pos=0x00a41007;					// srav $v0, $a0, $a1
-			break;
+		        write_uint32(pos, 0x00a41007); // srav $v0, $a0, $a1
+		        break;
 #if (_MIPS_ISA==MIPS32R2) || defined(PSP)
 		case t_RORd:
-			*(Bit32u*)pos=0x00a41046;					// rotr $v0, $a0, $a1
-			break;
+		        write_uint32(pos, 0x00a41046); // rotr $v0, $a0, $a1
+		        break;
 #endif
 		case t_NEGb:
 		case t_NEGw:
 		case t_NEGd:
-			*(Bit32u*)pos=0x00041023;					// subu $v0, $0, $a0
-			break;
+		        write_uint32(pos, 0x00041023); // subu $v0, $0, $a0
+		        break;
 		default:
-			*(Bit32u*)pos=0x0c000000+((((Bit32u)fct_ptr)>>2)&0x3ffffff);		// jal simple_func
-			break;
+		        write_uint32(pos,
+		                     0x0c000000 +
+		                             (((static_cast<uint32_t>(fct_ptr)) >> 2) &
+		                              0x3ffffff)); // jal simple_func
+		        break;
 	}
 #else
-	*(Bit32u*)pos=0x0c000000+(((Bit32u)fct_ptr)>>2)&0x3ffffff);		// jal simple_func
+	write_uint32(pos, 0x0c000000+((static_cast<uint32_t>(fct_ptr)) >> 2) & 0x3ffffff));		// jal simple_func
 #endif
 }
 #endif
