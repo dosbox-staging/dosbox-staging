@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Dec 18, 2019"
+.TH DOSBOX 1 "Apr 17, 2020"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 dosbox \- an x86/DOS emulator with sound/graphics
@@ -66,7 +66,7 @@ at the end of
 .RB "inside " dosbox )
 .TP
 .B \-userconf
-Load the configuration file located in ~/.dosbox. Can be combined with
+Load the configuration file located in ~/.config/dosbox. Can be combined with
 .RB "the " \-conf " option." 
 .TP
 .BI \-scaler " scaler"
@@ -285,7 +285,7 @@ If no configfile is specified at the commandline, a file named
 loaded automatically. If a configfile is specified at the commandline
 that one will be used instead. If no configfile is specified or found
 in the current directory
-.RB " then dosbox will load one from " ~/.dosbox/ ". It will try to create "
+.RB " then dosbox will load one from " ~/.config/dosbox/ ". It will try to create "
 one if there is none.
 .SH "SPECIAL KEYS"
 .TP 12m
