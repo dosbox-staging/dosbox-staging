@@ -539,16 +539,16 @@ skip_shot:
 				case 15:
 				case 16:
 					for (x = 0; x < countWidth; x++) {
-						const uint16_t pixel = host_readw_at(srcLine, x);
-						host_writew_at(doubleRow, x * 2, pixel);
-						host_writew_at(doubleRow, x * 2 + 1, pixel);
+						const uint16_t pixel = read_uint16_at(srcLine, x);
+						write_uint16_at(doubleRow, x * 2, pixel);
+						write_uint16_at(doubleRow, x * 2 + 1, pixel);
 					}
 					break;
 				case 32:
 					for (x = 0; x < countWidth; x++) {
-						const uint32_t pixel = host_readd_at(srcLine, x);
-						host_writed_at(doubleRow, x * 2, pixel);
-						host_writed_at(doubleRow, x * 2 + 1, pixel);
+						const uint32_t pixel = read_uint32_at(srcLine, x);
+						write_uint32_at(doubleRow, x * 2, pixel);
+						write_uint32_at(doubleRow, x * 2 + 1, pixel);
 					}
 					break;
 				}
