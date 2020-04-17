@@ -938,13 +938,20 @@ static void gen_run_code(void) {
 		cache.pos = cache.pos + (32 - (((Bitu)cache.pos) & 0x1f));
 	}
 
-	write_uint32(pos1, LDR_IMM(FC_SEGS_ADDR, HOST_pc, cache.pos - (pos1 + 8)));      // ldr FC_SEGS_ADDR, [pc, #(&Segs)]
+	write_uint32(pos1, LDR_IMM(FC_SEGS_ADDR, HOST_pc,
+	                           cache.pos - (pos1 + 8))); // ldr FC_SEGS_ADDR,
+	                                                     // [pc, #(&Segs)]
 	cache_addd((Bit32u)&Segs);      // address of "Segs"
 
-	write_uint32(pos2, LDR_IMM(FC_REGS_ADDR, HOST_pc, cache.pos - (pos2 + 8)));      // ldr FC_REGS_ADDR, [pc, #(&cpu_regs)]
+	write_uint32(pos2, LDR_IMM(FC_REGS_ADDR, HOST_pc,
+	                           cache.pos - (pos2 + 8))); // ldr FC_REGS_ADDR,
+	                                                     // [pc, #(&cpu_regs)]
 	cache_addd((Bit32u)&cpu_regs);  // address of "cpu_regs"
 
-	write_uint32(pos3, LDR_IMM(readdata_addr, HOST_pc, cache.pos - (pos3 + 8)));      // ldr readdata_addr, [pc, #(&core_dynrec.readdata)]
+	write_uint32(pos3, LDR_IMM(readdata_addr, HOST_pc,
+	                           cache.pos - (pos3 + 8))); // ldr readdata_addr,
+	                                                     // [pc,
+	                                                     // #(&core_dynrec.readdata)]
 	cache_addd((Bit32u)&core_dynrec.readdata);  // address of "core_dynrec.readdata"
 
 	// align cache.pos to 32 bytes
@@ -970,51 +977,56 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 		case t_ADDb:
 		case t_ADDw:
 		case t_ADDd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, ADD_REG_LSL_IMM(FC_RETOP, HOST_a1, HOST_a2, 0));	// add FC_RETOP, a1, a2
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, ADD_REG_LSL_IMM(FC_RETOP, HOST_a1,
+		                                              HOST_a2, 0)); // add FC_RETOP, a1, a2
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
 		case t_ORb:
 		case t_ORw:
 		case t_ORd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, ORR_REG_LSL_IMM(FC_RETOP, HOST_a1, HOST_a2, 0));	// orr FC_RETOP, a1, a2
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, ORR_REG_LSL_IMM(FC_RETOP, HOST_a1,
+		                                              HOST_a2, 0)); // orr FC_RETOP, a1, a2
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
 		case t_ANDb:
 		case t_ANDw:
 		case t_ANDd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, AND_REG_LSL_IMM(FC_RETOP, HOST_a1, HOST_a2, 0));	// and FC_RETOP, a1, a2
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, AND_REG_LSL_IMM(FC_RETOP, HOST_a1,
+		                                              HOST_a2, 0)); // and FC_RETOP, a1, a2
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
 		case t_SUBb:
 		case t_SUBw:
 		case t_SUBd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, SUB_REG_LSL_IMM(FC_RETOP, HOST_a1, HOST_a2, 0));	// sub FC_RETOP, a1, a2
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, SUB_REG_LSL_IMM(FC_RETOP, HOST_a1,
+		                                              HOST_a2, 0)); // sub FC_RETOP, a1, a2
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
 		case t_XORb:
 		case t_XORw:
 		case t_XORd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, EOR_REG_LSL_IMM(FC_RETOP, HOST_a1, HOST_a2, 0));	// eor FC_RETOP, a1, a2
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, EOR_REG_LSL_IMM(FC_RETOP, HOST_a1,
+		                                              HOST_a2, 0)); // eor FC_RETOP, a1, a2
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
 		case t_CMPb:
@@ -1023,183 +1035,325 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 		case t_TESTb:
 		case t_TESTw:
 		case t_TESTd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, NOP);				// nop
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, NOP); // nop
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
 		case t_INCb:
 		case t_INCw:
 		case t_INCd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, ADD_IMM(FC_RETOP, HOST_a1, 1, 0));	// add FC_RETOP, a1, #1
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, ADD_IMM(FC_RETOP, HOST_a1, 1, 0)); // add FC_RETOP, a1, #1
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
 		case t_DECb:
 		case t_DECw:
 		case t_DECd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, SUB_IMM(FC_RETOP, HOST_a1, 1, 0));	// sub FC_RETOP, a1, #1
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, SUB_IMM(FC_RETOP, HOST_a1, 1, 0)); // sub FC_RETOP, a1, #1
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
 		case t_SHLb:
 		case t_SHLw:
 		case t_SHLd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, MOV_REG_LSL_REG(FC_RETOP, HOST_a1, HOST_a2));	// mov FC_RETOP, a1, lsl a2
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, MOV_REG_LSL_REG(FC_RETOP, HOST_a1,
+		                                              HOST_a2)); // mov
+		                                                         // FC_RETOP,
+		                                                         // a1,
+		                                                         // lsl a2
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
-		case t_SHRb:
-			write_uint32(pos, NOP);					// nop
+	        case t_SHRb: write_uint32(pos, NOP); // nop
 #if C_TARGETCPU == ARMV7LE
-			write_uint32(pos + 4, BFC(HOST_a1, 8, 24));	// bfc a1, 8, 24
-			write_uint32(pos + 8, MOV_REG_LSR_REG(FC_RETOP, HOST_a1, HOST_a2));	// mov FC_RETOP, a1, lsr a2
+		        write_uint32(pos + 4, BFC(HOST_a1, 8, 24)); // bfc a1,
+		                                                    // 8, 24
+		        write_uint32(pos + 8, MOV_REG_LSR_REG(FC_RETOP, HOST_a1,
+		                                              HOST_a2)); // mov
+		                                                         // FC_RETOP,
+		                                                         // a1,
+		                                                         // lsr a2
 #else
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, AND_IMM(FC_RETOP, HOST_a1, 0xff, 0));				// and FC_RETOP, a1, #0xff
-			write_uint32(pos + 12, MOV_REG_LSR_REG(FC_RETOP, FC_RETOP, HOST_a2));	// mov FC_RETOP, FC_RETOP, lsr a2
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, AND_IMM(FC_RETOP, HOST_a1, 0xff,
+		                                      0)); // and FC_RETOP, a1,
+		                                           // #0xff
+		        write_uint32(pos + 12, MOV_REG_LSR_REG(FC_RETOP, FC_RETOP,
+		                                               HOST_a2)); // mov
+		                                                          // FC_RETOP,
+		                                                          // FC_RETOP,
+		                                                          // lsr a2
 #endif
-			break;
-		case t_SHRw:
-			write_uint32(pos, NOP);					// nop
+		        break;
+	        case t_SHRw: write_uint32(pos, NOP); // nop
 #if C_TARGETCPU == ARMV7LE
-			write_uint32(pos + 4, BFC(HOST_a1, 16, 16));	// bfc a1, 16, 16
-			write_uint32(pos + 8, MOV_REG_LSR_REG(FC_RETOP, HOST_a1, HOST_a2));	// mov FC_RETOP, a1, lsr a2
+		        write_uint32(pos + 4, BFC(HOST_a1, 16, 16)); // bfc a1,
+		                                                     // 16, 16
+		        write_uint32(pos + 8, MOV_REG_LSR_REG(FC_RETOP, HOST_a1,
+		                                              HOST_a2)); // mov
+		                                                         // FC_RETOP,
+		                                                         // a1,
+		                                                         // lsr a2
 #else
-			write_uint32(pos + 4, MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 16));			// mov FC_RETOP, a1, lsl #16
-			write_uint32(pos + 8, MOV_REG_LSR_IMM(FC_RETOP, FC_RETOP, 16));			// mov FC_RETOP, FC_RETOP, lsr #16
-			write_uint32(pos + 12, MOV_REG_LSR_REG(FC_RETOP, FC_RETOP, HOST_a2));	// mov FC_RETOP, FC_RETOP, lsr a2
+		        write_uint32(pos + 4, MOV_REG_LSL_IMM(FC_RETOP, HOST_a1,
+		                                              16)); // mov
+		                                                    // FC_RETOP,
+		                                                    // a1, lsl #16
+		        write_uint32(pos + 8, MOV_REG_LSR_IMM(FC_RETOP, FC_RETOP,
+		                                              16)); // mov
+		                                                    // FC_RETOP,
+		                                                    // FC_RETOP,
+		                                                    // lsr #16
+		        write_uint32(pos + 12, MOV_REG_LSR_REG(FC_RETOP, FC_RETOP,
+		                                               HOST_a2)); // mov
+		                                                          // FC_RETOP,
+		                                                          // FC_RETOP,
+		                                                          // lsr a2
 #endif
-			break;
+		        break;
 		case t_SHRd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, MOV_REG_LSR_REG(FC_RETOP, HOST_a1, HOST_a2));	// mov FC_RETOP, a1, lsr a2
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, MOV_REG_LSR_REG(FC_RETOP, HOST_a1,
+		                                              HOST_a2)); // mov
+		                                                         // FC_RETOP,
+		                                                         // a1,
+		                                                         // lsr a2
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
-		case t_SARb:
-			write_uint32(pos, NOP);					// nop
+	        case t_SARb: write_uint32(pos, NOP); // nop
 #if C_TARGETCPU == ARMV7LE
-			write_uint32(pos + 4, SXTB(FC_RETOP, HOST_a1, 0));					// sxtb FC_RETOP, a1
-			write_uint32(pos + 8, MOV_REG_ASR_REG(FC_RETOP, FC_RETOP, HOST_a2));	// mov FC_RETOP, FC_RETOP, asr a2
+		        write_uint32(pos + 4, SXTB(FC_RETOP, HOST_a1, 0)); // sxtb
+		                                                           // FC_RETOP,
+		                                                           // a1
+		        write_uint32(pos + 8, MOV_REG_ASR_REG(FC_RETOP, FC_RETOP,
+		                                              HOST_a2)); // mov
+		                                                         // FC_RETOP,
+		                                                         // FC_RETOP,
+		                                                         // asr a2
 #else
-			write_uint32(pos + 4, MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 24));			// mov FC_RETOP, a1, lsl #24
-			write_uint32(pos + 8, MOV_REG_ASR_IMM(FC_RETOP, FC_RETOP, 24));			// mov FC_RETOP, FC_RETOP, asr #24
-			write_uint32(pos + 12, MOV_REG_ASR_REG(FC_RETOP, FC_RETOP, HOST_a2));	// mov FC_RETOP, FC_RETOP, asr a2
+		        write_uint32(pos + 4, MOV_REG_LSL_IMM(FC_RETOP, HOST_a1,
+		                                              24)); // mov
+		                                                    // FC_RETOP,
+		                                                    // a1, lsl #24
+		        write_uint32(pos + 8, MOV_REG_ASR_IMM(FC_RETOP, FC_RETOP,
+		                                              24)); // mov
+		                                                    // FC_RETOP,
+		                                                    // FC_RETOP,
+		                                                    // asr #24
+		        write_uint32(pos + 12, MOV_REG_ASR_REG(FC_RETOP, FC_RETOP,
+		                                               HOST_a2)); // mov
+		                                                          // FC_RETOP,
+		                                                          // FC_RETOP,
+		                                                          // asr a2
 #endif
-			break;
-		case t_SARw:
-			write_uint32(pos, NOP);					// nop
+		        break;
+	        case t_SARw: write_uint32(pos, NOP); // nop
 #if C_TARGETCPU == ARMV7LE
-			write_uint32(pos + 4, SXTH(FC_RETOP, HOST_a1, 0));					// sxth FC_RETOP, a1
-			write_uint32(pos + 8, MOV_REG_ASR_REG(FC_RETOP, FC_RETOP, HOST_a2));	// mov FC_RETOP, FC_RETOP, asr a2
+		        write_uint32(pos + 4, SXTH(FC_RETOP, HOST_a1, 0)); // sxth
+		                                                           // FC_RETOP,
+		                                                           // a1
+		        write_uint32(pos + 8, MOV_REG_ASR_REG(FC_RETOP, FC_RETOP,
+		                                              HOST_a2)); // mov
+		                                                         // FC_RETOP,
+		                                                         // FC_RETOP,
+		                                                         // asr a2
 #else
-			write_uint32(pos + 4, MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 16));			// mov FC_RETOP, a1, lsl #16
-			write_uint32(pos + 8, MOV_REG_ASR_IMM(FC_RETOP, FC_RETOP, 16));			// mov FC_RETOP, FC_RETOP, asr #16
-			write_uint32(pos + 12, MOV_REG_ASR_REG(FC_RETOP, FC_RETOP, HOST_a2));	// mov FC_RETOP, FC_RETOP, asr a2
+		        write_uint32(pos + 4, MOV_REG_LSL_IMM(FC_RETOP, HOST_a1,
+		                                              16)); // mov
+		                                                    // FC_RETOP,
+		                                                    // a1, lsl #16
+		        write_uint32(pos + 8, MOV_REG_ASR_IMM(FC_RETOP, FC_RETOP,
+		                                              16)); // mov
+		                                                    // FC_RETOP,
+		                                                    // FC_RETOP,
+		                                                    // asr #16
+		        write_uint32(pos + 12, MOV_REG_ASR_REG(FC_RETOP, FC_RETOP,
+		                                               HOST_a2)); // mov
+		                                                          // FC_RETOP,
+		                                                          // FC_RETOP,
+		                                                          // asr a2
 #endif
-			break;
+		        break;
 		case t_SARd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, MOV_REG_ASR_REG(FC_RETOP, HOST_a1, HOST_a2));	// mov FC_RETOP, a1, asr a2
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, MOV_REG_ASR_REG(FC_RETOP, HOST_a1,
+		                                              HOST_a2)); // mov
+		                                                         // FC_RETOP,
+		                                                         // a1,
+		                                                         // asr a2
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
 		case t_RORb:
 #if C_TARGETCPU == ARMV7LE
-			write_uint32(pos, BFI(HOST_a1, HOST_a1, 8, 8));						// bfi a1, a1, 8, 8
-			write_uint32(pos + 4, BFI(HOST_a1, HOST_a1, 16, 16));				// bfi a1, a1, 16, 16
-			write_uint32(pos + 8, MOV_REG_ROR_REG(FC_RETOP, HOST_a1, HOST_a2));	// mov FC_RETOP, a1, ror a2
+		        write_uint32(pos, BFI(HOST_a1, HOST_a1, 8, 8)); // bfi
+		                                                        // a1,
+		                                                        // a1, 8, 8
+		        write_uint32(pos + 4, BFI(HOST_a1, HOST_a1, 16, 16)); // bfi a1, a1, 16, 16
+		        write_uint32(pos + 8, MOV_REG_ROR_REG(FC_RETOP, HOST_a1,
+		                                              HOST_a2)); // mov
+		                                                         // FC_RETOP,
+		                                                         // a1,
+		                                                         // ror a2
 #else
-			write_uint32(pos, MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 24));					// mov FC_RETOP, a1, lsl #24
-			write_uint32(pos + 4, ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP, 8));		// orr FC_RETOP, FC_RETOP, FC_RETOP, lsr #8
-			write_uint32(pos + 8, ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP, 16));	// orr FC_RETOP, FC_RETOP, FC_RETOP, lsr #16
-			write_uint32(pos + 12, MOV_REG_ROR_REG(FC_RETOP, FC_RETOP, HOST_a2));		// mov FC_RETOP, FC_RETOP, ror a2
+		        write_uint32(pos, MOV_REG_LSL_IMM(FC_RETOP, HOST_a1,
+		                                          24)); // mov FC_RETOP,
+		                                                // a1, lsl #24
+		        write_uint32(pos + 4,
+		                     ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP,
+		                                     8)); // orr FC_RETOP,
+		                                          // FC_RETOP, FC_RETOP,
+		                                          // lsr #8
+		        write_uint32(pos + 8,
+		                     ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP,
+		                                     16)); // orr FC_RETOP,
+		                                           // FC_RETOP,
+		                                           // FC_RETOP, lsr #16
+		        write_uint32(pos + 12, MOV_REG_ROR_REG(FC_RETOP, FC_RETOP,
+		                                               HOST_a2)); // mov
+		                                                          // FC_RETOP,
+		                                                          // FC_RETOP,
+		                                                          // ror a2
 #endif
-			break;
-		case t_RORw:
-			write_uint32(pos, NOP);					// nop
+		        break;
+	        case t_RORw: write_uint32(pos, NOP); // nop
 #if C_TARGETCPU == ARMV7LE
-			write_uint32(pos + 4, BFI(HOST_a1, HOST_a1, 16, 16));				// bfi a1, a1, 16, 16
-			write_uint32(pos + 8, MOV_REG_ROR_REG(FC_RETOP, HOST_a1, HOST_a2));	// mov FC_RETOP, a1, ror a2
+		        write_uint32(pos + 4, BFI(HOST_a1, HOST_a1, 16, 16)); // bfi a1, a1, 16, 16
+		        write_uint32(pos + 8, MOV_REG_ROR_REG(FC_RETOP, HOST_a1,
+		                                              HOST_a2)); // mov
+		                                                         // FC_RETOP,
+		                                                         // a1,
+		                                                         // ror a2
 #else
-			write_uint32(pos + 4, MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 16));				// mov FC_RETOP, a1, lsl #16
-			write_uint32(pos + 8, ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP, 16));	// orr FC_RETOP, FC_RETOP, FC_RETOP, lsr #16
-			write_uint32(pos + 12, MOV_REG_ROR_REG(FC_RETOP, FC_RETOP, HOST_a2));		// mov FC_RETOP, FC_RETOP, ror a2
+		        write_uint32(pos + 4, MOV_REG_LSL_IMM(FC_RETOP, HOST_a1,
+		                                              16)); // mov
+		                                                    // FC_RETOP,
+		                                                    // a1, lsl #16
+		        write_uint32(pos + 8,
+		                     ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP,
+		                                     16)); // orr FC_RETOP,
+		                                           // FC_RETOP,
+		                                           // FC_RETOP, lsr #16
+		        write_uint32(pos + 12, MOV_REG_ROR_REG(FC_RETOP, FC_RETOP,
+		                                               HOST_a2)); // mov
+		                                                          // FC_RETOP,
+		                                                          // FC_RETOP,
+		                                                          // ror a2
 #endif
-			break;
+		        break;
 		case t_RORd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, MOV_REG_ROR_REG(FC_RETOP, HOST_a1, HOST_a2));	// mov FC_RETOP, a1, ror a2
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, MOV_REG_ROR_REG(FC_RETOP, HOST_a1,
+		                                              HOST_a2)); // mov
+		                                                         // FC_RETOP,
+		                                                         // a1,
+		                                                         // ror a2
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
 		case t_ROLw:
 #if C_TARGETCPU == ARMV7LE
-			write_uint32(pos, BFI(HOST_a1, HOST_a1, 16, 16));					// bfi a1, a1, 16, 16
-			write_uint32(pos + 4, RSB_IMM(HOST_a2, HOST_a2, 32, 0));				// rsb a2, a2, #32
-			write_uint32(pos + 8, MOV_REG_ROR_REG(FC_RETOP, HOST_a1, HOST_a2));	// mov FC_RETOP, a1, ror a2
+		        write_uint32(pos, BFI(HOST_a1, HOST_a1, 16, 16)); // bfi
+		                                                          // a1,
+		                                                          // a1,
+		                                                          // 16, 16
+		        write_uint32(pos + 4, RSB_IMM(HOST_a2, HOST_a2, 32, 0)); // rsb a2, a2, #32
+		        write_uint32(pos + 8, MOV_REG_ROR_REG(FC_RETOP, HOST_a1,
+		                                              HOST_a2)); // mov
+		                                                         // FC_RETOP,
+		                                                         // a1,
+		                                                         // ror a2
 #else
-			write_uint32(pos, MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 16));					// mov FC_RETOP, a1, lsl #16
-			write_uint32(pos + 4, RSB_IMM(HOST_a2, HOST_a2, 32, 0));						// rsb a2, a2, #32
-			write_uint32(pos + 8, ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP, 16));	// orr FC_RETOP, FC_RETOP, FC_RETOP, lsr #16
-			write_uint32(pos + 12, MOV_REG_ROR_REG(FC_RETOP, FC_RETOP, HOST_a2));		// mov FC_RETOP, FC_RETOP, ror a2
+		        write_uint32(pos, MOV_REG_LSL_IMM(FC_RETOP, HOST_a1,
+		                                          16)); // mov FC_RETOP,
+		                                                // a1, lsl #16
+		        write_uint32(pos + 4, RSB_IMM(HOST_a2, HOST_a2, 32, 0)); // rsb a2, a2, #32
+		        write_uint32(pos + 8,
+		                     ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP,
+		                                     16)); // orr FC_RETOP,
+		                                           // FC_RETOP,
+		                                           // FC_RETOP, lsr #16
+		        write_uint32(pos + 12, MOV_REG_ROR_REG(FC_RETOP, FC_RETOP,
+		                                               HOST_a2)); // mov
+		                                                          // FC_RETOP,
+		                                                          // FC_RETOP,
+		                                                          // ror a2
 #endif
-			break;
-		case t_ROLd:
-			write_uint32(pos, NOP);					// nop
+		        break;
+	        case t_ROLd: write_uint32(pos, NOP); // nop
 #if C_TARGETCPU == ARMV7LE
-			write_uint32(pos + 4, RSB_IMM(HOST_a2, HOST_a2, 32, 0));				// rsb a2, a2, #32
-			write_uint32(pos + 8, MOV_REG_ROR_REG(FC_RETOP, HOST_a1, HOST_a2));	// mov FC_RETOP, a1, ror a2
+		        write_uint32(pos + 4, RSB_IMM(HOST_a2, HOST_a2, 32, 0)); // rsb a2, a2, #32
+		        write_uint32(pos + 8, MOV_REG_ROR_REG(FC_RETOP, HOST_a1,
+		                                              HOST_a2)); // mov
+		                                                         // FC_RETOP,
+		                                                         // a1,
+		                                                         // ror a2
 #else
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, RSB_IMM(HOST_a2, HOST_a2, 32, 0));				// rsb a2, a2, #32
-			write_uint32(pos + 12, MOV_REG_ROR_REG(FC_RETOP, HOST_a1, HOST_a2));	// mov FC_RETOP, a1, ror a2
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, RSB_IMM(HOST_a2, HOST_a2, 32, 0)); // rsb a2, a2, #32
+		        write_uint32(pos + 12, MOV_REG_ROR_REG(FC_RETOP, HOST_a1,
+		                                               HOST_a2)); // mov
+		                                                          // FC_RETOP,
+		                                                          // a1,
+		                                                          // ror a2
 #endif
-			break;
+		        break;
 		case t_NEGb:
 		case t_NEGw:
 		case t_NEGd:
-			write_uint32(pos, NOP);					// nop
-			write_uint32(pos + 4, NOP);				// nop
-			write_uint32(pos + 8, RSB_IMM(FC_RETOP, HOST_a1, 0, 0));	// rsb FC_RETOP, a1, #0
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, RSB_IMM(FC_RETOP, HOST_a1, 0, 0)); // rsb FC_RETOP, a1, #0
 #if C_TARGETCPU != ARMV7LE
-			write_uint32(pos + 12, NOP);				// nop
+		        write_uint32(pos + 12, NOP); // nop
 #endif
 			break;
 		default:
 #if C_TARGETCPU == ARMV7LE
-			write_uint32(pos, MOVW(temp1, (static_cast<uint32_t>(fct_ptr)) & 0xffff));      // movw temp1, #(fct_ptr & 0xffff)
-			write_uint32(pos + 4, MOVT(temp1, (static_cast<uint32_t>(fct_ptr)) >> 16));      // movt temp1, #(fct_ptr >> 16)
+		        write_uint32(pos,
+		                     MOVW(temp1, (static_cast<uint32_t>(fct_ptr)) &
+		                                         0xffff)); // movw temp1,
+		                                                   // #(fct_ptr
+		                                                   // & 0xffff)
+		        write_uint32(pos + 4,
+		                     MOVT(temp1, (static_cast<uint32_t>(fct_ptr)) >>
+		                                         16)); // movt temp1,
+		                                               // #(fct_ptr >> 16)
 #else
-			write_uint32(pos + 12, static_cast<uint32_t>(fct_ptr));		// simple_func
+		        write_uint32(pos + 12, static_cast<uint32_t>(fct_ptr)); // simple_func
 #endif
 			break;
 
 	}
 #else
 #if C_TARGETCPU == ARMV7LE
-	write_uint32(pos, MOVW(temp1, (static_cast<uint32_t>(fct_ptr)) & 0xffff));      // movw temp1, #(fct_ptr & 0xffff)
-	write_uint32(pos + 4, MOVT(temp1, (static_cast<uint32_t>(fct_ptr)) >> 16));      // movt temp1, #(fct_ptr >> 16)
+	write_uint32(pos, MOVW(temp1, (static_cast<uint32_t>(fct_ptr)) &
+	                                      0xffff)); // movw temp1, #(fct_ptr
+	                                                // & 0xffff)
+	write_uint32(pos + 4, MOVT(temp1, (static_cast<uint32_t>(fct_ptr)) >>
+	                                          16)); // movt temp1, #(fct_ptr
+	                                                // >> 16)
 #else
-	write_uint32(pos + 12, static_cast<uint32_t>(fct_ptr));		// simple_func
+	write_uint32(pos + 12, static_cast<uint32_t>(fct_ptr)); // simple_func
 #endif
 #endif
 }
