@@ -629,41 +629,46 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 		case t_ADDw:
 		case t_ADDd:
 			// mov eax,FC_OP1; add eax,FC_OP2
-			*(Bit32u*)(pos+0)=0xc001c089+(FC_OP1<<11)+(FC_OP2<<27);
-			*(Bit32u*)(pos+4)=0x909006eb;	// skip
-			*(Bit32u*)(pos+8)=0x90909090;
+			write_uint32(pos + 0, 0xc001c089 + (FC_OP1 << 11) +
+			                                   (FC_OP2 << 27));
+			write_uint32(pos + 4, 0x909006eb); // skip
+			write_uint32(pos + 8, 0x90909090);
 			return;
 		case t_ORb:
 		case t_ORw:
 		case t_ORd:
 			// mov eax,FC_OP1; or eax,FC_OP2
-			*(Bit32u*)(pos+0)=0xc009c089+(FC_OP1<<11)+(FC_OP2<<27);
-			*(Bit32u*)(pos+4)=0x909006eb;	// skip
-			*(Bit32u*)(pos+8)=0x90909090;
+			write_uint32(pos + 0, 0xc009c089 + (FC_OP1 << 11) +
+			                                   (FC_OP2 << 27));
+			write_uint32(pos + 4, 0x909006eb); // skip
+			write_uint32(pos + 8, 0x90909090);
 			return;
 		case t_ANDb:
 		case t_ANDw:
 		case t_ANDd:
 			// mov eax,FC_OP1; and eax,FC_OP2
-			*(Bit32u*)(pos+0)=0xc021c089+(FC_OP1<<11)+(FC_OP2<<27);
-			*(Bit32u*)(pos+4)=0x909006eb;	// skip
-			*(Bit32u*)(pos+8)=0x90909090;
+			write_uint32(pos + 0, 0xc021c089 + (FC_OP1 << 11) +
+			                                   (FC_OP2 << 27));
+			write_uint32(pos + 4, 0x909006eb); // skip
+			write_uint32(pos + 8, 0x90909090);
 			return;
 		case t_SUBb:
 		case t_SUBw:
 		case t_SUBd:
 			// mov eax,FC_OP1; sub eax,FC_OP2
-			*(Bit32u*)(pos+0)=0xc029c089+(FC_OP1<<11)+(FC_OP2<<27);
-			*(Bit32u*)(pos+4)=0x909006eb;	// skip
-			*(Bit32u*)(pos+8)=0x90909090;
+			write_uint32(pos + 0, 0xc029c089 + (FC_OP1 << 11) +
+			                                   (FC_OP2 << 27));
+			write_uint32(pos + 4, 0x909006eb); // skip
+			write_uint32(pos + 8, 0x90909090);
 			return;
-		case t_XORb:
+	    case t_XORb:
 		case t_XORw:
 		case t_XORd:
 			// mov eax,FC_OP1; xor eax,FC_OP2
-			*(Bit32u*)(pos+0)=0xc031c089+(FC_OP1<<11)+(FC_OP2<<27);
-			*(Bit32u*)(pos+4)=0x909006eb;	// skip
-			*(Bit32u*)(pos+8)=0x90909090;
+			write_uint32(pos + 0, 0xc031c089 + (FC_OP1 << 11) +
+			                                   (FC_OP2 << 27));
+			write_uint32(pos + 4, 0x909006eb); // skip
+			write_uint32(pos + 8, 0x90909090);
 			return;
 		case t_CMPb:
 		case t_CMPw:
@@ -671,34 +676,35 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 		case t_TESTb:
 		case t_TESTw:
 		case t_TESTd:
-			*(Bit32u*)(pos+0)=0x90900aeb;	// skip
-			*(Bit32u*)(pos+4)=0x90909090;
-			*(Bit32u*)(pos+8)=0x90909090;
+			write_uint32(pos + 0, 0x90900aeb); // skip
+			write_uint32(pos + 4, 0x90909090);
+			write_uint32(pos + 8, 0x90909090);
 			return;
 		case t_INCb:
 		case t_INCw:
 		case t_INCd:
-			*(Bit32u*)(pos+0)=0xc0ffc089+(FC_OP1<<11); // mov eax,ecx; inc eax
-			*(Bit32u*)(pos+4)=0x909006eb;	// skip
-			*(Bit32u*)(pos+8)=0x90909090;
+			write_uint32(pos + 0, 0xc0ffc089+(FC_OP1<<11); // mov eax,ecx; inc eax
+			write_uint32(pos + 4, 0x909006eb;	// skip
+			write_uint32(pos + 8, 0x90909090;
 			return;
 		case t_DECb:
 		case t_DECw:
 		case t_DECd:
-			*(Bit32u*)(pos+0)=0xc8ffc089+(FC_OP1<<11); // mov eax, FC_OP1; dec eax
-			*(Bit32u*)(pos+4)=0x909006eb;	// skip
-			*(Bit32u*)(pos+8)=0x90909090;
+			write_uint32(pos + 0, 0xc8ffc089+(FC_OP1<<11)); // mov eax, FC_OP1; dec eax
+			write_uint32(pos + 4, 0x909006eb);	// skip
+			write_uint32(pos + 8, 0x90909090);
 			return;
 		case t_NEGb:
 		case t_NEGw:
 		case t_NEGd:
-			*(Bit32u*)(pos+0)=0xd8f7c089+(FC_OP1<<11); // mov eax, FC_OP1; neg eax
-			*(Bit32u*)(pos+4)=0x909006eb;	// skip
-			*(Bit32u*)(pos+8)=0x90909090;
+			write_uint32(pos + 0, 0xd8f7c089+(FC_OP1<<11)); // mov eax, FC_OP1; neg eax
+			write_uint32(pos + 4, 0x909006eb);	// skip
+			write_uint32(pos + 8, 0x90909090);
 			return;
 	}
 #endif
-	*(Bit64u*)(pos+2)=(Bit64u)fct_ptr;		// fill function pointer
+	write_uint64(pos + 2, static_cast<uint64_t>(fct_ptr)); // fill function
+	                                                       // pointer
 }
 #endif
 

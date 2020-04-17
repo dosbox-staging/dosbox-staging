@@ -440,39 +440,40 @@ static void gen_return_function(void) {
 #ifdef DRC_FLAGS_INVALIDATION
 // called when a call to a function can be replaced by a
 // call to a simpler function
-static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
+static void gen_fill_function_ptr(uint8_t *pos, void *fct_ptr, Bitu flags_type)
+{
 #ifdef DRC_FLAGS_INVALIDATION_DCODE
 	// try to avoid function calls but rather directly fill in code
 	switch (flags_type) {
 		case t_ADDb:
 		case t_ADDw:
 		case t_ADDd:
-			*(Bit32u*)pos=0xc203c18b;	// mov eax,ecx; add eax,edx
-			*(pos+4)=0x90;
+		        write_uint32(pos, 0xc203c18b); // mov eax,ecx; add eax,edx
+		        *(pos+4)=0x90;
 			break;
 		case t_ORb:
 		case t_ORw:
 		case t_ORd:
-			*(Bit32u*)pos=0xc20bc18b;	// mov eax,ecx; or eax,edx
-			*(pos+4)=0x90;
+		        write_uint32(pos, 0xc20bc18b); // mov eax,ecx; or eax,edx
+		        *(pos+4)=0x90;
 			break;
 		case t_ANDb:
 		case t_ANDw:
 		case t_ANDd:
-			*(Bit32u*)pos=0xc223c18b;	// mov eax,ecx; and eax,edx
-			*(pos+4)=0x90;
+		        write_uint32(pos, 0xc223c18b); // mov eax,ecx; and eax,edx
+		        *(pos+4)=0x90;
 			break;
 		case t_SUBb:
 		case t_SUBw:
 		case t_SUBd:
-			*(Bit32u*)pos=0xc22bc18b;	// mov eax,ecx; sub eax,edx
-			*(pos+4)=0x90;
+		        write_uint32(pos, 0xc22bc18b); // mov eax,ecx; sub eax,edx
+		        *(pos+4)=0x90;
 			break;
 		case t_XORb:
 		case t_XORw:
 		case t_XORd:
-			*(Bit32u*)pos=0xc233c18b;	// mov eax,ecx; xor eax,edx
-			*(pos+4)=0x90;
+		        write_uint32(pos, 0xc233c18b); // mov eax,ecx; xor eax,edx
+		        *(pos+4)=0x90;
 			break;
 		case t_CMPb:
 		case t_CMPw:
@@ -480,33 +481,40 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 		case t_TESTb:
 		case t_TESTw:
 		case t_TESTd:
-			*(Bit32u*)pos=0x909003eb;	// skip
-			*(pos+4)=0x90;
+		        write_uint32(pos, 0x909003eb); // skip
+		        *(pos+4)=0x90;
 			break;
 		case t_INCb:
 		case t_INCw:
 		case t_INCd:
-			*(Bit32u*)pos=0x9040c18b;	// mov eax,ecx; inc eax
-			*(pos+4)=0x90;
+		        write_uint32(pos, 0x9040c18b); // mov eax,ecx; inc eax
+		        *(pos+4)=0x90;
 			break;
 		case t_DECb:
 		case t_DECw:
 		case t_DECd:
-			*(Bit32u*)pos=0x9048c18b;	// mov eax,ecx; dec eax
-			*(pos+4)=0x90;
+		        write_uint32(pos, 0x9048c18b); // mov eax,ecx; dec eax
+		        *(pos+4)=0x90;
 			break;
 		case t_NEGb:
 		case t_NEGw:
 		case t_NEGd:
-			*(Bit32u*)pos=0xd8f7c18b;	// mov eax,ecx; neg eax
-			*(pos+4)=0x90;
+		        write_uint32(pos, 0xd8f7c18b); // mov eax,ecx; neg eax
+		        *(pos+4)=0x90;
 			break;
 		default:
-			*(Bit32u*)(pos+1)=(Bit32u)((Bit8u*)fct_ptr - (pos+1+4));	// fill function pointer
-			break;
+		        write_uint32(pos + 1,
+		                     static_cast<uint32_t>(
+		                             static_cast<uint8_t *>(fct_ptr) -
+		                             (pos + 1 + 4))); // fill function
+		                                              // pointer
+		        break;
 	}
 #else
-	*(Bit32u*)(pos+1)=(Bit32u)((Bit8u*)fct_ptr - (pos+1+4));	// fill function pointer
+	write_uint32(pos + 1, static_cast<uint32_t>(static_cast<uint8_t *>(fct_ptr) -
+	                                            (pos + 1 + 4))); // fill
+	                                                             // function
+	                                                             // pointer
 #endif
 }
 #endif
