@@ -137,7 +137,7 @@ public:
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return;
 		host_writew(hostmem+addr,val);
-		const uint16_t is_mapped = host_readw(write_map + addr);
+		const uint16_t is_mapped = read_uint16(write_map + addr);
 		if (!is_mapped) {
 			if (active_blocks)
 				return;
@@ -162,7 +162,7 @@ public:
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return;
 		host_writed(hostmem+addr,val);
-		const uint32_t is_mapped = host_readd(write_map + addr);
+		const uint32_t is_mapped = read_uint32(write_map + addr);
 		if (!is_mapped) {
 			if (active_blocks)
 				return;
@@ -216,7 +216,7 @@ public:
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return false;
 
-		const uint16_t is_mapped = host_readw(write_map + addr);
+		const uint16_t is_mapped = read_uint16(write_map + addr);
 		if (!is_mapped) {
 			if (!active_blocks) {
 				active_count--;
@@ -247,7 +247,7 @@ public:
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return false;
 
-		const uint32_t is_mapped = host_readd(write_map + addr);
+		const uint32_t is_mapped = read_uint32(write_map + addr);
 		if (!is_mapped) {
 			if (!active_blocks) {
 				active_count--;
@@ -489,19 +489,19 @@ static INLINE void cache_addb(Bit8u val) {
 
 static INLINE void cache_addw(const uint16_t val)
 {
-	host_writew(cache.pos, val);
+	write_uint16(cache.pos, val);
 	cache.pos += sizeof(val);
 }
 
 static INLINE void cache_addd(const uint32_t val)
 {
-	host_writed(cache.pos, val);
+	write_uint32(cache.pos, val);
 	cache.pos += sizeof(val);
 }
 
 static INLINE void cache_addq(const uint64_t val)
 {
-	host_writeq(cache.pos, val);
+	write_uint64(cache.pos, val);
 	cache.pos += sizeof(val);
 }
 
