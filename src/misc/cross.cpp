@@ -152,15 +152,9 @@ void Cross::GetPlatformConfigDir(std::string& in) {
 		in += CROSS_FILESPLIT;
 }
 
-void Cross::GetPlatformConfigName(std::string& in) {
-#ifdef WIN32
-#define DEFAULT_CONFIG_FILE "dosbox-" CONF_BRAND ".conf"
-#elif defined(MACOSX)
-#define DEFAULT_CONFIG_FILE "DOSBox " CONF_BRAND " Preferences"
-#else /*linux freebsd*/
-#define DEFAULT_CONFIG_FILE "dosbox-" CONF_BRAND ".conf"
-#endif
-	in = DEFAULT_CONFIG_FILE;
+void Cross::GetPlatformConfigName(std::string &in)
+{
+	in = "dosbox-" CONF_BRAND ".conf";
 }
 
 void Cross::CreatePlatformConfigDir(std::string &in)
@@ -170,9 +164,9 @@ void Cross::CreatePlatformConfigDir(std::string &in)
 	in += "\\DOSBox";
 	mkdir(in.c_str());
 #elif defined(MACOSX)
-	in = "~/Library/Preferences";
+	in = "~/Library/Preferences/DOSBox";
 	ResolveHomedir(in);
-	//Don't create it. Assume it exists
+	mkdir(in.c_str(), 0700);
 #else
 	assert(!cached_conf_path.empty());
 	in = cached_conf_path.c_str();
