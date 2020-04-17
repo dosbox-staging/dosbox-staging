@@ -893,7 +893,7 @@ bool Config::ParseConfigFile(char const * const configfilename) {
 	if (!in) return false;
 	configfiles.push_back(configfilename);
 
-	LOG_MSG("CONFIG: Loading %s config file %s",
+	LOG_MSG("CONFIG: Loading %s file %s",
 	        configfiles.size() == 1 ? "primary" : "additional",
 	        configfilename);
 

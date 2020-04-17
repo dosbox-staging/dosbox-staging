@@ -3181,7 +3181,7 @@ int main(int argc, char* argv[]) {
 			Cross::GetPlatformConfigName(config_file);
 			config_combined = config_path + config_file;
 			if (control->PrintConfig(config_combined)) {
-				LOG_MSG("CONFIG: Generating default configuration.\n"
+				LOG_MSG("CONFIG: Generating default configuration\n"
 					"CONFIG: Writing it to %s",
 					config_combined.c_str());
 				// Load them as well. Makes relative paths much easier
@@ -3216,7 +3216,7 @@ int main(int argc, char* argv[]) {
 		Cross::GetPlatformConfigName(config_file);
 		config_combined = config_path + config_file;
 		if (control->PrintConfig(config_combined)) {
-			LOG_MSG("CONFIG: Generating default configuration.\n"
+			LOG_MSG("CONFIG: Generating default configuration\n"
 				"CONFIG: Writing it to %s",
 				config_combined.c_str());
 			// Load them as well. Makes relative paths much easier
