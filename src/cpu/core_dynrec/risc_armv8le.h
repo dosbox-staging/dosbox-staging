@@ -1150,25 +1150,25 @@ static void gen_fill_function_ptr(uint8_t *pos, void *fct_ptr, Bitu flags_type)
 			write_uint32(pos + 16, LSRV64(FC_RETOP, HOST_x0, HOST_x2));				// lsrv FC_RETOP, x0, x2
 			break;
 		default:
-			write_uint32(pos, MOVZ64(temp1, (static_cast<uint64_t>(fct_ptr)) & 0xffff, 0));                 // movz temp1, #(fct_ptr & 0xffff)
-			write_uint32(pos + 4, MOVK64(temp1, ((static_cast<uint64_t>(fct_ptr)) >> 16) & 0xffff, 16));    // movk temp1, #((fct_ptr >> 16) & 0xffff), lsl #16
-			write_uint32(pos + 8, MOVK64(temp1, ((static_cast<uint64_t>(fct_ptr)) >> 32) & 0xffff, 32));    // movk temp1, #((fct_ptr >> 32) & 0xffff), lsl #32
-			write_uint32(pos + 12, MOVK64(temp1, ((static_cast<uint64_t>(fct_ptr)) >> 48) & 0xffff, 48));   // movk temp1, #((fct_ptr >> 48) & 0xffff), lsl #48
+			write_uint32(pos, MOVZ64(temp1, (reinterpret_cast<uint64_t>(fct_ptr)) & 0xffff, 0));                 // movz temp1, #(fct_ptr & 0xffff)
+			write_uint32(pos + 4, MOVK64(temp1, ((reinterpret_cast<uint64_t>(fct_ptr)) >> 16) & 0xffff, 16));    // movk temp1, #((fct_ptr >> 16) & 0xffff), lsl #16
+			write_uint32(pos + 8, MOVK64(temp1, ((reinterpret_cast<uint64_t>(fct_ptr)) >> 32) & 0xffff, 32));    // movk temp1, #((fct_ptr >> 32) & 0xffff), lsl #32
+			write_uint32(pos + 12, MOVK64(temp1, ((reinterpret_cast<uint64_t>(fct_ptr)) >> 48) & 0xffff, 48));   // movk temp1, #((fct_ptr >> 48) & 0xffff), lsl #48
 			break;
 	}
 #else
-	write_uint32(pos, MOVZ64(temp1, (static_cast<uint64_t>(fct_ptr)) & 0xffff,
+	write_uint32(pos, MOVZ64(temp1, (reinterpret_cast<uint64_t>(fct_ptr)) & 0xffff,
 	                         0)); // movz temp1, #(fct_ptr & 0xffff)
 	write_uint32(pos + 4,
-	             MOVK64(temp1, ((static_cast<uint64_t>(fct_ptr)) >> 16) & 0xffff,
+	             MOVK64(temp1, ((reinterpret_cast<uint64_t>(fct_ptr)) >> 16) & 0xffff,
 	                    16)); // movk temp1, #((fct_ptr >> 16) & 0xffff),
 	                          // lsl #16
 	write_uint32(pos + 8,
-	             MOVK64(temp1, ((static_cast<uint64_t>(fct_ptr)) >> 32) & 0xffff,
+	             MOVK64(temp1, ((reinterpret_cast<uint64_t>(fct_ptr)) >> 32) & 0xffff,
 	                    32)); // movk temp1, #((fct_ptr >> 32) & 0xffff),
 	                          // lsl #32
 	write_uint32(pos + 12,
-	             MOVK64(temp1, ((static_cast<uint64_t>(fct_ptr)) >> 48) & 0xffff,
+	             MOVK64(temp1, ((reinterpret_cast<uint64_t>(fct_ptr)) >> 48) & 0xffff,
 	                    48)); // movk temp1, #((fct_ptr >> 48) & 0xffff),
 	                          // lsl #48
 #endif

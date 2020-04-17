@@ -703,8 +703,9 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 			return;
 	}
 #endif
-	write_uint64(pos + 2, static_cast<uint64_t>(fct_ptr)); // fill function
-	                                                       // pointer
+	write_uint64(pos + 2, reinterpret_cast<uint64_t>(fct_ptr)); // fill
+	                                                            // function
+	                                                            // pointer
 }
 #endif
 
