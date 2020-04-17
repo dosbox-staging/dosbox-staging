@@ -1414,7 +1414,7 @@ static void gen_fill_function_ptr(uint8_t *pos, void *fct_ptr, Bitu flags_type)
 			default:
 				write_uint32((static_cast<uint32_t>(*pos) << 2) +
 				     (static_cast<uint32_t>(pos) + 2),
-				      static_cast<uint32_t>(fct_ptr)); // simple_func
+				      reinterpret_cast<uint32_t>(fct_ptr)); // simple_func
 				break;
 		}
 
@@ -1423,12 +1423,12 @@ static void gen_fill_function_ptr(uint8_t *pos, void *fct_ptr, Bitu flags_type)
 	if (((Bit32u)pos & 0x03) == 0)
 	{
 		write_uint32((static_cast<uint32_t>(*pos) << 2) +
-		             (static_cast<uint32_t>(pos) + 4),
-		             static_cast<uint32_t>(fct_ptr)); // simple_func
+		                     (static_cast<uint32_t>(pos) + 4),
+		             reinterpret_cast<uint32_t>(fct_ptr)); // simple_func
 	} else {
 		write_uint32((static_cast<uint32_t>(*pos) << 2) +
-		             (static_cast<uint32_t>(pos) + 2),
-		             static_cast<uint32_t>(fct_ptr)); // simple_func
+		                     (static_cast<uint32_t>(pos) + 2),
+		             reinterpret_cast<uint32_t>(fct_ptr)); // simple_func
 	}
 #endif
 }

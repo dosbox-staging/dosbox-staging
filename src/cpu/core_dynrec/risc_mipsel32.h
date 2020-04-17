@@ -644,12 +644,12 @@ static void gen_fill_function_ptr(uint8_t *pos, void *fct_ptr, Bitu flags_type)
 		default:
 		        write_uint32(pos,
 		                     0x0c000000 +
-		                             (((static_cast<uint32_t>(fct_ptr)) >> 2) &
+		                             (((reinterpret_cast<uint32_t>(fct_ptr)) >> 2) &
 		                              0x3ffffff)); // jal simple_func
 		        break;
 	}
 #else
-	write_uint32(pos, 0x0c000000+((static_cast<uint32_t>(fct_ptr)) >> 2) & 0x3ffffff));		// jal simple_func
+	write_uint32(pos, 0x0c000000+((reinterpret_cast<uint32_t>(fct_ptr)) >> 2) & 0x3ffffff));		// jal simple_func
 #endif
 }
 #endif

@@ -1105,7 +1105,7 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 				write_uint16(pos + 2, B_FWD(14));						// b after_call (pc+14)
 				break;
 			default:
-				write_uint32(pos + 8, static_cast<uint32_t>(fct_ptr));		// simple_func
+				write_uint32(pos + 8, reinterpret_cast<uint32_t>(fct_ptr));		// simple_func
 				break;
 		}
 	}
@@ -1297,7 +1297,7 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 				write_uint16(pos + 2, B_FWD(16));						// b after_call (pc+16)
 				break;
 			default:
-				write_uint32(pos + 10, static_cast<uint32_t>(fct_ptr));		// simple_func
+				write_uint32(pos + 10, reinterpret_cast<uint32_t>(fct_ptr));		// simple_func
 				break;
 		}
 
@@ -1305,11 +1305,11 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 #else
 	if (((Bit32u)pos & 0x03) == 0)
 	{
-		write_uint32(pos + 8, static_cast<uint32_t>(fct_ptr)); // simple_func
+		write_uint32(pos + 8, reinterpret_cast<uint32_t>(fct_ptr)); // simple_func
 	}
 	else
 	{
-		write_uint32(pos + 10, static_cast<uint32_t>(fct_ptr)); // simple_func
+		write_uint32(pos + 10, reinterpret_cast<uint32_t>(fct_ptr)); // simple_func
 	}
 #endif
 }

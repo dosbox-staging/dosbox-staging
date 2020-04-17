@@ -1329,31 +1329,33 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 			break;
 		default:
 #if C_TARGETCPU == ARMV7LE
-		        write_uint32(pos,
-		                     MOVW(temp1, (static_cast<uint32_t>(fct_ptr)) &
-		                                         0xffff)); // movw temp1,
-		                                                   // #(fct_ptr
-		                                                   // & 0xffff)
+		        write_uint32(pos, MOVW(temp1,
+		                               (reinterpret_cast<uint32_t>(fct_ptr)) &
+		                                       0xffff)); // movw temp1,
+		                                                 // #(fct_ptr
+		                                                 // & 0xffff)
 		        write_uint32(pos + 4,
-		                     MOVT(temp1, (static_cast<uint32_t>(fct_ptr)) >>
-		                                         16)); // movt temp1,
-		                                               // #(fct_ptr >> 16)
+		                     MOVT(temp1,
+		                          (reinterpret_cast<uint32_t>(fct_ptr)) >>
+		                                  16)); // movt temp1,
+		                                        // #(fct_ptr >> 16)
 #else
-		        write_uint32(pos + 12, static_cast<uint32_t>(fct_ptr)); // simple_func
+		        write_uint32(pos + 12,
+		                     reinterpret_cast<uint32_t>(fct_ptr)); // simple_func
 #endif
 			break;
 
 	}
 #else
 #if C_TARGETCPU == ARMV7LE
-	write_uint32(pos, MOVW(temp1, (static_cast<uint32_t>(fct_ptr)) &
+	write_uint32(pos, MOVW(temp1, (reinterpret_cast<uint32_t>(fct_ptr)) &
 	                                      0xffff)); // movw temp1, #(fct_ptr
 	                                                // & 0xffff)
-	write_uint32(pos + 4, MOVT(temp1, (static_cast<uint32_t>(fct_ptr)) >>
+	write_uint32(pos + 4, MOVT(temp1, (reinterpret_cast<uint32_t>(fct_ptr)) >>
 	                                          16)); // movt temp1, #(fct_ptr
 	                                                // >> 16)
 #else
-	write_uint32(pos + 12, static_cast<uint32_t>(fct_ptr)); // simple_func
+	write_uint32(pos + 12, reinterpret_cast<uint32_t>(fct_ptr)); // simple_func
 #endif
 #endif
 }
