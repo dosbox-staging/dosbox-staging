@@ -240,7 +240,7 @@ static uint16_t decode_fetchw()
 		val |= decode_fetchb() << 8;
 		return val;
 	}
-	host_addw(decode.page.wmap + decode.page.index, 0x0101);
+	incr_uint16(decode.page.wmap + decode.page.index, 0x0101);
 	decode.code += sizeof(uint16_t);
 	decode.page.index += sizeof(uint16_t);
 	return mem_readw(decode.code - sizeof(uint16_t));
@@ -257,7 +257,7 @@ static uint32_t decode_fetchd()
 		return val;
 		/* Advance to the next page */
 	}
-	host_addd(decode.page.wmap + decode.page.index, 0x01010101);
+	incr_uint32(decode.page.wmap + decode.page.index, 0x01010101);
 	decode.code += sizeof(uint32_t);
 	decode.page.index += sizeof(uint32_t);
 	return mem_readd(decode.code - sizeof(uint32_t));
@@ -294,8 +294,8 @@ static void INLINE decode_increase_wmapmask(Bitu size) {
 	// update mask entries
 	switch (size) {
 	case 1: activecb->cache.wmapmask[mapidx] += 0x01; break;
-	case 2: host_addw(activecb->cache.wmapmask + mapidx, 0x0101); break;
-	case 4: host_addd(activecb->cache.wmapmask + mapidx, 0x01010101); break;
+	case 2: incr_uint16(activecb->cache.wmapmask + mapidx, 0x0101); break;
+	case 4: incr_uint32(activecb->cache.wmapmask + mapidx, 0x01010101); break;
 	}
 }
 
