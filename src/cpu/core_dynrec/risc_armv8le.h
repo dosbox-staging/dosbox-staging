@@ -24,7 +24,7 @@
 // some configuring defines that specify the capabilities of this architecture
 // or aspects of the recompiling
 
-// protect FC_ADDR over function calls if necessaray
+// protect FC_ADDR over function calls if necessary
 // #define DRC_PROTECT_ADDR_REG
 
 // try to use non-flags generating functions if possible
@@ -924,214 +924,253 @@ static void gen_return_function(void) {
 
 // called when a call to a function can be replaced by a
 // call to a simpler function
-static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
+static void gen_fill_function_ptr(uint8_t *pos, void *fct_ptr, Bitu flags_type)
+{
 #ifdef DRC_FLAGS_INVALIDATION_DCODE
 	// try to avoid function calls but rather directly fill in code
 	switch (flags_type) {
 		case t_ADDb:
 		case t_ADDw:
 		case t_ADDd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=ADD_REG_LSL_IMM(FC_RETOP, HOST_w0, HOST_w1, 0);	// add FC_RETOP, w0, w1
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_ORb:
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, ADD_REG_LSL_IMM(FC_RETOP, HOST_w0,
+		                                              HOST_w1, 0)); // add FC_RETOP, w0, w1
+		        write_uint32(pos + 12, NOP); // nop
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_ORb:
 		case t_ORw:
 		case t_ORd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=ORR_REG_LSL_IMM(FC_RETOP, HOST_w0, HOST_w1, 0);	// orr FC_RETOP, w0, w1
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_ANDb:
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, ORR_REG_LSL_IMM(FC_RETOP, HOST_w0,
+		                                              HOST_w1, 0)); // orr FC_RETOP, w0, w1
+		        write_uint32(pos + 12, NOP); // nop
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_ANDb:
 		case t_ANDw:
 		case t_ANDd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=AND_REG_LSL_IMM(FC_RETOP, HOST_w0, HOST_w1, 0);	// and FC_RETOP, w0, w1
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_SUBb:
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, AND_REG_LSL_IMM(FC_RETOP, HOST_w0,
+		                                              HOST_w1, 0)); // and FC_RETOP, w0, w1
+		        write_uint32(pos + 12, NOP); // nop
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_SUBb:
 		case t_SUBw:
 		case t_SUBd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=SUB_REG_LSL_IMM(FC_RETOP, HOST_w0, HOST_w1, 0);	// sub FC_RETOP, w0, w1
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_XORb:
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, SUB_REG_LSL_IMM(FC_RETOP, HOST_w0,
+		                                              HOST_w1, 0)); // sub FC_RETOP, w0, w1
+		        write_uint32(pos + 12, NOP); // nop
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_XORb:
 		case t_XORw:
 		case t_XORd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=EOR_REG_LSL_IMM(FC_RETOP, HOST_w0, HOST_w1, 0);	// eor FC_RETOP, w0, w1
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_CMPb:
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, EOR_REG_LSL_IMM(FC_RETOP, HOST_w0,
+		                                              HOST_w1, 0)); // eor FC_RETOP, w0, w1
+		        write_uint32(pos + 12, NOP); // nop
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_CMPb:
 		case t_CMPw:
 		case t_CMPd:
 		case t_TESTb:
 		case t_TESTw:
 		case t_TESTd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=NOP;				// nop
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_INCb:
+		        write_uint32(pos, NOP);      // nop
+		        write_uint32(pos + 4, NOP);  // nop
+		        write_uint32(pos + 8, NOP);  // nop
+		        write_uint32(pos + 12, NOP); // nop
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_INCb:
 		case t_INCw:
 		case t_INCd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=ADD_IMM(FC_RETOP, HOST_w0, 1, 0);	// add FC_RETOP, w0, #1
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_DECb:
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, ADD_IMM(FC_RETOP, HOST_w0, 1, 0)); // add FC_RETOP, w0, #1
+		        write_uint32(pos + 12, NOP); // nop
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_DECb:
 		case t_DECw:
 		case t_DECd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=SUB_IMM(FC_RETOP, HOST_w0, 1, 0);	// sub FC_RETOP, w0, #1
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_SHLb:
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, SUB_IMM(FC_RETOP, HOST_w0, 1, 0)); // sub FC_RETOP, w0, #1
+		        write_uint32(pos + 12, NOP); // nop
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_SHLb:
 		case t_SHLw:
 		case t_SHLd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=LSLV(FC_RETOP, HOST_w0, HOST_w1);	// lslv FC_RETOP, w0, w1
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_SHRb:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=UXTB(FC_RETOP, HOST_w0);				// uxtb FC_RETOP, w0
-			*(Bit32u*)(pos+8)=NOP;				// nop
-			*(Bit32u*)(pos+12)=LSRV(FC_RETOP, FC_RETOP, HOST_w1);	// lsrv FC_RETOP, FC_RETOP, w1
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_SHRw:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=UXTH(FC_RETOP, HOST_w0);				// uxth FC_RETOP, w0
-			*(Bit32u*)(pos+8)=NOP;				// nop
-			*(Bit32u*)(pos+12)=LSRV(FC_RETOP, FC_RETOP, HOST_w1);	// lsrv FC_RETOP, FC_RETOP, w1
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_SHRd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=LSRV(FC_RETOP, HOST_w0, HOST_w1);	// lsrv FC_RETOP, w0, w1
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_SARb:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=SXTB(FC_RETOP, HOST_w0);				// sxtb FC_RETOP, w0
-			*(Bit32u*)(pos+8)=NOP;				// nop
-			*(Bit32u*)(pos+12)=ASRV(FC_RETOP, FC_RETOP, HOST_w1);	// asrv FC_RETOP, FC_RETOP, w1
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_SARw:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=SXTH(FC_RETOP, HOST_w0);				// sxth FC_RETOP, w0
-			*(Bit32u*)(pos+8)=NOP;				// nop
-			*(Bit32u*)(pos+12)=ASRV(FC_RETOP, FC_RETOP, HOST_w1);	// asrv FC_RETOP, FC_RETOP, w1
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_SARd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=ASRV(FC_RETOP, HOST_w0, HOST_w1);	// asrv FC_RETOP, w0, w1
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
-			break;
-		case t_RORb:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=BFI(HOST_w0, HOST_w0, 8, 8);			// bfi w0, w0, 8, 8
-			*(Bit32u*)(pos+8)=BFI(HOST_w0, HOST_w0, 16, 16);		// bfi w0, w0, 16, 16
-			*(Bit32u*)(pos+12)=RORV(FC_RETOP, HOST_w0, HOST_w1);	// rorv FC_RETOP, w0, w1
-			*(Bit32u*)(pos+16)=NOP;				// nop
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, LSLV(FC_RETOP, HOST_w0, HOST_w1)); // lslv FC_RETOP, w0, w1
+		        write_uint32(pos + 12, NOP); // nop
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_SHRb:
+		        write_uint32(pos, NOP);                         // nop
+		        write_uint32(pos + 4, UXTB(FC_RETOP, HOST_w0)); // uxtb
+		                                                        // FC_RETOP,
+		                                                        // w0
+		        write_uint32(pos + 8, NOP); // nop
+		        write_uint32(pos + 12,
+		                     LSRV(FC_RETOP, FC_RETOP, HOST_w1)); // lsrv
+		                                                         // FC_RETOP,
+		                                                         // FC_RETOP,
+		                                                         // w1
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_SHRw:
+		        write_uint32(pos, NOP);                         // nop
+		        write_uint32(pos + 4, UXTH(FC_RETOP, HOST_w0)); // uxth
+		                                                        // FC_RETOP,
+		                                                        // w0
+		        write_uint32(pos + 8, NOP); // nop
+		        write_uint32(pos + 12,
+		                     LSRV(FC_RETOP, FC_RETOP, HOST_w1)); // lsrv
+		                                                         // FC_RETOP,
+		                                                         // FC_RETOP,
+		                                                         // w1
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_SHRd:
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, LSRV(FC_RETOP, HOST_w0, HOST_w1)); // lsrv FC_RETOP, w0, w1
+		        write_uint32(pos + 12, NOP); // nop
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_SARb:
+		        write_uint32(pos, NOP);                         // nop
+		        write_uint32(pos + 4, SXTB(FC_RETOP, HOST_w0)); // sxtb
+		                                                        // FC_RETOP,
+		                                                        // w0
+		        write_uint32(pos + 8, NOP); // nop
+		        write_uint32(pos + 12,
+		                     ASRV(FC_RETOP, FC_RETOP, HOST_w1)); // asrv
+		                                                         // FC_RETOP,
+		                                                         // FC_RETOP,
+		                                                         // w1
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_SARw:
+		        write_uint32(pos, NOP);                         // nop
+		        write_uint32(pos + 4, SXTH(FC_RETOP, HOST_w0)); // sxth
+		                                                        // FC_RETOP,
+		                                                        // w0
+		        write_uint32(pos + 8, NOP); // nop
+		        write_uint32(pos + 12,
+		                     ASRV(FC_RETOP, FC_RETOP, HOST_w1)); // asrv
+		                                                         // FC_RETOP,
+		                                                         // FC_RETOP,
+		                                                         // w1
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_SARd:
+		        write_uint32(pos, NOP);     // nop
+		        write_uint32(pos + 4, NOP); // nop
+		        write_uint32(pos + 8, ASRV(FC_RETOP, HOST_w0, HOST_w1)); // asrv FC_RETOP, w0, w1
+		        write_uint32(pos + 12, NOP); // nop
+		        write_uint32(pos + 16, NOP); // nop
+		        break;
+	        case t_RORb:
+		        write_uint32(pos, NOP); // nop
+		        write_uint32(pos + 4, BFI(HOST_w0, HOST_w0, 8, 8);			// bfi w0, w0, 8, 8
+			write_uint32(pos + 8, BFI(HOST_w0, HOST_w0, 16, 16);		// bfi w0, w0, 16, 16
+			write_uint32(pos + 12, RORV(FC_RETOP, HOST_w0, HOST_w1));	// rorv FC_RETOP, w0, w1
+			write_uint32(pos + 16, NOP);				// nop
 			break;
 		case t_RORw:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=BFI(HOST_w0, HOST_w0, 16, 16);		// bfi w0, w0, 16, 16
-			*(Bit32u*)(pos+8)=NOP;				// nop
-			*(Bit32u*)(pos+12)=RORV(FC_RETOP, HOST_w0, HOST_w1);	// rorv FC_RETOP, w0, w1
-			*(Bit32u*)(pos+16)=NOP;				// nop
+			write_uint32(pos, NOP);					// nop
+			write_uint32(pos + 4, BFI(HOST_w0, HOST_w0, 16, 16);		// bfi w0, w0, 16, 16
+			write_uint32(pos + 8, NOP);				// nop
+			write_uint32(pos + 12, RORV(FC_RETOP, HOST_w0, HOST_w1));	// rorv FC_RETOP, w0, w1
+			write_uint32(pos + 16, NOP);				// nop
 			break;
 		case t_RORd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=RORV(FC_RETOP, HOST_w0, HOST_w1);	// rorv FC_RETOP, w0, w1
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
+			write_uint32(pos, NOP);					// nop
+			write_uint32(pos + 4, NOP);				// nop
+			write_uint32(pos + 8, RORV(FC_RETOP, HOST_w0, HOST_w1));	// rorv FC_RETOP, w0, w1
+			write_uint32(pos + 12, NOP);				// nop
+			write_uint32(pos + 16, NOP);				// nop
 			break;
 		case t_ROLb:
-			*(Bit32u*)pos=MOVZ(HOST_w2, 32, 0);									// movz w2, #32
-			*(Bit32u*)(pos+4)=BFI(HOST_w0, HOST_w0, 8, 8);						// bfi w0, w0, 8, 8
-			*(Bit32u*)(pos+8)=SUB_REG_LSL_IMM(HOST_w2, HOST_w2, HOST_w1, 0);	// sub w2, w2, w1
-			*(Bit32u*)(pos+12)=BFI(HOST_w0, HOST_w0, 16, 16);					// bfi w0, w0, 16, 16
-			*(Bit32u*)(pos+16)=RORV(FC_RETOP, HOST_w0, HOST_w2);				// rorv FC_RETOP, w0, w2
+			write_uint32(pos, MOVZ(HOST_w2, 32, 0));									// movz w2, #32
+			write_uint32(pos + 4, BFI(HOST_w0, HOST_w0, 8, 8));						// bfi w0, w0, 8, 8
+			write_uint32(pos + 8, SUB_REG_LSL_IMM(HOST_w2, HOST_w2, HOST_w1, 0));	// sub w2, w2, w1
+			write_uint32(pos + 12, BFI(HOST_w0, HOST_w0, 16, 16));					// bfi w0, w0, 16, 16
+			write_uint32(pos + 16, RORV(FC_RETOP, HOST_w0, HOST_w2));				// rorv FC_RETOP, w0, w2
 			break;
 		case t_ROLw:
-			*(Bit32u*)pos=MOVZ(HOST_w2, 32, 0);									// movz w2, #32
-			*(Bit32u*)(pos+4)=BFI(HOST_w0, HOST_w0, 16, 16);					// bfi w0, w0, 16, 16
-			*(Bit32u*)(pos+8)=SUB_REG_LSL_IMM(HOST_w2, HOST_w2, HOST_w1, 0);	// sub w2, w2, w1
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=RORV(FC_RETOP, HOST_w0, HOST_w2);				// rorv FC_RETOP, w0, w2
+			write_uint32(pos, MOVZ(HOST_w2, 32, 0));									// movz w2, #32
+			write_uint32(pos + 4, BFI(HOST_w0, HOST_w0, 16, 16));					// bfi w0, w0, 16, 16
+			write_uint32(pos + 8, SUB_REG_LSL_IMM(HOST_w2, HOST_w2, HOST_w1, 0));	// sub w2, w2, w1
+			write_uint32(pos + 12, NOP);				// nop
+			write_uint32(pos + 16, RORV(FC_RETOP, HOST_w0, HOST_w2));				// rorv FC_RETOP, w0, w2
 			break;
 		case t_ROLd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=MOVZ(HOST_w2, 32, 0);								// movz w2, #32
-			*(Bit32u*)(pos+8)=SUB_REG_LSL_IMM(HOST_w2, HOST_w2, HOST_w1, 0);	// sub w2, w2, w1
-			*(Bit32u*)(pos+12)=RORV(FC_RETOP, HOST_w0, HOST_w2);				// rorv FC_RETOP, w0, w2
-			*(Bit32u*)(pos+16)=NOP;				// nop
+			write_uint32(pos, NOP);					// nop
+			write_uint32(pos + 4, MOVZ(HOST_w2, 32, 0));								// movz w2, #32
+			write_uint32(pos + 8, SUB_REG_LSL_IMM(HOST_w2, HOST_w2, HOST_w1, 0));	// sub w2, w2, w1
+			write_uint32(pos + 12, RORV(FC_RETOP, HOST_w0, HOST_w2));				// rorv FC_RETOP, w0, w2
+			write_uint32(pos + 16, NOP);				// nop
 			break;
 		case t_NEGb:
 		case t_NEGw:
 		case t_NEGd:
-			*(Bit32u*)pos=NOP;					// nop
-			*(Bit32u*)(pos+4)=NOP;				// nop
-			*(Bit32u*)(pos+8)=SUB_REG_LSL_IMM(FC_RETOP, HOST_wzr, HOST_w0, 0);	// sub FC_RETOP, wzr, w0
-			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
+			write_uint32(pos, NOP);					// nop
+			write_uint32(pos + 4, NOP);				// nop
+			write_uint32(pos + 8, SUB_REG_LSL_IMM(FC_RETOP, HOST_wzr, HOST_w0, 0));	// sub FC_RETOP, wzr, w0
+			write_uint32(pos + 12, NOP);				// nop
+			write_uint32(pos + 16, NOP);				// nop
 			break;
 		case t_DSHLd:
-			*(Bit32u*)pos=MOVZ64(HOST_x3, 0x1f, 0);								// movz x3, #0x1f
-			*(Bit32u*)(pos+4)=BFI64(HOST_x1, HOST_x0, 32, 32);					// bfi x1, x0, 32, 32
-			*(Bit32u*)(pos+8)=AND64_REG_LSL_IMM(HOST_x2, HOST_x2, HOST_x3, 0);	// and x2, x2, x3
-			*(Bit32u*)(pos+12)=LSLV64(FC_RETOP, HOST_x1, HOST_x2);				// lslv FC_RETOP, x1, x2
-			*(Bit32u*)(pos+16)=LSR64_IMM(FC_RETOP, FC_RETOP, 32);				// lsr FC_RETOP, FC_RETOP, #32
+			write_uint32(pos, MOVZ64(HOST_x3, 0x1f, 0));								// movz x3, #0x1f
+			write_uint32(pos + 4, BFI64(HOST_x1, HOST_x0, 32, 32));					// bfi x1, x0, 32, 32
+			write_uint32(pos + 8, AND64_REG_LSL_IMM(HOST_x2, HOST_x2, HOST_x3, 0));	// and x2, x2, x3
+			write_uint32(pos + 12, LSLV64(FC_RETOP, HOST_x1, HOST_x2));				// lslv FC_RETOP, x1, x2
+			write_uint32(pos + 16, LSR64_IMM(FC_RETOP, FC_RETOP, 32));				// lsr FC_RETOP, FC_RETOP, #32
 			break;
 		case t_DSHRd:
-			*(Bit32u*)pos=MOVZ64(HOST_x3, 0x1f, 0);								// movz x3, #0x1f
-			*(Bit32u*)(pos+4)=BFI64(HOST_x0, HOST_x1, 32, 32);					// bfi x0, x1, 32, 32
-			*(Bit32u*)(pos+8)=AND64_REG_LSL_IMM(HOST_x2, HOST_x2, HOST_x3, 0);	// and x2, x2, x3
-			*(Bit32u*)(pos+12)=NOP;												// nop
-			*(Bit32u*)(pos+16)=LSRV64(FC_RETOP, HOST_x0, HOST_x2);				// lsrv FC_RETOP, x0, x2
+			write_uint32(pos, MOVZ64(HOST_x3, 0x1f, 0));								// movz x3, #0x1f
+			write_uint32(pos + 4, BFI64(HOST_x0, HOST_x1, 32, 32));					// bfi x0, x1, 32, 32
+			write_uint32(pos + 8, AND64_REG_LSL_IMM(HOST_x2, HOST_x2, HOST_x3, 0));	// and x2, x2, x3
+			write_uint32(pos + 12, NOP);												// nop
+			write_uint32(pos + 16, LSRV64(FC_RETOP, HOST_x0, HOST_x2));				// lsrv FC_RETOP, x0, x2
 			break;
 		default:
-			*(Bit32u*)pos=MOVZ64(temp1, ((Bit64u)fct_ptr) & 0xffff, 0);                 // movz temp1, #(fct_ptr & 0xffff)
-			*(Bit32u*)(pos+4)=MOVK64(temp1, (((Bit64u)fct_ptr) >> 16) & 0xffff, 16);    // movk temp1, #((fct_ptr >> 16) & 0xffff), lsl #16
-			*(Bit32u*)(pos+8)=MOVK64(temp1, (((Bit64u)fct_ptr) >> 32) & 0xffff, 32);    // movk temp1, #((fct_ptr >> 32) & 0xffff), lsl #32
-			*(Bit32u*)(pos+12)=MOVK64(temp1, (((Bit64u)fct_ptr) >> 48) & 0xffff, 48);   // movk temp1, #((fct_ptr >> 48) & 0xffff), lsl #48
+			write_uint32(pos, MOVZ64(temp1, (static_cast<uint64_t>(fct_ptr)) & 0xffff, 0));                 // movz temp1, #(fct_ptr & 0xffff)
+			write_uint32(pos + 4, MOVK64(temp1, ((static_cast<uint64_t>(fct_ptr)) >> 16) & 0xffff, 16));    // movk temp1, #((fct_ptr >> 16) & 0xffff), lsl #16
+			write_uint32(pos + 8, MOVK64(temp1, ((static_cast<uint64_t>(fct_ptr)) >> 32) & 0xffff, 32));    // movk temp1, #((fct_ptr >> 32) & 0xffff), lsl #32
+			write_uint32(pos + 12, MOVK64(temp1, ((static_cast<uint64_t>(fct_ptr)) >> 48) & 0xffff, 48));   // movk temp1, #((fct_ptr >> 48) & 0xffff), lsl #48
 			break;
-
 	}
 #else
-	*(Bit32u*)pos=MOVZ64(temp1, ((Bit64u)fct_ptr) & 0xffff, 0);                 // movz temp1, #(fct_ptr & 0xffff)
-	*(Bit32u*)(pos+4)=MOVK64(temp1, (((Bit64u)fct_ptr) >> 16) & 0xffff, 16);    // movk temp1, #((fct_ptr >> 16) & 0xffff), lsl #16
-	*(Bit32u*)(pos+8)=MOVK64(temp1, (((Bit64u)fct_ptr) >> 32) & 0xffff, 32);    // movk temp1, #((fct_ptr >> 32) & 0xffff), lsl #32
-	*(Bit32u*)(pos+12)=MOVK64(temp1, (((Bit64u)fct_ptr) >> 48) & 0xffff, 48);   // movk temp1, #((fct_ptr >> 48) & 0xffff), lsl #48
+	write_uint32(pos, MOVZ64(temp1, (static_cast<uint64_t>(fct_ptr)) & 0xffff,
+	                         0)); // movz temp1, #(fct_ptr & 0xffff)
+	write_uint32(pos + 4,
+	             MOVK64(temp1, ((static_cast<uint64_t>(fct_ptr)) >> 16) & 0xffff,
+	                    16)); // movk temp1, #((fct_ptr >> 16) & 0xffff),
+	                          // lsl #16
+	write_uint32(pos + 8,
+	             MOVK64(temp1, ((static_cast<uint64_t>(fct_ptr)) >> 32) & 0xffff,
+	                    32)); // movk temp1, #((fct_ptr >> 32) & 0xffff),
+	                          // lsl #32
+	write_uint32(pos + 12,
+	             MOVK64(temp1, ((static_cast<uint64_t>(fct_ptr)) >> 48) & 0xffff,
+	                    48)); // movk temp1, #((fct_ptr >> 48) & 0xffff),
+	                          // lsl #48
 #endif
 }
 #endif
