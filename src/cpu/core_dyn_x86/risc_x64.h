@@ -304,7 +304,7 @@ static BlockReturn gen_runcodeInit(uint8_t *code)
 	opcode(0).setea(4,-1,0,CALLSTACK).Emit8(0x89);  // mov [rsp+8/40], eax
 	opcode(4).setrm(ARG0_REG).Emit8(0xFF);   // jmp ARG0
 
-	host_writed(diff, cache.pos - diff - sizeof(uint32_t));
+	write_uint32(diff, cache.pos - diff - sizeof(uint32_t));
 	// eax = return value, ecx = flags
 	opcode(1).setea(5,-1,0,offsetof(CPU_Regs,flags)).Emit8(0x33); // xor ecx, reg_flags
 	opcode(4).setrm(1).setimm(FMASK_TEST,4).Emit8(0x81);          // and ecx,FMASK_TEST
@@ -1152,7 +1152,7 @@ static Bit8u * gen_create_branch_long(BranchTypes type) {
 
 static void gen_fill_branch_long(uint8_t *data, uint8_t *from = cache.pos)
 {
-	host_writed(data, from - data - sizeof(uint32_t));
+	write_uint32(data, from - data - sizeof(uint32_t));
 }
 
 static uint8_t *gen_create_jump(uint8_t *to = 0)
@@ -1165,7 +1165,7 @@ static uint8_t *gen_create_jump(uint8_t *to = 0)
 
 #if 0
 static void gen_fill_jump(uint8_t *data, uint8_t *to = cache.pos) {
-	host_writed(data, to - data - sizeof(uint32_t));
+	write_uint32(data, to - data - sizeof(uint32_t));
 }
 #endif
 
