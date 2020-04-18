@@ -53,5 +53,6 @@ function parse_args() {
 # shellcheck disable=SC2034
 data_dir="packages"
 
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # shellcheck source=scripts/automator/main.sh
-source "$(dirname "$0")/automator/main.sh"
+source "$script_dir/automator/main.sh"
