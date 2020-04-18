@@ -285,8 +285,9 @@ If no configfile is specified at the commandline, a file named
 loaded automatically. If a configfile is specified at the commandline
 that one will be used instead. If no configfile is specified or found
 in the current directory
-.RB " then dosbox will load one from " ~/.config/dosbox/ ". It will try to create "
-one if there is none.
+.RB " then dosbox will load one from " $XDG_CONFIG_HOME/dosbox/ "
+.RB " (which defaults to " ~/.config/dosbox/ "). It will try to create a
+new default config file if it does not exist yet.
 .SH "SPECIAL KEYS"
 .TP 12m
 .IP ALT\-ENTER

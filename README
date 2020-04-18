@@ -1556,6 +1556,18 @@ The default directories storing config file are:
    (Linux)   ~/.config/dosbox/
    (macOS)   ~/Library/Preferences/DOSBox/
 
+Linux users:
+    The configuration's parent-directory can be customized by setting
+    the XDG_DATA_HOME environment variable, per the XDG Base Directory
+    Specification. If set, DOSBox will use $XDG_CONFIG_HOME/dosbox/ for
+    its configuration path.
+
+Windows users:
+    In Windows Vista or newer, the configuration file won't work correctly
+    if it is located in "Windows" or "Program Files" folder or their subfolders,
+    or directly on C:\, so the best place for storing extra configuration files
+    is next to the default config directory or for example: C:\oldgames
+
 The file is divided into several sections. Each section starts with a
 [section name] line. The settings are the property=value lines where value can
 be altered to customize DOSBox.
@@ -1570,12 +1582,6 @@ DOSBox will load configuration files that are specified with -conf. If none were
 specified, it will try to load "dosbox.conf" from the local directory.
 If there is none, DOSBox will load the user configuration file.
 This file will be created if it doesn't exist.
-
-Important!: In Windows Vista/7 the configuration file won't work correctly
-if it is located in "Windows" or "Program Files" folder or their subfolders,
-or directly on c:\, so the best place for storing extra configuration files is
-for example: C:\oldgames
-
 
 
 ======================
