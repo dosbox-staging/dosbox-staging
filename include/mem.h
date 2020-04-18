@@ -76,6 +76,15 @@ static INLINE uint16_t read_uint16(const uint8_t *arr)
 	return val;
 }
 
+/*  Read a uint16 from 8-bit DOS/little-endian byte-ordered memory.
+ *  Use this instead of endian branching and byte swapping, such as:
+ *  #if BIG_ENDIAN byteswap(*(uint16_t*)(arr)) #else *(uint16_t*)(arr) 
+ */
+static INLINE uint16_t host_readw(const uint8_t *arr)
+{
+	return le16_to_host(read_uint16(arr));
+}
+
 /*  Read an array-indexed uint16 from 8-bit native byte-ordered memory.
  *  Use this instead of ((uint16_t*)arr)[index]
  */
@@ -83,6 +92,11 @@ static INLINE uint16_t read_uint16_at(const uint8_t *arr, const uintptr_t index)
 {
 	return read_uint16(arr + index * sizeof(uint16_t));
 }
+
+/*  Read an array-indexed uint16 from 8-bit DOS/little-endian byte-ordered
+ *  memory. Use this instead of endian branching and byte swapping, such as:
+ *  #if BIG_ENDIAN byteswap(((uint16_t*)arr)[i]) #else ((uint16_t*)arr)[i]
+ */
 static INLINE uint16_t host_readw_at(const uint8_t *arr, const uintptr_t index)
 {
 	return host_readw(arr + index * sizeof(uint16_t));
@@ -94,12 +108,19 @@ static INLINE void write_uint16(uint8_t *arr, uint16_t val)
 	memcpy(arr, &val, sizeof(val));
 }
 
+// Write a uint16 to 8-bit memory using DOS/little-endian byte-ordering.
+static INLINE void host_writew(uint8_t *arr, uint16_t val)
+{
+	write_uint16(arr, host_to_le16(val));
+}
 
 // Write an array-indexed uint16 to 8-bit memory using native byte-ordering.
 static INLINE void write_uint16_at(uint8_t *arr, const uintptr_t index, const uint16_t val)
 {
 	write_uint16(arr + index * sizeof(uint16_t), val);
 }
+
+// Write an array-indexed uint16 to 8-bit memory using DOS/little-endian byte-ordering.
 static INLINE void host_writew_at(uint8_t *arr, const uintptr_t index, const uint16_t val)
 {
 	host_writew(arr + index * sizeof(uint16_t), val);
@@ -111,18 +132,33 @@ static INLINE void incr_uint16(uint8_t *arr, const uint16_t incr)
 	write_uint16(arr, read_uint16(arr) + incr);
 }
 
-// Read, write, and add using 32-bit double-words
-static INLINE uint32_t host_readd(const uint8_t *arr)
+// Increment a uint16 value held in 8-bit DOS/little-endian byte-ordered memory.
+static INLINE void host_incrw(uint8_t *arr, const uint16_t incr)
+{
+	host_writew(arr, host_readw(arr) + incr);
+}
+
+// Read a uint32 from 8-bit native byte-ordered memory.
+static INLINE uint32_t read_uint32(const uint8_t *arr)
 {
 	uint32_t val;
 	memcpy(&val, arr, sizeof(val));
+	return val;
+}
+
+// Read a uint32 from 8-bit DOS/little-endian byte-ordered memory.
+static INLINE uint32_t host_readd(const uint8_t *arr)
+{
+	return le32_to_host(read_uint32(arr));
+}
+
 // Read an array-indexed uint32 from 8-bit native byte-ordered memory.
 static INLINE uint32_t read_uint32_at(const uint8_t *arr, const uintptr_t index)
 {
 	return read_uint32(arr + index * sizeof(uint32_t));
 }
 
-// Like the above, but allows index-style access assuming a 32-bit array
+// Read an array-indexed uint16 from 8-bit DOS/little-endian byte-ordered memory. 
 static INLINE uint32_t host_readd_at(const uint8_t *arr, const uintptr_t index)
 {
 	return host_readd(arr + index * sizeof(uint32_t));
@@ -133,13 +169,20 @@ static INLINE void write_uint32(uint8_t *arr, uint32_t val)
 {
 	memcpy(arr, &val, sizeof(val));
 }
+
+// Write a uint32 to 8-bit memory using DOS/little-endian byte-ordering.
 static INLINE void host_writed(uint8_t *arr, uint32_t val)
 {
-	// Convert the host-type value to little-endian before filling array
-	val = host_to_le32(val);
-	memcpy(arr, &val, sizeof(val));
+	write_uint32(arr, host_to_le32(val));
 }
 
+// Write an array-indexed uint32 to 8-bit memory using native byte-ordering.
+static INLINE void write_uint32_at(uint8_t *arr, const uintptr_t index, const uint32_t val)
+{
+	write_uint32(arr + index * sizeof(uint32_t), val);
+}
+
+// Write an array-indexed uint32 to 8-bit memory using DOS/little-endian byte-ordering.
 static INLINE void host_writed_at(uint8_t *arr, const uintptr_t index, const uint32_t val)
 {
 	host_writed(arr + index * sizeof(uint32_t), val);
@@ -150,9 +193,11 @@ static INLINE void incr_uint32(uint8_t *arr, const uint32_t incr)
 {
 	write_uint32(arr, read_uint32(arr) + incr);
 }
+
+// Increment a uint32 value held in 8-bit DOS/little-endian byte-ordered memory.
+static INLINE void host_incrd(uint8_t *arr, const uint32_t incr)
 {
-	const uint32_t val = host_readd(arr) + incr;
-	host_writed(arr, val);
+	host_writed(arr, host_readd(arr) + incr);
 }
 
 // Read a uint64 from 8-bit native byte-ordered memory.
