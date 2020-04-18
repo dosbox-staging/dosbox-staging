@@ -56,7 +56,7 @@ MemHandle MEM_NextHandle(MemHandle handle);
 MemHandle MEM_NextHandleAt(MemHandle handle,Bitu where);
 
 // Read and write single-byte values
-static INLINE uint8_t host_readb(const uint8_t *var)
+constexpr uint8_t host_readb(const uint8_t *var)
 {
 	return *var;
 }
