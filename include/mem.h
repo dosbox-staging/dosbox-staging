@@ -200,6 +200,10 @@ static INLINE void host_incrd(uint8_t *arr, const uint32_t incr)
 	host_writed(arr, host_readd(arr) + incr);
 }
 
+// (Temporary, to-be-removed in next PRs when code moves to incr_* functions)
+static INLINE void host_addw(uint8_t *arr, const uint16_t incr){ host_incrw(arr, incr); }
+static INLINE void host_addd(uint8_t *arr, const uint32_t incr){ host_incrd(arr, incr); }
+
 // Read a uint64 from 8-bit native byte-ordered memory.
 static INLINE uint64_t read_uint64(const uint8_t *arr)
 {
@@ -213,6 +217,10 @@ static INLINE void write_uint64(uint8_t *arr, uint64_t val)
 {
 	memcpy(arr, &val, sizeof(val));
 }
+
+// (Temporary, to-be-removed in next PRs when code moves to read/write_* functions)
+static INLINE uint64_t host_readq(uint8_t *arr){ return le64_to_host(read_uint64(arr)); }
+static INLINE void host_writeq(uint8_t *arr, uint64_t val){ write_uint64(arr, host_to_le64(val)); }
 
 static INLINE void var_write(uint8_t *var, uint8_t val)
 {
