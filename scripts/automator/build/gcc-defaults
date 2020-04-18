@@ -22,7 +22,7 @@ cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -frename-registers
 cflags_warnmore+=("${cflags_debug[@]}" -pedantic -Wcast-align -Wdouble-promotion
                   -Wduplicated-branches -Wduplicated-cond -Wextra -Wformat=2
                   -Wlogical-op -Wmisleading-indentation -Wnull-dereference
-                  -Wshadow -Wunused -fstrict-aliasing -Wstrict-aliasing=2)
+                  -Wshadow -Wunused)
 cxxonly_warnmore+=(-Weffc++ -Wnon-virtual-dtor -Woverloaded-virtual
                    -Wuseless-cast)
 

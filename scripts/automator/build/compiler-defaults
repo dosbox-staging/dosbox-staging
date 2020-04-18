@@ -5,7 +5,7 @@ cc=""
 cxx=""
 ld=""
 ranlib=""
-cflags+=(-Wall -pipe)
+cflags+=(-Wall -Wstrict-aliasing=2 -pipe)
 cxxonly+=("")
 ldflags+=("")
 libs+=("")
