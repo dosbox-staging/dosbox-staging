@@ -106,7 +106,7 @@ jobs:
           LD: gcc
           RANLIB: gcc-ranlib
           FLAGS: >-
-            -O3 -fno-signed-zeros -fno-trapping-math -fassociative-math 
+            -O3 -fno-signed-zeros -fno-trapping-math -fassociative-math
             -mfpmath=sse -msse4.2 -flto -ffunction-sections -fdata-sections
             -DNDEBUG -pipe
           LINKFLAGS: -Wl,--as-needed

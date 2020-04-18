@@ -17,7 +17,7 @@ cflags_debug+=("${cflags[@]}" -g -fno-omit-frame-pointer)
 #       no-trapping-math.
 cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -frename-registers
                  -fno-signed-zeros -fno-trapping-math -fassociative-math
-                 -frename-registers -ffunction-sections -fdata-sections)
+                 -ffunction-sections -fdata-sections -fno-stack-protector)
 
 cflags_warnmore+=("${cflags_debug[@]}" -pedantic -Wcast-align -Wdouble-promotion
                   -Wduplicated-branches -Wduplicated-cond -Wextra -Wformat=2
