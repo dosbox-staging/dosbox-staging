@@ -66,37 +66,49 @@ static INLINE void host_writeb(uint8_t *var, const uint8_t val)
 	*var = val;
 }
 
-// Read, write, and add using 16-bit words
-static INLINE uint16_t host_readw(const uint8_t *arr)
+/*  Read a uint16 from 8-bit native byte-ordered memory. Use this
+ *  instead of *(uint16_t*)(8_bit_ptr) or *(uint16_t*)(8_bit_ptr + offset)
+ */
+static INLINE uint16_t read_uint16(const uint8_t *arr)
 {
 	uint16_t val;
 	memcpy(&val, arr, sizeof(val));
-	// array sequence was DOS little-endian, so convert value to host-type
-	return le16_to_host(val);
+	return val;
 }
 
-// Like the above, but allows index-style access assuming a 16-bit array
+/*  Read an array-indexed uint16 from 8-bit native byte-ordered memory.
+ *  Use this instead of ((uint16_t*)arr)[index]
+ */
+static INLINE uint16_t read_uint16_at(const uint8_t *arr, const uintptr_t index)
+{
+	return read_uint16(arr + index * sizeof(uint16_t));
+}
 static INLINE uint16_t host_readw_at(const uint8_t *arr, const uintptr_t index)
 {
 	return host_readw(arr + index * sizeof(uint16_t));
 }
 
-static INLINE void host_writew(uint8_t *arr, uint16_t val)
+// Write a uint16 to 8-bit memory using native byte-ordering.
+static INLINE void write_uint16(uint8_t *arr, uint16_t val)
 {
-	// Convert the host-type value to little-endian before filling array
-	val = host_to_le16(val);
 	memcpy(arr, &val, sizeof(val));
 }
 
+
+// Write an array-indexed uint16 to 8-bit memory using native byte-ordering.
+static INLINE void write_uint16_at(uint8_t *arr, const uintptr_t index, const uint16_t val)
+{
+	write_uint16(arr + index * sizeof(uint16_t), val);
+}
 static INLINE void host_writew_at(uint8_t *arr, const uintptr_t index, const uint16_t val)
 {
 	host_writew(arr + index * sizeof(uint16_t), val);
 }
 
-static INLINE void host_addw(uint8_t *arr, const uint16_t incr)
+// Increment a uint16 value held in 8-bit native byte-ordered memory.
+static INLINE void incr_uint16(uint8_t *arr, const uint16_t incr)
 {
-	const uint16_t val = host_readw(arr) + incr;
-	host_writew(arr, val);
+	write_uint16(arr, read_uint16(arr) + incr);
 }
 
 // Read, write, and add using 32-bit double-words
@@ -104,8 +116,10 @@ static INLINE uint32_t host_readd(const uint8_t *arr)
 {
 	uint32_t val;
 	memcpy(&val, arr, sizeof(val));
-	// array sequence was DOS little-endian, so convert value to host-type
-	return le32_to_host(val);
+// Read an array-indexed uint32 from 8-bit native byte-ordered memory.
+static INLINE uint32_t read_uint32_at(const uint8_t *arr, const uintptr_t index)
+{
+	return read_uint32(arr + index * sizeof(uint32_t));
 }
 
 // Like the above, but allows index-style access assuming a 32-bit array
@@ -114,6 +128,11 @@ static INLINE uint32_t host_readd_at(const uint8_t *arr, const uintptr_t index)
 	return host_readd(arr + index * sizeof(uint32_t));
 }
 
+// Write a uint32 to 8-bit memory using native byte-ordering.
+static INLINE void write_uint32(uint8_t *arr, uint32_t val)
+{
+	memcpy(arr, &val, sizeof(val));
+}
 static INLINE void host_writed(uint8_t *arr, uint32_t val)
 {
 	// Convert the host-type value to little-endian before filling array
@@ -126,25 +145,27 @@ static INLINE void host_writed_at(uint8_t *arr, const uintptr_t index, const uin
 	host_writed(arr + index * sizeof(uint32_t), val);
 }
 
-static INLINE void host_addd(uint8_t *arr, const uint32_t incr)
+// Increment a uint32 value held in 8-bit native byte-ordered memory.
+static INLINE void incr_uint32(uint8_t *arr, const uint32_t incr)
+{
+	write_uint32(arr, read_uint32(arr) + incr);
+}
 {
 	const uint32_t val = host_readd(arr) + incr;
 	host_writed(arr, val);
 }
 
-// Read and write using 64-bit quad-words
-static INLINE uint64_t host_readq(const uint8_t *arr)
+// Read a uint64 from 8-bit native byte-ordered memory.
+static INLINE uint64_t read_uint64(const uint8_t *arr)
 {
 	uint64_t val;
 	memcpy(&val, arr, sizeof(val));
-	// array sequence was DOS little-endian, so convert value to host-type
-	return le64_to_host(val);
+	return val;
 }
 
-static INLINE void host_writeq(uint8_t *arr, uint64_t val)
+// Write a uint64 to 8-bit memory using native byte-ordering.
+static INLINE void write_uint64(uint8_t *arr, uint64_t val)
 {
-	// Convert the host-type value to little-endian before filling array
-	val = host_to_le64(val);
 	memcpy(arr, &val, sizeof(val));
 }
 
