@@ -61,7 +61,7 @@ jobs:
           steps.repo-meta.outputs.has-commits == 'true'
         with:
           path: 'C:/tools/msys64'
-          key: msys2-64-${{ steps.get-date.outputs.date }}-3
+          key: msys2-64-${{ steps.get-date.outputs.date }}
 
       - name:  Install MSYS2 (Windows)
         if:    >
