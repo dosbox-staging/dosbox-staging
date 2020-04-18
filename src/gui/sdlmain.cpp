@@ -3151,13 +3151,6 @@ int main(int argc, char* argv[]) {
 	// Once initialized, ensure we clean up SDL for all exit conditions
 	atexit(SDL_Quit);
 
-#ifndef DISABLE_JOYSTICK
-	//Initialise Joystick separately. This way we can warn when it fails instead
-	//of exiting the application
-	if( SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 )
-		LOG_MSG("Failed to init joystick support");
-#endif
-
 	sdl.laltstate = SDL_KEYUP;
 	sdl.raltstate = SDL_KEYUP;
 

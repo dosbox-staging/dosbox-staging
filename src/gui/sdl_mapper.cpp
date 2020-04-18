@@ -16,8 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "dosbox.h"
-
 #include <algorithm>
 #include <cassert>
 #include <cctype>
@@ -34,6 +32,8 @@
 #include <SDL.h>
 #include <SDL_thread.h>
 
+#include "control.h"
+#include "types.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
@@ -2503,9 +2503,12 @@ void BIND_MappingEvents() {
  *  mapper.sticks.num to the number of found SDL joysticks.
  */
 static void QueryJoysticks() {
-	// Initialize SDL's Joystick and Event subsystems, if needed
+	// Initialize SDL's Joystick subsystem, if needed
 	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
-		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0) {
+			LOG_MSG("SDL: Failed to initialize the joystick subsystem");
+			return;
+		}
 
 	// Record how many joysticks are present and set our desired minimum axis
 	const int num_joysticks = SDL_NumJoysticks();
@@ -2513,7 +2516,7 @@ static void QueryJoysticks() {
 
 	// Check which, if any, of the first two joysticks are useable
 	bool useable[2] = {false};
-	for (int i = 0; i < std::min(num_joysticks, 2); ++i) {
+	for (int i = 0; i < (std::min)(num_joysticks, 2); ++i) {
 		SDL_Joystick *stick = SDL_JoystickOpen(i);
 		useable[i] = (SDL_JoystickNumAxes(stick) >= req_min_axis) ||
 		             (SDL_JoystickNumButtons(stick) > 0) ? true : false;
@@ -2689,8 +2692,12 @@ void MAPPER_DisplayUI() {
 }
 
 static void MAPPER_Init(Section *sec) {
-	(void) sec; // unused but present for API compliance
-	QueryJoysticks();
+	(void) sec; // unused, but needed for API compliance
+	const Section *section = control->GetSection("joystick");
+	assert(section);
+	const std::string joystick_type = section->GetPropValue("joysticktype");
+	if (!joystick_type.empty() && joystick_type != "none")
+		QueryJoysticks();
 	if (buttons.empty())
 		CreateLayout();
 	if (bindgroups.empty())
@@ -2779,8 +2786,11 @@ void MAPPER_AutoType(std::vector<std::string> &sequence,
 
 // Activate user-specified or default binds
 static void MAPPER_LoadFile(Section *sec) {
-	Section_prop const *const section=static_cast<Section_prop *>(sec);
+	assert(sec);
+	Section_prop const *const section = static_cast<Section_prop *>(sec);
+	assert(section);
 	Prop_path const *const pp = section->Get_path("mapperfile");
+	assert(pp);
 	mapper.filename = pp->realpath;
 
 	static bool init_phase = true;
@@ -2792,6 +2802,7 @@ static void MAPPER_LoadFile(Section *sec) {
 }
 
 void MAPPER_StartUp(Section * sec) {
+	assert(sec);
 	Section_prop * section = static_cast<Section_prop *>(sec);
 
 	 //runs one-time on startup
