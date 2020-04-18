@@ -41,6 +41,11 @@
 
 #include "support.h"
 
+static std::string GetConfigName()
+{
+	return "dosbox-" CONF_BRAND ".conf";
+}
+
 #ifndef WIN32
 
 std::string cached_conf_path;
@@ -61,13 +66,6 @@ static bool CreateDirectories(const std::string &path)
 		return false;
 
 	return (mkdir(path.c_str(), 0700) == 0);
-}
-
-static std::string GetConfigName()
-{
-	std::string file_name;
-	Cross::GetPlatformConfigName(file_name);
-	return file_name;
 }
 
 static std::string ResolveHome(std::string tilde_path)
@@ -154,7 +152,7 @@ void Cross::GetPlatformConfigDir(std::string& in) {
 
 void Cross::GetPlatformConfigName(std::string &in)
 {
-	in = "dosbox-" CONF_BRAND ".conf";
+	in = GetConfigName();
 }
 
 void Cross::CreatePlatformConfigDir(std::string &in)
