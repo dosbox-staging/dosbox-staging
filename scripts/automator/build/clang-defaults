@@ -11,8 +11,7 @@ fi
 TYPES+=(release debug warnmore pgotrain optinfo msan usan)
 
 # Note: no-math-errno improves optimization of C/C++ math functions
-cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -fno-math-errno
-                 -fno-strict-aliasing)
+cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -fno-math-errno -fstrict-aliasing)
 cflags_debug+=("${cflags[@]}" -g -fno-omit-frame-pointer)
 
 cflags_warnmore+=("${cflags_debug[@]}" -Wextra -Wshadow -Wcast-align -Wunused
