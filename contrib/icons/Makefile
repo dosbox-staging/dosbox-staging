@@ -1,4 +1,4 @@
-.PHONY: help clean
+.PHONY: help clean favicons
 
 help:
 	@echo "Re-generate icons in platform specific formats."
@@ -26,6 +26,18 @@ dosbox-staging.ico: \
 		icon_24.png \
 		icon_16.png
 	icotool -c $^ -o $@
+
+##
+# Favicons for a web page. Usage:
+#
+# <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+# <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+# <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+#
+favicons: \
+		favicon-16x16.png \
+		favicon-32x32.png \
+		favicon-96x96.png
 
 ##
 #  Create an icon using macOS .icns format.
@@ -97,6 +109,9 @@ icon_48.png: dosbox-staging.svg
 icon_64.png: dosbox-staging.svg
 	rsvg-convert -h 64 $< > $@
 
+icon_96.png: dosbox-staging.svg
+	rsvg-convert -h 96 $< > $@
+
 icon_128.png: dosbox-staging.svg
 	rsvg-convert -h 128 $< > $@
 
@@ -109,7 +124,17 @@ icon_512.png: dosbox-staging.svg
 icon_1024.png: dosbox-staging.svg
 	rsvg-convert -h 1024 $< > $@
 
+favicon-16x16.png: icon_16.png
+	cp $< $@
+
+favicon-32x32.png: icon_32.png
+	cp $< $@
+
+favicon-96x96.png: icon_96.png
+	cp $< $@
+
 clean:
 	rm -rf dosbox-staging.iconset
 	rm -rf hicolor
 	rm -f icon_*.png
+	rm -f favicon*
