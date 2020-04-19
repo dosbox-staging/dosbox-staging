@@ -36,7 +36,8 @@ void MAPPER_BindKeys();
 void MAPPER_StartUp(Section * sec);
 void MAPPER_Run(bool pressed);
 void MAPPER_DisplayUI();
-void MAPPER_LosingFocus(void);
+void MAPPER_LosingFocus();
+bool MAPPER_IsUsingJoysticks();
 std::vector<std::string> MAPPER_GetEventNames(const std::string &prefix);
 void MAPPER_AutoType(std::vector<std::string> &sequence,
                      const uint32_t wait_ms,

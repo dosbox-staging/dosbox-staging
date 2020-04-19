@@ -47,6 +47,7 @@
 #include "cross.h"
 #include "video.h"
 #include "mouse.h"
+#include "joystick.h"
 #include "pic.h"
 #include "timer.h"
 #include "setup.h"
@@ -62,7 +63,6 @@
 #include "../libs/ppscale/ppscale.h"
 
 #define MAPPERFILE "mapper-sdl2-" VERSION ".map"
-//#define DISABLE_JOYSTICK
 
 #if C_OPENGL
 //Define to disable the usage of the pixel buffer object
@@ -344,7 +344,6 @@ struct SDL_Block {
 	int  ppscale_x, ppscale_y; /* x and y scales for pixel-perfect     */
 	bool double_h, double_w;   /* double-height and double-width flags */
 	SDL_Rect updateRects[1024];
-	Bitu num_joysticks;
 #if defined (WIN32)
 	// Time when sdl regains focus (alt-tab) in windowed mode
 	Bit32u focus_ticks;
@@ -2457,12 +2456,14 @@ void GFX_Events() {
 
 	SDL_Event event;
 #if defined (REDUCE_JOYSTICK_POLLING)
-	static int poll_delay = 0;
-	int time = GetTicks();
-	if (time - poll_delay > 20) {
-		poll_delay = time;
-		if (sdl.num_joysticks > 0) SDL_JoystickUpdate();
-		MAPPER_UpdateJoysticks();
+	if (MAPPER_IsUsingJoysticks()) {
+		static int poll_delay = 0;
+		int time = GetTicks();
+		if (time - poll_delay > 20) {
+			poll_delay = time;
+			SDL_JoystickUpdate();
+			MAPPER_UpdateJoysticks();
+		}
 	}
 #endif
 	while (SDL_PollEvent(&event)) {
@@ -3151,17 +3152,8 @@ int main(int argc, char* argv[]) {
 	// Once initialized, ensure we clean up SDL for all exit conditions
 	atexit(SDL_Quit);
 
-#ifndef DISABLE_JOYSTICK
-	//Initialise Joystick separately. This way we can warn when it fails instead
-	//of exiting the application
-	if( SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 )
-		LOG_MSG("Failed to init joystick support");
-#endif
-
 	sdl.laltstate = SDL_KEYUP;
 	sdl.raltstate = SDL_KEYUP;
-
-	sdl.num_joysticks=SDL_NumJoysticks();
 
 	CROSS_DetermineConfigPaths();
 

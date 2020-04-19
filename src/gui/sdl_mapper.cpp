@@ -2500,9 +2500,10 @@ void BIND_MappingEvents() {
 /**
  *  Queries SDL's joysticks and sets joytype accordingly.
  *  If no joysticks are valid then joytype is left at JOY_NONE.
- *  Also resets mapper.sticks.num_groups to 0 and
- *  mapper.sticks.num to the number of found SDL joysticks.
- */
+ *  Also resets mapper.sticks.num_groups to 0, mapper.sticks.num
+ *  to the number of found SDL joysticks, and enables the boolean
+ *  joysticks_active if joystick support is enabled and are present.
+ */ 
 static void QueryJoysticks() {
 	// Initialize SDL's Joystick and Event subsystems, if needed
 	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
@@ -2595,6 +2596,10 @@ static void CreateBindGroups() {
 			break;
 		}
 	}
+}
+
+bool MAPPER_IsUsingJoysticks() {
+	return (mapper.sticks.num > 0);
 }
 
 #if defined (REDUCE_JOYSTICK_POLLING)
