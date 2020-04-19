@@ -3245,9 +3245,8 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		// Apply key bindings only after all subsystems have added them
-		MAPPER_BindKeys();
-		// With the default key binds in place, render the mapper UI if requested
+		MAPPER_BindKeys(); // All subsystem handlers need to be
+		                   // registered at this point to be mappable.
 		if (control->cmdline->FindExist("-startmapper"))
 			MAPPER_DisplayUI();
 

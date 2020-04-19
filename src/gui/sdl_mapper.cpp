@@ -2688,15 +2688,6 @@ void MAPPER_DisplayUI() {
 	GFX_ResetScreen();
 }
 
-static void MAPPER_Init(Section *sec) {
-	(void) sec; // unused but present for API compliance
-	QueryJoysticks();
-	if (buttons.empty())
-		CreateLayout();
-	if (bindgroups.empty())
-		CreateBindGroups();
-}
-
 static void MAPPER_Destroy(Section *sec) {
 	(void) sec; // unused but present for API compliance
 
@@ -2743,6 +2734,15 @@ void MAPPER_BindKeys() {
 	//Release any keys pressed, or else they'll get stuck
 	GFX_LosingFocus(); 
 
+	QueryJoysticks();
+
+	// Create the graphical layout for all registered key-binds
+	if (buttons.empty())
+		CreateLayout();
+
+	if (bindgroups.empty())
+		CreateBindGroups();
+
 	// Create binds from file or fallback to internals
 	if (!MAPPER_CreateBindsFromFile())
 		CreateDefaultBinds();
@@ -2778,11 +2778,18 @@ void MAPPER_AutoType(std::vector<std::string> &sequence,
 }
 
 // Activate user-specified or default binds
-static void MAPPER_LoadFile(Section *sec) {
+static void MAPPER_ConfigureBindings(Section *sec) {
+	(void) sec; // unused but present for API compliance
 	Section_prop const *const section=static_cast<Section_prop *>(sec);
 	Prop_path const *const pp = section->Get_path("mapperfile");
 	mapper.filename = pp->realpath;
 
+	/*  Because the mapper is initialized before several other of DOSBox's
+	 *  submodules have a chance to register their key bindings, we defer
+	 *  the mapper's setup and instead manully BindKeys() in SDL main only
+	 *  after -all- subsystems have been initialized, which ensures that all
+	 *  binding a present, and thus are also layed out in the mapper's GUI.
+	 */
 	static bool init_phase = true;
 	if (init_phase) {
 		init_phase = false;
@@ -2794,11 +2801,8 @@ static void MAPPER_LoadFile(Section *sec) {
 void MAPPER_StartUp(Section * sec) {
 	Section_prop * section = static_cast<Section_prop *>(sec);
 
-	 //runs one-time on startup
-	section->AddInitFunction(&MAPPER_Init, false);
-
 	 //runs after this function ends and for subsequent config -set "sdl mapperfile=file.map" commands
-	section->AddInitFunction(&MAPPER_LoadFile, true);
+	section->AddInitFunction(&MAPPER_ConfigureBindings, true);
 
 	// runs one-time on shutdown
 	section->AddDestroyFunction(&MAPPER_Destroy, false);
