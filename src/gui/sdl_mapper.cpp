@@ -34,6 +34,7 @@
 #include <SDL.h>
 #include <SDL_thread.h>
 
+#include "control.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
@@ -2513,7 +2514,7 @@ static void QueryJoysticks() {
 
 	// Check which, if any, of the first two joysticks are useable
 	bool useable[2] = {false};
-	for (int i = 0; i < std::min(num_joysticks, 2); ++i) {
+	for (int i = 0; i < (std::min)(num_joysticks, 2); ++i) {
 		SDL_Joystick *stick = SDL_JoystickOpen(i);
 		useable[i] = (SDL_JoystickNumAxes(stick) >= req_min_axis) ||
 		             (SDL_JoystickNumButtons(stick) > 0) ? true : false;
@@ -2734,7 +2735,11 @@ void MAPPER_BindKeys() {
 	//Release any keys pressed, or else they'll get stuck
 	GFX_LosingFocus(); 
 
-	QueryJoysticks();
+	const Section *section = control->GetSection("joystick");
+	assert(section);
+	const std::string joystick_type = section->GetPropValue("joysticktype");
+	if (!joystick_type.empty() && joystick_type != "none")
+		QueryJoysticks();
 
 	// Create the graphical layout for all registered key-binds
 	if (buttons.empty())
