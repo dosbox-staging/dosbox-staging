@@ -144,6 +144,15 @@ jobs:
               -srcfolder dist \
               -ov -format UDZO "dosbox-staging-macOS-${{ env.VERSION }}.dmg"
 
+      - name: AV scan
+        run: |
+          set -x
+          brew install clamav > /dev/null
+          clamconf=/usr/local/etc/clamav/freshclam.conf
+          mv -f "$clamconf".sample "$clamconf"
+          sed -ie 's/^Example/#Example/g' "$clamconf"
+          freshclam --quiet && freshclam
+          clamscan --heuristic-scan-precedence=yes --recursive --infected .
       - name: Upload disk image
         uses: actions/upload-artifact@master
         # GitHub automatically zips the artifacts, and there's no option
