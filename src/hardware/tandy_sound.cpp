@@ -254,6 +254,23 @@ static void TandyDACUpdate(Bitu length) {
 				tandy.dac.chan->AddSamples_m8(1,&tandy.dac.dma.last_sample);
 			}
 		}
+		/* even if the DAC is disabled hold the last sample and SLOWLY restore DC.
+		 * jumping to silence quickly here causes loud annoying pops in Prince of Persia
+		 * when sound effects play. Prince of Persia seems to emit some very non-zero DC
+		 * value (like 0x08) when not playing sound effects, so this is needed to
+		 * recover from that without pops. This behavior also seems to match DAC behavior
+		 * with Prince of Persia according to real Tandy 1000 TL/3 hardware, complete
+		 * with the 8-bit DAC stepping noise on return to zero. In any case, this
+		 * modification makes the Tandy DAC sound effects in Prince of Persia much
+		 * more enjoyable to listen to and match the apparent sound of real hardware. */
+		/* NTS: This doesn't quite make the DAC step noise heard on real hardware, but
+		 *      it's good enough for now. */
+	} else if (tandy.dac.dma.last_sample != 128) {
+		for (Bitu ct=0; ct < length; ct++) {
+			tandy.dac.chan->AddSamples_m8(1,&tandy.dac.dma.last_sample);
+			if (tandy.dac.dma.last_sample != 128)
+				tandy.dac.dma.last_sample = (Bit8u)(((((int)tandy.dac.dma.last_sample - 128) * 63) / 64) + 128);
+		}
 	} else {
 		tandy.dac.chan->AddSilence();
 	}
@@ -291,9 +308,6 @@ public:
 			if ((strcmp(section->Get_string("tandy"),"true")!=0) &&
 				(strcmp(section->Get_string("tandy"),"on")!=0)) return;
 
-			/* ports from second DMA controller conflict with tandy ports */
-			CloseSecondDMAController();
-
 			if (enable_hw_tandy_dac) {
 				WriteHandler[2].Install(0x1e0,SN76496Write,IO_MB,2);
 				WriteHandler[3].Install(0x1e4,TandyDACWrite,IO_MB,4);
@@ -301,6 +315,13 @@ public:
 			}
 		}
 
+		/* ports from second DMA controller conflict with tandy ports at 0xC0.
+		 * Furthermore, the default I/O handlers after de-registration are needed
+		 * to ensure the SN76496 is writeable at port 0xC0 whether you're doing
+		 * normal 8-bit I/O or your a weirdo like Prince of Persia using 16-bit
+		 * I/O to write frequency values. (bugfix for Tandy mode of Prince of
+		 * Persia). */
+		CloseSecondDMAController();
 
 		Bit32u sample_rate = section->Get_int("tandyrate");
 		tandy.chan=MixerChan.Install(&SN76496Update,sample_rate,"TANDY");
@@ -330,7 +351,7 @@ public:
 		tandy.dac.irq_activated=false;
 		tandy.dac.frequency=0;
 		tandy.dac.amplitude=0;
-		tandy.dac.dma.last_sample=0;
+		tandy.dac.dma.last_sample=128;
 
 
 		tandy.enabled=false;
