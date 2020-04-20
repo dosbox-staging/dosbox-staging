@@ -12,7 +12,7 @@ jobs:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-latest
     env:
-      debfile: pvs-studio-7.06.37052.34-amd64.deb
+      debfile: pvs-studio-7.07.37949.43-amd64.deb
     steps:
       - uses: actions/checkout@v1
         with:
@@ -70,7 +70,7 @@ jobs:
           path: pvs-report
       - name: Summarize report
         env:
-          MAX_BUGS: 503
+          MAX_BUGS: 507
         run: |
           echo "Full report is included in build Artifacts"
           echo
