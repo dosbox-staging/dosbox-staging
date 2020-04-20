@@ -143,6 +143,13 @@ jobs:
           # Create tarball
           tar -cJf "dosbox-staging-linux-$VERSION.tar.xz" "dosbox-staging-linux-$VERSION"
 
+      - name: AV scan
+        run: |
+          set -x
+          sudo apt-get install clamav > /dev/null
+          sudo systemctl stop clamav-freshclam
+          sudo freshclam --quiet && sudo freshclam
+          clamscan --heuristic-scan-precedence=yes --recursive --infected .
       - name: Upload tarball
         uses: actions/upload-artifact@master
         # GitHub automatically zips the artifacts (there's no way to create
