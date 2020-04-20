@@ -171,12 +171,7 @@ public:
 			invalidation_map=(Bit8u*)malloc(4096);
 			memset(invalidation_map,0,4096);
 		}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-		host_writew(&invalidation_map[addr],
-			host_readw(&invalidation_map[addr])+0x101);
-#else
-		(*(Bit16u*)&invalidation_map[addr])+=0x101;
-#endif
+		host_addw(invalidation_map + addr, 0x101);
 		InvalidateRange(addr,addr+1);
 	}
 	void writed(PhysPt addr,Bitu val){
@@ -193,12 +188,7 @@ public:
 			invalidation_map=(Bit8u*)malloc(4096);
 			memset(invalidation_map,0,4096);
 		}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-		host_writed(&invalidation_map[addr],
-			host_readd(&invalidation_map[addr])+0x1010101);
-#else
-		(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
-#endif
+		host_addd(invalidation_map + addr, 0x1010101);
 		InvalidateRange(addr,addr+3);
 	}
 	bool writeb_checked(PhysPt addr,Bitu val) {
@@ -240,12 +230,7 @@ public:
 				invalidation_map=(Bit8u*)malloc(4096);
 				memset(invalidation_map,0,4096);
 			}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-			host_writew(&invalidation_map[addr],
-				host_readw(&invalidation_map[addr])+0x101);
-#else
-			(*(Bit16u*)&invalidation_map[addr])+=0x101;
-#endif
+			host_addw(invalidation_map + addr, 0x101);
 			if (InvalidateRange(addr,addr+1)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
@@ -269,12 +254,7 @@ public:
 				invalidation_map=(Bit8u*)malloc(4096);
 				memset(invalidation_map,0,4096);
 			}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-			host_writed(&invalidation_map[addr],
-				host_readd(&invalidation_map[addr])+0x1010101);
-#else
-			(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
-#endif
+			host_addd(invalidation_map + addr, 0x1010101);
 			if (InvalidateRange(addr,addr+3)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
@@ -533,23 +513,22 @@ static INLINE void cache_addb(Bit8u val) {
 }
 
 // place a 16bit value into the cache
-static INLINE void cache_addw(Bit16u val) {
-	*(Bit16u*)cache.pos=val;
-	cache.pos+=2;
+static INLINE void cache_addw(const uint16_t val) {
+	host_writew(cache.pos, val);
+	cache.pos += sizeof(val);
 }
 
 // place a 32bit value into the cache
-static INLINE void cache_addd(Bit32u val) {
-	*(Bit32u*)cache.pos=val;
-	cache.pos+=4;
+static INLINE void cache_addd(const uint32_t val) {
+	host_writed(cache.pos, val);
+	cache.pos += sizeof(val);
 }
 
 // place a 64bit value into the cache
-static INLINE void cache_addq(Bit64u val) {
-	*(Bit64u*)cache.pos=val;
-	cache.pos+=8;
+static INLINE void cache_addq(const uint64_t val) {
+	host_writeq(cache.pos, val);
+	cache.pos += sizeof(val);
 }
-
 
 static void dyn_return(BlockReturn retcode,bool ret_exception);
 static void dyn_run_code(void);

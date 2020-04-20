@@ -50,6 +50,10 @@ missing
 mkinstalldirs
 stamp-h1
 
+# autotools configuration ephemerals
+confdefs.h
+conftest.dir
+
 # Other
 compile
 build.log
@@ -58,6 +62,7 @@ make.log
 .previous_build
 .current_build
 *.defines
+missed.txt
 
 # Visual Studio
 .vs
@@ -71,8 +76,16 @@ make.log
 
 # PVS static analysis outputs or ephemerals
 pvs-*
+!pvs-studio.yml
 strace_out
 suppress_base.json
 
 # macOS directory prefs
 .DS_Store
+
+# Profiling data
+*.prof
+*.profraw
+*.profraw.imports
+*.afdo
+*.afdo.imports

@@ -1,23 +1,36 @@
 # Tool overrides
-cc="clang${postfix}"
-cxx="clang++${postfix}"
-
-# Flag additions
-TYPES+=(debug warnmore profile)
-cflags_release=("${cflags[@]}" -Os)
-cflags_debug=("${cflags[@]}" -g -fno-omit-frame-pointer)
-cflags_profile=("${cflags_debug[@]}" -fprofile-instr-generate -fcoverage-mapping)
-cflags_warnmore=("${cflags_debug[@]}" -Wextra -Wshadow -Wcast-align -Wunused
-                 -Woverloaded-virtual -Wpedantic -Wconversion -Wsign-conversion
-                 -Wdouble-promotion -Wformat=2)
-cxxonly_warnmore=(-Wnon-virtual-dtor -Woverloaded-virtual)
+cc="${ccache}clang${postfix}"
+cxx="${ccache}clang++${postfix}"
 
 # Colorize output only for interactive shells
 if [[ $- == *i* ]]; then
 	cflags+=(-fcolor-diagnostics)
 fi
 
+# Release-type additions
+TYPES+=(release debug warnmore pgotrain optinfo msan usan)
+
+# Note: no-math-errno improves optimization of C/C++ math functions
+cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -fno-math-errno
+                 -fno-strict-aliasing)
+cflags_debug+=("${cflags[@]}" -g -fno-omit-frame-pointer)
+
+cflags_warnmore+=("${cflags_debug[@]}" -Wextra -Wshadow -Wcast-align -Wunused
+                  -Woverloaded-virtual -Wpedantic -Wconversion -Wsign-conversion
+                  -Wdouble-promotion -Wformat=2 -fstrict-aliasing -Wstrict-aliasing=2)
+cxxonly_warnmore+=(-Wnon-virtual-dtor -Woverloaded-virtual)
+
+cflags_pgotrain+=("${cflags_debug[@]}" -fprofile-instr-generate
+                  -fcoverage-mapping)
+
+cflags_optinfo+=("${cflags_release[@]}" -Rpass-analysis=loop-vectorize
+                 -gline-tables-only -gcolumn-info)
+
+cflags_msan=("${cflags_debug[@]}" -fsanitize-recover=all -fPIE -pie
+             -fsanitize=memory -fno-omit-frame-pointer)
+cflags_usan=("${cflags_debug[@]}" -fsanitize-recover=all
+             -fsanitize=undefined)
+
 # Modifier additions
 MODIFIERS=(fdo)
-ldflags_fdo=(-fprofile-instr-generate)
-cflags_fdo=("-fprofile-sample-use=${FDO_FILE:-}")
+cflags_fdo+=("-fprofile-sample-use=${FDO_FILE:-${repo_root}/current.afdo}")

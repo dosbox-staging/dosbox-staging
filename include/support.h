@@ -22,8 +22,12 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <cassert>
+#include <cmath>
 #include <cstdio>
 #include <ctype.h>
+#include <limits>
+#include <stdexcept>
 #include <string.h>
 #include <string>
 
@@ -33,6 +37,28 @@
 #define strcasecmp(a, b) _stricmp(a, b)
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
 #endif
+
+/*
+ *  Converts a string to a finite number (such as float or double).
+ *  Returns the number or quiet_NaN, if it could not be parsed.
+ *  This function does not attemp to capture exceptions that may
+ *  be thrown from std::stod(...)
+ */
+template<typename T>
+T to_finite(const std::string& input) {
+	// Defensively set NaN from the get-go
+	T result = std::numeric_limits<T>::quiet_NaN();
+	size_t bytes_read = 0;
+	try {
+		const double interim = std::stod(input, &bytes_read);
+		if (!input.empty() && bytes_read == input.size())
+			result = static_cast<T>(interim);
+	}
+	// Capture expected exceptions stod may throw
+	catch (std::invalid_argument &e) {}
+	catch (std::out_of_range &e) {}
+	return result;
+}
 
 // Returns the filename with the prior path stripped.
 // Works with both \ and / directory delimeters.
@@ -54,6 +80,13 @@ inline constexpr T1 ceil_sdivide(const T1 x, const T2 y) noexcept {
 	static_assert(std::is_signed<T2>::value, "Second parameter should be signed.");
 	return x / y + (((x < 0) ^ (y > 0)) && (x % y));
 	// https://stackoverflow.com/a/33790603
+}
+
+inline int iround(double x) {
+	assert(std::isfinite(x));
+	assert(x >= (std::numeric_limits<int>::min)());
+	assert(x <= (std::numeric_limits<int>::max)());
+	return static_cast<int>(round(x));
 }
 
 // Include a message in assert, similar to static_assert:
@@ -121,5 +154,10 @@ void trim(std::string& str);
 void upcase(std::string &str);
 void lowcase(std::string &str);
 void strip_punctuation(std::string &str);
+
+template<size_t N>
+bool starts_with(const char (& pfx)[N], const std::string &str) noexcept {
+	return (strncmp(pfx, str.c_str(), N) == 0);
+}
 
 #endif

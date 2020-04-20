@@ -67,6 +67,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;SDL2_net.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;opusfile.lib;opus.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -113,6 +114,7 @@
       <DebugInformationFormat>None</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;opusfile.lib;opus.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -172,6 +174,7 @@
     <ClCompile Include="..\src\dos\drive_local.cpp" />
     <ClCompile Include="..\src\dos\drive_overlay.cpp" />
     <ClCompile Include="..\src\dos\drive_virtual.cpp" />
+    <ClCompile Include="..\src\dos\program_autotype.cpp" />
     <ClCompile Include="..\src\fpu\fpu.cpp" />
     <ClCompile Include="..\src\gui\midi.cpp" />
     <ClCompile Include="..\src\gui\render.cpp" />
@@ -269,6 +272,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\bios.h" />
     <ClInclude Include="..\include\bios_disk.h" />
+    <ClInclude Include="..\include\byteorder.h" />
     <ClInclude Include="..\include\callback.h" />
     <ClInclude Include="..\include\control.h" />
     <ClInclude Include="..\include\cpu.h" />
@@ -344,6 +348,7 @@
     <ClInclude Include="..\src\dos\Ntddcdrm.h" />
     <ClInclude Include="..\src\dos\Ntddscsi.h" />
     <ClInclude Include="..\src\dos\Ntddstor.h" />
+    <ClInclude Include="..\src\dos\program_autotype.h" />
     <ClInclude Include="..\src\fpu\fpu_instructions.h" />
     <ClInclude Include="..\src\fpu\fpu_instructions_x86.h" />
     <ClInclude Include="..\src\gui\midi_win32.h" />

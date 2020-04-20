@@ -1,0 +1,3 @@
+# GCC flags specific to the Raspberry Pi 4 series of SBC
+cflags_release+=(-march=armv8-a+crc -mtune=cortex-a72 
+                 -mfpu=neon-fp-armv8 -mfloat-abi=hard)

@@ -16,9 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <algorithm>
+#include <cstring>
+#include <cstdlib>
 
-#include <string.h>
-#include <stdlib.h>
 #include "dosbox.h"
 #include "callback.h"
 #include "mem.h"
@@ -99,11 +100,12 @@ static Bit16u GEMMIS_seg;
 
 class device_EMM : public DOS_Device {
 public:
-	device_EMM(bool is_emm386_avail) {
-		is_emm386=is_emm386_avail;
+	device_EMM(bool is_emm386_avail) : is_emm386(is_emm386_avail)
+	{
 		SetName("EMMXXXX0");
-		GEMMIS_seg=0;
+		GEMMIS_seg = 0;
 	}
+
 	bool Read(Bit8u * /*data*/,Bit16u * /*size*/) { return false;}
 	bool Write(Bit8u * /*data*/,Bit16u * /*size*/){
 		LOG(LOG_IOCTL,LOG_NORMAL)("EMS:Write to device");
@@ -595,10 +597,10 @@ static void LoadMoveRegion(PhysPt data,MoveRegion & region) {
 	region.dest_page_seg=mem_readw(data+0x10);
 }
 
-static Bit8u MemoryRegion(void) {
+static uint8_t MemoryRegion()
+{
 	MoveRegion region;
-	Bit8u buf_src[MEM_PAGE_SIZE];
-	Bit8u buf_dest[MEM_PAGE_SIZE];
+
 	if (reg_al>1) {
 		LOG(LOG_MISC,LOG_ERROR)("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 		return EMM_FUNC_NOSUP;
@@ -630,15 +632,19 @@ static Bit8u MemoryRegion(void) {
 		dest_off=region.dest_offset&(MEM_PAGE_SIZE-1);
 		dest_remain=MEM_PAGE_SIZE-dest_off;
 	}
-	Bitu toread;
-	while (region.bytes>0) {
-		if (region.bytes>MEM_PAGE_SIZE) toread=MEM_PAGE_SIZE;
-		else toread=region.bytes;
+
+	uint8_t buf_src[MEM_PAGE_SIZE];
+	uint8_t buf_dest[MEM_PAGE_SIZE];
+
+	while (region.bytes > 0) {
+		const size_t toread = std::min<size_t>(region.bytes, MEM_PAGE_SIZE);
+
 		/* Read from the source */
 		if (!region.src_type) {
 			MEM_BlockRead(src_mem,buf_src,toread);
 		} else {
-			if (toread<src_remain) {
+			assert(toread <= MEM_PAGE_SIZE);
+			if (toread <= src_remain) {
 				MEM_BlockRead((src_handle*MEM_PAGE_SIZE)+src_off,buf_src,toread);
 			} else {
 				MEM_BlockRead((src_handle*MEM_PAGE_SIZE)+src_off,buf_src,src_remain);
@@ -651,7 +657,8 @@ static Bit8u MemoryRegion(void) {
 			if (!region.dest_type) {
 				MEM_BlockRead(dest_mem,buf_dest,toread);
 			} else {
-				if (toread<dest_remain) {
+				assert(toread <= MEM_PAGE_SIZE);
+				if (toread <= dest_remain) {
 					MEM_BlockRead((dest_handle*MEM_PAGE_SIZE)+dest_off,buf_dest,toread);
 				} else {
 					MEM_BlockRead((dest_handle*MEM_PAGE_SIZE)+dest_off,buf_dest,dest_remain);
@@ -662,7 +669,8 @@ static Bit8u MemoryRegion(void) {
 			if (!region.src_type) {
 				MEM_BlockWrite(src_mem,buf_dest,toread);
 			} else {
-				if (toread<src_remain) {
+				assert(toread <= MEM_PAGE_SIZE);
+				if (toread <= src_remain) {
 					MEM_BlockWrite((src_handle*MEM_PAGE_SIZE)+src_off,buf_dest,toread);
 				} else {
 					MEM_BlockWrite((src_handle*MEM_PAGE_SIZE)+src_off,buf_dest,src_remain);
@@ -674,7 +682,8 @@ static Bit8u MemoryRegion(void) {
 		if (!region.dest_type) {
 			MEM_BlockWrite(dest_mem,buf_src,toread);
 		} else {
-			if (toread<dest_remain) {
+			assert(toread <= MEM_PAGE_SIZE);
+			if (toread <= dest_remain) {
 				MEM_BlockWrite((dest_handle*MEM_PAGE_SIZE)+dest_off,buf_src,toread);
 			} else {
 				MEM_BlockWrite((dest_handle*MEM_PAGE_SIZE)+dest_off,buf_src,dest_remain);
@@ -690,7 +699,6 @@ static Bit8u MemoryRegion(void) {
 	}
 	return EMM_NO_ERROR;
 }
-
 
 static Bitu INT67_Handler(void) {
 	Bitu i;
@@ -1299,20 +1307,27 @@ Bitu GetEMSType(Section_prop * section) {
 	return rtype;
 }
 
-
-class EMS: public Module_base {
+class EMS : public Module_base {
 private:
-	DOS_Device * emm_device;
+	DOS_Device *emm_device = nullptr;
+
 	/* location in protected unfreeable memory where the ems name and callback are
 	 * stored  32 bytes.*/
 	static Bit16u ems_baseseg;
-	RealPt old67_pointer;
-	CALLBACK_HandlerObject call_vdma,call_vcpi,call_v86mon;
-	Bitu call_int67;
+
+	RealPt old67_pointer = 0;
+	CALLBACK_HandlerObject call_vdma;
+	CALLBACK_HandlerObject call_vcpi;
+	CALLBACK_HandlerObject call_v86mon;
+	Bitu call_int67 = 0;
 
 public:
-	EMS(Section* configuration):Module_base(configuration) {
-		emm_device=NULL;
+	EMS(Section *configuration)
+	        : Module_base(configuration),
+	          call_vdma(),
+	          call_vcpi(),
+	          call_v86mon()
+	{
 		ems_type=0;
 
 		/* Virtual DMA interrupt callback */
@@ -1336,8 +1351,9 @@ public:
 		if (!ems_baseseg) ems_baseseg=DOS_GetMemory(2);	//We have 32 bytes
 
 		/* Add a little hack so it appears that there is an actual ems device installed */
-		char const* emsname="EMMXXXX0";
-		MEM_BlockWrite(PhysMake(ems_baseseg,0xa),emsname,(Bitu)(strlen(emsname)+1));
+		char const *emsname = "EMMXXXX0";
+		MEM_BlockWrite(PhysMake(ems_baseseg, 0xa), emsname,
+		               strlen(emsname) + 1);
 
 		call_int67=CALLBACK_Allocate();
 		CALLBACK_Setup(call_int67,&INT67_Handler,CB_IRET,PhysMake(ems_baseseg,4),"Int 67 ems");
@@ -1415,6 +1431,9 @@ public:
 			}
 		}
 	}
+
+	EMS(const EMS &) = delete;            // prevent copying
+	EMS &operator=(const EMS &) = delete; // prevent assignment
 
 	~EMS() {
 		if (ems_type<=0) return;

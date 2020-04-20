@@ -21,13 +21,14 @@
 #include <assert.h>
 #include <cctype>
 #include <ctype.h>
+#include <cstring>
 #include <functional>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include <cstring>
-  
+#include <stdexcept>
+
 #include "dosbox.h"
 #include "cross.h"
 #include "debug.h"

@@ -16,34 +16,28 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef DOSBOX_MIDI_H
 #define DOSBOX_MIDI_H
 
-#ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
-#endif
 
-#ifndef DOSBOX_PROGRAMS_H
 #include "programs.h"
-#endif
 
 class MidiHandler {
 public:
 	MidiHandler();
-	virtual bool Open(const char * /*conf*/) { 
-		LOG_MSG("No working midi device found/selected! Please check your settings and/or compilation environment.");
-		return true; 
-	};
+	virtual ~MidiHandler() = default;
+	virtual bool Open(const char * /*conf*/) {
+		LOG_MSG("MIDI: No working MIDI device found/selected.");
+		return true;
+	}
 	virtual void Close(void) {};
 	virtual void PlayMsg(Bit8u * /*msg*/) {};
 	virtual void PlaySysex(Bit8u * /*sysex*/,Bitu /*len*/) {};
 	virtual const char * GetName(void) { return "none"; };
 	virtual void ListAll(Program * base) {};
-	virtual ~MidiHandler() { };
 	MidiHandler * next;
 };
-
 
 #define SYSEX_SIZE 8192
 struct DB_Midi {

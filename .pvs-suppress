@@ -2,6 +2,38 @@
     "version": 1,
     "warnings": [
         {
+            "CodeCurrent": 99146737,
+            "CodeNext": 3299936121,
+            "CodePrev": 2974951853,
+            "ErrorCode": "V570",
+            "FileName": "mem.h",
+            "Message": "The 'val' variable is assigned to itself."
+        },
+        {
+            "CodeCurrent": 99146737,
+            "CodeNext": 3299936121,
+            "CodePrev": 2974951853,
+            "ErrorCode": "V570",
+            "FileName": "mem.h",
+            "Message": "The 'val' variable is assigned to itself."
+        },
+        {
+            "CodeCurrent": 99146737,
+            "CodeNext": 3299936121,
+            "CodePrev": 2974951853,
+            "ErrorCode": "V570",
+            "FileName": "mem.h",
+            "Message": "The 'val' variable is assigned to itself."
+        },
+        {
+            "CodeCurrent": 432032057,
+            "CodeNext": 36027430,
+            "CodePrev": 0,
+            "ErrorCode": "V801",
+            "FileName": "sdl_mapper.cpp",
+            "Message": "Decreased performance. It is better to redefine the first function argument as a reference. Consider replacing 'const .. sequence' with 'const .. &sequence'."
+        },
+        {
             "CodeCurrent": 4109900279,
             "CodeNext": 355817,
             "CodePrev": 1212132082,
@@ -48,6 +80,30 @@
             "ErrorCode": "V547",
             "FileName": "dr_flac.h",
             "Message": "Expression 'result == - _' is always false."
+        },
+        {
+            "CodeCurrent": 220072429,
+            "CodeNext": 220072429,
+            "CodePrev": 0,
+            "ErrorCode": "V1004",
+            "FileName": "dr_flac.h",
+            "Message": "The 'pFlac' pointer was used unsafely after it was verified against nullptr."
+        },
+        {
+            "CodeCurrent": 220072429,
+            "CodeNext": 2822007974,
+            "CodePrev": 220072429,
+            "ErrorCode": "V1004",
+            "FileName": "dr_flac.h",
+            "Message": "The 'pFlac' pointer was used unsafely after it was verified against nullptr."
+        },
+        {
+            "CodeCurrent": 2822007974,
+            "CodeNext": 0,
+            "CodePrev": 220072429,
+            "ErrorCode": "V1004",
+            "FileName": "dr_flac.h",
+            "Message": "The 'pFlac' pointer was used unsafely after it was verified against nullptr."
         },
         {
             "CodeCurrent": 297803,

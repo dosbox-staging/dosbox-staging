@@ -16,9 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef DOSBOX_VIDEO_H
 #define DOSBOX_VIDEO_H
+
+#include "types.h"
 
 #define REDUCE_JOYSTICK_POLLING
 
@@ -63,14 +64,10 @@ void GFX_ResetScreen(void);
 void GFX_Start(void);
 void GFX_Stop(void);
 void GFX_SwitchFullScreen(void);
-bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch);
+bool GFX_StartUpdate(uint8_t * &pixels, int &pitch);
 void GFX_EndUpdate( const Bit16u *changedLines );
 void GFX_GetSize(int &width, int &height, bool &fullscreen);
 void GFX_LosingFocus(void);
-
-#if defined (WIN32)
-bool GFX_SDLUsingWinDIB(void);
-#endif
 
 #if defined (REDUCE_JOYSTICK_POLLING)
 void MAPPER_UpdateJoysticks(void);

@@ -114,7 +114,7 @@ public:
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return;
 		host_writeb(hostmem+addr,val);
-		if (!*(Bit8u*)&write_map[addr]) {
+		if (!write_map[addr]) {
 			if (active_blocks) return;
 			active_count--;
 			if (!active_count) Release();
@@ -137,8 +137,10 @@ public:
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return;
 		host_writew(hostmem+addr,val);
-		if (!*(Bit16u*)&write_map[addr]) {
-			if (active_blocks) return;
+		const uint16_t is_mapped = host_readw(write_map + addr);
+		if (!is_mapped) {
+			if (active_blocks)
+				return;
 			active_count--;
 			if (!active_count) Release();
 			return;
@@ -149,7 +151,7 @@ public:
 			}
 			memset(invalidation_map,0,4096);
 		}
-		(*(Bit16u*)&invalidation_map[addr])+=0x101;
+		host_addw(invalidation_map + addr, 0x101);
 		InvalidateRange(addr,addr+1);
 	}
 	void writed(PhysPt addr,Bitu val){
@@ -160,8 +162,10 @@ public:
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return;
 		host_writed(hostmem+addr,val);
-		if (!*(Bit32u*)&write_map[addr]) {
-			if (active_blocks) return;
+		const uint32_t is_mapped = host_readd(write_map + addr);
+		if (!is_mapped) {
+			if (active_blocks)
+				return;
 			active_count--;
 			if (!active_count) Release();
 			return;
@@ -172,7 +176,7 @@ public:
 			}
 			memset(invalidation_map,0,4096);
 		}
-		(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
+		host_addd(invalidation_map + addr, 0x1010101);
 		InvalidateRange(addr,addr+3);
 	}
 	bool writeb_checked(PhysPt addr,Bitu val) {
@@ -182,7 +186,7 @@ public:
 		}
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return false;
-		if (!*(Bit8u*)&write_map[addr]) {
+		if (!write_map[addr]) {
 			if (!active_blocks) {
 				active_count--;
 				if (!active_count) Release();
@@ -211,7 +215,9 @@ public:
 		}
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return false;
-		if (!*(Bit16u*)&write_map[addr]) {
+
+		const uint16_t is_mapped = host_readw(write_map + addr);
+		if (!is_mapped) {
 			if (!active_blocks) {
 				active_count--;
 				if (!active_count) Release();
@@ -224,7 +230,7 @@ public:
 				}
 				memset(invalidation_map,0,4096);
 			}
-			(*(Bit16u*)&invalidation_map[addr])+=0x101;
+			host_addw(invalidation_map + addr, 0x101);
 			if (InvalidateRange(addr,addr+1)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
@@ -240,7 +246,9 @@ public:
 		}
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return false;
-		if (!*(Bit32u*)&write_map[addr]) {
+
+		const uint32_t is_mapped = host_readd(write_map + addr);
+		if (!is_mapped) {
 			if (!active_blocks) {
 				active_count--;
 				if (!active_count) Release();
@@ -253,7 +261,7 @@ public:
 				}
 				memset(invalidation_map,0,4096);
 			}
-			(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
+			host_addd(invalidation_map + addr, 0x1010101);
 			if (InvalidateRange(addr,addr+3)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
@@ -479,19 +487,22 @@ static INLINE void cache_addb(Bit8u val) {
 	*cache.pos++=val;
 }
 
-static INLINE void cache_addw(Bit16u val) {
-	*(Bit16u*)cache.pos=val;
-	cache.pos+=2;
+static INLINE void cache_addw(const uint16_t val)
+{
+	host_writew(cache.pos, val);
+	cache.pos += sizeof(val);
 }
 
-static INLINE void cache_addd(Bit32u val) {
-	*(Bit32u*)cache.pos=val;
-	cache.pos+=4;
+static INLINE void cache_addd(const uint32_t val)
+{
+	host_writed(cache.pos, val);
+	cache.pos += sizeof(val);
 }
 
-static INLINE void cache_addq(Bit64u val) {
-	*(Bit64u*)cache.pos=val;
-	cache.pos+=8;
+static INLINE void cache_addq(const uint64_t val)
+{
+	host_writeq(cache.pos, val);
+	cache.pos += sizeof(val);
 }
 
 static void gen_return(BlockReturn retcode);

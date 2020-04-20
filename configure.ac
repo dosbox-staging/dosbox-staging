@@ -430,15 +430,28 @@ else
   AC_MSG_RESULT(no)
 fi
 
-AH_TEMPLATE(C_SSHOT,[Define to 1 to enable screenshots, requires libpng])
-AC_ARG_ENABLE(screenshots,AC_HELP_STRING([--disable-screenshots],[Disable screenshots and movie recording]),,enable_screenshots=yes)
-AC_CHECK_HEADER(png.h,have_png_h=yes,)
-AC_CHECK_LIB(png, png_get_io_ptr, have_png_lib=yes, ,-lz)
+AH_TEMPLATE(C_SSHOT, [Define to 1 to enable screenshots, requires libpng])
+AC_ARG_ENABLE(screenshots,
+              AC_HELP_STRING([--disable-screenshots],
+                             [Disable screenshots and movie recording]),
+              enable_screenshots=no,
+              enable_screenshots=yes)
+AC_ARG_ENABLE(png_static,
+              AC_HELP_STRING([--enable-png-static],
+                             [Link libpng statically (not recommended)]),
+              enable_png_static=yes,
+              enable_png_static=no)
+AC_CHECK_HEADER(png.h, have_png_h=yes, )
+AC_CHECK_LIB(png, png_get_io_ptr, have_png_lib=yes, , -lz)
 AC_MSG_CHECKING([whether screenshots will be enabled])
 if test x$enable_screenshots = xyes; then
-    if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
-    LIBS="$LIBS -lpng -lz"
-    AC_DEFINE(C_SSHOT,1)
+  if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
+    if test x$enable_png_static = xyes ; then
+      LIBS="$LIBS -Wl,-Bstatic -lpng -Wl,-Bdynamic -lz"
+    else
+      LIBS="$LIBS -lpng -lz"
+    fi
+    AC_DEFINE(C_SSHOT, 1)
     AC_MSG_RESULT([yes])
   else
     AC_MSG_RESULT([no, can't find libpng.])

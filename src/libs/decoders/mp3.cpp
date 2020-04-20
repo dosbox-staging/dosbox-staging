@@ -1,13 +1,9 @@
 /*
- *  DOSBox MP3 decoder API implementation
- *  -------------------------------------
- *  This decoder makes use of the dr_mp3 library by David Reid (mackron@gmail.com)
- *    - dr_libs: https://github.com/mackron/dr_libs (source)
- *    - dr_mp3:  http://mackron.github.io/dr_mp3.html (website)
+ *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020       The DOSBox Team
- *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
  *  Copyright (C) 2001-2017  Ryan C. Gordon <icculus@icculus.org>
+ *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
+ *  Copyright (C) 2020-2020  The dosbox-staging team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,31 +20,24 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#if HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#include <assert.h>
-#include <SDL.h> // provides: SDL_malloc, SDL_realloc, SDL_free, SDL_memcpy, and SDL_memset
+/*
+ *  DOSBox MP3 decoder API implementation
+ *  -------------------------------------
+ *  This decoder makes use of the dr_mp3 library by David Reid (mackron@gmail.com)
+ *    - dr_libs: https://github.com/mackron/dr_libs (source)
+ *    - dr_mp3:  http://mackron.github.io/dr_mp3.html (website)
+ */
 #include <support.h>
 
+#include "mp3_seek_table.h"
 #define DR_MP3_IMPLEMENTATION
-#define DR_MP3_NO_STDIO 1
-#define DRMP3_FREE(p)                    SDL_free((p))
-#define DRMP3_ASSERT(x)                  assert((x))
-#define DRMP3_MALLOC(sz)                 SDL_malloc((sz))
-#define DRMP3_REALLOC(p, sz)             SDL_realloc((p), (sz))
-#define DRMP3_ZERO_MEMORY(p, sz)         SDL_memset((p), 0, (sz))
-#define DRMP3_COPY_MEMORY(dst, src, sz)  SDL_memcpy((dst), (src), (sz))
-#include "dr_mp3.h" // provides: drmp3
-
-#include "mp3_seek_table.h" // provides: populate_seek_table and SDL_Sound headers
+#include "dr_mp3.h"
 
 #include "SDL_sound.h"
 #define __SDL_SOUND_INTERNAL__
-#include "SDL_sound_internal.h" // provides: Sound_SampleInternal
+#include "SDL_sound_internal.h"
 
-#define MP3_FAST_SEEK_FILENAME "fastseek.lut"
+static constexpr char fast_seek_filename[] = "fastseek.lut";
 
 static size_t mp3_read(void* const pUserData, void* const pBufferOut, const size_t bytesToRead)
 {
@@ -123,7 +112,7 @@ static int32_t MP3_open(Sound_Sample* const sample, const char* const ext)
     if (p_mp3) {
         p_mp3->p_dr = (drmp3*) SDL_calloc(1, sizeof (drmp3));
         if (p_mp3->p_dr) {
-            if (drmp3_init(p_mp3->p_dr, mp3_read, mp3_seek, sample, nullptr, nullptr) == DRMP3_TRUE) {
+            if (drmp3_init(p_mp3->p_dr, mp3_read, mp3_seek, sample, nullptr) == DRMP3_TRUE) {
                 SNDDBG(("MP3: Accepting data stream.\n"));
                 sample->flags = SOUND_SAMPLEFLAG_CANSEEK;
                 sample->actual.channels = static_cast<uint8_t>(p_mp3->p_dr->channels);
@@ -132,7 +121,7 @@ static int32_t MP3_open(Sound_Sample* const sample, const char* const ext)
 
                 // frame count is agnostic of sample size and number of channels
                 const uint64_t num_frames =
-                    populate_seek_points(internal->rw, p_mp3, MP3_FAST_SEEK_FILENAME, result);
+                    populate_seek_points(internal->rw, p_mp3, fast_seek_filename, result);
 
                 // total_time needs milliseconds
                 internal->total_time = (num_frames != 0) ? 

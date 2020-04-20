@@ -1,12 +1,9 @@
 /*
- *  DOSBox FLAC decoder API implementation
- *  --------------------------------------
- *  This decoder makes use of the dr_flac library by David Reid (mackron@gmail.com)
- *    - dr_libs: https://github.com/mackron/dr_libs (source)
- *    - dr_flac: http://mackron.github.io/dr_flac.html (website)
+ *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2018-2020  The DOSBox Team
  *  Copyright (C) 2001-2017  Ryan C. Gordon <icculus@icculus.org>
+ *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
+ *  Copyright (C) 2020-2020  The dosbox-staging team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,9 +20,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#if HAVE_CONFIG_H
-#  include <config.h>
-#endif
+/*
+ *  DOSBox FLAC decoder API implementation
+ *  --------------------------------------
+ *  This decoder makes use of the dr_flac library by David Reid (mackron@gmail.com)
+ *    - dr_libs: https://github.com/mackron/dr_libs (source)
+ *    - dr_flac: http://mackron.github.io/dr_flac.html (website)
+ */
 
 #include <math.h> /* for llroundf */
 
@@ -36,11 +37,8 @@
 #define DR_FLAC_IMPLEMENTATION
 #define DR_FLAC_NO_STDIO 1
 #define DR_FLAC_NO_WIN32_IO 1
-#define DRFLAC_FREE(p)                    SDL_free((p))
-#define DRFLAC_MALLOC(sz)                 SDL_malloc((sz))
-#define DRFLAC_REALLOC(p, sz)             SDL_realloc((p), (sz))
-#define DRFLAC_ZERO_MEMORY(p, sz)         SDL_memset((p), 0, (sz))
-#define DRFLAC_COPY_MEMORY(dst, src, sz)  SDL_memcpy((dst), (src), (sz))
+#define DR_FLAC_NO_OGG 1
+#define DR_FLAC_BUFFER_SIZE 8192
 #include "dr_flac.h"
 
 static size_t flac_read(void* pUserData, void* pBufferOut, size_t bytesToRead)

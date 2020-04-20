@@ -21,12 +21,14 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <chrono>
 #include <cinttypes>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <list>
+#include <thread>
 #include <vector>
 
 #include <SDL.h>
@@ -41,7 +43,7 @@
 #include "video.h"
 
 /* Mouse related */
-void GFX_ToggleMouseCapture(void);
+void GFX_ToggleMouseCapture();
 extern SDL_bool mouse_is_captured; //true if mouse is confined to window
 
 enum {
@@ -121,15 +123,17 @@ public:
 	virtual void Active(bool yesno)=0;
 	virtual void ActivateEvent(bool ev_trigger,bool skip_action)=0;
 	virtual void DeActivateEvent(bool ev_trigger)=0;
-	void DeActivateAll(void);
+	void DeActivateAll();
 	void SetValue(Bits value){
 		current_value=value;
 	}
-	Bits GetValue(void) {
+	Bits GetValue() {
 		return current_value;
 	}
-	char * GetName(void) { return entry; }
-	virtual bool IsTrigger(void)=0;
+	const char * GetName(void) const {
+		 return entry;
+	}
+	virtual bool IsTrigger() = 0;
 	CBindList bindlist;
 protected:
 	Bitu activity = 0;
@@ -141,7 +145,7 @@ protected:
 class CTriggeredEvent : public CEvent {
 public:
 	CTriggeredEvent(char const * const _entry) : CEvent(_entry) {}
-	virtual bool IsTrigger(void) {
+	virtual bool IsTrigger() {
 		return true;
 	}
 	void ActivateEvent(bool ev_trigger,bool skip_action) {
@@ -167,7 +171,7 @@ public:
 class CContinuousEvent : public CEvent {
 public:
 	CContinuousEvent(char const * const _entry) : CEvent(_entry) {}
-	virtual bool IsTrigger(void) {
+	virtual bool IsTrigger() {
 		return false;
 	}
 	void ActivateEvent(bool ev_trigger,bool skip_action) {
@@ -193,10 +197,10 @@ public:
 			if (!GetActivityCount()) Active(false);
 		}
 	}
-	virtual Bitu GetActivityCount(void) {
+	virtual Bitu GetActivityCount() {
 		return activity;
 	}
-	virtual void RepostActivity(void) {}
+	virtual void RepostActivity() {}
 };
 
 class CBind {
@@ -281,7 +285,7 @@ public:
 	Bitu mods = 0;
 	Bitu flags = 0;
 	CEvent *event = nullptr;
-	CBindList *list;
+	CBindList *list = nullptr;
 	bool active = false;
 	bool holding = false;
 };
@@ -298,7 +302,7 @@ void CEvent::ClearBinds() {
 	}
 	bindlist.clear();
 }
-void CEvent::DeActivateAll(void) {
+void CEvent::DeActivateAll() {
 	for (CBindList_it bit = bindlist.begin() ; bit != bindlist.end(); ++bit) {
 		(*bit)->DeActivateBind(true);
 	}
@@ -318,8 +322,8 @@ public:
 	virtual CBind * CreateEventBind(SDL_Event * event)=0;
 
 	virtual bool CheckEvent(SDL_Event * event)=0;
-	virtual const char * ConfigStart(void)=0;
-	virtual const char * BindStart(void)=0;
+	virtual const char * ConfigStart() = 0;
+	virtual const char * BindStart() = 0;
 
 protected:
 
@@ -395,16 +399,16 @@ public:
 		return new CKeyBind(&lists[(Bitu)_key],_key);
 	}
 private:
-	const char * ConfigStart(void) {
+	const char * ConfigStart() {
 		return configname;
 	}
-	const char * BindStart(void) {
+	const char * BindStart() {
 		return "Key";
 	}
 protected:
 	const char *configname = "key";
-	CBindList *lists;
-	Bitu keys;
+	CBindList *lists = nullptr;
+	Bitu keys = 0;
 };
 static std::list<CKeyBindGroup *> keybindgroups;
 
@@ -589,7 +593,7 @@ public:
 		hats_cap = emulated_hats;
 		if (hats_cap > hats)
 			hats_cap=hats;
-		LOG_MSG("SDL: Using joystick %s with %d axes, %d buttons and %d hat(s)",
+		LOG_MSG("MAPPER: Initialized %s with %d axes, %d buttons, and %d hat(s)",
 		        SDL_JoystickNameForIndex(stick), axes, buttons, hats);
 	}
 
@@ -825,12 +829,12 @@ private:
 		                     this, hat, value);
 	}
 
-	const char * ConfigStart(void)
+	const char * ConfigStart()
 	{
 		return configname;
 	}
 
-	const char * BindStart(void)
+	const char * BindStart()
 	{
 		if (sdl_joystick)
 			return SDL_JoystickNameForIndex(stick);
@@ -864,6 +868,7 @@ protected:
 	Uint8 old_hat_state[16];
 	bool is_dummy;
 };
+std::list<CStickBindGroup *> stickbindgroups;
 
 class C4AxisBindGroup : public  CStickBindGroup {
 public:
@@ -1199,6 +1204,94 @@ protected:
 	uint16_t button_state = 0;
 };
 
+
+void MAPPER_TriggerEvent(const CEvent *event, const bool deactivation_state) {
+	assert(event);
+	for (auto &bind : event->bindlist) {
+		bind->ActivateBind(32767, true, false);
+		bind->DeActivateBind(deactivation_state);
+	}
+}
+
+class Typer {
+	public:
+		Typer() = default;
+		Typer(const Typer&) = delete; // prevent copy
+		Typer& operator=(const Typer&) = delete; // prevent assignment
+		~Typer() {
+			Stop();
+		}
+		void Start(std::vector<CEvent*>     *ext_events,
+		           std::vector<std::string> &ext_sequence,
+                   const uint32_t           wait_ms,
+                   const uint32_t           pace_ms) {
+			// Guard against empty inputs
+			if (!ext_events || ext_sequence.empty())
+				return;
+			Wait();
+			m_events = ext_events;
+			m_sequence = std::move(ext_sequence);
+			m_wait_ms = wait_ms;
+			m_pace_ms = pace_ms;
+			m_stop_requested = false;
+			m_instance = std::thread(&Typer::Callback, this);
+		}
+		void Wait() {
+			if (m_instance.joinable())
+				m_instance.join();
+		}
+		void Stop() {
+			m_stop_requested = true;
+			Wait();
+		}
+	private:
+		void Callback() {
+ 			// quit before our initial wait time
+ 			if (m_stop_requested)
+				return;
+			std::this_thread::sleep_for(std::chrono::milliseconds(m_wait_ms));
+			for (const auto &button : m_sequence) {
+				bool found = false;
+				// comma adds an extra pause, similar to the pause used in a phone number
+				if (button == ",") {
+					found = true;
+					 // quit before the pause
+					if (m_stop_requested)
+						return;
+					std::this_thread::sleep_for(std::chrono::milliseconds(m_pace_ms));
+				// Otherwise trigger the matching button if we have one
+				} else {
+					const std::string bind_name = "key_" + button;
+					for (auto &event : *m_events) {
+						if (bind_name == event->GetName()) {
+							found = true;
+							MAPPER_TriggerEvent(event, true);
+							break;
+						}
+					}
+				}
+				/*
+				*  Terminate the sequence for safety reasons if we can't find a button.
+				*  For example, we don't wan't DEAL becoming DEL, or 'rem' becoming 'rm'
+				*/
+				if (!found) {
+					LOG_MSG("MAPPER: Couldn't find a button named '%s', stopping.",
+							button.c_str());
+					return;
+				}
+				if (m_stop_requested) // quit before the pacing delay
+					return;
+				std::this_thread::sleep_for(std::chrono::milliseconds(m_pace_ms));
+			}
+		}
+		std::thread              m_instance;
+		std::vector<std::string> m_sequence;
+		std::vector<CEvent*>     *m_events = nullptr;
+		uint32_t                 m_wait_ms = 0;
+		uint32_t                 m_pace_ms = 0;
+		bool                     m_stop_requested = false;
+};
+
 static struct CMapper {
 	SDL_Window *window = nullptr;
 	SDL_Rect draw_rect = {0, 0, 0, 0};
@@ -1217,10 +1310,12 @@ static struct CMapper {
 		unsigned int num = 0;
 		unsigned int num_groups = 0;
 	} sticks;
+	Typer typist;
 	std::string filename = "";
 } mapper;
 
 void CBindGroup::ActivateBindList(CBindList * list,Bits value,bool ev_trigger) {
+	assert(list);
 	Bitu validmod=0;
 	CBindList_it it;
 	for (it = list->begin(); it != list->end(); ++it) {
@@ -1234,6 +1329,7 @@ void CBindGroup::ActivateBindList(CBindList * list,Bits value,bool ev_trigger) {
 }
 
 void CBindGroup::DeactivateBindList(CBindList * list,bool ev_trigger) {
+	assert(list);
 	CBindList_it it;
 	for (it = list->begin(); it != list->end(); ++it) {
 		(*it)->DeActivateBind(ev_trigger);
@@ -1273,7 +1369,7 @@ public:
 
 	virtual ~CButton() = default;
 
-	virtual void Draw(void) {
+	virtual void Draw() {
 		if (!enabled)
 			return;
 		Bit8u * point = ((Bit8u *)mapper.draw_surface->pixels) + (y * mapper.draw_surface->w) + x;
@@ -1289,8 +1385,8 @@ public:
 	virtual bool OnTop(Bitu _x,Bitu _y) {
 		return ( enabled && (_x>=x) && (_x<x+dx) && (_y>=y) && (_y<y+dy));
 	}
-	virtual void BindColor(void) {}
-	virtual void Click(void) {}
+	virtual void BindColor() {}
+	virtual void Click() {}
 	void Enable(bool yes) { 
 		enabled=yes; 
 		mapper.redraw=true;
@@ -1314,7 +1410,7 @@ public:
 	CTextButton(const CTextButton&) = delete; // prevent copy
 	CTextButton& operator=(const CTextButton&) = delete; // prevent assignment
 
-	void Draw(void)
+	void Draw()
 	{
 		if (!enabled)
 			return;
@@ -1323,7 +1419,7 @@ public:
 	}
 
 protected:
-	const char *text;
+	const char *text = nullptr;
 };
 
 class CClickableTextButton : public CTextButton {
@@ -1332,7 +1428,7 @@ public:
 		: CTextButton(_x, _y, _dx, _dy, _text)
 	{}
 
-	void BindColor(void)
+	void BindColor()
 	{
 		this->SetColor(CLR_WHITE);
 	}
@@ -1351,17 +1447,17 @@ public:
 	CEventButton(const CEventButton&) = delete; // prevent copy
 	CEventButton& operator=(const CEventButton&) = delete; // prevent assignment
 
-	void BindColor(void) {
+	void BindColor() {
 		this->SetColor(event->bindlist.begin()==event->bindlist.end() ? CLR_GREY : CLR_WHITE);
 	}
-	void Click(void) {
+	void Click() {
 		if (last_clicked) last_clicked->BindColor();
 		this->SetColor(CLR_GREEN);
 		SetActiveEvent(event);
 		last_clicked=this;
 	}
 protected:
-	CEvent * event;
+	CEvent * event = nullptr;
 };
 
 class CCaptionButton : public CButton {
@@ -1371,12 +1467,12 @@ public:
 	}
 	void Change(const char * format,...) GCC_ATTRIBUTE(__format__(__printf__,2,3));
 
-	void Draw(void) {
+	void Draw() {
 		if (!enabled) return;
 		DrawText(x+2,y+2,caption,color);
 	}
 protected:
-	char caption[128];
+	char caption[128] = {};
 };
 
 void CCaptionButton::Change(const char * format,...) {
@@ -1389,7 +1485,7 @@ void CCaptionButton::Change(const char * format,...) {
 
 static void change_action_text(const char* text,Bit8u col);
 
-static void MAPPER_SaveBinds(void);
+static void MAPPER_SaveBinds();
 
 class CBindButton : public CClickableTextButton {
 public:	
@@ -1398,7 +1494,7 @@ public:
 		  type(_type)
 	{}
 
-	void Click(void) {
+	void Click() {
 		switch (type) {
 		case BB_Add: 
 			mapper.addbind=true;
@@ -1441,7 +1537,7 @@ public:
 		  type(t)
 	{}
 
-	void Draw(void) {
+	void Draw() {
 		if (!enabled) return;
 		bool checked=false;
 		switch (type) {
@@ -1467,7 +1563,7 @@ public:
 		}
 		CClickableTextButton::Draw();
 	}
-	void Click(void) {
+	void Click() {
 		switch (type) {
 		case BC_Mod1:
 			mapper.abind->mods^=BMOD_Mod1;
@@ -1521,10 +1617,10 @@ public:
 	void Active(bool /*moved*/) {
 		virtual_joysticks[stick].axis_pos[axis]=(Bit16s)(GetValue()*(positive?1:-1));
 	}
-	virtual Bitu GetActivityCount(void) {
+	virtual Bitu GetActivityCount() {
 		return activity|opposite_axis->activity;
 	}
-	virtual void RepostActivity(void) {
+	virtual void RepostActivity() {
 		/* caring for joystick movement into the opposite direction */
 		opposite_axis->Active(true);
 	}
@@ -1610,7 +1706,7 @@ public:
 		(*handler)(yesno);
 	};
 
-	const char * ButtonName(void)
+	const char * ButtonName()
 	{
 		return buttonname;
 	}
@@ -1721,7 +1817,7 @@ extern SDL_Window * GFX_SetSDLSurfaceWindow(Bit16u width, Bit16u height);
 extern SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height);
 extern void GFX_UpdateDisplayDimensions(int width, int height);
 
-static void DrawButtons(void) {
+static void DrawButtons() {
 	SDL_FillRect(mapper.draw_surface,0,CLR_BLACK);
 	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
 		(*but_it)->Draw();
@@ -1842,7 +1938,7 @@ static KeyBlock combo_4[11]={
 static CKeyEvent * caps_lock_event=NULL;
 static CKeyEvent * num_lock_event=NULL;
 
-static void CreateLayout(void) {
+static void CreateLayout() {
 	Bitu i;
 	/* Create the buttons for the Keyboard */
 #define BW 28
@@ -2072,17 +2168,17 @@ static SDL_Color map_pal[CLR_LAST]={
 static void CreateStringBind(char * line) {
 	line=trim(line);
 	char * eventname=StripWord(line);
-	CEvent * event;
+	CEvent * event = nullptr;
 	for (CEventVector_it ev_it = events.begin(); ev_it != events.end(); ++ev_it) {
 		if (!strcasecmp((*ev_it)->GetName(),eventname)) {
 			event=*ev_it;
 			goto foundevent;
 		}
 	}
-	LOG_MSG("Can't find matching event for %s",eventname);
+	LOG_MSG("MAPPER: Can't find key binding for %s event", eventname);
 	return ;
 foundevent:
-	CBind * bind;
+	CBind * bind = nullptr;
 	for (char * bindline=StripWord(line);*bindline;bindline=StripWord(line)) {
 		for (CBindGroup_it it = bindgroups.begin(); it != bindgroups.end(); ++it) {
 			bind=(*it)->CreateConfigBind(bindline);
@@ -2176,13 +2272,16 @@ static struct {
 	{0, SDL_SCANCODE_UNKNOWN}
 };
 
-static void ClearAllBinds(void) {
+static void ClearAllBinds() {
+	// wait for the auto-typer to complete because it might be accessing events
+	mapper.typist.Wait();
+
 	for (CEvent *event : events) {
 		event->ClearBinds();
 	}
 }
 
-static void CreateDefaultBinds(void) {
+static void CreateDefaultBinds() {
 	ClearAllBinds();
 	char buffer[512];
 	Bitu i=0;
@@ -2237,6 +2336,7 @@ static void CreateDefaultBinds(void) {
 	sprintf(buffer,"jhat_0_0_1 \"stick_0 hat 0 2\" ");CreateStringBind(buffer);
 	sprintf(buffer,"jhat_0_0_2 \"stick_0 hat 0 4\" ");CreateStringBind(buffer);
 	sprintf(buffer,"jhat_0_0_3 \"stick_0 hat 0 8\" ");CreateStringBind(buffer);
+	LOG_MSG("MAPPER: Loaded default key bindings");
 }
 
 void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key, Bitu mods,char const * const eventname,char const * const buttonname) {
@@ -2251,10 +2351,11 @@ void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key, Bitu mods,char cons
 	return ;
 }
 
-static void MAPPER_SaveBinds(void) {
-	FILE * savefile=fopen(mapper.filename.c_str(),"wt+");
+static void MAPPER_SaveBinds() {
+	const char *filename = mapper.filename.c_str();
+	FILE * savefile=fopen(filename,"wt+");
 	if (!savefile) {
-		LOG_MSG("Can't open %s for saving the mappings",mapper.filename.c_str());
+		LOG_MSG("MAPPER: Can't open %s for saving the key bindings", filename);
 		return;
 	}
 	char buf[128];
@@ -2271,18 +2372,23 @@ static void MAPPER_SaveBinds(void) {
 	}
 	fclose(savefile);
 	change_action_text("Mapper file saved.",CLR_WHITE);
+	LOG_MSG("MAPPER: Wrote key bindings to %s", filename);
 }
 
-static bool MAPPER_LoadBinds(void) {
-	FILE * loadfile=fopen(mapper.filename.c_str(),"rt");
-	if (!loadfile) return false;
+static bool MAPPER_CreateBindsFromFile() {
+	const char* filename = mapper.filename.c_str();
+	FILE * loadfile = fopen(filename,"rt");
+	if (!loadfile)
+		return false;
 	ClearAllBinds();
+	uint32_t bind_tally = 0;
 	char linein[512];
 	while (fgets(linein,512,loadfile)) {
 		CreateStringBind(linein);
+		++bind_tally;
 	}
 	fclose(loadfile);
-	LOG_MSG("MAPPER: Loading mapper settings from %s", mapper.filename.c_str());
+	LOG_MSG("MAPPER: Loaded %d key bindings from %s", bind_tally, filename);
 	return true;
 }
 
@@ -2292,7 +2398,7 @@ void MAPPER_CheckEvent(SDL_Event * event) {
 	}
 }
 
-void BIND_MappingEvents(void) {
+void BIND_MappingEvents() {
 	SDL_Event event;
 	static bool isButtonPressed = false;
 	static CButton *lastHoveredButton = NULL;
@@ -2419,16 +2525,16 @@ static void QueryJoysticks() {
 	const bool second_usable = useable[1];	
 	if (first_usable && second_usable) {
 		joytype = JOY_2AXIS;
-		LOG_MSG("SDL: Two or more joysticks found, initializing with 2axis");
+		LOG_MSG("MAPPER: Found two or more joysticks");
 	} else if (first_usable) {
 		joytype = JOY_4AXIS;
-		LOG_MSG("SDL: One joystick found, initializing with 4axis");
+		LOG_MSG("MAPPER: Found one joystick");
 	} else if (second_usable) {
 		joytype = JOY_4AXIS_2;
-		LOG_MSG("SDL: One joystick found, initializing with 4axis_2");
+		LOG_MSG("MAPPER: Found second joystick is usable");
 	} else {
 		joytype = JOY_NONE;
-		LOG_MSG("SDL: No joysticks found");
+		LOG_MSG("MAPPER: Found no joysticks");
 	}
 
 	// If we made it here, then update the other two external variables
@@ -2436,7 +2542,7 @@ static void QueryJoysticks() {
 	mapper.sticks.num = num_joysticks;
 }
 
-static void CreateBindGroups(void) {
+static void CreateBindGroups() {
 	bindgroups.clear();
 	CKeyBindGroup* key_bind_group = new CKeyBindGroup(SDL_NUM_SCANCODES);
 	keybindgroups.push_back(key_bind_group);
@@ -2462,27 +2568,28 @@ static void CreateBindGroups(void) {
 			break;
 		case JOY_4AXIS:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new C4AxisBindGroup(joyno,joyno);
-			new CStickBindGroup(joyno+1U,joyno+1U,true);
+			stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
 			break;
 		case JOY_4AXIS_2:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new C4AxisBindGroup(joyno+1U,joyno);
-			new CStickBindGroup(joyno,joyno+1U,true);
+			stickbindgroups.push_back(new CStickBindGroup(joyno,joyno+1U,true));
 			break;
 		case JOY_FCS:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new CFCSBindGroup(joyno,joyno);
-			new CStickBindGroup(joyno+1U,joyno+1U,true);
+			stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
 			break;
 		case JOY_CH:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new CCHBindGroup(joyno,joyno);
-			new CStickBindGroup(joyno+1U,joyno+1U,true);
+			stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
 			break;
 		case JOY_2AXIS:
 		default:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno,joyno);
 			if((joyno+1U) < mapper.sticks.num) {
+				delete mapper.sticks.stick[mapper.sticks.num_groups];
 				mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno+1U,joyno+1U);
 			} else {
-				new CStickBindGroup(joyno+1U,joyno+1U,true);
+				stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
 			}
 			break;
 		}
@@ -2490,7 +2597,7 @@ static void CreateBindGroups(void) {
 }
 
 #if defined (REDUCE_JOYSTICK_POLLING)
-void MAPPER_UpdateJoysticks(void) {
+void MAPPER_UpdateJoysticks() {
 	for (Bitu i=0; i<mapper.sticks.num_groups; i++) {
 		assert(mapper.sticks.stick[i]);
 		mapper.sticks.stick[i]->UpdateJoystick();
@@ -2498,7 +2605,7 @@ void MAPPER_UpdateJoysticks(void) {
 }
 #endif
 
-void MAPPER_LosingFocus(void) {
+void MAPPER_LosingFocus() {
 	for (CEventVector_it evit = events.begin(); evit != events.end(); ++evit) {
 		if(*evit != caps_lock_event && *evit != num_lock_event)
 			(*evit)->DeActivateAll();
@@ -2508,7 +2615,7 @@ void MAPPER_LosingFocus(void) {
 void MAPPER_RunEvent(Bitu /*val*/) {
 	KEYBOARD_ClrBuffer();	//Clear buffer
 	GFX_LosingFocus();		//Release any keys pressed (buffer gets filled again).
-	MAPPER_RunInternal();
+	MAPPER_DisplayUI();
 }
 
 void MAPPER_Run(bool pressed) {
@@ -2519,7 +2626,7 @@ void MAPPER_Run(bool pressed) {
 
 SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags);
 
-void MAPPER_RunInternal() {
+void MAPPER_DisplayUI() {
 	int cursor = SDL_ShowCursor(SDL_QUERY);
 	SDL_ShowCursor(SDL_ENABLE);
 	bool mousetoggle = false;
@@ -2581,39 +2688,20 @@ void MAPPER_RunInternal() {
 	GFX_ResetScreen();
 }
 
-void MAPPER_Init(void) {
+static void MAPPER_Init(Section *sec) {
+	(void) sec; // unused but present for API compliance
 	QueryJoysticks();
-	if (buttons.empty()) CreateLayout();
-	if (bindgroups.empty()) CreateBindGroups();
-	if (!MAPPER_LoadBinds()) CreateDefaultBinds();
-	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
-		(*but_it)->BindColor();
-	}
-	if (SDL_GetModState()&KMOD_CAPS) {
-		for (CBindList_it bit = caps_lock_event->bindlist.begin(); bit != caps_lock_event->bindlist.end(); ++bit) {
-			(*bit)->ActivateBind(32767,true,false);
-			(*bit)->DeActivateBind(false);
-		}
-	}
-	if (SDL_GetModState()&KMOD_NUM) {
-		for (CBindList_it bit = num_lock_event->bindlist.begin(); bit != num_lock_event->bindlist.end(); ++bit) {
-			(*bit)->ActivateBind(32767,true,false);
-			(*bit)->DeActivateBind(false);
-		}
-	}
+	if (buttons.empty())
+		CreateLayout();
+	if (bindgroups.empty())
+		CreateBindGroups();
 }
 
-static void ReloadMapper(Section *sec) {
+static void MAPPER_Destroy(Section *sec) {
 	(void) sec; // unused but present for API compliance
-	Section_prop const *const section=static_cast<Section_prop *>(sec);
-	Prop_path const *const pp = section->Get_path("mapperfile");
-	mapper.filename = pp->realpath;
-	GFX_LosingFocus(); //Release any keys pressed, or else they'll get stuck.
-	MAPPER_Init();
-}
 
-static void Destroy_Mapper(Section *sec) {
-	(void) sec; // unused but present for API compliance
+	// Stop any ongoing typing as soon as possible (because it access events)
+	mapper.typist.Stop();
 
 	// Release all the accumulated allocations by the mapper 
  	for (auto & ptr : events)
@@ -2632,6 +2720,10 @@ static void Destroy_Mapper(Section *sec) {
 		delete ptr;
 	keybindgroups.clear();
 
+	for (auto & ptr : stickbindgroups)
+		delete ptr;
+	stickbindgroups.clear();
+
 	// Free any allocated sticks
 	for (int i = 0; i < MAXSTICKS; ++i) {
 		delete mapper.sticks.stick[i];
@@ -2647,9 +2739,68 @@ static void Destroy_Mapper(Section *sec) {
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 }
 
+void MAPPER_BindKeys() {
+	//Release any keys pressed, or else they'll get stuck
+	GFX_LosingFocus(); 
+
+	// Create binds from file or fallback to internals
+	if (!MAPPER_CreateBindsFromFile())
+		CreateDefaultBinds();
+
+	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it)
+		(*but_it)->BindColor();
+
+	if (SDL_GetModState()&KMOD_CAPS)
+		MAPPER_TriggerEvent(caps_lock_event, false);
+
+	if (SDL_GetModState()&KMOD_NUM)
+		MAPPER_TriggerEvent(num_lock_event, false);
+}
+
+std::vector<std::string> MAPPER_GetEventNames(const std::string &prefix) {
+	std::vector<std::string> key_names;
+	key_names.reserve(events.size());
+	for (auto & e : events) {
+		const std::string name = e->GetName();
+		const std::size_t found = name.find(prefix);
+		if (found != std::string::npos) {
+			const std::string key_name = name.substr(found + prefix.length());
+			key_names.push_back(key_name);
+		}
+	}
+	return key_names;
+}
+
+void MAPPER_AutoType(std::vector<std::string> &sequence,
+                     const uint32_t wait_ms,
+                     const uint32_t pace_ms) {
+	mapper.typist.Start(&events, sequence, wait_ms, pace_ms);
+}
+
+// Activate user-specified or default binds
+static void MAPPER_LoadFile(Section *sec) {
+	Section_prop const *const section=static_cast<Section_prop *>(sec);
+	Prop_path const *const pp = section->Get_path("mapperfile");
+	mapper.filename = pp->realpath;
+
+	static bool init_phase = true;
+	if (init_phase) {
+		init_phase = false;
+		return;
+	}
+	MAPPER_BindKeys();
+}
+
 void MAPPER_StartUp(Section * sec) {
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	section->AddInitFunction(&ReloadMapper, true); //runs immediately after this function ends
-	section->AddDestroyFunction(&Destroy_Mapper, false);
+	Section_prop * section = static_cast<Section_prop *>(sec);
+
+	 //runs one-time on startup
+	section->AddInitFunction(&MAPPER_Init, false);
+
+	 //runs after this function ends and for subsequent config -set "sdl mapperfile=file.map" commands
+	section->AddInitFunction(&MAPPER_LoadFile, true);
+
+	// runs one-time on shutdown
+	section->AddDestroyFunction(&MAPPER_Destroy, false);
 	MAPPER_AddHandler(&MAPPER_Run,MK_f1,MMOD1,"mapper","Mapper");
 }

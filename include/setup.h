@@ -19,26 +19,12 @@
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
 
-#ifndef CH_LIST
-#define CH_LIST
+#include <cstdio>
 #include <list>
-#endif
-
-#ifndef CH_VECTOR
-#define CH_VECTOR
-#include <vector>
-#endif
-
-#ifndef CH_STRING
-#define CH_STRING
 #include <string>
-#endif
+#include <vector>
 
-#ifndef CH_CSTDIO
-#define CH_CSTDIO
-#include <stdio.h>
-#endif
-
+#include "support.h"
 
 class Hex {
 private:
@@ -111,14 +97,30 @@ private:
 
 class Property {
 public:
-	struct Changeable { enum Value {Always, WhenIdle,OnlyAtStart};};
+	struct Changeable {
+		enum Value { Always, WhenIdle, OnlyAtStart, Deprecated };
+	};
+
 	const std::string propname;
 
-	Property(std::string const& _propname, Changeable::Value when):propname(_propname),change(when) { }
+	Property(const std::string &name, Changeable::Value when)
+		: propname(name),
+		  value(),
+		  suggested_values{},
+		  default_value(),
+		  change(when)
+	{
+		assertm(!name.empty(), "Property name can't be empty.");
+	}
+
+	virtual ~Property() = default;
+
 	void Set_values(const char * const * in);
 	void Set_values(const std::vector<std::string> &in);
 	void Set_help(std::string const& str);
-	char const* Get_help();
+
+	const char* GetHelp() const;
+
 	virtual	bool SetValue(std::string const& str)=0;
 	Value const& GetValue() const { return value;}
 	Value const& Get_Default_Value() const { return default_value; }
@@ -126,11 +128,12 @@ public:
 	//Type specific properties are encouraged to override this and check for type
 	//specific features.
 	virtual bool CheckValue(Value const& in, bool warn);
-public:
-	virtual ~Property(){ }
+
+	Changeable::Value GetChange() const { return change; }
+	bool IsDeprecated() const { return (change == Changeable::Value::Deprecated); }
+
 	virtual const std::vector<Value>& GetValues() const;
 	Value::Etype Get_type(){return default_value.type;}
-	Changeable::Value getChange() {return change;}
 
 protected:
 	//Set interval value to in or default if in is invalid. force always sets the value.
@@ -339,4 +342,5 @@ public:
 	/* Returns true if succesful.*/
 	virtual bool Change_Config(Section* /*newconfig*/) {return false;} ;
 };
+
 #endif

@@ -76,6 +76,8 @@
 static inline float powf (float x, float y) { return (float) pow (x,y); }
 #endif
 
+void CROSS_DetermineConfigPaths();
+
 class Cross {
 public:
 	static void GetPlatformConfigDir(std::string& in);

@@ -39,6 +39,7 @@
 #include "inout.h"
 #include "dma.h"
 #include "shell.h"
+#include "program_autotype.h"
 
 #if defined(WIN32)
 #ifndef S_ISDIR
@@ -109,7 +110,7 @@ public:
 				while ( (idx = value.find("Z:\\")) != std::string::npos ||
 					(idx = value.find("z:\\")) != std::string::npos  )
 					value.replace(idx,3,tempenv);
-				line = value;
+				line = std::move(value);
 			}
 			if (!line.size()) line = tempenv;
 			first_shell->SetEnv("PATH",line.c_str());
@@ -685,7 +686,7 @@ public:
 			else {
 				Bit8u rombuf[65536];
 				Bits cfound_at=-1;
-				if (cart_cmd!="") {
+				if (!cart_cmd.empty()) {
 					/* read cartridge data into buffer */
 					fseek(usefile_1,0x200L, SEEK_SET);
 					if (fread(rombuf, 1, rombytesize_1-0x200, usefile_1) < rombytesize_1 - 0x200) {
@@ -816,7 +817,7 @@ public:
 				for (auto &disk : diskSwap)
 					disk.reset();
 
-				if (cart_cmd=="") {
+				if (cart_cmd.empty()) {
 					Bit32u old_int18=mem_readd(0x60);
 					/* run cartridge setup */
 					SegSet16(ds,romseg);
@@ -1180,7 +1181,6 @@ public:
 		}
 
 		char drive;
-		std::string label;
 		std::vector<std::string> paths;
 		std::string umount;
 		/* Check for unmounting */
@@ -1274,7 +1274,7 @@ public:
 				std::string homedir(temp_line);
 				Cross::ResolveHomedir(homedir);
 				if (!stat(homedir.c_str(),&test)) {
-					temp_line = homedir;
+					temp_line = std::move(homedir);
 				} else {
 					// convert dosbox filename to system filename
 					char fullname[CROSS_LEN];
@@ -1364,9 +1364,7 @@ public:
 					// Tear-down all prior drives when we hit a problem
 					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
 					for (auto pImgDisk : imgDisks) {
-						if (pImgDisk) {
-							delete pImgDisk;
-						}
+						delete pImgDisk;
 					}
 					return;
 				}
@@ -1563,7 +1561,6 @@ void KEYB::Run(void) {
 static void KEYB_ProgramStart(Program * * make) {
 	*make=new KEYB;
 }
-
 
 void DOS_SetupPrograms(void) {
 	/*Add Messages */
@@ -1771,6 +1768,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n\n");
 
 	/*regular setup*/
+	PROGRAMS_MakeFile("AUTOTYPE.COM", AUTOTYPE_ProgramStart);
 	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
 	PROGRAMS_MakeFile("MEM.COM",MEM_ProgramStart);
 	PROGRAMS_MakeFile("LOADFIX.COM",LOADFIX_ProgramStart);
