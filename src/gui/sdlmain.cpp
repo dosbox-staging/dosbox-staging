@@ -2456,7 +2456,7 @@ void GFX_Events() {
 
 	SDL_Event event;
 #if defined (REDUCE_JOYSTICK_POLLING)
-	if (joysticks_active) {
+	if (MAPPER_IsUsingJoysticks()) {
 		static int poll_delay = 0;
 		int time = GetTicks();
 		if (time - poll_delay > 20) {

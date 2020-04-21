@@ -2542,7 +2542,6 @@ static void QueryJoysticks() {
 	// If we made it here, then update the other two external variables
 	mapper.sticks.num_groups = 0;
 	mapper.sticks.num = num_joysticks;
-	joysticks_active = (num_joysticks > 0);
 }
 
 static void CreateBindGroups() {
@@ -2597,6 +2596,10 @@ static void CreateBindGroups() {
 			break;
 		}
 	}
+}
+
+bool MAPPER_IsUsingJoysticks() {
+	return (mapper.sticks.num > 0);
 }
 
 #if defined (REDUCE_JOYSTICK_POLLING)

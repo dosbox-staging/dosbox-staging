@@ -45,6 +45,5 @@ enum JoystickType {
 };
 
 extern JoystickType joytype;
-extern bool joysticks_active;
 extern bool button_wrapping_enabled;
 #endif
