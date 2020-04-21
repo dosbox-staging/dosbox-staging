@@ -1,18 +1,4 @@
-DOSBox v0.74-2 Manual (always use the latest version from www.dosbox.com)
-
-
-
-=====
-NOTE:
-=====
-
-While we are hoping that one day DOSBox will run all programs ever made for
-the PC, we are not there yet.
-At present, DOSBox running on a high-end machine will roughly be the equivalent
-of a Pentium I PC. DOSBox can be configured to run a wide range of DOS games,
-from CGA/Tandy/PCjr classics up to games from the Quake era.
-
-
+DOSBox (dosbox-staging) v0.75.0 Manual
 
 ======
 INDEX:
@@ -46,9 +32,7 @@ Type INTRO in DOSBox for a quick tour.
 It is essential that you get familiar with the idea of mounting, DOSBox does not
 automatically make any drive (or a part of it) accessible to the emulation. See
 the FAQ entry "How to start?" as well as the description of the MOUNT command
-(Section 4: "Internal Programs"). If you have your game on a CD-ROM you may try
-this guide: https://www.vogons.org/viewtopic.php?t=8933
-
+(Section 4: "Internal Programs").
 
 
 ===============
@@ -296,10 +280,10 @@ OPTIONS: I would like to change DOSBox's options.
 
 
 HELP: Great Manual, but I still don't get it.
-    For more questions read the rest of this Manual. You may also look at:
-    guides located at https://www.vogons.org/viewforum.php?f=53
-    the wiki of DOSBox https://www.dosbox.com/wiki/
-    the site/forum: https://www.dosbox.com
+    You'll find answers to most DOSBox-related questions throughout
+    this document.  If you still have problems with running your game,
+    create a bug report or ask your question on:
+    https://github.com/dosbox-staging/dosbox-staging/issues
 
 
 
@@ -901,8 +885,8 @@ IPX
   itself to the virtual IPX network. For every additional computer that
   should be part of the virtual IPX network, you'll need to type
   "IPXNET CONNECT <computer host name or IP>".
-  For example, if your server is at bob.dosbox.com, you would type
-  "IPXNET CONNECT bob.dosbox.com" on every non-server system.
+  For example, if your server is at bob.foobar.com, you would type
+  "IPXNET CONNECT bob.foobar.com" on every non-server system.
 
   To play games that need Netbios a file named NETBIOS.EXE from Novell is
   needed. Establish the IPX connection as explained above, then run
@@ -1620,8 +1604,13 @@ See the THANKS file.
 17. Contact:
 ============
 
-See the site: 
-https://www.dosbox.com
-for an email address (The Crew-page).
+Project home:
+https://dosbox-staging.github.io/
 
+You can report bugs and ask questions in our bugtracker:
+https://github.com/dosbox-staging/dosbox-staging/issues
+
+If you want to chat, you'll find fellow users and developers on #dosbox-staging
+channel on Luxtorpeda project Discord server:
+https://discord.gg/WwAg3Xf
 
