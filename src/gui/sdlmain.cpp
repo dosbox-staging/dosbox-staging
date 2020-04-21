@@ -62,7 +62,7 @@
 
 #include "../libs/ppscale/ppscale.h"
 
-#define MAPPERFILE "mapper-sdl2-" VERSION ".map"
+#define MAPPERFILE "mapper-v2.map"
 
 #if C_OPENGL
 //Define to disable the usage of the pixel buffer object
