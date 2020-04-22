@@ -18,7 +18,7 @@ jobs:
     name: Coverity static analyzer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - run:  sudo apt-get update
       - name: Log environment
         run:  ./scripts/log-env.sh

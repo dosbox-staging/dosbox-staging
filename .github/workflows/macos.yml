@@ -22,9 +22,7 @@ jobs:
             flags: -c gcc -v 9
             max_warnings: 58
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
+      - uses: actions/checkout@v2
       - name: Install C++ compiler and libraries
         run:  brew install $(./scripts/list-build-dependencies.sh -m brew ${{ matrix.conf.flags}})
       - name:  Prepare compiler cache
@@ -60,7 +58,7 @@ jobs:
       CXX: ccache clang++
       FLAGS: -DNDEBUG -O3 -fno-math-errno -fstrict-aliasing -march=nehalem -flto=thin -pipe
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Install C++ compiler and libraries
         run:  brew install librsvg $(./scripts/list-build-dependencies.sh -m brew -c clang)
       - name:  Prepare compiler cache
@@ -90,6 +88,7 @@ jobs:
       - name: Inject version string
         run: |
           set -x
+          git fetch --prune --unshallow
           export VERSION=$(git describe --abbrev=5)
           sed -i -e "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
           echo ::set-env name=VERSION::$VERSION

@@ -14,9 +14,7 @@ jobs:
     env:
       debfile: pvs-studio-7.07.37949.43-amd64.deb
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
+      - uses: actions/checkout@v2
       - run:  sudo apt-get update
       - name: Log and setup environment
         run: |

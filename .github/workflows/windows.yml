@@ -36,9 +36,7 @@ jobs:
       CCACHE_MAXSIZE:  "64M"
       CCACHE_COMPRESS: "true"
     steps:
-      - uses:  actions/checkout@v1
-        with:
-          fetch-depth: 1
+      - uses:  actions/checkout@v2
       - name:  Get Date
         id:    get-date
         shell: bash
@@ -98,9 +96,7 @@ jobs:
       matrix:
         type: [Debug]
     steps:
-      - uses:  actions/checkout@v1
-        with:
-          fetch-depth: 1
+      - uses:  actions/checkout@v2
       - name:  Install packages
         shell: pwsh
         run: |
@@ -122,7 +118,7 @@ jobs:
     runs-on: windows-latest
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
     steps:
-      - uses:  actions/checkout@v1
+      - uses:  actions/checkout@v2
       - name:  Install packages
         shell: pwsh
         run: |
@@ -135,6 +131,7 @@ jobs:
         shell: bash
         run: |
           set -x
+          git fetch --prune --unshallow
           export VERSION=$(git describe --abbrev=4)
           sed -i "s|VERSION \"git\"|VERSION \"$VERSION\"|" src/platform/visualc/config.h
           echo ::set-env name=VERSION::$VERSION
