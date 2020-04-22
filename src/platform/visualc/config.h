@@ -1,5 +1,5 @@
 /* String appended to the .conf file. */
-#define CONF_BRAND "staging-git"
+#define CONF_BRAND "staging"
 
 /* Version number of package */
 #define VERSION "git"
