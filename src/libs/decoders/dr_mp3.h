@@ -1,6 +1,6 @@
 /*
 MP3 audio decoder. Choice of public domain or MIT-0. See license statements at the end of this file.
-dr_mp3 - v0.6.4 - 2020-04-19
+dr_mp3 - v0.6.5 - 2020-04-23
 
 David Reid - mackron@gmail.com
 
@@ -671,7 +671,7 @@ static int drmp3_have_simd(void)
 
 #if defined(__ARM_ARCH) && (__ARM_ARCH >= 6) && !defined(__aarch64__)
 #define DRMP3_HAVE_ARMV6 1
-static __inline__ __attribute__((always_inline)) drmp32_int32 drmp3_clip_int16_arm(int32_t a)
+static __inline__ __attribute__((always_inline)) drmp3_int32 drmp3_clip_int16_arm(int32_t a)
 {
     drmp3_int32 x = 0;
     __asm__ ("ssat %0, #16, %1" : "=r"(x) : "r"(a));
@@ -4360,6 +4360,9 @@ counts rather than sample counts.
 /*
 REVISION HISTORY
 ================
+v0.6.5 - 2020-04-19
+  - Fix compilation error on ARM builds.
+
 v0.6.4 - 2020-04-19
   - Bring up to date with changes to minimp3.
 
