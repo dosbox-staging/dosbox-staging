@@ -33,7 +33,7 @@
 	<string>%VERSION%</string>
 
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright 2002-2020 The DOSBox Team</string>
+	<string>Copyright 2020 The dosbox-staging team</string>
 
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
