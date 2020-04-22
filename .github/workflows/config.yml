@@ -40,10 +40,7 @@ jobs:
     env:
       CHERE_INVOKING: yes
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-
+      - uses: actions/checkout@v2
       - name: Check repo for commits
         id:   repo-meta
         shell: bash

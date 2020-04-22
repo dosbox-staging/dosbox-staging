@@ -13,9 +13,7 @@ jobs:
     runs-on: ubuntu-18.04
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
+      - uses: actions/checkout@v2
       - run:  sudo apt-get update
       - name: Run shellcheck
         run:  ./scripts/verify-bash.sh
@@ -38,9 +36,7 @@ jobs:
     runs-on: ubuntu-18.04
     needs: run_linters
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
+      - uses: actions/checkout@v2
       - run:  sudo apt-get update
       - name: Install C++ compiler and libraries
         run:  sudo apt-get install python3-setuptools $(./scripts/list-build-dependencies.sh -m apt -c gcc)
@@ -106,9 +102,7 @@ jobs:
             tsan:  0  # our test does not trigger multiple threads yet
             uasan: 36
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
+      - uses: actions/checkout@v2
       - run:  sudo apt-get update
       - name: Install C++ compiler and libraries
         env:
