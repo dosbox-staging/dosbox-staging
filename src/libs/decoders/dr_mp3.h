@@ -1,6 +1,6 @@
 /*
 MP3 audio decoder. Choice of public domain or MIT-0. See license statements at the end of this file.
-dr_mp3 - v0.6.4 - 2020-04-19
+dr_mp3 - v0.6.5 - 2020-04-23
 
 David Reid - mackron@gmail.com
 
@@ -4360,6 +4360,9 @@ counts rather than sample counts.
 /*
 REVISION HISTORY
 ================
+v0.6.5 - 2020-04-19
+  - Fix compilation error on ARM builds.
+
 v0.6.4 - 2020-04-19
   - Bring up to date with changes to minimp3.
 
