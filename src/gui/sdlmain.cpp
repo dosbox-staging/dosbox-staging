@@ -373,22 +373,23 @@ Read AUTHORS file for more details.
 )";
 
 #if C_OPENGL
-static char const shader_src_default[] =
-	"varying vec2 v_texCoord;\n"
-	"#if defined(VERTEX)\n"
-	"uniform vec2 rubyTextureSize;\n"
-	"uniform vec2 rubyInputSize;\n"
-	"attribute vec4 a_position;\n"
-	"void main() {\n"
-	"  gl_Position = a_position;\n"
-	"  v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize/rubyTextureSize;\n"
-	"}\n"
-	"#elif defined(FRAGMENT)\n"
-	"uniform sampler2D rubyTexture;\n\n"
-	"void main() {\n"
-	"  gl_FragColor = texture2D(rubyTexture, v_texCoord);\n"
-	"}\n"
-	"#endif\n";
+static char const shader_src_default[] = R"GLSL(
+varying vec2 v_texCoord;
+#if defined(VERTEX)
+uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
+attribute vec4 a_position;
+void main() {
+	gl_Position = a_position;
+	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize/rubyTextureSize;
+}
+#elif defined(FRAGMENT)
+uniform sampler2D rubyTexture;
+void main() {
+	gl_FragColor = texture2D(rubyTexture, v_texCoord);
+}
+#endif
+)GLSL";
 
 #ifdef DB_OPENGL_ERROR
 void OPENGL_ERROR(const char* message) {
