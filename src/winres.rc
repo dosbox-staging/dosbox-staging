@@ -18,12 +18,12 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Comments", "Â© 2020 dosbox-staging team, published under GNU GPL"
+            VALUE "Comments", "© 2020 dosbox-staging team, published under GNU GPL"
             VALUE "CompanyName", "dosbox-staging"
             VALUE "FileDescription", "DOSBox DOS Emulator"
             VALUE "FileVersion", "0, 76, 0, 0"
             VALUE "InternalName", "dosbox-staging"
-            VALUE "LegalCopyright", "Copyright Â© 2020 dosbox-staging team"
+            VALUE "LegalCopyright", "Copyright © 2020 dosbox-staging team"
             VALUE "OriginalFilename", "dosbox.exe"
             VALUE "ProductName", "dosbox-staging"
             VALUE "ProductVersion", "0, 76, 0, 0"
