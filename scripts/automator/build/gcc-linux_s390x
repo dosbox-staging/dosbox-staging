@@ -1,0 +1,8 @@
+# GCC flags for the IBM S/390 and zSeries platform
+
+# Defaults include:
+#  -mlong-double-128, 128-bit long doubles
+#  -m64, generate 64-bit instructions
+#  -mfused-madd, use floating point multiply and accumulate instructions
+
+cflags_release+=(-march=native -mhard-float)

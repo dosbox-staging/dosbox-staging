@@ -1,0 +1,2 @@
+# GCC flags specific to the IBM POWER8 platform
+cflags_release+=(-mcpu=power8)
