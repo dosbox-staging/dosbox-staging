@@ -1,0 +1,47 @@
+name: Platform builds
+
+on:
+  schedule: [cron: '0 14 * * *']
+
+jobs:
+  build_linux_platforms:
+    runs-on: ubuntu-latest
+    name: ${{ matrix.conf.name }}
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
+    strategy:
+      matrix:
+        conf:
+          - name: ARMv6 (Debian Buster)
+            architecture: armv6
+            distribution: buster
+          - name: ARMv7 (Debian Buster)
+            architecture: armv7
+            distribution: buster
+          - name: AArch64 (Ubuntu 18.04)
+            architecture: aarch64
+            distribution: ubuntu18.04
+          - name: LinuxONE (Ubuntu 18.04)
+            architecture: s390x
+            distribution: ubuntu18.04
+          - name: POWER8 (Ubuntu 18.04)
+            architecture: ppc64le
+            distribution: ubuntu18.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Check repo for commits
+        id: repo-meta
+        shell: bash
+        run:  'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
+
+      - uses: uraimo/run-on-arch-action@master
+        if: steps.repo-meta.outputs.has-commits == 'true'
+        with:
+          architecture: ${{ matrix.conf.architecture }}
+          distribution: ${{ matrix.conf.distribution }}
+          run: |
+            set -x
+            apt-get update
+            apt-get install -y $(./scripts/list-build-dependencies.sh -c gcc -m apt)
+            ./scripts/log-env.sh
+            ./scripts/build.sh -c gcc -t release
