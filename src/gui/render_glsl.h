@@ -29,8 +29,8 @@ uniform vec2 rubyTextureSize;
 attribute vec4 a_position;
 
 void main() {
-  gl_Position = a_position;
-  v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)*rubyInputSize;
+	gl_Position = a_position;
+	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)*rubyInputSize;
 }
 
 #elif defined(FRAGMENT)
@@ -94,8 +94,8 @@ uniform vec2 rubyTextureSize;
 attribute vec4 a_position;
 
 void main() {
-  gl_Position = a_position;
-  v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize*3.0;
+	gl_Position = a_position;
+	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize*3.0;
 }
 
 #elif defined(FRAGMENT)
@@ -174,8 +174,8 @@ uniform vec2 rubyTextureSize;
 attribute vec4 a_position;
 
 void main() {
-  gl_Position = a_position;
-  v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)*rubyInputSize;
+	gl_Position = a_position;
+	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)*rubyInputSize;
 }
 
 #elif defined(FRAGMENT)
@@ -239,8 +239,8 @@ uniform vec2 rubyTextureSize;
 attribute vec4 a_position;
 
 void main() {
-  gl_Position = a_position;
-  v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize*3.0;
+	gl_Position = a_position;
+	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize*3.0;
 }
 
 #elif defined(FRAGMENT)
@@ -307,8 +307,8 @@ uniform vec2 rubyTextureSize;
 attribute vec4 a_position;
 
 void main() {
-  gl_Position = a_position;
-  v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize * 2.0;
+	gl_Position = a_position;
+	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize * 2.0;
 }
 
 #elif defined(FRAGMENT)
@@ -360,8 +360,8 @@ uniform vec2 rubyTextureSize;
 attribute vec4 a_position;
 
 void main() {
-  gl_Position = a_position;
-  v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize * 3.0;
+	gl_Position = a_position;
+	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize * 3.0;
 }
 
 #elif defined(FRAGMENT)
@@ -415,29 +415,29 @@ uniform vec2 rubyTextureSize;
 #if defined(VERTEX)
 attribute vec4 a_position;
 void main() {
-  gl_Position = a_position;
-  v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize;
+	gl_Position = a_position;
+	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize;
 }
 
 #elif defined(FRAGMENT)
 uniform sampler2D rubyTexture;
 
 void main() {
-  vec2 prescale = vec2(2.0);
-  vec2 texel = v_texCoord;
-  vec2 texel_floored = floor(texel);
-  vec2 s = fract(texel);
-  vec2 region_range = vec2(0.5) - vec2(0.5) / prescale;
+	vec2 prescale = vec2(2.0);
+	vec2 texel = v_texCoord;
+	vec2 texel_floored = floor(texel);
+	vec2 s = fract(texel);
+	vec2 region_range = vec2(0.5) - vec2(0.5) / prescale;
 
-  vec2 center_dist = s - vec2(0.5);
-  vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) * prescale + vec2(0.5);
+	vec2 center_dist = s - vec2(0.5);
+	vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) * prescale + vec2(0.5);
 
-  vec2 mod_texel = min(texel_floored + f, rubyInputSize-0.5);
-  vec4 p = texture2D(rubyTexture, mod_texel/rubyTextureSize);
-  float ss = abs(s.y*2.0-1.0);
-  p -= p*ss;
+	vec2 mod_texel = min(texel_floored + f, rubyInputSize-0.5);
+	vec4 p = texture2D(rubyTexture, mod_texel/rubyTextureSize);
+	float ss = abs(s.y*2.0-1.0);
+	p -= p*ss;
 
-  gl_FragColor = p;
+	gl_FragColor = p;
 }
 #endif
 )GLSL";
@@ -451,29 +451,29 @@ uniform vec2 rubyTextureSize;
 #if defined(VERTEX)
 attribute vec4 a_position;
 void main() {
-  gl_Position = a_position;
-  v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize;
+	gl_Position = a_position;
+	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize;
 }
 
 #elif defined(FRAGMENT)
 uniform sampler2D rubyTexture;
 
 void main() {
-  vec2 prescale = vec2(3.0);
-  vec2 texel = v_texCoord;
-  vec2 texel_floored = floor(texel);
-  vec2 s = fract(texel);
-  vec2 region_range = vec2(0.5) - vec2(0.5) / prescale;
+	vec2 prescale = vec2(3.0);
+	vec2 texel = v_texCoord;
+	vec2 texel_floored = floor(texel);
+	vec2 s = fract(texel);
+	vec2 region_range = vec2(0.5) - vec2(0.5) / prescale;
 
-  vec2 center_dist = s - 0.5;
-  vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) * prescale + vec2(0.5);
+	vec2 center_dist = s - 0.5;
+	vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) * prescale + vec2(0.5);
 
-  vec2 mod_texel = min(texel_floored + f, rubyInputSize-0.5);
-  vec4 p = texture2D(rubyTexture, mod_texel/rubyTextureSize);
-  float m = s.y*6.0;
-  m -= clamp(m, 2.0, 4.0);
-  m = abs(m/2.0);
-  gl_FragColor = p - p*m;
+	vec2 mod_texel = min(texel_floored + f, rubyInputSize-0.5);
+	vec4 p = texture2D(rubyTexture, mod_texel/rubyTextureSize);
+	float m = s.y*6.0;
+	m -= clamp(m, 2.0, 4.0);
+	m = abs(m/2.0);
+	gl_FragColor = p - p*m;
 }
 #endif
 )GLSL";
@@ -487,29 +487,29 @@ uniform vec2 rubyTextureSize;
 #if defined(VERTEX)
 attribute vec4 a_position;
 void main() {
-  gl_Position = a_position;
-  v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize;
+	gl_Position = a_position;
+	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize;
 }
 
 #elif defined(FRAGMENT)
 uniform sampler2D rubyTexture;
 
 void main() {
-  vec2 prescale = vec2(2.0);
-  vec2 texel = v_texCoord;
-  vec2 texel_floored = floor(texel);
-  vec2 s = fract(texel);
-  vec2 region_range = vec2(0.5) - vec2(0.5) / prescale;
+	vec2 prescale = vec2(2.0);
+	vec2 texel = v_texCoord;
+	vec2 texel_floored = floor(texel);
+	vec2 s = fract(texel);
+	vec2 region_range = vec2(0.5) - vec2(0.5) / prescale;
 
-  vec2 center_dist = s - 0.5;
-  vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) * prescale + vec2(0.5);
+	vec2 center_dist = s - 0.5;
+	vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) * prescale + vec2(0.5);
 
-  vec2 mod_texel = min(texel_floored + f, rubyInputSize-0.5);
-  vec4 p = texture2D(rubyTexture, mod_texel/rubyTextureSize);
-  float ss = abs(s.y*2.0-1.0);
-  p -= p*ss*3.0/8.0;
+	vec2 mod_texel = min(texel_floored + f, rubyInputSize-0.5);
+	vec4 p = texture2D(rubyTexture, mod_texel/rubyTextureSize);
+	float ss = abs(s.y*2.0-1.0);
+	p -= p*ss*3.0/8.0;
 
-  gl_FragColor = p;
+	gl_FragColor = p;
 }
 #endif
 )GLSL";
@@ -523,29 +523,29 @@ uniform vec2 rubyTextureSize;
 #if defined(VERTEX)
 attribute vec4 a_position;
 void main() {
-  gl_Position = a_position;
-  v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize;
+	gl_Position = a_position;
+	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize;
 }
 
 #elif defined(FRAGMENT)
 uniform sampler2D rubyTexture;
 
 void main() {
-  vec2 prescale = vec2(3.0);
-  vec2 texel = v_texCoord;
-  vec2 texel_floored = floor(texel);
-  vec2 s = fract(texel);
-  vec2 region_range = vec2(0.5) - vec2(0.5) / prescale;
+	vec2 prescale = vec2(3.0);
+	vec2 texel = v_texCoord;
+	vec2 texel_floored = floor(texel);
+	vec2 s = fract(texel);
+	vec2 region_range = vec2(0.5) - vec2(0.5) / prescale;
 
-  vec2 center_dist = s - 0.5;
-  vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) * prescale + vec2(0.5);
+	vec2 center_dist = s - 0.5;
+	vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) * prescale + vec2(0.5);
 
-  vec2 mod_texel = min(texel_floored + f, rubyInputSize-0.5);
-  vec4 p = texture2D(rubyTexture, mod_texel/rubyTextureSize);
-  float ss = abs(s.y*2.0-1.0);
-  p -= p*ss*11.0/16.0;
+	vec2 mod_texel = min(texel_floored + f, rubyInputSize-0.5);
+	vec4 p = texture2D(rubyTexture, mod_texel/rubyTextureSize);
+	float ss = abs(s.y*2.0-1.0);
+	p -= p*ss*11.0/16.0;
 
-  gl_FragColor = p;
+	gl_FragColor = p;
 }
 #endif
 )GLSL";
@@ -560,25 +560,25 @@ varying vec2 prescale; // const set by vertex shader
 #if defined(VERTEX)
 attribute vec4 a_position;
 void main() {
-  gl_Position = a_position;
-  v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize;
-  prescale = ceil(rubyOutputSize / rubyInputSize);
+	gl_Position = a_position;
+	v_texCoord = vec2(a_position.x+1.0,1.0-a_position.y)/2.0*rubyInputSize;
+	prescale = ceil(rubyOutputSize / rubyInputSize);
 }
 
 #elif defined(FRAGMENT)
 uniform sampler2D rubyTexture;
 
 void main() {
-  const vec2 halfp = vec2(0.5);
-  vec2 texel_floored = floor(v_texCoord);
-  vec2 s = fract(v_texCoord);
-  vec2 region_range = halfp - halfp / prescale;
+	const vec2 halfp = vec2(0.5);
+	vec2 texel_floored = floor(v_texCoord);
+	vec2 s = fract(v_texCoord);
+	vec2 region_range = halfp - halfp / prescale;
 
-  vec2 center_dist = s - halfp;
-  vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) * prescale + halfp;
+	vec2 center_dist = s - halfp;
+	vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) * prescale + halfp;
 
-  vec2 mod_texel = min(texel_floored + f, rubyInputSize-halfp);
-  gl_FragColor = texture2D(rubyTexture, mod_texel / rubyTextureSize);
+	vec2 mod_texel = min(texel_floored + f, rubyInputSize-halfp);
+	gl_FragColor = texture2D(rubyTexture, mod_texel / rubyTextureSize);
 }
 #endif
 )GLSL";
