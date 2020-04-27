@@ -297,30 +297,35 @@ See Section 13: "The configuration (options) file".
 
 To be able to use Command Line Parameters:
 (Windows)  open cmd.exe or command.com or edit the shortcut to dosbox.exe
-(Linux)    use console
-(Mac OS X) start terminal.app and navigate to:
-           /applications/dosbox.app/contents/macos/dosbox
+(Linux)    use any terminal emulator
+(macOS)    start terminal.app and navigate to:
+           /Applications/dosbox-staging.app/Contents/MacOS/dosbox
 
 The options are valid for all operating systems unless noted in the option
 description:
 
-dosbox [name] [-exit] [-c command] [-fullscreen] [-userconf]
-       [-conf congfigfilelocation] [-lang languagefilelocation]
-       [-machine machine type] [-noconsole] [-startmapper] [-noautoexec]
-       [-securemode] [-scaler scaler | -forcescaler scaler] [-version]
-       [-socket socket]
-       
-dosbox -version
-dosbox -editconf program
-dosbox -opencaptures program
-dosbox -printconf
+dosbox [-fullscreen] [-startmapper] [-noautoexec] [-securemode] [-userconf]
+       [-scaler scaler | -forcescaler scaler] [-conf congfigfile]
+       [-lang langfile] [-machine machine-type] [-socket socketnumber]
+       [-c command] [-noconsole] [-exit] [NAME]
+
+dosbox --version
+
+dosbox --printconf
+
+dosbox --editconf [editor]
+
 dosbox -eraseconf
+
 dosbox -erasemapper
 
-  name
-        If "name" is a directory it will mount that as the C: drive.
-        If "name" is an executable it will mount the directory of "name"
-        as the C: drive and execute "name".
+dosbox -opencaptures program
+
+
+  NAME
+        If "NAME" is a directory it will mount that as the C: drive.
+        If "NAME" is an executable it will mount the directory of "NAME"
+        as the C: drive and execute "NAME".
 
   -exit
         DOSBox will close itself when the DOS application "name" ends.
@@ -382,20 +387,20 @@ dosbox -erasemapper
         Similar to the -scaler parameter, but tries to force usage of
         the specified scaler even if it might not fit.
 
-  -version
-        output version information and exit. Useful for frontends.
+  --version
+        Output version information and exit. Useful for frontends.
 
-  -editconf program
-        calls program with as first parameter the configuration file.
-        You can specify this command more than once. In this case it will
-        move to second program if the first one fails to start.
+  --editconf [editor]
+        Open the default configuration file in a text editor. If no editor name
+        is given, then use the program from EDITOR environment variable,
+        otherwise DOSBox will try to guess the name.
 
   -opencaptures program
         calls program with as first parameter the location of the captures
         folder.
 
-  -printconf
-        prints the location of the default configuration file.
+  --printconf
+        Print the location of the default configuration file.
 
   -resetconf
         removes the default configuration file.
@@ -1539,6 +1544,8 @@ The default directories storing config file are:
    (Windows) C:\Users\<username>\AppData\Local\DOSBox\
    (Linux)   ~/.config/dosbox/
    (macOS)   ~/Library/Preferences/DOSBox/
+
+You can quickly find exact path by running dosbox with parameter "--printconf".
 
 Linux users:
     The configuration's parent-directory can be customized by setting

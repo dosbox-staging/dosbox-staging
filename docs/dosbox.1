@@ -10,23 +10,20 @@ dosbox \- an x86/DOS emulator with sound/graphics
 .B [\-noautoexec]
 .B [\-securemode]
 .B [\-userconf]
-.BI "[\-scaler " scaler ] 
-.BI "[\-forcescaler " scaler ]
+.BI "[\-scaler " scaler | \-forcescaler " scaler]
 .BI "[\-conf " configfile ]
 .BI "[\-lang " langfile ]
 .BI "[\-machine " machinetype ]
 .BI "[\-socket " socketnumber ]
 .BI "[\-c " command ]
 .B [\-exit]
-.B [file]
+.B [NAME]
 .LP
-.B dosbox \-version
+.B dosbox \-\-version
 .LP
-.BI "dosbox \-editconf" " program"
+.B dosbox \-\-printconf
 .LP
-.BI "dosbox \-opencaptures" " program"
-.LP
-.B dosbox \-printconf
+.BI "dosbox \-\-editconf ["editor ]
 .LP
 .B dosbox \-eraseconf
 .LP
@@ -35,11 +32,13 @@ dosbox \- an x86/DOS emulator with sound/graphics
 .B dosbox \-erasemapper
 .LP
 .B dosbox \-resetmapper
+.LP
+.BI "dosbox \-opencaptures" " program"
 .SH DESCRIPTION
 This manual page briefly documents
-.BR "dosbox" ", an x86/DOS emulator."
+.BR "dosbox-staging" ", an x86/DOS emulator."
 .LP
-.RB "The optional " file " argument should be a DOS executable or a"
+.RB "The optional " NAME " argument should be a DOS executable or a"
 directory. If it is a dos executable (.com .exe .bat) the program will 
 run automatically. If it is a directory, a DOS session will run with 
 the directory mounted as C:\\.
@@ -106,19 +105,19 @@ an Internal Program, a DOS command or an executable on a mounted drive.
 .B "\-exit "
 .BR "dosbox" " will close itself when the DOS program specified by "file " ends."
 .TP
-.B \-version
+.B \-\-version
 Output version information and exit. Useful for frontends.
 .TP
-.BI \-editconf " program"
-.RI calls " program" " with as first parameter the configuration file."
-You can specify this command more than once. In this case it will
-.RI " move to second " program " if the first one fails to start."
+.BI "\-\-editconf ["editor ]
+.R Open the default configuration file in a text editor. If no editor name
+is given, then use the program from EDITOR environment variable,
+otherwise DOSBox will try to guess the name.
 .TP
 .BI \-opencaptures " program"
 .RI "calls " program " with as  first parameter the location of the captures folder."
 .TP
-.B \-printconf
-prints the location of the default configuration file.
+.B \-\-printconf
+Prints the location of the default configuration file.
 .TP
 .B \-eraseconf, \-resetconf
 removes the default configuration file.
