@@ -3158,8 +3158,8 @@ int main(int argc, char* argv[]) {
 		}
 #endif  //defined(WIN32) && !(C_DEBUG)
 
-		if (control->cmdline->FindExist("-version") ||
-		    control->cmdline->FindExist("--version")) {
+		if (control->cmdline->FindExist("--version") ||
+		    control->cmdline->FindExist("-version")) {
 			printf(version_msg, VERSION);
 			return 0;
 		}
