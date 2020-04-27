@@ -3089,6 +3089,8 @@ int main(int argc, char* argv[]) {
 		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
 		OverrideWMClass(); // Before SDL2 video subsystem is initialized
 
+		CROSS_DetermineConfigPaths();
+
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
 		control=&myconf;
@@ -3155,8 +3157,6 @@ int main(int argc, char* argv[]) {
 
 	sdl.laltstate = SDL_KEYUP;
 	sdl.raltstate = SDL_KEYUP;
-
-	CROSS_DetermineConfigPaths();
 
 	/* Parse configuration files */
 	std::string config_file, config_path, config_combined;
