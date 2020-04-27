@@ -50,6 +50,23 @@ static std::string GetConfigName()
 
 std::string cached_conf_path;
 
+static std::string ResolveHome(std::string tilde_path)
+{
+	Cross::ResolveHomedir(tilde_path);
+	return tilde_path;
+}
+
+#if defined(MACOSX)
+
+static std::string DetermineConfigPath()
+{
+	const std::string conf_path = ResolveHome("~/Library/Preferences/DOSBox");
+	mkdir(conf_path.c_str(), 0700);
+	return conf_path;
+}
+
+#else
+
 static bool CreateDirectories(const std::string &path)
 {
 	struct stat sb;
@@ -66,12 +83,6 @@ static bool CreateDirectories(const std::string &path)
 		return false;
 
 	return (mkdir(path.c_str(), 0700) == 0);
-}
-
-static std::string ResolveHome(std::string tilde_path)
-{
-	Cross::ResolveHomedir(tilde_path);
-	return tilde_path;
 }
 
 static bool PathExists(const std::string &path)
@@ -106,17 +117,20 @@ static std::string DetermineConfigPath()
 	return conf_path;
 }
 
-#endif // !WIN32
+#endif // !MACOSX
 
 void CROSS_DetermineConfigPaths()
 {
-#if !defined(WIN32) && !defined(MACOSX)
 	if (cached_conf_path.empty())
 		cached_conf_path = DetermineConfigPath();
-#endif
 }
 
+#endif // !WIN32
+
 #ifdef WIN32
+
+void CROSS_DetermineConfigPaths() {}
+
 static void W32_ConfDir(std::string& in,bool create) {
 	int c = create?1:0;
 	char result[MAX_PATH] = { 0 };
@@ -139,9 +153,6 @@ void Cross::GetPlatformConfigDir(std::string& in) {
 #ifdef WIN32
 	W32_ConfDir(in,false);
 	in += "\\DOSBox";
-#elif defined(MACOSX)
-	in = "~/Library/Preferences";
-	ResolveHomedir(in);
 #else
 	assert(!cached_conf_path.empty());
 	in = cached_conf_path;
@@ -161,10 +172,6 @@ void Cross::CreatePlatformConfigDir(std::string &in)
 	W32_ConfDir(in,true);
 	in += "\\DOSBox";
 	mkdir(in.c_str());
-#elif defined(MACOSX)
-	in = "~/Library/Preferences/DOSBox";
-	ResolveHomedir(in);
-	mkdir(in.c_str(), 0700);
 #else
 	assert(!cached_conf_path.empty());
 	in = cached_conf_path.c_str();
