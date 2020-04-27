@@ -3012,20 +3012,22 @@ static void launchcaptures(std::string const& edit) {
 	exit(1);
 }
 
-static void printconfiglocation() {
-	std::string path,file;
+static int PrintConfigLocation()
+{
+	std::string path, file;
 	Cross::CreatePlatformConfigDir(path);
 	Cross::GetPlatformConfigName(file);
 	path += file;
 
-	FILE* f = fopen(path.c_str(),"r");
+	FILE *f = fopen(path.c_str(), "r");
 	if (!f && !control->PrintConfig(path)) {
-		printf("tried creating %s. but failed", path.c_str());
-		exit(1);
+		fprintf(stderr, "Tried creating '%s', but failed.\n", path.c_str());
+		return 1;
 	}
-	if(f) fclose(f);
-	printf("%s\n",path.c_str());
-	exit(0);
+	if (f)
+		fclose(f);
+	printf("%s\n", path.c_str());
+	return 0;
 }
 
 static void eraseconfigfile() {
@@ -3135,8 +3137,11 @@ int main(int argc, char* argv[]) {
 			return 0;
 		}
 
-		if (control->cmdline->FindExist("-printconf"))
-			printconfiglocation();
+		if (control->cmdline->FindExist("--printconf") ||
+		    control->cmdline->FindExist("-printconf")) {
+			const int err = PrintConfigLocation();
+			return err;
+		}
 
 #if C_DEBUG
 		DEBUG_SetupConsole();
