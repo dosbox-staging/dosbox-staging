@@ -165,6 +165,7 @@ typedef struct {
 	} cursor;
 	Drawmode mode;
 	bool vret_triggered;
+	bool override;
 } VGA_Draw;
 
 typedef struct {
@@ -446,6 +447,7 @@ void VGA_SetCGA2Table(Bit8u val0,Bit8u val1);
 void VGA_SetCGA4Table(Bit8u val0,Bit8u val1,Bit8u val2,Bit8u val3);
 void VGA_ActivateHardwareCursor(void);
 void VGA_KillDrawing(void);
+void VGA_SetOverride(bool override);
 
 extern VGA_Type vga;
 

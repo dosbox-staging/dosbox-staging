@@ -21,7 +21,8 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
-
+bool shutdown = false;
+bool glide_active = false;
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -50,6 +51,7 @@
 #include "cpu.h"
 #include "cross.h"
 #include "control.h"
+#include "glidedef.h"
 
 #define MAPPERFILE "mapper-" VERSION ".map"
 //#define DISABLE_JOYSTICK
@@ -236,9 +238,9 @@ void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
 	if(cycles != -1) internal_cycles = cycles;
 	if(frameskip != -1) internal_frameskip = frameskip;
 	if(CPU_CycleAutoAdjust) {
-		sprintf(title,"DOSBox %s, Cpu speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %sG, Cpu speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
 	} else {
-		sprintf(title,"DOSBox %s, Cpu speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %sG, Cpu speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
 	}
 
 	if(paused) strcat(title," PAUSED");
@@ -347,6 +349,10 @@ check_gotbpp:
 
 
 void GFX_ResetScreen(void) {
+	if(glide.enabled) {
+		GLIDE_ResetScreen(true);
+		return;
+	}
 	GFX_Stop();
 	if (sdl.draw.callback)
 		(sdl.draw.callback)( GFX_CallBackReset );
@@ -679,13 +685,24 @@ static void CaptureMouse(bool pressed) {
 }
 
 void GFX_SwitchFullScreen(void) {
+	if(!shutdown) {
+		Section_prop* glide_sec = static_cast<Section_prop *>(control->GetSection("glide"));
+		//Start in windowed mode to improve success rate on vista
+		bool g = glide_sec?glide_sec->Get_bool("glide"):false;
+
+		//disable fullscreen mode when there is no glide
+		if(g && !glide.enabled) return;
+	}
 	sdl.desktop.fullscreen=!sdl.desktop.fullscreen;
 	if (sdl.desktop.fullscreen) {
 		if (!sdl.mouse.locked) GFX_CaptureMouse();
 	} else {
 		if (sdl.mouse.locked) GFX_CaptureMouse();
 	}
-	GFX_ResetScreen();
+	if (glide.enabled)
+		GLIDE_ResetScreen();
+	else
+		GFX_ResetScreen();
 }
 
 static void SwitchFullScreen(bool pressed) {
@@ -908,6 +925,7 @@ static void GUI_ShutDown(Section * /*sec*/) {
 static void KillSwitch(bool pressed) {
 	if (!pressed)
 		return;
+	shutdown = true;
 	throw 1;
 }
 
@@ -1006,7 +1024,10 @@ static void GUI_StartUp(Section * sec) {
 	SDL_WM_SetIcon(logos,NULL);
 #endif
 
-	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
+	Section_prop* glide_sec = static_cast<Section_prop *>(control->GetSection("glide"));
+	//Start in windowed mode to improve success rate on vista
+	bool g = glide_sec->Get_bool("glide");
+	sdl.desktop.fullscreen=g?false:section->Get_bool("fullscreen");
 	sdl.wait_on_error=section->Get_bool("waitonerror");
 
 	Prop_multival* p=section->Get_multival("priority");
@@ -1340,6 +1361,7 @@ void GFX_Events() {
 #endif
 						GFX_CaptureMouse();
 					}
+					//See comment below
 					SetPriority(sdl.priority.nofocus);
 					GFX_LosingFocus();
 					CPU_Enable_SkipAutoAdjust();
@@ -1371,7 +1393,7 @@ void GFX_Events() {
 						SDL_WaitEvent(&ev);
 
 						switch (ev.type) {
-						case SDL_QUIT: throw(0); break; // a bit redundant at linux at least as the active events gets before the quit event.
+						case SDL_QUIT: shutdown = true;throw(0); break; // a bit redundant at linux at least as the active events gets before the quit event.
 						case SDL_ACTIVEEVENT:     // wait until we get window focus back
 							if (ev.active.state & (SDL_APPINPUTFOCUS | SDL_APPACTIVE)) {
 								// We've got focus back, so unpause and break out of the loop
@@ -1404,10 +1426,11 @@ void GFX_Events() {
 //			HandleVideoResize(&event.resize);
 			break;
 		case SDL_QUIT:
+			shutdown=true;
 			throw(0);
 			break;
 		case SDL_VIDEOEXPOSE:
-			if (sdl.draw.callback) sdl.draw.callback( GFX_CallBackRedraw );
+			if ((sdl.draw.callback) && (!glide.enabled)) sdl.draw.callback( GFX_CallBackRedraw );
 			break;
 #ifdef WIN32
 		case SDL_KEYDOWN:
@@ -1786,6 +1809,7 @@ int main(int argc, char* argv[]) {
 			if (strcmp(sdl_drv_name,"windib")==0) LOG_MSG("SDL_Init: Starting up with SDL windib video driver.\n          Try to update your video card and directx drivers!");
 		}
 #endif
+	glide.fullscreen = &sdl.desktop.fullscreen;
 	sdl.num_joysticks=SDL_NumJoysticks();
 
 	/* Parse configuration files */
@@ -1855,8 +1879,12 @@ int main(int argc, char* argv[]) {
 		/* Some extra SDL Functions */
 		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
 
+		Section_prop* glide_sec = static_cast<Section_prop *>(control->GetSection("glide"));
+		//Start in windowed mode to improve success rate on vista
+		bool g = glide_sec->Get_bool("glide");
+
 		if (control->cmdline->FindExist("-fullscreen") || sdl_sec->Get_bool("fullscreen")) {
-			if(!sdl.desktop.fullscreen) { //only switch if not allready in fullscreen
+			if(!sdl.desktop.fullscreen && !g) { //only switch if not allready in fullscreen
 				GFX_SwitchFullScreen();
 			}
 		}
@@ -1866,6 +1894,7 @@ int main(int argc, char* argv[]) {
 		if (control->cmdline->FindExist("-startmapper")) MAPPER_RunInternal();
 		/* Start up main machine */
 		control->StartUp();
+		shutdown=true;
 		/* Shutdown everything */
 	} catch (char * error) {
 		GFX_ShowMsg("Exit to error: %s",error);

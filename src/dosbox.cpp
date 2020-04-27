@@ -77,6 +77,7 @@ void HARDWARE_Init(Section*);
 
 void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
 void JOYSTICK_Init(Section*);
+void GLIDE_Init(Section*);
 void MOUSE_Init(Section*);
 void SBLASTER_Init(Section*);
 void GUS_Init(Section*);
@@ -184,9 +185,9 @@ increaseticks:
 							if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 20480) 
 								ratio = 20480;
 							Bit64s cmax_scaled = (Bit64s)CPU_CycleMax * (Bit64s)ratio;
-							if (ratio <= 1024) 
-								new_cmax = (Bit32s)(cmax_scaled / (Bit64s)1024);
-							else 
+//							if (ratio <= 1024) 
+//								new_cmax = (Bit32s)(cmax_scaled / (Bit64s)1024);
+//							else 
 								new_cmax = (Bit32s)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (Bit64s)2048);
 						}
 					}
@@ -646,6 +647,14 @@ void DOSBOX_Init(void) {
 	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::WhenIdle,"");
 	Pmulti_remain->Set_help("see serial1");
 
+
+	secprop=control->AddSection_prop("glide",&GLIDE_Init,true);
+	Pbool = secprop->Add_bool("glide",Property::Changeable::WhenIdle,false);
+	Pbool->Set_help("Enable glide emulation: true,false.");
+	Phex = secprop->Add_hex("grport",Property::Changeable::WhenIdle,0x600);
+	Phex->Set_help("I/O port to use for host communication.");
+	Pstring = secprop->Add_string("lfb",Property::Changeable::WhenIdle,"full");
+	Pstring->Set_help("LFB access: full,read,write,none.");
 
 	/* All the DOS Related stuff, which will eventually start up in the shell */
 	secprop=control->AddSection_prop("dos",&DOS_Init,false);//done

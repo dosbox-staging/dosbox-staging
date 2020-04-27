@@ -1,5 +1,11 @@
 Things needed for compilation.
 
+
+GLIDE HEADERS
+    Needed for compilation, can be found in the openglide cvs
+	http://openglide.cvs.sourceforge.net/openglide/
+	place them in the include directory
+	
 SDL 
     The Simple DirectMedia Library available at http://www.libsdl.org
     The dll distributed with the windows version of DOSBox is slightly
