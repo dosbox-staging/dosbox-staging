@@ -2923,28 +2923,50 @@ static void show_warning(char const * const message) {
 #endif // WIN32
 }
 
-static void launcheditor() {
-	std::string path,file;
+static int LaunchEditor()
+{
+	std::string path, file;
 	Cross::CreatePlatformConfigDir(path);
 	Cross::GetPlatformConfigName(file);
 	path += file;
-	FILE* f = fopen(path.c_str(),"r");
+
+	FILE *f = fopen(path.c_str(), "r");
 	if (!f && !control->PrintConfig(path)) {
-		printf("tried creating %s. but failed.\n", path.c_str());
-		exit(1);
+		fprintf(stderr, "Tried creating '%s', but failed.\n", path.c_str());
+		return 1;
 	}
-	if(f) fclose(f);
-/*	if(edit.empty()) {
-		printf("no editor specified.\n");
-		exit(1);
-	}*/
-	std::string edit;
-	while(control->cmdline->FindString("-editconf",edit,true)) //Loop until one succeeds
-		execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) 0);
-	//if you get here the launching failed!
-	printf("can't find editor(s) specified at the command line.\n");
-	exit(1);
+	if (f)
+		fclose(f);
+
+	auto replace_with_process = [path](const std::string &prog) {
+		execlp(prog.c_str(), prog.c_str(), path.c_str(), (char *)nullptr);
+	};
+
+	std::string editor;
+	constexpr bool remove_arg = true;
+	// Loop until one succeeds
+	while (control->cmdline->FindString("--editconf", editor, remove_arg))
+		replace_with_process(editor);
+
+	while (control->cmdline->FindString("-editconf", editor, remove_arg))
+		replace_with_process(editor);
+
+	const char *env_editor = getenv("EDITOR");
+	if (env_editor)
+		replace_with_process(env_editor);
+
+	replace_with_process("nano");
+	replace_with_process("vim");
+	replace_with_process("vi");
+	replace_with_process("notepad++.exe");
+	replace_with_process("notepad.exe");
+
+	fprintf(stderr, "Can't find any text editors.\n"
+	                "You can set the EDITOR env variable to your preferred "
+	                "text editor.\n");
+	return 1;
 }
+
 #if C_DEBUG
 extern void DEBUG_ShutDown(Section * /*sec*/);
 #endif
@@ -3100,8 +3122,13 @@ int main(int argc, char* argv[]) {
 		Config_Add_SDL();
 		DOSBOX_Init();
 
+		if (control->cmdline->FindExist("--editconf") ||
+		    control->cmdline->FindExist("-editconf")) {
+			const int err = LaunchEditor();
+			return err;
+		}
+
 		std::string editor;
-		if(control->cmdline->FindString("-editconf",editor,false)) launcheditor();
 		if(control->cmdline->FindString("-opencaptures",editor,true)) launchcaptures(editor);
 		if(control->cmdline->FindExist("-eraseconf")) eraseconfigfile();
 		if(control->cmdline->FindExist("-resetconf")) eraseconfigfile();
