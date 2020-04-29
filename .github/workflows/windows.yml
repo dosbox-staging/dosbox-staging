@@ -169,6 +169,14 @@ jobs:
           sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README.txt
           # Create dir for zipping
           mv dest dosbox-staging-windows-${{ env.VERSION }}
+
+      - name: Windows Defender AV Scan
+        shell: powershell
+        run: |
+          Update-MpSignature
+          Start-MpScan -ScanPath "${{ github.workspace }}\dosbox-staging-windows-${{ env.VERSION }}"
+          Start-MpScan -ScanPath dosbox-staging-windows-${{ env.VERSION }}
+
       - name: Upload package
         uses: actions/upload-artifact@master
         with:
