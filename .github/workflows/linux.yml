@@ -142,7 +142,7 @@ jobs:
           # Create tarball
           tar -cJf "dosbox-staging-linux-$VERSION.tar.xz" "dosbox-staging-linux-$VERSION"
 
-      - name: AV scan
+      - name: Clam AV scan
         run: |
           set -x
           sudo apt-get install clamav > /dev/null
