@@ -173,9 +173,9 @@ jobs:
       - name: Windows Defender AV Scan
         shell: powershell
         run: |
-          Update-MpSignature
-          Start-MpScan -ScanPath "${{ github.workspace }}\dosbox-staging-windows-${{ env.VERSION }}"
-          Start-MpScan -ScanPath dosbox-staging-windows-${{ env.VERSION }}
+          Get-MpComputerStatus
+          Start-MpScan -ScanPath "./dosbox-staging-windows-${{ env.VERSION }}"
+          echo $?
 
       - name: Upload package
         uses: actions/upload-artifact@master
