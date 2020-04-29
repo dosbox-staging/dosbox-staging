@@ -172,6 +172,18 @@ jobs:
           sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README.txt
           # Create dir for zipping
           mv dest dosbox-staging-windows-${{ env.VERSION }}
+
+      - name: Windows Defender AV Scan
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dosboxDir = "${{ github.workspace }}/dosbox-staging-windows-${{ env.VERSION }}"
+          & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -DisableRemediation -File $dosboxDir
+          if( $LASTEXITCODE -ne 0 ) {
+              Get-Content -Path $env:TEMP\MpCmdRun.log
+              Throw "Exit $LASTEXITCODE : Windows Defender found an issue"
+          }
+
       - name: Upload package
         uses: actions/upload-artifact@master
         with:

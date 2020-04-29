@@ -145,7 +145,7 @@ jobs:
               -srcfolder dist \
               -ov -format UDZO "dosbox-staging-macOS-${{ env.VERSION }}.dmg"
 
-      - name: AV scan
+      - name: Clam AV scan
         run: |
           set -x
           brew install clamav > /dev/null
