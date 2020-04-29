@@ -369,10 +369,10 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 #ifdef PNG_TEXT_SUPPORTED
 		int fields = 1;
 		png_text text[1] = {};
-		const char* text_s = "DOSBox " VERSION;
-		size_t strl = strlen(text_s);
-		char* ptext_s = new char[strl + 1];
-		strcpy(ptext_s, text_s);
+		const char* text_s = "dosbox-staging " VERSION;
+		const size_t text_len = strlen(text_s);
+		char* ptext_s = new char[text_len + 1];
+		strncpy(ptext_s, text_s, text_len);
 		char software[9] = { 'S','o','f','t','w','a','r','e',0};
 		text[0].compression = PNG_TEXT_COMPRESSION_NONE;
 		text[0].key  = software;
