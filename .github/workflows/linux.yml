@@ -91,7 +91,6 @@ jobs:
           set -x
           git fetch --prune --unshallow
           export VERSION=$(git describe --abbrev=4)
-          git fetch --depth 1
           sed -i "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
           echo ::set-env name=VERSION::$VERSION
       - name: Build
