@@ -174,8 +174,8 @@ jobs:
         shell: powershell
         run: |
           Get-MpComputerStatus
-          wget "https://secure.eicar.org/eicar.com" -O "./dosbox-staging-windows-${{ env.VERSION }}/eicar.com"
-          Start-MpScan -ScanPath "./dosbox-staging-windows-${{ env.VERSION }}"
+          Invoke-WebRequest "https://secure.eicar.org/eicar.com" -OutFile "./dosbox-staging-windows-${{ env.VERSION }}/eicar.com" -Verbose
+          Start-MpScan -ScanPath "./dosbox-staging-windows-${{ env.VERSION }}" -Verbose -ErrorAction Stop
           echo $?
 
       - name: Upload package
