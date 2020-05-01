@@ -259,7 +259,8 @@ static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* 
 Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s specific_layout, Bit32s requested_codepage) {
 	this->reset();
 
-	if (specific_layout==-1) strcpy(current_keyboard_file_name, keyboard_file_name);
+	if (specific_layout == -1)
+		safe_strcpy(current_keyboard_file_name, keyboard_file_name);
 	if (!strcmp(keyboard_file_name,"none")) return KEYB_NOERROR;
 
 	static Bit8u read_buf[65535];
@@ -701,7 +702,7 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 
 Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s codepage_id) {
 	char cp_filename[512];
-	strcpy(cp_filename, codepage_file_name);
+	safe_strcpy(cp_filename, codepage_file_name);
 	if (!strcmp(cp_filename,"none")) return KEYB_NOERROR;
 
 	if (codepage_id==dos.loaded_codepage) return KEYB_NOERROR;
@@ -967,7 +968,7 @@ Bitu keyboard_layout::switch_keyboard_layout(const char* new_layout, keyboard_la
 	if (strncasecmp(new_layout,"US",2)) {
 		// switch to a foreign layout
 		char tbuf[256];
-		strcpy(tbuf, new_layout);
+		safe_strcpy(tbuf, new_layout);
 		size_t newlen=strlen(tbuf);
 
 		bool language_code_found=false;

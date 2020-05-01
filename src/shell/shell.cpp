@@ -329,7 +329,7 @@ void DOS_Shell::Run(void) {
 	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
 	if (cmd->FindStringRemainBegin("/C",line)) {
-		strcpy(input_line,line.c_str());
+		safe_strcpy(input_line, line.c_str());
 		char* sep = strpbrk(input_line,"\r\n"); //GTA installer
 		if (sep) *sep = 0;
 		DOS_Shell temp;
@@ -351,7 +351,7 @@ void DOS_Shell::Run(void) {
 		if (machine == MCH_HERC) WriteOut(MSG_Get("SHELL_STARTUP_HERC"));
 		WriteOut(MSG_Get("SHELL_STARTUP_END"));
 
-		strcpy(input_line,line.c_str());
+		safe_strcpy(input_line, line.c_str());
 		line.erase();
 		ParseLine(input_line);
 	} else {
@@ -775,7 +775,7 @@ void SHELL_Init() {
 	CommandTail tail;
 	tail.count=(Bit8u)strlen(init_line);
 	memset(&tail.buffer,0,127);
-	strcpy(tail.buffer,init_line);
+	safe_strcpy(tail.buffer, init_line);
 	MEM_BlockWrite(PhysMake(psp_seg,128),&tail,128);
 
 	/* Setup internal DOS Variables */

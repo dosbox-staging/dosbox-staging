@@ -979,7 +979,7 @@ public:
 					WriteOut("IPX Server address not specified.\n");
 					return;
 				}
-				strcpy(strHost, temp_line.c_str());
+				safe_strcpy(strHost, temp_line.c_str());
 
 				if(!cmd->FindCommand(3, temp_line)) {
 					udpPort = 213;

@@ -87,14 +87,14 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 	if (is_dir_only_in_overlay(dir)) {
 		//The simple case
 		char odir[CROSS_LEN];
-		strcpy(odir,overlaydir);
+		safe_strcpy(odir, overlaydir);
 		strcat(odir,dir);
 		CROSS_FILENAME(odir);
 		int temp = rmdir(odir);
 		if (temp == 0) {
 			remove_DOSdir_from_cache(dir);
 			char newdir[CROSS_LEN];
-			strcpy(newdir,basedir);
+			safe_strcpy(newdir, basedir);
 			strcat(newdir,dir);
 			CROSS_FILENAME(newdir);
 			dirCache.DeleteEntry(newdir,true);
@@ -154,7 +154,7 @@ bool Overlay_Drive::MakeDir(char * dir) {
 		return true;
 	}
 	char newdir[CROSS_LEN];
-	strcpy(newdir,overlaydir);
+	safe_strcpy(newdir, overlaydir);
 	strcat(newdir,dir);
 	CROSS_FILENAME(newdir);
 #if defined (WIN32)						/* MS Visual C++ */
@@ -164,7 +164,7 @@ bool Overlay_Drive::MakeDir(char * dir) {
 #endif
 	if (temp==0) {
 		char fakename[CROSS_LEN];
-		strcpy(fakename,basedir);
+		safe_strcpy(fakename, basedir);
 		strcat(fakename,dir);
 		CROSS_FILENAME(fakename);
 		dirCache.AddEntryDirOverlay(fakename,true);
@@ -180,7 +180,7 @@ bool Overlay_Drive::TestDir(char * dir) {
 
 	//Directories are stored without a trailing backslash
 	char tempdir[CROSS_LEN];
-	strcpy(tempdir,dir);
+	safe_strcpy(tempdir, dir);
 	size_t templen = strlen(dir);
 	if (templen && tempdir[templen-1] == '\\') tempdir[templen-1] = 0;
 
@@ -234,7 +234,8 @@ FILE* Overlay_Drive::create_file_in_overlay(char* dos_filename, char const* mode
 
 	if (logoverlay) LOG_MSG("create_file_in_overlay called %s %s",dos_filename,mode);
 	char newname[CROSS_LEN];
-	strcpy(newname,overlaydir); //TODO GOG make part of class and join in 
+	safe_strcpy(newname, overlaydir); // TODO GOG make part of class and
+	                                  // join in
 	strcat(newname,dos_filename); //HERE we need to convert it to Linux TODO
 	CROSS_FILENAME(newname);
 
@@ -324,7 +325,7 @@ Overlay_Drive::Overlay_Drive(const char * startdir,const char* overlay, Bit16u _
 		error = 1;
 		return;
 	}
-	strcpy(overlaydir,overlay);
+	safe_strcpy(overlaydir, overlay);
 	char dirname[CROSS_LEN] = { 0 };
 	//Determine if overlaydir is part of the startdir.
 	convert_overlay_to_DOSname_in_base(dirname);
@@ -350,7 +351,7 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 #endif
 			//Beginning is the same.
 			char t[CROSS_LEN];
-			strcpy(t,overlaydir+strlen(basedir));
+			safe_strcpy(t, overlaydir + strlen(basedir));
 
 			char* p = t;
 			char* b = t;
@@ -358,11 +359,11 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 			while ( (p =strchr(p,CROSS_FILESPLIT)) ) {
 				char directoryname[CROSS_LEN]={0};
 				char dosboxdirname[CROSS_LEN]={0};
-				strcpy(directoryname,dirname);
+				safe_strcpy(directoryname, dirname);
 				strncat(directoryname,b,p-b);
 
 				char d[CROSS_LEN];
-				strcpy(d,basedir);
+				safe_strcpy(d, basedir);
 				strcat(d,directoryname);
 				CROSS_FILENAME(d);
 				//Try to find the corresponding directoryname in DOSBox.
@@ -419,7 +420,7 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	//if name exists, use that one instead!
 	//overlay file.
 	char newname[CROSS_LEN];
-	strcpy(newname,overlaydir);
+	safe_strcpy(newname, overlaydir);
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
 
@@ -473,7 +474,7 @@ bool Overlay_Drive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes
 	*file = of;
 	//create fake name for the drive cache
 	char fakename[CROSS_LEN];
-	strcpy(fakename,basedir);
+	safe_strcpy(fakename, basedir);
 	strcat(fakename,name);
 	CROSS_FILENAME(fakename);
 	dirCache.AddEntry(fakename,true); //add it.
@@ -507,7 +508,7 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 		if (logoverlay) LOG_MSG("syncdir: %s",dirname);
 		//Test if directory exist in base.
 		char dirnamebase[CROSS_LEN] ={0};
-		strcpy(dirnamebase,basedir);
+		safe_strcpy(dirnamebase, basedir);
 		strcat(dirnamebase,dirname);
 		CROSS_FILENAME(dirnamebase);
 		struct stat basetest;
@@ -518,7 +519,7 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 
 			struct stat overlaytest;
 			char dirnameoverlay[CROSS_LEN] ={0};
-			strcpy(dirnameoverlay,overlaydir);
+			safe_strcpy(dirnameoverlay, overlaydir);
 			strcat(dirnameoverlay,dirname);
 			CROSS_FILENAME(dirnameoverlay);
 			if (stat(dirnameoverlay,&overlaytest) == 0 ) {
@@ -608,16 +609,16 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 
 #if OVERLAY_DIR
 			char tdir[CROSS_LEN];
-			strcpy(tdir,(*i).c_str());
+			safe_strcpy(tdir, (*i).c_str());
 			CROSS_DOSFILENAME(tdir);
 			bool dir_exists_in_base = localDrive::TestDir(tdir);
 #endif
 
 			char dir[CROSS_LEN];
-			strcpy(dir,overlaydir);
+			safe_strcpy(dir, overlaydir);
 			strcat(dir,(*i).c_str());
 			char dirpush[CROSS_LEN];
-			strcpy(dirpush,(*i).c_str());
+			safe_strcpy(dirpush, (*i).c_str());
 			static char end[2] = {CROSS_FILESPLIT,0};
 			strcat(dirpush,end); //Linux ?
 			dir_information* dirp = open_directory(dir);
@@ -653,7 +654,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 	if (read_directory_contents) {
 		for( i = filenames.begin(); i != filenames.end(); ++i) {
 			char dosname[CROSS_LEN];
-			strcpy(dosname,(*i).c_str());
+			safe_strcpy(dosname, (*i).c_str());
 			upcase(dosname);  //Should not be really needed, as uppercase in the overlay is a requirement...
 			CROSS_DOSFILENAME(dosname);
 			if (logoverlay) LOG_MSG("update cache add dosname %s",dosname);
@@ -664,7 +665,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 #if OVERLAY_DIR
 	for (i = DOSdirs_cache.begin(); i !=DOSdirs_cache.end(); ++i) {
 		char fakename[CROSS_LEN];
-		strcpy(fakename,basedir);
+		safe_strcpy(fakename, basedir);
 		strcat(fakename,(*i).c_str());
 		CROSS_FILENAME(fakename);
 		dirCache.AddEntryDirOverlay(fakename,true);
@@ -673,7 +674,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 
 	for (i = DOSnames_cache.begin(); i != DOSnames_cache.end(); ++i) {
 		char fakename[CROSS_LEN];
-		strcpy(fakename,basedir);
+		safe_strcpy(fakename, basedir);
 		strcat(fakename,(*i).c_str());
 		CROSS_FILENAME(fakename);
 		dirCache.AddEntry(fakename,true);
@@ -742,20 +743,20 @@ again:
 	}
 	if(!WildFileCmp(dir_ent,srch_pattern)) goto again;
 
-	strcpy(full_name,srchInfo[id].srch_dir);
+	safe_strcpy(full_name, srchInfo[id].srch_dir);
 	strcat(full_name,dir_ent);
 	
 	//GetExpandName might indirectly destroy dir_ent (by caching in a new directory 
 	//and due to its design dir_ent might be lost.)
 	//Copying dir_ent first
-	strcpy(dir_entcopy,dir_ent);
-	
+	safe_strcpy(dir_entcopy, dir_ent);
+
 	//First try overlay:
 	char ovname[CROSS_LEN];
 	char relativename[CROSS_LEN];
-	strcpy(relativename,srchInfo[id].srch_dir);
+	safe_strcpy(relativename, srchInfo[id].srch_dir);
 	//strip off basedir: //TODO cleanup
-	strcpy(ovname,overlaydir);
+	safe_strcpy(ovname, overlaydir);
 	char* prel = full_name + strlen(basedir);
 
 	
@@ -777,7 +778,7 @@ again:
 		if (logoverlay) LOG_MSG("using overlay data for %s : %s",full_name, ovname);
 	} else {
 		char preldos[CROSS_LEN];
-		strcpy(preldos,prel);
+		safe_strcpy(preldos, prel);
 		CROSS_DOSFILENAME(preldos);
 		if (is_deleted_file(preldos)) { //dir.. maybe lower or keep it as is TODO
 			if (logoverlay) LOG_MSG("skipping deleted file %s %s %s",preldos,full_name,ovname);
@@ -798,7 +799,7 @@ again:
 	char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;
 
 	if(strlen(dir_entcopy)<DOS_NAMELENGTH_ASCII){
-		strcpy(find_name,dir_entcopy);
+		safe_strcpy(find_name, dir_entcopy);
 		upcase(find_name);
 	} 
 
@@ -822,13 +823,13 @@ bool Overlay_Drive::FileUnlink(char * name) {
 	Bit32u a = GetTicks();
 	if (logoverlay) LOG_MSG("calling unlink on %s",name);
 	char basename[CROSS_LEN];
-	strcpy(basename,basedir);
+	safe_strcpy(basename, basedir);
 	strcat(basename,name);
 	CROSS_FILENAME(basename);
 
 
 	char overlayname[CROSS_LEN];
-	strcpy(overlayname,overlaydir);
+	safe_strcpy(overlayname, overlaydir);
 	strcat(overlayname,name);
 	CROSS_FILENAME(overlayname);
 //	char *fullname = dirCache.GetExpandName(newname);
@@ -898,7 +899,7 @@ bool Overlay_Drive::FileUnlink(char * name) {
 
 bool Overlay_Drive::GetFileAttr(char * name,Bit16u * attr) {
 	char overlayname[CROSS_LEN];
-	strcpy(overlayname,overlaydir);
+	safe_strcpy(overlayname, overlaydir);
 	strcat(overlayname,name);
 	CROSS_FILENAME(overlayname);
 
@@ -930,7 +931,7 @@ void Overlay_Drive::add_deleted_file(const char* name,bool create_on_disk) {
 void Overlay_Drive::add_special_file_to_disk(const char* dosname, const char* operation) {
 	std::string name = create_filename_of_special_operation(dosname, operation);
 	char overlayname[CROSS_LEN];
-	strcpy(overlayname,overlaydir);
+	safe_strcpy(overlayname, overlaydir);
 	strcat(overlayname,name.c_str());
 	CROSS_FILENAME(overlayname);
 	FILE* f = fopen_wrap(overlayname,"wb+");
@@ -947,7 +948,7 @@ void Overlay_Drive::add_special_file_to_disk(const char* dosname, const char* op
 void Overlay_Drive::remove_special_file_from_disk(const char* dosname, const char* operation) {
 	std::string name = create_filename_of_special_operation(dosname,operation);
 	char overlayname[CROSS_LEN];
-	strcpy(overlayname,overlaydir);
+	safe_strcpy(overlayname, overlaydir);
 	strcat(overlayname,name.c_str());
 	CROSS_FILENAME(overlayname);
 	if(unlink(overlayname) != 0) E_Exit("Failed removal of %s",overlayname);
@@ -1056,7 +1057,7 @@ bool Overlay_Drive::check_if_leading_is_deleted(const char* name){
 
 bool Overlay_Drive::FileExists(const char* name) {
 	char overlayname[CROSS_LEN];
-	strcpy(overlayname,overlaydir);
+	safe_strcpy(overlayname, overlaydir);
 	strcat(overlayname,name);
 	CROSS_FILENAME(overlayname);
 	struct stat temp_stat;
@@ -1090,12 +1091,12 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 	Bit32u a = GetTicks();
 	//First generate overlay names.
 	char overlaynameold[CROSS_LEN];
-	strcpy(overlaynameold,overlaydir);
+	safe_strcpy(overlaynameold, overlaydir);
 	strcat(overlaynameold,oldname);
 	CROSS_FILENAME(overlaynameold);
 
 	char overlaynamenew[CROSS_LEN];
-	strcpy(overlaynamenew,overlaydir);
+	safe_strcpy(overlaynamenew, overlaydir);
 	strcat(overlaynamenew,newname);
 	CROSS_FILENAME(overlaynamenew);
 
@@ -1113,7 +1114,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		Bit32u aa = GetTicks();
 		//File exists in the basedrive. Make a copy and mark old one as deleted.
 		char newold[CROSS_LEN];
-		strcpy(newold,basedir);
+		safe_strcpy(newold, basedir);
 		strcat(newold,oldname);
 		CROSS_FILENAME(newold);
 		dirCache.ExpandName(newold);
@@ -1161,7 +1162,7 @@ bool Overlay_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 
 bool Overlay_Drive::FileStat(const char* name, FileStat_Block * const stat_block) {
 	char overlayname[CROSS_LEN];
-	strcpy(overlayname,overlaydir);
+	safe_strcpy(overlayname, overlaydir);
 	strcat(overlayname,name);
 	CROSS_FILENAME(overlayname);
 	struct stat temp_stat;

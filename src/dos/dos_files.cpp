@@ -219,7 +219,7 @@ bool DOS_ChangeDir(char const * const dir) {
 	}
 	
 	if (Drives[drive]->TestDir(fulldir)) {
-		strcpy(Drives[drive]->curdir,fulldir);
+		safe_strcpy(Drives[drive]->curdir, fulldir);
 		return true;
 	} else {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
@@ -327,12 +327,12 @@ bool DOS_FindFirst(char * search,Bit16u attr,bool fcb_findfirst) {
 	char * find_last;
 	find_last=strrchr(fullsearch,'\\');
 	if (!find_last) {	/*No dir */
-		strcpy(pattern,fullsearch);
+		safe_strcpy(pattern, fullsearch);
 		dir[0]=0;
 	} else {
 		*find_last=0;
-		strcpy(pattern,find_last+1);
-		strcpy(dir,fullsearch);
+		safe_strcpy(pattern, find_last + 1);
+		safe_strcpy(dir, fullsearch);
 	}
 
 	dta.SetupSearch(drive,(Bit8u)attr,pattern);
@@ -464,7 +464,7 @@ static bool PathExists(char const * const name) {
 	const char* leading = strrchr(name,'\\');
 	if(!leading) return true;
 	char temp[CROSS_LEN];
-	strcpy(temp,name);
+	safe_strcpy(temp, name);
 	char * lead = strrchr(temp,'\\');
 	if (lead == temp) return true;
 	*lead = 0;
@@ -915,9 +915,11 @@ checkext:
 	}
 savefcb:
 	if (!hasdrive & !(parser & PARSE_DFLT_DRIVE)) fcb_name.part.drive[0] = 0;
-	if (!hasname & !(parser & PARSE_BLNK_FNAME)) strcpy(fcb_name.part.name,"        ");
-	if (!hasext & !(parser & PARSE_BLNK_FEXT)) strcpy(fcb_name.part.ext,"   ");
-	fcb.SetName(fcb_name.part.drive[0],fcb_name.part.name,fcb_name.part.ext);
+	if (!hasname & !(parser & PARSE_BLNK_FNAME))
+		safe_strcpy(fcb_name.part.name, "        ");
+	if (!hasext & !(parser & PARSE_BLNK_FEXT))
+		safe_strcpy(fcb_name.part.ext, "   ");
+	fcb.SetName(fcb_name.part.drive[0], fcb_name.part.name, fcb_name.part.ext);
 	fcb.ClearBlockRecsize(); //Undocumented bonus work.
 	*change=(Bit8u)(string-string_begin);
 	return ret;
