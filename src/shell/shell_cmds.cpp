@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -962,7 +963,14 @@ void DOS_Shell::CMD_SET(char * args) {
 				if (GetEnvStr(p,temp)) {
 					std::string::size_type equals = temp.find('=');
 					if (equals == std::string::npos) continue;
-					strcpy(p_parsed,temp.substr(equals+1).c_str());
+					const uintptr_t remaining_len = (std::min)(
+					        sizeof(parsed) -
+					                static_cast<uintptr_t>(
+					                        p_parsed - parsed),
+					        sizeof(parsed));
+					safe_strncpy(p_parsed,
+					             temp.substr(equals + 1).c_str(),
+					             remaining_len);
 					p_parsed += strlen(p_parsed);
 				}
 				p = second;
