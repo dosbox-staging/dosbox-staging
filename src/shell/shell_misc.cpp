@@ -426,21 +426,21 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		//try to add .com, .exe and .bat extensions to filename
 
 		safe_strcpy(temp_name, fullname);
-		strcat(temp_name,".COM");
+		safe_strcat(temp_name, ".COM");
 		temp_fullname=Which(temp_name);
 		if (temp_fullname) { extension=".com";strcpy(fullname,temp_fullname); }
 
 		else 
 		{
 			safe_strcpy(temp_name, fullname);
-			strcat(temp_name,".EXE");
+			safe_strcat(temp_name, ".EXE");
 			temp_fullname=Which(temp_name);
 		 	if (temp_fullname) { extension=".exe";strcpy(fullname,temp_fullname);}
 
 			else 
 			{
 				safe_strcpy(temp_name, fullname);
-				strcat(temp_name,".BAT");
+				safe_strcat(temp_name, ".BAT");
 				temp_fullname=Which(temp_name);
 		 		if (temp_fullname) { extension=".bat";strcpy(fullname,temp_fullname);}
 
@@ -614,7 +614,7 @@ char * DOS_Shell::Which(char * name)
 			if(len >= (DOS_PATHLENGTH - 2)) continue;
 
 			if(path[len - 1] != '\\') {
-				strcat(path,"\\"); 
+				safe_strcat(path, "\\");
 				len++;
 			}
 

@@ -153,7 +153,7 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &e
 	if (!error) {
 		if (loadImage()) {
 			safe_strcpy(info, "isoDrive ");
-			strcat(info, fileName);
+			safe_strcat(info, fileName);
 			this->driveLetter = driveLetter;
 			this->mediaid = mediaid;
 			char buffer[32] = { 0 };
@@ -162,7 +162,7 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &e
 
 		} else if (CDROM_Interface_Image::images[subUnit]->HasDataTrack() == false) { //Audio only cdrom
 			safe_strcpy(info, "isoDrive ");
-			strcat(info, fileName);
+			safe_strcat(info, fileName);
 			this->driveLetter = driveLetter;
 			this->mediaid = mediaid;
 			char buffer[32] = { 0 };
