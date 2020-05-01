@@ -377,7 +377,8 @@ public:
 					}
 					//Copy current directory if not marked as deleted.
 					if (newdrive->TestDir(ldp->curdir)) {
-						strcpy(newdrive->curdir, ldp->curdir);
+						safe_strcpy(newdrive->curdir,
+						            ldp->curdir);
 					}
 
 					delete Drives[drive - 'A'];
@@ -580,11 +581,11 @@ private:
 		Section* dos_sec = control->GetSection("dos");
 		dos_sec->ExecuteDestroy(false);
 		char test[20];
-		strcpy(test,"umb=false");
+		safe_strcpy(test, "umb=false");
 		dos_sec->HandleInputline(test);
-		strcpy(test,"xms=false");
+		safe_strcpy(test, "xms=false");
 		dos_sec->HandleInputline(test);
-		strcpy(test,"ems=false");
+		safe_strcpy(test, "ems=false");
 		dos_sec->HandleInputline(test);
 		dos_sec->ExecuteInit(false);
      }
@@ -1514,10 +1515,10 @@ void KEYB::Run(void) {
 				char cp_file_name[256];
 				if (cmd->FindCommand(3,cp_string)) {
 					/* third parameter is codepage file */
-					strcpy(cp_file_name, cp_string.c_str());
+					safe_strcpy(cp_file_name, cp_string.c_str());
 				} else {
 					/* no codepage file specified, use automatic selection */
-					strcpy(cp_file_name, "auto");
+					safe_strcpy(cp_file_name, "auto");
 				}
 
 				keyb_error=DOS_LoadKeyboardLayout(temp_line.c_str(), tried_cp, cp_file_name);

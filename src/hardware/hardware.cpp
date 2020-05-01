@@ -100,7 +100,7 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 			return 0;
 		}
 	}
-	strcpy(file_start,RunningProgram);
+	safe_strcpy(file_start, RunningProgram);
 	lowcase(file_start);
 	strcat(file_start,"_");
 	bool is_directory;

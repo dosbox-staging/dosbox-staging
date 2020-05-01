@@ -312,7 +312,7 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 	static char buffer[2 * CROSS_LEN + 1] = { 0 };
 	static char split[2] = { CROSS_FILESPLIT , 0 };
 	buffer[0] = 0;
-	strcpy(buffer,dirp->base_path);
+	safe_strcpy(buffer, dirp->base_path);
 	size_t buflen = strlen(buffer);
 	if (buflen && buffer[buflen - 1] != CROSS_FILESPLIT ) strcat(buffer, split);
 	strcat(buffer,entry_name);

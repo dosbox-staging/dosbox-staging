@@ -95,8 +95,8 @@ static void LoadMessageFile(const char * fname) {
 		/* New string name */
 		if (linein[0]==':') {
 			string[0]=0;
-			strcpy(name,linein+1);
-		/* End of string marker */
+			safe_strcpy(name, linein + 1);
+			/* End of string marker */
 		} else if (linein[0]=='.') {
 			/* Replace/Add the string to the internal languagefile */
 			/* Remove last newline (marker is \n.\n) */

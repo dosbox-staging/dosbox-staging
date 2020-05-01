@@ -152,7 +152,7 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &e
 
 	if (!error) {
 		if (loadImage()) {
-			strcpy(info, "isoDrive ");
+			safe_strcpy(info, "isoDrive ");
 			strcat(info, fileName);
 			this->driveLetter = driveLetter;
 			this->mediaid = mediaid;
@@ -161,12 +161,12 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &e
 			Set_Label(buffer,discLabel,true);
 
 		} else if (CDROM_Interface_Image::images[subUnit]->HasDataTrack() == false) { //Audio only cdrom
-			strcpy(info, "isoDrive ");
+			safe_strcpy(info, "isoDrive ");
 			strcat(info, fileName);
 			this->driveLetter = driveLetter;
 			this->mediaid = mediaid;
 			char buffer[32] = { 0 };
-			strcpy(buffer, "Audio_CD");
+			safe_strcpy(buffer, "Audio_CD");
 			Set_Label(buffer,discLabel,true);
 		} else error = 6; //Corrupt image
 	}
@@ -296,7 +296,7 @@ bool isoDrive::FindNext(DOS_DTA &dta) {
 			char findName[DOS_NAMELENGTH_ASCII];		
 			findName[0] = 0;
 			if(strlen((char*)de.ident) < DOS_NAMELENGTH_ASCII) {
-				strcpy(findName, (char*)de.ident);
+				safe_strcpy(findName, (char *)de.ident);
 				upcase(findName);
 			}
 			Bit32u findSize = DATA_LENGTH(de);

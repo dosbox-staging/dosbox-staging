@@ -268,7 +268,7 @@ void DOS_Shell::CMD_RENAME(char * args){
 
 		//dir_source and target are introduced for when we support multiple files being renamed.
 		char target[DOS_PATHLENGTH+CROSS_LEN + 5] = {0};
-		strcpy(target,dir_source);
+		safe_strcpy(target, dir_source);
 		strncat(target,args,CROSS_LEN);
 
 		DOS_Rename(arg1,target);
@@ -874,12 +874,12 @@ void DOS_Shell::CMD_COPY(char * args) {
 			dta.GetResult(name,size,date,time,attr);
 
 			if ((attr & DOS_ATTR_DIRECTORY) == 0) {
-				strcpy(nameSource,pathSource);
+				safe_strcpy(nameSource, pathSource);
 				strcat(nameSource,name);
 				// Open Source
 				if (DOS_OpenFile(nameSource,0,&sourceHandle)) {
 					// Create Target or open it if in concat mode
-					strcpy(nameTarget,pathTarget);
+					safe_strcpy(nameTarget, pathTarget);
 					if (nameTarget[strlen(nameTarget) - 1] == '\\') strcat(nameTarget,name);
 
 					//Special variable to ensure that copy * a_file, where a_file is not a directory concats.
@@ -1248,7 +1248,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
 	char mountstring[DOS_PATHLENGTH+CROSS_LEN+20];
 	char temp_str[2] = { 0,0 };
 	try {
-		strcpy(mountstring,"MOUNT ");
+		safe_strcpy(mountstring, "MOUNT ");
 		StripSpaces(args);
 		std::string arg;
 		CommandLine command(0,args);
@@ -1275,7 +1275,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
 
 		if ( ( ldp=dynamic_cast<localDrive*>(Drives[drive])) == 0 ) throw 0;
 		char newname[CROSS_LEN];
-		strcpy(newname, ldp->getBasedir());
+		safe_strcpy(newname, ldp->getBasedir());
 		strcat(newname,fulldir);
 		CROSS_FILENAME(newname);
 		ldp->dirCache.ExpandName(newname);
