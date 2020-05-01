@@ -477,8 +477,10 @@ int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data) {
 	// modify file identifier for use with dosbox
 	if ((de->length < 33 + de->fileIdentLength)) return -1;
 	if (IS_DIR(FLAGS2)) {
-		if (de->fileIdentLength == 1 && de->ident[0] == 0) strcpy((char*)de->ident, ".");
-		else if (de->fileIdentLength == 1 && de->ident[0] == 1) strcpy((char*)de->ident, "..");
+		if (de->fileIdentLength == 1 && de->ident[0] == 0)
+			strcpy(reinterpret_cast<char *>(de->ident), ".");
+		else if (de->fileIdentLength == 1 && de->ident[0] == 1)
+			strcpy(reinterpret_cast<char *>(de->ident), "..");
 		else {
 			if (de->fileIdentLength > 200) return -1;
 			de->ident[de->fileIdentLength] = 0;
@@ -498,7 +500,7 @@ int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data) {
 	if (dotpos!=NULL) {
 		if (strlen(dotpos)>4) dotpos[4]=0;
 		if (dotpos-(char*)de->ident>8) {
-			strcpy((char*)(&de->ident[8]),dotpos);
+			strcpy(reinterpret_cast<char *>(&de->ident[8]), dotpos);
 		}
 	} else if (strlen((char*)de->ident)>8) de->ident[8]=0;
 	return de->length;
