@@ -142,7 +142,8 @@ static void W32_ConfDir(std::string& in,bool create) {
 		safe_strncpy(result,windir,MAX_PATH);
 		char const* appdata = "\\Application Data";
 		size_t len = strlen(result);
-		if(len + strlen(appdata) < MAX_PATH) strcat(result,appdata);
+		if (len + strlen(appdata) < MAX_PATH)
+			safe_strcat(result, appdata);
 		if(create) mkdir(result);
 	}
 	in = result;
@@ -231,8 +232,10 @@ dir_information* open_directory(const char* dirname) {
 
 	safe_strncpy(dir.base_path,dirname,MAX_PATH);
 
-	if (dirname[len-1] == '\\') strcat(dir.base_path,"*.*");
-	else                        strcat(dir.base_path,"\\*.*");
+	if (dirname[len - 1] == '\\')
+		safe_strcat(dir.base_path, "*.*");
+	else
+		safe_strcat(dir.base_path, "\\*.*");
 
 	dir.handle = INVALID_HANDLE_VALUE;
 
@@ -314,8 +317,9 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 	buffer[0] = 0;
 	safe_strcpy(buffer, dirp->base_path);
 	size_t buflen = strlen(buffer);
-	if (buflen && buffer[buflen - 1] != CROSS_FILESPLIT ) strcat(buffer, split);
-	strcat(buffer,entry_name);
+	if (buflen && buffer[buflen - 1] != CROSS_FILESPLIT)
+		safe_strcat(buffer, split);
+	safe_strcat(buffer, entry_name);
 	struct stat status;
 
 	if (stat(buffer,&status) == 0) is_directory = (S_ISDIR(status.st_mode)>0);

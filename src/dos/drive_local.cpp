@@ -37,7 +37,7 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/)
 //TODO Maybe care for attributes but not likely
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
-	strcat(newname,name);
+	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 	char* temp_name = dirCache.GetExpandName(newname); //Can only be used in till a new drive_cache action is preformed */
 	/* Test if file exists (so we need to truncate it). don't add to dirCache then */
@@ -83,7 +83,7 @@ bool localDrive::FileOpen(DOS_File** file, char * name, Bit32u flags) {
 	}
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
-	strcat(newname,name);
+	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 
@@ -173,7 +173,7 @@ FILE * localDrive::GetSystemFilePtr(char const * const name, char const * const 
 
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
-	strcat(newname,name);
+	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 
@@ -192,7 +192,7 @@ bool localDrive::GetSystemFilename(char *sysName, char const * const dosName) {
 bool localDrive::FileUnlink(char * name) {
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
-	strcat(newname,name);
+	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 	char *fullname = dirCache.GetExpandName(newname);
 	if (unlink(fullname)) {
@@ -233,7 +233,7 @@ bool localDrive::FileUnlink(char * name) {
 bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	char tempDir[CROSS_LEN];
 	safe_strcpy(tempDir, basedir);
-	strcat(tempDir,_dir);
+	safe_strcat(tempDir, _dir);
 	CROSS_FILENAME(tempDir);
 
 	if (allocation.mediaid==0xF0) {
@@ -241,8 +241,9 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	}
     
 	char end[2]={CROSS_FILESPLIT,0};
-	if (tempDir[strlen(tempDir)-1]!=CROSS_FILESPLIT) strcat(tempDir,end);
-	
+	if (tempDir[strlen(tempDir) - 1] != CROSS_FILESPLIT)
+		safe_strcat(tempDir, end);
+
 	Bit16u id;
 	if (!dirCache.FindFirst(tempDir,id)) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
@@ -304,8 +305,8 @@ again:
 	if (!WildFileCmp(dir_ent,srch_pattern)) goto again;
 
 	safe_strcpy(full_name, srchInfo[id].srch_dir);
-	strcat(full_name,dir_ent);
-	
+	safe_strcat(full_name, dir_ent);
+
 	//GetExpandName might indirectly destroy dir_ent (by caching in a new directory 
 	//and due to its design dir_ent might be lost.)
 	//Copying dir_ent first
@@ -342,7 +343,7 @@ again:
 bool localDrive::GetFileAttr(char * name,Bit16u * attr) {
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
-	strcat(newname,name);
+	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 
@@ -359,7 +360,7 @@ bool localDrive::GetFileAttr(char * name,Bit16u * attr) {
 bool localDrive::MakeDir(char * dir) {
 	char newdir[CROSS_LEN];
 	safe_strcpy(newdir, basedir);
-	strcat(newdir,dir);
+	safe_strcat(newdir, dir);
 	CROSS_FILENAME(newdir);
 #if defined (WIN32)						/* MS Visual C++ */
 	int temp=mkdir(dirCache.GetExpandName(newdir));
@@ -374,7 +375,7 @@ bool localDrive::MakeDir(char * dir) {
 bool localDrive::RemoveDir(char * dir) {
 	char newdir[CROSS_LEN];
 	safe_strcpy(newdir, basedir);
-	strcat(newdir,dir);
+	safe_strcat(newdir, dir);
 	CROSS_FILENAME(newdir);
 	int temp=rmdir(dirCache.GetExpandName(newdir));
 	if (temp==0) dirCache.DeleteEntry(newdir,true);
@@ -384,7 +385,7 @@ bool localDrive::RemoveDir(char * dir) {
 bool localDrive::TestDir(char * dir) {
 	char newdir[CROSS_LEN];
 	safe_strcpy(newdir, basedir);
-	strcat(newdir,dir);
+	safe_strcat(newdir, dir);
 	CROSS_FILENAME(newdir);
 	dirCache.ExpandName(newdir);
 	// Skip directory test, if "\"
@@ -402,13 +403,13 @@ bool localDrive::TestDir(char * dir) {
 bool localDrive::Rename(char * oldname,char * newname) {
 	char newold[CROSS_LEN];
 	safe_strcpy(newold, basedir);
-	strcat(newold,oldname);
+	safe_strcat(newold, oldname);
 	CROSS_FILENAME(newold);
 	dirCache.ExpandName(newold);
 	
 	char newnew[CROSS_LEN];
 	safe_strcpy(newnew, basedir);
-	strcat(newnew,newname);
+	safe_strcat(newnew, newname);
 	CROSS_FILENAME(newnew);
 	int temp=rename(newold,dirCache.GetExpandName(newnew));
 	if (temp==0) dirCache.CacheOut(newnew);
@@ -427,7 +428,7 @@ bool localDrive::AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,
 bool localDrive::FileExists(const char* name) {
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
-	strcat(newname,name);
+	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 	struct stat temp_stat;
@@ -439,7 +440,7 @@ bool localDrive::FileExists(const char* name) {
 bool localDrive::FileStat(const char* name, FileStat_Block * const stat_block) {
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
-	strcat(newname,name);
+	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 	struct stat temp_stat;
@@ -628,7 +629,7 @@ cdromDrive::cdromDrive(const char _driveLetter,
 	// Init mscdex
 	error = MSCDEX_AddDrive(driveLetter,startdir,subUnit);
 	safe_strcpy(info, "CDRom ");
-	strcat(info, startdir);
+	safe_strcat(info, startdir);
 	// Get Volume Label
 	char name[32];
 	if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name,true,true);

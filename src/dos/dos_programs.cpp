@@ -705,9 +705,9 @@ public:
 							strncpy(buf,(char*)&rombuf[ct+1],clen);
 							buf[clen]=0;
 							upcase(buf);
-							strcat(cmdlist," ");
-							strcat(cmdlist,buf);
-							ct+=1+clen+3;
+							safe_strcat(cmdlist, " ");
+							safe_strcat(cmdlist, buf);
+							ct += 1 + clen + 3;
 							if (ct>sizeof(cmdlist)) break;
 							clen=rombuf[ct];
 						}
@@ -725,9 +725,9 @@ public:
 							strncpy(buf,(char*)&rombuf[ct+1],clen);
 							buf[clen]=0;
 							upcase(buf);
-							strcat(cmdlist," ");
-							strcat(cmdlist,buf);
-							ct+=1+clen;
+							safe_strcat(cmdlist, " ");
+							safe_strcat(cmdlist, buf);
+							ct += 1 + clen;
 
 							if (cart_cmd==buf) {
 								cfound_at=ct;
@@ -1060,8 +1060,8 @@ void LOADFIX::Run(void)
 				ok = cmd->FindCommand(commandNr++,temp_line);
 				if (sizeof(args) - strlen(args) - 1 < temp_line.length() + 1)
 					break;
-				strcat(args,temp_line.c_str());
-				strcat(args," ");
+				safe_strcat(args, temp_line.c_str());
+				safe_strcat(args, " ");
 			} while (ok);
 			// Use shell to start program
 			DOS_Shell shell;
