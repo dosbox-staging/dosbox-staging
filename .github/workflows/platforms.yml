@@ -48,4 +48,5 @@ jobs:
             ./scripts/build.sh -c gcc -t release
 
       - name: Summarize warnings
+        if: steps.repo-meta.outputs.has-commits == 'true'
         run:  ./scripts/count-warnings.py --max-warnings -1 build.log
