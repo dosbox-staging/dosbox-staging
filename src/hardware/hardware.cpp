@@ -367,22 +367,18 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 				PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 		}
 #ifdef PNG_TEXT_SUPPORTED
-		int fields = 1;
-		png_text text[1] = {};
-		const char* text_s = "dosbox-staging " VERSION;
-		const size_t text_len = strlen(text_s);
-		char* ptext_s = new char[text_len + 1];
-		strncpy(ptext_s, text_s, text_len);
-		char software[9] = { 'S','o','f','t','w','a','r','e',0};
-		text[0].compression = PNG_TEXT_COMPRESSION_NONE;
-		text[0].key  = software;
-		text[0].text = ptext_s;
-		png_set_text(png_ptr, info_ptr, text, fields);
+		constexpr char keyword[] = "Software";
+		constexpr char value[] = "dosbox-staging " VERSION;
+		constexpr int num_text = 1;
+		static_assert(sizeof(keyword) < 80, "libpng limit");
+		png_text texts[num_text] = {};
+		texts[0].compression = PNG_TEXT_COMPRESSION_NONE;
+		texts[0].key = const_cast<png_charp>(keyword);
+		texts[0].text = const_cast<png_charp>(value);
+		texts[0].text_length = sizeof(value);
+		png_set_text(png_ptr, info_ptr, texts, num_text);
 #endif
 		png_write_info(png_ptr, info_ptr);
-#ifdef PNG_TEXT_SUPPORTED
-		delete [] ptext_s;
-#endif
 		for (i=0;i<height;i++) {
 			void *rowPointer;
 			uint8_t *srcLine;
