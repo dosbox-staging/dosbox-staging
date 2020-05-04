@@ -307,10 +307,10 @@ void DOS_Shell::CMD_ECHO(char * args){
 	} else WriteOut("%s\r\n",args);
 }
 
-
-void DOS_Shell::CMD_EXIT(char * args) {
+void DOS_Shell::CMD_EXIT(char *args)
+{
 	HELP("EXIT");
-	exit = true;
+	exit_flag = true;
 }
 
 void DOS_Shell::CMD_CHDIR(char * args) {

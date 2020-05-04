@@ -120,7 +120,7 @@ public:
 	Bit16u input_handle;
 	BatchFile * bf;
 	bool echo;
-	bool exit;
+	bool exit_flag;
 	bool call;
 };
 
