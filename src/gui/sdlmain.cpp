@@ -248,7 +248,7 @@ struct Dimensions {
 };
 
 struct SDL_Block {
-	bool inited;
+	bool initialized = false;
 	bool active;							//If this isn't set don't draw
 	bool updating;
 	bool update_display_contents;
@@ -406,12 +406,10 @@ void OPENGL_ERROR(const char*) {
 #endif
 #endif
 
-static int SDL_Init_Wrapper(void)
+static void QuitSDL()
 {
-	// Don't init timers, GetTicks seems to work fine and they can use
-	// a fair amount of power (Macs again).
-	// Please report problems with audio and other things.
-	return SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
+	if (sdl.initialized)
+		SDL_Quit();
 }
 
 extern const char* RunningProgram;
@@ -2886,11 +2884,12 @@ static void show_warning(char const * const message) {
 	fprintf(stderr, "%s", message);
 	return;
 #else
-	if (!sdl.inited && SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) < 0) {
-		sdl.inited = true;
-		printf("%s",message);
+	if (!sdl.initialized && SDL_Init(SDL_INIT_VIDEO) < 0) {
+		sdl.initialized = true;
+		fprintf(stderr, "%s", message);
 		return;
 	}
+
 	if (!sdl.window && !GFX_SetSDLSurfaceWindow(640, 400))
 		return;
 
@@ -2959,7 +2958,7 @@ void restart_program(std::vector<std::string> & parameters) {
 	newargs[parameters.size()] = NULL;
 	MIXER_CloseAudioDevice();
 	SDL_Delay(50);
-	SDL_Quit();
+	QuitSDL();
 #if C_DEBUG
 	// shutdown curses
 	DEBUG_ShutDown(NULL);
@@ -3148,11 +3147,11 @@ int main(int argc, char* argv[]) {
 	LOG_MSG("dosbox-staging version %s", VERSION);
 	LOG_MSG("---");
 
-	if (SDL_Init_Wrapper() < 0)
+	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0)
 		E_Exit("Can't init SDL %s", SDL_GetError());
-	sdl.inited = true;
+	sdl.initialized = true;
 	// Once initialized, ensure we clean up SDL for all exit conditions
-	atexit(SDL_Quit);
+	atexit(QuitSDL);
 
 	sdl.laltstate = SDL_KEYUP;
 	sdl.raltstate = SDL_KEYUP;
@@ -3264,9 +3263,16 @@ int main(int argc, char* argv[]) {
 		// just exit
 		rcode = 1;
 	}
+
 #if defined (WIN32)
 	sticky_keys(true); //Might not be needed if the shutdown function switches to windowed mode, but it doesn't hurt
 #endif
+
+	// We already do this at exit, but do cleanup earlier in case of normal
+	// exit; this works around problems when atexit order clashes with SDL2
+	// cleanup order. Happens with SDL_VIDEODRIVER=wayland as of SDL 2.0.12.
+	QuitSDL();
+
 	return rcode;
 }
 
