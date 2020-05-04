@@ -157,16 +157,16 @@ AutoexecObject::~AutoexecObject(){
 }
 
 DOS_Shell::DOS_Shell()
-	: Program(),
-	  l_history{},
-	  l_completion{},
-	  completion_start(nullptr),
-	  completion_index(0),
-	  input_handle(STDIN),
-	  bf(nullptr),
-	  echo(true),
-	  exit(false),
-	  call(false)
+        : Program(),
+          l_history{},
+          l_completion{},
+          completion_start(nullptr),
+          completion_index(0),
+          input_handle(STDIN),
+          bf(nullptr),
+          echo(true),
+          exit_flag(false),
+          call(false)
 {}
 
 Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
@@ -375,7 +375,7 @@ void DOS_Shell::Run(void) {
 			InputCommand(input_line);
 			ParseLine(input_line);
 		}
-	} while (!exit);
+	} while (!exit_flag);
 }
 
 void DOS_Shell::SyntaxError(void) {
