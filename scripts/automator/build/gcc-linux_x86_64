@@ -5,8 +5,3 @@ ldflags+=(-Wl,--as-needed)
 x86_math=(-mfpmath=sse -msse4.2)
 cflags_release+=("${x86_math[@]}")
 cflags_optinfo+=("${x86_math[@]}")
-
-# Modifier additions
-MODIFIERS+=(lto)
-cflags_lto+=(-flto)
-ldflags_lto+=("${cflags[@]}" "-flto=$(( $(nproc) + 2 ))")
