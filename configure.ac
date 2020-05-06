@@ -1,5 +1,5 @@
 dnl Init.
-AC_INIT(dosbox,[0.75.0-rc1])
+AC_INIT(dosbox,[0.75.0])
 AC_DEFINE([CONF_BRAND],["staging"],[Suffix of the .conf file.])
 AC_PREREQ(2.50)
 AC_CONFIG_SRCDIR(README)
