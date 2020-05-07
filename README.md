@@ -95,9 +95,9 @@ packages installed via your package manager.
 
     sudo dnf install SDL2 SDL2_net opusfile
 
-#### Debian (10 or newer), Ubuntu (18.04 LTS or newer)
+#### Debian (9 or newer), Ubuntu (16.04 LTS or newer)
 
-    sudo apt install libsdl2-2.0 libsdl2-net-2.0 libopusfile0
+    sudo apt install libsdl2-2.0-0 libsdl2-net-2.0-0 libopusfile0
 
 #### Arch, Manjaro
 
