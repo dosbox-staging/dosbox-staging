@@ -308,7 +308,8 @@ bool DOS_Rename(char const * const oldname,char const * const newname) {
 	return false;
 }
 
-bool DOS_FindFirst(char * search,Bit16u attr,bool fcb_findfirst) {
+bool DOS_FindFirst(const char *search, uint16_t attr, bool fcb_findfirst)
+{
 	LOG(LOG_FILES,LOG_NORMAL)("file search attributes %X name %s",attr,search);
 	DOS_DTA dta(dos.dta());
 	Bit8u drive;char fullsearch[DOS_PATHLENGTH];

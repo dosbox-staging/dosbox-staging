@@ -124,7 +124,7 @@ bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry,bool fcb = false)
 bool DOS_OpenFileExtended(char const * name, Bit16u flags, Bit16u createAttr, Bit16u action, Bit16u *entry, Bit16u* status);
 bool DOS_CreateFile(char const * name,Bit16u attribute,Bit16u * entry, bool fcb = false);
 bool DOS_UnlinkFile(char const * const name);
-bool DOS_FindFirst(char *search,Bit16u attr,bool fcb_findfirst=false);
+bool DOS_FindFirst(const char *search, uint16_t attr, bool fcb_findfirst = false);
 bool DOS_FindNext(void);
 bool DOS_Canonicalize(char const * const name,char * const big);
 bool DOS_CreateTempFile(char * const name,Bit16u * entry);
