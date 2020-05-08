@@ -475,6 +475,12 @@ if test x$enable_network = xyes ; then
     AC_DEFINE(C_MODEM,1)
     AC_DEFINE(C_IPX,1)
     AC_MSG_RESULT([yes])
+    case "$host_os" in haiku*)
+      AC_CHECK_LIB(network, socket, [],
+                   [AC_MSG_ERROR([Can't find a useable network libary])],
+                   -l network)
+      ;;
+    esac
   else
     AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
   fi

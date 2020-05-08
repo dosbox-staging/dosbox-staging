@@ -1,0 +1,7 @@
+# Tool additions
+ldflags+=(-Wl,--as-needed)
+
+# Enable math vectorizions using instructions avaiable in circa-2008+ CPUs
+x86_math=(-mfpmath=sse -msse4.2)
+cflags_release+=("${x86_math[@]}")
+cflags_optinfo+=("${x86_math[@]}")

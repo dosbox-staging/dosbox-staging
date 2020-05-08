@@ -1,17 +1,19 @@
-# DOSBox Build Script
+# Build Script
 
-This script builds DOSBox with your choice of compiler, release type, and
-additional options. It runs on MacOS, Linux, and Windows.
+This script builds `dosbox-staging` with your choice of compiler, release
+type, and additional options. It runs on MacOS, Linux, Windows, and possibly
+other operating systems.
 
-If this is your first time building DOSBox, then you will need to install
-DOSBox's development tools and dependencies, which is included in the notes
-below.
+If this is your first time building dosbox-staging, then you will need to
+install its development tools and dependencies, which is covered in the
+notes below.
 
 ## Requirements
 
 - **Windows newer than XP**
   - **NTFS-based C:**, because msys2 doesn't work on FAT filesystems
 - **MacOS** 10.x
+- **Haiku** up-to-date
 - **Ubuntu** 16.04 or newer
 - **Fedora** up-to-date
 - **RedHat or CentOS** 7 or newer
@@ -81,13 +83,13 @@ agreed to:
 1. Download and install brew per the instructions here: <https://brew.sh>
 1. Update it with: `brew update`
 1. Install git with: `brew install git`
-1. Install DOSBox dependencies:
+1. Install dosbox-staging dependencies:
    `brew install $(./scripts/list-build-dependencies.sh -p brew)`
 
 ### MacPorts Installation
 
-1. Build and install MacPorts along with DOSBox dependencies with the following
-   sequence:
+1. Build and install MacPorts along with dosbox-staging dependencies with the
+   following sequence:
 
    ``` shell
    git clone --quiet --depth=1 https://github.com/macports/macports-base.git
@@ -101,12 +103,12 @@ agreed to:
    sudo port -q install $(/scripts/list-build-dependencies.sh -p macports)
    ```
 
-### Build DOSBox (common for all of the above)
+### Build dosbox-staging (common for all of the above)
 
 1. Clone the repository: `git clone
    https://github.com/dreamer/dosbox-staging.git`
 1. Change directories into the repo: `cd dosbox-staging`
-1. Build DOSBox:
+1. Build:
 
 - Clang: `./scripts/build.sh --compiler clang -t release --bin-path
   /usr/local/bin`
@@ -125,11 +127,40 @@ agreed to:
    in this example: `sudo apt install -y $(./scripts/list-build-dependencies.sh
    -p apt)` For other supported package managers, run:
    `./scripts/list-build-dependencies.sh --help`
-1. Build DOSBox:
+1. Build:
 
 - Clang: `./scripts/build.sh --compiler clang -t release -v 9`
 - GCC (default version): `./scripts/build.sh -c gcc -t release`
 - GCC (specific version, ie: 9): `./scripts/build.sh -c gcc -v 9 -t release`
+
+## Haiku Installation
+
+1. Clone the repository: `git clone
+   https://github.com/dreamer/dosbox-staging.git`
+1. Change directories into the repo: `cd dosbox-staging`
+1. (🏁 first-time-only) Install dependencies:
+
+   `pkgman install -y $(./scripts/list-build-dependencies.sh
+   -c clang -v 9 -p haikuports)`
+1. Build an optimized binary:
+
+- Clang: `./scripts/build.sh --compiler clang -t
+  release -m lto --prefix=$HOME/config/non-packaged`
+- GCC: `./scripts/build.sh -c gcc -t release
+  --prefix=$HOME/config/non-packaged`
+1. Build a debug binary:
+
+- Clang: `./scripts/build.sh --compiler clang -t debug
+  --prefix=$HOME/config/non-packaged`
+- GCC: `./scripts/build.sh -c gcc -t debug
+  --prefix=$HOME/config/non-packaged`
+1. Install: `make install`
+1. Set the emulation core type to ***normal*** by editing your config file
+  `dosbox -editconf` and setting `core = normal` in the `[cpu]` section.
+1. You may now run `dosbox` inside any directory in your Terminal.
+
+Note: `texture*` output is not available under Haiku; use the default
+`opengl*` output options instead.
 
 ## Additional Tips
 
@@ -305,7 +336,7 @@ Procedures:
 
    Repeat this for multiple training runs, each time saving the output to a new
    `-o samples-N.prof` file.  Ideally you want to exercise all code paths in
-   DOSBox (core types, video cards, video modes, sound cards, and audio
+   dosbox-staging (core types, video cards, video modes, sound cards, and audio
    codecs).
 
 1. Convert your sample profiles into compiler-specific records using tools

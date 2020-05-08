@@ -1,0 +1,10 @@
+cflags+=(-fPIC)
+
+function make_binary() {
+	make \
+		--jobs="$(nproc)" \
+		--output-sync=line \
+		|& tee build.log
+}
+
+dependencies=(objdump -afp "${executable}")
