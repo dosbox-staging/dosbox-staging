@@ -40,7 +40,7 @@
 
 #if !defined(_MSC_VER)
 
-/* Aside of MSVC, every C++11-capable compiler provides __builtin_bswap*
+/* Aside of MSVC, every C++14-capable compiler provides __builtin_bswap*
  * as compiler intrinsics or builtin functions.
  */
 
