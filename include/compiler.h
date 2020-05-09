@@ -29,7 +29,7 @@
 
 // The __attribute__ syntax is supported by GCC, Clang, and IBM compilers.
 //
-// TODO: C++11 introduces standard syntax for implementation-defined attributes,
+// TODO: C++11 introduced standard syntax for implementation-defined attributes,
 //       it should allow for removal of C_HAS_ATTRIBUTE from the buildsystem.
 //       However, the vast majority of GCC_ATTRIBUTEs in DOSBox code need
 //       to be reviewed, as many of them seem to be incorrectly/unnecessarily

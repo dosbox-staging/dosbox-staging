@@ -54,9 +54,9 @@ AC_CHECK_SIZEOF(unsigned long)
 AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(int *)
 
-dnl Require compiler with C++11 support.
+dnl Require compiler with C++14 support.
 dnl Allow GNU extensions to work around MinGW bugs around POSIX compatibility.
-AX_CXX_COMPILE_STDCXX_11(ext, mandatory)
+AX_CXX_COMPILE_STDCXX_14(ext, mandatory)
 
 dnl some semi complex check for sys/socket so it works on darwin as well
 AC_CHECK_HEADERS([stdlib.h sys/types.h])

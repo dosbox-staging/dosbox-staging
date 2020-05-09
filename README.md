@@ -16,7 +16,7 @@ support today's systems.
 |                                | dosbox-staging              | DOSBox
 |-                               |-                            |-
 | **Version control**            | Git                         | [SVN]
-| **Language**                   | C++11                       | C++03<sup>[1]</sup>
+| **Language**                   | C++14                       | C++03<sup>[1]</sup>
 | **SDL**                        | 2.0                         | 1.2<sup>＊</sup>
 | **CI**                         | Yes                         | No
 | **Static analysis**            | Yes<sup>[2],[3],[4]</sup>   | No

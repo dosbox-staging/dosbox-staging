@@ -25,7 +25,9 @@ ColumnLimit: 80
 # C/C++ Language specifics
 #
 Language: Cpp
-Standard: Cpp11 # in clang-format 11.x: c++11
+# in clang-format 9.x "Cpp11" covers formatting for C++11 and C++14
+# in clang-format 10.x: switch to "c++14"
+Standard: Cpp11
 
 # The extra indent or outdent of class access modifiers, e.g. public:
 #
@@ -96,8 +98,6 @@ AlwaysBreakTemplateDeclarations: Yes
 #                      "cccc";
 # shortname = "dddd"
 #             "eeee";
-#
-# TODO Test interaction with C++11 raw string literals
 #
 # AlwaysBreakBeforeMultilineStrings: true
 
@@ -229,13 +229,6 @@ SpacesInParentheses: false
 # int a[5];       NOT    int a[ 5 ];
 #
 SpacesInSquareBrackets: false
-
-# Insert a space after '{' and before '}' in struct initializers
-#
-# This is native C++11 style, but it looks very weird.
-# TODO Investigate if it has any tangible benefits.
-#
-# Cpp11BracedListStyle: false
 
 # A list of macros that should be interpreted as foreach loops instead of as
 # function calls.

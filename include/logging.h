@@ -94,7 +94,7 @@ void GFX_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1,
 // be redirected into internal DOSBox debugger for DOS programs (C_DEBUG feature).
 #define DEBUG_LOG_MSG(...)
 #else
-// There's no portable way to expand variadic macro using C99/C++11 (or older)
+// There's no portable way to expand variadic macro using C99/C++14 (or older)
 // alone. This language limitation got removed only with C++20 (through addition
 // of __VA_OPT__ macro).
 #ifdef _MSC_VER
