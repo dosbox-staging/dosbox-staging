@@ -155,9 +155,7 @@ void upcase(std::string &str);
 void lowcase(std::string &str);
 void strip_punctuation(std::string &str);
 
-template<size_t N>
-bool starts_with(const char (& pfx)[N], const std::string &str) noexcept {
-	return (strncmp(pfx, str.c_str(), N) == 0);
-}
+bool starts_with(const std::string &prefix, const std::string &str) noexcept;
+bool ends_with(const std::string &suffix, const std::string &str) noexcept;
 
 #endif

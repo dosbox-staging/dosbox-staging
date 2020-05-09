@@ -64,6 +64,22 @@ void lowcase(std::string &str) {
 	std::transform(str.begin(), str.end(), str.begin(), tf);
 }
 
+bool starts_with(const std::string &prefix, const std::string &str) noexcept
+{
+	const size_t n = prefix.length();
+	const auto pfx = std::cbegin(prefix);
+	const auto txt = std::cbegin(str);
+	return std::equal(pfx, pfx + n, txt, txt + n);
+}
+
+bool ends_with(const std::string &suffix, const std::string &str) noexcept
+{
+	const size_t n = suffix.length();
+	const auto sfx = std::crbegin(suffix);
+	const auto txt = std::crbegin(str);
+	return std::equal(sfx, sfx + n, txt, txt + n);
+}
+
 void trim(std::string &str) {
 	std::string::size_type loc = str.find_first_not_of(" \r\t\f\n");
 	if (loc != std::string::npos) str.erase(0,loc);
