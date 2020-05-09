@@ -28,10 +28,17 @@ import sys
 
 # For recognizing warnings in GCC format in stderr:
 #
-WARNING_PATTERN = re.compile(r'([^:]+):(\d+):\d+: warning: .* \[-W(.+)\]')
+GCC_WARN_PATTERN = re.compile(r'([^:]+):(\d+):\d+: warning: .* \[-W(.+)\]')
 #                               ~~~~~   ~~~  ~~~           ~~      ~~
 #                               ↑       ↑    ↑             ↑       ↑
 #                               file    line column        message type
+
+# For recognizing warnings in MSVC format:
+#
+MSVC_WARN_PATTERN = re.compile(r'.+>([^\(]+)\((\d+),\d+\): warning ([^:]+): .*')
+#                                ~~  ~~~~~~    ~~~  ~~~             ~~~~~   ~~
+#                                ↑   ↑         ↑    ↑               ↑        ↑
+#                          project   file      line column       code  message
 
 # For removing color when GCC is invoked with -fdiagnostics-color=always
 #
@@ -42,9 +49,11 @@ def remove_colors(line):
     return re.sub(ANSI_COLOR_PATTERN, '', line)
 
 
-def count_warning(line, warning_types, warning_files, warning_lines):
+def count_warning(gcc_format, line, warning_types, warning_files, warning_lines):
     line = remove_colors(line)
-    match = WARNING_PATTERN.match(line)
+
+    pattern = GCC_WARN_PATTERN if gcc_format else MSVC_WARN_PATTERN
+    match = pattern.match(line)
     if not match:
         return 0
 
@@ -116,6 +125,11 @@ def parse_args():
         action='store_true',
         help='Display sorted list of all warnings.')
 
+    parser.add_argument(
+        '--msvc',
+        action='store_true',
+        help='Look for warnings using MSVC format.')
+
     return parser.parse_args()
 
 
@@ -126,8 +140,10 @@ def main():
     warning_files = {}
     warning_lines = set()
     args = parse_args()
+    use_gcc_format = not args.msvc
     for line in get_input_lines(args.logfile):
-        total += count_warning(line,
+        total += count_warning(use_gcc_format,
+                               line,
                                warning_types,
                                warning_files,
                                warning_lines)
