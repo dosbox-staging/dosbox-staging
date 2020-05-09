@@ -111,7 +111,13 @@ jobs:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
-          MSBuild -m dosbox.sln -p:Configuration=${{ matrix.type }}
+          MSBuild -m dosbox.sln -p:Configuration=${{ matrix.type }} | Tee-Object build.log
+      - name:  Summarize warnings
+        shell: pwsh
+        env:
+          MAX_WARNINGS: 401
+        run: python scripts\count-warnings.py --msvc vs\build.log
+
 
   build_windows_vs_release:
     name: Release build
