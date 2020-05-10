@@ -110,8 +110,8 @@ and build with both compilers.
 
 ### Install Dependencies under macOS
 
-Before installing either, the Xcode tools need to be installed and the license
-agreed to:
+Before installing either Brew or MacPorts, the Apple's Xcode tools need to be
+installed and the license agreed to:
 
 #### Xcode Installation
 
