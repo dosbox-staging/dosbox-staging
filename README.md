@@ -134,7 +134,7 @@ button, select "Open" and the dialog will show a button to run and unsigned app.
 ### Linux, macOS, MSYS2, MinGW, other OSes
 
 Read [INSTALL](INSTALL) file for a general summary about dependencies and
-configure options. Read [build.md](scripts/build.md) for the comprehensive
+configure options. Read [BUILD.md](BUILD.md) for the comprehensive
 compilation guide.
 
 ``` shell

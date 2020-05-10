@@ -74,11 +74,11 @@ discuss it with us early, e.g. by creating a new bugtracker issue.
 Basic build instructions are in [README.md][readme-b]; take a moment to read
 [INSTALL][install] file as well. These are good enough to get you started :)
 
-Detailed build instructions are in [scripts/build.md][build-doc] file.
+Detailed build instructions are in [BUILD.md][build-doc] file.
 
 [readme-b]: https://github.com/dosbox-staging/dosbox-staging#build-instructions
 [install]: https://github.com/dosbox-staging/dosbox-staging/blob/master/INSTALL
-[build-doc]: https://github.com/dosbox-staging/dosbox-staging/blob/master/scripts/build.md
+[build-doc]: https://github.com/dosbox-staging/dosbox-staging/blob/master/BUILD.md
 
 # Contributing code
 
