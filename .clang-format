@@ -271,6 +271,6 @@ PenaltyReturnTypeOnItsOwnLine: 200
 # "include" directives, but there are still edge cases, so we still need to
 # rely on developers doing this manually.
 #
-# See https://github.com/dreamer/dosbox-staging/issues/196 for details.
+# See https://github.com/dosbox-staging/dosbox-staging/issues/196 for details.
 #
 SortIncludes: false
