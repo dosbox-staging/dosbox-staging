@@ -150,7 +150,7 @@ installed and the license agreed to:
 1. Change directories into the repo: `cd dosbox-staging`
 1. Install depedencies:
 
-   'sudo port -q install $(./scripts/list-build-dependencies.sh -m macports -c gcc)'
+   `sudo port -q install $(./scripts/list-build-dependencies.sh -m macports -c gcc)`
 
 ### Build a macOS Binary (common for Brew and MacPorts)
 
