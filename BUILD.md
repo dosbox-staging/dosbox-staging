@@ -118,16 +118,19 @@ installed and the license agreed to:
 1. Install the command line tools: `xcode-select --install`
 1. Accept the license agreement: `sudo xcodebuild -license`
 
-#### Brew Package Manager Installation
+#### Install the Brew Package Manager and Dependencies
 
 1. Download and install brew per the instructions here: <https://brew.sh>
 1. Update it with: `brew update`
 1. Install git with: `brew install git`
-1. Install dosbox-staging dependencies:
+1. Clone the repository: `git clone
+   https://github.com/dreamer/dosbox-staging.git`
+1. Change directories into the repo: `cd dosbox-staging`
+1. Install dependencies:
   
    `brew install $(./scripts/list-build-dependencies.sh -m brew -c gcc)`
 
-#### MacPorts Package Manager Installation
+#### Install the MacPorts Package Manager and Dependencies
 
 1. Build and install MacPorts along with dosbox-staging dependencies with the
    following sequence:
@@ -141,14 +144,16 @@ installed and the license agreed to:
    PREFIX="/opt/local"
    PATH="${PREFIX}/sbin:${PREFIX}/bin:${PATH}"
    sudo port -q selfupdate
-   sudo port -q install $(./scripts/list-build-dependencies.sh -m macports -c gcc)
    ```
-
-### Clone and Build a macOS Binary
-
 1. Clone the repository: `git clone
    https://github.com/dreamer/dosbox-staging.git`
 1. Change directories into the repo: `cd dosbox-staging`
+1. Install depedencies:
+
+   'sudo port -q install $(./scripts/list-build-dependencies.sh -m macports -c gcc)'
+
+### Build a macOS Binary (common for Brew and MacPorts)
+
 1. Build an optimized binary with various compilers:
 
 - Clang: `./scripts/build.sh -c clang -t release -p /usr/local/bin`
