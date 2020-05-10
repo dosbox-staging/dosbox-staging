@@ -211,13 +211,28 @@ installed and the license agreed to:
 - GCC: `./scripts/build.sh -c gcc -t release --prefix=$HOME/config/non-packaged`
 
 1. To build a debug binary, use `-t debug` in place of `-t release`.
-1. Install: `make install`
-1. Set the emulation core type to ***normal*** by editing your config file
-  `dosbox -editconf` and setting `core = normal` in the `[cpu]` section.
-1. You may now run `dosbox` inside any directory in your Terminal.
+1. Install the binary: `make install`
+1. Edit your configuration file by running: `dosbox -editconf` and make the
+   following suggested changes (leave all other settings as-is):
+ 
+   ``` ini
+   [sdl]
+   windowresolution = 800x600
+   output = texturenb
+   texture_renderer = software
 
-Note: `texture*` output is not available under Haiku; use the default
-`opengl*` output options instead.
+   [renderer]
+   scaler = none
+   glshader = none
+
+   [cpu]
+   core = normal
+   ```
+
+   The state of Haiku's GPU Hardware-acceleration is being discussed here:
+   https://discuss.haiku-os.org/t/state-of-accelerated-opengl/4163
+
+1. You may now run `dosbox` inside any directory in your Terminal.
 
 ## Additional Tips
 
