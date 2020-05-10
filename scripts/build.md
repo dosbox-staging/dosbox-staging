@@ -142,25 +142,40 @@ agreed to:
 
    `pkgman install -y $(./scripts/list-build-dependencies.sh
    -c clang -v 9 -p haikuports)`
-1. Build an optimized binary:
+1. Build an optimized binary with either compiler:
 
 - Clang: `./scripts/build.sh --compiler clang -t
   release -m lto --prefix=$HOME/config/non-packaged`
 - GCC: `./scripts/build.sh -c gcc -t release
   --prefix=$HOME/config/non-packaged`
-1. Build a debug binary:
+1. Build a debug binary with either compiler:
 
 - Clang: `./scripts/build.sh --compiler clang -t debug
   --prefix=$HOME/config/non-packaged`
 - GCC: `./scripts/build.sh -c gcc -t debug
   --prefix=$HOME/config/non-packaged`
 1. Install: `make install`
-1. Set the emulation core type to ***normal*** by editing your config file
-  `dosbox -editconf` and setting `core = normal` in the `[cpu]` section.
-1. You may now run `dosbox` inside any directory in your Terminal.
+2. Edit your configuration file by running: `dosbox -editconf` and make the
+   following suggested changes (leave all other settings as-is):
 
-Note: `texture*` output is not available under Haiku; use the default
-`opengl*` output options instead.
+   ``` ini
+   [sdl]
+   windowresolution = 800x600
+   output = texturenb
+   texture_renderer = software
+
+   [renderer]
+   scaler = none
+   glshader = none
+
+   [cpu]
+   core = normal
+   ```
+
+3. You may now run `dosbox` inside any directory in your Terminal.
+
+The state of Haiku's GPU Hardware-acceleration is being discussed here:
+https://discuss.haiku-os.org/t/state-of-accelerated-opengl/4163
 
 ## Additional Tips
 
