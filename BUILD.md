@@ -83,7 +83,7 @@ notes below.
 ### Clone and Build a Windows Binary
 
 1. Clone and enter the repository's directory:
-   1. `git clone https://github.com/dreamer/dosbox-staging.git`
+   1. `git clone https://github.com/dosbox-staging/dosbox-staging.git`
    1. `cd dosbox-staging`
 
    Be sure to run all subsequent steps below while inside the repo's directory.
@@ -124,7 +124,7 @@ installed and the license agreed to:
 1. Update it with: `brew update`
 1. Install git with: `brew install git`
 1. Clone the repository: `git clone
-   https://github.com/dreamer/dosbox-staging.git`
+   https://github.com/dosbox-staging/dosbox-staging.git`
 1. Change directories into the repo: `cd dosbox-staging`
 1. Install dependencies:
   
@@ -146,7 +146,7 @@ installed and the license agreed to:
    sudo port -q selfupdate
    ```
 1. Clone the repository: `git clone
-   https://github.com/dreamer/dosbox-staging.git`
+   https://github.com/dosbox-staging/dosbox-staging.git`
 1. Change directories into the repo: `cd dosbox-staging`
 1. Install depedencies:
 
@@ -169,7 +169,7 @@ installed and the license agreed to:
 
 1. Install git: `sudo apt install -y git`
 1. Clone the repository: `git clone
-   https://github.com/dreamer/dosbox-staging.git`
+   https://github.com/dosbox-staging/dosbox-staging.git`
 1. Change directories into the repo: `cd dosbox-staging`
 1. (🏁 first-time-only) Install dependencies based on your package manager.
    In this example, we use Ubuntu 20.04:
@@ -195,7 +195,7 @@ installed and the license agreed to:
 ### Install Dependencies under Haiku
 
 1. Clone the repository: `git clone
-   https://github.com/dreamer/dosbox-staging.git`
+   https://github.com/dosbox-staging/dosbox-staging.git`
 1. Change directories into the repo: `cd dosbox-staging`
 1. (🏁 first-time-only) Install dependencies:
 

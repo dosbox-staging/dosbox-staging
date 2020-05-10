@@ -115,7 +115,7 @@ cleanup () {
 # Set up remote repo to prepare for push
 #
 setup_remote () {
-	git -C "$1" remote add dosbox-staging git@github.com:dreamer/dosbox-staging.git
+	git -C "$1" remote add dosbox-staging git@github.com:dosbox-staging/dosbox-staging.git
 	git -C "$1" fetch dosbox-staging
 }
 

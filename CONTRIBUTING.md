@@ -39,7 +39,7 @@ There's plenty of tasks to work on all around, here are some ideas:
 - Test with your DOS games.
 - Package dosbox-staging for your OS.
 - Improve documentation (in the repo, or in the
-  [project wiki](https://github.com/dreamer/dosbox-staging/wiki)).
+  [project wiki](https://github.com/dosbox-staging/dosbox-staging/wiki)).
 - Promote the project in gaming communities :)
 - Provide translations (!)
 - Look at warning in code (build with `-Wall -Weffc++` to see the long list
@@ -49,14 +49,14 @@ There's plenty of tasks to work on all around, here are some ideas:
   See artifacts/reports in: [Clang][code-analysis], [Coverity][coverity],
   [PVS][pvs]
 - Look at our groomed list of features we want implemented in the
-  [Backlog](https://github.com/dreamer/dosbox-staging/projects/3) - if the issue
-  is not assigned to anyone, then it's for the pickings! Leave a comment saying
-  that you're working on it.
+  [Backlog](https://github.com/dosbox-staging/dosbox-staging/projects/3) - if
+  the issue is not assigned to anyone, then it's for the pickings! Leave a
+  comment saying that you're working on it.
 - Find next release project in our
-  [projects list ](https://github.com/dreamer/dosbox-staging/projects)
+  [projects list ](https://github.com/dosbox-staging/dosbox-staging/projects)
   and pick one of tasks in "To do" column.
 - Peruse through the list of
-  [open bug reports](https://github.com/dreamer/dosbox-staging/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+  [open bug reports](https://github.com/dosbox-staging/dosbox-staging/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
   and try to reproduce or fix them.
 
 Or just send us a Pull Request with your improvement
