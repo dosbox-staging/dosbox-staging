@@ -269,15 +269,17 @@ void CSerial::handleEvent(Bit16u type) {
 			break;
 		}
 		case SERIAL_ERRMSG_EVENT: {
-			LOG_MSG("Serial%d: Errors: "\
-				"Framing %d, Parity %d, Overrun RX:%d (IF0:%d), TX:%d, Break %d",
-				COMNUMBER, framingErrors, parityErrors, overrunErrors,
-				overrunIF0,txOverrunErrors, breakErrors);
-			errormsg_pending=false;
-			framingErrors=0;
-			parityErrors=0;
-			overrunErrors=0;
-			txOverrunErrors=0;
+		        LOG_MSG("Serial%" PRIuPTR ": Errors: "
+		                "Framing %" PRIuPTR ", Parity %" PRIuPTR
+		                ", Overrun RX:%" PRIuPTR " (IF0:%" PRIuPTR
+		                "), TX:%" PRIuPTR ", Break %" PRIuPTR,
+		                COMNUMBER, framingErrors, parityErrors, overrunErrors,
+		                overrunIF0, txOverrunErrors, breakErrors);
+		        errormsg_pending = false;
+		        framingErrors = 0;
+		        parityErrors = 0;
+		        overrunErrors = 0;
+		        txOverrunErrors=0;
 			overrunIF0=0;
 			breakErrors=0;
 			break;					  
@@ -1271,7 +1273,7 @@ public:
 				serialports[i] = NULL;
 			} else {
 				serialports[i] = NULL;
-				LOG_MSG("Invalid type for serial%d",i+1);
+				LOG_MSG("Invalid type for serial%" PRIuPTR, i + 1);
 			}
 			if(serialports[i]) biosParameter[i] = serial_baseaddr[i];
 		} // for 1-4

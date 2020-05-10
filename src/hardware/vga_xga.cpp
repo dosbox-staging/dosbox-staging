@@ -104,9 +104,11 @@ void XGA_Write_Multifunc(Bitu val, Bitu len) {
 			xga.read_sel = dataval;
 			break;
 		default:
-			LOG_MSG("XGA: Unhandled multifunction command %x", regselect);
-			break;
-	}
+		        LOG_MSG("XGA: Unhandled multifunction command "
+		                "%" PRIuPTR,
+		                regselect);
+		        break;
+	        }
 }
 
 Bitu XGA_Read_Multifunc() {
@@ -637,13 +639,18 @@ void XGA_DrawWait(Bitu val, Bitu len)
 							break;
 						default:
 							// Let's hope they never show up ;)
-							LOG_MSG("XGA: unsupported bpp / datawidth combination %x",
-								xga.waitcmd.buswidth);
-							break;
-					};
-					break;
-			
-				case 0x02: // Data from PIX_TRANS selects the mix
+				                        LOG_MSG("XGA: "
+				                                "unsupported "
+				                                "bpp / "
+				                                "datawidth "
+				                                "combination "
+				                                "%" PRIuPTR,
+				                                xga.waitcmd.buswidth);
+				                        break;
+			                        };
+			                        break;
+
+		                case 0x02: // Data from PIX_TRANS selects the mix
 					switch(xga.waitcmd.buswidth&0x60) {
 						case 0x0:
 							chunksize=8;
@@ -1154,11 +1161,13 @@ void XGA_Write(Bitu port, Bitu val, Bitu len) {
 				//LOG_MSG("XGA: Wrote to port %4x with %08x, len %x", port, val, len);
 				xga.waitcmd.newline = false;
 				XGA_DrawWait(val, len);
-				
-			}
-			else LOG_MSG("XGA: Wrote to port %x with %x, len %x", port, val, len);
-			break;
-	}
+
+		        } else
+			        LOG_MSG("XGA: Wrote to port %" PRIuPTR
+			                " with %" PRIuPTR ", len %" PRIuPTR,
+			                port, val, len);
+		        break;
+	        }
 }
 
 Bitu XGA_Read(Bitu port, Bitu len) {
