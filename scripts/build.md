@@ -1,5 +1,7 @@
 # Build Script
 
+## Introduction
+
 This script builds `dosbox-staging` with your choice of compiler, release
 type, and additional options. It runs on MacOS, Linux, Windows, and possibly
 other operating systems.
@@ -7,6 +9,35 @@ other operating systems.
 If this is your first time building dosbox-staging, then you will need to
 install its development tools and dependencies, which is covered in the
 notes below.
+
+- [Build Script](#build-script)
+  - [Introduction](#introduction)
+  - [Requirements](#requirements)
+  - [Windows Procedures](#windows-procedures)
+    - [Install MSYS2](#install-msys2)
+    - [Clone and Build a Windows Binary](#clone-and-build-a-windows-binary)
+  - [macOS Procedures](#macos-procedures)
+    - [Install Dependencies under macOS](#install-dependencies-under-macos)
+      - [Xcode Installation](#xcode-installation)
+      - [Brew Package Manager Installation](#brew-package-manager-installation)
+      - [MacPorts Package Manager Installation](#macports-package-manager-installation)
+    - [Clone and Build a macOS Binary](#clone-and-build-a-macos-binary)
+  - [Linux Procedures](#linux-procedures)
+    - [Install Dependencies under Linux](#install-dependencies-under-linux)
+    - [Build a Linux Binary](#build-a-linux-binary)
+  - [Haiku Procedures](#haiku-procedures)
+    - [Install Dependencies under Haiku](#install-dependencies-under-haiku)
+    - [Build a Haiku Binary](#build-a-haiku-binary)
+  - [Additional Tips](#additional-tips)
+    - [Compiler variations](#compiler-variations)
+    - [Release types](#release-types)
+    - [Build Results, Rebuilding, and Cleaning](#build-results-rebuilding-and-cleaning)
+    - [CCache](#ccache)
+    - [Optimization Modifiers](#optimization-modifiers)
+  - [AutoFDO Procedures](#autofdo-procedures)
+    - [Prerequisites for AutoFDO](#prerequisites-for-autofdo)
+    - [Record Data for AutoFDO Builds](#record-data-for-autofdo-builds)
+    - [Build Using AutoFDO Data](#build-using-autofdo-data)
 
 ## Requirements
 
@@ -20,7 +51,9 @@ notes below.
 - **Arch-based distribution** up-to-date
 - **OpenSUSE Leap** 15 or newer
 
-## Windows Installation and Usage
+## Windows Procedures
+
+### Install MSYS2
 
 1. Download and install Chocolatey: <https://chocolatey.org/install>
 1. Open a console and run Cholocatey's command line interface (CLI)
@@ -47,46 +80,57 @@ notes below.
    1. Start Menu > Run ... `c:\tools\msys64\msys2_shell.cmd`
    1. Run all subsequent steps within this terminal.
 
+### Clone and Build a Windows Binary
+
 1. Clone and enter the repository's directory:
    1. `git clone https://github.com/dreamer/dosbox-staging.git`
    1. `cd dosbox-staging`
-   
+
    Be sure to run all subsequent steps below while inside the repo's directory.
 
-1. (🏁 first-time-only) Install the build tools and runtime dependencies:
+2. (🏁 first-time-only) Install the build tools and runtime dependencies:
 
-   `./scripts/list-build-dependencies.sh -p msys2 | xargs pacman -S
+   `./scripts/list-build-dependencies.sh -m msys2 -c clang | xargs pacman -S
    --noconfirm`
 
-1. Launch the build script with default settings: 
-   
-   `./scripts/build/run.sh -c gcc -t release --bin-path /mingw64/bin`
+3. Build an optimized binary with either compiler:
 
-## macOS Installation and Usage
+- GCC: `./scripts/build.sh -c gcc -t release --bin-path /mingw64/bin`
+- Clang: `./scripts/build.sh -c clang -t release --bin-path /mingw64/bin`
 
-Builds on macOS can be performed with Clang or GCC.
+1. To build a debug binary, use `-t debug` in place of `-t release`.
 
-If you only plan on only building with Clang, then follow the Brew installation
-steps. If you're interested in building with GCC, then Brew or MacPorts will
-work, and both can be installed without conflicting with each other.
+## macOS Procedures
 
-Before installing either, the Xcode tools need to be installed and the license
-agreed to:
+Builds on macOS can be performed with Clang or GCC. For general use, we
+recommend building with `Clang` as it supports linking with Apple's CoreMidi
+SDK. Developers interested in testing wider compiler coverage might also be
+interested in building with GCC. The following sections describe how to install
+and build with both compilers.
 
-### Xcode Installation
+### Install Dependencies under macOS
+
+Before installing either Brew or MacPorts, the Apple's Xcode tools need to be
+installed and the license agreed to:
+
+#### Xcode Installation
 
 1. Install the command line tools: `xcode-select --install`
 1. Accept the license agreement: `sudo xcodebuild -license`
 
-### Brew Installation
+#### Install the Brew Package Manager and Dependencies
 
 1. Download and install brew per the instructions here: <https://brew.sh>
 1. Update it with: `brew update`
 1. Install git with: `brew install git`
-1. Install dosbox-staging dependencies:
-   `brew install $(./scripts/list-build-dependencies.sh -p brew)`
+1. Clone the repository: `git clone
+   https://github.com/dreamer/dosbox-staging.git`
+1. Change directories into the repo: `cd dosbox-staging`
+1. Install dependencies:
+  
+   `brew install $(./scripts/list-build-dependencies.sh -m brew -c gcc)`
 
-### MacPorts Installation
+#### Install the MacPorts Package Manager and Dependencies
 
 1. Build and install MacPorts along with dosbox-staging dependencies with the
    following sequence:
@@ -95,65 +139,78 @@ agreed to:
    git clone --quiet --depth=1 https://github.com/macports/macports-base.git
    cd macports-base
    ./configure
-   make -j"$(sysctl -n hw.physicalcpu || echo 4)"
+   make -j"$(sysctl -n hw.physicalcpu)"
    sudo make install
    PREFIX="/opt/local"
    PATH="${PREFIX}/sbin:${PREFIX}/bin:${PATH}"
    sudo port -q selfupdate
-   sudo port -q install $(/scripts/list-build-dependencies.sh -p macports)
    ```
-
-### Build dosbox-staging (common for all of the above)
-
 1. Clone the repository: `git clone
    https://github.com/dreamer/dosbox-staging.git`
 1. Change directories into the repo: `cd dosbox-staging`
-1. Build:
+1. Install depedencies:
 
-- Clang: `./scripts/build.sh --compiler clang -t release --bin-path
-  /usr/local/bin`
-- GCC (brew): `./scripts/build.sh --compiler-version 9 -t release --bin-path
-  /usr/local/bin`
-- GCC (macports): `./scripts/build.sh --compiler-version mp-9 -t release
-  --bin-path /opt/local/bin`
+   `sudo port -q install $(./scripts/list-build-dependencies.sh -m macports -c gcc)`
 
-## Linux Installation
+### Build a macOS Binary (common for Brew and MacPorts)
+
+1. Build an optimized binary with various compilers:
+
+- Clang: `./scripts/build.sh -c clang -t release -p /usr/local/bin`
+- GCC (brew): `./scripts/build.sh -c gcc -v 9 -t release -p /usr/local/bin`
+- GCC (macports): `./scripts/build.sh -c gcc -v mp-9 -t release -p
+  /opt/local/bin`
+
+1. To build a debug binary, use `-t debug` in place of `-t release`.
+
+## Linux Procedures
+
+### Install Dependencies under Linux
 
 1. Install git: `sudo apt install -y git`
 1. Clone the repository: `git clone
    https://github.com/dreamer/dosbox-staging.git`
 1. Change directories into the repo: `cd dosbox-staging`
-1. (🏁 first-time-only) Install dependencies based on your package manager; apt
-   in this example: `sudo apt install -y $(./scripts/list-build-dependencies.sh
-   -p apt)` For other supported package managers, run:
-   `./scripts/list-build-dependencies.sh --help`
-1. Build:
+1. (🏁 first-time-only) Install dependencies based on your package manager.
+   In this example, we use Ubuntu 20.04:
 
-- Clang: `./scripts/build.sh --compiler clang -t release -v 9`
-- GCC (default version): `./scripts/build.sh -c gcc -t release`
-- GCC (specific version, ie: 9): `./scripts/build.sh -c gcc -v 9 -t release`
+   `sudo apt install -y $(./scripts/list-build-dependencies.sh -m apt -c clang)`
 
-## Haiku Installation
+   For other supported package managers, run:
+   `./scripts/list-build-dependencies.sh`
+
+### Build a Linux Binary
+
+1. Build an optimized binary using various compilers:
+
+- Clang: `./scripts/build.sh -c clang -t release -m lto`
+- GCC (default version): `./scripts/build.sh -c gcc -t release -m lto`
+- GCC (specific version, ie: 10): `./scripts/build.sh -c gcc -v 10 -t release -m
+  lto`
+
+1. To build a debug binary, use `-t debug` in place of `-t release -m lto`.
+
+## Haiku Procedures
+
+### Install Dependencies under Haiku
 
 1. Clone the repository: `git clone
    https://github.com/dreamer/dosbox-staging.git`
 1. Change directories into the repo: `cd dosbox-staging`
 1. (🏁 first-time-only) Install dependencies:
 
-   `pkgman install -y $(./scripts/list-build-dependencies.sh
-   -c clang -v 9 -p haikuports)`
-1. Build an optimized binary:
+   `pkgman install -y $(./scripts/list-build-dependencies.sh -m haikuports -c
+   clang -v 9)`
 
-- Clang: `./scripts/build.sh --compiler clang -t
-  release -m lto --prefix=$HOME/config/non-packaged`
-- GCC: `./scripts/build.sh -c gcc -t release
-  --prefix=$HOME/config/non-packaged`
-1. Build a debug binary:
+### Build a Haiku Binary
 
-- Clang: `./scripts/build.sh --compiler clang -t debug
+1. Build an optimized binary using various compilers:
+
+- Clang: `./scripts/build.sh --compiler clang -t release -m lto
   --prefix=$HOME/config/non-packaged`
-- GCC: `./scripts/build.sh -c gcc -t debug
-  --prefix=$HOME/config/non-packaged`
+- GCC: `./scripts/build.sh -c gcc -t release --prefix=$HOME/config/non-packaged`
+
+1. To build a debug binary, use `-t debug` in place of `-t release`.
 1. Install: `make install`
 1. Set the emulation core type to ***normal*** by editing your config file
   `dosbox -editconf` and setting `core = normal` in the `[cpu]` section.
@@ -177,13 +234,14 @@ common options to the **list-build-dependencies.sh** and **build.sh** scripts:
 ### Release types
 
 Build release types includes:
+
 - **release**, optimizes the binary and disables some checks, such as
   assertions.
 - **debug**, adds debug symbols and disables optimizations for ideal debugging.
   - You can run the resulting binary in the GNU debugger: `gdb /path/to/
     dosbox`, followed by `run mygame.bat`
 - **pgotrain** adds Profile Guided Optimization (PGO) tracking instrumentation
-  to the compiled binary. 
+  to the compiled binary.
   
   This allows the recording of profile statistics that can be used to compile a
   PGO-optimized binary. Note that PGO optimization is different from
@@ -193,8 +251,8 @@ Build release types includes:
   describing how to generate and use the profiling data.
 
 - **warnmore**, displays additional helpful C and C++ warnings for developers.
-- **fdotrain**, add tracing symbols used to generate AutoFDO sampling data. 
-- **$SANITIZER TYPE**, builds a binary intrumented with code to catch issues at
+- **fdotrain**, add tracing symbols used to generate AutoFDO sampling data.
+- **$SANITIZER TYPE**, builds a binary instrumented with code to catch issues at
   runtime that relate to the type of sanitizer being used. For example: memory
   leaks, threading issues, and so on. This is for Linux and macOS only.
   
@@ -212,8 +270,8 @@ After building, your `dosbox` or `dosbox.exe` binary will reside inside
 `./dosbox-staging/src/`.
 
 The build script records the prior build type and will clean if needed between
-builds.  To manually remove all intermediate obect files and ephemeral
-auto-tools outputs, run `make distclean`. 
+builds.  To manually remove all intermediate object files and ephemeral
+auto-tools outputs, run `make distclean`.
 
 To additionally remove all files except for the repository files, use `git
 clean -fdx`.
@@ -233,7 +291,7 @@ reduces the size of the cache. It will also display cache statistics after each
 build. To see more details, run `ccache -s`.
 
 To learn more about ccache run `ccache -h`, and read
-https://ccache.dev/manual/latest.html
+<https://ccache.dev/manual/latest.html>
 
 ### Optimization Modifiers
 
@@ -258,14 +316,17 @@ The following modifier flags can be added when building a **release** type:
   The section below describes how to collect an AutoFDO dataset for GCC and
   Clang.
 
-### Recording Sampling Data used in AutoFDO builds
+## AutoFDO Procedures
 
-Prerequisites:
+Feedback Directed Optimization (FDO) involves recording performance data from
+the Linux kernel and using it to direct the compiler's optimizer.
+
+### Prerequisites for AutoFDO
 
 - An **Intel processor** that supports the last branch record (LBR) instruction.
 - A Linux **kernel** built with Branch Profiling tracers enabled:
 
-  ```
+  ``` shell
   CONFIG_PM_TRACE=y
   CONFIG_TRACE_BRANCH_PROFILING=y
   CONFIG_BRANCH_TRACER=y
@@ -279,7 +340,7 @@ Prerequisites:
   1. `(X) Trace likely/unlikely profiler`
 
 - The **AutoFDO** software package. It may be available via your package
-  manager or built from sources (https://github.com/google/autofdo).
+  manager or built from sources <https://github.com/google/autofdo>.
 
   - **Note about compiler versions** the autofdo binaries need to be compiled
     with the exact version of the compiler that will later be used to compile
@@ -294,7 +355,7 @@ Prerequisites:
 
   - **Note about clang** If you plan to compile with a version of clang newer
     than your package manager's default version, then you will need to compile
-    autofdo from source and configure it with the coresponding version of
+    autofdo from source and configure it with the corresponding version of
     `llvm-config`.  For example, if I want to build with clang-10, then I would
     configure autofdo with: `./configure --with-llvm=/usr/bin/llvm-config-10`.
 
@@ -302,11 +363,11 @@ Prerequisites:
     and install autofdo, for example:
 
     - default GCC:
-     
+
       `sudo .github/scripts/build-autofdo.sh`
     - newer GCC:
 
-      ```
+      ``` shell
       export CC=/usr/bin/gcc-9
       export CXX=/usr/bin/g++-9
       sudo .github/scripts/build-autofdo.sh
@@ -317,17 +378,17 @@ Prerequisites:
       `sudo .github/scripts/build-autofdo.sh`
 
 - The **pmu-tools** software package, which can be downloaded from
-  https://github.com/andikleen/pmu-tools. This is a collection of python
+  <https://github.com/andikleen/pmu-tools.> This is a collection of python
   scripts used to assist in capturing sampling data.
 
-Procedures:
+### Record Data for AutoFDO Builds
 
 1. Ensure the custom Linux Kernel supporting LBR tracing is running.
-   
-1. Build `dosbox-staging` from source using the `fdotrain` target:
+
+2. Build `dosbox-staging` from source using the `fdotrain` target:
    `./scripts/build.h -c gcc -t fdotrain`
 
-1. Record kernel sample profiles while running dosbox-staging:
+3. Record kernel sample profiles while running dosbox-staging:
 
     `/path/to/pmu-tools/ocperf.py record -F max -o "samples-1.prof" -b -e
     br_inst_retired.near_taken:pp -- /path/to/fdo-trained/dosbox ARGS`
@@ -339,31 +400,33 @@ Procedures:
    dosbox-staging (core types, video cards, video modes, sound cards, and audio
    codecs).
 
-1. Convert your sample profiles into compiler-specific records using tools
+4. Convert your sample profiles into compiler-specific records using tools
    provided in the `autofdo` package:
-   
+
    For GCC, run:
    - `create_gcov --binary=/path/to/fdo-trained/dosbox
      --profile=samples-1.prof -gcov=samples-1.afdo -gcov_version=1`
-     
-     ... for each `.prof` file, creating a coresponding `.afdo` file.
+
+     ... for each `.prof` file, creating a corresponding `.afdo` file.
 
    - At this point, you now have an `.afdo` file for each `.prof` file. Merge
      the `.afdo`s into a single `curren.afdo` file with:
-     
+
      `profile_merger -gcov_version=1 -output_file=current.afdo *.afdo`
 
    For Clang, run:
-   
+
    - `create_llvm_prof --binary=/path/to/fdo-trained/dosbox
      --profile=samples-1.prof --out=samples-1.profraw`
 
-     ... for each `*.prof` file, creating a coresponding `.profraw` file.
+     ... for each `*.prof` file, creating a corresponding `.profraw` file.
 
    - At this point, you now have a `.profraw` file for each `.prof` file. Merge
      them into a single `current.profraw` file with:
   
      `llvm-profdata-<version> merge -sample -output=current.profraw *.profraw`
+
+### Build Using AutoFDO Data
 
 You can now use your merged `.afdo` or `.profraw` file to build with the `-m
 fdo` modifier by  placing your `current.afdo/.profraw` file in the repo's root
