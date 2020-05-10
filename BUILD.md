@@ -38,7 +38,6 @@ notes below.
     - [Prerequisites for AutoFDO](#prerequisites-for-autofdo)
     - [Record Data for AutoFDO Builds](#record-data-for-autofdo-builds)
     - [Build Using AutoFDO Data](#build-using-autofdo-data)
-      above)](#build-dosbox-staging-common-for-all-of-the-above)
 
 ## Requirements
 
