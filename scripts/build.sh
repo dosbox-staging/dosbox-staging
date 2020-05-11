@@ -139,6 +139,6 @@ function parse_args() {
 	selected_type=$(lower "${selected_type}")
 }
 
-script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+script_dir="$(cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P)"
 # shellcheck source=scripts/automator/main.sh
 source "$script_dir/automator/main.sh"
