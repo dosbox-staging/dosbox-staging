@@ -16,7 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include <iomanip>
 #include <sstream>
 #include <string.h>
@@ -30,10 +29,9 @@
 #include "setup.h"
 #include "support.h"
 #include "shell.h"
-using namespace std;
+#include "midi.h"
 
-void MIDI_RawOutByte(Bit8u data);
-bool MIDI_Available(void);
+using namespace std;
 
 #define SB_PIC_EVENTS 0
 
