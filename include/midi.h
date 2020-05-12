@@ -26,7 +26,12 @@
 class MidiHandler {
 public:
 	MidiHandler();
+
+	MidiHandler(const MidiHandler &) = delete; // prevent copying
+	MidiHandler &operator=(const MidiHandler &) = delete; // prevent assignment
+
 	virtual ~MidiHandler() = default;
+
 	virtual bool Open(const char * /*conf*/) {
 		LOG_MSG("MIDI: No working MIDI device found/selected.");
 		return true;
@@ -36,7 +41,8 @@ public:
 	virtual void PlaySysex(Bit8u * /*sysex*/,Bitu /*len*/) {};
 	virtual const char * GetName(void) { return "none"; };
 	virtual void ListAll(Program * base) {};
-	MidiHandler * next;
+
+	MidiHandler *next;
 };
 
 #define SYSEX_SIZE 8192
