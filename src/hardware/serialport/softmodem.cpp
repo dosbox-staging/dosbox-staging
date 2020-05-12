@@ -366,15 +366,15 @@ void CSerialModem::EnterIdleState(void){
 
 		serversocket.reset(new TCPServerSocket(listenport));
 		if (!serversocket->isopen) {
-			LOG_MSG("Serial%" PRIuPTR ": Modem could not open TCP port %" PRIuPTR ".",
-			        COMNUMBER,
-			        listenport);
+			LOG_MSG("Serial Port %u: Modem could not open TCP port "
+			        "%" PRIuPTR ".",
+			        PortNumber(), listenport);
 
 			serversocket.reset(nullptr);
 		} else
-			LOG_MSG("Serial%" PRIuPTR ": Modem listening on port %" PRIuPTR "...",
-			        COMNUMBER,
-			        listenport);
+			LOG_MSG("Serial Port %u: Modem listening on port "
+			        "%" PRIuPTR "...",
+			        PortNumber(), listenport);
 	}
 	waitingclientsocket.reset(nullptr);
 
