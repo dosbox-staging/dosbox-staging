@@ -46,21 +46,6 @@ public:
 };
 
 #define SYSEX_SIZE 8192
-struct DB_Midi {
-	Bitu status;
-	Bitu cmd_len;
-	Bitu cmd_pos;
-	Bit8u cmd_buf[8];
-	Bit8u rt_buf[8];
-	struct {
-		Bit8u buf[SYSEX_SIZE];
-		Bitu used;
-		Bitu delay;
-		Bit32u start;
-	} sysex;
-	bool available;
-	MidiHandler * handler;
-};
 
 void MIDI_Init(Section *sec);
 bool MIDI_Available();
