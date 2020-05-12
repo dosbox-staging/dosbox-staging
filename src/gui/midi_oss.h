@@ -17,15 +17,26 @@
  */
 
 #include <fcntl.h>
+
 #define SEQ_MIDIPUTC    5
 
-class MidiHandler_oss: public MidiHandler {
+class MidiHandler_oss : public MidiHandler {
 private:
-	int  device;
-	Bit8u device_num;
+	int device;
+	uint8_t device_num;
 	bool isOpen;
+
 public:
-	MidiHandler_oss() : MidiHandler(),isOpen(false) {};
+	MidiHandler_oss()
+	        : MidiHandler(),
+	          device(0),
+	          device_num(0),
+	          isOpen(false)
+	{}
+
+	MidiHandler_oss(const MidiHandler_oss &) = delete; // prevent copying
+	MidiHandler_oss &operator=(const MidiHandler_oss &) = delete; // prevent assignment
+
 	const char * GetName(void) { return "oss";};
 	bool Open(const char * conf) {
 		char devname[512];
@@ -70,7 +81,3 @@ public:
 };
 
 MidiHandler_oss Midi_oss;
-
-
-
-
