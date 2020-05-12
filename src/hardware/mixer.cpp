@@ -714,10 +714,7 @@ private:
 		);
 	}
 
-	void ListMidi(){
-		if(midi.handler) midi.handler->ListAll(this);
-	};
-
+	void ListMidi() { MIDI_ListAll(this); }
 };
 
 static void MIXER_ProgramStart(Program * * make) {

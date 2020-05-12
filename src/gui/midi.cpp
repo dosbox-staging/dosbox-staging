@@ -226,6 +226,11 @@ getdefault:
 	}
 };
 
+void MIDI_ListAll(Program *output_handler)
+{
+	if (midi.handler)
+		midi.handler->ListAll(output_handler);
+}
 
 static MIDI* test;
 void MIDI_Destroy(Section* /*sec*/){
