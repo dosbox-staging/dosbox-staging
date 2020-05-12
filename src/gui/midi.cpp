@@ -106,8 +106,8 @@ struct DB_Midi {
 	struct {
 		uint8_t buf[SYSEX_SIZE];
 		size_t used;
-		Bitu delay;
-		uint32_t start;
+		uint32_t delay; // ms
+		uint32_t start; // ms
 	} sysex;
 	bool available;
 	MidiHandler * handler;
@@ -115,11 +115,26 @@ struct DB_Midi {
 
 DB_Midi midi;
 
+/* When using a physical Roland MT-32 rev. 0 as MIDI output device,
+ * some games may require a delay in order to prevent buffer overflow
+ * issues.
+ *
+ * Explanation for this formula can be found in discussion under patch
+ * that introduced it: https://sourceforge.net/p/dosbox/patches/241/
+ */
+uint32_t delay_in_ms(size_t sysex_bytes_num)
+{
+	constexpr double midi_baud_rate = 3.125; // bytes per ms
+	const auto delay = (sysex_bytes_num * 1.25) / midi_baud_rate;
+	return static_cast<uint32_t>(delay) + 2;
+}
+
 void MIDI_RawOutByte(uint8_t data)
 {
 	if (midi.sysex.start) {
-		Bit32u passed_ticks = GetTicks() - midi.sysex.start;
-		if (passed_ticks < midi.sysex.delay) SDL_Delay(midi.sysex.delay - passed_ticks);
+		const uint32_t passed_ticks = GetTicks() - midi.sysex.start;
+		if (passed_ticks < midi.sysex.delay)
+			SDL_Delay(midi.sysex.delay - passed_ticks);
 	}
 
 	/* Test for a realtime MIDI message */
@@ -148,7 +163,9 @@ void MIDI_RawOutByte(uint8_t data)
 						midi.sysex.delay = 145; // Viking Child
 					} else if (midi.sysex.buf[5] == 0x10 && midi.sysex.buf[6] == 0x00 && midi.sysex.buf[7] == 0x01) {
 						midi.sysex.delay = 30; // Dark Sun 1
-					} else midi.sysex.delay = (Bitu)(((float)(midi.sysex.used) * 1.25f) * 1000.0f / 3125.0f) + 2;
+					} else {
+						midi.sysex.delay = delay_in_ms(midi.sysex.used);
+					}
 					midi.sysex.start = GetTicks();
 				}
 			}
