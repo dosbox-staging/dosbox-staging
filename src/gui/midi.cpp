@@ -16,16 +16,16 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <assert.h>
-#include <string.h>
-#include <stdlib.h>
+#include "midi.h"
+
+#include <cassert>
+#include <cstring>
+#include <cstdlib>
 #include <string>
 #include <algorithm>
 
 #include <SDL.h>
 
-#include "dosbox.h"
-#include "midi.h"
 #include "cross.h"
 #include "support.h"
 #include "setup.h"
@@ -99,7 +99,8 @@ MidiHandler Midi_none;
 
 DB_Midi midi;
 
-void MIDI_RawOutByte(Bit8u data) {
+void MIDI_RawOutByte(uint8_t data)
+{
 	if (midi.sysex.start) {
 		Bit32u passed_ticks = GetTicks() - midi.sysex.start;
 		if (passed_ticks < midi.sysex.delay) SDL_Delay(midi.sysex.delay - passed_ticks);
@@ -163,7 +164,8 @@ void MIDI_RawOutByte(Bit8u data) {
 	}
 }
 
-bool MIDI_Available(void)  {
+bool MIDI_Available()
+{
 	return midi.available;
 }
 

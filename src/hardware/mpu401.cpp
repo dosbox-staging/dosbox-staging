@@ -16,7 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include <string.h>
 #include "dosbox.h"
 #include "inout.h"
@@ -24,9 +23,7 @@
 #include "setup.h"
 #include "cpu.h"
 #include "support.h"
-
-void MIDI_RawOutByte(Bit8u data);
-bool MIDI_Available(void);
+#include "midi.h"
 
 static void MPU401_Event(Bitu);
 static void MPU401_Reset(void);
