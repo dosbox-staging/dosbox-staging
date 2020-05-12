@@ -70,7 +70,19 @@ private:
 		return true;
 	}
 public:
-	MidiHandler_alsa() : MidiHandler() {};
+	MidiHandler_alsa()
+	        : MidiHandler(),
+	          ev{},
+	          seq_handle(nullptr),
+	          seq_client(0),
+	          seq_port(0),
+	          my_client(0),
+	          my_port(0)
+	{}
+
+	MidiHandler_alsa(const MidiHandler_alsa &) = delete; // prevent copying
+	MidiHandler_alsa &operator=(const MidiHandler_alsa &) = delete; // prevent assignment
+
 	const char* GetName(void) { return "alsa"; }
 	void PlaySysex(Bit8u * sysex,Bitu len) {
 		snd_seq_ev_set_sysex(&ev, len, sysex);
@@ -194,7 +206,6 @@ public:
 		LOG_MSG("ALSA: Client initialised [%d:%d]", seq_client, seq_port);
 		return true;
 	}
-
 };
 
 MidiHandler_alsa Midi_alsa;
