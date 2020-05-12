@@ -61,10 +61,10 @@ Bit8u MIDI_evt_len[256] = {
 
 MidiHandler * handler_list = 0;
 
-MidiHandler::MidiHandler(){
-	next = handler_list;
+MidiHandler::MidiHandler() : next(handler_list)
+{
 	handler_list = this;
-};
+}
 
 MidiHandler Midi_none;
 
