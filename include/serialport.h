@@ -172,6 +172,7 @@ public:
 #define SERIAL_RX_TIMEOUT_EVENT 7
 
 #define	SERIAL_BASE_EVENT_COUNT 7
+#define SERIAL_MAX_PORTS 4
 
 	Bitu irq;
 	

@@ -93,7 +93,7 @@ device_COM::~device_COM() {
 
 
 // COM1 - COM4 objects
-CSerial* serialports[4] ={0,0,0,0};
+CSerial *serialports[SERIAL_MAX_PORTS] = {0};
 
 static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
 	Bitu i;
@@ -1229,7 +1229,7 @@ bool CSerial::Putchar(Bit8u data, bool wait_dsr, bool wait_cts, Bitu timeout) {
 class SERIALPORTS:public Module_base {
 public:
 	SERIALPORTS (Section * configuration):Module_base (configuration) {
-		Bit16u biosParameter[4] = { 0, 0, 0, 0 };
+		Bit16u biosParameter[SERIAL_MAX_PORTS] = {0};
 		Section_prop *section = static_cast <Section_prop*>(configuration);
 
 #if C_MODEM
@@ -1237,8 +1237,8 @@ public:
 		MODEM_ReadPhonebook(pbFilename->realpath);
 #endif
 
-		char s_property[] = "serialx"; 
-		for(Bitu i = 0; i < 4; i++) {
+		char s_property[] = "serialx";
+		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i) {
 			// get the configuration property
 			s_property[6] = '1' + i;
 			Prop_multival* p = section->Get_multival(s_property);
@@ -1287,7 +1287,7 @@ public:
 	}
 
 	~SERIALPORTS () {
-		for (Bitu i = 0; i < 4; i++)
+		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i)
 			if (serialports[i]) {
 				delete serialports[i];
 				serialports[i] = 0;
