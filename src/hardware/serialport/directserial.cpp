@@ -42,13 +42,14 @@ CDirectSerial::CDirectSerial (Bitu id, CommandLine* cmd)
 	std::string tmpstring;
 	if(!cmd->FindStringBegin("realport:",tmpstring,false)) return;
 
-	LOG_MSG ("Serial%d: Opening %s", COMNUMBER, tmpstring.c_str());
+	LOG_MSG("Serial Port %u: Opening %s", PortNumber(), tmpstring.c_str());
 	if(!SERIAL_open(tmpstring.c_str(), &comport)) {
 		char errorbuffer[256];
 		SERIAL_getErrorString(errorbuffer, sizeof(errorbuffer));
-		LOG_MSG("Serial%d: Serial Port \"%s\" could not be opened.",
-			COMNUMBER, tmpstring.c_str());
-		LOG_MSG("%s",errorbuffer);
+		LOG_MSG("Serial Port %u: Serial Port \"%s\" could not be "
+		        "opened.",
+		        PortNumber(), tmpstring.c_str());
+		LOG_MSG("%s", errorbuffer);
 		return;
 	}
 
@@ -273,9 +274,10 @@ void CDirectSerial::updatePortConfig (Bit16u divider, Bit8u lcr) {
 #if SERIAL_DEBUG
 		log_ser(dbg_aux,"Serial port settings not supported by host." );
 #endif
-		LOG_MSG ("Serial%d: Desired serial mode not supported (%d,%d,%c,%d)",
-			COMNUMBER, baudrate,bytelength,parity,stopbits);
-	} 
+		LOG_MSG("Serial Port %u: Desired serial mode not supported "
+		        "(%d,%d,%c,%d)",
+		        PortNumber(), baudrate, bytelength, parity, stopbits);
+	}
 	CDirectSerial::setRTSDTR(getRTS(), getDTR());
 }
 
@@ -290,7 +292,7 @@ void CDirectSerial::updateMSR () {
 
 void CDirectSerial::transmitByte (Bit8u val, bool first) {
 	if(!SERIAL_sendchar(comport, val))
-		LOG_MSG("Serial%d: COM port error: write failed!", COMNUMBER);
+		LOG_MSG("Serial Port %u: write failed!", PortNumber());
 	if(first) setEvent(SERIAL_THR_EVENT, bytetime/8);
 	else setEvent(SERIAL_TX_EVENT, bytetime);
 }

@@ -140,9 +140,12 @@ public:
 	bool InstallationSuccessful;// check after constructing. If
 								// something was wrong, delete it right away.
 
-	// Constructor takes com port number (0-3)
-	CSerial(Bitu id, CommandLine* cmd);
-	
+	/*
+	 * Communication port index is typically 0-3, but logically limited
+	 * to the number of physical interrupts available on the system.
+	 */
+	CSerial(const uint8_t port_index_, CommandLine *cmd);
+
 	virtual ~CSerial();
 		
 	IO_ReadHandleObject ReadHandler[8];
@@ -150,7 +153,7 @@ public:
 
 	float bytetime; // how long a byte takes to transmit/receive in milliseconds
 	void changeLineProperties();
-	Bitu idnumber;
+	const uint8_t port_index = 0;
 
 	void setEvent(Bit16u type, float duration);
 	void removeEvent(Bit16u type);
@@ -169,8 +172,7 @@ public:
 #define SERIAL_RX_TIMEOUT_EVENT 7
 
 #define	SERIAL_BASE_EVENT_COUNT 7
-
-#define COMNUMBER idnumber+1
+#define SERIAL_MAX_PORTS        4
 
 	Bitu irq;
 	
@@ -247,7 +249,7 @@ public:
 	
 	bool Putchar(Bit8u data, bool wait_dtr, bool wait_rts, Bitu timeout);
 	bool Getchar(Bit8u* data, Bit8u* lsr, bool wait_dsr, Bitu timeout);
-
+	uint8_t PortNumber() const;
 
 private:
 

@@ -84,7 +84,7 @@ Bit16u device_COM::GetInformation(void) {
 
 device_COM::device_COM(class CSerial* sc) {
 	sclass = sc;
-	SetName(serial_comname[sclass->idnumber]);
+	SetName(serial_comname[sclass->port_index]);
 }
 
 device_COM::~device_COM() {
@@ -93,7 +93,7 @@ device_COM::~device_COM() {
 
 
 // COM1 - COM4 objects
-CSerial* serialports[4] ={0,0,0,0};
+CSerial *serialports[SERIAL_MAX_PORTS] = {0};
 
 static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
 	Bitu i;
@@ -241,12 +241,12 @@ static void Serial_EventHandler(Bitu val) {
 }
 
 void CSerial::setEvent(Bit16u type, float duration) {
-    PIC_AddEvent(Serial_EventHandler,duration,(type<<2)|idnumber);
+	PIC_AddEvent(Serial_EventHandler, duration, (type << 2) | port_index);
 }
 
 void CSerial::removeEvent(Bit16u type) {
-    // TODO
-	PIC_RemoveSpecificEvents(Serial_EventHandler,(type<<2)|idnumber);
+	// TODO
+	PIC_RemoveSpecificEvents(Serial_EventHandler, (type << 2) | port_index);
 }
 
 void CSerial::handleEvent(Bit16u type) {
@@ -269,13 +269,15 @@ void CSerial::handleEvent(Bit16u type) {
 			break;
 		}
 		case SERIAL_ERRMSG_EVENT: {
-			LOG_MSG("Serial%d: Errors: "\
-				"Framing %d, Parity %d, Overrun RX:%d (IF0:%d), TX:%d, Break %d",
-				COMNUMBER, framingErrors, parityErrors, overrunErrors,
-				overrunIF0,txOverrunErrors, breakErrors);
-			errormsg_pending=false;
-			framingErrors=0;
-			parityErrors=0;
+		        LOG_MSG("Serial%u: Errors: "
+		                "Framing %d, Parity %d, Overrun RX:%d "
+		                "(IF0:%d), TX:%d, Break %d",
+		                PortNumber(), framingErrors, parityErrors,
+		                overrunErrors, overrunIF0, txOverrunErrors,
+		                breakErrors);
+		        errormsg_pending = false;
+		        framingErrors = 0;
+		        parityErrors=0;
 			overrunErrors=0;
 			txOverrunErrors=0;
 			overrunIF0=0;
@@ -883,8 +885,8 @@ void CSerial::Write_SPR (Bit8u data) {
 /* Write_reserved                                                           **/
 /*****************************************************************************/
 void CSerial::Write_reserved (Bit8u data, Bit8u address) {
-	/*LOG_UART("Serial%d: Write to reserved register, value 0x%x, register %x",
-		COMNUMBER, data, address);*/
+	/*LOG_UART("Serial%u: Write to reserved register, value 0x%x, register
+	   %x", PortNumber(), data, address);*/
 }
 
 /*****************************************************************************/
@@ -1072,13 +1074,15 @@ void CSerial::Init_Registers () {
 	PIC_DeActivateIRQ(irq);
 }
 
-CSerial::CSerial(Bitu id, CommandLine* cmd) {
-	idnumber=id;
-	Bit16u base = serial_baseaddr[id];
+CSerial::CSerial(const uint8_t port_index_, CommandLine *cmd)
+        : port_index(port_index_)
+{
+	const uint16_t base = serial_baseaddr[port_index];
 
-	irq = serial_defaultirq[id];
+	irq = serial_defaultirq[port_index];
 	getBituSubstring("irq:",&irq, cmd);
-	if (irq < 2 || irq > 15) irq = serial_defaultirq[id];
+	if (irq < 2 || irq > 15)
+		irq = serial_defaultirq[port_index];
 
 #if SERIAL_DEBUG
 	dbg_serialtraffic = cmd->FindExist("dbgtr", false);
@@ -1110,8 +1114,8 @@ CSerial::CSerial(Bitu id, CommandLine* cmd) {
 		std::string cleft;
 		cmd->GetStringRemain(cleft);
 
-		log_ser(true,"Serial%d: BASE %3x, IRQ %d, initstring \"%s\"\r\n\r\n",
-			COMNUMBER,base,irq,cleft.c_str());
+		log_ser(true, "Serial Port %u: BASE %3x, IRQ %d, initstring \"%s\"\r\n\r\n",
+		        PortNumber(), base, irq, cleft.c_str());
 	}
 #endif
 	fifosize=16;
@@ -1183,6 +1187,10 @@ bool CSerial::Getchar(Bit8u* data, Bit8u* lsr, bool wait_dsr, Bitu timeout) {
 	return true;
 }
 
+uint8_t CSerial::PortNumber() const
+{
+	return port_index + 1;
+}
 
 bool CSerial::Putchar(Bit8u data, bool wait_dsr, bool wait_cts, Bitu timeout) {
 	
@@ -1221,7 +1229,7 @@ bool CSerial::Putchar(Bit8u data, bool wait_dsr, bool wait_cts, Bitu timeout) {
 class SERIALPORTS:public Module_base {
 public:
 	SERIALPORTS (Section * configuration):Module_base (configuration) {
-		Bit16u biosParameter[4] = { 0, 0, 0, 0 };
+		Bit16u biosParameter[SERIAL_MAX_PORTS] = {0};
 		Section_prop *section = static_cast <Section_prop*>(configuration);
 
 #if C_MODEM
@@ -1229,8 +1237,8 @@ public:
 		MODEM_ReadPhonebook(pbFilename->realpath);
 #endif
 
-		char s_property[] = "serialx"; 
-		for(Bitu i = 0; i < 4; i++) {
+		char s_property[] = "serialx";
+		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i) {
 			// get the configuration property
 			s_property[6] = '1' + i;
 			Prop_multival* p = section->Get_multival(s_property);
@@ -1271,7 +1279,7 @@ public:
 				serialports[i] = NULL;
 			} else {
 				serialports[i] = NULL;
-				LOG_MSG("Invalid type for serial%d",i+1);
+				LOG_MSG("Invalid type for serial port %u", i + 1);
 			}
 			if(serialports[i]) biosParameter[i] = serial_baseaddr[i];
 		} // for 1-4
@@ -1279,7 +1287,7 @@ public:
 	}
 
 	~SERIALPORTS () {
-		for (Bitu i = 0; i < 4; i++)
+		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i)
 			if (serialports[i]) {
 				delete serialports[i];
 				serialports[i] = 0;
