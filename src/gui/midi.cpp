@@ -97,6 +97,22 @@ MidiHandler Midi_none;
 
 #endif
 
+struct DB_Midi {
+	uint8_t status;
+	size_t cmd_len;
+	size_t cmd_pos;
+	uint8_t cmd_buf[8];
+	uint8_t rt_buf[8];
+	struct {
+		uint8_t buf[SYSEX_SIZE];
+		size_t used;
+		Bitu delay;
+		uint32_t start;
+	} sysex;
+	bool available;
+	MidiHandler * handler;
+};
+
 DB_Midi midi;
 
 void MIDI_RawOutByte(uint8_t data)
