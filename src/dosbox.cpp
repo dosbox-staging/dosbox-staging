@@ -42,6 +42,7 @@
 #include "ints/int10.h"
 #include "render.h"
 #include "pci_bus.h"
+#include "midi.h"
 
 Config * control;
 MachineType machine;
@@ -71,7 +72,6 @@ void FPU_Init(Section*);
 void DMA_Init(Section*);
 
 void MIXER_Init(Section*);
-void MIDI_Init(Section*);
 void HARDWARE_Init(Section*);
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
@@ -568,7 +568,7 @@ void DOSBOX_Init(void) {
 	Pint->SetMinMax(0,100);
 	Pint->Set_help("How many milliseconds of data to keep on top of the blocksize.");
 
-	secprop=control->AddSection_prop("midi",&MIDI_Init,true);//done
+	secprop = control->AddSection_prop("midi", &MIDI_Init, true);
 	secprop->AddInitFunction(&MPU401_Init,true);//done
 
 	pstring = secprop->Add_string("mpu401", when_idle, "intelligent");
