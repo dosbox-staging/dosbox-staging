@@ -64,6 +64,7 @@ struct DB_Midi {
 
 extern DB_Midi midi;
 
+void MIDI_Init(Section *sec);
 bool MIDI_Available();
 void MIDI_RawOutByte(uint8_t data);
 
