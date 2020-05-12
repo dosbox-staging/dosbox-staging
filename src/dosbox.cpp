@@ -396,6 +396,7 @@ void DOSBOX_Init(void) {
 	Prop_multival_remain* Pmulti_remain;
 
 	constexpr auto always = Property::Changeable::Always;
+	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	SDLNetInited = false;
 
@@ -570,16 +571,34 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("midi",&MIDI_Init,true);//done
 	secprop->AddInitFunction(&MPU401_Init,true);//done
 
-	const char* mputypes[] = { "intelligent", "uart", "none",0};
-	// FIXME: add some way to offer the actually available choices.
-	const char *devices[] = { "default", "win32", "alsa", "oss", "coreaudio", "coremidi","none", 0};
-	Pstring = secprop->Add_string("mpu401",Property::Changeable::WhenIdle,"intelligent");
-	Pstring->Set_values(mputypes);
-	Pstring->Set_help("Type of MPU-401 to emulate.");
+	pstring = secprop->Add_string("mpu401", when_idle, "intelligent");
+	const char *mputypes[] = {"intelligent", "uart", "none", 0};
+	pstring->Set_values(mputypes);
+	pstring->Set_help("Type of MPU-401 to emulate.");
 
-	Pstring = secprop->Add_string("mididevice",Property::Changeable::WhenIdle,"default");
-	Pstring->Set_values(devices);
-	Pstring->Set_help("Device that will receive the MIDI data from MPU-401.");
+	pstring = secprop->Add_string("mididevice", when_idle, "default");
+	const char *midi_devices[] = {
+		"default",
+#if defined(MACOSX)
+#ifdef C_SUPPORTS_COREMIDI
+		"coremidi",
+#endif
+#ifdef C_SUPPORTS_COREAUDIO
+		"coreaudio",
+#endif
+#elif defined(WIN32)
+		"win32",
+#else
+		"oss",
+#endif
+#if defined(HAVE_ALSA)
+		"alsa",
+#endif
+		"none",
+		0
+	};
+	pstring->Set_values(midi_devices);
+	pstring->Set_help("Device that will receive the MIDI data from MPU-401.");
 
 	Pstring = secprop->Add_string("midiconfig",Property::Changeable::WhenIdle,"");
 	Pstring->Set_help("Special configuration options for the device driver. This is usually the id or part of the name of the device you want to use\n"
