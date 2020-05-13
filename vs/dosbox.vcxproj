@@ -176,7 +176,6 @@
     <ClCompile Include="..\src\dos\drive_virtual.cpp" />
     <ClCompile Include="..\src\dos\program_autotype.cpp" />
     <ClCompile Include="..\src\fpu\fpu.cpp" />
-    <ClCompile Include="..\src\gui\midi.cpp" />
     <ClCompile Include="..\src\gui\render.cpp" />
     <ClCompile Include="..\src\gui\render_scalers.cpp" />
     <ClCompile Include="..\src\gui\sdlmain.cpp" />
@@ -256,6 +255,7 @@
     <ClCompile Include="..\src\libs\decoders\wav.c" />
     <ClCompile Include="..\src\libs\nuked\nukedopl.cpp" />
     <ClCompile Include="..\src\libs\ppscale\ppscale.c" />
+    <ClCompile Include="..\src\midi\midi.cpp" />
     <ClCompile Include="..\src\misc\cross.cpp" />
     <ClCompile Include="..\src\misc\messages.cpp" />
     <ClCompile Include="..\src\misc\programs.cpp" />
@@ -351,7 +351,6 @@
     <ClInclude Include="..\src\dos\program_autotype.h" />
     <ClInclude Include="..\src\fpu\fpu_instructions.h" />
     <ClInclude Include="..\src\fpu\fpu_instructions_x86.h" />
-    <ClInclude Include="..\src\gui\midi_win32.h" />
     <ClInclude Include="..\src\gui\render_scalers.h" />
     <ClInclude Include="..\src\gui\render_templates.h" />
     <ClInclude Include="..\src\hardware\font-switch.h" />
@@ -382,6 +381,7 @@
     <ClInclude Include="..\src\libs\decoders\xxhash.h" />
     <ClInclude Include="..\src\libs\nuked\nukedopl.h" />
     <ClInclude Include="..\src\libs\ppscale\ppscale.h" />
+    <ClInclude Include="..\src\midi\midi_win32.h" />
     <ClInclude Include="..\src\platform\visualc\config.h" />
     <ClInclude Include="..\src\platform\visualc\unistd.h" />
   </ItemGroup>
