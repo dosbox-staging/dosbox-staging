@@ -62,8 +62,8 @@ struct _TCPsocketX {
 #ifdef NATIVESOCKETS
 	SOCKET channel = 0;
 #endif
-	IPaddress remoteAddress;
-	IPaddress localAddress;
+	IPaddress remoteAddress = {0, 0};
+	IPaddress localAddress = {0, 0};
 	int sflag = 0;
 };
 
@@ -83,7 +83,7 @@ public:
 	// -1: no data
 	// -2: socket closed
 	// >0: data char
-	Bits GetcharNonBlock();
+	int16_t GetcharNonBlock();
 
 	bool Putchar(uint8_t data);
 	bool SendArray(uint8_t *data, uint32_t bufsize);

@@ -43,7 +43,7 @@ TCPClientSocket::TCPClientSocket(int platformsocket)
 	// fill the SDL socket manually
 	nativetcpstruct->ready = 0;
 	nativetcpstruct->sflag = 0;
-	nativetcpstruct->channel = (SOCKET) platformsocket;
+	nativetcpstruct->channel = platformsocket;
 	sockaddr_in		sa;
 	socklen_t		sz;
 	sz=sizeof(sa);
@@ -57,10 +57,8 @@ TCPClientSocket::TCPClientSocket(int platformsocket)
 	}
 	sz=sizeof(sa);
 	if(getsockname(platformsocket, (sockaddr *)(&sa), &sz)==0) {
-		((struct _TCPsocketX*)nativetcpstruct)->
-			localAddress.host=/*ntohl(*/sa.sin_addr.s_addr;//);
-		((struct _TCPsocketX*)nativetcpstruct)->
-			localAddress.port=/*ntohs(*/sa.sin_port;//);
+		(nativetcpstruct)->localAddress.host = /*ntohl(*/ sa.sin_addr.s_addr; //);
+		(nativetcpstruct)->localAddress.port = /*ntohs(*/ sa.sin_port; //);
 	}
 	else {
 		mysock = nullptr;
@@ -167,12 +165,13 @@ bool TCPClientSocket::ReceiveArray(uint8_t *data, uint32_t *size)
 	}
 }
 
-Bits TCPClientSocket::GetcharNonBlock() {
-// return:
-// -1: no data
-// -2: socket closed
-// 0..255: data
-	Bits rvalue = -1;
+int16_t TCPClientSocket::GetcharNonBlock()
+{
+	// return:
+	// -1: no data
+	// -2: socket closed
+	// 0..255: data
+	int16_t rvalue = -1;
 	if(SDLNet_CheckSockets(listensocketset,0))
 	{
 		char data = 0;
@@ -180,7 +179,7 @@ Bits TCPClientSocket::GetcharNonBlock() {
 			isopen = false;
 			rvalue = -2;
 		} else
-			rvalue = static_cast<Bits>(data);
+			rvalue = static_cast<int16_t>(data);
 	}
 	return rvalue;
 }
