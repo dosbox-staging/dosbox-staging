@@ -198,7 +198,8 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 			else pic->special = false;
 			//Check if there are irqs ready to run, as the priority system has possibly been changed.
 			pic->check_for_irq();
-			LOG(LOG_PIC,LOG_NORMAL)("port %X : special mask %s",port,(pic->special)?"ON":"OFF");
+			LOG(LOG_PIC, LOG_NORMAL)("port %#" PRIxPTR " : special mask %s",
+			                         port, (pic->special) ? "ON" : "OFF");
 		}
 	} else {	// OCW2 issued
 		if (val&0x20) {		// EOI commands
@@ -235,14 +236,19 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 		pic->set_imr(val);
 		break;
 	case 1:                        /* icw2          */
-		LOG(LOG_PIC,LOG_NORMAL)("%d:Base vector %X",port==0x21 ? 0 : 1,val);
-		pic->vector_base = val&0xf8;
-		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
-		else if(pic->single) pic->icw_index=3;		/* skip ICW3 in single mode */
+		LOG(LOG_PIC, LOG_NORMAL)("%d:Base vector %#" PRIxPTR,
+		                         port == 0x21 ? 0 : 1, val);
+		pic->vector_base = val & 0xf8;
+		if (pic->icw_index++ >= pic->icw_words)
+			pic->icw_index = 0;
+		else if (pic->single)
+			pic->icw_index = 3; /* skip ICW3 in single mode */
 		break;
 	case 2:							/* icw 3 */
-		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 3 %X",port==0x21 ? 0 : 1,val);
-		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
+		LOG(LOG_PIC, LOG_NORMAL)("%d:ICW 3 %#" PRIxPTR,
+		                         port == 0x21 ? 0 : 1, val);
+		if (pic->icw_index++ >= pic->icw_words)
+			pic->icw_index = 0;
 		break;
 	case 3:							/* icw 4 */
 		/*
@@ -254,17 +260,20 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 			4		Special/Not Special nested mode 
 		*/
 		pic->auto_eoi=(val & 0x2)>0;
-		
-		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 4 %X",port==0x21 ? 0 : 1,val);
 
-		if ((val&0x01)==0) E_Exit("PIC:ICW4: %x, 8085 mode not handled",val);
-		if ((val&0x10)!=0) LOG_MSG("PIC:ICW4: %x, special fully-nested mode not handled",val);
+		LOG(LOG_PIC, LOG_NORMAL)("%d:ICW 4 %#" PRIxPTR,
+		                         port == 0x21 ? 0 : 1, val);
+
+		if ((val & 0x01) == 0)
+			E_Exit("PIC:ICW4: %#" PRIxPTR ", 8085 mode not handled", val);
+		if ((val & 0x10) != 0)
+			LOG_MSG("PIC:ICW4: %#" PRIxPTR
+			        ", special fully-nested mode not handled",
+			        val);
 
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
-	default:
-		LOG(LOG_PIC,LOG_NORMAL)("ICW HUH? %X",val);
-		break;
+	default: LOG(LOG_PIC, LOG_NORMAL)("ICW HUH? %#" PRIxPTR, val); break;
 	}
 }
 
