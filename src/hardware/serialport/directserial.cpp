@@ -31,8 +31,9 @@
 /* This is a serial passthrough class.  Its amazingly simple to */
 /* write now that the serial ports themselves were abstracted out */
 
-CDirectSerial::CDirectSerial (Bitu id, CommandLine* cmd)
-					:CSerial (id, cmd) {
+CDirectSerial::CDirectSerial(const uint8_t port_index_, CommandLine *cmd)
+        : CSerial(port_index_, cmd)
+{
 	InstallationSuccessful = false;
 	comport = 0;
 
@@ -60,7 +61,7 @@ CDirectSerial::CDirectSerial (Bitu id, CommandLine* cmd)
 
 	// rxdelay: How many milliseconds to wait before causing an
 	// overflow when the application is unresponsive.
-	if(getBituSubstring("rxdelay:", &rx_retry_max, cmd)) {
+	if (getUintFromString("rxdelay:", rx_retry_max, cmd)) {
 		if(!(rx_retry_max<=10000)) {
 			rx_retry_max=0;
 		}
@@ -259,9 +260,7 @@ void CDirectSerial::updatePortConfig (Bit16u divider, Bit8u lcr) {
 	Bit8u bytelength = (lcr & 0x3)+5;
 
 	// baudrate
-	Bitu baudrate;
-	if(divider==0) baudrate=115200;
-	else baudrate = 115200 / divider;
+	const uint32_t baudrate = divider ? 115200 / divider : 115200;
 
 	// stopbits
 	Bit8u stopbits;
