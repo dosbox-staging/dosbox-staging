@@ -419,7 +419,8 @@ public:
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
 	virtual void EmptyCache(void);
 
-	FILE* create_file_in_overlay(char* dos_filename, char const* mode);
+	FILE *create_file_in_overlay(const char *dos_filename, char const *mode);
+
 	virtual Bits UnMount(void);
 	virtual bool TestDir(char * dir);
 	virtual bool RemoveDir(char * dir);

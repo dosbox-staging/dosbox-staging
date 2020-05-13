@@ -21,6 +21,7 @@
 
 #include "dosbox.h"
 
+#include <string>
 #include <vector>
 
 #include "cross.h"
@@ -55,19 +56,37 @@ class DOS_DTA;
 
 class DOS_File {
 public:
-	DOS_File():flags(0),time(0),date(0),attr(0),refCtr(0),open(false),name(0),hdrive(0xff) { };
-	DOS_File(const DOS_File& orig);
-	DOS_File & operator= (const DOS_File & orig);
-	virtual	~DOS_File(){if(name) delete [] name;};
+	DOS_File()
+	        : flags(0),
+	          time(0),
+	          date(0),
+	          attr(0),
+	          refCtr(0),
+	          open(false),
+	          name(""),
+	          hdrive(0xff)
+	{}
+
+	DOS_File(const DOS_File &orig) = default;
+	DOS_File &operator=(const DOS_File &orig);
+
+	virtual ~DOS_File() = default;
+
+	const char *GetName() const { return name.c_str(); }
+
+	void SetName(const char *str) { name = str; }
+
+	bool IsName(const char *str) const
+	{
+		return !name.empty() && (strcasecmp(name.c_str(), str) == 0);
+	}
+
 	virtual bool	Read(Bit8u * data,Bit16u * size)=0;
 	virtual bool	Write(Bit8u * data,Bit16u * size)=0;
 	virtual bool	Seek(Bit32u * pos,Bit32u type)=0;
 	virtual bool	Close()=0;
 	virtual Bit16u	GetInformation(void)=0;
-	virtual void	SetName(const char* _name)	{ if (name) delete[] name; name = new char[strlen(_name)+1]; strcpy(name,_name); }
-	virtual char*	GetName(void)				{ return name; };
 	virtual bool	IsOpen()					{ return open; };
-	virtual bool	IsName(const char* _name)	{ if (!name) return false; return strcasecmp(name,_name)==0; };
 	virtual void	AddRef()					{ refCtr++; };
 	virtual Bits	RemoveRef()					{ return --refCtr; };
 	virtual bool	UpdateDateTimeFromHost()	{ return true; }
@@ -80,7 +99,7 @@ public:
 	Bit16u attr;
 	Bits refCtr;
 	bool open;
-	char* name;
+	std::string name;
 /* Some Device Specific Stuff */
 private:
 	Bit8u hdrive;
