@@ -77,7 +77,8 @@ static void SN76496Write(Bitu /*port*/,Bitu data,Bitu /*iolen*/) {
 	}
 	device.write(data);
 
-//	LOG_MSG("3voice write %X at time %7.3f",data,PIC_FullIndex());
+	//	LOG_MSG("3voice write %#" PRIxPTR " at time
+	//%7.3f",data,PIC_FullIndex());
 }
 
 static void SN76496Update(Bitu length) {
@@ -227,7 +228,7 @@ static Bitu TandyDACRead(Bitu port,Bitu /*iolen*/) {
 	case 0xc7:
 		return (Bit8u)(((tandy.dac.frequency>>8)&0xf) | (tandy.dac.amplitude<<5));
 	}
-	LOG_MSG("Tandy DAC: Read from unknown %X",port);
+	LOG_MSG("Tandy DAC: Read from unknown %#" PRIxPTR, port);
 	return 0xff;
 }
 
