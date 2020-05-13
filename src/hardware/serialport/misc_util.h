@@ -58,13 +58,13 @@
 Bit32u Netwrapper_GetCapabilities();
 
 struct _TCPsocketX {
-	int ready;
+	int ready = 0;
 #ifdef NATIVESOCKETS
-	SOCKET channel;
+	SOCKET channel = 0;
 #endif
 	IPaddress remoteAddress;
 	IPaddress localAddress;
-	int sflag;
+	int sflag = 0;
 };
 
 class TCPClientSocket {
@@ -111,6 +111,7 @@ private:
 	// Items for send buffering
 	uint32_t sendbuffersize = 0;
 	uint32_t sendbufferindex = 0;
+	uint8_t *sendbuffer = nullptr;
 };
 
 struct TCPServerSocket {
