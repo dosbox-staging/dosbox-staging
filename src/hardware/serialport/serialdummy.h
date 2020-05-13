@@ -40,7 +40,7 @@ public:
 	void handleUpperEvent(Bit16u type);
 
 #ifdef CHECKIT_TESTPLUG
-	Bit8u loopbackdata;
+	uint8_t loopbackdata = 0;
 #endif
 
 };
