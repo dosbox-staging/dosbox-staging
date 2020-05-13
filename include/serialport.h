@@ -51,6 +51,9 @@
 
 class MyFifo {
 public:
+	MyFifo(const MyFifo &) = delete;            // prevent copying
+	MyFifo &operator=(const MyFifo &) = delete; // prevent assignment
+
 	MyFifo(uint32_t maxsize_)
 	{
 		maxsize = size = maxsize_;
@@ -128,6 +131,8 @@ private:
 
 class CSerial {
 public:
+	CSerial(const CSerial &) = delete;            // prevent copying
+	CSerial &operator=(const CSerial &) = delete; // prevent assignment
 
 #if SERIAL_DEBUG
 	FILE * debugfp;
@@ -158,7 +163,8 @@ public:
 	IO_ReadHandleObject ReadHandler[8];
 	IO_WriteHandleObject WriteHandler[8];
 
-	float bytetime; // how long a byte takes to transmit/receive in milliseconds
+	float bytetime = 0.0f; // how long a byte takes to transmit/receive in
+	                       // milliseconds
 	void changeLineProperties();
 	const uint8_t port_index = 0;
 
@@ -375,7 +381,7 @@ private:
 #define LSR_ERROR_MASK 0x1e
 
 	// error printing
-	bool errormsg_pending;
+	bool errormsg_pending = false;
 	uint32_t framingErrors = 0;
 	uint32_t parityErrors = 0;
 	uint32_t overrunErrors = 0;
@@ -444,7 +450,11 @@ const char *const serial_comname[] = {"COM1", "COM2", "COM3", "COM4"};
 
 class device_COM : public DOS_Device {
 public:
-	// Creates a COM device that communicates with the num-th parallel port, i.e. is LPTnum
+	device_COM(const device_COM &) = delete;            // prevent copying
+	device_COM &operator=(const device_COM &) = delete; // prevent assignment
+
+	// Creates a COM device that communicates with the num-th parallel port,
+	// i.e. is LPTnum
 	device_COM(class CSerial* sc);
 	~device_COM();
 	bool Read(uint8_t *data, uint16_t *size);

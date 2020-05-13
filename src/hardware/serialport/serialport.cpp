@@ -70,6 +70,7 @@ bool device_COM::Write(uint8_t *data, uint16_t *size)
 
 bool device_COM::Seek(uint32_t *pos, uint32_t type)
 {
+	(void)type; // unused, but required for API compliance
 	*pos = 0;
 	return true;
 }
@@ -97,8 +98,9 @@ device_COM::~device_COM() {
 CSerial *serialports[SERIAL_MAX_PORTS] = {0};
 
 static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
-	uint32_t i;
-	uint32_t retval;
+	(void)iolen; // unused, but required for API compliance
+	uint32_t i = 0;
+	uint32_t retval = 0;
 	uint8_t offset_type = static_cast<uint8_t>(port) & 0x7;
 	switch (static_cast<uint32_t>(port) & 0xff8) {
 	case 0x3f8: i = 0; break;
@@ -889,6 +891,8 @@ void CSerial::Write_SPR(uint8_t data)
 /*****************************************************************************/
 void CSerial::Write_reserved(uint8_t data, uint8_t address)
 {
+	(void)data;    // unused, but required for API compliance
+	(void)address; // unused, but required for API compliance
 	/*LOG_UART("Serial%u: Write to reserved register, value 0x%x, register
 	   %x", PortNumber(), data, address);*/
 }
@@ -1158,7 +1162,8 @@ CSerial::~CSerial(void) {
 	DOS_DelDevice(mydosdevice);
 	for (uint32_t i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++)
 		removeEvent(i);
-};
+}
+
 bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeout)
 {
 	const double starttime = PIC_FullIndex();
@@ -1301,7 +1306,9 @@ public:
 
 static SERIALPORTS *testSerialPortsBaseclass;
 
-void SERIAL_Destroy (Section * sec) {
+void SERIAL_Destroy(Section *sec)
+{
+	(void)sec; // unused, but required for API compliance
 	delete testSerialPortsBaseclass;
 	testSerialPortsBaseclass = NULL;
 }
