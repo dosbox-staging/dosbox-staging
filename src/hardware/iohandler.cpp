@@ -115,7 +115,8 @@ void IO_ReadHandleObject::Install(Bitu port,IO_ReadHandler * handler,Bitu mask,B
 		m_mask=mask;
 		m_range=range;
 		IO_RegisterReadHandler(port,handler,mask,range);
-	} else E_Exit("IO_readHandler already installed port %x",port);
+	} else
+		E_Exit("IO_readHandler already installed port %#" PRIxPTR, port);
 }
 
 void IO_ReadHandleObject::Uninstall(){
@@ -135,7 +136,8 @@ void IO_WriteHandleObject::Install(Bitu port,IO_WriteHandler * handler,Bitu mask
 		m_mask=mask;
 		m_range=range;
 		IO_RegisterWriteHandler(port,handler,mask,range);
-	} else E_Exit("IO_writeHandler already installed port %x",port);
+	} else
+		E_Exit("IO_writeHandler already installed port %#" PRIxPTR, port);
 }
 
 void IO_WriteHandleObject::Uninstall() {
@@ -146,7 +148,7 @@ void IO_WriteHandleObject::Uninstall() {
 
 IO_WriteHandleObject::~IO_WriteHandleObject(){
 	Uninstall();
-	//LOG_MSG("FreeWritehandler called with port %X",m_port);
+	// LOG_MSG("FreeWritehandler called with port %#" PRIxPTR,m_port);
 }
 
 struct IOF_Entry {

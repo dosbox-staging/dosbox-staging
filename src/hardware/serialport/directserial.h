@@ -32,18 +32,22 @@
 
 class CDirectSerial : public CSerial {
 public:
-	CDirectSerial(const uint8_t port_index_, CommandLine *cmd);
+	CDirectSerial(const CDirectSerial &) = delete; // prevent copying
+	CDirectSerial &operator=(const CDirectSerial &) = delete; // prevent
+	                                                          // assignment
+
+	CDirectSerial(const uint8_t port_idx, CommandLine *cmd);
 	~CDirectSerial();
 
-	void updatePortConfig(Bit16u divider, Bit8u lcr);
+	void updatePortConfig(uint16_t divider, uint8_t lcr);
 	void updateMSR();
-	void transmitByte(Bit8u val, bool first);
+	void transmitByte(uint8_t val, bool first);
 	void setBreak(bool value);
 	
 	void setRTSDTR(bool rts, bool dtr);
 	void setRTS(bool val);
 	void setDTR(bool val);
-	void handleUpperEvent(Bit16u type);
+	void handleUpperEvent(uint16_t type);
 
 private:
 	COMPORT comport = nullptr;

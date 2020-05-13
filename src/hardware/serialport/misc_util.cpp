@@ -21,9 +21,9 @@
 #if C_MODEM
 
 #include "misc_util.h"
-Bit32u Netwrapper_GetCapabilities()
+uint32_t Netwrapper_GetCapabilities()
 {
-	Bit32u retval=0;
+	uint32_t retval = 0;
 	retval = CAPWORD;
 	return retval;
 }
@@ -43,7 +43,7 @@ TCPClientSocket::TCPClientSocket(int platformsocket)
 	// fill the SDL socket manually
 	nativetcpstruct->ready = 0;
 	nativetcpstruct->sflag = 0;
-	nativetcpstruct->channel = (SOCKET) platformsocket;
+	nativetcpstruct->channel = platformsocket;
 	sockaddr_in		sa;
 	socklen_t		sz;
 	sz=sizeof(sa);
@@ -57,10 +57,8 @@ TCPClientSocket::TCPClientSocket(int platformsocket)
 	}
 	sz=sizeof(sa);
 	if(getsockname(platformsocket, (sockaddr *)(&sa), &sz)==0) {
-		((struct _TCPsocketX*)nativetcpstruct)->
-			localAddress.host=/*ntohl(*/sa.sin_addr.s_addr;//);
-		((struct _TCPsocketX*)nativetcpstruct)->
-			localAddress.port=/*ntohs(*/sa.sin_port;//);
+		(nativetcpstruct)->localAddress.host = /*ntohl(*/ sa.sin_addr.s_addr; //);
+		(nativetcpstruct)->localAddress.port = /*ntohs(*/ sa.sin_port; //);
 	}
 	else {
 		mysock = nullptr;
@@ -97,7 +95,7 @@ TCPClientSocket::TCPClientSocket(TCPsocket source)
 	}
 }
 
-TCPClientSocket::TCPClientSocket(const char* destination, Bit16u port)
+TCPClientSocket::TCPClientSocket(const char *destination, uint16_t port)
 {
 	if (!SDLNetInited) {
 		if (SDLNet_Init() == -1) {
@@ -135,82 +133,87 @@ TCPClientSocket::~TCPClientSocket()
 	if(listensocketset) SDLNet_FreeSocketSet(listensocketset);
 }
 
-bool TCPClientSocket::GetRemoteAddressString(Bit8u* buffer) {
-	IPaddress* remote_ip;
-	Bit8u b1, b2, b3, b4;
+bool TCPClientSocket::GetRemoteAddressString(uint8_t *buffer)
+{
+	IPaddress *remote_ip;
+	uint8_t b1, b2, b3, b4;
 	remote_ip=SDLNet_TCP_GetPeerAddress(mysock);
 	if(!remote_ip) return false;
 	b4=remote_ip->host>>24;
 	b3=(remote_ip->host>>16)&0xff;
 	b2=(remote_ip->host>>8)&0xff;
 	b1=remote_ip->host&0xff;
-	sprintf((char*)buffer,"%u.%u.%u.%u",b1,b2,b3,b4);
+	sprintf((char*)buffer,"%" PRIu8 ".%" PRIu8 ".%" PRIu8 ".%" PRIu8,
+	        b1, b2, b3, b4);
 	return true;
 }
 
-bool TCPClientSocket::ReceiveArray(uint8_t *data, uint32_t *size)
+bool TCPClientSocket::ReceiveArray(uint8_t *data, size_t &n)
 {
+	assertm(n <= static_cast<size_t>(std::numeric_limits<int>::max()),
+	        "SDL_net can't handle more bytes at a time.");
+	assert(data);
 	if (SDLNet_CheckSockets(listensocketset, 0)) {
-		Bits retval = SDLNet_TCP_Recv(mysock, data, static_cast<int>(*size));
-		if(retval<1) {
-			isopen=false;
-			*size = 0;
+		const int result = SDLNet_TCP_Recv(mysock, data, static_cast<int>(n));
+		if(result < 1) {
+			isopen = false;
+			n = 0;
 			return false;
 		} else {
-			*size = static_cast<uint32_t>(retval);
+			n = result;
 			return true;
 		}
 	} else {
-		*size=0;
+		n = 0;
 		return true;
 	}
 }
 
-Bits TCPClientSocket::GetcharNonBlock() {
-// return:
-// -1: no data
-// -2: socket closed
-// 0..255: data
-	Bits rvalue = -1;
+SocketState TCPClientSocket::GetcharNonBlock(uint8_t &val)
+{
+	SocketState state = SocketState::Empty;
 	if(SDLNet_CheckSockets(listensocketset,0))
 	{
-		char data = 0;
-		if (SDLNet_TCP_Recv(mysock, &data, 1) != 1) {
+		if (SDLNet_TCP_Recv(mysock, &val, 1) == 1)
+			state = SocketState::Good;
+		else {
 			isopen = false;
-			rvalue = -2;
-		} else
-			rvalue = static_cast<Bits>(data);
+			state = SocketState::Closed;
+		}
 	}
-	return rvalue;
+	return state;
 }
 
-bool TCPClientSocket::Putchar(Bit8u data)
+bool TCPClientSocket::Putchar(uint8_t val)
 {
-	return SendArray(&data, 1);
+	return SendArray(&val, 1);
 }
 
-bool TCPClientSocket::SendArray(uint8_t *data, uint32_t bufsize)
+bool TCPClientSocket::SendArray(uint8_t *data, const size_t n)
 {
-	if (SDLNet_TCP_Send(mysock, data, static_cast<int>(bufsize))
-	    != (int)bufsize) {
+	assertm(n <= static_cast<size_t>(std::numeric_limits<int>::max()),
+	        "SDL_net can't handle more bytes at a time.");
+	assert(data);
+	if (SDLNet_TCP_Send(mysock, data, static_cast<int>(n))
+	    != static_cast<int>(n)) {
 		isopen = false;
 		return false;
 	}
 	return true;
 }
 
-bool TCPClientSocket::SendByteBuffered(Bit8u data)
+bool TCPClientSocket::SendByteBuffered(const uint8_t val)
 {
 	if (sendbuffersize == 0)
 		return false;
 
 	if (sendbufferindex < (sendbuffersize - 1)) {
-		sendbuffer[sendbufferindex] = data;
+		sendbuffer[sendbufferindex] = val;
 		sendbufferindex++;
 		return true;
 	}
 	// buffer is full, get rid of it
-	sendbuffer[sendbufferindex] = data;
+	sendbuffer[sendbufferindex] = val;
 	sendbufferindex = 0;
 	return SendArray(sendbuffer, sendbuffersize);
 }
@@ -224,18 +227,18 @@ void TCPClientSocket::FlushBuffer()
 	}
 }
 
-void TCPClientSocket::SetSendBufferSize(uint32_t bufsize)
+void TCPClientSocket::SetSendBufferSize(const size_t n)
 {
 	// Only resize the buffer if needed
-	if (!sendbuffer || sendbuffersize != bufsize) {
+	if (!sendbuffer || sendbuffersize != n) {
 		delete [] sendbuffer;
-		sendbuffer = new Bit8u[bufsize];
-		sendbuffersize = bufsize;
+		sendbuffer = new uint8_t[n];
+		sendbuffersize = n;
 	}
 	sendbufferindex = 0;
 }
 
-TCPServerSocket::TCPServerSocket(Bit16u port)
+TCPServerSocket::TCPServerSocket(const uint16_t port)
 {
 	isopen = false;
 	mysock = nullptr;

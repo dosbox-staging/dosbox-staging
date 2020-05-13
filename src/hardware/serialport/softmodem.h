@@ -61,19 +61,20 @@ bool MODEM_ReadPhonebook(const std::string &filename);
 
 class CFifo {
 public:
-	CFifo(uint32_t _size) : data(_size), size(_size), pos(0), used(0) {}
+	CFifo(const size_t n) : data(n), size(n) {}
 
-	INLINE uint32_t left(void) const { return size - used; }
-	INLINE uint32_t inuse(void) const { return used; }
-	void clear(void)
+	uint32_t left() const { return size - used; }
+	uint32_t inuse() const { return used; }
+	void clear()
 	{
 		used = 0;
 		pos = 0;
 	}
 
-	void addb(Bit8u _val) {
-		if(used >= size) {
-			static Bits lcount = 0;
+	void addb(uint8_t val)
+	{
+		if (used >= size) {
+			static uint16_t lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
 				LOG_MSG("MODEM: FIFO Overflow! (addb)");
@@ -81,47 +82,48 @@ public:
 			return;
 		}
 		//assert(used<size);
-		uint32_t where = pos + used;
+		size_t where = pos + used;
 		if (where >= size)
 			where -= size;
-		data[where]=_val;
-		//LOG_MSG("+%x",_val);
+		data[where] = val;
+		//LOG_MSG("+%x", val);
 		used++;
 	}
 
-	void adds(uint8_t *_str, uint32_t _len)
+	void adds(uint8_t *str, size_t len)
 	{
-		if ((used + _len) > size) {
-			static Bits lcount = 0;
+		if ((used + len) > size) {
+			static uint16_t lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO Overflow! (adds len %" PRIuPTR ")",
-				        _len);
+				LOG_MSG("MODEM: FIFO Overflow! (adds len %u)",
+				        static_cast<unsigned>(len));
 			}
 			return;
 		}
 
-		//assert((used+_len)<=size);
-		uint32_t where = pos + used;
-		used += _len;
-		while (_len--) {
+		//assert((used + len) <= size);
+		size_t where = pos + used;
+		used += len;
+		while (len--) {
 			if (where >= size)
 				where -= size;
-			//LOG_MSG("+'%x'",*_str);
-			data[where++] = *_str++;
+			//LOG_MSG("+'%x'", *str);
+			data[where++] = *str++;
 		}
 	}
 
-	Bit8u getb(void) {
+	uint8_t getb()
+	{
 		if (!used) {
-			static Bits lcount = 0;
+			static uint16_t lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
 				LOG_MSG("MODEM: FIFO UNDERFLOW! (getb)");
 			}
 			return data[pos];
 		}
-		uint32_t where = pos;
+		const size_t where = pos;
 		if (++pos >= size)
 			pos -= size;
 		used--;
@@ -129,22 +131,22 @@ public:
 		return data[where];
 	}
 
-	void gets(uint8_t *_str, uint32_t _len)
+	void gets(uint8_t *str, size_t len)
 	{
 		if (!used) {
-			static Bits lcount = 0;
+			static uint16_t lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO UNDERFLOW! (gets len %" PRIuPTR ")",
-				        _len);
+				LOG_MSG("MODEM: FIFO UNDERFLOW! (gets len %u)",
+				        static_cast<unsigned>(len));
 			}
 			return;
 		}
-			//assert(used>=_len);
-		used -= _len;
-		while (_len--) {
-			//LOG_MSG("-%x",data[pos]);
-			*_str++ = data[pos];
+		// assert(used >= len);
+		used -= len;
+		while (len--) {
+			//LOG_MSG("-%x", data[pos]);
+			*str++ = data[pos];
 			if (++pos >= size)
 				pos -= size;
 		}
@@ -152,9 +154,9 @@ public:
 
 private:
 	std::vector<uint8_t> data;
-	uint32_t size = 0;
-	uint32_t pos = 0;
-	uint32_t used = 0;
+	size_t size = 0;
+	size_t pos = 0;
+	size_t used = 0;
 };
 #define MREG_AUTOANSWER_COUNT 0
 #define MREG_RING_COUNT 1
@@ -168,7 +170,7 @@ private:
 
 class CSerialModem : public CSerial {
 public:
-	CSerialModem(const uint8_t port_index_, CommandLine *cmd);
+	CSerialModem(const uint8_t port_idx, CommandLine *cmd);
 	~CSerialModem();
 	void Reset();
 
@@ -179,7 +181,7 @@ public:
 	void EnterIdleState();
 	void EnterConnectedState();
 	bool Dial(const char *host);
-	void AcceptIncomingCall(void);
+	void AcceptIncomingCall();
 	uint32_t ScanNumber(char *&scan) const;
 	char GetChar(char * & scan) const;
 
@@ -190,13 +192,13 @@ public:
 	void TelnetEmulation(uint8_t *data, uint32_t size);
 
 	//TODO
-	void Timer2(void);
-	void handleUpperEvent(Bit16u type);
+	void Timer2();
+	void handleUpperEvent(uint16_t type);
 
 	void RXBufferEmpty();
 
-	void transmitByte(Bit8u val, bool first);
-	void updatePortConfig(Bit16u divider, Bit8u lcr);
+	void transmitByte(uint8_t val, bool first);
+	void updatePortConfig(uint16_t divider, uint8_t lcr);
 	void updateMSR();
 
 	void setBreak(bool);
@@ -230,11 +232,11 @@ protected:
 	uint32_t dtrmode = 0;
 	int32_t dtrofftimer = 0;
 	uint8_t tmpbuf[MODEM_BUFFER_QUEUE_SIZE] = {0};
-	uint32_t listenport = 23; // 23 is the default telnet TCP/IP port
+	uint16_t listenport = 23; // 23 is the default telnet TCP/IP port
 	uint8_t reg[SREGS] = {0};
-	std::unique_ptr<TCPServerSocket> serversocket;
-	std::unique_ptr<TCPClientSocket> clientsocket;
-	std::unique_ptr<TCPClientSocket> waitingclientsocket;
+	std::unique_ptr<TCPServerSocket> serversocket = nullptr;
+	std::unique_ptr<TCPClientSocket> clientsocket = nullptr;
+	std::unique_ptr<TCPClientSocket> waitingclientsocket = nullptr;
 
 	struct {
 		bool binary[2] = {false};

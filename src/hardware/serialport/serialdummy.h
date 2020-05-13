@@ -26,18 +26,18 @@
 
 class CSerialDummy : public CSerial {
 public:
-	CSerialDummy(const uint8_t port_index_, CommandLine *cmd);
+	CSerialDummy(const uint8_t port_idx, CommandLine *cmd);
 	~CSerialDummy();
 
 	void setRTSDTR(bool rts, bool dtr);
 	void setRTS(bool val);
 	void setDTR(bool val);
 
-	void updatePortConfig(Bit16u, Bit8u lcr);
+	void updatePortConfig(uint16_t, uint8_t lcr);
 	void updateMSR();
-	void transmitByte(Bit8u val, bool first);
+	void transmitByte(uint8_t val, bool first);
 	void setBreak(bool value);
-	void handleUpperEvent(Bit16u type);
+	void handleUpperEvent(uint16_t type);
 
 #ifdef CHECKIT_TESTPLUG
 	uint8_t loopbackdata = 0;
