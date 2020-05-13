@@ -26,7 +26,8 @@
 #include "nullmodem.h"
 
 CNullModem::CNullModem(const uint8_t port_index_, CommandLine *cmd)
-        : CSerial(port_index_, cmd)
+        : CSerial(port_index_, cmd),
+          telClient({})
 {
 	uint32_t temptcpport = 23;
 	rx_retry_max = 20;
@@ -125,9 +126,8 @@ CNullModem::CNullModem(const uint8_t port_index_, CommandLine *cmd)
 				setEvent(SERIAL_NULLMODEM_DTR_EVENT, 50);
 				LOG_MSG("Serial Port %u: Waiting for DTR...",
 				        PortNumber());
-			} else if (!ClientConnect(
-			                   new TCPClientSocket((char *)hostnamebuffer,
-			                                       (uint16_t)clientport)))
+			} else if (!ClientConnect(new TCPClientSocket((char *)hostnamebuffer,
+			                                              clientport)))
 				return;
 		} else {
 			// we are a server
@@ -165,18 +165,21 @@ void CNullModem::WriteChar(uint8_t data)
 	}
 }
 
-Bits CNullModem::readChar() {
-	Bits rxchar = clientsocket->GetcharNonBlock();
+int16_t CNullModem::readChar()
+{
+	int16_t rxchar = clientsocket->GetcharNonBlock();
 	if (telnet && rxchar >= 0)
 		return TelnetEmulation((uint8_t)rxchar);
 	else if (rxchar == 0xff && !transparent) { // escape char
 		// get the next char
-		Bits rxchar = clientsocket->GetcharNonBlock();
-		if (rxchar==0xff) return rxchar; // 0xff 0xff -> 0xff was meant
-		rxchar&0x1? setCTS(true) : setCTS(false);
-		rxchar&0x2? setDSR(true) : setDSR(false);
-		if (rxchar&0x4) receiveByteEx(0x0,0x10);
-		return -1;	// no "payload" received
+		int16_t next_char = clientsocket->GetcharNonBlock();
+		if (next_char == 0xff)
+			return next_char; // 0xff 0xff -> 0xff was meant
+		next_char & 0x1 ? setCTS(true) : setCTS(false);
+		next_char & 0x2 ? setDSR(true) : setDSR(false);
+		if (next_char & 0x4)
+			receiveByteEx(0x0, 0x10);
+		return -1; // no "payload" received
 	} else
 		return rxchar;
 }
@@ -405,9 +408,8 @@ void CNullModem::handleUpperEvent(uint16_t type)
 		case SERIAL_NULLMODEM_DTR_EVENT: {
 			if ((!DTR_delta) && getDTR()) {
 				// DTR went positive. Try to connect.
-			        if (ClientConnect(new TCPClientSocket(
-			                    (char *)hostnamebuffer,
-			                    (uint16_t)clientport)))
+			        if (ClientConnect(new TCPClientSocket((char *)hostnamebuffer,
+			                                              clientport)))
 				        break; // no more DTR wait event when
 				               // connected
 		        }
@@ -573,13 +575,17 @@ void CNullModem::setBreak (bool /*value*/) {
 /*****************************************************************************/
 void CNullModem::setRTSDTR(bool xrts, bool xdtr) {
 	if (!transparent) {
-		uint8_t control[2];
-		control[0]=0xff;
-		control[1]=0x0;
-		if (xrts) control[1]|=1;
-		if (xdtr) control[1]|=2;
-		if (LCR&LCR_BREAK_MASK) control[1]|=4;
-		if (clientsocket) clientsocket->SendArray(control, 2);
+		uint8_t ctrl_lines[2];
+		ctrl_lines[0] = 0xff;
+		ctrl_lines[1] = 0x0;
+		if (xrts)
+			ctrl_lines[1] |= 1;
+		if (xdtr)
+			ctrl_lines[1] |= 2;
+		if (LCR & LCR_BREAK_MASK)
+			ctrl_lines[1] |= 4;
+		if (clientsocket)
+			clientsocket->SendArray(ctrl_lines, 2);
 	}
 }
 void CNullModem::setRTS(bool val) {

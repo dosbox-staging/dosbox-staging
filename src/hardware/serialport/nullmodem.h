@@ -35,6 +35,9 @@
 
 class CNullModem : public CSerial {
 public:
+	CNullModem(const CNullModem &) = delete;            // prevent copying
+	CNullModem &operator=(const CNullModem &) = delete; // prevent assignment
+
 	CNullModem(const uint8_t port_index_, CommandLine *cmd);
 	~CNullModem();
 
@@ -69,33 +72,33 @@ private:
 	bool ServerListen();
 	bool ServerConnect();
     void Disconnect();
-	Bits readChar();
-	void WriteChar(uint8_t data);
+    int16_t readChar();
+    void WriteChar(uint8_t data);
 
-	bool DTR_delta = false; // with dtrrespect, we try to establish a
-	                        // connection whenever DTR switches to 1. This
-	                        // variable is used to remember the old state.
+    bool DTR_delta = false; // with dtrrespect, we try to establish a
+	                    // connection whenever DTR switches to 1. This
+	                    // variable is used to remember the old state.
 
-	bool tx_block = false; // true while the SERIAL_TX_REDUCTION event
-	                       // is pending
+    bool tx_block = false; // true while the SERIAL_TX_REDUCTION event
+	                   // is pending
 
-	uint32_t rx_retry = 0; // counter of retries
+    uint32_t rx_retry = 0; // counter of retries
 
-	uint32_t rx_retry_max = 0; // how many POLL_EVENTS to wait before
-	                           // causing a overrun error.
+    uint32_t rx_retry_max = 0; // how many POLL_EVENTS to wait before
+	                       // causing a overrun error.
 
-	uint32_t tx_gather = 0; // how long to gather tx data before
-	                        // sending all of them [milliseconds]
+    uint32_t tx_gather = 0; // how long to gather tx data before
+	                    // sending all of them [milliseconds]
 
-	bool dtrrespect = false; // dtr behavior - only send data to the serial
-	                         // port when DTR is on
+    bool dtrrespect = false; // dtr behavior - only send data to the serial
+	                     // port when DTR is on
 
-	bool transparent = false; // if true, don't send 0xff 0xXX to toggle
-	                          // DSR/CTS.
+    bool transparent = false; // if true, don't send 0xff 0xXX to toggle
+	                      // DSR/CTS.
 
-	bool telnet = false; // Do Telnet parsing.
+    bool telnet = false; // Do Telnet parsing.
 
-	// Telnet's brain
+    // Telnet's brain
 #define TEL_CLIENT 0
 #define TEL_SERVER 1
 
