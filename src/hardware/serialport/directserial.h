@@ -32,7 +32,7 @@
 
 class CDirectSerial : public CSerial {
 public:
-	CDirectSerial(Bitu id, CommandLine* cmd);
+	CDirectSerial(const uint8_t port_index_, CommandLine *cmd);
 	~CDirectSerial();
 
 	void updatePortConfig(Bit16u divider, Bit8u lcr);
@@ -48,15 +48,15 @@ public:
 private:
 	COMPORT comport;
 
-	Bitu rx_state;
+	uint32_t rx_state = 0;
 #define D_RX_IDLE		0
 #define D_RX_WAIT		1
 #define D_RX_BLOCKED	2
 #define D_RX_FASTWAIT	3
 
-	Bitu rx_retry;		// counter of retries (every millisecond)
-	Bitu rx_retry_max;	// how many POLL_EVENTS to wait before causing
-						// an overrun error.
+	uint32_t rx_retry = 0;     // counter of retries (every millisecond)
+	uint32_t rx_retry_max = 0; // how many POLL_EVENTS to wait before
+	                           // causing an overrun error.
 	bool doReceive();
 
 #if SERIAL_DEBUG

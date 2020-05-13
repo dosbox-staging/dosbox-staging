@@ -148,20 +148,19 @@ bool TCPClientSocket::GetRemoteAddressString(Bit8u* buffer) {
 	return true;
 }
 
-bool TCPClientSocket::ReceiveArray(Bit8u* data, Bitu* size) {
-	if(SDLNet_CheckSockets(listensocketset,0))
-	{
+bool TCPClientSocket::ReceiveArray(uint8_t *data, uint32_t *size)
+{
+	if (SDLNet_CheckSockets(listensocketset, 0)) {
 		Bits retval = SDLNet_TCP_Recv(mysock, data, static_cast<int>(*size));
 		if(retval<1) {
 			isopen=false;
 			*size = 0;
 			return false;
 		} else {
-			*size = static_cast<Bitu>(retval);
+			*size = static_cast<uint32_t>(retval);
 			return true;
 		}
-	}
-	else {
+	} else {
 		*size=0;
 		return true;
 	}
@@ -190,7 +189,7 @@ bool TCPClientSocket::Putchar(Bit8u data)
 	return SendArray(&data, 1);
 }
 
-bool TCPClientSocket::SendArray(Bit8u* data, Bitu bufsize)
+bool TCPClientSocket::SendArray(uint8_t *data, uint32_t bufsize)
 {
 	if (SDLNet_TCP_Send(mysock, data, static_cast<int>(bufsize))
 	    != (int)bufsize) {
@@ -225,7 +224,7 @@ void TCPClientSocket::FlushBuffer()
 	}
 }
 
-void TCPClientSocket::SetSendBufferSize(Bitu bufsize)
+void TCPClientSocket::SetSendBufferSize(uint32_t bufsize)
 {
 	// Only resize the buffer if needed
 	if (!sendbuffer || sendbuffersize != bufsize) {

@@ -35,7 +35,7 @@
 
 class CNullModem : public CSerial {
 public:
-	CNullModem(Bitu id, CommandLine* cmd);
+	CNullModem(const uint8_t port_index_, CommandLine *cmd);
 	~CNullModem();
 
 	void updatePortConfig(Bit16u divider, Bit8u lcr);
@@ -58,7 +58,7 @@ private:
 
 	Bit8u hostnamebuffer[128]; // the name passed to us by the user
 
-	Bitu rx_state;
+	uint32_t rx_state = 0;
 #define N_RX_IDLE		0
 #define N_RX_WAIT		1
 #define N_RX_BLOCKED	2
@@ -80,15 +80,14 @@ private:
 	bool tx_block;		// true while the SERIAL_TX_REDUCTION event
 						// is pending
 
-	Bitu rx_retry;		// counter of retries
+	uint32_t rx_retry = 0; // counter of retries
 
-	Bitu rx_retry_max;	// how many POLL_EVENTS to wait before causing
-						// a overrun error.
+	uint32_t rx_retry_max = 0; // how many POLL_EVENTS to wait before
+	                           // causing a overrun error.
 
-	Bitu tx_gather;		// how long to gather tx data before
-						// sending all of them [milliseconds]
+	uint32_t tx_gather = 0; // how long to gather tx data before
+	                        // sending all of them [milliseconds]
 
-	
 	bool dtrrespect;	// dtr behavior - only send data to the serial
 						// port when DTR is on
 

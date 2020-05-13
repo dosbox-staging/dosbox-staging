@@ -51,17 +51,16 @@
 
 class MyFifo {
 public:
-	MyFifo(Bitu maxsize_) {
-		maxsize=size=maxsize_;
-		pos=used=0;
-		data=new Bit8u[size];
+	MyFifo(uint32_t maxsize_)
+	{
+		maxsize = size = maxsize_;
+		pos = used = 0;
+		data = new uint8_t[size];
 	}
 	~MyFifo() {
 		delete[] data;
 	}
-	INLINE Bitu getFree(void) {
-		return size-used;
-	}
+	INLINE uint32_t getFree(void) { return size - used; }
 	bool isEmpty() {
 		return used==0;
 	}
@@ -69,10 +68,8 @@ public:
 		return (size-used)==0;
 	}
 
-	INLINE Bitu getUsage(void) {
-		return used;
-	}
-	void setSize(Bitu newsize)
+	INLINE uint32_t getUsage(void) { return used; }
+	void setSize(uint32_t newsize)
 	{
 		size=newsize;
 		pos=used=0;
@@ -82,10 +79,12 @@ public:
 		data[0]=0;
 	}
 
-	bool addb(Bit8u _val) {
-		Bitu where=pos+used;
-		if (where>=size) where-=size;
-		if(used>=size) {
+	bool addb(uint8_t _val)
+	{
+		uint32_t where = pos + used;
+		if (where >= size)
+			where -= size;
+		if (used >= size) {
 			// overwrite last byte
 			if(where==0) where=size-1;
 			else where--;
@@ -96,30 +95,37 @@ public:
 		used++;
 		return true;
 	}
-	Bit8u getb() {
-		if (!used) return data[pos];
-		Bitu where=pos;
+	uint8_t getb()
+	{
+		if (!used)
+			return data[pos];
+		uint32_t where = pos;
 		used--;
 		if(used) pos++;
 		if (pos>=size) pos-=size;
 		return data[where];
 	}
-	Bit8u getTop() {
-		Bitu where=pos+used;
-		if (where>=size) where-=size;
-		if(used>=size) {
-			if(where==0) where=size-1;
+	uint8_t getTop()
+	{
+		uint32_t where = pos + used;
+		if (where >= size)
+			where -= size;
+		if (used >= size) {
+			if (where == 0)
+				where = size - 1;
 			else where--;
 		}
 		return data[where];
 	}
 
-	Bit8u probeByte() {
-		return data[pos];
-	}
+	uint8_t probeByte() { return data[pos]; }
+
 private:
-	Bit8u * data;
-	Bitu maxsize,size,pos,used;
+	uint8_t *data = nullptr;
+	uint32_t maxsize = 0;
+	uint32_t size = 0;
+	uint32_t pos = 0;
+	uint32_t used = 0;
 };
 
 class CSerial {
@@ -135,7 +141,9 @@ public:
 	void log_ser(bool active, char const* format,...);
 #endif
 
-	static bool getBituSubstring(const char* name,Bitu* data, CommandLine* cmd);
+	static bool getUintFromString(const char *name,
+	                              uint32_t &data,
+	                              CommandLine *cmd);
 
 	bool InstallationSuccessful;// check after constructing. If
 								// something was wrong, delete it right away.
@@ -174,8 +182,8 @@ public:
 #define	SERIAL_BASE_EVENT_COUNT 7
 #define SERIAL_MAX_PORTS        4
 
-	Bitu irq;
-	
+	uint32_t irq = 0;
+
 	// CSerial requests an update of the input lines
 	virtual void updateMSR()=0;
 
@@ -210,15 +218,15 @@ public:
 	void Write_SPR(Bit8u data);
 	void Write_reserved(Bit8u data, Bit8u address);
 
-	Bitu Read_RHR();
-	Bitu Read_IER();
-	Bitu Read_ISR();
-	Bitu Read_LCR();
-	Bitu Read_MCR();
-	Bitu Read_LSR();
-	Bitu Read_MSR();
-	Bitu Read_SPR();
-	
+	uint32_t Read_RHR();
+	uint32_t Read_IER();
+	uint32_t Read_ISR();
+	uint32_t Read_LCR();
+	uint32_t Read_MCR();
+	uint32_t Read_LSR();
+	uint32_t Read_MSR();
+	uint32_t Read_SPR();
+
 	// If a byte comes from loopback or prepherial, put it in here.
 	void receiveByte(Bit8u data);
 	void receiveByteEx(Bit8u data, Bit8u error);
@@ -246,9 +254,9 @@ public:
 	virtual void updatePortConfig(Bit16u divider, Bit8u lcr)=0;
 	
 	void Init_Registers();
-	
-	bool Putchar(Bit8u data, bool wait_dtr, bool wait_rts, Bitu timeout);
-	bool Getchar(Bit8u* data, Bit8u* lsr, bool wait_dsr, Bitu timeout);
+
+	bool Putchar(uint8_t data, bool wait_dtr, bool wait_rts, uint32_t timeout);
+	bool Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeout);
 	uint8_t PortNumber() const;
 
 private:
@@ -365,13 +373,12 @@ private:
 
 	// error printing
 	bool errormsg_pending;
-	Bitu framingErrors;
-	Bitu parityErrors;
-	Bitu overrunErrors;
-	Bitu txOverrunErrors;
-	Bitu overrunIF0;
-	Bitu breakErrors;
-
+	uint32_t framingErrors = 0;
+	uint32_t parityErrors = 0;
+	uint32_t overrunErrors = 0;
+	uint32_t txOverrunErrors = 0;
+	uint32_t overrunIF0 = 0;
+	uint32_t breakErrors = 0;
 
 	// Modem Status Register
 	//	r
@@ -406,16 +413,17 @@ private:
 	void transmitLoopbackByte(Bit8u val, bool value);
 
 	// 16C550 (FIFO)
-	public: // todo remove
+public: // todo remove
 	MyFifo* rxfifo;
-	private:
+private:
 	MyFifo* txfifo;
 	MyFifo* errorfifo;
-	Bitu errors_in_fifo;
-	Bitu rx_interrupt_threshold;
-	Bitu fifosize;
-	Bit8u FCR;
-	bool sync_guardtime;
+	uint32_t errors_in_fifo = 0;
+	uint32_t rx_interrupt_threshold = 0;
+	uint32_t fifosize = 0;
+        uint8_t FCR = 0;
+        bool sync_guardtime = false;
+
 	#define FIFO_STATUS_ACTIVE 0xc0 // FIFO is active AND works ;)
 	#define FIFO_ERROR 0x80
 	#define FCR_ACTIVATE 0x01

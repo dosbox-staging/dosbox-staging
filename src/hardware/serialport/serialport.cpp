@@ -96,9 +96,9 @@ device_COM::~device_COM() {
 CSerial *serialports[SERIAL_MAX_PORTS] = {0};
 
 static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
-	Bitu i;
-	Bitu retval;
-	Bitu index = port & 0x7;
+	uint32_t i;
+	uint32_t retval;
+	uint8_t offset_type = static_cast<uint8_t>(port) & 0x7;
 	switch(port&0xff8) {
 		case 0x3f8: i=0; break;
 		case 0x2f8: i=1; break;
@@ -108,31 +108,15 @@ static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
 	}
 	if(serialports[i]==0) return 0xff;
 
-	switch (index) {
-		case RHR_OFFSET:
-			retval = serialports[i]->Read_RHR();
-			break;
-		case IER_OFFSET:
-			retval = serialports[i]->Read_IER();
-			break;
-		case ISR_OFFSET:
-			retval = serialports[i]->Read_ISR();
-			break;
-		case LCR_OFFSET:
-			retval = serialports[i]->Read_LCR();
-			break;
-		case MCR_OFFSET:
-			retval = serialports[i]->Read_MCR();
-			break;
-		case LSR_OFFSET:
-			retval = serialports[i]->Read_LSR();
-			break;
-		case MSR_OFFSET:
-			retval = serialports[i]->Read_MSR();
-			break;
-		case SPR_OFFSET:
-			retval = serialports[i]->Read_SPR();
-			break;
+	switch (offset_type) {
+	case RHR_OFFSET: retval = serialports[i]->Read_RHR(); break;
+	case IER_OFFSET: retval = serialports[i]->Read_IER(); break;
+	case ISR_OFFSET: retval = serialports[i]->Read_ISR(); break;
+	case LCR_OFFSET: retval = serialports[i]->Read_LCR(); break;
+	case MCR_OFFSET: retval = serialports[i]->Read_MCR(); break;
+	case LSR_OFFSET: retval = serialports[i]->Read_LSR(); break;
+	case MSR_OFFSET: retval = serialports[i]->Read_MSR(); break;
+	case SPR_OFFSET: retval = serialports[i]->Read_SPR(); break;
 	}
 
 #if SERIAL_DEBUG
@@ -148,8 +132,8 @@ static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
 	return retval;	
 }
 static void SERIAL_Write (Bitu port, Bitu val, Bitu) {
-	Bitu i;
-	Bitu index = port & 0x7;
+	uint32_t i;
+	const uint8_t offset_type = static_cast<uint8_t>(port) & 0x7;
 	switch(port&0xff8) {
 		case 0x3f8: i=0; break;
 		case 0x2f8: i=1; break;
@@ -163,32 +147,23 @@ static void SERIAL_Write (Bitu port, Bitu val, Bitu) {
 		const char* const dbgtext[]={"THR","IER","FCR",
 			"LCR","MCR","!LSR","MSR","SPR","DLL","DLM"};
 		if(serialports[i]->dbg_register) {
-			Bitu debugindex=index;
-			if((index<2) && ((serialports[i]->LCR)&LCR_DIVISOR_Enable_MASK))
+			uint32_t debugindex = offset_type;
+			if ((offset_type < 2) &&
+			    ((serialports[i]->LCR) & LCR_DIVISOR_Enable_MASK)) {
 				debugindex += 8;
+			}
 			serialports[i]->log_ser(serialports[i]->dbg_register,
-				"write 0x%2x to %s.",val,dbgtext[debugindex]);
-		}
+			                        "write 0x%2x to %s.", val,
+			                        dbgtext[debugindex]);
+	        }
 #endif
-	switch (index) {
-		case THR_OFFSET:
-			serialports[i]->Write_THR (val);
-			return;
-		case IER_OFFSET:
-			serialports[i]->Write_IER (val);
-			return;
-		case FCR_OFFSET:
-			serialports[i]->Write_FCR (val);
-			return;
-		case LCR_OFFSET:
-			serialports[i]->Write_LCR (val);
-			return;
-		case MCR_OFFSET:
-			serialports[i]->Write_MCR (val);
-			return;
-		case MSR_OFFSET:
-			serialports[i]->Write_MSR (val);
-			return;
+	        switch (offset_type) {
+	        case THR_OFFSET: serialports[i]->Write_THR(val); return;
+	        case IER_OFFSET: serialports[i]->Write_IER(val); return;
+	        case FCR_OFFSET: serialports[i]->Write_FCR(val); return;
+	        case LCR_OFFSET: serialports[i]->Write_LCR(val); return;
+	        case MCR_OFFSET: serialports[i]->Write_MCR(val); return;
+	        case MSR_OFFSET: serialports[i]->Write_MSR(val); return;
 		case SPR_OFFSET:
 			serialports[i]->Write_SPR (val);
 			return;
@@ -208,7 +183,7 @@ void CSerial::log_ser(bool active, char const* format,...) {
 		vsprintf(buf+strlen(buf),format,msg);
 		va_end(msg);
 		// Add newline if not present
-		Bitu len=strlen(buf);
+		const uint32_t len = strlen(buf);
 		if(buf[len-1]!='\n') strcat(buf,"\r\n");
 		fputs(buf,debugfp);
 	}
@@ -235,7 +210,7 @@ void CSerial::changeLineProperties() {
 }
 
 static void Serial_EventHandler(Bitu val) {
-	Bitu serclassid=val&0x3;
+	const uint32_t serclassid = val & 0x3;
 	if(serialports[serclassid]!=0)
 		serialports[serclassid]->handleEvent(val>>2);
 }
@@ -329,8 +304,7 @@ void CSerial::clear (Bit8u priority) {
 }
 
 void CSerial::ComputeInterrupts () {
-
-	Bitu val = IER & waiting_interrupts;
+	const uint32_t val = IER & waiting_interrupts;
 
 	if (val & ERROR_PRIORITY)			ISR = ISR_ERROR_VAL;
 	else if (val & TIMEOUT_PRIORITY)	ISR = ISR_FIFOTIMEOUT_VAL;
@@ -540,11 +514,12 @@ void CSerial::Write_THR (Bit8u data) {
 /*****************************************************************************/
 /* Receive Holding Register, also LSB of Divisor Latch (r/w)                **/
 /*****************************************************************************/
-Bitu CSerial::Read_RHR () {
+uint32_t CSerial::Read_RHR()
+{
 	// 0-7 received data
 	if ((LCR & LCR_DIVISOR_Enable_MASK)) return baud_divider&0xff;
 	else {
-		Bit8u data=rxfifo->getb();
+		uint8_t data = rxfifo->getb();
 		if(FCR&FCR_ACTIVATE) {
 			Bit8u error=errorfifo->getb();
 			if(error) errors_in_fifo--;
@@ -572,11 +547,12 @@ Bitu CSerial::Read_RHR () {
 /*****************************************************************************/
 // Modified by:
 // - writing to it.
-Bitu CSerial::Read_IER () {
+uint32_t CSerial::Read_IER()
+{
 	// 0	receive holding register (byte received)
 	// 1	transmit holding register (byte sent)
 	// 2	receive line status (overrun, parity error, frame error, break)
-	// 3	modem status 
+	// 3	modem status
 	// 4-7	0
 
 	if (LCR & LCR_DIVISOR_Enable_MASK) return baud_divider>>8;
@@ -605,7 +581,8 @@ void CSerial::Write_IER (Bit8u data) {
 // modified by:
 // - incoming interrupts
 // - loopback mode
-Bitu CSerial::Read_ISR () {
+uint32_t CSerial::Read_ISR()
+{
 	// 0	0:interrupt pending 1: no interrupt
 	// 1-3	identification
 	//      011 LSR
@@ -669,7 +646,8 @@ void CSerial::Write_FCR (Bit8u data) {
 // - switch between RHR/THR and baud rate registers
 // Modified by:
 // - writing to it.
-Bitu CSerial::Read_LCR () {
+uint32_t CSerial::Read_LCR()
+{
 	// 0-1	word length
 	// 2	stop bits
 	// 3	parity enable
@@ -703,7 +681,8 @@ void CSerial::Write_LCR (Bit8u data) {
 // Set levels of RTS and DTR, as well as loopback-mode.
 // Modified by: 
 // - writing to it.
-Bitu CSerial::Read_MCR () {
+uint32_t CSerial::Read_MCR()
+{
 	// 0	-DTR
 	// 1	-RTS
 	// 2	-OP1
@@ -810,13 +789,9 @@ void CSerial::Write_MCR (Bit8u data) {
 // modified by:
 // - event from real serial port
 // - loopback
-Bitu CSerial::Read_LSR () {
-	Bitu retval = LSR & (LSR_ERROR_MASK|LSR_TX_EMPTY_MASK);
-	if(txfifo->isEmpty()) retval |= LSR_TX_HOLDING_EMPTY_MASK;
-	if(!(rxfifo->isEmpty()))retval |= LSR_RX_DATA_READY_MASK;
-	if(errors_in_fifo) retval |= FIFO_ERROR;
-	LSR &= (~LSR_ERROR_MASK);			// clear error bits on read
-	clear (ERROR_PRIORITY);
+uint32_t CSerial::Read_LSR()
+{
+	uint32_t retval = LSR & (LSR_ERROR_MASK | LSR_TX_EMPTY_MASK);
 	return retval;
 }
 
@@ -835,24 +810,21 @@ void CSerial::Write_MSR (Bit8u val) {
 // modified by:
 // - real values
 // - write operation to MCR in loopback mode
-Bitu CSerial::Read_MSR () {
-	Bit8u retval=0;
-	
+uint32_t CSerial::Read_MSR()
+{
+	uint8_t retval = 0;
 	if (loopback) {
-		
 		if (rts) retval |= MSR_CTS_MASK;
 		if (dtr) retval |= MSR_DSR_MASK;
 		if (op1) retval |= MSR_RI_MASK;
 		if (op2) retval |= MSR_CD_MASK;
-	
-	} else {
 
+	} else {
 		updateMSR();
 		if (cd) retval |= MSR_CD_MASK;
 		if (ri) retval |= MSR_RI_MASK;
 		if (dsr) retval |= MSR_DSR_MASK;
 		if (cts) retval |= MSR_CTS_MASK;
-	
 	}
 	// new delta flags
 	if(d_cd) retval|=MSR_dCD_MASK;
@@ -873,7 +845,8 @@ Bitu CSerial::Read_MSR () {
 /* Scratchpad Register (r/w)                                                **/
 /*****************************************************************************/
 // Just a memory register. Not much to do here.
-Bitu CSerial::Read_SPR () {
+uint32_t CSerial::Read_SPR()
+{
 	return SPR;
 }
 
@@ -1080,7 +1053,7 @@ CSerial::CSerial(const uint8_t port_index_, CommandLine *cmd)
 	const uint16_t base = serial_baseaddr[port_index];
 
 	irq = serial_defaultirq[port_index];
-	getBituSubstring("irq:",&irq, cmd);
+	getUintFromString("irq:", irq, cmd);
 	if (irq < 2 || irq > 15)
 		irq = serial_defaultirq[port_index];
 
@@ -1135,29 +1108,30 @@ CSerial::CSerial(const uint8_t port_index_, CommandLine *cmd)
 	overrunIF0=0;
 	breakErrors=0;
 
-	for (Bitu i = 0; i <= 7; i++) {
+	for (uint32_t i = 0; i <= 7; i++) {
 		WriteHandler[i].Install (i + base, SERIAL_Write, IO_MB);
-		ReadHandler[i].Install (i + base, SERIAL_Read, IO_MB);
+		ReadHandler[i].Install(i + base, SERIAL_Read, IO_MB);
 	}
 }
 
-bool CSerial::getBituSubstring(const char* name,Bitu* data, CommandLine* cmd) {
+bool CSerial::getUintFromString(const char *name, uint32_t &data, CommandLine *cmd)
+{
+	bool result = false;
 	std::string tmpstring;
-	if(!(cmd->FindStringBegin(name,tmpstring,false))) return false;
-	const char* tmpchar = tmpstring.c_str();
-	unsigned int d = 0;
-	if(sscanf(tmpchar,"%u",&d) != 1) return false;
-	*data = static_cast<Bitu>(d);
-	return true;
+	if (cmd->FindStringBegin(name, tmpstring, false))
+		result = (sscanf(tmpstring.c_str(), "%u", &data) == 1);
+	return result;
 }
 
 CSerial::~CSerial(void) {
 	DOS_DelDevice(mydosdevice);
-	for(Bitu i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++)
+	for (uint32_t i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++)
 		removeEvent(i);
 };
-bool CSerial::Getchar(Bit8u* data, Bit8u* lsr, bool wait_dsr, Bitu timeout) {
-	double starttime=PIC_FullIndex();
+
+bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeout)
+{
+	double starttime = PIC_FullIndex();
 	// wait for DSR on
 	if(wait_dsr) {
 		while((!(Read_MSR()&0x20))&&(starttime>PIC_FullIndex()-timeout))
@@ -1192,9 +1166,10 @@ uint8_t CSerial::PortNumber() const
 	return port_index + 1;
 }
 
-bool CSerial::Putchar(Bit8u data, bool wait_dsr, bool wait_cts, Bitu timeout) {
-	
-	double starttime=PIC_FullIndex();
+bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeout)
+{
+	double starttime = PIC_FullIndex();
+
 	// wait for it to become empty
 	while(!(Read_LSR()&0x20)) {
 		CALLBACK_Idle();

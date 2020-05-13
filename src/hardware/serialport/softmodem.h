@@ -61,20 +61,12 @@ bool MODEM_ReadPhonebook(const std::string &filename);
 
 class CFifo {
 public:
-	CFifo(Bitu _size)
-		: data(_size),
-		  size(_size),
-		  pos(0),
-		  used(0)
-	{}
+	CFifo(uint32_t _size) : data(_size), size(_size), pos(0), used(0) {}
 
-	INLINE Bitu left(void) const {
-		return size - used;
-	}
-	INLINE Bitu inuse(void) const {
-		return used;
-	}
-	void clear(void) {
+	INLINE uint32_t left(void) const { return size - used; }
+	INLINE uint32_t inuse(void) const { return used; }
+	void clear(void)
+	{
 		used = 0;
 		pos = 0;
 	}
@@ -89,7 +81,7 @@ public:
 			return;
 		}
 		//assert(used<size);
-		Bitu where = pos + used;
+		uint32_t where = pos + used;
 		if (where >= size)
 			where -= size;
 		data[where]=_val;
@@ -97,9 +89,10 @@ public:
 		used++;
 	}
 
-	void adds(Bit8u * _str,Bitu _len) {
-		if ( (used+_len) > size) {
-			static Bits lcount=0;
+	void adds(uint8_t *_str, uint32_t _len)
+	{
+		if ((used + _len) > size) {
+			static Bits lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
 				LOG_MSG("MODEM: FIFO Overflow! (adds len %" PRIuPTR ")",
@@ -109,7 +102,7 @@ public:
 		}
 
 		//assert((used+_len)<=size);
-		Bitu where = pos + used;
+		uint32_t where = pos + used;
 		used += _len;
 		while (_len--) {
 			if (where >= size)
@@ -128,7 +121,7 @@ public:
 			}
 			return data[pos];
 		}
-		Bitu where = pos;
+		uint32_t where = pos;
 		if (++pos >= size)
 			pos -= size;
 		used--;
@@ -136,7 +129,8 @@ public:
 		return data[where];
 	}
 
-	void gets(Bit8u * _str,Bitu _len) {
+	void gets(uint8_t *_str, uint32_t _len)
+	{
 		if (!used) {
 			static Bits lcount = 0;
 			if (lcount < 1000) {
@@ -155,11 +149,12 @@ public:
 				pos -= size;
 		}
 	}
+
 private:
-	std::vector<Bit8u> data;
-	Bitu size;
-	Bitu pos;
-	Bitu used;
+	std::vector<uint8_t> data;
+	uint32_t size = 0;
+	uint32_t pos = 0;
+	uint32_t used = 0;
 };
 #define MREG_AUTOANSWER_COUNT 0
 #define MREG_RING_COUNT 1
@@ -173,26 +168,26 @@ private:
 
 class CSerialModem : public CSerial {
 public:
-	CSerialModem(Bitu id, CommandLine* cmd);
+	CSerialModem(const uint8_t port_index_, CommandLine *cmd);
 	~CSerialModem();
 	void Reset();
 
 	void SendLine(const char *line);
 	void SendRes(const ResTypes response);
-	void SendNumber(Bitu val);
+	void SendNumber(uint32_t val);
 
 	void EnterIdleState();
 	void EnterConnectedState();
 	bool Dial(const char *host);
 	void AcceptIncomingCall(void);
-	Bitu ScanNumber(char * & scan) const;
+	uint32_t ScanNumber(char *&scan) const;
 	char GetChar(char * & scan) const;
 
 	void DoCommand();
 
-	// void MC_Changed(Bitu new_mc);
+	// void MC_Changed(uint32_t new_mc);
 
-	void TelnetEmulation(Bit8u * data, Bitu size);
+	void TelnetEmulation(uint8_t *data, uint32_t size);
 
 	//TODO
 	void Timer2(void);
@@ -221,21 +216,21 @@ protected:
 	bool ringing;
 	bool numericresponse;   // true: send control response as number.
 	                        // false: send text (i.e. NO DIALTONE)
-	bool telnetmode;        // true: process IAC commands.
+	bool telnetmode;        // true: process IAC commands.	
 	bool connected;
-	Bitu doresponse;
-	Bit8u waiting_tx_character;
-	Bitu cmdpause;
-	Bits ringtimer;
-	Bits ringcount;
-	Bitu plusinc;
-	Bitu cmdpos;
-	Bitu flowcontrol;
-	Bitu dtrmode;
-	Bits dtrofftimer;
-	Bit8u tmpbuf[MODEM_BUFFER_QUEUE_SIZE];
-	Bitu listenport;
-	Bit8u reg[SREGS];
+	uint32_t doresponse = 0;
+	uint8_t waiting_tx_character = 0;
+	uint32_t cmdpause = 0;
+	int32_t ringtimer = 0;
+	int32_t ringcount = 0;
+	uint32_t plusinc = 0;
+	uint32_t cmdpos = 0;
+	uint32_t flowcontrol = 0;
+	uint32_t dtrmode = 0;
+	int32_t dtrofftimer = 0;
+	uint8_t tmpbuf[MODEM_BUFFER_QUEUE_SIZE] = {0};
+	uint32_t listenport = 23; // 23 is the default telnet TCP/IP port
+	uint8_t reg[SREGS] = {0};
 	std::unique_ptr<TCPServerSocket> serversocket;
 	std::unique_ptr<TCPClientSocket> clientsocket;
 	std::unique_ptr<TCPClientSocket> waitingclientsocket;
@@ -251,10 +246,8 @@ protected:
 	} telClient;
 
 	struct {
-		bool active;
-		double f1, f2;
-		Bitu len,pos;
-		char str[256];
+		uint32_t len = 0;
+		uint32_t pos = 0;
 	} dial;
 };
 #endif

@@ -25,34 +25,21 @@
 #include "serialport.h"
 #include "nullmodem.h"
 
-CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
-	Bitu temptcpport=23;
-	memset(&telClient, 0, sizeof(telClient));
-	InstallationSuccessful = false;
-	serversocket = 0;
-	clientsocket = 0;
-	serverport = 0;
-	clientport = 0;
-
-	rx_retry = 0;
+CNullModem::CNullModem(const uint8_t port_index_, CommandLine *cmd)
+        : CSerial(port_index_, cmd)
+{
+	uint32_t temptcpport = 23;
 	rx_retry_max = 20;
 	rx_state=N_RX_DISC;
 
 	tx_gather = 12;
-	
-	dtrrespect=false;
-	tx_block=false;
-	receiveblock=false;
-	transparent=false;
-	telnet=false;
-	
-	Bitu bool_temp=0;
+	uint32_t bool_temp = 0;
 
 	// usedtr: The nullmodem will
 	// 1) when it is client connect to the server not immediately but
 	//    as soon as a modem-aware application is started (DTR is switched on).
 	// 2) only receive data when DTR is on.
-	if (getBituSubstring("usedtr:", &bool_temp, cmd)) {
+	if (getUintFromString("usedtr:", bool_temp, cmd)) {
 		if (bool_temp==1) {
 			dtrrespect=true;
 			transparent=true;
@@ -60,12 +47,12 @@ CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
 		}
 	}
 	// transparent: don't add additional handshake control.
-	if (getBituSubstring("transparent:", &bool_temp, cmd)) {
+	if (getUintFromString("transparent:", bool_temp, cmd)) {
 		if (bool_temp==1) transparent=true;
 		else transparent=false;
 	}
 	// telnet: interpret telnet commands.
-	if (getBituSubstring("telnet:", &bool_temp, cmd)) {
+	if (getUintFromString("telnet:", bool_temp, cmd)) {
 		if (bool_temp==1) {
 			transparent=true;
 			telnet=true;
@@ -73,26 +60,26 @@ CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
 	}
 	// rxdelay: How many milliseconds to wait before causing an
 	// overflow when the application is unresponsive.
-	if (getBituSubstring("rxdelay:", &rx_retry_max, cmd)) {
+	if (getUintFromString("rxdelay:", rx_retry_max, cmd)) {
 		if (!(rx_retry_max<=10000)) {
 			rx_retry_max=50;
 		}
 	}
 	// txdelay: How many milliseconds to wait before sending data.
 	// This reduces network overhead quite a lot.
-	if (getBituSubstring("txdelay:", &tx_gather, cmd)) {
+	if (getUintFromString("txdelay:", tx_gather, cmd)) {
 		if (!(tx_gather<=500)) {
 			tx_gather=12;
 		}
 	}
 	// port is for both server and client
-	if (getBituSubstring("port:", &temptcpport, cmd)) {
+	if (getUintFromString("port:", temptcpport, cmd)) {
 		if (!(temptcpport>0&&temptcpport<65536)) {
 			temptcpport=23;
 		}
 	}
 	// socket inheritance (client-alike)
-	if (getBituSubstring("inhsocket:", &bool_temp, cmd)) {
+	if (getUintFromString("inhsocket:", bool_temp, cmd)) {
 #ifdef NATIVESOCKETS
 		if (Netwrapper_GetCapabilities()&NETWRAPPER_TCP_NATIVESOCKET) {
 			if (bool_temp==1) {

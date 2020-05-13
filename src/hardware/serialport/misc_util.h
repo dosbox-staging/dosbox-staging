@@ -85,16 +85,16 @@ public:
 	// >0: data char
 	Bits GetcharNonBlock();
 
-	bool Putchar(Bit8u data);
-	bool SendArray(Bit8u* data, Bitu bufsize);
-	bool ReceiveArray(Bit8u* data, Bitu* size);
+	bool Putchar(uint8_t data);
+	bool SendArray(uint8_t *data, uint32_t bufsize);
+	bool ReceiveArray(uint8_t *data, uint32_t *size);
 
 	bool isopen = false;
 
 	bool GetRemoteAddressString(Bit8u* buffer);
 
 	void FlushBuffer();
-	void SetSendBufferSize(Bitu bufsize);
+	void SetSendBufferSize(uint32_t bufsize);
 
 	// buffered send functions
 	bool SendByteBuffered(Bit8u data);
@@ -109,9 +109,9 @@ private:
 	SDLNet_SocketSet listensocketset = nullptr;
 
 	// Items for send buffering
-	Bitu sendbuffersize = 0;
-	Bitu sendbufferindex = 0;
-	Bit8u *sendbuffer = nullptr;
+	uint32_t sendbuffersize = 0;
+	uint32_t sendbufferindex = 0;
+	uint8_t *sendbuffer = nullptr;
 };
 
 struct TCPServerSocket {

@@ -102,40 +102,41 @@ static const char *MODEM_GetAddressFromPhone(const char *input) {
 	return nullptr;
 }
 
-CSerialModem::CSerialModem(Bitu id, CommandLine* cmd)
-	: CSerial(id, cmd),
-	  rqueue(new CFifo(MODEM_BUFFER_QUEUE_SIZE)),
-	  tqueue(new CFifo(MODEM_BUFFER_QUEUE_SIZE)),
-	  cmdbuf {0},
-	  commandmode(false),
-	  echo(false),
-	  oldDTRstate(false),
-	  ringing(false),
-	  numericresponse(false),
-	  // Default to direct null modem connection; Telnet mode interprets IAC codes
-	  telnetmode(false),
-	  connected(false),
-	  doresponse(0),
-	  waiting_tx_character(0),
-	  cmdpause(0),
-	  ringtimer(0),
-	  ringcount(0),
-	  plusinc(0),
-	  cmdpos(0),
-	  flowcontrol(0),
-	  tmpbuf {0},
-	  listenport(23),
-	  reg {0},
-	  serversocket(nullptr),
-	  clientsocket(nullptr),
-	  waitingclientsocket(nullptr),
-	  telClient {},
-	  dial {}
+CSerialModem::CSerialModem(const uint8_t port_index_, CommandLine *cmd)
+        : CSerial(port_index_, cmd),
+          rqueue(new CFifo(MODEM_BUFFER_QUEUE_SIZE)),
+          tqueue(new CFifo(MODEM_BUFFER_QUEUE_SIZE)),
+          cmdbuf{0},
+          commandmode(false),
+          echo(false),
+          oldDTRstate(false),
+          ringing(false),
+          numericresponse(false),
+          // Default to direct null modem connection; Telnet mode interprets IAC
+          // codes
+          telnetmode(false),
+          connected(false),
+          doresponse(0),
+          waiting_tx_character(0),
+          cmdpause(0),
+          ringtimer(0),
+          ringcount(0),
+          plusinc(0),
+          cmdpos(0),
+          flowcontrol(0),
+          tmpbuf{0},
+          listenport(23),
+          reg{0},
+          serversocket(nullptr),
+          clientsocket(nullptr),
+          waitingclientsocket(nullptr),
+          telClient{},
+          dial{}
 {
 	InstallationSuccessful=false;
 
 	// Setup the listening port, and ignore the return code as this is optional
-	(void) getBituSubstring("listenport:", &listenport, cmd);
+	(void)getUintFromString("listenport:", listenport, cmd);
 
 	// TODO: Fix dialtones if requested
 	//mhd.chan=MIXER_AddChannel((MIXER_MixHandler)this->MODEM_CallBack,8000,"MODEM");
@@ -151,7 +152,8 @@ CSerialModem::CSerialModem(Bitu id, CommandLine* cmd)
 
 CSerialModem::~CSerialModem() {
 	// remove events
-	for (Bitu i = SERIAL_BASE_EVENT_COUNT+1; i <= SERIAL_MODEM_EVENT_COUNT; i++)
+	for (uint32_t i = SERIAL_BASE_EVENT_COUNT + 1;
+	     i <= SERIAL_MODEM_EVENT_COUNT; i++)
 		removeEvent(i);
 }
 
@@ -175,7 +177,7 @@ void CSerialModem::handleUpperEvent(Bit16u type) {
 				CSerial::setCTS(false);
 			}
 		} else {
-			static Bits lcount=0;
+			static uint16_t lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
 				LOG_MSG("MODEM: TX Buffer overflow!");
@@ -209,7 +211,8 @@ void CSerialModem::SendLine(const char *line) {
 }
 
 // only for numbers < 1000...
-void CSerialModem::SendNumber(Bitu val) {
+void CSerialModem::SendNumber(uint32_t val)
+{
 	rqueue->addb(0xd);
 	rqueue->addb(0xa);
 
@@ -225,7 +228,7 @@ void CSerialModem::SendNumber(Bitu val) {
 
 void CSerialModem::SendRes(const ResTypes response) {
 	char const * string = nullptr;
-	Bitu code = -1;
+	uint32_t code = -1;
 	switch (response) {
 		case ResOK:         code = 0; string = "OK"; break;
 		case ResCONNECT:    code = 1; string = "CONNECT 57600"; break;
@@ -242,7 +245,7 @@ void CSerialModem::SendRes(const ResTypes response) {
 		if (doresponse == 2 && (response == ResRING ||
 			response == ResCONNECT || response == ResNOCARRIER))
 			return;
-		if (numericresponse && code != static_cast<Bitu>(-1))
+		if (numericresponse && code != static_cast<uint32_t>(-1))
 			SendNumber(code);
 		else if (string != nullptr)
 			SendLine(string);
@@ -301,8 +304,9 @@ void CSerialModem::AcceptIncomingCall(void) {
 	}
 }
 
-Bitu CSerialModem::ScanNumber(char * & scan) const {
-	Bitu ret=0;
+uint32_t CSerialModem::ScanNumber(char *&scan) const
+{
+	uint32_t ret = 0;
 	while (char c = *scan) {
 		if (c >= '0' && c <= '9') {
 			ret*=10;
@@ -581,7 +585,7 @@ void CSerialModem::DoCommand() {
 			// Response options
 			// 0 = all on, 1 = all off,
 			// 2 = no ring and no connect/carrier in answermode
-			Bitu val = ScanNumber(scanbuf);
+			const uint32_t val = ScanNumber(scanbuf);
 			if (!(val > 2)) {
 				doresponse = val;
 				break;
@@ -591,7 +595,7 @@ void CSerialModem::DoCommand() {
 			}
 		}
 		case 'S': { // Registers
-			Bitu index = ScanNumber(scanbuf);
+			const uint32_t index = ScanNumber(scanbuf);
 			if (index >= SREGS) {
 				SendRes(ResERROR);
 				return; //goto ret_none;
@@ -604,7 +608,7 @@ void CSerialModem::DoCommand() {
 				scanbuf++;
 				while (scanbuf[0] == ' ')
 					scanbuf++; // skip spaces
-				Bitu val = ScanNumber(scanbuf);
+				const uint32_t val = ScanNumber(scanbuf);
 				reg[index] = val;
 				break;
 			}
@@ -620,8 +624,8 @@ void CSerialModem::DoCommand() {
 			char cmdchar = GetChar(scanbuf);
 			switch(cmdchar) {
 				case 'K': {
-					Bitu val = ScanNumber(scanbuf);
-					if(val < 5)
+				        const uint32_t val = ScanNumber(scanbuf);
+				        if (val < 5)
 						flowcontrol = val;
 					else {
 						SendRes(ResERROR);
@@ -630,8 +634,9 @@ void CSerialModem::DoCommand() {
 					break;
 				}
 				case 'D': {
-					Bitu val = ScanNumber(scanbuf);
-					if (val<4) dtrmode=val;
+				        const uint32_t val = ScanNumber(scanbuf);
+				        if (val < 4)
+					        dtrmode = val;
 					else {
 						SendRes(ResERROR);
 						return;
@@ -684,11 +689,10 @@ void CSerialModem::DoCommand() {
 	}
 }
 
-void CSerialModem::TelnetEmulation(Bit8u * data, Bitu size) {
-	Bitu i;
-	Bit8u c;
-	for (i=0; i < size; i++) {
-		c = data[i];
+void CSerialModem::TelnetEmulation(uint8_t *data, uint32_t size)
+{
+	uint8_t c;
+	for (uint32_t i = 0; i < size; i++) {
 		if (telClient.inIAC) {
 			if (telClient.recCommand) {
 				if ((c != 0) && (c != 1) && (c != 3)) {
@@ -786,9 +790,7 @@ void CSerialModem::TelnetEmulation(Bit8u * data, Bitu size) {
 }
 
 void CSerialModem::Timer2(void) {
-	Bitu usesize;
-	Bit8u txval;
-	Bitu txbuffersize =0;
+	uint32_t txbuffersize = 0;
 
 	// Check for eventual break command
 	if (!commandmode) {
@@ -809,7 +811,7 @@ void CSerialModem::Timer2(void) {
 	// Handle incoming data from serial port, read as much as available
 	CSerial::setCTS(true);	// buffer will get 'emptier', new data can be received
 	while (tqueue->inuse()) {
-		txval = tqueue->getb();
+		const uint8_t txval = tqueue->getb();
 		if (commandmode) {
 			if (echo) {
 				rqueue->addb(txval);
@@ -852,9 +854,7 @@ void CSerialModem::Timer2(void) {
 	}
 	// Handle incoming to the serial port
 	if (!commandmode && clientsocket && rqueue->left()) {
-		usesize = rqueue->left();
-		if (usesize > 16)
-			usesize = 16;
+		uint32_t usesize = rqueue->left() >= 16 ? 16 : rqueue->left();
 		if (!clientsocket->ReceiveArray(tmpbuf, &usesize)) {
 			SendRes(ResNOCARRIER);
 			EnterIdleState();
