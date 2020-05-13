@@ -23,7 +23,9 @@
 #include "serialdummy.h"
 #include "serialport.h"
 
-CSerialDummy::CSerialDummy(Bitu id,	CommandLine* cmd):CSerial(id, cmd) {
+CSerialDummy::CSerialDummy(const uint8_t port_index_, CommandLine *cmd)
+        : CSerial(port_index_, cmd)
+{
 	CSerial::Init_Registers();
 	setRI(false);
 	setDSR(false);

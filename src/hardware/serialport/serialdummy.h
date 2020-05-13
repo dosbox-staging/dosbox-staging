@@ -26,7 +26,7 @@
 
 class CSerialDummy : public CSerial {
 public:
-	CSerialDummy(Bitu id, CommandLine* cmd);
+	CSerialDummy(const uint8_t port_index_, CommandLine *cmd);
 	~CSerialDummy();
 
 	void setRTSDTR(bool rts, bool dtr);
