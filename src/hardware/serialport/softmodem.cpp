@@ -104,8 +104,10 @@ static const char *MODEM_GetAddressFromPhone(const char *input) {
 
 CSerialModem::CSerialModem(const uint8_t port_index_, CommandLine *cmd)
         : CSerial(port_index_, cmd),
-          rqueue(new CFifo(MODEM_BUFFER_QUEUE_SIZE)),
-          tqueue(new CFifo(MODEM_BUFFER_QUEUE_SIZE))
+          rqueue(std::make_unique<CFifo>(MODEM_BUFFER_QUEUE_SIZE)),
+          tqueue(std::make_unique<CFifo>(MODEM_BUFFER_QUEUE_SIZE)),
+          telClient({}),
+          dial({})
 {
 	InstallationSuccessful=false;
 
@@ -370,7 +372,7 @@ void CSerialModem::EnterConnectedState(void) {
 	serversocket.reset(nullptr);
 	SendRes(ResCONNECT);
 	commandmode = false;
-	memset(&telClient, 0, sizeof(telClient));
+	telClient = {}; // reset values
 	connected = true;
 	ringing = false;
 	dtrofftimer = -1;

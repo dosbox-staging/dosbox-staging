@@ -60,14 +60,19 @@ void CSerialDummy::handleUpperEvent(uint16_t type)
 /*****************************************************************************/
 void CSerialDummy::updatePortConfig(uint16_t divider, uint8_t lcr)
 {
+	(void)divider; // unused
+	(void)lcr;     // unused
+
 	// LOG_MSG("Serial port at 0x%x: Port params changed: %d Baud",
 	// base,dcb.BaudRate);
 }
 
 void CSerialDummy::updateMSR() {
 }
+
 void CSerialDummy::transmitByte(uint8_t val, bool first)
 {
+	(void)val; // unused
 	if (first)
 		setEvent(SERIAL_THR_EVENT, bytetime / 10);
 	else setEvent(SERIAL_TX_EVENT, bytetime);
@@ -82,19 +87,23 @@ void CSerialDummy::transmitByte(uint8_t val, bool first)
 /*****************************************************************************/
 
 void CSerialDummy::setBreak(bool value) {
-	//LOG_MSG("UART 0x%x: Break toggeled: %d", base, value);
+	(void)value; // unused
+	             // LOG_MSG("UART 0x%x: Break toggeled: %d", base, value);
 }
 
 /*****************************************************************************/
 /* setRTSDTR sets the modem control lines                                   **/
 /*****************************************************************************/
-void CSerialDummy::setRTSDTR(bool rts, bool dtr) {
-	setRTS(rts);
-	setDTR(dtr);
+void CSerialDummy::setRTSDTR(bool rts_, bool dtr_)
+{
+	setRTS(rts_);
+	setDTR(dtr_);
 }
 void CSerialDummy::setRTS(bool val) {
 #ifdef CHECKIT_TESTPLUG
 	setCTS(val);
+#else
+	(void)val; // unused
 #endif
 }
 void CSerialDummy::setDTR(bool val) {
@@ -102,5 +111,7 @@ void CSerialDummy::setDTR(bool val) {
 	setDSR(val);
 	setRI(val);
 	setCD(val);
+#else
+	(void)val; // unused
 #endif
 }
