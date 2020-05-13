@@ -104,7 +104,7 @@ static const char *MODEM_GetAddressFromPhone(const char *input) {
 
 CSerialModem::CSerialModem(const uint8_t port_index_, CommandLine *cmd)
         : CSerial(port_index_, cmd),
-	  rqueue(new CFifo(MODEM_BUFFER_QUEUE_SIZE)),
+          rqueue(new CFifo(MODEM_BUFFER_QUEUE_SIZE)),
           tqueue(new CFifo(MODEM_BUFFER_QUEUE_SIZE))
 {
 	InstallationSuccessful=false;
@@ -346,13 +346,13 @@ void CSerialModem::EnterIdleState(void){
 		serversocket.reset(new TCPServerSocket(listenport));
 		if (!serversocket->isopen) {
 			LOG_MSG("Serial Port %u: Modem could not open TCP port "
-			        "%" PRIuPTR ".",
+			        "%u.",
 			        PortNumber(), listenport);
 
 			serversocket.reset(nullptr);
 		} else
-			LOG_MSG("Serial Port %u: Modem listening on port "
-			        "%" PRIuPTR "...",
+			LOG_MSG("Serial Port %u: Modem listening on TCP port "
+			        "%u ...",
 			        PortNumber(), listenport);
 	}
 	waitingclientsocket.reset(nullptr);
@@ -601,34 +601,34 @@ void CSerialModem::DoCommand() {
 				case 'K': {
 				        const uint32_t val = ScanNumber(scanbuf);
 				        if (val < 5)
-						flowcontrol = val;
-					else {
-						SendRes(ResERROR);
-						return;
-					}
-					break;
-				}
-				case 'D': {
+					        flowcontrol = val;
+				        else {
+					        SendRes(ResERROR);
+					        return;
+				        }
+				        break;
+			        }
+			        case 'D': {
 				        const uint32_t val = ScanNumber(scanbuf);
 				        if (val < 4)
 					        dtrmode = val;
-					else {
-						SendRes(ResERROR);
-						return;
-					}
-					break;
-				}
-				case '\0':
-					// end of string
-					SendRes(ResERROR);
-					return;
-				default:
-					LOG_MSG("Modem: Unhandled command: &%c%" PRIuPTR,
-					        cmdchar,
-					        ScanNumber(scanbuf));
-					break;
-			}
-			break;
+				        else {
+					        SendRes(ResERROR);
+					        return;
+				        }
+				        break;
+			        }
+			        case '\0':
+				        // end of string
+				        SendRes(ResERROR);
+				        return;
+			        default:
+				        LOG_MSG("Modem: Unhandled command: "
+				                "&%c%u",
+				                cmdchar, ScanNumber(scanbuf));
+				        break;
+			        }
+			        break;
 		}
 		case '\\': { // \ escaped commands
 			char cmdchar = GetChar(scanbuf);
@@ -645,19 +645,18 @@ void CSerialModem::DoCommand() {
 					SendRes(ResERROR);
 					return;
 				default:
-					LOG_MSG("Modem: Unhandled command: \\%c%" PRIuPTR,
-					        cmdchar,
-					        ScanNumber(scanbuf));
-					break;
-			}
-			break;
+				        LOG_MSG("Modem: Unhandled command: "
+				                "\\%c%u",
+				                cmdchar, ScanNumber(scanbuf));
+				        break;
+			        }
+			        break;
 		}
 		case '\0':
 			SendRes(ResOK);
 			return;
 		default:
-			LOG_MSG("Modem: Unhandled command: %c%" PRIuPTR,
-			        chr,
+			LOG_MSG("Modem: Unhandled command: %c%u", chr,
 			        ScanNumber(scanbuf));
 			break;
 		}
@@ -754,11 +753,11 @@ void CSerialModem::TelnetEmulation(uint8_t *data, uint32_t size)
 				continue;
 			}
 		}
-	} else {
-		if (c == 0xff) {
-			telClient.inIAC = true;
-			continue;
-		}
+		} else {
+			if (c == 0xff) {
+				telClient.inIAC = true;
+				continue;
+			}
 			rqueue->addb(c);
 		}
 	}
