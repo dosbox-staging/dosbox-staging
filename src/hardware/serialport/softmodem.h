@@ -71,9 +71,10 @@ public:
 		pos = 0;
 	}
 
-	void addb(Bit8u _val) {
-		if(used >= size) {
-			static Bits lcount = 0;
+	void addb(uint8_t _val)
+	{
+		if (used >= size) {
+			static uint16_t lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
 				LOG_MSG("MODEM: FIFO Overflow! (addb)");
@@ -90,10 +91,12 @@ public:
 	}
 
 	void adds(uint8_t *_str, uint32_t _len)
+	{
+		if ((used + _len) > size) {
+			static uint16_t lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO Overflow! (adds len %" PRIuPTR ")",
-				        _len);
+				LOG_MSG("MODEM: FIFO Overflow! (adds len %u)", _len);
 			}
 			return;
 		}
@@ -109,7 +112,8 @@ public:
 		}
 	}
 
-	Bit8u getb(void) {
+	uint8_t getb(void)
+	{
 		if (!used) {
 			static Bits lcount = 0;
 			if (lcount < 1000) {
@@ -129,15 +133,14 @@ public:
 	void gets(uint8_t *_str, uint32_t _len)
 	{
 		if (!used) {
-			static Bits lcount = 0;
+			static uint16_t lcount = 0;
 			if (lcount < 1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO UNDERFLOW! (gets len %" PRIuPTR ")",
-				        _len);
+				LOG_MSG("MODEM: FIFO UNDERFLOW! (gets len %u)", _len);
 			}
 			return;
 		}
-			//assert(used>=_len);
+		// assert(used>=_len);
 		used -= _len;
 		while (_len--) {
 			//LOG_MSG("-%x",data[pos]);
@@ -146,7 +149,9 @@ public:
 				pos -= size;
 		}
 	}
+
 private:
+	std::vector<uint8_t> data;
 	uint32_t size = 0;
 	uint32_t pos = 0;
 	uint32_t used = 0;
@@ -186,12 +191,12 @@ public:
 
 	//TODO
 	void Timer2(void);
-	void handleUpperEvent(Bit16u type);
+	void handleUpperEvent(uint16_t type);
 
 	void RXBufferEmpty();
 
-	void transmitByte(Bit8u val, bool first);
-	void updatePortConfig(Bit16u divider, Bit8u lcr);
+	void transmitByte(uint8_t val, bool first);
+	void updatePortConfig(uint16_t divider, uint8_t lcr);
 	void updateMSR();
 
 	void setBreak(bool);
@@ -210,7 +215,7 @@ protected:
 	bool oldDTRstate = false;
 	bool ringing = false;
 	bool numericresponse = false; // true: send control response as number.
-	                        // false: send text (i.e. NO DIALTONE)
+	                              // false: send text (i.e. NO DIALTONE)
 	bool telnetmode = false; // Default to direct null modem connection;
 	                         // Telnet mode interprets IAC
 	bool connected = false;

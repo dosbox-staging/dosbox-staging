@@ -131,13 +131,14 @@ CSerialModem::~CSerialModem() {
 		removeEvent(i);
 }
 
-void CSerialModem::handleUpperEvent(Bit16u type) {
+void CSerialModem::handleUpperEvent(uint16_t type)
+{
 	switch (type) {
 	case SERIAL_RX_EVENT: {
 		// check for bytes to be sent to port
 		if (CSerial::CanReceiveByte())
 			if (rqueue->inuse() && (CSerial::getRTS() || (flowcontrol != 3))) {
-				Bit8u rbyte = rqueue->getb();
+				uint8_t rbyte = rqueue->getb();
 				//LOG_MSG("Modem: sending byte %2x back to UART3",rbyte);
 				CSerial::receiveByte(rbyte);
 			}
@@ -179,7 +180,7 @@ void CSerialModem::handleUpperEvent(Bit16u type) {
 void CSerialModem::SendLine(const char *line) {
 	rqueue->addb(0xd);
 	rqueue->addb(0xa);
-	rqueue->adds((Bit8u *)line, strlen(line));
+	rqueue->adds((uint8_t *)line, strlen(line));
 	rqueue->addb(0xd);
 	rqueue->addb(0xa);
 }
@@ -224,9 +225,9 @@ void CSerialModem::SendRes(const ResTypes response) {
 		else if (string != nullptr)
 			SendLine(string);
 
-		//if(CSerial::CanReceiveByte())	// very fast response
+		// if(CSerial::CanReceiveByte())	// very fast response
 		//	if(rqueue->inuse() && CSerial::getRTS())
-		//	{ Bit8u rbyte =rqueue->getb();
+		//	{ uint8_t rbyte =rqueue->getb();
 		//		CSerial::receiveByte(rbyte);
 		//	LOG_MSG("Modem: sending byte %2x back to UART2",rbyte);
 		//	}
@@ -244,11 +245,11 @@ bool CSerialModem::Dial(const char * host) {
 	const char *destination = buf;
 
 	// Scan host for port
-	Bit16u port;
+	uint16_t port;
 	char * hasport = strrchr(buf,':');
 	if (hasport) {
 		*hasport++ = 0;
-		port = (Bit16u)atoi(hasport);
+		port = (uint16_t)atoi(hasport);
 	}
 	else {
 		port = MODEM_DEFAULT_PORT;
@@ -666,6 +667,7 @@ void CSerialModem::DoCommand() {
 void CSerialModem::TelnetEmulation(uint8_t *data, uint32_t size)
 {
 	for (uint32_t i = 0; i < size; i++) {
+		uint8_t c = data[i];
 		if (telClient.inIAC) {
 			if (telClient.recCommand) {
 				if ((c != 0) && (c != 1) && (c != 3)) {
@@ -913,13 +915,14 @@ void CSerialModem::Timer2(void) {
 void CSerialModem::RXBufferEmpty() {
 	// see if rqueue has some more bytes
 	if (rqueue->inuse() && (CSerial::getRTS() || (flowcontrol != 3))){
-		Bit8u rbyte = rqueue->getb();
+		uint8_t rbyte = rqueue->getb();
 		//LOG_MSG("Modem: sending byte %2x back to UART1",rbyte);
 		CSerial::receiveByte(rbyte);
 	}
 }
 
-void CSerialModem::transmitByte(Bit8u val, bool first) {
+void CSerialModem::transmitByte(uint8_t val, bool first)
+{
 	waiting_tx_character = val;
 	setEvent(MODEM_TX_EVENT, bytetime); // TX event
 	if (first)
@@ -927,8 +930,9 @@ void CSerialModem::transmitByte(Bit8u val, bool first) {
 	//LOG_MSG("MODEM: Byte %x to be transmitted",val);
 }
 
-void CSerialModem::updatePortConfig(Bit16u, Bit8u lcr) {
-	(void) lcr; // deliberately unused but needed for API compliance
+void CSerialModem::updatePortConfig(uint16_t, uint8_t lcr)
+{
+	(void)lcr; // deliberately unused but needed for API compliance
 }
 
 void CSerialModem::updateMSR() {
