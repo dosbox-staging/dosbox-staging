@@ -21,9 +21,9 @@
 #if C_MODEM
 
 #include "misc_util.h"
-Bit32u Netwrapper_GetCapabilities()
+uint32_t Netwrapper_GetCapabilities()
 {
-	Bit32u retval=0;
+	uint32_t retval = 0;
 	retval = CAPWORD;
 	return retval;
 }
@@ -97,7 +97,7 @@ TCPClientSocket::TCPClientSocket(TCPsocket source)
 	}
 }
 
-TCPClientSocket::TCPClientSocket(const char* destination, Bit16u port)
+TCPClientSocket::TCPClientSocket(const char *destination, uint16_t port)
 {
 	if (!SDLNetInited) {
 		if (SDLNet_Init() == -1) {
@@ -135,9 +135,10 @@ TCPClientSocket::~TCPClientSocket()
 	if(listensocketset) SDLNet_FreeSocketSet(listensocketset);
 }
 
-bool TCPClientSocket::GetRemoteAddressString(Bit8u* buffer) {
-	IPaddress* remote_ip;
-	Bit8u b1, b2, b3, b4;
+bool TCPClientSocket::GetRemoteAddressString(uint8_t *buffer)
+{
+	IPaddress *remote_ip;
+	uint8_t b1, b2, b3, b4;
 	remote_ip=SDLNet_TCP_GetPeerAddress(mysock);
 	if(!remote_ip) return false;
 	b4=remote_ip->host>>24;
@@ -149,7 +150,7 @@ bool TCPClientSocket::GetRemoteAddressString(Bit8u* buffer) {
 }
 
 bool TCPClientSocket::ReceiveArray(uint8_t *data, uint32_t *size)
-	{
+{
 	if (SDLNet_CheckSockets(listensocketset, 0)) {
 		Bits retval = SDLNet_TCP_Recv(mysock, data, static_cast<int>(*size));
 		if(retval<1) {
@@ -184,7 +185,7 @@ Bits TCPClientSocket::GetcharNonBlock() {
 	return rvalue;
 }
 
-bool TCPClientSocket::Putchar(Bit8u data)
+bool TCPClientSocket::Putchar(uint8_t data)
 {
 	return SendArray(&data, 1);
 }
@@ -199,7 +200,7 @@ bool TCPClientSocket::SendArray(uint8_t *data, uint32_t bufsize)
 	return true;
 }
 
-bool TCPClientSocket::SendByteBuffered(Bit8u data)
+bool TCPClientSocket::SendByteBuffered(uint8_t data)
 {
 	if (sendbuffersize == 0)
 		return false;
@@ -229,13 +230,13 @@ void TCPClientSocket::SetSendBufferSize(uint32_t bufsize)
 	// Only resize the buffer if needed
 	if (!sendbuffer || sendbuffersize != bufsize) {
 		delete [] sendbuffer;
-		sendbuffer = new Bit8u[bufsize];
+		sendbuffer = new uint8_t[bufsize];
 		sendbuffersize = bufsize;
 	}
 	sendbufferindex = 0;
 }
 
-TCPServerSocket::TCPServerSocket(Bit16u port)
+TCPServerSocket::TCPServerSocket(uint16_t port)
 {
 	isopen = false;
 	mysock = nullptr;

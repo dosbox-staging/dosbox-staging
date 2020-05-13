@@ -55,7 +55,7 @@
 
 #include <SDL_net.h>
 
-Bit32u Netwrapper_GetCapabilities();
+uint32_t Netwrapper_GetCapabilities();
 
 struct _TCPsocketX {
 	int ready = 0;
@@ -70,7 +70,7 @@ struct _TCPsocketX {
 class TCPClientSocket {
 public:
 	TCPClientSocket(TCPsocket source);
-	TCPClientSocket(const char* destination, Bit16u port);
+	TCPClientSocket(const char *destination, uint16_t port);
 #ifdef NATIVESOCKETS
 	TCPClientSocket(int platformsocket);
 #endif
@@ -91,13 +91,13 @@ public:
 
 	bool isopen = false;
 
-	bool GetRemoteAddressString(Bit8u* buffer);
+	bool GetRemoteAddressString(uint8_t *buffer);
 
 	void FlushBuffer();
 	void SetSendBufferSize(uint32_t bufsize);
 
 	// buffered send functions
-	bool SendByteBuffered(Bit8u data);
+	bool SendByteBuffered(uint8_t data);
 
 private:
 
@@ -118,7 +118,7 @@ struct TCPServerSocket {
 	bool isopen = false;
 	TCPsocket mysock = nullptr;
 
-	TCPServerSocket(Bit16u port);
+	TCPServerSocket(uint16_t port);
 	TCPServerSocket(const TCPServerSocket&) = delete; // prevent copying
 	TCPServerSocket& operator=(const TCPServerSocket&) = delete; // prevent assignment
 
