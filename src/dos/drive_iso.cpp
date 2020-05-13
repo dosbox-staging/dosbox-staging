@@ -58,7 +58,6 @@ isoFile::isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, Bit32u
 	fileEnd = fileBegin + stat->size;
 	cachedSector = -1;
 	open = true;
-	this->name = NULL;
 	SetName(name);
 }
 

@@ -93,20 +93,6 @@ bool DOS_Device::WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcod
 	return Devices[devnum]->WriteToControlChannel(bufptr,size,retcode);
 }
 
-DOS_File::DOS_File(const DOS_File& orig) {
-	flags=orig.flags;
-	time=orig.time;
-	date=orig.date;
-	attr=orig.attr;
-	refCtr=orig.refCtr;
-	open=orig.open;
-	hdrive=orig.hdrive;
-	name=0;
-	if(orig.name) {
-		name=new char [strlen(orig.name) + 1];strcpy(name,orig.name);
-	}
-}
-
 DOS_File & DOS_File::operator= (const DOS_File & orig) {
 	flags=orig.flags;
 	time=orig.time;
@@ -115,12 +101,7 @@ DOS_File & DOS_File::operator= (const DOS_File & orig) {
 	refCtr=orig.refCtr;
 	open=orig.open;
 	hdrive=orig.hdrive;
-	if(name) {
-		delete [] name; name=0;
-	}
-	if(orig.name) {
-		name=new char [strlen(orig.name) + 1];strcpy(name,orig.name);
-	}
+	name = orig.name;
 	return *this;
 }
 
@@ -151,7 +132,8 @@ Bit8u DOS_FindDevice(char const * name) {
 	/* loop through devices */
 	for(Bit8u index = 0;index < DOS_DEVICES;index++) {
 		if (Devices[index]) {
-			if (WildFileCmp(name_part,Devices[index]->name)) return index;
+			if (WildFileCmp(name_part, Devices[index]->GetName()))
+				return index;
 		}
 	}
 	return DOS_DEVICES;
@@ -175,7 +157,7 @@ void DOS_DelDevice(DOS_Device * dev) {
 // We will destroy the device if we find it in our list.
 // TODO:The file table is not checked to see the device is opened somewhere!
 	for (Bitu i = 0; i <DOS_DEVICES;i++) {
-		if(Devices[i] && !strcasecmp(Devices[i]->name,dev->name)){
+		if (Devices[i] && !strcasecmp(Devices[i]->GetName(), dev->GetName())) {
 			delete Devices[i];
 			Devices[i] = 0;
 			return;

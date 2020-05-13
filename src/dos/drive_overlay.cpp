@@ -230,8 +230,8 @@ public:
 //Create leading directories of a file being overlayed if they exist in the original (localDrive).
 //This function is used to create copies of existing files, so all leading directories exist in the original.
 
-FILE* Overlay_Drive::create_file_in_overlay(char* dos_filename, char const* mode) {
-
+FILE *Overlay_Drive::create_file_in_overlay(const char *dos_filename, char const *mode)
+{
 	if (logoverlay) LOG_MSG("create_file_in_overlay called %s %s",dos_filename,mode);
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, overlaydir); // TODO GOG make part of class and
@@ -242,7 +242,8 @@ FILE* Overlay_Drive::create_file_in_overlay(char* dos_filename, char const* mode
 
 	FILE* f = fopen_wrap(newname,mode);
 	//Check if a directories are part of the name:
-	char* dir = strrchr(dos_filename,'\\');
+	const char *dir = strrchr(dos_filename, '\\');
+
 	if (!f && dir && *dir) {
 		if (logoverlay) LOG_MSG("Overlay: warning creating a file inside a directory %s",dos_filename);
 		//ensure they exist, else make them in the overlay if they exist in the original....

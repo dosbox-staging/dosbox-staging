@@ -579,7 +579,6 @@ localFile::localFile(const char* _name, FILE * handle)
 
 	attr=DOS_ATTR_ARCHIVE;
 
-	name=0;
 	SetName(_name);
 }
 
