@@ -661,6 +661,7 @@ src/libs/gui_tk/Makefile
 src/libs/decoders/Makefile
 src/libs/nuked/Makefile
 src/libs/ppscale/Makefile
+src/midi/Makefile
 src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile
