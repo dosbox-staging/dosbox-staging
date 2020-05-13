@@ -162,11 +162,11 @@ public:
 	void changeLineProperties();
 	const uint8_t port_index = 0;
 
-	void setEvent(Bit16u type, float duration);
-	void removeEvent(Bit16u type);
-	void handleEvent(Bit16u type);
-	virtual void handleUpperEvent(Bit16u type)=0;
-	
+	void setEvent(uint16_t type, float duration);
+	void removeEvent(uint16_t type);
+	void handleEvent(uint16_t type);
+	virtual void handleUpperEvent(uint16_t type) = 0;
+
 	// defines for event type
 #define SERIAL_TX_LOOPBACK_EVENT 0
 #define SERIAL_THR_LOOPBACK_EVENT 1
@@ -179,10 +179,10 @@ public:
 #define SERIAL_RX_TIMEOUT_EVENT 7
 
 #define	SERIAL_BASE_EVENT_COUNT 7
-#define SERIAL_MAX_PORTS 4
+#define SERIAL_MAX_PORTS        4
 
 	uint32_t irq = 0;
-	
+
 	// CSerial requests an update of the input lines
 	virtual void updateMSR()=0;
 
@@ -207,15 +207,16 @@ public:
 	virtual void setDTR(bool val)=0;
 
 	// Register access
-	void Write_THR(Bit8u data);
-	void Write_IER(Bit8u data);
-	void Write_FCR(Bit8u data);
-	void Write_LCR(Bit8u data);
-	void Write_MCR(Bit8u data);
-	// Really old hardware seems to have the delta part of this register writable
-	void Write_MSR(Bit8u data);
-	void Write_SPR(Bit8u data);
-	void Write_reserved(Bit8u data, Bit8u address);
+	void Write_THR(uint8_t data);
+	void Write_IER(uint8_t data);
+	void Write_FCR(uint8_t data);
+	void Write_LCR(uint8_t data);
+	void Write_MCR(uint8_t data);
+	// Really old hardware seems to have the delta part of this register
+	// writable
+	void Write_MSR(uint8_t data);
+	void Write_SPR(uint8_t data);
+	void Write_reserved(uint8_t data, uint8_t address);
 
 	uint32_t Read_RHR();
 	uint32_t Read_IER();
@@ -225,13 +226,13 @@ public:
 	uint32_t Read_LSR();
 	uint32_t Read_MSR();
 	uint32_t Read_SPR();
-	
+
 	// If a byte comes from loopback or prepherial, put it in here.
-	void receiveByte(Bit8u data);
-	void receiveByteEx(Bit8u data, Bit8u error);
+	void receiveByte(uint8_t data);
+	void receiveByteEx(uint8_t data, uint8_t error);
 
 	// If an error was received, put it here (in LSR register format)
-	void receiveError(Bit8u errorword);
+	void receiveError(uint8_t errorword);
 
 	// depratched
 	// connected device checks, if port can receive data:
@@ -244,16 +245,16 @@ public:
 	void ByteTransmitted();
 
 	// Transmit byte to prepherial
-	virtual void transmitByte(Bit8u val, bool first)=0;
+	virtual void transmitByte(uint8_t val, bool first) = 0;
 
 	// switch break state to the passed value
 	virtual void setBreak(bool value)=0;
 	
 	// change baudrate, number of bits, parity, word length al at once
-	virtual void updatePortConfig(Bit16u divider, Bit8u lcr)=0;
-	
+	virtual void updatePortConfig(uint16_t divider, uint8_t lcr) = 0;
+
 	void Init_Registers();
-	
+
 	bool Putchar(uint8_t data, bool wait_dtr, bool wait_rts, uint32_t timeout);
 	bool Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeout);
 	uint8_t PortNumber() const;
@@ -266,12 +267,12 @@ private:
 	void ComputeInterrupts();
 	
 	// a sub-interrupt is triggered
-	void rise(Bit8u priority);
+	void rise(uint8_t priority);
 
 	// clears the pending sub-interrupt
-	void clear(Bit8u priority);
-	
-	#define ERROR_PRIORITY 4	// overrun, parity error, frame error, break
+	void clear(uint8_t priority);
+
+#define ERROR_PRIORITY 4	// overrun, parity error, frame error, break
 	#define RX_PRIORITY 1		// a byte has been received
 	#define TX_PRIORITY 2		// tx buffer has become empty
 	#define MSR_PRIORITY 8		// CRS, DSR, RI, DCD change 
@@ -279,98 +280,99 @@ private:
 	#define NONE_PRIORITY 0
 
 	uint8_t waiting_interrupts = 0; // these are on, but maybe not enabled
-	
+
 	// 16C550
 	//				read/write		name
 
 	uint16_t baud_divider = 0;
-							// Data: whole byte
-	#define THR_OFFSET 0	// w Transmit Holding Register
-							// Data: whole byte
+#define RHR_OFFSET                                                             \
+	0 // r Receive Holding Register, also LSB of Divisor Latch (r/w)
+	  // Data: whole byte
+#define THR_OFFSET                                                             \
+	0                // w Transmit Holding Register
+	                 // Data: whole byte
 	uint8_t IER = 0; //	r/w		Interrupt Enable Register, also
 	                 // MSB of Divisor Latch
-	#define IER_OFFSET 1
+#define IER_OFFSET 1
 
 	bool irq_active = false;
-				
-	#define RHR_INT_Enable_MASK				0x1
-	#define THR_INT_Enable_MASK				0x2
-	#define Receive_Line_INT_Enable_MASK	0x4
-	#define Modem_Status_INT_Enable_MASK	0x8
+
+#define RHR_INT_Enable_MASK          0x1
+#define THR_INT_Enable_MASK          0x2
+#define Receive_Line_INT_Enable_MASK 0x4
+#define Modem_Status_INT_Enable_MASK 0x8
 
 	uint8_t ISR = 0; //	r				Interrupt Status
 	                 // Register
-	#define ISR_OFFSET 2
+#define ISR_OFFSET 2
 
-	#define ISR_CLEAR_VAL 0x1
-	#define ISR_FIFOTIMEOUT_VAL 0xc
-	#define ISR_ERROR_VAL 0x6
-	#define ISR_RX_VAL 0x4
-	#define ISR_TX_VAL 0x2
-	#define ISR_MSR_VAL 0x0
-public:	
+#define ISR_CLEAR_VAL       0x1
+#define ISR_FIFOTIMEOUT_VAL 0xc
+#define ISR_ERROR_VAL       0x6
+#define ISR_RX_VAL          0x4
+#define ISR_TX_VAL          0x2
+#define ISR_MSR_VAL         0x0
+public:
 	uint8_t LCR = 0; //	r/w				Line Control
 	                 // Register
 private:
-	#define LCR_OFFSET 3
-						// bit0: word length bit0
-						// bit1: word length bit1
-						// bit2: stop bits
-						// bit3: parity enable
-						// bit4: even parity
-						// bit5: set parity
-						// bit6: set break
-						// bit7: divisor latch enable
+#define LCR_OFFSET 3
+	// bit0: word length bit0
+	// bit1: word length bit1
+	// bit2: stop bits
+	// bit3: parity enable
+	// bit4: even parity
+	// bit5: set parity
+	// bit6: set break
+	// bit7: divisor latch enable
 
-	
-	#define	LCR_BREAK_MASK 0x40
-	#define LCR_DIVISOR_Enable_MASK 0x80
-	#define LCR_PORTCONFIG_MASK 0x3F
-	
-	#define LCR_PARITY_NONE		0x0
-	#define LCR_PARITY_ODD		0x8
-	#define LCR_PARITY_EVEN		0x18
-	#define LCR_PARITY_MARK		0x28
-	#define LCR_PARITY_SPACE	0x38
+#define LCR_BREAK_MASK          0x40
+#define LCR_DIVISOR_Enable_MASK 0x80
+#define LCR_PORTCONFIG_MASK     0x3F
 
-	#define LCR_DATABITS_5		0x0
-	#define LCR_DATABITS_6		0x1
-	#define LCR_DATABITS_7		0x2
-	#define LCR_DATABITS_8		0x3
+#define LCR_PARITY_NONE  0x0
+#define LCR_PARITY_ODD   0x8
+#define LCR_PARITY_EVEN  0x18
+#define LCR_PARITY_MARK  0x28
+#define LCR_PARITY_SPACE 0x38
 
-	#define LCR_STOPBITS_1		0x0
-	#define LCR_STOPBITS_MORE_THAN_1 0x4
+#define LCR_DATABITS_5 0x0
+#define LCR_DATABITS_6 0x1
+#define LCR_DATABITS_7 0x2
+#define LCR_DATABITS_8 0x3
 
-	// Modem Control Register
-	// r/w				
-	#define MCR_OFFSET 4
-	bool dtr;			// bit0: DTR
-	bool rts;			// bit1: RTS
-	bool op1;			// bit2: OP1
-	bool op2;			// bit3: OP2
-	bool loopback;		// bit4: loop back enable
+#define LCR_STOPBITS_1           0x0
+#define LCR_STOPBITS_MORE_THAN_1 0x4
 
-	#define MCR_DTR_MASK 0x1
-	#define MCR_RTS_MASK 0x2	
-	#define MCR_OP1_MASK 0x4	
-	#define MCR_OP2_MASK 0x8
-	#define MCR_LOOPBACK_Enable_MASK 0x10
-public:	
+// Modem Control Register
+// r/w
+#define MCR_OFFSET 4
+	bool dtr = false;      // bit0: DTR
+	bool rts = false;      // bit1: RTS
+	bool op1 = false;      // bit2: OP1
+	bool op2 = false;      // bit3: OP2
+	bool loopback = false; // bit4: loop back enable
+
+#define MCR_DTR_MASK             0x1
+#define MCR_RTS_MASK             0x2
+#define MCR_OP1_MASK             0x4
+#define MCR_OP2_MASK             0x8
+#define MCR_LOOPBACK_Enable_MASK 0x10
+public:
 	uint8_t LSR = 0; //	r				Line Status
 	                 // Register
 private:
+#define LSR_OFFSET 5
 
-	#define LSR_OFFSET 5
+#define LSR_RX_DATA_READY_MASK    0x1
+#define LSR_OVERRUN_ERROR_MASK    0x2
+#define LSR_PARITY_ERROR_MASK     0x4
+#define LSR_FRAMING_ERROR_MASK    0x8
+#define LSR_RX_BREAK_MASK         0x10
+#define LSR_TX_HOLDING_EMPTY_MASK 0x20
+#define LSR_TX_EMPTY_MASK         0x40
 
-	#define LSR_RX_DATA_READY_MASK 0x1
-	#define LSR_OVERRUN_ERROR_MASK 0x2
-	#define LSR_PARITY_ERROR_MASK 0x4
-	#define LSR_FRAMING_ERROR_MASK 0x8
-	#define LSR_RX_BREAK_MASK 0x10
-	#define LSR_TX_HOLDING_EMPTY_MASK 0x20
-	#define LSR_TX_EMPTY_MASK 0x40
-
-	#define LSR_ERROR_MASK 0x1e
+#define LSR_ERROR_MASK 0x1e
 
 	// error printing
 	bool errormsg_pending;
@@ -392,24 +394,25 @@ private:
 	bool dsr = false;   // bit5: DSR
 	bool ri = false;    // bit6: RI
 	bool cd = false;    // bit7: CD
-	
-	#define MSR_delta_MASK 0xf
-	#define MSR_LINE_MASK 0xf0
 
-	#define MSR_dCTS_MASK 0x1
-	#define MSR_dDSR_MASK 0x2
-	#define MSR_dRI_MASK 0x4
-	#define MSR_dCD_MASK 0x8
-	#define MSR_CTS_MASK 0x10
-	#define MSR_DSR_MASK 0x20
-	#define MSR_RI_MASK 0x40
-	#define MSR_CD_MASK 0x80
+#define MSR_delta_MASK 0xf
+#define MSR_LINE_MASK  0xf0
+
+#define MSR_dCTS_MASK 0x1
+#define MSR_dDSR_MASK 0x2
+#define MSR_dRI_MASK  0x4
+#define MSR_dCD_MASK  0x8
+#define MSR_CTS_MASK  0x10
+#define MSR_DSR_MASK  0x20
+#define MSR_RI_MASK   0x40
+#define MSR_CD_MASK   0x80
 
 	uint8_t SPR = 0; //	r/w				Scratchpad Register
-	#define SPR_OFFSET 7
+#define SPR_OFFSET 7
 
 	// For loopback purposes...
 	uint8_t loopback_data = 0;
+	void transmitLoopbackByte(uint8_t val, bool value);
 
 	// 16C550 (FIFO)
 	public: // todo remove
@@ -423,13 +426,13 @@ private:
 	        uint32_t fifosize = 0;
 	        uint8_t FCR = 0;
 	        bool sync_guardtime = false;
-	#define FIFO_STATUS_ACTIVE 0xc0 // FIFO is active AND works ;)
-	#define FIFO_ERROR 0x80
-	#define FCR_ACTIVATE 0x01
-	#define FCR_CLEAR_RX 0x02
-	#define FCR_CLEAR_TX 0x04
-	#define FCR_OFFSET 2
-	#define FIFO_FLOWCONTROL 0x20
+#define FIFO_STATUS_ACTIVE 0xc0 // FIFO is active AND works ;)
+#define FIFO_ERROR         0x80
+#define FCR_ACTIVATE       0x01
+#define FCR_CLEAR_RX       0x02
+#define FCR_CLEAR_TX       0x04
+#define FCR_OFFSET         2
+#define FIFO_FLOWCONTROL   0x20
 };
 
 extern CSerial* serialports[];
@@ -444,11 +447,12 @@ public:
 	// Creates a COM device that communicates with the num-th parallel port, i.e. is LPTnum
 	device_COM(class CSerial* sc);
 	~device_COM();
-	bool Read(Bit8u * data,Bit16u * size);
-	bool Write(Bit8u * data,Bit16u * size);
-	bool Seek(Bit32u * pos,Bit32u type);
+	bool Read(uint8_t *data, uint16_t *size);
+	bool Write(uint8_t *data, uint16_t *size);
+	bool Seek(uint32_t *pos, uint32_t type);
 	bool Close();
-	Bit16u GetInformation(void);
+	uint16_t GetInformation(void);
+
 private:
 	CSerial *sclass = nullptr;
 };
