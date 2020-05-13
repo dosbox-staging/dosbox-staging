@@ -39,35 +39,37 @@ CSerialDummy::~CSerialDummy() {
 	removeEvent(SERIAL_TX_EVENT);
 }
 
-void CSerialDummy::handleUpperEvent(Bit16u type) {
-	if(type==SERIAL_TX_EVENT) {
-	//LOG_MSG("SERIAL_TX_EVENT");
+void CSerialDummy::handleUpperEvent(uint16_t type)
+{
+	if (type == SERIAL_TX_EVENT) {
+		// LOG_MSG("SERIAL_TX_EVENT");
 #ifdef CHECKIT_TESTPLUG
 		receiveByte(loopbackdata);
 #endif
 		ByteTransmitted(); // tx timeout
-	}
-	else if(type==SERIAL_THR_EVENT){
+	} else if (type == SERIAL_THR_EVENT) {
 		//LOG_MSG("SERIAL_THR_EVENT");
 		ByteTransmitting();
 		setEvent(SERIAL_TX_EVENT,bytetime);
 	}
-
 }
 
 /*****************************************************************************/
 /* updatePortConfig is called when emulated app changes the serial port     **/
 /* parameters baudrate, stopbits, number of databits, parity.               **/
 /*****************************************************************************/
-void CSerialDummy::updatePortConfig(Bit16u divider, Bit8u lcr) {
-	//LOG_MSG("Serial port at 0x%x: Port params changed: %d Baud", base,dcb.BaudRate);
+void CSerialDummy::updatePortConfig(uint16_t divider, uint8_t lcr)
+{
+	// LOG_MSG("Serial port at 0x%x: Port params changed: %d Baud",
+	// base,dcb.BaudRate);
 }
 
 void CSerialDummy::updateMSR() {
 }
-void CSerialDummy::transmitByte(Bit8u val, bool first) {
-
-	if(first) setEvent(SERIAL_THR_EVENT, bytetime/10); 
+void CSerialDummy::transmitByte(uint8_t val, bool first)
+{
+	if (first)
+		setEvent(SERIAL_THR_EVENT, bytetime / 10);
 	else setEvent(SERIAL_TX_EVENT, bytetime);
 
 #ifdef CHECKIT_TESTPLUG
