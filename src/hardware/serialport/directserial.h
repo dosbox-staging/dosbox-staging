@@ -46,7 +46,7 @@ public:
 	void handleUpperEvent(Bit16u type);
 
 private:
-	COMPORT comport;
+	COMPORT comport = nullptr;
 
 	uint32_t rx_state = 0;
 #define D_RX_IDLE		0
@@ -60,10 +60,9 @@ private:
 	bool doReceive();
 
 #if SERIAL_DEBUG
-	bool dbgmsg_poll_block;
-	bool dbgmsg_rx_block;
+	bool dbgmsg_poll_block = false;
+	bool dbgmsg_rx_block = false;
 #endif
-
 };
 
 #endif	// C_DIRECTSERIAL
