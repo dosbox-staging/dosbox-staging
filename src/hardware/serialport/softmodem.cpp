@@ -105,32 +105,7 @@ static const char *MODEM_GetAddressFromPhone(const char *input) {
 CSerialModem::CSerialModem(const uint8_t port_index_, CommandLine *cmd)
         : CSerial(port_index_, cmd),
 	  rqueue(new CFifo(MODEM_BUFFER_QUEUE_SIZE)),
-	  tqueue(new CFifo(MODEM_BUFFER_QUEUE_SIZE)),
-	  cmdbuf {0},
-	  commandmode(false),
-	  echo(false),
-	  oldDTRstate(false),
-	  ringing(false),
-	  numericresponse(false),
-	  // Default to direct null modem connection; Telnet mode interprets IAC codes
-	  telnetmode(false),
-	  connected(false),
-	  doresponse(0),
-	  waiting_tx_character(0),
-	  cmdpause(0),
-	  ringtimer(0),
-	  ringcount(0),
-	  plusinc(0),
-	  cmdpos(0),
-	  flowcontrol(0),
-	  tmpbuf {0},
-	  listenport(23),
-	  reg {0},
-	  serversocket(nullptr),
-	  clientsocket(nullptr),
-	  waitingclientsocket(nullptr),
-	  telClient {},
-	  dial {}
+          tqueue(new CFifo(MODEM_BUFFER_QUEUE_SIZE))
 {
 	InstallationSuccessful=false;
 
