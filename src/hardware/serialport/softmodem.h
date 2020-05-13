@@ -232,9 +232,9 @@ protected:
 	uint8_t tmpbuf[MODEM_BUFFER_QUEUE_SIZE] = {0};
 	uint32_t listenport = 23; // 23 is the default telnet TCP/IP port
 	uint8_t reg[SREGS] = {0};
-	std::unique_ptr<TCPServerSocket> serversocket;
-	std::unique_ptr<TCPClientSocket> clientsocket;
-	std::unique_ptr<TCPClientSocket> waitingclientsocket;
+	std::unique_ptr<TCPServerSocket> serversocket = nullptr;
+	std::unique_ptr<TCPClientSocket> clientsocket = nullptr;
+	std::unique_ptr<TCPClientSocket> waitingclientsocket = nullptr;
 
 	struct {
 		bool binary[2] = {false};
