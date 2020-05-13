@@ -58,13 +58,13 @@
 Bit32u Netwrapper_GetCapabilities();
 
 struct _TCPsocketX {
-	int ready;
+	int ready = 0;
 #ifdef NATIVESOCKETS
-	SOCKET channel;
+	SOCKET channel = 0;
 #endif
 	IPaddress remoteAddress;
 	IPaddress localAddress;
-	int sflag;
+	int sflag = 0;
 };
 
 class TCPClientSocket {

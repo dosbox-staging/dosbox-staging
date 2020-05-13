@@ -209,15 +209,16 @@ public:
 	std::unique_ptr<CFifo> tqueue;
 
 protected:
-	char cmdbuf[255];
-	bool commandmode;       // true: interpret input as commands
-	bool echo;              // local echo on or off
-	bool oldDTRstate;
-	bool ringing;
-	bool numericresponse;   // true: send control response as number.
-	                        // false: send text (i.e. NO DIALTONE)
-	bool telnetmode;        // true: process IAC commands.	
-	bool connected;
+	char cmdbuf[255] = {0};
+	bool commandmode = false; // true: interpret input as commands
+	bool echo = false;        // local echo on or off
+	bool oldDTRstate = false;
+	bool ringing = false;
+	bool numericresponse = false; // true: send control response as number.
+	                              // false: send text (i.e. NO DIALTONE)
+	bool telnetmode = false; // Default to direct null modem connection;
+	                         // Telnet mode interprets IAC
+	bool connected = false;
 	uint32_t doresponse = 0;
 	uint8_t waiting_tx_character = 0;
 	uint32_t cmdpause = 0;
@@ -236,18 +237,22 @@ protected:
 	std::unique_ptr<TCPClientSocket> waitingclientsocket;
 
 	struct {
-		bool binary[2];
-		bool echo[2];
-		bool supressGA[2];
-		bool timingMark[2];
-		bool inIAC;
-		bool recCommand;
-		Bit8u command;
+		bool binary[2] = {false};
+		bool echo[2] = {false};
+		bool supressGA[2] = {false};
+		bool timingMark[2] = {false};
+		bool inIAC = false;
+		bool recCommand = false;
+		uint8_t command = 0;
 	} telClient;
 
 	struct {
+		bool active = false;
+		double f1 = 0.0f;
+		double f2 = 0.0f;
 		uint32_t len = 0;
 		uint32_t pos = 0;
+		char str[256] = {0};
 	} dial;
 };
 #endif

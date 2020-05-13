@@ -133,20 +133,21 @@ public:
 
 #if SERIAL_DEBUG
 	FILE * debugfp;
-	bool dbg_modemcontrol; // RTS,CTS,DTR,DSR,RI,CD
-	bool dbg_serialtraffic;
-	bool dbg_register;
-	bool dbg_interrupt;
-	bool dbg_aux;
-	void log_ser(bool active, char const* format,...);
+	bool dbg_modemcontrol = false; // RTS,CTS,DTR,DSR,RI,CD
+	bool dbg_serialtraffic = false;
+	bool dbg_register = false;
+	bool dbg_interrupt = false;
+	bool dbg_aux = false;
+	void log_ser(bool active, char const *format, ...);
 #endif
 
 	static bool getUintFromString(const char *name,
 	                              uint32_t &data,
 	                              CommandLine *cmd);
 
-	bool InstallationSuccessful;// check after constructing. If
-								// something was wrong, delete it right away.
+	bool InstallationSuccessful = false; // check after constructing. If
+	                                     // something was wrong, delete it
+	                                     // right away.
 
 	/*
 	 * Communication port index is typically 0-3, but logically limited
@@ -260,8 +261,7 @@ public:
 	uint8_t PortNumber() const;
 
 private:
-
-	DOS_Device* mydosdevice;
+	DOS_Device *mydosdevice = nullptr;
 
 	// I used this spec: st16c450v420.pdf
 
@@ -280,27 +280,30 @@ private:
 	#define TIMEOUT_PRIORITY 0x10
 	#define NONE_PRIORITY 0
 
-	Bit8u waiting_interrupts;	// these are on, but maybe not enabled
+	uint8_t waiting_interrupts = 0; // these are on, but maybe not enabled
 	
 	// 16C550
 	//				read/write		name
 
-	Bit16u baud_divider;
-	#define RHR_OFFSET 0	// r Receive Holding Register, also LSB of Divisor Latch (r/w)
+	uint16_t baud_divider = 0;
+
+ 	#define RHR_OFFSET 0	// r Receive Holding Register, also LSB of Divisor Latch (r/w)
 							// Data: whole byte
 	#define THR_OFFSET 0	// w Transmit Holding Register
 							// Data: whole byte
-	Bit8u IER;	//	r/w		Interrupt Enable Register, also MSB of Divisor Latch
+	uint8_t IER = 0; //	r/w		Interrupt Enable Register, also
+	                 // MSB of Divisor Latch
 	#define IER_OFFSET 1
 
-	bool irq_active;
+	bool irq_active = false;
 				
 	#define RHR_INT_Enable_MASK				0x1
 	#define THR_INT_Enable_MASK				0x2
 	#define Receive_Line_INT_Enable_MASK	0x4
 	#define Modem_Status_INT_Enable_MASK	0x8
 
-	Bit8u ISR;	//	r				Interrupt Status Register
+	uint8_t ISR = 0; //	r				Interrupt Status
+	                 // Register
 	#define ISR_OFFSET 2
 
 	#define ISR_CLEAR_VAL 0x1
@@ -310,7 +313,8 @@ private:
 	#define ISR_TX_VAL 0x2
 	#define ISR_MSR_VAL 0x0
 public:	
-	Bit8u LCR;	//	r/w				Line Control Register
+	uint8_t LCR = 0; //	r/w				Line Control
+	                 // Register
 private:
 	#define LCR_OFFSET 3
 						// bit0: word length bit0
@@ -356,7 +360,8 @@ private:
 	#define MCR_OP2_MASK 0x8
 	#define MCR_LOOPBACK_Enable_MASK 0x10
 public:	
-	Bit8u LSR;	//	r				Line Status Register
+	uint8_t LSR = 0; //	r				Line Status
+	                 // Register
 private:
 
 	#define LSR_OFFSET 5
@@ -383,14 +388,14 @@ private:
 	// Modem Status Register
 	//	r
 	#define MSR_OFFSET 6
-	bool d_cts;			// bit0: deltaCTS
-	bool d_dsr;			// bit1: deltaDSR
-	bool d_ri;			// bit2: deltaRI
-	bool d_cd;			// bit3: deltaCD
-	bool cts;			// bit4: CTS
-	bool dsr;			// bit5: DSR
-	bool ri;			// bit6: RI
-	bool cd;			// bit7: CD
+	bool d_cts = false; // bit0: deltaCTS
+	bool d_dsr = false; // bit1: deltaDSR
+	bool d_ri = false;  // bit2: deltaRI
+	bool d_cd = false;  // bit3: deltaCD
+	bool cts = false;   // bit4: CTS
+	bool dsr = false;   // bit5: DSR
+	bool ri = false;    // bit6: RI
+	bool cd = false;    // bit7: CD
 	
 	#define MSR_delta_MASK 0xf
 	#define MSR_LINE_MASK 0xf0
@@ -404,25 +409,24 @@ private:
 	#define MSR_RI_MASK 0x40
 	#define MSR_CD_MASK 0x80
 
-	Bit8u SPR;	//	r/w				Scratchpad Register
+	uint8_t SPR = 0; //	r/w				Scratchpad Register
 	#define SPR_OFFSET 7
 
-
 	// For loopback purposes...
-	Bit8u loopback_data;
-	void transmitLoopbackByte(Bit8u val, bool value);
+	uint8_t loopback_data = 0;
 
 	// 16C550 (FIFO)
 public: // todo remove
-	MyFifo* rxfifo;
+	MyFifo *rxfifo = nullptr;
+
 private:
-	MyFifo* txfifo;
-	MyFifo* errorfifo;
+	MyFifo *txfifo = nullptr;
+	MyFifo *errorfifo = nullptr;
 	uint32_t errors_in_fifo = 0;
 	uint32_t rx_interrupt_threshold = 0;
 	uint32_t fifosize = 0;
-        uint8_t FCR = 0;
-        bool sync_guardtime = false;
+	uint8_t FCR = 0;
+	bool sync_guardtime = false;
 
 	#define FIFO_STATUS_ACTIVE 0xc0 // FIFO is active AND works ;)
 	#define FIFO_ERROR 0x80
@@ -434,9 +438,9 @@ private:
 };
 
 extern CSerial* serialports[];
-const Bit8u serial_defaultirq[] = { 4, 3, 4, 3 };
-const Bit16u serial_baseaddr[] = {0x3f8,0x2f8,0x3e8,0x2e8};
-const char* const serial_comname[]={"COM1","COM2","COM3","COM4"};
+const uint8_t serial_defaultirq[] = {4, 3, 4, 3};
+const uint16_t serial_baseaddr[] = {0x3f8, 0x2f8, 0x3e8, 0x2e8};
+const char *const serial_comname[] = {"COM1", "COM2", "COM3", "COM4"};
 
 // the COM devices
 
@@ -451,7 +455,7 @@ public:
 	bool Close();
 	Bit16u GetInformation(void);
 private:
-	CSerial* sclass;
+	CSerial *sclass = nullptr;
 };
 
 #endif

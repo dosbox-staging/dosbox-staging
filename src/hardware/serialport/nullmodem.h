@@ -49,14 +49,13 @@ public:
 	void handleUpperEvent(Bit16u type);
 
 private:
-	TCPServerSocket* serversocket;
-	TCPClientSocket* clientsocket;
+	TCPServerSocket *serversocket = nullptr;
+	TCPClientSocket *clientsocket = nullptr;
 
-	bool receiveblock;		// It's not a block of data it rather blocks
-	Bit16u serverport;		// we are a server if this is nonzero
-	Bit16u clientport;
+	uint16_t serverport = 0; // we are a server if this is nonzero
+	uint16_t clientport = 0;
 
-	Bit8u hostnamebuffer[128]; // the name passed to us by the user
+	uint8_t hostnamebuffer[128] = {0}; // the name passed to us by the user
 
 	uint32_t rx_state = 0;
 #define N_RX_IDLE		0
@@ -73,12 +72,12 @@ private:
 	Bits readChar();
 	void WriteChar(Bit8u data);
 
-	bool DTR_delta;		// with dtrrespect, we try to establish a connection
-						// whenever DTR switches to 1. This variable is
-						// used to remember the old state.
+	bool DTR_delta = false; // with dtrrespect, we try to establish a
+	                        // connection whenever DTR switches to 1. This
+	                        // variable is used to remember the old state.
 
-	bool tx_block;		// true while the SERIAL_TX_REDUCTION event
-						// is pending
+	bool tx_block = false; // true while the SERIAL_TX_REDUCTION event
+	                       // is pending
 
 	uint32_t rx_retry = 0; // counter of retries
 
@@ -88,13 +87,13 @@ private:
 	uint32_t tx_gather = 0; // how long to gather tx data before
 	                        // sending all of them [milliseconds]
 
-	bool dtrrespect;	// dtr behavior - only send data to the serial
-						// port when DTR is on
+	bool dtrrespect = false; // dtr behavior - only send data to the serial
+	                         // port when DTR is on
 
-	bool transparent;	// if true, don't send 0xff 0xXX to toggle
-						// DSR/CTS.
+	bool transparent = false; // if true, don't send 0xff 0xXX to toggle
+	                          // DSR/CTS.
 
-	bool telnet;		// Do Telnet parsing.
+	bool telnet = false; // Do Telnet parsing.
 
 	// Telnet's brain
 #define TEL_CLIENT 0
@@ -104,14 +103,14 @@ private:
 
 	// Telnet's memory
 	struct {
-		bool binary[2];
-		bool echo[2];
-		bool supressGA[2];
-		bool timingMark[2];
-					
-		bool inIAC;
-		bool recCommand;
-		Bit8u command;
+		bool binary[2] = {false};
+		bool echo[2] = {false};
+		bool supressGA[2] = {false};
+		bool timingMark[2] = {false};
+
+		bool inIAC = false;
+		bool recCommand = false;
+		uint8_t command = 0;
 	} telClient;
 };
 
