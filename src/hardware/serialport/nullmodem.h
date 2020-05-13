@@ -72,7 +72,7 @@ private:
 	bool ServerListen();
 	bool ServerConnect();
     void Disconnect();
-    int16_t readChar();
+    SocketState readChar(uint8_t &val);
     void WriteChar(uint8_t data);
 
     bool DTR_delta = false; // with dtrrespect, we try to establish a
@@ -102,7 +102,7 @@ private:
 #define TEL_CLIENT 0
 #define TEL_SERVER 1
 
-	Bits TelnetEmulation(uint8_t data);
+	SocketState TelnetEmulation(const uint8_t data);
 
 	// Telnet's memory
 	struct {

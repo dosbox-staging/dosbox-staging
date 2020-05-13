@@ -165,23 +165,19 @@ bool TCPClientSocket::ReceiveArray(uint8_t *data, uint32_t *size)
 	}
 }
 
-int16_t TCPClientSocket::GetcharNonBlock()
+SocketState TCPClientSocket::GetcharNonBlock(uint8_t &val)
 {
-	// return:
-	// -1: no data
-	// -2: socket closed
-	// 0..255: data
-	int16_t rvalue = -1;
+	SocketState state = SocketState::Empty;
 	if(SDLNet_CheckSockets(listensocketset,0))
 	{
-		char data = 0;
-		if (SDLNet_TCP_Recv(mysock, &data, 1) != 1) {
+		if (SDLNet_TCP_Recv(mysock, &val, 1) == 1)
+			state = SocketState::Good;
+		else {
 			isopen = false;
-			rvalue = -2;
-		} else
-			rvalue = static_cast<int16_t>(data);
+			state = SocketState::Closed;
+		}
 	}
-	return rvalue;
+	return state;
 }
 
 bool TCPClientSocket::Putchar(uint8_t data)

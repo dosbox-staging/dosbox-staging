@@ -67,6 +67,12 @@ struct _TCPsocketX {
 	int sflag = 0;
 };
 
+enum class SocketState {
+	Good, // had data and socket is open
+	Empty, // didn't have data but socket is open
+	Closed // didn't have data and socket is closed
+};
+
 class TCPClientSocket {
 public:
 	TCPClientSocket(TCPsocket source);
@@ -79,11 +85,7 @@ public:
 
 	~TCPClientSocket();
 
-	// return:
-	// -1: no data
-	// -2: socket closed
-	// >0: data char
-	int16_t GetcharNonBlock();
+	SocketState GetcharNonBlock(uint8_t &val);
 
 	bool Putchar(uint8_t data);
 	bool SendArray(uint8_t *data, uint32_t bufsize);

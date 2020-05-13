@@ -167,23 +167,28 @@ void CNullModem::WriteChar(uint8_t data)
 	}
 }
 
-int16_t CNullModem::readChar()
+SocketState CNullModem::readChar(uint8_t &val)
 {
-	int16_t rxchar = clientsocket->GetcharNonBlock();
-	if (telnet && rxchar >= 0)
-		return TelnetEmulation((uint8_t)rxchar);
-	else if (rxchar == 0xff && !transparent) { // escape char
-		// get the next char
-		int16_t next_char = clientsocket->GetcharNonBlock();
-		if (next_char == 0xff)
-			return next_char; // 0xff 0xff -> 0xff was meant
-		next_char & 0x1 ? setCTS(true) : setCTS(false);
-		next_char & 0x2 ? setDSR(true) : setDSR(false);
-		if (next_char & 0x4)
+	SocketState state = clientsocket->GetcharNonBlock(val);
+	if (state != SocketState::Good)
+		return state;
+
+	if (telnet)
+		return TelnetEmulation(val);
+
+	if (val == 0xff && !transparent) { // escape char
+		// get the next character
+		state = clientsocket->GetcharNonBlock(val);
+		if (state != SocketState::Good || val == 0xff) // 0xff 0xff -> 0xff was meant
+			return state;
+
+		setCTS(val & 0x1);
+		setDSR(val & 0x2);
+		if (val & 0x4)
 			receiveByteEx(0x0, 0x10);
-		return -1; // no "payload" received
-	} else
-		return rxchar;
+		return SocketState::Empty; // no "payload" received
+	}
+	return SocketState::Good;
 }
 
 bool CNullModem::ClientConnect(TCPClientSocket* newsocket) {
@@ -436,14 +441,17 @@ void CNullModem::updateMSR () {
 }
 
 bool CNullModem::doReceive () {
-		Bits rxchar = readChar();
-		if (rxchar>=0) {
-		        receiveByteEx((uint8_t)rxchar, 0);
-		        return true;
-	        } else if (rxchar == -2) {
-		        Disconnect();
-	        }
-	        return false;
+	uint8_t val;
+	SocketState state = readChar(val);
+	if (state == SocketState::Good) {
+		receiveByteEx(val, 0);
+		return true;
+	}
+	if (state == SocketState::Closed) {
+		Disconnect();
+	}
+	// socket was either empty or closed
+	return false;
 }
 
 void CNullModem::transmitByte(uint8_t val, bool first)
@@ -459,7 +467,7 @@ void CNullModem::transmitByte(uint8_t val, bool first)
 	WriteChar(val);
 }
 
-Bits CNullModem::TelnetEmulation(uint8_t data)
+SocketState CNullModem::TelnetEmulation(const uint8_t data)
 {
 	uint8_t response[3];
 	if (telClient.inIAC) {
@@ -541,12 +549,12 @@ Bits CNullModem::TelnetEmulation(uint8_t data)
 			}
 			telClient.inIAC = false;
 			telClient.recCommand = false;
-			return -1; //continue;
+			return SocketState::Empty; //continue;
 		} else {
 			if (data==249) {
 				/* Go Ahead received */
 				telClient.inIAC = false;
-				return -1; //continue;
+				return SocketState::Empty; //continue;
 			}
 			telClient.command = data;
 			telClient.recCommand = true;
@@ -555,17 +563,17 @@ Bits CNullModem::TelnetEmulation(uint8_t data)
 				/* Binary data with value of 255 */
 				telClient.inIAC = false;
 				telClient.recCommand = false;
-					return 0xff;
+					return SocketState::Good;
 			}
 		}
 	} else {
 		if (data == 0xff) {
 			telClient.inIAC = true;
-			return -1;
+			return SocketState::Empty;
 		}
-		return data;
+		return SocketState::Good;
 	}
-	return -1; // ???
+	return SocketState::Empty; // ???
 }
 
 /*****************************************************************************/
