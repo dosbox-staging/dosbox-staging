@@ -32,6 +32,10 @@
 
 class CDirectSerial : public CSerial {
 public:
+	CDirectSerial(const CDirectSerial &) = delete; // prevent copying
+	CDirectSerial &operator=(const CDirectSerial &) = delete; // prevent
+	                                                          // assignment
+
 	CDirectSerial(const uint8_t port_index_, CommandLine *cmd);
 	~CDirectSerial();
 
