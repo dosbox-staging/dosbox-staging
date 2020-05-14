@@ -53,10 +53,10 @@
 // Serial port interface
 
 #define SERIAL_MAX_FIFO_SIZE 256
-/* Note: almost all DOS-era universal asynchronous receiver-transmitter
+/* Note: Almost all DOS-era universal asynchronous receiver-transmitter
  *       (UART)'s permitted up to a 16-byte receive and transmit
- *       first-in/first-out (FIFO), however some specialty controller
- *       cards allowed up to 64-bytes and later 256-bytes.
+ *       first-in/first-out (FIFO) buffer, however some specialty
+ *       controller cards allowed up to 64-bytes and later 256-bytes.
  */
 
 class MyFifo {
@@ -477,7 +477,7 @@ public:
 	bool Write(uint8_t *data, uint16_t *size);
 	bool Seek(uint32_t *pos, uint32_t type);
 	bool Close();
-	uint16_t GetInformation(void);
+	uint16_t GetInformation();
 
 private:
 	CSerial *sclass = nullptr;

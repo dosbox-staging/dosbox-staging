@@ -282,7 +282,7 @@ bool CSerialModem::Dial(const char * host) {
 	}
 }
 
-void CSerialModem::AcceptIncomingCall(void) {
+void CSerialModem::AcceptIncomingCall() {
 	if (waitingclientsocket) {
 		clientsocket = std::move(waitingclientsocket);
 		EnterConnectedState();
@@ -340,7 +340,7 @@ void CSerialModem::Reset(){
 	telnetmode = false;
 }
 
-void CSerialModem::EnterIdleState(void){
+void CSerialModem::EnterIdleState(){
 	connected = false;
 	ringing = false;
 	dtrofftimer = -1;
@@ -377,7 +377,7 @@ void CSerialModem::EnterIdleState(void){
 	tqueue->clear();
 }
 
-void CSerialModem::EnterConnectedState(void) {
+void CSerialModem::EnterConnectedState() {
 	// we don't accept further calls
 	serversocket.reset(nullptr);
 	SendRes(ResCONNECT);
@@ -787,7 +787,7 @@ void CSerialModem::TelnetEmulation(uint8_t *data, uint32_t size)
 	}
 }
 
-void CSerialModem::Timer2(void) {
+void CSerialModem::Timer2() {
 	uint32_t txbuffersize = 0;
 
 	// Check for eventual break command

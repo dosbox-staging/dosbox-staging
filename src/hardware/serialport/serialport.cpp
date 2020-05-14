@@ -79,7 +79,7 @@ bool device_COM::Close() {
 	return false;
 }
 
-uint16_t device_COM::GetInformation(void)
+uint16_t device_COM::GetInformation()
 {
 	return 0x80A0;
 }
@@ -1155,7 +1155,7 @@ bool CSerial::getUintFromString(const char *name, uint32_t &data, CommandLine *c
 	return result;
 }
 
-CSerial::~CSerial(void) {
+CSerial::~CSerial() {
 	DOS_DelDevice(mydosdevice);
 	for (uint32_t i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++)
 		removeEvent(i);

@@ -61,9 +61,10 @@ bool MODEM_ReadPhonebook(const std::string &filename);
 
 class CFifo {
 public:
-	CFifo(size_t n) : data(n), size(n), pos(0), used(0) {}
-	size_t left() const { return size - used; }
-	size_t inuse() const { return used; }
+	CFifo(uint32_t _size) : data(_size), size(_size), pos(0), used(0) {}
+
+	uint32_t left() const { return size - used; }
+	uint32_t inuse() const { return used; }
 	void clear()
 	{
 		used = 0;
@@ -112,7 +113,7 @@ public:
 		}
 	}
 
-	uint8_t getb(void)
+	uint8_t getb()
 	{
 		if (!used) {
 			static uint16_t lcount = 0;
@@ -180,7 +181,7 @@ public:
 	void EnterIdleState();
 	void EnterConnectedState();
 	bool Dial(const char *host);
-	void AcceptIncomingCall(void);
+	void AcceptIncomingCall();
 	uint32_t ScanNumber(char *&scan) const;
 	char GetChar(char * & scan) const;
 
@@ -191,7 +192,7 @@ public:
 	void TelnetEmulation(uint8_t *data, uint32_t size);
 
 	//TODO
-	void Timer2(void);
+	void Timer2();
 	void handleUpperEvent(uint16_t type);
 
 	void RXBufferEmpty();
