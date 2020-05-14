@@ -23,8 +23,8 @@
 #include "serialdummy.h"
 #include "serialport.h"
 
-CSerialDummy::CSerialDummy(const uint8_t port_index_, CommandLine *cmd)
-        : CSerial(port_index_, cmd)
+CSerialDummy::CSerialDummy(const uint8_t port_idx, CommandLine *cmd)
+        : CSerial(port_idx, cmd)
 {
 	CSerial::Init_Registers();
 	setRI(false);
@@ -95,10 +95,10 @@ void CSerialDummy::setBreak(bool value) {
 /*****************************************************************************/
 /* setRTSDTR sets the modem control lines                                   **/
 /*****************************************************************************/
-void CSerialDummy::setRTSDTR(bool rts_, bool dtr_)
+void CSerialDummy::setRTSDTR(bool rts_state, bool dtr_state)
 {
-	setRTS(rts_);
-	setDTR(dtr_);
+	setRTS(rts_state);
+	setDTR(dtr_state);
 }
 void CSerialDummy::setRTS(bool val) {
 #ifdef CHECKIT_TESTPLUG
