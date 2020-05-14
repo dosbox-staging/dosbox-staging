@@ -115,7 +115,7 @@ jobs:
       - name:  Summarize warnings
         shell: pwsh
         env:
-          MAX_WARNINGS: 401
+          MAX_WARNINGS: 348
         run: python scripts\count-warnings.py --msvc vs\build.log
 
 
