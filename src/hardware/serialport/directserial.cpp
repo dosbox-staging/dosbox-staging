@@ -31,8 +31,8 @@
 /* This is a serial passthrough class.  Its amazingly simple to */
 /* write now that the serial ports themselves were abstracted out */
 
-CDirectSerial::CDirectSerial(const uint8_t port_index_, CommandLine *cmd)
-        : CSerial(port_index_, cmd)
+CDirectSerial::CDirectSerial(const uint8_t port_idx, CommandLine *cmd)
+        : CSerial(port_idx, cmd)
 {
 	InstallationSuccessful = false;
 	comport = 0;
@@ -306,10 +306,10 @@ void CDirectSerial::setBreak (bool value) {
 }
 
 // updateModemControlLines(mcr) sets DTR and RTS.
-void CDirectSerial::setRTSDTR(bool rts_, bool dtr_)
+void CDirectSerial::setRTSDTR(bool rts_state, bool dtr_state)
 {
-	SERIAL_setRTS(comport, rts_);
-	SERIAL_setDTR(comport, dtr_);
+	SERIAL_setRTS(comport, rts_state);
+	SERIAL_setDTR(comport, dtr_state);
 }
 
 void CDirectSerial::setRTS(bool val) {

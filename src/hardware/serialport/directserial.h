@@ -36,7 +36,7 @@ public:
 	CDirectSerial &operator=(const CDirectSerial &) = delete; // prevent
 	                                                          // assignment
 
-	CDirectSerial(const uint8_t port_index_, CommandLine *cmd);
+	CDirectSerial(const uint8_t port_idx, CommandLine *cmd);
 	~CDirectSerial();
 
 	void updatePortConfig(uint16_t divider, uint8_t lcr);
