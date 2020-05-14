@@ -235,46 +235,40 @@ void CSerial::removeEvent(uint16_t type)
 
 void CSerial::handleEvent(uint16_t type)
 {
-	switch (type) {
-	case SERIAL_TX_LOOPBACK_EVENT: {
-
+	switch (type) { 
+	case SERIAL_TX_LOOPBACK_EVENT: 
 #if SERIAL_DEBUG
-			log_ser(dbg_serialtraffic,loopback_data<0x10?
-				"tx 0x%02x (%u) (loopback)":"tx 0x%02x (%c) (loopback)",
-				loopback_data, loopback_data);
+		log_ser(dbg_serialtraffic,
+		        loopback_data < 0x10 ? "tx 0x%02x (%u) (loopback)"
+		                             : "tx 0x%02x (%c) (loopback)",
+		        loopback_data, loopback_data);
 #endif
-			receiveByte (loopback_data);
-			ByteTransmitted ();
-			break;
-		}
-		case SERIAL_THR_LOOPBACK_EVENT: {
-			loopback_data=txfifo->probeByte();
-			ByteTransmitting();
-			setEvent(SERIAL_TX_LOOPBACK_EVENT,bytetime);	
-			break;
-		}
-		case SERIAL_ERRMSG_EVENT: {
-		        LOG_MSG("SERIAL: Port %u errors: "
-		                "framing %d, parity %d, RX overruns %d, "
-		                "IF0 overruns: %d, TX overruns: %d, break %d.",
-		                GetPortNumber(), framingErrors, parityErrors,
-		                overrunErrors, overrunIF0, txOverrunErrors,
-		                breakErrors);
-		        errormsg_pending=false;
-			framingErrors=0;
-			parityErrors=0;
-			overrunErrors=0;
-			txOverrunErrors=0;
-			overrunIF0=0;
-			breakErrors=0;
-			break;					  
-		}
-		case SERIAL_RX_TIMEOUT_EVENT: {
-			rise(TIMEOUT_PRIORITY);
-			break;
-		}
-		default: handleUpperEvent(type);
-	        }
+		receiveByte(loopback_data);
+		ByteTransmitted();
+		break;
+
+	case SERIAL_THR_LOOPBACK_EVENT:
+		loopback_data = txfifo->probeByte();
+		ByteTransmitting();
+		setEvent(SERIAL_TX_LOOPBACK_EVENT, bytetime);
+		break;
+	case SERIAL_ERRMSG_EVENT:
+		LOG_MSG("SERIAL: Port %u errors: "
+		        "framing %d, parity %d, RX overruns %d, "
+		        "IF0 overruns: %d, TX overruns: %d, break %d.",
+		        GetPortNumber(), framingErrors, parityErrors,
+		        overrunErrors, overrunIF0, txOverrunErrors, breakErrors);
+		errormsg_pending = false;
+		framingErrors = 0;
+		parityErrors = 0;
+		overrunErrors = 0;
+		txOverrunErrors = 0;
+		overrunIF0 = 0;
+		breakErrors = 0;
+		break;
+	case SERIAL_RX_TIMEOUT_EVENT: rise(TIMEOUT_PRIORITY); break;
+	default: handleUpperEvent(type);
+	}
 }
 
 /*****************************************************************************/
@@ -1085,8 +1079,8 @@ void CSerial::Init_Registers () {
 	PIC_DeActivateIRQ(irq);
 }
 
-CSerial::CSerial(const uint8_t port_index_, CommandLine *cmd)
-        : port_index(port_index_)
+CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
+        : port_index(port_idx)
 {
 	const uint16_t base = serial_baseaddr[port_index];
 

@@ -20,6 +20,9 @@
 #ifndef DOSBOX_SERIALPORT_H
 #define DOSBOX_SERIALPORT_H
 
+#include <algorithm>
+#include <vector>
+
 #ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
 #endif
@@ -47,86 +50,98 @@
 #include "hardware.h"
 #endif
 
-// Serial port interface 
+// Serial port interface
+
+#define SERIAL_MAX_FIFO_SIZE 256
+/* Note: almost all DOS-era universal asynchronous receiver-transmitter
+ *       (UART)'s permitted up to a 16-byte receive and transmit
+ *       first-in/first-out (FIFO), however some specialty controller
+ *       cards allowed up to 64-bytes and later 256-bytes.
+ */
 
 class MyFifo {
 public:
 	MyFifo(const MyFifo &) = delete;            // prevent copying
 	MyFifo &operator=(const MyFifo &) = delete; // prevent assignment
 
-	MyFifo(uint32_t maxsize_)
+	MyFifo(size_t n) : data(n, 0), maxsize(n), size(n)
 	{
-		maxsize = size = maxsize_;
+		assert(n <= SERIAL_MAX_FIFO_SIZE);
+	}
+	size_t getFree() { return size - used; }
+	bool isEmpty() { return used == 0; }
+	bool isFull() { return (size - used) == 0; }
+	size_t getUsage() { return used; }
+	void setSize(size_t n)
+	{
+		assert(n <= SERIAL_MAX_FIFO_SIZE);
+		data.resize(n);
+		size = n;
+		maxsize = n;
 		pos = used = 0;
-		data = new uint8_t[size];
 	}
-	~MyFifo() {
-		delete[] data;
-	}
-	INLINE uint32_t getFree(void) { return size - used; }
-	bool isEmpty() {
-		return used==0;
-	}
-	bool isFull() {
-		return (size-used)==0;
+	void clear() {
+		pos = used = 0;
+		if (data.size() > 0)
+			std::fill(data.begin(), data.end(), 0);
 	}
 
-	INLINE uint32_t getUsage(void) { return used; }
-	void setSize(uint32_t newsize)
+	bool addb(uint8_t val)
 	{
-		size=newsize;
-		pos=used=0;
-	}
-	void clear(void) {
-		pos=used=0;
-		data[0]=0;
-	}
-
-	bool addb(uint8_t _val)
-	{
-		uint32_t where = pos + used;
+		size_t where = pos + used;
 		if (where >= size)
 			where -= size;
-		if(used>=size) {
+		if (used >= size) {
 			// overwrite last byte
-			if(where==0) where=size-1;
+			if (where == 0)
+				where = size - 1;
 			else where--;
-			data[where]=_val;
+			assert(where < data.size());
+			data[where] = val;
 			return false;
 		}
-		data[where]=_val;
+		assert(where < data.size());
+		data[where] = val;
 		used++;
 		return true;
 	}
 	uint8_t getb()
 	{
 		if (!used) return data[pos];
-		uint32_t where = pos;
+		size_t where = pos;
 		used--;
 		if(used) pos++;
 		if (pos>=size) pos-=size;
+		assert(where < data.size());
 		return data[where];
 	}
 	uint8_t getTop()
 	{
-		uint32_t where = pos + used;
+		size_t where = pos + used;
 		if (where >= size)
 			where -= size;
-		if(used>=size) {
-			if(where==0) where=size-1;
-			else where--;
+		if (used >= size) {
+			if (where == 0)
+				where = size - 1;
+			else
+				where--;
 		}
+		assert(where < data.size());
 		return data[where];
 	}
 
-	uint8_t probeByte() { return data[pos]; }
+	uint8_t probeByte()
+	{
+		assert(pos < data.size());
+		return data[pos];
+	}
 
 private:
-	uint8_t *data = nullptr;
-	uint32_t maxsize = 0;
-	uint32_t size = 0;
-	uint32_t pos = 0;
-	uint32_t used = 0;
+	std::vector<uint8_t> data;
+	size_t maxsize = 0;
+	size_t size = 0;
+	size_t pos = 0;
+	size_t used = 0;
 };
 
 class CSerial {
