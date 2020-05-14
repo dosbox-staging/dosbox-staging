@@ -38,7 +38,7 @@ public:
 	CNullModem(const CNullModem &) = delete;            // prevent copying
 	CNullModem &operator=(const CNullModem &) = delete; // prevent assignment
 
-	CNullModem(const uint8_t port_index_, CommandLine *cmd);
+	CNullModem(const uint8_t port_idx, CommandLine *cmd);
 	~CNullModem();
 
 	void updatePortConfig(uint16_t divider, uint8_t lcr);

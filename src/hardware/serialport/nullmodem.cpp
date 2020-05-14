@@ -25,8 +25,8 @@
 #include "serialport.h"
 #include "nullmodem.h"
 
-CNullModem::CNullModem(const uint8_t port_index_, CommandLine *cmd)
-        : CSerial(port_index_, cmd),
+CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
+        : CSerial(port_idx, cmd),
           telClient({})
 {
 	uint32_t temptcpport = 23;
