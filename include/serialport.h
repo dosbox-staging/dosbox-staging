@@ -156,10 +156,9 @@ public:
 	 * Communication port index is typically 0-3, but logically limited
 	 * to the number of physical interrupts available on the system.
 	 */
-	CSerial(const uint8_t port_index_, CommandLine *cmd);
-
+	CSerial(const uint8_t port_idx, CommandLine *cmd);
 	virtual ~CSerial();
-		
+
 	IO_ReadHandleObject ReadHandler[8];
 	IO_WriteHandleObject WriteHandler[8];
 
@@ -263,7 +262,7 @@ public:
 
 	bool Putchar(uint8_t data, bool wait_dtr, bool wait_rts, uint32_t timeout);
 	bool Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeout);
-	uint8_t PortNumber() const;
+	uint8_t GetPortNumber() const { return port_index + 1; }
 
 private:
 	DOS_Device *mydosdevice = nullptr;

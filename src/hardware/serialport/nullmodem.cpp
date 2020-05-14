@@ -88,25 +88,27 @@ CNullModem::CNullModem(const uint8_t port_index_, CommandLine *cmd)
 				if (control->cmdline->FindInt("-socket",sock,true)) {
 					dtrrespect=false;
 					transparent=true;
-					LOG_MSG("Inheritance socket handle: %d",sock);
+					LOG_MSG("SERIAL: Port %u inheritance "
+					        "socket handle: %d",
+					        GetPortNumber(), sock);
 					if (!ClientConnect(new TCPClientSocket(sock)))
 						return;
 				} else {
-					LOG_MSG("Serial Port %u: -socket "
-					        "parameter missing.",
-					        PortNumber());
+					LOG_MSG("SERIAL: Port %u missing "
+					        "\"-socket\" parameter.",
+					        GetPortNumber());
 					return;
 				}
 			}
 		} else {
-			LOG_MSG("Serial Port %u: socket inheritance not "
+			LOG_MSG("SERIAL: Port %u socket inheritance not "
 			        "supported on this platform.",
-			        PortNumber());
+			        GetPortNumber());
 			return;
 		}
 #else
-		LOG_MSG("Serial Port %u: socket inheritance not available.",
-		        PortNumber());
+		LOG_MSG("SERIAL: Port %u socket inheritance not available.",
+		        GetPortNumber());
 #endif
 	} else {
 		// normal server/client
@@ -124,8 +126,8 @@ CNullModem::CNullModem(const uint8_t port_index_, CommandLine *cmd)
 			if (dtrrespect) {
 				// we connect as soon as DTR is switched on
 				setEvent(SERIAL_NULLMODEM_DTR_EVENT, 50);
-				LOG_MSG("Serial Port %u: Waiting for DTR...",
-				        PortNumber());
+				LOG_MSG("SERIAL: Port %u waiting for DTR ...",
+				        GetPortNumber());
 			} else if (!ClientConnect(new TCPClientSocket((char *)hostnamebuffer,
 			                                              clientport)))
 				return;
@@ -159,7 +161,7 @@ void CNullModem::WriteChar(uint8_t data)
 	if (clientsocket)
 		clientsocket->SendByteBuffered(data);
 	if (!tx_block) {
-		//LOG_MSG("setevreduct");
+		// LOG_MSG("SERIAL: Port %u, setevreduct", GetPortNumber());
 		setEvent(SERIAL_TX_REDUCTION, (float)tx_gather);
 		tx_block=true;
 	}
@@ -189,7 +191,7 @@ bool CNullModem::ClientConnect(TCPClientSocket* newsocket) {
 	clientsocket = newsocket;
  
 	if (!clientsocket->isopen) {
-		LOG_MSG("Serial Port %u: Connection failed.", PortNumber());
+		LOG_MSG("SERIAL: Port %u connection failed.", GetPortNumber());
 		delete clientsocket;
 		clientsocket=0;
 		setCD(false);
@@ -200,7 +202,7 @@ bool CNullModem::ClientConnect(TCPClientSocket* newsocket) {
 	// transmit the line status
 	if (!transparent) setRTSDTR(getRTS(), getDTR());
 	rx_state=N_RX_IDLE;
-	LOG_MSG("Serial Port %u: Connected to %s", PortNumber(), peernamebuf);
+	LOG_MSG("SERIAL: Port %u connected to %s.", GetPortNumber(), peernamebuf);
 	setEvent(SERIAL_POLLING_EVENT, 1);
 	setCD(true);
 	return true;
@@ -210,9 +212,9 @@ bool CNullModem::ServerListen() {
 	// Start the server listen port.
 	serversocket = new TCPServerSocket(serverport);
 	if (!serversocket->isopen) return false;
-	LOG_MSG("Serial Port %u: Nullmodem server waiting for connection on "
-	        "TCP port %d...",
-	        PortNumber(), serverport);
+	LOG_MSG("SERIAL: Port %u nullmodem server waiting for connection on "
+	        "TCP port %d ...",
+	        GetPortNumber(), serverport);
 	setEvent(SERIAL_SERVER_POLLING_EVENT, 50);
 	setCD(false);
 	return true;
@@ -225,7 +227,7 @@ bool CNullModem::ServerConnect() {
 
 	uint8_t peeripbuf[16];
 	clientsocket->GetRemoteAddressString(peeripbuf);
-	LOG_MSG("Serial Port %u: A client (%s) has connected.", PortNumber(),
+	LOG_MSG("SERIAL: Port %u a client (%s) has connected.", GetPortNumber(),
 	        peeripbuf);
 #if SERIAL_DEBUG
 	log_ser(dbg_aux,"Nullmodem: A client (%s) has connected.", peeripbuf);
@@ -248,7 +250,7 @@ void CNullModem::Disconnect() {
 	removeEvent(SERIAL_POLLING_EVENT);
 	removeEvent(SERIAL_RX_EVENT);
 	// it was disconnected; free the socket and restart the server socket
-	LOG_MSG("Serial Port %u: Disconnected.", PortNumber());
+	LOG_MSG("SERIAL: Port %u disconnected.", GetPortNumber());
 	delete clientsocket;
 	clientsocket=0;
 	setDSR(false);
@@ -336,8 +338,10 @@ void CNullModem::handleUpperEvent(uint16_t type)
 		case SERIAL_RX_EVENT: {
 			switch(rx_state) {
 				case N_RX_IDLE:
-					LOG_MSG("internal error in nullmodem");
-					break;
+			                LOG_MSG("SERIAL: Port %u internal "
+			                        "error in nullmodem.",
+			                        GetPortNumber());
+			                break;
 
 				case N_RX_BLOCKED: // try to receive
 				case N_RX_WAIT:
@@ -461,10 +465,10 @@ Bits CNullModem::TelnetEmulation(uint8_t data)
 	if (telClient.inIAC) {
 		if (telClient.recCommand) {
 			if ((data != 0) && (data != 1) && (data != 3)) {
-				LOG_MSG("Serial Port %u: Unrecognized telnet "
-				        "option %d",
-				        PortNumber(), data);
-				if (telClient.command>250) {
+				LOG_MSG("SERIAL: Port %u unrecognized telnet "
+				        "option %d.",
+				        GetPortNumber(), data);
+				if (telClient.command > 250) {
 					/* Reject anything we don't recognize */
 					response[0]=0xff;
 					response[1]=252;
@@ -530,8 +534,10 @@ Bits CNullModem::TelnetEmulation(uint8_t data)
 					}
 					break;
 				default:
-					LOG_MSG("MODEM: Telnet client sent IAC %d", telClient.command);
-					break;
+				        LOG_MSG("SERIAL: Port %u telnet client "
+				                "sent IAC %d.",
+				                GetPortNumber(), telClient.command);
+				        break;
 			}
 			telClient.inIAC = false;
 			telClient.recCommand = false;

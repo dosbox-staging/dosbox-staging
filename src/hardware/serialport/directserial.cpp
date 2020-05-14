@@ -43,14 +43,12 @@ CDirectSerial::CDirectSerial(const uint8_t port_index_, CommandLine *cmd)
 	std::string tmpstring;
 	if(!cmd->FindStringBegin("realport:",tmpstring,false)) return;
 
-	LOG_MSG("Serial Port %u: Opening %s", PortNumber(), tmpstring.c_str());
+	LOG_MSG("SERIAL: Port %u opening %s.", GetPortNumber(), tmpstring.c_str());
 	if(!SERIAL_open(tmpstring.c_str(), &comport)) {
 		char errorbuffer[256];
 		SERIAL_getErrorString(errorbuffer, sizeof(errorbuffer));
-		LOG_MSG("Serial Port %u: Serial Port \"%s\" could not be "
-		        "opened.",
-		        PortNumber(), tmpstring.c_str());
-		LOG_MSG("%s", errorbuffer);
+		LOG_MSG("SERIAL: Port %u could not open \"%s\" due to: %s.",
+		        GetPortNumber(), tmpstring.c_str(), errorbuffer);
 		return;
 	}
 
@@ -169,8 +167,10 @@ void CDirectSerial::handleUpperEvent(uint16_t type)
 		case SERIAL_RX_EVENT: {
 			switch(rx_state) {
 				case D_RX_IDLE:
-					LOG_MSG("internal error in directserial");
-					break;
+			                LOG_MSG("SERIAL: Port %u internal "
+			                        "error in directserial.",
+			                        GetPortNumber());
+			                break;
 
 				case D_RX_BLOCKED: // try to receive
 				case D_RX_WAIT:
@@ -276,9 +276,9 @@ void CDirectSerial::updatePortConfig(uint16_t divider, uint8_t lcr)
 #if SERIAL_DEBUG
 		log_ser(dbg_aux,"Serial port settings not supported by host." );
 #endif
-		LOG_MSG("Serial Port %u: Desired serial mode not supported "
-		        "(%u,%u,%c,%u)",
-		        PortNumber(), baudrate, bytelength, parity, stopbits);
+		LOG_MSG("SERIAL: Port %u desired mode not supported "
+		        "(%u,%u,%c,%u).",
+		        GetPortNumber(), baudrate, bytelength, parity, stopbits);
 	}
 	CDirectSerial::setRTSDTR(getRTS(), getDTR());
 }
@@ -295,7 +295,7 @@ void CDirectSerial::updateMSR () {
 void CDirectSerial::transmitByte(uint8_t val, bool first)
 {
 	if (!SERIAL_sendchar(comport, val))
-		LOG_MSG("Serial Port %u: write failed!", PortNumber());
+		LOG_MSG("SERIAL: Port %u write failed!", GetPortNumber());
 	if(first) setEvent(SERIAL_THR_EVENT, bytetime/8);
 	else setEvent(SERIAL_TX_EVENT, bytetime);
 }

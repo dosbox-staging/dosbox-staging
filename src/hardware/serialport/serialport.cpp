@@ -254,10 +254,10 @@ void CSerial::handleEvent(uint16_t type)
 			break;
 		}
 		case SERIAL_ERRMSG_EVENT: {
-		        LOG_MSG("Serial%u: Errors: "
-		                "Framing %d, Parity %d, Overrun RX:%d "
-		                "(IF0:%d), TX:%d, Break %d",
-		                PortNumber(), framingErrors, parityErrors,
+		        LOG_MSG("SERIAL: Port %u errors: "
+		                "framing %d, parity %d, RX overruns %d, "
+		                "IF0 overruns: %d, TX overruns: %d, break %d.",
+		                GetPortNumber(), framingErrors, parityErrors,
 		                overrunErrors, overrunIF0, txOverrunErrors,
 		                breakErrors);
 		        errormsg_pending=false;
@@ -436,11 +436,11 @@ void CSerial::receiveByte(uint8_t data)
 /*****************************************************************************/
 void CSerial::ByteTransmitting() {
 	if(sync_guardtime) {
-		//LOG_MSG("byte transmitting after guard");
-		//if(txfifo->isEmpty()) LOG_MSG("Serial port: FIFO empty when it should not");
+		//LOG_MSG("SERIAL: Port %u byte transmitting after guard.", GetPortNumber());
+		//if(txfifo->isEmpty()) LOG_MSG("SERIAL: Port %u FIFO empty when it should not", GetPortNumber());
 		sync_guardtime=false;
 		txfifo->getb();
-	} //else LOG_MSG("byte transmitting");
+	} // else LOG_MSG("SERIAL: Port %u byte transmitting.", GetPortNumber());
 	if(txfifo->isEmpty())rise (TX_PRIORITY);
 }
 
@@ -487,10 +487,10 @@ void CSerial::Write_THR(uint8_t data)
 
 		if((LSR & LSR_TX_EMPTY_MASK))
 		{	// we were idle before
-			//LOG_MSG("starting new transmit cycle");
-			//if(sync_guardtime) LOG_MSG("Serial port internal error 1");
-			//if(!(LSR & LSR_TX_EMPTY_MASK)) LOG_MSG("Serial port internal error 2");
-			//if(txfifo->getUsage()) LOG_MSG("Serial port internal error 3");
+			//LOG_MSG("SERIAL: Port %u starting new transmit cycle", GetPortNumber());
+			//if(sync_guardtime) LOG_MSG("SERIAL: Port %u internal error 1", GetPortNumber());
+			//if(!(LSR & LSR_TX_EMPTY_MASK)) LOG_MSG("SERIAL: Port %u internal error 2", GetPortNumber());
+			//if(txfifo->getUsage()) LOG_MSG("SERIAL: Port %u internal error 3", GetPortNumber());
 			
 			// need "warming up" time
 			sync_guardtime=true;
@@ -718,7 +718,10 @@ void CSerial::Write_MCR(uint8_t data)
 {
 	// WARNING: At the time setRTSDTR is called rts and dsr members are
 	// still wrong.
-	if (data&FIFO_FLOWCONTROL) LOG_MSG("Warning: tried to activate hardware handshake.");
+	if (data & FIFO_FLOWCONTROL)
+		LOG_MSG("SERIAL: Port %u warning, tried to activate hardware "
+		        "handshake.",
+		        GetPortNumber());
 	bool new_dtr = data & MCR_DTR_MASK? true:false;
 	bool new_rts = data & MCR_RTS_MASK? true:false;
 	bool new_op1 = data & MCR_OP1_MASK? true:false;
@@ -894,7 +897,7 @@ void CSerial::Write_reserved(uint8_t data, uint8_t address)
 	(void)data;    // unused, but required for API compliance
 	(void)address; // unused, but required for API compliance
 	/*LOG_UART("Serial%u: Write to reserved register, value 0x%x, register
-	   %x", PortNumber(), data, address);*/
+	   %x", GetPortNumber(), data, address);*/
 }
 
 /*****************************************************************************/
@@ -1122,8 +1125,8 @@ CSerial::CSerial(const uint8_t port_index_, CommandLine *cmd)
 		std::string cleft;
 		cmd->GetStringRemain(cleft);
 
-		log_ser(true, "Serial Port %u: BASE %3x, IRQ %d, initstring \"%s\"\r\n\r\n",
-		        PortNumber(), base, irq, cleft.c_str());
+		log_ser(true, "SERIAL: Port %u BASE %3x, IRQ %d, initstring \"%s\"\r\n\r\n",
+		        GetPortNumber(), base, irq, cleft.c_str());
 	}
 #endif
 	fifosize=16;
@@ -1194,11 +1197,6 @@ bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeo
 	log_ser(dbg_aux,"Getchar read 0x%x",*data);
 #endif
 	return true;
-}
-
-uint8_t CSerial::PortNumber() const
-{
-	return port_index + 1;
 }
 
 bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeout)
@@ -1288,7 +1286,8 @@ public:
 				serialports[i] = NULL;
 			} else {
 				serialports[i] = NULL;
-				LOG_MSG("Invalid type for serial port %u",i+1);
+				LOG_MSG("SERIAL: Port %u invalid type \"%s\".",
+				        i + 1, type.c_str());
 			}
 			if(serialports[i]) biosParameter[i] = serial_baseaddr[i];
 		} // for 1-4

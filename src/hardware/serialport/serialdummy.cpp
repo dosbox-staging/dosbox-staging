@@ -42,13 +42,13 @@ CSerialDummy::~CSerialDummy() {
 void CSerialDummy::handleUpperEvent(uint16_t type)
 {
 	if (type == SERIAL_TX_EVENT) {
-		// LOG_MSG("SERIAL_TX_EVENT");
+		// LOG_MSG("SERIAL: Port %u TX_EVENT", GetPortNumber());
 #ifdef CHECKIT_TESTPLUG
 		receiveByte(loopbackdata);
 #endif
 		ByteTransmitted(); // tx timeout
 	} else if (type == SERIAL_THR_EVENT) {
-		//LOG_MSG("SERIAL_THR_EVENT");
+		//LOG_MSG("SERIAL: Port %u THR_EVENT", GetPortNumber());
 		ByteTransmitting();
 		setEvent(SERIAL_TX_EVENT,bytetime);
 	}
@@ -63,8 +63,8 @@ void CSerialDummy::updatePortConfig(uint16_t divider, uint8_t lcr)
 	(void)divider; // unused
 	(void)lcr;     // unused
 
-	// LOG_MSG("Serial port at 0x%x: Port params changed: %d Baud",
-	// base,dcb.BaudRate);
+	// LOG_MSG("SERIAL: Port %u at UART 0x%x params changed: %d baud",
+	// GetPortNumber(), base, dcb.BaudRate);
 }
 
 void CSerialDummy::updateMSR() {
@@ -88,7 +88,8 @@ void CSerialDummy::transmitByte(uint8_t val, bool first)
 
 void CSerialDummy::setBreak(bool value) {
 	(void)value; // unused
-	             // LOG_MSG("UART 0x%x: Break toggeled: %d", base, value);
+	// LOG_MSG("SERIAL: Port %u at UART 0x%x break "
+	//         "toggeled: %d.", GetPortNumber(), base, value);
 }
 
 /*****************************************************************************/
