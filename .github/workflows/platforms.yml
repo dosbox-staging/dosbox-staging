@@ -34,6 +34,14 @@ jobs:
         shell: bash
         run:  'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
 
+      - name: Inject version string
+        run: |
+          set -x
+          git fetch --prune --unshallow
+          export VERSION=$(git describe --abbrev=4)
+          sed -i "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
+          echo ::set-env name=VERSION::$VERSION
+
       - name: Build
         uses: uraimo/run-on-arch-action@master
         if: steps.repo-meta.outputs.has-commits == 'true'
@@ -43,10 +51,55 @@ jobs:
           run: |
             set -x
             apt-get update
-            apt-get install -y $(./scripts/list-build-dependencies.sh -c gcc -m apt)
+            apt-get install -y libpng-dev $(./scripts/list-build-dependencies.sh -c gcc -m apt)
             ./scripts/log-env.sh
-            ./scripts/build.sh -c gcc -t release
+            ./scripts/build.sh -c gcc -t release -m lto
 
       - name: Summarize warnings
         if: steps.repo-meta.outputs.has-commits == 'true'
         run:  ./scripts/count-warnings.py --max-warnings -1 build.log
+
+      - name: Package
+        run: |
+          set -x
+
+          # Prepare content
+          install -DT        src/dosbox           dest/dosbox
+          install -DT -m 644 docs/README.template dest/README
+          install -DT -m 644 COPYING              dest/COPYING
+          install -DT -m 644 README               dest/doc/manual.txt
+          install -DT -m 644 docs/README.video    dest/doc/video.txt
+          install -DT -m 644 docs/dosbox.1        dest/man/dosbox.1
+          # skip icon generation for now because rsvg-convert isn't available
+
+          # Fill README template file
+          sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README
+          sed -i "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" dest/README
+          sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README
+
+          # Inventory the package
+          PACKAGE="dosbox-staging-linux-${{ matrix.conf.architecture }}-$VERSION"
+          mv dest "$PACKAGE"
+          ls -1lh "$PACKAGE"
+
+          # Create tarball
+          tar -cJf "$PACKAGE.tar.xz" "$PACKAGE"
+          echo ::set-env name=PACKAGE::$PACKAGE
+
+      - name: Clam AV scan
+        run: |
+          set -x
+          sudo apt-get install clamav > /dev/null
+          sudo systemctl stop clamav-freshclam
+          sudo freshclam --quiet && sudo freshclam
+          clamscan --heuristic-scan-precedence=yes --recursive --infected .
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@master
+        # GitHub automatically zips the artifacts (there's no way to create
+        # a tarball), and it removes all executable flags while zipping.
+        # Letting it zip a tarball preserves flags in the compressed files.
+        with:
+          name: ${{ env.PACKAGE }}
+          path: ${{ env.PACKAGE }}.tar.xz
+
