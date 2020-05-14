@@ -95,7 +95,7 @@ device_COM::~device_COM() {
 
 
 // COM1 - COM4 objects
-CSerial *serialports[SERIAL_MAX_PORTS] = {0};
+CSerial *serialports[SERIAL_MAX_PORTS] = {nullptr};
 
 static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
 	(void)iolen; // unused, but required for API compliance

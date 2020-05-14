@@ -200,6 +200,8 @@ public:
 
 #define	SERIAL_BASE_EVENT_COUNT 7
 #define SERIAL_MAX_PORTS        4
+// Note: The code currently only handles four ports.
+//       To allow more, add more UARTs in SERIAL_Read(...)
 
 	uint32_t irq = 0;
 
