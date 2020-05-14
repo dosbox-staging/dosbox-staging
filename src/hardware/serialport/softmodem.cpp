@@ -105,8 +105,8 @@ static const char *MODEM_GetAddressFromPhone(const char *input) {
 	return nullptr;
 }
 
-CSerialModem::CSerialModem(const uint8_t port_index_, CommandLine *cmd)
-        : CSerial(port_index_, cmd),
+CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
+        : CSerial(port_idx, cmd),
           rqueue(std::make_unique<CFifo>(MODEM_BUFFER_QUEUE_SIZE)),
           tqueue(std::make_unique<CFifo>(MODEM_BUFFER_QUEUE_SIZE)),
           telClient({}),
@@ -114,8 +114,11 @@ CSerialModem::CSerialModem(const uint8_t port_index_, CommandLine *cmd)
 {
 	InstallationSuccessful=false;
 
-	// Setup the listening port, and ignore the return code as this is optional
-	(void)getUintFromString("listenport:", listenport, cmd);
+	// Setup the listening port
+	uint32_t val;
+	if (getUintFromString("listenport:", val, cmd))
+		listenport = val;
+	// Otherwise the default listenport will be used
 
 	// TODO: Fix dialtones if requested
 	//mhd.chan=MIXER_AddChannel((MIXER_MixHandler)this->MODEM_CallBack,8000,"MODEM");
@@ -975,9 +978,9 @@ void CSerialModem::setBreak(bool) {
 	// TODO: handle this
 }
 
-void CSerialModem::setRTSDTR(bool rts_, bool dtr_) {
-	(void) rts_; // deliberately unused but needed for API compliance
-	setDTR(dtr_);
+void CSerialModem::setRTSDTR(bool rts_state, bool dtr_state) {
+	(void) rts_state; // deliberately unused but needed for API compliance
+	setDTR(dtr_state);
 }
 void CSerialModem::setRTS(bool val) {
 	(void) val; // deliberately unused but but needed for API compliance
