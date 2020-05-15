@@ -40,7 +40,7 @@
 #define C_CORE_INLINE 1
 
 /* Define to 1 to enable FluidSynth MIDI synthesiser */
-#define C_FLUIDSYNTH 0
+#define C_FLUIDSYNTH 1
 
 /* Enable the FPU module, still only for beta testing */
 #define C_FPU 1
