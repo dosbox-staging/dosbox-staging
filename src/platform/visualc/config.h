@@ -60,6 +60,9 @@
 /* environ can be linked */
 #define ENVIRON_LINKED 1
 
+/* Prevent <windows.h> from clobbering std::min and std::max */
+#define NOMINMAX 1
+
 /* Define to 1 if you want serial passthrough support. */
 #define C_DIRECTSERIAL 1
 
