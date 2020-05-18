@@ -4,18 +4,26 @@ on: [push, pull_request]
 
 jobs:
   build_windows_vs:
-    name: MSVC 32-bit
+    name: ${{ matrix.conf.name }}
     runs-on: windows-latest
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
     strategy:
       matrix:
-        type: [Debug]
+        conf:
+          - name: MSVC 32-bit
+            vs-platform: x86
+            vcpkg-triplet: x86-windows
+            max_warnings: 348
+          - name: MSVC 64-bit
+            vs-platform: x64
+            vcpkg-triplet: x64-windows
+            max_warnings: 2313
     steps:
       - uses:  actions/checkout@v2
       - name:  Install packages
         shell: pwsh
         run: |
-          vcpkg install libpng sdl2 sdl2-net opusfile
+          vcpkg install --triplet ${{ matrix.conf.vcpkg-triplet }} libpng sdl2 sdl2-net opusfile
           vcpkg integrate install
       - name:  Log environment
         shell: pwsh
@@ -26,16 +34,16 @@ jobs:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
-          MSBuild -m dosbox.sln -p:Configuration=${{ matrix.type }} | Tee-Object build.log
+          MSBuild -m dosbox.sln -p:Configuration=Debug -p:Platform=${{ matrix.conf.vs-platform }} | Tee-Object build.log
       - name:  Summarize warnings
         shell: pwsh
         env:
-          MAX_WARNINGS: 348
+          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run: python scripts\count-warnings.py --msvc vs\build.log
 
 
   build_windows_vs_release:
-    name: Release build
+    name: Release build (32-bit)
     runs-on: windows-latest
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
     steps:
@@ -62,40 +70,37 @@ jobs:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
-          MSBuild -m dosbox.sln -p:Configuration=Release
-          # TODO "Windows SmartScreen" complains about unsigned .exe during
-          #      the first start of a build. Maybe self-signed certificate
-          #      will make it a bit more user-friendly.
+          MSBuild -m dosbox.sln -p:Configuration=Release -p:Platform=x86
       - name:  Package
         shell: bash
         run: |
           set -x
           # Prepare content
           mkdir -p dest/doc
-          cp vs/Release/dosbox.exe           dest/
-          cp COPYING                         dest/COPYING.txt
-          cp docs/README.template            dest/README.txt
-          cp docs/README.video               dest/doc/video.txt
-          cp README                          dest/doc/manual.txt
-          cp vs/Release/libpng16.dll         dest/
-          cp vs/Release/ogg.dll              dest/
-          cp vs/Release/opus.dll             dest/
-          cp vs/Release/SDL2.dll             dest/
-          cp vs/Release/SDL2_net.dll         dest/
-          cp src/libs/zmbv/Release/zlib1.dll dest/
-          cp src/libs/zmbv/Release/zmbv.dll  dest/
+          cp vs/Win32/Release/dosbox.exe           dest/
+          cp COPYING                               dest/COPYING.txt
+          cp docs/README.template                  dest/README.txt
+          cp docs/README.video                     dest/doc/video.txt
+          cp README                                dest/doc/manual.txt
+          cp vs/Win32/Release/libpng16.dll         dest/
+          cp vs/Win32/Release/ogg.dll              dest/
+          cp vs/Win32/Release/opus.dll             dest/
+          cp vs/Win32/Release/SDL2.dll             dest/
+          cp vs/Win32/Release/SDL2_net.dll         dest/
+          cp src/libs/zmbv/Win32/Release/zlib1.dll dest/
+          cp src/libs/zmbv/Win32/Release/zmbv.dll  dest/
           # Fill README template file
           sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README.txt
           sed -i "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" dest/README.txt
           sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README.txt
           # Create dir for zipping
-          mv dest dosbox-staging-windows-${{ env.VERSION }}
+          mv dest dosbox-staging-windows-x86-${{ env.VERSION }}
 
       - name: Windows Defender AV Scan
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          $dosboxDir = "${{ github.workspace }}/dosbox-staging-windows-${{ env.VERSION }}"
+          $dosboxDir = "${{ github.workspace }}\dosbox-staging-windows-x86-${{ env.VERSION }}"
           & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -DisableRemediation -File $dosboxDir
           if( $LASTEXITCODE -ne 0 ) {
               Get-Content -Path $env:TEMP\MpCmdRun.log
@@ -105,5 +110,5 @@ jobs:
       - name: Upload package
         uses: actions/upload-artifact@master
         with:
-          name: dosbox-staging-windows-${{ env.VERSION }}
-          path: dosbox-staging-windows-${{ env.VERSION }}
+          name: dosbox-staging-windows-x86-${{ env.VERSION }}
+          path: dosbox-staging-windows-x86-${{ env.VERSION }}
