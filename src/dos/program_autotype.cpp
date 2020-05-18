@@ -68,7 +68,7 @@ void AUTOTYPE::PrintKeys()
 	// Keep track of the longest key name
 	size_t max_length = 0;
 	for (const auto &name : names)
-		max_length = (std::max)(name.length(), max_length);
+		max_length = std::max(name.length(), max_length);
 
 	// Sanity check to avoid dividing by 0
 	if (!max_length) {
