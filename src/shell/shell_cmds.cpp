@@ -964,11 +964,10 @@ void DOS_Shell::CMD_SET(char * args) {
 				std::string temp;
 				if (GetEnvStr(p,temp)) {
 					std::string::size_type equals = temp.find('=');
-					if (equals == std::string::npos) continue;
-					const uintptr_t remaining_len = (std::min)(
-					        sizeof(parsed) -
-					                static_cast<uintptr_t>(
-					                        p_parsed - parsed),
+					if (equals == std::string::npos)
+						continue;
+					const uintptr_t remaining_len = std::min(
+					        sizeof(parsed) - static_cast<uintptr_t>(p_parsed - parsed),
 					        sizeof(parsed));
 					safe_strncpy(p_parsed,
 					             temp.substr(equals + 1).c_str(),
