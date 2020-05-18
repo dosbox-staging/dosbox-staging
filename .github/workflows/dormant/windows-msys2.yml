@@ -1,0 +1,90 @@
+name: Windows builds
+
+on: [push, pull_request]
+
+jobs:
+  build_windows_msys2:
+    name: ${{ matrix.conf.compiler }} ${{ matrix.conf.bits }}-bit
+    runs-on: windows-latest
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
+    strategy:
+      # Because Clang depends on GCC, we run the Clang-32/64bit jobs
+      # first to create combined caches that include both Clang and GCC.
+      # Running 2-jobs at once ensure the GCC jobs start after Clang.
+      max-parallel: 2
+      matrix:
+        conf:
+          - compiler: Clang
+            bits: 32
+            arch: i686
+            max_warnings: 9
+          - compiler: Clang
+            bits: 64
+            arch: x86_64
+            max_warnings: 41
+          - compiler: GCC
+            bits: 32
+            arch: i686
+            max_warnings: 26
+          - compiler: GCC
+            bits: 64
+            arch: x86_64
+            max_warnings: 58
+    env:
+      CHERE_INVOKING:  yes
+      CCACHE_DIR:      "${{ github.workspace }}/.ccache"
+      CCACHE_MAXSIZE:  "64M"
+      CCACHE_COMPRESS: "true"
+    steps:
+      - uses:  actions/checkout@v2
+      - name:  Get Date
+        id:    get-date
+        shell: bash
+        run:   echo "::set-output name=date::$(date +%Y-%W)"
+      - uses:  actions/cache@v1
+        id:    cache-msys2
+        with:
+          path: 'C:/tools/msys64'
+          key: msys2-${{ matrix.conf.bits }}-${{ steps.get-date.outputs.date }}
+      - name:  Install MSYS2
+        if:    steps.cache-msys2.outputs.cache-hit != 'true'
+        run:   choco install msys2 --no-progress
+      - name:  Install C++ compiler and libraries
+        if:    steps.cache-msys2.outputs.cache-hit != 'true'
+        shell: python scripts\msys-bash.py {0}
+        run:   ./scripts/list-build-dependencies.sh -m msys2 -c clang -b ${{ matrix.conf.bits }} | xargs pacman -S --noconfirm
+      - name:  Shrink MSYS2 for cache
+        if:    steps.cache-msys2.outputs.cache-hit != 'true'
+        shell: python scripts\msys-bash.py {0}
+        run:   ./.github/scripts/shrink-msys2.sh
+      - name:  Prepare compiler cache
+        id:    prep-ccache
+        shell: bash
+        run: |
+          mkdir -p "${CCACHE_DIR}"
+          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date -I)"
+          echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+      - uses:  actions/cache@v1
+        id:    cache-ccache
+        with:
+          path: ${{ steps.prep-ccache.outputs.dir }}
+          key:  ccache-msys2-${{ matrix.conf.compiler }}-${{ matrix.conf.bits }}-${{ steps.prep-ccache.outputs.today }}
+          restore-keys: |
+            ccache-msys2-${{ matrix.conf.compiler }}-${{ matrix.conf.bits }}-${{ steps.prep-ccache.outputs.yesterday }}
+      - name:  Log environment
+        shell: python scripts\msys-bash.py {0}
+        run:   ./scripts/log-env.sh
+      - name:  Build
+        shell: python scripts\msys-bash.py {0}
+        run: |
+          # The following two MSYSTEM variables are used by auto-tools to determine host
+          # architecture so we override them to match the current build type (32-bit or 64-bit)
+          export MSYSTEM_CARCH=${{ matrix.conf.arch }}
+          export MSYSTEM_CHOST=${{ matrix.conf.arch }}-pc-msys
+          ./scripts/build.sh --compiler ${{ matrix.conf.compiler }} --build-type Debug --bin-path /mingw${{ matrix.conf.bits }}/bin
+      - name:  Summarize warnings
+        env:
+          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
+        run:   python scripts\count-warnings.py build.log
+
