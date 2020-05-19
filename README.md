@@ -157,13 +157,13 @@ PowerShell, and run:
 
 ``` powershell
 PS:\> .\vcpkg integrate install
-PS:\> .\vcpkg install libpng sdl2 sdl2-net opusfile
+PS:\> .\vcpkg install --triplet x64-windows libpng sdl2 sdl2-net opusfile
 ```
 
 These two steps will ensure that MSVC finds and links all dependencies.
 
-Start Visual Studio, open file: `vs\dosbox.sln` and build all projects
-(Ctrl+Shift+B).
+Start Visual Studio and open file: `vs\dosbox.sln`. Make sure you have `x64`
+selected as the solution platform.  Use Ctrl+Shift+B to build all projects.
 
 ## Interop with SVN
 
