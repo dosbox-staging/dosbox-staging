@@ -167,6 +167,7 @@
       <CompileAs>Default</CompileAs>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;opusfile.lib;opus.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -178,6 +179,7 @@
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <FixedBaseAddress>false</FixedBaseAddress>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <Midl>
       <TypeLibraryName>.\Release/dosbox.tlb</TypeLibraryName>
@@ -210,6 +212,7 @@
       <CompileAs>Default</CompileAs>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;opusfile.lib;opus.lib;ogg.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -221,6 +224,7 @@
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Console</SubSystem>
       <FixedBaseAddress>false</FixedBaseAddress>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <Midl>
       <TypeLibraryName>.\Release/dosbox.tlb</TypeLibraryName>
