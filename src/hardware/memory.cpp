@@ -107,13 +107,13 @@ public:
 		flags=PFLAG_READABLE|PFLAG_HASROM;
 	}
 	void writeb(PhysPt addr,Bitu val){
-		LOG(LOG_CPU,LOG_ERROR)("Write %x to rom at %x",val,addr);
+		LOG(LOG_CPU,LOG_ERROR)("Write %" sBitfs(x) " to rom at %x",val,addr);
 	}
 	void writew(PhysPt addr,Bitu val){
-		LOG(LOG_CPU,LOG_ERROR)("Write %x to rom at %x",val,addr);
+		LOG(LOG_CPU,LOG_ERROR)("Write %" sBitfs(x) " to rom at %x",val,addr);
 	}
 	void writed(PhysPt addr,Bitu val){
-		LOG(LOG_CPU,LOG_ERROR)("Write %x to rom at %x",val,addr);
+		LOG(LOG_CPU,LOG_ERROR)("Write %" sBitfs(x) " to rom at %x",val,addr);
 	}
 };
 
@@ -559,8 +559,8 @@ public:
 			LOG_MSG("Memory sizes above %d MB are NOT recommended.",SAFE_MEMORY - 1);
 			LOG_MSG("Stick with the default values unless you are absolutely certain.");
 		}
-		MemBase = new Bit8u[memsize*1024*1024];
-		if (!MemBase) E_Exit("Can't allocate main memory of %d MB",memsize);
+		MemBase = new(std::nothrow) Bit8u[memsize*1024*1024];
+		if (!MemBase) E_Exit("Can't allocate main memory of %" sBitfs(d) " MB",memsize);
 		/* Clear the memory, as new doesn't always give zeroed memory
 		 * (Visual C debug mode). We want zeroed memory though. */
 		memset((void*)MemBase,0,memsize*1024*1024);
