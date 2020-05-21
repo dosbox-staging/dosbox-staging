@@ -143,6 +143,7 @@ private:
 		uint32_t adjustOverRead(const uint32_t offset,
 		                        const uint32_t requested_bytes);
 		int length_redbook_bytes = -1;
+		uint32_t audio_pos = (std::numeric_limits<uint32_t>::max)(); // last position when playing audio
 
 	public:
 		virtual          ~TrackFile() = default;
@@ -155,6 +156,7 @@ private:
 		virtual Bit32u   getRate() = 0;
 		virtual Bit8u    getChannels() = 0;
 		virtual int      getLength() = 0;
+		virtual void setAudioPosition(uint32_t pos) = 0;
 		const Bit16u chunkSize = 0;
 	};
 
@@ -176,6 +178,8 @@ private:
 		Bit32u          getRate() { return 44100; }
 		Bit8u           getChannels() { return 2; }
 		int             getLength();
+		void setAudioPosition(uint32_t pos) { audio_pos = pos; };
+
 	private:
 		std::ifstream   *file;
 	};
@@ -198,10 +202,11 @@ private:
 		Bit32u          getRate();
 		Bit8u           getChannels();
 		int             getLength();
+		// This is a no-op because we track the audio position in all
+		// areas of this class.
+		void setAudioPosition(uint32_t pos) {}
 	private:
-		Sound_Sample    *sample = nullptr;
-		// ensure the first seek isn't cached by starting with an impossibly-large position
-		uint32_t        track_pos = (std::numeric_limits<uint32_t>::max)();
+		Sound_Sample *sample = nullptr;
 	};
 
 public:

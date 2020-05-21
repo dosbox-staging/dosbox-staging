@@ -118,12 +118,13 @@ bool CDROM_Interface_Image::BinaryFile::read(uint8_t *buffer,
 	assertm(offset <= MAX_REDBOOK_BYTES, "Requested offset exceeds CDROM size");
 	assertm(requested_bytes <= MAX_REDBOOK_BYTES, "Requested bytes exceeds CDROM size");
 
-	if (!seek(offset))
-		return false;
-
 	const uint32_t adjusted_bytes = adjustOverRead(offset, requested_bytes);
 	if (adjusted_bytes == 0) // no work to do!
 		return true;
+
+	// Reposition if needed
+	if (!seek(offset))
+		return false;
 
 	file->read((char *)buffer, adjusted_bytes);
 	return !file->fail();
@@ -167,6 +168,9 @@ bool CDROM_Interface_Image::BinaryFile::seek(const uint32_t offset)
 	if (!offsetInsideTrack(offset))
 		return false;
 
+	if (static_cast<uint32_t>(file->tellg()) == offset)
+		return true;
+
 	file->seekg(offset, ios::beg);
 
 	// If the first seek attempt failed, then try harder
@@ -185,6 +189,13 @@ uint32_t CDROM_Interface_Image::BinaryFile::decode(int16_t *buffer,
 	assertm(buffer && file, "The file pointer or buffer are invalid");
 	assertm(desired_track_frames <= MAX_REDBOOK_FRAMES,
 	        "Requested number of frames exceeds the maximum for a CDROM");
+	assertm(audio_pos < MAX_REDBOOK_BYTES,
+	        "Tried to decode audio before the playback position was set");
+
+	// Reposition against our last audio position if needed
+	if (static_cast<uint32_t>(file->tellg()) != audio_pos)
+		if (!seek(audio_pos))
+			return 0;
 
 	file->read((char*)buffer, desired_track_frames * BYTES_PER_REDBOOK_PCM_FRAME);
 	/**
@@ -193,6 +204,9 @@ uint32_t CDROM_Interface_Image::BinaryFile::decode(int16_t *buffer,
 	 *  std::streamsize are never used."; so we store it as unsigned.
 	 */
 	const uint32_t bytes_read = static_cast<uint32_t>(file->gcount());
+
+	// decoding is an audio-task, so update our audio position
+	audio_pos += bytes_read;
 
 	// Return the number of decoded Redbook frames
 	return ceil_udivide(bytes_read, BYTES_PER_REDBOOK_PCM_FRAME);
@@ -247,7 +261,7 @@ bool CDROM_Interface_Image::AudioFile::seek(const uint32_t requested_pos)
 	if (!offsetInsideTrack(requested_pos))
 		return false;
 
-	if (track_pos == requested_pos) {
+	if (audio_pos == requested_pos) {
 #ifdef DEBUG
 		LOG_MSG("CDROM: seek to %u avoided with position-tracking", requested_pos);
 #endif
@@ -269,8 +283,9 @@ bool CDROM_Interface_Image::AudioFile::seek(const uint32_t requested_pos)
 	clock::time_point begin = clock::now(); // start the timer
 #endif
 
-	// Perform the seek
+	// Perform the seek and update our position
 	const bool result = Sound_Seek(sample, pos_in_ms);
+	audio_pos = result ? requested_pos : std::numeric_limits<uint32_t>::max();
 
 #ifdef DEBUG
 	clock::time_point end = clock::now(); // stop the timer
@@ -294,9 +309,6 @@ bool CDROM_Interface_Image::AudioFile::seek(const uint32_t requested_pos)
 		        elapsed_ms, average_cdrom_seek_ms);
 #endif
 
-	// Only store the track's new position if the seek was successful
-	if (result)
-		track_pos = requested_pos;
 	return result;
 }
 
@@ -402,21 +414,25 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
 		// Taken into account that we've now fill both (stereo) channels
 		decoded_bytes *= REDBOOK_CHANNELS;
 	}
-	// Increment the track's position by the Redbook-sized decoded bytes
-	track_pos += decoded_bytes;
+	// reading DAE is an audio-task, so update our audio position
+	audio_pos += decoded_bytes;
 	return !(sample->flags & SOUND_SAMPLEFLAG_ERROR);
 }
 
 uint32_t CDROM_Interface_Image::AudioFile::decode(int16_t *buffer,
                                                   const uint32_t desired_track_frames)
 {
+	assertm(audio_pos < MAX_REDBOOK_BYTES,
+	        "Tried to decode audio before the playback position was set");
+
 	// Sound_Decode_Direct returns frames (agnostic of bitrate and channels)
 	const uint32_t frames_decoded =
 	    Sound_Decode_Direct(sample, (void*)buffer, desired_track_frames);
 
-	// Increment the track's in terms of Redbook-equivalent bytes
+	// decoding is an audio-task, so update our audio position
+	// in terms of Redbook-equivalent bytes
 	const uint32_t redbook_bytes = frames_decoded * BYTES_PER_REDBOOK_PCM_FRAME;
-	track_pos += redbook_bytes;
+	audio_pos += redbook_bytes;
 
 	return frames_decoded;
 }
@@ -617,7 +633,8 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
 				absolute_sector = track->start;
 				// relative_sector is zero because we're at the start of the track
 			}
-		// the CD hasn't been played yet or has an invalid track_pos
+			// the CD hasn't been played yet or has an invalid
+			// audio_pos
 		} else {
 			for (track_iter it = tracks.begin(); it != tracks.end(); ++it) {
 				if (it->attr == 0) {	// Found an audio track
@@ -633,17 +650,11 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
 	absolute_msf = frames_to_msf(absolute_sector + REDBOOK_FRAME_PADDING);
 	relative_msf = frames_to_msf(relative_sector);
 #ifdef DEBUG
-		LOG_MSG("CDROM: GetAudioSub => track_pos at %02d:%02d:%02d (on sector %u) "
-		        "within track %u at %02d:%02d:%02d (at its sector %u)",
-		        absolute_msf.min,
-		        absolute_msf.sec,
-		        absolute_msf.fr,
-		        absolute_sector + REDBOOK_FRAME_PADDING,
-		        track_num,
-		        relative_msf.min,
-		        relative_msf.sec,
-		        relative_msf.fr,
-		        relative_sector);
+	LOG_MSG("CDROM: GetAudioSub => position at %02d:%02d:%02d (on sector %u) "
+	        "within track %u at %02d:%02d:%02d (at its sector %u)",
+	        absolute_msf.min, absolute_msf.sec, absolute_msf.fr,
+	        absolute_sector + REDBOOK_FRAME_PADDING, track_num, relative_msf.min,
+	        relative_msf.sec, relative_msf.fr, relative_sector);
 #endif
 	return true;
 }
@@ -717,6 +728,9 @@ bool CDROM_Interface_Image::PlayAudioSector(const uint32_t start, uint32_t len)
 		StopAudio();
 		return false;
 	}
+
+	// We're performing an audio-task, so update the audio position
+	track_file->setAudioPosition(offset);
 
 	// Get properties about the current track
 	const uint8_t track_channels = track_file->getChannels();
