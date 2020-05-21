@@ -13,7 +13,7 @@ jobs:
           - name: MSVC 32-bit
             vs-platform: x86
             vcpkg-triplet: x86-windows
-            max_warnings: 348
+            max_warnings: 349
           - name: MSVC 64-bit
             vs-platform: x64
             vcpkg-triplet: x64-windows

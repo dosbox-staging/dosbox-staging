@@ -17,10 +17,10 @@ jobs:
         conf:
           - name: Clang
             flags: -c clang
-            max_warnings: 38
+            max_warnings: 7
           - name: GCC-9
             flags: -c gcc -v 9
-            max_warnings: 57
+            max_warnings: 26
     steps:
       - uses: actions/checkout@v2
       - name: Install C++ compiler and libraries
