@@ -1,5 +1,7 @@
 /*
- *  Copyright (C) 2019-2020  The DOSBox Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2019-2020  The dosbox-staging team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -49,7 +51,8 @@ using Bits   = intptr_t;
 
 using Real64 = double;
 
-// TODO: remove
-#define sBitfs(x) PRIuPTR
+/* Upstream uses a macro named this way for formatting Bitu values.
+ */
+#define sBitfs(x) PRI ## x ## PTR
 
-#endif /* DOSBOX_TYPES_H */
+#endif
