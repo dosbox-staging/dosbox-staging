@@ -88,7 +88,8 @@ static void StripSpaces(char*&args,char also) {
 		args++;
 }
 
-static char* ExpandDot(char*args, char* buffer , size_t bufsize) {
+static char *ExpandDot(const char *args, char *buffer, size_t bufsize)
+{
 	if (*args == '.') {
 		if (*(args+1) == 0){
 			safe_strncpy(buffer, "*.*", bufsize);
@@ -105,8 +106,6 @@ static char* ExpandDot(char*args, char* buffer , size_t bufsize) {
 	else safe_strncpy(buffer,args, bufsize);
 	return buffer;
 }
-
-
 
 bool DOS_Shell::CheckConfig(char *cmd_in, char *line) {
 	Section* test = control->GetSectionFromProperty(cmd_in);
@@ -443,11 +442,47 @@ struct DtaResult {
 
 };
 
+static std::string to_search_pattern(const char *arg)
+{
+	std::string pattern = arg;
+	trim(pattern);
+
+	const char last_char = (pattern.length() > 0 ? pattern.back() : '\0');
+	switch (last_char) {
+	case '\0': // No arguments, search for all.
+		pattern = "*.*";
+		break;
+	case '\\': // Handle \, C:\, etc.
+	case ':':  // Handle C:, etc.
+		pattern += "*.*";
+		break;
+	default: break;
+	}
+
+	// Handle patterns starting with a dot.
+	char buffer[CROSS_LEN];
+	pattern = ExpandDot(pattern.c_str(), buffer, sizeof(buffer));
+
+	// When there's no wildcard and target is a directory then search files
+	// inside the directory.
+	const char *p = pattern.c_str();
+	if (!strrchr(p, '*') && !strrchr(p, '?')) {
+		uint16_t attr = 0;
+		if (DOS_GetFileAttr(p, &attr) && (attr & DOS_ATTR_DIRECTORY))
+			pattern += "\\*.*";
+	}
+
+	// If no extension, list all files.
+	// This makes patterns like foo* work.
+	if (!strrchr(pattern.c_str(), '.'))
+		pattern += ".*";
+
+	return pattern;
+}
 
 void DOS_Shell::CMD_DIR(char * args) {
 	HELP("DIR");
 	char numformat[16];
-	char path[DOS_PATHLENGTH];
 
 	std::string line;
 	if (GetEnvStr("DIRCMD",line)){
@@ -494,36 +529,11 @@ void DOS_Shell::CMD_DIR(char * args) {
 		return;
 	}
 
-	char buffer[CROSS_LEN];
-	args = trim(args);
-	size_t argLen = strlen(args);
-	if (argLen == 0) {
-		strcpy(args,"*.*"); //no arguments.
-	} else {
-		switch (args[argLen-1])
-		{
-		case '\\':	// handle \, C:\, etc.
-		case ':' :	// handle C:, etc.
-			strcat(args,"*.*");
-			break;
-		default:
-			break;
-		}
-	}
-	args = ExpandDot(args,buffer,CROSS_LEN);
-
-	if (!strrchr(args,'*') && !strrchr(args,'?')) {
-		Bit16u attribute=0;
-		if (DOS_GetFileAttr(args,&attribute) && (attribute&DOS_ATTR_DIRECTORY) ) {
-			strcat(args,"\\*.*");	// if no wildcard and a directory, get its files
-		}
-	}
-	if (!strrchr(args,'.')) {
-		strcat(args,".*");	// if no extension, get them all
-	}
+	const std::string pattern = to_search_pattern(args);
 
 	/* Make a full path in the args */
-	if (!DOS_Canonicalize(args,path)) {
+	char path[DOS_PATHLENGTH];
+	if (!DOS_Canonicalize(pattern.c_str(), path)) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 		return;
 	}
@@ -572,9 +582,12 @@ void DOS_Shell::CMD_DIR(char * args) {
 	RealPt save_dta=dos.dta();
 	dos.dta(dos.tables.tempdta);
 	DOS_DTA dta(dos.dta());
-	bool ret=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
+
+	bool ret = DOS_FindFirst(pattern.c_str(), 0xffff & ~DOS_ATTR_VOLUME);
 	if (!ret) {
-		if (!optB) WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
+		if (!optB)
+			WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),
+			         pattern.c_str());
 		dos.dta(save_dta);
 		return;
 	}
