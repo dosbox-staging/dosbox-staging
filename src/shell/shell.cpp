@@ -691,6 +691,8 @@ void SHELL_Init() {
 
 	MSG_Add("SHELL_CMD_LS_HELP", "List directory contents.\n");
 	MSG_Add("SHELL_CMD_LS_HELP_LONG", "ls [/?] [PATTERN]\n");
+	MSG_Add("SHELL_CMD_LS_PATH_ERR",
+	        "ls: cannot access '%s': No such file or directory\n");
 
 	MSG_Add("SHELL_CMD_CHOICE_HELP","Waits for a keypress and sets ERRORLEVEL.\n");
 	MSG_Add("SHELL_CMD_CHOICE_HELP_LONG","CHOICE [/C:choices] [/N] [/S] text\n"
