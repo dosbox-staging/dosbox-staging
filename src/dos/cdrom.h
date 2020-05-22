@@ -108,28 +108,28 @@ public:
 	virtual void ChannelControl     (TCtrl ctrl) = 0;
 	virtual bool ReadSectors        (PhysPt buffer, const bool raw, const uint32_t sector, const uint16_t num) = 0;
 	virtual bool LoadUnloadMedia    (bool unload) = 0;
-	virtual void InitNewMedia       (void) {};
+	virtual void InitNewMedia       (void) {}
 };
 
 class CDROM_Interface_Fake : public CDROM_Interface
 {
 public:
 	bool SetDevice          (char *) { return true; }
-	bool GetUPC             (unsigned char& attr, char* upc) { attr = 0; strcpy(upc,"UPC"); return true; };
+	bool GetUPC             (unsigned char& attr, char* upc) { attr = 0; strcpy(upc,"UPC"); return true; }
 	bool GetAudioTracks     (uint8_t& stTrack, uint8_t& end, TMSF& leadOut);
 	bool GetAudioTrackInfo  (uint8_t track, TMSF& start, unsigned char& attr);
 	bool GetAudioSub        (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
 	bool GetAudioStatus     (bool& playing, bool& pause);
 	bool GetMediaTrayStatus (bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
-	bool PlayAudioSector    (const uint32_t start, uint32_t len) { (void)start; (void)len; return true; };
-	bool PauseAudio         (bool /*resume*/) { return true; };
-	bool StopAudio          (void) { return true; };
+	bool PlayAudioSector    (const uint32_t start, uint32_t len) { (void)start; (void)len; return true; }
+	bool PauseAudio         (bool /*resume*/) { return true; }
+	bool StopAudio          (void) { return true; }
 	void ChannelControl     (TCtrl ctrl) {
 		(void) ctrl; // unused by part of the API
 		return; 
 	};
-	bool ReadSectors        (PhysPt /*buffer*/, const bool /*raw*/, const uint32_t /*sector*/, const uint16_t /*num*/) { return true; };
-	bool LoadUnloadMedia    (bool /*unload*/) { return true; };
+	bool ReadSectors        (PhysPt /*buffer*/, const bool /*raw*/, const uint32_t /*sector*/, const uint16_t /*num*/) { return true; }
+	bool LoadUnloadMedia    (bool /*unload*/) { return true; }
 };
 
 class CDROM_Interface_Image : public CDROM_Interface
@@ -143,7 +143,7 @@ private:
 		uint32_t adjustOverRead(const uint32_t offset,
 		                        const uint32_t requested_bytes);
 		int length_redbook_bytes = -1;
-		uint32_t audio_pos = (std::numeric_limits<uint32_t>::max)(); // last position when playing audio
+		uint32_t audio_pos = std::numeric_limits<uint32_t>::max(); // last position when playing audio
 
 	public:
 		virtual          ~TrackFile() = default;
@@ -178,7 +178,7 @@ private:
 		Bit32u          getRate() { return 44100; }
 		Bit8u           getChannels() { return 2; }
 		int             getLength();
-		void setAudioPosition(uint32_t pos) { audio_pos = pos; };
+		void setAudioPosition(uint32_t pos) { audio_pos = pos; }
 
 	private:
 		std::ifstream   *file;
@@ -223,7 +223,7 @@ public:
 	};
 	CDROM_Interface_Image           (Bit8u _subUnit);
 	virtual ~CDROM_Interface_Image  (void);
-	void	InitNewMedia            (void) {};
+	void	InitNewMedia            (void) {}
 	bool	SetDevice               (char *path);
 	bool	GetUPC                  (unsigned char& attr, char* upc);
 	bool	GetAudioTracks          (uint8_t& stTrack, uint8_t& end, TMSF& leadOut);
