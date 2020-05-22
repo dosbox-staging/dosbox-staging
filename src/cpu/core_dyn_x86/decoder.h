@@ -2040,6 +2040,14 @@ static void dyn_add_iocheck_var(Bit8u accessed_port,Bitu access_size) {
 	dyn_check_bool_exception_al();
 }
 
+static void dyn_xlat(void) {
+	gen_extend_byte(false,true,DREG(TMPW),DREG(EAX),0);
+	gen_lea(DREG(TMPW),DREG(TMPW),DREG(EBX),0,0);
+	if (!decode.big_addr) gen_extend_word(false,DREG(TMPW),DREG(TMPW));
+	gen_lea(DREG(TMPW),DREG(TMPW),decode.segprefix ? decode.segprefix : DREG(DS),0,0);
+	dyn_read_byte_release(DREG(TMPW),DREG(EAX),false);
+}
+
 #ifdef X86_DYNFPU_DH_ENABLED
 #include "dyn_fpu_dh.h"
 #define dh_fpu_startup() {		\
@@ -2454,6 +2462,10 @@ restart_prefix:
 		//GRP2 Eb/Ev,CL
 		case 0xd2:dyn_grp2_eb(grp2_cl);break;
 		case 0xd3:dyn_grp2_ev(grp2_cl);break;
+		// SALC
+		case 0xd6:gen_needflags();gen_protectflags();gen_dop_byte(DOP_SBB,DREG(EAX),0,DREG(EAX),0);break;
+		// XLAT
+		case 0xd7:dyn_xlat();break;
 		//FPU
 #ifdef CPU_FPU
 		case 0xd8:
@@ -2624,7 +2636,7 @@ restart_prefix:
 			}
 			break;
 		case 0xf0:		//LOCK
-			break;
+			goto restart_prefix;
 		case 0xf2:		//REPNE/NZ
 			decode.rep=REP_NZ;
 			goto restart_prefix;
