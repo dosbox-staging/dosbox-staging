@@ -770,6 +770,8 @@ void DOS_Shell::CMD_LS(char *args)
 		results.push_back(result);
 	} while ((ret = DOS_FindNext()) == true);
 
+	size_t w_count = 0;
+
 	for (const auto &entry : results) {
 		std::string name = entry.name;
 		const bool is_dir = entry.attr & DOS_ATTR_DIRECTORY;
@@ -779,20 +781,22 @@ void DOS_Shell::CMD_LS(char *args)
 
 		if (is_dir) {
 			upcase(name);
-			WriteOut("\033[34;1m%-16s\033[0m", name.c_str());
-			continue;
+			WriteOut("\033[34;1m%-15s\033[0m", name.c_str());
+		} else {
+			lowcase(name);
+			const bool is_executable = ends_with(".exe", name) ||
+			                           ends_with(".bat", name) ||
+			                           ends_with(".com", name);
+			if (is_executable)
+				WriteOut("\033[32;1m%-15s\033[0m", name.c_str());
+			else
+				WriteOut("%-15s", name.c_str());
 		}
 
-		lowcase(name);
-		const bool is_executable = ends_with(".exe", name) ||
-		                           ends_with(".bat", name) ||
-		                           ends_with(".com", name);
-		if (is_executable)
-			WriteOut("\033[32;1m%-16s\033[0m", name.c_str());
-		else
-			WriteOut("%-16s", name.c_str());
+		++w_count;
+		if (w_count % 5 == 0)
+			WriteOut_NoParsing("\n");
 	}
-	WriteOut("\n");
 	dos.dta(original_dta);
 }
 
