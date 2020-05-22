@@ -155,6 +155,10 @@ static INLINE void FPU_SET_C3(Bitu C){
 	if(C) fpu.sw |= 0x4000;
 }
 
+static INLINE void FPU_LOG_WARN(Bitu tree, bool ea, Bitu group, Bitu sub) {
+	LOG(LOG_FPU,LOG_WARN)("ESC %" sBitfs(d) "%s:Unhandled group %" sBitfs(d) " subfunction %" sBitfs(d),tree,ea?" EA":"",group,sub);
+}
+
 #define DB_FPU_STACK_CHECK_NONE 0
 #define DB_FPU_STACK_CHECK_LOG  1
 #define DB_FPU_STACK_CHECK_EXIT 2
