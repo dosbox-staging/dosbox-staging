@@ -234,6 +234,7 @@ void MixerChannel::SetFreq(Bitu freq) {
 	MIXER_UnlockAudioDevice();
 }
 
+// (Mix() is locked by its caller
 void MixerChannel::Mix(Bitu _needed) {
 	needed=_needed;
 	while (enabled && needed>done) {
@@ -245,14 +246,18 @@ void MixerChannel::Mix(Bitu _needed) {
 }
 
 void MixerChannel::AddSilence(void) {
-	if (done<needed) {
-		done=needed;
-		//Make sure the next samples are zero when they get switched to prev
-		next_sample[0] = 0;
-		next_sample[1] = 0;
-		//This should trigger an instant request for new samples
-		freq_counter = FREQ_NEXT;
-	}
+	// There is no gap to fill with silence
+	if (done >= needed)
+		return;
+
+	MIXER_LockAudioDevice();
+	done = needed;
+	//Make sure the next samples are zero when they get switched to prev
+	next_sample[0] = 0;
+	next_sample[1] = 0;
+	//This should trigger an instant request for new samples
+	freq_counter = FREQ_NEXT;
+	MIXER_UnlockAudioDevice();
 }
 
 template<class Type,bool stereo,bool signeddata,bool nativeorder>
