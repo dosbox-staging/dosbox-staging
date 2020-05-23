@@ -101,14 +101,14 @@ MixerChannel::MixerChannel(MIXER_Handler _handler, Bitu _freq, const char * _nam
 		volmain      {0, 0},
 		next         (nullptr),
 		name         (_name),
-		done         (0),
-		enabled      (false),
+		done         (0), // increases as samples are decoded (lock needed)
+		enabled      (false), // controls if samples are fed to mixer (lock needed)
 
 		// Private member initialization
 		handler      (_handler),
-		freq_add     (0),
-		freq_counter (0),
-		needed       (0),
+		freq_add     (0), // changes every mix step (lock needed)
+		freq_counter (0), // changes every mix step (lock needed)
+		needed       (0), // decreases as samples decoded (lock needed)
 		prev_sample  {0, 0},
 		next_sample  {0, 0},
 		volmul       {0, 0},
