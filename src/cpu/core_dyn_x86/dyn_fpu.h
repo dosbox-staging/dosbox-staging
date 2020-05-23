@@ -60,9 +60,10 @@ static void FPU_FFREE(Bitu st) {
 	gen_load_host(&TOP,DREG(TMPB),4);			\
 }
 
-static void dyn_eatree() {
-	Bitu group=(decode.modrm.val >> 3) & 7;
-	switch (group){
+static void dyn_eatree()
+{
+	const unsigned group = (decode.modrm.val >> 3) & 7;
+	switch (group) {
 	case 0x00:		/* FADD ST,STi */
 		gen_call_function((void*)&FPU_FADD_EA,"%Drd",DREG(TMPB));
 		break;
@@ -93,13 +94,13 @@ static void dyn_eatree() {
 	}
 }
 
-static void dyn_fpu_esc0(){
-	dyn_get_modrm(); 
-	if (decode.modrm.val >= 0xc0) { 
+static void dyn_fpu_esc0()
+{
+	dyn_get_modrm();
+	if (decode.modrm.val >= 0xc0) {
 		dyn_fpu_top();
-		Bitu group=(decode.modrm.val >> 3) & 7;
-		//Bitu sub=(decode.modrm.val & 7);
-		switch (group){
+		const unsigned group = (decode.modrm.val >> 3) & 7;
+		switch (group) {
 		case 0x00:		//FADD ST,STi /
 			gen_call_function((void*)&FPU_FADD,"%Drd%Drd",DREG(TMPB),DREG(EA));
 			break;
@@ -128,7 +129,7 @@ static void dyn_fpu_esc0(){
 		default:
 			break;
 		}
-	} else { 
+	} else {
 		dyn_fill_ea();
 		gen_call_function((void*)&FPU_FLD_F32_EA,"%Drd",DREG(EA)); 
 		gen_load_host(&TOP,DREG(TMPB),4);
@@ -136,12 +137,13 @@ static void dyn_fpu_esc0(){
 	}
 }
 
-static void dyn_fpu_esc1(){
-	dyn_get_modrm();  
-	if (decode.modrm.val >= 0xc0) { 
-		Bitu group=(decode.modrm.val >> 3) & 7;
-		Bitu sub=(decode.modrm.val & 7);
-		switch (group){
+static void dyn_fpu_esc1()
+{
+	dyn_get_modrm();
+	const unsigned group = (decode.modrm.val >> 3) & 7;
+	const unsigned sub = (decode.modrm.val & 7);
+	if (decode.modrm.val >= 0xc0) {
+		switch (group) {
 		case 0x00: /* FLD STi */
 			gen_protectflags(); 
 			gen_load_host(&TOP,DREG(EA),4); 
@@ -282,10 +284,8 @@ static void dyn_fpu_esc1(){
 			break;
 		}
 	} else {
-		Bitu group=(decode.modrm.val >> 3) & 7;
-		Bitu sub=(decode.modrm.val & 7);
-		dyn_fill_ea(); 
-		switch(group){
+		dyn_fill_ea();
+		switch (group) {
 		case 0x00: /* FLD float*/
 			gen_protectflags(); 
 			gen_call_function((void*)&FPU_PREP_PUSH,"");
@@ -321,14 +321,15 @@ static void dyn_fpu_esc1(){
 	}
 }
 
-static void dyn_fpu_esc2(){
-	dyn_get_modrm();  
-	if (decode.modrm.val >= 0xc0) { 
-		Bitu group=(decode.modrm.val >> 3) & 7;
-		Bitu sub=(decode.modrm.val & 7);
-		switch(group){
+static void dyn_fpu_esc2()
+{
+	dyn_get_modrm();
+	if (decode.modrm.val >= 0xc0) {
+		const unsigned group = (decode.modrm.val >> 3) & 7;
+		const unsigned sub = (decode.modrm.val & 7);
+		switch (group) {
 		case 0x05:
-			switch(sub){
+			switch (sub) {
 			case 0x01:		/* FUCOMPP */
 				gen_protectflags(); 
 				gen_load_host(&TOP,DREG(EA),4); 
@@ -349,18 +350,19 @@ static void dyn_fpu_esc2(){
 			break;
 		}
 	} else {
-		dyn_fill_ea(); 
+		dyn_fill_ea();
 		gen_call_function((void*)&FPU_FLD_I32_EA,"%Drd",DREG(EA)); 
 		gen_load_host(&TOP,DREG(TMPB),4); 
 		dyn_eatree();
 	}
 }
 
-static void dyn_fpu_esc3(){
+static void dyn_fpu_esc3()
+{
 	dyn_get_modrm();
 	const unsigned group = (decode.modrm.val >> 3) & 7;
 	const unsigned sub = (decode.modrm.val & 7);
-	if (decode.modrm.val >= 0xc0) { 
+	if (decode.modrm.val >= 0xc0) {
 		switch (group) {
 		case 0x04:
 			switch (sub) {
@@ -387,7 +389,7 @@ static void dyn_fpu_esc3(){
 			break;
 		}
 	} else {
-		dyn_fill_ea(); 
+		dyn_fill_ea();
 		switch (group) {
 		case 0x00:	/* FILD */
 			gen_call_function((void*)&FPU_PREP_PUSH,"");
@@ -419,13 +421,13 @@ static void dyn_fpu_esc3(){
 	}
 }
 
-static void dyn_fpu_esc4(){
-	dyn_get_modrm();  
-	Bitu group=(decode.modrm.val >> 3) & 7;
-	//Bitu sub=(decode.modrm.val & 7);
-	if (decode.modrm.val >= 0xc0) { 
+static void dyn_fpu_esc4()
+{
+	dyn_get_modrm();
+	const unsigned group = (decode.modrm.val >> 3) & 7;
+	if (decode.modrm.val >= 0xc0) {
 		dyn_fpu_top();
-		switch(group){
+		switch (group) {
 		case 0x00:	/* FADD STi,ST*/
 			gen_call_function((void*)&FPU_FADD,"%Drd%Drd",DREG(EA),DREG(TMPB));
 			break;
@@ -454,21 +456,22 @@ static void dyn_fpu_esc4(){
 		default:
 			break;
 		}
-	} else { 
-		dyn_fill_ea(); 
+	} else {
+		dyn_fill_ea();
 		gen_call_function((void*)&FPU_FLD_F64_EA,"%Drd",DREG(EA)); 
 		gen_load_host(&TOP,DREG(TMPB),4); 
 		dyn_eatree();
 	}
 }
 
-static void dyn_fpu_esc5(){
-	dyn_get_modrm();  
-	Bitu group=(decode.modrm.val >> 3) & 7;
-	Bitu sub=(decode.modrm.val & 7);
-	if (decode.modrm.val >= 0xc0) { 
+static void dyn_fpu_esc5()
+{
+	dyn_get_modrm();
+	const unsigned group = (decode.modrm.val >> 3) & 7;
+	const unsigned sub = (decode.modrm.val & 7);
+	if (decode.modrm.val >= 0xc0) {
 		dyn_fpu_top();
-		switch(group){
+		switch (group) {
 		case 0x00: /* FFREE STi */
 			gen_call_function((void*)&FPU_FFREE,"%Drd",DREG(EA));
 			break;
@@ -492,12 +495,12 @@ static void dyn_fpu_esc5(){
 		default:
 			LOG(LOG_FPU,LOG_WARN)("ESC 5:Unhandled group %d subfunction %d",group,sub);
 			break;
-        }
+		}
 		gen_releasereg(DREG(EA));
 		gen_releasereg(DREG(TMPB));
 	} else {
-		dyn_fill_ea(); 
-		switch(group){
+		dyn_fill_ea();
+		switch (group) {
 		case 0x00:  /* FLD double real*/
 			gen_call_function((void*)&FPU_PREP_PUSH,"");
 			gen_protectflags(); 
@@ -533,13 +536,14 @@ static void dyn_fpu_esc5(){
 	}
 }
 
-static void dyn_fpu_esc6(){
-	dyn_get_modrm();  
-	Bitu group=(decode.modrm.val >> 3) & 7;
-	Bitu sub=(decode.modrm.val & 7);
-	if (decode.modrm.val >= 0xc0) { 
+static void dyn_fpu_esc6()
+{
+	dyn_get_modrm();
+	const unsigned group = (decode.modrm.val >> 3) & 7;
+	const unsigned sub = (decode.modrm.val & 7);
+	if (decode.modrm.val >= 0xc0) {
 		dyn_fpu_top();
-		switch(group){
+		switch (group) {
 		case 0x00:	/*FADDP STi,ST*/
 			gen_call_function((void*)&FPU_FADD,"%Drd%Drd",DREG(EA),DREG(TMPB));
 			break;
@@ -575,21 +579,22 @@ static void dyn_fpu_esc6(){
 		default:
 			break;
 		}
-		gen_call_function((void*)&FPU_FPOP,"");		
+		gen_call_function((void *)&FPU_FPOP, "");
 	} else {
-		dyn_fill_ea(); 
+		dyn_fill_ea();
 		gen_call_function((void*)&FPU_FLD_I16_EA,"%Drd",DREG(EA)); 
 		gen_load_host(&TOP,DREG(TMPB),4); 
 		dyn_eatree();
 	}
 }
 
-static void dyn_fpu_esc7(){
-	dyn_get_modrm();  
-	Bitu group=(decode.modrm.val >> 3) & 7;
-	Bitu sub=(decode.modrm.val & 7);
-	if (decode.modrm.val >= 0xc0) { 
-		switch (group){
+static void dyn_fpu_esc7()
+{
+	dyn_get_modrm();
+	const unsigned group = (decode.modrm.val >> 3) & 7;
+	const unsigned sub = (decode.modrm.val & 7);
+	if (decode.modrm.val >= 0xc0) {
+		switch (group) {
 		case 0x00: /* FFREEP STi*/
 			dyn_fpu_top();
 			gen_call_function((void*)&FPU_FFREE,"%Drd",DREG(EA));
@@ -622,8 +627,8 @@ static void dyn_fpu_esc7(){
 			break;
 		}
 	} else {
-		dyn_fill_ea(); 
-		switch(group){
+		dyn_fill_ea();
+		switch (group) {
 		case 0x00:  /* FILD Bit16s */
 			gen_call_function((void*)&FPU_PREP_PUSH,"");
 			gen_load_host(&TOP,DREG(TMPB),4); 
