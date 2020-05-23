@@ -16,8 +16,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef DOSBOX_DYN_FPU_H
+#define DOSBOX_DYN_FPU_H
 
 #include "dosbox.h"
+
 #if C_FPU
 
 #include <math.h>
@@ -668,5 +671,7 @@ static void dyn_fpu_esc7()
 		}
 	}
 }
+
+#endif // C_FPU
 
 #endif
