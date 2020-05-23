@@ -152,6 +152,7 @@ struct SCodeViewData {
 static Bit16u  dataSeg;
 static Bit32u  dataOfs;
 static bool    showExtend = true;
+static bool    showPrintable = true;
 
 static void ClearInputLine(void) {
 	codeViewData.inputStr[0] = 0;
@@ -204,7 +205,7 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
 		switch (desc.Type()) {
 			case DESC_TASK_GATE:
-				sprintf(out1,"%s: s:%08X type:%02X p",selname,desc.GetSelector(),desc.saved.gate.type);
+				sprintf(out1,"%s: s:%08" sBitfs(X) " type:%02X p",selname,desc.GetSelector(),desc.saved.gate.type);
 				sprintf(out2,"    TaskGate   dpl : %01X %1X",desc.saved.gate.dpl,desc.saved.gate.p);
 				return true;
 			case DESC_LDT:
@@ -213,23 +214,23 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 			case DESC_386_TSS_A:
 			case DESC_386_TSS_B:
 				sprintf(out1,"%s: b:%08X type:%02X pag",selname,desc.GetBase(),desc.saved.seg.type);
-				sprintf(out2,"    l:%08X dpl : %01X %1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.g);
+				sprintf(out2,"    l:%08" sBitfs(X) " dpl : %01X %1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.g);
 				return true;
 			case DESC_286_CALL_GATE:
 			case DESC_386_CALL_GATE:
-				sprintf(out1,"%s: s:%08X type:%02X p params: %02X",selname,desc.GetSelector(),desc.saved.gate.type,desc.saved.gate.paramcount);
-				sprintf(out2,"    o:%08X dpl : %01X %1X",desc.GetOffset(),desc.saved.gate.dpl,desc.saved.gate.p);
+				sprintf(out1,"%s: s:%08" sBitfs(X) " type:%02X p params: %02X",selname,desc.GetSelector(),desc.saved.gate.type,desc.saved.gate.paramcount);
+				sprintf(out2,"    o:%08" sBitfs(X) " dpl : %01X %1X",desc.GetOffset(),desc.saved.gate.dpl,desc.saved.gate.p);
 				return true;
 			case DESC_286_INT_GATE:
 			case DESC_286_TRAP_GATE:
 			case DESC_386_INT_GATE:
 			case DESC_386_TRAP_GATE:
-				sprintf(out1,"%s: s:%08X type:%02X p",selname,desc.GetSelector(),desc.saved.gate.type);
-				sprintf(out2,"    o:%08X dpl : %01X %1X",desc.GetOffset(),desc.saved.gate.dpl,desc.saved.gate.p);
+				sprintf(out1,"%s: s:%08" sBitfs(X) " type:%02X p",selname,desc.GetSelector(),desc.saved.gate.type);
+				sprintf(out2,"    o:%08" sBitfs(X) " dpl : %01X %1X",desc.GetOffset(),desc.saved.gate.dpl,desc.saved.gate.p);
 				return true;
 		}
 		sprintf(out1,"%s: b:%08X type:%02X parbg",selname,desc.GetBase(),desc.saved.seg.type);
-		sprintf(out2,"    l:%08X dpl : %01X %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
+		sprintf(out2,"    l:%08" sBitfs(X) " dpl : %01X %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
 		return true;
 	} else {
 		strcpy(out1,"                                     ");
@@ -719,8 +720,10 @@ static void DrawData(void) {
 			address = GetAddress(dataSeg,add);
 			if (mem_readb_checked(address,&ch)) ch=0;
 			mvwprintw (dbg.win_data,y,14+3*x,"%02X",ch);
-			if (ch<32 || !isprint(*reinterpret_cast<unsigned char*>(&ch))) ch='.';
-			mvwprintw (dbg.win_data,y,63+x,"%c",ch);
+			if (showPrintable) {
+				if (ch<32 || !isprint(*reinterpret_cast<unsigned char*>(&ch))) ch='.';
+				mvwprintw (dbg.win_data,y,63+x,"%c",ch);
+			} else mvwaddch(dbg.win_data,y,63+x,ch);
 			add++;
 		};
 	}	
@@ -1376,6 +1379,7 @@ bool ParseCommand(char* str) {
 		DEBUG_ShowMsg("F3/F6                     - Previous command in history.\n");
 		DEBUG_ShowMsg("F4/F7                     - Next command in history.\n");
 		DEBUG_ShowMsg("F5                        - Run.\n");
+		DEBUG_ShowMsg("F8                        - Toggle printable characters.\n");
 		DEBUG_ShowMsg("F9                        - Set/Remove breakpoint.\n");
 		DEBUG_ShowMsg("F10/F11                   - Step over / trace into instruction.\n");
 		DEBUG_ShowMsg("ALT + D/E/S/X/B           - Set data view to DS:SI/ES:DI/SS:SP/DS:DX/ES:BX.\n");
@@ -1729,6 +1733,9 @@ Bit32u DEBUG_CheckKeys(void) {
 
 				DOSBOX_SetNormalLoop();
 				break;
+		case KEY_F(8):	// Toggle printable characters
+				showPrintable = !showPrintable;
+				break;
 		case KEY_F(9):	// Set/Remove Breakpoint
 				if (CBreakpoint::IsBreakpoint(codeViewData.cursorSeg, codeViewData.cursorOfs)) {
 					if (CBreakpoint::DeleteBreakpoint(codeViewData.cursorSeg, codeViewData.cursorOfs))
@@ -1924,8 +1931,7 @@ static void LogMCBChain(Bit16u mcb_segment) {
 }
 
 // Display the content of all Memory Control Blocks.
-static void LogMCBS(void)
-{
+static void LogMCBS(void) {
 	LOG(LOG_MISC,LOG_ERROR)("MCB Seg  Size (bytes)  PSP Seg (notes)  Filename");
 	LOG(LOG_MISC,LOG_ERROR)("Conventional memory:");
 	LogMCBChain(dos.firstMCB);
@@ -1934,20 +1940,19 @@ static void LogMCBS(void)
 	LogMCBChain(dos_infoblock.GetStartOfUMBChain());
 }
 
-static void LogGDT(void)
-{
+static void LogGDT(void) {
 	char out1[512];
 	Descriptor desc;
 	Bitu length = cpu.gdt.GetLimit();
 	PhysPt address = cpu.gdt.GetBase();
 	PhysPt max	   = address + length;
 	Bitu i = 0;
-	LOG(LOG_MISC,LOG_ERROR)("GDT Base:%08X Limit:%08X",address,length);
+	LOG(LOG_MISC,LOG_ERROR)("GDT Base:%08X Limit:%08" sBitfs(X),address,length);
 	while (address<max) {
 		desc.Load(address);
-		sprintf(out1,"%04X: b:%08X type: %02X parbg",(i<<3),desc.GetBase(),desc.saved.seg.type);
+		sprintf(out1,"%04" sBitfs(X) ": b:%08X type: %02X parbg",(i<<3),desc.GetBase(),desc.saved.seg.type);
 		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
-		sprintf(out1,"      l:%08X dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
+		sprintf(out1,"      l:%08" sBitfs(X) " dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
 		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 		address+=8; i++;
 	};
@@ -1962,12 +1967,12 @@ static void LogLDT(void) {
 	PhysPt address = desc.GetBase();
 	PhysPt max	   = address + length;
 	Bitu i = 0;
-	LOG(LOG_MISC,LOG_ERROR)("LDT Base:%08X Limit:%08X",address,length);
+	LOG(LOG_MISC,LOG_ERROR)("LDT Base:%08X Limit:%08" sBitfs(X),address,length);
 	while (address<max) {
 		desc.Load(address);
-		sprintf(out1,"%04X: b:%08X type: %02X parbg",(i<<3)|4,desc.GetBase(),desc.saved.seg.type);
+		sprintf(out1,"%04" sBitfs(X) ": b:%08X type: %02X parbg",(i<<3)|4,desc.GetBase(),desc.saved.seg.type);
 		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
-		sprintf(out1,"      l:%08X dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
+		sprintf(out1,"      l:%08" sBitfs(X) " dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
 		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 		address+=8; i++;
 	};
@@ -1979,7 +1984,7 @@ static void LogIDT(void) {
 	Bitu address = 0;
 	while (address<256*8) {
 		if (cpu.idt.GetDescriptor(address,desc)) {
-			sprintf(out1,"%04X: sel:%04X off:%02X",address/8,desc.GetSelector(),desc.GetOffset());
+			sprintf(out1,"%04" sBitfs(X) ": sel:%04" sBitfs(X) " off:%02" sBitfs(X),address/8,desc.GetSelector(),desc.GetOffset());
 			LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 		}
 		address+=8;
@@ -2015,10 +2020,10 @@ void LogPages(char* selname) {
 				X86PageEntry entry;
 				Bitu entry_addr=(table.block.base<<12)+(sel & 0x3ff)*4;
 				entry.load=phys_readd(entry_addr);
-				sprintf(out1,"page %05Xxxx -> %04Xxxx  flags [puw] %x:%x::%x:%x::%x:%x",sel,entry.block.base,entry.block.p,table.block.p,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
+				sprintf(out1,"page %05" sBitfs(X) "xxx -> %04Xxxx  flags [puw] %x:%x::%x:%x::%x:%x",sel,entry.block.base,entry.block.p,table.block.p,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
 				LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 			} else {
-				sprintf(out1,"pagetable %03X not present, flags [puw] %x::%x::%x",(sel >> 10),table.block.p,table.block.us,table.block.wr);
+				sprintf(out1,"pagetable %03" sBitfs(X) " not present, flags [puw] %x::%x::%x",(sel >> 10),table.block.p,table.block.us,table.block.wr);
 				LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 			}
 		}
@@ -2027,24 +2032,24 @@ void LogPages(char* selname) {
 
 static void LogCPUInfo(void) {
 	char out1[512];
-	sprintf(out1,"cr0:%08X cr2:%08X cr3:%08X  cpl=%x",cpu.cr0,paging.cr2,paging.cr3,cpu.cpl);
+	sprintf(out1,"cr0:%08" sBitfs(X) " cr2:%08" sBitfs(X) " cr3:%08" sBitfs(X) "  cpl=%" sBitfs(x),cpu.cr0,paging.cr2,paging.cr3,cpu.cpl);
 	LOG(LOG_MISC,LOG_ERROR)("%s",out1);
-	sprintf(out1,"eflags:%08X [vm=%x iopl=%x nt=%x]",reg_flags,GETFLAG(VM)>>17,GETFLAG(IOPL)>>12,GETFLAG(NT)>>14);
+	sprintf(out1,"eflags:%08" sBitfs(X) " [vm=%" sBitfs(x) " iopl=%" sBitfs(x) " nt=%" sBitfs(x) "]",reg_flags,GETFLAG(VM)>>17,GETFLAG(IOPL)>>12,GETFLAG(NT)>>14);
 	LOG(LOG_MISC,LOG_ERROR)("%s",out1);
-	sprintf(out1,"GDT base=%08X limit=%08X",cpu.gdt.GetBase(),cpu.gdt.GetLimit());
+	sprintf(out1,"GDT base=%08X limit=%08" sBitfs(X),cpu.gdt.GetBase(),cpu.gdt.GetLimit());
 	LOG(LOG_MISC,LOG_ERROR)("%s",out1);
-	sprintf(out1,"IDT base=%08X limit=%08X",cpu.idt.GetBase(),cpu.idt.GetLimit());
+	sprintf(out1,"IDT base=%08X limit=%08" sBitfs(X),cpu.idt.GetBase(),cpu.idt.GetLimit());
 	LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 
 	Bitu sel=CPU_STR();
 	Descriptor desc;
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
-		sprintf(out1,"TR selector=%04X, base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
+		sprintf(out1,"TR selector=%04" sBitfs(X) ", base=%08X limit=%08" sBitfs(X) "*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
 		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 	}
 	sel=CPU_SLDT();
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
-		sprintf(out1,"LDT selector=%04X, base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
+		sprintf(out1,"LDT selector=%04" sBitfs(X) ", base=%08X limit=%08" sBitfs(X) "*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
 		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 	}
 };
