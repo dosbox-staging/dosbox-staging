@@ -227,14 +227,11 @@ void MixerChannel::Enable(bool _yesno) {
 }
 
 void MixerChannel::SetFreq(Bitu freq) {
-	freq_add=(freq<<FREQ_SHIFT)/mixer.freq;
-
-	if (freq != mixer.freq) {
-		interpolate = true;
-	}
-	else {
-		interpolate = false;
-	}
+	MIXER_LockAudioDevice();
+	freq_add = (freq << FREQ_SHIFT) / mixer.freq;
+	// Interpolate if our frequencies differ
+	interpolate = (freq != mixer.freq);
+	MIXER_UnlockAudioDevice();
 }
 
 void MixerChannel::Mix(Bitu _needed) {
