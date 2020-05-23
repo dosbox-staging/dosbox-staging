@@ -499,7 +499,7 @@ forcenormal:
 		render.scale.cachePitch = render.src.width * 4;
 		break;
 	default:
-		E_Exit("RENDER:Wrong source bpp %d", render.src.bpp );
+		E_Exit("RENDER:Wrong source bpp %" sBitfs(d), render.src.bpp );
 	}
 	render.scale.blocks = render.src.width / SCALER_BLOCKSIZE;
 	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
@@ -591,7 +591,7 @@ void RENDER_SetForceUpdate(bool f) {
 }
 
 #if C_OPENGL
-static bool RENDER_GetShader(std::string& shader_path) {
+static bool RENDER_GetShader(std::string& shader_path, char *old_src) {
 	char* src;
 	std::stringstream buf;
 	std::ifstream fshader(shader_path.c_str(), std::ios_base::binary);
@@ -622,10 +622,10 @@ static bool RENDER_GetShader(std::string& shader_path) {
 				if (!first_shell->GetEnvNum(i, env))
 					continue;
 				if (env.compare(0, 9, "GLSHADER_")==0) {
-					size_t brk = s.find('=');
+					size_t brk = env.find('=');
 					if (brk == std::string::npos) continue;
 					env[brk] = ' ';
-					pre_defs += "#define " + env.substr(0) + '\n';
+					pre_defs += "#define " + env.substr(9) + '\n';
 				}
 			}
 			if (!pre_defs.empty()) {
@@ -638,15 +638,11 @@ static bool RENDER_GetShader(std::string& shader_path) {
 			}
 		}
 		// keep the same buffer if contents aren't different
-		if (render.shader_src==NULL || s != render.shader_src) {
+		if (old_src==NULL || s != old_src) {
 			src = strdup(s.c_str());
 			if (src==NULL) LOG_MSG("WARNING: Couldn't copy shader source");
-		} else { 
-			src = render.shader_src;
-			render.shader_src = NULL;
-		}
+		} else src = old_src;
 	} else src = NULL;
-	free(render.shader_src);
 	render.shader_src = src;
 	return src != NULL;
 }
@@ -709,18 +705,17 @@ void RENDER_Init(Section * sec) {
 	char* shader_src = render.shader_src;
 	Prop_path *sh = section->Get_path("glshader");
 	f = (std::string)sh->GetValue();
-	if (f.empty() || f=="none") {
-		free(render.shader_src);
-		render.shader_src = NULL;
-	} else if (!RENDER_GetShader(sh->realpath)) {
+	if (f.empty() || f=="none") render.shader_src = NULL;
+	else if (!RENDER_GetShader(sh->realpath,shader_src)) {
 		std::string path;
 		Cross::GetPlatformConfigDir(path);
 		path = path + "glshaders" + CROSS_FILESPLIT + f;
-		if (!RENDER_GetShader(path) && (sh->realpath==f || !RENDER_GetShader(f))) {
+		if (!RENDER_GetShader(path,shader_src) && (sh->realpath==f || !RENDER_GetShader(f,shader_src))) {
 			sh->SetValue("none");
 			LOG_MSG("Shader file \"%s\" not found", f.c_str());
 		}
 	}
+	if (shader_src!=render.shader_src) free(shader_src);
 #endif
 
 	//If something changed that needs a ReInit
