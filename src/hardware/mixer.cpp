@@ -212,14 +212,18 @@ void MixerChannel::MapChannels(Bit8u _left, Bit8u _right) {
 }
 
 void MixerChannel::Enable(bool _yesno) {
-	if (_yesno==enabled) return;
-	enabled=_yesno;
+	// The channel is already in the desired stated
+	if (_yesno == enabled)
+		return;
+
+	MIXER_LockAudioDevice();
+	enabled = _yesno;
 	if (enabled) {
 		freq_counter = 0;
-		MIXER_LockAudioDevice();
-		if (done<mixer.done) done=mixer.done;
-		MIXER_UnlockAudioDevice();
+		if (done < mixer.done)
+			done = mixer.done;
 	}
+	MIXER_UnlockAudioDevice();
 }
 
 void MixerChannel::SetFreq(Bitu freq) {
@@ -461,11 +465,9 @@ void MixerChannel::AddSamples_s32_nonnative(Bitu len,const Bit32s * data) {
 }
 
 void MixerChannel::FillUp(void) {
-	MIXER_LockAudioDevice();
-	if (!enabled || done<mixer.done) {
-		MIXER_UnlockAudioDevice();
+	if (!enabled || done < mixer.done)
 		return;
-	}
+	MIXER_LockAudioDevice();
 	float index=PIC_TickIndex();
 	Mix((Bitu)(index*mixer.needed));
 	MIXER_UnlockAudioDevice();
