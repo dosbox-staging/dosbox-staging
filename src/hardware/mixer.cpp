@@ -472,8 +472,8 @@ void MixerChannel::AddSamples_s32_nonnative(Bitu len,const Bit32s * data) {
 void MixerChannel::FillUp(void) {
 	if (!enabled || done < mixer.done)
 		return;
+	const float index = PIC_TickIndex();
 	MIXER_LockAudioDevice();
-	float index=PIC_TickIndex();
 	Mix((Bitu)(index*mixer.needed));
 	MIXER_UnlockAudioDevice();
 }
