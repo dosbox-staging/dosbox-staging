@@ -477,6 +477,7 @@ CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player;
 
 CDROM_Interface_Image::CDROM_Interface_Image(Bit8u _subUnit)
 	: tracks({}),
+	  readBuffer({}),
 	  mcn(""),
 	  subUnit(_subUnit)
 {
@@ -774,6 +775,15 @@ bool CDROM_Interface_Image::PlayAudioSector(const uint32_t start, uint32_t len)
 	player.totalTrackFrames = ceil_udivide(track_rate * player.totalRedbookFrames,
 	                                      REDBOOK_FRAMES_PER_SECOND);
 
+	/*
+	 * Compute the N'th track frame at which we should start ramping down the
+	 * audio.  We compute this using the the peak volume, where each volume
+	 * "step" represents one ms, combined with the track's playback frequency.
+	 */
+ 	constexpr uint8_t ramp_duration_ms = CDDA_Volume::Max;
+	const uint32_t ramp_duration_frames = ceil_udivide(track_rate * ramp_duration_ms, 1000u);
+	player.rampDownFrame = player.totalTrackFrames - ramp_duration_frames;
+
 #ifdef DEBUG
 	if (start < track->start) {
 		LOG_MSG("CDROM: Play sector %u to %u in the pregap of track %d [pregap %d,"
@@ -799,6 +809,10 @@ bool CDROM_Interface_Image::PlayAudioSector(const uint32_t start, uint32_t len)
 	}
 #endif
 
+	// Only ramp-up from a ramped-down state
+	if (player.ramp & CDDA_Ramp::Down)
+		player.ramp = CDDA_Ramp::Up;
+
 	// start the channel!
 	player.channel->SetFreq(track_rate);
 	player.channel->Enable(true);
@@ -814,25 +828,33 @@ bool CDROM_Interface_Image::PlayAudioSector(const uint32_t start, uint32_t len)
 
 bool CDROM_Interface_Image::PauseAudio(bool resume)
 {
-	player.isPaused = !resume;
-	if (player.channel)
-		player.channel->Enable(resume);
-#ifdef DEBUG
-	LOG_MSG("CDROM: PauseAudio => audio is now %s",
-	        resume ? "unpaused" : "paused");
-#endif
+	// Player needs to pause
+	if (!player.isPaused && !resume) {
+		player.ramp = CDDA_Ramp::DownThenPause;
+		// If our channel doesn't exist then simply assign the state here
+		if (!player.channel)
+			player.isPaused = true;
+	}
+	// Player needs to resume
+	else if (resume && player.isPaused) {
+		player.ramp = CDDA_Ramp::Up;
+		if (player.channel)
+			player.channel->Enable(true);
+		player.isPaused = false;
+	}
 	return true;
 }
 
 bool CDROM_Interface_Image::StopAudio(void)
 {
-	player.isPlaying = false;
-	player.isPaused = false;
-	if (player.channel)
-		player.channel->Enable(false);
-#ifdef DEBUG
-	LOG_MSG("CDROM: StopAudio => stopped playback and halted the mixer");
-#endif
+	// Player needs to stop
+	if (player.isPlaying)
+		player.ramp = CDDA_Ramp::DownThenStop;
+	// If our channel doesn't exist then simply assign the state here
+	if (!player.channel) {
+		player.isPlaying = false;
+		player.isPaused = false;
+	}
 	return true;
 }
 
@@ -845,6 +867,13 @@ void CDROM_Interface_Image::ChannelControl(TCtrl ctrl)
 		        "before playing audio");
 #endif
 		return;
+	}
+	// Revoke volume control from the CD-DA player: the game is in control
+	if (player.hasRampControl) {
+		player.hasRampControl = false;
+#ifdef DEBUG
+		LOG_MSG("CDROM: Game is controlling CD-DA volumes; ramping disabled");
+#endif
 	}
 
 	// Adjust the volume of our mixer channel as defined by the application
@@ -994,6 +1023,21 @@ bool CDROM_Interface_Image::ReadSector(uint8_t *buffer, const bool raw, const ui
 	return track->file->read(buffer, offset, length);
 }
 
+void CDROM_Interface_Image::RampVolume()
+{
+	if (player.ramp == CDDA_Ramp::Up) {
+		if (player.volume < CDDA_Volume::Max)
+			++player.volume;
+	} else if (player.ramp & CDDA_Ramp::Down) {
+		if (player.volume > CDDA_Volume::Min)
+			--player.volume;
+	}
+	if (player.hasRampControl) {
+		constexpr float max_vol = static_cast<float>(CDDA_Volume::Max);
+		const float ramp_vol = pow(player.volume / max_vol, 2.0f);
+		player.channel->SetScale(ramp_vol);
+	}
+}
 
 void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 {
@@ -1031,26 +1075,45 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu desired_track_frames)
 		return;
 	}
 
-	const uint32_t decoded_track_frames = track_file->decode(player.buffer,
-	                                                         static_cast<uint32_t>(desired_track_frames));
+	// If playback is nearing completion then ramp-down if not already.
+	const bool begin_rampdown = player.playedTrackFrames >= player.rampDownFrame;
+	if (begin_rampdown && !(player.ramp & CDDA_Ramp::Down)) {
+		player.ramp = CDDA_Ramp::DownThenStop;
+	}
+
+	const uint32_t decoded_track_frames = track_file->decode(
+	        player.buffer, static_cast<uint32_t>(desired_track_frames));
 	player.playedTrackFrames += decoded_track_frames;
 
-	/**
+	/*
 	 *  Uses either the stereo or mono and native or nonnative
 	 *  AddSamples call assigned during construction
 	 */
+	RampVolume();
 	(player.channel->*player.addFrames)(decoded_track_frames, player.buffer);
 
-	if (player.playedTrackFrames >= player.totalTrackFrames) {
+	// If we've ramped-up, then hold steady
+	if (player.ramp == CDDA_Ramp::Up && player.volume == CDDA_Volume::Max) {
+		player.ramp = CDDA_Ramp::Neutral;
+	}
+	// If we're done playback or are ramped-down, then either pause or stop playback
+	if (player.playedTrackFrames >= player.totalTrackFrames || player.volume == CDDA_Volume::Min) {
+		player.channel->Enable(false);
+		if (player.ramp == CDDA_Ramp::DownThenPause) {
 #ifdef DEBUG
-		LOG_MSG("CDROM: CDAudioCallBack stopping because "
-		"playedTrackFrames (%u) >= totalTrackFrames (%u)",
-		player.playedTrackFrames, player.totalTrackFrames);
+			LOG_MSG("CDROM: Paused playback");
 #endif
-		player.cd->StopAudio();
-
-	} else if (decoded_track_frames == 0) {
-		// Our track has run dry but we still have more music left to play!
+			player.isPaused = true;
+		} else {
+			player.isPlaying = false;
+			player.isPaused = false;
+#ifdef DEBUG
+			LOG_MSG("CDROM: Stopped playback");
+#endif
+		}
+	}
+	// If there's still more to play but our track has run out, then move onto the next
+	else if (decoded_track_frames == 0) {
 		const double percent_played = static_cast<double>(
 		                              player.playedTrackFrames)
 		                              / player.totalTrackFrames;

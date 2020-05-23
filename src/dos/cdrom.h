@@ -58,6 +58,23 @@
 #define MAX_REDBOOK_BYTES (MAX_REDBOOK_FRAMES * BYTES_PER_RAW_REDBOOK_FRAME) // length of a CDROM in bytes
 #define MAX_REDBOOK_DURATION_MS (99 * 60 * 1000) // 99 minute CDROM in milliseconds
 
+// CD-DA volume ramp states
+enum CDDA_Ramp: uint8_t {
+	Neutral       = 1u << 0, // Hold the volume and keep playing
+	Up            = 1u << 1, // Ramp-up until full volume is reached
+	DownThenPause = 1u << 2, // Ramp-down until silent, then pause playback
+	DownThenStop  = 1u << 3, // Ramp-down until silent, then stop playback
+
+	// Boolean helpers used for compound comparisons (do not set these)
+	Down          = DownThenPause | DownThenStop,
+	InProgress    = Up | Down
+};
+
+// CD-DA Volume limits
+enum CDDA_Volume: uint8_t {
+	Min = 0u,
+	Max = 15u
+};
 
 struct TMSF
 {
@@ -252,9 +269,13 @@ private:
 		void (MixerChannel::*addFrames) (Bitu, const Bit16s*) = nullptr;
 		uint32_t                 playedTrackFrames  = 0;
 		uint32_t                 totalTrackFrames   = 0;
+		uint32_t                 rampDownFrame      = 0;
 		uint32_t                 startSector        = 0;
 		uint32_t                 totalRedbookFrames = 0;
 		int16_t                  buffer[MIXER_BUFSIZE * REDBOOK_CHANNELS] = {0};
+		CDDA_Ramp                ramp               = CDDA_Ramp::DownThenStop;
+		uint8_t                  volume             = CDDA_Volume::Min;
+		bool                     hasRampControl     = true;
 		bool                     isPlaying          = false;
 		bool                     isPaused           = false;
 	} player;
@@ -266,6 +287,7 @@ private:
 	                 const bool mode2);
 	std::vector<Track>::iterator GetTrack(const uint32_t sector);
 	static void CDAudioCallBack (Bitu desired_frames);
+	static void RampVolume();
 
 	// Private functions for cue sheet processing
 	bool  LoadCueSheet(char *cuefile);
