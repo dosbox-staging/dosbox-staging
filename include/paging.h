@@ -276,12 +276,17 @@ static INLINE Bit16u mem_readw_inline(PhysPt address) {
 	} else return mem_unalignedreadw(address);
 }
 
-static INLINE Bit32u mem_readd_inline(PhysPt address) {
-	if ((address & 0xfff)<0xffd) {
-		HostPt tlb_addr=get_tlb_read(address);
-		if (tlb_addr) return host_readd(tlb_addr+address);
-		else return (get_tlb_readhandler(address))->readd(address);
-	} else return mem_unalignedreadd(address);
+static INLINE uint32_t mem_readd_inline(PhysPt address)
+{
+	if ((address & 0xfff) < 0xffd) {
+		HostPt tlb_addr = get_tlb_read(address);
+		if (tlb_addr)
+			return host_readd(tlb_addr + address);
+		else
+			return static_cast<uint32_t>((get_tlb_readhandler(address))->readd(address));
+	} else {
+		return mem_unalignedreadd(address);
+	}
 }
 
 static INLINE void mem_writeb_inline(PhysPt address,Bit8u val) {
