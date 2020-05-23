@@ -362,8 +362,9 @@ bool CSerial::CanReceiveByte() {
 void CSerial::receiveByteEx(uint8_t data, uint8_t error)
 {
 #if SERIAL_DEBUG
-	log_ser(dbg_serialtraffic, data < 0x10 ? "\t\t\t\trx 0x%02x (%"
-	        PRIu8 "):\t\t\t\trx 0x%02x (%c)", data, data); // TODO: fix
+	log_ser(dbg_serialtraffic,
+	        data < 0x10 ? "\t\t\t\trx 0x%02x (%" PRIu8 ")" : "\t\t\t\trx 0x%02x (%c)",
+	        data, data);
 #endif
 	if (!(rxfifo->addb(data))) {
 		// Overrun error ;o
