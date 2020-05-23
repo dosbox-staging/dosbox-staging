@@ -395,6 +395,8 @@ void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
 	Bitu index = 0;
 	Bitu index_add = (len << FREQ_SHIFT)/outlen;
 	Bitu mixpos = mixer.pos + done;
+
+	MIXER_LockAudioDevice();
 	done = needed;
 	Bitu pos = 0;
 
@@ -415,6 +417,7 @@ void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
 		mixer.work[mixpos][1] += sample * volmul[1];
 		mixpos++;
 	}
+	MIXER_UnlockAudioDevice();
 }
 
 void MixerChannel::AddSamples_m8(Bitu len, const Bit8u * data) {
