@@ -27,6 +27,11 @@ jobs:
             os: ubuntu-18.04
             flags: -c gcc -v 9
             max_warnings: 26
+          - name: GCC-9 (Ubuntu 18.04) +debug
+            os: ubuntu-18.04
+            flags: -c gcc -v 9
+            config_flags: --enable-debug
+            max_warnings: 263
           - name: Clang-8 (Ubuntu 18.04)
             os: ubuntu-18.04
             flags: -c clang -v 8
@@ -54,7 +59,7 @@ jobs:
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Build
-        run:  ./scripts/build.sh --build-type Debug ${{ matrix.conf.flags }}
+        run:  ./scripts/build.sh -t Debug ${{ matrix.conf.flags }} ${{ matrix.conf.config_flags }}
       - name: Summarize warnings
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
