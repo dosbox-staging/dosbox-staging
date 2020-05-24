@@ -43,6 +43,31 @@ static void outc(Bit8u c) {
 	DOS_WriteFile(STDOUT,&c,&n);
 }
 
+static bool completion_pfx_has_cmd(const char *line)
+{
+	/* Look for a non-space followed by space or; if we'll find it,
+	 * then user completed a command name and is now filling in command
+	 * arguments.
+	 *
+	 * DOS accepts passing arguments without a space (after a forward slash
+	 * e.g. 'dir/w' instead of 'dir /w', but detection of such case would
+	 * complicate completion when running command in a sub-directory).
+	 */
+	assert(line);
+	char prev_char = '\0';
+	char last_char = '\0';
+	while (*line) {
+		prev_char = last_char;
+		last_char = *line;
+		line++;
+		if (prev_char == '\0' || last_char == '\0')
+			continue;
+		if (prev_char != ' ' && last_char == ' ')
+			return true;
+	}
+	return false;
+}
+
 void DOS_Shell::InputCommand(char * line) {
 	Bitu size=CMD_MAXLINE-2; //lastcharacter+0
 	Bit8u c;Bit16u n=1;
@@ -52,7 +77,8 @@ void DOS_Shell::InputCommand(char * line) {
 
 	line[0] = '\0';
 
-	std::list<std::string>::iterator it_history = l_history.begin(), it_completion = l_completion.begin();
+	auto it_history = l_history.begin();
+	auto it_completion = l_completion.begin();
 
 	while (size) {
 		dos.echo=false;
@@ -234,14 +260,23 @@ void DOS_Shell::InputCommand(char * line) {
 		case'\t':
 			{
 				if (l_completion.size()) {
-					it_completion ++;
-					if (it_completion == l_completion.end()) it_completion = l_completion.begin();
-				} else {
+					DEBUG_LOG_MSG(">> l_completion.size()");
+				        it_completion++;
+				        if (it_completion == l_completion.end())
+					        it_completion = l_completion.begin();
+			        } else {
+					DEBUG_LOG_MSG(">> !l_completion.size(); line: '%s'", line);
+
 					// build new completion list
 					// Lines starting with CD will only get directories in the list
-					bool dir_only = (strncasecmp(line,"CD ",3)==0);
+				        const bool dir_only = (strncasecmp(line, "CD ", 3) == 0);
 
-					// get completion mask
+					// Decide if completing a command name
+					// or a comman argument
+					const bool is_arg = completion_pfx_has_cmd(line);
+					DEBUG_LOG_MSG(">> %s", is_arg ? "complete arg" : "complete cmd");
+
+				        // get completion mask
 					char *p_completion_start = strrchr(line, ' ');
 
 					if (p_completion_start) {
@@ -252,9 +287,17 @@ void DOS_Shell::InputCommand(char * line) {
 						completion_index = 0;
 					}
 
+					// FIXME why did they implement it this way?!
+					//       this seems to work really bad for non-commands
+					DEBUG_LOG_MSG(":: pfx '%s'", p_completion_start);
+					std::string pfx = p_completion_start;
+
 					char *path;
-					if ((path = strrchr(line+completion_index,'\\'))) completion_index = (Bit16u)(path-line+1);
-					if ((path = strrchr(line+completion_index,'/'))) completion_index = (Bit16u)(path-line+1);
+					if ((path = strrchr(line+completion_index,'\\')))
+						completion_index = (Bit16u)(path-line+1);
+					if ((path = strrchr(line+completion_index,'/')))
+						completion_index = (Bit16u)(path-line+1);
+
 
 					// build the completion list
 					char mask[DOS_PATHLENGTH] = {0};
@@ -263,7 +306,7 @@ void DOS_Shell::InputCommand(char * line) {
 							//Beep;
 							break;
 						}
-						safe_strncpy(mask, p_completion_start,DOS_PATHLENGTH);
+						safe_strncpy(mask, p_completion_start, DOS_PATHLENGTH);
 						char* dot_pos=strrchr(mask,'.');
 						char* bs_pos=strrchr(mask,'\\');
 						char* fs_pos=strrchr(mask,'/');
@@ -282,13 +325,19 @@ void DOS_Shell::InputCommand(char * line) {
 					bool res = DOS_FindFirst(mask, 0xffff & ~DOS_ATTR_VOLUME);
 					if (!res) {
 						dos.dta(save_dta);
-						break;	// TODO: beep
+						// FIXME: this break prevented autocompletion
+						// when current dir was missing execs
+						//break;	// TODO: beep
 					}
 
 					DOS_DTA dta(dos.dta());
-					char name[DOS_NAMELENGTH_ASCII];Bit32u sz;Bit16u date;Bit16u time;Bit8u att;
+					char name[DOS_NAMELENGTH_ASCII];
+					Bit32u sz;
+					Bit16u date;
+					Bit16u time;
+					Bit8u att;
 
-					std::list<std::string> executable;
+				        std::list<std::string> executable;
 					while (res) {
 						dta.GetResult(name,sz,date,time,att);
 						// add result to completion list
@@ -308,9 +357,74 @@ void DOS_Shell::InputCommand(char * line) {
 						}
 						res=DOS_FindNext();
 					}
-					/* Add executable list to front of completion list. */
-					std::copy(executable.begin(),executable.end(),std::front_inserter(l_completion));
-					it_completion = l_completion.begin();
+					for (auto &exe : executable)
+						DEBUG_LOG_MSG(">> exe: %s", exe.c_str());
+
+					// FIXME: rewrite, refactor loop above
+				        if (is_arg) {
+						// old implementation:
+					        /* Add executable list to front
+					         * of completion list. */
+					        std::copy(executable.begin(),
+					                  executable.end(),
+					                  std::front_inserter( l_completion));
+				        } else {
+						// we're completing a command, there's no
+						// point in listing non-executable files:
+
+						// force insert all builtin commands
+						// FIXME it really should be all executable available
+						// in PATH; but that's too much work for a proof
+						// of concept 
+						// FIXME it won't work correctly on Z: drive
+					        std::list<std::string> builtins = {
+					                "ATTRIB",
+							// "AUTOEXEC",
+							"AUTOTYPE",
+							"BOOT",
+						      	"CALL",
+					                "CD",       "CHDIR",
+					                "CHOICE",  
+							"CLS",
+					                "COPY",
+							"COMMAND",
+							"CONFIG",
+						    	"DATE",
+					                "DEL",      "DELETE",
+					                "DIR",      "ECHO",
+					                "ERASE",    "EXIT",
+					                "GOTO",     "HELP",
+					                "IF",
+							"IMGMOUNT",
+							"INTRO",
+							"KEYB",
+						  	"LH",
+					                "LOADFIX",
+					                "LOADHIGH",
+							"LOADROM",
+							"LS",
+					                "MD",
+							"MEM",
+							"MIXER",
+							"MKDIR",
+							"MOUNT",
+					                "PATH",     "PAUSE",
+					                "RD",       "REM",
+					                "REN",      "RENAME",
+							"RESCAN",
+					                "RMDIR",    "SET",
+					                "SHIFT",    "SUBST",
+					                "TIME",     "TYPE",
+					                "VER",
+					        };
+						upcase(pfx);
+						for (auto &b : builtins)
+							if (starts_with(pfx, b))
+								executable.push_back(b);
+						l_completion = executable;
+				        }
+
+				        it_completion = l_completion.begin();
 					dos.dta(save_dta);
 				}
 
