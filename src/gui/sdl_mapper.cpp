@@ -567,16 +567,15 @@ public:
 			return;
 		}
 
-		// FIXME: when errors from SDL won't be treated as big numbers,
-		// perhaps we won't need to set those ''max_caps''
+		const int sdl_axes = SDL_JoystickNumAxes(sdl_joystick);
+		if (sdl_axes < 0)
+			LOG_MSG("SDL: Can't detect axes; %s", SDL_GetError());
+		axes = clamp(sdl_axes, 0, MAXAXIS);
 
-		axes = SDL_JoystickNumAxes(sdl_joystick); // TODO returns -1 on error
-		if (axes > MAXAXIS)
-			axes = MAXAXIS;
-
-		hats = SDL_JoystickNumHats(sdl_joystick); // TODO returns -1 on error
-		if (hats > MAXHAT)
-			hats = MAXHAT;
+		const int sdl_hats = SDL_JoystickNumHats(sdl_joystick);
+		if (sdl_hats < 0)
+			LOG_MSG("SDL: Can't detect hats; %s", SDL_GetError());
+		hats = clamp(sdl_hats, 0, MAXHAT);
 
 		buttons = SDL_JoystickNumButtons(sdl_joystick); // TODO returns -1 on error
 		button_wrap = buttons;
