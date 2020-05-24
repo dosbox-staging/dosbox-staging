@@ -178,7 +178,7 @@ static void dyn_fpu_esc1()
 				break;
 			case 0x02:       /* UNKNOWN */
 			case 0x03:       /* ILLEGAL */
-				LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %X subfunction %X",group,sub);
+				FPU_LOG_WARN(1,false,group,sub);
 				break;
 			case 0x04:       /* FTST */
 				gen_call_function((void*)&FPU_FTST,"");
@@ -188,7 +188,7 @@ static void dyn_fpu_esc1()
 				break;
 			case 0x06:       /* FTSTP (cyrix)*/
 			case 0x07:       /* UNKNOWN */
-				LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %X subfunction %X",group,sub);
+				FPU_LOG_WARN(1,false,group,sub);
 				break;
 			}
 			break;
@@ -216,7 +216,7 @@ static void dyn_fpu_esc1()
 				gen_call_function((void*)&FPU_FLDZ,"");
 				break;
 			case 0x07:       /* ILLEGAL */
-				LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %X subfunction %X",group,sub);
+				FPU_LOG_WARN(1,false,group,sub);
 				break;
 			}
 			break;
@@ -247,7 +247,7 @@ static void dyn_fpu_esc1()
 				gen_call_function((void*)&FPU_FINCSTP,"");
 				break;
 			default:
-				LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %X subfunction %X",group,sub);
+				FPU_LOG_WARN(1,false,group,sub);
 				break;
 			}
 			break;
@@ -278,12 +278,12 @@ static void dyn_fpu_esc1()
 				gen_call_function((void*)&FPU_FCOS,"");
 				break;
 			default:
-				LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %X subfunction %X",group,sub);
+				FPU_LOG_WARN(1,false,group,sub);
 				break;
 			}
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %X subfunction %X",group,sub);
+			FPU_LOG_WARN(1,false,group,sub);
 			break;
 		}
 	} else {
@@ -296,7 +296,7 @@ static void dyn_fpu_esc1()
 			gen_call_function((void*)&FPU_FLD_F32,"%Drd%Drd",DREG(EA),DREG(TMPB));
 			break;
 		case 0x01: /* UNKNOWN */
-			LOG(LOG_FPU,LOG_WARN)("ESC EA 1:Unhandled group %d subfunction %d",group,sub);
+			FPU_LOG_WARN(1,true,group,sub);
 			break;
 		case 0x02: /* FST float*/
 			gen_call_function((void*)&FPU_FST_F32,"%Drd",DREG(EA));
@@ -318,7 +318,7 @@ static void dyn_fpu_esc1()
 			gen_call_function((void *)&FPU_FNSTCW,"%Drd",DREG(EA));
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC EA 1:Unhandled group %d subfunction %d",group,sub);
+			FPU_LOG_WARN(1,true,group,sub);
 			break;
 		}
 	}
@@ -344,12 +344,12 @@ static void dyn_fpu_esc2()
 				gen_call_function((void *)&FPU_FPOP,"");
 				break;
 			default:
-				LOG(LOG_FPU,LOG_WARN)("ESC 2:Unhandled group %d subfunction %d",group,sub); 
+				FPU_LOG_WARN(2,false,5,sub);
 				break;
 			}
 			break;
 		default:
-	   		LOG(LOG_FPU,LOG_WARN)("ESC 2:Unhandled group %d subfunction %d",group,sub);
+			FPU_LOG_WARN(2,false,group,sub);
 			break;
 		}
 	} else {
@@ -388,7 +388,7 @@ static void dyn_fpu_esc3()
 			}
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 3:Unhandled group %u subfunction %u", group, sub);
+			FPU_LOG_WARN(3, false, group, sub);
 			break;
 		}
 	} else {
@@ -401,7 +401,7 @@ static void dyn_fpu_esc3()
 			gen_call_function((void*)&FPU_FLD_I32,"%Drd%Drd",DREG(EA),DREG(TMPB));
 			break;
 		case 0x01:	/* FISTTP */
-			LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %u subfunction %u", group, sub);
+			FPU_LOG_WARN(3, false, 1, sub);
 			break;
 		case 0x02:	/* FIST */
 			gen_call_function((void*)&FPU_FST_I32,"%Drd",DREG(EA));
@@ -419,7 +419,8 @@ static void dyn_fpu_esc3()
 			gen_call_function((void*)&FPU_FPOP,"");
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %u subfunction %u", group, sub);
+			FPU_LOG_WARN(3, true, group, sub);
+			break;
 		}
 	}
 }
@@ -496,7 +497,7 @@ static void dyn_fpu_esc5()
 			gen_call_function((void*)&FPU_FPOP,"");
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 5:Unhandled group %d subfunction %d",group,sub);
+			FPU_LOG_WARN(5,false,group,sub);
 			break;
 		}
 		gen_releasereg(DREG(EA));
@@ -511,7 +512,7 @@ static void dyn_fpu_esc5()
 			gen_call_function((void*)&FPU_FLD_F64,"%Drd%Drd",DREG(EA),DREG(TMPB));
 			break;
 		case 0x01:  /* FISTTP longint*/
-			LOG(LOG_FPU,LOG_WARN)("ESC 5 EA:Unhandled group %d subfunction %d",group,sub);
+			FPU_LOG_WARN(5,true,1,sub);
 			break;
 		case 0x02:   /* FST double real*/
 			gen_call_function((void*)&FPU_FST_F64,"%Drd",DREG(EA));
@@ -534,7 +535,8 @@ static void dyn_fpu_esc5()
 			gen_call_function((void*)&mem_writew,"%Drd%Drd",DREG(EA),DREG(TMPB));
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 5 EA:Unhandled group %d subfunction %d",group,sub);
+			FPU_LOG_WARN(5,true,group,sub);
+			break;
 		}
 	}
 }
@@ -558,7 +560,7 @@ static void dyn_fpu_esc6()
 			break;	/* TODO IS THIS ALLRIGHT ????????? */
 		case 0x03:  /*FCOMPP*/
 			if(sub != 1) {
-				LOG(LOG_FPU,LOG_WARN)("ESC 6:Unhandled group %d subfunction %d",group,sub);
+				FPU_LOG_WARN(6,false,3,sub);
 				return;
 			}
 			gen_load_host(&TOP,DREG(EA),4); 
@@ -621,12 +623,12 @@ static void dyn_fpu_esc7()
 					gen_mov_host(&fpu.sw,DREG(EAX),2);
 					break;
 				default:
-					LOG(LOG_FPU,LOG_WARN)("ESC 7:Unhandled group %d subfunction %d",group,sub);
+					FPU_LOG_WARN(7,false,4,sub);
 					break;
 			}
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 7:Unhandled group %d subfunction %d",group,sub);
+			FPU_LOG_WARN(7,false,group,sub);
 			break;
 		}
 	} else {
@@ -638,7 +640,7 @@ static void dyn_fpu_esc7()
 			gen_call_function((void*)&FPU_FLD_I16,"%Drd%Drd",DREG(EA),DREG(TMPB));
 			break;
 		case 0x01:
-			LOG(LOG_FPU,LOG_WARN)("ESC 7 EA:Unhandled group %d subfunction %d",group,sub);
+			FPU_LOG_WARN(7,true,group,sub);
 			break;
 		case 0x02:   /* FIST Bit16s */
 			gen_call_function((void*)&FPU_FST_I16,"%Drd",DREG(EA));
@@ -666,7 +668,7 @@ static void dyn_fpu_esc7()
 			gen_call_function((void*)&FPU_FPOP,"");
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 7 EA:Unhandled group %d subfunction %d",group,sub);
+			FPU_LOG_WARN(7,true,group,sub);
 			break;
 		}
 	}
