@@ -552,20 +552,8 @@ public:
 		// initialize binding lists and position data
 		pos_axis_lists = new CBindList[MAXAXIS];
 		neg_axis_lists = new CBindList[MAXAXIS];
-		button_lists=new CBindList[MAXBUTTON];
-		hat_lists=new CBindList[4];
-
-		for (int i = 0; i < MAXBUTTON; i++) {
-			button_autofire[i]=0;
-			old_button_state[i]=0;
-		}
-		for (int i = 0; i < 16; i++)
-			old_hat_state[i] = 0;
-
-		for (int i = 0; i < MAXAXIS; i++) {
-			old_pos_axis_state[i] = false;
-			old_neg_axis_state[i] = false;
-		}
+		button_lists = new CBindList[MAXBUTTON];
+		hat_lists = new CBindList[4];
 
 		// initialize emulated joystick state
 		emulated_axes=2;
@@ -781,7 +769,8 @@ public:
 			}
 		}
 		for (int i = 0; i < hats; i++) {
-			Uint8 chat_state = SDL_JoystickGetHat(sdl_joystick, i);
+			assert(i < MAXHAT);
+			const uint8_t chat_state = SDL_JoystickGetHat(sdl_joystick, i);
 
 			/* activate binding if hat state has changed */
 			if ((chat_state & SDL_HAT_UP) != (old_hat_state[i] & SDL_HAT_UP)) {
@@ -800,7 +789,7 @@ public:
 				if (chat_state & SDL_HAT_LEFT) ActivateBindList(&hat_lists[(i<<2)+3],32767,true);
 				else DeactivateBindList(&hat_lists[(i<<2)+3],true);
 			}
-			old_hat_state[i]=chat_state;
+			old_hat_state[i] = chat_state;
 		}
 	}
 
@@ -875,13 +864,14 @@ protected:
 	Bitu emustick;
 	SDL_Joystick *sdl_joystick = nullptr;
 	char configname[10];
-	Bitu button_autofire[MAXBUTTON];
-	bool old_button_state[MAXBUTTON];
-	bool old_pos_axis_state[MAXAXIS];
-	bool old_neg_axis_state[MAXAXIS];
-	Uint8 old_hat_state[16];
+	unsigned button_autofire[MAXBUTTON] = {};
+	bool old_button_state[MAXBUTTON] = {};
+	bool old_pos_axis_state[MAXAXIS] = {};
+	bool old_neg_axis_state[MAXAXIS] = {};
+	uint8_t old_hat_state[MAXHAT] = {};
 	bool is_dummy;
 };
+
 std::list<CStickBindGroup *> stickbindgroups;
 
 class C4AxisBindGroup : public  CStickBindGroup {
