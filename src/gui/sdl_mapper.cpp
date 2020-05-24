@@ -573,16 +573,10 @@ public:
 		axes = SDL_JoystickNumAxes(sdl_joystick); // TODO returns -1 on error
 		if (axes > MAXAXIS)
 			axes = MAXAXIS;
-		axes_cap = emulated_axes;
-		if (axes_cap > axes)
-			axes_cap = axes;
 
 		hats = SDL_JoystickNumHats(sdl_joystick); // TODO returns -1 on error
 		if (hats > MAXHAT)
 			hats = MAXHAT;
-		hats_cap = emulated_hats;
-		if (hats_cap > hats)
-			hats_cap=hats;
 
 		buttons = SDL_JoystickNumButtons(sdl_joystick); // TODO returns -1 on error
 		button_wrap = buttons;
@@ -851,14 +845,12 @@ protected:
 	CBindList *button_lists = nullptr;
 	CBindList *hat_lists = nullptr;
 	int axes = 0;
-	int axes_cap = 0;
 	int emulated_axes = 0;
 	int buttons = 0;
 	int button_cap = 0;
 	int button_wrap = 0;
 	int emulated_buttons = 0;
 	int hats = 0;
-	int hats_cap = 0;
 	int emulated_hats = 0;
 	int stick;
 	Bitu emustick;
@@ -880,12 +872,6 @@ public:
 		emulated_axes=4;
 		emulated_buttons=4;
 		if (button_wrapping_enabled) button_wrap=emulated_buttons;
-
-		axes_cap=emulated_axes;
-		if (axes_cap>axes) axes_cap=axes;
-		hats_cap=emulated_hats;
-		if (hats_cap>hats) hats_cap=hats;
-
 		JOYSTICK_Enable(1,true);
 	}
 
@@ -951,12 +937,6 @@ public:
 		emulated_buttons=4;
 		emulated_hats=1;
 		if (button_wrapping_enabled) button_wrap=emulated_buttons;
-
-		axes_cap=emulated_axes;
-		if (axes_cap>axes) axes_cap=axes;
-		hats_cap=emulated_hats;
-		if (hats_cap>hats) hats_cap=hats;
-
 		JOYSTICK_Enable(1,true);
 		JOYSTICK_Move_Y(1,1.0);
 	}
@@ -1088,12 +1068,6 @@ public:
 		emulated_buttons=6;
 		emulated_hats=1;
 		if (button_wrapping_enabled) button_wrap=emulated_buttons;
-
-		axes_cap=emulated_axes;
-		if (axes_cap>axes) axes_cap=axes;
-		hats_cap=emulated_hats;
-		if (hats_cap>hats) hats_cap=hats;
-
 		JOYSTICK_Enable(1,true);
 	}
 
