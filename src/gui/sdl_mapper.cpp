@@ -560,10 +560,10 @@ public:
 		positive = _positive;
 	}
 	void ConfigName(char * buf) {
-		sprintf(buf,"%s axis %d %d",group->ConfigStart(),axis,positive ? 1 : 0);
+		sprintf(buf,"%s axis %" sBitfs(d) " %d",group->ConfigStart(),axis,(positive ? 1 : 0));
 	}
 	void BindName(char * buf) {
-		sprintf(buf,"%s Axis %d%s",group->BindStart(),axis,positive ? "+" : "-");
+		sprintf(buf,"%s Axis %" sBitfs(d) "%s",group->BindStart(),axis,(positive ? "+" : "-"));
 	}
 protected:
 	CBindGroup * group;
@@ -578,10 +578,10 @@ public:
 		button=_button;
 	}
 	void ConfigName(char * buf) {
-		sprintf(buf,"%s button %d",group->ConfigStart(),button);
+		sprintf(buf,"%s button %" sBitfs(d),group->ConfigStart(),button);
 	}
 	void BindName(char * buf) {
-		sprintf(buf,"%s Button %d",group->BindStart(),button);
+		sprintf(buf,"%s Button %" sBitfs(d),group->BindStart(),button);
 	}
 protected:
 	CBindGroup * group;
@@ -602,10 +602,10 @@ public:
 		else E_Exit("MAPPER:JOYSTICK:Invalid hat position");
 	}
 	void ConfigName(char * buf) {
-		sprintf(buf,"%s hat %d %d",group->ConfigStart(),hat,dir);
+		sprintf(buf,"%s hat %" sBitfs(d) " %d",group->ConfigStart(),hat,dir);
 	}
 	void BindName(char * buf) {
-		sprintf(buf,"%s Hat %d %s",group->BindStart(),hat,(dir==SDL_HAT_UP)?"up":
+		sprintf(buf,"%s Hat %" sBitfs(d) " %s",group->BindStart(),hat,(dir==SDL_HAT_UP)?"up":
 														((dir==SDL_HAT_RIGHT)?"right":
 														((dir==SDL_HAT_DOWN)?"down":"left")));
 	}
@@ -622,7 +622,7 @@ public:
 	CStickBindGroup(Bitu _stick,Bitu _emustick,bool _dummy=false) : CBindGroup (){
 		stick=_stick;		// the number of the physical device (SDL numbering|)
 		emustick=_emustick;	// the number of the emulated device
-		sprintf(configname,"stick_%d",emustick);
+		sprintf(configname,"stick_%" sBitfs(d),emustick);
 
 		sdl_joystick=NULL;
 		axes=0;	buttons=0; hats=0;
@@ -675,7 +675,7 @@ public:
 		if (axes_cap>axes) axes_cap=axes;
 		hats_cap=emulated_hats;
 		if (hats_cap>hats) hats_cap=hats;
-		LOG_MSG("Using joystick %s with %d axes, %d buttons and %d hat(s)",SDL_JoystickName(stick),axes,buttons,hats);
+		LOG_MSG("Using joystick %s with %" sBitfs(d) " axes, %" sBitfs(d) " buttons and %" sBitfs(d) " hat%s",SDL_JoystickName(stick),axes,buttons,hats,(hats>1)?"s.":".");
 	}
 	~CStickBindGroup() {
 		SDL_JoystickClose(sdl_joystick);
@@ -869,6 +869,7 @@ private:
 		return NULL;
 	}
 	CBind * CreateHatBind(Bitu hat,Bit8u value) {
+		if (hat < hats_cap) return NULL;
 		Bitu hat_dir;
 		if (value&SDL_HAT_UP) hat_dir=0;
 		else if (value&SDL_HAT_RIGHT) hat_dir=1;
@@ -1610,7 +1611,7 @@ public:
 			key=SDLK_HOME; 
 			break;
 		}
-		sprintf(buf,"%s \"key %d%s%s%s\"",
+		sprintf(buf,"%s \"key %" sBitfs(d) "%s%s%s\"",
 			entry,
 			key,
 			defmod & 1 ? " mod1" : "",
@@ -1710,39 +1711,39 @@ static CKeyEvent * AddKeyButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * 
 
 static CJAxisEvent * AddJAxisButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,Bitu stick,Bitu axis,bool positive,CJAxisEvent * opposite_axis) {
 	char buf[64];
-	sprintf(buf,"jaxis_%d_%d%s",stick,axis,positive ? "+" : "-");
+	sprintf(buf,"jaxis_%" sBitfs(d) "_%" sBitfs(d) "%s",stick,axis,(positive ? "+" : "-"));
 	CJAxisEvent	* event=new CJAxisEvent(buf,stick,axis,positive,opposite_axis);
 	new CEventButton(x,y,dx,dy,title,event);
 	return event;
 }
 static CJAxisEvent * AddJAxisButton_hidden(Bitu stick,Bitu axis,bool positive,CJAxisEvent * opposite_axis) {
 	char buf[64];
-	sprintf(buf,"jaxis_%d_%d%s",stick,axis,positive ? "+" : "-");
+	sprintf(buf,"jaxis_%" sBitfs(d) "_%" sBitfs(d) "%s",stick,axis, (positive ? "+" : "-") );
 	return new CJAxisEvent(buf,stick,axis,positive,opposite_axis);
 }
 
 static void AddJButtonButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,Bitu stick,Bitu button) {
 	char buf[64];
-	sprintf(buf,"jbutton_%d_%d",stick,button);
+	sprintf(buf,"jbutton_%" sBitfs(d) "_%" sBitfs(d),stick,button);
 	CJButtonEvent * event=new CJButtonEvent(buf,stick,button);
 	new CEventButton(x,y,dx,dy,title,event);
 }
 static void AddJButtonButton_hidden(Bitu stick,Bitu button) {
 	char buf[64];
-	sprintf(buf,"jbutton_%d_%d",stick,button);
+	sprintf(buf,"jbutton_%" sBitfs(d) "_%" sBitfs(d),stick,button);
 	new CJButtonEvent(buf,stick,button);
 }
 
 static void AddJHatButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,Bitu _stick,Bitu _hat,Bitu _dir) {
 	char buf[64];
-	sprintf(buf,"jhat_%d_%d_%d",_stick,_hat,_dir);
+	sprintf(buf,"jhat_%" sBitfs(d) "_%" sBitfs(d) "_%" sBitfs(d),_stick,_hat,_dir);
 	CJHatEvent * event=new CJHatEvent(buf,_stick,_hat,_dir);
 	new CEventButton(x,y,dx,dy,title,event);
 }
 
 static void AddModButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,Bitu _mod) {
 	char buf[64];
-	sprintf(buf,"mod_%d",_mod);
+	sprintf(buf,"mod_%" sBitfs(d),_mod);
 	CModEvent * event=new CModEvent(buf,_mod);
 	new CEventButton(x,y,dx,dy,title,event);
 }
@@ -2090,7 +2091,7 @@ static void CreateDefaultBinds(void) {
 	char buffer[512];
 	Bitu i=0;
 	while (DefaultKeys[i].eventend) {
-		sprintf(buffer,"key_%s \"key %d\"",DefaultKeys[i].eventend,DefaultKeys[i].key);
+		sprintf(buffer,"key_%s \"key %" sBitfs(d) "\"",DefaultKeys[i].eventend,DefaultKeys[i].key);
 		CreateStringBind(buffer);
 		i++;
 	}
