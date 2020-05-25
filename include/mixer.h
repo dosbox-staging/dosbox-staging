@@ -86,7 +86,7 @@ public:
 	MixerChannel *next = nullptr;
 	const char *name = nullptr;
 	Bitu done = 0u; // Timing on how many samples have been done by the mixer
-	bool isEnabled = false;
+	bool is_enabled = false;
 
 private:
 	MixerChannel();

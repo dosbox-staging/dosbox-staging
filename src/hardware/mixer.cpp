@@ -198,7 +198,7 @@ void MixerChannel::MapChannels(Bit8u _left, Bit8u _right) {
 void MixerChannel::Enable(const bool should_enable)
 {
 	// Is the channel already in the desired state?
-	if (isEnabled == should_enable)
+	if (is_enabled == should_enable)
 		return;
 
 	// Lock the channel before changing states
@@ -224,7 +224,7 @@ void MixerChannel::Enable(const bool should_enable)
 		next_sample[0] = 0;
 		next_sample[1] = 0;
 	}
-	isEnabled = should_enable;
+	is_enabled = should_enable;
 	MIXER_UnlockAudioDevice();
 }
 
@@ -235,7 +235,7 @@ void MixerChannel::SetFreq(Bitu freq) {
 
 void MixerChannel::Mix(Bitu _needed) {
 	needed=_needed;
-	while (isEnabled && needed > done) {
+	while (is_enabled && needed > done) {
 		Bitu left = (needed - done);
 		left *= freq_add;
 		left  = (left >> FREQ_SHIFT) + ((left & FREQ_MASK)!=0);
