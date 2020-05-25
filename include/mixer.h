@@ -82,7 +82,7 @@ public:
 	void Enable(bool should_enable);
 	void FlushSamples();
 
-	float volmain[2] = {0.0f};
+	float volmain[2] = {0.0f, 0.0f};
 	MixerChannel *next = nullptr;
 	const char *name = nullptr;
 	Bitu done = 0u; // Timing on how many samples have been done by the mixer
@@ -98,9 +98,9 @@ private:
 	Bitu needed = 0u; // Timing on how many samples were needed by the mixer
 	Bits prev_sample[2] = {0}; // Previous and next samples
 	Bits next_sample[2] = {0};
-	Bit32s volmul[2] = {0};
-	float scale[2] = {0.0f};
-	Bit8u channel_map[2] = {0u}; // Output channel mapping
+	int32_t volmul[2] = {0};
+	float scale[2] = {0.0f, 0.0f};
+	uint8_t channel_map[2] = {0u, 0u}; // Output channel mapping
 	bool interpolate = false;
 };
 
