@@ -79,26 +79,29 @@ public:
 	void AddStretched(Bitu len,Bit16s * data);		//Strech block up into needed data
 
 	void FillUp(void);
-	void Enable(bool _yesno);
+	void Enable(bool should_enable);
+	void FlushSamples();
 
-	float          volmain[2];
-	MixerChannel*  next;
-	const char*    name;
-	Bitu           done;           //Timing on how many samples have been done by the mixer
-	bool           enabled;
+	float volmain[2] = {0.0f};
+	MixerChannel *next = nullptr;
+	const char *name = nullptr;
+	Bitu done = 0u; // Timing on how many samples have been done by the mixer
+	bool isEnabled = false;
 
 private:
 	MixerChannel();
-	MIXER_Handler  handler;
-	Bitu           freq_add;       //This gets added the frequency counter each mixer step
-	Bitu           freq_counter;   //When this flows over a new sample needs to be read from the device
-	Bitu           needed; 	       //Timing on how many samples were needed by the mixer
-	Bits           prev_sample[2]; //Previous and next samples
-	Bits           next_sample[2];
-	Bit32s         volmul[2];
-	float          scale[2];
-	Bit8u          channel_map[2]; //Output channel mapping
-	bool           interpolate;
+	MIXER_Handler handler = nullptr;
+	Bitu freq_add = 0u; // This gets added the frequency counter each mixer
+	                    // step
+	Bitu freq_counter = 0u; // When this flows over a new sample needs to be
+	                        // read from the device
+	Bitu needed = 0u; // Timing on how many samples were needed by the mixer
+	Bits prev_sample[2] = {0}; // Previous and next samples
+	Bits next_sample[2] = {0};
+	Bit32s volmul[2] = {0};
+	float scale[2] = {0.0f};
+	Bit8u channel_map[2] = {0u}; // Output channel mapping
+	bool interpolate = false;
 };
 
 MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,const char * name);
