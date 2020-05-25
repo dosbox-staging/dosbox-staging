@@ -51,10 +51,10 @@ public:
 	void SetScale(float f);
 	void SetScale(float _left, float _right);
 	void MapChannels(Bit8u _left, Bit8u _right);
-	void UpdateVolume(void);
+	void UpdateVolume();
 	void SetFreq(Bitu _freq);
 	void Mix(Bitu _needed);
-	void AddSilence(void);			//Fill up until needed
+	void AddSilence();			//Fill up until needed
 
 	template<class Type,bool stereo,bool signeddata,bool nativeorder>
 	void AddSamples(Bitu len, const Type* data);

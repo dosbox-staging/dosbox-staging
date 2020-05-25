@@ -136,15 +136,15 @@ void MIXER_DelChannel(MixerChannel* delchan) {
 	}
 }
 
-static void MIXER_LockAudioDevice(void) {
+static void MIXER_LockAudioDevice() {
 	SDL_LockAudioDevice(mixer.sdldevice);
 }
 
-static void MIXER_UnlockAudioDevice(void) {
+static void MIXER_UnlockAudioDevice() {
 	SDL_UnlockAudioDevice(mixer.sdldevice);
 }
 
-void MixerChannel::UpdateVolume(void) {
+void MixerChannel::UpdateVolume() {
 	volmul[0]=(Bits)((1 << MIXER_VOLSHIFT)*scale[0]*volmain[0]*mixer.mastervol[0]);
 	volmul[1]=(Bits)((1 << MIXER_VOLSHIFT)*scale[1]*volmain[1]*mixer.mastervol[1]);
 }
@@ -243,7 +243,7 @@ void MixerChannel::Mix(Bitu _needed) {
 	}
 }
 
-void MixerChannel::AddSilence(void) {
+void MixerChannel::AddSilence() {
 	if (done<needed) {
 		done=needed;
 		//Make sure the next samples are zero when they get switched to prev
@@ -460,8 +460,8 @@ void MixerChannel::AddSamples_s32_nonnative(Bitu len,const Bit32s * data) {
 	AddSamples<Bit32s,true,true,false>(len,data);
 }
 
-void MixerChannel::FillUp(void) {
-	if (!isEnabled || done < mixer.done)
+void MixerChannel::FillUp() {
+	if (!is_enabled || done < mixer.done)
 		return;
 	float index=PIC_TickIndex();
 	MIXER_LockAudioDevice();
@@ -470,7 +470,7 @@ void MixerChannel::FillUp(void) {
 }
 
 extern bool ticksLocked;
-static inline bool Mixer_irq_important(void) {
+static inline bool Mixer_irq_important() {
 	/* In some states correct timing of the irqs is more important then
 	 * non stuttering audo */
 	return (ticksLocked || (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)));
@@ -515,7 +515,7 @@ static void MIXER_MixData(Bitu needed) {
 	mixer.done = needed;
 }
 
-static void MIXER_Mix(void) {
+static void MIXER_Mix() {
 	MIXER_LockAudioDevice();
 	MIXER_MixData(mixer.needed);
 	mixer.tick_counter += mixer.tick_add;
@@ -524,7 +524,7 @@ static void MIXER_Mix(void) {
 	MIXER_UnlockAudioDevice();
 }
 
-static void MIXER_Mix_NoSound(void) {
+static void MIXER_Mix_NoSound() {
 	MIXER_MixData(mixer.needed);
 	/* Clear piece we've just generated */
 	for (Bitu i=0;i<mixer.needed;i++) {
@@ -682,7 +682,7 @@ public:
 		if (!w) vol1=vol0;
 	}
 
-	void Run(void) {
+	void Run() {
 		if(cmd->FindExist("/LISTMIDI")) {
 			ListMidi();
 			return;
@@ -792,7 +792,7 @@ void MIXER_Init(Section* sec) {
 	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
 }
 
-void MIXER_CloseAudioDevice(void) {
+void MIXER_CloseAudioDevice() {
 	if (!mixer.nosound) {
 		if (mixer.sdldevice != 0) {
 			SDL_CloseAudioDevice(mixer.sdldevice);
