@@ -96,26 +96,10 @@ static struct {
 
 Bit8u MixTemp[MIXER_BUFSIZE];
 
-MixerChannel::MixerChannel(MIXER_Handler _handler, Bitu _freq, const char * _name) :
-		// Public member initialization
-		volmain      {0, 0},
-		next         (nullptr),
-		name         (_name),
-		done         (0),
-		enabled      (false),
-
-		// Private member initialization
-		handler      (_handler),
-		freq_add     (0),
-		freq_counter (0),
-		needed       (0),
-		prev_sample  {0, 0},
-		next_sample  {0, 0},
-		volmul       {0, 0},
-		scale        {0, 0},
-		channel_map  {0, 0},
-		interpolate  (false) {
-}
+MixerChannel::MixerChannel(MIXER_Handler _handler, Bitu _freq, const char *_name)
+        : name(_name),
+          handler(_handler)
+{}
 
 MixerChannel * MIXER_AddChannel(MIXER_Handler handler, Bitu freq, const char * name) {
 	MixerChannel * chan=new MixerChannel(handler, freq, name);
@@ -152,15 +136,18 @@ void MIXER_DelChannel(MixerChannel* delchan) {
 	}
 }
 
-static void MIXER_LockAudioDevice(void) {
+static void MIXER_LockAudioDevice()
+{
 	SDL_LockAudioDevice(mixer.sdldevice);
 }
 
-static void MIXER_UnlockAudioDevice(void) {
+static void MIXER_UnlockAudioDevice()
+{
 	SDL_UnlockAudioDevice(mixer.sdldevice);
 }
 
-void MixerChannel::UpdateVolume(void) {
+void MixerChannel::UpdateVolume()
+{
 	volmul[0]=(Bits)((1 << MIXER_VOLSHIFT)*scale[0]*volmain[0]*mixer.mastervol[0]);
 	volmul[1]=(Bits)((1 << MIXER_VOLSHIFT)*scale[1]*volmain[1]*mixer.mastervol[1]);
 }
@@ -211,31 +198,47 @@ void MixerChannel::MapChannels(Bit8u _left, Bit8u _right) {
 	}
 }
 
-void MixerChannel::Enable(bool _yesno) {
-	if (_yesno==enabled) return;
-	enabled=_yesno;
-	if (enabled) {
-		freq_counter = 0;
-		MIXER_LockAudioDevice();
-		if (done<mixer.done) done=mixer.done;
-		MIXER_UnlockAudioDevice();
+void MixerChannel::Enable(const bool should_enable)
+{
+	// Is the channel already in the desired state?
+	if (is_enabled == should_enable)
+		return;
+
+	// Lock the channel before changing states
+	MIXER_LockAudioDevice();
+
+	// Prepare the channel to accept samples
+	if (should_enable) {
+		freq_counter = 0u;
+		// Don't start with a deficit
+		if (done < mixer.done)
+			done = mixer.done;
+
+		// Prepare the channel to go dormant
+	} else {
+		// Clear the current counters and sample values to
+		// start clean if/when this channel is re-enabled.
+		// Samples can be buffered into disable channels, so
+		// we don't perform this zero'ing in the enable phase.
+		done = 0u;
+		needed = 0u;
+		prev_sample[0] = 0;
+		prev_sample[1] = 0;
+		next_sample[0] = 0;
+		next_sample[1] = 0;
 	}
+	is_enabled = should_enable;
+	MIXER_UnlockAudioDevice();
 }
 
 void MixerChannel::SetFreq(Bitu freq) {
 	freq_add=(freq<<FREQ_SHIFT)/mixer.freq;
-
-	if (freq != mixer.freq) {
-		interpolate = true;
-	}
-	else {
-		interpolate = false;
-	}
+	interpolate = (freq != mixer.freq);
 }
 
 void MixerChannel::Mix(Bitu _needed) {
 	needed=_needed;
-	while (enabled && needed>done) {
+	while (is_enabled && needed > done) {
 		Bitu left = (needed - done);
 		left *= freq_add;
 		left  = (left >> FREQ_SHIFT) + ((left & FREQ_MASK)!=0);
@@ -243,7 +246,8 @@ void MixerChannel::Mix(Bitu _needed) {
 	}
 }
 
-void MixerChannel::AddSilence(void) {
+void MixerChannel::AddSilence()
+{
 	if (done<needed) {
 		done=needed;
 		//Make sure the next samples are zero when they get switched to prev
@@ -460,19 +464,19 @@ void MixerChannel::AddSamples_s32_nonnative(Bitu len,const Bit32s * data) {
 	AddSamples<Bit32s,true,true,false>(len,data);
 }
 
-void MixerChannel::FillUp(void) {
-	MIXER_LockAudioDevice();
-	if (!enabled || done<mixer.done) {
-		MIXER_UnlockAudioDevice();
+void MixerChannel::FillUp()
+{
+	if (!is_enabled || done < mixer.done)
 		return;
-	}
 	float index=PIC_TickIndex();
+	MIXER_LockAudioDevice();
 	Mix((Bitu)(index*mixer.needed));
 	MIXER_UnlockAudioDevice();
 }
 
 extern bool ticksLocked;
-static inline bool Mixer_irq_important(void) {
+static inline bool Mixer_irq_important()
+{
 	/* In some states correct timing of the irqs is more important then
 	 * non stuttering audo */
 	return (ticksLocked || (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)));
@@ -517,7 +521,8 @@ static void MIXER_MixData(Bitu needed) {
 	mixer.done = needed;
 }
 
-static void MIXER_Mix(void) {
+static void MIXER_Mix()
+{
 	MIXER_LockAudioDevice();
 	MIXER_MixData(mixer.needed);
 	mixer.tick_counter += mixer.tick_add;
@@ -526,7 +531,8 @@ static void MIXER_Mix(void) {
 	MIXER_UnlockAudioDevice();
 }
 
-static void MIXER_Mix_NoSound(void) {
+static void MIXER_Mix_NoSound()
+{
 	MIXER_MixData(mixer.needed);
 	/* Clear piece we've just generated */
 	for (Bitu i=0;i<mixer.needed;i++) {
@@ -684,7 +690,8 @@ public:
 		if (!w) vol1=vol0;
 	}
 
-	void Run(void) {
+	void Run()
+	{
 		if(cmd->FindExist("/LISTMIDI")) {
 			ListMidi();
 			return;
@@ -706,6 +713,7 @@ public:
 		for (chan = mixer.channels;chan;chan = chan->next)
 			ShowVolume(chan->name,chan->volmain[0],chan->volmain[1]);
 	}
+
 private:
 	void ShowVolume(const char * name,float vol0,float vol1) {
 		WriteOut("%-8s %3.0f:%-3.0f  %+3.2f:%-+3.2f \n",name,
@@ -794,7 +802,8 @@ void MIXER_Init(Section* sec) {
 	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
 }
 
-void MIXER_CloseAudioDevice(void) {
+void MIXER_CloseAudioDevice()
+{
 	if (!mixer.nosound) {
 		if (mixer.sdldevice != 0) {
 			SDL_CloseAudioDevice(mixer.sdldevice);

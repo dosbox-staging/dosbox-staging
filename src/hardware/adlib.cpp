@@ -594,7 +594,7 @@ void Module::PortWrite( Bitu port, Bitu val, Bitu iolen ) {
 	//Keep track of last write time
 	lastUsed = PIC_Ticks;
 	//Maybe only enable with a keyon?
-	if ( !mixerChan->enabled ) {
+	if (!mixerChan->is_enabled) {
 		mixerChan->Enable(true);
 	}
 	if ( port&1 ) {

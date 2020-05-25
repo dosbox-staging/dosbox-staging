@@ -40,7 +40,8 @@ static Bit32u cmsBase;
 static saa1099_device* device[2];
 
 static void write_cms(Bitu port, Bitu val, Bitu /* iolen */) {
-	if(cms_chan && (!cms_chan->enabled)) cms_chan->Enable(true);
+	if (cms_chan && (!cms_chan->is_enabled))
+		cms_chan->Enable(true);
 	lastWriteTicks = PIC_Ticks;
 	switch ( port - cmsBase ) {
 	case 1:
