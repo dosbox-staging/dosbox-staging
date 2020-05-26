@@ -1,0 +1,6 @@
+# Security address
+Contact: mailto:dreamer.tan+dosbox-security@gmail.com
+Preferred-Languages: en, pl
+
+# Acknowledgements
+# nobody reported security issues to dosbox-staging yet
