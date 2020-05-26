@@ -367,7 +367,7 @@ extern int stb_vorbis_get_samples_short(stb_vorbis *f, int channels, short **buf
 
 enum STBVorbisError
 {
-   VORBIS__no_error,
+   VORBIS__no_error = 0,
 
    VORBIS_need_more_data=1,             // not a real error
 
@@ -712,9 +712,9 @@ typedef struct
 
 typedef struct
 {
-   uint8 order;
    uint16 rate;
    uint16 bark_map_size;
+   uint8 order;
    uint8 amplitude_bits;
    uint8 amplitude_offset;
    uint8 number_of_books;
@@ -929,9 +929,6 @@ typedef struct stb_vorbis vorb;
 static int error(vorb *f, enum STBVorbisError e)
 {
    f->error = e;
-   if (!f->eof && e != VORBIS_need_more_data) {
-      f->error=e; // breakpoint for debugging
-   }
    return 0;
 }
 
@@ -1680,7 +1677,6 @@ static uint32 get_bits(vorb *f, int n)
          f->valid_bits += 8;
       }
    }
-   if (f->valid_bits < 0) return 0;
    z = f->acc & ((1 << n)-1);
    f->acc >>= n;
    f->valid_bits -= n;
@@ -3311,11 +3307,10 @@ static int vorbis_decode_packet_rest(vorb *f, int *len, Mode *m, int left_start,
                if (val) {
                   step2_flag[low] = step2_flag[high] = 1;
                   step2_flag[j] = 1;
-                  if (val >= room)
-                     if (highroom > lowroom)
-                        finalY[j] = val - lowroom + pred;
-                     else
+                  if (val >= room) {
+                     if (highroom <= lowroom)
                         finalY[j] = pred - val + highroom - 1;
+                  }
                   else
                      if (val & 1)
                         finalY[j] = pred - ((val+1)>>1);
@@ -3937,8 +3932,7 @@ static int start_decoder(vorb *f)
                unsigned int div=1;
                for (k=0; k < c->dimensions; ++k) {
                   int off = (z / div) % c->lookup_values;
-                  float val = mults[off];
-                  val = mults[off]*c->delta_value + c->minimum_value + last;
+                  const float val = mults[off]*c->delta_value + c->minimum_value + last;
                   c->multiplicands[j*c->dimensions + k] = val;
                   if (c->sequence_p)
                      last = val;
@@ -4385,7 +4379,7 @@ stb_vorbis_comment stb_vorbis_get_comment(stb_vorbis *f)
 
 int stb_vorbis_get_error(stb_vorbis *f)
 {
-   int e = f->error;
+   int e = (int)(f->error);
    f->error = VORBIS__no_error;
    return e;
 }
@@ -5050,7 +5044,6 @@ unsigned int stb_vorbis_stream_length_in_samples(stb_vorbis *f)
             // set. whoops!
             break;
          }
-         previous_safe = last_page_loc+1;
          last_page_loc = stb_vorbis_get_file_offset(f);
       }
 
@@ -5208,7 +5201,7 @@ stb_vorbis * stb_vorbis_open_memory(const unsigned char *data, int len, int *err
          return f;
       }
    }
-   if (error) *error = p.error;
+   if (error) *error = (int)(p.error);
    vorbis_deinit(&p);
    return NULL;
 }
@@ -5399,8 +5392,6 @@ int stb_vorbis_get_samples_short_interleaved(stb_vorbis *f, int channels, short 
    float **outputs;
    int len = num_shorts / channels;
    int n=0;
-   int z = f->channels;
-   if (z > channels) z = channels;
    while (n < len) {
       int k = f->channel_buffer_end - f->channel_buffer_start;
       if (n+k >= len) k = len - n;
@@ -5419,8 +5410,6 @@ int stb_vorbis_get_samples_short(stb_vorbis *f, int channels, short **buffer, in
 {
    float **outputs;
    int n=0;
-   int z = f->channels;
-   if (z > channels) z = channels;
    while (n < len) {
       int k = f->channel_buffer_end - f->channel_buffer_start;
       if (n+k >= len) k = len - n;
