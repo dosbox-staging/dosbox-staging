@@ -91,9 +91,14 @@ public:
 	//Previous and next samples
 	Bits prevSample[2];
 	Bits nextSample[2];
+	//Simple way to lower the impact of DC offset. if MIXER_UPRAMP_STEPS is >0.
+	//Still work in progress and thus disabled for now.
+	Bits offset[2];
 	const char * name;
 	bool interpolate;
 	bool enabled;
+	bool last_samples_were_stereo;
+	bool last_samples_were_silence;
 	MixerChannel * next;
 };
 
