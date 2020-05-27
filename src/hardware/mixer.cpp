@@ -18,7 +18,7 @@
 
 
 /*
-	Remove the sdl code from here and have it handeld in the sdlmain.
+	Remove the sdl code from here and have it handled in the sdlmain.
 	That should call the mixer start from there or something.
 */
 
@@ -248,18 +248,53 @@ void MixerChannel::Mix(Bitu _needed) {
 
 void MixerChannel::AddSilence()
 {
-	if (done<needed) {
-		done=needed;
-		//Make sure the next samples are zero when they get switched to prev
-		next_sample[0] = 0;
-		next_sample[1] = 0;
-		//This should trigger an instant request for new samples
-		freq_counter = FREQ_NEXT;
+	if (done < needed) {
+		if(prev_sample[0] == 0 && prev_sample[1] == 0) {
+			done = needed;
+			//Make sure the next samples are zero when they get switched to prev
+			next_sample[0] = 0;
+			next_sample[1] = 0;
+			//This should trigger an instant request for new samples
+			freq_counter = FREQ_NEXT;
+		} else {
+			bool stereo = last_samples_were_stereo;
+			//Position where to write the data
+			Bitu mixpos = mixer.pos + done;
+			while (done < needed) {
+				// Maybe depend on sample rate. (the 4)
+				if (prev_sample[0] > 4)       next_sample[0] = prev_sample[0] - 4;
+				else if (prev_sample[0] < -4) next_sample[0] = prev_sample[0] + 4;
+				else next_sample[0] = 0;
+				if (prev_sample[1] > 4)       next_sample[1] = prev_sample[1] - 4;
+				else if (prev_sample[1] < -4) next_sample[1] = prev_sample[1] + 4;
+				else next_sample[1] = 0;
+
+				mixpos &= MIXER_BUFMASK;
+				Bit32s* write = mixer.work[mixpos];
+
+				write[0] += prev_sample[0] * volmul[0];
+				write[1] += (stereo ? prev_sample[1] : prev_sample[0]) * volmul[1];
+
+				prev_sample[0] = next_sample[0];
+				prev_sample[1] = next_sample[1];
+				mixpos++;
+				done++;
+				freq_counter = FREQ_NEXT;
+			} 
+		}
 	}
+	last_samples_were_silence = true;
+	offset[0] = offset[1] = 0;
 }
+
+//4 seems to work . Disabled for now
+#define MIXER_UPRAMP_STEPS 0
+#define MIXER_UPRAMP_SAVE 512
 
 template<class Type,bool stereo,bool signeddata,bool nativeorder>
 inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
+	last_samples_were_stereo = stereo;
+	
 	//Position where to write the data
 	Bitu mixpos = mixer.pos + done;
 	//Position in the incoming data
@@ -269,8 +304,19 @@ inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 		//Does new data need to get read?
 		while (freq_counter >= FREQ_NEXT) {
 			//Would this overflow the source data, then it's time to leave
-			if (pos >= len)
+			if (pos >= len) {
+				last_samples_were_silence = false;
+#if MIXER_UPRAMP_STEPS > 0
+				if (offset[0] || offset[1]) {
+					//Should be safe to do, as the value inside offset is 16 bit while offset itself is at least 32 bit
+					offset[0] = (offset[0]*(MIXER_UPRAMP_STEPS-1))/MIXER_UPRAMP_STEPS;
+					offset[1] = (offset[1]*(MIXER_UPRAMP_STEPS-1))/MIXER_UPRAMP_STEPS;
+					if (offset[0] < MIXER_UPRAMP_SAVE && offset[0] > -MIXER_UPRAMP_SAVE) offset[0] = 0;
+					if (offset[1] < MIXER_UPRAMP_SAVE && offset[1] > -MIXER_UPRAMP_SAVE) offset[1] = 0;
+				}
+#endif
 				return;
+			}
 			freq_counter -= FREQ_NEXT;
 
 			prev_sample[0] = next_sample[0];
@@ -350,6 +396,20 @@ inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 			}
 			//This sample has been handled now, increase position
 			pos++;
+#if MIXER_UPRAMP_STEPS > 0
+			if (last_samples_were_silence && pos == 1) {
+				offset[0] = next_sample[0] - prev_sample[0];
+				if (stereo) offset[1] = next_sample[1] - prev_sample[1];
+				//Don't bother with small steps.
+				if (offset[0] < (MIXER_UPRAMP_SAVE*4) && offset[0] > (-MIXER_UPRAMP_SAVE*4)) offset[0] = 0;
+				if (offset[1] < (MIXER_UPRAMP_SAVE*4) && offset[1] > (-MIXER_UPRAMP_SAVE*4)) offset[1] = 0;
+			}
+
+			if (offset[0] || offset[1]) {
+				next_sample[0] = next_sample[0] - (offset[0]*(MIXER_UPRAMP_STEPS*static_cast<Bits>(len)-static_cast<Bits>(pos))) /( MIXER_UPRAMP_STEPS*static_cast<Bits>(len) );
+				next_sample[1] = next_sample[1] - (offset[1]*(MIXER_UPRAMP_STEPS*static_cast<Bits>(len)-static_cast<Bits>(pos))) /( MIXER_UPRAMP_STEPS*static_cast<Bits>(len) );
+			}
+#endif
 		}
 
 		//Apply the left and right channel mappers only on write[..]
@@ -468,9 +528,9 @@ void MixerChannel::FillUp()
 {
 	if (!is_enabled || done < mixer.done)
 		return;
-	float index=PIC_TickIndex();
+	float index = PIC_TickIndex();
 	MIXER_LockAudioDevice();
-	Mix((Bitu)(index*mixer.needed));
+	Mix((Bitu)(index * mixer.needed));
 	MIXER_UnlockAudioDevice();
 }
 
@@ -483,7 +543,7 @@ static inline bool Mixer_irq_important()
 }
 
 static Bit32u calc_tickadd(Bit32u freq) {
-#if TICK_SHIFT >16
+#if TICK_SHIFT > 16
 	Bit64u freq64 = static_cast<Bit64u>(freq);
 	freq64 = (freq64<<TICK_SHIFT)/1000;
 	Bit32u r = static_cast<Bit32u>(freq64);

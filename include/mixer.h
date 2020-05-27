@@ -98,10 +98,15 @@ private:
 	Bitu needed = 0u; // Timing on how many samples were needed by the mixer
 	Bits prev_sample[2] = {0}; // Previous and next samples
 	Bits next_sample[2] = {0};
+	// Simple way to lower the impact of DC offset. if MIXER_UPRAMP_STEPS is >0.
+	// Still work in progress and thus disabled for now.
+	Bits offset[2] = {0};
 	int32_t volmul[2] = {0};
 	float scale[2] = {0.0f, 0.0f};
 	uint8_t channel_map[2] = {0u, 0u}; // Output channel mapping
 	bool interpolate = false;
+	bool last_samples_were_stereo = false;
+	bool last_samples_were_silence = true;
 };
 
 MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,const char * name);
