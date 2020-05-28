@@ -55,8 +55,8 @@ struct drmp3_seek_point_serial {
 //   - a pointer to the working dr_mp3 instance
 //   - a template vector of seek_points (the serializeable form)
 struct mp3_t {
-    drmp3* p_dr;    // the actual drmp3 instance we open, read, and seek within
-    std::vector<drmp3_seek_point_serial> seek_points_vector;
+    drmp3* p_dr = nullptr;    // the actual drmp3 instance we open, read, and seek within
+    std::vector<drmp3_seek_point_serial> seek_points_vector = {};
 };
 
 uint64_t populate_seek_points(struct SDL_RWops* const context,
