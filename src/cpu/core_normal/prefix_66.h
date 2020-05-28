@@ -554,14 +554,14 @@
 		break;
 	CASE_D(0xe5)												/* IN EAX,Ib */
 		{
-			Bitu port=Fetchb();
+			uint16_t port=Fetchb();
 			if (CPU_IO_Exception(port,4)) RUNEXCEPTION();
 			reg_eax=IO_ReadD(port);
 			break;
 		}
 	CASE_D(0xe7)												/* OUT Ib,EAX */
 		{
-			Bitu port=Fetchb();
+			uint16_t port=Fetchb();
 			if (CPU_IO_Exception(port,4)) RUNEXCEPTION();
 			IO_WriteD(port,reg_eax);
 			break;

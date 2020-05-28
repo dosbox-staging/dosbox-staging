@@ -514,14 +514,14 @@ void mem_writed(PhysPt address,Bit32u val) {
 	mem_writed_inline(address,val);
 }
 
-static void write_p92(Bitu port,Bitu val,Bitu iolen) {	
+static void write_p92(uint16_t port,Bitu val,Bitu iolen) {	
 	// Bit 0 = system reset (switch back to real mode)
 	if (val&1) E_Exit("XMS: CPU reset via port 0x92 not supported.");
 	memory.a20.controlport = val & ~2;
 	MEM_A20_Enable((val & 2)>0);
 }
 
-static Bitu read_p92(Bitu port,Bitu iolen) {
+static Bitu read_p92(uint16_t port,Bitu iolen) {
 	return memory.a20.controlport | (memory.a20.enabled ? 0x02 : 0);
 }
 

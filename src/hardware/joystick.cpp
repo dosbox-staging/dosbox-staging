@@ -144,7 +144,7 @@ bool button_wrapping_enabled = true;
 
 extern bool autofire; //sdl_mapper.cpp
 
-static Bitu read_p201(Bitu port,Bitu iolen) {
+static Bitu read_p201(uint16_t port,Bitu iolen) {
 	/* Reset Joystick to 0 after TIMEOUT ms */
 	if(write_active && ((PIC_Ticks - last_write) > TIMEOUT)) {
 		write_active = false;
@@ -180,7 +180,7 @@ static Bitu read_p201(Bitu port,Bitu iolen) {
 	return ret;
 }
 
-static Bitu read_p201_timed(Bitu port,Bitu iolen) {
+static Bitu read_p201_timed(uint16_t port,Bitu iolen) {
 	Bit8u ret=0xff;
 	double currentTick = PIC_FullIndex();
 	if( stick[0].enabled ){
@@ -203,7 +203,7 @@ static Bitu read_p201_timed(Bitu port,Bitu iolen) {
 	return ret;
 }
 
-static void write_p201(Bitu port,Bitu val,Bitu iolen) {
+static void write_p201(uint16_t port,Bitu val,Bitu iolen) {
 	/* Store writetime index */
 	write_active = true;
 	last_write = PIC_Ticks;
@@ -218,7 +218,7 @@ static void write_p201(Bitu port,Bitu val,Bitu iolen) {
 	}
 
 }
-static void write_p201_timed(Bitu port,Bitu val,Bitu iolen) {
+static void write_p201_timed(uint16_t port,Bitu val,Bitu iolen) {
 	// Axes take time = 24.2 microseconds + ( 0.011 microsecons/ohm * resistance )
 	// to reset to 0
 	// Pre-calculate the time at which each axis hits 0 here

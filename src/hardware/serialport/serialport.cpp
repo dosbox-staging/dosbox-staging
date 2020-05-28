@@ -97,7 +97,7 @@ device_COM::~device_COM() {
 // COM1 - COM4 objects
 CSerial *serialports[SERIAL_MAX_PORTS] = {nullptr};
 
-static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
+static Bitu SERIAL_Read (uint16_t port, Bitu iolen) {
 	(void)iolen; // unused, but required for API compliance
 	uint32_t i = 0;
 	uint32_t retval = 0;
@@ -137,7 +137,7 @@ static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
 #endif
 	return static_cast<Bitu>(retval);
 }
-static void SERIAL_Write (Bitu port, Bitu val, Bitu) {
+static void SERIAL_Write (uint16_t port, Bitu val, Bitu) {
 	uint32_t i;
 	const uint8_t offset_type = static_cast<uint8_t>(port) & 0x7;
 	switch(port&0xff8) {
@@ -1159,7 +1159,7 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 	overrunIF0=0;
 	breakErrors=0;
 
-	for (uint32_t i = 0; i <= 7; i++) {
+	for (uint16_t i = 0; i <= 7; i++) {
 		WriteHandler[i].Install (i + base, SERIAL_Write, IO_MB);
 		ReadHandler[i].Install(i + base, SERIAL_Read, IO_MB);
 	}

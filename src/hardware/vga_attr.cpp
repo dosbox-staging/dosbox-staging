@@ -90,14 +90,14 @@ void VGA_ATTR_SetPalette(Bit8u index, Bit8u val) {
 	VGA_DAC_CombineColor(index,val);
 }
 
-Bitu read_p3c0(Bitu /*port*/,Bitu /*iolen*/) {
+Bitu read_p3c0(uint16_t port,Bitu /*iolen*/) {
 	// Wcharts, Win 3.11 & 95 SVGA
 	Bitu retval = attr(index) & 0x1f;
 	if (!(attr(disabled) & 0x1)) retval |= 0x20;
 	return retval;
 }
  
-void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
+void write_p3c0(uint16_t port,Bitu val,Bitu iolen) {
 	if (!vga.internal.attrindex) {
 		attr(index)=val & 0x1F;
 		vga.internal.attrindex=true;
@@ -257,7 +257,7 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 	}
 }
 
-Bitu read_p3c1(Bitu /*port*/,Bitu iolen) {
+Bitu read_p3c1(uint16_t port,Bitu iolen) {
 //	vga.internal.attrindex=false;
 	switch (attr(index)) {
 			/* Palette */

@@ -23,15 +23,15 @@
 
 #define seq(blah) vga.seq.blah
 
-Bitu read_p3c4(Bitu /*port*/,Bitu /*iolen*/) {
+Bitu read_p3c4(uint16_t port,Bitu /*iolen*/) {
 	return seq(index);
 }
 
-void write_p3c4(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
+void write_p3c4(uint16_t port,Bitu val,Bitu /*iolen*/) {
 	seq(index)=val;
 }
 
-void write_p3c5(Bitu /*port*/,Bitu val,Bitu iolen) {
+void write_p3c5(uint16_t port,Bitu val,Bitu iolen) {
 //	LOG_MSG("SEQ WRITE reg %X val %X",seq(index),val);
 	switch(seq(index)) {
 	case 0:		/* Reset */
@@ -120,7 +120,7 @@ void write_p3c5(Bitu /*port*/,Bitu val,Bitu iolen) {
 }
 
 
-Bitu read_p3c5(Bitu /*port*/,Bitu iolen) {
+Bitu read_p3c5(uint16_t port,Bitu iolen) {
 //	LOG_MSG("VGA:SEQ:Read from index %2X",seq(index));
 	switch(seq(index)) {
 	case 0:			/* Reset */

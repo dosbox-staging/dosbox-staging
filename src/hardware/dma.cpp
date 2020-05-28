@@ -35,7 +35,7 @@ static Bit32u dma_wrapping = 0xffff;
 
 static void UpdateEMSMapping(void) {
 	/* if EMS is not present, this will result in a 1:1 mapping */
-	Bitu i;
+	uint16_t i;
 	for (i=0;i<0x10;i++) {
 		ems_board_mapping[EMM_PAGEFRAME4K+i]=paging.firstmb[EMM_PAGEFRAME4K+i];
 	}
@@ -108,7 +108,7 @@ bool SecondDMAControllerAvailable(void) {
 	else return false;
 }
 
-static void DMA_Write_Port(Bitu port,Bitu val,Bitu /*iolen*/) {
+static void DMA_Write_Port(uint16_t port,Bitu val,Bitu /*iolen*/) {
 	//LOG(LOG_DMACONTROL,LOG_ERROR)("Write %" sBitfs(X) " %" sBitfs(X),port,val);
 	if (port<0x10) {
 		/* write to the first DMA controller (channels 0-3) */
@@ -131,7 +131,7 @@ static void DMA_Write_Port(Bitu port,Bitu val,Bitu /*iolen*/) {
 	}
 }
 
-static Bitu DMA_Read_Port(Bitu port,Bitu iolen) {
+static Bitu DMA_Read_Port(uint16_t port,Bitu iolen) {
 	//LOG(LOG_DMACONTROL,LOG_ERROR)("Read %" sBitfs(X),port);
 	if (port<0x10) {
 		/* read from the first DMA controller (channels 0-3) */
@@ -349,7 +349,7 @@ again:
 class DMA:public Module_base{
 public:
 	DMA(Section* configuration):Module_base(configuration){
-		Bitu i;
+		uint16_t i;
 		DmaControllers[0] = new DmaController(0);
 		if (IS_EGAVGA_ARCH) DmaControllers[1] = new DmaController(1);
 		else DmaControllers[1] = NULL;
@@ -403,7 +403,7 @@ void DMA_Init(Section* sec) {
 	DMA_SetWrapping(0xffff);
 	test = new DMA(sec);
 	sec->AddDestroyFunction(&DMA_Destroy);
-	Bitu i;
+	uint16_t i;
 	for (i=0;i<LINK_START;i++) {
 		ems_board_mapping[i]=i;
 	}

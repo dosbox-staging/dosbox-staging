@@ -30,14 +30,14 @@
 IO_WriteHandler * io_writehandlers[3][IO_MAX];
 IO_ReadHandler * io_readhandlers[3][IO_MAX];
 
-static Bitu IO_ReadBlocked(Bitu /*port*/,Bitu /*iolen*/) {
+static Bitu IO_ReadBlocked(uint16_t port,Bitu /*iolen*/) {
 	return ~0;
 }
 
-static void IO_WriteBlocked(Bitu /*port*/,Bitu /*val*/,Bitu /*iolen*/) {
+static void IO_WriteBlocked(uint16_t port,Bitu /*val*/,Bitu /*iolen*/) {
 }
 
-static Bitu IO_ReadDefault(Bitu port,Bitu iolen) {
+static Bitu IO_ReadDefault(uint16_t port,Bitu iolen) {
 	switch (iolen) {
 	case 1:
 		LOG(LOG_IO,LOG_WARN)("Read from port %04X",port);
@@ -55,7 +55,7 @@ static Bitu IO_ReadDefault(Bitu port,Bitu iolen) {
 	return 0;
 }
 
-void IO_WriteDefault(Bitu port,Bitu val,Bitu iolen) {
+void IO_WriteDefault(uint16_t port,Bitu val,Bitu iolen) {
 	switch (iolen) {
 	case 1:
 		LOG(LOG_IO,LOG_WARN)("Writing %02X to port %04X",val,port);
@@ -72,7 +72,7 @@ void IO_WriteDefault(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
-void IO_RegisterReadHandler(Bitu port,IO_ReadHandler * handler,Bitu mask,Bitu range) {
+void IO_RegisterReadHandler(uint16_t port,IO_ReadHandler * handler,Bitu mask,Bitu range) {
 	while (range--) {
 		if (mask&IO_MB) io_readhandlers[0][port]=handler;
 		if (mask&IO_MW) io_readhandlers[1][port]=handler;
@@ -81,7 +81,7 @@ void IO_RegisterReadHandler(Bitu port,IO_ReadHandler * handler,Bitu mask,Bitu ra
 	}
 }
 
-void IO_RegisterWriteHandler(Bitu port,IO_WriteHandler * handler,Bitu mask,Bitu range) {
+void IO_RegisterWriteHandler(uint16_t port,IO_WriteHandler * handler,Bitu mask,Bitu range) {
 	while (range--) {
 		if (mask&IO_MB) io_writehandlers[0][port]=handler;
 		if (mask&IO_MW) io_writehandlers[1][port]=handler;
@@ -90,7 +90,7 @@ void IO_RegisterWriteHandler(Bitu port,IO_WriteHandler * handler,Bitu mask,Bitu 
 	}
 }
 
-void IO_FreeReadHandler(Bitu port,Bitu mask,Bitu range) {
+void IO_FreeReadHandler(uint16_t port,Bitu mask,Bitu range) {
 	while (range--) {
 		if (mask&IO_MB) io_readhandlers[0][port]=IO_ReadDefault;
 		if (mask&IO_MW) io_readhandlers[1][port]=IO_ReadDefault;
@@ -99,7 +99,7 @@ void IO_FreeReadHandler(Bitu port,Bitu mask,Bitu range) {
 	}
 }
 
-void IO_FreeWriteHandler(Bitu port,Bitu mask,Bitu range) {
+void IO_FreeWriteHandler(uint16_t port,Bitu mask,Bitu range) {
 	while (range--) {
 		if (mask&IO_MB) io_writehandlers[0][port]=IO_WriteDefault;
 		if (mask&IO_MW) io_writehandlers[1][port]=IO_WriteDefault;
@@ -108,7 +108,7 @@ void IO_FreeWriteHandler(Bitu port,Bitu mask,Bitu range) {
 	}
 }
 
-void IO_ReadHandleObject::Install(Bitu port,IO_ReadHandler * handler,Bitu mask,Bitu range) {
+void IO_ReadHandleObject::Install(uint16_t port,IO_ReadHandler * handler,Bitu mask,Bitu range) {
 	if(!installed) {
 		installed=true;
 		m_port=port;
@@ -116,7 +116,7 @@ void IO_ReadHandleObject::Install(Bitu port,IO_ReadHandler * handler,Bitu mask,B
 		m_range=range;
 		IO_RegisterReadHandler(port,handler,mask,range);
 	} else
-		E_Exit("IO_readHandler already installed port %#" PRIxPTR, port);
+		E_Exit("IO_readHandler already installed port %#" PRIx16, port);
 }
 
 void IO_ReadHandleObject::Uninstall(){
@@ -129,7 +129,7 @@ IO_ReadHandleObject::~IO_ReadHandleObject(){
 	Uninstall();
 }
 
-void IO_WriteHandleObject::Install(Bitu port,IO_WriteHandler * handler,Bitu mask,Bitu range) {
+void IO_WriteHandleObject::Install(uint16_t port,IO_WriteHandler * handler,Bitu mask,Bitu range) {
 	if(!installed) {
 		installed=true;
 		m_port=port;
@@ -137,7 +137,7 @@ void IO_WriteHandleObject::Install(Bitu port,IO_WriteHandler * handler,Bitu mask
 		m_range=range;
 		IO_RegisterWriteHandler(port,handler,mask,range);
 	} else
-		E_Exit("IO_writeHandler already installed port %#" PRIxPTR, port);
+		E_Exit("IO_writeHandler already installed port %#" PRIx16, port);
 }
 
 void IO_WriteHandleObject::Uninstall() {
@@ -148,7 +148,7 @@ void IO_WriteHandleObject::Uninstall() {
 
 IO_WriteHandleObject::~IO_WriteHandleObject(){
 	Uninstall();
-	// LOG_MSG("FreeWritehandler called with port %#" PRIxPTR,m_port);
+	// LOG_MSG("FreeWritehandler called with port %#" PRIx16,m_port);
 }
 
 struct IOF_Entry {
@@ -225,7 +225,7 @@ inline void IO_USEC_write_delay() {
 #ifdef ENABLE_PORTLOG
 static Bit8u crtc_index = 0;
 const char* const len_type[] = {" 8","16","32"};
-void log_io(Bitu width, bool write, Bitu port, Bitu val) {
+void log_io(Bitu width, bool write, uint16_t port, Bitu val) {
 	switch(width) {
 	case 0:
 		val&=0xff;
@@ -288,7 +288,7 @@ void log_io(Bitu width, bool write, Bitu port, Bitu val) {
 #endif
 
 
-void IO_WriteB(Bitu port,Bitu val) {
+void IO_WriteB(uint16_t port,Bitu val) {
 	log_io(0, true, port, val);
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,1)))) {
 		LazyFlags old_lflags;
@@ -324,7 +324,7 @@ void IO_WriteB(Bitu port,Bitu val) {
 	}
 }
 
-void IO_WriteW(Bitu port,Bitu val) {
+void IO_WriteW(uint16_t port,Bitu val) {
 	log_io(1, true, port, val);
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,2)))) {
 		LazyFlags old_lflags;
@@ -360,7 +360,7 @@ void IO_WriteW(Bitu port,Bitu val) {
 	}
 }
 
-void IO_WriteD(Bitu port,Bitu val) {
+void IO_WriteD(uint16_t port,Bitu val) {
 	log_io(2, true, port, val);
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,4)))) {
 		LazyFlags old_lflags;
@@ -393,7 +393,7 @@ void IO_WriteD(Bitu port,Bitu val) {
 	else io_writehandlers[2][port](port,val,4);
 }
 
-Bitu IO_ReadB(Bitu port) {
+Bitu IO_ReadB(uint16_t port) {
 	Bitu retval;
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,1)))) {
 		LazyFlags old_lflags;
@@ -432,7 +432,7 @@ Bitu IO_ReadB(Bitu port) {
 	return retval;
 }
 
-Bitu IO_ReadW(Bitu port) {
+Bitu IO_ReadW(uint16_t port) {
 	Bitu retval;
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,2)))) {
 		LazyFlags old_lflags;
@@ -470,7 +470,7 @@ Bitu IO_ReadW(Bitu port) {
 	return retval;
 }
 
-Bitu IO_ReadD(Bitu port) {
+Bitu IO_ReadD(uint16_t port) {
 	Bitu retval;
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,4)))) {
 		LazyFlags old_lflags;

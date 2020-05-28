@@ -194,7 +194,7 @@ static void counter_latch(Bitu counter) {
 }
 
 
-static void write_latch(Bitu port,Bitu val,Bitu /*iolen*/) {
+static void write_latch(uint16_t port,Bitu val,Bitu /*iolen*/) {
 //LOG(LOG_PIT,LOG_ERROR)("port %X write:%X state:%X",port,val,pit[port-0x40].write_state);
 	Bitu counter=port-0x40;
 	PIT_Block * p=&pit[counter];
@@ -252,7 +252,7 @@ static void write_latch(Bitu port,Bitu val,Bitu /*iolen*/) {
     }
 }
 
-static Bitu read_latch(Bitu port,Bitu /*iolen*/) {
+static Bitu read_latch(uint16_t port,Bitu /*iolen*/) {
 //LOG(LOG_PIT,LOG_ERROR)("port read %X",port);
 	Bit32u counter=port-0x40;
 	Bit8u ret=0;
@@ -293,7 +293,7 @@ static Bitu read_latch(Bitu port,Bitu /*iolen*/) {
 	return ret;
 }
 
-static void write_p43(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
+static void write_p43(uint16_t port,Bitu val,Bitu /*iolen*/) {
 //LOG(LOG_PIT,LOG_ERROR)("port 43 %X",val);
 	Bitu latch=(val >> 6) & 0x03;
 	switch (latch) {

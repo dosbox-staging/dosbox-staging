@@ -658,8 +658,8 @@ public:
 	}
 };
 
-extern void XGA_Write(Bitu port, Bitu val, Bitu len);
-extern Bitu XGA_Read(Bitu port, Bitu len);
+extern void XGA_Write(uint16_t port, Bitu val, Bitu len);
+extern Bitu XGA_Read(uint16_t port, Bitu len);
 
 class VGA_MMIO_Handler : public PageHandler {
 public:
@@ -667,28 +667,28 @@ public:
 		flags=PFLAG_NOCODE;
 	}
 	void writeb(PhysPt addr,Bitu val) {
-		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		uint16_t port = PAGING_GetPhysicalAddress(addr) & 0xffff;
 		XGA_Write(port, val, 1);
 	}
 	void writew(PhysPt addr,Bitu val) {
-		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		uint16_t port = PAGING_GetPhysicalAddress(addr) & 0xffff;
 		XGA_Write(port, val, 2);
 	}
 	void writed(PhysPt addr,Bitu val) {
-		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		uint16_t port = PAGING_GetPhysicalAddress(addr) & 0xffff;
 		XGA_Write(port, val, 4);
 	}
 
 	Bitu readb(PhysPt addr) {
-		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		uint16_t port = PAGING_GetPhysicalAddress(addr) & 0xffff;
 		return XGA_Read(port, 1);
 	}
 	Bitu readw(PhysPt addr) {
-		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		uint16_t port = PAGING_GetPhysicalAddress(addr) & 0xffff;
 		return XGA_Read(port, 2);
 	}
 	Bitu readd(PhysPt addr) {
-		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		uint16_t port = PAGING_GetPhysicalAddress(addr) & 0xffff;
 		return XGA_Read(port, 4);
 	}
 };

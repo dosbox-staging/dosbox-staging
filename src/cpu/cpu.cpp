@@ -520,7 +520,7 @@ doconforming:
 	return true;
 }
 
-bool CPU_IO_Exception(Bitu port,Bitu size) {
+bool CPU_IO_Exception(uint16_t port,Bitu size) {
 	if (cpu.pmode && ((GETFLAG_IOPL<cpu.cpl) || GETFLAG(VM))) {
 		cpu.mpl=0;
 		if (!cpu_tss.is386) goto doexception;

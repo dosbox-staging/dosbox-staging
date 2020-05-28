@@ -40,7 +40,7 @@ static void MPU401_EOIHandlerDispatch(void);
 enum MpuMode { M_UART,M_INTELLIGENT };
 enum MpuDataType {T_OVERFLOW,T_MARK,T_MIDI_SYS,T_MIDI_NORM,T_COMMAND};
 
-static void MPU401_WriteData(Bitu port,Bitu val,Bitu iolen);
+static void MPU401_WriteData(uint16_t port,Bitu val,Bitu iolen);
 
 /* Messages sent to MPU-401 from host */
 #define MSG_EOX	                        0xf7
@@ -111,14 +111,14 @@ static void ClrQueue(void) {
 	mpu.queue_pos=0;
 }
 
-static Bitu MPU401_ReadStatus(Bitu port,Bitu iolen) {
+static Bitu MPU401_ReadStatus(uint16_t port,Bitu iolen) {
 	Bit8u ret=0x3f;	/* Bits 6 and 7 clear */
 	if (mpu.state.cmd_pending) ret|=0x40;
 	if (!mpu.queue_used) ret|=0x80;
 	return ret;
 }
 
-static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
+static void MPU401_WriteCommand(uint16_t port,Bitu val,Bitu iolen) {
 	if (mpu.mode==M_UART && val!=0xff) return;
 	if (mpu.state.reset) {
 		if (mpu.state.cmd_pending || val!=0xff) {
@@ -267,7 +267,7 @@ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 	QueueByte(MSG_MPU_ACK);
 }
 
-static Bitu MPU401_ReadData(Bitu port,Bitu iolen) {
+static Bitu MPU401_ReadData(uint16_t port,Bitu iolen) {
 	Bit8u ret=MSG_MPU_ACK;
 	if (mpu.queue_used) {
 		if (mpu.queue_pos>=MPU401_QUEUE) mpu.queue_pos-=MPU401_QUEUE;
@@ -300,7 +300,7 @@ static Bitu MPU401_ReadData(Bitu port,Bitu iolen) {
 	return ret;
 }
 
-static void MPU401_WriteData(Bitu port,Bitu val,Bitu iolen) {
+static void MPU401_WriteData(uint16_t port,Bitu val,Bitu iolen) {
 	if (mpu.mode==M_UART) {MIDI_RawOutByte(val);return;}
 	switch (mpu.state.command_byte) {	/* 0xe# command data */
 		case 0x00:

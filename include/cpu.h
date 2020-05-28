@@ -133,7 +133,7 @@ bool CPU_PUSHF(Bitu use32);
 bool CPU_CLI(void);
 bool CPU_STI(void);
 
-bool CPU_IO_Exception(Bitu port,Bitu size);
+bool CPU_IO_Exception(uint16_t port,Bitu size);
 void CPU_RunException(void);
 
 void CPU_ENTER(bool use32,Bitu bytes,Bitu level);

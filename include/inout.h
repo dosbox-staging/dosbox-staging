@@ -27,25 +27,25 @@
 #define IO_MD	0x4
 #define IO_MA	(IO_MB | IO_MW | IO_MD )
 
-typedef Bitu IO_ReadHandler(Bitu port,Bitu iolen);
-typedef void IO_WriteHandler(Bitu port,Bitu val,Bitu iolen);
+typedef Bitu IO_ReadHandler(uint16_t port,Bitu iolen);
+typedef void IO_WriteHandler(uint16_t port,Bitu val,Bitu iolen);
 
 extern IO_WriteHandler * io_writehandlers[3][IO_MAX];
 extern IO_ReadHandler * io_readhandlers[3][IO_MAX];
 
-void IO_RegisterReadHandler(Bitu port,IO_ReadHandler * handler,Bitu mask,Bitu range=1);
-void IO_RegisterWriteHandler(Bitu port,IO_WriteHandler * handler,Bitu mask,Bitu range=1);
+void IO_RegisterReadHandler(uint16_t port,IO_ReadHandler * handler,Bitu mask,Bitu range=1);
+void IO_RegisterWriteHandler(uint16_t port,IO_WriteHandler * handler,Bitu mask,Bitu range=1);
 
-void IO_FreeReadHandler(Bitu port,Bitu mask,Bitu range=1);
-void IO_FreeWriteHandler(Bitu port,Bitu mask,Bitu range=1);
+void IO_FreeReadHandler(uint16_t port,Bitu mask,Bitu range=1);
+void IO_FreeWriteHandler(uint16_t port,Bitu mask,Bitu range=1);
 
-void IO_WriteB(Bitu port,Bitu val);
-void IO_WriteW(Bitu port,Bitu val);
-void IO_WriteD(Bitu port,Bitu val);
+void IO_WriteB(uint16_t port,Bitu val);
+void IO_WriteW(uint16_t port,Bitu val);
+void IO_WriteD(uint16_t port,Bitu val);
 
-Bitu IO_ReadB(Bitu port);
-Bitu IO_ReadW(Bitu port);
-Bitu IO_ReadD(Bitu port);
+Bitu IO_ReadB(uint16_t port);
+Bitu IO_ReadW(uint16_t port);
+Bitu IO_ReadD(uint16_t port);
 
 /* Classes to manage the IO objects created by the various devices.
  * The io objects will remove itself on destruction.*/
@@ -63,21 +63,21 @@ public:
 };
 class IO_ReadHandleObject: private IO_Base{
 public:
-	void Install(Bitu port,IO_ReadHandler * handler,Bitu mask,Bitu range=1);
+	void Install(uint16_t port,IO_ReadHandler * handler,Bitu mask,Bitu range=1);
 	void Uninstall();
 	~IO_ReadHandleObject();
 };
 class IO_WriteHandleObject: private IO_Base{
 public:
-	void Install(Bitu port,IO_WriteHandler * handler,Bitu mask,Bitu range=1);
+	void Install(uint16_t port,IO_WriteHandler * handler,Bitu mask,Bitu range=1);
 	void Uninstall();
 	~IO_WriteHandleObject();
 };
 
-static INLINE void IO_Write(Bitu port,Bit8u val) {
+static INLINE void IO_Write(uint16_t port,Bit8u val) {
 	IO_WriteB(port,val);
 }
-static INLINE Bit8u IO_Read(Bitu port){
+static INLINE Bit8u IO_Read(uint16_t port){
 	return (Bit8u)IO_ReadB(port);
 }
 

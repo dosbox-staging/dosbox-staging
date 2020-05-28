@@ -590,7 +590,7 @@ Bitu Module::CtrlRead( void ) {
 }
 
 
-void Module::PortWrite( Bitu port, Bitu val, Bitu iolen ) {
+void Module::PortWrite( uint16_t port, Bitu val, Bitu iolen ) {
 	//Keep track of last write time
 	lastUsed = PIC_Ticks;
 	//Maybe only enable with a keyon?
@@ -665,7 +665,7 @@ void Module::PortWrite( Bitu port, Bitu val, Bitu iolen ) {
 }
 
 
-Bitu Module::PortRead( Bitu port, Bitu iolen ) {
+Bitu Module::PortRead( uint16_t port, Bitu iolen ) {
 	switch ( mode ) {
 	case MODE_OPL2:
 		//We allocated 4 ports, so just return -1 for the higher ones
@@ -736,11 +736,11 @@ static void OPL_CallBack(Bitu len) {
 	}
 }
 
-static Bitu OPL_Read(Bitu port,Bitu iolen) {
+static Bitu OPL_Read(uint16_t port,Bitu iolen) {
 	return module->PortRead( port, iolen );
 }
 
-void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
+void OPL_Write(uint16_t port,Bitu val,Bitu iolen) {
 	module->PortWrite( port, val, iolen );
 }
 
@@ -840,7 +840,7 @@ Module::Module(Section *configuration)
 	  capture(nullptr)
 {
 	Section_prop * section=static_cast<Section_prop *>(configuration);
-	Bitu base = section->Get_hex("sbbase");
+	uint16_t base = section->Get_hex("sbbase");
 	Bitu rate = section->Get_int("oplrate");
 	//Make sure we can't select lower than 8000 to prevent fixed point issues
 	if ( rate < 8000 )

@@ -27,15 +27,15 @@
 #include "render.h"
 #include "mapper.h"
 
-static void write_crtc_index_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
+static void write_crtc_index_other(uint16_t port,Bitu val,Bitu /*iolen*/) {
 	vga.other.index=(Bit8u)val;
 }
 
-static Bitu read_crtc_index_other(Bitu /*port*/,Bitu /*iolen*/) {
+static Bitu read_crtc_index_other(uint16_t port,Bitu /*iolen*/) {
 	return vga.other.index;
 }
 
-static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
+static void write_crtc_data_other(uint16_t port,Bitu val,Bitu /*iolen*/) {
 	switch (vga.other.index) {
 	case 0x00:		//Horizontal total
 		if (vga.other.htotal ^ val) VGA_StartResize();
@@ -110,7 +110,7 @@ static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		LOG(LOG_VGAMISC,LOG_NORMAL)("MC6845:Write %X to illegal index %x",val,vga.other.index);
 	}
 }
-static Bitu read_crtc_data_other(Bitu /*port*/,Bitu /*iolen*/) {
+static Bitu read_crtc_data_other(uint16_t port,Bitu /*iolen*/) {
 	switch (vga.other.index) {
 	case 0x00:		//Horizontal total
 		return vga.other.htotal;
@@ -154,7 +154,7 @@ static Bitu read_crtc_data_other(Bitu /*port*/,Bitu /*iolen*/) {
 	return (Bitu)(~0);
 }
 
-static void write_lightpen(Bitu port,Bitu val,Bitu) {
+static void write_lightpen(uint16_t port,Bitu val,Bitu) {
 	switch (port) {
 	case 0x3db:	// Clear lightpen latch
 		vga.other.lightpen_triggered = false;
@@ -423,7 +423,7 @@ static void write_cga_color_select(Bitu val) {
 	}
 }
 
-static void write_cga(Bitu port,Bitu val,Bitu /*iolen*/) {
+static void write_cga(uint16_t port,Bitu val,Bitu /*iolen*/) {
 	switch (port) {
 	case 0x3d8:
 		vga.tandy.mode_control=(Bit8u)val;
@@ -623,7 +623,7 @@ static void write_tandy_reg(Bit8u val) {
 	}
 }
 
-static void write_tandy(Bitu port,Bitu val,Bitu /*iolen*/) {
+static void write_tandy(uint16_t port,Bitu val,Bitu /*iolen*/) {
 	switch (port) {
 	case 0x3d8:
 		val &= 0x3f; // only bits 0-6 are used
@@ -670,7 +670,7 @@ static void write_tandy(Bitu port,Bitu val,Bitu /*iolen*/) {
 	}
 }
 
-static void write_pcjr(Bitu port,Bitu val,Bitu /*iolen*/) {
+static void write_pcjr(uint16_t port,Bitu val,Bitu /*iolen*/) {
 	switch (port) {
 	case 0x3da:
 		if (vga.tandy.pcjr_flipflop) write_tandy_reg((Bit8u)val);
@@ -774,7 +774,7 @@ void Herc_Palette(void) {
 	}
 }
 
-static void write_hercules(Bitu port,Bitu val,Bitu /*iolen*/) {
+static void write_hercules(uint16_t port,Bitu val,Bitu /*iolen*/) {
 	switch (port) {
 	case 0x3b8: {
 		// the protected bits can always be cleared but only be set if the 
@@ -819,12 +819,12 @@ static void write_hercules(Bitu port,Bitu val,Bitu /*iolen*/) {
 	}
 }
 
-/* static Bitu read_hercules(Bitu port,Bitu iolen) {
+/* static Bitu read_hercules(uint16_t port,Bitu iolen) {
 	LOG_MSG("read from Herc port %x",port);
 	return 0;
 } */
 
-Bitu read_herc_status(Bitu /*port*/,Bitu /*iolen*/) {
+Bitu read_herc_status(uint16_t port,Bitu /*iolen*/) {
 	// 3BAh (R):  Status Register
 	// bit   0  Horizontal sync
 	//       1  Light pen status (only some cards)
@@ -925,7 +925,7 @@ void VGA_SetupOther(void) {
 		IO_RegisterReadHandler(0x3ba,read_herc_status,IO_MB);
 	} else if (!IS_EGAVGA_ARCH) {
 		Bitu base=0x3d0;
-		for (Bitu port_ct=0; port_ct<4; port_ct++) {
+		for (uint16_t port_ct=0; port_ct<4; port_ct++) {
 			IO_RegisterWriteHandler(base+port_ct*2,write_crtc_index_other,IO_MB);
 			IO_RegisterWriteHandler(base+port_ct*2+1,write_crtc_data_other,IO_MB);
 			IO_RegisterReadHandler(base+port_ct*2,read_crtc_index_other,IO_MB);

@@ -32,18 +32,18 @@
 void VGA_MapMMIO(void);
 void VGA_UnmapMMIO(void);
 
-void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen);
+void vga_write_p3d5(uint16_t port,Bitu val,Bitu iolen);
 Bitu DEBUG_EnableDebugger(void);
 
-void vga_write_p3d4(Bitu port,Bitu val,Bitu iolen) {
+void vga_write_p3d4(uint16_t port,Bitu val,Bitu iolen) {
 	crtc(index)=val;
 }
 
-Bitu vga_read_p3d4(Bitu port,Bitu iolen) {
+Bitu vga_read_p3d4(uint16_t port,Bitu iolen) {
 	return crtc(index);
 }
 
-void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
+void vga_write_p3d5(uint16_t port,Bitu val,Bitu iolen) {
 //	if (crtc(index)>0x18) LOG_MSG("VGA CRCT write %X to reg %X",val,crtc(index));
 	switch(crtc(index)) {
 	case 0x00:	/* Horizontal Total Register */
@@ -367,7 +367,7 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
-Bitu vga_read_p3d5(Bitu port,Bitu iolen) {
+Bitu vga_read_p3d5(uint16_t port,Bitu iolen) {
 //	LOG_MSG("VGA CRCT read from reg %X",crtc(index));
 	switch(crtc(index)) {
 	case 0x00:	/* Horizontal Total Register */

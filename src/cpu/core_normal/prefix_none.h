@@ -870,28 +870,28 @@
 		break;
 	CASE_B(0xe4)												/* IN AL,Ib */
 		{	
-			Bitu port=Fetchb();
+			uint16_t port=Fetchb();
 			if (CPU_IO_Exception(port,1)) RUNEXCEPTION();
 			reg_al=IO_ReadB(port);
 			break;
 		}
 	CASE_W(0xe5)												/* IN AX,Ib */
 		{	
-			Bitu port=Fetchb();
+			uint16_t port=Fetchb();
 			if (CPU_IO_Exception(port,2)) RUNEXCEPTION();
 			reg_ax=IO_ReadW(port);
 			break;
 		}
 	CASE_B(0xe6)												/* OUT Ib,AL */
 		{
-			Bitu port=Fetchb();
+			uint16_t port=Fetchb();
 			if (CPU_IO_Exception(port,1)) RUNEXCEPTION();
 			IO_WriteB(port,reg_al);
 			break;
 		}		
 	CASE_W(0xe7)												/* OUT Ib,AX */
 		{
-			Bitu port=Fetchb();
+			uint16_t port=Fetchb();
 			if (CPU_IO_Exception(port,2)) RUNEXCEPTION();
 			IO_WriteW(port,reg_ax);
 			break;

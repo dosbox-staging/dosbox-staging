@@ -39,7 +39,7 @@ static Bit32u lastWriteTicks;
 static Bit32u cmsBase;
 static saa1099_device* device[2];
 
-static void write_cms(Bitu port, Bitu val, Bitu /* iolen */) {
+static void write_cms(uint16_t port, Bitu val, Bitu /* iolen */) {
 	if (cms_chan && (!cms_chan->is_enabled))
 		cms_chan->Enable(true);
 	lastWriteTicks = PIC_Ticks;
@@ -95,7 +95,7 @@ static void CMS_CallBack(Bitu len) {
 // The Gameblaster detection
 static Bit8u cms_detect_register = 0xff;
 
-static void write_cms_detect(Bitu port, Bitu val, Bitu /* iolen */) {
+static void write_cms_detect(uint16_t port, Bitu val, Bitu /* iolen */) {
 	switch ( port - cmsBase ) {
 	case 0x6:
 	case 0x7:
@@ -104,7 +104,7 @@ static void write_cms_detect(Bitu port, Bitu val, Bitu /* iolen */) {
 	}
 }
 
-static Bitu read_cms_detect(Bitu port, Bitu /* iolen */) {
+static Bitu read_cms_detect(uint16_t port, Bitu /* iolen */) {
 	Bit8u retval = 0xff;
 	switch ( port - cmsBase ) {
 	case 0x4:

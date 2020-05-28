@@ -177,7 +177,7 @@ static struct {
 	PICEntry * next_entry;
 } pic_queue;
 
-static void write_command(Bitu port,Bitu val,Bitu iolen) {
+static void write_command(uint16_t port,Bitu val,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x20 ? 0 : 1];
 
 	if (GCC_UNLIKELY(val&0x10)) {		// ICW1 issued
@@ -229,7 +229,7 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 	}	// end OCW2
 }
 
-static void write_data(Bitu port,Bitu val,Bitu iolen) {
+static void write_data(uint16_t port,Bitu val,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x21 ? 0 : 1];
 	switch(pic->icw_index) {
 	case 0:                        /* mask register */
@@ -278,7 +278,7 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 }
 
 
-static Bitu read_command(Bitu port,Bitu iolen) {
+static Bitu read_command(uint16_t port,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x20 ? 0 : 1];
 	if (pic->request_issr){
 		return pic->isr;
@@ -288,7 +288,7 @@ static Bitu read_command(Bitu port,Bitu iolen) {
 }
 
 
-static Bitu read_data(Bitu port,Bitu iolen) {
+static Bitu read_data(uint16_t port,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x21 ? 0 : 1];
 	return pic->imr;
 }

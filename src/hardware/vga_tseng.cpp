@@ -233,13 +233,13 @@ Bitu read_p3c5_et4k(Bitu reg,Bitu iolen) {
 bit 0-3  64k Write bank number (0..15)
     4-7  64k Read bank number (0..15)
 */
-void write_p3cd_et4k(Bitu port,Bitu val,Bitu iolen) {
+void write_p3cd_et4k(uint16_t port,Bitu val,Bitu iolen) {
    vga.svga.bank_write = val & 0x0f;
    vga.svga.bank_read = (val>>4) & 0x0f;
    VGA_SetupHandlers();
 }
 
-Bitu read_p3cd_et4k(Bitu port,Bitu iolen) {
+Bitu read_p3cd_et4k(uint16_t port,Bitu iolen) {
    return (vga.svga.bank_read<<4)|vga.svga.bank_write;
 }
 
@@ -629,14 +629,14 @@ bit 0-2  64k Write bank number
            2  1M linear memory
 NOTES: 1M linear memory is not supported
 */
-void write_p3cd_et3k(Bitu port,Bitu val,Bitu iolen) {
+void write_p3cd_et3k(uint16_t port,Bitu val,Bitu iolen) {
 	vga.svga.bank_write = val & 0x07;
 	vga.svga.bank_read = (val>>3) & 0x07;
 	vga.svga.bank_size = (val&0x40)?64*1024:128*1024;
 	VGA_SetupHandlers();
 }
 
-Bitu read_p3cd_et3k(Bitu port,Bitu iolen) {
+Bitu read_p3cd_et3k(uint16_t port,Bitu iolen) {
 	return (vga.svga.bank_read<<3)|vga.svga.bank_write|((vga.svga.bank_size==128*1024)?0:0x40);
 }
 

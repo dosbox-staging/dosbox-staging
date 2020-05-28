@@ -146,8 +146,8 @@ public:
 	Chip	chip[2];
 
 	//Handle port writes
-	void PortWrite( Bitu port, Bitu val, Bitu iolen );
-	Bitu PortRead( Bitu port, Bitu iolen );
+	void PortWrite( uint16_t port, Bitu val, Bitu iolen );
+	Bitu PortRead( uint16_t port, Bitu iolen );
 	void Init( Mode m );
 
 	Module(Section *configuration);

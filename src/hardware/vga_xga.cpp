@@ -1010,15 +1010,15 @@ Bitu XGA_GetDualReg(Bit32u reg) {
 	return 0;
 }
 
-extern Bitu vga_read_p3da(Bitu port,Bitu iolen);
+extern Bitu vga_read_p3da(uint16_t port,Bitu iolen);
 
-extern void vga_write_p3d4(Bitu port,Bitu val,Bitu iolen);
-extern Bitu vga_read_p3d4(Bitu port,Bitu iolen);
+extern void vga_write_p3d4(uint16_t port,Bitu val,Bitu iolen);
+extern Bitu vga_read_p3d4(uint16_t port,Bitu iolen);
 
-extern void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen);
-extern Bitu vga_read_p3d5(Bitu port,Bitu iolen);
+extern void vga_write_p3d5(uint16_t port,Bitu val,Bitu iolen);
+extern Bitu vga_read_p3d5(uint16_t port,Bitu iolen);
 
-void XGA_Write(Bitu port, Bitu val, Bitu len) {
+void XGA_Write(uint16_t port, Bitu val, Bitu len) {
 //	LOG_MSG("XGA: Write to port %x, val %8x, len %x", port,val, len);
 
 	switch(port) {
@@ -1168,14 +1168,14 @@ void XGA_Write(Bitu port, Bitu val, Bitu len) {
 				XGA_DrawWait(val, len);
 
 		        } else
-			        LOG_MSG("XGA: Wrote to port %#" PRIxPTR
+			        LOG_MSG("XGA: Wrote to port %#" PRIx16
 			                " with %#" PRIxPTR ", len %#" PRIxPTR,
 			                port, val, len);
 		        break;
 	        }
 }
 
-Bitu XGA_Read(Bitu port, Bitu len) {
+Bitu XGA_Read(uint16_t port, Bitu len) {
 	switch(port) {
 		case 0x8118:
 		case 0x9ae8:

@@ -144,7 +144,7 @@ struct SB_INFO {
 		bool haveref;
 	} adpcm;
 	struct {
-		Bitu base;
+		uint16_t base;
 		Bitu irq;
 		Bit8u dma8,dma16;
 	} hw;
@@ -1480,7 +1480,7 @@ static Bit8u CTMIXER_Read(void) {
 }
 
 
-static Bitu read_sb(Bitu port,Bitu /*iolen*/) {
+static Bitu read_sb(uint16_t port,Bitu /*iolen*/) {
 	switch (port-sb.hw.base) {
 	case MIXER_INDEX:
 		return sb.mixer.index;
@@ -1519,7 +1519,7 @@ static Bitu read_sb(Bitu port,Bitu /*iolen*/) {
 	return 0xff;
 }
 
-static void write_sb(Bitu port,Bitu val,Bitu /*iolen*/) {
+static void write_sb(uint16_t port,Bitu val,Bitu /*iolen*/) {
 	Bit8u val8=(Bit8u)(val&0xff);
 	switch (port-sb.hw.base) {
 	case DSP_RESET:
@@ -1540,7 +1540,7 @@ static void write_sb(Bitu port,Bitu val,Bitu /*iolen*/) {
 	}
 }
 
-static void adlib_gusforward(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
+static void adlib_gusforward(uint16_t port,Bitu val,Bitu /*iolen*/) {
 	adlib_commandreg=(Bit8u)(val&0xff);
 }
 

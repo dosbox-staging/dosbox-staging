@@ -95,7 +95,7 @@ static void KEYBOARD_AddBuffer(Bit8u data) {
 }
 
 
-static Bitu read_p60(Bitu port,Bitu iolen) {
+static Bitu read_p60(uint16_t port,Bitu iolen) {
 	keyb.p60changed=false;
 	if (!keyb.scheduled && keyb.used) {
 		keyb.scheduled=true;
@@ -104,7 +104,7 @@ static Bitu read_p60(Bitu port,Bitu iolen) {
 	return keyb.p60data;
 }	
 
-static void write_p60(Bitu port,Bitu val,Bitu iolen) {
+static void write_p60(uint16_t port,Bitu val,Bitu iolen) {
 	switch (keyb.command) {
 	case CMD_NONE:	/* None */
 		/* No active command this would normally get sent to the keyboard then */
@@ -172,7 +172,7 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 
 extern bool TIMER_GetOutput2(void);
 static Bit8u port_61_data = 0;
-static Bitu read_p61(Bitu port,Bitu iolen) {
+static Bitu read_p61(uint16_t port,Bitu iolen) {
 	if (TIMER_GetOutput2()) port_61_data|=0x20;
 	else					port_61_data&=~0x20;
 	port_61_data^=0x10;
@@ -180,7 +180,7 @@ static Bitu read_p61(Bitu port,Bitu iolen) {
 }
 
 extern void TIMER_SetGate2(bool);
-static void write_p61(Bitu port,Bitu val,Bitu iolen) {
+static void write_p61(uint16_t port,Bitu val,Bitu iolen) {
 	if ((port_61_data ^ val) & 3) {
 		if((port_61_data ^ val) & 1) TIMER_SetGate2(val&0x1);
 		PCSPEAKER_SetType(val & 3);
@@ -188,13 +188,13 @@ static void write_p61(Bitu port,Bitu val,Bitu iolen) {
 	port_61_data = val;
 }
 
-static Bitu read_p62(Bitu port,Bitu iolen) {
+static Bitu read_p62(uint16_t port,Bitu iolen) {
 	Bit8u ret=~0x20;
 	if (TIMER_GetOutput2()) ret|=0x20;
 	return ret;
 }
 
-static void write_p64(Bitu port,Bitu val,Bitu iolen) {
+static void write_p64(uint16_t port,Bitu val,Bitu iolen) {
 	switch (val) {
 	case 0xae:		/* Activate keyboard */
 		keyb.active=true;
@@ -220,7 +220,7 @@ static void write_p64(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
-static Bitu read_p64(Bitu port,Bitu iolen) {
+static Bitu read_p64(uint16_t port,Bitu iolen) {
 	Bit8u status= 0x1c | (keyb.p60changed? 0x1 : 0x0);
 	return status;
 }

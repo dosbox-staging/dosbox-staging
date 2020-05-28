@@ -69,7 +69,7 @@ static ncr8496_device device_ncr8496(machine_config(), 0, 0, SOUND_CLOCK);
 static sn76496_base_device* activeDevice = &device_ncr8496;
 #define device (*activeDevice)
 
-static void SN76496Write(Bitu /*port*/,Bitu data,Bitu /*iolen*/) {
+static void SN76496Write(uint16_t port,Bitu data,Bitu /*iolen*/) {
 	tandy.last_write=PIC_Ticks;
 	if (!tandy.enabled) {
 		tandy.chan->Enable(true);
@@ -159,7 +159,7 @@ static void TandyDACDMAEnabled(void) {
 static void TandyDACDMADisabled(void) {
 }
 
-static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
+static void TandyDACWrite(uint16_t port,Bitu data,Bitu /*iolen*/) {
 	switch (port) {
 	case 0xc4: {
 		Bitu oldmode = tandy.dac.mode;
@@ -219,7 +219,7 @@ static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
 	}
 }
 
-static Bitu TandyDACRead(Bitu port,Bitu /*iolen*/) {
+static Bitu TandyDACRead(uint16_t port,Bitu /*iolen*/) {
 	switch (port) {
 	case 0xc4:
 		return (tandy.dac.mode&0x77) | (tandy.dac.irq_activated ? 0x08 : 0x00);
@@ -228,7 +228,7 @@ static Bitu TandyDACRead(Bitu port,Bitu /*iolen*/) {
 	case 0xc7:
 		return (Bit8u)(((tandy.dac.frequency>>8)&0xf) | (tandy.dac.amplitude<<5));
 	}
-	LOG_MSG("Tandy DAC: Read from unknown %#" PRIxPTR, port);
+	LOG_MSG("Tandy DAC: Read from unknown %#" PRIx16, port);
 	return 0xff;
 }
 

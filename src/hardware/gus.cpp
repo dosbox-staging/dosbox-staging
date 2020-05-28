@@ -90,7 +90,7 @@ struct GFGus {
 		float delay;
 	} timers[2];
 	Bit32u rate;
-	Bitu portbase;
+	uint16_t portbase;
 	Bit8u dma1;
 	Bit8u dma2;
 
@@ -619,7 +619,7 @@ static void ExecuteGlobRegister(void) {
 }
 
 
-static Bitu read_gus(Bitu port,Bitu iolen) {
+static Bitu read_gus(uint16_t port,Bitu iolen) {
 //	LOG_MSG("read from gus port %x",port);
 	switch(port - GUS_BASE) {
 	case 0x206:
@@ -661,7 +661,7 @@ static Bitu read_gus(Bitu port,Bitu iolen) {
 }
 
 
-static void write_gus(Bitu port,Bitu val,Bitu iolen) {
+static void write_gus(uint16_t port,Bitu val,Bitu iolen) {
 //	LOG_MSG("Write gus port %x val %x",port,val);
 	switch(port - GUS_BASE) {
 	case 0x200:

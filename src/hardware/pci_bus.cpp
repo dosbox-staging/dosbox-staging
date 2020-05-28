@@ -44,7 +44,7 @@ static PCI_Device* pci_devices[PCI_MAX_PCIDEVICES];		// registered PCI devices
 // 10- 8 - subfunction number	(0x00000700)
 //  7- 2 - config register #	(0x000000fc)
 
-static void write_pci_addr(Bitu port,Bitu val,Bitu iolen) {
+static void write_pci_addr(uint16_t port,Bitu val,Bitu iolen) {
 	LOG(LOG_PCI,LOG_NORMAL)("Write PCI address :=%x",val);
 	pci_caddress=val;
 }
@@ -70,7 +70,7 @@ static void write_pci_register(PCI_Device* dev,Bit8u regnum,Bit8u value) {
 		pci_cfg_data[dev->PCIId()][dev->PCISubfunction()][regnum]=(Bit8u)(parsed_register&0xff);
 }
 
-static void write_pci(Bitu port,Bitu val,Bitu iolen) {
+static void write_pci(uint16_t port,Bitu val,Bitu iolen) {
 	LOG(LOG_PCI,LOG_NORMAL)("Write PCI data :=%x (len %d)",port,val,iolen);
 
 	// check for enabled/bus 0
@@ -102,7 +102,7 @@ static void write_pci(Bitu port,Bitu val,Bitu iolen) {
 }
 
 
-static Bitu read_pci_addr(Bitu port,Bitu iolen) {
+static Bitu read_pci_addr(uint16_t port,Bitu iolen) {
 	LOG(LOG_PCI,LOG_NORMAL)("Read PCI address -> %x",pci_caddress);
 	return pci_caddress;
 }
@@ -140,7 +140,7 @@ static Bit8u read_pci_register(PCI_Device* dev,Bit8u regnum) {
 	return 0xff;
 }
 
-static Bitu read_pci(Bitu port,Bitu iolen) {
+static Bitu read_pci(uint16_t port,Bitu iolen) {
 	LOG(LOG_PCI,LOG_NORMAL)("Read PCI data -> %x",pci_caddress);
 
 	if ((pci_caddress & 0x80ff0000) == 0x80000000) {

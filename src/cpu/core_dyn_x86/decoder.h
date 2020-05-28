@@ -2579,12 +2579,12 @@ restart_prefix:
 		case 0xe3:dyn_loop(LOOP_JCXZ);goto finish_block;
 		//IN AL/AX,imm
 		case 0xe4: {
-			Bitu port=decode_fetchb();
+			Bit8u port=decode_fetchb();
 			dyn_add_iocheck_var(port,1);
 			gen_call_function((void*)&IO_ReadB,"%Id%Rl",port,DREG(EAX));
 			} break;
 		case 0xe5: {
-			Bitu port=decode_fetchb();
+			Bit8u port=decode_fetchb();
 			dyn_add_iocheck_var(port,decode.big_op?4:2);
 			if (decode.big_op) {
                 gen_call_function((void*)&IO_ReadD,"%Id%Rd",port,DREG(EAX));
@@ -2594,12 +2594,12 @@ restart_prefix:
 			} break;
 		//OUT imm,AL
 		case 0xe6: {
-			Bitu port=decode_fetchb();
+			Bit8u port=decode_fetchb();
 			dyn_add_iocheck_var(port,1);
 			gen_call_function((void*)&IO_WriteB,"%Id%Dl",port,DREG(EAX));
 			} break;
 		case 0xe7: {
-			Bitu port=decode_fetchb();
+			Bit8u port=decode_fetchb();
 			dyn_add_iocheck_var(port,decode.big_op?4:2);
 			if (decode.big_op) {
                 gen_call_function((void*)&IO_WriteD,"%Id%Dd",port,DREG(EAX));

@@ -24,15 +24,15 @@
 #define gfx(blah) vga.gfx.blah
 static bool index9warned=false;
 
-static void write_p3ce(Bitu port,Bitu val,Bitu iolen) {
+static void write_p3ce(uint16_t port,Bitu val,Bitu iolen) {
 	gfx(index)=val & 0x0f;
 }
 
-static Bitu read_p3ce(Bitu port,Bitu iolen) {
+static Bitu read_p3ce(uint16_t port,Bitu iolen) {
 	return gfx(index);
 }
 
-static void write_p3cf(Bitu port,Bitu val,Bitu iolen) {
+static void write_p3cf(uint16_t port,Bitu val,Bitu iolen) {
 	switch (gfx(index)) {
 	case 0:	/* Set/Reset Register */
 		gfx(set_reset)=val & 0x0f;
@@ -190,7 +190,7 @@ static void write_p3cf(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
-static Bitu read_p3cf(Bitu port,Bitu iolen) {
+static Bitu read_p3cf(uint16_t port,Bitu iolen) {
 	switch (gfx(index)) {
 	case 0:	/* Set/Reset Register */
 		return gfx(set_reset);

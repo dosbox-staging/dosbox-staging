@@ -72,12 +72,12 @@ static void cmos_checktimer(void) {
 //	status reg A reading with this (and with other delays actually)
 }
 
-void cmos_selreg(Bitu port,Bitu val,Bitu iolen) {
+void cmos_selreg(uint16_t port,Bitu val,Bitu iolen) {
 	cmos.reg=val & 0x3f;
 	cmos.nmi=(val & 0x80)>0;
 }
 
-static void cmos_writereg(Bitu port,Bitu val,Bitu iolen) {
+static void cmos_writereg(uint16_t port,Bitu val,Bitu iolen) {
 	switch (cmos.reg) {
 	case 0x00:		/* Seconds */
 	case 0x02:		/* Minutes */
@@ -123,7 +123,7 @@ static void cmos_writereg(Bitu port,Bitu val,Bitu iolen) {
 
 #define MAKE_RETURN(_VAL) (cmos.bcd ? ((((_VAL) / 10) << 4) | ((_VAL) % 10)) : (_VAL));
 
-static Bitu cmos_readreg(Bitu port,Bitu iolen) {
+static Bitu cmos_readreg(uint16_t port,Bitu iolen) {
 	if (cmos.reg>0x3f) {
 		LOG(LOG_BIOS,LOG_ERROR)("CMOS:Read from illegal register %x",cmos.reg);
 		return 0xff;
