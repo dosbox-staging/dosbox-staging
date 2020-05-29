@@ -231,24 +231,30 @@ public:
 };
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
+
 class Section {
 private:
 	typedef void (*SectionFunction)(Section*);
+
 	/* Wrapper class around startup and shutdown functions. the variable
 	 * canchange indicates it can be called on configuration changes */
 	struct Function_wrapper {
 		SectionFunction function;
 		bool canchange;
-		Function_wrapper(SectionFunction const _fun,bool _ch){
-			function=_fun;
-			canchange=_ch;
-		}
+
+		Function_wrapper(SectionFunction const fn, bool ch)
+		        : function(fn),
+		          canchange(ch)
+		{}
 	};
-	std::list<Function_wrapper> initfunctions;
-	std::list<Function_wrapper> destroyfunctions;
+
+	std::list<Function_wrapper> initfunctions = {};
+	std::list<Function_wrapper> destroyfunctions = {};
 	std::string sectionname;
 public:
-	Section(std::string const& _sectionname):sectionname(_sectionname) {  }
+	Section(const std::string &name) : sectionname(name) {}
+
+	virtual ~Section() = default; // Children must call executedestroy!
 
 	void AddInitFunction(SectionFunction func,bool canchange=false);
 	void AddDestroyFunction(SectionFunction func,bool canchange=false);
@@ -259,7 +265,6 @@ public:
 	virtual std::string GetPropValue(std::string const& _property) const =0;
 	virtual bool HandleInputline(std::string const& _line)=0;
 	virtual void PrintData(FILE* outfile) const =0;
-	virtual ~Section() { /*Children must call executedestroy ! */}
 };
 
 class Prop_multival;
