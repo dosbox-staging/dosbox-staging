@@ -262,9 +262,9 @@ public:
 	void ExecuteDestroy(bool destroyall=true);
 	const char* GetName() const {return sectionname.c_str();}
 
-	virtual std::string GetPropValue(std::string const& _property) const =0;
-	virtual bool HandleInputline(std::string const& _line)=0;
-	virtual void PrintData(FILE* outfile) const =0;
+	virtual std::string GetPropValue(const std::string &property) const = 0;
+	virtual bool HandleInputline(const std::string &line) = 0;
+	virtual void PrintData(FILE *outfile) const = 0;
 };
 
 class Prop_multival;
