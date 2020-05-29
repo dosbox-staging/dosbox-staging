@@ -325,14 +325,16 @@ public:
 	virtual bool SetValue(std::string const& input);
 };
 
-
-class Section_line: public Section{
+class Section_line : public Section {
 public:
-	Section_line(std::string const& _sectionname):Section(_sectionname){}
-	~Section_line(){ExecuteDestroy(true);}
-	bool HandleInputline(std::string const& gegevens);
-	void PrintData(FILE* outfile) const;
-	virtual std::string GetPropValue(std::string const& _property) const;
+	Section_line(std::string const &name) : Section(name), data() {}
+
+	~Section_line() override { ExecuteDestroy(true); }
+
+	std::string GetPropValue(const std::string &property) const override;
+	bool HandleInputline(const std::string &line) override;
+	void PrintData(FILE *outfile) const override;
+
 	std::string data;
 };
 
