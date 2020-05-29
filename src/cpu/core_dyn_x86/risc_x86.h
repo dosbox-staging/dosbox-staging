@@ -868,6 +868,9 @@ static void gen_call_function(void * func,char const* ops,...) {
 	/* Clear some unprotected registers */
 	x86gen.regs[X86_REG_ECX]->Clear();
 	x86gen.regs[X86_REG_EDX]->Clear();
+	/* Make sure reg_esp is current */
+	if (DynRegs[G_ESP].flags & DYNFLG_CHANGED)
+		DynRegs[G_ESP].genreg->Save();
 	/* Do the actual call to the procedure */
 	cache_addb(0xe8);
 	cache_addd((Bit32u)func - (Bit32u)cache.pos-4);
@@ -939,6 +942,9 @@ static void gen_call_write(DynReg * dr,Bit32u val,Bitu write_size) {
 	/* Clear some unprotected registers */
 	x86gen.regs[X86_REG_ECX]->Clear();
 	x86gen.regs[X86_REG_EDX]->Clear();
+	/* Make sure reg_esp is current */
+	if (DynRegs[G_ESP].flags & DYNFLG_CHANGED)
+		DynRegs[G_ESP].genreg->Save();
 	/* Do the actual call to the procedure */
 	cache_addb(0xe8);
 	switch (write_size) {

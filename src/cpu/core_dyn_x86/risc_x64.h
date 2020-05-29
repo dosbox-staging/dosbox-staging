@@ -1020,6 +1020,9 @@ static void gen_call_ptr(void *func=NULL, Bit8u ptr=0) {
 	x64gen.regs[X64_REG_R9]->Clear();
 	x64gen.regs[X64_REG_R10]->Clear();
 	x64gen.regs[X64_REG_R11]->Clear();
+	/* Make sure reg_esp is current */
+	if (DynRegs[G_ESP].flags & DYNFLG_CHANGED)
+		DynRegs[G_ESP].genreg->Save();
 
 	/* Do the actual call to the procedure */
 	if (func!=NULL) {
@@ -1135,7 +1138,7 @@ static void gen_fill_branch(Bit8u * data,Bit8u * from=cache.pos) {
 	Bits len=from-data-1;
 	if (len<0) len=~len;
 	if (len>127)
-		LOG_MSG("Big jump %d",len);
+		LOG_MSG("Big jump %" sBitfs(d),len);
 #endif
 	*data=(Bit8u)(from-data-1);
 }
@@ -1171,7 +1174,7 @@ static void gen_fill_short_jump(Bit8u * data, Bit8u * to=cache.pos) {
 	Bits len=to-data-1;
 	if (len<0) len=~len;
 	if (len>127)
-		LOG_MSG("Big jump %d",len);
+		LOG_MSG("Big jump %" sBitfs(d),len);
 #endif
 	data[0] = (Bit8u)(to-data-1);
 }
