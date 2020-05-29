@@ -453,11 +453,11 @@ static void cache_closeblock(void) {
 	Bitu written=cache.pos-block->cache.start;
 	if (written>block->cache.size) {
 		if (!block->cache.next) {
-			if (written>block->cache.size+CACHE_MAXSIZE)
-				E_Exit("CacheBlock overrun 1 %" PRIuPTR,
-				       written-block->cache.size);
+			if (written > block->cache.size + CACHE_MAXSIZE)
+				E_Exit("CacheBlock overrun 1 %" sBitfs(d),
+				       written - block->cache.size);
 		} else {
-			E_Exit("CacheBlock overrun 2 written %" PRIuPTR " size %" PRIuPTR,
+			E_Exit("CacheBlock overrun 2 written %" sBitfs(d) " size %" sBitfs(d),
 			       written, block->cache.size);
 		}
 	} else {
