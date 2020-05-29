@@ -705,17 +705,20 @@ string Section_prop::GetPropValue(string const& _property) const {
 	return NO_SUCH_PROPERTY;
 }
 
-bool Section_line::HandleInputline(string const& line) {
+bool Section_line::HandleInputline(const std::string &line)
+{
 	if (!data.empty()) data += "\n"; //Add return to previous line in buffer
 	data += line;
 	return true;
 }
 
-void Section_line::PrintData(FILE* outfile) const {
-	fprintf(outfile,"%s",data.c_str());
+void Section_line::PrintData(FILE *outfile) const
+{
+	fprintf(outfile, "%s", data.c_str());
 }
 
-string Section_line::GetPropValue(string const& /* _property*/) const {
+std::string Section_line::GetPropValue(const std::string &) const
+{
 	return NO_SUCH_PROPERTY;
 }
 
