@@ -338,16 +338,20 @@ public:
 	std::string data;
 };
 
+/* Base for all hardware and software "devices" */
 class Module_base {
-	/* Base for all hardware and software "devices" */
 protected:
-	Section* m_configuration;
+	Section *m_configuration;
+
 public:
-	Module_base(Section* configuration){m_configuration=configuration;};
-//	Module_base(Section* configuration, SaveState* state) {};
-	virtual ~Module_base(){/*LOG_MSG("executed")*/;};//Destructors are required
-	/* Returns true if succesful.*/
-	virtual bool Change_Config(Section* /*newconfig*/) {return false;} ;
+	Module_base(Section *conf_section) : m_configuration(conf_section) {}
+
+	Module_base(const Module_base &) = delete; // prevent copying
+	Module_base &operator=(const Module_base &) = delete; // prevent assignment
+
+	virtual ~Module_base() = default;
+
+	virtual bool Change_Config(Section * /*newconfig*/) { return false; }
 };
 
 #endif
