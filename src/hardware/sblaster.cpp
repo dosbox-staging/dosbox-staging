@@ -60,7 +60,17 @@ using namespace std;
 #define SB_SH_MASK	((1 << SB_SH)-1)
 
 enum {DSP_S_RESET,DSP_S_RESET_WAIT,DSP_S_NORMAL,DSP_S_HIGHSPEED};
-enum SB_TYPES {SBT_NONE=0,SBT_1=1,SBT_PRO1=2,SBT_2=3,SBT_PRO2=4,SBT_16=6,SBT_GB=7};
+
+enum SB_TYPES {
+	SBT_NONE = 0,
+	SBT_1    = 1,
+	SBT_PRO1 = 2,
+	SBT_2    = 3,
+	SBT_PRO2 = 4,
+	SBT_16   = 6,
+	SBT_GB   = 7
+};
+
 enum SB_IRQS {SB_IRQ_8,SB_IRQ_16,SB_IRQ_MPU};
 
 enum DSP_MODES {
