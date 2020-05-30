@@ -257,17 +257,20 @@ static void DMA_Play_Samples(Bitu size);
 typedef void (*dma_process_f)(Bitu);
 static dma_process_f DMA_Process_Samples;
 
-static void DSP_SetSpeaker(bool how) {
-	if (sb.speaker==how) return;
-	sb.speaker=how;
-	if (sb.type==SBT_16) return;
-	sb.chan->Enable(how);
+static void DSP_SetSpeaker(bool requested_state) {
+	// Speaker-output is already in the requested state
+	if (sb.speaker == requested_state)
+		return;
+
+	// Otherwise change state per the request.
+	sb.speaker = requested_state;
+	sb.chan->Enable(requested_state);
 	if (sb.speaker) {
 		PIC_RemoveEvents(DMA_Suppress_Samples);
 		DMA_Flush_Remaining();
-	} else {
-		
 	}
+	LOG_MSG("%s: Speaker-output has been toggled %s",
+	        CardType(), requested_state ? "on" : "off");
 }
 
 static void InitializeSpeakerState() {
