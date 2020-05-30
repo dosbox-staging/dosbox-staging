@@ -251,6 +251,7 @@ static const char * CardType()
 static void DSP_ChangeMode(DSP_MODES mode);
 
 static void DMA_Flush_Remaining();
+static void DMA_Suppress_Init(Bitu size);
 static void DMA_Suppress_Samples(Bitu size);
 static void DMA_Play_Samples(Bitu size);
 typedef void (*dma_process_f)(Bitu);
@@ -585,6 +586,17 @@ static void DMA_Play_Samples(Bitu size) {
 
 		}
 	}
+}
+
+static void DMA_Suppress_Init(Bitu size) {
+ 	// Only suppress the first dword-transfer or less
+ 	if (size <= sizeof(uint32_t) || !sb.speaker) {
+		Suppress_DMA_Transfer(size);
+		LOG_MSG("%s: Suppressed initial %" PRIuPTR "-byte DMA transfer",
+		        CardType(), size);
+	 } else
+		DMA_Play_Samples(size);
+	DMA_Process_Samples = &DMA_Play_Samples;
 }
 
 static void DMA_Suppress_Samples(Bitu size) {
