@@ -547,7 +547,7 @@ static void DMA_Process_Samples(Bitu size) {
 		if (sb.dma.mode==DSP_DMA_16_ALIASED) read=read<<1;
 		break;
 	default:
-		LOG_MSG("Unhandled dma mode %d",sb.dma.mode);
+		LOG_MSG("%s: Unhandled dma mode %d", CardType(), sb.dma.mode);
 		sb.mode=MODE_NONE;
 		return;
 	}
@@ -632,8 +632,12 @@ static void DMA_Flush_Remaining() {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
 		float delay=(bigger*1000.0f)/sb.dma.rate;
 		PIC_AddEvent(DMA_Suppress_Samples, delay,bigger);
+		LOG(LOG_SB,LOG_NORMAL)("%s: Silent DMA Transfer scheduling IRQ in %.3f milliseconds",
+		                       CardType(), delay);
 	} else if (sb.dma.left<sb.dma.min) {
 		float delay=(sb.dma.left*1000.0f)/sb.dma.rate;
+		LOG(LOG_SB,LOG_NORMAL)("%s: Short transfer scheduling IRQ in %.3f milliseconds",
+		                       CardType(), delay);	
 		PIC_AddEvent(DMA_Process_Samples,delay,sb.dma.left);
 	}
 }
@@ -813,6 +817,7 @@ static void DSP_Reset(void) {
 static void DSP_DoReset(Bit8u val) {
 	if (((val&1)!=0) && (sb.dsp.state!=DSP_S_RESET)) {
 //TODO Get out of highspeed mode
+		LOG_MSG("%s: DSP reset requested", CardType());
 		DSP_Reset();
 		sb.dsp.state=DSP_S_RESET;
 	} else if (((val&1)==0) && (sb.dsp.state==DSP_S_RESET)) {	// reset off
