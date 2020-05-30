@@ -252,7 +252,9 @@ static void DSP_ChangeMode(DSP_MODES mode);
 
 static void DMA_Flush_Remaining();
 static void DMA_Suppress_Samples(Bitu size);
-static void DMA_Process_Samples(Bitu size);
+static void DMA_Play_Samples(Bitu size);
+typedef void (*dma_process_f)(Bitu);
+static dma_process_f DMA_Process_Samples = &DMA_Play_Samples;
 
 static void DSP_SetSpeaker(bool how) {
 	if (sb.speaker==how) return;
@@ -315,7 +317,7 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 			min_size *= 2;
 			if (sb.dma.left > min_size) {
 				if (s > (sb.dma.left - min_size)) s = sb.dma.left - min_size;
-				//This will trigger an irq, see DMA_Process_Samples, so lets not do that
+				//This will trigger an irq, see DMA_Play_Samples, so lets not do that
 				if (!sb.dma.autoinit && sb.dma.left <= sb.dma.min) s = 0;
 				if (s) DMA_Process_Samples(s);
 			}
@@ -436,7 +438,7 @@ INLINE Bit8u decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 	return reference;
 }
 
-static void DMA_Process_Samples(Bitu size) {
+static void DMA_Play_Samples(Bitu size) {
 	Bitu read=0;Bitu done=0;Bitu i=0;
 	last_dma_callback = PIC_FullIndex();
 
