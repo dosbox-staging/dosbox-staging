@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <array>
 #include <iomanip>
 #include <sstream>
 #include <string.h>
@@ -236,6 +237,17 @@ static int E2_incr_table[4][9] = {
 #define min(a,b) ((a)<(b)?(a):(b))
 #endif
 
+static const char * CardType()
+{
+	constexpr std::array<const char *, 8> types = {"NONE",   "SB1",
+	                                               "SBPRO1", "SB2",
+	                                               "SBPRO2", "UNASSIGNED",
+	                                               "SB16",   "GB"};
+	const size_t type_id = static_cast<size_t>(sb.type);
+	assertm(type_id != 5 && type_id < types.size(),
+	        "sb.type does not match a known Sound Blaster type ID");
+	return types[type_id];
+}
 static void DSP_ChangeMode(DSP_MODES mode);
 static void CheckDMAEnd();
 static void END_DMA_Event(Bitu);
