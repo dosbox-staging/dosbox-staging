@@ -249,7 +249,8 @@ static const char * CardType()
 	return types[type_id];
 }
 static void DSP_ChangeMode(DSP_MODES mode);
-static void CheckDMAEnd();
+
+static void DMA_Flush_Remaining();
 static void END_DMA_Event(Bitu);
 static void DMA_Silent_Event(Bitu val);
 static void GenerateDMASound(Bitu size);
@@ -261,7 +262,7 @@ static void DSP_SetSpeaker(bool how) {
 	sb.chan->Enable(how);
 	if (sb.speaker) {
 		PIC_RemoveEvents(DMA_Silent_Event);
-		CheckDMAEnd();
+		DMA_Flush_Remaining();
 	} else {
 		
 	}
@@ -327,7 +328,7 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 		if (sb.mode==MODE_DMA_MASKED && sb.dma.mode!=DSP_DMA_NONE) {
 			DSP_ChangeMode(MODE_DMA);
 //			sb.mode=MODE_DMA;
-			CheckDMAEnd();
+			DMA_Flush_Remaining();
 			LOG(LOG_SB,LOG_NORMAL)("DMA unmasked,starting output, auto %d block %d",chan->autoinit,chan->basecnt);
 		}
 	}
@@ -629,7 +630,7 @@ static void END_DMA_Event(Bitu val) {
 	GenerateDMASound(val);
 }
 
-static void CheckDMAEnd(void) {
+static void DMA_Flush_Remaining() {
 	if (!sb.dma.left) return;
 	if (!sb.speaker && sb.type!=SBT_16) {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
