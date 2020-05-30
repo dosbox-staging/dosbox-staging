@@ -251,7 +251,6 @@ static const char * CardType()
 static void DSP_ChangeMode(DSP_MODES mode);
 
 static void DMA_Flush_Remaining();
-static void END_DMA_Event(Bitu);
 static void DMA_Silent_Event(Bitu val);
 static void DMA_Process_Samples(Bitu size);
 
@@ -555,7 +554,7 @@ static void DMA_Process_Samples(Bitu size) {
 	//Check how many bytes were actually read
 	sb.dma.left-=read;
 	if (!sb.dma.left) {
-		PIC_RemoveEvents(END_DMA_Event);
+		PIC_RemoveEvents(DMA_Process_Samples);
 		if (sb.dma.mode >= DSP_DMA_16) 
 			SB_RaiseIRQ(SB_IRQ_16);
 		else 
@@ -626,10 +625,6 @@ static void DMA_Silent_Event(Bitu val) {
 	}
 }
 
-static void END_DMA_Event(Bitu val) {
-	DMA_Process_Samples(val);
-}
-
 static void DMA_Flush_Remaining() {
 	if (!sb.dma.left) return;
 	if (!sb.speaker && sb.type!=SBT_16) {
@@ -639,8 +634,7 @@ static void DMA_Flush_Remaining() {
 		LOG(LOG_SB,LOG_NORMAL)("Silent DMA Transfer scheduling IRQ in %.3f milliseconds",delay);
 	} else if (sb.dma.left<sb.dma.min) {
 		float delay=(sb.dma.left*1000.0f)/sb.dma.rate;
-		LOG(LOG_SB,LOG_NORMAL)("Short transfer scheduling IRQ in %.3f milliseconds",delay);	
-		PIC_AddEvent(END_DMA_Event,delay,sb.dma.left);
+		PIC_AddEvent(DMA_Process_Samples,delay,sb.dma.left);
 	}
 }
 
@@ -699,7 +693,7 @@ static void DSP_DoDMATransfer(const DMA_MODES mode, Bitu freq, bool autoinit, bo
 	sb.dma.min=(sb.dma.rate*3)/1000;
 	sb.chan->SetFreq(freq);
 
-	PIC_RemoveEvents(END_DMA_Event);
+	PIC_RemoveEvents(DMA_Process_Samples);
 	//Set to be masked, the dma call can change this again.
 	sb.mode = MODE_DMA_MASKED;
 	sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
@@ -813,8 +807,7 @@ static void DSP_Reset(void) {
 	sb.irq.pending_8bit=false;
 	sb.irq.pending_16bit=false;
 	sb.chan->SetFreq(22050);
-//	DSP_SetSpeaker(false);
-	PIC_RemoveEvents(END_DMA_Event);
+	PIC_RemoveEvents(DMA_Process_Samples);
 }
 
 static void DSP_DoReset(Bit8u val) {
@@ -1007,7 +1000,7 @@ static void DSP_DoCommand(void) {
 			// possibly different code here that does not switch to MODE_DMA_PAUSE
 		}
 		sb.mode=MODE_DMA_PAUSE;
-		PIC_RemoveEvents(END_DMA_Event);
+		PIC_RemoveEvents(DMA_Process_Samples);
 		break;
 	case 0xd1:	/* Enable Speaker */
 		DSP_SetSpeaker(true);
