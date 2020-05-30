@@ -255,7 +255,7 @@ static void DMA_Suppress_Init(Bitu size);
 static void DMA_Suppress_Samples(Bitu size);
 static void DMA_Play_Samples(Bitu size);
 typedef void (*dma_process_f)(Bitu);
-static dma_process_f DMA_Process_Samples = &DMA_Play_Samples;
+static dma_process_f DMA_Process_Samples;
 
 static void DSP_SetSpeaker(bool how) {
 	if (sb.speaker==how) return;
@@ -268,6 +268,16 @@ static void DSP_SetSpeaker(bool how) {
 	} else {
 		
 	}
+}
+
+static void InitializeSpeakerState() {
+		// Real SBPro2 hardware starts with the card's speaker-output disabled 
+		sb.speaker = false;
+		// For SB16, the output channel starts active however subsequent
+		// requests to disable the speaker will be honored (see: SetSpeaker).
+		sb.chan->Enable(sb.type == SBT_16);
+		// Suppress the first small DMA transfer to avoid hearing it.
+		DMA_Process_Samples = &DMA_Suppress_Init;
 }
 
 static INLINE void SB_RaiseIRQ(SB_IRQS type) {
@@ -807,6 +817,7 @@ static void DSP_Reset(void) {
 	sb.irq.pending_8bit=false;
 	sb.irq.pending_16bit=false;
 	sb.chan->SetFreq(22050);
+	InitializeSpeakerState();
 	PIC_RemoveEvents(DMA_Process_Samples);
 }
 
@@ -1712,13 +1723,6 @@ public:
 
 		DSP_Reset();
 		CTMIXER_Reset();
-
-		// The documentation does not specify if SB gets initialized with the speaker enabled
-		// or disabled. Real SBPro2 has it disabled. 
-		sb.speaker=false;
-		// On SB16 the speaker flag does not affect actual speaker state.
-		if (sb.type == SBT_16) sb.chan->Enable(true);
-		else sb.chan->Enable(false);
 
 		// Create set blaster line
 		ostringstream temp;
