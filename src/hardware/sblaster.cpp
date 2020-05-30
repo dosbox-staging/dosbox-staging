@@ -251,7 +251,7 @@ static const char * CardType()
 static void DSP_ChangeMode(DSP_MODES mode);
 
 static void DMA_Flush_Remaining();
-static void DMA_Silent_Event(Bitu val);
+static void DMA_Suppress_Samples(Bitu size);
 static void DMA_Process_Samples(Bitu size);
 
 static void DSP_SetSpeaker(bool how) {
@@ -260,7 +260,7 @@ static void DSP_SetSpeaker(bool how) {
 	if (sb.type==SBT_16) return;
 	sb.chan->Enable(how);
 	if (sb.speaker) {
-		PIC_RemoveEvents(DMA_Silent_Event);
+		PIC_RemoveEvents(DMA_Suppress_Samples);
 		DMA_Flush_Remaining();
 	} else {
 		
@@ -603,9 +603,10 @@ static void GenerateDACSound(Bitu len) {
 }
 */
 
-static void DMA_Silent_Event(Bitu val) {
-	if (sb.dma.left<val) val=sb.dma.left;
-	Bitu read=sb.dma.chan->Read(val,sb.dma.buf.b8);
+static void DMA_Suppress_Samples(Bitu size) {
+	if (sb.dma.left < size)
+		size = sb.dma.left;
+	const Bitu read = sb.dma.chan->Read(size, sb.dma.buf.b8);
 	sb.dma.left-=read;
 	if (!sb.dma.left) {
 		if (sb.dma.mode >= DSP_DMA_16) SB_RaiseIRQ(SB_IRQ_16);
@@ -621,7 +622,7 @@ static void DMA_Silent_Event(Bitu val) {
 	if (sb.dma.left) {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
 		float delay=(bigger*1000.0f)/sb.dma.rate;
-		PIC_AddEvent(DMA_Silent_Event,delay,bigger);
+		PIC_AddEvent(DMA_Suppress_Samples, delay,bigger);
 	}
 }
 
@@ -630,8 +631,7 @@ static void DMA_Flush_Remaining() {
 	if (!sb.speaker && sb.type!=SBT_16) {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
 		float delay=(bigger*1000.0f)/sb.dma.rate;
-		PIC_AddEvent(DMA_Silent_Event,delay,bigger);
-		LOG(LOG_SB,LOG_NORMAL)("Silent DMA Transfer scheduling IRQ in %.3f milliseconds",delay);
+		PIC_AddEvent(DMA_Suppress_Samples, delay,bigger);
 	} else if (sb.dma.left<sb.dma.min) {
 		float delay=(sb.dma.left*1000.0f)/sb.dma.rate;
 		PIC_AddEvent(DMA_Process_Samples,delay,sb.dma.left);
