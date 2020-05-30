@@ -587,24 +587,6 @@ static void DMA_Play_Samples(Bitu size) {
 	}
 }
 
-/* old version...
-static void GenerateDACSound(Bitu len) {
-	if (!sb.dac.used) {
-		sb.mode=MODE_NONE;
-		return;
-	}
-	Bitu dac_add=(sb.dac.used<<16)/len;
-	Bitu dac_pos=0;
-	Bit16s * out=(Bit16s *)MixTemp;
-	for (Bitu i=len;i;i--) {
-		*out++=sb.dac.data[0+(dac_pos>>16)];
-		dac_pos+=dac_add;
-	}
-	sb.dac.used=0;
-	sb.chan->AddSamples_m16(len,(Bit16s *)MixTemp);
-}
-*/
-
 static void DMA_Suppress_Samples(Bitu size) {
 	if (sb.dma.left < size)
 		size = sb.dma.left;
@@ -989,7 +971,6 @@ static void DSP_DoCommand(void) {
 	case 0xc8:	case 0xc9:	case 0xca:	case 0xcb:  case 0xcc:	case 0xcd:	case 0xce:	case 0xcf:
 		DSP_SB16_ONLY;
 		/* Generic 8/16 bit DMA */
-//		DSP_SetSpeaker(true);		//SB16 always has speaker enabled
 		sb.dma.sign=(sb.dsp.in.data[0] & 0x10) > 0;
 		DSP_PrepareDMA_New((sb.dsp.cmd & 0x10) ? DSP_DMA_16 : DSP_DMA_8,
 			1+sb.dsp.in.data[1]+(sb.dsp.in.data[2] << 8),
