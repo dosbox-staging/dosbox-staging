@@ -224,21 +224,26 @@ void PCSPEAKER_SetType(Bitu mode) {
 	switch (mode) {
 	case 0:
 		spkr.mode=SPKR_OFF;
-		AddDelayEntry(newindex, SPKR_NEGATIVE_VOLTAGE);
+		AddDelayEntry(newindex, SPKR_NEUTRAL_VOLTAGE);
 		break;
 	case 1:
 		spkr.mode=SPKR_PIT_OFF;
-		AddDelayEntry(newindex, SPKR_NEGATIVE_VOLTAGE);
+		AddDelayEntry(newindex, SPKR_NEUTRAL_VOLTAGE);
 		break;
 	case 2:
 		spkr.mode=SPKR_ON;
-		AddDelayEntry(newindex, SPKR_POSITIVE_VOLTAGE);
+		AddDelayEntry(newindex, SPKR_NEUTRAL_VOLTAGE);
 		break;
 	case 3:
-		if (spkr.mode!=SPKR_PIT_ON) {
-			AddDelayEntry(newindex,spkr.pit_last);
+		if (spkr.mode != SPKR_PIT_ON) {
+			// Carry the last value forward if it was something,
+			// otherwise fallback to the positive voltage
+			const float voltage = fabs(spkr.pit_last) > SPKR_NEUTRAL_VOLTAGE
+			                              ? spkr.pit_last
+			                              : SPKR_POSITIVE_VOLTAGE;
+			AddDelayEntry(newindex, voltage);
+			spkr.mode = SPKR_PIT_ON;
 		}
-		spkr.mode=SPKR_PIT_ON;
 		break;
 	};
 }
