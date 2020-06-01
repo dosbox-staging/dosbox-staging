@@ -26,8 +26,9 @@
 #include "pic.h"
 
 #define SPKR_ENTRIES 1024
-#define SPKR_VOLUME 5000
-#define SPKR_SPEED (float)((SPKR_VOLUME*2)/0.070f)
+#define SPKR_POSITIVE_VOLTAGE 5000.0f
+#define SPKR_NEGATIVE_VOLTAGE -SPKR_POSITIVE_VOLTAGE
+#define SPKR_SPEED (SPKR_POSITIVE_VOLTAGE * 2.0f / 0.070f)
 
 enum SPKR_MODES {
 	SPKR_OFF,SPKR_ON,SPKR_PIT_OFF,SPKR_PIT_ON
@@ -83,7 +84,7 @@ static void ForwardPIT(float newindex) {
 				if ((spkr.pit_index+passed)>=spkr.pit_max) {
 					float delay=spkr.pit_max-spkr.pit_index;
 					delay_base+=delay;passed-=delay;
-					spkr.pit_last=-SPKR_VOLUME;
+					spkr.pit_last = SPKR_NEGATIVE_VOLTAGE;
 					if (spkr.mode==SPKR_PIT_ON) AddDelayEntry(delay_base,spkr.pit_last);
 					spkr.pit_index=0;
 				} else {
@@ -94,7 +95,7 @@ static void ForwardPIT(float newindex) {
 				if ((spkr.pit_index+passed)>=spkr.pit_half) {
 					float delay=spkr.pit_half-spkr.pit_index;
 					delay_base+=delay;passed-=delay;
-					spkr.pit_last=SPKR_VOLUME;
+					spkr.pit_last = SPKR_POSITIVE_VOLTAGE;
 					if (spkr.mode==SPKR_PIT_ON) AddDelayEntry(delay_base,spkr.pit_last);
 					spkr.pit_index=spkr.pit_half;
 				} else {
@@ -112,7 +113,7 @@ static void ForwardPIT(float newindex) {
 				if ((spkr.pit_index+passed)>=spkr.pit_max) {
 					float delay=spkr.pit_max-spkr.pit_index;
 					delay_base+=delay;passed-=delay;
-					spkr.pit_last=SPKR_VOLUME;
+					spkr.pit_last = SPKR_POSITIVE_VOLTAGE;
 					if (spkr.mode==SPKR_PIT_ON) AddDelayEntry(delay_base,spkr.pit_last);
 					spkr.pit_index=0;
 					/* Load the new count */
@@ -126,7 +127,7 @@ static void ForwardPIT(float newindex) {
 				if ((spkr.pit_index+passed)>=spkr.pit_half) {
 					float delay=spkr.pit_half-spkr.pit_index;
 					delay_base+=delay;passed-=delay;
-					spkr.pit_last=-SPKR_VOLUME;
+					spkr.pit_last = SPKR_NEGATIVE_VOLTAGE;
 					if (spkr.mode==SPKR_PIT_ON) AddDelayEntry(delay_base,spkr.pit_last);
 					spkr.pit_index=spkr.pit_half;
 					/* Load the new count */
@@ -146,7 +147,7 @@ static void ForwardPIT(float newindex) {
 			if (spkr.pit_index+passed>=spkr.pit_max) {
 				float delay=spkr.pit_max-spkr.pit_index;
 				delay_base+=delay;passed-=delay;
-				spkr.pit_last=-SPKR_VOLUME;
+				spkr.pit_last = SPKR_NEGATIVE_VOLTAGE;
 				if (spkr.mode==SPKR_PIT_ON) AddDelayEntry(delay_base,spkr.pit_last);				//No new events unless reprogrammed
 				spkr.pit_index=spkr.pit_max;
 			} else spkr.pit_index+=passed;
@@ -170,18 +171,18 @@ void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
 		if (cntr>80) { 
 			cntr=80;
 		}
-		spkr.pit_last=((float)cntr-40)*(SPKR_VOLUME/40.0f);
+		spkr.pit_last = ((float)cntr - 40) * (SPKR_POSITIVE_VOLTAGE / 40.0f);
 		AddDelayEntry(newindex,spkr.pit_last);
 		spkr.pit_index=0;
 		break;
 	case 1:
 		if (spkr.mode!=SPKR_PIT_ON) return;
-		spkr.pit_last=SPKR_VOLUME;
+		spkr.pit_last = SPKR_POSITIVE_VOLTAGE;
 		AddDelayEntry(newindex,spkr.pit_last);
 		break;
 	case 2:			/* Single cycle low, rest low high generator */
 		spkr.pit_index=0;
-		spkr.pit_last=-SPKR_VOLUME;
+		spkr.pit_last = SPKR_NEGATIVE_VOLTAGE;
 		AddDelayEntry(newindex,spkr.pit_last);
 		spkr.pit_half=(1000.0f/PIT_TICK_RATE)*1;
 		spkr.pit_max=(1000.0f/PIT_TICK_RATE)*cntr;
@@ -197,7 +198,7 @@ void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
 		spkr.pit_new_half=spkr.pit_new_max/2;
 		break;
 	case 4:		/* Software triggered strobe */
-		spkr.pit_last=SPKR_VOLUME;
+		spkr.pit_last = SPKR_POSITIVE_VOLTAGE;
 		AddDelayEntry(newindex,spkr.pit_last);
 		spkr.pit_index=0;
 		spkr.pit_max=(1000.0f/PIT_TICK_RATE)*cntr;
@@ -222,15 +223,15 @@ void PCSPEAKER_SetType(Bitu mode) {
 	switch (mode) {
 	case 0:
 		spkr.mode=SPKR_OFF;
-		AddDelayEntry(newindex,-SPKR_VOLUME);
+		AddDelayEntry(newindex, SPKR_NEGATIVE_VOLTAGE);
 		break;
 	case 1:
 		spkr.mode=SPKR_PIT_OFF;
-		AddDelayEntry(newindex,-SPKR_VOLUME);
+		AddDelayEntry(newindex, SPKR_NEGATIVE_VOLTAGE);
 		break;
 	case 2:
 		spkr.mode=SPKR_ON;
-		AddDelayEntry(newindex,SPKR_VOLUME);
+		AddDelayEntry(newindex, SPKR_POSITIVE_VOLTAGE);
 		break;
 	case 3:
 		if (spkr.mode!=SPKR_PIT_ON) {
