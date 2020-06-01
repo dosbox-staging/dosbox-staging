@@ -38,26 +38,28 @@ enum SPKR_MODES {
 };
 
 struct DelayEntry {
-	float index;
-	float vol;
+	float index = 0.0f;
+	float vol = 0.0f;
 };
 
 static struct {
-	MixerChannel * chan;
-	SPKR_MODES mode;
-	Bitu pit_mode;
-	Bitu rate;
-
-	float pit_last;
-	float pit_new_max,pit_new_half;
-	float pit_max,pit_half;
-	float pit_index;
-	float volwant,volcur;
+	DelayEntry entries[SPKR_ENTRIES] = {};
+	MixerChannel *chan = nullptr;
+	SPKR_MODES mode = SPKR_OFF;
+	Bitu pit_mode = 3;
+	Bitu rate = 0u;
+	Bitu min_tr = 0u;
+	Bitu used = 0u;
+	float pit_last = 0.0f;
+	float pit_max = (1000.0f / PIT_TICK_RATE) * 1320;
+	float pit_half = pit_max / 2;
+	float pit_new_max = pit_max;
+	float pit_new_half = pit_half;
+	float pit_index = 0.0f;
+	float volwant = 0.0f;
+	float volcur = 0.0f;
+	float last_index = 0.0f;
 	uint8_t fade_step = 0u;
-	float last_index;
-	Bitu min_tr;
-	DelayEntry entries[SPKR_ENTRIES];
-	Bitu used;
 } spkr;
 
 bool SpeakerExists(){
@@ -315,7 +317,7 @@ static void PCSPEAKER_CallBack(Bitu len) {
 		float index=sample_base;
 		sample_base+=sample_add;
 		float end=sample_base;
-		double value=0;
+		float value = 0;
 		while(index<end) {
 			/* Check if there is an upcoming event */
 			if (spkr.used && spkr.entries[pos].index<=index) {
@@ -363,34 +365,29 @@ static void PCSPEAKER_CallBack(Bitu len) {
 }
 class PCSPEAKER:public Module_base {
 private:
-	MixerObject MixerChan;
+	MixerObject MixerChan = {};
 public:
-	PCSPEAKER(Section* configuration):Module_base(configuration){
-		spkr.chan=0;
+	PCSPEAKER(Section *configuration) : Module_base(configuration)
+	{
 		Section_prop * section=static_cast<Section_prop *>(configuration);
-		if(!section->Get_bool("pcspeaker")) return;
-		spkr.mode=SPKR_OFF;
-		spkr.last_index=0;
+		if (!section->Get_bool("pcspeaker"))
+			return;
 		spkr.rate = std::max(section->Get_int("pcrate"), 8000);
-		spkr.pit_mode=3;
-		spkr.pit_max=(1000.0f/PIT_TICK_RATE)*1320;
-		spkr.pit_half=spkr.pit_max/2;
-		spkr.pit_new_max=spkr.pit_max;
-		spkr.pit_new_half=spkr.pit_half;
-		spkr.pit_index=0;
-		spkr.min_tr = (PIT_TICK_RATE + spkr.rate/2 - 1) / (spkr.rate / 2);
-		spkr.used=0;
+		spkr.min_tr = (PIT_TICK_RATE + spkr.rate / 2 - 1) / (spkr.rate / 2);
 		/* Register the sound channel */
-		spkr.chan=MixerChan.Install(&PCSPEAKER_CallBack,spkr.rate,"SPKR");
+		spkr.chan = MixerChan.Install(&PCSPEAKER_CallBack, spkr.rate, "SPKR");
 	}
 	~PCSPEAKER(){
 		Section_prop * section=static_cast<Section_prop *>(m_configuration);
 		if(!section->Get_bool("pcspeaker")) return;
 	}
+	PCSPEAKER(const PCSPEAKER&) = delete; // prevent copying
+	PCSPEAKER& operator= (const PCSPEAKER&) = delete; // prevent assignment
 };
 static PCSPEAKER* test;
 
 void PCSPEAKER_ShutDown(Section* sec){
+	(void) sec; // unused
 	delete test;
 }
 
