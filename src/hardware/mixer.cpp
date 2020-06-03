@@ -16,13 +16,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 /*
 	Remove the sdl code from here and have it handled in the sdlmain.
 	That should call the mixer start from there or something.
 */
 
 // #define DEBUG 1
+
+#include "mixer.h"
 
 #include <string.h>
 #include <sys/types.h>
@@ -42,7 +43,6 @@
 
 #include "mem.h"
 #include "pic.h"
-#include "dosbox.h"
 #include "mixer.h"
 #include "timer.h"
 #include "setup.h"
