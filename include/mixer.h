@@ -44,6 +44,11 @@ extern Bit8u MixTemp[MIXER_BUFSIZE];
 #define MAX_AUDIO ((1<<(16-1))-1)
 #define MIN_AUDIO -(1<<(16-1))
 
+// Produces a volume scaler along a smooth 50-step cosine ramp,
+// where step 50 is maximum (100%) volume and step 0 is the
+// least volume (0%), with a cosine-curve in between.
+float GetFadeScalar(size_t step);
+
 class MixerChannel {
 public:
 	MixerChannel(MIXER_Handler _handler, Bitu _freq, const char * _name);
