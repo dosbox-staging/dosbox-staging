@@ -78,6 +78,7 @@ public:
 	void ParseEnv(char ** envp);
 	bool SecureMode() const { return secure_mode; }
 	void SwitchToSecureMode() { secure_mode = true; }//can't be undone
+	bool WantsBanners() const;
 };
 
 #endif

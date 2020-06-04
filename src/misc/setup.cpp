@@ -981,6 +981,22 @@ void Config::StartUp()
 	(*_start_function)();
 }
 
+bool Config::WantsBanners() const
+{
+	const Section* s = GetSection("dosbox");
+	assert(s);
+	const std::string user_choice = s->GetPropValue("show_banners");
+
+	bool wants_banners;
+	if (user_choice == "yes")
+		wants_banners = true;
+	else if (user_choice == "no")
+		wants_banners = false;
+	else // auto-mode
+		wants_banners = !cmdline->HasExecutable();
+	return wants_banners;
+}
+
 bool CommandLine::FindExist(char const * const name,bool remove) {
 	cmd_it it;
 	if (!(FindEntry(name,it,false))) return false;
