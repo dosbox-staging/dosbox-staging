@@ -413,15 +413,16 @@ void DOSBOX_Init(void) {
 		"vgaonly", "svga_s3", "svga_et3000", "svga_et4000",
 		"svga_paradise", "vesa_nolfb", "vesa_oldvbe", 0 };
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
+
+	Pstring = secprop->Add_path("captures",Property::Changeable::Always,"capture");
+	Pstring->Set_help("Directory where things like wave, midi, screenshot get captured.");
+
 	Pstring = secprop->Add_path("language",Property::Changeable::Always,"");
 	Pstring->Set_help("Select another language file.");
 
 	Pstring = secprop->Add_string("machine",Property::Changeable::OnlyAtStart,"svga_s3");
 	Pstring->Set_values(machines);
 	Pstring->Set_help("The type of machine DOSBox tries to emulate.");
-
-	Pstring = secprop->Add_path("captures",Property::Changeable::Always,"capture");
-	Pstring->Set_help("Directory where things like wave, midi, screenshot get captured.");
 
 #if C_DEBUG
 	LOG_StartUp();
