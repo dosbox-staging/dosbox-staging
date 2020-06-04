@@ -784,10 +784,7 @@ void DOS_Shell::CMD_LS(char *args)
 			WriteOut("\033[34;1m%-15s\033[0m", name.c_str());
 		} else {
 			lowcase(name);
-			const bool is_executable = ends_with(".exe", name) ||
-			                           ends_with(".bat", name) ||
-			                           ends_with(".com", name);
-			if (is_executable)
+			if (is_executable(name))
 				WriteOut("\033[32;1m%-15s\033[0m", name.c_str());
 			else
 				WriteOut("%-15s", name.c_str());

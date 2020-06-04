@@ -293,13 +293,11 @@ void DOS_Shell::InputCommand(char * line) {
 						dta.GetResult(name,sz,date,time,att);
 						// add result to completion list
 
-						char *ext;	// file extension
 						if (strcmp(name, ".") && strcmp(name, "..")) {
 							if (dir_only) { //Handle the dir only case different (line starts with cd)
 								if(att & DOS_ATTR_DIRECTORY) l_completion.push_back(name);
 							} else {
-								ext = strrchr(name, '.');
-								if (ext && (strcmp(ext, ".BAT") == 0 || strcmp(ext, ".COM") == 0 || strcmp(ext, ".EXE") == 0))
+								if (is_executable(std::string(name)))
 									// we add executables to the a seperate list and place that list infront of the normal files
 									executable.push_front(name);
 								else
