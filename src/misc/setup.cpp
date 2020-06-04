@@ -1024,6 +1024,14 @@ bool CommandLine::FindCommand(unsigned int which,std::string & value) {
 	return true;
 }
 
+bool CommandLine::HasExecutable() const
+{
+	for (const auto& arg : cmds)
+		if (is_executable(arg))
+			return true;
+	return false;
+}
+
 bool CommandLine::FindEntry(char const * const name,cmd_it & it,bool neednext) {
 	for (it = cmds.begin(); it != cmds.end(); ++it) {
 		if (!strcasecmp((*it).c_str(),name)) {

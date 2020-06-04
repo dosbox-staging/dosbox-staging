@@ -54,6 +54,7 @@ public:
 	bool GetStringRemain(std::string & value);
 	int GetParameterFromList(const char* const params[], std::vector<std::string> & output);
 	void FillVector(std::vector<std::string> & vector);
+	bool HasExecutable() const;
 	unsigned int GetCount(void);
 	void Shift(unsigned int amount=1);
 	Bit16u Get_arglength();
