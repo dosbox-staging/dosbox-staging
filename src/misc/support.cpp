@@ -80,6 +80,14 @@ bool ends_with(const std::string &suffix, const std::string &str) noexcept
 	return std::equal(sfx, sfx + n, txt, txt + n);
 }
 
+bool is_executable(std::string filename) noexcept
+{	
+	lowcase(filename);
+	return ends_with(".exe", filename) ||
+	       ends_with(".bat", filename) ||
+	       ends_with(".com", filename);
+}
+
 void trim(std::string &str)
 {
 	constexpr char whitespace[] = " \r\t\f\n";
