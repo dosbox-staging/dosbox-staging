@@ -445,6 +445,11 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&TIMER_Init);//done
 	secprop->AddInitFunction(&CMOS_Init);//done
 
+	const char* banner_choices[] = { "yes", "no", "auto", 0};
+	Pstring = secprop->Add_string("show_banners", Property::Changeable::OnlyAtStart, "yes");
+	Pstring->Set_values(banner_choices);
+	Pstring->Set_help("Show splash and console banners on startup.");
+
 	secprop=control->AddSection_prop("render",&RENDER_Init,true);
 	Pint = secprop->Add_int("frameskip",Property::Changeable::Always,0);
 	Pint->SetMinMax(0,10);
