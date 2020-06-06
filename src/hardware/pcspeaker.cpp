@@ -380,6 +380,7 @@ public:
 		spkr.min_tr = (PIT_TICK_RATE + spkr.rate / 2 - 1) / (spkr.rate / 2);
 		/* Register the sound channel */
 		spkr.chan = MixerChan.Install(&PCSPEAKER_CallBack, spkr.rate, "SPKR");
+		spkr.chan->SetPeakMagnitude(static_cast<uint32_t>(SPKR_POSITIVE_VOLTAGE));
 	}
 	~PCSPEAKER(){
 		Section_prop * section=static_cast<Section_prop *>(m_configuration);
