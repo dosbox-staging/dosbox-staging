@@ -235,11 +235,13 @@ void MixerChannel::SetFreq(Bitu freq) {
 	freq_add=(freq<<FREQ_SHIFT)/mixer.freq;
 	interpolate = (freq != mixer.freq);
 	sample_rate = static_cast<uint32_t>(freq);
+	envelope.Update(sample_rate, peak_magnitude);
 }
 
 void MixerChannel::SetPeakMagnitude(const uint32_t peak)
 {
 	peak_magnitude = peak;
+	envelope.Update(sample_rate, peak_magnitude);
 }
 
 void MixerChannel::Mix(Bitu _needed) {
@@ -417,6 +419,10 @@ inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 			}
 #endif
 		}
+
+		// Process initial samples through an expanding envelope to prevent
+		// severe clicks and pops. Becomes a no-op when done.
+		envelope.Process(stereo, interpolate, prev_sample, next_sample);
 
 		//Apply the left and right channel mappers only on write[..]
 		//assignments.  This ensures the channels are mapped only once
