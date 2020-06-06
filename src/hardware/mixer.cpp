@@ -234,6 +234,7 @@ void MixerChannel::Enable(const bool should_enable)
 void MixerChannel::SetFreq(Bitu freq) {
 	freq_add=(freq<<FREQ_SHIFT)/mixer.freq;
 	interpolate = (freq != mixer.freq);
+	sample_rate = static_cast<uint32_t>(freq);
 }
 
 void MixerChannel::Mix(Bitu _needed) {
