@@ -99,12 +99,7 @@ jobs:
         run: |
           set -x
           ./autogen.sh
-          # FIXME temporarily disable everything aside SDL2 due to linking issues
-          ./configure \
-            --enable-sdl-static \
-            --disable-screenshots \
-            --disable-network \
-            CFLAGS="$FLAGS" CXXFLAGS="$FLAGS"
+          ./configure CFLAGS="$FLAGS" CXXFLAGS="$FLAGS"
           gmake -j "$(sysctl -n hw.physicalcpu)"
           strip src/dosbox
           otool -L src/dosbox
@@ -115,7 +110,15 @@ jobs:
           # Generate icon
           make -C contrib/icons/ dosbox-staging.icns
 
-          dst=dist/dosbox-staging.app/Contents/
+          dst="dist/dosbox-staging.app/Contents"
+
+          # Source library paths
+          libpng_name="libpng16.16.dylib"
+          libpng_path="/usr/local/opt/libpng/lib/$libpng_name"
+          sdl2_name="libSDL2-2.0.0.dylib"
+          sdl2_path="/usr/local/opt/sdl2/lib/$sdl2_name"
+          sdl2net_name="libSDL2_net-2.0.0.dylib"
+          sdl2net_path="/usr/local/opt/sdl2_net/lib/$sdl2net_name"
 
           # Prepare content
           install -d "$dst/MacOS/"
@@ -123,6 +126,9 @@ jobs:
           install -d "$dst/SharedSupport/"
 
           install        "src/dosbox"                        "$dst/MacOS/"
+          install -m 644 "$libpng_path"                      "$dst/MacOS/"
+          install -m 644 "$sdl2_path"                        "$dst/MacOS/"
+          install -m 644 "$sdl2net_path"                     "$dst/MacOS/"
           install -m 644 "contrib/macos/Info.plist.template" "$dst/Info.plist"
           install -m 644 "contrib/macos/PkgInfo"             "$dst/PkgInfo"
           install -m 644 "contrib/icons/dosbox-staging.icns" "$dst/Resources/"
@@ -131,6 +137,18 @@ jobs:
           install -m 644 "README"                            "$dst/SharedSupport/manual.txt"
           install -m 644 "docs/README.video"                 "$dst/SharedSupport/video.txt"
 
+          # Load dynamic libraries relative to the executable
+          install_name_tool -add_rpath              @executable_path/.   "$dst/MacOS/dosbox"
+          install_name_tool -change "$libpng_path"  @rpath/$libpng_name  "$dst/MacOS/dosbox"
+          install_name_tool -change "$sdl2_path"    @rpath/$sdl2_name    "$dst/MacOS/dosbox"
+          install_name_tool -change "$sdl2net_path" @rpath/$sdl2net_name "$dst/MacOS/dosbox"
+          install_name_tool -add_rpath              @executable_path/.   "$dst/MacOS/$sdl2net_name"
+          install_name_tool -change "$sdl2_path"    @rpath/$sdl2_name    "$dst/MacOS/$sdl2net_name"
+          install_name_tool -change "$sdl2net_path" @rpath/$sdl2net_name "$dst/MacOS/$sdl2net_name"
+
+          otool -L "$dst/MacOS/dosbox"
+          otool -L "$dst/MacOS/$sdl2net_name"
+      
           # Fill README template file
           sed -i -e "s|%VERSION%|${{ env.VERSION }}|"           "$dst/Info.plist"
           sed -i -e "s|%GIT_COMMIT%|$GITHUB_SHA|"               "$dst/SharedSupport/README"
