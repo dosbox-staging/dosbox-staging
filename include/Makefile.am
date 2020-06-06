@@ -13,6 +13,7 @@ dosbox.h \
 dos_inc.h \
 dos_system.h \
 drives.h \
+envelope.h \
 fpu.h \
 hardware.h \
 inout.h \

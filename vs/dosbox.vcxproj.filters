@@ -142,6 +142,9 @@
     <ClCompile Include="..\src\hardware\dma.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\envelope.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\gameblaster.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
@@ -424,6 +427,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\drives.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\envelope.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\fpu.h">
