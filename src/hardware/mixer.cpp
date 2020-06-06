@@ -237,6 +237,11 @@ void MixerChannel::SetFreq(Bitu freq) {
 	sample_rate = static_cast<uint32_t>(freq);
 }
 
+void MixerChannel::SetPeakMagnitude(const uint32_t peak)
+{
+	peak_magnitude = peak;
+}
+
 void MixerChannel::Mix(Bitu _needed) {
 	needed=_needed;
 	while (is_enabled && needed > done) {

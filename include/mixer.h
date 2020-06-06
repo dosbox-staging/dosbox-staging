@@ -53,6 +53,7 @@ public:
 	void MapChannels(Bit8u _left, Bit8u _right);
 	void UpdateVolume();
 	void SetFreq(Bitu _freq);
+	void SetPeakMagnitude(uint32_t peak);
 	void Mix(Bitu _needed);
 	void AddSilence(); // Fill up until needed
 
@@ -104,6 +105,12 @@ private:
 	uint32_t sample_rate = 0u;
 	int32_t volmul[2] = {0};
 	float scale[2] = {0.0f, 0.0f};
+
+	// Defines the peak sample magnitude we can expect in this channel.
+	// Normally this won't be changed, but some channels /generate/
+	// their sample values, such as the PC Speaker, where the peak is 5000.
+	uint16_t peak_magnitude = MAX_AUDIO;
+
 	uint8_t channel_map[2] = {0u, 0u}; // Output channel mapping
 	bool interpolate = false;
 	bool last_samples_were_stereo = false;
