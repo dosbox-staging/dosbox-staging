@@ -99,7 +99,9 @@ Bit8u MixTemp[MIXER_BUFSIZE];
 MixerChannel::MixerChannel(MIXER_Handler _handler, Bitu _freq, const char *_name)
         : name(_name),
           handler(_handler)
-{}
+{
+	(void)_freq; // unused, but required for API compliance
+}
 
 MixerChannel * MIXER_AddChannel(MIXER_Handler handler, Bitu freq, const char * name) {
 	MixerChannel * chan=new MixerChannel(handler, freq, name);
@@ -620,6 +622,7 @@ static void MIXER_Mix_NoSound()
 }
 
 static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
+	(void)userdata; // unused, but required for API compliance
 	memset(stream, 0, len);
 	Bitu need=(Bitu)len/MIXER_SSIZE;
 	Bit16s * output=(Bit16s *)stream;
@@ -728,6 +731,7 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 }
 
 static void MIXER_Stop(Section* sec) {
+	(void)sec; // unused, but required for API compliance
 }
 
 class MIXER : public Program {
@@ -746,7 +750,8 @@ public:
 				++scan;continue;
 			}
 			if (!db) val/=100;
-			else val=powf(10.0f,(float)val/20.0f);
+			else
+				val = powf(10.0f, val / 20.0f);
 			if (val<0) val=1.0f;
 			if (!w) {
 				vol0=val;
@@ -783,10 +788,11 @@ public:
 
 private:
 	void ShowVolume(const char * name,float vol0,float vol1) {
-		WriteOut("%-8s %3.0f:%-3.0f  %+3.2f:%-+3.2f \n",name,
-			vol0*100,vol1*100,
-			20*log(vol0)/log(10.0f),20*log(vol1)/log(10.0f)
-		);
+		WriteOut("%-8s %3.0f:%-3.0f  %+3.2f:%-+3.2f \n", name,
+		         static_cast<double>(vol0 * 100),
+		         static_cast<double>(vol1 * 100),
+		         static_cast<double>(20 * log(vol0) / log(10.0f)),
+		         static_cast<double>(20 * log(vol1) / log(10.0f)));
 	}
 
 	void ListMidi() { MIDI_ListAll(this); }

@@ -129,7 +129,7 @@ private:
 	bool installed;
 	char m_name[32];
 public:
-	MixerObject():installed(false){};
+	MixerObject() : installed(false) {}
 	MixerChannel* Install(MIXER_Handler handler,Bitu freq,const char * name);
 	~MixerObject();
 };
