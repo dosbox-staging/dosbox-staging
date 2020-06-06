@@ -828,6 +828,9 @@ static void DSP_DoReset(Bit8u val) {
 	if (((val&1)!=0) && (sb.dsp.state!=DSP_S_RESET)) {
 //TODO Get out of highspeed mode
 		LOG_MSG("%s: DSP reset requested", CardType());
+		// Halt the channel so we're silent acoss reset events.
+		// Channel is re-enabled (if SB16) or via control by the game (non-SB16).
+		sb.chan->Enable(false);
 		DSP_Reset();
 		sb.dsp.state=DSP_S_RESET;
 	} else if (((val&1)==0) && (sb.dsp.state==DSP_S_RESET)) {	// reset off
