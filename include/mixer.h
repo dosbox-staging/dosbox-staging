@@ -53,6 +53,7 @@ public:
 	void MapChannels(Bit8u _left, Bit8u _right);
 	void UpdateVolume();
 	void SetFreq(Bitu _freq);
+	void SetPeakAmplitude(uint32_t peak);
 	void Mix(Bitu _needed);
 	void AddSilence(); // Fill up until needed
 
@@ -104,6 +105,12 @@ private:
 	uint32_t sample_rate = 0u;
 	int32_t volmul[2] = {0};
 	float scale[2] = {0.0f, 0.0f};
+
+	// Defines the peak sample amplitude we can expect in this channel.
+	// Default to signed 16bit max, however channel's that know their own
+	// peak, like the PCSpeaker, should update it with: SetPeakAmplitude()
+	uint32_t peak_amplitude = MAX_AUDIO;
+
 	uint8_t channel_map[2] = {0u, 0u}; // Output channel mapping
 	bool interpolate = false;
 	bool last_samples_were_stereo = false;

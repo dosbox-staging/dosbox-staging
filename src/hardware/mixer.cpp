@@ -237,6 +237,12 @@ void MixerChannel::SetFreq(Bitu freq) {
 	sample_rate = static_cast<uint32_t>(freq);
 }
 
+void MixerChannel::SetPeakAmplitude(const uint32_t peak)
+{
+	peak_amplitude = peak;
+	envelope.Update(sample_rate, peak_amplitude);
+}
+
 void MixerChannel::Mix(Bitu _needed) {
 	needed=_needed;
 	while (is_enabled && needed > done) {
