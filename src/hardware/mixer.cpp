@@ -68,8 +68,16 @@
 #define TICK_NEXT ( 1 << TICK_SHIFT)
 #define TICK_MASK (TICK_NEXT -1)
 
+// Over how many milliseconds will we permit a signal to grow from
+// zero up to peak amplitude? (recommended 10 to 20ms)
+#define ENVELOPE_MAX_EXPANSION_OVER_MS 15u
 
-static INLINE Bit16s MIXER_CLIP(Bits SAMP) {
+// Regardless if the signal needed to be eveloped or not, how long
+// should the envelope monitor the initial signal? (recommended > 5s)
+#define ENVELOPE_EXPIRES_AFTER_S 10u
+
+static inline int16_t MIXER_CLIP(Bits SAMP)
+{
 	if (SAMP < MAX_AUDIO) {
 		if (SAMP > MIN_AUDIO)
 			return SAMP;
@@ -98,6 +106,7 @@ Bit8u MixTemp[MIXER_BUFSIZE];
 
 MixerChannel::MixerChannel(MIXER_Handler _handler, Bitu _freq, const char *_name)
         : name(_name),
+          envelope(name),
           handler(_handler)
 {
 	(void)_freq; // unused, but required for API compliance
@@ -237,12 +246,15 @@ void MixerChannel::SetFreq(Bitu freq) {
 	freq_add=(freq<<FREQ_SHIFT)/mixer.freq;
 	interpolate = (freq != mixer.freq);
 	sample_rate = static_cast<uint32_t>(freq);
+	envelope.Update(sample_rate, peak_amplitude,
+	                ENVELOPE_MAX_EXPANSION_OVER_MS, ENVELOPE_EXPIRES_AFTER_S);
 }
 
 void MixerChannel::SetPeakAmplitude(const uint32_t peak)
 {
 	peak_amplitude = peak;
-	envelope.Update(sample_rate, peak_amplitude);
+	envelope.Update(sample_rate, peak_amplitude,
+	                ENVELOPE_MAX_EXPANSION_OVER_MS, ENVELOPE_EXPIRES_AFTER_S);
 }
 
 void MixerChannel::Mix(Bitu _needed) {
@@ -421,11 +433,15 @@ inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 #endif
 		}
 
-		//Apply the left and right channel mappers only on write[..]
-		//assignments.  This ensures the channels are mapped only once
+		// Process initial samples through an expanding envelope to
+		// prevent severe clicks and pops. Becomes a no-op when done.
+		envelope.Process(stereo, interpolate, prev_sample, next_sample);
+
+		// Apply the left and right channel mappers only on write[..]
+		// assignments.  This ensures the channels are mapped only once
 		//(avoiding double-swapping) and also minimizes the places where
-		//we use our mapping variables as array indexes.
-		//Note that volumes are independent of the channels mapping.
+		// we use our mapping variables as array indexes.
+		// Note that volumes are independent of the channels mapping.
 		const Bit8u left_map(channel_map[0]);
 		const Bit8u right_map(channel_map[1]);
 
