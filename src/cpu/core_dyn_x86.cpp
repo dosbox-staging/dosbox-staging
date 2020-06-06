@@ -164,7 +164,7 @@ static struct {
 
 static struct {
 	Bitu callback;
-	Bit32u readdata;
+	Bitu readdata;
 } core_dyn;
 
 #if defined(X86_DYNFPU_DH_ENABLED)

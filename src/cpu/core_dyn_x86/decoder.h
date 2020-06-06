@@ -559,9 +559,9 @@ static bool mem_readd_checked_dcx86(PhysPt address) {
 			core_dyn.readdata=host_readd(tlb_addr+address);
 			return false;
 		} else {
-			return get_tlb_readhandler(address)->readd_checked(address, &core_dyn.readdata);
+			return get_tlb_readhandler(address)->readd_checked(address, (Bit32u*)&core_dyn.readdata);
 		}
-	} else return mem_unalignedreadd_checked(address, &core_dyn.readdata);
+	} else return mem_unalignedreadd_checked(address, (Bit32u*)&core_dyn.readdata);
 }
 
 static bool mem_readw_checked_dcx86(PhysPt address) {
@@ -2048,6 +2048,43 @@ static void dyn_xlat(void) {
 	dyn_read_byte_release(DREG(TMPW),DREG(EAX),false);
 }
 
+static void dyn_larlsl(bool islar) {
+	dyn_get_modrm();
+	gen_protectflags();
+	// 32-bit code = protected mode, no need to check
+	if (!cpu.code.big) {
+		// LAR/LSL is undefined in real/v86 mode
+		gen_load_host(&cpu.pmode,DREG(TMPW),1);
+		gen_dop_word_imm(DOP_SUB,true,DREG(TMPW),1); // tmpw = cpu.pmode ? 0:0xffffffff
+		gen_dop_word(DOP_OR,true,DREG(TMPW),DREG(FLAGS));
+		gen_dop_word_imm(DOP_TEST,true,DREG(TMPW),FLAG_VM);
+		gen_releasereg(DREG(TMPW));
+		DynState s;
+		dyn_savestate(&s);
+		Bit8u *is_pmode = gen_create_branch(BR_Z);
+		gen_call_function((void*)CPU_PrepareException,"%Id%Id",EXCEPTION_UD,0);
+		dyn_check_bool_exception_al();
+		gen_fill_branch(is_pmode);
+		dyn_loadstate(&s);
+	}
+	void *func = islar ? (void*)CPU_LAR : (void*)CPU_LSL;
+	if (decode.modrm.mod<3) {
+		dyn_fill_ea();
+		dyn_read_word_release(DREG(EA),DREG(TMPW),false);
+		dyn_flags_gen_to_host();
+		gen_call_function(func,"%Drw%Ip",DREG(TMPW),&core_dyn.readdata);
+	} else {
+		dyn_flags_gen_to_host();
+		gen_call_function(func,"%Dw%Ip",&DynRegs[decode.modrm.rm],&core_dyn.readdata);
+	}
+	dyn_flags_host_to_gen();
+	gen_needflags();
+	gen_preloadreg(&DynRegs[decode.modrm.reg]);
+	Bit8u *br = gen_create_branch(BR_NZ);
+	gen_mov_host(&core_dyn.readdata, &DynRegs[decode.modrm.reg], decode.big_op?4:2);
+	gen_fill_branch(br);
+}
+
 #ifdef X86_DYNFPU_DH_ENABLED
 #include "dyn_fpu_dh.h"
 #define dh_fpu_startup() {		\
@@ -2140,6 +2177,10 @@ restart_prefix:
 		{
 			Bitu dual_code=decode_fetchb();
 			switch (dual_code) {
+			/* LAR */
+			case 0x02: dyn_larlsl(true);break;
+			/* LSL */
+			case 0x03: dyn_larlsl(false);break;
 			/* Short conditional jumps */
 			case 0x80:case 0x81:case 0x82:case 0x83:case 0x84:case 0x85:case 0x86:case 0x87:	
 			case 0x88:case 0x89:case 0x8a:case 0x8b:case 0x8c:case 0x8d:case 0x8e:case 0x8f:	
