@@ -430,40 +430,43 @@ skipWrite:
 Chip
 */
 
+Chip::Chip() : timer0(80), timer1(320) {
+}
+
 bool Chip::Write( Bit32u reg, Bit8u val ) {
 	switch ( reg ) {
 	case 0x02:
-		timer[0].counter = val;
+		timer0.SetCounter(val);
 		return true;
 	case 0x03:
-		timer[1].counter = val;
+		timer1.SetCounter(val);
 		return true;
 	case 0x04:
 		double time;
 		time = PIC_FullIndex();
+		//Reset overflow in both timers
 		if ( val & 0x80 ) {
-			timer[0].Reset( time );
-			timer[1].Reset( time );
+			timer0.Reset( time );
+			timer1.Reset( time );
 		} else {
-			timer[0].Update( time );
-			timer[1].Update( time );
-			if ( val & 0x1 ) {
-				timer[0].Start( time, 80 );
-			} else {
-				timer[0].Stop( );
+			//timer 0 not masked
+			if (!(val & 0x40)) {
+				if (val & 0x1) {
+					timer0.Start(time);
+				}
+				else {
+					timer0.Stop();
+				}
 			}
-			timer[0].masked = (val & 0x40) > 0;
-			if ( timer[0].masked )
-				timer[0].overflow = false;
-			if ( val & 0x2 ) {
-				timer[1].Start( time, 320 );
-			} else {
-				timer[1].Stop( );
+			//Timer 1 not masked
+			if (!(val & 0x20)) {
+				if (val & 0x2) {
+					timer1.Start(time);
+				}
+				else {
+					timer1.Stop();
+				}
 			}
-			timer[1].masked = (val & 0x20) > 0;
-			if ( timer[1].masked )
-				timer[1].overflow = false;
-
 		}
 		return true;
 	}
@@ -472,21 +475,18 @@ bool Chip::Write( Bit32u reg, Bit8u val ) {
 
 
 Bit8u Chip::Read( ) {
-	double time( PIC_FullIndex() );
-	timer[0].Update( time );
-	timer[1].Update( time );
+	const double time( PIC_FullIndex() );
 	Bit8u ret = 0;
 	//Overflow won't be set if a channel is masked
-	if ( timer[0].overflow ) {
+	if (timer0.Update(time)) {
 		ret |= 0x40;
 		ret |= 0x80;
 	}
-	if ( timer[1].overflow ) {
+	if (timer1.Update(time)) {
 		ret |= 0x20;
 		ret |= 0x80;
 	}
 	return ret;
-
 }
 
 void Module::CacheWrite( Bit32u reg, Bit8u val ) {
