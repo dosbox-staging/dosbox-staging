@@ -565,7 +565,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_ECHO_ON","ECHO is on.\n");
 	MSG_Add("SHELL_CMD_ECHO_OFF","ECHO is off.\n");
 	MSG_Add("SHELL_ILLEGAL_CONTROL_CHARACTER",
-	        "Unexpected control character: Dec %03u and Hex 0x%02X.\n");
+	        "Unexpected control character: Dec %03u and Hex %#04x.\n");
 	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s.\n");
 	MSG_Add("SHELL_MISSING_PARAMETER","Required parameter missing.\n");
 	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s.\n");

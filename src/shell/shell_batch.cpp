@@ -78,8 +78,10 @@ emptyline:
 				//So we continue reading till EOL/EOF
 				if (((cmd_write - temp) + 1) < (CMD_MAXLINE - 1))
 					*cmd_write++ = c;
-			} else if (c != 10 && c != 13)
-				shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"), c, c);
+			} else {
+				if (c != '\n' && c != '\r')
+					shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"), c, c);
+			}
 		}
 	} while (c!='\n' && n);
 	*cmd_write=0;
@@ -182,8 +184,10 @@ again:
 			if (c>31) {
 				if (((cmd_write - cmd_buffer) + 1) < (CMD_MAXLINE - 1))
 					*cmd_write++ = c;
-			} else if (c != 10 && c != 13)
-				shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"), c, c);
+			} else {
+				if (c != '\n' && c != '\r')
+					shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"), c, c);
+			}
 		}
 	} while (c!='\n' && n);
 	*cmd_write++ = 0;
