@@ -15,27 +15,27 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: GCC-5 (Ubuntu 16.04)
+          - name: GCC, Ubuntu 16.04
             os: ubuntu-16.04
             flags: -c gcc
             max_warnings: 24
-          - name: GCC-7 (Ubuntu 18.04)
+          - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
             flags: -c gcc
             max_warnings: 26
-          - name: GCC-9 (Ubuntu 18.04)
-            os: ubuntu-18.04
-            flags: -c gcc -v 9
+          - name: GCC, Ubuntu 20.04
+            os: ubuntu-20.04
+            flags: -c gcc
             max_warnings: 26
-          - name: GCC-9 (Ubuntu 18.04) +debug
-            os: ubuntu-18.04
-            flags: -c gcc -v 9
+          - name: GCC, Ubuntu 20.04, +debug
+            os: ubuntu-20.04
+            flags: -c gcc
             config_flags: --enable-debug
-            max_warnings: 139
-          - name: Clang-8 (Ubuntu 18.04)
-            os: ubuntu-18.04
-            flags: -c clang -v 8
-            max_warnings: 7
+            max_warnings: 137
+          - name: Clang, Ubuntu 20.04
+            os: ubuntu-20.04
+            flags: -c clang -v 10
+            max_warnings: 9
     steps:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update
@@ -53,9 +53,9 @@ jobs:
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.today }}
+          key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.today }}
           restore-keys: |
-            ccache-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.yesterday }}
+            ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.yesterday }}
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Build
@@ -66,7 +66,7 @@ jobs:
         run:  ./scripts/count-warnings.py build.log
 
   build_linux_release_dynamic:
-    name: Release build (dynamic)
+    name: Release build
     runs-on: ubuntu-18.04
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
     steps:
