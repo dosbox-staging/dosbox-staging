@@ -10,7 +10,7 @@ env:
 jobs:
   run_linters:
     name: Script linters
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
     steps:
       - uses: actions/checkout@v2
@@ -33,7 +33,7 @@ jobs:
 
   build_clang_static_analyser:
     name: Clang static analyzer
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     needs: run_linters
     steps:
       - uses: actions/checkout@v2
