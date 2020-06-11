@@ -99,11 +99,9 @@ jobs:
         run: |
           set -x
           ./autogen.sh
-          # FIXME temporarily disable everything aside SDL2 due to linking issues
           ./configure \
+            --enable-png-static \
             --enable-sdl-static \
-            --disable-screenshots \
-            --disable-network \
             CFLAGS="$FLAGS" CXXFLAGS="$FLAGS"
           gmake -j "$(sysctl -n hw.physicalcpu)"
           strip src/dosbox
