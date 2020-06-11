@@ -149,6 +149,8 @@ jobs:
           otool -L "$dst/MacOS/dosbox"
           otool -L "$dst/MacOS/$sdl2net_name"
       
+          find /usr/local -name '*.a'
+
           # Fill README template file
           sed -i -e "s|%VERSION%|${{ env.VERSION }}|"           "$dst/Info.plist"
           sed -i -e "s|%GIT_COMMIT%|$GITHUB_SHA|"               "$dst/SharedSupport/README"
