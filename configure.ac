@@ -447,7 +447,14 @@ AC_MSG_CHECKING([whether screenshots will be enabled])
 if test x$enable_screenshots = xyes; then
   if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
     if test x$enable_png_static = xyes ; then
-      LIBS="$LIBS -Wl,-Bstatic -lpng -Wl,-Bdynamic -lz"
+      case "$host" in
+        *-*-darwin*)
+          LIBS="$LIBS /usr/local/lib/libpng.a -lz"
+          ;;
+        *)
+          LIBS="$LIBS -Wl,-Bstatic -lpng -Wl,-Bdynamic -lz"
+          ;;
+      esac
     else
       LIBS="$LIBS -lpng -lz"
     fi
