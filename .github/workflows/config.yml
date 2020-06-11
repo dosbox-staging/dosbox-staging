@@ -24,6 +24,9 @@ jobs:
           - configure_flags:  --enable-debug
           - configure_flags:  --enable-debug=heavy
           - configure_flags:  --enable-alsa-midi
+          - configure_flags:  --enable-png-static
+          - configure_flags:  --enable-sdl-static
+          - configure_flags:  --enable-png-static --enable-sdl-static
           - configure_flags:  --disable-core-inline
           - configure_flags:  --disable-dynamic-x86
           - configure_flags:  --disable-dynrec
