@@ -441,21 +441,30 @@ AC_ARG_ENABLE(png_static,
                              [Link libpng statically (not recommended)]),
               enable_png_static=yes,
               enable_png_static=no)
-AC_CHECK_HEADER(png.h, have_png_h=yes, )
-AC_CHECK_LIB(png, png_get_io_ptr, have_png_lib=yes, , -lz)
-AC_MSG_CHECKING([whether screenshots will be enabled])
-if test x$enable_screenshots = xyes; then
-  if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
-    if test x$enable_png_static = xyes ; then
-      LIBS="$LIBS -Wl,-Bstatic -lpng -Wl,-Bdynamic -lz"
+if test x"$enable_screenshots" = x"yes"; then
+    if test x"$enable_png_static" = x"yes"; then
+      case "$host" in
+        *-*-darwin*)
+          libpng_LIBS="/usr/local/lib/libpng.a"
+          AC_MSG_NOTICE([checking for libpng... using macOS brew library])
+          ;;
+        *)
+          PKG_CHECK_MODULES([libpng], [libpng],
+            [libpng_LIBS="-Wl,-Bstatic $libpng_LIBS -Wl,-Bdynamic"])
+          ;;
+      esac
     else
-      LIBS="$LIBS -lpng -lz"
+      PKG_CHECK_MODULES([libpng], [libpng])
     fi
-    AC_DEFINE(C_SSHOT, 1)
-    AC_MSG_RESULT([yes])
-  else
-    AC_MSG_RESULT([no, can't find libpng.])
-  fi
+    dnl If our libs are empty, then PNG wasn't found
+    if test x"$libpng_LIBS" = x""; then
+      AC_MSG_RESULT([screenshots disabled... can't find libpng!])
+    else
+      AC_DEFINE(C_SSHOT, 1)
+      LIBS="$LIBS $libpng_LIBS -lz"
+      CXXFLAGS="$CXXFLAGS $libpng_CFLAGS"
+      AC_MSG_NOTICE([screenshots enabled... using $libpng_LIBS])
+    fi
 else
   AC_MSG_RESULT([no])
 fi
