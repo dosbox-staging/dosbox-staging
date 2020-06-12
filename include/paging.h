@@ -57,7 +57,8 @@ class PageDirectory;
 
 class PageHandler {
 public:
-	virtual ~PageHandler(void) { }
+	virtual ~PageHandler() = default;
+
 	virtual Bitu readb(PhysPt addr);
 	virtual Bitu readw(PhysPt addr);
 	virtual Bitu readd(PhysPt addr);
@@ -72,7 +73,8 @@ public:
 	virtual bool writeb_checked(PhysPt addr,Bitu val);
 	virtual bool writew_checked(PhysPt addr,Bitu val);
 	virtual bool writed_checked(PhysPt addr,Bitu val);
-	Bitu flags;
+
+	Bitu flags = 0x0;
 };
 
 /* Some other functions */
