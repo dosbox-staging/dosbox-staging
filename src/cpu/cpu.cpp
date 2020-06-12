@@ -1758,97 +1758,76 @@ void CPU_ARPL(Bitu & dest_sel,Bitu src_sel) {
 	
 void CPU_LAR(Bitu selector,Bitu & ar) {
 	FillFlags();
-	if (selector == 0) {
-		SETFLAGBIT(ZF,false);
-		return;
-	}
-	Descriptor desc;Bitu rpl=selector & 3;
-	if (!cpu.gdt.GetDescriptor(selector,desc)){
-		SETFLAGBIT(ZF,false);
-		return;
-	}
-	switch (desc.Type()){
-	case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
-	case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
-		break;
+	if (selector & 0xfffc) {
+		Descriptor desc;
+		Bitu rpl=selector & 3;
+		if (cpu.gdt.GetDescriptor(selector,desc)) {
+			switch (desc.Type()) {
+				case DESC_LDT:
+				case DESC_TASK_GATE:
 
-	case DESC_286_INT_GATE:		case DESC_286_TRAP_GATE:	{
-	case DESC_386_INT_GATE:		case DESC_386_TRAP_GATE:
-		SETFLAGBIT(ZF,false);
-		return;
-	}
+				case DESC_286_TSS_A:		case DESC_286_TSS_B:
+				case DESC_286_CALL_GATE:
 
-	case DESC_LDT:
-	case DESC_TASK_GATE:
+				case DESC_386_TSS_A:		case DESC_386_TSS_B:
+				case DESC_386_CALL_GATE:
 
-	case DESC_286_TSS_A:		case DESC_286_TSS_B:
-	case DESC_286_CALL_GATE:
+				case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:
+				case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+				case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:
+				case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+				case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
+				case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
+					if (desc.DPL()<cpu.cpl || desc.DPL()<rpl)
+						break;
 
-	case DESC_386_TSS_A:		case DESC_386_TSS_B:
-	case DESC_386_CALL_GATE:
-	
-
-	case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:
-	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-	case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:
-	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-	case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
-	case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
-		if (desc.DPL()<cpu.cpl || desc.DPL() < rpl) {
-			SETFLAGBIT(ZF,false);
-			return;
+				case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
+				case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
+					/* Valid descriptor */
+					ar=desc.saved.fill[1] & 0x00ffff00;
+					SETFLAGBIT(ZF,true);
+					return;
+			}
 		}
-		break;
-	default:
-		SETFLAGBIT(ZF,false);
-		return;
 	}
-	/* Valid descriptor */
-	ar=desc.saved.fill[1] & 0x00ffff00;
-	SETFLAGBIT(ZF,true);
+
+	SETFLAGBIT(ZF,false);
 }
 
 void CPU_LSL(Bitu selector,Bitu & limit) {
 	FillFlags();
-	if (selector == 0) {
-		SETFLAGBIT(ZF,false);
-		return;
-	}
-	Descriptor desc;Bitu rpl=selector & 3;
-	if (!cpu.gdt.GetDescriptor(selector,desc)){
-		SETFLAGBIT(ZF,false);
-		return;
-	}
-	switch (desc.Type()){
-	case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
-	case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
-		break;
+	if (selector & 0xfffc) {
+		Descriptor desc;
+		Bitu rpl=selector & 3;
+		if (cpu.gdt.GetDescriptor(selector,desc)) {
+			switch (desc.Type()) {
+				case DESC_LDT:
+				case DESC_286_TSS_A:
+				case DESC_286_TSS_B:
 
-	case DESC_LDT:
-	case DESC_286_TSS_A:
-	case DESC_286_TSS_B:
-	
-	case DESC_386_TSS_A:
-	case DESC_386_TSS_B:
+				case DESC_386_TSS_A:
+				case DESC_386_TSS_B:
 
-	case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:
-	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-	case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:
-	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-	
-	case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
-	case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
-		if (desc.DPL()<cpu.cpl || desc.DPL() < rpl) {
-			SETFLAGBIT(ZF,false);
-			return;
+				case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:
+				case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+				case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:
+				case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+
+				case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
+				case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
+					if (desc.DPL()<cpu.cpl || desc.DPL()<rpl)
+						break;
+
+				case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
+				case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
+					limit=desc.GetLimit();
+					SETFLAGBIT(ZF,true);
+					return;
+			}
 		}
-		break;
-	default:
-		SETFLAGBIT(ZF,false);
-		return;
 	}
-	limit=desc.GetLimit();
-	SETFLAGBIT(ZF,true);
+
+	SETFLAGBIT(ZF,false);
 }
 
 void CPU_VERR(Bitu selector) {
