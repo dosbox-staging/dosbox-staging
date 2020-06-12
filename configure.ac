@@ -473,22 +473,21 @@ AC_ARG_ENABLE(network,
               AS_HELP_STRING([--disable-network],
                              [Disable networking features (modem, ipx)]),,
               enable_network=yes)
-AC_ARG_ENABLE(sdl_net_static,
-              AC_HELP_STRING([--enable-sdl-net-static],
-                             [Link SDL2_Net statically (not recommended)]),
-              enable_sdl_net_static=yes,
-              enable_sdl_net_static=no)
 AC_CHECK_HEADER(SDL_net.h, have_sdl_net_h=yes,)
 AC_CHECK_LIB(SDL2_net, SDLNet_Init, have_sdl_net_lib=yes, , )
 AC_MSG_CHECKING([whether networking features will be enabled])
 if test x$enable_network = xyes ; then
   if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
-    if test x$enable_sdl_net_static = xyes ; then
+    libtype=""
+    if test x$enable_sdl_static = xyes ; then
+      libtype="(static)"
       case "$host" in
         *-*-darwin*)
           LIBS="$LIBS /usr/local/lib/libSDL2_net.a"
           ;;
         *)
+          AC_MSG_WARN(m4_normalize([Statically linking SDL2 is unreliable.
+            Please ensure that "libSDL2_net.a" is available.]))
           LIBS="$LIBS -Wl,-Bstatic -lSDL2_net -Wl,-Bdynamic"
           ;;
       esac
@@ -497,7 +496,7 @@ if test x$enable_network = xyes ; then
     fi
     AC_DEFINE(C_MODEM,1)
     AC_DEFINE(C_IPX,1)
-    AC_MSG_RESULT([yes])
+    AC_MSG_RESULT([yes $libtype])
     case "$host_os" in haiku*)
       AC_CHECK_LIB(network, socket, [],
                    [AC_MSG_ERROR([Can't find a useable network libary])],
@@ -505,7 +504,7 @@ if test x$enable_network = xyes ; then
       ;;
     esac
   else
-    AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
+    AC_MSG_WARN([Can't find SDL2_net, internal modem and ipx disabled])
   fi
 else
   AC_MSG_RESULT([no])
