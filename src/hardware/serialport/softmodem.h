@@ -91,7 +91,7 @@ public:
 			static Bits lcount=0;
 			if (lcount<1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO Overflow! (adds len %" sBitfs(u) ")",_len);
+				LOG_MSG("MODEM: FIFO Overflow! (adds len %u)",_len);
 			}
 			return;
 		}
@@ -125,7 +125,7 @@ public:
 			static Bits lcount=0;
 			if (lcount<1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO UNDERFLOW! (gets len %" sBitfs(d) ")",_len);
+				LOG_MSG("MODEM: FIFO UNDERFLOW! (gets len %d)",_len);
 			}
 			return;
 		}
@@ -147,7 +147,6 @@ private:
 #define MREG_CR_CHAR 3
 #define MREG_LF_CHAR 4
 #define MREG_BACKSPACE_CHAR 5
-#define MREG_GUARD_TIME 12
 
 
 class CSerialModem : public CSerial {

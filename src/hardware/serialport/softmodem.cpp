@@ -245,7 +245,6 @@ void CSerialModem::Reset(){
 	reg[MREG_CR_CHAR]='\r';
 	reg[MREG_LF_CHAR]='\n';
 	reg[MREG_BACKSPACE_CHAR]='\b';
-	reg[MREG_GUARD_TIME]=50;
 
 	cmdpause = 0;	
 	echo = true;
@@ -277,10 +276,10 @@ void CSerialModem::EnterIdleState(void){
 		
 		serversocket=new TCPServerSocket(listenport);	
 		if(!serversocket->isopen) {
-			LOG_MSG("Serial%" sBitfs(d) ": Modem could not open TCP port %" sBitfs(d) ".",COMNUMBER,listenport);
+			LOG_MSG("Serial%d: Modem could not open TCP port %d.",COMNUMBER,listenport);
 			delete serversocket;
 			serversocket=0;
-		} else LOG_MSG("Serial%" sBitfs(d) ": Modem listening on port %" sBitfs(d) "...",COMNUMBER,listenport);
+		} else LOG_MSG("Serial%d: Modem listening on port %d...",COMNUMBER,listenport);
 	}
 	waitingclientsocket=0;
 	
@@ -528,7 +527,7 @@ void CSerialModem::DoCommand() {
 					SendRes(ResERROR);
 					return;
 				default:
-					LOG_MSG("Modem: Unhandled command: &%c%" sBitfs(d),cmdchar,ScanNumber(scanbuf));
+					LOG_MSG("Modem: Unhandled command: &%c%d",cmdchar,ScanNumber(scanbuf));
 					break;
 			}
 			break;
@@ -548,7 +547,7 @@ void CSerialModem::DoCommand() {
 					SendRes(ResERROR);
 					return;
 				default:
-					LOG_MSG("Modem: Unhandled command: \\%c%" sBitfs(d),cmdchar, ScanNumber(scanbuf));
+					LOG_MSG("Modem: Unhandled command: \\%c%d",cmdchar, ScanNumber(scanbuf));
 					break;
 			}
 			break;
@@ -557,7 +556,7 @@ void CSerialModem::DoCommand() {
 			SendRes(ResOK);
 			return;
 		default:
-			LOG_MSG("Modem: Unhandled command: %c%" sBitfs(d),chr,ScanNumber(scanbuf));
+			LOG_MSG("Modem: Unhandled command: %c%d",chr,ScanNumber(scanbuf));
 			break;
 		}
 	}
@@ -667,26 +666,13 @@ void CSerialModem::TelnetEmulation(Bit8u * data, Bitu size) {
 void CSerialModem::Timer2(void) {
 
 	unsigned long args = 1;
+	bool sendbyte = true;
 	Bitu usesize;
 	Bit8u txval;
 	Bitu txbuffersize =0;
 
 	// Check for eventual break command
-	if (!commandmode) {
-		cmdpause++;
-		if (cmdpause > (20 * reg[MREG_GUARD_TIME])) {
-			if (plusinc == 0) {
-				plusinc = 1;
-			}
-			else if (plusinc == 4) {
-				LOG_MSG("Modem: Entering command mode(escape sequence)");
-				commandmode = true;
-				SendRes(ResOK);
-				plusinc = 0;
-			}
-		}
-	}
-
+	if (!commandmode) cmdpause++;
 	// Handle incoming data from serial port, read as much as available
 	CSerial::setCTS(true);	// buffer will get 'emptier', new data can be received 
 	while (tqueue->inuse()) {
@@ -707,19 +693,29 @@ void CSerialModem::Timer2(void) {
 			}
 		}
 		else {// + character
-			if (plusinc >= 1 && plusinc <= 3 && txval == reg[MREG_ESCAPE_CHAR]) // +
-				plusinc++;
-			else {
-				plusinc = 0;
+			// 1000 ticks have passed, can check for pause command
+			if (cmdpause > 1000) {
+				if(txval ==reg[MREG_ESCAPE_CHAR]) // +
+				{
+					plusinc++;
+					if(plusinc>=3) {
+						LOG_MSG("Modem: Entering command mode(escape sequence)");
+						commandmode = true;
+						SendRes(ResOK);
+						plusinc = 0;
+					}
+					sendbyte=false;
+				} else {
+					plusinc=0;
+				}
+	// If not a special pause command, should go for bigger blocks to send 
 			}
-			cmdpause = 0;
 			tmpbuf[txbuffersize] = txval;
 			txbuffersize++;
-
 		}
 	} // while loop
 	
-	if (clientsocket && txbuffersize) {
+	if (clientsocket && sendbyte && txbuffersize) {
 		// down here it saves a lot of network traffic
 		if(!clientsocket->SendArray(tmpbuf,txbuffersize)) {
 			SendRes(ResNOCARRIER);
@@ -737,6 +733,7 @@ void CSerialModem::Timer2(void) {
 			// Filter telnet commands 
 			if(telnetmode) TelnetEmulation(tmpbuf, usesize);
 			else rqueue->adds(tmpbuf,usesize);
+			cmdpause = 0;
 		} 
 	}
 	// Check for incoming calls
