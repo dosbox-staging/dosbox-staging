@@ -102,7 +102,6 @@ jobs:
           ./configure \
             --enable-png-static \
             --enable-sdl-static \
-            --enable-sdl-net-static \
             CFLAGS="$FLAGS" CXXFLAGS="$FLAGS"
           gmake -j "$(sysctl -n hw.physicalcpu)"
           strip src/dosbox
