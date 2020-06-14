@@ -85,9 +85,11 @@ public:
 	bool Execute(char * name,char * args);
 	/* Checks if it matches a hardware-property */
 	bool CheckConfig(char* cmd_in,char*line);
-/* Some internal used functions */
-	char * Which(char * name);
-/* Some supported commands */
+
+	/* Some internal used functions */
+	const char *Which(const char *name) const;
+
+	/* Commands */
 	void CMD_HELP(char * args);
 	void CMD_CLS(char * args);
 	void CMD_COPY(char * args);
