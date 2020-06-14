@@ -26,6 +26,7 @@
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <list>
 #include <thread>
@@ -381,8 +382,7 @@ public:
 		if (strncasecmp(buf, configname, strlen(configname)))
 			return nullptr;
 		StripWord(buf);
-		char *num = StripWord(buf);
-		long code = ConvDecWord(num);
+		long code = atol(StripWord(buf));
 		assert(code > 0);
 		return CreateKeyBind((SDL_Scancode)code);
 	}
@@ -619,17 +619,15 @@ public:
 		char *type = StripWord(buf);
 		CBind *bind = nullptr;
 		if (!strcasecmp(type,"axis")) {
-			// TODO ConvDecWord returns Bits… (signed), but it was stored in unsigned
-			// seems like this could be safely replaced with std::atoi
-			int ax = ConvDecWord(StripWord(buf));
-			int pos = ConvDecWord(StripWord(buf));
+			int ax = atoi(StripWord(buf));
+			int pos = atoi(StripWord(buf));
 			bind = CreateAxisBind(ax, pos > 0); // TODO double check, previously it was != 0
 		} else if (!strcasecmp(type, "button")) {
-			int but = ConvDecWord(StripWord(buf));
+			int but = atoi(StripWord(buf));
 			bind = CreateButtonBind(but);
 		} else if (!strcasecmp(type, "hat")) {
-			uint8_t hat = static_cast<uint8_t>(ConvDecWord(StripWord(buf)));
-			uint8_t dir = static_cast<uint8_t>(ConvDecWord(StripWord(buf)));
+			uint8_t hat = static_cast<uint8_t>(atoi(StripWord(buf)));
+			uint8_t dir = static_cast<uint8_t>(atoi(StripWord(buf)));
 			bind = CreateHatBind(hat, dir);
 		}
 		return bind;
