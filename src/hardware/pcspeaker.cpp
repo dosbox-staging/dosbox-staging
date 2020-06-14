@@ -62,7 +62,8 @@ static struct {
 	uint8_t fade_step = 0u;
 } spkr;
 
-bool SpeakerExists(){
+static bool SpeakerExists()
+{
 	// If the mixer's channel doesn't exist, then dosbox
 	// hasn't created the device yet (so return false).
 	return spkr.chan != nullptr;
@@ -168,7 +169,8 @@ static void ForwardPIT(float newindex) {
 }
 
 // PIT-mode activation
-void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
+void PCSPEAKER_SetCounter(Bitu cntr, Bitu mode)
+{
 	if (!SpeakerExists())
 		return;
 
@@ -243,7 +245,8 @@ static float NeutralLastPitOr(float fallback)
 }
 
 // PWM-mode activation
-void PCSPEAKER_SetType(Bitu mode) {
+void PCSPEAKER_SetType(Bitu mode)
+{
 	if (!SpeakerExists())
 		return;
 
@@ -302,7 +305,8 @@ static void FadeVolume(uint16_t num_actions)
 		spkr.chan->Enable(false);
 }
 
-static void PCSPEAKER_CallBack(Bitu len) {
+static void PCSPEAKER_CallBack(Bitu len)
+{
 	if (!SpeakerExists())
 		return;
 
