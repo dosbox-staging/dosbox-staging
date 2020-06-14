@@ -78,9 +78,9 @@ public:
 	CommandLine * cmd;
 	DOS_PSP * psp;
 	virtual void Run(void)=0;
-	bool GetEnvStr(const char * entry,std::string & result);
-	bool GetEnvNum(Bitu num,std::string & result);
-	Bitu GetEnvCount(void);
+	bool GetEnvStr(const char *entry, std::string &result) const;
+	bool GetEnvNum(Bitu num, std::string &result) const;
+	Bitu GetEnvCount() const;
 	bool SetEnv(const char * entry,const char * new_string);
 	void WriteOut(const char *format, ...);	// printf to DOS stdout
 	void WriteOut_NoParsing(const char *str); // write string to DOS stdout
