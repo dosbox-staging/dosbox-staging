@@ -415,48 +415,32 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	if (!p_fullname)
 		return false;
 	safe_strcpy(fullname, p_fullname);
-	const char* extension = strrchr(fullname,'.');
-	
-	/*always disallow files without extension from being executed. */
-	/*only internal commands can be run this way and they never get in this handler */
-	if(extension == 0)
-	{
-		//Check if the result will fit in the parameters. Else abort
-		if(strlen(fullname) >( DOS_PATHLENGTH - 1) ) return false;
 
+	// Always disallow files without extension from being executed.
+	// Only internal commands can be run this way and they never get in
+	// this handler.
+	const char *extension = strrchr(fullname, '.');
+	if (!extension) {
+		// Check if the result will fit in the parameters.
+		if (strlen(fullname) > (DOS_PATHLENGTH - 1))
+			return false;
+
+		// Try to add .COM, .EXE and .BAT extensions to the filename
 		char temp_name[DOS_PATHLENGTH + 4];
-		const char *temp_fullname;
-
-		//try to add .com, .exe and .bat extensions to filename
-
-		safe_strcpy(temp_name, fullname);
-		safe_strcat(temp_name, ".COM");
-		temp_fullname=Which(temp_name);
-		if (temp_fullname) { extension=".com";strcpy(fullname,temp_fullname); }
-
-		else 
-		{
-			safe_strcpy(temp_name, fullname);
-			safe_strcat(temp_name, ".EXE");
-			temp_fullname=Which(temp_name);
-		 	if (temp_fullname) { extension=".exe";strcpy(fullname,temp_fullname);}
-
-			else 
-			{
-				safe_strcpy(temp_name, fullname);
-				safe_strcat(temp_name, ".BAT");
-				temp_fullname=Which(temp_name);
-		 		if (temp_fullname) { extension=".bat";strcpy(fullname,temp_fullname);}
-
-				else  
-				{
-		 			return false;
-				}
-			
-			}	
+		for (const char *ext : {".COM", ".EXE", ".BAT"}) {
+			snprintf(temp_name, sizeof(temp_name), "%s%s", fullname, ext);
+			const char *temp_fullname = Which(temp_name);
+			if (temp_fullname) {
+				extension = ext;
+				safe_strcpy(fullname, temp_fullname);
+				break;
+			}
 		}
+
+		if (!extension)
+			return false;
 	}
-	
+
 	if (strcasecmp(extension, ".bat") == 0) 
 	{	/* Run the .bat file */
 		/* delete old batch file if call is not active*/
