@@ -199,9 +199,9 @@ static INLINE void decode_increase_wmapmask(Bitu size) {
 		}
 	}
 	switch (size) {
-	case 1: activecb->cache.wmapmask[mapidx] += 0x01; break;
-	case 2: host_addw(activecb->cache.wmapmask + mapidx, 0x0101); break;
-	case 4: host_addd(activecb->cache.wmapmask + mapidx, 0x01010101); break;
+		case 1 : activecb->cache.wmapmask[mapidx]+=0x01; break;
+		case 2 : (*(Bit16u*)&activecb->cache.wmapmask[mapidx])+=0x0101; break;
+		case 4 : (*(Bit32u*)&activecb->cache.wmapmask[mapidx])+=0x01010101; break;
 	}
 }
 
