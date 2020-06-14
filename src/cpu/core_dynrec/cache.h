@@ -533,22 +533,23 @@ static INLINE void cache_addb(Bit8u val) {
 }
 
 // place a 16bit value into the cache
-static INLINE void cache_addw(const uint16_t val) {
-	host_writew(cache.pos, val);
-	cache.pos += sizeof(val);
+static INLINE void cache_addw(Bit16u val) {
+	*(Bit16u*)cache.pos=val;
+	cache.pos+=2;
 }
 
 // place a 32bit value into the cache
-static INLINE void cache_addd(const uint32_t val) {
-	host_writed(cache.pos, val);
-	cache.pos += sizeof(val);
+static INLINE void cache_addd(Bit32u val) {
+	*(Bit32u*)cache.pos=val;
+	cache.pos+=4;
 }
 
 // place a 64bit value into the cache
-static INLINE void cache_addq(const uint64_t val) {
-	host_writeq(cache.pos, val);
-	cache.pos += sizeof(val);
+static INLINE void cache_addq(Bit64u val) {
+	*(Bit64u*)cache.pos=val;
+	cache.pos+=8;
 }
+
 
 static void dyn_return(BlockReturn retcode,bool ret_exception);
 static void dyn_run_code(void);
