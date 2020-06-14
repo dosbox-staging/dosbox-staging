@@ -192,7 +192,8 @@ void Program::InjectMissingNewline()
 	last_written_character = '\n';
 }
 
-bool Program::GetEnvStr(const char * entry,std::string & result) {
+bool Program::GetEnvStr(const char *entry, std::string &result) const
+{
 	/* Walk through the internal environment and see for a match */
 	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
 
@@ -217,7 +218,8 @@ bool Program::GetEnvStr(const char * entry,std::string & result) {
 	return false;
 }
 
-bool Program::GetEnvNum(Bitu num,std::string & result) {
+bool Program::GetEnvNum(Bitu num, std::string &result) const
+{
 	char env_string[1024+1];
 	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
 	do 	{
@@ -230,7 +232,8 @@ bool Program::GetEnvNum(Bitu num,std::string & result) {
 	return false;
 }
 
-Bitu Program::GetEnvCount(void) {
+Bitu Program::GetEnvCount() const
+{
 	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
 	Bitu num=0;
 	while (mem_readb(env_read)!=0) {
