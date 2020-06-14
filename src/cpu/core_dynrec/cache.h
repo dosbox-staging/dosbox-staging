@@ -171,7 +171,12 @@ public:
 			invalidation_map=(Bit8u*)malloc(4096);
 			memset(invalidation_map,0,4096);
 		}
-		host_addw(invalidation_map + addr, 0x101);
+#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
+		host_writew(&invalidation_map[addr],
+			host_readw(&invalidation_map[addr])+0x101);
+#else
+		(*(Bit16u*)&invalidation_map[addr])+=0x101;
+#endif
 		InvalidateRange(addr,addr+1);
 	}
 	void writed(PhysPt addr,Bitu val){
@@ -188,7 +193,12 @@ public:
 			invalidation_map=(Bit8u*)malloc(4096);
 			memset(invalidation_map,0,4096);
 		}
-		host_addd(invalidation_map + addr, 0x1010101);
+#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
+		host_writed(&invalidation_map[addr],
+			host_readd(&invalidation_map[addr])+0x1010101);
+#else
+		(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
+#endif
 		InvalidateRange(addr,addr+3);
 	}
 	bool writeb_checked(PhysPt addr,Bitu val) {
@@ -230,7 +240,12 @@ public:
 				invalidation_map=(Bit8u*)malloc(4096);
 				memset(invalidation_map,0,4096);
 			}
-			host_addw(invalidation_map + addr, 0x101);
+#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
+			host_writew(&invalidation_map[addr],
+				host_readw(&invalidation_map[addr])+0x101);
+#else
+			(*(Bit16u*)&invalidation_map[addr])+=0x101;
+#endif
 			if (InvalidateRange(addr,addr+1)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
@@ -254,7 +269,12 @@ public:
 				invalidation_map=(Bit8u*)malloc(4096);
 				memset(invalidation_map,0,4096);
 			}
-			host_addd(invalidation_map + addr, 0x1010101);
+#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
+			host_writed(&invalidation_map[addr],
+				host_readd(&invalidation_map[addr])+0x1010101);
+#else
+			(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
+#endif
 			if (InvalidateRange(addr,addr+3)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
