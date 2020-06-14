@@ -248,39 +248,43 @@ static const char * CardType()
 	        "sb.type does not match a known Sound Blaster type ID");
 	return types[type_id];
 }
+
 static void DSP_ChangeMode(DSP_MODES mode);
 
-static void DMA_Flush_Remaining();
-static void DMA_Suppress_Init(Bitu size);
-static void DMA_Suppress_Samples(Bitu size);
-static void DMA_Play_Samples(Bitu size);
-typedef void (*dma_process_f)(Bitu);
-static dma_process_f DMA_Process_Samples;
+static void FlushRemainingDMATransfer();
+static void SuppressInitialDMATransfer(Bitu size);
+static void SuppressDMATransfer(Bitu size);
+static void PlayDMATransfer(Bitu size);
+
+typedef void (*process_dma_f)(Bitu);
+static process_dma_f ProcessDMATransfer;
 
 static void DSP_SetSpeaker(bool requested_state) {
 	// Speaker-output is already in the requested state
 	if (sb.speaker == requested_state)
 		return;
 
-	// Otherwise change state per the request.
-	sb.speaker = requested_state;
-	sb.chan->Enable(requested_state);
-	if (sb.speaker) {
-		PIC_RemoveEvents(DMA_Suppress_Samples);
-		DMA_Flush_Remaining();
+	// If the speaker's being turned on, then flush old
+	// content before releasing the channel for playback.
+	if (requested_state) {
+		PIC_RemoveEvents(SuppressDMATransfer);
+		FlushRemainingDMATransfer();
 	}
+	sb.chan->Enable(requested_state);
+	sb.speaker = requested_state;
 	LOG_MSG("%s: Speaker-output has been toggled %s",
 	        CardType(), requested_state ? "on" : "off");
 }
 
-static void InitializeSpeakerState() {
-		// Real SBPro2 hardware starts with the card's speaker-output disabled 
-		sb.speaker = false;
-		// For SB16, the output channel starts active however subsequent
-		// requests to disable the speaker will be honored (see: SetSpeaker).
-		sb.chan->Enable(sb.type == SBT_16);
-		// Suppress the first small DMA transfer to avoid hearing it.
-		DMA_Process_Samples = &DMA_Suppress_Init;
+static void InitializeSpeakerState()
+{
+	// Real SBPro2 hardware starts with the card's speaker-output disabled 
+	sb.speaker = false;
+	// For SB16, the output channel starts active however subsequent
+	// requests to disable the speaker will be honored (see: SetSpeaker).
+	sb.chan->Enable(sb.type == SBT_16);
+	// Suppress the first small DMA transfer to avoid hearing it.
+	ProcessDMATransfer = &SuppressInitialDMATransfer;
 }
 
 static INLINE void SB_RaiseIRQ(SB_IRQS type) {
@@ -330,10 +334,14 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 			if (!min_size) min_size = 1;
 			min_size *= 2;
 			if (sb.dma.left > min_size) {
-				if (s > (sb.dma.left - min_size)) s = sb.dma.left - min_size;
-				//This will trigger an irq, see DMA_Play_Samples, so lets not do that
-				if (!sb.dma.autoinit && sb.dma.left <= sb.dma.min) s = 0;
-				if (s) DMA_Process_Samples(s);
+				if (s > (sb.dma.left - min_size))
+					s = sb.dma.left - min_size;
+				// This will trigger an irq, see
+				// PlayDMATransfer, so lets not do that
+				if (!sb.dma.autoinit && sb.dma.left <= sb.dma.min)
+					s = 0;
+				if (s)
+					ProcessDMATransfer(s);
 			}
 			sb.mode = MODE_DMA_MASKED;
 //			DSP_ChangeMode(MODE_DMA_MASKED);
@@ -343,7 +351,7 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 		if (sb.mode==MODE_DMA_MASKED && sb.dma.mode!=DSP_DMA_NONE) {
 			DSP_ChangeMode(MODE_DMA);
 //			sb.mode=MODE_DMA;
-			DMA_Flush_Remaining();
+			FlushRemainingDMATransfer();
 			LOG(LOG_SB,LOG_NORMAL)("DMA unmasked,starting output, auto %d block %d",chan->autoinit,chan->basecnt);
 		}
 	}
@@ -452,7 +460,8 @@ INLINE Bit8u decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 	return reference;
 }
 
-static void DMA_Play_Samples(Bitu size) {
+static void PlayDMATransfer(Bitu size)
+{
 	Bitu read=0;Bitu done=0;Bitu i=0;
 	last_dma_callback = PIC_FullIndex();
 
@@ -570,7 +579,7 @@ static void DMA_Play_Samples(Bitu size) {
 	//Check how many bytes were actually read
 	sb.dma.left-=read;
 	if (!sb.dma.left) {
-		PIC_RemoveEvents(DMA_Process_Samples);
+		PIC_RemoveEvents(ProcessDMATransfer);
 		if (sb.dma.mode >= DSP_DMA_16) 
 			SB_RaiseIRQ(SB_IRQ_16);
 		else 
@@ -601,18 +610,21 @@ static void DMA_Play_Samples(Bitu size) {
 	}
 }
 
-static void DMA_Suppress_Init(Bitu size) {
- 	// Only suppress the first dword-transfer or less
- 	if (size <= sizeof(uint32_t) || !sb.speaker) {
-		Suppress_DMA_Transfer(size);
+static void SuppressInitialDMATransfer(Bitu size)
+{
+	// Only suppress the first dword-transfer or less
+	if (size <= sizeof(uint32_t) || !sb.speaker) {
+		SuppressDMATransfer(size);
 		LOG_MSG("%s: Suppressed initial %" PRIuPTR "-byte DMA transfer",
 		        CardType(), size);
-	 } else
-		DMA_Play_Samples(size);
-	DMA_Process_Samples = &DMA_Play_Samples;
+	} else {
+		PlayDMATransfer(size);
+	}
+	ProcessDMATransfer = &PlayDMATransfer;
 }
 
-static void DMA_Suppress_Samples(Bitu size) {
+static void SuppressDMATransfer(Bitu size)
+{
 	if (sb.dma.left < size)
 		size = sb.dma.left;
 	const Bitu read = sb.dma.chan->Read(size, sb.dma.buf.b8);
@@ -631,23 +643,24 @@ static void DMA_Suppress_Samples(Bitu size) {
 	if (sb.dma.left) {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
 		float delay=(bigger*1000.0f)/sb.dma.rate;
-		PIC_AddEvent(DMA_Suppress_Samples, delay,bigger);
+		PIC_AddEvent(SuppressDMATransfer, delay, bigger);
 	}
 }
 
-static void DMA_Flush_Remaining() {
+static void FlushRemainingDMATransfer()
+{
 	if (!sb.dma.left) return;
 	if (!sb.speaker && sb.type!=SBT_16) {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
 		float delay=(bigger*1000.0f)/sb.dma.rate;
-		PIC_AddEvent(DMA_Suppress_Samples, delay,bigger);
+		PIC_AddEvent(SuppressDMATransfer, delay, bigger);
 		LOG(LOG_SB,LOG_NORMAL)("%s: Silent DMA Transfer scheduling IRQ in %.3f milliseconds",
 		                       CardType(), delay);
 	} else if (sb.dma.left<sb.dma.min) {
 		float delay=(sb.dma.left*1000.0f)/sb.dma.rate;
 		LOG(LOG_SB,LOG_NORMAL)("%s: Short transfer scheduling IRQ in %.3f milliseconds",
-		                       CardType(), delay);	
-		PIC_AddEvent(DMA_Process_Samples,delay,sb.dma.left);
+		                       CardType(), delay);
+		PIC_AddEvent(ProcessDMATransfer, delay, sb.dma.left);
 	}
 }
 
@@ -706,7 +719,7 @@ static void DSP_DoDMATransfer(const DMA_MODES mode, Bitu freq, bool autoinit, bo
 	sb.dma.min=(sb.dma.rate*3)/1000;
 	sb.chan->SetFreq(freq);
 
-	PIC_RemoveEvents(DMA_Process_Samples);
+	PIC_RemoveEvents(ProcessDMATransfer);
 	//Set to be masked, the dma call can change this again.
 	sb.mode = MODE_DMA_MASKED;
 	sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
@@ -821,7 +834,7 @@ static void DSP_Reset(void) {
 	sb.irq.pending_16bit=false;
 	sb.chan->SetFreq(22050);
 	InitializeSpeakerState();
-	PIC_RemoveEvents(DMA_Process_Samples);
+	PIC_RemoveEvents(ProcessDMATransfer);
 }
 
 static void DSP_DoReset(Bit8u val) {
@@ -1017,7 +1030,7 @@ static void DSP_DoCommand(void) {
 			// possibly different code here that does not switch to MODE_DMA_PAUSE
 		}
 		sb.mode=MODE_DMA_PAUSE;
-		PIC_RemoveEvents(DMA_Process_Samples);
+		PIC_RemoveEvents(ProcessDMATransfer);
 		break;
 	case 0xd1:	/* Enable Speaker */
 		DSP_SetSpeaker(true);
@@ -1612,7 +1625,7 @@ static void SBLASTER_CallBack(Bitu len) {
 		if (len&SB_SH_MASK) len+=1 << SB_SH;
 		len>>=SB_SH;
 		if (len>sb.dma.left) len=sb.dma.left;
-		DMA_Process_Samples(len);
+		ProcessDMATransfer(len);
 		break;
 	}
 }
