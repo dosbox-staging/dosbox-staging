@@ -197,21 +197,6 @@ char * StripWord(char *&line) {
 	return begin;
 }
 
-Bits ConvDecWord(char * word) {
-	bool negative=false;Bitu ret=0;
-	if (*word=='-') {
-		negative=true;
-		word++;
-	}
-	while (char c=*word) {
-		ret*=10;
-		ret+=c-'0';
-		word++;
-	}
-	if (negative) return 0-ret;
-	else return ret;
-}
-
 Bits ConvHexWord(char * word) {
 	Bitu ret=0;
 	while (char c=toupper(*reinterpret_cast<unsigned char*>(word))) {
