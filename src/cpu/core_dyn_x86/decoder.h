@@ -140,34 +140,28 @@ static Bit8u decode_fetchb(void) {
 	decode.code+=1;
 	return mem_readb(decode.code-1);
 }
-
-static uint16_t decode_fetchw()
-{
-	if (GCC_UNLIKELY(decode.page.index >= 4095)) {
-		uint16_t val = decode_fetchb();
-		val |= decode_fetchb() << 8;
+static Bit16u decode_fetchw(void) {
+	if (GCC_UNLIKELY(decode.page.index>=4095)) {
+   		Bit16u val=decode_fetchb();
+		val|=decode_fetchb() << 8;
 		return val;
 	}
-	host_addw(decode.page.wmap + decode.page.index, 0x0101);
-	decode.code += sizeof(uint16_t);
-	decode.page.index += sizeof(uint16_t);
-	return mem_readw(decode.code - sizeof(uint16_t));
+	*(Bit16u *)&decode.page.wmap[decode.page.index]+=0x0101;
+	decode.code+=2;decode.page.index+=2;
+	return mem_readw(decode.code-2);
 }
-
-static uint32_t decode_fetchd()
-{
-	if (GCC_UNLIKELY(decode.page.index >= 4093)) {
-		Bit32u val = decode_fetchb();
-		val |= decode_fetchb() << 8;
-		val |= decode_fetchb() << 16;
+static Bit32u decode_fetchd(void) {
+	if (GCC_UNLIKELY(decode.page.index>=4093)) {
+   		Bit32u val=decode_fetchb();
+		val|=decode_fetchb() << 8;
+		val|=decode_fetchb() << 16;
 		val|=decode_fetchb() << 24;
 		return val;
         /* Advance to the next page */
 	}
-	host_addd(decode.page.wmap + decode.page.index, 0x01010101);
-	decode.code += sizeof(uint32_t);
-	decode.page.index += sizeof(uint32_t);
-	return mem_readd(decode.code - sizeof(uint32_t));
+	*(Bit32u *)&decode.page.wmap[decode.page.index]+=0x01010101;
+	decode.code+=4;decode.page.index+=4;
+	return mem_readd(decode.code-4);
 }
 
 #define START_WMMEM 64
