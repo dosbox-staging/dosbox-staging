@@ -21,10 +21,9 @@
 
 #include "dosbox.h"
 
-#include <cstring>
-
 #include "types.h"
-#include "byteorder.h"
+#include "mem_host.h"
+#include "mem_unaligned.h"
 
 typedef Bit32u PhysPt;
 typedef Bit8u * HostPt;
@@ -54,99 +53,6 @@ bool MEM_ReAllocatePages(MemHandle & handle,Bitu pages,bool sequence);
 
 MemHandle MEM_NextHandle(MemHandle handle);
 MemHandle MEM_NextHandleAt(MemHandle handle,Bitu where);
-
-// Read and write single-byte values
-static INLINE uint8_t host_readb(const uint8_t *var)
-{
-	return *var;
-}
-
-static INLINE void host_writeb(uint8_t *var, const uint8_t val)
-{
-	*var = val;
-}
-
-// Read, write, and add using 16-bit words
-static INLINE uint16_t host_readw(const uint8_t *arr)
-{
-	uint16_t val;
-	memcpy(&val, arr, sizeof(val));
-	// array sequence was DOS little-endian, so convert value to host-type
-	return le16_to_host(val);
-}
-
-// Like the above, but allows index-style access assuming a 16-bit array
-static INLINE uint16_t host_readw_at(const uint8_t *arr, const uintptr_t index)
-{
-	return host_readw(arr + index * sizeof(uint16_t));
-}
-
-static INLINE void host_writew(uint8_t *arr, uint16_t val)
-{
-	// Convert the host-type value to little-endian before filling array
-	val = host_to_le16(val);
-	memcpy(arr, &val, sizeof(val));
-}
-
-static INLINE void host_writew_at(uint8_t *arr, const uintptr_t index, const uint16_t val)
-{
-	host_writew(arr + index * sizeof(uint16_t), val);
-}
-
-static INLINE void host_addw(uint8_t *arr, const uint16_t incr)
-{
-	const uint16_t val = host_readw(arr) + incr;
-	host_writew(arr, val);
-}
-
-// Read, write, and add using 32-bit double-words
-static INLINE uint32_t host_readd(const uint8_t *arr)
-{
-	uint32_t val;
-	memcpy(&val, arr, sizeof(val));
-	// array sequence was DOS little-endian, so convert value to host-type
-	return le32_to_host(val);
-}
-
-// Like the above, but allows index-style access assuming a 32-bit array
-static INLINE uint32_t host_readd_at(const uint8_t *arr, const uintptr_t index)
-{
-	return host_readd(arr + index * sizeof(uint32_t));
-}
-
-static INLINE void host_writed(uint8_t *arr, uint32_t val)
-{
-	// Convert the host-type value to little-endian before filling array
-	val = host_to_le32(val);
-	memcpy(arr, &val, sizeof(val));
-}
-
-static INLINE void host_writed_at(uint8_t *arr, const uintptr_t index, const uint32_t val)
-{
-	host_writed(arr + index * sizeof(uint32_t), val);
-}
-
-static INLINE void host_addd(uint8_t *arr, const uint32_t incr)
-{
-	const uint32_t val = host_readd(arr) + incr;
-	host_writed(arr, val);
-}
-
-// Read and write using 64-bit quad-words
-static INLINE uint64_t host_readq(const uint8_t *arr)
-{
-	uint64_t val;
-	memcpy(&val, arr, sizeof(val));
-	// array sequence was DOS little-endian, so convert value to host-type
-	return le64_to_host(val);
-}
-
-static INLINE void host_writeq(uint8_t *arr, uint64_t val)
-{
-	// Convert the host-type value to little-endian before filling array
-	val = host_to_le64(val);
-	memcpy(arr, &val, sizeof(val));
-}
 
 static INLINE void var_write(uint8_t *var, uint8_t val)
 {
