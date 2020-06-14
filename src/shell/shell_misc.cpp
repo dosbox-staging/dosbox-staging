@@ -386,7 +386,6 @@ bool DOS_Shell::Execute(char * name,char * args) {
 /* return true  => don't check for hardware changes in do_command 
  * return false =>       check for hardware changes in do_command */
 	char fullname[DOS_PATHLENGTH+4]; //stores results from Which
-	char* p_fullname;
 	char line[CMD_MAXLINE];
 	if(strlen(args)!= 0){
 		if(*args != ' '){ //put a space in front
@@ -410,9 +409,11 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		}
 		return true;
 	}
+
 	/* Check for a full name */
-	p_fullname = Which(name);
-	if (!p_fullname) return false;
+	const char *p_fullname = Which(name);
+	if (!p_fullname)
+		return false;
 	safe_strcpy(fullname, p_fullname);
 	const char* extension = strrchr(fullname,'.');
 	
@@ -422,7 +423,10 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	{
 		//Check if the result will fit in the parameters. Else abort
 		if(strlen(fullname) >( DOS_PATHLENGTH - 1) ) return false;
-		char temp_name[DOS_PATHLENGTH+4],* temp_fullname;
+
+		char temp_name[DOS_PATHLENGTH + 4];
+		const char *temp_fullname;
+
 		//try to add .com, .exe and .bat extensions to filename
 
 		safe_strcpy(temp_name, fullname);
@@ -563,7 +567,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 
 static char which_ret[DOS_PATHLENGTH+4];
 
-char * DOS_Shell::Which(char * name)
+const char *DOS_Shell::Which(const char *name) const
 {
 	const size_t name_len = strlen(name);
 	if (name_len >= DOS_PATHLENGTH)
