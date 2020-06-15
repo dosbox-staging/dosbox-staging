@@ -13,6 +13,7 @@ jobs:
     runs-on: ${{ matrix.conf.os }}
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
     strategy:
+      max-parallel: 4
       matrix:
         conf:
           - name: GCC, Ubuntu 16.04
@@ -27,15 +28,21 @@ jobs:
             os: ubuntu-20.04
             flags: -c gcc
             max_warnings: 26
-          - name: GCC, Ubuntu 20.04, +debug
-            os: ubuntu-20.04
-            flags: -c gcc
-            config_flags: --enable-debug
-            max_warnings: 137
           - name: Clang, Ubuntu 20.04
             os: ubuntu-20.04
             flags: -c clang -v 10
             max_warnings: 9
+          - name: Ubuntu, +debug
+            os: ubuntu-latest
+            flags: -c gcc
+            config_flags: --enable-debug
+            max_warnings: 137
+          - name: Ubuntu, -dyn_x86, +dynrec
+            os: ubuntu-latest
+            flags: -c gcc
+            config_flags: --disable-dynamic-x86
+            max_warnings: 33
+
     steps:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update
