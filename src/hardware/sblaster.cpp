@@ -230,13 +230,6 @@ static int E2_incr_table[4][9] = {
   {  0x01, -0x02,  0x04, -0x08, -0x10,  0x20, -0x40,  0x80,   90 }
 };
 
-#ifndef max
-#define max(a,b) ((a)>(b)?(a):(b))
-#endif
-#ifndef min
-#define min(a,b) ((a)<(b)?(a):(b))
-#endif
-
 static const char * CardType()
 {
 	constexpr std::array<const char *, 8> types = {"NONE",   "SB1",
