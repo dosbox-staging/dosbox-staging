@@ -392,6 +392,7 @@
     <ClInclude Include="..\include\keyboard.h" />
     <ClInclude Include="..\include\logging.h" />
     <ClInclude Include="..\include\mem.h" />
+    <ClInclude Include="..\include\mem_host.h" />
     <ClInclude Include="..\include\mem_unaligned.h" />
     <ClInclude Include="..\include\midi.h" />
     <ClInclude Include="..\include\mixer.h" />
