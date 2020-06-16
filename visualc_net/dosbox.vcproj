@@ -649,6 +649,25 @@
 						RelativePath="..\src\hardware\serialport\softmodem.h">
 					</File>
 				</Filter>
+				<Filter
+					Name="voodoo"
+					Filter="">
+					<File
+						RelativePath="..\src\hardware\voodoo.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\voodoo_emu.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\voodoo_interface.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\voodoo_opengl.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\voodoo_vogl.cpp">
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="gui"

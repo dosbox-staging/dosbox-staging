@@ -20,6 +20,10 @@
 #ifndef DOSBOX_VIDEO_H
 #define DOSBOX_VIDEO_H
 
+#ifndef DOSBOX_DOSBOX_H
+#include "dosbox.h"
+#endif
+
 #define REDUCE_JOYSTICK_POLLING
 
 typedef enum {
@@ -60,6 +64,7 @@ Bitu GFX_GetBestMode(Bitu flags);
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t cb);
 void GFX_SetShader(const char* src);
+void GFX_TearDown(void);
 
 void GFX_ResetScreen(void);
 void GFX_Start(void);
@@ -69,6 +74,13 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch);
 void GFX_EndUpdate( const Bit16u *changedLines );
 void GFX_GetSize(int &width, int &height, bool &fullscreen);
 void GFX_LosingFocus(void);
+
+bool GFX_IsFullscreen(void);
+void GFX_SwitchLazyFullscreen(bool lazy);
+bool GFX_LazyFullscreenRequested(void);
+void GFX_SwitchFullscreenNoReset(void);
+void GFX_RestoreMode(void);
+void GFX_UpdateSDLCaptureState(void);
 
 #if defined (WIN32)
 bool GFX_SDLUsingWinDIB(void);
