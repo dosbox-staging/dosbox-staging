@@ -365,7 +365,7 @@ bool localDrive::MakeDir(char * dir) {
 #if defined (WIN32)						/* MS Visual C++ */
 	int temp=mkdir(dirCache.GetExpandName(newdir));
 #else
-	int temp=mkdir(dirCache.GetExpandName(newdir),0700);
+	int temp=mkdir(dirCache.GetExpandName(newdir),0775);
 #endif
 	if (temp==0) dirCache.CacheOut(newdir,true);
 
