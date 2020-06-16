@@ -23,6 +23,7 @@ keyboard.h \
 logging.h \
 mapper.h \
 mem.h \
+mem_unaligned.h \
 midi.h \
 mixer.h \
 mouse.h \
