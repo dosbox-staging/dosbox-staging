@@ -160,7 +160,7 @@ bool Overlay_Drive::MakeDir(char * dir) {
 #if defined (WIN32)						/* MS Visual C++ */
 	int temp = mkdir(newdir);
 #else
-	int temp = mkdir(newdir,0700);
+	int temp = mkdir(newdir,0775);
 #endif
 	if (temp==0) {
 		char fakename[CROSS_LEN];
