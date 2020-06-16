@@ -389,7 +389,7 @@ dnl x86 only enable it if dynamic-x86 is disabled.
         AC_MSG_RESULT([no, using dynamic-x86])
     fi
   else 
-    if test x$c_targetcpu = xarm -o x$c_targetcpu = xppc64le ; then
+    if test x$c_targetcpu = xarm -o x$c_targetcpu = xppc64le -o x$c_targetcpu = xpowerpc ; then
       AC_DEFINE(C_DYNREC,1)
       AC_MSG_RESULT(yes)
     else
