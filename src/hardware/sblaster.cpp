@@ -242,6 +242,20 @@ static const char * CardType()
 	return types[type_id];
 }
 
+static const char *DmaModeName()
+{
+	switch (sb.dma.mode) {
+	case DSP_DMA_2: return "2-bit ADPCM"; break;
+	case DSP_DMA_3: return "3-bit ADPCM"; break;
+	case DSP_DMA_4: return "4-bit ADPCM"; break;
+	case DSP_DMA_8: return "8-bit PCM"; break;
+	case DSP_DMA_16: return "16-bit PCM"; break;
+	case DSP_DMA_16_ALIASED: return "16-bit (aliased) PCM"; break;
+	case DSP_DMA_NONE: return "non-DMA"; break;
+	};
+	return "Unknown DMA-mode";
+}
+
 static void DSP_ChangeMode(DSP_MODES mode);
 
 static void FlushRemainingDMATransfer();
@@ -603,16 +617,27 @@ static void PlayDMATransfer(Bitu size)
 	}
 }
 
+/*
+ *  This function intercepts the first DMA transfer and decides if it should
+ *  suppress or play it.  The criteria is as follows:
+ *   - Suppress if the card is not in a DMA mode (ie: junk data)
+ *   - Suppress DWORD-sized transfers (or less) in 8-bit DMA modes
+ *   - Suppress BYTE-sized transfers in 16-bit DMA modes
+ */
 static void SuppressInitialDMATransfer(Bitu size)
 {
-	// Only suppress the first dword-transfer or less
-	if (size <= sizeof(uint32_t) || !sb.speaker) {
+	if (sb.dma.mode == DSP_DMA_NONE ||
+	    (sb.dma.mode < DSP_DMA_16 && size <= sizeof(uint32_t)) ||
+	    size <= sizeof(uint8_t)) {
 		SuppressDMATransfer(size);
-		LOG_MSG("%s: Suppressed initial %" PRIuPTR "-byte DMA transfer",
-		        CardType(), size);
+		LOG_MSG("%s: Suppressed initial %" PRIuPTR "-byte %s transfer",
+		        CardType(), size, DmaModeName());
 	} else {
 		PlayDMATransfer(size);
 	}
+	// We only get one shot at suppressing the first transfer,
+	// so switch back to normal processing to deactivate this
+	// function from intercepting subsequent DMA transfers.
 	ProcessDMATransfer = &PlayDMATransfer;
 }
 
@@ -718,22 +743,10 @@ static void DSP_DoDMATransfer(const DMA_MODES mode, Bitu freq, bool autoinit, bo
 	sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
 
 #if (C_DEBUG)
-	const char *type;
-	switch (mode) {
-	case DSP_DMA_2:          type = "2-bits ADPCM"; break;
-	case DSP_DMA_3:          type = "3-bits ADPCM"; break;
-	case DSP_DMA_4:          type = "4-bits ADPCM"; break;
-	case DSP_DMA_8:          type = "8-bits PCM"; break;
-	case DSP_DMA_16:         type = "16-bits PCM"; break;
-	case DSP_DMA_16_ALIASED: type = "16-bits (aliased) PCM"; break;
-	case DSP_DMA_NONE:       type = ""; break;
-	};
-	LOG(LOG_SB, LOG_NORMAL)("DMA Transfer:%s %s %s freq %d rate %d size %d",
-		type,
-		stereo ? "Stereo" : "Mono",
-		autoinit ? "Auto-Init" : "Single-Cycle",
-		freq, sb.dma.rate, sb.dma.left
-		);
+	LOG(LOG_SB, LOG_NORMAL)
+	("DMA Transfer:%s %s %s freq %d rate %d size %d", DmaModeName(),
+	 stereo ? "Stereo" : "Mono", autoinit ? "Auto-Init" : "Single-Cycle",
+	 freq, sb.dma.rate, sb.dma.left);
 #endif
 }
 
@@ -832,10 +845,10 @@ static void DSP_Reset(void) {
 
 static void DSP_DoReset(Bit8u val) {
 	if (((val&1)!=0) && (sb.dsp.state!=DSP_S_RESET)) {
-//TODO Get out of highspeed mode
-		LOG_MSG("%s: DSP reset requested", CardType());
-		// Halt the channel so we're silent acoss reset events.
-		// Channel is re-enabled (if SB16) or via control by the game (non-SB16).
+		// TODO Get out of highspeed mode
+		// Halt the channel so we're silent across reset events.
+		// Channel is re-enabled (if SB16) or via control by the game
+		// (non-SB16).
 		sb.chan->Enable(false);
 		DSP_Reset();
 		sb.dsp.state=DSP_S_RESET;
@@ -843,6 +856,7 @@ static void DSP_DoReset(Bit8u val) {
 		sb.dsp.state=DSP_S_RESET_WAIT;
 		PIC_RemoveEvents(DSP_FinishReset);
 		PIC_AddEvent(DSP_FinishReset,20.0f/1000.0f,0);	// 20 microseconds
+		LOG_MSG("%s: DSP was reset", CardType());
 	}
 }
 
