@@ -96,21 +96,6 @@ static struct {
 
 Bit8u MixTemp[MIXER_BUFSIZE];
 
-float GetFadeScalar(const size_t step)
-{
-	static constexpr std::array<float, 51> cos_scalars = {
-	        1.0f,    0.9990f, 0.9961f, 0.9911f, 0.9843f, 0.9755f, 0.9649f,
-	        0.9524f, 0.9382f, 0.9222f, 0.9045f, 0.8853f, 0.8645f, 0.8423f,
-	        0.8187f, 0.7939f, 0.7679f, 0.7409f, 0.7129f, 0.6841f, 0.6545f,
-	        0.6243f, 0.5937f, 0.5627f, 0.5314f, 0.5000f, 0.4686f, 0.4373f,
-	        0.4063f, 0.3757f, 0.3455f, 0.3159f, 0.2871f, 0.2591f, 0.2321f,
-	        0.2061f, 0.1813f, 0.1577f, 0.1355f, 0.1147f, 0.0955f, 0.0778f,
-	        0.0618f, 0.0476f, 0.0351f, 0.0245f, 0.0157f, 0.0089f, 0.0039f,
-	        0.0010f, 0.0000f};
-	constexpr size_t last = cos_scalars.size() - 1u;
-	return cos_scalars[last - std::min(last, step)];
-}
-
 MixerChannel::MixerChannel(MIXER_Handler _handler, Bitu _freq, const char *_name)
         : name(_name),
           handler(_handler)
