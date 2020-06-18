@@ -16,10 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-
 /* MIPS32 (little endian) backend by crazyc */
-
 
 // some configuring defines that specify the capabilities of this architecture
 // or aspects of the recompiling

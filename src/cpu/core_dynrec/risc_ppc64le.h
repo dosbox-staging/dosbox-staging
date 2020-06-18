@@ -16,6 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+/* PPC64LE/OpenPOWER (little endian) backend */
+
 // debugging
 #define DEBUG_ME 0
 #define __ASSERT(x,...) \

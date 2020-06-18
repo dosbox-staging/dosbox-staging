@@ -16,10 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-
-/* ARMv8 (little endian, 64-bit) backend by M-HT */
-
+/* ARMv8 Aarch64 (little endian, 64-bit) backend by M-HT */
 
 // some configuring defines that specify the capabilities of this architecture
 // or aspects of the recompiling

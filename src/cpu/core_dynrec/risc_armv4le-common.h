@@ -16,10 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-
 /* ARMv4 (little endian) backend by M-HT (common data/functions) */
-
 
 // some configuring defines that specify the capabilities of this architecture
 // or aspects of the recompiling

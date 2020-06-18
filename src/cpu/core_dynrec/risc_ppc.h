@@ -16,6 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+/* PowerPC (big endian, 32-bit) backend */
+
 // some configuring defines that specify the capabilities of this architecture
 // or aspects of the recompiling
 

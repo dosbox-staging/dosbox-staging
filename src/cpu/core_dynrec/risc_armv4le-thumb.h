@@ -16,10 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-
 /* ARMv4 (little endian) backend by M-HT (thumb version) */
-
 
 // temporary "lo" registers
 #define templo1 HOST_v3
