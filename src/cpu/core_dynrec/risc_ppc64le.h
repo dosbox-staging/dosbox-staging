@@ -19,7 +19,6 @@
 /* PPC64LE/OpenPOWER (little endian) backend */
 
 // debugging
-#define DEBUG_ME 0
 #define __ASSERT(x,...) \
     { if(!(x)) { fprintf(stderr, "ASSERT:" __VA_ARGS__); asm("trap\n"); } }
 
@@ -142,11 +141,8 @@ extern FPU_rec fpu;
 
 // move a full register from reg_src to reg_dst
 // truncate to 32-bits (matches x86_64, which uses 32-bit mov)
-static void gen_mov_regs(HostReg reg_dst,HostReg reg_src)
+static void gen_mov_regs(HostReg reg_dst, HostReg reg_src)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 // rld* etc. are backwards: rS is first in the encoding
 // always move, even if reg_src == reg_dst, because we may need truncation
 	RLD_OP(30, reg_src, reg_dst, 0, 32, 0, 0); // clrldi dst, src, 32
@@ -154,11 +150,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 
 // move a 16bit constant value into dest_reg
 // the upper 16bit of the destination register may be destroyed
-static void gen_mov_word_to_reg_imm(HostReg dest_reg,Bit16u imm)
+static void gen_mov_word_to_reg_imm(HostReg dest_reg, Bit16u imm)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	IMM_OP(14, dest_reg, 0, imm); // li dest,imm
 }
 
@@ -223,11 +216,8 @@ static HostReg INLINE gen_addr(Bit64s &addr, HostReg dest)
 }
 
 // move a 64bit constant value into dest_reg
-static void gen_mov_qword_to_reg_imm(HostReg dest_reg,Bit64u imm)
+static void gen_mov_qword_to_reg_imm(HostReg dest_reg, Bit64u imm)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	if (imm & 0xffffffff00000000) {
 		IMM_OP(15, dest_reg, 0,        (imm & 0xffff000000000000)>>48); // lis dest, upper
 		if (imm & 0x0000ffff00000000)
@@ -242,11 +232,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 }
 
 // move a 32bit constant value into dest_reg
-static void gen_mov_dword_to_reg_imm(HostReg dest_reg,Bit32u imm)
+static void gen_mov_dword_to_reg_imm(HostReg dest_reg, Bit32u imm)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	if ((Bit16s)imm != imm) {
 		IMM_OP(15,         dest_reg, 0,        (imm & 0xffff0000)>>16); // lis
 		if (imm & 0x0000ffff)
@@ -256,13 +243,10 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 	}
 }
 
-// move a 32bit (dword==true) or 16bit (dword==false) value from memory into dest_reg
-// 16bit moves may destroy the upper 16bit of the destination register
-static void gen_mov_word_to_reg(HostReg dest_reg,void* data,bool dword)
+// move a 32bit (dword==true) or 16bit (dword==false) value from memory into
+// dest_reg 16bit moves may destroy the upper 16bit of the destination register
+static void gen_mov_word_to_reg(HostReg dest_reg, void *data, bool dword)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	Bit64s addr = (Bit64s)data;
 	HostReg ld = gen_addr(addr, dest_reg);
 	IMM_OP(dword ? 32:40, dest_reg, ld, addr);  // lwz/lhz dest, addr@l(ld)
@@ -272,10 +256,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 // the upper 24bit of the destination register can be destroyed
 // this function does not use FC_OP1/FC_OP2 as dest_reg as these
 // registers might not be directly byte-accessible on some architectures
-static void gen_mov_byte_to_reg_low_imm(HostReg dest_reg,Bit8u imm) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+static void gen_mov_byte_to_reg_low_imm(HostReg dest_reg, Bit8u imm)
+{
 	gen_mov_word_to_reg_imm(dest_reg, imm);
 }
 
@@ -283,19 +265,14 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 // the upper 24bit of the destination register can be destroyed
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
-static void gen_mov_byte_to_reg_low_imm_canuseword(HostReg dest_reg,Bit8u imm) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+static void gen_mov_byte_to_reg_low_imm_canuseword(HostReg dest_reg, Bit8u imm)
+{
 	gen_mov_word_to_reg_imm(dest_reg, imm);
 }
 
 // move 32bit (dword==true) or 16bit (dword==false) of a register into memory
-static void gen_mov_word_from_reg(HostReg src_reg,void* dest,bool dword)
+static void gen_mov_word_from_reg(HostReg src_reg, void *dest, bool dword)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	Bit64s addr = (Bit64s)dest;
 	HostReg ld = gen_addr(addr, HOST_R8);
 	IMM_OP(dword ? 36 : 44, src_reg, ld, addr);  // stw/sth src,addr@l(ld)
@@ -305,11 +282,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 // the upper 24bit of the destination register can be destroyed
 // this function does not use FC_OP1/FC_OP2 as dest_reg as these
 // registers might not be directly byte-accessible on some architectures
-static void gen_mov_byte_to_reg_low(HostReg dest_reg,void* data)
+static void gen_mov_byte_to_reg_low(HostReg dest_reg, void *data)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	Bit64s addr = (Bit64s)data;
 	HostReg ld = gen_addr(addr, dest_reg);
 	IMM_OP(34, dest_reg, ld, addr);  // lbz dest,addr@l(ld)
@@ -319,19 +293,14 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 // the upper 24bit of the destination register can be destroyed
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
-static void gen_mov_byte_to_reg_low_canuseword(HostReg dest_reg,void* data) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+static void gen_mov_byte_to_reg_low_canuseword(HostReg dest_reg, void *data)
+{
 	gen_mov_byte_to_reg_low(dest_reg, data);
 }
 
 // move the lowest 8bit of a register into memory
-static void gen_mov_byte_from_reg_low(HostReg src_reg,void* dest)
+static void gen_mov_byte_from_reg_low(HostReg src_reg, void *dest)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	Bit64s addr = (Bit64s)dest;
 	HostReg ld = gen_addr(addr, HOST_R8);
 	IMM_OP(38, src_reg, ld, addr);  // stb src_reg,addr@l(ld)
@@ -339,11 +308,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 
 // convert an 8bit word to a 32bit dword
 // the register is zero-extended (sign==false) or sign-extended (sign==true)
-static void gen_extend_byte(bool sign,HostReg reg)
+static void gen_extend_byte(bool sign, HostReg reg)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	if (sign)
 		EXT_OP(reg, reg, 0, 954, 0); // extsb reg, src
 	else
@@ -352,11 +318,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 
 // convert a 16bit word to a 32bit dword
 // the register is zero-extended (sign==false) or sign-extended (sign==true)
-static void gen_extend_word(bool sign,HostReg reg)
+static void gen_extend_word(bool sign, HostReg reg)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	if (sign)
 		EXT_OP(reg, reg, 0, 922, 0); // extsh reg, reg
 	else
@@ -364,21 +327,15 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 }
 
 // add a 32bit value from memory to a full register
-static void gen_add(HostReg reg,void* op)
+static void gen_add(HostReg reg, void *op)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	gen_mov_word_to_reg(HOST_R8, op, true); // r8 = *(Bit32u*)op
 	EXT_OP(reg,reg,HOST_R8,266,0);          // add reg,reg,r8
 }
 
 // add a 32bit constant value to a full register
-static void gen_add_imm(HostReg reg,Bit32u imm)
+static void gen_add_imm(HostReg reg, Bit32u imm)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
     if (!imm) return;
 	if ((Bit16s)imm != (Bit32s)imm)
 		IMM_OP(15, reg, reg, (imm+0x8000)>>16); // addis reg,reg,imm@ha
@@ -387,10 +344,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 }
 
 // and a 32bit constant value with a full register
-static void gen_and_imm(HostReg reg,Bit32u imm) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+static void gen_and_imm(HostReg reg, Bit32u imm)
+{
 	Bits sbit,ebit,tbit,bbit,abit,i;
 
 	// sbit = number of leading 0 bits
@@ -454,20 +409,15 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 }
 
 // move a 32bit constant value into memory
-static void gen_mov_direct_dword(void* dest,Bit32u imm) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+static void gen_mov_direct_dword(void *dest, Bit32u imm)
+{
 	gen_mov_dword_to_reg_imm(HOST_R9, imm);
 	gen_mov_word_from_reg(HOST_R9, dest, 1);
 }
 
 // move an address into memory (assumes address != NULL)
-static void INLINE gen_mov_direct_ptr(void* dest,DRC_PTR_SIZE_IM imm)
+static void INLINE gen_mov_direct_ptr(void *dest, DRC_PTR_SIZE_IM imm)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	block_ptr = 0;
 	gen_mov_qword_to_reg_imm(HOST_R27, imm);
 	// this will be used to look-up the linked blocks
@@ -478,12 +428,10 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 	DSF_OP(62, HOST_R27, ld, addr, 0); // std r27, addr@l(ld)
 }
 
-// add a 32bit (dword==true) or 16bit (dword==false) constant value to a 32bit memory value
-static void gen_add_direct_word(void* dest,Bit32u imm,bool dword)
+// add a 32bit (dword==true) or 16bit (dword==false) constant value
+// to a 32bit memory value
+static void gen_add_direct_word(void *dest, Bit32u imm, bool dword)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	HostReg ld;
 	Bit64s addr = (Bit64s)dest;
 
@@ -505,22 +453,18 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 	IMM_OP(dword ? 36 : 44, HOST_R9, ld, addr); // stw/sth r9, addr@l(ld)
 }
 
-// subtract a 32bit (dword==true) or 16bit (dword==false) constant value from a 32-bit memory value
-static void gen_sub_direct_word(void* dest,Bit32u imm,bool dword) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+// subtract a 32bit (dword==true) or 16bit (dword==false) constant value
+// from a 32-bit memory value
+static void gen_sub_direct_word(void *dest, Bit32u imm, bool dword)
+{
 	gen_add_direct_word(dest, -(Bit32s)imm, dword);
 }
 
 // effective address calculation, destination is dest_reg
 // scale_reg is scaled by scale (scale_reg*(2^scale)) and
 // added to dest_reg, then the immediate value is added
-static INLINE void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits imm)
+static INLINE void gen_lea(HostReg dest_reg, HostReg scale_reg, Bitu scale, Bits imm)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	if (scale)
 	{
 		RLW_OP(21, scale_reg, HOST_R8, scale, 0, 31-scale, 0); // slwi scale_reg,r8,scale
@@ -534,11 +478,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 // effective address calculation, destination is dest_reg
 // dest_reg is scaled by scale (dest_reg*(2^scale)),
 // then the immediate value is added
-static INLINE void gen_lea(HostReg dest_reg,Bitu scale,Bits imm)
+static INLINE void gen_lea(HostReg dest_reg, Bitu scale, Bits imm)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	if (scale)
 	{
 		RLW_OP(21, dest_reg, dest_reg, scale, 0, 31-scale, 0); // slwi dest,dest,scale
@@ -587,22 +528,18 @@ static int INLINE do_gen_call(void *func, Bit64u *npos, bool pad)
 }
 
 // generate a call to a parameterless function
-static void INLINE gen_call_function_raw(void * func,bool fastcall=true)
+static void INLINE gen_call_function_raw(void *func, bool fastcall = true)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	cache.pos += do_gen_call(func, (Bit64u*)cache.pos, fastcall);
 }
 
 // generate a call to a function with paramcount parameters
 // note: the parameters are loaded in the architecture specific way
 // using the gen_load_param_ functions below
-static Bit64u INLINE gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false)
+static Bit64u INLINE gen_call_function_setup(void *func,
+                                             Bitu paramcount,
+                                             bool fastcall = false)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	Bit64u proc_addr=(Bit64u)cache.pos;
 	gen_call_function_raw(func,fastcall);
 	return proc_addr;
@@ -610,46 +547,36 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 
 // load an immediate value as param'th function parameter
 // these are 32-bit (see risc_x64.h)
-static void INLINE gen_load_param_imm(Bitu imm,Bitu param) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+static void INLINE gen_load_param_imm(Bitu imm, Bitu param)
+{
 	gen_mov_dword_to_reg_imm(RegParams[param], imm);
 }
 
 // load an address as param'th function parameter
 // 32-bit
-static void INLINE gen_load_param_addr(Bitu addr,Bitu param) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+static void INLINE gen_load_param_addr(Bitu addr, Bitu param)
+{
 	gen_load_param_imm(addr, param);
 }
 
 // load a host-register as param'th function parameter
 // 32-bit
-static void INLINE gen_load_param_reg(Bitu reg,Bitu param) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+static void INLINE gen_load_param_reg(Bitu reg, Bitu param)
+{
 	gen_mov_regs(RegParams[param], (HostReg)reg);
 }
 
 // load a value from memory as param'th function parameter
 // 32-bit
-static void INLINE gen_load_param_mem(Bitu mem,Bitu param) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+static void INLINE gen_load_param_mem(Bitu mem, Bitu param)
+{
 	gen_mov_word_to_reg(RegParams[param], (void*)mem, true);
 }
 
 // jump to an address pointed at by ptr, offset is in imm
 // use r12 for ppc64le ABI compatibility
-static void gen_jmp_ptr(void * ptr,Bits imm=0) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+static void gen_jmp_ptr(void *ptr, Bits imm = 0)
+{
 	// "gen_mov_qword_to_reg"
 	gen_mov_qword_to_reg_imm(HOST_R12,(Bit64u)ptr);         // r12 = *(Bit64u*)ptr
 	DSF_OP(58, HOST_R12, HOST_R12, 0, 0);
@@ -667,11 +594,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 
 // short conditional jump (+-127 bytes) if register is zero
 // the destination is set by gen_fill_branch() later
-static Bit64u gen_create_branch_on_zero(HostReg reg,bool dword)
+static Bit64u gen_create_branch_on_zero(HostReg reg, bool dword)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	if (!dword)
 		IMM_OP(28,reg,HOST_R0,0xFFFF); // andi. r0,reg,0xFFFF
 	else
@@ -683,11 +607,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 
 // short conditional jump (+-127 bytes) if register is nonzero
 // the destination is set by gen_fill_branch() later
-static Bit64u gen_create_branch_on_nonzero(HostReg reg,bool dword)
+static Bit64u gen_create_branch_on_nonzero(HostReg reg, bool dword)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	if (!dword)
 		IMM_OP(28,reg,HOST_R0,0xFFFF); // andi. r0,reg,0xFFFF
 	else
@@ -700,9 +621,6 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 // calculate relative offset and fill it into the location pointed to by data
 static void gen_fill_branch(DRC_PTR_SIZE_IM data)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 #if C_DEBUG
 	Bits len=(Bit64u)cache.pos-data;
 	if (len<0) len=-len;
@@ -717,11 +635,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 // conditional jump if register is nonzero
 // for isdword==true the 32bit of the register are tested
 // for isdword==false the lowest 8bit of the register are tested
-static Bit64u gen_create_branch_long_nonzero(HostReg reg,bool dword)
+static Bit64u gen_create_branch_long_nonzero(HostReg reg, bool dword)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	if (!dword)
 		IMM_OP(28,reg,HOST_R0,0xFF); // andi. r0,reg,0xFF
 	else
@@ -734,9 +649,6 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 // compare 32bit-register against zero and jump if value less/equal than zero
 static Bit64u gen_create_branch_long_leqzero(HostReg reg)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	IMM_OP(11, 0, reg, 0); // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x04, 1, 0); // ble
@@ -744,10 +656,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 }
 
 // calculate long relative offset and fill it into the location pointed to by data
-static void gen_fill_branch_long(Bit64u data) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+static void gen_fill_branch_long(Bit64u data)
+{
 	return gen_fill_branch((DRC_PTR_SIZE_IM)data);
 }
 
@@ -776,11 +686,8 @@ static void cache_block_closing(Bit8u* block_start,Bitu block_size)
 
 static void cache_block_before_close(void) {}
 
-static void gen_function(void* func)
+static void gen_function(void *func)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	Bit64s off = (Bit64s)func - (Bit64s)cache.pos;
 
 	// relative branches are limited to +/- 32MB
@@ -799,9 +706,6 @@ static void* epilog_addr;
 static Bit8u *getCF_glue;
 static void gen_run_code(void)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	// prolog
 	DSF_OP(62, HOST_R1, HOST_R1, -256, 1); // stdu sp,-256(sp)
 	EXT_OP(FC_OP1, 9, 0, 467, 0); // mtctr FC_OP1
@@ -849,9 +753,6 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 // return from a function
 static void gen_return_function(void)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	gen_function(epilog_addr);
 }
 
@@ -859,11 +760,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 // call to a simpler function
 // these must equal the length of a branch stanza (see
 // do_gen_call)
-static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type)
+static void gen_fill_function_ptr(Bit8u *pos, void *fct_ptr, Bitu flags_type)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	Bit32u *op = (Bit32u*)pos;
 
     // blank the entire old stanza
@@ -1005,47 +903,40 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 	}
 }
 
-// mov 16bit value from Segs[index] into dest_reg using FC_SEGS_ADDR (index modulo 2 must be zero)
-// 16bit moves may destroy the upper 16bit of the destination register
-static void gen_mov_seg16_to_reg(HostReg dest_reg,Bitu index) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+// mov 16bit value from Segs[index] into dest_reg using FC_SEGS_ADDR (index
+// modulo 2 must be zero) 16bit moves may destroy the upper 16bit of the
+// destination register
+static void gen_mov_seg16_to_reg(HostReg dest_reg, Bitu index)
+{
 	gen_mov_word_to_reg(dest_reg, (Bit8u*)&Segs + index, false);
 }
 
-// mov 32bit value from Segs[index] into dest_reg using FC_SEGS_ADDR (index modulo 4 must be zero)
-static void gen_mov_seg32_to_reg(HostReg dest_reg,Bitu index) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+// mov 32bit value from Segs[index] into dest_reg using FC_SEGS_ADDR (index
+// modulo 4 must be zero)
+static void gen_mov_seg32_to_reg(HostReg dest_reg, Bitu index)
+{
 	gen_mov_word_to_reg(dest_reg, (Bit8u*)&Segs + index, true);
 }
 
-// add a 32bit value from Segs[index] to a full register using FC_SEGS_ADDR (index modulo 4 must be zero)
-static void gen_add_seg32_to_reg(HostReg reg,Bitu index) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+// add a 32bit value from Segs[index] to a full register using FC_SEGS_ADDR
+// (index modulo 4 must be zero)
+static void gen_add_seg32_to_reg(HostReg reg, Bitu index)
+{
 	gen_add(reg, (Bit8u*)&Segs + index);
 }
 
-// mov 16bit value from cpu_regs[index] into dest_reg using FC_REGS_ADDR (index modulo 2 must be zero)
-// 16bit moves may destroy the upper 16bit of the destination register
-static void gen_mov_regval16_to_reg(HostReg dest_reg,Bitu index)
+// mov 16bit value from cpu_regs[index] into dest_reg using FC_REGS_ADDR (index
+// modulo 2 must be zero) 16bit moves may destroy the upper 16bit of the
+// destination register
+static void gen_mov_regval16_to_reg(HostReg dest_reg, Bitu index)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	gen_mov_word_to_reg(dest_reg, (Bit8u*)&cpu_regs + index, false);
 }
 
-// mov 32bit value from cpu_regs[index] into dest_reg using FC_REGS_ADDR (index modulo 4 must be zero)
-static void gen_mov_regval32_to_reg(HostReg dest_reg,Bitu index)
+// mov 32bit value from cpu_regs[index] into dest_reg using FC_REGS_ADDR (index
+// modulo 4 must be zero)
+static void gen_mov_regval32_to_reg(HostReg dest_reg, Bitu index)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	gen_mov_word_to_reg(dest_reg, (Bit8u*)&cpu_regs + index, true);
 }
 
@@ -1053,11 +944,8 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 // the upper 24bit of the destination register can be destroyed
 // this function does not use FC_OP1/FC_OP2 as dest_reg as these
 // registers might not be directly byte-accessible on some architectures
-static void gen_mov_regbyte_to_reg_low(HostReg dest_reg,Bitu index)
+static void gen_mov_regbyte_to_reg_low(HostReg dest_reg, Bitu index)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	gen_mov_byte_to_reg_low(dest_reg, (Bit8u*)&cpu_regs + index);
 }
 
@@ -1065,66 +953,55 @@ fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
 // the upper 24bit of the destination register can be destroyed
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
-static void INLINE gen_mov_regbyte_to_reg_low_canuseword(HostReg dest_reg,Bitu index) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+static void INLINE gen_mov_regbyte_to_reg_low_canuseword(HostReg dest_reg, Bitu index)
+{
 	gen_mov_byte_to_reg_low_canuseword(dest_reg, (Bit8u*)&cpu_regs + index);
 }
 
-// move 16bit of register into cpu_regs[index] using FC_REGS_ADDR (index modulo 2 must be zero)
-static void gen_mov_regval16_from_reg(HostReg src_reg,Bitu index)
+// move 16bit of register into cpu_regs[index] using FC_REGS_ADDR
+// (index modulo 2 must be zero)
+static void gen_mov_regval16_from_reg(HostReg src_reg, Bitu index)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	gen_mov_word_from_reg(src_reg, (Bit8u*)&cpu_regs + index, false);
 }
 
-// move 32bit of register into cpu_regs[index] using FC_REGS_ADDR (index modulo 4 must be zero)
-static void gen_mov_regval32_from_reg(HostReg src_reg,Bitu index)
+// move 32bit of register into cpu_regs[index] using FC_REGS_ADDR
+// (index modulo 4 must be zero)
+static void gen_mov_regval32_from_reg(HostReg src_reg, Bitu index)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	gen_mov_word_from_reg(src_reg, (Bit8u*)&cpu_regs + index, true);
 }
 
 // move the lowest 8bit of a register into cpu_regs[index] using FC_REGS_ADDR
-static void gen_mov_regbyte_from_reg_low(HostReg src_reg,Bitu index)
+static void gen_mov_regbyte_from_reg_low(HostReg src_reg, Bitu index)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	gen_mov_byte_from_reg_low(src_reg, (Bit8u*)&cpu_regs + index);
 }
 
-// add a 32bit value from cpu_regs[index] to a full register using FC_REGS_ADDR (index modulo 4 must be zero)
-static void gen_add_regval32_to_reg(HostReg reg,Bitu index)
+// add a 32bit value from cpu_regs[index] to a full register using FC_REGS_ADDR
+// (index modulo 4 must be zero)
+static void gen_add_regval32_to_reg(HostReg reg, Bitu index)
 {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
 	gen_add(reg, (Bit8u*)&cpu_regs + index);
 }
 
-// move 32bit (dword==true) or 16bit (dword==false) of a register into cpu_regs[index] using FC_REGS_ADDR (if dword==true index modulo 4 must be zero) (if dword==false index modulo 2 must be zero)
-static void gen_mov_regword_from_reg(HostReg src_reg,Bitu index,bool dword) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+// move 32bit (dword==true) or 16bit (dword==false) of a register into
+// cpu_regs[index] using FC_REGS_ADDR (if dword==true index modulo 4 must be
+// zero) (if dword==false index modulo 2 must be zero)
+static void gen_mov_regword_from_reg(HostReg src_reg, Bitu index, bool dword)
+{
 	if (dword)
 		gen_mov_regval32_from_reg(src_reg, index);
 	else
 		gen_mov_regval16_from_reg(src_reg, index);
 }
 
-// move a 32bit (dword==true) or 16bit (dword==false) value from cpu_regs[index] into dest_reg using FC_REGS_ADDR (if dword==true index modulo 4 must be zero) (if dword==false index modulo 2 must be zero)
-// 16bit moves may destroy the upper 16bit of the destination register
-static void gen_mov_regword_to_reg(HostReg dest_reg,Bitu index,bool dword) {
-#if DEBUG_ME
-fprintf(stderr, "ppc64le: %s\n", __FUNCTION__);
-#endif
+// move a 32bit (dword==true) or 16bit (dword==false) value from cpu_regs[index]
+// into dest_reg using FC_REGS_ADDR (if dword==true index modulo 4 must be zero)
+// (if dword==false index modulo 2 must be zero) 16bit moves may destroy the
+// upper 16bit of the destination register
+static void gen_mov_regword_to_reg(HostReg dest_reg, Bitu index, bool dword)
+{
 	if (dword)
 		gen_mov_regval32_to_reg(dest_reg, index);
 	else
