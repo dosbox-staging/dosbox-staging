@@ -365,7 +365,8 @@ static void dyn_fpu_esc2(){
 	}
 }
 
-static void dyn_fpu_esc3(){
+static void dyn_fpu_esc3()
+{
 	dyn_get_modrm();  
 //	if (decode.modrm.val >= 0xc0) { 
 	if (decode.modrm.mod == 3) {
@@ -374,7 +375,8 @@ static void dyn_fpu_esc3(){
 			switch (decode.modrm.rm) {
 			case 0x00:				//FNENI
 			case 0x01:				//FNDIS
-				LOG(LOG_FPU,LOG_ERROR)("8087 only fpu code used esc 3: group 4: subfuntion: %d",decode.modrm.rm);
+				LOG(LOG_FPU, LOG_ERROR)("8087 only fpu code used esc 3: group 4: subfunction: %" PRIuPTR,
+				                        decode.modrm.rm);
 				break;
 			case 0x02:				//FNCLEX FCLEX
 				gen_call_function_raw((void*)&FPU_FCLEX);
@@ -387,11 +389,12 @@ static void dyn_fpu_esc3(){
 //				LOG(LOG_FPU,LOG_ERROR)("80267 protected mode (un)set. Nothing done");
 				break;
 			default:
-				E_Exit("ESC 3:ILLEGAL OPCODE group %d subfunction %d",decode.modrm.reg,decode.modrm.rm);
+				E_Exit("ESC 3:ILLEGAL OPCODE group %" PRIuPTR " subfunction %" PRIuPTR,
+				       decode.modrm.reg, decode.modrm.rm);
 			}
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 3:Unhandled group %d subfunction %d",decode.modrm.reg,decode.modrm.rm);
+			FPU_LOG_WARN(3, false, decode.modrm.reg, decode.modrm.rm);
 			break;
 		}
 	} else {
@@ -403,7 +406,7 @@ static void dyn_fpu_esc3(){
 			gen_call_function_RR((void*)&FPU_FLD_I32,FC_OP1,FC_OP2);
 			break;
 		case 0x01:	/* FISTTP */
-			LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %d subfunction %d",decode.modrm.reg,decode.modrm.rm);
+			FPU_LOG_WARN(3, true, decode.modrm.reg, decode.modrm.rm);
 			break;
 		case 0x02:	/* FIST */
 			dyn_fill_ea(FC_ADDR); 
@@ -425,7 +428,7 @@ static void dyn_fpu_esc3(){
 			gen_call_function_raw((void*)&FPU_FPOP);
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %d subfunction %d",decode.modrm.reg,decode.modrm.rm);
+			FPU_LOG_WARN(3, true, decode.modrm.reg, decode.modrm.rm);
 		}
 	}
 }
