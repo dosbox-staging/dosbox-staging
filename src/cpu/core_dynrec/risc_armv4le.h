@@ -16,8 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-
 /* ARMv4/ARMv7 (little endian) backend (switcher) by M-HT */
 
 #include "risc_armv4le-common.h"

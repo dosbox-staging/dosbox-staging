@@ -16,7 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
+/* x86_64/AMD64 (little endian, 32-bit) backend */
 
 // some configuring defines that specify the capabilities of this architecture
 // or aspects of the recompiling

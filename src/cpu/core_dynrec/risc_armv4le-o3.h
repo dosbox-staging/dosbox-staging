@@ -16,10 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-
 /* ARMv4/ARMv7 (little endian) backend by M-HT (arm version) */
-
 
 // temporary registers
 #define temp1 HOST_ip
