@@ -16,28 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#if(0)
-// Only needed when linting standalone with cpp
-typedef char Bit8s;
-typedef unsigned char Bit8u;
-typedef short Bit16s;
-typedef unsigned short Bit16u;
-typedef long Bit32s;
-typedef unsigned long Bit32u;
-typedef long long Bit64s;
-typedef unsigned long long Bit64u;
-typedef Bit32s Bits;
-typedef Bit32u Bitu;
-#define cache_addd(x) x
-#define INLINE inline
-Bit32u Segs[16];
-Bit32u cpu_regs[16];
-struct cachetype {
-    Bit8u *pos;
-} cache;
-Bit8u *get_CF;
-#endif
-
 // debugging
 #define DEBUG_ME 0
 #define __ASSERT(x,...) \
