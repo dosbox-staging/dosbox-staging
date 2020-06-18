@@ -221,7 +221,13 @@ static void write_latch(Bitu port,Bitu val,Bitu /*iolen*/) {
 		if (p->write_latch == 0) {
 			if (p->bcd == false) p->cntr = 0x10000;
 			else p->cntr=9999;
-		} else p->cntr = p->write_latch;
+		}
+		// square wave, count by 2
+		else if (p->write_latch == 1 && p->mode == 3)
+			// counter==1 and mode==3 makes a low frequency buzz (Paratrooper)
+			p->cntr = p->bcd ? 10000 : 0x10001;
+		else
+			p->cntr = p->write_latch;
 
 		if ((!p->new_mode) && (p->mode == 2) && (counter == 0)) {
 			// In mode 2 writing another value has no direct effect on the count
