@@ -235,9 +235,9 @@ static void gen_mov_qword_to_reg_imm(HostReg dest_reg, Bit64u imm)
 }
 
 // move a 32bit constant value into dest_reg
-static void gen_mov_dword_to_reg_imm(HostReg dest_reg, Bit32u imm)
+static void gen_mov_dword_to_reg_imm(HostReg dest_reg, uint32_t imm)
 {
-	if ((Bit16s)imm != imm) {
+	if (static_cast<int16_t>(imm) != static_cast<int32_t>(imm)) {
 		IMM_OP(15, dest_reg, 0, (imm & 0xffff0000) >> 16); // lis
 		if (imm & 0x0000ffff)
 			IMM_OP(24, dest_reg, dest_reg, (imm & 0x0000ffff)); // ori
