@@ -16,13 +16,13 @@ jobs:
           - name: ARMv7 (Debian Buster)
             architecture: armv7
             distribution: buster
-          - name: AArch64 (Ubuntu 18.04)
+          - name: ARMv8 AArch64 (Ubuntu 18.04)
             architecture: aarch64
             distribution: ubuntu18.04
-          - name: LinuxONE (Ubuntu 18.04)
+          - name: s390x (Ubuntu 18.04)
             architecture: s390x
             distribution: ubuntu18.04
-          - name: POWER8 (Ubuntu 18.04)
+          - name: ppc64le (Ubuntu 18.04)
             architecture: ppc64le
             distribution: ubuntu18.04
     steps:
