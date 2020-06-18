@@ -620,15 +620,14 @@ static void PlayDMATransfer(Bitu size)
 /*
  *  This function intercepts the first DMA transfer and decides if it should
  *  suppress or play it.  The criteria is as follows:
- *   - Suppress if the card is not in a DMA mode (ie: junk data)
- *   - Suppress DWORD-sized transfers (or less) in 8-bit DMA modes
+ *   - Suppress DWORD-sized transfers (or less) in non-16-bit DMA modes
  *   - Suppress BYTE-sized transfers in 16-bit DMA modes
  */
 static void SuppressInitialDMATransfer(Bitu size)
 {
-	if (sb.dma.mode == DSP_DMA_NONE ||
-	    (sb.dma.mode < DSP_DMA_16 && size <= sizeof(uint32_t)) ||
-	    size <= sizeof(uint8_t)) {
+	const size_t size_limit = sb.dma.mode < DSP_DMA_16 ? sizeof(uint32_t)
+	                                                   : sizeof(uint8_t);
+	if (size <= size_limit) {
 		SuppressDMATransfer(size);
 		LOG_MSG("%s: Suppressed initial %" PRIuPTR "-byte %s transfer",
 		        CardType(), size, DmaModeName());
