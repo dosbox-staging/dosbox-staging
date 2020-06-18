@@ -446,10 +446,10 @@ static void cache_closeblock(void) {
 	if (written>block->cache.size) {
 		if (!block->cache.next) {
 			if (written > block->cache.size + CACHE_MAXSIZE)
-				E_Exit("CacheBlock overrun 1 %" sBitfs(d),
+				E_Exit("CacheBlock overrun 1 %" PRIuPTR,
 				       written - block->cache.size);
 		} else {
-			E_Exit("CacheBlock overrun 2 written %" sBitfs(d) " size %" sBitfs(d),
+			E_Exit("CacheBlock overrun 2 written %" PRIuPTR " size %" PRIuPTR,
 			       written, block->cache.size);
 		}
 	} else {
