@@ -45,7 +45,7 @@
 
 // register mapping
 enum HostReg {
-	HOST_R0=0,
+	HOST_R0 = 0,
 	HOST_R1,
 	HOST_R2,
 	HOST_R3,
@@ -57,7 +57,7 @@ enum HostReg {
 	HOST_R9,
 	HOST_R10,
 	HOST_R11,
-	HOST_R12,  // end of volatile registers. use for CTR calls
+	HOST_R12, // end of volatile registers. use for CTR calls
 	HOST_R13,
 	HOST_R14,
 	HOST_R15,
@@ -71,12 +71,12 @@ enum HostReg {
 	HOST_R23,
 	HOST_R24,
 	HOST_R25,
-	HOST_R26,  // generic non-volatile (used for inline adc/sbb)
-	HOST_R27,  // points to current CacheBlockDynRec (decode.block)
-	HOST_R28,  // points to fpu
-	HOST_R29,  // FC_ADDR
-	HOST_R30,  // points to Segs
-	HOST_R31,  // points to cpu_regs
+	HOST_R26, // generic non-volatile (used for inline adc/sbb)
+	HOST_R27, // points to current CacheBlockDynRec (decode.block)
+	HOST_R28, // points to fpu
+	HOST_R29, // FC_ADDR
+	HOST_R30, // points to Segs
+	HOST_R31, // points to cpu_regs
 
 	HOST_NONE
 };
@@ -197,21 +197,23 @@ static HostReg INLINE gen_addr(Bit64s &addr, HostReg dest)
 #endif
 
 	if (addr & 0xffffffff00000000) {
-		IMM_OP(15, dest, 0,    (addr & 0xffff000000000000)>>48); // lis dest, upper
+		IMM_OP(15, dest, 0, (addr & 0xffff000000000000) >> 48); // lis dest, upper
 		if (addr & 0x0000ffff00000000)
-			IMM_OP(24, dest, dest, (addr & 0x0000ffff00000000)>>32); // ori dest, dest, ...
+			IMM_OP(24, dest, dest, (addr & 0x0000ffff00000000) >> 32); // ori dest, dest, ...
 		RLD_OP(30, dest, dest, 32, 31, 1, 0); // rldicr dest, dest, 32, 31
 		if (addr & 0x00000000ffff0000)
-			IMM_OP(25, dest, dest, (addr & 0x00000000ffff0000)>>16); // oris dest, dest, ...
-	} else
-		IMM_OP(15, dest, 0,    (addr & 0x00000000ffff0000)>>16); // lis dest, lower
+			IMM_OP(25, dest, dest, (addr & 0x00000000ffff0000) >> 16); // oris dest, dest, ...
+	} else {
+		IMM_OP(15, dest, 0, (addr & 0x00000000ffff0000) >> 16); // lis dest, lower
+	}
 	// watch unexpected sign extension with following instructions
 	if (addr & 0x8000) {
 		// make the displacement in the following instruction 0 for safety
-		IMM_OP(24, dest, dest, (addr & 0x000000000000ffff)    );
+		IMM_OP(24, dest, dest, (addr & 0x000000000000ffff));
 		addr = 0;
-	} else
+	} else {
 		addr = (Bit16s)addr;
+	}
 	return dest;
 }
 
@@ -219,27 +221,28 @@ static HostReg INLINE gen_addr(Bit64s &addr, HostReg dest)
 static void gen_mov_qword_to_reg_imm(HostReg dest_reg, Bit64u imm)
 {
 	if (imm & 0xffffffff00000000) {
-		IMM_OP(15, dest_reg, 0,        (imm & 0xffff000000000000)>>48); // lis dest, upper
+		IMM_OP(15, dest_reg, 0, (imm & 0xffff000000000000) >> 48); // lis dest, upper
 		if (imm & 0x0000ffff00000000)
-			IMM_OP(24, dest_reg, dest_reg, (imm & 0x0000ffff00000000)>>32); // ori dest, dest, ...
+			IMM_OP(24, dest_reg, dest_reg, (imm & 0x0000ffff00000000) >> 32); // ori dest, dest, ...
 		RLD_OP(30, dest_reg, dest_reg, 32, 31, 1, 0); // rldicr dest, dest, 32, 31
 		if (imm & 0x00000000ffff0000)
-			IMM_OP(25, dest_reg, dest_reg, (imm & 0x00000000ffff0000)>>16); // oris dest, dest, ...
-	} else
-		IMM_OP(15, dest_reg, 0,            (imm & 0x00000000ffff0000)>>16);  // lis dest, lower
+			IMM_OP(25, dest_reg, dest_reg, (imm & 0x00000000ffff0000) >> 16); // oris dest, dest, ...
+	} else {
+		IMM_OP(15, dest_reg, 0, (imm & 0x00000000ffff0000) >> 16); // lis dest, lower
+	}
 	if (imm & 0xffff)
-		IMM_OP(24, dest_reg, dest_reg,     (imm & 0x000000000000ffff)    ); // ori dest, dest, ...
+		IMM_OP(24, dest_reg, dest_reg, (imm & 0x000000000000ffff)); // ori dest, dest, ...
 }
 
 // move a 32bit constant value into dest_reg
 static void gen_mov_dword_to_reg_imm(HostReg dest_reg, Bit32u imm)
 {
 	if ((Bit16s)imm != imm) {
-		IMM_OP(15,         dest_reg, 0,        (imm & 0xffff0000)>>16); // lis
+		IMM_OP(15, dest_reg, 0, (imm & 0xffff0000) >> 16); // lis
 		if (imm & 0x0000ffff)
-			IMM_OP(24,     dest_reg, dest_reg, (imm & 0x0000ffff)    ); // ori
+			IMM_OP(24, dest_reg, dest_reg, (imm & 0x0000ffff)); // ori
 	} else {
-		IMM_OP(14,         dest_reg, 0,        imm); // li
+		IMM_OP(14, dest_reg, 0, imm); // li
 	}
 }
 
@@ -764,13 +767,13 @@ static void gen_fill_function_ptr(Bit8u *pos, void *fct_ptr, Bitu flags_type)
 {
 	Bit32u *op = (Bit32u*)pos;
 
-    // blank the entire old stanza
-    op[1] = NOP;
-    op[2] = NOP;
-    op[3] = NOP;
-    op[4] = NOP;
-    op[5] = NOP;
-    op[6] = NOP;
+	// blank the entire old stanza
+	op[1] = NOP;
+	op[2] = NOP;
+	op[3] = NOP;
+	op[4] = NOP;
+	op[5] = NOP;
+	op[6] = NOP;
 
 	switch (flags_type) {
 #if defined(DRC_FLAGS_INVALIDATION_DCODE)
