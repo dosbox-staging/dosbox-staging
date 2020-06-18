@@ -155,9 +155,9 @@ static INLINE void FPU_SET_C3(Bitu C){
 	if(C) fpu.sw |= 0x4000;
 }
 
-static INLINE void FPU_LOG_WARN(unsigned tree, bool ea, unsigned group, unsigned sub)
+static INLINE void FPU_LOG_WARN(unsigned tree, bool ea, uintptr_t group, uintptr_t sub)
 {
-	LOG(LOG_FPU, LOG_WARN)("ESC %u%s: Unhandled group %u subfunction %u",
+	LOG(LOG_FPU, LOG_WARN)("ESC %u%s: Unhandled group %" PRIuPTR " subfunction %" PRIuPTR,
 	                       tree, ea ? " EA" : "", group, sub);
 }
 
