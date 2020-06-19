@@ -16,9 +16,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "compiler.h"
 
 #define X86_INLINED_MEMACCESS
-
 
 enum REP_Type {
 	REP_NONE=0,REP_NZ,REP_Z
@@ -2023,7 +2023,8 @@ static void dyn_iret(void) {
 	dyn_closeblock();
 }
 
-static void dyn_interrupt(Bitu num) {
+MAYBE_UNUSED static void dyn_interrupt(Bitu num)
+{
 	gen_protectflags();
 	dyn_flags_gen_to_host();
 	dyn_reduce_cycles();
