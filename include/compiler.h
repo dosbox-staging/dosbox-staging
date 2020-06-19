@@ -22,18 +22,35 @@
 // This header wraps compiler-specific features, so they won't need to
 // be hacked into the buildsystem.
 
-// Modern C++ compilers have better support for feature testing using GNU
-// extension __has_attribute but C++20 introduces even better alternative:
-// standard-defined __has_cpp_attribute, which will remove the need for
-// defining C_HAS_* macros on a buildsystem level (at some point).
+// Function-like macro __has_cpp_attribute was introduced in C++20, but
+// various compilers support it since C++11 as a language extension.
+// Thanks to that we can use it for testing support for both language-defined
+// and vendor-specific attributes.
+
+#ifndef __has_cpp_attribute // for compatibility with non-supporting compilers
+#define __has_cpp_attribute(x) 0
+#endif
+
+// When passing the -Wunused flag to GCC or Clang, entities that are unused by
+// the program may be diagnosed.  The MAYBE_UNUSED attribute can be used to
+// silence such diagnostics when the entity cannot be removed.
+//
+// The attribute may be applied to the declaration of a class, a typedef,
+// a variable, a function or method, a function parameter, an enumeration,
+// an enumerator, a non-static data member, or a label.
+
+#if __has_cpp_attribute(maybe_unused)
+#define MAYBE_UNUSED [[maybe_unused]]
+#elif __has_cpp_attribute(gnu::unused)
+#define MAYBE_UNUSED [[gnu::unused]]
+#else
+#define MAYBE_UNUSED
+#endif
 
 // The __attribute__ syntax is supported by GCC, Clang, and IBM compilers.
 //
-// TODO: C++11 introduced standard syntax for implementation-defined attributes,
-//       it should allow for removal of C_HAS_ATTRIBUTE from the buildsystem.
-//       However, the vast majority of GCC_ATTRIBUTEs in DOSBox code need
-//       to be reviewed, as many of them seem to be incorrectly/unnecessarily
-//       used.
+// Provided for backwards-compatibility with old code; to be gradually
+// replaced by new C++ attribute syntax.
 
 #if C_HAS_ATTRIBUTE
 #define GCC_ATTRIBUTE(x) __attribute__ ((x))
