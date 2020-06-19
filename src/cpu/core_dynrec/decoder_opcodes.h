@@ -16,8 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-
 /*
 	The functions in this file are called almost exclusively by	decoder.h,
 	they translate an (or a set of) instruction(s) into hostspecific code
@@ -28,6 +26,8 @@
 	(see operators.h). Parameter loading and result writeback is done
 	according to the instruction.
 */
+
+#include "compiler.h"
 
 static void dyn_dop_ebgb(DualOps op) {
 	dyn_get_modrm();
@@ -1249,15 +1249,14 @@ static void dyn_iret(void) {
 	dyn_closeblock();
 }
 
-static void dyn_interrupt(Bit8u num) {
+MAYBE_UNUSED static void dyn_interrupt(Bit8u num)
+{
 	dyn_reduce_cycles();
 	dyn_set_eip_last_end(FC_RETOP);
 	gen_call_function_IIR((void*)&CPU_Interrupt,num,CPU_INT_SOFTWARE,FC_RETOP);
 	dyn_return(BR_Normal);
 	dyn_closeblock();
 }
-
-
 
 static void dyn_string(StringOps op) {
 	if (decode.rep) MOV_REG_WORD_TO_HOST_REG(FC_OP1,DRC_REG_ECX,decode.big_addr);
