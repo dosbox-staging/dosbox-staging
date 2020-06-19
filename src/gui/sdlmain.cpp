@@ -506,7 +506,8 @@ static void KillSwitch(bool pressed) {
 	throw 1;
 }
 
-static void PauseDOSBox(bool pressed) {
+MAYBE_UNUSED static void PauseDOSBox(bool pressed)
+{
 	if (!pressed)
 		return;
 	GFX_SetTitle(-1,-1,true);
