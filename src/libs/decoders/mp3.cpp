@@ -168,7 +168,7 @@ extern const Sound_DecoderFunctions __Sound_DecoderFunctions_MP3 = {
     {
         extensions_mp3,
         "MPEG-1 Audio Layer I-III",
-        "The DOSBox Team"
+        "The dosbox-staging team"
     },
 
     MP3_init,       /*   init() method */
