@@ -808,11 +808,14 @@ static void dyn_write_word(HostReg reg_addr,HostReg reg_val,bool dword) {
 	dyn_check_exception(FC_RETOP);
 }
 
-
-
 // effective address calculation helper, op2 has to be present!
 // loads op1 into ea_reg and adds the scaled op2 and the immediate to it
-static void dyn_lea_mem_mem(HostReg ea_reg,void* op1,void* op2,Bitu scale,Bits imm) {
+MAYBE_UNUSED static void dyn_lea_mem_mem(HostReg ea_reg,
+                                         void *op1,
+                                         void *op2,
+                                         Bitu scale,
+                                         Bits imm)
+{
 	if (scale || imm) {
 		if (op1!=NULL) {
 			gen_mov_word_to_reg(ea_reg,op1,true);
