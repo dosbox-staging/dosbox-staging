@@ -160,7 +160,7 @@ const Sound_DecoderFunctions __Sound_DecoderFunctions_FLAC =
     {
         extensions_flac,
         "Free Lossless Audio Codec (FLAC)",
-        "The DOSBox Team"
+        "The dosbox-staging team"
     },
 
     FLAC_init,       /*   init() method */
