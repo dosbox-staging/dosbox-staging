@@ -36,7 +36,7 @@ jobs:
             os: ubuntu-latest
             flags: -c gcc
             config_flags: --enable-debug
-            max_warnings: 137
+            max_warnings: 135
           - name: Ubuntu, +dynrec, -dyn_x86
             os: ubuntu-latest
             flags: -c gcc
@@ -46,7 +46,7 @@ jobs:
             os: ubuntu-latest
             flags: -c gcc
             config_flags: --disable-dynamic-x86 --enable-debug
-            max_warnings: 188
+            max_warnings: 186
 
     steps:
       - uses: actions/checkout@v2
