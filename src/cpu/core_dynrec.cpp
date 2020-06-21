@@ -21,12 +21,13 @@
 
 #if (C_DYNREC)
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <stddef.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <type_traits>
 
 #if defined (WIN32)
 #include <windows.h>
@@ -123,13 +124,29 @@ static void IllegalOptionDynrec(const char* msg) {
 	E_Exit("DynrecCore: illegal option in %s",msg);
 }
 
-static struct {
+struct core_dynrec_t {
 	BlockReturn (*runcode)(Bit8u*);		// points to code that can start a block
 	Bitu callback;				// the occurred callback
 	Bitu readdata;				// spare space used when reading from memory
 	Bit32u protected_regs[8];	// space to save/restore register values
-} core_dynrec;
+};
 
+static core_dynrec_t core_dynrec;
+
+// core_dynrec is often being used this way:
+//
+//   function_expecting_int16_ptr((uint16_t*)(&core_dynrec.readdata));
+//
+// These uses are ok and safe as long as core_dynrec.readdata is correctly
+// aligned.
+//
+static_assert(std::is_standard_layout<core_dynrec_t>::value,
+              "core_dynrec_t must be a standard layout type, otherwise "
+              "offsetof calculation is undefined behaviour.");
+static_assert(offsetof(core_dynrec_t, readdata) % sizeof(uint16_t) == 0,
+              "core_dynrec.readdata must be word aligned");
+static_assert(offsetof(core_dynrec_t, readdata) % sizeof(uint32_t) == 0,
+              "core_dynrec.readdata must be double-word aligned");
 
 #include "core_dynrec/cache.h"
 
