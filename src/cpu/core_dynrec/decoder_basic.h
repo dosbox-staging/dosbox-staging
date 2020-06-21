@@ -693,8 +693,6 @@ static void dyn_check_exception(HostReg reg) {
 	used_save_info_dynrec++;
 }
 
-
-
 bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) DRC_FC;
 bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) {
 	HostPt tlb_addr=get_tlb_read(address);
@@ -704,15 +702,6 @@ bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) {
 	} else {
 		return get_tlb_readhandler(address)->readb_checked(address, (Bit8u*)(&core_dynrec.readdata));
 	}
-}
-
-bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address,Bit8u val) DRC_FC;
-bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address,Bit8u val) {
-	HostPt tlb_addr=get_tlb_write(address);
-	if (tlb_addr) {
-		host_writeb(tlb_addr+address,val);
-		return false;
-	} else return get_tlb_writehandler(address)->writeb_checked(address,val);
 }
 
 bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) DRC_FC;
@@ -735,6 +724,18 @@ bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) {
 			return false;
 		} else return get_tlb_readhandler(address)->readd_checked(address, (Bit32u*)(&core_dynrec.readdata));
 	} else return mem_unalignedreadd_checked(address, ((Bit32u*)(&core_dynrec.readdata)));
+}
+
+bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address, Bit8u val) DRC_FC;
+bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address, Bit8u val)
+{
+	HostPt tlb_addr = get_tlb_write(address);
+	if (tlb_addr) {
+		host_writeb(tlb_addr + address, val);
+		return false;
+	} else {
+		return get_tlb_writehandler(address)->writeb_checked(address, val);
+	}
 }
 
 bool DRC_CALL_CONV mem_writew_checked_drc(PhysPt address,Bit16u val) DRC_FC;
