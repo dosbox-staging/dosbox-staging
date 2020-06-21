@@ -585,7 +585,7 @@ static void gen_jmp_ptr(void *ptr, Bits imm = 0)
 	DSF_OP(58, HOST_R12, HOST_R12, 0, 0);
 
 	if ((Bit16s)imm != (Bit32s)imm) {
-		// XXX: this is not tested. I've left it as a quasi-assertion.
+		// FIXME: this is not tested. I've left it as a quasi-assertion.
 		fprintf(stderr, "large gen_jmp_ptr offset\n");
 		__asm__("trap\n");
 		IMM_OP(15, HOST_R12, HOST_R12, (imm + 0x8000)>>16); // addis r12, r12, imm@ha
@@ -630,7 +630,7 @@ static void gen_fill_branch(DRC_PTR_SIZE_IM data)
 	if (len >= 0x8000) LOG_MSG("Big jump %d",len);
 #endif
 
-	// XXX: assert???
+	// FIXME: assert???
 	((Bit16u*)data)[0] =((Bit64u)cache.pos-data) & 0xFFFC; // ENDIAN!!!
 }
 
