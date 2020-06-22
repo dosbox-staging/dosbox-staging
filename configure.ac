@@ -492,16 +492,16 @@ if test x$enable_network = xyes ; then
       libtype="(static)"
       case "$host" in
         *-*-darwin*)
-          LIBS="$LIBS /usr/local/lib/libSDL2_net.a"
+          LIBS="/usr/local/lib/libSDL2_net.a $LIBS"
           ;;
         *)
           AC_MSG_WARN(m4_normalize([Statically linking SDL2 is unreliable.
             Please ensure that "libSDL2_net.a" is available.]))
-          LIBS="$LIBS -Wl,-Bstatic -lSDL2_net -Wl,-Bdynamic"
+          LIBS="-Wl,-Bstatic -lSDL2_net -Wl,-Bdynamic $LIBS"
           ;;
       esac
     else
-      LIBS="$LIBS -lSDL2_net"
+      LIBS="-lSDL2_net $LIBS"
     fi
     AC_DEFINE(C_MODEM,1)
     AC_DEFINE(C_IPX,1)
