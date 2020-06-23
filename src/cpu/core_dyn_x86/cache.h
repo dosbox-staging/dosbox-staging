@@ -16,6 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <new>
+
 #include "mem_unaligned.h"
 #include "types.h"
 
@@ -75,9 +77,8 @@ static CacheBlock link_blocks[2];
 
 class CodePageHandler : public PageHandler {
 public:
-	CodePageHandler() {
-		invalidation_map=NULL;
-	}
+	CodePageHandler() : invalidation_map(nullptr) {}
+
 	void SetupAt(Bitu _phys_page,PageHandler * _old_pagehandler) {
 		phys_page=_phys_page;
 		old_pagehandler=_old_pagehandler;
@@ -87,9 +88,9 @@ public:
 		active_count=16;
 		memset(&hash_map,0,sizeof(hash_map));
 		memset(&write_map,0,sizeof(write_map));
-		if (invalidation_map!=NULL) {
-			free(invalidation_map);
-			invalidation_map=NULL;
+		if (invalidation_map) {
+			delete [] invalidation_map;
+			invalidation_map = nullptr;
 		}
 	}
 	bool InvalidateRange(Bitu start,Bitu end) {
@@ -114,6 +115,17 @@ public:
 		}
 		return is_current_block;
 	}
+
+	uint8_t *alloc_invalidation_map() const
+	{
+		constexpr size_t map_size = 4096;
+		uint8_t *map = new (std::nothrow) uint8_t[map_size];
+		if (GCC_UNLIKELY(!map))
+			E_Exit("failed to allocate invalidation_map");
+		memset(map, 0, map_size);
+		return map;
+	}
+
 	void writeb(PhysPt addr,Bitu val){
 		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
 		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
@@ -129,11 +141,7 @@ public:
 			if (!active_count) Release();
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map=(Bit8u*)malloc(4096);
-			if (!invalidation_map) {
-				E_Exit("wb:failed to allocate invalidation_map's memory");
-			}
-			memset(invalidation_map,0,4096);
+			invalidation_map = alloc_invalidation_map();
 		}
 		invalidation_map[addr]++;
 		InvalidateRange(addr,addr);
@@ -153,11 +161,7 @@ public:
 			if (!active_count) Release();
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map=(Bit8u*)malloc(4096);
-			if (!invalidation_map) {
-				E_Exit("ww:failed to allocate invalidation_map's memory");
-			}
-			memset(invalidation_map,0,4096);
+			invalidation_map = alloc_invalidation_map();
 		}
 		host_addw(&invalidation_map[addr], 0x0101);
 		InvalidateRange(addr,addr+1);
@@ -177,11 +181,7 @@ public:
 			if (!active_count) Release();
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map=(Bit8u*)malloc(4096);
-			if (!invalidation_map) {
-				E_Exit("wd:failed to allocate invalidation_map's memory");
-			}
-			memset(invalidation_map,0,4096);
+			invalidation_map = alloc_invalidation_map();
 		}
 		host_addd(&invalidation_map[addr], 0x01010101);
 		InvalidateRange(addr,addr+3);
@@ -200,13 +200,9 @@ public:
 				if (!active_count) Release();
 			}
 		} else {
-			if (!invalidation_map) {
-				invalidation_map=(Bit8u*)malloc(4096);
-				if (!invalidation_map) {
-					E_Exit("cb:failed to allocate invalidation_map's memory");
-				}
-				memset(invalidation_map,0,4096);
-			}
+			if (!invalidation_map)
+				invalidation_map = alloc_invalidation_map();
+
 			invalidation_map[addr]++;
 			if (InvalidateRange(addr,addr)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
@@ -230,13 +226,9 @@ public:
 				if (!active_count) Release();
 			}
 		} else {
-			if (!invalidation_map) {
-				invalidation_map=(Bit8u*)malloc(4096);
-				if (!invalidation_map) {
-					E_Exit("cw:failed to allocate invalidation_map's memory");
-				}
-				memset(invalidation_map,0,4096);
-			}
+			if (!invalidation_map)
+				invalidation_map = alloc_invalidation_map();
+
 			host_addw(&invalidation_map[addr], 0x0101);
 			if (InvalidateRange(addr,addr+1)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
@@ -260,13 +252,9 @@ public:
 				if (!active_count) Release();
 			}
 		} else {
-			if (!invalidation_map) {
-				invalidation_map=(Bit8u*)malloc(4096);
-				if (!invalidation_map) {
-					E_Exit("cd:failed to allocate invalidation_map's memory");
-				}
-				memset(invalidation_map,0,4096);
-			}
+			if (!invalidation_map)
+				invalidation_map = alloc_invalidation_map();
+
 			host_addd(&invalidation_map[addr], 0x01010101);
 			if (InvalidateRange(addr,addr+3)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
