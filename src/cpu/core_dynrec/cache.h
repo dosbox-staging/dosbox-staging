@@ -305,12 +305,13 @@ public:
 	void DelCacheBlock(CacheBlockDynRec * block) {
 		active_blocks--;
 		active_count=16;
-		CacheBlockDynRec * * bwhere=&hash_map[block->hash.index];
-		while (*bwhere!=block) {
-			bwhere=&((*bwhere)->hash.next);
-			//Will crash if a block isn't found, which should never happen.
+		CacheBlockDynRec **where = &hash_map[block->hash.index];
+		while (*where != block) {
+			where = &((*where)->hash.next);
+			// Will crash if a block isn't found, which should never
+			// happen.
 		}
-		*bwhere=block->hash.next;
+		*where = block->hash.next;
 
 		// remove the cleared block from the write map
 		if (GCC_UNLIKELY(block->cache.wmapmask!=NULL)) {
@@ -396,11 +397,11 @@ private:
 	Bitu phys_page;
 };
 
-
-static INLINE void cache_addunusedblock(CacheBlockDynRec * block) {
+static inline void cache_add_unused_block(CacheBlockDynRec *block)
+{
 	// block has become unused, add it to the freelist
-	block->cache.next=cache.block.free;
-	cache.block.free=block;
+	block->cache.next = cache.block.free;
+	cache.block.free = block;
 }
 
 static CacheBlockDynRec * cache_getblock(void) {
@@ -439,8 +440,9 @@ void CacheBlockDynRec::Clear(void) {
 				LOG(LOG_CPU,LOG_ERROR)("Cache anomaly. please investigate");
 			}
 		}
-	} else
-		cache_addunusedblock(this);
+	} else {
+		cache_add_unused_block(this);
+	}
 	if (crossblock) {
 		// clear out the crossblock (in the page before) as well
 		crossblock->crossblock=0;
@@ -476,7 +478,7 @@ static CacheBlockDynRec * cache_openblock(void) {
 		if (nextblock->page.handler)
 			nextblock->Clear();
 		// block is free now
-		cache_addunusedblock(nextblock);
+		cache_add_unused_block(nextblock);
 		nextblock=tempblock;
 	}
 skipresize:

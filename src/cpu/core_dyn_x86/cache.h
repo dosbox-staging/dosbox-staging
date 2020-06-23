@@ -280,12 +280,13 @@ public:
 	void DelCacheBlock(CacheBlock * block) {
 		active_blocks--;
 		active_count=16;
-		CacheBlock * * where=&hash_map[block->hash.index];
-		while (*where!=block) {
-			where=&((*where)->hash.next);
-			//Will crash if a block isn't found, which should never happen.
+		CacheBlock **where = &hash_map[block->hash.index];
+		while (*where != block) {
+			where = &((*where)->hash.next);
+			// Will crash if a block isn't found, which should never
+			// happen.
 		}
-		*where=block->hash.next;
+		*where = block->hash.next;
 		if (GCC_UNLIKELY(block->cache.wmapmask!=NULL)) {
 			for (Bitu i=block->page.start;i<block->cache.maskstart;i++) {
 				if (write_map[i]) write_map[i]--;
@@ -355,10 +356,11 @@ private:
 	Bitu phys_page;
 };
 
-
-static INLINE void cache_addunsedblock(CacheBlock * block) {
-	block->cache.next=cache.block.free;
-	cache.block.free=block;
+static inline void cache_add_unused_block(CacheBlock *block)
+{
+	// block has become unused, add it to the freelist
+	block->cache.next = cache.block.free;
+	cache.block.free = block;
 }
 
 static CacheBlock * cache_getblock(void) {
@@ -391,8 +393,9 @@ void CacheBlock::Clear(void) {
 			else
 				LOG(LOG_CPU,LOG_ERROR)("Cache anomaly. please investigate");
 		}
-	} else 
-		cache_addunsedblock(this);
+	} else {
+		cache_add_unused_block(this);
+	}
 	if (crossblock) {
 		crossblock->crossblock=0;
 		crossblock->Clear();
@@ -423,7 +426,7 @@ static CacheBlock * cache_openblock(void) {
 		CacheBlock * tempblock=nextblock->cache.next;
 		if (nextblock->page.handler) 
 			nextblock->Clear();
-		cache_addunsedblock(nextblock);
+		cache_add_unused_block(nextblock);
 		nextblock=tempblock;
 	}
 skipresize:
