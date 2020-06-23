@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "types.h"
 
 class CodePageHandlerDynRec;	// forward
 
@@ -70,15 +71,13 @@ static struct {
 	CodePageHandlerDynRec * last_page;		// the last used page
 } cache;
 
-
 // cache memory pointers, to be malloc'd later
-static Bit8u * cache_code_start_ptr=NULL;
-static Bit8u * cache_code=NULL;
-static Bit8u * cache_code_link_blocks=NULL;
+static uint8_t *cache_code_start_ptr = nullptr;
+static uint8_t *cache_code = nullptr;
+static uint8_t *cache_code_link_blocks = nullptr;
 
-static CacheBlockDynRec * cache_blocks=NULL;
+static CacheBlockDynRec *cache_blocks = nullptr;
 static CacheBlockDynRec link_blocks[2];		// default linking (specially marked)
-
 
 // the CodePageHandlerDynRec class provides access to the contained
 // cache blocks and intercepts writes to the code for special treatment

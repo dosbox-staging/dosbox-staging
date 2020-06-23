@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "types.h"
 
 class CacheBlock {
 public:
@@ -63,6 +64,12 @@ static struct {
 	CodePageHandler * last_page;
 } cache;
 
+// cache memory pointers, to be malloc'd later
+static uint8_t *cache_code_start_ptr = nullptr;
+static uint8_t *cache_code = nullptr;
+static uint8_t *cache_code_link_blocks = nullptr;
+
+static CacheBlock *cache_blocks = nullptr;
 static CacheBlock link_blocks[2];
 
 class CodePageHandler : public PageHandler {
@@ -498,11 +505,6 @@ static INLINE void cache_addq(Bit64u val) {
 }
 
 static void gen_return(BlockReturn retcode);
-
-static Bit8u * cache_code_start_ptr=NULL;
-static Bit8u * cache_code=NULL;
-static Bit8u * cache_code_link_blocks=NULL;
-static CacheBlock * cache_blocks=NULL;
 
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
 #if (C_HAVE_MPROTECT)
