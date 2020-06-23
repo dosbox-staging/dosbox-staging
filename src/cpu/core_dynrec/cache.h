@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "mem_unaligned.h"
 #include "types.h"
 
 class CodePageHandlerDynRec;	// forward
@@ -161,7 +162,7 @@ public:
 		if (host_readw(hostmem+addr)==(Bit16u)val) return;
 		host_writew(hostmem+addr,val);
 		// see if there's code where we are writing to
-		if (!*(Bit16u*)&write_map[addr]) {
+		if (!read_unaligned_uint16(&write_map[addr])) {
 			if (active_blocks) return;		// still some blocks in this page
 			active_count--;
 			if (!active_count) Release();	// delay page releasing until active_count is zero
@@ -170,12 +171,7 @@ public:
 			invalidation_map=(Bit8u*)malloc(4096);
 			memset(invalidation_map,0,4096);
 		}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-		host_writew(&invalidation_map[addr],
-			host_readw(&invalidation_map[addr])+0x101);
-#else
-		(*(Bit16u*)&invalidation_map[addr])+=0x101;
-#endif
+		host_addw(&invalidation_map[addr], 0x0101);
 		InvalidateRange(addr,addr+1);
 	}
 	void writed(PhysPt addr,Bitu val){
@@ -183,7 +179,7 @@ public:
 		if (host_readd(hostmem+addr)==(Bit32u)val) return;
 		host_writed(hostmem+addr,val);
 		// see if there's code where we are writing to
-		if (!*(Bit32u*)&write_map[addr]) {
+		if (!read_unaligned_uint32(&write_map[addr])) {
 			if (active_blocks) return;		// still some blocks in this page
 			active_count--;
 			if (!active_count) Release();	// delay page releasing until active_count is zero
@@ -192,19 +188,14 @@ public:
 			invalidation_map=(Bit8u*)malloc(4096);
 			memset(invalidation_map,0,4096);
 		}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-		host_writed(&invalidation_map[addr],
-			host_readd(&invalidation_map[addr])+0x1010101);
-#else
-		(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
-#endif
+		host_addd(&invalidation_map[addr], 0x01010101);
 		InvalidateRange(addr,addr+3);
 	}
 	bool writeb_checked(PhysPt addr,Bitu val) {
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return false;
 		// see if there's code where we are writing to
-		if (!host_readb(&write_map[addr])) {
+		if (!write_map[addr]) {
 			if (!active_blocks) {
 				// no blocks left in this page, still delay the page releasing a bit
 				active_count--;
@@ -228,7 +219,7 @@ public:
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return false;
 		// see if there's code where we are writing to
-		if (!*(Bit16u*)&write_map[addr]) {
+		if (!read_unaligned_uint16(&write_map[addr])) {
 			if (!active_blocks) {
 				// no blocks left in this page, still delay the page releasing a bit
 				active_count--;
@@ -239,12 +230,7 @@ public:
 				invalidation_map=(Bit8u*)malloc(4096);
 				memset(invalidation_map,0,4096);
 			}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-			host_writew(&invalidation_map[addr],
-				host_readw(&invalidation_map[addr])+0x101);
-#else
-			(*(Bit16u*)&invalidation_map[addr])+=0x101;
-#endif
+			host_addw(&invalidation_map[addr], 0x0101);
 			if (InvalidateRange(addr,addr+1)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
@@ -257,7 +243,7 @@ public:
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return false;
 		// see if there's code where we are writing to
-		if (!*(Bit32u*)&write_map[addr]) {
+		if (!read_unaligned_uint32(&write_map[addr])) {
 			if (!active_blocks) {
 				// no blocks left in this page, still delay the page releasing a bit
 				active_count--;
@@ -268,12 +254,7 @@ public:
 				invalidation_map=(Bit8u*)malloc(4096);
 				memset(invalidation_map,0,4096);
 			}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-			host_writed(&invalidation_map[addr],
-				host_readd(&invalidation_map[addr])+0x1010101);
-#else
-			(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
-#endif
+			host_addd(&invalidation_map[addr], 0x01010101);
 			if (InvalidateRange(addr,addr+3)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
