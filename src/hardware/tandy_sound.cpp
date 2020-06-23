@@ -52,7 +52,6 @@ static struct {
 		struct {
 			Bitu rate;
 			Bit8u buf[TDAC_DMA_BUFSIZE];
-			Bit8u last_sample;
 			DmaChannel * chan;
 			bool transfer_done;
 		} dma;
@@ -232,34 +231,20 @@ static Bitu TandyDACRead(Bitu port,Bitu /*iolen*/) {
 	return 0xff;
 }
 
-static void TandyDACGenerateDMASound(Bitu length) {
-	if (length) {
-		Bitu read=tandy.dac.dma.chan->Read(length,tandy.dac.dma.buf);
-		tandy.dac.chan->AddSamples_m8(read,tandy.dac.dma.buf);
-		if (read < length) {
-			if (read>0) tandy.dac.dma.last_sample=tandy.dac.dma.buf[read-1];
-			for (Bitu ct=read; ct < length; ct++) {
-				tandy.dac.chan->AddSamples_m8(1,&tandy.dac.dma.last_sample);
-			}
-		}
-	}
+static void TandyDACUpdate(size_t requested)
+{
+	uint8_t *buf = tandy.dac.dma.buf;
+	const bool should_read = tandy.dac.enabled &&
+	                         (tandy.dac.mode & 0x0c) == 0x0c &&
+	                         !tandy.dac.dma.transfer_done;
+	size_t actual = should_read ? tandy.dac.dma.chan->Read(requested, buf) : 0u;
+	// If we came up short, move back one to terminate the tail in silence
+	if (actual && actual < requested)
+		actual--;
+	// Always write the requested quantity regardless of read status
+	memset(buf + actual, 128u, requested - actual);
+	tandy.dac.chan->AddSamples_m8(requested, buf);
 }
-
-static void TandyDACUpdate(Bitu length) {
-	if (tandy.dac.enabled && ((tandy.dac.mode&0x0c)==0x0c)) {
-		if (!tandy.dac.dma.transfer_done) {
-			Bitu len = length;
-			TandyDACGenerateDMASound(len);
-		} else {
-			for (Bitu ct=0; ct < length; ct++) {
-				tandy.dac.chan->AddSamples_m8(1,&tandy.dac.dma.last_sample);
-			}
-		}
-	} else {
-		tandy.dac.chan->AddSilence();
-	}
-}
-
 
 class TANDYSOUND: public Module_base {
 private:
@@ -331,8 +316,6 @@ public:
 		tandy.dac.irq_activated=false;
 		tandy.dac.frequency=0;
 		tandy.dac.amplitude=0;
-		tandy.dac.dma.last_sample=0;
-
 
 		tandy.enabled=false;
 		real_writeb(0x40,0xd4,0xff);	/* BIOS Tandy DAC initialization value */
