@@ -16,6 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <new>
+
 #include "mem_unaligned.h"
 #include "types.h"
 
@@ -84,9 +86,7 @@ static CacheBlockDynRec link_blocks[2];		// default linking (specially marked)
 // cache blocks and intercepts writes to the code for special treatment
 class CodePageHandlerDynRec : public PageHandler {
 public:
-	CodePageHandlerDynRec() {
-		invalidation_map=NULL;
-	}
+	CodePageHandlerDynRec() : invalidation_map(nullptr) {}
 
 	void SetupAt(Bitu _phys_page,PageHandler * _old_pagehandler) {
 		// initialize this codepage handler
@@ -105,9 +105,9 @@ public:
 		// initialize the maps with zero (no cache blocks as well as code present)
 		memset(&hash_map,0,sizeof(hash_map));
 		memset(&write_map,0,sizeof(write_map));
-		if (invalidation_map!=NULL) {
-			free(invalidation_map);
-			invalidation_map=NULL;
+		if (invalidation_map) {
+			delete [] invalidation_map;
+			invalidation_map = nullptr;
 		}
 	}
 
@@ -139,6 +139,16 @@ public:
 		return is_current_block;
 	}
 
+	uint8_t *alloc_invalidation_map() const
+	{
+		constexpr size_t map_size = 4096;
+		uint8_t *map = new (std::nothrow) uint8_t[map_size];
+		if (GCC_UNLIKELY(!map))
+			E_Exit("failed to allocate invalidation_map");
+		memset(map, 0, map_size);
+		return map;
+	}
+
 	// the following functions will clean all cache blocks that are invalid now due to the write
 	void writeb(PhysPt addr,Bitu val){
 		addr&=4095;
@@ -151,8 +161,7 @@ public:
 			if (!active_count) Release();	// delay page releasing until active_count is zero
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map=(Bit8u*)malloc(4096);
-			memset(invalidation_map,0,4096);
+			invalidation_map = alloc_invalidation_map();
 		}
 		invalidation_map[addr]++;
 		InvalidateRange(addr,addr);
@@ -168,8 +177,7 @@ public:
 			if (!active_count) Release();	// delay page releasing until active_count is zero
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map=(Bit8u*)malloc(4096);
-			memset(invalidation_map,0,4096);
+			invalidation_map = alloc_invalidation_map();
 		}
 		host_addw(&invalidation_map[addr], 0x0101);
 		InvalidateRange(addr,addr+1);
@@ -185,8 +193,7 @@ public:
 			if (!active_count) Release();	// delay page releasing until active_count is zero
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map=(Bit8u*)malloc(4096);
-			memset(invalidation_map,0,4096);
+			invalidation_map = alloc_invalidation_map();
 		}
 		host_addd(&invalidation_map[addr], 0x01010101);
 		InvalidateRange(addr,addr+3);
@@ -202,10 +209,9 @@ public:
 				if (!active_count) Release();
 			}
 		} else {
-			if (!invalidation_map) {
-				invalidation_map=(Bit8u*)malloc(4096);
-				memset(invalidation_map,0,4096);
-			}
+			if (!invalidation_map)
+				invalidation_map = alloc_invalidation_map();
+
 			invalidation_map[addr]++;
 			if (InvalidateRange(addr,addr)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
@@ -226,10 +232,9 @@ public:
 				if (!active_count) Release();
 			}
 		} else {
-			if (!invalidation_map) {
-				invalidation_map=(Bit8u*)malloc(4096);
-				memset(invalidation_map,0,4096);
-			}
+			if (!invalidation_map)
+				invalidation_map = alloc_invalidation_map();
+
 			host_addw(&invalidation_map[addr], 0x0101);
 			if (InvalidateRange(addr,addr+1)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
@@ -250,10 +255,9 @@ public:
 				if (!active_count) Release();
 			}
 		} else {
-			if (!invalidation_map) {
-				invalidation_map=(Bit8u*)malloc(4096);
-				memset(invalidation_map,0,4096);
-			}
+			if (!invalidation_map)
+				invalidation_map = alloc_invalidation_map();
+
 			host_addd(&invalidation_map[addr], 0x01010101);
 			if (InvalidateRange(addr,addr+3)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
