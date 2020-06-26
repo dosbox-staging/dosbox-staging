@@ -28,7 +28,7 @@
 #include "pic.h"
 
 #define SPKR_ENTRIES 1024
-#define SPKR_POSITIVE_VOLTAGE 5000.0f
+#define SPKR_POSITIVE_VOLTAGE 15000.0f
 #define SPKR_NEUTRAL_VOLTAGE  0.0f
 #define SPKR_NEGATIVE_VOLTAGE -SPKR_POSITIVE_VOLTAGE
 
@@ -46,7 +46,9 @@ static struct {
 	DelayEntry entries[SPKR_ENTRIES] = {};
 	DCSilencer dc_silencer = {};
 	MixerChannel *chan = nullptr;
+	SPKR_MODES prev_mode = SPKR_OFF;
 	SPKR_MODES mode = SPKR_OFF;
+	Bitu prev_pit_mode = 3;
 	Bitu pit_mode = 3;
 	Bitu rate = 0u;
 	Bitu min_tr = 0u;
@@ -79,6 +81,17 @@ static void AddDelayEntry(float index,float vol) {
 	spkr.entries[spkr.used].index=index;
 	spkr.entries[spkr.used].vol=vol;
 	spkr.used++;
+
+#if 0
+	// This is extremely verbose; pipe the output to a file.
+	// Display the previous and current speaker modes w/ requested volume
+	if (fabs(vol) > Amplitude::neutral)
+		LOG_MSG("SPEAKER: Adding pos=%3s, pit=%" PRIuPTR "|%" PRIuPTR
+		        ", pwm=%d|%d, volume=%6.0f",
+		        spkr.prev_pos > 0 ? "yes" : "no", spkr.prev_pit_mode,
+		        spkr.pit_mode, spkr.prev_mode, spkr.mode,
+		        static_cast<double>(vol));
+#endif
 }
 
 static void ForwardPIT(float newindex) {
@@ -179,6 +192,8 @@ void PCSPEAKER_SetCounter(Bitu cntr, Bitu mode)
 
 	float newindex=PIC_TickIndex();
 	ForwardPIT(newindex);
+	spkr.prev_pit_mode = spkr.pit_mode;
+	spkr.pit_mode = mode;
 	switch (mode) {
 	case 0:		/* Mode 0 one shot, used with realsound */
 		if (spkr.mode!=SPKR_PIT_ON) return;
@@ -223,8 +238,6 @@ void PCSPEAKER_SetCounter(Bitu cntr, Bitu mode)
 #endif
 		return;
 	}
-	spkr.pit_mode=mode;
-
 	// Activate the channel after queuing new speaker entries
 	spkr.chan->Enable(true);
 }
@@ -253,8 +266,9 @@ void PCSPEAKER_SetType(Bitu mode)
 	if (!SpeakerExists())
 		return;
 
-	float newindex=PIC_TickIndex();
+	float newindex = PIC_TickIndex();
 	ForwardPIT(newindex);
+	spkr.prev_mode = spkr.mode;
 	switch (mode) {
 	case 0:
 		spkr.mode=SPKR_OFF;
