@@ -306,7 +306,6 @@ bool isoDrive::FindNext(DOS_DTA &dta) {
 			&& !(~attr & findAttr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM))) {
 			
 			/* file is okay, setup everything to be copied in DTA Block */
-			char findName[DOS_NAMELENGTH_ASCII];		
 			findName[0] = 0;
 			if(strlen((char*)de.ident) < DOS_NAMELENGTH_ASCII) {
 				safe_strcpy(findName, (char *)de.ident);

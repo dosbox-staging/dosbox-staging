@@ -207,34 +207,6 @@ void Cross::CreateDir(std::string const& in) {
 #endif
 }
 
-/* does the filename fit the 8.3 format? */
-static bool is_filename_8by3w(const char* fname) {
-    int i;
-
-    /* Is the first part 8 chars or less? */
-    i=0;
-    while (*fname != 0 && *fname != '.') {
-		if (*fname<=32||*fname==127||*fname=='"'||*fname=='+'||*fname=='='||*fname==','||*fname==';'||*fname==':'||*fname=='<'||*fname=='>'||*fname=='|'||*fname=='?'||*fname=='*') return false;
-		fname++; i++;
-	}
-    if (i > 8) return false;
-
-    if (*fname == '.') fname++;
-
-    /* Is the second part 3 chars or less? A second '.' also makes it a LFN */
-    i=0;
-    while (*fname != 0 && *fname != '.') {
-		if (*fname<=32||*fname==127||*fname=='"'||*fname=='+'||*fname=='='||*fname==','||*fname==';'||*fname==':'||*fname=='<'||*fname=='>'||*fname=='|'||*fname=='?'||*fname=='*') return false;
-		fname++; i++;
-	}
-    if (i > 3) return false;
-
-    /* if there is anything beyond this point, it's an LFN */
-    if (*fname != 0) return false;
-
-    return true;
-}
-
 bool Cross::IsPathAbsolute(std::string const& in) {
 	// Absolute paths
 #if defined (WIN32)
@@ -268,6 +240,34 @@ dir_information* open_directory(const char* dirname) {
 	dir.handle = INVALID_HANDLE_VALUE;
 
 	return (access(dirname,0) ? NULL : &dir);
+}
+
+/* does the filename fit the 8.3 format? */
+static bool is_filename_8by3w(const char* fname) {
+    int i;
+
+    /* Is the first part 8 chars or less? */
+    i=0;
+    while (*fname != 0 && *fname != '.') {
+		if (*fname<=32||*fname==127||*fname=='"'||*fname=='+'||*fname=='='||*fname==','||*fname==';'||*fname==':'||*fname=='<'||*fname=='>'||*fname=='|'||*fname=='?'||*fname=='*') return false;
+		fname++; i++;
+	}
+    if (i > 8) return false;
+
+    if (*fname == '.') fname++;
+
+    /* Is the second part 3 chars or less? A second '.' also makes it a LFN */
+    i=0;
+    while (*fname != 0 && *fname != '.') {
+		if (*fname<=32||*fname==127||*fname=='"'||*fname=='+'||*fname=='='||*fname==','||*fname==';'||*fname==':'||*fname=='<'||*fname=='>'||*fname=='|'||*fname=='?'||*fname=='*') return false;
+		fname++; i++;
+	}
+    if (i > 3) return false;
+
+    /* if there is anything beyond this point, it's an LFN */
+    if (*fname != 0) return false;
+
+    return true;
 }
 
 bool read_directory_first(dir_information* dirp, char* entry_name, char* entry_sname, bool& is_directory) {
