@@ -207,6 +207,34 @@ void Cross::CreateDir(std::string const& in) {
 #endif
 }
 
+/* does the filename fit the 8.3 format? */
+static bool is_filename_8by3w(const char* fname) {
+    int i;
+
+    /* Is the first part 8 chars or less? */
+    i=0;
+    while (*fname != 0 && *fname != '.') {
+		if (*fname<=32||*fname==127||*fname=='"'||*fname=='+'||*fname=='='||*fname==','||*fname==';'||*fname==':'||*fname=='<'||*fname=='>'||*fname=='|'||*fname=='?'||*fname=='*') return false;
+		fname++; i++;
+	}
+    if (i > 8) return false;
+
+    if (*fname == '.') fname++;
+
+    /* Is the second part 3 chars or less? A second '.' also makes it a LFN */
+    i=0;
+    while (*fname != 0 && *fname != '.') {
+		if (*fname<=32||*fname==127||*fname=='"'||*fname=='+'||*fname=='='||*fname==','||*fname==';'||*fname==':'||*fname=='<'||*fname=='>'||*fname=='|'||*fname=='?'||*fname=='*') return false;
+		fname++; i++;
+	}
+    if (i > 3) return false;
+
+    /* if there is anything beyond this point, it's an LFN */
+    if (*fname != 0) return false;
+
+    return true;
+}
+
 bool Cross::IsPathAbsolute(std::string const& in) {
 	// Absolute paths
 #if defined (WIN32)
@@ -242,7 +270,7 @@ dir_information* open_directory(const char* dirname) {
 	return (access(dirname,0) ? NULL : &dir);
 }
 
-bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
+bool read_directory_first(dir_information* dirp, char* entry_name, char* entry_sname, bool& is_directory) {
 	if (!dirp) return false;
 	dirp->handle = FindFirstFile(dirp->base_path, &dirp->search_data);
 	if (INVALID_HANDLE_VALUE == dirp->handle) {
@@ -250,6 +278,10 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
 	}
 
 	safe_strncpy(entry_name,dirp->search_data.cFileName,(MAX_PATH<CROSS_LEN)?MAX_PATH:CROSS_LEN);
+	if (dirp->search_data.cAlternateFileName[0] != 0 && is_filename_8by3w(dirp->search_data.cFileName))
+		safe_strncpy(entry_sname,dirp->search_data.cFileName,13);
+	else
+		safe_strncpy(entry_sname,dirp->search_data.cAlternateFileName,13);
 
 	if (dirp->search_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) is_directory = true;
 	else is_directory = false;
@@ -257,12 +289,16 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
 	return true;
 }
 
-bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
+bool read_directory_next(dir_information* dirp, char* entry_name, char* entry_sname, bool& is_directory) {
 	if (!dirp) return false;
 	int result = FindNextFile(dirp->handle, &dirp->search_data);
 	if (result==0) return false;
 
 	safe_strncpy(entry_name,dirp->search_data.cFileName,(MAX_PATH<CROSS_LEN)?MAX_PATH:CROSS_LEN);
+	if (dirp->search_data.cAlternateFileName[0] != 0 && is_filename_8by3w(dirp->search_data.cFileName))
+		safe_strncpy(entry_sname,dirp->search_data.cFileName,13);
+	else
+		safe_strncpy(entry_sname,dirp->search_data.cAlternateFileName,13);
 
 	if (dirp->search_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) is_directory = true;
 	else is_directory = false;
@@ -288,7 +324,7 @@ dir_information* open_directory(const char* dirname) {
 
 bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
 	if (!dirp) return false;
-	return read_directory_next(dirp,entry_name,is_directory);
+	return read_directory_next(dirp,entry_name,entry_sname,is_directory);
 }
 
 bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
@@ -300,6 +336,7 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 
 //	safe_strncpy(entry_name,dentry->d_name,(FILENAME_MAX<MAX_PATH)?FILENAME_MAX:MAX_PATH);	// [include stdio.h], maybe pathconf()
 	safe_strncpy(entry_name,dentry->d_name,CROSS_LEN);
+	entry_sname[0]=0;
 
 #ifdef DIRENT_HAS_D_TYPE
 	if(dentry->d_type == DT_DIR) {

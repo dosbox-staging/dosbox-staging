@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: LFN support
  */
 
 // Uncomment to enable file-open diagnostic messages
@@ -32,6 +34,10 @@
 #include "support.h"
 #include "cross.h"
 #include "inout.h"
+
+Bit16u ldid[256];
+std::string ldir[256];
+extern int lfn_filefind_handle;
 
 bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/) {
 //TODO Maybe care for attributes but not likely
@@ -236,6 +242,8 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	safe_strcat(tempDir, _dir);
 	CROSS_FILENAME(tempDir);
 
+	for (unsigned int i=0;i<strlen(tempDir);i++) tempDir[i]=toupper(tempDir[i]);
+
 	if (allocation.mediaid==0xF0) {
 		EmptyCache(); //rescan floppie-content on each findfirst
 	}
@@ -249,16 +257,21 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		return false;
 	}
-	safe_strcpy(srchInfo[id].srch_dir, tempDir);
-	dta.SetDirID(id);
+	if (lfn_filefind_handle>=LFN_FILEFIND_MAX) {
+		dta.SetDirID(id);
+		safe_strcpy(srchInfo[id].srch_dir, tempDir);
+	} else {
+		ldid[lfn_filefind_handle]=id;
+		ldir[lfn_filefind_handle]=tempDir;
+	}
 	
 	Bit8u sAttr;
-	dta.GetSearchParams(sAttr,tempDir);
+	dta.GetSearchParams(sAttr,tempDir,uselfn);
 
 	if (this->isRemote() && this->isRemovable()) {
 		// cdroms behave a bit different than regular drives
 		if (sAttr == DOS_ATTR_VOLUME) {
-			dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+			dta.SetResult(dirCache.GetLabel(),dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
 			return true;
 		}
 	} else {
@@ -270,13 +283,13 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 				DOS_SetError(DOSERR_NO_MORE_FILES);
 				return false;
 			}
-			dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+			dta.SetResult(dirCache.GetLabel(),dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
 			return true;
 		} else if ((sAttr & DOS_ATTR_VOLUME)  && (*_dir == 0) && !fcb_findfirst) { 
 		//should check for a valid leading directory instead of 0
 		//exists==true if the volume label matches the searchmask and the path is valid
 			if (WildFileCmp(dirCache.GetLabel(),tempDir)) {
-				dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+				dta.SetResult(dirCache.GetLabel(),dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
 				return true;
 			}
 		}
@@ -286,31 +299,39 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 
 bool localDrive::FindNext(DOS_DTA & dta) {
 
-	char * dir_ent;
+	char * dir_ent, *ldir_ent;
 	struct stat stat_block;
-	char full_name[CROSS_LEN];
-	char dir_entcopy[CROSS_LEN];
+	char full_name[CROSS_LEN], lfull_name[LFN_NAMELENGTH+1];
+	char dir_entcopy[CROSS_LEN], ldir_entcopy[CROSS_LEN];
 
 	Bit8u srch_attr;char srch_pattern[DOS_NAMELENGTH_ASCII];
 	Bit8u find_attr;
 
-	dta.GetSearchParams(srch_attr,srch_pattern);
-	Bit16u id = dta.GetDirID();
+	dta.GetSearchParams(srch_attr,srch_pattern,uselfn);
+	Bit16u id = lfn_filefind_handle>=LFN_FILEFIND_MAX?dta.GetDirID():ldid[lfn_filefind_handle];
 
 again:
-	if (!dirCache.FindNext(id,dir_ent)) {
+	if (!dirCache.FindNext(id,dir_ent,ldir_ent)) {
+		if (lfn_filefind_handle<LFN_FILEFIND_MAX) {
+			ldid[lfn_filefind_handle]=0;
+			ldir[lfn_filefind_handle]="";
+		}
 		DOS_SetError(DOSERR_NO_MORE_FILES);
 		return false;
 	}
-	if (!WildFileCmp(dir_ent,srch_pattern)) goto again;
+	if (!WildFileCmp(dir_ent,srch_pattern)&&!LWildFileCmp(ldir_ent,srch_pattern)) goto again;
 
-	safe_strcpy(full_name, srchInfo[id].srch_dir);
+	safe_strcpy(full_name,lfn_filefind_handle>=LFN_FILEFIND_MAX?srchInfo[id].srch_dir:(ldir[lfn_filefind_handle]!=""?ldir[lfn_filefind_handle].c_str():"\\"));
+	safe_strcpy(lfull_name,full_name);
+
 	safe_strcat(full_name, dir_ent);
+    safe_strcat(lfull_name,ldir_ent);
 
 	//GetExpandName might indirectly destroy dir_ent (by caching in a new directory 
 	//and due to its design dir_ent might be lost.)
 	//Copying dir_ent first
 	safe_strcpy(dir_entcopy, dir_ent);
+	safe_strcpy(ldir_entcopy,ldir_ent);
 	if (stat(dirCache.GetExpandName(full_name),&stat_block)!=0) { 
 		goto again;//No symlinks and such
 	}	
@@ -320,12 +341,15 @@ again:
  	if (~srch_attr & find_attr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM)) goto again;
 	
 	/*file is okay, setup everything to be copied in DTA Block */
-	char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;
+	char find_name[DOS_NAMELENGTH_ASCII], lfind_name[LFN_NAMELENGTH+1];
+    Bit16u find_date,find_time;Bit32u find_size;
 
 	if (strlen(dir_entcopy)<DOS_NAMELENGTH_ASCII) {
 		safe_strcpy(find_name, dir_entcopy);
 		upcase(find_name);
-	} 
+	}
+	strcpy(lfind_name,ldir_entcopy);
+    lfind_name[LFN_NAMELENGTH]=0;
 
 	find_size=(Bit32u) stat_block.st_size;
 	struct tm *time;
@@ -336,7 +360,7 @@ again:
 		find_time=6; 
 		find_date=4;
 	}
-	dta.SetResult(find_name,find_size,find_date,find_time,find_attr);
+	dta.SetResult(find_name,lfind_name,find_size,find_date,find_time,find_attr);
 	return true;
 }
 
@@ -356,6 +380,55 @@ bool localDrive::GetFileAttr(char * name,Bit16u * attr) {
 	*attr=0;
 	return false; 
 }
+
+bool localDrive::GetFileAttrEx(char* name, struct stat *status) {
+	char newname[CROSS_LEN];
+	strcpy(newname,basedir);
+	strcat(newname,name);
+	CROSS_FILENAME(newname);
+	dirCache.ExpandName(newname);
+	return !stat(newname,status);
+}
+
+unsigned long localDrive::GetCompressedSize(char* name) {
+#if !defined (WIN32)
+	return 0;
+#else
+	char newname[CROSS_LEN];
+	strcpy(newname,basedir);
+	strcat(newname,name);
+	CROSS_FILENAME(newname);
+	dirCache.ExpandName(newname);
+	DWORD size = GetCompressedFileSize(newname, NULL);
+	if (size != INVALID_FILE_SIZE) {
+		if (size != 0 && size == GetFileSize(newname, NULL)) {
+			DWORD sectors_per_cluster, bytes_per_sector, free_clusters, total_clusters;
+			if (GetDiskFreeSpace(newname, &sectors_per_cluster, &bytes_per_sector, &free_clusters, &total_clusters)) {
+				size = ((size - 1) | (sectors_per_cluster * bytes_per_sector - 1)) + 1;
+			}
+		}
+		return size;
+	} else {
+		DOS_SetError((Bit16u)GetLastError());
+		return -1;
+	}
+#endif
+}
+
+#if defined (WIN32)
+HANDLE localDrive::CreateOpenFile(const char* name) {
+	char newname[CROSS_LEN];
+	strcpy(newname,basedir);
+	strcat(newname,name);
+	CROSS_FILENAME(newname);
+	dirCache.ExpandName(newname);
+	HANDLE handle=CreateFile(newname, FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+	if (handle==INVALID_HANDLE_VALUE)
+		DOS_SetError((Bit16u)GetLastError());
+	return handle;
+	return INVALID_HANDLE_VALUE;
+}
+#endif
 
 bool localDrive::MakeDir(char * dir) {
 	char newdir[CROSS_LEN];
@@ -677,6 +750,20 @@ bool cdromDrive::GetFileAttr(char * name,Bit16u * attr) {
 	if (result) *attr |= DOS_ATTR_READ_ONLY;
 	return result;
 }
+
+bool cdromDrive::GetFileAttrEx(char* name, struct stat *status) {
+	return localDrive::GetFileAttrEx(name,status);
+}
+
+unsigned long cdromDrive::GetCompressedSize(char* name) {
+	return localDrive::GetCompressedSize(name);
+}
+
+#if defined (WIN32)
+HANDLE cdromDrive::CreateOpenFile(const char* name) {
+		return localDrive::CreateOpenFile(name);
+}
+#endif
 
 bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta,bool /*fcb_findfirst*/) {
 	// If media has changed, reInit drivecache.

@@ -30,6 +30,7 @@
 #include "dos_system.h"
 
 bool WildFileCmp(const char * file, const char * wild);
+bool LWildFileCmp(const char * file, const char * wild);
 void Set_Label(char const * const input, char * const output, bool cdrom);
 std::string To_Label(const char* name);
 
@@ -67,6 +68,11 @@ public:
 	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
 	virtual bool FindNext(DOS_DTA & dta);
 	virtual bool GetFileAttr(char * name,Bit16u * attr);
+	virtual bool GetFileAttrEx(char* name, struct stat *status);
+	virtual unsigned long GetCompressedSize(char* name);
+#if defined (WIN32)
+	virtual HANDLE CreateOpenFile(char const* const name);
+#endif
 	virtual bool Rename(char * oldname,char * newname);
 	virtual bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
 	virtual bool FileExists(const char* name);
@@ -133,6 +139,18 @@ struct direntry {
 	Bit32u entrysize;
 } GCC_ATTRIBUTE(packed);
 
+struct direntry_lfn {
+    Bit8u LDIR_Ord;                 /* 0x00 Long filename ordinal (1 to 63). bit 6 (0x40) is set if the last entry, which normally comes first in the directory */
+    Bit16u LDIR_Name1[5];           /* 0x01 first 5 chars */
+    Bit8u attrib;                   /* 0x0B */
+    Bit8u LDIR_Type;                /* 0x0C zero to indicate a LFN */
+    Bit8u LDIR_Chksum;              /* 0x0D checksum */
+    Bit16u LDIR_Name2[6];           /* 0x0E next 6 chars */
+    Bit16u LDIR_FstClusLO;          /* 0x1A zero (loFirstClust) */
+    Bit16u LDIR_Name3[2];           /* 0x1C next 2 chars */
+} GCC_ATTRIBUTE(packed);
+
+
 struct partTable {
 	Bit8u booter[446];
 	struct {
@@ -166,6 +184,11 @@ public:
 	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
 	virtual bool FindNext(DOS_DTA & dta);
 	virtual bool GetFileAttr(char * name,Bit16u * attr);
+	virtual bool GetFileAttrEx(char* name, struct stat *status);
+	virtual unsigned long GetCompressedSize(char* name);
+#if defined (WIN32)
+	virtual HANDLE CreateOpenFile(char const* const name);
+#endif
 	virtual bool Rename(char * oldname,char * newname);
 	virtual bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
 	virtual bool FileExists(const char* name);
@@ -190,13 +213,14 @@ public:
 	std::shared_ptr<imageDisk> loadedDisk;
 	bool created_successfully;
 private:
+	char* Generate_SFN(const char *path, const char *name);
 	Bit32u getClusterValue(Bit32u clustNum);
 	void setClusterValue(Bit32u clustNum, Bit32u clustValue);
 	Bit32u getClustFirstSect(Bit32u clustNum);
 	bool FindNextInternal(Bit32u dirClustNumber, DOS_DTA & dta, direntry *foundEntry);
 	bool getDirClustNum(char * dir, Bit32u * clustNum, bool parDir);
-	bool getFileDirEntry(char const * const filename, direntry * useEntry, Bit32u * dirClust, Bit32u * subEntry);
-	bool addDirectoryEntry(Bit32u dirClustNumber, direntry useEntry);
+	bool getFileDirEntry(char const * const filename, direntry * useEntry, Bit32u * dirClust, Bit32u * subEntry,bool dirOk=false);
+	bool addDirectoryEntry(Bit32u dirClustNumber, direntry useEntry,const char *lfn=NULL);
 	void zeroOutCluster(Bit32u clustNumber);
 	bool getEntryName(char *fullname, char *entname);
 	
@@ -212,6 +236,17 @@ private:
 
 	Bit8u fatSectBuffer[1024];
 	Bit32u curFatSect;
+	struct lfnRange_t {
+		Bit16u      dirPos_start;
+		Bit16u      dirPos_end;
+
+		void clear(void) {
+			dirPos_start = dirPos_end = 0;
+		}
+		bool empty(void) const {
+			return dirPos_start == dirPos_end;
+		}
+	} lfnRange = {0,0};
 };
 
 class cdromDrive : public localDrive
@@ -225,6 +260,11 @@ public:
 	virtual bool MakeDir(char * dir);
 	virtual bool Rename(char * oldname,char * newname);
 	virtual bool GetFileAttr(char * name,Bit16u * attr);
+	virtual bool GetFileAttrEx(char* name, struct stat *status);
+	virtual unsigned long GetCompressedSize(char* name);
+#if defined (WIN32)
+	virtual HANDLE CreateOpenFile(char const* const name);
+#endif
 	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
 	virtual void SetDir(const char* path);
 	virtual bool isRemote(void);
@@ -325,6 +365,11 @@ public:
 	virtual bool FindFirst(char *_dir, DOS_DTA &dta, bool fcb_findfirst);
 	virtual bool FindNext(DOS_DTA &dta);
 	virtual bool GetFileAttr(char *name, Bit16u *attr);
+	virtual bool GetFileAttrEx(char* name, struct stat *status);
+	virtual unsigned long GetCompressedSize(char* name);
+#if defined (WIN32)
+	virtual HANDLE CreateOpenFile(char const* const name);
+#endif
 	virtual bool Rename(char * oldname,char * newname);
 	virtual bool AllocationInfo(Bit16u *bytes_sector, Bit8u *sectors_cluster, Bit16u *total_clusters, Bit16u *free_clusters);
 	virtual bool FileExists(const char *name);
@@ -347,6 +392,7 @@ private:
 	bool GetNextDirEntry(const int dirIterator, isoDirEntry* de);
 	void FreeDirIterator(const int dirIterator);
 	bool ReadCachedSector(Bit8u** buffer, const Bit32u sector);
+	void GetLongName(char *ident, char *lfindName);
 	
 	struct DirIterator {
 		bool valid;
@@ -388,6 +434,11 @@ public:
 	bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst);
 	bool FindNext(DOS_DTA & dta);
 	bool GetFileAttr(char * name,Bit16u * attr);
+	bool GetFileAttrEx(char* name, struct stat *status);
+	unsigned long GetCompressedSize(char* name);
+#if defined (WIN32)
+	HANDLE CreateOpenFile(char const* const name);
+#endif
 	bool Rename(char * oldname,char * newname);
 	bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
 	bool FileExists(const char* name);
@@ -431,7 +482,7 @@ private:
 	bool Sync_leading_dirs(const char* dos_filename);
 	void add_DOSname_to_cache(const char* name);
 	void remove_DOSname_from_cache(const char* name);
-	void add_DOSdir_to_cache(const char* name);
+	void add_DOSdir_to_cache(const char* name, const char* sname);
 	void remove_DOSdir_from_cache(const char* name);
 	void update_cache(bool read_directory_contents = false);
 	
@@ -458,5 +509,14 @@ private:
 	std::vector<std::string> DOSdirs_cache; //Can not blindly change its type. it is important that subdirs come after the parent directory.
 	const std::string special_prefix;
 };
+
+/* No LFN filefind in progress (SFN call). This index is out of range and meant to indicate no LFN call in progress. */
+#define LFN_FILEFIND_NONE           258
+/* FAT image handle */
+#define LFN_FILEFIND_IMG            256
+/* Internal handle */
+#define LFN_FILEFIND_INTERNAL       255
+/* Highest valid handle */
+#define LFN_FILEFIND_MAX            255
 
 #endif

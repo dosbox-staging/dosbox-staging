@@ -27,9 +27,11 @@
 #include "cross.h"
 #include "mem.h"
 #include "support.h"
+#include <ctype.h>
 
 #define DOS_NAMELENGTH 12
 #define DOS_NAMELENGTH_ASCII (DOS_NAMELENGTH+1)
+#define LFN_NAMELENGTH 255
 #define DOS_FCBNAME 15
 #define DOS_DIRDEPTH 8
 #define DOS_PATHLENGTH 80
@@ -169,18 +171,18 @@ public:
 	void  SetBaseDir           (const char* path);
 	void  SetDirSort           (TDirSort sort) { sortDirType = sort; };
 	bool  OpenDir              (const char* path, Bit16u& id);
-	bool  ReadDir              (Bit16u id, char* &result);
+	bool  ReadDir              (Bit16u id, char* &result, char * &lresult);
 
 	void  ExpandName           (char* path);
 	char* GetExpandName        (const char* path);
 	bool  GetShortName         (const char* fullname, char* shortname);
 
 	bool  FindFirst            (char* path, Bit16u& id);
-	bool  FindNext             (Bit16u id, char* &result);
+	bool  FindNext             (Bit16u id, char* &result, char* &lresult);
 
 	void  CacheOut             (const char* path, bool ignoreLastDir = false);
 	void  AddEntry             (const char* path, bool checkExist = false);
-	void  AddEntryDirOverlay   (const char* path, bool checkExist = false);
+	void  AddEntryDirOverlay   (const char* path, char *sfile, bool checkExist = false);
 
 	void  DeleteEntry          (const char* path, bool ignoreLastDir = false);
 	void  EmptyCache           (void);
@@ -230,12 +232,12 @@ private:
 	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
 	unsigned        CreateShortNameID       (CFileInfo* dir, const char* name);
 	int		CompareShortname	(const char* compareName, const char* shortName);
-	bool		SetResult		(CFileInfo* dir, char * &result, Bitu entryNr);
+	bool		SetResult		(CFileInfo* dir, char * &result, char * &lresult, Bitu entryNr);
 	bool		IsCachedIn		(CFileInfo* dir);
 	CFileInfo*	FindDirInfo		(const char* path, char* expandedPath);
 	bool		RemoveSpaces		(char* str);
 	bool		OpenDir			(CFileInfo* dir, const char* path, Bit16u& id);
-	void		CreateEntry		(CFileInfo* dir, const char* name, bool is_directory);
+	char*		CreateEntry		(CFileInfo* dir, const char* name, const char* sname, bool is_directory);
 	void		CopyEntry		(CFileInfo* dir, CFileInfo* from);
 	Bit16u		GetFreeID		(CFileInfo* dir);
 	void		Clear			(void);
@@ -270,6 +272,11 @@ public:
 	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false)=0;
 	virtual bool FindNext(DOS_DTA & dta)=0;
 	virtual bool GetFileAttr(char * name,Bit16u * attr)=0;
+	virtual bool GetFileAttrEx(char* name, struct stat *status)=0;
+	virtual unsigned long GetCompressedSize(char* name)=0;
+#if defined (WIN32)
+	virtual HANDLE CreateOpenFile(char const* const name)=0;
+#endif
 	virtual bool Rename(char * oldname,char * newname)=0;
 	virtual bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters)=0;
 	virtual bool FileExists(const char* name)=0;
@@ -283,7 +290,7 @@ public:
 
 	const char * GetInfo() const { return info; }
 
-	char curdir[DOS_PATHLENGTH];
+	char curdir[LFN_NAMELENGTH+1];
 	char info[256];
 	/* Can be overridden for example in iso images */
 	virtual char const * GetLabel(){return dirCache.GetLabel();};

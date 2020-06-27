@@ -127,7 +127,7 @@ char *ltrim(char *str) {
 char *rtrim(char *str) {
 	char *p;
 	p = strchr(str, '\0');
-	while (--p >= str && isspace(*reinterpret_cast<unsigned char*>(p))) {};
+	while (--p >= str && *reinterpret_cast<unsigned char*>(p) != '\f' && isspace(*reinterpret_cast<unsigned char*>(p))) {};
 	p[1] = '\0';
 	return str;
 }
@@ -189,6 +189,23 @@ char * StripWord(char *&line) {
 	char * begin=scan;
 	for (char c = *scan ;(c = *scan);scan++) {
 		if (isspace(*reinterpret_cast<unsigned char*>(&c))) {
+			*scan++=0;
+			break;
+		}
+	}
+	line=scan;
+	return begin;
+}
+
+char * StripArg(char *&line) {
+       char * scan=line;
+       int q=0;
+       scan=ltrim(scan);
+       char * begin=scan;
+       for (char c = *scan ;(c = *scan);scan++) {
+               if (*scan=='"') {
+                       q++;
+               } else if (q/2*2==q && isspace(*reinterpret_cast<unsigned char*>(&c))) {
 			*scan++=0;
 			break;
 		}

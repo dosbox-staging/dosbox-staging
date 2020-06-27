@@ -107,7 +107,7 @@ DOS_File & DOS_File::operator= (const DOS_File & orig) {
 
 Bit8u DOS_FindDevice(char const * name) {
 	/* should only check for the names before the dot and spacepadded */
-	char fullname[DOS_PATHLENGTH];Bit8u drive;
+	char fullname[LFN_NAMELENGTH+2];Bit8u drive;
 //	if(!name || !(*name)) return DOS_DEVICES; //important, but makename does it
 	if (!DOS_MakeName(name,fullname,&drive)) return DOS_DEVICES;
 

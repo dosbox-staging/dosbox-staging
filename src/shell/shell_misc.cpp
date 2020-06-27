@@ -27,12 +27,15 @@
 #include "regs.h"
 #include "callback.h"
 #include "support.h"
+#include "drives.h"
+
+extern int lfn_filefind_handle;
 
 void DOS_Shell::ShowPrompt(void) {
 	Bit8u drive=DOS_GetDefaultDrive()+'A';
-	char dir[DOS_PATHLENGTH];
+	char dir[LFN_NAMELENGTH+2];
 	dir[0] = 0; //DOS_GetCurrentDir doesn't always return something. (if drive is messed up)
-	DOS_GetCurrentDir(0,dir);
+	DOS_GetCurrentDir(0,dir,uselfn);
 	InjectMissingNewline();
 	WriteOut("%c:\\%s>", drive, dir);
 	ResetLastWrittenChar('\n'); // prevents excessive newline if cmd prints nothing
@@ -239,10 +242,38 @@ void DOS_Shell::InputCommand(char * line) {
 				} else {
 					// build new completion list
 					// Lines starting with CD will only get directories in the list
-					bool dir_only = (strncasecmp(line,"CD ",3)==0);
+					bool dir_only = (strncasecmp(line,"CD ",3)==0)||(strncasecmp(line,"MD ",3)==0)||(strncasecmp(line,"RD ",3)==0)||
+							(strncasecmp(line,"CHDIR ",6)==0)||(strncasecmp(line,"MKDIR ",3)==0)||(strncasecmp(line,"RMDIR ",6)==0);
+					int q=0, r=0, k=0;
 
 					// get completion mask
 					char *p_completion_start = strrchr(line, ' ');
+					while (p_completion_start) {
+						q=0;
+						char *i;
+						for (i=line;i<p_completion_start;i++)
+						   if (*i=='\"') q++;
+						if (q/2*2==q) break;
+						*i=0;
+						p_completion_start = strrchr(line, ' ');
+						*i=' ';
+					}
+					char c[]={'<','>','|'};
+					for (unsigned int j=0; j<sizeof(c); j++) {
+						char *sp = strrchr(line, c[j]);
+						while (sp) {
+							q=0;
+							char *i;
+							for (i=line;i<sp;i++)
+								if (*i=='\"') q++;
+							if (q/2*2==q) break;
+							*i=0;
+							sp = strrchr(line, c[j]);
+							*i=c[j];
+						}
+						if (!p_completion_start || p_completion_start<sp)
+							p_completion_start = sp;
+					}
 
 					if (p_completion_start) {
 						p_completion_start ++;
@@ -251,27 +282,29 @@ void DOS_Shell::InputCommand(char * line) {
 						p_completion_start = line;
 						completion_index = 0;
 					}
+					k=completion_index;
 
 					char *path;
+					if ((path = strrchr(line+completion_index,':'))) completion_index = (Bit16u)(path-line+1);
 					if ((path = strrchr(line+completion_index,'\\'))) completion_index = (Bit16u)(path-line+1);
 					if ((path = strrchr(line+completion_index,'/'))) completion_index = (Bit16u)(path-line+1);
 
 					// build the completion list
-					char mask[DOS_PATHLENGTH] = {0};
+					char mask[LFN_NAMELENGTH+2] = {0}, smask[LFN_NAMELENGTH] = {0};
 					if (p_completion_start) {
-						if (strlen(p_completion_start) + 3 >= DOS_PATHLENGTH) {
+						if (strlen(p_completion_start) + 3 >= (uselfn?LFN_NAMELENGTH:DOS_PATHLENGTH)) {
 							//Beep;
 							break;
 						}
-						safe_strncpy(mask, p_completion_start,DOS_PATHLENGTH);
+						safe_strncpy(mask, p_completion_start,uselfn?LFN_NAMELENGTH:DOS_PATHLENGTH);
 						char* dot_pos=strrchr(mask,'.');
 						char* bs_pos=strrchr(mask,'\\');
 						char* fs_pos=strrchr(mask,'/');
 						char* cl_pos=strrchr(mask,':');
 						// not perfect when line already contains wildcards, but works
 						if ((dot_pos-bs_pos>0) && (dot_pos-fs_pos>0) && (dot_pos-cl_pos>0))
-							strncat(mask, "*",DOS_PATHLENGTH - 1);
-						else strncat(mask, "*.*",DOS_PATHLENGTH - 1);
+							strncat(mask, "*",(uselfn?LFN_NAMELENGTH:DOS_PATHLENGTH) - 1);
+						else strncat(mask, "*.*",(uselfn?LFN_NAMELENGTH:DOS_PATHLENGTH) - 1);
 					} else {
 					        safe_strcpy(mask, "*.*");
 				        }
@@ -279,35 +312,59 @@ void DOS_Shell::InputCommand(char * line) {
 					RealPt save_dta=dos.dta();
 					dos.dta(dos.tables.tempdta);
 
-					bool res = DOS_FindFirst(mask, 0xffff & ~DOS_ATTR_VOLUME);
+					bool res = false;
+					if (DOS_GetSFNPath(mask,smask,false)) {
+						sprintf(mask,"\"%s\"",smask);
+						int fbak=lfn_filefind_handle;
+						lfn_filefind_handle=uselfn?LFN_FILEFIND_INTERNAL:LFN_FILEFIND_NONE;
+						res = DOS_FindFirst(mask, 0xffff & ~DOS_ATTR_VOLUME);
+						lfn_filefind_handle=fbak;
+					}
 					if (!res) {
 						dos.dta(save_dta);
 						break;	// TODO: beep
 					}
 
 					DOS_DTA dta(dos.dta());
-					char name[DOS_NAMELENGTH_ASCII];Bit32u sz;Bit16u date;Bit16u time;Bit8u att;
+					char name[DOS_NAMELENGTH_ASCII], lname[LFN_NAMELENGTH], qlname[LFN_NAMELENGTH+2];
+					Bit32u sz;Bit16u date;Bit16u time;Bit8u att;
 
 					std::list<std::string> executable;
+					q=0;r=0;
+					while (*p_completion_start) {
+						k++;
+						if (*p_completion_start++=='\"') {
+							if (k<=completion_index)
+								q++;
+							else
+								r++;
+						}
+					}
+					int fbak=lfn_filefind_handle;
+					lfn_filefind_handle=uselfn?LFN_FILEFIND_INTERNAL:LFN_FILEFIND_NONE;
 					while (res) {
-						dta.GetResult(name,sz,date,time,att);
+						dta.GetResult(name,lname,sz,date,time,att);
+						if ((strchr(uselfn?lname:name,' ')!=NULL&&q/2*2==q)||r)
+							sprintf(qlname,q/2*2!=q?"%s\"":"\"%s\"",uselfn?lname:name);
+						else
+							strcpy(qlname,uselfn?lname:name);
 						// add result to completion list
 
-						char *ext;	// file extension
 						if (strcmp(name, ".") && strcmp(name, "..")) {
 							if (dir_only) { //Handle the dir only case different (line starts with cd)
-								if(att & DOS_ATTR_DIRECTORY) l_completion.push_back(name);
+								if(att & DOS_ATTR_DIRECTORY) l_completion.push_back(qlname);
 							} else {
-								ext = strrchr(name, '.');
+								const char *ext = strrchr(name, '.'); // file extension
 								if (ext && (strcmp(ext, ".BAT") == 0 || strcmp(ext, ".COM") == 0 || strcmp(ext, ".EXE") == 0))
 									// we add executables to the a seperate list and place that list infront of the normal files
-									executable.push_front(name);
+									executable.push_front(qlname);
 								else
-									l_completion.push_back(name);
+									l_completion.push_back(qlname);
 							}
 						}
 						res=DOS_FindNext();
 					}
+					lfn_filefind_handle=fbak;
 					/* Add executable list to front of completion list. */
 					std::copy(executable.begin(),executable.end(),std::front_inserter(l_completion));
 					it_completion = l_completion.begin();
@@ -549,9 +606,9 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	return true; //Executable started
 }
 
-static char which_ret[DOS_PATHLENGTH+4];
+static char which_ret[DOS_PATHLENGTH+4], s_ret[DOS_PATHLENGTH+4];
 
-const char *DOS_Shell::Which(const char *name) const
+const char *DOS_Shell::Which(char *name) const
 {
 	const size_t name_len = strlen(name);
 	if (name_len >= DOS_PATHLENGTH)
@@ -560,6 +617,9 @@ const char *DOS_Shell::Which(const char *name) const
 	/* Parse through the Path to find the correct entry */
 	/* Check if name is already ok but just misses an extension */
 
+	if (DOS_FileExists(name))
+		return name;
+	upcase(name);
 	if (DOS_FileExists(name))
 		return name;
 
@@ -596,10 +656,22 @@ const char *DOS_Shell::Which(const char *name) const
 			path[DOS_PATHLENGTH - 1] = 0;
 		} else path[i_path] = 0;
 
+		int k=0;
+		for (int i=0;i<(int)strlen(path);i++)
+			if (path[i]!='\"')
+				path[k++]=path[i];
+		path[k]=0;
 
 		/* check entry */
 		if(size_t len = strlen(path)){
 			if(len >= (DOS_PATHLENGTH - 2)) continue;
+
+			if (uselfn&&len>3) {
+				if (path[len - 1]=='\\') path[len - 1]=0;
+				if (DOS_GetSFNPath(("\""+std::string(path)+"\"").c_str(), s_ret, false))
+					strcpy(path, s_ret);
+				len = strlen(path);
+			}
 
 			if(path[len - 1] != '\\') {
 				safe_strcat(path, "\\");
@@ -609,15 +681,15 @@ const char *DOS_Shell::Which(const char *name) const
 			//If name too long =>next
 			if((name_len + len + 1) >= DOS_PATHLENGTH) continue;
 
-			safe_strcat(path, name);
+			safe_strcat(path, uselfn&&strchr(name, ' ')?("\""+std::string(name)+"\"").c_str():name);
 			safe_strcpy(which_ret, path);
 			if (DOS_FileExists(which_ret))
-				return which_ret;
+				return uselfn&&strchr(which_ret, '\"')&&DOS_GetSFNPath(which_ret, s_ret, false)?s_ret:which_ret;
 
 			for (const char *ext_fmt : {"%s.COM", "%s.EXE", "%s.BAT"}) {
 				snprintf(which_ret, sizeof(which_ret), ext_fmt, path);
 				if (DOS_FileExists(which_ret))
-					return which_ret;
+					return uselfn&&strchr(which_ret, '\"')&&DOS_GetSFNPath(which_ret, s_ret, false)?s_ret:which_ret;
 			}
 		}
 	}

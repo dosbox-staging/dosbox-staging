@@ -181,6 +181,21 @@ static bool DOS_MultiplexFunctions(void) {
 		}
 		else if (reg_bx == 0x18) return true;	// idle callout
 		else return false;
+	case 0x160A:
+	{
+		char psp_name[9];
+		DOS_MCB psp_mcb(dos.psp()-1);
+		psp_mcb.GetFileName(psp_name);
+		printf("psp_name %s reg_sp %X mem_readw(SegPhys(ss)+reg_sp) %X\n", psp_name, reg_sp, mem_readw(SegPhys(ss)+reg_sp));
+		// Report Windows version 4.0 (95) to NESTICLE x.xx so that it uses LFN when available
+		if (uselfn && (!strcmp(psp_name, "NESTICLE") || reg_sp == 0x220A && mem_readw(SegPhys(ss)+reg_sp)/0x100 == 0x1F)) {
+			reg_ax = 0;
+			reg_bx = 0x400;
+			reg_cx = 2;
+			return true;
+		}
+		return false;
+	}
 	case 0x1680:	/*  RELEASE CURRENT VIRTUAL MACHINE TIME-SLICE */
 		//TODO Maybe do some idling but could screw up other systems :)
 		return true; //So no warning in the debugger anymore
@@ -196,6 +211,11 @@ static bool DOS_MultiplexFunctions(void) {
 		SegSet16(es,0xffff);
 		reg_di=0xffff;
 		return true;
+	case 0x4a33:	/* Check MS-DOS Version 7 */
+		if (dos.version.major > 6) {
+			reg_ax=0;
+			return true;
+		}
 	}
 
 	return false;

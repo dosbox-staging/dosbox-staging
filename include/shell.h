@@ -87,7 +87,7 @@ public:
 	bool CheckConfig(char* cmd_in,char*line);
 
 	/* Some internal used functions */
-	const char *Which(const char *name) const;
+	const char *Which(char *name) const;
 
 	/* Commands */
 	void CMD_HELP(char * args);

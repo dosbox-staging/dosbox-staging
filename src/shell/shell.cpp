@@ -177,6 +177,7 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 	Bitu num=0;
 	bool quote = false;
 	char* t;
+	int q;
 
 	while ( (ch=*lr++) ) {
 		if(quote && ch != '"') { /* don't parse redirection within quotes. Not perfect yet. Escaped quotes will mess the count up */
@@ -189,44 +190,42 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 			quote = !quote;
 			break;
 		case '>':
-			*append=((*lr)=='>');
-			if (*append) lr++;
-			lr=ltrim(lr);
-			if (*ofn) free(*ofn);
-			*ofn=lr;
-			while (*lr && *lr!=' ' && *lr!='<' && *lr!='|') lr++;
-			//if it ends on a : => remove it.
-			if((*ofn != lr) && (lr[-1] == ':')) lr[-1] = 0;
-//			if(*lr && *(lr+1))
-//				*lr++=0;
-//			else
-//				*lr=0;
-			t = (char*)malloc(lr-*ofn+1);
-			if (t == nullptr) {
-				E_Exit("SHELL: Could not allocate %u bytes in parser",
-				       static_cast<unsigned int>(lr-*ofn+1));
+			*append = ((*lr) == '>');
+			if (*append)
+				lr++;
+			lr = ltrim(lr);
+			if (*ofn)
+				free(*ofn);
+			*ofn = lr;
+			q = 0;
+			while (*lr && (q/2*2!=q || *lr != ' ') && *lr != '<' && *lr != '|') {
+				if (*lr=='"')
+					q++;
+				lr++;
 			}
-
-			safe_strncpy(t,*ofn,lr-*ofn+1);
-			*ofn=t;
+			// if it ends on a : => remove it.
+			if ((*ofn != lr) && (lr[-1] == ':'))
+				lr[-1] = 0;
+			t = (char*)malloc(lr-*ofn+1);
+			safe_strncpy(t, *ofn, lr-*ofn+1);
+			*ofn = t;
 			continue;
 		case '<':
-			if (*ifn) free(*ifn);
-			lr=ltrim(lr);
-			*ifn=lr;
-			while (*lr && *lr!=' ' && *lr!='>' && *lr != '|') lr++;
-			if((*ifn != lr) && (lr[-1] == ':')) lr[-1] = 0;
-//			if(*lr && *(lr+1))
-//				*lr++=0;
-//			else
-//				*lr=0;
-			t = (char*)malloc(lr-*ifn+1);
-			if (t == nullptr) {
-				E_Exit("SHELL: Could not allocate %u bytes in parser",
-				       static_cast<unsigned int>(lr-*ifn+1));
+			if (*ifn)
+				free(*ifn);
+			lr = ltrim(lr);
+			*ifn = lr;
+			q = 0;
+			while (*lr && (q/2*2!=q || *lr != ' ') && *lr != '>' && *lr != '|') {
+				if (*lr=='"')
+					q++;
+				lr++;
 			}
-			safe_strncpy(t,*ifn,lr-*ifn+1);
-			*ifn=t;
+			if ((*ifn != lr) && (lr[-1] == ':'))
+				lr[-1] = 0;
+			t = (char*)malloc(lr-*ifn+1);
+			safe_strncpy(t, *ifn, lr-*ifn+1);
+			*ifn = t;
 			continue;
 		case '|':
 			ch=0;
@@ -570,7 +569,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_MISSING_PARAMETER","Required parameter missing.\n");
 	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT","Hint: To change to different drive type \033[31m%c:\033[0m\n");
-	MSG_Add("SHELL_CMD_CHDIR_HINT_2","directoryname is longer than 8 characters and/or contains spaces.\nTry \033[31mcd %s\033[0m\n");
+	MSG_Add("SHELL_CMD_CHDIR_HINT_2","directoryname contains unquoted spaces.\nTry \033[31mcd %s\033[0m or properly quote them with quotation marks.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT_3","You are still on drive Z:, change to a mounted drive with \033[31mC:\033[0m.\n");
 	MSG_Add("SHELL_CMD_DATE_HELP","Displays or changes the internal date.\n");
 	MSG_Add("SHELL_CMD_DATE_ERROR","The specified date is not correct.\n");
@@ -591,7 +590,9 @@ void SHELL_Init() {
 									"  /H:         Synchronize with host\n");
 	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s.\n");
 	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %s.\n");
+	MSG_Add("SHELL_CMD_RENAME_ERROR","Unable to rename: %s.\n");
 	MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s.\n");
+	MSG_Add("SHELL_CMD_DEL_SURE","All files in directory will be deleted!\nAre you sure [Y/N]?");
 	MSG_Add("SHELL_SYNTAXERROR","The syntax of the command is incorrect.\n");
 	MSG_Add("SHELL_CMD_SET_NOT_SET","Environment variable %s not defined.\n");
 	MSG_Add("SHELL_CMD_SET_OUT_OF_SPACE","Not enough environment space left.\n");
@@ -608,10 +609,13 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%16d dir(s)  %17s bytes free\n");
 	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must \033[31mmount\033[0m it first. Type \033[1;33mintro\033[0m or \033[1;33mintro mount\033[0m for more information.\n");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
-	MSG_Add("SHELL_CMD_PAUSE","Press any key to continue...");
+	MSG_Add("SHELL_CMD_PAUSE","Press any key to continue...\n");
 	MSG_Add("SHELL_CMD_PAUSE_HELP","Waits for 1 keystroke to continue.\n");
 	MSG_Add("SHELL_CMD_COPY_FAILURE","Copy failure : %s.\n");
 	MSG_Add("SHELL_CMD_COPY_SUCCESS","   %d File(s) copied.\n");
+	MSG_Add("SHELL_CMD_COPY_CONFIRM","Overwrite %s (Yes/No/All)?");
+	MSG_Add("SHELL_CMD_COPY_NOSPACE","Insufficient disk space - %s\n");
+	MSG_Add("SHELL_CMD_COPY_ERROR","Error in copying file %s\n");
 	MSG_Add("SHELL_CMD_SUBST_NO_REMOVE","Unable to remove, drive not in use.\n");
 	MSG_Add("SHELL_CMD_SUBST_FAILURE","SUBST failed. You either made an error in your commandline or the target drive is already used.\nIt's only possible to use SUBST on Local drives");
 

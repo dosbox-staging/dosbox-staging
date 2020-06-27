@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier and joncampbell123: LFN support
  */
 
 
@@ -37,6 +39,135 @@
 #define FAT12		   0
 #define FAT16		   1
 #define FAT32		   2
+
+static Bit16u dpos[256];
+static Bit32u dnum[256];
+extern bool wpcolon, force_sfn;
+extern int lfn_filefind_handle;
+
+bool filename_not_8x3(const char *n) {
+	unsigned int i;
+
+	i = 0;
+	while (*n != 0) {
+		if (*n == '.') break;
+		if (*n<=32||*n==127||*n=='"'||*n=='+'||*n=='='||*n==','||*n==';'||*n==':'||*n=='<'||*n=='>'||*n=='['||*n==']'||*n=='|'||*n=='?'||*n=='*') return true;
+		i++;
+		n++;
+	}
+	if (i > 8) return true;
+	if (*n == 0) return false; /* made it past 8 or less normal chars and end of string: normal */
+
+	/* skip dot */
+	assert(*n == '.');
+	n++;
+
+	i = 0;
+	while (*n != 0) {
+		if (*n == '.') return true; /* another '.' means LFN */
+		if (*n<=32||*n==127||*n=='"'||*n=='+'||*n=='='||*n==','||*n==';'||*n==':'||*n=='<'||*n=='>'||*n=='['||*n==']'||*n=='|'||*n=='?'||*n=='*') return true;
+		i++;
+		n++;
+	}
+	if (i > 3) return true;
+
+	return false; /* it is 8.3 case */
+}
+
+/* Assuming an LFN call, if the name is not strict 8.3 uppercase, return true.
+ * If the name is strict 8.3 uppercase like "FILENAME.TXT" there is no point making an LFN because it is a waste of space */
+bool filename_not_strict_8x3(const char *n) {
+	if (filename_not_8x3(n)) return true;
+	for (unsigned int i=0; i<strlen(n); i++)
+		if (n[i]>='a' && n[i]<='z')
+			return true;
+	return false; /* it is strict 8.3 upper case */
+}
+
+char sfn[DOS_NAMELENGTH_ASCII];
+/* Generate 8.3 names from LFNs, with tilde usage (from ~1 to ~9999). */
+char* fatDrive::Generate_SFN(const char *path, const char *name) {
+	if (!filename_not_8x3(name)) {
+		strcpy(sfn, name);
+		upcase(sfn);
+		return sfn;
+	}
+	char lfn[LFN_NAMELENGTH+1], fullname[DOS_PATHLENGTH+DOS_NAMELENGTH_ASCII], *n;
+	if (name==NULL||!*name) return NULL;
+	if (strlen(name)>LFN_NAMELENGTH) {
+		strncpy(lfn, name, LFN_NAMELENGTH);
+		lfn[LFN_NAMELENGTH]=0;
+	} else
+		strcpy(lfn, name);
+	if (!strlen(lfn)) return NULL;
+	direntry fileEntry = {};
+	Bit32u dirClust, subEntry;
+	unsigned int k=1, i, t=10000;
+	while (k<10000) {
+		n=lfn;
+		if (t>strlen(n)||k==1||k==10||k==100||k==1000) {
+			i=0;
+			*sfn=0;
+			while (*n == '.'||*n == ' ') n++;
+			while (strlen(n)&&(*(n+strlen(n)-1)=='.'||*(n+strlen(n)-1)==' ')) *(n+strlen(n)-1)=0;
+			while (*n != 0 && *n != '.' && i<(k<10?6u:(k<100?5u:(k<1000?4:3u)))) {
+				if (*n == ' ') {
+					n++;
+					continue;
+				}
+				if (*n=='"'||*n=='+'||*n=='='||*n==','||*n==';'||*n==':'||*n=='<'||*n=='>'||*n=='['||*n==']'||*n=='|'||*n=='?'||*n=='*') {
+					sfn[i++]='_';
+					n++;
+				} else
+					sfn[i++]=toupper(*(n++));
+			}
+			sfn[i++]='~';
+			t=i;
+		} else
+			i=t;
+		if (k<10)
+			sfn[i++]='0'+k;
+		else if (k<100) {
+			sfn[i++]='0'+(k/10);
+			sfn[i++]='0'+(k%10);
+		} else if (k<1000) {
+			sfn[i++]='0'+(k/100);
+			sfn[i++]='0'+((k%100)/10);
+			sfn[i++]='0'+(k%10);
+		} else {
+			sfn[i++]='0'+(k/1000);
+			sfn[i++]='0'+((k%1000)/100);
+			sfn[i++]='0'+((k%100)/10);
+			sfn[i++]='0'+(k%10);
+		}
+		if (t>strlen(n)||k==1||k==10||k==100||k==1000) {
+			char *p=strrchr(n, '.');
+			if (p!=NULL) {
+				sfn[i++]='.';
+				n=p+1;
+				while (*n == '.') n++;
+				int j=0;
+				while (*n != 0 && j++<3) {
+					if (*n == ' ') {
+						n++;
+						continue;
+					}
+					if (*n=='"'||*n=='+'||*n=='='||*n==','||*n==';'||*n==':'||*n=='<'||*n=='>'||*n=='['||*n==']'||*n=='|'||*n=='?'||*n=='*') {
+						sfn[i++]='_';
+						n++;
+					} else
+						sfn[i++]=toupper(*(n++));
+				}
+			}
+			sfn[i++]=0;
+		}
+		strcpy(fullname, path);
+		strcat(fullname, sfn);
+		if(!getFileDirEntry(fullname, &fileEntry, &dirClust, &subEntry,/*dirOk*/true)) return sfn;
+		k++;
+	}
+	return NULL;
+}
 
 class fatFile : public DOS_File {
 public:
@@ -426,11 +557,19 @@ bool fatDrive::getEntryName(char *fullname, char *entname) {
 		findFile = findDir;
 		findDir = strtok(NULL,"\\");
 	}
-	strncpy(entname, findFile, DOS_NAMELENGTH_ASCII);
+	int j=0;
+	for (int i=0; i<(int)strlen(findFile); i++)
+		if (findFile[i]!=' '&&findFile[i]!='"'&&findFile[i]!='+'&&findFile[i]!='='&&findFile[i]!=','&&findFile[i]!=';'&&findFile[i]!=':'&&findFile[i]!='<'&&findFile[i]!='>'&&findFile[i]!='['&&findFile[i]!=']'&&findFile[i]!='|'&&findFile[i]!='?'&&findFile[i]!='*') findFile[j++]=findFile[i];
+	findFile[j]=0;
+	if (strlen(findFile)>12)
+		strncpy(entname, findFile, 12);
+	else
+		strcpy(entname, findFile);
+	upcase(entname);
 	return true;
 }
 
-bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry, Bit32u * dirClust, Bit32u * subEntry) {
+bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry, Bit32u * dirClust, Bit32u * subEntry,bool dirOk) {
 	size_t len = strnlen(filename, DOS_PATHLENGTH);
 	char dirtoken[DOS_PATHLENGTH];
 	Bit32u currentClust = 0;
@@ -441,6 +580,8 @@ bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry,
 	safe_strcpy(dirtoken, filename);
 	findFile=dirtoken;
 
+	int fbak=lfn_filefind_handle;
+	lfn_filefind_handle=uselfn?LFN_FILEFIND_IMG:LFN_FILEFIND_NONE;
 	/* Skip if testing in root directory */
 	if ((len>0) && (filename[len-1]!='\\')) {
 		//LOG_MSG("Testing for filename %s", filename);
@@ -454,22 +595,29 @@ bool fatDrive::getFileDirEntry(char const * const filename, direntry * useEntry,
 			if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) break;
 			else {
 				//Found something. See if it's a directory (findfirst always finds regular files)
-				char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;Bit8u find_attr;
-				imgDTA->GetResult(find_name,find_size,find_date,find_time,find_attr);
+				char find_name[DOS_NAMELENGTH_ASCII],lfind_name[LFN_NAMELENGTH];
+                Bit16u find_date,find_time;Bit32u find_size;Bit8u find_attr;
+                imgDTA->GetResult(find_name,lfind_name,find_size,find_date,find_time,find_attr);
 				if(!(find_attr & DOS_ATTR_DIRECTORY)) break;
+
+				char * findNext;
+				findNext = strtok(NULL,"\\");
+				if (findNext == NULL && dirOk) break; /* dirOk means that if the last element is a directory, then refer to the directory itself */
+				findDir = findNext;
 			}
 
 			currentClust = foundEntry.loFirstClust;
-			findDir = strtok(NULL,"\\");
+			//findDir = strtok(NULL,"\\");
 		}
 	} else {
 		/* Set to root directory */
 	}
 
 	/* Search found directory for our file */
-	imgDTA->SetupSearch(0,0x7,findFile);
+	imgDTA->SetupSearch(0,0x7 | (dirOk ? DOS_ATTR_DIRECTORY : 0),findFile);
 	imgDTA->SetDirID(0);
-	if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) return false;
+	if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) {lfn_filefind_handle=fbak;return false;}
+	lfn_filefind_handle=fbak;
 
 	memcpy(useEntry, &foundEntry, sizeof(direntry));
 	*dirClust = currentClust;
@@ -485,21 +633,26 @@ bool fatDrive::getDirClustNum(char *dir, Bit32u *clustNum, bool parDir) {
 	char * findDir;
 	safe_strcpy(dirtoken, dir);
 
+	int fbak=lfn_filefind_handle;
 	/* Skip if testing for root directory */
 	if ((len>0) && (dir[len-1]!='\\')) {
 		//LOG_MSG("Testing for dir %s", dir);
 		findDir = strtok(dirtoken,"\\");
 		while(findDir != NULL) {
+			lfn_filefind_handle=uselfn?LFN_FILEFIND_IMG:LFN_FILEFIND_NONE;
 			imgDTA->SetupSearch(0,DOS_ATTR_DIRECTORY,findDir);
 			imgDTA->SetDirID(0);
 			findDir = strtok(NULL,"\\");
-			if(parDir && (findDir == NULL)) break;
+			if(parDir && (findDir == NULL)) {lfn_filefind_handle=fbak;break;}
 
-			char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;Bit8u find_attr;
+			char find_name[DOS_NAMELENGTH_ASCII],lfind_name[LFN_NAMELENGTH];
+            Bit16u find_date,find_time;Bit32u find_size;Bit8u find_attr;
 			if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) {
+				lfn_filefind_handle=fbak;
 				return false;
 			} else {
-				imgDTA->GetResult(find_name,find_size,find_date,find_time,find_attr);
+				imgDTA->GetResult(find_name,lfind_name,find_size,find_date,find_time,find_attr);
+				lfn_filefind_handle=fbak;
 				if(!(find_attr &DOS_ATTR_DIRECTORY)) return false;
 			}
 			currentClust = foundEntry.loFirstClust;
@@ -968,30 +1121,69 @@ Bit8u fatDrive::GetMediaByte(void) {
 
 // name can be a full DOS path with filename, up-to DOS_PATHLENGTH in length
 bool fatDrive::FileCreate(DOS_File **file, char *name, Bit16u attributes) {
+	const char *lfn = NULL;
 	direntry fileEntry;
 	Bit32u dirClust, subEntry;
 	char dirName[DOS_NAMELENGTH_ASCII];
-	char pathName[11]; // pathName is actually just the filename, without path
+	char pathName[11], path[LFN_NAMELENGTH+2]; // pathName is actually just the filename, without path
 
 	Bit16u save_errorcode=dos.errorcode;
 
+	if (attributes & DOS_ATTR_DIRECTORY) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
+	/* you cannot create root directory */
+	if (*name == 0) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
 	/* Check if file already exists */
-	if(getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
+	if(getFileDirEntry(name, &fileEntry, &dirClust, &subEntry, true/*dirOk*/)) {
+		/* You can't create/truncate a directory! */
+		if (fileEntry.attrib & DOS_ATTR_DIRECTORY) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
+
 		/* Truncate file */
 		fileEntry.entrysize=0;
 		directoryChange(dirClust, &fileEntry, subEntry);
 		if(fileEntry.loFirstClust != 0) deleteClustChain(fileEntry.loFirstClust, 0);
 	} else {
 		/* Can we even get the name of the file itself? */
-		if(!getEntryName(name, &dirName[0])) return false;
+		if(!getEntryName(name, &dirName[0])||!strlen(trim(dirName))) return false;
 		convToDirFile(&dirName[0], &pathName[0]);
 
 		/* Can we find the base directory? */
 		if(!getDirClustNum(name, &dirClust, true)) return false;
+
+		/* NTS: "name" is the full relative path. For LFN creation to work we need only the final element of the path */
+		if (uselfn && !force_sfn) {
+			lfn = strrchr(name,'\\');
+
+			if (lfn != NULL) {
+				lfn++; /* step past '\' */
+				strcpy(path, name);
+				*(strrchr(path,'\\')+1)=0;
+			} else {
+				lfn = name; /* no path elements */
+				*path=0;
+			}
+
+			if (filename_not_strict_8x3(lfn)) {
+				char *sfn=Generate_SFN(path, lfn);
+				if (sfn!=NULL) convToDirFile(sfn, &pathName[0]);
+			} else
+				lfn = NULL;
+		}
+
 		memset(&fileEntry, 0, sizeof(direntry));
 		memcpy(&fileEntry.entryname, &pathName[0], 11);
 		fileEntry.attrib = (Bit8u)(attributes & 0xff);
-		addDirectoryEntry(dirClust, fileEntry);
+		addDirectoryEntry(dirClust, fileEntry, lfn);
 
 		/* Check if file exists now */
 		if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) return false;
@@ -1039,13 +1231,36 @@ bool fatDrive::FileStat(const char * /*name*/, FileStat_Block *const /*stat_bloc
 }
 
 bool fatDrive::FileUnlink(char * name) {
-	direntry fileEntry;
+	direntry tmpentry = {};
+	direntry fileEntry = {};
 	Bit32u dirClust, subEntry;
 
-	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) return false;
+	/* you cannot delete root directory */
+	if (*name == 0) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 
+	lfnRange.clear();
+	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {return false;}
+	lfnRange_t dir_lfn_range = lfnRange; /* copy down LFN results before they are obliterated by the next call to FindNextInternal. */
+
+	/* delete LFNs */
+	if (!dir_lfn_range.empty() && (dos.version.major >= 7 || uselfn)) {
+		/* last LFN entry should be fileidx */
+		assert(dir_lfn_range.dirPos_start < dir_lfn_range.dirPos_end);
+		if (dir_lfn_range.dirPos_end != subEntry) LOG_MSG("FAT warning: LFN dirPos_end=%u fileidx=%u (mismatch)",dir_lfn_range.dirPos_end,subEntry);
+		for (unsigned int didx=dir_lfn_range.dirPos_start;didx < dir_lfn_range.dirPos_end;didx++) {
+			if (directoryBrowse(dirClust,&tmpentry,didx)) {
+				tmpentry.entryname[0] = 0xe5;
+				directoryChange(dirClust,&tmpentry,didx);
+			}
+		}
+	}
+
+	/* remove primary 8.3 SFN */
 	fileEntry.entryname[0] = 0xe5;
-	directoryChange(dirClust, &fileEntry, subEntry);
+	directoryChange(dirClust, &fileEntry, (Bit32s)subEntry);
 
 	if(fileEntry.loFirstClust != 0) deleteClustChain(fileEntry.loFirstClust, 0);
 
@@ -1056,13 +1271,13 @@ bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) {
 	direntry dummyClust;
 #if 0
 	Bit8u attr;char pattern[DOS_NAMELENGTH_ASCII];
-	dta.GetSearchParams(attr,pattern);
+	dta.GetSearchParams(attr,pattern,uselfn);
 	if(attr==DOS_ATTR_VOLUME) {
 		if (strcmp(GetLabel(), "") == 0 ) {
 			DOS_SetError(DOSERR_NO_MORE_FILES);
 			return false;
 		}
-		dta.SetResult(GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+		dta.SetResult(GetLabel(),GetLabel(),0,0,0,DOS_ATTR_VOLUME);
 		return true;
 	}
 	if(attr & DOS_ATTR_VOLUME) //check for root dir or fcb_findfirst
@@ -1072,8 +1287,15 @@ bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		return false;
 	}
-	dta.SetDirID(0);
-	dta.SetDirIDCluster((Bit16u)(cwdDirCluster&0xffff));
+
+	if (lfn_filefind_handle>=LFN_FILEFIND_MAX) {
+		dta.SetDirID(0);
+		dta.SetDirIDCluster(cwdDirCluster);
+	} else {
+		dpos[lfn_filefind_handle]=0;
+		dnum[lfn_filefind_handle]=cwdDirCluster;
+	}
+
 	return FindNextInternal(cwdDirCluster, dta, &dummyClust);
 }
 
@@ -1119,12 +1341,16 @@ bool fatDrive::FindNextInternal(Bit32u dirClustNumber, DOS_DTA &dta, direntry *f
 	Bit32u tmpsector;
 	Bit8u attrs;
 	Bit16u dirPos;
-	char srch_pattern[DOS_NAMELENGTH_ASCII];
+	char srch_pattern[CROSS_LEN];
 	char find_name[DOS_NAMELENGTH_ASCII];
+	char lfind_name[LFN_NAMELENGTH+1];
+	unsigned int lfn_max_ord = 0;
+	unsigned char lfn_checksum = 0;
+	bool lfn_ord_found[0x40];
 	char extension[4];
 
-	dta.GetSearchParams(attrs, srch_pattern);
-	dirPos = dta.GetDirID();
+	dta.GetSearchParams(attrs, srch_pattern,uselfn);
+	dirPos = lfn_filefind_handle>=LFN_FILEFIND_MAX?dta.GetDirID():dpos[lfn_filefind_handle];
 
 nextfile:
 	logentsector = dirPos / 16;
@@ -1132,6 +1358,10 @@ nextfile:
 
 	if(dirClustNumber==0) {
 		if(dirPos >= bootbuffer.rootdirentries) {
+			if (lfn_filefind_handle<LFN_FILEFIND_MAX) {
+				dpos[lfn_filefind_handle]=0;
+				dnum[lfn_filefind_handle]=0;
+			}
 			DOS_SetError(DOSERR_NO_MORE_FILES);
 			return false;
 		}
@@ -1140,19 +1370,33 @@ nextfile:
 		tmpsector = getAbsoluteSectFromChain(dirClustNumber, logentsector);
 		/* A zero sector number can't happen */
 		if(tmpsector == 0) {
+			if (lfn_filefind_handle<LFN_FILEFIND_MAX) {
+				dpos[lfn_filefind_handle]=0;
+				dnum[lfn_filefind_handle]=0;
+			}
 			DOS_SetError(DOSERR_NO_MORE_FILES);
 			return false;
 		}
 		readSector(tmpsector,sectbuf);
 	}
 	dirPos++;
-	dta.SetDirID(dirPos);
+	if (lfn_filefind_handle>=LFN_FILEFIND_MAX) dta.SetDirID(dirPos);
+	else dpos[lfn_filefind_handle]=dirPos;
 
 	/* Deleted file entry */
-	if (sectbuf[entryoffset].entryname[0] == 0xe5) goto nextfile;
+	if (sectbuf[entryoffset].entryname[0] == 0xe5) {
+        lfind_name[0] = 0; /* LFN code will memset() it in full upon next dirent */
+        lfn_max_ord = 0;
+        lfnRange.clear();
+		goto nextfile;
+	}
 
 	/* End of directory list */
 	if (sectbuf[entryoffset].entryname[0] == 0x00) {
+		if (lfn_filefind_handle<LFN_FILEFIND_MAX) {
+			dpos[lfn_filefind_handle]=0;
+			dnum[lfn_filefind_handle]=0;
+		}
 		DOS_SetError(DOSERR_NO_MORE_FILES);
 		return false;
 	}
@@ -1160,74 +1404,158 @@ nextfile:
 	memset(extension,0,4);
 	memcpy(find_name,&sectbuf[entryoffset].entryname[0],8);
 	memcpy(extension,&sectbuf[entryoffset].entryname[8],3);
-	trimString(&find_name[0], sizeof(find_name));
-	trimString(&extension[0], sizeof(extension));
 	
-	//if(!(sectbuf[entryoffset].attrib & DOS_ATTR_DIRECTORY))
+    if (!(sectbuf[entryoffset].attrib & DOS_ATTR_VOLUME)) {
+        trimString(&find_name[0], sizeof(find_name));
+        trimString(&extension[0], sizeof(extension));
+    }
+
 	if (extension[0]!=0) {
-		safe_strcat(find_name, ".");
+		if (!(sectbuf[entryoffset].attrib & DOS_ATTR_VOLUME)) {
+			safe_strcat(find_name, ".");
+		}
 		safe_strcat(find_name, extension);
 	}
+
+	if (sectbuf[entryoffset].attrib & DOS_ATTR_VOLUME)
+        trimString(find_name, sizeof(find_name));
 
 	/* Compare attributes to search attributes */
 
 	//TODO What about attrs = DOS_ATTR_VOLUME|DOS_ATTR_DIRECTORY ?
 	if (attrs == DOS_ATTR_VOLUME) {
+		if (dos.version.major >= 7 || uselfn) {
+			/* skip LFN entries */
+			if ((sectbuf[entryoffset].attrib & 0x3F) == 0x0F)
+				goto nextfile;
+		}
+
 		if (!(sectbuf[entryoffset].attrib & DOS_ATTR_VOLUME)) goto nextfile;
 		dirCache.SetLabel(find_name, false, true);
+	} else if ((dos.version.major >= 7 || uselfn) && (sectbuf[entryoffset].attrib & 0x3F) == 0x0F) { /* long filename piece */
+		struct direntry_lfn *dlfn = (struct direntry_lfn*)(&sectbuf[entryoffset]);
+
+		/* assume last entry comes first, because that's how Windows 9x does it and that is how you're supposed to do it according to Microsoft */
+		if (dlfn->LDIR_Ord & 0x40) {
+			lfn_max_ord = (dlfn->LDIR_Ord & 0x3F); /* NTS: First entry has ordinal 1, this is the HIGHEST ordinal in the LFN. The other entries follow in descending ordinal. */
+			for (unsigned int i=0;i < 0x40;i++) lfn_ord_found[i] = false;
+			lfn_checksum = dlfn->LDIR_Chksum;
+			memset(lfind_name,0,LFN_NAMELENGTH);
+			lfnRange.clear();
+			lfnRange.dirPos_start = dirPos - 1; /* NTS: The code above has already incremented dirPos */
+		}
+
+		if (lfn_max_ord != 0 && (dlfn->LDIR_Ord & 0x3F) > 0 && (dlfn->LDIR_Ord & 0x3Fu) <= lfn_max_ord && dlfn->LDIR_Chksum == lfn_checksum) {
+			unsigned int oidx = (dlfn->LDIR_Ord & 0x3Fu) - 1u;
+			unsigned int stridx = oidx * 13u;
+
+			if ((stridx+13u) <= LFN_NAMELENGTH) {
+				for (unsigned int i=0;i < 5;i++)
+					lfind_name[stridx+i+0] = (char)(dlfn->LDIR_Name1[i] & 0xFF);
+				for (unsigned int i=0;i < 6;i++)
+					lfind_name[stridx+i+5] = (char)(dlfn->LDIR_Name2[i] & 0xFF);
+				for (unsigned int i=0;i < 2;i++)
+					lfind_name[stridx+i+11] = (char)(dlfn->LDIR_Name3[i] & 0xFF);
+
+				lfn_ord_found[oidx] = true;
+			}
+		}
+
+		goto nextfile;
 	} else {
-		if (~attrs & sectbuf[entryoffset].attrib & (DOS_ATTR_DIRECTORY | DOS_ATTR_VOLUME | DOS_ATTR_SYSTEM | DOS_ATTR_HIDDEN) ) goto nextfile;
+		if (~attrs & sectbuf[entryoffset].attrib & (DOS_ATTR_DIRECTORY | DOS_ATTR_VOLUME | DOS_ATTR_SYSTEM | DOS_ATTR_HIDDEN) ) {
+            lfind_name[0] = 0; /* LFN code will memset() it in full upon next dirent */
+            lfn_max_ord = 0;
+            lfnRange.clear();
+			goto nextfile;
+		}
 	}
 
+	if (lfn_max_ord != 0) {
+		bool ok = false;
+		unsigned int complete = 0;
+		for (unsigned int i=0;i < lfn_max_ord;i++) complete += lfn_ord_found[i]?1:0;
 
-	/* Compare name to search pattern */
-	if(!WildFileCmp(find_name,srch_pattern)) goto nextfile;
+		if (complete == lfn_max_ord) {
+			unsigned char chk = 0;
+			for (unsigned int i=0;i < 11;i++) {
+				chk = ((chk & 1u) ? 0x80u : 0x00u) + (chk >> 1u) + sectbuf[entryoffset].entryname[i];
+			}
 
-	copyDirEntry(&sectbuf[entryoffset], foundEntry);
+			if (lfn_checksum == chk) {
+				lfnRange.dirPos_end = dirPos - 1; /* NTS: The code above has already incremented dirPos */
+				ok = true;
+			}
+		}
 
-	//dta.SetResult(find_name, foundEntry->entrysize, foundEntry->crtDate, foundEntry->crtTime, foundEntry->attrib);
+		if (!ok) {
+			lfind_name[0] = 0; /* LFN code will memset() it in full upon next dirent */
+			lfn_max_ord = 0;
+			lfnRange.clear();
+		}
+	}
+	else {
+		lfind_name[0] = 0; /* LFN code will memset() it in full upon next dirent */
+		lfn_max_ord = 0;
+		lfnRange.clear();
+	}
 
-	dta.SetResult(find_name, foundEntry->entrysize, foundEntry->modDate, foundEntry->modTime, foundEntry->attrib);
+	/* Compare name to search pattern. Skip long filename match if no long filename given. */
+	if (!(WildFileCmp(find_name,srch_pattern) || (lfn_max_ord != 0 && lfind_name[0] != 0 && LWildFileCmp(lfind_name,srch_pattern)))) {
+		lfind_name[0] = 0; /* LFN code will memset() it in full upon next dirent */
+		lfn_max_ord = 0;
+		lfnRange.clear();
+		goto nextfile;
+	}
+
+	// Drive emulation does not need to require a LFN in case there is no corresponding 8.3 names.
+	if (lfind_name[0] == 0) strcpy(lfind_name,find_name);
+
+	//copyDirEntry(&sectbuf[entryoffset], foundEntry);
+
+	dta.SetResult(find_name, lfind_name, sectbuf[entryoffset].entrysize, sectbuf[entryoffset].modDate, sectbuf[entryoffset].modTime, sectbuf[entryoffset].attrib);
+
+	memcpy(foundEntry, &sectbuf[entryoffset], sizeof(direntry));
 
 	return true;
 }
 
 bool fatDrive::FindNext(DOS_DTA &dta) {
-	direntry dummyClust;
+	direntry dummyClust = {};
 
-	return FindNextInternal(dta.GetDirIDCluster(), dta, &dummyClust);
+	return FindNextInternal(lfn_filefind_handle>=LFN_FILEFIND_MAX?dta.GetDirIDCluster():(dnum[lfn_filefind_handle]?dnum[lfn_filefind_handle]:0), dta, &dummyClust);
 }
 
 bool fatDrive::GetFileAttr(char *name, Bit16u *attr) {
-	direntry fileEntry;
+    direntry fileEntry = {};
 	Bit32u dirClust, subEntry;
-	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
-		char dirName[DOS_NAMELENGTH_ASCII];
-		char pathName[11];
 
-		/* Can we even get the name of the directory itself? */
-		if(!getEntryName(name, &dirName[0])) return false;
-		convToDirFile(&dirName[0], &pathName[0]);
+	/* you CAN get file attr root directory */
+	if (*name == 0) {
+		*attr=DOS_ATTR_DIRECTORY;
+		return true;
+	}
 
-		/* Get parent directory starting cluster */
-		if(!getDirClustNum(name, &dirClust, true)) return false;
-
-		/* Find directory entry in parent directory */
-		Bit32s fileidx = 2;
-		if (dirClust==0) fileidx = 0;	// root directory
-		Bit32s last_idx=0;
-		while(directoryBrowse(dirClust, &fileEntry, fileidx, last_idx)) {
-			if(memcmp(&fileEntry.entryname, &pathName[0], 11) == 0) {
-				*attr=fileEntry.attrib;
-				return true;
-			}
-			last_idx=fileidx;
-			fileidx++;
-		}
+	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry, /*dirOk*/true)) {
 		return false;
 	} else *attr=fileEntry.attrib;
 	return true;
 }
+
+bool fatDrive::GetFileAttrEx(char* name, struct stat *status) {
+	return false;
+}
+
+unsigned long fatDrive::GetCompressedSize(char* name) {
+	return 0;
+}
+
+#if defined (WIN32)
+HANDLE fatDrive::CreateOpenFile(const char* name) {
+	DOS_SetError(1);
+	return INVALID_HANDLE_VALUE;
+}
+#endif
 
 bool fatDrive::directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum, Bit32s start/*=0*/) {
 	direntry sectbuf[16];	/* 16 directory entries per sector */
@@ -1304,22 +1632,28 @@ bool fatDrive::directoryChange(Bit32u dirClustNumber, direntry *useEntry, Bit32s
 	}
 }
 
-bool fatDrive::addDirectoryEntry(Bit32u dirClustNumber, direntry useEntry) {
-	direntry sectbuf[16]; /* 16 directory entries per sector */
-	Bit32u logentsector; /* Logical entry sector */
-	Bit32u entryoffset;  /* Index offset within sector */
+bool fatDrive::addDirectoryEntry(Bit32u dirClustNumber, direntry useEntry,const char *lfn) {
+	direntry sectbuf[16]; /* 16 directory entries per 512 byte sector */
 	Bit32u tmpsector;
 	Bit16u dirPos = 0;
-	
+	unsigned int need = 1;
+	unsigned int found = 0;
+	Bit16u dirPosFound = 0;
+
+	if (lfn != NULL && *lfn != 0) {
+		/* 13 characters per LFN entry.
+		 * FIXME: When we convert the LFN to wchar using code page, strlen() prior to conversion will not work,
+		 *        convert first then count wchar_t characters. */
+		need = (unsigned int)(1 + ((strlen(lfn) + 12) / 13))/*round up*/;
+	}
+
 	for(;;) {
-		
-		logentsector = dirPos / 16;
-		entryoffset = dirPos % 16;
+		Bit32u logentsector = ((Bit32u)((size_t)dirPos / 16)); /* Logical entry sector */
+		Bit32u entryoffset = ((Bit32u)((size_t)dirPos % 16)); /* Index offset within sector */
 
 		if(dirClustNumber==0) {
 			if(dirPos >= bootbuffer.rootdirentries) return false;
 			tmpsector = firstRootDirSect+logentsector;
-			readSector(tmpsector,sectbuf);
 		} else {
 			tmpsector = getAbsoluteSectFromChain(dirClustNumber, logentsector);
 			/* A zero sector number can't happen - we need to allocate more room for this directory*/
@@ -1327,20 +1661,92 @@ bool fatDrive::addDirectoryEntry(Bit32u dirClustNumber, direntry useEntry) {
 				Bit32u newClust;
 				newClust = appendCluster(dirClustNumber);
 				if(newClust == 0) return false;
+				zeroOutCluster(newClust);
 				/* Try again to get tmpsector */
 				tmpsector = getAbsoluteSectFromChain(dirClustNumber, logentsector);
 				if(tmpsector == 0) return false; /* Give up if still can't get more room for directory */
 			}
-			readSector(tmpsector,sectbuf);
 		}
-		dirPos++;
+		readSector(tmpsector,sectbuf);
 
 		/* Deleted file entry or end of directory list */
 		if ((sectbuf[entryoffset].entryname[0] == 0xe5) || (sectbuf[entryoffset].entryname[0] == 0x00)) {
-			copyDirEntry(&useEntry, &sectbuf[entryoffset]);
-			writeSector(tmpsector,sectbuf);
-			break;
+			if (found == 0) dirPosFound = dirPos;
+
+			if ((++found) >= need) {
+				sectbuf[entryoffset] = useEntry;
+				writeSector(tmpsector,sectbuf);
+
+				/* Add LFN entries */
+				if (need != 1/*LFN*/) {
+					Bit16u lfnbuf[LFN_NAMELENGTH+13]; /* on disk, LFNs are WCHAR unicode (UCS-16) */
+
+					assert(lfn != NULL);
+					assert(*lfn != 0);
+
+					/* TODO: ANSI LFN convert to wchar here according to code page */
+
+					unsigned int o = 0;
+					const char *scan = lfn;
+
+					while (*scan) {
+						if (o >= LFN_NAMELENGTH) return false; /* Nope! */
+						lfnbuf[o++] = (Bit16u)((unsigned char)(*scan++));
+					}
+
+					/* on disk, LFNs are padded with 0x0000 followed by a run of 0xFFFF to fill the dirent */
+					lfnbuf[o++] = 0x0000;
+					for (unsigned int i=0;i < 13;i++) lfnbuf[o++] = 0xFFFF;
+					assert(o <= (LFN_NAMELENGTH+13));
+
+					unsigned char chk = 0;
+					for (unsigned int i=0;i < 11;i++) {
+						chk = ((chk & 1u) ? 0x80u : 0x00u) + (chk >> 1u) + useEntry.entryname[i];
+					}
+
+					dirPos = dirPosFound;
+					for (unsigned int s=0;s < (need-1u);s++) {
+						unsigned int lfnsrci = (need-2u-s);
+						unsigned int lfnsrc = lfnsrci * 13;
+
+						logentsector = ((Bit32u)((size_t)dirPos / 16)); /* Logical entry sector */
+						entryoffset = ((Bit32u)((size_t)dirPos % 16)); /* Index offset within sector */
+
+						if(dirClustNumber==0) {
+							if(dirPos >= bootbuffer.rootdirentries) return false;
+							tmpsector = firstRootDirSect+logentsector;
+						} else {
+							tmpsector = getAbsoluteSectFromChain(dirClustNumber, logentsector);
+							/* A zero sector number can't happen - we need to allocate more room for this directory*/
+							if(tmpsector == 0) return false;
+						}
+						readSector(tmpsector,sectbuf);
+
+						direntry_lfn *dlfn = (direntry_lfn*)(&sectbuf[entryoffset]);
+
+						memset(dlfn,0,sizeof(*dlfn));
+
+						dlfn->LDIR_Ord = (s == 0 ? 0x40 : 0x00) + lfnsrci + 1;
+						dlfn->LDIR_Chksum = chk;
+						dlfn->attrib = 0x0F;
+
+						for (unsigned int i=0;i < 5;i++) dlfn->LDIR_Name1[i] = lfnbuf[lfnsrc++];
+						for (unsigned int i=0;i < 6;i++) dlfn->LDIR_Name2[i] = lfnbuf[lfnsrc++];
+						for (unsigned int i=0;i < 2;i++) dlfn->LDIR_Name3[i] = lfnbuf[lfnsrc++];
+
+						writeSector(tmpsector,sectbuf);
+						dirPos++;
+					}
+				}
+
+				break;
+			}
 		}
+		else {
+			found = 0;
+		}
+
+		dirPos++;
 	}
 
 	return true;
@@ -1358,23 +1764,47 @@ void fatDrive::zeroOutCluster(Bit32u clustNumber) {
 }
 
 bool fatDrive::MakeDir(char *dir) {
-	Bit32u dummyClust, dirClust;
+	const char *lfn = NULL;
+	Bit32u dummyClust, dirClust, subEntry;
 	direntry tmpentry;
 	char dirName[DOS_NAMELENGTH_ASCII];
-	char pathName[11];
+	char pathName[11], path[LFN_NAMELENGTH+2];
 
 	/* Can we even get the name of the directory itself? */
 	if(!getEntryName(dir, &dirName[0])) return false;
 	convToDirFile(&dirName[0], &pathName[0]);
 
-	/* Fail to make directory if already exists */
-	if(getDirClustNum(dir, &dummyClust, false)) return false;
+	/* Fail to make directory if something of that name already exists */
+	if(getFileDirEntry(dir,&tmpentry,&dummyClust,&subEntry,/*dirOk*/true)) return false;
+
+	/* Can we find the base directory? */
+	if(!getDirClustNum(dir, &dirClust, true)) return false;
 
 	dummyClust = getFirstFreeClust();
 	/* No more space */
 	if(dummyClust == 0) return false;
 	
 	if(!allocateCluster(dummyClust, 0)) return false;
+
+	/* NTS: "dir" is the full relative path. For LFN creation to work we need only the final element of the path */
+	if (uselfn && !force_sfn) {
+		lfn = strrchr(dir,'\\');
+
+		if (lfn != NULL) {
+			lfn++; /* step past '\' */
+			strcpy(path, dir);
+			*(strrchr(path,'\\')+1)=0;
+		} else {
+			lfn = dir; /* no path elements */
+			*path=0;
+		}
+
+		if (filename_not_strict_8x3(lfn)) {
+			char *sfn=Generate_SFN(path, lfn);
+			if (sfn!=NULL) convToDirFile(sfn, &pathName[0]);
+		} else
+			lfn = NULL;
+	}
 
 	zeroOutCluster(dummyClust);
 
@@ -1387,7 +1817,7 @@ bool fatDrive::MakeDir(char *dir) {
 	tmpentry.loFirstClust = (Bit16u)(dummyClust & 0xffff);
 	tmpentry.hiFirstClust = (Bit16u)(dummyClust >> 16);
 	tmpentry.attrib = DOS_ATTR_DIRECTORY;
-	addDirectoryEntry(dirClust, tmpentry);
+	addDirectoryEntry(dirClust, tmpentry, lfn);
 
 	/* Add the [.] and [..] entries to our new directory*/
 	/* [.] entry */
@@ -1410,23 +1840,30 @@ bool fatDrive::MakeDir(char *dir) {
 }
 
 bool fatDrive::RemoveDir(char *dir) {
-	Bit32u dummyClust, dirClust;
+	Bit32u dummyClust, dirClust, subEntry;
 	direntry tmpentry;
 	char dirName[DOS_NAMELENGTH_ASCII];
 	char pathName[11];
+
+	/* you cannot rmdir root directory */
+	if (*dir == 0) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 
 	/* Can we even get the name of the directory itself? */
 	if(!getEntryName(dir, &dirName[0])) return false;
 	convToDirFile(&dirName[0], &pathName[0]);
 
 	/* Get directory starting cluster */
-	if(!getDirClustNum(dir, &dummyClust, false)) return false;
+	lfnRange.clear();
+	if(!getFileDirEntry(dir,&tmpentry,&dirClust,&subEntry,/*dirOk*/true)) return false; /* dirClust is parent dir of directory */
+	if (!(tmpentry.attrib & DOS_ATTR_DIRECTORY)) return false;
+	dummyClust = tmpentry.loFirstClust;
+	lfnRange_t dir_lfn_range = lfnRange; /* copy down LFN results before they are obliterated by the next call to FindNextInternal. */
 
 	/* Can't remove root directory */
 	if(dummyClust == 0) return false;
-
-	/* Get parent directory starting cluster */
-	if(!getDirClustNum(dir, &dirClust, true)) return false;
 
 	/* Check to make sure directory is empty */
 	Bit32u filecount = 0;
@@ -1441,64 +1878,107 @@ bool fatDrive::RemoveDir(char *dir) {
 	/* Return if directory is not empty */
 	if(filecount > 0) return false;
 
-	/* Find directory entry in parent directory */
-	if (dirClust==0) fileidx = 0;	// root directory
-	else fileidx = 2;
-	bool found = false;
-	while(directoryBrowse(dirClust, &tmpentry, fileidx)) {
-		if(memcmp(&tmpentry.entryname, &pathName[0], 11) == 0) {
-			found = true;
-			tmpentry.entryname[0] = 0xe5;
-			directoryChange(dirClust, &tmpentry, fileidx);
-			deleteClustChain(dummyClust, 0);
-
-			break;
+	/* delete LFNs */
+	if (!dir_lfn_range.empty() && (dos.version.major >= 7 || uselfn)) {
+		/* last LFN entry should be fileidx */
+		assert(dir_lfn_range.dirPos_start < dir_lfn_range.dirPos_end);
+		if (dir_lfn_range.dirPos_end != subEntry) LOG_MSG("FAT warning: LFN dirPos_end=%u fileidx=%u (mismatch)",dir_lfn_range.dirPos_end,subEntry);
+		for (unsigned int didx=dir_lfn_range.dirPos_start;didx < dir_lfn_range.dirPos_end;didx++) {
+			if (directoryBrowse(dirClust,&tmpentry,didx)) {
+				tmpentry.entryname[0] = 0xe5;
+				directoryChange(dirClust,&tmpentry,didx);
+			}
 		}
-		fileidx++;
 	}
 
-	if(!found) return false;
+	/* remove primary 8.3 entry */
+	if (!directoryBrowse(dirClust, &tmpentry, subEntry)) return false;
+	tmpentry.entryname[0] = 0xe5;
+	if (!directoryChange(dirClust, &tmpentry, subEntry)) return false;
 
+	/* delete allocation chain */
+	deleteClustChain(dummyClust, 0);
 	return true;
 }
 
 bool fatDrive::Rename(char * oldname, char * newname) {
-	direntry fileEntry1;
-	Bit32u dirClust1, subEntry1;
-	if(!getFileDirEntry(oldname, &fileEntry1, &dirClust1, &subEntry1)) return false;
-	/* File to be renamed really exists */
-
-	direntry fileEntry2;
-	Bit32u dirClust2, subEntry2;
-
-	/* Check if file already exists */
-	if(!getFileDirEntry(newname, &fileEntry2, &dirClust2, &subEntry2)) {
-		/* Target doesn't exist, can rename */
-
-		char dirName2[DOS_NAMELENGTH_ASCII];
-		char pathName2[11];
-		/* Can we even get the name of the file itself? */
-		if(!getEntryName(newname, &dirName2[0])) return false;
-		convToDirFile(&dirName2[0], &pathName2[0]);
-
-		/* Can we find the base directory? */
-		if(!getDirClustNum(newname, &dirClust2, true)) return false;
-		memcpy(&fileEntry2, &fileEntry1, sizeof(direntry));
-		memcpy(&fileEntry2.entryname, &pathName2[0], 11);
-		addDirectoryEntry(dirClust2, fileEntry2);
-
-		/* Check if file exists now */
-		if(!getFileDirEntry(newname, &fileEntry2, &dirClust2, &subEntry2)) return false;
-
-		/* Remove old entry */
-		fileEntry1.entryname[0] = 0xe5;
-		directoryChange(dirClust1, &fileEntry1, subEntry1);
-
-		return true;
+	const char *lfn = NULL;
+	/* you cannot rename root directory */
+	if (*oldname == 0 || *newname == 0) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
 	}
 
-	/* Target already exists, fail */
-	return false;
+    direntry fileEntry1 = {}, fileEntry2 = {};
+	Bit32u dirClust1, subEntry1, dirClust2, subEntry2;
+	char dirName2[DOS_NAMELENGTH_ASCII];
+	char pathName2[11], path[LFN_NAMELENGTH+2];
+	lfnRange_t dir_lfn_range;
+
+	/* Check that old name exists (file or directory) */
+	lfnRange.clear();
+	if(!getFileDirEntry(oldname, &fileEntry1, &dirClust1, &subEntry1, /*dirOk*/true)) return false;
+	dir_lfn_range = lfnRange;
+
+	/* Check if new name (file or directory) already exists, fail if so */
+	if(getFileDirEntry(newname, &fileEntry2, &dirClust2, &subEntry2, /*dirOk*/true)&&!(uselfn&&!force_sfn&&strcmp(oldname, newname)&&!strcasecmp(oldname, newname))) return false;
+
+	/* Can we even get the name of the file itself? */
+	if(!getEntryName(newname, &dirName2[0])||!strlen(trim(dirName2))) return false;
+	convToDirFile(&dirName2[0], &pathName2[0]);
+
+	/* Can we find the base directory of the new name? (we know the parent dir of oldname in dirClust1) */
+	if(!getDirClustNum(newname, &dirClust2, true)) return false;
+
+	/* NTS: "newname" is the full relative path. For LFN creation to work we need only the final element of the path */
+	if (uselfn && !force_sfn) {
+		lfn = strrchr(newname,'\\');
+
+		if (lfn != NULL) {
+			lfn++; /* step past '\' */
+			strcpy(path, newname);
+			*(strrchr(path,'\\')+1)=0;
+		} else {
+			lfn = newname; /* no path elements */
+			*path=0;
+		}
+
+		if (filename_not_strict_8x3(lfn)) {
+			char oldchar=fileEntry1.entryname[0];
+			fileEntry1.entryname[0] = 0xe5;
+			directoryChange(dirClust1, &fileEntry1, (Bit32s)subEntry1);
+			char *sfn=Generate_SFN(path, lfn);
+			if (sfn!=NULL) convToDirFile(sfn, &pathName2[0]);
+			fileEntry1.entryname[0] = oldchar;
+			directoryChange(dirClust1, &fileEntry1, (Bit32s)subEntry1);
+		} else
+			lfn = NULL;
+	}
+
+	/* add new dirent */
+	memcpy(&fileEntry2, &fileEntry1, sizeof(direntry));
+	memcpy(&fileEntry2.entryname, &pathName2[0], 11);
+	addDirectoryEntry(dirClust2, fileEntry2, lfn);
+
+	/* Remove old 8.3 SFN entry */
+	fileEntry1.entryname[0] = 0xe5;
+	directoryChange(dirClust1, &fileEntry1, (Bit32s)subEntry1);
+
+	/* remove LFNs of old entry only if emulating LFNs or DOS version 7.0.
+	 * Earlier DOS versions ignore LFNs. */
+	if (!dir_lfn_range.empty() && (dos.version.major >= 7 || uselfn)) {
+		/* last LFN entry should be fileidx */
+		assert(dir_lfn_range.dirPos_start < dir_lfn_range.dirPos_end);
+		if (dir_lfn_range.dirPos_end != subEntry1) LOG_MSG("FAT warning: LFN dirPos_end=%u fileidx=%u (mismatch)",dir_lfn_range.dirPos_end,subEntry1);
+		for (unsigned int didx=dir_lfn_range.dirPos_start;didx < dir_lfn_range.dirPos_end;didx++) {
+			if (directoryBrowse(dirClust1,&fileEntry1,didx)) {
+				fileEntry1.entryname[0] = 0xe5;
+				directoryChange(dirClust1,&fileEntry1,didx);
+			}
+		}
+	}
+
+	return true;
 }
 
 bool fatDrive::TestDir(char *dir) {

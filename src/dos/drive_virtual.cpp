@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: LFN support
  */
 
 #include <stdio.h>
@@ -28,6 +30,7 @@
 
 struct VFILE_Block {
 	const char * name;
+	const char * lname;
 	Bit8u * data;
 	Bit32u size;
 	Bit16u date;
@@ -35,12 +38,13 @@ struct VFILE_Block {
 	VFILE_Block * next;
 };
 
-
-static VFILE_Block * first_file;	
+extern int lfn_filefind_handle;
+static VFILE_Block * first_file, * lfn_search[256];
 
 void VFILE_Register(const char * name,Bit8u * data,Bit32u size) {
 	VFILE_Block * new_file=new VFILE_Block;
 	new_file->name=name;
+	new_file->lname=name;
 	new_file->data=data;
 	new_file->size=size;
 	new_file->date=DOS_PackDate(2002,10,1);
@@ -137,6 +141,7 @@ Bit16u Virtual_File::GetInformation(void) {
 Virtual_Drive::Virtual_Drive() {
 	strcpy(info,"Internal Virtual Drive");
 	search_file=0;
+	for (int i=0; i<256; i++) lfn_search[i] = 0;
 }
 
 
@@ -201,15 +206,18 @@ bool Virtual_Drive::FileExists(const char* name){
 }
 
 bool Virtual_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
-	search_file=first_file;
-	Bit8u attr;char pattern[DOS_NAMELENGTH_ASCII];
-	dta.GetSearchParams(attr,pattern);
+	if (lfn_filefind_handle>=LFN_FILEFIND_MAX)
+		search_file=first_file;
+	else
+		lfn_search[lfn_filefind_handle]=first_file;
+	Bit8u attr;char pattern[CROSS_LEN];
+	dta.GetSearchParams(attr,pattern,uselfn);
 	if (attr == DOS_ATTR_VOLUME) {
-		dta.SetResult(GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+		dta.SetResult(GetLabel(),GetLabel(),0,0,0,DOS_ATTR_VOLUME);
 		return true;
 	} else if ((attr & DOS_ATTR_VOLUME) && !fcb_findfirst) {
 		if (WildFileCmp(GetLabel(),pattern)) {
-			dta.SetResult(GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+			dta.SetResult(GetLabel(),GetLabel(),0,0,0,DOS_ATTR_VOLUME);
 			return true;
 		}
 	}
@@ -217,16 +225,26 @@ bool Virtual_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 }
 
 bool Virtual_Drive::FindNext(DOS_DTA & dta) {
-	Bit8u attr;char pattern[DOS_NAMELENGTH_ASCII];
-	dta.GetSearchParams(attr,pattern);
-	while (search_file) {
-		if (WildFileCmp(search_file->name,pattern)) {
-			dta.SetResult(search_file->name,search_file->size,search_file->date,search_file->time,DOS_ATTR_ARCHIVE);
+	Bit8u attr;char pattern[CROSS_LEN];
+	dta.GetSearchParams(attr,pattern,uselfn);
+	if (lfn_filefind_handle>=LFN_FILEFIND_MAX)
+		while (search_file) {
+			if (WildFileCmp(search_file->name,pattern)) {
+				dta.SetResult(search_file->name,search_file->lname,search_file->size,search_file->date,search_file->time,DOS_ATTR_ARCHIVE);
+				search_file=search_file->next;
+				return true;
+			}
 			search_file=search_file->next;
-			return true;
 		}
-		search_file=search_file->next;
-	}
+	else
+		while (lfn_search[lfn_filefind_handle]) {
+			if (WildFileCmp(lfn_search[lfn_filefind_handle]->name,pattern)) {
+				dta.SetResult(lfn_search[lfn_filefind_handle]->name,lfn_search[lfn_filefind_handle]->lname,lfn_search[lfn_filefind_handle]->size,lfn_search[lfn_filefind_handle]->date,lfn_search[lfn_filefind_handle]->time,DOS_ATTR_ARCHIVE);
+				lfn_search[lfn_filefind_handle]=lfn_search[lfn_filefind_handle]->next;
+				return true;
+			}
+			lfn_search[lfn_filefind_handle]=lfn_search[lfn_filefind_handle]->next;
+		}
 	DOS_SetError(DOSERR_NO_MORE_FILES);
 	return false;
 }
@@ -242,6 +260,21 @@ bool Virtual_Drive::GetFileAttr(char * name,Bit16u * attr) {
 	}
 	return false;
 }
+
+bool Virtual_Drive::GetFileAttrEx(char* name, struct stat *status) {
+	return false;
+}
+
+unsigned long Virtual_Drive::GetCompressedSize(char* name) {
+	return 0;
+}
+
+#if defined (WIN32)
+HANDLE Virtual_Drive::CreateOpenFile(const char* name) {
+	DOS_SetError(1);
+	return INVALID_HANDLE_VALUE;
+}
+#endif
 
 bool Virtual_Drive::Rename(char * oldname,char * newname) {
 	return false;

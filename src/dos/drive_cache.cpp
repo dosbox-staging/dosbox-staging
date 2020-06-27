@@ -14,6 +14,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ *  Wengier: LFN support
  */
 
 #include "dos_system.h"
@@ -144,8 +146,8 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir) {
 	safe_strcpy(basePath, baseDir);
 	Bit16u id;
 	if (OpenDir(baseDir,id)) {
-		char* result = 0;
-		ReadDir(id,result);
+		char* result = 0, *lresult = 0;
+        ReadDir(id,result,lresult);
 	};
 	// Get Volume Label
 #if defined (WIN32)
@@ -213,7 +215,9 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists) {
 			if (GetLongName(dir, file, sizeof(file))>=0) return;
 		}
 
-		CreateEntry(dir,file,false);
+		char sfile[DOS_NAMELENGTH];
+        sfile[0]=0;
+		CreateEntry(dir,file,sfile,false);
 
 		Bits index = GetLongName(dir, file, sizeof(file));
 		if (index>=0) {
@@ -229,7 +233,9 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists) {
 //		LOG_DEBUG("DIR: Error: Failed to add %s",path);	
 	}
 }
-void DOS_Drive_Cache::AddEntryDirOverlay(const char* path, bool checkExists) {
+
+bool filename_not_strict_8x3(const char *n);
+void DOS_Drive_Cache::AddEntryDirOverlay(const char* path, char *sfile, bool checkExists) {
 	// Get Last part...
 	char file	[CROSS_LEN];
 	char expand	[CROSS_LEN];
@@ -254,6 +260,11 @@ void DOS_Drive_Cache::AddEntryDirOverlay(const char* path, bool checkExists) {
 	CFileInfo* dir = FindDirInfo(dironly,expand);
 	const char* pos = strrchr(path,CROSS_FILESPLIT);
 
+	char sname[CROSS_LEN], *p=strrchr(sfile, '\\');
+	if (p!=NULL)
+		strcpy(sname, p+1);
+	else
+		strcpy(sname, sfile);
 	if (pos && dir) {
 		safe_strcpy(file, pos + 1);
 		// Check if directory already exists, then don't add new entry...
@@ -265,17 +276,25 @@ void DOS_Drive_Cache::AddEntryDirOverlay(const char* path, bool checkExists) {
 				if (dir->isOverlayDir && dir->fileList.empty()) {
 					//maybe care about searches ? but this function should only run on cache inits/refreshes.
 					//add dot entries
-					CreateEntry(dir,".",true);
-					CreateEntry(dir,"..",true);
+					CreateEntry(dir,".",".",true);
+					CreateEntry(dir,"..","..",true);
 				}
 				return;
 			}
 		}
 
-		CreateEntry(dir,file,true);
-		
-
-		Bits index = GetLongName(dir, file, sizeof(file));
+      if (filename_not_strict_8x3(sname)) sname[0]=0;
+      char* genname=CreateEntry(dir,file,sname,true);
+      Bits index = GetLongName(dir,(char *)(!strlen(sname)||filename_not_strict_8x3(sname)?file:sname), sizeof((!strlen(sname)||filename_not_strict_8x3(sname)?file:sname)));
+	  if (strlen(genname)) {
+		  strcpy(sfile, sname);
+		  p=strrchr(sfile, '\\');
+		  if (p!=NULL) {
+			  *(p+1)=0;
+			  strcat(sfile, genname);
+		  } else
+			  strcpy(sfile, genname);
+	  }
 		if (index>=0) {
 			Bit32u i;
 			// Check if there are any open search dir that are affected by this...
@@ -286,8 +305,8 @@ void DOS_Drive_Cache::AddEntryDirOverlay(const char* path, bool checkExists) {
 
 			dir = dir->fileList[index];
 			dir->isOverlayDir = true;
-			CreateEntry(dir,".",true);
-			CreateEntry(dir,"..",true);
+			CreateEntry(dir,".",".",true);
+			CreateEntry(dir,"..","..",true);
 		}
 		//		LOG_DEBUG("DIR: Added Entry %s",path);
 	} else {
@@ -516,17 +535,15 @@ Bits DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName, const size
 	// Search long name and return array number of element
 	Bits low	= 0;
 	Bits high	= (Bits)(filelist_size-1);
-	Bits mid,res;
-	while (low<=high) {
-		mid = (low+high)/2;
-		res = strcmp(shortName,curDir->fileList[mid]->shortname);
-		if (res>0)	low  = mid+1; else
-		if (res<0)	high = mid-1; else
-		{	// Found
-			safe_strncpy(shortName, curDir->fileList[mid]->orgname, shortName_len);
-			return mid;
-		};
-	}
+	Bits res;
+	if (strlen(shortName))
+		for (Bitu i=0; i<filelist_size; i++) {
+			if (!strcasecmp(shortName,curDir->fileList[i]->orgname) || !strcasecmp(shortName,curDir->fileList[i]->shortname)) {
+				safe_strncpy(shortName, curDir->fileList[i]->orgname, shortName_len);
+				return (Bits)i;
+			}
+		}
+
 #ifdef WINE_DRIVE_SUPPORT
 	if (strlen(shortName) < 8 || shortName[4] != '~' || shortName[5] == '.' || shortName[6] == '.' || shortName[7] == '.') return -1; // not available
 	// else it's most likely a Wine style short name ABCD~###, # = not dot  (length at least 8) 
@@ -692,9 +709,9 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 		safe_strcpy(work, basePath);
 		if (OpenDir(curDir,work,id)) {
 			char buffer[CROSS_LEN];
-			char* result = 0;
+			char* result = 0, *lresult = 0;
 			safe_strcpy(buffer, dirPath);
-			ReadDir(id,result);
+			ReadDir(id,result,lresult);
 			safe_strcpy(dirPath, buffer);
 			if (dirSearch[id]) {
 				dirSearch[id]->id = MAX_OPENDIRS;
@@ -729,9 +746,9 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 			if (!IsCachedIn(curDir)) {
 				if (OpenDir(curDir,expandedPath,id)) {
 					char buffer[CROSS_LEN];
-					char* result = 0;
+					char *result = 0, *lresult = 0;
 					safe_strcpy(buffer, dirPath);
-					ReadDir(id,result);
+					ReadDir(id,result,lresult);
 					safe_strcpy(dirPath, buffer);
 					if (dirSearch[id]) {
 						dirSearch[id]->id = MAX_OPENDIRS;
@@ -792,16 +809,15 @@ bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, Bit16u& id) {
 	return false;
 }
 
-void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, bool is_directory) {
+char* DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, const char* sname, bool is_directory) {
 	CFileInfo* info = new CFileInfo;
+	safe_strcpy(info->shortname, sname);
 	safe_strcpy(info->orgname, name);
 	info->shortNr = 0;
 	info->isDir = is_directory;
 
 	// Check for long filenames...
-	CreateShortName(dir, info);		
-
-	bool found = false;
+	if (sname[0]==0) CreateShortName(dir, info);
 
 	// keep list sorted (so GetLongName works correctly, used by CreateShortName in this routine)
 	if (dir->fileList.size()>0) {
@@ -809,6 +825,7 @@ void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, bool is_dire
 			// append at end of list
 			dir->fileList.push_back(info);
 		} else {
+			bool found = false;
 			// look for position where to insert this element
 			std::vector<CFileInfo*>::iterator it;
 			for (it=dir->fileList.begin(); it!=dir->fileList.end(); ++it) {
@@ -825,6 +842,9 @@ void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, bool is_dire
 		// empty file list, append
 		dir->fileList.push_back(info);
 	}
+	static char sgenname[DOS_NAMELENGTH+1];
+	strcpy(sgenname, info->shortname);
+	return sgenname;
 }
 
 void DOS_Drive_Cache::CopyEntry(CFileInfo* dir, CFileInfo* from) {
@@ -838,7 +858,7 @@ void DOS_Drive_Cache::CopyEntry(CFileInfo* dir, CFileInfo* from) {
 	dir->fileList.push_back(info);
 }
 
-bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result) {
+bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result, char * &lresult) {
 	// shouldnt happen...
 	if (id >= MAX_OPENDIRS)
 		return false;
@@ -854,12 +874,12 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result) {
 			return false;
 		}
 		// Read complete directory
-		char dir_name[CROSS_LEN];
+		char dir_name[CROSS_LEN], dir_sname[DOS_NAMELENGTH+1];
 		bool is_directory;
-		if (read_directory_first(dirp, dir_name, is_directory)) {
-			CreateEntry(dirSearch[id], dir_name, is_directory);
-			while (read_directory_next(dirp, dir_name, is_directory)) {
-				CreateEntry(dirSearch[id], dir_name, is_directory);
+		if (read_directory_first(dirp, dir_name, dir_sname, is_directory)) {
+			CreateEntry(dirSearch[id], dir_name, dir_sname, is_directory);
+			while (read_directory_next(dirp, dir_name, dir_sname, is_directory)) {
+				CreateEntry(dirSearch[id], dir_name, dir_sname, is_directory);
 			}
 		}
 
@@ -877,7 +897,7 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result) {
 		};*/
 	};
 	if (dirSearch[id]) {
-		if (SetResult(dirSearch[id], result, dirSearch[id]->nextEntry))
+		if (SetResult(dirSearch[id], result, lresult, dirSearch[id]->nextEntry))
 			return true;
 		dirSearch[id]->id = MAX_OPENDIRS;
 		dirSearch[id] = nullptr;
@@ -885,15 +905,18 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result) {
 	return false;
 }
 
-bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bitu entryNr)
+bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, char* &lresult, Bitu entryNr)
 {
 	static char res[CROSS_LEN] = { 0 };
+    static char lres[CROSS_LEN] = { 0 };
 
 	result = res;
+	lresult = lres;
 	if (entryNr>=dir->fileList.size()) return false;
 	CFileInfo* info = dir->fileList[entryNr];
 	// copy filename, short version
 	safe_strcpy(res, info->shortname);
+	safe_strcpy(lres,info->orgname);
 	// Set to next Entry
 	dir->nextEntry = entryNr+1;
 	return true;
@@ -953,13 +976,13 @@ bool DOS_Drive_Cache::FindFirst(char* path, Bit16u& id) {
 	return true;
 }
 
-bool DOS_Drive_Cache::FindNext(Bit16u id, char* &result) {
+bool DOS_Drive_Cache::FindNext(Bit16u id, char* &result, char* &lresult) {
 	// out of range ?
 	if ((id>=MAX_OPENDIRS) || !dirFindFirst[id]) {
 		LOG(LOG_MISC,LOG_ERROR)("DIRCACHE: FindFirst/Next failure : ID out of range: %04X",id);
 		return false;
 	}
-	if (!SetResult(dirFindFirst[id], result, dirFindFirst[id]->nextEntry)) {
+	if (!SetResult(dirFindFirst[id], result, lresult, dirFindFirst[id]->nextEntry)) {
 		// free slot
 		DeleteFileInfo(dirFindFirst[id]);
 		dirFindFirst[id] = nullptr;

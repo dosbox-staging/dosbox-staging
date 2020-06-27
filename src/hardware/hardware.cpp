@@ -104,10 +104,10 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	lowcase(file_start);
 	strcat(file_start,"_");
 	bool is_directory;
-	char tempname[CROSS_LEN];
-	bool testRead = read_directory_first(dir, tempname, is_directory );
+	char tempname[CROSS_LEN], sname[15];
+	bool testRead = read_directory_first(dir, tempname, sname, is_directory );
 	int last = 0;
-	for ( ; testRead; testRead = read_directory_next(dir, tempname, is_directory) ) {
+	for ( ; testRead; testRead = read_directory_next(dir, tempname, sname, is_directory) ) {
 		char * test=strstr(tempname,ext);
 		if (!test || strlen(test)!=strlen(ext)) 
 			continue;
