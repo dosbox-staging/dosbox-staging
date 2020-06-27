@@ -322,12 +322,12 @@ dir_information* open_directory(const char* dirname) {
 	return dir.dir?&dir:NULL;
 }
 
-bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
+bool read_directory_first(dir_information* dirp, char* entry_name, char* entry_sname, bool& is_directory) {
 	if (!dirp) return false;
 	return read_directory_next(dirp,entry_name,entry_sname,is_directory);
 }
 
-bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
+bool read_directory_next(dir_information* dirp, char* entry_name, char* entry_sname, bool& is_directory) {
 	if (!dirp) return false;
 	struct dirent* dentry = readdir(dirp->dir);
 	if (dentry==NULL) {
