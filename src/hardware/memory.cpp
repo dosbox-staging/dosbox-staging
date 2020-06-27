@@ -571,6 +571,9 @@ public:
 		}
 		memset((void*)MemBase, 0, memsize * 1024 * 1024);
 		memory.pages = (memsize * 1024 * 1024) / 4096;
+		LOG_MSG("MEMORY: Base address: %p", MemBase);
+		LOG_MSG("MEMORY: Using %d DOS memory pages (%u MiB)",
+		        static_cast<int>(memory.pages), memsize);
 
 		/* Allocate the data for the different page information blocks */
 		memory.phandlers = new (std::nothrow) PageHandler * [memory.pages];
