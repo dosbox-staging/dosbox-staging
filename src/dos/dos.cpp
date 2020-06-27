@@ -1445,7 +1445,7 @@ void DOS_Int21_7143(char *name1, const char *name2) {
 				case 0x05:
 				case 0x07:
 				{
-#if defined (WIN32) && !defined(HX_DOS)
+#if defined (WIN32)
 					HANDLE hFile = DOS_CreateOpenFile(name1);
 					if (hFile != INVALID_HANDLE_VALUE) {
 						time_t clock = time(NULL), ttime;
@@ -1482,7 +1482,6 @@ void DOS_Int21_7143(char *name1, const char *name2) {
 				case 0x04:
 				case 0x06:
 				case 0x08:
-#if !defined(HX_DOS)
 					struct stat status;
 					if (DOS_GetFileAttrEx(name1, &status)) {
 						const struct tm * ltime;
@@ -1496,7 +1495,6 @@ void DOS_Int21_7143(char *name1, const char *name2) {
 						reg_ax=0;
 						CALLBACK_SCF(false);
 					} else
-#endif
 					{
 						CALLBACK_SCF(true);
 						reg_ax=dos.errorcode;
@@ -1758,7 +1756,6 @@ void DOS_Int21_71a6(const char *name1, const char *name2) {
 	if (handle < DOS_FILES && Files[handle] && Files[handle]->name!="") {
 		struct stat status;
 		if (DOS_GetFileAttrEx(Files[handle]->name.c_str(), &status, Files[handle]->GetDrive())) {
-#if !defined(HX_DOS)
 			time_t ttime;
 			const struct tm * ltime;
 			ttime=status.st_ctime;
@@ -1776,7 +1773,6 @@ void DOS_Int21_71a6(const char *name1, const char *name2) {
 				mtime=DOS_PackTime((Bit16u)ltime->tm_hour,(Bit16u)ltime->tm_min,(Bit16u)ltime->tm_sec);
 				mdate=DOS_PackDate((Bit16u)(ltime->tm_year+1900),(Bit16u)(ltime->tm_mon+1),(Bit16u)ltime->tm_mday);
 			}
-#endif
 			sprintf(buf,"%-4s%-4s%-4s%-4s%-4s%-4s%-4s%-4s%-4s%-4s%-4s%-4s%-4s",(char*)&st,(char*)&ctime,(char*)&cdate,(char*)&atime,(char*)&adate,(char*)&mtime,(char*)&mdate,(char*)&serial_number,(char*)&st,(char*)&st,(char*)&st,(char*)&st,(char*)&handle);
 			for (int i=32;i<36;i++) buf[i]=0;
 			buf[36]=(char)((Bit32u)status.st_size%256);
