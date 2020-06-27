@@ -785,6 +785,7 @@ struct DtaResult {
 
 };
 
+/* Unused function
 static std::string to_search_pattern(const char *arg)
 {
 	std::string pattern = arg;
@@ -822,6 +823,7 @@ static std::string to_search_pattern(const char *arg)
 
 	return pattern;
 }
+*/
 
 Bit32u byte_count,file_count,dir_count;
 Bitu p_count;

@@ -575,7 +575,7 @@ bool isoDrive :: lookup(isoDirEntry *de, const char *path) {
 			int dirIterator = GetDirIterator(de);
 			while (!found && GetNextDirEntry(dirIterator, de)) {
 				GetLongName((char*)de->ident,longname);
-				if (!IS_ASSOC(FLAGS2) && (0 == strncasecmp((char*) de->ident, name, ISO_MAX_FILENAME_LENGTH)) ||0 == strncasecmp((char*) longname, name, ISO_MAXPATHNAME)) {
+				if ((!IS_ASSOC(FLAGS2) && (0 == strncasecmp((char*) de->ident, name, ISO_MAX_FILENAME_LENGTH))) ||0 == strncasecmp((char*) longname, name, ISO_MAXPATHNAME)) {
 					found = true;
 				}
 			}
