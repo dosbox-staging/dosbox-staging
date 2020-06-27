@@ -16,6 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <new>
+
+#include "mem_unaligned.h"
+#include "types.h"
 
 class CodePageHandlerDynRec;	// forward
 
@@ -70,23 +74,19 @@ static struct {
 	CodePageHandlerDynRec * last_page;		// the last used page
 } cache;
 
-
 // cache memory pointers, to be malloc'd later
-static Bit8u * cache_code_start_ptr=NULL;
-static Bit8u * cache_code=NULL;
-static Bit8u * cache_code_link_blocks=NULL;
+static uint8_t *cache_code_start_ptr = nullptr;
+static uint8_t *cache_code = nullptr;
+static uint8_t *cache_code_link_blocks = nullptr;
 
-static CacheBlockDynRec * cache_blocks=NULL;
+static CacheBlockDynRec *cache_blocks = nullptr;
 static CacheBlockDynRec link_blocks[2];		// default linking (specially marked)
-
 
 // the CodePageHandlerDynRec class provides access to the contained
 // cache blocks and intercepts writes to the code for special treatment
 class CodePageHandlerDynRec : public PageHandler {
 public:
-	CodePageHandlerDynRec() {
-		invalidation_map=NULL;
-	}
+	CodePageHandlerDynRec() : invalidation_map(nullptr) {}
 
 	void SetupAt(Bitu _phys_page,PageHandler * _old_pagehandler) {
 		// initialize this codepage handler
@@ -105,9 +105,9 @@ public:
 		// initialize the maps with zero (no cache blocks as well as code present)
 		memset(&hash_map,0,sizeof(hash_map));
 		memset(&write_map,0,sizeof(write_map));
-		if (invalidation_map!=NULL) {
-			free(invalidation_map);
-			invalidation_map=NULL;
+		if (invalidation_map) {
+			delete [] invalidation_map;
+			invalidation_map = nullptr;
 		}
 	}
 
@@ -139,6 +139,16 @@ public:
 		return is_current_block;
 	}
 
+	uint8_t *alloc_invalidation_map() const
+	{
+		constexpr size_t map_size = 4096;
+		uint8_t *map = new (std::nothrow) uint8_t[map_size];
+		if (GCC_UNLIKELY(!map))
+			E_Exit("failed to allocate invalidation_map");
+		memset(map, 0, map_size);
+		return map;
+	}
+
 	// the following functions will clean all cache blocks that are invalid now due to the write
 	void writeb(PhysPt addr,Bitu val){
 		addr&=4095;
@@ -151,8 +161,7 @@ public:
 			if (!active_count) Release();	// delay page releasing until active_count is zero
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map=(Bit8u*)malloc(4096);
-			memset(invalidation_map,0,4096);
+			invalidation_map = alloc_invalidation_map();
 		}
 		invalidation_map[addr]++;
 		InvalidateRange(addr,addr);
@@ -162,21 +171,15 @@ public:
 		if (host_readw(hostmem+addr)==(Bit16u)val) return;
 		host_writew(hostmem+addr,val);
 		// see if there's code where we are writing to
-		if (!*(Bit16u*)&write_map[addr]) {
+		if (!read_unaligned_uint16(&write_map[addr])) {
 			if (active_blocks) return;		// still some blocks in this page
 			active_count--;
 			if (!active_count) Release();	// delay page releasing until active_count is zero
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map=(Bit8u*)malloc(4096);
-			memset(invalidation_map,0,4096);
+			invalidation_map = alloc_invalidation_map();
 		}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-		host_writew(&invalidation_map[addr],
-			host_readw(&invalidation_map[addr])+0x101);
-#else
-		(*(Bit16u*)&invalidation_map[addr])+=0x101;
-#endif
+		host_addw(&invalidation_map[addr], 0x0101);
 		InvalidateRange(addr,addr+1);
 	}
 	void writed(PhysPt addr,Bitu val){
@@ -184,38 +187,31 @@ public:
 		if (host_readd(hostmem+addr)==(Bit32u)val) return;
 		host_writed(hostmem+addr,val);
 		// see if there's code where we are writing to
-		if (!*(Bit32u*)&write_map[addr]) {
+		if (!read_unaligned_uint32(&write_map[addr])) {
 			if (active_blocks) return;		// still some blocks in this page
 			active_count--;
 			if (!active_count) Release();	// delay page releasing until active_count is zero
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map=(Bit8u*)malloc(4096);
-			memset(invalidation_map,0,4096);
+			invalidation_map = alloc_invalidation_map();
 		}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-		host_writed(&invalidation_map[addr],
-			host_readd(&invalidation_map[addr])+0x1010101);
-#else
-		(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
-#endif
+		host_addd(&invalidation_map[addr], 0x01010101);
 		InvalidateRange(addr,addr+3);
 	}
 	bool writeb_checked(PhysPt addr,Bitu val) {
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return false;
 		// see if there's code where we are writing to
-		if (!host_readb(&write_map[addr])) {
+		if (!write_map[addr]) {
 			if (!active_blocks) {
 				// no blocks left in this page, still delay the page releasing a bit
 				active_count--;
 				if (!active_count) Release();
 			}
 		} else {
-			if (!invalidation_map) {
-				invalidation_map=(Bit8u*)malloc(4096);
-				memset(invalidation_map,0,4096);
-			}
+			if (!invalidation_map)
+				invalidation_map = alloc_invalidation_map();
+
 			invalidation_map[addr]++;
 			if (InvalidateRange(addr,addr)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
@@ -229,23 +225,17 @@ public:
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return false;
 		// see if there's code where we are writing to
-		if (!*(Bit16u*)&write_map[addr]) {
+		if (!read_unaligned_uint16(&write_map[addr])) {
 			if (!active_blocks) {
 				// no blocks left in this page, still delay the page releasing a bit
 				active_count--;
 				if (!active_count) Release();
 			}
 		} else {
-			if (!invalidation_map) {
-				invalidation_map=(Bit8u*)malloc(4096);
-				memset(invalidation_map,0,4096);
-			}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-			host_writew(&invalidation_map[addr],
-				host_readw(&invalidation_map[addr])+0x101);
-#else
-			(*(Bit16u*)&invalidation_map[addr])+=0x101;
-#endif
+			if (!invalidation_map)
+				invalidation_map = alloc_invalidation_map();
+
+			host_addw(&invalidation_map[addr], 0x0101);
 			if (InvalidateRange(addr,addr+1)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
@@ -258,23 +248,17 @@ public:
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return false;
 		// see if there's code where we are writing to
-		if (!*(Bit32u*)&write_map[addr]) {
+		if (!read_unaligned_uint32(&write_map[addr])) {
 			if (!active_blocks) {
 				// no blocks left in this page, still delay the page releasing a bit
 				active_count--;
 				if (!active_count) Release();
 			}
 		} else {
-			if (!invalidation_map) {
-				invalidation_map=(Bit8u*)malloc(4096);
-				memset(invalidation_map,0,4096);
-			}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-			host_writed(&invalidation_map[addr],
-				host_readd(&invalidation_map[addr])+0x1010101);
-#else
-			(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
-#endif
+			if (!invalidation_map)
+				invalidation_map = alloc_invalidation_map();
+
+			host_addd(&invalidation_map[addr], 0x01010101);
 			if (InvalidateRange(addr,addr+3)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
@@ -305,12 +289,13 @@ public:
 	void DelCacheBlock(CacheBlockDynRec * block) {
 		active_blocks--;
 		active_count=16;
-		CacheBlockDynRec * * bwhere=&hash_map[block->hash.index];
-		while (*bwhere!=block) {
-			bwhere=&((*bwhere)->hash.next);
-			//Will crash if a block isn't found, which should never happen.
+		CacheBlockDynRec **where = &hash_map[block->hash.index];
+		while (*where != block) {
+			where = &((*where)->hash.next);
+			// Will crash if a block isn't found, which should never
+			// happen.
 		}
-		*bwhere=block->hash.next;
+		*where = block->hash.next;
 
 		// remove the cleared block from the write map
 		if (GCC_UNLIKELY(block->cache.wmapmask!=NULL)) {
@@ -396,11 +381,11 @@ private:
 	Bitu phys_page;
 };
 
-
-static INLINE void cache_addunusedblock(CacheBlockDynRec * block) {
+static inline void cache_add_unused_block(CacheBlockDynRec *block)
+{
 	// block has become unused, add it to the freelist
-	block->cache.next=cache.block.free;
-	cache.block.free=block;
+	block->cache.next = cache.block.free;
+	cache.block.free = block;
 }
 
 static CacheBlockDynRec * cache_getblock(void) {
@@ -439,8 +424,9 @@ void CacheBlockDynRec::Clear(void) {
 				LOG(LOG_CPU,LOG_ERROR)("Cache anomaly. please investigate");
 			}
 		}
-	} else
-		cache_addunusedblock(this);
+	} else {
+		cache_add_unused_block(this);
+	}
 	if (crossblock) {
 		// clear out the crossblock (in the page before) as well
 		crossblock->crossblock=0;
@@ -476,7 +462,7 @@ static CacheBlockDynRec * cache_openblock(void) {
 		if (nextblock->page.handler)
 			nextblock->Clear();
 		// block is free now
-		cache_addunusedblock(nextblock);
+		cache_add_unused_block(nextblock);
 		nextblock=tempblock;
 	}
 skipresize:

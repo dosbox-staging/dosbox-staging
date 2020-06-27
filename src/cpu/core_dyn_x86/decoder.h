@@ -1054,6 +1054,7 @@ static void dyn_pop(DynReg * dynreg,bool checked=true) {
 		gen_dop_word_var(DOP_AND,true,DREG(STACK),&cpu.stack.mask);
 		gen_dop_word_var(DOP_AND,true,DREG(ESP),&cpu.stack.notmask);
 		gen_dop_word(DOP_OR,true,DREG(ESP),DREG(STACK));
+		gen_releasereg(DREG(STACK));
 	}
 }
 
@@ -1160,6 +1161,7 @@ skip_extend_word:
 								gen_lea(DREG(EA),DREG(EA),scaled,scale,0);
 								gen_lea(reg_ea,DREG(EA),*seg,0,0);
 							}
+							if (reg_ea!=DREG(EA)) gen_releasereg(DREG(EA));
 							return;
 						}
 						imm=(Bit32s)val;
@@ -1203,6 +1205,7 @@ skip_extend_word:
 						gen_lea(reg_ea,DREG(EA),decode.segprefix ? decode.segprefix : segbase,0,0);
 					}
 				}
+				if (reg_ea!=DREG(EA)) gen_releasereg(DREG(EA));
 				return;
 			}
 			
@@ -1219,6 +1222,7 @@ skip_extend_word:
 			else {
 				gen_lea(DREG(EA),base,scaled,scale,imm);
 				gen_lea(reg_ea,DREG(EA),decode.segprefix ? decode.segprefix : segbase,0,0);
+				if (reg_ea!=DREG(EA)) gen_releasereg(DREG(EA));
 			}
 		}
 	}
@@ -1772,6 +1776,7 @@ static void dyn_load_seg_off_ea(SegNames seg) {
 		dyn_read_word_release(DREG(EA),DREG(TMPW),decode.big_op);
 		dyn_load_seg(seg,DREG(TMPB));gen_releasereg(DREG(TMPB));
 		gen_dop_word(DOP_MOV,decode.big_op,&DynRegs[decode.modrm.reg],DREG(TMPW));
+		gen_releasereg(DREG(TMPW));
 	} else {
 		IllegalOption("dyn_load_seg_off_ea");
 	}
@@ -2795,6 +2800,7 @@ restart_prefix:
 			case 0x6:		/* PUSH Ev */
 				gen_releasereg(DREG(EA));
 				dyn_push(src);
+				gen_releasereg(DREG(TMPW));
 				break;
 			default:
 				LOG(LOG_CPU,LOG_ERROR)("CPU:GRP5:Illegal opcode 0xff");

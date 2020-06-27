@@ -16,6 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <new>
+
+#include "mem_unaligned.h"
+#include "types.h"
 
 class CacheBlock {
 public:
@@ -63,13 +67,18 @@ static struct {
 	CodePageHandler * last_page;
 } cache;
 
+// cache memory pointers, to be malloc'd later
+static uint8_t *cache_code_start_ptr = nullptr;
+static uint8_t *cache_code = nullptr;
+static uint8_t *cache_code_link_blocks = nullptr;
+
+static CacheBlock *cache_blocks = nullptr;
 static CacheBlock link_blocks[2];
 
 class CodePageHandler : public PageHandler {
 public:
-	CodePageHandler() {
-		invalidation_map=NULL;
-	}
+	CodePageHandler() : invalidation_map(nullptr) {}
+
 	void SetupAt(Bitu _phys_page,PageHandler * _old_pagehandler) {
 		phys_page=_phys_page;
 		old_pagehandler=_old_pagehandler;
@@ -79,9 +88,9 @@ public:
 		active_count=16;
 		memset(&hash_map,0,sizeof(hash_map));
 		memset(&write_map,0,sizeof(write_map));
-		if (invalidation_map!=NULL) {
-			free(invalidation_map);
-			invalidation_map=NULL;
+		if (invalidation_map) {
+			delete [] invalidation_map;
+			invalidation_map = nullptr;
 		}
 	}
 	bool InvalidateRange(Bitu start,Bitu end) {
@@ -106,6 +115,17 @@ public:
 		}
 		return is_current_block;
 	}
+
+	uint8_t *alloc_invalidation_map() const
+	{
+		constexpr size_t map_size = 4096;
+		uint8_t *map = new (std::nothrow) uint8_t[map_size];
+		if (GCC_UNLIKELY(!map))
+			E_Exit("failed to allocate invalidation_map");
+		memset(map, 0, map_size);
+		return map;
+	}
+
 	void writeb(PhysPt addr,Bitu val){
 		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
 		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
@@ -114,17 +134,14 @@ public:
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return;
 		host_writeb(hostmem+addr,val);
+		// see if there's code where we are writing to
 		if (!write_map[addr]) {
 			if (active_blocks) return;
 			active_count--;
 			if (!active_count) Release();
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map=(Bit8u*)malloc(4096);
-			if (!invalidation_map) {
-				E_Exit("wb:failed to allocate invalidation_map's memory");
-			}
-			memset(invalidation_map,0,4096);
+			invalidation_map = alloc_invalidation_map();
 		}
 		invalidation_map[addr]++;
 		InvalidateRange(addr,addr);
@@ -137,19 +154,16 @@ public:
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return;
 		host_writew(hostmem+addr,val);
-		if (!*(Bit16u*)&write_map[addr]) {
+		// see if there's code where we are writing to
+		if (!read_unaligned_uint16(&write_map[addr])) {
 			if (active_blocks) return;
 			active_count--;
 			if (!active_count) Release();
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map=(Bit8u*)malloc(4096);
-			if (!invalidation_map) {
-				E_Exit("ww:failed to allocate invalidation_map's memory");
-			}
-			memset(invalidation_map,0,4096);
+			invalidation_map = alloc_invalidation_map();
 		}
-		(*(Bit16u*)&invalidation_map[addr])+=0x101;
+		host_addw(&invalidation_map[addr], 0x0101);
 		InvalidateRange(addr,addr+1);
 	}
 	void writed(PhysPt addr,Bitu val){
@@ -160,19 +174,16 @@ public:
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return;
 		host_writed(hostmem+addr,val);
-		if (!*(Bit32u*)&write_map[addr]) {
+		// see if there's code where we are writing to
+		if (!read_unaligned_uint32(&write_map[addr])) {
 			if (active_blocks) return;
 			active_count--;
 			if (!active_count) Release();
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map=(Bit8u*)malloc(4096);
-			if (!invalidation_map) {
-				E_Exit("wd:failed to allocate invalidation_map's memory");
-			}
-			memset(invalidation_map,0,4096);
+			invalidation_map = alloc_invalidation_map();
 		}
-		(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
+		host_addd(&invalidation_map[addr], 0x01010101);
 		InvalidateRange(addr,addr+3);
 	}
 	bool writeb_checked(PhysPt addr,Bitu val) {
@@ -182,19 +193,16 @@ public:
 		}
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return false;
+		// see if there's code where we are writing to
 		if (!write_map[addr]) {
 			if (!active_blocks) {
 				active_count--;
 				if (!active_count) Release();
 			}
 		} else {
-			if (!invalidation_map) {
-				invalidation_map=(Bit8u*)malloc(4096);
-				if (!invalidation_map) {
-					E_Exit("cb:failed to allocate invalidation_map's memory");
-				}
-				memset(invalidation_map,0,4096);
-			}
+			if (!invalidation_map)
+				invalidation_map = alloc_invalidation_map();
+
 			invalidation_map[addr]++;
 			if (InvalidateRange(addr,addr)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
@@ -211,20 +219,17 @@ public:
 		}
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return false;
-		if (!*(Bit16u*)&write_map[addr]) {
+		// see if there's code where we are writing to
+		if (!read_unaligned_uint16(&write_map[addr])) {
 			if (!active_blocks) {
 				active_count--;
 				if (!active_count) Release();
 			}
 		} else {
-			if (!invalidation_map) {
-				invalidation_map=(Bit8u*)malloc(4096);
-				if (!invalidation_map) {
-					E_Exit("cw:failed to allocate invalidation_map's memory");
-				}
-				memset(invalidation_map,0,4096);
-			}
-			(*(Bit16u*)&invalidation_map[addr])+=0x101;
+			if (!invalidation_map)
+				invalidation_map = alloc_invalidation_map();
+
+			host_addw(&invalidation_map[addr], 0x0101);
 			if (InvalidateRange(addr,addr+1)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
@@ -240,20 +245,17 @@ public:
 		}
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return false;
-		if (!*(Bit32u*)&write_map[addr]) {
+		// see if there's code where we are writing to
+		if (!read_unaligned_uint32(&write_map[addr])) {
 			if (!active_blocks) {
 				active_count--;
 				if (!active_count) Release();
 			}
 		} else {
-			if (!invalidation_map) {
-				invalidation_map=(Bit8u*)malloc(4096);
-				if (!invalidation_map) {
-					E_Exit("cd:failed to allocate invalidation_map's memory");
-				}
-				memset(invalidation_map,0,4096);
-			}
-			(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
+			if (!invalidation_map)
+				invalidation_map = alloc_invalidation_map();
+
+			host_addd(&invalidation_map[addr], 0x01010101);
 			if (InvalidateRange(addr,addr+3)) {
 				cpu.exception.which=SMC_CURRENT_BLOCK;
 				return true;
@@ -280,12 +282,13 @@ public:
 	void DelCacheBlock(CacheBlock * block) {
 		active_blocks--;
 		active_count=16;
-		CacheBlock * * where=&hash_map[block->hash.index];
-		while (*where!=block) {
-			where=&((*where)->hash.next);
-			//Will crash if a block isn't found, which should never happen.
+		CacheBlock **where = &hash_map[block->hash.index];
+		while (*where != block) {
+			where = &((*where)->hash.next);
+			// Will crash if a block isn't found, which should never
+			// happen.
 		}
-		*where=block->hash.next;
+		*where = block->hash.next;
 		if (GCC_UNLIKELY(block->cache.wmapmask!=NULL)) {
 			for (Bitu i=block->page.start;i<block->cache.maskstart;i++) {
 				if (write_map[i]) write_map[i]--;
@@ -355,10 +358,11 @@ private:
 	Bitu phys_page;
 };
 
-
-static INLINE void cache_addunsedblock(CacheBlock * block) {
-	block->cache.next=cache.block.free;
-	cache.block.free=block;
+static inline void cache_add_unused_block(CacheBlock *block)
+{
+	// block has become unused, add it to the freelist
+	block->cache.next = cache.block.free;
+	cache.block.free = block;
 }
 
 static CacheBlock * cache_getblock(void) {
@@ -391,8 +395,9 @@ void CacheBlock::Clear(void) {
 			else
 				LOG(LOG_CPU,LOG_ERROR)("Cache anomaly. please investigate");
 		}
-	} else 
-		cache_addunsedblock(this);
+	} else {
+		cache_add_unused_block(this);
+	}
 	if (crossblock) {
 		crossblock->crossblock=0;
 		crossblock->Clear();
@@ -423,7 +428,7 @@ static CacheBlock * cache_openblock(void) {
 		CacheBlock * tempblock=nextblock->cache.next;
 		if (nextblock->page.handler) 
 			nextblock->Clear();
-		cache_addunsedblock(nextblock);
+		cache_add_unused_block(nextblock);
 		nextblock=tempblock;
 	}
 skipresize:
@@ -495,11 +500,6 @@ static INLINE void cache_addq(Bit64u val) {
 }
 
 static void gen_return(BlockReturn retcode);
-
-static Bit8u * cache_code_start_ptr=NULL;
-static Bit8u * cache_code=NULL;
-static Bit8u * cache_code_link_blocks=NULL;
-static CacheBlock * cache_blocks=NULL;
 
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
 #if (C_HAVE_MPROTECT)
