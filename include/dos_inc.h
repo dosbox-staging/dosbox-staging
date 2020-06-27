@@ -50,6 +50,9 @@ struct DOS_Version {
 	Bit8u major,minor,revision;
 };
 
+typedef unsigned char       UINT8;
+typedef unsigned short      UINT16;
+typedef unsigned int        UINT32;
 
 #ifdef _MSC_VER
 #pragma pack (1)
