@@ -541,12 +541,14 @@ void PreparePCJRCartRom(void) {
 
 HostPt GetMemBase(void) { return MemBase; }
 
-class MEMORY:public Module_base{
+class MEMORY : public Module_base {
 private:
-	IO_ReadHandleObject ReadHandler;
-	IO_WriteHandleObject WriteHandler;
-public:	
-	MEMORY(Section* configuration):Module_base(configuration){
+	IO_ReadHandleObject ReadHandler{};
+	IO_WriteHandleObject WriteHandler{};
+
+public:
+	MEMORY(Section *configuration) : Module_base(configuration)
+	{
 		Bitu i;
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 	
@@ -608,14 +610,15 @@ public:
 		ReadHandler.Install(0x92,read_p92,IO_MB);
 		MEM_A20_Enable(false);
 	}
-	~MEMORY(){
+
+	~MEMORY()
+	{
 		delete [] MemBase;
 		delete [] memory.phandlers;
 		delete [] memory.mhandles;
 	}
-};	
+};
 
-	
 static MEMORY* test;	
 	
 static void MEM_ShutDown(Section * sec) {
