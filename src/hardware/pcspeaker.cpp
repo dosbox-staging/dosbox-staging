@@ -43,9 +43,7 @@ Amplitude levels for the speaker are computed as follows:
 4. When the PC Speaker generates square waves, we apply the above reductions
    again plus an additional RMS factor, knowing that square wave are
    exclusively at full amplitude, and carry twice the power of sine waves.
-
-TODO: sqrt() and log() are not available as a constexpr in C++14,
-      so hard-code them for now.
+   RMS * RMS == 0.5, so the square wave reduction becomes: - 5 dB / 2.
 */
 constexpr float AMPLITUDE_MINUS_5DB = 0.562341f;
 constexpr float AMPLITUDE_RMS = static_cast<float>(M_SQRT1_2);
@@ -54,9 +52,7 @@ constexpr float AMPLITUDE_POSITIVE = std::numeric_limits<int16_t>::max() *
 constexpr float AMPLITUDE_NEGATIVE = std::numeric_limits<int16_t>::min() *
                                      AMPLITUDE_MINUS_5DB * AMPLITUDE_RMS;
 constexpr float AMPLITUDE_NEUTRAL = (AMPLITUDE_POSITIVE + AMPLITUDE_NEGATIVE) / 2;
-constexpr float AMPLITUDE_SQUARE_WAVE_REDUCER = AMPLITUDE_MINUS_5DB *
-                                                AMPLITUDE_RMS * AMPLITUDE_RMS;
->>>>>>> 48b7cc8c... Move the PC Speaker volume defines to static const expressions
+constexpr float AMPLITUDE_SQUARE_WAVE_REDUCER = AMPLITUDE_MINUS_5DB / 2;
 
 #define DC_SILENCER_WAVES   5u
 #define DC_SILENCER_WAVE_HZ 30u
@@ -100,12 +96,44 @@ static bool SpeakerExists()
 	return spkr.chan != nullptr;
 }
 
+// Determines if the inbound wave is square by inspecting
+// current and previous states.
+static bool IsWaveSquare() {
+
+	// We have a square wave if either are true:
+
+	// 1. PIT mode is set, and the speaker ...
+	if (spkr.pit_mode) {
+		// previously generated a square wave
+		if (spkr.prev_mode == SPKR_PIT_ON)
+			return true;
+		// is currently generating a square wave
+		if (spkr.mode == SPKR_PIT_ON)
+			return true;
+	}
+
+	// 2. Speaker was in a neutral position and is transitioning ...
+	if (!spkr.prev_pos) {
+		// into a square wave
+		if (spkr.prev_mode != SPKR_PIT_ON && spkr.mode == SPKR_PIT_ON)
+			return true;
+		// out of a square wave
+		if (spkr.prev_mode == SPKR_PIT_ON && spkr.mode != SPKR_PIT_ON)
+			return true;
+	}
+	return false;
+}
+
 static void AddDelayEntry(float index,float vol) {
 	if (spkr.used==SPKR_ENTRIES) {
 		return;
 	}
 	spkr.entries[spkr.used].index=index;
-	spkr.entries[spkr.used].vol=vol;
+
+	if (IsWaveSquare())
+		vol *= AMPLITUDE_SQUARE_WAVE_REDUCER;
+
+	spkr.entries[spkr.used].vol = vol;
 	spkr.used++;
 
 #if 0
