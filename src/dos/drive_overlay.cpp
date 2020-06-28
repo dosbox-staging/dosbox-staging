@@ -95,11 +95,31 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 	/* Overlay: Check if folder is empty (findfirst/next, skipping . and .. and breaking on first file found ?), if so, then it is not too tricky. */
 	if (is_dir_only_in_overlay(dir)) {
 		//The simple case
-		char odir[CROSS_LEN];
+		char sdir[CROSS_LEN],odir[CROSS_LEN];
+		safe_strcpy(sdir,dir);
 		safe_strcpy(odir, overlaydir);
-		safe_strcat(odir, dir);
+		safe_strcat(odir, sdir);
 		CROSS_FILENAME(odir);
-		int temp = rmdir(odir);
+		int temp=-1;
+#if defined(_MSC_VER)						/* MS Visual C++ */
+		temp = _rmdir(odir);
+#else
+		temp = rmdir(odir);
+#endif
+		if (temp) {
+			char* temp_name = dirCache.GetExpandName(GetCrossedName(basedir,dir));
+			if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
+				safe_strcpy(sdir,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
+				safe_strcpy(odir,overlaydir);
+				safe_strcat(odir,sdir);
+				CROSS_FILENAME(odir);
+#if defined (_MSC_VER)
+				temp=_rmdir(odir);
+#else
+				temp=rmdir(odir);
+#endif
+			}
+		}
 		if (temp == 0) {
 			remove_DOSdir_from_cache(dir);
 			char newdir[CROSS_LEN];
@@ -178,10 +198,13 @@ bool Overlay_Drive::MakeDir(char * dir) {
 	safe_strcpy(newdir,overlaydir);
 	safe_strcat(newdir,sdir);
 	CROSS_FILENAME(newdir);
-#if defined (WIN32)						/* MS Visual C++ */
-	int temp = mkdir(newdir);
+	int temp=-1;
+#if defined(_MSC_VER)                                            /* MS Visual C++ */
+	temp = _mkdir(newdir);
+#elif defined (WIN32)
+	temp = mkdir(newdir);
 #else
-	int temp = mkdir(newdir,0775);
+	temp = mkdir(newdir,0775);
 #endif
 	if (temp==0) {
 		char fakename[CROSS_LEN];
@@ -600,10 +623,13 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 			} else {
 				//folder does not exist, make it
 				if (logoverlay) LOG_MSG("creating %s",dirnameoverlay);
-#if defined (WIN32)						/* MS Visual C++ */
-				int temp = mkdir(dirnameoverlay);
+				int temp=-1;
+#if defined(_MSC_VER)                                            /* MS Visual C++ */
+				temp = _mkdir(dirnameoverlay);
+#elif defined (WIN32)
+				temp = mkdir(dirnameoverlay);
 #else
-				int temp = mkdir(dirnameoverlay,0775);
+				temp = mkdir(dirnameoverlay,0775);
 #endif
 				if (temp != 0) return false;
 			}
@@ -1232,7 +1258,7 @@ bool Overlay_Drive::check_if_leading_is_deleted(const char* name){
 	const char* dname = strrchr(name,'\\');
 	if (dname != NULL) {
 		char dirname[CROSS_LEN];
-		safe_strncpy(dirname,name,dname - name);
+		strncpy(dirname,name,dname - name);
 		dirname[dname - name] = 0;
 		if (is_deleted_path(dirname)) return true;
 	}
