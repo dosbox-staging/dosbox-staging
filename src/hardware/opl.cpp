@@ -24,13 +24,13 @@
  * Ken Silverman's official web site: "http://www.advsys.net/ken"
  */
 
-
-#include <math.h>
-#include <stdlib.h> // rand()
-#include <string.h> // memset()
-#include "dosbox.h"
 #include "opl.h"
 
+#include <cmath>
+#include <stdlib.h> // rand()
+#include <string.h> // memset()
+
+#include "dosbox.h"
 
 static fltype recipsamp;	// inverse of sampling rate
 static Bit16s wavtable[WAVEPREC*3];	// wave form table
@@ -566,13 +566,19 @@ void adlib_init(Bit32u samplerate) {
 
 		// create waveform tables
 		for (i=0;i<(WAVEPREC>>1);i++) {
-			wavtable[(i<<1)  +WAVEPREC]	= (Bit16s)(16384*sin((fltype)((i<<1)  )*PI*2/WAVEPREC));
-			wavtable[(i<<1)+1+WAVEPREC]	= (Bit16s)(16384*sin((fltype)((i<<1)+1)*PI*2/WAVEPREC));
-			wavtable[i]					= wavtable[(i<<1)  +WAVEPREC];
+			wavtable[(i << 1) + WAVEPREC] = (Bit16s)(
+			        16384 * sin((fltype)((i << 1)) * M_PI * 2 / WAVEPREC));
+			wavtable[(i << 1) + 1 + WAVEPREC] = (Bit16s)(
+			        16384 *
+			        sin((fltype)((i << 1) + 1) * M_PI * 2 / WAVEPREC));
+			wavtable[i] = wavtable[(i << 1) + WAVEPREC];
 			// alternative: (zero-less)
-/*			wavtable[(i<<1)  +WAVEPREC]	= (Bit16s)(16384*sin((fltype)((i<<2)+1)*PI/WAVEPREC));
-			wavtable[(i<<1)+1+WAVEPREC]	= (Bit16s)(16384*sin((fltype)((i<<2)+3)*PI/WAVEPREC));
-			wavtable[i]					= wavtable[(i<<1)-1+WAVEPREC]; */
+			/*			wavtable[(i<<1)  +WAVEPREC]	=
+			   (Bit16s)(16384*sin((fltype)((i<<2)+1)*M_PI/WAVEPREC));
+			                        wavtable[(i<<1)+1+WAVEPREC] =
+			   (Bit16s)(16384*sin((fltype)((i<<2)+3)*M_PI/WAVEPREC));
+			                        wavtable[i]
+			   = wavtable[(i<<1)-1+WAVEPREC]; */
 		}
 		for (i=0;i<(WAVEPREC>>3);i++) {
 			wavtable[i+(WAVEPREC<<1)]		= wavtable[i+(WAVEPREC>>3)]-16384;

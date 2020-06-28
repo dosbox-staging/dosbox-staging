@@ -596,7 +596,7 @@ static void FPU_FLDL2E(void){
 
 static void FPU_FLDPI(void){
 	FPU_PREP_PUSH();
-	fpu.regs[TOP].d = PI;
+	fpu.regs[TOP].d = M_PI;
 }
 
 static void FPU_FLDLG2(void){
