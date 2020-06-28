@@ -160,4 +160,35 @@ bool ends_with(const std::string &suffix, const std::string &str) noexcept;
 
 bool is_executable_filename(const std::string &filename) noexcept;
 
+// Coarse but fast sine and cosine approximations. Accuracy ranges from 0.0005
+// to 0.098 and speed ranges from ~3 to 5x faster than floats with cosf/sinf and
+// ~10x faster than doubles with sin/cos.
+
+// Only consider using these if the benefit of adding sine and cosine even with
+// the reduced accuracy outweighs the loss of using an outright inferior
+// technique. For example, fitting a curve using sine and cosine versus no
+// curve-fitting using linear-only interpolation.
+constexpr float coarse_sin(float x)
+{
+	constexpr int fact_3 = 1 * 2 * 3;
+	constexpr int fact_5 = fact_3 * 4 * 5;
+	constexpr int fact_7 = fact_5 * 6 * 7;
+
+	const float x_pow_2 = x * x;
+	const float x_pow_3 = x_pow_2 * x;
+	const float x_pow_5 = x_pow_3 * x_pow_2;
+	const float x_pow_7 = x_pow_5 * x_pow_2;
+
+	const float taylor_1 = x - (x_pow_3 / fact_3);
+	const float taylor_2 = taylor_1 + (x_pow_5 / fact_5);
+	const float taylor_3 = taylor_2 - (x_pow_7 / fact_7);
+
+	return taylor_3;
+}
+
+constexpr float coarse_cos(float x)
+{
+	constexpr auto half_pi = static_cast<float>(M_PI_2);
+	return coarse_sin(x + half_pi);
+}
 #endif
