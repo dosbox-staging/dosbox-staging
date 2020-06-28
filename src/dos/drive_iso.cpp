@@ -298,7 +298,7 @@ bool isoDrive::FindNext(DOS_DTA &dta) {
 		if (IS_HIDDEN(FLAGS1)) findAttr |= DOS_ATTR_HIDDEN;
 
 		if (strcmp((char*)de.ident,(char*)fullname))
-			strcpy(lfindName,fullname);
+			safe_strcpy(lfindName,fullname);
 		else
 			GetLongName((char*)de.ident,lfindName);
 
@@ -523,7 +523,7 @@ int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data) {
 			if (de->ident[tmp - 1] == '.') de->ident[tmp - 1] = 0;
 		}
 	}
-	strcpy((char*)fullname,(char*)de->ident);
+	safe_strcpy(fullname,(char*)de->ident);
 	char* dotpos = strchr((char*)de->ident, '.');
 	if (dotpos!=NULL) {
 		if (strlen(dotpos)>4) dotpos[4]=0;
