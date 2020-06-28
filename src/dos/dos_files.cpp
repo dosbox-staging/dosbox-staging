@@ -68,7 +68,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 		return false;
 	}
 	char names[LFN_NAMELENGTH];
-	strcpy(names,name);
+	safe_strcpy(names,name);
 	char * name_int = names;
 	if (strlen(names)==14 && name_int[1]==':' && name_int[2]!='\\' && name_int[9]==' ' && name_int[10]=='.') {
 		for (unsigned int i=0;i<strlen(names);i++)
@@ -237,7 +237,7 @@ bool DOS_GetSFNPath(char const * const path,char * SFNPath,bool LFN) {
     Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
     if (!DOS_MakeName(path,fulldir,&drive)) return false;
     sprintf(SFNPath,"%c:\\",drive+'A');
-    strcpy(LFNPath,SFNPath);
+    safe_strcpy(LFNPath,SFNPath);
     p = fulldir;
     if (*p==0) return true;
 	RealPt save_dta=dos.dta();
@@ -258,9 +258,9 @@ bool DOS_GetSFNPath(char const * const path,char * SFNPath,bool LFN) {
 				lfn_filefind_handle=fbak;
 				dta.GetResult(name,lname,size,date,time,attr);
 				strcat(SFNPath,name);
-				strcat(LFNPath,lname);
+				safe_strcat(LFNPath,lname);
 				strcat(SFNPath,"\\");
-				strcat(LFNPath,"\\");
+				safe_strcat(LFNPath,"\\");
 			}
 			else {
 				lfn_filefind_handle=fbak;
@@ -269,9 +269,9 @@ bool DOS_GetSFNPath(char const * const path,char * SFNPath,bool LFN) {
 			}
 		} else {
 			strcat(SFNPath,p);
-			strcat(LFNPath,p);
+			safe_strcat(LFNPath,p);
 			strcat(SFNPath,"\\");
-			strcat(LFNPath,"\\");
+			safe_strcat(LFNPath,"\\");
 			*s = '\\';
 			p = s + 1;
 			break;
@@ -283,10 +283,10 @@ bool DOS_GetSFNPath(char const * const path,char * SFNPath,bool LFN) {
 		if (!strrchr(p,'*')&&!strrchr(p,'?')&&DOS_FindFirst(pdir,0xffff & ~DOS_ATTR_VOLUME,false)) {
 			dta.GetResult(name,lname,size,date,time,attr);
 			strcat(SFNPath,name);
-			strcat(LFNPath,lname);
+			safe_strcat(LFNPath,lname);
 		} else {
 			strcat(SFNPath,p);
-			strcat(LFNPath,p);
+			safe_strcat(LFNPath,p);
 		}
 		lfn_filefind_handle=fbak;
     }
@@ -778,15 +778,15 @@ bool DOS_UnlinkFile(char const * const name) {
 			return false;
 		}
 		if (!strchr(name,'\"')||!DOS_GetSFNPath(("\""+std::string(fullname)+"\"").c_str(), fname, false))
-			strcpy(fname, fullname);
+			safe_strcpy(fname, fullname);
 		char * find_last=strrchr(fname,'\\');
 		if (!find_last) {
 			dir[0]=0;
-			strcpy(pattern, fname);
+			safe_strcpy(pattern, fname);
 		} else {
 			*find_last=0;
-			strcpy(dir,fname);
-			strcpy(pattern, find_last+1);
+			safe_strcpy(dir,fname);
+			safe_strcpy(pattern, find_last+1);
 		}
 		int k=0;
 		for (int i=0;i<(int)strlen(pattern);i++)
@@ -798,9 +798,9 @@ bool DOS_UnlinkFile(char const * const name) {
 		DOS_DTA dta(dos.dta());
 		std::vector<std::string> cdirs;
 		cdirs.clear();
-		strcpy(spath, dir);
-		if (!DOS_GetSFNPath(dir, spath, false)) strcpy(spath, dir);
-		if (!strlen(spath)||spath[strlen(spath)-1]!='\\') strcat(spath, "\\");
+		safe_strcpy(spath, dir);
+		if (!DOS_GetSFNPath(dir, spath, false)) safe_strcpy(spath, dir);
+		if (!strlen(spath)||spath[strlen(spath)-1]!='\\') safe_strcat(spath, "\\");
 		std::string pfull=std::string(spath)+std::string(pattern);
 		int fbak=lfn_filefind_handle;
 		lfn_filefind_handle=LFN_FILEFIND_INTERNAL;
@@ -810,9 +810,9 @@ bool DOS_UnlinkFile(char const * const name) {
 			Bit16u find_date,find_time;Bit32u find_size;Bit8u find_attr;
 			dta.GetResult(find_name,lfind_name,find_size,find_date,find_time,find_attr);
 			if (!(find_attr & DOS_ATTR_DIRECTORY)&&strlen(find_name)&&!strchr(find_name, '*')&&!strchr(find_name, '?')) {
-				strcpy(temp, dir);
-				if (strlen(temp)&&temp[strlen(temp)-1]!='\\') strcat(temp, "\\");
-				strcat(temp, find_name);
+				safe_strcpy(temp, dir);
+				if (strlen(temp)&&temp[strlen(temp)-1]!='\\') safe_strcat(temp, "\\");
+				safe_strcat(temp, find_name);
 				cdirs.push_back(std::string(temp));
 			}
 		} while ((ret=DOS_FindNext())==true);
@@ -853,7 +853,7 @@ bool DOS_GetFileAttrEx(char const* const name, struct stat *status, Bit8u hdrive
 	Bit8u drive;
 	bool usehdrive=hdrive>=0&&hdrive<DOS_FILES;
 	if (usehdrive)
-		strcpy(fullname,name);
+		safe_strcpy(fullname,name);
 	else if (!DOS_MakeName(name, fullname, &drive))
 		return false;
 	return Drives[usehdrive?hdrive:drive]->GetFileAttrEx(fullname, status);

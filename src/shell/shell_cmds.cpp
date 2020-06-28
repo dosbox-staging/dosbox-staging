@@ -308,23 +308,23 @@ continue_1:
 	char path[LFN_NAMELENGTH+2], spath[LFN_NAMELENGTH+2], pattern[LFN_NAMELENGTH+2], *r=strrchr(full, '\\');
 	if (r!=NULL) {
 		*r=0;
-		strcpy(path, full);
-		strcat(path, "\\");
-		strcpy(pattern, r+1);
+		safe_strcpy(path, full);
+		safe_strcat(path, "\\");
+		safe_strcpy(pattern, r+1);
 		*r='\\';
 	} else {
-		strcpy(path, "");
-		strcpy(pattern, full);
+		safe_strcpy(path, "");
+		safe_strcpy(pattern, full);
 	}
 	int k=0;
 	for (int i=0;i<(int)strlen(pattern);i++)
 		if (pattern[i]!='\"')
 			pattern[k++]=pattern[i];
 	pattern[k]=0;
-	strcpy(spath, path);
+	safe_strcpy(spath, path);
 	if (strchr(args,'\"')||uselfn) {
-		if (!DOS_GetSFNPath(("\""+std::string(path)+"\\").c_str(), spath, false)) strcpy(spath, path);
-		if (!strlen(spath)||spath[strlen(spath)-1]!='\\') strcat(spath, "\\");
+		if (!DOS_GetSFNPath(("\""+std::string(path)+"\\").c_str(), spath, false)) safe_strcpy(spath, path);
+		if (!strlen(spath)||spath[strlen(spath)-1]!='\\') safe_strcat(spath, "\\");
 	}
 	std::string pfull=std::string(spath)+std::string(pattern);
 	int fbak=lfn_filefind_handle;
@@ -338,7 +338,7 @@ continue_1:
 	}
 	lfn_filefind_handle=fbak;
 	//end can't be 0, but if it is we'll get a nice crash, who cares :)
-	strcpy(sfull,full);
+	safe_strcpy(sfull,full);
 	char * end=strrchr(full,'\\')+1;*end=0;
 	char * lend=strrchr(sfull,'\\')+1;*lend=0;
 	dta=dos.dta();
@@ -462,33 +462,33 @@ void DOS_Shell::CMD_RENAME(char * args){
 			strcat(dummy, ".\\");
 	} else {
 		if (strchr(arg2,'\\')||strchr(arg2,':')) {SyntaxError();return;};
-		strcpy(dir_source, ".\\");
+		safe_strcpy(dir_source, ".\\");
 	}
 
-	strcpy(target,arg2);
+	safe_strcpy(target,arg2);
 
 	char path[LFN_NAMELENGTH+2], spath[LFN_NAMELENGTH+2], pattern[LFN_NAMELENGTH+2], full[LFN_NAMELENGTH+2], *r;
 	if (!DOS_Canonicalize(arg1,full)) return;
 	r=strrchr(full, '\\');
 	if (r!=NULL) {
 		*r=0;
-		strcpy(path, full);
-		strcat(path, "\\");
-		strcpy(pattern, r+1);
+		safe_strcpy(path, full);
+		safe_strcat(path, "\\");
+		safe_strcpy(pattern, r+1);
 		*r='\\';
 	} else {
-		strcpy(path, "");
-		strcpy(pattern, full);
+		safe_strcpy(path, "");
+		safe_strcpy(pattern, full);
 	}
 	int k=0;
 	for (int i=0;i<(int)strlen(pattern);i++)
 		if (pattern[i]!='\"')
 			pattern[k++]=pattern[i];
 	pattern[k]=0;
-	strcpy(spath, path);
+	safe_strcpy(spath, path);
 	if (strchr(arg1,'\"')||uselfn) {
-		if (!DOS_GetSFNPath(("\""+std::string(path)+"\\").c_str(), spath, false)) strcpy(spath, path);
-		if (!strlen(spath)||spath[strlen(spath)-1]!='\\') strcat(spath, "\\");
+		if (!DOS_GetSFNPath(("\""+std::string(path)+"\\").c_str(), spath, false)) safe_strcpy(spath, path);
+		if (!strlen(spath)||spath[strlen(spath)-1]!='\\') safe_strcat(spath, "\\");
 	}
 	RealPt save_dta=dos.dta();
 	dos.dta(dos.tables.tempdta);
@@ -508,12 +508,12 @@ void DOS_Shell::CMD_RENAME(char * args){
 			lfn_filefind_handle=fbak;
 
 			if(!(attr&DOS_ATTR_DIRECTORY && (!strcmp(name, ".") || !strcmp(name, "..")))) {
-				strcpy(dir_target, target);
+				safe_strcpy(dir_target, target);
 				removeChar(dir_target, '\"');
 				arg2=dir_target;
-				strcpy(sargs, dir_source);
+				safe_strcpy(sargs, dir_source);
 				if (uselfn) removeChar(sargs, '\"');
-				strcat(sargs, uselfn?lname:name);
+				safe_strcat(sargs, uselfn?lname:name);
 				if (uselfn&&strchr(arg2,'*')&&!strchr(arg2,'.')) strcat(arg2, ".*");
 				char *dot1=strrchr(uselfn?lname:name,'.'), *dot2=strrchr(arg2,'.'), *star;
 				if (dot2==NULL) {
@@ -534,12 +534,12 @@ void DOS_Shell::CMD_RENAME(char * args){
 				} else {
 					if (dot1) {
 						*dot1=0;
-						strcpy(tname1, uselfn?lname:name);
+						safe_strcpy(tname1, uselfn?lname:name);
 						*dot1='.';
 					} else
-						strcpy(tname1, uselfn?lname:name);
+						safe_strcpy(tname1, uselfn?lname:name);
 					*dot2=0;
-					strcpy(tname2, arg2);
+					safe_strcpy(tname2, arg2);
 					*dot2='.';
 					star=strchr(tname2,'*');
 					if (strchr(tname2,'?')) {
@@ -556,8 +556,8 @@ void DOS_Shell::CMD_RENAME(char * args){
 					}
 					removeChar(tname2, '?');
 					if (dot1) {
-						strcpy(text1, dot1+1);
-						strcpy(text2, dot2+1);
+						safe_strcpy(text1, dot1+1);
+						safe_strcpy(text2, dot2+1);
 						star=strchr(text2,'*');
 						if (strchr(text2,'?')) {
 							for (unsigned int i=0; i<(uselfn?LFN_NAMELENGTH:DOS_NAMELENGTH) && i<(star?star-text2:strlen(text2)); i++) {
@@ -572,7 +572,7 @@ void DOS_Shell::CMD_RENAME(char * args){
 								*star=0;
 						}
 					} else {
-						strcpy(text2, dot2+1);
+						safe_strcpy(text2, dot2+1);
 						if (strchr(text2,'?')||strchr(text2,'*')) {
 							for (unsigned int i=0; i<(uselfn?LFN_NAMELENGTH:DOS_NAMELENGTH) && i<(star?star-text2:strlen(text2)); i++) {
 								if (*(text2+i)=='*') {
@@ -583,14 +583,14 @@ void DOS_Shell::CMD_RENAME(char * args){
 						}
 					}
 					removeChar(text2, '?');
-					strcpy(tfull, tname2);
-					strcat(tfull, ".");
-					strcat(tfull, text2);
+					safe_strcpy(tfull, tname2);
+					safe_strcat(tfull, ".");
+					safe_strcat(tfull, text2);
 					arg2=tfull;
 				}
-				strcpy(targs, dir_source);
+				safe_strcpy(targs, dir_source);
 				if (uselfn) removeChar(targs, '\"');
-				strcat(targs, arg2);
+				safe_strcat(targs, arg2);
 				sources.push_back(uselfn?((sargs[0]!='"'?"\"":"")+std::string(sargs)+(sargs[strlen(sargs)-1]!='"'?"\"":"")).c_str():sargs);
 				sources.push_back(uselfn?((targs[0]!='"'?"\"":"")+std::string(targs)+(targs[strlen(targs)-1]!='"'?"\"":"")).c_str():targs);
 				sources.push_back(strlen(sargs)>2&&sargs[0]=='.'&&sargs[1]=='\\'?sargs+2:sargs);
@@ -873,7 +873,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 			}
 		}
 	}
-    if (*(sargs+strlen(sargs)-1) != '\\') strcat(sargs,"\\");
+    if (*(sargs+strlen(sargs)-1) != '\\') safe_strcat(sargs,"\\");
 
 	Bit32u cbyte_count=0,cfile_count=0,w_count=0;
 	int fbak=lfn_filefind_handle;
@@ -1021,7 +1021,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 	}
 	if (optS) {
 		size_t len=strlen(sargs);
-		strcat(sargs, "*.*");
+		safe_strcat(sargs, "*.*");
 		bool ret=DOS_FindFirst(sargs,0xffff & ~DOS_ATTR_VOLUME);
 		*(sargs+len)=0;
 		if (ret) {
@@ -1032,12 +1032,12 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 				dta.GetResult(result.name,result.lname,result.size,result.date,result.time,result.attr);
 
 				if(result.attr&DOS_ATTR_DIRECTORY && strcmp(result.name, ".")&&strcmp(result.name, "..")) {
-					strcat(sargs, result.name);
-					strcat(sargs, "\\");
+					safe_strcat(sargs, result.name);
+					safe_strcat(sargs, "\\");
 					char *fname = strrchr(args, '\\');
 					if (fname==NULL) fname=args;
 					else fname++;
-					strcat(sargs, fname);
+					safe_strcat(sargs, fname);
 					cdirs.push_back((sargs[0]!='"'&&sargs[strlen(sargs)-1]=='"'?"\"":"")+std::string(sargs));
 					*(sargs+len)=0;
 				}
@@ -1189,7 +1189,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 		return;
 	}
 	if (!(uselfn&&!optZ&&strchr(sargs,'*'))&&!strrchr(sargs,'.'))
-		strcat(sargs,".*");	// if no extension, get them all
+		safe_strcat(sargs,".*");	// if no extension, get them all
     sprintf(args,"\"%s\"",sargs);
 
 	/* Make a full path in the args */
@@ -1202,7 +1202,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 		return;
 	}
-    if (*(sargs+strlen(sargs)-1) != '\\') strcat(sargs,"\\");
+    if (*(sargs+strlen(sargs)-1) != '\\') safe_strcat(sargs,"\\");
 
 	const char drive_letter = path[0];
 	const size_t drive_idx = drive_letter - 'A';
@@ -1430,7 +1430,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 		std::string::size_type idx = line.find('=');
 		std::string value=line.substr(idx +1 , std::string::npos);
 		char copycmd[CROSS_LEN];
-		strcpy(copycmd, value.c_str());
+		safe_strcpy(copycmd, value.c_str());
 		if (ScanCMDBool(copycmd, "Y") && !ScanCMDBool(copycmd, "-Y")) optY = true;
 	}
 	if (ScanCMDBool(args,"-Y")) optY=false;
@@ -1481,7 +1481,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 					find_last=strrchr(source_x,'\\');
 					if (find_last==NULL) find_last=source_x;
 					else find_last++;
-					if (strlen(find_last)>0&&source_x[source_x_len-1]=='*'&&strchr(find_last, '.')==NULL) strcat(source_x, ".*");
+					if (strlen(find_last)>0&&source_x[source_x_len-1]=='*'&&strchr(find_last, '.')==NULL) safe_strcat(source_x, ".*");
 				}
 			}
 			if (!has_drive_spec  && !strpbrk(source_p,"*?") ) { //doubt that fu*\*.* is valid
@@ -1490,12 +1490,12 @@ void DOS_Shell::CMD_COPY(char * args) {
 					bool root=false;
 					if (strlen(spath)==3&&spath[1]==':'&&spath[2]=='\\') {
 						root=true;
-						strcat(spath, "*.*");
+						safe_strcat(spath, "*.*");
 					}
 					if (DOS_FindFirst(spath,0xffff & ~DOS_ATTR_VOLUME)) {
                     dta.GetResult(name,lname,size,date,time,attr);
 					if (attr & DOS_ATTR_DIRECTORY || root)
-						strcat(source_x,"\\*.*");
+						safe_strcat(source_x,"\\*.*");
 					}
 				}
 			}
@@ -1545,7 +1545,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 			dos.dta(save_dta);
 			return;
 		}
-		strcpy(pathSource,pathSourcePre);
+		safe_strcpy(pathSource,pathSourcePre);
 		if (uselfn) sprintf(pathSource,"\"%s\"",pathSourcePre);
 		// cut search pattern
 		char* pos = strrchr(pathSource,'\\');
@@ -1565,7 +1565,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 			if (DOS_FindFirst(pathTarget,0xffff & ~DOS_ATTR_VOLUME)) {
 				dta.GetResult(name,lname,size,date,time,attr);
 				if (attr & DOS_ATTR_DIRECTORY) {
-					strcat(pathTarget,"\\");
+					safe_strcat(pathTarget,"\\");
 					target_is_file = false;
 				}
 			}
@@ -1636,8 +1636,8 @@ void DOS_Shell::CMD_COPY(char * args) {
 			if ((attr & DOS_ATTR_DIRECTORY)==0) {
                 Bit16u ftime,fdate;
 
-				strcpy(nameSource,pathSource);
-				strcat(nameSource,name);
+				safe_strcpy(nameSource,pathSource);
+				safe_strcat(nameSource,name);
 
 				// Open Source
 				if (DOS_OpenFile(nameSource,0,&sourceHandle)) {
@@ -1646,33 +1646,33 @@ void DOS_Shell::CMD_COPY(char * args) {
                     if (!ftdvalid) LOG_MSG("WARNING: COPY cannot obtain file date/time");
 
 					// Create Target or open it if in concat mode
-					strcpy(nameTarget,q);
-                    strcat(nameTarget,pathTarget);
+					safe_strcpy(nameTarget,q);
+					safe_strcat(nameTarget,pathTarget);
 
 					if (ext) { // substitute parts if necessary
 						if (!ext[-1]) { // substitute extension
-							strcat(nameTarget, (uselfn?lname:name) + replacementOffset);
+							safe_strcat(nameTarget, (uselfn?lname:name) + replacementOffset);
 							char *p=strchr(nameTarget, '.');
 							strcpy(p==NULL?nameTarget+strlen(nameTarget):p, ext);
 						}
 						if (ext[1] == '*') { // substitute name (so just add the extension)
-							strcat(nameTarget, strchr(uselfn?lname:name, '.'));
+							safe_strcat(nameTarget, strchr(uselfn?lname:name, '.'));
 						}
 					}
 
-                    if (nameTarget[strlen(nameTarget)-1]=='\\') strcat(nameTarget,uselfn?lname:name);
-                    strcat(nameTarget,q);
+                    if (nameTarget[strlen(nameTarget)-1]=='\\') safe_strcat(nameTarget,uselfn?lname:name);
+                    safe_strcat(nameTarget,q);
 
 					//Special variable to ensure that copy * a_file, where a_file is not a directory concats.
 					bool special = second_file_of_current_source && target_is_file && strchr(target.filename.c_str(), '*')==NULL;
 					second_file_of_current_source = true;
 					if (special) oldsource.concat = true;
 					if (*nameSource&&*nameTarget) {
-						strcpy(nametmp, nameSource[0]!='\"'&&nameTarget[0]=='\"'?"\"":"");
-						strcat(nametmp, nameSource);
-						strcat(nametmp, nameSource[strlen(nameSource)-1]!='\"'&&nameTarget[strlen(nameTarget)-1]=='\"'?"\"":"");
+						safe_strcpy(nametmp, nameSource[0]!='\"'&&nameTarget[0]=='\"'?"\"":"");
+						safe_strcat(nametmp, nameSource);
+						safe_strcat(nametmp, nameSource[strlen(nameSource)-1]!='\"'&&nameTarget[strlen(nameTarget)-1]=='\"'?"\"":"");
 					} else
-						strcpy(nametmp, nameSource);
+						safe_strcpy(nametmp, nameSource);
 					if (!oldsource.concat && (!strcasecmp(nameSource, nameTarget) || !strcasecmp(nametmp, nameTarget)))
 						{
 						WriteOut("File cannot be copied onto itself\r\n");
@@ -1885,23 +1885,23 @@ void DOS_Shell::CMD_IF(char * args) {
 			r=strrchr(full, '\\');
 			if (r!=NULL) {
 				*r=0;
-				strcpy(path, full);
-				strcat(path, "\\");
-				strcpy(pattern, r+1);
+				safe_strcpy(path, full);
+				safe_strcat(path, "\\");
+				safe_strcpy(pattern, r+1);
 				*r='\\';
 			} else {
-				strcpy(path, "");
-				strcpy(pattern, full);
+				safe_strcpy(path, "");
+				safe_strcpy(pattern, full);
 			}
 			int k=0;
 			for (int i=0;i<(int)strlen(pattern);i++)
 				if (pattern[i]!='\"')
 					pattern[k++]=pattern[i];
 			pattern[k]=0;
-			strcpy(spath, path);
+			safe_strcpy(spath, path);
 			if (strchr(word,'\"')||uselfn) {
-				if (!DOS_GetSFNPath(("\""+std::string(path)+"\\").c_str(), spath, false)) strcpy(spath, path);
-				if (!strlen(spath)||spath[strlen(spath)-1]!='\\') strcat(spath, "\\");
+				if (!DOS_GetSFNPath(("\""+std::string(path)+"\\").c_str(), spath, false)) safe_strcpy(spath, path);
+				if (!strlen(spath)||spath[strlen(spath)-1]!='\\') safe_strcat(spath, "\\");
 			}
 			RealPt save_dta=dos.dta();
 			dos.dta(dos.tables.tempdta);
@@ -2152,14 +2152,14 @@ void DOS_Shell::CMD_SUBST(char * args) {
 		command.FindCommand(2,arg);
 		if ((arg == "/D") || (arg == "/d")) {
 			if (!Drives[temp_str[0]-'A'] ) throw 1; //targetdrive not in use
-			strcat(mountstring,"-u ");
-			strcat(mountstring,temp_str);
+			safe_strcat(mountstring,"-u ");
+			safe_strcat(mountstring,temp_str);
 			this->ParseLine(mountstring);
 			return;
 		}
 		if (Drives[temp_str[0]-'A'] ) throw 0; //targetdrive in use
-		strcat(mountstring,temp_str);
-		strcat(mountstring," ");
+		safe_strcat(mountstring,temp_str);
+		safe_strcat(mountstring," ");
 
 		Bit8u drive;char fulldir[LFN_NAMELENGTH+2];
 		if (!DOS_MakeName(const_cast<char*>(arg.c_str()),fulldir,&drive)) throw 0;
@@ -2167,12 +2167,12 @@ void DOS_Shell::CMD_SUBST(char * args) {
 		if ( ( ldp=dynamic_cast<localDrive*>(Drives[drive])) == 0 ) throw 0;
 		char newname[CROSS_LEN];
 		safe_strcpy(newname, ldp->getBasedir());
-		strcat(newname,fulldir);
+		safe_strcat(newname,fulldir);
 		CROSS_FILENAME(newname);
 		ldp->dirCache.ExpandName(newname);
-		strcat(mountstring,"\"");
-		strcat(mountstring, newname);
-		strcat(mountstring,"\"");
+		safe_strcat(mountstring,"\"");
+		safe_strcat(mountstring, newname);
+		safe_strcat(mountstring,"\"");
 		this->ParseLine(mountstring);
 	}
 	catch(int a){

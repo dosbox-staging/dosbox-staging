@@ -347,7 +347,7 @@ void DOS_Shell::InputCommand(char * line) {
 						if ((strchr(uselfn?lname:name,' ')!=NULL&&q/2*2==q)||r)
 							sprintf(qlname,q/2*2!=q?"%s\"":"\"%s\"",uselfn?lname:name);
 						else
-							strcpy(qlname,uselfn?lname:name);
+							safe_strcpy(qlname,uselfn?lname:name);
 						// add result to completion list
 
 						if (strcmp(name, ".") && strcmp(name, "..")) {
@@ -669,7 +669,7 @@ const char *DOS_Shell::Which(char *name) const
 			if (uselfn&&len>3) {
 				if (path[len - 1]=='\\') path[len - 1]=0;
 				if (DOS_GetSFNPath(("\""+std::string(path)+"\"").c_str(), s_ret, false))
-					strcpy(path, s_ret);
+					safe_strcpy(path, s_ret);
 				len = strlen(path);
 			}
 

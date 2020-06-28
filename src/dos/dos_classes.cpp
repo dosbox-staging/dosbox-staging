@@ -388,8 +388,8 @@ void DOS_DTA::SetResult(const char * _name,const char * _lname,Bit32u _size,Bit1
 	fd.mdate=_date;
 	fd.mtime=_time;
 	fd.attr=_attr;
-	strcpy(fd.lname,_lname);
-	strcpy(fd.sname,_name);
+	safe_strcpy(fd.lname,_lname);
+	safe_strcpy(fd.sname,_name);
 	if (!strcmp(fd.lname,fd.sname)) fd.sname[0]=0;
 	if (lfn_filefind_handle>=LFN_FILEFIND_MAX) {
 		MEM_BlockWrite(pt+offsetof(sDTA,name),(void *)_name,strlen(_name)+1);

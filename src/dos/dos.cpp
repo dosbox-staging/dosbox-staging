@@ -1870,13 +1870,13 @@ void DOS_Int21_71aa(char* name1, const char* name2) {
 			} else {
 				MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 				char mountstring[DOS_PATHLENGTH+CROSS_LEN+20];
-				strcpy(mountstring,"MOUNT ");
+				safe_strcpy(mountstring,"MOUNT ");
 				char temp_str[3] = { 0,0,0 };
 				temp_str[0]=(char)('A'+reg_bl-1);
 				temp_str[1]=' ';
-				strcat(mountstring,temp_str);
-				strcat(mountstring,name1);
-				strcat(mountstring," >nul");
+				safe_strcat(mountstring,temp_str);
+				safe_strcat(mountstring,name1);
+				safe_strcat(mountstring," >nul");
 				DOS_Shell temp;
 				temp.ParseLine(mountstring);
 				if (Drives[drive]) {
@@ -1897,11 +1897,11 @@ void DOS_Int21_71aa(char* name1, const char* name2) {
 				CALLBACK_SCF(true);
 			} else {
 				char mountstring[DOS_PATHLENGTH+CROSS_LEN+20];
-				strcpy(mountstring,"MOUNT -u ");
+				safe_strcpy(mountstring,"MOUNT -u ");
 				char temp_str[2] = { 0,0 };
 				temp_str[0]=(char)('A'+reg_bl-1);
-				strcat(mountstring,temp_str);
-				strcat(mountstring," >nul");
+				safe_strcat(mountstring,temp_str);
+				safe_strcat(mountstring," >nul");
 				DOS_Shell temp;
 				temp.ParseLine(mountstring);
 				if (!Drives[drive]) {

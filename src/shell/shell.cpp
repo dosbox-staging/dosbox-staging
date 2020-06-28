@@ -666,7 +666,25 @@ void SHELL_Init() {
 	        "Type CD drive: to display the current directory in the specified drive.\n"
 	        "Type CD without parameters to display the current drive and directory.\n");
 	MSG_Add("SHELL_CMD_CLS_HELP","Clear screen.\n");
-	MSG_Add("SHELL_CMD_DIR_HELP","Directory View.\n");
+	MSG_Add("SHELL_CMD_DIR_HELP","Displays a list of files and subdirectories in a directory.\n");
+	MSG_Add("SHELL_CMD_DIR_HELP_LONG","DIR [drive:][path][filename] [/[W|B]] [/S] [/P] [/A[D|H|S|R|A]] [/O[N|E|G|S|D]]\n\n"
+		   "  [drive:][path][filename]\n"
+		   "              Specifies drive, directory, and/or files to list.\n"
+		   "  /W          Uses wide list format.\n"
+		   "  /B          Uses bare format (no heading information or summary).\n"
+		   "  /S          Displays files in specified directory and all subdirectories.\n"
+		   "  /P          Pauses after each screenful of information.\n"
+		   "  /A          Displays files with specified attributes.\n"
+		   "  attributes   D  Directories                R  Read-only files\n"
+		   "               H  Hidden files               A  Files ready for archiving\n"
+		   "               S  System files               -  Prefix meaning not\n"
+		   "  /O          List by files in sorted order.\n"
+		   "  sortorder    N  By name (alphabetic)       S  By size (smallest first)\n"
+		   "               E  By extension (alphabetic)  D  By date & time (earlist first)\n"
+		   "               G  Group directories first    -  Prefix to reverse order\n\n"
+		   "Switches may be preset in the DIRCMD environment variable.  Override\n"
+		   "preset switches by prefixing any switch with - (hyphen)--for example, /-W.\n"
+		   );
 	MSG_Add("SHELL_CMD_ECHO_HELP","Display messages and enable/disable command echoing.\n");
 	MSG_Add("SHELL_CMD_EXIT_HELP","Exit from the shell.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP","Show help.\n");
@@ -685,18 +703,22 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_REM_HELP","Add comments in a batch file.\n");
 	MSG_Add("SHELL_CMD_REM_HELP_LONG","REM [comment]\n");
 	MSG_Add("SHELL_CMD_NO_WILD","This is a simple version of the command, no wildcards allowed!\n");
-	MSG_Add("SHELL_CMD_RENAME_HELP","Renames one or more files.\n");
-	MSG_Add("SHELL_CMD_RENAME_HELP_LONG","RENAME [drive:][path]filename1 filename2.\n"
-	        "REN [drive:][path]filename1 filename2.\n\n"
-	        "Note that you can not specify a new drive or path for your destination file.\n");
+	MSG_Add("SHELL_CMD_RENAME_HELP","Renames a file/directory or files.\n");
+	MSG_Add("SHELL_CMD_RENAME_HELP_LONG","RENAME [drive:][path][directoryname1 | filename1] [directoryname2 | filename2]\n"
+	        "REN [drive:][path][directoryname1 | filename1] [directoryname2 | filename2]\n\n"
+	        "Note that you can not specify a new drive or path for your destination.\n");
 	MSG_Add("SHELL_CMD_DELETE_HELP","Removes one or more files.\n");
 	MSG_Add("SHELL_CMD_COPY_HELP","Copy files.\n");
 	MSG_Add("SHELL_CMD_CALL_HELP","Start a batch file from within another batch file.\n");
 	MSG_Add("SHELL_CMD_SUBST_HELP","Assign an internal directory to a drive.\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP","Loads a program into upper memory (requires xms=true,umb=true).\n");
 
-	MSG_Add("SHELL_CMD_LS_HELP", "List directory contents.\n");
-	MSG_Add("SHELL_CMD_LS_HELP_LONG", "ls [/?] [PATTERN]\n");
+	MSG_Add("SHELL_CMD_LS_HELP", "Lists directory contents.\n");
+	MSG_Add("SHELL_CMD_LS_HELP_LONG", "LS [drive:][path][filename] [/A] [/L] [/P] [/Z]\n\n"
+	        "  /A\tLists hidden and system files also.\n"
+	        "  /L\tLists names one per line.\n"
+		    "  /P\tPauses after each screenful of information.\n"
+			"  /Z\tDisplays short names even if LFN support is available.\n");
 	MSG_Add("SHELL_CMD_LS_PATH_ERR",
 	        "ls: cannot access '%s': No such file or directory\n");
 
@@ -709,7 +731,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_ATTRIB_HELP","Does nothing. Provided for compatibility.\n");
 	MSG_Add("SHELL_CMD_PATH_HELP","Provided for compatibility.\n");
 	MSG_Add("SHELL_CMD_VER_HELP","View and set the reported DOS version.\n");
-	MSG_Add("SHELL_CMD_VER_VER","DOSBox version %s. Reported DOS version %d.%02d.\n");
+	MSG_Add("SHELL_CMD_VER_VER","dosbox-staging version %s. Reported DOS version %d.%02d.\n");
 
 	/* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
