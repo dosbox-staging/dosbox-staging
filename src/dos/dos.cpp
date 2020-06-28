@@ -1197,7 +1197,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 
 	case 0x71:					/* Unknown probably 4dos detection */
-		printf("DOS:MS-DOS 7.x long file name support call %2X\n",reg_al);
+		printf("DOS:MS-DOS 7+ long file name support call %2X\n",reg_al);
 		if (!uselfn) {
 				reg_ax=0x7100;
 				CALLBACK_SCF(true); //Check this! What needs this ? See default case

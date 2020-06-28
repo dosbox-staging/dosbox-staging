@@ -736,8 +736,6 @@ void SHELL_Init() {
 	        "  /L\tLists names one per line.\n"
 		    "  /P\tPauses after each screenful of information.\n"
 			"  /Z\tDisplays short names even if LFN support is available.\n");
-	MSG_Add("SHELL_CMD_LS_PATH_ERR",
-	        "ls: cannot access '%s': No such file or directory\n");
 
 	MSG_Add("SHELL_CMD_CHOICE_HELP","Waits for a keypress and sets ERRORLEVEL.\n");
 	MSG_Add("SHELL_CMD_CHOICE_HELP_LONG","CHOICE [/C:choices] [/N] [/S] text\n"
