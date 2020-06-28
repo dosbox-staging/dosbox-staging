@@ -305,7 +305,7 @@ bool DOS_GetCurrentDir(Bit8u drive,char * const buffer, bool LFN) {
 	}
 
 	if (LFN && uselfn) {
-        char cdir[LFN_NAMELENGTH+2],ldir[LFN_NAMELENGTH+2];
+        char cdir[LFN_NAMELENGTH+6],ldir[LFN_NAMELENGTH+2];
 
 		if (strchr(Drives[drive]->curdir,' '))
 			sprintf(cdir,"\"%c:\\%s\"",drive+'A',Drives[drive]->curdir);
@@ -383,7 +383,7 @@ bool DOS_RemoveDir(char const * const dir) {
 	char currdir[DOS_PATHLENGTH]= { 0 }, lcurrdir[LFN_NAMELENGTH+2]= { 0 };
     DOS_GetCurrentDir(drive + 1 ,currdir, false);
     DOS_GetCurrentDir(drive + 1 ,lcurrdir, true);
-    if(strcasecmp(currdir,fulldir) == 0 || uselfn && strcasecmp(lcurrdir,fulldir) == 0) {
+    if(strcasecmp(currdir,fulldir) == 0 || (uselfn && strcasecmp(lcurrdir,fulldir) == 0)) {
 		DOS_SetError(DOSERR_REMOVE_CURRENT_DIRECTORY);
 		return false;
 	}
@@ -479,7 +479,7 @@ bool DOS_FindFirst(const char *search, uint16_t attr, bool fcb_findfirst)
 bool DOS_FindNext(void) {
 	DOS_DTA dta(dos.dta());
 	Bit8u i = dta.GetSearchDrive();
-	if(uselfn && i >= DOS_DRIVES || !Drives[i]) i=sdrive;
+	if((uselfn && i >= DOS_DRIVES) || !Drives[i]) i=sdrive;
 	if(i >= DOS_DRIVES || !Drives[i]) {
 		/* Corrupt search. */
 		LOG(LOG_FILES,LOG_ERROR)("Corrupt search!!!!");
