@@ -443,10 +443,13 @@ bool localDrive::MakeDir(char * dir) {
 	safe_strcpy(newdir, basedir);
 	safe_strcat(newdir, dir);
 	CROSS_FILENAME(newdir);
-#if defined (WIN32)						/* MS Visual C++ */
-	int temp=mkdir(dirCache.GetExpandName(newdir));
+	int temp=-1;
+#if defined(_MSC_VER)					/* MS Visual C++ */
+	temp=_mkdir(dirCache.GetExpandName(newdir));
+#elif defined (WIN32)
+	temp=mkdir(dirCache.GetExpandName(newdir));
 #else
-	int temp=mkdir(dirCache.GetExpandName(newdir),0775);
+	temp=mkdir(dirCache.GetExpandName(newdir),0775);
 #endif
 	if (temp==0) dirCache.CacheOut(newdir,true);
 
@@ -458,7 +461,12 @@ bool localDrive::RemoveDir(char * dir) {
 	safe_strcpy(newdir, basedir);
 	safe_strcat(newdir, dir);
 	CROSS_FILENAME(newdir);
-	int temp=rmdir(dirCache.GetExpandName(newdir));
+	int temp=-1;
+#if defined(_MSC_VER)
+	temp=_rmdir(dirCache.GetExpandName(newdir));
+#else
+	temp=rmdir(dirCache.GetExpandName(newdir));
+#endif
 	if (temp==0) dirCache.DeleteEntry(newdir,true);
 	return (temp==0);
 }
