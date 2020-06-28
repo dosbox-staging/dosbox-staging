@@ -188,6 +188,9 @@ installed and the license agreed to:
 - GCC (specific version, ie: 10): `./scripts/build.sh -c gcc -v 10 -t release -m
   lto`
 
+  :warning: Raspberry Pi 4 users should avoid link-time-optimized builds for
+  now. Simply drop the `-m lto` in your build line.
+
 1. To build a debug binary, use `-t debug` in place of `-t release -m lto`.
 
 ## Haiku Procedures
