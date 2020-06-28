@@ -13,11 +13,11 @@ jobs:
           - name: MSVC 32-bit
             vs-platform: x86
             vcpkg-triplet: x86-windows
-            max_warnings: 599
+            max_warnings: 516
           - name: MSVC 64-bit
             vs-platform: x64
             vcpkg-triplet: x64-windows
-            max_warnings: 2457
+            max_warnings: 2374
     steps:
       - uses:  actions/checkout@v2
       - name:  Install packages
