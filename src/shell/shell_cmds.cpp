@@ -834,8 +834,7 @@ Bitu p_count;
 std::vector<std::string> dirs, adirs;
 
 static size_t GetPauseCount() {
-	Bit8u page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
-	return (CURSOR_POS_ROW(page) > 2u) ? (CURSOR_POS_ROW(page) - 2u) : 22u; /* <- FIXME: Please clarify this logic */
+	return (real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) > 2u) ? (real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) - 2u) : 22u;
 }
 
 static bool dirPaused(DOS_Shell * shell, Bitu w_size, bool optP, bool optW) {
