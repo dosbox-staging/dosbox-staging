@@ -708,7 +708,24 @@ void SHELL_Init() {
 	        "REN [drive:][path][directoryname1 | filename1] [directoryname2 | filename2]\n\n"
 	        "Note that you can not specify a new drive or path for your destination.\n");
 	MSG_Add("SHELL_CMD_DELETE_HELP","Removes one or more files.\n");
+	MSG_Add("SHELL_CMD_DELETE_HELP_LONG","DEL [/P] [/Q] names\n"
+		   "ERASE [/P] [/Q] names\n\n"
+		   "  names\t\tSpecifies a list of one or more files or directories.\n"
+		   "\t\tWildcards may be used to delete multiple files. If a\n"
+		   "\t\tdirectory is specified, all files within the directory\n"
+		   "\t\twill be deleted.\n"
+		   "  /P\t\tPrompts for confirmation before deleting one or more files.\n"
+		   "  /Q\t\tQuiet mode, do not ask if ok to delete on global wildcard\n");
 	MSG_Add("SHELL_CMD_COPY_HELP","Copy files.\n");
+	MSG_Add("SHELL_CMD_COPY_HELP_LONG","COPY [/Y | /-Y] source [+source [+ ...]] [destination]\n\n"
+		   "  source\tSpecifies the file or files to be copied.\n"
+		   "  destination\tSpecifies the directory and/or filename for the new file(s).\n"
+		   "  /Y\t\tSuppresses prompting to confirm you want to overwrite an\n\t\texisting destination file.\n"
+		   "  /-Y\t\tCauses prompting to confirm you want to overwrite an\n\t\texisting destination file.\n\n"
+		   "The switch /Y may be preset in the COPYCMD environment variable.\n"
+		   "This may be overridden with /-Y on the command line.\n\n"
+		   "To append files, specify a single file for destination, but multiple files\n"
+		   "for source (using wildcards or file1+file2+file3 format).\n");
 	MSG_Add("SHELL_CMD_CALL_HELP","Start a batch file from within another batch file.\n");
 	MSG_Add("SHELL_CMD_SUBST_HELP","Assign an internal directory to a drive.\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP","Loads a program into upper memory (requires xms=true,umb=true).\n");

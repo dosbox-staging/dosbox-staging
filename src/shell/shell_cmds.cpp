@@ -212,7 +212,6 @@ void DOS_Shell::CMD_CLS(char * args) {
 void DOS_Shell::CMD_DELETE(char * args) {
 	HELP("DELETE");
 	bool optP=ScanCMDBool(args,"P");
-	bool optF=ScanCMDBool(args,"F");
 	bool optQ=ScanCMDBool(args,"Q");
 
 	char * rem=ScanCMDRemain(args);
@@ -350,7 +349,7 @@ continue_1:
 	lfn_filefind_handle=uselfn?LFN_FILEFIND_INTERNAL:LFN_FILEFIND_NONE;
 	while (res) {
 		dta.GetResult(name,lname,size,date,time,attr);
-		if (!optF && (attr & DOS_ATTR_READ_ONLY) && !(attr & DOS_ATTR_DIRECTORY)) {
+		if ((attr & DOS_ATTR_READ_ONLY) && !(attr & DOS_ATTR_DIRECTORY)) {
 			exist=true;
 			strcpy(end,name);
 			strcpy(lend,lname);
@@ -371,12 +370,7 @@ continue_1:
 			}
 			if (strlen(full)) {
 				std::string pfull=(uselfn||strchr(full, ' ')?(full[0]!='"'?"\"":""):"")+std::string(full)+(uselfn||strchr(full, ' ')?(full[strlen(full)-1]!='"'?"\"":""):"");
-				bool reset=false;
-				if (optF && (attr & DOS_ATTR_READ_ONLY)&&DOS_SetFileAttr(pfull.c_str(), attr & ~DOS_ATTR_READ_ONLY)) reset=true;
-				if (!DOS_UnlinkFile(pfull.c_str())) {
-					if (optF&&reset) DOS_SetFileAttr(pfull.c_str(), attr);
-					WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),uselfn?sfull:full);
-				}
+				if (!DOS_UnlinkFile(pfull.c_str())) WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),uselfn?sfull:full);
 			} else WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),uselfn?sfull:full);
 		}
 		res=DOS_FindNext();
@@ -1414,6 +1408,7 @@ struct copysource {
 
 
 void DOS_Shell::CMD_COPY(char * args) {
+	HELP("COPY");
 	static std::string defaulttarget = ".";
 	StripSpaces(args);
 	/* Command uses dta so set it to our internal dta */
