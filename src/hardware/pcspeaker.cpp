@@ -31,7 +31,6 @@
 #define SPKR_POSITIVE_VOLTAGE 5000.0f
 #define SPKR_NEUTRAL_VOLTAGE  0.0f
 #define SPKR_NEGATIVE_VOLTAGE -SPKR_POSITIVE_VOLTAGE
-#define SPKR_SPEED (SPKR_POSITIVE_VOLTAGE * 2.0f / 0.070f)
 
 #define DC_SILENCER_WAVES   5u
 #define DC_SILENCER_WAVE_HZ 30u
@@ -338,9 +337,11 @@ static void PCSPEAKER_CallBack(Bitu len)
 				value+=spkr.volcur*vol_len;
 				index+=vol_len;
 			} else {
-				/* Check how long it will take to goto new level */
-				float vol_time=fabsf(vol_diff)/SPKR_SPEED;
-				if (vol_time<=vol_len) {
+				// Check how long it will take to goto new level
+				// TODO: describe the basis for these magic numbers and their effects
+				constexpr float spkr_speed = SPKR_POSITIVE_VOLTAGE * 2.0f / 0.070f;
+				const float vol_time = fabsf(vol_diff) / spkr_speed;
+				if (vol_time <= vol_len) {
 					/* Volume reaches endpoint in this block, calc until that point */
 					value+=vol_time*spkr.volcur;
 					value+=vol_time*vol_diff/2;
@@ -348,13 +349,16 @@ static void PCSPEAKER_CallBack(Bitu len)
 					spkr.volcur=spkr.volwant;
 				} else {
 					/* Volume still not reached in this block */
-					value+=spkr.volcur*vol_len;
-					if (vol_diff<0) {
-						value-=(SPKR_SPEED*vol_len*vol_len)/2;
-						spkr.volcur-=SPKR_SPEED*vol_len;
+					value += spkr.volcur * vol_len;
+					const float speed_by_len = spkr_speed * vol_len;
+					const float speed_by_len_sq = speed_by_len *
+					                              vol_len / 2;
+					if (vol_diff < 0) {
+						value -= speed_by_len_sq;
+						spkr.volcur -= speed_by_len;
 					} else {
-						value+=(SPKR_SPEED*vol_len*vol_len)/2;
-						spkr.volcur+=SPKR_SPEED*vol_len;
+						value += speed_by_len_sq;
+						spkr.volcur += speed_by_len;
 					}
 					index+=vol_len;
 				}
