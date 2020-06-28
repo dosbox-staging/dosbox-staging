@@ -17,6 +17,7 @@ libhardware_a_SOURCES = \
 	adlib.cpp \
 	cmos.cpp \
 	dbopl.cpp \
+	dc_silencer.cpp \
 	disney.cpp \
 	dma.cpp \
 	envelope.cpp \

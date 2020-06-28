@@ -133,6 +133,9 @@
     <ClCompile Include="..\src\hardware\cmos.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\dc_silencer.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\dbopl.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
