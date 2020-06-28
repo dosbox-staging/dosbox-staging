@@ -16,12 +16,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "support.h"
 
 #include <algorithm>
 #include <assert.h>
 #include <cctype>
-#include <ctype.h>
+#include <cmath>
 #include <cstring>
+#include <ctype.h>
 #include <functional>
 #include <stdarg.h>
 #include <stdio.h>
@@ -32,7 +34,6 @@
 #include "dosbox.h"
 #include "cross.h"
 #include "debug.h"
-#include "support.h"
 #include "video.h"
 
 std::string get_basename(const std::string& filename) {
@@ -240,3 +241,5 @@ void E_Exit(const char * format,...) {
 
 	throw(buf);
 }
+
+
