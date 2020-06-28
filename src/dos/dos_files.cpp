@@ -99,7 +99,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 		return false; 
 	}
 	r=0;w=0;
-	while ((r<(uselfn?LFN_NAMELENGTH:DOS_PATHLENGTH)) && name_int[r]!=0) {
+	while ((r<(Bitu)(uselfn?LFN_NAMELENGTH:DOS_PATHLENGTH)) && name_int[r]!=0) {
 		c=name_int[r++];
 		if (c=='/') c='\\';
 		else if (c=='"') {q++;continue;}
@@ -112,7 +112,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 		upname[w++]=c;
 	}
 	while (r>0 && name_int[r-1]==' ') r--;
-	if (r>=(uselfn?LFN_NAMELENGTH:DOS_PATHLENGTH)) { DOS_SetError(DOSERR_PATH_NOT_FOUND);return false; }
+	if (r>=(Bitu)(uselfn?LFN_NAMELENGTH:DOS_PATHLENGTH)) { DOS_SetError(DOSERR_PATH_NOT_FOUND);return false; }
 	upname[w]=0;
 
 	/* Now parse the new file name to make the final filename */
@@ -216,7 +216,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 				}
 			}
 
-			if (strlen(fullname)+strlen(tempdir)>=(uselfn?LFN_NAMELENGTH:DOS_PATHLENGTH)) {
+			if (strlen(fullname)+strlen(tempdir)>=(unsigned int)(uselfn?LFN_NAMELENGTH:DOS_PATHLENGTH)) {
 				DOS_SetError(DOSERR_PATH_NOT_FOUND);return false;
 			}
 		   

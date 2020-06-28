@@ -292,7 +292,7 @@ void DOS_Shell::InputCommand(char * line) {
 					// build the completion list
 					char mask[LFN_NAMELENGTH+2] = {0}, smask[LFN_NAMELENGTH] = {0};
 					if (p_completion_start) {
-						if (strlen(p_completion_start) + 3 >= (uselfn?LFN_NAMELENGTH:DOS_PATHLENGTH)) {
+						if (strlen(p_completion_start) + 3 >= (unsigned int)(uselfn?LFN_NAMELENGTH:DOS_PATHLENGTH)) {
 							//Beep;
 							break;
 						}

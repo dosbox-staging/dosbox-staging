@@ -1232,7 +1232,7 @@ bool Overlay_Drive::check_if_leading_is_deleted(const char* name){
 	const char* dname = strrchr(name,'\\');
 	if (dname != NULL) {
 		char dirname[CROSS_LEN];
-		strncpy(dirname,name,dname - name);
+		safe_strncpy(dirname,name,dname - name);
 		dirname[dname - name] = 0;
 		if (is_deleted_path(dirname)) return true;
 	}

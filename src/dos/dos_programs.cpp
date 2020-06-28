@@ -703,7 +703,7 @@ public:
 					char buf[257];
 					if (cart_cmd=="?") {
 						while (clen!=0) {
-							strncpy(buf,(char*)&rombuf[ct+1],clen);
+							safe_strncpy(buf,(char*)&rombuf[ct+1],clen);
 							buf[clen]=0;
 							upcase(buf);
 							safe_strcat(cmdlist, " ");
@@ -723,7 +723,7 @@ public:
 						return;
 					} else {
 						while (clen!=0) {
-							strncpy(buf,(char*)&rombuf[ct+1],clen);
+							safe_strncpy(buf,(char*)&rombuf[ct+1],clen);
 							buf[clen]=0;
 							upcase(buf);
 							safe_strcat(cmdlist, " ");
