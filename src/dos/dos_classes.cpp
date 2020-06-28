@@ -18,7 +18,6 @@
  *  Wengier: LFN support
  */
 
-
 #include <string.h>
 #include <stdlib.h>
 #include "dosbox.h"
@@ -352,7 +351,6 @@ bool DOS_PSP::SetNumFiles(Bit16u fileNum) {
 	return true;
 }
 
-
 void DOS_DTA::SetupSearch(Bit8u _sdrive,Bit8u _sattr,char * pattern) {
 	unsigned int i;
 
@@ -399,7 +397,6 @@ void DOS_DTA::SetResult(const char * _name,const char * _lname,Bit32u _size,Bit1
 		sSave(sDTA,attr,_attr);
 	}
 }
-
 
 void DOS_DTA::GetResult(char * _name,char * _lname,Bit32u & _size,Bit16u & _date,Bit16u & _time,Bit8u & _attr) {
 	strcpy(_lname,fd.lname);
