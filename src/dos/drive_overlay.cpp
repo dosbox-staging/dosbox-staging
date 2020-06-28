@@ -51,8 +51,8 @@ using namespace std;
 
 char* GetCrossedName(const char *basedir, const char *dir) {
 	static char crossname[CROSS_LEN];
-	strcpy(crossname, basedir);
-	strcat(crossname, dir);
+	safe_strcpy(crossname, basedir);
+	safe_strcat(crossname, dir);
 	CROSS_FILENAME(crossname);
 	return crossname;
 }
@@ -163,20 +163,20 @@ bool Overlay_Drive::MakeDir(char * dir) {
 		return true;
 	}
 	char newdir[CROSS_LEN],sdir[CROSS_LEN];
-	strcpy(sdir,dir);
+	safe_strcpy(sdir,dir);
 	char *p=strrchr(sdir,'\\');
 	if (p!=NULL) {
 		*p=0;
 		char *temp_name=dirCache.GetExpandName(GetCrossedName(basedir,sdir));
 		if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
-			strcpy(newdir,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
-			strcat(newdir,"\\");
-			strcat(newdir,p+1);
-			strcpy(sdir,newdir);
+			safe_strcpy(newdir,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
+			safe_strcat(newdir,"\\");
+			safe_strcat(newdir,p+1);
+			safe_strcpy(sdir,newdir);
 		}
 	}
-	strcpy(newdir,overlaydir);
-	strcat(newdir,sdir);
+	safe_strcpy(newdir,overlaydir);
+	safe_strcat(newdir,sdir);
 	CROSS_FILENAME(newdir);
 #if defined (WIN32)						/* MS Visual C++ */
 	int temp = mkdir(newdir);
@@ -188,7 +188,7 @@ bool Overlay_Drive::MakeDir(char * dir) {
 		safe_strcpy(fakename, basedir);
 		safe_strcat(fakename, dir);
 		CROSS_FILENAME(fakename);
-		strcpy(sdir, dir);
+		safe_strcpy(sdir, dir);
 		upcase(sdir);
 		dirCache.AddEntryDirOverlay(fakename,sdir,true);
 		add_DOSdir_to_cache(dir,sdir);
@@ -275,7 +275,7 @@ FILE *Overlay_Drive::create_file_in_overlay(const char *dos_filename, char const
 		Sync_leading_dirs(dos_filename);
 		//try again
 		char temp_name[CROSS_LEN],tmp[CROSS_LEN];
-		strcpy(tmp, dos_filename);
+		safe_strcpy(tmp, dos_filename);
 		char *p=strrchr(tmp, '\\');
 		assert(p!=NULL);
 		*p=0;
@@ -283,21 +283,21 @@ FILE *Overlay_Drive::create_file_in_overlay(const char *dos_filename, char const
 		for(std::vector<std::string>::iterator it = DOSdirs_cache.begin(); it != DOSdirs_cache.end(); it+=2)
 			if ((*(it+1)).length()&&!strcasecmp((*(it+1)).c_str(), tmp)) {
 				found=true;
-				strcpy(tmp, (*it).c_str());
+				safe_strcpy(tmp, (*it).c_str());
 				break;
 			}
 		if (found) {
-			strcpy(temp_name,overlaydir);
-			strcat(temp_name,tmp);
-			strcat(temp_name,dir);
+			safe_strcpy(temp_name,overlaydir);
+			safe_strcat(temp_name,tmp);
+			safe_strcat(temp_name,dir);
 			CROSS_FILENAME(temp_name);
 			f = fopen_wrap(temp_name,mode);
 		}
 		if (!f) {
-			strcpy(temp_name,dirCache.GetExpandName(GetCrossedName(basedir,dos_filename)));
+			safe_strcpy(temp_name,dirCache.GetExpandName(GetCrossedName(basedir,dos_filename)));
 			if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
-				strcpy(newname,overlaydir);
-				strcat(newname,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
+				safe_strcpy(newname,overlaydir);
+				safe_strcat(newname,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
 				CROSS_FILENAME(newname);
 			}
 			f = fopen_wrap(newname,mode);
@@ -483,8 +483,8 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 		char* temp_name = dirCache.GetExpandName(GetCrossedName(basedir,name));
 		if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
 			temp_name+=strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0);
-			strcpy(newname,overlaydir);
-			strcat(newname,temp_name);
+			safe_strcpy(newname,overlaydir);
+			safe_strcat(newname,temp_name);
 			CROSS_FILENAME(newname);
 			hand = fopen_wrap(newname,type);
 		}
@@ -590,8 +590,8 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 			char* temp_name = dirCache.GetExpandName(GetCrossedName(basedir,dirname));
 			if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
 				temp_name+=strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0);
-				strcpy(dirnameoverlay,overlaydir);
-				strcat(dirnameoverlay,temp_name);
+				safe_strcpy(dirnameoverlay,overlaydir);
+				safe_strcat(dirnameoverlay,temp_name);
 				CROSS_FILENAME(dirnameoverlay);
 			}
 			if (stat(dirnameoverlay,&overlaytest) == 0 ) {
@@ -660,7 +660,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 			else if (is_directory) {
 				dirnames.push_back(dir_name);
 				if (!strlen(dir_sname)) {
-					strcpy(dir_sname, dir_name);
+					safe_strcpy(dir_sname, dir_name);
 					upcase(dir_sname);
 				}
 				dirnames.push_back(dir_sname);
@@ -670,7 +670,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 				else if (is_directory) {
 					dirnames.push_back(dir_name);
 					if (!strlen(dir_sname)) {
-						strcpy(dir_sname, dir_name);
+						safe_strcpy(dir_sname, dir_name);
 						upcase(dir_sname);
 					}
 					dirnames.push_back(dir_sname);
@@ -719,7 +719,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 			//Good directory, add to DOSdirs_cache if not existing in localDrive. tested earlier to prevent problems with opendir
 			if (!dir_exists_in_base) {
 				if (!strlen(sdir)) {
-					strcpy(sdir, tdir);
+					safe_strcpy(sdir, tdir);
 					upcase(sdir);
 				}
 				add_DOSdir_to_cache(tdir,sdir);
@@ -735,7 +735,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 				else if (is_directory) {
 					dirnames.push_back(string(dirpush)+dir_name);
 					if (!strlen(dir_sname)) {
-						strcpy(dir_sname, dir_name);
+						safe_strcpy(dir_sname, dir_name);
 						upcase(dir_sname);
 					}
 					dirnames.push_back(string(dirspush)+dir_sname);
@@ -745,7 +745,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 					else if (is_directory) {
 						dirnames.push_back(string(dirpush)+dir_name);
 						if (!strlen(dir_sname)) {
-							strcpy(dir_sname, dir_name);
+							safe_strcpy(dir_sname, dir_name);
 							upcase(dir_sname);
 						}
 						dirnames.push_back(string(dirspush)+dir_sname);
@@ -773,25 +773,25 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 #if OVERLAY_DIR
 	for (i = DOSdirs_cache.begin(); i !=DOSdirs_cache.end(); i+=2) {
 		char fakename[CROSS_LEN],sdir[CROSS_LEN],tmp[CROSS_LEN],*p;
-		strcpy(fakename,basedir);
-		strcat(fakename,(*i).c_str());
+		safe_strcpy(fakename,basedir);
+		safe_strcat(fakename,(*i).c_str());
 		CROSS_FILENAME(fakename);
-		strcpy(sdir,(*(i+1)).c_str());
+		safe_strcpy(sdir,(*(i+1)).c_str());
 		dirCache.AddEntryDirOverlay(fakename,sdir,true);
 		if (strlen(sdir)) {
-			strcpy(tmp,(*(i+1)).c_str());
+			safe_strcpy(tmp,(*(i+1)).c_str());
 			p=strrchr(tmp, '\\');
 			if (p==NULL) *(i+1)=std::string(sdir);
 			else {
 				*p=0;
 				for(std::vector<std::string>::iterator it = DOSdirs_cache.begin(); it<i && it != DOSdirs_cache.end(); it+=2) {
 					if (!strcasecmp((*it).c_str(), tmp)) {
-						strcpy(tmp, (*(it+1)).c_str());
+						safe_strcpy(tmp, (*(it+1)).c_str());
 						break;
 					}
 				}
-				strcat(tmp,"\\");
-				strcat(tmp,sdir);
+				safe_strcat(tmp,"\\");
+				safe_strcat(tmp,sdir);
 				*(i+1)=std::string(tmp);
 			}
 		}
@@ -939,7 +939,7 @@ again:
 		safe_strcpy(find_name, dir_entcopy);
 		upcase(find_name);
 	}
-	strcpy(lfind_name,ldir_entcopy);
+	safe_strcpy(lfind_name,ldir_entcopy);
     lfind_name[LFN_NAMELENGTH]=0;
 
 	find_size=(Bit32u) stat_block.st_size;
@@ -980,8 +980,8 @@ bool Overlay_Drive::FileUnlink(char * name) {
 		if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
 			char overtmpname[CROSS_LEN];
 			temp_name+=strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0);
-			strcpy(overtmpname,overlaydir);
-			strcat(overtmpname,temp_name);
+			safe_strcpy(overtmpname,overlaydir);
+			safe_strcat(overtmpname,temp_name);
 			CROSS_FILENAME(overtmpname);
 			if (unlink(overtmpname)==0) removed=true;
 		}
@@ -1056,7 +1056,7 @@ bool Overlay_Drive::GetFileAttr(char * name,Bit16u * attr) {
 	safe_strcat(overlayname,name);
 	CROSS_FILENAME(overlayname);
 	char* temp_name = dirCache.GetExpandName(GetCrossedName(basedir,name));
-	strcpy(tmp, name);
+	safe_strcpy(tmp, name);
 	char *q=strrchr(tmp, '\\');
 	if (q!=NULL) *(q+1)=0;
 	else *tmp=0;
@@ -1137,9 +1137,9 @@ bool Overlay_Drive::is_dir_only_in_overlay(const char* name) {
 	if (DOSdirs_cache.empty()) return false;
 	char fname[CROSS_LEN];
 	char* temp_name = dirCache.GetExpandName(GetCrossedName(basedir,name));
-	strcpy(fname, "");
+	safe_strcpy(fname, "");
 	if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
-		strcpy(fname,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
+		safe_strcpy(fname,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
 		CROSS_DOSFILENAME(fname);
 	}
 	for(std::vector<std::string>::iterator it = DOSdirs_cache.begin(); it != DOSdirs_cache.end(); it+=2) {
@@ -1169,9 +1169,9 @@ void Overlay_Drive::add_DOSdir_to_cache(const char* name, const char *sname) {
 void Overlay_Drive::remove_DOSdir_from_cache(const char* name) {
 	char fname[CROSS_LEN];
 	char* temp_name = dirCache.GetExpandName(GetCrossedName(basedir,name));
-	strcpy(fname, "");
+	safe_strcpy(fname, "");
 	if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
-		strcpy(fname,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
+		safe_strcpy(fname,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
 		CROSS_DOSFILENAME(fname);
 	}
 	for(std::vector<std::string>::iterator it = DOSdirs_cache.begin(); it != DOSdirs_cache.end(); it+=2) {
@@ -1241,15 +1241,15 @@ bool Overlay_Drive::check_if_leading_is_deleted(const char* name){
 
 bool Overlay_Drive::FileExists(const char* name) {
 	char overlayname[CROSS_LEN];
-	strcpy(overlayname,overlaydir);
-	strcat(overlayname,name);
+	safe_strcpy(overlayname,overlaydir);
+	safe_strcat(overlayname,name);
 	CROSS_FILENAME(overlayname);
 	struct stat tempstat;
 	if (stat(overlayname,&tempstat)==0 && (tempstat.st_mode & S_IFDIR)==0) return true;
 	char* temp_name = dirCache.GetExpandName(GetCrossedName(basedir,name));
 	if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
-		strcpy(overlayname,overlaydir);
-		strcat(overlayname,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
+		safe_strcpy(overlayname,overlaydir);
+		safe_strcat(overlayname,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
 		CROSS_FILENAME(overlayname);
 		if(stat(overlayname,&tempstat)==0 && (tempstat.st_mode & S_IFDIR)==0) return true;
 	}
@@ -1283,31 +1283,31 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		}
 #endif
 		char overlaynameold[CROSS_LEN];
-		strcpy(overlaynameold,overlaydir);
-		strcat(overlaynameold,oldname);
+		safe_strcpy(overlaynameold,overlaydir);
+		safe_strcat(overlaynameold,oldname);
 		CROSS_FILENAME(overlaynameold);
 
 		char overlaynamenew[CROSS_LEN];
-		strcpy(overlaynamenew,overlaydir);
-		strcat(overlaynamenew,newname);
+		safe_strcpy(overlaynamenew,overlaydir);
+		safe_strcat(overlaynamenew,newname);
 		CROSS_FILENAME(overlaynamenew);
 
 		if (stat(overlaynameold,&tempstat)) {
 			char* temp_name = dirCache.GetExpandName(GetCrossedName(basedir,oldname));
 			if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
 				temp_name+=strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0);
-				strcpy(overlaynameold,GetCrossedName(overlaydir,temp_name));
+				safe_strcpy(overlaynameold,GetCrossedName(overlaydir,temp_name));
 			}
-			strcpy(tmp,newname);
+			safe_strcpy(tmp,newname);
 			char *p=strrchr(tmp,'\\'), ndir[CROSS_LEN];
 			if (p!=NULL) {
 				*p=0;
 				temp_name=dirCache.GetExpandName(GetCrossedName(basedir,tmp));
 				if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
-					strcpy(ndir,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
-					strcat(ndir,"\\");
-					strcat(ndir,p+1);
-					strcpy(overlaynamenew,GetCrossedName(overlaydir,ndir));
+					safe_strcpy(ndir,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
+					safe_strcat(ndir,"\\");
+					safe_strcat(ndir,p+1);
+					safe_strcpy(overlaynamenew,GetCrossedName(overlaydir,ndir));
 				}
 			}
 		}
@@ -1338,18 +1338,18 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		char* temp_name = dirCache.GetExpandName(GetCrossedName(basedir,oldname));
 		if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
 			temp_name+=strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0);
-			strcpy(overlaynameold,GetCrossedName(overlaydir,temp_name));
+			safe_strcpy(overlaynameold,GetCrossedName(overlaydir,temp_name));
 		}
-		strcpy(tmp,newname);
+		safe_strcpy(tmp,newname);
 		char *p=strrchr(tmp,'\\'), ndir[CROSS_LEN];
 		if (p!=NULL) {
 			*p=0;
 			temp_name=dirCache.GetExpandName(GetCrossedName(basedir,tmp));
 			if (strlen(temp_name)>strlen(basedir)&&!strncasecmp(temp_name, basedir, strlen(basedir))) {
-				strcpy(ndir,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
-				strcat(ndir,"\\");
-				strcat(ndir,p+1);
-				strcpy(overlaynamenew,GetCrossedName(overlaydir,ndir));
+				safe_strcpy(ndir,temp_name+strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0));
+				safe_strcat(ndir,"\\");
+				safe_strcat(ndir,p+1);
+				safe_strcpy(overlaynamenew,GetCrossedName(overlaydir,ndir));
 			}
 		}
 	}
@@ -1412,8 +1412,8 @@ bool Overlay_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 
 	if (*_dir) {
 		char newname[CROSS_LEN], tmp[CROSS_LEN];
-		strcpy(newname,overlaydir);
-		strcat(newname,_dir);
+		safe_strcpy(newname,overlaydir);
+		safe_strcat(newname,_dir);
 		CROSS_FILENAME(newname);
 		struct stat temp_stat;
 		if (stat(newname,&temp_stat)) {
@@ -1422,12 +1422,12 @@ bool Overlay_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 				temp_name+=strlen(basedir)+(*(temp_name+strlen(basedir))=='\\'?1:0);
 				return localDrive::FindFirst(temp_name,dta,fcb_findfirst);
 			}
-			strcpy(tmp, _dir);
+			safe_strcpy(tmp, _dir);
 			bool found=false;
 			for(std::vector<std::string>::iterator it = DOSdirs_cache.begin(); it != DOSdirs_cache.end(); it+=2) {
 				if ((*(it+1)).length()&&!strcasecmp((*(it+1)).c_str(), tmp)) {
 					found=true;
-					strcpy(tmp, (*it).c_str());
+					safe_strcpy(tmp, (*it).c_str());
 					break;
 				}
 			}

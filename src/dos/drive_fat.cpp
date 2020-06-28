@@ -88,7 +88,7 @@ char sfn[DOS_NAMELENGTH_ASCII];
 /* Generate 8.3 names from LFNs, with tilde usage (from ~1 to ~9999). */
 char* fatDrive::Generate_SFN(const char *path, const char *name) {
 	if (!filename_not_8x3(name)) {
-		strcpy(sfn, name);
+		safe_strcpy(sfn, name);
 		upcase(sfn);
 		return sfn;
 	}
@@ -98,7 +98,7 @@ char* fatDrive::Generate_SFN(const char *path, const char *name) {
 		strncpy(lfn, name, LFN_NAMELENGTH);
 		lfn[LFN_NAMELENGTH]=0;
 	} else
-		strcpy(lfn, name);
+		safe_strcpy(lfn, name);
 	if (!strlen(lfn)) return NULL;
 	direntry fileEntry = {};
 	Bit32u dirClust, subEntry;
@@ -161,8 +161,8 @@ char* fatDrive::Generate_SFN(const char *path, const char *name) {
 			}
 			sfn[i++]=0;
 		}
-		strcpy(fullname, path);
-		strcat(fullname, sfn);
+		safe_strcpy(fullname, path);
+		safe_strcat(fullname, sfn);
 		if(!getFileDirEntry(fullname, &fileEntry, &dirClust, &subEntry,/*dirOk*/true)) return sfn;
 		k++;
 	}
@@ -1166,7 +1166,7 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, Bit16u attributes) {
 
 			if (lfn != NULL) {
 				lfn++; /* step past '\' */
-				strcpy(path, name);
+				safe_strcpy(path, name);
 				*(strrchr(path,'\\')+1)=0;
 			} else {
 				lfn = name; /* no path elements */
@@ -1792,7 +1792,7 @@ bool fatDrive::MakeDir(char *dir) {
 
 		if (lfn != NULL) {
 			lfn++; /* step past '\' */
-			strcpy(path, dir);
+			safe_strcpy(path, dir);
 			*(strrchr(path,'\\')+1)=0;
 		} else {
 			lfn = dir; /* no path elements */
@@ -1936,7 +1936,7 @@ bool fatDrive::Rename(char * oldname, char * newname) {
 
 		if (lfn != NULL) {
 			lfn++; /* step past '\' */
-			strcpy(path, newname);
+			safe_strcpy(path, newname);
 			*(strrchr(path,'\\')+1)=0;
 		} else {
 			lfn = newname; /* no path elements */

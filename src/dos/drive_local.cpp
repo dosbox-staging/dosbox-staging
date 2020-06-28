@@ -348,7 +348,7 @@ again:
 		safe_strcpy(find_name, dir_entcopy);
 		upcase(find_name);
 	}
-	strcpy(lfind_name,ldir_entcopy);
+	safe_strcpy(lfind_name,ldir_entcopy);
     lfind_name[LFN_NAMELENGTH]=0;
 
 	find_size=(Bit32u) stat_block.st_size;
@@ -383,8 +383,8 @@ bool localDrive::GetFileAttr(char * name,Bit16u * attr) {
 
 bool localDrive::GetFileAttrEx(char* name, struct stat *status) {
 	char newname[CROSS_LEN];
-	strcpy(newname,basedir);
-	strcat(newname,name);
+	safe_strcpy(newname,basedir);
+	safe_strcat(newname,name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 	return !stat(newname,status);
@@ -395,8 +395,8 @@ unsigned long localDrive::GetCompressedSize(char* name) {
 	return 0;
 #else
 	char newname[CROSS_LEN];
-	strcpy(newname,basedir);
-	strcat(newname,name);
+	safe_strcpy(newname,basedir);
+	safe_strcat(newname,name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 	DWORD size = GetCompressedFileSize(newname, NULL);
@@ -418,8 +418,8 @@ unsigned long localDrive::GetCompressedSize(char* name) {
 #if defined (WIN32)
 HANDLE localDrive::CreateOpenFile(const char* name) {
 	char newname[CROSS_LEN];
-	strcpy(newname,basedir);
-	strcat(newname,name);
+	safe_strcpy(newname,basedir);
+	safe_strcat(newname,name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 	HANDLE handle=CreateFile(newname, FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);

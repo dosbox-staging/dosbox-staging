@@ -262,9 +262,9 @@ void DOS_Drive_Cache::AddEntryDirOverlay(const char* path, char *sfile, bool che
 
 	char sname[CROSS_LEN], *p=strrchr(sfile, '\\');
 	if (p!=NULL)
-		strcpy(sname, p+1);
+		safe_strcpy(sname, p+1);
 	else
-		strcpy(sname, sfile);
+		safe_strcpy(sname, sfile);
 	if (pos && dir) {
 		safe_strcpy(file, pos + 1);
 		// Check if directory already exists, then don't add new entry...
@@ -841,7 +841,7 @@ char* DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, const char*
 		dir->fileList.push_back(info);
 	}
 	static char sgenname[DOS_NAMELENGTH+1];
-	strcpy(sgenname, info->shortname);
+	safe_strcpy(sgenname, info->shortname);
 	return sgenname;
 }
 
