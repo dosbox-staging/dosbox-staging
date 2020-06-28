@@ -20,6 +20,58 @@
 	Based of sn76496.c of the M.A.M.E. project
 */
 
+/*
+A note about accurately emulating the Tandy's digital to analog (DAC) behavior
+------------------------------------------------------------------------------
+The Tandy's DAC is responsible for converting digital audio samples into their
+analog equivalents in the form of voltage levels output to the line-out or
+speaker.
+
+After playing a sequence of samples, such as a sound effect, the last value fed
+into the DAC will correspond to the final voltage set in the line-out.
+
+Well behaved audio sequences end with zero amplitude and thus leave the speaker
+in the neutral position (without a positive or negative voltage); and this is
+what we see in practice.
+
+However, Price of Persia uniquely terminates most of its sound effects with a
+non-zero amplitude, leaving the DAC holding a non-zero voltage, which is also
+called a DC-offset.
+
+The Tandy controller mitigates DC-offset by incrementally stepping the DAC's
+output voltage back toward the neutral centerline. This DAC ramp-down behavior
+is audible as an artifact post-fixed onto every Prince of Persia sound effect,
+which sounds like a soft, short-lived shoe squeak.
+
+This hardware behavior can be emulated by tracking the last sample played,
+checking if it's at the centerline or not (centerline being 128, in the range of
+unisigned 8-bit values).  If it's not at the centerline, then steading generate
+new samples than trend this last-played value toward the centerline until it's
+reached.
+
+The DOSBox-X project has faithfully [*] replicated this hardware artifact using
+the following code-snippet:
+
+if (tandy.dac.dma.last_sample != 128) {
+        for (Bitu ct=0; ct < length; ct++) {
+                tandy.dac.chan->AddSamples_m8(1,&tandy.dac.dma.last_sample);
+                if (tandy.dac.dma.last_sample != 128)
+                        tandy.dac.dma.last_sample =
+(Bit8u)(((((int)tandy.dac.dma.last_sample - 128) * 63) / 64) + 128);
+        }
+}
+
+[*] As the author Jonathan Campbell explains, "I used a VGA capture card and an
+MCE2VGA to capture the output of a real Tandy 1000, and then tried to adjust the
+Tandy DAC code to match the artifact after each step."
+
+The implementation below prioritizes the game author's intended audio score
+ahead of deleterious artifacts caused by hardware defects or limitations.
+Because the sound caused by the Tandy's DAC is not part of the game's audio
+score, we deliberately omit this behavior and terminate sequences at the
+centerline.
+*/
+
 #include "dosbox.h"
 #include "inout.h"
 #include "mixer.h"
@@ -315,7 +367,7 @@ public:
 		tandy.dac.mode   =0;
 		tandy.dac.irq_activated=false;
 		tandy.dac.frequency=0;
-		tandy.dac.amplitude=0;
+		tandy.dac.amplitude = 0;
 
 		tandy.enabled=false;
 		real_writeb(0x40,0xd4,0xff);	/* BIOS Tandy DAC initialization value */
