@@ -23,7 +23,7 @@ jobs:
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
             flags: -c gcc
-            max_warnings: 26
+            max_warnings: 30
           - name: GCC, Ubuntu 20.04
             os: ubuntu-20.04
             flags: -c gcc
