@@ -1353,7 +1353,8 @@ int FM_OPL::init_tables()
 	for (i=0; i<SIN_LEN; i++)
 	{
 		/* non-standard sinus */
-		m = sin(((i*2)+1) * M_PI / SIN_LEN); /* checked against the real chip */
+		m = sin(((i * 2) + 1) * M_PI / SIN_LEN); /* checked against the
+		                                          real chip */
 
 		/* we never reach zero here due to ((i*2)+1) */
 

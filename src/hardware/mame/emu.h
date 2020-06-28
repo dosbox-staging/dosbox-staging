@@ -3,12 +3,13 @@
 
 
 #include "dosbox.h"
+
+#include <cmath>
 #if defined(_MSC_VER) && (_MSC_VER  <= 1500) 
 #include <SDL.h>
 #else
 #include <stdint.h>
 #endif
-#include <math.h>
 #include <float.h>
 #include <stdlib.h>
 #include <memory.h>
@@ -16,10 +17,6 @@
 #if C_DEBUG
 #include <stdio.h>
 #include <stdarg.h>
-#endif
-
-#ifndef M_PI
-#define M_PI           3.14159265358979323846
 #endif
 
 typedef Bit16s stream_sample_t;
