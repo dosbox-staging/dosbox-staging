@@ -19,7 +19,6 @@
  */
 
 #include "drives.h"
-
 #include "support.h"
 
 bool wild_match(char *haystack, char *needle) {
