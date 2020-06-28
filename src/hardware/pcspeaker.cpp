@@ -61,6 +61,7 @@ static struct {
 	float volcur = 0.0f;
 	float last_index = 0.0f;
 	int16_t last_played_sample = 0;
+	uint16_t prev_pos = 0u;
 	uint8_t idle_countdown = 0u;
 } spkr;
 
@@ -364,6 +365,7 @@ static void PCSPEAKER_CallBack(Bitu len)
 				}
 			}
 		}
+		spkr.prev_pos = pos;
 		*stream++=(Bit16s)(value/sample_add);
 	}
 	PlayOrFadeout(pos, len, reinterpret_cast<int16_t *>(MixTemp));
