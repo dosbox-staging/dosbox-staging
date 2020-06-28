@@ -1009,11 +1009,20 @@ bool Overlay_Drive::FileUnlink(char * name) {
 			safe_strcpy(overtmpname,overlaydir);
 			safe_strcat(overtmpname,temp_name);
 			CROSS_FILENAME(overtmpname);
-			if (unlink(overtmpname)==0) removed=true;
+#if defined(_MSC_VER)						/* MS Visual C++ */
+			if (_unlink(overtmpname)==0)
+#else
+			if (unlink(overtmpname)==0)
+#endif
+				 removed=true;
 		}
 	}
 
+#if defined(_MSC_VER)
+	if (!removed&&_unlink(overlayname)) {
+#else
 	if (!removed&&unlink(overlayname)) {
+#endif
 		//Unlink failed for some reason try finding it.
 		if(stat(overlayname,&buffer)) {
 			//file not found in overlay, check the basedrive
@@ -1048,7 +1057,11 @@ bool Overlay_Drive::FileUnlink(char * name) {
 			}
 		}
 		if(!found_file) return false;
+#if defined(_MSC_VER)
+		if (_unlink(overlayname) == 0) { //Overlay file removed
+#else
 		if (unlink(overlayname) == 0) { //Overlay file removed
+#endif
 			//Mark basefile as deleted if it exists:
 			if (localDrive::FileExists(name)) add_deleted_file(name,true);
 			remove_DOSname_from_cache(name); //Should be an else ? although better safe than sorry.
@@ -1145,7 +1158,12 @@ void Overlay_Drive::remove_special_file_from_disk(const char* dosname, const cha
 	safe_strcpy(overlayname, overlaydir);
 	safe_strcat(overlayname, name.c_str());
 	CROSS_FILENAME(overlayname);
-	if(unlink(overlayname) != 0) E_Exit("Failed removal of %s",overlayname);
+#if defined(_MSC_VER)
+	if(_unlink(overlayname) != 0)
+#else
+	if(unlink(overlayname) != 0)
+#endif
+		E_Exit("Failed removal of %s",overlayname);
 }
 
 std::string Overlay_Drive::create_filename_of_special_operation(const char* dosname, const char* operation) {

@@ -201,7 +201,11 @@ bool localDrive::FileUnlink(char * name) {
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 	char *fullname = dirCache.GetExpandName(newname);
+#if defined(_MSC_VER)						/* MS Visual C++ */
+	if (_unlink(fullname)) {
+#else
 	if (unlink(fullname)) {
+#endif
 		//Unlink failed for some reason try finding it.
 		struct stat buffer;
 		if (stat(fullname,&buffer)) return false; // File not found.
@@ -225,7 +229,11 @@ bool localDrive::FileUnlink(char * name) {
 			}
 		}
 		if (!found_file) return false;
+#if defined(_MSC_VER)
+		if (!_unlink(fullname)) {
+#else
 		if (!unlink(fullname)) {
+#endif
 			dirCache.DeleteEntry(newname);
 			return true;
 		}
