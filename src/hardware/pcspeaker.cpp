@@ -22,6 +22,7 @@
 #include <array>
 #include <cmath>
 
+#include "dc_silencer.h"
 #include "timer.h"
 #include "setup.h"
 #include "pic.h"
@@ -32,9 +33,10 @@
 #define SPKR_NEGATIVE_VOLTAGE -SPKR_POSITIVE_VOLTAGE
 #define SPKR_SPEED (SPKR_POSITIVE_VOLTAGE * 2.0f / 0.070f)
 
-enum SPKR_MODES {
-	SPKR_OFF,SPKR_ON,SPKR_PIT_OFF,SPKR_PIT_ON
-};
+#define DC_SILENCER_WAVES   5u
+#define DC_SILENCER_WAVE_HZ 30u
+
+enum SPKR_MODES { SPKR_OFF, SPKR_ON, SPKR_PIT_OFF, SPKR_PIT_ON };
 
 struct DelayEntry {
 	float index = 0.0f;
@@ -43,6 +45,7 @@ struct DelayEntry {
 
 static struct {
 	DelayEntry entries[SPKR_ENTRIES] = {};
+	DCSilencer dc_silencer = {};
 	MixerChannel *chan = nullptr;
 	SPKR_MODES mode = SPKR_OFF;
 	Bitu pit_mode = 3;
@@ -58,6 +61,7 @@ static struct {
 	float volwant = 0.0f;
 	float volcur = 0.0f;
 	float last_index = 0.0f;
+	int16_t last_played_sample = 0;
 	uint8_t idle_countdown = 0u;
 } spkr;
 
@@ -274,34 +278,29 @@ void PCSPEAKER_SetType(Bitu mode)
 	spkr.chan->Enable(true);
 }
 
-// Once the speaker is idle (as defined when num_actions is empty),
-// give it a short grace-time before ramping the volume down.
-// By keeping this idle-phase relatively short, we reduce the chance
-// PC-Speaker's DC-offset can influence other channels (such as the
-// Sound blaster or GUS).  Counts are in milliseconds.
-static void FadeVolume(uint16_t num_actions)
+// After the speaker has idled (as defined when the number of speaker
+// movements is zero) for a short time, wind down the DC-offset, and
+// then halt the channel.
+static void PlayOrFadeout(const uint16_t speaker_movements,
+                          size_t requested_samples,
+                          int16_t *buffer)
 {
-	constexpr uint8_t grace_start = 50u;
-	constexpr uint8_t grace_end = 15u;
-	assert(grace_start >= grace_end);
-	static_assert(grace_end > 0, "algorithm depends on non-zero grace_end value");
+	constexpr uint8_t grace_time_ms = 100u;
+	static_assert(grace_time_ms > 0,
+	              "Algorithm depends on a non-zero grace time");
 
-	// If the speaker was used then reset our countdown.
-	if (num_actions) {
-		spkr.idle_countdown = grace_start;
-		return;
-	}
-	// If the count is lower than the idle period, then ramp down the volume.
-	if (spkr.idle_countdown && spkr.idle_countdown < grace_end) {
-		spkr.volwant = spkr.volwant * spkr.idle_countdown / grace_end;
+	if (speaker_movements && requested_samples) {
+		spkr.idle_countdown = grace_time_ms;
+		spkr.dc_silencer.Reset();
+	} else if (spkr.idle_countdown) {
 		spkr.idle_countdown--;
-	}
-	// If we've ramped to zero, then shutdown the channel. This function
-	// will not be called again until the channel's re-enabled through
-	// the PWM or PIT functions.
-	if (!spkr.idle_countdown && SpeakerExists()) {
+		spkr.last_played_sample = buffer[requested_samples - 1];
+	} else if (!spkr.dc_silencer.Generate(spkr.last_played_sample,
+	                                      requested_samples, buffer)) {
 		spkr.chan->Enable(false);
 	}
+
+	spkr.chan->AddSamples_m16(requested_samples, buffer);
 }
 
 static void PCSPEAKER_CallBack(Bitu len)
@@ -363,8 +362,7 @@ static void PCSPEAKER_CallBack(Bitu len)
 		}
 		*stream++=(Bit16s)(value/sample_add);
 	}
-	spkr.chan->AddSamples_m16(len,(Bit16s*)MixTemp);
-	FadeVolume(pos);
+	PlayOrFadeout(pos, len, reinterpret_cast<int16_t *>(MixTemp));
 }
 class PCSPEAKER:public Module_base {
 private:
@@ -376,6 +374,10 @@ public:
 		if (!section->Get_bool("pcspeaker"))
 			return;
 		spkr.rate = std::max(section->Get_int("pcrate"), 8000);
+
+		spkr.dc_silencer.Configure(static_cast<uint32_t>(spkr.rate),
+		                           DC_SILENCER_WAVES, DC_SILENCER_WAVE_HZ);
+
 		spkr.min_tr = (PIT_TICK_RATE + spkr.rate / 2 - 1) / (spkr.rate / 2);
 		/* Register the sound channel */
 		spkr.chan = MixerChan.Install(&PCSPEAKER_CallBack, spkr.rate, "SPKR");
