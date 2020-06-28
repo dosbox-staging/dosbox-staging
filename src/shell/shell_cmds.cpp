@@ -519,7 +519,7 @@ void DOS_Shell::CMD_RENAME(char * args){
 				if (dot2==NULL) {
 					star=strchr(arg2,'*');
 					if (strchr(arg2,'?')) {
-						for (unsigned int i=0; i<(uselfn?LFN_NAMELENGTH:DOS_NAMELENGTH) && i<(star?star-arg2:strlen(arg2)); i++) {
+						for (int i=0; i<(uselfn?LFN_NAMELENGTH:DOS_NAMELENGTH) && i<(star?star-arg2:strlen(arg2)); i++) {
 							if (*(arg2+i)=='?'&&i<strlen(name))
 								*(arg2+i)=name[i];
 						}
@@ -543,7 +543,7 @@ void DOS_Shell::CMD_RENAME(char * args){
 					*dot2='.';
 					star=strchr(tname2,'*');
 					if (strchr(tname2,'?')) {
-						for (unsigned int i=0; i<(uselfn?LFN_NAMELENGTH:DOS_NAMELENGTH) && i<(star?star-tname2:strlen(tname2)); i++) {
+						for (int i=0; i<(uselfn?LFN_NAMELENGTH:DOS_NAMELENGTH) && i<(star?star-tname2:strlen(tname2)); i++) {
 							if (*(tname2+i)=='?'&&i<strlen(tname1))
 								*(tname2+i)=tname1[i];
 						}
@@ -560,7 +560,7 @@ void DOS_Shell::CMD_RENAME(char * args){
 						safe_strcpy(text2, dot2+1);
 						star=strchr(text2,'*');
 						if (strchr(text2,'?')) {
-							for (unsigned int i=0; i<(uselfn?LFN_NAMELENGTH:DOS_NAMELENGTH) && i<(star?star-text2:strlen(text2)); i++) {
+							for (int i=0; i<(uselfn?LFN_NAMELENGTH:DOS_NAMELENGTH) && i<(star?star-text2:strlen(text2)); i++) {
 								if (*(text2+i)=='?'&&i<strlen(text1))
 									*(text2+i)=text1[i];
 							}
@@ -574,7 +574,7 @@ void DOS_Shell::CMD_RENAME(char * args){
 					} else {
 						safe_strcpy(text2, dot2+1);
 						if (strchr(text2,'?')||strchr(text2,'*')) {
-							for (unsigned int i=0; i<(uselfn?LFN_NAMELENGTH:DOS_NAMELENGTH) && i<(star?star-text2:strlen(text2)); i++) {
+							for (int i=0; i<(uselfn?LFN_NAMELENGTH:DOS_NAMELENGTH) && i<(star?star-text2:strlen(text2)); i++) {
 								if (*(text2+i)=='*') {
 									*(text2+i)=0;
 									break;

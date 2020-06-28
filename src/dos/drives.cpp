@@ -156,8 +156,8 @@ bool LWildFileCmp(const char * file, const char * wild)
     }
     upcase(file_name);upcase(file_ext);
     char nwild[LFN_NAMELENGTH+2];
-    strcpy(nwild,wild);
-    if (strrchr(nwild,'*')&&strrchr(nwild,'.')==NULL) strcat(nwild,".*");
+    safe_strcpy(nwild,wild);
+    if (strrchr(nwild,'*')&&strrchr(nwild,'.')==NULL) safe_strcat(nwild,".*");
     find_ext=strrchr(nwild,'.');
     if (find_ext) {
             Bitu size=(Bitu)(find_ext-nwild);
