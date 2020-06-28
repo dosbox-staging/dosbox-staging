@@ -447,7 +447,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	if(strlen(args)!= 0){
 		if(*args != ' '){ //put a space in front
 			line[0]=' ';line[1]=0;
-			strncat(line,args,CMD_MAXLINE-2);
+			safe_strncat(line,args,CMD_MAXLINE-2);
 			line[CMD_MAXLINE-1]=0;
 		}
 		else

@@ -95,7 +95,7 @@ char* fatDrive::Generate_SFN(const char *path, const char *name) {
 	char lfn[LFN_NAMELENGTH+1], fullname[DOS_PATHLENGTH+DOS_NAMELENGTH_ASCII], *n;
 	if (name==NULL||!*name) return NULL;
 	if (strlen(name)>LFN_NAMELENGTH) {
-		strncpy(lfn, name, LFN_NAMELENGTH);
+		safe_strncpy(lfn, name, LFN_NAMELENGTH);
 		lfn[LFN_NAMELENGTH]=0;
 	} else
 		safe_strcpy(lfn, name);
