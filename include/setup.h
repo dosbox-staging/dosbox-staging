@@ -21,6 +21,7 @@
 
 #include <cstdio>
 #include <list>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -304,21 +305,33 @@ public:
 	std::string GetPropValue(const std::string &property) const override;
 };
 
-class Prop_multival:public Property{
+class Prop_multival : public Property {
 protected:
-	Section_prop* section;
+	std::unique_ptr<Section_prop> section;
 	std::string separator;
 	void make_default_value();
+
 public:
-	Prop_multival(std::string const& _propname, Changeable::Value when,std::string const& sep):Property(_propname,when), section(new Section_prop("")),separator(sep) {
-		default_value = value = "";
+	Prop_multival(const std::string &name,
+	              Changeable::Value when,
+	              const std::string &sep)
+	        : Property(name, when),
+	          section(new Section_prop("")),
+	          separator(sep)
+	{
+		default_value = "";
+		value = "";
 	}
-	Section_prop *GetSection() { return section; }
-	const Section_prop *GetSection() const { return section; }
-	virtual bool SetValue(std::string const& input);
-	virtual const std::vector<Value>& GetValues() const;
-	~Prop_multival() { delete section; }
-}; //value bevat totale string. setvalue zet elk van de sub properties en checked die.
+
+	Section_prop *GetSection() { return section.get(); }
+	const Section_prop *GetSection() const { return section.get(); }
+
+	// value contains total string.
+	// SetValue sets each of the sub properties.
+	bool SetValue(const std::string &input) override;
+
+	const std::vector<Value> &GetValues() const override;
+};
 
 class Prop_multival_remain:public Prop_multival{
 public:
