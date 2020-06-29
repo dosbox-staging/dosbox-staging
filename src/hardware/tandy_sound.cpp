@@ -91,28 +91,30 @@ centerline.
 #define TDAC_DMA_BUFSIZE 1024
 
 static struct {
-	MixerChannel * chan = nullptr;
-	bool enabled;
-	Bitu last_write;
+	MixerChannel *chan = nullptr;
+	bool enabled = false;
+	Bitu last_write = 0u;
 	struct {
-		MixerChannel * chan = nullptr;
-		bool enabled;
+		MixerChannel *chan = nullptr;
+		bool enabled = false;
 		struct {
-			Bitu base;
-			Bit8u irq,dma;
+			Bitu base = 0u;
+			Bit8u irq = 0u;
+			Bit8u dma = 0u;
 		} hw;
 		struct {
-			Bitu rate;
-			Bit8u buf[TDAC_DMA_BUFSIZE];
-			DmaChannel * chan = nullptr;
-			bool transfer_done;
+			Bitu rate = 0u;
+			Bit8u buf[TDAC_DMA_BUFSIZE] = {};
+			DmaChannel *chan = nullptr;
+			bool transfer_done = false;
 		} dma;
-		Bit8u mode,control;
-		Bit16u frequency;
-		Bit8u amplitude;
-		bool irq_activated;
-	} dac;
-} tandy;
+		Bit8u mode = 0u;
+		Bit8u control = 0u;
+		Bit16u frequency = 0u;
+		Bit8u amplitude = 0u;
+		bool irq_activated = false;
+	} dac = {};
+} tandy = {};
 
 static sn76496_device device_sn76496(machine_config(), 0, 0, SOUND_CLOCK );
 static ncr8496_device device_ncr8496(machine_config(), 0, 0, SOUND_CLOCK);
@@ -136,8 +138,8 @@ static void SN76496Update(Bitu length) {
 	if (!tandy.chan)
 		return;
 
-	//Disable the channel if it's been quiet for a while
-	if ((tandy.last_write+5000)<PIC_Ticks) {
+	// Disable the channel if it's been quiet for a while
+	if ((tandy.last_write + 5000) < PIC_Ticks) {
 		tandy.enabled=false;
 		tandy.chan->Enable(false);
 		return;
@@ -213,12 +215,13 @@ static void TandyDACModeChanged()
 	}
 }
 
-static void TandyDACDMAEnabled(void) {
+static void TandyDACDMAEnabled()
+{
 	TandyDACModeChanged();
 }
 
-static void TandyDACDMADisabled(void) {
-}
+static void TandyDACDMADisabled()
+{}
 
 static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
 	switch (port) {
@@ -321,8 +324,12 @@ private:
 	MixerObject MixerChan;
 	MixerObject MixerChanDAC;
 public:
-	TANDYSOUND(Section* configuration):Module_base(configuration){
-		Section_prop * section=static_cast<Section_prop *>(configuration);
+	TANDYSOUND(Section *configuration)
+	        : Module_base(configuration),
+	          MixerChan(),
+	          MixerChanDAC()
+	{
+		Section_prop *section = static_cast<Section_prop *>(configuration);
 
 		bool enable_hw_tandy_dac=true;
 		Bitu sbport, sbirq, sbdma;
@@ -390,12 +397,9 @@ public:
 
 		((device_t&)device).device_start();
 		device.convert_samplerate(sample_rate);
-
 	}
 	~TANDYSOUND(){ }
 };
-
-
 
 static TANDYSOUND* test;
 
