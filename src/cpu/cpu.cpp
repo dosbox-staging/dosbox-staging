@@ -274,15 +274,12 @@ void CPU_CheckSegments(void) {
 	if (needs_invalidation) CPU_SetSegGeneral(gs,0);
 }
 
-
 class TaskStateSegment {
 public:
-	TaskStateSegment() {
-		valid=false;
-	}
-	bool IsValid(void) {
-		return valid;
-	}
+	TaskStateSegment() = default;
+
+	bool IsValid() const { return valid; }
+
 	Bitu Get_back(void) {
 		cpu.mpl=0;
 		Bit16u backlink=mem_readw(base);
@@ -331,12 +328,13 @@ public:
 		is386=desc.Is386();
 		return true;
 	}
-	TSS_Descriptor desc;
-	Bitu selector;
-	PhysPt base;
-	Bitu limit;
-	Bitu is386;
-	bool valid;
+
+	TSS_Descriptor desc = {};
+	Bitu selector = 0;
+	PhysPt base = 0;
+	Bitu limit = 0;
+	Bitu is386 = 0;
+	bool valid = false;
 };
 
 TaskStateSegment cpu_tss;
