@@ -37,7 +37,6 @@ public:
 	operator int () const { return _hex; }
 };
 
-class Value {
 /* 
  * Multitype storage container that is aware of the currently stored type in it.
  * Value st = "hello";
@@ -45,55 +44,86 @@ class Value {
  * st = 12 //Exception
  * in = 12 //works
  */
+class Value {
 private:
-	Hex _hex;
-	bool _bool;
-	int _int;
-	std::string* _string;
-	double _double;
+	Hex _hex = 0;
+	bool _bool = false;
+	int _int = 0;
+	std::string *_string = nullptr;
+	double _double = 0;
+
 public:
-	class WrongType { }; // Conversion error class
-	enum Etype { V_NONE, V_HEX, V_BOOL, V_INT, V_STRING, V_DOUBLE,V_CURRENT} type;
+	class WrongType {}; // Conversion error class
+
+	enum Etype {
+		V_NONE,
+		V_HEX,
+		V_BOOL,
+		V_INT,
+		V_STRING,
+		V_DOUBLE,
+		V_CURRENT
+	} type = V_NONE;
 
 	/* Constructors */
-	Value()                      :_hex(0), _bool(false),_int(0), _string(0),                  _double(0), type(V_NONE)   { };
-	Value(Hex in)                :_hex(in),_bool(false),_int(0), _string(0),                  _double(0), type(V_HEX)    { };
-	Value(int in)                :_hex(0), _bool(false),_int(in),_string(0),                  _double(0), type(V_INT)    { };
-	Value(bool in)               :_hex(0), _bool(in)   ,_int(0), _string(0),                  _double(0), type(V_BOOL)   { };
-	Value(double in)             :_hex(0), _bool(false),_int(0), _string(0),                  _double(in),type(V_DOUBLE) { };
-	Value(std::string const& in) :_hex(0), _bool(false),_int(0), _string(new std::string(in)),_double(0), type(V_STRING) { };
-	Value(char const * const in) :_hex(0), _bool(false),_int(0), _string(new std::string(in)),_double(0), type(V_STRING) { };
-	Value(Value const& in):_string(0) {plaincopy(in);}
-	~Value() { destroy();};
-	Value(std::string const& in,Etype _t) :_hex(0),_bool(false),_int(0),_string(0),_double(0),type(V_NONE) {SetValue(in,_t);}
+
+	Value() = default;
+
+	Value(const Hex &in) : _hex(in), type(V_HEX) {}
+
+	Value(int in) : _int(in), type(V_INT) {}
+
+	Value(bool in) : _bool(in), type(V_BOOL) {}
+
+	Value(double in) : _double(in), type(V_DOUBLE) {}
+
+	Value(const std::string &in, Etype t) { SetValue(in, t); }
+
+	Value(const std::string &in)
+	        : _string(new std::string(in)),
+	          type(V_STRING)
+	{}
+
+	Value(char const *const in)
+	        : _string(new std::string(in)),
+	          type(V_STRING)
+	{}
+
+	Value(const Value &in) { plaincopy(in); }
+
+	/* Destructor */
+	virtual ~Value() { destroy(); }
 
 	/* Assigment operators */
-	Value& operator= (Hex in)                 { return copy(Value(in));}
-	Value& operator= (int in)                 { return copy(Value(in));}
-	Value& operator= (bool in)                { return copy(Value(in));}
-	Value& operator= (double in)              { return copy(Value(in));}
-	Value& operator= (std::string const& in)  { return copy(Value(in));}
-	Value& operator= (char const * const in)  { return copy(Value(in));}
-	Value& operator= (Value const& in)        { return copy(Value(in));}
+	Value &operator=(Hex in) { return copy(Value(in)); }
+	Value &operator=(int in) { return copy(Value(in)); }
+	Value &operator=(bool in) { return copy(Value(in)); }
+	Value &operator=(double in) { return copy(Value(in)); }
+	Value &operator=(const std::string &in) { return copy(Value(in)); }
+	Value &operator=(char const *const in) { return copy(Value(in)); }
+	Value &operator=(const Value &in) { return copy(Value(in)); }
 
-	bool operator== (Value const & other) const;
-	operator bool () const;
-	operator Hex () const;
-	operator int () const;
-	operator double () const;
-	operator char const* () const;
-	bool SetValue(std::string const& in,Etype _type = V_CURRENT);
+	bool operator==(const Value &other) const;
+
+	operator bool() const;
+	operator Hex() const;
+	operator int() const;
+	operator double() const;
+	operator char const *() const;
+
+	bool SetValue(const std::string &in, Etype _type = V_CURRENT);
+
 	std::string ToString() const;
 
 private:
 	void destroy() throw();
-	Value& copy(Value const& in);
-	void plaincopy(Value const& in) throw();
-	bool set_hex(std::string const& in);
-	bool set_int(std::string const&in);
-	bool set_bool(std::string const& in);
-	void set_string(std::string const& in);
-	bool set_double(std::string const& in);
+	Value &copy(const Value &in);
+	void plaincopy(const Value &in) throw();
+	bool set_hex(const std::string &in);
+	bool set_int(const std::string &in);
+	bool set_bool(const std::string &in);
+	void set_string(const std::string &in);
+	bool set_double(const std::string &in);
 };
 
 class Property {
