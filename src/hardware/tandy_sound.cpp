@@ -178,7 +178,7 @@ static void TandyDAC_DMA_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 
 static void TandyDACModeChanged()
 {
-	if (!tandy.dac.chan || !tandy.dac.dma.chan) {
+	if (!tandy.dac.chan) {
 		DEBUG_LOG_MSG("TANDY: Skipping mode change until the DAC is "
 		              "initialized");
 		return;
