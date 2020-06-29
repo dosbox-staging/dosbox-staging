@@ -81,7 +81,7 @@ public:
 	
 	void AddStretched(Bitu len,Bit16s * data);		//Strech block up into needed data
 
-	void FillUp(void);
+	void FillUp();
 	void Enable(bool should_enable);
 	void FlushSamples();
 
@@ -92,7 +92,11 @@ public:
 	bool is_enabled = false;
 
 private:
-	MixerChannel();
+	// prevent default construction, copying, and assignment
+	MixerChannel() = delete;
+	MixerChannel(const MixerChannel &) = delete;
+	MixerChannel &operator=(const MixerChannel &) = delete;
+
 	Envelope envelope;
 	MIXER_Handler handler = nullptr;
 	Bitu freq_add = 0u; // This gets added the frequency counter each mixer
@@ -136,7 +140,6 @@ public:
 	MixerChannel* Install(MIXER_Handler handler,Bitu freq,const char * name);
 	~MixerObject();
 };
-
 
 /* PC Speakers functions, tightly related to the timer functions */
 void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode);

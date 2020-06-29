@@ -104,13 +104,13 @@ static struct {
 
 Bit8u MixTemp[MIXER_BUFSIZE];
 
-MixerChannel::MixerChannel(MIXER_Handler _handler, Bitu _freq, const char *_name)
+MixerChannel::MixerChannel(MIXER_Handler _handler,
+                           MAYBE_UNUSED Bitu _freq,
+                           const char *_name)
         : name(_name),
           envelope(name),
           handler(_handler)
-{
-	(void)_freq; // unused, but required for API compliance
-}
+{}
 
 MixerChannel * MIXER_AddChannel(MIXER_Handler handler, Bitu freq, const char * name) {
 	MixerChannel * chan=new MixerChannel(handler, freq, name);
@@ -637,8 +637,8 @@ static void MIXER_Mix_NoSound()
 	mixer.done=0;
 }
 
-static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
-	(void)userdata; // unused, but required for API compliance
+static void SDLCALL MIXER_CallBack(MAYBE_UNUSED void *userdata, Uint8 *stream, int len)
+{
 	memset(stream, 0, len);
 	Bitu need=(Bitu)len/MIXER_SSIZE;
 	Bit16s * output=(Bit16s *)stream;
@@ -746,9 +746,8 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 	}
 }
 
-static void MIXER_Stop(Section* sec) {
-	(void)sec; // unused, but required for API compliance
-}
+static void MIXER_Stop(MAYBE_UNUSED Section *sec)
+{}
 
 class MIXER : public Program {
 public:
