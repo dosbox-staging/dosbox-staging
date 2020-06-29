@@ -29,12 +29,13 @@
 
 class Hex {
 private:
-	int _hex;
+	int value;
+
 public:
-	Hex(int in):_hex(in) { };
-	Hex():_hex(0) { };
-	bool operator==(Hex const& other) {return _hex == other._hex;}
-	operator int () const { return _hex; }
+	Hex() : value(0) {}
+	Hex(int in) : value(in) {}
+	bool operator==(const Hex &other) const { return value == other.value; }
+	operator int() const { return value; }
 };
 
 /* 
