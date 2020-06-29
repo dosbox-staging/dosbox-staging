@@ -91,11 +91,11 @@ centerline.
 #define TDAC_DMA_BUFSIZE 1024
 
 static struct {
-	MixerChannel * chan;
+	MixerChannel * chan = nullptr;
 	bool enabled;
 	Bitu last_write;
 	struct {
-		MixerChannel * chan;
+		MixerChannel * chan = nullptr;
 		bool enabled;
 		struct {
 			Bitu base;
@@ -104,7 +104,7 @@ static struct {
 		struct {
 			Bitu rate;
 			Bit8u buf[TDAC_DMA_BUFSIZE];
-			DmaChannel * chan;
+			DmaChannel * chan = nullptr;
 			bool transfer_done;
 		} dma;
 		Bit8u mode,control;
@@ -122,7 +122,7 @@ static sn76496_base_device* activeDevice = &device_ncr8496;
 
 static void SN76496Write(Bitu /*port*/,Bitu data,Bitu /*iolen*/) {
 	tandy.last_write=PIC_Ticks;
-	if (!tandy.enabled) {
+	if (!tandy.enabled && tandy.chan) {
 		tandy.chan->Enable(true);
 		tandy.enabled=true;
 	}
@@ -133,6 +133,9 @@ static void SN76496Write(Bitu /*port*/,Bitu data,Bitu /*iolen*/) {
 }
 
 static void SN76496Update(Bitu length) {
+	if (!tandy.chan)
+		return;
+
 	//Disable the channel if it's been quiet for a while
 	if ((tandy.last_write+5000)<PIC_Ticks) {
 		tandy.enabled=false;
@@ -171,8 +174,15 @@ static void TandyDAC_DMA_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 	}
 }
 
-static void TandyDACModeChanged(void) {
-	switch (tandy.dac.mode&3) {
+static void TandyDACModeChanged()
+{
+	if (!tandy.dac.chan || !tandy.dac.dma.chan) {
+		DEBUG_LOG_MSG("TANDY: Skipping mode change until the DAC is "
+		              "initialized");
+		return;
+	}
+
+	switch (tandy.dac.mode & 3) {
 	case 0:
 		// joystick mode
 		break;
@@ -285,6 +295,12 @@ static Bitu TandyDACRead(Bitu port,Bitu /*iolen*/) {
 
 static void TandyDACUpdate(size_t requested)
 {
+	if (!tandy.dac.chan || !tandy.dac.dma.chan) {
+		DEBUG_LOG_MSG(
+		        "TANDY: Skipping update until the DAC is initialized");
+		return;
+	}
+
 	uint8_t *buf = tandy.dac.dma.buf;
 	const bool should_read = tandy.dac.enabled &&
 	                         (tandy.dac.mode & 0x0c) == 0x0c &&
