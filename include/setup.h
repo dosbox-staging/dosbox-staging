@@ -269,14 +269,18 @@ public:
 
 class Prop_multival;
 class Prop_multival_remain;
-class Section_prop:public Section {
+
+class Section_prop : public Section {
 private:
-	std::list<Property*> properties;
+	std::list<Property *> properties = {};
 	typedef std::list<Property*>::iterator it;
 	typedef std::list<Property*>::const_iterator const_it;
 
 public:
-	Section_prop(std::string const&  _sectionname):Section(_sectionname){}
+	Section_prop(const std::string &name) : Section(name) {}
+
+	~Section_prop() override;
+
 	Prop_int* Add_int(std::string const& _propname, Property::Changeable::Value when, int _value=0);
 	Prop_string* Add_string(std::string const& _propname, Property::Changeable::Value when, char const * const _value=NULL);
 	Prop_path* Add_path(std::string const& _propname, Property::Changeable::Value when, char const * const _value=NULL);
@@ -295,11 +299,9 @@ public:
 	Prop_path* Get_path(std::string const& _propname) const;
 	Prop_multival* Get_multival(std::string const& _propname) const;
 	Prop_multival_remain* Get_multivalremain(std::string const& _propname) const;
-	bool HandleInputline(std::string const& gegevens);
-	void PrintData(FILE* outfile) const;
-	virtual std::string GetPropValue(std::string const& _property) const;
-	//ExecuteDestroy should be here else the destroy functions use destroyed properties
-	virtual ~Section_prop();
+	bool HandleInputline(const std::string &line) override;
+	void PrintData(FILE* outfile) const override;
+	std::string GetPropValue(const std::string &property) const override;
 };
 
 class Prop_multival:public Property{

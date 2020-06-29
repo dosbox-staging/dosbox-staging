@@ -813,14 +813,14 @@ Section_prop* Config::AddSection_prop(char const * const _name,void (*_initfunct
 	return blah;
 }
 
-Section_prop::~Section_prop() {
+Section_prop::~Section_prop()
+{
 	//ExecuteDestroy should be here else the destroy functions use destroyed properties
 	ExecuteDestroy(true);
 	/* Delete properties themself (properties stores the pointer of a prop */
 	for(it prop = properties.begin(); prop != properties.end(); ++prop)
 		delete (*prop);
 }
-
 
 Section_line* Config::AddSection_line(char const * const _name,void (*_initfunction)(Section*)) {
 	Section_line* blah = new Section_line(_name);
