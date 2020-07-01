@@ -42,6 +42,9 @@
 
 DOS_File * Files[DOS_FILES];
 DOS_Drive * Drives[DOS_DRIVES];
+bool force_sfn = false;
+
+int lfn_filefind_handle = LFN_FILEFIND_NONE;
 
 Bit8u DOS_GetDefaultDrive(void) {
 //	return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDrive();
@@ -83,6 +86,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 		if ((c>='a') && (c<='z')) c-=32;
 		else if (c==' ') continue; /* should be separator */
 		else if (c=='/') c='\\';
+		else if (c=='"') continue;
 		upname[w++]=c;
 	}
 	while (r>0 && name_int[r-1]==' ') r--;
@@ -189,7 +193,25 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 		}
 		tempdir[w++]=upname[r++];
 	}
-	return true;	
+	return true;
+}
+
+bool DOS_GetSFNPath(char const * const path,char * SFNPath,bool LFN) {
+	char pdir[LFN_NAMELENGTH+4], *p;
+	Bit8u drive;char fulldir[DOS_PATHLENGTH],LFNPath[CROSS_LEN];
+	char name[DOS_NAMELENGTH_ASCII], lname[LFN_NAMELENGTH];
+	Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
+	if (!DOS_MakeName(path,fulldir,&drive)) return false;
+    sprintf(SFNPath,"%c:\\",drive+'A');
+    safe_strcpy(LFNPath,SFNPath);
+    p = fulldir;
+    if (*p==0) return true;
+	int k=0;
+	for (int i=0;i<(int)strlen(path);i++)
+		if (path[i]!='\"')
+			SFNPath[k++]=path[i];
+	SFNPath[k]=0;
+	return true;
 }
 
 bool DOS_GetCurrentDir(Bit8u drive,char * const buffer) {

@@ -32,6 +32,8 @@
 
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
+int enablelfn=-1;
+bool uselfn;
 
 #define DOS_COPYBUFSIZE 0x10000
 Bit8u dos_copybuf[DOS_COPYBUFSIZE];
@@ -1255,6 +1257,28 @@ public:
 		dos.version.minor=0;
 		dos.direct_output=false;
 		dos.internal_output=false;
+
+		const Section_prop* section = static_cast<Section_prop*>(configuration);
+		if (!strcmp(section->Get_string("lfn"), "true")) enablelfn=1;
+		else if (!strcmp(section->Get_string("lfn"), "false")) enablelfn=0;
+		else if (!strcmp(section->Get_string("lfn"), "autostart")) enablelfn=-2;
+		else enablelfn=-1;
+
+		std::string ver = section->Get_string("ver");
+		if (!ver.empty()) {
+			const char *s = ver.c_str();
+
+			if (isdigit(*s)) {
+				dos.version.minor=0;
+				dos.version.major=(int)strtoul(s,(char**)(&s),10);
+				if (*s == '.' || *s == ' ') {
+					s++;
+					if (isdigit(*s))
+						dos.version.minor=(*(s-1)=='.'&&strlen(s)==1?10:1)*(int)strtoul(s,(char**)(&s),10);
+				}
+			}
+		}
+		uselfn = enablelfn==1 || ((enablelfn == -1 || enablelfn == -2) && dos.version.major>6);
 	}
 	~DOS(){
 		for (Bit16u i=0;i<DOS_DRIVES;i++) delete Drives[i];
