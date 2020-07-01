@@ -13,11 +13,9 @@ jobs:
           - name: MSVC 32-bit
             vs-platform: x86
             vcpkg-triplet: x86-windows
-            max_warnings: -1
           - name: MSVC 64-bit
             vs-platform: x64
             vcpkg-triplet: x64-windows
-            max_warnings: -1
     steps:
       - uses:  actions/checkout@v2
       - name:  Install packages
@@ -35,11 +33,6 @@ jobs:
         run: |
           cd vs
           MSBuild -m dosbox.sln -p:Configuration=Debug -p:Platform=${{ matrix.conf.vs-platform }} | Tee-Object build.log
-      - name:  Summarize warnings
-        shell: pwsh
-        env:
-          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run: python scripts\count-warnings.py --msvc vs\build.log
 
 
   build_windows_vs_release:
