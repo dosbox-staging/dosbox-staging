@@ -806,8 +806,12 @@ private:
 		                        button);
 	}
 
-	CBind * CreateHatBind(uint8_t hat, uint8_t value)
+	CBind *CreateHatBind(uint8_t hat, uint8_t value)
 	{
+		if (is_dummy)
+			return nullptr;
+		assert(hat_lists);
+
 		Bitu hat_dir;
 		if (value & SDL_HAT_UP)
 			hat_dir = 0;
