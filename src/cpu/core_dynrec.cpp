@@ -213,9 +213,10 @@ Bits CPU_Core_Dynrec_Run(void) {
 	for (;;) {
 		// Determine the linear address of CS:EIP
 		PhysPt ip_point=SegPhys(cs)+reg_eip;
-		#if C_HEAVY_DEBUG
-			if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
-		#endif
+#if C_HEAVY_DEBUG
+		if (DEBUG_HeavyIsBreakpoint())
+			return debugCallback;
+#endif
 
 		CodePageHandlerDynRec * chandler=0;
 		// see if the current page is present and contains code
