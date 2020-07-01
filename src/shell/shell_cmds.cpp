@@ -810,34 +810,34 @@ void DOS_Shell::CMD_DIR(char * args) {
 	byte_count=0;file_count=0;dir_count=0;p_count=0;
 	Bitu w_size = optW?5:1;
 
-	args = (char *)to_search_pattern(args).c_str();
+	char *pattern = (char *)to_search_pattern(args).c_str();
 
-	if (!strrchr(args,'*') && !strrchr(args,'?')) {
+	if (DOS_FindDevice(pattern) != DOS_DEVICES) {
+		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),pattern);
+		return;
+	}
+	if (!strrchr(pattern,'*') && !strrchr(pattern,'?')) {
 		Bit16u attribute=0;
-		if(!DOS_GetSFNPath(args,sargs,false)) {
+		if(!DOS_GetSFNPath(pattern,sargs,false)) {
 			WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 			return;
 		}
 		if(DOS_GetFileAttr(sargs,&attribute) && (attribute&DOS_ATTR_DIRECTORY) ) {
 			DOS_FindFirst(sargs,0xffff & ~DOS_ATTR_VOLUME);
 			DOS_DTA dta(dos.dta());
-			sprintf(args,"%s\\*.*",sargs);	// if no wildcard and a directory, get its files
+			sprintf(pattern,"%s\\*.*",sargs);	// if no wildcard and a directory, get its files
 		}
 	}
-	if (!DOS_GetSFNPath(args,sargs,false)) {
+	if (!DOS_GetSFNPath(pattern,sargs,false)) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
-		return;
-	}
-	if (DOS_FindDevice(sargs) != DOS_DEVICES) {
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
 		return;
 	}
 	if (!(uselfn&&!optZ&&strchr(sargs,'*'))&&!strrchr(sargs,'.'))
 		safe_strcat(sargs,".*");	// if no extension, get them all
-	sprintf(args,"\"%s\"",sargs);
+	sprintf(pattern,"\"%s\"",sargs);
 
-	/* Make a full path in the args */
-	if (!DOS_Canonicalize(args,path)) {
+	/* Make a full path in the pattern */
+	if (!DOS_Canonicalize(pattern,path)) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 		return;
 	}
@@ -865,7 +865,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	dos.dta(dos.tables.tempdta);
 	DOS_DTA dta(dos.dta());
 	dirs.clear();
-	dirs.push_back(std::string(args));
+	dirs.push_back(std::string(pattern));
 	while (!dirs.empty()) {
 		if (!doDir(this, (char *)dirs.begin()->c_str(), dta, numformat, w_size, optW, optZ, optS, optP, optB, optA, optAD, optAminusD, optAS, optAminusS, optAH, optAminusH, optAR, optAminusR, optAA, optAminusA, optO, optOG, optON, optOD, optOE, optOS, reverseSort)) {dos.dta(save_dta);return;}
 		dirs.erase(dirs.begin());
@@ -875,7 +875,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 			WriteOut("\n");
 			if (!dirPaused(this, w_size, optP, optW)) {dos.dta(save_dta);return;}
 			if (!file_count&&!dir_count)
-				WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
+				WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),pattern);
 			else
 				WriteOut(MSG_Get("SHELL_CMD_DIR_FILES_LISTED"));
 			if (!dirPaused(this, w_size, optP, optW)) {dos.dta(save_dta);return;}
