@@ -1481,8 +1481,10 @@ public:
 			change_action_text("Press a key/joystick button or move the joystick.",CLR_RED);
 			break;
 		case BB_Del:
-			if (mapper.abindit!=mapper.aevent->bindlist.end())  {
-				delete (*mapper.abindit);
+			if (mapper.abindit != mapper.aevent->bindlist.end()) {
+				auto *active_bind = *mapper.abindit;
+				all_binds.remove(active_bind);
+				delete active_bind;
 				mapper.abindit=mapper.aevent->bindlist.erase(mapper.abindit);
 				if (mapper.abindit==mapper.aevent->bindlist.end()) 
 					mapper.abindit=mapper.aevent->bindlist.begin();
