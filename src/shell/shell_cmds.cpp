@@ -805,6 +805,10 @@ void DOS_Shell::CMD_DIR(char * args) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		return;
 	}
+	if (DOS_FindDevice(args) != DOS_DEVICES) {
+		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
+		return;
+	}
 	byte_count=0;file_count=0;dir_count=0;p_count=0;
 	Bitu w_size = optW?5:1;
 
@@ -821,10 +825,6 @@ void DOS_Shell::CMD_DIR(char * args) {
 			DOS_DTA dta(dos.dta());
 			sprintf(args,"%s\\*.*",sargs);	// if no wildcard and a directory, get its files
 		}
-	}
-	if (DOS_FindDevice(args) != DOS_DEVICES) {
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
-		return;
 	}
 	if (!DOS_GetSFNPath(args,sargs,false)) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
