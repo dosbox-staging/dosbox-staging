@@ -715,7 +715,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 void DOS_Shell::CMD_DIR(char * args) {
 	HELP("DIR");
 	char numformat[16];
-	char path[LFN_NAMELENGTH+2];
+	char path[LFN_NAMELENGTH+2], pattern[LFN_NAMELENGTH+2];
 	char sargs[CROSS_LEN];
 
 	std::string line;
@@ -810,8 +810,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	byte_count=0;file_count=0;dir_count=0;p_count=0;
 	Bitu w_size = optW?5:1;
 
-	char *pattern = (char *)to_search_pattern(args).c_str();
-
+	strcpy(pattern, to_search_pattern(args).c_str());
 	if (DOS_FindDevice(pattern) != DOS_DEVICES) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),pattern);
 		return;
