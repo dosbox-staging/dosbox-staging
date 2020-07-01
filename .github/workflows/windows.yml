@@ -43,15 +43,26 @@ jobs:
 
 
   build_windows_vs_release:
-    name: Release build (32-bit)
+    name: ${{ matrix.conf.name }}
     runs-on: windows-latest
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
+    strategy:
+      matrix:
+        conf:
+          - name: Release build (32-bit)
+            vcpkg-triplet: x86-windows
+            vs-platform: x86
+            vs-release-dirname: Win32
+          - name: Release build (64-bit)
+            vcpkg-triplet: x64-windows
+            vs-platform: x64
+            vs-release-dirname: x64
     steps:
       - uses:  actions/checkout@v2
       - name:  Install packages
         shell: pwsh
         run: |
-          vcpkg install libpng sdl2 sdl2-net opusfile
+          vcpkg install --triplet ${{ matrix.conf.vcpkg-triplet }} libpng sdl2 sdl2-net opusfile
           vcpkg integrate install
       - name:  Log environment
         shell: pwsh
@@ -70,37 +81,41 @@ jobs:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
-          MSBuild -m dosbox.sln -p:Configuration=Release -p:Platform=x86
+          MSBuild -m dosbox.sln -p:Configuration=Release -p:Platform=${{ matrix.conf.vs-platform }}
       - name:  Package
         shell: bash
         run: |
           set -x
+
           # Prepare content
+          readonly RELEASE_DIR=${{ matrix.conf.vs-release-dirname }}/Release
           mkdir -p dest/doc
-          cp vs/Win32/Release/dosbox.exe           dest/
-          cp COPYING                               dest/COPYING.txt
-          cp docs/README.template                  dest/README.txt
-          cp docs/README.video                     dest/doc/video.txt
-          cp README                                dest/doc/manual.txt
-          cp vs/Win32/Release/libpng16.dll         dest/
-          cp vs/Win32/Release/ogg.dll              dest/
-          cp vs/Win32/Release/opus.dll             dest/
-          cp vs/Win32/Release/SDL2.dll             dest/
-          cp vs/Win32/Release/SDL2_net.dll         dest/
-          cp src/libs/zmbv/Win32/Release/zlib1.dll dest/
-          cp src/libs/zmbv/Win32/Release/zmbv.dll  dest/
+          cp vs/$RELEASE_DIR/dosbox.exe           dest/
+          cp COPYING                              dest/COPYING.txt
+          cp docs/README.template                 dest/README.txt
+          cp docs/README.video                    dest/doc/video.txt
+          cp README                               dest/doc/manual.txt
+          cp vs/$RELEASE_DIR/libpng16.dll         dest/
+          cp vs/$RELEASE_DIR/ogg.dll              dest/
+          cp vs/$RELEASE_DIR/opus.dll             dest/
+          cp vs/$RELEASE_DIR/SDL2.dll             dest/
+          cp vs/$RELEASE_DIR/SDL2_net.dll         dest/
+          cp src/libs/zmbv/$RELEASE_DIR/zlib1.dll dest/
+          cp src/libs/zmbv/$RELEASE_DIR/zmbv.dll  dest/
+
           # Fill README template file
           sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README.txt
           sed -i "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" dest/README.txt
           sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README.txt
+
           # Create dir for zipping
-          mv dest dosbox-staging-windows-x86-${{ env.VERSION }}
+          mv dest dosbox-staging-windows-${{ matrix.conf.vs-platform }}-${{ env.VERSION }}
 
       - name: Windows Defender AV Scan
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          $dosboxDir = "${{ github.workspace }}\dosbox-staging-windows-x86-${{ env.VERSION }}"
+          $dosboxDir = "${{ github.workspace }}\dosbox-staging-windows-${{ matrix.conf.vs-platform }}-${{ env.VERSION }}"
           & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -DisableRemediation -File $dosboxDir
           if( $LASTEXITCODE -ne 0 ) {
               Get-Content -Path $env:TEMP\MpCmdRun.log
@@ -110,5 +125,5 @@ jobs:
       - name: Upload package
         uses: actions/upload-artifact@master
         with:
-          name: dosbox-staging-windows-x86-${{ env.VERSION }}
-          path: dosbox-staging-windows-x86-${{ env.VERSION }}
+          name: dosbox-staging-windows-${{ matrix.conf.vs-platform }}-${{ env.VERSION }}
+          path: dosbox-staging-windows-${{ matrix.conf.vs-platform }}-${{ env.VERSION }}
