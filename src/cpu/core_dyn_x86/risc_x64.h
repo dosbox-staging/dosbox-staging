@@ -76,8 +76,10 @@ static struct {
 
 class opcode {
 public:
-	opcode(void) : is_word(false), imm_size(0), rex(0) {}
-	opcode(int reg,bool dword=true,Bitu acc=1) : is_word(!dword), imm_size(0), rex(0) {
+	opcode() = default;
+
+	opcode(int reg, bool dword = true, Bitu acc = 1) : is_word(!dword)
+	{
 		setreg(reg, acc);
 	}
 
@@ -95,13 +97,15 @@ public:
 	void Emit16(Bit16u op);
 
 private:
-	bool is_word;
-	int reg;
-	Bit64u imm;
-	int imm_size;
+	bool is_word = false;
+	int reg = 0;
+	uint64_t imm = 0;
+	int imm_size = 0;
+	uint8_t rex = 0;
+	uint8_t modrm = 0;
+	uint8_t sib = 0;
 
-	Bit8u rex, modrm, sib;
-	Bits offset;
+	Bits offset = 0;
 
 	void EmitImm(void) {
 		switch(imm_size) {
