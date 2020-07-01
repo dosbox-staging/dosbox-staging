@@ -538,7 +538,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 		do {    /* File name and extension */
 			DtaResult result;
 			dta.GetResult(result.name,result.size,result.date,result.time,result.attr);
-			strcpy(result.lname,result.name);
+			safe_strcpy(result.lname,result.name);
 
 			/* Skip non-directories if option AD is present, or skip dirs in case of A-D */
 			if(optAD && !(result.attr&DOS_ATTR_DIRECTORY) ) continue;
@@ -688,7 +688,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 			do {    /* File name and extension */
 				DtaResult result;
 				dta.GetResult(result.name,result.size,result.date,result.time,result.attr);
-				strcpy(result.lname,result.name);
+				safe_strcpy(result.lname,result.name);
 
 				if(result.attr&DOS_ATTR_DIRECTORY && strcmp(result.name, ".")&&strcmp(result.name, "..")) {
 					safe_strcat(sargs, result.name);
@@ -823,8 +823,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 		if(DOS_GetFileAttr(sargs,&attribute) && (attribute&DOS_ATTR_DIRECTORY) ) {
 			DOS_FindFirst(sargs,0xffff & ~DOS_ATTR_VOLUME);
 			DOS_DTA dta(dos.dta());
-			strcpy(args,sargs);
-			strcat(args,"\\*.*");	// if no wildcard and a directory, get its files
+			sprintf(args,"%s\\*.*",sargs);	// if no wildcard and a directory, get its files
 		}
 	}
 	if (!DOS_GetSFNPath(args,sargs,false)) {
@@ -963,7 +962,7 @@ void DOS_Shell::CMD_LS(char *args)
 	do {
 		DtaResult result;
 		dta.GetResult(result.name, result.size, result.date, result.time, result.attr);
-		strcpy(result.lname,result.name);
+		safe_strcpy(result.lname,result.name);
 		results.push_back(result);
 	} while ((ret = DOS_FindNext()) == true);
 	lfn_filefind_handle=fbak;

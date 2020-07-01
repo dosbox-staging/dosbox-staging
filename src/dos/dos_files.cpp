@@ -68,10 +68,14 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 	const char * name_int = name;
 	char tempdir[DOS_PATHLENGTH];
 	char upname[DOS_PATHLENGTH];
-	Bitu r,w;
+	Bitu r,w,q=0;
 	Bit8u c;
 	*drive = DOS_GetDefaultDrive();
 	/* First get the drive */
+	while (name_int[0]=='"') {
+		q++;
+		name_int++;
+	}
 	if (name_int[1]==':') {
 		*drive=(name_int[0] | 0x20)-'a';
 		name_int+=2;
@@ -86,7 +90,8 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 		if ((c>='a') && (c<='z')) c-=32;
 		else if (c==' ') continue; /* should be separator */
 		else if (c=='/') c='\\';
-		else if (c=='"') continue;
+		else if (c=='"') {q++;continue;}
+		else if (uselfn&&!force_sfn&&c==' ' && q/2*2 == q) continue;
 		upname[w++]=c;
 	}
 	while (r>0 && name_int[r-1]==' ') r--;
