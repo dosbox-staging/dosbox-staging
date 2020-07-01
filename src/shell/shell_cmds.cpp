@@ -729,7 +729,9 @@ void DOS_Shell::CMD_DIR(char * args) {
 	ScanCMDBool(args,"4"); /* /4 ignored (default) */
 	bool optW=ScanCMDBool(args,"W");
 	bool optP=ScanCMDBool(args,"P");
-	if (ScanCMDBool(args,"WP") || ScanCMDBool(args,"PW")) optW=optP=true;
+	if (ScanCMDBool(args,"WP") || ScanCMDBool(args,"PW")) {
+		optW=optP=true;
+	}
 	if (ScanCMDBool(args,"-W")) optW=false;
 	if (ScanCMDBool(args,"-P")) optP=false;
 	bool optZ=ScanCMDBool(args,"Z");
@@ -805,10 +807,6 @@ void DOS_Shell::CMD_DIR(char * args) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		return;
 	}
-	if (DOS_FindDevice(args) != DOS_DEVICES) {
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
-		return;
-	}
 	byte_count=0;file_count=0;dir_count=0;p_count=0;
 	Bitu w_size = optW?5:1;
 
@@ -828,6 +826,10 @@ void DOS_Shell::CMD_DIR(char * args) {
 	}
 	if (!DOS_GetSFNPath(args,sargs,false)) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
+		return;
+	}
+	if (DOS_FindDevice(sargs) != DOS_DEVICES) {
+		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
 		return;
 	}
 	if (!(uselfn&&!optZ&&strchr(sargs,'*'))&&!strrchr(sargs,'.'))
