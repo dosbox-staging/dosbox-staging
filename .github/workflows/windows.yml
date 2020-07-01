@@ -11,19 +11,17 @@ jobs:
       matrix:
         conf:
           - name: MSVC 32-bit
-            vs-platform: x86
-            vcpkg-triplet: x86-windows
+            arch: x86
             max_warnings: 343
           - name: MSVC 64-bit
-            vs-platform: x64
-            vcpkg-triplet: x64-windows
+            arch: x64
             max_warnings: 2208
     steps:
       - uses:  actions/checkout@v2
       - name:  Install packages
         shell: pwsh
         run: |
-          vcpkg install --triplet ${{ matrix.conf.vcpkg-triplet }} libpng sdl2 sdl2-net opusfile
+          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net opusfile
           vcpkg integrate install
       - name:  Log environment
         shell: pwsh
@@ -34,7 +32,7 @@ jobs:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
-          MSBuild -m dosbox.sln -p:Configuration=Debug -p:Platform=${{ matrix.conf.vs-platform }} | Tee-Object build.log
+          MSBuild -m dosbox.sln -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }} | Tee-Object build.log
       - name:  Summarize warnings
         shell: pwsh
         env:
@@ -50,19 +48,17 @@ jobs:
       matrix:
         conf:
           - name: Release build (32-bit)
-            vcpkg-triplet: x86-windows
-            vs-platform: x86
+            arch: x86
             vs-release-dirname: Win32
           - name: Release build (64-bit)
-            vcpkg-triplet: x64-windows
-            vs-platform: x64
+            arch: x64
             vs-release-dirname: x64
     steps:
       - uses:  actions/checkout@v2
       - name:  Install packages
         shell: pwsh
         run: |
-          vcpkg install --triplet ${{ matrix.conf.vcpkg-triplet }} libpng sdl2 sdl2-net opusfile
+          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net opusfile
           vcpkg integrate install
       - name:  Log environment
         shell: pwsh
@@ -81,7 +77,7 @@ jobs:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
-          MSBuild -m dosbox.sln -p:Configuration=Release -p:Platform=${{ matrix.conf.vs-platform }}
+          MSBuild -m dosbox.sln -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
       - name:  Package
         shell: bash
         run: |
@@ -109,13 +105,13 @@ jobs:
           sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README.txt
 
           # Create dir for zipping
-          mv dest dosbox-staging-windows-${{ matrix.conf.vs-platform }}-${{ env.VERSION }}
+          mv dest dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}
 
       - name: Windows Defender AV Scan
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          $dosboxDir = "${{ github.workspace }}\dosbox-staging-windows-${{ matrix.conf.vs-platform }}-${{ env.VERSION }}"
+          $dosboxDir = "${{ github.workspace }}\dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}"
           & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -DisableRemediation -File $dosboxDir
           if( $LASTEXITCODE -ne 0 ) {
               Get-Content -Path $env:TEMP\MpCmdRun.log
@@ -125,5 +121,5 @@ jobs:
       - name: Upload package
         uses: actions/upload-artifact@master
         with:
-          name: dosbox-staging-windows-${{ matrix.conf.vs-platform }}-${{ env.VERSION }}
-          path: dosbox-staging-windows-${{ matrix.conf.vs-platform }}-${{ env.VERSION }}
+          name: dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}
+          path: dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}
