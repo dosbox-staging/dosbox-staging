@@ -106,6 +106,8 @@ packages installed via your package manager.
 
 ### [Windows]
 
+Our Windows snapshots include both 32-bit (x86) and 64-bit (x64) builds.
+
 A dosbox.exe file in a snapshot package is not signed, therefore Windows 10
 might prevent the program from starting.
 
@@ -114,8 +116,6 @@ unrecognised app from starting", you have two options to dismiss it:
 
 1) Click "More info", and button "Run anyway" will appear.
 2) Right-click on dosbox.exe, select: Properties → General → Security → Unblock
-
-Windows packages are built for "x86" architecture (in practice it means i686).
 
 ### [macOS]
 
