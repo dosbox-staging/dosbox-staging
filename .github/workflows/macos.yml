@@ -11,7 +11,7 @@ jobs:
   build_macos:
     name: ${{ matrix.conf.name }}
     runs-on: macos-latest
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     strategy:
       matrix:
         conf:
@@ -52,7 +52,7 @@ jobs:
   build_macos_release:
     name: Release build
     runs-on: macos-latest
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     env:
       CC: ccache clang
       CXX: ccache clang++

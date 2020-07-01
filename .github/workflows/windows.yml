@@ -6,7 +6,7 @@ jobs:
   build_windows_vs:
     name: ${{ matrix.conf.name }}
     runs-on: windows-latest
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     strategy:
       matrix:
         conf:
@@ -45,7 +45,7 @@ jobs:
   build_windows_vs_release:
     name: Release build (32-bit)
     runs-on: windows-latest
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     steps:
       - uses:  actions/checkout@v2
       - name:  Install packages

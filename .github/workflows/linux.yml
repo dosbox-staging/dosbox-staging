@@ -11,7 +11,7 @@ jobs:
   build_ubuntu:
     name: ${{ matrix.conf.name }}
     runs-on: ${{ matrix.conf.os }}
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     strategy:
       max-parallel: 4
       matrix:
@@ -80,7 +80,7 @@ jobs:
   build_linux_release_dynamic:
     name: Release build
     runs-on: ubuntu-18.04
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222', github.actor) == false
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     steps:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update
