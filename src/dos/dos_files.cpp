@@ -202,10 +202,10 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 }
 
 bool DOS_GetSFNPath(char const * const path,char * SFNPath,bool LFN) {
-	char pdir[LFN_NAMELENGTH+4], *p;
+	char /*pdir[LFN_NAMELENGTH+4],*/ *p;
 	Bit8u drive;char fulldir[DOS_PATHLENGTH],LFNPath[CROSS_LEN];
-	char name[DOS_NAMELENGTH_ASCII], lname[LFN_NAMELENGTH];
-	Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
+	//char name[DOS_NAMELENGTH_ASCII], lname[LFN_NAMELENGTH];
+	//Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
 	if (!DOS_MakeName(path,fulldir,&drive)) return false;
     sprintf(SFNPath,"%c:\\",drive+'A');
     safe_strcpy(LFNPath,SFNPath);
