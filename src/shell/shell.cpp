@@ -713,8 +713,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_LS_HELP_LONG", "LS [drive:][path][filename] [/A] [/L] [/P] [/Z]\n\n"
 	        "  /A\tLists hidden and system files also.\n"
 	        "  /L\tLists names one per line.\n"
-		    "  /P\tPauses after each screenful of information.\n"
-			"  /Z\tDisplays short names even if LFN support is available.\n");
+	        "  /P\tPauses after each screenful of information.\n"
+	        "  /Z\tDisplays short names even if LFN support is available.\n");
 
 	MSG_Add("SHELL_CMD_CHOICE_HELP","Waits for a keypress and sets ERRORLEVEL.\n");
 	MSG_Add("SHELL_CMD_CHOICE_HELP_LONG","CHOICE [/C:choices] [/N] [/S] text\n"

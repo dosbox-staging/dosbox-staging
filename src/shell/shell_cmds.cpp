@@ -719,7 +719,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	char sargs[CROSS_LEN];
 
 	std::string line;
-	if(GetEnvStr("DIRCMD",line)){
+	if (GetEnvStr("DIRCMD",line)){
 		std::string::size_type idx = line.find('=');
 		std::string value=line.substr(idx +1 , std::string::npos);
 		line = std::string(args) + " " + value;
@@ -810,10 +810,6 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 	args = (char *)to_search_pattern(args).c_str();
 
-	if (DOS_FindDevice(args) != DOS_DEVICES) {
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
-		return;
-	}
 	if (!strrchr(args,'*') && !strrchr(args,'?')) {
 		Bit16u attribute=0;
 		if(!DOS_GetSFNPath(args,sargs,false)) {
@@ -826,13 +822,17 @@ void DOS_Shell::CMD_DIR(char * args) {
 			sprintf(args,"%s\\*.*",sargs);	// if no wildcard and a directory, get its files
 		}
 	}
+	if (DOS_FindDevice(args) != DOS_DEVICES) {
+		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
+		return;
+	}
 	if (!DOS_GetSFNPath(args,sargs,false)) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 		return;
 	}
 	if (!(uselfn&&!optZ&&strchr(sargs,'*'))&&!strrchr(sargs,'.'))
 		safe_strcat(sargs,".*");	// if no extension, get them all
-    sprintf(args,"\"%s\"",sargs);
+	sprintf(args,"\"%s\"",sargs);
 
 	/* Make a full path in the args */
 	if (!DOS_Canonicalize(args,path)) {
@@ -844,12 +844,12 @@ void DOS_Shell::CMD_DIR(char * args) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 		return;
 	}
-    if (*(sargs+strlen(sargs)-1) != '\\') safe_strcat(sargs,"\\");
+	if (*(sargs+strlen(sargs)-1) != '\\') safe_strcat(sargs,"\\");
 
 	const char drive_letter = path[0];
 	const size_t drive_idx = drive_letter - 'A';
 	const bool print_label = (drive_letter >= 'A') && Drives[drive_idx];
-    if (!optB) {
+	if (!optB) {
 		if (print_label) {
 			const char *label = Drives[drive_idx]->GetLabel();
 			WriteOut(MSG_Get("SHELL_CMD_DIR_VOLUME"), drive_letter, label);
@@ -896,8 +896,8 @@ void DOS_Shell::CMD_DIR(char * args) {
 			                              &free_clusters);
 			free_space = bytes_sector * sectors_cluster * free_clusters;
 		}
-		FormatNumber(free_space,numformat);
-		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"),dir_count,numformat);
+		FormatNumber(free_space, numformat);
+		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"), dir_count, numformat);
 		if (!dirPaused(this, w_size, optP, optW)) {dos.dta(save_dta);return;}
 	}
 	dos.dta(save_dta);
@@ -916,7 +916,7 @@ void DOS_Shell::CMD_LS(char *args)
 		return;
 	}
 
-	RealPt save_dta=dos.dta();
+	const RealPt save_dta=dos.dta();
 	dos.dta(dos.tables.tempdta);
 	DOS_DTA dta(dos.dta());
 
@@ -988,7 +988,7 @@ void DOS_Shell::CMD_LS(char *args)
 		if (total<tcols) break;
 	}
 
-	w_count = 0, p_count = 0;
+	w_count = p_count = 0;
 
 	for (const auto &entry : results) {
 		std::string name = uselfn&&!optZ?entry.lname:entry.name;
