@@ -133,8 +133,28 @@ void Program::ChangeToLongCmd() {
 	full_arguments.assign(""); //Clear so it gets even more save
 }
 
-static char last_written_character = 0;//For 0xA to OxD 0xA expansion
-void Program::WriteOut(const char * format,...) {
+bool Program::SuppressWriteOut(const char *format)
+{
+	// Have we encountered an executable thus far?
+	static bool encountered_executable = false;
+	if (encountered_executable)
+		return false;
+	if (control->GetStartupVerbosity() > Verbosity::Quiet)
+		return false;
+	if (!control->cmdline->HasExecutableName())
+		return false;
+
+	// Keep suppressing output until after we hit the first executable.
+	encountered_executable = is_executable_filename(format);
+	return true;
+}
+
+static char last_written_character = 0; // For 0xA to OxD 0xA expansion (\n to \r\n)
+void Program::WriteOut(const char *format, ...)
+{
+	if (SuppressWriteOut(format))
+		return;
+
 	char buf[2048];
 	va_list msg;
 	
@@ -158,6 +178,9 @@ void Program::WriteOut(const char * format,...) {
 }
 
 void Program::WriteOut_NoParsing(const char * format) {
+	if (SuppressWriteOut(format))
+		return;
+
 	Bit16u size = (Bit16u)strlen(format);
 	char const* buf = format;
 	dos.internal_output=true;
