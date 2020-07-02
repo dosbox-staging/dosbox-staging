@@ -91,7 +91,6 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 		else if (c==' ') continue; /* should be separator */
 		else if (c=='/') c='\\';
 		else if (c=='"') {q++;continue;}
-		else if (uselfn&&!force_sfn&&c==' ' && q/2*2 == q) continue;
 		upname[w++]=c;
 	}
 	while (r>0 && name_int[r-1]==' ') r--;
@@ -114,7 +113,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 			tempdir[w]=0;
 			if (tempdir[0]==0) { w=0;r++;continue;}
 			if (strcmp(tempdir,".")==0) {
-				tempdir[0]=0;			
+				tempdir[0]=0;
 				w=0;r++;
 				continue;
 			}
@@ -207,10 +206,10 @@ bool DOS_GetSFNPath(char const * const path,char * SFNPath,bool LFN) {
 	//char name[DOS_NAMELENGTH_ASCII], lname[LFN_NAMELENGTH];
 	//Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
 	if (!DOS_MakeName(path,fulldir,&drive)) return false;
-    sprintf(SFNPath,"%c:\\",drive+'A');
-    safe_strcpy(LFNPath,SFNPath);
-    p = fulldir;
-    if (*p==0) return true;
+	sprintf(SFNPath,"%c:\\",drive+'A');
+	safe_strcpy(LFNPath,SFNPath);
+	p = fulldir;
+	if (*p==0) return true;
 	int k=0;
 	for (int i=0;i<(int)strlen(path);i++)
 		if (path[i]!='\"')

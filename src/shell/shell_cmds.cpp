@@ -510,7 +510,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 		shell->WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 		return true;
 	}
-    if (!optB&&!optS) {
+	if (!optB&&!optS) {
 		shell->WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),uselfn&&!optZ&&DOS_GetSFNPath(path,largs,true)?largs:sargs);
 		if (optP) {
 			p_count+=optW?5:1;
@@ -524,7 +524,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 			}
 		}
 	}
-    if (*(sargs+strlen(sargs)-1) != '\\') safe_strcat(sargs,"\\");
+	if (*(sargs+strlen(sargs)-1) != '\\') safe_strcat(sargs,"\\");
 
 	Bit32u cbyte_count=0,cfile_count=0,w_count=0;
 	int fbak=lfn_filefind_handle;
