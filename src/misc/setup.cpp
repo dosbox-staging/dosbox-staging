@@ -1024,6 +1024,15 @@ bool CommandLine::FindCommand(unsigned int which,std::string & value) {
 	return true;
 }
 
+// Was a directory provided on the command line?
+bool CommandLine::HasDirectory() const
+{
+	for (const auto& arg : cmds)
+		if (open_directory(arg.c_str()))
+			return true;
+	return false;
+}
+
 // Was an executable filename provided on the command line?
 bool CommandLine::HasExecutableName() const
 {
