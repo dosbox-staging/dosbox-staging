@@ -726,7 +726,10 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_ATTRIB_HELP","Does nothing. Provided for compatibility.\n");
 	MSG_Add("SHELL_CMD_PATH_HELP","Provided for compatibility.\n");
 	MSG_Add("SHELL_CMD_VER_HELP","View and set the reported DOS version.\n");
-	MSG_Add("SHELL_CMD_VER_VER","DOSBox version %s. Reported DOS version %d.%02d.\n");
+	MSG_Add("SHELL_CMD_VER_VER","dosbox-staging version %s. Reported DOS version %d.%02d.\n");
+	MSG_Add("SHELL_CMD_VER_HELP_LONG","VER\n"
+	       "VER SET [major.minor] or VER SET [major minor]\n\n"
+	       "  [major.minor] or [major minor]  Set the reported DOS version.\n");
 
 	/* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
