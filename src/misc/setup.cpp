@@ -981,6 +981,27 @@ void Config::StartUp()
 	(*_start_function)();
 }
 
+Verbosity Config::GetStartupVerbosity() const
+{
+	const Section* s = GetSection("dosbox");
+	assert(s);
+	const std::string user_choice = s->GetPropValue("startup_verbosity");
+
+	if (user_choice == "high")
+		return Verbosity::High;
+	if (user_choice == "medium")
+		return Verbosity::Medium;
+	if (user_choice == "low")
+		return Verbosity::Low;
+	if (user_choice == "quiet")
+		return Verbosity::Quiet;
+	// auto-mode
+	if (cmdline->HasDirectory() || cmdline->HasExecutableName())
+		return Verbosity::Low;
+	else
+		return Verbosity::High;
+}
+
 bool CommandLine::FindExist(char const * const name,bool remove) {
 	cmd_it it;
 	if (!(FindEntry(name,it,false))) return false;
