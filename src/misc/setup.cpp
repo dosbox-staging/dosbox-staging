@@ -1024,6 +1024,15 @@ bool CommandLine::FindCommand(unsigned int which,std::string & value) {
 	return true;
 }
 
+// Was an executable filename provided on the command line?
+bool CommandLine::HasExecutableName() const
+{
+	for (const auto& arg : cmds)
+		if (is_executable_filename(arg))
+			return true;
+	return false;
+}
+
 bool CommandLine::FindEntry(char const * const name,cmd_it & it,bool neednext) {
 	for (it = cmds.begin(); it != cmds.end(); ++it) {
 		if (!strcasecmp((*it).c_str(),name)) {
