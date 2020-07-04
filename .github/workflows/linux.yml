@@ -167,7 +167,7 @@ jobs:
           sudo freshclam --quiet && sudo freshclam
           clamscan --heuristic-scan-precedence=yes --recursive --infected .
       - name: Upload tarball
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2
         # GitHub automatically zips the artifacts (there's no way to create
         # a tarball), and it removes all executable flags while zipping.
         # Letting it zip a tarball preserves flags in the compressed files.
