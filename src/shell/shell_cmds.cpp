@@ -480,7 +480,10 @@ Bitu p_count;
 std::vector<std::string> dirs, adirs;
 
 static size_t GetPauseCount() {
-	return (real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) > 2u) ? (real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS)) : 24u;
+	Bit8u rows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
+	if (!rows||rows>100) rows=24;
+	else if (rows<3) rows=3;
+	return rows;
 }
 
 static bool dirPaused(DOS_Shell * shell, Bitu w_size, bool optP, bool optW) {
@@ -623,11 +626,13 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 					if (!ext) ext = empty_string;
 					else *ext++ = 0;
 				}
-				Bit8u day	= (Bit8u)(date & 0x001f);
-				Bit8u month	= (Bit8u)((date >> 5) & 0x000f);
-				Bit16u year = (Bit16u)((date >> 9) + 1980);
-				Bit8u hour	= (Bit8u)((time >> 5 ) >> 6);
-				Bit8u minute = (Bit8u)((time >> 5) & 0x003f);
+				// default format: one detailed entry per line
+				//
+				const auto year   = static_cast<uint16_t>((date >> 9) + 1980);
+				const auto month  = static_cast<uint8_t>((date >> 5) & 0x000f);
+				const auto day    = static_cast<uint8_t>(date & 0x001f);
+				const auto hour   = static_cast<uint8_t>((time >> 5) >> 6);
+				const auto minute = static_cast<uint8_t>((time >> 5) & 0x003f);
 
 				if (attr & DOS_ATTR_DIRECTORY) {
 					if (optW) {
