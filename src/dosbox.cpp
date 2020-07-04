@@ -812,16 +812,17 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("umb",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("Enable UMB support.");
 
-    Pstring = secprop->Add_string("ver",Property::Changeable::WhenIdle,"");
-    Pstring->Set_help("Set DOS version (5.0 by default). Specify as major.minor format.\n"
+    pstring = secprop->Add_string("ver",when_idle,"");
+    pstring->Set_help("Set DOS version (5.0 by default). Specify as major.minor format.\n"
 			"A single number is treated as the major version.\n"
 			"Common settings are 3.3, 5.0, 6.22, and 7.1.\n"
-            "Long filename (LFN) support will be enabled with a\n"
-			"reported DOS version of 7.0 or higher with \"lfn=auto\" (default).\n");
+			//"Long filename (LFN) support will be enabled with a\n"
+			//"reported DOS version of 7.0 or higher with \"lfn=auto\" (default).\n"
+            );
 
-    Pstring = secprop->Add_string("lfn",Property::Changeable::WhenIdle,"auto");
-    Pstring->Set_values(lfn_settings);
-    Pstring->Set_help("Enable long filename support. If set to auto (default), it is enabled if the reported DOS version is at least 7.0.\n"
+    pstring = secprop->Add_string("lfn",when_idle,"auto");
+    pstring->Set_values(lfn_settings);
+    pstring->Set_help("Enable long filename support. If set to auto (default), it is enabled if the reported DOS version is at least 7.0.\n"
                       "If set to autostart, the builtin VER command won't activate/disactivate LFN support according to the reported DOS version.");
 
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init,true);

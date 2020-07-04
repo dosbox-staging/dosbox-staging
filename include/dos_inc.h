@@ -50,6 +50,7 @@ struct DOS_Version {
 	Bit8u major,minor,revision;
 };
 
+extern bool uselfn;
 
 #ifdef _MSC_VER
 #pragma pack (1)

@@ -433,7 +433,7 @@ struct DtaResult {
 	Bit16u time;
 	Bit8u attr;
 
-	static bool groupDef(const DtaResult &lhs, const DtaResult &rhs) { return (lhs.attr & DOS_ATTR_DIRECTORY) && !(rhs.attr & DOS_ATTR_DIRECTORY)?true:((((lhs.attr & DOS_ATTR_DIRECTORY) && (rhs.attr & DOS_ATTR_DIRECTORY)) || (!(lhs.attr & DOS_ATTR_DIRECTORY) && !(rhs.attr & DOS_ATTR_DIRECTORY))) && strcmp(lhs.name, rhs.name) < 0); }
+	static bool groupDef(const DtaResult &lhs, const DtaResult &rhs) { return (lhs.attr & DOS_ATTR_DIRECTORY) && !(rhs.attr & DOS_ATTR_DIRECTORY)?true:(((lhs.attr & DOS_ATTR_DIRECTORY) == (rhs.attr & DOS_ATTR_DIRECTORY)) && strcmp(lhs.name, rhs.name) < 0); }
 	static bool groupDirs(const DtaResult &lhs, const DtaResult &rhs) { return (lhs.attr & DOS_ATTR_DIRECTORY) && !(rhs.attr & DOS_ATTR_DIRECTORY); }
 	static bool compareName(const DtaResult &lhs, const DtaResult &rhs) { return strcmp(lhs.name, rhs.name) < 0; }
 	static bool compareExt(const DtaResult &lhs, const DtaResult &rhs) { return strcmp(lhs.getExtension(), rhs.getExtension()) < 0; }
@@ -607,7 +607,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 					shell->WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),uselfn&&!optZ&&DOS_GetSFNPath(path,largs,true)?largs:sargs);
 					if (optP) {
 						p_count+=optW?10:2;
-						if (optS&&p_count%(GetPauseCount()*w_size)<3) {
+						if (p_count%(GetPauseCount()*w_size)<3) {
 							shell->WriteOut(MSG_Get("SHELL_CMD_PAUSE"));
 							Bit8u c;Bit16u n=1;
 							DOS_ReadFile(STDIN,&c,&n);
@@ -908,8 +908,7 @@ void DOS_Shell::CMD_LS(char *args)
 	HELP("LS");
 	bool optA=ScanCMDBool(args,"A");
 	bool optL=ScanCMDBool(args,"L");
-	bool optP=ScanCMDBool(args,"P");
-	bool optZ=ScanCMDBool(args,"Z");
+	bool optZ=false;//ScanCMDBool(args,"Z");
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
@@ -1013,15 +1012,6 @@ void DOS_Shell::CMD_LS(char *args)
 		if (col>1) {
 			++w_count;
 			if (w_count % col == 0) {p_count++;WriteOut_NoParsing("\n");}
-		}
-		if (optP&&p_count>=GetPauseCount()) {
-			WriteOut(MSG_Get("SHELL_CMD_PAUSE"));
-			Bit8u c;Bit16u n=1;
-			DOS_ReadFile(STDIN,&c,&n);
-			if (c==3) {WriteOut("^C\r\n");dos.dta(save_dta);return;}
-			if (c==0) DOS_ReadFile(STDIN,&c,&n); // read extended key
-			WriteOut_NoParsing("\n");
-			p_count=0;
 		}
 	}
 	if (col>1&&w_count%col) WriteOut_NoParsing("\n");
@@ -1169,7 +1159,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 			return;
 		}
 
-		Bit16u sourceHandle,targetHandle;
+		Bit16u sourceHandle,targetHandle=65535;
 		char nameTarget[DOS_PATHLENGTH];
 		char nameSource[DOS_PATHLENGTH];
 
@@ -1202,7 +1192,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 							Bit16u	toread = 0x8000;
 							do {
 								failed |= DOS_ReadFile(sourceHandle,buffer,&toread);
-								failed |= DOS_WriteFile(targetHandle,buffer,&toread);
+								failed |= targetHandle!=65535 && DOS_WriteFile(targetHandle,buffer,&toread);
 							} while (toread == 0x8000);
 							failed |= DOS_CloseFile(sourceHandle);
 							failed |= DOS_CloseFile(targetHandle);

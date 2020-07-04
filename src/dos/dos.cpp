@@ -1259,12 +1259,13 @@ public:
 		dos.internal_output=false;
 
 		const Section_prop* section = static_cast<Section_prop*>(configuration);
-		if (!strcmp(section->Get_string("lfn"), "true")) enablelfn=1;
-		else if (!strcmp(section->Get_string("lfn"), "false")) enablelfn=0;
-		else if (!strcmp(section->Get_string("lfn"), "autostart")) enablelfn=-2;
+		const std::string lfn=section->Get_string("lfn");
+		if (lfn=="true") enablelfn=1;
+		else if (lfn=="false") enablelfn=0;
+		else if (lfn=="autostart") enablelfn=-2;
 		else enablelfn=-1;
 
-		std::string ver = section->Get_string("ver");
+		const std::string ver = section->Get_string("ver");
 		if (!ver.empty()) {
 			const char *s = ver.c_str();
 
