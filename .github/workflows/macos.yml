@@ -152,7 +152,7 @@ jobs:
           freshclam --quiet && freshclam
           clamscan --heuristic-scan-precedence=yes --recursive --infected .
       - name: Upload disk image
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2
         # GitHub automatically zips the artifacts, and there's no option
         # to skip it or upload a file only.
         with:
