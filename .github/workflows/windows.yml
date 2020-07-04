@@ -123,3 +123,27 @@ jobs:
         with:
           name: dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}
           path: dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}
+
+
+  publish_additional_artifacts:
+    name: Publish additional artifacts
+    needs: build_windows_vs_release
+    runs-on: windows-latest
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
+    steps:
+      - uses: actions/checkout@v2
+      - name: Generate changelog
+        shell: bash
+        run: |
+          set +x
+          git fetch --unshallow
+          VERSION=$(git describe --abbrev=4)
+          echo ::set-env name=VERSION::$VERSION
+          NEWEST_TAG=$(git describe --abbrev=0)
+          git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
+      - uses: actions/upload-artifact@v2
+        with:
+          # Keep exactly this artifact name; it's being used to propagate
+          # version info via GitHub REST API
+          name: changelog-${{ env.VERSION }}.txt
+          path: changelog-${{ env.VERSION }}.txt
