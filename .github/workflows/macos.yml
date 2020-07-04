@@ -151,6 +151,7 @@ jobs:
           sed -ie 's/^Example/#Example/g' "$clamconf"
           freshclam --quiet && freshclam
           clamscan --heuristic-scan-precedence=yes --recursive --infected .
+
       - name: Upload disk image
         uses: actions/upload-artifact@v2
         # GitHub automatically zips the artifacts, and there's no option
@@ -158,3 +159,26 @@ jobs:
         with:
           name: dosbox-staging-macOS-x86_64
           path: dosbox-staging-macOS-${{ env.VERSION }}.dmg
+
+
+  publish_additional_artifacts:
+    name: Publish additional artifacts
+    needs: build_macos_release
+    runs-on: macos-latest
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
+    steps:
+      - uses: actions/checkout@v2
+      - name: Generate changelog
+        run: |
+          set +x
+          git fetch --unshallow
+          VERSION=$(git describe --abbrev=4)
+          echo ::set-env name=VERSION::$VERSION
+          NEWEST_TAG=$(git describe --abbrev=0)
+          git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
+      - uses: actions/upload-artifact@v2
+        with:
+          # Keep exactly this artifact name; it's being used to propagate
+          # version info via GitHub REST API
+          name: changelog-${{ env.VERSION }}.txt
+          path: changelog-${{ env.VERSION }}.txt
