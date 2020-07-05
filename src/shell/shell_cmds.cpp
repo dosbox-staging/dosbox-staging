@@ -481,8 +481,8 @@ std::vector<std::string> dirs, adirs;
 
 static size_t GetPauseCount() {
 	Bit8u rows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
-	if (!rows||rows>100) rows=24;
-	else if (rows<3) rows=3;
+	assert(rows>0&&rows<100);
+	if (rows<3) rows=3;
 	return rows;
 }
 
@@ -515,17 +515,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 	}
 	if (!optB&&!optS) {
 		shell->WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),uselfn&&!optZ&&DOS_GetSFNPath(path,largs,true)?largs:sargs);
-		if (optP) {
-			p_count+=optW?5:1;
-			if (p_count%(GetPauseCount()*w_size)<2) {
-				shell->WriteOut(MSG_Get("SHELL_CMD_PAUSE"));
-				Bit8u c;Bit16u n=1;
-				DOS_ReadFile(STDIN,&c,&n);
-				if (c==3) {shell->WriteOut("^C\r\n");return false;}
-				if (c==0) DOS_ReadFile(STDIN,&c,&n); // read extended key
-				shell->WriteOut_NoParsing("\n");
-			}
-		}
+		if (!dirPaused(shell, w_size, optP, optW)) return false;
 	}
 	if (*(sargs+strlen(sargs)-1) != '\\') safe_strcat(sargs,"\\");
 
@@ -607,18 +597,9 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 				if (first&&optS) {
 					first=false;
 					shell->WriteOut("\n");
+					if (!dirPaused(shell, w_size, optP, optW)) return false;
 					shell->WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),uselfn&&!optZ&&DOS_GetSFNPath(path,largs,true)?largs:sargs);
-					if (optP) {
-						p_count+=optW?10:2;
-						if (p_count%(GetPauseCount()*w_size)<3) {
-							shell->WriteOut(MSG_Get("SHELL_CMD_PAUSE"));
-							Bit8u c;Bit16u n=1;
-							DOS_ReadFile(STDIN,&c,&n);
-							if (c==3) {shell->WriteOut("^C\r\n");return false;}
-							if (c==0) DOS_ReadFile(STDIN,&c,&n); // read extended key
-							shell->WriteOut_NoParsing("\n");
-						}
-					}
+					if (!dirPaused(shell, w_size, optP, optW)) return false;
 				}
 				char * ext = empty_string;
 				if (!optW && (name[0] != '.')) {
