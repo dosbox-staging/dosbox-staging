@@ -486,14 +486,15 @@ static size_t GetPauseCount() {
 	return rows;
 }
 
+// With DIR /P, check if it is time to pause ("press any key")
 static bool dirPaused(DOS_Shell * shell, Bitu w_size, bool optP, bool optW) {
-	p_count+=optW?5:1;
-	if (optP && p_count%(GetPauseCount()*w_size)<1) {
-		shell->WriteOut(MSG_Get("SHELL_CMD_PAUSE"));
+	p_count+=optW?5:1;										// Increase count (5x if /W)
+	if (optP && !(p_count%(GetPauseCount()*w_size))) {		// Time to pause
+		shell->WriteOut(MSG_Get("SHELL_CMD_PAUSE"));		// Show pause message
 		Bit8u c;Bit16u n=1;
-		DOS_ReadFile(STDIN,&c,&n);
-		if (c==3) {shell->WriteOut("^C\r\n");return false;}
-		if (c==0) DOS_ReadFile(STDIN,&c,&n); // read extended key
+		DOS_ReadFile(STDIN,&c,&n);							// Do pause (wait for key)
+		if (c==3) {shell->WriteOut("^C\r\n");return false;}	// Break if Ctrl+C
+		if (c==0) DOS_ReadFile(STDIN,&c,&n);				// Read extended key
 		shell->WriteOut_NoParsing("\n");
 	}
 	return true;
