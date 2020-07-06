@@ -16,11 +16,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "dosbox.h"
 
-#include <string.h>
+#include <array>
 #include <iomanip>
 #include <sstream>
-#include "dosbox.h"
+#include <string.h>
+
+// TODO: this gives us M_PI on VisualStudio. Remove this once we've defined PI ourselves
+//       in support.h
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include "inout.h"
 #include "mixer.h"
 #include "dma.h"
@@ -37,6 +44,7 @@ using namespace std;
 #define WAVE_MSWMASK ((1 << 16)-1)
 #define WAVE_LSWMASK (0xffffffff ^ WAVE_MSWMASK)
 
+#define GUS_PAN_POSITIONS 16 // 0 face-left, 7 face-forward, and 15 face-right
 #define GUS_BASE myGUS.portbase
 #define GUS_RATE myGUS.rate
 #define LOG_GUS 0
@@ -58,7 +66,13 @@ static Bit8u irqtable[8] = { 0, 2, 5, 3, 7, 11, 12, 15 };
 static Bit8u dmatable[8] = { 0, 1, 3, 5, 6, 7, 0, 0 };
 static Bit8u GUSRam[1024*1024]; // 1024K of GUS Ram
 static Bit16u vol16bit[4096];
-static Bit32u pantable[16];
+
+struct Frame {
+	float left = 0.0f;
+	float right = 0.0f;
+};
+
+static std::array<Frame, GUS_PAN_POSITIONS> pan_scalars = {};
 
 class GUSChannels;
 static void CheckVoiceIrq(void);
@@ -128,8 +142,6 @@ public:
 	Bit8u PanPot;
 	Bit8u channum;
 	Bit32u irqmask;
-	Bit32u PanLeft;
-	Bit32u PanRight;
 	Bit32s VolLeft;
 	Bit32s VolRight;
 
@@ -150,8 +162,6 @@ public:
 		RampVol = 0;
 		VolLeft = 0;
 		VolRight = 0;
-		PanLeft = 0;
-		PanRight = 0;
 		PanPot = 0x7;
 	}
 
@@ -217,12 +227,14 @@ public:
 		WriteWaveFreq(WaveFreq);
 		WriteRampRate(RampRate);
 	}
-	void WritePanPot(Bit8u val) {
+
+	void WritePanPot(Bit8u val)
+	{
 		PanPot = val;
-		PanLeft = pantable[0x0f-(val & 0xf)];
-		PanRight = pantable[(val & 0xf)];
+
 		UpdateVolumes();
 	}
+
 	Bit8u ReadPanPot(void) {
 		return PanPot;
 	}
@@ -278,12 +290,12 @@ public:
 		}
 	}
 	INLINE void UpdateVolumes(void) {
-		Bit32s templeft=RampVol - PanLeft;
+		Bit32s templeft = RampVol;
 		templeft&=~(templeft >> 31);
-		Bit32s tempright=RampVol - PanRight;
+		Bit32s tempright = RampVol;
 		tempright&=~(tempright >> 31);
-		VolLeft=vol16bit[templeft];
-		VolRight=vol16bit[tempright];
+		VolLeft = static_cast<int32_t>(vol16bit[templeft] * pan_scalars[PanPot].left);
+		VolRight = static_cast<int32_t>(vol16bit[tempright] * pan_scalars[PanPot].right);
 	}
 	INLINE void RampUpdate(void) {
 		/* Check if ramping enabled */
@@ -800,9 +812,59 @@ static void MakeTables(void) {
 		//Original amplification routine in the hardware
 		//vol16bit[i] = ((256 + i & 0xff) << VOL_SHIFT) / (1 << (24 - (i >> 8)));
 	}
-	pantable[0] = 4095;
-	for (i=1;i<16;i++) {
-		pantable[i]=(Bit32u)(0.5-128.0*(log((double)i/15.0)/log(2.0)));
+}
+
+/*
+Constant-Power Panning
+-------------------------
+The GUS SDK describes having 16 panning positions (0 through 15)
+with 0 representing all full left rotation through to center or
+mid-point at 7, to full-right rotation at 15.  The SDK also
+describes that output power is held constant through this range.
+
+	#!/usr/bin/env python3
+	import math
+	print(f'Left-scalar  Pot Norm.   Right-scalar | Power')
+	print(f'-----------  --- -----   ------------ | -----')
+	for pot in range(16):
+		norm = (pot - 7.) / (7.0 if pot < 7 else 8.0)
+		direction = math.pi * (norm + 1.0 ) / 4.0
+		lscale = math.cos(direction)
+		rscale = math.sin(direction)
+		power = lscale * lscale + rscale * rscale
+		print(f'{lscale:.5f} <~~~ {pot:2} ({norm:6.3f})'\
+			f' ~~~> {rscale:.5f} | {power:.3f}')
+
+	Left-scalar  Pot Norm.   Right-scalar | Power
+	-----------  --- -----   ------------ | -----
+	1.00000 <~~~  0 (-1.000) ~~~> 0.00000 | 1.000
+	0.99371 <~~~  1 (-0.857) ~~~> 0.11196 | 1.000
+	0.97493 <~~~  2 (-0.714) ~~~> 0.22252 | 1.000
+	0.94388 <~~~  3 (-0.571) ~~~> 0.33028 | 1.000
+	0.90097 <~~~  4 (-0.429) ~~~> 0.43388 | 1.000
+	0.84672 <~~~  5 (-0.286) ~~~> 0.53203 | 1.000
+	0.78183 <~~~  6 (-0.143) ~~~> 0.62349 | 1.000
+	0.70711 <~~~  7 ( 0.000) ~~~> 0.70711 | 1.000
+	0.63439 <~~~  8 ( 0.125) ~~~> 0.77301 | 1.000
+	0.55557 <~~~  9 ( 0.250) ~~~> 0.83147 | 1.000
+	0.47140 <~~~ 10 ( 0.375) ~~~> 0.88192 | 1.000
+	0.38268 <~~~ 11 ( 0.500) ~~~> 0.92388 | 1.000
+	0.29028 <~~~ 12 ( 0.625) ~~~> 0.95694 | 1.000
+	0.19509 <~~~ 13 ( 0.750) ~~~> 0.98079 | 1.000
+	0.09802 <~~~ 14 ( 0.875) ~~~> 0.99518 | 1.000
+	0.00000 <~~~ 15 ( 1.000) ~~~> 1.00000 | 1.000
+*/
+static void PopulatePanScalars()
+{
+	for (uint8_t pos = 0u; pos < GUS_PAN_POSITIONS; ++pos) {
+		// Normalize absolute range [0, 15] to [-1.0, 1.0]
+		const double norm = (pos - 7.0f) / (pos < 7u ? 7 : 8);
+		// Convert to an angle between 0 and 90-degree, in radians
+		const double angle = (norm + 1) * M_PI / 4;
+		pan_scalars.at(pos).left = static_cast<float>(cos(angle));
+		pan_scalars.at(pos).right = static_cast<float>(sin(angle));
+		// DEBUG_LOG_MSG("GUS: pan_scalar[%u] = %f | %f", pos, pan_scalars.at(pos).left,
+		//               pan_scalars.at(pos).right);
 	}
 }
 
@@ -867,6 +929,7 @@ public:
 	//	DmaChannels[myGUS.dma1]->Register_TC_Callback(GUS_DMA_TC_Callback);
 	
 		MakeTables();
+		PopulatePanScalars();
 	
 		for (Bit8u chan_ct=0; chan_ct<32; chan_ct++) {
 			guschan[chan_ct] = new GUSChannels(chan_ct);
