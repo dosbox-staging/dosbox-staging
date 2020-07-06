@@ -37,10 +37,6 @@ using namespace std;
 #define WAVE_MSWMASK ((1 << 16)-1)
 #define WAVE_LSWMASK (0xffffffff ^ WAVE_MSWMASK)
 
-//Amount of precision the volume has
-#define RAMP_FRACT (10)
-#define RAMP_FRACT_MASK ((1 << RAMP_FRACT)-1)
-
 #define GUS_BASE myGUS.portbase
 #define GUS_RATE myGUS.rate
 #define LOG_GUS 0
@@ -249,7 +245,7 @@ public:
 	void WriteRampRate(Bit8u val) {
 		RampRate = val;
 		double frameadd = (double)(RampRate & 63)/(double)(1 << (3*(val >> 6)));
-		double realadd = (frameadd*(double)myGUS.basefreq/(double)GUS_RATE) * (double)(1 << RAMP_FRACT);
+		double realadd = frameadd*(double)myGUS.basefreq/(double)GUS_RATE;
 		RampAdd = (Bit32u)realadd;
 	}
 	INLINE void WaveUpdate(void) {
@@ -286,8 +282,8 @@ public:
 		templeft&=~(templeft >> 31);
 		Bit32s tempright=RampVol - PanRight;
 		tempright&=~(tempright >> 31);
-		VolLeft=vol16bit[templeft >> RAMP_FRACT];
-		VolRight=vol16bit[tempright >> RAMP_FRACT];
+		VolLeft=vol16bit[templeft];
+		VolRight=vol16bit[tempright];
 	}
 	INLINE void RampUpdate(void) {
 		/* Check if ramping enabled */
@@ -439,7 +435,7 @@ static Bit16u ExecuteReadRegister(void) {
 		else return 0x0000;
 
 	case 0x89: // Channel volume register
-		if (curchan) return (Bit16u)((curchan->RampVol >> RAMP_FRACT) << 4);
+		if (curchan) return (Bit16u)(curchan->RampVol << 4);
 		else return 0x0000;
 	case 0x8a: // Channel MSB current address register
 		if (curchan) return (Bit16u)(curchan->WaveAddr >> 16);
@@ -523,19 +519,19 @@ static void ExecuteGlobRegister(void) {
 	case 0x7:  // Channel volume ramp start register  EEEEMMMM
 		if(curchan != NULL) {
 			Bit8u tmpdata = (Bit16u)myGUS.gRegData >> 8;
-			curchan->RampStart = tmpdata << (4+RAMP_FRACT);
+			curchan->RampStart = tmpdata << 4;
 		}
 		break;
 	case 0x8:  // Channel volume ramp end register  EEEEMMMM
 		if(curchan != NULL) {
 			Bit8u tmpdata = (Bit16u)myGUS.gRegData >> 8;
-			curchan->RampEnd = tmpdata << (4+RAMP_FRACT);
+			curchan->RampEnd = tmpdata << 4;
 		}
 		break;
 	case 0x9:  // Channel current volume register
 		if(curchan != NULL) {
 			Bit16u tmpdata = (Bit16u)myGUS.gRegData >> 4;
-			curchan->RampVol = tmpdata << RAMP_FRACT;
+			curchan->RampVol = tmpdata;
 			curchan->UpdateVolumes();
 		}
 		break;
@@ -803,9 +799,9 @@ static void MakeTables(void) {
 		//Original amplification routine in the hardware
 		//vol16bit[i] = ((256 + i & 0xff) << VOL_SHIFT) / (1 << (24 - (i >> 8)));
 	}
-	pantable[0] = 4095 << RAMP_FRACT;
+	pantable[0] = 4095;
 	for (i=1;i<16;i++) {
-		pantable[i]=(Bit32u)(0.5-128.0*(log((double)i/15.0)/log(2.0))*(double)(1 << RAMP_FRACT));
+		pantable[i]=(Bit32u)(0.5-128.0*(log((double)i/15.0)/log(2.0)));
 	}
 }
 
