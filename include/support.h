@@ -159,4 +159,13 @@ bool ends_with(const std::string &suffix, const std::string &str) noexcept;
 
 bool is_executable_filename(const std::string &filename) noexcept;
 
+template <typename FromT, typename ToT, typename AsT>
+constexpr AsT scale_from_to_as()
+{
+	constexpr double numerator = std::min(std::numeric_limits<ToT>::min(),
+	                                      std::numeric_limits<ToT>::max());
+	constexpr double denominator = std::max(std::numeric_limits<FromT>::min(),
+	                                        std::numeric_limits<FromT>::max());
+	return static_cast<AsT>(numerator / denominator);
+}
 #endif
