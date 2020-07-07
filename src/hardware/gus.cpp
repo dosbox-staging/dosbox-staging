@@ -19,14 +19,11 @@
 #include "dosbox.h"
 
 #include <array>
+#include <cmath>
 #include <iomanip>
+#include <limits>
 #include <sstream>
 #include <string.h>
-
-// TODO: this gives us M_PI on VisualStudio. Remove this once we've defined PI ourselves
-//       in support.h
-#define _USE_MATH_DEFINES
-#include <cmath>
 
 #include "inout.h"
 #include "mixer.h"
@@ -165,43 +162,65 @@ public:
 		PanPot = 0x7;
 	}
 
-	// Returns a single 16-bit sample from the Gravis's RAM
+	// Fetch the next 8-bit sample from GUS memory returned as a floating
+	// point type containing a value that spans the 16-bit signed range.
+	// This implementation preserves up to 3 significant figures of the
+	// inter-wave portion previously lost due to integer bit-shifting.
+	inline float GetSample8() const
+	{
+		const uint32_t useAddr = WaveAddr >> WAVE_FRACT;
+		float w1 = static_cast<int8_t>(GUSRam[useAddr]);
+		// add a fraction of the next sample
+		if (WaveAdd < (1 << WAVE_FRACT)) {
+			const uint32_t nextAddr = (useAddr + 1) & (1024 * 1024 - 1);
+			const float w2 = static_cast<float>(
+			        static_cast<int8_t>(GUSRam[nextAddr]));
+			const float diff = w2 - w1;
+			constexpr float max_wave = static_cast<float>(1 << WAVE_FRACT);
+			const float scale = (WaveAddr & WAVE_FRACT_MASK) / max_wave;
+			w1 += diff * scale;
 
-	INLINE Bit32s GetSample8() const {
-		Bit32u useAddr = WaveAddr >> WAVE_FRACT;
-		if (WaveAdd >= (1 << WAVE_FRACT)) {
-			Bit32s tmpsmall = (Bit8s)GUSRam[useAddr];
-			return tmpsmall << 8;
+			// Ensure the sample with added inter-wave portion is
+			// still within the true 8-bit range, albeit with far
+			// more accuracy.
+			assert(w1 <= std::numeric_limits<int8_t>::max() ||
+			       w1 >= std::numeric_limits<int8_t>::min());
 		}
-		else {
-			Bit32u nextAddr = (useAddr + 1) & ( 1024 * 1024 - 1 );
-			// Interpolate
-			Bit32s w1 = ((Bit8s)GUSRam[useAddr]) << 8;
-			Bit32s w2 = ((Bit8s)GUSRam[nextAddr]) << 8;
-			Bit32s diff = w2 - w1;
-			Bit32s scale = (Bit32s)(WaveAddr&WAVE_FRACT_MASK);
-			return (w1 + ((diff*scale) >> WAVE_FRACT));
-		}
+		constexpr auto to_16bit_range =
+		        1 << (std::numeric_limits<int16_t>::digits -
+		              std::numeric_limits<int8_t>::digits);
+		return w1 * to_16bit_range;
 	}
 
-	INLINE Bit32s GetSample16() const {
-		Bit32u useAddr = WaveAddr >> WAVE_FRACT;
+	// Fetch the next 16-bit sample from GUS memory as a floating point
+	// value.
+	inline float GetSample16() const
+	{
 		// Formula used to convert addresses for use with 16-bit samples
-		Bit32u holdAddr = useAddr & 0xc0000L;
-		useAddr = useAddr & 0x1ffffL;
-		useAddr = useAddr << 1;
-		useAddr = (holdAddr | useAddr);
-		if (WaveAdd >= (1 << WAVE_FRACT)) {
-			return (GUSRam[useAddr + 0] | (((Bit8s)GUSRam[useAddr + 1]) << 8));
+		const uint32_t base = WaveAddr >> WAVE_FRACT;
+		const uint32_t holdAddr = base & 0xc0000L;
+		const uint32_t useAddr = holdAddr | ((base & 0x1ffffL) << 1);
+
+		float w1 = static_cast<float>(
+		        GUSRam[useAddr] |
+		        (static_cast<int8_t>(GUSRam[useAddr + 1]) << 8));
+
+		// add a fraction of the next sample
+		if (WaveAdd < (1 << WAVE_FRACT)) {
+			const float w2 = static_cast<float>(
+			        static_cast<int8_t>(GUSRam[useAddr + 2]) |
+			        (static_cast<int8_t>(GUSRam[useAddr + 3]) << 8));
+			const float diff = w2 - w1;
+			constexpr float max_wave = static_cast<float>(1 << WAVE_FRACT);
+			const float scale = (WaveAddr & WAVE_FRACT_MASK) / max_wave;
+			w1 += diff * scale;
+
+			// Ensure the sample with added inter-wave portion is
+			// still within the true 16-bit range.
+			assert(w1 <= std::numeric_limits<int16_t>::max() ||
+			       w1 >= std::numeric_limits<int16_t>::min());
 		}
-		else {
-			// Interpolate
-			Bit32s w1 = (GUSRam[useAddr + 0] | (((Bit8s)GUSRam[useAddr + 1]) << 8));
-			Bit32s w2 = (GUSRam[useAddr + 2] | (((Bit8s)GUSRam[useAddr + 3]) << 8));
-			Bit32s diff = w2 - w1;
-			Bit32s scale = (Bit32s)(WaveAddr&WAVE_FRACT_MASK);
-			return (w1 + ((diff*scale) >> WAVE_FRACT));
-		}
+		return w1;
 	}
 
 	void WriteWaveFreq(Bit16u val) {
@@ -335,10 +354,10 @@ public:
 		if (WaveCtrl & WCTRL_16BIT) {
 			for (int i = 0; i < (int)len; i++) {
 				// Get sample
-				Bit32s tmpsamp = GetSample16();
+				const float sample = GetSample16();
 				// Output stereo sample
-				stream[i << 1] += tmpsamp * VolLeft;
-				stream[(i << 1) + 1] += tmpsamp * VolRight;
+				stream[i << 1] += static_cast<int32_t>(sample * VolLeft);
+				stream[(i << 1) + 1] += static_cast<int32_t>(sample * VolRight);
 				WaveUpdate();
 				RampUpdate();
 			}
@@ -346,10 +365,10 @@ public:
 		else {
 			for (int i = 0; i < (int)len; i++) {
 				// Get sample
-				Bit32s tmpsamp = GetSample8();
+				const float sample = GetSample8();
 				// Output stereo sample
-				stream[i << 1] += tmpsamp * VolLeft;
-				stream[(i << 1) + 1] += tmpsamp * VolRight;
+				stream[i << 1] += static_cast<int32_t>(sample * VolLeft);
+				stream[(i << 1) + 1] += static_cast<int32_t>(sample * VolRight);
 				WaveUpdate();
 				RampUpdate();
 			}
