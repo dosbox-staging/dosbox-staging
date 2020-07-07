@@ -487,9 +487,10 @@ static size_t GetPauseCount() {
 }
 
 // With DIR /P, check if it is time to pause ("press any key")
-static bool dirPaused(DOS_Shell * shell, Bitu w_size, bool optP, bool optW) {
-	p_count+=optW?5:1;										// Increase count (5x if /W)
+static bool dirPaused(DOS_Shell * shell, Bitu w_size, bool optP, bool optW, Bit32u &w_count) {
+	p_count+=w_count?1:w_size;									// Increase count
 	if (optP && !(p_count%(GetPauseCount()*w_size))) {		// Time to pause
+		if (w_count&&optW&&w_count%5) {shell->WriteOut("\n");w_count=0;}
 		shell->WriteOut(MSG_Get("SHELL_CMD_PAUSE"));		// Show pause message
 		Bit8u c;Bit16u n=1;
 		DOS_ReadFile(STDIN,&c,&n);							// Do pause (wait for key)
@@ -500,6 +501,7 @@ static bool dirPaused(DOS_Shell * shell, Bitu w_size, bool optP, bool optW) {
 	return true;
 }
 
+Bit32u wdummy=0;
 static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat, Bitu w_size, bool optW, bool optZ, bool optS, bool optP, bool optB, bool optA, bool optAD, bool optAminusD, bool optAS, bool optAminusS, bool optAH, bool optAminusH, bool optAR, bool optAminusR, bool optAA, bool optAminusA, bool optO, bool optOG, bool optON, bool optOD, bool optOE, bool optOS, bool reverseSort) {
 	char path[LFN_NAMELENGTH+2];
 	char sargs[CROSS_LEN], largs[CROSS_LEN];
@@ -516,7 +518,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 	}
 	if (!optB&&!optS) {
 		shell->WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),uselfn&&!optZ&&DOS_GetSFNPath(path,largs,true)?largs:sargs);
-		if (!dirPaused(shell, w_size, optP, optW)) return false;
+		if (!dirPaused(shell, w_size, optP, optW, wdummy)) return false;
 	}
 	if (*(sargs+strlen(sargs)-1) != '\\') safe_strcat(sargs,"\\");
 
@@ -598,9 +600,9 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 				if (first&&optS) {
 					first=false;
 					shell->WriteOut("\n");
-					if (!dirPaused(shell, w_size, optP, optW)) return false;
+					if (!dirPaused(shell, w_size, optP, optW, wdummy)) return false;
 					shell->WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),uselfn&&!optZ&&DOS_GetSFNPath(path,largs,true)?largs:sargs);
-					if (!dirPaused(shell, w_size, optP, optW)) return false;
+					if (!dirPaused(shell, w_size, optP, optW, wdummy)) return false;
 				}
 				char * ext = empty_string;
 				if (!optW && (name[0] != '.')) {
@@ -643,15 +645,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 				}
 				if (optW) w_count++;
 			}
-			if (optP && !(++p_count%(GetPauseCount()*w_size))) {
-				if (optW&&w_count%5) {shell->WriteOut("\n");w_count=0;}
-				shell->WriteOut(MSG_Get("SHELL_CMD_PAUSE"));
-				Bit8u c;Bit16u n=1;
-				DOS_ReadFile(STDIN,&c,&n);
-				if (c==3) {shell->WriteOut("^C\r\n");return false;}
-				if (c==0) DOS_ReadFile(STDIN,&c,&n); // read extended key
-				shell->WriteOut_NoParsing("\n");
-			}
+			if (!dirPaused(shell, w_size, optP, optW, w_count)) return false;
 		}
 
 		if (!results.size())
@@ -662,7 +656,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 		found=false;
 	if (!found&&!optB&&!optS) {
 		shell->WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
-		if (!dirPaused(shell, w_size, optP, optW)) return false;
+		if (!dirPaused(shell, w_size, optP, optW, wdummy)) return false;
 	}
 	if (optS) {
 		size_t len=strlen(sargs);
@@ -693,7 +687,7 @@ static bool doDir(DOS_Shell * shell, char * args, DOS_DTA dta, char * numformat,
 		if (found&&!optB) {
 			FormatNumber(cbyte_count,numformat);
 			shell->WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_USED"),cfile_count,numformat);
-			if (!dirPaused(shell, w_size, optP, optW)) return false;
+			if (!dirPaused(shell, w_size, optP, optW, wdummy)) return false;
 		}
 	}
 	return true;
@@ -858,17 +852,17 @@ void DOS_Shell::CMD_DIR(char * args) {
 	if (!optB) {
 		if (optS) {
 			WriteOut("\n");
-			if (!dirPaused(this, w_size, optP, optW)) {dos.dta(save_dta);return;}
+			if (!dirPaused(this, w_size, optP, optW, wdummy)) {dos.dta(save_dta);return;}
 			if (!file_count&&!dir_count)
 				WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),pattern);
 			else
 				WriteOut(MSG_Get("SHELL_CMD_DIR_FILES_LISTED"));
-			if (!dirPaused(this, w_size, optP, optW)) {dos.dta(save_dta);return;}
+			if (!dirPaused(this, w_size, optP, optW, wdummy)) {dos.dta(save_dta);return;}
 		}
 		/* Show the summary of results */
 		FormatNumber(byte_count,numformat);
 		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_USED"),file_count,numformat);
-		if (!dirPaused(this, w_size, optP, optW)) {dos.dta(save_dta);return;}
+		if (!dirPaused(this, w_size, optP, optW, wdummy)) {dos.dta(save_dta);return;}
 		Bit8u drive=dta.GetSearchDrive();
 		//TODO Free Space
 		Bitu free_space=1024u*1024u*100u;
@@ -885,7 +879,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 		}
 		FormatNumber(free_space, numformat);
 		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"), dir_count, numformat);
-		if (!dirPaused(this, w_size, optP, optW)) {dos.dta(save_dta);return;}
+		if (!dirPaused(this, w_size, optP, optW, wdummy)) {dos.dta(save_dta);return;}
 	}
 	dos.dta(save_dta);
 }
