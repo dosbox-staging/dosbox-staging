@@ -42,6 +42,7 @@ using namespace std;
 #define WAVE_LSWMASK (0xffffffff ^ WAVE_MSWMASK)
 
 #define GUS_PAN_POSITIONS 16 // 0 face-left, 7 face-forward, and 15 face-right
+#define GUS_VOLUME_POSITIONS 4096
 #define GUS_BASE myGUS.portbase
 #define GUS_RATE myGUS.rate
 #define LOG_GUS 0
@@ -62,7 +63,7 @@ static MixerChannel * gus_chan;
 static Bit8u irqtable[8] = { 0, 2, 5, 3, 7, 11, 12, 15 };
 static Bit8u dmatable[8] = { 0, 1, 3, 5, 6, 7, 0, 0 };
 static Bit8u GUSRam[1024*1024]; // 1024K of GUS Ram
-static Bit16u vol16bit[4096];
+static std::array<uint16_t, GUS_VOLUME_POSITIONS> vol_scalars = {};
 
 struct Frame {
 	float left = 0.0f;
@@ -127,11 +128,10 @@ public:
 	Bit8u  WaveCtrl;
 	Bit16u WaveFreq;
 
-	Bit32u RampStart;
-	Bit32u RampEnd;
-	Bit32u RampVol;
-	Bit32u RampAdd;
-	Bit32u RampAddReal;
+	uint32_t StartVolIndex = 0u;
+	uint32_t EndVolIndex = 0u;
+	uint32_t CurrentVolIndex = 0u;
+	uint32_t IncrVolIndex = 0u;
 
 	Bit8u RampRate;
 	Bit8u RampCtrl;
@@ -152,11 +152,7 @@ public:
 		WaveFreq = 0;
 		WaveCtrl = 3;
 		RampRate = 0;
-		RampStart = 0;
-		RampEnd = 0;
 		RampCtrl = 3;
-		RampAdd = 0;
-		RampVol = 0;
 		VolLeft = 0;
 		VolRight = 0;
 		PanPot = 0x7;
@@ -277,7 +273,7 @@ public:
 		RampRate = val;
 		double frameadd = (double)(RampRate & 63)/(double)(1 << (3*(val >> 6)));
 		double realadd = frameadd*(double)myGUS.basefreq/(double)GUS_RATE;
-		RampAdd = (Bit32u)realadd;
+		IncrVolIndex = static_cast<uint32_t>(realadd);
 	}
 	INLINE void WaveUpdate(void) {
 		if (WaveCtrl & ( WCTRL_STOP | WCTRL_STOPPED)) return;
@@ -309,25 +305,26 @@ public:
 		}
 	}
 	INLINE void UpdateVolumes(void) {
-		Bit32s templeft = RampVol;
-		templeft&=~(templeft >> 31);
-		Bit32s tempright = RampVol;
-		tempright&=~(tempright >> 31);
-		VolLeft = static_cast<int32_t>(vol16bit[templeft] * pan_scalars[PanPot].left);
-		VolRight = static_cast<int32_t>(vol16bit[tempright] * pan_scalars[PanPot].right);
+		assert(CurrentVolIndex < GUS_VOLUME_POSITIONS);
+		VolLeft = static_cast<int32_t>(vol_scalars[CurrentVolIndex] *
+		                               pan_scalars[PanPot].left);
+		VolRight = static_cast<int32_t>(vol_scalars[CurrentVolIndex] *
+		                                pan_scalars[PanPot].right);
 	}
-	INLINE void RampUpdate(void) {
+
+	inline void RampUpdate()
+	{
 		/* Check if ramping enabled */
 		if (RampCtrl & 0x3) return;
-		Bit32s RampLeft;
+		Bit32s RemainingVolIndexes;
 		if (RampCtrl & 0x40) {
-			RampVol-=RampAdd;
-			RampLeft=RampStart-RampVol;
+			CurrentVolIndex -= IncrVolIndex;
+			RemainingVolIndexes = StartVolIndex - CurrentVolIndex;
 		} else {
-			RampVol+=RampAdd;
-			RampLeft=RampVol-RampEnd;
+			CurrentVolIndex += IncrVolIndex;
+			RemainingVolIndexes = CurrentVolIndex - EndVolIndex;
 		}
-		if (RampLeft<0) {
+		if (RemainingVolIndexes < 0) {
 			UpdateVolumes();
 			return;
 		}
@@ -339,10 +336,14 @@ public:
 		if (RampCtrl & 0x08) {
 			/* Bi-directional looping */
 			if (RampCtrl & 0x10) RampCtrl^=0x40;
-			RampVol = (RampCtrl & 0x40) ? (RampEnd-RampLeft) : (RampStart+RampLeft);
+			CurrentVolIndex = (RampCtrl & 0x40)
+			                          ? (EndVolIndex - RemainingVolIndexes)
+			                          : (StartVolIndex +
+			                             RemainingVolIndexes);
 		} else {
 			RampCtrl|=1;	//Stop the channel
-			RampVol = (RampCtrl & 0x40) ? RampStart : RampEnd;
+			CurrentVolIndex = (RampCtrl & 0x40) ? StartVolIndex
+			                                    : EndVolIndex;
 		}
 		UpdateVolumes();
 	}
@@ -401,7 +402,7 @@ static void GUSReset(void) {
 		// Stop all channels
 		int i;
 		for(i=0;i<32;i++) {
-			guschan[i]->RampVol=0;
+			guschan[i]->CurrentVolIndex = 0u;
 			guschan[i]->WriteWaveCtrl(0x1);
 			guschan[i]->WriteRampCtrl(0x1);
 			guschan[i]->WritePanPot(0x7);
@@ -466,8 +467,10 @@ static Bit16u ExecuteReadRegister(void) {
 		else return 0x0000;
 
 	case 0x89: // Channel volume register
-		if (curchan) return (Bit16u)(curchan->RampVol << 4);
-		else return 0x0000;
+		if (curchan)
+			return (Bit16u)(curchan->CurrentVolIndex << 4);
+		else
+			return 0x0000;
 	case 0x8a: // Channel MSB current address register
 		if (curchan) return (Bit16u)(curchan->WaveAddr >> 16);
 		else return 0x0000;
@@ -550,19 +553,19 @@ static void ExecuteGlobRegister(void) {
 	case 0x7:  // Channel volume ramp start register  EEEEMMMM
 		if(curchan != NULL) {
 			Bit8u tmpdata = (Bit16u)myGUS.gRegData >> 8;
-			curchan->RampStart = tmpdata << 4;
+			curchan->StartVolIndex = tmpdata << 4;
 		}
 		break;
 	case 0x8:  // Channel volume ramp end register  EEEEMMMM
 		if(curchan != NULL) {
 			Bit8u tmpdata = (Bit16u)myGUS.gRegData >> 8;
-			curchan->RampEnd = tmpdata << 4;
+			curchan->EndVolIndex = tmpdata << 4;
 		}
 		break;
 	case 0x9:  // Channel current volume register
 		if(curchan != NULL) {
 			Bit16u tmpdata = (Bit16u)myGUS.gRegData >> 4;
-			curchan->RampVol = tmpdata;
+			curchan->CurrentVolIndex = tmpdata;
 			curchan->UpdateVolumes();
 		}
 		break;
@@ -826,10 +829,11 @@ static void MakeTables(void) {
 	int i;
 	double out = (double)(1 << 13);
 	for (i=4095;i>=0;i--) {
-		vol16bit[i]=(Bit16s)out;
+		vol_scalars[i] = (Bit16s)out;
 		out/=1.002709201;		/* 0.0235 dB Steps */
-		//Original amplification routine in the hardware
-		//vol16bit[i] = ((256 + i & 0xff) << VOL_SHIFT) / (1 << (24 - (i >> 8)));
+		// Original amplification routine in the hardware
+		// vol_scalars[i] = ((256 + i & 0xff) << VOL_SHIFT) / (1 << (24
+		// - (i >> 8)));
 	}
 }
 
