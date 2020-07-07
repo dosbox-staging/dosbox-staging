@@ -1206,7 +1206,7 @@ static Bitu DOS_26Handler(void) {
     return CBRET_NONE;
 }
 
-
+void set_ver(char *args);
 class DOS:public Module_base{
 private:
 	CALLBACK_HandlerObject callback[7];
@@ -1253,8 +1253,6 @@ public:
 		DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(25); /* Else the next call gives a warning. */
 		DOS_SetDefaultDrive(25);
 	
-		dos.version.major=5;
-		dos.version.minor=0;
 		dos.direct_output=false;
 		dos.internal_output=false;
 
@@ -1265,21 +1263,7 @@ public:
 		else if (lfn=="autostart") enablelfn=-2;
 		else enablelfn=-1;
 
-		const std::string ver = section->Get_string("ver");
-		if (!ver.empty()) {
-			const char *s = ver.c_str();
-
-			if (isdigit(*s)) {
-				dos.version.minor=0;
-				dos.version.major=(int)strtoul(s,(char**)(&s),10);
-				if (*s == '.' || *s == ' ') {
-					s++;
-					if (isdigit(*s))
-						dos.version.minor=(*(s-1)=='.'&&strlen(s)==1?10:1)*(int)strtoul(s,(char**)(&s),10);
-				}
-			}
-		}
-		uselfn = enablelfn==1 || ((enablelfn == -1 || enablelfn == -2) && dos.version.major>6);
+		set_ver((char *)section->Get_string("ver"));
 	}
 	~DOS(){
 		for (Bit16u i=0;i<DOS_DRIVES;i++) delete Drives[i];

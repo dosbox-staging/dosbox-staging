@@ -488,7 +488,7 @@ static size_t GetPauseCount() {
 
 // With DIR /P, check if it is time to pause ("press any key")
 static bool dirPaused(DOS_Shell * shell, Bitu w_size, bool optP, bool optW, Bit32u &w_count) {
-	p_count+=w_count?1:w_size;									// Increase count
+	p_count+=w_count?1:w_size;								// Increase count
 	if (optP && !(p_count%(GetPauseCount()*w_size))) {		// Time to pause
 		if (w_count&&optW&&w_count%5) {shell->WriteOut("\n");w_count=0;}
 		shell->WriteOut(MSG_Get("SHELL_CMD_PAUSE"));		// Show pause message
@@ -1686,23 +1686,27 @@ void DOS_Shell::CMD_PATH(char *args){
 	}
 }
 
+void set_ver(char *args) {
+	char* word = StripWord(args);
+	if (!*args && !*word) { //Reset
+		dos.version.major = 5;
+		dos.version.minor = 0;
+	} else if (*args == 0 && *word && (strchr(word,'.') != 0)) { //Allow: ver set 5.1
+		const char * p = strchr(word,'.');
+		dos.version.major = (Bit8u)(atoi(word));
+		dos.version.minor = (Bit8u)(strlen(p+1)==1&&*(p+1)>'0'&&*(p+1)<='9'?atoi(p+1)*10:atoi(p+1));
+	} else { //Official syntax: ver set 5 2
+		dos.version.major = (Bit8u)(atoi(word));
+		dos.version.minor = (Bit8u)(atoi(args));
+	}
+	if (enablelfn != -2) uselfn = enablelfn==1 || (enablelfn == -1 && dos.version.major>6);
+}
+
 void DOS_Shell::CMD_VER(char *args) {
 	HELP("VER");
 	if (args && strlen(args)) {
 		char* word = StripWord(args);
 		if (strcasecmp(word,"set")) return;
-		word = StripWord(args);
-		if (!*args && !*word) { //Reset
-			dos.version.major = 5;
-			dos.version.minor = 0;
-		} else if (*args == 0 && *word && (strchr(word,'.') != 0)) { //Allow: ver set 5.1
-			const char * p = strchr(word,'.');
-			dos.version.major = (Bit8u)(atoi(word));
-			dos.version.minor = (Bit8u)(strlen(p+1)==1&&*(p+1)>'0'&&*(p+1)<='9'?atoi(p+1)*10:atoi(p+1));
-		} else { //Official syntax: ver set 5 2
-			dos.version.major = (Bit8u)(atoi(word));
-			dos.version.minor = (Bit8u)(atoi(args));
-		}
-		if (enablelfn != -2) uselfn = enablelfn==1 || (enablelfn == -1 && dos.version.major>6);
+		set_ver(args);
 	} else WriteOut(MSG_Get("SHELL_CMD_VER_VER"),VERSION,dos.version.major,dos.version.minor);
 }
