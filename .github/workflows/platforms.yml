@@ -99,7 +99,7 @@ jobs:
 
       - name: Upload tarball
         if: steps.repo-meta.outputs.has-commits == 'true'
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2
         # GitHub automatically zips the artifacts (there's no way to create
         # a tarball), and it removes all executable flags while zipping.
         # Letting it zip a tarball preserves flags in the compressed files.

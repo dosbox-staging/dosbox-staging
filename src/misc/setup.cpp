@@ -981,6 +981,27 @@ void Config::StartUp()
 	(*_start_function)();
 }
 
+Verbosity Config::GetStartupVerbosity() const
+{
+	const Section* s = GetSection("dosbox");
+	assert(s);
+	const std::string user_choice = s->GetPropValue("startup_verbosity");
+
+	if (user_choice == "high")
+		return Verbosity::High;
+	if (user_choice == "medium")
+		return Verbosity::Medium;
+	if (user_choice == "low")
+		return Verbosity::Low;
+	if (user_choice == "quiet")
+		return Verbosity::Quiet;
+	// auto-mode
+	if (cmdline->HasDirectory() || cmdline->HasExecutableName())
+		return Verbosity::Low;
+	else
+		return Verbosity::High;
+}
+
 bool CommandLine::FindExist(char const * const name,bool remove) {
 	cmd_it it;
 	if (!(FindEntry(name,it,false))) return false;
@@ -1022,6 +1043,24 @@ bool CommandLine::FindCommand(unsigned int which,std::string & value) {
 	for (;which>1;which--) it++;
 	value=(*it);
 	return true;
+}
+
+// Was a directory provided on the command line?
+bool CommandLine::HasDirectory() const
+{
+	for (const auto& arg : cmds)
+		if (open_directory(arg.c_str()))
+			return true;
+	return false;
+}
+
+// Was an executable filename provided on the command line?
+bool CommandLine::HasExecutableName() const
+{
+	for (const auto& arg : cmds)
+		if (is_executable_filename(arg))
+			return true;
+	return false;
 }
 
 bool CommandLine::FindEntry(char const * const name,cmd_it & it,bool neednext) {

@@ -69,6 +69,7 @@ Other differences:
 | **[Wayland] support**    | Experimental (use `SDL_VIDEODRIVER=wayland`) | N/A
 | **Modem phonebook file** | Yes (`phonebookfile=<name>`)                 | N/A
 | **Autotype command**     | Yes<sup>[10]</sup>                           | N/A
+| **Startup verbosity**    | Yes<sup>[11]</sup>                           | N/A
 
 [OPL]:https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]:https://en.wikipedia.org/wiki/Color_Graphics_Adapter
@@ -77,6 +78,7 @@ Other differences:
 [8]:https://www.vogons.org/viewtopic.php?f=9&t=37782
 [9]:https://github.com/dosbox-staging/dosbox-staging/commit/ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
 [10]:https://github.com/dosbox-staging/dosbox-staging/commit/239396fec83dbba6a1eb1a0f4461f4a427d2be38
+[11]: https://github.com/dosbox-staging/dosbox-staging/pull/477
 
 ## Development snapshot builds
 
@@ -106,6 +108,8 @@ packages installed via your package manager.
 
 ### [Windows]
 
+Our Windows snapshots include both 32-bit (x86) and 64-bit (x64) builds.
+
 A dosbox.exe file in a snapshot package is not signed, therefore Windows 10
 might prevent the program from starting.
 
@@ -114,8 +118,6 @@ unrecognised app from starting", you have two options to dismiss it:
 
 1) Click "More info", and button "Run anyway" will appear.
 2) Right-click on dosbox.exe, select: Properties → General → Security → Unblock
-
-Windows packages are built for "x86" architecture (in practice it means i686).
 
 ### [macOS]
 

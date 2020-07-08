@@ -983,12 +983,7 @@ void DOS_Shell::CMD_LS(char *args)
 				WriteOut("\033[34;1m%-*s\033[0m", max[w_count % col], name.c_str());
 		} else {
 			if (!uselfn||optZ) lowcase(name);
-			bool is_executable=false;
-			if (name.length()>4) {
-				char ext[5];
-				safe_strcpy(ext, name.substr(name.length()-4).c_str());
-				if (!strcasecmp(ext, ".exe") || !strcasecmp(ext, ".com") || !strcasecmp(ext, ".bat")) is_executable=true;
-			}
+			bool is_executable=is_executable_filename(name);
 			if (col==1) {
 				WriteOut(is_executable?"\033[32;1m%s\033[0m\n":"%s\n", name.c_str());
 				p_count++;

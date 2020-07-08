@@ -258,7 +258,7 @@ void PCSPEAKER_SetType(Bitu mode)
 		break;
 	case 1:
 		spkr.mode=SPKR_PIT_OFF;
-		AddDelayEntry(newindex, NeutralLastPitOr(SPKR_NEGATIVE_VOLTAGE));
+		AddDelayEntry(newindex, NeutralOr(SPKR_NEGATIVE_VOLTAGE));
 		break;
 	case 2:
 		spkr.mode=SPKR_ON;

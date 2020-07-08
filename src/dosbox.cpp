@@ -397,6 +397,7 @@ void DOSBOX_Init(void) {
 
 	constexpr auto always = Property::Changeable::Always;
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
+	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 
 	SDLNetInited = false;
 
@@ -443,6 +444,18 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&PROGRAMS_Init);
 	secprop->AddInitFunction(&TIMER_Init);//done
 	secprop->AddInitFunction(&CMOS_Init);//done
+
+	const char *verbosity_choices[] = {"high",   "medium", "low",
+	                                   "quiet", "auto",   0};
+	Pstring = secprop->Add_string("startup_verbosity", only_at_start, "high");
+	Pstring->Set_values(verbosity_choices);
+	Pstring->Set_help("Controls verbosity prior to displaying the program:\n"
+	"       | Show splash | Show welcome | Show early stdout\n"
+	"high   |     yes     |     yes      |       yes\n"
+	"medium |     no      |     yes      |       yes\n"
+	"low    |     no      |     no       |       yes\n"
+	"quiet  |     no      |     no       |       no\n"
+	"auto   | 'low' if exec or dir is passed, otherwise 'high'");
 
 	secprop=control->AddSection_prop("render",&RENDER_Init,true);
 	Pint = secprop->Add_int("frameskip",Property::Changeable::Always,0);

@@ -157,4 +157,6 @@ void strip_punctuation(std::string &str);
 bool starts_with(const std::string &prefix, const std::string &str) noexcept;
 bool ends_with(const std::string &suffix, const std::string &str) noexcept;
 
+bool is_executable_filename(const std::string &filename) noexcept;
+
 #endif

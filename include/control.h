@@ -29,7 +29,15 @@
 #include "programs.h"
 #include "setup.h"
 
-class Config{
+enum class Verbosity : int8_t {
+	//             Show Splash | Show Welcome | Show Early Stdout |
+	High = 3,   //     yes     |     yes      |       yes         |
+	Medium = 2, //     no      |     yes      |       yes         |
+	Low = 1,    //     no      |     no       |       yes         |
+	Quiet = 0   //     no      |     no       |       no          |
+};
+
+class Config {
 public:
 	CommandLine * cmdline;
 private:
@@ -78,6 +86,7 @@ public:
 	void ParseEnv(char ** envp);
 	bool SecureMode() const { return secure_mode; }
 	void SwitchToSecureMode() { secure_mode = true; }//can't be undone
+	Verbosity GetStartupVerbosity() const;
 };
 
 #endif

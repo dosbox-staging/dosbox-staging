@@ -54,6 +54,8 @@ public:
 	bool GetStringRemain(std::string & value);
 	int GetParameterFromList(const char* const params[], std::vector<std::string> & output);
 	void FillVector(std::vector<std::string> & vector);
+	bool HasDirectory() const;
+	bool HasExecutableName() const;
 	unsigned int GetCount(void);
 	void Shift(unsigned int amount=1);
 	Bit16u Get_arglength();
@@ -84,6 +86,7 @@ public:
 	bool SetEnv(const char * entry,const char * new_string);
 	void WriteOut(const char *format, ...);	// printf to DOS stdout
 	void WriteOut_NoParsing(const char *str); // write string to DOS stdout
+	bool SuppressWriteOut(const char *format); // prevent writing to DOS stdout
 	void InjectMissingNewline();
 	void ChangeToLongCmd();
 
