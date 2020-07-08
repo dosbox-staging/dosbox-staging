@@ -32,7 +32,7 @@
 
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
-int enablelfn=-1;
+int lfn_state=-1;
 bool uselfn;
 
 #define DOS_COPYBUFSIZE 0x10000
@@ -1258,10 +1258,10 @@ public:
 
 		const Section_prop* section = static_cast<Section_prop*>(configuration);
 		const std::string lfn=section->Get_string("lfn");
-		if (lfn=="true") enablelfn=1;
-		else if (lfn=="false") enablelfn=0;
-		else if (lfn=="autostart") enablelfn=-2;
-		else enablelfn=-1;
+		if (lfn=="on") lfn_state=1;
+		else if (lfn=="off") lfn_state=0;
+		else if (lfn=="autostart") lfn_state=-2;
+		else lfn_state=-1;
 
 		set_ver((char *)section->Get_string("ver"));
 	}

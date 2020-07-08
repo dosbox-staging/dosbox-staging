@@ -405,7 +405,7 @@ void DOSBOX_Init(void) {
 	const char *iosgus[] = { "240", "220", "260", "280", "2a0", "2c0", "2e0", "300", 0 };
 	const char *irqsgus[] = { "5", "3", "7", "9", "10", "11", "12", 0 };
 	const char *dmasgus[] = { "3", "0", "1", "5", "6", "7", 0 };
-	const char *lfn_settings[] = { "true", "false", "auto", "autostart", 0};
+	const char *lfn_settings[] = { "on", "off", "auto", "autostart", 0};
 
 	/* Setup all the different modules making up DOSBox */
 	const char* machines[] = {

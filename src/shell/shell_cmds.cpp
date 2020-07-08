@@ -38,7 +38,7 @@
 #include "drives.h"
 #include "../src/ints/int10.h"
 
-extern int enablelfn, lfn_filefind_handle;
+extern int lfn_state, lfn_filefind_handle;
 
 // clang-format off
 static SHELL_Cmd cmd_list[] = {
@@ -1699,7 +1699,7 @@ void set_ver(char *args) {
 		dos.version.major = (Bit8u)(atoi(word));
 		dos.version.minor = (Bit8u)(atoi(args));
 	}
-	if (enablelfn != -2) uselfn = enablelfn==1 || (enablelfn == -1 && dos.version.major>6);
+	if (lfn_state != -2) uselfn = lfn_state==1 || (lfn_state == -1 && dos.version.major>6);
 }
 
 void DOS_Shell::CMD_VER(char *args) {
