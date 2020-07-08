@@ -1,6 +1,6 @@
 # dosbox-staging
 
-[![Linux x86_64 build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Linux%20builds?label=Linux%20builds%20(x86_64))](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22)
+[![Linux x86\_64 build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Linux%20builds?label=Linux%20builds%20(x86_64))](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22)
 [![Linux other build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Platform%20builds?label=Linux%20builds%20(ARM,%20S390x,%20ppc64le))](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Platform+builds%22)
 [![Windows build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Windows%20builds?label=Windows%20builds)](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22)
 [![macOS build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/macOS%20builds?label=macOS%20builds)](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22)
@@ -22,6 +22,7 @@ support today's systems.
 | **Static analysis**            | Yes<sup>[2],[3],[4]</sup>   | No
 | **Dynamic analysis**           | Yes                         | No
 | **clang-format**               | Yes                         | No
+| **[Development builds]**       | Yes                         | No
 | **Automated regression tests** | No (WIP)                    | No
 
 [SVN]:https://sourceforge.net/projects/dosbox/
@@ -29,6 +30,7 @@ support today's systems.
 [2]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
 [3]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
 [4]:https://scan.coverity.com/projects/dosbox-staging
+[Development builds]:https://dosbox-staging.github.io/downloads/devel/
 
 ### Feature differences
 
@@ -80,82 +82,71 @@ Other differences:
 [10]:https://github.com/dosbox-staging/dosbox-staging/commit/239396fec83dbba6a1eb1a0f4461f4a427d2be38
 [11]: https://github.com/dosbox-staging/dosbox-staging/pull/477
 
-## Development snapshot builds
+## Stable release builds
 
-Pre-release builds can be downloaded from CI build artifacts. Go to [Linux],
-[Windows] or [macOS], select the newest build and download the package linked
-in the "**Artifacts**" section.
+[Linux](https://dosbox-staging.github.io/downloads/linux/),
+[Windows](https://dosbox-staging.github.io/downloads/windows/),
+[macOS](https://dosbox-staging.github.io/downloads/macos/)
 
-You need to be logged-in on GitHub to access these snapshot builds.
+## Test builds / development snapshots
 
-### [Linux]
-
-Snapshots are dynamically-linked x86\_64 builds, you'll need additional
-packages installed via your package manager.
-
-#### Fedora
-
-    sudo dnf install SDL2 SDL2_net opusfile
-
-#### Debian (9 or newer), Ubuntu (16.04 LTS or newer)
-
-    sudo apt install libsdl2-2.0-0 libsdl2-net-2.0-0 libopusfile0
-
-#### Arch, Manjaro
-
-    sudo pacman -S sdl2 sdl2_net opusfile
-
-
-### [Windows]
-
-Our Windows snapshots include both 32-bit (x86) and 64-bit (x64) builds.
-
-A dosbox.exe file in a snapshot package is not signed, therefore Windows 10
-might prevent the program from starting.
-
-If Windows displays the message "Windows Defender SmartScreen prevented an
-unrecognised app from starting", you have two options to dismiss it:
-
-1) Click "More info", and button "Run anyway" will appear.
-2) Right-click on dosbox.exe, select: Properties → General → Security → Unblock
-
-### [macOS]
-
-Due to GitHub CI and Apple SDKs limitations, the snapshots work only on
-macOS Catalina (10.15).
-
-dosbox-staging app bundle is **unsigned** - click on app with right mouse
-button, select "Open" and the dialog will show a button to run and unsigned app.
-
-[Linux]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22+is%3Asuccess+branch%3Amaster
-[Windows]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22+is%3Asuccess+branch%3Amaster
-[macOS]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22+is%3Asuccess+branch%3Amaster
+[Links to the newest builds](https://dosbox-staging.github.io/downloads/devel/)
 
 ## Build instructions
 
-### Linux, macOS, MSYS2, MinGW, other OSes
-
 Read [INSTALL](INSTALL) file for a general summary about dependencies and
-configure options. Read [BUILD.md](BUILD.md) for the comprehensive
-compilation guide.
+configure options and [BUILD.md](BUILD.md) for the comprehensive
+compilation guide.  You can also use helper script
+[`./scripts/build.sh`](scripts/build.sh), that performs builds for many
+useful scenarios (LTO, FDO, sanitizer builds, many others).
+
+### Linux, macOS
+
+Install build dependencies appropriate for your OS:
+
+``` shell
+# Fedora
+sudo dnf install gcc-c++ automake alsa-lib-devel libpng-devel \
+                 SDL2-devel SDL2_net-devel opusfile-devel
+```
+
+``` shell
+# Debian, Ubuntu
+sudo apt install build-essential automake libasound2-dev libpng-dev \
+                 libsdl2-dev libsdl2-net-dev libopusfile-dev
+```
+
+``` shell
+# Arch, Manjaro
+sudo pacman -S gcc automake alsa-lib libpng sdl2 sdl2_net opusfile
+```
+
+``` shell
+# macOS
+xcode-select --install
+brew install autogen automake libpng sdl2 sdl2_net opusfile
+```
+
+Following flags are suggested for local optimised builds:
 
 ``` shell
 git clone https://github.com/dosbox-staging/dosbox-staging.git
 cd dosbox-staging
 ./autogen.sh
-./configure
-make
+./configure CPPFLAGS="-DNDEBUG" \
+            CFLAGS="-O3 -march=native" \
+            CXXFLAGS="-O3 -march=native"
+make -j$(nproc)
 ```
 
-You can also use a helper script [`./scripts/build.sh`](scripts/build.sh),
-that performs builds for many useful scenarios (LTO, FDO, sanitizer builds,
-many others).
+See [CONTRIBUTING.md](CONTRIBUTING.md#build-dosbox-staging)
+for compilation flags more suited for development.
 
-### Visual Studio (2019 or newer)
+### Windows - Visual Studio (2019 or newer)
 
 First, you need to setup [vcpkg](https://github.com/microsoft/vcpkg) to
-install build dependencies. Once vcpkg is installed and bootstrapped, open
-PowerShell, and run:
+install build dependencies. Once vcpkg is bootstrapped, open PowerShell,
+and run:
 
 ``` powershell
 PS:\> .\vcpkg integrate install
@@ -167,19 +158,19 @@ These two steps will ensure that MSVC finds and links all dependencies.
 Start Visual Studio and open file: `vs\dosbox.sln`. Make sure you have `x64`
 selected as the solution platform.  Use Ctrl+Shift+B to build all projects.
 
-## Interop with SVN
+### Windows (MSYS2, MinGW), macOS (MacPorts), Haiku OS, others
 
-This repository is (deliberately) NOT git-svn compatible, this is a pure
-Git repo.
+Instructions for other build systems and operating systems are documented
+in [BUILD.md](BUILD.md).
+
+## Imported branches and community patches
 
 Commits landing in SVN upstream are imported to this repo in a timely manner,
-to the branches matching [`svn/*`] pattern.
-You can safely use those branches to rebase your changes, and prepare patches
-using Git [format-patch](https://git-scm.com/docs/git-format-patch) for sending
-upstream (it is easier and faster, than preparing patches manually).
+to the branches matching [`svn/*`] pattern, e.g. [`svn/trunk`].
 
-Other branch name patterns are also in use, e.g. [`vogons/*`] for various
-patches posted on the Vogons forum.
+Other branch name patterns are also in use: [`vogons/*`] for various
+patches posted on the Vogons forum, [`munt/*`] for patches from the Munt
+project, etc.
 
 Git tags matching pattern `svn/*` are pointing to the commits referenced by SVN
 "tag" paths at the time of creation.
@@ -193,7 +184,10 @@ git fetch origin "refs/notes/*:refs/notes/*"
 ```
 
 For some historical context of why this repo exists you can read
-[Vogons thread](https://www.vogons.org/viewtopic.php?p=790065#p790065).
+[Vogons thread](https://www.vogons.org/viewtopic.php?p=790065#p790065),
+([1](https://imgur.com/a/bnJEZcx), [2](https://imgur.com/a/HnG1Ls4))
 
 [`svn/*`]:https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F
+[`svn/trunk`]:https://github.com/dosbox-staging/dosbox-staging/tree/svn/trunk
 [`vogons/*`]:https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F
+[`munt/*`]:https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=munt%2F
