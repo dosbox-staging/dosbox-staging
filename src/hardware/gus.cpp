@@ -121,6 +121,11 @@ static void GUS_DMA_Callback(DmaChannel * chan,DMAEvent event);
 
 class GUSChannels {
 public:
+	void WriteWaveCtrl(uint8_t val);
+
+	typedef float (GUSChannels::*get_sample_f)() const;
+	get_sample_f getSample = &GUSChannels::GetSample8;
+
 	Bit32u WaveStart;
 	Bit32u WaveEnd;
 	Bit32u WaveAddr;
@@ -225,15 +230,8 @@ public:
 		double realadd = (frameadd*(double)myGUS.basefreq/(double)GUS_RATE) * (double)(1 << WAVE_FRACT);
 		WaveAdd = (Bit32u)realadd;
 	}
-	void WriteWaveCtrl(Bit8u val) {
-		Bit32u oldirq=myGUS.WaveIRQ;
-		WaveCtrl = val & 0x7f;
-		if ((val & 0xa0)==0xa0) myGUS.WaveIRQ|=irqmask;
-		else myGUS.WaveIRQ&=~irqmask;
-		if (oldirq != myGUS.WaveIRQ) 
-			CheckVoiceIrq();
-	}
-	INLINE Bit8u ReadWaveCtrl(void) {
+
+	inline Bit8u ReadWaveCtrl() {
 		Bit8u ret=WaveCtrl;
 		if (myGUS.WaveIRQ & irqmask) ret|=0x80;
 		return ret;
@@ -348,34 +346,36 @@ public:
 		UpdateVolumes();
 	}
 
-	void generateSamples(Bit32s * stream,Bit32u len) {
-		//Disabled channel
-		if (RampCtrl & WaveCtrl & 3) return;
+	void generateSamples(int32_t *stream, uint32_t len)
+	{
+		if (RampCtrl & WaveCtrl & 3) // Channel is disabled
+			return;
 
-		if (WaveCtrl & WCTRL_16BIT) {
-			for (int i = 0; i < (int)len; i++) {
-				// Get sample
-				const float sample = GetSample16();
-				// Output stereo sample
-				stream[i << 1] += static_cast<int32_t>(sample * VolLeft);
-				stream[(i << 1) + 1] += static_cast<int32_t>(sample * VolRight);
-				WaveUpdate();
-				RampUpdate();
-			}
-		}
-		else {
-			for (int i = 0; i < (int)len; i++) {
-				// Get sample
-				const float sample = GetSample8();
-				// Output stereo sample
-				stream[i << 1] += static_cast<int32_t>(sample * VolLeft);
-				stream[(i << 1) + 1] += static_cast<int32_t>(sample * VolRight);
-				WaveUpdate();
-				RampUpdate();
-			}
+		uint16_t tally = 0;
+		while (tally++ < len) {
+			const float sample = (this->*getSample)();
+			*(stream++) += static_cast<int32_t>(sample * VolLeft);
+			*(stream++) += static_cast<int32_t>(sample * VolRight);
+			WaveUpdate();
+			RampUpdate();
 		}
 	}
 };
+
+void GUSChannels::WriteWaveCtrl(uint8_t val)
+{
+	Bit32u oldirq = myGUS.WaveIRQ;
+	WaveCtrl = val & 0x7f;
+	getSample = (WaveCtrl & WCTRL_16BIT) ? &GUSChannels::GetSample16
+	                                     : &GUSChannels::GetSample8;
+
+	if ((val & 0xa0) == 0xa0)
+		myGUS.WaveIRQ |= irqmask;
+	else
+		myGUS.WaveIRQ &= ~irqmask;
+	if (oldirq != myGUS.WaveIRQ)
+		CheckVoiceIrq();
+}
 
 static GUSChannels *guschan[32];
 static GUSChannels *curchan;
