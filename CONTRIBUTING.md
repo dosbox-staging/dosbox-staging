@@ -71,10 +71,27 @@ discuss it with us early, e.g. by creating a new bugtracker issue.
 
 # Build dosbox-staging
 
-Basic build instructions are in [README.md][readme-b]; take a moment to read
-[INSTALL][install] file as well. These are good enough to get you started :)
+Install dependencies listed in [README.md][readme-b]; take a moment to read
+[INSTALL][install] file as well. You can also learn longer list of dependencies
+for other build systems by running script `./scripts/list-build-dependencies.sh`.
 
 Detailed build instructions are in [BUILD.md][build-doc] file.
+
+Example build instructions appropriate for development:
+
+``` shell
+./autogen.sh
+./configure CFLAGS="-g -fdiagnostics-color -O0 -Wall -Weffc++" \
+            CXXFLAGS="-g -fdiagnostics-color -O0 -Wall -Weffc++"
+make -j$(nproc) |& tee build.log
+./scripts/count-warnings.py build.log
+```
+
+You can also use `./scripts/build.sh` script, which includes configurations
+for various build types and operating systems.
+
+For development, it's recommended to use `ccache` - it can speed up your clean
+builds by up to 60x.
 
 [readme-b]: https://github.com/dosbox-staging/dosbox-staging#build-instructions
 [install]: https://github.com/dosbox-staging/dosbox-staging/blob/master/INSTALL
