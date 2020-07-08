@@ -68,11 +68,12 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 	const char * name_int = name;
 	char tempdir[DOS_PATHLENGTH];
 	char upname[DOS_PATHLENGTH];
-	Bitu r,w,q=0;
+	Bitu r,w;
+	Bitu q=0;
 	Bit8u c;
 	*drive = DOS_GetDefaultDrive();
 	/* First get the drive */
-	while (name_int[0]=='"') {
+	while (name_int[0] == '"') {
 		q++;
 		name_int++;
 	}
