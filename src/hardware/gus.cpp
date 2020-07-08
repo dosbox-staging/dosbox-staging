@@ -778,7 +778,8 @@ static void GUS_DMA_Callback(DmaChannel * chan,DMAEvent event) {
 	chan->Register_Callback(0);
 }
 
-static void GUS_CallBack(Bitu len) {
+static void GUS_CallBack(uint16_t len)
+{
 	Bit32s buffer[MIXER_BUFSIZE][2];
 	memset(buffer, 0, len * sizeof(buffer[0]));
 
@@ -879,7 +880,7 @@ public:
 		myGUS.gRegData=0x1;
 		GUSReset();
 		myGUS.gRegData=0x0;
-		int portat = 0x200+GUS_BASE;
+		const Bitu portat = 0x200 + GUS_BASE;
 
 		// ULTRASND=Port,DMA1,DMA2,IRQ1,IRQ2
 		// [GUS port], [GUS DMA (recording)], [GUS DMA (playback)], [GUS IRQ (playback)], [GUS IRQ (MIDI)]
