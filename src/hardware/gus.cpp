@@ -224,11 +224,11 @@ public:
 		return w1;
 	}
 
-	void WriteWaveFreq(Bit16u val) {
+	void WriteWaveFreq(uint16_t val)
+	{
 		WaveFreq = val;
-		double frameadd = double(val >> 1)/512.0;		//Samples / original gus frame
-		double realadd = (frameadd*(double)myGUS.basefreq/(double)GUS_RATE) * (double)(1 << WAVE_FRACT);
-		WaveAdd = (Bit32u)realadd;
+		const float rate_ratio = static_cast<float>(myGUS.basefreq) / GUS_RATE;
+		WaveAdd = static_cast<uint32_t>(val * rate_ratio / 2.0f);
 	}
 
 	inline Bit8u ReadWaveCtrl() {
