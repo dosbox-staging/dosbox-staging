@@ -144,8 +144,8 @@ public:
 	uint8_t PanPot = 0u;
 	uint8_t channum = 0u;
 	uint32_t irqmask = 0u;
-	Bit32s VolLeft;
-	Bit32s VolRight;
+	int32_t VolLeft = 0;
+	int32_t VolRight = 0;
 
 	GUSChannels(uint8_t num)
 	{
@@ -280,7 +280,7 @@ public:
 	}
 	INLINE void WaveUpdate(void) {
 		if (WaveCtrl & ( WCTRL_STOP | WCTRL_STOPPED)) return;
-		Bit32s WaveLeft;
+		int32_t WaveLeft;
 		if (WaveCtrl & WCTRL_DECREASING) {
 			WaveAddr -= WaveAdd;
 			WaveLeft = WaveStart-WaveAddr;
@@ -312,7 +312,7 @@ public:
 	{
 		/* Check if ramping enabled */
 		if (RampCtrl & 0x3) return;
-		Bit32s RemainingVolIndexes;
+		int32_t RemainingVolIndexes;
 		if (RampCtrl & 0x40) {
 			CurrentVolIndex -= IncrVolIndex;
 			RemainingVolIndexes = StartVolIndex - CurrentVolIndex;
