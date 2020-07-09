@@ -77,12 +77,12 @@ static void CheckVoiceIrq(void);
 
 struct GFGus {
 	uint8_t gRegSelect = 0u;
-	Bit16u gRegData;
+	uint16_t gRegData = 0u;
 	Bit32u gDramAddr;
-	Bit16u gCurChannel;
+	uint16_t gCurChannel = 0u;
 
 	uint8_t DMAControl = 0u;
-	Bit16u dmaAddr;
+	uint16_t dmaAddr = 0u;
 	uint8_t TimerControl = 0u;
 	uint8_t SampControl = 0u;
 	uint8_t mixControl = 0u;
@@ -131,7 +131,7 @@ public:
 	Bit32u WaveAddr;
 	Bit32u WaveAdd;
 	uint8_t WaveCtrl = 0u;
-	Bit16u WaveFreq;
+	uint16_t WaveFreq = 0u;
 
 	uint32_t StartVolIndex = 0u;
 	uint32_t EndVolIndex = 0u;
@@ -436,7 +436,7 @@ static void CheckVoiceIrq(void) {
 	}
 }
 
-static Bit16u ExecuteReadRegister(void) {
+static uint16_t ExecuteReadRegister() {
 	uint8_t tmpreg;
 	//	LOG_MSG("Read global reg %x",myGUS.gRegSelect);
 	switch (myGUS.gRegSelect) {
@@ -444,37 +444,37 @@ static Bit16u ExecuteReadRegister(void) {
 		tmpreg = myGUS.DMAControl & 0xbf;
 		tmpreg |= (myGUS.IRQStatus & 0x80) >> 1;
 		myGUS.IRQStatus&=0x7f;
-		return (Bit16u)(tmpreg << 8);
+		return static_cast<uint16_t>(tmpreg << 8);
 	case 0x42:  // Dma address register
 		return myGUS.dmaAddr;
 	case 0x45:  // Timer control register.  Identical in operation to Adlib's timer
-		return (Bit16u)(myGUS.TimerControl << 8);
+		return static_cast<uint16_t>(myGUS.TimerControl << 8);
 		break;
 	case 0x49:  // Dma sample register
 		tmpreg = myGUS.DMAControl & 0xbf;
 		tmpreg |= (myGUS.IRQStatus & 0x80) >> 1;
-		return (Bit16u)(tmpreg << 8);
+		return static_cast<uint16_t>(tmpreg << 8);
 	case 0x80: // Channel voice control read register
 		if (curchan) return curchan->ReadWaveCtrl() << 8;
 		else return 0x0300;
 
 	case 0x82: // Channel MSB start address register
-		if (curchan) return (Bit16u)(curchan->WaveStart >> 16);
+		if (curchan) return static_cast<uint16_t>(curchan->WaveStart >> 16);
 		else return 0x0000;
 	case 0x83: // Channel LSW start address register
-		if (curchan) return (Bit16u)(curchan->WaveStart );
+		if (curchan) return static_cast<uint16_t>(curchan->WaveStart );
 		else return 0x0000;
 
 	case 0x89: // Channel volume register
 		if (curchan)
-			return (Bit16u)(curchan->CurrentVolIndex << 4);
+			return static_cast<uint16_t>(curchan->CurrentVolIndex << 4);
 		else
 			return 0x0000;
 	case 0x8a: // Channel MSB current address register
-		if (curchan) return (Bit16u)(curchan->WaveAddr >> 16);
+		if (curchan) return static_cast<uint16_t>(curchan->WaveAddr >> 16);
 		else return 0x0000;
 	case 0x8b: // Channel LSW current address register
-		if (curchan) return (Bit16u)(curchan->WaveAddr );
+		if (curchan) return static_cast<uint16_t>(curchan->WaveAddr );
 		else return 0x0000;
 
 	case 0x8d: // Channel volume control register
@@ -489,7 +489,7 @@ static Bit16u ExecuteReadRegister(void) {
 		myGUS.RampIRQ&=~mask;
 		myGUS.WaveIRQ&=~mask;
 		CheckVoiceIrq();
-		return (Bit16u)(tmpreg << 8);
+		return static_cast<uint16_t>(tmpreg << 8);
 	default:
 #if LOG_GUS
 		LOG_MSG("Read Register num 0x%x", myGUS.gRegSelect);
@@ -514,7 +514,7 @@ static void ExecuteGlobRegister(void) {
 //	if (myGUS.gRegSelect|1!=0x44) LOG_MSG("write global register %x with %x", myGUS.gRegSelect, myGUS.gRegData);
 	switch(myGUS.gRegSelect) {
 	case 0x0:  // Channel voice control register
-		if(curchan) curchan->WriteWaveCtrl((Bit16u)myGUS.gRegData>>8);
+		if(curchan) curchan->WriteWaveCtrl(static_cast<uint16_t>(myGUS.gRegData)>>8);
 		break;
 	case 0x1:  // Channel frequency control register
 		if(curchan) curchan->WriteWaveFreq(myGUS.gRegData);
@@ -545,25 +545,25 @@ static void ExecuteGlobRegister(void) {
 		break;
 	case 0x6:  // Channel volume ramp rate register
 		if(curchan != NULL) {
-			uint8_t tmpdata = (Bit16u)myGUS.gRegData >> 8;
+			uint8_t tmpdata = static_cast<uint16_t>(myGUS.gRegData) >> 8;
 			curchan->WriteRampRate(tmpdata);
 		}
 		break;
 	case 0x7:  // Channel volume ramp start register  EEEEMMMM
 		if(curchan != NULL) {
-			uint8_t tmpdata = (Bit16u)myGUS.gRegData >> 8;
+			uint8_t tmpdata = static_cast<uint16_t>(myGUS.gRegData) >> 8;
 			curchan->StartVolIndex = tmpdata << 4;
 		}
 		break;
 	case 0x8:  // Channel volume ramp end register  EEEEMMMM
 		if(curchan != NULL) {
-			uint8_t tmpdata = (Bit16u)myGUS.gRegData >> 8;
+			uint8_t tmpdata = static_cast<uint16_t>(myGUS.gRegData) >> 8;
 			curchan->EndVolIndex = tmpdata << 4;
 		}
 		break;
 	case 0x9:  // Channel current volume register
 		if(curchan != NULL) {
-			Bit16u tmpdata = (Bit16u)myGUS.gRegData >> 4;
+			uint16_t tmpdata = static_cast<uint16_t>(myGUS.gRegData) >> 4;
 			curchan->CurrentVolIndex = tmpdata;
 		}
 		break;
@@ -580,10 +580,10 @@ static void ExecuteGlobRegister(void) {
 		}
 		break;
 	case 0xC:  // Channel pan pot register
-		if(curchan) curchan->WritePanPot((Bit16u)myGUS.gRegData>>8);
+		if(curchan) curchan->WritePanPot(static_cast<uint16_t>(myGUS.gRegData)>>8);
 		break;
 	case 0xD:  // Channel volume control register
-		if(curchan) curchan->WriteRampCtrl((Bit16u)myGUS.gRegData>>8);
+		if(curchan) curchan->WriteRampCtrl(static_cast<uint16_t>(myGUS.gRegData)>>8);
 		break;
 	case 0xE:  // Set active channel register
 		myGUS.gRegSelect = myGUS.gRegData>>8;		//JAZZ Jackrabbit seems to assume this?
@@ -747,12 +747,12 @@ static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 0x304:
 		if (iolen==2) {
-			myGUS.gRegData=(Bit16u)val;
+			myGUS.gRegData=static_cast<uint16_t>(val);
 			ExecuteGlobRegister();
-		} else myGUS.gRegData = (Bit16u)val;
+		} else myGUS.gRegData = static_cast<uint16_t>(val);
 		break;
 	case 0x305:
-		myGUS.gRegData = (Bit16u)((0x00ff & myGUS.gRegData) | val << 8);
+		myGUS.gRegData = static_cast<uint16_t>((0x00ff & myGUS.gRegData) | val << 8);
 		ExecuteGlobRegister();
 		break;
 	case 0x307:
