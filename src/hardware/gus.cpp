@@ -78,7 +78,7 @@ static void CheckVoiceIrq(void);
 struct GFGus {
 	uint8_t gRegSelect = 0u;
 	uint16_t gRegData = 0u;
-	Bit32u gDramAddr;
+	uint32_t gDramAddr = 0u;
 	uint16_t gCurChannel = 0u;
 
 	uint8_t DMAControl = 0u;
@@ -87,7 +87,7 @@ struct GFGus {
 	uint8_t SampControl = 0u;
 	uint8_t mixControl = 0u;
 	uint8_t ActiveChannels = 0u;
-	Bit32u basefreq;
+	uint32_t basefreq = 0u;
 
 	struct GusTimer {
 		uint8_t value = 0u;
@@ -97,7 +97,7 @@ struct GFGus {
 		bool running;
 		float delay;
 	} timers[2];
-	Bit32u rate;
+	uint32_t rate = 0u;
 	Bitu portbase;
 	uint8_t dma1 = 0u;
 	uint8_t dma2 = 0u;
@@ -109,10 +109,10 @@ struct GFGus {
 	bool ChangeIRQDMA;
 	// IRQ status register values
 	uint8_t IRQStatus = 0u;
-	Bit32u ActiveMask;
+	uint32_t ActiveMask = 0u;
 	uint8_t IRQChan = 0u;
-	Bit32u RampIRQ;
-	Bit32u WaveIRQ;
+	uint32_t RampIRQ = 0u;
+	uint32_t WaveIRQ = 0u;
 } myGUS;
 
 Bitu DEBUG_EnableDebugger(void);
@@ -126,10 +126,10 @@ public:
 	typedef float (GUSChannels::*get_sample_f)() const;
 	get_sample_f getSample = &GUSChannels::GetSample8;
 
-	Bit32u WaveStart;
-	Bit32u WaveEnd;
-	Bit32u WaveAddr;
-	Bit32u WaveAdd;
+	uint32_t WaveStart = 0u;
+	uint32_t WaveEnd = 0u;
+	uint32_t WaveAddr = 0u;
+	uint32_t WaveAdd = 0u;
 	uint8_t WaveCtrl = 0u;
 	uint16_t WaveFreq = 0u;
 
@@ -143,7 +143,7 @@ public:
 
 	uint8_t PanPot = 0u;
 	uint8_t channum = 0u;
-	Bit32u irqmask;
+	uint32_t irqmask = 0u;
 	Bit32s VolLeft;
 	Bit32s VolRight;
 
@@ -254,7 +254,7 @@ public:
 	uint8_t ReadPanPot(void) { return PanPot; }
 	void WriteRampCtrl(uint8_t val)
 	{
-		Bit32u old=myGUS.RampIRQ;
+		uint32_t old=myGUS.RampIRQ;
 		RampCtrl = val & 0x7f;
 		//Manually set the irq
 		if ((val & 0xa0)==0xa0) 
@@ -363,7 +363,7 @@ public:
 
 void GUSChannels::WriteWaveCtrl(uint8_t val)
 {
-	Bit32u oldirq = myGUS.WaveIRQ;
+	uint32_t oldirq = myGUS.WaveIRQ;
 	WaveCtrl = val & 0x7f;
 	getSample = (WaveCtrl & WCTRL_16BIT) ? &GUSChannels::GetSample16
 	                                     : &GUSChannels::GetSample8;
@@ -429,7 +429,7 @@ static void CheckVoiceIrq(void) {
 	if (myGUS.WaveIRQ) myGUS.IRQStatus|=0x20;
 	GUS_CheckIRQ();
 	for (;;) {
-		Bit32u check=(1 << myGUS.IRQChan);
+		uint32_t check=(1 << myGUS.IRQChan);
 		if (totalmask & check) return;
 		myGUS.IRQChan++;
 		if (myGUS.IRQChan>=myGUS.ActiveChannels) myGUS.IRQChan=0;
@@ -487,7 +487,7 @@ static uint16_t ExecuteReadRegister()
 		else return 0x0300;
 	case 0x8f: // General channel IRQ status register
 		tmpreg=myGUS.IRQChan|0x20;
-		Bit32u mask;
+		uint32_t mask;
 		mask=1 << myGUS.IRQChan;
         if (!(myGUS.RampIRQ & mask)) tmpreg|=0x40;
 		if (!(myGUS.WaveIRQ & mask)) tmpreg|=0x80;
@@ -528,25 +528,25 @@ static void ExecuteGlobRegister(void) {
 		break;
 	case 0x2:  // Channel MSW start address register
 		if (curchan) {
-			Bit32u tmpaddr = (Bit32u)((myGUS.gRegData & 0x1fff) << 16);
+			uint32_t tmpaddr = static_cast<uint32_t>((myGUS.gRegData & 0x1fff) << 16);
 			curchan->WaveStart = (curchan->WaveStart & WAVE_MSWMASK) | tmpaddr;
 		}
 		break;
 	case 0x3:  // Channel LSW start address register
 		if(curchan != NULL) {
-			Bit32u tmpaddr = (Bit32u)(myGUS.gRegData);
+			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData);
 			curchan->WaveStart = (curchan->WaveStart & WAVE_LSWMASK) | tmpaddr;
 		}
 		break;
 	case 0x4:  // Channel MSW end address register
 		if(curchan != NULL) {
-			Bit32u tmpaddr = (Bit32u)(myGUS.gRegData & 0x1fff) << 16;
+			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData & 0x1fff) << 16;
 			curchan->WaveEnd = (curchan->WaveEnd & WAVE_MSWMASK) | tmpaddr;
 		}
 		break;
 	case 0x5:  // Channel MSW end address register
 		if(curchan != NULL) {
-			Bit32u tmpaddr = (Bit32u)(myGUS.gRegData);
+			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData);
 			curchan->WaveEnd = (curchan->WaveEnd & WAVE_LSWMASK) | tmpaddr;
 		}
 		break;
@@ -576,13 +576,13 @@ static void ExecuteGlobRegister(void) {
 		break;
 	case 0xA:  // Channel MSW current address register
 		if(curchan != NULL) {
-			Bit32u tmpaddr = (Bit32u)(myGUS.gRegData & 0x1fff) << 16;
+			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData & 0x1fff) << 16;
 			curchan->WaveAddr = (curchan->WaveAddr & WAVE_MSWMASK) | tmpaddr;
 		}
 		break;
 	case 0xB:  // Channel LSW current address register
 		if(curchan != NULL) {
-			Bit32u tmpaddr = (Bit32u)(myGUS.gRegData);
+			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData);
 			curchan->WaveAddr = (curchan->WaveAddr & WAVE_LSWMASK) | tmpaddr;
 		}
 		break;
@@ -603,7 +603,7 @@ static void ExecuteGlobRegister(void) {
 		if(myGUS.ActiveChannels > 32) myGUS.ActiveChannels = 32;
 		myGUS.ActiveMask=0xffffffffU >> (32-myGUS.ActiveChannels);
 		gus_chan->Enable(true);
-		myGUS.basefreq = (Bit32u)(0.5 + 1000000.0/(1.619695497*(double)(myGUS.ActiveChannels)));
+		myGUS.basefreq = static_cast<uint32_t>(0.5 + 1000000.0/(1.619695497*(double)(myGUS.ActiveChannels)));
 #if LOG_GUS
 		LOG_MSG("GUS set to %d channels, freq %d", myGUS.ActiveChannels, myGUS.basefreq);
 #endif
@@ -620,10 +620,10 @@ static void ExecuteGlobRegister(void) {
 		myGUS.dmaAddr = myGUS.gRegData;
 		break;
 	case 0x43:  // MSB Peek/poke DRAM position
-		myGUS.gDramAddr = (0xff0000 & myGUS.gDramAddr) | ((Bit32u)myGUS.gRegData);
+		myGUS.gDramAddr = (0xff0000 & myGUS.gDramAddr) | (static_cast<uint32_t>(myGUS.gRegData));
 		break;
 	case 0x44:  // LSW Peek/poke DRAM position
-		myGUS.gDramAddr = (0xffff & myGUS.gDramAddr) | ((Bit32u)myGUS.gRegData>>8) << 16;
+		myGUS.gDramAddr = (0xffff & myGUS.gDramAddr) | (static_cast<uint32_t>(myGUS.gRegData>>8)) << 16;
 		break;
 	case 0x45:  // Timer control register.  Identical in operation to Adlib's timer
 		myGUS.TimerControl = static_cast<uint8_t>(myGUS.gRegData >> 8);
