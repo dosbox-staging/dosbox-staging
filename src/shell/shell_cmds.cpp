@@ -38,7 +38,7 @@
 #include "drives.h"
 #include "../src/ints/int10.h"
 
-extern int lfn_state, lfn_filefind_handle;
+extern int lfn_filefind_handle;
 
 // clang-format off
 static SHELL_Cmd cmd_list[] = {
@@ -1681,22 +1681,7 @@ void DOS_Shell::CMD_PATH(char *args){
 	}
 }
 
-void set_ver(char *args, bool start) {
-	char* word = StripWord(args);
-	if (!*args && !*word) { //Reset
-		dos.version.major = 5;
-		dos.version.minor = 0;
-	} else if (*args == 0 && *word && (strchr(word,'.') != 0)) { //Allow: ver set 5.1
-		const char * p = strchr(word,'.');
-		dos.version.major = (Bit8u)(atoi(word));
-		dos.version.minor = (Bit8u)(strlen(p+1)==1&&*(p+1)>'0'&&*(p+1)<='9'?atoi(p+1)*10:atoi(p+1));
-	} else { //Official syntax: ver set 5 2
-		dos.version.major = (Bit8u)(atoi(word));
-		dos.version.minor = (Bit8u)(atoi(args));
-	}
-	if (start || lfn_state != -2) uselfn = lfn_state==1 || ((lfn_state == -1 || lfn_state == -2) && dos.version.major>6);
-}
-
+void set_ver(char *args, bool start);
 void DOS_Shell::CMD_VER(char *args) {
 	HELP("VER");
 	if (args && strlen(args)) {

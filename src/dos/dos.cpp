@@ -32,7 +32,6 @@
 
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
-int lfn_state=-1;
 bool uselfn;
 
 #define DOS_COPYBUFSIZE 0x10000
@@ -1206,7 +1205,23 @@ static Bitu DOS_26Handler(void) {
     return CBRET_NONE;
 }
 
-void set_ver(char *args, bool start);
+static int lfn_state=-1;
+void set_ver(char *args, bool start) {
+	char* word = StripWord(args);
+	if (!*args && !*word) { //Reset
+		dos.version.major = 5;
+		dos.version.minor = 0;
+	} else if (*args == 0 && *word && (strchr(word,'.') != 0)) { //Allow: ver set 5.1
+		const char * p = strchr(word,'.');
+		dos.version.major = (Bit8u)(atoi(word));
+		dos.version.minor = (Bit8u)(strlen(p+1)==1&&*(p+1)>'0'&&*(p+1)<='9'?atoi(p+1)*10:atoi(p+1));
+	} else { //Official syntax: ver set 5 2
+		dos.version.major = (Bit8u)(atoi(word));
+		dos.version.minor = (Bit8u)(atoi(args));
+	}
+	if (start || lfn_state != -2) uselfn = lfn_state==1 || ((lfn_state == -1 || lfn_state == -2) && dos.version.major>6);
+}
+
 class DOS:public Module_base{
 private:
 	CALLBACK_HandlerObject callback[7];
@@ -1262,7 +1277,6 @@ public:
 		else if (lfn=="off") lfn_state=0;
 		else if (lfn=="autostart") lfn_state=-2;
 		else lfn_state=-1;
-
 		set_ver((char *)section->Get_string("ver"), true);
 	}
 	~DOS(){
