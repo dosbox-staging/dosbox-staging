@@ -218,7 +218,7 @@ public:
 		WaveAdd = static_cast<uint32_t>(val * rate_ratio / 2.0f);
 	}
 
-	inline uint8_t ReadWaveCtrl()
+	inline uint8_t ReadWaveCtrl() const
 	{
 		uint8_t ret = WaveCtrl;
 		if (myGUS.WaveIRQ & irqmask)
@@ -238,10 +238,10 @@ public:
 		PanPot = val;
 	}
 
-	uint8_t ReadPanPot() { return PanPot; }
+	uint8_t ReadPanPot() const { return PanPot; }
 	void WriteRampCtrl(uint8_t val)
 	{
-		uint32_t old = myGUS.RampIRQ;
+		const uint32_t old = myGUS.RampIRQ;
 		RampCtrl = val & 0x7f;
 		//Manually set the irq
 		if ((val & 0xa0)==0xa0) 
@@ -251,7 +251,7 @@ public:
 		if (old != myGUS.RampIRQ) 
 			CheckVoiceIrq();
 	}
-	INLINE uint8_t ReadRampCtrl()
+	inline uint8_t ReadRampCtrl() const
 	{
 		uint8_t ret = RampCtrl;
 		if (myGUS.RampIRQ & irqmask)
@@ -261,8 +261,10 @@ public:
 	void WriteRampRate(uint8_t val)
 	{
 		RampRate = val;
-		double frameadd = (double)(RampRate & 63)/(double)(1 << (3*(val >> 6)));
-		double realadd = frameadd*(double)myGUS.basefreq/(double)GUS_RATE;
+		const double frameadd = (double)(RampRate & 63) /
+		                        (double)(1 << (3 * (val >> 6)));
+		const double realadd = frameadd * (double)myGUS.basefreq /
+		                       (double)GUS_RATE;
 		IncrVolIndex = static_cast<uint32_t>(realadd);
 	}
 	INLINE void WaveUpdate()
@@ -352,7 +354,7 @@ public:
 
 void GUSChannels::WriteWaveCtrl(uint8_t val)
 {
-	uint32_t oldirq = myGUS.WaveIRQ;
+	const uint32_t oldirq = myGUS.WaveIRQ;
 	WaveCtrl = val & 0x7f;
 	getSample = (WaveCtrl & WCTRL_16BIT) ? &GUSChannels::GetSample16
 	                                     : &GUSChannels::GetSample8;
@@ -389,12 +391,11 @@ static void GUSReset()
 		myGUS.ChangeIRQDMA = false;
 		myGUS.mixControl = 0x0b;	// latches enabled by default LINEs disabled
 		// Stop all channels
-		int i;
-		for(i=0;i<32;i++) {
-			guschan[i]->CurrentVolIndex = 0u;
-			guschan[i]->WriteWaveCtrl(0x1);
-			guschan[i]->WriteRampCtrl(0x1);
-			guschan[i]->WritePanPot(0x7);
+		for (const auto channel : guschan) {
+			channel->CurrentVolIndex = 0u;
+			channel->WriteWaveCtrl(0x1);
+			channel->WriteRampCtrl(0x1);
+			channel->WritePanPot(0x7);
 		}
 		myGUS.IRQChan = 0;
 	}
@@ -414,8 +415,9 @@ static INLINE void GUS_CheckIRQ()
 static void CheckVoiceIrq()
 {
 	myGUS.IRQStatus &= 0x9f;
-	Bitu totalmask=(myGUS.RampIRQ|myGUS.WaveIRQ) & myGUS.ActiveMask;
-	if (!totalmask) return;
+	const Bitu totalmask = (myGUS.RampIRQ | myGUS.WaveIRQ) & myGUS.ActiveMask;
+	if (!totalmask)
+		return;
 	if (myGUS.RampIRQ) myGUS.IRQStatus|=0x40;
 	if (myGUS.WaveIRQ) myGUS.IRQStatus|=0x20;
 	GUS_CheckIRQ();
@@ -506,10 +508,9 @@ static void GUS_TimerEvent(Bitu val) {
 
 static void ExecuteGlobRegister()
 {
-	int i;
 	//	if (myGUS.gRegSelect|1!=0x44) LOG_MSG("write global register %x
-	//with %x", myGUS.gRegSelect, myGUS.gRegData);
-	switch(myGUS.gRegSelect) {
+	// with %x", myGUS.gRegSelect, myGUS.gRegData);
+	switch (myGUS.gRegSelect) {
 	case 0x0:  // Channel voice control register
 		if (curchan)
 			curchan->WriteWaveCtrl(
@@ -604,7 +605,8 @@ static void ExecuteGlobRegister()
 #if LOG_GUS
 		LOG_MSG("GUS set to %d channels, freq %d", myGUS.ActiveChannels, myGUS.basefreq);
 #endif
-		for (i=0;i<myGUS.ActiveChannels;i++) guschan[i]->UpdateWaveRamp();
+		for (uint8_t i = 0; i < myGUS.ActiveChannels; i++)
+			guschan[i]->UpdateWaveRamp();
 		break;
 	case 0x10:  // Undocumented register used in Fast Tracker 2
 		break;
@@ -793,14 +795,16 @@ static void GUS_DMA_Callback(DmaChannel * chan,DMAEvent event) {
 		//Check for 16 or 8bit channel
 		read*=(chan->DMA16+1);
 		if((myGUS.DMAControl & 0x80) != 0) {
-			//Invert the MSB to convert twos compliment form
-			Bitu i;
-			if((myGUS.DMAControl & 0x40) == 0) {
+			// Invert the MSB to convert twos compliment form
+			const size_t dma_end = dmaaddr + read;
+			if ((myGUS.DMAControl & 0x40) == 0) {
 				// 8-bit data
-				for(i=dmaaddr;i<(dmaaddr+read);i++) GUSRam[i] ^= 0x80;
+				for (size_t i = dmaaddr; i < dma_end; ++i)
+					GUSRam[i] ^= 0x80;
 			} else {
 				// 16-bit data
-				for(i=dmaaddr+1;i<(dmaaddr+read);i+=2) GUSRam[i] ^= 0x80;
+				for (size_t i = dmaaddr + 1; i < dma_end; i += 2)
+					GUSRam[i] ^= 0x80;
 			}
 		}
 	//Writing to dma
@@ -905,8 +909,8 @@ public:
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		if (!section->Get_bool("gus"))
 			return;
-		myGUS.rate=section->Get_int("gusrate");
-	
+		myGUS.rate = section->Get_int("gusrate");
+
 		myGUS.portbase = section->Get_hex("gusbase") - 0x200;
 		int dma_val = section->Get_int("gusdma");
 		if ((dma_val<0) || (dma_val>255)) dma_val = 3;	// sensible default
