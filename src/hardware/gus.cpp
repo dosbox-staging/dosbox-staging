@@ -46,7 +46,6 @@ using namespace std;
 #define GUS_VOLUME_SCALE_DIV 1.002709201 // 0.0235 dB increments
 #define GUS_RAM_SIZE         1048576 // 1 MB
 #define GUS_BASE             myGUS.portbase
-#define GUS_RATE             myGUS.rate
 #define LOG_GUS              0
 
 #define WCTRL_STOPPED       0x01
@@ -213,8 +212,7 @@ public:
 	void WriteWaveFreq(uint16_t val)
 	{
 		WaveFreq = val;
-		const float rate_ratio = static_cast<float>(myGUS.basefreq) / GUS_RATE;
-		WaveAdd = static_cast<uint32_t>(val * rate_ratio / 2.0f);
+		WaveAdd = ceil_udivide(val, 2u);
 	}
 
 	inline uint8_t ReadWaveCtrl() const
@@ -260,11 +258,9 @@ public:
 	void WriteRampRate(uint8_t val)
 	{
 		RampRate = val;
-		const double frameadd = (double)(RampRate & 63) /
-		                        (double)(1 << (3 * (val >> 6)));
-		const double realadd = frameadd * (double)myGUS.basefreq /
-		                       (double)GUS_RATE;
-		IncrVolIndex = static_cast<uint32_t>(realadd);
+		const uint8_t scale = val & 63;
+		const uint8_t divider = 1 << (3 * (val >> 6));
+		IncrVolIndex = (!scale || !divider) ? 0u :ceil_udivide(scale, divider);
 	}
 	inline void WaveUpdate()
 	{
@@ -625,16 +621,15 @@ static void ExecuteGlobRegister()
 		if (myGUS.ActiveChannels > 32)
 			myGUS.ActiveChannels = 32;
 		myGUS.ActiveMask = 0xffffffffU >> (32 - myGUS.ActiveChannels);
-		gus_chan->Enable(true);
 		myGUS.basefreq = static_cast<uint32_t>(
 		        0.5 + 1000000.0 / (1.619695497 *
 		                           (double)(myGUS.ActiveChannels)));
-#if LOG_GUS
-		LOG_MSG("GUS set to %d channels, freq %d", myGUS.ActiveChannels,
-		        myGUS.basefreq);
-#endif
+		gus_chan->SetFreq(myGUS.basefreq);
 		for (uint8_t i = 0; i < myGUS.ActiveChannels; i++)
 			guschan[i]->UpdateWaveRamp();
+		gus_chan->Enable(true);
+		DEBUG_LOG_MSG("GUS: Activated %u voices running at %u Hz",
+		              myGUS.ActiveChannels, myGUS.basefreq);
 		break;
 	case 0x10: // Undocumented register used in Fast Tracker 2
 		break;
@@ -962,8 +957,6 @@ public:
 		Section_prop *section = static_cast<Section_prop *>(configuration);
 		if (!section->Get_bool("gus"))
 			return;
-		myGUS.rate = section->Get_int("gusrate");
-
 		myGUS.portbase = section->Get_hex("gusbase") - 0x200;
 		int dma_val = section->Get_int("gusdma");
 		if ((dma_val < 0) || (dma_val > 255))
@@ -1016,7 +1009,7 @@ public:
 			guschan[chan_ct] = new GUSChannels(chan_ct);
 		}
 		// Register the Mixer CallBack
-		gus_chan = MixerChan.Install(GUS_CallBack, GUS_RATE, "GUS");
+		gus_chan = MixerChan.Install(GUS_CallBack, 0, "GUS");
 		myGUS.gRegData = 0x1;
 		GUSReset();
 		myGUS.gRegData = 0x0;
