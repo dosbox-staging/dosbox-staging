@@ -59,7 +59,7 @@ using namespace std;
 #define WCTRL_IRQPENDING		0x80
 
 uint8_t adlib_commandreg = 0u;
-static MixerChannel * gus_chan;
+static MixerChannel *gus_chan = nullptr;
 static uint8_t irqtable[8] = {0, 2, 5, 3, 7, 11, 12, 15};
 static uint8_t dmatable[8] = {0, 1, 3, 5, 6, 7, 0, 0};
 static uint8_t GUSRam[GUS_RAM_SIZE] = {0u};
@@ -91,22 +91,23 @@ struct GFGus {
 
 	struct GusTimer {
 		uint8_t value = 0u;
-		bool reached;
-		bool raiseirq;
-		bool masked;
-		bool running;
-		float delay;
+		bool reached = false;
+		bool raiseirq = false;
+		bool masked = false;
+		bool running = false;
+		float delay = 0.0f;
 	} timers[2];
+
 	uint32_t rate = 0u;
-	Bitu portbase;
+	Bitu portbase = 0u;
 	uint8_t dma1 = 0u;
 	uint8_t dma2 = 0u;
 
 	uint8_t irq1 = 0u;
 	uint8_t irq2 = 0u;
 
-	bool irqenabled;
-	bool ChangeIRQDMA;
+	bool irqenabled = false;
+	bool ChangeIRQDMA = false;
 	// IRQ status register values
 	uint8_t IRQStatus = 0u;
 	uint32_t ActiveMask = 0u;
@@ -130,7 +131,7 @@ public:
 	uint32_t WaveEnd = 0u;
 	uint32_t WaveAddr = 0u;
 	uint32_t WaveAdd = 0u;
-	uint8_t WaveCtrl = 0u;
+	uint8_t WaveCtrl = 3u;
 	uint16_t WaveFreq = 0u;
 
 	uint32_t StartVolIndex = 0u;
@@ -139,30 +140,15 @@ public:
 	uint32_t IncrVolIndex = 0u;
 
 	uint8_t RampRate = 0u;
-	uint8_t RampCtrl = 0u;
+	uint8_t RampCtrl = 3u;
 
-	uint8_t PanPot = 0u;
+	uint8_t PanPot = 7u;
 	uint8_t channum = 0u;
 	uint32_t irqmask = 0u;
 	int32_t VolLeft = 0;
 	int32_t VolRight = 0;
 
-	GUSChannels(uint8_t num)
-	{
-		channum = num;
-		irqmask = 1 << num;
-		WaveStart = 0;
-		WaveEnd = 0;
-		WaveAddr = 0;
-		WaveAdd = 0;
-		WaveFreq = 0;
-		WaveCtrl = 3;
-		RampRate = 0;
-		RampCtrl = 3;
-		VolLeft = 0;
-		VolRight = 0;
-		PanPot = 0x7;
-	}
+	GUSChannels(uint8_t num) : channum(num), irqmask(1 << num) {}
 
 	// Fetch the next 8-bit sample from GUS memory returned as a floating
 	// point type containing a value that spans the 16-bit signed range.
@@ -281,7 +267,8 @@ public:
 	}
 	INLINE void WaveUpdate()
 	{
-		if (WaveCtrl & ( WCTRL_STOP | WCTRL_STOPPED)) return;
+		if (WaveCtrl & (WCTRL_STOP | WCTRL_STOPPED))
+			return;
 		int32_t WaveLeft;
 		if (WaveCtrl & WCTRL_DECREASING) {
 			WaveAddr -= WaveAdd;
@@ -378,12 +365,12 @@ void GUSChannels::WriteWaveCtrl(uint8_t val)
 		CheckVoiceIrq();
 }
 
-static GUSChannels *guschan[32];
-static GUSChannels *curchan;
+static std::array<GUSChannels *, 32> guschan = {nullptr};
+static GUSChannels *curchan = nullptr;
 
 static void GUSReset()
 {
-	if((myGUS.gRegData & 0x1) == 0x1) {
+	if ((myGUS.gRegData & 0x1) == 0x1) {
 		// Reset
 		adlib_commandreg = 85;
 		myGUS.IRQStatus = 0;
@@ -420,13 +407,13 @@ static void GUSReset()
 
 static INLINE void GUS_CheckIRQ()
 {
-	if (myGUS.IRQStatus && (myGUS.mixControl & 0x08)) 
+	if (myGUS.IRQStatus && (myGUS.mixControl & 0x08))
 		PIC_ActivateIRQ(myGUS.irq1);
 }
 
 static void CheckVoiceIrq()
 {
-	myGUS.IRQStatus&=0x9f;
+	myGUS.IRQStatus &= 0x9f;
 	Bitu totalmask=(myGUS.RampIRQ|myGUS.WaveIRQ) & myGUS.ActiveMask;
 	if (!totalmask) return;
 	if (myGUS.RampIRQ) myGUS.IRQStatus|=0x40;
@@ -520,7 +507,8 @@ static void GUS_TimerEvent(Bitu val) {
 static void ExecuteGlobRegister()
 {
 	int i;
-//	if (myGUS.gRegSelect|1!=0x44) LOG_MSG("write global register %x with %x", myGUS.gRegSelect, myGUS.gRegData);
+	//	if (myGUS.gRegSelect|1!=0x44) LOG_MSG("write global register %x
+	//with %x", myGUS.gRegSelect, myGUS.gRegData);
 	switch(myGUS.gRegSelect) {
 	case 0x0:  // Channel voice control register
 		if (curchan)
@@ -909,15 +897,14 @@ private:
 	IO_ReadHandleObject ReadHandler[8];
 	IO_WriteHandleObject WriteHandler[9];
 	AutoexecObject autoexecline[2];
-	MixerObject MixerChan;
+	MixerObject MixerChan = {};
+
 public:
 	GUS(Section* configuration):Module_base(configuration){
 		if(!IS_EGAVGA_ARCH) return;
 		Section_prop * section=static_cast<Section_prop *>(configuration);
-		if(!section->Get_bool("gus")) return;
-
-		memset(&myGUS, 0, sizeof(myGUS));
-
+		if (!section->Get_bool("gus"))
+			return;
 		myGUS.rate=section->Get_int("gusrate");
 	
 		myGUS.portbase = section->Get_hex("gusbase") - 0x200;
@@ -966,7 +953,7 @@ public:
 		PopulateVolScalars();
 		PopulatePanScalars();
 
-		for (uint8_t chan_ct = 0; chan_ct < 32; chan_ct++) {
+		for (uint8_t chan_ct = 0; chan_ct < guschan.size(); chan_ct++) {
 			guschan[chan_ct] = new GUSChannels(chan_ct);
 		}
 		// Register the Mixer CallBack 
@@ -997,11 +984,8 @@ public:
 		GUSReset();
 		myGUS.gRegData=0x0;
 	
-		for(Bitu i=0;i<32;i++) {
-			delete guschan[i];
-		}
-
-		memset(&myGUS, 0, sizeof(myGUS));
+		for (auto voice : guschan)
+			delete voice;
 	}
 };
 
