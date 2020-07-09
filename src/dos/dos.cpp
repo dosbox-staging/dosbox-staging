@@ -1206,7 +1206,7 @@ static Bitu DOS_26Handler(void) {
     return CBRET_NONE;
 }
 
-void set_ver(char *args);
+void set_ver(char *args, bool start);
 class DOS:public Module_base{
 private:
 	CALLBACK_HandlerObject callback[7];
@@ -1263,7 +1263,7 @@ public:
 		else if (lfn=="autostart") lfn_state=-2;
 		else lfn_state=-1;
 
-		set_ver((char *)section->Get_string("ver"));
+		set_ver((char *)section->Get_string("ver"), true);
 	}
 	~DOS(){
 		for (Bit16u i=0;i<DOS_DRIVES;i++) delete Drives[i];

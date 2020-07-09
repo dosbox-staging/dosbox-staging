@@ -951,10 +951,10 @@ void DOS_Shell::CMD_LS(char *args)
 	unsigned int max[10], total, tcols=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
 	if (!tcols) tcols=80;
 
-	for (col=10; col>0; col--) {
-		for (int i=0; i<10; i++) max[i]=2;
-		if (optL) col=1;
-		if (col==1) break;
+	for (col=10; col>0; col--) {				// Try to automatically find the number of columns to display
+		for (int i=0; i<10; i++) max[i]=2;		// Initialize the max count
+		if (optL) col=1;						// /L implies 1 column
+		if (col==1) break;						// Break if only 1 column
 		w_count=0;
 		for (const auto &entry : results) {
 			std::string name = uselfn&&!optZ?entry.lname:entry.name;
@@ -1681,7 +1681,7 @@ void DOS_Shell::CMD_PATH(char *args){
 	}
 }
 
-void set_ver(char *args) {
+void set_ver(char *args, bool start) {
 	char* word = StripWord(args);
 	if (!*args && !*word) { //Reset
 		dos.version.major = 5;
@@ -1694,7 +1694,7 @@ void set_ver(char *args) {
 		dos.version.major = (Bit8u)(atoi(word));
 		dos.version.minor = (Bit8u)(atoi(args));
 	}
-	if (lfn_state != -2) uselfn = lfn_state==1 || (lfn_state == -1 && dos.version.major>6);
+	if (start || lfn_state != -2) uselfn = lfn_state==1 || ((lfn_state == -1 || lfn_state == -2) && dos.version.major>6);
 }
 
 void DOS_Shell::CMD_VER(char *args) {
@@ -1702,6 +1702,6 @@ void DOS_Shell::CMD_VER(char *args) {
 	if (args && strlen(args)) {
 		char* word = StripWord(args);
 		if (strcasecmp(word,"set")) return;
-		set_ver(args);
+		set_ver(args, false);
 	} else WriteOut(MSG_Get("SHELL_CMD_VER_VER"),VERSION,dos.version.major,dos.version.minor);
 }
