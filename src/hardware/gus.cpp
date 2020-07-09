@@ -44,9 +44,10 @@ using namespace std;
 #define GUS_PAN_POSITIONS 16 // 0 face-left, 7 face-forward, and 15 face-right
 #define GUS_VOLUME_POSITIONS 4096
 #define GUS_VOLUME_SCALE_DIV 1.002709201 // 0.0235 dB increments
+#define GUS_RAM_SIZE         1048576 // 1 MB
 #define GUS_BASE myGUS.portbase
 #define GUS_RATE myGUS.rate
-#define LOG_GUS 0
+#define LOG_GUS              0
 
 #define WCTRL_STOPPED			0x01
 #define WCTRL_STOP				0x02
@@ -59,9 +60,9 @@ using namespace std;
 
 Bit8u adlib_commandreg;
 static MixerChannel * gus_chan;
-static Bit8u irqtable[8] = { 0, 2, 5, 3, 7, 11, 12, 15 };
-static Bit8u dmatable[8] = { 0, 1, 3, 5, 6, 7, 0, 0 };
-static Bit8u GUSRam[1024*1024]; // 1024K of GUS Ram
+static uint8_t irqtable[8] = {0, 2, 5, 3, 7, 11, 12, 15};
+static uint8_t dmatable[8] = {0, 1, 3, 5, 6, 7, 0, 0};
+static uint8_t GUSRam[GUS_RAM_SIZE] = {0u};
 static std::array<float, GUS_VOLUME_POSITIONS> vol_scalars = {0.0f};
 
 struct Frame {
@@ -172,7 +173,7 @@ public:
 		float w1 = static_cast<int8_t>(GUSRam[useAddr]);
 		// add a fraction of the next sample
 		if (WaveAdd < (1 << WAVE_FRACT)) {
-			const uint32_t nextAddr = (useAddr + 1) & (1024 * 1024 - 1);
+			const uint32_t nextAddr = (useAddr + 1) & (GUS_RAM_SIZE - 1);
 			const float w2 = static_cast<float>(
 			        static_cast<int8_t>(GUSRam[nextAddr]));
 			const float diff = w2 - w1;
@@ -667,7 +668,7 @@ static Bitu read_gus(Bitu port,Bitu iolen) {
 	case 0x305:
 		return ExecuteReadRegister() >> 8;
 	case 0x307:
-		if(myGUS.gDramAddr < sizeof(GUSRam)) {
+		if(myGUS.gDramAddr < GUS_RAM_SIZE) {
 			return GUSRam[myGUS.gDramAddr];
 		} else {
 			return 0;
@@ -752,7 +753,7 @@ static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 		ExecuteGlobRegister();
 		break;
 	case 0x307:
-		if(myGUS.gDramAddr < sizeof(GUSRam)) GUSRam[myGUS.gDramAddr] = (Bit8u)val;
+		if(myGUS.gDramAddr < GUS_RAM_SIZE) GUSRam[myGUS.gDramAddr] = static_cast<uint8_t>(val);
 		break;
 	default:
 #if LOG_GUS
@@ -888,10 +889,9 @@ public:
 		if(!IS_EGAVGA_ARCH) return;
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		if(!section->Get_bool("gus")) return;
-	
-		memset(&myGUS,0,sizeof(myGUS));
-		memset(GUSRam,0,1024*1024);
-	
+
+		memset(&myGUS, 0, sizeof(myGUS));
+
 		myGUS.rate=section->Get_int("gusrate");
 	
 		myGUS.portbase = section->Get_hex("gusbase") - 0x200;
@@ -975,8 +975,7 @@ public:
 			delete guschan[i];
 		}
 
-		memset(&myGUS,0,sizeof(myGUS));
-		memset(GUSRam,0,1024*1024);
+		memset(&myGUS, 0, sizeof(myGUS));
 	}
 };
 
