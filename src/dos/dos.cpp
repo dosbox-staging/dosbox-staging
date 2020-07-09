@@ -1219,6 +1219,7 @@ void set_ver(char *args, bool start) {
 		dos.version.major = (Bit8u)(atoi(word));
 		dos.version.minor = (Bit8u)(atoi(args));
 	}
+	// lfn_state: 1 => enable, 0 => disable, -1 => enable if dos_ver>6 at start and in run-time, -2 => enable if dos_ver>6 at start
 	if (start || lfn_state != -2) uselfn = lfn_state==1 || ((lfn_state == -1 || lfn_state == -2) && dos.version.major>6);
 }
 
@@ -1273,10 +1274,10 @@ public:
 
 		const Section_prop* section = static_cast<Section_prop*>(configuration);
 		const std::string lfn=section->Get_string("lfn");
-		if (lfn=="on") lfn_state=1;
-		else if (lfn=="off") lfn_state=0;
-		else if (lfn=="autostart") lfn_state=-2;
-		else lfn_state=-1;
+		if (lfn=="on") lfn_state=1;					// Enable LFN
+		else if (lfn=="off") lfn_state=0;			// Disable LFN
+		else if (lfn=="autostart") lfn_state=-2;	// Auto-enable LFN if dos_ver>6 at start
+		else lfn_state=-1;							// Auto-enable LFN if dos_ver>6 at start and in run-time
 		set_ver((char *)section->Get_string("ver"), true);
 	}
 	~DOS(){
