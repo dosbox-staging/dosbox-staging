@@ -254,7 +254,7 @@ public:
 	uint8_t ReadPanPot(void) { return PanPot; }
 	void WriteRampCtrl(uint8_t val)
 	{
-		uint32_t old=myGUS.RampIRQ;
+		uint32_t old = myGUS.RampIRQ;
 		RampCtrl = val & 0x7f;
 		//Manually set the irq
 		if ((val & 0xa0)==0xa0) 
@@ -429,7 +429,7 @@ static void CheckVoiceIrq(void) {
 	if (myGUS.WaveIRQ) myGUS.IRQStatus|=0x20;
 	GUS_CheckIRQ();
 	for (;;) {
-		uint32_t check=(1 << myGUS.IRQChan);
+		uint32_t check = (1 << myGUS.IRQChan);
 		if (totalmask & check) return;
 		myGUS.IRQChan++;
 		if (myGUS.IRQChan>=myGUS.ActiveChannels) myGUS.IRQChan=0;
@@ -528,7 +528,8 @@ static void ExecuteGlobRegister(void) {
 		break;
 	case 0x2:  // Channel MSW start address register
 		if (curchan) {
-			uint32_t tmpaddr = static_cast<uint32_t>((myGUS.gRegData & 0x1fff) << 16);
+			uint32_t tmpaddr = static_cast<uint32_t>(
+			        (myGUS.gRegData & 0x1fff) << 16);
 			curchan->WaveStart = (curchan->WaveStart & WAVE_MSWMASK) | tmpaddr;
 		}
 		break;
@@ -540,7 +541,8 @@ static void ExecuteGlobRegister(void) {
 		break;
 	case 0x4:  // Channel MSW end address register
 		if(curchan != NULL) {
-			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData & 0x1fff) << 16;
+			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData & 0x1fff)
+			                   << 16;
 			curchan->WaveEnd = (curchan->WaveEnd & WAVE_MSWMASK) | tmpaddr;
 		}
 		break;
@@ -576,7 +578,8 @@ static void ExecuteGlobRegister(void) {
 		break;
 	case 0xA:  // Channel MSW current address register
 		if(curchan != NULL) {
-			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData & 0x1fff) << 16;
+			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData & 0x1fff)
+			                   << 16;
 			curchan->WaveAddr = (curchan->WaveAddr & WAVE_MSWMASK) | tmpaddr;
 		}
 		break;
@@ -603,7 +606,9 @@ static void ExecuteGlobRegister(void) {
 		if(myGUS.ActiveChannels > 32) myGUS.ActiveChannels = 32;
 		myGUS.ActiveMask=0xffffffffU >> (32-myGUS.ActiveChannels);
 		gus_chan->Enable(true);
-		myGUS.basefreq = static_cast<uint32_t>(0.5 + 1000000.0/(1.619695497*(double)(myGUS.ActiveChannels)));
+		myGUS.basefreq = static_cast<uint32_t>(
+		        0.5 + 1000000.0 / (1.619695497 *
+		                           (double)(myGUS.ActiveChannels)));
 #if LOG_GUS
 		LOG_MSG("GUS set to %d channels, freq %d", myGUS.ActiveChannels, myGUS.basefreq);
 #endif
@@ -620,10 +625,12 @@ static void ExecuteGlobRegister(void) {
 		myGUS.dmaAddr = myGUS.gRegData;
 		break;
 	case 0x43:  // MSB Peek/poke DRAM position
-		myGUS.gDramAddr = (0xff0000 & myGUS.gDramAddr) | (static_cast<uint32_t>(myGUS.gRegData));
+		myGUS.gDramAddr = (0xff0000 & myGUS.gDramAddr) |
+		                  (static_cast<uint32_t>(myGUS.gRegData));
 		break;
 	case 0x44:  // LSW Peek/poke DRAM position
-		myGUS.gDramAddr = (0xffff & myGUS.gDramAddr) | (static_cast<uint32_t>(myGUS.gRegData>>8)) << 16;
+		myGUS.gDramAddr = (0xffff & myGUS.gDramAddr) |
+		                  (static_cast<uint32_t>(myGUS.gRegData >> 8)) << 16;
 		break;
 	case 0x45:  // Timer control register.  Identical in operation to Adlib's timer
 		myGUS.TimerControl = static_cast<uint8_t>(myGUS.gRegData >> 8);
