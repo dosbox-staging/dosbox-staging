@@ -535,8 +535,7 @@ static void ExecuteGlobRegister()
 	switch (myGUS.gRegSelect) {
 	case 0x0: // Channel voice control register
 		if (curchan)
-			curchan->WriteWaveCtrl(
-			        static_cast<uint16_t>(myGUS.gRegData) >> 8);
+			curchan->WriteWaveCtrl(myGUS.gRegData >> 8);
 		break;
 	case 0x1: // Channel frequency control register
 		if (curchan)
@@ -572,25 +571,25 @@ static void ExecuteGlobRegister()
 		break;
 	case 0x6: // Channel volume ramp rate register
 		if (curchan) {
-			uint8_t tmpdata = static_cast<uint16_t>(myGUS.gRegData) >> 8;
+			uint8_t tmpdata = myGUS.gRegData >> 8;
 			curchan->WriteRampRate(tmpdata);
 		}
 		break;
 	case 0x7: // Channel volume ramp start register  EEEEMMMM
 		if (curchan) {
-			uint8_t tmpdata = static_cast<uint16_t>(myGUS.gRegData) >> 8;
+			uint8_t tmpdata = myGUS.gRegData >> 8;
 			curchan->StartVolIndex = tmpdata << 4;
 		}
 		break;
 	case 0x8: // Channel volume ramp end register  EEEEMMMM
 		if (curchan) {
-			uint8_t tmpdata = static_cast<uint16_t>(myGUS.gRegData) >> 8;
+			uint8_t tmpdata = myGUS.gRegData >> 8;
 			curchan->EndVolIndex = tmpdata << 4;
 		}
 		break;
 	case 0x9: // Channel current volume register
 		if (curchan) {
-			uint16_t tmpdata = static_cast<uint16_t>(myGUS.gRegData) >> 4;
+			uint16_t tmpdata = myGUS.gRegData >> 4;
 			curchan->CurrentVolIndex = tmpdata;
 		}
 		break;
@@ -611,13 +610,11 @@ static void ExecuteGlobRegister()
 		break;
 	case 0xC: // Channel pan pot register
 		if (curchan)
-			curchan->WritePanPot(
-			        static_cast<uint16_t>(myGUS.gRegData) >> 8);
+			curchan->WritePanPot(myGUS.gRegData >> 8);
 		break;
 	case 0xD: // Channel volume control register
 		if (curchan)
-			curchan->WriteRampCtrl(
-			        static_cast<uint16_t>(myGUS.gRegData) >> 8);
+			curchan->WriteRampCtrl(myGUS.gRegData >> 8);
 		break;
 	case 0xE: // Set active channel register
 		myGUS.gRegSelect = myGUS.gRegData >> 8; // JAZZ Jackrabbit seems
