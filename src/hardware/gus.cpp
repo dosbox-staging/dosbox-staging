@@ -704,21 +704,26 @@ static void ExecuteGlobRegister()
 	case 0xE: // Set active channel register
 		myGUS.gRegSelect = myGUS.gRegData >> 8; // JAZZ Jackrabbit seems
 		                                        // to assume this?
-		myGUS.ActiveChannels = 1 + ((myGUS.gRegData >> 8) & 63);
-		if (myGUS.ActiveChannels < 14)
-			myGUS.ActiveChannels = 14;
-		if (myGUS.ActiveChannels > 32)
-			myGUS.ActiveChannels = 32;
-		myGUS.ActiveMask = 0xffffffffU >> (32 - myGUS.ActiveChannels);
-		myGUS.basefreq = static_cast<uint32_t>(
-		        0.5 + 1000000.0 / (1.619695497 *
-		                           (double)(myGUS.ActiveChannels)));
-		gus_chan->SetFreq(myGUS.basefreq);
-		for (uint8_t i = 0; i < myGUS.ActiveChannels; i++)
-			guschan[i]->UpdateWaveRamp();
-		gus_chan->Enable(true);
-		DEBUG_LOG_MSG("GUS: Activated %u voices running at %u Hz",
-		              myGUS.ActiveChannels, myGUS.basefreq);
+		{
+			unsigned requested = 1 + ((myGUS.gRegData >> 8) & 63);
+			requested = clamp(requested, GUS_MIN_CHANNELS,
+			                  GUS_MAX_CHANNELS);
+			if (requested != myGUS.ActiveChannels) {
+				myGUS.ActiveChannels = requested;
+				myGUS.ActiveMask = 0xffffffffU >>
+				                   (32 - myGUS.ActiveChannels);
+				myGUS.basefreq = static_cast<uint32_t>(
+				        0.5 + 1000000.0 / (1.619695497 *
+				                           myGUS.ActiveChannels));
+				gus_chan->SetFreq(myGUS.basefreq);
+				LOG_MSG("GUS: Activated %u voices running at %u Hz",
+				        myGUS.ActiveChannels, myGUS.basefreq);
+			}
+			// Always re-apply the ramp as it can change elsewhere
+			for (uint8_t i = 0; i < myGUS.ActiveChannels; i++)
+				guschan[i]->UpdateWaveRamp();
+			gus_chan->Enable(true);
+		}
 		break;
 	case 0x10: // Undocumented register used in Fast Tracker 2
 		break;
