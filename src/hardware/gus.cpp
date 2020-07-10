@@ -41,11 +41,13 @@ using namespace std;
 #define WAVE_MSWMASK    ((1 << 16) - 1)
 #define WAVE_LSWMASK    (0xffffffff ^ WAVE_MSWMASK)
 
-#define GUS_BUFFER_FRAMES 64
-#define GUS_PAN_POSITIONS 16 // 0 face-left, 7 face-forward, and 15 face-right
-#define GUS_VOLUME_POSITIONS 4096
+#define GUS_MIN_CHANNELS     14u
+#define GUS_MAX_CHANNELS     32u
+#define GUS_BUFFER_FRAMES    64u
+#define GUS_PAN_POSITIONS    16u // 0 face-left, 7 face-forward, and 15 face-right
+#define GUS_VOLUME_POSITIONS 4096u
 #define GUS_VOLUME_SCALE_DIV 1.002709201 // 0.0235 dB increments
-#define GUS_RAM_SIZE         1048576 // 1 MB
+#define GUS_RAM_SIZE         1048576u // 1 MB
 #define GUS_BASE             myGUS.portbase
 #define LOG_GUS              0
 
@@ -146,10 +148,18 @@ public:
 	uint8_t PanPot = 7u;
 	uint8_t channum = 0u;
 	uint32_t irqmask = 0u;
-	int32_t VolLeft = 0;
-	int32_t VolRight = 0;
+
+	uint32_t generated_8bit_ms = 0u;
+	uint32_t generated_16bit_ms = 0u;
+	uint32_t *generated_ms = &generated_8bit_ms;
 
 	GUSChannels(uint8_t num) : channum(num), irqmask(1 << num) {}
+
+	void ClearStats()
+	{
+		generated_8bit_ms = 0u;
+		generated_16bit_ms = 0u;
+	}
 
 	// Fetch the next 8-bit sample from GUS memory returned as a floating
 	// point type containing a value that spans the 16-bit signed range.
@@ -352,6 +362,7 @@ public:
 			WaveUpdate();
 			RampUpdate();
 		}
+		(*generated_ms)++;
 	}
 };
 
@@ -359,8 +370,13 @@ void GUSChannels::WriteWaveCtrl(uint8_t val)
 {
 	const uint32_t oldirq = myGUS.WaveIRQ;
 	WaveCtrl = val & 0x7f;
-	getSample = (WaveCtrl & WCTRL_16BIT) ? &GUSChannels::GetSample16
-	                                     : &GUSChannels::GetSample8;
+	if (WaveCtrl & WCTRL_16BIT) {
+		getSample = &GUSChannels::GetSample16;
+		generated_ms = &generated_16bit_ms;
+	} else {
+		getSample = &GUSChannels::GetSample8;
+		generated_ms = &generated_8bit_ms;
+	}
 
 	if ((val & 0xa0) == 0xa0)
 		myGUS.WaveIRQ |= irqmask;
@@ -370,7 +386,7 @@ void GUSChannels::WriteWaveCtrl(uint8_t val)
 		CheckVoiceIrq();
 }
 
-static std::array<GUSChannels *, 32> guschan = {nullptr};
+static std::array<GUSChannels *, GUS_MAX_CHANNELS> guschan = {nullptr};
 static GUSChannels *curchan = nullptr;
 
 static void GUSReset()
@@ -399,6 +415,7 @@ static void GUSReset()
 			channel->WriteWaveCtrl(0x1);
 			channel->WriteRampCtrl(0x1);
 			channel->WritePanPot(0x7);
+			channel->ClearStats();
 		}
 		myGUS.IRQChan = 0;
 		myGUS.peak_amplitude = {1.0f, 1.0f};
