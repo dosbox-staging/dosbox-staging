@@ -240,11 +240,10 @@ public:
 		WriteRampRate(RampRate);
 	}
 
-	void WritePanPot(uint8_t val)
+	void WritePanPot(uint8_t pos)
 	{
-		assertm(val >= 0 && val <= 15,
-		        "Valid pan positions range from 0 to 15");
-		PanPot = val;
+		constexpr uint8_t max_pos = GUS_PAN_POSITIONS - 1;
+		PanPot = std::min(pos, max_pos);
 	}
 
 	uint8_t ReadPanPot() const { return PanPot; }
