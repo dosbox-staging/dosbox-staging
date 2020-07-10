@@ -389,9 +389,80 @@ void GUSChannels::WriteWaveCtrl(uint8_t val)
 static std::array<GUSChannels *, GUS_MAX_CHANNELS> guschan = {nullptr};
 static GUSChannels *curchan = nullptr;
 
+static void PrintStats()
+{
+	// Aggregate stats from all channels
+	uint32_t combined_8bit_ms = 0u;
+	uint32_t combined_16bit_ms = 0u;
+	uint32_t used_8bit_voices = 0u;
+	uint32_t used_16bit_voices = 0u;
+	for (const auto voice : guschan) {
+		if (voice->generated_8bit_ms) {
+			combined_8bit_ms += voice->generated_8bit_ms;
+			used_8bit_voices++;
+		}
+		if (voice->generated_16bit_ms) {
+			combined_16bit_ms += voice->generated_16bit_ms;
+			used_16bit_voices++;
+		}
+	}
+	const uint32_t combined_ms = combined_8bit_ms + combined_16bit_ms;
+
+	// Is there enough information to be meaningful?
+	if (combined_ms < 10000u ||
+	    (myGUS.peak_amplitude.left + myGUS.peak_amplitude.right) < 10 ||
+	    !(used_8bit_voices + used_16bit_voices))
+		return;
+
+	// Print info about the type of audio and voices used
+	if (used_16bit_voices == 0u)
+		LOG_MSG("GUS: Audio comprised of 8-bit samples from %u voices",
+		        used_8bit_voices);
+	else if (used_8bit_voices == 0u)
+		LOG_MSG("GUS: Audio comprised of 16-bit samples from %u voices",
+		        used_16bit_voices);
+	else {
+		const uint8_t ratio_8bit = ceil_udivide(100u * combined_8bit_ms,
+		                                        combined_ms);
+		const uint8_t ratio_16bit = ceil_udivide(100u * combined_16bit_ms,
+		                                         combined_ms);
+		LOG_MSG("GUS: Audio was made up of %u%% 8-bit %u-voice and "
+		        "%u%% 16-bit %u-voice samples",
+		        ratio_8bit, used_8bit_voices, ratio_16bit,
+		        used_16bit_voices);
+	}
+
+	// Calculate and print info about the volume
+	const float mixer_scalar = std::max(gus_chan->volmain[0],
+	                                    gus_chan->volmain[1]);
+	double peak_ratio = mixer_scalar *
+	                    std::max(myGUS.peak_amplitude.left,
+	                             myGUS.peak_amplitude.right) /
+	                    std::numeric_limits<int16_t>::max();
+
+	// It's expected and normal for multi-channel audio to periodically
+	// accumulate beyond the max, which which is gracefully scaled without
+	// distortion, so there is no need to recommend that users scale-down
+	// their GUS channel.
+	peak_ratio = std::min(peak_ratio, 1.0);
+	LOG_MSG("GUS: Peak amplitude reached %.0f%% of max", 100 * peak_ratio);
+
+	// Make a suggestion if the peak volume was well below 3 dB
+	if (peak_ratio < 0.6) {
+		const auto multiplier = static_cast<uint16_t>(
+		        100.0 * static_cast<double>(mixer_scalar) / peak_ratio);
+		LOG_MSG("GUS: If it should be louder, %s %u",
+		        fabs(mixer_scalar - 1.0f) > 0.01f ? "adjust mixer gus to" : "use: mixer gus",
+		        multiplier);
+	}
+}
+
 static void GUSReset()
 {
 	if ((myGUS.gRegData & 0x1) == 0x1) {
+		// Characterize playback before resettings
+		PrintStats();
+
 		// Reset
 		adlib_commandreg = 85;
 		myGUS.IRQStatus = 0;
