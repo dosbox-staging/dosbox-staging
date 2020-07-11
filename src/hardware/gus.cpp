@@ -867,6 +867,41 @@ static void GUS_DMA_Callback(DmaChannel *chan, DMAEvent event)
 	chan->Register_Callback(0);
 }
 
+static bool SoftLimit(float (&in)[GUS_BUFFER_FRAMES][2],
+                      int16_t (&out)[GUS_BUFFER_FRAMES][2],
+                      uint16_t len)
+{
+	constexpr float max_allowed = static_cast<float>(
+	        std::numeric_limits<int16_t>::max() - 1);
+
+	// If our peaks are under the max, then there's no need to limit
+	if (myGUS.peak_amplitude.left < max_allowed &&
+	    myGUS.peak_amplitude.right < max_allowed)
+		return false;
+
+	// Calculate the percent we need to scale down the volume.  In cases
+	// where one side is less than the max, it's ratio is limited to 1.0.
+	const Frame ratio = {std::min(1.0f, max_allowed / myGUS.peak_amplitude.left),
+	                     std::min(1.0f, max_allowed / myGUS.peak_amplitude.right)};
+	for (uint8_t i = 0; i < len; ++i) {
+		out[i][0] = static_cast<int16_t>(in[i][0] * ratio.left);
+		out[i][1] = static_cast<int16_t>(in[i][1] * ratio.right);
+	}
+
+	// Release the limit incrementally using our existing volume scale.
+	constexpr float release_amount =
+	        max_allowed * (static_cast<float>(GUS_VOLUME_SCALE_DIV) - 1.0f);
+
+	if (myGUS.peak_amplitude.left > max_allowed)
+		myGUS.peak_amplitude.left -= release_amount;
+	if (myGUS.peak_amplitude.right > max_allowed)
+		myGUS.peak_amplitude.right -= release_amount;
+	// LOG_MSG("GUS: releasing myGUS.peak_amplitude = %.2f | %.2f",
+	//         static_cast<double>(myGUS.peak_amplitude.left),
+	//         static_cast<double>(myGUS.peak_amplitude.right));
+	return true;
+}
+
 static void GUS_CallBack(uint16_t len)
 {
 	assert(len <= GUS_BUFFER_FRAMES);
@@ -875,12 +910,14 @@ static void GUS_CallBack(uint16_t len)
 	for (uint8_t i = 0; i < myGUS.ActiveChannels; ++i)
 		guschan[i]->generateSamples(*accumulator, myGUS.peak_amplitude, len);
 
-	int16_t bounded[GUS_BUFFER_FRAMES][2];
-	for (uint8_t i = 0; i < len; ++i)
-		for (uint8_t j = 0; j < 2; ++j)
-			bounded[i][j] = static_cast<int16_t>(accumulator[i][j]);
+	int16_t scaled[GUS_BUFFER_FRAMES][2];
+	if (!SoftLimit(accumulator, scaled, len))
+		for (uint8_t i = 0; i < len; ++i)
+			for (uint8_t j = 0; j < 2; ++j)
+				scaled[i][j] = static_cast<int16_t>(
+				        accumulator[i][j]);
 
-	gus_chan->AddSamples_s16(len, bounded[0]);
+	gus_chan->AddSamples_s16(len, scaled[0]);
 	CheckVoiceIrq();
 }
 
