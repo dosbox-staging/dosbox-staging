@@ -859,7 +859,9 @@ static void DrawCode(void) {
 		if (showExtend) res = AnalyzeInstruction(dline, saveSel);
 		// Spacepad it up to 28 characters
 		size_t dline_len = strlen(dline);
-		if(dline_len < 28) for (c = dline_len; c < 28;c++) dline[c] = ' '; dline[28] = 0;
+		for (c = dline_len; c < 28; c++)
+			dline[c] = ' ';
+		dline[28] = 0;
 		waddstr(dbg.win_code,dline);
 		// Spacepad it up to 20 characters
 		size_t res_len = strlen(res);
