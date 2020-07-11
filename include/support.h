@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <cassert>
 #define _USE_MATH_DEFINES // M_PI under MSVC
-#include <cmath>
+#include <math.h>
 #include <cstdio>
 #include <ctype.h>
 #include <limits>
