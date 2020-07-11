@@ -24,10 +24,11 @@
 #include <algorithm>
 #include <cassert>
 #define _USE_MATH_DEFINES // M_PI under MSVC
-#include <math.h>
+#include <cmath>
 #include <cstdio>
 #include <ctype.h>
 #include <limits>
+#include <math.h>
 #include <stdexcept>
 #include <string.h>
 #include <string>
