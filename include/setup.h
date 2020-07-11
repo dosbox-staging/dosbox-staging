@@ -184,30 +184,40 @@ protected:
 	const Changeable::Value change;
 };
 
-class Prop_int:public Property {
+class Prop_int : public Property {
 public:
-	Prop_int(std::string const& _propname,Changeable::Value when, int _value)
-		:Property(_propname,when) {
-		default_value = value = _value;
-		min = max = -1;
+	Prop_int(const std::string &name, Changeable::Value when, int val)
+	        : Property(name, when),
+	          min_value(-1),
+	          max_value(-1)
+	{
+		default_value = val;
+		value = val;
 	}
-	Prop_int(std::string const&  _propname,Changeable::Value when, int _min,int _max,int _value)
-		:Property(_propname,when) {
-		default_value = value = _value;
-		min = _min;
-		max = _max;
+
+	~Prop_int() override = default;
+
+	int GetMin() const { return min_value; }
+	int GetMax() const { return max_value; }
+
+	void SetMinMax(const Value &min, const Value &max)
+	{
+		min_value = min;
+		max_value = max;
 	}
-	int getMin() { return min;}
-	int getMax() { return max;}
-	void SetMinMax(Value const& _min,Value const& _max) {this->min = _min; this->max=_max;}
-	bool SetValue(std::string const& in);
-	~Prop_int(){ }
-	virtual bool CheckValue(Value const& in, bool warn);
-	// Override SetVal, so it takes min,max in account when there are no suggested values
-	virtual bool SetVal(Value const& in, bool forced,bool warn=true);
+
+	bool SetValue(const std::string &in) override;
+
+	bool CheckValue(const Value &in, bool warn) override;
+
+protected:
+	// Override SetVal, so it takes min,max in account when there are no
+	// suggested values
+	bool SetVal(const Value &in, bool forced, bool warn = true) override;
 
 private:
-	Value min,max;
+	Value min_value;
+	Value max_value;
 };
 
 class Prop_double:public Property {

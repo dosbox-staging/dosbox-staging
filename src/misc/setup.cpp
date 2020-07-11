@@ -259,9 +259,9 @@ bool Prop_int::SetVal(Value const& in, bool forced, bool warn) {
 			return false;
 		}
 	} else {
-		//Handle ranges if specified
-		int mi = min;
-		int ma = max;
+		// Handle ranges if specified
+		const int mi = min_value;
+		const int ma = max_value;
 		int va = static_cast<int>(Value(in));
 
 		//No ranges
@@ -273,24 +273,40 @@ bool Prop_int::SetVal(Value const& in, bool forced, bool warn) {
 		//Outside range, set it to the closest boundary
 		if (va > ma ) va = ma; else va = mi;
 
-		if (warn) LOG_MSG("%s is outside the allowed range %s-%s for variable: %s.\nIt has been set to the closest boundary: %d.",in.ToString().c_str(),min.ToString().c_str(),max.ToString().c_str(),propname.c_str(),va);
+		if (warn) {
+			LOG_MSG("%s is outside the allowed range %s-%s for variable: %s.\n"
+			        "It has been set to the closest boundary: %d.",
+			        in.ToString().c_str(),
+			        min_value.ToString().c_str(),
+			        max_value.ToString().c_str(),
+			        propname.c_str(),
+			        va);
+		}
 
 		value = va; 
 		return true;
-		}
+	}
 }
 bool Prop_int::CheckValue(Value const& in, bool warn) {
 //	if(!suggested_values.empty() && Property::CheckValue(in,warn)) return true;
 	if(!suggested_values.empty()) return Property::CheckValue(in,warn);
-	LOG_MSG("still used ?");
+	// LOG_MSG("still used ?");
 	//No >= and <= in Value type and == is ambigious
-	int mi = min;
-	int ma = max;
+	const int mi = min_value;
+	const int ma = max_value;
 	int va = static_cast<int>(Value(in));
 	if (mi == -1 && ma == -1) return true;
 	if (va >= mi && va <= ma) return true;
 
-	if (warn) LOG_MSG("%s lies outside the range %s-%s for variable: %s.\nIt might now be reset to the default value: %s",in.ToString().c_str(),min.ToString().c_str(),max.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
+	if (warn) {
+		LOG_MSG("%s lies outside the range %s-%s for variable: %s.\n"
+		        "It might now be reset to the default value: %s",
+		        in.ToString().c_str(),
+		        min_value.ToString().c_str(),
+		        max_value.ToString().c_str(),
+		        propname.c_str(),
+		        default_value.ToString().c_str());
+	}
 	return false;
 }
 
