@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <cassert>
-#define _USE_MATH_DEFINES // M_PI under MSVC
 #include <cmath>
 #include <cstdio>
 #include <ctype.h>
