@@ -727,7 +727,6 @@ void XGA_BlitRect(Bitu val) {
 	Bit32u xat, yat;
 	Bitu srcdata;
 	Bitu dstdata;
-
 	Bits srcx, srcy, tarx, tary, dx, dy;
 
 	dx = -1;
@@ -735,11 +734,6 @@ void XGA_BlitRect(Bitu val) {
 
 	if(((val >> 5) & 0x01) != 0) dx = 1;
 	if(((val >> 7) & 0x01) != 0) dy = 1;
-
-	srcx = xga.curx;
-	srcy = xga.cury;
-	tarx = xga.destx;
-	tary = xga.desty;
 
 	Bitu mixselect = (xga.pix_cntl >> 6) & 0x3;
 	uint32_t mixmode = 0x67; /* Source is bitmap data, mix mode is src */
@@ -758,9 +752,10 @@ void XGA_BlitRect(Bitu val) {
 			break;
 	}
 
-
 	/* Copy source to video ram */
-	for(yat=0;yat<=xga.MIPcount ;yat++) {
+	srcy = xga.cury;
+	tary = xga.desty;
+	for (yat = 0; yat <= xga.MIPcount; yat++) {
 		srcx = xga.curx;
 		tarx = xga.destx;
 
