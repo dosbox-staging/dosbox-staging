@@ -75,22 +75,26 @@ void CALLBACK_SIF(bool val);
 
 extern Bitu call_priv_io;
 
-
-class CALLBACK_HandlerObject{
+class CALLBACK_HandlerObject {
 private:
 	bool installed;
 	Bitu m_callback;
-	enum {NONE,SETUP,SETUPAT} m_type;
-    struct {	
+	enum { NONE, SETUP, SETUPAT } m_type;
+	struct {
 		RealPt old_vector;
-		Bit8u interrupt;
+		uint8_t interrupt;
 		bool installed;
 	} vectorhandler;
+
 public:
-	CALLBACK_HandlerObject():installed(false),m_type(NONE) {
-		vectorhandler.installed=false;
-	}
-	~CALLBACK_HandlerObject();
+	CALLBACK_HandlerObject()
+	        : installed(false),
+	          m_callback(0),
+	          m_type(NONE),
+	          vectorhandler{0, 0, false}
+	{}
+
+	virtual ~CALLBACK_HandlerObject();
 
 	//Install and allocate a callback.
 	void Install(CallBack_Handler handler,Bitu type,const char* description);
