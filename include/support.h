@@ -27,6 +27,7 @@
 #include <cstdio>
 #include <ctype.h>
 #include <limits>
+#include <math.h>
 #include <stdexcept>
 #include <string.h>
 #include <string>
