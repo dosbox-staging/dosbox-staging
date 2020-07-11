@@ -158,15 +158,6 @@ d_test.d_type = 0;
 }])],[AC_MSG_RESULT(yes);AC_DEFINE(DIRENT_HAS_D_TYPE,1,[struct dirent has d_type])],AC_MSG_RESULT(no))
 
 
-dnl Check for powf
-AC_MSG_CHECKING(for powf in libm);
-LIBS_BACKUP=$LIBS;
-LIBS="$LIBS -lm";
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]],[[
-        powf(1.0f, 1.0f);
-]])], [AC_MSG_RESULT(yes)], [AC_DEFINE([DB_HAVE_NO_POWF],[1],[libm doesn't include powf])])
-LIBS=$LIBS_BACKUP
-
 dnl Look for clock_gettime, a DB_HAVE_CLOCK_GETTIME is set when present
 AH_TEMPLATE([DB_HAVE_CLOCK_GETTIME],[Determines if the function clock_gettime is available.])
 AC_SEARCH_LIBS([clock_gettime], [rt] , [found_clock_gettime=yes], [found_clock_gettime=no])
