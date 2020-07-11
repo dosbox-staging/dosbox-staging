@@ -70,12 +70,6 @@
 #define cross_fileno(s) fileno(s)
 #endif
 
-//Solaris maybe others
-#if defined (DB_HAVE_NO_POWF)
-#include <math.h>
-static inline float powf (float x, float y) { return (float) pow (x,y); }
-#endif
-
 void CROSS_DetermineConfigPaths();
 
 class Cross {
