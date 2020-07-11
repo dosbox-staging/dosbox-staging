@@ -16,14 +16,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-
-#include "dosbox.h"
-#include "mem.h"
 #include "paging.h"
+
+#include <cassert>
+#include <cstdlib>
+#include <cstring>
+
+#include "mem.h"
 #include "regs.h"
 #include "lazyflags.h"
 #include "cpu.h"
@@ -694,9 +693,10 @@ void PAGING_LinkPage(Bitu lin_page,Bitu phys_page) {
 	if (lin_page>=TLB_SIZE || phys_page>=TLB_SIZE) 
 		E_Exit("Illegal page");
 
-	if (paging.links.used>=PAGING_LINKS) {
+	if (paging.links.used >= PAGING_LINKS) {
 		LOG(LOG_PAGING,LOG_NORMAL)("Not enough paging links, resetting cache");
 		PAGING_ClearTLB();
+		assert(paging.links.used == 0);
 	}
 
 	paging.tlb.phys_page[lin_page]=phys_page;
@@ -716,9 +716,10 @@ void PAGING_LinkPage_ReadOnly(Bitu lin_page,Bitu phys_page) {
 	if (lin_page>=TLB_SIZE || phys_page>=TLB_SIZE) 
 		E_Exit("Illegal page");
 
-	if (paging.links.used>=PAGING_LINKS) {
+	if (paging.links.used >= PAGING_LINKS) {
 		LOG(LOG_PAGING,LOG_NORMAL)("Not enough paging links, resetting cache");
 		PAGING_ClearTLB();
+		assert(paging.links.used == 0);
 	}
 
 	paging.tlb.phys_page[lin_page]=phys_page;
