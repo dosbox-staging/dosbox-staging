@@ -967,14 +967,13 @@ void DOS_Shell::CMD_COPY(char * args) {
 					        	                  DOS_SeekFile(targetHandle,&dummy,DOS_SEEK_END))) {
 							// Copy
 							static Bit8u buffer[0x8000]; // static, otherwise stack overflow possible.
-							bool	failed = false;
-							Bit16u	toread = 0x8000;
+							uint16_t toread = 0x8000;
 							do {
-								failed |= DOS_ReadFile(sourceHandle,buffer,&toread);
-								failed |= DOS_WriteFile(targetHandle,buffer,&toread);
+								DOS_ReadFile(sourceHandle, buffer, &toread);
+								DOS_WriteFile(targetHandle, buffer, &toread);
 							} while (toread == 0x8000);
-							failed |= DOS_CloseFile(sourceHandle);
-							failed |= DOS_CloseFile(targetHandle);
+							DOS_CloseFile(sourceHandle);
+							DOS_CloseFile(targetHandle);
 							WriteOut(" %s\n",name);
 							if (!source.concat && !special) count++; //Only count concat files once
 						} else {
