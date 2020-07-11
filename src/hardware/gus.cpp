@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2020  The dosbox-staging team
  *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
