@@ -533,11 +533,11 @@ void CONFIG::Run(void) {
 							// print min, max for integer values if used
 							Prop_int* pint = dynamic_cast <Prop_int*>(p);
 							if (pint==NULL) E_Exit("Int property dynamic cast failed.");
-							if (pint->getMin() != pint->getMax()) {
+							if (pint->GetMin() != pint->GetMax()) {
 								std::ostringstream oss;
-								oss << pint->getMin();
+								oss << pint->GetMin();
 								oss << "..";
-								oss << pint->getMax();
+								oss << pint->GetMax();
 								propvalues += oss.str();
 							}
 						}
