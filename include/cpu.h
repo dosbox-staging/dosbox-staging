@@ -326,7 +326,7 @@ struct TSS_32 {
 class Descriptor
 {
 public:
-	Descriptor() { saved.fill[0]=saved.fill[1]=0; }
+	Descriptor() : saved{{0, 0}} {}
 
 	void Load(PhysPt address);
 	void Save(PhysPt address);
@@ -359,9 +359,9 @@ public:
 	}
 public:
 	union {
+		uint32_t fill[2];
 		S_Descriptor seg;
 		G_Descriptor gate;
-		Bit32u fill[2];
 	} saved;
 };
 
