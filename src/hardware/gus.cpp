@@ -38,7 +38,6 @@ using namespace std;
 
 // Extra bits of precision over normal gus
 #define WAVE_FRACT      9
-#define WAVE_FRACT_MASK ((1 << WAVE_FRACT) - 1)
 #define WAVE_MSWMASK    ((1 << 16) - 1)
 #define WAVE_LSWMASK    (0xffffffff ^ WAVE_MSWMASK)
 
@@ -128,9 +127,11 @@ class GUSChannels {
 public:
 	void WriteWaveCtrl(uint8_t val);
 
-	typedef float (GUSChannels::*get_sample_f)() const;
-	get_sample_f getSample = &GUSChannels::GetSample8;
+	typedef std::function<float(const uint32_t)> get_sample_f;
+	get_sample_f GetSample = std::bind(&GUSChannels::GetSample8,
+	                                   this, std::placeholders::_1);
 
+	Gus::VoiceIrqs &voice_irqs;
 	uint32_t WaveStart = 0u;
 	uint32_t WaveEnd = 0u;
 	uint32_t WaveAddr = 0u;
@@ -162,64 +163,21 @@ public:
 		generated_16bit_ms = 0u;
 	}
 
-	// Fetch the next 8-bit sample from GUS memory returned as a floating
-	// point type containing a value that spans the 16-bit signed range.
-	// This implementation preserves up to 3 significant figures of the
-	// inter-wave portion previously lost due to integer bit-shifting.
-	inline float GetSample8() const
+	// Read an 8-bit sample scaled into the 16-bit range, returned as a float
+	inline float GetSample8(const uint32_t addr) const
 	{
-		const uint32_t useAddr = WaveAddr >> WAVE_FRACT;
-		float w1 = static_cast<int8_t>(GUSRam[useAddr]);
-		// add a fraction of the next sample
-		if (WaveAdd < (1 << WAVE_FRACT)) {
-			const uint32_t nextAddr = (useAddr + 1) & (GUS_RAM_SIZE - 1);
-			const float w2 = static_cast<float>(
-			        static_cast<int8_t>(GUSRam[nextAddr]));
-			const float diff = w2 - w1;
-			constexpr float max_wave = static_cast<float>(1 << WAVE_FRACT);
-			const float scale = (WaveAddr & WAVE_FRACT_MASK) / max_wave;
-			w1 += diff * scale;
-
-			// Ensure the sample with added inter-wave portion is
-			// still within the true 8-bit range, albeit with far
-			// more accuracy.
-			assert(w1 <= std::numeric_limits<int8_t>::max() ||
-			       w1 >= std::numeric_limits<int8_t>::min());
-		}
-		constexpr auto to_16bit_range =
-		        1 << (std::numeric_limits<int16_t>::digits -
-		              std::numeric_limits<int8_t>::digits);
-		return w1 * to_16bit_range;
+		constexpr float to_16bit_range =
+		        1u << (std::numeric_limits<int16_t>::digits -
+		               std::numeric_limits<int8_t>::digits);
+		return static_cast<int8_t>(GUSRam[addr & 0xFFFFFu]) * to_16bit_range;
 	}
 
-	// Fetch the next 16-bit sample from GUS memory as a floating point
-	inline float GetSample16() const
+	// Read a 16-bit sample returned as a float
+	inline float GetSample16(const uint32_t addr) const
 	{
-		// Formula used to convert addresses for use with 16-bit samples
-		const uint32_t base = WaveAddr >> WAVE_FRACT;
-		const uint32_t holdAddr = base & 0xc0000L;
-		const uint32_t useAddr = holdAddr | ((base & 0x1ffffL) << 1);
-
-		float w1 = static_cast<float>(
-		        GUSRam[useAddr] |
-		        (static_cast<int8_t>(GUSRam[useAddr + 1]) << 8));
-
-		// add a fraction of the next sample
-		if (WaveAdd < (1 << WAVE_FRACT)) {
-			const float w2 = static_cast<float>(
-			        static_cast<int8_t>(GUSRam[useAddr + 2]) |
-			        (static_cast<int8_t>(GUSRam[useAddr + 3]) << 8));
-			const float diff = w2 - w1;
-			constexpr float max_wave = static_cast<float>(1 << WAVE_FRACT);
-			const float scale = (WaveAddr & WAVE_FRACT_MASK) / max_wave;
-			w1 += diff * scale;
-
-			// Ensure the sample with added inter-wave portion is
-			// still within the true 16-bit range.
-			assert(w1 <= std::numeric_limits<int16_t>::max() ||
-			       w1 >= std::numeric_limits<int16_t>::min());
-		}
-		return w1;
+		// Calculate offset of the 16-bit sample
+		const uint32_t adjaddr = (addr & 0xC0000u) | ((addr & 0x1FFFFu) << 1u);
+		return static_cast<int16_t>(host_readw(GUSRam + adjaddr));
 	}
 
 	void WriteWaveFreq(uint16_t val)
@@ -353,28 +311,59 @@ public:
 			return;
 
 		while (len-- > 0) {
-			const float sample = (this->*getSample)() *
-			                     vol_scalars[CurrentVolIndex];
+			// Calculate the memory address of the sample
+			const uint32_t useAddr = WaveAddr >> WAVE_FRACT;
+
+			// Get the sample
+			float sample = GetSample(useAddr);
+
+			// Add any fractional inter-wave portion
+			constexpr uint32_t wave_width = 1 << WAVE_FRACT;
+			if (WaveAdd < wave_width) {
+				const float next_sample = GetSample(useAddr + 1u);
+				const uint32_t wave_fraction = WaveAddr & (wave_width - 1u);
+				sample += (next_sample - sample) * wave_fraction / wave_width;
+				// Confirm the sample plus inter-wave portion is in-bounds
+				assert(sample <= std::numeric_limits<int16_t>::max() &&
+				       sample >= std::numeric_limits<int16_t>::min());
+			}
+			// Apply any selected volume reduction
+			sample *= vol_scalars[CurrentVolIndex];
+
+			// Add the sample to the stream, angled in L-R space
 			*(stream++) += sample * pan_scalars[PanPot].left;
 			*(stream++) += sample * pan_scalars[PanPot].right;
+
+			// Keep tabs on the accumulated stream amplitudes
 			peak.left = std::max(peak.left, fabs(stream[-2]));
 			peak.right = std::max(peak.right, fabs(stream[-1]));
+
+			// Move onto the the next memory address and volume reduction
 			WaveUpdate();
 			RampUpdate();
 		}
+		// Tally the number of generated sets so far
 		(*generated_ms)++;
 	}
 };
+
+GUSChannels::GUSChannels(uint8_t num, Gus::VoiceIrqs &irqs)
+        : voice_irqs(irqs),
+          channum(num),
+          irqmask(1 << num)
+{}
 
 void GUSChannels::WriteWaveCtrl(uint8_t val)
 {
 	const uint32_t oldirq = myGUS.WaveIRQ;
 	WaveCtrl = val & 0x7f;
 	if (WaveCtrl & WCTRL_16BIT) {
-		getSample = &GUSChannels::GetSample16;
+		GetSample = std::bind(&GUSChannels::GetSample16, this,
+		                      std::placeholders::_1);
 		generated_ms = &generated_16bit_ms;
 	} else {
-		getSample = &GUSChannels::GetSample8;
+		GetSample = std::bind(&GUSChannels::GetSample8, this,
+		                      std::placeholders::_1);
 		generated_ms = &generated_8bit_ms;
 	}
 
@@ -441,7 +430,7 @@ static void PrintStats()
 	                    std::numeric_limits<int16_t>::max();
 
 	// It's expected and normal for multi-channel audio to periodically
-	// accumulate beyond the max, which which is gracefully scaled without
+	// accumulate beyond the max, which is gracefully scaled without
 	// distortion, so there is no need to recommend that users scale-down
 	// their GUS channel.
 	peak_ratio = std::min(peak_ratio, 1.0);
