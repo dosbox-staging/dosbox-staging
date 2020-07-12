@@ -592,6 +592,9 @@ case "$host" in
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32 and Posix).])
        if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
          LIBS="$LIBS -lws2_32"
+         if test x$enable_sdl_static = xyes ; then
+           LIBS="$LIBS -liphlpapi"
+         fi
        fi
        ;;
     *-*-darwin*)
