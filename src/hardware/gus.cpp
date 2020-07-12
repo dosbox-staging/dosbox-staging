@@ -19,6 +19,7 @@
 
 #include "dosbox.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <iomanip>
@@ -34,7 +35,6 @@
 #include "shell.h"
 #include "math.h"
 #include "regs.h"
-using namespace std;
 
 // Extra bits of precision over normal gus
 #define WAVE_FRACT      9
@@ -335,8 +335,8 @@ public:
 			*(stream++) += sample * pan_scalars[PanPot].right;
 
 			// Keep tabs on the accumulated stream amplitudes
-			peak.left = std::max(peak.left, fabs(stream[-2]));
-			peak.right = std::max(peak.right, fabs(stream[-1]));
+			peak.left = std::max(peak.left, fabsf(stream[-2]));
+			peak.right = std::max(peak.right, fabsf(stream[-1]));
 
 			// Move onto the the next memory address and volume reduction
 			WaveUpdate();
@@ -1144,10 +1144,10 @@ public:
 		// ULTRASND=Port,DMA1,DMA2,IRQ1,IRQ2
 		// [GUS port], [GUS DMA (recording)], [GUS DMA (playback)], [GUS
 		// IRQ (playback)], [GUS IRQ (MIDI)]
-		ostringstream temp;
-		temp << "SET ULTRASND=" << hex << setw(3) << portat << ","
-		     << dec << (Bitu)myGUS.dma1 << "," << (Bitu)myGUS.dma2 << ","
-		     << (Bitu)myGUS.irq1 << "," << (Bitu)myGUS.irq2 << ends;
+		std::ostringstream temp;
+		temp << "SET ULTRASND=" << std::hex << std::setw(3) << portat << ","
+		     << std::dec << (Bitu)myGUS.dma1 << "," << (Bitu)myGUS.dma2 << ","
+		     << (Bitu)myGUS.irq1 << "," << (Bitu)myGUS.irq2 << std::ends;
 		// Create autoexec.bat lines
 		autoexecline[0].Install(temp.str());
 		autoexecline[1].Install(std::string("SET ULTRADIR=") +
