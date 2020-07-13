@@ -22,8 +22,10 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <functional>
 #include <iomanip>
 #include <limits>
+#include <memory>
 #include <sstream>
 #include <string.h>
 
@@ -37,355 +39,694 @@
 #include "regs.h"
 
 // Extra bits of precision over normal gus
-#define WAVE_FRACT      9
-#define WAVE_MSWMASK    ((1 << 16) - 1)
-#define WAVE_LSWMASK    (0xffffffff ^ WAVE_MSWMASK)
-
-#define GUS_MIN_CHANNELS     14u
-#define GUS_MAX_CHANNELS     32u
+#define WAVE_FRACT           9
+#define WAVE_MSWMASK         ((1 << 16) - 1)
+#define WAVE_LSWMASK         (0xffffffff ^ WAVE_MSWMASK)
+#define GUS_ADDRESSES        8u
+#define GUS_MIN_VOICES       14u
+#define GUS_MAX_VOICES       32u
 #define GUS_BUFFER_FRAMES    64u
 #define GUS_PAN_POSITIONS    16u // 0 face-left, 7 face-forward, and 15 face-right
 #define GUS_VOLUME_POSITIONS 4096u
 #define GUS_VOLUME_SCALE_DIV 1.002709201 // 0.0235 dB increments
-#define GUS_RAM_SIZE         1048576u // 1 MB
-#define GUS_BASE             myGUS.portbase
+#define GUS_RAM_SIZE         1048576u    // 1 MB
+#define GUS_READ_HANDLERS    8u
+#define GUS_WRITE_HANDLERS   9u
 #define LOG_GUS              0
 
-#define WCTRL_STOPPED       0x01
-#define WCTRL_STOP          0x02
-#define WCTRL_16BIT         0x04
-#define WCTRL_LOOP          0x08
-#define WCTRL_BIDIRECTIONAL 0x10
-#define WCTRL_IRQENABLED    0x20
-#define WCTRL_DECREASING    0x40
-#define WCTRL_IRQPENDING    0x80
+using namespace std::placeholders;
 
+// External Tie-in for OPL FM-audio
 uint8_t adlib_commandreg = 0u;
-static MixerChannel *gus_chan = nullptr;
-static uint8_t irqtable[8] = {0, 2, 5, 3, 7, 11, 12, 15};
-static uint8_t dmatable[8] = {0, 1, 3, 5, 6, 7, 0, 0};
-static uint8_t GUSRam[GUS_RAM_SIZE] = {0u};
-static std::array<float, GUS_VOLUME_POSITIONS> vol_scalars = {0.0f};
-
-struct Frame {
+struct AudioFrame {
 	float left = 0.0f;
 	float right = 0.0f;
 };
 
-static std::array<Frame, GUS_PAN_POSITIONS> pan_scalars = {};
-
-class GUSChannels;
-static void CheckVoiceIrq();
-
-struct GFGus {
-	uint8_t gRegSelect = 0u;
-	uint16_t gRegData = 0u;
-	uint32_t gDramAddr = 0u;
-	uint16_t gCurChannel = 0u;
-
-	uint8_t DMAControl = 0u;
-	uint16_t dmaAddr = 0u;
-	uint8_t TimerControl = 0u;
-	uint8_t SampControl = 0u;
-	uint8_t mixControl = 0u;
-	uint8_t ActiveChannels = 0u;
-	uint32_t basefreq = 0u;
-
-	struct GusTimer {
-		uint8_t value = 0u;
-		bool reached = false;
-		bool raiseirq = false;
-		bool masked = false;
-		bool running = false;
-		float delay = 0.0f;
-	} timers[2];
-
-	uint32_t rate = 0u;
-	Frame peak_amplitude = {1.0f, 1.0f};
-	Bitu portbase = 0u;
-	uint8_t dma1 = 0u;
-	uint8_t dma2 = 0u;
-
-	uint8_t irq1 = 0u;
-	uint8_t irq2 = 0u;
-
-	bool irqenabled = false;
-	bool ChangeIRQDMA = false;
-	// IRQ status register values
-	uint8_t IRQStatus = 0u;
-	uint32_t ActiveMask = 0u;
-	uint8_t IRQChan = 0u;
-	uint32_t RampIRQ = 0u;
-	uint32_t WaveIRQ = 0u;
-} myGUS;
-
-Bitu DEBUG_EnableDebugger();
-
-static void GUS_DMA_Callback(DmaChannel *chan, DMAEvent event);
-
-class GUSChannels {
-public:
-	void WriteWaveCtrl(uint8_t val);
-
-	typedef std::function<float(const uint32_t)> get_sample_f;
-	get_sample_f GetSample = std::bind(&GUSChannels::GetSample8,
-	                                   this, std::placeholders::_1);
-
-	Gus::VoiceIrqs &voice_irqs;
-	uint32_t WaveStart = 0u;
-	uint32_t WaveEnd = 0u;
-	uint32_t WaveAddr = 0u;
-	uint32_t WaveAdd = 0u;
-	uint8_t WaveCtrl = 3u;
-	uint16_t WaveFreq = 0u;
-
-	uint32_t StartVolIndex = 0u;
-	uint32_t EndVolIndex = 0u;
-	uint32_t CurrentVolIndex = 0u;
-	uint32_t IncrVolIndex = 0u;
-
-	uint8_t RampRate = 0u;
-	uint8_t RampCtrl = 3u;
-
-	uint8_t PanPot = 7u;
-	uint8_t channum = 0u;
-	uint32_t irqmask = 0u;
-
-	uint32_t generated_8bit_ms = 0u;
-	uint32_t generated_16bit_ms = 0u;
-	uint32_t *generated_ms = &generated_8bit_ms;
-
-	GUSChannels(uint8_t num) : channum(num), irqmask(1 << num) {}
-
-	void ClearStats()
-	{
-		generated_8bit_ms = 0u;
-		generated_16bit_ms = 0u;
-	}
-
-	// Read an 8-bit sample scaled into the 16-bit range, returned as a float
-	inline float GetSample8(const uint32_t addr) const
-	{
-		constexpr float to_16bit_range =
-		        1u << (std::numeric_limits<int16_t>::digits -
-		               std::numeric_limits<int8_t>::digits);
-		return static_cast<int8_t>(GUSRam[addr & 0xFFFFFu]) * to_16bit_range;
-	}
-
-	// Read a 16-bit sample returned as a float
-	inline float GetSample16(const uint32_t addr) const
-	{
-		// Calculate offset of the 16-bit sample
-		const uint32_t adjaddr = (addr & 0xC0000u) | ((addr & 0x1FFFFu) << 1u);
-		return static_cast<int16_t>(host_readw(GUSRam + adjaddr));
-	}
-
-	void WriteWaveFreq(uint16_t val)
-	{
-		WaveFreq = val;
-		WaveAdd = ceil_udivide(val, 2u);
-	}
-
-	inline uint8_t ReadWaveCtrl() const
-	{
-		uint8_t ret = WaveCtrl;
-		if (myGUS.WaveIRQ & irqmask)
-			ret |= 0x80;
-		return ret;
-	}
-	void UpdateWaveRamp()
-	{
-		WriteWaveFreq(WaveFreq);
-		WriteRampRate(RampRate);
-	}
-
-	void WritePanPot(uint8_t pos)
-	{
-		constexpr uint8_t max_pos = GUS_PAN_POSITIONS - 1;
-		PanPot = std::min(pos, max_pos);
-	}
-
-	uint8_t ReadPanPot() const { return PanPot; }
-	void WriteRampCtrl(uint8_t val)
-	{
-		const uint32_t old = myGUS.RampIRQ;
-		RampCtrl = val & 0x7f;
-		// Manually set the irq
-		if ((val & 0xa0) == 0xa0)
-			myGUS.RampIRQ |= irqmask;
-		else
-			myGUS.RampIRQ &= ~irqmask;
-		if (old != myGUS.RampIRQ)
-			CheckVoiceIrq();
-	}
-	inline uint8_t ReadRampCtrl() const
-	{
-		uint8_t ret = RampCtrl;
-		if (myGUS.RampIRQ & irqmask)
-			ret |= 0x80;
-		return ret;
-	}
-	void WriteRampRate(uint8_t val)
-	{
-		RampRate = val;
-		const uint8_t scale = val & 63;
-		const uint8_t divider = 1 << (3 * (val >> 6));
-		IncrVolIndex = (!scale || !divider) ? 0u :ceil_udivide(scale, divider);
-	}
-	inline void WaveUpdate()
-	{
-		if (WaveCtrl & (WCTRL_STOP | WCTRL_STOPPED))
-			return;
-		int32_t WaveLeft;
-		if (WaveCtrl & WCTRL_DECREASING) {
-			WaveAddr -= WaveAdd;
-			WaveLeft = WaveStart - WaveAddr;
-		} else {
-			WaveAddr += WaveAdd;
-			WaveLeft = WaveAddr - WaveEnd;
-		}
-		// Not yet reaching a boundary
-		if (WaveLeft < 0)
-			return;
-		/* Generate an IRQ if needed */
-		if (WaveCtrl & 0x20) {
-			myGUS.WaveIRQ |= irqmask;
-		}
-		/* Check for not being in PCM operation */
-		if (RampCtrl & 0x04)
-			return;
-		/* Check for looping */
-		if (WaveCtrl & WCTRL_LOOP) {
-			/* Bi-directional looping */
-			if (WaveCtrl & WCTRL_BIDIRECTIONAL)
-				WaveCtrl ^= WCTRL_DECREASING;
-			WaveAddr = (WaveCtrl & WCTRL_DECREASING)
-			                   ? (WaveEnd - WaveLeft)
-			                   : (WaveStart + WaveLeft);
-		} else {
-			WaveCtrl |= 1; // Stop the channel
-			WaveAddr = (WaveCtrl & WCTRL_DECREASING) ? WaveStart
-			                                         : WaveEnd;
-		}
-	}
-
-	inline void RampUpdate()
-	{
-		/* Check if ramping enabled */
-		if (RampCtrl & 0x3)
-			return;
-		int32_t RemainingVolIndexes;
-		if (RampCtrl & 0x40) {
-			CurrentVolIndex -= IncrVolIndex;
-			RemainingVolIndexes = StartVolIndex - CurrentVolIndex;
-		} else {
-			CurrentVolIndex += IncrVolIndex;
-			RemainingVolIndexes = CurrentVolIndex - EndVolIndex;
-		}
-		if (RemainingVolIndexes < 0) {
-			return;
-		}
-		/* Generate an IRQ if needed */
-		if (RampCtrl & 0x20) {
-			myGUS.RampIRQ |= irqmask;
-		}
-		/* Check for looping */
-		if (RampCtrl & 0x08) {
-			/* Bi-directional looping */
-			if (RampCtrl & 0x10)
-				RampCtrl ^= 0x40;
-			CurrentVolIndex = (RampCtrl & 0x40)
-			                          ? (EndVolIndex - RemainingVolIndexes)
-			                          : (StartVolIndex +
-			                             RemainingVolIndexes);
-		} else {
-			RampCtrl |= 1; // Stop the channel
-			CurrentVolIndex = (RampCtrl & 0x40) ? StartVolIndex
-			                                    : EndVolIndex;
-		}
-	}
-
-	void generateSamples(float *stream, Frame &peak, uint16_t len)
-	{
-		if (RampCtrl & WaveCtrl & 3) // Channel is disabled
-			return;
-
-		while (len-- > 0) {
-			// Calculate the memory address of the sample
-			const uint32_t useAddr = WaveAddr >> WAVE_FRACT;
-
-			// Get the sample
-			float sample = GetSample(useAddr);
-
-			// Add any fractional inter-wave portion
-			constexpr uint32_t wave_width = 1 << WAVE_FRACT;
-			if (WaveAdd < wave_width) {
-				const float next_sample = GetSample(useAddr + 1u);
-				const uint32_t wave_fraction = WaveAddr & (wave_width - 1u);
-				sample += (next_sample - sample) * wave_fraction / wave_width;
-				// Confirm the sample plus inter-wave portion is in-bounds
-				assert(sample <= std::numeric_limits<int16_t>::max() &&
-				       sample >= std::numeric_limits<int16_t>::min());
-			}
-			// Apply any selected volume reduction
-			sample *= vol_scalars[CurrentVolIndex];
-
-			// Add the sample to the stream, angled in L-R space
-			*(stream++) += sample * pan_scalars[PanPot].left;
-			*(stream++) += sample * pan_scalars[PanPot].right;
-
-			// Keep tabs on the accumulated stream amplitudes
-			peak.left = std::max(peak.left, fabsf(stream[-2]));
-			peak.right = std::max(peak.right, fabsf(stream[-1]));
-
-			// Move onto the the next memory address and volume reduction
-			WaveUpdate();
-			RampUpdate();
-		}
-		// Tally the number of generated sets so far
-		(*generated_ms)++;
-	}
+// A set of common IRQs shared between the DSP and each voice
+struct SharedVoiceIrqs {
+	const std::function<void()> check = nullptr;
+	uint32_t vol = 0u;
+	uint32_t wave = 0u;
+	uint8_t status = 0u;
 };
 
-GUSChannels::GUSChannels(uint8_t num, Gus::VoiceIrqs &irqs)
-        : voice_irqs(irqs),
-          channum(num),
-          irqmask(1 << num)
+// A Single GUS Voice
+class Voice {
+public:
+	Voice(uint8_t num, SharedVoiceIrqs &irqs);
+	void ClearStats();
+	void GenerateSamples(float *stream,
+	                     const std::array<unsigned char, GUS_RAM_SIZE> &ram,
+	                     const std::array<float, GUS_VOLUME_POSITIONS> &,
+	                     const std::array<AudioFrame, GUS_PAN_POSITIONS> &,
+	                     AudioFrame &peak,
+	                     uint16_t requested_frames);
+
+	uint8_t ReadWaveCtrl() const;
+	uint8_t ReadVolCtrl() const;
+	void WritePanPot(uint8_t pos);
+	void WriteVolCtrl(uint8_t val);
+	void WriteVolRate(uint8_t val);
+	void WriteWaveCtrl(uint8_t val);
+	void WriteWaveFreq(uint16_t val);
+	void UpdateWaveAndVol();
+
+	// bit-depth tracking
+	uint32_t generated_8bit_ms = 0u;
+	uint32_t generated_16bit_ms = 0u;
+
+	// wave state
+	uint32_t wave_start = 0u;
+	uint32_t wave_end = 0u;
+	uint32_t wave_addr = 0u;
+	uint16_t wave_inc = 0u;
+	uint16_t wave_freq = 0u;
+	uint8_t wave_ctrl = 3u;
+
+	// volume scalar state
+	uint16_t vol_index_start = 0u;
+	uint16_t vol_index_end = 0u;
+	uint16_t vol_index_current = 0u;
+	uint16_t vol_index_inc = 0u;
+	uint8_t vol_index_rate = 0u;
+	uint8_t vol_ctrl = 3u;
+
+private:
+	Voice() = delete;
+	Voice(const Voice &) = delete;            // prevent copying
+	Voice &operator=(const Voice &) = delete; // prevent assignment
+
+	inline float GetSample8(const std::array<unsigned char, GUS_RAM_SIZE> &ram,
+	                        const uint32_t addr) const;
+	inline float GetSample16(const std::array<unsigned char, GUS_RAM_SIZE> &ram,
+	                         const uint32_t addr) const;
+	inline void VolUpdate();
+	uint8_t ReadPanPot() const;
+	inline void WaveUpdate();
+
+	// Control states
+	enum VWCtrl : uint8_t {
+		Reset = 0x01,
+		Stopped = 0x02,
+		Disabled = Reset | Stopped,
+		Bit16 = 0x04,
+		Loop = 0x08,
+		BiDirectional = 0x10,
+		RaiseIrq = 0x20,
+		Decreasing = 0x40,
+	};
+
+	typedef std::function<float(const std::array<unsigned char, GUS_RAM_SIZE> &, const uint32_t)> get_sample_f;
+	get_sample_f GetSample = std::bind(&Voice::GetSample8, this, _1, _2);
+
+	// shared IRQs with the GUS DSP
+	SharedVoiceIrqs &shared_irqs;
+	uint32_t &generated_ms = generated_8bit_ms;
+
+	uint32_t irq_mask = 0u;
+	uint8_t pan_position = 7u;
+
+};
+
+// The GUS GF1 DSP
+class Gus {
+public:
+	Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &dir);
+	~Gus();
+	bool CheckTimer(size_t t);
+	
+	struct Timer {
+		float delay = 0.0f;
+		uint8_t value = 0u;
+		bool is_masked = false;
+		bool should_raise_irq = false;
+		bool has_expired = false;
+		bool is_counting_down = false;
+	};
+	Timer timers[2] = {};
+
+private:
+	Gus() = delete;
+	Gus(const Gus &) = delete;            // prevent copying
+	Gus &operator=(const Gus &) = delete; // prevent assignment
+
+	void AudioCallback(uint16_t requested_frames);
+	void CheckIrq();
+	void CheckVoiceIrq();
+	void DmaCallback(DmaChannel *dma_channel, DMAEvent event);
+	void WriteToRegister();
+	uint16_t ReadFromRegister();
+	void PopulateAutoExec(uint16_t port, const std::string &dir);
+	void PopulatePanScalars();
+	void PopulateVolScalars();
+	void PrintStats();
+	Bitu ReadFromPort(const Bitu port, const Bitu iolen);
+	void Reset();
+	bool SoftLimit(float (&)[GUS_BUFFER_FRAMES][2],
+	               int16_t (&)[GUS_BUFFER_FRAMES][2],
+	               uint16_t);
+	void WriteToPort(Bitu port, Bitu val, Bitu iolen);
+
+	// Collections
+	std::array<std::unique_ptr<Voice>, GUS_MAX_VOICES> voices = {{nullptr}};
+	std::array<IO_ReadHandleObject, GUS_READ_HANDLERS> read_handlers = {};
+	std::array<IO_WriteHandleObject, GUS_WRITE_HANDLERS> write_handlers = {};
+	std::array<AudioFrame, GUS_PAN_POSITIONS> pan_scalars = {};
+	std::array<float, GUS_VOLUME_POSITIONS> vol_scalars = {};
+	const std::array<uint8_t, GUS_ADDRESSES> irq_addresses = {{0,  2, 5, 3,  7, 11, 12, 15}};
+	const std::array<uint8_t, GUS_ADDRESSES> dma_addresses = {{0, 1, 3, 5, 6, 7, 0, 0}};
+	std::array<uint8_t, GUS_RAM_SIZE> ram = {{0u}};
+
+	// Complex members
+	AutoexecObject autoexec_lines[2] = {};
+	SharedVoiceIrqs shared_voice_irqs = {std::bind(&Gus::CheckVoiceIrq, this),
+	                                     0u, 0u};
+	AudioFrame peak_amplitude = {1.0f, 1.0f};
+	MixerObject mixer_channel = {};
+	MixerChannel *audio_channel = nullptr;
+	Voice *current_voice = nullptr;
+	uint8_t &adlib_command_reg = adlib_commandreg;
+
+	// Port address
+	size_t port_base = 0u;
+
+	// Voice states
+	uint32_t active_voice_mask = 0u;
+	uint16_t current_voice_index = 0u;
+	uint8_t active_voices = 0u;
+
+	// Register and playback rate
+	uint32_t dram_addr = 0u;
+	uint32_t playback_rate = 0u;
+	uint16_t register_data = 0u;
+	uint8_t selected_register = 0u;
+
+	// Control states
+	uint8_t mix_ctrl = 0u;
+	uint8_t sample_ctrl = 0u;
+	uint8_t timer_ctrl = 0u;
+	uint8_t dma_ctrl = 0u;
+
+	// DMA states
+	uint16_t dma_addr = 0u;
+	uint8_t dma1 = 0u; // recording DMA
+	uint8_t dma2 = 0u; // playback DMA
+
+	// IRQ states
+	uint8_t irq1 = 0u; // playback IRQ
+	uint8_t irq2 = 0u; // MIDI IRQ
+	uint8_t irq_status = 0u;
+	bool irq_enabled = false;
+	bool should_change_irq_dma = false;
+};
+
+static Gus *myGUS = nullptr;
+
+Voice::Voice(uint8_t num, SharedVoiceIrqs &irqs)
+        : shared_irqs(irqs),
+          irq_mask(1 << num)
 {}
 
-void GUSChannels::WriteWaveCtrl(uint8_t val)
+void Voice::ClearStats()
 {
-	const uint32_t oldirq = myGUS.WaveIRQ;
-	WaveCtrl = val & 0x7f;
-	if (WaveCtrl & WCTRL_16BIT) {
-		GetSample = std::bind(&GUSChannels::GetSample16, this,
-		                      std::placeholders::_1);
-		generated_ms = &generated_16bit_ms;
+	generated_8bit_ms = 0u;
+	generated_16bit_ms = 0u;
+}
+
+void Voice::GenerateSamples(float *stream,
+                            const std::array<unsigned char, GUS_RAM_SIZE> &ram,
+                            const std::array<float, GUS_VOLUME_POSITIONS> &vol_scalars,
+                            const std::array<AudioFrame, GUS_PAN_POSITIONS> &pan_scalars,
+                            AudioFrame &peak,
+                            uint16_t requested_frames)
+{
+	if (vol_ctrl & wave_ctrl & VWCtrl::Disabled)
+		return;
+
+	while (requested_frames-- > 0) {
+		// Get the sample
+		const uint32_t sample_addr = wave_addr >> WAVE_FRACT;
+		float sample = GetSample(ram, sample_addr);
+
+		// Add any fractional inter-wave portion
+		constexpr uint32_t wave_width = 1 << WAVE_FRACT;
+		if (wave_inc < wave_width) {
+			const float next_sample = GetSample(ram, sample_addr + 1u);
+			const uint32_t wave_fraction = wave_addr & (wave_width - 1u);
+			sample += (next_sample - sample) * wave_fraction / wave_width;
+
+			// Confirm the sample plus inter-wave portion is in-bounds
+			assert(sample <= std::numeric_limits<int16_t>::max() &&
+			       sample >= std::numeric_limits<int16_t>::min());
+		}
+		// Apply any selected volume reduction
+		sample *= vol_scalars[vol_index_current];
+
+		// Add the sample to the stream, angled in L-R space
+		*(stream++) += sample * pan_scalars[pan_position].left;
+		*(stream++) += sample * pan_scalars[pan_position].right;
+
+		// Keep tabs on the accumulated stream amplitudes
+		peak.left = std::max(peak.left, fabsf(stream[-2]));
+		peak.right = std::max(peak.right, fabsf(stream[-1]));
+
+		// Move onto the the next memory address and volume
+		// reduction
+		WaveUpdate();
+		VolUpdate();
+	}
+	// Tally the number of generated sets so far
+	generated_ms++;
+}
+
+// Read an 8-bit sample scaled into the 16-bit range, returned as a float
+inline float Voice::GetSample8(const std::array<unsigned char, GUS_RAM_SIZE> &ram,
+                               const uint32_t addr) const
+{
+	constexpr float to_16bit_range = 1u
+	                                 << (std::numeric_limits<int16_t>::digits -
+	                                     std::numeric_limits<int8_t>::digits);
+	return static_cast<int8_t>(ram[addr & 0xFFFFFu]) * to_16bit_range;
+}
+
+// Read a 16-bit sample returned as a float
+inline float Voice::GetSample16(const std::array<unsigned char, GUS_RAM_SIZE> &ram,
+                                const uint32_t addr) const
+{
+	// Calculate offset of the 16-bit sample
+	const uint32_t adjaddr = (addr & 0xC0000u) | ((addr & 0x1FFFFu) << 1u);
+	return static_cast<int16_t>(host_readw(ram.data() + adjaddr));
+}
+
+uint8_t Voice::ReadPanPot() const
+{
+	return pan_position;
+}
+
+inline uint8_t Voice::ReadVolCtrl() const
+{
+	uint8_t ret = vol_ctrl;
+	if (shared_irqs.vol & irq_mask)
+		ret |= 0x80;
+	return ret;
+}
+
+inline uint8_t Voice::ReadWaveCtrl() const
+{
+	uint8_t ret = wave_ctrl;
+	if (shared_irqs.wave & irq_mask)
+		ret |= 0x80;
+	return ret;
+}
+
+void Voice::UpdateWaveAndVol()
+{
+	WriteWaveFreq(wave_freq);
+	WriteVolRate(vol_index_rate);
+}
+
+inline void Voice::VolUpdate()
+{
+	// Is volume control disabled?
+	if (vol_ctrl & VWCtrl::Disabled)
+		return;
+	int32_t vol_count_remaining;
+	// Should the voice's volume be decreased?
+	if (vol_ctrl & VWCtrl::Decreasing) {
+		vol_index_current -= vol_index_inc;
+		vol_count_remaining = vol_index_start - vol_index_current;
+	} else { // or increased?
+		vol_index_current += vol_index_inc;
+		vol_count_remaining = vol_index_current - vol_index_end;
+	}
+	// We've reached the desired volume
+	if (vol_count_remaining < 0) {
+		return;
+	}
+	// Is an IRQ event needed?
+	if (vol_ctrl & VWCtrl::RaiseIrq) {
+		shared_irqs.vol |= irq_mask;
+	}
+	// Is the volume looping?
+	if (vol_ctrl & VWCtrl::Loop) {
+		// Is it looping bi-directionally?
+		if (vol_ctrl & VWCtrl::BiDirectional)
+			vol_ctrl ^= VWCtrl::Decreasing;
+		vol_index_current = (vol_ctrl & VWCtrl::Decreasing)
+		                            ? (vol_index_end - vol_count_remaining)
+		                            : (vol_index_start + vol_count_remaining);
+	} else { // Otherwise reset the volume's position
+		vol_ctrl |= 1;
+		vol_index_current = (vol_ctrl & VWCtrl::Decreasing) ? vol_index_start
+		                                      : vol_index_end;
+	}
+}
+
+inline void Voice::WaveUpdate()
+{
+	// LOG_MSG("GUS: WaveUpdate start %u, end %u, addr %u, inc %u, freq %u",
+	//         wave_start, wave_end, wave_addr, wave_inc, wave_freq);
+	if (wave_ctrl & VWCtrl::Disabled)
+		return;
+	int32_t wave_remaining;
+	if (wave_ctrl & VWCtrl::Decreasing) {
+		wave_addr -= wave_inc;
+		wave_remaining = wave_start - wave_addr;
 	} else {
-		GetSample = std::bind(&GUSChannels::GetSample8, this,
-		                      std::placeholders::_1);
-		generated_ms = &generated_8bit_ms;
+		wave_addr += wave_inc;
+		wave_remaining = wave_addr - wave_end;
+	}
+	// Not yet reaching a boundary
+	if (wave_remaining < 0)
+		return;
+	/* Generate an IRQ if needed */
+	if (wave_ctrl & 0x20) {
+		shared_irqs.wave |= irq_mask;
+	}
+	/* Check for not being in PCM operation */
+	if (vol_ctrl & 0x04)
+		return;
+	/* Check for looping */
+	if (wave_ctrl & VWCtrl::Loop) {
+		/* Bi-directional looping */
+		if (wave_ctrl & VWCtrl::BiDirectional)
+			wave_ctrl ^= VWCtrl::Decreasing;
+		wave_addr = (wave_ctrl & VWCtrl::Decreasing)
+		                    ? (wave_end - wave_remaining)
+		                    : (wave_start + wave_remaining);
+	} else {
+		wave_ctrl |= 1; // Stop the voice
+		wave_addr = (wave_ctrl & VWCtrl::Decreasing) ? wave_start : wave_end;
+	}
+}
+
+void Voice::WritePanPot(uint8_t pos)
+{
+	constexpr uint8_t max_pos = GUS_PAN_POSITIONS - 1;
+	pan_position = std::min(pos, max_pos);
+}
+
+void Voice::WriteVolCtrl(uint8_t val)
+{
+	const uint32_t old = shared_irqs.vol;
+	vol_ctrl = val & 0x7f;
+	// Manually set the irq
+	if ((val & 0xa0) == 0xa0)
+		shared_irqs.vol |= irq_mask;
+	else
+		shared_irqs.vol &= ~irq_mask;
+	if (old != shared_irqs.vol)
+		shared_irqs.check();
+}
+
+void Voice::WriteVolRate(uint8_t val)
+{
+	vol_index_rate = val;
+	const uint8_t scale = val & 63;
+	const uint8_t divider = 1 << (3 * (val >> 6));
+	vol_index_inc = (!scale || !divider) ? 0u : ceil_udivide(scale, divider);
+}
+
+void Voice::WriteWaveCtrl(uint8_t val)
+{
+	const uint32_t oldirq = shared_irqs.wave;
+	wave_ctrl = val & 0x7f;
+	if (wave_ctrl & VWCtrl::Bit16) {
+		GetSample = std::bind(&Voice::GetSample16, this, _1, _2);
+		generated_ms = generated_16bit_ms;
+	} else {
+		GetSample = std::bind(&Voice::GetSample8, this, _1, _2);
+		generated_ms = generated_8bit_ms;
 	}
 
 	if ((val & 0xa0) == 0xa0)
-		myGUS.WaveIRQ |= irqmask;
+		shared_irqs.wave |= irq_mask;
 	else
-		myGUS.WaveIRQ &= ~irqmask;
-	if (oldirq != myGUS.WaveIRQ)
-		CheckVoiceIrq();
+		shared_irqs.wave &= ~irq_mask;
+	if (oldirq != shared_irqs.wave)
+		shared_irqs.check();
 }
 
-static std::array<GUSChannels *, GUS_MAX_CHANNELS> guschan = {nullptr};
-static GUSChannels *curchan = nullptr;
-
-static void PrintStats()
+void Voice::WriteWaveFreq(uint16_t val)
 {
-	// Aggregate stats from all channels
+	wave_freq = val;
+	wave_inc = ceil_udivide(val, 2u);
+}
+
+Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
+        : port_base(port - 0x200),
+          dma1(dma),
+          dma2(dma),
+          irq1(irq),
+          irq2(irq)
+{
+	// Create the internal voice channels
+	for (uint8_t i = 0; i < GUS_MAX_VOICES; ++i) {
+		voices.at(i) = std::make_unique<Voice>(i, shared_voice_irqs);
+	}
+
+	// Register the IO read addresses
+	const auto read_from = std::bind(&Gus::ReadFromPort, this, _1, _2);
+	read_handlers[0].Install(0x302 + port_base, read_from, IO_MB);
+	read_handlers[1].Install(0x303 + port_base, read_from, IO_MB);
+	read_handlers[2].Install(0x304 + port_base, read_from, IO_MB | IO_MW);
+	read_handlers[3].Install(0x305 + port_base, read_from, IO_MB);
+	read_handlers[4].Install(0x206 + port_base, read_from, IO_MB);
+	read_handlers[5].Install(0x208 + port_base, read_from, IO_MB);
+	read_handlers[6].Install(0x307 + port_base, read_from, IO_MB);
+	// Board Only
+	read_handlers[7].Install(0x20A + port_base, read_from, IO_MB);
+
+	// Register the IO write addresses
+	// We'll leave the MIDI interface to the MPU-401
+	// Ditto for the Joystick
+	// GF1 Synthesizer
+	const auto write_to = std::bind(&Gus::WriteToPort, this, _1, _2, _3);
+	write_handlers[0].Install(0x302 + port_base, write_to, IO_MB);
+	write_handlers[1].Install(0x303 + port_base, write_to, IO_MB);
+	write_handlers[2].Install(0x304 + port_base, write_to, IO_MB | IO_MW);
+	write_handlers[3].Install(0x305 + port_base, write_to, IO_MB);
+	write_handlers[4].Install(0x208 + port_base, write_to, IO_MB);
+	write_handlers[5].Install(0x209 + port_base, write_to, IO_MB);
+	write_handlers[6].Install(0x307 + port_base, write_to, IO_MB);
+	// Board Only
+	write_handlers[7].Install(0x200 + port_base, write_to, IO_MB);
+	write_handlers[8].Install(0x20B + port_base, write_to, IO_MB);
+
+	// Register the Mixer CallBack
+	audio_channel = mixer_channel.Install(
+		std::bind(&Gus::AudioCallback, this, std::placeholders::_1), 1, "GUS");
+
+	// Populate the volume and pan tables
+	PopulateVolScalars();
+	PopulatePanScalars();
+
+	// Reset the DSP
+	register_data = 0x1;
+	Reset();
+	register_data = 0x0;
+
+	PopulateAutoExec(port, ultradir);
+}
+
+Gus::~Gus()
+{
+	PrintStats();
+}
+
+void Gus::AudioCallback(uint16_t requested_frames)
+{
+	assert(requested_frames <= GUS_BUFFER_FRAMES);
+	float accumulator[GUS_BUFFER_FRAMES][2] = {{0}};
+	for (uint8_t i = 0; i < active_voices; ++i)
+		voices[i]->GenerateSamples(*accumulator, ram, vol_scalars, pan_scalars,
+		                           peak_amplitude, requested_frames);
+
+	int16_t scaled[GUS_BUFFER_FRAMES][2];
+	if (!SoftLimit(accumulator, scaled, requested_frames))
+		for (uint8_t i = 0; i < requested_frames; ++i)
+			for (uint8_t j = 0; j < 2; ++j)
+				scaled[i][j] = static_cast<int16_t>(
+				        accumulator[i][j]);
+
+	audio_channel->AddSamples_s16(requested_frames, scaled[0]);
+	CheckVoiceIrq();
+}
+
+inline void Gus::CheckIrq()
+{
+	if (irq_status && (mix_ctrl & 0x08))
+		PIC_ActivateIRQ(irq1);
+}
+
+bool Gus::CheckTimer(const size_t t)
+{
+	if (!timers[t].is_masked)
+		timers[t].has_expired = true;
+	if (timers[t].should_raise_irq) {
+		irq_status |= 0x4 << t;
+		CheckIrq();
+	}
+	return timers[t].is_counting_down;
+}
+
+void Gus::CheckVoiceIrq()
+{
+	irq_status &= 0x9f;
+	const Bitu totalmask = (shared_voice_irqs.vol | shared_voice_irqs.wave) &
+	                       active_voice_mask;
+	if (!totalmask)
+		return;
+	if (shared_voice_irqs.vol)
+		irq_status |= 0x40;
+	if (shared_voice_irqs.wave)
+		irq_status |= 0x20;
+	CheckIrq();
+	for (;;) {
+		uint32_t check = (1 << shared_voice_irqs.status);
+		if (totalmask & check)
+			return;
+		shared_voice_irqs.status++;
+		if (shared_voice_irqs.status >= active_voices)
+			shared_voice_irqs.status = 0;
+	}
+}
+
+void Gus::DmaCallback(DmaChannel *dma_channel, DMAEvent event)
+{
+	if (event != DMA_UNMASKED)
+		return;
+	Bitu addr;
+	// Calculate the dma address
+	// DMA transfers can't cross 256k boundaries, so you should be safe to
+	// just determine the start once and go from there Bit 2 - 0 = if DMA
+	// channel is an 8 bit channel(0 - 3).
+	if (dma_ctrl & 0x4)
+		addr = (((dma_addr & 0x1fff) << 1) | (dma_addr & 0xc000)) << 4;
+	else
+		addr = dma_addr << 4;
+	// Reading from dma?
+	if ((dma_ctrl & 0x2) == 0) {
+		Bitu read = dma_channel->Read(dma_channel->currcnt + 1, &ram[addr]);
+		// Check for 16 or 8bit channel
+		read *= (dma_channel->DMA16 + 1);
+		if ((dma_ctrl & 0x80) != 0) {
+			// Invert the MSB to convert twos compliment form
+			const size_t dma_end = addr + read;
+			assert(dma_end <= ram.size());
+			if ((dma_ctrl & 0x40) == 0) {
+				// 8-bit data
+				for (size_t i = addr; i < dma_end; ++i)
+					ram[i] ^= 0x80;
+			} else {
+				// 16-bit data
+				for (size_t i = addr + 1; i < dma_end; i += 2)
+					ram[i] ^= 0x80;
+			}
+		}
+		// Writing to dma
+	} else {
+		dma_channel->Write(dma_channel->currcnt + 1, &ram[addr]);
+	}
+	/* Raise the TC irq if needed */
+	if ((dma_ctrl & 0x20) != 0) {
+		irq_status |= 0x80;
+		CheckIrq();
+	}
+	dma_channel->Register_Callback(0);
+}
+
+void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
+{
+	// ULTRASND=Port,(rec)DMA1,(pcm)DMA2,(play)IRQ1,(midi)IRQ2
+	std::ostringstream sndline;
+	sndline << "SET ULTRASND=" << std::hex << std::setw(3) << port << ","
+	        << std::dec << static_cast<int>(dma1) << ","
+	        << static_cast<int>(dma2) << "," << static_cast<int>(irq1)
+	        << "," << static_cast<int>(irq2) << std::ends;
+	LOG_MSG("GUS: %s", sndline.str().c_str());
+	autoexec_lines[0].Install(sndline.str());
+
+	// ULTRADIR=full path to directory containing "midi"
+	std::string dirline = "SET ULTRADIR=" + ultradir;
+	autoexec_lines[1].Install(dirline);
+}
+
+// Generate logarithmic to linear volume conversion tables
+void Gus::PopulateVolScalars()
+{
+	double out = 1.0;
+	for (uint16_t i = GUS_VOLUME_POSITIONS - 1; i > 0; --i) {
+		vol_scalars.at(i) = static_cast<float>(out);
+		out /= GUS_VOLUME_SCALE_DIV;
+	}
+	vol_scalars.at(0) = 0.0f;
+}
+
+/*
+Constant-Power Panning
+-------------------------
+The GUS SDK describes having 16 panning positions (0 through 15)
+with 0 representing all full left rotation through to center or
+mid-point at 7, to full-right rotation at 15.  The SDK also
+describes that output power is held constant through this range.
+
+	#!/usr/bin/env python3
+	import math
+	print(f'Left-scalar  Pot Norm.   Right-scalar | Power')
+	print(f'-----------  --- -----   ------------ | -----')
+	for pot in range(16):
+		norm = (pot - 7.) / (7.0 if pot < 7 else 8.0)
+		direction = math.pi * (norm + 1.0 ) / 4.0
+		lscale = math.cos(direction)
+		rscale = math.sin(direction)
+		power = lscale * lscale + rscale * rscale
+		print(f'{lscale:.5f} <~~~ {pot:2} ({norm:6.3f})'\
+		      f' ~~~> {rscale:.5f} | {power:.3f}')
+
+	Left-scalar  Pot Norm.   Right-scalar | Power
+	-----------  --- -----   ------------ | -----
+	1.00000 <~~~  0 (-1.000) ~~~> 0.00000 | 1.000
+	0.99371 <~~~  1 (-0.857) ~~~> 0.11196 | 1.000
+	0.97493 <~~~  2 (-0.714) ~~~> 0.22252 | 1.000
+	0.94388 <~~~  3 (-0.571) ~~~> 0.33028 | 1.000
+	0.90097 <~~~  4 (-0.429) ~~~> 0.43388 | 1.000
+	0.84672 <~~~  5 (-0.286) ~~~> 0.53203 | 1.000
+	0.78183 <~~~  6 (-0.143) ~~~> 0.62349 | 1.000
+	0.70711 <~~~  7 ( 0.000) ~~~> 0.70711 | 1.000
+	0.63439 <~~~  8 ( 0.125) ~~~> 0.77301 | 1.000
+	0.55557 <~~~  9 ( 0.250) ~~~> 0.83147 | 1.000
+	0.47140 <~~~ 10 ( 0.375) ~~~> 0.88192 | 1.000
+	0.38268 <~~~ 11 ( 0.500) ~~~> 0.92388 | 1.000
+	0.29028 <~~~ 12 ( 0.625) ~~~> 0.95694 | 1.000
+	0.19509 <~~~ 13 ( 0.750) ~~~> 0.98079 | 1.000
+	0.09802 <~~~ 14 ( 0.875) ~~~> 0.99518 | 1.000
+	0.00000 <~~~ 15 ( 1.000) ~~~> 1.00000 | 1.000
+*/
+void Gus::PopulatePanScalars()
+{
+	for (uint8_t pos = 0u; pos < GUS_PAN_POSITIONS; ++pos) {
+		// Normalize absolute range [0, 15] to [-1.0, 1.0]
+		const double norm = (pos - 7.0f) / (pos < 7u ? 7 : 8);
+		// Convert to an angle between 0 and 90-degree, in radians
+		const double angle = (norm + 1) * M_PI / 4;
+		pan_scalars.at(pos).left = static_cast<float>(cos(angle));
+		pan_scalars.at(pos).right = static_cast<float>(sin(angle));
+		// DEBUG_LOG_MSG("GUS: pan_scalar[%u] = %f | %f", pos,
+		// pan_scalars.at(pos).left,
+		// pan_scalars.at(pos).right);
+	}
+}
+
+void Gus::PrintStats()
+{
+	// Aggregate stats from all voices
 	uint32_t combined_8bit_ms = 0u;
 	uint32_t combined_16bit_ms = 0u;
 	uint32_t used_8bit_voices = 0u;
 	uint32_t used_16bit_voices = 0u;
-	for (const auto voice : guschan) {
+	for (const auto &voice : voices) {
 		if (voice->generated_8bit_ms) {
 			combined_8bit_ms += voice->generated_8bit_ms;
 			used_8bit_voices++;
@@ -399,7 +740,7 @@ static void PrintStats()
 
 	// Is there enough information to be meaningful?
 	if (combined_ms < 10000u ||
-	    (myGUS.peak_amplitude.left + myGUS.peak_amplitude.right) < 10 ||
+	    (peak_amplitude.left + peak_amplitude.right) < 10 ||
 	    !(used_8bit_voices + used_16bit_voices))
 		return;
 
@@ -422,17 +763,16 @@ static void PrintStats()
 	}
 
 	// Calculate and print info about the volume
-	const float mixer_scalar = std::max(gus_chan->volmain[0],
-	                                    gus_chan->volmain[1]);
+	const float mixer_scalar = std::max(audio_channel->volmain[0],
+	                                    audio_channel->volmain[1]);
 	double peak_ratio = mixer_scalar *
-	                    std::max(myGUS.peak_amplitude.left,
-	                             myGUS.peak_amplitude.right) /
+	                    std::max(peak_amplitude.left, peak_amplitude.right) /
 	                    std::numeric_limits<int16_t>::max();
 
-	// It's expected and normal for multi-channel audio to periodically
+	// It's expected and normal for multi-voice audio to periodically
 	// accumulate beyond the max, which is gracefully scaled without
 	// distortion, so there is no need to recommend that users scale-down
-	// their GUS channel.
+	// their GUS voice.
 	peak_ratio = std::min(peak_ratio, 1.0);
 	LOG_MSG("GUS: Peak amplitude reached %.0f%% of max", 100 * peak_ratio);
 
@@ -446,362 +786,37 @@ static void PrintStats()
 	}
 }
 
-static void GUSReset()
-{
-	if ((myGUS.gRegData & 0x1) == 0x1) {
-		// Characterize playback before resettings
-		PrintStats();
-
-		// Reset
-		adlib_commandreg = 85;
-		myGUS.IRQStatus = 0;
-		myGUS.timers[0].raiseirq = false;
-		myGUS.timers[1].raiseirq = false;
-		myGUS.timers[0].reached = false;
-		myGUS.timers[1].reached = false;
-		myGUS.timers[0].running = false;
-		myGUS.timers[1].running = false;
-
-		myGUS.timers[0].value = 0xff;
-		myGUS.timers[1].value = 0xff;
-		myGUS.timers[0].delay = 0.080f;
-		myGUS.timers[1].delay = 0.320f;
-
-		myGUS.ChangeIRQDMA = false;
-		myGUS.mixControl = 0x0b; // latches enabled, LINEs disabled
-		// Stop all channels
-		for (const auto channel : guschan) {
-			channel->CurrentVolIndex = 0u;
-			channel->WriteWaveCtrl(0x1);
-			channel->WriteRampCtrl(0x1);
-			channel->WritePanPot(0x7);
-			channel->ClearStats();
-		}
-		myGUS.IRQChan = 0;
-		myGUS.peak_amplitude = {1.0f, 1.0f};
-	}
-	if ((myGUS.gRegData & 0x4) != 0) {
-		myGUS.irqenabled = true;
-	} else {
-		myGUS.irqenabled = false;
-	}
-}
-
-static inline void GUS_CheckIRQ()
-{
-	if (myGUS.IRQStatus && (myGUS.mixControl & 0x08))
-		PIC_ActivateIRQ(myGUS.irq1);
-}
-
-static void CheckVoiceIrq()
-{
-	myGUS.IRQStatus &= 0x9f;
-	const Bitu totalmask = (myGUS.RampIRQ | myGUS.WaveIRQ) & myGUS.ActiveMask;
-	if (!totalmask)
-		return;
-	if (myGUS.RampIRQ)
-		myGUS.IRQStatus |= 0x40;
-	if (myGUS.WaveIRQ)
-		myGUS.IRQStatus |= 0x20;
-	GUS_CheckIRQ();
-	for (;;) {
-		uint32_t check = (1 << myGUS.IRQChan);
-		if (totalmask & check)
-			return;
-		myGUS.IRQChan++;
-		if (myGUS.IRQChan >= myGUS.ActiveChannels)
-			myGUS.IRQChan = 0;
-	}
-}
-
-static uint16_t ExecuteReadRegister()
-{
-	uint8_t tmpreg;
-	//	LOG_MSG("Read global reg %x",myGUS.gRegSelect);
-	switch (myGUS.gRegSelect) {
-	case 0x41: // Dma control register - read acknowledges DMA IRQ
-		tmpreg = myGUS.DMAControl & 0xbf;
-		tmpreg |= (myGUS.IRQStatus & 0x80) >> 1;
-		myGUS.IRQStatus &= 0x7f;
-		return static_cast<uint16_t>(tmpreg << 8);
-	case 0x42: // Dma address register
-		return myGUS.dmaAddr;
-	case 0x45: // Timer control register matches Adlib's behavior
-		return static_cast<uint16_t>(myGUS.TimerControl << 8);
-		break;
-	case 0x49: // Dma sample register
-		tmpreg = myGUS.DMAControl & 0xbf;
-		tmpreg |= (myGUS.IRQStatus & 0x80) >> 1;
-		return static_cast<uint16_t>(tmpreg << 8);
-	case 0x80: // Channel voice control read register
-		if (curchan)
-			return curchan->ReadWaveCtrl() << 8;
-		else
-			return 0x0300;
-
-	case 0x82: // Channel MSB start address register
-		if (curchan)
-			return static_cast<uint16_t>(curchan->WaveStart >> 16);
-		else
-			return 0x0000;
-	case 0x83: // Channel LSW start address register
-		if (curchan)
-			return static_cast<uint16_t>(curchan->WaveStart);
-		else
-			return 0x0000;
-
-	case 0x89: // Channel volume register
-		if (curchan)
-			return static_cast<uint16_t>(curchan->CurrentVolIndex << 4);
-		else
-			return 0x0000;
-	case 0x8a: // Channel MSB current address register
-		if (curchan)
-			return static_cast<uint16_t>(curchan->WaveAddr >> 16);
-		else
-			return 0x0000;
-	case 0x8b: // Channel LSW current address register
-		if (curchan)
-			return static_cast<uint16_t>(curchan->WaveAddr);
-		else
-			return 0x0000;
-
-	case 0x8d: // Channel volume control register
-		if (curchan)
-			return curchan->ReadRampCtrl() << 8;
-		else
-			return 0x0300;
-	case 0x8f: // General channel IRQ status register
-		tmpreg = myGUS.IRQChan | 0x20;
-		uint32_t mask;
-		mask = 1 << myGUS.IRQChan;
-		if (!(myGUS.RampIRQ & mask))
-			tmpreg |= 0x40;
-		if (!(myGUS.WaveIRQ & mask))
-			tmpreg |= 0x80;
-		myGUS.RampIRQ &= ~mask;
-		myGUS.WaveIRQ &= ~mask;
-		CheckVoiceIrq();
-		return static_cast<uint16_t>(tmpreg << 8);
-	default:
-#if LOG_GUS
-		LOG_MSG("Read Register num 0x%x", myGUS.gRegSelect);
-#endif
-		return myGUS.gRegData;
-	}
-}
-
-static void GUS_TimerEvent(Bitu val)
-{
-	if (!myGUS.timers[val].masked)
-		myGUS.timers[val].reached = true;
-	if (myGUS.timers[val].raiseirq) {
-		myGUS.IRQStatus |= 0x4 << val;
-		GUS_CheckIRQ();
-	}
-	if (myGUS.timers[val].running)
-		PIC_AddEvent(GUS_TimerEvent, myGUS.timers[val].delay, val);
-}
-
-static void ExecuteGlobRegister()
-{
-	//	if (myGUS.gRegSelect|1!=0x44) LOG_MSG("write global register %x
-	// with %x", myGUS.gRegSelect, myGUS.gRegData);
-	switch (myGUS.gRegSelect) {
-	case 0x0: // Channel voice control register
-		if (curchan)
-			curchan->WriteWaveCtrl(myGUS.gRegData >> 8);
-		break;
-	case 0x1: // Channel frequency control register
-		if (curchan)
-			curchan->WriteWaveFreq(myGUS.gRegData);
-		break;
-	case 0x2: // Channel MSW start address register
-		if (curchan) {
-			uint32_t tmpaddr = static_cast<uint32_t>(
-			        (myGUS.gRegData & 0x1fff) << 16);
-			curchan->WaveStart = (curchan->WaveStart & WAVE_MSWMASK) |
-			                     tmpaddr;
-		}
-		break;
-	case 0x3: // Channel LSW start address register
-		if (curchan) {
-			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData);
-			curchan->WaveStart = (curchan->WaveStart & WAVE_LSWMASK) |
-			                     tmpaddr;
-		}
-		break;
-	case 0x4: // Channel MSW end address register
-		if (curchan) {
-			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData & 0x1fff)
-			                   << 16;
-			curchan->WaveEnd = (curchan->WaveEnd & WAVE_MSWMASK) | tmpaddr;
-		}
-		break;
-	case 0x5: // Channel MSW end address register
-		if (curchan) {
-			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData);
-			curchan->WaveEnd = (curchan->WaveEnd & WAVE_LSWMASK) | tmpaddr;
-		}
-		break;
-	case 0x6: // Channel volume ramp rate register
-		if (curchan) {
-			uint8_t tmpdata = myGUS.gRegData >> 8;
-			curchan->WriteRampRate(tmpdata);
-		}
-		break;
-	case 0x7: // Channel volume ramp start register  EEEEMMMM
-		if (curchan) {
-			uint8_t tmpdata = myGUS.gRegData >> 8;
-			curchan->StartVolIndex = tmpdata << 4;
-		}
-		break;
-	case 0x8: // Channel volume ramp end register  EEEEMMMM
-		if (curchan) {
-			uint8_t tmpdata = myGUS.gRegData >> 8;
-			curchan->EndVolIndex = tmpdata << 4;
-		}
-		break;
-	case 0x9: // Channel current volume register
-		if (curchan) {
-			uint16_t tmpdata = myGUS.gRegData >> 4;
-			curchan->CurrentVolIndex = tmpdata;
-		}
-		break;
-	case 0xA: // Channel MSW current address register
-		if (curchan) {
-			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData & 0x1fff)
-			                   << 16;
-			curchan->WaveAddr = (curchan->WaveAddr & WAVE_MSWMASK) |
-			                    tmpaddr;
-		}
-		break;
-	case 0xB: // Channel LSW current address register
-		if (curchan) {
-			uint32_t tmpaddr = static_cast<uint32_t>(myGUS.gRegData);
-			curchan->WaveAddr = (curchan->WaveAddr & WAVE_LSWMASK) |
-			                    tmpaddr;
-		}
-		break;
-	case 0xC: // Channel pan pot register
-		if (curchan)
-			curchan->WritePanPot(myGUS.gRegData >> 8);
-		break;
-	case 0xD: // Channel volume control register
-		if (curchan)
-			curchan->WriteRampCtrl(myGUS.gRegData >> 8);
-		break;
-	case 0xE: // Set active channel register
-		myGUS.gRegSelect = myGUS.gRegData >> 8; // JAZZ Jackrabbit seems
-		                                        // to assume this?
-		{
-			unsigned requested = 1 + ((myGUS.gRegData >> 8) & 63);
-			requested = clamp(requested, GUS_MIN_CHANNELS,
-			                  GUS_MAX_CHANNELS);
-			if (requested != myGUS.ActiveChannels) {
-				myGUS.ActiveChannels = requested;
-				myGUS.ActiveMask = 0xffffffffU >>
-				                   (32 - myGUS.ActiveChannels);
-				myGUS.basefreq = static_cast<uint32_t>(
-				        0.5 + 1000000.0 / (1.619695497 *
-				                           myGUS.ActiveChannels));
-				gus_chan->SetFreq(myGUS.basefreq);
-				LOG_MSG("GUS: Activated %u voices running at %u Hz",
-				        myGUS.ActiveChannels, myGUS.basefreq);
-			}
-			// Always re-apply the ramp as it can change elsewhere
-			for (uint8_t i = 0; i < myGUS.ActiveChannels; i++)
-				guschan[i]->UpdateWaveRamp();
-			gus_chan->Enable(true);
-		}
-		break;
-	case 0x10: // Undocumented register used in Fast Tracker 2
-		break;
-	case 0x41: // Dma control register
-		myGUS.DMAControl = static_cast<uint8_t>(myGUS.gRegData >> 8);
-		GetDMAChannel(myGUS.dma1)
-		        ->Register_Callback(
-		                (myGUS.DMAControl & 0x1) ? GUS_DMA_Callback : 0);
-		break;
-	case 0x42: // Gravis DRAM DMA address register
-		myGUS.dmaAddr = myGUS.gRegData;
-		break;
-	case 0x43: // MSB Peek/poke DRAM position
-		myGUS.gDramAddr = (0xff0000 & myGUS.gDramAddr) |
-		                  (static_cast<uint32_t>(myGUS.gRegData));
-		break;
-	case 0x44: // LSW Peek/poke DRAM position
-		myGUS.gDramAddr = (0xffff & myGUS.gDramAddr) |
-		                  (static_cast<uint32_t>(myGUS.gRegData >> 8)) << 16;
-		break;
-	case 0x45: // Timer control register.  Identical in operation to Adlib's
-	           // timer
-		myGUS.TimerControl = static_cast<uint8_t>(myGUS.gRegData >> 8);
-		myGUS.timers[0].raiseirq = (myGUS.TimerControl & 0x04) > 0;
-		if (!myGUS.timers[0].raiseirq)
-			myGUS.IRQStatus &= ~0x04;
-		myGUS.timers[1].raiseirq = (myGUS.TimerControl & 0x08) > 0;
-		if (!myGUS.timers[1].raiseirq)
-			myGUS.IRQStatus &= ~0x08;
-		break;
-	case 0x46: // Timer 1 control
-		myGUS.timers[0].value = static_cast<uint8_t>(myGUS.gRegData >> 8);
-		myGUS.timers[0].delay = (0x100 - myGUS.timers[0].value) * 0.080f;
-		break;
-	case 0x47: // Timer 2 control
-		myGUS.timers[1].value = static_cast<uint8_t>(myGUS.gRegData >> 8);
-		myGUS.timers[1].delay = (0x100 - myGUS.timers[1].value) * 0.320f;
-		break;
-	case 0x49: // DMA sampling control register
-		myGUS.SampControl = static_cast<uint8_t>(myGUS.gRegData >> 8);
-		GetDMAChannel(myGUS.dma1)
-		        ->Register_Callback((myGUS.SampControl & 0x1) ? GUS_DMA_Callback
-		                                                      : 0);
-		break;
-	case 0x4c: // GUS reset register
-		GUSReset();
-		break;
-	default:
-#if LOG_GUS
-		LOG_MSG("Unimplemented global register %x -- %x",
-		        myGUS.gRegSelect, myGUS.gRegData);
-#endif
-		break;
-	}
-	return;
-}
-
-static Bitu read_gus(Bitu port, Bitu iolen)
+Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 {
 	//	LOG_MSG("read from gus port %x",port);
-	switch (port - GUS_BASE) {
-	case 0x206: return myGUS.IRQStatus;
+	switch (port - port_base) {
+	case 0x206: return irq_status;
 	case 0x208:
-		uint8_t tmptime;
-		tmptime = 0u;
-		if (myGUS.timers[0].reached)
-			tmptime |= (1 << 6);
-		if (myGUS.timers[1].reached)
-			tmptime |= (1 << 5);
-		if (tmptime & 0x60)
-			tmptime |= (1 << 7);
-		if (myGUS.IRQStatus & 0x04)
-			tmptime |= (1 << 2);
-		if (myGUS.IRQStatus & 0x08)
-			tmptime |= (1 << 1);
-		return tmptime;
-	case 0x20a: return adlib_commandreg;
-	case 0x302: return static_cast<uint8_t>(myGUS.gCurChannel);
-	case 0x303: return myGUS.gRegSelect;
+		uint8_t tmp_time;
+		tmp_time = 0u;
+		if (timers[0].has_expired)
+			tmp_time |= (1 << 6);
+		if (timers[1].has_expired)
+			tmp_time |= (1 << 5);
+		if (tmp_time & 0x60)
+			tmp_time |= (1 << 7);
+		if (irq_status & 0x04)
+			tmp_time |= (1 << 2);
+		if (irq_status & 0x08)
+			tmp_time |= (1 << 1);
+		return tmp_time;
+	case 0x20a: return adlib_command_reg;
+	case 0x302: return static_cast<uint8_t>(current_voice_index);
+	case 0x303: return selected_register;
 	case 0x304:
 		if (iolen == 2)
-			return ExecuteReadRegister() & 0xffff;
+			return ReadFromRegister() & 0xffff;
 		else
-			return ExecuteReadRegister() & 0xff;
-	case 0x305: return ExecuteReadRegister() >> 8;
+			return ReadFromRegister() & 0xff;
+	case 0x305: return ReadFromRegister() >> 8;
 	case 0x307:
-		if (myGUS.gDramAddr < GUS_RAM_SIZE) {
-			return GUSRam[myGUS.gDramAddr];
+		if (dram_addr < GUS_RAM_SIZE) {
+			return ram[dram_addr];
 		} else {
 			return 0;
 		}
@@ -815,87 +830,224 @@ static Bitu read_gus(Bitu port, Bitu iolen)
 	return 0xff;
 }
 
-static void write_gus(Bitu port, Bitu val, Bitu iolen)
+uint16_t Gus::ReadFromRegister()
+{
+	// LOG_MSG("GUS: Read register %x", selected_register);
+	uint8_t tmpreg;
+
+	// Registers that read from the general DSP
+	switch (selected_register) {
+	case 0x41: // Dma control register - read acknowledges DMA IRQ
+		tmpreg = dma_ctrl & 0xbf;
+		tmpreg |= (irq_status & 0x80) >> 1;
+		irq_status &= 0x7f;
+		return static_cast<uint16_t>(tmpreg << 8);
+	case 0x42: // Dma address register
+		return dma_addr;
+	case 0x45: // Timer control register matches Adlib's behavior
+		return static_cast<uint16_t>(timer_ctrl << 8);
+	case 0x49: // Dma sample register
+		tmpreg = dma_ctrl & 0xbf;
+		tmpreg |= (irq_status & 0x80) >> 1;
+		return static_cast<uint16_t>(tmpreg << 8);
+	case 0x8f: // General voice IRQ status register
+		tmpreg = shared_voice_irqs.status | 0x20;
+		uint32_t mask;
+		mask = 1 << shared_voice_irqs.status;
+		if (!(shared_voice_irqs.vol & mask))
+			tmpreg |= 0x40;
+		if (!(shared_voice_irqs.wave & mask))
+			tmpreg |= 0x80;
+		shared_voice_irqs.vol &= ~mask;
+		shared_voice_irqs.wave &= ~mask;
+		shared_voice_irqs.check();
+		return static_cast<uint16_t>(tmpreg << 8);
+	}
+
+	if (!current_voice)
+		return (selected_register == 0x80 || selected_register == 0x8d)
+		               ? 0x0300
+		               : 0u;
+
+	// Registers that read from from the current voice
+	switch (selected_register) {
+	case 0x80: // Voice wave control read register
+		return current_voice->ReadWaveCtrl() << 8;
+	case 0x82: // Voice MSB start address register
+		return static_cast<uint16_t>(current_voice->wave_start >> 16);
+	case 0x83: // Voice LSW start address register
+		return static_cast<uint16_t>(current_voice->wave_start);
+	case 0x89: // Voice volume register
+		return static_cast<uint16_t>(current_voice->vol_index_current << 4);
+	case 0x8a: // Voice MSB current address register
+		return static_cast<uint16_t>(current_voice->wave_addr >> 16);
+	case 0x8b: // Voice LSW current address register
+		return static_cast<uint16_t>(current_voice->wave_addr);
+	case 0x8d: // Voice volume control register
+		return current_voice->ReadVolCtrl() << 8;
+	}
+#if LOG_GUS
+	LOG_MSG("GUS: Unimplemented read Register 0x%x", selected_register);
+#endif
+	return register_data;
+}
+
+void Gus::Reset()
+{
+	if ((register_data & 0x1) == 0x1) {
+		// Characterize playback before resettings
+		PrintStats();
+
+		// Reset
+		adlib_command_reg = 85;
+		irq_status = 0;
+		timers[0].should_raise_irq = false;
+		timers[1].should_raise_irq = false;
+		timers[0].has_expired = false;
+		timers[1].has_expired = false;
+		timers[0].is_counting_down = false;
+		timers[1].is_counting_down = false;
+
+		timers[0].value = 0xff;
+		timers[1].value = 0xff;
+		timers[0].delay = 0.080f;
+		timers[1].delay = 0.320f;
+
+		should_change_irq_dma = false;
+		mix_ctrl = 0x0b; // latches enabled, LINEs disabled
+		// Stop all voices
+		for (auto &voice : voices) {
+			voice->vol_index_current = 0u;
+			voice->WriteWaveCtrl(0x1);
+			voice->WriteVolCtrl(0x1);
+			voice->WritePanPot(0x7);
+			voice->ClearStats();
+		}
+		shared_voice_irqs.status = 0u;
+		peak_amplitude = {1.0f, 1.0f};
+	}
+	irq_enabled = register_data & 0x4;
+}
+
+bool Gus::SoftLimit(float (&in)[GUS_BUFFER_FRAMES][2],
+                    int16_t (&out)[GUS_BUFFER_FRAMES][2],
+                    uint16_t requested_frames)
+{
+	constexpr float max_allowed = static_cast<float>(
+	        std::numeric_limits<int16_t>::max() - 1);
+
+	// If our peaks are under the max, then there's no need to limit
+	if (peak_amplitude.left < max_allowed && peak_amplitude.right < max_allowed)
+		return false;
+
+	// Calculate the percent we need to scale down the volume.  In cases
+	// where one side is less than the max, it's ratio is limited to 1.0.
+	const AudioFrame ratio = {std::min(1.0f, max_allowed / peak_amplitude.left),
+	                          std::min(1.0f, max_allowed / peak_amplitude.right)};
+	for (uint8_t i = 0; i < requested_frames; ++i) {
+		out[i][0] = static_cast<int16_t>(in[i][0] * ratio.left);
+		out[i][1] = static_cast<int16_t>(in[i][1] * ratio.right);
+	}
+
+	// Release the limit incrementally using our existing volume scale.
+	constexpr float release_amount =
+	        max_allowed * (static_cast<float>(GUS_VOLUME_SCALE_DIV) - 1.0f);
+
+	if (peak_amplitude.left > max_allowed)
+		peak_amplitude.left -= release_amount;
+	if (peak_amplitude.right > max_allowed)
+		peak_amplitude.right -= release_amount;
+	// LOG_MSG("GUS: releasing peak_amplitude = %.2f | %.2f",
+	//         static_cast<double>(peak_amplitude.left),
+	//         static_cast<double>(peak_amplitude.right));
+	return true;
+}
+
+static void GUS_TimerEvent(Bitu t)
+{
+	if (myGUS->CheckTimer(t))
+		PIC_AddEvent(GUS_TimerEvent, myGUS->timers[t].delay, t);
+}
+
+void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 {
 	//	LOG_MSG("Write gus port %x val %x",port,val);
-	switch (port - GUS_BASE) {
+	switch (port - port_base) {
 	case 0x200:
-		myGUS.mixControl = static_cast<uint8_t>(val);
-		myGUS.ChangeIRQDMA = true;
+		mix_ctrl = static_cast<uint8_t>(val);
+		should_change_irq_dma = true;
 		return;
-	case 0x208: adlib_commandreg = static_cast<uint8_t>(val); break;
+	case 0x208: adlib_command_reg = static_cast<uint8_t>(val); break;
 	case 0x209:
-		// TODO adlib_commandreg should be 4 for this to work else it
-		// should just latch the value
+		// TODO adlib_command_reg should be 4 for this to work
+		// else it should just latch the value
 		if (val & 0x80) {
-			myGUS.timers[0].reached = false;
-			myGUS.timers[1].reached = false;
+			timers[0].has_expired = false;
+			timers[1].has_expired = false;
 			return;
 		}
-		myGUS.timers[0].masked = (val & 0x40) > 0;
-		myGUS.timers[1].masked = (val & 0x20) > 0;
+		timers[0].is_masked = (val & 0x40) > 0;
+		timers[1].is_masked = (val & 0x20) > 0;
 		if (val & 0x1) {
-			if (!myGUS.timers[0].running) {
-				PIC_AddEvent(GUS_TimerEvent,
-				             myGUS.timers[0].delay, 0);
-				myGUS.timers[0].running = true;
+			if (!timers[0].is_counting_down) {
+				PIC_AddEvent(GUS_TimerEvent, timers[0].delay, 0);
+				timers[0].is_counting_down = true;
 			}
 		} else
-			myGUS.timers[0].running = false;
+			timers[0].is_counting_down = false;
 		if (val & 0x2) {
-			if (!myGUS.timers[1].running) {
-				PIC_AddEvent(GUS_TimerEvent,
-				             myGUS.timers[1].delay, 1);
-				myGUS.timers[1].running = true;
+			if (!timers[1].is_counting_down) {
+				PIC_AddEvent(GUS_TimerEvent, timers[1].delay, 1);
+				timers[1].is_counting_down = true;
 			}
 		} else
-			myGUS.timers[1].running = false;
+			timers[1].is_counting_down = false;
 		break;
 		// TODO Check if 0x20a register is also available on the gus
 		// like on the interwave
 	case 0x20b:
-		if (!myGUS.ChangeIRQDMA)
+		if (!should_change_irq_dma)
 			break;
-		myGUS.ChangeIRQDMA = false;
-		if (myGUS.mixControl & 0x40) {
+		should_change_irq_dma = false;
+		if (mix_ctrl & 0x40) {
 			// IRQ configuration, only use low bits for irq 1
-			if (irqtable[val & 0x7])
-				myGUS.irq1 = irqtable[val & 0x7];
+			if (irq_addresses[val & 0x7])
+				irq1 = irq_addresses[val & 0x7];
 #if LOG_GUS
-			LOG_MSG("Assigned GUS to IRQ %d", myGUS.irq1);
+			LOG_MSG("Assigned GUS to IRQ %d", irq1);
 #endif
 		} else {
 			// DMA configuration, only use low bits for dma 1
-			if (dmatable[val & 0x7])
-				myGUS.dma1 = dmatable[val & 0x7];
+			if (dma_addresses[val & 0x7])
+				dma1 = dma_addresses[val & 0x7];
 #if LOG_GUS
-			LOG_MSG("Assigned GUS to DMA %d", myGUS.dma1);
+			LOG_MSG("Assigned GUS to DMA %d", dma1);
 #endif
 		}
 		break;
 	case 0x302:
-		myGUS.gCurChannel = val & 31;
-		curchan = guschan[myGUS.gCurChannel];
+		current_voice_index = val & 31;
+		current_voice = voices[current_voice_index].get();
 		break;
 	case 0x303:
-		myGUS.gRegSelect = static_cast<uint8_t>(val);
-		myGUS.gRegData = 0;
+		selected_register = static_cast<uint8_t>(val);
+		register_data = 0;
 		break;
 	case 0x304:
 		if (iolen == 2) {
-			myGUS.gRegData = static_cast<uint16_t>(val);
-			ExecuteGlobRegister();
+			register_data = static_cast<uint16_t>(val);
+			WriteToRegister();
 		} else
-			myGUS.gRegData = static_cast<uint16_t>(val);
+			register_data = static_cast<uint16_t>(val);
 		break;
 	case 0x305:
-		myGUS.gRegData = static_cast<uint16_t>((0x00ff & myGUS.gRegData) |
-		                                       val << 8);
-		ExecuteGlobRegister();
+		register_data = static_cast<uint16_t>((0x00ff & register_data) |
+		                                      val << 8);
+		WriteToRegister();
 		break;
 	case 0x307:
-		if (myGUS.gDramAddr < GUS_RAM_SIZE)
-			GUSRam[myGUS.gDramAddr] = static_cast<uint8_t>(val);
+		if (dram_addr < GUS_RAM_SIZE)
+			ram[dram_addr] = static_cast<uint8_t>(val);
 		break;
 	default:
 #if LOG_GUS
@@ -905,281 +1057,182 @@ static void write_gus(Bitu port, Bitu val, Bitu iolen)
 	}
 }
 
-static void GUS_DMA_Callback(DmaChannel *chan, DMAEvent event)
+void Gus::WriteToRegister()
 {
-	if (event != DMA_UNMASKED)
-		return;
-	Bitu dmaaddr;
-	// Calculate the dma address
-	// DMA transfers can't cross 256k boundaries, so you should be safe to
-	// just determine the start once and go from there Bit 2 - 0 = if DMA
-	// channel is an 8 bit channel(0 - 3).
-	if (myGUS.DMAControl & 0x4)
-		dmaaddr = (((myGUS.dmaAddr & 0x1fff) << 1) | (myGUS.dmaAddr & 0xc000))
-		          << 4;
-	else
-		dmaaddr = myGUS.dmaAddr << 4;
-	// Reading from dma?
-	if ((myGUS.DMAControl & 0x2) == 0) {
-		Bitu read = chan->Read(chan->currcnt + 1, &GUSRam[dmaaddr]);
-		// Check for 16 or 8bit channel
-		read *= (chan->DMA16 + 1);
-		if ((myGUS.DMAControl & 0x80) != 0) {
-			// Invert the MSB to convert twos compliment form
-			const size_t dma_end = dmaaddr + read;
-			if ((myGUS.DMAControl & 0x40) == 0) {
-				// 8-bit data
-				for (size_t i = dmaaddr; i < dma_end; ++i)
-					GUSRam[i] ^= 0x80;
-			} else {
-				// 16-bit data
-				for (size_t i = dmaaddr + 1; i < dma_end; i += 2)
-					GUSRam[i] ^= 0x80;
+	//	if (selected_register|1!=0x44) LOG_MSG("write global register %x
+	// with %x", selected_register, register_data);
+
+	// Registers that write to the general DSP
+	switch (selected_register) {
+	case 0xE: // Set active voice register
+		selected_register = register_data >> 8; // JAZZ Jackrabbit seems
+		                                        // to assume this?
+		{
+			unsigned requested = 1 + ((register_data >> 8) & 63);
+			requested = clamp(requested, GUS_MIN_VOICES, GUS_MAX_VOICES);
+			if (requested != active_voices) {
+				active_voices = requested;
+				active_voice_mask = 0xffffffffU >>
+				                    (32 - active_voices);
+				playback_rate = static_cast<uint32_t>(
+				        0.5 + 1000000.0 / (1.619695497 * active_voices));
+				audio_channel->SetFreq(playback_rate);
+				LOG_MSG("GUS: Sampling %u voices at %u Hz",
+				        active_voices, playback_rate);
 			}
+			// Refresh the wave and volume states for the active set
+			for (uint8_t i = 0; i < active_voices; i++)
+				voices.at(i)->UpdateWaveAndVol();
+			audio_channel->Enable(true);
 		}
-		// Writing to dma
-	} else {
-		chan->Write(chan->currcnt + 1, &GUSRam[dmaaddr]);
-	}
-	/* Raise the TC irq if needed */
-	if ((myGUS.DMAControl & 0x20) != 0) {
-		myGUS.IRQStatus |= 0x80;
-		GUS_CheckIRQ();
-	}
-	chan->Register_Callback(0);
-}
-
-static bool SoftLimit(float (&in)[GUS_BUFFER_FRAMES][2],
-                      int16_t (&out)[GUS_BUFFER_FRAMES][2],
-                      uint16_t len)
-{
-	constexpr float max_allowed = static_cast<float>(
-	        std::numeric_limits<int16_t>::max() - 1);
-
-	// If our peaks are under the max, then there's no need to limit
-	if (myGUS.peak_amplitude.left < max_allowed &&
-	    myGUS.peak_amplitude.right < max_allowed)
-		return false;
-
-	// Calculate the percent we need to scale down the volume.  In cases
-	// where one side is less than the max, it's ratio is limited to 1.0.
-	const Frame ratio = {std::min(1.0f, max_allowed / myGUS.peak_amplitude.left),
-	                     std::min(1.0f, max_allowed / myGUS.peak_amplitude.right)};
-	for (uint8_t i = 0; i < len; ++i) {
-		out[i][0] = static_cast<int16_t>(in[i][0] * ratio.left);
-		out[i][1] = static_cast<int16_t>(in[i][1] * ratio.right);
-	}
-
-	// Release the limit incrementally using our existing volume scale.
-	constexpr float release_amount =
-	        max_allowed * (static_cast<float>(GUS_VOLUME_SCALE_DIV) - 1.0f);
-
-	if (myGUS.peak_amplitude.left > max_allowed)
-		myGUS.peak_amplitude.left -= release_amount;
-	if (myGUS.peak_amplitude.right > max_allowed)
-		myGUS.peak_amplitude.right -= release_amount;
-	// LOG_MSG("GUS: releasing myGUS.peak_amplitude = %.2f | %.2f",
-	//         static_cast<double>(myGUS.peak_amplitude.left),
-	//         static_cast<double>(myGUS.peak_amplitude.right));
-	return true;
-}
-
-static void GUS_CallBack(uint16_t len)
-{
-	assert(len <= GUS_BUFFER_FRAMES);
-
-	float accumulator[GUS_BUFFER_FRAMES][2] = {{0}};
-	for (uint8_t i = 0; i < myGUS.ActiveChannels; ++i)
-		guschan[i]->generateSamples(*accumulator, myGUS.peak_amplitude, len);
-
-	int16_t scaled[GUS_BUFFER_FRAMES][2];
-	if (!SoftLimit(accumulator, scaled, len))
-		for (uint8_t i = 0; i < len; ++i)
-			for (uint8_t j = 0; j < 2; ++j)
-				scaled[i][j] = static_cast<int16_t>(
-				        accumulator[i][j]);
-
-	gus_chan->AddSamples_s16(len, scaled[0]);
-	CheckVoiceIrq();
-}
-
-// Generate logarithmic to linear volume conversion tables
-static void PopulateVolScalars()
-{
-	double out = 1.0;
-	for (uint16_t i = GUS_VOLUME_POSITIONS - 1; i > 0; --i) {
-		vol_scalars.at(i) = static_cast<float>(out);
-		out /= GUS_VOLUME_SCALE_DIV;
-	}
-	vol_scalars[0] = 0.0f;
-}
-
-/*
-Constant-Power Panning
--------------------------
-The GUS SDK describes having 16 panning positions (0 through 15)
-with 0 representing all full left rotation through to center or
-mid-point at 7, to full-right rotation at 15.  The SDK also
-describes that output power is held constant through this range.
-
-	#!/usr/bin/env python3
-	import math
-	print(f'Left-scalar  Pot Norm.   Right-scalar | Power')
-	print(f'-----------  --- -----   ------------ | -----')
-	for pot in range(16):
-		norm = (pot - 7.) / (7.0 if pot < 7 else 8.0)
-		direction = math.pi * (norm + 1.0 ) / 4.0
-		lscale = math.cos(direction)
-		rscale = math.sin(direction)
-		power = lscale * lscale + rscale * rscale
-		print(f'{lscale:.5f} <~~~ {pot:2} ({norm:6.3f})'\
-				f' ~~~> {rscale:.5f} | {power:.3f}')
-
-	Left-scalar  Pot Norm.   Right-scalar | Power
-	-----------  --- -----   ------------ | -----
-	1.00000 <~~~  0 (-1.000) ~~~> 0.00000 | 1.000
-	0.99371 <~~~  1 (-0.857) ~~~> 0.11196 | 1.000
-	0.97493 <~~~  2 (-0.714) ~~~> 0.22252 | 1.000
-	0.94388 <~~~  3 (-0.571) ~~~> 0.33028 | 1.000
-	0.90097 <~~~  4 (-0.429) ~~~> 0.43388 | 1.000
-	0.84672 <~~~  5 (-0.286) ~~~> 0.53203 | 1.000
-	0.78183 <~~~  6 (-0.143) ~~~> 0.62349 | 1.000
-	0.70711 <~~~  7 ( 0.000) ~~~> 0.70711 | 1.000
-	0.63439 <~~~  8 ( 0.125) ~~~> 0.77301 | 1.000
-	0.55557 <~~~  9 ( 0.250) ~~~> 0.83147 | 1.000
-	0.47140 <~~~ 10 ( 0.375) ~~~> 0.88192 | 1.000
-	0.38268 <~~~ 11 ( 0.500) ~~~> 0.92388 | 1.000
-	0.29028 <~~~ 12 ( 0.625) ~~~> 0.95694 | 1.000
-	0.19509 <~~~ 13 ( 0.750) ~~~> 0.98079 | 1.000
-	0.09802 <~~~ 14 ( 0.875) ~~~> 0.99518 | 1.000
-	0.00000 <~~~ 15 ( 1.000) ~~~> 1.00000 | 1.000
-*/
-static void PopulatePanScalars()
-{
-	for (uint8_t pos = 0u; pos < GUS_PAN_POSITIONS; ++pos) {
-		// Normalize absolute range [0, 15] to [-1.0, 1.0]
-		const double norm = (pos - 7.0f) / (pos < 7u ? 7 : 8);
-		// Convert to an angle between 0 and 90-degree, in radians
-		const double angle = (norm + 1) * M_PI / 4;
-		pan_scalars.at(pos).left = static_cast<float>(cos(angle));
-		pan_scalars.at(pos).right = static_cast<float>(sin(angle));
-		// DEBUG_LOG_MSG("GUS: pan_scalar[%u] = %f | %f", pos,
-		// pan_scalars.at(pos).left, pan_scalars.at(pos).right);
-	}
-}
-
-class GUS : public Module_base {
-private:
-	IO_ReadHandleObject ReadHandler[8];
-	IO_WriteHandleObject WriteHandler[9];
-	AutoexecObject autoexecline[2];
-	MixerObject MixerChan = {};
-
-public:
-	GUS(Section *configuration) : Module_base(configuration)
-	{
-		if (!IS_EGAVGA_ARCH)
-			return;
-		Section_prop *section = static_cast<Section_prop *>(configuration);
-		if (!section->Get_bool("gus"))
-			return;
-		myGUS.portbase = section->Get_hex("gusbase") - 0x200;
-		int dma_val = section->Get_int("gusdma");
-		if ((dma_val < 0) || (dma_val > 255))
-			dma_val = 3; // sensible default
-		int irq_val = section->Get_int("gusirq");
-		if ((irq_val < 0) || (irq_val > 255))
-			irq_val = 5; // sensible default
-		myGUS.dma1 = static_cast<uint8_t>(dma_val);
-		myGUS.dma2 = static_cast<uint8_t>(dma_val);
-		myGUS.irq1 = static_cast<uint8_t>(irq_val);
-		myGUS.irq2 = static_cast<uint8_t>(irq_val);
-
-		// We'll leave the MIDI interface to the MPU-401
-		// Ditto for the Joystick
-		// GF1 Synthesizer
-		ReadHandler[0].Install(0x302 + GUS_BASE, read_gus, IO_MB);
-		WriteHandler[0].Install(0x302 + GUS_BASE, write_gus, IO_MB);
-
-		WriteHandler[1].Install(0x303 + GUS_BASE, write_gus, IO_MB);
-		ReadHandler[1].Install(0x303 + GUS_BASE, read_gus, IO_MB);
-
-		WriteHandler[2].Install(0x304 + GUS_BASE, write_gus, IO_MB | IO_MW);
-		ReadHandler[2].Install(0x304 + GUS_BASE, read_gus, IO_MB | IO_MW);
-
-		WriteHandler[3].Install(0x305 + GUS_BASE, write_gus, IO_MB);
-		ReadHandler[3].Install(0x305 + GUS_BASE, read_gus, IO_MB);
-
-		ReadHandler[4].Install(0x206 + GUS_BASE, read_gus, IO_MB);
-
-		WriteHandler[4].Install(0x208 + GUS_BASE, write_gus, IO_MB);
-		ReadHandler[5].Install(0x208 + GUS_BASE, read_gus, IO_MB);
-
-		WriteHandler[5].Install(0x209 + GUS_BASE, write_gus, IO_MB);
-
-		WriteHandler[6].Install(0x307 + GUS_BASE, write_gus, IO_MB);
-		ReadHandler[6].Install(0x307 + GUS_BASE, read_gus, IO_MB);
-
-		// Board Only
-
-		WriteHandler[7].Install(0x200 + GUS_BASE, write_gus, IO_MB);
-		ReadHandler[7].Install(0x20A + GUS_BASE, read_gus, IO_MB);
-		WriteHandler[8].Install(0x20B + GUS_BASE, write_gus, IO_MB);
-
-		//	DmaChannels[myGUS.dma1]->Register_TC_Callback(GUS_DMA_TC_Callback);
-
-		PopulateVolScalars();
-		PopulatePanScalars();
-
-		for (uint8_t chan_ct = 0; chan_ct < guschan.size(); chan_ct++) {
-			guschan[chan_ct] = new GUSChannels(chan_ct);
+		return;
+	case 0x10: // Undocumented register used in Fast Tracker 2
+		return;
+	case 0x41: // Dma control register
+		dma_ctrl = static_cast<uint8_t>(register_data >> 8);
+		{
+			auto dma_callback = std::bind(&Gus::DmaCallback, this,
+			                              _1, _2);
+			auto empty_callback =
+			        std::function<void(DmaChannel *, DMAEvent)>(nullptr);
+			GetDMAChannel(dma1)->Register_Callback(
+			        (dma_ctrl & 0x1) ? dma_callback : empty_callback);
 		}
-		// Register the Mixer CallBack
-		gus_chan = MixerChan.Install(GUS_CallBack, 0, "GUS");
-		myGUS.gRegData = 0x1;
-		GUSReset();
-		myGUS.gRegData = 0x0;
-		const Bitu portat = 0x200 + GUS_BASE;
-
-		// ULTRASND=Port,DMA1,DMA2,IRQ1,IRQ2
-		// [GUS port], [GUS DMA (recording)], [GUS DMA (playback)], [GUS
-		// IRQ (playback)], [GUS IRQ (MIDI)]
-		std::ostringstream temp;
-		temp << "SET ULTRASND=" << std::hex << std::setw(3) << portat << ","
-		     << std::dec << (Bitu)myGUS.dma1 << "," << (Bitu)myGUS.dma2 << ","
-		     << (Bitu)myGUS.irq1 << "," << (Bitu)myGUS.irq2 << std::ends;
-		// Create autoexec.bat lines
-		autoexecline[0].Install(temp.str());
-		autoexecline[1].Install(std::string("SET ULTRADIR=") +
-		                        section->Get_string("ultradir"));
+		return;
+	case 0x42: // Gravis DRAM DMA address register
+		dma_addr = register_data;
+		return;
+	case 0x43: // MSB Peek/poke DRAM position
+		dram_addr = (0xff0000 & dram_addr) |
+		            (static_cast<uint32_t>(register_data));
+		return;
+	case 0x44: // LSW Peek/poke DRAM position
+		dram_addr = (0xffff & dram_addr) |
+		            (static_cast<uint32_t>(register_data >> 8)) << 16;
+		return;
+	case 0x45: // Timer control register.  Identical in operation to Adlib's
+	           // timer
+		timer_ctrl = static_cast<uint8_t>(register_data >> 8);
+		timers[0].should_raise_irq = (timer_ctrl & 0x04) > 0;
+		if (!timers[0].should_raise_irq)
+			irq_status &= ~0x04;
+		timers[1].should_raise_irq = (timer_ctrl & 0x08) > 0;
+		if (!timers[1].should_raise_irq)
+			irq_status &= ~0x08;
+		return;
+	case 0x46: // Timer 1 control
+		timers[0].value = static_cast<uint8_t>(register_data >> 8);
+		timers[0].delay = (0x100 - timers[0].value) * 0.080f;
+		return;
+	case 0x47: // Timer 2 control
+		timers[1].value = static_cast<uint8_t>(register_data >> 8);
+		timers[1].delay = (0x100 - timers[1].value) * 0.320f;
+		return;
+	case 0x49: // DMA sampling control register
+		sample_ctrl = static_cast<uint8_t>(register_data >> 8);
+		{
+			auto dma_callback = std::bind(&Gus::DmaCallback, this, _1, _2);
+			std::function<void(DmaChannel *, DMAEvent)> empty_callback = nullptr;
+			GetDMAChannel(dma1)->Register_Callback(
+			        (sample_ctrl & 0x1) ? dma_callback : empty_callback);
+		}
+		return;
+	case 0x4c: // GUS reset register
+		Reset();
+		return;
 	}
 
-	~GUS()
-	{
-		if (!IS_EGAVGA_ARCH)
-			return;
-		Section_prop *section = static_cast<Section_prop *>(m_configuration);
-		if (!section->Get_bool("gus"))
-			return;
+	if (!current_voice)
+		return;
 
-		myGUS.gRegData = 0x1;
-		GUSReset();
-		myGUS.gRegData=0x0;
-	
-		for (auto voice : guschan)
-			delete voice;
+	uint32_t tmp_addr;
+
+	// Registers that write to the current voice
+	switch (selected_register) {
+	case 0x0: // Voice wave control register
+		current_voice->WriteWaveCtrl(register_data >> 8);
+		break;
+	case 0x1: // Voice frequency control register
+		current_voice->WriteWaveFreq(register_data);
+		break;
+	case 0x2: // Voice MSW start address register
+		tmp_addr = static_cast<uint32_t>((register_data & 0x1fff) << 16);
+		current_voice->wave_start = (current_voice->wave_start & WAVE_MSWMASK) |
+		                            tmp_addr;
+		break;
+	case 0x3: // Voice LSW start address register
+		tmp_addr = static_cast<uint32_t>(register_data);
+		current_voice->wave_start = (current_voice->wave_start & WAVE_LSWMASK) |
+		                            tmp_addr;
+		break;
+	case 0x4: // Voice MSW end address register
+		tmp_addr = static_cast<uint32_t>(register_data & 0x1fff) << 16;
+		current_voice->wave_end = (current_voice->wave_end & WAVE_MSWMASK) |
+		                          tmp_addr;
+		break;
+	case 0x5: // Voice MSW end address register
+		tmp_addr = static_cast<uint32_t>(register_data);
+		current_voice->wave_end = (current_voice->wave_end & WAVE_LSWMASK) |
+		                          tmp_addr;
+		break;
+	case 0x6: // Voice volume rate register
+		current_voice->WriteVolRate(register_data >> 8);
+		break;
+	case 0x7: // Voice volume start register  EEEEMMMM
+		current_voice->vol_index_start = (register_data >> 8) << 4;
+		break;
+	case 0x8: // Voice volume end register  EEEEMMMM
+		current_voice->vol_index_end = (register_data >> 8) << 4;
+		break;
+	case 0x9: // Voice current volume register
+		current_voice->vol_index_current = register_data >> 4;
+		break;
+	case 0xA: // Voice MSW current address register
+		tmp_addr = static_cast<uint32_t>(register_data & 0x1fff) << 16;
+		current_voice->wave_addr = (current_voice->wave_addr & WAVE_MSWMASK) |
+		                           tmp_addr;
+		break;
+	case 0xB: // Voice LSW current address register
+		tmp_addr = static_cast<uint32_t>(register_data);
+		current_voice->wave_addr = (current_voice->wave_addr & WAVE_LSWMASK) |
+		                           tmp_addr;
+		break;
+	case 0xC: // Voice pan pot register
+		current_voice->WritePanPot(register_data >> 8);
+		break;
+	case 0xD: // Voice volume control register
+		current_voice->WriteVolCtrl(register_data >> 8);
+		break;
 	}
-};
 
-static GUS *test;
+#if LOG_GUS
+	LOG_MSG("Unimplemented write register %x -- %x", register_select,
+	        register_data);
+#endif
+	return;
+}
 
 void GUS_ShutDown(Section * /*sec*/)
 {
-	delete test;
+	delete myGUS;
+	myGUS = nullptr;
 }
 
 void GUS_Init(Section *sec)
 {
-	test = new GUS(sec);
+	if (!IS_EGAVGA_ARCH)
+		return;
+	Section_prop *conf = dynamic_cast<Section_prop *>(sec);
+
+	// Is the GUS disabled?
+	if (!conf || !conf->Get_bool("gus"))
+		return;
+
+	const uint16_t port = conf->Get_hex("gusbase");
+	const uint8_t dma = clamp(conf->Get_int("gusdma"), 1, 255);
+	const uint8_t irq = clamp(conf->Get_int("gusirq"), 1, 255);
+	const std::string ultradir = conf->Get_string("ultradir");
+
+	myGUS = new Gus(port, dma, irq, ultradir);
 	sec->AddDestroyFunction(&GUS_ShutDown, true);
 }
