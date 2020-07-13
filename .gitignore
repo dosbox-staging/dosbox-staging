@@ -66,6 +66,7 @@ missed.txt
 
 # Visual Studio
 .vs
+.vscode
 
 # Common editor temp/backup files
 *~
