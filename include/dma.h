@@ -20,15 +20,16 @@
 #ifndef DOSBOX_DMA_H
 #define DOSBOX_DMA_H
 
+#include <functional>
+
 enum DMAEvent {
 	DMA_REACHED_TC,
 	DMA_MASKED,
 	DMA_UNMASKED,
-//	DMA_TRANSFEREND, this shouldn't really be a ignal
 };
 
 class DmaChannel;
-typedef void (* DMA_CallBack)(DmaChannel * chan,DMAEvent event);
+using DMA_CallBack = std::function<void(DmaChannel *chan, DMAEvent event)>;
 
 class DmaChannel {
 public:
@@ -50,7 +51,8 @@ public:
 
 	DmaChannel(Bit8u num, bool dma16);
 	void DoCallBack(DMAEvent event) {
-		if (callback)	(*callback)(this,event);
+		if (callback)
+			callback(this, event);
 	}
 	void SetMask(bool _mask) {
 		masked=_mask;
