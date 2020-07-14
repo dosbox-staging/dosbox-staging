@@ -89,4 +89,9 @@ public:
 	Verbosity GetStartupVerbosity() const;
 };
 
+// TODO
+#if 0
+std::string CONFIG_GetConfString(const char *section, const char *prop);
+#endif
+
 #endif

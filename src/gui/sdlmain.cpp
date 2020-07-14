@@ -356,7 +356,9 @@ struct SDL_Block {
 static SDL_Block sdl;
 
 static SDL_Rect CalculateViewport(int win_width, int win_height);
+static SDL_Rect CalculatePixelPerfectViewport(int win_width, int win_height);
 static void CleanupSDLResources();
+static Dimensions GetAvailableArea(int width, int height);
 static void HandleVideoResize(int width, int height);
 
 static constexpr char version_msg[] = R"(dosbox (dosbox-staging), version %s
@@ -620,6 +622,8 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  bool fullscreen,
                                  bool resizable)
 {
+	DEBUG_LOG_MSG(":: SetWindowMode %d %d %d %d %d", screen_type, width,
+	              height, fullscreen, resizable);
 	static SCREEN_TYPES last_type = SCREEN_SURFACE;
 
 	CleanupSDLResources();
@@ -731,8 +735,39 @@ SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height)
 	return rect;
 }
 
+static void SetupPixelPerfectWindow(SCREEN_TYPES screen_type, bool resizable)
+{
+	const int imgw = sdl.ppscale_x * sdl.draw.width;
+	const int imgh = sdl.ppscale_y * sdl.draw.height;
+
+	int wndw, wndh;
+	if (sdl.desktop.fullscreen) {
+		const Dimensions available = GetAvailableArea(sdl.draw.width,
+		                                              sdl.draw.height);
+
+		wndw = available.width;
+		wndh = available.height;
+	} else {
+		wndh = imgh;
+		wndw = imgw;
+	}
+
+	sdl.clip.w = imgw;
+	sdl.clip.h = imgh;
+	sdl.clip.x = (wndw - imgw) / 2;
+	sdl.clip.y = (wndh - imgh) / 2;
+
+	sdl.window = SetWindowMode(screen_type, wndw, wndh,
+	                           sdl.desktop.fullscreen, resizable);
+}
+
 static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 {
+	if (sdl.scaling_mode == SmPerfect) {
+		SetupPixelPerfectWindow(screen_type, resizable);
+		return sdl.window;
+	}
+
 	Bit16u fixedWidth;
 	Bit16u fixedHeight;
 
@@ -872,15 +907,19 @@ static Dimensions GetAvailableArea(int width, int height)
 		if (sdl.desktop.full.fixed)
 			return {sdl.desktop.full.width, sdl.desktop.full.height};
 	} else {
+		//DEBUG_LOG_MSG("::: getavailablearea not fullscreen %d %d", sdl.desktop.window.width, sdl.desktop.window.height);
 		if (sdl.desktop.window.width > 0 && sdl.desktop.window.height > 0)
 			return {sdl.desktop.window.width, sdl.desktop.window.height};
 	}
+
 
 	const double par = sdl.draw.pixel_aspect;
 	if (par > 1.0)
 		height = iround(height * par);
 	if (par < 1.0)
 		width = iround(width / par);
+
+	DEBUG_LOG_MSG("::: getavailablearea; %f %d %d", par, width, height);
 
 	return {width, height};
 }
@@ -901,6 +940,8 @@ static Dimensions GetAvailableArea(int width, int height)
 /* Initialise pixel-perfect mode: */
 static bool InitPp(Bit16u avw, Bit16u avh)
 {
+	DEBUG_LOG_MSG(":: InitPp");
+
 	bool   ok;
 	/* TODO: consider reading apsect importance from the .ini-file */
 	ok = pp_getscale(
@@ -1036,36 +1077,12 @@ dosurface:
 		break; // SCREEN_SURFACE
 
 	case SCREEN_TEXTURE: {
-		/* TODO: set up all ScalingMode-related settings here. Currently, the */
-		/*       interpolation hint is set at the reading of settings.    */
-		if (sdl.scaling_mode != SmPerfect) {
-			if (!SetupWindowScaled(SCREEN_TEXTURE, false)) {
-				LOG_MSG("SDL: Can't set video mode, falling "
-				        "back to surface");
-				goto dosurface;
-			}
-		} else {
-			const int imgw = sdl.ppscale_x * sdl.draw.width;
-			const int imgh = sdl.ppscale_y * sdl.draw.height;
-
-			int wndw, wndh;
-			if (sdl.desktop.fullscreen) {
-				wndw = available.width;
-				wndh = available.height;
-			} else {
-				wndh = imgh;
-				wndw = imgw;
-			}
-
-			sdl.clip.w = imgw;
-			sdl.clip.h = imgh;
-			sdl.clip.x = (wndw - imgw) / 2;
-			sdl.clip.y = (wndh - imgh) / 2;
-
-			sdl.window = SetWindowMode(SCREEN_TEXTURE, wndw, wndh,
-			                           sdl.desktop.fullscreen,
-			                           FIXED_SIZE);
+		if (!SetupWindowScaled(SCREEN_TEXTURE, false)) {
+			LOG_MSG("SDL: Can't set video mode, falling back to "
+			        "surface");
+			goto dosurface;
 		}
+
 		if (sdl.render_driver != "auto")
 			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.render_driver.c_str());
 		sdl.renderer = SDL_CreateRenderer(sdl.window, -1,
@@ -1148,10 +1165,11 @@ dosurface:
 			goto dosurface;
 		}
 		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
-		if (sdl.opengl.context == NULL) {
-			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
-			goto dosurface;
+		if (sdl.opengl.context == nullptr) {
+			LOG_MSG("SDL: %s", SDL_GetError());
+			E_Exit("Can't create OpenGL context");
 		}
+
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
 
@@ -1263,15 +1281,19 @@ dosurface:
 		    sdl.desktop.fullscreen &&
 		    !sdl.desktop.full.fixed &&
 		    (sdl.clip.w != windowWidth || sdl.clip.h != windowHeight)) {
+			DEBUG_LOG_MSG("::: 1");
 			// LOG_MSG("attempting to fix the centering to %d %d %d %d",(windowWidth-sdl.clip.w)/2,(windowHeight-sdl.clip.h)/2,sdl.clip.w,sdl.clip.h);
 			glViewport((windowWidth - sdl.clip.w) / 2,
 			           (windowHeight - sdl.clip.h) / 2,
 			           sdl.clip.w,
 			           sdl.clip.h);
 		} else if (sdl.desktop.window.resizable) {
-			sdl.clip = CalculateViewport(windowWidth, windowHeight);
+			DEBUG_LOG_MSG("::: 2");
+			//sdl.clip = CalculateViewport(windowWidth, windowHeight);
+			sdl.clip = CalculatePixelPerfectViewport(windowWidth, windowHeight); // <- this was it!
 			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		} else {
+			DEBUG_LOG_MSG("::: 3");
 			/* We don't just pass sdl.clip.y as-is, so we cover the case of non-vertical
 			 * centering on Android (in order to leave room for the on-screen keyboard)
 			 */
@@ -1936,6 +1958,8 @@ static bool DetectResizableWindow()
 	assert(rs);
 	const std::string sname = rs->GetPropValue("glshader");
 
+	//const std::string sname = CONFIG_GetConfString("render", "glshader");
+
 	if (sname != "sharp" && sname != "none") {
 		LOG_MSG("MAIN: Disabling resizable window, because it's not "
 		        "compatible with selected render.glshader\n"
@@ -2001,6 +2025,9 @@ static void SetupWindowResolution(const char *val)
 	sdl.desktop.window.use_original_size = true;
 }
 
+// TODO rename to CalculateFitViewport
+// (because it's either fit width or fit height)
+//
 static SDL_Rect CalculateViewport(int win_width, int win_height)
 {
 	assert(sdl.draw.width > 0);
@@ -2029,6 +2056,27 @@ static SDL_Rect CalculateViewport(int win_width, int win_height)
 		const int x = (win_width - w) / 2;
 		return {x, 0, w, h};
 	}
+}
+
+// FIXME this was duplicated from SetupPixelPerfectWindow
+// remove this duplication
+//
+// FIXME implement switched between CalculateFitViewport and this
+//
+static SDL_Rect CalculatePixelPerfectViewport(int win_width, int win_height)
+{
+	DEBUG_LOG_MSG(":: calcpixelperfectviewport %d %d", win_width, win_height);
+	InitPp(win_width, win_height); // updates sdl.ppscale_{x,y}
+
+	const int imgw = sdl.ppscale_x * sdl.draw.width;
+	const int imgh = sdl.ppscale_y * sdl.draw.height;
+
+	const int w = imgw;
+	const int h = imgh;
+	const int x = (win_width - imgw) / 2;
+	const int y = (win_height - imgh) / 2;
+
+	return {x, y, w, h};
 }
 
 //extern void UI_Run(bool);
@@ -2362,6 +2410,8 @@ bool GFX_IsFullscreen(void) {
 
 static void HandleVideoResize(int width, int height)
 {
+	DEBUG_LOG_MSG(":: handle video resize %d %d", width, height);
+
 	/* Maybe a screen rotation has just occurred, so we simply resize.
 	There may be a different cause for a forced resized, though.    */
 	if (sdl.desktop.full.display_res && sdl.desktop.fullscreen) {
@@ -2374,7 +2424,8 @@ static void HandleVideoResize(int width, int height)
 
 #if C_OPENGL
 	if (sdl.desktop.window.resizable && sdl.desktop.type == SCREEN_OPENGL) {
-		sdl.clip = CalculateViewport(width, height);
+		//sdl.clip = CalculateViewport(width, height);
+		sdl.clip = CalculatePixelPerfectViewport(width, height);
 		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		return;
 	}

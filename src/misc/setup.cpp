@@ -1301,3 +1301,15 @@ void CommandLine::Shift(unsigned int amount) {
 		if(cmds.size()) cmds.erase(cmds.begin());
 	}
 }
+
+std::string CONFIG_GetConfString(const char *sec, const char *prop)
+{
+	assert(control);
+	const Section *section = control->GetSection(sec);
+	assert(section);
+	std::string value = section->GetPropValue(prop);
+	// find '#' and remove
+	// trim
+	// return
+
+}
