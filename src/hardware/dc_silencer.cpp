@@ -55,7 +55,7 @@ bool DCSilencer::Generate(const int16_t dc_offset, const size_t samples, int16_t
 	while (vol_pos > 0 && i < samples) {
 		vol_pos -= vol_dt; // keep turning down the volume ..
 		rad_pos += rad_dt; // keep walking around our circle ..
-		const float sample = dc_offset * coarse_cos(rad_pos) * vol_pos;
+		const float sample = dc_offset * cosf(rad_pos) * vol_pos;
 		buffer[i++] = static_cast<int16_t>(sample);
 	}
 	// only consider the job done when we haven't generated any samples.
