@@ -15,8 +15,8 @@ cflags_debug+=("${cflags[@]}" -g -fstack-protector -fno-omit-frame-pointer)
 # Note: associative-math is needed for vectorization of floating point
 #       calculations, which also relies on no-signed-zeros and
 #       no-trapping-math.
-cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -fstrict-aliasing
-                 -fno-signed-zeros -fno-trapping-math -fassociative-math
+cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -fstrict-aliasing -fno-signed-zeros
+                 -fno-trapping-math -fassociative-math -freciprocal-math
                  -frename-registers -ffunction-sections -fdata-sections)
 
 cflags_warnmore+=("${cflags_debug[@]}" -pedantic -Wcast-align -Wdouble-promotion
