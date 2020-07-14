@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <cassert>
 #include <new>
 
 #include "mem_unaligned.h"
@@ -149,8 +150,14 @@ public:
 		return map;
 	}
 
-	// the following functions will clean all cache blocks that are invalid now due to the write
-	void writeb(PhysPt addr,Bitu val){
+	// the following functions will clean all cache blocks that are invalid
+	// now due to the write
+
+	void writeb(PhysPt addr, Bitu val)
+	{
+		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
+		assert(old_pagehandler->flags & PFLAG_READABLE);
+
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return;
 		host_writeb(hostmem+addr,val);
@@ -166,7 +173,12 @@ public:
 		invalidation_map[addr]++;
 		InvalidateRange(addr,addr);
 	}
-	void writew(PhysPt addr,Bitu val){
+
+	void writew(PhysPt addr, Bitu val)
+	{
+		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
+		assert(old_pagehandler->flags & PFLAG_READABLE);
+
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return;
 		host_writew(hostmem+addr,val);
@@ -182,7 +194,12 @@ public:
 		host_addw(&invalidation_map[addr], 0x0101);
 		InvalidateRange(addr,addr+1);
 	}
-	void writed(PhysPt addr,Bitu val){
+
+	void writed(PhysPt addr, Bitu val)
+	{
+		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
+		assert(old_pagehandler->flags & PFLAG_READABLE);
+
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return;
 		host_writed(hostmem+addr,val);
@@ -198,7 +215,12 @@ public:
 		host_addd(&invalidation_map[addr], 0x01010101);
 		InvalidateRange(addr,addr+3);
 	}
-	bool writeb_checked(PhysPt addr,Bitu val) {
+
+	bool writeb_checked(PhysPt addr, Bitu val)
+	{
+		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
+		assert(old_pagehandler->flags & PFLAG_READABLE);
+
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return false;
 		// see if there's code where we are writing to
@@ -221,7 +243,12 @@ public:
 		host_writeb(hostmem+addr,val);
 		return false;
 	}
-	bool writew_checked(PhysPt addr,Bitu val) {
+
+	bool writew_checked(PhysPt addr, Bitu val)
+	{
+		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
+		assert(old_pagehandler->flags & PFLAG_READABLE);
+
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return false;
 		// see if there's code where we are writing to
@@ -244,7 +271,12 @@ public:
 		host_writew(hostmem+addr,val);
 		return false;
 	}
-	bool writed_checked(PhysPt addr,Bitu val) {
+
+	bool writed_checked(PhysPt addr, Bitu val)
+	{
+		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
+		assert(old_pagehandler->flags & PFLAG_READABLE);
+
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return false;
 		// see if there's code where we are writing to
