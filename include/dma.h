@@ -16,9 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef DOSBOX_DMA_H
 #define DOSBOX_DMA_H
+
+#include "dosbox.h"
+
+#include <cassert>
 
 enum DMAEvent {
 	DMA_REACHED_TC,
@@ -82,24 +85,29 @@ public:
 
 class DmaController {
 private:
-	Bit8u ctrlnum;
 	bool flipflop;
 	DmaChannel *DmaChannels[4];
 public:
 	IO_ReadHandleObject DMA_ReadHandler[0x12];
 	IO_WriteHandleObject DMA_WriteHandler[0x12];
-	DmaController(Bit8u num) {
-		flipflop = false;
-		ctrlnum = num;		/* first or second DMA controller */
-		for(Bit8u i=0;i<4;i++) {
-			DmaChannels[i] = new DmaChannel(i+ctrlnum*4,ctrlnum==1);
-		}
+
+	DmaController(uint8_t num) : flipflop(false)
+	{
+		assert(num == 0 || num == 1); // first or second DMA controller
+
+		for (uint8_t i = 0; i < 4; ++i)
+			DmaChannels[i] = new DmaChannel(i + num * 4, num == 1);
 	}
-	~DmaController(void) {
-		for(Bit8u i=0;i<4;i++) {
-			delete DmaChannels[i];
-		}
+
+	DmaController(const DmaController &) = delete; // prevent copy
+	DmaController &operator=(const DmaController &) = delete; // prevent assignment
+
+	~DmaController()
+	{
+		for (auto *dma_channel : DmaChannels)
+			delete dma_channel;
 	}
+
 	DmaChannel * GetChannel(Bit8u chan) {
 		if (chan<4) return DmaChannels[chan];
 		else return NULL;
