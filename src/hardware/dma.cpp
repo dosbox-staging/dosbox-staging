@@ -346,15 +346,17 @@ again:
 	return done;
 }
 
-class DMA:public Module_base{
+class DMA : public Module_base {
 public:
-	DMA(Section* configuration):Module_base(configuration){
-		Bitu i;
+	DMA(Section *configuration) : Module_base(configuration)
+	{
 		DmaControllers[0] = new DmaController(0);
-		if (IS_EGAVGA_ARCH) DmaControllers[1] = new DmaController(1);
-		else DmaControllers[1] = NULL;
-	
-		for (i=0;i<0x10;i++) {
+		if (IS_EGAVGA_ARCH)
+			DmaControllers[1] = new DmaController(1);
+		else
+			DmaControllers[1] = nullptr;
+
+		for (Bitu i = 0; i < 0x10; i++) {
 			Bitu mask=IO_MB;
 			if (i<8) mask|=IO_MW;
 			/* install handler for first DMA controller ports */
