@@ -250,16 +250,22 @@ public:
 	virtual bool CheckValue(Value const& in, bool warn);
 	~Prop_string(){ }
 };
-class Prop_path:public Prop_string{
+
+class Prop_path : public Prop_string {
 public:
-	std::string realpath;
-	Prop_path(std::string const& _propname, Changeable::Value when, char const * const _value)
-		:Prop_string(_propname,when,_value) {
-		default_value = value = _value;
-		realpath = _value;
+	Prop_path(const std::string &name, Changeable::Value when, const char *val)
+	        : Prop_string(name, when, val),
+	          realpath(val)
+	{
+		default_value = val;
+		value = val;
 	}
-	bool SetValue(std::string const& in);
-	~Prop_path(){ }
+
+	~Prop_path() override = default;
+
+	bool SetValue(const std::string &in) override;
+
+	std::string realpath;
 };
 
 class Prop_hex:public Property {
