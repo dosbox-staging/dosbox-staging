@@ -11,7 +11,7 @@ fi
 TYPES+=(release debug warnmore pgotrain optinfo msan usan)
 
 cflags_debug+=("${cflags[@]}" -g -fno-omit-frame-pointer)
-cxxonly_debug+=("${cxxonly[@]}" -Weffc++)
+cxxonly_debug+=("${cxxonly[@]}" -Weffc++ -Wextra-semi)
 
 # Note: no-math-errno improves optimization of C/C++ math functions
 cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -fno-math-errno
