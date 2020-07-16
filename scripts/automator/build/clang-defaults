@@ -10,15 +10,17 @@ fi
 # Release-type additions
 TYPES+=(release debug warnmore pgotrain optinfo msan usan)
 
+cflags_debug+=("${cflags[@]}" -g -fno-omit-frame-pointer)
+cxxonly_debug+=("${cxxonly[@]}" -Weffc++)
+
 # Note: no-math-errno improves optimization of C/C++ math functions
 cflags_release+=("${cflags[@]}" -DNDEBUG -O3 -fno-math-errno
                  -fno-strict-aliasing)
-cflags_debug+=("${cflags[@]}" -g -fno-omit-frame-pointer)
 
 cflags_warnmore+=("${cflags_debug[@]}" -Wextra -Wshadow -Wcast-align -Wunused
                   -Woverloaded-virtual -Wpedantic -Wconversion -Wsign-conversion
                   -Wdouble-promotion -Wformat=2 -fstrict-aliasing -Wstrict-aliasing=2)
-cxxonly_warnmore+=(-Wnon-virtual-dtor -Woverloaded-virtual)
+cxxonly_warnmore+=("${cxxonly_debug[@]}" -Wnon-virtual-dtor -Woverloaded-virtual)
 
 cflags_pgotrain+=("${cflags_debug[@]}" -fprofile-instr-generate
                   -fcoverage-mapping)
