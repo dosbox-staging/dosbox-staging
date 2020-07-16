@@ -158,13 +158,13 @@ public:
 	
 	struct Timer {
 		float delay = 0.0f;
-		uint8_t value = 0u;
+		uint8_t value = 0xff;
 		bool is_masked = false;
 		bool should_raise_irq = false;
 		bool has_expired = false;
 		bool is_counting_down = false;
 	};
-	Timer timers[2] = {};
+	Timer timers[2] = {{0.080f}, {0.320f}};
 
 private:
 	Gus() = delete;
@@ -223,7 +223,7 @@ private:
 	uint8_t selected_register = 0u;
 
 	// Control states
-	uint8_t mix_ctrl = 0u;
+	uint8_t mix_ctrl = 0x0b; // latches enabled, LINEs disabled
 	uint8_t sample_ctrl = 0u;
 	uint8_t timer_ctrl = 0u;
 	uint8_t dma_ctrl = 0u;
@@ -522,10 +522,8 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	PopulateVolScalars();
 	PopulatePanScalars();
 
-	// Reset the DSP
-	register_data = 0x1;
-	Reset();
-	register_data = 0x0;
+	// Reset the Adlib command
+	adlib_command_reg = 85;
 
 	PopulateAutoExec(port, ultradir);
 }
