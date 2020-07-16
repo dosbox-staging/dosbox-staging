@@ -56,10 +56,16 @@ public:
 	void Get_Geometry(Bit32u * getHeads, Bit32u *getCyl, Bit32u *getSect, Bit32u *getSectSize);
 	Bit8u GetBiosType(void);
 	Bit32u getSectSize(void);
+
 	imageDisk(FILE *imgFile, const char *imgName, Bit32u imgSizeK, bool isHardDisk);
 	imageDisk(const imageDisk&) = delete; // prevent copy
 	imageDisk& operator=(const imageDisk&) = delete; // prevent assignment
-	~imageDisk() { if(diskimg != NULL) { fclose(diskimg); }	};
+
+	virtual ~imageDisk()
+	{
+		if (diskimg != nullptr)
+			fclose(diskimg);
+	}
 
 	bool hardDrive;
 	bool active;
