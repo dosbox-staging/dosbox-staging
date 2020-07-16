@@ -240,15 +240,20 @@ public:
 	~Prop_bool(){ }
 };
 
-class Prop_string:public Property{
+class Prop_string : public Property {
 public:
-	Prop_string(std::string const& _propname, Changeable::Value when, char const * const _value)
-		:Property(_propname,when) {
-		default_value = value = _value;
+	Prop_string(const std::string &name, Changeable::Value when, const char *val)
+	        : Property(name, when)
+	{
+		default_value = val;
+		value = val;
 	}
-	bool SetValue(std::string const& in);
-	virtual bool CheckValue(Value const& in, bool warn);
-	~Prop_string(){ }
+
+	~Prop_string() override = default;
+
+	bool SetValue(const std::string &in) override;
+
+	bool CheckValue(const Value &in, bool warn) override;
 };
 
 class Prop_path : public Prop_string {
@@ -256,10 +261,7 @@ public:
 	Prop_path(const std::string &name, Changeable::Value when, const char *val)
 	        : Prop_string(name, when, val),
 	          realpath(val)
-	{
-		default_value = val;
-		value = val;
-	}
+	{}
 
 	~Prop_path() override = default;
 
