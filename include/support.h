@@ -191,4 +191,22 @@ constexpr float coarse_cos(float x)
 	constexpr auto half_pi = static_cast<float>(M_PI_2);
 	return coarse_sin(x + half_pi);
 }
+
+// Use ARRAY_LEN macro to safely calculate number of elements in a C-array.
+// This macro can be used in a constant expressions, even if array is a
+// non-static class member:
+//
+//   constexpr auto n = ARRAY_LEN(my_array);
+//
+template <typename T>
+constexpr size_t static_if_array_then_zero()
+{
+	static_assert(std::is_array<T>::value, "not an array type");
+	return 0;
+}
+
+#define ARRAY_LEN(arr)                                                         \
+	(static_if_array_then_zero<decltype(arr)>() +                          \
+	 (sizeof(arr) / sizeof(arr[0])));
+
 #endif
