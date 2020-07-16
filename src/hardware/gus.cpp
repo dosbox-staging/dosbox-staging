@@ -896,6 +896,10 @@ void Gus::Reset()
 		// Characterize playback before resettings
 		PrintStats();
 
+		// Shutdown the audio output before altering the DSP
+		if (audio_channel)
+			audio_channel->Enable(false);
+
 		// Reset
 		adlib_command_reg = 85;
 		irq_status = 0;
