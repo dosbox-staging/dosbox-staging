@@ -75,7 +75,8 @@ public:
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
 	virtual Bits UnMount(void);
-	const char* getBasedir() {return basedir;};
+	const char *GetBasedir() const { return basedir; }
+
 protected:
 	char basedir[CROSS_LEN];
 	struct {
@@ -335,7 +336,7 @@ public:
 	virtual bool isRemovable(void);
 	virtual Bits UnMount(void);
 	bool readSector(Bit8u *buffer, Bit32u sector);
-	virtual char const* GetLabel(void) {return discLabel;};
+	virtual const char *GetLabel() { return discLabel; }
 	virtual void Activate(void);
 private:
 	int  readDirEntry(isoDirEntry *de, Bit8u *data);

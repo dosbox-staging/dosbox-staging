@@ -364,7 +364,7 @@ public:
 						WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"));
 						return;
 					}
-					std::string base = ldp->getBasedir();
+					std::string base = ldp->GetBasedir();
 					Bit8u o_error = 0;
 					newdrive = new Overlay_Drive(base.c_str(),temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid,o_error);
 					//Erase old drive on success
