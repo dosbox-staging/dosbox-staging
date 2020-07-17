@@ -16,16 +16,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include "dos_inc.h"
+
+#include <cstring>
+
 #include "../ints/int10.h"
-#include <string.h>
 
 #define NUMBER_ANSI_DATA 10
 
 class device_CON : public DOS_Device {
 public:
-	device_CON();
+	device_CON() { SetName("CON"); }
+
 	bool Read(Bit8u * data,Bit16u * size);
 	bool Write(Bit8u * data,Bit16u * size);
 	bool Seek(Bit32u * pos,Bit32u type);
@@ -34,21 +36,30 @@ public:
 	bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
 	bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
 private:
-	void ClearAnsi(void);
+	void ClearAnsi();
 	void Output(Bit8u chr);
-	Bit8u readcache;
-	struct ansi { /* should create a constructor, which would fill them with the appropriate values */
-		bool esc;
-		bool sci;
-		bool enabled;
-		Bit8u attr;
-		Bit8u data[NUMBER_ANSI_DATA];
-		Bit8u numberofarg;
-		Bit8s savecol;
-		Bit8s saverow;
-		bool warned;
-	} ansi;
+
+	uint8_t readcache = 0;
+	struct ansi {
+		bool esc = false;
+		bool sci = false;
+		bool enabled = false;
+		uint8_t attr = 0x7;
+		uint8_t data[NUMBER_ANSI_DATA] = {};
+		uint8_t numberofarg = 0;
+		int8_t savecol = 0;
+		int8_t saverow = 0;
+		bool warned = false;
+	} ansi = {};
 };
+
+void device_CON::ClearAnsi()
+{
+	memset(ansi.data, 0, NUMBER_ANSI_DATA);
+	ansi.esc = false;
+	ansi.sci = false;
+	ansi.numberofarg = 0;
+}
 
 bool device_CON::Read(Bit8u * data,Bit16u * size) {
 	Bit16u oldax=reg_ax;
@@ -403,24 +414,6 @@ Bit16u device_CON::GetInformation(void) {
 	if (head>=end) head=start;
 	mem_writew(BIOS_KEYBOARD_BUFFER_HEAD,head);
 	return 0x80D3; /* No Key Available */
-}
-
-device_CON::device_CON() {
-	SetName("CON");
-	readcache=0;
-	ansi.enabled=false;
-	ansi.attr=0x7;
-	ansi.saverow=0;
-	ansi.savecol=0;
-	ansi.warned=false;
-	ClearAnsi();
-}
-
-void device_CON::ClearAnsi(void){
-	for(Bit8u i=0; i<NUMBER_ANSI_DATA;i++) ansi.data[i]=0;
-	ansi.esc=false;
-	ansi.sci=false;
-	ansi.numberofarg=0;
 }
 
 void device_CON::Output(Bit8u chr) {
