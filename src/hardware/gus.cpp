@@ -1091,7 +1091,7 @@ void Gus::WriteToRegister()
 	case 0xE: // Set active voice register
 		selected_register = register_data >> 8; // Jazz Jackrabbit needs this
 		{
-			uint8_t requested = 1 + ((register_data >> 8) & 63);
+			uint8_t requested = 1 + ((register_data >> 8) & 31);
 			requested = clamp(requested, MIN_VOICES, MAX_VOICES);
 			if (requested != active_voices) {
 				active_voices = requested;
