@@ -809,19 +809,19 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 	switch (port - port_base) {
 	case 0x206: return irq_status;
 	case 0x208:
-		uint8_t tmp_time;
-		tmp_time = 0u;
+		uint8_t time;
+		time = 0u;
 		if (timers[0].has_expired)
-			tmp_time |= (1 << 6);
+			time |= (1 << 6);
 		if (timers[1].has_expired)
-			tmp_time |= (1 << 5);
-		if (tmp_time & 0x60)
-			tmp_time |= (1 << 7);
+			time |= (1 << 5);
+		if (time & 0x60)
+			time |= (1 << 7);
 		if (irq_status & 0x04)
-			tmp_time |= (1 << 2);
+			time |= (1 << 2);
 		if (irq_status & 0x08)
-			tmp_time |= (1 << 1);
-		return tmp_time;
+			time |= (1 << 1);
+		return time;
 	case 0x20a: return adlib_command_reg;
 	case 0x302: return static_cast<uint8_t>(current_voice_index);
 	case 0x303: return selected_register;
@@ -850,35 +850,35 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 uint16_t Gus::ReadFromRegister()
 {
 	// LOG_MSG("GUS: Read register %x", selected_register);
-	uint8_t tmpreg;
+	uint8_t reg;
 
 	// Registers that read from the general DSP
 	switch (selected_register) {
 	case 0x41: // Dma control register - read acknowledges DMA IRQ
-		tmpreg = dma_ctrl & 0xbf;
-		tmpreg |= (irq_status & 0x80) >> 1;
+		reg = dma_ctrl & 0xbf;
+		reg |= (irq_status & 0x80) >> 1;
 		irq_status &= 0x7f;
-		return static_cast<uint16_t>(tmpreg << 8);
+		return static_cast<uint16_t>(reg << 8);
 	case 0x42: // Dma address register
 		return dma_addr;
 	case 0x45: // Timer control register matches Adlib's behavior
 		return static_cast<uint16_t>(timer_ctrl << 8);
 	case 0x49: // Dma sample register
-		tmpreg = dma_ctrl & 0xbf;
-		tmpreg |= (irq_status & 0x80) >> 1;
-		return static_cast<uint16_t>(tmpreg << 8);
+		reg = dma_ctrl & 0xbf;
+		reg |= (irq_status & 0x80) >> 1;
+		return static_cast<uint16_t>(reg << 8);
 	case 0x8f: // General voice IRQ status register
-		tmpreg = shared_voice_irqs.status | 0x20;
+		reg = shared_voice_irqs.status | 0x20;
 		uint32_t mask;
 		mask = 1 << shared_voice_irqs.status;
 		if (!(shared_voice_irqs.vol & mask))
-			tmpreg |= 0x40;
+			reg |= 0x40;
 		if (!(shared_voice_irqs.wave & mask))
-			tmpreg |= 0x80;
+			reg |= 0x80;
 		shared_voice_irqs.vol &= ~mask;
 		shared_voice_irqs.wave &= ~mask;
 		shared_voice_irqs.check();
-		return static_cast<uint16_t>(tmpreg << 8);
+		return static_cast<uint16_t>(reg << 8);
 	}
 
 	if (!current_voice)
