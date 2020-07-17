@@ -22,7 +22,7 @@
 #include "mem_unaligned.h"
 #include "types.h"
 
-class CodePageHandlerDynRec;	// forward
+class CodePageHandler; // forward
 
 // basic cache block representation
 class CacheBlockDynRec {
@@ -38,7 +38,7 @@ public:
 	}
 	struct {
 		Bit16u start,end;		// where in the page is the original code
-		CodePageHandlerDynRec * handler;			// page containing this code
+		CodePageHandler *handler;       // page containing this code
 	} page;
 	struct {
 		Bit8u * start;			// where in the cache are we
@@ -70,9 +70,9 @@ static struct {
 		CacheBlockDynRec * running;		// the last block that was entered for execution
 	} block;
 	Bit8u * pos;		// position in the cache block
-	CodePageHandlerDynRec * free_pages;		// pointer to the free list
-	CodePageHandlerDynRec * used_pages;		// pointer to the list of used pages
-	CodePageHandlerDynRec * last_page;		// the last used page
+	CodePageHandler *free_pages; // pointer to the free list
+	CodePageHandler *used_pages; // pointer to the list of used pages
+	CodePageHandler *last_page;  // the last used page
 } cache;
 
 // cache memory pointers, to be malloc'd later
@@ -83,11 +83,11 @@ static uint8_t *cache_code_link_blocks = nullptr;
 static CacheBlockDynRec *cache_blocks = nullptr;
 static CacheBlockDynRec link_blocks[2];		// default linking (specially marked)
 
-// the CodePageHandlerDynRec class provides access to the contained
+// the CodePageHandler class provides access to the contained
 // cache blocks and intercepts writes to the code for special treatment
-class CodePageHandlerDynRec : public PageHandler {
+class CodePageHandler : public PageHandler {
 public:
-	CodePageHandlerDynRec() : invalidation_map(nullptr) {}
+	CodePageHandler() : invalidation_map(nullptr) {}
 
 	void SetupAt(Bitu _phys_page,PageHandler * _old_pagehandler) {
 		// initialize this codepage handler
@@ -400,7 +400,7 @@ public:
 	// the write map, there are write_map[i] cache blocks that cover the byte at address i
 	Bit8u write_map[4096];
 	Bit8u * invalidation_map;
-	CodePageHandlerDynRec * next, * prev;	// page linking
+	CodePageHandler *next, *prev; // page linking
 private:
 	PageHandler * old_pagehandler;
 
@@ -666,7 +666,7 @@ static void cache_init(bool enable) {
 		cache.used_pages=0;
 		// setup the code pages
 		for (i=0;i<CACHE_PAGES;i++) {
-			CodePageHandlerDynRec * newpage=new CodePageHandlerDynRec();
+			CodePageHandler *newpage = new CodePageHandler();
 			newpage->next=cache.free_pages;
 			cache.free_pages=newpage;
 		}
