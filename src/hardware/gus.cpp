@@ -40,13 +40,18 @@
 
 #define LOG_GUS 0 // set to 1 for detailed logging
 
+constexpr uint8_t ADLIB_CMD_DEFAULT = 85u;
 constexpr uint8_t BUFFER_FRAMES = 64u;
 constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
 constexpr uint8_t MAX_VOICES = 32u;
 constexpr uint8_t MIN_VOICES = 14u;
 constexpr uint8_t PAN_POSITIONS = 16u;  // 0: -45-deg, 7: centre, 15: +45-deg
+constexpr uint8_t PAN_DEFAULT_POSITION = 7u;
 constexpr uint32_t RAM_SIZE = 1048576u; // 1 MB
 constexpr uint8_t READ_HANDLERS = 8u;
+constexpr float TIMER_1_DEFAULT_DELAY = 0.080f;
+constexpr float TIMER_2_DEFAULT_DELAY = 0.320f;
+constexpr float ONE_AMP = 1.0f;              // first amplitude value
 constexpr uint16_t VOLUME_INC_SCALAR = 512u; // Volume index increment scalar
 constexpr uint16_t VOLUME_LEVELS = 4096u;
 constexpr double VOLUME_LEVEL_DIVISOR = 1.002709201; // 0.0235 dB increments
@@ -54,11 +59,11 @@ constexpr uint8_t WAVE_FRACT = 9;                // Interpolation width in bits
 constexpr uint32_t WAVE_MSWMASK = (1 << 16) - 1; // Upper wave mask
 constexpr uint32_t WAVE_LSWMASK = 0xffffffff ^ WAVE_MSWMASK; // Lower wave mask
 constexpr uint8_t WRITE_HANDLERS = 9u;
-
+constexpr uint8_t VWCTRL_DEFAULT = 3u;
 using namespace std::placeholders;
 
 // External Tie-in for OPL FM-audio
-uint8_t adlib_commandreg = 0u;
+uint8_t adlib_commandreg = ADLIB_CMD_DEFAULT;
 struct AudioFrame {
 	float left = 0.0f;
 	float right = 0.0f;
@@ -103,7 +108,7 @@ public:
 	uint32_t wave_addr = 0u;
 	uint16_t wave_inc = 0u;
 	uint16_t wave_freq = 0u;
-	uint8_t wave_ctrl = 3u;
+	uint8_t wave_ctrl = VWCTRL_DEFAULT;
 
 	// volume scalar state
 	uint32_t vol_index_start = 0u;
@@ -111,7 +116,7 @@ public:
 	uint32_t vol_index_current = 0u;
 	uint32_t vol_index_inc = 0u;
 	uint8_t vol_index_rate = 0u;
-	uint8_t vol_ctrl = 3u;
+	uint8_t vol_ctrl = VWCTRL_DEFAULT;
 
 private:
 	Voice() = delete;
@@ -146,8 +151,7 @@ private:
 	uint32_t &generated_ms = generated_8bit_ms;
 
 	uint32_t irq_mask = 0u;
-	uint8_t pan_position = 7u;
-
+	uint8_t pan_position = PAN_DEFAULT_POSITION;
 };
 
 // The GUS GF1 DSP
@@ -165,7 +169,7 @@ public:
 		bool has_expired = false;
 		bool is_counting_down = false;
 	};
-	Timer timers[2] = {{0.080f}, {0.320f}};
+	Timer timers[2] = {{TIMER_1_DEFAULT_DELAY}, {TIMER_2_DEFAULT_DELAY}};
 
 private:
 	Gus() = delete;
@@ -205,7 +209,7 @@ private:
 	AutoexecObject autoexec_lines[2] = {};
 	SharedVoiceIrqs shared_voice_irqs = {std::bind(&Gus::CheckVoiceIrq, this),
 	                                     0u, 0u};
-	AudioFrame peak_amplitude = {1.0f, 1.0f};
+	AudioFrame peak_amplitude = {ONE_AMP, ONE_AMP};
 	MixerObject mixer_channel = {};
 	MixerChannel *audio_channel = nullptr;
 	Voice *current_voice = nullptr;
@@ -549,9 +553,6 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	// Populate the volume and pan tables
 	PopulateVolScalars();
 	PopulatePanScalars();
-
-	// Reset the Adlib command
-	adlib_command_reg = 85;
 
 	PopulateAutoExec(port, ultradir);
 }
@@ -934,7 +935,7 @@ void Gus::Reset()
 			audio_channel->Enable(false);
 
 		// Reset
-		adlib_command_reg = 85;
+		adlib_command_reg = ADLIB_CMD_DEFAULT;
 		irq_status = 0;
 		timers[0].should_raise_irq = false;
 		timers[1].should_raise_irq = false;
@@ -945,8 +946,8 @@ void Gus::Reset()
 
 		timers[0].value = 0xff;
 		timers[1].value = 0xff;
-		timers[0].delay = 0.080f;
-		timers[1].delay = 0.320f;
+		timers[0].delay = TIMER_1_DEFAULT_DELAY;
+		timers[1].delay = TIMER_2_DEFAULT_DELAY;
 
 		should_change_irq_dma = false;
 		mix_ctrl = 0x0b; // latches enabled, LINEs disabled
@@ -955,11 +956,11 @@ void Gus::Reset()
 			voice->vol_index_current = 0u;
 			voice->WriteWaveCtrl(0x1);
 			voice->WriteVolCtrl(0x1);
-			voice->WritePanPot(0x7);
+			voice->WritePanPot(PAN_DEFAULT_POSITION);
 			voice->ClearStats();
 		}
 		shared_voice_irqs.status = 0u;
-		peak_amplitude = {1.0f, 1.0f};
+		peak_amplitude = {ONE_AMP, ONE_AMP};
 	}
 	irq_enabled = register_data & 0x4;
 }
@@ -977,16 +978,16 @@ bool Gus::SoftLimit(float (&in)[BUFFER_FRAMES][2],
 
 	// Calculate the percent we need to scale down the volume.  In cases
 	// where one side is less than the max, it's ratio is limited to 1.0.
-	const AudioFrame ratio = {std::min(1.0f, max_allowed / peak_amplitude.left),
-	                          std::min(1.0f, max_allowed / peak_amplitude.right)};
+	const AudioFrame ratio = {std::min(ONE_AMP, max_allowed / peak_amplitude.left),
+	                          std::min(ONE_AMP, max_allowed / peak_amplitude.right)};
 	for (uint8_t i = 0; i < requested_frames; ++i) {
 		out[i][0] = static_cast<int16_t>(in[i][0] * ratio.left);
 		out[i][1] = static_cast<int16_t>(in[i][1] * ratio.right);
 	}
 
-	// Release the limit incrementally using our existing volume scale.
-	constexpr float release_amount =
-	        max_allowed * (static_cast<float>(VOLUME_LEVEL_DIVISOR) - 1.0f);
+	// Release the limit incrementally using our existing volume scale
+	constexpr float delta_db = static_cast<float>(VOLUME_LEVEL_DIVISOR) - ONE_AMP;
+	constexpr float release_amount = max_allowed * delta_db;
 
 	if (peak_amplitude.left > max_allowed)
 		peak_amplitude.left -= release_amount;
