@@ -47,6 +47,7 @@
 #define GUS_MAX_VOICES       32u
 #define GUS_BUFFER_FRAMES    64u
 #define GUS_PAN_POSITIONS    16u // 0 face-left, 7 face-forward, and 15 face-right
+#define GUS_VOLUME_INC_MULT  512u // Scales the smallest volume idx increment up 1
 #define GUS_VOLUME_POSITIONS 4096u
 #define GUS_VOLUME_SCALE_DIV 1.002709201 // 0.0235 dB increments
 #define GUS_RAM_SIZE         1048576u    // 1 MB
@@ -105,10 +106,10 @@ public:
 	uint8_t wave_ctrl = 3u;
 
 	// volume scalar state
-	uint16_t vol_index_start = 0u;
-	uint16_t vol_index_end = 0u;
-	uint16_t vol_index_current = 0u;
-	uint16_t vol_index_inc = 0u;
+	uint32_t vol_index_start = 0u;
+	uint32_t vol_index_end = 0u;
+	uint32_t vol_index_current = 0u;
+	uint32_t vol_index_inc = 0u;
 	uint8_t vol_index_rate = 0u;
 	uint8_t vol_ctrl = 3u;
 
@@ -281,7 +282,8 @@ void Voice::GenerateSamples(float *stream,
 			       sample >= std::numeric_limits<int16_t>::min());
 		}
 		// Apply any selected volume reduction
-		sample *= vol_scalars[vol_index_current];
+		const uint32_t i = ceil_udivide(vol_index_current, GUS_VOLUME_INC_MULT);
+		sample *= vol_scalars[i];
 
 		// Add the sample to the stream, angled in L-R space
 		*(stream++) += sample * pan_scalars[pan_position].left;
@@ -440,12 +442,29 @@ void Voice::WriteVolCtrl(uint8_t val)
 		shared_irqs.check();
 }
 
+// Four volume-index-rate "banks" are available that define the number of
+// volume indexes that will be incremented (or decremented, depending on the
+// volume_ctrl value) each step, for a given voice.  The banks are:
+//
+// - 0 to 63, which defines single index increments,
+// - 64 to 127 defines fractional index increments by 1/8th,
+// - 128 to 191 defines fractional index increments by 1/64ths, and
+// - 192 to 255 defines fractional index increments by 1/512ths.
+//
+// To ensure the smallest increment (1/512) effects an index change, we
+// normalize all the volume index variables (including this) by multiplying by
+// GUS_VOLUME_INC_MULT (or 512). Note that "index" qualifies all these variables
+// because they are merely indexes into the vol_scalars[] array. The actual
+// volume scalar value (a floating point fraction between 0.0 and 1.0) is never
+// actually operated on, and is simply looked up from the final index position
+// at the time of sample population.
+
 void Voice::WriteVolRate(uint8_t val)
 {
 	vol_index_rate = val;
-	const uint8_t scale = val & 63;
-	const uint8_t divider = 1 << (3 * (val >> 6));
-	vol_index_inc = (!scale || !divider) ? 0u : ceil_udivide(scale, divider);
+	const uint32_t pos_in_bank = (vol_index_rate & 63);
+	const uint32_t decimator = 1 << (3 * (val >> 6));
+	vol_index_inc = ceil_udivide(pos_in_bank * GUS_VOLUME_INC_MULT, decimator);
 }
 
 void Voice::WriteWaveCtrl(uint8_t val)
@@ -876,7 +895,9 @@ uint16_t Gus::ReadFromRegister()
 	case 0x83: // Voice LSW start address register
 		return static_cast<uint16_t>(current_voice->wave_start);
 	case 0x89: // Voice volume register
-		return static_cast<uint16_t>(current_voice->vol_index_current << 4);
+		return static_cast<uint16_t>(
+		        ceil_udivide(current_voice->vol_index_current, GUS_VOLUME_INC_MULT)
+		        << 4);
 	case 0x8a: // Voice MSB current address register
 		return static_cast<uint16_t>(current_voice->wave_addr >> 16);
 	case 0x8b: // Voice LSW current address register
@@ -1147,7 +1168,8 @@ void Gus::WriteToRegister()
 	if (!current_voice)
 		return;
 
-	uint32_t tmp_addr;
+	uint32_t addr;
+	uint8_t data;
 
 	// Registers that write to the current voice
 	switch (selected_register) {
@@ -1158,46 +1180,42 @@ void Gus::WriteToRegister()
 		current_voice->WriteWaveFreq(register_data);
 		break;
 	case 0x2: // Voice MSW start address register
-		tmp_addr = static_cast<uint32_t>((register_data & 0x1fff) << 16);
-		current_voice->wave_start = (current_voice->wave_start & WAVE_MSWMASK) |
-		                            tmp_addr;
+		addr = static_cast<uint32_t>((register_data & 0x1fff) << 16);
+		current_voice->wave_start = (current_voice->wave_start & WAVE_MSWMASK) | addr;
 		break;
 	case 0x3: // Voice LSW start address register
-		tmp_addr = static_cast<uint32_t>(register_data);
-		current_voice->wave_start = (current_voice->wave_start & WAVE_LSWMASK) |
-		                            tmp_addr;
+		addr = static_cast<uint32_t>(register_data);
+		current_voice->wave_start = (current_voice->wave_start & WAVE_LSWMASK) | addr;
 		break;
 	case 0x4: // Voice MSW end address register
-		tmp_addr = static_cast<uint32_t>(register_data & 0x1fff) << 16;
-		current_voice->wave_end = (current_voice->wave_end & WAVE_MSWMASK) |
-		                          tmp_addr;
+		addr = static_cast<uint32_t>(register_data & 0x1fff) << 16;
+		current_voice->wave_end = (current_voice->wave_end & WAVE_MSWMASK) | addr;
 		break;
 	case 0x5: // Voice MSW end address register
-		tmp_addr = static_cast<uint32_t>(register_data);
-		current_voice->wave_end = (current_voice->wave_end & WAVE_LSWMASK) |
-		                          tmp_addr;
+		addr = static_cast<uint32_t>(register_data);
+		current_voice->wave_end = (current_voice->wave_end & WAVE_LSWMASK) | addr;
 		break;
 	case 0x6: // Voice volume rate register
 		current_voice->WriteVolRate(register_data >> 8);
 		break;
 	case 0x7: // Voice volume start register  EEEEMMMM
-		current_voice->vol_index_start = (register_data >> 8) << 4;
+		data = register_data >> 8;
+		current_voice->vol_index_start = (data << 4) * GUS_VOLUME_INC_MULT;
 		break;
 	case 0x8: // Voice volume end register  EEEEMMMM
-		current_voice->vol_index_end = (register_data >> 8) << 4;
+		data = register_data >> 8;
+		current_voice->vol_index_end = (data << 4) * GUS_VOLUME_INC_MULT;
 		break;
 	case 0x9: // Voice current volume register
-		current_voice->vol_index_current = register_data >> 4;
+		current_voice->vol_index_current = (register_data >> 4) * GUS_VOLUME_INC_MULT;
 		break;
 	case 0xA: // Voice MSW current address register
-		tmp_addr = static_cast<uint32_t>(register_data & 0x1fff) << 16;
-		current_voice->wave_addr = (current_voice->wave_addr & WAVE_MSWMASK) |
-		                           tmp_addr;
+		addr = static_cast<uint32_t>(register_data & 0x1fff) << 16;
+		current_voice->wave_addr = (current_voice->wave_addr & WAVE_MSWMASK) | addr;
 		break;
 	case 0xB: // Voice LSW current address register
-		tmp_addr = static_cast<uint32_t>(register_data);
-		current_voice->wave_addr = (current_voice->wave_addr & WAVE_LSWMASK) |
-		                           tmp_addr;
+		addr = static_cast<uint32_t>(register_data);
+		current_voice->wave_addr = (current_voice->wave_addr & WAVE_LSWMASK) | addr;
 		break;
 	case 0xC: // Voice pan pot register
 		current_voice->WritePanPot(register_data >> 8);
