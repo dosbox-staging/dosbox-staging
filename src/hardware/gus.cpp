@@ -248,7 +248,7 @@ private:
 	bool should_change_irq_dma = false;
 };
 
-static Gus *myGUS = nullptr;
+static std::unique_ptr<Gus> myGUS = nullptr;
 
 Voice::Voice(uint8_t num, SharedVoiceIrqs &irqs)
         : shared_irqs(irqs),
@@ -562,7 +562,7 @@ Gus::~Gus()
 	PrintStats();
 }
 
-void Gus::AudioCallback(uint16_t requested_frames)
+void Gus::AudioCallback(const uint16_t requested_frames)
 {
 	assert(requested_frames <= BUFFER_FRAMES);
 	float accumulator[BUFFER_FRAMES][2] = {{0}};
@@ -572,10 +572,10 @@ void Gus::AudioCallback(uint16_t requested_frames)
 
 	int16_t scaled[BUFFER_FRAMES][2];
 	if (!SoftLimit(accumulator, scaled, requested_frames))
-		for (uint8_t i = 0; i < requested_frames; ++i)
-			for (uint8_t j = 0; j < 2; ++j)
-				scaled[i][j] = static_cast<int16_t>(
-				        accumulator[i][j]);
+		for (uint8_t i = 0; i < BUFFER_FRAMES; ++i) { // vectorized
+			scaled[i][0] = static_cast<int16_t>(accumulator[i][0]);
+			scaled[i][1] = static_cast<int16_t>(accumulator[i][1]);
+		}
 
 	audio_channel->AddSamples_s16(requested_frames, scaled[0]);
 	CheckVoiceIrq();
