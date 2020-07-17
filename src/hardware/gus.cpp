@@ -38,9 +38,10 @@
 #include "math.h"
 #include "regs.h"
 
+#define LOG_GUS 0 // set to 1 for detailed logging
+
 constexpr uint8_t BUFFER_FRAMES = 64u;
 constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
-constexpr bool LOG_GUS = 0;
 constexpr uint8_t MAX_VOICES = 32u;
 constexpr uint8_t MIN_VOICES = 14u;
 constexpr uint8_t PAN_POSITIONS = 16u;  // 0: -45-deg, 7: centre, 15: +45-deg
@@ -274,8 +275,9 @@ void Voice::GenerateSamples(float *stream,
 		// Add any fractional inter-wave portion
 		constexpr uint32_t wave_width = 1 << WAVE_FRACT;
 		if (wave_inc < wave_width) {
-			const float next_sample = GetSample(ram, sample_addr + 1u);
-			const uint32_t wave_fraction = wave_addr & (wave_width - 1u);
+			const auto next_sample = GetSample(ram, sample_addr + 1u);
+			const auto wave_fraction = static_cast<float>(
+			        wave_addr & (wave_width - 1u));
 			sample += (next_sample - sample) * wave_fraction / wave_width;
 
 			// Confirm the sample plus inter-wave portion is in-bounds
@@ -283,7 +285,7 @@ void Voice::GenerateSamples(float *stream,
 			       sample >= std::numeric_limits<int16_t>::min());
 		}
 		// Apply any selected volume reduction
-		const uint32_t i = ceil_udivide(vol_index_current, VOLUME_INC_SCALAR);
+		const auto i = ceil_udivide(vol_index_current, VOLUME_INC_SCALAR);
 		sample *= vol_scalars[i];
 
 		// Add the sample to the stream, angled in L-R space
@@ -358,10 +360,12 @@ inline void Voice::VolUpdate()
 	// Should the voice's volume be decreased?
 	if (vol_ctrl & VWCtrl::Decreasing) {
 		vol_index_current -= vol_index_inc;
-		vol_count_remaining = vol_index_start - vol_index_current;
+		vol_count_remaining = static_cast<signed>(vol_index_start -
+		                                          vol_index_current);
 	} else { // or increased?
 		vol_index_current += vol_index_inc;
-		vol_count_remaining = vol_index_current - vol_index_end;
+		vol_count_remaining = static_cast<signed>(vol_index_current -
+		                                          vol_index_end);
 	}
 	// We've reached the desired volume
 	if (vol_count_remaining < 0) {
@@ -376,9 +380,12 @@ inline void Voice::VolUpdate()
 		// Is it looping bi-directionally?
 		if (vol_ctrl & VWCtrl::BiDirectional)
 			vol_ctrl ^= VWCtrl::Decreasing;
-		vol_index_current = (vol_ctrl & VWCtrl::Decreasing)
-		                            ? (vol_index_end - vol_count_remaining)
-		                            : (vol_index_start + vol_count_remaining);
+		vol_index_current =
+		        (vol_ctrl & VWCtrl::Decreasing)
+		                ? (vol_index_end -
+		                   static_cast<unsigned>(vol_count_remaining))
+		                : (vol_index_start +
+		                   static_cast<unsigned>(vol_count_remaining));
 	} else { // Otherwise reset the volume's position
 		vol_ctrl |= 1;
 		vol_index_current = (vol_ctrl & VWCtrl::Decreasing) ? vol_index_start
@@ -395,10 +402,10 @@ inline void Voice::WaveUpdate()
 	int32_t wave_remaining;
 	if (wave_ctrl & VWCtrl::Decreasing) {
 		wave_addr -= wave_inc;
-		wave_remaining = wave_start - wave_addr;
+		wave_remaining = static_cast<signed>(wave_start - wave_addr);
 	} else {
 		wave_addr += wave_inc;
-		wave_remaining = wave_addr - wave_end;
+		wave_remaining = static_cast<signed>(wave_addr - wave_end);
 	}
 	// Not yet reaching a boundary
 	if (wave_remaining < 0)
@@ -416,8 +423,9 @@ inline void Voice::WaveUpdate()
 		if (wave_ctrl & VWCtrl::BiDirectional)
 			wave_ctrl ^= VWCtrl::Decreasing;
 		wave_addr = (wave_ctrl & VWCtrl::Decreasing)
-		                    ? (wave_end - wave_remaining)
-		                    : (wave_start + wave_remaining);
+		                    ? (wave_end - static_cast<unsigned>(wave_remaining))
+		                    : (wave_start +
+		                       static_cast<unsigned>(wave_remaining));
 	} else {
 		wave_ctrl |= 1; // Stop the voice
 		wave_addr = (wave_ctrl & VWCtrl::Decreasing) ? wave_start : wave_end;
@@ -615,23 +623,24 @@ void Gus::DmaCallback(DmaChannel *dma_channel, DMAEvent event)
 {
 	if (event != DMA_UNMASKED)
 		return;
-	Bitu addr;
+	size_t addr;
 	// Calculate the dma address
 	// DMA transfers can't cross 256k boundaries, so you should be safe to
 	// just determine the start once and go from there Bit 2 - 0 = if DMA
 	// channel is an 8 bit channel(0 - 3).
 	if (dma_ctrl & 0x4)
-		addr = (((dma_addr & 0x1fff) << 1) | (dma_addr & 0xc000)) << 4;
+		addr = static_cast<size_t>(
+		        (((dma_addr & 0x1fff) << 1) | (dma_addr & 0xc000))) << 4;
 	else
-		addr = dma_addr << 4;
+		addr = static_cast<size_t>(dma_addr) << 4;
 	// Reading from dma?
 	if ((dma_ctrl & 0x2) == 0) {
-		Bitu read = dma_channel->Read(dma_channel->currcnt + 1, &ram[addr]);
+		auto read = dma_channel->Read(dma_channel->currcnt + 1, &ram[addr]);
 		// Check for 16 or 8bit channel
 		read *= (dma_channel->DMA16 + 1);
 		if ((dma_ctrl & 0x80) != 0) {
 			// Invert the MSB to convert twos compliment form
-			const size_t dma_end = addr + read;
+			const auto dma_end = addr + read;
 			assert(dma_end <= ram.size());
 			if ((dma_ctrl & 0x40) == 0) {
 				// 8-bit data
@@ -639,7 +648,7 @@ void Gus::DmaCallback(DmaChannel *dma_channel, DMAEvent event)
 					ram[i] ^= 0x80;
 			} else {
 				// 16-bit data
-				for (size_t i = addr + 1; i < dma_end; i += 2)
+				for (size_t i = addr + 1u; i < dma_end; i += 2u)
 					ram[i] ^= 0x80;
 			}
 		}
@@ -726,9 +735,9 @@ void Gus::PopulatePanScalars()
 {
 	for (uint8_t pos = 0u; pos < PAN_POSITIONS; ++pos) {
 		// Normalize absolute range [0, 15] to [-1.0, 1.0]
-		const double norm = (pos - 7.0f) / (pos < 7u ? 7 : 8);
+		const auto norm = (pos - 7.0) / (pos < 7u ? 7 : 8);
 		// Convert to an angle between 0 and 90-degree, in radians
-		const double angle = (norm + 1) * M_PI / 4;
+		const auto angle = (norm + 1) * M_PI / 4;
 		pan_scalars.at(pos).left = static_cast<float>(cos(angle));
 		pan_scalars.at(pos).right = static_cast<float>(sin(angle));
 		// DEBUG_LOG_MSG("GUS: pan_scalar[%u] = %f | %f", pos,
@@ -770,10 +779,10 @@ void Gus::PrintStats()
 		LOG_MSG("GUS: Audio comprised of 16-bit samples from %u voices",
 		        used_16bit_voices);
 	else {
-		const uint8_t ratio_8bit = ceil_udivide(100u * combined_8bit_ms,
-		                                        combined_ms);
-		const uint8_t ratio_16bit = ceil_udivide(100u * combined_16bit_ms,
-		                                         combined_ms);
+		const auto ratio_8bit = ceil_udivide(100u * combined_8bit_ms,
+		                                     combined_ms);
+		const auto ratio_16bit = ceil_udivide(100u * combined_16bit_ms,
+		                                      combined_ms);
 		LOG_MSG("GUS: Audio was made up of %u%% 8-bit %u-voice and "
 		        "%u%% 16-bit %u-voice samples",
 		        ratio_8bit, used_8bit_voices, ratio_16bit,
@@ -781,10 +790,11 @@ void Gus::PrintStats()
 	}
 
 	// Calculate and print info about the volume
-	const float mixer_scalar = std::max(audio_channel->volmain[0],
-	                                    audio_channel->volmain[1]);
+	const auto mixer_scalar = static_cast<double>(
+	        std::max(audio_channel->volmain[0], audio_channel->volmain[1]));
 	double peak_ratio = mixer_scalar *
-	                    std::max(peak_amplitude.left, peak_amplitude.right) /
+	                    static_cast<double>(std::max(peak_amplitude.left,
+	                                                 peak_amplitude.right)) /
 	                    std::numeric_limits<int16_t>::max();
 
 	// It's expected and normal for multi-voice audio to periodically
@@ -797,9 +807,10 @@ void Gus::PrintStats()
 	// Make a suggestion if the peak volume was well below 3 dB
 	if (peak_ratio < 0.6) {
 		const auto multiplier = static_cast<uint16_t>(
-		        100.0 * static_cast<double>(mixer_scalar) / peak_ratio);
+		        100.0 * mixer_scalar / peak_ratio);
 		LOG_MSG("GUS: If it should be louder, %s %u",
-		        fabs(mixer_scalar - 1.0f) > 0.01f ? "adjust mixer gus to" : "use: mixer gus",
+		        fabs(mixer_scalar - 1.0) > 0.01 ? "adjust mixer gus to"
+		                                        : "use: mixer gus",
 		        multiplier);
 	}
 }
@@ -890,7 +901,7 @@ uint16_t Gus::ReadFromRegister()
 	// Registers that read from from the current voice
 	switch (selected_register) {
 	case 0x80: // Voice wave control read register
-		return current_voice->ReadWaveCtrl() << 8;
+		return static_cast<uint16_t>(current_voice->ReadWaveCtrl() << 8);
 	case 0x82: // Voice MSB start address register
 		return static_cast<uint16_t>(current_voice->wave_start >> 16);
 	case 0x83: // Voice LSW start address register
@@ -904,7 +915,7 @@ uint16_t Gus::ReadFromRegister()
 	case 0x8b: // Voice LSW current address register
 		return static_cast<uint16_t>(current_voice->wave_addr);
 	case 0x8d: // Voice volume control register
-		return current_voice->ReadVolCtrl() << 8;
+		return static_cast<uint16_t>(current_voice->ReadVolCtrl() << 8);
 	}
 #if LOG_GUS
 	LOG_MSG("GUS: Unimplemented read Register 0x%x", selected_register);
@@ -1200,15 +1211,17 @@ void Gus::WriteToRegister()
 		break;
 	case 0x7: // Voice volume start register  EEEEMMMM
 		data = register_data >> 8;
-		current_voice->vol_index_start = (data << 4) * VOLUME_INC_SCALAR;
+		current_voice->vol_index_start = static_cast<unsigned>(
+		        (data << 4) * VOLUME_INC_SCALAR);
 		break;
 	case 0x8: // Voice volume end register  EEEEMMMM
 		data = register_data >> 8;
-		current_voice->vol_index_end = (data << 4) * VOLUME_INC_SCALAR;
+		current_voice->vol_index_end = static_cast<unsigned>(
+		        (data << 4) * VOLUME_INC_SCALAR);
 		break;
 	case 0x9: // Voice current volume register
-		current_voice->vol_index_current = (register_data >> 4) *
-		                                   VOLUME_INC_SCALAR;
+		current_voice->vol_index_current = static_cast<unsigned>(
+		        (register_data >> 4) * VOLUME_INC_SCALAR);
 		break;
 	case 0xA: // Voice MSW current address register
 		addr = static_cast<uint32_t>(register_data & 0x1fff) << 16;
@@ -1249,9 +1262,9 @@ void GUS_Init(Section *sec)
 	if (!conf || !conf->Get_bool("gus"))
 		return;
 
-	const uint16_t port = conf->Get_hex("gusbase");
-	const uint8_t dma = clamp(conf->Get_int("gusdma"), 1, 255);
-	const uint8_t irq = clamp(conf->Get_int("gusirq"), 1, 255);
+	const auto port = static_cast<uint16_t>(conf->Get_hex("gusbase"));
+	const auto dma = static_cast<uint8_t>(clamp(conf->Get_int("gusdma"), 1, 255));
+	const auto irq = static_cast<uint8_t>(clamp(conf->Get_int("gusirq"), 1, 255));
 	const std::string ultradir = conf->Get_string("ultradir");
 
 	myGUS = new Gus(port, dma, irq, ultradir);
