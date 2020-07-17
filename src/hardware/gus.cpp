@@ -38,22 +38,21 @@
 #include "math.h"
 #include "regs.h"
 
-// Extra bits of precision over normal gus
-#define WAVE_FRACT           9
-#define WAVE_MSWMASK         ((1 << 16) - 1)
-#define WAVE_LSWMASK         (0xffffffff ^ WAVE_MSWMASK)
-#define GUS_ADDRESSES        8u
-#define GUS_MIN_VOICES       14u
-#define GUS_MAX_VOICES       32u
-#define GUS_BUFFER_FRAMES    64u
-#define GUS_PAN_POSITIONS    16u // 0 face-left, 7 face-forward, and 15 face-right
-#define GUS_VOLUME_INC_MULT  512u // Scales the smallest volume idx increment up 1
-#define GUS_VOLUME_POSITIONS 4096u
-#define GUS_VOLUME_SCALE_DIV 1.002709201 // 0.0235 dB increments
-#define GUS_RAM_SIZE         1048576u    // 1 MB
-#define GUS_READ_HANDLERS    8u
-#define GUS_WRITE_HANDLERS   9u
-#define LOG_GUS              0
+constexpr uint8_t BUFFER_FRAMES = 64u;
+constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
+constexpr bool LOG_GUS = 0;
+constexpr uint8_t MAX_VOICES = 32u;
+constexpr uint8_t MIN_VOICES = 14u;
+constexpr uint8_t PAN_POSITIONS = 16u;  // 0: -45-deg, 7: centre, 15: +45-deg
+constexpr uint32_t RAM_SIZE = 1048576u; // 1 MB
+constexpr uint8_t READ_HANDLERS = 8u;
+constexpr uint16_t VOLUME_INC_SCALAR = 512u; // Volume index increment scalar
+constexpr uint16_t VOLUME_LEVELS = 4096u;
+constexpr double VOLUME_LEVEL_DIVISOR = 1.002709201; // 0.0235 dB increments
+constexpr uint8_t WAVE_FRACT = 9;                // Interpolation width in bits
+constexpr uint32_t WAVE_MSWMASK = (1 << 16) - 1; // Upper wave mask
+constexpr uint32_t WAVE_LSWMASK = 0xffffffff ^ WAVE_MSWMASK; // Lower wave mask
+constexpr uint8_t WRITE_HANDLERS = 9u;
 
 using namespace std::placeholders;
 
@@ -78,9 +77,9 @@ public:
 	Voice(uint8_t num, SharedVoiceIrqs &irqs);
 	void ClearStats();
 	void GenerateSamples(float *stream,
-	                     const std::array<unsigned char, GUS_RAM_SIZE> &ram,
-	                     const std::array<float, GUS_VOLUME_POSITIONS> &,
-	                     const std::array<AudioFrame, GUS_PAN_POSITIONS> &,
+	                     const std::array<unsigned char, RAM_SIZE> &ram,
+	                     const std::array<float, VOLUME_LEVELS> &,
+	                     const std::array<AudioFrame, PAN_POSITIONS> &,
 	                     AudioFrame &peak,
 	                     uint16_t requested_frames);
 
@@ -118,9 +117,9 @@ private:
 	Voice(const Voice &) = delete;            // prevent copying
 	Voice &operator=(const Voice &) = delete; // prevent assignment
 
-	inline float GetSample8(const std::array<unsigned char, GUS_RAM_SIZE> &ram,
+	inline float GetSample8(const std::array<unsigned char, RAM_SIZE> &ram,
 	                        const uint32_t addr) const;
-	inline float GetSample16(const std::array<unsigned char, GUS_RAM_SIZE> &ram,
+	inline float GetSample16(const std::array<unsigned char, RAM_SIZE> &ram,
 	                         const uint32_t addr) const;
 	inline void VolUpdate();
 	uint8_t ReadPanPot() const;
@@ -138,7 +137,7 @@ private:
 		Decreasing = 0x40,
 	};
 
-	typedef std::function<float(const std::array<unsigned char, GUS_RAM_SIZE> &, const uint32_t)> get_sample_f;
+	typedef std::function<float(const std::array<unsigned char, RAM_SIZE> &, const uint32_t)> get_sample_f;
 	get_sample_f GetSample = std::bind(&Voice::GetSample8, this, _1, _2);
 
 	// shared IRQs with the GUS DSP
@@ -184,20 +183,22 @@ private:
 	void PrintStats();
 	Bitu ReadFromPort(const Bitu port, const Bitu iolen);
 	void Reset();
-	bool SoftLimit(float (&)[GUS_BUFFER_FRAMES][2],
-	               int16_t (&)[GUS_BUFFER_FRAMES][2],
+	bool SoftLimit(float (&)[BUFFER_FRAMES][2],
+	               int16_t (&)[BUFFER_FRAMES][2],
 	               uint16_t);
 	void WriteToPort(Bitu port, Bitu val, Bitu iolen);
 
 	// Collections
-	std::array<std::unique_ptr<Voice>, GUS_MAX_VOICES> voices = {{nullptr}};
-	std::array<IO_ReadHandleObject, GUS_READ_HANDLERS> read_handlers = {};
-	std::array<IO_WriteHandleObject, GUS_WRITE_HANDLERS> write_handlers = {};
-	std::array<AudioFrame, GUS_PAN_POSITIONS> pan_scalars = {};
-	std::array<float, GUS_VOLUME_POSITIONS> vol_scalars = {};
-	const std::array<uint8_t, GUS_ADDRESSES> irq_addresses = {{0,  2, 5, 3,  7, 11, 12, 15}};
-	const std::array<uint8_t, GUS_ADDRESSES> dma_addresses = {{0, 1, 3, 5, 6, 7, 0, 0}};
-	std::array<uint8_t, GUS_RAM_SIZE> ram = {{0u}};
+	std::array<std::unique_ptr<Voice>, MAX_VOICES> voices = {{nullptr}};
+	std::array<IO_ReadHandleObject, READ_HANDLERS> read_handlers = {};
+	std::array<IO_WriteHandleObject, WRITE_HANDLERS> write_handlers = {};
+	std::array<AudioFrame, PAN_POSITIONS> pan_scalars = {};
+	std::array<float, VOLUME_LEVELS> vol_scalars = {};
+	const std::array<uint8_t, DMA_IRQ_ADDRESSES> irq_addresses = {
+	        {0, 2, 5, 3, 7, 11, 12, 15}};
+	const std::array<uint8_t, DMA_IRQ_ADDRESSES> dma_addresses = {
+	        {0, 1, 3, 5, 6, 7, 0, 0}};
+	std::array<uint8_t, RAM_SIZE> ram = {{0u}};
 
 	// Complex members
 	AutoexecObject autoexec_lines[2] = {};
@@ -256,9 +257,9 @@ void Voice::ClearStats()
 }
 
 void Voice::GenerateSamples(float *stream,
-                            const std::array<unsigned char, GUS_RAM_SIZE> &ram,
-                            const std::array<float, GUS_VOLUME_POSITIONS> &vol_scalars,
-                            const std::array<AudioFrame, GUS_PAN_POSITIONS> &pan_scalars,
+                            const std::array<unsigned char, RAM_SIZE> &ram,
+                            const std::array<float, VOLUME_LEVELS> &vol_scalars,
+                            const std::array<AudioFrame, PAN_POSITIONS> &pan_scalars,
                             AudioFrame &peak,
                             uint16_t requested_frames)
 {
@@ -282,7 +283,7 @@ void Voice::GenerateSamples(float *stream,
 			       sample >= std::numeric_limits<int16_t>::min());
 		}
 		// Apply any selected volume reduction
-		const uint32_t i = ceil_udivide(vol_index_current, GUS_VOLUME_INC_MULT);
+		const uint32_t i = ceil_udivide(vol_index_current, VOLUME_INC_SCALAR);
 		sample *= vol_scalars[i];
 
 		// Add the sample to the stream, angled in L-R space
@@ -303,7 +304,7 @@ void Voice::GenerateSamples(float *stream,
 }
 
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
-inline float Voice::GetSample8(const std::array<unsigned char, GUS_RAM_SIZE> &ram,
+inline float Voice::GetSample8(const std::array<unsigned char, RAM_SIZE> &ram,
                                const uint32_t addr) const
 {
 	constexpr float to_16bit_range = 1u
@@ -313,7 +314,7 @@ inline float Voice::GetSample8(const std::array<unsigned char, GUS_RAM_SIZE> &ra
 }
 
 // Read a 16-bit sample returned as a float
-inline float Voice::GetSample16(const std::array<unsigned char, GUS_RAM_SIZE> &ram,
+inline float Voice::GetSample16(const std::array<unsigned char, RAM_SIZE> &ram,
                                 const uint32_t addr) const
 {
 	// Calculate offset of the 16-bit sample
@@ -425,7 +426,7 @@ inline void Voice::WaveUpdate()
 
 void Voice::WritePanPot(uint8_t pos)
 {
-	constexpr uint8_t max_pos = GUS_PAN_POSITIONS - 1;
+	constexpr uint8_t max_pos = PAN_POSITIONS - 1;
 	pan_position = std::min(pos, max_pos);
 }
 
@@ -453,7 +454,7 @@ void Voice::WriteVolCtrl(uint8_t val)
 //
 // To ensure the smallest increment (1/512) effects an index change, we
 // normalize all the volume index variables (including this) by multiplying by
-// GUS_VOLUME_INC_MULT (or 512). Note that "index" qualifies all these variables
+// VOLUME_INC_SCALAR (or 512). Note that "index" qualifies all these variables
 // because they are merely indexes into the vol_scalars[] array. The actual
 // volume scalar value (a floating point fraction between 0.0 and 1.0) is never
 // actually operated on, and is simply looked up from the final index position
@@ -464,7 +465,7 @@ void Voice::WriteVolRate(uint8_t val)
 	vol_index_rate = val;
 	const uint32_t pos_in_bank = (vol_index_rate & 63);
 	const uint32_t decimator = 1 << (3 * (val >> 6));
-	vol_index_inc = ceil_udivide(pos_in_bank * GUS_VOLUME_INC_MULT, decimator);
+	vol_index_inc = ceil_udivide(pos_in_bank * VOLUME_INC_SCALAR, decimator);
 }
 
 void Voice::WriteWaveCtrl(uint8_t val)
@@ -501,7 +502,7 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
           irq2(irq)
 {
 	// Create the internal voice channels
-	for (uint8_t i = 0; i < GUS_MAX_VOICES; ++i) {
+	for (uint8_t i = 0; i < MAX_VOICES; ++i) {
 		voices.at(i) = std::make_unique<Voice>(i, shared_voice_irqs);
 	}
 
@@ -554,13 +555,13 @@ Gus::~Gus()
 
 void Gus::AudioCallback(uint16_t requested_frames)
 {
-	assert(requested_frames <= GUS_BUFFER_FRAMES);
-	float accumulator[GUS_BUFFER_FRAMES][2] = {{0}};
+	assert(requested_frames <= BUFFER_FRAMES);
+	float accumulator[BUFFER_FRAMES][2] = {{0}};
 	for (uint8_t i = 0; i < active_voices; ++i)
 		voices[i]->GenerateSamples(*accumulator, ram, vol_scalars, pan_scalars,
 		                           peak_amplitude, requested_frames);
 
-	int16_t scaled[GUS_BUFFER_FRAMES][2];
+	int16_t scaled[BUFFER_FRAMES][2];
 	if (!SoftLimit(accumulator, scaled, requested_frames))
 		for (uint8_t i = 0; i < requested_frames; ++i)
 			for (uint8_t j = 0; j < 2; ++j)
@@ -674,9 +675,9 @@ void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
 void Gus::PopulateVolScalars()
 {
 	double out = 1.0;
-	for (uint16_t i = GUS_VOLUME_POSITIONS - 1; i > 0; --i) {
+	for (uint16_t i = VOLUME_LEVELS - 1; i > 0; --i) {
 		vol_scalars.at(i) = static_cast<float>(out);
-		out /= GUS_VOLUME_SCALE_DIV;
+		out /= VOLUME_LEVEL_DIVISOR;
 	}
 	vol_scalars.at(0) = 0.0f;
 }
@@ -723,7 +724,7 @@ describes that output power is held constant through this range.
 */
 void Gus::PopulatePanScalars()
 {
-	for (uint8_t pos = 0u; pos < GUS_PAN_POSITIONS; ++pos) {
+	for (uint8_t pos = 0u; pos < PAN_POSITIONS; ++pos) {
 		// Normalize absolute range [0, 15] to [-1.0, 1.0]
 		const double norm = (pos - 7.0f) / (pos < 7u ? 7 : 8);
 		// Convert to an angle between 0 and 90-degree, in radians
@@ -832,7 +833,7 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 			return ReadFromRegister() & 0xff;
 	case 0x305: return ReadFromRegister() >> 8;
 	case 0x307:
-		if (dram_addr < GUS_RAM_SIZE) {
+		if (dram_addr < RAM_SIZE) {
 			return ram[dram_addr];
 		} else {
 			return 0;
@@ -896,7 +897,7 @@ uint16_t Gus::ReadFromRegister()
 		return static_cast<uint16_t>(current_voice->wave_start);
 	case 0x89: // Voice volume register
 		return static_cast<uint16_t>(
-		        ceil_udivide(current_voice->vol_index_current, GUS_VOLUME_INC_MULT)
+		        ceil_udivide(current_voice->vol_index_current, VOLUME_INC_SCALAR)
 		        << 4);
 	case 0x8a: // Voice MSB current address register
 		return static_cast<uint16_t>(current_voice->wave_addr >> 16);
@@ -952,8 +953,8 @@ void Gus::Reset()
 	irq_enabled = register_data & 0x4;
 }
 
-bool Gus::SoftLimit(float (&in)[GUS_BUFFER_FRAMES][2],
-                    int16_t (&out)[GUS_BUFFER_FRAMES][2],
+bool Gus::SoftLimit(float (&in)[BUFFER_FRAMES][2],
+                    int16_t (&out)[BUFFER_FRAMES][2],
                     uint16_t requested_frames)
 {
 	constexpr float max_allowed = static_cast<float>(
@@ -974,7 +975,7 @@ bool Gus::SoftLimit(float (&in)[GUS_BUFFER_FRAMES][2],
 
 	// Release the limit incrementally using our existing volume scale.
 	constexpr float release_amount =
-	        max_allowed * (static_cast<float>(GUS_VOLUME_SCALE_DIV) - 1.0f);
+	        max_allowed * (static_cast<float>(VOLUME_LEVEL_DIVISOR) - 1.0f);
 
 	if (peak_amplitude.left > max_allowed)
 		peak_amplitude.left -= release_amount;
@@ -1069,7 +1070,7 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		WriteToRegister();
 		break;
 	case 0x307:
-		if (dram_addr < GUS_RAM_SIZE)
+		if (dram_addr < RAM_SIZE)
 			ram[dram_addr] = static_cast<uint8_t>(val);
 		break;
 	default:
@@ -1088,15 +1089,14 @@ void Gus::WriteToRegister()
 	// Registers that write to the general DSP
 	switch (selected_register) {
 	case 0xE: // Set active voice register
-		selected_register = register_data >> 8; // JAZZ Jackrabbit seems
-		                                        // to assume this?
+		selected_register = register_data >> 8; // Jazz Jackrabbit needs this
 		{
-			unsigned requested = 1 + ((register_data >> 8) & 63);
-			requested = clamp(requested, GUS_MIN_VOICES, GUS_MAX_VOICES);
+			uint8_t requested = 1 + ((register_data >> 8) & 63);
+			requested = clamp(requested, MIN_VOICES, MAX_VOICES);
 			if (requested != active_voices) {
 				active_voices = requested;
 				active_voice_mask = 0xffffffffU >>
-				                    (32 - active_voices);
+				                    (MAX_VOICES - active_voices);
 				playback_rate = static_cast<uint32_t>(
 				        0.5 + 1000000.0 / (1.619695497 * active_voices));
 				audio_channel->SetFreq(playback_rate);
@@ -1200,14 +1200,15 @@ void Gus::WriteToRegister()
 		break;
 	case 0x7: // Voice volume start register  EEEEMMMM
 		data = register_data >> 8;
-		current_voice->vol_index_start = (data << 4) * GUS_VOLUME_INC_MULT;
+		current_voice->vol_index_start = (data << 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0x8: // Voice volume end register  EEEEMMMM
 		data = register_data >> 8;
-		current_voice->vol_index_end = (data << 4) * GUS_VOLUME_INC_MULT;
+		current_voice->vol_index_end = (data << 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0x9: // Voice current volume register
-		current_voice->vol_index_current = (register_data >> 4) * GUS_VOLUME_INC_MULT;
+		current_voice->vol_index_current = (register_data >> 4) *
+		                                   VOLUME_INC_SCALAR;
 		break;
 	case 0xA: // Voice MSW current address register
 		addr = static_cast<uint32_t>(register_data & 0x1fff) << 16;
