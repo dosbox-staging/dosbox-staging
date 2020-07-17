@@ -105,9 +105,9 @@ static struct DynDecode {
 	Bit8u seg_prefix;		// segment prefix (if seg_prefix_used==true)
 
 	// block that contains the first instruction translated
-	CacheBlockDynRec * block;
+	CacheBlock *block;
 	// block that contains the current byte of the instruction stream
-	CacheBlockDynRec * active_block;
+	CacheBlock *active_block;
 
 	// the active page (containing the current byte of the instruction stream)
 	struct {
@@ -209,7 +209,7 @@ static void decode_advancepage(void) {
 	Bitu faddr=decode.page.first << 12;
 	mem_readb(faddr);
 	MakeCodePage(faddr,decode.page.code);
-	CacheBlockDynRec * newblock=cache_getblock();
+	CacheBlock *newblock = cache_getblock();
 	decode.active_block->crossblock=newblock;
 	newblock->crossblock=decode.active_block;
 	decode.active_block=newblock;
@@ -262,7 +262,7 @@ static Bit32u decode_fetchd(void) {
 // codefetch functions
 static void INLINE decode_increase_wmapmask(Bitu size) {
 	Bitu mapidx;
-	CacheBlockDynRec* activecb=decode.active_block; 
+	CacheBlock *activecb = decode.active_block;
 	if (GCC_UNLIKELY(!activecb->cache.wmapmask)) {
 		// no mask memory yet allocated, start with a small buffer
 		activecb->cache.wmapmask=(Bit8u*)malloc(START_WMMEM);

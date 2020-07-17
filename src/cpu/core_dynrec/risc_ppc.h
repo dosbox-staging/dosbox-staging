@@ -46,7 +46,7 @@
 
 // register mapping
 enum HostReg {
-	HOST_R0=0,
+	HOST_R0 = 0,
 	HOST_R1,
 	HOST_R2,
 	HOST_R3,
@@ -73,7 +73,7 @@ enum HostReg {
 	HOST_R24,
 	HOST_R25,
 	HOST_R26,  // generic non-volatile (used for inline adc/sbb)
-	HOST_R27,  // points to current CacheBlockDynRec (decode.block)
+	HOST_R27,  // points to current CacheBlock (decode.block)
 	HOST_R28,  // points to fpu
 	HOST_R29,  // FC_ADDR
 	HOST_R30,  // points to Segs

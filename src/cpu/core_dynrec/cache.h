@@ -25,12 +25,13 @@
 class CodePageHandler; // forward
 
 // basic cache block representation
-class CacheBlockDynRec {
+class CacheBlock {
 public:
 	void Clear(void);
 	// link this cache block to another block, index specifies the code
 	// path (always zero for unconditional links, 0/1 for conditional ones
-	void LinkTo(Bitu index,CacheBlockDynRec * toblock) {
+	void LinkTo(Bitu index, CacheBlock *toblock)
+	{
 		assert(toblock);
 		link[index].to=toblock;
 		link[index].next=toblock->link[index].from;	// set target block
@@ -43,7 +44,7 @@ public:
 	struct {
 		Bit8u * start;			// where in the cache are we
 		Bitu size;
-		CacheBlockDynRec * next;
+		CacheBlock *next;
 		// writemap masking maskpointer/start/length
 		// to allow holes in the writemap
 		Bit8u * wmapmask;
@@ -52,22 +53,23 @@ public:
 	} cache;
 	struct {
 		Bitu index;
-		CacheBlockDynRec * next;
+		CacheBlock *next;
 	} hash;
 	struct {
-		CacheBlockDynRec * to;		// this block can transfer control to the to-block
-		CacheBlockDynRec * next;
-		CacheBlockDynRec * from;	// the from-block can transfer control to this block
-	} link[2];	// maximum two links (conditional jumps)
-	CacheBlockDynRec * crossblock;
+		CacheBlock *to;   // this block can transfer control to the to-block
+		CacheBlock *next;
+		CacheBlock *from; // the from-block can transfer control to this block
+	} link[2];                // maximum two links (conditional jumps)
+	CacheBlock *crossblock;
 };
 
 static struct {
 	struct {
-		CacheBlockDynRec * first;		// the first cache block in the list
-		CacheBlockDynRec * active;		// the current cache block
-		CacheBlockDynRec * free;		// pointer to the free list
-		CacheBlockDynRec * running;		// the last block that was entered for execution
+		CacheBlock *first;   // the first cache block in the list
+		CacheBlock *active;  // the current cache block
+		CacheBlock *free;    // pointer to the free list
+		CacheBlock *running; // the last block that was entered for
+		                     // execution
 	} block;
 	Bit8u * pos;		// position in the cache block
 	CodePageHandler *free_pages; // pointer to the free list
@@ -80,8 +82,8 @@ static uint8_t *cache_code_start_ptr = nullptr;
 static uint8_t *cache_code = nullptr;
 static uint8_t *cache_code_link_blocks = nullptr;
 
-static CacheBlockDynRec *cache_blocks = nullptr;
-static CacheBlockDynRec link_blocks[2];		// default linking (specially marked)
+static CacheBlock *cache_blocks = nullptr;
+static CacheBlock link_blocks[2]; // default linking (specially marked)
 
 // the CodePageHandler class provides access to the contained
 // cache blocks and intercepts writes to the code for special treatment
@@ -125,9 +127,9 @@ public:
 			for (Bitu count=start;count<=end;count++) map+=write_map[count];
 			if (!map) return is_current_block;	// no more code, finished
 
-			CacheBlockDynRec * block=hash_map[index];
+			CacheBlock *block = hash_map[index];
 			while (block) {
-				CacheBlockDynRec * nextblock=block->hash.next;
+				CacheBlock *nextblock = block->hash.next;
 				// test if this block is in the range
 				if (start<=block->page.end && end>=block->page.start) {
 					if (ip_point<=block->page.end && ip_point>=block->page.start) is_current_block=true;
@@ -301,7 +303,8 @@ public:
 	}
 
     // add a cache block to this page and note it in the hash map
-	void AddCacheBlock(CacheBlockDynRec * block) {
+	void AddCacheBlock(CacheBlock *block)
+	{
 		Bitu index=1+(block->page.start>>DYN_HASH_SHIFT);
 		block->hash.next=hash_map[index];	// link to old block at index from the new block
 		block->hash.index=index;
@@ -310,7 +313,8 @@ public:
 		active_blocks++;
 	}
 	// there's a block whose code started in a different page
-    void AddCrossBlock(CacheBlockDynRec * block) {
+	void AddCrossBlock(CacheBlock *block)
+	{
 		block->hash.next=hash_map[0];
 		block->hash.index=0;
 		hash_map[0]=block;
@@ -318,10 +322,11 @@ public:
 		active_blocks++;
 	}
 	// remove a cache block
-	void DelCacheBlock(CacheBlockDynRec * block) {
+	void DelCacheBlock(CacheBlock *block)
+	{
 		active_blocks--;
 		active_count=16;
-		CacheBlockDynRec **where = &hash_map[block->hash.index];
+		CacheBlock **where = &hash_map[block->hash.index];
 		while (*where != block) {
 			where = &((*where)->hash.next);
 			// Will crash if a block isn't found, which should never
@@ -368,9 +373,9 @@ public:
 	void ClearRelease(void) {
 		// clear out all cache blocks in this page
 		for (Bitu index=0;index<(1+DYN_PAGE_HASH);index++) {
-			CacheBlockDynRec * block=hash_map[index];
+			CacheBlock *block = hash_map[index];
 			while (block) {
-				CacheBlockDynRec * nextblock=block->hash.next;
+				CacheBlock *nextblock = block->hash.next;
 				block->page.handler=0;			// no need, full clear
 				block->Clear();
 				block=nextblock;
@@ -379,8 +384,9 @@ public:
 		Release();	// now can release this page
 	}
 
-	CacheBlockDynRec * FindCacheBlock(Bitu start) {
-		CacheBlockDynRec * block=hash_map[1+(start>>DYN_HASH_SHIFT)];
+	CacheBlock *FindCacheBlock(Bitu start)
+	{
+		CacheBlock *block = hash_map[1 + (start >> DYN_HASH_SHIFT)];
 		// see if there's a cache block present at the start address
 		while (block) {
 			if (block->page.start==start) return block;	// found
@@ -405,7 +411,7 @@ private:
 	PageHandler * old_pagehandler;
 
 	// hash map to quickly find the cache blocks in this page
-	CacheBlockDynRec * hash_map[1+DYN_PAGE_HASH];
+	CacheBlock *hash_map[1 + DYN_PAGE_HASH];
 
 	Bitu active_blocks;		// the number of cache blocks in this page
 	Bitu active_count;		// delaying parameter to not immediately release a page
@@ -413,30 +419,32 @@ private:
 	Bitu phys_page;
 };
 
-static inline void cache_add_unused_block(CacheBlockDynRec *block)
+static inline void cache_add_unused_block(CacheBlock *block)
 {
 	// block has become unused, add it to the freelist
 	block->cache.next = cache.block.free;
 	cache.block.free = block;
 }
 
-static CacheBlockDynRec * cache_getblock(void) {
+static CacheBlock *cache_getblock(void)
+{
 	// get a free cache block and advance the free pointer
-	CacheBlockDynRec * ret=cache.block.free;
+	CacheBlock *ret = cache.block.free;
 	if (!ret) E_Exit("Ran out of CacheBlocks" );
 	cache.block.free=ret->cache.next;
 	ret->cache.next=0;
 	return ret;
 }
 
-void CacheBlockDynRec::Clear(void) {
+void CacheBlock::Clear(void)
+{
 	Bitu ind;
 	// check if this is not a cross page block
 	if (hash.index) for (ind=0;ind<2;ind++) {
-		CacheBlockDynRec * fromlink=link[ind].from;
+		CacheBlock * fromlink=link[ind].from;
 		link[ind].from=0;
 		while (fromlink) {
-			CacheBlockDynRec * nextlink=fromlink->link[ind].next;
+			CacheBlock * nextlink=fromlink->link[ind].next;
 			// clear the next-link and let the block point to the standard linkcode
 			fromlink->link[ind].next=0;
 			fromlink->link[ind].to=&link_blocks[ind];
@@ -445,7 +453,7 @@ void CacheBlockDynRec::Clear(void) {
 		}
 		if (link[ind].to!=&link_blocks[ind]) {
 			// not linked to the standard linkcode, find the block that links to this block
-			CacheBlockDynRec * * wherelink=&link[ind].to->link[ind].from;
+			CacheBlock **wherelink = &link[ind].to->link[ind].from;
 			while (*wherelink != this && *wherelink) {
 				wherelink = &(*wherelink)->link[ind].next;
 			}
@@ -476,12 +484,12 @@ void CacheBlockDynRec::Clear(void) {
 	}
 }
 
-
-static CacheBlockDynRec * cache_openblock(void) {
-	CacheBlockDynRec * block=cache.block.active;
+static CacheBlock *cache_openblock(void)
+{
+	CacheBlock *block = cache.block.active;
 	// check for enough space in this block
 	Bitu size=block->cache.size;
-	CacheBlockDynRec * nextblock=block->cache.next;
+	CacheBlock *nextblock = block->cache.next;
 	if (block->page.handler)
 		block->Clear();
 	// block size must be at least CACHE_MAXSIZE
@@ -490,7 +498,7 @@ static CacheBlockDynRec * cache_openblock(void) {
 			goto skipresize;
 		// merge blocks
 		size+=nextblock->cache.size;
-		CacheBlockDynRec * tempblock=nextblock->cache.next;
+		CacheBlock *tempblock = nextblock->cache.next;
 		if (nextblock->page.handler)
 			nextblock->Clear();
 		// block is free now
@@ -506,7 +514,7 @@ skipresize:
 }
 
 static void cache_closeblock(void) {
-	CacheBlockDynRec * block=cache.block.active;
+	CacheBlock *block = cache.block.active;
 	// links point to the default linking code
 	block->link[0].to=&link_blocks[0];
 	block->link[1].to=&link_blocks[1];
@@ -531,7 +539,7 @@ static void cache_closeblock(void) {
 		// smaller than cache align then don't bother to resize
 		if (left>CACHE_ALIGN) {
 			new_size=((written-1)|(CACHE_ALIGN-1))+1;
-			CacheBlockDynRec * newblock=cache_getblock();
+			CacheBlock *newblock = cache_getblock();
 			// align block now to CACHE_ALIGN
 			newblock->cache.start=block->cache.start+new_size;
 			newblock->cache.size=block->cache.size-new_size;
@@ -597,15 +605,16 @@ static void cache_init(bool enable) {
 		cache_initialized = true;
 		if (cache_blocks == NULL) {
 			// allocate the cache blocks memory
-			cache_blocks=(CacheBlockDynRec*)malloc(CACHE_BLOCKS*sizeof(CacheBlockDynRec));
+			cache_blocks = (CacheBlock *)malloc(CACHE_BLOCKS *
+			                                    sizeof(CacheBlock));
 			if(!cache_blocks) E_Exit("Allocating cache_blocks has failed");
-			memset(cache_blocks,0,sizeof(CacheBlockDynRec)*CACHE_BLOCKS);
+			memset(cache_blocks, 0, sizeof(CacheBlock) * CACHE_BLOCKS);
 			cache.block.free=&cache_blocks[0];
 			// initialize the cache blocks
 			for (i=0;i<CACHE_BLOCKS-1;i++) {
-				cache_blocks[i].link[0].to=(CacheBlockDynRec *)1;
-				cache_blocks[i].link[1].to=(CacheBlockDynRec *)1;
-				cache_blocks[i].cache.next=&cache_blocks[i+1];
+				cache_blocks[i].link[0].to = (CacheBlock *)1;
+				cache_blocks[i].link[1].to = (CacheBlock *)1;
+				cache_blocks[i].cache.next = &cache_blocks[i + 1];
 			}
 		}
 		if (cache_code_start_ptr==NULL) {
@@ -630,7 +639,7 @@ static void cache_init(bool enable) {
 			if(mprotect(cache_code_link_blocks,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP,PROT_WRITE|PROT_READ|PROT_EXEC))
 				LOG_MSG("Setting execute permission on the code cache has failed");
 #endif
-			CacheBlockDynRec * block=cache_getblock();
+			CacheBlock *block = cache_getblock();
 			cache.block.first=block;
 			cache.block.active=block;
 			block->cache.start=&cache_code[0];
