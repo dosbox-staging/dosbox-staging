@@ -1249,8 +1249,7 @@ void Gus::WriteToRegister()
 
 void GUS_ShutDown(Section * /*sec*/)
 {
-	delete myGUS;
-	myGUS = nullptr;
+	myGUS.reset();
 }
 
 void GUS_Init(Section *sec)
@@ -1268,6 +1267,6 @@ void GUS_Init(Section *sec)
 	const auto irq = static_cast<uint8_t>(clamp(conf->Get_int("gusirq"), 1, 255));
 	const std::string ultradir = conf->Get_string("ultradir");
 
-	myGUS = new Gus(port, dma, irq, ultradir);
+	myGUS = std::make_unique<Gus>(port, dma, irq, ultradir);
 	sec->AddDestroyFunction(&GUS_ShutDown, true);
 }
