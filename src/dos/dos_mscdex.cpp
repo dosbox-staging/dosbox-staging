@@ -101,9 +101,14 @@ public:
 	CMscdex            (const CMscdex&) = delete; // prevent copying
 	CMscdex& operator= (const CMscdex&) = delete; // prevent assignment
 
-	Bit16u		GetVersion			(void)	{ return (MSCDEX_VERSION_HIGH<<8)+MSCDEX_VERSION_LOW; };
-	Bit16u   GetNumDrives (void) const { return numDrives; }
-	Bit16u		GetFirstDrive		(void)	{ return dinfo[0].drive; };
+	uint16_t GetVersion() const
+	{
+		return (MSCDEX_VERSION_HIGH << 8) + MSCDEX_VERSION_LOW;
+	}
+
+	uint16_t GetNumDrives() const { return numDrives; }
+	uint16_t GetFirstDrive() const { return dinfo[0].drive; }
+
 	Bit8u		GetSubUnit			(Bit16u _drive);
 	bool		GetUPC				(Bit8u subUnit, Bit8u& attr, char* upc);
 
