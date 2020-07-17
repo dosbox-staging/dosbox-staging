@@ -31,7 +31,10 @@
 	instruction is encountered.
 */
 
-static CacheBlockDynRec * CreateCacheBlock(CodePageHandlerDynRec * codepage,PhysPt start,Bitu max_opcodes) {
+static CacheBlockDynRec *CreateCacheBlock(CodePageHandler *codepage,
+                                          PhysPt start,
+                                          Bitu max_opcodes)
+{
 	// initialize a load of variables
 	decode.code_start=start;
 	decode.code=start;

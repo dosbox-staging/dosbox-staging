@@ -111,7 +111,7 @@ static struct DynDecode {
 
 	// the active page (containing the current byte of the instruction stream)
 	struct {
-		CodePageHandlerDynRec * code;
+		CodePageHandler *code;
 		Bitu index;		// index to the current byte of the instruction stream
 		Bit8u * wmap;	// write map that indicates code presence for every byte of this page
 		Bit8u * invmap;	// invalidation map
@@ -127,8 +127,8 @@ static struct DynDecode {
 	} modrm;
 } decode;
 
-
-static bool MakeCodePage(Bitu lin_addr,CodePageHandlerDynRec * &cph) {
+static bool MakeCodePage(Bitu lin_addr, CodePageHandler *&cph)
+{
 	Bit8u rdval;
 	const Bitu cflag = cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16;
 	//Ensure page contains memory:
@@ -137,7 +137,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandlerDynRec * &cph) {
 	PageHandler * handler=get_tlb_readhandler(lin_addr);
 	if (handler->flags & PFLAG_HASCODE) {
 		// this is a codepage handler, make sure it matches current code size
-		cph=(CodePageHandlerDynRec *)handler;
+		cph = (CodePageHandler *)handler;
 		if (handler->flags & cflag) return false;
 		// wrong code size/stale dynamic code, drop it
 		cph->ClearRelease();
@@ -149,7 +149,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandlerDynRec * &cph) {
 		if (PAGING_ForcePageInit(lin_addr)) {
 			handler=get_tlb_readhandler(lin_addr);
 			if (handler->flags & PFLAG_HASCODE) {
-				cph=(CodePageHandlerDynRec *)handler;
+				cph = (CodePageHandler *)handler;
 				if (handler->flags & cflag) return false;
 				cph->ClearRelease();
 				cph=0;
@@ -183,7 +183,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandlerDynRec * &cph) {
 			}
 		}
 	}
-	CodePageHandlerDynRec * cpagehandler=cache.free_pages;
+	CodePageHandler *cpagehandler = cache.free_pages;
 	cache.free_pages=cache.free_pages->next;
 
 	// adjust previous and next page pointer
