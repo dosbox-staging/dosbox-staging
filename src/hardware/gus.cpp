@@ -52,7 +52,7 @@ constexpr uint8_t READ_HANDLERS = 8u;
 constexpr float TIMER_1_DEFAULT_DELAY = 0.080f;
 constexpr float TIMER_2_DEFAULT_DELAY = 0.320f;
 constexpr float ONE_AMP = 1.0f;              // first amplitude value
-constexpr uint16_t VOLUME_INC_SCALAR = 512u; // Volume index increment scalar
+constexpr int16_t VOLUME_INC_SCALAR = 512;   // Volume index increment scalar
 constexpr uint16_t VOLUME_LEVELS = 4096u;
 constexpr double VOLUME_LEVEL_DIVISOR = 1.002709201; // 0.0235 dB increments
 constexpr uint8_t WAVE_FRACT = 9;                // Interpolation width in bits
@@ -111,11 +111,11 @@ public:
 	uint8_t wave_ctrl = VWCTRL_DEFAULT;
 
 	// volume scalar state
-	uint32_t vol_index_start = 0u;
-	uint32_t vol_index_end = 0u;
-	uint32_t vol_index_current = 0u;
-	uint32_t vol_index_inc = 0u;
-	uint8_t vol_index_rate = 0u;
+	int32_t vol_index_start = 0;
+	int32_t vol_index_end = 0;
+	int32_t vol_index_current = 0;
+	int32_t vol_index_inc = 0;
+	uint8_t vol_index_rate = 0;
 	uint8_t vol_ctrl = VWCTRL_DEFAULT;
 
 private:
@@ -288,8 +288,13 @@ void Voice::GenerateSamples(float *stream,
 			assert(sample <= std::numeric_limits<int16_t>::max() &&
 			       sample >= std::numeric_limits<int16_t>::min());
 		}
+
+		// Unscale the volume index and check its bounds
+		const auto i = static_cast<size_t>(
+		        ceil_sdivide(vol_index_current, VOLUME_INC_SCALAR));
+		assert(i < VOLUME_LEVELS);
+
 		// Apply any selected volume reduction
-		const auto i = ceil_udivide(vol_index_current, VOLUME_INC_SCALAR);
 		sample *= vol_scalars[i];
 
 		// Add the sample to the stream, angled in L-R space
@@ -364,12 +369,10 @@ inline void Voice::VolUpdate()
 	// Should the voice's volume be decreased?
 	if (vol_ctrl & VWCtrl::Decreasing) {
 		vol_index_current -= vol_index_inc;
-		vol_count_remaining = static_cast<signed>(vol_index_start -
-		                                          vol_index_current);
+		vol_count_remaining = vol_index_start - vol_index_current;
 	} else { // or increased?
 		vol_index_current += vol_index_inc;
-		vol_count_remaining = static_cast<signed>(vol_index_current -
-		                                          vol_index_end);
+		vol_count_remaining = vol_index_current - vol_index_end;
 	}
 	// We've reached the desired volume
 	if (vol_count_remaining < 0) {
@@ -384,12 +387,9 @@ inline void Voice::VolUpdate()
 		// Is it looping bi-directionally?
 		if (vol_ctrl & VWCtrl::BiDirectional)
 			vol_ctrl ^= VWCtrl::Decreasing;
-		vol_index_current =
-		        (vol_ctrl & VWCtrl::Decreasing)
-		                ? (vol_index_end -
-		                   static_cast<unsigned>(vol_count_remaining))
-		                : (vol_index_start +
-		                   static_cast<unsigned>(vol_count_remaining));
+		vol_index_current = (vol_ctrl & VWCtrl::Decreasing)
+		                            ? vol_index_end - vol_count_remaining
+		                            : vol_index_start + vol_count_remaining;
 	} else { // Otherwise reset the volume's position
 		vol_ctrl |= 1;
 		vol_index_current = (vol_ctrl & VWCtrl::Decreasing) ? vol_index_start
@@ -475,9 +475,13 @@ void Voice::WriteVolCtrl(uint8_t val)
 void Voice::WriteVolRate(uint8_t val)
 {
 	vol_index_rate = val;
-	const uint32_t pos_in_bank = (vol_index_rate & 63);
-	const uint32_t decimator = 1 << (3 * (val >> 6));
-	vol_index_inc = ceil_udivide(pos_in_bank * VOLUME_INC_SCALAR, decimator);
+	constexpr uint8_t bank_lengths = 63;
+	const int pos_in_bank = vol_index_rate & bank_lengths;
+	const int decimator = 1 << (3 * (val >> 6));
+	vol_index_inc = ceil_sdivide(pos_in_bank * VOLUME_INC_SCALAR, decimator);
+
+	// Sanity check the bounds of the incrementer
+	assert(vol_index_inc >= 0 && vol_index_inc <= bank_lengths * VOLUME_INC_SCALAR);
 }
 
 void Voice::WriteWaveCtrl(uint8_t val)
@@ -908,9 +912,12 @@ uint16_t Gus::ReadFromRegister()
 	case 0x83: // Voice LSW start address register
 		return static_cast<uint16_t>(current_voice->wave_start);
 	case 0x89: // Voice volume register
-		return static_cast<uint16_t>(
-		        ceil_udivide(current_voice->vol_index_current, VOLUME_INC_SCALAR)
-		        << 4);
+	{
+		const int i = ceil_sdivide(current_voice->vol_index_current,
+		                           VOLUME_INC_SCALAR);
+		assert(i < VOLUME_LEVELS);
+		return static_cast<uint16_t>(i << 4);
+	}
 	case 0x8a: // Voice MSB current address register
 		return static_cast<uint16_t>(current_voice->wave_addr >> 16);
 	case 0x8b: // Voice LSW current address register
@@ -1212,17 +1219,22 @@ void Gus::WriteToRegister()
 		break;
 	case 0x7: // Voice volume start register  EEEEMMMM
 		data = register_data >> 8;
-		current_voice->vol_index_start = static_cast<unsigned>(
-		        (data << 4) * VOLUME_INC_SCALAR);
+		// Don't need to bounds-check the value because it's implied:
+		// 'data' is a uint8, so is 255 at most. 255 * 2^4 = 4080, which
+		// falls within-bounds of the 4096-long vol_scalars array.
+		current_voice->vol_index_start = (data << 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0x8: // Voice volume end register  EEEEMMMM
 		data = register_data >> 8;
-		current_voice->vol_index_end = static_cast<unsigned>(
-		        (data << 4) * VOLUME_INC_SCALAR);
+		// Same as above regarding bound-checking.
+		current_voice->vol_index_end = (data << 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0x9: // Voice current volume register
-		current_voice->vol_index_current = static_cast<unsigned>(
-		        (register_data >> 4) * VOLUME_INC_SCALAR);
+		// Don't need to bounds-check the value because it's implied:
+		// reg data is a uint16, and 65535 >> 4 takes it down to 4095,
+		// which is the last element in the 4096-long vol_scalars array.
+		current_voice->vol_index_current = (register_data >> 4) *
+		                                   VOLUME_INC_SCALAR;
 		break;
 	case 0xA: // Voice MSW current address register
 		addr = static_cast<uint32_t>(register_data & 0x1fff) << 16;
