@@ -71,11 +71,10 @@ struct AudioFrame {
 };
 
 // A set of common IRQs shared between the DSP and each voice
-struct SharedVoiceIrqs {
+struct VoiceIrq {
 	const std::function<void()> check = nullptr;
-	uint32_t vol = 0u;
-	uint32_t wave = 0u;
-	uint8_t status = 0u;
+	uint32_t state = 0u;
+	uint8_t count = 0u;
 };
 
 struct VoiceControl {
@@ -90,7 +89,7 @@ struct VoiceControl {
 // A Single GUS Voice
 class Voice {
 public:
-	Voice(uint8_t num, SharedVoiceIrqs &irqs);
+	Voice(uint8_t num, VoiceIrq &irq);
 	bool CheckWaveRolloverCondition();
 	void ClearStats();
 	void GenerateSamples(float *stream,
@@ -100,14 +99,11 @@ public:
 	                     AudioFrame &peak,
 	                     uint16_t requested_frames);
 
-	uint8_t ReadWaveCtrl() const;
-	uint8_t ReadVolCtrl() const;
 	void WritePanPot(uint8_t pos);
-	void WriteVolCtrl(uint8_t val);
 	void WriteVolRate(uint16_t val);
-	void WriteWaveCtrl(uint8_t val);
 	void WriteWaveFreq(uint16_t val);
 	void UpdateWaveAndVol();
+	void UpdateWaveBitDepth();
 
 	// bit-depth tracking
 	uint32_t generated_8bit_ms = 0u;
@@ -115,6 +111,7 @@ public:
 
 	VoiceControl wave;
 	VoiceControl volume_idx;
+	uint32_t irq_mask = 0u;
 
 private:
 	Voice() = delete;
@@ -142,10 +139,9 @@ private:
 	get_sample_f GetSample = std::bind(&Voice::GetSample8, this, _1, _2);
 
 	// shared IRQs with the GUS DSP
-	SharedVoiceIrqs &shared_irqs;
+	VoiceIrq &shared_irq;
 	uint32_t &generated_ms = generated_8bit_ms;
 
-	uint32_t irq_mask = 0u;
 	uint8_t pan_position = PAN_DEFAULT_POSITION;
 };
 
@@ -181,6 +177,7 @@ private:
 	void PopulatePanScalars();
 	void PopulateVolScalars();
 	void PrintStats();
+	uint8_t ReadCtrl(const VoiceControl &ctrl) const;
 	Bitu ReadFromPort(const Bitu port, const Bitu iolen);
 	void Reset();
 	bool SoftLimit(float (&)[BUFFER_FRAMES][2],
@@ -188,6 +185,7 @@ private:
 	               uint16_t);
 	void UpdateWaveMsw(int32_t &addr) const;
 	void UpdateWaveLsw(int32_t &addr) const;
+	void WriteCtrl(VoiceControl &ctrl, uint32_t irq_mask, uint8_t val);
 	void WriteToPort(Bitu port, Bitu val, Bitu iolen);
 
 	// Collections
@@ -204,8 +202,7 @@ private:
 
 	// Complex members
 	AutoexecObject autoexec_lines[2] = {};
-	SharedVoiceIrqs shared_voice_irqs = {std::bind(&Gus::CheckVoiceIrq, this),
-	                                     0u, 0u};
+	VoiceIrq voice_irq = {std::bind(&Gus::CheckVoiceIrq, this), 0u, 0u};
 	AudioFrame peak_amplitude = {ONE_AMP, ONE_AMP};
 	MixerObject mixer_channel = {};
 	MixerChannel *audio_channel = nullptr;
@@ -247,9 +244,10 @@ private:
 
 static std::unique_ptr<Gus> myGUS = nullptr;
 
-Voice::Voice(uint8_t num, SharedVoiceIrqs &irqs)
-        : shared_irqs(irqs),
-          irq_mask(1 << num)
+Voice::Voice(uint8_t num, VoiceIrq &irq)
+        : irq_mask(1 << num),
+		shared_irq(irq)
+          
 {}
 
 void Voice::ClearStats()
@@ -367,22 +365,6 @@ uint8_t Voice::ReadPanPot() const
 	return pan_position;
 }
 
-inline uint8_t Voice::ReadVolCtrl() const
-{
-	uint8_t ret = volume_idx.state;
-	if (shared_irqs.vol & irq_mask)
-		ret |= 0x80;
-	return ret;
-}
-
-inline uint8_t Voice::ReadWaveCtrl() const
-{
-	uint8_t ret = wave.state;
-	if (shared_irqs.wave & irq_mask)
-		ret |= 0x80;
-	return ret;
-}
-
 void Voice::UpdateWaveAndVol()
 {
 	WriteWaveFreq(wave.rate);
@@ -407,7 +389,7 @@ inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_reset)
 	
 	// Generate an IRQ if requested
 	if (ctrl.state & VWCtrl::RaiseIrq) {
-		shared_irqs.wave |= irq_mask;
+		shared_irq.state |= irq_mask;
 	}
 
 	// Allow the current position to move beyond its limit
@@ -434,19 +416,6 @@ void Voice::WritePanPot(uint8_t pos)
 {
 	constexpr uint8_t max_pos = PAN_POSITIONS - 1;
 	pan_position = std::min(pos, max_pos);
-}
-
-void Voice::WriteVolCtrl(uint8_t val)
-{
-	const uint32_t old = shared_irqs.vol;
-	volume_idx.state = val & 0x7f;
-	// Manually set the irq
-	if ((val & 0xa0) == 0xa0)
-		shared_irqs.vol |= irq_mask;
-	else
-		shared_irqs.vol &= ~irq_mask;
-	if (old != shared_irqs.vol)
-		shared_irqs.check();
 }
 
 // Four volume-index-rate "banks" are available that define the number of
@@ -478,10 +447,21 @@ void Voice::WriteVolRate(uint16_t val)
 	assert(volume_idx.inc >= 0 && volume_idx.inc <= bank_lengths * VOLUME_INC_SCALAR);
 }
 
-void Voice::WriteWaveCtrl(uint8_t val)
+
+void Gus::WriteCtrl(VoiceControl &ctrl, uint32_t voice_irq_mask, uint8_t val)
 {
-	const uint32_t oldirq = shared_irqs.wave;
-	wave.state = val & 0x7f;
+	const uint32_t prev_state = voice_irq.state;
+	ctrl.state = val & 0x7f;
+	// Manually set the irq
+	if ((val & 0xa0) == 0xa0)
+		voice_irq.state |= voice_irq_mask;
+	else
+		voice_irq.state &= ~voice_irq_mask;
+	if (prev_state != voice_irq.state)
+		voice_irq.check();
+}
+
+void Voice::UpdateWaveBitDepth() {
 	if (wave.state & VWCtrl::Bit16) {
 		GetSample = std::bind(&Voice::GetSample16, this, _1, _2);
 		generated_ms = generated_16bit_ms;
@@ -490,12 +470,6 @@ void Voice::WriteWaveCtrl(uint8_t val)
 		generated_ms = generated_8bit_ms;
 	}
 
-	if ((val & 0xa0) == 0xa0)
-		shared_irqs.wave |= irq_mask;
-	else
-		shared_irqs.wave &= ~irq_mask;
-	if (oldirq != shared_irqs.wave)
-		shared_irqs.check();
 }
 
 void Voice::WriteWaveFreq(uint16_t val)
@@ -513,7 +487,7 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 {
 	// Create the internal voice channels
 	for (uint8_t i = 0; i < MAX_VOICES; ++i) {
-		voices.at(i) = std::make_unique<Voice>(i, shared_voice_irqs);
+		voices.at(i) = std::make_unique<Voice>(i, voice_irq);
 	}
 
 	// Register the IO read addresses
@@ -600,22 +574,19 @@ bool Gus::CheckTimer(const size_t t)
 void Gus::CheckVoiceIrq()
 {
 	irq_status &= 0x9f;
-	const Bitu totalmask = (shared_voice_irqs.vol | shared_voice_irqs.wave) &
-	                       active_voice_mask;
+	const Bitu totalmask = voice_irq.state &  active_voice_mask;
 	if (!totalmask)
 		return;
-	if (shared_voice_irqs.vol)
-		irq_status |= 0x40;
-	if (shared_voice_irqs.wave)
-		irq_status |= 0x20;
+	if (voice_irq.state)
+		irq_status |= (0x40 | 0x20);
 	CheckIrq();
 	for (;;) {
-		uint32_t check = (1 << shared_voice_irqs.status);
+		uint32_t check = (1 << voice_irq.count);
 		if (totalmask & check)
 			return;
-		shared_voice_irqs.status++;
-		if (shared_voice_irqs.status >= active_voices)
-			shared_voice_irqs.status = 0;
+		voice_irq.count++;
+		if (voice_irq.count >= active_voices)
+			voice_irq.count = 0;
 	}
 }
 
@@ -815,6 +786,14 @@ void Gus::PrintStats()
 	}
 }
 
+uint8_t Gus::ReadCtrl(const VoiceControl &ctrl) const
+{
+	uint8_t ret = ctrl.state;
+	if (voice_irq.state & current_voice->irq_mask)
+		ret |= 0x80;
+	return ret;
+}
+
 Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 {
 	//	LOG_MSG("read from gus port %x",port);
@@ -880,16 +859,13 @@ uint16_t Gus::ReadFromRegister()
 		reg |= (irq_status & 0x80) >> 1;
 		return static_cast<uint16_t>(reg << 8);
 	case 0x8f: // General voice IRQ status register
-		reg = shared_voice_irqs.status | 0x20;
+		reg = voice_irq.count | 0x20;
 		uint32_t mask;
-		mask = 1 << shared_voice_irqs.status;
-		if (!(shared_voice_irqs.vol & mask))
-			reg |= 0x40;
-		if (!(shared_voice_irqs.wave & mask))
-			reg |= 0x80;
-		shared_voice_irqs.vol &= ~mask;
-		shared_voice_irqs.wave &= ~mask;
-		shared_voice_irqs.check();
+		mask = 1 << voice_irq.count;
+		if (!(voice_irq.state & mask))
+			reg |= (0x40 | 0x80);
+		voice_irq.state &= ~mask;
+		voice_irq.check();
 		return static_cast<uint16_t>(reg << 8);
 	}
 
@@ -901,7 +877,7 @@ uint16_t Gus::ReadFromRegister()
 	// Registers that read from from the current voice
 	switch (selected_register) {
 	case 0x80: // Voice wave control read register
-		return static_cast<uint16_t>(current_voice->ReadWaveCtrl() << 8);
+		return static_cast<uint16_t>(ReadCtrl(current_voice->wave) << 8);
 	case 0x82: // Voice MSB start address register
 		return static_cast<uint16_t>(current_voice->wave.start >> 16);
 	case 0x83: // Voice LSW start address register
@@ -918,7 +894,7 @@ uint16_t Gus::ReadFromRegister()
 	case 0x8b: // Voice LSW current address register
 		return static_cast<uint16_t>(current_voice->wave.pos);
 	case 0x8d: // Voice volume control register
-		return static_cast<uint16_t>(current_voice->ReadVolCtrl() << 8);
+		return static_cast<uint16_t>(ReadCtrl(current_voice->volume_idx) << 8);
 	}
 #if LOG_GUS
 	LOG_MSG("GUS: Unimplemented read Register 0x%x", selected_register);
@@ -956,12 +932,12 @@ void Gus::Reset()
 		// Stop all voices
 		for (auto &voice : voices) {
 			voice->volume_idx.pos = 0u;
-			voice->WriteWaveCtrl(0x1);
-			voice->WriteVolCtrl(0x1);
+			WriteCtrl(voice->wave, voice->irq_mask, 0x1);
+			WriteCtrl(voice->volume_idx, voice->irq_mask, 0x1);
 			voice->WritePanPot(PAN_DEFAULT_POSITION);
 			voice->ClearStats();
 		}
-		shared_voice_irqs.status = 0u;
+		voice_irq.count = 0u;
 		peak_amplitude = {ONE_AMP, ONE_AMP};
 	}
 	irq_enabled = register_data & 0x4;
@@ -1199,7 +1175,8 @@ void Gus::WriteToRegister()
 	// Registers that write to the current voice
 	switch (selected_register) {
 	case 0x0: // Voice wave control register
-		current_voice->WriteWaveCtrl(register_data >> 8);
+		WriteCtrl(current_voice->wave, current_voice->irq_mask, register_data >> 8);
+		current_voice->UpdateWaveBitDepth();
 		break;
 	case 0x1: // Voice frequency control register
 		current_voice->WriteWaveFreq(register_data);
@@ -1248,7 +1225,7 @@ void Gus::WriteToRegister()
 		current_voice->WritePanPot(register_data >> 8);
 		break;
 	case 0xD: // Voice volume control register
-		current_voice->WriteVolCtrl(register_data >> 8);
+		WriteCtrl(current_voice->volume_idx, current_voice->irq_mask, register_data >> 8);
 		break;
 	}
 
