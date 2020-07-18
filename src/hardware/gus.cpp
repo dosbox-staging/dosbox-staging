@@ -123,15 +123,15 @@ private:
 	void UpdateControl(VoiceControl &ctrl, bool skip_loop);
 
 	// Control states
-	enum VWCtrl : uint8_t {
-		Reset = 0x01,
-		Stopped = 0x02,
-		Disabled = Reset | Stopped,
-		Bit16 = 0x04,
-		Loop = 0x08,
-		BiDirectional = 0x10,
-		RaiseIrq = 0x20,
-		Decreasing = 0x40,
+	enum CTRL : uint8_t {
+		RESET = 0x01,
+		STOPPED = 0x02,
+		DISABLED = RESET | STOPPED,
+		BIT16 = 0x04,
+		LOOP = 0x08,
+		BIDIRECTIONAL = 0x10,
+		RAISEIRQ = 0x20,
+		DECREASING = 0x40,
 	};
 
 	typedef std::function<float(const uint8_t *, const int32_t)> get_sample_f;
@@ -280,7 +280,7 @@ Joh Campbell, maintainer of DOSox-X:
 */
 bool Voice::CheckWaveRolloverCondition()
 {
-	return vctrl.state & VWCtrl::Bit16 && !(wctrl.state & VWCtrl::Loop);
+	return vctrl.state & CTRL::BIT16 && !(wctrl.state & CTRL::LOOP);
 }
 void Voice::GenerateSamples(float *stream,
                             const uint8_t *ram,
@@ -289,7 +289,7 @@ void Voice::GenerateSamples(float *stream,
                             AudioFrame &peak,
                             uint16_t requested_frames)
 {
-	if (vctrl.state & wctrl.state & VWCtrl::Disabled)
+	if (vctrl.state & wctrl.state & CTRL::DISABLED)
 		return;
 
 	while (requested_frames-- > 0) {
@@ -372,10 +372,10 @@ void Voice::UpdateWaveAndVol()
 
 inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_reset)
 {
-	if (ctrl.state & VWCtrl::Disabled)
+	if (ctrl.state & CTRL::DISABLED)
 		return;
 	int32_t remaining;
-	if (ctrl.state & VWCtrl::Decreasing) {
+	if (ctrl.state & CTRL::DECREASING) {
 		ctrl.pos -= ctrl.inc;
 		remaining = ctrl.start - ctrl.pos;
 	} else {
@@ -387,7 +387,7 @@ inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_reset)
 		return;
 	
 	// Generate an IRQ if requested
-	if (ctrl.state & VWCtrl::RaiseIrq) {
+	if (ctrl.state & CTRL::RAISEIRQ) {
 		shared_irq.state |= irq_mask;
 	}
 
@@ -396,18 +396,18 @@ inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_reset)
 		return;
 
 	// Should we loop?
-	if (ctrl.state & VWCtrl::Loop) {
+	if (ctrl.state & CTRL::LOOP) {
 		/* Bi-directional looping */
-		if (ctrl.state & VWCtrl::BiDirectional)
-			ctrl.state ^= VWCtrl::Decreasing;
-		ctrl.pos = (ctrl.state & VWCtrl::Decreasing)
+		if (ctrl.state & CTRL::BIDIRECTIONAL)
+			ctrl.state ^= CTRL::DECREASING;
+		ctrl.pos = (ctrl.state & CTRL::DECREASING)
 		                   ? ctrl.end - remaining
 		                   : ctrl.start + remaining;
 	}
 	// Otherwise, reset the position back to its start or end
-	 else {
+	else {
 		ctrl.state |= 1; // Stop the voice
-		ctrl.pos = (ctrl.state & VWCtrl::Decreasing) ? ctrl.start : ctrl.end;
+		ctrl.pos = (ctrl.state & CTRL::DECREASING) ? ctrl.start : ctrl.end;
 	}
 }
 
@@ -461,7 +461,7 @@ void Gus::WriteCtrl(VoiceControl &ctrl, uint32_t voice_irq_mask, uint8_t val)
 }
 
 void Voice::UpdateWaveBitDepth() {
-	if (wctrl.state & VWCtrl::Bit16) {
+	if (wctrl.state & CTRL::BIT16) {
 		GetSample = std::bind(&Voice::GetSample16, this, _1, _2);
 		generated_ms = generated_16bit_ms;
 	} else {
