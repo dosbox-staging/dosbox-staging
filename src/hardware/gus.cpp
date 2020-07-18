@@ -78,7 +78,7 @@ struct SharedVoiceIrqs {
 	uint8_t status = 0u;
 };
 
-struct VoiceCtrl {
+struct VoiceControl {
 	int32_t start = 0;
 	int32_t end = 0;
 	int32_t pos = 0;
@@ -91,6 +91,7 @@ struct VoiceCtrl {
 class Voice {
 public:
 	Voice(uint8_t num, SharedVoiceIrqs &irqs);
+	bool CheckWaveRolloverCondition();
 	void ClearStats();
 	void GenerateSamples(float *stream,
 	                     const uint8_t *ram,
@@ -112,8 +113,8 @@ public:
 	uint32_t generated_8bit_ms = 0u;
 	uint32_t generated_16bit_ms = 0u;
 
-	VoiceCtrl wave;
-	VoiceCtrl volume_idx;
+	VoiceControl wave;
+	VoiceControl volume_idx;
 
 private:
 	Voice() = delete;
@@ -122,9 +123,8 @@ private:
 
 	inline float GetSample8(const uint8_t *ram, const int32_t addr) const;
 	inline float GetSample16(const uint8_t *ram, const int32_t addr) const;
-	inline void VolUpdate();
 	uint8_t ReadPanPot() const;
-	inline void WaveUpdate();
+	void UpdateControl(VoiceControl &ctrl, bool skip_loop);
 
 	// Control states
 	enum VWCtrl : uint8_t {
@@ -258,6 +258,33 @@ void Voice::ClearStats()
 	generated_16bit_ms = 0u;
 }
 
+/*
+Gravis SDK, Section 3.11. Rollover feature:
+	Each voice has a 'rollover' feature that allows an application to be notified
+	when a voice's playback position passes over a particular place in DRAM.  This
+	is very useful for getting seamless digital audio playback.  Basically, the GF1
+	will generate an IRQ when a voice's current position is  equal to the end
+	position.  However, instead of stopping or looping back to the start position,
+	the voice will continue playing in the same direction.  This means that there
+	will be no pause (or gap) in the playback.
+	
+	Note that this feature is enabled/disabled through the voice's VOLUME control
+	register (since there are no more bits available in the voice control
+	registers).   A voice's loop enable bit takes precedence over the rollover. This
+	means that if a voice's loop enable is on, it will loop when it hits the end
+	position, regardless of the state of the rollover enable.
+---
+Joh Campbell, maintainer of DOSox-X:
+	Despite the confusing description above, that means that looping takes
+	precedence over rollover. If not looping, then rollover means to fire the IRQ
+	but keep moving. If looping, then fire IRQ and carry out loop behavior. Gravis
+	Ultrasound Windows 3.1 drivers expect this behavior, else Windows WAVE output
+	will not work correctly.
+*/
+bool Voice::CheckWaveRolloverCondition()
+{
+	return volume_idx.state & VWCtrl::Bit16 && !(wave.state & VWCtrl::Loop);
+}
 void Voice::GenerateSamples(float *stream,
                             const uint8_t *ram,
                             const float *vol_scalars,
@@ -286,8 +313,12 @@ void Voice::GenerateSamples(float *stream,
 		}
 
 		// Unscale the volume index and check its bounds
-		const auto i = static_cast<size_t>(
+		auto i = static_cast<size_t>(
 		        ceil_sdivide(volume_idx.pos, VOLUME_INC_SCALAR));
+		if (i >= VOLUME_LEVELS) {
+			LOG_MSG("GUS: level exceeded! %lu - clamping", i);
+			i = std::min(i, static_cast<size_t>(VOLUME_LEVELS - 1u));
+		}
 		assert(i < VOLUME_LEVELS);
 
 		// Apply any selected volume reduction
@@ -301,10 +332,9 @@ void Voice::GenerateSamples(float *stream,
 		peak.left = std::max(peak.left, fabsf(stream[-2]));
 		peak.right = std::max(peak.right, fabsf(stream[-1]));
 
-		// Move onto the the next memory address and volume
-		// reduction
-		WaveUpdate();
-		VolUpdate();
+		// Update our wave and volume controls
+		UpdateControl(wave, CheckWaveRolloverCondition());
+		UpdateControl(volume_idx, false);
 	}
 	// Tally the number of generated sets so far
 	generated_ms++;
@@ -359,82 +389,44 @@ void Voice::UpdateWaveAndVol()
 	WriteVolRate(volume_idx.rate);
 }
 
-inline void Voice::VolUpdate()
+inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_reset)
 {
-	// Is volume control disabled?
-	if (volume_idx.state & VWCtrl::Disabled)
+	if (ctrl.state & VWCtrl::Disabled)
 		return;
-	int32_t vol_count_remaining;
-	// Should the voice's volume be decreased?
-	if (volume_idx.state & VWCtrl::Decreasing) {
-		volume_idx.pos -= volume_idx.inc;
-		vol_count_remaining = volume_idx.start - volume_idx.pos;
-	} else { // or increased?
-		volume_idx.pos += volume_idx.inc;
-		vol_count_remaining = volume_idx.pos - volume_idx.end;
-	}
-	// We've reached the desired volume
-	if (vol_count_remaining < 0) {
-		return;
-	}
-	// Is an IRQ event needed?
-	if (volume_idx.state & VWCtrl::RaiseIrq) {
-		shared_irqs.vol |= irq_mask;
-	}
-	/* Check for not being in PCM operation */
-	if (volume_idx.state & 0x04)
-		return;
-	// Is the volume looping?
-	if (volume_idx.state & VWCtrl::Loop) {
-		// Is it looping bi-directionally?
-		if (volume_idx.state & VWCtrl::BiDirectional)
-			volume_idx.state ^= VWCtrl::Decreasing;
-		volume_idx.pos = (volume_idx.state & VWCtrl::Decreasing)
-		                         ? volume_idx.end - vol_count_remaining
-		                         : volume_idx.start + vol_count_remaining;
-	} else { // Otherwise reset the volume's position
-		volume_idx.state |= 1;
-		volume_idx.pos = (volume_idx.state & VWCtrl::Decreasing)
-		                         ? volume_idx.start
-		                         : volume_idx.end;
-	}
-}
-
-inline void Voice::WaveUpdate()
-{
-	// LOG_MSG("GUS: WaveUpdate start %u, end %u, addr %u, inc %u, freq %u",
-	//         wave.start, wave.end, wave.pos, wave.inc, wave.rate);
-	if (wave.state & VWCtrl::Disabled)
-		return;
-	int32_t wave_remaining;
-	if (wave.state & VWCtrl::Decreasing) {
-		wave.pos -= wave.inc;
-		wave_remaining = wave.start - wave.pos;
+	int32_t remaining;
+	if (ctrl.state & VWCtrl::Decreasing) {
+		ctrl.pos -= ctrl.inc;
+		remaining = ctrl.start - ctrl.pos;
 	} else {
-		wave.pos += wave.inc;
-		wave_remaining = wave.pos - wave.end;
+		ctrl.pos += ctrl.inc;
+		remaining = ctrl.pos - ctrl.end;
 	}
 	// Not yet reaching a boundary
-	if (wave_remaining < 0)
+	if (remaining < 0)
 		return;
-	/* Generate an IRQ if needed */
-	if (wave.state & 0x20) {
+	
+	// Generate an IRQ if requested
+	if (ctrl.state & VWCtrl::RaiseIrq) {
 		shared_irqs.wave |= irq_mask;
 	}
-	/* Check for not being in PCM operation */
-	if (volume_idx.state & 0x04)
+
+	// Allow the current position to move beyond its limit
+	if (dont_loop_or_reset)
 		return;
-	/* Check for looping */
-	if (wave.state & VWCtrl::Loop) {
+
+	// Should we loop?
+	if (ctrl.state & VWCtrl::Loop) {
 		/* Bi-directional looping */
-		if (wave.state & VWCtrl::BiDirectional)
-			wave.state ^= VWCtrl::Decreasing;
-		wave.pos = (wave.state & VWCtrl::Decreasing)
-		                   ? wave.end - wave_remaining
-		                   : wave.start + wave_remaining;
-	} else {
-		wave.state |= 1; // Stop the voice
-		wave.pos = (wave.state & VWCtrl::Decreasing) ? wave.start : wave.end;
+		if (ctrl.state & VWCtrl::BiDirectional)
+			ctrl.state ^= VWCtrl::Decreasing;
+		ctrl.pos = (ctrl.state & VWCtrl::Decreasing)
+		                   ? ctrl.end - remaining
+		                   : ctrl.start + remaining;
+	}
+	// Otherwise, reset the position back to its start or end
+	 else {
+		ctrl.state |= 1; // Stop the voice
+		ctrl.pos = (ctrl.state & VWCtrl::Decreasing) ? ctrl.start : ctrl.end;
 	}
 }
 
