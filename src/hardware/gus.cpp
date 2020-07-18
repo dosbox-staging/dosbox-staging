@@ -55,11 +55,12 @@ constexpr float ONE_AMP = 1.0f;              // first amplitude value
 constexpr int16_t VOLUME_INC_SCALAR = 512;   // Volume index increment scalar
 constexpr uint16_t VOLUME_LEVELS = 4096u;
 constexpr double VOLUME_LEVEL_DIVISOR = 1.002709201; // 0.0235 dB increments
-constexpr uint8_t WAVE_FRACT = 9;                // Interpolation width in bits
-constexpr uint32_t WAVE_MSWMASK = (1 << 16) - 1; // Upper wave mask
-constexpr uint32_t WAVE_LSWMASK = 0xffffffff ^ WAVE_MSWMASK; // Lower wave mask
+constexpr int16_t WAVE_WIDTH = 1 << 9; // Wave interpolation width (9 bits)
+constexpr uint32_t WAVE_MSW_MASK = (1 << 16) - 1; // Upper wave mask
+constexpr uint32_t WAVE_LSW_MASK = 0xffffffff ^ WAVE_MSW_MASK; // Lower wave mask
 constexpr uint8_t WRITE_HANDLERS = 9u;
 constexpr uint8_t VWCTRL_DEFAULT = 3u;
+
 using namespace std::placeholders;
 
 // External Tie-in for OPL FM-audio
@@ -103,11 +104,11 @@ public:
 	uint32_t generated_16bit_ms = 0u;
 
 	// wave state
-	uint32_t wave_start = 0u;
-	uint32_t wave_end = 0u;
-	uint32_t wave_addr = 0u;
-	uint16_t wave_inc = 0u;
-	uint16_t wave_freq = 0u;
+	int32_t wave_start = 0;
+	int32_t wave_end = 0;
+	int32_t wave_addr = 0;
+	int32_t wave_inc = 0;
+	uint16_t wave_freq = 0;
 	uint8_t wave_ctrl = VWCTRL_DEFAULT;
 
 	// volume scalar state
@@ -124,9 +125,9 @@ private:
 	Voice &operator=(const Voice &) = delete; // prevent assignment
 
 	inline float GetSample8(const std::array<unsigned char, RAM_SIZE> &ram,
-	                        const uint32_t addr) const;
+	                        const int32_t addr) const;
 	inline float GetSample16(const std::array<unsigned char, RAM_SIZE> &ram,
-	                         const uint32_t addr) const;
+	                         const int32_t addr) const;
 	inline void VolUpdate();
 	uint8_t ReadPanPot() const;
 	inline void WaveUpdate();
@@ -143,7 +144,7 @@ private:
 		Decreasing = 0x40,
 	};
 
-	typedef std::function<float(const std::array<unsigned char, RAM_SIZE> &, const uint32_t)> get_sample_f;
+	typedef std::function<float(const std::array<unsigned char, RAM_SIZE> &, const int32_t)> get_sample_f;
 	get_sample_f GetSample = std::bind(&Voice::GetSample8, this, _1, _2);
 
 	// shared IRQs with the GUS DSP
@@ -191,6 +192,8 @@ private:
 	bool SoftLimit(float (&)[BUFFER_FRAMES][2],
 	               int16_t (&)[BUFFER_FRAMES][2],
 	               uint16_t);
+	void UpdateWaveMsw(int32_t &addr) const;
+	void UpdateWaveLsw(int32_t &addr) const;
 	void WriteToPort(Bitu port, Bitu val, Bitu iolen);
 
 	// Collections
@@ -273,16 +276,15 @@ void Voice::GenerateSamples(float *stream,
 
 	while (requested_frames-- > 0) {
 		// Get the sample
-		const uint32_t sample_addr = wave_addr >> WAVE_FRACT;
+		const int sample_addr = wave_addr / WAVE_WIDTH;
 		float sample = GetSample(ram, sample_addr);
 
 		// Add any fractional inter-wave portion
-		constexpr uint32_t wave_width = 1 << WAVE_FRACT;
-		if (wave_inc < wave_width) {
-			const auto next_sample = GetSample(ram, sample_addr + 1u);
+		if (wave_inc < WAVE_WIDTH) {
+			const auto next_sample = GetSample(ram, sample_addr + 1);
 			const auto wave_fraction = static_cast<float>(
-			        wave_addr & (wave_width - 1u));
-			sample += (next_sample - sample) * wave_fraction / wave_width;
+			        wave_addr & (WAVE_WIDTH - 1));
+			sample += (next_sample - sample) * wave_fraction / WAVE_WIDTH;
 
 			// Confirm the sample plus inter-wave portion is in-bounds
 			assert(sample <= std::numeric_limits<int16_t>::max() &&
@@ -316,21 +318,26 @@ void Voice::GenerateSamples(float *stream,
 
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
 inline float Voice::GetSample8(const std::array<unsigned char, RAM_SIZE> &ram,
-                               const uint32_t addr) const
+                               const int32_t addr) const
 {
 	constexpr float to_16bit_range = 1u
 	                                 << (std::numeric_limits<int16_t>::digits -
 	                                     std::numeric_limits<int8_t>::digits);
-	return static_cast<int8_t>(ram[addr & 0xFFFFFu]) * to_16bit_range;
+	const size_t i = static_cast<uint32_t>(addr) & 0xFFFFFu;
+	assert(i < RAM_SIZE);
+	return static_cast<int8_t>(ram[i]) * to_16bit_range;
 }
 
 // Read a 16-bit sample returned as a float
 inline float Voice::GetSample16(const std::array<unsigned char, RAM_SIZE> &ram,
-                                const uint32_t addr) const
+                                const int32_t addr) const
 {
 	// Calculate offset of the 16-bit sample
-	const uint32_t adjaddr = (addr & 0xC0000u) | ((addr & 0x1FFFFu) << 1u);
-	return static_cast<int16_t>(host_readw(ram.data() + adjaddr));
+	const auto lower = static_cast<unsigned>(addr) & 0xC0000u;
+	const auto upper = static_cast<unsigned>(addr) & 0x1FFFFu;
+	const size_t i = lower | (upper << 1);
+	assert(i < RAM_SIZE);
+	return static_cast<int16_t>(host_readw(ram.data() + i));
 }
 
 uint8_t Voice::ReadPanPot() const
@@ -406,10 +413,10 @@ inline void Voice::WaveUpdate()
 	int32_t wave_remaining;
 	if (wave_ctrl & VWCtrl::Decreasing) {
 		wave_addr -= wave_inc;
-		wave_remaining = static_cast<signed>(wave_start - wave_addr);
+		wave_remaining = wave_start - wave_addr;
 	} else {
 		wave_addr += wave_inc;
-		wave_remaining = static_cast<signed>(wave_addr - wave_end);
+		wave_remaining = wave_addr - wave_end;
 	}
 	// Not yet reaching a boundary
 	if (wave_remaining < 0)
@@ -427,9 +434,8 @@ inline void Voice::WaveUpdate()
 		if (wave_ctrl & VWCtrl::BiDirectional)
 			wave_ctrl ^= VWCtrl::Decreasing;
 		wave_addr = (wave_ctrl & VWCtrl::Decreasing)
-		                    ? (wave_end - static_cast<unsigned>(wave_remaining))
-		                    : (wave_start +
-		                       static_cast<unsigned>(wave_remaining));
+		                    ? wave_end - wave_remaining
+		                    : wave_start + wave_remaining;
 	} else {
 		wave_ctrl |= 1; // Stop the voice
 		wave_addr = (wave_ctrl & VWCtrl::Decreasing) ? wave_start : wave_end;
@@ -1100,6 +1106,19 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 	}
 }
 
+void Gus::UpdateWaveLsw(int32_t &addr) const
+{
+	const auto lower = static_cast<unsigned>(addr) & WAVE_LSW_MASK;
+	addr = static_cast<int32_t>(lower | register_data);
+}
+
+void Gus::UpdateWaveMsw(int32_t &addr) const
+{
+	const uint32_t upper = register_data & 0x1fff;
+	const auto lower = static_cast<unsigned>(addr) & WAVE_MSW_MASK;
+	addr = static_cast<int32_t>(lower | (upper << 16));
+}
+
 void Gus::WriteToRegister()
 {
 	//	if (selected_register|1!=0x44) LOG_MSG("write global register %x
@@ -1187,9 +1206,7 @@ void Gus::WriteToRegister()
 	if (!current_voice)
 		return;
 
-	uint32_t addr;
 	uint8_t data;
-
 	// Registers that write to the current voice
 	switch (selected_register) {
 	case 0x0: // Voice wave control register
@@ -1199,20 +1216,16 @@ void Gus::WriteToRegister()
 		current_voice->WriteWaveFreq(register_data);
 		break;
 	case 0x2: // Voice MSW start address register
-		addr = static_cast<uint32_t>((register_data & 0x1fff) << 16);
-		current_voice->wave_start = (current_voice->wave_start & WAVE_MSWMASK) | addr;
+		UpdateWaveMsw(current_voice->wave_start);
 		break;
 	case 0x3: // Voice LSW start address register
-		addr = static_cast<uint32_t>(register_data);
-		current_voice->wave_start = (current_voice->wave_start & WAVE_LSWMASK) | addr;
+		UpdateWaveLsw(current_voice->wave_start);
 		break;
 	case 0x4: // Voice MSW end address register
-		addr = static_cast<uint32_t>(register_data & 0x1fff) << 16;
-		current_voice->wave_end = (current_voice->wave_end & WAVE_MSWMASK) | addr;
+		UpdateWaveMsw(current_voice->wave_end);
 		break;
-	case 0x5: // Voice MSW end address register
-		addr = static_cast<uint32_t>(register_data);
-		current_voice->wave_end = (current_voice->wave_end & WAVE_LSWMASK) | addr;
+	case 0x5: // Voice LSW end address register
+		UpdateWaveLsw(current_voice->wave_end);
 		break;
 	case 0x6: // Voice volume rate register
 		current_voice->WriteVolRate(register_data >> 8);
@@ -1237,12 +1250,10 @@ void Gus::WriteToRegister()
 		                                   VOLUME_INC_SCALAR;
 		break;
 	case 0xA: // Voice MSW current address register
-		addr = static_cast<uint32_t>(register_data & 0x1fff) << 16;
-		current_voice->wave_addr = (current_voice->wave_addr & WAVE_MSWMASK) | addr;
+		UpdateWaveMsw(current_voice->wave_addr);
 		break;
 	case 0xB: // Voice LSW current address register
-		addr = static_cast<uint32_t>(register_data);
-		current_voice->wave_addr = (current_voice->wave_addr & WAVE_LSWMASK) | addr;
+		UpdateWaveLsw(current_voice->wave_addr);
 		break;
 	case 0xC: // Voice pan pot register
 		current_voice->WritePanPot(register_data >> 8);
