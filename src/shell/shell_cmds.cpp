@@ -834,26 +834,29 @@ void DOS_Shell::CMD_LS(char *args)
 	const int column_sep = 2; // chars separating columns
 	const auto word_widths = to_name_lengths(results, column_sep);
 	const auto column_widths = calc_column_widths(word_widths, column_sep + 1);
+	const size_t cols = column_widths.size();
 
 	size_t w_count = 0;
 
 	for (const auto &entry : results) {
 		std::string name = entry.name;
 		const bool is_dir = entry.attr & DOS_ATTR_DIRECTORY;
+		const size_t col = w_count % cols;
+		const int cw = column_widths[col];
 
 		if (is_dir) {
 			upcase(name);
-			WriteOut("\033[34;1m%-15s\033[0m", name.c_str());
+			WriteOut("\033[34;1m%-*s\033[0m", cw, name.c_str());
 		} else {
 			lowcase(name);
 			if (is_executable_filename(name))
-				WriteOut("\033[32;1m%-15s\033[0m", name.c_str());
+				WriteOut("\033[32;1m%-*s\033[0m", cw, name.c_str());
 			else
-				WriteOut("%-15s", name.c_str());
+				WriteOut("%-*s", cw, name.c_str());
 		}
 
 		++w_count;
-		if (w_count % 5 == 0)
+		if (w_count % cols == 0)
 			WriteOut_NoParsing("\n");
 	}
 	dos.dta(original_dta);
