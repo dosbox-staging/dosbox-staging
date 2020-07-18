@@ -100,7 +100,7 @@ public:
 
 	void WritePanPot(uint8_t pos);
 	void WriteVolRate(uint16_t val);
-	void WriteWaveFreq(uint16_t val);
+	void WriteWaveRate(uint16_t val);
 	void UpdateWaveAndVol();
 	void UpdateWaveBitDepth();
 
@@ -108,8 +108,8 @@ public:
 	uint32_t generated_8bit_ms = 0u;
 	uint32_t generated_16bit_ms = 0u;
 
-	VoiceControl wave;
-	VoiceControl volume_idx;
+	VoiceControl wctrl;
+	VoiceControl vctrl;
 	uint32_t irq_mask = 0u;
 
 private:
@@ -280,7 +280,7 @@ Joh Campbell, maintainer of DOSox-X:
 */
 bool Voice::CheckWaveRolloverCondition()
 {
-	return volume_idx.state & VWCtrl::Bit16 && !(wave.state & VWCtrl::Loop);
+	return vctrl.state & VWCtrl::Bit16 && !(wctrl.state & VWCtrl::Loop);
 }
 void Voice::GenerateSamples(float *stream,
                             const uint8_t *ram,
@@ -289,19 +289,19 @@ void Voice::GenerateSamples(float *stream,
                             AudioFrame &peak,
                             uint16_t requested_frames)
 {
-	if (volume_idx.state & wave.state & VWCtrl::Disabled)
+	if (vctrl.state & wctrl.state & VWCtrl::Disabled)
 		return;
 
 	while (requested_frames-- > 0) {
 		// Get the sample
-		const int sample_addr = wave.pos / WAVE_WIDTH;
+		const int sample_addr = wctrl.pos / WAVE_WIDTH;
 		float sample = GetSample(ram, sample_addr);
 
 		// Add any fractional inter-wave portion
-		if (wave.inc < WAVE_WIDTH) {
+		if (wctrl.inc < WAVE_WIDTH) {
 			const auto next_sample = GetSample(ram, sample_addr + 1);
 			const auto wave_fraction = static_cast<float>(
-			        wave.pos & (WAVE_WIDTH - 1));
+			        wctrl.pos & (WAVE_WIDTH - 1));
 			sample += (next_sample - sample) * wave_fraction / WAVE_WIDTH;
 
 			// Confirm the sample plus inter-wave portion is in-bounds
@@ -311,7 +311,7 @@ void Voice::GenerateSamples(float *stream,
 
 		// Unscale the volume index and check its bounds
 		auto i = static_cast<size_t>(
-		        ceil_sdivide(volume_idx.pos, VOLUME_INC_SCALAR));
+		        ceil_sdivide(vctrl.pos, VOLUME_INC_SCALAR));
 		if (i >= VOLUME_LEVELS) {
 			LOG_MSG("GUS: level exceeded! %lu - clamping", i);
 			i = std::min(i, static_cast<size_t>(VOLUME_LEVELS - 1u));
@@ -330,8 +330,8 @@ void Voice::GenerateSamples(float *stream,
 		peak.right = std::max(peak.right, fabsf(stream[-1]));
 
 		// Update our wave and volume controls
-		UpdateControl(wave, CheckWaveRolloverCondition());
-		UpdateControl(volume_idx, false);
+		UpdateControl(wctrl, CheckWaveRolloverCondition());
+		UpdateControl(vctrl, false);
 	}
 	// Tally the number of generated sets so far
 	generated_ms++;
@@ -366,8 +366,8 @@ uint8_t Voice::ReadPanPot() const
 
 void Voice::UpdateWaveAndVol()
 {
-	WriteWaveFreq(wave.rate);
-	WriteVolRate(volume_idx.rate);
+	WriteWaveRate(wctrl.rate);
+	WriteVolRate(vctrl.rate);
 }
 
 inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_reset)
@@ -436,14 +436,14 @@ void Voice::WritePanPot(uint8_t pos)
 
 void Voice::WriteVolRate(uint16_t val)
 {
-	volume_idx.rate = val;
+	vctrl.rate = val;
 	constexpr uint8_t bank_lengths = 63;
 	const int pos_in_bank = val & bank_lengths;
 	const int decimator = 1 << (3 * (val >> 6));
-	volume_idx.inc = ceil_sdivide(pos_in_bank * VOLUME_INC_SCALAR, decimator);
+	vctrl.inc = ceil_sdivide(pos_in_bank * VOLUME_INC_SCALAR, decimator);
 
 	// Sanity check the bounds of the incrementer
-	assert(volume_idx.inc >= 0 && volume_idx.inc <= bank_lengths * VOLUME_INC_SCALAR);
+	assert(vctrl.inc >= 0 && vctrl.inc <= bank_lengths * VOLUME_INC_SCALAR);
 }
 
 
@@ -461,20 +461,19 @@ void Gus::WriteCtrl(VoiceControl &ctrl, uint32_t voice_irq_mask, uint8_t val)
 }
 
 void Voice::UpdateWaveBitDepth() {
-	if (wave.state & VWCtrl::Bit16) {
+	if (wctrl.state & VWCtrl::Bit16) {
 		GetSample = std::bind(&Voice::GetSample16, this, _1, _2);
 		generated_ms = generated_16bit_ms;
 	} else {
 		GetSample = std::bind(&Voice::GetSample8, this, _1, _2);
 		generated_ms = generated_8bit_ms;
 	}
-
 }
 
-void Voice::WriteWaveFreq(uint16_t val)
+void Voice::WriteWaveRate(uint16_t val)
 {
-	wave.rate = val;
-	wave.inc = ceil_udivide(val, 2u);
+	wctrl.rate = val;
+	wctrl.inc = ceil_udivide(val, 2u);
 }
 
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
@@ -876,24 +875,24 @@ uint16_t Gus::ReadFromRegister()
 	// Registers that read from from the current voice
 	switch (selected_register) {
 	case 0x80: // Voice wave control read register
-		return static_cast<uint16_t>(ReadCtrl(current_voice->wave) << 8);
+		return static_cast<uint16_t>(ReadCtrl(current_voice->wctrl) << 8);
 	case 0x82: // Voice MSB start address register
-		return static_cast<uint16_t>(current_voice->wave.start >> 16);
+		return static_cast<uint16_t>(current_voice->wctrl.start >> 16);
 	case 0x83: // Voice LSW start address register
-		return static_cast<uint16_t>(current_voice->wave.start);
+		return static_cast<uint16_t>(current_voice->wctrl.start);
 	case 0x89: // Voice volume register
 	{
-		const int i = ceil_sdivide(current_voice->volume_idx.pos,
+		const int i = ceil_sdivide(current_voice->vctrl.pos,
 		                           VOLUME_INC_SCALAR);
 		assert(i < VOLUME_LEVELS);
 		return static_cast<uint16_t>(i << 4);
 	}
 	case 0x8a: // Voice MSB current address register
-		return static_cast<uint16_t>(current_voice->wave.pos >> 16);
+		return static_cast<uint16_t>(current_voice->wctrl.pos >> 16);
 	case 0x8b: // Voice LSW current address register
-		return static_cast<uint16_t>(current_voice->wave.pos);
+		return static_cast<uint16_t>(current_voice->wctrl.pos);
 	case 0x8d: // Voice volume control register
-		return static_cast<uint16_t>(ReadCtrl(current_voice->volume_idx) << 8);
+		return static_cast<uint16_t>(ReadCtrl(current_voice->vctrl) << 8);
 	}
 #if LOG_GUS
 	LOG_MSG("GUS: Unimplemented read Register 0x%x", selected_register);
@@ -930,9 +929,9 @@ void Gus::Reset()
 		mix_ctrl = 0x0b; // latches enabled, LINEs disabled
 		// Stop all voices
 		for (auto &voice : voices) {
-			voice->volume_idx.pos = 0u;
-			WriteCtrl(voice->wave, voice->irq_mask, 0x1);
-			WriteCtrl(voice->volume_idx, voice->irq_mask, 0x1);
+			voice->vctrl.pos = 0u;
+			WriteCtrl(voice->wctrl, voice->irq_mask, 0x1);
+			WriteCtrl(voice->vctrl, voice->irq_mask, 0x1);
 			voice->WritePanPot(PAN_DEFAULT_POSITION);
 			voice->ClearStats();
 		}
@@ -953,8 +952,9 @@ bool Gus::SoftLimit(float (&in)[BUFFER_FRAMES][2],
 	if (peak_amplitude.left < max_allowed && peak_amplitude.right < max_allowed)
 		return false;
 
-	// Calculate the percent we need to scale down the volume_idx.  In cases
-	// where one side is less than the max, it's ratio is limited to 1.0.
+	// Calculate the percent we need to scale down the volume index
+	// position.  In cases where one side is less than the max, it's ratio
+	// is limited to 1.0.
 	const AudioFrame ratio = {std::min(ONE_AMP, max_allowed / peak_amplitude.left),
 	                          std::min(ONE_AMP, max_allowed / peak_amplitude.right)};
 	for (uint8_t i = 0; i < requested_frames; ++i) {
@@ -1174,23 +1174,24 @@ void Gus::WriteToRegister()
 	// Registers that write to the current voice
 	switch (selected_register) {
 	case 0x0: // Voice wave control register
-		WriteCtrl(current_voice->wave, current_voice->irq_mask, register_data >> 8);
+		WriteCtrl(current_voice->wctrl, current_voice->irq_mask,
+		          register_data >> 8);
 		current_voice->UpdateWaveBitDepth();
 		break;
-	case 0x1: // Voice frequency control register
-		current_voice->WriteWaveFreq(register_data);
+	case 0x1: // Voice rate control register
+		current_voice->WriteWaveRate(register_data);
 		break;
 	case 0x2: // Voice MSW start address register
-		UpdateWaveMsw(current_voice->wave.start);
+		UpdateWaveMsw(current_voice->wctrl.start);
 		break;
 	case 0x3: // Voice LSW start address register
-		UpdateWaveLsw(current_voice->wave.start);
+		UpdateWaveLsw(current_voice->wctrl.start);
 		break;
 	case 0x4: // Voice MSW end address register
-		UpdateWaveMsw(current_voice->wave.end);
+		UpdateWaveMsw(current_voice->wctrl.end);
 		break;
 	case 0x5: // Voice LSW end address register
-		UpdateWaveLsw(current_voice->wave.end);
+		UpdateWaveLsw(current_voice->wctrl.end);
 		break;
 	case 0x6: // Voice volume rate register
 		current_voice->WriteVolRate(register_data >> 8);
@@ -1200,31 +1201,31 @@ void Gus::WriteToRegister()
 		// Don't need to bounds-check the value because it's implied:
 		// 'data' is a uint8, so is 255 at most. 255 << 4 = 4080, which
 		// falls within-bounds of the 4096-long vol_scalars array.
-		current_voice->volume_idx.start = (data << 4) * VOLUME_INC_SCALAR;
+		current_voice->vctrl.start = (data << 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0x8: // Voice volume end register  EEEEMMMM
 		data = register_data >> 8;
 		// Same as above regarding bound-checking.
-		current_voice->volume_idx.end = (data << 4) * VOLUME_INC_SCALAR;
+		current_voice->vctrl.end = (data << 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0x9: // Voice current volume register
 		// Don't need to bounds-check the value because it's implied:
 		// reg data is a uint16, and 65535 >> 4 takes it down to 4095,
 		// which is the last element in the 4096-long vol_scalars array.
-		current_voice->volume_idx.pos = (register_data >> 4) *
-		                                VOLUME_INC_SCALAR;
+		current_voice->vctrl.pos = (register_data >> 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0xA: // Voice MSW current address register
-		UpdateWaveMsw(current_voice->wave.pos);
+		UpdateWaveMsw(current_voice->wctrl.pos);
 		break;
 	case 0xB: // Voice LSW current address register
-		UpdateWaveLsw(current_voice->wave.pos);
+		UpdateWaveLsw(current_voice->wctrl.pos);
 		break;
 	case 0xC: // Voice pan pot register
 		current_voice->WritePanPot(register_data >> 8);
 		break;
 	case 0xD: // Voice volume control register
-		WriteCtrl(current_voice->volume_idx, current_voice->irq_mask, register_data >> 8);
+		WriteCtrl(current_voice->vctrl, current_voice->irq_mask,
+		          register_data >> 8);
 		break;
 	}
 
