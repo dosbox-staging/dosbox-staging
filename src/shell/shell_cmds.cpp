@@ -35,6 +35,7 @@
 #include "support.h"
 #include "control.h"
 #include "paging.h"
+#include "../ints/int10.h"
 
 // clang-format off
 static SHELL_Cmd cmd_list[] = {
@@ -495,6 +496,49 @@ static std::vector<int> to_name_lengths(const std::vector<DtaResult> &dir_conten
 	return ret;
 }
 
+static std::vector<int> calc_column_widths(const std::vector<int> &word_widths,
+                                           int min_col_width)
+{
+	assert(min_col_width > 0);
+
+	// Actual terminal width (number of text columns) using current text
+	// mode; in practice it's either 40, 80, or 132.
+	const int term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+
+	// Use term_width-1 because we never want to print line up to the actual
+	// limit; this would cause unnecessary line wrapping
+	const size_t max_columns = (term_width - 1) / min_col_width;
+	std::vector<int> col_widths(max_columns);
+
+	// This function returns true when column number is too high to fit
+	// words into a terminal width.  If it returns false, then the first
+	// coln integers in col_widths vector describe the column widths.
+	auto too_many_columns = [&](size_t coln) -> bool {
+		std::fill(col_widths.begin(), col_widths.end(), 0);
+		if (coln <= 1)
+			return false;
+		int max_line_width = 0; // tally of the longest line
+		int c = 0;              // current columnt
+		for (const int width : word_widths) {
+			const int old_col_width = col_widths[c];
+			const int new_col_width = std::max(old_col_width, width);
+			col_widths[c] = new_col_width;
+			max_line_width += (new_col_width - old_col_width);
+			if (max_line_width >= term_width)
+				return true;
+			c = (c + 1) % coln;
+		}
+		return false;
+	};
+
+	size_t col_count = max_columns;
+	while (too_many_columns(col_count)) {
+		col_count--;
+		col_widths.pop_back();
+	}
+	return col_widths;
+}
+
 void DOS_Shell::CMD_DIR(char * args) {
 	HELP("DIR");
 	char numformat[16];
@@ -789,6 +833,7 @@ void DOS_Shell::CMD_LS(char *args)
 
 	const int column_sep = 2; // chars separating columns
 	const auto word_widths = to_name_lengths(results, column_sep);
+	const auto column_widths = calc_column_widths(word_widths, column_sep + 1);
 
 	size_t w_count = 0;
 
