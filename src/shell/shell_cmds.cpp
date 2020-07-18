@@ -482,6 +482,19 @@ static std::string to_search_pattern(const char *arg)
 	return pattern;
 }
 
+// Map a vector of dir contents to a vector of word widths.
+static std::vector<int> to_name_lengths(const std::vector<DtaResult> &dir_contents,
+                                        int padding)
+{
+	std::vector<int> ret;
+	ret.reserve(dir_contents.size());
+	for (const auto &entry : dir_contents) {
+		const int len = static_cast<int>(strlen(entry.name));
+		ret.push_back(len + padding);
+	}
+	return ret;
+}
+
 void DOS_Shell::CMD_DIR(char * args) {
 	HELP("DIR");
 	char numformat[16];
@@ -773,6 +786,9 @@ void DOS_Shell::CMD_LS(char *args)
 			continue;
 		results.push_back(result);
 	} while ((ret = DOS_FindNext()) == true);
+
+	const int column_sep = 2; // chars separating columns
+	const auto word_widths = to_name_lengths(results, column_sep);
 
 	size_t w_count = 0;
 
