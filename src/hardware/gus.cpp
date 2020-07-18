@@ -205,7 +205,7 @@ private:
 	AudioFrame peak_amplitude = {ONE_AMP, ONE_AMP};
 	MixerObject mixer_channel = {};
 	MixerChannel *audio_channel = nullptr;
-	Voice *current_voice = nullptr;
+	Voice *voice = nullptr;
 	uint8_t &adlib_command_reg = adlib_commandreg;
 
 	// Port address
@@ -213,7 +213,7 @@ private:
 
 	// Voice states
 	uint32_t active_voice_mask = 0u;
-	uint16_t current_voice_index = 0u;
+	uint16_t voice_index = 0u;
 	uint8_t active_voices = 0u;
 
 	// Register and playback rate
@@ -722,13 +722,13 @@ void Gus::PrintStats()
 	uint32_t combined_16bit_ms = 0u;
 	uint32_t used_8bit_voices = 0u;
 	uint32_t used_16bit_voices = 0u;
-	for (const auto &voice : voices) {
-		if (voice->generated_8bit_ms) {
-			combined_8bit_ms += voice->generated_8bit_ms;
+	for (const auto &v : voices) {
+		if (v->generated_8bit_ms) {
+			combined_8bit_ms += v->generated_8bit_ms;
 			used_8bit_voices++;
 		}
-		if (voice->generated_16bit_ms) {
-			combined_16bit_ms += voice->generated_16bit_ms;
+		if (v->generated_16bit_ms) {
+			combined_16bit_ms += v->generated_16bit_ms;
 			used_16bit_voices++;
 		}
 	}
@@ -787,7 +787,7 @@ void Gus::PrintStats()
 uint8_t Gus::ReadCtrl(const VoiceControl &ctrl) const
 {
 	uint8_t ret = ctrl.state;
-	if (voice_irq.state & current_voice->irq_mask)
+	if (voice_irq.state & voice->irq_mask)
 		ret |= 0x80;
 	return ret;
 }
@@ -812,7 +812,7 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 			time |= (1 << 1);
 		return time;
 	case 0x20a: return adlib_command_reg;
-	case 0x302: return static_cast<uint8_t>(current_voice_index);
+	case 0x302: return static_cast<uint8_t>(voice_index);
 	case 0x303: return selected_register;
 	case 0x304:
 		if (iolen == 2)
@@ -867,7 +867,7 @@ uint16_t Gus::ReadFromRegister()
 		return static_cast<uint16_t>(reg << 8);
 	}
 
-	if (!current_voice)
+	if (!voice)
 		return (selected_register == 0x80 || selected_register == 0x8d)
 		               ? 0x0300
 		               : 0u;
@@ -875,24 +875,23 @@ uint16_t Gus::ReadFromRegister()
 	// Registers that read from from the current voice
 	switch (selected_register) {
 	case 0x80: // Voice wave control read register
-		return static_cast<uint16_t>(ReadCtrl(current_voice->wctrl) << 8);
+		return static_cast<uint16_t>(ReadCtrl(voice->wctrl) << 8);
 	case 0x82: // Voice MSB start address register
-		return static_cast<uint16_t>(current_voice->wctrl.start >> 16);
+		return static_cast<uint16_t>(voice->wctrl.start >> 16);
 	case 0x83: // Voice LSW start address register
-		return static_cast<uint16_t>(current_voice->wctrl.start);
+		return static_cast<uint16_t>(voice->wctrl.start);
 	case 0x89: // Voice volume register
 	{
-		const int i = ceil_sdivide(current_voice->vctrl.pos,
-		                           VOLUME_INC_SCALAR);
+		const int i = ceil_sdivide(voice->vctrl.pos, VOLUME_INC_SCALAR);
 		assert(i < VOLUME_LEVELS);
 		return static_cast<uint16_t>(i << 4);
 	}
 	case 0x8a: // Voice MSB current address register
-		return static_cast<uint16_t>(current_voice->wctrl.pos >> 16);
+		return static_cast<uint16_t>(voice->wctrl.pos >> 16);
 	case 0x8b: // Voice LSW current address register
-		return static_cast<uint16_t>(current_voice->wctrl.pos);
+		return static_cast<uint16_t>(voice->wctrl.pos);
 	case 0x8d: // Voice volume control register
-		return static_cast<uint16_t>(ReadCtrl(current_voice->vctrl) << 8);
+		return static_cast<uint16_t>(ReadCtrl(voice->vctrl) << 8);
 	}
 #if LOG_GUS
 	LOG_MSG("GUS: Unimplemented read Register 0x%x", selected_register);
@@ -928,12 +927,12 @@ void Gus::Reset()
 		should_change_irq_dma = false;
 		mix_ctrl = 0x0b; // latches enabled, LINEs disabled
 		// Stop all voices
-		for (auto &voice : voices) {
-			voice->vctrl.pos = 0u;
-			WriteCtrl(voice->wctrl, voice->irq_mask, 0x1);
-			WriteCtrl(voice->vctrl, voice->irq_mask, 0x1);
-			voice->WritePanPot(PAN_DEFAULT_POSITION);
-			voice->ClearStats();
+		for (auto &v : voices) {
+			v->vctrl.pos = 0u;
+			WriteCtrl(v->wctrl, v->irq_mask, 0x1);
+			WriteCtrl(v->vctrl, v->irq_mask, 0x1);
+			v->WritePanPot(PAN_DEFAULT_POSITION);
+			v->ClearStats();
 		}
 		voice_irq.count = 0u;
 		peak_amplitude = {ONE_AMP, ONE_AMP};
@@ -956,7 +955,8 @@ bool Gus::SoftLimit(float (&in)[BUFFER_FRAMES][2],
 	// position.  In cases where one side is less than the max, it's ratio
 	// is limited to 1.0.
 	const AudioFrame ratio = {std::min(ONE_AMP, max_allowed / peak_amplitude.left),
-	                          std::min(ONE_AMP, max_allowed / peak_amplitude.right)};
+	                          std::min(ONE_AMP,
+	                                   max_allowed / peak_amplitude.right)};
 	for (uint8_t i = 0; i < requested_frames; ++i) {
 		out[i][0] = static_cast<int16_t>(in[i][0] * ratio.left);
 		out[i][1] = static_cast<int16_t>(in[i][1] * ratio.right);
@@ -1039,8 +1039,8 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		}
 		break;
 	case 0x302:
-		current_voice_index = val & 31;
-		current_voice = voices[current_voice_index].get();
+		voice_index = val & 31;
+		voice = voices[voice_index].get();
 		break;
 	case 0x303:
 		selected_register = static_cast<uint8_t>(val);
@@ -1167,65 +1167,63 @@ void Gus::WriteToRegister()
 		return;
 	}
 
-	if (!current_voice)
+	if (!voice)
 		return;
 
 	uint8_t data;
 	// Registers that write to the current voice
 	switch (selected_register) {
 	case 0x0: // Voice wave control register
-		WriteCtrl(current_voice->wctrl, current_voice->irq_mask,
-		          register_data >> 8);
-		current_voice->UpdateWaveBitDepth();
+		WriteCtrl(voice->wctrl, voice->irq_mask, register_data >> 8);
+		voice->UpdateWaveBitDepth();
 		break;
 	case 0x1: // Voice rate control register
-		current_voice->WriteWaveRate(register_data);
+		voice->WriteWaveRate(register_data);
 		break;
 	case 0x2: // Voice MSW start address register
-		UpdateWaveMsw(current_voice->wctrl.start);
+		UpdateWaveMsw(voice->wctrl.start);
 		break;
 	case 0x3: // Voice LSW start address register
-		UpdateWaveLsw(current_voice->wctrl.start);
+		UpdateWaveLsw(voice->wctrl.start);
 		break;
 	case 0x4: // Voice MSW end address register
-		UpdateWaveMsw(current_voice->wctrl.end);
+		UpdateWaveMsw(voice->wctrl.end);
 		break;
 	case 0x5: // Voice LSW end address register
-		UpdateWaveLsw(current_voice->wctrl.end);
+		UpdateWaveLsw(voice->wctrl.end);
 		break;
 	case 0x6: // Voice volume rate register
-		current_voice->WriteVolRate(register_data >> 8);
+		voice->WriteVolRate(register_data >> 8);
 		break;
 	case 0x7: // Voice volume start register  EEEEMMMM
 		data = register_data >> 8;
 		// Don't need to bounds-check the value because it's implied:
 		// 'data' is a uint8, so is 255 at most. 255 << 4 = 4080, which
 		// falls within-bounds of the 4096-long vol_scalars array.
-		current_voice->vctrl.start = (data << 4) * VOLUME_INC_SCALAR;
+		voice->vctrl.start = (data << 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0x8: // Voice volume end register  EEEEMMMM
 		data = register_data >> 8;
 		// Same as above regarding bound-checking.
-		current_voice->vctrl.end = (data << 4) * VOLUME_INC_SCALAR;
+		voice->vctrl.end = (data << 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0x9: // Voice current volume register
 		// Don't need to bounds-check the value because it's implied:
 		// reg data is a uint16, and 65535 >> 4 takes it down to 4095,
 		// which is the last element in the 4096-long vol_scalars array.
-		current_voice->vctrl.pos = (register_data >> 4) * VOLUME_INC_SCALAR;
+		voice->vctrl.pos = (register_data >> 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0xA: // Voice MSW current address register
-		UpdateWaveMsw(current_voice->wctrl.pos);
+		UpdateWaveMsw(voice->wctrl.pos);
 		break;
 	case 0xB: // Voice LSW current address register
-		UpdateWaveLsw(current_voice->wctrl.pos);
+		UpdateWaveLsw(voice->wctrl.pos);
 		break;
 	case 0xC: // Voice pan pot register
-		current_voice->WritePanPot(register_data >> 8);
+		voice->WritePanPot(register_data >> 8);
 		break;
 	case 0xD: // Voice volume control register
-		WriteCtrl(current_voice->vctrl, current_voice->irq_mask,
-		          register_data >> 8);
+		WriteCtrl(voice->vctrl, voice->irq_mask, register_data >> 8);
 		break;
 	}
 
