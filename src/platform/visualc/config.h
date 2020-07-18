@@ -72,3 +72,9 @@
 // Enables mathematical constants under Visual Studio, such as M_PI
 // https://docs.microsoft.com/en-us/cpp/c-runtime-library/math-constants
 #define _USE_MATH_DEFINES
+
+// MSVC issues pedantic warnings on POSIX functions; for portability we don't
+// want to deal with these warnings, as the only way to avoid them is using
+// Microsoft-specific names and functions instead of POSIX conformant ones.
+// https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-3-c4996?view=vs-2019#posix-function-names
+#define _CRT_NONSTDC_NO_WARNINGS
