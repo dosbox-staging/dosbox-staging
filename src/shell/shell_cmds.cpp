@@ -744,6 +744,8 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 void DOS_Shell::CMD_LS(char *args)
 {
+	using namespace std::string_literals;
+
 	HELP("LS");
 
 	const RealPt original_dta = dos.dta();
@@ -767,6 +769,8 @@ void DOS_Shell::CMD_LS(char *args)
 		DtaResult result;
 		dta.GetResult(result.name, result.size, result.date,
 		              result.time, result.attr);
+		if (result.name == "."s || result.name == ".."s)
+			continue;
 		results.push_back(result);
 	} while ((ret = DOS_FindNext()) == true);
 
@@ -775,9 +779,6 @@ void DOS_Shell::CMD_LS(char *args)
 	for (const auto &entry : results) {
 		std::string name = entry.name;
 		const bool is_dir = entry.attr & DOS_ATTR_DIRECTORY;
-
-		if (name == "." || name == "..")
-			continue;
 
 		if (is_dir) {
 			upcase(name);
