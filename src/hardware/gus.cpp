@@ -72,7 +72,6 @@ struct AudioFrame {
 
 // A set of common IRQs shared between the DSP and each voice
 struct VoiceIrq {
-	const std::function<void()> check = nullptr;
 	uint32_t state = 0u;
 	uint8_t count = 0u;
 };
@@ -202,7 +201,7 @@ private:
 
 	// Complex members
 	AutoexecObject autoexec_lines[2] = {};
-	VoiceIrq voice_irq = {std::bind(&Gus::CheckVoiceIrq, this), 0u, 0u};
+	VoiceIrq voice_irq = {};
 	AudioFrame peak_amplitude = {ONE_AMP, ONE_AMP};
 	MixerObject mixer_channel = {};
 	MixerChannel *audio_channel = nullptr;
@@ -458,7 +457,7 @@ void Gus::WriteCtrl(VoiceControl &ctrl, uint32_t voice_irq_mask, uint8_t val)
 	else
 		voice_irq.state &= ~voice_irq_mask;
 	if (prev_state != voice_irq.state)
-		voice_irq.check();
+		CheckVoiceIrq();
 }
 
 void Voice::UpdateWaveBitDepth() {
@@ -865,7 +864,7 @@ uint16_t Gus::ReadFromRegister()
 		if (!(voice_irq.state & mask))
 			reg |= (0x40 | 0x80);
 		voice_irq.state &= ~mask;
-		voice_irq.check();
+		CheckVoiceIrq();
 		return static_cast<uint16_t>(reg << 8);
 	}
 
@@ -1199,7 +1198,7 @@ void Gus::WriteToRegister()
 	case 0x7: // Voice volume start register  EEEEMMMM
 		data = register_data >> 8;
 		// Don't need to bounds-check the value because it's implied:
-		// 'data' is a uint8, so is 255 at most. 255 * 2^4 = 4080, which
+		// 'data' is a uint8, so is 255 at most. 255 << 4 = 4080, which
 		// falls within-bounds of the 4096-long vol_scalars array.
 		current_voice->volume_idx.start = (data << 4) * VOLUME_INC_SCALAR;
 		break;
