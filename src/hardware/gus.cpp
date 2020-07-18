@@ -84,9 +84,9 @@ public:
 	Voice(uint8_t num, SharedVoiceIrqs &irqs);
 	void ClearStats();
 	void GenerateSamples(float *stream,
-	                     const std::array<unsigned char, RAM_SIZE> &ram,
-	                     const std::array<float, VOLUME_LEVELS> &,
-	                     const std::array<AudioFrame, PAN_POSITIONS> &,
+	                     const uint8_t *ram,
+	                     const float *vol_scalars,
+	                     const AudioFrame *pan_scalars,
 	                     AudioFrame &peak,
 	                     uint16_t requested_frames);
 
@@ -124,10 +124,8 @@ private:
 	Voice(const Voice &) = delete;            // prevent copying
 	Voice &operator=(const Voice &) = delete; // prevent assignment
 
-	inline float GetSample8(const std::array<unsigned char, RAM_SIZE> &ram,
-	                        const int32_t addr) const;
-	inline float GetSample16(const std::array<unsigned char, RAM_SIZE> &ram,
-	                         const int32_t addr) const;
+	inline float GetSample8(const uint8_t *ram, const int32_t addr) const;
+	inline float GetSample16(const uint8_t *ram, const int32_t addr) const;
 	inline void VolUpdate();
 	uint8_t ReadPanPot() const;
 	inline void WaveUpdate();
@@ -144,7 +142,7 @@ private:
 		Decreasing = 0x40,
 	};
 
-	typedef std::function<float(const std::array<unsigned char, RAM_SIZE> &, const int32_t)> get_sample_f;
+	typedef std::function<float(const uint8_t *, const int32_t)> get_sample_f;
 	get_sample_f GetSample = std::bind(&Voice::GetSample8, this, _1, _2);
 
 	// shared IRQs with the GUS DSP
@@ -265,9 +263,9 @@ void Voice::ClearStats()
 }
 
 void Voice::GenerateSamples(float *stream,
-                            const std::array<unsigned char, RAM_SIZE> &ram,
-                            const std::array<float, VOLUME_LEVELS> &vol_scalars,
-                            const std::array<AudioFrame, PAN_POSITIONS> &pan_scalars,
+                            const uint8_t *ram,
+                            const float *vol_scalars,
+                            const AudioFrame *pan_scalars,
                             AudioFrame &peak,
                             uint16_t requested_frames)
 {
@@ -317,8 +315,7 @@ void Voice::GenerateSamples(float *stream,
 }
 
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
-inline float Voice::GetSample8(const std::array<unsigned char, RAM_SIZE> &ram,
-                               const int32_t addr) const
+inline float Voice::GetSample8(const uint8_t *ram, const int32_t addr) const
 {
 	constexpr float to_16bit_range = 1u
 	                                 << (std::numeric_limits<int16_t>::digits -
@@ -329,15 +326,14 @@ inline float Voice::GetSample8(const std::array<unsigned char, RAM_SIZE> &ram,
 }
 
 // Read a 16-bit sample returned as a float
-inline float Voice::GetSample16(const std::array<unsigned char, RAM_SIZE> &ram,
-                                const int32_t addr) const
+inline float Voice::GetSample16(const uint8_t *ram, const int32_t addr) const
 {
 	// Calculate offset of the 16-bit sample
 	const auto lower = static_cast<unsigned>(addr) & 0xC0000u;
 	const auto upper = static_cast<unsigned>(addr) & 0x1FFFFu;
 	const size_t i = lower | (upper << 1);
 	assert(i < RAM_SIZE);
-	return static_cast<int16_t>(host_readw(ram.data() + i));
+	return static_cast<int16_t>(host_readw(ram + i));
 }
 
 uint8_t Voice::ReadPanPot() const
@@ -577,7 +573,8 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 	assert(requested_frames <= BUFFER_FRAMES);
 	float accumulator[BUFFER_FRAMES][2] = {{0}};
 	for (uint8_t i = 0; i < active_voices; ++i)
-		voices[i]->GenerateSamples(*accumulator, ram, vol_scalars, pan_scalars,
+		voices[i]->GenerateSamples(*accumulator, ram.data(),
+		                           vol_scalars.data(), pan_scalars.data(),
 		                           peak_amplitude, requested_frames);
 
 	int16_t scaled[BUFFER_FRAMES][2];
