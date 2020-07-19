@@ -17,229 +17,29 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "dosbox.h"
+#include "gus.h"
 
-#include <algorithm>
-#include <array>
-#include <cmath>
-#include <functional>
 #include <iomanip>
-#include <limits>
-#include <memory>
 #include <sstream>
-#include <string.h>
+#include <unistd.h>
 
-#include "inout.h"
-#include "mixer.h"
-#include "dma.h"
-#include "pic.h"
+
 #include "setup.h"
-#include "shell.h"
-#include "math.h"
-#include "regs.h"
 
 #define LOG_GUS 0 // set to 1 for detailed logging
 
 constexpr uint8_t ADLIB_CMD_DEFAULT = 85u;
-constexpr uint8_t BUFFER_FRAMES = 64u;
-constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
-constexpr uint8_t MAX_VOICES = 32u;
 constexpr uint8_t MIN_VOICES = 14u;
-constexpr uint8_t PAN_POSITIONS = 16u;  // 0: -45-deg, 7: centre, 15: +45-deg
-constexpr uint8_t PAN_DEFAULT_POSITION = 7u;
-constexpr uint32_t RAM_SIZE = 1048576u; // 1 MB
-constexpr uint8_t READ_HANDLERS = 8u;
-constexpr float TIMER_1_DEFAULT_DELAY = 0.080f;
-constexpr float TIMER_2_DEFAULT_DELAY = 0.320f;
-constexpr float ONE_AMP = 1.0f;              // first amplitude value
 constexpr int16_t VOLUME_INC_SCALAR = 512;   // Volume index increment scalar
-constexpr uint16_t VOLUME_LEVELS = 4096u;
 constexpr double VOLUME_LEVEL_DIVISOR = 1.002709201; // 0.0235 dB increments
 constexpr int16_t WAVE_WIDTH = 1 << 9; // Wave interpolation width (9 bits)
 constexpr uint32_t WAVE_MSW_MASK = (1 << 16) - 1; // Upper wave mask
 constexpr uint32_t WAVE_LSW_MASK = 0xffffffff ^ WAVE_MSW_MASK; // Lower wave mask
-constexpr uint8_t WRITE_HANDLERS = 9u;
-constexpr uint8_t VOICE_DEFAULT_STATE = 3u;
 
 using namespace std::placeholders;
 
 // External Tie-in for OPL FM-audio
 uint8_t adlib_commandreg = ADLIB_CMD_DEFAULT;
-struct AudioFrame {
-	float left = 0.0f;
-	float right = 0.0f;
-};
-
-// A set of common IRQs shared between the DSP and each voice
-struct VoiceIrq {
-	uint32_t state = 0u;
-	uint8_t count = 0u;
-};
-
-struct VoiceControl {
-	int32_t start = 0;
-	int32_t end = 0;
-	int32_t pos = 0;
-	int32_t inc = 0;
-	uint16_t rate = 0;
-	uint8_t state = VOICE_DEFAULT_STATE;
-};
-
-// A Single GUS Voice
-class Voice {
-public:
-	Voice(uint8_t num, VoiceIrq &irq);
-	bool CheckWaveRolloverCondition();
-	void ClearStats();
-	void GenerateSamples(float *stream,
-	                     const uint8_t *ram,
-	                     const float *vol_scalars,
-	                     const AudioFrame *pan_scalars,
-	                     AudioFrame &peak,
-	                     uint16_t requested_frames);
-
-	void WritePanPot(uint8_t pos);
-	void WriteVolRate(uint16_t val);
-	void WriteWaveRate(uint16_t val);
-	void UpdateWaveAndVol();
-	void UpdateWaveBitDepth();
-
-	// bit-depth tracking
-	uint32_t generated_8bit_ms = 0u;
-	uint32_t generated_16bit_ms = 0u;
-
-	VoiceControl wctrl;
-	VoiceControl vctrl;
-	uint32_t irq_mask = 0u;
-
-private:
-	Voice() = delete;
-	Voice(const Voice &) = delete;            // prevent copying
-	Voice &operator=(const Voice &) = delete; // prevent assignment
-
-	inline float GetSample8(const uint8_t *ram, const int32_t addr) const;
-	inline float GetSample16(const uint8_t *ram, const int32_t addr) const;
-	uint8_t ReadPanPot() const;
-	void UpdateControl(VoiceControl &ctrl, bool skip_loop);
-
-	// Control states
-	enum CTRL : uint8_t {
-		RESET = 0x01,
-		STOPPED = 0x02,
-		DISABLED = RESET | STOPPED,
-		BIT16 = 0x04,
-		LOOP = 0x08,
-		BIDIRECTIONAL = 0x10,
-		RAISEIRQ = 0x20,
-		DECREASING = 0x40,
-	};
-
-	typedef std::function<float(const uint8_t *, const int32_t)> get_sample_f;
-	get_sample_f GetSample = std::bind(&Voice::GetSample8, this, _1, _2);
-
-	// shared IRQs with the GUS DSP
-	VoiceIrq &shared_irq;
-	uint32_t &generated_ms = generated_8bit_ms;
-
-	uint8_t pan_position = PAN_DEFAULT_POSITION;
-};
-
-// The GUS GF1 DSP
-class Gus {
-public:
-	Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &dir);
-	~Gus();
-	bool CheckTimer(size_t t);
-	
-	struct Timer {
-		float delay = 0.0f;
-		uint8_t value = 0xff;
-		bool is_masked = false;
-		bool should_raise_irq = false;
-		bool has_expired = false;
-		bool is_counting_down = false;
-	};
-	Timer timers[2] = {{TIMER_1_DEFAULT_DELAY}, {TIMER_2_DEFAULT_DELAY}};
-
-private:
-	Gus() = delete;
-	Gus(const Gus &) = delete;            // prevent copying
-	Gus &operator=(const Gus &) = delete; // prevent assignment
-
-	void AudioCallback(uint16_t requested_frames);
-	void CheckIrq();
-	void CheckVoiceIrq();
-	void DmaCallback(DmaChannel *dma_channel, DMAEvent event);
-	void WriteToRegister();
-	uint16_t ReadFromRegister();
-	void PopulateAutoExec(uint16_t port, const std::string &dir);
-	void PopulatePanScalars();
-	void PopulateVolScalars();
-	void PrintStats();
-	uint8_t ReadCtrl(const VoiceControl &ctrl) const;
-	Bitu ReadFromPort(const Bitu port, const Bitu iolen);
-	void Reset();
-	bool SoftLimit(float (&)[BUFFER_FRAMES][2],
-	               int16_t (&)[BUFFER_FRAMES][2],
-	               uint16_t);
-	void UpdateWaveMsw(int32_t &addr) const;
-	void UpdateWaveLsw(int32_t &addr) const;
-	void WriteCtrl(VoiceControl &ctrl, uint32_t irq_mask, uint8_t val);
-	void WriteToPort(Bitu port, Bitu val, Bitu iolen);
-
-	// Collections
-	std::array<std::unique_ptr<Voice>, MAX_VOICES> voices = {{nullptr}};
-	std::array<IO_ReadHandleObject, READ_HANDLERS> read_handlers = {};
-	std::array<IO_WriteHandleObject, WRITE_HANDLERS> write_handlers = {};
-	std::array<AudioFrame, PAN_POSITIONS> pan_scalars = {};
-	std::array<float, VOLUME_LEVELS> vol_scalars = {};
-	const std::array<uint8_t, DMA_IRQ_ADDRESSES> irq_addresses = {
-	        {0, 2, 5, 3, 7, 11, 12, 15}};
-	const std::array<uint8_t, DMA_IRQ_ADDRESSES> dma_addresses = {
-	        {0, 1, 3, 5, 6, 7, 0, 0}};
-	std::array<uint8_t, RAM_SIZE> ram = {{0u}};
-
-	// Complex members
-	AutoexecObject autoexec_lines[2] = {};
-	VoiceIrq voice_irq = {};
-	AudioFrame peak_amplitude = {ONE_AMP, ONE_AMP};
-	MixerObject mixer_channel = {};
-	MixerChannel *audio_channel = nullptr;
-	Voice *voice = nullptr;
-	uint8_t &adlib_command_reg = adlib_commandreg;
-
-	// Port address
-	size_t port_base = 0u;
-
-	// Voice states
-	uint32_t active_voice_mask = 0u;
-	uint16_t voice_index = 0u;
-	uint8_t active_voices = 0u;
-
-	// Register and playback rate
-	uint32_t dram_addr = 0u;
-	uint32_t playback_rate = 0u;
-	uint16_t register_data = 0u;
-	uint8_t selected_register = 0u;
-
-	// Control states
-	uint8_t mix_ctrl = 0x0b; // latches enabled, LINEs disabled
-	uint8_t sample_ctrl = 0u;
-	uint8_t timer_ctrl = 0u;
-	uint8_t dma_ctrl = 0u;
-
-	// DMA states
-	uint16_t dma_addr = 0u;
-	uint8_t dma1 = 0u; // recording DMA
-	uint8_t dma2 = 0u; // playback DMA
-
-	// IRQ states
-	uint8_t irq1 = 0u; // playback IRQ
-	uint8_t irq2 = 0u; // MIDI IRQ
-	uint8_t irq_status = 0u;
-	bool irq_enabled = false;
-	bool should_change_irq_dma = false;
-};
 
 static std::unique_ptr<Gus> myGUS = nullptr;
 
@@ -542,7 +342,7 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 		                           peak_amplitude, requested_frames);
 
 	int16_t scaled[BUFFER_FRAMES][2];
-	if (!SoftLimit(accumulator, scaled, requested_frames))
+	if (!SoftLimit(accumulator, scaled))
 		for (uint8_t i = 0; i < BUFFER_FRAMES; ++i) { // vectorized
 			scaled[i][0] = static_cast<int16_t>(accumulator[i][0]);
 			scaled[i][1] = static_cast<int16_t>(accumulator[i][1]);
@@ -642,11 +442,11 @@ void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
 	        << static_cast<int>(dma2) << "," << static_cast<int>(irq1)
 	        << "," << static_cast<int>(irq2) << std::ends;
 	LOG_MSG("GUS: %s", sndline.str().c_str());
-	autoexec_lines[0].Install(sndline.str());
+	autoexec_lines.at(0).Install(sndline.str());
 
 	// ULTRADIR=full path to directory containing "midi"
 	std::string dirline = "SET ULTRADIR=" + ultradir;
-	autoexec_lines[1].Install(dirline);
+	autoexec_lines.at(1).Install(dirline);
 }
 
 // Generate logarithmic to linear volume conversion tables
@@ -940,9 +740,7 @@ void Gus::Reset()
 	irq_enabled = register_data & 0x4;
 }
 
-bool Gus::SoftLimit(float (&in)[BUFFER_FRAMES][2],
-                    int16_t (&out)[BUFFER_FRAMES][2],
-                    uint16_t requested_frames)
+bool Gus::SoftLimit(float (&in)[BUFFER_FRAMES][2], int16_t (&out)[BUFFER_FRAMES][2])
 {
 	constexpr float max_allowed = static_cast<float>(
 	        std::numeric_limits<int16_t>::max() - 1);
@@ -957,7 +755,7 @@ bool Gus::SoftLimit(float (&in)[BUFFER_FRAMES][2],
 	const AudioFrame ratio = {std::min(ONE_AMP, max_allowed / peak_amplitude.left),
 	                          std::min(ONE_AMP,
 	                                   max_allowed / peak_amplitude.right)};
-	for (uint8_t i = 0; i < requested_frames; ++i) {
+	for (uint8_t i = 0; i < BUFFER_FRAMES; ++i) { // Vectorized
 		out[i][0] = static_cast<int16_t>(in[i][0] * ratio.left);
 		out[i][1] = static_cast<int16_t>(in[i][1] * ratio.right);
 	}
