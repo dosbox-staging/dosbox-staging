@@ -21,6 +21,7 @@
 #define DOSBOX_INOUT_H
 
 #include <functional>
+#include <unordered_map>
 
 #define IO_MAX (64*1024+3)
 
@@ -41,8 +42,8 @@ using io_val_t_proposed = uint32_t; // Handling exists up to a dword (or less)
 using IO_ReadHandler = std::function<Bitu(io_port_t port, Bitu iolen)>;
 using IO_WriteHandler = std::function<void(io_port_t port, io_val_t val, Bitu iolen)>;
 
-extern IO_WriteHandler io_writehandlers[IO_SIZES][IO_MAX];
-extern IO_ReadHandler io_readhandlers[IO_SIZES][IO_MAX];
+extern std::unordered_map<io_port_t, IO_WriteHandler> io_writehandlers[IO_SIZES];
+extern std::unordered_map<io_port_t, IO_ReadHandler> io_readhandlers[IO_SIZES];
 
 void IO_RegisterReadHandler(io_port_t port, IO_ReadHandler handler, Bitu mask, Bitu range = 1);
 void IO_RegisterWriteHandler(io_port_t port,
