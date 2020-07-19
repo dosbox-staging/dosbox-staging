@@ -197,6 +197,7 @@ private:
 	uint32_t dram_addr = 0u;
 	uint32_t playback_rate = 0u;
 	uint16_t register_data = 0u;
+	uint16_t reset_register = 0u;
 	uint8_t selected_register = 0u;
 
 	// Control states
