@@ -668,7 +668,22 @@ void SHELL_Init() {
 	        "Type CD drive: to display the current directory in the specified drive.\n"
 	        "Type CD without parameters to display the current drive and directory.\n");
 	MSG_Add("SHELL_CMD_CLS_HELP","Clear screen.\n");
-	MSG_Add("SHELL_CMD_DIR_HELP","Directory View.\n");
+	MSG_Add("SHELL_CMD_DIR_HELP",
+	        "Displays a list of files and subdirectories in a directory.\n");
+	MSG_Add("SHELL_CMD_DIR_HELP_LONG",
+	        "DIR [drive:][path][filename] [/[W|B]] [/P] [/[AD]|[A-D]] [/O[-][N|E|S|D]]\n"
+	        "\n"
+	        "  [drive:][path][filename]\n"
+	        "              Specifies drive, directory, and/or files to list.\n"
+	        "  /W          Uses wide list format.\n"
+	        "  /B          Uses bare format (no heading information or summary).\n"
+	        "  /P          Pauses after each screenful of information.\n"
+	        "  /AD         Displays all directories.\n"
+	        "  /A-D        Displays all files.\n"
+	        "  /O          List by files in sorted order.\n"
+	        "               -  Prefix to reverse order\n"
+	        "  sortorder    N  By name (alphabetic)       S  By size (smallest first)\n"
+	        "               E  By extension (alphabetic)  D  By date & time (oldest first)\n");
 	MSG_Add("SHELL_CMD_ECHO_HELP","Display messages and enable/disable command echoing.\n");
 	MSG_Add("SHELL_CMD_EXIT_HELP","Exit from the shell.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP","Show help.\n");
