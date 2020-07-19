@@ -24,6 +24,7 @@
 #include <cassert>
 #include <functional>
 
+#include "inout.h"
 #include "support.h"
 
 enum DMAEvent {
