@@ -30,28 +30,31 @@
 #define IO_MA	(IO_MB | IO_MW | IO_MD ) // All three
 #define IO_SIZES 3 // byte, word, and dword
 
-using IO_ReadHandler = std::function<Bitu(Bitu port, Bitu iolen)>;
-using IO_WriteHandler = std::function<void(Bitu port, Bitu val, Bitu iolen)>;
+using io_port_t = Bitu;
+using io_val_t = Bitu;
+
+using IO_ReadHandler = std::function<Bitu(io_port_t port, Bitu iolen)>;
+using IO_WriteHandler = std::function<void(io_port_t port, io_val_t val, Bitu iolen)>;
 
 extern IO_WriteHandler io_writehandlers[IO_SIZES][IO_MAX];
 extern IO_ReadHandler io_readhandlers[IO_SIZES][IO_MAX];
 
-void IO_RegisterReadHandler(Bitu port, IO_ReadHandler handler, Bitu mask, Bitu range = 1);
-void IO_RegisterWriteHandler(Bitu port,
+void IO_RegisterReadHandler(io_port_t port, IO_ReadHandler handler, Bitu mask, Bitu range = 1);
+void IO_RegisterWriteHandler(io_port_t port,
                              IO_WriteHandler handler,
                              Bitu mask,
                              Bitu range = 1);
 
-void IO_FreeReadHandler(Bitu port,Bitu mask,Bitu range=1);
-void IO_FreeWriteHandler(Bitu port,Bitu mask,Bitu range=1);
+void IO_FreeReadHandler(io_port_t port, Bitu mask, Bitu range = 1);
+void IO_FreeWriteHandler(io_port_t port, Bitu mask, Bitu range = 1);
 
-void IO_WriteB(Bitu port,Bitu val);
-void IO_WriteW(Bitu port,Bitu val);
-void IO_WriteD(Bitu port,Bitu val);
+void IO_WriteB(io_port_t port, io_val_t val);
+void IO_WriteW(io_port_t port, io_val_t val);
+void IO_WriteD(io_port_t port, io_val_t val);
 
-Bitu IO_ReadB(Bitu port);
-Bitu IO_ReadW(Bitu port);
-Bitu IO_ReadD(Bitu port);
+io_val_t IO_ReadB(io_port_t port);
+io_val_t IO_ReadW(io_port_t port);
+io_val_t IO_ReadD(io_port_t port);
 
 /* Classes to manage the IO objects created by the various devices.
  * The io objects will remove itself on destruction.*/
@@ -69,21 +72,22 @@ public:
 };
 class IO_ReadHandleObject: private IO_Base{
 public:
-	void Install(Bitu port, IO_ReadHandler handler, Bitu mask, Bitu range = 1);
+	void Install(io_port_t port, IO_ReadHandler handler, Bitu mask, Bitu range = 1);
 	void Uninstall();
 	~IO_ReadHandleObject();
 };
 class IO_WriteHandleObject: private IO_Base{
 public:
-	void Install(Bitu port, IO_WriteHandler handler, Bitu mask, Bitu range = 1);
+	void Install(io_port_t port, IO_WriteHandler handler, Bitu mask, Bitu range = 1);
 	void Uninstall();
 	~IO_WriteHandleObject();
 };
 
-static INLINE void IO_Write(Bitu port,Bit8u val) {
+static INLINE void IO_Write(io_port_t port, Bit8u val)
+{
 	IO_WriteB(port,val);
 }
-static INLINE Bit8u IO_Read(Bitu port){
+static INLINE Bit8u IO_Read(io_port_t port){
 	return (Bit8u)IO_ReadB(port);
 }
 
