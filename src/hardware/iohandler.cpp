@@ -27,8 +27,8 @@
 
 //#define ENABLE_PORTLOG
 
-IO_WriteHandler io_writehandlers[3][IO_MAX];
-IO_ReadHandler io_readhandlers[3][IO_MAX];
+IO_WriteHandler io_writehandlers[IO_SIZES][IO_MAX];
+IO_ReadHandler io_readhandlers[IO_SIZES][IO_MAX];
 
 static Bitu IO_ReadBlocked(Bitu /*port*/,Bitu /*iolen*/) {
 	return ~0;
@@ -72,7 +72,8 @@ void IO_WriteDefault(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
-void IO_RegisterReadHandler(Bitu port,IO_ReadHandler handler,Bitu mask,Bitu range) {
+void IO_RegisterReadHandler(Bitu port, IO_ReadHandler handler, Bitu mask, Bitu range)
+{
 	while (range--) {
 		if (mask&IO_MB) io_readhandlers[0][port]=handler;
 		if (mask&IO_MW) io_readhandlers[1][port]=handler;
@@ -81,7 +82,8 @@ void IO_RegisterReadHandler(Bitu port,IO_ReadHandler handler,Bitu mask,Bitu rang
 	}
 }
 
-void IO_RegisterWriteHandler(Bitu port,IO_WriteHandler handler,Bitu mask,Bitu range) {
+void IO_RegisterWriteHandler(Bitu port, IO_WriteHandler handler, Bitu mask, Bitu range)
+{
 	while (range--) {
 		if (mask&IO_MB) io_writehandlers[0][port]=handler;
 		if (mask&IO_MW) io_writehandlers[1][port]=handler;
@@ -108,7 +110,8 @@ void IO_FreeWriteHandler(Bitu port,Bitu mask,Bitu range) {
 	}
 }
 
-void IO_ReadHandleObject::Install(Bitu port,IO_ReadHandler handler,Bitu mask,Bitu range) {
+void IO_ReadHandleObject::Install(Bitu port, IO_ReadHandler handler, Bitu mask, Bitu range)
+{
 	if(!installed) {
 		installed=true;
 		m_port=port;
@@ -129,7 +132,8 @@ IO_ReadHandleObject::~IO_ReadHandleObject(){
 	Uninstall();
 }
 
-void IO_WriteHandleObject::Install(Bitu port,IO_WriteHandler handler,Bitu mask,Bitu range) {
+void IO_WriteHandleObject::Install(Bitu port, IO_WriteHandler handler, Bitu mask, Bitu range)
+{
 	if(!installed) {
 		installed=true;
 		m_port=port;
@@ -516,7 +520,7 @@ public:
 	~IO()
 	{
 		uint32_t total_bytes = 0u;
-		for (uint8_t i = 0; i < 3; ++i) {
+		for (uint8_t i = 0; i < IO_SIZES; ++i) {
 			const int readers = IO_MAX;
 			const int writers = IO_MAX;
 			DEBUG_LOG_MSG("IOBUS: Releasing %d read and %d write %d-bit port handlers",
