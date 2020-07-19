@@ -27,8 +27,8 @@
 
 //#define ENABLE_PORTLOG
 
-IO_WriteHandler io_writehandlers[IO_SIZES][IO_MAX];
-IO_ReadHandler io_readhandlers[IO_SIZES][IO_MAX];
+std::unordered_map<io_port_t, IO_WriteHandler> io_writehandlers[IO_SIZES] = {};
+std::unordered_map<io_port_t, IO_ReadHandler> io_readhandlers[IO_SIZES] = {};
 
 void port_within_proposed(io_port_t port) {
 	assert(port < std::numeric_limits<io_port_t_proposed>::max());
@@ -576,18 +576,20 @@ public:
 	}
 	~IO()
 	{
-		uint32_t total_bytes = 0u;
+		size_t total_bytes = 0u;
 		for (uint8_t i = 0; i < IO_SIZES; ++i) {
-			const int readers = IO_MAX;
-			const int writers = IO_MAX;
-			DEBUG_LOG_MSG("IOBUS: Releasing %d read and %d write %d-bit port handlers",
+			const size_t readers = io_readhandlers[i].size();
+			const size_t writers = io_writehandlers[i].size();
+			DEBUG_LOG_MSG("IOBUS: Releasing %lu read and %lu write %d-bit port handlers",
 			              readers, writers, 8 << i);
-			total_bytes += readers * sizeof(IO_ReadHandler);
-			total_bytes += writers * sizeof(IO_WriteHandler);
+			total_bytes += readers * sizeof(IO_ReadHandler) +
+			               sizeof(io_readhandlers[i]);
+			total_bytes += writers * sizeof(IO_WriteHandler) +
+			               sizeof(io_readhandlers[i]);
+			io_readhandlers[i].clear();
+			io_writehandlers[i].clear();
 		}
-		DEBUG_LOG_MSG("IOBUS: Handlers consumed %u total bytes", total_bytes);
-		IO_FreeReadHandler(0, IO_MA, IO_MAX);
-		IO_FreeWriteHandler(0, IO_MA, IO_MAX);
+		DEBUG_LOG_MSG("IOBUS: Handlers consumed %lu total bytes", total_bytes);
 	}
 };
 
