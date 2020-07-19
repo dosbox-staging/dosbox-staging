@@ -711,18 +711,8 @@ void Gus::Reset()
 		// Reset
 		adlib_command_reg = ADLIB_CMD_DEFAULT;
 		irq_status = 0;
-		timers[0].should_raise_irq = false;
-		timers[1].should_raise_irq = false;
-		timers[0].has_expired = false;
-		timers[1].has_expired = false;
-		timers[0].is_counting_down = false;
-		timers[1].is_counting_down = false;
-
-		timers[0].value = 0xff;
-		timers[1].value = 0xff;
-		timers[0].delay = TIMER_1_DEFAULT_DELAY;
-		timers[1].delay = TIMER_2_DEFAULT_DELAY;
-
+		timers[0] = Timer{TIMER_1_DEFAULT_DELAY};
+		timers[1] = Timer{TIMER_2_DEFAULT_DELAY};
 		should_change_irq_dma = false;
 		mix_ctrl = 0x0b; // latches enabled, LINEs disabled
 		// Stop all voices
