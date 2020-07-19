@@ -30,8 +30,13 @@
 #define IO_MA	(IO_MB | IO_MW | IO_MD ) // All three
 #define IO_SIZES 3 // byte, word, and dword
 
+// Existing type sizes
 using io_port_t = Bitu;
 using io_val_t = Bitu;
+
+// Proposed type types
+using io_port_t_proposed = uint16_t; // DOS only supports 16-bit port addresses
+using io_val_t_proposed = uint32_t; // Handling exists up to a dword (or less)
 
 using IO_ReadHandler = std::function<Bitu(io_port_t port, Bitu iolen)>;
 using IO_WriteHandler = std::function<void(io_port_t port, io_val_t val, Bitu iolen)>;
