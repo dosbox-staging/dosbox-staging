@@ -23,8 +23,6 @@
 #include <functional>
 #include <unordered_map>
 
-#define IO_MAX (64*1024+3)
-
 #define IO_MB	0x1 // Byte (8-bit)
 #define IO_MW	0x2 // Word (16-bit)
 #define IO_MD	0x4 // DWord (32-bit)
