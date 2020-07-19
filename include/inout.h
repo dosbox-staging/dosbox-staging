@@ -64,16 +64,12 @@ io_val_t IO_ReadD(io_port_t port);
  * The io objects will remove itself on destruction.*/
 class IO_Base{
 protected:
-	bool installed;
-	Bitu m_port, m_mask,m_range;
-public:
-	IO_Base()
-	: installed(false),
-	  m_port(0),
-	  m_mask(0),
-	  m_range(0)
-{}
+	bool installed = false;
+	io_port_t m_port = 0u;
+	Bitu m_mask = 0u;
+	Bitu m_range = 0u;
 };
+
 class IO_ReadHandleObject: private IO_Base{
 public:
 	void Install(io_port_t port, IO_ReadHandler handler, Bitu mask, Bitu range = 1);
