@@ -515,7 +515,18 @@ public:
 	}
 	~IO()
 	{
-		//Same as the constructor ?
+		uint32_t total_bytes = 0u;
+		for (uint8_t i = 0; i < 3; ++i) {
+			const int readers = IO_MAX;
+			const int writers = IO_MAX;
+			DEBUG_LOG_MSG("IOBUS: Releasing %d read and %d write %d-bit port handlers",
+			              readers, writers, 8 << i);
+			total_bytes += readers * sizeof(void*);
+			total_bytes += writers * sizeof(void*);
+		}
+		DEBUG_LOG_MSG("IOBUS: Handlers consumed %u total bytes", total_bytes);
+		IO_FreeReadHandler(0, IO_MA, IO_MAX);
+		IO_FreeWriteHandler(0, IO_MA, IO_MAX);
 	}
 };
 
