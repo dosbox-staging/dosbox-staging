@@ -30,6 +30,14 @@
 IO_WriteHandler io_writehandlers[IO_SIZES][IO_MAX];
 IO_ReadHandler io_readhandlers[IO_SIZES][IO_MAX];
 
+void port_within_proposed(io_port_t port) {
+	assert(port < std::numeric_limits<io_port_t_proposed>::max());
+}
+
+void val_within_proposed(io_val_t val) {
+	assert(val <= std::numeric_limits<io_val_t_proposed>::max());
+}
+
 static io_val_t ReadBlocked(io_port_t /*port*/, Bitu /*iolen*/)
 {
 	return ~0;
@@ -40,6 +48,8 @@ static void WriteBlocked(io_port_t /*port*/, io_val_t /*val*/, Bitu /*iolen*/)
 
 static io_val_t ReadDefault(io_port_t port, Bitu iolen)
 {
+	port_within_proposed(port);
+
 	switch (iolen) {
 	case 1:
 		LOG(LOG_IO, LOG_WARN)("IOBUS: Unexpected read from %04xh; blocking",
@@ -60,6 +70,9 @@ static io_val_t ReadDefault(io_port_t port, Bitu iolen)
 
 static void WriteDefault(io_port_t port, io_val_t val, Bitu iolen)
 {
+	port_within_proposed(port);
+	val_within_proposed(val);
+
 	switch (iolen) {
 	case 1:
 		LOG(LOG_IO, LOG_WARN)("IOBUS: Unexpected write of %u to %04xh; blocking",
@@ -80,6 +93,8 @@ static void WriteDefault(io_port_t port, io_val_t val, Bitu iolen)
 
 void IO_RegisterReadHandler(io_port_t port, IO_ReadHandler handler, Bitu mask, Bitu range)
 {
+	port_within_proposed(port);
+
 	while (range--) {
 		if (mask&IO_MB) io_readhandlers[0][port]=handler;
 		if (mask&IO_MW) io_readhandlers[1][port]=handler;
@@ -90,6 +105,8 @@ void IO_RegisterReadHandler(io_port_t port, IO_ReadHandler handler, Bitu mask, B
 
 void IO_RegisterWriteHandler(io_port_t port, IO_WriteHandler handler, Bitu mask, Bitu range)
 {
+	port_within_proposed(port);
+
 	while (range--) {
 		if (mask&IO_MB) io_writehandlers[0][port]=handler;
 		if (mask&IO_MW) io_writehandlers[1][port]=handler;
@@ -100,6 +117,8 @@ void IO_RegisterWriteHandler(io_port_t port, IO_WriteHandler handler, Bitu mask,
 
 void IO_FreeReadHandler(io_port_t port, Bitu mask, Bitu range)
 {
+	port_within_proposed(port);
+
 	while (range--) {
 		if (mask&IO_MB) io_readhandlers[0][port] = ReadDefault;
 		if (mask&IO_MW) io_readhandlers[1][port] = ReadDefault;
@@ -110,6 +129,8 @@ void IO_FreeReadHandler(io_port_t port, Bitu mask, Bitu range)
 
 void IO_FreeWriteHandler(io_port_t port, Bitu mask, Bitu range)
 {
+	port_within_proposed(port);
+
 	while (range--) {
 		if (mask&IO_MB) io_writehandlers[0][port] = WriteDefault;
 		if (mask&IO_MW) io_writehandlers[1][port] = WriteDefault;
@@ -120,6 +141,8 @@ void IO_FreeWriteHandler(io_port_t port, Bitu mask, Bitu range)
 
 void IO_ReadHandleObject::Install(io_port_t port, IO_ReadHandler handler, Bitu mask, Bitu range)
 {
+	port_within_proposed(port);
+
 	if(!installed) {
 		installed=true;
 		m_port=port;
@@ -142,6 +165,8 @@ IO_ReadHandleObject::~IO_ReadHandleObject(){
 
 void IO_WriteHandleObject::Install(io_port_t port, IO_WriteHandler handler, Bitu mask, Bitu range)
 {
+	port_within_proposed(port);
+
 	if(!installed) {
 		installed=true;
 		m_port=port;
@@ -239,6 +264,9 @@ static Bit8u crtc_index = 0;
 const char* const len_type[] = {" 8","16","32"};
 void log_io(Bitu width, bool write, io_port_t port, io_val_t val)
 {
+	port_within_proposed(port);
+	val_within_proposed(val);
+
 	switch(width) {
 	case 0:
 		val&=0xff;
@@ -302,6 +330,9 @@ void log_io(Bitu width, bool write, io_port_t port, io_val_t val)
 
 void IO_WriteB(io_port_t port, io_val_t val)
 {
+	port_within_proposed(port);
+	val_within_proposed(val);
+
 	log_io(0, true, port, val);
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,1)))) {
 		LazyFlags old_lflags;
@@ -339,6 +370,9 @@ void IO_WriteB(io_port_t port, io_val_t val)
 
 void IO_WriteW(io_port_t port, io_val_t val)
 {
+	port_within_proposed(port);
+	val_within_proposed(val);
+
 	log_io(1, true, port, val);
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,2)))) {
 		LazyFlags old_lflags;
@@ -376,6 +410,9 @@ void IO_WriteW(io_port_t port, io_val_t val)
 
 void IO_WriteD(io_port_t port, io_val_t val)
 {
+	port_within_proposed(port);
+	val_within_proposed(val);
+
 	log_io(2, true, port, val);
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,4)))) {
 		LazyFlags old_lflags;
@@ -410,6 +447,8 @@ void IO_WriteD(io_port_t port, io_val_t val)
 
 io_val_t IO_ReadB(io_port_t port)
 {
+	port_within_proposed(port);
+
 	io_val_t retval;
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,1)))) {
 		LazyFlags old_lflags;
@@ -450,6 +489,8 @@ io_val_t IO_ReadB(io_port_t port)
 
 io_val_t IO_ReadW(io_port_t port)
 {
+	port_within_proposed(port);
+
 	io_val_t retval;
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,2)))) {
 		LazyFlags old_lflags;
@@ -489,6 +530,8 @@ io_val_t IO_ReadW(io_port_t port)
 
 io_val_t IO_ReadD(io_port_t port)
 {
+	port_within_proposed(port);
+
 	io_val_t retval;
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,4)))) {
 		LazyFlags old_lflags;
