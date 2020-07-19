@@ -46,6 +46,31 @@ static io_val_t ReadBlocked(io_port_t /*port*/, Bitu /*iolen*/)
 static void WriteBlocked(io_port_t /*port*/, io_val_t /*val*/, Bitu /*iolen*/)
 {}
 
+static io_val_t ReadDefault(io_port_t port, Bitu iolen);
+static void WriteDefault(io_port_t port, io_val_t val, Bitu iolen);
+
+// The ReadPort and WritePort functions lookup and call the handler
+// at the desired port. If the port hasn't been assigned (and the
+// lookup is empty), then the default handler is assigned and called.
+static io_val_t ReadPort(uint8_t req_bytes, io_port_t port)
+{
+	// Convert bytes to handler map index MB.0x1->0, MW.0x2->1, and MD.0x4->2
+	const uint8_t idx = req_bytes >> 1;
+	const auto &it = io_readhandlers[idx].emplace(port, ReadDefault).first;
+	return it->second(port, req_bytes);
+}
+
+static void WritePort(uint8_t put_bytes, io_port_t port, io_val_t val)
+{
+	// Convert bytes to handler map index MB.0x1->0, MW.0x2->1, and MD.0x4->2
+	const uint8_t idx = put_bytes >> 1;
+
+	 // Convert bytes into a cut-off mask: 1->0xff, 2->0xffff, 4->0xffffff
+	const auto mask = (1ul << (put_bytes * 8)) - 1;
+	const auto &it = io_writehandlers[idx].emplace(port, WriteDefault).first;
+	it->second(port, val & mask, put_bytes);
+}
+
 static io_val_t ReadDefault(io_port_t port, Bitu iolen)
 {
 	port_within_proposed(port);
@@ -56,14 +81,8 @@ static io_val_t ReadDefault(io_port_t port, Bitu iolen)
 		                      static_cast<uint32_t>(port));
 		io_readhandlers[0][port] = ReadBlocked;
 		return 0xff;
-	case 2:
-		return
-			(io_readhandlers[0][port+0](port+0,1) << 0) |
-			(io_readhandlers[0][port+1](port+1,1) << 8);
-	case 4:
-		return
-			(io_readhandlers[1][port+0](port+0,2) << 0) |
-			(io_readhandlers[1][port+2](port+2,2) << 16);
+	case 2: return ReadPort(IO_MB, port) | (ReadPort(IO_MB, port + 1) << 8);
+	case 4: return ReadPort(IO_MW, port) | (ReadPort(IO_MW, port + 2) << 16);
 	}
 	return 0;
 }
@@ -81,12 +100,12 @@ static void WriteDefault(io_port_t port, io_val_t val, Bitu iolen)
 		io_writehandlers[0][port] = WriteBlocked;
 		break;
 	case 2:
-		io_writehandlers[0][port+0](port+0,(val >> 0) & 0xff,1);
-		io_writehandlers[0][port+1](port+1,(val >> 8) & 0xff,1);
+		WritePort(IO_MB, port, val);
+		WritePort(IO_MB, port + 1, val >> 8);
 		break;
 	case 4:
-		io_writehandlers[1][port+0](port+0,(val >> 0 ) & 0xffff,2);
-		io_writehandlers[1][port+2](port+2,(val >> 16) & 0xffff,2);
+		WritePort(IO_MW, port, val);
+		WritePort(IO_MW, port + 2, val >> 16);
 		break;
 	}
 }
@@ -120,9 +139,12 @@ void IO_FreeReadHandler(io_port_t port, Bitu mask, Bitu range)
 	port_within_proposed(port);
 
 	while (range--) {
-		if (mask&IO_MB) io_readhandlers[0][port] = ReadDefault;
-		if (mask&IO_MW) io_readhandlers[1][port] = ReadDefault;
-		if (mask&IO_MD) io_readhandlers[2][port] = ReadDefault;
+		if (mask & IO_MB)
+			io_readhandlers[0].erase(port);
+		if (mask & IO_MW)
+			io_readhandlers[1].erase(port);
+		if (mask & IO_MD)
+			io_readhandlers[2].erase(port);
 		port++;
 	}
 }
@@ -132,9 +154,12 @@ void IO_FreeWriteHandler(io_port_t port, Bitu mask, Bitu range)
 	port_within_proposed(port);
 
 	while (range--) {
-		if (mask&IO_MB) io_writehandlers[0][port] = WriteDefault;
-		if (mask&IO_MW) io_writehandlers[1][port] = WriteDefault;
-		if (mask&IO_MD) io_writehandlers[2][port] = WriteDefault;
+		if (mask & IO_MB)
+			io_writehandlers[0].erase(port);
+		if (mask & IO_MW)
+			io_writehandlers[1].erase(port);
+		if (mask & IO_MD)
+			io_writehandlers[2].erase(port);
 		port++;
 	}
 }
@@ -364,7 +389,7 @@ void IO_WriteB(io_port_t port, io_val_t val)
 	}
 	else {
 		IO_USEC_write_delay();
-		io_writehandlers[0][port](port,val,1);
+		WritePort(IO_MB, port, val);
 	}
 }
 
@@ -404,7 +429,7 @@ void IO_WriteW(io_port_t port, io_val_t val)
 	}
 	else {
 		IO_USEC_write_delay();
-		io_writehandlers[1][port](port,val,2);
+		WritePort(IO_MW, port, val);
 	}
 }
 
@@ -441,8 +466,9 @@ void IO_WriteD(io_port_t port, io_val_t val)
 		reg_dx = old_dx;
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
+	} else {
+		WritePort(IO_MD, port, val);
 	}
-	else io_writehandlers[2][port](port,val,4);
 }
 
 io_val_t IO_ReadB(io_port_t port)
@@ -481,7 +507,7 @@ io_val_t IO_ReadB(io_port_t port)
 	}
 	else {
 		IO_USEC_read_delay();
-		retval = io_readhandlers[0][port](port,1);
+		retval = ReadPort(IO_MB, port);
 	}
 	log_io(0, false, port, retval);
 	return retval;
@@ -522,7 +548,7 @@ io_val_t IO_ReadW(io_port_t port)
 	}
 	else {
 		IO_USEC_read_delay();
-		retval = io_readhandlers[1][port](port,2);
+		retval = ReadPort(IO_MW, port);
 	}
 	log_io(1, false, port, retval);
 	return retval;
@@ -561,8 +587,9 @@ io_val_t IO_ReadD(io_port_t port)
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
 	} else {
-		retval = io_readhandlers[2][port](port,4);
+		retval = ReadPort(IO_MD, port);
 	}
+
 	log_io(2, false, port, retval);
 	return retval;
 }
@@ -570,9 +597,7 @@ io_val_t IO_ReadD(io_port_t port)
 class IO :public Module_base {
 public:
 	IO(Section* configuration):Module_base(configuration){
-	iof_queue.used=0;
-	IO_FreeReadHandler(0,IO_MA,IO_MAX);
-	IO_FreeWriteHandler(0,IO_MA,IO_MAX);
+		iof_queue.used = 0;
 	}
 	~IO()
 	{
