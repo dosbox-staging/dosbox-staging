@@ -872,8 +872,8 @@ void Gus::UpdateWaveMsw(int32_t &addr) const
 
 void Gus::WriteToRegister()
 {
-	//	if (selected_register|1!=0x44) LOG_MSG("write global register %x
-	// with %x", selected_register, register_data);
+	if (selected_register == 6 && !register_data)
+		LOG_MSG("GUS: write reg %x with %x", selected_register, register_data);
 
 	// Registers that write to the general DSP
 	switch (selected_register) {
@@ -949,9 +949,14 @@ void Gus::WriteToRegister()
 			        (sample_ctrl & 0x1) ? dma_callback : empty_callback);
 		}
 		return;
-	case 0x4c: // GUS reset register
+	case 0x4c: // GUS reset register		
+		{
+		reset_register = (register_data >> 8) & 7;
+		int b = register_data & 0x100;
+		LOG_MSG("GUS: write reset (>> 8) & 7 = %d, 0x100 = %d", reset_register, b);
 		Reset();
 		return;
+		}
 	}
 
 	if (!voice)
