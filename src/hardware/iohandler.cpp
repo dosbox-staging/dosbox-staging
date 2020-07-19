@@ -40,7 +40,7 @@ void val_within_proposed(io_val_t val) {
 
 static io_val_t ReadBlocked(io_port_t /*port*/, Bitu /*iolen*/)
 {
-	return ~0;
+	return static_cast<io_val_t>(~0);
 }
 
 static void WriteBlocked(io_port_t /*port*/, io_val_t /*val*/, Bitu /*iolen*/)
@@ -210,7 +210,8 @@ void IO_WriteHandleObject::Uninstall() {
 
 IO_WriteHandleObject::~IO_WriteHandleObject(){
 	Uninstall();
-	// LOG_MSG("FreeWritehandler called with port %#" PRIxPTR,m_port);
+	// LOG_MSG("IOBUS: FreeWritehandler called with port %04x",
+	// static_cast<uint32_t>(m_port));
 }
 
 struct IOF_Entry {
@@ -244,9 +245,8 @@ static Bits IOFaultCore(void) {
  * games with their timing of certain operations
  */
 
-
-#define IODELAY_READ_MICROS 1.0
-#define IODELAY_WRITE_MICROS 0.75
+constexpr double IODELAY_READ_MICROS = 1.0;
+constexpr double IODELAY_WRITE_MICROS = 0.75;
 
 inline void IO_USEC_read_delay_old() {
 	if(CPU_CycleMax > static_cast<Bit32s>((IODELAY_READ_MICROS*1000.0))) {
@@ -266,9 +266,10 @@ inline void IO_USEC_write_delay_old() {
 	}
 }
 
-
-#define IODELAY_READ_MICROSk (Bit32u)(1024/1.0)
-#define IODELAY_WRITE_MICROSk (Bit32u)(1024/0.75)
+constexpr int32_t IODELAY_READ_MICROSk = static_cast<int32_t>(
+        1024 / IODELAY_READ_MICROS);
+constexpr int32_t IODELAY_WRITE_MICROSk = static_cast<int32_t>(
+        1024 / IODELAY_WRITE_MICROS);
 
 inline void IO_USEC_read_delay() {
 	Bits delaycyc = CPU_CycleMax/IODELAY_READ_MICROSk;
@@ -325,8 +326,9 @@ void log_io(Bitu width, bool write, io_port_t port, io_val_t val)
 		// case 0x3c5: // VGA seq
 			break;
 		default:
-			LOG_MSG("iow%s % 4x % 4x, cs:ip %04x:%04x", len_type[width],
-				port, val, SegValue(cs),reg_eip);
+			LOG_MSG("IOSBUS: iow%s % 4x % 4x, cs:ip %04x:%04x",
+			        len_type[width], static_cast<uint32_t>(port),
+			        val, SegValue(cs), reg_eip);
 			break;
 		}
 	} else {
@@ -343,8 +345,9 @@ void log_io(Bitu width, bool write, io_port_t port, io_val_t val)
 			// don't log for the above cases
 			break;
 		default:
-			LOG_MSG("ior%s % 4x % 4x,\t\tcs:ip %04x:%04x", len_type[width],
-				port, val, SegValue(cs),reg_eip);
+			LOG_MSG("IOBUS: ior%s % 4x % 4x,\t\tcs:ip %04x:%04x",
+			        len_type[width], static_cast<uint32_t>(port),
+			        val, SegValue(cs), reg_eip);
 			break;
 		}
 	}
@@ -372,8 +375,8 @@ void IO_WriteB(io_port_t port, io_val_t val)
 		CPU_Push16(reg_ip);
 		Bit8u old_al = reg_al;
 		Bit16u old_dx = reg_dx;
-		reg_al = val;
-		reg_dx = port;
+		reg_al = static_cast<uint8_t>(val);
+		reg_dx = static_cast<uint16_t>(port);
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
 		reg_eip = RealOff(icb)+0x08;
@@ -412,8 +415,8 @@ void IO_WriteW(io_port_t port, io_val_t val)
 		CPU_Push16(reg_ip);
 		Bit16u old_ax = reg_ax;
 		Bit16u old_dx = reg_dx;
-		reg_ax = val;
-		reg_dx = port;
+		reg_ax = static_cast<uint16_t>(val);
+		reg_dx = static_cast<uint16_t>(port);
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
 		reg_eip = RealOff(icb)+0x0a;
@@ -452,8 +455,8 @@ void IO_WriteD(io_port_t port, io_val_t val)
 		CPU_Push16(reg_ip);
 		Bit32u old_eax = reg_eax;
 		Bit16u old_dx = reg_dx;
-		reg_eax = val;
-		reg_dx = port;
+		reg_eax = static_cast<uint32_t>(val);
+		reg_dx = static_cast<uint16_t>(port);
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
 		reg_eip = RealOff(icb)+0x0c;
@@ -489,7 +492,7 @@ io_val_t IO_ReadB(io_port_t port)
 		CPU_Push16(reg_ip);
 		Bit8u old_al = reg_al;
 		Bit16u old_dx = reg_dx;
-		reg_dx = port;
+		reg_dx = static_cast<uint16_t>(port);
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
 		reg_eip = RealOff(icb)+0x00;
@@ -531,7 +534,7 @@ io_val_t IO_ReadW(io_port_t port)
 		CPU_Push16(reg_ip);
 		Bit16u old_ax = reg_ax;
 		Bit16u old_dx = reg_dx;
-		reg_dx = port;
+		reg_dx = static_cast<uint16_t>(port);
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
 		reg_eip = RealOff(icb)+0x02;
@@ -572,7 +575,7 @@ io_val_t IO_ReadD(io_port_t port)
 		CPU_Push16(reg_ip);
 		Bit32u old_eax = reg_eax;
 		Bit16u old_dx = reg_dx;
-		reg_dx = port;
+		reg_dx = static_cast<uint16_t>(port);
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
 		reg_eip = RealOff(icb)+0x04;
