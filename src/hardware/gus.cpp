@@ -23,7 +23,6 @@
 #include <sstream>
 #include <unistd.h>
 
-
 #include "setup.h"
 
 #define LOG_GUS 0 // set to 1 for detailed logging
@@ -41,7 +40,7 @@ using namespace std::placeholders;
 // External Tie-in for OPL FM-audio
 uint8_t adlib_commandreg = ADLIB_CMD_DEFAULT;
 
-static std::unique_ptr<Gus> myGUS = nullptr;
+static std::unique_ptr<Gus> gus = nullptr;
 
 Voice::Voice(uint8_t num, VoiceIrq &irq)
         : irq_mask(1 << num),
@@ -776,8 +775,8 @@ bool Gus::SoftLimit(float (&in)[BUFFER_FRAMES][2], int16_t (&out)[BUFFER_FRAMES]
 
 static void GUS_TimerEvent(Bitu t)
 {
-	if (myGUS->CheckTimer(t))
-		PIC_AddEvent(GUS_TimerEvent, myGUS->timers[t].delay, t);
+	if (gus->CheckTimer(t))
+		PIC_AddEvent(GUS_TimerEvent, gus->timers[t].delay, t);
 }
 
 void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
@@ -1035,7 +1034,7 @@ void Gus::WriteToRegister()
 void GUS_ShutDown(Section * /*sec*/)
 {
 	// Explicitly release the GUS
-	myGUS.reset();
+	gus.reset();
 }
 
 void GUS_Init(Section *sec)
@@ -1054,6 +1053,6 @@ void GUS_Init(Section *sec)
 	const std::string ultradir = conf->Get_string("ultradir");
 
 	// Instantiate the GUS with the settings
-	myGUS = std::make_unique<Gus>(port, dma, irq, ultradir);
+	gus = std::make_unique<Gus>(port, dma, irq, ultradir);
 	sec->AddDestroyFunction(&GUS_ShutDown, true);
 }
