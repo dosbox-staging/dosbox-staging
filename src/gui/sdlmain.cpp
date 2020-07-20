@@ -614,6 +614,37 @@ static int int_log2 (int val) {
     return log;
 }
 
+// This is a hack to prevent SDL2 from re-creating window internally. Prevents
+// crashes on Windows and Linux, and prevents initial window from being visibly
+// destroyed (for window managers that show animations while creating window,
+// e.g. Gnome 3).
+static uint32_t opengl_driver_crash_workaround(SCREEN_TYPES type)
+{
+	if (type != SCREEN_TEXTURE)
+		return 0;
+
+	if (starts_with("opengl", sdl.render_driver))
+		return SDL_WINDOW_OPENGL;
+
+	if (sdl.render_driver != "auto")
+		return 0;
+
+	static int default_driver_is_opengl = -1;
+	if (default_driver_is_opengl >= 0)
+		return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
+
+	// According to SDL2 documentation, the first driver
+	// in the list is the default one.
+	int i = 0;
+	SDL_RendererInfo info;
+	while (SDL_GetRenderDriverInfo(i++, &info) == 0) {
+		if (info.flags & SDL_RENDERER_TARGETTEXTURE)
+			break;
+	}
+	default_driver_is_opengl = starts_with("opengl", info.name);
+	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
+}
+
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
                                  int height,
@@ -639,16 +670,9 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 			SDL_DestroyWindow(sdl.window);
 		}
 
-		uint32_t flags = 0;
+		uint32_t flags = opengl_driver_crash_workaround(screen_type);
 #if C_OPENGL
 		if (screen_type == SCREEN_OPENGL)
-			flags |= SDL_WINDOW_OPENGL;
-#endif
-#if defined (WIN32)
-		// This is a hack for Windows 10 to prevent a crash in AMD OpenGL
-		// driver when window is being re-created by SDL2 internally to
-		// support OpenGL.
-		if (screen_type == SCREEN_TEXTURE && starts_with("opengl", sdl.render_driver))
 			flags |= SDL_WINDOW_OPENGL;
 #endif
 
