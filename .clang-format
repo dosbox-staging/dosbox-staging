@@ -134,6 +134,11 @@ BraceWrapping:
   SplitEmptyRecord: false
   SplitEmptyNamespace: true
 
+# Never break string literals; programmer will usually do more meaningful
+# break (if it's really required).
+#
+BreakStringLiterals: false
+
 # When set to false, a function declaration's or function definition's
 # parameters (but not function calls) will either all be on the same line
 # or will have one line each.

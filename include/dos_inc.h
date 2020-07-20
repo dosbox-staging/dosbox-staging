@@ -292,19 +292,27 @@ public:
 
 	void	SaveVectors			(void);
 	void	RestoreVectors		(void);
-	void	SetSize				(Bit16u size)			{ sSave(sPSP,next_seg,size);		};
-	Bit16u	GetSize				(void)					{ return (Bit16u)sGet(sPSP,next_seg);		};
-	void	SetEnvironment		(Bit16u envseg)			{ sSave(sPSP,environment,envseg);	};
-	Bit16u	GetEnvironment		(void)					{ return (Bit16u)sGet(sPSP,environment);	};
-	Bit16u	GetSegment			(void)					{ return seg;						};
+
+	void SetSize(uint16_t size) { sSave(sPSP, next_seg, size); }
+	uint16_t GetSize() { return (uint16_t)sGet(sPSP, next_seg); }
+
+	void SetEnvironment(uint16_t eseg) { sSave(sPSP, environment, eseg); }
+	uint16_t GetEnvironment() { return (uint16_t)sGet(sPSP, environment); }
+
+	uint16_t GetSegment() { return seg; }
+
 	void	SetFileHandle		(Bit16u index, Bit8u handle);
 	Bit8u	GetFileHandle		(Bit16u index);
-	void	SetParent			(Bit16u parent)			{ sSave(sPSP,psp_parent,parent);	};
-	Bit16u	GetParent			(void)					{ return (Bit16u)sGet(sPSP,psp_parent);		};
-	void	SetStack			(RealPt stackpt)		{ sSave(sPSP,stack,stackpt);		};
-	RealPt	GetStack			(void)					{ return sGet(sPSP,stack);			};
-	void	SetInt22			(RealPt int22pt)		{ sSave(sPSP,int_22,int22pt);		};
-	RealPt	GetInt22			(void)					{ return sGet(sPSP,int_22);			};
+
+	void SetParent(uint16_t parent) { sSave(sPSP, psp_parent, parent); }
+	uint16_t GetParent() { return (uint16_t)sGet(sPSP, psp_parent); }
+
+	void SetStack(RealPt stackpt) { sSave(sPSP, stack, stackpt); }
+	RealPt GetStack() { return sGet(sPSP, stack); }
+
+	void SetInt22(RealPt int22pt) { sSave(sPSP, int_22, int22pt); }
+	RealPt GetInt22() { return sGet(sPSP, int_22); }
+
 	void	SetFCB1				(RealPt src);
 	void	SetFCB2				(RealPt src);
 	void	SetCommandTail		(RealPt src);	
@@ -474,10 +482,11 @@ public:
 	void GetSearchParams(Bit8u & _sattr,char * _spattern);
 	void GetResult(char * _name,Bit32u & _size,Bit16u & _date,Bit16u & _time,Bit8u & _attr);
 
-	void	SetDirID(Bit16u entry)			{ sSave(sDTA,dirID,entry); };
-	void	SetDirIDCluster(Bit16u entry)	{ sSave(sDTA,dirCluster,entry); };
-	Bit16u	GetDirID(void)				{ return (Bit16u)sGet(sDTA,dirID); };
-	Bit16u	GetDirIDCluster(void)		{ return (Bit16u)sGet(sDTA,dirCluster); };
+	void SetDirID(uint16_t entry) { sSave(sDTA, dirID, entry); }
+	void SetDirIDCluster(uint16_t entry) { sSave(sDTA, dirCluster, entry); }
+	uint16_t GetDirID() { return (uint16_t)sGet(sDTA, dirID); }
+	uint16_t GetDirIDCluster() { return (uint16_t)sGet(sDTA, dirCluster); }
+
 private:
 	#ifdef _MSC_VER
 	#pragma pack(1)
@@ -627,12 +636,16 @@ struct DOS_Block {
 	DOS_Version version;
 	Bit16u firstMCB;
 	Bit16u errorcode;
-	Bit16u psp(){return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetPSP();};
-	void psp(Bit16u _seg){ DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetPSP(_seg);};
+
+	uint16_t psp() { return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetPSP(); }
+	void psp(uint16_t seg) { DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetPSP(seg); }
+
 	Bit16u env;
 	RealPt cpmentry;
-	RealPt dta(){return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDTA();};
-	void dta(RealPt _dta){DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDTA(_dta);};
+
+	RealPt dta() { return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetDTA(); }
+	void dta(RealPt dtap) { DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetDTA(dtap); }
+
 	Bit8u return_code,return_mode;
 	
 	Bit8u current_drive;

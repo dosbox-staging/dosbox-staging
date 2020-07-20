@@ -43,25 +43,29 @@ struct machine_config;
 #define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName)		\
 	const device_type Type = 0;
 
-
 class device_sound_interface {
-public:			
+public:
 	struct sound_stream {
-		void update() {
-		}
+		void update() {}
 	};
+
 	sound_stream temp;
 
-	sound_stream* stream_alloc(int whatever, int channels, int size) {
+	device_sound_interface(const machine_config &mconfig, device_t &_device)
+	        : temp()
+	{}
+
+	virtual ~device_sound_interface() = default;
+
+	sound_stream *stream_alloc(int whatever, int channels, int size)
+	{
 		return &temp;
-	};
-	
-
-	virtual void sound_stream_update(sound_stream &stream, stream_sample_t **inputs, stream_sample_t **outputs, int samples) = 0;
-
-	device_sound_interface(const machine_config &mconfig, device_t& _device) {
 	}
 
+	virtual void sound_stream_update(sound_stream &stream,
+	                                 stream_sample_t **inputs,
+	                                 stream_sample_t **outputs,
+	                                 int samples) = 0;
 };
 
 struct attotime {
