@@ -48,12 +48,6 @@ Voice::Voice(uint8_t num, VoiceIrq &irq)
           
 {}
 
-void Voice::ClearStats()
-{
-	generated_8bit_ms = 0u;
-	generated_16bit_ms = 0u;
-}
-
 /*
 Gravis SDK, Section 3.11. Rollover feature:
 	Each voice has a 'rollover' feature that allows an application to be notified
@@ -169,7 +163,7 @@ void Voice::UpdateWaveAndVol()
 	WriteVolRate(vctrl.rate);
 }
 
-inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_reset)
+inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_restart)
 {
 	if (ctrl.state & CTRL::DISABLED)
 		return;
@@ -191,7 +185,7 @@ inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_reset)
 	}
 
 	// Allow the current position to move beyond its limit
-	if (dont_loop_or_reset)
+	if (dont_loop_or_restart)
 		return;
 
 	// Should we loop?
@@ -203,7 +197,7 @@ inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_reset)
 		                   ? ctrl.end - remaining
 		                   : ctrl.start + remaining;
 	}
-	// Otherwise, reset the position back to its start or end
+	// Otherwise, restart the position back to its start or end
 	else {
 		ctrl.state |= 1; // Stop the voice
 		ctrl.pos = (ctrl.state & CTRL::DECREASING) ? ctrl.start : ctrl.end;
@@ -324,11 +318,6 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	PopulatePanScalars();
 
 	PopulateAutoExec(port, ultradir);
-}
-
-Gus::~Gus()
-{
-	PrintStats();
 }
 
 void Gus::AudioCallback(const uint16_t requested_frames)
@@ -698,33 +687,50 @@ uint16_t Gus::ReadFromRegister()
 	return register_data;
 }
 
-void Gus::Reset()
+void Gus::Reset(uint8_t state)
 {
-	if ((register_data & 0x1) == 0x1) {
-		// Characterize playback before resettings
-		PrintStats();
+	// Shutdown the DSP
+	if (state == 0) {
+		// Halt playback before altering the DSP state
+		audio_channel->Enable(false);
 
-		// Shutdown the audio output before altering the DSP
-		if (audio_channel)
-			audio_channel->Enable(false);
-
-		// Reset
-		adlib_command_reg = ADLIB_CMD_DEFAULT;
 		irq_status = 0;
-		timers[0] = Timer{TIMER_1_DEFAULT_DELAY};
-		timers[1] = Timer{TIMER_2_DEFAULT_DELAY};
+		voice = nullptr;
+		voice_index = 0u;
+		active_voices = 0u;
+		voice_irq.count = 0u;
 		should_change_irq_dma = false;
+	}
+	// Get ready by initializing the DSP
+	else if (state == 1) {
+		// Initialize the OPL emulator state
+		adlib_command_reg = ADLIB_CMD_DEFAULT;
+
+		// Initialize the timers, but let them finish counting down
+		// (EpicPinball's Android expects this)
+		timers[0] = Timer{TIMER_1_DEFAULT_DELAY, timers[0].value,
+		                  timers[0].has_expired, timers[0].is_counting_down};
+		timers[1] = Timer{TIMER_1_DEFAULT_DELAY, timers[1].value,
+		                  timers[1].has_expired, timers[1].is_counting_down};
+
 		mix_ctrl = 0x0b; // latches enabled, LINEs disabled
-		// Stop all voices
+
+		// Initialize the voice states
 		for (auto &v : voices) {
 			v->vctrl.pos = 0u;
 			WriteCtrl(v->wctrl, v->irq_mask, 0x1);
 			WriteCtrl(v->vctrl, v->irq_mask, 0x1);
 			v->WritePanPot(PAN_DEFAULT_POSITION);
-			v->ClearStats();
 		}
-		voice_irq.count = 0u;
-		peak_amplitude = {ONE_AMP, ONE_AMP};
+	}
+	// Play!
+	else if (active_voices) {
+		audio_channel->Enable(true);
+		if (prev_logged_voices != active_voices) {
+			LOG_MSG("GUS: Sampling %u voices at %u Hz",
+			        active_voices, playback_rate);
+			prev_logged_voices = active_voices;
+		}
 	}
 	irq_enabled = register_data & 0x4;
 }
@@ -872,9 +878,6 @@ void Gus::UpdateWaveMsw(int32_t &addr) const
 
 void Gus::WriteToRegister()
 {
-	if (selected_register == 6 && !register_data)
-		LOG_MSG("GUS: write reg %x with %x", selected_register, register_data);
-
 	// Registers that write to the general DSP
 	switch (selected_register) {
 	case 0xE: // Set active voice register
@@ -889,13 +892,10 @@ void Gus::WriteToRegister()
 				playback_rate = static_cast<uint32_t>(
 				        0.5 + 1000000.0 / (1.619695497 * active_voices));
 				audio_channel->SetFreq(playback_rate);
-				LOG_MSG("GUS: Sampling %u voices at %u Hz",
-				        active_voices, playback_rate);
 			}
 			// Refresh the wave and volume states for the active set
 			for (uint8_t i = 0; i < active_voices; i++)
 				voices.at(i)->UpdateWaveAndVol();
-			audio_channel->Enable(true);
 		}
 		return;
 	case 0x10: // Undocumented register used in Fast Tracker 2
@@ -923,7 +923,6 @@ void Gus::WriteToRegister()
 		            (static_cast<uint32_t>(register_data >> 8)) << 16;
 		return;
 	case 0x45: // Timer control register.  Identical in operation to Adlib's
-	           // timer
 		timer_ctrl = static_cast<uint8_t>(register_data >> 8);
 		timers[0].should_raise_irq = (timer_ctrl & 0x04) > 0;
 		if (!timers[0].should_raise_irq)
@@ -949,14 +948,9 @@ void Gus::WriteToRegister()
 			        (sample_ctrl & 0x1) ? dma_callback : empty_callback);
 		}
 		return;
-	case 0x4c: // GUS reset register		
-		{
-		reset_register = (register_data >> 8) & 7;
-		int b = register_data & 0x100;
-		LOG_MSG("GUS: write reset (>> 8) & 7 = %d, 0x100 = %d", reset_register, b);
-		Reset();
+	case 0x4c: // GUS reset register
+		Reset((register_data >> 8) & 7);
 		return;
-		}
 	}
 
 	if (!voice)
@@ -1028,8 +1022,10 @@ void Gus::WriteToRegister()
 
 void GUS_ShutDown(Section * /*sec*/)
 {
-	// Explicitly release the GUS
-	gus.reset();
+	if (gus) {
+		gus->PrintStats();
+		gus.reset();
+	}
 }
 
 void GUS_Init(Section *sec)
