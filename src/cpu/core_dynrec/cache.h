@@ -22,44 +22,51 @@
 #include "mem_unaligned.h"
 #include "types.h"
 
-class CodePageHandler; // forward
+class CodePageHandler;
 
 // basic cache block representation
 class CacheBlock {
 public:
-	void Clear(void);
+	void Clear();
+
 	// link this cache block to another block, index specifies the code
 	// path (always zero for unconditional links, 0/1 for conditional ones
 	void LinkTo(Bitu index, CacheBlock *toblock)
 	{
 		assert(toblock);
 		link[index].to=toblock;
-		link[index].next=toblock->link[index].from;	// set target block
-		toblock->link[index].from=this;				// remember who links me
+		link[index].next = toblock->link[index].from; // set target block
+		toblock->link[index].from = this; // remember who links me
 	}
+
 	struct {
-		Bit16u start,end;		// where in the page is the original code
-		CodePageHandler *handler;       // page containing this code
+		uint16_t start, end; // where in the page is the original code
+		CodePageHandler *handler; // page containing this code
 	} page;
+
 	struct {
-		Bit8u * start;			// where in the cache are we
+		uint8_t *start; // where in the cache are we
 		Bitu size;
 		CacheBlock *next;
-		// writemap masking maskpointer/start/length
-		// to allow holes in the writemap
-		Bit8u * wmapmask;
-		Bit16u maskstart;
-		Bit16u masklen;
+		// writemap masking maskpointer/start/length to allow holes in
+		// the writemap
+		uint8_t *wmapmask;
+		uint16_t maskstart;
+		uint16_t masklen;
 	} cache;
+
 	struct {
 		Bitu index;
 		CacheBlock *next;
 	} hash;
+
 	struct {
-		CacheBlock *to;   // this block can transfer control to the to-block
+		CacheBlock *to; // this block can transfer control to the to-block
 		CacheBlock *next;
-		CacheBlock *from; // the from-block can transfer control to this block
+		CacheBlock *from; // the from-block can transfer control
+		                  // to this block
 	} link[2];                // maximum two links (conditional jumps)
+
 	CacheBlock *crossblock;
 };
 
