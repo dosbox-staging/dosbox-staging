@@ -33,6 +33,7 @@
 #include "pic.h"
 #include "shell.h"
 
+// GUS constants used in member definitions
 constexpr uint8_t BUFFER_FRAMES = 64u;
 constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
 constexpr uint8_t MAX_VOICES = 32u;
@@ -47,18 +48,21 @@ constexpr uint8_t VOICE_DEFAULT_STATE = 3u;
 constexpr uint16_t VOLUME_LEVELS = 4096u;
 constexpr uint8_t WRITE_HANDLERS = 9u;
 
-
+// A simple stereo audio frame that's used by the Gus and Voice classes.
 struct AudioFrame {
 	float left = 0.0f;
 	float right = 0.0f;
 };
 
-// A set of common IRQs shared between the DSP and each voice
+// A group of parameters defining the Gus's voice IRQ control that's also shared
+// (as a reference) into each instantiated voice.
 struct VoiceIrq {
 	uint32_t state = 0u;
 	uint8_t count = 0u;
 };
 
+// A group of parameters used in the Voice class to track the Wave and Volume
+// controls.
 struct VoiceControl {
 	int32_t start = 0;
 	int32_t end = 0;
@@ -68,7 +72,15 @@ struct VoiceControl {
 	uint8_t state = VOICE_DEFAULT_STATE;
 };
 
-// A Single GUS Voice
+// A Voice, used by the Gus class, which instantiates 32 of these.
+// Each voice represents a single "mono" stream of audio having it's own
+// characteristics defined by the running program, such as:
+//   - being 8bit or 16bit
+//   - having a position placed left or right (panned)
+//   - having a its volume scaled (from native-level down to 0)
+//   - having start, stop, loop, and loop-backward controls
+//   - informing the GUS DSP as to when an IRQ is needed to keep it playing
+//
 class Voice {
 public:
 	Voice(uint8_t num, VoiceIrq &irq);
@@ -119,12 +131,21 @@ private:
 	typedef std::function<float(const uint8_t *, const int32_t)> get_sample_f;
 	get_sample_f GetSample = std::bind(&Voice::GetSample8, this, std::placeholders::_1, std::placeholders::_2);
 
-	// shared IRQs with the GUS DSP
+	// shared IRQ with the GUS DSP
 	VoiceIrq &shared_irq;
 	uint32_t &generated_ms = generated_8bit_ms;
 	uint8_t pan_position = PAN_DEFAULT_POSITION;
 };
 
+// The Gravis UltraSound (Gus) DSP
+// This class:
+//   - Registers, receives, and responds to port address inputs, which are used
+//     by the emulated software to configure and control the Gus.
+//   - Reads audio content provided via direct memory access (DMA)
+//   - Provides common resources to the Voices, such as the volume and pan tables
+//   - Integrates the audio from its voices into a 16-bit stereo output stream
+//   - Populates an autoexec line (ULTRASND=...) with its port, irq, and dma addresses
+//
 class Gus {
 public:
 	Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &dir);

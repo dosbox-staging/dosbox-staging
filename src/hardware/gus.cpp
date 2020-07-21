@@ -27,6 +27,7 @@
 
 #define LOG_GUS 0 // set to 1 for detailed logging
 
+// GUS constants used in functional code
 constexpr uint8_t ADLIB_CMD_DEFAULT = 85u;
 constexpr uint8_t MIN_VOICES = 14u;
 constexpr int16_t VOLUME_INC_SCALAR = 512;   // Volume index increment scalar
