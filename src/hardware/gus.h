@@ -90,8 +90,8 @@ public:
 	uint32_t generated_8bit_ms = 0u;
 	uint32_t generated_16bit_ms = 0u;
 
-	VoiceControl wctrl = {};
-	VoiceControl vctrl = {};
+	VoiceControl wave_ctrl = {};
+	VoiceControl vol_ctrl = {};
 	uint32_t irq_mask = 0u;
 
 private:
@@ -131,7 +131,9 @@ public:
 	bool CheckTimer(size_t t);
 	void PrintStats();
 
-	struct Timer {
+	class Timer {
+		public:
+		void PartialReset(float delay_scalar);
 		float delay = 0.0f;
 		uint8_t value = 0xff;
 		bool has_expired = false;
@@ -146,7 +148,9 @@ private:
 	Gus(const Gus &) = delete;            // prevent copying
 	Gus &operator=(const Gus &) = delete; // prevent assignment
 
+	void ActivateVoices(uint8_t requested_voices);
 	void AudioCallback(uint16_t requested_frames);
+	void BeginPlayback();
 	void CheckIrq();
 	void CheckVoiceIrq();
 	void DmaCallback(DmaChannel *dma_channel, DMAEvent event);
@@ -154,10 +158,13 @@ private:
 	void PopulateAutoExec(uint16_t port, const std::string &dir);
 	void PopulatePanScalars();
 	void PopulateVolScalars();
+	void PrepareForPlayback();
 	uint8_t ReadCtrl(const VoiceControl &ctrl) const;
 	size_t ReadFromPort(const size_t port, const size_t iolen);
+	void RegisterIoHandlers();
 	void Reset(uint8_t state);
 	bool SoftLimit(float (&)[BUFFER_FRAMES][2], int16_t (&)[BUFFER_FRAMES][2]);
+	void StopPlayback();
 	void UpdateWaveMsw(int32_t &addr) const;
 	void UpdateWaveLsw(int32_t &addr) const;
 	void WriteCtrl(VoiceControl &ctrl, uint32_t irq_mask, uint8_t val);
