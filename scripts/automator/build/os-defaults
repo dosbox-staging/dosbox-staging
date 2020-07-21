@@ -9,10 +9,13 @@ function pre_build() {
 	cd ../..
 	underline "Environment"
 	echo "[$(${CC} --version | head -1)]"
+	export_names=()
 	for v in "${VARIABLES[@]}"; do
 		vupper=$(upper "${v}")
 		echo "${vupper}=\"$(eval echo \$"${vupper}")\""
+		export_names+=($vupper)
 	done
+	echo "export ${export_names[@]}" CXXFLAGS=\"\${CFLAGS} \${CXXONLY}\"
 	underline "Launching"
 }
 
