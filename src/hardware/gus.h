@@ -73,7 +73,6 @@ class Voice {
 public:
 	Voice(uint8_t num, VoiceIrq &irq);
 	bool CheckWaveRolloverCondition();
-	void ClearStats();
 	void GenerateSamples(float *stream,
 	                     const uint8_t *ram,
 	                     const float *vol_scalars,
@@ -91,8 +90,8 @@ public:
 	uint32_t generated_8bit_ms = 0u;
 	uint32_t generated_16bit_ms = 0u;
 
-	VoiceControl wctrl;
-	VoiceControl vctrl;
+	VoiceControl wctrl = {};
+	VoiceControl vctrl = {};
 	uint32_t irq_mask = 0u;
 
 private:
@@ -129,9 +128,9 @@ private:
 class Gus {
 public:
 	Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &dir);
-	~Gus();
 	bool CheckTimer(size_t t);
-	
+	void PrintStats();
+
 	struct Timer {
 		float delay = 0.0f;
 		uint8_t value = 0xff;
@@ -155,10 +154,9 @@ private:
 	void PopulateAutoExec(uint16_t port, const std::string &dir);
 	void PopulatePanScalars();
 	void PopulateVolScalars();
-	void PrintStats();
 	uint8_t ReadCtrl(const VoiceControl &ctrl) const;
 	size_t ReadFromPort(const size_t port, const size_t iolen);
-	void Reset();
+	void Reset(uint8_t state);
 	bool SoftLimit(float (&)[BUFFER_FRAMES][2], int16_t (&)[BUFFER_FRAMES][2]);
 	void UpdateWaveMsw(int32_t &addr) const;
 	void UpdateWaveLsw(int32_t &addr) const;
@@ -192,12 +190,12 @@ private:
 	uint32_t active_voice_mask = 0u;
 	uint16_t voice_index = 0u;
 	uint8_t active_voices = 0u;
+	uint8_t prev_logged_voices = 0u;
 
 	// Register and playback rate
 	uint32_t dram_addr = 0u;
 	uint32_t playback_rate = 0u;
 	uint16_t register_data = 0u;
-	uint16_t reset_register = 0u;
 	uint8_t selected_register = 0u;
 
 	// Control states
