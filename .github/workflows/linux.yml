@@ -21,16 +21,16 @@ jobs:
             os: ubuntu-16.04
             flags: -c gcc
             config_flags: --disable-fluidsynth
-            max_warnings: 312
+            max_warnings: 309
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
             flags: -c gcc
             config_flags: --disable-fluidsynth
-            max_warnings: 311
+            max_warnings: 308
           - name: GCC, Ubuntu 20.04
             os: ubuntu-20.04
             flags: -c gcc
-            max_warnings: 311
+            max_warnings: 308
           - name: Clang, Ubuntu 20.04
             os: ubuntu-20.04
             flags: -c clang -v 10
@@ -44,7 +44,7 @@ jobs:
             os: ubuntu-20.04
             flags: -c gcc
             config_flags: --disable-dynamic-x86
-            max_warnings: 308
+            max_warnings: 305
           - name: Ubuntu, +dynrec, +debug, -dyn_x86
             os: ubuntu-20.04
             flags: -c gcc
