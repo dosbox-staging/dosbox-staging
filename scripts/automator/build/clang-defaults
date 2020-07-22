@@ -7,6 +7,11 @@ if [[ $- == *i* ]]; then
 	cflags+=(-fcolor-diagnostics)
 fi
 
+# ccache can cache Clang's preprocessor pass
+if [[ -n "${ccache}" ]]; then
+        cflags+=(-fpch-preprocess) 
+fi
+
 # Release-type additions
 TYPES+=(release debug warnmore pgotrain optinfo msan usan)
 

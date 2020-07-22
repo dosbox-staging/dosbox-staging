@@ -90,3 +90,7 @@ suppress_base.json
 *.profraw.imports
 *.afdo
 *.afdo.imports
+
+# Intel optimization reports
+*.optrpt
+
