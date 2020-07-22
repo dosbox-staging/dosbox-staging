@@ -33,7 +33,7 @@
 #include "pic.h"
 #include "shell.h"
 
-// GUS constants used in member definitions
+// Constants used in member definitions
 constexpr uint8_t BUFFER_FRAMES = 64u;
 constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
 constexpr uint8_t MAX_VOICES = 32u;
@@ -72,6 +72,15 @@ struct VoiceControl {
 	uint8_t state = VOICE_DEFAULT_STATE;
 };
 
+// Collection types involving constant quantities
+using address_array_t = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
+using autoexec_array_t = std::array<AutoexecObject, 2>;
+using pan_array_t = std::array<AudioFrame, PAN_POSITIONS>;
+using ram_array_t = std::array<uint8_t, RAM_SIZE>;
+using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
+using vol_array_t = std::array<float, VOLUME_LEVELS>;
+using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
+
 // A Voice, used by the Gus class, which instantiates 32 of these.
 // Each voice represents a single "mono" stream of audio having it's own
 // characteristics defined by the running program, such as:
@@ -86,9 +95,9 @@ public:
 	Voice(uint8_t num, VoiceIrq &irq);
 	bool CheckWaveRolloverCondition();
 	void GenerateSamples(float *stream,
-	                     const uint8_t *ram,
-	                     const float *vol_scalars,
-	                     const AudioFrame *pan_scalars,
+	                     const ram_array_t &ram,
+	                     const vol_array_t &vol_scalars,
+	                     const pan_array_t &pan_scalars,
 	                     AudioFrame &peak,
 	                     uint16_t requested_frames);
 
@@ -111,8 +120,8 @@ private:
 	Voice(const Voice &) = delete;            // prevent copying
 	Voice &operator=(const Voice &) = delete; // prevent assignment
 
-	inline float GetSample8(const uint8_t *ram, const int32_t addr) const;
-	inline float GetSample16(const uint8_t *ram, const int32_t addr) const;
+	inline float GetSample8(const ram_array_t &ram, const int32_t addr) const;
+	inline float GetSample16(const ram_array_t &ram, const int32_t addr) const;
 	uint8_t ReadPanPot() const;
 	void UpdateControl(VoiceControl &ctrl, bool skip_loop);
 
@@ -128,7 +137,7 @@ private:
 		DECREASING = 0x40,
 	};
 
-	typedef std::function<float(const uint8_t *, const int32_t)> get_sample_f;
+	typedef std::function<float(const ram_array_t &, const int32_t)> get_sample_f;
 	get_sample_f GetSample = std::bind(&Voice::GetSample8, this, std::placeholders::_1, std::placeholders::_2);
 
 	// shared IRQ with the GUS DSP
@@ -136,6 +145,8 @@ private:
 	uint32_t &generated_ms = generated_8bit_ms;
 	uint8_t pan_position = PAN_DEFAULT_POSITION;
 };
+
+using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
 
 // The Gravis UltraSound (Gus) DSP
 // This class:
@@ -193,17 +204,17 @@ private:
 	void WriteToRegister();
 
 	// Collections
-	std::array<uint8_t, RAM_SIZE> ram = {{0u}};
-	std::array<AutoexecObject, 2> autoexec_lines = {};
-	std::array<float, VOLUME_LEVELS> vol_scalars = {};
-	std::array<AudioFrame, PAN_POSITIONS> pan_scalars = {};
-	const std::array<uint8_t, DMA_IRQ_ADDRESSES> dma_addresses = {{0, 1, 3, 5, 6, 7, 0, 0}};
-	const std::array<uint8_t, DMA_IRQ_ADDRESSES> irq_addresses = {{0, 2, 5, 3, 7, 11, 12, 15}};
-	std::array<std::unique_ptr<Voice>, MAX_VOICES> voices = {{nullptr}};
-	std::array<IO_ReadHandleObject, READ_HANDLERS> read_handlers = {};
-	std::array<IO_WriteHandleObject, WRITE_HANDLERS> write_handlers = {};
+	autoexec_array_t autoexec_lines = {};
+	pan_array_t pan_scalars = {};
+	ram_array_t ram = {{0u}};
+	read_io_array_t read_handlers = {};
+	voice_array_t voices = {{nullptr}};
+	vol_array_t vol_scalars = {};
+	write_io_array_t write_handlers = {};
+	const address_array_t dma_addresses = {{0, 1, 3, 5, 6, 7, 0, 0}};
+	const address_array_t irq_addresses = {{0, 2, 5, 3, 7, 11, 12, 15}};
 
-	// Compound and pointer members
+	// Struct and pointer members
 	Voice *voice = nullptr;
 	VoiceIrq voice_irq = {};
 	MixerObject mixer_channel = {};
