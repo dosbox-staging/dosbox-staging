@@ -79,8 +79,14 @@ Joh Campbell, maintainer of DOSox-X:
 */
 bool Voice::CheckWaveRolloverCondition()
 {
-	return vol_ctrl.state & CTRL::BIT16 && !(wave_ctrl.state & CTRL::LOOP);
+	return (vol_ctrl.state & CTRL::BIT16) && !(wave_ctrl.state & CTRL::LOOP);
 }
+
+bool Voice::Is8Bit()
+{
+	return !(wave_ctrl.state & CTRL::BIT16);
+}
+
 void Voice::GenerateSamples(float *stream,
                             const ram_array_t &ram,
                             const vol_array_t &vol_scalars,
@@ -90,15 +96,17 @@ void Voice::GenerateSamples(float *stream,
 {
 	if (vol_ctrl.state & wave_ctrl.state & CTRL::DISABLED)
 		return;
-
-	while (requested_frames-- > 0) {
+	for (uint16_t i = 0; i < requested_frames; ++i, stream += 2) {
 		// Get the sample
 		const int sample_addr = wave_ctrl.pos / WAVE_WIDTH;
-		float sample = GetSample(ram, sample_addr);
+		float sample = Is8Bit() ? GetSample8(ram, sample_addr)
+		                        : GetSample16(ram, sample_addr);
 
 		// Add any fractional inter-wave portion
 		if (wave_ctrl.inc < WAVE_WIDTH) {
-			const float next_sample = GetSample(ram, sample_addr + 1);
+			const float next_sample =
+			        Is8Bit() ? GetSample8(ram, sample_addr + 1)
+			                 : GetSample16(ram, sample_addr + 1);
 			const auto wave_fraction = wave_ctrl.pos & (WAVE_WIDTH - 1);
 			const auto wave_percent = static_cast<float>(wave_fraction) *
 			                          WAVE_WIDTH_INV;
@@ -107,20 +115,20 @@ void Voice::GenerateSamples(float *stream,
 		assert(sample <= AUDIO_SAMPLE_MAX && sample >= AUDIO_SAMPLE_MIN);
 
 		// Unscale the volume index and check its bounds
-		auto i = static_cast<size_t>(
+		auto vol_idx = static_cast<size_t>(
 		        ceil_sdivide(vol_ctrl.pos, VOLUME_INC_SCALAR));
 
 		// Apply any selected volume reduction
-		assert(i < vol_scalars.size());
-		sample *= vol_scalars[i];
+		assert(vol_idx < vol_scalars.size());
+		sample *= vol_scalars[vol_idx];
 
 		// Add the sample to the stream, angled in L-R space
-		*(stream++) += sample * pan_scalars[pan_position].left;
-		*(stream++) += sample * pan_scalars[pan_position].right;
+		// Also track the accumulated stream's peak amplitudes
+		stream[0] += sample * pan_scalars[pan_position].left;
+		peak.left = std::max(peak.left, fabsf(stream[0]));
 
-		// Keep tabs on the accumulated stream amplitudes
-		peak.left = std::max(peak.left, fabsf(stream[-2]));
-		peak.right = std::max(peak.right, fabsf(stream[-1]));
+		stream[1] += sample * pan_scalars[pan_position].right;
+		peak.right = std::max(peak.right, fabsf(stream[1]));
 
 		// Update our wave and volume controls
 		UpdateControl(wave_ctrl, CheckWaveRolloverCondition());
@@ -131,7 +139,7 @@ void Voice::GenerateSamples(float *stream,
 }
 
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
-inline float Voice::GetSample8(const ram_array_t &ram, const int32_t addr) const
+float Voice::GetSample8(const ram_array_t &ram, const int32_t addr) const
 {
 	constexpr float to_16bit_range = 1u
 	                                 << (std::numeric_limits<int16_t>::digits -
@@ -142,7 +150,7 @@ inline float Voice::GetSample8(const ram_array_t &ram, const int32_t addr) const
 }
 
 // Read a 16-bit sample returned as a float
-inline float Voice::GetSample16(const ram_array_t &ram, const int32_t addr) const
+float Voice::GetSample16(const ram_array_t &ram, const int32_t addr) const
 {
 	// Calculate offset of the 16-bit sample
 	const auto lower = static_cast<unsigned>(addr) & 0xC0000u;
@@ -255,10 +263,8 @@ void Gus::WriteCtrl(VoiceControl &ctrl, uint32_t voice_irq_mask, uint8_t val)
 
 void Voice::UpdateWaveBitDepth() {
 	if (wave_ctrl.state & CTRL::BIT16) {
-		GetSample = std::bind(&Voice::GetSample16, this, _1, _2);
 		generated_ms = generated_16bit_ms;
 	} else {
-		GetSample = std::bind(&Voice::GetSample8, this, _1, _2);
 		generated_ms = generated_8bit_ms;
 	}
 }
@@ -342,7 +348,7 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 	CheckVoiceIrq();
 }
 
-inline void Gus::CheckIrq()
+void Gus::CheckIrq()
 {
 	if (irq_status && (mix_ctrl & 0x08))
 		PIC_ActivateIRQ(irq1);
@@ -745,7 +751,7 @@ void Gus::SoftLimit(const float (&in)[BUFFER_FRAMES][2],
 	// If our peaks are under the max, then there's no need to limit
 	if (peak_amplitude.left < AUDIO_SAMPLE_MAX &&
 	    peak_amplitude.right < AUDIO_SAMPLE_MAX) {
-		for (uint8_t i = 0; i < BUFFER_FRAMES; ++i) { // vectorized
+		for (auto i = 0; i < BUFFER_FRAMES; ++i) { // vectorized
 			out[i][0] = static_cast<int16_t>(in[i][0]);
 			out[i][1] = static_cast<int16_t>(in[i][1]);
 		}
@@ -758,7 +764,7 @@ void Gus::SoftLimit(const float (&in)[BUFFER_FRAMES][2],
 	const AudioFrame ratio = {
 	        std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak_amplitude.left),
 	        std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak_amplitude.right)};
-	for (uint8_t i = 0; i < BUFFER_FRAMES; ++i) { // Vectorized
+	for (auto i = 0; i < BUFFER_FRAMES; ++i) { // Vectorized
 		out[i][0] = static_cast<int16_t>(in[i][0] * ratio.left);
 		out[i][1] = static_cast<int16_t>(in[i][1] * ratio.right);
 	}
