@@ -1552,22 +1552,21 @@ void DOS_Shell::CMD_PATH(char *args){
 	}
 }
 
-void DOS_Shell::CMD_VER(char *args) {
+void DOS_Shell::CMD_VER(char *args)
+{
 	HELP("VER");
 	if (args && strlen(args)) {
-		char* word = StripWord(args);
-		if (strcasecmp(word,"set")) return;
+		char *word = StripWord(args);
+		if (strcasecmp(word, "set"))
+			return;
 		word = StripWord(args);
-		if (!*args && !*word) { //Reset
-			dos.version.major = 5;
-			dos.version.minor = 0;
-		} else if (*args == 0 && *word && (strchr(word,'.') != 0)) { //Allow: ver set 5.1
-			const char * p = strchr(word,'.');
-			dos.version.major = (Bit8u)(atoi(word));
-			dos.version.minor = (Bit8u)(atoi(p+1));
-		} else { //Official syntax: ver set 5 2
-			dos.version.major = (Bit8u)(atoi(word));
-			dos.version.minor = (Bit8u)(atoi(args));
-		}
-	} else WriteOut(MSG_Get("SHELL_CMD_VER_VER"),VERSION,dos.version.major,dos.version.minor);
+		const auto new_version = DOS_ParseVersion(word, args);
+		if (new_version.major || new_version.minor) {
+			dos.version.major = new_version.major;
+			dos.version.minor = new_version.minor;
+		} else
+			WriteOut(MSG_Get("SHELL_CMD_VER_INVALID"));
+	} else
+		WriteOut(MSG_Get("SHELL_CMD_VER_VER"), VERSION,
+		         dos.version.major, dos.version.minor);
 }

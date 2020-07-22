@@ -565,11 +565,16 @@ MEM
 
 
 VER
+VER set version_number
 VER set major_version [minor_version]
   Display the current DOSBox version and reported DOS version
   (parameterless usage).
   Change the reported DOS version with the "set" parameter,
-  for example: "VER set 6 22" to have DOSBox report DOS 6.22 as version number.
+  either with a version number, or in "major_version [minor_version]" format.
+  For example: "VER set 7.1" to have DOSBox report DOS 7.1 as version number.
+  Alternatively, "VER set 6 22" lets DOSBox report DOS 6.22 as version number.
+  You can also set the DOS version via the "ver=" setting in the [dos] section
+  of the DOSBox configuration file so that DOSBox will activate it at start.
 
 
 CONFIG -writeconf filelocation

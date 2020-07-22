@@ -200,6 +200,8 @@ void DOS_KeyboardLayout_Init(Section* sec);
 
 bool DOS_LayoutKey(Bitu key, Bit8u flags1, Bit8u flags2, Bit8u flags3);
 
+DOS_Version DOS_ParseVersion(const char *word, const char *args);
+
 enum {
 	KEYB_NOERROR=0,
 	KEYB_FILENOTFOUND,

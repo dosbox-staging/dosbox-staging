@@ -837,6 +837,11 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("umb",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("Enable UMB support.");
 
+	pstring = secprop->Add_string("ver", when_idle, "5.0");
+	pstring->Set_help("Set DOS version (5.0 by default). Specify as major.minor format.\n"
+	                  "A single number is treated as the major version.\n"
+	                  "Common settings are 3.3, 5.0, 6.22, and 7.1.");
+
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init,true);
 	Pstring = secprop->Add_string("keyboardlayout",Property::Changeable::WhenIdle, "auto");
 	Pstring->Set_help("Language code of the keyboard layout (or none).");
