@@ -34,7 +34,7 @@
 #include "shell.h"
 
 // Constants used in member definitions
-constexpr uint8_t BUFFER_FRAMES = 64u;
+constexpr int8_t BUFFER_FRAMES = 64;
 constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
 constexpr uint8_t MAX_VOICES = 32u;
 constexpr float ONE_AMP = 1.0f;              // first amplitude value
@@ -100,7 +100,7 @@ public:
 	                     const pan_array_t &pan_scalars,
 	                     AudioFrame &peak,
 	                     uint16_t requested_frames);
-
+	bool Is8Bit();
 	void WritePanPot(uint8_t pos);
 	void WriteVolRate(uint16_t val);
 	void WriteWaveRate(uint16_t val);
@@ -120,8 +120,8 @@ private:
 	Voice(const Voice &) = delete;            // prevent copying
 	Voice &operator=(const Voice &) = delete; // prevent assignment
 
-	inline float GetSample8(const ram_array_t &ram, const int32_t addr) const;
-	inline float GetSample16(const ram_array_t &ram, const int32_t addr) const;
+	float GetSample8(const ram_array_t &ram, const int32_t addr) const;
+	float GetSample16(const ram_array_t &ram, const int32_t addr) const;
 	uint8_t ReadPanPot() const;
 	void UpdateControl(VoiceControl &ctrl, bool skip_loop);
 
@@ -136,9 +136,6 @@ private:
 		RAISEIRQ = 0x20,
 		DECREASING = 0x40,
 	};
-
-	typedef std::function<float(const ram_array_t &, const int32_t)> get_sample_f;
-	get_sample_f GetSample = std::bind(&Voice::GetSample8, this, std::placeholders::_1, std::placeholders::_2);
 
 	// shared IRQ with the GUS DSP
 	VoiceIrq &shared_irq;
