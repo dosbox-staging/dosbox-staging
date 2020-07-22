@@ -1,0 +1,33 @@
+# Load Intel's setup script from its default install location
+# -----------------------------------------------------------
+
+# Do we already have the compiler in our path?
+if command -v icc &> /dev/null; then
+        return
+fi
+
+# Is Intel's setup script available?
+INTEL_ENV_SETUP="/opt/intel/bin/iccvars.sh"
+if [[ ! -f "$INTEL_ENV_SETUP" ]]; then
+        return
+fi
+
+# Intel uses non-standard machine names, so translate
+# what we know, and fallback to the standard otherwise.
+if [[ "$machine" == x86_64 ]]; then
+        ARCH="intel64"
+elif [[ "$machine" == "i686" || "$machine" == "i386" ]]; then
+        ARCH="ia32"
+else
+        ARCH="$machine"
+fi
+
+# Intel expects the OS type to be lower-case
+lower_os="$(lower "$os")"
+
+# Best-effort attempt to load the environment
+# Note that it expects "interactive" error handling
+set +u
+source "$INTEL_ENV_SETUP" -arch "$ARCH" -platform "$lower_os"
+set -u
+

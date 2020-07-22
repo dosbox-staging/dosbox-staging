@@ -1,0 +1,20 @@
+# Tool overrides
+ar="ixar"
+cc="${ccache}icc"
+cxx="${ccache}icpc"
+ld="ixld"
+
+# Supported build types
+TYPES+=(debug release optinfo)
+
+cflags_debug+=("${cflags[@]}" -g)
+cxxonly_debug+=("${cxxonly[@]}" -Weffc++ -diag-disable=2012,2015)
+# 2012 warns about using #define's instead of constexpr (too noisy)
+# 2015 warns about using /* comments */ instead of // comments (too noisy)
+
+cflags_release+=("${cflags[@]}" -O3 -xHost -DNDEBUG)
+
+# Places optimization report files (*.optrpt) along-side source
+cflags_optinfo+=("${cflags_debug[@]}" "${cflags_release[@]}"
+                 -diag-remark=vec -qopt-report=5 -qopt-report-phase=vec,loop)
+cxxonly_optinfo+=("${cxxonly_debug[@]}")

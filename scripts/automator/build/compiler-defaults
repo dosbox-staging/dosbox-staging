@@ -21,7 +21,6 @@ if command -v ccache &> /dev/null; then
 	fi
 	# cache pre-compiled headers
 	export CCACHE_SLOPPINESS="time_macros"
-	cflags+=(-fpch-preprocess)
 else
 	ccache=""
 fi
