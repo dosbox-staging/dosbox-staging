@@ -334,12 +334,7 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 		                           requested_frames);
 
 	int16_t scaled[BUFFER_FRAMES][2];
-	if (!SoftLimit(accumulator, scaled))
-		for (uint8_t i = 0; i < BUFFER_FRAMES; ++i) { // vectorized
-			scaled[i][0] = static_cast<int16_t>(accumulator[i][0]);
-			scaled[i][1] = static_cast<int16_t>(accumulator[i][1]);
-		}
-
+	SoftLimit(accumulator, scaled);
 	audio_channel->AddSamples_s16(requested_frames, scaled[0]);
 	CheckVoiceIrq();
 }
@@ -741,14 +736,20 @@ void Gus::BeginPlayback()
 	}
 }
 
-bool Gus::SoftLimit(float (&in)[BUFFER_FRAMES][2], int16_t (&out)[BUFFER_FRAMES][2])
+void Gus::SoftLimit(const float (&in)[BUFFER_FRAMES][2],
+                    int16_t (&out)[BUFFER_FRAMES][2])
 {
 	constexpr float max_allowed = static_cast<float>(
 	        std::numeric_limits<int16_t>::max() - 1);
 
 	// If our peaks are under the max, then there's no need to limit
-	if (peak_amplitude.left < max_allowed && peak_amplitude.right < max_allowed)
-		return false;
+	if (peak_amplitude.left < max_allowed && peak_amplitude.right < max_allowed) {
+		for (uint8_t i = 0; i < BUFFER_FRAMES; ++i) { // vectorized
+			out[i][0] = static_cast<int16_t>(in[i][0]);
+			out[i][1] = static_cast<int16_t>(in[i][1]);
+		}
+		return;
+	}
 
 	// Calculate the percent we need to scale down the volume index
 	// position.  In cases where one side is less than the max, it's ratio
@@ -771,7 +772,6 @@ bool Gus::SoftLimit(float (&in)[BUFFER_FRAMES][2], int16_t (&out)[BUFFER_FRAMES]
 	// LOG_MSG("GUS: releasing peak_amplitude = %.2f | %.2f",
 	//         static_cast<double>(peak_amplitude.left),
 	//         static_cast<double>(peak_amplitude.right));
-	return true;
 }
 
 static void GUS_TimerEvent(Bitu t)
