@@ -77,9 +77,9 @@ bool Voice::CheckWaveRolloverCondition()
 	return vol_ctrl.state & CTRL::BIT16 && !(wave_ctrl.state & CTRL::LOOP);
 }
 void Voice::GenerateSamples(float *stream,
-                            const uint8_t *ram,
-                            const float *vol_scalars,
-                            const AudioFrame *pan_scalars,
+                            const ram_array_t &ram,
+                            const vol_array_t &vol_scalars,
+                            const pan_array_t &pan_scalars,
                             AudioFrame &peak,
                             uint16_t requested_frames)
 {
@@ -106,13 +106,9 @@ void Voice::GenerateSamples(float *stream,
 		// Unscale the volume index and check its bounds
 		auto i = static_cast<size_t>(
 		        ceil_sdivide(vol_ctrl.pos, VOLUME_INC_SCALAR));
-		if (i >= VOLUME_LEVELS) {
-			LOG_MSG("GUS: level exceeded! %lu - clamping", i);
-			i = std::min(i, static_cast<size_t>(VOLUME_LEVELS - 1u));
-		}
-		assert(i < VOLUME_LEVELS);
 
 		// Apply any selected volume reduction
+		assert(i < vol_scalars.size());
 		sample *= vol_scalars[i];
 
 		// Add the sample to the stream, angled in L-R space
@@ -132,25 +128,25 @@ void Voice::GenerateSamples(float *stream,
 }
 
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
-inline float Voice::GetSample8(const uint8_t *ram, const int32_t addr) const
+inline float Voice::GetSample8(const ram_array_t &ram, const int32_t addr) const
 {
 	constexpr float to_16bit_range = 1u
 	                                 << (std::numeric_limits<int16_t>::digits -
 	                                     std::numeric_limits<int8_t>::digits);
 	const size_t i = static_cast<uint32_t>(addr) & 0xFFFFFu;
-	assert(i < RAM_SIZE);
+	assert(i < ram.size());
 	return static_cast<int8_t>(ram[i]) * to_16bit_range;
 }
 
 // Read a 16-bit sample returned as a float
-inline float Voice::GetSample16(const uint8_t *ram, const int32_t addr) const
+inline float Voice::GetSample16(const ram_array_t &ram, const int32_t addr) const
 {
 	// Calculate offset of the 16-bit sample
 	const auto lower = static_cast<unsigned>(addr) & 0xC0000u;
 	const auto upper = static_cast<unsigned>(addr) & 0x1FFFFu;
 	const size_t i = lower | (upper << 1);
-	assert(i < RAM_SIZE);
-	return static_cast<int16_t>(host_readw(ram + i));
+	assert(i < ram.size());
+	return static_cast<int16_t>(host_readw(ram.data() + i));
 }
 
 uint8_t Voice::ReadPanPot() const
@@ -273,6 +269,7 @@ void Voice::WriteWaveRate(uint16_t val)
 void Gus::RegisterIoHandlers()
 {
 	// Register the IO read addresses
+	assert(7 < read_handlers.size());
 	const auto read_from = std::bind(&Gus::ReadFromPort, this, _1, _2);
 	read_handlers[0].Install(0x302 + port_base, read_from, IO_MB);
 	read_handlers[1].Install(0x303 + port_base, read_from, IO_MB);
@@ -288,6 +285,7 @@ void Gus::RegisterIoHandlers()
 	// We'll leave the MIDI interface to the MPU-401
 	// Ditto for the Joystick
 	// GF1 Synthesizer
+	assert(8 < write_handlers.size());
 	const auto write_to = std::bind(&Gus::WriteToPort, this, _1, _2, _3);
 	write_handlers[0].Install(0x302 + port_base, write_to, IO_MB);
 	write_handlers[1].Install(0x303 + port_base, write_to, IO_MB);
@@ -328,11 +326,12 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 void Gus::AudioCallback(const uint16_t requested_frames)
 {
 	assert(requested_frames <= BUFFER_FRAMES);
+
 	float accumulator[BUFFER_FRAMES][2] = {{0}};
 	for (uint8_t i = 0; i < active_voices; ++i)
-		voices[i]->GenerateSamples(*accumulator, ram.data(),
-		                           vol_scalars.data(), pan_scalars.data(),
-		                           peak_amplitude, requested_frames);
+		voices[i]->GenerateSamples(accumulator[0], ram, vol_scalars,
+		                           pan_scalars, peak_amplitude,
+		                           requested_frames);
 
 	int16_t scaled[BUFFER_FRAMES][2];
 	if (!SoftLimit(accumulator, scaled))
@@ -394,6 +393,7 @@ void Gus::DmaCallback(DmaChannel *dma_channel, DMAEvent event)
 		addr = static_cast<size_t>(dma_addr) << 4;
 	// Reading from dma?
 	if ((dma_ctrl & 0x2) == 0) {
+		assert(addr < ram.size());
 		auto read = dma_channel->Read(dma_channel->currcnt + 1, &ram[addr]);
 		// Check for 16 or 8bit channel
 		read *= (dma_channel->DMA16 + 1);
@@ -822,15 +822,19 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		should_change_irq_dma = false;
 		if (mix_ctrl & 0x40) {
 			// IRQ configuration, only use low bits for irq 1
-			if (irq_addresses[val & 0x7])
-				irq1 = irq_addresses[val & 0x7];
+			const auto i = val & 0x7;
+			assert(i < irq_addresses.size());
+			if (irq_addresses[i])
+				irq1 = irq_addresses[i];
 #if LOG_GUS
 			LOG_MSG("Assigned GUS to IRQ %d", irq1);
 #endif
 		} else {
 			// DMA configuration, only use low bits for dma 1
-			if (dma_addresses[val & 0x7])
-				dma1 = dma_addresses[val & 0x7];
+			const auto i = val & 0x7;
+			assert(i < dma_addresses.size());
+			if (dma_addresses[i])
+				dma1 = dma_addresses[i];
 #if LOG_GUS
 			LOG_MSG("Assigned GUS to DMA %d", dma1);
 #endif
@@ -838,6 +842,7 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		break;
 	case 0x302:
 		voice_index = val & 31;
+		assert(voice_index < voices.size());
 		voice = voices[voice_index].get();
 		break;
 	case 0x303:
@@ -886,6 +891,7 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 	requested_voices = clamp(requested_voices, MIN_VOICES, MAX_VOICES);
 	if (requested_voices != active_voices) {
 		active_voices = requested_voices;
+		assert(active_voices <= voices.size());
 		active_voice_mask = 0xffffffffU >> (MAX_VOICES - active_voices);
 		playback_rate = static_cast<uint32_t>(
 		        0.5 + 1000000.0 / (1.619695497 * active_voices));
@@ -926,10 +932,12 @@ void Gus::WriteToRegister()
 	case 0x43: // MSB Peek/poke DRAM position
 		dram_addr = (0xff0000 & dram_addr) |
 		            (static_cast<uint32_t>(register_data));
+		assert(dram_addr < ram.size());
 		return;
 	case 0x44: // LSW Peek/poke DRAM position
 		dram_addr = (0xffff & dram_addr) |
 		            (static_cast<uint32_t>(register_data >> 8)) << 16;
+		assert(dram_addr < ram.size());
 		return;
 	case 0x45: // Timer control register.  Identical in operation to Adlib's
 		timer_ctrl = static_cast<uint8_t>(register_data >> 8);
