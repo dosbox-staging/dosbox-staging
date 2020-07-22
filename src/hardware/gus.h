@@ -195,7 +195,8 @@ private:
 	size_t ReadFromPort(const size_t port, const size_t iolen);
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
-	bool SoftLimit(float (&)[BUFFER_FRAMES][2], int16_t (&)[BUFFER_FRAMES][2]);
+	void SoftLimit(const float (&in)[BUFFER_FRAMES][2],
+	               int16_t (&out)[BUFFER_FRAMES][2]);
 	void StopPlayback();
 	void UpdateWaveMsw(int32_t &addr) const;
 	void UpdateWaveLsw(int32_t &addr) const;
