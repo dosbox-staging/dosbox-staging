@@ -34,7 +34,8 @@
 #include "shell.h"
 
 // Constants used in member definitions
-constexpr int8_t BUFFER_FRAMES = 64;
+constexpr int BUFFER_FRAMES = 48;
+constexpr int BUFFER_SAMPLES = BUFFER_FRAMES * 2;
 constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
 constexpr uint8_t MAX_VOICES = 32u;
 constexpr float ONE_AMP = 1.0f;              // first amplitude value
@@ -99,13 +100,12 @@ public:
 	                     const vol_array_t &vol_scalars,
 	                     const pan_array_t &pan_scalars,
 	                     AudioFrame &peak,
-	                     uint16_t requested_frames);
-	bool Is8Bit();
+	                     const int requested_frames);
+
 	void WritePanPot(uint8_t pos);
 	void WriteVolRate(uint16_t val);
 	void WriteWaveRate(uint16_t val);
-	void UpdateWaveAndVol();
-	void UpdateWaveBitDepth();
+	void UpdatePeakAndBitCount(const float *stream, AudioFrame &peak);
 
 	// bit-depth tracking
 	uint32_t generated_8bit_ms = 0u;
@@ -119,11 +119,17 @@ private:
 	Voice() = delete;
 	Voice(const Voice &) = delete;            // prevent copying
 	Voice &operator=(const Voice &) = delete; // prevent assignment
-
-	float GetSample8(const ram_array_t &ram, const int32_t addr) const;
-	float GetSample16(const ram_array_t &ram, const int32_t addr) const;
+	bool Is8Bit() const;
+	float GetInterWavePercent() const;
+	float GetInterWavePortion(const ram_array_t &ram, const float sample) const;
+	float Read8BitSample(const ram_array_t &ram, const int32_t addr) const;
+	float Read16BitSample(const ram_array_t &ram, const int32_t addr) const;
+	float GetSample(const ram_array_t &ram) const;
+	float GetVolumeScalar(const vol_array_t &vol_scalars) const;
+	void IncrementAddress();
+	void IncrementVolScalar(const vol_array_t &vol_scalars);
 	uint8_t ReadPanPot() const;
-	void UpdateControl(VoiceControl &ctrl, bool skip_loop);
+	int32_t IncrementControl(VoiceControl &ctrl, bool skip_loop);
 
 	// Control states
 	enum CTRL : uint8_t {
@@ -139,8 +145,9 @@ private:
 
 	// shared IRQ with the GUS DSP
 	VoiceIrq &shared_irq;
-	uint32_t &generated_ms = generated_8bit_ms;
 	uint8_t pan_position = PAN_DEFAULT_POSITION;
+	int32_t sample_address = 0u;
+	float sample_vol_scalar = 0;
 };
 
 using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
