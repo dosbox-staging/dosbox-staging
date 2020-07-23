@@ -28,10 +28,10 @@ import sys
 
 # For recognizing warnings in GCC format in stderr:
 #
-GCC_WARN_PATTERN = re.compile(r'([^:]+):(\d+):\d+: warning: .* \[-W(.+?)\]')
-#                                ~~~~~   ~~~  ~~~           ~~      ~~~
-#                                ↑       ↑    ↑             ↑       ↑
-#                                file    line column  message    type
+GCC_WARN_PATTERN = re.compile(r'([^:]+):(\d+):\d+: warning: .* \[-W(.+?)\](.*)')
+#                                ~~~~~   ~~~  ~~~           ~~      ~~~    ~~
+#                                ↑       ↑    ↑             ↑       ↑      ↑
+#                                file    line column  message    type  extra
 
 # For recognizing warnings in MSVC format:
 #
@@ -76,7 +76,7 @@ def remove_colors(line):
     return re.sub(ANSI_COLOR_PATTERN, '', line)
 
 
-def count_warning(gcc_format, line, warnings):
+def count_warning(gcc_format, line_no, line, warnings):
     line = remove_colors(line)
 
     pattern = GCC_WARN_PATTERN if gcc_format else MSVC_WARN_PATTERN
@@ -94,6 +94,11 @@ def count_warning(gcc_format, line, warnings):
     file = match.group(1)
     # wline = match.group(2)
     wtype = match.group(3)
+
+    if pattern == GCC_WARN_PATTERN and match.group(4):
+        print('Log file is corrupted: extra characters in line',
+              line_no, file=sys.stderr)
+
     _, fname = os.path.split(file)
     warnings.count_type(wtype)
     warnings.count_file(fname)
@@ -164,8 +169,10 @@ def main():
     warnings = warning_summaries()
     args = parse_args()
     use_gcc_format = not args.msvc
+    line_no = 1
     for line in get_input_lines(args.logfile):
-        total += count_warning(use_gcc_format, line, warnings)
+        total += count_warning(use_gcc_format, line_no, line, warnings)
+        line_no += 1
     if args.list:
         warnings.list_all()
     if args.files and warnings.files:
