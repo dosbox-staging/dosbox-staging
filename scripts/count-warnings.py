@@ -28,10 +28,10 @@ import sys
 
 # For recognizing warnings in GCC format in stderr:
 #
-GCC_WARN_PATTERN = re.compile(r'([^:]+):(\d+):\d+: warning: .* \[-W(.+)\]')
-#                               ~~~~~   ~~~  ~~~           ~~      ~~
-#                               ↑       ↑    ↑             ↑       ↑
-#                               file    line column        message type
+GCC_WARN_PATTERN = re.compile(r'([^:]+):(\d+):\d+: warning: .* \[-W(.+?)\]')
+#                                ~~~~~   ~~~  ~~~           ~~      ~~~
+#                                ↑       ↑    ↑             ↑       ↑
+#                                file    line column  message    type
 
 # For recognizing warnings in MSVC format:
 #
