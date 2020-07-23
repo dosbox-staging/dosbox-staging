@@ -82,9 +82,60 @@ bool Voice::CheckWaveRolloverCondition()
 	return (vol_ctrl.state & CTRL::BIT16) && !(wave_ctrl.state & CTRL::LOOP);
 }
 
-bool Voice::Is8Bit()
+bool Voice::Is8Bit() const
 {
 	return !(wave_ctrl.state & CTRL::BIT16);
+}
+
+float Voice::GetSample(const ram_array_t &ram) const
+{
+	const int32_t addr = sample_address;
+	return Is8Bit() ? Read8BitSample(ram, addr) : Read16BitSample(ram, addr);
+}
+
+float Voice::GetInterWavePercent() const
+{
+	const auto wave_fraction = wave_ctrl.pos & (WAVE_WIDTH - 1);
+	return static_cast<float>(wave_fraction) * WAVE_WIDTH_INV;
+}
+
+float Voice::GetInterWavePortion(const ram_array_t &ram, const float sample) const
+{
+	float portion = 0;
+	if (wave_ctrl.inc < WAVE_WIDTH) {
+		const int32_t addr = sample_address + 1;
+		const float next_sample = Is8Bit() ? Read8BitSample(ram, addr)
+		                                   : Read16BitSample(ram, addr);
+		portion = (next_sample - sample) * GetInterWavePercent();
+	}
+	return portion;
+}
+
+// Check and record any new peak samples as well as the bit-depth
+void Voice::UpdatePeakAndBitCount(const float *stream, AudioFrame &peak)
+{
+	for (int i = 0; i < BUFFER_SAMPLES - 1; i += 2) { // Vectorized
+		peak.left = std::max(peak.left, fabsf(stream[i]));
+		peak.right = std::max(peak.right, fabsf(stream[i + 1]));
+	}
+	// Tally the number of generated sets so far
+	Is8Bit() ? generated_8bit_ms++ : generated_16bit_ms++;
+}
+
+void Voice::IncrementAddress()
+{
+	IncrementControl(wave_ctrl, CheckWaveRolloverCondition());
+	sample_address = wave_ctrl.pos / WAVE_WIDTH;
+}
+
+void Voice::IncrementVolScalar(const vol_array_t &vol_scalars)
+{
+	IncrementControl(vol_ctrl, false);
+	// Unscale the volume index and check its bounds
+	const auto i = static_cast<size_t>(
+	        ceil_sdivide(vol_ctrl.pos, VOLUME_INC_SCALAR));
+	assert(i < vol_scalars.size());
+	sample_vol_scalar = vol_scalars[i];
 }
 
 void Voice::GenerateSamples(float *stream,
@@ -92,54 +143,28 @@ void Voice::GenerateSamples(float *stream,
                             const vol_array_t &vol_scalars,
                             const pan_array_t &pan_scalars,
                             AudioFrame &peak,
-                            uint16_t requested_frames)
+                            const int requested_frames)
 {
 	if (vol_ctrl.state & wave_ctrl.state & CTRL::DISABLED)
 		return;
-	for (uint16_t i = 0; i < requested_frames; ++i, stream += 2) {
-		// Get the sample
-		const int sample_addr = wave_ctrl.pos / WAVE_WIDTH;
-		float sample = Is8Bit() ? GetSample8(ram, sample_addr)
-		                        : GetSample16(ram, sample_addr);
 
-		// Add any fractional inter-wave portion
-		if (wave_ctrl.inc < WAVE_WIDTH) {
-			const float next_sample =
-			        Is8Bit() ? GetSample8(ram, sample_addr + 1)
-			                 : GetSample16(ram, sample_addr + 1);
-			const auto wave_fraction = wave_ctrl.pos & (WAVE_WIDTH - 1);
-			const auto wave_percent = static_cast<float>(wave_fraction) *
-			                          WAVE_WIDTH_INV;
-			sample += (next_sample - sample) * wave_percent;
-		}
+	// Add the samples to the stream, angled in L-R space
+	const int sample_end = requested_frames * 2 - 1;
+	for (int i = 0; i < sample_end; i += 2) {
+		float sample = GetSample(ram);
+		sample += GetInterWavePortion(ram, sample);
 		assert(sample <= AUDIO_SAMPLE_MAX && sample >= AUDIO_SAMPLE_MIN);
-
-		// Unscale the volume index and check its bounds
-		auto vol_idx = static_cast<size_t>(
-		        ceil_sdivide(vol_ctrl.pos, VOLUME_INC_SCALAR));
-
-		// Apply any selected volume reduction
-		assert(vol_idx < vol_scalars.size());
-		sample *= vol_scalars[vol_idx];
-
-		// Add the sample to the stream, angled in L-R space
-		// Also track the accumulated stream's peak amplitudes
-		stream[0] += sample * pan_scalars[pan_position].left;
-		peak.left = std::max(peak.left, fabsf(stream[0]));
-
-		stream[1] += sample * pan_scalars[pan_position].right;
-		peak.right = std::max(peak.right, fabsf(stream[1]));
-
-		// Update our wave and volume controls
-		UpdateControl(wave_ctrl, CheckWaveRolloverCondition());
-		UpdateControl(vol_ctrl, false);
+		sample *= sample_vol_scalar;
+		stream[i] += sample * pan_scalars[pan_position].left;
+		stream[i + 1] += sample * pan_scalars[pan_position].right;
+		IncrementAddress();
+		IncrementVolScalar(vol_scalars);
 	}
-	// Tally the number of generated sets so far
-	generated_ms++;
+	UpdatePeakAndBitCount(stream, peak);
 }
 
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
-float Voice::GetSample8(const ram_array_t &ram, const int32_t addr) const
+float Voice::Read8BitSample(const ram_array_t &ram, const int32_t addr) const
 {
 	constexpr float to_16bit_range = 1u
 	                                 << (std::numeric_limits<int16_t>::digits -
@@ -150,7 +175,7 @@ float Voice::GetSample8(const ram_array_t &ram, const int32_t addr) const
 }
 
 // Read a 16-bit sample returned as a float
-float Voice::GetSample16(const ram_array_t &ram, const int32_t addr) const
+float Voice::Read16BitSample(const ram_array_t &ram, const int32_t addr) const
 {
 	// Calculate offset of the 16-bit sample
 	const auto lower = static_cast<unsigned>(addr) & 0xC0000u;
@@ -165,16 +190,10 @@ uint8_t Voice::ReadPanPot() const
 	return pan_position;
 }
 
-void Voice::UpdateWaveAndVol()
-{
-	WriteWaveRate(wave_ctrl.rate);
-	WriteVolRate(vol_ctrl.rate);
-}
-
-inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_restart)
+int32_t Voice::IncrementControl(VoiceControl &ctrl, bool dont_loop_or_restart)
 {
 	if (ctrl.state & CTRL::DISABLED)
-		return;
+		return ctrl.pos;
 	int32_t remaining;
 	if (ctrl.state & CTRL::DECREASING) {
 		ctrl.pos -= ctrl.inc;
@@ -185,8 +204,8 @@ inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_restart)
 	}
 	// Not yet reaching a boundary
 	if (remaining < 0)
-		return;
-	
+		return ctrl.pos;
+
 	// Generate an IRQ if requested
 	if (ctrl.state & CTRL::RAISEIRQ) {
 		shared_irq.state |= irq_mask;
@@ -194,7 +213,7 @@ inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_restart)
 
 	// Allow the current position to move beyond its limit
 	if (dont_loop_or_restart)
-		return;
+		return ctrl.pos;
 
 	// Should we loop?
 	if (ctrl.state & CTRL::LOOP) {
@@ -210,6 +229,7 @@ inline void Voice::UpdateControl(VoiceControl &ctrl, bool dont_loop_or_restart)
 		ctrl.state |= 1; // Stop the voice
 		ctrl.pos = (ctrl.state & CTRL::DECREASING) ? ctrl.start : ctrl.end;
 	}
+	return ctrl.pos;
 }
 
 void Voice::WritePanPot(uint8_t pos)
@@ -259,14 +279,6 @@ void Gus::WriteCtrl(VoiceControl &ctrl, uint32_t voice_irq_mask, uint8_t val)
 		voice_irq.state &= ~voice_irq_mask;
 	if (prev_state != voice_irq.state)
 		CheckVoiceIrq();
-}
-
-void Voice::UpdateWaveBitDepth() {
-	if (wave_ctrl.state & CTRL::BIT16) {
-		generated_ms = generated_16bit_ms;
-	} else {
-		generated_ms = generated_8bit_ms;
-	}
 }
 
 void Voice::WriteWaveRate(uint16_t val)
@@ -335,7 +347,6 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 void Gus::AudioCallback(const uint16_t requested_frames)
 {
 	assert(requested_frames <= BUFFER_FRAMES);
-
 	float accumulator[BUFFER_FRAMES][2] = {{0}};
 	for (uint8_t i = 0; i < active_voices; ++i)
 		voices[i]->GenerateSamples(accumulator[0], ram, vol_scalars,
@@ -446,12 +457,13 @@ void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
 // Generate logarithmic to linear volume conversion tables
 void Gus::PopulateVolScalars()
 {
+	assert(vol_scalars.size() == VOLUME_LEVELS);
 	double out = 1.0;
 	for (uint16_t i = VOLUME_LEVELS - 1; i > 0; --i) {
-		vol_scalars.at(i) = static_cast<float>(out);
+		vol_scalars[i] = static_cast<float>(out);
 		out /= VOLUME_LEVEL_DIVISOR;
 	}
-	vol_scalars.at(0) = 0.0f;
+	vol_scalars[0] = 0.0f;
 }
 
 /*
@@ -496,16 +508,17 @@ describes that output power is held constant through this range.
 */
 void Gus::PopulatePanScalars()
 {
-	for (uint8_t pos = 0u; pos < PAN_POSITIONS; ++pos) {
+	assert(pan_scalars.size() == PAN_POSITIONS);
+	for (uint8_t i = 0; i < PAN_POSITIONS; ++i) { // Vectorized
 		// Normalize absolute range [0, 15] to [-1.0, 1.0]
-		const auto norm = (pos - 7.0) / (pos < 7u ? 7 : 8);
+		const auto norm = (i - 7.0) / (i < 7u ? 7 : 8);
 		// Convert to an angle between 0 and 90-degree, in radians
 		const auto angle = (norm + 1) * M_PI / 4;
-		pan_scalars.at(pos).left = static_cast<float>(cos(angle));
-		pan_scalars.at(pos).right = static_cast<float>(sin(angle));
-		// DEBUG_LOG_MSG("GUS: pan_scalar[%u] = %f | %f", pos,
-		//               pan_scalars.at(pos).left,
-		//               pan_scalars.at(pos).right);
+		pan_scalars[i].left = static_cast<float>(cos(angle));
+		pan_scalars[i].right = static_cast<float>(sin(angle));
+		// DEBUG_LOG_MSG("GUS: pan_scalar[%u] = %f | %f", i,
+		//               pan_scalars.at(i).left,
+		//               pan_scalars.at(i).right);
 	}
 }
 
@@ -751,7 +764,7 @@ void Gus::SoftLimit(const float (&in)[BUFFER_FRAMES][2],
 	// If our peaks are under the max, then there's no need to limit
 	if (peak_amplitude.left < AUDIO_SAMPLE_MAX &&
 	    peak_amplitude.right < AUDIO_SAMPLE_MAX) {
-		for (auto i = 0; i < BUFFER_FRAMES; ++i) { // vectorized
+		for (int i = 0; i < BUFFER_FRAMES; ++i) { // vectorized
 			out[i][0] = static_cast<int16_t>(in[i][0]);
 			out[i][1] = static_cast<int16_t>(in[i][1]);
 		}
@@ -764,7 +777,7 @@ void Gus::SoftLimit(const float (&in)[BUFFER_FRAMES][2],
 	const AudioFrame ratio = {
 	        std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak_amplitude.left),
 	        std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak_amplitude.right)};
-	for (auto i = 0; i < BUFFER_FRAMES; ++i) { // Vectorized
+	for (int i = 0; i < BUFFER_FRAMES; ++i) { // Vectorized
 		out[i][0] = static_cast<int16_t>(in[i][0] * ratio.left);
 		out[i][1] = static_cast<int16_t>(in[i][1] * ratio.right);
 	}
@@ -905,9 +918,6 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 		        0.5 + 1000000.0 / (1.619695497 * active_voices));
 		audio_channel->SetFreq(playback_rate);
 	}
-	// Refresh the wave and volume states for the active set
-	for (uint8_t i = 0; i < active_voices; i++)
-		voices.at(i)->UpdateWaveAndVol();
 }
 
 void Gus::WriteToRegister()
@@ -995,7 +1005,6 @@ void Gus::WriteToRegister()
 	switch (selected_register) {
 	case 0x0: // Voice wave control register
 		WriteCtrl(voice->wave_ctrl, voice->irq_mask, register_data >> 8);
-		voice->UpdateWaveBitDepth();
 		break;
 	case 0x1: // Voice rate control register
 		voice->WriteWaveRate(register_data);
