@@ -99,13 +99,11 @@ public:
 	                     const ram_array_t &ram,
 	                     const vol_array_t &vol_scalars,
 	                     const pan_array_t &pan_scalars,
-	                     AudioFrame &peak,
 	                     const int requested_frames);
 
 	void WritePanPot(uint8_t pos);
 	void WriteVolRate(uint16_t val);
 	void WriteWaveRate(uint16_t val);
-	void UpdatePeakAndBitCount(const float *stream, AudioFrame &peak);
 
 	// bit-depth tracking
 	uint32_t generated_8bit_ms = 0u;
@@ -204,6 +202,7 @@ private:
 	void StopPlayback();
 	void UpdateWaveMsw(int32_t &addr) const;
 	void UpdateWaveLsw(int32_t &addr) const;
+	void UpdatePeakAmplitudes(const float (&stream)[BUFFER_FRAMES][2]);
 	void WriteCtrl(VoiceControl &ctrl, uint32_t irq_mask, uint8_t val);
 	void WriteToPort(size_t port, size_t val, size_t iolen);
 	void WriteToRegister();
@@ -223,7 +222,7 @@ private:
 	Voice *voice = nullptr;
 	VoiceIrq voice_irq = {};
 	MixerObject mixer_channel = {};
-	AudioFrame peak_amplitude = {ONE_AMP, ONE_AMP};
+	AudioFrame peak = {ONE_AMP, ONE_AMP};
 	uint8_t &adlib_command_reg = adlib_commandreg;
 	MixerChannel *audio_channel = nullptr;
 
