@@ -29,17 +29,20 @@
 
 // GUS constants used in functional code
 constexpr uint8_t ADLIB_CMD_DEFAULT = 85u;
+constexpr auto AUDIO_SAMPLE_MAX = static_cast<float>(
+        std::numeric_limits<int16_t>::max());
+constexpr auto AUDIO_SAMPLE_MIN = static_cast<float>(
+        std::numeric_limits<int16_t>::min());
+constexpr auto DELTA_DB = 0.002709201; // 0.0235 dB increments
 constexpr uint8_t MIN_VOICES = 14u;
+constexpr auto SOFT_LIMIT_RELEASE_INC = AUDIO_SAMPLE_MAX *
+                                        static_cast<float>(DELTA_DB);
 constexpr int16_t VOLUME_INC_SCALAR = 512;   // Volume index increment scalar
-constexpr double VOLUME_LEVEL_DIVISOR = 1.002709201; // 0.0235 dB increments
+constexpr auto VOLUME_LEVEL_DIVISOR = 1.0 + DELTA_DB;
 constexpr int16_t WAVE_WIDTH = 1 << 9; // Wave interpolation width (9 bits)
 constexpr float WAVE_WIDTH_INV = 1.0f / WAVE_WIDTH;
 constexpr uint32_t WAVE_MSW_MASK = (1 << 16) - 1; // Upper wave mask
 constexpr uint32_t WAVE_LSW_MASK = 0xffffffff ^ WAVE_MSW_MASK; // Lower wave mask
-constexpr float AUDIO_SAMPLE_MAX = static_cast<float>(
-        std::numeric_limits<int16_t>::max());
-constexpr float AUDIO_SAMPLE_MIN = static_cast<float>(
-        std::numeric_limits<int16_t>::min());
 
 using namespace std::placeholders;
 
@@ -111,17 +114,6 @@ float Voice::GetInterWavePortion(const ram_array_t &ram, const float sample) con
 	return portion;
 }
 
-// Check and record any new peak samples as well as the bit-depth
-void Voice::UpdatePeakAndBitCount(const float *stream, AudioFrame &peak)
-{
-	for (int i = 0; i < BUFFER_SAMPLES - 1; i += 2) { // Vectorized
-		peak.left = std::max(peak.left, fabsf(stream[i]));
-		peak.right = std::max(peak.right, fabsf(stream[i + 1]));
-	}
-	// Tally the number of generated sets so far
-	Is8Bit() ? generated_8bit_ms++ : generated_16bit_ms++;
-}
-
 void Voice::IncrementAddress()
 {
 	IncrementControl(wave_ctrl, CheckWaveRolloverCondition());
@@ -142,7 +134,6 @@ void Voice::GenerateSamples(float *stream,
                             const ram_array_t &ram,
                             const vol_array_t &vol_scalars,
                             const pan_array_t &pan_scalars,
-                            AudioFrame &peak,
                             const int requested_frames)
 {
 	if (vol_ctrl.state & wave_ctrl.state & CTRL::DISABLED)
@@ -160,7 +151,8 @@ void Voice::GenerateSamples(float *stream,
 		IncrementAddress();
 		IncrementVolScalar(vol_scalars);
 	}
-	UpdatePeakAndBitCount(stream, peak);
+	// Keep track of how many ms this voice has generated
+	Is8Bit() ? generated_8bit_ms++ : generated_16bit_ms++;
 }
 
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
@@ -267,7 +259,6 @@ void Voice::WriteVolRate(uint16_t val)
 	assert(vol_ctrl.inc >= 0 && vol_ctrl.inc <= bank_lengths * VOLUME_INC_SCALAR);
 }
 
-
 void Gus::WriteCtrl(VoiceControl &ctrl, uint32_t voice_irq_mask, uint8_t val)
 {
 	const uint32_t prev_state = voice_irq.state;
@@ -350,8 +341,7 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 	float accumulator[BUFFER_FRAMES][2] = {{0}};
 	for (uint8_t i = 0; i < active_voices; ++i)
 		voices[i]->GenerateSamples(accumulator[0], ram, vol_scalars,
-		                           pan_scalars, peak_amplitude,
-		                           requested_frames);
+		                           pan_scalars, requested_frames);
 
 	int16_t scaled[BUFFER_FRAMES][2];
 	SoftLimit(accumulator, scaled);
@@ -542,8 +532,7 @@ void Gus::PrintStats()
 	const uint32_t combined_ms = combined_8bit_ms + combined_16bit_ms;
 
 	// Is there enough information to be meaningful?
-	if (combined_ms < 10000u ||
-	    (peak_amplitude.left + peak_amplitude.right) < 10 ||
+	if (combined_ms < 10000u || (peak.left + peak.right) < 10 ||
 	    !(used_8bit_voices + used_16bit_voices))
 		return;
 
@@ -568,7 +557,7 @@ void Gus::PrintStats()
 	// Calculate and print info about the volume
 	const auto mixer_scalar = std::max(audio_channel->volmain[0],
 	                                   audio_channel->volmain[1]);
-	const auto peak_sample = std::max(peak_amplitude.left, peak_amplitude.right);
+	const auto peak_sample = std::max(peak.left, peak.right);
 	auto peak_ratio = mixer_scalar * peak_sample / AUDIO_SAMPLE_MAX;
 
 	// It's expected and normal for multi-voice audio to periodically
@@ -758,12 +747,21 @@ void Gus::BeginPlayback()
 	}
 }
 
+void Gus::UpdatePeakAmplitudes(const float (&stream)[BUFFER_FRAMES][2])
+{
+	for (int i = 0; i < BUFFER_FRAMES; ++i) { // Vectorized
+		peak.left = std::max(peak.left, fabsf(stream[i][0]));
+		peak.right = std::max(peak.right, fabsf(stream[i][1]));
+	}
+}
+
 void Gus::SoftLimit(const float (&in)[BUFFER_FRAMES][2],
                     int16_t (&out)[BUFFER_FRAMES][2])
 {
+	UpdatePeakAmplitudes(in);
+
 	// If our peaks are under the max, then there's no need to limit
-	if (peak_amplitude.left < AUDIO_SAMPLE_MAX &&
-	    peak_amplitude.right < AUDIO_SAMPLE_MAX) {
+	if (peak.left < AUDIO_SAMPLE_MAX && peak.right < AUDIO_SAMPLE_MAX) {
 		for (int i = 0; i < BUFFER_FRAMES; ++i) { // vectorized
 			out[i][0] = static_cast<int16_t>(in[i][0]);
 			out[i][1] = static_cast<int16_t>(in[i][1]);
@@ -774,25 +772,19 @@ void Gus::SoftLimit(const float (&in)[BUFFER_FRAMES][2],
 	// Calculate the percent we need to scale down the volume index
 	// position.  In cases where one side is less than the max, it's ratio
 	// is limited to 1.0.
-	const AudioFrame ratio = {
-	        std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak_amplitude.left),
-	        std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak_amplitude.right)};
+	const AudioFrame ratio = {std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak.left),
+	                          std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak.right)};
 	for (int i = 0; i < BUFFER_FRAMES; ++i) { // Vectorized
 		out[i][0] = static_cast<int16_t>(in[i][0] * ratio.left);
 		out[i][1] = static_cast<int16_t>(in[i][1] * ratio.right);
 	}
-
-	// Release the limit incrementally using our existing volume scale
-	constexpr float delta_db = static_cast<float>(VOLUME_LEVEL_DIVISOR) - ONE_AMP;
-	constexpr float release_amount = AUDIO_SAMPLE_MAX * delta_db;
-
-	if (peak_amplitude.left > AUDIO_SAMPLE_MAX)
-		peak_amplitude.left -= release_amount;
-	if (peak_amplitude.right > AUDIO_SAMPLE_MAX)
-		peak_amplitude.right -= release_amount;
+	if (peak.left > AUDIO_SAMPLE_MAX)
+		peak.left -= SOFT_LIMIT_RELEASE_INC;
+	if (peak.right > AUDIO_SAMPLE_MAX)
+		peak.right -= SOFT_LIMIT_RELEASE_INC;
 	// LOG_MSG("GUS: releasing peak_amplitude = %.2f | %.2f",
-	//         static_cast<double>(peak_amplitude.left),
-	//         static_cast<double>(peak_amplitude.right));
+	//         static_cast<double>(peak.left),
+	//         static_cast<double>(peak.right));
 }
 
 static void GUS_TimerEvent(Bitu t)
