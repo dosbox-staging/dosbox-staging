@@ -45,11 +45,38 @@ MSVC_WARN_PATTERN = re.compile(r'.+>([^\(]+)\((\d+),\d+\): warning ([^:]+): .*')
 ANSI_COLOR_PATTERN = re.compile(r'\x1b\[[0-9;]*[mGKH]')
 
 
+class warning_summaries:
+
+    def __init__(self):
+        self.types = {}
+        self.files = {}
+        self.lines = set()
+
+    def count_type(self, name):
+        self.types[name] = self.types.get(name, 0) + 1
+
+    def count_file(self, name):
+        self.files[name] = self.files.get(name, 0) + 1
+
+    def list_all(self):
+        for line in sorted(self.lines):
+            print(line)
+        print()
+
+    def print_files(self):
+        print("Warnings grouped by file:\n")
+        print_summary(self.files)
+
+    def print_types(self):
+        print("Warnings grouped by type:\n")
+        print_summary(self.types)
+
+
 def remove_colors(line):
     return re.sub(ANSI_COLOR_PATTERN, '', line)
 
 
-def count_warning(gcc_format, line, warning_types, warning_files, warning_lines):
+def count_warning(gcc_format, line, warnings):
     line = remove_colors(line)
 
     pattern = GCC_WARN_PATTERN if gcc_format else MSVC_WARN_PATTERN
@@ -60,18 +87,16 @@ def count_warning(gcc_format, line, warning_types, warning_files, warning_lines)
     # Some warnings (e.g. effc++) are reported multiple times, once
     # for every usage; ignore duplicates.
     line = line.strip()
-    if line in warning_lines:
+    if line in warnings.lines:
         return 0
-    warning_lines.add(line)
+    warnings.lines.add(line)
 
     file = match.group(1)
-    # line = match.group(2)
+    # wline = match.group(2)
     wtype = match.group(3)
     _, fname = os.path.split(file)
-    type_count = warning_types.get(wtype) or 0
-    file_count = warning_files.get(fname) or 0
-    warning_types[wtype] = type_count + 1
-    warning_files[fname] = file_count + 1
+    warnings.count_type(wtype)
+    warnings.count_file(fname)
     return 1
 
 
@@ -136,27 +161,17 @@ def parse_args():
 def main():
     rcode = 0
     total = 0
-    warning_types = {}
-    warning_files = {}
-    warning_lines = set()
+    warnings = warning_summaries()
     args = parse_args()
     use_gcc_format = not args.msvc
     for line in get_input_lines(args.logfile):
-        total += count_warning(use_gcc_format,
-                               line,
-                               warning_types,
-                               warning_files,
-                               warning_lines)
+        total += count_warning(use_gcc_format, line, warnings)
     if args.list:
-        for line in sorted(warning_lines):
-            print(line)
-        print()
-    if args.files and warning_files:
-        print("Warnings grouped by file:\n")
-        print_summary(warning_files)
-    if warning_types:
-        print("Warnings grouped by type:\n")
-        print_summary(warning_types)
+        warnings.list_all()
+    if args.files and warnings.files:
+        warnings.print_files()
+    if warnings.types:
+        warnings.print_types()
     print('Total: {} warnings'.format(total), end='')
     if args.max_warnings >= 0:
         print(' (out of {} allowed)\n'.format(args.max_warnings))
