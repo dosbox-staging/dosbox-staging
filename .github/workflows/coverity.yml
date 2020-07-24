@@ -8,10 +8,13 @@ on:
 env:
   COVERITY_EMAIL: ${{ secrets.CoverityEmail }}
   COVERITY_TOKEN: ${{ secrets.CoverityToken }}
+  BASE_DIR: "/dev/shm"
+  PACKAGE: "/dev/shm/coverity-package/coverity.tar.zst"
+  PACKAGE_DIR: "/dev/shm/coverity-package"
   # Latest package: https://scan.coverity.com/download
   PACKAGE_VERSION: "2019.03"
-  TARBALL_SHA256: "0bec2d12e7fca3fe4b6df843d9584e2a58e273970a8549c100541f86dbc0da4e"
   TARBALL_GDRIVE_ID: ${{ secrets.GoogleDriveId }}
+  TARBALL_SHA256: "0bec2d12e7fca3fe4b6df843d9584e2a58e273970a8549c100541f86dbc0da4e"
 
 jobs:
   coverity_scan:
@@ -20,19 +23,30 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update
-      - name: Log environment
-        run:  ./scripts/log-env.sh
+      - name: Log and setup environment
+        run: |
+          ./scripts/log-env.sh
+          mkdir -p "${PACKAGE_DIR}"
 
       - name: Install C++ compiler and dependencies
         run: |
           sudo apt-get install zstd python3-setuptools $(./scripts/list-build-dependencies.sh -m apt -c gcc)
           sudo pip3 install gdown
 
-      - name: Fetch the Coverity instrumenteur
+      - name: Prepare the Coverity package cache
+        uses: actions/cache@v2
+        id: cache-coverity
+        with:
+          path: ${{ env.PACKAGE_DIR }}
+          key: coverity-${{ env.PACKAGE_VERSION }}
+      - name:  Fetch the Coverity package
+        if:    steps.cache-coverity.outputs.cache-hit != 'true'
+        run:   gdown --id "${TARBALL_GDRIVE_ID}" -O "${PACKAGE}"
+
+      - name: Install the Coverity package
         run: |
           set -xeuo pipefail
-          gdown --id "${TARBALL_GDRIVE_ID}" -O - \
-          | tee >(tar -I zstd -C /dev/shm -x) \
+          tee >(tar -I zstd -C "${BASE_DIR}" -x) < "${PACKAGE}" \
           | sha256sum -c <(echo "${TARBALL_SHA256} -" )
 
       - name: Build and instrument the project
@@ -43,7 +57,7 @@ jobs:
           export CFLAGS="-g -Og"
           export CXXFLAGS="${CFLAGS}"
           ./configure
-          PATH="/dev/shm/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
+          PATH="${BASE_DIR}/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
           cov-build --dir cov-int make -j "$(nproc)"
           tar -cvaf package.tar.gz cov-int
 
