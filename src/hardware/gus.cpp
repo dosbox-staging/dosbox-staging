@@ -37,7 +37,7 @@ constexpr auto DELTA_DB = 0.002709201; // 0.0235 dB increments
 constexpr uint8_t MIN_VOICES = 14u;
 constexpr auto SOFT_LIMIT_RELEASE_INC = AUDIO_SAMPLE_MAX *
                                         static_cast<float>(DELTA_DB);
-constexpr int16_t VOLUME_INC_SCALAR = 512;   // Volume index increment scalar
+constexpr int16_t VOLUME_INC_SCALAR = 512; // Volume index increment scalar
 constexpr auto VOLUME_LEVEL_DIVISOR = 1.0 + DELTA_DB;
 constexpr int16_t WAVE_WIDTH = 1 << 9; // Wave interpolation width (9 bits)
 constexpr float WAVE_WIDTH_INV = 1.0f / WAVE_WIDTH;
@@ -90,7 +90,7 @@ bool Voice::Is8Bit() const
 	return !(wave_ctrl.state & CTRL::BIT16);
 }
 
-float Voice::GetSample(const ram_array_t &ram) const
+float Voice::GetSample(const uint8_t *ram) const
 {
 	const int32_t addr = sample_address;
 	return Is8Bit() ? Read8BitSample(ram, addr) : Read16BitSample(ram, addr);
@@ -102,7 +102,7 @@ float Voice::GetInterWavePercent() const
 	return static_cast<float>(wave_fraction) * WAVE_WIDTH_INV;
 }
 
-float Voice::GetInterWavePortion(const ram_array_t &ram, const float sample) const
+float Voice::GetInterWavePortion(const uint8_t *ram, const float sample) const
 {
 	float portion = 0;
 	if (wave_ctrl.inc < WAVE_WIDTH) {
@@ -120,20 +120,20 @@ void Voice::IncrementAddress()
 	sample_address = wave_ctrl.pos / WAVE_WIDTH;
 }
 
-void Voice::IncrementVolScalar(const vol_array_t &vol_scalars)
+void Voice::IncrementVolScalar(const float *vol_scalars)
 {
 	IncrementControl(vol_ctrl, false);
 	// Unscale the volume index and check its bounds
 	const auto i = static_cast<size_t>(
 	        ceil_sdivide(vol_ctrl.pos, VOLUME_INC_SCALAR));
-	assert(i < vol_scalars.size());
+	assert(i < VOLUME_LEVELS);
 	sample_vol_scalar = vol_scalars[i];
 }
 
 void Voice::GenerateSamples(float *stream,
-                            const ram_array_t &ram,
-                            const vol_array_t &vol_scalars,
-                            const pan_array_t &pan_scalars,
+                            const uint8_t *ram,
+                            const float *vol_scalars,
+                            const AudioFrame *pan_scalars,
                             const int requested_frames)
 {
 	if (vol_ctrl.state & wave_ctrl.state & CTRL::DISABLED)
@@ -156,25 +156,25 @@ void Voice::GenerateSamples(float *stream,
 }
 
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
-float Voice::Read8BitSample(const ram_array_t &ram, const int32_t addr) const
+float Voice::Read8BitSample(const uint8_t *ram, const int32_t addr) const
 {
 	constexpr float to_16bit_range = 1u
 	                                 << (std::numeric_limits<int16_t>::digits -
 	                                     std::numeric_limits<int8_t>::digits);
 	const size_t i = static_cast<uint32_t>(addr) & 0xFFFFFu;
-	assert(i < ram.size());
+	assert(i < RAM_SIZE);
 	return static_cast<int8_t>(ram[i]) * to_16bit_range;
 }
 
 // Read a 16-bit sample returned as a float
-float Voice::Read16BitSample(const ram_array_t &ram, const int32_t addr) const
+float Voice::Read16BitSample(const uint8_t *ram, const int32_t addr) const
 {
 	// Calculate offset of the 16-bit sample
 	const auto lower = static_cast<unsigned>(addr) & 0xC0000u;
 	const auto upper = static_cast<unsigned>(addr) & 0x1FFFFu;
 	const size_t i = lower | (upper << 1);
-	assert(i < ram.size());
-	return static_cast<int16_t>(host_readw(ram.data() + i));
+	assert(i < RAM_SIZE);
+	return static_cast<int16_t>(host_readw(ram + i));
 }
 
 uint8_t Voice::ReadPanPot() const
@@ -338,14 +338,17 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 void Gus::AudioCallback(const uint16_t requested_frames)
 {
 	assert(requested_frames <= BUFFER_FRAMES);
-	float accumulator[BUFFER_FRAMES][2] = {{0}};
+
+	// Zero the accumulator array
+	for (int i = 0; i < BUFFER_SAMPLES; ++i) // vectorized
+		accumulator[i] = 0;
+
 	for (uint8_t i = 0; i < active_voices; ++i)
-		voices[i]->GenerateSamples(accumulator[0], ram, vol_scalars,
+		voices[i]->GenerateSamples(accumulator, ram, vol_scalars,
 		                           pan_scalars, requested_frames);
 
-	int16_t scaled[BUFFER_FRAMES][2];
 	SoftLimit(accumulator, scaled);
-	audio_channel->AddSamples_s16(requested_frames, scaled[0]);
+	audio_channel->AddSamples_s16(requested_frames, scaled);
 	CheckVoiceIrq();
 }
 
@@ -398,14 +401,14 @@ void Gus::DmaCallback(DmaChannel *dma_channel, DMAEvent event)
 		addr = static_cast<size_t>(dma_addr) << 4;
 	// Reading from dma?
 	if ((dma_ctrl & 0x2) == 0) {
-		assert(addr < ram.size());
+		assert(addr < RAM_SIZE);
 		auto read = dma_channel->Read(dma_channel->currcnt + 1, &ram[addr]);
 		// Check for 16 or 8bit channel
 		read *= (dma_channel->DMA16 + 1);
 		if ((dma_ctrl & 0x80) != 0) {
 			// Invert the MSB to convert twos compliment form
 			const auto dma_end = addr + read;
-			assert(dma_end <= ram.size());
+			assert(dma_end <= RAM_SIZE);
 			if ((dma_ctrl & 0x40) == 0) {
 				// 8-bit data
 				for (size_t i = addr; i < dma_end; ++i)
@@ -447,7 +450,6 @@ void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
 // Generate logarithmic to linear volume conversion tables
 void Gus::PopulateVolScalars()
 {
-	assert(vol_scalars.size() == VOLUME_LEVELS);
 	double out = 1.0;
 	for (uint16_t i = VOLUME_LEVELS - 1; i > 0; --i) {
 		vol_scalars[i] = static_cast<float>(out);
@@ -498,10 +500,9 @@ describes that output power is held constant through this range.
 */
 void Gus::PopulatePanScalars()
 {
-	assert(pan_scalars.size() == PAN_POSITIONS);
-	for (uint8_t i = 0; i < PAN_POSITIONS; ++i) { // Vectorized
+	for (int i = 0; i < PAN_POSITIONS; ++i) { // Vectorized
 		// Normalize absolute range [0, 15] to [-1.0, 1.0]
-		const auto norm = (i - 7.0) / (i < 7u ? 7 : 8);
+		const auto norm = (i - 7.0) / (i < 7 ? 7 : 8);
 		// Convert to an angle between 0 and 90-degree, in radians
 		const auto angle = (norm + 1) * M_PI / 4;
 		pan_scalars[i].left = static_cast<float>(cos(angle));
@@ -747,36 +748,35 @@ void Gus::BeginPlayback()
 	}
 }
 
-void Gus::UpdatePeakAmplitudes(const float (&stream)[BUFFER_FRAMES][2])
+void Gus::UpdatePeakAmplitudes(const float *stream)
 {
-	for (int i = 0; i < BUFFER_FRAMES; ++i) { // Vectorized
-		peak.left = std::max(peak.left, fabsf(stream[i][0]));
-		peak.right = std::max(peak.right, fabsf(stream[i][1]));
+	for (int i = 0; i < BUFFER_SAMPLES - 1; i += 2) {
+		peak.left = std::max(peak.left, fabsf(stream[i]));
+		peak.right = std::max(peak.right, fabsf(stream[i + 1]));
 	}
 }
 
-void Gus::SoftLimit(const float (&in)[BUFFER_FRAMES][2],
-                    int16_t (&out)[BUFFER_FRAMES][2])
+void Gus::SoftLimit(const float *in, int16_t *out)
 {
 	UpdatePeakAmplitudes(in);
 
 	// If our peaks are under the max, then there's no need to limit
 	if (peak.left < AUDIO_SAMPLE_MAX && peak.right < AUDIO_SAMPLE_MAX) {
-		for (int i = 0; i < BUFFER_FRAMES; ++i) { // vectorized
-			out[i][0] = static_cast<int16_t>(in[i][0]);
-			out[i][1] = static_cast<int16_t>(in[i][1]);
+		for (int i = 0; i < BUFFER_SAMPLES - 1; i += 2) { // vectorized
+			out[i] = static_cast<int16_t>(in[i]);
+			out[i + 1] = static_cast<int16_t>(in[i + 1]);
 		}
 		return;
 	}
-
 	// Calculate the percent we need to scale down the volume index
 	// position.  In cases where one side is less than the max, it's ratio
 	// is limited to 1.0.
-	const AudioFrame ratio = {std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak.left),
-	                          std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak.right)};
-	for (int i = 0; i < BUFFER_FRAMES; ++i) { // Vectorized
-		out[i][0] = static_cast<int16_t>(in[i][0] * ratio.left);
-		out[i][1] = static_cast<int16_t>(in[i][1] * ratio.right);
+	const float left_scalar = std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak.left);
+	const float right_scalar = std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak.right);
+
+	for (int i = 0; i < BUFFER_SAMPLES - 1; i += 2) { // Vectorized
+		out[i] = static_cast<int16_t>(in[i] * left_scalar);
+		out[i + 1] = static_cast<int16_t>(in[i + 1] * right_scalar);
 	}
 	if (peak.left > AUDIO_SAMPLE_MAX)
 		peak.left -= SOFT_LIMIT_RELEASE_INC;
@@ -942,12 +942,10 @@ void Gus::WriteToRegister()
 	case 0x43: // MSB Peek/poke DRAM position
 		dram_addr = (0xff0000 & dram_addr) |
 		            (static_cast<uint32_t>(register_data));
-		assert(dram_addr < ram.size());
 		return;
 	case 0x44: // LSW Peek/poke DRAM position
 		dram_addr = (0xffff & dram_addr) |
 		            (static_cast<uint32_t>(register_data >> 8)) << 16;
-		assert(dram_addr < ram.size());
 		return;
 	case 0x45: // Timer control register.  Identical in operation to Adlib's
 		timer_ctrl = static_cast<uint8_t>(register_data >> 8);
