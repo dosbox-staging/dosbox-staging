@@ -37,7 +37,7 @@ cflags_pgotrain+=("${cflags_debug[@]}" -pg -ftree-vectorize)
 
 cflags_fdotrain+=("${cflags[@]}" -DNDEBUG -g1 -fno-omit-frame-pointer)
 
-cflags_optinfo+=("${cflags_release[@]}" -fopt-info-missed
+cflags_optinfo+=("${cflags_release[@]}" -fopt-info-all
                  -ftree-vectorizer-verbose=6)
 
 cflags_asan+=("${cflags_debug[@]}" -fsanitize=address)
