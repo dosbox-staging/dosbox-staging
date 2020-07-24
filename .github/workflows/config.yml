@@ -57,7 +57,7 @@ jobs:
         shell: bash
         run:   echo ::set-output name=date::$(date +%Y-%W)
 
-      - uses:  actions/cache@v1
+      - uses:  actions/cache@v2
         id:    cache-msys2
         if:    >
           matrix.system.name == 'Windows' &&
