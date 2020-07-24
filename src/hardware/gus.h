@@ -76,10 +76,7 @@ struct VoiceControl {
 // Collection types involving constant quantities
 using address_array_t = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
 using autoexec_array_t = std::array<AutoexecObject, 2>;
-using pan_array_t = std::array<AudioFrame, PAN_POSITIONS>;
-using ram_array_t = std::array<uint8_t, RAM_SIZE>;
 using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
-using vol_array_t = std::array<float, VOLUME_LEVELS>;
 using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
 
 // A Voice, used by the Gus class, which instantiates 32 of these.
@@ -96,22 +93,20 @@ public:
 	Voice(uint8_t num, VoiceIrq &irq);
 	bool CheckWaveRolloverCondition();
 	void GenerateSamples(float *stream,
-	                     const ram_array_t &ram,
-	                     const vol_array_t &vol_scalars,
-	                     const pan_array_t &pan_scalars,
+	                     const uint8_t *ram,
+	                     const float *vol_scalars,
+	                     const AudioFrame *pan_scalars,
 	                     const int requested_frames);
 
 	void WritePanPot(uint8_t pos);
 	void WriteVolRate(uint16_t val);
 	void WriteWaveRate(uint16_t val);
 
-	// bit-depth tracking
-	uint32_t generated_8bit_ms = 0u;
-	uint32_t generated_16bit_ms = 0u;
-
 	VoiceControl wave_ctrl = {};
 	VoiceControl vol_ctrl = {};
 	uint32_t irq_mask = 0u;
+	uint32_t generated_8bit_ms = 0u;
+	uint32_t generated_16bit_ms = 0u;
 
 private:
 	Voice() = delete;
@@ -119,13 +114,13 @@ private:
 	Voice &operator=(const Voice &) = delete; // prevent assignment
 	bool Is8Bit() const;
 	float GetInterWavePercent() const;
-	float GetInterWavePortion(const ram_array_t &ram, const float sample) const;
-	float Read8BitSample(const ram_array_t &ram, const int32_t addr) const;
-	float Read16BitSample(const ram_array_t &ram, const int32_t addr) const;
-	float GetSample(const ram_array_t &ram) const;
-	float GetVolumeScalar(const vol_array_t &vol_scalars) const;
+	float GetInterWavePortion(const uint8_t *ram, const float sample) const;
+	float Read8BitSample(const uint8_t *ram, const int32_t addr) const;
+	float Read16BitSample(const uint8_t *ram, const int32_t addr) const;
+	float GetSample(const uint8_t *ram) const;
+	float GetVolumeScalar(const float *vol_scalars) const;
 	void IncrementAddress();
-	void IncrementVolScalar(const vol_array_t &vol_scalars);
+	void IncrementVolScalar(const float *vol_scalars);
 	uint8_t ReadPanPot() const;
 	int32_t IncrementControl(VoiceControl &ctrl, bool skip_loop);
 
@@ -143,9 +138,9 @@ private:
 
 	// shared IRQ with the GUS DSP
 	VoiceIrq &shared_irq;
-	uint8_t pan_position = PAN_DEFAULT_POSITION;
-	int32_t sample_address = 0u;
 	float sample_vol_scalar = 0;
+	int32_t sample_address = 0u;
+	uint8_t pan_position = PAN_DEFAULT_POSITION;
 };
 
 using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
@@ -197,26 +192,27 @@ private:
 	size_t ReadFromPort(const size_t port, const size_t iolen);
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
-	void SoftLimit(const float (&in)[BUFFER_FRAMES][2],
-	               int16_t (&out)[BUFFER_FRAMES][2]);
+	void SoftLimit(const float *in, int16_t *out);
 	void StopPlayback();
 	void UpdateWaveMsw(int32_t &addr) const;
 	void UpdateWaveLsw(int32_t &addr) const;
-	void UpdatePeakAmplitudes(const float (&stream)[BUFFER_FRAMES][2]);
+	void UpdatePeakAmplitudes(const float *stream);
 	void WriteCtrl(VoiceControl &ctrl, uint32_t irq_mask, uint8_t val);
 	void WriteToPort(size_t port, size_t val, size_t iolen);
 	void WriteToRegister();
 
 	// Collections
-	autoexec_array_t autoexec_lines = {};
-	pan_array_t pan_scalars = {};
-	ram_array_t ram = {{0u}};
-	read_io_array_t read_handlers = {};
-	voice_array_t voices = {{nullptr}};
-	vol_array_t vol_scalars = {};
-	write_io_array_t write_handlers = {};
-	const address_array_t dma_addresses = {{0, 1, 3, 5, 6, 7, 0, 0}};
-	const address_array_t irq_addresses = {{0, 2, 5, 3, 7, 11, 12, 15}};
+	float vol_scalars[VOLUME_LEVELS] = {}; // floats
+	float accumulator[BUFFER_SAMPLES] = {0};
+	int16_t scaled[BUFFER_SAMPLES] = {};
+	AudioFrame pan_scalars[PAN_POSITIONS] = {};
+	uint8_t ram[RAM_SIZE] = {0u};         // uint8s
+	read_io_array_t read_handlers = {};   // std::functions
+	write_io_array_t write_handlers = {}; // std::functions
+	const address_array_t dma_addresses = {{0, 1, 3, 5, 6, 7, 0, 0}}; // uint8s
+	const address_array_t irq_addresses = {{0, 2, 5, 3, 7, 11, 12, 15}}; // uint8s
+	voice_array_t voices = {{nullptr}};   // Voice objects
+	autoexec_array_t autoexec_lines = {}; // AutoexecObjects
 
 	// Struct and pointer members
 	Voice *voice = nullptr;
