@@ -51,7 +51,7 @@ jobs:
           echo "::set-output name=dir::$CCACHE_DIR"
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
-      - uses:  actions/cache@v1
+      - uses:  actions/cache@v2
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
@@ -119,7 +119,7 @@ jobs:
           echo "::set-output name=dir::$CCACHE_DIR"
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
-      - uses:  actions/cache@v1
+      - uses:  actions/cache@v2
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
