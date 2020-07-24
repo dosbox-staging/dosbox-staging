@@ -6,6 +6,7 @@ env:
   CCACHE_DIR:      "/dev/shm/.ccache"
   CCACHE_MAXSIZE:  "64M"
   CCACHE_COMPRESS: "true"
+  CLAMDB_DIR:      "/var/lib/clamav"
 
 jobs:
   build_ubuntu:
@@ -159,12 +160,29 @@ jobs:
           # Create tarball
           tar -cJf "dosbox-staging-linux-$VERSION.tar.xz" "dosbox-staging-linux-$VERSION"
 
+      - name:  Prepare Clam AV DB cache
+        id:    prep-clamdb
+        shell: bash
+        run: |
+          sudo mkdir -p "${CLAMDB_DIR}"
+          sudo chmod 777 "${CLAMDB_DIR}"
+          echo "::set-output name=today::$(date -I)"
+          echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+      - uses:  actions/cache@v2
+        id:    cache-clamdb
+        with:
+          path: ${{ env.CLAMDB_DIR }}/*.cvd
+          key:  clamdb-linux-${{ steps.prep-clamdb.outputs.today }}-1
+          restore-keys: |
+            clamdb-linux-${{ steps.prep-clamdb.outputs.yesterday }}-1
+
       - name: Clam AV scan
         run: |
           set -x
-          sudo apt-get install clamav > /dev/null
+          sudo apt-get install clamav
           sudo systemctl stop clamav-freshclam
-          sudo freshclam --quiet && sudo freshclam
+          sudo sed -i 's/30/20000/g' /etc/clamav/freshclam.conf
+          sudo freshclam --foreground
           clamscan --heuristic-scan-precedence=yes --recursive --infected .
 
       - name: Upload tarball

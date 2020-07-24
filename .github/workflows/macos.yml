@@ -6,6 +6,7 @@ env:
   CCACHE_DIR:      "${{ github.workspace }}/.ccache"
   CCACHE_MAXSIZE:  "64M"
   CCACHE_COMPRESS: "true"
+  CLAMDB_DIR:      "/usr/local/Cellar/clamav"
 
 jobs:
   build_macos:
@@ -142,14 +143,29 @@ jobs:
               -srcfolder dist \
               -ov -format UDZO "dosbox-staging-macOS-${{ env.VERSION }}.dmg"
 
-      - name: Clam AV scan
+      - name:  Install Clam AV
+        id:    prep-clamdb
+        shell: bash
         run: |
-          set -x
           brew install clamav > /dev/null
           clamconf=/usr/local/etc/clamav/freshclam.conf
           mv -f "$clamconf".sample "$clamconf"
           sed -ie 's/^Example/#Example/g' "$clamconf"
-          freshclam --quiet && freshclam
+          sed -ie 's/30/20000/g' "$clamconf"
+          echo "::set-output name=today::$(gdate -I)"
+          echo "::set-output name=yesterday::$(gdate --date=yesterday -I)"
+      - uses:  actions/cache@v2
+        id:    cache-clamdb
+        with:
+          path: ${{ env.CLAMDB_DIR }}/**/*.cvd
+          key:  clamdb-macos-${{ steps.prep-clamdb.outputs.today }}-2
+          restore-keys: |
+            clamdb-macos-${{ steps.prep-clamdb.outputs.yesterday }}-2
+
+      - name: Clam AV scan
+        run: |
+          set -x
+          freshclam --foreground
           clamscan --heuristic-scan-precedence=yes --recursive --infected .
 
       - name: Upload disk image
