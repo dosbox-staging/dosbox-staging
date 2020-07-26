@@ -1385,8 +1385,8 @@ void GUS_Init(Section *sec)
 
 	// Read the GUS config settings
 	const auto port = static_cast<uint16_t>(conf->Get_hex("gusbase"));
-	const auto dma = static_cast<uint8_t>(clamp(conf->Get_int("gusdma"), 1, 255));
-	const auto irq = static_cast<uint8_t>(clamp(conf->Get_int("gusirq"), 1, 255));
+	const auto dma = clamp(static_cast<uint8_t>(conf->Get_int("gusdma")), MIN_DMA_ADDRESS, MAX_DMA_ADDRESS);
+	const auto irq = clamp(static_cast<uint8_t>(conf->Get_int("gusirq")), MIN_IRQ_ADDRESS, MAX_IRQ_ADDRESS);
 	const std::string ultradir = conf->Get_string("ultradir");
 
 	// Instantiate the GUS with the settings

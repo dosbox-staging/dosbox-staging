@@ -38,6 +38,10 @@ constexpr int BUFFER_FRAMES = 48;
 constexpr int BUFFER_SAMPLES = BUFFER_FRAMES * 2;
 constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
 constexpr uint8_t MAX_VOICES = 32u;
+constexpr uint8_t MAX_DMA_ADDRESS = 7u;
+constexpr uint8_t MAX_IRQ_ADDRESS = 15u;
+constexpr uint8_t MIN_DMA_ADDRESS = 1u;
+constexpr uint8_t MIN_IRQ_ADDRESS = 2u;
 constexpr float ONE_AMP = 1.0f;              // first amplitude value
 constexpr uint8_t PAN_DEFAULT_POSITION = 7u;
 constexpr uint8_t PAN_POSITIONS = 16u;  // 0: -45-deg, 7: centre, 15: +45-deg
@@ -214,17 +218,19 @@ private:
 	void WriteToRegister();
 
 	// Collections
-	float vol_scalars[VOLUME_LEVELS] = {}; // floats
+	float vol_scalars[VOLUME_LEVELS] = {};
 	float accumulator[BUFFER_SAMPLES] = {0};
 	int16_t scaled[BUFFER_SAMPLES] = {};
 	AudioFrame pan_scalars[PAN_POSITIONS] = {};
-	uint8_t ram[RAM_SIZE] = {0u};         // uint8s
+	uint8_t ram[RAM_SIZE] = {0u};
 	read_io_array_t read_handlers = {};   // std::functions
 	write_io_array_t write_handlers = {}; // std::functions
-	const address_array_t dma_addresses = {{0, 1, 3, 5, 6, 7, 0, 0}}; // uint8s
-	const address_array_t irq_addresses = {{0, 2, 5, 3, 7, 11, 12, 15}}; // uint8s
-	voice_array_t voices = {{nullptr}};   // Voice objects
-	autoexec_array_t autoexec_lines = {}; // AutoexecObjects
+	const address_array_t dma_addresses = {
+	        {0, MIN_DMA_ADDRESS, 3, 5, 6, MAX_IRQ_ADDRESS, 0, 0}};
+	const address_array_t irq_addresses = {
+	        {0, MIN_IRQ_ADDRESS, 5, 3, 7, 11, 12, MAX_IRQ_ADDRESS}};
+	voice_array_t voices = {{nullptr}};
+	autoexec_array_t autoexec_lines = {};
 
 	// Struct and pointer members
 	Voice *voice = nullptr;
