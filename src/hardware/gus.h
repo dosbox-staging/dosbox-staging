@@ -160,12 +160,10 @@ public:
 	bool CheckTimer(size_t t);
 	void PrintStats();
 
-	class Timer {
-		public:
-		void PartialReset(float delay_scalar);
+	struct Timer {
 		float delay = 0.0f;
 		uint8_t value = 0xff;
-		bool has_expired = false;
+		bool has_expired = true;
 		bool is_counting_down = false;
 		bool is_masked = false;
 		bool should_raise_irq = false;

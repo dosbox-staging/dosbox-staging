@@ -701,34 +701,28 @@ void Gus::StopPlayback()
 	// Halt playback before altering the DSP state
 	audio_channel->Enable(false);
 
+	irq_enabled = false;
 	irq_status = 0;
+
+	dma_ctrl = 0u;
+	mix_ctrl = 0xb; // latches enabled, LINEs disabled
+	timer_ctrl = 0u;
+	sample_ctrl = 0u;
+
 	voice = nullptr;
 	voice_index = 0u;
 	active_voices = 0u;
-	voice_irq.count = 0u;
-	should_change_irq_dma = false;
-}
 
-// Reset all but the countdown state to let them finish counting down
-// EpicPinball's Android expects this.
-void Gus::Timer::PartialReset(float delay_scalar)
-{
-	delay = delay_scalar;
-	is_masked = false;
-	should_raise_irq = false;
+	dma_addr = 0u;
+	dram_addr = 0u;
+	register_data = 0u;
+	selected_register = 0u;
+	should_change_irq_dma = false;
+	PIC_RemoveEvents(GUS_TimerEvent);
 }
 
 void Gus::PrepareForPlayback()
 {
-	// Initialize the OPL emulator state
-	adlib_command_reg = ADLIB_CMD_DEFAULT;
-
-	// Initialize the timers
-	timers[0].PartialReset(TIMER_1_DEFAULT_DELAY);
-	timers[1].PartialReset(TIMER_2_DEFAULT_DELAY);
-
-	mix_ctrl = 0x0b; // latches enabled, LINEs disabled
-
 	// Initialize the voice states
 	for (auto &v : voices) {
 		v->vol_ctrl.pos = 0u;
@@ -736,6 +730,13 @@ void Gus::PrepareForPlayback()
 		WriteCtrl(v->vol_ctrl, v->irq_mask, 0x1);
 		v->WritePanPot(PAN_DEFAULT_POSITION);
 	}
+
+	// Initialize the OPL emulator state
+	adlib_command_reg = ADLIB_CMD_DEFAULT;
+
+	voice_irq = VoiceIrq{};
+	timers[0] = Timer{TIMER_1_DEFAULT_DELAY};
+	timers[1] = Timer{TIMER_2_DEFAULT_DELAY};
 }
 
 void Gus::BeginPlayback()
