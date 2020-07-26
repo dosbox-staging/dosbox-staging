@@ -355,6 +355,7 @@ struct SDL_Block {
 
 static SDL_Block sdl;
 
+static Dimensions GetAvailableArea(int width, int height);
 static SDL_Rect calc_viewport_fit(int win_width, int win_height);
 static void CleanupSDLResources();
 static void HandleVideoResize(int width, int height);
@@ -755,8 +756,37 @@ SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height)
 	return rect;
 }
 
+static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
+{
+	const Dimensions available = GetAvailableArea(sdl.draw.width, sdl.draw.height);
+
+	const int imgw = sdl.ppscale_x * sdl.draw.width;
+	const int imgh = sdl.ppscale_y * sdl.draw.height;
+
+	int wndw, wndh;
+	if (sdl.desktop.fullscreen) {
+		wndw = available.width;
+		wndh = available.height;
+	} else {
+		wndh = imgh;
+		wndw = imgw;
+	}
+
+	sdl.clip.w = imgw;
+	sdl.clip.h = imgh;
+	sdl.clip.x = (wndw - imgw) / 2;
+	sdl.clip.y = (wndh - imgh) / 2;
+
+	sdl.window = SetWindowMode(screen_type, wndw, wndh,
+	                           sdl.desktop.fullscreen, resizable);
+	return sdl.window;
+}
+
 static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 {
+	if (sdl.scaling_mode == SmPerfect)
+		return setup_window_pp(screen_type, resizable);
+
 	Bit16u fixedWidth;
 	Bit16u fixedHeight;
 
@@ -1060,36 +1090,11 @@ dosurface:
 		break; // SCREEN_SURFACE
 
 	case SCREEN_TEXTURE: {
-		/* TODO: set up all ScalingMode-related settings here. Currently, the */
-		/*       interpolation hint is set at the reading of settings.    */
-		if (sdl.scaling_mode != SmPerfect) {
-			if (!SetupWindowScaled(SCREEN_TEXTURE, false)) {
-				LOG_MSG("SDL: Can't set video mode, falling "
-				        "back to surface");
-				goto dosurface;
-			}
-		} else {
-			const int imgw = sdl.ppscale_x * sdl.draw.width;
-			const int imgh = sdl.ppscale_y * sdl.draw.height;
-
-			int wndw, wndh;
-			if (sdl.desktop.fullscreen) {
-				wndw = available.width;
-				wndh = available.height;
-			} else {
-				wndh = imgh;
-				wndw = imgw;
-			}
-
-			sdl.clip.w = imgw;
-			sdl.clip.h = imgh;
-			sdl.clip.x = (wndw - imgw) / 2;
-			sdl.clip.y = (wndh - imgh) / 2;
-
-			sdl.window = SetWindowMode(SCREEN_TEXTURE, wndw, wndh,
-			                           sdl.desktop.fullscreen,
-			                           FIXED_SIZE);
+		if (!SetupWindowScaled(SCREEN_TEXTURE, false)) {
+			LOG_MSG("MAIN: Can't initialise 'texture' window");
+			E_Exit("Creating window failed");
 		}
+
 		if (sdl.render_driver != "auto")
 			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.render_driver.c_str());
 		sdl.renderer = SDL_CreateRenderer(sdl.window, -1,
