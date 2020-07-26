@@ -143,6 +143,8 @@ private:
 	uint8_t pan_position = PAN_DEFAULT_POSITION;
 };
 
+static void GUS_TimerEvent(Bitu t);
+
 using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
 
 // The Gravis UltraSound (Gus) DSP

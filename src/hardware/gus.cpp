@@ -387,8 +387,11 @@ void Gus::CheckVoiceIrq()
 
 void Gus::DmaCallback(DmaChannel *dma_channel, DMAEvent event)
 {
-	if (event != DMA_UNMASKED)
+	if (event != DMA_UNMASKED) {
+		LOG_MSG("GUS: DMA masked");
 		return;
+	}
+	LOG_MSG("GUS: DMA unmasked");
 	size_t addr;
 	// Calculate the dma address
 	// DMA transfers can't cross 256k boundaries, so you should be safe to
@@ -641,9 +644,14 @@ uint16_t Gus::ReadFromRegister()
 	// Registers that read from the general DSP
 	switch (selected_register) {
 	case 0x41: // Dma control register - read acknowledges DMA IRQ
+		if (!GetDMAChannel(dma1)->masked && !(dma_ctrl & 0x01) && !(irq_status & 0x80)) {
+			LOG_MSG("GUS As instructed, switching on DMA ENABLE upon polling DMA control register (HACK) as workaround");
+			dma_ctrl |= 0x01;
+		}
 		reg = dma_ctrl & 0xbf;
 		reg |= (irq_status & 0x80) >> 1;
 		irq_status &= 0x7f;
+		CheckIrq();
 		return static_cast<uint16_t>(reg << 8);
 	case 0x42: // Dma address register
 		return dma_addr;
@@ -929,6 +937,7 @@ void Gus::WriteToRegister()
 	case 0x41: // Dma control register
 		dma_ctrl = static_cast<uint8_t>(register_data >> 8);
 		{
+			LOG_MSG("GUS: 0x41");
 			auto dma_callback = std::bind(&Gus::DmaCallback, this,
 			                              _1, _2);
 			auto empty_callback =
@@ -984,7 +993,9 @@ void Gus::WriteToRegister()
 				PrepareForPlayback();
 			else if (active_voices)
 				BeginPlayback();
+			LOG_MSG("GUS: 0x4c state %u", state);
 		}
+		CheckIrq();
 		return;
 	}
 
