@@ -341,7 +341,7 @@ struct SDL_Block {
 		bool middle_will_release = true;
 		bool has_focus = false;
 	} mouse;
-	int  ppscale_x, ppscale_y; /* x and y scales for pixel-perfect     */
+	SDL_Point pp_scale = {1, 1};
 	bool double_h, double_w;   /* double-height and double-width flags */
 	SDL_Rect updateRects[1024];
 #if defined (WIN32)
@@ -355,6 +355,7 @@ struct SDL_Block {
 
 static SDL_Block sdl;
 
+static bool calc_pp_scale(int width, int heigth);
 static Dimensions GetAvailableArea(int width, int height);
 static SDL_Rect calc_viewport_fit(int win_width, int win_height);
 static void CleanupSDLResources();
@@ -760,8 +761,11 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 {
 	const Dimensions available = GetAvailableArea(sdl.draw.width, sdl.draw.height);
 
-	const int imgw = sdl.ppscale_x * sdl.draw.width;
-	const int imgh = sdl.ppscale_y * sdl.draw.height;
+	if (!calc_pp_scale(available.width, available.height))
+		return nullptr;
+
+	const int imgw = sdl.pp_scale.x * sdl.draw.width;
+	const int imgh = sdl.pp_scale.y * sdl.draw.height;
 
 	int wndw, wndh;
 	if (sdl.desktop.fullscreen) {
@@ -939,41 +943,21 @@ static Dimensions GetAvailableArea(int width, int height)
 	return {width, height};
 }
 
-// ATT: aspect is the final aspect ratio of the image including its pixel dimensions and PAR
-/*static void GetActualArea( Bit16u av_w, Bit16u av_h, Bit16u *w, Bit16u *h, double aspect )
-{	double as_x, as_y;
-
-	if( aspect > 1.0 )
-	{	as_y =     aspect; as_x = 1.0;  } else
-	{	as_x = 1.0/aspect; as_y = 1.0;  }
-
-	if( av_h / as_y < av_w / as_x )
-	{	*h = av_h; *w = round( (double)av_h / aspect );  } else
-	{	*w = av_w; *h = round( (double)av_w * aspect );  }
-}*/
-
-/* Initialise pixel-perfect mode: */
-static bool InitPp(Bit16u avw, Bit16u avh)
+static bool calc_pp_scale(int avw, int avh)
 {
-	bool   ok;
-	/* TODO: consider reading apsect importance from the .ini-file */
-	ok = pp_getscale(
-		sdl.draw.width, sdl.draw.height,
-		sdl.draw.pixel_aspect,
-		avw, avh,
-		1.14, /* relative importance of aspect ratio */
-		&sdl.ppscale_x,
-		&sdl.ppscale_y
-	) == 0;
-	if (ok) {
-		const double newpar = (double)sdl.ppscale_y / sdl.ppscale_x;
-		LOG_MSG("MAIN: Pixel-perfect scaling (%dx%d): "
-		        "%dx%d (PAR %#.3g) -> %dx%d (PAR %#.3g)",
-		        sdl.ppscale_x, sdl.ppscale_y, sdl.draw.width, sdl.draw.height,
-		        sdl.draw.pixel_aspect, sdl.ppscale_x * sdl.draw.width,
-		        sdl.ppscale_y * sdl.draw.height, newpar);
-	}
-	return ok;
+	constexpr double aspect_weight = 1.14;
+	const int ret = pp_getscale(sdl.draw.width, sdl.draw.height,
+	                            sdl.draw.pixel_aspect, avw, avh, aspect_weight,
+	                            &sdl.pp_scale.x, &sdl.pp_scale.y);
+	if (ret != 0)
+		return false;
+
+	LOG_MSG("MAIN: Pixel-perfect scaling (%dx%d): %dx%d (PAR %#.3g) -> %dx%d (PAR %#.3g)",
+	        sdl.pp_scale.x, sdl.pp_scale.y, sdl.draw.width, sdl.draw.height,
+	        sdl.draw.pixel_aspect, sdl.pp_scale.x * sdl.draw.width,
+	        sdl.pp_scale.y * sdl.draw.height,
+	        static_cast<double>(sdl.pp_scale.y) / sdl.pp_scale.x);
+	return true;
 }
 
 Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
@@ -1004,13 +988,6 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 	        pixel_aspect);
 	LOG_MSG("MAIN: Emulator resolution: %dx%d",
 	        available.width, available.height);
-
-	if (sdl.scaling_mode == SmPerfect) {
-		if (!InitPp(available.width, available.height)) {
-			LOG_MSG("Failed to initialise pixel-perfect mode, reverting to surface.");
-			goto dosurface;
-		}
-	}
 
 	switch (sdl.desktop.want_type) {
 dosurface:
