@@ -144,6 +144,7 @@ private:
 };
 
 static void GUS_TimerEvent(Bitu t);
+static void GUS_DMA_Event(Bitu val);
 
 using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
 
@@ -172,6 +173,11 @@ public:
 	};
 	Timer timers[2] = {{TIMER_1_DEFAULT_DELAY}, {TIMER_2_DEFAULT_DELAY}};
 
+	// moved to public to use the PIC queue
+	uint8_t dma_ctrl = 0u;
+	uint8_t dma1 = 0u; // recording DMA
+	void GUS_DMA_Event_Transfer(DmaChannel *, Bitu dmawords);
+
 private:
 	Gus() = delete;
 	Gus(const Gus &) = delete;            // prevent copying
@@ -182,6 +188,12 @@ private:
 	void BeginPlayback();
 	void CheckIrq();
 	void CheckVoiceIrq();
+
+	void GUS_DMA_Callback(DmaChannel *chan, DMAEvent event);
+	void GUS_StartDMA();
+	void GUS_StopDMA();
+	void GUS_Update_DMA_Event_transfer();
+
 	void DmaCallback(DmaChannel *dma_channel, DMAEvent event);
 	uint16_t ReadFromRegister();
 	void PopulateAutoExec(uint16_t port, const std::string &dir);
@@ -241,11 +253,10 @@ private:
 	uint8_t mix_ctrl = 0x0b; // latches enabled, LINEs disabled
 	uint8_t sample_ctrl = 0u;
 	uint8_t timer_ctrl = 0u;
-	uint8_t dma_ctrl = 0u;
 
 	// DMA states
 	uint16_t dma_addr = 0u;
-	uint8_t dma1 = 0u; // recording DMA
+	uint8_t dma_addr_offset = 0u; // bits 0-3 of the addr
 	uint8_t dma2 = 0u; // playback DMA
 
 	// IRQ states
