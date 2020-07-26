@@ -312,8 +312,8 @@ void Gus::RegisterIoHandlers()
 }
 
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
-        : port_base(port - 0x200),
-          dma1(dma),
+        : dma1(dma),
+          port_base(port - 0x200),
           dma2(dma),
           irq1(irq),
           irq2(irq)
@@ -417,89 +417,9 @@ void Gus::GUS_DMA_Event_Transfer(DmaChannel *chan, Bitu dmawords)
 	Bitu dmalimit = RAM_SIZE;
 	unsigned int docount = 0;
 	unsigned int step = 0;
-	bool dma16xlate;
 	Bitu holdAddr;
 
-	// FIXME: What does the GUS do if the DMA address goes beyond the end of
-	// memory?
-
-	/* is this a DMA transfer where the GUS memory address is to be
-	 * translated for 16-bit PCM? Note that there is plenty of code out
-	 * there that transfers 16-bit PCM with 8-bit DMA, and such transfers DO
-	 * NOT involve the memory address translation.
-	 *
-	 * MODE    XLATE?    NOTE
-	 * 0x00    NO        8-bit PCM, 8-bit DMA (Most DOS programs)
-	 * 0x04    DEPENDS   8-bit PCM, 16-bit DMA (Star Control II, see
-	 * comments below) 0x40    NO        16-bit PCM, 8-bit DMA (Windows 3.1,
-	 * Quake, for 16-bit PCM over 8-bit DMA) 0x44    YES       16-bit PCM,
-	 * 16-bit DMA (Windows 3.1, Quake, for 16-bit PCM over 16-bit DMA)
-	 *
-	 * Mode 0x04 is marked DEPENDS. It DEPENDS on whether the assigned DMA
-	 * channel is 8-bit (NO) or 16-bit (YES). Mode 0x04 does not appear to
-	 * be used by any other DOS application or Windows drivers, only by an
-	 * erratic bug in Star Control II. FIXME: But, what does REAL hardware
-	 * do? Drag out the old Pentium 100MHz with the GUS classic and test!
-	 * --J.C.
-	 *
-	 * Star Control II has a bug where, if the GUS DMA channel is 8-bit (DMA
-	 * channel 0-3), it will upload it's samples to GUS RAM, one DMA
-	 * transfer per sample, and sometimes set bit 2. Setting bit 2
-	 * incorrectly tells the GUS it's a 16-bit wide DMA transfer when the
-	 * DMA channel is 8-bit. But, if the DMA channel is 16-bit (DMA channel
-	 * 5-7), Star Control II will correctly set bit 2 in all cases and
-	 * samples will transfer correctly to GUS RAM.
-	 * */
-
-	/* FIXME: So, if the GUS DMA channel is 8-bit and Star Control II writes
-	 * mode 0x04 (8-bit PCM, 16-bit DMA), what does the GF1 do? I'm guessing
-	 * so far that something happens within the GF1 to transfer as 8-bit
-	 * anyway, clearly the developers of Star Control II did not hear any
-	 * audible sign that an invalid DMA control was being used. Perhaps the
-	 * hardware engineers of the GF1 figured out that case and put something
-	 * in the silicon to ignore the invalid DMA control state. I won't have
-	 * any answers until I pull out an old Pentium box with a GUS classic
-	 * and check. --J.C.
-	 *
-	 *        DMA transfers noted by Star Control II that are the reason for
-	 * this hack (gusdma=1):
-	 *
-	 *        LOG:  157098507 DEBUG MISC:GUS DMA: terminal count reached.
-	 * DMAControl=0x21 LOG:  157098507 DEBUG MISC:GUS DMA transfer 1981
-	 * bytes, GUS RAM address 0x0 8-bit DMA 8-bit PCM (ctrl=0x21) LOG:
-	 * 157098507 DEBUG MISC:GUS DMA: terminal count reached. DMAControl=0x21
-	 *        LOG:  157100331 DEBUG MISC:GUS DMA: terminal count reached.
-	 * DMAControl=0x21 LOG:  157100331 DEBUG MISC:GUS DMA transfer 912
-	 * bytes, GUS RAM address 0x7c0 8-bit DMA 8-bit PCM (ctrl=0x21) LOG:
-	 * 157100331 DEBUG MISC:GUS DMA: terminal count reached. DMAControl=0x21
-	 *        LOG:  157100470 DEBUG MISC:GUS DMA: terminal count reached.
-	 * DMAControl=0x25 LOG:  157100470 DEBUG MISC:GUS DMA transfer 1053
-	 * bytes, GUS RAM address 0xb50 16-bit DMA 8-bit PCM (ctrl=0x25)    <--
-	 * What? LOG:  157100470 DEBUG MISC:GUS DMA: terminal count reached.
-	 * DMAControl=0x25 LOG:  157102251 DEBUG MISC:GUS DMA: terminal count
-	 * reached. DMAControl=0x21 LOG:  157102251 DEBUG MISC:GUS DMA transfer
-	 * 1597 bytes, GUS RAM address 0xf80 8-bit DMA 8-bit PCM (ctrl=0x21) LOG:
-	 * 157102251 DEBUG MISC:GUS DMA: terminal count reached. DMAControl=0x21
-	 *        LOG:  157104064 DEBUG MISC:GUS DMA: terminal count reached.
-	 * DMAControl=0x21 LOG:  157104064 DEBUG MISC:GUS DMA transfer 2413
-	 * bytes, GUS RAM address 0x15c0 8-bit DMA 8-bit PCM (ctrl=0x21) LOG:
-	 * 157104064 DEBUG MISC:GUS DMA: terminal count reached. DMAControl=0x21
-	 *
-	 *        (end list)
-	 *
-	 *        Noted: Prior to this hack, the samples played by Star Control
-	 * II sounded more random and often involved leftover sample data in GUS
-	 * RAM, where with this fix, the music now sounds identical to what is
-	 * played when using it's Sound Blaster support. */
-	if (dma1 < 4 /*8-bit DMA channel*/ &&
-	    (dma_ctrl & 0x44) == 0x04 /*8-bit PCM, 16-bit DMA*/)
-		dma16xlate = false; /* Star Control II hack: 8-bit PCM, 8-bit
-		                       DMA, ignore the bit that says it's 16-bit
-		                       wide */
-	else
-		dma16xlate = (dma_ctrl & 0x4) ? true : false;
-
-	if (dma16xlate) {
+	if (IsDma16Bit()) {
 		// 16-bit wide DMA. The GUS SDK specifically mentions that
 		// 16-bit DMA is translated to GUS RAM the same way you
 		// translate the play pointer. Eugh. But this allows older demos
@@ -565,7 +485,7 @@ void Gus::GUS_DMA_Event_Transfer(DmaChannel *chan, Bitu dmawords)
 	if (step > 0) {
 		dmaaddr += (unsigned int)step;
 
-		if (dma16xlate) {
+		if (IsDma16Bit()) {
 			holdAddr = dmaaddr & 0xc0000L;
 			dmaaddr = dmaaddr & 0x3ffffL;
 			dmaaddr = dmaaddr >> 1;
@@ -668,7 +588,7 @@ void Gus::DmaCallback(DmaChannel *dma_channel, DMAEvent event)
 	// DMA transfers can't cross 256k boundaries, so you should be safe to
 	// just determine the start once and go from there Bit 2 - 0 = if DMA
 	// channel is an 8 bit channel(0 - 3).
-	if (dma_ctrl & 0x4)
+	if (IsDma16Bit())
 		addr = static_cast<size_t>(
 		        (((dma_addr & 0x1fff) << 1) | (dma_addr & 0xc000))) << 4;
 	else
@@ -907,6 +827,19 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 	return 0xff;
 }
 
+bool Gus::IsDma16Bit()
+{
+	// What bit-size should DMA memory be transferred as?
+	// Mode PCM/DMA  Address Use-16  Note
+	// 0x00   8/ 8   Any     No      Most DOS programs
+	// 0x04   8/16   >= 4    Yes     16-bit if using High DMA
+	// 0x04   8/16   < 4     No      8-bit if using Low DMA
+	// 0x40  16/ 8   Any     No      Windows 3.1, Quake
+	// 0x44  16/16   >= 4    Yes     Windows 3.1, Quake
+	LOG_MSG("GUS: %u-bit DMA using address %u", (dma_ctrl & 0x4) ? 16u : 8u, dma1);
+	return (dma_ctrl & 0x4) && (dma1 >= 4);
+}
+
 uint16_t Gus::ReadFromRegister()
 {
 	// LOG_MSG("GUS: Read register %x", selected_register);
@@ -1129,8 +1062,7 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 			// DMA configuration, only use low bits for dma 1
 			const auto i = val & 0x7;
 			assert(i < dma_addresses.size());
-			// If the DMA address is valid differs from our current
-			// setting
+			// If the DMA address is valid differs from existing
 			if (dma_addresses[i] && dma1 != dma_addresses[i]) {
 				GetDMAChannel(dma1)->Register_Callback(nullptr);
 				dma1 = dma_addresses[i];
@@ -1216,7 +1148,7 @@ void Gus::WriteToRegister()
 	case 0x10: // Undocumented register used in Fast Tracker 2
 		return;
 	case 0x41: // Dma control register
-		dma_ctrl = (Bit8u)(register_data >> 8);
+		dma_ctrl = register_data >> 8;
 		GUS_Update_DMA_Event_transfer();
 		LOG_MSG("GUS: 0x41");
 
