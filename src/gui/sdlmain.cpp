@@ -357,7 +357,7 @@ static SDL_Block sdl;
 
 static bool calc_pp_scale(int width, int heigth);
 static Dimensions GetAvailableArea(int width, int height);
-static SDL_Rect calc_viewport_fit(int win_width, int win_height);
+static SDL_Rect calc_viewport(int width, int height);
 static void CleanupSDLResources();
 static void HandleVideoResize(int width, int height);
 
@@ -1275,7 +1275,7 @@ dosurface:
 			           sdl.clip.w,
 			           sdl.clip.h);
 		} else if (sdl.desktop.window.resizable) {
-			sdl.clip = calc_viewport_fit(windowWidth, windowHeight);
+			sdl.clip = calc_viewport(windowWidth, windowHeight);
 			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		} else {
 			/* We don't just pass sdl.clip.y as-is, so we cover the case of non-vertical
@@ -2037,6 +2037,26 @@ static SDL_Rect calc_viewport_fit(int win_width, int win_height)
 	}
 }
 
+static SDL_Rect calc_viewport_pp(int win_width, int win_height)
+{
+	calc_pp_scale(win_width, win_height); // updates sdl.ppscale
+
+	const int w = sdl.pp_scale.x * sdl.draw.width;
+	const int h = sdl.pp_scale.y * sdl.draw.height;
+	const int x = (win_width - w) / 2;
+	const int y = (win_height - h) / 2;
+
+	return {x, y, w, h};
+}
+
+static SDL_Rect calc_viewport(int width, int height)
+{
+	if (sdl.scaling_mode == SmPerfect)
+		return calc_viewport_pp(width, height);
+	else
+		return calc_viewport_fit(width, height);
+}
+
 //extern void UI_Run(bool);
 void Restart(bool pressed);
 
@@ -2380,7 +2400,7 @@ static void HandleVideoResize(int width, int height)
 
 #if C_OPENGL
 	if (sdl.desktop.window.resizable && sdl.desktop.type == SCREEN_OPENGL) {
-		sdl.clip = calc_viewport_fit(width, height);
+		sdl.clip = calc_viewport(width, height);
 		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		return;
 	}
