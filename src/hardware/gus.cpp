@@ -325,9 +325,12 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 
 	RegisterIoHandlers();
 
-	// Register the Mixer CallBack
+	// Register the Audio and DMA callbacks
 	audio_channel = mixer_channel.Install(
 		std::bind(&Gus::AudioCallback, this, std::placeholders::_1), 1, "GUS");
+
+	GetDMAChannel(dma1)->Register_Callback(
+	        std::bind(&Gus::GUS_DMA_Callback, this, _1, _2));
 
 	// Populate the volume, pan, and auto-exec arrays
 	PopulateVolScalars();
@@ -382,6 +385,274 @@ void Gus::CheckVoiceIrq()
 		voice_irq.count++;
 		if (voice_irq.count >= active_voices)
 			voice_irq.count = 0;
+	}
+}
+
+static Bitu GUS_Master_Clock = 617400; /* NOTE: This is 1000000Hz / 1.619695497.
+                                          Seems to be a common base rate within
+                                          the hardware. */
+static Bitu GUS_DMA_Event_transfer = 16; /* DMA words (8 or 16-bit) per interval */
+static Bitu GUS_DMA_Events_per_sec = 44100 / 4; /* cheat a little, to improve
+                                                   emulation performance */
+static double GUS_DMA_Event_interval = 1000.0 / GUS_DMA_Events_per_sec;
+static double GUS_DMA_Event_interval_init = 1000.0 / 44100;
+static bool GUS_DMA_Active = false;
+
+void Gus::GUS_Update_DMA_Event_transfer()
+{
+	/* NTS: From the GUS SDK, bits 3-4 of DMA Control divide the ISA DMA
+	 * transfer rate down from "approx 650KHz". Bits 3-4 are documented as
+	 * "DMA Rate divisor" */
+	GUS_DMA_Event_transfer = GUS_Master_Clock / GUS_DMA_Events_per_sec /
+	                         (Bitu)(((Bitu)(dma_ctrl >> 3u) & 3u) + 1u);
+	GUS_DMA_Event_transfer &= ~1u; /* make sure it's word aligned in case of
+	                                  16-bit PCM */
+	if (GUS_DMA_Event_transfer == 0)
+		GUS_DMA_Event_transfer = 2;
+}
+
+void Gus::GUS_DMA_Event_Transfer(DmaChannel *chan, Bitu dmawords)
+{
+	Bitu dmaaddr = (Bitu)(dma_addr << 4ul) + (Bitu)dma_addr_offset;
+	Bitu dmalimit = RAM_SIZE;
+	unsigned int docount = 0;
+	unsigned int step = 0;
+	bool dma16xlate;
+	Bitu holdAddr;
+
+	// FIXME: What does the GUS do if the DMA address goes beyond the end of
+	// memory?
+
+	/* is this a DMA transfer where the GUS memory address is to be
+	 * translated for 16-bit PCM? Note that there is plenty of code out
+	 * there that transfers 16-bit PCM with 8-bit DMA, and such transfers DO
+	 * NOT involve the memory address translation.
+	 *
+	 * MODE    XLATE?    NOTE
+	 * 0x00    NO        8-bit PCM, 8-bit DMA (Most DOS programs)
+	 * 0x04    DEPENDS   8-bit PCM, 16-bit DMA (Star Control II, see
+	 * comments below) 0x40    NO        16-bit PCM, 8-bit DMA (Windows 3.1,
+	 * Quake, for 16-bit PCM over 8-bit DMA) 0x44    YES       16-bit PCM,
+	 * 16-bit DMA (Windows 3.1, Quake, for 16-bit PCM over 16-bit DMA)
+	 *
+	 * Mode 0x04 is marked DEPENDS. It DEPENDS on whether the assigned DMA
+	 * channel is 8-bit (NO) or 16-bit (YES). Mode 0x04 does not appear to
+	 * be used by any other DOS application or Windows drivers, only by an
+	 * erratic bug in Star Control II. FIXME: But, what does REAL hardware
+	 * do? Drag out the old Pentium 100MHz with the GUS classic and test!
+	 * --J.C.
+	 *
+	 * Star Control II has a bug where, if the GUS DMA channel is 8-bit (DMA
+	 * channel 0-3), it will upload it's samples to GUS RAM, one DMA
+	 * transfer per sample, and sometimes set bit 2. Setting bit 2
+	 * incorrectly tells the GUS it's a 16-bit wide DMA transfer when the
+	 * DMA channel is 8-bit. But, if the DMA channel is 16-bit (DMA channel
+	 * 5-7), Star Control II will correctly set bit 2 in all cases and
+	 * samples will transfer correctly to GUS RAM.
+	 * */
+
+	/* FIXME: So, if the GUS DMA channel is 8-bit and Star Control II writes
+	 * mode 0x04 (8-bit PCM, 16-bit DMA), what does the GF1 do? I'm guessing
+	 * so far that something happens within the GF1 to transfer as 8-bit
+	 * anyway, clearly the developers of Star Control II did not hear any
+	 * audible sign that an invalid DMA control was being used. Perhaps the
+	 * hardware engineers of the GF1 figured out that case and put something
+	 * in the silicon to ignore the invalid DMA control state. I won't have
+	 * any answers until I pull out an old Pentium box with a GUS classic
+	 * and check. --J.C.
+	 *
+	 *        DMA transfers noted by Star Control II that are the reason for
+	 * this hack (gusdma=1):
+	 *
+	 *        LOG:  157098507 DEBUG MISC:GUS DMA: terminal count reached.
+	 * DMAControl=0x21 LOG:  157098507 DEBUG MISC:GUS DMA transfer 1981
+	 * bytes, GUS RAM address 0x0 8-bit DMA 8-bit PCM (ctrl=0x21) LOG:
+	 * 157098507 DEBUG MISC:GUS DMA: terminal count reached. DMAControl=0x21
+	 *        LOG:  157100331 DEBUG MISC:GUS DMA: terminal count reached.
+	 * DMAControl=0x21 LOG:  157100331 DEBUG MISC:GUS DMA transfer 912
+	 * bytes, GUS RAM address 0x7c0 8-bit DMA 8-bit PCM (ctrl=0x21) LOG:
+	 * 157100331 DEBUG MISC:GUS DMA: terminal count reached. DMAControl=0x21
+	 *        LOG:  157100470 DEBUG MISC:GUS DMA: terminal count reached.
+	 * DMAControl=0x25 LOG:  157100470 DEBUG MISC:GUS DMA transfer 1053
+	 * bytes, GUS RAM address 0xb50 16-bit DMA 8-bit PCM (ctrl=0x25)    <--
+	 * What? LOG:  157100470 DEBUG MISC:GUS DMA: terminal count reached.
+	 * DMAControl=0x25 LOG:  157102251 DEBUG MISC:GUS DMA: terminal count
+	 * reached. DMAControl=0x21 LOG:  157102251 DEBUG MISC:GUS DMA transfer
+	 * 1597 bytes, GUS RAM address 0xf80 8-bit DMA 8-bit PCM (ctrl=0x21) LOG:
+	 * 157102251 DEBUG MISC:GUS DMA: terminal count reached. DMAControl=0x21
+	 *        LOG:  157104064 DEBUG MISC:GUS DMA: terminal count reached.
+	 * DMAControl=0x21 LOG:  157104064 DEBUG MISC:GUS DMA transfer 2413
+	 * bytes, GUS RAM address 0x15c0 8-bit DMA 8-bit PCM (ctrl=0x21) LOG:
+	 * 157104064 DEBUG MISC:GUS DMA: terminal count reached. DMAControl=0x21
+	 *
+	 *        (end list)
+	 *
+	 *        Noted: Prior to this hack, the samples played by Star Control
+	 * II sounded more random and often involved leftover sample data in GUS
+	 * RAM, where with this fix, the music now sounds identical to what is
+	 * played when using it's Sound Blaster support. */
+	if (dma1 < 4 /*8-bit DMA channel*/ &&
+	    (dma_ctrl & 0x44) == 0x04 /*8-bit PCM, 16-bit DMA*/)
+		dma16xlate = false; /* Star Control II hack: 8-bit PCM, 8-bit
+		                       DMA, ignore the bit that says it's 16-bit
+		                       wide */
+	else
+		dma16xlate = (dma_ctrl & 0x4) ? true : false;
+
+	if (dma16xlate) {
+		// 16-bit wide DMA. The GUS SDK specifically mentions that
+		// 16-bit DMA is translated to GUS RAM the same way you
+		// translate the play pointer. Eugh. But this allows older demos
+		// to work properly even if you set the GUS DMA to a 16-bit
+		// channel (5) instead of the usual 8-bit channel (1).
+		holdAddr = dmaaddr & 0xc0000L;
+		dmaaddr = dmaaddr & 0x1ffffL;
+		dmaaddr = dmaaddr << 1;
+		dmaaddr = (holdAddr | dmaaddr);
+		dmalimit = ((dmaaddr & 0xc0000L) | 0x3FFFFL) + 1;
+	}
+
+	if (dmaaddr < dmalimit)
+		docount = (unsigned int)(dmalimit - dmaaddr);
+
+	docount /= (chan->DMA16 + 1u);
+	if (docount > (chan->currcnt + 1u))
+		docount = chan->currcnt + 1u;
+	if ((Bitu)docount > dmawords)
+		docount = dmawords;
+
+	// hack: some programs especially Gravis Ultrasound MIDI playback like
+	// to upload by DMA but never clear the DMA TC flag on the DMA controller.
+	bool saved_tcount = chan->tcount;
+	chan->tcount = false;
+
+	if (docount > 0) {
+		if ((dma_ctrl & 0x2) == 0) {
+			Bitu read = (Bitu)chan->Read((Bitu)docount, &ram[dmaaddr]);
+			// Check for 16 or 8bit channel
+			read *= (chan->DMA16 + 1u);
+			if ((dma_ctrl & 0x80) != 0) {
+				// Invert the MSB to convert twos compliment form
+				Bitu i;
+				if ((dma_ctrl & 0x40) == 0) {
+					// 8-bit data
+					for (i = dmaaddr; i < (dmaaddr + read); i++)
+						ram[i] ^= 0x80;
+				} else {
+					// 16-bit data
+					for (i = dmaaddr + 1;
+					     i < (dmaaddr + read); i += 2)
+						ram[i] ^= 0x80;
+				}
+			}
+
+			step = read;
+		} else {
+			// Read data out of UltraSound
+			Bitu wd = (Bitu)chan->Write((Bitu)docount, &ram[dmaaddr]);
+			// Check for 16 or 8bit channel
+			wd *= (chan->DMA16 + 1u);
+
+			step = wd;
+		}
+	}
+
+	LOG_MSG("GUS DMA transfer %lu bytes, GUS RAM address 0x%lx %u-bit DMA %u-bit PCM (ctrl=0x%02x) tcount=%u",
+	        (unsigned long)step, (unsigned long)dmaaddr,
+	        (dma_ctrl & 0x4) ? 16 : 8, (dma_ctrl & 0x40) ? 16 : 8, dma_ctrl,
+	        chan->tcount);
+
+	if (step > 0) {
+		dmaaddr += (unsigned int)step;
+
+		if (dma16xlate) {
+			holdAddr = dmaaddr & 0xc0000L;
+			dmaaddr = dmaaddr & 0x3ffffL;
+			dmaaddr = dmaaddr >> 1;
+			dmaaddr = (holdAddr | dmaaddr);
+		}
+
+		dma_addr = dmaaddr >> 4;
+		dma_addr_offset = dmaaddr & 0xF;
+	}
+
+	if (chan->tcount) {
+		LOG_MSG("GUS DMA transfer hit Terminal Count, setting DMA TC IRQ pending");
+
+		/* Raise the TC irq, and stop DMA */
+		irq_status |= 0x80;
+		saved_tcount = true;
+		CheckIrq();
+		GUS_StopDMA();
+	}
+
+	chan->tcount = saved_tcount;
+}
+
+static void GUS_DMA_Event(Bitu val)
+{
+	(void)val; // UNUSED
+	DmaChannel *chan = GetDMAChannel(gus->dma1);
+	if (chan == NULL) {
+		LOG_MSG("GUS DMA event: DMA channel no longer exists, stopping DMA transfer events");
+		GUS_DMA_Active = false;
+		return;
+	}
+
+	if (chan->masked) {
+		LOG_MSG("GUS: Stopping DMA transfer interval, DMA masked=%u",
+		        chan->masked ? 1 : 0);
+		GUS_DMA_Active = false;
+		return;
+	}
+
+	if (!(gus->dma_ctrl & 0x01 /*DMA enable*/)) {
+		LOG_MSG("GUS DMA event: DMA control 'enable DMA' bit was reset, stopping DMA transfer events");
+		GUS_DMA_Active = false;
+		return;
+	}
+
+	LOG_MSG("GUS DMA event: max %u DMA words. DMA: tc=%u mask=%u cnt=%u",
+	        (unsigned int)GUS_DMA_Event_transfer, chan->tcount ? 1 : 0,
+	        chan->masked ? 1 : 0, chan->currcnt + 1);
+	gus->GUS_DMA_Event_Transfer(chan, GUS_DMA_Event_transfer);
+
+	if (GUS_DMA_Active) {
+		/* keep going */
+		PIC_AddEvent(GUS_DMA_Event, GUS_DMA_Event_interval);
+	}
+}
+
+void Gus::GUS_StopDMA()
+{
+	if (GUS_DMA_Active)
+		LOG_MSG("GUS: Stopping DMA transfer interval");
+
+	PIC_RemoveEvents(GUS_DMA_Event);
+	GUS_DMA_Active = false;
+}
+
+void Gus::GUS_StartDMA()
+{
+	if (!GUS_DMA_Active) {
+		GUS_DMA_Active = true;
+		LOG_MSG("GUS: Starting DMA transfer interval");
+		PIC_AddEvent(GUS_DMA_Event, GUS_DMA_Event_interval_init);
+
+		if (GetDMAChannel(dma1)->masked)
+			LOG(LOG_MISC, LOG_WARN)
+			("GUS: DMA transfer interval started when channel is masked");
+	}
+}
+
+void Gus::GUS_DMA_Callback(DmaChannel *, DMAEvent event)
+{
+	if (event == DMA_UNMASKED) {
+		LOG_MSG("GUS: DMA unmasked");
+		if (dma_ctrl & 0x01 /*DMA enable*/)
+			GUS_StartDMA();
+	} else if (event == DMA_MASKED) {
+		LOG_MSG("GUS: DMA masked. Perhaps it will stop the DMA transfer event.");
 	}
 }
 
@@ -644,9 +915,11 @@ uint16_t Gus::ReadFromRegister()
 	// Registers that read from the general DSP
 	switch (selected_register) {
 	case 0x41: // Dma control register - read acknowledges DMA IRQ
-		if (!GetDMAChannel(dma1)->masked && !(dma_ctrl & 0x01) && !(irq_status & 0x80)) {
+		if (!GetDMAChannel(dma1)->masked && !(dma_ctrl & 0x01) &&
+		    !(irq_status & 0x80)) {
 			LOG_MSG("GUS As instructed, switching on DMA ENABLE upon polling DMA control register (HACK) as workaround");
 			dma_ctrl |= 0x01;
+			GUS_StartDMA();
 		}
 		reg = dma_ctrl & 0xbf;
 		reg |= (irq_status & 0x80) >> 1;
@@ -722,6 +995,7 @@ void Gus::StopPlayback()
 	active_voices = 0u;
 
 	dma_addr = 0u;
+	dma_addr_offset = 0u;
 	dram_addr = 0u;
 	register_data = 0u;
 	selected_register = 0u;
@@ -855,8 +1129,15 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 			// DMA configuration, only use low bits for dma 1
 			const auto i = val & 0x7;
 			assert(i < dma_addresses.size());
-			if (dma_addresses[i])
+			// If the DMA address is valid differs from our current
+			// setting
+			if (dma_addresses[i] && dma1 != dma_addresses[i]) {
+				GetDMAChannel(dma1)->Register_Callback(nullptr);
 				dma1 = dma_addresses[i];
+				auto dma_callback = std::bind(&Gus::GUS_DMA_Callback,
+				                              this, _1, _2);
+				GetDMAChannel(dma1)->Register_Callback(dma_callback);
+			}
 #if LOG_GUS
 			LOG_MSG("Assigned GUS to DMA %d", dma1);
 #endif
@@ -935,19 +1216,30 @@ void Gus::WriteToRegister()
 	case 0x10: // Undocumented register used in Fast Tracker 2
 		return;
 	case 0x41: // Dma control register
-		dma_ctrl = static_cast<uint8_t>(register_data >> 8);
-		{
-			LOG_MSG("GUS: 0x41");
-			auto dma_callback = std::bind(&Gus::DmaCallback, this,
-			                              _1, _2);
-			auto empty_callback =
-			        std::function<void(DmaChannel *, DMAEvent)>(nullptr);
-			GetDMAChannel(dma1)->Register_Callback(
-			        (dma_ctrl & 0x1) ? dma_callback : empty_callback);
-		}
-		return;
+		dma_ctrl = (Bit8u)(register_data >> 8);
+		GUS_Update_DMA_Event_transfer();
+		LOG_MSG("GUS: 0x41");
+
+		if (dma_ctrl & 1)
+			GUS_StartDMA();
+		else
+			GUS_StopDMA();
+		break;
+
+	/* 	case 0x41: // Dma control register
+	                dma_ctrl = static_cast<uint8_t>(register_data >> 8);
+	                {
+	                        LOG_MSG("GUS: 0x41");
+	                        auto dma_callback = std::bind(&Gus::DmaCallback,
+	   this, _1, _2); auto empty_callback = std::function<void(DmaChannel *,
+	   DMAEvent)>(nullptr); GetDMAChannel(dma1)->Register_Callback( (dma_ctrl
+	   & 0x1) ? dma_callback : empty_callback);
+	                }
+	                return;
+	 */
 	case 0x42: // Gravis DRAM DMA address register
 		dma_addr = register_data;
+		dma_addr_offset = 0u;
 		return;
 	case 0x43: // MSB Peek/poke DRAM position
 		dram_addr = (0xff0000 & dram_addr) |
@@ -976,12 +1268,20 @@ void Gus::WriteToRegister()
 		return;
 	case 0x49: // DMA sampling control register
 		sample_ctrl = static_cast<uint8_t>(register_data >> 8);
-		{
-			auto dma_callback = std::bind(&Gus::DmaCallback, this, _1, _2);
-			std::function<void(DmaChannel *, DMAEvent)> empty_callback = nullptr;
-			GetDMAChannel(dma1)->Register_Callback(
-			        (sample_ctrl & 0x1) ? dma_callback : empty_callback);
-		}
+		if (dma_ctrl & 1)
+			GUS_StartDMA();
+		else
+			GUS_StopDMA();
+		/* 		{
+		                        auto dma_callback =
+		   std::bind(&Gus::DmaCallback, this, _1, _2);
+		                        std::function<void(DmaChannel *,
+		   DMAEvent)> empty_callback = nullptr;
+		                        GetDMAChannel(dma1)->Register_Callback(
+		                                (sample_ctrl & 0x1) ?
+		   dma_callback : empty_callback);
+		                }
+		 */
 		return;
 	case 0x4c: // Runtime control
 		irq_enabled = register_data & 0x4;
