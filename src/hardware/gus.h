@@ -42,7 +42,7 @@ constexpr uint8_t MAX_DMA_ADDRESS = 7u;
 constexpr uint8_t MAX_IRQ_ADDRESS = 15u;
 constexpr uint8_t MIN_DMA_ADDRESS = 1u;
 constexpr uint8_t MIN_IRQ_ADDRESS = 2u;
-constexpr float ONE_AMP = 1.0f;              // first amplitude value
+constexpr float ONE_AMP = 1.0f; // first amplitude value
 constexpr uint8_t PAN_DEFAULT_POSITION = 7u;
 constexpr uint8_t PAN_POSITIONS = 16u;  // 0: -45-deg, 7: centre, 15: +45-deg
 constexpr uint32_t RAM_SIZE = 1048576u; // 1 MB
@@ -199,6 +199,7 @@ private:
 	void GUS_Update_DMA_Event_transfer();
 
 	void DmaCallback(DmaChannel *dma_channel, DMAEvent event);
+	bool IsDma16Bit();
 	uint16_t ReadFromRegister();
 	void PopulateAutoExec(uint16_t port, const std::string &dir);
 	void PopulatePanScalars();
