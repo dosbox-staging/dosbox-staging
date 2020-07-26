@@ -242,11 +242,6 @@ enum PRIORITY_LEVELS {
 /* Alias for indicating, that new window should not be user-resizable: */
 constexpr bool FIXED_SIZE = false;
 
-struct Dimensions {
-	int width;
-	int height;
-};
-
 struct SDL_Block {
 	bool initialized = false;
 	bool active;							//If this isn't set don't draw
@@ -356,8 +351,9 @@ struct SDL_Block {
 static SDL_Block sdl;
 
 static bool calc_pp_scale(int width, int heigth);
-static Dimensions GetAvailableArea(int width, int height);
 static SDL_Rect calc_viewport(int width, int height);
+static SDL_Rect get_available_area(int width, int height);
+
 static void CleanupSDLResources();
 static void HandleVideoResize(int width, int height);
 
@@ -759,9 +755,9 @@ SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height)
 
 static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 {
-	const Dimensions available = GetAvailableArea(sdl.draw.width, sdl.draw.height);
+	const SDL_Rect available = get_available_area(sdl.draw.width, sdl.draw.height);
 
-	if (!calc_pp_scale(available.width, available.height))
+	if (!calc_pp_scale(available.w, available.h))
 		return nullptr;
 
 	const int imgw = sdl.pp_scale.x * sdl.draw.width;
@@ -769,8 +765,8 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 
 	int wndw, wndh;
 	if (sdl.desktop.fullscreen) {
-		wndw = available.width;
-		wndh = available.height;
+		wndw = available.w;
+		wndh = available.h;
 	} else {
 		wndh = imgh;
 		wndw = imgw;
@@ -924,14 +920,14 @@ static bool LoadGLShaders(const char *src, GLuint *vertex, GLuint *fragment) {
 /* TODO: The current implementation will not let the pixel-perfect mode to  */
 /*       to apply even the simplest 1:2 and 2:1 corrections at the original */
 /*       window resolution, therefore: consider a special case for PP mode. */
-static Dimensions GetAvailableArea(int width, int height)
+static SDL_Rect get_available_area(int width, int height)
 {
 	if (sdl.desktop.fullscreen) {
 		if (sdl.desktop.full.fixed)
-			return {sdl.desktop.full.width, sdl.desktop.full.height};
+			return {0, 0, sdl.desktop.full.width, sdl.desktop.full.height};
 	} else {
 		if (sdl.desktop.window.width > 0 && sdl.desktop.window.height > 0)
-			return {sdl.desktop.window.width, sdl.desktop.window.height};
+			return {0, 0, sdl.desktop.window.width, sdl.desktop.window.height};
 	}
 
 	const double par = sdl.draw.pixel_aspect;
@@ -940,7 +936,7 @@ static Dimensions GetAvailableArea(int width, int height)
 	if (par < 1.0)
 		width = iround(width / par);
 
-	return {width, height};
+	return {0, 0, width, height};
 }
 
 static bool calc_pp_scale(int avw, int avh)
@@ -979,15 +975,14 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 	sdl.double_h = (flags & GFX_DBL_H) > 0;
 	sdl.double_w = (flags & GFX_DBL_W) > 0;
 
-	const Dimensions available = GetAvailableArea(sdl.draw.width, sdl.draw.height);
-
 	LOG_MSG("MAIN: Draw resolution: %dx%d,%s%s pixel aspect ratio: %#.2f",
 	        sdl.draw.width, sdl.draw.height,
 	        sdl.double_w ? " double-width," : "",
 	        sdl.double_h ? " double-height," : "",
 	        pixel_aspect);
-	LOG_MSG("MAIN: Emulator resolution: %dx%d",
-	        available.width, available.height);
+
+	const SDL_Rect available = get_available_area(sdl.draw.width, sdl.draw.height);
+	LOG_MSG("MAIN: Emulator resolution: %dx%d", available.w, available.h);
 
 	switch (sdl.desktop.want_type) {
 dosurface:
