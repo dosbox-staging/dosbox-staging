@@ -2156,6 +2156,10 @@ static void GUI_StartUp(Section * sec) {
 		sdl.desktop.want_type=SCREEN_OPENGL;
 		sdl.scaling_mode = SmNearest;
 		sdl.opengl.bilinear = false;
+	} else if (output == "openglpp") {
+		sdl.desktop.want_type = SCREEN_OPENGL;
+		sdl.scaling_mode = SmPerfect;
+		sdl.opengl.bilinear = false;
 #endif
 	} else {
 		LOG_MSG("SDL: Unsupported output device %s, switching back to surface",output.c_str());
@@ -2812,6 +2816,7 @@ void Config_Add_SDL() {
 #if C_OPENGL
 		"opengl",
 		"openglnb",
+		"openglpp",
 #endif
 		0
 	};
