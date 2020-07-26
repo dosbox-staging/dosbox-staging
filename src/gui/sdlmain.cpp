@@ -2824,10 +2824,10 @@ void Config_Add_SDL() {
 	Pstring->Set_help("What video system to use for output.");
 	Pstring->Set_values(outputs);
 
-	Pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
-	Pstring->Set_help("Choose a renderer driver if output=texture or texturenb.\n"
-	                  "Use output=auto for an automatic choice.");
-	Pstring->Set_values(Get_SDL_TextureRenderers());
+	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
+	pstring->Set_help("Choose a renderer driver when using a texture output mode.\n"
+	                  "Use texture_renderer=auto for an automatic choice.");
+	pstring->Set_values(Get_SDL_TextureRenderers());
 
 	// Define mouse control settings
 	Pmulti = sdl_sec->Add_multi("capture_mouse", always, " ");
