@@ -355,7 +355,7 @@ struct SDL_Block {
 
 static SDL_Block sdl;
 
-static SDL_Rect CalculateViewport(int win_width, int win_height);
+static SDL_Rect calc_viewport_fit(int win_width, int win_height);
 static void CleanupSDLResources();
 static void HandleVideoResize(int width, int height);
 
@@ -1293,7 +1293,7 @@ dosurface:
 			           sdl.clip.w,
 			           sdl.clip.h);
 		} else if (sdl.desktop.window.resizable) {
-			sdl.clip = CalculateViewport(windowWidth, windowHeight);
+			sdl.clip = calc_viewport_fit(windowWidth, windowHeight);
 			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		} else {
 			/* We don't just pass sdl.clip.y as-is, so we cover the case of non-vertical
@@ -2025,7 +2025,7 @@ static void SetupWindowResolution(const char *val)
 	sdl.desktop.window.use_original_size = true;
 }
 
-static SDL_Rect CalculateViewport(int win_width, int win_height)
+static SDL_Rect calc_viewport_fit(int win_width, int win_height)
 {
 	assert(sdl.draw.width > 0);
 	assert(sdl.draw.height > 0);
@@ -2398,7 +2398,7 @@ static void HandleVideoResize(int width, int height)
 
 #if C_OPENGL
 	if (sdl.desktop.window.resizable && sdl.desktop.type == SCREEN_OPENGL) {
-		sdl.clip = CalculateViewport(width, height);
+		sdl.clip = calc_viewport_fit(width, height);
 		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		return;
 	}
