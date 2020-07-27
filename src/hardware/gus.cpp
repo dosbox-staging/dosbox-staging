@@ -29,11 +29,16 @@
 
 // GUS constants used in functional code
 constexpr uint8_t ADLIB_CMD_DEFAULT = 85u;
-constexpr auto AUDIO_SAMPLE_MAX = static_cast<float>(
-        std::numeric_limits<int16_t>::max());
-constexpr auto AUDIO_SAMPLE_MIN = static_cast<float>(
-        std::numeric_limits<int16_t>::min());
-constexpr auto DELTA_DB = 0.002709201; // 0.0235 dB increments
+constexpr float AUDIO_SAMPLE_MAX = static_cast<float>(MAX_AUDIO);
+constexpr float AUDIO_SAMPLE_MIN = static_cast<float>(MIN_AUDIO);
+constexpr int BUFFER_FRAMES = 48;
+constexpr int BUFFER_SAMPLES = BUFFER_FRAMES * 2; // 2 samples/frame (left & right)
+constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024; // 8 KB per transfer
+constexpr auto DELTA_DB = 0.002709201;             // 0.0235 dB increments
+constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
+constexpr uint32_t ISA_BUS_THROUGHPUT = 32 * 1024 * 1024; // 32 MB/s
+constexpr uint16_t DMA_TRANSFERS_PER_S = ISA_BUS_THROUGHPUT / BYTES_PER_DMA_XFER;
+constexpr uint8_t MAX_VOICES = 32u;
 constexpr uint8_t MIN_VOICES = 14u;
 constexpr auto SOFT_LIMIT_RELEASE_INC = AUDIO_SAMPLE_MAX *
                                         static_cast<float>(DELTA_DB);
@@ -43,6 +48,11 @@ constexpr int16_t WAVE_WIDTH = 1 << 9; // Wave interpolation width (9 bits)
 constexpr float WAVE_WIDTH_INV = 1.0f / WAVE_WIDTH;
 constexpr uint32_t WAVE_MSW_MASK = (1 << 16) - 1; // Upper wave mask
 constexpr uint32_t WAVE_LSW_MASK = 0xffffffff ^ WAVE_MSW_MASK; // Lower wave mask
+
+constexpr uint32_t BYTES_PER_DMA_XFER = 64 * 1024;          // 64 KB max per xfer
+constexpr uint32_t ISA_BURST_THROUGHPUT = 32 * 1024 * 1024; // EISA BUS peak DMA rate
+constexpr uint16_t DMA_TRANSFERS_PER_S = ISA_BURST_THROUGHPUT / BYTES_PER_DMA_XFER;
+constexpr float MS_PER_DMA_XFER = 1000.0f / DMA_TRANSFERS_PER_S;
 
 using namespace std::placeholders;
 
@@ -388,35 +398,14 @@ void Gus::CheckVoiceIrq()
 	}
 }
 
-static Bitu GUS_Master_Clock = 617400; /* NOTE: This is 1000000Hz / 1.619695497.
-                                          Seems to be a common base rate within
-                                          the hardware. */
-static Bitu GUS_DMA_Event_transfer = 16; /* DMA words (8 or 16-bit) per interval */
-static Bitu GUS_DMA_Events_per_sec = 44100 / 4; /* cheat a little, to improve
-                                                   emulation performance */
-static double GUS_DMA_Event_interval = 1000.0 / GUS_DMA_Events_per_sec;
-static double GUS_DMA_Event_interval_init = 1000.0 / 44100;
 static bool GUS_DMA_Active = false;
 
-void Gus::GUS_Update_DMA_Event_transfer()
+void Gus::GUS_DMA_Event_Transfer(DmaChannel *chan, uint32_t dmawords)
 {
-	/* NTS: From the GUS SDK, bits 3-4 of DMA Control divide the ISA DMA
-	 * transfer rate down from "approx 650KHz". Bits 3-4 are documented as
-	 * "DMA Rate divisor" */
-	GUS_DMA_Event_transfer = GUS_Master_Clock / GUS_DMA_Events_per_sec /
-	                         (Bitu)(((Bitu)(dma_ctrl >> 3u) & 3u) + 1u);
-	GUS_DMA_Event_transfer &= ~1u; /* make sure it's word aligned in case of
-	                                  16-bit PCM */
-	if (GUS_DMA_Event_transfer == 0)
-		GUS_DMA_Event_transfer = 2;
-}
-
-void Gus::GUS_DMA_Event_Transfer(DmaChannel *chan, Bitu dmawords)
-{
-	Bitu dmaaddr = (Bitu)(dma_addr << 4ul) + (Bitu)dma_addr_offset;
+	Bitu addr = (Bitu)(dma_addr << 4ul) + (Bitu)dma_addr_offset;
 	Bitu dmalimit = RAM_SIZE;
-	unsigned int docount = 0;
-	unsigned int step = 0;
+	uint32_t docount = 0;
+	uint32_t step = 0;
 	Bitu holdAddr;
 
 	if (IsDma16Bit()) {
@@ -425,15 +414,15 @@ void Gus::GUS_DMA_Event_Transfer(DmaChannel *chan, Bitu dmawords)
 		// translate the play pointer. Eugh. But this allows older demos
 		// to work properly even if you set the GUS DMA to a 16-bit
 		// channel (5) instead of the usual 8-bit channel (1).
-		holdAddr = dmaaddr & 0xc0000L;
-		dmaaddr = dmaaddr & 0x1ffffL;
-		dmaaddr = dmaaddr << 1;
-		dmaaddr = (holdAddr | dmaaddr);
-		dmalimit = ((dmaaddr & 0xc0000L) | 0x3FFFFL) + 1;
+		holdAddr = addr & 0xc0000L;
+		addr = addr & 0x1ffffL;
+		addr = addr << 1;
+		addr = (holdAddr | addr);
+		dmalimit = ((addr & 0xc0000L) | 0x3FFFFL) + 1;
 	}
 
-	if (dmaaddr < dmalimit)
-		docount = (unsigned int)(dmalimit - dmaaddr);
+	if (addr < dmalimit)
+		docount = (unsigned int)(dmalimit - addr);
 
 	docount /= (chan->DMA16 + 1u);
 	if (docount > (chan->currcnt + 1u))
@@ -448,7 +437,7 @@ void Gus::GUS_DMA_Event_Transfer(DmaChannel *chan, Bitu dmawords)
 
 	if (docount > 0) {
 		if ((dma_ctrl & 0x2) == 0) {
-			Bitu read = (Bitu)chan->Read((Bitu)docount, &ram[dmaaddr]);
+			Bitu read = chan->Read(docount, &ram[addr]);
 			// Check for 16 or 8bit channel
 			read *= (chan->DMA16 + 1u);
 			if ((dma_ctrl & 0x80) != 0) {
@@ -456,44 +445,42 @@ void Gus::GUS_DMA_Event_Transfer(DmaChannel *chan, Bitu dmawords)
 				Bitu i;
 				if ((dma_ctrl & 0x40) == 0) {
 					// 8-bit data
-					for (i = dmaaddr; i < (dmaaddr + read); i++)
+					for (i = addr; i < (addr + read); i++)
 						ram[i] ^= 0x80;
 				} else {
 					// 16-bit data
-					for (i = dmaaddr + 1;
-					     i < (dmaaddr + read); i += 2)
+					for (i = addr + 1; i < (addr + read); i += 2)
 						ram[i] ^= 0x80;
 				}
 			}
 
-			step = read;
+			step = static_cast<uint32_t>(read);
 		} else {
 			// Read data out of UltraSound
-			Bitu wd = (Bitu)chan->Write((Bitu)docount, &ram[dmaaddr]);
+			const uint32_t num_read = static_cast<uint32_t>(
+			        chan->Write(docount, &ram[addr]));
 			// Check for 16 or 8bit channel
-			wd *= (chan->DMA16 + 1u);
-
-			step = wd;
+			const uint8_t byte_each = chan->DMA16 + 1u;
+			step = num_read * byte_each;
 		}
 	}
 
-	LOG_MSG("GUS DMA transfer %lu bytes, GUS RAM address 0x%lx %u-bit DMA %u-bit PCM (ctrl=0x%02x) tcount=%u",
-	        (unsigned long)step, (unsigned long)dmaaddr,
-	        (dma_ctrl & 0x4) ? 16 : 8, (dma_ctrl & 0x40) ? 16 : 8, dma_ctrl,
-	        chan->tcount);
+	LOG_MSG("GUS: %u bytes of %u-bit audio transferred via %s-DMA to 0x%lx (ctrl=0x%02x, tcount=%u)",
+	        step, (dma_ctrl & 0x40) ? 16 : 8, (dma_ctrl & 0x4) ? "high" : "low",
+	        (unsigned long)addr, dma_ctrl, chan->tcount);
 
 	if (step > 0) {
-		dmaaddr += (unsigned int)step;
+		addr += (unsigned int)step;
 
 		if (IsDma16Bit()) {
-			holdAddr = dmaaddr & 0xc0000L;
-			dmaaddr = dmaaddr & 0x3ffffL;
-			dmaaddr = dmaaddr >> 1;
-			dmaaddr = (holdAddr | dmaaddr);
+			holdAddr = addr & 0xc0000L;
+			addr = addr & 0x3ffffL;
+			addr = addr >> 1;
+			addr = (holdAddr | addr);
 		}
 
-		dma_addr = dmaaddr >> 4;
-		dma_addr_offset = dmaaddr & 0xF;
+		dma_addr = static_cast<uint16_t>(addr >> 4);
+		dma_addr_offset = addr & 0xF;
 	}
 
 	if (chan->tcount) {
@@ -505,7 +492,6 @@ void Gus::GUS_DMA_Event_Transfer(DmaChannel *chan, Bitu dmawords)
 		CheckIrq();
 		GUS_StopDMA();
 	}
-
 	chan->tcount = saved_tcount;
 }
 
@@ -532,14 +518,14 @@ static void GUS_DMA_Event(Bitu val)
 		return;
 	}
 
-	LOG_MSG("GUS DMA event: max %u DMA words. DMA: tc=%u mask=%u cnt=%u",
-	        (unsigned int)GUS_DMA_Event_transfer, chan->tcount ? 1 : 0,
+	LOG_MSG("GUS DMA event: max %u bytes. DMA: tc=%u mask=%u cnt=%u",
+	        (unsigned int)BYTES_PER_DMA_XFER, chan->tcount ? 1 : 0,
 	        chan->masked ? 1 : 0, chan->currcnt + 1);
-	gus->GUS_DMA_Event_Transfer(chan, GUS_DMA_Event_transfer);
+	gus->GUS_DMA_Event_Transfer(chan, BYTES_PER_DMA_XFER);
 
 	if (GUS_DMA_Active) {
 		/* keep going */
-		PIC_AddEvent(GUS_DMA_Event, GUS_DMA_Event_interval);
+		PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
 	}
 }
 
@@ -557,7 +543,8 @@ void Gus::GUS_StartDMA()
 	if (!GUS_DMA_Active) {
 		GUS_DMA_Active = true;
 		LOG_MSG("GUS: Starting DMA transfer interval");
-		PIC_AddEvent(GUS_DMA_Event, GUS_DMA_Event_interval_init);
+
+		PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
 
 		if (GetDMAChannel(dma1)->masked)
 			LOG(LOG_MISC, LOG_WARN)
@@ -1149,9 +1136,6 @@ void Gus::WriteToRegister()
 		return;
 	case 0x41: // Dma control register
 		dma_ctrl = register_data >> 8;
-		GUS_Update_DMA_Event_transfer();
-		LOG_MSG("GUS: 0x41");
-
 		if (dma_ctrl & 1)
 			GUS_StartDMA();
 		else
@@ -1225,7 +1209,6 @@ void Gus::WriteToRegister()
 				PrepareForPlayback();
 			else if (active_voices)
 				BeginPlayback();
-			LOG_MSG("GUS: 0x4c state %u", state);
 		}
 		CheckIrq();
 		return;

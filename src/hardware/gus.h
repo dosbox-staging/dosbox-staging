@@ -180,7 +180,7 @@ public:
 	// moved to public to use the PIC queue
 	uint8_t dma_ctrl = 0u;
 	uint8_t dma1 = 0u; // recording DMA
-	void GUS_DMA_Event_Transfer(DmaChannel *, Bitu dmawords);
+	void GUS_DMA_Event_Transfer(DmaChannel *, uint32_t dmawords);
 
 private:
 	Gus() = delete;
@@ -196,7 +196,6 @@ private:
 	void GUS_DMA_Callback(DmaChannel *chan, DMAEvent event);
 	void GUS_StartDMA();
 	void GUS_StopDMA();
-	void GUS_Update_DMA_Event_transfer();
 
 	void DmaCallback(DmaChannel *dma_channel, DMAEvent event);
 	bool IsDma16Bit();
