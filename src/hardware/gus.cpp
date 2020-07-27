@@ -31,15 +31,12 @@
 constexpr uint8_t ADLIB_CMD_DEFAULT = 85u;
 constexpr float AUDIO_SAMPLE_MAX = static_cast<float>(MAX_AUDIO);
 constexpr float AUDIO_SAMPLE_MIN = static_cast<float>(MIN_AUDIO);
-constexpr int BUFFER_FRAMES = 48;
-constexpr int BUFFER_SAMPLES = BUFFER_FRAMES * 2; // 2 samples/frame (left & right)
 constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024; // 8 KB per transfer
 constexpr auto DELTA_DB = 0.002709201;             // 0.0235 dB increments
-constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
 constexpr uint32_t ISA_BUS_THROUGHPUT = 32 * 1024 * 1024; // 32 MB/s
 constexpr uint16_t DMA_TRANSFERS_PER_S = ISA_BUS_THROUGHPUT / BYTES_PER_DMA_XFER;
-constexpr uint8_t MAX_VOICES = 32u;
 constexpr uint8_t MIN_VOICES = 14u;
+constexpr float MS_PER_DMA_XFER = 1000.0f / DMA_TRANSFERS_PER_S;
 constexpr auto SOFT_LIMIT_RELEASE_INC = AUDIO_SAMPLE_MAX *
                                         static_cast<float>(DELTA_DB);
 constexpr int16_t VOLUME_INC_SCALAR = 512; // Volume index increment scalar
@@ -48,11 +45,6 @@ constexpr int16_t WAVE_WIDTH = 1 << 9; // Wave interpolation width (9 bits)
 constexpr float WAVE_WIDTH_INV = 1.0f / WAVE_WIDTH;
 constexpr uint32_t WAVE_MSW_MASK = (1 << 16) - 1; // Upper wave mask
 constexpr uint32_t WAVE_LSW_MASK = 0xffffffff ^ WAVE_MSW_MASK; // Lower wave mask
-
-constexpr uint32_t BYTES_PER_DMA_XFER = 64 * 1024;          // 64 KB max per xfer
-constexpr uint32_t ISA_BURST_THROUGHPUT = 32 * 1024 * 1024; // EISA BUS peak DMA rate
-constexpr uint16_t DMA_TRANSFERS_PER_S = ISA_BURST_THROUGHPUT / BYTES_PER_DMA_XFER;
-constexpr float MS_PER_DMA_XFER = 1000.0f / DMA_TRANSFERS_PER_S;
 
 using namespace std::placeholders;
 
@@ -400,114 +392,59 @@ void Gus::CheckVoiceIrq()
 
 static bool GUS_DMA_Active = false;
 
-void Gus::GUS_DMA_Event_Transfer(DmaChannel *chan, uint32_t dmawords)
+size_t Gus::Dma16Addr()
 {
-	Bitu addr = (Bitu)(dma_addr << 4ul) + (Bitu)dma_addr_offset;
-	Bitu dmalimit = RAM_SIZE;
-	uint32_t docount = 0;
-	uint32_t step = 0;
-	Bitu holdAddr;
+	const auto combined = ((dma_addr & 0x1fff) << 1) | (dma_addr & 0xc000);
+	return static_cast<size_t>(combined) << 4;
+}
+size_t Gus::Dma8Addr()
+{
+	return static_cast<size_t>(dma_addr) << 4;
+}
 
-	if (IsDma16Bit()) {
-		// 16-bit wide DMA. The GUS SDK specifically mentions that
-		// 16-bit DMA is translated to GUS RAM the same way you
-		// translate the play pointer. Eugh. But this allows older demos
-		// to work properly even if you set the GUS DMA to a 16-bit
-		// channel (5) instead of the usual 8-bit channel (1).
-		holdAddr = addr & 0xc0000L;
-		addr = addr & 0x1ffffL;
-		addr = addr << 1;
-		addr = (holdAddr | addr);
-		dmalimit = ((addr & 0xc0000L) | 0x3FFFFL) + 1;
+void Gus::GUS_DMA_Event_Transfer(DmaChannel *dma, uint32_t dmawords)
+{
+	const auto desired = dma->currcnt + 1;
+	auto i = IsDma16Bit() ? Dma16Addr() : Dma8Addr();
+	assert(i < RAM_SIZE);
+
+	if (dma_ctrl & 0x2) // Write into DMA from GUS memory
+		dma->Write(desired, ram + i);
+
+	else if (!(dma_ctrl & 0x80)) // Passover
+		dma->Read(desired, ram + i);
+
+	else { // Read from DMA into GUS memory
+		const auto start = i + IsDma16Bit();
+		const auto samples_read = dma->Read(desired, ram + i);
+		const auto sample_size = IsDma16Bit() ? 2 : 1;
+		const auto end = i + samples_read * sample_size;
+		assert(end <= RAM_SIZE);
+		for (i = start; i < end; i += sample_size)
+			ram[i] ^= 0x80;
 	}
-
-	if (addr < dmalimit)
-		docount = (unsigned int)(dmalimit - addr);
-
-	docount /= (chan->DMA16 + 1u);
-	if (docount > (chan->currcnt + 1u))
-		docount = chan->currcnt + 1u;
-	if ((Bitu)docount > dmawords)
-		docount = dmawords;
-
-	// hack: some programs especially Gravis Ultrasound MIDI playback like
-	// to upload by DMA but never clear the DMA TC flag on the DMA controller.
-	bool saved_tcount = chan->tcount;
-	chan->tcount = false;
-
-	if (docount > 0) {
-		if ((dma_ctrl & 0x2) == 0) {
-			Bitu read = chan->Read(docount, &ram[addr]);
-			// Check for 16 or 8bit channel
-			read *= (chan->DMA16 + 1u);
-			if ((dma_ctrl & 0x80) != 0) {
-				// Invert the MSB to convert twos compliment form
-				Bitu i;
-				if ((dma_ctrl & 0x40) == 0) {
-					// 8-bit data
-					for (i = addr; i < (addr + read); i++)
-						ram[i] ^= 0x80;
-				} else {
-					// 16-bit data
-					for (i = addr + 1; i < (addr + read); i += 2)
-						ram[i] ^= 0x80;
-				}
-			}
-
-			step = static_cast<uint32_t>(read);
-		} else {
-			// Read data out of UltraSound
-			const uint32_t num_read = static_cast<uint32_t>(
-			        chan->Write(docount, &ram[addr]));
-			// Check for 16 or 8bit channel
-			const uint8_t byte_each = chan->DMA16 + 1u;
-			step = num_read * byte_each;
-		}
-	}
-
-	LOG_MSG("GUS: %u bytes of %u-bit audio transferred via %s-DMA to 0x%lx (ctrl=0x%02x, tcount=%u)",
-	        step, (dma_ctrl & 0x40) ? 16 : 8, (dma_ctrl & 0x4) ? "high" : "low",
-	        (unsigned long)addr, dma_ctrl, chan->tcount);
-
-	if (step > 0) {
-		addr += (unsigned int)step;
-
-		if (IsDma16Bit()) {
-			holdAddr = addr & 0xc0000L;
-			addr = addr & 0x3ffffL;
-			addr = addr >> 1;
-			addr = (holdAddr | addr);
-		}
-
-		dma_addr = static_cast<uint16_t>(addr >> 4);
-		dma_addr_offset = addr & 0xF;
-	}
-
-	if (chan->tcount) {
-		LOG_MSG("GUS DMA transfer hit Terminal Count, setting DMA TC IRQ pending");
-
-		/* Raise the TC irq, and stop DMA */
+	// Raise the TC irq, and stop DMA
+	if (dma_ctrl & 0x20) {
+		// LOG_MSG("GUS DMA transfer hit Terminal Count");
 		irq_status |= 0x80;
-		saved_tcount = true;
 		CheckIrq();
 		GUS_StopDMA();
 	}
-	chan->tcount = saved_tcount;
 }
 
 static void GUS_DMA_Event(Bitu val)
 {
 	(void)val; // UNUSED
-	DmaChannel *chan = GetDMAChannel(gus->dma1);
-	if (chan == NULL) {
+	DmaChannel *dma = GetDMAChannel(gus->dma1);
+	if (dma == NULL) {
 		LOG_MSG("GUS DMA event: DMA channel no longer exists, stopping DMA transfer events");
 		GUS_DMA_Active = false;
 		return;
 	}
 
-	if (chan->masked) {
+	if (dma->masked) {
 		LOG_MSG("GUS: Stopping DMA transfer interval, DMA masked=%u",
-		        chan->masked ? 1 : 0);
+		        dma->masked ? 1 : 0);
 		GUS_DMA_Active = false;
 		return;
 	}
@@ -519,9 +456,9 @@ static void GUS_DMA_Event(Bitu val)
 	}
 
 	LOG_MSG("GUS DMA event: max %u bytes. DMA: tc=%u mask=%u cnt=%u",
-	        (unsigned int)BYTES_PER_DMA_XFER, chan->tcount ? 1 : 0,
-	        chan->masked ? 1 : 0, chan->currcnt + 1);
-	gus->GUS_DMA_Event_Transfer(chan, BYTES_PER_DMA_XFER);
+	        (unsigned int)BYTES_PER_DMA_XFER, dma->tcount ? 1 : 0,
+	        dma->masked ? 1 : 0, dma->currcnt + 1);
+	gus->GUS_DMA_Event_Transfer(dma, BYTES_PER_DMA_XFER);
 
 	if (GUS_DMA_Active) {
 		/* keep going */
@@ -561,55 +498,6 @@ void Gus::GUS_DMA_Callback(DmaChannel *, DMAEvent event)
 	} else if (event == DMA_MASKED) {
 		LOG_MSG("GUS: DMA masked. Perhaps it will stop the DMA transfer event.");
 	}
-}
-
-void Gus::DmaCallback(DmaChannel *dma_channel, DMAEvent event)
-{
-	if (event != DMA_UNMASKED) {
-		LOG_MSG("GUS: DMA masked");
-		return;
-	}
-	LOG_MSG("GUS: DMA unmasked");
-	size_t addr;
-	// Calculate the dma address
-	// DMA transfers can't cross 256k boundaries, so you should be safe to
-	// just determine the start once and go from there Bit 2 - 0 = if DMA
-	// channel is an 8 bit channel(0 - 3).
-	if (IsDma16Bit())
-		addr = static_cast<size_t>(
-		        (((dma_addr & 0x1fff) << 1) | (dma_addr & 0xc000))) << 4;
-	else
-		addr = static_cast<size_t>(dma_addr) << 4;
-	// Reading from dma?
-	if ((dma_ctrl & 0x2) == 0) {
-		assert(addr < RAM_SIZE);
-		auto read = dma_channel->Read(dma_channel->currcnt + 1, &ram[addr]);
-		// Check for 16 or 8bit channel
-		read *= (dma_channel->DMA16 + 1);
-		if ((dma_ctrl & 0x80) != 0) {
-			// Invert the MSB to convert twos compliment form
-			const auto dma_end = addr + read;
-			assert(dma_end <= RAM_SIZE);
-			if ((dma_ctrl & 0x40) == 0) {
-				// 8-bit data
-				for (size_t i = addr; i < dma_end; ++i)
-					ram[i] ^= 0x80;
-			} else {
-				// 16-bit data
-				for (size_t i = addr + 1u; i < dma_end; i += 2u)
-					ram[i] ^= 0x80;
-			}
-		}
-		// Writing to dma
-	} else {
-		dma_channel->Write(dma_channel->currcnt + 1, &ram[addr]);
-	}
-	/* Raise the TC irq if needed */
-	if ((dma_ctrl & 0x20) != 0) {
-		irq_status |= 0x80;
-		CheckIrq();
-	}
-	dma_channel->Register_Callback(0);
 }
 
 void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
@@ -915,7 +803,6 @@ void Gus::StopPlayback()
 	active_voices = 0u;
 
 	dma_addr = 0u;
-	dma_addr_offset = 0u;
 	dram_addr = 0u;
 	register_data = 0u;
 	selected_register = 0u;
@@ -1155,7 +1042,6 @@ void Gus::WriteToRegister()
 	 */
 	case 0x42: // Gravis DRAM DMA address register
 		dma_addr = register_data;
-		dma_addr_offset = 0u;
 		return;
 	case 0x43: // MSB Peek/poke DRAM position
 		dram_addr = (0xff0000 & dram_addr) |

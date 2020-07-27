@@ -193,11 +193,12 @@ private:
 	void CheckIrq();
 	void CheckVoiceIrq();
 
+	size_t Dma8Addr();
+	size_t Dma16Addr();
+
 	void GUS_DMA_Callback(DmaChannel *chan, DMAEvent event);
 	void GUS_StartDMA();
 	void GUS_StopDMA();
-
-	void DmaCallback(DmaChannel *dma_channel, DMAEvent event);
 	bool IsDma16Bit();
 	uint16_t ReadFromRegister();
 	void PopulateAutoExec(uint16_t port, const std::string &dir);
@@ -262,7 +263,6 @@ private:
 
 	// DMA states
 	uint16_t dma_addr = 0u;
-	uint8_t dma_addr_offset = 0u; // bits 0-3 of the addr
 	uint8_t dma2 = 0u; // playback DMA
 
 	// IRQ states
