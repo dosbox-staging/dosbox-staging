@@ -862,13 +862,16 @@ void DOS_Shell::CMD_LS(char *args)
 }
 
 struct copysource {
-	std::string filename;
-	bool concat;
-	copysource(std::string filein,bool concatin):
-		filename(filein),concat(concatin){ };
-	copysource():filename(""),concat(false){ };
-};
+	std::string filename = "";
+	bool concat = false;
 
+	copysource() = default;
+
+	copysource(const std::string &file, bool cat)
+	        : filename(file),
+	          concat(cat)
+	{}
+};
 
 void DOS_Shell::CMD_COPY(char * args) {
 	HELP("COPY");
