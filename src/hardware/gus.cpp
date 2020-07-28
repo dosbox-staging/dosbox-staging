@@ -92,44 +92,34 @@ bool Voice::Is8Bit() const
 	return !(wave_ctrl.state & CTRL::BIT16);
 }
 
-float Voice::GetSample(const uint8_t *ram) const
+float Voice::GetSample(const uint8_t *ram)
 {
-	const int32_t addr = sample_address;
-	return Is8Bit() ? Read8BitSample(ram, addr) : Read16BitSample(ram, addr);
-}
-
-float Voice::GetInterWavePercent() const
-{
-	const auto wave_fraction = wave_ctrl.pos & (WAVE_WIDTH - 1);
-	return static_cast<float>(wave_fraction) * WAVE_WIDTH_INV;
-}
-
-float Voice::GetInterWavePortion(const uint8_t *ram, const float sample) const
-{
-	float portion = 0;
-	if (wave_ctrl.inc < WAVE_WIDTH) {
-		const int32_t addr = sample_address + 1;
+	int32_t addr = wave_ctrl.pos / WAVE_WIDTH;
+	float sample = Is8Bit() ? Read8BitSample(ram, addr)
+	                        : Read16BitSample(ram, addr);
+	const auto fraction = wave_ctrl.pos & (WAVE_WIDTH - 1);
+	if (wave_ctrl.inc < WAVE_WIDTH && fraction) {
+		addr += 1;
 		const float next_sample = Is8Bit() ? Read8BitSample(ram, addr)
 		                                   : Read16BitSample(ram, addr);
-		portion = (next_sample - sample) * GetInterWavePercent();
+		sample += (next_sample - sample) *
+		          static_cast<float>(fraction) * WAVE_WIDTH_INV;
 	}
-	return portion;
-}
-
-void Voice::IncrementAddress()
-{
+	assert(sample >= static_cast<float>(std::numeric_limits<int16_t>::min())); // AUDIO_SAMPLE_MIN
+	assert(sample <= AUDIO_SAMPLE_MAX);
 	IncrementControl(wave_ctrl, CheckWaveRolloverCondition());
-	sample_address = wave_ctrl.pos / WAVE_WIDTH;
+	return sample;
 }
 
-void Voice::IncrementVolScalar(const float *vol_scalars)
+float Voice::GetVolScalar(const float *vol_scalars)
 {
-	IncrementControl(vol_ctrl, false);
 	// Unscale the volume index and check its bounds
 	const auto i = static_cast<size_t>(
 	        ceil_sdivide(vol_ctrl.pos, VOLUME_INC_SCALAR));
 	assert(i < VOLUME_LEVELS);
-	sample_vol_scalar = vol_scalars[i];
+	const float scalar = vol_scalars[i];
+	IncrementControl(vol_ctrl, false); // don't check wave rollover
+	return scalar;
 }
 
 void Voice::GenerateSamples(float *stream,
@@ -145,13 +135,9 @@ void Voice::GenerateSamples(float *stream,
 	const int sample_end = requested_frames * 2 - 1;
 	for (int i = 0; i < sample_end; i += 2) {
 		float sample = GetSample(ram);
-		sample += GetInterWavePortion(ram, sample);
-		assert(sample <= AUDIO_SAMPLE_MAX && sample >= AUDIO_SAMPLE_MIN);
-		sample *= sample_vol_scalar;
+		sample *= GetVolScalar(vol_scalars);
 		stream[i] += sample * pan_scalars[pan_position].left;
 		stream[i + 1] += sample * pan_scalars[pan_position].right;
-		IncrementAddress();
-		IncrementVolScalar(vol_scalars);
 	}
 	// Keep track of how many ms this voice has generated
 	Is8Bit() ? generated_8bit_ms++ : generated_16bit_ms++;
@@ -392,44 +378,49 @@ void Gus::CheckVoiceIrq()
 
 static bool GUS_DMA_Active = false;
 
-size_t Gus::Dma16Addr()
+uint32_t Gus::Dma8Addr()
 {
-	const auto combined = ((dma_addr & 0x1fff) << 1) | (dma_addr & 0xc000);
-	return static_cast<size_t>(combined) << 4;
-}
-size_t Gus::Dma8Addr()
-{
-	return static_cast<size_t>(dma_addr) << 4;
+	return static_cast<uint32_t>(dma_addr << 4);
 }
 
-void Gus::GUS_DMA_Event_Transfer(DmaChannel *dma, uint32_t dmawords)
+uint32_t Gus::Dma16Addr()
 {
-	const auto desired = dma->currcnt + 1;
-	auto i = IsDma16Bit() ? Dma16Addr() : Dma8Addr();
-	assert(i < RAM_SIZE);
+	const auto lower = dma_addr & 0x1fff;
+	const auto upper = dma_addr & 0xc000;
+	const auto combined = (lower << 1) | upper;
+	return static_cast<uint32_t>(combined << 4);
+}
 
-	if (dma_ctrl & 0x2) // Write into DMA from GUS memory
-		dma->Write(desired, ram + i);
+void Gus::GUS_DMA_Event_Transfer(DmaChannel *dma, uint32_t)
+{
+	const auto addr = IsDmaXfer16Bit() ? Dma16Addr() : Dma8Addr();
+	const uint16_t desired = dma->currcnt + 1;
 
-	else if (!(dma_ctrl & 0x80)) // Passover
-		dma->Read(desired, ram + i);
+	if ((dma_ctrl & 0x2)) // Copy samples via DMA from GUS memory
+		dma->Write(desired, ram + addr);
 
-	else { // Read from DMA into GUS memory
-		const auto start = i + IsDma16Bit();
-		const auto samples_read = dma->Read(desired, ram + i);
-		const auto sample_size = IsDma16Bit() ? 2 : 1;
-		const auto end = i + samples_read * sample_size;
-		assert(end <= RAM_SIZE);
-		for (i = start; i < end; i += sample_size)
+	else if (!(dma_ctrl & 0x80)) // Skip DMA content
+		dma->Read(desired, ram + addr);
+
+	else { // Copy samples via DMA into GUS memory
+		const auto samples = dma->Read(desired, ram + addr);
+		const auto start = addr + (IsDmaPcm16Bit() ? 1u : 0u);
+		const auto skip = IsDmaPcm16Bit() ? 2u : 1u;
+		const auto end = addr + samples * (dma->DMA16 + 1u);
+		for (size_t i = start; i < end; i += skip)
 			ram[i] ^= 0x80;
 	}
-	// Raise the TC irq, and stop DMA
-	if (dma_ctrl & 0x20) {
-		// LOG_MSG("GUS DMA transfer hit Terminal Count");
+	// Raise the TC irq if needed
+	if ((dma_ctrl & 0x20) != 0) {
 		irq_status |= 0x80;
 		CheckIrq();
 		GUS_StopDMA();
 	}
+}
+
+bool Gus::IsDmaPcm16Bit()
+{
+	return dma_ctrl & 0x40;
 }
 
 static void GUS_DMA_Event(Bitu val)
@@ -443,8 +434,7 @@ static void GUS_DMA_Event(Bitu val)
 	}
 
 	if (dma->masked) {
-		LOG_MSG("GUS: Stopping DMA transfer interval, DMA masked=%u",
-		        dma->masked ? 1 : 0);
+		LOG_MSG("GUS: Stopping DMA transfer interval, DMA masked");
 		GUS_DMA_Active = false;
 		return;
 	}
@@ -455,9 +445,8 @@ static void GUS_DMA_Event(Bitu val)
 		return;
 	}
 
-	LOG_MSG("GUS DMA event: max %u bytes. DMA: tc=%u mask=%u cnt=%u",
-	        (unsigned int)BYTES_PER_DMA_XFER, dma->tcount ? 1 : 0,
-	        dma->masked ? 1 : 0, dma->currcnt + 1);
+	LOG_MSG("GUS DMA event: max %u bytes. DMA: tc=%u mask=0 cnt=%u",
+	        BYTES_PER_DMA_XFER, dma->tcount ? 1 : 0, dma->currcnt + 1);
 	gus->GUS_DMA_Event_Transfer(dma, BYTES_PER_DMA_XFER);
 
 	if (GUS_DMA_Active) {
@@ -702,7 +691,7 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 	return 0xff;
 }
 
-bool Gus::IsDma16Bit()
+bool Gus::IsDmaXfer16Bit()
 {
 	// What bit-size should DMA memory be transferred as?
 	// Mode PCM/DMA  Address Use-16  Note
@@ -1029,17 +1018,6 @@ void Gus::WriteToRegister()
 			GUS_StopDMA();
 		break;
 
-	/* 	case 0x41: // Dma control register
-	                dma_ctrl = static_cast<uint8_t>(register_data >> 8);
-	                {
-	                        LOG_MSG("GUS: 0x41");
-	                        auto dma_callback = std::bind(&Gus::DmaCallback,
-	   this, _1, _2); auto empty_callback = std::function<void(DmaChannel *,
-	   DMAEvent)>(nullptr); GetDMAChannel(dma1)->Register_Callback( (dma_ctrl
-	   & 0x1) ? dma_callback : empty_callback);
-	                }
-	                return;
-	 */
 	case 0x42: // Gravis DRAM DMA address register
 		dma_addr = register_data;
 		return;
@@ -1070,20 +1048,10 @@ void Gus::WriteToRegister()
 		return;
 	case 0x49: // DMA sampling control register
 		sample_ctrl = static_cast<uint8_t>(register_data >> 8);
-		if (dma_ctrl & 1)
+		if (sample_ctrl & 1)
 			GUS_StartDMA();
 		else
 			GUS_StopDMA();
-		/* 		{
-		                        auto dma_callback =
-		   std::bind(&Gus::DmaCallback, this, _1, _2);
-		                        std::function<void(DmaChannel *,
-		   DMAEvent)> empty_callback = nullptr;
-		                        GetDMAChannel(dma1)->Register_Callback(
-		                                (sample_ctrl & 0x1) ?
-		   dma_callback : empty_callback);
-		                }
-		 */
 		return;
 	case 0x4c: // Runtime control
 		irq_enabled = register_data & 0x4;
@@ -1178,10 +1146,7 @@ void GUS_Init(Section *sec)
 {
 	assert(sec);
 	Section_prop *conf = dynamic_cast<Section_prop *>(sec);
-	assert(conf);
-
-	// Is the GUS disabled?
-	if (!conf->Get_bool("gus"))
+	if (!conf || !conf->Get_bool("gus"))
 		return;
 
 	// Read the GUS config settings

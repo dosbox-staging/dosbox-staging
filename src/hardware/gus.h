@@ -117,14 +117,11 @@ private:
 	Voice(const Voice &) = delete;            // prevent copying
 	Voice &operator=(const Voice &) = delete; // prevent assignment
 	bool Is8Bit() const;
-	float GetInterWavePercent() const;
-	float GetInterWavePortion(const uint8_t *ram, const float sample) const;
+	float GetVolScalar(const float *vol_scalars);
 	float Read8BitSample(const uint8_t *ram, const int32_t addr) const;
 	float Read16BitSample(const uint8_t *ram, const int32_t addr) const;
-	float GetSample(const uint8_t *ram) const;
+	float GetSample(const uint8_t *ram);
 	float GetVolumeScalar(const float *vol_scalars) const;
-	void IncrementAddress();
-	void IncrementVolScalar(const float *vol_scalars);
 	uint8_t ReadPanPot() const;
 	int32_t IncrementControl(VoiceControl &ctrl, bool skip_loop);
 
@@ -142,8 +139,6 @@ private:
 
 	// shared IRQ with the GUS DSP
 	VoiceIrq &shared_irq;
-	float sample_vol_scalar = 0;
-	int32_t sample_address = 0u;
 	uint8_t pan_position = PAN_DEFAULT_POSITION;
 };
 
@@ -193,13 +188,14 @@ private:
 	void CheckIrq();
 	void CheckVoiceIrq();
 
-	size_t Dma8Addr();
-	size_t Dma16Addr();
+	uint32_t Dma8Addr();
+	uint32_t Dma16Addr();
 
 	void GUS_DMA_Callback(DmaChannel *chan, DMAEvent event);
 	void GUS_StartDMA();
 	void GUS_StopDMA();
-	bool IsDma16Bit();
+	bool IsDmaPcm16Bit();
+	bool IsDmaXfer16Bit();
 	uint16_t ReadFromRegister();
 	void PopulateAutoExec(uint16_t port, const std::string &dir);
 	void PopulatePanScalars();
