@@ -12,10 +12,10 @@ jobs:
         conf:
           - name: MSVC 32-bit
             arch: x86
-            max_warnings: 343
+            max_warnings: 321
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 2208
+            max_warnings: 2185
     steps:
       - uses:  actions/checkout@v2
       - name:  Install packages
