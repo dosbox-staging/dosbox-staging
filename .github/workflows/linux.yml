@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.conf.os }}
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     strategy:
-      max-parallel: 4
+      max-parallel: 3
       matrix:
         conf:
           - name: GCC, Ubuntu 16.04
