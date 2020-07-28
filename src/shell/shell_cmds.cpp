@@ -810,17 +810,16 @@ void DOS_Shell::CMD_LS(char *args)
 	DOS_DTA dta(dos.dta());
 
 	const std::string pattern = to_search_pattern(args);
-	bool ret = DOS_FindFirst(pattern.c_str(), 0xffff & ~DOS_ATTR_VOLUME);
-	if (!ret) {
+	if (!DOS_FindFirst(pattern.c_str(), 0xffff & ~DOS_ATTR_VOLUME)) {
 		WriteOut(MSG_Get("SHELL_CMD_LS_PATH_ERR"), trim(args));
 		dos.dta(original_dta);
 		return;
 	}
 
-	std::vector<DtaResult> results;
+	std::vector<DtaResult> dir_contents;
 	// reserve space for as many as we can fit into a single memory page
 	// nothing more to it; make it larger if necessary
-	results.reserve(MEM_PAGE_SIZE / sizeof(DtaResult));
+	dir_contents.reserve(MEM_PAGE_SIZE / sizeof(DtaResult));
 
 	do {
 		DtaResult result;
@@ -828,17 +827,17 @@ void DOS_Shell::CMD_LS(char *args)
 		              result.time, result.attr);
 		if (result.name == "."s || result.name == ".."s)
 			continue;
-		results.push_back(result);
-	} while ((ret = DOS_FindNext()) == true);
+		dir_contents.push_back(result);
+	} while (DOS_FindNext());
 
 	const int column_sep = 2; // chars separating columns
-	const auto word_widths = to_name_lengths(results, column_sep);
+	const auto word_widths = to_name_lengths(dir_contents, column_sep);
 	const auto column_widths = calc_column_widths(word_widths, column_sep + 1);
 	const size_t cols = column_widths.size();
 
 	size_t w_count = 0;
 
-	for (const auto &entry : results) {
+	for (const auto &entry : dir_contents) {
 		std::string name = entry.name;
 		const bool is_dir = entry.attr & DOS_ATTR_DIRECTORY;
 		const size_t col = w_count % cols;
