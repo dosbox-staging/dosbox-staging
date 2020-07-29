@@ -69,7 +69,7 @@ struct VoiceIrq {
 
 // A group of parameters used in the Voice class to track the Wave and Volume
 // controls.
-struct VoiceControl {
+struct VoiceCtrl {
 	uint32_t &irq_state;
 	int32_t start = 0;
 	int32_t end = 0;
@@ -104,18 +104,17 @@ public:
 	                     const AudioFrame *pan_scalars,
 	                     const int requested_frames);
 
-	uint8_t ReadVolCtrlState() const;
-	uint8_t ReadWaveCtrlState() const;
+	uint8_t ReadVolState() const;
+	uint8_t ReadWaveState() const;
 	void ResetCtrls();
 	void WritePanPot(uint8_t pos);
 	void WriteVolRate(uint16_t rate);
 	void WriteWaveRate(uint16_t rate);
+	bool UpdateVolState(uint8_t state);
+	bool UpdateWaveState(uint8_t state);
 
-	bool UpdateVolCtrlState(uint8_t state);
-	bool UpdateWaveCtrlState(uint8_t state);
-
-	VoiceControl vol_ctrl;
-	VoiceControl wave_ctrl;
+	VoiceCtrl vol_ctrl;
+	VoiceCtrl wave_ctrl;
 
 	uint32_t generated_8bit_ms = 0u;
 	uint32_t generated_16bit_ms = 0u;
@@ -128,13 +127,14 @@ private:
 	float GetVolScalar(const float *vol_scalars);
 	float GetSample(const uint8_t *ram);
 	float GetVolumeScalar(const float *vol_scalars) const;
+	int32_t PopWavePos();
+	int32_t PopVolPos();
 	float Read8BitSample(const uint8_t *ram, const int32_t addr) const;
 	float Read16BitSample(const uint8_t *ram, const int32_t addr) const;
-	uint8_t ReadCtrlState(const VoiceControl &ctrl) const;
+	uint8_t ReadCtrlState(const VoiceCtrl &ctrl) const;
 	uint8_t ReadPanPot() const;
-
-	int32_t IncrementControl(VoiceControl &ctrl, bool skip_loop);
-	bool UpdateCtrlState(VoiceControl &ctrl, uint8_t state);
+	void IncrementCtrlPos(VoiceCtrl &ctrl, bool skip_loop);
+	bool UpdateCtrlState(VoiceCtrl &ctrl, uint8_t state);
 
 	// Control states
 	enum CTRL : uint8_t {
@@ -220,7 +220,6 @@ private:
 	void UpdateWaveMsw(int32_t &addr) const;
 	void UpdateWaveLsw(int32_t &addr) const;
 	void UpdatePeakAmplitudes(const float *stream);
-	void UpdateCtrlState(VoiceControl &ctrl, uint32_t irq_mask, uint8_t val);
 	void WriteToPort(size_t port, size_t val, size_t iolen);
 	void WriteToRegister();
 
