@@ -62,13 +62,15 @@ struct AudioFrame {
 // A group of parameters defining the Gus's voice IRQ control that's also shared
 // (as a reference) into each instantiated voice.
 struct VoiceIrq {
-	uint32_t state = 0u;
-	uint8_t count = 0u;
+	uint32_t vol_state = 0u;
+	uint32_t wave_state = 0u;
+	uint8_t status = 0u;
 };
 
 // A group of parameters used in the Voice class to track the Wave and Volume
 // controls.
 struct VoiceControl {
+	uint32_t &irq_state;
 	int32_t start = 0;
 	int32_t end = 0;
 	int32_t pos = 0;
@@ -102,13 +104,19 @@ public:
 	                     const AudioFrame *pan_scalars,
 	                     const int requested_frames);
 
+	uint8_t ReadVolCtrlState() const;
+	uint8_t ReadWaveCtrlState() const;
+	void ResetCtrls();
 	void WritePanPot(uint8_t pos);
-	void WriteVolRate(uint16_t val);
-	void WriteWaveRate(uint16_t val);
+	void WriteVolRate(uint16_t rate);
+	void WriteWaveRate(uint16_t rate);
 
-	VoiceControl wave_ctrl = {};
-	VoiceControl vol_ctrl = {};
-	uint32_t irq_mask = 0u;
+	bool UpdateVolCtrlState(uint8_t state);
+	bool UpdateWaveCtrlState(uint8_t state);
+
+	VoiceControl vol_ctrl;
+	VoiceControl wave_ctrl;
+
 	uint32_t generated_8bit_ms = 0u;
 	uint32_t generated_16bit_ms = 0u;
 
@@ -118,12 +126,15 @@ private:
 	Voice &operator=(const Voice &) = delete; // prevent assignment
 	bool Is8Bit() const;
 	float GetVolScalar(const float *vol_scalars);
-	float Read8BitSample(const uint8_t *ram, const int32_t addr) const;
-	float Read16BitSample(const uint8_t *ram, const int32_t addr) const;
 	float GetSample(const uint8_t *ram);
 	float GetVolumeScalar(const float *vol_scalars) const;
+	float Read8BitSample(const uint8_t *ram, const int32_t addr) const;
+	float Read16BitSample(const uint8_t *ram, const int32_t addr) const;
+	uint8_t ReadCtrlState(const VoiceControl &ctrl) const;
 	uint8_t ReadPanPot() const;
+
 	int32_t IncrementControl(VoiceControl &ctrl, bool skip_loop);
+	bool UpdateCtrlState(VoiceControl &ctrl, uint8_t state);
 
 	// Control states
 	enum CTRL : uint8_t {
@@ -137,8 +148,8 @@ private:
 		DECREASING = 0x40,
 	};
 
-	// shared IRQ with the GUS DSP
-	VoiceIrq &shared_irq;
+	uint32_t irq_mask = 0u;
+	uint8_t &shared_irq_status;
 	uint8_t pan_position = PAN_DEFAULT_POSITION;
 };
 
@@ -201,7 +212,6 @@ private:
 	void PopulatePanScalars();
 	void PopulateVolScalars();
 	void PrepareForPlayback();
-	uint8_t ReadCtrl(const VoiceControl &ctrl) const;
 	size_t ReadFromPort(const size_t port, const size_t iolen);
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
@@ -210,7 +220,7 @@ private:
 	void UpdateWaveMsw(int32_t &addr) const;
 	void UpdateWaveLsw(int32_t &addr) const;
 	void UpdatePeakAmplitudes(const float *stream);
-	void WriteCtrl(VoiceControl &ctrl, uint32_t irq_mask, uint8_t val);
+	void UpdateCtrlState(VoiceControl &ctrl, uint32_t irq_mask, uint8_t val);
 	void WriteToPort(size_t port, size_t val, size_t iolen);
 	void WriteToRegister();
 

@@ -54,9 +54,11 @@ uint8_t adlib_commandreg = ADLIB_CMD_DEFAULT;
 static std::unique_ptr<Gus> gus = nullptr;
 
 Voice::Voice(uint8_t num, VoiceIrq &irq)
-        : irq_mask(1 << num),
-		shared_irq(irq)
-          
+        : vol_ctrl{irq.vol_state},
+          wave_ctrl{irq.wave_state},
+          irq_mask(1 << num),
+          shared_irq_status(irq.status)
+
 {}
 
 /*
@@ -188,7 +190,7 @@ int32_t Voice::IncrementControl(VoiceControl &ctrl, bool dont_loop_or_restart)
 
 	// Generate an IRQ if requested
 	if (ctrl.state & CTRL::RAISEIRQ) {
-		shared_irq.state |= irq_mask;
+		ctrl.irq_state |= irq_mask;
 	}
 
 	// Allow the current position to move beyond its limit
@@ -247,17 +249,36 @@ void Voice::WriteVolRate(uint16_t val)
 	assert(vol_ctrl.inc >= 0 && vol_ctrl.inc <= bank_lengths * VOLUME_INC_SCALAR);
 }
 
-void Gus::WriteCtrl(VoiceControl &ctrl, uint32_t voice_irq_mask, uint8_t val)
+void Voice::ResetCtrls()
 {
-	const uint32_t prev_state = voice_irq.state;
-	ctrl.state = val & 0x7f;
+	vol_ctrl.pos = 0u;
+	UpdateVolCtrlState(0x1);
+	UpdateWaveCtrlState(0x1);
+	WritePanPot(PAN_DEFAULT_POSITION);
+}
+
+bool Voice::UpdateVolCtrlState(uint8_t state)
+{
+	return UpdateCtrlState(vol_ctrl, state);
+}
+
+bool Voice::UpdateWaveCtrlState(uint8_t state)
+{
+	return UpdateCtrlState(wave_ctrl, state);
+}
+
+bool Voice::UpdateCtrlState(VoiceControl &ctrl, uint8_t state)
+{
+	const uint32_t orig_irq_state = ctrl.irq_state;
+	ctrl.state = state & 0x7f;
 	// Manually set the irq
-	if ((val & 0xa0) == 0xa0)
-		voice_irq.state |= voice_irq_mask;
+	if ((state & 0xa0) == 0xa0)
+		ctrl.irq_state |= irq_mask;
 	else
-		voice_irq.state &= ~voice_irq_mask;
-	if (prev_state != voice_irq.state)
-		CheckVoiceIrq();
+		ctrl.irq_state &= ~irq_mask;
+
+	// Indicate if the IRQ state changed
+	return orig_irq_state != ctrl.irq_state;
 }
 
 void Voice::WriteWaveRate(uint16_t val)
@@ -363,16 +384,19 @@ bool Gus::CheckTimer(const size_t t)
 void Gus::CheckVoiceIrq()
 {
 	irq_status &= 0x9f;
-	const Bitu totalmask = voice_irq.state &  active_voice_mask;
+	const Bitu totalmask = (voice_irq.vol_state | voice_irq.wave_state) &
+	                       active_voice_mask;
 	if (!totalmask)
 		return;
-	if (voice_irq.state)
-		irq_status |= (0x40 | 0x20);
+	if (voice_irq.vol_state)
+		irq_status |= 0x40;
+	if (voice_irq.wave_state)
+		irq_status |= 0x20;
 	CheckIrq();
-	while (!(totalmask & (1 << voice_irq.count))) {
-		voice_irq.count++;
-		if (voice_irq.count >= active_voices)
-			voice_irq.count = 0;
+	while (!(totalmask & 1ULL << voice_irq.status)) {
+		voice_irq.status++;
+		if (voice_irq.status >= active_voices)
+			voice_irq.status = 0;
 	}
 }
 
@@ -639,12 +663,22 @@ void Gus::PrintStats()
 	}
 }
 
-uint8_t Gus::ReadCtrl(const VoiceControl &ctrl) const
+uint8_t Voice::ReadVolCtrlState() const
 {
-	uint8_t ret = ctrl.state;
-	if (voice_irq.state & voice->irq_mask)
-		ret |= 0x80;
-	return ret;
+	return ReadCtrlState(vol_ctrl);
+}
+
+uint8_t Voice::ReadWaveCtrlState() const
+{
+	return ReadCtrlState(wave_ctrl);
+}
+
+uint8_t Voice::ReadCtrlState(const VoiceControl &ctrl) const
+{
+	uint8_t state = ctrl.state;
+	if (ctrl.irq_state & irq_mask)
+		state |= 0x80;
+	return state;
 }
 
 Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
@@ -732,12 +766,15 @@ uint16_t Gus::ReadFromRegister()
 		reg |= (irq_status & 0x80) >> 1;
 		return static_cast<uint16_t>(reg << 8);
 	case 0x8f: // General voice IRQ status register
-		reg = voice_irq.count | 0x20;
+		reg = voice_irq.status | 0x20;
 		uint32_t mask;
-		mask = 1 << voice_irq.count;
-		if (!(voice_irq.state & mask))
-			reg |= (0x40 | 0x80);
-		voice_irq.state &= ~mask;
+		mask = 1 << voice_irq.status;
+		if (!(voice_irq.vol_state & mask))
+			reg |= 0x40;
+		if (!(voice_irq.wave_state & mask))
+			reg |= 0x80;
+		voice_irq.vol_state &= ~mask;
+		voice_irq.wave_state &= ~mask;
 		CheckVoiceIrq();
 		return static_cast<uint16_t>(reg << 8);
 	}
@@ -750,7 +787,7 @@ uint16_t Gus::ReadFromRegister()
 	// Registers that read from from the current voice
 	switch (selected_register) {
 	case 0x80: // Voice wave control read register
-		return static_cast<uint16_t>(ReadCtrl(voice->wave_ctrl) << 8);
+		return static_cast<uint16_t>(voice->ReadWaveCtrlState() << 8);
 	case 0x82: // Voice MSB start address register
 		return static_cast<uint16_t>(voice->wave_ctrl.start >> 16);
 	case 0x83: // Voice LSW start address register
@@ -766,7 +803,7 @@ uint16_t Gus::ReadFromRegister()
 	case 0x8b: // Voice LSW current address register
 		return static_cast<uint16_t>(voice->wave_ctrl.pos);
 	case 0x8d: // Voice volume control register
-		return static_cast<uint16_t>(ReadCtrl(voice->vol_ctrl) << 8);
+		return static_cast<uint16_t>(voice->ReadVolCtrlState() << 8);
 	}
 #if LOG_GUS
 	LOG_MSG("GUS: Unimplemented read Register 0x%x", selected_register);
@@ -802,12 +839,8 @@ void Gus::StopPlayback()
 void Gus::PrepareForPlayback()
 {
 	// Initialize the voice states
-	for (auto &v : voices) {
-		v->vol_ctrl.pos = 0u;
-		WriteCtrl(v->wave_ctrl, v->irq_mask, 0x1);
-		WriteCtrl(v->vol_ctrl, v->irq_mask, 0x1);
-		v->WritePanPot(PAN_DEFAULT_POSITION);
-	}
+	for (auto &v : voices)
+		v->ResetCtrls();
 
 	// Initialize the OPL emulator state
 	adlib_command_reg = ADLIB_CMD_DEFAULT;
@@ -1075,7 +1108,8 @@ void Gus::WriteToRegister()
 	// Registers that write to the current voice
 	switch (selected_register) {
 	case 0x0: // Voice wave control register
-		WriteCtrl(voice->wave_ctrl, voice->irq_mask, register_data >> 8);
+		if (voice->UpdateWaveCtrlState(register_data >> 8))
+			CheckVoiceIrq();
 		break;
 	case 0x1: // Voice rate control register
 		voice->WriteWaveRate(register_data);
@@ -1123,7 +1157,8 @@ void Gus::WriteToRegister()
 		voice->WritePanPot(register_data >> 8);
 		break;
 	case 0xD: // Voice volume control register
-		WriteCtrl(voice->vol_ctrl, voice->irq_mask, register_data >> 8);
+		if (voice->UpdateVolCtrlState(register_data >> 8))
+			CheckVoiceIrq();
 		break;
 	}
 
