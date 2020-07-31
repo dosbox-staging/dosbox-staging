@@ -687,14 +687,14 @@ uint32_t Gus::Dma16Addr()
 
 bool Gus::PerformDmaTransfer()
 {
-	if (dma_channel->masked || !(dma_ctrl & 0x01)) {
-		LOG_MSG("GUS: DMA channel masked or control stopped");
+	if (dma_channel->masked || !(dma_ctrl & 0x01))
 		return false;
-	}
 
+#if LOG_GUS
 	LOG_MSG("GUS DMA event: max %u bytes. DMA: tc=%u mask=0 cnt=%u",
 	        BYTES_PER_DMA_XFER, dma_channel->tcount ? 1 : 0,
 	        dma_channel->currcnt + 1);
+#endif
 
 	const auto addr = IsDmaXfer16Bit() ? Dma16Addr() : Dma8Addr();
 	const uint16_t desired = dma_channel->currcnt + 1;
@@ -736,7 +736,8 @@ bool Gus::IsDmaXfer16Bit()
 	// 0x04   8/16   < 4     No      8-bit if using Low DMA
 	// 0x40  16/ 8   Any     No      Windows 3.1, Quake
 	// 0x44  16/16   >= 4    Yes     Windows 3.1, Quake
-	LOG_MSG("GUS: %u-bit DMA using address %u", (dma_ctrl & 0x4) ? 16u : 8u, dma1);
+	
+	// LOG_MSG("GUS: %u-bit DMA using address %u", (dma_ctrl & 0x4) ? 16u : 8u, dma1);
 	return (dma_ctrl & 0x4) && (dma1 >= 4);
 }
 
@@ -923,7 +924,7 @@ void Gus::PrintStats()
 
 Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 {
-	//	LOG_MSG("read from gus port %x",port);
+	//	LOG_MSG("GUS: Read from port %x", port);
 	switch (port - port_base) {
 	case 0x206: return irq_status;
 	case 0x208:
@@ -957,7 +958,7 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 		}
 	default:
 #if LOG_GUS
-		LOG_MSG("Read GUS at port 0x%x", port);
+		LOG_MSG("GUS Read at port 0x%x", port);
 #endif
 		break;
 	}
@@ -1145,12 +1146,12 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 }
 
 #if LOG_GUS
-LOG_MSG("Assigned GUS to DMA %d", dma1);
+LOG_MSG("GUS: Assigned DMA1 address to %u", dma1);
 #endif
 
 void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 {
-	//	LOG_MSG("Write gus port %x val %x",port,val);
+	//	LOG_MSG("GUS: Write to port %x val %x", port, val);
 	switch (port - port_base) {
 	case 0x200:
 		mix_ctrl = static_cast<uint8_t>(val);
@@ -1195,15 +1196,13 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 			if (irq_addresses[i])
 				irq1 = irq_addresses[i];
 #if LOG_GUS
-			LOG_MSG("Assigned GUS to IRQ %d", irq1);
+			LOG_MSG("GUS: Assigned IRQ1 to %d", irq1);
 #endif
 		} else {
 			// DMA configuration, only use low bits for dma 1
 			const uint8_t i = val & 0x7;
 			if (i < dma_addresses.size() && dma_addresses[i])
 				UpdateDmaAddress(dma_addresses[i]);
-			else
-				LOG_MSG("GUS: Request to change the DMA address failed; ignoring");
 		}
 		break;
 	case 0x302:
@@ -1233,7 +1232,7 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		break;
 	default:
 #if LOG_GUS
-		LOG_MSG("Write GUS at port 0x%x with %x", port, val);
+		LOG_MSG("GUS: Write to port 0x%x with value %x", port, val);
 #endif
 		break;
 	}
@@ -1389,7 +1388,7 @@ void Gus::WriteToRegister()
 	}
 
 #if LOG_GUS
-	LOG_MSG("Unimplemented write register %x -- %x", register_select,
+	LOG_MSG("GUS: Unimplemented write register %x -- %x", register_select,
 	        register_data);
 #endif
 	return;
