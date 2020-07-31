@@ -206,8 +206,8 @@ public:
 
 	// moved to public to use the PIC queue
 	uint8_t dma_ctrl = 0u;
-	uint8_t dma1 = 0u; // recording DMA
-	void GUS_DMA_Event_Transfer(DmaChannel *, uint32_t dmawords);
+	uint8_t dma1 = 0u;
+	bool PerformDmaTransfer();
 
 private:
 	Gus() = delete;
@@ -223,7 +223,7 @@ private:
 	uint32_t Dma8Addr();
 	uint32_t Dma16Addr();
 
-	void GUS_DMA_Callback(DmaChannel *chan, DMAEvent event);
+	void DmaCallback(DmaChannel *chan, DMAEvent event);
 	void GUS_StartDMA();
 	void GUS_StopDMA();
 	bool IsDmaPcm16Bit();
@@ -238,6 +238,7 @@ private:
 	void Reset(uint8_t state);
 	void SoftLimit(const float *in, int16_t *out);
 	void StopPlayback();
+	void UpdateDmaAddress(uint8_t new_address);
 	void UpdateWaveMsw(int32_t &addr) const;
 	void UpdateWaveLsw(int32_t &addr) const;
 	void UpdatePeakAmplitudes(const float *stream);
@@ -263,6 +264,7 @@ private:
 	Voice *voice = nullptr;
 	VoiceIrq voice_irq = {};
 	MixerObject mixer_channel = {};
+	DmaChannel *dma_channel = nullptr;
 	AudioFrame peak = {ONE_AMP, ONE_AMP};
 	uint8_t &adlib_command_reg = adlib_commandreg;
 	MixerChannel *audio_channel = nullptr;
@@ -571,8 +573,7 @@ void Voice::WriteWaveRate(uint16_t val)
 }
 
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
-        : dma1(dma),
-          port_base(port - 0x200),
+        : port_base(port - 0x200),
           dma2(dma),
           irq1(irq),
           irq2(irq)
@@ -588,8 +589,7 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	audio_channel = mixer_channel.Install(
 		std::bind(&Gus::AudioCallback, this, std::placeholders::_1), 1, "GUS");
 
-	GetDMAChannel(dma1)->Register_Callback(
-	        std::bind(&Gus::GUS_DMA_Callback, this, _1, _2));
+	UpdateDmaAddress(dma);
 
 	// Populate the volume, pan, and auto-exec arrays
 	PopulateVolScalars();
@@ -673,8 +673,6 @@ void Gus::CheckVoiceIrq()
 	}
 }
 
-static bool GUS_DMA_Active = false;
-
 uint32_t Gus::Dma8Addr()
 {
 	return static_cast<uint32_t>(dma_addr << 4);
@@ -688,22 +686,31 @@ uint32_t Gus::Dma16Addr()
 	return static_cast<uint32_t>(combined << 4);
 }
 
-void Gus::GUS_DMA_Event_Transfer(DmaChannel *dma, uint32_t)
+bool Gus::PerformDmaTransfer()
 {
+	if (dma_channel->masked || !(dma_ctrl & 0x01)) {
+		LOG_MSG("GUS: DMA channel masked or control stopped");
+		return false;
+	}
+
+	LOG_MSG("GUS DMA event: max %u bytes. DMA: tc=%u mask=0 cnt=%u",
+	        BYTES_PER_DMA_XFER, dma_channel->tcount ? 1 : 0,
+	        dma_channel->currcnt + 1);
+
 	const auto addr = IsDmaXfer16Bit() ? Dma16Addr() : Dma8Addr();
-	const uint16_t desired = dma->currcnt + 1;
+	const uint16_t desired = dma_channel->currcnt + 1;
 
 	if ((dma_ctrl & 0x2)) // Copy samples via DMA from GUS memory
-		dma->Write(desired, ram + addr);
+		dma_channel->Write(desired, ram + addr);
 
 	else if (!(dma_ctrl & 0x80)) // Skip DMA content
-		dma->Read(desired, ram + addr);
+		dma_channel->Read(desired, ram + addr);
 
 	else { // Copy samples via DMA into GUS memory
-		const auto samples = dma->Read(desired, ram + addr);
+		const auto samples = dma_channel->Read(desired, ram + addr);
 		const auto start = addr + (IsDmaPcm16Bit() ? 1u : 0u);
 		const auto skip = IsDmaPcm16Bit() ? 2u : 1u;
-		const auto end = addr + samples * (dma->DMA16 + 1u);
+		const auto end = addr + samples * (dma_channel->DMA16 + 1u);
 		for (size_t i = start; i < end; i += skip)
 			ram[i] ^= 0x80;
 	}
@@ -712,7 +719,9 @@ void Gus::GUS_DMA_Event_Transfer(DmaChannel *dma, uint32_t)
 		irq_status |= 0x80;
 		CheckIrq();
 		GUS_StopDMA();
+		return false;
 	}
+	return true;
 }
 
 bool Gus::IsDmaPcm16Bit()
@@ -733,62 +742,25 @@ bool Gus::IsDmaXfer16Bit()
 	return (dma_ctrl & 0x4) && (dma1 >= 4);
 }
 
-static void GUS_DMA_Event(Bitu val)
+static void GUS_DMA_Event(Bitu)
 {
-	(void)val; // UNUSED
-	DmaChannel *dma = GetDMAChannel(gus->dma1);
-	if (dma == NULL) {
-		LOG_MSG("GUS DMA event: DMA channel no longer exists, stopping DMA transfer events");
-		GUS_DMA_Active = false;
-		return;
-	}
-
-	if (dma->masked) {
-		LOG_MSG("GUS: Stopping DMA transfer interval, DMA masked");
-		GUS_DMA_Active = false;
-		return;
-	}
-
-	if (!(gus->dma_ctrl & 0x01 /*DMA enable*/)) {
-		LOG_MSG("GUS DMA event: DMA control 'enable DMA' bit was reset, stopping DMA transfer events");
-		GUS_DMA_Active = false;
-		return;
-	}
-
-	LOG_MSG("GUS DMA event: max %u bytes. DMA: tc=%u mask=0 cnt=%u",
-	        BYTES_PER_DMA_XFER, dma->tcount ? 1 : 0, dma->currcnt + 1);
-	gus->GUS_DMA_Event_Transfer(dma, BYTES_PER_DMA_XFER);
-
-	if (GUS_DMA_Active) {
-		/* keep going */
+	if (gus->PerformDmaTransfer())
 		PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
-	}
 }
 
 void Gus::GUS_StopDMA()
 {
-	if (GUS_DMA_Active)
-		LOG_MSG("GUS: Stopping DMA transfer interval");
-
+	LOG_MSG("GUS: Stopping DMA transfer interval");
 	PIC_RemoveEvents(GUS_DMA_Event);
-	GUS_DMA_Active = false;
 }
 
 void Gus::GUS_StartDMA()
 {
-	if (!GUS_DMA_Active) {
-		GUS_DMA_Active = true;
-		LOG_MSG("GUS: Starting DMA transfer interval");
-
-		PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
-
-		if (GetDMAChannel(dma1)->masked)
-			LOG(LOG_MISC, LOG_WARN)
-			("GUS: DMA transfer interval started when channel is masked");
-	}
+	LOG_MSG("GUS: Starting DMA transfer interval");
+	PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
 }
 
-void Gus::GUS_DMA_Callback(DmaChannel *, DMAEvent event)
+void Gus::DmaCallback(DmaChannel *, DMAEvent event)
 {
 	if (event == DMA_UNMASKED) {
 		LOG_MSG("GUS: DMA unmasked");
@@ -1015,12 +987,6 @@ uint16_t Gus::ReadFromRegister()
 	// Registers that read from the general DSP
 	switch (selected_register) {
 	case 0x41: // Dma control register - read acknowledges DMA IRQ
-		if (!GetDMAChannel(dma1)->masked && !(dma_ctrl & 0x01) &&
-		    !(irq_status & 0x80)) {
-			LOG_MSG("GUS As instructed, switching on DMA ENABLE upon polling DMA control register (HACK) as workaround");
-			dma_ctrl |= 0x01;
-			GUS_StartDMA();
-		}
 		reg = dma_ctrl & 0xbf;
 		reg |= (irq_status & 0x80) >> 1;
 		irq_status &= 0x7f;
@@ -1175,6 +1141,27 @@ static void GUS_TimerEvent(Bitu t)
 		PIC_AddEvent(GUS_TimerEvent, gus->timers[t].delay, t);
 }
 
+void Gus::UpdateDmaAddress(const uint8_t new_address)
+{
+	// Has it changed?
+	if (new_address == dma1)
+		return;
+
+	// Unregister the current callback
+	if (dma_channel)
+		dma_channel->Register_Callback(nullptr);
+
+	// Update the address, channel, and callback
+	dma1 = new_address;
+	dma_channel = GetDMAChannel(dma1);
+	assert(dma_channel);
+	dma_channel->Register_Callback(std::bind(&Gus::DmaCallback, this, _1, _2));
+}
+
+#if LOG_GUS
+LOG_MSG("Assigned GUS to DMA %d", dma1);
+#endif
+
 void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 {
 	//	LOG_MSG("Write gus port %x val %x",port,val);
@@ -1226,19 +1213,11 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 #endif
 		} else {
 			// DMA configuration, only use low bits for dma 1
-			const auto i = val & 0x7;
-			assert(i < dma_addresses.size());
-			// If the DMA address is valid differs from existing
-			if (dma_addresses[i] && dma1 != dma_addresses[i]) {
-				GetDMAChannel(dma1)->Register_Callback(nullptr);
-				dma1 = dma_addresses[i];
-				auto dma_callback = std::bind(&Gus::GUS_DMA_Callback,
-				                              this, _1, _2);
-				GetDMAChannel(dma1)->Register_Callback(dma_callback);
-			}
-#if LOG_GUS
-			LOG_MSG("Assigned GUS to DMA %d", dma1);
-#endif
+			const uint8_t i = val & 0x7;
+			if (i < dma_addresses.size() && dma_addresses[i])
+				UpdateDmaAddress(dma_addresses[i]);
+			else
+				LOG_MSG("GUS: Request to change the DMA address failed; ignoring");
 		}
 		break;
 	case 0x302:
