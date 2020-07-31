@@ -224,8 +224,7 @@ private:
 	uint32_t Dma16Addr();
 
 	void DmaCallback(DmaChannel *chan, DMAEvent event);
-	void GUS_StartDMA();
-	void GUS_StopDMA();
+	void StartDmaTransfers();
 	bool IsDmaPcm16Bit();
 	bool IsDmaXfer16Bit();
 	uint16_t ReadFromRegister();
@@ -718,7 +717,6 @@ bool Gus::PerformDmaTransfer()
 	if ((dma_ctrl & 0x20) != 0) {
 		irq_status |= 0x80;
 		CheckIrq();
-		GUS_StopDMA();
 		return false;
 	}
 	return true;
@@ -748,27 +746,15 @@ static void GUS_DMA_Event(Bitu)
 		PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
 }
 
-void Gus::GUS_StopDMA()
+void Gus::StartDmaTransfers()
 {
-	LOG_MSG("GUS: Stopping DMA transfer interval");
-	PIC_RemoveEvents(GUS_DMA_Event);
-}
-
-void Gus::GUS_StartDMA()
-{
-	LOG_MSG("GUS: Starting DMA transfer interval");
 	PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
 }
 
 void Gus::DmaCallback(DmaChannel *, DMAEvent event)
 {
-	if (event == DMA_UNMASKED) {
-		LOG_MSG("GUS: DMA unmasked");
-		if (dma_ctrl & 0x01 /*DMA enable*/)
-			GUS_StartDMA();
-	} else if (event == DMA_MASKED) {
-		LOG_MSG("GUS: DMA masked. Perhaps it will stop the DMA transfer event.");
-	}
+	if (event == DMA_UNMASKED)
+		StartDmaTransfers();
 }
 
 void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
@@ -1290,9 +1276,7 @@ void Gus::WriteToRegister()
 	case 0x41: // Dma control register
 		dma_ctrl = register_data >> 8;
 		if (dma_ctrl & 1)
-			GUS_StartDMA();
-		else
-			GUS_StopDMA();
+			StartDmaTransfers();
 		break;
 
 	case 0x42: // Gravis DRAM DMA address register
@@ -1326,9 +1310,7 @@ void Gus::WriteToRegister()
 	case 0x49: // DMA sampling control register
 		sample_ctrl = static_cast<uint8_t>(register_data >> 8);
 		if (sample_ctrl & 1)
-			GUS_StartDMA();
-		else
-			GUS_StopDMA();
+			StartDmaTransfers();
 		return;
 	case 0x4c: // Runtime control
 		irq_enabled = register_data & 0x4;
