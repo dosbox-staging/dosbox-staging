@@ -105,19 +105,18 @@ using autoexec_array_t = std::array<AutoexecObject, 2>;
 using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
 using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
 
-// A Voice, used by the Gus class, which instantiates 32 of these.
-// Each voice represents a single "mono" stream of audio having it's own
+// A Voice is used by the Gus class and instantiates 32 of these.
+// Each voice represents a single "mono" stream of audio having its own
 // characteristics defined by the running program, such as:
 //   - being 8bit or 16bit
-//   - having a position placed left or right (panned)
-//   - having a its volume scaled (from native-level down to 0)
+//   - having a "position" along a left-right axis (panned)
+//   - having its volume reduced by some amount (native-level down to 0)
 //   - having start, stop, loop, and loop-backward controls
 //   - informing the GUS DSP as to when an IRQ is needed to keep it playing
 //
 class Voice {
 public:
 	Voice(uint8_t num, VoiceIrq &irq);
-	bool CheckWaveRolloverCondition();
 	void GenerateSamples(float *stream,
 	                     const uint8_t *ram,
 	                     const float *vol_scalars,
@@ -143,6 +142,7 @@ private:
 	Voice() = delete;
 	Voice(const Voice &) = delete;            // prevent copying
 	Voice &operator=(const Voice &) = delete; // prevent assignment
+	bool CheckWaveRolloverCondition();
 	bool Is8Bit() const;
 	float GetVolScalar(const float *vol_scalars);
 	float GetSample(const uint8_t *ram);
@@ -178,15 +178,17 @@ static void GUS_DMA_Event(Bitu val);
 
 using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
 
-// The Gravis UltraSound (Gus) DSP
+// The Gravis UltraSound GF1 DSP (classic)
 // This class:
 //   - Registers, receives, and responds to port address inputs, which are used
-//     by the emulated software to configure and control the Gus.
-//   - Reads audio content provided via direct memory access (DMA)
-//   - Provides common resources to the Voices, such as the volume and pan tables
-//   - Integrates the audio from its voices into a 16-bit stereo output stream
+//     by the emulated software to configure and control the GUS card.
+//   - Reads or provides audio samples via direct memory access (DMA)
+//   - Provides shared resources to all of the Voices, such as the volume
+//     reducing table, constant-power panning table, and IRQ states.
+//   - Integrates the audio from each active voice into a 16-bit stereo output
+//     stream without resampling.
 //   - Populates an autoexec line (ULTRASND=...) with its port, irq, and dma
-//   addresses
+//     addresses.
 //
 class Gus {
 public:
@@ -203,10 +205,6 @@ public:
 		bool should_raise_irq = false;
 	};
 	Timer timers[2] = {{TIMER_1_DEFAULT_DELAY}, {TIMER_2_DEFAULT_DELAY}};
-
-	// moved to public to use the PIC queue
-	uint8_t dma_ctrl = 0u;
-	uint8_t dma1 = 0u;
 	bool PerformDmaTransfer();
 
 private:
@@ -219,10 +217,8 @@ private:
 	void BeginPlayback();
 	void CheckIrq();
 	void CheckVoiceIrq();
-
 	uint32_t Dma8Addr();
 	uint32_t Dma16Addr();
-
 	void DmaCallback(DmaChannel *chan, DMAEvent event);
 	void StartDmaTransfers();
 	bool IsDmaPcm16Bit();
@@ -260,13 +256,13 @@ private:
 	autoexec_array_t autoexec_lines = {};
 
 	// Struct and pointer members
-	Voice *voice = nullptr;
 	VoiceIrq voice_irq = {};
 	MixerObject mixer_channel = {};
-	DmaChannel *dma_channel = nullptr;
 	AudioFrame peak = {ONE_AMP, ONE_AMP};
-	uint8_t &adlib_command_reg = adlib_commandreg;
+	Voice *voice = nullptr;
+	DmaChannel *dma_channel = nullptr;
 	MixerChannel *audio_channel = nullptr;
+	uint8_t &adlib_command_reg = adlib_commandreg;
 
 	// Port address
 	size_t port_base = 0u;
@@ -290,7 +286,9 @@ private:
 
 	// DMA states
 	uint16_t dma_addr = 0u;
-	uint8_t dma2 = 0u; // playback DMA
+	uint8_t dma_ctrl = 0u;
+	uint8_t dma1 = 0u; // playback DMA
+	uint8_t dma2 = 0u; // recording DMA
 
 	// IRQ states
 	uint8_t irq1 = 0u; // playback IRQ
@@ -614,7 +612,7 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 	assert(requested_frames <= BUFFER_FRAMES);
 
 	// Zero the accumulator array
-	for (int i = 0; i < BUFFER_SAMPLES; ++i) // vectorized
+	for (int i = 0; i < BUFFER_SAMPLES; ++i)
 		accumulator[i] = 0;
 
 	for (uint8_t i = 0; i < active_voices; ++i)
@@ -737,7 +735,6 @@ bool Gus::IsDmaXfer16Bit()
 	// 0x40  16/ 8   Any     No      Windows 3.1, Quake
 	// 0x44  16/16   >= 4    Yes     Windows 3.1, Quake
 	
-	// LOG_MSG("GUS: %u-bit DMA using address %u", (dma_ctrl & 0x4) ? 16u : 8u, dma1);
 	return (dma_ctrl & 0x4) && (dma1 >= 4);
 }
 
@@ -789,9 +786,9 @@ void Gus::PopulateVolScalars()
 Constant-Power Panning
 -------------------------
 The GUS SDK describes having 16 panning positions (0 through 15)
-with 0 representing all full left rotation through to center or
-mid-point at 7, to full-right rotation at 15.  The SDK also
-describes that output power is held constant through this range.
+with 0 representing the full-left rotation, 7 being the mid-point,
+and 15 being the full-right rotation.  The SDK also describes
+that output power is held constant through this range.
 
 	#!/usr/bin/env python3
 	import math
@@ -905,7 +902,7 @@ void Gus::PrintStats()
 	// It's expected and normal for multi-voice audio to periodically
 	// accumulate beyond the max, which is gracefully scaled without
 	// distortion, so there is no need to recommend that users scale-down
-	// their GUS voice.
+	// their GUS mixer settings.
 	peak_ratio = std::min(peak_ratio, 1.0f);
 	LOG_MSG("GUS: Peak amplitude reached %.0f%% of max",
 	        static_cast<double>(100 * peak_ratio));
@@ -1097,7 +1094,7 @@ void Gus::SoftLimit(const float *in, int16_t *out)
 
 	// If our peaks are under the max, then there's no need to limit
 	if (peak.left < AUDIO_SAMPLE_MAX && peak.right < AUDIO_SAMPLE_MAX) {
-		for (int i = 0; i < BUFFER_SAMPLES - 1; i += 2) { // vectorized
+		for (int i = 0; i < BUFFER_SAMPLES - 1; i += 2) {
 			out[i] = static_cast<int16_t>(in[i]);
 			out[i + 1] = static_cast<int16_t>(in[i + 1]);
 		}
@@ -1143,11 +1140,10 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 	dma_channel = GetDMAChannel(dma1);
 	assert(dma_channel);
 	dma_channel->Register_Callback(std::bind(&Gus::DmaCallback, this, _1, _2));
-}
-
 #if LOG_GUS
-LOG_MSG("GUS: Assigned DMA1 address to %u", dma1);
+	LOG_MSG("GUS: Assigned DMA1 address to %u", dma1);
 #endif
+}
 
 void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 {
@@ -1326,6 +1322,7 @@ void Gus::WriteToRegister()
 		return;
 	}
 
+	// All the registers below here involve voices
 	if (!voice)
 		return;
 
