@@ -78,7 +78,7 @@ static struct {
 		CacheBlock *running; // the last block that was entered for
 		                     // execution
 	} block;
-	Bit8u * pos;		// position in the cache block
+	uint8_t *pos;                // position in the cache block
 	CodePageHandler *free_pages; // pointer to the free list
 	CodePageHandler *used_pages; // pointer to the list of used pages
 	CodePageHandler *last_page;  // the last used page
