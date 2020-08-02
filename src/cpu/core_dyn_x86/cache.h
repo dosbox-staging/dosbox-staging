@@ -594,7 +594,7 @@ static void cache_closeblock()
 #if (C_DYNAMIC_X86)
 	const bool cache_is_full = !block->cache.next;
 #elif (C_DYNREC)
-	const bool cache_is_full = (!block->cache.next || (block->cache.next->cache.start>(cache_code_start_ptr + CACHE_TOTAL - CACHE_MAXSIZE));
+	const bool cache_is_full = (!block->cache.next || (block->cache.next->cache.start > (cache_code_start_ptr + CACHE_TOTAL - CACHE_MAXSIZE)));
 #endif
 	if (cache_is_full) {
 		// DEBUG_LOG_MSG("Cache full; restarting");

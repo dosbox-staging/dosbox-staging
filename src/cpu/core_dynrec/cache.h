@@ -591,7 +591,7 @@ static void cache_closeblock()
 		}
 	}
 	// advance the active block pointer
-	const bool cache_is_full = (!block->cache.next || (block->cache.next->cache.start>(cache_code_start_ptr + CACHE_TOTAL - CACHE_MAXSIZE));
+	const bool cache_is_full = (!block->cache.next || (block->cache.next->cache.start > (cache_code_start_ptr + CACHE_TOTAL - CACHE_MAXSIZE)));
 	if (cache_is_full) {
 		// DEBUG_LOG_MSG("Cache full; restarting");
 		cache.block.active=cache.block.first;
