@@ -7,5 +7,6 @@ libmidi_a_SOURCES = \
 	midi_alsa.h \
 	midi_coreaudio.h \
 	midi_coremidi.h \
+	midi_handler.h \
 	midi_oss.h \
 	midi_win32.h

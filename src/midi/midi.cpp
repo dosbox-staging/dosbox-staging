@@ -29,11 +29,12 @@
 #include <SDL.h>
 
 #include "cross.h"
-#include "support.h"
-#include "setup.h"
-#include "mapper.h"
-#include "pic.h"
 #include "hardware.h"
+#include "mapper.h"
+#include "midi_handler.h"
+#include "pic.h"
+#include "setup.h"
+#include "support.h"
 #include "timer.h"
 
 #define RAWBUF	1024
