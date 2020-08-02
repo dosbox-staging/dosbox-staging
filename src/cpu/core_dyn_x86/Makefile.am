@@ -1,5 +1,4 @@
 noinst_HEADERS = \
-	cache.h \
 	decoder.h \
 	dyn_fpu_dh.h \
 	dyn_fpu.h \
