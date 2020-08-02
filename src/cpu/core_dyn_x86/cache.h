@@ -447,25 +447,29 @@ void CacheBlock::Clear()
 	}
 }
 
-
-static CacheBlock * cache_openblock(void) {
-	CacheBlock * block=cache.block.active;
-	/* check for enough space in this block */
-	Bitu size=block->cache.size;
-	CacheBlock * nextblock=block->cache.next;
-	if (block->page.handler) 
+static CacheBlock *cache_openblock(void)
+{
+	CacheBlock *block = cache.block.active;
+	// check for enough space in this block
+	Bitu size = block->cache.size;
+	CacheBlock *nextblock = block->cache.next;
+	if (block->page.handler)
 		block->Clear();
+	// block size must be at least CACHE_MAXSIZE
 	while (size<CACHE_MAXSIZE) {
-		if (!nextblock) 
+		if (!nextblock)
 			goto skipresize;
+		// merge blocks
 		size+=nextblock->cache.size;
-		CacheBlock * tempblock=nextblock->cache.next;
-		if (nextblock->page.handler) 
+		CacheBlock *tempblock = nextblock->cache.next;
+		if (nextblock->page.handler)
 			nextblock->Clear();
+		// block is free now
 		cache_add_unused_block(nextblock);
 		nextblock=tempblock;
 	}
 skipresize:
+	// adjust parameters and open this block
 	block->cache.size=size;
 	block->cache.next=nextblock;
 	cache.pos=block->cache.start;
