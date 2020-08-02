@@ -1,4 +1,6 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
  *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -16,6 +18,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef DOSBOX_MIDI_COREAUDIO_H
+#define DOSBOX_MIDI_COREAUDIO_H
 
 #include <AudioToolbox/AUGraph.h>
 #include <CoreServices/CoreServices.h>
@@ -193,3 +197,5 @@ public:
 #undef RequireNoErr
 
 MidiHandler_coreaudio Midi_coreaudio;
+
+#endif
