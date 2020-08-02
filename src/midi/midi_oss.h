@@ -21,6 +21,8 @@
 #ifndef DOSBOX_MIDI_OSS_H
 #define DOSBOX_MIDI_OSS_H
 
+#include "midi_handler.h"
+
 #include <fcntl.h>
 
 #define SEQ_MIDIPUTC    5
@@ -42,8 +44,10 @@ public:
 	MidiHandler_oss(const MidiHandler_oss &) = delete; // prevent copying
 	MidiHandler_oss &operator=(const MidiHandler_oss &) = delete; // prevent assignment
 
-	const char * GetName(void) { return "oss";};
-	bool Open(const char * conf) {
+	const char *GetName() const override { return "oss"; }
+
+	bool Open(const char *conf) override
+	{
 		char devname[512];
 		if (conf && conf[0]) safe_strncpy(devname,conf,512);
 		else strcpy(devname,"/dev/sequencer");
@@ -56,12 +60,16 @@ public:
 		device=open(devname, O_WRONLY, 0);
 		if (device<0) return false;
 		return true;
-	};
-	void Close(void) {
+	}
+
+	void Close() override
+	{
 		if (!isOpen) return;
 		if (device>0) close(device);
-	};
-	void PlayMsg(Bit8u * msg) {
+	}
+
+	void PlayMsg(const uint8_t *msg) override
+	{
 		Bit8u buf[128];Bitu pos=0;
 		Bitu len=MIDI_evt_len[*msg];
 		for (;len>0;len--) {
@@ -72,8 +80,10 @@ public:
 			msg++;
 		}
 		write(device,buf,pos);
-	};
-	void PlaySysex(Bit8u * sysex,Bitu len) {
+	}
+
+	void PlaySysex(uint8_t *sysex, size_t len) override
+	{
 		Bit8u buf[SYSEX_SIZE*4];Bitu pos=0;
 		for (;len>0;len--) {
 			buf[pos++] = SEQ_MIDIPUTC;

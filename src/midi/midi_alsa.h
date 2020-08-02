@@ -21,6 +21,8 @@
 #ifndef DOSBOX_MIDI_ALSA_H
 #define DOSBOX_MIDI_ALSA_H
 
+#include "midi_handler.h"
+
 #define ALSA_PCM_OLD_HW_PARAMS_API
 #define ALSA_PCM_OLD_SW_PARAMS_API
 #include <alsa/asoundlib.h>
@@ -87,13 +89,16 @@ public:
 	MidiHandler_alsa(const MidiHandler_alsa &) = delete; // prevent copying
 	MidiHandler_alsa &operator=(const MidiHandler_alsa &) = delete; // prevent assignment
 
-	const char* GetName(void) { return "alsa"; }
-	void PlaySysex(Bit8u * sysex,Bitu len) {
+	const char *GetName() const override { return "alsa"; }
+
+	void PlaySysex(uint8_t *sysex, size_t len) override
+	{
 		snd_seq_ev_set_sysex(&ev, len, sysex);
 		send_event(1);
 	}
 
-	void PlayMsg(Bit8u * msg) {
+	void PlayMsg(const uint8_t *msg) override
+	{
 		ev.type = SND_SEQ_EVENT_OSS;
 
 		ev.data.raw32.d[0] = msg[0];
@@ -138,14 +143,16 @@ public:
 			send_event(1);
 			break;
 		}
-	}	
+	}
 
-	void Close(void) {
+	void Close() override
+	{
 		if (seq_handle)
 			snd_seq_close(seq_handle);
 	}
 
-	bool Open(const char * conf) {
+	bool Open(const char *conf) override
+	{
 		char var[10];
 		unsigned int caps;
 		bool defaultport = true; //try 17:0. Seems to be default nowadays

@@ -21,6 +21,8 @@
 #ifndef DOSBOX_MIDI_COREAUDIO_H
 #define DOSBOX_MIDI_COREAUDIO_H
 
+#include "midi_handler.h"
+
 #include <AudioToolbox/AUGraph.h>
 #include <CoreServices/CoreServices.h>
 
@@ -64,8 +66,11 @@ private:
         const char *soundfont;
 public:
 	MidiHandler_coreaudio() : m_auGraph(0), m_synth(0) {}
-	const char * GetName(void) { return "coreaudio"; }
-	bool Open(const char * conf) {
+
+	const char *GetName() const override { return "coreaudio"; }
+
+	bool Open(const char *conf) override
+	{
 		OSStatus err = 0;
 
 		if (m_auGraph)
@@ -177,7 +182,8 @@ public:
 		return false;
 	}
 
-	void Close(void) {
+	void Close() override
+	{
 		if (m_auGraph) {
 			AUGraphStop(m_auGraph);
 			DisposeAUGraph(m_auGraph);
@@ -185,11 +191,13 @@ public:
 		}
 	}
 
-	void PlayMsg(Bit8u * msg) {
+	void PlayMsg(const uint8_t *msg) override
+	{
 		MusicDeviceMIDIEvent(m_synth, msg[0], msg[1], msg[2], 0);
-	}	
+	}
 
-	void PlaySysex(Bit8u * sysex, Bitu len) {
+	void PlaySysex(uint8_t *sysex, size_t len) override
+	{
 		MusicDeviceSysEx(m_synth, sysex, len);
 	}
 };

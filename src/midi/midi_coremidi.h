@@ -22,9 +22,13 @@
 #ifndef DOSBOX_MIDI_COREMIDI_H
 #define DOSBOX_MIDI_COREMIDI_H
 
+#include "midi_handler.h"
+
 #include <CoreMIDI/MIDIServices.h>
 #include <sstream>
 #include <string>
+
+#include "programs.h"
 
 class MidiHandler_coremidi : public MidiHandler {
 private:
@@ -33,9 +37,12 @@ private:
 	MIDIEndpointRef m_endpoint;
 	MIDIPacket* m_pCurPacket;
 public:
-	MidiHandler_coremidi()  {m_pCurPacket = 0;}
-	const char * GetName(void) { return "coremidi"; }
-	bool Open(const char * conf) {	
+	MidiHandler_coremidi() { m_pCurPacket = 0; }
+
+	const char *GetName() const override { return "coremidi"; }
+
+	bool Open(const char *conf) override
+	{
 		// Get the MIDIEndPoint
 		m_endpoint = 0;
 		Bitu numDests = MIDIGetNumberOfDestinations();
@@ -90,8 +97,9 @@ public:
 		
 		return true;
 	}
-	
-	void Close(void) {
+
+	void Close() override
+	{
 		// Dispose the port
 		MIDIPortDispose(m_port);
 
@@ -102,8 +110,9 @@ public:
 		// Not, as it is for Endpoints created by us
 //		MIDIEndpointDispose(m_endpoint);
 	}
-	
-	void PlayMsg(Bit8u * msg) {
+
+	void PlayMsg(const uint8_t *msg) override
+	{
 		// Acquire a MIDIPacketList
 		Byte packetBuf[128];
 		MIDIPacketList *packetList = (MIDIPacketList *)packetBuf;
@@ -118,8 +127,9 @@ public:
 		// Send the MIDIPacketList
 		MIDISend(m_port,m_endpoint,packetList);
 	}
-	
-	void PlaySysex(Bit8u * sysex, Bitu len) {
+
+	void PlaySysex(uint8_t *sysex, size_t len) override
+	{
 		// Acquire a MIDIPacketList
 		Byte packetBuf[SYSEX_SIZE*4];
 		MIDIPacketList *packetList = (MIDIPacketList *)packetBuf;
@@ -131,7 +141,9 @@ public:
 		// Send the MIDIPacketList
 		MIDISend(m_port,m_endpoint,packetList);
 	}
-	void ListAll(Program* base) {
+
+	void ListAll(Program *base) override
+	{
 		Bitu numDests = MIDIGetNumberOfDestinations();
 		for(Bitu i = 0; i < numDests; i++){
 			MIDIEndpointRef dest = MIDIGetDestination(i);
