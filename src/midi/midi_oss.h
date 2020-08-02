@@ -1,4 +1,6 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
  *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -15,6 +17,9 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+
+#ifndef DOSBOX_MIDI_OSS_H
+#define DOSBOX_MIDI_OSS_H
 
 #include <fcntl.h>
 
@@ -76,8 +81,10 @@ public:
 			buf[pos++] = device_num;
 			buf[pos++] = 0;
 		}
-		write(device,buf,pos);	
+		write(device, buf, pos);
 	}
 };
 
 MidiHandler_oss Midi_oss;
+
+#endif
