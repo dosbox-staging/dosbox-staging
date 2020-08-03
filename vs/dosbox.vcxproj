@@ -481,7 +481,6 @@
     <ClInclude Include="..\src\libs\decoders\SDL_sound_internal.h" />
     <ClInclude Include="..\src\libs\decoders\stb.h" />
     <ClInclude Include="..\src\libs\decoders\stb_vorbis.h" />
-    <ClInclude Include="..\src\libs\decoders\xxh3.h" />
     <ClInclude Include="..\src\libs\decoders\xxhash.h" />
     <ClInclude Include="..\src\libs\nuked\nukedopl.h" />
     <ClInclude Include="..\src\libs\ppscale\ppscale.h" />
