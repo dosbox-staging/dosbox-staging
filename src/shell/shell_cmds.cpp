@@ -625,13 +625,21 @@ void DOS_Shell::CMD_DIR(char * args) {
 	}
 
 	// Helper function to handle 'Press any key to continue' message
-	// regardless of specific formatting below.
-	// Call it whenever a newline gets printed.
+	// regardless of user-selected formatting of DIR command output.
 	//
-	// TODO: DIR code assumes, that terminal size is 80x25
+	// Call it whenever a newline gets printed to potentially display
+	// this one-line message.
+	//
+	// For some strange reason number of columns stored in BIOS segment
+	// is exact, while number of rows is 0-based (so 80x25 mode is
+	// represented as 80x24).  It's convenient for us, as it means we can
+	// get away with (p_count % term_rows) instead of
+	// (p_count % (term_rows - 1)).
+	//
+	const int term_rows = real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS);
 	auto show_press_any_key = [&]() {
 		p_count += 1;
-		if (optP && (p_count % 24) == 0)
+		if (optP && (p_count % term_rows) == 0)
 			CMD_PAUSE(empty_string);
 	};
 
@@ -794,7 +802,6 @@ void DOS_Shell::CMD_DIR(char * args) {
 		}
 		FormatNumber(free_space, numformat);
 		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"), dir_count, numformat);
-		show_press_any_key();
 	}
 	dos.dta(save_dta);
 }
