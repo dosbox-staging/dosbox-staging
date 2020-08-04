@@ -17,16 +17,45 @@ jobs:
             arch: x64
             max_warnings: 2170
     steps:
-      - uses:  actions/checkout@v2
-      - name:  Install packages
+      - name:  Backup existing vcpkg installation
         shell: pwsh
         run: |
+          mv c:\vcpkg c:\vcpkg-bak
+          md c:\vcpkg -ea 0
+
+      - name: Generate vcpkg cache key
+        id:    prep-vcpkg
+        shell: bash
+        run: |
+          echo "::set-output name=year_and_week::$(date '+%Y%W')"
+
+      - name: Cache vcpkg
+        uses: actions/cache@v2
+        id:   cache-vcpkg
+        with:
+          path: c:\vcpkg
+          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-1
+
+      - name:  Install new packages using vcpkg
+        if:    steps.cache-vcpkg.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          rm -R c:\vcpkg
+          mv c:\vcpkg-bak c:\vcpkg
           vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net opusfile fluidsynth
-          if (-not $?) { throw "vcpkg install failed" }
+          if (-not $?) { throw "vcpkg failed to install library dependencies" }
+
+      - name:  Integrate packages
+        shell: pwsh
+        run: |
           vcpkg integrate install
+          if (-not $?) { throw "vcpkg failed to integrate packages" }
+
+      - uses:  actions/checkout@v2
       - name:  Log environment
         shell: pwsh
         run:   .\scripts\log-env.ps1
+
       - name:  Build
         shell: pwsh
         env:
@@ -43,8 +72,8 @@ jobs:
 
   build_windows_vs_release:
     name: ${{ matrix.conf.name }}
+    needs: build_windows_vs
     runs-on: windows-latest
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     strategy:
       matrix:
         conf:
@@ -55,16 +84,30 @@ jobs:
             arch: x64
             vs-release-dirname: x64
     steps:
-      - uses:  actions/checkout@v2
-      - name:  Install packages
+      - name:  Prepare vcpkg for cache restore
+        id:    prep-vcpkg
         shell: pwsh
         run: |
-          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net opusfile fluidsynth
-          if (-not $?) { throw "vcpkg install failed" }
+          mv c:\vcpkg c:\vcpkg-bak
+          md c:\vcpkg -ea 0
+
+      - name: Restore the most recent cache of vcpkg
+        uses: actions/cache@v2
+        with:
+          path: c:\vcpkg
+          key: vcpkg-${{ matrix.conf.arch }}-
+
+      - name:  Integrate packages
+        shell: pwsh
+        run: |
           vcpkg integrate install
+          if (-not $?) { throw "vcpkg failed to integrate packages" }
+
+      - uses:  actions/checkout@v2
       - name:  Log environment
         shell: pwsh
         run:   .\scripts\log-env.ps1
+
       - name:  Inject version string
         shell: bash
         run: |
@@ -73,6 +116,7 @@ jobs:
           export VERSION=$(git describe --abbrev=4)
           sed -i "s|VERSION \"git\"|VERSION \"$VERSION\"|" src/platform/visualc/config.h
           echo ::set-env name=VERSION::$VERSION
+
       - name:  Build
         shell: pwsh
         env:
@@ -80,6 +124,7 @@ jobs:
         run: |
           cd vs
           MSBuild -m dosbox.sln -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
+
       - name:  Package
         shell: bash
         run: |
