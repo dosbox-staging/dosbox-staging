@@ -15,13 +15,13 @@ jobs:
             max_warnings: 321
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 2185
+            max_warnings: -1
     steps:
       - uses:  actions/checkout@v2
       - name:  Install packages
         shell: pwsh
         run: |
-          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net opusfile
+          vcpkg install --triplet ${{ matrix.conf.arch }}-windows sdl2 sdl2-net opusfile
           if (-not $?) { throw "vcpkg install failed" }
           vcpkg integrate install
       - name:  Log environment
@@ -59,7 +59,7 @@ jobs:
       - name:  Install packages
         shell: pwsh
         run: |
-          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net opusfile
+          vcpkg install --triplet ${{ matrix.conf.arch }}-windows sdl2 sdl2-net opusfile
           if (-not $?) { throw "vcpkg install failed" }
           vcpkg integrate install
       - name:  Log environment
@@ -93,13 +93,10 @@ jobs:
           cp docs/README.template                 dest/README.txt
           cp docs/README.video                    dest/doc/video.txt
           cp README                               dest/doc/manual.txt
-          cp vs/$RELEASE_DIR/libpng16.dll         dest/
           cp vs/$RELEASE_DIR/ogg.dll              dest/
           cp vs/$RELEASE_DIR/opus.dll             dest/
           cp vs/$RELEASE_DIR/SDL2.dll             dest/
           cp vs/$RELEASE_DIR/SDL2_net.dll         dest/
-          cp src/libs/zmbv/$RELEASE_DIR/zlib1.dll dest/
-          cp src/libs/zmbv/$RELEASE_DIR/zmbv.dll  dest/
 
           # Fill README template file
           sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README.txt
