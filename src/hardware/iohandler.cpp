@@ -56,8 +56,7 @@ static io_val_t ReadPort(uint8_t req_bytes, io_port_t port)
 {
 	// Convert bytes to handler map index MB.0x1->0, MW.0x2->1, and MD.0x4->2
 	const uint8_t idx = req_bytes >> 1;
-	const auto &it = io_readhandlers[idx].emplace(port, ReadDefault).first;
-	return it->second(port, req_bytes);
+	return io_readhandlers[idx].emplace(port, ReadDefault).first->second(port, req_bytes);
 }
 
 static void WritePort(uint8_t put_bytes, io_port_t port, io_val_t val)
@@ -67,8 +66,9 @@ static void WritePort(uint8_t put_bytes, io_port_t port, io_val_t val)
 
 	 // Convert bytes into a cut-off mask: 1->0xff, 2->0xffff, 4->0xffffff
 	const auto mask = (1ul << (put_bytes * 8)) - 1;
-	const auto &it = io_writehandlers[idx].emplace(port, WriteDefault).first;
-	it->second(port, val & mask, put_bytes);
+	io_writehandlers[idx]
+	        .emplace(port, WriteDefault)
+	        .first->second(port, val & mask, put_bytes);
 }
 
 static io_val_t ReadDefault(io_port_t port, Bitu iolen)
@@ -247,24 +247,6 @@ static Bits IOFaultCore(void) {
 
 constexpr double IODELAY_READ_MICROS = 1.0;
 constexpr double IODELAY_WRITE_MICROS = 0.75;
-
-inline void IO_USEC_read_delay_old() {
-	if(CPU_CycleMax > static_cast<Bit32s>((IODELAY_READ_MICROS*1000.0))) {
-		// this could be calculated whenever CPU_CycleMax changes
-		Bits delaycyc = static_cast<Bits>((CPU_CycleMax/1000)*IODELAY_READ_MICROS);
-		if(CPU_Cycles > delaycyc) CPU_Cycles -= delaycyc;
-		else CPU_Cycles = 0;
-	}
-}
-
-inline void IO_USEC_write_delay_old() {
-	if(CPU_CycleMax > static_cast<Bit32s>((IODELAY_WRITE_MICROS*1000.0))) {
-		// this could be calculated whenever CPU_CycleMax changes
-		Bits delaycyc = static_cast<Bits>((CPU_CycleMax/1000)*IODELAY_WRITE_MICROS);
-		if(CPU_Cycles > delaycyc) CPU_Cycles -= delaycyc;
-		else CPU_Cycles = 0;
-	}
-}
 
 constexpr int32_t IODELAY_READ_MICROSk = static_cast<int32_t>(
         1024 / IODELAY_READ_MICROS);
