@@ -1342,7 +1342,7 @@ void DOS_Shell::CMD_DATE(char * args) {
 	}
 	WriteOut("%s %s\n",day, buffer);
 	if (!dateonly) WriteOut(MSG_Get("SHELL_CMD_DATE_SETHLP"));
-};
+}
 
 void DOS_Shell::CMD_TIME(char * args) {
 	HELP("TIME");
@@ -1382,7 +1382,7 @@ void DOS_Shell::CMD_TIME(char * args) {
 		WriteOut(MSG_Get("SHELL_CMD_TIME_NOW"));
 		WriteOut("%2u:%02u:%02u,%02u\n",reg_ch,reg_cl,reg_dh,reg_dl);
 	}
-};
+}
 
 void DOS_Shell::CMD_SUBST (char * args) {
 /* If more that one type can be substed think of something else
