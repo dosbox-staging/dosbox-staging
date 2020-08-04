@@ -35,9 +35,16 @@ private:
 	MIDIPortRef m_port;
 	MIDIClientRef m_client;
 	MIDIEndpointRef m_endpoint;
-	MIDIPacket* m_pCurPacket;
+	MIDIPacket *m_pCurPacket;
+
 public:
-	MidiHandler_coremidi() { m_pCurPacket = 0; }
+	MidiHandler_coremidi()
+	        : MidiHandler(),
+	          m_port(0),
+	          m_client(0),
+	          m_endpoint(0),
+	          m_pCurPacket(nullptr)
+	{}
 
 	const char *GetName() const override { return "coremidi"; }
 
