@@ -94,3 +94,6 @@ suppress_base.json
 # Intel optimization reports
 *.optrpt
 
+# clangd language server
+.clangd
+compile_commands.json
