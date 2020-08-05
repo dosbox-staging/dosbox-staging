@@ -513,24 +513,50 @@ bool localFile::Read(Bit8u * data,Bit16u * size) {
 	return true;
 }
 
-bool localFile::Write(Bit8u * data,Bit16u * size) {
+bool localFile::Write(uint8_t *data, uint16_t *size)
+{
 	Bit32u lastflags = this->flags & 0xf;
 	if (lastflags == OPEN_READ || lastflags == OPEN_READ_NO_MOD) {	// check if file opened in read-only mode
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-	if (last_action==READ) fseek(fhandle,ftell(fhandle),SEEK_SET);
-	last_action=WRITE;
+
+	// Seek and inform if it failed
+	if (last_action == READ) {
+		const auto pos = ftell(fhandle);
+		if (pos >= 0) { // seek if ftell() succeeded
+			if (fseek(fhandle, pos, SEEK_SET) != 0) {
+				LOG_MSG("FS: Failed seeking to byte %ld in file %s",
+				        pos, name.c_str());
+			}
+		}
+	}
+
+	last_action = WRITE;
+
+	// Truncate the file
 	if (*size == 0) {
-		return !ftruncate(cross_fileno(fhandle), ftell(fhandle));
-	} else {
+		const auto file = cross_fileno(fhandle);
+		const auto pos = ftell(fhandle);
+		bool result = false;
+		if (file != -1 && pos >= 0) { // truncate if ftell and fileno succeeded
+			result = ftruncate(file, pos) == 0; // 0 is success
+			if (!result) {
+				LOG_MSG("FS: Failed truncating file %s",
+					name.c_str());
+			}
+		}
+		return result;
+	}
+	// Otherwise write data to the file
+	else {
 		const auto requested = *size;
 		const auto actual = static_cast<uint16_t>(
 		        fwrite(data, 1, requested, fhandle));
-		if (actual != requested)
-			LOG_MSG("FS: Only wrote %u of %u requested bytes to %s",
-			        actual, requested, filename.c_str());
-
+		if (actual != requested) {
+			LOG_MSG("FS: Only wrote %u of %u requested bytes to file %s",
+			        actual, requested, name.c_str());
+		}
 		*size = actual; // always save the actual
 		return true; // always return true, even if partially written
 	}
@@ -611,9 +637,10 @@ void localFile::Flush()
 		return;
 
 	const auto pos = ftell(fhandle);
-	// only seek to a valid file position
-	if (pos >= 0)
-		fseek(fhandle, pos, SEEK_SET);
+	if (pos >= 0) // seek if ftell() succeeded
+		if (fseek(fhandle, pos, SEEK_SET) != 0)
+			LOG_MSG("FS: Failed seeking to byte %ld in file %s",
+			        pos, name.c_str());
 
 	// Always reset the state even if the file is broken
 	last_action = NONE;
