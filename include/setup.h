@@ -306,8 +306,8 @@ public:
 
 	virtual ~Section() = default; // Children must call executedestroy!
 
-	void AddInitFunction(SectionFunction func,bool canchange=false);
-	void AddDestroyFunction(SectionFunction func,bool canchange=false);
+	void AddInitFunction(SectionFunction func, bool canchange = false);
+	void AddDestroyFunction(SectionFunction func, bool canchange = false);
 	void ExecuteInit(bool initall=true);
 	void ExecuteDestroy(bool destroyall=true);
 	const char* GetName() const {return sectionname.c_str();}
