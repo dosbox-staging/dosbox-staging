@@ -451,7 +451,7 @@ public:
 		char orig[CROSS_LEN+1];
 		char cross_filesplit[2] = {CROSS_FILESPLIT , 0};
 
-		Bitu dummy = 1;
+		uint32_t dummy = 1;
 		bool command_found = false;
 		while (control->cmdline->FindCommand(dummy++,line) && !command_found) {
 			struct stat test;

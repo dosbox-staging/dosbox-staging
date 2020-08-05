@@ -503,11 +503,12 @@ static std::vector<int> calc_column_widths(const std::vector<int> &word_widths,
 
 	// Actual terminal width (number of text columns) using current text
 	// mode; in practice it's either 40, 80, or 132.
-	const int term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+	const auto term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
 
 	// Use term_width-1 because we never want to print line up to the actual
 	// limit; this would cause unnecessary line wrapping
-	const size_t max_columns = (term_width - 1) / min_col_width;
+	const auto max_columns = (term_width - 1u) /
+	                         static_cast<unsigned>(min_col_width);
 	std::vector<int> col_widths(max_columns);
 
 	// This function returns true when column number is too high to fit
@@ -518,7 +519,7 @@ static std::vector<int> calc_column_widths(const std::vector<int> &word_widths,
 		if (coln <= 1)
 			return false;
 		int max_line_width = 0; // tally of the longest line
-		int c = 0;              // current columnt
+		size_t c = 0;           // current columnt
 		for (const int width : word_widths) {
 			const int old_col_width = col_widths[c];
 			const int new_col_width = std::max(old_col_width, width);

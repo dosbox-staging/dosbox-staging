@@ -205,7 +205,7 @@ void DOS_Shell::InputCommand(char * line) {
 		case 0x08:				/* BackSpace */
 			if (str_index) {
 				outc(8);
-				Bit32u str_remain=str_len - str_index;
+				auto str_remain = str_len - str_index;
 				size++;
 				if (str_remain) {
 					memmove(&line[str_index-1],&line[str_index],str_remain);
