@@ -350,7 +350,7 @@ struct SDL_Block {
 
 static SDL_Block sdl;
 
-static bool calc_pp_scale(int width, int heigth);
+static SDL_Point calc_pp_scale(int width, int heigth);
 static SDL_Rect calc_viewport(int width, int height);
 static SDL_Rect get_available_area(int width, int height);
 
@@ -757,8 +757,13 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 {
 	const SDL_Rect available = get_available_area(sdl.draw.width, sdl.draw.height);
 
-	if (!calc_pp_scale(available.w, available.h))
-		return nullptr;
+	sdl.pp_scale = calc_pp_scale(available.w, available.h);
+
+	LOG_MSG("MAIN: Pixel-perfect scaling (%dx%d): %dx%d (PAR %#.3g) -> %dx%d (PAR %#.3g)",
+	        sdl.pp_scale.x, sdl.pp_scale.y, sdl.draw.width, sdl.draw.height,
+	        sdl.draw.pixel_aspect, sdl.pp_scale.x * sdl.draw.width,
+	        sdl.pp_scale.y * sdl.draw.height,
+	        static_cast<double>(sdl.pp_scale.y) / sdl.pp_scale.x);
 
 	const int imgw = sdl.pp_scale.x * sdl.draw.width;
 	const int imgh = sdl.pp_scale.y * sdl.draw.height;
@@ -939,21 +944,22 @@ static SDL_Rect get_available_area(int width, int height)
 	return {0, 0, width, height};
 }
 
-static bool calc_pp_scale(int avw, int avh)
+static SDL_Point calc_pp_scale(int avw, int avh)
 {
-	constexpr double aspect_weight = 1.14;
-	const int ret = pp_getscale(sdl.draw.width, sdl.draw.height,
-	                            sdl.draw.pixel_aspect, avw, avh, aspect_weight,
-	                            &sdl.pp_scale.x, &sdl.pp_scale.y);
-	if (ret != 0)
-		return false;
+	assert(sdl.draw.width > 0);
+	assert(sdl.draw.height > 0);
+	assert(sdl.draw.pixel_aspect > 0.0);
 
-	LOG_MSG("MAIN: Pixel-perfect scaling (%dx%d): %dx%d (PAR %#.3g) -> %dx%d (PAR %#.3g)",
-	        sdl.pp_scale.x, sdl.pp_scale.y, sdl.draw.width, sdl.draw.height,
-	        sdl.draw.pixel_aspect, sdl.pp_scale.x * sdl.draw.width,
-	        sdl.pp_scale.y * sdl.draw.height,
-	        static_cast<double>(sdl.pp_scale.y) / sdl.pp_scale.x);
-	return true;
+	int x = 0;
+	int y = 0;
+	constexpr double aspect_weight = 1.14;
+	const int err = pp_getscale(sdl.draw.width, sdl.draw.height,
+	                            sdl.draw.pixel_aspect, avw, avh,
+	                            aspect_weight, &x, &y);
+	if (err == 0)
+		return {x, y};
+	else
+		return {1, 1};
 }
 
 Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
@@ -2035,7 +2041,7 @@ static SDL_Rect calc_viewport_fit(int win_width, int win_height)
 
 static SDL_Rect calc_viewport_pp(int win_width, int win_height)
 {
-	calc_pp_scale(win_width, win_height); // updates sdl.ppscale
+	sdl.pp_scale = calc_pp_scale(win_width, win_height);
 
 	const int w = sdl.pp_scale.x * sdl.draw.width;
 	const int h = sdl.pp_scale.y * sdl.draw.height;
