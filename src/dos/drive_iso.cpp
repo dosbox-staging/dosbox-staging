@@ -178,22 +178,23 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &e
 
 isoDrive::~isoDrive() { }
 
-int isoDrive::UpdateMscdex(char driveLetter, const char* path, Bit8u& subUnit) {
-	if (MSCDEX_HasDrive(driveLetter)) {
-		subUnit = MSCDEX_GetSubUnit(driveLetter);
-		CDROM_Interface_Image* oldCdrom = CDROM_Interface_Image::images[subUnit];
-		CDROM_Interface* cdrom = new CDROM_Interface_Image(subUnit);
+int isoDrive::UpdateMscdex(char drive_letter, const char *path, uint8_t &sub_unit)
+{
+	if (MSCDEX_HasDrive(drive_letter)) {
+		sub_unit = MSCDEX_GetSubUnit(drive_letter);
+		CDROM_Interface_Image *oldCdrom = CDROM_Interface_Image::images[sub_unit];
+		CDROM_Interface *cdrom = new CDROM_Interface_Image(sub_unit);
 		char pathCopy[CROSS_LEN];
 		safe_strncpy(pathCopy, path, CROSS_LEN);
 		if (!cdrom->SetDevice(pathCopy)) {
-			CDROM_Interface_Image::images[subUnit] = oldCdrom;
+			CDROM_Interface_Image::images[sub_unit] = oldCdrom;
 			delete cdrom;
 			return 3;
 		}
-		MSCDEX_ReplaceDrive(cdrom, subUnit);
+		MSCDEX_ReplaceDrive(cdrom, sub_unit);
 		return 0;
 	} else {
-		return MSCDEX_AddDrive(driveLetter, path, subUnit);
+		return MSCDEX_AddDrive(drive_letter, path, sub_unit);
 	}
 }
 
