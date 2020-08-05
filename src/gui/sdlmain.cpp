@@ -3150,8 +3150,8 @@ int main(int argc, char* argv[]) {
 			if(freopen(STDOUT_FILE, "w", stdout) == NULL)
 				no_stdout = true; // No stdout so don't write messages
 			freopen(STDERR_FILE, "w", stderr);
-			setvbuf(stdout, NULL, _IOLBF, BUFSIZ);	/* Line buffered */
-			setbuf(stderr, NULL);					/* No buffering */
+			setvbuf(stdout, NULL, _IOLBF, BUFSIZ); // Line buffered
+			setvbuf(stderr, NULL, _IONBF, BUFSIZ); // No buffering
 		} else {
 			if (AllocConsole()) {
 				fclose(stdin);
