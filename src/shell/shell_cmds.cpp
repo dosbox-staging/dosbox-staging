@@ -552,7 +552,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	}
 
 	bool optW=ScanCMDBool(args,"W");
-	ScanCMDBool(args,"S");
+	static_cast<void>(ScanCMDBool(args, "S"));
 	bool optP=ScanCMDBool(args,"P");
 	if (ScanCMDBool(args,"WP") || ScanCMDBool(args,"PW")) {
 		optW=optP=true;
@@ -895,9 +895,9 @@ void DOS_Shell::CMD_COPY(char * args) {
 	while (ScanCMDBool(args,"B")) ;
 	while (ScanCMDBool(args,"T")) ; //Shouldn't this be A ?
 	while (ScanCMDBool(args,"A")) ;
-	ScanCMDBool(args,"Y");
-	ScanCMDBool(args,"-Y");
-	ScanCMDBool(args,"V");
+	static_cast<void>(ScanCMDBool(args, "Y"));
+	static_cast<void>(ScanCMDBool(args, "-Y"));
+	static_cast<void>(ScanCMDBool(args, "V"));
 
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
@@ -1407,10 +1407,10 @@ void DOS_Shell::CMD_SUBST (char * args) {
 
 		if (command.GetCount() != 2) throw 0 ;
 
-		command.FindCommand(1,arg);
+		static_cast<void>(command.FindCommand(1, arg));
 		if ( (arg.size() > 1) && arg[1] !=':')  throw(0);
 		temp_str[0]=(char)toupper(args[0]);
-		command.FindCommand(2,arg);
+		static_cast<void>(command.FindCommand(2, arg));
 		if ((arg == "/D") || (arg == "/d")) {
 			if (!Drives[temp_str[0]-'A'] ) throw 1; //targetdrive not in use
 			strcat(mountstring,"-u ");
@@ -1476,8 +1476,9 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	if (args) {
 		optN = ScanCMDBool(args,"N");
 		optS = ScanCMDBool(args,"S"); //Case-sensitive matching
-		ScanCMDBool(args,"T"); //Default Choice after timeout
-		char *last = strchr(args,0);
+		static_cast<void>(ScanCMDBool(args, "T")); // Default Choice
+		                                           // after timeout
+		char *last = strchr(args, 0);
 		StripSpaces(args);
 		rem = ScanCMDRemain(args);
 
