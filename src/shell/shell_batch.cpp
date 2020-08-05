@@ -81,7 +81,7 @@ emptyline:
 				//Only add it if room for it (and trailing zero) in the buffer, but do the check here instead at the end
 				//So we continue reading till EOL/EOF
 				if (((cmd_write - temp) + 1) < (CMD_MAXLINE - 1))
-					*cmd_write++ = c;
+					*cmd_write++ = static_cast<char>(c);
 			} else {
 				if (c != '\n' && c != '\r')
 					shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"), c, c);
@@ -187,7 +187,7 @@ again:
 		if (n>0) {
 			if (c>31) {
 				if (((cmd_write - cmd_buffer) + 1) < (CMD_MAXLINE - 1))
-					*cmd_write++ = c;
+					*cmd_write++ = static_cast<char>(c);
 			} else {
 				if (c != '\n' && c != '\r')
 					shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"), c, c);

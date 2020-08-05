@@ -78,7 +78,7 @@ void DOS_Shell::InputCommand(char * line) {
 					if (it_history != l_history.end() && it_history->length() > str_len) {
 						const char *reader = &(it_history->c_str())[str_len];
 						while ((c = *reader++)) {
-							line[str_index ++] = c;
+							line[str_index++] = static_cast<char>(c);
 							DOS_WriteFile(STDOUT,&c,&n);
 						}
 						str_len = str_index = (Bitu)it_history->length();
@@ -354,7 +354,7 @@ void DOS_Shell::InputCommand(char * line) {
 				size--;
 			};
 		   
-			line[str_index]=c;
+			line[str_index] = static_cast<char>(c);
 			str_index ++;
 			if (str_index > str_len){ 
 				line[str_index] = '\0';
