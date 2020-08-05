@@ -343,12 +343,18 @@ void DOS_Shell::InputCommand(char * line) {
 			if (l_completion.size()) l_completion.clear();
 			if(str_index < str_len && true) { //mem_readb(BIOS_KEYBOARD_FLAGS1)&0x80) dev_con.h ?
 				outc(' ');//move cursor one to the right.
-				Bit16u a = str_len - str_index;
-				Bit8u* text=reinterpret_cast<Bit8u*>(&line[str_index]);
-				DOS_WriteFile(STDOUT,text,&a);//write buffer to screen
-				outc(8);//undo the cursor the right.
-				for(Bitu i=str_len;i>str_index;i--) {
-					line[i]=line[i-1]; //move internal buffer
+
+				// Confirm that the tail length is in-bounds before casting
+				const auto tail_length = str_len - str_index;
+				assert(tail_length >= 0 && tail_length <= UINT16_MAX);
+
+				// Once confirmed, cast into the required type
+				auto amount = static_cast<uint16_t>(tail_length);
+				const auto text = reinterpret_cast<uint8_t *>(&line[str_index]);
+				DOS_WriteFile(STDOUT, text, &amount); // write buffer to screen
+				outc(8); // undo the cursor the right.
+				for (auto i = str_len; i > str_index; --i) {
+					line[i] = line[i - 1]; // move internal buffer
 					outc(8); //move cursor back (from write buffer to screen)
 				}
 				line[++str_len]=0;//new end (as the internal buffer moved one place to the right
@@ -404,8 +410,12 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	/* check for a drive change */
 	if (((strcmp(name + 1, ":") == 0) || (strcmp(name + 1, ":\\") == 0)) && isalpha(*name))
 	{
-		if (!DOS_SetDrive(toupper(name[0])-'A')) {
-			WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),toupper(name[0]));
+		const auto drive_letter = static_cast<char>(toupper(name[0]));
+		assert(drive_letter >= 'A'); // ensure the following subtraction won't wrap around
+		const auto drive_index = static_cast<uint8_t>(drive_letter - 'A');
+		if (!DOS_SetDrive(drive_index)) {
+			WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),
+			         toupper(name[0]));
 		}
 		return true;
 	}

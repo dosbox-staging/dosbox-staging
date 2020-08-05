@@ -610,7 +610,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 		*last_dir_sep = '\0';
 
 	const char drive_letter = path[0];
-	const size_t drive_idx = drive_letter - 'A';
+	const auto drive_idx = static_cast<size_t>(drive_letter - 'A');
 	const bool print_label = (drive_letter >= 'A') && Drives[drive_idx];
 	unsigned p_count = 0; // line counter for 'pause' command
 
@@ -640,7 +640,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	const int term_rows = real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS);
 	auto show_press_any_key = [&]() {
 		p_count += 1;
-		if (optP && (p_count % term_rows) == 0)
+		if (optP && (p_count % static_cast<unsigned>(term_rows)) == 0)
 			CMD_PAUSE(empty_string);
 	};
 
@@ -799,9 +799,11 @@ void DOS_Shell::CMD_DIR(char * args) {
 			                              &sectors_cluster,
 			                              &total_clusters,
 			                              &free_clusters);
-			free_space = bytes_sector * sectors_cluster * free_clusters;
+			free_space = static_cast<unsigned>(
+			        bytes_sector * sectors_cluster * free_clusters);
 		}
-		FormatNumber(free_space, numformat);
+		assert(free_space <= UINT32_MAX);
+		FormatNumber(static_cast<uint32_t>(free_space), numformat);
 		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"), dir_count, numformat);
 	}
 	dos.dta(save_dta);
@@ -1153,7 +1155,8 @@ void DOS_Shell::CMD_IF(char * args) {
 		}
 
 		Bit8u n = 0;
-		do n = n * 10 + (*word - '0');
+		do
+			n = static_cast<uint8_t>(n * 10 + (*word - '0'));
 		while (isdigit(*++word));
 		if (*word && !isspace(*word)) {
 			WriteOut(MSG_Get("SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER"));
@@ -1300,9 +1303,9 @@ void DOS_Shell::CMD_DATE(char * args) {
 		curtime = time (NULL);
 		loctime = localtime (&curtime);
 
-		reg_cx = loctime->tm_year+1900;
-		reg_dh = loctime->tm_mon+1;
-		reg_dl = loctime->tm_mday;
+		reg_cx = static_cast<uint16_t>(loctime->tm_year + 1900);
+		reg_dh = static_cast<uint8_t>(loctime->tm_mon + 1);
+		reg_dl = static_cast<uint8_t>(loctime->tm_mday);
 
 		reg_ah=0x2b; // set system date
 		CALLBACK_RunRealInt(0x21);
@@ -1343,9 +1346,18 @@ void DOS_Shell::CMD_DATE(char * args) {
 			buffer[bufferptr] = formatstring[i];
 			bufferptr++;
 		} else {
-			if (formatstring[i] == 'M') bufferptr += sprintf(buffer+bufferptr,"%02u",(Bit8u) reg_dh);
-			if (formatstring[i] == 'D') bufferptr += sprintf(buffer+bufferptr,"%02u",(Bit8u) reg_dl);
-			if (formatstring[i] == 'Y') bufferptr += sprintf(buffer+bufferptr,"%04u",(Bit16u) reg_cx);
+			if (formatstring[i] == 'M')
+				bufferptr += static_cast<unsigned>(
+				        sprintf(buffer + bufferptr, "%02u",
+				                (Bit8u)reg_dh));
+			if (formatstring[i] == 'D')
+				bufferptr += static_cast<unsigned>(
+				        sprintf(buffer + bufferptr, "%02u",
+				                (Bit8u)reg_dl));
+			if (formatstring[i] == 'Y')
+				bufferptr += static_cast<unsigned>(
+				        sprintf(buffer + bufferptr, "%04u",
+				                (Bit16u)reg_cx));
 		}
 	}
 	WriteOut("%s %s\n",day, buffer);
