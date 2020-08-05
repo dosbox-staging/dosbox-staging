@@ -684,7 +684,6 @@ void CSerialModem::DoCommand() {
 
 void CSerialModem::TelnetEmulation(uint8_t *data, uint32_t size)
 {
-	uint8_t c;
 	for (uint32_t i = 0; i < size; i++) {
 		uint8_t c = data[i];
 		if (telClient.inIAC) {
