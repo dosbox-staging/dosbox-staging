@@ -504,7 +504,10 @@ int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data) {
 	if (dotpos!=NULL) {
 		if (strlen(dotpos)>4) dotpos[4]=0;
 		if (dotpos-(char*)de->ident>8) {
-			strcpy(reinterpret_cast<char *>(&de->ident[8]), dotpos);
+			constexpr int pos = 8;
+			const auto maxlen = ARRAY_LEN(de->ident) - pos;
+			const auto sub_ident = reinterpret_cast<char *>(de->ident + pos);
+			snprintf(sub_ident, maxlen, "%s", dotpos);
 		}
 	} else if (strlen((char*)de->ident)>8) de->ident[8]=0;
 	return de->length;
