@@ -205,13 +205,13 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 //				*lr++=0;
 //			else
 //				*lr=0;
-			t = (char*)malloc(lr-*ofn+1);
+			t = (char *)malloc(static_cast<size_t>(lr - *ofn + 1u));
 			if (t == nullptr) {
 				E_Exit("SHELL: Could not allocate %u bytes in parser",
-				       static_cast<unsigned int>(lr-*ofn+1));
+				       static_cast<unsigned int>(lr - *ofn + 1u));
 			}
 
-			safe_strncpy(t,*ofn,lr-*ofn+1);
+			safe_strncpy(t, *ofn, static_cast<size_t>(lr - *ofn + 1u));
 			*ofn=t;
 			continue;
 		case '<':
@@ -224,12 +224,12 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 //				*lr++=0;
 //			else
 //				*lr=0;
-			t = (char*)malloc(lr-*ifn+1);
+			t = (char *)malloc(static_cast<size_t>(lr - *ifn + 1u));
 			if (t == nullptr) {
 				E_Exit("SHELL: Could not allocate %u bytes in parser",
-				       static_cast<unsigned int>(lr-*ifn+1));
+				       static_cast<unsigned int>(lr - *ifn + 1u));
 			}
-			safe_strncpy(t,*ifn,lr-*ifn+1);
+			safe_strncpy(t, *ifn, static_cast<size_t>(lr - *ifn + 1u));
 			*ifn=t;
 			continue;
 		case '|':
