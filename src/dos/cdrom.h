@@ -124,10 +124,9 @@ public:
 	bool PlayAudioSector    (const uint32_t start, uint32_t len) { (void)start; (void)len; return true; }
 	bool PauseAudio         (bool /*resume*/) { return true; }
 	bool StopAudio          (void) { return true; }
-	void ChannelControl     (TCtrl ctrl) {
-		(void) ctrl; // unused by part of the API
-		return; 
-	};
+
+	void ChannelControl(MAYBE_UNUSED TCtrl ctrl) {}
+
 	bool ReadSectors        (PhysPt /*buffer*/, const bool /*raw*/, const uint32_t /*sector*/, const uint16_t /*num*/) { return true; }
 	bool LoadUnloadMedia    (bool /*unload*/) { return true; }
 };
