@@ -647,17 +647,34 @@ localFile::localFile(const char* _name, FILE * handle)
 	SetName(_name);
 }
 
-bool localFile::UpdateDateTimeFromHost(void) {
-	if (!open) return false;
+bool localFile::UpdateDateTimeFromHost()
+{
+	if (!open)
+		return false;
+
+	// Legal defaults if we're unable to populate them
+	time = 1;
+	date = 1;
+
+	const auto file = cross_fileno(fhandle);
+	if (file == -1)
+		return true; // use defaults
+
 	struct stat temp_stat;
-	fstat(cross_fileno(fhandle), &temp_stat);
-	struct tm * ltime;
-	if ((ltime=localtime(&temp_stat.st_mtime))!=0) {
-		time=DOS_PackTime((Bit16u)ltime->tm_hour,(Bit16u)ltime->tm_min,(Bit16u)ltime->tm_sec);
-		date=DOS_PackDate((Bit16u)(ltime->tm_year+1900),(Bit16u)(ltime->tm_mon+1),(Bit16u)ltime->tm_mday);
-	} else {
-		time=1;date=1;
-	}
+	if (fstat(file, &temp_stat) == -1)
+		return true; // use defaults
+
+	const tm *ltime = localtime(&temp_stat.st_mtime);
+	if (!ltime)
+		return true; // use defaults
+
+	time = DOS_PackTime(static_cast<uint16_t>(ltime->tm_hour),
+	                    static_cast<uint16_t>(ltime->tm_min),
+	                    static_cast<uint16_t>(ltime->tm_sec));
+
+	date = DOS_PackDate(static_cast<uint16_t>(ltime->tm_year + 1900),
+	                    static_cast<uint16_t>(ltime->tm_mon + 1),
+	                    static_cast<uint16_t>(ltime->tm_mday));
 	return true;
 }
 
