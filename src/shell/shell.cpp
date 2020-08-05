@@ -153,7 +153,11 @@ AutoexecObject::~AutoexecObject(){
 			}
 		} else it++;
 	}
-	this->CreateAutoexec();
+	try {
+		this->CreateAutoexec();
+	} catch (const char *errmsg) {
+		LOG_MSG("SHELL: failed creating autoexec object because %s", errmsg);
+	}
 }
 
 DOS_Shell::DOS_Shell()
