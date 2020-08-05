@@ -598,13 +598,19 @@ bool localFile::UpdateDateTimeFromHost(void) {
 	return true;
 }
 
-void localFile::Flush(void) {
-	if (last_action==WRITE) {
-		fseek(fhandle,ftell(fhandle),SEEK_SET);
-		last_action=NONE;
-	}
-}
+void localFile::Flush()
+{
+	if (last_action != WRITE)
+		return;
 
+	const auto pos = ftell(fhandle);
+	// only seek to a valid file position
+	if (pos >= 0)
+		fseek(fhandle, pos, SEEK_SET);
+
+	// Always reset the state even if the file is broken
+	last_action = NONE;
+}
 
 // ********************************************
 // CDROM DRIVE
