@@ -44,11 +44,13 @@ static void outc(Bit8u c) {
 }
 
 void DOS_Shell::InputCommand(char * line) {
-	Bitu size=CMD_MAXLINE-2; //lastcharacter+0
-	Bit8u c;Bit16u n=1;
-	Bitu str_len=0;Bitu str_index=0;
-	Bit16u len=0;
-	bool current_hist=false; // current command stored in history?
+	size_t size = CMD_MAXLINE - 2; //lastcharacter+0
+	uint8_t c;
+	uint16_t n = 1;
+	size_t str_len = 0;
+	size_t str_index = 0;
+	uint16_t len = 0;
+	bool current_hist = false; // current command stored in history?
 
 	line[0] = '\0';
 
