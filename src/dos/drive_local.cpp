@@ -502,14 +502,35 @@ bool localFile::Read(Bit8u * data,Bit16u * size) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-	if (last_action==WRITE) fseek(fhandle,ftell(fhandle),SEEK_SET);
-	last_action=READ;
-	*size=(Bit16u)fread(data,1,*size,fhandle);
+	if (last_action == WRITE) {
+		const auto pos = ftell(fhandle);
+		if (pos >= 0) {
+			if (fseek(fhandle, pos, SEEK_SET) != 0) {
+				DEBUG_LOG_MSG("FS: Failed seeking to byte %ld in file %s",
+				        pos, name.c_str());
+			}
+		} else {
+			DEBUG_LOG_MSG("FS: Failed obtaining position in file %s",
+			        name.c_str());
+		}
+	}
+
+	last_action = READ;
+
+	const auto requested = *size;
+	const auto actual = static_cast<uint16_t>(fread(data, 1, requested, fhandle));
+	if (actual != requested)
+		DEBUG_LOG_MSG("FS: Only read %u of %u requested bytes from file %s",
+		        actual, requested, name.c_str());
+	*size = actual; // always save the actual
+
 	/* Fake harddrive motion. Inspector Gadget with soundblaster compatible */
 	/* Same for Igor */
-	/* hardrive motion => unmask irq 2. Only do it when it's masked as unmasking is realitively heavy to emulate */
+	/* hardrive motion => unmask irq 2. Only do it when it's masked as
+	 * unmasking is realitively heavy to emulate */
 	Bit8u mask = IO_Read(0x21);
-	if (mask & 0x4) IO_Write(0x21,mask&0xfb);
+	if (mask & 0x4)
+		IO_Write(0x21, mask & 0xfb);
 	return true;
 }
 
@@ -526,9 +547,12 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 		const auto pos = ftell(fhandle);
 		if (pos >= 0) { // seek if ftell() succeeded
 			if (fseek(fhandle, pos, SEEK_SET) != 0) {
-				LOG_MSG("FS: Failed seeking to byte %ld in file %s",
+				DEBUG_LOG_MSG("FS: Failed seeking to byte %ld in file %s",
 				        pos, name.c_str());
 			}
+		} else {
+			DEBUG_LOG_MSG("FS: Failed obtaining position in file %s",
+			        name.c_str());
 		}
 	}
 
@@ -542,9 +566,12 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 		if (file != -1 && pos >= 0) { // truncate if ftell and fileno succeeded
 			result = ftruncate(file, pos) == 0; // 0 is success
 			if (!result) {
-				LOG_MSG("FS: Failed truncating file %s",
+				DEBUG_LOG_MSG("FS: Failed truncating file %s",
 					name.c_str());
 			}
+		} else {
+			DEBUG_LOG_MSG("FS: Failed obtaining position in file %s",
+			        name.c_str());
 		}
 		return result;
 	}
@@ -554,7 +581,7 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 		const auto actual = static_cast<uint16_t>(
 		        fwrite(data, 1, requested, fhandle));
 		if (actual != requested) {
-			LOG_MSG("FS: Only wrote %u of %u requested bytes to file %s",
+			DEBUG_LOG_MSG("FS: Only wrote %u of %u requested bytes to file %s",
 			        actual, requested, name.c_str());
 		}
 		*size = actual; // always save the actual
@@ -576,8 +603,11 @@ bool localFile::Seek(Bit32u * pos,Bit32u type) {
 	if (ret!=0) {
 		// Out of file range, pretend everythings ok 
 		// and move file pointer top end of file... ?! (Black Thorne)
-		fseek(fhandle,0,SEEK_END);
-	};
+		if (fseek(fhandle, 0, SEEK_END) != 0) {
+			DEBUG_LOG_MSG("FS: Failed seeking to the end of file %s",
+			        name.c_str());
+		}
+	}
 #if 0
 	fpos_t temppos;
 	fgetpos(fhandle,&temppos);
@@ -637,10 +667,15 @@ void localFile::Flush()
 		return;
 
 	const auto pos = ftell(fhandle);
-	if (pos >= 0) // seek if ftell() succeeded
-		if (fseek(fhandle, pos, SEEK_SET) != 0)
-			LOG_MSG("FS: Failed seeking to byte %ld in file %s",
+	if (pos >= 0) { // seek if ftell() succeeded
+		if (fseek(fhandle, pos, SEEK_SET) != 0) {
+			DEBUG_LOG_MSG("FS: Failed seeking to byte %ld in file %s",
 			        pos, name.c_str());
+		}
+	} else {
+		DEBUG_LOG_MSG("FS: Failed obtaining position in file %s",
+		        name.c_str());
+	}
 
 	// Always reset the state even if the file is broken
 	last_action = NONE;
