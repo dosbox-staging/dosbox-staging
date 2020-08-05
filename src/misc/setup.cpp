@@ -1245,8 +1245,8 @@ bool CommandLine::FindEntry(char const * const name,cmd_it & it,bool neednext) {
 
 }
 
-
-CommandLine::CommandLine(int argc,char const * const argv[]) {
+CommandLine::CommandLine(int argc, char const *const argv[])
+{
 	if (argc>0) {
 		file_name=argv[0];
 	}
@@ -1256,6 +1256,7 @@ CommandLine::CommandLine(int argc,char const * const argv[]) {
 		i++;
 	}
 }
+
 Bit16u CommandLine::Get_arglength() {
 	if (cmds.empty()) return 0;
 	Bit16u i=1;
@@ -1264,8 +1265,8 @@ Bit16u CommandLine::Get_arglength() {
 	return --i;
 }
 
-
-CommandLine::CommandLine(char const * const name,char const * const cmdline) {
+CommandLine::CommandLine(const char *name, const char *cmdline)
+{
 	if (name) file_name=name;
 	/* Parse the cmds and put them in the list */
 	bool inword,inquote;char c;
