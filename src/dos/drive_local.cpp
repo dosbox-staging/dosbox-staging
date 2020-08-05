@@ -730,7 +730,7 @@ cdromDrive::cdromDrive(const char _driveLetter,
 
 bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	if ((flags&0xf)==OPEN_READWRITE) {
-		flags &= ~OPEN_READWRITE;
+		flags &= ~static_cast<unsigned>(OPEN_READWRITE);
 	} else if ((flags&0xf)==OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
