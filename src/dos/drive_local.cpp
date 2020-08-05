@@ -219,7 +219,9 @@ bool localDrive::FileUnlink(char * name) {
 			}
 		}
 		if (!found_file) return false;
-		if (!unlink(fullname)) {
+
+		// If the file still exists then try to delete it
+		if (stat(fullname, &buffer) == 0 && unlink(fullname) == 0) {
 			dirCache.DeleteEntry(newname);
 			return true;
 		}
