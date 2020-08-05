@@ -113,9 +113,9 @@ emptyline:
 			if (cmd_read[0] == '0') {  /* Handle %0 */
 				const char *file_name = cmd->GetFileName();
 				cmd_read++;
-				size_t name_len = strlen(file_name);
+				const auto name_len = static_cast<int>(strlen(file_name));
 				if (((cmd_write - line) + name_len) < (CMD_MAXLINE - 1)) {
-					strcpy(cmd_write,file_name);
+					strcpy(cmd_write, file_name);
 					cmd_write += name_len;
 				}
 				continue;
@@ -127,8 +127,9 @@ emptyline:
 				next -= '0';
 				if (cmd->GetCount()<(unsigned int)next) continue;
 				std::string word;
-				if (!cmd->FindCommand(next,word)) continue;
-				size_t name_len = strlen(word.c_str());
+				if (!cmd->FindCommand(static_cast<unsigned>(next), word))
+					continue;
+				const auto name_len = static_cast<int>(strlen(word.c_str()));
 				if (((cmd_write - line) + name_len) < (CMD_MAXLINE - 1)) {
 					strcpy(cmd_write,word.c_str());
 					cmd_write += name_len;
@@ -145,7 +146,7 @@ emptyline:
 					const char* equals = strchr(env.c_str(),'=');
 					if (!equals) continue;
 					equals++;
-					size_t name_len = strlen(equals);
+					const auto name_len = static_cast<int>(strlen(equals));
 					if (((cmd_write - line) + name_len) < (CMD_MAXLINE - 1)) {
 						strcpy(cmd_write,equals);
 						cmd_write += name_len;
