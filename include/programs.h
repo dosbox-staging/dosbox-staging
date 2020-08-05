@@ -39,9 +39,10 @@
 
 class CommandLine {
 public:
-	CommandLine(int argc,char const * const argv[]);
-	CommandLine(char const * const name,char const * const cmdline);
-	const char * GetFileName(){ return file_name.c_str();}
+	CommandLine(int argc, char const *const argv[]);
+	CommandLine(const char *name, const char *cmdline);
+
+	const char *GetFileName() { return file_name.c_str(); }
 
 	bool FindExist(char const * const name,bool remove=false);
 	bool FindHex(char const * const name,unsigned int & value,bool remove=false);
@@ -61,9 +62,11 @@ public:
 	Bit16u Get_arglength();
 
 private:
-	typedef std::list<std::string>::iterator cmd_it;
-	std::list<std::string> cmds;
-	std::string file_name;
+	using cmd_it = std::list<std::string>::iterator;
+
+	std::list<std::string> cmds = {};
+	std::string file_name = "";
+
 	bool FindEntry(char const * const name,cmd_it & it,bool neednext=false);
 };
 
