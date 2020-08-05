@@ -77,11 +77,12 @@ void DOS_Shell::InputCommand(char * line) {
 					it_history = l_history.begin();
 					if (it_history != l_history.end() && it_history->length() > str_len) {
 						const char *reader = &(it_history->c_str())[str_len];
-						while ((c = *reader++)) {
+						while ((c = static_cast<uint8_t>(*reader++))) {
 							line[str_index++] = static_cast<char>(c);
-							DOS_WriteFile(STDOUT,&c,&n);
+							DOS_WriteFile(STDOUT, &c, &n);
 						}
-						str_len = str_index = (Bitu)it_history->length();
+						str_len = it_history->length();
+						str_index = it_history->length();
 						size = CMD_MAXLINE - str_index - 2;
 						line[str_len] = 0;
 					}
@@ -96,7 +97,7 @@ void DOS_Shell::InputCommand(char * line) {
 
 				case 0x4D:	/* RIGHT */
 					if (str_index < str_len) {
-						outc(line[str_index++]);
+						outc(static_cast<uint8_t>(line[str_index++]));
 					}
 					break;
 
@@ -109,11 +110,11 @@ void DOS_Shell::InputCommand(char * line) {
 
 				case 0x4F:	/* END */
 					while (str_index < str_len) {
-						outc(line[str_index++]);
-					}
-					break;
+					        outc(static_cast<uint8_t>(line[str_index++]));
+				        }
+				        break;
 
-				case 0x48:	/* UP */
+			        case 0x48:	/* UP */
 					if (l_history.empty() || it_history == l_history.end()) break;
 
 					// store current command in history if we are at beginning
@@ -211,8 +212,8 @@ void DOS_Shell::InputCommand(char * line) {
 					line[--str_len]=0;
 					str_index --;
 					/* Go back to redraw */
-					for (Bit16u i=str_index; i < str_len; i++)
-						outc(line[i]);
+					for (auto i = str_index; i < str_len; ++i)
+						outc(static_cast<uint8_t>(line[i]));
 				} else {
 					line[--str_index] = '\0';
 					str_len--;

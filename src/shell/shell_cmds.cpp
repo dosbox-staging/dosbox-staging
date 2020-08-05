@@ -326,8 +326,8 @@ void DOS_Shell::CMD_CHDIR(char * args) {
 		DOS_GetCurrentDir(0,dir);
 		WriteOut("%c:\\%s\n",drive,dir);
 	} else if (strlen(args) == 2 && args[1] == ':') {
-		Bit8u targetdrive = (args[0] | 0x20) - 'a' + 1;
-		unsigned char targetdisplay = *reinterpret_cast<unsigned char*>(&args[0]);
+		const auto targetdrive = static_cast<uint8_t>((args[0] | 0x20) - 'a' + 1);
+		auto targetdisplay = *reinterpret_cast<unsigned char *>(&args[0]);
 		if (!DOS_GetCurrentDir(targetdrive,dir)) {
 			if (drive == 'Z') {
 				WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),toupper(targetdisplay));
@@ -1498,8 +1498,12 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	if (!rem || !*rem) rem = defchoice; /* No choices specified use YN */
 	ptr = rem;
 	Bit8u c;
-	if (!optS) while ((c = *ptr)) *ptr++ = (char)toupper(c); /* When in no case-sensitive mode. make everything upcase */
-	if (args && *args ) {
+
+	// Convert everything to uppercase if not case-sensitive
+	if (!optS)
+		while ((c = static_cast<uint8_t>(*ptr)))
+			*ptr++ = static_cast<char>(toupper(c)); 
+	if (args && *args) {
 		StripSpaces(args);
 		size_t argslen = strlen(args);
 		if (argslen > 1 && args[0] == '"' && args[argslen-1] == '"') {
