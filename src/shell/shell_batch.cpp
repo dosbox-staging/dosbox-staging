@@ -36,12 +36,16 @@ BatchFile::BatchFile(DOS_Shell *host,
 	  filename("")
 {
 	char totalname[DOS_PATHLENGTH+4];
-	DOS_Canonicalize(resolved_name,totalname); // Get fullname including drive specificiation
+
+	// Get fullname including drive specification
+	if (!DOS_Canonicalize(resolved_name, totalname))
+		E_Exit("SHELL: Can't determine path to batch file %s", resolved_name);
+
 	filename = totalname;
 	// Test if file is openable
 	if (!DOS_OpenFile(totalname,(DOS_NOT_INHERIT|OPEN_READ),&file_handle)) {
 		//TODO Come up with something better
-		E_Exit("SHELL:Can't open BatchFile %s",totalname);
+		E_Exit("SHELL:Can't open batch file %s", totalname);
 	}
 	DOS_CloseFile(file_handle);
 }
@@ -55,7 +59,7 @@ BatchFile::~BatchFile() {
 bool BatchFile::ReadLine(char * line) {
 	//Open the batchfile and seek to stored postion
 	if (!DOS_OpenFile(filename.c_str(),(DOS_NOT_INHERIT|OPEN_READ),&file_handle)) {
-		LOG(LOG_MISC,LOG_ERROR)("ReadLine Can't open BatchFile %s",filename.c_str());
+		LOG(LOG_MISC, LOG_ERROR)("ReadLine Can't open batch file %s", filename.c_str());
 		delete this;
 		return false;
 	}
@@ -165,7 +169,7 @@ emptyline:
 bool BatchFile::Goto(char * where) {
 	//Open bat file and search for the where string
 	if (!DOS_OpenFile(filename.c_str(),(DOS_NOT_INHERIT|OPEN_READ),&file_handle)) {
-		LOG(LOG_MISC,LOG_ERROR)("SHELL:Goto Can't open BatchFile %s",filename.c_str());
+		LOG(LOG_MISC, LOG_ERROR)("SHELL:Goto Can't open batch file %s", filename.c_str());
 		delete this;
 		return false;
 	}
