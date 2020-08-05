@@ -129,7 +129,7 @@ typedef void (APIENTRYP PFNGLVERTEXATTRIBPOINTERPROC) (GLuint index, GLint size,
 
 /* Apple defines these functions in their GL header (as core functions)
  * so we can't use their names as function pointers. We can't link
- * directly as some platforms may not have them. So they get their own 
+ * directly as some platforms may not have them. So they get their own
  * namespace here to keep the official names but avoid collisions.
  */
 namespace gl2 {
@@ -398,7 +398,7 @@ void OPENGL_ERROR(const char* message) {
 		LOG_MSG("%X",r);
 	} while ( (r=glGetError()) != GL_NO_ERROR);
 }
-#else 
+#else
 void OPENGL_ERROR(const char*) {
 	return;
 }
@@ -1285,7 +1285,7 @@ dosurface:
 		if (sdl.opengl.texture > 0) {
 			glDeleteTextures(1,&sdl.opengl.texture);
 		}
- 		glGenTextures(1,&sdl.opengl.texture);
+		glGenTextures(1, &sdl.opengl.texture);
 		glBindTexture(GL_TEXTURE_2D,sdl.opengl.texture);
 		// No borders
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -1388,7 +1388,7 @@ void GFX_ToggleMouseCapture(void) {
 	 */
 	if (!sdl.mouse.has_focus)
 		return;
-	
+
 	assertm(sdl.mouse.control_choice != NoMouse,
 	        "SDL: Mouse capture is invalid when NoMouse is configured [Logic Bug]");
 
@@ -1396,8 +1396,9 @@ void GFX_ToggleMouseCapture(void) {
 	if (SDL_SetRelativeMouseMode(mouse_is_captured) != 0) {
 		SDL_ShowCursor(SDL_ENABLE);
 		E_Exit("SDL: failed to %s relative-mode [SDL Bug]",
-   		       mouse_is_captured ? "put the mouse in" : "take the mouse out of");
- 	}
+		       mouse_is_captured ? "put the mouse in"
+		                         : "take the mouse out of");
+	}
 	LOG_MSG("SDL: %s the mouse", mouse_is_captured ? "captured" : "released");
 }
 
@@ -1407,7 +1408,7 @@ static void ToggleMouseCapture(bool pressed) {
 	GFX_ToggleMouseCapture();
 }
 
-/*  
+/*
  *  Assesses the following:
  *   - current window size (full or not),
  *   - mouse capture state, (yes or no).
@@ -1495,7 +1496,7 @@ void GFX_SwitchFullScreen()
 	sticky_keys(sdl.desktop.fullscreen);
 #endif
 	sdl.desktop.fullscreen = !sdl.desktop.fullscreen;
- 	GFX_ResetScreen();
+	GFX_ResetScreen();
 	sdl.desktop.switching_fullscreen = false;
 }
 
@@ -1510,8 +1511,8 @@ static void SwitchFullScreen(bool pressed)
 // can be achieved via GFX_SetSize call), and specifically - properly initialized
 // output-specific bits (sdl.surface, sdl.texture, sdl.opengl.framebuf, or
 // sdl.openg.pixel_buffer_object fields).
-// 
-// If everything is prepared correctly, this function returns true, assigns 
+//
+// If everything is prepared correctly, this function returns true, assigns
 // 'pixels' output parameter to to a buffer (with format specified via earlier
 // GFX_SetSize call), and assigns 'pitch' to a number of bytes used for a single
 // pixels row in 'pixels' buffer.
@@ -1855,7 +1856,7 @@ static SDL_Window *SetDefaultWindowMode()
 	                     sdl.desktop.want_resizable_window);
 }
 
-/* 
+/*
  * Please leave the Splash screen stuff in working order.
  * We spend a lot of time making DOSBox.
  */
@@ -2334,8 +2335,8 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 		        || !mouse_is_captured)) {
 
 			GFX_ToggleMouseCapture();
- 			break;	// Don't pass click to mouse handler
- 		}
+			break; // Don't pass click to mouse handler
+		}
 		switch (button->button) {
 		case SDL_BUTTON_LEFT:
 			Mouse_ButtonPressed(0);
