@@ -2484,16 +2484,17 @@ void GFX_Events() {
 				continue;
 
 			case SDL_WINDOWEVENT_RESIZED:
-				DEBUG_LOG_MSG("SDL: Window has been resized to %dx%d",
-				              event.window.data1,
-				              event.window.data2);
+				// DEBUG_LOG_MSG("SDL: Window has been resized to %dx%d",
+				//               event.window.data1,
+				//               event.window.data2);
 				HandleVideoResize(event.window.data1,
 				                  event.window.data2);
 				continue;
 
 			case SDL_WINDOWEVENT_EXPOSED:
-				DEBUG_LOG_MSG("SDL: Window has been exposed "
-				              "and should be redrawn");
+				// DEBUG_LOG_MSG("SDL: Window has been exposed "
+				//               "and should be redrawn");
+
 				/* FIXME: below is not consistently true :(
 				 * seems incorrect on KDE and sometimes on MATE
 				 *
@@ -2532,11 +2533,11 @@ void GFX_Events() {
 				break;
 
 			case SDL_WINDOWEVENT_ENTER:
-				DEBUG_LOG_MSG("SDL: Window has gained mouse focus");
+				// DEBUG_LOG_MSG("SDL: Window has gained mouse focus");
 				continue;
 
 			case SDL_WINDOWEVENT_LEAVE:
-				DEBUG_LOG_MSG("SDL: Window has lost mouse focus");
+				// DEBUG_LOG_MSG("SDL: Window has lost mouse focus");
 				continue;
 
 			case SDL_WINDOWEVENT_SHOWN:
@@ -2556,7 +2557,8 @@ void GFX_Events() {
 #endif
 
 			case SDL_WINDOWEVENT_SIZE_CHANGED:
-				DEBUG_LOG_MSG("SDL: The window size has changed");
+				// DEBUG_LOG_MSG("SDL: The window size has changed");
+
 				// The window size has changed either as a
 				// result of an API call or through the system
 				// or user changing the window size.
@@ -2579,7 +2581,7 @@ void GFX_Events() {
 
 #if SDL_VERSION_ATLEAST(2, 0, 5)
 			case SDL_WINDOWEVENT_TAKE_FOCUS:
-				DEBUG_LOG_MSG("SDL: Window is being offered a focus");
+				// DEBUG_LOG_MSG("SDL: Window is being offered a focus");
 				// should SetWindowInputFocus() on itself or a
 				// subwindow, or ignore
 				continue;
