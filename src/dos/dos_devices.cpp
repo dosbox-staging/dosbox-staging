@@ -121,13 +121,15 @@ Bit8u DOS_FindDevice(char const * name) {
 	char* dot = strrchr(name_part,'.');
 	if(dot) *dot = 0; //no ext checking
 
-	static char com[5] = { 'C','O','M','1',0 };
-	static char lpt[5] = { 'L','P','T','1',0 };
 	// AUX is alias for COM1 and PRN for LPT1
 	// A bit of a hack. (but less then before).
 	// no need for casecmp as makename returns uppercase
-	if (strcmp(name_part, "AUX") == 0) name_part = com;
-	if (strcmp(name_part, "PRN") == 0) name_part = lpt;
+	static char com[] = "COM1";
+	static char lpt[] = "LPT1";
+	if (strcmp(name_part, "AUX") == 0)
+		name_part = com;
+	if (strcmp(name_part, "PRN") == 0)
+		name_part = lpt;
 
 	/* loop through devices */
 	for(Bit8u index = 0;index < DOS_DEVICES;index++) {

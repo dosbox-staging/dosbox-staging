@@ -20,7 +20,7 @@
 
 #include "support.h"
 
-bool WildFileCmp(const char * file, const char * wild) 
+bool WildFileCmp(const char *file, const char *wild)
 {
 	char file_name[9];
 	char file_ext[4];
@@ -40,9 +40,9 @@ bool WildFileCmp(const char * file, const char * wild)
 		if (size>8) size=8;
 		memcpy(file_name,file,size);
 		find_ext++;
-		memcpy(file_ext,find_ext,(strlen(find_ext)>3) ? 3 : strlen(find_ext)); 
+		memcpy(file_ext, find_ext, strnlen(find_ext, 3));
 	} else {
-		memcpy(file_name,file,(strlen(file) > 8) ? 8 : strlen(file));
+		memcpy(file_name, file, strnlen(file, 8));
 	}
 	upcase(file_name);upcase(file_ext);
 	find_ext=strrchr(wild,'.');
@@ -51,9 +51,9 @@ bool WildFileCmp(const char * file, const char * wild)
 		if (size>8) size=8;
 		memcpy(wild_name,wild,size);
 		find_ext++;
-		memcpy(wild_ext,find_ext,(strlen(find_ext)>3) ? 3 : strlen(find_ext));
+		memcpy(wild_ext, find_ext, strnlen(find_ext, 3));
 	} else {
-		memcpy(wild_name,wild,(strlen(wild) > 8) ? 8 : strlen(wild));
+		memcpy(wild_name, wild, strnlen(wild, 8));
 	}
 	upcase(wild_name);upcase(wild_ext);
 	/* Names are right do some checking */
