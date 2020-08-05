@@ -73,15 +73,20 @@ private:
 class Program {
 public:
 	Program();
-	Program(const Program&) = delete; // prevent copy
-	Program& operator=(const Program&) = delete; // prevent assignment
-	virtual ~Program(){
+
+	Program(const Program &) = delete;            // prevent copy
+	Program &operator=(const Program &) = delete; // prevent assignment
+
+	virtual ~Program()
+	{
 		delete cmd;
 		delete psp;
 	}
-	std::string temp_line;
-	CommandLine * cmd;
-	DOS_PSP * psp;
+
+	std::string temp_line = "";
+	CommandLine *cmd = nullptr;
+	DOS_PSP *psp = nullptr;
+
 	virtual void Run(void)=0;
 	bool GetEnvStr(const char *entry, std::string &result) const;
 	bool GetEnvNum(Bitu num, std::string &result) const;
