@@ -852,14 +852,15 @@ void Config::Init() {
 	}
 }
 
-void Section::AddInitFunction(SectionFunction func,bool canchange) {
-	initfunctions.push_back(Function_wrapper(func,canchange));
+void Section::AddInitFunction(SectionFunction func, bool canchange)
+{
+	initfunctions.emplace_back(func, canchange);
 }
 
-void Section::AddDestroyFunction(SectionFunction func,bool canchange) {
-	destroyfunctions.push_front(Function_wrapper(func,canchange));
+void Section::AddDestroyFunction(SectionFunction func, bool canchange)
+{
+	destroyfunctions.emplace_front(func, canchange);
 }
-
 
 void Section::ExecuteInit(bool initall) {
 	typedef std::list<Function_wrapper>::iterator func_it;
