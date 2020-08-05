@@ -166,10 +166,17 @@ void DOS_Shell::InputCommand(char * line) {
 					break;
 				case 0x53:/* DELETE */
 					{
-						if(str_index>=str_len) break;
-						Bit16u a=str_len-str_index-1;
-						Bit8u* text=reinterpret_cast<Bit8u*>(&line[str_index+1]);
-						DOS_WriteFile(STDOUT,text,&a);//write buffer to screen
+						if (str_index >= str_len)
+							break;
+
+						// Confirm that the tail length is in-bounds before casting
+						const auto tail_length = str_len - str_index - 1;
+						assert(tail_length >= 0 && tail_length <= UINT16_MAX);
+
+						// Once confirmed, cast into the required type
+						auto amount = static_cast<uint16_t>(tail_length);
+						auto text = reinterpret_cast<uint8_t *>(&line[str_index + 1]);
+						DOS_WriteFile(STDOUT,text, &amount);//write buffer to screen
 						outc(' ');outc(8);
 						for(Bitu i=str_index;i<str_len-1;i++) {
 							line[i]=line[i+1];
@@ -506,8 +513,13 @@ bool DOS_Shell::Execute(char * name,char * args) {
 				while ( *p == 0 && (p-parseline) < 250) p++; //Skip empty fields
 				if ((p-parseline) < 250) { //Found something. Lets get the first letter and break it up
 					p++;
-					memmove(static_cast<void*>(p + 1),static_cast<void*>(p),(250-(p-parseline)));
-					if ((p-parseline) < 250) *p = 0;
+					const auto tail_length = 250 - (p - parseline);
+					assert(tail_length >= 0); // ensure this won't wrap-around when cast to unsigned
+					memmove(static_cast<void *>(p + 1),
+					        static_cast<void *>(p),
+					        static_cast<size_t>(tail_length));
+					if ((p - parseline) < 250)
+						*p = 0;
 				}
 			}
 		}
