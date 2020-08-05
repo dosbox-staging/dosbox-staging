@@ -524,8 +524,15 @@ bool localFile::Write(Bit8u * data,Bit16u * size) {
 	if (*size == 0) {
 		return !ftruncate(cross_fileno(fhandle), ftell(fhandle));
 	} else {
-		*size = (Bit16u)fwrite(data, 1, *size, fhandle);
-		return true;
+		const auto requested = *size;
+		const auto actual = static_cast<uint16_t>(
+		        fwrite(data, 1, requested, fhandle));
+		if (actual != requested)
+			LOG_MSG("FS: Only wrote %u of %u requested bytes to %s",
+			        actual, requested, filename.c_str());
+
+		*size = actual; // always save the actual
+		return true; // always return true, even if partially written
 	}
 }
 
