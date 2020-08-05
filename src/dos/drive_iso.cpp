@@ -64,15 +64,22 @@ isoFile::isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, Bit32u
 bool isoFile::Read(Bit8u *data, Bit16u *size) {
 	if (filePos + *size > fileEnd)
 		*size = (Bit16u)(fileEnd - filePos);
-	
-	Bit16u nowSize = 0;
-	int sector = filePos / ISO_FRAMESIZE;
-	Bit16u sectorPos = (Bit16u)(filePos % ISO_FRAMESIZE);
-	
-	if (sector != cachedSector) {
-		if (drive->readSector(buffer, sector)) cachedSector = sector;
-		else { *size = 0; cachedSector = -1; }
+
+	uint16_t nowSize = 0;
+	uint32_t sector = filePos / ISO_FRAMESIZE;
+
+	if (static_cast<int>(sector) != cachedSector) {
+		if (drive->readSector(buffer, sector)) {
+			cachedSector = static_cast<int>(sector);
+		} else {
+			*size = 0;
+			cachedSector = -1;
+		}
 	}
+
+	static_assert(ISO_FRAMESIZE <= UINT16_MAX, "");
+	auto sectorPos = static_cast<uint16_t>(filePos % ISO_FRAMESIZE);
+
 	while (nowSize < *size) {
 		Bit16u remSector = ISO_FRAMESIZE - sectorPos;
 		Bit16u remSize = *size - nowSize;
@@ -90,9 +97,7 @@ bool isoFile::Read(Bit8u *data, Bit16u *size) {
 			memcpy(&data[nowSize], &buffer[sectorPos], remSize);
 			nowSize += remSize;
 		}
-			
 	}
-	
 	*size = nowSize;
 	filePos += *size;
 	return true;
