@@ -221,11 +221,6 @@ Bits ConvHexWord(char * word) {
 	return ret;
 }
 
-double ConvDblWord(char * word) {
-	return 0.0f;
-}
-
-
 static char buf[1024];           //greater scope as else it doesn't always gets thrown right (linux/gcc2.95)
 void E_Exit(const char * format,...) {
 #if C_DEBUG && C_HEAVY_DEBUG
