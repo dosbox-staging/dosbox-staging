@@ -149,7 +149,9 @@ bool Program::SuppressWriteOut(const char *format)
 	return true;
 }
 
-static char last_written_character = 0; // For 0xA to OxD 0xA expansion (\n to \r\n)
+// For "\n" to "\r\n" expansion (0xA to OxD 0xA) in WriteOut* functions
+static char last_written_character = '\n';
+
 void Program::WriteOut(const char *format, ...)
 {
 	if (SuppressWriteOut(format))
@@ -157,7 +159,7 @@ void Program::WriteOut(const char *format, ...)
 
 	char buf[2048];
 	va_list msg;
-	
+
 	va_start(msg,format);
 	vsnprintf(buf,2047,format,msg);
 	va_end(msg);
@@ -173,7 +175,7 @@ void Program::WriteOut(const char *format, ...)
 		DOS_WriteFile(STDOUT,&out,&s);
 	}
 	dos.internal_output=false;
-	
+
 //	DOS_WriteFile(STDOUT,(Bit8u *)buf,&size);
 }
 
