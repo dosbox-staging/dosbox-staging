@@ -158,7 +158,7 @@ public:
 		bool defaultport = true; //try 17:0. Seems to be default nowadays
 
 		// try to use port specified in config file
-		if (conf && conf[0]) { 
+		if (conf && conf[0]) {
 			safe_strncpy(var, conf, 10);
 			if (!parse_addr(var, &seq_client, &seq_port)) {
 				LOG_MSG("ALSA: Invalid alsa port %s", var);
@@ -176,11 +176,11 @@ public:
 			LOG_MSG("ALSA: Can't open sequencer");
 			return false;
 		}
-	
+
 		my_client = snd_seq_client_id(seq_handle);
 		snd_seq_set_client_name(seq_handle, "DOSBOX");
 		snd_seq_set_client_group(seq_handle, "input");
-	
+
 		caps = SND_SEQ_PORT_CAP_READ;
 		if (seq_client == SND_SEQ_ADDRESS_SUBSCRIBERS)
 			caps = ~SND_SEQ_PORT_CAP_SUBS_READ;
@@ -192,7 +192,7 @@ public:
 			LOG_MSG("ALSA: Can't create ALSA port");
 			return false;
 		}
-	
+
 		if (seq_client != SND_SEQ_ADDRESS_SUBSCRIBERS) {
 			/* subscribe to MIDI port */
 			if (snd_seq_connect_to(seq_handle, my_port, seq_client, seq_port) < 0) {
