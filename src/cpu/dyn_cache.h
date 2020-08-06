@@ -23,6 +23,7 @@
 #include <new>
 
 #include "mem_unaligned.h"
+#include "paging.h"
 #include "types.h"
 
 class CodePageHandler;
@@ -172,7 +173,7 @@ public:
 	// the following functions will clean all cache blocks that are invalid
 	// now due to the write
 
-	void writeb(PhysPt addr, Bitu val)
+	void writeb(PhysPt addr, Bitu val) override
 	{
 		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
 		assert(old_pagehandler->flags & PFLAG_READABLE);
@@ -196,7 +197,7 @@ public:
 		InvalidateRange(addr,addr);
 	}
 
-	void writew(PhysPt addr, Bitu val)
+	void writew(PhysPt addr, Bitu val) override
 	{
 		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
 		assert(old_pagehandler->flags & PFLAG_READABLE);
@@ -220,7 +221,7 @@ public:
 		InvalidateRange(addr,addr+1);
 	}
 
-	void writed(PhysPt addr, Bitu val)
+	void writed(PhysPt addr, Bitu val) override
 	{
 		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
 		assert(old_pagehandler->flags & PFLAG_READABLE);
@@ -244,7 +245,7 @@ public:
 		InvalidateRange(addr,addr+3);
 	}
 
-	bool writeb_checked(PhysPt addr, Bitu val)
+	bool writeb_checked(PhysPt addr, Bitu val) override
 	{
 		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
 		assert(old_pagehandler->flags & PFLAG_READABLE);
@@ -273,7 +274,7 @@ public:
 		return false;
 	}
 
-	bool writew_checked(PhysPt addr, Bitu val)
+	bool writew_checked(PhysPt addr, Bitu val) override
 	{
 		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
 		assert(old_pagehandler->flags & PFLAG_READABLE);
@@ -302,7 +303,7 @@ public:
 		return false;
 	}
 
-	bool writed_checked(PhysPt addr, Bitu val)
+	bool writed_checked(PhysPt addr, Bitu val) override
 	{
 		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
 		assert(old_pagehandler->flags & PFLAG_READABLE);
@@ -432,13 +433,13 @@ public:
 		return 0; // none found
 	}
 
-	HostPt GetHostReadPt(Bitu phys_page)
+	HostPt GetHostReadPt(Bitu phys_page) override
 	{
 		hostmem = old_pagehandler->GetHostReadPt(phys_page);
 		return hostmem;
 	}
 
-	HostPt GetHostWritePt(Bitu phys_page)
+	HostPt GetHostWritePt(Bitu phys_page) override
 	{
 		return GetHostReadPt(phys_page);
 	}
