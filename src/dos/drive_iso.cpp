@@ -29,36 +29,41 @@
 #define FLAGS1	((iso) ? de.fileFlags : de.timeZone)
 #define FLAGS2	((iso) ? de->fileFlags : de->timeZone)
 
-using namespace std;
-
 class isoFile : public DOS_File {
 public:
-	isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, Bit32u offset);
-	bool Read(Bit8u *data, Bit16u *size);
-	bool Write(Bit8u *data, Bit16u *size);
-	bool Seek(Bit32u *pos, Bit32u type);
+	isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, uint32_t offset);
+	isoFile(const isoFile &) = delete;            // prevent copying
+	isoFile &operator=(const isoFile &) = delete; // prevent assignment
+
+	bool Read(uint8_t *data, uint16_t *size);
+	bool Write(uint8_t *data, uint16_t *size);
+	bool Seek(uint32_t *pos, uint32_t type);
 	bool Close();
-	Bit16u GetInformation(void);
+	uint16_t GetInformation(void);
+
 private:
-	isoDrive *drive;
-	Bit8u buffer[ISO_FRAMESIZE];
-	int cachedSector;
-	Bit32u fileBegin;
-	Bit32u filePos;
-	Bit32u fileEnd;
+	isoDrive *drive = nullptr;
+	int cachedSector = -1;
+	uint32_t fileBegin = 0;
+	uint32_t filePos = 0;
+	uint32_t fileEnd = 0;
+	uint8_t buffer[ISO_FRAMESIZE] = {{}};
 };
 
-isoFile::isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, Bit32u offset) {
-	this->drive = drive;
+isoFile::isoFile(isoDrive *iso_drive, const char *name, FileStat_Block *stat, Bit32u offset)
+        : drive(iso_drive),
+          fileBegin(offset),
+          filePos(offset),
+          fileEnd(offset + stat->size)
+{
+	SetName(name);
+
+	// Initialize base members
+	assert(stat);
 	time = stat->time;
 	date = stat->date;
 	attr = stat->attr;
-	fileBegin = offset;
-	filePos = fileBegin;
-	fileEnd = fileBegin + stat->size;
-	cachedSector = -1;
 	open = true;
-	SetName(name);
 }
 
 bool isoFile::Read(Bit8u *data, Bit16u *size) {
