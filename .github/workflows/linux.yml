@@ -20,15 +20,15 @@ jobs:
           - name: GCC, Ubuntu 16.04
             os: ubuntu-16.04
             flags: -c gcc
-            max_warnings: 320
+            max_warnings: 312
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
             flags: -c gcc
-            max_warnings: 319
+            max_warnings: 311
           - name: GCC, Ubuntu 20.04
             os: ubuntu-20.04
             flags: -c gcc
-            max_warnings: 319
+            max_warnings: 311
           - name: Clang, Ubuntu 20.04
             os: ubuntu-20.04
             flags: -c clang -v 10
@@ -37,17 +37,17 @@ jobs:
             os: ubuntu-latest
             flags: -c gcc
             config_flags: --enable-debug
-            max_warnings: 429
+            max_warnings: 421
           - name: Ubuntu, +dynrec, -dyn_x86
             os: ubuntu-latest
             flags: -c gcc
             config_flags: --disable-dynamic-x86
-            max_warnings: 316
+            max_warnings: 308
           - name: Ubuntu, +dynrec, +debug, -dyn_x86
             os: ubuntu-latest
             flags: -c gcc
             config_flags: --disable-dynamic-x86 --enable-debug
-            max_warnings: 463
+            max_warnings: 455
 
     steps:
       - uses: actions/checkout@v2
