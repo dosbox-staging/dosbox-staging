@@ -207,6 +207,6 @@ constexpr size_t static_if_array_then_zero()
 
 #define ARRAY_LEN(arr)                                                         \
 	(static_if_array_then_zero<decltype(arr)>() +                          \
-	 (sizeof(arr) / sizeof(arr[0])));
+	 (sizeof(arr) / sizeof(arr[0])))
 
 #endif
