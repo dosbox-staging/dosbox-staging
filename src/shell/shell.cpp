@@ -371,10 +371,9 @@ void DOS_Shell::Run(void) {
 						ShowPrompt();
 						WriteOut_NoParsing(input_line);
 						WriteOut_NoParsing("\n");
-					};
-				};
+					}
+				}
 				ParseLine(input_line);
-				if (echo) WriteOut("\n");
 			}
 		} else {
 			if (echo) ShowPrompt();
@@ -656,8 +655,7 @@ void SHELL_Init() {
 	        "\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 	        "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 	        "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
-	        //"\n" //Breaks the startup message if you type a mount and a drive change.
-	);
+	        "\n");
 	MSG_Add("SHELL_STARTUP_SUB","\033[32;1mdosbox-staging %s\033[0m\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Displays/changes the current directory.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG","CHDIR [drive:][path]\n"
