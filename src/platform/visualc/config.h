@@ -8,7 +8,7 @@
 #define C_DEBUG 0
 
 /* Define to 1 to enable screenshots, requires libpng */
-#define C_SSHOT 0
+#define C_SSHOT 1
 
 /* Define to 1 to use opengl display output support */
 #define C_OPENGL 1
