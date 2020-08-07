@@ -255,5 +255,4 @@ struct Handler : public Adlib::Handler {
 	virtual void Init( Bitu rate );
 };
 
-
-};		//Namespace
+} // namespace DBOPL
