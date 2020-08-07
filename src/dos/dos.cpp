@@ -1206,12 +1206,9 @@ static Bitu DOS_26Handler(void) {
 
 DOS_Version DOS_ParseVersion(const char *word, const char *args)
 {
-    struct DOS_Version new_version;
+	DOS_Version new_version = {5, 0, 0}; // Default to 5.0
 	assert(word != NULL && args != NULL);
-	if (!*args && !*word) { // Reset
-		new_version.major = 5;
-		new_version.minor = 0;
-	} else if (*args == 0 && *word && (strchr(word, '.') != 0)) {
+	if (*word && !*args && (strchr(word, '.') != 0)) {
 		// Allow usual syntax: ver set 7.1
 		const char *p = strchr(word, '.');
 		p++;
@@ -1221,23 +1218,24 @@ DOS_Version DOS_ParseVersion(const char *word, const char *args)
 			// Get the first 2 characters as minor version if there are more
 			minor = atoi(len > 2 ? std::string(p).substr(0, 2).c_str() : p);
 			// If .1 as the minor version, regard it as .10
-			if (len == 1) minor *= 10;
+			if (len == 1)
+				minor *= 10;
 		}
-		// Return 0.0 for invalid DOS version
+		// Return the new DOS version, or 0.0 for invalid DOS version
 		if (!isdigit(*word) || atoi(word) < 0 || atoi(word) > 30 || minor < 0 || (!atoi(word) && !minor)) {
 			new_version.major = 0;
 			new_version.minor = 0;
-		}else {
+		} else {
 			new_version.major = static_cast<uint8_t>(atoi(word));
 			new_version.minor = static_cast<uint8_t>(minor);
         }
-	} else { // Official DOSBox syntax: ver set 6 2
+	} else if (*word || *args) { // Official DOSBox syntax: ver set 6 2
 		// If only an integer like 7, regard it as 7.0, or take args as minor version
 		int minor = *args ? (isdigit(*args) ? atoi(args) : -1) : 0;
 		// Get the first 2 digits of if there are more in the number
 		while (minor > 99)
 			minor /= 10;
-		// Return 0.0 for invalid DOS version
+		// Return the new DOS version, or 0.0 for invalid DOS version
 		if (!isdigit(*word) || atoi(word) < 0 || atoi(word) > 30 || minor < 0 || (!atoi(word) && !minor)) {
 			new_version.major = 0;
 			new_version.minor = 0;
