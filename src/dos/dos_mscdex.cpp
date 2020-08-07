@@ -63,16 +63,51 @@ static MountType MSCDEX_GetMountType(const char *path);
 class DOS_DeviceHeader : public MemStruct {
 public:
 	DOS_DeviceHeader(PhysPt ptr) { pt = ptr; }
-	
-	void	SetNextDeviceHeader	(RealPt ptr)	{ sSave(sDeviceHeader,nextDeviceHeader,ptr);	};
-	RealPt	GetNextDeviceHeader	(void)			{ return sGet(sDeviceHeader,nextDeviceHeader);	};
-	void	SetAttribute		(Bit16u atr)	{ sSave(sDeviceHeader,devAttributes,atr);		};
-	void	SetDriveLetter		(Bit8u letter)	{ sSave(sDeviceHeader,driveLetter,letter);		};
-	void	SetNumSubUnits		(Bit8u num)		{ sSave(sDeviceHeader,numSubUnits,num);			};
-	Bit8u	GetNumSubUnits		(void)			{ return sGet(sDeviceHeader,numSubUnits);		};
-	void	SetName				(char const* _name)	{ MEM_BlockWrite(pt+offsetof(sDeviceHeader,name),_name,8); };
-	void	SetInterrupt		(Bit16u ofs)	{ sSave(sDeviceHeader,interrupt,ofs);			};
-	void	SetStrategy			(Bit16u ofs)	{ sSave(sDeviceHeader,strategy,ofs);			};
+
+	void SetNextDeviceHeader(RealPt ptr)
+	{
+		sSave(sDeviceHeader, nextDeviceHeader, ptr);
+	}
+
+	RealPt GetNextDeviceHeader()
+	{
+		return sGet(sDeviceHeader, nextDeviceHeader);
+	}
+
+	void SetAttribute(uint16_t atr)
+	{
+		sSave(sDeviceHeader, devAttributes, atr);
+	}
+
+	void SetDriveLetter(uint8_t letter)
+	{
+		sSave(sDeviceHeader, driveLetter, letter);
+	}
+
+	void SetNumSubUnits(uint8_t num)
+	{
+		sSave(sDeviceHeader, numSubUnits, num);
+	}
+
+	uint8_t GetNumSubUnits()
+	{
+		return sGet(sDeviceHeader, numSubUnits);
+	}
+
+	void SetName(const char *new_name)
+	{
+		MEM_BlockWrite(pt + offsetof(sDeviceHeader, name), new_name, 8);
+	}
+
+	void SetInterrupt(uint16_t ofs)
+	{
+		sSave(sDeviceHeader, interrupt, ofs);
+	}
+
+	void SetStrategy(uint16_t offset)
+	{
+		sSave(sDeviceHeader, strategy, offset);
+	}
 
 public:
 	#ifdef _MSC_VER
