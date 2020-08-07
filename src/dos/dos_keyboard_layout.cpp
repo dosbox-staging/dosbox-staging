@@ -61,12 +61,13 @@ static FILE* OpenDosboxFile(const char* name) {
 
 class keyboard_layout {
 public:
-	keyboard_layout() {
+	keyboard_layout()
+	{
 		this->reset();
 		language_codes=NULL;
 		use_foreign_layout=false;
 		sprintf(current_keyboard_file_name, "none");
-	};
+	}
 
 	~keyboard_layout();
 
