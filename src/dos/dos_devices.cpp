@@ -35,7 +35,8 @@ DOS_Device * Devices[DOS_DEVICES];
 
 class device_NUL : public DOS_Device {
 public:
-	device_NUL() { SetName("NUL"); };
+	device_NUL() { SetName("NUL"); }
+
 	virtual bool Read(Bit8u * data,Bit16u * size) {
 		*size = 0; //Return success and no data read. 
 		LOG(LOG_IOCTL,LOG_NORMAL)("%s:READ",GetName());
