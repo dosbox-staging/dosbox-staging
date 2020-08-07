@@ -68,7 +68,7 @@
 #define host_to_le16(x) bswap_u16(static_cast<uint16_t>(x))
 #define host_to_le32(x) bswap_u32(static_cast<uint32_t>(x))
 #define host_to_le64(x) bswap_u64(static_cast<uint64_t>(x))
-                                                           
+
 #define le16_to_host(x) bswap_u16(static_cast<uint16_t>(x))
 #define le32_to_host(x) bswap_u32(static_cast<uint32_t>(x))
 #define le64_to_host(x) bswap_u64(static_cast<uint64_t>(x))
