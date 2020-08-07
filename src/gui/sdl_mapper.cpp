@@ -387,10 +387,13 @@ public:
 		return CreateKeyBind((SDL_Scancode)code);
 	}
 
-	CBind * CreateEventBind(SDL_Event * event) {
-		if (event->type!=SDL_KEYDOWN) return 0;
+	CBind *CreateEventBind(SDL_Event *event)
+	{
+		if (event->type != SDL_KEYDOWN)
+			return nullptr;
 		return CreateKeyBind(event->key.keysym.scancode);
-	};
+	}
+
 	bool CheckEvent(SDL_Event * event) {
 		if (event->type!=SDL_KEYDOWN && event->type!=SDL_KEYUP) return false;
 		uintptr_t key = static_cast<uintptr_t>(event->key.keysym.scancode);
@@ -1683,9 +1686,7 @@ public:
 	CHandlerEvent(const CHandlerEvent&) = delete; // prevent copy
 	CHandlerEvent& operator=(const CHandlerEvent&) = delete; // prevent assignment
 
-	void Active(bool yesno) {
-		(*handler)(yesno);
-	};
+	void Active(bool yesno) { (*handler)(yesno); }
 
 	const char * ButtonName()
 	{
