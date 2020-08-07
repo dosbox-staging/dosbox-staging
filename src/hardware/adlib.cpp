@@ -719,9 +719,7 @@ void Module::Init( Mode m ) {
 	}
 }
 
-}; //namespace
-
-
+} // namespace Adlib
 
 static Adlib::Module* module = 0;
 
@@ -900,8 +898,7 @@ Module::~Module() {
 //Initialize static members
 OPL_Mode Module::oplmode=OPL_none;
 
-};	//Adlib Namespace
-
+} // namespace Adlib
 
 void OPL_Init(Section* sec,OPL_Mode oplmode) {
 	Adlib::Module::oplmode = oplmode;
