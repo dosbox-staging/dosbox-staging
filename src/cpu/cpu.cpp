@@ -2215,7 +2215,11 @@ public:
 		Change_Config(configuration);	
 		CPU_JMP(false,0,0,0);					//Setup the first cpu core
 	}
-	bool Change_Config(Section* newconfig){
+
+	~CPU() override = default;
+
+	bool Change_Config(Section *newconfig) override
+	{
 		Section_prop * section=static_cast<Section_prop *>(newconfig);
 		CPU_AutoDetermineMode=CPU_AUTODETERMINE_NONE;
 		//CPU_CycleLeft=0;//needed ?
@@ -2385,9 +2389,8 @@ public:
 		else GFX_SetTitle(CPU_CycleMax,-1,false);
 		return true;
 	}
-	~CPU(){ /* empty */};
 };
-	
+
 static CPU * test;
 
 void CPU_ShutDown(Section* sec) {
