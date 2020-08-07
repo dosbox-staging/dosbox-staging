@@ -495,34 +495,62 @@ localDrive::localDrive(const char * startdir,
 	dirCache.SetBaseDir(basedir);
 }
 
+// Updates the internal file's current position
+bool localFile::ftell_and_check()
+{
+	if (!fhandle)
+		return false;
+
+	stream_pos = ftell(fhandle);
+	if (stream_pos >= 0)
+		return true;
+
+	DEBUG_LOG_MSG("FS: Failed obtaining position in file %s", name.c_str());
+	return false;
+}
+
+// Seeks the internal file to the specified position relative to whence
+bool localFile::fseek_to_and_check(long pos, int whence)
+{
+	if (!fhandle)
+		return false;
+
+	if (fseek(fhandle, pos, whence) == 0) {
+		stream_pos = pos;
+		return true;
+	}
+	DEBUG_LOG_MSG("FS: Failed seeking to byte %ld in file %s", stream_pos, name.c_str());
+	return false;
+}
+
+// Seeks the internal file to the internal position relative to whence
+void localFile::fseek_and_check(int whence)
+{
+	static_cast<void>(fseek_to_and_check(stream_pos, whence));
+}
 
 //TODO Maybe use fflush, but that seemed to fuck up in visual c
-bool localFile::Read(Bit8u * data,Bit16u * size) {
-	if ((this->flags & 0xf) == OPEN_WRITE) {	// check if file opened in write-only mode
+bool localFile::Read(uint8_t *data, uint16_t *size)
+{
+	// check if the file is opened in write-only mode
+	if ((this->flags & 0xf) == OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-	if (last_action == WRITE) {
-		const auto pos = ftell(fhandle);
-		if (pos >= 0) {
-			if (fseek(fhandle, pos, SEEK_SET) != 0) {
-				DEBUG_LOG_MSG("FS: Failed seeking to byte %ld in file %s",
-				        pos, name.c_str());
-			}
-		} else {
-			DEBUG_LOG_MSG("FS: Failed obtaining position in file %s",
-			        name.c_str());
-		}
-	}
+
+	// Seek if we last wrote
+	if (last_action == WRITE)
+		if (ftell_and_check())
+			fseek_and_check(SEEK_SET);
 
 	last_action = READ;
-
 	const auto requested = *size;
 	const auto actual = static_cast<uint16_t>(fread(data, 1, requested, fhandle));
-	if (actual != requested)
-		DEBUG_LOG_MSG("FS: Only read %u of %u requested bytes from file %s",
-		        actual, requested, name.c_str());
 	*size = actual; // always save the actual
+
+	// if (actual != requested)
+	//	DEBUG_LOG_MSG("FS: Only read %u of %u requested bytes from file %s",
+	//	              actual, requested, name.c_str());
 
 	/* Fake harddrive motion. Inspector Gadget with soundblaster compatible */
 	/* Same for Igor */
@@ -542,54 +570,43 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 		return false;
 	}
 
-	// Seek and inform if it failed
-	if (last_action == READ) {
-		const auto pos = ftell(fhandle);
-		if (pos >= 0) { // seek if ftell() succeeded
-			if (fseek(fhandle, pos, SEEK_SET) != 0) {
-				DEBUG_LOG_MSG("FS: Failed seeking to byte %ld in file %s",
-				        pos, name.c_str());
-			}
-		} else {
-			DEBUG_LOG_MSG("FS: Failed obtaining position in file %s",
-			        name.c_str());
-		}
-	}
+	// Seek if we last read
+	if (last_action == READ)
+		if (ftell_and_check())
+			fseek_and_check(SEEK_SET);
 
 	last_action = WRITE;
 
 	// Truncate the file
 	if (*size == 0) {
 		const auto file = cross_fileno(fhandle);
-		const auto pos = ftell(fhandle);
-		bool result = false;
-		if (file != -1 && pos >= 0) { // truncate if ftell and fileno succeeded
-			result = ftruncate(file, pos) == 0; // 0 is success
-			if (!result) {
-				DEBUG_LOG_MSG("FS: Failed truncating file %s",
-					name.c_str());
-			}
-		} else {
-			DEBUG_LOG_MSG("FS: Failed obtaining position in file %s",
-			        name.c_str());
+		if (file == -1) {
+			DEBUG_LOG_MSG("FS: Could not resolve file number for %s", name.c_str());
+			return false;
 		}
-		return result;
-	}
-	// Otherwise write data to the file
-	else {
-		const auto requested = *size;
-		const auto actual = static_cast<uint16_t>(
-		        fwrite(data, 1, requested, fhandle));
-		if (actual != requested) {
-			DEBUG_LOG_MSG("FS: Only wrote %u of %u requested bytes to file %s",
-			        actual, requested, name.c_str());
+		if (!ftell_and_check()) {
+			return false;
 		}
-		*size = actual; // always save the actual
-		return true; // always return true, even if partially written
+		if (ftruncate(file, stream_pos) != 0) {
+			DEBUG_LOG_MSG("FS: Failed truncating file %s", name.c_str());
+			return false;
+		}
+		// Truncation succeeded if we made it here
+		return true;
 	}
+
+	// Otherwise we have some data to write
+	const auto requested = *size;
+	const auto actual = static_cast<uint16_t>(fwrite(data, 1, requested, fhandle));
+	if (actual != requested)
+		DEBUG_LOG_MSG("FS: Only wrote %u of %u requested bytes to file %s",
+		              actual, requested, name.c_str());
+	*size = actual; // always save the actual
+	return true;    // always return true, even if partially written
 }
 
-bool localFile::Seek(Bit32u * pos,Bit32u type) {
+bool localFile::Seek(uint32_t *pos, uint32_t type)
+{
 	int seektype;
 	switch (type) {
 	case DOS_SEEK_SET:seektype=SEEK_SET;break;
@@ -599,14 +616,11 @@ bool localFile::Seek(Bit32u * pos,Bit32u type) {
 	//TODO Give some doserrorcode;
 		return false;//ERROR
 	}
-	int ret=fseek(fhandle,*reinterpret_cast<Bit32s*>(pos),seektype);
-	if (ret!=0) {
-		// Out of file range, pretend everythings ok 
-		// and move file pointer top end of file... ?! (Black Thorne)
-		if (fseek(fhandle, 0, SEEK_END) != 0) {
-			DEBUG_LOG_MSG("FS: Failed seeking to the end of file %s",
-			        name.c_str());
-		}
+	if (!fseek_to_and_check(static_cast<long>(*pos), seektype)) {
+		// Failed to seek, but try again this time seeking to
+		// the end of file, which satisfies Black Thorne.
+		stream_pos = 0;
+		fseek_and_check(SEEK_END);
 	}
 #if 0
 	fpos_t temppos;
@@ -614,8 +628,17 @@ bool localFile::Seek(Bit32u * pos,Bit32u type) {
 	Bit32u * fake_pos=(Bit32u*)&temppos;
 	*pos=*fake_pos;
 #endif
-	*pos=(Bit32u)ftell(fhandle);
-	last_action=NONE;
+	if (ftell_and_check())
+		*pos = static_cast<uint32_t>(stream_pos);
+
+	// If ftell fails then stream_pos becomes -1 however this function's
+	// 'pos' argument can't handle -1 because it's unsigned. So we
+	// explicitly underflow it to its maximum to acknowledge what's
+	// actually happening:
+	else
+		*pos = UINT32_MAX;
+
+	last_action = NONE;
 	return true;
 }
 
@@ -683,16 +706,8 @@ void localFile::Flush()
 	if (last_action != WRITE)
 		return;
 
-	const auto pos = ftell(fhandle);
-	if (pos >= 0) { // seek if ftell() succeeded
-		if (fseek(fhandle, pos, SEEK_SET) != 0) {
-			DEBUG_LOG_MSG("FS: Failed seeking to byte %ld in file %s",
-			        pos, name.c_str());
-		}
-	} else {
-		DEBUG_LOG_MSG("FS: Failed obtaining position in file %s",
-		        name.c_str());
-	}
+	if (ftell_and_check())
+		fseek_and_check(SEEK_SET);
 
 	// Always reset the state even if the file is broken
 	last_action = NONE;
