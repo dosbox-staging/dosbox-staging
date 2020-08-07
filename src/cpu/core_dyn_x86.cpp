@@ -256,12 +256,13 @@ Bits CPU_Core_Dyn_X86_Run(void) {
 	// helper class to auto-save DH_FPU state on function exit
 	class auto_dh_fpu {
 	public:
-		~auto_dh_fpu(void) {
+		~auto_dh_fpu()
+		{
 #if defined(X86_DYNFPU_DH_ENABLED)
 			if (dyn_dh_fpu.state_used)
 				gen_dh_fpu_save();
 #endif
-		};
+		}
 	};
 	auto_dh_fpu fpu_saver;
 
