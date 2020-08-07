@@ -32,7 +32,7 @@ jobs:
           - name: Clang, Ubuntu 20.04
             os: ubuntu-20.04
             flags: -c clang -v 10
-            max_warnings: 28
+            max_warnings: 8
           - name: Ubuntu, +debug
             os: ubuntu-latest
             flags: -c gcc
