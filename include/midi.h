@@ -24,11 +24,17 @@
 
 #include "dosbox.h"
 
+#include "setup.h"
+
 class Program;
 
 void MIDI_Init(Section *sec);
 bool MIDI_Available();
 void MIDI_ListAll(Program *output_handler);
 void MIDI_RawOutByte(uint8_t data);
+
+#if C_FLUIDSYNTH
+void init_fluid_dosbox_settings(Section_prop& secprop);
+#endif
 
 #endif

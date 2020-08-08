@@ -608,6 +608,9 @@ void DOSBOX_Init(void) {
 #if defined(HAVE_ALSA)
 		"alsa",
 #endif
+#if C_FLUIDSYNTH
+		"fluidsynth",
+#endif
 		"none",
 		0
 	};
@@ -621,6 +624,9 @@ void DOSBOX_Init(void) {
 	                  "When using a Roland MT-32 rev. 0 as midi output device, some games may require a delay in order to prevent 'buffer overflow' issues.\n"
 	                  "In that case, add 'delaysysex', for example: midiconfig=2 delaysysex\n"
 	                  "See the README/Manual for more details.");
+#if C_FLUIDSYNTH
+	init_fluid_dosbox_settings(*secprop);
+#endif
 
 #if C_DEBUG
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
