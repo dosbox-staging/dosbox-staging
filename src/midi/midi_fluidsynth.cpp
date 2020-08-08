@@ -110,17 +110,17 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	auto *section = static_cast<Section_prop *>(control->GetSection("midi"));
 
 	fluid_settings_ptr_t settings(new_fluid_settings(), delete_fluid_settings);
+	if (!settings) {
+		LOG_MSG("MIDI: new_fluid_settings failed");
+		return false;
+	}
 
-	auto get_double = [section](const char *const propname) {
+	auto get_double = [section](const char *propname) {
 		try {
 			return std::stod(section->Get_string(propname));
 		} catch (const std::exception &e) {
-			/*
-			log_cb(RETRO_LOG_WARN,
-			       "[dosbox] error reading floating point '%s' "
-			       "conf setting: %s\n",
-			       e.what());
-		       */
+			LOG_MSG("MIDI: error reading '%s' setting: %s",
+			        propname, e.what());
 			return 0.0;
 		}
 	};
@@ -156,7 +156,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 
 	fsynth_ptr_t fluid_synth(new_fluid_synth(settings.get()), delete_fluid_synth);
 	if (!fluid_synth) {
-		// log_cb(RETRO_LOG_WARN, "[dosbox] Error creating fluidsynth synthesiser\n");
+		LOG_MSG("MIDI: Failed to create the FluidSynth synthesizer");
 		return false;
 	}
 
@@ -219,7 +219,7 @@ void MidiHandlerFluidsynth::PlayMsg(const uint8_t *msg)
 	default: {
 		uint64_t tmp;
 		memcpy(&tmp, msg, sizeof(tmp));
-		// log_cb(RETRO_LOG_WARN, "[dosbox] fluidsynth: unknown MIDI command: %08lx", tmp);
+		LOG_MSG("MIDI: unknown MIDI command: %0" PRIx64, tmp);
 		break;
 	}
 	}
