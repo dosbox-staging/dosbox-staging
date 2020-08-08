@@ -24,25 +24,9 @@
 
 #if C_FLUIDSYNTH
 
-#include <clocale>
 #include <string>
 
 #include "control.h"
-
-// Fluidsynth uses libinstpatch which as of v1.1.3 has the nasty behavior of
-// changing the locale under our nose. We remember and restore the current
-// locale whenever this could happen.
-//
-// https://github.com/realnc/dosbox-core/issues/7
-// https://github.com/swami/libinstpatch/issues/37
-//
-class LocaleGuard final {
-public:
-	~LocaleGuard() { setlocale(LC_ALL, locale_.c_str()); }
-
-private:
-	std::string locale_ = setlocale(LC_ALL, nullptr);
-};
 
 MidiHandlerFluidsynth MidiHandlerFluidsynth::instance;
 
@@ -103,8 +87,6 @@ void init_fluid_dosbox_settings(Section_prop &secprop)
 
 bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 {
-	LocaleGuard locale_guard;
-
 	Close();
 
 	auto *section = static_cast<Section_prop *>(control->GetSection("midi"));
