@@ -10,7 +10,7 @@ env:
 jobs:
   pvs_studio_analyzer:
     name: PVS-Studio static analyzer
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       debfile: pvs-studio-7.08.39765.52-amd64.deb
     steps:

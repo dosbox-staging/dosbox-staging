@@ -44,7 +44,7 @@ jobs:
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Build
-        run:  ./scripts/build.sh --build-type Debug ${{ matrix.conf.flags }}
+        run:  ./scripts/build.sh --build-type Debug ${{ matrix.conf.flags }} --disable-fluidsynth
       - name: Summarize warnings
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
@@ -103,6 +103,7 @@ jobs:
           ./configure \
             --enable-png-static \
             --enable-sdl-static \
+            --disable-fluidsynth \
             CFLAGS="$FLAGS" CXXFLAGS="$FLAGS"
           gmake -j "$(sysctl -n hw.physicalcpu)"
           strip src/dosbox

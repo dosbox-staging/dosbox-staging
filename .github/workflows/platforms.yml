@@ -54,7 +54,7 @@ jobs:
             apt-get update
             apt-get install -y libpng-dev $(./scripts/list-build-dependencies.sh -c gcc -m apt)
             ./scripts/log-env.sh
-            ./scripts/build.sh -c gcc -t release -m lto
+            ./scripts/build.sh -c gcc -t release -m lto --disable-fluidsynth
 
       - name: Summarize warnings
         if: steps.repo-meta.outputs.has-commits == 'true'

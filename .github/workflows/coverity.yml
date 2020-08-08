@@ -19,7 +19,7 @@ env:
 jobs:
   coverity_scan:
     name: Coverity static analyzer
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update
