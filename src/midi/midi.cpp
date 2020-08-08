@@ -36,6 +36,7 @@
 #include "setup.h"
 #include "support.h"
 #include "timer.h"
+#include "midi_fluidsynth.h"
 
 #define RAWBUF	1024
 
