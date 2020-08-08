@@ -33,7 +33,7 @@ jobs:
 
   build_clang_static_analyser:
     name: Clang static analyzer
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: run_linters
     steps:
       - uses: actions/checkout@v2
@@ -87,7 +87,7 @@ jobs:
   dynamic_matrix:
     name: ${{ matrix.conf.name }} dynamic sanitizers
     needs: run_linters
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         conf:

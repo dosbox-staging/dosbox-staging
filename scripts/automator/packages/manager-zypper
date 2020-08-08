@@ -5,5 +5,5 @@ packages+=(ccache devel_basis xvfb libtool opusfile)
 if [[ "${bits}" == "32" ]]; then
 	packages+=(ncurses-devel-32bit libSDL2-devel-32bit libSDL2_net-devel-32bit)
 else
-	packages+=(ncurses-devel SDL2 SDL2_net)
+	packages+=(ncurses-devel SDL2 SDL2_net fluidsynth-devel)
 fi

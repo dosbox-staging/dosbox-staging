@@ -1,2 +1,2 @@
 # Package repo: https://packages.ubuntu.com/
-packages+=(ccache libtool build-essential autotools-dev automake libsdl2-dev libsdl2-net-dev libncurses-dev libopusfile-dev)
+packages+=(ccache libtool build-essential autotools-dev automake libsdl2-dev libsdl2-net-dev libncurses-dev libopusfile-dev libfluidsynth-dev)
