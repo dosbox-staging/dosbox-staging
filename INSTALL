@@ -17,6 +17,11 @@ Opusfile, by Xiph
     video distribution platforms such as YouTube.
     License: three-clause BSD
 
+FluidSynth 2.0 (optional)
+    FluidSynth is a real-time software synthesizer.
+    http://www.fluidsynth.org/
+    License: GNU LGPL v2.1
+
 Curses (optional)
     If you want to enable the debugger you need a curses library.
     On Linux, install ncurses-devel via your distro package manager.
@@ -44,8 +49,9 @@ SDL_net (optional)
     Get it from https://www.libsdl.org/projects/SDL_net/
     License: zlib
 
-alsa-lib (optional)
-    For ALSA audio support under linux. Get it from https://www.alsa-project.org/
+alsa-lib (mandatory, Linux only)
+    For ALSA audio support under linux.
+    See https://www.alsa-project.org/
     Licensed under LGPL
 
 If you want compile from developer sources (SVN) under a unix system, you will need:
