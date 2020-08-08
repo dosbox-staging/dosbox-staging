@@ -194,42 +194,39 @@ bool localDrive::FileUnlink(char * name) {
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
-	char *fullname = dirCache.GetExpandName(newname);
-	if (unlink(fullname)) {
-		//Unlink failed for some reason try finding it.
-		struct stat buffer;
-		if (stat(fullname,&buffer)) return false; // File not found.
+	const char *fullname = dirCache.GetExpandName(newname);
 
-		FILE* file_writable = fopen_wrap(fullname,"rb+");
-		if (!file_writable) return false; //No acces ? ERROR MESSAGE NOT SET. FIXME ?
-		fclose(file_writable);
-
-		//File exists and can technically be deleted, nevertheless it failed.
-		//This means that the file is probably open by some process.
-		//See if We have it open.
-		bool found_file = false;
-		for (Bitu i = 0;i < DOS_FILES;i++) {
-			if (Files[i] && Files[i]->IsName(name)) {
-				Bitu max = DOS_FILES;
-				while (Files[i]->IsOpen() && max--) {
-					Files[i]->Close();
-					if (Files[i]->RemoveRef()<=0) break;
-				}
-				found_file=true;
-			}
-		}
-		if (!found_file) return false;
-
-		// If the file still exists then try to delete it
-		if (stat(fullname, &buffer) == 0 && unlink(fullname) == 0) {
-			dirCache.DeleteEntry(newname);
-			return true;
-		}
-		return false;
-	} else {
+	// Can we remove the file without issue?
+	if (remove(fullname) == 0) {
 		dirCache.DeleteEntry(newname);
 		return true;
 	}
+
+	// Maybe we've got it open, so scan our Files[] inventory and close it
+	bool found_internally = false;
+	for (size_t i = 0; i < DOS_FILES; ++i) {
+		if (Files[i] && Files[i]->IsName(name)) {
+			size_t max = DOS_FILES;
+			while (Files[i]->IsOpen() && --max) {
+				Files[i]->Close();
+				if (Files[i]->RemoveRef() <= 0) {
+					break;
+				}
+			}
+			found_internally = true;
+		}
+	}
+
+	// Found it, so try removing it one last time ...
+	if (found_internally && std::remove(fullname) == 0) {
+		dirCache.DeleteEntry(newname);
+		return true;
+	}
+
+	//Still failed to remove it; time to give up!
+	DEBUG_LOG_MSG("FS: Unable to remove %s; file might be write-protected",
+	              fullname);
+	return false;
 }
 
 bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
