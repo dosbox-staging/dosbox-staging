@@ -24,13 +24,14 @@
 
 #if C_FLUIDSYNTH
 
+#include <cassert>
 #include <string>
 
 #include "control.h"
 
 MidiHandlerFluidsynth MidiHandlerFluidsynth::instance;
 
-void init_fluid_dosbox_settings(Section_prop &secprop)
+static void init_fluid_dosbox_settings(Section_prop &secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -89,7 +90,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 {
 	Close();
 
-	auto *section = static_cast<Section_prop *>(control->GetSection("midi"));
+	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
 
 	fluid_settings_ptr_t settings(new_fluid_settings(), delete_fluid_settings);
 	if (!settings) {
@@ -223,6 +224,22 @@ void MidiHandlerFluidsynth::mixerCallback(const Bitu len)
 {
 	fluid_synth_write_s16(instance.synth.get(), len, data, 0, 2, data, 1, 2);
 	instance.channel->AddSamples_s16(len, data);
+}
+
+static void fluid_destroy(MAYBE_UNUSED Section *sec)
+{}
+
+static void fluid_init(Section *sec)
+{
+	sec->AddDestroyFunction(&fluid_destroy, true);
+}
+
+void FLUID_AddConfigSection(Config *conf)
+{
+	assert(conf);
+	Section_prop *sec = conf->AddSection_prop("fluidsynth", &fluid_init);
+	assert(sec);
+	init_fluid_dosbox_settings(*sec);
 }
 
 #endif // C_FLUIDSYNTH
