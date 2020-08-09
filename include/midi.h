@@ -34,7 +34,7 @@ void MIDI_ListAll(Program *output_handler);
 void MIDI_RawOutByte(uint8_t data);
 
 #if C_FLUIDSYNTH
-void init_fluid_dosbox_settings(Section_prop& secprop);
+void FLUID_AddConfigSection(Config *conf);
 #endif
 
 #endif

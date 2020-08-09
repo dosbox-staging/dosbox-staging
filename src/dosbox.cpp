@@ -625,7 +625,7 @@ void DOSBOX_Init(void) {
 	                  "In that case, add 'delaysysex', for example: midiconfig=2 delaysysex\n"
 	                  "See the README/Manual for more details.");
 #if C_FLUIDSYNTH
-	init_fluid_dosbox_settings(*secprop);
+	FLUID_AddConfigSection(control);
 #endif
 
 #if C_DEBUG
