@@ -583,16 +583,16 @@ void DOSBOX_Init(void) {
 	Pint->Set_help("How many milliseconds of data to keep on top of the blocksize.");
 
 	secprop = control->AddSection_prop("midi", &MIDI_Init, true);
-	secprop->AddInitFunction(&MPU401_Init,true);//done
+	secprop->AddInitFunction(&MPU401_Init, true);
 
 	pstring = secprop->Add_string("mpu401", when_idle, "intelligent");
 	const char *mputypes[] = {"intelligent", "uart", "none", 0};
 	pstring->Set_values(mputypes);
 	pstring->Set_help("Type of MPU-401 to emulate.");
 
-	pstring = secprop->Add_string("mididevice", when_idle, "default");
+	pstring = secprop->Add_string("mididevice", when_idle, "auto");
 	const char *midi_devices[] = {
-		"default",
+		"auto",
 #if defined(MACOSX)
 #ifdef C_SUPPORTS_COREMIDI
 		"coremidi",
@@ -615,7 +615,13 @@ void DOSBOX_Init(void) {
 		0
 	};
 	pstring->Set_values(midi_devices);
-	pstring->Set_help("Device that will receive the MIDI data from MPU-401.");
+	pstring->Set_help(
+	        "Device that will receive the MIDI data from emulated MPU-401.\n"
+#if C_FLUIDSYNTH
+	        "Use 'fluidsynth' to select built-in software synthesiser,\n"
+	        "see the fluidsynth section for detailed configuration.\n"
+#endif
+	        "Use 'auto' to pick the first working device.");
 
 	Pstring = secprop->Add_string("midiconfig",Property::Changeable::WhenIdle,"");
 	Pstring->Set_help("Special configuration options for the device driver. This is usually the id or part of the name of the device you want to use\n"
@@ -770,7 +776,7 @@ void DOSBOX_Init(void) {
 
 	Pbool = secprop->Add_bool("buttonwrap",Property::Changeable::WhenIdle,false);
 	Pbool->Set_help("enable button wrapping at the number of emulated buttons.");
-	
+
 	Pbool = secprop->Add_bool("circularinput",Property::Changeable::WhenIdle,false);
 	Pbool->Set_help("enable translation of circular input to square output.\n"
 	                "Try enabling this if your left analog stick can only move in a circle.");

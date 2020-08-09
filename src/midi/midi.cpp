@@ -36,7 +36,6 @@
 #include "setup.h"
 #include "support.h"
 #include "timer.h"
-#include "midi_fluidsynth.h"
 
 #define RAWBUF	1024
 
@@ -74,6 +73,8 @@ MidiHandler Midi_none;
 
 /* Include different midi drivers, lowest ones get checked first for default.
    Each header provides an independent midi interface. */
+
+#include "midi_fluidsynth.h"
 
 #if defined(MACOSX)
 
@@ -206,13 +207,15 @@ bool MIDI_Available()
 	return midi.available;
 }
 
-class MIDI:public Module_base{
+class MIDI : public Module_base {
 public:
-	MIDI(Section* configuration):Module_base(configuration){
+	MIDI(Section *configuration) : Module_base(configuration)
+	{
 		Section_prop * section=static_cast<Section_prop *>(configuration);
-		const char * dev=section->Get_string("mididevice");
+		std::string dev = section->Get_string("mididevice");
+		lowcase(dev);
+
 		std::string fullconf=section->Get_string("midiconfig");
-		/* If device = "default" go for first handler that works */
 		MidiHandler * handler;
 //		MAPPER_AddHandler(MIDI_SaveRawEvent,MK_f8,MMOD1|MMOD2,"caprawmidi","Cap MIDI");
 		midi.sysex.delay = 0;
@@ -227,35 +230,43 @@ public:
 		midi.status=0x00;
 		midi.cmd_pos=0;
 		midi.cmd_len=0;
-		if (!strcasecmp(dev,"default")) goto getdefault;
+		// Value "default" exists for backwards-compatibility.
+		// TODO: Rewrite this logic without using goto
+		if (dev == "auto" || dev == "default")
+			goto getdefault;
 		handler=handler_list;
 		while (handler) {
-			if (!strcasecmp(dev,handler->GetName())) {
+			if (dev == handler->GetName()) {
 				if (!handler->Open(conf)) {
-					LOG_MSG("MIDI: Can't open device:%s with config:%s.",dev,conf);
+					LOG_MSG("MIDI: Can't open device: %s with config: '%s'",
+					        dev.c_str(), conf);
 					goto getdefault;
 				}
 				midi.handler=handler;
 				midi.available=true;
-				LOG_MSG("MIDI: Opened device:%s",handler->GetName());
+				LOG_MSG("MIDI: Opened device: %s",
+				        handler->GetName());
 				return;
 			}
 			handler=handler->next;
 		}
-		LOG_MSG("MIDI: Can't find device:%s, finding default handler.",dev);
+		LOG_MSG("MIDI: Can't find device: %s, using default handler.",
+		        dev.c_str());
 getdefault:
 		handler=handler_list;
 		while (handler) {
 			if (handler->Open(conf)) {
 				midi.available=true;
 				midi.handler=handler;
-				LOG_MSG("MIDI: Opened device:%s",handler->GetName());
+				LOG_MSG("MIDI: Opened device: %s",
+				        handler->GetName());
 				return;
 			}
 			handler=handler->next;
 		}
 		/* This shouldn't be possible */
 	}
+
 	~MIDI(){
 		if(midi.available) midi.handler->Close();
 		midi.available = false;
