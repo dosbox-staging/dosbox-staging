@@ -2120,7 +2120,7 @@ static void CPU_CycleIncrease(bool pressed) {
 	    
 		CPU_CycleLeft=0;CPU_Cycles=0;
 		if (CPU_CycleMax==old_cycles) CPU_CycleMax++;
-		LOG_MSG("CPU speed: fixed %d cycles.",CPU_CycleMax);
+		LOG_MSG("CPU speed: fixed %d cycles.", CPU_CycleMax);
 		GFX_SetTitle(CPU_CycleMax,-1,false);
 	}
 }

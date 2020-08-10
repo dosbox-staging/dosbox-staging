@@ -31,6 +31,7 @@
 #include <string.h>
 #include <thread>
 #include <unistd.h>
+#include <vector>
 
 #include "debug.h"
 #include "cpu.h"
@@ -54,6 +55,10 @@
 #include "pci_bus.h"
 #include "midi.h"
 #include "hardware.h"
+
+constexpr double FRAME_RATE = 60.0;
+constexpr uint8_t MAX_FRAME_QUEUE = 9;
+constexpr int MIN_CYCLES_PERCENT = 33; // valid range: 1% to 100%
 
 #if C_NE2000
 //#include "ne2000.h"
@@ -159,9 +164,10 @@ bool mono_cga=false;
 
 void increaseticks_fixed();
 
-static constexpr auto frame_pace_us = usT(1000 * 1000 / 60);
-static constexpr uint32_t frame_pace_ms = frame_pace_us.count() / 1000;
-static int32_t target_cycles;
+static constexpr auto frame_pace_us = usT(static_cast<int>(1000000.0 / FRAME_RATE));
+static constexpr auto frame_pace_ms = static_cast<uint32_t>(frame_pace_us.count()) / 1000;
+static constexpr auto max_latency_ms = static_cast<uint32_t>(frame_pace_us.count()) * MAX_FRAME_QUEUE /
+                                           1000;
 
 static int frame_balance = 0;
 static int pic_balance = 0;
@@ -169,6 +175,59 @@ static std::thread pic_pacer;
 static std::thread frame_pacer;
 static std::mutex pic_balance_mutex;
 static std::mutex frame_balance_mutex;
+
+static std::vector<int32_t> cycle_range;
+const std::vector<int32_t> generate_cycle_range(const int32_t max_cycles,
+                                                int min_percent)
+{
+	// Bound valid values between 1% and 100%
+	min_percent = clamp(min_percent, 1, 100);
+	const double min_cycles = max_cycles * min_percent / 100.0;
+
+	std::vector<int32_t> range;
+	for (double c = min_cycles; c < max_cycles; c *= 1.07) {
+		const auto cycles = static_cast<int32_t>(c);
+		range.push_back(cycles);
+		LOG_MSG("SCHED: range %d", cycles);
+	}
+	range.push_back(max_cycles);
+	return range;
+}
+
+static std::vector<int32_t>::iterator cycle_selector;
+bool cycles_below_max()
+{
+	return cycle_selector < cycle_range.end();
+}
+
+void increase_cycles(const uint32_t current_latency_ms)
+{
+	static uint8_t decimator = 0;
+	decimator = (decimator + 1) % 20;
+	if (cycles_below_max() && decimator == 0) {
+		++cycle_selector;
+		CPU_CycleMax = cycle_selector == cycle_range.end()
+		                       ? cycle_range.back()
+		                       : *cycle_selector;
+		LOG_MSG("SCHED: %u ms queue, increased cycles to %u",
+		        current_latency_ms, CPU_CycleMax);
+	}
+}
+
+bool cycles_above_min()
+{
+	return cycle_selector > cycle_range.begin();
+}
+
+void decrease_cycles(const uint32_t current_latency_ms)
+{
+	if (cycles_above_min()) {
+		--cycle_selector;
+		CPU_CycleMax = *cycle_selector;
+		LOG_MSG("SCHED: %u ms queue, decreasing cycles to %u",
+		        current_latency_ms, CPU_CycleMax);
+	}
+}
 
 static void pace_pic()
 {
@@ -230,16 +289,12 @@ void increaseticks_fixed()
 		ticksRemain = ticksNew - ticksLast;
 		ticksLast = ticksNew;
 
-		if (ticksRemain > frame_pace_ms) {
-			CPU_CycleMax -= CPU_CycleMax / 10;
-			ticksRemain = frame_pace_ms;
-			LOG_MSG("Dropped cycles to %u", CPU_CycleMax);
+		if (ticksRemain > max_latency_ms && cycles_above_min()) {
+			decrease_cycles(ticksRemain);
+			ticksRemain = max_latency_ms;
+		} else if (ticksRemain && cycles_below_max()) {
+			increase_cycles(ticksRemain);
 		}
-		else if (ticksRemain > 3 && CPU_CycleMax < target_cycles) {
-			CPU_CycleMax += CPU_CycleMax / 25;
-			LOG_MSG("Bumped cycles to %u", CPU_CycleMax);
-		}
-
 		return;
 	}
 	while (pic_balance < 1)
@@ -411,11 +466,12 @@ void DOSBOX_RunMachine()
 {
 	static bool started = false;
 	if (!started) {
+		cycle_range = generate_cycle_range(CPU_CycleMax, MIN_CYCLES_PERCENT);
+		cycle_selector = cycle_range.end();
 		pic_pacer = std::thread(&pace_pic);
 		pic_pacer.detach();
 		frame_pacer = std::thread(&pace_frame);
 		frame_pacer.detach();
-		target_cycles = CPU_CycleMax;
 		started = true;
 	}
 
