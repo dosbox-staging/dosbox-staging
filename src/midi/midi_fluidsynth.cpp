@@ -90,7 +90,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
 	}
 
-	mixer_channel_ptr_t mixer_channel(MIXER_AddChannel(mixerCallback,
+	mixer_channel_ptr_t mixer_channel(MIXER_AddChannel(mixer_callback,
 	                                                   sample_rate, "FSYNTH"),
 	                                  MIXER_DelChannel);
 	mixer_channel->Enable(true);
@@ -161,10 +161,10 @@ void MidiHandlerFluidsynth::PlaySysex(uint8_t *sysex, size_t len)
 // introduces alignment problem; replaced with new local buffer for now.
 int16_t data[MIXER_BUFSIZE];
 
-void MidiHandlerFluidsynth::mixerCallback(const Bitu len)
+void MidiHandlerFluidsynth::mixer_callback(uint16_t frames)
 {
-	fluid_synth_write_s16(instance.synth.get(), len, data, 0, 2, data, 1, 2);
-	instance.channel->AddSamples_s16(len, data);
+	fluid_synth_write_s16(instance.synth.get(), frames, data, 0, 2, data, 1, 2);
+	instance.channel->AddSamples_s16(frames, data);
 }
 
 static void fluid_destroy(MAYBE_UNUSED Section *sec)
