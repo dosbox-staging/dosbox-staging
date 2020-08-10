@@ -28,6 +28,7 @@
 #include <string>
 
 #include "control.h"
+#include "cross.h"
 
 MidiHandlerFluidsynth MidiHandlerFluidsynth::instance;
 
@@ -86,9 +87,13 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	}
 
 	std::string soundfont = section->Get_string("soundfont");
+	Cross::ResolveHomedir(soundfont);
 	if (!soundfont.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
 	}
+
+	DEBUG_LOG_MSG("MIDI: FluidSynth loaded %d SoundFont files",
+	              fluid_synth_sfcount(fluid_synth.get()));
 
 	mixer_channel_ptr_t mixer_channel(MIXER_AddChannel(mixer_callback,
 	                                                   sample_rate, "FSYNTH"),
