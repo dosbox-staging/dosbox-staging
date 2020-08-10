@@ -161,15 +161,17 @@ void MidiHandlerFluidsynth::PlaySysex(uint8_t *sysex, size_t len)
 	fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
 }
 
-// TODO: originally, buffer MixTemp was being used here to receive int16_t data
-// from fluid and pass it ot the mixer... but this buffer is uint8_t, thus
-// introduces alignment problem; replaced with new local buffer for now.
-int16_t data[MIXER_BUFSIZE];
-
 void MidiHandlerFluidsynth::mixer_callback(uint16_t frames)
 {
-	fluid_synth_write_s16(instance.synth.get(), frames, data, 0, 2, data, 1, 2);
-	instance.channel->AddSamples_s16(frames, data);
+	constexpr uint16_t expected_max_frames = (96000 / 1000) + 4;
+	int16_t data[expected_max_frames * 2]; // two channels per frame
+	while (frames > 0) {
+		const uint16_t len = std::min(frames, expected_max_frames);
+		fluid_synth_write_s16(instance.synth.get(), len, data, 0, 2,
+		                      data, 1, 2);
+		instance.channel->AddSamples_s16(len, data);
+		frames -= len;
+	}
 }
 
 static void fluid_destroy(MAYBE_UNUSED Section *sec)
