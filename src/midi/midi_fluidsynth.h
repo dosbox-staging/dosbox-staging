@@ -59,7 +59,7 @@ private:
 	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
 	bool is_open = false;
 
-	static void mixerCallback(Bitu len);
+	static void mixer_callback(uint16_t len); // see: MIXER_Handler
 };
 
 #endif // C_FLUIDSYNTH
