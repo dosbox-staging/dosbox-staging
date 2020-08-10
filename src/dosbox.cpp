@@ -222,24 +222,40 @@ static Bitu Normal_Loop(void)
 
 void increaseticks_fixed()
 {
-	Bit32u ticksNew;
-	ticksNew = GetTicks();
+	const uint32_t ticksNew = GetTicks();
 	if (ticksNew <= ticksLast) {
-		ticksAdded = 0;
 
 		while (pic_balance < 1)
 			std::this_thread::sleep_for(usT(50));
 		std::lock_guard<std::mutex> guard(pic_balance_mutex);
-		pic_balance--;
-
-		Bit32s timeslept = GetTicks() - ticksNew;
-		return; //0
+		pic_balance = 0;
+		return;
 	}
 
-	ticksRemain = ticksNew-ticksLast;
+	ticksRemain = std::min(20u, ticksNew - ticksLast);
 	ticksLast = ticksNew;
+	/* 	if (ticksRemain > 20)
+	                ticksRemain = 20; */
 }
-//For trying other delays
+
+/* uint32_t t_remain = 0;
+uint32_t t_last = 0;
+
+void increaseticks_fixed()
+{
+        const uint32_t t_new = GetTicks();
+        if (t_new <= t_last) {
+                while (pic_balance < 1)
+                        std::this_thread::sleep_for(usT(50));
+                std::lock_guard<std::mutex> guard(pic_balance_mutex);
+                pic_balance = 0;
+                return;
+        }
+        t_remain = std::min(20u, t_new - t_last);
+        t_last = t_new;
+} */
+
+// For trying other delays
 #define wrap_delay(a) SDL_Delay(a)
 
 void increaseticks() { //Make it return ticksRemain and set it in the function above to remove the global variable.
