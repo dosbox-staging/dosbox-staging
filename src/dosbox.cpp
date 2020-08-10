@@ -160,6 +160,9 @@ bool mono_cga=false;
 void increaseticks_fixed();
 
 static constexpr auto frame_pace_us = usT(1000 * 1000 / 60);
+static constexpr uint32_t frame_pace_ms = frame_pace_us.count() / 1000;
+static int32_t target_cycles;
+
 static int frame_balance = 0;
 static int pic_balance = 0;
 static std::thread pic_pacer;
@@ -223,37 +226,27 @@ static Bitu Normal_Loop(void)
 void increaseticks_fixed()
 {
 	const uint32_t ticksNew = GetTicks();
-	if (ticksNew <= ticksLast) {
+	if (ticksNew > ticksLast) {
+		ticksRemain = ticksNew - ticksLast;
+		ticksLast = ticksNew;
 
-		while (pic_balance < 1)
-			std::this_thread::sleep_for(usT(50));
-		std::lock_guard<std::mutex> guard(pic_balance_mutex);
-		pic_balance = 0;
+		if (ticksRemain > frame_pace_ms) {
+			CPU_CycleMax -= CPU_CycleMax / 10;
+			ticksRemain = frame_pace_ms;
+			LOG_MSG("Dropped cycles to %u", CPU_CycleMax);
+		}
+		else if (ticksRemain > 3 && CPU_CycleMax < target_cycles) {
+			CPU_CycleMax += CPU_CycleMax / 25;
+			LOG_MSG("Bumped cycles to %u", CPU_CycleMax);
+		}
+
 		return;
 	}
-
-	ticksRemain = std::min(20u, ticksNew - ticksLast);
-	ticksLast = ticksNew;
-	/* 	if (ticksRemain > 20)
-	                ticksRemain = 20; */
+	while (pic_balance < 1)
+		std::this_thread::sleep_for(usT(50));
+	std::lock_guard<std::mutex> guard(pic_balance_mutex);
+	pic_balance = 0;
 }
-
-/* uint32_t t_remain = 0;
-uint32_t t_last = 0;
-
-void increaseticks_fixed()
-{
-        const uint32_t t_new = GetTicks();
-        if (t_new <= t_last) {
-                while (pic_balance < 1)
-                        std::this_thread::sleep_for(usT(50));
-                std::lock_guard<std::mutex> guard(pic_balance_mutex);
-                pic_balance = 0;
-                return;
-        }
-        t_remain = std::min(20u, t_new - t_last);
-        t_last = t_new;
-} */
 
 // For trying other delays
 #define wrap_delay(a) SDL_Delay(a)
@@ -422,6 +415,7 @@ void DOSBOX_RunMachine()
 		pic_pacer.detach();
 		frame_pacer = std::thread(&pace_frame);
 		frame_pacer.detach();
+		target_cycles = CPU_CycleMax;
 		started = true;
 	}
 
