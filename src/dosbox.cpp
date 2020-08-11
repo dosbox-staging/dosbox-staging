@@ -165,9 +165,10 @@ bool mono_cga=false;
 void increaseticks_fixed();
 
 static constexpr auto frame_pace_us = usT(static_cast<int>(1000000.0 / FRAME_RATE));
-static constexpr auto frame_pace_ms = static_cast<uint32_t>(frame_pace_us.count()) / 1000;
-static constexpr auto max_latency_ms = static_cast<uint32_t>(frame_pace_us.count()) * MAX_FRAME_QUEUE /
-                                           1000;
+static constexpr auto frame_pace_ms = static_cast<uint32_t>(frame_pace_us.count()) /
+                                      1000;
+static constexpr auto max_latency_ms = static_cast<uint32_t>(frame_pace_us.count()) *
+                                       MAX_FRAME_QUEUE / 1000;
 
 static int frame_balance = 0;
 static int pic_balance = 0;
@@ -194,6 +195,7 @@ const std::vector<int32_t> generate_cycle_range(const int32_t max_cycles,
 	return range;
 }
 
+static uint16_t cycle_adjust_tempo = 0;
 static std::vector<int32_t>::iterator cycle_selector;
 bool cycles_below_max()
 {
@@ -202,15 +204,15 @@ bool cycles_below_max()
 
 void increase_cycles(const uint32_t current_latency_ms)
 {
-	static uint8_t decimator = 0;
-	decimator = (decimator + 1) % 20;
-	if (cycles_below_max() && decimator == 0) {
+	if (cycles_below_max() && !cycle_adjust_tempo) {
+		const auto original_cycles = CPU_CycleMax;
 		++cycle_selector;
 		CPU_CycleMax = cycle_selector == cycle_range.end()
 		                       ? cycle_range.back()
 		                       : *cycle_selector;
-		LOG_MSG("SCHED: %u ms queue, increased cycles to %u",
-		        current_latency_ms, CPU_CycleMax);
+		if (CPU_CycleMax != original_cycles)
+			LOG_MSG("SCHED: %u ms queue, increased cycles to %u",
+			        current_latency_ms, CPU_CycleMax);
 	}
 }
 
@@ -219,14 +221,22 @@ bool cycles_above_min()
 	return cycle_selector > cycle_range.begin();
 }
 
-void decrease_cycles(const uint32_t current_latency_ms)
+void decrease_cycles(uint32_t current_latency_ms)
 {
-	if (cycles_above_min()) {
-		--cycle_selector;
-		CPU_CycleMax = *cycle_selector;
+	const auto original_cycles = CPU_CycleMax;
+	const auto frames_delayed = 1 + (current_latency_ms - max_latency_ms) /
+	                                        frame_pace_ms;
+	for (auto i = frames_delayed; i > 0; --i) {
+		if (cycles_above_min()) {
+			--cycle_selector;
+			CPU_CycleMax = *cycle_selector;
+		} else {
+			break;
+		}
+	}
+	if (CPU_CycleMax != original_cycles)
 		LOG_MSG("SCHED: %u ms queue, decreasing cycles to %u",
 		        current_latency_ms, CPU_CycleMax);
-	}
 }
 
 static void pace_pic()
@@ -284,15 +294,17 @@ static Bitu Normal_Loop(void)
 
 void increaseticks_fixed()
 {
+	// Only adjust cycles up once every second
+	cycle_adjust_tempo = (cycle_adjust_tempo + 1) % 1000;
+
 	const uint32_t ticksNew = GetTicks();
 	if (ticksNew > ticksLast) {
 		ticksRemain = ticksNew - ticksLast;
 		ticksLast = ticksNew;
-
-		if (ticksRemain > max_latency_ms && cycles_above_min()) {
+		if (ticksRemain > max_latency_ms) {
 			decrease_cycles(ticksRemain);
 			ticksRemain = max_latency_ms;
-		} else if (ticksRemain && cycles_below_max()) {
+		} else if (ticksRemain) {
 			increase_cycles(ticksRemain);
 		}
 		return;
