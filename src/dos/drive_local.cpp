@@ -117,21 +117,11 @@ bool localDrive::FileOpen(DOS_File **file, char *name, Bit32u flags)
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 
-	//Flush the buffer of handles for the same file. (Betrayal in Antara)
-	Bit8u i,drive=DOS_DRIVES;
-	localFile *lfp = nullptr;
-	for (i = 0; i < DOS_DRIVES; i++) {
-		if (Drives[i] == this) {
-			drive = i;
-			break;
-		}
-	}
-	for (i = 0; i < DOS_FILES; i++) {
-		if (Files[i] && Files[i]->IsOpen() && Files[i]->GetDrive()==drive && Files[i]->IsName(name)) {
-			lfp=dynamic_cast<localFile*>(Files[i]);
-			if (lfp) lfp->Flush();
-		}
-	}
+	// If the file's already open then flush it before continuing
+	// (Betrayal in Antara)
+	DOS_File *open_file = FindOpenFile(this, name);
+	if (open_file)
+		dynamic_cast<localFile*>(open_file)->Flush();
 
 	FILE* fhandle = fopen(newname, type);
 
@@ -147,7 +137,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, Bit32u flags)
 	}
 #endif
 
-	// If we couldn't open the file, then it's possibile that
+	// If we couldn't open the file, then it's possible that
 	// the file is simply write-protected and the flags requested
 	// RW access.  So check if this is the case:
 	if (!fhandle && flags & (OPEN_READWRITE | OPEN_WRITE)) {
