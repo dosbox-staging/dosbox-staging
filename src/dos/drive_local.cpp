@@ -209,6 +209,7 @@ bool localDrive::GetSystemFilename(char *sysName, char const * const dosName) {
 	return true;
 }
 
+// Attempt to delete the file name from our local drive mount
 bool localDrive::FileUnlink(char * name) {
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
@@ -222,30 +223,24 @@ bool localDrive::FileUnlink(char * name) {
 		return true;
 	}
 
-	// Maybe we've got it open, so scan our Files[] inventory and close it
-	bool found_internally = false;
-	for (size_t i = 0; i < DOS_FILES; ++i) {
-		if (Files[i] && Files[i]->IsName(name)) {
-			size_t max = DOS_FILES;
-			while (Files[i]->IsOpen() && --max) {
-				Files[i]->Close();
-				if (Files[i]->RemoveRef() <= 0) {
-					break;
-				}
+	// Otherwise maybe the file's opened within our mount ... 
+	DOS_File * open_file = FindOpenFile(this, name);
+	if (open_file) {
+		size_t max = DOS_FILES;
+		// then close and remove references (as many times as needed),
+		while (open_file->IsOpen() && --max) {
+			open_file->Close();
+			if (open_file->RemoveRef() <= 0) {
+				break;
 			}
-			found_internally = true;
+		}
+		// and try removing it again.
+		if (remove(fullname) == 0) {
+			dirCache.DeleteEntry(newname);
+			return true;
 		}
 	}
-
-	// Found it, so try removing it one last time ...
-	if (found_internally && std::remove(fullname) == 0) {
-		dirCache.DeleteEntry(newname);
-		return true;
-	}
-
-	//Still failed to remove it; time to give up!
-	DEBUG_LOG_MSG("FS: Unable to remove %s; file might be write-protected",
-	              fullname);
+	DEBUG_LOG_MSG("FS: Unable to remove file %s", fullname);
 	return false;
 }
 
