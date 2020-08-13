@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <errno.h>
 
 #include "dos_inc.h"
 #include "dos_mscdex.h"
@@ -119,9 +118,9 @@ bool localDrive::FileOpen(DOS_File **file, char *name, Bit32u flags)
 
 	// If the file's already open then flush it before continuing
 	// (Betrayal in Antara)
-	DOS_File *open_file = FindOpenFile(this, name);
+	auto open_file = dynamic_cast<localFile *>(FindOpenFile(this, name));
 	if (open_file)
-		dynamic_cast<localFile*>(open_file)->Flush();
+		open_file->Flush();
 
 	FILE* fhandle = fopen(newname, type);
 
@@ -223,8 +222,8 @@ bool localDrive::FileUnlink(char * name) {
 		return true;
 	}
 
-	// Otherwise maybe the file's opened within our mount ... 
-	DOS_File * open_file = FindOpenFile(this, name);
+	// Otherwise maybe the file's opened within our mount ...
+	DOS_File *open_file = FindOpenFile(this, name);
 	if (open_file) {
 		size_t max = DOS_FILES;
 		// then close and remove references (as many times as needed),
@@ -617,7 +616,7 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	return true;    // always return true, even if partially written
 }
 
-bool localFile::Seek(uint32_t *pos, uint32_t type)
+bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 {
 	int seektype;
 	switch (type) {
@@ -628,7 +627,12 @@ bool localFile::Seek(uint32_t *pos, uint32_t type)
 	//TODO Give some doserrorcode;
 		return false;//ERROR
 	}
-	if (!fseek_to_and_check(static_cast<long>(*pos), seektype)) {
+
+	// The inbound position is actually an int32_t being passed through a
+	// uint32_t* pointer (pos_addr), so reinterpret the underlying memory as
+	// such to prevent rollover into the unsigned range.
+	const auto pos = *reinterpret_cast<int32_t *>(pos_addr);
+	if (!fseek_to_and_check(pos, seektype)) {
 		// Failed to seek, but try again this time seeking to
 		// the end of file, which satisfies Black Thorne.
 		stream_pos = 0;
@@ -638,17 +642,18 @@ bool localFile::Seek(uint32_t *pos, uint32_t type)
 	fpos_t temppos;
 	fgetpos(fhandle,&temppos);
 	Bit32u * fake_pos=(Bit32u*)&temppos;
-	*pos=*fake_pos;
+	*pos_addr = *fake_pos;
 #endif
-	if (ftell_and_check())
-		*pos = static_cast<uint32_t>(stream_pos);
+	static_cast<void>(ftell_and_check());
 
-	// If ftell fails then stream_pos becomes -1 however this function's
-	// 'pos' argument can't handle -1 because it's unsigned. So we
-	// explicitly underflow it to its maximum to acknowledge what's
-	// actually happening:
-	else
-		*pos = UINT32_MAX;
+	// The inbound position is actually an int32_t being passed through a
+	// uint32_t* pointer (pos_addr), so before we save the seeked position
+	// back into it we first ensure the current long stream_pos (which is a
+	// signed 64-bit on some platforms + OSes) can fit within the int32_t
+	// range before assigning it.
+	assert(stream_pos >= std::numeric_limits<int32_t>::min() &&
+	       stream_pos <= std::numeric_limits<int32_t>::max());
+	*reinterpret_cast<int32_t *>(pos_addr) = static_cast<int32_t>(stream_pos);
 
 	last_action = NONE;
 	return true;
