@@ -78,9 +78,9 @@ public:
 	const char *GetBasedir() const { return basedir; }
 
 protected:
-	char basedir[CROSS_LEN];
+	char basedir[CROSS_LEN] = "";
 	struct {
-		char srch_dir[CROSS_LEN];
+		char srch_dir[CROSS_LEN] = "";
 	} srchInfo[MAX_OPENDIRS];
 
 private:

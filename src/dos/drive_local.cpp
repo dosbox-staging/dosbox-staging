@@ -333,7 +333,10 @@ again:
  	if (~srch_attr & find_attr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM)) goto again;
 	
 	/*file is okay, setup everything to be copied in DTA Block */
-	char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;
+	char find_name[DOS_NAMELENGTH_ASCII] = "";
+	uint16_t find_date;
+	uint16_t find_time;
+	uint32_t find_size;
 
 	if (strlen(dir_entcopy)<DOS_NAMELENGTH_ASCII) {
 		safe_strcpy(find_name, dir_entcopy);
