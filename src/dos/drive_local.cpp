@@ -21,7 +21,10 @@
 
 #include "drives.h"
 
+#include <cerrno>
+#include <climits>
 #include <cstdio>
+#include <limits>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -70,8 +73,35 @@ bool localDrive::IsFirstEncounter(const std::string& filename) {
 	return was_inserted;
 }
 
-bool localDrive::FileOpen(DOS_File** file, char * name, Bit32u flags) {
-	const char* type = nullptr;
+// Search the Files[] inventory for an open file matching the requested
+// local drive and file name. Returns nullptr if not found.
+DOS_File *FindOpenFile(const DOS_Drive *drive, const char *name)
+{
+	if (!drive || !name)
+		return nullptr;
+
+	uint8_t drive_num = DOS_DRIVES; // default out range
+	// Look for a matching drive mount
+	for (uint8_t i = 0; i < DOS_DRIVES; ++i) {
+		if (Drives[i] && Drives[i] == drive) {
+			drive_num = i;
+			break;
+		}
+	}
+	if (drive_num == DOS_DRIVES) // still out of range, no matching mount
+		return nullptr;
+
+	// Look for a matching open filename on the same mount
+	for (auto *file : Files)
+		if (file && file->IsOpen() && file->GetDrive() == drive_num && file->IsName(name))
+			return file; // drive + file path is unique
+
+	return nullptr;
+}
+
+bool localDrive::FileOpen(DOS_File **file, char *name, Bit32u flags)
+{
+	const char *type = nullptr;
 	switch (flags&0xf) {
 	case OPEN_READ:        type = "rb" ; break;
 	case OPEN_WRITE:       type = "rb+"; break;
