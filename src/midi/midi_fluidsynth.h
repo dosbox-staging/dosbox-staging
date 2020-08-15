@@ -54,7 +54,7 @@ private:
 
 	static MidiHandlerFluidsynth instance;
 
-	fluid_settings_ptr_t fluid_settings{nullptr, &delete_fluid_settings};
+	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
 	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
 	bool is_open = false;
