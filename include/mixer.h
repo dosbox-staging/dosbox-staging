@@ -56,7 +56,9 @@ extern Bit8u MixTemp[MIXER_BUFSIZE];
 class MixerChannel {
 public:
 	MixerChannel(MIXER_Handler _handler, Bitu _freq, const char * _name);
-	void SetVolume(float _left,float _right);
+	uint32_t GetSampleRate() const;
+	bool IsInterpolated() const;
+	void SetVolume(float _left, float _right);
 	void SetScale(float f);
 	void SetScale(float _left, float _right);
 	void MapChannels(Bit8u _left, Bit8u _right);

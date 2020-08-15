@@ -121,6 +121,16 @@ MixerChannel * MIXER_AddChannel(MIXER_Handler handler, Bitu freq, const char * n
 	chan->MapChannels(0, 1);
 	chan->Enable(false);
 	mixer.channels=chan;
+
+	const auto mix_rate = mixer.freq;
+	const auto chan_rate = chan->GetSampleRate();
+	if (chan_rate == mix_rate)
+		LOG_MSG("MIXER: %s channel operating at %u Hz without resampling",
+		        name, chan_rate);
+	else
+		LOG_MSG("MIXER: %s channel operating at %u Hz and %s to the output rate",
+		        name, chan_rate,
+		        chan_rate > mix_rate ? "downsampling" : "upsampling");
 	return chan;
 }
 
@@ -248,6 +258,16 @@ void MixerChannel::SetFreq(Bitu freq) {
 	sample_rate = static_cast<uint32_t>(freq);
 	envelope.Update(sample_rate, peak_amplitude,
 	                ENVELOPE_MAX_EXPANSION_OVER_MS, ENVELOPE_EXPIRES_AFTER_S);
+}
+
+bool MixerChannel::IsInterpolated() const
+{
+	return interpolate;
+}
+
+uint32_t MixerChannel::GetSampleRate() const
+{
+	return sample_rate;
 }
 
 void MixerChannel::SetPeakAmplitude(const uint32_t peak)
