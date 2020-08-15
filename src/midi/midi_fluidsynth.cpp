@@ -63,8 +63,9 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 {
 	Close();
 
-	fluid_settings_ptr_t settings(new_fluid_settings(), delete_fluid_settings);
-	if (!settings) {
+	fluid_settings_ptr_t fluid_settings(new_fluid_settings(),
+	                                    delete_fluid_settings);
+	if (!fluid_settings) {
 		LOG_MSG("MIDI: new_fluid_settings failed");
 		return false;
 	}
@@ -75,12 +76,13 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	// http://www.fluidsynth.org/api/fluidsettings.xml
 
 	const int sample_rate = section->Get_int("fluid_rate");
-	fluid_settings_setnum(settings.get(), "synth.sample-rate", sample_rate);
+	fluid_settings_setnum(fluid_settings.get(), "synth.sample-rate", sample_rate);
 
 	const int cpu_cores = section->Get_int("synth_threads");
-	fluid_settings_setint(settings.get(), "synth.cpu-cores", cpu_cores);
+	fluid_settings_setint(fluid_settings.get(), "synth.cpu-cores", cpu_cores);
 
-	fsynth_ptr_t fluid_synth(new_fluid_synth(settings.get()), delete_fluid_synth);
+	fsynth_ptr_t fluid_synth(new_fluid_synth(fluid_settings.get()),
+	                         delete_fluid_synth);
 	if (!fluid_synth) {
 		LOG_MSG("MIDI: Failed to create the FluidSynth synthesizer");
 		return false;
@@ -100,7 +102,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	                                  MIXER_DelChannel);
 	mixer_channel->Enable(true);
 
-	fluid_settings = std::move(settings);
+	settings = std::move(fluid_settings);
 	synth = std::move(fluid_synth);
 	channel = std::move(mixer_channel);
 	is_open = true;
@@ -115,7 +117,7 @@ void MidiHandlerFluidsynth::Close()
 	channel->Enable(false);
 	channel = nullptr;
 	synth = nullptr;
-	fluid_settings = nullptr;
+	settings = nullptr;
 	is_open = false;
 }
 
