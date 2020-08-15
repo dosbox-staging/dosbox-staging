@@ -673,15 +673,9 @@ void DOSBOX_Init(void) {
 	const char* oplemus[] = {"default", "compat", "fast", "mame", "nuked", 0};
 	Pstring = secprop->Add_string("oplemu", Property::Changeable::WhenIdle, "default");
 	Pstring->Set_values(oplemus);
-	Pstring->Set_help("Provider for the OPL emulation. 'compat' provides better quality,\n"
-	                  "'nuked' is the default and most accurate (but the most CPU-intensive).\n"
-	                  "See sblaster.oplrate as well.");
-
-	const char *oplrates[] = {"44100", "49716", "48000", "32000", "22050", "16000", "11025", "8000", 0};
-	Pint = secprop->Add_int("oplrate", Property::Changeable::WhenIdle, 44100);
-	Pint->Set_values(oplrates);
-	Pint->Set_help("Sample rate of OPL music emulation. Use 49716 for the highest\n"
-	               "quality (set the mixer.rate accordingly).");
+	Pstring->Set_help(
+	        "Provider for the OPL emulation. 'compat' provides better quality,\n"
+	        "'nuked' is the default and most accurate (but the most CPU-intensive).\n");
 
 	// Configure Gravis UltraSound emulation
 	GUS_AddConfigSection(control);
