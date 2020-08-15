@@ -252,8 +252,15 @@ void MixerChannel::Enable(const bool should_enable)
 	MIXER_UnlockAudioDevice();
 }
 
-void MixerChannel::SetFreq(Bitu freq) {
-	freq_add=(freq<<FREQ_SHIFT)/mixer.freq;
+void MixerChannel::SetFreq(Bitu freq)
+{
+	if (!freq) {
+		// If the channel rate is zero, then avoid resampling by running
+		// the channel at the same rate as the mixer
+		assert(mixer.freq > 0);
+		freq = mixer.freq;
+	}
+	freq_add = (freq << FREQ_SHIFT) / mixer.freq;
 	interpolate = (freq != mixer.freq);
 	sample_rate = static_cast<uint32_t>(freq);
 	envelope.Update(sample_rate, peak_amplitude,
