@@ -839,18 +839,15 @@ Module::Module(Section *configuration)
 {
 	Section_prop * section=static_cast<Section_prop *>(configuration);
 	Bitu base = section->Get_hex("sbbase");
-	Bitu rate = section->Get_int("oplrate");
-	//Make sure we can't select lower than 8000 to prevent fixed point issues
-	if ( rate < 8000 )
-		rate = 8000;
+
 	ctrl.mixer = section->Get_bool("sbmixer");
 
-	mixerChan = mixerObject.Install(OPL_CallBack,rate,"FM");
+	mixerChan = mixerObject.Install(OPL_CallBack, 0, "FM");
 	//Used to be 2.0, which was measured to be too high. Exact value depends on card/clone.
 	mixerChan->SetScale( 1.5f );  
 
 	handler = make_opl_handler(section->Get_string("oplemu"), oplmode);
-	handler->Init(rate);
+	handler->Init(mixerChan->GetSampleRate());
 
 	bool single = false;
 	switch ( oplmode ) {
