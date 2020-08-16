@@ -44,12 +44,12 @@ void DOS_ParamBlock::LoadData()
 
 void DOS_ParamBlock::SaveData()
 {
-	SSET_WORD(sExec,envseg,exec.envseg);
-	SSET_DWORD(sExec,cmdtail,exec.cmdtail);
-	SSET_DWORD(sExec,fcb1,exec.fcb1);
-	SSET_DWORD(sExec,fcb2,exec.fcb2);
-	SSET_DWORD(sExec,initsssp,exec.initsssp);
-	SSET_DWORD(sExec,initcsip,exec.initcsip);
+	SSET_WORD(sExec, envseg, exec.envseg);
+	SSET_DWORD(sExec, cmdtail, exec.cmdtail);
+	SSET_DWORD(sExec, fcb1, exec.fcb1);
+	SSET_DWORD(sExec, fcb2, exec.fcb2);
+	SSET_DWORD(sExec, initsssp, exec.initsssp);
+	SSET_DWORD(sExec, initcsip, exec.initcsip);
 }
 
 void DOS_InfoBlock::SetLocation(uint16_t segment)
@@ -128,7 +128,8 @@ void DOS_InfoBlock::SetBuffers(uint16_t x, uint16_t y)
 
 Bit16u DOS_PSP::rootpsp = 0;
 
-void DOS_PSP::MakeNew(Bit16u mem_size) {
+void DOS_PSP::MakeNew(uint16_t mem_size)
+{
 	/* get previous */
 //	DOS_PSP prevpsp(dos.psp());
 	/* Clear it first */
@@ -183,15 +184,18 @@ void DOS_PSP::SetFileHandle(uint16_t index, uint8_t handle)
 	}
 }
 
-Bit16u DOS_PSP::FindFreeFileEntry(void) {
-	PhysPt files=Real2Phys(sGet(sPSP,file_table));
-	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
-		if (mem_readb(files+i)==0xff) return i;
+uint16_t DOS_PSP::FindFreeFileEntry() const
+{
+	PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
+	const auto max_files = SGET_WORD(sPSP, max_files);
+	for (uint16_t i = 0; i < max_files; ++i) {
+		if (mem_readb(files + i) == 0xff)
+			return i;
 	}
 	return 0xff;
 }
 
-uint16_t DOS_PSP::FindEntryByHandle(uint8_t handle)
+uint16_t DOS_PSP::FindEntryByHandle(uint8_t handle) const
 {
 	PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
 	const auto max_files = SGET_WORD(sPSP, max_files);
@@ -199,7 +203,7 @@ uint16_t DOS_PSP::FindEntryByHandle(uint8_t handle)
 		if (mem_readb(files + i) == handle)
 			return i;
 	}
-	return 0xFF;
+	return 0xff;
 }
 
 void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp) {
@@ -210,7 +214,7 @@ void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp) {
 		{	//copy obeying not inherit flag.(but dont duplicate them)
 			bool allowCopy = true;//(handle==0) || ((handle>0) && (FindEntryByHandle(handle)==0xff));
 			if((handle<DOS_FILES) && Files[handle] && !(Files[handle]->flags & DOS_NOT_INHERIT) && allowCopy)
-			{   
+			{
 				Files[handle]->AddRef();
 				SetFileHandle(i,handle);
 			}
@@ -226,24 +230,27 @@ void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp) {
 	}
 }
 
-void DOS_PSP::CloseFiles(void) {
-	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
+void DOS_PSP::CloseFiles()
+{
+	const auto max_files = SGET_WORD(sPSP, max_files);
+	for (uint16_t i = 0; i < max_files; ++i)
 		DOS_CloseFile(i);
-	}
 }
 
-void DOS_PSP::SaveVectors(void) {
+void DOS_PSP::SaveVectors()
+{
 	/* Save interrupt 22,23,24 */
-	sSave(sPSP,int_22,RealGetVec(0x22));
-	sSave(sPSP,int_23,RealGetVec(0x23));
-	sSave(sPSP,int_24,RealGetVec(0x24));
+	SSET_DWORD(sPSP, int_22, RealGetVec(0x22));
+	SSET_DWORD(sPSP, int_23, RealGetVec(0x23));
+	SSET_DWORD(sPSP, int_24, RealGetVec(0x24));
 }
 
-void DOS_PSP::RestoreVectors(void) {
+void DOS_PSP::RestoreVectors()
+{
 	/* Restore interrupt 22,23,24 */
-	RealSetVec(0x22,sGet(sPSP,int_22));
-	RealSetVec(0x23,sGet(sPSP,int_23));
-	RealSetVec(0x24,sGet(sPSP,int_24));
+	RealSetVec(0x22, SGET_DWORD(sPSP, int_22));
+	RealSetVec(0x23, SGET_DWORD(sPSP, int_23));
+	RealSetVec(0x24, SGET_DWORD(sPSP, int_24));
 }
 
 void DOS_PSP::SetCommandTail(RealPt src) {
@@ -313,36 +320,38 @@ void DOS_DTA::SetResult(const char * _name,Bit32u _size,Bit16u _date,Bit16u _tim
 	sSave(sDTA,attr,_attr);
 }
 
-
-void DOS_DTA::GetResult(char * _name,Bit32u & _size,Bit16u & _date,Bit16u & _time,Bit8u & _attr) {
-	MEM_BlockRead(pt+offsetof(sDTA,name),_name,DOS_NAMELENGTH_ASCII);
-	_size=sGet(sDTA,size);
-	_date=(Bit16u)sGet(sDTA,date);
-	_time=(Bit16u)sGet(sDTA,time);
-	_attr=(Bit8u)sGet(sDTA,attr);
+void DOS_DTA::GetResult(char *name,
+                        uint32_t &size,
+                        uint16_t &date,
+                        uint16_t &time,
+                        uint8_t &attr) const
+{
+	constexpr auto name_offset = offsetof(sDTA, name);
+	MEM_BlockRead(pt + name_offset, name, DOS_NAMELENGTH_ASCII);
+	size = SGET_DWORD(sDTA, size);
+	date = SGET_WORD(sDTA, date);
+	time = SGET_WORD(sDTA, time);
+	attr = SGET_BYTE(sDTA, attr);
 }
 
-Bit8u DOS_DTA::GetSearchDrive(void) {
-	return (Bit8u)sGet(sDTA,sdrive);
-}
-
-void DOS_DTA::GetSearchParams(Bit8u & attr,char * pattern) {
-	attr=(Bit8u)sGet(sDTA,sattr);
+void DOS_DTA::GetSearchParams(uint8_t &attr, char *pattern) const
+{
+	attr = SGET_BYTE(sDTA, attr);
 	char temp[11];
 	MEM_BlockRead(pt+offsetof(sDTA,sname),temp,11);
 	memcpy(pattern,temp,8);
 	pattern[8]='.';
 	memcpy(&pattern[9],&temp[8],3);
 	pattern[12]=0;
-
 }
 
-DOS_FCB::DOS_FCB(Bit16u seg,Bit16u off,bool allow_extended) { 
-	SetPt(seg,off); 
+DOS_FCB::DOS_FCB(uint16_t seg, uint16_t off, bool allow_extended)
+{
+	SetPt(seg, off);
 	real_pt=pt;
 	extended=false;
 	if (allow_extended) {
-		if (sGet(sFCB,drive)==0xff) {
+		if (SGET_BYTE(sFCB, drive) == 0xff) {
 			pt+=7;
 			extended=true;
 		}
@@ -423,7 +432,7 @@ void DOS_FCB::FileOpen(Bit8u _fhandle) {
 	sSave(sFCB,file_handle,_fhandle);
 	sSave(sFCB,cur_block,0);
 	sSave(sFCB,rec_size,128);
-//	sSave(sFCB,rndm,0); // breaks Jewels of darkness. 
+//	sSave(sFCB,rndm,0); // breaks Jewels of darkness.
 	Bit32u size = 0;
 	Files[_fhandle]->Seek(&size,DOS_SEEK_END);
 	sSave(sFCB,filesize,size);
@@ -474,8 +483,10 @@ void DOS_FCB::SetResult(Bit32u size,Bit16u date,Bit16u time,Bit8u attr) {
 	mem_writeb(pt + 0x0c,attr);
 }
 
-void DOS_SDA::Init() {
+void DOS_SDA::Init()
+{
 	/* Clear */
-	for(Bitu i=0;i<sizeof(sSDA);i++) mem_writeb(pt+i,0x00);
-	sSave(sSDA,drive_crit_error,0xff);   
+	for (size_t i = 0; i < sizeof(sSDA); ++i)
+		mem_writeb(pt + i, 0x00);
+	SSET_BYTE(sSDA, drive_crit_error, uint8_t(0xff));
 }

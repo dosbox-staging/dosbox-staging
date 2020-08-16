@@ -66,7 +66,7 @@ public:
 
 	void SetNextDeviceHeader(RealPt ptr)
 	{
-		sSave(sDeviceHeader, nextDeviceHeader, ptr);
+		SSET_DWORD(sDeviceHeader, nextDeviceHeader, ptr);
 	}
 
 	RealPt GetNextDeviceHeader() const
@@ -76,17 +76,17 @@ public:
 
 	void SetAttribute(uint16_t atr)
 	{
-		sSave(sDeviceHeader, devAttributes, atr);
+		SSET_WORD(sDeviceHeader, devAttributes, atr);
 	}
 
 	void SetDriveLetter(uint8_t letter)
 	{
-		sSave(sDeviceHeader, driveLetter, letter);
+		SSET_BYTE(sDeviceHeader, driveLetter, letter);
 	}
 
 	void SetNumSubUnits(uint8_t num)
 	{
-		sSave(sDeviceHeader, numSubUnits, num);
+		SSET_BYTE(sDeviceHeader, numSubUnits, num);
 	}
 
 	uint8_t GetNumSubUnits() const
@@ -101,12 +101,12 @@ public:
 
 	void SetInterrupt(uint16_t ofs)
 	{
-		sSave(sDeviceHeader, interrupt, ofs);
+		SSET_WORD(sDeviceHeader, interrupt, ofs);
 	}
 
 	void SetStrategy(uint16_t offset)
 	{
-		sSave(sDeviceHeader, strategy, offset);
+		SSET_WORD(sDeviceHeader, strategy, offset);
 	}
 
 public:

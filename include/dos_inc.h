@@ -331,20 +331,19 @@ public:
 		seg = segment;
 	}
 
-	void	MakeNew				(Bit16u memSize);
-	void	CopyFileTable		(DOS_PSP* srcpsp,bool createchildpsp);
-	Bit16u	FindFreeFileEntry	(void);
-	void	CloseFiles			(void);
+	void MakeNew(uint16_t mem_size);
+	void CopyFileTable(DOS_PSP *srcpsp, bool createchildpsp);
+	void CloseFiles();
 
-	void	SaveVectors			(void);
-	void	RestoreVectors		(void);
+	void SaveVectors();
+	void RestoreVectors();
 
 	uint16_t GetSegment() const { return seg; }
 
 	void SetFileHandle(uint16_t index, uint8_t handle);
 	uint8_t GetFileHandle(uint16_t index) const;
-
-	uint16_t FindEntryByHandle(uint8_t handle);
+	uint16_t FindFreeFileEntry() const;
+	uint16_t FindEntryByHandle(uint8_t handle) const;
 
 	void SetSize(uint16_t size) { SSET_WORD(sPSP, next_seg, size); }
 	void SetInt22(RealPt int22pt) { SSET_DWORD(sPSP, int_22, int22pt); }
@@ -521,20 +520,25 @@ public:
 	Bit16u	seg;
 };
 
-class DOS_DTA:public MemStruct{
+class DOS_DTA : public MemStruct {
 public:
 	DOS_DTA(RealPt addr) { SetPt(addr); }
 
 	void SetupSearch(Bit8u _sdrive,Bit8u _sattr,char * _pattern);
 	void SetResult(const char * _name,Bit32u _size,Bit16u _date,Bit16u _time,Bit8u _attr);
-	
-	Bit8u GetSearchDrive(void);
-	void GetSearchParams(Bit8u & _sattr,char * _spattern);
-	void GetResult(char * _name,Bit32u & _size,Bit16u & _date,Bit16u & _time,Bit8u & _attr);
+
+	void GetSearchParams(uint8_t &attr, char *pattern) const;
+
+	void GetResult(char *name,
+	               uint32_t &size,
+	               uint16_t &date,
+	               uint16_t &time,
+	               uint8_t &attr) const;
 
 	void SetDirID(uint16_t id) { SSET_WORD(sDTA, dirID, id); }
 	void SetDirIDCluster(uint16_t cl) { SSET_WORD(sDTA, dirCluster, cl); }
 
+	uint8_t GetSearchDrive() const { return SGET_BYTE(sDTA, sdrive); }
 	uint16_t GetDirID() const { return SGET_WORD(sDTA, dirID); }
 	uint16_t GetDirIDCluster() const { return SGET_WORD(sDTA, dirCluster); }
 
@@ -563,7 +567,8 @@ private:
 
 class DOS_FCB: public MemStruct {
 public:
-	DOS_FCB(Bit16u seg,Bit16u off,bool allow_extended=true);
+	DOS_FCB(uint16_t seg, uint16_t off, bool allow_extended = true);
+
 	void Create(bool _extended);
 	void SetName(Bit8u _drive,char * _fname,char * _ext);
 	void SetSizeDateTime(Bit32u _size,Bit16u _date,Bit16u _time);
@@ -703,7 +708,7 @@ struct DOS_Block {
 	void dta(RealPt dtap) { DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetDTA(dtap); }
 
 	Bit8u return_code,return_mode;
-	
+
 	Bit8u current_drive;
 	bool verify;
 	bool breakcheck;
