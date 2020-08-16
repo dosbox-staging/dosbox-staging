@@ -403,8 +403,10 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	/* check for a drive change */
 	if (((strcmp(name + 1, ":") == 0) || (strcmp(name + 1, ":\\") == 0)) && isalpha(*name))
 	{
-		if (!DOS_SetDrive(toupper(name[0])-'A')) {
-			WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),toupper(name[0]));
+		const auto drive_idx = drive_index(name[0]);
+		if (!DOS_SetDrive(drive_idx)) {
+			WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),
+			         toupper(name[0]));
 		}
 		return true;
 	}
