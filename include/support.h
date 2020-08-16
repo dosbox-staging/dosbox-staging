@@ -44,6 +44,11 @@
 // is in-range of a char and returns it as such.
 char int_to_char(int val);
 
+// Given a case-insensitive drive letter (a/A .. z/Z),
+// returns a zero-based index starting at 0 for drive A
+// through to 26 for drive Z.
+uint8_t drive_index(char drive);
+
 /*
  *  Converts a string to a finite number (such as float or double).
  *  Returns the number or quiet_NaN, if it could not be parsed.

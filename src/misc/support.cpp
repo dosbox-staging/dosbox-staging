@@ -46,6 +46,14 @@ char int_to_char(int val)
 	return static_cast<char>(val);
 }
 
+uint8_t drive_index(char drive)
+{
+	const auto drive_letter = int_to_char(toupper(drive));
+	// Confirm the provided drive is valid
+	assert(drive_letter >= 'A' && drive_letter <= 'Z');
+	return static_cast<uint8_t>(drive_letter - 'A');
+}
+
 std::string get_basename(const std::string &filename)
 {
 	// Guard against corner cases: '', '/', '\', 'a'
