@@ -376,8 +376,8 @@ void DOS_DTA::GetSearchParams(uint8_t &attr, char *pattern) const
 }
 
 DOS_FCB::DOS_FCB(uint16_t seg, uint16_t off, bool allow_extended)
+        : MemStruct(seg, off)
 {
-	SetPt(seg, off);
 	real_pt=pt;
 	extended=false;
 	if (allow_extended) {
