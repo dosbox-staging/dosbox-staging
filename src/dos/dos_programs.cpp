@@ -259,7 +259,7 @@ public:
 			// get the drive letter
 			cmd->FindCommand(1,temp_line);
 			if ((temp_line.size() > 2) || ((temp_line.size() > 1) && (temp_line[1]!=':'))) goto showusage;
-			int i_drive = toupper(temp_line[0]);
+			const int i_drive = toupper(temp_line[0]);
 
 			if (!isalpha(i_drive)) {
 				goto showusage;
@@ -267,7 +267,7 @@ public:
 			if ((i_drive - 'A') >= DOS_DRIVES || (i_drive - 'A') < 0 ) {
 				goto showusage;
 			}
-			drive = static_cast<char>(i_drive);
+			drive = int_to_char(i_drive);
 			if (type == "overlay") {
 				//Ensure that the base drive exists:
 				if (!Drives[drive_index(drive)]) {
@@ -1257,12 +1257,13 @@ public:
 				WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
 				return;
 			}
-			int i_drive = toupper(temp_line[0]);
-			if (!isalpha(i_drive) || (i_drive - 'A') >= DOS_DRIVES || (i_drive - 'A') <0) {
+			const int i_drive = toupper(temp_line[0]);
+			if (!isalpha(i_drive) || (i_drive - 'A') >= DOS_DRIVES ||
+			    (i_drive - 'A') < 0) {
 				WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
 				return;
 			}
-			drive = static_cast<char>(i_drive);
+			drive = int_to_char(i_drive);
 		} else if (fstype=="none") {
 			cmd->FindCommand(1,temp_line);
 			if ((temp_line.size() > 1) || (!isdigit(temp_line[0]))) {
