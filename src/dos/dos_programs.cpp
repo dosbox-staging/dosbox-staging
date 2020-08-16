@@ -56,7 +56,7 @@ static Bitu ZDRIVE_NUM = 25;
 static const char* UnmountHelper(char umount) {
 	int i_drive;
 	if (umount < '0' || umount > 3+'0')
-		i_drive = toupper(umount) - 'A';
+		i_drive = drive_index(umount);
 	else
 		i_drive = umount - '0';
 
@@ -93,7 +93,7 @@ class MOUNT : public Program {
 public:
 	void Move_Z(char new_z) {
 		char newz_drive = (char) toupper(new_z);
-		int i_newz = newz_drive - 'A';
+		int i_newz = drive_index(newz_drive);
 		if (i_newz >= 0 && i_newz < DOS_DRIVES-1 && !Drives[i_newz]) {
 			ZDRIVE_NUM = i_newz;
 			/* remap drives */
@@ -270,12 +270,14 @@ public:
 			drive = static_cast<char>(i_drive);
 			if (type == "overlay") {
 				//Ensure that the base drive exists:
-				if (!Drives[drive-'A']) {
+				if (!Drives[drive_index(drive)]) {
 					WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_NO_BASE"));
 					return;
 				}
-			} else if (Drives[drive-'A']) {
-				WriteOut(MSG_Get("PROGRAM_MOUNT_ALREADY_MOUNTED"),drive,Drives[drive-'A']->GetInfo());
+			} else if (Drives[drive_index(drive)]) {
+				WriteOut(MSG_Get("PROGRAM_MOUNT_ALREADY_MOUNTED"),
+				         drive,
+				         Drives[drive_index(drive)]->GetInfo());
 				return;
 			}
 
@@ -358,8 +360,10 @@ public:
 				if (temp_line == "/") WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
 #endif
 				if (type == "overlay") {
-					localDrive* ldp = dynamic_cast<localDrive*>(Drives[drive - 'A']);
-					cdromDrive* cdp = dynamic_cast<cdromDrive*>(Drives[drive - 'A']);
+					localDrive *ldp = dynamic_cast<localDrive *>(
+					        Drives[drive_index(drive)]);
+					cdromDrive *cdp = dynamic_cast<cdromDrive *>(
+					        Drives[drive_index(drive)]);
 					if (!ldp || cdp) {
 						WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"));
 						return;
@@ -381,8 +385,8 @@ public:
 						            ldp->curdir);
 					}
 
-					delete Drives[drive - 'A'];
-					Drives[drive - 'A'] = 0;
+					delete Drives[drive_index(drive)];
+					Drives[drive_index(drive)] = nullptr;
 				} else {
 					newdrive = new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
 				}
@@ -391,11 +395,16 @@ public:
 			WriteOut(MSG_Get("PROGRAM_MOUNT_ILL_TYPE"),type.c_str());
 			return;
 		}
-		Drives[drive - 'A'] = newdrive;
+		Drives[drive_index(drive)] = newdrive;
 		/* Set the correct media byte in the table */
-		mem_writeb(Real2Phys(dos.tables.mediaid) + (drive - 'A') * 9, newdrive->GetMediaByte());
-		if (type != "overlay") WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,newdrive->GetInfo());
-		else WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_STATUS"),temp_line.c_str(),drive);
+		mem_writeb(Real2Phys(dos.tables.mediaid) + (drive_index(drive)) * 9,
+		           newdrive->GetMediaByte());
+		if (type != "overlay")
+			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), drive,
+			         newdrive->GetInfo());
+		else
+			WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_STATUS"),
+			         temp_line.c_str(), drive);
 		/* check if volume label is given and don't allow it to updated in the future */
 		if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str(),iscdrom,false);
 		/* For hard drives set the label to DRIVELETTER_Drive.
@@ -675,15 +684,19 @@ public:
 
 		swapInDisks(0);
 
-		if (!imageDiskList[drive - 'A']) {
+		if (!imageDiskList[drive_index(drive)]) {
 			WriteOut(MSG_Get("PROGRAM_BOOT_UNABLE"), drive);
 			return;
 		}
 
 		bootSector bootarea;
-		imageDiskList[drive - 'A']->Read_Sector(0, 0, 1, (Bit8u *)&bootarea);
-		if ((bootarea.rawdata[0]==0x50) && (bootarea.rawdata[1]==0x43) && (bootarea.rawdata[2]==0x6a) && (bootarea.rawdata[3]==0x72)) {
-			if (machine!=MCH_PCJR) WriteOut(MSG_Get("PROGRAM_BOOT_CART_WO_PCJR"));
+		imageDiskList[drive_index(drive)]->Read_Sector(0, 0, 1,
+		                                               reinterpret_cast<uint8_t *>(&bootarea));
+		if ((bootarea.rawdata[0] == 0x50) && (bootarea.rawdata[1] == 0x43) &&
+		    (bootarea.rawdata[2] == 0x6a) && (bootarea.rawdata[3] == 0x72)) {
+			if (machine != MCH_PCJR) {
+				WriteOut(MSG_Get("PROGRAM_BOOT_CART_WO_PCJR"));
+			}
 			else {
 				Bit8u rombuf[65536];
 				Bits cfound_at=-1;
@@ -1346,7 +1359,7 @@ public:
 				LOG_MSG("autosized image file: %d:%d:%d:%d",sizes[0],sizes[1],sizes[2],sizes[3]);
 			}
 
-			if (Drives[drive - 'A']) {
+			if (Drives[drive_index(drive)]) {
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED"));
 				return;
 			}
@@ -1373,20 +1386,23 @@ public:
 
 			// Update DriveManager
 			for (ct = 0; ct < imgDisks.size(); ct++) {
-				DriveManager::AppendDisk(drive - 'A', imgDisks[ct]);
+				DriveManager::AppendDisk(drive_index(drive),
+				                         imgDisks[ct]);
 			}
-			DriveManager::InitializeDrive(drive - 'A');
+			DriveManager::InitializeDrive(drive_index(drive));
 
 			// Set the correct media byte in the table
-			mem_writeb(Real2Phys(dos.tables.mediaid) + (drive - 'A') * 9, mediaid);
+			mem_writeb(Real2Phys(dos.tables.mediaid) +
+			                   drive_index(drive) * 9,
+			           mediaid);
 
 			/* Command uses dta so set it to our internal dta */
 			RealPt save_dta = dos.dta();
 			dos.dta(dos.tables.tempdta);
 
 			for (ct = 0; ct < imgDisks.size(); ct++) {
-				DriveManager::CycleDisks(drive - 'A', (ct == (imgDisks.size() - 1)));
-
+				const bool notify = (ct == (imgDisks.size() - 1));
+				DriveManager::CycleDisks(drive_index(drive), notify);
 				char root[7] = {drive,':','\\','*','.','*',0};
 				DOS_FindFirst(root, DOS_ATTR_VOLUME); // force obtaining the label and saving it in dirCache
 			}
@@ -1401,14 +1417,13 @@ public:
 			if (paths.size() == 1) {
 				auto *newdrive = static_cast<fatDrive*>(imgDisks[0]);
 				if ('A' <= drive && drive <= 'D' && !(newdrive->loadedDisk->hardDrive)) {
-					const size_t idx = drive - 'A';
+					const size_t idx = drive_index(drive);
 					imageDiskList[idx] = newdrive->loadedDisk;
 					updateDPT();
 				}
 			}
 		} else if (fstype=="iso") {
-
-			if (Drives[drive - 'A']) {
+			if (Drives[drive_index(drive)]) {
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED"));
 				return;
 			}
@@ -1441,12 +1456,15 @@ public:
 			}
 			// Update DriveManager
 			for (ct = 0; ct < isoDisks.size(); ct++) {
-				DriveManager::AppendDisk(drive - 'A', isoDisks[ct]);
+				DriveManager::AppendDisk(drive_index(drive),
+				                         isoDisks[ct]);
 			}
-			DriveManager::InitializeDrive(drive - 'A');
+			DriveManager::InitializeDrive(drive_index(drive));
 
 			// Set the correct media byte in the table
-			mem_writeb(Real2Phys(dos.tables.mediaid) + (drive - 'A') * 9, mediaid);
+			mem_writeb(Real2Phys(dos.tables.mediaid) +
+			                   drive_index(drive) * 9,
+			           mediaid);
 
 			// Print status message (success)
 			WriteOut(MSG_Get("MSCDEX_SUCCESS"));
