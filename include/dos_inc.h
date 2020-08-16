@@ -277,7 +277,7 @@ protected:
  * pointer.
  *
  * Example usage:
- * 
+ *
  *   SSET_WORD(dos-structure-name, field-name, value);
  *   uint16_t x = SGET_WORD(dos-structure-name, field-name);
  *
