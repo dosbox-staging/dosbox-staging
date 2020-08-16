@@ -343,7 +343,7 @@ void DOS_DTA::GetResult(char *name,
 
 void DOS_DTA::GetSearchParams(uint8_t &attr, char *pattern) const
 {
-	attr = SGET_BYTE(sDTA, attr);
+	attr = SGET_BYTE(sDTA, sattr);
 	char temp[11];
 	MEM_BlockRead(pt+offsetof(sDTA,sname),temp,11);
 	memcpy(pattern,temp,8);
