@@ -69,9 +69,9 @@ public:
 		sSave(sDeviceHeader, nextDeviceHeader, ptr);
 	}
 
-	RealPt GetNextDeviceHeader()
+	RealPt GetNextDeviceHeader() const
 	{
-		return sGet(sDeviceHeader, nextDeviceHeader);
+		return SGET_DWORD(sDeviceHeader, nextDeviceHeader);
 	}
 
 	void SetAttribute(uint16_t atr)
@@ -89,9 +89,9 @@ public:
 		sSave(sDeviceHeader, numSubUnits, num);
 	}
 
-	uint8_t GetNumSubUnits()
+	uint8_t GetNumSubUnits() const
 	{
-		return sGet(sDeviceHeader, numSubUnits);
+		return SGET_BYTE(sDeviceHeader, numSubUnits);
 	}
 
 	void SetName(const char *new_name)

@@ -338,32 +338,29 @@ public:
 	void	SaveVectors			(void);
 	void	RestoreVectors		(void);
 
-	void SetSize(uint16_t size) { sSave(sPSP, next_seg, size); }
-	uint16_t GetSize() { return (uint16_t)sGet(sPSP, next_seg); }
-
-	void SetEnvironment(uint16_t eseg) { sSave(sPSP, environment, eseg); }
-	uint16_t GetEnvironment() { return (uint16_t)sGet(sPSP, environment); }
-
 	uint16_t GetSegment() { return seg; }
 
 	void	SetFileHandle		(Bit16u index, Bit8u handle);
 	Bit8u	GetFileHandle		(Bit16u index);
-
-	void SetParent(uint16_t parent) { sSave(sPSP, psp_parent, parent); }
-	uint16_t GetParent() { return (uint16_t)sGet(sPSP, psp_parent); }
-
-	void SetStack(RealPt stackpt) { sSave(sPSP, stack, stackpt); }
-	RealPt GetStack() { return sGet(sPSP, stack); }
-
-	void SetInt22(RealPt int22pt) { sSave(sPSP, int_22, int22pt); }
-	RealPt GetInt22() { return sGet(sPSP, int_22); }
 
 	void	SetFCB1				(RealPt src);
 	void	SetFCB2				(RealPt src);
 	void	SetCommandTail		(RealPt src);	
 	bool	SetNumFiles			(Bit16u fileNum);
 	Bit16u	FindEntryByHandle	(Bit8u handle);
-			
+
+	void SetSize(uint16_t size) { SSET_WORD(sPSP, next_seg, size); }
+	void SetInt22(RealPt int22pt) { SSET_DWORD(sPSP, int_22, int22pt); }
+	void SetParent(uint16_t parent) { SSET_WORD(sPSP, psp_parent, parent); }
+	void SetEnvironment(uint16_t env) { SSET_WORD(sPSP, environment, env); }
+	void SetStack(RealPt stackpt) { SSET_DWORD(sPSP, stack, stackpt); }
+
+	uint16_t GetSize() const { return SGET_WORD(sPSP, next_seg); }
+	RealPt GetInt22() const { return SGET_DWORD(sPSP, int_22); }
+	uint16_t GetParent() const { return SGET_WORD(sPSP, psp_parent); }
+	uint16_t GetEnvironment() const { return SGET_WORD(sPSP, environment); }
+	RealPt GetStack() const { return SGET_DWORD(sPSP, stack); }
+
 private:
 	#ifdef _MSC_VER
 	#pragma pack(1)
@@ -412,9 +409,11 @@ public:
 	{
 		pt = addr;
 	}
-	void Clear(void);
-	void LoadData(void);
-	void SaveData(void);		/* Save it as an exec block */
+
+	void Clear();
+	void LoadData();
+	void SaveData(); // Save it as an exec block
+
 	#ifdef _MSC_VER
 	#pragma pack (1)
 	#endif
@@ -437,30 +436,34 @@ public:
 	sOverlay overlay;
 };
 
-class DOS_InfoBlock:public MemStruct {
+class DOS_InfoBlock : public MemStruct {
 public:
-	DOS_InfoBlock()
-		: seg(0)
-	{}
+	DOS_InfoBlock() : seg(0) {}
+
 	void SetLocation(Bit16u  seg);
-	void SetFirstMCB(Bit16u _first_mcb);
-	void SetBuffers(Bit16u x,Bit16u y);
-	void SetCurDirStruct(Bit32u _curdirstruct);
-	void SetFCBTable(Bit32u _fcbtable);
+	void SetBuffers(uint16_t x, uint16_t y);
+
 	void SetDeviceChainStart(Bit32u _devchain);
 	void SetDiskBufferHeadPt(Bit32u _dbheadpt);
-	void SetStartOfUMBChain(Bit16u _umbstartseg);
-	void SetUMBChainState(Bit8u _umbchaining);
 	void SetBlockDevices(Bit8u _count);
-	Bit16u	GetStartOfUMBChain(void);
+
 	Bit8u	GetUMBChainState(void);
 	RealPt	GetPointer(void);
-	Bit32u GetDeviceChain(void);
 
-	#ifdef _MSC_VER
+	void SetFirstMCB(uint16_t mcb) { SSET_WORD(sDIB, firstMCB, mcb); }
+	void SetCurDirStruct(uint32_t cds) { SSET_DWORD(sDIB, curDirStructure, cds); }
+	void SetFCBTable(uint32_t tab) { SSET_DWORD(sDIB, fcbTable, tab); }
+	void SetUMBChainState(uint8_t state) { SSET_BYTE(sDIB, chainingUMB, state); }
+	void SetStartOfUMBChain(uint16_t seg) { SSET_WORD(sDIB, startOfUMBChain, seg); }
+
+	uint32_t GetDeviceChain() const { return SGET_DWORD(sDIB, nulNextDriver); }
+	uint16_t GetStartOfUMBChain() const { return SGET_WORD(sDIB, startOfUMBChain); }
+
+
+#ifdef _MSC_VER
 	#pragma pack(1)
 	#endif
-	struct sDIB {		
+	struct sDIB {
 		Bit8u	unknown1[4];
 		Bit16u	magicWord;			// -0x22 needs to be 1
 		Bit8u	unknown2[8];
@@ -527,10 +530,11 @@ public:
 	void GetSearchParams(Bit8u & _sattr,char * _spattern);
 	void GetResult(char * _name,Bit32u & _size,Bit16u & _date,Bit16u & _time,Bit8u & _attr);
 
-	void SetDirID(uint16_t entry) { sSave(sDTA, dirID, entry); }
-	void SetDirIDCluster(uint16_t entry) { sSave(sDTA, dirCluster, entry); }
-	uint16_t GetDirID() { return (uint16_t)sGet(sDTA, dirID); }
-	uint16_t GetDirIDCluster() { return (uint16_t)sGet(sDTA, dirCluster); }
+	void SetDirID(uint16_t id) { SSET_WORD(sDTA, dirID, id); }
+	void SetDirIDCluster(uint16_t cl) { SSET_WORD(sDTA, dirCluster, cl); }
+
+	uint16_t GetDirID() const { return SGET_WORD(sDTA, dirID); }
+	uint16_t GetDirIDCluster() const { return SGET_WORD(sDTA, dirCluster); }
 
 private:
 	#ifdef _MSC_VER
@@ -613,14 +617,18 @@ private:
 class DOS_MCB : public MemStruct{
 public:
 	DOS_MCB(Bit16u seg) { SetPt(seg); }
+
 	void SetFileName(char const * const _name) { MEM_BlockWrite(pt+offsetof(sMCB,filename),_name,8); }
 	void GetFileName(char * const _name) { MEM_BlockRead(pt+offsetof(sMCB,filename),_name,8);_name[8]=0;}
-	void SetType(Bit8u _type) { sSave(sMCB,type,_type);}
-	void SetSize(Bit16u _size) { sSave(sMCB,size,_size);}
-	void SetPSPSeg(Bit16u _pspseg) { sSave(sMCB,psp_segment,_pspseg);}
-	Bit8u GetType(void) { return (Bit8u)sGet(sMCB,type);}
-	Bit16u GetSize(void) { return (Bit16u)sGet(sMCB,size);}
-	Bit16u GetPSPSeg(void) { return (Bit16u)sGet(sMCB,psp_segment);}
+
+	void SetType(uint8_t type) { SSET_BYTE(sMCB, type, type); }
+	void SetSize(uint16_t size) { SSET_WORD(sMCB, size, size); }
+	void SetPSPSeg(uint16_t psp) { SSET_WORD(sMCB, psp_segment, psp); }
+
+	uint8_t GetType() const { return SGET_BYTE(sMCB, type); }
+	uint16_t GetSize() const { return SGET_WORD(sMCB, size); }
+	uint16_t GetPSPSeg() const { return SGET_WORD(sMCB, psp_segment); }
+
 private:
 	#ifdef _MSC_VER
 	#pragma pack (1)
@@ -640,15 +648,16 @@ private:
 class DOS_SDA : public MemStruct {
 public:
 	DOS_SDA(Bit16u _seg,Bit16u _offs) { SetPt(_seg,_offs); }
-	void Init();   
-	void SetDrive(Bit8u _drive) { sSave(sSDA,current_drive, _drive); }
-	void SetDTA(Bit32u _dta) { sSave(sSDA,current_dta, _dta); }
-	void SetPSP(Bit16u _psp) { sSave(sSDA,current_psp, _psp); }
-	Bit8u GetDrive(void) { return (Bit8u)sGet(sSDA,current_drive); }
-	Bit16u GetPSP(void) { return (Bit16u)sGet(sSDA,current_psp); }
-	Bit32u GetDTA(void) { return (Bit32u)sGet(sSDA,current_dta); }
-	
-	
+	void Init();
+
+	void SetDTA(uint32_t dta) { SSET_DWORD(sSDA, current_dta, dta); }
+	void SetPSP(uint16_t psp) { SSET_WORD(sSDA, current_psp, psp); }
+	void SetDrive(uint8_t drive) { SSET_BYTE(sSDA, current_drive, drive); }
+
+	uint32_t GetDTA() const { return SGET_DWORD(sSDA, current_dta); }
+	uint16_t GetPSP() const { return SGET_WORD(sSDA, current_psp); }
+	uint8_t GetDrive() const { return SGET_BYTE(sSDA, current_drive); }
+
 private:
 	#ifdef _MSC_VER
 	#pragma pack (1)
