@@ -251,7 +251,6 @@ static INLINE Bit16u DOS_PackDate(Bit16u year,Bit16u mon,Bit16u day) {
 /* Remains some classes used to access certain things */
 #define sOffset(s,m) ((char*)&(((s*)NULL)->m)-(char*)NULL)
 #define sGet(s,m) GetIt(sizeof(((s *)&pt)->m),(PhysPt)sOffset(s,m))
-#define sSave(s,m,val) SaveIt(sizeof(((s *)&pt)->m),(PhysPt)sOffset(s,m),val)
 
 class MemStruct {
 public:
@@ -262,13 +261,6 @@ public:
 		case 4:return mem_readd(pt+addr);
 		}
 		return 0;
-	}
-	void SaveIt(Bitu size,PhysPt addr,Bitu val) {
-		switch (size) {
-		case 1:mem_writeb(pt+addr,(Bit8u)val);break;
-		case 2:mem_writew(pt+addr,(Bit16u)val);break;
-		case 4:mem_writed(pt+addr,(Bit32u)val);break;
-		}
 	}
 	void SetPt(Bit16u seg) { pt=PhysMake(seg,0);}
 	void SetPt(Bit16u seg,Bit16u off) { pt=PhysMake(seg,off);}
@@ -289,8 +281,8 @@ protected:
  *   SSET_WORD(dos-structure-name, field-name, value);
  *   uint16_t x = SGET_WORD(dos-structure-name, field-name);
  *
- * FIXME: Use these macros to replace all usage of sGet and sSave macros,
- *        so MemStruct::GetIt and MemStruct::SaveIt methods could be removed.
+ * FIXME: Use these macros to replace all usage of sGet macro,
+ *        so MemStruct::GetIt method could be removed.
  */
 template <size_t N, typename S, typename T1, typename T2 = T1>
 constexpr PhysPt assert_macro_args_ok()
