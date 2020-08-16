@@ -16,15 +16,16 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "shell.h"
 
-#include <stdlib.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include "callback.h"
+#include "control.h"
 #include "dosbox.h"
 #include "regs.h"
-#include "control.h"
-#include "shell.h"
-#include "callback.h"
 #include "support.h"
 
 
