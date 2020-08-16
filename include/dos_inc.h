@@ -524,11 +524,14 @@ class DOS_DTA : public MemStruct {
 public:
 	DOS_DTA(RealPt addr) { SetPt(addr); }
 
-	void SetupSearch(Bit8u _sdrive,Bit8u _sattr,char * _pattern);
-	void SetResult(const char * _name,Bit32u _size,Bit16u _date,Bit16u _time,Bit8u _attr);
-
+	void SetupSearch(uint8_t drive, uint8_t attr, char *pattern);
 	void GetSearchParams(uint8_t &attr, char *pattern) const;
 
+	void SetResult(const char *_name,
+	               uint32_t size,
+	               uint16_t date,
+	               uint16_t time,
+	               uint8_t attr);
 	void GetResult(char *name,
 	               uint32_t &size,
 	               uint16_t &date,
@@ -570,25 +573,28 @@ public:
 	DOS_FCB(uint16_t seg, uint16_t off, bool allow_extended = true);
 
 	void Create(bool _extended);
-	void SetName(Bit8u _drive,char * _fname,char * _ext);
-	void SetSizeDateTime(Bit32u _size,Bit16u _date,Bit16u _time);
-	void GetSizeDateTime(Bit32u & _size,Bit16u & _date,Bit16u & _time);
+	void SetName(uint8_t drive, const char *fname, const char *ext);
 	void GetName(char * fillname);
-	void FileOpen(Bit8u _fhandle);
-	void FileClose(Bit8u & _fhandle);
-	void GetRecord(Bit16u & _cur_block,Bit8u & _cur_rec);
-	void SetRecord(Bit16u _cur_block,Bit8u _cur_rec);
-	void GetSeqData(Bit8u & _fhandle,Bit16u & _rec_size);
-	void SetSeqData(Bit8u _fhandle,Bit16u _rec_size);
-	void GetRandom(Bit32u & _random);
-	void SetRandom(Bit32u  _random);
-	Bit8u GetDrive(void);
-	bool Extended(void);
+	void FileOpen(uint8_t fhandle);
+	void FileClose(uint8_t &fhandle);
+	bool Extended() const { return extended; }
 	void GetAttr(Bit8u & attr);
 	void SetAttr(Bit8u attr);
 	void SetResult(Bit32u size,Bit16u date,Bit16u time,Bit8u attr);
-	bool Valid(void);
+	bool Valid() const;
 	void ClearBlockRecsize(void);
+
+	void SetRecord(uint16_t cur_block, uint8_t cur_rec);
+	void SetSizeDateTime(uint32_t size, uint16_t date, uint16_t time);
+	void SetSeqData(uint8_t fhandle, uint16_t rec_size);
+	void SetRandom(uint32_t random) { SSET_DWORD(sFCB, rndm, random); }
+
+	uint8_t GetDrive() const;
+	void GetRecord(uint16_t &cur_block, uint8_t &cur_rec) const;
+	void GetSizeDateTime(uint32_t &size, uint16_t &date, uint16_t &time) const;
+	void GetSeqData(uint8_t &fhandle, uint16_t &rec_size) const;
+	uint32_t GetRandom() const { return SGET_DWORD(sFCB, rndm); }
+
 private:
 	bool extended;
 	PhysPt real_pt;
