@@ -16,18 +16,16 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
 
-#ifndef DOSBOX_DOS_SYSTEM_H
-#include "dos_system.h"
-#endif
-#ifndef DOSBOX_MEM_H
-#include "mem.h"
-#endif
+#include "dosbox.h"
 
-#include <stddef.h> //for offsetof
+#include <cstddef>
+#include <type_traits>
+
+#include "dos_system.h"
+#include "mem.h"
 
 #ifdef _MSC_VER
 #pragma pack (1)
@@ -249,6 +247,50 @@ static INLINE Bit16u DOS_PackDate(Bit16u year,Bit16u mon,Bit16u day) {
 #define DOSERR_NO_MORE_FILES 18
 #define DOSERR_FILE_ALREADY_EXISTS 80
 
+/* Macros SSET_* and SGET_* are used to safely access fields in memory-mapped
+ * DOS structures represented via classes inheriting from MemStruct class.
+ *
+ * All of these macros depend on 'pt' base pointer from MemStruct base class;
+ * all DOS-specific fields are accessed by reading memory relative to that
+ * pointer.
+ *
+ * Example usage:
+ *
+ *   SSET_WORD(dos-structure-name, field-name, value);
+ *   uint16_t x = SGET_WORD(dos-structure-name, field-name);
+ *
+ * FIXME: Use these macros to replace all usage of sGet and sSave macros,
+ *        so MemStruct::GetIt and MemStruct::SaveIt methods could be removed.
+ */
+template <size_t N, typename S, typename T1, typename T2 = T1>
+constexpr PhysPt assert_macro_args_ok()
+{
+	static_assert(sizeof(T1) == N, "Requested struct field has unexpected size");
+	static_assert(sizeof(T2) == N, "Type used to save value has unexpected size");
+	static_assert(std::is_standard_layout<S>::value,
+	              "Struct needs to have standard layout for offsetof calculation");
+	// returning 0, so compiler can optimize-out no-op "0 +" expression
+	return 0;
+}
+
+#define VERIFY_SSET_ARGS(n, s, f, v)                                           \
+	assert_macro_args_ok<n, s, decltype(s::f), decltype(v)>()
+#define VERIFY_SGET_ARGS(n, s, f)                                              \
+	assert_macro_args_ok<n, s, decltype(s::f)>()
+
+#define SSET_BYTE(s, f, v)                                                     \
+	mem_writeb(VERIFY_SSET_ARGS(1, s, f, v) + pt + offsetof(s, f), v)
+#define SSET_WORD(s, f, v)                                                     \
+	mem_writew(VERIFY_SSET_ARGS(2, s, f, v) + pt + offsetof(s, f), v)
+#define SSET_DWORD(s, f, v)                                                    \
+	mem_writed(VERIFY_SSET_ARGS(4, s, f, v) + pt + offsetof(s, f), v)
+
+#define SGET_BYTE(s, f)                                                        \
+	mem_readb(VERIFY_SGET_ARGS(1, s, f) + pt + offsetof(s, f))
+#define SGET_WORD(s, f)                                                        \
+	mem_readw(VERIFY_SGET_ARGS(2, s, f) + pt + offsetof(s, f))
+#define SGET_DWORD(s, f)                                                       \
+	mem_readd(VERIFY_SGET_ARGS(4, s, f) + pt + offsetof(s, f))
 
 /* Remains some classes used to access certain things */
 #define sOffset(s,m) ((char*)&(((s*)NULL)->m)-(char*)NULL)
