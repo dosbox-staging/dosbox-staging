@@ -609,7 +609,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 		*last_dir_sep = '\0';
 
 	const char drive_letter = path[0];
-	const size_t drive_idx = drive_letter - 'A';
+	const auto drive_idx = drive_index(drive_letter);
 	const bool print_label = (drive_letter >= 'A') && Drives[drive_idx];
 	unsigned p_count = 0; // line counter for 'pause' command
 
@@ -1411,16 +1411,19 @@ void DOS_Shell::CMD_SUBST (char * args) {
 		if ( (arg.size() > 1) && arg[1] !=':')  throw(0);
 		temp_str[0]=(char)toupper(args[0]);
 		command.FindCommand(2,arg);
+		const auto drive_idx = drive_index(temp_str[0]);
 		if ((arg == "/D") || (arg == "/d")) {
-			if (!Drives[temp_str[0]-'A'] ) throw 1; //targetdrive not in use
-			strcat(mountstring,"-u ");
-			strcat(mountstring,temp_str);
+			if (!Drives[drive_idx])
+				throw 1; // targetdrive not in use
+			strcat(mountstring, "-u ");
+			strcat(mountstring, temp_str);
 			this->ParseLine(mountstring);
 			return;
 		}
-		if (Drives[temp_str[0]-'A'] ) throw 0; //targetdrive in use
-		strcat(mountstring,temp_str);
-		strcat(mountstring," ");
+		if (Drives[drive_idx])
+			throw 0; // targetdrive in use
+		strcat(mountstring, temp_str);
+		strcat(mountstring, " ");
 
    		Bit8u drive;char fulldir[DOS_PATHLENGTH];
 		if (!DOS_MakeName(const_cast<char*>(arg.c_str()),fulldir,&drive)) throw 0;
