@@ -16,11 +16,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
+#include <climits>
 #include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #include "dosbox.h"
 #include "bios.h"
@@ -808,6 +808,7 @@ static bool isvalid(const char in){
 #define PARSE_RET_WILD          1
 #define PARSE_RET_BADDRIVE      0xff
 
+// TODO: Refactor and document this function until it's understandable
 Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *change) {
 	char * string_begin=string;
 	Bit8u ret=0;
@@ -838,8 +839,11 @@ Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *
 #endif
 	/* Get the old information from the previous fcb */
 	fcb.GetName(fcb_name.full);
-	fcb_name.part.drive[0]-='A'-1;fcb_name.part.drive[1]=0;
-	fcb_name.part.name[8]=0;fcb_name.part.ext[3]=0;
+	auto drive_idx = drive_index(fcb_name.part.drive[0]) + 1;
+	fcb_name.part.drive[0] = int_to_char(drive_idx);
+	fcb_name.part.drive[1] = 0;
+	fcb_name.part.name[8] = 0;
+	fcb_name.part.ext[3] = 0;
 	/* strip leading spaces */
 	while((*string==' ')||(*string=='\t')) string++;
 
@@ -859,11 +863,15 @@ Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *
 		if (!isvalid(toupper(d))) {string += 2; goto savefcb;} //TODO check (for ret value)
 		fcb_name.part.drive[0]=0;
 		hasdrive=true;
-		if (isalpha(d) && Drives[toupper(d)-'A']) { //Floppies under dos always exist, but don't bother with that at this level
-			; //THIS* was here
-		} else ret=0xff;
-		fcb_name.part.drive[0]=DOS_ToUpper(string[0])-'A'+1; //Always do THIS* and continue parsing, just return the right code
-		string+=2;
+
+		// Floppies under dos always exist, but don't bother with that at this level
+		assert(d <= CHAR_MAX); // drive letters are strictly "low" ASCII a/A to z/Z
+		if (!(isalpha(d) && Drives[drive_index(static_cast<char>(d))])) {
+			ret = 0xff;
+		}
+		// Always do THIS* and continue parsing, just return the right code
+		fcb_name.part.drive[0] = DOS_ToUpper(string[0]) - 'A' + 1;
+		string += 2;
 	}
 
 	/* Check for extension only file names */
