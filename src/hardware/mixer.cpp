@@ -905,13 +905,29 @@ void MIXER_Init(Section* sec) {
 		mixer.tick_add=calc_tickadd(mixer.freq);
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else {
-		if((static_cast<Bit16s>(mixer.freq) != obtained.freq) || (mixer.blocksize != obtained.samples))
-			LOG_MSG("MIXER: Got different values from SDL: freq %d, blocksize %d",obtained.freq,obtained.samples);
-		mixer.freq=obtained.freq;
-		mixer.blocksize=obtained.samples;
-		mixer.tick_add=calc_tickadd(mixer.freq);
+		// Does SDL want a different playback rate?
+		assert(obtained.freq > 0 &&
+		       static_cast<unsigned>(obtained.freq) < UINT32_MAX);
+		const auto obtained_freq = static_cast<uint32_t>(obtained.freq);
+		if (obtained_freq != mixer.freq) {
+			LOG_MSG("MIXER: SDL changed the playback rate from %u to %u Hz",
+			        mixer.freq, obtained_freq);
+			mixer.freq = obtained_freq;
+		}
+
+		// Does SDL want a different blocksize?
+		const auto obtained_blocksize = obtained.samples;
+		if (obtained_blocksize != mixer.blocksize) {
+			LOG_MSG("MIXER: SDL changed the blocksize from %u to %u bytes",
+			        mixer.blocksize, obtained_blocksize);
+			mixer.blocksize = obtained_blocksize;
+		}
+		mixer.tick_add = calc_tickadd(mixer.freq);
 		TIMER_AddTickHandler(MIXER_Mix);
 		SDL_PauseAudioDevice(mixer.sdldevice, 0);
+
+		LOG_MSG("MIXER: Negotiated a %u-Hz output rate and %u-byte blocksize",
+		        mixer.freq, mixer.blocksize);
 	}
 	const auto requested_prebuffer = section->Get_int("prebuffer");
 	mixer.min_needed = static_cast<uint16_t>(clamp(requested_prebuffer, 0, 100));
