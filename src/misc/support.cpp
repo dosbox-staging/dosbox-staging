@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <cctype>
+#include <climits>
 #include <cmath>
 #include <cstring>
 #include <ctype.h>
@@ -36,7 +37,17 @@
 #include "debug.h"
 #include "video.h"
 
-std::string get_basename(const std::string& filename) {
+char int_to_char(int val)
+{
+	// To handle inbound values cast from unsigned chars, permit a slightly
+	// wider range to avoid triggering the assert when processing international
+	// ASCII values between 128 and 255.
+	assert(val >= CHAR_MIN && val <= UCHAR_MAX);
+	return static_cast<char>(val);
+}
+
+std::string get_basename(const std::string &filename)
+{
 	// Guard against corner cases: '', '/', '\', 'a'
 	if (filename.length() <= 1)
 		return filename;

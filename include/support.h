@@ -39,6 +39,11 @@
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
 #endif
 
+// Some C functions operate on characters but return integers,
+// such as 'toupper'. This function asserts that a given int
+// is in-range of a char and returns it as such.
+char int_to_char(int val);
+
 /*
  *  Converts a string to a finite number (such as float or double).
  *  Returns the number or quiet_NaN, if it could not be parsed.
