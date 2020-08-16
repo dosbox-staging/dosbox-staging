@@ -86,20 +86,23 @@ static inline int16_t MIXER_CLIP(Bits SAMP)
 }
 
 static struct {
-	int32_t work[MIXER_BUFSIZE][2];
+	int32_t work[MIXER_BUFSIZE][2] = {{0}};
 	//Write/Read pointers for the buffer
-	Bitu pos,done;
-	Bitu needed, min_needed, max_needed;
-	//For every millisecond tick how many samples need to be generated
-	Bit32u tick_add;
-	Bit32u tick_counter;
-	float mastervol[2];
-	MixerChannel * channels;
-	bool nosound;
-	Bit32u freq;
-	Bit32u blocksize;
-	//Note: As stated earlier, all sdl code shall rather be in sdlmain
-	SDL_AudioDeviceID sdldevice;
+	Bitu pos = 0;
+	Bitu done = 0;
+	Bitu needed = 0;
+	Bitu min_needed = 0;
+	Bitu max_needed = 0;
+	// For every millisecond tick how many samples need to be generated
+	uint32_t tick_add = 0;
+	uint32_t tick_counter = 0;
+	float mastervol[2] = {1.0f, 1.0f};
+	MixerChannel *channels = nullptr;
+	bool nosound = false;
+	uint32_t freq = 0;
+	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
+	// Note: As stated earlier, all sdl code shall rather be in sdlmain
+	SDL_AudioDeviceID sdldevice = {};
 } mixer;
 
 Bit8u MixTemp[MIXER_BUFSIZE];
@@ -867,9 +870,10 @@ void MIXER_Init(Section* sec) {
 
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Read out config section */
-	mixer.freq=section->Get_int("rate");
+
 	mixer.nosound=section->Get_bool("nosound");
-	mixer.blocksize=section->Get_int("blocksize");
+	mixer.freq = static_cast<uint32_t>(section->Get_int("rate"));
+	mixer.blocksize = static_cast<uint16_t>(section->Get_int("blocksize"));
 
 	/* Initialize the internal stuff */
 	mixer.channels=0;
@@ -883,12 +887,12 @@ void MIXER_Init(Section* sec) {
 	SDL_AudioSpec spec;
 	SDL_AudioSpec obtained;
 
-	spec.freq=mixer.freq;
+	spec.freq = static_cast<int>(mixer.freq);
 	spec.format=AUDIO_S16SYS;
 	spec.channels=2;
 	spec.callback=MIXER_CallBack;
-	spec.userdata=NULL;
-	spec.samples=(Uint16)mixer.blocksize;
+	spec.userdata = nullptr;
+	spec.samples = mixer.blocksize;
 
 	mixer.tick_counter=0;
 	if (mixer.nosound) {
@@ -909,11 +913,11 @@ void MIXER_Init(Section* sec) {
 		TIMER_AddTickHandler(MIXER_Mix);
 		SDL_PauseAudioDevice(mixer.sdldevice, 0);
 	}
-	mixer.min_needed=section->Get_int("prebuffer");
-	if (mixer.min_needed>100) mixer.min_needed=100;
-	mixer.min_needed=(mixer.freq*mixer.min_needed)/1000;
-	mixer.max_needed=mixer.blocksize * 2 + 2*mixer.min_needed;
-	mixer.needed=mixer.min_needed+1;
+	const auto requested_prebuffer = section->Get_int("prebuffer");
+	mixer.min_needed = static_cast<uint16_t>(clamp(requested_prebuffer, 0, 100));
+	mixer.min_needed = (mixer.freq * mixer.min_needed) / 1000;
+	mixer.max_needed = mixer.blocksize * 2 + 2 * mixer.min_needed;
+	mixer.needed = mixer.min_needed + 1;
 	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
 }
 
