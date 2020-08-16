@@ -617,7 +617,7 @@ public:
 		Bit32u floppysize=0;
 		Bit32u rombytesize_1=0;
 		Bit32u rombytesize_2=0;
-		Bit8u drive = 'A';
+		char drive = 'A';
 		std::string cart_cmd="";
 
 		if (!cmd->GetCount()) {
