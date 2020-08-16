@@ -1308,21 +1308,25 @@ bool device_MSCDEX::WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * ret
 	return false;
 }
 
+// TODO: this functions modifies physicalPath despite several callers passing it
+// a const char*. Figure out if a copy can suffice or if the it really should
+// change it upstream (in which case we should drop const and fix the callers).
 int MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit)
 {
-	int result = mscdex->AddDrive(driveLetter-'A',(char*)physicalPath,subUnit);
+	int result = mscdex->AddDrive(drive_index(driveLetter),
+	                              const_cast<char*>(physicalPath), subUnit);
 	return result;
 }
 
 int MSCDEX_RemoveDrive(char driveLetter)
 {
 	if(!mscdex) return 0;
-	return mscdex->RemoveDrive(driveLetter-'A');
+	return mscdex->RemoveDrive(drive_index(driveLetter));
 }
 
 bool MSCDEX_HasDrive(char driveLetter)
 {
-	return mscdex->HasDrive(driveLetter-'A');
+	return mscdex->HasDrive(drive_index(driveLetter));
 }
 
 void MSCDEX_ReplaceDrive(CDROM_Interface* cdrom, Bit8u subUnit)
@@ -1332,7 +1336,7 @@ void MSCDEX_ReplaceDrive(CDROM_Interface* cdrom, Bit8u subUnit)
 
 Bit8u MSCDEX_GetSubUnit(char driveLetter)
 {
-	return mscdex->GetSubUnit(driveLetter-'A');
+	return mscdex->GetSubUnit(drive_index(driveLetter));
 }
 
 bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name)
