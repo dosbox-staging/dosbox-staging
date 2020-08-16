@@ -169,14 +169,18 @@ DOS_Shell::DOS_Shell()
           call(false)
 {}
 
-Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
-
+// TODO: this function should be refactored to make to it easier to understand.
+// It's currently riddled with pointer and array adjustments each loop plus
+// branches and sub-loops.
+Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, bool *append)
+{
 	char * lr=s;
 	char * lw=s;
 	char ch;
 	Bitu num=0;
 	bool quote = false;
-	char* t;
+	char *temp = nullptr;
+	size_t temp_len = 0;
 
 	while ( (ch=*lr++) ) {
 		if(quote && ch != '"') { /* don't parse redirection within quotes. Not perfect yet. Escaped quotes will mess the count up */
@@ -192,41 +196,32 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 			*append=((*lr)=='>');
 			if (*append) lr++;
 			lr=ltrim(lr);
-			if (*ofn) free(*ofn);
-			*ofn=lr;
+			if (*ofn) {
+				delete[] * ofn;
+				*ofn = nullptr;
+			}
+			*ofn = lr;
 			while (*lr && *lr!=' ' && *lr!='<' && *lr!='|') lr++;
 			//if it ends on a : => remove it.
 			if((*ofn != lr) && (lr[-1] == ':')) lr[-1] = 0;
-//			if(*lr && *(lr+1))
-//				*lr++=0;
-//			else
-//				*lr=0;
-			t = (char*)malloc(lr-*ofn+1);
-			if (t == nullptr) {
-				E_Exit("SHELL: Could not allocate %u bytes in parser",
-				       static_cast<unsigned int>(lr-*ofn+1));
-			}
-
-			safe_strncpy(t,*ofn,lr-*ofn+1);
-			*ofn=t;
+			temp_len = static_cast<size_t>(lr - *ofn + 1u);
+			temp = new char[temp_len];
+			safe_strncpy(temp, *ofn, temp_len);
+			*ofn = temp;
 			continue;
 		case '<':
-			if (*ifn) free(*ifn);
-			lr=ltrim(lr);
+			if (*ifn) {
+				delete[] * ifn;
+				*ifn = nullptr;
+			}
+			lr = ltrim(lr);
 			*ifn=lr;
 			while (*lr && *lr!=' ' && *lr!='>' && *lr != '|') lr++;
 			if((*ifn != lr) && (lr[-1] == ':')) lr[-1] = 0;
-//			if(*lr && *(lr+1))
-//				*lr++=0;
-//			else
-//				*lr=0;
-			t = (char*)malloc(lr-*ifn+1);
-			if (t == nullptr) {
-				E_Exit("SHELL: Could not allocate %u bytes in parser",
-				       static_cast<unsigned int>(lr-*ifn+1));
-			}
-			safe_strncpy(t,*ifn,lr-*ifn+1);
-			*ifn=t;
+			temp_len = static_cast<size_t>(lr - *ofn + 1u);
+			temp = new char[temp_len];
+			safe_strncpy(temp, *ifn, temp_len);
+			*ifn = temp;
 			continue;
 		case '|':
 			ch=0;
@@ -246,8 +241,8 @@ void DOS_Shell::ParseLine(char * line) {
 
 	/* Do redirection and pipe checks */
 
-	char * in  = 0;
-	char * out = 0;
+	char *in = nullptr;
+	char *out = nullptr;
 
 	Bit16u dummy,dummy2;
 	Bit32u bigdummy = 0;
@@ -295,14 +290,14 @@ void DOS_Shell::ParseLine(char * line) {
 	if(in) {
 		DOS_CloseFile(0);
 		if(normalstdin) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
-		free(in);
+		delete[] in;
 	}
 	if(out) {
 		DOS_CloseFile(1);
 		if(!normalstdin) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
 		if(normalstdout) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
 		if(!normalstdin) DOS_CloseFile(0);
-		free(out);
+		delete[] out;
 	}
 }
 
