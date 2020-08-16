@@ -441,19 +441,25 @@ forcenormal:
 			height = MakeAspectTable( skip, render.src.height, yscale, yscale);
 		}
 	}
-/* Setup the scaler variables */
-	double par;  /* the pixel aspect ratio of the source pixel array */
-	par = (double)width / height / 4 * 3; /* MS-DOS screen is always 4:3 */
+
+	// Setup the scaler variables
 
 	if (dblh)
 		gfx_flags |= GFX_DBL_H;
 	if (dblw)
 		gfx_flags |= GFX_DBL_W;
 
-	#if C_OPENGL
-		GFX_SetShader(render.shader_src);
-	#endif
-	gfx_flags=GFX_SetSize(width,height,gfx_flags,gfx_scalew,gfx_scaleh,&RENDER_CallBack,par);
+#if C_OPENGL
+	GFX_SetShader(render.shader_src);
+#endif
+
+	// The pixel aspect ratio of the source image, assuming 4:3 screen
+	const double real_par = (width / 4.0) / (height / 3.0);
+	const double user_par = (render.aspect ? real_par : 1.0);
+
+	gfx_flags = GFX_SetSize(width, height, gfx_flags, gfx_scalew,
+	                        gfx_scaleh, &RENDER_CallBack, user_par);
+
 	if (gfx_flags & GFX_CAN_8)
 		render.scale.outMode = scalerMode8;
 	else if (gfx_flags & GFX_CAN_15)
