@@ -52,9 +52,11 @@ void DOS_ParamBlock::SaveData()
 	SSET_DWORD(sExec,initcsip,exec.initcsip);
 }
 
-void DOS_InfoBlock::SetLocation(Bit16u segment) {
+void DOS_InfoBlock::SetLocation(uint16_t segment)
+{
 	seg = segment;
-	pt=PhysMake(seg,0);
+	pt = PhysMake(seg, 0);
+
 	/* Clear the initial Block */
 	for(Bitu i=0;i<sizeof(sDIB);i++) mem_writeb(pt+i,0xff);
 	for(Bitu i=0;i<14;i++) mem_writeb(pt+i,0);
@@ -122,26 +124,6 @@ void DOS_InfoBlock::SetBuffers(uint16_t x, uint16_t y)
 	SSET_WORD(sDIB, buffers_y, y);
 }
 
-void DOS_InfoBlock::SetDeviceChainStart(Bit32u _devchain) {
-	sSave(sDIB,nulNextDriver,_devchain);
-}
-
-void DOS_InfoBlock::SetDiskBufferHeadPt(Bit32u _dbheadpt) {
-	sSave(sDIB,diskBufferHeadPt,_dbheadpt);
-}
-
-Bit8u DOS_InfoBlock::GetUMBChainState(void) {
-	return (Bit8u)sGet(sDIB,chainingUMB);
-}
-
-void DOS_InfoBlock::SetBlockDevices(Bit8u _count) {
-	sSave(sDIB,blockDevices,_count);
-}
-
-RealPt DOS_InfoBlock::GetPointer(void) {
-	return RealMake(seg,offsetof(sDIB,firstDPB));
-}
-
 /* program Segment prefix */
 
 Bit16u DOS_PSP::rootpsp = 0;
@@ -185,10 +167,12 @@ void DOS_PSP::MakeNew(Bit16u mem_size) {
 	if (rootpsp==0) rootpsp = seg;
 }
 
-Bit8u DOS_PSP::GetFileHandle(Bit16u index) {
-	if (index>=sGet(sPSP,max_files)) return 0xff;
-	PhysPt files=Real2Phys(sGet(sPSP,file_table));
-	return mem_readb(files+index);
+uint8_t DOS_PSP::GetFileHandle(uint16_t index)
+{
+	if (index >= SGET_WORD(sPSP, max_files))
+		return 0xff;
+	PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
+	return mem_readb(files + index);
 }
 
 void DOS_PSP::SetFileHandle(Bit16u index, Bit8u handle) {

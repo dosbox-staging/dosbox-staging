@@ -341,7 +341,7 @@ public:
 	uint16_t GetSegment() { return seg; }
 
 	void	SetFileHandle		(Bit16u index, Bit8u handle);
-	Bit8u	GetFileHandle		(Bit16u index);
+	uint8_t GetFileHandle(uint16_t index);
 
 	void	SetFCB1				(RealPt src);
 	void	SetFCB2				(RealPt src);
@@ -440,25 +440,26 @@ class DOS_InfoBlock : public MemStruct {
 public:
 	DOS_InfoBlock() : seg(0) {}
 
-	void SetLocation(Bit16u  seg);
+	void SetLocation(uint16_t segment);
 	void SetBuffers(uint16_t x, uint16_t y);
 
-	void SetDeviceChainStart(Bit32u _devchain);
-	void SetDiskBufferHeadPt(Bit32u _dbheadpt);
-	void SetBlockDevices(Bit8u _count);
+	RealPt GetPointer() const
+	{
+		return RealMake(seg, offsetof(sDIB, firstDPB));
+	}
 
-	Bit8u	GetUMBChainState(void);
-	RealPt	GetPointer(void);
-
+	void SetDiskBufferHeadPt(uint32_t db) { SSET_DWORD(sDIB, diskBufferHeadPt, db); }
 	void SetFirstMCB(uint16_t mcb) { SSET_WORD(sDIB, firstMCB, mcb); }
 	void SetCurDirStruct(uint32_t cds) { SSET_DWORD(sDIB, curDirStructure, cds); }
 	void SetFCBTable(uint32_t tab) { SSET_DWORD(sDIB, fcbTable, tab); }
+	void SetBlockDevices(uint8_t num) { SSET_BYTE(sDIB, blockDevices, num); }
+	void SetDeviceChainStart(uint32_t chain) { SSET_DWORD(sDIB, nulNextDriver, chain); }
 	void SetUMBChainState(uint8_t state) { SSET_BYTE(sDIB, chainingUMB, state); }
 	void SetStartOfUMBChain(uint16_t seg) { SSET_WORD(sDIB, startOfUMBChain, seg); }
 
 	uint32_t GetDeviceChain() const { return SGET_DWORD(sDIB, nulNextDriver); }
+	uint8_t GetUMBChainState() const { return SGET_BYTE(sDIB, chainingUMB); }
 	uint16_t GetStartOfUMBChain() const { return SGET_WORD(sDIB, startOfUMBChain); }
-
 
 #ifdef _MSC_VER
 	#pragma pack(1)
