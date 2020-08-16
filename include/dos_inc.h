@@ -330,6 +330,7 @@ public:
 		SetPt(segment);
 		seg = segment;
 	}
+
 	void	MakeNew				(Bit16u memSize);
 	void	CopyFileTable		(DOS_PSP* srcpsp,bool createchildpsp);
 	Bit16u	FindFreeFileEntry	(void);
@@ -338,22 +339,22 @@ public:
 	void	SaveVectors			(void);
 	void	RestoreVectors		(void);
 
-	uint16_t GetSegment() { return seg; }
+	uint16_t GetSegment() const { return seg; }
 
-	void	SetFileHandle		(Bit16u index, Bit8u handle);
-	uint8_t GetFileHandle(uint16_t index);
+	void SetFileHandle(uint16_t index, uint8_t handle);
+	uint8_t GetFileHandle(uint16_t index) const;
 
-	void	SetFCB1				(RealPt src);
-	void	SetFCB2				(RealPt src);
-	void	SetCommandTail		(RealPt src);	
-	bool	SetNumFiles			(Bit16u fileNum);
-	Bit16u	FindEntryByHandle	(Bit8u handle);
+	uint16_t FindEntryByHandle(uint8_t handle);
 
 	void SetSize(uint16_t size) { SSET_WORD(sPSP, next_seg, size); }
 	void SetInt22(RealPt int22pt) { SSET_DWORD(sPSP, int_22, int22pt); }
 	void SetParent(uint16_t parent) { SSET_WORD(sPSP, psp_parent, parent); }
 	void SetEnvironment(uint16_t env) { SSET_WORD(sPSP, environment, env); }
 	void SetStack(RealPt stackpt) { SSET_DWORD(sPSP, stack, stackpt); }
+	bool SetNumFiles(uint16_t file_num);
+	void SetFCB1(RealPt src);
+	void SetFCB2(RealPt src);
+	void SetCommandTail(RealPt src);
 
 	uint16_t GetSize() const { return SGET_WORD(sPSP, next_seg); }
 	RealPt GetInt22() const { return SGET_DWORD(sPSP, int_22); }

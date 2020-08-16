@@ -167,7 +167,7 @@ void DOS_PSP::MakeNew(Bit16u mem_size) {
 	if (rootpsp==0) rootpsp = seg;
 }
 
-uint8_t DOS_PSP::GetFileHandle(uint16_t index)
+uint8_t DOS_PSP::GetFileHandle(uint16_t index) const
 {
 	if (index >= SGET_WORD(sPSP, max_files))
 		return 0xff;
@@ -175,10 +175,11 @@ uint8_t DOS_PSP::GetFileHandle(uint16_t index)
 	return mem_readb(files + index);
 }
 
-void DOS_PSP::SetFileHandle(Bit16u index, Bit8u handle) {
-	if (index<sGet(sPSP,max_files)) {
-		PhysPt files=Real2Phys(sGet(sPSP,file_table));
-		mem_writeb(files+index,handle);
+void DOS_PSP::SetFileHandle(uint16_t index, uint8_t handle)
+{
+	if (index < SGET_WORD(sPSP, max_files)) {
+		PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
+		mem_writeb(files + index, handle);
 	}
 }
 
@@ -186,15 +187,18 @@ Bit16u DOS_PSP::FindFreeFileEntry(void) {
 	PhysPt files=Real2Phys(sGet(sPSP,file_table));
 	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
 		if (mem_readb(files+i)==0xff) return i;
-	}	
+	}
 	return 0xff;
 }
 
-Bit16u DOS_PSP::FindEntryByHandle(Bit8u handle) {
-	PhysPt files=Real2Phys(sGet(sPSP,file_table));
-	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
-		if (mem_readb(files+i)==handle) return i;
-	}	
+uint16_t DOS_PSP::FindEntryByHandle(uint8_t handle)
+{
+	PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
+	const auto max_files = SGET_WORD(sPSP, max_files);
+	for (uint16_t i = 0; i < max_files; ++i) {
+		if (mem_readb(files + i) == handle)
+			return i;
+	}
 	return 0xFF;
 }
 
@@ -259,26 +263,28 @@ void DOS_PSP::SetFCB2(RealPt src) {
 	if (src) MEM_BlockCopy(PhysMake(seg,offsetof(sPSP,fcb2)),Real2Phys(src),16);
 }
 
-bool DOS_PSP::SetNumFiles(Bit16u fileNum) {
-	//20 minimum. clipper program.
-	if (fileNum < 20) fileNum = 20;
-	 
-	if (fileNum>20) {
+bool DOS_PSP::SetNumFiles(uint16_t file_num)
+{
+	// 20 minimum. clipper program.
+	if (file_num < 20)
+		file_num = 20;
+
+	if (file_num > 20) {
 		// Allocate needed paragraphs
-		fileNum+=2;	// Add a few more files for safety
-		Bit16u para = (fileNum/16)+((fileNum%16)>0);
-		RealPt data	= RealMake(DOS_GetMemory(para),0);
-		sSave(sPSP,file_table,data);
-		sSave(sPSP,max_files,fileNum);
-		Bit16u i;
-		for (i=0; i<20; i++)		SetFileHandle(i,(Bit8u)sGet(sPSP,files[i]));
-		for (i=20; i<fileNum; i++)	SetFileHandle(i,0xFF);
+		file_num += 2; // Add a few more files for safety
+		uint16_t para = (file_num / 16) + ((file_num % 16) > 0);
+		RealPt data = RealMake(DOS_GetMemory(para), 0);
+		SSET_DWORD(sPSP, file_table, data);
+		SSET_WORD(sPSP, max_files, file_num);
+		for (uint16_t i = 0; i < 20; i++)
+			SetFileHandle(i, sGet(sPSP, files[i])); // FIXME! 'i' is unusable in constexpr!!
+		for (uint16_t i = 20; i < file_num; i++)
+			SetFileHandle(i, 0xFF);
 	} else {
-		sSave(sPSP,max_files,fileNum);
-	};
+		SSET_WORD(sPSP, max_files, file_num);
+	}
 	return true;
 }
-
 
 void DOS_DTA::SetupSearch(Bit8u _sdrive,Bit8u _sattr,char * pattern) {
 	sSave(sDTA,sdrive,_sdrive);
