@@ -247,21 +247,8 @@ static INLINE Bit16u DOS_PackDate(Bit16u year,Bit16u mon,Bit16u day) {
 #define DOSERR_NO_MORE_FILES 18
 #define DOSERR_FILE_ALREADY_EXISTS 80
 
-
-/* Remains some classes used to access certain things */
-#define sOffset(s,m) ((char*)&(((s*)NULL)->m)-(char*)NULL)
-#define sGet(s,m) GetIt(sizeof(((s *)&pt)->m),(PhysPt)sOffset(s,m))
-
 class MemStruct {
 public:
-	Bitu GetIt(Bitu size,PhysPt addr) {
-		switch (size) {
-		case 1:return mem_readb(pt+addr);
-		case 2:return mem_readw(pt+addr);
-		case 4:return mem_readd(pt+addr);
-		}
-		return 0;
-	}
 	void SetPt(Bit16u seg) { pt=PhysMake(seg,0);}
 	void SetPt(Bit16u seg,Bit16u off) { pt=PhysMake(seg,off);}
 	void SetPt(RealPt addr) { pt=Real2Phys(addr);}
@@ -280,9 +267,6 @@ protected:
  *
  *   SSET_WORD(dos-structure-name, field-name, value);
  *   uint16_t x = SGET_WORD(dos-structure-name, field-name);
- *
- * FIXME: Use these macros to replace all usage of sGet macro,
- *        so MemStruct::GetIt method could be removed.
  */
 template <size_t N, typename S, typename T1, typename T2 = T1>
 constexpr PhysPt assert_macro_args_ok()
