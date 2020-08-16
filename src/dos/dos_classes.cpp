@@ -124,8 +124,6 @@ void DOS_InfoBlock::SetBuffers(uint16_t x, uint16_t y)
 	SSET_WORD(sDIB, buffers_y, y);
 }
 
-/* program Segment prefix */
-
 Bit16u DOS_PSP::rootpsp = 0;
 
 void DOS_PSP::MakeNew(uint16_t mem_size)

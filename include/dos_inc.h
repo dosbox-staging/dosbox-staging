@@ -301,6 +301,8 @@ constexpr PhysPt assert_macro_args_ok()
 #define SGET_DWORD(s, f)                                                       \
 	mem_readd(VERIFY_SGET_ARGS(4, s, f) + pt + offsetof(s, f))
 
+/* Program Segment Prefix
+ */
 class DOS_PSP : public MemStruct {
 public:
 	DOS_PSP(uint16_t segment) : MemStruct(segment), seg(segment) {}
@@ -494,6 +496,8 @@ public:
 	Bit16u	seg;
 };
 
+/* Disk/Data Transfer Address
+ */
 class DOS_DTA : public MemStruct {
 public:
 	DOS_DTA(RealPt addr) : MemStruct(addr) {}
@@ -542,6 +546,8 @@ private:
 	#endif
 };
 
+/* File Control Block
+ */
 class DOS_FCB: public MemStruct {
 public:
 	DOS_FCB(uint16_t seg, uint16_t off, bool allow_extended = true);
@@ -601,6 +607,8 @@ private:
 	#endif
 };
 
+/* Memory Control Block
+ */
 class DOS_MCB : public MemStruct {
 public:
 	DOS_MCB(uint16_t seg) : MemStruct(seg, 0) {}
