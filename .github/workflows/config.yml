@@ -4,9 +4,21 @@ on:
   schedule: [cron: '0 16 * * *']
 
 jobs:
+  repo-check:
+    name: Repository commit check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - id: commit-check
+        run: 'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
+    outputs:
+      has-commits: ${{ steps.commit-check.outputs.has-commits }}
+
   config_all:
     name: ${{ matrix.system.name }} ${{ matrix.conf.configure_flags }} ${{ matrix.conf.without_packages }}
     runs-on: ${{ matrix.system.os }}
+    needs: repo-check
+    if: needs.repo-check.outputs.has-commits == 'true'
     strategy:
       max-parallel: 8
       matrix:
@@ -44,25 +56,21 @@ jobs:
     env:
       CHERE_INVOKING: yes
     steps:
-      - uses: actions/checkout@v2
-      - name: Check repo for commits
-        id:   repo-meta
+      - uses:  actions/checkout@v2
+      - name:  Check repo for commits
+        id:    repo-meta
         shell: bash
-        run:  'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
+        run:   'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
 
       - name:  Get Date
         id:    get-date
-        if:    >
-          matrix.system.name == 'Windows' &&
-          steps.repo-meta.outputs.has-commits == 'true'
+        if:    matrix.system.name == 'Windows'
         shell: bash
         run:   echo ::set-output name=date::$(date +%Y-%W)
 
       - uses:  actions/cache@v2
         id:    cache-msys2
-        if:    >
-          matrix.system.name == 'Windows' &&
-          steps.repo-meta.outputs.has-commits == 'true'
+        if:    matrix.system.name == 'Windows'
         with:
           path: 'C:/tools/msys64'
           key: msys2-64-${{ steps.get-date.outputs.date }}-3
@@ -70,51 +78,39 @@ jobs:
       - name:  Install MSYS2 (Windows)
         if:    >
           matrix.system.name == 'Windows' &&
-          steps.cache-msys2.outputs.cache-hit != 'true' &&
-          steps.repo-meta.outputs.has-commits == 'true'
+          steps.cache-msys2.outputs.cache-hit != 'true'
         run:   choco install msys2 --no-progress
 
       - name:  Install dependencies ${{ matrix.conf.without_packages }} (Windows)
         if:    >
           matrix.system.name == 'Windows' &&
-          steps.cache-msys2.outputs.cache-hit != 'true' &&
-          steps.repo-meta.outputs.has-commits == 'true'
+          steps.cache-msys2.outputs.cache-hit != 'true'
         shell: python scripts\msys-bash.py {0}
         run: |
            scripts/list-build-dependencies.sh -m msys2 -c clang ${{ matrix.conf.without_packages }} | xargs pacman -S --noconfirm
            .github/scripts/shrink-msys2.sh
 
       - name:  Install dependencies ${{ matrix.conf.without_packages }} (Linux)
-        if:    >
-          matrix.system.name == 'Linux' &&
-          steps.repo-meta.outputs.has-commits == 'true'
+        if:    matrix.system.name == 'Linux'
         run: |
           sudo apt-get -y update
           sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c gcc ${{ matrix.conf.without_packages }})
 
       - name:  Install dependencies ${{ matrix.conf.without_packages }} (macOS)
-        if:    >
-          matrix.system.name == 'macOS' &&
-          steps.repo-meta.outputs.has-commits == 'true'
+        if:    matrix.system.name == 'macOS'
         run:   brew install $(./scripts/list-build-dependencies.sh -m brew -c clang ${{ matrix.conf.without_packages }})
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Windows)
-        if:    >
-          matrix.system.name == 'Windows' &&
-          steps.repo-meta.outputs.has-commits == 'true'
+        if:    matrix.system.name == 'Windows'
         shell: python scripts\msys-bash.py {0}
         run:   scripts/build.sh -c ${{ matrix.system.compiler }} -t debug --bin-path /mingw64/bin ${{ matrix.conf.configure_flags }}
 
       - name:  Build ${{ matrix.conf.configure_flags }} (macOS)
-        if:    >
-          matrix.system.name == 'macOS' &&
-          steps.repo-meta.outputs.has-commits == 'true'
+        if:    matrix.system.name == 'macOS'
         run: |
           export PKG_CONFIG_PATH="/usr/local/opt/ncurses/lib/pkgconfig:$PKG_CONFIG_PATH"
           ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug ${{ matrix.conf.configure_flags }}
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Linux)
-        if:    >
-          matrix.system.name == 'Linux' &&
-          steps.repo-meta.outputs.has-commits == 'true'
+        if:    matrix.system.name == 'Linux'
         run:   ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug ${{ matrix.conf.configure_flags }}
