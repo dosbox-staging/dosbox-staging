@@ -102,6 +102,18 @@ emptyline:
 	if (!strlen(temp)) goto emptyline;
 	if (temp[0]==':') goto emptyline;
 
+	// Lambda that copies the src to cmd_write, provided the result fits
+	// within CMD_MAXLINE while taking the existing line into consideration.
+	// Finally it moves the cmd_write pointer ahead by the length copied.
+	auto append_cmd_write = [&cmd_write, &line](const char *src) {
+		const auto src_len = strlen(src);
+		const auto req_len = cmd_write - line + static_cast<int>(src_len);
+		if (req_len < CMD_MAXLINE - 1) {
+			safe_strncpy(cmd_write, src, src_len);
+			cmd_write += src_len;
+		}
+	};
+
 	/* Now parse the line read from the bat file for % stuff */
 	cmd_write=line;
 	char * cmd_read=temp;
@@ -117,11 +129,7 @@ emptyline:
 			if (cmd_read[0] == '0') {  /* Handle %0 */
 				const char *file_name = cmd->GetFileName();
 				cmd_read++;
-				size_t name_len = strlen(file_name);
-				if (((cmd_write - line) + name_len) < (CMD_MAXLINE - 1)) {
-					strcpy(cmd_write,file_name);
-					cmd_write += name_len;
-				}
+				append_cmd_write(file_name);
 				continue;
 			}
 			char next = cmd_read[0];
@@ -132,11 +140,7 @@ emptyline:
 				if (cmd->GetCount()<(unsigned int)next) continue;
 				std::string word;
 				if (!cmd->FindCommand(next,word)) continue;
-				size_t name_len = strlen(word.c_str());
-				if (((cmd_write - line) + name_len) < (CMD_MAXLINE - 1)) {
-					strcpy(cmd_write,word.c_str());
-					cmd_write += name_len;
-				}
+				append_cmd_write(word.c_str());
 				continue;
 			} else {
 				/* Not a command line number has to be an environment */
@@ -149,11 +153,7 @@ emptyline:
 					const char* equals = strchr(env.c_str(),'=');
 					if (!equals) continue;
 					equals++;
-					size_t name_len = strlen(equals);
-					if (((cmd_write - line) + name_len) < (CMD_MAXLINE - 1)) {
-						strcpy(cmd_write,equals);
-						cmd_write += name_len;
-					}
+					append_cmd_write(equals);
 				}
 				cmd_read = first;
 			}
