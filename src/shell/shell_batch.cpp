@@ -36,7 +36,11 @@ BatchFile::BatchFile(DOS_Shell *host,
 	  filename("")
 {
 	char totalname[DOS_PATHLENGTH+4];
-	DOS_Canonicalize(resolved_name,totalname); // Get fullname including drive specificiation
+
+	// Get fullname including drive specification
+	if (!DOS_Canonicalize(resolved_name, totalname))
+		E_Exit("SHELL: Can't determine path to batch file %s", resolved_name);
+	
 	filename = totalname;
 	// Test if file is openable
 	if (!DOS_OpenFile(totalname,(DOS_NOT_INHERIT|OPEN_READ),&file_handle)) {
