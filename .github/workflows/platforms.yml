@@ -4,9 +4,21 @@ on:
   schedule: [cron: '0 14 * * *']
 
 jobs:
-  build_linux_platforms:
+  repo-check:
+    name: Repository commit check
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - id: commit-check
+        run: 'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
+    outputs:
+      has-commits: ${{ steps.commit-check.outputs.has-commits }}
+
+  build_linux_platforms:
     name: ${{ matrix.conf.name }}
+    runs-on: ubuntu-latest
+    needs: repo-check
+    if: needs.repo-check.outputs.has-commits == 'true'
     strategy:
       matrix:
         conf:
@@ -29,13 +41,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Check repo for commits
-        id: repo-meta
-        shell: bash
-        run:  'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
-
       - name: Inject version string
-        if: steps.repo-meta.outputs.has-commits == 'true'
         run: |
           set -x
           git fetch --prune --unshallow
@@ -45,7 +51,6 @@ jobs:
 
       - name: Build
         uses: uraimo/run-on-arch-action@master
-        if: steps.repo-meta.outputs.has-commits == 'true'
         with:
           architecture: ${{ matrix.conf.architecture }}
           distribution: ${{ matrix.conf.distribution }}
@@ -57,11 +62,9 @@ jobs:
             ./scripts/build.sh -c gcc -t release -m lto --disable-fluidsynth
 
       - name: Summarize warnings
-        if: steps.repo-meta.outputs.has-commits == 'true'
         run:  ./scripts/count-warnings.py --max-warnings -1 build.log
 
       - name: Package
-        if: steps.repo-meta.outputs.has-commits == 'true'
         run: |
           set -x
 
@@ -89,7 +92,6 @@ jobs:
           echo ::set-env name=PACKAGE::$PACKAGE
 
       - name: Clam AV scan
-        if: steps.repo-meta.outputs.has-commits == 'true'
         run: |
           set -x
           sudo apt-get install clamav > /dev/null
@@ -98,7 +100,6 @@ jobs:
           clamscan --heuristic-scan-precedence=yes --recursive --infected .
 
       - name: Upload tarball
-        if: steps.repo-meta.outputs.has-commits == 'true'
         uses: actions/upload-artifact@v2
         # GitHub automatically zips the artifacts (there's no way to create
         # a tarball), and it removes all executable flags while zipping.
