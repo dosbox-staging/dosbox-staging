@@ -100,7 +100,7 @@ jobs:
             sanitizers: TSAN UASAN
             usan:  -1
             tsan:  0  # our test does not trigger multiple threads yet
-            uasan: 34
+            uasan: 14
     steps:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update
