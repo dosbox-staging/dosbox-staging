@@ -52,6 +52,7 @@ BatchFile::~BatchFile() {
 	shell->echo=echo;
 }
 
+// TODO: Refactor this sprawling function into smaller ones without GOTOs
 bool BatchFile::ReadLine(char * line) {
 	//Open the batchfile and seek to stored postion
 	if (!DOS_OpenFile(filename.c_str(),(DOS_NOT_INHERIT|OPEN_READ),&file_handle)) {
@@ -139,7 +140,9 @@ emptyline:
 				next -= '0';
 				if (cmd->GetCount()<(unsigned int)next) continue;
 				std::string word;
-				if (!cmd->FindCommand(next,word)) continue;
+				assert(next >= 0);
+				if (!cmd->FindCommand(static_cast<unsigned>(next), word))
+					continue;
 				append_cmd_write(word.c_str());
 				continue;
 			} else {
