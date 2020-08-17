@@ -16,7 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
+#include <climits>
 #include <stdlib.h>
 #include <string.h>
 
@@ -61,35 +61,43 @@ bool BatchFile::ReadLine(char * line) {
 	}
 	DOS_SeekFile(file_handle,&(this->location),DOS_SEEK_SET);
 
-	Bit8u c=0;Bit16u n=1;
-	char temp[CMD_MAXLINE];
+	uint16_t bytes_read = 1;
+	uint8_t data = 0;
+	char val = 0;
+	char temp[CMD_MAXLINE] = "";
 emptyline:
 	char * cmd_write=temp;
 	do {
-		n=1;
-		DOS_ReadFile(file_handle,&c,&n);
-		if (n>0) {
+		bytes_read = 1;
+		DOS_ReadFile(file_handle, &data, &bytes_read);
+
+		// Allow the full 0-255 range to wrap into the char
+		assert(data <= UINT8_MAX);
+		val = static_cast<char>(data);
+
+		if (bytes_read > 0) {
 			/* Why are we filtering this ?
-			 * Exclusion list: tab for batch files 
+			 * Exclusion list: tab for batch files
 			 * escape for ansi
 			 * backspace for alien odyssey */
-			if (c>31 || c==0x1b || c=='\t' || c==8) {
+			if (val > 31 || val == 0x1b || val == '\t' || val == 8) {
 				//Only add it if room for it (and trailing zero) in the buffer, but do the check here instead at the end
 				//So we continue reading till EOL/EOF
-				if (((cmd_write - temp) + 1) < (CMD_MAXLINE - 1))
-					*cmd_write++ = c;
-			} else {
-				if (c != '\n' && c != '\r')
-					shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"), c, c);
+				if (cmd_write - temp + 1 < CMD_MAXLINE - 1) {
+					*cmd_write++ = val;
+				}
+			} else if (val != '\n' && val != '\r') {
+				shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"),
+				                val, val);
 			}
 		}
-	} while (c!='\n' && n);
+	} while (val != '\n' && bytes_read);
 	*cmd_write=0;
-	if (!n && cmd_write==temp) {
+	if (!bytes_read && cmd_write == temp) {
 		//Close file and delete bat file
 		DOS_CloseFile(file_handle);
 		delete this;
-		return false;	
+		return false;
 	}
 	if (!strlen(temp)) goto emptyline;
 	if (temp[0]==':') goto emptyline;
@@ -162,6 +170,7 @@ emptyline:
 	return true;	
 }
 
+// TODO: Refactor this sprawling function into smaller ones without GOTOs
 bool BatchFile::Goto(char * where) {
 	//Open bat file and search for the where string
 	if (!DOS_OpenFile(filename.c_str(),(DOS_NOT_INHERIT|OPEN_READ),&file_handle)) {
@@ -170,26 +179,31 @@ bool BatchFile::Goto(char * where) {
 		return false;
 	}
 
-	char cmd_buffer[CMD_MAXLINE];
-	char * cmd_write;
+	char cmd_buffer[CMD_MAXLINE] = "";
+	char *cmd_write = nullptr;
 
 	/* Scan till we have a match or return false */
-	Bit8u c;Bit16u n;
+	uint16_t bytes_read = 1;
+	uint8_t data = 0;
+	char val = 0;
 again:
 	cmd_write=cmd_buffer;
 	do {
-		n=1;
-		DOS_ReadFile(file_handle,&c,&n);
-		if (n>0) {
-			if (c>31) {
-				if (((cmd_write - cmd_buffer) + 1) < (CMD_MAXLINE - 1))
-					*cmd_write++ = c;
-			} else {
-				if (c != '\n' && c != '\r')
-					shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"), c, c);
+		bytes_read = 1;
+		DOS_ReadFile(file_handle, &data, &bytes_read);
+		assert(data <= CHAR_MAX);
+		val = static_cast<char>(data);
+		if (bytes_read > 0) {
+			if (val > 31) {
+				if (cmd_write - cmd_buffer + 1 < CMD_MAXLINE - 1) {
+					*cmd_write++ = val;
+				}
+			} else if (val != '\n' && val != '\r') {
+				shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"),
+				                val, val);
 			}
 		}
-	} while (c!='\n' && n);
+	} while (val != '\n' && bytes_read);
 	*cmd_write++ = 0;
 	char *nospace = trim(cmd_buffer);
 	if (nospace[0] == ':') {
@@ -213,10 +227,10 @@ again:
 		}
 	   
 	}
-	if (!n) {
+	if (!bytes_read) {
 		DOS_CloseFile(file_handle);
 		delete this;
-		return false;	
+		return false;
 	}
 	goto again;
 	return false;
