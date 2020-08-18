@@ -23,17 +23,25 @@
 #include "shell.h"
 #include "support.h"
 
+// Permitted ASCII control characters in batch files
+constexpr uint8_t BACKSPACE = 8;
+constexpr uint8_t CARRIAGE_RETURN = '\r';
+constexpr uint8_t ESC = 27;
+constexpr uint8_t LINE_FEED = '\n';
+constexpr uint8_t TAB = '\t';
+constexpr uint8_t UNIT_SEPARATOR = 31;
+
 BatchFile::BatchFile(DOS_Shell *host,
-                     char const * const resolved_name,
-                     char const * const entered_name,
-                     char const * const cmd_line)
-	: file_handle(0),
-	  location(0),
-	  echo(host->echo),
-	  shell(host),
-	  prev(host->bf),
-	  cmd(new CommandLine(entered_name, cmd_line)),
-	  filename("")
+                     char const *const resolved_name,
+                     char const *const entered_name,
+                     char const *const cmd_line)
+        : file_handle(0),
+          location(0),
+          echo(host->echo),
+          shell(host),
+          prev(host->bf),
+          cmd(new CommandLine(entered_name, cmd_line)),
+          filename("")
 {
 	char totalname[DOS_PATHLENGTH+4];
 
@@ -78,26 +86,28 @@ emptyline:
 		val = static_cast<char>(data);
 
 		if (bytes_read > 0) {
-			/* Why are we filtering this ?
-			 * Exclusion list: tab for batch files
-			 * escape for ansi
-			 * backspace for alien odyssey */
-
-			// negative char values are international ASCII characters
-			// above 127 that got wrapped
-			if (val < 0 || val > 31 || val == 0x1b || val == '\t' || val == 8) {
+			/* Inclusion criteria:
+			 *  - backspace for alien odyssey
+			 *  - tab for batch files
+			 *  - escape for ANSI
+			 * Note: the negative allowance permits high
+			 * international ASCII characters that are wrapped when
+			 * char is a signed type
+			 */
+			if (val < 0 || val > UNIT_SEPARATOR ||
+			    val == BACKSPACE || val == ESC || val == TAB) {
 				// Only add it if room for it (and trailing zero)
 				// in the buffer, but do the check here instead
 				// at the end So we continue reading till EOL/EOF
 				if (cmd_write - temp + 1 < CMD_MAXLINE - 1) {
 					*cmd_write++ = val;
 				}
-			} else if (val != '\n' && val != '\r') {
+			} else if (val != LINE_FEED && val != CARRIAGE_RETURN) {
 				shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"),
 				                val, val);
 			}
 		}
-	} while (val != '\n' && bytes_read);
+	} while (val != LINE_FEED && bytes_read);
 	*cmd_write=0;
 	if (!bytes_read && cmd_write == temp) {
 		//Close file and delete bat file
@@ -201,18 +211,20 @@ again:
 		DOS_ReadFile(file_handle, &data, &bytes_read);
 		val = static_cast<char>(data);
 		if (bytes_read > 0) {
-			// negative char values are international ASCII characters
-			// above 127 that got wrapped
-			if (val < 0 || val > 31) {
+			// Note: the negative allowance permits high
+			// international ASCII characters that are wrapped when
+			// char is a signed type
+			if (val < 0 || val > UNIT_SEPARATOR) {
 				if (cmd_write - cmd_buffer + 1 < CMD_MAXLINE - 1) {
 					*cmd_write++ = val;
 				}
-			} else if (val != '\n' && val != '\r') {
+			} else if (val != BACKSPACE && val != CARRIAGE_RETURN &&
+			           val != ESC && val != LINE_FEED && val != TAB) {
 				shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"),
 				                val, val);
 			}
 		}
-	} while (val != '\n' && bytes_read);
+	} while (val != LINE_FEED && bytes_read);
 	*cmd_write++ = 0;
 	char *nospace = trim(cmd_buffer);
 	if (nospace[0] == ':') {
