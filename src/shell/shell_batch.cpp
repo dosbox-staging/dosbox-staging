@@ -75,9 +75,6 @@ emptyline:
 	do {
 		bytes_read = 1;
 		DOS_ReadFile(file_handle, &data, &bytes_read);
-
-		// Allow the full 0-255 range to wrap into the char
-		assert(data <= UINT8_MAX);
 		val = static_cast<char>(data);
 
 		if (bytes_read > 0) {
@@ -85,9 +82,13 @@ emptyline:
 			 * Exclusion list: tab for batch files
 			 * escape for ansi
 			 * backspace for alien odyssey */
-			if (val > 31 || val == 0x1b || val == '\t' || val == 8) {
-				//Only add it if room for it (and trailing zero) in the buffer, but do the check here instead at the end
-				//So we continue reading till EOL/EOF
+
+			// negative char values are international ASCII characters
+			// above 127 that got wrapped
+			if (val < 0 || val > 31 || val == 0x1b || val == '\t' || val == 8) {
+				// Only add it if room for it (and trailing zero)
+				// in the buffer, but do the check here instead
+				// at the end So we continue reading till EOL/EOF
 				if (cmd_write - temp + 1 < CMD_MAXLINE - 1) {
 					*cmd_write++ = val;
 				}
@@ -198,10 +199,11 @@ again:
 	do {
 		bytes_read = 1;
 		DOS_ReadFile(file_handle, &data, &bytes_read);
-		assert(data <= CHAR_MAX);
 		val = static_cast<char>(data);
 		if (bytes_read > 0) {
-			if (val > 31) {
+			// negative char values are international ASCII characters
+			// above 127 that got wrapped
+			if (val < 0 || val > 31) {
 				if (cmd_write - cmd_buffer + 1 < CMD_MAXLINE - 1) {
 					*cmd_write++ = val;
 				}
