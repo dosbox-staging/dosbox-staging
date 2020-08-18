@@ -2,7 +2,7 @@
 #define CONF_BRAND "staging"
 
 /* Version number of package */
-#define VERSION "0.75.0"
+#define VERSION "0.75.1"
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0
