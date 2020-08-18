@@ -261,10 +261,7 @@ public:
 			if ((temp_line.size() > 2) || ((temp_line.size() > 1) && (temp_line[1]!=':'))) goto showusage;
 			const int i_drive = toupper(temp_line[0]);
 
-			if (!isalpha(i_drive)) {
-				goto showusage;
-			}
-			if ((i_drive - 'A') >= DOS_DRIVES || (i_drive - 'A') < 0 ) {
+			if (i_drive < 'A' || i_drive > 'Z') {
 				goto showusage;
 			}
 			drive = int_to_char(i_drive);
@@ -1258,8 +1255,7 @@ public:
 				return;
 			}
 			const int i_drive = toupper(temp_line[0]);
-			if (!isalpha(i_drive) || (i_drive - 'A') >= DOS_DRIVES ||
-			    (i_drive - 'A') < 0) {
+			if (i_drive < 'A' || i_drive > 'Z') {
 				WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
 				return;
 			}
