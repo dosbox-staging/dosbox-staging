@@ -175,7 +175,6 @@ private:
 	float Read8BitSample(const uint8_t *ram, const int32_t addr) const;
 	float Read16BitSample(const uint8_t *ram, const int32_t addr) const;
 	uint8_t ReadCtrlState(const VoiceCtrl &ctrl) const;
-	uint8_t ReadPanPot() const;
 	void IncrementCtrlPos(VoiceCtrl &ctrl, bool skip_loop);
 	bool UpdateCtrlState(VoiceCtrl &ctrl, uint8_t state);
 
@@ -345,7 +344,7 @@ Gravis SDK, Section 3.11. Rollover feature:
 	position.  However, instead of stopping or looping back to the start position,
 	the voice will continue playing in the same direction.  This means that there
 	will be no pause (or gap) in the playback.
-	
+
 	Note that this feature is enabled/disabled through the voice's VOLUME control
 	register (since there are no more bits available in the voice control
 	registers).   A voice's loop enable bit takes precedence over the rollover. This
@@ -503,11 +502,6 @@ uint8_t Voice::ReadCtrlState(const VoiceCtrl &ctrl) const
 	if (ctrl.irq_state & irq_mask)
 		state |= 0x80;
 	return state;
-}
-
-uint8_t Voice::ReadPanPot() const
-{
-	return pan_position;
 }
 
 uint8_t Voice::ReadVolState() const
@@ -757,7 +751,6 @@ bool Gus::IsDmaXfer16Bit()
 	// 0x04   8/16   < 4     No      8-bit if using Low DMA
 	// 0x40  16/ 8   Any     No      Windows 3.1, Quake
 	// 0x44  16/16   >= 4    Yes     Windows 3.1, Quake
-	
 	return (dma_ctrl & 0x4) && (dma1 >= 4);
 }
 
