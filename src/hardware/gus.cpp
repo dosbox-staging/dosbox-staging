@@ -24,7 +24,6 @@
 #include <array>
 #include <iomanip>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <unistd.h>
 
@@ -778,16 +777,21 @@ void Gus::DmaCallback(DmaChannel *, DMAEvent event)
 
 void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
 {
-	// ULTRASND=Port,(rec)DMA1,(pcm)DMA2,(play)IRQ1,(midi)IRQ2
-	std::ostringstream sndline;
-	sndline << "SET ULTRASND=" << std::hex << std::setw(3) << port << ","
-	        << std::dec << static_cast<int>(dma1) << ","
-	        << static_cast<int>(dma2) << "," << static_cast<int>(irq1)
-	        << "," << static_cast<int>(irq2) << std::ends;
-	LOG_MSG("GUS: %s", sndline.str().c_str());
-	autoexec_lines.at(0).Install(sndline.str());
+	// Ensure our port and addresses will fit in our format widths
+	// The config selection controls their actual values, so this is a
+	// maximum-limit.
+	assert(port < 0xfff);
+	assert(dma1 < 10 && dma2 < 10);
+	assert(irq1 < 10 && irq2 < 10);
 
-	// ULTRADIR=full path to directory containing "midi"
+	// ULTRASND variable
+	char set_ultrasnd[] = "SET ULTRASND=HHH,D,D,I,I";
+	snprintf(set_ultrasnd, sizeof(set_ultrasnd),
+	         "SET ULTRASND=%x,%u,%u,%u,%u", port, dma1, dma2, irq1, irq2);
+	LOG_MSG("GUS: %s", set_ultrasnd);
+	autoexec_lines.at(0).Install(set_ultrasnd);
+
+	// ULTRADIR variable
 	std::string dirline = "SET ULTRADIR=" + ultradir;
 	autoexec_lines.at(1).Install(dirline);
 }
