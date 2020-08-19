@@ -93,12 +93,18 @@ jobs:
           cp docs/README.template                 dest/README.txt
           cp docs/README.video                    dest/doc/video.txt
           cp README                               dest/doc/manual.txt
-          cp vs/$RELEASE_DIR/libpng16.dll         dest/
+          cp vs/$RELEASE_DIR/libfluidsynth-2.dll  dest/
+          cp vs/$RELEASE_DIR/glib-2.dll           dest/ # fluidsynth dependency
+          cp vs/$RELEASE_DIR/libintl.dll          dest/ # glib dependency
+          cp vs/$RELEASE_DIR/pcre.dll             dest/ # glib dependency
+          cp vs/$RELEASE_DIR/libiconv.dll         dest/ # glib dependency
+          cp vs/$RELEASE_DIR/libcharset.dll       dest/ # iconv dependency
           cp vs/$RELEASE_DIR/ogg.dll              dest/
           cp vs/$RELEASE_DIR/opus.dll             dest/
           cp vs/$RELEASE_DIR/SDL2.dll             dest/
           cp vs/$RELEASE_DIR/SDL2_net.dll         dest/
-          cp src/libs/zmbv/$RELEASE_DIR/zlib1.dll dest/
+          cp vs/$RELEASE_DIR/libpng16.dll         dest/
+          cp src/libs/zmbv/$RELEASE_DIR/zlib1.dll dest/ # libpng dependency
           cp src/libs/zmbv/$RELEASE_DIR/zmbv.dll  dest/
 
           # Fill README template file
