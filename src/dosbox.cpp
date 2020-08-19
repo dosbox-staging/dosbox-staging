@@ -83,7 +83,7 @@ void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
 void JOYSTICK_Init(Section*);
 void MOUSE_Init(Section*);
 void SBLASTER_Init(Section*);
-void GUS_Init(Section*);
+void GUS_AddConfigSection(Config *conf);
 void MPU401_Init(Section*);
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
@@ -403,11 +403,8 @@ void DOSBOX_Init(void) {
 	SDLNetInited = false;
 
 	// Some frequently used option sets
-	const char *rates[] = {  "44100", "48000", "32000","22050", "16000", "11025", "8000", "49716", 0 };
-	const char *iosgus[] = { "240", "220", "260", "280", "2a0", "2c0", "2e0", "300", 0 };
-	const char *irqsgus[] = { "5", "3", "7", "9", "10", "11", "12", 0 };
-	const char *dmasgus[] = { "3", "0", "1", "5", "6", "7", 0 };
-
+	const char *rates[] = {"44100", "48000", "32000", "22050", "16000",
+	                       "11025", "8000",  "49716", 0};
 
 	/* Setup all the different modules making up DOSBox */
 	const char* machines[] = {
@@ -686,28 +683,8 @@ void DOSBOX_Init(void) {
 	Pint->Set_help("Sample rate of OPL music emulation. Use 49716 for the highest\n"
 	               "quality (set the mixer.rate accordingly).");
 
-	secprop=control->AddSection_prop("gus",&GUS_Init,true); //done
-	Pbool = secprop->Add_bool("gus",Property::Changeable::WhenIdle,false);
-	Pbool->Set_help("Enable the Gravis UltraSound emulation.");
-
-	Phex = secprop->Add_hex("gusbase",Property::Changeable::WhenIdle,0x240);
-	Phex->Set_values(iosgus);
-	Phex->Set_help("The IO base address of the Gravis UltraSound.");
-
-	Pint = secprop->Add_int("gusirq",Property::Changeable::WhenIdle,5);
-	Pint->Set_values(irqsgus);
-	Pint->Set_help("The IRQ number of the Gravis UltraSound.");
-
-	Pint = secprop->Add_int("gusdma",Property::Changeable::WhenIdle,3);
-	Pint->Set_values(dmasgus);
-	Pint->Set_help("The DMA channel of the Gravis UltraSound.");
-
-	Pstring = secprop->Add_string("ultradir",Property::Changeable::WhenIdle,"C:\\ULTRASND");
-	Pstring->Set_help(
-		"Path to UltraSound directory. In this directory\n"
-		"there should be a MIDI directory that contains\n"
-		"the patch files for GUS playback. Patch sets used\n"
-		"with Timidity should work fine.");
+	// Configure Gravis UltraSound emulation
+	GUS_AddConfigSection(control);
 
 	secprop = control->AddSection_prop("speaker",&PCSPEAKER_Init,true);//done
 	Pbool = secprop->Add_bool("pcspeaker",Property::Changeable::WhenIdle,true);
