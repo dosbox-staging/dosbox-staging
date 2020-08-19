@@ -28,6 +28,7 @@
 #include <string>
 #include <unistd.h>
 
+#include "control.h"
 #include "dma.h"
 #include "hardware.h"
 #include "mixer.h"
@@ -1391,7 +1392,7 @@ void Gus::WriteToRegister()
 	return;
 }
 
-void GUS_ShutDown(Section * /*sec*/)
+static void gus_destroy(MAYBE_UNUSED Section *sec)
 {
 	if (gus) {
 		gus->PrintStats();
@@ -1399,7 +1400,7 @@ void GUS_ShutDown(Section * /*sec*/)
 	}
 }
 
-void GUS_Init(Section *sec)
+static void gus_init(Section *sec)
 {
 	assert(sec);
 	Section_prop *conf = dynamic_cast<Section_prop *>(sec);
@@ -1414,5 +1415,43 @@ void GUS_Init(Section *sec)
 
 	// Instantiate the GUS with the settings
 	gus = std::make_unique<Gus>(port, dma, irq, ultradir);
-	sec->AddDestroyFunction(&GUS_ShutDown, true);
+	sec->AddDestroyFunction(&gus_destroy, true);
+}
+
+void init_gus_dosbox_settings(Section_prop &secprop)
+{
+	constexpr auto when_idle = Property::Changeable::WhenIdle;
+
+	auto *bool_prop = secprop.Add_bool("gus", when_idle, false);
+	bool_prop->Set_help("Enable Gravis UltraSound emulation.");
+
+	auto *hex_prop = secprop.Add_hex("gusbase", when_idle, 0x240);
+	const char *bases[] = {"240", "220", "260", "280",  "2a0",
+	                       "2c0", "2e0", "300", nullptr};
+	hex_prop->Set_values(bases);
+	hex_prop->Set_help("The IO base address of the Gravis UltraSound.");
+
+	auto *int_prop = secprop.Add_int("gusirq", when_idle, 5);
+	const char *irqs[] = {"5", "3", "7", "9", "10", "11", "12", nullptr};
+	int_prop->Set_values(irqs);
+	int_prop->Set_help("The IRQ number of the Gravis UltraSound.");
+
+	int_prop = secprop.Add_int("gusdma", when_idle, 3);
+	const char *dmas[] = {"3", "0", "1", "5", "6", "7", nullptr};
+	int_prop->Set_values(dmas);
+	int_prop->Set_help("The DMA channel of the Gravis UltraSound.");
+
+	auto *str_prop = secprop.Add_string("ultradir", when_idle, "C:\\ULTRASND");
+	str_prop->Set_help("Path to UltraSound directory. In this directory\n"
+	                   "there should be a MIDI directory that contains\n"
+	                   "the patch files for GUS playback. Patch sets used\n"
+	                   "with Timidity should work fine.");
+}
+
+void GUS_AddConfigSection(Config *conf)
+{
+	assert(conf);
+	Section_prop *sec = conf->AddSection_prop("gus", &gus_init);
+	assert(sec);
+	init_gus_dosbox_settings(*sec);
 }
