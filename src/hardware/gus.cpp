@@ -460,11 +460,13 @@ void Voice::GenerateSamples(float *stream,
 	Is8Bit() ? generated_8bit_ms++ : generated_16bit_ms++;
 }
 
+// Returns the current wave position and increments the position
+// to the next wave position.
 int32_t Voice::PopWavePos()
 {
-	const int32_t pos = wave_ctrl.pos;
+	const int32_t current_pos = wave_ctrl.pos;
 	IncrementCtrlPos(wave_ctrl, CheckWaveRolloverCondition());
-	return pos;
+	return current_pos;
 }
 
 int32_t Voice::PopVolPos()
