@@ -716,13 +716,16 @@ bool Gus::PerformDmaTransfer()
 	const auto addr = IsDmaXfer16Bit() ? Dma16Addr() : Dma8Addr();
 	const uint16_t desired = dma_channel->currcnt + 1;
 
-	if ((dma_ctrl & 0x2)) // Copy samples via DMA from GUS memory
+	// Copy samples via DMA from GUS memory
+	if ((dma_ctrl & 0x2)) {
 		dma_channel->Write(desired, ram + addr);
-
-	else if (!(dma_ctrl & 0x80)) // Skip DMA content
+	}
+	// Skip DMA content
+	else if (!(dma_ctrl & 0x80)) {
 		dma_channel->Read(desired, ram + addr);
-
-	else { // Copy samples via DMA into GUS memory
+	}
+	// Copy samples via DMA into GUS memory
+	else {
 		const auto samples = dma_channel->Read(desired, ram + addr);
 		const auto start = addr + (IsDmaPcm16Bit() ? 1u : 0u);
 		const auto skip = IsDmaPcm16Bit() ? 2u : 1u;
