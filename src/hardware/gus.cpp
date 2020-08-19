@@ -937,9 +937,8 @@ void Gus::PrintStats()
 		const auto multiplier = static_cast<uint16_t>(
 		        100 * mixer_scalar / peak_ratio);
 		LOG_MSG("GUS: If it should be louder, %s %u",
-		        static_cast<float>(fabs(mixer_scalar - 1.0f)) > 0.01f
-		                ? "adjust mixer gus to"
-		                : "use: mixer gus",
+		        fabs(mixer_scalar - 1.0f) > 0.01f ? "adjust mixer gus to"
+		                                          : "use: mixer gus",
 		        multiplier);
 	}
 }
