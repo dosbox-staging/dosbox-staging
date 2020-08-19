@@ -619,7 +619,7 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 	if (requested_voices != active_voices) {
 		active_voices = requested_voices;
 		assert(active_voices <= voices.size());
-		active_voice_mask = 0xffffffffU >> (MAX_VOICES - active_voices);
+		active_voice_mask = 0xffffffffu >> (MAX_VOICES - active_voices);
 		playback_rate = static_cast<uint32_t>(
 		        0.5 + 1000000.0 / (1.619695497 * active_voices));
 		audio_channel->SetFreq(playback_rate);
@@ -1061,7 +1061,7 @@ void Gus::RegisterIoHandlers()
 	read_handlers[5].Install(0x208 + port_base, read_from, IO_MB);
 	read_handlers[6].Install(0x307 + port_base, read_from, IO_MB);
 	// Board Only
-	read_handlers[7].Install(0x20A + port_base, read_from, IO_MB);
+	read_handlers[7].Install(0x20a + port_base, read_from, IO_MB);
 
 	// Register the IO write addresses
 	// We'll leave the MIDI interface to the MPU-401
@@ -1078,7 +1078,7 @@ void Gus::RegisterIoHandlers()
 	write_handlers[6].Install(0x307 + port_base, write_to, IO_MB);
 	// Board Only
 	write_handlers[7].Install(0x200 + port_base, write_to, IO_MB);
-	write_handlers[8].Install(0x20B + port_base, write_to, IO_MB);
+	write_handlers[8].Install(0x20b + port_base, write_to, IO_MB);
 }
 
 void Gus::StopPlayback()
@@ -1279,7 +1279,7 @@ void Gus::WriteToRegister()
 {
 	// Registers that write to the general DSP
 	switch (selected_register) {
-	case 0xE: // Set active voice register
+	case 0xe: // Set active voice register
 		selected_register = register_data >> 8; // Jazz Jackrabbit needs this
 		{
 			uint8_t num_voices = 1 + ((register_data >> 8) & 31);
@@ -1389,16 +1389,16 @@ void Gus::WriteToRegister()
 		// which is the last element in the 4096-long vol_scalars array.
 		voice->vol_ctrl.pos = (register_data >> 4) * VOLUME_INC_SCALAR;
 		break;
-	case 0xA: // Voice MSW current address register
+	case 0xa: // Voice MSW current address register
 		UpdateWaveMsw(voice->wave_ctrl.pos);
 		break;
-	case 0xB: // Voice LSW current address register
+	case 0xb: // Voice LSW current address register
 		UpdateWaveLsw(voice->wave_ctrl.pos);
 		break;
-	case 0xC: // Voice pan pot register
+	case 0xc: // Voice pan pot register
 		voice->WritePanPot(register_data >> 8);
 		break;
-	case 0xD: // Voice volume control register
+	case 0xd: // Voice volume control register
 		if (voice->UpdateVolState(register_data >> 8))
 			CheckVoiceIrq();
 		break;
