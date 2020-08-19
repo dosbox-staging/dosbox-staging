@@ -271,9 +271,9 @@ private:
 	read_io_array_t read_handlers = {};   // std::functions
 	write_io_array_t write_handlers = {}; // std::functions
 	const address_array_t dma_addresses = {
-	        {0, MIN_DMA_ADDRESS, 3, 5, 6, MAX_IRQ_ADDRESS, 0, 0}};
+	        {MIN_DMA_ADDRESS, 1, 3, 5, 6, MAX_IRQ_ADDRESS, 0, 0}};
 	const address_array_t irq_addresses = {
-	        {0, MIN_IRQ_ADDRESS, 5, 3, 7, 11, 12, MAX_IRQ_ADDRESS}};
+	        {MIN_IRQ_ADDRESS, 2, 5, 3, 7, 11, 12, MAX_IRQ_ADDRESS}};
 	voice_array_t voices = {{nullptr}};
 	autoexec_array_t autoexec_lines = {};
 
