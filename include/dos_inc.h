@@ -321,7 +321,9 @@ protected:
 	PhysPt pt;
 };
 
-class DOS_PSP :public MemStruct {
+/* Program Segment Prefix */
+
+class DOS_PSP : public MemStruct {
 public:
 	DOS_PSP(Bit16u segment)
 		: seg(0)
@@ -329,40 +331,44 @@ public:
 		SetPt(segment);
 		seg = segment;
 	}
-	void	MakeNew				(Bit16u memSize);
-	void	CopyFileTable		(DOS_PSP* srcpsp,bool createchildpsp);
-	Bit16u	FindFreeFileEntry	(void);
-	void	CloseFiles			(void);
 
-	void	SaveVectors			(void);
-	void	RestoreVectors		(void);
+	void MakeNew(uint16_t mem_size);
 
-	void SetSize(uint16_t size) { sSave(sPSP, next_seg, size); }
-	uint16_t GetSize() { return (uint16_t)sGet(sPSP, next_seg); }
+	void CopyFileTable(DOS_PSP *srcpsp, bool createchildpsp);
 
-	void SetEnvironment(uint16_t eseg) { sSave(sPSP, environment, eseg); }
-	uint16_t GetEnvironment() { return (uint16_t)sGet(sPSP, environment); }
+	void CloseFiles();
 
-	uint16_t GetSegment() { return seg; }
+	uint16_t GetSegment() const { return seg; }
 
-	void	SetFileHandle		(Bit16u index, Bit8u handle);
-	Bit8u	GetFileHandle		(Bit16u index);
+	void SaveVectors();
+	void RestoreVectors();
 
-	void SetParent(uint16_t parent) { sSave(sPSP, psp_parent, parent); }
-	uint16_t GetParent() { return (uint16_t)sGet(sPSP, psp_parent); }
+	void SetFileHandle(uint16_t index, uint8_t handle);
+	uint8_t GetFileHandle(uint16_t index) const;
 
-	void SetStack(RealPt stackpt) { sSave(sPSP, stack, stackpt); }
-	RealPt GetStack() { return sGet(sPSP, stack); }
+	uint16_t FindFreeFileEntry() const;
+	uint16_t FindEntryByHandle(uint8_t handle) const;
 
-	void SetInt22(RealPt int22pt) { sSave(sPSP, int_22, int22pt); }
-	RealPt GetInt22() { return sGet(sPSP, int_22); }
+	void SetSize(uint16_t size) { SSET_WORD(sPSP, next_seg, size); }
+	uint16_t GetSize() const { return SGET_WORD(sPSP, next_seg); }
 
-	void	SetFCB1				(RealPt src);
-	void	SetFCB2				(RealPt src);
-	void	SetCommandTail		(RealPt src);	
-	bool	SetNumFiles			(Bit16u fileNum);
-	Bit16u	FindEntryByHandle	(Bit8u handle);
-			
+	void SetInt22(RealPt int22pt) { SSET_DWORD(sPSP, int_22, int22pt); }
+	RealPt GetInt22() const { return SGET_DWORD(sPSP, int_22); }
+
+	void SetParent(uint16_t parent) { SSET_WORD(sPSP, psp_parent, parent); }
+	uint16_t GetParent() const { return SGET_WORD(sPSP, psp_parent); }
+
+	void SetEnvironment(uint16_t env) { SSET_WORD(sPSP, environment, env); }
+	uint16_t GetEnvironment() const { return SGET_WORD(sPSP, environment); }
+
+	void SetStack(RealPt stackpt) { SSET_DWORD(sPSP, stack, stackpt); }
+	RealPt GetStack() const { return SGET_DWORD(sPSP, stack); }
+
+	bool SetNumFiles(uint16_t file_num);
+	void SetFCB1(RealPt src);
+	void SetFCB2(RealPt src);
+	void SetCommandTail(RealPt src);
+
 private:
 	#ifdef _MSC_VER
 	#pragma pack(1)

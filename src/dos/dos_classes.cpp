@@ -169,80 +169,88 @@ Bit32u DOS_InfoBlock::GetDeviceChain(void) {
 	return sGet(sDIB,nulNextDriver);
 }
 
-
-/* program Segment prefix */
-
 Bit16u DOS_PSP::rootpsp = 0;
 
-void DOS_PSP::MakeNew(Bit16u mem_size) {
+void DOS_PSP::MakeNew(uint16_t mem_size)
+{
 	/* get previous */
 //	DOS_PSP prevpsp(dos.psp());
 	/* Clear it first */
-	Bitu i;
-	for (i=0;i<sizeof(sPSP);i++) mem_writeb(pt+i,0);
+	for (PhysPt i = 0; i < sizeof(sPSP); ++i)
+		mem_writeb(pt + i, 0);
 	// Set size
-	sSave(sPSP,next_seg,seg+mem_size);
+	SSET_WORD(sPSP, next_seg, static_cast<uint16_t>(seg + mem_size));
 	/* far call opcode */
-	sSave(sPSP,far_call,0xea);
-	// far call to interrupt 0x21 - faked for bill & ted 
+	SSET_BYTE(sPSP, far_call, uint8_t(0xea));
+	// far call to interrupt 0x21 - faked for bill & ted
 	// lets hope nobody really uses this address
-	sSave(sPSP,cpm_entry,RealMake(0xDEAD,0xFFFF));
+	SSET_DWORD(sPSP, cpm_entry, RealMake(0xdead, 0xffff));
 	/* Standard blocks,int 20  and int21 retf */
-	sSave(sPSP,exit[0],0xcd);
-	sSave(sPSP,exit[1],0x20);
-	sSave(sPSP,service[0],0xcd);
-	sSave(sPSP,service[1],0x21);
-	sSave(sPSP,service[2],0xcb);
+	SSET_BYTE(sPSP, exit[0], uint8_t(0xcd));
+	SSET_BYTE(sPSP, exit[1], uint8_t(0x20));
+	SSET_BYTE(sPSP, service[0], uint8_t(0xcd));
+	SSET_BYTE(sPSP, service[1], uint8_t(0x21));
+	SSET_BYTE(sPSP, service[2], uint8_t(0xcb));
 	/* psp and psp-parent */
-	sSave(sPSP,psp_parent,dos.psp());
-	sSave(sPSP,prev_psp,0xffffffff);
-	sSave(sPSP,dos_version,0x0005);
+	SSET_WORD(sPSP, psp_parent, dos.psp());
+	SSET_DWORD(sPSP, prev_psp, uint32_t(0xffffffff));
+	SSET_WORD(sPSP, dos_version, uint16_t(0x0005));
 	/* terminate 22,break 23,crititcal error 24 address stored */
 	SaveVectors();
 
 	/* FCBs are filled with 0 */
 	// ....
 	/* Init file pointer and max_files */
-	sSave(sPSP,file_table,RealMake(seg,offsetof(sPSP,files)));
-	sSave(sPSP,max_files,20);
+	SSET_DWORD(sPSP, file_table, RealMake(seg, offsetof(sPSP, files)));
+	SSET_WORD(sPSP, max_files, uint16_t(20));
 	for (Bit16u ct=0;ct<20;ct++) SetFileHandle(ct,0xff);
 
 	/* User Stack pointer */
-//	if (prevpsp.GetSegment()!=0) sSave(sPSP,stack,prevpsp.GetStack());
+//	if (prevpsp.GetSegment()!=0) SSET_DWORD(sPSP,stack,prevpsp.GetStack());
 
 	if (rootpsp==0) rootpsp = seg;
 }
 
-Bit8u DOS_PSP::GetFileHandle(Bit16u index) {
-	if (index>=sGet(sPSP,max_files)) return 0xff;
-	PhysPt files=Real2Phys(sGet(sPSP,file_table));
-	return mem_readb(files+index);
+uint8_t DOS_PSP::GetFileHandle(uint16_t index) const
+{
+	if (index >= SGET_WORD(sPSP, max_files))
+		return 0xff;
+	const PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
+	return mem_readb(files + index);
 }
 
-void DOS_PSP::SetFileHandle(Bit16u index, Bit8u handle) {
-	if (index<sGet(sPSP,max_files)) {
-		PhysPt files=Real2Phys(sGet(sPSP,file_table));
-		mem_writeb(files+index,handle);
+void DOS_PSP::SetFileHandle(uint16_t index, uint8_t handle)
+{
+	if (index < SGET_WORD(sPSP, max_files)) {
+		const PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
+		mem_writeb(files + index, handle);
 	}
 }
 
-Bit16u DOS_PSP::FindFreeFileEntry(void) {
-	PhysPt files=Real2Phys(sGet(sPSP,file_table));
-	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
-		if (mem_readb(files+i)==0xff) return i;
-	}	
+uint16_t DOS_PSP::FindFreeFileEntry() const
+{
+	PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
+	const auto max_files = SGET_WORD(sPSP, max_files);
+	for (uint16_t i = 0; i < max_files; ++i) {
+		if (mem_readb(files + i) == 0xff)
+			return i;
+	}
 	return 0xff;
 }
 
-Bit16u DOS_PSP::FindEntryByHandle(Bit8u handle) {
-	PhysPt files=Real2Phys(sGet(sPSP,file_table));
-	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
-		if (mem_readb(files+i)==handle) return i;
-	}	
-	return 0xFF;
+uint16_t DOS_PSP::FindEntryByHandle(uint8_t handle) const
+{
+	const PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
+	const auto max_files = SGET_WORD(sPSP, max_files);
+	for (uint16_t i = 0; i < max_files; ++i) {
+		if (mem_readb(files + i) == handle)
+			return i;
+	}
+	return 0xff;
 }
 
-void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp) {
+void DOS_PSP::CopyFileTable(DOS_PSP *srcpsp, bool createchildpsp)
+{
 	/* Copy file table from calling process */
 	for (Bit16u i=0;i<20;i++) {
 		Bit8u handle = srcpsp->GetFileHandle(i);
@@ -250,7 +258,7 @@ void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp) {
 		{	//copy obeying not inherit flag.(but dont duplicate them)
 			bool allowCopy = true;//(handle==0) || ((handle>0) && (FindEntryByHandle(handle)==0xff));
 			if((handle<DOS_FILES) && Files[handle] && !(Files[handle]->flags & DOS_NOT_INHERIT) && allowCopy)
-			{   
+			{
 				Files[handle]->AddRef();
 				SetFileHandle(i,handle);
 			}
@@ -266,33 +274,37 @@ void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp) {
 	}
 }
 
-void DOS_PSP::CloseFiles(void) {
-	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
+void DOS_PSP::CloseFiles()
+{
+	const auto max_files = SGET_WORD(sPSP, max_files);
+	for (uint16_t i = 0; i < max_files; ++i)
 		DOS_CloseFile(i);
-	}
 }
 
-void DOS_PSP::SaveVectors(void) {
+void DOS_PSP::SaveVectors()
+{
 	/* Save interrupt 22,23,24 */
-	sSave(sPSP,int_22,RealGetVec(0x22));
-	sSave(sPSP,int_23,RealGetVec(0x23));
-	sSave(sPSP,int_24,RealGetVec(0x24));
+	SSET_DWORD(sPSP, int_22, RealGetVec(0x22));
+	SSET_DWORD(sPSP, int_23, RealGetVec(0x23));
+	SSET_DWORD(sPSP, int_24, RealGetVec(0x24));
 }
 
-void DOS_PSP::RestoreVectors(void) {
+void DOS_PSP::RestoreVectors()
+{
 	/* Restore interrupt 22,23,24 */
-	RealSetVec(0x22,sGet(sPSP,int_22));
-	RealSetVec(0x23,sGet(sPSP,int_23));
-	RealSetVec(0x24,sGet(sPSP,int_24));
+	RealSetVec(0x22, SGET_DWORD(sPSP, int_22));
+	RealSetVec(0x23, SGET_DWORD(sPSP, int_23));
+	RealSetVec(0x24, SGET_DWORD(sPSP, int_24));
 }
 
-void DOS_PSP::SetCommandTail(RealPt src) {
-	if (src) {	// valid source
+void DOS_PSP::SetCommandTail(RealPt src)
+{
+	if (src) { // valid source
 		MEM_BlockCopy(pt+offsetof(sPSP,cmdtail),Real2Phys(src),128);
-	} else {	// empty
-		sSave(sPSP,cmdtail.count,0x00);
+	} else { // empty
+		SSET_BYTE(sPSP, cmdtail.count, uint8_t(0));
 		mem_writeb(pt+offsetof(sPSP,cmdtail.buffer),0x0d);
-	};
+	}
 }
 
 void DOS_PSP::SetFCB1(RealPt src) {
@@ -303,23 +315,26 @@ void DOS_PSP::SetFCB2(RealPt src) {
 	if (src) MEM_BlockCopy(PhysMake(seg,offsetof(sPSP,fcb2)),Real2Phys(src),16);
 }
 
-bool DOS_PSP::SetNumFiles(Bit16u fileNum) {
-	//20 minimum. clipper program.
-	if (fileNum < 20) fileNum = 20;
-	 
-	if (fileNum>20) {
+bool DOS_PSP::SetNumFiles(uint16_t file_num)
+{
+	// 20 minimum. clipper program.
+	if (file_num < 20)
+		file_num = 20;
+
+	if (file_num > 20) {
 		// Allocate needed paragraphs
-		fileNum+=2;	// Add a few more files for safety
-		Bit16u para = (fileNum/16)+((fileNum%16)>0);
-		RealPt data	= RealMake(DOS_GetMemory(para),0);
-		sSave(sPSP,file_table,data);
-		sSave(sPSP,max_files,fileNum);
-		Bit16u i;
-		for (i=0; i<20; i++)		SetFileHandle(i,(Bit8u)sGet(sPSP,files[i]));
-		for (i=20; i<fileNum; i++)	SetFileHandle(i,0xFF);
+		file_num += 2; // Add a few more files for safety
+		const uint16_t para = (file_num / 16) + ((file_num % 16) > 0);
+		const RealPt data = RealMake(DOS_GetMemory(para), 0);
+		SSET_DWORD(sPSP, file_table, data);
+		SSET_WORD(sPSP, max_files, file_num);
+		for (uint16_t i = 0; i < 20; i++)
+			SetFileHandle(i, sGet(sPSP, files[i])); // FIXME! 'i' is unusable in constexpr!!
+		for (uint16_t i = 20; i < file_num; i++)
+			SetFileHandle(i, 0xFF);
 	} else {
-		sSave(sPSP,max_files,fileNum);
-	};
+		SSET_WORD(sPSP, max_files, file_num);
+	}
 	return true;
 }
 
