@@ -491,8 +491,8 @@ float Voice::Read8BitSample(const uint8_t *ram, const int32_t addr) const
 float Voice::Read16BitSample(const uint8_t *ram, const int32_t addr) const
 {
 	// Calculate offset of the 16-bit sample
-	const auto lower = static_cast<unsigned>(addr) & 0xC0000u;
-	const auto upper = static_cast<unsigned>(addr) & 0x1FFFFu;
+	const auto lower = addr & 0b1100'0000'0000'0000'0000;
+	const auto upper = addr & 0b0001'1111'1111'1111'1111;
 	const size_t i = lower | (upper << 1);
 	assert(i < RAM_SIZE);
 	return static_cast<int16_t>(host_readw(ram + i));
@@ -696,8 +696,8 @@ uint32_t Gus::Dma8Addr()
 
 uint32_t Gus::Dma16Addr()
 {
-	const auto lower = dma_addr & 0x1fff;
-	const auto upper = dma_addr & 0xc000;
+	const auto lower = dma_addr & 0b0001'1111'1111'1111;
+	const auto upper = dma_addr & 0b1100'0000'0000'0000;
 	const auto combined = (lower << 1) | upper;
 	return static_cast<uint32_t>(combined << 4);
 }
