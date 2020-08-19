@@ -38,40 +38,62 @@
 
 #define LOG_GUS 0 // set to 1 for detailed logging
 
-// Constants used in member definitions
+// Global Constants
+// ----------------
+
+// AdLib emulation state constant
 constexpr uint8_t ADLIB_CMD_DEFAULT = 85u;
+
+// Amplitude level constants
+constexpr float ONE_AMP = 1.0f; // first amplitude value
 constexpr float AUDIO_SAMPLE_MAX = static_cast<float>(MAX_AUDIO);
 constexpr float AUDIO_SAMPLE_MIN = static_cast<float>(MIN_AUDIO);
+
+// Buffer and memory constants
 constexpr int BUFFER_FRAMES = 48;
 constexpr int BUFFER_SAMPLES = BUFFER_FRAMES * 2; // 2 samples/frame (left & right)
-constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024; // 8 KB per transfer
-constexpr auto DELTA_DB = 0.002709201;             // 0.0235 dB increments
-constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
+constexpr uint32_t RAM_SIZE = 1048576u;           // 1 MB
+
+// DMA transfer size and rate constants
+constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024;         // 8 KB per transfer
 constexpr uint32_t ISA_BUS_THROUGHPUT = 32 * 1024 * 1024; // 32 MB/s
 constexpr uint16_t DMA_TRANSFERS_PER_S = ISA_BUS_THROUGHPUT / BYTES_PER_DMA_XFER;
+constexpr float MS_PER_DMA_XFER = 1000.0f / DMA_TRANSFERS_PER_S;
+
+// Voice-channel and state related constants
 constexpr uint8_t MAX_VOICES = 32u;
 constexpr uint8_t MIN_VOICES = 14u;
+constexpr uint8_t VOICE_DEFAULT_STATE = 3u;
+
+// DMA and IRQ extents and quantity constants
+constexpr uint8_t MIN_DMA_ADDRESS = 0u;
 constexpr uint8_t MAX_DMA_ADDRESS = 7u;
+constexpr uint8_t MIN_IRQ_ADDRESS = 0u;
 constexpr uint8_t MAX_IRQ_ADDRESS = 15u;
-constexpr uint8_t MIN_DMA_ADDRESS = 1u;
-constexpr uint8_t MIN_IRQ_ADDRESS = 2u;
-constexpr float MS_PER_DMA_XFER = 1000.0f / DMA_TRANSFERS_PER_S;
-constexpr float ONE_AMP = 1.0f; // first amplitude value
+constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
+
+// Pan position constants
 constexpr uint8_t PAN_DEFAULT_POSITION = 7u;
 constexpr uint8_t PAN_POSITIONS = 16u;  // 0: -45-deg, 7: centre, 15: +45-deg
-constexpr uint32_t RAM_SIZE = 1048576u; // 1 MB
-constexpr uint8_t READ_HANDLERS = 8u;
-constexpr float SOFT_LIMIT_RELEASE_INC = AUDIO_SAMPLE_MAX * static_cast<float>(DELTA_DB);
+
+// Timer delay constants
 constexpr float TIMER_1_DEFAULT_DELAY = 0.080f;
 constexpr float TIMER_2_DEFAULT_DELAY = 0.320f;
-constexpr uint8_t VOICE_DEFAULT_STATE = 3u;
+
+// Volume scaling and dampening constants
+constexpr auto DELTA_DB = 0.002709201;     // 0.0235 dB increments
 constexpr int16_t VOLUME_INC_SCALAR = 512; // Volume index increment scalar
 constexpr auto VOLUME_LEVEL_DIVISOR = 1.0 + DELTA_DB;
 constexpr uint16_t VOLUME_LEVELS = 4096u;
+constexpr float SOFT_LIMIT_RELEASE_INC = AUDIO_SAMPLE_MAX *
+                                         static_cast<float>(DELTA_DB);
+
+// Interwave addressing constants
 constexpr int16_t WAVE_WIDTH = 1 << 9; // Wave interpolation width (9 bits)
 constexpr float WAVE_WIDTH_INV = 1.0f / WAVE_WIDTH;
-constexpr uint32_t WAVE_MSW_MASK = (1 << 16) - 1; // Upper wave mask
-constexpr uint32_t WAVE_LSW_MASK = 0xffffffff ^ WAVE_MSW_MASK; // Lower wave mask
+
+// IO address quantities
+constexpr uint8_t READ_HANDLERS = 8u;
 constexpr uint8_t WRITE_HANDLERS = 9u;
 
 // A simple stereo audio frame that's used by the Gus and Voice classes.
@@ -1245,12 +1267,14 @@ void Gus::UpdatePeakAmplitudes(const float *stream)
 
 void Gus::UpdateWaveLsw(int32_t &addr) const
 {
+	constexpr uint32_t WAVE_LSW_MASK = ~((1 << 16) - 1); // Lower wave mask
 	const auto lower = static_cast<unsigned>(addr) & WAVE_LSW_MASK;
 	addr = static_cast<int32_t>(lower | register_data);
 }
 
 void Gus::UpdateWaveMsw(int32_t &addr) const
 {
+	constexpr uint32_t WAVE_MSW_MASK = (1 << 16) - 1; // Upper wave mask
 	const uint32_t upper = register_data & 0x1fff;
 	const auto lower = static_cast<unsigned>(addr) & WAVE_MSW_MASK;
 	addr = static_cast<int32_t>(lower | (upper << 16));
