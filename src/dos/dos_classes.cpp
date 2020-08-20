@@ -416,20 +416,18 @@ void DOS_DTA::GetSearchParams(Bit8u & attr,char * pattern) {
 
 }
 
-DOS_FCB::DOS_FCB(Bit16u seg,Bit16u off,bool allow_extended) { 
-	SetPt(seg,off); 
-	real_pt=pt;
-	extended=false;
+DOS_FCB::DOS_FCB(uint16_t seg, uint16_t off, bool allow_extended)
+        : extended(false),
+          real_pt(0)
+{
+	SetPt(seg, off);
+	real_pt = pt;
 	if (allow_extended) {
-		if (sGet(sFCB,drive)==0xff) {
+		if (SGET_BYTE(sFCB, drive) == 0xff) {
 			pt+=7;
 			extended=true;
 		}
 	}
-}
-
-bool DOS_FCB::Extended(void) {
-	return extended;
 }
 
 void DOS_FCB::Create(bool _extended) {
@@ -446,87 +444,94 @@ void DOS_FCB::Create(bool _extended) {
 	} else extended=false;
 }
 
-void DOS_FCB::SetName(Bit8u _drive,char * _fname,char * _ext) {
-	sSave(sFCB,drive,_drive);
-	MEM_BlockWrite(pt+offsetof(sFCB,filename),_fname,8);
-	MEM_BlockWrite(pt+offsetof(sFCB,ext),_ext,3);
+void DOS_FCB::SetName(uint8_t drive, const char *fname, const char *ext)
+{
+	SSET_BYTE(sFCB, drive, drive);
+	constexpr size_t name_len = ARRAY_LEN(sFCB::filename);
+	constexpr size_t ext_len = ARRAY_LEN(sFCB::ext);
+	MEM_BlockWrite(pt + offsetof(sFCB, filename), fname, name_len);
+	MEM_BlockWrite(pt + offsetof(sFCB, ext), ext, ext_len);
 }
 
-void DOS_FCB::SetSizeDateTime(Bit32u _size,Bit16u _date,Bit16u _time) {
-	sSave(sFCB,filesize,_size);
-	sSave(sFCB,date,_date);
-	sSave(sFCB,time,_time);
+void DOS_FCB::SetSizeDateTime(uint32_t size, uint16_t mod_date, uint16_t mod_time)
+{
+	SSET_DWORD(sFCB, filesize, size);
+	SSET_WORD(sFCB, date, mod_date);
+	SSET_WORD(sFCB, time, mod_time);
 }
 
-void DOS_FCB::GetSizeDateTime(Bit32u & _size,Bit16u & _date,Bit16u & _time) {
-	_size=sGet(sFCB,filesize);
-	_date=(Bit16u)sGet(sFCB,date);
-	_time=(Bit16u)sGet(sFCB,time);
+void DOS_FCB::GetSizeDateTime(uint32_t &size, uint16_t &mod_date, uint16_t &mod_time) const
+{
+	size = SGET_DWORD(sFCB, filesize);
+	mod_date = SGET_WORD(sFCB, date);
+	mod_time = SGET_WORD(sFCB, time);
 }
 
-void DOS_FCB::GetRecord(Bit16u & _cur_block,Bit8u & _cur_rec) {
-	_cur_block=(Bit16u)sGet(sFCB,cur_block);
-	_cur_rec=(Bit8u)sGet(sFCB,cur_rec);
-
+void DOS_FCB::GetRecord(uint16_t &block, uint8_t &rec) const
+{
+	block = SGET_WORD(sFCB, cur_block);
+	rec = SGET_BYTE(sFCB, cur_rec);
 }
 
-void DOS_FCB::SetRecord(Bit16u _cur_block,Bit8u _cur_rec) {
-	sSave(sFCB,cur_block,_cur_block);
-	sSave(sFCB,cur_rec,_cur_rec);
+void DOS_FCB::SetRecord(uint16_t block, uint8_t rec)
+{
+	SSET_WORD(sFCB, cur_block, block);
+	SSET_BYTE(sFCB, cur_rec, rec);
 }
 
-void DOS_FCB::GetSeqData(Bit8u & _fhandle,Bit16u & _rec_size) {
-	_fhandle=(Bit8u)sGet(sFCB,file_handle);
-	_rec_size=(Bit16u)sGet(sFCB,rec_size);
+void DOS_FCB::GetSeqData(uint8_t &fhandle, uint16_t &rsize) const
+{
+	fhandle = SGET_BYTE(sFCB, file_handle);
+	rsize = SGET_WORD(sFCB, rec_size);
 }
 
-void DOS_FCB::SetSeqData(Bit8u _fhandle,Bit16u _rec_size) {
-	sSave(sFCB,file_handle,_fhandle);
-	sSave(sFCB,rec_size,_rec_size);
+void DOS_FCB::SetSeqData(uint8_t fhandle, uint16_t rsize)
+{
+	SSET_BYTE(sFCB, file_handle, fhandle);
+	SSET_WORD(sFCB, rec_size, rsize);
 }
 
-void DOS_FCB::GetRandom(Bit32u & _random) {
-	_random=sGet(sFCB,rndm);
+void DOS_FCB::ClearBlockRecsize()
+{
+	SSET_WORD(sFCB, cur_block, uint16_t(0));
+	SSET_WORD(sFCB, rec_size, uint16_t(0));
 }
 
-void DOS_FCB::SetRandom(Bit32u _random) {
-	sSave(sFCB,rndm,_random);
-}
-
-void DOS_FCB::ClearBlockRecsize(void) {
-	sSave(sFCB,cur_block,0);
-	sSave(sFCB,rec_size,0);
-}
-void DOS_FCB::FileOpen(Bit8u _fhandle) {
-	sSave(sFCB,drive,GetDrive()+1);
-	sSave(sFCB,file_handle,_fhandle);
-	sSave(sFCB,cur_block,0);
-	sSave(sFCB,rec_size,128);
-//	sSave(sFCB,rndm,0); // breaks Jewels of darkness. 
-	Bit32u size = 0;
-	Files[_fhandle]->Seek(&size,DOS_SEEK_END);
-	sSave(sFCB,filesize,size);
+void DOS_FCB::FileOpen(uint8_t fhandle)
+{
+	SSET_BYTE(sFCB, drive, static_cast<uint8_t>(GetDrive() + 1));
+	SSET_BYTE(sFCB, file_handle, fhandle);
+	SSET_WORD(sFCB, cur_block, uint16_t(0));
+	SSET_WORD(sFCB, rec_size, uint16_t(128));
+	// SSET_WORD(sFCB, rndm, 0); // breaks Jewels of darkness.
+	uint32_t size = 0;
+	Files[fhandle]->Seek(&size, DOS_SEEK_END);
+	SSET_DWORD(sFCB, filesize, size);
 	size = 0;
-	Files[_fhandle]->Seek(&size,DOS_SEEK_SET);
-	sSave(sFCB,time,Files[_fhandle]->time);
-	sSave(sFCB,date,Files[_fhandle]->date);
+	Files[fhandle]->Seek(&size, DOS_SEEK_SET);
+	SSET_WORD(sFCB, time, Files[fhandle]->time);
+	SSET_WORD(sFCB, date, Files[fhandle]->date);
 }
 
-bool DOS_FCB::Valid() {
-	//Very simple check for Oubliette
-	if(sGet(sFCB,filename[0]) == 0 && sGet(sFCB,file_handle) == 0) return false;
-	return true;
+bool DOS_FCB::Valid() const
+{
+	// Very simple check for Oubliette
+	return (SGET_BYTE(sFCB, filename[0]) || SGET_BYTE(sFCB, file_handle));
 }
 
-void DOS_FCB::FileClose(Bit8u & _fhandle) {
-	_fhandle=(Bit8u)sGet(sFCB,file_handle);
-	sSave(sFCB,file_handle,0xff);
+void DOS_FCB::FileClose(uint8_t &fhandle)
+{
+	fhandle = SGET_BYTE(sFCB, file_handle);
+	SSET_BYTE(sFCB, file_handle, uint8_t(0xff));
 }
 
-Bit8u DOS_FCB::GetDrive(void) {
-	Bit8u drive=(Bit8u)sGet(sFCB,drive);
-	if (!drive) return  DOS_GetDefaultDrive();
-	else return drive-1;
+uint8_t DOS_FCB::GetDrive() const
+{
+	const uint8_t drive = SGET_BYTE(sFCB, drive);
+	if (!drive)
+		return DOS_GetDefaultDrive();
+	else
+		return drive - 1;
 }
 
 void DOS_FCB::GetName(char * fillname) {
@@ -538,12 +543,16 @@ void DOS_FCB::GetName(char * fillname) {
 	fillname[14]=0;
 }
 
-void DOS_FCB::GetAttr(Bit8u& attr) {
-	if(extended) attr=mem_readb(pt - 1);
+void DOS_FCB::GetAttr(uint8_t &attr) const
+{
+	if (extended)
+		attr = mem_readb(pt - 1);
 }
 
-void DOS_FCB::SetAttr(Bit8u attr) {
-	if(extended) mem_writeb(pt - 1,attr);
+void DOS_FCB::SetAttr(uint8_t attr)
+{
+	if (extended)
+		mem_writeb(pt - 1, attr);
 }
 
 void DOS_FCB::SetResult(Bit32u size,Bit16u date,Bit16u time,Bit8u attr) {

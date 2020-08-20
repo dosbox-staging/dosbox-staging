@@ -1153,14 +1153,13 @@ Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u * numRec,bool restore) {
  * Random block read updates these fields to reflect the state after the read!
  */
 	DOS_FCB fcb(seg,offset);
-	Bit32u random;
 	Bit16u old_block=0;
 	Bit8u old_rec=0;
 	Bit8u error=0;
 	Bit16u count;
 
 	/* Set the correct record from the random data */
-	fcb.GetRandom(random);
+	const uint32_t random = fcb.GetRandom();
 	fcb.SetRecord((Bit16u)(random / 128),(Bit8u)(random & 127));
 	if (restore) fcb.GetRecord(old_block,old_rec);//store this for after the read.
 	// Read records
@@ -1181,14 +1180,13 @@ Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u * numRec,bool restore) {
 Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u * numRec,bool restore) {
 /* see FCB_RandomRead */
 	DOS_FCB fcb(seg,offset);
-	Bit32u random;
 	Bit16u old_block=0;
 	Bit8u old_rec=0;
 	Bit8u error=0;
 	Bit16u count;
 
 	/* Set the correct record from the random data */
-	fcb.GetRandom(random);
+	const uint32_t random = fcb.GetRandom();
 	fcb.SetRecord((Bit16u)(random / 128),(Bit8u)(random & 127));
 	if (restore) fcb.GetRecord(old_block,old_rec);
 	if (*numRec > 0) {
