@@ -560,29 +560,45 @@ private:
 	#endif
 };
 
-class DOS_FCB: public MemStruct {
+/* File Control Block */
+
+class DOS_FCB : public MemStruct {
 public:
-	DOS_FCB(Bit16u seg,Bit16u off,bool allow_extended=true);
+	DOS_FCB(uint16_t seg, uint16_t off, bool allow_extended = true);
+
 	void Create(bool _extended);
-	void SetName(Bit8u _drive,char * _fname,char * _ext);
-	void SetSizeDateTime(Bit32u _size,Bit16u _date,Bit16u _time);
-	void GetSizeDateTime(Bit32u & _size,Bit16u & _date,Bit16u & _time);
+
+	bool Extended() const { return extended; }
+
+	void SetName(uint8_t drive, const char *fname, const char *ext);
 	void GetName(char * fillname);
-	void FileOpen(Bit8u _fhandle);
-	void FileClose(Bit8u & _fhandle);
-	void GetRecord(Bit16u & _cur_block,Bit8u & _cur_rec);
-	void SetRecord(Bit16u _cur_block,Bit8u _cur_rec);
-	void GetSeqData(Bit8u & _fhandle,Bit16u & _rec_size);
-	void SetSeqData(Bit8u _fhandle,Bit16u _rec_size);
-	void GetRandom(Bit32u & _random);
-	void SetRandom(Bit32u  _random);
-	Bit8u GetDrive(void);
-	bool Extended(void);
-	void GetAttr(Bit8u & attr);
-	void SetAttr(Bit8u attr);
+
+	void SetSizeDateTime(uint32_t size, uint16_t mod_date, uint16_t mod_time);
+	void GetSizeDateTime(uint32_t &size, uint16_t &mod_date, uint16_t &mod_time) const;
+
+	void FileOpen(uint8_t fhandle);
+	void FileClose(uint8_t &fhandle);
+
+	void SetRecord(uint16_t cur_block, uint8_t cur_rec);
+	void GetRecord(uint16_t &cur_block, uint8_t &cur_rec) const;
+
+	void SetSeqData(uint8_t fhandle, uint16_t rec_size);
+	void GetSeqData(uint8_t &fhandle, uint16_t &rec_size) const;
+
+	void SetRandom(uint32_t random) { SSET_DWORD(sFCB, rndm, random); }
+	uint32_t GetRandom() const { return SGET_DWORD(sFCB, rndm); }
+
+	void SetAttr(uint8_t attr);
+	void GetAttr(uint8_t &attr) const;
+
 	void SetResult(Bit32u size,Bit16u date,Bit16u time,Bit8u attr);
-	bool Valid(void);
-	void ClearBlockRecsize(void);
+
+	uint8_t GetDrive() const;
+
+	bool Valid() const;
+
+	void ClearBlockRecsize();
+
 private:
 	bool extended;
 	PhysPt real_pt;
@@ -596,8 +612,8 @@ private:
 		Bit16u cur_block;		/* Current Block */
 		Bit16u rec_size;		/* Logical record size */
 		Bit32u filesize;		/* File Size */
-		Bit16u date;
-		Bit16u time;
+		uint16_t date;                  // Date of last modification
+		uint16_t time;                  // Time of last modification
 		/* Reserved Block should be 8 bytes */
 		Bit8u sft_entries;
 		Bit8u share_attributes;
