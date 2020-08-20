@@ -2264,6 +2264,7 @@ static void GUI_StartUp(Section * sec) {
 		if (sdl.mouse.control_choice & (CaptureOnClick | CaptureOnStart))
 			middle_control_msg = " and middle-click will uncapture the mouse";
 	} else {
+		sdl.mouse.middle_will_release = false;
 		if (sdl.mouse.control_choice & (CaptureOnClick | CaptureOnStart))
 			middle_control_msg = " and middle-clicks will be sent to the game";
 	}
