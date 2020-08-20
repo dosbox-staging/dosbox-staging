@@ -93,7 +93,7 @@ jobs:
         conf:
           - name: Clang
             sanitizers: USAN
-            usan:  86
+            usan:  61
             tsan:  -1
             uasan: -1
           - name: GCC
