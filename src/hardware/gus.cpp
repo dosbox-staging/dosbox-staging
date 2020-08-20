@@ -526,12 +526,14 @@ void Voice::ResetCtrls()
 bool Voice::UpdateCtrlState(VoiceCtrl &ctrl, uint8_t state)
 {
 	const uint32_t orig_irq_state = ctrl.irq_state;
-	ctrl.state = state & 0x7f;
 	// Manually set the irq
 	if ((state & 0xa0) == 0xa0)
 		ctrl.irq_state |= irq_mask;
 	else
 		ctrl.irq_state &= ~irq_mask;
+
+	// Always update the state
+	ctrl.state = state & 0x7f;
 
 	// Indicate if the IRQ state changed
 	return orig_irq_state != ctrl.irq_state;
