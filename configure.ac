@@ -31,6 +31,13 @@ m4_pattern_forbid([^AC_])
 m4_pattern_forbid([^AH_])
 m4_pattern_forbid([^AX_])
 
+dnl Configure POSIX thread support
+m4_pattern_allow(AX_PTHREAD_ZOS_MISSING)
+m4_pattern_allow(AX_PTHREAD_CC_IS_CLANG)
+AX_PTHREAD
+LIBS="$PTHREAD_LIBS $LIBS"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+
 dnl Check for SDL
 SDL_VERSION=2.0.0
 AM_PATH_SDL($SDL_VERSION,
