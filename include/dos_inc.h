@@ -675,15 +675,18 @@ private:
 class DOS_SDA : public MemStruct {
 public:
 	DOS_SDA(Bit16u _seg,Bit16u _offs) { SetPt(_seg,_offs); }
-	void Init();   
-	void SetDrive(Bit8u _drive) { sSave(sSDA,current_drive, _drive); }
-	void SetDTA(Bit32u _dta) { sSave(sSDA,current_dta, _dta); }
-	void SetPSP(Bit16u _psp) { sSave(sSDA,current_psp, _psp); }
-	Bit8u GetDrive(void) { return (Bit8u)sGet(sSDA,current_drive); }
-	Bit16u GetPSP(void) { return (Bit16u)sGet(sSDA,current_psp); }
-	Bit32u GetDTA(void) { return (Bit32u)sGet(sSDA,current_dta); }
-	
-	
+
+	void Init();
+
+	void SetDrive(uint8_t drive) { SSET_BYTE(sSDA, current_drive, drive); }
+	uint8_t GetDrive() const { return SGET_BYTE(sSDA, current_drive); }
+
+	void SetDTA(uint32_t dta) { SSET_DWORD(sSDA, current_dta, dta); }
+	uint32_t GetDTA() const { return SGET_DWORD(sSDA, current_dta); }
+
+	void SetPSP(uint16_t psp) { SSET_WORD(sSDA, current_psp, psp); }
+	uint16_t GetPSP() const { return SGET_WORD(sSDA, current_psp); }
+
 private:
 	#ifdef _MSC_VER
 	#pragma pack (1)
@@ -727,7 +730,7 @@ struct DOS_Block {
 	void dta(RealPt dtap) { DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetDTA(dtap); }
 
 	Bit8u return_code,return_mode;
-	
+
 	Bit8u current_drive;
 	bool verify;
 	bool breakcheck;
