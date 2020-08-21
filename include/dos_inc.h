@@ -521,21 +521,35 @@ public:
 	Bit16u	seg;
 };
 
-class DOS_DTA:public MemStruct{
+/* Disk Transfer Address
+ *
+ * Some documents refer to it also as Data Transfer Address or Disk Transfer Area.
+ */
+
+class DOS_DTA : public MemStruct {
 public:
 	DOS_DTA(RealPt addr) { SetPt(addr); }
 
-	void SetupSearch(Bit8u _sdrive,Bit8u _sattr,char * _pattern);
-	void SetResult(const char * _name,Bit32u _size,Bit16u _date,Bit16u _time,Bit8u _attr);
-	
-	Bit8u GetSearchDrive(void);
-	void GetSearchParams(Bit8u & _sattr,char * _spattern);
-	void GetResult(char * _name,Bit32u & _size,Bit16u & _date,Bit16u & _time,Bit8u & _attr);
+	void SetupSearch(uint8_t drive, uint8_t attr, char *pattern);
+	uint8_t GetSearchDrive() const { return SGET_BYTE(sDTA, sdrive); }
+	void GetSearchParams(uint8_t &attr, char *pattern) const;
 
-	void SetDirID(uint16_t entry) { sSave(sDTA, dirID, entry); }
-	void SetDirIDCluster(uint16_t entry) { sSave(sDTA, dirCluster, entry); }
-	uint16_t GetDirID() { return (uint16_t)sGet(sDTA, dirID); }
-	uint16_t GetDirIDCluster() { return (uint16_t)sGet(sDTA, dirCluster); }
+	void SetResult(const char *name,
+	               uint32_t size,
+	               uint16_t date,
+	               uint16_t time,
+	               uint8_t attr);
+	void GetResult(char *name,
+	               uint32_t &size,
+	               uint16_t &date,
+	               uint16_t &time,
+	               uint8_t &attr) const;
+
+	void SetDirID(uint16_t id) { SSET_WORD(sDTA, dirID, id); }
+	uint16_t GetDirID() const { return SGET_WORD(sDTA, dirID); }
+
+	void SetDirIDCluster(uint16_t cl) { SSET_WORD(sDTA, dirCluster, cl); }
+	uint16_t GetDirIDCluster() const { return SGET_WORD(sDTA, dirCluster); }
 
 private:
 	#ifdef _MSC_VER
@@ -543,7 +557,7 @@ private:
 	#endif
 	struct sDTA {
 		Bit8u sdrive;						/* The Drive the search is taking place */
-		Bit8u sname[8];						/* The Search pattern for the filename */		
+		Bit8u sname[8];						/* The Search pattern for the filename */
 		Bit8u sext[3];						/* The Search pattern for the extenstion */
 		Bit8u sattr;						/* The Attributes that need to be found */
 		Bit16u dirID;						/* custom: dir-search ID for multiple searches at the same time */
@@ -618,7 +632,7 @@ private:
 		Bit8u sft_entries;
 		Bit8u share_attributes;
 		Bit8u extra_info;
-		/* Maybe swap file_handle and sft_entries now that fcbs 
+		/* Maybe swap file_handle and sft_entries now that fcbs
 		 * aren't stored in the psp filetable anymore */
 		Bit8u file_handle;
 		Bit8u reserved[4];
