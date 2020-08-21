@@ -417,9 +417,11 @@ public:
 	{
 		pt = addr;
 	}
-	void Clear(void);
-	void LoadData(void);
-	void SaveData(void);		/* Save it as an exec block */
+
+	void Clear();
+	void LoadData();
+	void SaveData(); // Save it as an exec block
+
 	#ifdef _MSC_VER
 	#pragma pack (1)
 	#endif
