@@ -364,10 +364,10 @@ bool DOS_PSP::SetNumFiles(uint16_t file_num)
 	return true;
 }
 
-
-void DOS_DTA::SetupSearch(Bit8u _sdrive,Bit8u _sattr,char * pattern) {
-	sSave(sDTA,sdrive,_sdrive);
-	sSave(sDTA,sattr,_sattr);
+void DOS_DTA::SetupSearch(uint8_t drive, uint8_t attr, char *pattern)
+{
+	SSET_BYTE(sDTA, sdrive, drive);
+	SSET_BYTE(sDTA, sattr, attr);
 	/* Fill with spaces */
 	Bitu i;
 	for (i=0;i<11;i++) mem_writeb(pt+offsetof(sDTA,sname)+i,' ');
@@ -384,36 +384,42 @@ void DOS_DTA::SetupSearch(Bit8u _sdrive,Bit8u _sattr,char * pattern) {
 	}
 }
 
-void DOS_DTA::SetResult(const char * _name,Bit32u _size,Bit16u _date,Bit16u _time,Bit8u _attr) {
-	MEM_BlockWrite(pt+offsetof(sDTA,name),(void *)_name,strlen(_name)+1);
-	sSave(sDTA,size,_size);
-	sSave(sDTA,date,_date);
-	sSave(sDTA,time,_time);
-	sSave(sDTA,attr,_attr);
+void DOS_DTA::SetResult(const char *found_name,
+                        uint32_t found_size,
+                        uint16_t found_date,
+                        uint16_t found_time,
+                        uint8_t found_attr)
+{
+	MEM_BlockWrite(pt + offsetof(sDTA, name), found_name, strlen(found_name) + 1);
+	SSET_DWORD(sDTA, size, found_size);
+	SSET_WORD(sDTA, date, found_date);
+	SSET_WORD(sDTA, time, found_time);
+	SSET_BYTE(sDTA, attr, found_attr);
 }
 
-
-void DOS_DTA::GetResult(char * _name,Bit32u & _size,Bit16u & _date,Bit16u & _time,Bit8u & _attr) {
-	MEM_BlockRead(pt+offsetof(sDTA,name),_name,DOS_NAMELENGTH_ASCII);
-	_size=sGet(sDTA,size);
-	_date=(Bit16u)sGet(sDTA,date);
-	_time=(Bit16u)sGet(sDTA,time);
-	_attr=(Bit8u)sGet(sDTA,attr);
+void DOS_DTA::GetResult(char *found_name,
+                        uint32_t &found_size,
+                        uint16_t &found_date,
+                        uint16_t &found_time,
+                        uint8_t &found_attr) const
+{
+	constexpr auto name_offset = offsetof(sDTA, name);
+	MEM_BlockRead(pt + name_offset, found_name, DOS_NAMELENGTH_ASCII);
+	found_size = SGET_DWORD(sDTA, size);
+	found_date = SGET_WORD(sDTA, date);
+	found_time = SGET_WORD(sDTA, time);
+	found_attr = SGET_BYTE(sDTA, attr);
 }
 
-Bit8u DOS_DTA::GetSearchDrive(void) {
-	return (Bit8u)sGet(sDTA,sdrive);
-}
-
-void DOS_DTA::GetSearchParams(Bit8u & attr,char * pattern) {
-	attr=(Bit8u)sGet(sDTA,sattr);
+void DOS_DTA::GetSearchParams(uint8_t &attr, char *pattern) const
+{
+	attr = SGET_BYTE(sDTA, sattr);
 	char temp[11];
 	MEM_BlockRead(pt+offsetof(sDTA,sname),temp,11);
 	memcpy(pattern,temp,8);
 	pattern[8]='.';
 	memcpy(&pattern[9],&temp[8],3);
 	pattern[12]=0;
-
 }
 
 DOS_FCB::DOS_FCB(uint16_t seg, uint16_t off, bool allow_extended)
