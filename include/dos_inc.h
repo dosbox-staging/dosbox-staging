@@ -645,17 +645,24 @@ private:
 	#endif
 };
 
-class DOS_MCB : public MemStruct{
+/* Memory Control Block */
+
+class DOS_MCB : public MemStruct {
 public:
 	DOS_MCB(Bit16u seg) { SetPt(seg); }
+
 	void SetFileName(char const * const _name) { MEM_BlockWrite(pt+offsetof(sMCB,filename),_name,8); }
 	void GetFileName(char * const _name) { MEM_BlockRead(pt+offsetof(sMCB,filename),_name,8);_name[8]=0;}
-	void SetType(Bit8u _type) { sSave(sMCB,type,_type);}
-	void SetSize(Bit16u _size) { sSave(sMCB,size,_size);}
-	void SetPSPSeg(Bit16u _pspseg) { sSave(sMCB,psp_segment,_pspseg);}
-	Bit8u GetType(void) { return (Bit8u)sGet(sMCB,type);}
-	Bit16u GetSize(void) { return (Bit16u)sGet(sMCB,size);}
-	Bit16u GetPSPSeg(void) { return (Bit16u)sGet(sMCB,psp_segment);}
+
+	void SetType(uint8_t mcb_type) { SSET_BYTE(sMCB, type, mcb_type); }
+	uint8_t GetType() const { return SGET_BYTE(sMCB, type); }
+
+	void SetSize(uint16_t size_paras) { SSET_WORD(sMCB, size, size_paras); }
+	uint16_t GetSize() const { return SGET_WORD(sMCB, size); }
+
+	void SetPSPSeg(uint16_t psp) { SSET_WORD(sMCB, psp_segment, psp); }
+	uint16_t GetPSPSeg() const { return SGET_WORD(sMCB, psp_segment); }
+
 private:
 	#ifdef _MSC_VER
 	#pragma pack (1)
@@ -663,7 +670,7 @@ private:
 	struct sMCB {
 		Bit8u type;
 		Bit16u psp_segment;
-		Bit16u size;	
+		uint16_t size; // Allocation size in 16-byte paragraphs
 		Bit8u unused[3];
 		Bit8u filename[8];
 	} GCC_ATTRIBUTE(packed);
