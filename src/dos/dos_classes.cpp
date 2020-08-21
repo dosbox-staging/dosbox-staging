@@ -568,8 +568,10 @@ void DOS_FCB::SetResult(Bit32u size,Bit16u date,Bit16u time,Bit8u attr) {
 	mem_writeb(pt + 0x0c,attr);
 }
 
-void DOS_SDA::Init() {
+void DOS_SDA::Init()
+{
 	/* Clear */
-	for(Bitu i=0;i<sizeof(sSDA);i++) mem_writeb(pt+i,0x00);
-	sSave(sSDA,drive_crit_error,0xff);   
+	for (size_t i = 0; i < sizeof(sSDA); ++i)
+		mem_writeb(pt + i, 0x00);
+	SSET_BYTE(sSDA, drive_crit_error, uint8_t(0xff));
 }
