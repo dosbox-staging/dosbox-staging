@@ -24,30 +24,32 @@
 #include "dos_inc.h"
 #include "support.h"
 
-
-void DOS_ParamBlock::Clear(void) {
-	memset(&exec,0,sizeof(exec));
-	memset(&overlay,0,sizeof(overlay));
+void DOS_ParamBlock::Clear()
+{
+	memset(&exec, 0, sizeof(exec));
+	memset(&overlay, 0, sizeof(overlay));
 }
 
-void DOS_ParamBlock::LoadData(void) {
-	exec.envseg=(Bit16u)sGet(sExec,envseg);
-	exec.cmdtail=sGet(sExec,cmdtail);
-	exec.fcb1=sGet(sExec,fcb1);
-	exec.fcb2=sGet(sExec,fcb2);
-	exec.initsssp=sGet(sExec,initsssp);
-	exec.initcsip=sGet(sExec,initcsip);
-	overlay.loadseg=(Bit16u)sGet(sOverlay,loadseg);
-	overlay.relocation=(Bit16u)sGet(sOverlay,relocation);
+void DOS_ParamBlock::LoadData()
+{
+	exec.envseg = SGET_WORD(sExec, envseg);
+	exec.cmdtail = SGET_DWORD(sExec, cmdtail);
+	exec.fcb1 = SGET_DWORD(sExec, fcb1);
+	exec.fcb2 = SGET_DWORD(sExec, fcb2);
+	exec.initsssp = SGET_DWORD(sExec, initsssp);
+	exec.initcsip = SGET_DWORD(sExec, initcsip);
+	overlay.loadseg = SGET_WORD(sOverlay, loadseg);
+	overlay.relocation = SGET_WORD(sOverlay, relocation);
 }
 
-void DOS_ParamBlock::SaveData(void) {
-	sSave(sExec,envseg,exec.envseg);
-	sSave(sExec,cmdtail,exec.cmdtail);
-	sSave(sExec,fcb1,exec.fcb1);
-	sSave(sExec,fcb2,exec.fcb2);
-	sSave(sExec,initsssp,exec.initsssp);
-	sSave(sExec,initcsip,exec.initcsip);
+void DOS_ParamBlock::SaveData()
+{
+	SSET_WORD(sExec, envseg, exec.envseg);
+	SSET_DWORD(sExec, cmdtail, exec.cmdtail);
+	SSET_DWORD(sExec, fcb1, exec.fcb1);
+	SSET_DWORD(sExec, fcb2, exec.fcb2);
+	SSET_DWORD(sExec, initsssp, exec.initsssp);
+	SSET_DWORD(sExec, initcsip, exec.initcsip);
 }
 
 
