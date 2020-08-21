@@ -444,30 +444,37 @@ public:
 	sOverlay overlay;
 };
 
-class DOS_InfoBlock:public MemStruct {
+class DOS_InfoBlock : public MemStruct {
 public:
-	DOS_InfoBlock()
-		: seg(0)
-	{}
-	void SetLocation(Bit16u  seg);
-	void SetFirstMCB(Bit16u _first_mcb);
-	void SetBuffers(Bit16u x,Bit16u y);
-	void SetCurDirStruct(Bit32u _curdirstruct);
-	void SetFCBTable(Bit32u _fcbtable);
-	void SetDeviceChainStart(Bit32u _devchain);
-	void SetDiskBufferHeadPt(Bit32u _dbheadpt);
-	void SetStartOfUMBChain(Bit16u _umbstartseg);
-	void SetUMBChainState(Bit8u _umbchaining);
-	void SetBlockDevices(Bit8u _count);
-	Bit16u	GetStartOfUMBChain(void);
-	Bit8u	GetUMBChainState(void);
-	RealPt	GetPointer(void);
-	Bit32u GetDeviceChain(void);
+	DOS_InfoBlock() : seg(0) {}
+
+	void SetLocation(uint16_t segment);
+	void SetBuffers(uint16_t x, uint16_t y);
+
+	RealPt GetPointer() const
+	{
+		return RealMake(seg, offsetof(sDIB, firstDPB));
+	}
+
+	void SetDeviceChainStart(uint32_t chain) { SSET_DWORD(sDIB, nulNextDriver, chain); }
+	uint32_t GetDeviceChain() const { return SGET_DWORD(sDIB, nulNextDriver); }
+
+	void SetUMBChainState(uint8_t state) { SSET_BYTE(sDIB, chainingUMB, state); }
+	uint8_t GetUMBChainState() const { return SGET_BYTE(sDIB, chainingUMB); }
+
+	void SetStartOfUMBChain(uint16_t seg) { SSET_WORD(sDIB, startOfUMBChain, seg); }
+	uint16_t GetStartOfUMBChain() const { return SGET_WORD(sDIB, startOfUMBChain); }
+
+	void SetDiskBufferHeadPt(uint32_t db) { SSET_DWORD(sDIB, diskBufferHeadPt, db); }
+	void SetFirstMCB(uint16_t mcb) { SSET_WORD(sDIB, firstMCB, mcb); }
+	void SetCurDirStruct(uint32_t cds) { SSET_DWORD(sDIB, curDirStructure, cds); }
+	void SetFCBTable(uint32_t tab) { SSET_DWORD(sDIB, fcbTable, tab); }
+	void SetBlockDevices(uint8_t num) { SSET_BYTE(sDIB, blockDevices, num); }
 
 	#ifdef _MSC_VER
 	#pragma pack(1)
 	#endif
-	struct sDIB {		
+	struct sDIB {
 		Bit8u	unknown1[4];
 		Bit16u	magicWord;			// -0x22 needs to be 1
 		Bit8u	unknown2[8];

@@ -52,123 +52,76 @@ void DOS_ParamBlock::SaveData()
 	SSET_DWORD(sExec, initcsip, exec.initcsip);
 }
 
-
-void DOS_InfoBlock::SetLocation(Bit16u segment) {
+void DOS_InfoBlock::SetLocation(uint16_t segment)
+{
 	seg = segment;
-	pt=PhysMake(seg,0);
+	pt = PhysMake(seg, 0);
+
 	/* Clear the initial Block */
 	for(Bitu i=0;i<sizeof(sDIB);i++) mem_writeb(pt+i,0xff);
 	for(Bitu i=0;i<14;i++) mem_writeb(pt+i,0);
 
-	sSave(sDIB,regCXfrom5e,(Bit16u)0);
-	sSave(sDIB,countLRUcache,(Bit16u)0);
-	sSave(sDIB,countLRUopens,(Bit16u)0);
+	SSET_WORD(sDIB, regCXfrom5e, uint16_t(0));
+	SSET_WORD(sDIB, countLRUcache, uint16_t(0));
+	SSET_WORD(sDIB, countLRUopens, uint16_t(0));
+	SSET_WORD(sDIB, protFCBs, uint16_t(0));
+	SSET_WORD(sDIB, specialCodeSeg, uint16_t(0));
+	SSET_BYTE(sDIB, joindedDrives, uint8_t(0));
+	SSET_BYTE(sDIB, lastdrive, uint8_t(0x01)); // increase this if you add drives to cds-chain
+	SSET_DWORD(sDIB, diskInfoBuffer,
+	           RealMake(segment, offsetof(sDIB, diskBufferHeadPt)));
+	SSET_DWORD(sDIB, setverPtr, uint32_t(0));
+	SSET_WORD(sDIB, a20FixOfs, uint16_t(0));
+	SSET_WORD(sDIB, pspLastIfHMA, uint16_t(0));
+	SSET_BYTE(sDIB, blockDevices, uint8_t(0));
+	SSET_BYTE(sDIB, bootDrive, uint8_t(0));
+	SSET_BYTE(sDIB, useDwordMov, uint8_t(1));
+	SSET_WORD(sDIB, extendedSize,
+	          static_cast<uint16_t>(MEM_TotalPages() * 4 - 1024));
+	SSET_WORD(sDIB, magicWord, uint16_t(0x0001)); // dos5+
+	SSET_WORD(sDIB, sharingCount, uint16_t(0));
+	SSET_WORD(sDIB, sharingDelay, uint16_t(0));
+	SSET_WORD(sDIB, ptrCONinput, uint16_t(0)); // no unread input available
+	SSET_WORD(sDIB, maxSectorLength, uint16_t(0x200));
+	SSET_WORD(sDIB, dirtyDiskBuffers, uint16_t(0));
+	SSET_DWORD(sDIB, lookaheadBufPt, uint32_t(0));
+	SSET_WORD(sDIB, lookaheadBufNumber, uint16_t(0));
+	SSET_BYTE(sDIB, bufferLocation, uint8_t(0)); // buffer in base memory,
+	                                             // no workspace
+	SSET_DWORD(sDIB, workspaceBuffer, uint32_t(0));
+	SSET_WORD(sDIB, minMemForExec, uint16_t(0));
+	SSET_WORD(sDIB, memAllocScanStart, uint16_t(DOS_MEM_START));
+	SSET_WORD(sDIB, startOfUMBChain, uint16_t(0xffff));
+	SSET_BYTE(sDIB, chainingUMB, uint8_t(0));
+	SSET_DWORD(sDIB, nulNextDriver, uint32_t(0xffffffff));
+	SSET_WORD(sDIB, nulAttributes, uint16_t(0x8004));
+	SSET_DWORD(sDIB, nulStrategy, uint32_t(0x00000000));
+	SSET_BYTE(sDIB, nulString[0], uint8_t(0x4e));
+	SSET_BYTE(sDIB, nulString[1], uint8_t(0x55));
+	SSET_BYTE(sDIB, nulString[2], uint8_t(0x4c));
+	SSET_BYTE(sDIB, nulString[3], uint8_t(0x20));
+	SSET_BYTE(sDIB, nulString[4], uint8_t(0x20));
+	SSET_BYTE(sDIB, nulString[5], uint8_t(0x20));
+	SSET_BYTE(sDIB, nulString[6], uint8_t(0x20));
+	SSET_BYTE(sDIB, nulString[7], uint8_t(0x20));
 
-	sSave(sDIB,protFCBs,(Bit16u)0);
-	sSave(sDIB,specialCodeSeg,(Bit16u)0);
-	sSave(sDIB,joindedDrives,(Bit8u)0);
-	sSave(sDIB,lastdrive,(Bit8u)0x01);//increase this if you add drives to cds-chain
-
-	sSave(sDIB,diskInfoBuffer,RealMake(segment,offsetof(sDIB,diskBufferHeadPt)));
-	sSave(sDIB,setverPtr,(Bit32u)0);
-
-	sSave(sDIB,a20FixOfs,(Bit16u)0);
-	sSave(sDIB,pspLastIfHMA,(Bit16u)0);
-	sSave(sDIB,blockDevices,(Bit8u)0);
-	
-	sSave(sDIB,bootDrive,(Bit8u)0);
-	sSave(sDIB,useDwordMov,(Bit8u)1);
-	sSave(sDIB,extendedSize,(Bit16u)(MEM_TotalPages()*4-1024));
-	sSave(sDIB,magicWord,(Bit16u)0x0001);		// dos5+
-
-	sSave(sDIB,sharingCount,(Bit16u)0);
-	sSave(sDIB,sharingDelay,(Bit16u)0);
-	sSave(sDIB,ptrCONinput,(Bit16u)0);			// no unread input available
-	sSave(sDIB,maxSectorLength,(Bit16u)0x200);
-
-	sSave(sDIB,dirtyDiskBuffers,(Bit16u)0);
-	sSave(sDIB,lookaheadBufPt,(Bit32u)0);
-	sSave(sDIB,lookaheadBufNumber,(Bit16u)0);
-	sSave(sDIB,bufferLocation,(Bit8u)0);		// buffer in base memory, no workspace
-	sSave(sDIB,workspaceBuffer,(Bit32u)0);
-
-	sSave(sDIB,minMemForExec,(Bit16u)0);
-	sSave(sDIB,memAllocScanStart,(Bit16u)DOS_MEM_START);
-	sSave(sDIB,startOfUMBChain,(Bit16u)0xffff);
-	sSave(sDIB,chainingUMB,(Bit8u)0);
-
-	sSave(sDIB,nulNextDriver,(Bit32u)0xffffffff);
-	sSave(sDIB,nulAttributes,(Bit16u)0x8004);
-	sSave(sDIB,nulStrategy,(Bit32u)0x00000000);
-	sSave(sDIB,nulString[0],(Bit8u)0x4e);
-	sSave(sDIB,nulString[1],(Bit8u)0x55);
-	sSave(sDIB,nulString[2],(Bit8u)0x4c);
-	sSave(sDIB,nulString[3],(Bit8u)0x20);
-	sSave(sDIB,nulString[4],(Bit8u)0x20);
-	sSave(sDIB,nulString[5],(Bit8u)0x20);
-	sSave(sDIB,nulString[6],(Bit8u)0x20);
-	sSave(sDIB,nulString[7],(Bit8u)0x20);
-
-	/* Create a fake SFT, so programs think there are 100 file handles */
-	Bit16u sftOffset=offsetof(sDIB,firstFileTable)+0xa2;
-	sSave(sDIB,firstFileTable,RealMake(segment,sftOffset));
-	real_writed(segment,sftOffset+0x00,RealMake(segment+0x26,0));	//Next File Table
-	real_writew(segment,sftOffset+0x04,100);		//File Table supports 100 files
-	real_writed(segment+0x26,0x00,0xffffffff);		//Last File Table
-	real_writew(segment+0x26,0x04,100);				//File Table supports 100 files
+	// Create a fake SFT, so programs think there are 100 file handles
+	const uint16_t sft_offset = offsetof(sDIB, firstFileTable) + 0xa2;
+	SSET_DWORD(sDIB, firstFileTable, RealMake(segment, sft_offset));
+	// Next File Table
+	real_writed(segment, sft_offset + 0x00, RealMake(segment + 0x26, 0));
+	// File Table supports 100 files
+	real_writew(segment, sft_offset + 0x04, 100);
+	// Last File Table
+	real_writed(segment + 0x26, 0x00, 0xffffffff);
+	// File Table supports 100 files
+	real_writew(segment + 0x26, 0x04, 100);
 }
 
-void DOS_InfoBlock::SetFirstMCB(Bit16u _firstmcb) {
-	sSave(sDIB,firstMCB,_firstmcb); //c2woody
-}
-
-void DOS_InfoBlock::SetBuffers(Bit16u x,Bit16u y) {
-	sSave(sDIB,buffers_x,x);
-	sSave(sDIB,buffers_y,y);
-}
-
-void DOS_InfoBlock::SetCurDirStruct(Bit32u _curdirstruct) {
-	sSave(sDIB,curDirStructure,_curdirstruct);
-}
-
-void DOS_InfoBlock::SetFCBTable(Bit32u _fcbtable) {
-	sSave(sDIB,fcbTable,_fcbtable);
-}
-
-void DOS_InfoBlock::SetDeviceChainStart(Bit32u _devchain) {
-	sSave(sDIB,nulNextDriver,_devchain);
-}
-
-void DOS_InfoBlock::SetDiskBufferHeadPt(Bit32u _dbheadpt) {
-	sSave(sDIB,diskBufferHeadPt,_dbheadpt);
-}
-
-Bit16u DOS_InfoBlock::GetStartOfUMBChain(void) {
-	return (Bit16u)sGet(sDIB,startOfUMBChain);
-}
-
-void DOS_InfoBlock::SetStartOfUMBChain(Bit16u _umbstartseg) {
-	sSave(sDIB,startOfUMBChain,_umbstartseg);
-}
-
-Bit8u DOS_InfoBlock::GetUMBChainState(void) {
-	return (Bit8u)sGet(sDIB,chainingUMB);
-}
-
-void DOS_InfoBlock::SetUMBChainState(Bit8u _umbchaining) {
-	sSave(sDIB,chainingUMB,_umbchaining);
-}
-
-void DOS_InfoBlock::SetBlockDevices(Bit8u _count) {
-	sSave(sDIB,blockDevices,_count);
-}
-
-RealPt DOS_InfoBlock::GetPointer(void) {
-	return RealMake(seg,offsetof(sDIB,firstDPB));
-}
-
-Bit32u DOS_InfoBlock::GetDeviceChain(void) {
-	return sGet(sDIB,nulNextDriver);
+void DOS_InfoBlock::SetBuffers(uint16_t x, uint16_t y)
+{
+	SSET_WORD(sDIB, buffers_x, x);
+	SSET_WORD(sDIB, buffers_y, y);
 }
 
 Bit16u DOS_PSP::rootpsp = 0;
