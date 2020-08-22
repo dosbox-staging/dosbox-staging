@@ -1485,26 +1485,31 @@ void init_gus_dosbox_settings(Section_prop &secprop)
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	auto *bool_prop = secprop.Add_bool("gus", when_idle, false);
+	assert(bool_prop);
 	bool_prop->Set_help("Enable Gravis UltraSound emulation.");
 
 	auto *hex_prop = secprop.Add_hex("gusbase", when_idle, 0x240);
+	assert(hex_prop);
 	const char *const bases[] = {"240", "220", "260", "280",  "2a0",
 	                             "2c0", "2e0", "300", nullptr};
 	hex_prop->Set_values(bases);
 	hex_prop->Set_help("The IO base address of the Gravis UltraSound.");
 
 	auto *int_prop = secprop.Add_int("gusirq", when_idle, 5);
+	assert(int_prop);
 	const char *const irqs[] = {"5",  "3",  "7",  "9",
 	                            "10", "11", "12", nullptr};
 	int_prop->Set_values(irqs);
 	int_prop->Set_help("The IRQ number of the Gravis UltraSound.");
 
 	int_prop = secprop.Add_int("gusdma", when_idle, 3);
+	assert(int_prop);
 	const char *const dmas[] = {"3", "0", "1", "5", "6", "7", nullptr};
 	int_prop->Set_values(dmas);
 	int_prop->Set_help("The DMA channel of the Gravis UltraSound.");
 
 	auto *str_prop = secprop.Add_string("ultradir", when_idle, "C:\\ULTRASND");
+	assert(str_prop);
 	str_prop->Set_help("Path to UltraSound directory. In this directory\n"
 	                   "there should be a MIDI directory that contains\n"
 	                   "the patch files for GUS playback. Patch sets used\n"
