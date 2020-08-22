@@ -126,6 +126,7 @@ using accumulator_array_t = std::array<float, BUFFER_SAMPLES>;
 using address_array_t = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
 using autoexec_array_t = std::array<AutoexecObject, 2>;
 using pan_scalars_array_t = std::array<AudioFrame, PAN_POSITIONS>;
+using ram_array_t = std::array<uint8_t, RAM_SIZE>;
 using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
 using scaled_array_t = std::array<int16_t, BUFFER_SAMPLES>;
 using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
@@ -143,7 +144,7 @@ class Voice {
 public:
 	Voice(uint8_t num, VoiceIrq &irq) noexcept;
 	void GenerateSamples(accumulator_array_t &stream,
-	                     const uint8_t *ram,
+	                     const ram_array_t &ram,
 	                     const float *vol_scalars,
 	                     const pan_scalars_array_t &pan_scalars,
 	                     const int requested_frames);
@@ -170,12 +171,12 @@ private:
 	bool CheckWaveRolloverCondition() noexcept;
 	bool Is8Bit() const noexcept;
 	float GetVolScalar(const float *vol_scalars);
-	float GetSample(const uint8_t *ram);
+	float GetSample(const ram_array_t &ram);
 	float GetVolumeScalar(const float *vol_scalars) const;
 	int32_t PopWavePos();
 	int32_t PopVolPos();
-	float Read8BitSample(const uint8_t *ram, const int32_t addr) const noexcept;
-	float Read16BitSample(const uint8_t *ram, const int32_t addr) const noexcept;
+	float Read8BitSample(const ram_array_t &ram, const int32_t addr) const noexcept;
+	float Read16BitSample(const ram_array_t &ram, const int32_t addr) const noexcept;
 	uint8_t ReadCtrlState(const VoiceCtrl &ctrl) const noexcept;
 	void IncrementCtrlPos(VoiceCtrl &ctrl, bool skip_loop) noexcept;
 	bool UpdateCtrlState(VoiceCtrl &ctrl, uint8_t state) noexcept;
@@ -269,7 +270,7 @@ private:
 	accumulator_array_t accumulator = {{0}};
 	scaled_array_t scaled = {{}};
 	pan_scalars_array_t pan_scalars = {{}};
-	uint8_t ram[RAM_SIZE] = {0u};
+	ram_array_t ram = {{0u}};
 	read_io_array_t read_handlers = {};   // std::functions
 	write_io_array_t write_handlers = {}; // std::functions
 	const address_array_t dma_addresses = {
@@ -411,7 +412,7 @@ bool Voice::Is8Bit() const noexcept
 	return !(wave_ctrl.state & CTRL::BIT16);
 }
 
-float Voice::GetSample(const uint8_t *ram)
+float Voice::GetSample(const ram_array_t &ram)
 {
 	const int32_t pos = PopWavePos();
 	const auto addr = pos / WAVE_WIDTH;
@@ -442,7 +443,7 @@ float Voice::GetVolScalar(const float *vol_scalars)
 }
 
 void Voice::GenerateSamples(accumulator_array_t &stream,
-                            const uint8_t *ram,
+                            const ram_array_t &ram,
                             const float *vol_scalars,
                             const pan_scalars_array_t &pan_scalars,
                             const int requested_frames)
@@ -486,26 +487,23 @@ int32_t Voice::PopVolPos()
 }
 
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
-float Voice::Read8BitSample(const uint8_t *ram, const int32_t addr) const noexcept
+float Voice::Read8BitSample(const ram_array_t &ram, const int32_t addr) const noexcept
 {
 	const auto i = static_cast<size_t>(addr) & 0xfffffu;
-	assert(i < RAM_SIZE);
-
 	constexpr auto bits_in_16 = std::numeric_limits<int16_t>::digits;
 	constexpr auto bits_in_8 = std::numeric_limits<int8_t>::digits;
 	constexpr float to_16bit_range = 1 << (bits_in_16 - bits_in_8);
-	return static_cast<int8_t>(ram[i]) * to_16bit_range;
+	return static_cast<int8_t>(ram.at(i)) * to_16bit_range;
 }
 
 // Read a 16-bit sample returned as a float
-float Voice::Read16BitSample(const uint8_t *ram, const int32_t addr) const noexcept
+float Voice::Read16BitSample(const ram_array_t &ram, const int32_t addr) const noexcept
 {
 	// Calculate offset of the 16-bit sample
 	const auto lower = addr & 0b1100'0000'0000'0000'0000;
 	const auto upper = addr & 0b0001'1111'1111'1111'1111;
 	const auto i = static_cast<size_t>(lower | (upper << 1));
-	assert(i < RAM_SIZE);
-	return static_cast<int16_t>(host_readw(ram + i));
+	return static_cast<int16_t>(host_readw(&ram.at(i)));
 }
 
 uint8_t Voice::ReadCtrlState(const VoiceCtrl &ctrl) const noexcept
@@ -725,25 +723,35 @@ bool Gus::PerformDmaTransfer()
 	        dma_channel->currcnt + 1);
 #endif
 
-	const auto addr = IsDmaXfer16Bit() ? Dma16Addr() : Dma8Addr();
+	const auto offset = IsDmaXfer16Bit() ? Dma16Addr() : Dma8Addr();
 	const uint16_t desired = dma_channel->currcnt + 1;
+
+	// All of the operations below involve reading, writing, or skipping
+	// starting at the offset for N-desired samples
+	assert(offset + desired <= ram.size());
 
 	// Copy samples via DMA from GUS memory
 	if (dma_ctrl & 0x2) {
-		dma_channel->Write(desired, ram + addr);
+		dma_channel->Write(desired, &ram.at(offset));
 	}
 	// Skip DMA content
 	else if (!(dma_ctrl & 0x80)) {
-		dma_channel->Read(desired, ram + addr);
+		dma_channel->Read(desired, &ram.at(offset));
 	}
 	// Copy samples via DMA into GUS memory
 	else {
-		const auto samples = dma_channel->Read(desired, ram + addr);
-		const auto start = addr + (IsDmaPcm16Bit() ? 1u : 0u);
+		//
+		const auto samples = dma_channel->Read(desired, &ram.at(offset));
+		auto ram_pos = ram.begin() + offset;
+		const auto ram_pos_end = ram_pos + samples * (dma_channel->DMA16 + 1u);
+		// adjust our start and skip size if handling 16-bit
+		ram_pos += IsDmaPcm16Bit() ? 1u : 0u;
 		const auto skip = IsDmaPcm16Bit() ? 2u : 1u;
-		const auto end = addr + samples * (dma_channel->DMA16 + 1u);
-		for (size_t i = start; i < end; i += skip)
-			ram[i] ^= 0x80;
+		assert(ram_pos >= ram.begin() && ram_pos <= ram_pos_end && ram_pos_end <= ram.end());
+		while (ram_pos < ram_pos_end) {
+			*ram_pos ^= 0x80;
+			ram_pos += skip;
+		}
 	}
 	// Raise the TC irq if needed
 	if ((dma_ctrl & 0x20) != 0) {
@@ -989,11 +997,7 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 			return ReadFromRegister() & 0xff;
 	case 0x305: return ReadFromRegister() >> 8;
 	case 0x307:
-		if (dram_addr < RAM_SIZE) {
-			return ram[dram_addr];
-		} else {
-			return 0;
-		}
+		return dram_addr < ram.size() ? ram.at(dram_addr) : 0;
 	default:
 #if LOG_GUS
 		LOG_MSG("GUS Read at port 0x%x", port);
@@ -1267,8 +1271,8 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		WriteToRegister();
 		break;
 	case 0x307:
-		if (dram_addr < RAM_SIZE)
-			ram[dram_addr] = static_cast<uint8_t>(val);
+		if (dram_addr < ram.size())
+			ram.at(dram_addr) = static_cast<uint8_t>(val);
 		break;
 	default:
 #if LOG_GUS
