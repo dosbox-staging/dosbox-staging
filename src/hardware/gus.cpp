@@ -628,12 +628,16 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 	assert(requested_frames <= BUFFER_FRAMES);
 
 	// Zero the accumulator array values
-	for (auto &v : accumulator)
-		v = 0;
+	for (auto &val : accumulator)
+		val = 0;
 
-	for (uint8_t i = 0; i < active_voices; ++i)
-		voices[i]->GenerateSamples(accumulator, ram, vol_scalars,
-		                           pan_scalars, requested_frames);
+	auto v = voices.begin();
+	const auto v_end = v + active_voices;
+	while (v < v_end && *v) {
+		v->get()->GenerateSamples(accumulator, ram, vol_scalars,
+		                          pan_scalars, requested_frames);
+		++v;
+	}
 
 	SoftLimit(accumulator, scaled);
 	audio_channel->AddSamples_s16(requested_frames, scaled.data());
