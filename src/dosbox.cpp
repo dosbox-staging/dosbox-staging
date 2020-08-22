@@ -43,6 +43,7 @@
 #include "render.h"
 #include "pci_bus.h"
 #include "midi.h"
+#include "hardware.h"
 
 Config * control;
 MachineType machine;
@@ -83,7 +84,6 @@ void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
 void JOYSTICK_Init(Section*);
 void MOUSE_Init(Section*);
 void SBLASTER_Init(Section*);
-void GUS_AddConfigSection(Config *conf);
 void MPU401_Init(Section*);
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
