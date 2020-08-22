@@ -443,7 +443,7 @@ static CacheBlock *cache_getblock(void)
 	return ret;
 }
 
-void CacheBlock::Clear(void)
+void CacheBlock::Clear()
 {
 	Bitu ind;
 	// check if this is not a cross page block
@@ -452,24 +452,25 @@ void CacheBlock::Clear(void)
 		link[ind].from=0;
 		while (fromlink) {
 			CacheBlock * nextlink=fromlink->link[ind].next;
-			// clear the next-link and let the block point to the standard linkcode
+			// clear the next-link and let the block point to the
+			// standard linkcode
 			fromlink->link[ind].next=0;
 			fromlink->link[ind].to=&link_blocks[ind];
 
 			fromlink=nextlink;
 		}
 		if (link[ind].to!=&link_blocks[ind]) {
-			// not linked to the standard linkcode, find the block that links to this block
+			// not linked to the standard linkcode, find the block
+			// that links to this block
 			CacheBlock **wherelink = &link[ind].to->link[ind].from;
 			while (*wherelink != this && *wherelink) {
 				wherelink = &(*wherelink)->link[ind].next;
 			}
 			// now remove the link
-			if(*wherelink)
+			if (*wherelink)
 				*wherelink = (*wherelink)->link[ind].next;
-			else {
-				LOG(LOG_CPU,LOG_ERROR)("Cache anomaly. please investigate");
-			}
+			else
+				LOG(LOG_CPU, LOG_ERROR)("Cache anomaly. please investigate");
 		}
 	} else {
 		cache_add_unused_block(this);
