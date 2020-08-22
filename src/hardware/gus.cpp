@@ -146,14 +146,14 @@ public:
 	                     const pan_scalars_array_t &pan_scalars,
 	                     const int requested_frames);
 
-	uint8_t ReadVolState() const;
-	uint8_t ReadWaveState() const;
-	void ResetCtrls();
+	uint8_t ReadVolState() const noexcept;
+	uint8_t ReadWaveState() const noexcept;
+	void ResetCtrls() noexcept;
 	void WritePanPot(uint8_t pos) noexcept;
 	void WriteVolRate(uint16_t rate) noexcept;
 	void WriteWaveRate(uint16_t rate) noexcept;
-	bool UpdateVolState(uint8_t state);
-	bool UpdateWaveState(uint8_t state);
+	bool UpdateVolState(uint8_t state) noexcept;
+	bool UpdateWaveState(uint8_t state) noexcept;
 
 	VoiceCtrl vol_ctrl;
 	VoiceCtrl wave_ctrl;
@@ -168,8 +168,8 @@ private:
 	bool CheckWaveRolloverCondition() noexcept;
 	bool Is8Bit() const noexcept;
 	float GetVolScalar(const vol_scalars_array_t &vol_scalars);
-	float GetSample(const ram_array_t &ram);
-	int32_t PopWavePos();
+	float GetSample(const ram_array_t &ram) noexcept;
+	int32_t PopWavePos() noexcept;
 	float PopVolScalar(const vol_scalars_array_t &vol_scalars);
 	float Read8BitSample(const ram_array_t &ram, const int32_t addr) const noexcept;
 	float Read16BitSample(const ram_array_t &ram, const int32_t addr) const noexcept;
@@ -248,11 +248,11 @@ private:
 	void PopulateAutoExec(uint16_t port, const std::string &dir);
 	void PopulatePanScalars() noexcept;
 	void PopulateVolScalars() noexcept;
-	void PrepareForPlayback();
+	void PrepareForPlayback() noexcept;
 	size_t ReadFromPort(const size_t port, const size_t iolen);
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
-	void SoftLimit(const accumulator_array_t &in, scaled_array_t &out);
+	void SoftLimit(const accumulator_array_t &in, scaled_array_t &out) noexcept;
 	void StopPlayback();
 	void UpdateDmaAddress(uint8_t new_address);
 	void UpdateWaveMsw(int32_t &addr) const noexcept;
@@ -408,7 +408,7 @@ bool Voice::Is8Bit() const noexcept
 	return !(wave_ctrl.state & CTRL::BIT16);
 }
 
-float Voice::GetSample(const ram_array_t &ram)
+float Voice::GetSample(const ram_array_t &ram) noexcept
 {
 	const int32_t pos = PopWavePos();
 	const auto addr = pos / WAVE_WIDTH;
@@ -456,7 +456,7 @@ void Voice::GenerateSamples(accumulator_array_t &stream,
 
 // Returns the current wave position and increments the position
 // to the next wave position.
-int32_t Voice::PopWavePos()
+int32_t Voice::PopWavePos() noexcept
 {
 	const int32_t current_pos = wave_ctrl.pos;
 	IncrementCtrlPos(wave_ctrl, CheckWaveRolloverCondition());
@@ -500,17 +500,17 @@ uint8_t Voice::ReadCtrlState(const VoiceCtrl &ctrl) const noexcept
 	return state;
 }
 
-uint8_t Voice::ReadVolState() const
+uint8_t Voice::ReadVolState() const noexcept
 {
 	return ReadCtrlState(vol_ctrl);
 }
 
-uint8_t Voice::ReadWaveState() const
+uint8_t Voice::ReadWaveState() const noexcept
 {
 	return ReadCtrlState(wave_ctrl);
 }
 
-void Voice::ResetCtrls()
+void Voice::ResetCtrls() noexcept
 {
 	vol_ctrl.pos = 0u;
 	UpdateVolState(0x1);
@@ -534,12 +534,12 @@ bool Voice::UpdateCtrlState(VoiceCtrl &ctrl, uint8_t state) noexcept
 	return orig_irq_state != ctrl.irq_state;
 }
 
-bool Voice::UpdateVolState(uint8_t state)
+bool Voice::UpdateVolState(uint8_t state) noexcept
 {
 	return UpdateCtrlState(vol_ctrl, state);
 }
 
-bool Voice::UpdateWaveState(uint8_t state)
+bool Voice::UpdateWaveState(uint8_t state) noexcept
 {
 	return UpdateCtrlState(wave_ctrl, state);
 }
@@ -878,7 +878,7 @@ void Gus::PopulatePanScalars() noexcept
 	}
 }
 
-void Gus::PrepareForPlayback()
+void Gus::PrepareForPlayback() noexcept
 {
 	// Initialize the voice states
 	for (auto &v : voices)
@@ -1124,7 +1124,7 @@ void Gus::StopPlayback()
 	PIC_RemoveEvents(GUS_TimerEvent);
 }
 
-void Gus::SoftLimit(const accumulator_array_t &in, scaled_array_t &out)
+void Gus::SoftLimit(const accumulator_array_t &in, scaled_array_t &out) noexcept
 {
 	UpdatePeakAmplitudes(in);
 
