@@ -433,11 +433,12 @@ static inline void cache_add_unused_block(CacheBlock *block)
 	cache.block.free = block;
 }
 
-static CacheBlock *cache_getblock(void)
+static CacheBlock *cache_getblock()
 {
 	// get a free cache block and advance the free pointer
 	CacheBlock *ret = cache.block.free;
-	if (!ret) E_Exit("Ran out of CacheBlocks" );
+	if (!ret)
+		E_Exit("Ran out of CacheBlocks");
 	cache.block.free=ret->cache.next;
 	ret->cache.next=0;
 	return ret;
@@ -492,7 +493,7 @@ void CacheBlock::Clear()
 	}
 }
 
-static CacheBlock *cache_openblock(void)
+static CacheBlock *cache_openblock()
 {
 	CacheBlock *block = cache.block.active;
 	// check for enough space in this block
@@ -521,7 +522,8 @@ skipresize:
 	return block;
 }
 
-static void cache_closeblock(void) {
+static void cache_closeblock()
+{
 	CacheBlock *block = cache.block.active;
 	// links point to the default linking code
 	block->link[0].to=&link_blocks[0];
@@ -531,7 +533,7 @@ static void cache_closeblock(void) {
 	block->link[0].next=0;
 	block->link[1].next=0;
 	// close the block with correct alignment
-	Bitu written=(Bitu)(cache.pos-block->cache.start);
+	Bitu written = (Bitu)(cache.pos - block->cache.start);
 	if (written>block->cache.size) {
 		if (!block->cache.next) {
 			if (written > block->cache.size + CACHE_MAXSIZE)
@@ -618,7 +620,8 @@ static void cache_init(bool enable) {
 			// allocate the cache blocks memory
 			cache_blocks = (CacheBlock *)malloc(CACHE_BLOCKS *
 			                                    sizeof(CacheBlock));
-			if(!cache_blocks) E_Exit("Allocating cache_blocks has failed");
+			if (!cache_blocks)
+				E_Exit("Allocating cache_blocks has failed");
 			memset(cache_blocks, 0, sizeof(CacheBlock) * CACHE_BLOCKS);
 			cache.block.free=&cache_blocks[0];
 			// initialize the cache blocks
@@ -638,13 +641,19 @@ static void cache_init(bool enable) {
 #else
 			cache_code_start_ptr=(Bit8u*)malloc(CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1+PAGESIZE_TEMP);
 #endif
-			if(!cache_code_start_ptr) E_Exit("Allocating dynamic cache failed");
+			if (!cache_code_start_ptr)
+				E_Exit("Allocating dynamic core cache memory failed");
 
 			// align the cache at a page boundary
-			cache_code=(Bit8u*)(((Bitu)cache_code_start_ptr + PAGESIZE_TEMP-1) & ~(PAGESIZE_TEMP-1));//Bitu is same size as a pointer.
+			cache_code = (Bit8u *)(((Bitu)cache_code_start_ptr +
+			                        PAGESIZE_TEMP - 1) &
+			                       ~(PAGESIZE_TEMP - 1)); // Bitu is
+			                                              // same size
+			                                              // as a
+			                                              // pointer.
 
 			cache_code_link_blocks=cache_code;
-			cache_code=cache_code+PAGESIZE_TEMP;
+			cache_code += PAGESIZE_TEMP;
 
 #if (C_HAVE_MPROTECT)
 			if(mprotect(cache_code_link_blocks,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP,PROT_WRITE|PROT_READ|PROT_EXEC))
@@ -655,7 +664,7 @@ static void cache_init(bool enable) {
 			cache.block.active=block;
 			block->cache.start=&cache_code[0];
 			block->cache.size=CACHE_TOTAL;
-			block->cache.next=0;						// last block in the list
+			block->cache.next = 0; // last block in the list
 		}
 		// setup the default blocks for block linkage returns
 		cache.pos=&cache_code_link_blocks[0];
