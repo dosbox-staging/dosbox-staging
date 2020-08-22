@@ -72,15 +72,16 @@ public:
 
 static struct {
 	struct {
-		CacheBlock * first;
-		CacheBlock * active;
-		CacheBlock * free;
-		CacheBlock * running;
+		CacheBlock *first;   // the first cache block in the list
+		CacheBlock *active;  // the current cache block
+		CacheBlock *free;    // pointer to the free list
+		CacheBlock *running; // the last block that was entered for
+		                     // execution
 	} block;
-	Bit8u * pos;
-	CodePageHandler * free_pages;
-	CodePageHandler * used_pages;
-	CodePageHandler * last_page;
+	uint8_t *pos;                // position in the cache block
+	CodePageHandler *free_pages; // pointer to the free list
+	CodePageHandler *used_pages; // pointer to the list of used pages
+	CodePageHandler *last_page;  // the last used page
 } cache;
 
 // cache memory pointers, to be malloc'd later
@@ -89,7 +90,7 @@ static uint8_t *cache_code = nullptr;
 static uint8_t *cache_code_link_blocks = nullptr;
 
 static CacheBlock *cache_blocks = nullptr;
-static CacheBlock link_blocks[2];
+static CacheBlock link_blocks[2]; // default linking (specially marked)
 
 // the CodePageHandler class provides access to the contained
 // cache blocks and intercepts writes to the code for special treatment
