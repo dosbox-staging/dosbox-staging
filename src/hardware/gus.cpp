@@ -477,11 +477,12 @@ int32_t Voice::PopVolPos()
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
 float Voice::Read8BitSample(const uint8_t *ram, const int32_t addr) const noexcept
 {
+	const auto i = static_cast<size_t>(addr) & 0xfffffu;
+	assert(i < RAM_SIZE);
+
 	constexpr auto bits_in_16 = std::numeric_limits<int16_t>::digits;
 	constexpr auto bits_in_8 = std::numeric_limits<int8_t>::digits;
-	constexpr float to_16bit_range = 1u << (bits_in_16 - bits_in_8);
-	const size_t i = static_cast<uint32_t>(addr) & 0xfffffu;
-	assert(i < RAM_SIZE);
+	constexpr float to_16bit_range = 1 << (bits_in_16 - bits_in_8);
 	return static_cast<int8_t>(ram[i]) * to_16bit_range;
 }
 
