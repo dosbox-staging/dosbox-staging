@@ -225,7 +225,8 @@ public:
 		bool is_masked = false;
 		bool should_raise_irq = false;
 	};
-	Timer timers[2] = {{TIMER_1_DEFAULT_DELAY}, {TIMER_2_DEFAULT_DELAY}};
+	Timer timer_one = {TIMER_1_DEFAULT_DELAY};
+	Timer timer_two = {TIMER_2_DEFAULT_DELAY};
 	bool PerformDmaTransfer();
 
 private:
@@ -657,13 +658,14 @@ void Gus::CheckIrq()
 
 bool Gus::CheckTimer(const size_t t)
 {
-	if (!timers[t].is_masked)
-		timers[t].has_expired = true;
-	if (timers[t].should_raise_irq) {
+	auto &timer = t == 0 ? timer_one : timer_two;
+	if (!timer.is_masked)
+		timer.has_expired = true;
+	if (timer.should_raise_irq) {
 		irq_status |= 0x4 << t;
 		CheckIrq();
 	}
-	return timers[t].is_counting_down;
+	return timer.is_counting_down;
 }
 
 void Gus::CheckVoiceIrq()
@@ -888,8 +890,8 @@ void Gus::PrepareForPlayback() noexcept
 	adlib_command_reg = ADLIB_CMD_DEFAULT;
 
 	voice_irq = VoiceIrq{};
-	timers[0] = Timer{TIMER_1_DEFAULT_DELAY};
-	timers[1] = Timer{TIMER_2_DEFAULT_DELAY};
+	timer_one = Timer{TIMER_1_DEFAULT_DELAY};
+	timer_two = Timer{TIMER_2_DEFAULT_DELAY};
 }
 
 void Gus::PrintStats()
@@ -967,16 +969,16 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 	case 0x208:
 		uint8_t time;
 		time = 0u;
-		if (timers[0].has_expired)
+		if (timer_one.has_expired)
 			time |= (1 << 6);
-		if (timers[1].has_expired)
-			time |= (1 << 5);
+		if (timer_two.has_expired)
+			time |= 1 << 5;
 		if (time & 0x60)
-			time |= (1 << 7);
+			time |= 1 << 7;
 		if (irq_status & 0x04)
-			time |= (1 << 2);
+			time |= 1 << 2;
 		if (irq_status & 0x08)
-			time |= (1 << 1);
+			time |= 1 << 1;
 		return time;
 	case 0x20a: return adlib_command_reg;
 	case 0x302: return static_cast<uint8_t>(voice_index);
@@ -1163,8 +1165,10 @@ void Gus::SoftLimit(const accumulator_array_t &in, scaled_array_t &out) noexcept
 
 static void GUS_TimerEvent(Bitu t)
 {
-	if (gus->CheckTimer(t))
-		PIC_AddEvent(GUS_TimerEvent, gus->timers[t].delay, t);
+	if (gus->CheckTimer(t)) {
+		const auto &timer = t == 0 ? gus->timer_one : gus->timer_two;
+		PIC_AddEvent(GUS_TimerEvent, timer.delay, t);
+	}
 }
 
 void Gus::UpdateDmaAddress(const uint8_t new_address)
@@ -1200,26 +1204,26 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		// TODO adlib_command_reg should be 4 for this to work
 		// else it should just latch the value
 		if (val & 0x80) {
-			timers[0].has_expired = false;
-			timers[1].has_expired = false;
+			timer_one.has_expired = false;
+			timer_two.has_expired = false;
 			return;
 		}
-		timers[0].is_masked = (val & 0x40) > 0;
-		timers[1].is_masked = (val & 0x20) > 0;
+		timer_one.is_masked = (val & 0x40) > 0;
+		timer_two.is_masked = (val & 0x20) > 0;
 		if (val & 0x1) {
-			if (!timers[0].is_counting_down) {
-				PIC_AddEvent(GUS_TimerEvent, timers[0].delay, 0);
-				timers[0].is_counting_down = true;
+			if (!timer_one.is_counting_down) {
+				PIC_AddEvent(GUS_TimerEvent, timer_one.delay, 0);
+				timer_one.is_counting_down = true;
 			}
 		} else
-			timers[0].is_counting_down = false;
+			timer_one.is_counting_down = false;
 		if (val & 0x2) {
-			if (!timers[1].is_counting_down) {
-				PIC_AddEvent(GUS_TimerEvent, timers[1].delay, 1);
-				timers[1].is_counting_down = true;
+			if (!timer_two.is_counting_down) {
+				PIC_AddEvent(GUS_TimerEvent, timer_two.delay, 1);
+				timer_two.is_counting_down = true;
 			}
 		} else
-			timers[1].is_counting_down = false;
+			timer_two.is_counting_down = false;
 		break;
 		// TODO Check if 0x20a register is also available on the gus
 		// like on the interwave
@@ -1332,20 +1336,20 @@ void Gus::WriteToRegister()
 		return;
 	case 0x45: // Timer control register.  Identical in operation to Adlib's
 		timer_ctrl = static_cast<uint8_t>(register_data >> 8);
-		timers[0].should_raise_irq = (timer_ctrl & 0x04) > 0;
-		if (!timers[0].should_raise_irq)
+		timer_one.should_raise_irq = (timer_ctrl & 0x04) > 0;
+		if (!timer_one.should_raise_irq)
 			irq_status &= ~0x04;
-		timers[1].should_raise_irq = (timer_ctrl & 0x08) > 0;
-		if (!timers[1].should_raise_irq)
+		timer_two.should_raise_irq = (timer_ctrl & 0x08) > 0;
+		if (!timer_two.should_raise_irq)
 			irq_status &= ~0x08;
 		return;
 	case 0x46: // Timer 1 control
-		timers[0].value = static_cast<uint8_t>(register_data >> 8);
-		timers[0].delay = (0x100 - timers[0].value) * TIMER_1_DEFAULT_DELAY;
+		timer_one.value = static_cast<uint8_t>(register_data >> 8);
+		timer_one.delay = (0x100 - timer_one.value) * TIMER_1_DEFAULT_DELAY;
 		return;
 	case 0x47: // Timer 2 control
-		timers[1].value = static_cast<uint8_t>(register_data >> 8);
-		timers[1].delay = (0x100 - timers[1].value) * TIMER_2_DEFAULT_DELAY;
+		timer_two.value = static_cast<uint8_t>(register_data >> 8);
+		timer_two.delay = (0x100 - timer_two.value) * TIMER_2_DEFAULT_DELAY;
 		return;
 	case 0x49: // DMA sampling control register
 		sample_ctrl = static_cast<uint8_t>(register_data >> 8);
