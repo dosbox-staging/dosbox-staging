@@ -123,10 +123,11 @@ struct VoiceCtrl {
 
 // Collection types involving constant quantities
 using accumulator_array_t = std::array<float, BUFFER_SAMPLES>;
-using scaled_array_t = std::array<int16_t, BUFFER_SAMPLES>;
 using address_array_t = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
 using autoexec_array_t = std::array<AutoexecObject, 2>;
+using pan_scalars_array_t = std::array<AudioFrame, PAN_POSITIONS>;
 using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
+using scaled_array_t = std::array<int16_t, BUFFER_SAMPLES>;
 using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
 
 // A Voice is used by the Gus class and instantiates 32 of these.
@@ -144,7 +145,7 @@ public:
 	void GenerateSamples(accumulator_array_t &stream,
 	                     const uint8_t *ram,
 	                     const float *vol_scalars,
-	                     const AudioFrame *pan_scalars,
+	                     const pan_scalars_array_t &pan_scalars,
 	                     const int requested_frames);
 
 	uint8_t ReadVolState() const;
@@ -267,7 +268,7 @@ private:
 	float vol_scalars[VOLUME_LEVELS] = {};
 	accumulator_array_t accumulator = {{0}};
 	scaled_array_t scaled = {{}};
-	AudioFrame pan_scalars[PAN_POSITIONS] = {};
+	pan_scalars_array_t pan_scalars = {{}};
 	uint8_t ram[RAM_SIZE] = {0u};
 	read_io_array_t read_handlers = {};   // std::functions
 	write_io_array_t write_handlers = {}; // std::functions
@@ -431,6 +432,7 @@ float Voice::GetSample(const uint8_t *ram)
 
 float Voice::GetVolScalar(const float *vol_scalars)
 {
+	assert(vol_scalars);
 	// Unscale the volume index and check its bounds
 	const auto i = static_cast<size_t>(
 	        ceil_sdivide(PopVolPos(), VOLUME_INC_SCALAR));
@@ -442,21 +444,24 @@ float Voice::GetVolScalar(const float *vol_scalars)
 void Voice::GenerateSamples(accumulator_array_t &stream,
                             const uint8_t *ram,
                             const float *vol_scalars,
-                            const AudioFrame *pan_scalars,
+                            const pan_scalars_array_t &pan_scalars,
                             const int requested_frames)
 {
 	if (vol_ctrl.state & wave_ctrl.state & CTRL::DISABLED)
 		return;
 
-	// Add the samples to the stream, angled in L-R space
+	// Setup our iterators and pan percents
 	auto v = stream.begin();
 	const auto last_v = v + requested_frames * 2;
-	assert (last_v <= stream.end());
+	assert(last_v <= stream.end());
+	const auto pan_scalar = pan_scalars.at(pan_position);
+
+	// Add the samples to the stream, angled in L-R space
 	while (v < last_v) {
 		float sample = GetSample(ram);
 		sample *= GetVolScalar(vol_scalars);
-		*v++ += sample * pan_scalars[pan_position].left;
-		*v++ += sample * pan_scalars[pan_position].right;
+		*v++ += sample * pan_scalar.left;
+		*v++ += sample * pan_scalar.right;
 	}
 	// Keep track of how many ms this voice has generated
 	Is8Bit() ? generated_8bit_ms++ : generated_16bit_ms++;
@@ -471,11 +476,13 @@ int32_t Voice::PopWavePos()
 	return current_pos;
 }
 
+// Returns the current vol position (an index into the volume scalar array), and
+// then increments the position.
 int32_t Voice::PopVolPos()
 {
-	const int32_t pos = vol_ctrl.pos;
+	const int32_t current_pos = vol_ctrl.pos;
 	IncrementCtrlPos(vol_ctrl, false); // don't check wave rollover
-	return pos;
+	return current_pos;
 }
 
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
@@ -855,16 +862,20 @@ that output power is held constant through this range.
 */
 void Gus::PopulatePanScalars() noexcept
 {
-	for (int i = 0; i < PAN_POSITIONS; ++i) { // Vectorized
+	int i = 0;
+	auto pan_scalar = pan_scalars.begin();
+	while (pan_scalar < pan_scalars.end()) {
 		// Normalize absolute range [0, 15] to [-1.0, 1.0]
 		const auto norm = (i - 7.0) / (i < 7 ? 7 : 8);
 		// Convert to an angle between 0 and 90-degree, in radians
 		const auto angle = (norm + 1) * M_PI / 4;
-		pan_scalars[i].left = static_cast<float>(cos(angle));
-		pan_scalars[i].right = static_cast<float>(sin(angle));
+		pan_scalar->left = static_cast<float>(cos(angle));
+		pan_scalar->right = static_cast<float>(sin(angle));
+		++pan_scalar;
+		++i;
 		// DEBUG_LOG_MSG("GUS: pan_scalar[%u] = %f | %f", i,
-		//               pan_scalars.at(i).left,
-		//               pan_scalars.at(i).right);
+		//               pan_scalar->left,
+		//               pan_scalar->right);
 	}
 }
 
