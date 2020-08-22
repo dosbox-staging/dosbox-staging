@@ -160,7 +160,7 @@ static struct {
 
 #define IllegalOption(msg) E_Exit("DYNX86: illegal option in " msg)
 
-#include "core_dyn_x86/cache.h" 
+#include "dyn_cache.h" 
 
 static struct {
 	Bitu callback;

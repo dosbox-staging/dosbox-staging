@@ -148,7 +148,7 @@ static_assert(offsetof(core_dynrec_t, readdata) % sizeof(uint16_t) == 0,
 static_assert(offsetof(core_dynrec_t, readdata) % sizeof(uint32_t) == 0,
               "core_dynrec.readdata must be double-word aligned");
 
-#include "core_dynrec/cache.h"
+#include "dyn_cache.h"
 
 #define X86			0x01
 #define X86_64		0x02

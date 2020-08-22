@@ -1,5 +1,4 @@
 noinst_HEADERS = \
-	cache.h \
 	decoder_basic.h \
 	decoder.h \
 	decoder_opcodes.h \
