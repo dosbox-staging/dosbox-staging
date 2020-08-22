@@ -1,5 +1,8 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
  *  Copyright (C) 2002-2020  The DOSBox Team
+ *  Copyright (C) 2020-2020  The dosbox-staging team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -591,8 +594,13 @@ static void cache_closeblock()
 		}
 	}
 	// advance the active block pointer
-	if (!block->cache.next) {
-//		LOG_MSG("Cache full restarting");
+#if (C_DYNAMIC_X86)
+	const bool cache_is_full = !block->cache.next;
+#elif (C_DYNREC)
+	const bool cache_is_full = (!block->cache.next || (block->cache.next->cache.start > (cache_code_start_ptr + CACHE_TOTAL - CACHE_MAXSIZE)));
+#endif
+	if (cache_is_full) {
+		// DEBUG_LOG_MSG("Cache full; restarting");
 		cache.block.active=cache.block.first;
 	} else {
 		cache.block.active=block->cache.next;
@@ -627,7 +635,14 @@ static inline void cache_addq(uint64_t val)
 	cache.pos += sizeof(uint64_t);
 }
 
+#if (C_DYNAMIC_X86)
 static void gen_return(BlockReturn retcode);
+#elif (C_DYNREC)
+static void dyn_return(BlockReturn retcode, bool ret_exception);
+static void dyn_run_code();
+static void cache_block_before_close();
+static void cache_block_closing(uint8_t *block_start, Bitu block_size);
+#endif
 
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
 #if (C_HAVE_MPROTECT)
@@ -696,11 +711,39 @@ static void cache_init(bool enable) {
 		}
 		// setup the default blocks for block linkage returns
 		cache.pos=&cache_code_link_blocks[0];
+#if (C_DYNAMIC_X86)
 		link_blocks[0].cache.start=cache.pos;
 		gen_return(BR_Link1);
 		cache.pos=&cache_code_link_blocks[32];
 		link_blocks[1].cache.start=cache.pos;
 		gen_return(BR_Link2);
+#elif (C_DYNREC)
+		core_dynrec.runcode = (BlockReturn(*)(uint8_t *))cache.pos;
+		// can use op to PAGESIZE_TEMP-64 bytes
+		dyn_run_code();
+		cache_block_before_close();
+		cache_block_closing(cache_code_link_blocks,
+		                    cache.pos - cache_code_link_blocks);
+
+		cache.pos = &cache_code_link_blocks[PAGESIZE_TEMP - 64];
+		link_blocks[0].cache.start = cache.pos;
+		// link code that returns with a special return code
+		// must be less than 32 bytes
+		dyn_return(BR_Link1, false);
+		cache_block_before_close();
+		cache_block_closing(link_blocks[0].cache.start,
+		                    cache.pos - link_blocks[0].cache.start);
+
+		cache.pos = &cache_code_link_blocks[PAGESIZE_TEMP - 32];
+		link_blocks[1].cache.start = cache.pos;
+		// link code that returns with a special return code
+		// must be less than 32 bytes
+		dyn_return(BR_Link2, false);
+		cache_block_before_close();
+		cache_block_closing(link_blocks[1].cache.start,
+		                    cache.pos - link_blocks[1].cache.start);
+#endif
+
 		cache.free_pages=0;
 		cache.last_page=0;
 		cache.used_pages=0;

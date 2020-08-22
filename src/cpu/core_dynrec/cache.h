@@ -591,8 +591,9 @@ static void cache_closeblock()
 		}
 	}
 	// advance the active block pointer
-	if (!block->cache.next || (block->cache.next->cache.start>(cache_code_start_ptr + CACHE_TOTAL - CACHE_MAXSIZE))) {
-//		LOG_MSG("Cache full restarting");
+	const bool cache_is_full = (!block->cache.next || (block->cache.next->cache.start > (cache_code_start_ptr + CACHE_TOTAL - CACHE_MAXSIZE)));
+	if (cache_is_full) {
+		// DEBUG_LOG_MSG("Cache full; restarting");
 		cache.block.active=cache.block.first;
 	} else {
 		cache.block.active=block->cache.next;
@@ -631,7 +632,6 @@ static void dyn_return(BlockReturn retcode,bool ret_exception);
 static void dyn_run_code(void);
 static void cache_block_before_close(void);
 static void cache_block_closing(Bit8u* block_start,Bitu block_size);
-
 
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
 #if (C_HAVE_MPROTECT)
@@ -700,27 +700,30 @@ static void cache_init(bool enable) {
 		}
 		// setup the default blocks for block linkage returns
 		cache.pos=&cache_code_link_blocks[0];
-		core_dynrec.runcode=(BlockReturn (*)(Bit8u*))cache.pos;
+		core_dynrec.runcode = (BlockReturn(*)(uint8_t *))cache.pos;
 		// can use op to PAGESIZE_TEMP-64 bytes
 		dyn_run_code();
 		cache_block_before_close();
-		cache_block_closing(cache_code_link_blocks, cache.pos-cache_code_link_blocks);
+		cache_block_closing(cache_code_link_blocks,
+		                    cache.pos - cache_code_link_blocks);
 
-		cache.pos=&cache_code_link_blocks[PAGESIZE_TEMP-64];
-		link_blocks[0].cache.start=cache.pos;
+		cache.pos = &cache_code_link_blocks[PAGESIZE_TEMP - 64];
+		link_blocks[0].cache.start = cache.pos;
 		// link code that returns with a special return code
 		// must be less than 32 bytes
-		dyn_return(BR_Link1,false);
+		dyn_return(BR_Link1, false);
 		cache_block_before_close();
-		cache_block_closing(link_blocks[0].cache.start, cache.pos-link_blocks[0].cache.start);
+		cache_block_closing(link_blocks[0].cache.start,
+		                    cache.pos - link_blocks[0].cache.start);
 
-		cache.pos=&cache_code_link_blocks[PAGESIZE_TEMP-32];
-		link_blocks[1].cache.start=cache.pos;
+		cache.pos = &cache_code_link_blocks[PAGESIZE_TEMP - 32];
+		link_blocks[1].cache.start = cache.pos;
 		// link code that returns with a special return code
 		// must be less than 32 bytes
-		dyn_return(BR_Link2,false);
+		dyn_return(BR_Link2, false);
 		cache_block_before_close();
-		cache_block_closing(link_blocks[1].cache.start, cache.pos-link_blocks[1].cache.start);
+		cache_block_closing(link_blocks[1].cache.start,
+		                    cache.pos - link_blocks[1].cache.start);
 
 		cache.free_pages=0;
 		cache.last_page=0;
