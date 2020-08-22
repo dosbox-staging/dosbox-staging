@@ -82,7 +82,6 @@ constexpr float TIMER_2_DEFAULT_DELAY = 0.320f;
 // Volume scaling and dampening constants
 constexpr auto DELTA_DB = 0.002709201;     // 0.0235 dB increments
 constexpr int16_t VOLUME_INC_SCALAR = 512; // Volume index increment scalar
-constexpr auto VOLUME_LEVEL_DIVISOR = 1.0 + DELTA_DB;
 constexpr uint16_t VOLUME_LEVELS = 4096u;
 constexpr float SOFT_LIMIT_RELEASE_INC = AUDIO_SAMPLE_MAX *
                                          static_cast<float>(DELTA_DB);
@@ -129,6 +128,7 @@ using pan_scalars_array_t = std::array<AudioFrame, PAN_POSITIONS>;
 using ram_array_t = std::array<uint8_t, RAM_SIZE>;
 using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
 using scaled_array_t = std::array<int16_t, BUFFER_SAMPLES>;
+using vol_scalars_array_t = std::array<float, VOLUME_LEVELS>;
 using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
 
 // A Voice is used by the Gus class and instantiates 32 of these.
@@ -145,7 +145,7 @@ public:
 	Voice(uint8_t num, VoiceIrq &irq) noexcept;
 	void GenerateSamples(accumulator_array_t &stream,
 	                     const ram_array_t &ram,
-	                     const float *vol_scalars,
+	                     const vol_scalars_array_t &vol_scalars,
 	                     const pan_scalars_array_t &pan_scalars,
 	                     const int requested_frames);
 
@@ -170,11 +170,10 @@ private:
 	Voice &operator=(const Voice &) = delete; // prevent assignment
 	bool CheckWaveRolloverCondition() noexcept;
 	bool Is8Bit() const noexcept;
-	float GetVolScalar(const float *vol_scalars);
+	float GetVolScalar(const vol_scalars_array_t &vol_scalars);
 	float GetSample(const ram_array_t &ram);
-	float GetVolumeScalar(const float *vol_scalars) const;
 	int32_t PopWavePos();
-	int32_t PopVolPos();
+	float PopVolScalar(const vol_scalars_array_t &vol_scalars);
 	float Read8BitSample(const ram_array_t &ram, const int32_t addr) const noexcept;
 	float Read16BitSample(const ram_array_t &ram, const int32_t addr) const noexcept;
 	uint8_t ReadCtrlState(const VoiceCtrl &ctrl) const noexcept;
@@ -266,7 +265,7 @@ private:
 	void WriteToRegister();
 
 	// Collections
-	float vol_scalars[VOLUME_LEVELS] = {};
+	vol_scalars_array_t vol_scalars = {{}};
 	accumulator_array_t accumulator = {{0}};
 	scaled_array_t scaled = {{}};
 	pan_scalars_array_t pan_scalars = {{}};
@@ -431,20 +430,9 @@ float Voice::GetSample(const ram_array_t &ram)
 	return sample;
 }
 
-float Voice::GetVolScalar(const float *vol_scalars)
-{
-	assert(vol_scalars);
-	// Unscale the volume index and check its bounds
-	const auto i = static_cast<size_t>(
-	        ceil_sdivide(PopVolPos(), VOLUME_INC_SCALAR));
-	assert(i < VOLUME_LEVELS);
-	const float scalar = vol_scalars[i];
-	return scalar;
-}
-
 void Voice::GenerateSamples(accumulator_array_t &stream,
                             const ram_array_t &ram,
-                            const float *vol_scalars,
+                            const vol_scalars_array_t &vol_scalars,
                             const pan_scalars_array_t &pan_scalars,
                             const int requested_frames)
 {
@@ -460,7 +448,7 @@ void Voice::GenerateSamples(accumulator_array_t &stream,
 	// Add the samples to the stream, angled in L-R space
 	while (v < last_v) {
 		float sample = GetSample(ram);
-		sample *= GetVolScalar(vol_scalars);
+		sample *= PopVolScalar(vol_scalars);
 		*v++ += sample * pan_scalar.left;
 		*v++ += sample * pan_scalar.right;
 	}
@@ -477,13 +465,13 @@ int32_t Voice::PopWavePos()
 	return current_pos;
 }
 
-// Returns the current vol position (an index into the volume scalar array), and
-// then increments the position.
-int32_t Voice::PopVolPos()
+// Returns the current vol scalar and increments the volume control's position.
+float Voice::PopVolScalar(const vol_scalars_array_t &vol_scalars)
 {
-	const int32_t current_pos = vol_ctrl.pos;
+	// transform the current position into an index into the volume array
+	const auto i = ceil_sdivide(vol_ctrl.pos, VOLUME_INC_SCALAR);
 	IncrementCtrlPos(vol_ctrl, false); // don't check wave rollover
-	return current_pos;
+	return vol_scalars.at(static_cast<size_t>(i));
 }
 
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
@@ -820,12 +808,17 @@ void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
 // Generate logarithmic to linear volume conversion tables
 void Gus::PopulateVolScalars() noexcept
 {
-	double out = 1.0;
-	for (uint16_t i = VOLUME_LEVELS - 1; i > 0; --i) {
-		vol_scalars[i] = static_cast<float>(out);
-		out /= VOLUME_LEVEL_DIVISOR;
+	constexpr auto VOLUME_LEVEL_DIVISOR = 1.0 + DELTA_DB;
+	double scalar = 1.0;
+	auto v = vol_scalars.end();
+	// The last element starts at 1.0 and we divide downward to
+	// the first element that holds zero, which is directly assigned
+	// after the loop.
+	while (v > vol_scalars.begin()) {
+		*(--v) = static_cast<float>(scalar);
+		scalar /= VOLUME_LEVEL_DIVISOR;
 	}
-	vol_scalars[0] = 0.0f;
+	vol_scalars.front() = 0.0f;
 }
 
 /*
@@ -1059,7 +1052,7 @@ uint16_t Gus::ReadFromRegister()
 	case 0x89: // Voice volume register
 	{
 		const int i = ceil_sdivide(voice->vol_ctrl.pos, VOLUME_INC_SCALAR);
-		assert(i < VOLUME_LEVELS);
+		assert(i > 0 && i < static_cast<int>(vol_scalars.size()));
 		return static_cast<uint16_t>(i << 4);
 	}
 	case 0x8a: // Voice MSB current address register
