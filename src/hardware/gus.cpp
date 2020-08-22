@@ -492,7 +492,7 @@ float Voice::Read16BitSample(const uint8_t *ram, const int32_t addr) const noexc
 	// Calculate offset of the 16-bit sample
 	const auto lower = addr & 0b1100'0000'0000'0000'0000;
 	const auto upper = addr & 0b0001'1111'1111'1111'1111;
-	const size_t i = lower | (upper << 1);
+	const auto i = static_cast<size_t>(lower | (upper << 1));
 	assert(i < RAM_SIZE);
 	return static_cast<int16_t>(host_readw(ram + i));
 }
@@ -574,7 +574,7 @@ void Voice::WritePanPot(uint8_t pos) noexcept
 void Voice::WriteVolRate(uint16_t val) noexcept
 {
 	vol_ctrl.rate = val;
-	constexpr uint8_t bank_lengths = 63;
+	constexpr uint8_t bank_lengths = 63u;
 	const int pos_in_bank = val & bank_lengths;
 	const int decimator = 1 << (3 * (val >> 6));
 	vol_ctrl.inc = ceil_sdivide(pos_in_bank * VOLUME_INC_SCALAR, decimator);
@@ -590,7 +590,7 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 }
 
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
-        : port_base(port - 0x200),
+        : port_base(port - 0x200u),
           dma2(dma),
           irq1(irq),
           irq2(irq)
@@ -718,7 +718,7 @@ bool Gus::PerformDmaTransfer()
 	const uint16_t desired = dma_channel->currcnt + 1;
 
 	// Copy samples via DMA from GUS memory
-	if ((dma_ctrl & 0x2)) {
+	if (dma_ctrl & 0x2) {
 		dma_channel->Write(desired, ram + addr);
 	}
 	// Skip DMA content
