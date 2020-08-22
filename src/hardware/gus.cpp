@@ -1040,6 +1040,10 @@ uint16_t Gus::ReadFromRegister()
 		voice_irq.wave_state &= ~mask;
 		CheckVoiceIrq();
 		return static_cast<uint16_t>(reg << 8);
+	default:
+		break;
+		// If the above weren't triggered, then fall-through
+		// to the voice-specific register switch below.
 	}
 
 	if (!voice)
@@ -1067,10 +1071,11 @@ uint16_t Gus::ReadFromRegister()
 		return static_cast<uint16_t>(voice->wave_ctrl.pos);
 	case 0x8d: // Voice volume control register
 		return static_cast<uint16_t>(voice->ReadVolState() << 8);
+	default:
+		// DEBUG_LOG_MSG(GUS: register 0x%x not implemented for
+		// reading", selected_register);
+		break;
 	}
-#if LOG_GUS
-	LOG_MSG("GUS: Unimplemented read Register 0x%x", selected_register);
-#endif
 	return register_data;
 }
 
@@ -1375,6 +1380,10 @@ void Gus::WriteToRegister()
 		}
 		CheckIrq();
 		return;
+	default:
+		break;
+		// If the above weren't triggered, then fall-through
+		// to the voice-specific switch below.
 	}
 
 	// All the registers below here involve voices
@@ -1437,12 +1446,11 @@ void Gus::WriteToRegister()
 		if (voice->UpdateVolState(register_data >> 8))
 			CheckVoiceIrq();
 		break;
+	default:
+		// DEBUG_LOG_MSG(GUS: register 0x%x not implemented for
+		// writing", selected_register);
+		break;
 	}
-
-#if LOG_GUS
-	LOG_MSG("GUS: Unimplemented write register %x -- %x", register_select,
-	        register_data);
-#endif
 	return;
 }
 
