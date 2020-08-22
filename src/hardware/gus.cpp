@@ -1322,7 +1322,7 @@ void Gus::WriteToRegister()
 	case 0xe: // Set active voice register
 		selected_register = register_data >> 8; // Jazz Jackrabbit needs this
 		{
-			uint8_t num_voices = 1 + ((register_data >> 8) & 31);
+			const uint8_t num_voices = 1 + ((register_data >> 8) & 31);
 			ActivateVoices(num_voices);
 		}
 		return;
@@ -1465,7 +1465,7 @@ static void gus_destroy(MAYBE_UNUSED Section *sec)
 static void gus_init(Section *sec)
 {
 	assert(sec);
-	Section_prop *conf = dynamic_cast<Section_prop *>(sec);
+	const Section_prop *conf = dynamic_cast<Section_prop *>(sec);
 	if (!conf || !conf->Get_bool("gus"))
 		return;
 
@@ -1488,18 +1488,19 @@ void init_gus_dosbox_settings(Section_prop &secprop)
 	bool_prop->Set_help("Enable Gravis UltraSound emulation.");
 
 	auto *hex_prop = secprop.Add_hex("gusbase", when_idle, 0x240);
-	const char *bases[] = {"240", "220", "260", "280",  "2a0",
-	                       "2c0", "2e0", "300", nullptr};
+	const char *const bases[] = {"240", "220", "260", "280",  "2a0",
+	                             "2c0", "2e0", "300", nullptr};
 	hex_prop->Set_values(bases);
 	hex_prop->Set_help("The IO base address of the Gravis UltraSound.");
 
 	auto *int_prop = secprop.Add_int("gusirq", when_idle, 5);
-	const char *irqs[] = {"5", "3", "7", "9", "10", "11", "12", nullptr};
+	const char *const irqs[] = {"5",  "3",  "7",  "9",
+	                            "10", "11", "12", nullptr};
 	int_prop->Set_values(irqs);
 	int_prop->Set_help("The IRQ number of the Gravis UltraSound.");
 
 	int_prop = secprop.Add_int("gusdma", when_idle, 3);
-	const char *dmas[] = {"3", "0", "1", "5", "6", "7", nullptr};
+	const char *const dmas[] = {"3", "0", "1", "5", "6", "7", nullptr};
 	int_prop->Set_values(dmas);
 	int_prop->Set_help("The DMA channel of the Gravis UltraSound.");
 
