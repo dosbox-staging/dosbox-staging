@@ -17,6 +17,7 @@ libcpu_a_SOURCES = \
 	core_prefetch.cpp \
 	core_simple.cpp \
 	cpu.cpp \
+	dyn_cache.h \
 	flags.cpp \
 	instructions.h	\
 	lazyflags.h \

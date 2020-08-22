@@ -412,7 +412,6 @@
     <ClInclude Include="..\include\timer.h" />
     <ClInclude Include="..\include\vga.h" />
     <ClInclude Include="..\include\video.h" />
-    <ClInclude Include="..\src\cpu\core_dynrec\cache.h" />
     <ClInclude Include="..\src\cpu\core_dynrec\decoder.h" />
     <ClInclude Include="..\src\cpu\core_dynrec\decoder_basic.h" />
     <ClInclude Include="..\src\cpu\core_dynrec\decoder_opcodes.h" />
@@ -420,7 +419,6 @@
     <ClInclude Include="..\src\cpu\core_dynrec\operators.h" />
     <ClInclude Include="..\src\cpu\core_dynrec\risc_x64.h" />
     <ClInclude Include="..\src\cpu\core_dynrec\risc_x86.h" />
-    <ClInclude Include="..\src\cpu\core_dyn_x86\cache.h" />
     <ClInclude Include="..\src\cpu\core_dyn_x86\decoder.h" />
     <ClInclude Include="..\src\cpu\core_dyn_x86\dyn_fpu.h" />
     <ClInclude Include="..\src\cpu\core_dyn_x86\dyn_fpu_dh.h" />
@@ -443,6 +441,7 @@
     <ClInclude Include="..\src\cpu\core_normal\string.h" />
     <ClInclude Include="..\src\cpu\core_normal\support.h" />
     <ClInclude Include="..\src\cpu\core_normal\table_ea.h" />
+    <ClInclude Include="..\src\cpu\dyn_cache.h" />
     <ClInclude Include="..\src\cpu\instructions.h" />
     <ClInclude Include="..\src\cpu\lazyflags.h" />
     <ClInclude Include="..\src\cpu\modrm.h" />
