@@ -440,7 +440,7 @@ void Voice::GenerateSamples(accumulator_array_t &stream,
 
 	// Setup our iterators and pan percents
 	auto v = stream.begin();
-	const auto last_v = v + requested_frames * 2;
+	const auto last_v = v + static_cast<size_t>(requested_frames) * 2;
 	assert(last_v <= stream.end());
 	const auto pan_scalar = pan_scalars.at(pan_position);
 
@@ -716,7 +716,7 @@ bool Gus::PerformDmaTransfer()
 
 	// All of the operations below involve reading, writing, or skipping
 	// starting at the offset for N-desired samples
-	assert(offset + desired <= ram.size());
+	assert(static_cast<size_t>(offset) + desired <= ram.size());
 
 	// Copy samples via DMA from GUS memory
 	if (dma_ctrl & 0x2) {
@@ -731,7 +731,9 @@ bool Gus::PerformDmaTransfer()
 		//
 		const auto samples = dma_channel->Read(desired, &ram.at(offset));
 		auto ram_pos = ram.begin() + offset;
-		const auto ram_pos_end = ram_pos + samples * (dma_channel->DMA16 + 1u);
+		const auto positions = samples *
+		                       (static_cast<size_t>(dma_channel->DMA16) + 1u);
+		const auto ram_pos_end = ram_pos + positions;
 		// adjust our start and skip size if handling 16-bit
 		ram_pos += IsDmaPcm16Bit() ? 1u : 0u;
 		const auto skip = IsDmaPcm16Bit() ? 2u : 1u;
@@ -948,7 +950,7 @@ void Gus::PrintStats()
 	// their GUS mixer settings.
 	peak_ratio = std::min(peak_ratio, 1.0f);
 	LOG_MSG("GUS: Peak amplitude reached %.0f%% of max",
-	        static_cast<double>(100 * peak_ratio));
+	        100 * static_cast<double>(peak_ratio));
 
 	// Make a suggestion if the peak volume was well below 3 dB
 	if (peak_ratio < 0.6f) {
