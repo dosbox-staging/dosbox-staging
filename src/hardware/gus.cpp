@@ -1270,17 +1270,17 @@ void Gus::UpdatePeakAmplitudes(const float *stream) noexcept
 
 void Gus::UpdateWaveLsw(int32_t &addr) const noexcept
 {
-	constexpr uint32_t WAVE_LSW_MASK = ~((1 << 16) - 1); // Lower wave mask
-	const auto lower = static_cast<unsigned>(addr) & WAVE_LSW_MASK;
-	addr = static_cast<int32_t>(lower | register_data);
+	constexpr auto WAVE_LSW_MASK = ~((1 << 16) - 1); // Lower wave mask
+	const auto lower = addr & WAVE_LSW_MASK;
+	addr = lower | register_data;
 }
 
 void Gus::UpdateWaveMsw(int32_t &addr) const noexcept
 {
-	constexpr uint32_t WAVE_MSW_MASK = (1 << 16) - 1; // Upper wave mask
-	const uint32_t upper = register_data & 0x1fff;
-	const auto lower = static_cast<unsigned>(addr) & WAVE_MSW_MASK;
-	addr = static_cast<int32_t>(lower | (upper << 16));
+	constexpr auto WAVE_MSW_MASK = (1 << 16) - 1; // Upper wave mask
+	const auto upper = register_data & 0x1fff;
+	const auto lower = addr & WAVE_MSW_MASK;
+	addr = lower | (upper << 16);
 }
 
 void Gus::WriteToRegister()
