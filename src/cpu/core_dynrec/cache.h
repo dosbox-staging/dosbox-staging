@@ -557,30 +557,33 @@ static void cache_closeblock(void) {
 	}
 }
 
-
 // place an 8bit value into the cache
-static INLINE void cache_addb(Bit8u val) {
-	*cache.pos++=val;
+static inline void cache_addb(uint8_t val)
+{
+	*cache.pos = val;
+	cache.pos += sizeof(uint8_t);
 }
 
 // place a 16bit value into the cache
-static INLINE void cache_addw(Bit16u val) {
-	*(Bit16u*)cache.pos=val;
-	cache.pos+=2;
+static inline void cache_addw(uint16_t val)
+{
+	write_unaligned_uint16(cache.pos, val);
+	cache.pos += sizeof(uint16_t);
 }
 
 // place a 32bit value into the cache
-static INLINE void cache_addd(Bit32u val) {
-	*(Bit32u*)cache.pos=val;
-	cache.pos+=4;
+static inline void cache_addd(uint32_t val)
+{
+	write_unaligned_uint32(cache.pos, val);
+	cache.pos += sizeof(uint32_t);
 }
 
 // place a 64bit value into the cache
-static INLINE void cache_addq(Bit64u val) {
-	*(Bit64u*)cache.pos=val;
-	cache.pos+=8;
+static inline void cache_addq(uint64_t val)
+{
+	write_unaligned_uint64(cache.pos, val);
+	cache.pos += sizeof(uint64_t);
 }
-
 
 static void dyn_return(BlockReturn retcode,bool ret_exception);
 static void dyn_run_code(void);
