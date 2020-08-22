@@ -1010,7 +1010,7 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 uint16_t Gus::ReadFromRegister()
 {
 	// LOG_MSG("GUS: Read register %x", selected_register);
-	uint8_t reg;
+	uint8_t reg = 0;
 
 	// Registers that read from the general DSP
 	switch (selected_register) {
@@ -1381,7 +1381,7 @@ void Gus::WriteToRegister()
 	if (!voice)
 		return;
 
-	uint8_t data;
+	uint8_t data = 0;
 	// Registers that write to the current voice
 	switch (selected_register) {
 	case 0x0: // Voice wave control register
