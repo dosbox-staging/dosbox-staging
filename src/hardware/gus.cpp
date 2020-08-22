@@ -1084,15 +1084,15 @@ void Gus::RegisterIoHandlers()
 	// Register the IO read addresses
 	assert(7 < read_handlers.size());
 	const auto read_from = std::bind(&Gus::ReadFromPort, this, _1, _2);
-	read_handlers[0].Install(0x302 + port_base, read_from, IO_MB);
-	read_handlers[1].Install(0x303 + port_base, read_from, IO_MB);
-	read_handlers[2].Install(0x304 + port_base, read_from, IO_MB | IO_MW);
-	read_handlers[3].Install(0x305 + port_base, read_from, IO_MB);
-	read_handlers[4].Install(0x206 + port_base, read_from, IO_MB);
-	read_handlers[5].Install(0x208 + port_base, read_from, IO_MB);
-	read_handlers[6].Install(0x307 + port_base, read_from, IO_MB);
+	read_handlers.at(0).Install(0x302 + port_base, read_from, IO_MB);
+	read_handlers.at(1).Install(0x303 + port_base, read_from, IO_MB);
+	read_handlers.at(2).Install(0x304 + port_base, read_from, IO_MB | IO_MW);
+	read_handlers.at(3).Install(0x305 + port_base, read_from, IO_MB);
+	read_handlers.at(4).Install(0x206 + port_base, read_from, IO_MB);
+	read_handlers.at(5).Install(0x208 + port_base, read_from, IO_MB);
+	read_handlers.at(6).Install(0x307 + port_base, read_from, IO_MB);
 	// Board Only
-	read_handlers[7].Install(0x20a + port_base, read_from, IO_MB);
+	read_handlers.at(7).Install(0x20a + port_base, read_from, IO_MB);
 
 	// Register the IO write addresses
 	// We'll leave the MIDI interface to the MPU-401
@@ -1100,16 +1100,16 @@ void Gus::RegisterIoHandlers()
 	// GF1 Synthesizer
 	assert(8 < write_handlers.size());
 	const auto write_to = std::bind(&Gus::WriteToPort, this, _1, _2, _3);
-	write_handlers[0].Install(0x302 + port_base, write_to, IO_MB);
-	write_handlers[1].Install(0x303 + port_base, write_to, IO_MB);
-	write_handlers[2].Install(0x304 + port_base, write_to, IO_MB | IO_MW);
-	write_handlers[3].Install(0x305 + port_base, write_to, IO_MB);
-	write_handlers[4].Install(0x208 + port_base, write_to, IO_MB);
-	write_handlers[5].Install(0x209 + port_base, write_to, IO_MB);
-	write_handlers[6].Install(0x307 + port_base, write_to, IO_MB);
+	write_handlers.at(0).Install(0x302 + port_base, write_to, IO_MB);
+	write_handlers.at(1).Install(0x303 + port_base, write_to, IO_MB);
+	write_handlers.at(2).Install(0x304 + port_base, write_to, IO_MB | IO_MW);
+	write_handlers.at(3).Install(0x305 + port_base, write_to, IO_MB);
+	write_handlers.at(4).Install(0x208 + port_base, write_to, IO_MB);
+	write_handlers.at(5).Install(0x209 + port_base, write_to, IO_MB);
+	write_handlers.at(6).Install(0x307 + port_base, write_to, IO_MB);
 	// Board Only
-	write_handlers[7].Install(0x200 + port_base, write_to, IO_MB);
-	write_handlers[8].Install(0x20b + port_base, write_to, IO_MB);
+	write_handlers.at(7).Install(0x200 + port_base, write_to, IO_MB);
+	write_handlers.at(8).Install(0x20b + port_base, write_to, IO_MB);
 }
 
 void Gus::StopPlayback()
@@ -1245,23 +1245,23 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		if (mix_ctrl & 0x40) {
 			// IRQ configuration, only use low bits for irq 1
 			const auto i = val & 0x7;
-			assert(i < irq_addresses.size());
-			if (irq_addresses[i])
-				irq1 = irq_addresses[i];
+			const auto &address = irq_addresses.at(i);
+			if (address)
+				irq1 = address;
 #if LOG_GUS
 			LOG_MSG("GUS: Assigned IRQ1 to %d", irq1);
 #endif
 		} else {
 			// DMA configuration, only use low bits for dma 1
 			const uint8_t i = val & 0x7;
-			if (i < dma_addresses.size() && dma_addresses[i])
-				UpdateDmaAddress(dma_addresses[i]);
+			const auto address = dma_addresses.at(i);
+			if (address)
+				UpdateDmaAddress(address);
 		}
 		break;
 	case 0x302:
 		voice_index = val & 31;
-		assert(voice_index < voices.size());
-		voice = voices[voice_index].get();
+		voice = voices.at(voice_index).get();
 		break;
 	case 0x303:
 		selected_register = static_cast<uint8_t>(val);
