@@ -398,37 +398,46 @@ static CacheBlock * cache_getblock(void) {
 	return ret;
 }
 
-void CacheBlock::Clear(void) {
+void CacheBlock::Clear()
+{
 	Bitu ind;
-	/* Check if this is not a cross page block */
+	// check if this is not a cross page block
 	if (hash.index) for (ind=0;ind<2;ind++) {
 		CacheBlock * fromlink=link[ind].from;
 		link[ind].from=0;
 		while (fromlink) {
 			CacheBlock * nextlink=fromlink->link[ind].next;
+			// clear the next-link and let the block point to the
+			// standard linkcode
 			fromlink->link[ind].next=0;
 			fromlink->link[ind].to=&link_blocks[ind];
+
 			fromlink=nextlink;
 		}
 		if (link[ind].to!=&link_blocks[ind]) {
-			CacheBlock * * wherelink=&link[ind].to->link[ind].from;
+			// not linked to the standard linkcode, find the block
+			// that links to this block
+			CacheBlock **wherelink = &link[ind].to->link[ind].from;
 			while (*wherelink != this && *wherelink) {
 				wherelink = &(*wherelink)->link[ind].next;
 			}
-			if(*wherelink) 
+			// now remove the link
+			if (*wherelink)
 				*wherelink = (*wherelink)->link[ind].next;
 			else
-				LOG(LOG_CPU,LOG_ERROR)("Cache anomaly. please investigate");
+				LOG(LOG_CPU, LOG_ERROR)("Cache anomaly. please investigate");
 		}
 	} else {
 		cache_add_unused_block(this);
 	}
 	if (crossblock) {
+		// clear out the crossblock (in the page before) as well
 		crossblock->crossblock=0;
 		crossblock->Clear();
 		crossblock=0;
 	}
 	if (page.handler) {
+		// clear out the code page handler
 		page.handler->DelCacheBlock(this);
 		page.handler=0;
 	}
