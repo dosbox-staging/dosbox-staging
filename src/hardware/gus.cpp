@@ -51,11 +51,11 @@ constexpr float AUDIO_SAMPLE_MIN = static_cast<float>(MIN_AUDIO);
 // Buffer and memory constants
 constexpr int BUFFER_FRAMES = 48;
 constexpr int BUFFER_SAMPLES = BUFFER_FRAMES * 2; // 2 samples/frame (left & right)
-constexpr uint32_t RAM_SIZE = 1048576u;           // 1 MB
+constexpr uint32_t RAM_SIZE = 1024 * 1024;        // 1 MiB
 
 // DMA transfer size and rate constants
-constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024;         // 8 KB per transfer
-constexpr uint32_t ISA_BUS_THROUGHPUT = 32 * 1024 * 1024; // 32 MB/s
+constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024;         // 8 KiB per transfer
+constexpr uint32_t ISA_BUS_THROUGHPUT = 32 * 1024 * 1024; // 32 MiB/s
 constexpr uint16_t DMA_TRANSFERS_PER_S = ISA_BUS_THROUGHPUT / BYTES_PER_DMA_XFER;
 constexpr float MS_PER_DMA_XFER = 1000.0f / DMA_TRANSFERS_PER_S;
 
