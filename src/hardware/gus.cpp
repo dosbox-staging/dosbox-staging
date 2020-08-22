@@ -122,6 +122,8 @@ struct VoiceCtrl {
 };
 
 // Collection types involving constant quantities
+using accumulator_array_t = std::array<float, BUFFER_SAMPLES>;
+using scaled_array_t = std::array<int16_t, BUFFER_SAMPLES>;
 using address_array_t = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
 using autoexec_array_t = std::array<AutoexecObject, 2>;
 using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
@@ -139,7 +141,7 @@ using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
 class Voice {
 public:
 	Voice(uint8_t num, VoiceIrq &irq) noexcept;
-	void GenerateSamples(float *stream,
+	void GenerateSamples(accumulator_array_t &stream,
 	                     const uint8_t *ram,
 	                     const float *vol_scalars,
 	                     const AudioFrame *pan_scalars,
@@ -252,19 +254,19 @@ private:
 	size_t ReadFromPort(const size_t port, const size_t iolen);
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
-	void SoftLimit(const float *in, int16_t *out);
+	void SoftLimit(const accumulator_array_t &in, scaled_array_t &out);
 	void StopPlayback();
 	void UpdateDmaAddress(uint8_t new_address);
 	void UpdateWaveMsw(int32_t &addr) const noexcept;
 	void UpdateWaveLsw(int32_t &addr) const noexcept;
-	void UpdatePeakAmplitudes(const float *stream) noexcept;
+	void UpdatePeakAmplitudes(const accumulator_array_t &stream) noexcept;
 	void WriteToPort(size_t port, size_t val, size_t iolen);
 	void WriteToRegister();
 
 	// Collections
 	float vol_scalars[VOLUME_LEVELS] = {};
-	float accumulator[BUFFER_SAMPLES] = {0};
-	int16_t scaled[BUFFER_SAMPLES] = {};
+	accumulator_array_t accumulator = {{0}};
+	scaled_array_t scaled = {{}};
 	AudioFrame pan_scalars[PAN_POSITIONS] = {};
 	uint8_t ram[RAM_SIZE] = {0u};
 	read_io_array_t read_handlers = {};   // std::functions
@@ -365,7 +367,7 @@ void Voice::IncrementCtrlPos(VoiceCtrl &ctrl, bool dont_loop_or_restart) noexcep
 {
 	if (ctrl.state & CTRL::DISABLED)
 		return;
-	int32_t remaining;
+	int32_t remaining = 0;
 	if (ctrl.state & CTRL::DECREASING) {
 		ctrl.pos -= ctrl.inc;
 		remaining = ctrl.start - ctrl.pos;
@@ -437,7 +439,7 @@ float Voice::GetVolScalar(const float *vol_scalars)
 	return scalar;
 }
 
-void Voice::GenerateSamples(float *stream,
+void Voice::GenerateSamples(accumulator_array_t &stream,
                             const uint8_t *ram,
                             const float *vol_scalars,
                             const AudioFrame *pan_scalars,
@@ -447,12 +449,14 @@ void Voice::GenerateSamples(float *stream,
 		return;
 
 	// Add the samples to the stream, angled in L-R space
-	const int sample_end = requested_frames * 2 - 1;
-	for (int i = 0; i < sample_end; i += 2) {
+	auto v = stream.begin();
+	const auto last_v = v + requested_frames * 2;
+	assert (last_v <= stream.end());
+	while (v < last_v) {
 		float sample = GetSample(ram);
 		sample *= GetVolScalar(vol_scalars);
-		stream[i] += sample * pan_scalars[pan_position].left;
-		stream[i + 1] += sample * pan_scalars[pan_position].right;
+		*v++ += sample * pan_scalars[pan_position].left;
+		*v++ += sample * pan_scalars[pan_position].right;
 	}
 	// Keep track of how many ms this voice has generated
 	Is8Bit() ? generated_8bit_ms++ : generated_16bit_ms++;
@@ -632,15 +636,15 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 	assert(requested_frames <= BUFFER_FRAMES);
 
 	// Zero the accumulator array
-	for (int i = 0; i < BUFFER_SAMPLES; ++i)
-		accumulator[i] = 0;
+	for (auto &v : accumulator)
+		v = 0;
 
 	for (uint8_t i = 0; i < active_voices; ++i)
 		voices[i]->GenerateSamples(accumulator, ram, vol_scalars,
 		                           pan_scalars, requested_frames);
 
 	SoftLimit(accumulator, scaled);
-	audio_channel->AddSamples_s16(requested_frames, scaled);
+	audio_channel->AddSamples_s16(requested_frames, scaled.data());
 	CheckVoiceIrq();
 }
 
@@ -1114,15 +1118,18 @@ void Gus::StopPlayback()
 	PIC_RemoveEvents(GUS_TimerEvent);
 }
 
-void Gus::SoftLimit(const float *in, int16_t *out)
+void Gus::SoftLimit(const accumulator_array_t &in, scaled_array_t &out)
 {
 	UpdatePeakAmplitudes(in);
 
-	// If our peaks are under the max, then there's no need to limit
+	// get our in and out iterators
+	auto in_v = in.begin();
+	auto out_v = out.begin();
+
+	// If our peaks are under the max, then there's no overage - so copy
 	if (peak.left < AUDIO_SAMPLE_MAX && peak.right < AUDIO_SAMPLE_MAX) {
-		for (int i = 0; i < BUFFER_SAMPLES - 1; i += 2) {
-			out[i] = static_cast<int16_t>(in[i]);
-			out[i + 1] = static_cast<int16_t>(in[i + 1]);
+		while (in_v < in.end() && out_v < out.end()) {
+			*out_v++ = static_cast<int16_t>(*in_v++);
 		}
 		return;
 	}
@@ -1132,9 +1139,9 @@ void Gus::SoftLimit(const float *in, int16_t *out)
 	const float left_scalar = std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak.left);
 	const float right_scalar = std::min(ONE_AMP, AUDIO_SAMPLE_MAX / peak.right);
 
-	for (int i = 0; i < BUFFER_SAMPLES - 1; i += 2) { // Vectorized
-		out[i] = static_cast<int16_t>(in[i] * left_scalar);
-		out[i + 1] = static_cast<int16_t>(in[i + 1] * right_scalar);
+	while (in_v < in.end() && out_v < out.end()) {
+		*out_v++ = static_cast<int16_t>(*in_v++ * left_scalar);
+		*out_v++ = static_cast<int16_t>(*in_v++ * right_scalar);
 	}
 	if (peak.left > AUDIO_SAMPLE_MAX)
 		peak.left -= SOFT_LIMIT_RELEASE_INC;
@@ -1260,11 +1267,12 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 	}
 }
 
-void Gus::UpdatePeakAmplitudes(const float *stream) noexcept
+void Gus::UpdatePeakAmplitudes(const accumulator_array_t &stream) noexcept
 {
-	for (int i = 0; i < BUFFER_SAMPLES - 1; i += 2) {
-		peak.left = std::max(peak.left, fabsf(stream[i]));
-		peak.right = std::max(peak.right, fabsf(stream[i + 1]));
+	auto v = stream.begin();
+	while (v < stream.end()) {
+		peak.left = std::max(peak.left, fabsf(*v++));
+		peak.right = std::max(peak.right, fabsf(*v++));
 	}
 }
 
