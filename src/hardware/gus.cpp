@@ -138,7 +138,7 @@ using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
 //
 class Voice {
 public:
-	Voice(uint8_t num, VoiceIrq &irq);
+	Voice(uint8_t num, VoiceIrq &irq) noexcept;
 	void GenerateSamples(float *stream,
 	                     const uint8_t *ram,
 	                     const float *vol_scalars,
@@ -148,9 +148,9 @@ public:
 	uint8_t ReadVolState() const;
 	uint8_t ReadWaveState() const;
 	void ResetCtrls();
-	void WritePanPot(uint8_t pos);
-	void WriteVolRate(uint16_t rate);
-	void WriteWaveRate(uint16_t rate);
+	void WritePanPot(uint8_t pos) noexcept;
+	void WriteVolRate(uint16_t rate) noexcept;
+	void WriteWaveRate(uint16_t rate) noexcept;
 	bool UpdateVolState(uint8_t state);
 	bool UpdateWaveState(uint8_t state);
 
@@ -164,18 +164,18 @@ private:
 	Voice() = delete;
 	Voice(const Voice &) = delete;            // prevent copying
 	Voice &operator=(const Voice &) = delete; // prevent assignment
-	bool CheckWaveRolloverCondition();
-	bool Is8Bit() const;
+	bool CheckWaveRolloverCondition() noexcept;
+	bool Is8Bit() const noexcept;
 	float GetVolScalar(const float *vol_scalars);
 	float GetSample(const uint8_t *ram);
 	float GetVolumeScalar(const float *vol_scalars) const;
 	int32_t PopWavePos();
 	int32_t PopVolPos();
-	float Read8BitSample(const uint8_t *ram, const int32_t addr) const;
-	float Read16BitSample(const uint8_t *ram, const int32_t addr) const;
-	uint8_t ReadCtrlState(const VoiceCtrl &ctrl) const;
-	void IncrementCtrlPos(VoiceCtrl &ctrl, bool skip_loop);
-	bool UpdateCtrlState(VoiceCtrl &ctrl, uint8_t state);
+	float Read8BitSample(const uint8_t *ram, const int32_t addr) const noexcept;
+	float Read16BitSample(const uint8_t *ram, const int32_t addr) const noexcept;
+	uint8_t ReadCtrlState(const VoiceCtrl &ctrl) const noexcept;
+	void IncrementCtrlPos(VoiceCtrl &ctrl, bool skip_loop) noexcept;
+	bool UpdateCtrlState(VoiceCtrl &ctrl, uint8_t state) noexcept;
 
 	// Control states
 	enum CTRL : uint8_t {
@@ -238,16 +238,16 @@ private:
 	void BeginPlayback();
 	void CheckIrq();
 	void CheckVoiceIrq();
-	uint32_t Dma8Addr();
-	uint32_t Dma16Addr();
+	uint32_t Dma8Addr() noexcept;
+	uint32_t Dma16Addr() noexcept;
 	void DmaCallback(DmaChannel *chan, DMAEvent event);
 	void StartDmaTransfers();
-	bool IsDmaPcm16Bit();
-	bool IsDmaXfer16Bit();
+	bool IsDmaPcm16Bit() noexcept;
+	bool IsDmaXfer16Bit() noexcept;
 	uint16_t ReadFromRegister();
 	void PopulateAutoExec(uint16_t port, const std::string &dir);
-	void PopulatePanScalars();
-	void PopulateVolScalars();
+	void PopulatePanScalars() noexcept;
+	void PopulateVolScalars() noexcept;
 	void PrepareForPlayback();
 	size_t ReadFromPort(const size_t port, const size_t iolen);
 	void RegisterIoHandlers();
@@ -255,9 +255,9 @@ private:
 	void SoftLimit(const float *in, int16_t *out);
 	void StopPlayback();
 	void UpdateDmaAddress(uint8_t new_address);
-	void UpdateWaveMsw(int32_t &addr) const;
-	void UpdateWaveLsw(int32_t &addr) const;
-	void UpdatePeakAmplitudes(const float *stream);
+	void UpdateWaveMsw(int32_t &addr) const noexcept;
+	void UpdateWaveLsw(int32_t &addr) const noexcept;
+	void UpdatePeakAmplitudes(const float *stream) noexcept;
 	void WriteToPort(size_t port, size_t val, size_t iolen);
 	void WriteToRegister();
 
@@ -326,12 +326,11 @@ uint8_t adlib_commandreg = ADLIB_CMD_DEFAULT;
 
 static std::unique_ptr<Gus> gus = nullptr;
 
-Voice::Voice(uint8_t num, VoiceIrq &irq)
+Voice::Voice(uint8_t num, VoiceIrq &irq) noexcept
         : vol_ctrl{irq.vol_state},
           wave_ctrl{irq.wave_state},
           irq_mask(1 << num),
           shared_irq_status(irq.status)
-
 {}
 
 /*
@@ -357,12 +356,12 @@ Joh Campbell, maintainer of DOSox-X:
 	Ultrasound Windows 3.1 drivers expect this behavior, else Windows WAVE output
 	will not work correctly.
 */
-bool Voice::CheckWaveRolloverCondition()
+bool Voice::CheckWaveRolloverCondition() noexcept
 {
 	return (vol_ctrl.state & CTRL::BIT16) && !(wave_ctrl.state & CTRL::LOOP);
 }
 
-void Voice::IncrementCtrlPos(VoiceCtrl &ctrl, bool dont_loop_or_restart)
+void Voice::IncrementCtrlPos(VoiceCtrl &ctrl, bool dont_loop_or_restart) noexcept
 {
 	if (ctrl.state & CTRL::DISABLED)
 		return;
@@ -404,7 +403,7 @@ void Voice::IncrementCtrlPos(VoiceCtrl &ctrl, bool dont_loop_or_restart)
 	return;
 }
 
-bool Voice::Is8Bit() const
+bool Voice::Is8Bit() const noexcept
 {
 	return !(wave_ctrl.state & CTRL::BIT16);
 }
@@ -476,7 +475,7 @@ int32_t Voice::PopVolPos()
 }
 
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
-float Voice::Read8BitSample(const uint8_t *ram, const int32_t addr) const
+float Voice::Read8BitSample(const uint8_t *ram, const int32_t addr) const noexcept
 {
 	constexpr auto bits_in_16 = std::numeric_limits<int16_t>::digits;
 	constexpr auto bits_in_8 = std::numeric_limits<int8_t>::digits;
@@ -487,7 +486,7 @@ float Voice::Read8BitSample(const uint8_t *ram, const int32_t addr) const
 }
 
 // Read a 16-bit sample returned as a float
-float Voice::Read16BitSample(const uint8_t *ram, const int32_t addr) const
+float Voice::Read16BitSample(const uint8_t *ram, const int32_t addr) const noexcept
 {
 	// Calculate offset of the 16-bit sample
 	const auto lower = addr & 0b1100'0000'0000'0000'0000;
@@ -497,7 +496,7 @@ float Voice::Read16BitSample(const uint8_t *ram, const int32_t addr) const
 	return static_cast<int16_t>(host_readw(ram + i));
 }
 
-uint8_t Voice::ReadCtrlState(const VoiceCtrl &ctrl) const
+uint8_t Voice::ReadCtrlState(const VoiceCtrl &ctrl) const noexcept
 {
 	uint8_t state = ctrl.state;
 	if (ctrl.irq_state & irq_mask)
@@ -523,7 +522,7 @@ void Voice::ResetCtrls()
 	WritePanPot(PAN_DEFAULT_POSITION);
 }
 
-bool Voice::UpdateCtrlState(VoiceCtrl &ctrl, uint8_t state)
+bool Voice::UpdateCtrlState(VoiceCtrl &ctrl, uint8_t state) noexcept
 {
 	const uint32_t orig_irq_state = ctrl.irq_state;
 	// Manually set the irq
@@ -549,7 +548,7 @@ bool Voice::UpdateWaveState(uint8_t state)
 	return UpdateCtrlState(wave_ctrl, state);
 }
 
-void Voice::WritePanPot(uint8_t pos)
+void Voice::WritePanPot(uint8_t pos) noexcept
 {
 	constexpr uint8_t max_pos = PAN_POSITIONS - 1;
 	pan_position = std::min(pos, max_pos);
@@ -571,7 +570,7 @@ void Voice::WritePanPot(uint8_t pos)
 // volume scalar value (a floating point fraction between 0.0 and 1.0) is never
 // actually operated on, and is simply looked up from the final index position
 // at the time of sample population.
-void Voice::WriteVolRate(uint16_t val)
+void Voice::WriteVolRate(uint16_t val) noexcept
 {
 	vol_ctrl.rate = val;
 	constexpr uint8_t bank_lengths = 63;
@@ -583,7 +582,7 @@ void Voice::WriteVolRate(uint16_t val)
 	assert(vol_ctrl.inc >= 0 && vol_ctrl.inc <= bank_lengths * VOLUME_INC_SCALAR);
 }
 
-void Voice::WriteWaveRate(uint16_t val)
+void Voice::WriteWaveRate(uint16_t val) noexcept
 {
 	wave_ctrl.rate = val;
 	wave_ctrl.inc = ceil_udivide(val, 2u);
@@ -690,12 +689,12 @@ void Gus::CheckVoiceIrq()
 	}
 }
 
-uint32_t Gus::Dma8Addr()
+uint32_t Gus::Dma8Addr() noexcept
 {
 	return static_cast<uint32_t>(dma_addr << 4);
 }
 
-uint32_t Gus::Dma16Addr()
+uint32_t Gus::Dma16Addr() noexcept
 {
 	const auto lower = dma_addr & 0b0001'1111'1111'1111;
 	const auto upper = dma_addr & 0b1100'0000'0000'0000;
@@ -743,12 +742,12 @@ bool Gus::PerformDmaTransfer()
 	return true;
 }
 
-bool Gus::IsDmaPcm16Bit()
+bool Gus::IsDmaPcm16Bit() noexcept
 {
 	return dma_ctrl & 0x40;
 }
 
-bool Gus::IsDmaXfer16Bit()
+bool Gus::IsDmaXfer16Bit() noexcept
 {
 	// What bit-size should DMA memory be transferred as?
 	// Mode PCM/DMA  Address Use-16  Note
@@ -799,7 +798,7 @@ void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
 }
 
 // Generate logarithmic to linear volume conversion tables
-void Gus::PopulateVolScalars()
+void Gus::PopulateVolScalars() noexcept
 {
 	double out = 1.0;
 	for (uint16_t i = VOLUME_LEVELS - 1; i > 0; --i) {
@@ -849,7 +848,7 @@ that output power is held constant through this range.
 	0.09802 <~~~ 14 ( 0.875) ~~~> 0.99518 | 1.000
 	0.00000 <~~~ 15 ( 1.000) ~~~> 1.00000 | 1.000
 */
-void Gus::PopulatePanScalars()
+void Gus::PopulatePanScalars() noexcept
 {
 	for (int i = 0; i < PAN_POSITIONS; ++i) { // Vectorized
 		// Normalize absolute range [0, 15] to [-1.0, 1.0]
@@ -1260,7 +1259,7 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 	}
 }
 
-void Gus::UpdatePeakAmplitudes(const float *stream)
+void Gus::UpdatePeakAmplitudes(const float *stream) noexcept
 {
 	for (int i = 0; i < BUFFER_SAMPLES - 1; i += 2) {
 		peak.left = std::max(peak.left, fabsf(stream[i]));
@@ -1268,14 +1267,14 @@ void Gus::UpdatePeakAmplitudes(const float *stream)
 	}
 }
 
-void Gus::UpdateWaveLsw(int32_t &addr) const
+void Gus::UpdateWaveLsw(int32_t &addr) const noexcept
 {
 	constexpr uint32_t WAVE_LSW_MASK = ~((1 << 16) - 1); // Lower wave mask
 	const auto lower = static_cast<unsigned>(addr) & WAVE_LSW_MASK;
 	addr = static_cast<int32_t>(lower | register_data);
 }
 
-void Gus::UpdateWaveMsw(int32_t &addr) const
+void Gus::UpdateWaveMsw(int32_t &addr) const noexcept
 {
 	constexpr uint32_t WAVE_MSW_MASK = (1 << 16) - 1; // Upper wave mask
 	const uint32_t upper = register_data & 0x1fff;
