@@ -91,17 +91,28 @@ static uint8_t *cache_code_link_blocks = nullptr;
 static CacheBlock *cache_blocks = nullptr;
 static CacheBlock link_blocks[2];
 
+// the CodePageHandler class provides access to the contained
+// cache blocks and intercepts writes to the code for special treatment
 class CodePageHandler : public PageHandler {
 public:
 	CodePageHandler() : invalidation_map(nullptr) {}
 
 	void SetupAt(Bitu _phys_page,PageHandler * _old_pagehandler) {
+		// initialize this codepage handler
 		phys_page=_phys_page;
+		// save the old pagehandler to provide direct read access to the
+		// memory, and to be able to restore it later on
 		old_pagehandler=_old_pagehandler;
+
+		// adjust flags
 		flags=old_pagehandler->flags|(cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16);
 		flags&=~PFLAG_WRITEABLE;
+
 		active_blocks=0;
 		active_count=16;
+
+		// initialize the maps with zero (no cache blocks as well as
+		// code present)
 		memset(&hash_map,0,sizeof(hash_map));
 		memset(&write_map,0,sizeof(write_map));
 		if (invalidation_map) {
@@ -109,21 +120,33 @@ public:
 			invalidation_map = nullptr;
 		}
 	}
-	bool InvalidateRange(Bitu start,Bitu end) {
+
+	// clear out blocks that contain code which has been modified
+	bool InvalidateRange(Bitu start, Bitu end)
+	{
 		Bits index=1+(end>>DYN_HASH_SHIFT);
-		bool is_current_block=false;
+		bool is_current_block = false; // if the current block is
+		                               // modified, it has to be exited
+		                               // as soon as possible
+
 		Bit32u ip_point=SegPhys(cs)+reg_eip;
 		ip_point=(PAGING_GetPhysicalPage(ip_point)-(phys_page<<12))+(ip_point&0xfff);
 		while (index>=0) {
 			Bitu map=0;
+			// see if there is still some code in the range
 			for (Bitu count=start;count<=end;count++) map+=write_map[count];
-			if (!map) return is_current_block;
-			CacheBlock * block=hash_map[index];
+			if (!map)
+				return is_current_block; // no more code, finished
+
+			CacheBlock *block = hash_map[index];
 			while (block) {
-				CacheBlock * nextblock=block->hash.next;
+				CacheBlock *nextblock = block->hash.next;
+				// test if this block is in the range
 				if (start<=block->page.end && end>=block->page.start) {
 					if (ip_point<=block->page.end && ip_point>=block->page.start) is_current_block=true;
-					block->Clear();
+					block->Clear(); // clear the block,
+					                // decrements the
+					                // write_map accordingly
 				}
 				block=nextblock;
 			}
@@ -155,9 +178,12 @@ public:
 		host_writeb(hostmem+addr,val);
 		// see if there's code where we are writing to
 		if (!write_map[addr]) {
-			if (active_blocks) return;
+			if (active_blocks)
+				return; // still some blocks in this page
 			active_count--;
-			if (!active_count) Release();
+			if (!active_count)
+				Release(); // delay page releasing until
+				           // active_count is zero
 			return;
 		} else if (!invalidation_map) {
 			invalidation_map = alloc_invalidation_map();
@@ -176,9 +202,12 @@ public:
 		host_writew(hostmem+addr,val);
 		// see if there's code where we are writing to
 		if (!read_unaligned_uint16(&write_map[addr])) {
-			if (active_blocks) return;
+			if (active_blocks)
+				return; // still some blocks in this page
 			active_count--;
-			if (!active_count) Release();
+			if (!active_count)
+				Release(); // delay page releasing until
+				           // active_count is zero
 			return;
 		} else if (!invalidation_map) {
 			invalidation_map = alloc_invalidation_map();
@@ -197,9 +226,12 @@ public:
 		host_writed(hostmem+addr,val);
 		// see if there's code where we are writing to
 		if (!read_unaligned_uint32(&write_map[addr])) {
-			if (active_blocks) return;
+			if (active_blocks)
+				return; // still some blocks in this page
 			active_count--;
-			if (!active_count) Release();
+			if (!active_count)
+				Release(); // delay page releasing until
+				           // active_count is zero
 			return;
 		} else if (!invalidation_map) {
 			invalidation_map = alloc_invalidation_map();
@@ -218,6 +250,8 @@ public:
 		// see if there's code where we are writing to
 		if (!write_map[addr]) {
 			if (!active_blocks) {
+				// no blocks left in this page, still delay
+				// the page releasing a bit
 				active_count--;
 				if (!active_count) Release();
 			}
@@ -245,6 +279,8 @@ public:
 		// see if there's code where we are writing to
 		if (!read_unaligned_uint16(&write_map[addr])) {
 			if (!active_blocks) {
+				// no blocks left in this page, still delay
+				// the page releasing a bit
 				active_count--;
 				if (!active_count) Release();
 			}
@@ -272,6 +308,8 @@ public:
 		// see if there's code where we are writing to
 		if (!read_unaligned_uint32(&write_map[addr])) {
 			if (!active_blocks) {
+				// no blocks left in this page, still delay
+				// the page releasing a bit
 				active_count--;
 				if (!active_count) Release();
 			}
@@ -289,22 +327,31 @@ public:
 		return false;
 	}
 
-    void AddCacheBlock(CacheBlock * block) {
+	// add a cache block to this page and note it in the hash map
+	void AddCacheBlock(CacheBlock *block)
+	{
 		Bitu index=1+(block->page.start>>DYN_HASH_SHIFT);
-		block->hash.next=hash_map[index];
+		block->hash.next = hash_map[index]; // link to old block at
+		                                    // index from the new block
 		block->hash.index=index;
-		hash_map[index]=block;
+		hash_map[index] = block; // put new block at hash position
 		block->page.handler=this;
 		active_blocks++;
 	}
-    void AddCrossBlock(CacheBlock * block) {
+
+	// there's a block whose code started in a different page
+	void AddCrossBlock(CacheBlock *block)
+	{
 		block->hash.next=hash_map[0];
 		block->hash.index=0;
 		hash_map[0]=block;
 		block->page.handler=this;
 		active_blocks++;
 	}
-	void DelCacheBlock(CacheBlock * block) {
+
+	// remove a cache block
+	void DelCacheBlock(CacheBlock *block)
+	{
 		active_blocks--;
 		active_count=16;
 		CacheBlock **where = &hash_map[block->hash.index];
@@ -314,13 +361,18 @@ public:
 			// happen.
 		}
 		*where = block->hash.next;
+
+		// remove the cleared block from the write map
 		if (GCC_UNLIKELY(block->cache.wmapmask!=NULL)) {
+			// first part is not influenced by the mask
 			for (Bitu i=block->page.start;i<block->cache.maskstart;i++) {
 				if (write_map[i]) write_map[i]--;
 			}
 			Bitu maskct=0;
+			// last part sticks to the writemap mask
 			for (Bitu i=block->cache.maskstart;i<=block->page.end;i++,maskct++) {
 				if (write_map[i]) {
+					// only adjust writemap if it isn't masked
 					if ((maskct>=block->cache.masklen) || (!block->cache.wmapmask[maskct])) write_map[i]--;
 				}
 			}
@@ -332,9 +384,14 @@ public:
 			}
 		}
 	}
-	void Release(void) {
+
+	void Release()
+	{
+		// revert to old handler
 		MEM_SetPageHandler(phys_page,1,old_pagehandler);
 		PAGING_ClearTLB();
+
+		// remove page from the lists
 		if (prev) prev->next=next;
 		else cache.used_pages=next;
 		if (next) next->prev=prev;
@@ -343,43 +400,60 @@ public:
 		cache.free_pages=this;
 		prev=0;
 	}
-	void ClearRelease(void) {
+
+	void ClearRelease()
+	{
+		// clear out all cache blocks in this page
 		for (Bitu index=0;index<(1+DYN_PAGE_HASH);index++) {
-			CacheBlock * block=hash_map[index];
+			CacheBlock *block = hash_map[index];
 			while (block) {
-				CacheBlock * nextblock=block->hash.next;
-				block->page.handler=0;			//No need, full clear
+				CacheBlock *nextblock = block->hash.next;
+				block->page.handler = 0; // no need, full clear
 				block->Clear();
 				block=nextblock;
 			}
 		}
-		Release();
+		Release(); // now can release this page
 	}
-	CacheBlock * FindCacheBlock(Bitu start) {
-		CacheBlock * block=hash_map[1+(start>>DYN_HASH_SHIFT)];
+
+	CacheBlock *FindCacheBlock(Bitu start)
+	{
+		CacheBlock *block = hash_map[1 + (start >> DYN_HASH_SHIFT)];
+		// see if there's a cache block present at the start address
 		while (block) {
-			if (block->page.start==start) return block;
+			if (block->page.start == start)
+				return block; // found
 			block=block->hash.next;
 		}
-		return 0;
+		return 0; // none found
 	}
-	HostPt GetHostReadPt(Bitu phys_page) { 
-		hostmem=old_pagehandler->GetHostReadPt(phys_page);
+
+	HostPt GetHostReadPt(Bitu phys_page)
+	{
+		hostmem = old_pagehandler->GetHostReadPt(phys_page);
 		return hostmem;
 	}
-	HostPt GetHostWritePt(Bitu phys_page) { 
-		return GetHostReadPt( phys_page );
+
+	HostPt GetHostWritePt(Bitu phys_page)
+	{
+		return GetHostReadPt(phys_page);
 	}
+
 public:
+	// the write map, there are write_map[i] cache blocks that cover the
+	// byte at address i
 	Bit8u write_map[4096];
 	Bit8u * invalidation_map;
-	CodePageHandler * next, * prev;
+	CodePageHandler *next, *prev; // page linking
 private:
 	PageHandler * old_pagehandler;
-	CacheBlock * hash_map[1+DYN_PAGE_HASH];
-	Bitu active_blocks;
-	Bitu active_count;
-	HostPt hostmem;	
+
+	// hash map to quickly find the cache blocks in this page
+	CacheBlock *hash_map[1 + DYN_PAGE_HASH];
+
+	Bitu active_blocks; // the number of cache blocks in this page
+	Bitu active_count; // delaying parameter to not immediately release a page
+	HostPt hostmem;
 	Bitu phys_page;
 };
 
