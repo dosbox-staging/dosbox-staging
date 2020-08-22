@@ -64,7 +64,7 @@ constexpr uint8_t MAX_VOICES = 32u;
 constexpr uint8_t MIN_VOICES = 14u;
 constexpr uint8_t VOICE_DEFAULT_STATE = 3u;
 
-// DMA and IRQ extents and quantity constants
+// DMA and IRQ extents and quantities
 constexpr uint8_t MIN_DMA_ADDRESS = 0u;
 constexpr uint8_t MAX_DMA_ADDRESS = 7u;
 constexpr uint8_t MIN_IRQ_ADDRESS = 0u;
@@ -83,12 +83,9 @@ constexpr float TIMER_2_DEFAULT_DELAY = 0.320f;
 constexpr auto DELTA_DB = 0.002709201;     // 0.0235 dB increments
 constexpr int16_t VOLUME_INC_SCALAR = 512; // Volume index increment scalar
 constexpr uint16_t VOLUME_LEVELS = 4096u;
-constexpr float SOFT_LIMIT_RELEASE_INC = AUDIO_SAMPLE_MAX *
-                                         static_cast<float>(DELTA_DB);
 
-// Interwave addressing constants
+// Interwave addressing constant
 constexpr int16_t WAVE_WIDTH = 1 << 9; // Wave interpolation width (9 bits)
-constexpr float WAVE_WIDTH_INV = 1.0f / WAVE_WIDTH;
 
 // IO address quantities
 constexpr uint8_t READ_HANDLERS = 8u;
@@ -423,6 +420,7 @@ float Voice::GetSample(const ram_array_t &ram)
 		const auto next_addr = addr + 1;
 		const float next_sample = Is8Bit() ? Read8BitSample(ram, next_addr)
 		                                   : Read16BitSample(ram, next_addr);
+		constexpr float WAVE_WIDTH_INV = 1.0f / WAVE_WIDTH;
 		sample += (next_sample - sample) *
 		          static_cast<float>(fraction) * WAVE_WIDTH_INV;
 	}
@@ -628,7 +626,7 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 {
 	assert(requested_frames <= BUFFER_FRAMES);
 
-	// Zero the accumulator array
+	// Zero the accumulator array values
 	for (auto &v : accumulator)
 		v = 0;
 
@@ -1151,6 +1149,9 @@ void Gus::SoftLimit(const accumulator_array_t &in, scaled_array_t &out)
 		*out_v++ = static_cast<int16_t>(*in_v++ * left_scalar);
 		*out_v++ = static_cast<int16_t>(*in_v++ * right_scalar);
 	}
+
+	constexpr float SOFT_LIMIT_RELEASE_INC = AUDIO_SAMPLE_MAX *
+                                         static_cast<float>(DELTA_DB);
 	if (peak.left > AUDIO_SAMPLE_MAX)
 		peak.left -= SOFT_LIMIT_RELEASE_INC;
 	if (peak.right > AUDIO_SAMPLE_MAX)
