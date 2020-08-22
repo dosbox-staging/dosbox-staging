@@ -51,4 +51,8 @@ void CAPTURE_AddWave(Bit32u freq, Bit32u len, Bit16s * data);
 void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags, float fps, Bit8u * data, Bit8u * pal);
 void CAPTURE_AddMidi(bool sysex, Bitu len, Bit8u * data);
 
+class Config;
+// Gravis UltraSound configuration and initialization
+void GUS_AddConfigSection(Config *conf);
+
 #endif
