@@ -787,14 +787,14 @@ void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
 	assert(irq1 < 10 && irq2 < 10);
 
 	// ULTRASND variable
-	char set_ultrasnd[] = "SET ULTRASND=HHH,D,D,I,I";
+	char set_ultrasnd[] = "@SET ULTRASND=HHH,D,D,I,I";
 	snprintf(set_ultrasnd, sizeof(set_ultrasnd),
-	         "SET ULTRASND=%x,%u,%u,%u,%u", port, dma1, dma2, irq1, irq2);
+	         "@SET ULTRASND=%x,%u,%u,%u,%u", port, dma1, dma2, irq1, irq2);
 	LOG_MSG("GUS: %s", set_ultrasnd);
 	autoexec_lines.at(0).Install(set_ultrasnd);
 
 	// ULTRADIR variable
-	std::string dirline = "SET ULTRADIR=" + ultradir;
+	std::string dirline = "@SET ULTRADIR=" + ultradir;
 	autoexec_lines.at(1).Install(dirline);
 }
 
