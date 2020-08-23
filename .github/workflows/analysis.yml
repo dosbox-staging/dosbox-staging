@@ -171,3 +171,53 @@ jobs:
             echo
             xzcat "$UASAN_LOG" | MAX_ISSUES=${{ matrix.conf.uasan }} ./scripts/count-xsan-issues.py -
           fi
+
+  build_windows_vs_core_guidelines:
+    name: C++ Core Guidelines analysis
+    needs: run_linters
+    runs-on: windows-latest
+    steps:
+      - name:  Prepare vcpkg for cache restore
+        id:    prep-vcpkg
+        shell: pwsh
+        run: |
+          mv c:\vcpkg c:\vcpkg-bak
+          md c:\vcpkg -ea 0
+
+      - name: Restore the most recent cache of vcpkg
+        uses: actions/cache@v2
+        with:
+          path: c:\vcpkg
+          key: vcpkg-x64-
+
+      - name:  Integrate packages
+        shell: pwsh
+        run: |
+          vcpkg integrate install
+          if (-not $?) { throw "vcpkg failed to integrate packages" }
+
+      - uses:  actions/checkout@v2
+      - name:  Log environment
+        shell: pwsh
+        run:   .\scripts\log-env.ps1
+
+      - name:  Add CGL analysis to build
+        shell: bash
+        run: |
+          cd vs
+          sed -i '88i<RunCodeAnalysis>true</RunCodeAnalysis><CodeAnalysisRuleSet>MS_and_CGL_without_GSL.ruleset</CodeAnalysisRuleSet>' dosbox.vcxproj
+
+      - name:  Build
+        shell: pwsh
+        env:
+          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+        run: |
+          cd vs
+          MSBuild -m dosbox.sln -p:Configuration=Debug -p:Platform=x64 | Tee-Object build.log
+
+      - name:  Summarize warnings
+        shell: pwsh
+        env:
+          MAX_WARNINGS: 25000
+        run: python scripts\count-warnings.py --msvc vs\build.log
+
