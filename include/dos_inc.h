@@ -291,23 +291,21 @@ constexpr PhysPt assert_macro_args_ok()
 
 class MemStruct {
 public:
-	void SetPt(Bit16u seg) { pt=PhysMake(seg,0);}
-	void SetPt(Bit16u seg,Bit16u off) { pt=PhysMake(seg,off);}
-	void SetPt(RealPt addr) { pt=Real2Phys(addr);}
+	MemStruct() = default;
+	MemStruct(uint16_t seg, uint16_t off) : pt(PhysMake(seg, off)) {}
+	MemStruct(RealPt addr) : pt(Real2Phys(addr)) {}
+
+	void SetPt(uint16_t seg) { pt = PhysMake(seg, 0); }
+
 protected:
-	PhysPt pt;
+	PhysPt pt = 0;
 };
 
 /* Program Segment Prefix */
 
 class DOS_PSP : public MemStruct {
 public:
-	DOS_PSP(Bit16u segment)
-		: seg(0)
-	{
-		SetPt(segment);
-		seg = segment;
-	}
+	DOS_PSP(uint16_t segment) : seg(segment) { SetPt(seg); }
 
 	void MakeNew(uint16_t mem_size);
 
@@ -381,12 +379,14 @@ private:
 	#ifdef _MSC_VER
 	#pragma pack()
 	#endif
-	Bit16u	seg;
+
+	uint16_t seg;
+
 public:
 	static	Bit16u rootpsp;
 };
 
-class DOS_ParamBlock:public MemStruct {
+class DOS_ParamBlock : public MemStruct {
 public:
 	DOS_ParamBlock(PhysPt addr)
 		: exec{0, 0, 0, 0, 0, 0},
@@ -514,7 +514,7 @@ public:
 
 class DOS_DTA : public MemStruct {
 public:
-	DOS_DTA(RealPt addr) { SetPt(addr); }
+	DOS_DTA(RealPt addr) : MemStruct(addr) {}
 
 	void SetupSearch(uint8_t drive, uint8_t attr, char *pattern);
 	uint8_t GetSearchDrive() const { return SGET_BYTE(sDTA, sdrive); }
@@ -635,7 +635,7 @@ private:
 
 class DOS_MCB : public MemStruct {
 public:
-	DOS_MCB(Bit16u seg) { SetPt(seg); }
+	DOS_MCB(uint16_t seg) : MemStruct(seg, 0) {}
 
 	void SetFileName(char const * const _name) { MEM_BlockWrite(pt+offsetof(sMCB,filename),_name,8); }
 	void GetFileName(char * const _name) { MEM_BlockRead(pt+offsetof(sMCB,filename),_name,8);_name[8]=0;}
@@ -667,7 +667,7 @@ private:
 
 class DOS_SDA : public MemStruct {
 public:
-	DOS_SDA(Bit16u _seg,Bit16u _offs) { SetPt(_seg,_offs); }
+	DOS_SDA(uint16_t seg, uint16_t off) : MemStruct(seg, off) {}
 
 	void Init();
 
