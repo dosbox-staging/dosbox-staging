@@ -763,16 +763,10 @@ bool CDROM_Interface_Image::PlayAudioSector(const uint32_t start, uint32_t len)
 		player.addFrames = track_channels ==  2  ? &MixerChannel::AddSamples_s16_nonnative \
 		                                         : &MixerChannel::AddSamples_m16_nonnative;
 	}
-
-	/**
-	 *  Convert Redbook frames (len) to Track PCM frames, rounding up to whole
-	 *  integer frames. Note: the intermediate numerator in the calculation
-	 *  below can overflow uint32_t, so the variable types used must stay
-	 *  64-bit.
-	 */
 	player.playedTrackFrames = 0;
-	player.totalTrackFrames = ceil_udivide(track_rate * player.totalRedbookFrames,
-	                                      REDBOOK_FRAMES_PER_SECOND);
+	// Convert requested RedBook frames into PCM frames
+	player.totalTrackFrames = player.totalRedbookFrames *
+	                          (track_rate / REDBOOK_FRAMES_PER_SECOND);
 
 #ifdef DEBUG
 	if (start < track->start) {
