@@ -771,8 +771,8 @@ bool CDROM_Interface_Image::PlayAudioSector(const uint32_t start, uint32_t len)
 	 *  64-bit.
 	 */
 	player.playedTrackFrames = 0;
-	player.totalTrackFrames = ceil_udivide(track_rate * player.totalRedbookFrames,
-	                                      REDBOOK_FRAMES_PER_SECOND);
+	player.totalTrackFrames = player.totalRedbookFrames *
+	                          (track_rate / REDBOOK_FRAMES_PER_SECOND);
 
 #ifdef DEBUG
 	if (start < track->start) {
