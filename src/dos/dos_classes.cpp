@@ -1,5 +1,8 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
  *  Copyright (C) 2002-2020  The DOSBox Team
+ *  Copyright (C) 2020-2020  The dosbox-staging team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,12 +19,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <string.h>
-#include <stdlib.h>
-#include "dosbox.h"
-#include "mem.h"
 #include "dos_inc.h"
+
+#include <cstdlib>
+#include <cstring>
+
+#include "mem.h"
 #include "support.h"
 
 void DOS_ParamBlock::Clear()
@@ -378,11 +381,10 @@ void DOS_DTA::GetSearchParams(uint8_t &attr, char *pattern) const
 }
 
 DOS_FCB::DOS_FCB(uint16_t seg, uint16_t off, bool allow_extended)
-        : extended(false),
-          real_pt(0)
+        : MemStruct(seg, off),
+          extended(false),
+          real_pt(pt)
 {
-	SetPt(seg, off);
-	real_pt = pt;
 	if (allow_extended) {
 		if (SGET_BYTE(sFCB, drive) == 0xff) {
 			pt+=7;
