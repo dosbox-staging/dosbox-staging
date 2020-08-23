@@ -1062,7 +1062,7 @@ uint16_t Gus::ReadFromRegister()
 	case 0x89: // Voice volume register
 	{
 		const int i = ceil_sdivide(voice->vol_ctrl.pos, VOLUME_INC_SCALAR);
-		assert(i > 0 && i < static_cast<int>(vol_scalars.size()));
+		assert(i >= 0 && i < static_cast<int>(vol_scalars.size()));
 		return static_cast<uint16_t>(i << 4);
 	}
 	case 0x8a: // Voice MSB current address register
