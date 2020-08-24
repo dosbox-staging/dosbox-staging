@@ -91,12 +91,6 @@ constexpr int16_t WAVE_WIDTH = 1 << 9; // Wave interpolation width (9 bits)
 constexpr uint8_t READ_HANDLERS = 8u;
 constexpr uint8_t WRITE_HANDLERS = 9u;
 
-// A simple stereo audio frame that's used by the Gus and Voice classes.
-struct AudioFrame {
-	float left = 0.0f;
-	float right = 0.0f;
-};
-
 // A group of parameters defining the Gus's voice IRQ control that's also shared
 // (as a reference) into each instantiated voice.
 struct VoiceIrq {
@@ -121,7 +115,7 @@ struct VoiceCtrl {
 using accumulator_array_t = std::array<float, BUFFER_SAMPLES>;
 using address_array_t = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
 using autoexec_array_t = std::array<AutoexecObject, 2>;
-using pan_scalars_array_t = std::array<AudioFrame, PAN_POSITIONS>;
+using pan_scalars_array_t = std::array<AudioFrame<float>, PAN_POSITIONS>;
 using ram_array_t = std::array<uint8_t, RAM_SIZE>;
 using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
 using scaled_array_t = std::array<int16_t, BUFFER_SAMPLES>;
@@ -280,7 +274,7 @@ private:
 	// Struct and pointer members
 	VoiceIrq voice_irq = {};
 	MixerObject mixer_channel = {};
-	AudioFrame peak = {ONE_AMP, ONE_AMP};
+	AudioFrame<float> peak = {ONE_AMP, ONE_AMP};
 	Voice *voice = nullptr;
 	DmaChannel *dma_channel = nullptr;
 	MixerChannel *audio_channel = nullptr;

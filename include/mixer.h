@@ -46,8 +46,15 @@ enum MixerModes {
 	M_16M,M_16S
 };
 
-#define MIXER_BUFSIZE (16*1024)
-#define MIXER_BUFMASK (MIXER_BUFSIZE-1)
+// A simple stereo audio frame
+template <typename sample_t>
+struct AudioFrame {
+	sample_t left = 0;
+	sample_t right = 0;
+};
+
+#define MIXER_BUFSIZE (16 * 1024)
+#define MIXER_BUFMASK (MIXER_BUFSIZE - 1)
 extern Bit8u MixTemp[MIXER_BUFSIZE];
 
 #define MAX_AUDIO ((1<<(16-1))-1)
