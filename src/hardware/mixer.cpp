@@ -170,16 +170,31 @@ static void MIXER_UnlockAudioDevice()
 	SDL_UnlockAudioDevice(mixer.sdldevice);
 }
 
+void MixerChannel::RegisterLevelCallBack(apply_level_callback_f cb)
+{
+	apply_level = cb;
+	const AudioFrame level{volmain[0], volmain[1]};
+	apply_level(level);
+}
+
 void MixerChannel::UpdateVolume()
 {
-	volmul[0]=(Bits)((1 << MIXER_VOLSHIFT)*scale[0]*volmain[0]*mixer.mastervol[0]);
-	volmul[1]=(Bits)((1 << MIXER_VOLSHIFT)*scale[1]*volmain[1]*mixer.mastervol[1]);
+	// Don't scale by volmain[] if the level is being managed by the source
+	const float level_l = apply_level ? 1 : volmain[0];
+	const float level_r = apply_level ? 1 : volmain[1];
+	volmul[0] = (Bits)((1 << MIXER_VOLSHIFT) * scale[0] * level_l * mixer.mastervol[0]);
+	volmul[1] = (Bits)((1 << MIXER_VOLSHIFT) * scale[1] * level_r * mixer.mastervol[1]);
 }
 
 void MixerChannel::SetVolume(float _left,float _right) {
 	// Allow unconstrained user-defined values
 	volmain[0] = _left;
 	volmain[1] = _right;
+
+	if (apply_level) {
+		const AudioFrame level{_left, _right};
+		apply_level(level);
+	}
 	UpdateVolume();
 }
 
