@@ -71,16 +71,16 @@ void DOS_InfoBlock::SetLocation(uint16_t segment)
 	SSET_WORD(sDIB, specialCodeSeg, uint16_t(0));
 	SSET_BYTE(sDIB, joindedDrives, uint8_t(0));
 	SSET_BYTE(sDIB, lastdrive, uint8_t(0x01)); // increase this if you add drives to cds-chain
-	SSET_DWORD(sDIB, diskInfoBuffer,
-	           RealMake(segment, offsetof(sDIB, diskBufferHeadPt)));
+	const RealPt dib_addr = RealMake(segment, offsetof(sDIB, diskBufferHeadPt));
+	SSET_DWORD(sDIB, diskInfoBuffer, dib_addr);
 	SSET_DWORD(sDIB, setverPtr, uint32_t(0));
 	SSET_WORD(sDIB, a20FixOfs, uint16_t(0));
 	SSET_WORD(sDIB, pspLastIfHMA, uint16_t(0));
 	SSET_BYTE(sDIB, blockDevices, uint8_t(0));
 	SSET_BYTE(sDIB, bootDrive, uint8_t(0));
 	SSET_BYTE(sDIB, useDwordMov, uint8_t(1));
-	SSET_WORD(sDIB, extendedSize,
-	          static_cast<uint16_t>(MEM_TotalPages() * 4 - 1024));
+	const uint16_t ext_size = static_cast<uint16_t>(MEM_TotalPages() * 4 - 1024);
+	SSET_WORD(sDIB, extendedSize, ext_size);
 	SSET_WORD(sDIB, magicWord, uint16_t(0x0001)); // dos5+
 	SSET_WORD(sDIB, sharingCount, uint16_t(0));
 	SSET_WORD(sDIB, sharingDelay, uint16_t(0));
@@ -110,7 +110,8 @@ void DOS_InfoBlock::SetLocation(uint16_t segment)
 
 	// Create a fake SFT, so programs think there are 100 file handles
 	const uint16_t sft_offset = offsetof(sDIB, firstFileTable) + 0xa2;
-	SSET_DWORD(sDIB, firstFileTable, RealMake(segment, sft_offset));
+	const RealPt sft_addr = RealMake(segment, sft_offset);
+	SSET_DWORD(sDIB, firstFileTable, sft_addr);
 	// Next File Table
 	real_writed(segment, sft_offset + 0x00, RealMake(segment + 0x26, 0));
 	// File Table supports 100 files
@@ -159,7 +160,8 @@ void DOS_PSP::MakeNew(uint16_t mem_size)
 	/* FCBs are filled with 0 */
 	// ....
 	/* Init file pointer and max_files */
-	SSET_DWORD(sPSP, file_table, RealMake(seg, offsetof(sPSP, files)));
+	const RealPt ftab_addr = RealMake(seg, offsetof(sPSP, files));
+	SSET_DWORD(sPSP, file_table, ftab_addr);
 	SSET_WORD(sPSP, max_files, uint16_t(20));
 	for (Bit16u ct=0;ct<20;ct++) SetFileHandle(ct,0xff);
 
