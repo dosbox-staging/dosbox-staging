@@ -157,16 +157,37 @@ static void MIXER_UnlockAudioDevice()
 	SDL_UnlockAudioDevice(mixer.sdldevice);
 }
 
+void MixerChannel::RegisterVolCallBack(ApplyVolCallBack cb)
+{
+	apply_volume_callback = cb;
+	const AudioFrame<float> volume{volmain[0], volmain[1]};
+	apply_volume_callback(volume);
+}
+
 void MixerChannel::UpdateVolume()
 {
-	volmul[0]=(Bits)((1 << MIXER_VOLSHIFT)*scale[0]*volmain[0]*mixer.mastervol[0]);
-	volmul[1]=(Bits)((1 << MIXER_VOLSHIFT)*scale[1]*volmain[1]*mixer.mastervol[1]);
+	// If the source is externally managing the volume,
+	// then exclude volmain from our multiplier because it's being
+	// applied up-stream.
+	const float vol_main_left = apply_volume_callback ? 1 : volmain[0];
+	const float vol_main_right = apply_volume_callback ? 1 : volmain[1];
+	volmul[0] = (Bits)((1 << MIXER_VOLSHIFT) * scale[0] * vol_main_left *
+	                   mixer.mastervol[0]);
+	volmul[1] = (Bits)((1 << MIXER_VOLSHIFT) * scale[1] * vol_main_right *
+	                   mixer.mastervol[1]);
 }
 
 void MixerChannel::SetVolume(float _left,float _right) {
 	// Allow unconstrained user-defined values
 	volmain[0] = _left;
 	volmain[1] = _right;
+
+	// If the source is externally managing the volume,
+	// then assign the new volume levels into its pointers.
+	if (apply_volume_callback) {
+		const AudioFrame<float> volume{_left, _right};
+		apply_volume_callback(volume);
+	}
 	UpdateVolume();
 }
 

@@ -63,7 +63,11 @@ extern Bit8u MixTemp[MIXER_BUFSIZE];
 class MixerChannel {
 public:
 	MixerChannel(MIXER_Handler _handler, Bitu _freq, const char * _name);
-	void SetVolume(float _left,float _right);
+
+	// Allows and external source to control the volume up-stream
+	using ApplyVolCallBack = std::function<void(const AudioFrame<float> &vol_level)>;
+	void RegisterVolCallBack(ApplyVolCallBack cb);
+	void SetVolume(float _left, float _right);
 	void SetScale(float f);
 	void SetScale(float _left, float _right);
 	void MapChannels(Bit8u _left, Bit8u _right);
@@ -133,6 +137,11 @@ private:
 	uint32_t peak_amplitude = MAX_AUDIO;
 
 	uint8_t channel_map[2] = {0u, 0u}; // Output channel mapping
+
+	// If an audio source wants to manage the volume, then this callback
+	// will called on mixer volume changes.
+	ApplyVolCallBack apply_volume_callback = nullptr;
+
 	bool interpolate = false;
 	bool last_samples_were_stereo = false;
 	bool last_samples_were_silence = true;
