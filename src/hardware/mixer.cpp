@@ -789,7 +789,10 @@ public:
 		MixerChannel * chan = mixer.channels;
 		while (chan) {
 			if (cmd->FindString(chan->name,temp_line,false)) {
-				MakeVolume((char *)temp_line.c_str(),chan->volmain[0],chan->volmain[1]);
+				float left_vol = 0;
+				float right_vol = 0;
+				MakeVolume((char *)temp_line.c_str(), left_vol, right_vol);
+				chan->SetVolume(left_vol, right_vol);
 			}
 			chan->UpdateVolume();
 			chan = chan->next;
