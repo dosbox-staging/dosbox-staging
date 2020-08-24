@@ -91,12 +91,6 @@ constexpr int16_t WAVE_WIDTH = 1 << 9; // Wave interpolation width (9 bits)
 constexpr uint8_t READ_HANDLERS = 8u;
 constexpr uint8_t WRITE_HANDLERS = 9u;
 
-// A simple stereo audio frame that's used by the Gus and Voice classes.
-struct AudioFrame {
-	float left = 0.0f;
-	float right = 0.0f;
-};
-
 // A group of parameters defining the Gus's voice IRQ control that's also shared
 // (as a reference) into each instantiated voice.
 struct VoiceIrq {
