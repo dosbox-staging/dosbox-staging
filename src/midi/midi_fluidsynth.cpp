@@ -99,6 +99,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 
 	const int cpu_cores = section->Get_int("synth_threads");
 	fluid_settings_setint(fluid_settings.get(), "synth.cpu-cores", cpu_cores);
+	fluid_settings_setstr(fluid_settings.get(), "audio.sample-format", "float");
 
 	fsynth_ptr_t fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                         delete_fluid_synth);
@@ -192,13 +193,17 @@ void MidiHandlerFluidsynth::PlaySysex(uint8_t *sysex, size_t len)
 
 void MidiHandlerFluidsynth::MixerCallBack(uint16_t frames)
 {
-	constexpr uint16_t expected_max_frames = (96000 / 1000) + 4;
-	int16_t data[expected_max_frames * 2]; // two channels per frame
+	constexpr uint16_t max_samples = expected_max_frames * 2; // two channels per frame
+	std::array<float, max_samples> accumulator = {{0}};
+	std::array<int16_t, max_samples> scaled = {{0}};
+
 	while (frames > 0) {
-		const uint16_t len = std::min(frames, expected_max_frames);
-		fluid_synth_write_s16(synth.get(), len, data, 0, 2,
-		                      data, 1, 2);
-		channel->AddSamples_s16(len, data);
+		constexpr uint16_t max_frames = expected_max_frames; // local copy fixes link error
+		const uint16_t len = std::min(frames, max_frames);
+		fluid_synth_write_float(synth.get(), len, accumulator.data(), 0,
+		                        2, accumulator.data(), 1, 2);
+		soft_limiter.Apply(accumulator, scaled, len);
+		channel->AddSamples_s16(len, scaled.data());
 		frames -= len;
 	}
 }
