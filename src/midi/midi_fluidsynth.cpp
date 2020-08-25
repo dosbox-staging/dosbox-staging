@@ -191,6 +191,11 @@ void MidiHandlerFluidsynth::PlaySysex(uint8_t *sysex, size_t len)
 	fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
 }
 
+void MidiHandlerFluidsynth::PrintStats()
+{
+	soft_limiter.PrintStats(mixer_volume);
+}
+
 void MidiHandlerFluidsynth::MixerCallBack(uint16_t frames)
 {
 	constexpr uint16_t max_samples = expected_max_frames * 2; // two channels per frame
@@ -209,7 +214,9 @@ void MidiHandlerFluidsynth::MixerCallBack(uint16_t frames)
 }
 
 static void fluid_destroy(MAYBE_UNUSED Section *sec)
-{}
+{
+	instance.PrintStats();
+}
 
 static void fluid_init(Section *sec)
 {
