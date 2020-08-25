@@ -50,7 +50,7 @@ public:
 	void PlaySysex(uint8_t *sysex, size_t len) override;
 
 private:
-	MidiHandlerFluidsynth() = default;
+	void MixerCallBack(uint16_t len); // see: MIXER_Handler
 
 	static MidiHandlerFluidsynth instance;
 
@@ -58,8 +58,6 @@ private:
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
 	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
 	bool is_open = false;
-
-	static void mixer_callback(uint16_t len); // see: MIXER_Handler
 };
 
 #endif // C_FLUIDSYNTH
