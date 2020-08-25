@@ -42,7 +42,7 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 
 	// TODO Handle storing soundfonts in specific directory and update
 	// the documentation; right now users need to specify full path or
-	// fall on undecumented FluidSynth internal algorithm for picking
+	// fall on undocumented FluidSynth internal algorithm for picking
 	// sf2 files.
 
 	auto *int_prop = secprop.Add_int("fluid_rate", when_idle, 44100);
@@ -57,6 +57,16 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	        "If set to a value greater than 1, then additional synthesis\n"
 	        "threads will be created to take advantage of many CPU cores.\n"
 	        "(min 1, max 256)");
+}
+
+// SetMixerLevel is a callback that's given the user-desired mixer level,
+// which is a floating point multiplier that we apply internally as
+// FluidSynth's gain value. We then read-back the gain, and use that to
+// derive a pre-scale level.
+void MidiHandlerFluidsynth::SetMixerLevel(const AudioFrame &desired_level) noexcept
+{
+	prescale_level.left = INT16_MAX * desired_level.left;
+	prescale_level.right = INT16_MAX * desired_level.right;
 }
 
 bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
@@ -104,6 +114,10 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	                         static_cast<unsigned>(sample_rate), "FSYNTH"),
 	        MIXER_DelChannel);
 
+	// Let the mixer command adjust our internal level
+	const auto set_mixer_level = std::bind(&MidiHandlerFluidsynth::SetMixerLevel,
+	                                       this, std::placeholders::_1);
+	mixer_channel->RegisterLevelCallBack(set_mixer_level);
 	mixer_channel->Enable(true);
 
 	settings = std::move(fluid_settings);
