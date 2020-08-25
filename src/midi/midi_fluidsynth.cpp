@@ -181,6 +181,18 @@ void MidiHandlerFluidsynth::PlaySysex(uint8_t *sysex, size_t len)
 	fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
 }
 
+void MidiHandlerFluidsynth::PrintStats()
+{
+	// Normally prescale is simply a float-multiplier such as 0.5, 1.0, etc.
+	// However in the case of FluidSynth, it produces 32-bit floats between
+	// -1.0 and +1.0, therefore we scale those up to the 16-bit integer range
+	// in addition to the mixer's FSYNTH levels. Before printing statistics,
+	// we need to back-out this integer multiplier.
+	prescale_level.left /= INT16_MAX;
+	prescale_level.right /= INT16_MAX;
+	soft_limiter.PrintStats();
+}
+
 void MidiHandlerFluidsynth::MixerCallBack(uint16_t frames)
 {
 	constexpr uint16_t max_samples = expected_max_frames * 2; // two channels per frame
@@ -199,7 +211,9 @@ void MidiHandlerFluidsynth::MixerCallBack(uint16_t frames)
 }
 
 static void fluid_destroy(MAYBE_UNUSED Section *sec)
-{}
+{
+	instance.PrintStats();
+}
 
 static void fluid_init(Section *sec)
 {
