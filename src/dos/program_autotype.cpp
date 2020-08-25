@@ -147,7 +147,8 @@ void AUTOTYPE::Run()
 	ChangeToLongCmd();
 
 	// Usage
-	if (!cmd->GetCount()) {
+	if (!cmd->GetCount() || cmd->FindExist("-?", false) ||
+	    cmd->FindExist("-help", false)) {
 		PrintUsage();
 		return;
 	}
