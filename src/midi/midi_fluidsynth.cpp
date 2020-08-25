@@ -30,7 +30,7 @@
 #include "control.h"
 #include "cross.h"
 
-MidiHandlerFluidsynth MidiHandlerFluidsynth::instance;
+MidiHandlerFluidsynth instance;
 
 static void init_fluid_dosbox_settings(Section_prop &secprop)
 {
@@ -97,9 +97,13 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	DEBUG_LOG_MSG("MIDI: FluidSynth loaded %d SoundFont files",
 	              fluid_synth_sfcount(fluid_synth.get()));
 
-	mixer_channel_ptr_t mixer_channel(MIXER_AddChannel(mixer_callback,
-	                                                   sample_rate, "FSYNTH"),
-	                                  MIXER_DelChannel);
+	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
+	                                      this, std::placeholders::_1);
+	mixer_channel_ptr_t mixer_channel(
+	        MIXER_AddChannel(mixer_callback,
+	                         static_cast<unsigned>(sample_rate), "FSYNTH"),
+	        MIXER_DelChannel);
+
 	mixer_channel->Enable(true);
 
 	settings = std::move(fluid_settings);
@@ -163,15 +167,15 @@ void MidiHandlerFluidsynth::PlaySysex(uint8_t *sysex, size_t len)
 	fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
 }
 
-void MidiHandlerFluidsynth::mixer_callback(uint16_t frames)
+void MidiHandlerFluidsynth::MixerCallBack(uint16_t frames)
 {
 	constexpr uint16_t expected_max_frames = (96000 / 1000) + 4;
 	int16_t data[expected_max_frames * 2]; // two channels per frame
 	while (frames > 0) {
 		const uint16_t len = std::min(frames, expected_max_frames);
-		fluid_synth_write_s16(instance.synth.get(), len, data, 0, 2,
+		fluid_synth_write_s16(synth.get(), len, data, 0, 2,
 		                      data, 1, 2);
-		instance.channel->AddSamples_s16(len, data);
+		channel->AddSamples_s16(len, data);
 		frames -= len;
 	}
 }
