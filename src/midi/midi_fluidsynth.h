@@ -31,6 +31,7 @@
 #include <fluidsynth.h>
 
 #include "mixer.h"
+#include "soft_limiter.h"
 
 class MidiHandlerFluidsynth final : public MidiHandler {
 private:
@@ -43,6 +44,8 @@ private:
 	        std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
 public:
+	MidiHandlerFluidsynth() : soft_limiter("FSYNTH", prescale_level) {}
+	void PrintStats();
 	const char *GetName() const override { return "fluidsynth"; }
 	bool Open(const char *conf) override;
 	void Close() override;
@@ -50,6 +53,7 @@ public:
 	void PlaySysex(uint8_t *sysex, size_t len) override;
 
 private:
+	static constexpr uint16_t expected_max_frames = (96000 / 1000) + 4;
 	void MixerCallBack(uint16_t len); // see: MIXER_Handler
 	void SetMixerLevel(const AudioFrame &prescale_level) noexcept;
 
@@ -57,6 +61,7 @@ private:
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
 	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
 	AudioFrame prescale_level = {1.0f, 1.0f};
+	SoftLimiter<expected_max_frames> soft_limiter;
 
 	bool is_open = false;
 };
