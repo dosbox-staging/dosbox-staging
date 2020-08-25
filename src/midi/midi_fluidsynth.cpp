@@ -42,7 +42,7 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 
 	// TODO Handle storing soundfonts in specific directory and update
 	// the documentation; right now users need to specify full path or
-	// fall on undecumented FluidSynth internal algorithm for picking
+	// fall on undocumented FluidSynth internal algorithm for picking
 	// sf2 files.
 
 	auto *int_prop = secprop.Add_int("fluid_rate", when_idle, 44100);
@@ -57,6 +57,25 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	        "If set to a value greater than 1, then additional synthesis\n"
 	        "threads will be created to take advantage of many CPU cores.\n"
 	        "(min 1, max 256)");
+}
+
+// SetMixerVolume is a callback that's given the user-desired mixer volume,
+// which is a floating point multiplier that we apply internally as
+// FluidSynth's gain value. We then read-back the gain, and use that to
+// derive a pre-scale volume.
+void MidiHandlerFluidsynth::SetMixerVolume(const AudioFrame<float> &desired_volume) noexcept
+{
+	double gain = static_cast<double>(std::min(desired_volume.left, desired_volume.right));
+	fluid_settings_setnum(settings.get(), "synth.gain", gain);
+	fluid_settings_getnum(settings.get(), "synth.gain", &gain);
+
+	const float gain_f = static_cast<float>(gain);
+	prescale_volume = {INT16_MAX * (desired_volume.left / gain_f),
+	                   INT16_MAX * (desired_volume.right / gain_f)};
+
+	// Finally, we keep track of the as-is external mixer volume, which is
+	// used by the Soft Limiter when making mixer level recommendations.
+	mixer_volume = desired_volume;
 }
 
 bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
@@ -104,6 +123,10 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	                         static_cast<unsigned>(sample_rate), "FSYNTH"),
 	        MIXER_DelChannel);
 
+	// Let the mixer command adjust our internal volume
+	const auto set_mixer_volume = std::bind(&MidiHandlerFluidsynth::SetMixerVolume,
+	                                        this, std::placeholders::_1);
+	mixer_channel->RegisterVolCallBack(set_mixer_volume);
 	mixer_channel->Enable(true);
 
 	settings = std::move(fluid_settings);

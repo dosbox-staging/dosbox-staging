@@ -51,12 +51,16 @@ public:
 
 private:
 	void MixerCallBack(uint16_t len); // see: MIXER_Handler
-
-	static MidiHandlerFluidsynth instance;
+	void SetMixerVolume(const AudioFrame<float> &prescale_volume) noexcept;
 
 	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
 	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
+
+	// Volume scalars - see SetMixerVolume implementation
+	AudioFrame<float> mixer_volume = {1.0f, 1.0f};
+	AudioFrame<float> prescale_volume = {1.0f, 1.0f};
+
 	bool is_open = false;
 };
 
