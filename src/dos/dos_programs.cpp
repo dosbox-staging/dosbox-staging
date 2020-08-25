@@ -1184,6 +1184,14 @@ public:
 	void Run(void) {
 		//Hack To allow long commandlines
 		ChangeToLongCmd();
+
+		// Usage
+		if (!cmd->GetCount() || cmd->FindExist("?", false) ||
+		    cmd->FindExist("-help", false)) {
+			WriteOut(MSG_Get("SHELL_CMD_IMGMOUNT_HELP_LONG"));
+			return;
+		}
+
 		/* In secure mode don't allow people to change imgmount points.
 		 * Neither mount nor unmount */
 		if (control->SecureMode()) {
@@ -1746,8 +1754,39 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_LOADROM_UNRECOGNIZED","ROM file not recognized.\n");
 	MSG_Add("PROGRAM_LOADROM_BASIC_LOADED","BASIC ROM loaded.\n");
 
-	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE","Must specify drive letter to mount image at.\n");
-	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2","Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).\n");
+	MSG_Add("SHELL_CMD_IMGMOUNT_HELP",
+	        "mounts compact disc image(s) or floppy disk image(s) to a given drive letter.\n");
+
+	MSG_Add("SHELL_CMD_IMGMOUNT_HELP_LONG",
+	        "IMGMOUNT DRIVE [imagefile] -t [image_type] -fs [image_format]\n"
+	        "-size [sectorsbytesize, sectorsperhead, heads, cylinders -u DRIVE]\n"
+	        "\n"
+	        " IMGMOUNT DRIVE [imagefile] -t [image_type] -fs [image_format]\n"
+	        " DRIVE		Drive name (letter) the image will use.\n"
+	        " For example: A for the drive letter a: or D for the drive letter d:\n"
+	        " imagefile      Location of the image files to mount in dosbox.\n"
+	        " For example: c:\\games for Windows or ~\\games for Linux\n"
+	        " -t		Valid Image Types: Floppy, ISO, and HDD\n"
+	        " -fs		Valid Filesystem Formats: ISO, FAT, and None.\n"
+	        " -size		The Cylinders, Heads and Sectors specification of the drive.\n"
+	        "                This is only required to create bootable hard disk images.\n"
+	        " -u 		Unmount an image. For example: \"imgmount -u a\" will eject a:\\ \n"
+	        "\n"
+	        "Examples:\n"
+	        "\n"
+	        "Imgmount a CD image of Doom 1's CD as dosbox-staging's optical drive\n"
+			"with drive letter D:\n"
+	        "\n"
+	        "      imgmount d c:\\games\\doom.iso -t iso\n"
+	        "\n"
+	        "Imgmount the cue file of a Quake 1 CUE / BIN file pair to enable CD Audio: \n"
+	        "\n"
+	        "      imgmount d c:\\quake\\quake1.cue -t iso\n");
+
+	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE",
+	        "Must specify drive letter to mount image at.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2",
+	        "Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY",
 		"For \033[33mCD-ROM\033[0m images:   \033[34;1mIMGMOUNT drive-letter location-of-image -t iso\033[0m\n"
 		"\n"
