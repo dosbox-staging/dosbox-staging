@@ -248,6 +248,7 @@ private:
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
 	void SoftLimit(const accumulator_array_t &in, scaled_array_t &out) noexcept;
+	void SetMixerVolume(const AudioFrame<float> &level);
 	void StopPlayback();
 	void UpdateDmaAddress(uint8_t new_address);
 	void UpdateWaveMsw(int32_t &addr) const noexcept;
@@ -278,6 +279,7 @@ private:
 	Voice *voice = nullptr;
 	DmaChannel *dma_channel = nullptr;
 	MixerChannel *audio_channel = nullptr;
+	AudioFrame<float> mixer_volume = {1, 1};
 	uint8_t &adlib_command_reg = adlib_commandreg;
 
 	// Port address
@@ -592,9 +594,13 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 
 	RegisterIoHandlers();
 
-	// Register the Audio and DMA callbacks
+	// Register the Audio and DMA channels
 	audio_channel = mixer_channel.Install(
 		std::bind(&Gus::AudioCallback, this, std::placeholders::_1), 1, "GUS");
+	assert(audio_channel);
+	// Let the mixer command adjust the GUS's internal volume level
+	const auto set_mixer_volume = std::bind(&Gus::SetMixerVolume, this, _1);
+	audio_channel->RegisterVolCallBack(set_mixer_volume);
 
 	UpdateDmaAddress(dma);
 
@@ -617,6 +623,13 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 	}
 }
 
+void Gus::SetMixerVolume(const AudioFrame<float> &requested_volume)
+{
+	// Allow volumes to scale from silent up to 20-fold
+	mixer_volume = {clamp(requested_volume.left, 0.0f, 20.0f),
+	                clamp(requested_volume.right, 0.0f, 20.0f)};
+}
+
 void Gus::AudioCallback(const uint16_t requested_frames)
 {
 	assert(requested_frames <= BUFFER_FRAMES);
@@ -631,6 +644,13 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 		v->get()->GenerateSamples(accumulator, ram, vol_scalars,
 		                          pan_scalars, requested_frames);
 		++v;
+	}
+
+	// Pre-scale the stream by the user's mixer scalar
+	auto val = accumulator.begin();
+	while (val < accumulator.end()) {
+		*val++ *= mixer_volume.left;
+		*val++ *= mixer_volume.right;
 	}
 
 	SoftLimit(accumulator, scaled);
