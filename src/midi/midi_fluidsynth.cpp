@@ -94,45 +94,48 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	// Detailed explanation of all available FluidSynth settings:
 	// http://www.fluidsynth.org/api/fluidsettings.xml
 
+	// Configure the settings and move it into the member
 	const int sample_rate = section->Get_int("fluid_rate");
 	fluid_settings_setnum(fluid_settings.get(), "synth.sample-rate", sample_rate);
 
 	const int cpu_cores = section->Get_int("synth_threads");
 	fluid_settings_setint(fluid_settings.get(), "synth.cpu-cores", cpu_cores);
 	fluid_settings_setstr(fluid_settings.get(), "audio.sample-format", "float");
+	settings = std::move(fluid_settings);
 
-	fsynth_ptr_t fluid_synth(new_fluid_synth(fluid_settings.get()),
+	// Create the fluid-synth object move it into the member
+	fsynth_ptr_t fluid_synth(new_fluid_synth(settings.get()),
 	                         delete_fluid_synth);
 	if (!fluid_synth) {
 		LOG_MSG("MIDI: Failed to create the FluidSynth synthesizer");
 		return false;
 	}
+	synth = std::move(fluid_synth);
 
+	// Load the SoundFont
 	std::string soundfont = section->Get_string("soundfont");
 	Cross::ResolveHomedir(soundfont);
-	if (!soundfont.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
+	if (!soundfont.empty() && fluid_synth_sfcount(synth.get()) == 0) {
+		fluid_synth_sfload(synth.get(), soundfont.data(), true);
 	}
-
 	DEBUG_LOG_MSG("MIDI: FluidSynth loaded %d SoundFont files",
-	              fluid_synth_sfcount(fluid_synth.get()));
+	              fluid_synth_sfcount(synth.get()));
 
+	// Create the mixer channel and move it into the member
 	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
 	                                      this, std::placeholders::_1);
 	mixer_channel_ptr_t mixer_channel(
 	        MIXER_AddChannel(mixer_callback,
 	                         static_cast<unsigned>(sample_rate), "FSYNTH"),
 	        MIXER_DelChannel);
+	channel = std::move(mixer_channel);
 
-	// Let the mixer command adjust our internal volume
+	// Register our volume callback with the mixer
 	const auto set_mixer_volume = std::bind(&MidiHandlerFluidsynth::SetMixerVolume,
 	                                        this, std::placeholders::_1);
-	mixer_channel->RegisterVolCallBack(set_mixer_volume);
-	mixer_channel->Enable(true);
+	channel->RegisterVolCallBack(set_mixer_volume);
 
-	settings = std::move(fluid_settings);
-	synth = std::move(fluid_synth);
-	channel = std::move(mixer_channel);
+	channel->Enable(true);
 	is_open = true;
 	return true;
 }
