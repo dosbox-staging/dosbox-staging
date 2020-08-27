@@ -14,7 +14,7 @@ env:
   # Latest package: https://scan.coverity.com/download
   PACKAGE_VERSION: "2019.03"
   TARBALL_GDRIVE_ID: ${{ secrets.GoogleDriveId }}
-  TARBALL_SHA256: "0bec2d12e7fca3fe4b6df843d9584e2a58e273970a8549c100541f86dbc0da4e"
+  TARBALL_SHA256: "e387a444aad037dc011313f10a663d2397749cce3feb8fa512acd37ff8941046"
 
 jobs:
   coverity_scan:
