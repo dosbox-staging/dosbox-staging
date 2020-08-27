@@ -21,11 +21,19 @@
 
 #include "dos_inc.h"
 
+#include <cassert>
 #include <cstdlib>
 #include <cstring>
 
 #include "mem.h"
 #include "support.h"
+
+static void dos_memset(PhysPt addr, uint8_t val, size_t n)
+{
+	assert(n < UINT32_MAX);
+	for (uint32_t i = 0; i < n; ++i)
+		mem_writeb(addr + i, val);
+}
 
 void DOS_ParamBlock::Clear()
 {
@@ -61,8 +69,8 @@ void DOS_InfoBlock::SetLocation(uint16_t segment)
 	pt = PhysMake(seg, 0);
 
 	/* Clear the initial Block */
-	for(Bitu i=0;i<sizeof(sDIB);i++) mem_writeb(pt+i,0xff);
-	for(Bitu i=0;i<14;i++) mem_writeb(pt+i,0);
+	dos_memset(pt, 0xff, sizeof(sDIB));
+	dos_memset(pt, 0x00, 14);
 
 	SSET_WORD(sDIB, regCXfrom5e, uint16_t(0));
 	SSET_WORD(sDIB, countLRUcache, uint16_t(0));
@@ -329,8 +337,8 @@ void DOS_DTA::SetupSearch(uint8_t drive, uint8_t attr, char *pattern)
 	SSET_BYTE(sDTA, sdrive, drive);
 	SSET_BYTE(sDTA, sattr, attr);
 	/* Fill with spaces */
-	Bitu i;
-	for (i=0;i<11;i++) mem_writeb(pt+offsetof(sDTA,sname)+i,' ');
+	dos_memset(pt + offsetof(sDTA, sname), ' ', sizeof(sDTA::sname));
+	dos_memset(pt + offsetof(sDTA, sext), ' ', sizeof(sDTA::sext));
 	char * find_ext;
 	find_ext=strchr(pattern,'.');
 	if (find_ext) {
@@ -399,8 +407,7 @@ void DOS_FCB::Create(bool _extended) {
 	Bitu fill;
 	if (_extended) fill=33+7;
 	else fill=33;
-	Bitu i;
-	for (i=0;i<fill;i++) mem_writeb(real_pt+i,0);
+	dos_memset(real_pt, 0x00, fill);
 	pt=real_pt;
 	if (_extended) {
 		mem_writeb(real_pt,0xff);
@@ -530,7 +537,6 @@ void DOS_FCB::SetResult(Bit32u size,Bit16u date,Bit16u time,Bit8u attr) {
 void DOS_SDA::Init()
 {
 	/* Clear */
-	for (size_t i = 0; i < sizeof(sSDA); ++i)
-		mem_writeb(pt + i, 0x00);
+	dos_memset(pt, 0x00, sizeof(sSDA));
 	SSET_BYTE(sSDA, drive_crit_error, uint8_t(0xff));
 }
