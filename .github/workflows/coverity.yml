@@ -13,7 +13,7 @@ env:
   PACKAGE_DIR: "/dev/shm/coverity-package"
   # Latest package: https://scan.coverity.com/download
   PACKAGE_VERSION: "2019.03"
-  TARBALL_GDRIVE_ID: ${{ secrets.GoogleDriveId }}
+  TARBALL_URL: "https://github.com/dosbox-staging/dosbox-staging.github.io/releases/download/artifacts/coverity.tar.zst"
   TARBALL_SHA256: "e387a444aad037dc011313f10a663d2397749cce3feb8fa512acd37ff8941046"
 
 jobs:
@@ -30,8 +30,7 @@ jobs:
 
       - name: Install C++ compiler and dependencies
         run: |
-          sudo apt-get install zstd python3-setuptools $(./scripts/list-build-dependencies.sh -m apt -c gcc)
-          sudo pip3 install gdown
+          sudo apt-get install curl zstd $(./scripts/list-build-dependencies.sh -m apt -c gcc)
 
       - name: Prepare the Coverity package cache
         uses: actions/cache@v2
@@ -41,7 +40,7 @@ jobs:
           key: coverity-${{ env.PACKAGE_VERSION }}
       - name:  Fetch the Coverity package
         if:    steps.cache-coverity.outputs.cache-hit != 'true'
-        run:   gdown --id "${TARBALL_GDRIVE_ID}" -O "${PACKAGE}"
+        run:   curl -L "${TARBALL_URL}" > "${PACKAGE}"
 
       - name: Install the Coverity package
         run: |
