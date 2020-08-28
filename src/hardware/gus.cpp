@@ -1334,8 +1334,7 @@ void Gus::WriteToRegister()
 		dma_ctrl = register_data >> 8;
 		if (dma_ctrl & 1)
 			StartDmaTransfers();
-		break;
-
+		return;
 	case 0x42: // Gravis DRAM DMA address register
 		dma_addr = register_data;
 		return;
