@@ -231,6 +231,7 @@ bool CDROM_Interface_Image::PlayAudioSector(unsigned long start,unsigned long le
 	// We might want to do some more checks. E.g valid start and length
 	SDL_mutexP(player.mutex);
 	player.cd = this;
+	player.bufLen = 0;
 	player.currFrame = start;
 	player.targetFrame = start + len;
 	int track = GetTrack(start) - 1;
