@@ -999,11 +999,10 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 		return dram_addr < ram.size() ? ram.at(dram_addr) : 0;
 	default:
 #if LOG_GUS
-		LOG_MSG("GUS Read at port 0x%x", port);
+		LOG_MSG("GUS: Read at port %#x", static_cast<uint16_t>(port));
 #endif
 		break;
 	}
-
 	return 0xff;
 }
 
@@ -1072,8 +1071,10 @@ uint16_t Gus::ReadFromRegister()
 	case 0x8d: // Voice volume control register
 		return static_cast<uint16_t>(voice->ReadVolState() << 8);
 	default:
-		// DEBUG_LOG_MSG(GUS: register 0x%x not implemented for
-		// reading", selected_register);
+#if LOG_GUS
+		LOG_MSG("GUS: Register %#x not implemented for reading",
+		        selected_register);
+#endif
 		break;
 	}
 	return register_data;
@@ -1285,7 +1286,8 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		break;
 	default:
 #if LOG_GUS
-		LOG_MSG("GUS: Write to port 0x%x with value %x", port, val);
+		LOG_MSG("GUS: Write to port %#x with value %x",
+		        static_cast<uint16_t>(port), static_cast<uint32_t>(val));
 #endif
 		break;
 	}
@@ -1447,8 +1449,10 @@ void Gus::WriteToRegister()
 			CheckVoiceIrq();
 		break;
 	default:
-		// DEBUG_LOG_MSG(GUS: register 0x%x not implemented for
-		// writing", selected_register);
+#if LOG_GUS
+		LOG_MSG("GUS: Register %#x not implemented for writing",
+		        selected_register);
+#endif
 		break;
 	}
 	return;
