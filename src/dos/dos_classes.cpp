@@ -292,43 +292,18 @@ bool DOS_PSP::SetNumFiles(uint16_t file_num)
 	if (file_num < 20)
 		file_num = 20;
 
-	if (file_num > 20) {
+	if (file_num > 20 && ((file_num + 2) > SGET_WORD(sPSP, max_files))) {
 		// Allocate needed paragraphs
 		file_num += 2; // Add a few more files for safety
 		const uint16_t para = (file_num / 16) + ((file_num % 16) > 0);
 		const RealPt data = RealMake(DOS_GetMemory(para), 0);
+		for (uint16_t i = 0; i < file_num; i++) {
+			const uint8_t handle = (i < 20 ? GetFileHandle(i) : 0xFF);
+			mem_writeb(Real2Phys(data) + i, handle);
+		}
 		SSET_DWORD(sPSP, file_table, data);
-		SSET_WORD(sPSP, max_files, file_num);
-
-		// enumerating 20 constexpr integers manually is easier and
-		// faster than actually using std::integer_sequence...
-		// (second parameter to SGET_BYTE must be constexpr)
-		SetFileHandle(0, SGET_BYTE(sPSP, files[0]));
-		SetFileHandle(1, SGET_BYTE(sPSP, files[1]));
-		SetFileHandle(2, SGET_BYTE(sPSP, files[2]));
-		SetFileHandle(3, SGET_BYTE(sPSP, files[3]));
-		SetFileHandle(4, SGET_BYTE(sPSP, files[4]));
-		SetFileHandle(5, SGET_BYTE(sPSP, files[5]));
-		SetFileHandle(6, SGET_BYTE(sPSP, files[6]));
-		SetFileHandle(7, SGET_BYTE(sPSP, files[7]));
-		SetFileHandle(8, SGET_BYTE(sPSP, files[8]));
-		SetFileHandle(9, SGET_BYTE(sPSP, files[9]));
-		SetFileHandle(10, SGET_BYTE(sPSP, files[10]));
-		SetFileHandle(11, SGET_BYTE(sPSP, files[11]));
-		SetFileHandle(12, SGET_BYTE(sPSP, files[12]));
-		SetFileHandle(13, SGET_BYTE(sPSP, files[13]));
-		SetFileHandle(14, SGET_BYTE(sPSP, files[14]));
-		SetFileHandle(15, SGET_BYTE(sPSP, files[15]));
-		SetFileHandle(16, SGET_BYTE(sPSP, files[16]));
-		SetFileHandle(17, SGET_BYTE(sPSP, files[17]));
-		SetFileHandle(18, SGET_BYTE(sPSP, files[18]));
-		SetFileHandle(19, SGET_BYTE(sPSP, files[19]));
-
-		for (uint16_t i = 20; i < file_num; i++)
-			SetFileHandle(i, 0xFF);
-	} else {
-		SSET_WORD(sPSP, max_files, file_num);
 	}
+	SSET_WORD(sPSP, max_files, file_num);
 	return true;
 }
 
