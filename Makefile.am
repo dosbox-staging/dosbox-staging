@@ -4,7 +4,7 @@ AM_MAKEFLAGS ?= --no-print-directory
 
 EXTRA_DIST = autogen.sh
 
-SUBDIRS = docs include src
+SUBDIRS = docs include src tests
 
 # Per the auto-tools clean guidelines:
 # https://www.gnu.org/savannah-checkouts/gnu/automake/manual/html_node/Clean.html#Clean
@@ -35,10 +35,15 @@ distclean-local:
 	-find . -name Makefile.in -type f -delete
 	-find . -name .deps -type d -exec rm -rf {} +
 
-# 'run' is a convenience target for development, it runs the binary
-# immediately after the build.
+# 'run' and 'test' are convenience targets for development, they invoke the relevant
+# binaries immediately after the build.
 
-.PHONY: run
+.PHONY: run test
 
 run: all
 	./src/dosbox$(EXEEXT)
+
+if BUILD_TESTS
+test: all
+	./tests/tests$(EXEEXT)
+endif

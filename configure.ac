@@ -568,6 +568,47 @@ else
    AC_MSG_RESULT(no)
 fi
 
+dnl Unit Tests
+dnl ----------
+dnl 
+AC_ARG_ENABLE([tests],
+              AS_HELP_STRING([--enable-tests],
+                             [Build Unit Tests (requires Google Test framework)]))
+
+if test "${enable_tests}" = "yes" ; then
+    PREGTEST_CXXFLAGS="$CXXFLAGS"
+    dnl Start with checking if gtest is available as a static lib
+    dnl this will work e.g. on Debian or Ubuntu
+    AC_MSG_CHECKING(for Google Test framework (static lib))
+    CXXFLAGS="-Wl,-Bstatic -lgtest_main -lgtest -Wl,-Bdynamic"
+    AC_LINK_IFELSE(
+        [AC_LANG_SOURCE([
+            #include <gtest/gtest.h>
+	    namespace { TEST(Foo, Bar) { ASSERT_TRUE(true); } }
+        ])],
+        [AC_MSG_RESULT(yes); HAVE_GTEST=yes; HAVE_GTEST_STATIC=yes],
+        [AC_MSG_RESULT(no)])
+    dnl Also check if maybe it's available as a shared lib
+    dnl this will work e.g. on Fedora or Arch
+    AC_MSG_CHECKING(for Google Test framework (shared lib))
+    CXXFLAGS="-lgtest_main -lgtest"
+    AC_LINK_IFELSE(
+        [AC_LANG_SOURCE([
+            #include <gtest/gtest.h>
+	    namespace { TEST(Foo, Bar) { ASSERT_TRUE(true); } }
+        ])],
+        [AC_MSG_RESULT(yes); HAVE_GTEST=yes],
+        [AC_MSG_RESULT(no)])
+    dnl Fail loudly if gtest is missing
+    AS_IF([test "${HAVE_GTEST}" != "yes"],
+        [AC_MSG_ERROR(Google Test framework not found!)])
+    dnl Restore C++ compilation flags
+    CXXFLAGS="$PREGTEST_CXXFLAGS"
+fi
+
+AM_CONDITIONAL(BUILD_TESTS, test "${HAVE_GTEST}" = "yes")
+AM_CONDITIONAL(USE_GTEST_STATIC, test "${HAVE_GTEST_STATIC}" = "yes")
+
 dnl Check for mprotect. Needed for 64 bits linux
 AH_TEMPLATE(C_HAVE_MPROTECT,[Define to 1 if you have the mprotect function])
 AC_CHECK_HEADER([sys/mman.h], [
@@ -666,6 +707,8 @@ AH_BOTTOM([#if C_ATTRIBUTE_ALWAYS_INLINE
 
 AC_CONFIG_FILES([
 Makefile
+docs/Makefile
+include/Makefile
 src/Makefile
 src/cpu/Makefile
 src/cpu/core_full/Makefile
@@ -691,7 +734,6 @@ src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile
 src/platform/visualc/Makefile
-include/Makefile
-docs/Makefile
+tests/Makefile
 ])
 AC_OUTPUT
