@@ -35,6 +35,13 @@ jobs:
             os: ubuntu-20.04
             flags: -c clang -v 10
             max_warnings: 8
+          - name: Ubuntu, +tests
+            os: ubuntu-20.04
+            config_flags: --enable-tests
+            add_packages: libgtest-dev
+            flags: -c gcc
+            run_tests: true
+            max_warnings: -1
           - name: Ubuntu, +debug
             os: ubuntu-20.04
             flags: -c gcc
@@ -55,7 +62,7 @@ jobs:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update
       - name: Install C++ compiler and libraries
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt ${{ matrix.conf.flags }})
+        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt ${{ matrix.conf.flags }}) ${{ matrix.conf.add_packages }}
       - name:  Prepare compiler cache
         id:    prep-ccache
         shell: bash
@@ -75,7 +82,11 @@ jobs:
         run:  ./scripts/log-env.sh
       - name: Build
         run:  ./scripts/build.sh -t Debug ${{ matrix.conf.flags }} ${{ matrix.conf.config_flags }}
+      - name: Run tests
+        if:   matrix.conf.run_tests
+        run:  ./tests/tests
       - name: Summarize warnings
+        if:   matrix.conf.run_tests != true
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:  ./scripts/count-warnings.py build.log
