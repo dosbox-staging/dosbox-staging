@@ -336,9 +336,6 @@ void CSerialModem::Reset(){
 	echo = true;
 	doresponse = 0;
 	numericresponse = false;
-
-	/* Default to direct null modem connection.  Telnet mode interprets IAC codes */
-	telnetmode = false;
 }
 
 void CSerialModem::EnterIdleState(){
@@ -391,7 +388,18 @@ void CSerialModem::EnterConnectedState() {
 	CSerial::setRI(false);
 }
 
-void CSerialModem::DoCommand() {
+template <size_t N>
+bool is_next_token(const char (&a)[N], const char *b) noexcept
+{
+	// Is 'b' at least as long as 'a'?
+	constexpr size_t N_without_null = N - 1;
+	if (strnlen(b, N) < N_without_null)
+		return false;
+	return (strncmp(a, b, N_without_null) == 0);
+}
+
+void CSerialModem::DoCommand()
+{
 	cmdbuf[cmdpos] = 0;
 	cmdpos = 0;			//Reset for next command
 	upcase(cmdbuf);
@@ -414,23 +422,46 @@ void CSerialModem::DoCommand() {
 		SendRes(ResERROR);
 		return;
 	}
-	if (strstr(cmdbuf,"NET0")) {
-		telnetmode = false;
-		SendRes(ResOK);
-		return;
-	}
-	else if (strstr(cmdbuf,"NET1")) {
-		telnetmode = true;
-		SendRes(ResOK);
-		return;
-	}
-
 	char * scanbuf = &cmdbuf[2];
 	while (1) {
 		// LOG_MSG("SERIAL: Port %" PRIu8 " loopstart ->%s<-",
 		//         GetPortNumber(), scanbuf);
 		char chr = GetChar(scanbuf);
 		switch (chr) {
+
+		// Multi-character AT-commands are prefixed with +
+		// -----------------------------------------------
+		// Note: successfully finding your multi-char command
+		// requires moving the scanbuf position one beyond the
+		// the last character in the multi-char sequence to ensure
+		// single-character detection resumes on the next character.
+		// Either break if successful or fail with SendRes(ResERROR)
+		// and return (halting the command sequence all together).
+		case '+':
+			// +NET1 enables telnet-mode and +NET0 disables it
+			if (is_next_token("NET", scanbuf)) {
+				// only walk the pointer ahead if the command matches
+				scanbuf += 3;
+				const uint32_t requested_mode = ScanNumber(scanbuf);
+
+				// If the mode isn't valid then stop parsing
+				if (requested_mode != 1 && requested_mode != 0) {
+					SendRes(ResERROR);
+					return;
+				}
+				// Inform the user on changes
+				if (telnet_mode != static_cast<bool>(requested_mode)) {
+					telnet_mode = requested_mode;
+					LOG_MSG("SERIAL: Port %" PRIu8 " telnet-mode %s",
+					        GetPortNumber(),
+					        telnet_mode ? "enabled" : "disabled");
+				}
+				break;
+			}
+			// If the command wasn't recognized then stop parsing
+			SendRes(ResERROR);
+			return;
+
 		case 'D': { // Dial
 			char * foundstr = &scanbuf[0];
 			if (*foundstr == 'T' || *foundstr == 'P')
