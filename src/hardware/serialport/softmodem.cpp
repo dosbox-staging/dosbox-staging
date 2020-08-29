@@ -410,7 +410,7 @@ void CSerialModem::DoCommand()
 	cmdbuf[cmdpos] = 0;
 	cmdpos = 0;			//Reset for next command
 	upcase(cmdbuf);
-	LOG_MSG("SERIAL: Port %" PRIu8 " command sent to modem: ->%s<-\n",
+	LOG_MSG("SERIAL: Port %" PRIu8 " command sent to modem: ->%s<-",
 	        GetPortNumber(), cmdbuf);
 	/* Check for empty line, stops dialing and autoanswer */
 	if (!cmdbuf[0]) {
