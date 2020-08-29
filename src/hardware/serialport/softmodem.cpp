@@ -127,8 +127,15 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 
 	CSerial::Init_Registers();
 	Reset(); // reset calls EnterIdleState
-
 	setEvent(SERIAL_POLLING_EVENT,1);
+
+	// Enable telnet-mode if configured
+	if (getUintFromString("telnet:", val, cmd)) {
+		telnetmode = (val == 1);
+		LOG_MSG("SERIAL: Port %" PRIu8 " telnet-mode %s",
+		        GetPortNumber(), telnetmode ? "enabled" : "disabled");
+	}
+
 	InstallationSuccessful=true;
 }
 
