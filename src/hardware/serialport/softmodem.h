@@ -211,7 +211,12 @@ public:
 	std::unique_ptr<CFifo> tqueue;
 
 protected:
-	char cmdbuf[255] = {0};
+	// The AT command line can consist of a 99-character command sequence
+	// including the AT prefix followed by "D<phone/hostname>", where the
+	// hostname can reach a length of up to 253 characters.
+	// AT<97-chars>D<253-chars> is a string of up to 353 characters plus a
+	// null.
+	char cmdbuf[354] = {0};
 	bool commandmode = false; // true: interpret input as commands
 	bool echo = false;        // local echo on or off
 	bool oldDTRstate = false;

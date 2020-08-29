@@ -467,8 +467,8 @@ void CSerialModem::DoCommand()
 			if (*foundstr == 'T' || *foundstr == 'P')
 				foundstr++;
 
-			// Small protection against empty line and long string
-			if ((!foundstr[0]) || (strlen(foundstr) > 100)) {
+			// Small protection against empty line or hostnames beyond the 253-char limit
+			if ((!foundstr[0]) || (strlen(foundstr) > 253)) {
 				SendRes(ResERROR);
 				return;
 			}
