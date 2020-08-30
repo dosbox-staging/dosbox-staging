@@ -5,6 +5,10 @@ AC_PREREQ(2.50)
 AC_CONFIG_SRCDIR(README)
 AC_CONFIG_MACRO_DIR([m4])
 
+dnl Turn on less verbose makefiles by default
+dnl Change to 'no' or comment-out when debugging the buildsystem
+AM_SILENT_RULES([yes])
+
 dnl Check for pkg-config
 PKG_PROG_PKG_CONFIG
 
