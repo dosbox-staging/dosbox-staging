@@ -91,24 +91,17 @@ else
   AC_MSG_RESULT([no])
 fi
 
-dnl Checks for header files.
-
 dnl Checks for typedefs, structures, and compiler characteristics.
-AC_C_CONST
 AC_C_INLINE
-AC_TYPE_SIZE_T
 AC_STRUCT_TM
-AC_CHECK_SIZEOF(unsigned char)
-AC_CHECK_SIZEOF(unsigned short)
-AC_CHECK_SIZEOF(unsigned int)
-AC_CHECK_SIZEOF(unsigned long)
-AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(int *)
 
 dnl Require compiler with C++14 support.
 dnl Allow GNU extensions to work around MinGW bugs around POSIX compatibility.
 AC_LANG(C++)
 AX_CXX_COMPILE_STDCXX_14(ext, mandatory)
+
+dnl Checks for header files.
 
 dnl some semi complex check for sys/socket so it works on darwin as well
 AC_CHECK_HEADERS([stdlib.h sys/types.h])
