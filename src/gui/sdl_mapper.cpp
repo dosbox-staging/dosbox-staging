@@ -2282,6 +2282,10 @@ static void CreateDefaultBinds() {
 	CreateStringBind(buffer);
 	sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_LALT);
 	CreateStringBind(buffer);
+	sprintf(buffer, "mod_3 \"key %d\"", SDL_SCANCODE_RSHIFT);
+	CreateStringBind(buffer);
+	sprintf(buffer, "mod_3 \"key %d\"", SDL_SCANCODE_LSHIFT);
+	CreateStringBind(buffer);
 	for (CHandlerEventVector_it hit = handlergroup.begin(); hit != handlergroup.end(); ++hit) {
 		(*hit)->MakeDefaultBind(buffer);
 		CreateStringBind(buffer);

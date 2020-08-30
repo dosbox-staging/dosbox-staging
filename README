@@ -1158,8 +1158,12 @@ BIND
     joystick(s) (as reported by SDL), which is connected to the EVENT.
 mod1,2,3
     Modifiers. These are keys you need to have to be pressed while pressing
-    BIND. mod1 = CTRL and mod2 = ALT. These are generally only used when you
-    want to change the special keys of DOSBox.
+    BIND.
+       mod1 = CTRL (left or right)
+       mod2 = ALT (left or right)
+       mod3 = SHIFT (left or right)
+    These are generally only used when you want to change the special keys
+    of DOSBox.
 Add
     Add a new BIND to this EVENT. Basically add a key from your keyboard or an
     event from the joystick (button press, axis/hat movement) which will
