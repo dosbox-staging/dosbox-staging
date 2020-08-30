@@ -93,6 +93,7 @@ fi
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
+AC_C_BIGENDIAN
 AC_STRUCT_TM
 AC_CHECK_SIZEOF(int *)
 
@@ -233,9 +234,6 @@ if test x$alsa_midi = xtrue ; then
   AM_PATH_ALSA(0.9.0, AC_DEFINE(HAVE_ALSA,1,[Define to 1 to use ALSA for MIDI]) , : )
   CXXFLAGS="$CXXFLAGS $ALSA_CFLAGS"
 fi
-
-#Check for big endian machine, should #define WORDS_BIGENDIAN if so
-AC_C_BIGENDIAN
 
 #Features to enable/disable
 AH_TEMPLATE(C_DEBUG,[Define to 1 to enable internal debugger, requires ncurses or pdcurses])
