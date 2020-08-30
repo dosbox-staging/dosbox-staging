@@ -280,7 +280,7 @@ fi
 
 dnl The target cpu checks for dynamic cores
 AH_TEMPLATE(C_TARGETCPU,[The type of cpu this target has])
-AC_MSG_CHECKING(for target cpu type) 
+AC_MSG_CHECKING(for target cpu type)
 case "$host_cpu" in
   x86_64 | amd64)
     AC_DEFINE(C_TARGETCPU,X86_64)
@@ -366,8 +366,8 @@ AC_ARG_ENABLE(dynamic-core,AC_HELP_STRING([--disable-dynamic-core],[Disable all 
 
 AH_TEMPLATE(C_DYNAMIC_X86,[Define to 1 to use x86/x64 dynamic cpu core])
 AC_ARG_ENABLE(dynamic-x86,AC_HELP_STRING([--disable-dynamic-x86],[Disable x86/x64 dynamic cpu core]),,enable_dynamic_x86=yes)
-AC_MSG_CHECKING(whether x86 dynamic cpu core will be enabled) 
-if test x$enable_dynamic_x86 = xno -o x$enable_dynamic_core = xno; then 
+AC_MSG_CHECKING(whether x86 dynamic cpu core will be enabled)
+if test x$enable_dynamic_x86 = xno -o x$enable_dynamic_core = xno; then
    AC_MSG_RESULT(no)
 else
   if test x$c_targetcpu = xx86 -o x$c_targetcpu = xx86_64; then
@@ -392,7 +392,7 @@ dnl x86 only enable it if dynamic-x86 is disabled.
     else
         AC_MSG_RESULT([no, using dynamic-x86])
     fi
-  else 
+  else
     if test x$c_targetcpu = xarm -o x$c_targetcpu = xppc64le -o x$c_targetcpu = xpowerpc ; then
       AC_DEFINE(C_DYNREC,1)
       AC_MSG_RESULT(yes)
