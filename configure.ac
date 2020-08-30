@@ -192,12 +192,6 @@ AC_MSG_CHECKING(if compiler allows __attribute__((always_inline)) )
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([ inline void __attribute__((always_inline)) test(){}
 ])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_ALWAYS_INLINE)],AC_MSG_RESULT(no))
 
-AH_TEMPLATE([C_ATTRIBUTE_FASTCALL],[Determines if the compiler supports fastcall attribute.])
-AC_MSG_CHECKING(if compiler allows __attribute__((fastcall)) )
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([ void __attribute__((fastcall)) test(){}
-])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_FASTCALL)],AC_MSG_RESULT(no))
-
-
 CFLAGS="$OLDCFLAGS"
 
 
@@ -683,12 +677,6 @@ AH_BOTTOM([#if C_ATTRIBUTE_ALWAYS_INLINE
 #define INLINE inline __attribute__((always_inline))
 #else
 #define INLINE inline
-#endif])
-
-AH_BOTTOM([#if C_ATTRIBUTE_FASTCALL
-#define DB_FASTCALL __attribute__((fastcall))
-#else
-#define DB_FASTCALL
 #endif])
 
 AC_CONFIG_FILES([
