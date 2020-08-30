@@ -886,7 +886,7 @@ void VGA_SetupOther(void) {
 		if(!mono_cga) {
 			MAPPER_AddHandler(IncreaseHue,MK_f11,MMOD2,"inchue","Inc Hue");
 			MAPPER_AddHandler(DecreaseHue,MK_f11,0,"dechue","Dec Hue");
-			MAPPER_AddHandler(CGAModel,MK_f11,MMOD1|MMOD2,"cgamodel","CGA Model");
+			MAPPER_AddHandler(CGAModel,MK_f11,MMOD1|MMOD_ALT_OR_SHIFT,"cgamodel","CGA Model");
 			MAPPER_AddHandler(Composite,MK_f12,0,"cgacomp","CGA Comp");
 		} else {
 			MAPPER_AddHandler(CycleMonoCGAPal,MK_f11,0,"monocgapal","Mono CGA Pal"); 

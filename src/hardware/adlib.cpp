@@ -883,7 +883,7 @@ Module::Module(Section *configuration)
 	WriteHandler[2].Install(base+8,OPL_Write,IO_MB, 2);
 	ReadHandler[2].Install(base+8,OPL_Read,IO_MB, 1);
 
-	MAPPER_AddHandler(OPL_SaveRawEvent,MK_f7,MMOD1|MMOD2,"caprawopl","Cap OPL");
+	MAPPER_AddHandler(OPL_SaveRawEvent,MK_f7,MMOD1|MMOD_ALT_OR_SHIFT,"caprawopl","Cap OPL");
 }
 
 Module::~Module() {

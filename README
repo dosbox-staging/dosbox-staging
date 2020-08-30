@@ -1043,26 +1043,29 @@ For more information use the /? command line switch with the programs.
 5. Special Keys:
 ================
 
-ALT-ENTER     Switch to full screen and back.
-ALT-PAUSE     Pause emulation (hit ALT-PAUSE again to continue).
-CTRL-F1       Start the keymapper.
-CTRL-F4       Change between mounted floppy/CD images. Update directory cache 
-              for all drives.
-CTRL-ALT-F5   Start/Stop creating a movie of the screen. (avi video capturing)
-CTRL-F5       Save a screenshot. (PNG format)
-CTRL-F6       Start/Stop recording sound output to a wave file.
-CTRL-ALT-F7   Start/Stop recording of OPL commands. (DRO format)
-CTRL-ALT-F8   Start/Stop the recording of raw MIDI commands.
-CTRL-F7       Decrease frameskip.
-CTRL-F8       Increase frameskip.
-CTRL-F9       Kill DOSBox.
-CTRL-F10      Capture/Release the mouse.
-CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
-CTRL-F12      Speed up emulation (Increase DOSBox Cycles)*.
-ALT-F12       Unlock speed (turbo button/fast forward)**.
-CTRL-ALT-HOME Restart DOSBox.
-F11, ALT-F11  (machine=cga) change tint in NTSC output modes***.
-F11           (machine=hercules) cycle through amber, green, white colouring***.
+ALT-ENTER      Switch to full screen and back.
+ALT-PAUSE      Pause emulation (hit ALT-PAUSE again to continue).
+CTRL-F1        Start the keymapper.
+CTRL-F4        Change between mounted floppy/CD images. Update directory cache 
+               for all drives.
+CTRL-[MOD]-F5  Start/Stop creating a movie of the screen. (avi video capturing)
+CTRL-F5        Save a screenshot. (PNG format)
+CTRL-F6        Start/Stop recording sound output to a wave file.
+CTRL-[MOD]-F7  Start/Stop recording of OPL commands. (DRO format)
+CTRL-[MOD]-F8  Start/Stop the recording of raw MIDI commands.
+CTRL-F7        Decrease frameskip.
+CTRL-F8        Increase frameskip.
+CTRL-F9        Kill DOSBox.
+CTRL-F10       Capture/Release the mouse.
+CTRL-F11       Slow down emulation (Decrease DOSBox Cycles).
+CTRL-F12       Speed up emulation (Increase DOSBox Cycles)*.
+ALT-F12        Unlock speed (turbo button/fast forward)**.
+CTRL-ALT-HOME  Restart DOSBox.
+F11, [MOD]-F11 (machine=cga) change tint in NTSC output modes***.
+F11            (machine=hercules) cycle through amber, green, white colouring***.
+
+[MOD] is SHIFT on Linux
+[MOD] is ALT on Window, macOS, and other non-Linux OSes.
 
 *NOTE: Once you increase your DOSBox cycles beyond your computer CPU resources,
        it will produce the same effect as slowing down the emulation.

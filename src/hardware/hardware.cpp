@@ -754,10 +754,10 @@ public:
 		capturedir = proppath->realpath;
 		CaptureState = 0;
 		MAPPER_AddHandler(CAPTURE_WaveEvent,MK_f6,MMOD1,"recwave","Rec Wave");
-		MAPPER_AddHandler(CAPTURE_MidiEvent,MK_f8,MMOD1|MMOD2,"caprawmidi","Cap MIDI");
+		MAPPER_AddHandler(CAPTURE_MidiEvent,MK_f8,MMOD1|MMOD_ALT_OR_SHIFT,"caprawmidi","Cap MIDI");
 #if (C_SSHOT)
 		MAPPER_AddHandler(CAPTURE_ScreenShotEvent,MK_f5,MMOD1,"scrshot","Screenshot");
-		MAPPER_AddHandler(CAPTURE_VideoEvent,MK_f5,MMOD1|MMOD2,"video","Video");
+		MAPPER_AddHandler(CAPTURE_VideoEvent,MK_f5,MMOD1|MMOD_ALT_OR_SHIFT,"video","Video");
 #endif
 	}
 	~HARDWARE(){
