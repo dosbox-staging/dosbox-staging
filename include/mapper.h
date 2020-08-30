@@ -46,4 +46,13 @@ void MAPPER_AutoType(std::vector<std::string> &sequence,
 #define MMOD1 0x1
 #define MMOD2 0x2
 
+// Linux uses SHIFT
+#if defined(LINUX)
+#define MMOD_ALT_OR_SHIFT 0x4
+
+// Non-Linux uses ALT
+#else
+#define MMOD_ALT_OR_SHIFT 0x2
+#endif
+
 #endif
