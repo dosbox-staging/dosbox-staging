@@ -36,7 +36,7 @@ struct Operator;
 struct Channel;
 
 #if (DBOPL_WAVE == WAVE_HANDLER)
-typedef Bits ( DB_FASTCALL *WaveHandler) ( Bitu i, Bitu volume );
+typedef Bits (*WaveHandler)(Bitu i, Bitu volume);
 #endif
 
 typedef Bits ( DBOPL::Operator::*VolumeHandler) ( );

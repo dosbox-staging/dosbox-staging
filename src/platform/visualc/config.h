@@ -70,7 +70,6 @@
 #define C_DIRECTSERIAL 1
 
 #define INLINE __forceinline
-#define DB_FASTCALL __fastcall
 
 // Enables mathematical constants under Visual Studio, such as M_PI
 // https://docs.microsoft.com/en-us/cpp/c-runtime-library/math-constants
