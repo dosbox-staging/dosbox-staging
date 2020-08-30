@@ -219,11 +219,6 @@ case "$host" in
    [Compiler supports Core Audio headers])],
    AC_MSG_RESULT(no);AC_MSG_WARN([Compiler can't compile Apple headers. CoreAudio functionality disabled. Please use the Apple compiler!]))
    ;;
-
-  *)
-   AC_MSG_CHECKING(if compiler supports Apple's MIDI headers)
-   AC_MSG_RESULT([no, not on Apple])
-   ;;
 esac
 
 dnl enable disable alsa and pass it's cflags to CXXFLAGS
@@ -348,18 +343,15 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #if SIZEOF_INT_P != 4
 #error size intp is not 4, this not something to worry about
 #endif
-void blah() {
-;
-}
+void blah() {}
 ])],[c_sizep=4],[c_sizep=0])
-
 
 dnl automake 1.14 and upwards rewrite the host to have always 64 bit unless i386 as host is passed
 dnl this can make building a 32 bit executable a bit tricky, as dosbox relies on the host to select the
 dnl dynamic/dynrec core
-AC_MSG_CHECKING([whether Apple user wants to override the build process to produce a 32 bit binary])
 case "$host" in
   *-*-darwin*)
+   AC_MSG_CHECKING([whether Apple user wants to override the build process to produce a 32 bit binary])
    if test x$c_targetcpu = xx86_64 -a x$c_sizep = x4 ; then
      AC_MSG_RESULT(yes)
      AC_DEFINE(C_TARGETCPU,X86)
@@ -367,9 +359,6 @@ case "$host" in
    else
      AC_MSG_RESULT(no)
    fi
-   ;;
-  *)
-   AC_MSG_RESULT([no, not on Apple])
    ;;
 esac
 
