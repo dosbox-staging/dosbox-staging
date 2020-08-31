@@ -1692,8 +1692,14 @@ private:
 			}
 		}	
 	}
+
 public:
-	SBLASTER(Section* configuration):Module_base(configuration) {
+	SBLASTER(Section *configuration)
+	        : Module_base(configuration),
+	          autoexecline{},
+	          MixerChan{},
+	          oplmode(OPL_none)
+	{
 		Bitu i;
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 
@@ -1762,8 +1768,8 @@ public:
 		/* Soundblaster midi interface */
 		if (!MIDI_Available()) sb.midi = false;
 		else sb.midi = true;
-	}	
-	
+	}
+
 	~SBLASTER() {
 		switch (oplmode) {
 		case OPL_none:
