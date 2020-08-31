@@ -624,9 +624,12 @@ private:
 	IO_ReadHandleObject ReadHandler[2];
 	IO_WriteHandleObject WriteHandler[2];
 	bool installed; /*as it can fail to install by 2 ways (config and no midi)*/
+
 public:
-	MPU401(Section* configuration):Module_base(configuration){
-		installed = false;
+	MPU401(Section *configuration)
+	        : Module_base(configuration),
+	          installed(false)
+	{
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		const char* s_mpu = section->Get_string("mpu401");
 		if(strcasecmp(s_mpu,"none") == 0) return;
