@@ -57,7 +57,7 @@ public:
 	Bit8u GetBiosType(void);
 	Bit32u getSectSize(void);
 
-	imageDisk(FILE *imgFile, const char *imgName, Bit32u imgSizeK, bool isHardDisk);
+	imageDisk(FILE *img_file, const char *img_name, uint32_t img_size_k, bool is_hdd);
 	imageDisk(const imageDisk&) = delete; // prevent copy
 	imageDisk& operator=(const imageDisk&) = delete; // prevent assignment
 

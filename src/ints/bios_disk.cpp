@@ -201,26 +201,28 @@ Bit8u imageDisk::Write_AbsoluteSector(Bit32u sectnum, void *data) {
 
 }
 
-imageDisk::imageDisk(FILE *imgFile, const char *imgName, Bit32u imgSizeK, bool isHardDisk) {
-	heads = 0;
-	cylinders = 0;
-	sectors = 0;
-	sector_size = 512;
-	current_fpos = 0;
-	last_action = NONE;
-	diskimg = imgFile;
+imageDisk::imageDisk(FILE *img_file, const char *img_name, uint32_t img_size_k, bool is_hdd)
+        : hardDrive(is_hdd),
+          active(false),
+          diskimg(img_file),
+          floppytype(0),
+          sector_size(512),
+          heads(0),
+          cylinders(0),
+          sectors(0),
+          current_fpos(0),
+          last_action(NONE)
+{
 	fseek(diskimg,0,SEEK_SET);
 	memset(diskname,0,512);
-	safe_strncpy(diskname, imgName, sizeof(diskname));
-	active = false;
-	hardDrive = isHardDisk;
-	if(!isHardDisk) {
+	safe_strncpy(diskname, img_name, sizeof(diskname));
+	if (!is_hdd) {
 		Bit8u i=0;
 		bool founddisk = false;
 		while (DiskGeometryList[i].ksize!=0x0) {
-			if ((DiskGeometryList[i].ksize==imgSizeK) ||
-				(DiskGeometryList[i].ksize+1==imgSizeK)) {
-				if (DiskGeometryList[i].ksize!=imgSizeK)
+			if ((DiskGeometryList[i].ksize == img_size_k) ||
+			    (DiskGeometryList[i].ksize + 1 == img_size_k)) {
+				if (DiskGeometryList[i].ksize != img_size_k)
 					LOG_MSG("ImageLoader: image file with additional data, might not load!");
 				founddisk = true;
 				active = true;
