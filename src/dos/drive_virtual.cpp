@@ -66,23 +66,28 @@ void VFILE_Remove(const char *name) {
 
 class Virtual_File : public DOS_File {
 public:
-	Virtual_File(Bit8u * in_data,Bit32u in_size);
+	Virtual_File(uint8_t *in_data, uint32_t in_size);
+
+	Virtual_File(const Virtual_File &) = delete; // prevent copying
+	Virtual_File &operator=(const Virtual_File &) = delete; // prevent assignment
+
 	bool Read(Bit8u * data,Bit16u * size);
 	bool Write(Bit8u * data,Bit16u * size);
 	bool Seek(Bit32u * pos,Bit32u type);
 	bool Close();
 	Bit16u GetInformation(void);
+
 private:
-	Bit32u file_size;
-	Bit32u file_pos;
-	Bit8u * file_data;
+	uint32_t file_size;
+	uint32_t file_pos;
+	uint8_t *file_data;
 };
 
-
-Virtual_File::Virtual_File(Bit8u * in_data,Bit32u in_size) {
-	file_size=in_size;
-	file_data=in_data;
-	file_pos=0;
+Virtual_File::Virtual_File(uint8_t *in_data, uint32_t in_size)
+        : file_size(in_size),
+          file_pos(0),
+          file_data(in_data)
+{
 	date=DOS_PackDate(2002,10,1);
 	time=DOS_PackTime(12,34,56);
 	open=true;
