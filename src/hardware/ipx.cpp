@@ -1086,15 +1086,17 @@ Bitu IPX_ESRHandler(void) {
 
 void VFILE_Remove(const char *name);
 
-class IPX: public Module_base {
+class IPX : public Module_base {
 private:
-	CALLBACK_HandlerObject callback_ipx;
-	CALLBACK_HandlerObject callback_esr;
-	CALLBACK_HandlerObject callback_ipxint;
-	RealPt old_73_vector;
+	CALLBACK_HandlerObject callback_ipx = {};
+	CALLBACK_HandlerObject callback_esr = {};
+	CALLBACK_HandlerObject callback_ipxint = {};
+	RealPt old_73_vector = 0;
 	static Bit16u dospage;
+
 public:
-	IPX(Section* configuration):Module_base(configuration) {
+	IPX(Section *configuration) : Module_base(configuration)
+	{
 		Section_prop * section = static_cast<Section_prop *>(configuration);
 		if(!section->Get_bool("ipx")) return;
 		if(!SDLNetInited) {
@@ -1135,12 +1137,12 @@ public:
 		phys_writeb(phyDospage+3,(Bit8u)0x06);    // PUSH ES
 		phys_writew(phyDospage+4,(Bit16u)0xA00F); // PUSH FS
 		phys_writew(phyDospage+6,(Bit16u)0xA80F); // PUSH GS
- 
+
 		// callback
 		phys_writeb(phyDospage+8,(Bit8u)0xFE);  // GRP 4
 		phys_writeb(phyDospage+9,(Bit8u)0x38);  // Extra Callback instruction
 		phys_writew(phyDospage+10,call_ipxesr1);        // Callback identifier
- 
+
 		// register recreation
 		phys_writew(phyDospage+12,(Bit16u)0xA90F); // POP GS
 		phys_writew(phyDospage+14,(Bit16u)0xA10F); // POP FS
@@ -1148,7 +1150,7 @@ public:
 		phys_writeb(phyDospage+17,(Bit8u)0x1F);    // POP DS
 		phys_writeb(phyDospage+18,(Bit8u)0x61);    // POPA
 		phys_writeb(phyDospage+19,(Bit8u)0xCF);    // IRET: restores flags, CS, IP
- 
+
 		// IPX version 2.12
 		//phys_writeb(phyDospage+27,(Bit8u)0x2);
 		//phys_writeb(phyDospage+28,(Bit8u)0x12);
