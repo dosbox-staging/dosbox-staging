@@ -1413,7 +1413,8 @@ public:
 
 			if (paths.size() == 1) {
 				auto *newdrive = static_cast<fatDrive*>(imgDisks[0]);
-				if ('A' <= drive && drive <= 'D' && !(newdrive->loadedDisk->hardDrive)) {
+				if (('A' <= drive && drive <= 'B' && !(newdrive->loadedDisk->hardDrive)) ||
+				    ('C' <= drive && drive <= 'D' && newdrive->loadedDisk->hardDrive)) {
 					const size_t idx = drive_index(drive);
 					imageDiskList[idx] = newdrive->loadedDisk;
 					updateDPT();
