@@ -357,13 +357,14 @@ static void DISNEY_CallBack(Bitu len) {
 	}
 }
 
-class DISNEY: public Module_base {
+class DISNEY : public Module_base {
 private:
-	IO_ReadHandleObject ReadHandler;
-	IO_WriteHandleObject WriteHandler;
-	//MixerObject MixerChan;
+	IO_ReadHandleObject ReadHandler = {};
+	IO_WriteHandleObject WriteHandler = {};
+
 public:
-	DISNEY(Section* configuration):Module_base(configuration) {
+	DISNEY(Section *configuration) : Module_base(configuration)
+	{
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		if(!section->Get_bool("disney")) return;
 	
@@ -377,9 +378,8 @@ public:
 		disney.mo = new MixerObject();
 		disney.chan=disney.mo->Install(&DISNEY_CallBack,10000,"DISNEY");
 		DISNEY_disable(0);
-
-
 	}
+
 	~DISNEY(){
 		DISNEY_disable(0);
 		if (disney.mo)
