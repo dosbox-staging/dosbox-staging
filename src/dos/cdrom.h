@@ -220,7 +220,9 @@ public:
 		uint8_t                    attr       = 0;
 		bool                       mode2      = false;
 	};
-	CDROM_Interface_Image           (Bit8u _subUnit);
+
+	CDROM_Interface_Image(uint8_t sub_unit);
+
 	virtual ~CDROM_Interface_Image  (void);
 	void	InitNewMedia            (void) {}
 	bool	SetDevice               (char *path);
@@ -282,7 +284,6 @@ private:
 	std::vector<uint8_t> readBuffer;
 	std::string          mcn;
 	static int           refCount;
-	uint8_t              subUnit;
 };
 
 #endif /* __CDROM_INTERFACE__ */
