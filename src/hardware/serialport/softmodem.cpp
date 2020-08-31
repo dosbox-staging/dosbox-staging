@@ -131,9 +131,9 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 
 	// Enable telnet-mode if configured
 	if (getUintFromString("telnet:", val, cmd)) {
-		telnetmode = (val == 1);
+		telnet_mode = (val == 1);
 		LOG_MSG("SERIAL: Port %" PRIu8 " telnet-mode %s",
-		        GetPortNumber(), telnetmode ? "enabled" : "disabled");
+		        GetPortNumber(), telnet_mode ? "enabled" : "disabled");
 	}
 
 	InstallationSuccessful=true;
@@ -896,7 +896,7 @@ void CSerialModem::Timer2() {
 			EnterIdleState();
 		} else if (usesize) {
 			// Filter telnet commands
-			if (telnetmode)
+			if (telnet_mode)
 				TelnetEmulation(tmpbuf, usesize);
 			else
 				rqueue->adds(tmpbuf,usesize);
