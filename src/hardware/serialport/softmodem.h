@@ -223,7 +223,7 @@ protected:
 	bool ringing = false;
 	bool numericresponse = false; // true: send control response as number.
 	                              // false: send text (i.e. NO DIALTONE)
-	bool telnetmode = false; // Default to direct null modem connection;
+	bool telnet_mode = false; // Default to direct null modem connection;
 	                         // Telnet mode interprets IAC
 	bool connected = false;
 	uint32_t doresponse = 0;
