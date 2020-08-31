@@ -284,12 +284,14 @@ float JOYSTICK_GetMove_Y(Bitu which) {
 	return stick[1].ypos;
 }
 
-class JOYSTICK:public Module_base{
+class JOYSTICK : public Module_base {
 private:
-	IO_ReadHandleObject ReadHandler;
-	IO_WriteHandleObject WriteHandler;
+	IO_ReadHandleObject ReadHandler = {};
+	IO_WriteHandleObject WriteHandler = {};
+
 public:
-	JOYSTICK(Section* configuration):Module_base(configuration){
+	JOYSTICK(Section *configuration) : Module_base(configuration)
+	{
 		Section_prop * section = static_cast<Section_prop *>(configuration);
 		const char * type = section->Get_string("joysticktype");
 		if (!strcasecmp(type,"none"))         joytype = JOY_NONE;
@@ -325,6 +327,7 @@ public:
 		stick[0].deadzone = section->Get_int("deadzone");
 	}
 };
+
 static JOYSTICK* test;
 
 void JOYSTICK_Destroy(Section* sec) {
