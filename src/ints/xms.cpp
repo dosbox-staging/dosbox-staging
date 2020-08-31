@@ -417,8 +417,12 @@ Bitu GetEMSType(Section_prop * section);
 class XMS: public Module_base {
 private:
 	CALLBACK_HandlerObject callbackhandler;
+
 public:
-	XMS(Section* configuration):Module_base(configuration){
+	XMS(Section *configuration)
+	        : Module_base(configuration),
+	          callbackhandler{}
+	{
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		umb_available=false;
 		if (!section->Get_bool("xms")) return;
@@ -435,7 +439,7 @@ public:
 		//	label skip:
 		//	callback XMS_Handler
 		//	retf
-	   
+
 		for (i=0;i<XMS_HANDLES;i++) {
 			xms_handles[i].free=true;
 			xms_handles[i].mem=-1;
