@@ -396,9 +396,11 @@ void DOSBOX_Init(void) {
 	Prop_multival *pmulti;
 	Prop_multival_remain* Pmulti_remain;
 
+	// Specifies if and when a setting can be changed 
 	constexpr auto always = Property::Changeable::Always;
-	constexpr auto when_idle = Property::Changeable::WhenIdle;
+	constexpr auto deprecated = Property::Changeable::Deprecated;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
+	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	SDLNetInited = false;
 
@@ -663,6 +665,10 @@ void DOSBOX_Init(void) {
 
 	Pbool = secprop->Add_bool("sbmixer", Property::Changeable::WhenIdle, true);
 	Pbool->Set_help("Allow the Sound Blaster mixer to modify the DOSBox mixer.");
+
+	pint = secprop->Add_int("oplrate", deprecated, false);
+	pint->Set_help("oplrate is deprecated. The OPL waveform is now sampled\n"
+	               "        at the mixer's playback rate to avoid resampling.");
 
 	const char* oplmodes[] = {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none", 0};
 	Pstring = secprop->Add_string("oplmode", Property::Changeable::WhenIdle, "auto");
