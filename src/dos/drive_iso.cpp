@@ -143,15 +143,16 @@ Bit16u isoFile::GetInformation(void) {
 }
 
 isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &error)
-         :iso(false),
+        : nextFreeDirIterator(0),
+          iso(false),
           dataCD(false),
+          rootEntry{},
           mediaid(0),
           subUnit(0),
           driveLetter('\0')
- {
+{
 	this->fileName[0]  = '\0';
 	this->discLabel[0] = '\0';
-	nextFreeDirIterator = 0;
 	memset(dirIterators, 0, sizeof(dirIterators));
 	memset(sectorHashEntries, 0, sizeof(sectorHashEntries));
 	memset(&rootEntry, 0, sizeof(isoDirEntry));
