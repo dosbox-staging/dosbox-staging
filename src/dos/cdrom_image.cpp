@@ -475,12 +475,12 @@ int CDROM_Interface_Image::refCount = 0;
 CDROM_Interface_Image* CDROM_Interface_Image::images[26] = {};
 CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player;
 
-CDROM_Interface_Image::CDROM_Interface_Image(Bit8u _subUnit)
-	: tracks({}),
-	  mcn(""),
-	  subUnit(_subUnit)
+CDROM_Interface_Image::CDROM_Interface_Image(uint8_t sub_unit)
+        : tracks{},
+          readBuffer{},
+          mcn("")
 {
-	images[subUnit] = this;
+	images[sub_unit] = this;
 	if (refCount == 0) {
 		if (!player.mutex)
 			player.mutex = SDL_CreateMutex();
