@@ -232,9 +232,14 @@ opcode& opcode::setea(int rbase, int rscale, Bitu scale, Bits off) {
 
 class GenReg {
 public:
-	GenReg(Bit8u _index) : index(_index) {
-		notusable=false;dynreg=0;
+	GenReg(uint8_t reg_index)
+	        : dynreg(nullptr),
+	          last_used(0),
+	          index(reg_index),
+	          notusable(false)
+	{
 	}
+
 	DynReg  * dynreg;
 	Bitu last_used;			//Keeps track of last assigned regs 
 	const Bit8u index;
