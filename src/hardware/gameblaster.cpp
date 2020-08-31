@@ -118,16 +118,16 @@ static Bitu read_cms_detect(Bitu port, Bitu /* iolen */) {
 	return retval;
 }
 
-
-class CMS:public Module_base {
+class CMS : public Module_base {
 private:
-	IO_WriteHandleObject WriteHandler;
-	IO_WriteHandleObject DetWriteHandler;
-	IO_ReadHandleObject DetReadHandler;
-	MixerObject MixerChan;
+	IO_WriteHandleObject WriteHandler = {};
+	IO_WriteHandleObject DetWriteHandler = {};
+	IO_ReadHandleObject DetReadHandler = {};
+	MixerObject MixerChan = {};
 
 public:
-	CMS(Section* configuration):Module_base(configuration) {
+	CMS(Section *configuration) : Module_base(configuration)
+	{
 		Section_prop * section = static_cast<Section_prop *>(configuration);
 		Bitu sampleRate = section->Get_int( "oplrate" );
 		cmsBase = section->Get_hex("sbbase");
@@ -162,7 +162,6 @@ public:
 		delete device[1];
 	}
 };
-
 
 static CMS* test;
    
