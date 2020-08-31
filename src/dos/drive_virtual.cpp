@@ -138,12 +138,10 @@ Bit16u Virtual_File::GetInformation(void) {
 	return 0x40;	// read-only drive
 }
 
-
-Virtual_Drive::Virtual_Drive() {
+Virtual_Drive::Virtual_Drive() : search_file(nullptr)
+{
 	strcpy(info,"Internal Virtual Drive");
-	search_file=0;
 }
-
 
 bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 /* Scan through the internal list of files */
