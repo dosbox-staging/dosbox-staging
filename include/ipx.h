@@ -121,7 +121,10 @@ public:
 	Bitu SerialNumber;
 #endif
 
-	ECBClass(Bit16u segment, Bit16u offset);
+	ECBClass(uint16_t segment, uint16_t offset);
+	ECBClass(const ECBClass &) = delete;            // prevent copying
+	ECBClass &operator=(const ECBClass &) = delete; // prevent assignment
+
 	Bit16u getSocket(void);
 
 	Bit8u getInUseFlag(void);
