@@ -34,3 +34,11 @@ distclean-local:
 	-rm -rf autom4te.cache
 	-find . -name Makefile.in -type f -delete
 	-find . -name .deps -type d -exec rm -rf {} +
+
+# 'run' is a convenience target for development, it runs the binary
+# immediately after the build.
+
+.PHONY: run
+
+run: all
+	./src/dosbox$(EXEEXT)
