@@ -29,6 +29,7 @@ jobs:
           - name: macOS
             os: macos-latest
             compiler: clang
+            missing_packages: --disable-fluidsynth
           - name: Linux
             os: ubuntu-20.04
             compiler: gcc
@@ -104,14 +105,19 @@ jobs:
       - name:  Build ${{ matrix.conf.configure_flags }} (Windows)
         if:    matrix.system.name == 'Windows'
         shell: python scripts\msys-bash.py {0}
-        run:   scripts/build.sh -c ${{ matrix.system.compiler }} -t debug --bin-path /mingw64/bin ${{ matrix.conf.configure_flags }}
+        run: >
+          scripts/build.sh -c ${{ matrix.system.compiler }} -t debug --bin-path /mingw64/bin
+          ${{ matrix.conf.configure_flags }} ${{ matrix.system.missing_packages }}
 
       - name:  Build ${{ matrix.conf.configure_flags }} (macOS)
         if:    matrix.system.name == 'macOS'
-        run: |
-          export PKG_CONFIG_PATH="/usr/local/opt/ncurses/lib/pkgconfig:$PKG_CONFIG_PATH"
-          ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug ${{ matrix.conf.configure_flags }}
+        run: >
+          export PKG_CONFIG_PATH="/usr/local/opt/ncurses/lib/pkgconfig:$PKG_CONFIG_PATH" &&
+          ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug
+          ${{ matrix.conf.configure_flags }} ${{ matrix.system.missing_packages }}
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Linux)
         if:    matrix.system.name == 'Linux'
-        run:   ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug ${{ matrix.conf.configure_flags }}
+        run: >
+          ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug
+          ${{ matrix.conf.configure_flags }} ${{ matrix.system.missing_packages }}
