@@ -844,6 +844,13 @@ void DOS_Shell::CMD_LS(char *args)
 
 	size_t w_count = 0;
 
+	constexpr int ansi_blue = 34;
+	constexpr int ansi_green = 32;
+	auto write_color = [&](int color, const std::string &txt, int width) {
+		const int padr = width - static_cast<int>(txt.size());
+		WriteOut("\033[%d;1m%s\033[0m%-*s", color, txt.c_str(), padr, "");
+	};
+
 	for (const auto &entry : dir_contents) {
 		std::string name = entry.name;
 		const bool is_dir = entry.attr & DOS_ATTR_DIRECTORY;
@@ -852,11 +859,11 @@ void DOS_Shell::CMD_LS(char *args)
 
 		if (is_dir) {
 			upcase(name);
-			WriteOut("\033[34;1m%-*s\033[0m", cw, name.c_str());
+			write_color(ansi_blue, name, cw);
 		} else {
 			lowcase(name);
 			if (is_executable_filename(name))
-				WriteOut("\033[32;1m%-*s\033[0m", cw, name.c_str());
+				write_color(ansi_green, name, cw);
 			else
 				WriteOut("%-*s", cw, name.c_str());
 		}
