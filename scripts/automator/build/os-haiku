@@ -2,6 +2,7 @@ cflags+=(-fPIC)
 
 function make_binary() {
 	make \
+		ARFLAGS="${ARFLAGS}" \
 		--jobs="$(nproc)" \
 		--output-sync=line \
 		|& tee build.log

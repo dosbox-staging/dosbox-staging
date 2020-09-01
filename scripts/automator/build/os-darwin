@@ -5,6 +5,7 @@ function make_binary() {
     # Limit GCC to ASCII-only characters
     LC_ALL=C LANG=en_US LANGUAGE=en_US \
 	gmake \
+		ARFLAGS="${ARFLAGS}" \
 		--jobs="$(sysctl -n hw.physicalcpu)" \
 		--output-sync=line \
 		2>&1 | tee build.log

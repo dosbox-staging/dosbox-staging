@@ -1,10 +1,11 @@
 # Tools and flags for all compilers
-VARIABLES=(ar cc cxx ld ranlib cflags cxxonly ldflags libs)
+VARIABLES=(ar cc cxx ld ranlib arflags cflags cxxonly ldflags libs)
 ar=""
 cc=""
 cxx=""
 ld=""
 ranlib=""
+arflags="Dcr"
 cflags+=(-Wall -pipe)
 cxxonly+=("")
 ldflags+=("")
