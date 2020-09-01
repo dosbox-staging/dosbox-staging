@@ -3,6 +3,7 @@ function make_binary() {
 	# Limit GCC to ASCII-only characters
 	LC_ALL=C LANG=en_US LANGUAGE=en_US \
 	make \
+		ARFLAGS="${ARFLAGS}" \
 		--jobs="$(nproc)" \
 		--output-sync=line \
 		|& tee build.log
