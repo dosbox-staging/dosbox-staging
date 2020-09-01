@@ -826,11 +826,9 @@ void CSerialModem::Timer2() {
 					cmdpos--;
 			} else if (txval == '\r') {
 				DoCommand();
-			} else if (txval != '+') {
-				if (cmdpos < 99) {
-					cmdbuf[cmdpos] = txval;
-					cmdpos++;
-				}
+			} else if (cmdpos < 99) {
+				cmdbuf[cmdpos] = txval;
+				cmdpos++;
 			}
 		}
 		else {// + character
