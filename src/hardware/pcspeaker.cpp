@@ -99,29 +99,28 @@ static bool SpeakerExists()
 // Determines if the inbound wave is square by inspecting
 // current and previous states.
 static bool IsWaveSquare() {
+	// When compared across time, this value describe an active PIT-state being toggled
+	constexpr auto pit_was_toggled = SPKR_PIT_OFF + SPKR_PIT_ON;
 
-	// We have a square wave if either are true:
+	// The sum of the previous mode with the current mode becomes a temporal-state
+	const auto temporal_pit_state = static_cast<unsigned>(spkr.prev_pit_mode) +
+	                                static_cast<unsigned>(spkr.pit_mode);
+	const auto temporal_pwm_state = static_cast<unsigned>(spkr.prev_mode) +
+	                                static_cast<unsigned>(spkr.mode);
 
-	// 1. PIT mode is set, and the speaker ...
-	if (spkr.pit_mode) {
-		// previously generated a square wave
-		if (spkr.prev_mode == SPKR_PIT_ON)
-			return true;
-		// is currently generating a square wave
-		if (spkr.mode == SPKR_PIT_ON)
-			return true;
-	}
+	// We have a sine-wave if the PIT was steadily off and ...
+	if (temporal_pit_state == SPKR_OFF)
+		// The PWM toggled an ongoing PIT state or turned on PIT-mode from an off-state
+		if (temporal_pwm_state == pit_was_toggled || temporal_pwm_state == SPKR_PIT_ON)
+			return false;
 
-	// 2. Speaker was in a neutral position and is transitioning ...
-	if (!spkr.prev_pos) {
-		// into a square wave
-		if (spkr.prev_mode != SPKR_PIT_ON && spkr.mode == SPKR_PIT_ON)
-			return true;
-		// out of a square wave
-		if (spkr.prev_mode == SPKR_PIT_ON && spkr.mode != SPKR_PIT_ON)
-			return true;
-	}
-	return false;
+	// We have a sine-wave if the PIT was steadily on and ...
+	if (temporal_pit_state == SPKR_PIT_ON)
+		// the PWM was turned on from an off-state
+		if (temporal_pwm_state == SPKR_ON)
+			return false;
+
+	return true;
 }
 
 static void AddDelayEntry(float index,float vol) {
@@ -130,8 +129,19 @@ static void AddDelayEntry(float index,float vol) {
 	}
 	spkr.entries[spkr.used].index=index;
 
-	if (IsWaveSquare())
+	if (IsWaveSquare()) {
 		vol *= AMPLITUDE_SQUARE_WAVE_REDUCER;
+// #define DEBUG_SQUARE_WAVE 1
+#ifdef DEBUG_SQUARE_WAVE
+		LOG_MSG("SPEAKER: square-wave [prev_pos=%u, prev_mode=%u, mode=%u, prev_pit=%lu, pit=%lu]",
+		        spkr.prev_pos, spkr.prev_mode, spkr.mode,
+		        spkr.prev_pit_mode, spkr.pit_mode);
+	} else {
+		LOG_MSG("SPEAKER: sine-wave [prev_pos=%u, prev_mode=%u, mode=%u, prev_pit=%lu, pit=%lu], ",
+		        spkr.prev_pos, spkr.prev_mode, spkr.mode,
+		        spkr.prev_pit_mode, spkr.pit_mode);
+#endif
+	}
 
 	spkr.entries[spkr.used].vol = vol;
 	spkr.used++;
