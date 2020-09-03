@@ -1,6 +1,8 @@
-# Tool additions and overrides for Darwin, regardless of compiler
+# Tool and flag overrides for Darwin, regardless of compiler
 ar="ar"
+arflags="cr"
 ranlib="ranlib"
+
 function make_binary() {
     # Limit GCC to ASCII-only characters
     LC_ALL=C LANG=en_US LANGUAGE=en_US \
