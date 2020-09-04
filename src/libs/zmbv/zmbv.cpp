@@ -536,12 +536,27 @@ void VideoCodec::FreeBuffers(void) {
 	}
 }
 
-
-VideoCodec::VideoCodec() {
+VideoCodec::VideoCodec()
+        : compress{},
+          VectorCount(0),
+          oldframe(nullptr),
+          newframe(nullptr),
+          buf1(nullptr),
+          buf2(nullptr),
+          work(nullptr),
+          bufsize(0),
+          blockcount(0),
+          blocks(nullptr),
+          workUsed(0),
+          workPos(0),
+          palsize(0),
+          height(0),
+          width(0),
+          pitch(0),
+          format(ZMBV_FORMAT_NONE),
+          pixelsize(0),
+          zstream{}
+{
 	CreateVectorTable();
-	blocks = 0;
-	buf1 = 0;
-	buf2 = 0;
-	work = 0;
-	memset( &zstream, 0, sizeof(zstream));
+	memset(&zstream, 0, sizeof(zstream));
 }
