@@ -723,6 +723,33 @@ static void write_pcjr(Bitu port,Bitu val,Bitu /*iolen*/) {
 	}
 }
 
+static int palette_num(const char *colour)
+{
+	if (strcasecmp(colour, "green") == 0)
+		return 0;
+	if (strcasecmp(colour, "amber") == 0)
+		return 1;
+	if (strcasecmp(colour, "white") == 0)
+		return 2;
+	if (strcasecmp(colour, "paperwhite") == 0)
+		return 3;
+	return 2;
+}
+
+void VGA_SetMonoPalette(const char *colour)
+{
+	if (machine == MCH_HERC) {
+		herc_pal = palette_num(colour);
+		Herc_Palette();
+		return;
+	}
+	if (machine == MCH_CGA && mono_cga) {
+		mono_cga_pal = palette_num(colour);
+		Mono_CGA_Palette();
+		return;
+	}
+}
+
 static void CycleMonoCGAPal(bool pressed) {
 	if (!pressed) return;
 	if (++mono_cga_pal>3) mono_cga_pal=0;
@@ -752,24 +779,25 @@ static void CycleHercPal(bool pressed) {
 	Herc_Palette();
 	VGA_DAC_CombineColor(1,7);
 }
-	
-void Herc_Palette(void) {	
+
+void Herc_Palette()
+{
 	switch (herc_pal) {
-	case 0:	// White
-		VGA_DAC_SetEntry(0x7,0x2a,0x2a,0x2a);
-		VGA_DAC_SetEntry(0xf,0x3f,0x3f,0x3f);
+	case 0: // Green
+		VGA_DAC_SetEntry(0x7, 0x00, 0x26, 0x00);
+		VGA_DAC_SetEntry(0xf, 0x00, 0x3f, 0x00);
 		break;
-	case 1:	// Amber
-		VGA_DAC_SetEntry(0x7,0x34,0x20,0x00);
-		VGA_DAC_SetEntry(0xf,0x3f,0x34,0x00);
+	case 1: // Amber
+		VGA_DAC_SetEntry(0x7, 0x34, 0x20, 0x00);
+		VGA_DAC_SetEntry(0xf, 0x3f, 0x34, 0x00);
 		break;
-	case 2:	// Paper-white
-		VGA_DAC_SetEntry(0x7,0x2c,0x2d,0x2c);
-		VGA_DAC_SetEntry(0xf,0x3f,0x3f,0x3b);
+	case 2: // White
+		VGA_DAC_SetEntry(0x7, 0x2a, 0x2a, 0x2a);
+		VGA_DAC_SetEntry(0xf, 0x3f, 0x3f, 0x3f);
 		break;
-	case 3:	// Green
-		VGA_DAC_SetEntry(0x7,0x00,0x26,0x00);
-		VGA_DAC_SetEntry(0xf,0x00,0x3f,0x00);
+	case 3: // Paper-white
+		VGA_DAC_SetEntry(0x7, 0x2d, 0x2e, 0x2d);
+		VGA_DAC_SetEntry(0xf, 0x3f, 0x3f, 0x3b);
 		break;
 	}
 }
