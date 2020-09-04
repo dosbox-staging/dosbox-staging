@@ -58,16 +58,24 @@ static FILE* OpenDosboxFile(const char* name) {
 	return tmpfile;
 }
 
-
 class keyboard_layout {
 public:
 	keyboard_layout()
+	        : additional_planes(0),
+	          used_lock_modifiers(0x0f),
+	          diacritics_entries(0),
+	          diacritics_character(0),
+	          user_keys(0),
+	          use_foreign_layout(false),
+	          language_codes(nullptr),
+	          language_code_count(0)
 	{
 		this->reset();
-		language_codes=NULL;
-		use_foreign_layout=false;
 		sprintf(current_keyboard_file_name, "none");
 	}
+
+	keyboard_layout(const keyboard_layout &) = delete; // prevent copying
+	keyboard_layout &operator=(const keyboard_layout &) = delete; // prevent assignment
 
 	~keyboard_layout();
 
@@ -113,7 +121,6 @@ private:
 	Bitu read_keyboard_file(const char* keyboard_file_name, Bit32s specific_layout, Bit32s requested_codepage);
 	bool map_key(Bitu key, Bit16u layouted_key, bool is_command, bool is_keypair);
 };
-
 
 keyboard_layout::~keyboard_layout() {
 	if (language_codes) {
