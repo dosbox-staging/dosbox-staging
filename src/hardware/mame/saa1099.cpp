@@ -138,23 +138,27 @@ static const uint8_t envelope[8][64] = {
 
 #define FILL_ARRAY( _FILL_ ) memset( _FILL_, 0, sizeof( _FILL_ ) )
 
-saa1099_device::saa1099_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: device_t(mconfig, SAA1099, tag, owner, clock)
-	, device_sound_interface(mconfig, *this)
-	, m_stream(0)
+saa1099_device::saa1099_device(const machine_config &mconfig,
+                               const char *tag,
+                               device_t *owner,
+                               uint32_t clock)
+        : device_t(mconfig, SAA1099, tag, owner, clock),
+          device_sound_interface(mconfig, *this),
+          m_stream(0),
 #if 0
-	, m_noise_params{ 0, 0 }
-	, m_env_enable{ 0, 0 }
-	, m_env_reverse_right{ 0, 0 }
-	, m_env_mode{ 0, 0 }
-	, m_env_bits{ 0, 0 }
-	, m_env_clock{ 0, 0 }
-	, m_env_step{ 0, 0 }
+          m_noise_params{ 0, 0 },
+          m_env_enable{ 0, 0 },
+          m_env_reverse_right{ 0, 0 },
+          m_env_mode{ 0, 0 },
+          m_env_bits{ 0, 0 },
+          m_env_clock{ 0, 0 },
+          m_env_step{ 0, 0 },
 #endif
-	, m_all_ch_enable(0)
-	, m_sync_state(0)
-	, m_selected_reg(0)
-	, m_sample_rate(0.0)
+          m_all_ch_enable(0),
+          m_sync_state(0),
+          m_selected_reg(0),
+          m_sample_rate(0.0),
+          m_master_clock(0)
 {
 	FILL_ARRAY( m_noise_params );
 	FILL_ARRAY( m_env_enable );
@@ -163,7 +167,6 @@ saa1099_device::saa1099_device(const machine_config &mconfig, const char *tag, d
 	FILL_ARRAY( m_env_bits );
 	FILL_ARRAY( m_env_clock );
 	FILL_ARRAY( m_env_step );
-	
 }
 
 
