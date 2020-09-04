@@ -21,6 +21,7 @@ AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_HEADER(config.h)
 
 dnl Checks for programs.
+AM_PROG_AR
 AC_PROG_MAKE_SET
 AC_PROG_CC_C99
 AC_PROG_CPP
