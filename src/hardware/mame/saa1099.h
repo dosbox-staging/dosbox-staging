@@ -7,7 +7,7 @@
 #ifndef MAME_SOUND_SAA1099_H
 #define MAME_SOUND_SAA1099_H
 
-#pragma once
+#include "emu.h"
 
 //**************************************************************************
 //  INTERFACE CONFIGURATION MACROS
@@ -25,11 +25,15 @@
 
 // ======================> saa1099_device
 
-class saa1099_device : public device_t,
-						public device_sound_interface
-{
+class saa1099_device : public device_t, public device_sound_interface {
 public:
-	saa1099_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	saa1099_device(const machine_config &mconfig,
+	               const char *tag,
+	               device_t *owner,
+	               uint32_t clock);
+
+	saa1099_device(const saa1099_device &) = delete; // prevent copying
+	saa1099_device &operator=(const saa1099_device &) = delete; // prevent assignment
 
 	DECLARE_WRITE8_MEMBER( control_w );
 	DECLARE_WRITE8_MEMBER( data_w );
@@ -44,44 +48,34 @@ public:
 	virtual void sound_stream_update(sound_stream &stream, stream_sample_t **inputs, stream_sample_t **outputs, int samples);
 
 private:
-	struct saa1099_channel
-	{
-		saa1099_channel() {
-		    //Quite hacky, but let's see how it goes
-		    memset( this, 0, sizeof( *this ) );
-		}
+	struct saa1099_channel {
+		saa1099_channel() = default;
 
-		int frequency    ;   /* frequency (0x00..0xff) */
-		int freq_enable  ;   /* frequency enable */
-		int noise_enable ;   /* noise enable */
-		int octave       ;   /* octave (0x00..0x07) */
-		int amplitude[2];       /* amplitude (0x00..0x0f) */
-		int envelope[2];        /* envelope (0x00..0x0f or 0x10 == off) */
+		int frequency = 0;         // frequency (0x00..0xff)
+		int freq_enable = 0;       // frequency enable
+		int noise_enable = 0;      // noise enable
+		int octave = 0;            // octave (0x00..0x07)
+		int amplitude[2] = {0, 0}; // amplitude (0x00..0x0f)
+		int envelope[2] = {0, 0};  // envelope (0x00..0x0f or 0x10 == off)
 
 		/* vars to simulate the square wave */
-		double counter ;
-		double freq ;
-		int level ;
-		
+		double counter = 0;
+		double freq = 0;
+		int level = 0;
 	};
 
-	struct saa1099_noise
-	{
-		saa1099_noise() { 
-		    counter = 0;
-		    freq = 0;
-		    level = 0xFFFFFFFF;
-		}
+	struct saa1099_noise {
+		saa1099_noise() = default;
 
 		/* vars to simulate the noise generator output */
-		double counter;
-		double freq;
-		uint32_t level;         /* noise polynomial shifter */
+		double counter = 0;
+		double freq = 0;
+		uint32_t level = 0xFFFFFFFF; // noise polynomial shifter
 	};
 
 	void envelope_w(int ch);
 
-	sound_stream *m_stream;          /* our stream */
+	sound_stream *m_stream;           /* our stream */
 	int m_noise_params[2];            /* noise generators parameters */
 	int m_env_enable[2];              /* envelope generators enable */
 	int m_env_reverse_right[2];       /* envelope reversed for right channel */
