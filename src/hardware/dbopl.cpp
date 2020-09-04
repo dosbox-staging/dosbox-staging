@@ -980,18 +980,6 @@ Channel* Channel::BlockTemplate( Chip* chip, Bit32u samples, Bit32s* output ) {
 	return 0;
 }
 
-/*
-	Chip
-*/
-
-Chip::Chip() {
-	reg08 = 0;
-	reg04 = 0;
-	regBD = 0;
-	reg104 = 0;
-	opl3Active = 0;
-}
-
 INLINE Bit32u Chip::ForwardNoise() {
 	noiseCounter += noiseAdd;
 	Bitu count = noiseCounter >> LFO_SH;
