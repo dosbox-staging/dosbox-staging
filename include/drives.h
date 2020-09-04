@@ -405,11 +405,18 @@ private:
 	VFILE_Block * search_file;
 };
 
-class Overlay_Drive: public localDrive {
+class Overlay_Drive : public localDrive {
 public:
-	Overlay_Drive(const char * startdir,const char* overlay, Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid,Bit8u &error);
+	Overlay_Drive(const char *startdir,
+	              const char *overlay,
+	              uint16_t _bytes_sector,
+	              uint8_t _sectors_cluster,
+	              uint16_t _total_clusters,
+	              uint16_t _free_clusters,
+	              uint8_t _mediaid,
+	              uint8_t &error);
 
-	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
+	virtual bool FileOpen(DOS_File **file, char *name, uint32_t flags);
 	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/);
 	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst);
 	virtual bool FindNext(DOS_DTA & dta);
@@ -428,14 +435,13 @@ public:
 	virtual bool MakeDir(char * dir);
 private:
 	char overlaydir[CROSS_LEN];
-	bool optimize_cache_v1;
 	bool Sync_leading_dirs(const char* dos_filename);
 	void add_DOSname_to_cache(const char* name);
 	void remove_DOSname_from_cache(const char* name);
 	void add_DOSdir_to_cache(const char* name);
 	void remove_DOSdir_from_cache(const char* name);
 	void update_cache(bool read_directory_contents = false);
-	
+
 	std::vector<std::string> deleted_files_in_base; //Set is probably better, or some other solution (involving the disk).
 	std::vector<std::string> deleted_paths_in_base; //Currently only used to hide the overlay folder.
 	std::string overlap_folder;

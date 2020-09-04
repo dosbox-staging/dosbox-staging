@@ -307,9 +307,27 @@ static OverlayFile* ccc(DOS_File* file) {
 	return ret;
 }
 
-Overlay_Drive::Overlay_Drive(const char * startdir,const char* overlay, Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid,Bit8u &error)
-:localDrive(startdir,_bytes_sector,_sectors_cluster,_total_clusters,_free_clusters,_mediaid),special_prefix("DBOVERLAY") {
-	optimize_cache_v1 = true; //Try to not reread overlay files on deletes. Ideally drive_cache should be improved to handle deletes properly.
+Overlay_Drive::Overlay_Drive(const char *startdir,
+                             const char *overlay,
+                             uint16_t _bytes_sector,
+                             uint8_t _sectors_cluster,
+                             uint16_t _total_clusters,
+                             uint16_t _free_clusters,
+                             uint8_t _mediaid,
+                             uint8_t &error)
+        : localDrive(startdir,
+                     _bytes_sector,
+                     _sectors_cluster,
+                     _total_clusters,
+                     _free_clusters,
+                     _mediaid),
+          deleted_files_in_base{},
+          deleted_paths_in_base{},
+          overlap_folder(),
+          DOSnames_cache{},
+          DOSdirs_cache{},
+          special_prefix("DBOVERLAY")
+{
 	//Currently this flag does nothing, as the current behavior is to not reread due to caching everything.
 #if defined (WIN32)	
 	if (strcasecmp(startdir,overlay) == 0) {
