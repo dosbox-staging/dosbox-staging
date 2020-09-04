@@ -264,22 +264,27 @@ Bitu DmaController::ReadControllerReg(Bitu reg,Bitu /*len*/) {
 	return 0xffffffff;
 }
 
-DmaChannel::DmaChannel(Bit8u num, bool dma16) {
-	masked = true;
-	callback = NULL;
-	if(num == 4) return;
+DmaChannel::DmaChannel(uint8_t num, bool dma16)
+        : pagebase(0),
+          baseaddr(0),
+          curraddr(0),
+          basecnt(0),
+          currcnt(0),
+          channum(0),
+          pagenum(0),
+          DMA16(0x0),
+          increment(false),
+          autoinit(false),
+          masked(true),
+          tcount(false),
+          request(false),
+          callback(nullptr)
+{
+	if (num == 4)
+		return;
 	channum = num;
 	DMA16 = dma16 ? 0x1 : 0x0;
-	pagenum = 0;
-	pagebase = 0;
-	baseaddr = 0;
-	curraddr = 0;
-	basecnt = 0;
-	currcnt = 0;
 	increment = true;
-	autoinit = false;
-	tcount = false;
-	request = false;
 }
 
 Bitu DmaChannel::Read(Bitu want, Bit8u * buffer) {
