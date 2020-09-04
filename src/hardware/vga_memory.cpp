@@ -759,21 +759,21 @@ public:
 };
 
 static struct vg {
-	VGA_Map_Handler				map;
-	VGA_Changes_Handler			changes;
-	VGA_TEXT_PageHandler		text;
-	VGA_TANDY_PageHandler		tandy;
-	VGA_ChainedEGA_Handler		cega;
-	VGA_ChainedVGA_Handler		cvga;
-	VGA_UnchainedEGA_Handler	uega;
-	VGA_UnchainedVGA_Handler	uvga;
-	VGA_PCJR_Handler			pcjr;
-	VGA_HERC_Handler			herc;
-	VGA_LIN4_Handler			lin4;
-	VGA_LFB_Handler				lfb;
-	VGA_LFBChanges_Handler		lfbchanges;
-	VGA_MMIO_Handler			mmio;
-	VGA_Empty_Handler			empty;
+	VGA_Map_Handler map = {};
+	VGA_Changes_Handler changes = {};
+	VGA_TEXT_PageHandler text = {};
+	VGA_TANDY_PageHandler tandy = {};
+	VGA_ChainedEGA_Handler cega = {};
+	VGA_ChainedVGA_Handler cvga = {};
+	VGA_UnchainedEGA_Handler uega = {};
+	VGA_UnchainedVGA_Handler uvga = {};
+	VGA_PCJR_Handler pcjr = {};
+	VGA_HERC_Handler herc = {};
+	VGA_LIN4_Handler lin4 = {};
+	VGA_LFB_Handler lfb = {};
+	VGA_LFBChanges_Handler lfbchanges = {};
+	VGA_MMIO_Handler mmio = {};
+	VGA_Empty_Handler empty = {};
 } vgaph;
 
 void VGA_ChangedBank(void) {
