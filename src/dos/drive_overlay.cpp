@@ -197,13 +197,16 @@ bool Overlay_Drive::TestDir(char * dir) {
 	return localDrive::TestDir(dir);
 }
 
-
-class OverlayFile: public localFile {
+class OverlayFile : public localFile {
 public:
-	OverlayFile(const char* name, FILE * handle):localFile(name,handle){
-		overlay_active = false;
-		if (logoverlay) LOG_MSG("constructing OverlayFile: %s",name);
+	OverlayFile(const char *name, FILE *handle)
+	        : localFile(name, handle),
+	          overlay_active(false)
+	{
+		if (logoverlay)
+			LOG_MSG("constructing OverlayFile: %s", name);
 	}
+
 	bool Write(Bit8u * data,Bit16u * size) {
 		Bit32u f = flags&0xf;
 		if (!overlay_active && (f == OPEN_READWRITE || f == OPEN_WRITE)) {
