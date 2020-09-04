@@ -632,21 +632,17 @@ Operator::Operator() {
 	releaseAdd = 0;
 }
 
-/*
-	Channel
-*/
-
-Channel::Channel() {
-	old[0] = old[1] = 0;
-	chanData = 0;
-	regB0 = 0;
-	regC0 = 0;
-	maskLeft = -1;
-	maskRight = -1;
-	feedback = 31;
-	fourMask = 0;
-	synthHandler = &Channel::BlockTemplate< sm2FM >;
-}
+Channel::Channel()
+        : synthHandler(&Channel::BlockTemplate<sm2FM>),
+          chanData(0),
+          old{0, 0},
+          feedback(31),
+          regB0(0),
+          regC0(0),
+          fourMask(0),
+          maskLeft(-1),
+          maskRight(-1)
+{}
 
 void Channel::SetChanData( const Chip* chip, Bit32u data ) {
 	Bit32u change = chanData ^ data;
