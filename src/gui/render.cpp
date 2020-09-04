@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "dosbox.h"
 
 #include <sys/types.h>
 #include <assert.h>
@@ -24,7 +25,6 @@
 #include <sstream>
 #include <stdlib.h>
 
-#include "dosbox.h"
 #include "video.h"
 #include "render.h"
 #include "setup.h"
@@ -34,6 +34,7 @@
 #include "hardware.h"
 #include "support.h"
 #include "shell.h"
+#include "vga.h"
 
 #include "render_scalers.h"
 #include "render_glsl.h"
@@ -688,6 +689,7 @@ void RENDER_Init(Section * sec) {
 	render.aspect=section->Get_bool("aspect");
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
+	VGA_SetMonoPalette(section->Get_string("monochrome_palette"));
 	std::string cline;
 	std::string scaler;
 	//Check for commandline paramters and parse them through the configclass so they get checked against allowed values

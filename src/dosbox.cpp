@@ -470,6 +470,13 @@ void DOSBOX_Init(void) {
 	                "320x200 or 640x400; where as square-pixel modes, such as 640x480\n"
 	                "and 800x600, will be displayed as-is.");
 
+	pstring = secprop->Add_string("monochrome_palette", always, "white");
+	pstring->Set_help("Select default palette for monochrome display.\n"
+	                  "Works only when emulating hercules or cga_mono.\n"
+	                  "You can also cycle through available colours using F11.");
+	const char *mono_pal[] = {"white", "paperwhite", "green", "amber", 0};
+	pstring->Set_values(mono_pal);
+
 	pmulti = secprop->Add_multi("scaler", always, " ");
 	pmulti->SetValue("none");
 	pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes.\n"
