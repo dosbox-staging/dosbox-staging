@@ -23,23 +23,6 @@
 //  TYPE DEFINITIONS
 //**************************************************************************
 
-//Container class for int that just initalizes to 0
-class NullInt {
-    int value;
-public:
-    operator int& () {
-	return value;
-    }
-    
-    int& operator= ( int set ) {
-	value = set;
-	return value;
-    }
-    
-    NullInt( int set = 0 ) : value( set ) {
-    }
-};
-
 // ======================> saa1099_device
 
 class saa1099_device : public device_t,
