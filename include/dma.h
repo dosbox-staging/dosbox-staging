@@ -54,7 +54,8 @@ public:
 	bool request;
 	DMA_CallBack callback;
 
-	DmaChannel(Bit8u num, bool dma16);
+	DmaChannel(uint8_t num, bool dma16);
+
 	void DoCallBack(DMAEvent event) {
 		if (callback)
 			callback(this, event);
