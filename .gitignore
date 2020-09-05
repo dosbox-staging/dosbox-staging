@@ -34,6 +34,7 @@
 # svn:ignore
 aclocal.m4
 autom4te.cache
+ar-lib
 config.h
 config.h.in
 config.h.in~
