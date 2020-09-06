@@ -417,12 +417,8 @@ public:
 		if (type == "floppy") incrementFDD();
 		return;
 showusage:
-#if defined (WIN32)
-	   WriteOut(MSG_Get("PROGRAM_MOUNT_USAGE"),"d:\\dosprogs","d:\\dosprogs");
-#else
-	   WriteOut(MSG_Get("PROGRAM_MOUNT_USAGE"),"~/dosprogs","~/dosprogs");
-#endif
-		return;
+	WriteOut(MSG_Get("SHELL_CMD_MOUNT_HELP_LONG"));
+	return;
 	}
 };
 
@@ -1598,11 +1594,6 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_ERROR_2","%s isn't a directory\n");
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE","Illegal type %s\n");
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED","Drive %c already mounted with %s\n");
-	MSG_Add("PROGRAM_MOUNT_USAGE",
-		"Usage \033[34;1mMOUNT Drive-Letter Local-Directory\033[0m\n"
-		"For example: MOUNT c %s\n"
-		"This makes the directory %s act as the C: drive inside DOSBox.\n"
-		"The directory has to exist.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED","Drive %c isn't mounted.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCESS","Drive %c has successfully been removed.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL","Virtual Drives can not be unMOUNTed.\n");
@@ -1783,6 +1774,37 @@ void DOS_SetupPrograms(void) {
 	        "  \033[32;1mimgmount\033[0m \033[37;1ma\033[0m \033[36;1mfloppy1.img floppy2.img floppy3.img\033[0m -t floppy\n"
 	        "  \033[32;1mimgmount\033[0m \033[37;1mc\033[0m \033[36;1m~/dos/c_drive.img\033[0m -t hdd\n"
 	        "  \033[32;1mimgmount\033[0m \033[37;1mc\033[0m \033[36;1mbootable.img\033[0m -t hdd -fs none -size 512,63,32,1023\n");
+	
+	MSG_Add("SHELL_CMD_MOUNT_HELP",
+	        "maps physical folders or drives to a virtual drive letter.\n");
+			
+	MSG_Add("SHELL_CMD_MOUNT_HELP_LONG",
+		"maps a physical folder or drive on the host to a virtual drive in DOS.\n"
+		"\n"
+		"Usage:\n"
+		"  mount DRIVE DIRECTORY\n"
+		"  mount DRIVE FLOPPY -t floppy\n"
+	        "  mount DRIVE CD-ROM -t cdrom\n"
+		"  mount DRIVE OVRLAY -t overlay\n"
+		"  mount -u DRIVE (unmounts DRIVE's physical drive or folder)\n"
+		"Where:\n"
+		"  DRIVE		is the mounted drive's virtual drive letter: a, c, d...\n"
+		"  DIRECTORY	is the physical Windows or Linux folder to be mounted.\n"
+		"  FLOPPY	is a local dir or path to a physically-mounted floppy disk.\n"
+		"  CD-ROM	is a local dir or path to a physically-mounted CD-ROM.\n"
+		"  OVERLAY	is local dir that will overlay an existing DOS drive mount.\n"
+		"Notes:\n"
+		" - Physical folders are case-sensitive and either relative or absolute\n"
+		"   with respect to dosbox-staging's current-working directory.\n"
+		"Examples:\n"
+		"  mount C C:\\dosgames\n"
+		"  mount A A:\\ -t floppy\n"
+		"  mount D D:\\ -t cdrom\n"
+		"  mount C ~/DOSGAMES\n"
+		"  mount A /DEV/FD0 -t floppy\n"
+		"  mount D /MEDIA/CDROM -t cdrom\n"
+		"  mount C my_savegame_files -t overlay\n"
+	       );
 
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE",
 	        "Must specify drive letter to mount image at.\n");
