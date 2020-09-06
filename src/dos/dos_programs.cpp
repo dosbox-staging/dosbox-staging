@@ -1787,7 +1787,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("SHELL_CMD_MOUNT_HELP",
 	        "connects physical folders and drives to dosbox-staging virtual drives.\n");
 			
-	MSG_Add("SHELL_CMD_MOUNT_HELP_LONG"
+	MSG_Add("SHELL_CMD_MOUNT_HELP_LONG",
 			"MOUNT [Drive-Letter] [Local-Directory]\n"
 			"Drive-Letter	   Drive letter where the physical folder will be mounted: a, c, d...\n"
 			"Local Directory   The physical folder on your PC to be mounted within dosbox-staging.\n"
