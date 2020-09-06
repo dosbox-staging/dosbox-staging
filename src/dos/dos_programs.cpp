@@ -1783,6 +1783,29 @@ void DOS_SetupPrograms(void) {
 	        "  \033[32;1mimgmount\033[0m \033[37;1ma\033[0m \033[36;1mfloppy1.img floppy2.img floppy3.img\033[0m -t floppy\n"
 	        "  \033[32;1mimgmount\033[0m \033[37;1mc\033[0m \033[36;1m~/dos/c_drive.img\033[0m -t hdd\n"
 	        "  \033[32;1mimgmount\033[0m \033[37;1mc\033[0m \033[36;1mbootable.img\033[0m -t hdd -fs none -size 512,63,32,1023\n");
+	
+	MSG_Add("SHELL_CMD_MOUNT_HELP",
+	        "connects physical folders and drives to dosbox-staging virtual drives.\n");
+			
+	MSG_Add("SHELL_CMD_MOUNT_HELP_LONG"
+			"MOUNT [Drive-Letter] [Local-Directory]\n"
+			"Drive-Letter	   Drive letter where the physical folder will be mounted: a, c, d...\n"
+			"Local Directory   The physical folder on your PC to be mounted within dosbox-staging.\n"
+			"To unmount a drive, use: MOUNT -u [Drive-Letter]\n"
+			"Extra CD Rom Options:\n"
+			"-t [floppy|cdrom] Specify the mounted folder to behave as a floppy disc or compact disc.\n"
+			"-usecd [drive #]  For direct hardware emulation ie: audio playback, etc.\n"
+			"-cd		   Generate a list of local CD ROM drive's "drive #" values\n"
+			"-label [name]     Set the volume name of the drive (all caps)\n"
+			"-ioctl		   Lowest level of hardware access (Win 2K, XP, Linux)...follows the -usecd command\n"
+			"MOUNT D D:\ -t cdrom -usecd 0 -ioctl -label GAME_CD"
+			"More Mount Examples: (NOTE: The MOUNT command can ONLY be run from the Z: Drive).\n"
+			"Mount a Windows Floppy Drive: 			MOUNT A A:\\ -t floppy\n"
+			"Mount a Windows Folder Named C:\\dosgames: 	MOUNT C C:\\dosgames\n"
+			"Mount a Windows CDROM Drive: 			MOUNT D D:\\ -t cdrom\n"
+			"Mount a Linux Floppy Drive: 			MOUNT A /DEV/FD0 -t floppy\n"
+			"Mount a Linux Folder named DOSGAMES: 		MOUNT C ~/DOSGAMES\n"
+			"Mount a Linux CDROM Drive: 			MOUNT D /MEDIA/CDROM/ -t cdrom\n");
 
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE",
 	        "Must specify drive letter to mount image at.\n");
