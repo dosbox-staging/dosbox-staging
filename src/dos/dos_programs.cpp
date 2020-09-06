@@ -1798,7 +1798,7 @@ void DOS_SetupPrograms(void) {
 			"-cd		   Generate a list of local CD ROM drive's "drive #" values\n"
 			"-label [name]     Set the volume name of the drive (all caps)\n"
 			"-ioctl		   Lowest level of hardware access (Win 2K, XP, Linux)...follows the -usecd command\n"
-			"MOUNT D D:\ -t cdrom -usecd 0 -ioctl -label GAME_CD"
+			"MOUNT D D:\ -t cdrom -usecd 0 -ioctl -label GAME_CD\n"
 			"More Mount Examples: (NOTE: The MOUNT command can ONLY be run from the Z: Drive).\n"
 			"Mount a Windows Floppy Drive: 			MOUNT A A:\\ -t floppy\n"
 			"Mount a Windows Folder Named C:\\dosgames: 	MOUNT C C:\\dosgames\n"
