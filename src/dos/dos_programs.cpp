@@ -1776,28 +1776,35 @@ void DOS_SetupPrograms(void) {
 	        "  \033[32;1mimgmount\033[0m \033[37;1mc\033[0m \033[36;1mbootable.img\033[0m -t hdd -fs none -size 512,63,32,1023\n");
 	
 	MSG_Add("SHELL_CMD_MOUNT_HELP",
-	        "connects physical folders and drives to dosbox-staging virtual drives.\n");
+	        "maps physical folders or drives to a virtual drive letter.\n");
 			
 	MSG_Add("SHELL_CMD_MOUNT_HELP_LONG",
-			"MOUNT Drive-Letter Local-Directory [options]\n"
-			"Drive-Letter		Drive letter for the mounted drive: a, c, d, etc\n"
-			"Local Directory		The physical folder or drive to be mounted\n"
-			"To unmount a drive, use: MOUNT -u [Drive-Letter]\n"
-			"Where:\n"
-			"-t [floppy|cdrom]	Mounts drive as a floppy disc or compact disc.\n"
-			"-t [overlay]		Redirects any saved files to a different location.\n"
-			"-usecd [drive #]	Directly emulates hardware ie: audio playback, etc.\n"
-			"-cd			Generates list of local CDROM drive's 'drive #' values.\n"
-			"-label [name]		Sets the volume name of the drive (all caps).\n"
-			"-ioctl			Sets Lowest level of hardware access, follows -usecd\n"
-			"MOUNT D D:\\ -t cdrom -usecd 0 -ioctl -label GAME_CD\n"
-			"More Mount Examples:\n"
-			"Mount a Windows Floppy Drive: 			MOUNT A A:\\ -t floppy\n"
-			"Mount a Windows Folder Named C:\\dosgames: 	MOUNT C C:\\dosgames\n"
-			"Mount a Windows CDROM Drive: 			MOUNT D D:\\ -t cdrom\n"
-			"Mount a Linux Floppy Drive: 			MOUNT A /DEV/FD0 -t floppy\n"
-			"Mount a Linux Folder named DOSGAMES: 		MOUNT C ~/DOSGAMES\n"
-			"Mount a Linux CDROM Drive: 			MOUNT D /MEDIA/CDROM/ -t cdrom\n");
+		"maps physical folders or drives to a virtual drive letter.\n"
+		"\n"
+		"Usage:\n"
+		"mount DRIVE FOLDER\n"
+		"mount DRIVE FLOPPY -t floppy\n"
+	        "mount DRIVE CD-ROM -t cdrom\n"
+		"mount DRIVE OVRLAY -t overlay\n"
+		"mount -u DRIVE (unmounts DRIVE's physical drive or folder)\n"
+		"Where:\n"
+		"DRIVE	is the mounted drive's virtual drive letter: a, c, d...\n"
+		"FOLDER	is the physical Windows or Linux folder to be mounted.\n"
+		"FLOPPY	is the physical floppy drive's drive letter.\n"
+		"CD-ROM	is the physical CD-ROM drive's drive letter.\n"
+		"OVRLAY	is the physical Windows or Linux folder to be overlaid.\n"
+		"Notes:\n"
+		"Physical folders are case-sensitive and either relative or absolute\n"
+		"− with respect to dosbox-staging's current-working directory.\n"
+		"− Ctrl+F4 swaps & mounts the next FLOPPY or CDROM, if provided.\n"
+		"Examples:\n"
+		"mount A A:\\ -t floppy\n"
+		"mount C C:\\dosgames\n"
+		"mount D D:\\ -t cdrom\n"
+		"mount A /DEV/FD0 -t floppy\n"
+		"mount C ~/DOSGAMES\n"
+		"mount D /MEDIA/CDROM -t cdrom\n"
+	       );
 
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE",
 	        "Must specify drive letter to mount image at.\n");
