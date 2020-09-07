@@ -1795,7 +1795,7 @@ void DOS_SetupPrograms(void) {
 			"Extra CD Rom Options:\n"
 			"-t [floppy|cdrom] Specify the mounted folder to behave as a floppy disc or compact disc.\n"
 			"-usecd [drive #]  For direct hardware emulation ie: audio playback, etc.\n"
-			"-cd		   Generate a list of local CD ROM drive's "drive #" values\n"
+			"-cd		   Generate a list of local CD ROM drive's 'drive #' values\n"
 			"-label [name]     Set the volume name of the drive (all caps)\n"
 			"-ioctl		   Lowest level of hardware access (Win 2K, XP, Linux)...follows the -usecd command\n"
 			"MOUNT D D:\ -t cdrom -usecd 0 -ioctl -label GAME_CD\n"
