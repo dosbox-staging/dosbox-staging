@@ -391,6 +391,9 @@
     <ClCompile Include="..\src\dos\program_autotype.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\midi\midi_fluidsynth.cpp">
+      <Filter>src\midi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\bios.h">
@@ -734,6 +737,12 @@
     </ClInclude>
     <ClInclude Include="..\src\dos\program_autotype.h">
       <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\midi\midi_fluidsynth.h">
+      <Filter>src\midi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\midi\midi_handler.h">
+      <Filter>src\midi</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
