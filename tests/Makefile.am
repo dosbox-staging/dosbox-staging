@@ -14,7 +14,8 @@ tests_CXXFLAGS += -lgtest_main -lgtest
 endif
 
 tests_SOURCES = \
-	example.cpp
+	example.cpp \
+	support.cpp
 
 tests_LDADD = ../src/misc/libmisc.a
 
