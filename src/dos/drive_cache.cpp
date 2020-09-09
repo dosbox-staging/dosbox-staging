@@ -135,8 +135,10 @@ Bit16u DOS_Drive_Cache::GetFreeID(CFileInfo* dir) {
 	return 0;
 }
 
-void DOS_Drive_Cache::SetBaseDir(const char* baseDir) {
-	if (strlen(baseDir) == 0) return;
+void DOS_Drive_Cache::SetBaseDir(const char *baseDir)
+{
+	if (is_empty(baseDir))
+		return;
 
 	// Guard if source and destination are the same
 	if (basePath == baseDir) {

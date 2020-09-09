@@ -153,6 +153,11 @@ char *trim(char * str);
 char * upcase(char * str);
 char * lowcase(char * str);
 
+inline bool is_empty(const char *str) noexcept
+{
+	return str[0] == '\0';
+}
+
 bool ScanCMDBool(char * cmd,char const * const check);
 char * ScanCMDRemain(char * cmd);
 char * StripWord(char *&cmd);
