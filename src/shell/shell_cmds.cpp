@@ -155,8 +155,9 @@ void DOS_Shell::DoCommand(char * line) {
 		*cmd_write++=*line++;
 	}
 	*cmd_write=0;
-	if (strlen(cmd_buffer) == 0) return;
-/* Check the internal list */
+	if (is_empty(cmd_buffer))
+		return;
+	/* Check the internal list */
 	Bit32u cmd_index=0;
 	while (cmd_list[cmd_index].name) {
 		if (strcasecmp(cmd_list[cmd_index].name,cmd_buffer) == 0) {
@@ -925,7 +926,8 @@ void DOS_Shell::CMD_COPY(char * args) {
 			if (plus == source_p && sources.size()) {
 				sources[sources.size() - 1].concat = true;
 				// If spaces also followed plus then item is only a plus.
-				if (strlen(++source_p) == 0) break;
+				if (is_empty(++source_p))
+					break;
 				plus = strchr(source_p,'+');
 			}
 			if (plus) *plus++ = 0;
