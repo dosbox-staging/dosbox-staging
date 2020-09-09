@@ -53,6 +53,11 @@ AlignAfterOpenBracket: Align
 #
 AlignConsecutiveMacros: true
 
+# Don't align backslash character in macros, as it's unexpected during review
+# and does not look right when user changes the tab size character in their editor.
+#
+AlignEscapedNewlines: DontAlign
+
 # Allow short functions defined inside a class to be put on a single line
 #
 # class Foo {
