@@ -107,7 +107,7 @@ void DOS_Drive_Cache::EmptyCache(void) {
 	dirBase		= new CFileInfo;
 	save_dir	= nullptr;
 	srchNr		= 0;
-	SetBaseDir(basePath);
+	if (basePath[0] != 0) SetBaseDir(basePath);
 }
 
 void DOS_Drive_Cache::SetLabel(const char* vname,bool cdrom,bool allowupdate) {
@@ -136,6 +136,8 @@ Bit16u DOS_Drive_Cache::GetFreeID(CFileInfo* dir) {
 }
 
 void DOS_Drive_Cache::SetBaseDir(const char* baseDir) {
+	if (strlen(baseDir) == 0) return;
+
 	// Guard if source and destination are the same
 	if (basePath == baseDir) {
 		return;
@@ -609,6 +611,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 		// TODO: modify MOUNT/IMGMOUNT to exit with an error when encountering
 		// a directory having more than 65534 files, which is FAT32's limit.
 		char short_nr[8] = {'\0'};
+		if (GCC_UNLIKELY(info->shortNr > 9999999)) E_Exit("~9999999 same name files overflow");
 		snprintf(short_nr, sizeof(short_nr), "%u", info->shortNr);
 
 		// Copy first letters
@@ -771,7 +774,8 @@ bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, Bit16u& id) {
 	safe_strcpy(expandcopy, expand);
 	// Add "/"
 	char end[2]={CROSS_FILESPLIT,0};
-	if (expandcopy[strlen(expandcopy)-1] != CROSS_FILESPLIT) {
+	const size_t expandcopylen = strlen(expandcopy);
+	if (expandcopylen > 0 && expandcopy[expandcopylen - 1] != CROSS_FILESPLIT) {
 		safe_strcat(expandcopy, end);
 	}
 	// open dir
