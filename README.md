@@ -23,13 +23,15 @@ support today's systems.
 | **Dynamic analysis**           | Yes                         | No
 | **clang-format**               | Yes                         | No
 | **[Development builds]**       | Yes                         | No
-| **Automated regression tests** | No (WIP)                    | No
+| **Unit tests**                 | Yes<sup>[5]</sup>           | No
+| **Automated regression tests** | WIP                         | No
 
 [SVN]:https://sourceforge.net/projects/dosbox/
 [1]:https://sourceforge.net/p/dosbox/patches/283/
 [2]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
 [3]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
 [4]:https://scan.coverity.com/projects/dosbox-staging
+[5]:tests/README.md
 [Development builds]:https://dosbox-staging.github.io/downloads/devel/
 
 ### Feature differences
@@ -45,19 +47,19 @@ Codecs supported for CD-DA emulation:
 |                | dosbox-staging<sup>†</sup> | DOSBox SVN<sup>‡</sup>
 |-               |-                           |-
 | **Opus**       | Yes (libopus)              | No
-| **OGG/Vorbis** | Yes (built-in)             | Yes - SDL\_sound 1.2 (libvorbis)<sup>[5],＊</sup>
-| **MP3**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (libmpg123)<sup>[5],＊,§</sup>
+| **OGG/Vorbis** | Yes (built-in)             | Yes - SDL\_sound 1.2 (libvorbis)<sup>[6],＊</sup>
+| **MP3**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (libmpg123)<sup>[6],＊,§</sup>
 | **FLAC**       | Yes (built-in)             | No<sup>§</sup>
-| **WAV**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (built-in)<sup>[6],＊</sup>
-| **AIFF**       | No                         | Yes - SDL\_sound 1.2 (built-in)<sup>[6],＊</sup>
+| **WAV**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (built-in)<sup>[7],＊</sup>
+| **AIFF**       | No                         | Yes - SDL\_sound 1.2 (built-in)<sup>[7],＊</sup>
 
 <sup>＊- SDL 1.2 was last updated 2013-08-17 and SDL\_sound 2008-04-20</sup>\
 <sup>† - 22.05 kHz, 44.1 kHz, 48 kHz; mono, stereo</sup>\
 <sup>‡ - 44.1 kHz stereo only</sup>\
 <sup>§ - Broken or unsupported in either SDL\_sound or DOSBox</sup>
 
-[5]:https://www.dosbox.com/wiki/MOUNT#Mounting_a_CUE.2FBIN-Pair_as_volume
-[6]:https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/trunk/src/dos/cdrom_image.cpp#l536
+[6]:https://www.dosbox.com/wiki/MOUNT#Mounting_a_CUE.2FBIN-Pair_as_volume
+[7]:https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/trunk/src/dos/cdrom_image.cpp#l536
 
 Other differences:
 
