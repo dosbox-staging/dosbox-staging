@@ -1751,30 +1751,44 @@ void DOS_SetupPrograms(void) {
 
 	MSG_Add("SHELL_CMD_IMGMOUNT_HELP_LONG",
 	        "Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
-			"\n"
+	        "\n"
 	        "Usage:\n"
-			"  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mCDROM-SET\033[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom \n"
-			"  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mIMAGEFILE\033[0m [IMAGEFILE2 [..]] [-fs fat] -t floppy\n"
-			"  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mIMAGEFILE\033[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd\n"
-			"  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mBOOTIMAGE\033[0m [-fs fat|none] -t hdd -size GEOMETRY\n"
-			"  \033[32;1mimgmount\033[0m -u \033[37;1mDRIVE\033[0m  (unmounts the DRIVE's image)\n"
-			"Where:\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mCDROM-SET\033[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom \n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mIMAGEFILE\033[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mBOOTIMAGE\033[0m [-fs fat|none] -t hdd -size GEOMETRY\n"
+	        "  \033[32;1mimgmount\033[0m -u \033[37;1mDRIVE\033[0m  (unmounts the DRIVE's image)\n"
+	        "Where:\n"
 	        "  \033[37;1mDRIVE\033[0m     is the drive letter where the image will be mounted: a, c, d, ...\n"
-			"  \033[36;1mCDROM-SET\033[0m is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
-			"  \033[36;1mIMAGEFILE\033[0m is a hard drive or floppy image in FAT16 or 12 format\n"
-			"  \033[36;1mBOOTIMAGE\033[0m is a bootable disk image with specified -size GEOMETRY:\n"
+	        "  \033[36;1mCDROM-SET\033[0m is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
+	        "  \033[36;1mIMAGEFILE\033[0m is a hard drive or floppy image in FAT16 or FAT12 format\n"
+	        "  \033[36;1mBOOTIMAGE\033[0m is a bootable disk image with specified -size GEOMETRY:\n"
 	        "            bytes-per-sector,sectors-per-head,heads,cylinders\n"
-			"Notes:\n"
+	        "Notes:\n"
 	        "  - Image paths and filenames are case-sensitive and either relative or\n"
-			"    absolute with respect to dosbox's current-working directory.\n"
-			"  - Ctrl+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.\n"
+	        "    absolute with respect to dosbox's current-working directory.\n"
+	        "  - Ctrl+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.\n"
 	        "Examples:\n"
-	        "  \033[32;1mimgmount\033[0m \033[37;1md\033[0m \033[36;1mc:\\games\\doom.iso\033[0m -t cdrom\n"
-	        "  \033[32;1mimgmount\033[0m \033[37;1md\033[0m \033[36;1mcd/quake1.cue\033[0m -t cdrom\n"
-	        "  \033[32;1mimgmount\033[0m \033[37;1ma\033[0m \033[36;1mfloppy1.img floppy2.img floppy3.img\033[0m -t floppy\n"
-	        "  \033[32;1mimgmount\033[0m \033[37;1mc\033[0m \033[36;1m~/dos/c_drive.img\033[0m -t hdd\n"
-	        "  \033[32;1mimgmount\033[0m \033[37;1mc\033[0m \033[36;1mbootable.img\033[0m -t hdd -fs none -size 512,63,32,1023\n");
-	
+#if defined(WIN32)
+	        "  \033[32;1mimgmount\033[0m \033[37;1mD\033[0m \033[36;1mC:\\games\\doom.iso\033[0m -t cdrom\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mD\033[0m \033[36;1mcd/quake1.cue\033[0m -t cdrom\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mA\033[0m \033[36;1mfloppy1.img floppy2.img floppy3.img\033[0m -t floppy\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mC\033[0m \033[36;1mC:\\dos\\c_drive.img\033[0m -t hdd\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mC\033[0m \033[36;1mbootable.img\033[0m -t hdd -fs none -size 512,63,32,1023\n"
+#elif defined(MACOSX)
+	        "  \033[32;1mimgmount\033[0m \033[37;1mD\033[0m \033[36;1m/Users/USERNAME/games/doom.iso\033[0m -t cdrom\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mD\033[0m \033[36;1mcd/quake1.cue\033[0m -t cdrom\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mA\033[0m \033[36;1mfloppy1.img floppy2.img floppy3.img\033[0m -t floppy\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mC\033[0m \033[36;1m~/dos/c_drive.img\033[0m -t hdd\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mC\033[0m \033[36;1mbootable.img\033[0m -t hdd -fs none -size 512,63,32,1023\n"
+#else
+	        "  \033[32;1mimgmount\033[0m \033[37;1mD\033[0m \033[36;1m/home/USERNAME/games/doom.iso\033[0m -t cdrom\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mD\033[0m \033[36;1mcd/quake1.cue\033[0m -t cdrom\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mA\033[0m \033[36;1mfloppy1.img floppy2.img floppy3.img\033[0m -t floppy\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mC\033[0m \033[36;1m~/dos/c_drive.img\033[0m -t hdd\n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mC\033[0m \033[36;1mbootable.img\033[0m -t hdd -fs none -size 512,63,32,1023\n"
+#endif
+	);
+
 	MSG_Add("SHELL_CMD_MOUNT_HELP",
 	        "maps physical folders or drives to a virtual drive letter.\n");
 
