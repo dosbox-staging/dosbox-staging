@@ -1777,34 +1777,42 @@ void DOS_SetupPrograms(void) {
 	
 	MSG_Add("SHELL_CMD_MOUNT_HELP",
 	        "maps physical folders or drives to a virtual drive letter.\n");
-			
+
 	MSG_Add("SHELL_CMD_MOUNT_HELP_LONG",
-		"maps a physical folder or drive on the host to a virtual drive in DOS.\n"
-		"\n"
-		"Usage:\n"
-		"  mount DRIVE DIRECTORY\n"
-		"  mount DRIVE FLOPPY -t floppy\n"
-	        "  mount DRIVE CD-ROM -t cdrom\n"
-		"  mount DRIVE OVRLAY -t overlay\n"
-		"  mount -u DRIVE (unmounts DRIVE's physical drive or folder)\n"
-		"Where:\n"
-		"  DRIVE		is the mounted drive's virtual drive letter: a, c, d...\n"
-		"  DIRECTORY	is the physical Windows or Linux folder to be mounted.\n"
-		"  FLOPPY	is a local dir or path to a physically-mounted floppy disk.\n"
-		"  CD-ROM	is a local dir or path to a physically-mounted CD-ROM.\n"
-		"  OVERLAY	is local dir that will overlay an existing DOS drive mount.\n"
-		"Notes:\n"
-		" - Physical folders are case-sensitive and either relative or absolute\n"
-		"   with respect to dosbox-staging's current-working directory.\n"
-		"Examples:\n"
-		"  mount C C:\\dosgames\n"
-		"  mount A A:\\ -t floppy\n"
-		"  mount D D:\\ -t cdrom\n"
-		"  mount C ~/DOSGAMES\n"
-		"  mount A /DEV/FD0 -t floppy\n"
-		"  mount D /MEDIA/CDROM -t cdrom\n"
-		"  mount C my_savegame_files -t overlay\n"
-	       );
+	        "Mount a directory from the host OS to a drive letter.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  \033[32;1mmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mDIRECTORY\033[0m [-t TYPE] [-freesize SIZE] [-label LABEL]\n"
+	        "  \033[32;1mmount\033[0m -u \033[37;1mDRIVE\033[0m  (unmounts the DRIVE's directory)\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[37;1mDRIVE\033[0m     the drive letter where the directory will be mounted: A, C, D, ...\n"
+	        "  \033[36;1mDIRECTORY\033[0m is the directory on the host OS to be mounted\n"
+	        "  TYPE      type of the directory to mount: dir, floppy, cdrom, or overlay\n"
+	        "  SIZE      free space for the virtual drive (KiB for floppies, MiB otherwise)\n"
+	        "  LABEL     drive label name to be used\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - \033[36;1mDIRECTORY\033[0m is case-sensitive path, relative or absolute with respect to\n"
+	        "    dosbox's current-working directory.\n"
+	        "  - '-t overlay' redirects writes for mounted drive to another directory.\n"
+	        "  - Additional options are described in the manual (README file, chapter 4).\n"
+	        "\n"
+	        "Examples:\n"
+#if defined(WIN32)
+	        "  \033[32;1mmount\033[0m \033[37;1mC\033[0m \033[36;1mC:\\dosgames\033[0m\n"
+	        "  \033[32;1mmount\033[0m \033[37;1mD\033[0m \033[36;1mD:\\\033[0m -t cdrom\n"
+	        "  \033[32;1mmount\033[0m \033[37;1mC\033[0m \033[36;1mmy_savegame_files\033[0m -t overlay\n"
+#elif defined(MACOSX)
+	        "  \033[32;1mmount\033[0m \033[37;1mC\033[0m \033[36;1m~/dosgames\033[0m\n"
+	        "  \033[32;1mmount\033[0m \033[37;1mD\033[0m \033[36;1m\"/Volumes/Game CD\"\033[0m -t cdrom\n"
+	        "  \033[32;1mmount\033[0m \033[37;1mC\033[0m \033[36;1mmy_savegame_files\033[0m -t overlay\n"
+#else
+	        "  \033[32;1mmount\033[0m \033[37;1mC\033[0m \033[36;1m~/dosgames\033[0m\n"
+	        "  \033[32;1mmount\033[0m \033[37;1mD\033[0m \033[36;1m\"/media/USERNAME/Game CD\"\033[0m -t cdrom\n"
+	        "  \033[32;1mmount\033[0m \033[37;1mC\033[0m \033[36;1mmy_savegame_files\033[0m -t overlay\n"
+#endif
+	);
 
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE",
 	        "Must specify drive letter to mount image at.\n");
