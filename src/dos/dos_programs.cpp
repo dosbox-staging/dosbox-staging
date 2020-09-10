@@ -1182,8 +1182,8 @@ public:
 		ChangeToLongCmd();
 
 		// Usage
-		if (!cmd->GetCount() || cmd->FindExist("?", false) ||
-		    cmd->FindExist("-help", false)) {
+		if (!cmd->GetCount() || cmd->FindExist("/?", false) ||
+		    cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {
 			WriteOut(MSG_Get("SHELL_CMD_IMGMOUNT_HELP_LONG"));
 			return;
 		}
