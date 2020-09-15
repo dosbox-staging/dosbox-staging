@@ -342,7 +342,6 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu len)
 			player.isPlaying = false;
 		}
 	}
-	SDL_mutexV(player.mutex);
 	if (player.ctrlUsed) {
 		Bit16s sample0,sample1;
 		Bit16s * samples=(Bit16s *)&player.buffer;
@@ -366,6 +365,7 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu len)
 #endif
 	memmove(player.buffer, &player.buffer[len], player.bufLen - len);
 	player.bufLen -= len;
+	SDL_mutexV(player.mutex);
 }
 
 bool CDROM_Interface_Image::LoadIsoFile(char* filename)
