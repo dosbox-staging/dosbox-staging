@@ -1064,9 +1064,10 @@ void LOADFIX::Run(void)
 			bool found = cmd->FindCommand(commandNr++,temp_line);
 			while (found) {
 				if (strlen(args)+temp_line.length()+1>256) break;
-				strcat(args,temp_line.c_str());
+				safe_strcat(args, temp_line.c_str());
 				found = cmd->FindCommand(commandNr++,temp_line);
-				if (found) strcat(args," ");
+				if (found)
+					safe_strcat(args, " ");
 			}
 			// Use shell to start program
 			DOS_Shell shell;
