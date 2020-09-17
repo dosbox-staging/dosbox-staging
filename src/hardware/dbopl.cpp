@@ -610,26 +610,42 @@ Bits INLINE Operator::GetSample( Bits modulation ) {
 	}
 }
 
-Operator::Operator() {
-	chanData = 0;
-	freqMul = 0;
-	waveIndex = 0;
-	waveAdd = 0;
-	waveCurrent = 0;
-	keyOn = 0;
-	ksr = 0;
-	reg20 = 0;
-	reg40 = 0;
-	reg60 = 0;
-	reg80 = 0;
-	regE0 = 0;
-	SetState( OFF );
-	rateZero = (1 << OFF);
-	sustainLevel = ENV_MAX;
-	currentLevel = ENV_MAX;
-	totalLevel = ENV_MAX;
-	volume = ENV_MAX;
-	releaseAdd = 0;
+Operator::Operator()
+        : volHandler(nullptr),
+#if (DBOPL_WAVE == WAVE_HANDLER)
+          waveHandler(nullptr),
+#else
+          waveBase(nullptr),
+          waveMask(0),
+          waveStart(0),
+#endif
+          waveIndex(0),
+          waveAdd(0),
+          waveCurrent(0),
+          chanData(0),
+          freqMul(0),
+          vibrato(0),
+          sustainLevel(ENV_MAX),
+          totalLevel(ENV_MAX),
+          currentLevel(ENV_MAX),
+          volume(ENV_MAX),
+          attackAdd(0),
+          decayAdd(0),
+          releaseAdd(0),
+          rateIndex(0),
+          rateZero(1 << OFF),
+          keyOn(0),
+          reg20(0),
+          reg40(0),
+          reg60(0),
+          reg80(0),
+          regE0(0),
+          state(0),
+          tremoloMask(0),
+          vibStrength(0),
+          ksr(0)
+{
+	SetState(OFF);
 }
 
 Channel::Channel()
@@ -1081,7 +1097,6 @@ void Chip::WriteBD( Bit8u val ) {
 		chan[8].op[1].KeyOff( 0x2 );
 	}
 }
-
 
 #define REGOP( _FUNC_ )															\
 	index = ( ( reg >> 3) & 0x20 ) | ( reg & 0x1f );								\
