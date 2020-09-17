@@ -758,9 +758,9 @@ static inline void advance(OPL3 *chip)
 				{
 					op->volume += eg_inc[op->eg_sel_dr + ((chip->eg_cnt>>op->eg_sh_dr)&7)];
 
-					if (op->volume >= op->sl)
+					const auto sl = static_cast<int32_t>(op->sl);
+					if (op->volume >= sl)
 						op->state = EG_SUS;
-
 				}
 			break;
 
@@ -1657,7 +1657,7 @@ static void OPL3WriteReg(OPL3 *chip, int r, int v)
 	OPL3_CH *CH;
 	unsigned int ch_offset = 0;
 	int slot;
-	int block_fnum;
+	uint32_t block_fnum;
 
 	if (r&0x100)
 	{
