@@ -175,7 +175,7 @@ void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page);
 void INT10_TeletypeOutput(Bit8u chr,Bit8u attr);
 void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr);
 void INT10_ReadCharAttr(Bit16u * result,Bit8u page);
-void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr);
+void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bool showattr);
 void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,Bit16u count,Bit8u page);
 
 /* Graphics Stuff */

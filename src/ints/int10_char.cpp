@@ -587,7 +587,8 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 	}
 }
 
-void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr) {
+void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bool showattr)
+{
 	Bit8u pospage=page;
 	if (CurMode->type!=M_TEXT) {
 		showattr=true; //Use attr in graphics mode always
@@ -608,6 +609,9 @@ void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr)
 			case MCH_PCJR:
 				page=0;
 				pospage=0;
+				break;
+			case MCH_HERC:
+			case MCH_TANDY:
 				break;
 		}
 	}
