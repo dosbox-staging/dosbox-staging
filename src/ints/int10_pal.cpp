@@ -33,7 +33,8 @@ static INLINE void WriteTandyACTL(Bit8u creg,Bit8u val) {
 	else IO_Write(VGAREG_PCJR_DATA,val);
 }
 
-void INT10_SetSinglePaletteRegister(Bit8u reg,Bit8u val) {
+void INT10_SetSinglePaletteRegister(uint8_t reg, uint8_t val)
+{
 	switch (machine) {
 	case MCH_PCJR:
 		reg&=0xf;
@@ -63,7 +64,7 @@ void INT10_SetSinglePaletteRegister(Bit8u reg,Bit8u val) {
 					if (color_select& 0x20) reg++; // Cyan Magenta White
 				}
 				WriteTandyACTL(reg+0x10,val);
-			} 
+			}
 			// 4-color high resolution mode 0x0a isn't handled specially
 			else WriteTandyACTL(reg+0x10,val);
 			break;
@@ -83,9 +84,11 @@ void INT10_SetSinglePaletteRegister(Bit8u reg,Bit8u val) {
 		}
 		IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
 		break;
+	case MCH_HERC:
+	case MCH_CGA:
+		break;
 	}
 }
-
 
 void INT10_SetOverscanBorderColor(Bit8u val) {
 	switch (machine) {
