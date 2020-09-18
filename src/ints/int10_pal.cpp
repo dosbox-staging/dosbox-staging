@@ -90,7 +90,8 @@ void INT10_SetSinglePaletteRegister(uint8_t reg, uint8_t val)
 	}
 }
 
-void INT10_SetOverscanBorderColor(Bit8u val) {
+void INT10_SetOverscanBorderColor(uint8_t val)
+{
 	switch (machine) {
 	case TANDY_ARCH_CASE:
 		IO_Read(VGAREG_TDY_RESET);
@@ -102,6 +103,9 @@ void INT10_SetOverscanBorderColor(Bit8u val) {
 		IO_Write(VGAREG_ACTL_ADDRESS,0x11);
 		IO_Write(VGAREG_ACTL_WRITE_DATA,val);
 		IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
+		break;
+	case MCH_HERC:
+	case MCH_CGA:
 		break;
 	}
 }

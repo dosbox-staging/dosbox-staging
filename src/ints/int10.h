@@ -190,7 +190,7 @@ void INT10_ReloadFont(void);
 void INT10_SetBackgroundBorder(Bit8u val);
 void INT10_SetColorSelect(Bit8u val);
 void INT10_SetSinglePaletteRegister(uint8_t reg, uint8_t val);
-void INT10_SetOverscanBorderColor(Bit8u val);
+void INT10_SetOverscanBorderColor(uint8_t val);
 void INT10_SetAllPaletteRegisters(PhysPt data);
 void INT10_ToggleBlinkingBit(Bit8u state);
 void INT10_GetSinglePaletteRegister(Bit8u reg,Bit8u * val);
