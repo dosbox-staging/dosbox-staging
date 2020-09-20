@@ -26,7 +26,7 @@
 #include "mem_unaligned.h"
 
 typedef uint32_t PhysPt;
-typedef Bit8u * HostPt;
+typedef uint8_t * HostPt;
 typedef uint32_t RealPt;
 
 typedef Bit32s MemHandle;
@@ -77,15 +77,15 @@ static inline uint32_t var_read(uint32_t * var) {
 
 /* The Folowing six functions are slower but they recognize the paged memory system */
 
-Bit8u  mem_readb(PhysPt pt);
+uint8_t  mem_readb(PhysPt pt);
 uint16_t mem_readw(PhysPt pt);
 uint32_t mem_readd(PhysPt pt);
 
-void mem_writeb(PhysPt pt,Bit8u val);
+void mem_writeb(PhysPt pt,uint8_t val);
 void mem_writew(PhysPt pt,uint16_t val);
 void mem_writed(PhysPt pt,uint32_t val);
 
-static inline void phys_writeb(PhysPt addr,Bit8u val) {
+static inline void phys_writeb(PhysPt addr,uint8_t val) {
 	host_writeb(MemBase+addr,val);
 }
 static inline void phys_writew(PhysPt addr,uint16_t val){
@@ -95,7 +95,7 @@ static inline void phys_writed(PhysPt addr,uint32_t val){
 	host_writed(MemBase+addr,val);
 }
 
-static inline Bit8u phys_readb(PhysPt addr) {
+static inline uint8_t phys_readb(PhysPt addr) {
 	return host_readb(MemBase+addr);
 }
 static inline uint16_t phys_readw(PhysPt addr){
@@ -118,7 +118,7 @@ void mem_strcpy(PhysPt dest,PhysPt src);
 
 /* The folowing functions are all shortcuts to the above functions using physical addressing */
 
-static inline Bit8u real_readb(uint16_t seg,uint16_t off) {
+static inline uint8_t real_readb(uint16_t seg,uint16_t off) {
 	return mem_readb((seg<<4)+off);
 }
 static inline uint16_t real_readw(uint16_t seg,uint16_t off) {
@@ -128,7 +128,7 @@ static inline uint32_t real_readd(uint16_t seg,uint16_t off) {
 	return mem_readd((seg<<4)+off);
 }
 
-static inline void real_writeb(uint16_t seg,uint16_t off,Bit8u val) {
+static inline void real_writeb(uint16_t seg,uint16_t off,uint8_t val) {
 	mem_writeb(((seg<<4)+off),val);
 }
 static inline void real_writew(uint16_t seg,uint16_t off,uint16_t val) {
@@ -159,16 +159,16 @@ static inline RealPt RealMake(uint16_t seg,uint16_t off) {
 	return (seg<<16)+off;
 }
 
-static inline void RealSetVec(Bit8u vec,RealPt pt) {
+static inline void RealSetVec(uint8_t vec,RealPt pt) {
 	mem_writed(vec<<2,pt);
 }
 
-static inline void RealSetVec(Bit8u vec,RealPt pt,RealPt &old) {
+static inline void RealSetVec(uint8_t vec,RealPt pt,RealPt &old) {
 	old = mem_readd(vec<<2);
 	mem_writed(vec<<2,pt);
 }
 
-static inline RealPt RealGetVec(Bit8u vec) {
+static inline RealPt RealGetVec(uint8_t vec) {
 	return mem_readd(vec<<2);
 }	
 
