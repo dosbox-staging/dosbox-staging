@@ -118,6 +118,10 @@ bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry);
 bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate);
 bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate);
 
+// Date and Time Conversion
+uint16_t DOS_PackTime(uint16_t hour, uint16_t min, uint16_t sec);
+uint16_t DOS_PackDate(uint16_t year, uint16_t mon, uint16_t day);
+
 /* Routines for Drive Class */
 bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry,bool fcb = false);
 bool DOS_OpenFileExtended(char const * name, Bit16u flags, Bit16u createAttr, Bit16u action, Bit16u *entry, Bit16u* status);
@@ -214,28 +218,6 @@ static INLINE Bit16u long2para(Bit32u size) {
 	if (size>0xFFFF0) return 0xffff;
 	if (size&0xf) return (Bit16u)((size>>4)+1);
 	else return (Bit16u)(size>>4);
-}
-
-static inline uint16_t DOS_PackTime(uint16_t hour, uint16_t min, uint16_t sec)
-{
-	const auto hour_portion = (hour & 0x1f) << 11;
-	const auto min_portion = (min & 0x3f) << 5;
-	const auto sec_portion = (sec / 2) & 0x1f;
-	const auto packed = hour_portion | min_portion | sec_portion;
-
-	assert(packed >= 0 && packed <= UINT16_MAX); // ensure rvalue won't wrap
-	return static_cast<uint16_t>(packed);
-}
-
-static inline uint16_t DOS_PackDate(uint16_t year, uint16_t mon, uint16_t day)
-{
-	const auto year_portion = ((year - 1980) & 0x7f) << 9;
-	const auto mon_portion = (mon & 0x3f) << 5;
-	const auto day_portion = day & 0x1f;
-	const auto packed = year_portion | mon_portion | day_portion;
-
-	assert(packed >= 0 && packed <= UINT16_MAX); // ensure rvalue won't wrap
-	return static_cast<uint16_t>(packed);
 }
 
 /* Dos Error Codes */
