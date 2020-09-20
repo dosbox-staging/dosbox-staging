@@ -132,28 +132,34 @@ void mem_strcpy(PhysPt dest, PhysPt src);
 
 static inline uint8_t real_readb(uint16_t seg, uint16_t off)
 {
-	return mem_readb((seg << 4) + off);
+	const auto base = static_cast<uint32_t>(seg << 4);
+	return mem_readb(base + off);
 }
 static inline uint16_t real_readw(uint16_t seg, uint16_t off)
 {
-	return mem_readw((seg << 4) + off);
+	const auto base = static_cast<uint32_t>(seg << 4);
+	return mem_readw(base + off);
 }
 static inline uint32_t real_readd(uint16_t seg, uint16_t off)
 {
-	return mem_readd((seg << 4) + off);
+	const auto base = static_cast<uint32_t>(seg << 4);
+	return mem_readd(base + off);
 }
 
 static inline void real_writeb(uint16_t seg, uint16_t off, uint8_t val)
 {
-	mem_writeb(((seg << 4) + off), val);
+	const auto base = static_cast<uint32_t>(seg << 4);
+	mem_writeb(base + off, val);
 }
 static inline void real_writew(uint16_t seg, uint16_t off, uint16_t val)
 {
-	mem_writew(((seg << 4) + off), val);
+	const auto base = static_cast<uint32_t>(seg << 4);
+	mem_writew(base + off, val);
 }
 static inline void real_writed(uint16_t seg, uint16_t off, uint32_t val)
 {
-	mem_writed(((seg << 4) + off), val);
+	const auto base = static_cast<uint32_t>(seg << 4);
+	mem_writed(base + off, val);
 }
 
 static inline uint16_t RealSeg(RealPt pt)
@@ -168,35 +174,41 @@ static inline uint16_t RealOff(RealPt pt)
 
 static inline PhysPt Real2Phys(RealPt pt)
 {
-	return (RealSeg(pt) << 4) + RealOff(pt);
+	const auto base = static_cast<uint32_t>(RealSeg(pt) << 4);
+	return base + RealOff(pt);
 }
 
 static inline PhysPt PhysMake(uint16_t seg, uint16_t off)
 {
-	return (seg << 4) + off;
+	const auto base = static_cast<uint32_t>(seg << 4);
+	return base + off;
 }
 
 static inline RealPt RealMake(uint16_t seg, uint16_t off)
 {
-	return (seg << 16) + off;
+	const auto base = static_cast<uint32_t>(seg << 16);
+	return base + off;
 }
 
 static inline void RealSetVec(uint8_t vec, RealPt pt)
 {
-	mem_writed(vec << 2, pt);
+	const auto target = static_cast<uint16_t>(vec << 2);
+	mem_writed(target, pt);
 }
 
 // TODO: consider dropping this function. The three places where it's called all
 // ignore the 3rd updated parameter.
 static inline void RealSetVec(uint8_t vec, RealPt pt, RealPt &old)
 {
-	old = mem_readd(vec << 2);
-	mem_writed(vec << 2, pt);
+	const auto target = static_cast<uint16_t>(vec << 2);
+	old = mem_readd(target);
+	mem_writed(target, pt);
 }
 
 static inline RealPt RealGetVec(uint8_t vec)
 {
-	return mem_readd(vec << 2);
+	const auto target = static_cast<uint16_t>(vec << 2);
+	return mem_readd(target);
 }
 
 #endif
