@@ -435,7 +435,7 @@ public:
 	void SetUMBChainState(uint8_t state) { SSET_BYTE(sDIB, chainingUMB, state); }
 	uint8_t GetUMBChainState() const { return SGET_BYTE(sDIB, chainingUMB); }
 
-	void SetStartOfUMBChain(uint16_t seg) { SSET_WORD(sDIB, startOfUMBChain, seg); }
+	void SetStartOfUMBChain(uint16_t start_seg) { SSET_WORD(sDIB, startOfUMBChain, start_seg); }
 	uint16_t GetStartOfUMBChain() const { return SGET_WORD(sDIB, startOfUMBChain); }
 
 	void SetDiskBufferHeadPt(uint32_t db) { SSET_DWORD(sDIB, diskBufferHeadPt, db); }
