@@ -216,13 +216,26 @@ static INLINE Bit16u long2para(Bit32u size) {
 	else return (Bit16u)(size>>4);
 }
 
+static inline uint16_t DOS_PackTime(uint16_t hour, uint16_t min, uint16_t sec)
+{
+	const auto hour_portion = (hour & 0x1f) << 11;
+	const auto min_portion = (min & 0x3f) << 5;
+	const auto sec_portion = (sec / 2) & 0x1f;
+	const auto packed = hour_portion | min_portion | sec_portion;
 
-static INLINE Bit16u DOS_PackTime(Bit16u hour,Bit16u min,Bit16u sec) {
-	return (hour&0x1f)<<11 | (min&0x3f) << 5 | ((sec/2)&0x1f);
+	assert(packed >= 0 && packed <= UINT16_MAX); // ensure rvalue won't wrap
+	return static_cast<uint16_t>(packed);
 }
 
-static INLINE Bit16u DOS_PackDate(Bit16u year,Bit16u mon,Bit16u day) {
-	return ((year-1980)&0x7f)<<9 | (mon&0x3f) << 5 | (day&0x1f);
+static inline uint16_t DOS_PackDate(uint16_t year, uint16_t mon, uint16_t day)
+{
+	const auto year_portion = ((year - 1980) & 0x7f) << 9;
+	const auto mon_portion = (mon & 0x3f) << 5;
+	const auto day_portion = day & 0x1f;
+	const auto packed = year_portion | mon_portion | day_portion;
+
+	assert(packed >= 0 && packed <= UINT16_MAX); // ensure rvalue won't wrap
+	return static_cast<uint16_t>(packed);
 }
 
 /* Dos Error Codes */
