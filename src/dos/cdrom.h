@@ -203,7 +203,7 @@ private:
 		int             getLength();
 		// This is a no-op because we track the audio position in all
 		// areas of this class.
-		void setAudioPosition(uint32_t pos) {}
+		void setAudioPosition(MAYBE_UNUSED uint32_t pos) {}
 	private:
 		Sound_Sample *sample = nullptr;
 	};
