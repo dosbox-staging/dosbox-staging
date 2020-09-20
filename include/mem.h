@@ -29,7 +29,7 @@ typedef uint32_t PhysPt;
 typedef uint8_t * HostPt;
 typedef uint32_t RealPt;
 
-typedef Bit32s MemHandle;
+typedef int32_t MemHandle;
 
 #define MEM_PAGESIZE 4096
 
