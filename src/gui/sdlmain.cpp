@@ -507,7 +507,7 @@ MAYBE_UNUSED static void PauseDOSBox(bool pressed)
 {
 	if (!pressed)
 		return;
-	SDLMod inkeymod = SDL_GetModState();
+	const auto inkeymod = static_cast<uint16_t>(SDL_GetModState());
 
 	GFX_SetTitle(-1,-1,true);
 	bool paused = true;
@@ -531,7 +531,7 @@ MAYBE_UNUSED static void PauseDOSBox(bool pressed)
 			case SDL_KEYDOWN:   // Must use Pause/Break Key to resume.
 			case SDL_KEYUP:
 			if(event.key.keysym.sym == SDLK_PAUSE) {
-				SDLMod outkeymod = (event.key.keysym.mod);
+				const uint16_t outkeymod = event.key.keysym.mod;
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
 					MAPPER_LosingFocus();
