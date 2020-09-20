@@ -25,9 +25,9 @@
 #include "mem_host.h"
 #include "mem_unaligned.h"
 
-typedef Bit32u PhysPt;
+typedef uint32_t PhysPt;
 typedef Bit8u * HostPt;
-typedef Bit32u RealPt;
+typedef uint32_t RealPt;
 
 typedef Bit32s MemHandle;
 
@@ -63,7 +63,7 @@ static inline void var_write(uint16_t * var, uint16_t val) {
 	host_writew((HostPt)var, val);
 }
 
-static inline void var_write(Bit32u * var, Bit32u val) {
+static inline void var_write(uint32_t * var, uint32_t val) {
 	host_writed((HostPt)var, val);
 }
 
@@ -71,7 +71,7 @@ static inline uint16_t var_read(uint16_t * var) {
 	return host_readw((HostPt)var);
 }
 
-static inline Bit32u var_read(Bit32u * var) {
+static inline uint32_t var_read(uint32_t * var) {
 	return host_readd((HostPt)var);
 }
 
@@ -79,11 +79,11 @@ static inline Bit32u var_read(Bit32u * var) {
 
 Bit8u  mem_readb(PhysPt pt);
 uint16_t mem_readw(PhysPt pt);
-Bit32u mem_readd(PhysPt pt);
+uint32_t mem_readd(PhysPt pt);
 
 void mem_writeb(PhysPt pt,Bit8u val);
 void mem_writew(PhysPt pt,uint16_t val);
-void mem_writed(PhysPt pt,Bit32u val);
+void mem_writed(PhysPt pt,uint32_t val);
 
 static inline void phys_writeb(PhysPt addr,Bit8u val) {
 	host_writeb(MemBase+addr,val);
@@ -91,7 +91,7 @@ static inline void phys_writeb(PhysPt addr,Bit8u val) {
 static inline void phys_writew(PhysPt addr,uint16_t val){
 	host_writew(MemBase+addr,val);
 }
-static inline void phys_writed(PhysPt addr,Bit32u val){
+static inline void phys_writed(PhysPt addr,uint32_t val){
 	host_writed(MemBase+addr,val);
 }
 
@@ -101,7 +101,7 @@ static inline Bit8u phys_readb(PhysPt addr) {
 static inline uint16_t phys_readw(PhysPt addr){
 	return host_readw(MemBase+addr);
 }
-static inline Bit32u phys_readd(PhysPt addr){
+static inline uint32_t phys_readd(PhysPt addr){
 	return host_readd(MemBase+addr);
 }
 
@@ -124,7 +124,7 @@ static inline Bit8u real_readb(uint16_t seg,uint16_t off) {
 static inline uint16_t real_readw(uint16_t seg,uint16_t off) {
 	return mem_readw((seg<<4)+off);
 }
-static inline Bit32u real_readd(uint16_t seg,uint16_t off) {
+static inline uint32_t real_readd(uint16_t seg,uint16_t off) {
 	return mem_readd((seg<<4)+off);
 }
 
@@ -134,7 +134,7 @@ static inline void real_writeb(uint16_t seg,uint16_t off,Bit8u val) {
 static inline void real_writew(uint16_t seg,uint16_t off,uint16_t val) {
 	mem_writew(((seg<<4)+off),val);
 }
-static inline void real_writed(uint16_t seg,uint16_t off,Bit32u val) {
+static inline void real_writed(uint16_t seg,uint16_t off,uint32_t val) {
 	mem_writed(((seg<<4)+off),val);
 }
 
