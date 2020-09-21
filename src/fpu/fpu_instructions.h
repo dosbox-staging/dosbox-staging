@@ -282,30 +282,30 @@ static void FPU_FST_I64(PhysPt addr) {
 
 static void FPU_FBST(PhysPt addr) {
 	FPU_Reg val = fpu.regs[TOP];
-	bool sign = false;
-	if(fpu.regs[TOP].ll & LONGTYPE(0x8000000000000000)) { //sign
-		sign=true;
-		val.d=-val.d;
-	}
-	//numbers from back to front
-	Real64 temp=val.d;
-	Bitu p;
-	for(Bitu i=0;i<9;i++){
-		val.d=temp;
-		temp = static_cast<Real64>(static_cast<Bit64s>(floor(val.d/10.0)));
-		p = static_cast<Bitu>(val.d - 10.0*temp);  
-		val.d=temp;
-		temp = static_cast<Real64>(static_cast<Bit64s>(floor(val.d/10.0)));
-		p |= (static_cast<Bitu>(val.d - 10.0*temp)<<4);
+	if(val.ll & LONGTYPE(0x8000000000000000)) { // MSB = sign
+		mem_writeb(addr+9,0x80);
+		val.d = -val.d;
+	} else mem_writeb(addr+9,0);
 
-		mem_writeb(addr+i,p);
+	Bit64u rndint = static_cast<Bit64u>(FROUND(val.d));
+	// BCD (18 decimal digits) overflow? (0x0DE0B6B3A763FFFF max)
+	if (rndint > LONGTYPE(999999999999999999)) {
+		// write BCD integer indefinite value
+		mem_writed(addr+0,0);
+		mem_writed(addr+4,0xC0000000);
+		mem_writew(addr+8,0xFFFF);
+		return;
 	}
-	val.d=temp;
-	temp = static_cast<Real64>(static_cast<Bit64s>(floor(val.d/10.0)));
-	p = static_cast<Bitu>(val.d - 10.0*temp);
-	if(sign)
-		p|=0x80;
-	mem_writeb(addr+9,p);
+
+	//numbers from back to front
+	for(Bitu i=0;i<9;i++){
+		Bit64u temp = rndint / 10;
+		Bit8u p = static_cast<Bit8u>(rndint % 10);
+		rndint = temp / 10;
+		p |= (static_cast<Bit8u>(temp % 10)) << 4;
+		mem_writeb(addr++,p);
+	}
+	// flags? C1 should indicate if value was rounded up
 }
 
 static void FPU_FADD(Bitu op1, Bitu op2){
