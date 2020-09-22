@@ -17,14 +17,18 @@ SUBDIRS = docs include src tests
 # (note: with recursive makefiles, these files could be defined as individual distclean-local:
 # targets inside each sub-directory's Makefile.am, however listing them in one target here
 # is easier manage as they can all be seen at once.)
+#
+# This results in 'make distclean' working the same as 'git clean -fdx', even when code
+# was distributed via a tarball, and not cloned from a Git repo.
 
 distclean-local:
+	-rm ar-lib
 	-rm aclocal.m4
 	-rm build.log
 	-rm compile
+	-rm compile_commands.json
 	-rm config.guess
-	-rm config.h.in
-	-rm config.h.in~
+	-rm config.h.in*
 	-rm config.log
 	-rm config.sub
 	-rm configure
