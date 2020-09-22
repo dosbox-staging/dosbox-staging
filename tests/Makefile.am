@@ -19,4 +19,11 @@ tests_SOURCES = \
 
 tests_LDADD = ../src/misc/libmisc.a
 
+# Override automake's distclean target to prevent it recursing into
+# SUBDIRS and failing (it was already invoked in there via src/Makefile.am).
+distclean:
+	-rm tests$(EXEEXT)
+	-rm *.o
+	-rm Makefile
+
 endif
