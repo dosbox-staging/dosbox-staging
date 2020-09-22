@@ -299,11 +299,12 @@ static void FPU_FBST(PhysPt addr) {
 
 	//numbers from back to front
 	for(Bitu i=0;i<9;i++){
-		Bit64u temp = rndint / 10;
-		Bit8u p = static_cast<Bit8u>(rndint % 10);
-		rndint = temp / 10;
-		p |= (static_cast<Bit8u>(temp % 10)) << 4;
-		mem_writeb(addr++,p);
+		const lldiv_t div10 = lldiv(rndint, 10);
+		const lldiv_t div100 = lldiv(div10.quot, 10);
+		const uint8_t p = static_cast<uint8_t>(div10.rem) |
+		                  (static_cast<uint8_t>(div100.rem) << 4);
+		mem_writeb(addr++, p);
+		rndint = div100.quot;
 	}
 	// flags? C1 should indicate if value was rounded up
 }
