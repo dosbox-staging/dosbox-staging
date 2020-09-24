@@ -119,7 +119,7 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 			if (logoverlay) LOG_MSG("RemoveDir found %s",name);
 			if (empty && strcmp(".",name ) && strcmp("..",name)) 
 				empty = false; //Neither . or .. so directory not empty.
-		} while ( (ret=this->FindNext(dta)) );
+		} while (this->FindNext(dta));
 		//Always exhaust list, so drive_cache entry gets invalidated/reused.
 		//FindNext is done, restore error code to old value. DOS_RemoveDir will set the right one if needed.
 		dos.errorcode = olderror;

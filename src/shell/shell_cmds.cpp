@@ -674,7 +674,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 		results.push_back(result);
 
-	} while ( (ret=DOS_FindNext()) );
+	} while (DOS_FindNext());
 
 	if (optON) {
 		// Sort by name
