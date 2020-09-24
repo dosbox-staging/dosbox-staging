@@ -297,10 +297,10 @@ static void FPU_FBST(PhysPt addr) {
 		return;
 	}
 
-	static_assert(sizeof(long long int) == sizeof(uint64_t),
-	              "long long int needs to match uint64_t in size");
-	//numbers from back to front
-	for(Bitu i=0;i<9;i++){
+	static_assert(sizeof(rndint) == sizeof(long long int),
+	              "passing rndint to lldiv function");
+	// numbers from back to front
+	for (int i = 0; i < 9; i++) {
 		const lldiv_t div10 = lldiv(rndint, 10);
 		const lldiv_t div100 = lldiv(div10.quot, 10);
 		const uint8_t p = static_cast<uint8_t>(div10.rem) |
