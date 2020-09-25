@@ -872,17 +872,18 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;		
 	case 0x57:					/* Get/Set File's Date and Time */
-		if (reg_al==0x00) {
-			if (DOS_GetFileDate(reg_bx,&reg_cx,&reg_dx)) {
+		if (reg_al == 0x00) {
+			if (DOS_GetFileDate(reg_bx, &reg_cx, &reg_dx)) {
 				CALLBACK_SCF(false);
 			} else {
+				reg_ax = dos.errorcode;
 				CALLBACK_SCF(true);
 			}
-		} else if (reg_al==0x01) {
-			/* FIXME: verify if AX needs to be updated here */
+		} else if (reg_al == 0x01) {
 			if (DOS_SetFileDate(reg_bx, reg_cx, reg_dx)) {
 				CALLBACK_SCF(false);
 			} else {
+				reg_ax = dos.errorcode;
 				CALLBACK_SCF(true);
 			}
 		} else {
