@@ -1308,6 +1308,8 @@ public:
 	}
 
 	~SERIALPORTS () {
+		MODEM_ClearPhonebook();
+
 		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i)
 			if (serialports[i]) {
 				delete serialports[i];
