@@ -123,9 +123,9 @@ emptyline:
 	// Finally it moves the cmd_write pointer ahead by the length copied.
 	auto append_cmd_write = [&cmd_write, &line](const char *src) {
 		const auto src_len = strlen(src);
-		const auto req_len = cmd_write - line + static_cast<int>(src_len);
-		if (req_len < CMD_MAXLINE - 1) {
-			safe_strncpy(cmd_write, src, src_len);
+		const auto req_len = cmd_write - line + static_cast<int>(src_len) + 1;
+		if (src_len && req_len < CMD_MAXLINE) {
+			safe_strncpy(cmd_write, src, req_len);
 			cmd_write += src_len;
 		}
 	};
