@@ -87,6 +87,7 @@ static struct {
 	int16_t last_played_sample = 0;
 	uint16_t prev_pos = 0u;
 	uint8_t idle_countdown = 0u;
+	bool neutralize_dc_offset = true;
 } spkr;
 
 static bool SpeakerExists()
@@ -448,7 +449,12 @@ static void PCSPEAKER_CallBack(Bitu len)
 		spkr.prev_pos = pos;
 		*stream++=(Bit16s)(value/sample_add);
 	}
-	PlayOrFadeout(pos, len, reinterpret_cast<int16_t *>(MixTemp));
+
+	int16_t *buffer = reinterpret_cast<int16_t *>(MixTemp);
+	if (spkr.neutralize_dc_offset)
+		PlayOrFadeout(pos, len, buffer);
+	else
+		spkr.chan->AddSamples_m16(len, buffer);
 }
 class PCSPEAKER:public Module_base {
 private:
@@ -460,6 +466,16 @@ public:
 		if (!section->Get_bool("pcspeaker"))
 			return;
 		spkr.rate = std::max(section->Get_int("pcrate"), 8000);
+
+		std::string dc_offset_pref = section->Get_string("pc_zero_offset");
+		if (dc_offset_pref == "auto")
+#if !defined(WIN32)
+			spkr.neutralize_dc_offset = true;
+#else
+			spkr.neutralize_dc_offset = false;
+#endif
+		else
+			spkr.neutralize_dc_offset = (dc_offset_pref == "true");
 
 		spkr.dc_silencer.Configure(static_cast<uint32_t>(spkr.rate),
 		                           DC_SILENCER_WAVES, DC_SILENCER_WAVE_HZ);
