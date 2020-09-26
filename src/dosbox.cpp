@@ -712,9 +712,17 @@ void DOSBOX_Init(void) {
 	pint->SetMinMax(8000, 48000);
 	pint->Set_help("Sample rate of the PC-Speaker sound generation.");
 
-	secprop->AddInitFunction(&TANDYSOUND_Init,true);//done
-	const char* tandys[] = { "auto", "on", "off", 0};
-	Pstring = secprop->Add_string("tandy",Property::Changeable::WhenIdle,"auto");
+	const char *pc_zero_offset_opts[] = {"auto", "true", "false", 0};
+	pstring = secprop->Add_string("pc_zero_offset", when_idle, pc_zero_offset_opts[0]);
+	pstring->Set_values(pc_zero_offset_opts);
+	pstring->Set_help(
+	        "Neutralizes and prevents the PC speaker's DC-offset from harming other sources.\n"
+	        "'auto' enables this for non-Windows systems and disables it on Windows.\n"
+	        "If your OS performs its own DC-offset correction, then set this to 'false'.");
+
+	secprop->AddInitFunction(&TANDYSOUND_Init, true);
+	const char *tandys[] = {"auto", "on", "off", 0};
+	Pstring = secprop->Add_string("tandy", when_idle, "auto");
 	Pstring->Set_values(tandys);
 	Pstring->Set_help("Enable Tandy Sound System emulation. For 'auto', emulation is present only if machine is set to 'tandy'.");
 
