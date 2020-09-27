@@ -2149,6 +2149,8 @@ static void GUI_StartUp(Section * sec) {
 		sdl.desktop.want_type=SCREEN_SURFACE;//SHOULDN'T BE POSSIBLE anymore
 	}
 
+	SDL_EnableScreenSaver();
+
 	sdl.texture.texture = 0;
 	sdl.texture.pixelFormat = 0;
 	sdl.render_driver = section->Get_string("texture_renderer");
