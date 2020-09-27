@@ -57,6 +57,11 @@ jobs:
             flags: -c gcc
             config_flags: --disable-dynamic-x86 --enable-debug
             max_warnings: 210
+          - name: Ubuntu, -network
+            os: ubuntu-20.04
+            flags: -c gcc
+            config_flags: --disable-network
+            max_warnings: 61
 
     steps:
       - uses: actions/checkout@v2
