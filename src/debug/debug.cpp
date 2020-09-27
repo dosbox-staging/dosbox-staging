@@ -246,8 +246,14 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 class CDebugVar
 {
 public:
-	CDebugVar(char* _name, PhysPt _adr) { adr=_adr; safe_strncpy(name,_name,16); hasvalue = false; value = 0; };
-	
+	CDebugVar(const char *vname, PhysPt address)
+	        : adr(address),
+	          hasvalue(false),
+	          value(0)
+	{
+		safe_strcpy(name, vname);
+	}
+
 	char*  GetName (void)                 { return name; };
 	PhysPt GetAdr  (void)                 { return adr; };
 	void   SetValue(bool has, Bit16u val) { hasvalue = has; value=val; };
@@ -1704,19 +1710,23 @@ Bit32u DEBUG_CheckKeys(void) {
 				if (histBuffPos == histBuff.begin()) break;
 				if (histBuffPos == histBuff.end()) {
 					// copy inputStr to suspInputStr so we can restore it
-					safe_strncpy(codeViewData.suspInputStr, codeViewData.inputStr, sizeof(codeViewData.suspInputStr));
+					safe_strcpy(codeViewData.suspInputStr,
+					            codeViewData.inputStr);
 				}
-				safe_strncpy(codeViewData.inputStr,(*--histBuffPos).c_str(),sizeof(codeViewData.inputStr));
+				safe_strcpy(codeViewData.inputStr,
+				            (--histBuffPos)->c_str());
 				codeViewData.inputPos = strlen(codeViewData.inputStr);
 				break;
 		case KEY_F(7):	// next command (f1-f4 generate rubbish at my place)
 		case KEY_F(4):	// next command
 				if (histBuffPos == histBuff.end()) break;
 				if (++histBuffPos != histBuff.end()) {
-					safe_strncpy(codeViewData.inputStr,(*histBuffPos).c_str(),sizeof(codeViewData.inputStr));
+					safe_strcpy(codeViewData.inputStr,
+					            histBuffPos->c_str());
 				} else {
 					// copy suspInputStr back into inputStr
-					safe_strncpy(codeViewData.inputStr, codeViewData.suspInputStr, sizeof(codeViewData.inputStr));
+					safe_strcpy(codeViewData.inputStr,
+					            codeViewData.suspInputStr);
 				}
 				codeViewData.inputPos = strlen(codeViewData.inputStr);
 				break; 
@@ -2141,7 +2151,7 @@ public:
 		if (!cmd->FindCommand(commandNr++,temp_line)) return;
 		// Get filename
 		char filename[128];
-		safe_strncpy(filename,temp_line.c_str(),128);
+		safe_strcpy(filename, temp_line.c_str());
 		// Setup commandline
 		char args[256+1];
 		args[0]	= 0;

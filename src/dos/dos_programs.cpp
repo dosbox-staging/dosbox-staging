@@ -1057,7 +1057,7 @@ void LOADFIX::Run(void)
 		if (cmd->FindCommand(commandNr++,temp_line)) {
 			// get Filename
 			char filename[128];
-			safe_strncpy(filename,temp_line.c_str(),128);
+			safe_strcpy(filename, temp_line.c_str());
 			// Setup commandline
 			char args[256+1];
 			args[0] = 0;
@@ -1294,7 +1294,7 @@ public:
 					// convert dosbox filename to system filename
 					char fullname[CROSS_LEN];
 					char tmp[CROSS_LEN];
-					safe_strncpy(tmp, temp_line.c_str(), CROSS_LEN);
+					safe_strcpy(tmp, temp_line.c_str());
 
 					Bit8u dummy;
 					if (!DOS_MakeName(tmp, fullname, &dummy) || strncmp(Drives[dummy]->GetInfo(),"local directory",15)) {

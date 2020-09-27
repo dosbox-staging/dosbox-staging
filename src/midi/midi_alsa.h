@@ -159,7 +159,7 @@ public:
 
 		// try to use port specified in config file
 		if (conf && conf[0]) {
-			safe_strncpy(var, conf, 10);
+			safe_strcpy(var, conf);
 			if (!parse_addr(var, &seq_client, &seq_port)) {
 				LOG_MSG("ALSA: Invalid alsa port %s", var);
 				return false;

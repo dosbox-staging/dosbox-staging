@@ -565,14 +565,10 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 	Bits	len			= 0;
 	bool	createShort = false;
 
-	char tmpNameBuffer[CROSS_LEN];
-
-	char* tmpName = tmpNameBuffer;
-
 	// Remove Spaces
-	// avoid using safe_strncpy to prevent GCC warning about truncation on an incomplete copy
-	strncpy(tmpName, info->orgname, CROSS_LEN);
-	tmpName[CROSS_LEN - 1] = '\0'; // zero-terminate even if the source wasn't
+	char tmpNameBuffer[CROSS_LEN];
+	safe_strcpy(tmpNameBuffer, info->orgname);
+	char* tmpName = tmpNameBuffer;
 	upcase(tmpName);
 	createShort = RemoveSpaces(tmpName);
 
@@ -665,7 +661,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 			curDir->longNameList.push_back(info);
 		}
 	} else {
-		safe_strncpy(info->shortname, tmpName, DOS_NAMELENGTH_ASCII);
+		safe_strcpy(info->shortname, tmpName);
 	}
 	RemoveTrailingDot(info->shortname);
 }
