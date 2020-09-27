@@ -316,11 +316,12 @@ void INT10_GetPelMask(Bit8u & mask) {
 	mask=IO_Read(VGAREG_PEL_MASK);
 }
 
-void INT10_SetBackgroundBorder(Bit8u val) {
+void INT10_SetBackgroundBorder(uint8_t val)
+{
 	Bit8u color_select=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL);
 	color_select=(color_select & 0xe0) | (val & 0x1f);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,color_select);
-	
+
 	switch (machine) {
 	case MCH_CGA:
 		// only write the color select register
@@ -337,7 +338,7 @@ void INT10_SetBackgroundBorder(Bit8u val) {
 			IO_Write(0x3d9, color_select);
 			break;
 		case 0x07: // Tandy monochrome not implemented
-			break; 
+			break;
 		case 0x08:
 		case 0x09: // 16-color: write to color select, border and pal. index 0
 			INT10_SetOverscanBorderColor(val);
@@ -374,6 +375,8 @@ void INT10_SetBackgroundBorder(Bit8u val) {
 		INT10_SetSinglePaletteRegister( 2, val );
 		val+=2;
 		INT10_SetSinglePaletteRegister( 3, val );
+		break;
+	case MCH_HERC:
 		break;
 	}
 }

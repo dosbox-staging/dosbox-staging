@@ -187,7 +187,7 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 void INT10_ReloadFont(void);
 
 /* Palette Group */
-void INT10_SetBackgroundBorder(Bit8u val);
+void INT10_SetBackgroundBorder(uint8_t val);
 void INT10_SetColorSelect(Bit8u val);
 void INT10_SetSinglePaletteRegister(uint8_t reg, uint8_t val);
 void INT10_SetOverscanBorderColor(uint8_t val);
