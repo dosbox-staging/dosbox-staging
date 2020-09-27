@@ -139,7 +139,7 @@ static void W32_ConfDir(std::string& in,bool create) {
 	if(!r || result[0] == 0) {
 		char const * windir = getenv("windir");
 		if(!windir) windir = "c:\\windows";
-		safe_strncpy(result,windir,MAX_PATH);
+		safe_strcpy(result, windir);
 		char const* appdata = "\\Application Data";
 		size_t len = strlen(result);
 		if (len + strlen(appdata) < MAX_PATH)
@@ -282,7 +282,7 @@ void close_directory(dir_information* dirp) {
 dir_information* open_directory(const char* dirname) {
 	static dir_information dir;
 	dir.dir=opendir(dirname);
-	safe_strncpy(dir.base_path,dirname,CROSS_LEN);
+	safe_strcpy(dir.base_path, dirname);
 	return dir.dir?&dir:NULL;
 }
 

@@ -113,10 +113,9 @@ static CBindList holdlist;
 
 class CEvent {
 public:
-	CEvent(char const * const _entry)
-		: bindlist{}
+	CEvent(const char *ev_entry) : bindlist{}
 	{
-		safe_strncpy(entry, _entry, sizeof(entry));
+		safe_strcpy(entry, ev_entry);
 		events.push_back(this);
 	}
 

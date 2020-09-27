@@ -215,7 +215,7 @@ imageDisk::imageDisk(FILE *img_file, const char *img_name, uint32_t img_size_k, 
 {
 	fseek(diskimg,0,SEEK_SET);
 	memset(diskname,0,512);
-	safe_strncpy(diskname, img_name, sizeof(diskname));
+	safe_strcpy(diskname, img_name);
 	if (!is_hdd) {
 		Bit8u i=0;
 		bool founddisk = false;

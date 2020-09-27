@@ -850,7 +850,7 @@ static void MIXER_ProgramStart(Program * * make) {
 MixerChannel* MixerObject::Install(MIXER_Handler handler,Bitu freq,const char * name){
 	if(!installed) {
 		if(strlen(name) > 31) E_Exit("Too long mixer channel name");
-		safe_strncpy(m_name,name,32);
+		safe_strcpy(m_name, name);
 		installed = true;
 		return MIXER_AddChannel(handler,freq,name);
 	} else {

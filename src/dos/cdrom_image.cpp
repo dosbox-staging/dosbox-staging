@@ -1176,7 +1176,7 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 	bool success;
 	bool canAddTrack = false;
 	char tmp[MAX_FILENAME_LENGTH];  // dirname can change its argument
-	safe_strncpy(tmp, cuefile, MAX_FILENAME_LENGTH);
+	safe_strcpy(tmp, cuefile);
 	string pathname(dirname(tmp));
 	ifstream in;
 	in.open(cuefile, ios::in);
@@ -1406,7 +1406,7 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 	// finally check if file is in a dosbox local drive
 	char fullname[CROSS_LEN];
 	char tmp[CROSS_LEN];
-	safe_strncpy(tmp, filename.c_str(), CROSS_LEN);
+	safe_strcpy(tmp, filename.c_str());
 	Bit8u drive;
 	if (!DOS_MakeName(tmp, fullname, &drive)) {
 		return false;

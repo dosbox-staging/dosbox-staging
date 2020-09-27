@@ -263,7 +263,7 @@ void DOS_Shell::InputCommand(char * line) {
 							//Beep;
 							break;
 						}
-						safe_strncpy(mask, p_completion_start,DOS_PATHLENGTH);
+						safe_strcpy(mask, p_completion_start);
 						char* dot_pos=strrchr(mask,'.');
 						char* bs_pos=strrchr(mask,'\\');
 						char* fs_pos=strrchr(mask,'/');
@@ -391,10 +391,8 @@ bool DOS_Shell::Execute(char * name,char * args) {
 			line[0]=' ';line[1]=0;
 			strncat(line,args,CMD_MAXLINE-2);
 			line[CMD_MAXLINE-1]=0;
-		}
-		else
-		{
-			safe_strncpy(line,args,CMD_MAXLINE);
+		} else {
+			safe_strcpy(line, args);
 		}
 	}else{
 		line[0]=0;

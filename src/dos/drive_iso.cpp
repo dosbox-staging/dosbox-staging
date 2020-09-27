@@ -157,7 +157,7 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &e
 	memset(sectorHashEntries, 0, sizeof(sectorHashEntries));
 	memset(&rootEntry, 0, sizeof(isoDirEntry));
 
-	safe_strncpy(this->fileName, fileName, CROSS_LEN);
+	safe_strcpy(this->fileName, fileName);
 	error = UpdateMscdex(driveLetter, fileName, subUnit);
 
 	if (!error) {
@@ -191,7 +191,7 @@ int isoDrive::UpdateMscdex(char drive_letter, const char *path, uint8_t &sub_uni
 		CDROM_Interface_Image *oldCdrom = CDROM_Interface_Image::images[sub_unit];
 		CDROM_Interface *cdrom = new CDROM_Interface_Image(sub_unit);
 		char pathCopy[CROSS_LEN];
-		safe_strncpy(pathCopy, path, CROSS_LEN);
+		safe_strcpy(pathCopy, path);
 		if (!cdrom->SetDevice(pathCopy)) {
 			CDROM_Interface_Image::images[sub_unit] = oldCdrom;
 			delete cdrom;
@@ -544,7 +544,7 @@ bool isoDrive :: lookup(isoDirEntry *de, const char *path) {
 	if (!strcmp(path, "")) return true;
 
 	char isoPath[ISO_MAXPATHNAME];
-	safe_strncpy(isoPath, path, ISO_MAXPATHNAME);
+	safe_strcpy(isoPath, path);
 	strreplace(isoPath, '\\', '/');
 
 	// iterate over all path elements (name), and search each of them in the current de

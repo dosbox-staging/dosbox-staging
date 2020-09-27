@@ -49,7 +49,8 @@ public:
 	bool Open(const char *conf) override
 	{
 		char devname[512];
-		if (conf && conf[0]) safe_strncpy(devname,conf,512);
+		if (conf && conf[0])
+			safe_strcpy(devname, conf);
 		else strcpy(devname,"/dev/sequencer");
 		char * devfind=(strrchr(devname,','));
 		if (devfind) {

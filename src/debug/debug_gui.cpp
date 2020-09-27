@@ -217,7 +217,7 @@ static void LOG_Init(Section * sec) {
 	sect->AddDestroyFunction(&LOG_Destroy);
 	char buf[64];
 	for (Bitu i = LOG_ALL + 1;i < LOG_MAX;i++) { //Skip LOG_ALL, it is always enabled
-		safe_strncpy(buf,loggrp[i].front,sizeof(buf));
+		safe_strcpy(buf, loggrp[i].front);
 		lowcase(buf);
 		loggrp[i].enabled=sect->Get_bool(buf);
 	}
@@ -262,7 +262,7 @@ void LOG_StartUp(void) {
 	Pstring->Set_help("file where the log messages will be saved to");
 	char buf[64];
 	for (Bitu i = LOG_ALL + 1;i < LOG_MAX;i++) {
-		safe_strncpy(buf,loggrp[i].front, sizeof(buf));
+		safe_strcpy(buf, loggrp[i].front);
 		lowcase(buf);
 		Prop_bool* Pbool = sect->Add_bool(buf,Property::Changeable::Always,true);
 		Pbool->Set_help("Enable/Disable logging of this type.");

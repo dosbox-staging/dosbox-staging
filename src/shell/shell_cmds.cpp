@@ -261,7 +261,7 @@ void DOS_Shell::CMD_RENAME(char * args){
 
 		char dir_source[DOS_PATHLENGTH + 4] = {0}; //not sure if drive portion is included in pathlength
 		//Copy first and then modify, makes GCC happy
-		safe_strncpy(dir_source,arg1,DOS_PATHLENGTH + 4);
+		safe_strcpy(dir_source, arg1);
 		char* dummy = strrchr(dir_source,'\\');
 		if (!dummy) { //Possible due to length
 			WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
@@ -292,7 +292,7 @@ void DOS_Shell::CMD_ECHO(char * args){
 	}
 	char buffer[512];
 	char* pbuffer = buffer;
-	safe_strncpy(buffer,args,512);
+	safe_strcpy(buffer, args);
 	StripSpaces(pbuffer);
 	if (strcasecmp(pbuffer,"OFF") == 0) {
 		echo=false;
@@ -931,7 +931,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 				plus = strchr(source_p,'+');
 			}
 			if (plus) *plus++ = 0;
-			safe_strncpy(source_x,source_p,CROSS_LEN);
+			safe_strcpy(source_x, source_p);
 			bool has_drive_spec = false;
 			size_t source_x_len = strlen(source_x);
 			if (source_x_len>0) {

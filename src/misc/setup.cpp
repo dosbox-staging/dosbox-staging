@@ -751,7 +751,7 @@ bool Config::PrintConfig(const std::string &filename) const
 
 	for (const_it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
 		/* Print out the Section header */
-		safe_strncpy(temp,(*tel)->GetName(),sizeof(temp));
+		safe_strcpy(temp, (*tel)->GetName());
 		lowcase(temp);
 		fprintf(outfile,"[%s]\n",temp);
 
@@ -972,7 +972,7 @@ bool Config::ParseConfigFile(char const * const configfilename) {
 void Config::ParseEnv(char ** envp) {
 	for(char** env=envp; *env;env++) {
 		char copy[1024];
-		safe_strncpy(copy,*env,1024);
+		safe_strcpy(copy, *env);
 		if(strncasecmp(copy,"DOSBOX_",7))
 			continue;
 		char* sec_name = &copy[7];
