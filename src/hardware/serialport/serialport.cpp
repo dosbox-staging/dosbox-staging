@@ -1307,14 +1307,17 @@ public:
 		BIOS_SetComPorts (biosParameter);
 	}
 
-	~SERIALPORTS () {
-		MODEM_ClearPhonebook();
-
-		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i)
+	~SERIALPORTS()
+	{
+		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i) {
 			if (serialports[i]) {
 				delete serialports[i];
 				serialports[i] = 0;
 			}
+		}
+#if C_MODEM
+		MODEM_ClearPhonebook();
+#endif
 	}
 };
 
