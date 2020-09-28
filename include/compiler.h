@@ -75,4 +75,13 @@
 #define GCC_UNLIKELY
 #endif
 
-#endif /* DOSBOX_COMPILER_H */
+// XSTR and STR macros can be used turning defines into string literals:
+//
+// #define FOO 4
+// printf("It's a " STR(FOO));  // prints "It's a FOO"
+// printf("It's a " XSTR(FOO)); // prints "It's a 4"
+
+#define XSTR(s) STR(s)
+#define STR(s)  #s
+
+#endif

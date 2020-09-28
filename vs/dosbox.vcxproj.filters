@@ -744,6 +744,9 @@
     <ClInclude Include="..\src\midi\midi_handler.h">
       <Filter>src\midi</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\compiler.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">
