@@ -377,6 +377,7 @@
     <ClInclude Include="..\include\bios_disk.h" />
     <ClInclude Include="..\include\byteorder.h" />
     <ClInclude Include="..\include\callback.h" />
+    <ClInclude Include="..\include\compiler.h" />
     <ClInclude Include="..\include\control.h" />
     <ClInclude Include="..\include\cpu.h" />
     <ClInclude Include="..\include\cross.h" />
