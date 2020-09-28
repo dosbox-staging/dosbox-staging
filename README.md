@@ -16,7 +16,7 @@ support today's systems.
 |-                               |-                            |-
 | **Version control**            | Git                         | [SVN]
 | **Language**                   | C++11                       | C++03<sup>[1]</sup>
-| **SDL**                        | 2.0                         | 1.2<sup>＊</sup>
+| **SDL**                        | 2.0.2                       | 1.2<sup>＊</sup>
 | **CI**                         | Yes                         | No
 | **Static analysis**            | Yes<sup>[2],[3],[4]</sup>   | No
 | **Dynamic analysis**           | Yes                         | No
@@ -68,6 +68,7 @@ Other differences:
 | **[Wayland] support**    | Experimental (use `SDL_VIDEODRIVER=wayland`) | N/A
 | **Modem phonebook file** | Yes (`phonebookfile=<name>`)                 | N/A
 | **Autotype command**     | Yes<sup>[10]</sup>                           | N/A
+| **Raw mouse input**      | Yes (`raw_mouse_input=true`)                 | N/A
 
 [OPL]:https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]:https://en.wikipedia.org/wiki/Color_Graphics_Adapter
