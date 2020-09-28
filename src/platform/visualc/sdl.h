@@ -10,5 +10,5 @@
 	XSTR(SDL_MAJOR_VERSION) "." XSTR(SDL_MINOR_VERSION) "." XSTR(SDL_PATCHLEVEL)
 #endif
 
-static_assert(SDL_VERSION_ATLEAST(2, 0, 0),
-              "SDL >= 2.0.0 required (using " SDL_CONSTEXPR_VERSION ")");
+static_assert(SDL_VERSION_ATLEAST(2, 0, 2),
+              "SDL >= 2.0.2 required (using " SDL_CONSTEXPR_VERSION ")");
