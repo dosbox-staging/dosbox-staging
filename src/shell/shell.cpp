@@ -662,7 +662,9 @@ void SHELL_Init() {
 	        "  ..   Specifies that you want to change to the parent directory.\n\n"
 	        "Type CD drive: to display the current directory in the specified drive.\n"
 	        "Type CD without parameters to display the current drive and directory.\n");
-	MSG_Add("SHELL_CMD_CLS_HELP","Clear screen.\n");
+
+	MSG_Add("SHELL_CMD_CLS_HELP", "Clear the screen.\n");
+
 	MSG_Add("SHELL_CMD_DIR_HELP",
 	        "Displays a list of files and subdirectories in a directory.\n");
 	MSG_Add("SHELL_CMD_DIR_HELP_LONG",

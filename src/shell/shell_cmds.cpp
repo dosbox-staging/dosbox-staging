@@ -182,10 +182,13 @@ void DOS_Shell::DoCommand(char * line) {
 		return; \
 	}
 
-void DOS_Shell::CMD_CLS(char * args) {
+void DOS_Shell::CMD_CLS(char *args)
+{
 	HELP("CLS");
-	reg_ax=0x0003;
-	CALLBACK_RunRealInt(0x10);
+	const auto rows = real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS);
+	const auto cols = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+	INT10_ScrollWindow(0, 0, rows, static_cast<uint8_t>(cols), -rows, 0x7, 0xff);
+	INT10_SetCursorPos(0, 0, 0);
 }
 
 void DOS_Shell::CMD_DELETE(char * args) {
