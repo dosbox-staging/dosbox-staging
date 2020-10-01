@@ -103,9 +103,25 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	if (!soundfont.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
 	}
-
 	DEBUG_LOG_MSG("MIDI: FluidSynth loaded %d SoundFont files",
 	              fluid_synth_sfcount(fluid_synth.get()));
+
+	// Apply reasonable chorus and reverb settings matching ScummVM's defaults
+	constexpr int chorus_number = 3;
+	constexpr double chorus_level = 1.2;
+	constexpr double chorus_speed = 0.3;
+	constexpr double chorus_depth = 8.0;
+	fluid_synth_set_chorus_on(fluid_synth.get(), 1);
+	fluid_synth_set_chorus(fluid_synth.get(), chorus_number, chorus_level,
+	                       chorus_speed, chorus_depth, FLUID_CHORUS_MOD_SINE);
+
+	constexpr double reverb_room_size = 0.61;
+	constexpr double reverb_damping = 0.23;
+	constexpr double reverb_width = 0.76;
+	constexpr double reverb_level = 0.56;
+	fluid_synth_set_reverb_on(fluid_synth.get(), 1);
+	fluid_synth_set_reverb(fluid_synth.get(), reverb_room_size,
+	                       reverb_damping, reverb_width, reverb_level);
 
 	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
 	                                      this, std::placeholders::_1);
