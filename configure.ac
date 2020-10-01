@@ -514,21 +514,14 @@ AC_ARG_ENABLE(fluidsynth,
                              [Disable FluidSynth integration]))
 
 if test "${enable_fluidsynth}" != "no" ; then
-    AC_MSG_CHECKING(for FluidSynth >= 2.0.0)
-    AC_COMPILE_IFELSE(
-        [AC_LANG_SOURCE([
-            #include <fluidsynth.h>
-            static_assert(FLUIDSYNTH_VERSION_MAJOR >= 2, "");
-        ])],
-        [AC_MSG_RESULT(yes); USE_FLUIDSYNTH=yes],
-        [AC_MSG_RESULT(no);
-         AC_MSG_NOTICE(You can turn it off with --disable-fluidsynth);
-         AC_MSG_ERROR(FluidSynth >= 2.0.0 not found)])
-fi
-
-if test "${USE_FLUIDSYNTH}" = "yes" ; then
+    PKG_CHECK_MODULES(GLIB,
+                      [glib-2.0 >= 2.6.5 gthread-2.0 >= 2.6.5])
+    PKG_CHECK_MODULES(FLUIDSYNTH,
+                      fluidsynth >= 2,
+                      [LIBS="$LIBS $FLUIDSYNTH_LIBS $GLIB_LIBS"
+                       CPPFLAGS="$CPPFLAGS $FLUIDSYNTH_CFLAGS"
+                       USE_FLUIDSYNTH="yes"])
     AC_DEFINE(C_FLUIDSYNTH,1)
-    LIBS="$LIBS -lfluidsynth"
 else
     AC_DEFINE(C_FLUIDSYNTH,0)
     AC_MSG_WARN([FluidSynth integration disabled])
