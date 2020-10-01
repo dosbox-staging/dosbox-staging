@@ -106,6 +106,9 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	DEBUG_LOG_MSG("MIDI: FluidSynth loaded %d SoundFont files",
 	              fluid_synth_sfcount(fluid_synth.get()));
 
+	// Uses samples' native amplitudes without suppression or amplification
+	fluid_synth_set_gain(fluid_synth.get(), 1.0);
+
 	// Apply reasonable chorus and reverb settings matching ScummVM's defaults
 	constexpr int chorus_number = 3;
 	constexpr double chorus_level = 1.2;
