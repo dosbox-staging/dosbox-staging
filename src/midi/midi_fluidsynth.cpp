@@ -109,6 +109,10 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	// Uses samples' native amplitudes without suppression or amplification
 	fluid_synth_set_gain(fluid_synth.get(), 1.0);
 
+	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
+	constexpr int all_channels = -1;
+	fluid_synth_set_interp_method(fluid_synth.get(), all_channels, FLUID_INTERP_HIGHEST);
+
 	// Apply reasonable chorus and reverb settings matching ScummVM's defaults
 	constexpr int chorus_number = 3;
 	constexpr double chorus_level = 1.2;
