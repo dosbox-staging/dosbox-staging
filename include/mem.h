@@ -34,20 +34,20 @@ typedef int32_t MemHandle;
 #define MEM_PAGESIZE 4096
 
 extern HostPt MemBase;
-HostPt GetMemBase(void);
+HostPt GetMemBase();
 
-bool MEM_A20_Enabled(void);
+bool MEM_A20_Enabled();
 void MEM_A20_Enable(bool enable);
 
 /* Memory management / EMS mapping */
-HostPt MEM_GetBlockPage(void);
-Bitu MEM_FreeTotal(void);                  // Free 4 kb pages
-Bitu MEM_FreeLargest(void);                // Largest free 4 kb pages block
-Bitu MEM_TotalPages(void);                 // Total amount of 4 kb pages
+HostPt MEM_GetBlockPage();
+Bitu MEM_FreeTotal();                      // Free 4 KiB pages
+Bitu MEM_FreeLargest();                    // Largest free 4 KiB pages block
+Bitu MEM_TotalPages();                     // Total amount of 4 KiB pages
 Bitu MEM_AllocatedPages(MemHandle handle); // amount of allocated pages of handle
 MemHandle MEM_AllocatePages(Bitu pages, bool sequence);
-MemHandle MEM_GetNextFreePage(void);
-PhysPt MEM_AllocatePage(void);
+MemHandle MEM_GetNextFreePage();
+PhysPt MEM_AllocatePage();
 void MEM_ReleasePages(MemHandle handle);
 bool MEM_ReAllocatePages(MemHandle &handle, Bitu pages, bool sequence);
 
