@@ -1026,15 +1026,6 @@ bool CommandLine::FindExist(char const * const name,bool remove) {
 	return true;
 }
 
-bool CommandLine::FindHex(char const * const name,unsigned int & value,bool remove) {
-	cmd_it it,it_next;
-	if (!(FindEntry(name,it,true))) return false;
-	it_next=it;++it_next;
-	sscanf((*it_next).c_str(),"%X",&value);
-	if (remove) cmds.erase(it,++it_next);
-	return true;
-}
-
 bool CommandLine::FindInt(char const * const name,int & value,bool remove) {
 	cmd_it it,it_next;
 	if (!(FindEntry(name,it,true))) return false;
