@@ -633,8 +633,8 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 	case 0x3e:		/* CLOSE Close file */
-		if (DOS_CloseFile(reg_bx)) {
-//			reg_al=0x01;	/* al destroyed. Refcount */
+		if (DOS_CloseFile(reg_bx,false,&reg_al)) {
+			/* al destroyed with pre-close refcount from sft */
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
