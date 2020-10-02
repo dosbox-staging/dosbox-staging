@@ -839,19 +839,30 @@ bool Overlay_Drive::FileUnlink(char * name) {
 		if(stat(overlayname,&buffer)) {
 			//file not found in overlay, check the basedrive
 			//Check if file not already deleted 
-			if (is_deleted_file(name)) return false;
+			if (is_deleted_file(name)) {
+				DOS_SetError(DOSERR_FILE_NOT_FOUND);
+				return false;
+			}
 
 
 			char *fullname = dirCache.GetExpandName(basename);
-			if (stat(fullname,&buffer)) return false; // File not found in either, return file false.
+			if (stat(fullname,&buffer)) {
+				DOS_SetError(DOSERR_FILE_NOT_FOUND);
+				return false; // File not found in either, return file false.
+			}
 			//File does exist in normal drive.
 			//Maybe do something with the drive_cache.
 			add_deleted_file(name,true);
 			return true;
 //			E_Exit("trying to remove existing non-overlay file %s",name);
 		}
+
+		//Do we have access?
 		FILE* file_writable = fopen_wrap(overlayname,"rb+");
-		if(!file_writable) return false; //No access ? ERROR MESSAGE NOT SET. FIXME ?
+		if(!file_writable) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
 		fclose(file_writable);
 
 		//File exists and can technically be deleted, nevertheless it failed.
@@ -868,7 +879,10 @@ bool Overlay_Drive::FileUnlink(char * name) {
 				found_file=true;
 			}
 		}
-		if(!found_file) return false;
+		if(!found_file) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
 		if (unlink(overlayname) == 0) { //Overlay file removed
 			//Mark basefile as deleted if it exists:
 			if (localDrive::FileExists(name)) add_deleted_file(name,true);
@@ -880,6 +894,7 @@ bool Overlay_Drive::FileUnlink(char * name) {
 			
 			return true;
 		}
+		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	} else { //Removed from overlay.
 		//TODO IF it exists in the basedir: and more locations above.

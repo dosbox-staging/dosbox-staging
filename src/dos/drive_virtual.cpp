@@ -160,6 +160,7 @@ bool Virtual_Drive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) 
 }
 
 bool Virtual_Drive::FileUnlink(char * name) {
+	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 

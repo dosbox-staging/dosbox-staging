@@ -990,8 +990,22 @@ bool fatDrive::FileUnlink(char * name) {
 	direntry fileEntry;
 	Bit32u dirClust, subEntry;
 
-	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) return false;
+	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
+		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		return false;
+	}
+/*
+	Technically correct, but maybe an unwanted obstruction, so inactive for now.
 
+	if(fileEntry.attrib & (DOS_ATTR_SYSTEM | DOS_ATTR_HIDDEN)) {
+		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		return false;
+	}
+	if(fileEntry.attrib & DOS_ATTR_READ_ONLY) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+*/
 	fileEntry.entryname[0] = 0xe5;
 	directoryChange(dirClust, &fileEntry, subEntry);
 

@@ -143,10 +143,18 @@ bool localDrive::FileUnlink(char * name) {
 	if (unlink(fullname)) {
 		//Unlink failed for some reason try finding it.
 		struct stat buffer;
-		if(stat(fullname,&buffer)) return false; // File not found.
+		if(stat(fullname,&buffer)) {
+			//file not found
+			DOS_SetError(DOSERR_FILE_NOT_FOUND);
+			return false;
+		}
 
+		//Do we have access?
 		FILE* file_writable = fopen_wrap(fullname,"rb+");
-		if(!file_writable) return false; //No acces ? ERROR MESSAGE NOT SET. FIXME ?
+		if(!file_writable) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
 		fclose(file_writable);
 
 		//File exists and can technically be deleted, nevertheless it failed.
@@ -163,11 +171,15 @@ bool localDrive::FileUnlink(char * name) {
 				found_file=true;
 			}
 		}
-		if(!found_file) return false;
+		if(!found_file) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
 		if (!unlink(fullname)) {
 			dirCache.DeleteEntry(newname);
 			return true;
 		}
+		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	} else {
 		dirCache.DeleteEntry(newname);

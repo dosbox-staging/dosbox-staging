@@ -273,6 +273,20 @@ bool DOS_RemoveDir(char const * const dir) {
 	return false;
 }
 
+static bool PathExists(char const * const name) {
+	const char* leading = strrchr(name,'\\');
+	if(!leading) return true;
+	char temp[CROSS_LEN];
+	strcpy(temp,name);
+	char * lead = strrchr(temp,'\\');
+	if (lead == temp) return true;
+	*lead = 0;
+	Bit8u drive;char fulldir[DOS_PATHLENGTH];
+	if (!DOS_MakeName(temp,fulldir,&drive)) return false;
+	if(!Drives[drive]->TestDir(fulldir)) return false;
+	return true;
+}
+
 bool DOS_Rename(char const * const oldname,char const * const newname) {
 	Bit8u driveold;char fullold[DOS_PATHLENGTH];
 	Bit8u drivenew;char fullnew[DOS_PATHLENGTH];
@@ -295,16 +309,16 @@ bool DOS_Rename(char const * const oldname,char const * const newname) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-	/* Source must exist, check for path ? */
+	/* Source must exist */
 	if (!Drives[driveold]->GetFileAttr( fullold, &attr ) ) {
-		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		if (!PathExists(oldname)) DOS_SetError(DOSERR_PATH_NOT_FOUND);
+		else DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
 
 	if (Drives[drivenew]->Rename(fullold,fullnew)) return true;
-	/* If it still fails, which error should we give ? PATH NOT FOUND or EACCESS */
-	LOG(LOG_FILES,LOG_NORMAL)("Rename fails for %s to %s, no proper errorcode returned.",oldname,newname);
-	DOS_SetError(DOSERR_FILE_NOT_FOUND);
+	/* Rename failed despite checks => no access */
+	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
@@ -460,21 +474,6 @@ bool DOS_FlushFile(Bit16u entry) {
 	return true;
 }
 
-static bool PathExists(char const * const name) {
-	const char* leading = strrchr(name,'\\');
-	if(!leading) return true;
-	char temp[CROSS_LEN];
-	strcpy(temp,name);
-	char * lead = strrchr(temp,'\\');
-	if (lead == temp) return true;
-	*lead = 0;
-	Bit8u drive;char fulldir[DOS_PATHLENGTH];
-	if (!DOS_MakeName(temp,fulldir,&drive)) return false;
-	if(!Drives[drive]->TestDir(fulldir)) return false;
-	return true;
-}
-
-
 bool DOS_CreateFile(char const * name,Bit16u attributes,Bit16u * entry,bool fcb) {
 	// Creation of a device is the same as opening it
 	// Tc201 installer
@@ -515,8 +514,8 @@ bool DOS_CreateFile(char const * name,Bit16u attributes,Bit16u * entry,bool fcb)
 		if (!fcb) psp.SetFileHandle(*entry,handle);
 		return true;
 	} else {
-		if(!PathExists(name)) DOS_SetError(DOSERR_PATH_NOT_FOUND); 
-		else DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		if (!PathExists(name)) DOS_SetError(DOSERR_PATH_NOT_FOUND);
+		else DOS_SetError(DOSERR_ACCESS_DENIED); // Create failed but path exists => no access
 		return false;
 	}
 }
@@ -642,12 +641,7 @@ bool DOS_UnlinkFile(char const * const name) {
 		return false;
 	}
 	if (!DOS_MakeName(name,fullname,&drive)) return false;
-	if(Drives[drive]->FileUnlink(fullname)){
-		return true;
-	} else {
-		DOS_SetError(DOSERR_FILE_NOT_FOUND);
-		return false;
-	}
+	return Drives[drive]->FileUnlink(fullname);
 }
 
 bool DOS_GetFileAttr(char const * const name,Bit16u * attr) {
