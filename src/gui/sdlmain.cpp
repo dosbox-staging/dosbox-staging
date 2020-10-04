@@ -419,15 +419,22 @@ bool startup_state_capslock=false;
 void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
 {
 	char title[200] = {0};
+
+#if !defined(NDEBUG)
+	const char* build_type = " (debug build)";
+#else
+	const char* build_type = "";
+#endif
+
 	static Bit32s internal_cycles = 0;
 	if (cycles != -1)
 		internal_cycles = cycles;
 
 	const char *msg = CPU_CycleAutoAdjust
-	                          ? "%8s - max %d%% - dosbox-staging%s"
-	                          : "%8s - %d cycles/ms - dosbox-staging%s";
+	                          ? "%8s - max %d%% - dosbox-staging%s%s"
+	                          : "%8s - %d cycles/ms - dosbox-staging%s%s";
 	snprintf(title, sizeof(title), msg, RunningProgram, internal_cycles,
-	         paused ? " (PAUSED)" : "");
+	         build_type, paused ? " (PAUSED)" : "");
 	SDL_SetWindowTitle(sdl.window, title);
 }
 
