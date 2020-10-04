@@ -747,6 +747,12 @@ void SHELL_Init() {
 	DOS_OpenFile("CON",OPEN_READWRITE,&dummy);	/* STDAUX */
 	DOS_OpenFile("PRN",OPEN_READWRITE,&dummy);	/* STDPRN */
 
+	/* Create appearance of handle inheritance by first shell */
+	for (Bit16u i=0;i<5;i++) {
+		Bit8u handle=psp.GetFileHandle(i);
+		if (Files[handle]) Files[handle]->AddRef();
+	}
+
 	psp.SetParent(psp_seg);
 	/* Set the environment */
 	psp.SetEnvironment(env_seg);
