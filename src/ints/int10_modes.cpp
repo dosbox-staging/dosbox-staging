@@ -459,21 +459,33 @@ static void FinishSetMode(bool clearmem) {
 				real_writew( 0xb800,ct*2,0x0000);
 			}
 			break;
+		case M_HERC_TEXT:
+		case M_TANDY_TEXT:
 		case M_TEXT: {
+			// TODO Hercules had 32KiB compared to CGA/MDA 16KiB,
+			// but does it matter in here?
 			Bit16u seg = (CurMode->mode==7)?0xb000:0xb800;
 			for (Bit16u ct=0;ct<16*1024;ct++) real_writew(seg,ct*2,0x0720);
 			break;
 		}
-		case M_EGA:	
+		case M_EGA:
 		case M_VGA:
 		case M_LIN8:
 		case M_LIN4:
 		case M_LIN15:
 		case M_LIN16:
 		case M_LIN32:
+		case M_TANDY2:
+		case M_TANDY4:
+		case M_HERC_GFX:
+		case M_CGA16:
 			/* Hack we just access the memory directly */
 			memset(vga.mem.linear,0,vga.vmemsize);
 			memset(vga.fastmem, 0, vga.vmemsize<<1);
+			break;
+		case M_ERROR:
+			assert(false);
+			break;
 		}
 	}
 	/* Setup the BIOS */
