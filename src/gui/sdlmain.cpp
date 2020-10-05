@@ -244,10 +244,11 @@ constexpr bool FIXED_SIZE = false;
 
 struct SDL_Block {
 	bool initialized = false;
-	bool active;							//If this isn't set don't draw
-	bool updating;
-	bool update_display_contents;
-	bool resizing_window;
+	bool active = false; // If this isn't set don't draw
+	bool updating = false;
+	bool update_display_contents = true;
+	bool resizing_window = false;
+	bool wait_on_error = false;
 	ScalingMode scaling_mode;
 	struct {
 		int width = 0;
@@ -257,7 +258,6 @@ struct SDL_Block {
 		double pixel_aspect = 1.0;
 		GFX_CallBack_t callback = nullptr;
 	} draw;
-	bool wait_on_error;
 	struct {
 		struct {
 			Bit16u width = 0;
@@ -337,7 +337,6 @@ struct SDL_Block {
 		bool has_focus = false;
 	} mouse;
 	SDL_Point pp_scale = {1, 1};
-	bool double_h, double_w;   /* double-height and double-width flags */
 	SDL_Rect updateRects[1024];
 #if defined (WIN32)
 	// Time when sdl regains focus (alt-tab) in windowed mode
@@ -967,13 +966,13 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 	sdl.draw.pixel_aspect = pixel_aspect;
 	sdl.draw.callback = callback;
 
-	sdl.double_h = (flags & GFX_DBL_H) > 0;
-	sdl.double_w = (flags & GFX_DBL_W) > 0;
+	const bool double_h = (flags & GFX_DBL_H) > 0;
+	const bool double_w = (flags & GFX_DBL_W) > 0;
 
 	LOG_MSG("MAIN: Draw resolution: %dx%d,%s%s pixel aspect ratio: %#.2f",
 	        sdl.draw.width, sdl.draw.height,
-	        sdl.double_w ? " double-width," : "",
-	        sdl.double_h ? " double-height," : "",
+	        (double_w ? " double-width," : ""),
+	        (double_h ? " double-height," : ""),
 	        pixel_aspect);
 
 	switch (sdl.desktop.want_type) {
@@ -2048,16 +2047,18 @@ static SDL_Rect calc_viewport(int width, int height)
 //extern void UI_Run(bool);
 void Restart(bool pressed);
 
-static void GUI_StartUp(Section * sec) {
+static void GUI_StartUp(Section *sec)
+{
 	sec->AddDestroyFunction(&GUI_ShutDown);
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	sdl.active=false;
-	sdl.updating=false;
-	sdl.resizing_window = false;
+	Section_prop *section = static_cast<Section_prop *>(sec);
+
+	sdl.active = false;
+	sdl.updating = false;
 	sdl.update_display_contents = true;
+	sdl.resizing_window = false;
+	sdl.wait_on_error = section->Get_bool("waitonerror");
 
 	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
-	sdl.wait_on_error=section->Get_bool("waitonerror");
 
 	Prop_multival* p=section->Get_multival("priority");
 	std::string focus = p->GetSection()->Get_string("active");
