@@ -118,7 +118,7 @@ jobs:
           git fetch --prune --unshallow
           export VERSION=$(git describe --abbrev=4)
           sed -i "s|VERSION \"git\"|VERSION \"$VERSION\"|" src/platform/visualc/config.h
-          echo ::set-env name=VERSION::$VERSION
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name:  Build
         shell: pwsh
@@ -194,7 +194,7 @@ jobs:
           set +x
           git fetch --unshallow
           VERSION=$(git describe --abbrev=4)
-          echo ::set-env name=VERSION::$VERSION
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
       - uses: actions/upload-artifact@v2
