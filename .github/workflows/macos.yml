@@ -94,7 +94,7 @@ jobs:
           git fetch --prune --unshallow
           export VERSION=$(git describe --abbrev=5)
           sed -i -e "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
-          echo ::set-env name=VERSION::$VERSION
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Build
         env:
           FLUIDSYNTH_CFLAGS: -I${{ github.workspace }}/contrib/static-fluidsynth/include
@@ -219,7 +219,7 @@ jobs:
           set +x
           git fetch --unshallow
           VERSION=$(git describe --abbrev=4)
-          echo ::set-env name=VERSION::$VERSION
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
       - uses: actions/upload-artifact@v2
