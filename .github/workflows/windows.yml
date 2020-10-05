@@ -27,7 +27,10 @@ jobs:
         id:    prep-vcpkg
         shell: bash
         run: |
-          echo "::set-output name=year_and_week::$(date '+%Y%W')"
+          # echo "::set-output name=year_and_week::$(date '+%Y%W')"
+          # As of October 2020 (week 40), vcpkg timeouts when downloading mingw-w64
+          # package. FIXME turn on weekly cache as soon as it'll be working again.
+          echo "::set-output name=year_and_week::202039"
 
       - name: Cache vcpkg
         uses: actions/cache@v2
