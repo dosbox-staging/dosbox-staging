@@ -257,20 +257,20 @@ struct SDL_Block {
 		double scaley = 1.0;
 		double pixel_aspect = 1.0;
 		GFX_CallBack_t callback = nullptr;
-	} draw;
+	} draw = {};
 	struct {
 		struct {
 			Bit16u width = 0;
 			Bit16u height = 0;
 			bool fixed = false;
 			bool display_res = false;
-		} full;
+		} full = {};
 		struct {
 			uint16_t width = 0; // TODO convert to int
 			uint16_t height = 0; // TODO convert to int
 			bool use_original_size = true;
 			bool resizable = false;
-		} window;
+		} window = {};
 		Bit8u bpp = 0;
 		bool fullscreen = false;
 		// This flag indicates, that we are in the process of switching
@@ -286,7 +286,7 @@ struct SDL_Block {
 		bool want_resizable_window = false;
 		SCREEN_TYPES type;
 		SCREEN_TYPES want_type;
-	} desktop;
+	} desktop = {};
 #if C_OPENGL
 	struct {
 		SDL_GLContext context;
@@ -308,17 +308,17 @@ struct SDL_Block {
 			GLint input_size;
 			GLint output_size;
 			GLint frame_count;
-		} ruby;
+		} ruby = {};
 		GLuint actual_frame_count;
 		GLfloat vertex_data[2*3];
-	} opengl;
+	} opengl = {};
 #endif // C_OPENGL
 	struct {
 		PRIORITY_LEVELS focus;
 		PRIORITY_LEVELS nofocus;
-	} priority;
-	SDL_Rect clip;
-	SDL_Surface *surface;
+	} priority = {};
+	SDL_Rect clip = {0, 0, 0, 0};
+	SDL_Surface *surface = nullptr;
 	SDL_Window *window = nullptr;
 	SDL_Renderer *renderer = nullptr;
 	std::string render_driver = "";
@@ -327,7 +327,7 @@ struct SDL_Block {
 		SDL_Surface *input_surface = nullptr;
 		SDL_Texture *texture = nullptr;
 		SDL_PixelFormat *pixelFormat = nullptr;
-	} texture;
+	} texture = {};
 	struct {
 		int xsensitivity = 0;
 		int ysensitivity = 0;
@@ -335,7 +335,7 @@ struct SDL_Block {
 		MouseControlType control_choice = Seamless;
 		bool middle_will_release = true;
 		bool has_focus = false;
-	} mouse;
+	} mouse = {};
 	SDL_Point pp_scale = {1, 1};
 	SDL_Rect updateRects[1024];
 #if defined (WIN32)
