@@ -17,47 +17,47 @@ jobs:
       max-parallel: 3
       matrix:
         conf:
-          - name: GCC, Ubuntu 16.04
-            os: ubuntu-16.04
+          - name: Clang, Ubuntu 20.04
+            os: ubuntu-20.04
+            flags: -c clang -v 10
+            max_warnings: 2
+          - name: GCC, Ubuntu 20.04
+            os: ubuntu-20.04
             flags: -c gcc
-            config_flags: --disable-fluidsynth
-            max_warnings: 36
+            max_warnings: 38
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
             flags: -c gcc
             config_flags: --disable-fluidsynth
             max_warnings: 38
-          - name: GCC, Ubuntu 20.04
-            os: ubuntu-20.04
+          - name: GCC, Ubuntu 16.04
+            os: ubuntu-16.04
             flags: -c gcc
-            max_warnings: 38
-          - name: Clang, Ubuntu 20.04
-            os: ubuntu-20.04
-            flags: -c clang -v 10
-            max_warnings: 2
-          - name: Ubuntu, +tests
+            config_flags: --disable-fluidsynth
+            max_warnings: 36
+          - name: GCC, +tests
             os: ubuntu-20.04
             config_flags: --enable-tests
             add_packages: libgtest-dev
             flags: -c gcc
             run_tests: true
             max_warnings: -1
-          - name: Ubuntu, +debug
+          - name: GCC, +debug
             os: ubuntu-20.04
             flags: -c gcc
             config_flags: --enable-debug
             max_warnings: 148
-          - name: Ubuntu, +dynrec, -dyn_x86
+          - name: GCC, +dynrec, -dyn_x86
             os: ubuntu-20.04
             flags: -c gcc
             config_flags: --disable-dynamic-x86
             max_warnings: 38
-          - name: Ubuntu, +dynrec, +debug, -dyn_x86
+          - name: GCC, +dynrec, +debug, -dyn_x86
             os: ubuntu-20.04
             flags: -c gcc
             config_flags: --disable-dynamic-x86 --enable-debug
             max_warnings: 182
-          - name: Ubuntu, -network
+          - name: GCC, -network
             os: ubuntu-20.04
             flags: -c gcc
             config_flags: --disable-network
