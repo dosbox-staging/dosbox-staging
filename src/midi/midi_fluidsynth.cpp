@@ -111,7 +111,8 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
 	constexpr int all_channels = -1;
-	fluid_synth_set_interp_method(fluid_synth.get(), all_channels, FLUID_INTERP_HIGHEST);
+	fluid_synth_set_interp_method(fluid_synth.get(), all_channels,
+	                              FLUID_INTERP_HIGHEST);
 
 	// Apply reasonable chorus and reverb settings matching ScummVM's defaults
 	constexpr int chorus_number = 3;
@@ -219,16 +220,15 @@ void MidiHandlerFluidsynth::PrintStats()
 void MidiHandlerFluidsynth::MixerCallBack(uint16_t frames)
 {
 	constexpr uint16_t max_samples = expected_max_frames * 2; // two channels per frame
-	std::array<float, max_samples> accumulator = {{0}};
-	std::array<int16_t, max_samples> scaled = {{0}};
+	std::array<float, max_samples> stream;
 
 	while (frames > 0) {
 		constexpr uint16_t max_frames = expected_max_frames; // local copy fixes link error
 		const uint16_t len = std::min(frames, max_frames);
-		fluid_synth_write_float(synth.get(), len, accumulator.data(), 0,
-		                        2, accumulator.data(), 1, 2);
-		soft_limiter.Apply(accumulator, scaled, len);
-		channel->AddSamples_s16(len, scaled.data());
+		fluid_synth_write_float(synth.get(), len, stream.data(), 0, 2,
+		                        stream.data(), 1, 2);
+		const auto &out_stream = soft_limiter.Apply(stream, len);
+		channel->AddSamples_s16(len, out_stream.data());
 		frames -= len;
 	}
 }
