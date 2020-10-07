@@ -227,8 +227,7 @@ enum SCREEN_TYPES	{
 #endif
 };
 
-/* Modes of simple pixel scaling, currently encoded in the output type: */
-enum ScalingMode {SmNone, SmNearest, SmPerfect};
+enum class SCALING_MODE { NONE, NEAREST, PERFECT };
 
 enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_PAUSE,
@@ -249,7 +248,7 @@ struct SDL_Block {
 	bool update_display_contents = true;
 	bool resizing_window = false;
 	bool wait_on_error = false;
-	ScalingMode scaling_mode;
+	SCALING_MODE scaling_mode = SCALING_MODE::NONE;
 	struct {
 		int width = 0;
 		int height = 0;
@@ -564,7 +563,7 @@ MAYBE_UNUSED static void PauseDOSBox(bool pressed)
 /* Reset the screen with current values in the sdl structure */
 Bitu GFX_GetBestMode(Bitu flags)
 {
-	if (sdl.scaling_mode == SmPerfect)
+	if (sdl.scaling_mode == SCALING_MODE::PERFECT)
 		flags |= GFX_UNITY_SCALE;
 	switch (sdl.desktop.want_type) {
 	case SCREEN_SURFACE:
@@ -800,7 +799,7 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 
 static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 {
-	if (sdl.scaling_mode == SmPerfect)
+	if (sdl.scaling_mode == SCALING_MODE::PERFECT)
 		return setup_window_pp(screen_type, resizable);
 
 	Bit16u fixedWidth;
@@ -1281,17 +1280,13 @@ dosurface:
 		// No borders
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		if(
-			sdl.scaling_mode != SmNone || (
-				sdl.clip.h % height == 0 &&
-				sdl.clip.w % width  == 0 )
-		) {
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		} else {
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		}
+
+		const bool use_nearest = (sdl.scaling_mode != SCALING_MODE::NONE) ||
+		                         ((sdl.clip.h % height == 0) &&
+		                          (sdl.clip.w % width == 0));
+		const GLint filter = (use_nearest ? GL_NEAREST : GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
 
 		Bit8u* emptytex = new Bit8u[texsize * texsize * 4];
 		memset((void*) emptytex, 0, texsize * texsize * 4);
@@ -2038,7 +2033,7 @@ static SDL_Rect calc_viewport_pp(int win_width, int win_height)
 
 static SDL_Rect calc_viewport(int width, int height)
 {
-	if (sdl.scaling_mode == SmPerfect)
+	if (sdl.scaling_mode == SCALING_MODE::PERFECT)
 		return calc_viewport_pp(width, height);
 	else
 		return calc_viewport_fit(width, height);
@@ -2127,29 +2122,29 @@ static void GUI_StartUp(Section *sec)
 		sdl.desktop.want_type=SCREEN_SURFACE;
 	} else if (output == "texture") {
 		sdl.desktop.want_type=SCREEN_TEXTURE;
-		sdl.scaling_mode = SmNone;
+		sdl.scaling_mode = SCALING_MODE::NONE;
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 	} else if (output == "texturenb") {
 		sdl.desktop.want_type=SCREEN_TEXTURE;
-		sdl.scaling_mode = SmNearest;
+		sdl.scaling_mode = SCALING_MODE::NEAREST;
 		// Currently the default, but... oh well
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 	} else if (output == "texturepp") {
 		sdl.desktop.want_type=SCREEN_TEXTURE;
-		sdl.scaling_mode = SmPerfect;
+		sdl.scaling_mode = SCALING_MODE::PERFECT;
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 #if C_OPENGL
 	} else if (output == "opengl") {
 		sdl.desktop.want_type=SCREEN_OPENGL;
-		sdl.scaling_mode = SmNone;
+		sdl.scaling_mode = SCALING_MODE::NONE;
 		sdl.opengl.bilinear = true;
 	} else if (output == "openglnb") {
 		sdl.desktop.want_type=SCREEN_OPENGL;
-		sdl.scaling_mode = SmNearest;
+		sdl.scaling_mode = SCALING_MODE::NEAREST;
 		sdl.opengl.bilinear = false;
 	} else if (output == "openglpp") {
 		sdl.desktop.want_type = SCREEN_OPENGL;
-		sdl.scaling_mode = SmPerfect;
+		sdl.scaling_mode = SCALING_MODE::PERFECT;
 		sdl.opengl.bilinear = false;
 #endif
 	} else {
