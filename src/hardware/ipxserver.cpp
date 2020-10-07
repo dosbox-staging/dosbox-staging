@@ -16,12 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include "dosbox.h"
 
 #if C_IPX
 
-#include "dosbox.h"
 #include "ipxserver.h"
 #include "timer.h"
 #include <stdlib.h>
@@ -34,8 +32,8 @@ UDPsocket ipxServerSocket;  // Listening server socket
 packetBuffer connBuffer[SOCKETTABLESIZE];
 
 Bit8u inBuffer[IPXBUFFERSIZE];
-IPaddress ipconn[SOCKETTABLESIZE];  // Active TCP/IP connection 
-UDPsocket tcpconn[SOCKETTABLESIZE];  // Active TCP/IP connections
+IPaddress ipconn[SOCKETTABLESIZE];  // Active TCP/IP connection
+UDPsocket tcpconn[SOCKETTABLESIZE]; // Active TCP/IP connections
 SDLNet_SocketSet serverSocketSet;
 TIMER_TickHandler* serverTimer;
 
@@ -66,8 +64,6 @@ static void closeSocket(Bit16u sockidx) {
 static void sendIPXPacket(Bit8u *buffer, Bit16s bufSize) {
 	Bit16u srcport, destport;
 	Bit32u srchost, desthost;
-	Bit16u i;
-	Bits result;
 	UDPpacket outPacket;
 	outPacket.channel = -1;
 	outPacket.data = buffer;
@@ -81,15 +77,15 @@ static void sendIPXPacket(Bit8u *buffer, Bit16s bufSize) {
 
 	srcport = tmpHeader->src.addr.byIP.port;
 	destport = tmpHeader->dest.addr.byIP.port;
-	
 
 	if(desthost == 0xffffffff) {
 		// Broadcast
-		for(i=0;i<SOCKETTABLESIZE;i++) {
+		for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i) {
 			if(connBuffer[i].connected && ((ipconn[i].host != srchost)||(ipconn[i].port!=srcport))) {
 				outPacket.address = ipconn[i];
-				result = SDLNet_UDP_Send(ipxServerSocket,-1,&outPacket);
-				if(result == 0) {
+				const int result = SDLNet_UDP_Send(ipxServerSocket,
+				                                   -1, &outPacket);
+				if (result == 0) {
 					LOG_MSG("IPXSERVER: %s", SDLNet_GetError());
 					continue;
 				}
@@ -98,11 +94,12 @@ static void sendIPXPacket(Bit8u *buffer, Bit16s bufSize) {
 		}
 	} else {
 		// Specific address
-		for(i=0;i<SOCKETTABLESIZE;i++) {
+		for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i) {
 			if((connBuffer[i].connected) && (ipconn[i].host == desthost) && (ipconn[i].port == destport)) {
 				outPacket.address = ipconn[i];
-				result = SDLNet_UDP_Send(ipxServerSocket,-1,&outPacket);
-				if(result == 0) {
+				const int result = SDLNet_UDP_Send(ipxServerSocket,
+				                                   -1, &outPacket);
+				if (result == 0) {
 					LOG_MSG("IPXSERVER: %s", SDLNet_GetError());
 					continue;
 				}
@@ -110,10 +107,6 @@ static void sendIPXPacket(Bit8u *buffer, Bit16s bufSize) {
 			}
 		}
 	}
-
-
-
-
 }
 
 bool IPX_isConnectedToServer(Bits tableNum, IPaddress ** ptrAddr) {
@@ -125,11 +118,10 @@ bool IPX_isConnectedToServer(Bits tableNum, IPaddress ** ptrAddr) {
 static void ackClient(IPaddress clientAddr) {
 	IPXHeader regHeader;
 	UDPpacket regPacket;
-	Bits result;
 
 	SDLNet_Write16(0xffff, regHeader.checkSum);
 	SDLNet_Write16(sizeof(regHeader), regHeader.length);
-	
+
 	SDLNet_Write32(0, regHeader.dest.network);
 	PackIP(clientAddr, &regHeader.dest.addr.byIP);
 	SDLNet_Write16(0x2, regHeader.dest.socket);
@@ -144,8 +136,10 @@ static void ackClient(IPaddress clientAddr) {
 	regPacket.maxlen = sizeof(regHeader);
 	regPacket.address = clientAddr;
 	// Send registration string to client.  If client doesn't get this, client will not be registered
-	result = SDLNet_UDP_Send(ipxServerSocket,-1,&regPacket);
-
+	const int result = SDLNet_UDP_Send(ipxServerSocket, -1, &regPacket);
+	if (result == 0)
+		LOG_MSG("IPXSERVER: Connection response not sent: %s",
+		        SDLNet_GetError());
 }
 
 static void IPX_ServerLoop() {
@@ -154,28 +148,25 @@ static void IPX_ServerLoop() {
 
 	//char regString[] = "IPX Register\0";
 
-	Bit16u i;
 	Bit32u host;
-	Bits result;
 
 	inPacket.channel = -1;
 	inPacket.data = &inBuffer[0];
 	inPacket.maxlen = IPXBUFFERSIZE;
 
-
-	result = SDLNet_UDP_Recv(ipxServerSocket, &inPacket);
+	const int result = SDLNet_UDP_Recv(ipxServerSocket, &inPacket);
 	if (result != 0) {
 		// Check to see if incoming packet is a registration packet
 		// For this, I just spoofed the echo protocol packet designation 0x02
 		IPXHeader *tmpHeader;
 		tmpHeader = (IPXHeader *)&inBuffer[0];
-	
+
 		// Check to see if echo packet
 		if(SDLNet_Read16(tmpHeader->dest.socket) == 0x2) {
 			// Null destination node means its a server registration packet
 			if(tmpHeader->dest.addr.byIP.host == 0x0) {
 				UnpackIP(tmpHeader->src.addr.byIP, &tmpAddr);
-				for(i=0;i<SOCKETTABLESIZE;i++) {
+				for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i) {
 					if(!connBuffer[i].connected) {
 						// Use prefered host IP rather than the reported source IP
 						// It may be better to use the reported source
@@ -196,7 +187,6 @@ static void IPX_ServerLoop() {
 							return;
 						}
 					}
-					
 				}
 			}
 		}
@@ -211,22 +201,20 @@ void IPX_StopServer() {
 	SDLNet_UDP_Close(ipxServerSocket);
 }
 
-bool IPX_StartServer(Bit16u portnum) {
-	Bit16u i;
-
-	if(!SDLNet_ResolveHost(&ipxServerIp, NULL, portnum)) {
-	
+bool IPX_StartServer(uint16_t portnum)
+{
+	if (!SDLNet_ResolveHost(&ipxServerIp, nullptr, portnum)) {
 		//serverSocketSet = SDLNet_AllocSocketSet(SOCKETTABLESIZE);
 		ipxServerSocket = SDLNet_UDP_Open(portnum);
 		if(!ipxServerSocket) return false;
 
-		for(i=0;i<SOCKETTABLESIZE;i++) connBuffer[i].connected = false;
+		for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i)
+			connBuffer[i].connected = false;
 
 		TIMER_AddTickHandler(&IPX_ServerLoop);
 		return true;
 	}
 	return false;
 }
-
 
 #endif
