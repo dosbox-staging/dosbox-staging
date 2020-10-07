@@ -38,7 +38,7 @@ struct packetBuffer {
 
 
 void IPX_StopServer();
-bool IPX_StartServer(Bit16u portnum);
+bool IPX_StartServer(uint16_t portnum);
 bool IPX_isConnectedToServer(Bits tableNum, IPaddress ** ptrAddr);
 
 Bit8u packetCRC(Bit8u *buffer, Bit16u bufSize);
