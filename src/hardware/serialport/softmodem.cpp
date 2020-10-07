@@ -483,17 +483,9 @@ void CSerialModem::DoCommand()
 				SendRes(ResERROR);
 				return;
 			}
-			// scan for and remove spaces; weird bug: with leading spaces in the string,
+			// scan for and remove whitespaces; weird bug: with leading spaces in the string,
 			// SDLNet_ResolveHost will return no error but not work anyway (win)
-			while(foundstr[0] == ' ')
-				foundstr++;
-
-			char* helper = foundstr;
-			helper+=strlen(foundstr);
-			while(helper[0] == ' ') {
-				helper[0] = 0;
-				helper--;
-			}
+			foundstr = trim(foundstr);
 
 			const char *mappedaddr = MODEM_GetAddressFromPhone(foundstr);
 			if (mappedaddr) {
