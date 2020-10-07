@@ -342,8 +342,8 @@ struct SDL_Block {
 	Bit32u focus_ticks;
 #endif
 	// state of alt-keys for certain special handlings
-	SDL_EventType laltstate;
-	SDL_EventType raltstate;
+	SDL_EventType laltstate = SDL_KEYUP;
+	SDL_EventType raltstate = SDL_KEYUP;
 };
 
 static SDL_Block sdl;
@@ -540,7 +540,7 @@ MAYBE_UNUSED static void PauseDOSBox(bool pressed)
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
 					MAPPER_LosingFocus();
-					//Not perfect if the pressed alt key is switched, but then we have to 
+					//Not perfect if the pressed alt key is switched, but then we have to
 					//insert the keys into the mapper or create/rewrite the event and push it.
 					//Which is tricky due to possible use of scancodes.
 				}
@@ -2359,9 +2359,10 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 	}
 }
 
-void GFX_LosingFocus(void) {
-	sdl.laltstate=SDL_KEYUP;
-	sdl.raltstate=SDL_KEYUP;
+void GFX_LosingFocus()
+{
+	sdl.laltstate = SDL_KEYUP;
+	sdl.raltstate = SDL_KEYUP;
 	MAPPER_LosingFocus();
 }
 
@@ -3217,9 +3218,6 @@ int main(int argc, char* argv[]) {
 	sdl.initialized = true;
 	// Once initialized, ensure we clean up SDL for all exit conditions
 	atexit(QuitSDL);
-
-	sdl.laltstate = SDL_KEYUP;
-	sdl.raltstate = SDL_KEYUP;
 
 	/* Parse configuration files */
 	std::string config_file, config_path, config_combined;

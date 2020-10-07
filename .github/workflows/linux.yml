@@ -24,17 +24,17 @@ jobs:
           - name: GCC, Ubuntu 20.04
             os: ubuntu-20.04
             flags: -c gcc
-            max_warnings: 10
+            max_warnings: 8
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
             flags: -c gcc
             config_flags: --disable-fluidsynth
-            max_warnings: 10
+            max_warnings: 8
           - name: GCC, Ubuntu 16.04
             os: ubuntu-16.04
             flags: -c gcc
             config_flags: --disable-fluidsynth
-            max_warnings: 8
+            max_warnings: 6
           - name: GCC, +tests
             os: ubuntu-20.04
             config_flags: --enable-tests
@@ -46,22 +46,22 @@ jobs:
             os: ubuntu-20.04
             flags: -c gcc
             config_flags: --enable-debug
-            max_warnings: 120
+            max_warnings: 118
           - name: GCC, +dynrec, -dyn_x86
             os: ubuntu-20.04
             flags: -c gcc
             config_flags: --disable-dynamic-x86
-            max_warnings: 10
+            max_warnings: 8
           - name: GCC, +dynrec, +debug, -dyn_x86
             os: ubuntu-20.04
             flags: -c gcc
             config_flags: --disable-dynamic-x86 --enable-debug
-            max_warnings: 154
+            max_warnings: 152
           - name: GCC, -network
             os: ubuntu-20.04
             flags: -c gcc
             config_flags: --disable-network
-            max_warnings: 10
+            max_warnings: 8
 
     steps:
       - uses: actions/checkout@v2
