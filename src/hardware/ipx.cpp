@@ -512,7 +512,6 @@ Bitu IPX_IntHandler(void) {
 static void pingAck(IPaddress retAddr) {
 	IPXHeader regHeader;
 	UDPpacket regPacket;
-	Bits result;
 
 	SDLNet_Write16(0xffff, regHeader.checkSum);
 	SDLNet_Write16(sizeof(regHeader), regHeader.length);
@@ -531,14 +530,17 @@ static void pingAck(IPaddress retAddr) {
 	regPacket.len = sizeof(regHeader);
 	regPacket.maxlen = sizeof(regHeader);
 	regPacket.channel = UDPChannel;
-	
-	result = SDLNet_UDP_Send(ipxClientSocket, regPacket.channel, &regPacket);
+
+	const int result = SDLNet_UDP_Send(ipxClientSocket, regPacket.channel,
+	                                   &regPacket);
+	if (!result)
+		DEBUG_LOG_MSG("IPX: Failed to acknowledge send: %s",
+		              SDLNet_GetError());
 }
 
 static void pingSend(void) {
 	IPXHeader regHeader;
 	UDPpacket regPacket;
-	Bits result;
 
 	SDLNet_Write16(0xffff, regHeader.checkSum);
 	SDLNet_Write16(sizeof(regHeader), regHeader.length);
@@ -558,11 +560,11 @@ static void pingSend(void) {
 	regPacket.len = sizeof(regHeader);
 	regPacket.maxlen = sizeof(regHeader);
 	regPacket.channel = UDPChannel;
-	
-	result = SDLNet_UDP_Send(ipxClientSocket, regPacket.channel, &regPacket);
-	if(!result) {
-		LOG_MSG("IPX: SDLNet_UDP_Send: %s\n", SDLNet_GetError());
-	}
+
+	const int result = SDLNet_UDP_Send(ipxClientSocket, regPacket.channel,
+	                                   &regPacket);
+	if (!result)
+		LOG_MSG("IPX: Failed to send a ping packet: %s", SDLNet_GetError());
 }
 
 static void receivePacket(Bit8u *buffer, Bit16s bufSize) {
@@ -628,7 +630,6 @@ static void sendPacket(ECBClass* sendecb) {
 	Bit16u i, fragCount,t;
 	Bit16s packetsize;
 	Bit16u *wordptr;
-	Bits result;
 	UDPpacket outPacket;
 		
 	sendecb->setInUseFlag(USEFLAG_AVAILABLE);
@@ -709,9 +710,9 @@ static void sendPacket(ECBClass* sendecb) {
 		outPacket.len = packetsize;
 		outPacket.maxlen = packetsize;
 		// Since we're using a channel, we won't send the IP address again
-		result = SDLNet_UDP_Send(ipxClientSocket, UDPChannel, &outPacket);
-		
-		if(result == 0) {
+		const int result = SDLNet_UDP_Send(ipxClientSocket, UDPChannel,
+		                                   &outPacket);
+		if (result == 0) {
 			LOG_MSG("IPX: Could not send packet: %s", SDLNet_GetError());
 			sendecb->setCompletionFlag(COMP_HARDWAREERROR);
 			sendecb->NotifyESR();
@@ -734,15 +735,14 @@ static void sendPacket(ECBClass* sendecb) {
 
 static bool pingCheck(IPXHeader * outHeader) {
 	char buffer[1024];
-	Bits result;
 	UDPpacket regPacket;
 	IPXHeader *regHeader;
 	regPacket.data = (Uint8 *)buffer;
 	regPacket.maxlen = sizeof(buffer);
 	regPacket.channel = UDPChannel;
 	regHeader = (IPXHeader *)buffer;
-	
-	result = SDLNet_UDP_Recv(ipxClientSocket, &regPacket);
+
+	const int result = SDLNet_UDP_Recv(ipxClientSocket, &regPacket);
 	if (result != 0) {
 		memcpy(outHeader, regHeader, sizeof(IPXHeader));
 		return true;
@@ -797,7 +797,6 @@ bool ConnectToServer(char const *strAddr) {
 			} else {
 				// Wait for return packet from server.
 				// This will contain our IPX address and port num
-				Bits result;
 				Bit32u ticks, elapsed;
 				ticks = GetTicks();
 
@@ -810,13 +809,13 @@ bool ConnectToServer(char const *strAddr) {
 						return false;
 					}
 					CALLBACK_Idle();
-					result = SDLNet_UDP_Recv(ipxClientSocket, &regPacket);
-					if (result != 0) {
+					const int res = SDLNet_UDP_Recv(ipxClientSocket,
+					                                &regPacket);
+					if (res != 0) {
 						memcpy(localIpxAddr.netnode, regHeader.dest.addr.byNode.node, sizeof(localIpxAddr.netnode));
 						memcpy(localIpxAddr.netnum, regHeader.dest.network, sizeof(localIpxAddr.netnum));
 						break;
 					}
-					
 				}
 
 				LOG_MSG("IPX: Connected to server.  IPX address is %d:%d:%d:%d:%d:%d", CONVIPX(localIpxAddr.netnode));
