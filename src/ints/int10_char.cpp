@@ -487,7 +487,7 @@ void INT10_ReadCharAttr(Bit16u * result,Bit8u page) {
 }
 void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useattr) {
 	/* Externally used by the mouse routine */
-	PhysPt fontdata;
+	RealPt fontdata;
 	Bit16u cols = real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
 	Bit8u back,cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 	switch (CurMode->type) {
@@ -507,27 +507,27 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 	case M_TANDY16:
 		if (chr>=128) {
 			chr-=128;
-			fontdata=Real2Phys(RealGetVec(0x1f));
+			fontdata=RealGetVec(0x1f);
 			break;
 		}
 		switch (machine) {
 		case MCH_CGA:
 		case MCH_HERC:
-			fontdata=PhysMake(0xf000,0xfa6e);
+			fontdata=RealMake(0xf000,0xfa6e);
 			break;
 		case TANDY_ARCH_CASE:
-			fontdata=Real2Phys(RealGetVec(0x44));
+			fontdata=RealGetVec(0x44);
 			break;
 		default:
-			fontdata=Real2Phys(RealGetVec(0x43));
+			fontdata=RealGetVec(0x43);
 			break;
 		}
 		break;
 	default:
-		fontdata=Real2Phys(RealGetVec(0x43));
+		fontdata=RealGetVec(0x43);
 		break;
 	}
-	fontdata+=chr*cheight;
+	fontdata=RealMake(RealSeg(fontdata),RealOff(fontdata)+chr*cheight);
 
 	if(GCC_UNLIKELY(!useattr)) { //Set attribute(color) to a sensible value
 		static bool warned_use = false;
@@ -577,7 +577,8 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 	Bit16u ty=(Bit16u)y;
 	for (Bit8u h=0;h<cheight;h++) {
 		Bit8u bitsel=128;
-		Bit8u bitline=mem_readb(fontdata++);
+		Bit8u bitline=mem_readb(Real2Phys(fontdata));
+		fontdata=RealMake(RealSeg(fontdata),RealOff(fontdata)+1);
 		Bit16u tx=(Bit16u)x;
 		while (bitsel) {
 			INT10_PutPixel(tx,ty,page,(bitline&bitsel)?attr:back);
