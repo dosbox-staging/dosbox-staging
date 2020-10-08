@@ -25,9 +25,9 @@
 #include "callback.h"
 #include "control.h"
 #include "dosbox.h"
+#include "fs_utils.h"
 #include "regs.h"
 #include "support.h"
-
 
 Bitu call_shellstop;
 /* Larger scope so shell_del autoexec can use it to
@@ -475,7 +475,8 @@ public:
 					if(!name) continue;
 				}
 				*name++ = 0;
-				if (access(buffer,F_OK)) continue;
+				if (path_exists(buffer))
+					continue;
 				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
 				autoexec[13].Install("C:");
 				/* Save the non-modified filename (so boot and imgmount can use it (long filenames, case sensivitive)) */
