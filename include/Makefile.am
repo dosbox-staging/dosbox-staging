@@ -1,45 +1,45 @@
-noinst_HEADERS =  \
-bios_disk.h \
-bios.h \
-byteorder.h \
-callback.h \
-compiler.h \
-control.h \
-cpu.h \
-cross.h \
-debug.h \
-dma.h \
-dosbox.h \
-dos_inc.h \
-dos_system.h \
-drives.h \
-envelope.h \
-fpu.h \
-hardware.h \
-inout.h \
-ipx.h \
-ipxserver.h \
-joystick.h \
-keyboard.h \
-logging.h \
-mapper.h \
-mem.h \
-mem_host.h \
-mem_unaligned.h \
-midi.h \
-mixer.h \
-mouse.h \
-paging.h \
-pci_bus.h \
-pic.h \
-programs.h \
-regs.h \
-render.h \
-serialport.h \
-setup.h \
-shell.h \
-support.h \
-timer.h \
-types.h \
-vga.h \
-video.h
+noinst_HEADERS = \
+	bios.h \
+	bios_disk.h \
+	byteorder.h \
+	callback.h \
+	compiler.h \
+	control.h \
+	cpu.h \
+	cross.h \
+	debug.h \
+	dma.h \
+	dos_inc.h \
+	dos_system.h \
+	dosbox.h \
+	drives.h \
+	envelope.h \
+	fpu.h \
+	hardware.h \
+	inout.h \
+	ipx.h \
+	ipxserver.h \
+	joystick.h \
+	keyboard.h \
+	logging.h \
+	mapper.h \
+	mem.h \
+	mem_host.h \
+	mem_unaligned.h \
+	midi.h \
+	mixer.h \
+	mouse.h \
+	paging.h \
+	pci_bus.h \
+	pic.h \
+	programs.h \
+	regs.h \
+	render.h \
+	serialport.h \
+	setup.h \
+	shell.h \
+	support.h \
+	timer.h \
+	types.h \
+	vga.h \
+	video.h
