@@ -15,6 +15,7 @@ noinst_HEADERS = \
 	drives.h \
 	envelope.h \
 	fpu.h \
+	fs_utils.h \
 	hardware.h \
 	inout.h \
 	ipx.h \

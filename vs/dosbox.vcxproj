@@ -360,6 +360,7 @@
     <ClCompile Include="..\src\midi\midi.cpp" />
     <ClCompile Include="..\src\midi\midi_fluidsynth.cpp" />
     <ClCompile Include="..\src\misc\cross.cpp" />
+    <ClCompile Include="..\src\misc\fs_utils.cpp" />
     <ClCompile Include="..\src\misc\messages.cpp" />
     <ClCompile Include="..\src\misc\programs.cpp" />
     <ClCompile Include="..\src\misc\setup.cpp" />
@@ -389,6 +390,7 @@
     <ClInclude Include="..\include\drives.h" />
     <ClInclude Include="..\include\envelope.h" />
     <ClInclude Include="..\include\fpu.h" />
+    <ClInclude Include="..\include\fs_utils.h" />
     <ClInclude Include="..\include\hardware.h" />
     <ClInclude Include="..\include\inout.h" />
     <ClInclude Include="..\include\joystick.h" />
