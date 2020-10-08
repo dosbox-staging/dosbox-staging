@@ -44,7 +44,7 @@ jobs:
       - name: Log environment
         run:  ./scripts/log-env.sh
       - name: Build
-        run:  ./scripts/build.sh --build-type Debug ${{ matrix.conf.flags }} --disable-fluidsynth
+        run:  ./scripts/build.sh --build-type Debug ${{ matrix.conf.flags }}
       - name: Summarize warnings
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
