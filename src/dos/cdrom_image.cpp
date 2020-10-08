@@ -19,6 +19,7 @@
 // #define DEBUG 1
 
 #include "cdrom.h"
+
 #include <cassert>
 #include <cctype>
 #include <chrono>
@@ -30,7 +31,6 @@
 #include <limits>
 #include <sstream>
 #include <vector>
-#include <sys/stat.h>
 
 #if !defined(WIN32)
 #include <libgen.h>
@@ -39,6 +39,7 @@
 #endif
 
 #include "drives.h"
+#include "fs_utils.h"
 #include "support.h"
 #include "setup.h"
 
@@ -1392,17 +1393,17 @@ bool CDROM_Interface_Image::HasDataTrack(void)
 bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 {
 	// check if file exists
-	struct stat test;
-	if (stat(filename.c_str(), &test) == 0) {
+	if (path_exists(filename)) {
 		return true;
 	}
 
 	// check if file with path relative to cue file exists
 	string tmpstr(pathname + "/" + filename);
-	if (stat(tmpstr.c_str(), &test) == 0) {
+	if (path_exists(tmpstr)) {
 		filename = tmpstr;
 		return true;
 	}
+
 	// finally check if file is in a dosbox local drive
 	char fullname[CROSS_LEN];
 	char tmp[CROSS_LEN];
@@ -1415,7 +1416,7 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 	localDrive *ldp = dynamic_cast<localDrive*>(Drives[drive]);
 	if (ldp) {
 		ldp->GetSystemFilename(tmp, fullname);
-		if (stat(tmp, &test) == 0) {
+		if (path_exists(tmp)) {
 			filename = tmp;
 			return true;
 		}
@@ -1433,13 +1434,13 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 		if (copy[i] == '\\') copy[i] = '/';
 	}
 
-	if (stat(copy.c_str(), &test) == 0) {
+	if (path_exists(copy)) {
 		filename = copy;
 		return true;
 	}
 
 	tmpstr = pathname + "/" + copy;
-	if (stat(tmpstr.c_str(), &test) == 0) {
+	if (path_exists(tmpstr)) {
 		filename = tmpstr;
 		return true;
 	}
