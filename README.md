@@ -129,12 +129,8 @@ sudo pacman -S gcc automake alsa-lib libpng sdl2 sdl2_net opusfile fluidsynth
 ``` shell
 # macOS
 xcode-select --install
-brew install autogen automake libpng sdl2 sdl2_net opusfile glib
+brew install autogen automake libpng sdl2 sdl2_net opusfile fluid-synth
 ```
-*Note: FluidSynth as a library is not available on macOS via brew.
-Either use the `--disable-fluidsynth` configure flag to disable the
-feature or run `gmake` inside `contrib/static-fluid-synth` and set
-the resulting two environment variables prior to `./configure`ing.*
 
 Compilation flags suggested for local optimised builds:
 
