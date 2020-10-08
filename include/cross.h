@@ -44,7 +44,6 @@
 #if defined (WIN32)
 #define CROSS_FILENAME(blah) 
 #define CROSS_FILESPLIT '\\'
-#define F_OK 0
 #else
 #define	CROSS_FILENAME(blah) strreplace(blah,'\\','/')
 #define CROSS_FILESPLIT '/'
