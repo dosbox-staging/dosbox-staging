@@ -18,20 +18,15 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_FS_UTILS_H
-#define DOSBOX_FS_UTILS_H
+#if defined(WIN32)
 
 #include "fs_utils.h"
 
-#include <unistd.h>
+#include <io.h>
 
 bool path_exists(const char *path) noexcept
 {
-#if defined(WIN32)
-	return (access(path, 0) == 0);
-#else
-	return (access(path, F_OK) == 0);
-#endif
+	return (_access(path, 0) == 0);
 }
 
 #endif
