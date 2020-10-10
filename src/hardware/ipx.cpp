@@ -990,13 +990,14 @@ public:
 				}
 
 				if(ConnectToServer(strHost)) {
-                	WriteOut("IPX Tunneling Client connected to server at %s.\n", strHost);
+					WriteOut("IPX Tunneling Client connected to server at %s.\n",
+					         strHost);
 				} else {
 					WriteOut("IPX Tunneling Client failed to connect to server at %s.\n", strHost);
 				}
 				return;
 			}
-			
+
 			if(strcasecmp("disconnect", temp_line.c_str()) == 0) {
 				if(!incomingPacket.connected) {
 					WriteOut("IPX Tunneling Client not connected.\n");
@@ -1010,8 +1011,8 @@ public:
 
 			if(strcasecmp("status", temp_line.c_str()) == 0) {
 				WriteOut("IPX Tunneling Status:\n\n");
-				WriteOut("Server status: ");
-				if(isIpxServer) WriteOut("ACTIVE\n"); else WriteOut("INACTIVE\n");
+				WriteOut("Server status: %s\n",
+				         (isIpxServer ? "ACTIVE" : "INACTIVE"));
 				WriteOut("Client status: ");
 				if(incomingPacket.connected) {
 					WriteOut("CONNECTED -- Server at %d.%d.%d.%d port %d\n", CONVIP(ipxServConnIp.host), udpPort);
