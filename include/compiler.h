@@ -47,6 +47,15 @@
 #define MAYBE_UNUSED
 #endif
 
+// Wrapper for C++17 [[fallthrough]] null statement. Use this to avoid implicit
+// fallthrough in switch statements (-Wimplicit-fallthrough flag).
+
+#if __has_cpp_attribute(fallthrough)
+#define FALLTHROUGH [[fallthrough]]
+#else
+#define FALLTHROUGH
+#endif
+
 // The __attribute__ syntax is supported by GCC, Clang, and IBM compilers.
 //
 // Provided for backwards-compatibility with old code; to be gradually
