@@ -51,9 +51,7 @@ static std::string translate_to_glob_pattern(const std::string &path) noexcept
 		case '?':
 		case '*':
 		case '[':
-		case ']':
-			glob_pattern.push_back('\\');
-			// fall-through
+		case ']': glob_pattern.push_back('\\'); FALLTHROUGH;
 		default: glob_pattern.push_back(c); continue;
 		}
 	}
