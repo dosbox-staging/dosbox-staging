@@ -53,4 +53,22 @@ TEST(PathExists, MissingPathAsString)
 	EXPECT_FALSE(path_exists("foobar"));
 }
 
+TEST(PathConversion, SimpleTest)
+{
+	constexpr auto expected_result = "tests/files/paths/empty.txt";
+	constexpr auto input = "tests\\files\\PATHS\\EMPTY.TXT";
+	ASSERT_TRUE(path_exists(expected_result));
+	EXPECT_TRUE(path_exists(to_native_path(input)));
+#if !defined(WIN32)
+	EXPECT_EQ(expected_result, to_native_path(input));
+#endif
+}
+
+TEST(PathConversion, MissingFile)
+{
+	constexpr auto nonexistent_file = "tests/files/paths/missing.txt";
+	ASSERT_FALSE(path_exists(nonexistent_file));
+	EXPECT_FALSE(path_exists(to_native_path(nonexistent_file)));
+}
+
 } // namespace

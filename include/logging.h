@@ -21,6 +21,8 @@
 
 #include <cstdio>
 
+#include "compiler.h"
+
 enum LOG_TYPES {
 	LOG_ALL,
 	LOG_VGA, LOG_VGAGFX,LOG_VGAMISC,LOG_INT10,

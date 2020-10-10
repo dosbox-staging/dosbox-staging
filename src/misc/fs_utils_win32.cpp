@@ -29,4 +29,11 @@ bool path_exists(const char *path) noexcept
 	return (_access(path, 0) == 0);
 }
 
+std::string to_native_path(const std::string &path) noexcept
+{
+	if (path_exists(path))
+		return path;
+	return "";
+}
+
 #endif

@@ -23,7 +23,8 @@
 
 #include <string>
 
-// Checks if the given path corresponds to an existing file or directory.
+/* Check if the given path corresponds to an existing file or directory.
+ */
 
 bool path_exists(const char *path) noexcept;
 
@@ -31,5 +32,24 @@ inline bool path_exists(const std::string &path) noexcept
 {
 	return path_exists(path.c_str());
 }
+
+/* Convert path (possibly in format used by different OS) to a path
+ * native for host OS.
+ *
+ * If path (after conversion) does not correspond to an existing file or
+ * directory, then an empty string is returned.
+ *
+ * On Unix-like systems:
+ * - Expand ~ and ~name to paths in appropriate home directory.
+ * - Convert Windows-style path separators to Unix-style separators.
+ * - If case-insensitive, relative path matches an existing file in the
+ *   filesystem, then return case-sensitive path to that file.
+ * - If more than one files match, return the first one (alphabetically).
+ *
+ * On Windows:
+ * - If path points to an existing file, then return the path unmodified.
+ */
+
+std::string to_native_path(const std::string &path) noexcept;
 
 #endif

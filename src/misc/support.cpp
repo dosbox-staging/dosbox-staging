@@ -112,6 +112,15 @@ bool is_executable_filename(const std::string &filename) noexcept
 	return (sfx == "exe" || sfx == "bat" || sfx == "com");
 }
 
+std::string replace(const std::string &str, char old_char, char new_char) noexcept
+{
+	std::string new_str = str;
+	for (char &c : new_str)
+		if (c == old_char)
+			c = new_char;
+	return str;
+}
+
 void trim(std::string &str)
 {
 	constexpr char whitespace[] = " \r\t\f\n";
