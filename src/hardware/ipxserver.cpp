@@ -26,6 +26,8 @@
 #include <string.h>
 #include "ipx.h"
 
+constexpr int UDP_UNICAST = -1; // SDLNet magic number
+
 IPaddress ipxServerIp;  // IPAddress for server's listening port
 UDPsocket ipxServerSocket;  // Listening server socket
 
@@ -84,7 +86,8 @@ static void sendIPXPacket(Bit8u *buffer, Bit16s bufSize) {
 			if(connBuffer[i].connected && ((ipconn[i].host != srchost)||(ipconn[i].port!=srcport))) {
 				outPacket.address = ipconn[i];
 				const int result = SDLNet_UDP_Send(ipxServerSocket,
-				                                   -1, &outPacket);
+				                                   UDP_UNICAST,
+				                                   &outPacket);
 				if (result == 0) {
 					LOG_MSG("IPXSERVER: %s", SDLNet_GetError());
 					continue;
@@ -98,7 +101,8 @@ static void sendIPXPacket(Bit8u *buffer, Bit16s bufSize) {
 			if((connBuffer[i].connected) && (ipconn[i].host == desthost) && (ipconn[i].port == destport)) {
 				outPacket.address = ipconn[i];
 				const int result = SDLNet_UDP_Send(ipxServerSocket,
-				                                   -1, &outPacket);
+				                                   UDP_UNICAST,
+				                                   &outPacket);
 				if (result == 0) {
 					LOG_MSG("IPXSERVER: %s", SDLNet_GetError());
 					continue;
@@ -136,7 +140,7 @@ static void ackClient(IPaddress clientAddr) {
 	regPacket.maxlen = sizeof(regHeader);
 	regPacket.address = clientAddr;
 	// Send registration string to client.  If client doesn't get this, client will not be registered
-	const int result = SDLNet_UDP_Send(ipxServerSocket, -1, &regPacket);
+	const int result = SDLNet_UDP_Send(ipxServerSocket, UDP_UNICAST, &regPacket);
 	if (result == 0)
 		LOG_MSG("IPXSERVER: Connection response not sent: %s",
 		        SDLNet_GetError());
