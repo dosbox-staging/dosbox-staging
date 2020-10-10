@@ -176,6 +176,7 @@ char * StripWord(char *&cmd);
 bool IsHexWord(char * word);
 Bits ConvHexWord(char * word);
 
+std::string replace(const std::string &str, char old_char, char new_char) noexcept;
 void trim(std::string& str);
 void upcase(std::string &str);
 void lowcase(std::string &str);
