@@ -1265,8 +1265,8 @@ class Typer {
 				std::this_thread::sleep_for(std::chrono::milliseconds(m_pace_ms));
 			}
 		}
-		std::thread              m_instance;
-		std::vector<std::string> m_sequence;
+		std::thread m_instance = {};
+		std::vector<std::string> m_sequence = {};
 		std::vector<CEvent*>     *m_events = nullptr;
 		uint32_t                 m_wait_ms = 0;
 		uint32_t                 m_pace_ms = 0;
@@ -1280,18 +1280,18 @@ static struct CMapper {
 	SDL_Surface *surface = nullptr;
 	SDL_Surface *draw_surface = nullptr;
 	bool exit = false;
-	CEvent *aevent = nullptr; // Active Event
-	CBind *abind = nullptr; // Active Bind
-	CBindList_it abindit; //Location of active bind in list
+	CEvent *aevent = nullptr;  // Active Event
+	CBind *abind = nullptr;    // Active Bind
+	CBindList_it abindit = {}; // Location of active bind in list
 	bool redraw = false;
 	bool addbind = false;
 	Bitu mods = 0;
 	struct {
-		CStickBindGroup * stick[MAXSTICKS] = {nullptr};
+		CStickBindGroup *stick[MAXSTICKS] = {nullptr};
 		unsigned int num = 0;
 		unsigned int num_groups = 0;
-	} sticks;
-	Typer typist;
+	} sticks = {};
+	Typer typist = {};
 	std::string filename = "";
 } mapper;
 
