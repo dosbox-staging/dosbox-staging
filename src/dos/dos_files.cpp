@@ -485,22 +485,28 @@ bool DOS_CreateFile(char const * name,Bit16u attributes,Bit16u * entry,bool fcb)
 		return DOS_OpenFile(name, OPEN_READ, entry, fcb);
 
 	LOG(LOG_FILES,LOG_NORMAL)("file create attributes %X file %s",attributes,name);
-	char fullname[DOS_PATHLENGTH];Bit8u drive;
-	DOS_PSP psp(dos.psp());
-	if (!DOS_MakeName(name,fullname,&drive)) return false;
+
+	/* First check if the name is correct */
+	char fullname[DOS_PATHLENGTH];
+	uint8_t drive;
+	if (!DOS_MakeName(name, fullname, &drive))
+		return false;
+
 	/* Check for a free file handle */
-	Bit8u handle=DOS_FILES;Bit8u i;
-	for (i=0;i<DOS_FILES;i++) {
+	uint8_t handle = DOS_FILES;
+	for (uint8_t i = 0; i < DOS_FILES; ++i) {
 		if (!Files[i]) {
-			handle=i;
+			handle = i;
 			break;
 		}
 	}
-	if (handle==DOS_FILES) {
+	if (handle == DOS_FILES) {
 		DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
 		return false;
 	}
+
 	/* We have a position in the main table now find one in the psp table */
+	DOS_PSP psp(dos.psp());
 	*entry = fcb?handle:psp.FindFreeFileEntry();
 	if (*entry==0xff) {
 		DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
@@ -529,7 +535,6 @@ bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry,bool fcb) {
 	if (flags>2) LOG(LOG_FILES,LOG_ERROR)("Special file open command %X file %s",flags,name);
 	else LOG(LOG_FILES,LOG_NORMAL)("file open command %X file %s",flags,name);
 
-	DOS_PSP psp(dos.psp());
 	Bit16u attr = 0;
 	Bit8u devnum = DOS_FindDevice(name);
 	bool device = (devnum != DOS_DEVICES);
@@ -541,22 +546,27 @@ bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry,bool fcb) {
 		}
 	}
 
-	char fullname[DOS_PATHLENGTH];Bit8u drive;Bit8u i;
 	/* First check if the name is correct */
-	if (!DOS_MakeName(name,fullname,&drive)) return false;
-	Bit8u handle=255;		
+	char fullname[DOS_PATHLENGTH];
+	uint8_t drive;
+	if (!DOS_MakeName(name, fullname, &drive))
+		return false;
+
 	/* Check for a free file handle */
-	for (i=0;i<DOS_FILES;i++) {
+	uint8_t handle = DOS_FILES;
+	for (uint8_t i = 0; i < DOS_FILES; ++i) {
 		if (!Files[i]) {
-			handle=i;
+			handle = i;
 			break;
 		}
 	}
-	if (handle==255) {
+	if (handle == DOS_FILES) {
 		DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
 		return false;
 	}
+
 	/* We have a position in the main table now find one in the psp table */
+	DOS_PSP psp(dos.psp());
 	*entry = fcb?handle:psp.FindFreeFileEntry();
 
 	if (*entry==0xff) {
@@ -702,9 +712,9 @@ bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry) {
 		*newentry = entry;
 		return true;
 	};
-*/	
-	Bit8u handle=RealHandle(entry);
-	if (handle>=DOS_FILES) {
+*/
+	const uint8_t handle = RealHandle(entry);
+	if (handle >= DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
@@ -999,19 +1009,20 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset) {
 	}
 
 	/* First check if the name is correct */
-	Bit8u drive;
 	char fullname[DOS_PATHLENGTH];
-	if (!DOS_MakeName(shortname,fullname,&drive)) return false;
-	
+	uint8_t drive;
+	if (!DOS_MakeName(shortname, fullname, &drive))
+		return false;
+
 	/* Check, if file is already opened */
-	for (Bit8u i = 0;i < DOS_FILES;i++) {
+	for (uint8_t i = 0; i < DOS_FILES; ++i) {
 		if (Files[i] && Files[i]->IsOpen() && Files[i]->IsName(fullname)) {
 			Files[i]->AddRef();
 			fcb.FileOpen(i);
 			return true;
 		}
 	}
-	
+
 	if (!DOS_OpenFile(shortname,OPEN_READWRITE,&handle,true)) return false;
 	fcb.FileOpen((Bit8u)handle);
 	return true;
@@ -1255,11 +1266,13 @@ bool DOS_FCBRenameFile(Bit16u seg, Bit16u offset){
 	fcbold.GetName(oldname);fcbnew.GetName(newname);
 
 	/* Check, if sourcefile is still open. This was possible in DOS, but modern oses don't like this */
-	Bit8u drive; char fullname[DOS_PATHLENGTH];
-	if (!DOS_MakeName(oldname,fullname,&drive)) return false;
-	
+	char fullname[DOS_PATHLENGTH];
+	uint8_t drive;
+	if (!DOS_MakeName(oldname, fullname, &drive))
+		return false;
+
 	DOS_PSP psp(dos.psp());
-	for (Bit8u i=0;i<DOS_FILES;i++) {
+	for (uint8_t i = 0; i < DOS_FILES; ++i) {
 		if (Files[i] && Files[i]->IsOpen() && Files[i]->IsName(fullname)) {
 			Bit16u handle = psp.FindEntryByHandle(i);
 			//(more than once maybe)
@@ -1348,15 +1361,13 @@ bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate)
 	return true;
 }
 
-void DOS_SetupFiles (void) {
+void DOS_SetupFiles()
+{
 	/* Setup the File Handles */
-	Bit32u i;
-	for (i=0;i<DOS_FILES;i++) {
-		Files[i]=0;
-	}
+	for (uint8_t i = 0; i < DOS_FILES; ++i)
+		Files[i] = nullptr;
 	/* Setup the Virtual Disk System */
-	for (i=0;i<DOS_DRIVES;i++) {
-		Drives[i]=0;
-	}
-	Drives[25]=new Virtual_Drive();
+	for (uint8_t i = 0; i < DOS_DRIVES; ++i)
+		Drives[i] = nullptr;
+	Drives[drive_index('Z')] = new Virtual_Drive();
 }
