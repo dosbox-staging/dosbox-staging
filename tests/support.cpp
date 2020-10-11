@@ -70,4 +70,16 @@ TEST(SafeStrcpyDeathTest, ProtectFromCopyingOverlappingString)
 	EXPECT_DEBUG_DEATH({ safe_strcpy(buf, overlapping); }, "");
 }
 
+TEST(DriveIndex, DriveA)
+{
+	EXPECT_EQ(0, drive_index('a'));
+	EXPECT_EQ(0, drive_index('A'));
+}
+
+TEST(DriveIndex, DriveZ)
+{
+	EXPECT_EQ(25, drive_index('z'));
+	EXPECT_EQ(25, drive_index('Z'));
+}
+
 } // namespace

@@ -424,21 +424,19 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	}
 
 	//Flush the buffer of handles for the same file. (Betrayal in Antara)
-	Bit8u i,drive = DOS_DRIVES;
-	localFile *lfp;
-	for (i=0;i<DOS_DRIVES;i++) {
+	uint8_t drive = DOS_DRIVES;
+	for (uint8_t i = 0; i < DOS_DRIVES; ++i) {
 		if (Drives[i]==this) {
 			drive=i;
 			break;
 		}
 	}
-	for (i=0;i<DOS_FILES;i++) {
+	for (uint8_t i = 0; i < DOS_FILES; ++i) {
 		if (Files[i] && Files[i]->IsOpen() && Files[i]->GetDrive()==drive && Files[i]->IsName(name)) {
-			lfp=dynamic_cast<localFile*>(Files[i]);
+			localFile *lfp = dynamic_cast<localFile *>(Files[i]);
 			if (lfp) lfp->Flush();
 		}
 	}
-
 
 	//Todo check name first against local tree
 	//if name exists, use that one instead!
@@ -893,9 +891,9 @@ bool Overlay_Drive::FileUnlink(char * name) {
 		//This means that the file is probably open by some process.
 		//See if We have it open.
 		bool found_file = false;
-		for(Bitu i = 0;i < DOS_FILES;i++){
+		for (uint8_t i = 0; i < DOS_FILES; ++i) {
 			if(Files[i] && Files[i]->IsName(name)) {
-				Bitu max = DOS_FILES;
+				uint8_t max = DOS_FILES;
 				while(Files[i]->IsOpen() && max--) {
 					Files[i]->Close();
 					if (Files[i]->RemoveRef()<=0) break;
