@@ -1,5 +1,8 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
  *  Copyright (C) 2002-2020  The DOSBox Team
+ *  Copyright (C) 2019-2020  The dosbox-staging team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,14 +24,13 @@
 
 #include "dosbox.h"
 
-#include "types.h"
 #include "mem_host.h"
 #include "mem_unaligned.h"
+#include "types.h"
 
 typedef uint32_t PhysPt;
 typedef uint8_t *HostPt;
 typedef uint32_t RealPt;
-
 typedef int32_t MemHandle;
 
 #define MEM_PAGESIZE 4096
@@ -94,10 +96,12 @@ static inline void phys_writeb(PhysPt addr, uint8_t val)
 {
 	host_writeb(MemBase + addr, val);
 }
+
 static inline void phys_writew(PhysPt addr, uint16_t val)
 {
 	host_writew(MemBase + addr, val);
 }
+
 static inline void phys_writed(PhysPt addr, uint32_t val)
 {
 	host_writed(MemBase + addr, val);
@@ -107,10 +111,12 @@ static inline uint8_t phys_readb(PhysPt addr)
 {
 	return host_readb(MemBase + addr);
 }
+
 static inline uint16_t phys_readw(PhysPt addr)
 {
 	return host_readw(MemBase + addr);
 }
+
 static inline uint32_t phys_readd(PhysPt addr)
 {
 	return host_readd(MemBase + addr);
@@ -135,11 +141,13 @@ static inline uint8_t real_readb(uint16_t seg, uint16_t off)
 	const auto base = static_cast<uint32_t>(seg << 4);
 	return mem_readb(base + off);
 }
+
 static inline uint16_t real_readw(uint16_t seg, uint16_t off)
 {
 	const auto base = static_cast<uint32_t>(seg << 4);
 	return mem_readw(base + off);
 }
+
 static inline uint32_t real_readd(uint16_t seg, uint16_t off)
 {
 	const auto base = static_cast<uint32_t>(seg << 4);
@@ -151,11 +159,13 @@ static inline void real_writeb(uint16_t seg, uint16_t off, uint8_t val)
 	const auto base = static_cast<uint32_t>(seg << 4);
 	mem_writeb(base + off, val);
 }
+
 static inline void real_writew(uint16_t seg, uint16_t off, uint16_t val)
 {
 	const auto base = static_cast<uint32_t>(seg << 4);
 	mem_writew(base + off, val);
 }
+
 static inline void real_writed(uint16_t seg, uint16_t off, uint32_t val)
 {
 	const auto base = static_cast<uint32_t>(seg << 4);
