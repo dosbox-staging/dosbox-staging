@@ -38,7 +38,6 @@
 
 #include "dos_inc.h"
 #include "dos_mscdex.h"
-#include "fs_utils.h"
 #include "support.h"
 #include "cross.h"
 #include "inout.h"
@@ -421,7 +420,8 @@ bool localDrive::TestDir(char * dir) {
 		if (stat(newdir,&test))			return false;
 		if ((test.st_mode & S_IFDIR)==0)	return false;
 	};
-	return path_exists(newdir);
+	int temp=access(newdir,F_OK);
+	return (temp==0);
 }
 
 bool localDrive::Rename(char * oldname,char * newname) {

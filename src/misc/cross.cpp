@@ -39,7 +39,6 @@
 #include <pwd.h>
 #endif
 
-#include "fs_utils.h"
 #include "support.h"
 
 static std::string GetConfigName()
@@ -86,6 +85,11 @@ static bool CreateDirectories(const std::string &path)
 	return (mkdir(path.c_str(), 0700) == 0);
 }
 
+static bool PathExists(const std::string &path)
+{
+	return (access(path.c_str(), F_OK) == 0);
+}
+
 static std::string DetermineConfigPath()
 {
 	const char *xdg_conf_home = getenv("XDG_CONFIG_HOME");
@@ -93,11 +97,11 @@ static std::string DetermineConfigPath()
 	const std::string conf_path = ResolveHome(conf_home + "/dosbox");
 	const std::string old_conf_path = ResolveHome("~/.dosbox");
 
-	if (path_exists(conf_path + "/" + GetConfigName())) {
+	if (PathExists(conf_path + "/" + GetConfigName())) {
 		return conf_path;
 	}
 
-	if (path_exists(old_conf_path + "/" + GetConfigName())) {
+	if (PathExists(old_conf_path + "/" + GetConfigName())) {
 		LOG_MSG("WARNING: Config file found in deprecated path! (~/.dosbox)\n"
 		        "Backup/remove this dir and restart to generate updated config file.\n"
 		        "---");
@@ -235,7 +239,7 @@ dir_information* open_directory(const char* dirname) {
 
 	dir.handle = INVALID_HANDLE_VALUE;
 
-	return (path_exists(dirname) ? nullptr : &dir);
+	return (access(dirname,0) ? NULL : &dir);
 }
 
 bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
