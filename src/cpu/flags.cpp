@@ -116,8 +116,7 @@ Bit32u get_CF(void) {
 	case t_TESTw:
 	case t_TESTd:
 		return false;	/* Set to false */
-	case t_DIV:
-		return false;	/* Unkown */
+	case t_DIV: return false; /* Unknown */
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("get_CF Unknown %d",lflags.type);
 	}
@@ -198,8 +197,7 @@ Bit32u get_AF(void) {
 	case t_DSHRw:
 	case t_DSHRd:
 	case t_DIV:
-	case t_MUL:
-		return false;			          /* Unkown */
+	case t_MUL: return false; /* Unknown */
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("get_AF Unknown %d",lflags.type);
 	}
@@ -267,8 +265,7 @@ Bit32u get_ZF(void) {
 	case t_NEGd:
 		return (lf_resd==0);
 	case t_DIV:
-	case t_MUL:
-		return false;		/* Unkown */
+	case t_MUL: return false; /* Unknown */
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("get_ZF Unknown %d",lflags.type);
 	}
@@ -335,10 +332,8 @@ Bit32u get_SF(void) {
 	case t_NEGd:
 		return	(lf_resd&0x80000000);
 	case t_DIV:
-	case t_MUL:
-		return false;	/* Unkown */
-	default:
-		LOG(LOG_CPU,LOG_ERROR)("get_SF Unkown %d",lflags.type);
+	case t_MUL: return false; /* Unknown */
+	default: LOG(LOG_CPU, LOG_ERROR)("get_SF Unknown %d", lflags.type);
 	}
 	return false;
 
@@ -423,10 +418,8 @@ Bit32u get_OF(void) {
 	case t_SARw:
 	case t_SARd:
 		return false;			/* Return false */
-	case t_DIV:
-		return false;		/* Unkown */
-	default:
-		LOG(LOG_CPU,LOG_ERROR)("get_OF Unkown %d",lflags.type);
+	case t_DIV: return false;               /* Unknown */
+	default: LOG(LOG_CPU, LOG_ERROR)("get_OF Unknown %d", lflags.type);
 	}
 	return false;
 }

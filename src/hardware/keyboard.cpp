@@ -126,8 +126,8 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
 			break;
 		case 0xf4:	/* Enable keyboard,clear buffer, start scanning */
-			LOG(LOG_KEYBOARD,LOG_NORMAL)("Clear buffer,enable Scaning");
-			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
+			LOG(LOG_KEYBOARD, LOG_NORMAL)("Clear buffer,enable Scanning");
+			KEYBOARD_AddBuffer(0xfa); /* Acknowledge */
 			keyb.scanning=true;
 			break;
 		case 0xf5:	 /* Reset keyboard and disable scanning */
