@@ -946,7 +946,7 @@ static Bitu DOS_21Handler(void) {
 			reg_bh=0;	//Unspecified error class
 		}
 		reg_bl=1;	//Retry retry retry
-		reg_ch=0;	//Unkown error locus
+		reg_ch = 0;     // Unknown error locus
 		break;
 	case 0x5a:					/* Create temporary file */
 		{

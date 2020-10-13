@@ -584,7 +584,7 @@ Bit32u fatDrive::getAbsoluteSectFromChain(Bit32u startClustNum, Bit32u logicalSe
 			//LOG_MSG("End of cluster chain reached before end of logical sector seek!");
 			if (skipClust == 1 && fattype == FAT12) {
 				//break;
-				LOG(LOG_DOSMISC,LOG_ERROR)("End of cluster chain reached, but maybe good afterall ?");
+				LOG(LOG_DOSMISC, LOG_ERROR)("End of cluster chain reached, but maybe good after all ?");
 			}
 			return 0;
 		}
