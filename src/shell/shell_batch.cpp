@@ -163,7 +163,7 @@ emptyline:
 			} else {
 				/* Not a command line number has to be an environment */
 				char * first = strchr(cmd_read,'%');
-				/* No env afterall. Ignore a single % */
+				/* No env after all. Ignore a single % */
 				if (!first) {/* *cmd_write++ = '%';*/continue;}
 				*first++ = 0;
 				std::string env;
