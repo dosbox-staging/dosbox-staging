@@ -4,7 +4,7 @@ AM_MAKEFLAGS ?= --no-print-directory
 
 EXTRA_DIST = autogen.sh
 
-SUBDIRS = docs include src tests
+SUBDIRS = contrib docs include src tests
 
 # Per the auto-tools clean guidelines:
 # https://www.gnu.org/savannah-checkouts/gnu/automake/manual/html_node/Clean.html#Clean

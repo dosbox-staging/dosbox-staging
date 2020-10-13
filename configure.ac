@@ -714,6 +714,8 @@ AH_BOTTOM([#if C_ATTRIBUTE_ALWAYS_INLINE
 
 AC_CONFIG_FILES([
 Makefile
+contrib/Makefile
+contrib/linux/Makefile
 docs/Makefile
 include/Makefile
 src/Makefile
