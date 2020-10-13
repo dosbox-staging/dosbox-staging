@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2020 DOSBox-staging team -->
+<component type="desktop">
+  <id>io.github.dosbox-staging.dosbox-staging</id>
+  <project_license>GPL-2.0-or-later</project_license>
+  <metadata_license>CC0-1.0</metadata_license>
+  <provides>
+    <id>io.github.dosbox-staging</id>
+  </provides>
+  <content_rating type="oars-1.1" />
+  <name>DOSBox Staging</name>
+  <summary>DOSBox Staging is modernized DOSBox soft-fork</summary>
+  <description>
+    <p>
+      DOSBox Staging is a DOS-emulator using SDL 2 for easy portability to different platforms.
+    </p>
+    <p>
+      DOSBox emulates a 286/386 realmode CPU, Directory FileSystem/XMS/EMS, a SoundBlaster card
+      for excellent sound compatibility with older games... You can "re-live" the good old days
+      with the help of DOSBox Staging, it can run plenty of the old classics that don't run on your
+      new computer!
+    </p>
+  </description>
+  <launchable type="desktop-id">dosbox-staging.desktop</launchable>
+  <url type="homepage">https://dosbox-staging.github.io/</url>
+  <releases>
+    <release version="0.75.1" date="2020-07-19"/>
+  </releases>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Heroes of Might and Magic 2 (1996), 640x480</caption>
+      <image>https://dosbox-staging.github.io/homm2-pp-2x2-min.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Wolfenstein 3D (1992), 320x200 with a PAR</caption>
+      <image>https://dosbox-staging.github.io/wolf3d-pp-4x5-min.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Battle Chess (1988) at 1080p</caption>
+      <image>https://dosbox-staging.github.io/bc.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Maniac Mansion (1987) - forced CGA mode</caption>
+      <image>https://dosbox-staging.github.io/cga-showcase-1-min.png</image>
+    </screenshot>
+  </screenshots>
+  <update_contact>dreamer.tan@gmail.com</update_contact>
+</component>
