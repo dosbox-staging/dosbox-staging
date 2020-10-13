@@ -67,8 +67,8 @@ if test x$enable_network = xyes ; then
     libtype=""
     if test x$enable_sdl_static = xyes ; then
       libtype="(static)"
-      case "$host" in
-        *-*-darwin*)
+      case "${host_os}" in
+        darwin*)
           LIBS="$PRESDL_LIBS /usr/local/lib/libSDL2_net.a $SDL_LIBS"
           ;;
         *)
@@ -83,8 +83,9 @@ if test x$enable_network = xyes ; then
     AC_DEFINE(C_MODEM,1)
     AC_DEFINE(C_IPX,1)
     AC_MSG_RESULT([yes $libtype])
-    case "$host_os" in haiku*)
-      AC_CHECK_LIB(network, socket, [],
+    case "$host_os" in
+      haiku*)
+        AC_CHECK_LIB(network, socket, [],
                    [AC_MSG_ERROR([Can't find a useable network libary])],
                    -l network)
       ;;
@@ -206,8 +207,8 @@ int x=10;if( __builtin_expect ((x==1),0) ) ;
 AC_LANG_POP(C++)
 
 dnl When on macOS, enable support for Apple's Core MIDI and/or Core Audio if our compiler can #include their headers
-case "$host" in
-  *-*-darwin*)
+case "${host_os}" in
+  darwin*)
    AC_MSG_CHECKING(if compiler supports Apple's Core MIDI headers)
    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
    #include <CoreMIDI/MIDIServices.h>
@@ -352,8 +353,8 @@ void blah() {}
 dnl automake 1.14 and upwards rewrite the host to have always 64 bit unless i386 as host is passed
 dnl this can make building a 32 bit executable a bit tricky, as dosbox relies on the host to select the
 dnl dynamic/dynrec core
-case "$host" in
-  *-*-darwin*)
+case "${host_os}" in
+  darwin*)
    AC_MSG_CHECKING([whether Apple user wants to override the build process to produce a 32 bit binary])
    if test x$c_targetcpu = xx86_64 -a x$c_sizep = x4 ; then
      AC_MSG_RESULT(yes)
@@ -457,8 +458,8 @@ AC_ARG_ENABLE(png_static,
               enable_png_static=no)
 if test x"$enable_screenshots" = x"yes"; then
     if test x"$enable_png_static" = x"yes"; then
-      case "$host" in
-        *-*-darwin*)
+      case "${host_os}" in
+        darwin*)
           libpng_LIBS="/usr/local/lib/libpng.a"
           AC_MSG_NOTICE([checking for libpng... using macOS brew library])
           ;;
@@ -537,8 +538,8 @@ AC_CHECK_HEADER(GL/gl.h, have_gl_h=yes , have_gl_h=no , )
 AC_ARG_ENABLE(opengl,AC_HELP_STRING([--disable-opengl],[Disable opengl support]),,enable_opengl=yes)
 AC_MSG_CHECKING(whether opengl display output will be enabled)
 if test x$enable_opengl = xyes; then
-case "$host" in
-    *-*-darwin*)
+case "${host_os}" in
+    darwin*)
        AC_MSG_RESULT(yes)
        LIBS="$LIBS -framework OpenGL -framework CoreFoundation"
        AC_DEFINE(C_OPENGL,1)
@@ -621,10 +622,14 @@ int main(int argc,char * argv[]) {
 };
 ])],AC_MSG_RESULT(yes);AC_DEFINE(C_SET_PRIORITY,1),AC_MSG_RESULT(no))
 
+build_bsd=no
+build_linux=no
+build_windows=no
+build_mac=no
 
 dnl Some target detection and actions for them
-case "$host" in
-    *-*-cygwin* | *-*-mingw* | *-*-msys*)
+case "${host_os}" in
+    cygwin* | mingw* | msys*)
        LIBS="$LIBS -lwinmm"
        AC_DEFINE(WIN32, 1, [Compiling on Windows])
        AC_DEFINE(NOMINMAX, 1, [Prevent <windows.h> from clobbering std::min and std::max])
@@ -635,20 +640,23 @@ case "$host" in
            LIBS="$LIBS -liphlpapi"
          fi
        fi
+       build_windows=yes
        ;;
-    *-*-darwin*)
+    darwin*)
        dnl We have a problem here: both Mac OS X and Darwin report
        dnl the same signature "powerpc-apple-darwin*" - so we have
        dnl to do more to distinguish them.
        dnl For now I am lazy and do not add proper detection code.
        AC_DEFINE(MACOSX, 1, [Compiling on Mac OS X])
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32 and Posix).])
+       build_mac=yes
        ;;
-    *-*-linux*)
+    linux*)
        AC_DEFINE(LINUX, 1, [Compiling on GNU/Linux])
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32 and Posix).])
+       build_linux=yes
        ;;
-    *-*-freebsd* | *-*-dragonfly* | *-*-netbsd* | *-*-openbsd*)
+    freebsd* | dragonfly* | netbsd* | openbsd*)
        dnl Disabled directserial for now. It doesn't do anything without
        dnl specifying an extra ifdef in directserial_posix.*
        dnl directserial detection should be rewritten to test for the needed
@@ -656,12 +664,18 @@ case "$host" in
        dnl which ones are needed for BSD
        AC_DEFINE(BSD, 1, [Compiling on BSD])
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32 and Posix).])
+       build_bsd=yes
        ;;
 esac
 
+AM_CONDITIONAL([BSD], [test "$build_bsd" = "yes"])
+AM_CONDITIONAL([LINUX], [test "$build_linux" = "yes"])
+AM_CONDITIONAL([WINDOWS], [test "$build_windows" = "yes"])
+AM_CONDITIONAL([OSX], [test "$build_mac" = "yes"])
+
 dnl Some stuff for the icon.
-case "$host" in
-    *-*-cygwin* | *-*-mingw* | *-*-msys*)
+case "${host_os}" in
+    cygwin* | mingw* | msys*)
        dnl Some stuff for the ico
        AC_CHECK_TOOL(WINDRES, windres, :)
     ;;
