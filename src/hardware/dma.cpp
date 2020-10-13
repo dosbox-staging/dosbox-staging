@@ -127,6 +127,7 @@ static void DMA_Write_Port(Bitu port,Bitu val,Bitu /*iolen*/) {
 			case 0x89:GetDMAChannel(6)->SetPage((Bit8u)val);break;
 			case 0x8a:GetDMAChannel(7)->SetPage((Bit8u)val);break;
 			case 0x8b:GetDMAChannel(5)->SetPage((Bit8u)val);break;
+			case 0x8f:GetDMAChannel(4)->SetPage((Bit8u)val);break;
 		}
 	}
 }
@@ -148,6 +149,7 @@ static Bitu DMA_Read_Port(Bitu port,Bitu iolen) {
 		case 0x89:return GetDMAChannel(6)->pagenum;
 		case 0x8a:return GetDMAChannel(7)->pagenum;
 		case 0x8b:return GetDMAChannel(5)->pagenum;
+		case 0x8f:return GetDMAChannel(4)->pagenum;
 	}
 	return 0;
 }
@@ -366,16 +368,18 @@ public:
 				DmaControllers[1]->DMA_ReadHandler[i].Install(0xc0+i*2,DMA_Read_Port,mask);
 			}
 		}
-		/* install handlers for ports 0x81-0x83 (on the first DMA controller) */
+		/* install handlers for ports 0x81-0x83,0x87 (on the first DMA controller) */
 		DmaControllers[0]->DMA_WriteHandler[0x10].Install(0x81,DMA_Write_Port,IO_MB,3);
 		DmaControllers[0]->DMA_ReadHandler[0x10].Install(0x81,DMA_Read_Port,IO_MB,3);
 		DmaControllers[0]->DMA_WriteHandler[0x11].Install(0x87,DMA_Write_Port,IO_MB,1);
 		DmaControllers[0]->DMA_ReadHandler[0x11].Install(0x87,DMA_Read_Port,IO_MB,1);
 
 		if (IS_EGAVGA_ARCH) {
-			/* install handlers for ports 0x89-0x8B (on the second DMA controller) */
+			/* install handlers for ports 0x89-0x8b,0x8f (on the second DMA controller) */
 			DmaControllers[1]->DMA_WriteHandler[0x10].Install(0x89,DMA_Write_Port,IO_MB,3);
 			DmaControllers[1]->DMA_ReadHandler[0x10].Install(0x89,DMA_Read_Port,IO_MB,3);
+			DmaControllers[1]->DMA_WriteHandler[0x11].Install(0x8f,DMA_Write_Port,IO_MB,1);
+			DmaControllers[1]->DMA_ReadHandler[0x11].Install(0x8f,DMA_Read_Port,IO_MB,1);
 		}
 	}
 	~DMA(){
