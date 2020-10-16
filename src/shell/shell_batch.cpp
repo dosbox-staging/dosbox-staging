@@ -78,6 +78,7 @@ bool BatchFile::ReadLine(char * line) {
 	uint8_t data = 0;
 	char val = 0;
 	char temp[CMD_MAXLINE] = "";
+	char temp_cycles_hack[CMD_MAXLINE];
 emptyline:
 	char * cmd_write=temp;
 	do {
@@ -164,7 +165,27 @@ emptyline:
 				/* Not a command line number has to be an environment */
 				char * first = strchr(cmd_read,'%');
 				/* No env after all. Ignore a single % */
-				if (!first) {/* *cmd_write++ = '%';*/continue;}
+				if (!first) {
+					/* *cmd_write++ = '%';*/
+					//check if input contains cycles + max/auto  and that next character is space or empty
+					//If so, don't ignore it. This way cycles can still be set from within batch files
+					char peak = *(cmd_read);
+					if (peak == 0 || peak == ' ' || peak == '\r' || peak == '\n') {
+						strncpy(temp_cycles_hack,temp,cmd_read-temp);
+						temp_cycles_hack[cmd_read-temp] = 0;
+						upcase(temp_cycles_hack);
+						const char* cycles_test_cycles = strstr(temp_cycles_hack,"CYCLES");
+						if (cycles_test_cycles) {
+							const char* cycles_test_max = strstr(cycles_test_cycles,"MAX");
+							const char* cycles_test_auto = strstr(cycles_test_cycles,"AUTO");
+							if ( cycles_test_max  || cycles_test_auto )	{
+								   if (((cmd_write - line) + 1) < (CMD_MAXLINE - 1))
+									   *cmd_write++ = '%';
+							}
+						}
+					}
+					continue;
+				}
 				*first++ = 0;
 				std::string env;
 				if (shell->GetEnvStr(cmd_read,env)) {

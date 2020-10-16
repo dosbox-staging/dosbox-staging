@@ -636,8 +636,8 @@ static bool RENDER_GetShader(std::string& shader_path, char *old_src) {
 	else if (shader_path == "tv3x")        buf << tv3x_glsl;
 	else if (shader_path == "sharp")       buf << sharp_glsl;
 
-	std::string s = buf.str();
-	if (!s.empty()) {
+	if (!buf.str().empty()) {
+		std::string s = buf.str() + '\n';
 		if (first_shell) {
 			std::string pre_defs;
 			Bitu count = first_shell->GetEnvCount();
