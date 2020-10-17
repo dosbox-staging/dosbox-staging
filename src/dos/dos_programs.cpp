@@ -25,21 +25,21 @@
 #include <string>
 #include <vector>
 
-#include "support.h"
-#include "drives.h"
-#include "cross.h"
-#include "regs.h"
+#include "bios_disk.h"
+#include "bios.h"
 #include "callback.h"
 #include "cdrom.h"
-#include "dos_system.h"
-#include "bios.h"
-#include "bios_disk.h"
-#include "setup.h"
 #include "control.h"
-#include "inout.h"
+#include "cross.h"
 #include "dma.h"
-#include "shell.h"
+#include "dos_system.h"
+#include "drives.h"
+#include "inout.h"
 #include "program_autotype.h"
+#include "regs.h"
+#include "setup.h"
+#include "shell.h"
+#include "support.h"
 
 #if defined(WIN32)
 #ifndef S_ISDIR
