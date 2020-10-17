@@ -1180,7 +1180,7 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 	safe_strcpy(tmp, cuefile);
 	string pathname(dirname(tmp));
 	ifstream in;
-	in.open(cuefile, ios::in);
+	in.open(to_native_path(cuefile), ios::in);
 	if (in.fail()) {
 		return false;
 	}
@@ -1397,8 +1397,13 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 		return true;
 	}
 
-	// check if file with path relative to cue file exists
-	string tmpstr(pathname + "/" + filename);
+	// Check if file with path relative to cue file exists.
+	// Consider the possibility that the filename has a windows directory
+	// seperator or case-insensitive path (inside the CUE file) which is common
+	// for some commercial rereleases of DOS games using DOSBox.
+	const std::string cue_file_entry = (pathname + CROSS_FILESPLIT + filename);
+	const std::string tmpstr = to_native_path(cue_file_entry);
+
 	if (path_exists(tmpstr)) {
 		filename = tmpstr;
 		return true;
@@ -1422,29 +1427,6 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 		}
 	}
 
-#if !defined (WIN32)
-	/**
-	 *  Consider the possibility that the filename has a windows directory
-	 *  seperator (inside the CUE file) which is common for some commercial
-	 *  rereleases of DOS games using DOSBox
-	 */
-	string copy = filename;
-	size_t l = copy.size();
-	for (size_t i = 0; i < l;i++) {
-		if (copy[i] == '\\') copy[i] = '/';
-	}
-
-	if (path_exists(copy)) {
-		filename = copy;
-		return true;
-	}
-
-	tmpstr = pathname + "/" + copy;
-	if (path_exists(tmpstr)) {
-		filename = tmpstr;
-		return true;
-	}
-#endif
 	return false;
 }
 
