@@ -322,9 +322,6 @@ void CONFIG::Run(void) {
 				restart_params.push_back(control->cmdline->GetFileName());
 				for(size_t i = 0; i < pvars.size(); i++) {
 					restart_params.push_back(pvars[i]);
-					if (pvars[i].find(' ') != std::string::npos) {
-						pvars[i] = "\""+pvars[i]+"\""; // add back spaces
-					}
 				}
 				// the rest on the commandline, too
 				cmd->FillVector(restart_params);
