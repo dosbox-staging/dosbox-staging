@@ -34,6 +34,7 @@
 #include "dma.h"
 #include "dos_system.h"
 #include "drives.h"
+#include "fs_utils.h"
 #include "inout.h"
 #include "program_autotype.h"
 #include "regs.h"
@@ -1282,7 +1283,26 @@ public:
 
 		// find all file parameters, assuming that all option parameters have been removed
 		while (cmd->FindCommand((unsigned int)(paths.size() + 2), temp_line) && temp_line.size()) {
+			// Try to find the path on native filesystem first
+			const std::string real_path = to_native_path(temp_line);
+			if (real_path.empty()) {
+				LOG_MSG("IMGMOUNT: Path '%s' not found, maybe it's a DOS path",
+				        temp_line.c_str());
+			} else {
+				std::string home_resolve = temp_line;
+				Cross::ResolveHomedir(home_resolve);
+				if (home_resolve == real_path) {
+					LOG_MSG("IMGMOUNT: Path '%s' found",
+					        temp_line.c_str());
+				} else {
+					LOG_MSG("IMGMOUNT: Path '%s' found, while looking for '%s'",
+					        real_path.c_str(),
+					        temp_line.c_str());
+				}
+				temp_line = real_path;
+			}
 
+			// Test if input is file on virtual DOS drive.
 			struct stat test;
 			if (stat(temp_line.c_str(),&test)) {
 				//See if it works if the ~ are written out
@@ -1314,6 +1334,9 @@ public:
 						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
 						return;
 					}
+
+					LOG_MSG("IMGMOUNT: Path '%s' found on virtual drive %c:",
+					        fullname, 'A' + dummy);
 				}
 			}
 			if (S_ISDIR(test.st_mode)) {
@@ -1764,7 +1787,7 @@ void DOS_SetupPrograms(void) {
 	        "  \033[36;1mBOOTIMAGE\033[0m is a bootable disk image with specified -size GEOMETRY:\n"
 	        "            bytes-per-sector,sectors-per-head,heads,cylinders\n"
 	        "Notes:\n"
-	        "  - Image paths and filenames are case-sensitive and either relative or\n"
+	        "  - Image paths and filenames are case-insensitive and either relative or\n"
 	        "    absolute with respect to dosbox's current-working directory.\n"
 	        "  - Ctrl+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.\n"
 	        "Examples:\n"
