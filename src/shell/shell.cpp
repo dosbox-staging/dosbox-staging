@@ -617,7 +617,7 @@ void SHELL_Init() {
 		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
-		"\xBA \033[32mWelcome to dosbox-staging %-40s\033[37m \xBA\n"
+		"\xBA \033[32mWelcome to DOSBox Staging %-40s\033[37m \xBA\n"
 		"\xBA                                                                    \xBA\n"
 //		"\xBA DOSBox runs real and protected mode games.                         \xBA\n"
 		"\xBA For a short introduction for new users type: \033[33mINTRO\033[37m                 \xBA\n"
@@ -714,7 +714,7 @@ void SHELL_Init() {
 
 	MSG_Add("SHELL_CMD_VER_HELP", "View or set the reported DOS version.\n");
 	MSG_Add("SHELL_CMD_VER_VER",
-	        "dosbox-staging version %s. Reported DOS version %d.%02d.\n");
+	        "DOSBox Staging version %s. Reported DOS version %d.%02d.\n");
 
 	/* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
