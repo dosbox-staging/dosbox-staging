@@ -195,7 +195,7 @@ public:
 		}
 
 		if (cmd->FindExist("-cd", false)) {
-   			WriteOut(MSG_Get("PROGRAM_MOUNT_NO_OPTION"), "-cd");
+			WriteOut(MSG_Get("PROGRAM_MOUNT_NO_OPTION"), "-cd");
 			return;
 		}
 
@@ -296,23 +296,33 @@ public:
 					temp_line = lastconfigdir + CROSS_FILESPLIT + temp_line;
 				}
 			}
-			struct stat test;
-			//Win32 : strip tailing backslashes
-			//rest: substitute ~ for home
-			bool failed = false;
-#if defined (WIN32)
-			/* Removing trailing backslash if not root dir so stat will succeed */
-			if (temp_line.size() > 3 && temp_line[temp_line.size() - 1]=='\\') temp_line.erase(temp_line.size() - 1, 1);
-			if (stat(temp_line.c_str(),&test)) {
-#else
-			if (stat(temp_line.c_str(),&test)) {
-				failed = true;
-				Cross::ResolveHomedir(temp_line);
-				//Try again after resolving ~
-				if (!stat(temp_line.c_str(),&test)) failed = false;
-			}
-			if (failed) {
+
+#if defined(WIN32)
+			/* Removing trailing backslash if not root dir so stat
+			 * will succeed */
+			if (temp_line.size() > 3 && temp_line.back() == '\\')
+				temp_line.pop_back();
 #endif
+
+			const std::string real_path = to_native_path(temp_line);
+			if (real_path.empty()) {
+				LOG_MSG("MOUNT: Path '%s' not found", temp_line.c_str());
+			} else {
+				std::string home_resolve = temp_line;
+				Cross::ResolveHomedir(home_resolve);
+				if (home_resolve == real_path) {
+					LOG_MSG("MOUNT: Path '%s' found",
+					        temp_line.c_str());
+				} else {
+					LOG_MSG("MOUNT: Path '%s' found, while looking for '%s'",
+					        real_path.c_str(),
+					        temp_line.c_str());
+				}
+				temp_line = real_path;
+			}
+
+			struct stat test;
+			if (stat(temp_line.c_str(),&test)) {
 				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_1"),temp_line.c_str());
 				return;
 			}
@@ -1830,7 +1840,7 @@ void DOS_SetupPrograms(void) {
 	        "  LABEL     drive label name to be used\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - \033[36;1mDIRECTORY\033[0m is case-sensitive path, relative or absolute with respect to\n"
+	        "  - \033[36;1mDIRECTORY\033[0m is case-insensitive path, relative or absolute with respect to\n"
 	        "    dosbox's current-working directory.\n"
 	        "  - '-t overlay' redirects writes for mounted drive to another directory.\n"
 	        "  - Additional options are described in the manual (README file, chapter 4).\n"
