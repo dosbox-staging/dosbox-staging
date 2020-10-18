@@ -1631,13 +1631,13 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
 
 	MSG_Add("PROGRAM_INTRO",
-		"\033[2J\033[32;1mWelcome to DOSBox\033[0m, an x86 emulator with sound and graphics.\n"
+		"\033[2J\033[32;1mWelcome to DOSBox Staging\033[0m, an x86 emulator with sound and graphics.\n"
 		"DOSBox creates a shell for you which looks like old plain DOS.\n"
 		"\n"
 		"For information about basic mount type \033[34;1mintro mount\033[0m\n"
 		"For information about CD-ROM support type \033[34;1mintro cdrom\033[0m\n"
 		"For information about special keys type \033[34;1mintro special\033[0m\n"
-		"To access dosbox-staging's wiki, visit:\033[34;1m\n"
+		"To access DOSBox Staging's wiki, visit:\033[34;1m\n"
 		"https://github.com/dosbox-staging/dosbox-staging/wiki\033[0m\n"
 		"\n"
 		"\033[31;1mDOSBox will stop/exit without a warning if an error occurred!\033[0m\n"

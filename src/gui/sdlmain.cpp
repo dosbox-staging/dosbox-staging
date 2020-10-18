@@ -429,8 +429,8 @@ void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
 		internal_cycles = cycles;
 
 	const char *msg = CPU_CycleAutoAdjust
-	                          ? "%8s - max %d%% - dosbox-staging%s%s"
-	                          : "%8s - %d cycles/ms - dosbox-staging%s%s";
+	                          ? "%8s - max %d%% - DOSBox Staging%s%s"
+	                          : "%8s - %d cycles/ms - DOSBox Staging%s%s";
 	snprintf(title, sizeof(title), msg, RunningProgram, internal_cycles,
 	         build_type, paused ? " (PAUSED)" : "");
 	SDL_SetWindowTitle(sdl.window, title);
@@ -2238,7 +2238,7 @@ static void GUI_StartUp(Section *sec)
 
 	// FIXME the code updated sdl.desktop.bpp in here (has effect in setting up scalers)
 
-	SDL_SetWindowTitle(sdl.window, "dosbox-staging");
+	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
 	SetIcon();
 
 	const bool tiny_fullresolution = splash_image.width > sdl.desktop.full.width ||
