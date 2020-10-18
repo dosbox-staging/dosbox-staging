@@ -169,10 +169,10 @@ fast_import () {
 	git_rewrite_committers "$repo" "$git_new_base_commit..HEAD"
 
 	echo
-	echo "New commits in $repo:"
+	echo "Tip of svn/trunk in $repo:"
 	echo
 
-	git -C "$repo" log --oneline dosbox-staging/svn/trunk..svn/trunk
+	git -C "$repo" log --oneline dosbox-staging/svn/trunk~1..svn/trunk
 
 	echo
 	echo "Inspect new commits in $repo in detail."
