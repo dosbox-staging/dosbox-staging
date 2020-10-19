@@ -76,7 +76,7 @@ static void FPU_PUSH(double in){
 
 static void FPU_FPOP(void){
 #if DB_FPU_STACK_CHECK_POP > DB_FPU_STACK_CHECK_NONE
-	if (GCC_UNLIKELY(fpu.tags[TOP] != TAG_Empty)) {
+	if (GCC_UNLIKELY(fpu.tags[TOP] == TAG_Empty)) {
 #if DB_FPU_STACK_CHECK_POP == DB_FPU_STACK_CHECK_EXIT
 		E_Exit("FPU stack underflow");
 #else

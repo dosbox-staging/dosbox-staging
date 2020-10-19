@@ -659,7 +659,6 @@ static bool RENDER_GetShader(std::string& shader_path, char *old_src) {
 				if (pos != std::string::npos)
 					pos = s.find('\n', pos + 9);
 
-				pos = (pos == std::string::npos) ? 0 : pos + 1;
 				s.insert(pos, pre_defs);
 			}
 		}
