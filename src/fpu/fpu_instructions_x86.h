@@ -965,8 +965,8 @@ static void FPU_PREP_PUSH(void){
 		E_Exit("FPU stack overflow");
 #else
 		if (fpu.cw&1) { // Masked ?
-			fpu.sw &= 0x1; //Invalid Operation
-			fpu.sw &= 0x40; //Stack Fault
+			fpu.sw |= 0x1; //Invalid Operation
+			fpu.sw |= 0x40; //Stack Fault
 			FPU_SET_C1(1); //Register is used.
 			//No need to set 0x80 as the exception is masked.
 			LOG(LOG_FPU,LOG_ERROR)("Masked stack overflow encountered!");
@@ -986,8 +986,8 @@ static void FPU_FPOP(void){
 		E_Exit("FPU stack underflow");
 #else
 		if (fpu.cw&1) { // Masked ?
-			fpu.sw &= 0x1; //Invalid Operation
-			fpu.sw &= 0x40; //Stack Fault
+			fpu.sw |= 0x1; //Invalid Operation
+			fpu.sw |= 0x40; //Stack Fault
 			FPU_SET_C1(0); //Register is free.
 			//No need to set 0x80 as the exception is masked.
 			LOG(LOG_FPU,LOG_ERROR)("Masked stack underflow encountered!");
