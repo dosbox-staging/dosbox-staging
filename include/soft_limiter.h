@@ -121,7 +121,8 @@ private:
 
 	void FindPeaksAndZeroCrosses(const in_array_t &stream, uint16_t frames) noexcept;
 
-	void FindPeakAndCross(const in_array_iterator_t pos,
+	void FindPeakAndCross(const in_array_iterator_t in_end,
+	                      const in_array_iterator_t pos,
 	                      in_array_iterator_t &prev_pos,
 	                      const float prescalar,
 	                      float &local_peak,
@@ -163,10 +164,10 @@ private:
 	out_array_t out{};
 	std::string channel_name = {};
 	const AudioFrame &prescale; // values inside struct are mutable
-	in_array_iterator_t zero_cross_left = nullptr;
-	in_array_iterator_t zero_cross_right = nullptr;
-	in_array_iterator_t precross_peak_pos_left = nullptr;
-	in_array_iterator_t precross_peak_pos_right = nullptr;
+	in_array_iterator_t zero_cross_left = {};
+	in_array_iterator_t zero_cross_right = {};
+	in_array_iterator_t precross_peak_pos_left = {};
+	in_array_iterator_t precross_peak_pos_right = {};
 	AudioFrame global_peaks = {0, 0};
 	AudioFrame tail_frame = {0, 0};
 	int limited_ms = 0;
@@ -212,7 +213,8 @@ const typename SoftLimiter<array_frames>::out_array_t &SoftLimiter<array_frames>
 // peaks before the first zero-crossing, along with the first zero-crossing
 // position.
 template <size_t array_frames>
-void SoftLimiter<array_frames>::FindPeakAndCross(const in_array_iterator_t pos,
+void SoftLimiter<array_frames>::FindPeakAndCross(const in_array_iterator_t in_end,
+                                                 const in_array_iterator_t pos,
                                                  in_array_iterator_t &prev_pos,
                                                  const float prescalar,
                                                  float &local_peak,
@@ -223,7 +225,7 @@ void SoftLimiter<array_frames>::FindPeakAndCross(const in_array_iterator_t pos,
 	const auto val = fabsf(*pos) * prescalar;
 	if (val > bounds && val > local_peak) {
 		local_peak = val;
-		if (!zero_cross_pos) {
+		if (zero_cross_pos == in_end) {
 			precross_peak_pos = pos;
 		}
 	}
@@ -231,7 +233,8 @@ void SoftLimiter<array_frames>::FindPeakAndCross(const in_array_iterator_t pos,
 		global_peak = val;
 	}
 	// Detect and save the first zero-crossing position (if any)
-	if (!zero_cross_pos && prev_pos && signbit(*prev_pos) != signbit(*pos)) {
+	if (zero_cross_pos == in_end && prev_pos != in_end &&
+	    std::signbit(*prev_pos) != std::signbit(*pos)) {
 		zero_cross_pos = pos;
 	}
 	prev_pos = pos;
@@ -246,20 +249,20 @@ void SoftLimiter<array_frames>::FindPeaksAndZeroCrosses(const in_array_t &in,
 	auto pos = in.begin();
 	const auto pos_end = in.begin() + samples;
 
-	precross_peak_pos_left = nullptr;
-	precross_peak_pos_right = nullptr;
-	zero_cross_left = nullptr;
-	zero_cross_right = nullptr;
-	in_array_iterator_t prev_pos_left = nullptr;
-	in_array_iterator_t prev_pos_right = nullptr;
+	precross_peak_pos_left = in.end();
+	precross_peak_pos_right = in.end();
+	zero_cross_left = in.end();
+	zero_cross_right = in.end();
+	in_array_iterator_t prev_pos_left = in.end();
+	in_array_iterator_t prev_pos_right = in.end();
 	AudioFrame local_peaks = global_peaks;
 
 	while (pos != pos_end) {
-		FindPeakAndCross(pos++, prev_pos_left, prescale.left,
+		FindPeakAndCross(in.end(), pos++, prev_pos_left, prescale.left,
 		                 local_peaks.left, precross_peak_pos_left,
 		                 zero_cross_left, global_peaks.left);
 
-		FindPeakAndCross(pos++, prev_pos_right, prescale.right,
+		FindPeakAndCross(in.end(), pos++, prev_pos_right, prescale.right,
 		                 local_peaks.right, precross_peak_pos_right,
 		                 zero_cross_right, global_peaks.right);
 	}
@@ -282,7 +285,7 @@ void SoftLimiter<array_frames>::ScaleOrCopy(const in_array_t &in,
 	auto out_start = out.begin() + channel;
 
 	// We have a new peak, so ...
-	if (precross_peak_pos) {
+	if (precross_peak_pos != in.end()) {
 		const auto tail_abs = fabsf(tail);
 		const auto prepeak_scalar = (bounds - tail_abs) /
 		                            (prescalar * fabsf(*precross_peak_pos) -
@@ -295,7 +298,7 @@ void SoftLimiter<array_frames>::ScaleOrCopy(const in_array_t &in,
 		out_start = out.begin() + (precross_peak_pos - in.begin());
 		const auto postpeak_scalar = bounds / fabsf(*precross_peak_pos);
 		// down to the zero-crossing ...
-		if (zero_cross_pos) {
+		if (zero_cross_pos != in.end()) {
 			LinearScale(precross_peak_pos, zero_cross_pos,
 			            out_start, postpeak_scalar);
 
