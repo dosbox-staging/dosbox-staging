@@ -45,7 +45,7 @@ class Timer {
 	bool masked;
 public:
 	Timer( Bit16s micros ) {
-		overflow = false;//false;
+		overflow = false;
 		enabled = false;
 		masked = false;
 		start = 0;
