@@ -127,6 +127,8 @@ jobs:
 
       - name:  Package
         shell: bash
+        env:
+          VC_REDIST_PATH: 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Redist/MSVC'
         run: |
           set -x
 
@@ -137,6 +139,7 @@ jobs:
           cp COPYING                              dest/COPYING.txt
           cp docs/README.template                 dest/README.txt
           cp docs/README.video                    dest/doc/video.txt
+          cp docs/vc_redist.txt                   dest/doc/vc_redist.txt
           cp README                               dest/doc/manual.txt
           cp vs/$RELEASE_DIR/libfluidsynth-2.dll  dest/
           cp vs/$RELEASE_DIR/glib-2.dll           dest/ # fluidsynth dependency
@@ -151,6 +154,16 @@ jobs:
           cp vs/$RELEASE_DIR/libpng16.dll         dest/
           cp src/libs/zmbv/$RELEASE_DIR/zlib1.dll dest/ # libpng dependency
           cp src/libs/zmbv/$RELEASE_DIR/zmbv.dll  dest/
+
+          # List version of available Visual C++ Redistributable files
+          ls -l "$VC_REDIST_PATH"
+
+          # Include the necessary dlls from one of available versions
+          readonly VC_REDIST_VERSION="14.27.29016"
+          readonly VC_REDIST_DIR="$VC_REDIST_PATH/$VC_REDIST_VERSION/${{ matrix.conf.arch }}/Microsoft.VC142.CRT"
+          cp "$VC_REDIST_DIR/msvcp140.dll"       dest/
+          cp "$VC_REDIST_DIR/vcruntime140.dll"   dest/
+          cp "$VC_REDIST_DIR/vcruntime140_1.dll" dest/ || true # might be missing, depending on arch
 
           # Fill README template file
           sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README.txt

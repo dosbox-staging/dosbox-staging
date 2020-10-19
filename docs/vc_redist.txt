@@ -1,0 +1,29 @@
+This package might include following files from Visual C++ Runtime:
+
+msvcp140.dll
+vcruntime140.dll
+vcruntime140_1.dll
+
+These files are NOT covered by DOSBox Staging License.
+
+These are Microsoft Windows components, usually distributed via Windows 10
+update mechanism.  We provide them for convenience of users using older
+Windows versions.  These files are optional - if you have them pre-installed
+as part of your Operating System, you can safely remove them from this
+software package, or build your own version of DOSBox Staging, that does
+not use these files.  You can find instructions for doing so here:
+https://github.com/dosbox-staging/dosbox-staging/blob/master/BUILD.md#windows-procedures
+
+These files are covered by "MICROSOFT VISUAL STUDIO 2015 EXTENSIONS,
+VISUAL STUDIO SHELLS and C++ REDISTRIBUTABLE" license:
+https://visualstudio.microsoft.com/license-terms/mt171552/
+
+They fall into Section 2.1 "Utilities", as they are listed in the list of
+components linked in that section, and are explicitly allowed to be copied
+and distributed; they were copied verbatim into this software package,
+without any modifications. See:
+https://docs.microsoft.com/en-gb/visualstudio/productinfo/2015-redistribution-vs#visual-c-runtime-files
+
+The only difference is exact path to those files, as Visual Studio 2019
+changed the location; updated paths are listed here:
+https://docs.microsoft.com/en-us/visualstudio/releases/2019/redistribution#visual-c-runtime-files
