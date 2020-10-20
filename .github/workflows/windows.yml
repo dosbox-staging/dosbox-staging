@@ -45,12 +45,14 @@ jobs:
       matrix:
         conf:
           - name: Release build (32-bit)
-            vcpkg-triplet: x86-windows
+            arch: x86
             vs-platform: x86
+            vcpkg-triplet: x86-windows
             vs-release-dirname: Win32
           - name: Release build (64-bit)
-            vcpkg-triplet: x64-windows
+            arch: x64
             vs-platform: x64
+            vcpkg-triplet: x64-windows
             vs-release-dirname: x64
     steps:
       - uses:  actions/checkout@v2
