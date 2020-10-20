@@ -31,58 +31,88 @@
 
 namespace Adlib {
 
-struct Timer {
-	double start = 0.0;
-	double delay = 0.0;
-	bool enabled = false;
-	bool overflow = false;
-	bool masked = false;
-	Bit8u counter = 0;
+class Timer {
+	//Rounded down start time
+	double start;
+	//Clock interval
+	double interval;
+	//Delay before you overflow
+	double delay;
+	Bit8u counter;
+	bool enabled;
+	bool overflow;
 
-	Timer() = default;
+public:
+	Timer(int16_t micros)
+	        : start(0),
+	          interval(micros * 0.001), // interval in milliseconds
+	          delay(0),
+	          counter(0),
+	          enabled(false),
+	          overflow(false)
 
-	//Call update before making any further changes
-	void Update( double time ) {
-		if ( !enabled || !delay ) 
-			return;
-		double deltaStart = time - start;
+	{}
+
+	//Update returns with true if overflow
+	bool Update( double time ) {
+		if ( !enabled ) 
+			return false;
+		const double deltaTime = time - start;
 		//Only set the overflow flag when not masked
-		if ( deltaStart >= 0 && !masked ) {
-			overflow = 1;
+		if (deltaTime >= delay  ) {
+			overflow = true;
+			return true;
 		}
+		return false;
 	}
+
 	//On a reset make sure the start is in sync with the next cycle
-	void Reset(const double& time ) {
+	void Reset(const double time ) {
 		overflow = false;
-		if ( !delay || !enabled )
+		if ( !enabled )
 			return;
-		double delta = (time - start);
-		double rem = fmod( delta, delay );
-		double next = delay - rem;
-		start = time + next;		
+		//Sync start to the last delay interval
+		const double deltaTime = time - start;
+		const double rem = fmod(deltaTime, delay);
+		start = time - rem;
 	}
+
+	void SetCounter(Bit8u val) {
+		counter = val;
+	}
+
+	//Stopping always clears the overflow as well
 	void Stop( ) {
 		enabled = false;
-	}
-	void Start( const double& time, Bits scale ) {
-		//Don't enable again
-		if ( enabled ) {
-			return;
-		}
-		enabled = true;
-		delay = 0.001 * (256 - counter ) * scale;
-		start = time + delay;
+		overflow = false;
 	}
 
+	//Starting clears overflow
+	void Start( const double time ) {
+		enabled = true;
+		overflow = false;
+		//The counter is basically copied on start so calculate delay now
+		delay = (256 - counter) * interval;
+		//Sync start to the last clock interval
+		double rem = fmod(time, interval);
+		start = time - rem;
+	}
+
+	//Does this clock need an update, you could save a pic_fullindex on read?
+	bool NeedUpdate() const {
+		return enabled && !overflow;
+	}
 };
 
 struct Chip {
 	//Last selected register
-	Timer timer[2];
+	Timer timer0, timer1;
 	//Check for it being a write to the timer
 	bool Write( Bit32u addr, Bit8u val );
 	//Read the current timer state, will use current double
 	Bit8u Read( );
+
+	Chip();
 };
 
 //The type of handler this is
