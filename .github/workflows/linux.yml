@@ -93,7 +93,7 @@ jobs:
           set -x
           export VERSION=$(git describe --abbrev=4)
           sed -i "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
-          echo ::set-env name=VERSION::$VERSION
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Build
         env:
           AR: gcc-ar
