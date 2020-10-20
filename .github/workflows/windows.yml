@@ -11,9 +11,11 @@ jobs:
       matrix:
         conf:
           - name: MSVC 32-bit
+            arch: x86
             vs-platform: x86
             vcpkg-triplet: x86-windows
           - name: MSVC 64-bit
+            arch: x64
             vs-platform: x64
             vcpkg-triplet: x64-windows
     steps:
