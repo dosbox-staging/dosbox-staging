@@ -137,7 +137,8 @@ jobs:
           # Inventory the brew dependencies residing in /usr/local
           gthread="/usr/local/opt/glib/lib/libgthread-2.0.0.dylib"
           glib="/usr/local/opt/glib/lib/libglib-2.0.0.dylib"
-          glib_cellar="/usr/local/Cellar/glib/2.66.1/lib/libglib-2.0.0.dylib"
+          glib_version="$(pkg-config --modversion glib-2.0)"
+          glib_cellar="/usr/local/Cellar/glib/$glib_version/lib/libglib-2.0.0.dylib"
           intl="/usr/local/opt/gettext/lib/libintl.8.dylib"
           pcre="/usr/local/opt/pcre/lib/libpcre.1.dylib"
 
