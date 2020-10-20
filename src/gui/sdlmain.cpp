@@ -48,6 +48,7 @@
 #include "cpu.h"
 #include "cross.h"
 #include "debug.h"
+#include "gui_msgs.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
@@ -353,19 +354,6 @@ static SDL_Rect calc_viewport(int width, int height);
 
 static void CleanupSDLResources();
 static void HandleVideoResize(int width, int height);
-
-static constexpr char version_msg[] = R"(dosbox (dosbox-staging), version %s
-Copyright (C) 2020 The dosbox-staging team.
-License GPLv2+: GNU GPL version 2 or later <https://www.gnu.org/licenses/gpl-2.0.html>
-
-This is free software, and you are welcome to change and redistribute it
-under certain conditions; please read the COPYING file thoroughly before
-doing so.  There is NO WARRANTY, to the extent permitted by law.
-
-This program (dosbox-staging) is modified version of DOSBox.
-Copyright (C) 2020 The DOSBox Team, published under GNU GPLv2+
-Read AUTHORS file for more details.
-)";
 
 #if C_OPENGL
 static char const shader_src_default[] = R"GLSL(
@@ -3191,8 +3179,16 @@ int main(int argc, char* argv[]) {
 #endif  //defined(WIN32) && !(C_DEBUG)
 
 		if (control->cmdline->FindExist("--version") ||
-		    control->cmdline->FindExist("-version")) {
+		    control->cmdline->FindExist("-version") ||
+		    control->cmdline->FindExist("-v")) {
 			printf(version_msg, VERSION);
+			return 0;
+		}
+
+		//If command line includes --help or -h, print help message and exit.
+		if (control->cmdline->FindExist("--help") ||
+		    control->cmdline->FindExist("-h")) {
+			printf(help_msg); // -V618
 			return 0;
 		}
 
