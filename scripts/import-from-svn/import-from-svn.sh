@@ -146,9 +146,11 @@ full_import () {
 #
 fast_import () {
 	local -r repo=$1
-	local -r svn_base_rev=4260
-	local -r git_new_base_commit=fe177b413603793a3342cfe22f1fc9e050cbea76
-	local -r git_old_base_commit=6d0dd9871c53a9c0b2a2ff98d24d1aebc10c0ad4
+	local -r svn_base_rev=4385
+	# commit svn_base_rev before rebase:
+	local -r git_old_base_commit=132fa665fc3b5eea11fdc2236080afa5bbadbd9d
+	# commit svn_base_rev after rebase:
+	local -r git_new_base_commit=b5c09dd8ebf69c1ccc5c3d0722c80d30a1780576
 
 	if ! git_svn_clone_dosbox "$svn_base_rev:HEAD" "$repo" ; then
 		echo_err "TODO!!!" # TODO
