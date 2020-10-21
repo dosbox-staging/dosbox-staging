@@ -627,10 +627,6 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("gus",Property::Changeable::WhenIdle,false);
 	Pbool->Set_help("Enable the Gravis Ultrasound emulation.");
 
-	Pint = secprop->Add_int("gusrate",Property::Changeable::WhenIdle,44100);
-	Pint->Set_values(rates);
-	Pint->Set_help("Sample rate of Ultrasound emulation.");
-
 	Phex = secprop->Add_hex("gusbase",Property::Changeable::WhenIdle,0x240);
 	Phex->Set_values(iosgus);
 	Phex->Set_help("The IO base address of the Gravis Ultrasound.");
