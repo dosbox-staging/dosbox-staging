@@ -30,6 +30,10 @@ jobs:
           sudo chmod go-w /usr/share/rust/.cargo/bin
       - name: Run markdownlint
         run:  ./scripts/verify-markdown.sh
+      - name: Install appstream
+        run:  sudo apt-get install appstream
+      - name: Verify metainfo.xml
+        run:  appstreamcli validate contrib/linux/dosbox-staging.metainfo.xml
 
   build_clang_static_analyser:
     name: Clang static analyzer
