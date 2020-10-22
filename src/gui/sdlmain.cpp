@@ -59,7 +59,7 @@
 #include "cpu.h"
 #include "control.h"
 #include "render.h"
-#include "out_msgs.h"
+#include "gui_msgs.h"
 
 #include "../libs/ppscale/ppscale.h"
 

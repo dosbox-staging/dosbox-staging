@@ -460,6 +460,7 @@
     <ClInclude Include="..\src\fpu\fpu_instructions_x86.h" />
     <ClInclude Include="..\src\gui\render_scalers.h" />
     <ClInclude Include="..\src\gui\render_templates.h" />
+    <ClInclude Include="..\src\gui\gui_msgs.h" />
     <ClInclude Include="..\src\hardware\font-switch.h" />
     <ClInclude Include="..\src\hardware\mame\emu.h" />
     <ClInclude Include="..\src\hardware\mame\fmopl.h" />
