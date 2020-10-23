@@ -688,7 +688,7 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(oplemus);
 	Pstring->Set_help(
 	        "Provider for the OPL emulation. 'compat' provides better quality,\n"
-	        "'nuked' is the default and most accurate (but the most CPU-intensive).\n");
+	        "'nuked' is the default and most accurate (but the most CPU-intensive).");
 
 	// Configure Gravis UltraSound emulation
 	GUS_AddConfigSection(control);
