@@ -446,15 +446,15 @@ void SVGA_S3_WriteSEQ(Bitu reg,Bitu val,Bitu iolen) {
 		vga.s3.pll.lock=val;
 		break;
 	case 0x10:		/* Memory PLL Data Low */
-		vga.s3.mclk.n=val & 0x1f;
-		vga.s3.mclk.r=val >> 5;
+		vga.s3.mclk.n = (val & 0b000'11111);
+		vga.s3.mclk.r = (val & 0b111'00000) >> 5;
 		break;
 	case 0x11:		/* Memory PLL Data High */
 		vga.s3.mclk.m=val & 0x7f;
 		break;
 	case 0x12:		/* Video PLL Data Low */
-		vga.s3.clk[3].n=val & 0x1f;
-		vga.s3.clk[3].r=val >> 5;
+		vga.s3.clk[3].n = (val & 0b000'11111);
+		vga.s3.clk[3].r = (val & 0b111'00000) >> 5;
 		break;
 	case 0x13:		/* Video PLL Data High */
 		vga.s3.clk[3].m=val & 0x7f;
@@ -479,11 +479,11 @@ Bitu SVGA_S3_ReadSEQ(Bitu reg,Bitu iolen) {
 	case 0x08:		/* PLL Unlock */
 		return vga.s3.pll.lock;
 	case 0x10:		/* Memory PLL Data Low */
-		return vga.s3.mclk.n || (vga.s3.mclk.r << 5);
+		return (vga.s3.mclk.r << 5) | vga.s3.mclk.n;
 	case 0x11:		/* Memory PLL Data High */
 		return vga.s3.mclk.m;
 	case 0x12:		/* Video PLL Data Low */
-		return vga.s3.clk[3].n || (vga.s3.clk[3].r << 5);
+		return (vga.s3.clk[3].r << 5) | vga.s3.clk[3].n;
 	case 0x13:		/* Video Data High */
 		return vga.s3.clk[3].m;
 	case 0x15:
