@@ -97,4 +97,5 @@ suppress_base.json
 
 # clangd language server
 .clangd
+.cache
 compile_commands.json
