@@ -111,7 +111,7 @@ Install build dependencies appropriate for your OS:
 
 ``` shell
 # Fedora
-sudo dnf install gcc-c++ automake alsa-lib-devel libpng-devel SDL2-devel \
+sudo dnf install gcc-c++ make automake alsa-lib-devel libpng-devel SDL2-devel \
                  SDL2_net-devel opusfile-devel fluidsynth-devel
 ```
 
