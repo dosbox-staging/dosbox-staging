@@ -98,7 +98,7 @@ jobs:
       - name: Build
         env:
           FLUIDSYNTH_CFLAGS: -I${{ github.workspace }}/contrib/static-fluidsynth/include
-          FLUIDSYNTH_LIBS: ${{ github.workspace }}/contrib/static-fluidsynth/lib/libfluidsynth.a -lm
+          FLUIDSYNTH_LIBS: ${{ github.workspace }}/contrib/static-fluidsynth/lib/libfluidsynth.a -lm -L/usr/local/Cellar/glib/$(pkg-config --modversion glib-2.0)/lib -L/usr/local/opt/gettext/lib -lgthread-2.0 -lglib-2.0 -lintl
           OPUSFILE_CFLAGS: -I${{ github.workspace }}/contrib/static-opus/include -I${{ github.workspace }}/contrib/static-opus/include/opus
           OPUSFILE_LIBS: ${{ github.workspace }}/contrib/static-opus/lib/libopusfile.a ${{ github.workspace }}/contrib/static-opus/lib/libogg.a ${{ github.workspace }}/contrib/static-opus/lib/libopus.a -lm
         run: |
