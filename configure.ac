@@ -514,8 +514,6 @@ AC_ARG_ENABLE(fluidsynth,
                              [Disable FluidSynth integration]))
 
 if test "${enable_fluidsynth}" != "no" ; then
-    PKG_CHECK_MODULES(GLIB,
-                      [glib-2.0 >= 2.6.5 gthread-2.0 >= 2.6.5])
     PKG_CHECK_MODULES(FLUIDSYNTH,
                       fluidsynth >= 2,
                       [LIBS="$LIBS $FLUIDSYNTH_LIBS $GLIB_LIBS"
