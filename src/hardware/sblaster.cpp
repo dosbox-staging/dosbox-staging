@@ -991,11 +991,13 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0x75:	/* 075h : Single Cycle 4-bit ADPCM Reference */
 		sb.adpcm.haveref=true;
+		FALLTHROUGH;
 	case 0x74:	/* 074h : Single Cycle 4-bit ADPCM */	
 		DSP_PrepareDMA_Old(DSP_DMA_4,false,false);
 		break;
 	case 0x77:	/* 077h : Single Cycle 3-bit(2.6bit) ADPCM Reference*/
 		sb.adpcm.haveref=true;
+		FALLTHROUGH;
 	case 0x76:  /* 074h : Single Cycle 3-bit(2.6bit) ADPCM */
 		DSP_PrepareDMA_Old(DSP_DMA_3,false,false);
 		break;
@@ -1006,6 +1008,7 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0x17:	/* 017h : Single Cycle 2-bit ADPCM Reference*/
 		sb.adpcm.haveref=true;
+		FALLTHROUGH;
 	case 0x16:  /* 074h : Single Cycle 2-bit ADPCM */
 		DSP_PrepareDMA_Old(DSP_DMA_2,false,false);
 		break;
