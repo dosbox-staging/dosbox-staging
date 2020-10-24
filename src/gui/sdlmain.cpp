@@ -33,6 +33,12 @@
 #include <process.h>
 #endif
 
+#include <time.h>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
+using namespace std;
+
 #include "cross.h"
 #include "SDL.h"
 
@@ -1426,6 +1432,12 @@ void GFX_LosingFocus(void) {
 #define DB_POLLSKIP 1
 #endif
 
+#if defined(LINUX)
+#define SDL_XORG_FIX 1
+#else
+#define SDL_XORG_FIX 0
+#endif
+
 void GFX_Events() {
 	//Don't poll too often. This can be heavy on the OS, especially Macs.
 	//In idle mode 3000-4000 polls are done per second without this check.
@@ -1449,6 +1461,19 @@ void GFX_Events() {
 	}
 #endif
 	while (SDL_PollEvent(&event)) {
+#if SDL_XORG_FIX
+		// Special code for broken SDL with Xorg 1.20.1, where pairs of inputfocus gain and loss events are generated
+		// when locking the mouse in windowed mode.
+		if (event.type == SDL_ACTIVEEVENT && event.active.state == SDL_APPINPUTFOCUS && event.active.gain == 0) {
+			SDL_Event test; //Check if the next event would undo this one.
+			if (SDL_PeepEvents(&test,1,SDL_PEEKEVENT,SDL_ACTIVEEVENTMASK) == 1 && test.active.state == SDL_APPINPUTFOCUS && test.active.gain == 1) {
+				// Skip both events.
+				SDL_PeepEvents(&test,1,SDL_GETEVENT,SDL_ACTIVEEVENTMASK);
+				continue;
+			}
+		}
+#endif
+
 		switch (event.type) {
 		case SDL_ACTIVEEVENT:
 			if (event.active.state & SDL_APPINPUTFOCUS) {
@@ -1809,7 +1834,7 @@ static void erasemapperfile() {
 	exit(0);
 }
 
-
+extern bool logoverlay;
 
 //extern void UI_Init(void);
 int main(int argc, char* argv[]) {
@@ -1817,6 +1842,7 @@ int main(int argc, char* argv[]) {
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
 		control=&myconf;
+		logoverlay = control->cmdline->FindExist("-logoverlay",true);
 		/* Init the configuration system and add default values */
 		Config_Add_SDL();
 		DOSBOX_Init();
@@ -1831,11 +1857,24 @@ int main(int argc, char* argv[]) {
 
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
+		std::string logname("");
+		time_t ti = time(NULL);
+		struct tm * tp= localtime(&ti);
+		ostringstream os(logname);
+		os << (tp->tm_year+1900)
+		   <<setw(2)<<setfill('0')<< (tp->tm_mon+1)
+		   <<setw(2)<<setfill('0')<<(tp->tm_mday+0)
+		   <<setw(2)<<setfill('0')<<tp->tm_hour
+		   <<setw(2)<<setfill('0')<<tp->tm_min
+		   <<setw(2)<<setfill('0')<<tp->tm_sec
+		   <<setw(2)<<setfill('0')<<".txt"<<ends;
+		std::string tlog = "overlay-" + os.str();
 		if (control->cmdline->FindExist("-noconsole")) {
 			FreeConsole();
 			/* Redirect standard input and standard output */
 			if(freopen(STDOUT_FILE, "w", stdout) == NULL)
 				no_stdout = true; // No stdout so don't write messages
+			if (logoverlay && !no_stdout) freopen(tlog.c_str(),"w",stdout);
 			freopen(STDERR_FILE, "w", stderr);
 			setvbuf(stdout, NULL, _IOLBF, BUFSIZ);	/* Line buffered */
 			setbuf(stderr, NULL);					/* No buffering */
@@ -1848,6 +1887,7 @@ int main(int argc, char* argv[]) {
 				freopen("CONOUT$","w",stdout);
 				freopen("CONOUT$","w",stderr);
 			}
+			if (logoverlay) freopen(tlog.c_str(),"w",stdout);
 			SetConsoleTitle("DOSBox Status Window");
 		}
 #endif  //defined(WIN32) && !(C_DEBUG)

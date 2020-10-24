@@ -31,21 +31,6 @@
 #include "cross.h"
 #include "inout.h"
 
-class localFile : public DOS_File {
-public:
-	localFile(const char* name, FILE * handle);
-	bool Read(Bit8u * data,Bit16u * size);
-	bool Write(Bit8u * data,Bit16u * size);
-	bool Seek(Bit32u * pos,Bit32u type);
-	bool Close();
-	Bit16u GetInformation(void);
-	bool UpdateDateTimeFromHost(void);   
-	void FlagReadOnlyMedium(void);
-private:
-	FILE * fhandle;
-	bool read_only_medium;
-	enum { NONE,READ,WRITE } last_action;
-};
 
 
 bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/) {
@@ -82,9 +67,10 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/)
 bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	const char* type;
 	switch (flags&0xf) {
-	case OPEN_READ:type="rb"; break;
-	case OPEN_WRITE:type="rb+"; break;
-	case OPEN_READWRITE:type="rb+"; break;
+	case OPEN_READ:        type = "rb" ; break;
+	case OPEN_WRITE:       type = "rb+"; break;
+	case OPEN_READWRITE:   type = "rb+"; break;
+//	case OPEN_READ_NO_MOD: type = "rb" ; break; //No modification of dates. LORD4.07 uses this
 	default:
 		DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
 		return false;
