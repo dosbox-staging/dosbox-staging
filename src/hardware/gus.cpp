@@ -70,6 +70,7 @@ constexpr uint8_t MAX_DMA_ADDRESS = 7u;
 constexpr uint8_t MIN_IRQ_ADDRESS = 0u;
 constexpr uint8_t MAX_IRQ_ADDRESS = 15u;
 constexpr uint8_t DMA_IRQ_ADDRESSES = 8u; // number of IRQ and DMA channels
+constexpr uint16_t DMA_TC_STATUS_BITMASK = 0b100000000; // Status in 9th bit
 
 // Pan position constants
 constexpr uint8_t PAN_DEFAULT_POSITION = 7u;
@@ -303,7 +304,9 @@ private:
 
 	// DMA states
 	uint16_t dma_addr = 0u;
-	uint8_t dma_ctrl = 0u;
+	// dma_ctrl would normally be a uint8_t as real hardware uses 8 bits,
+	// but we store the DMA terminal count status in the 9th bit
+	uint16_t dma_ctrl = 0u;
 	uint8_t dma1 = 0u; // playback DMA
 	uint8_t dma2 = 0u; // recording DMA
 
@@ -756,6 +759,8 @@ bool Gus::PerformDmaTransfer()
 	}
 	// Raise the TC irq if needed
 	if ((dma_ctrl & 0x20) != 0) {
+		// We've hit the terminal count, so enable that bit
+		dma_ctrl |= DMA_TC_STATUS_BITMASK;
 		irq_status |= 0x80;
 		CheckIrq();
 		return false;
@@ -998,19 +1003,22 @@ uint16_t Gus::ReadFromRegister()
 
 	// Registers that read from the general DSP
 	switch (selected_register) {
-	case 0x41: // Dma control register - read acknowledges DMA IRQ
+	case 0x41: // DMA control register - read acknowledges DMA IRQ
 		reg = dma_ctrl & 0xbf;
-		reg |= (irq_status & 0x80) >> 1;
+		// get the status and store it in bit 6 of the register
+		reg |= (dma_ctrl & DMA_TC_STATUS_BITMASK) >> 2;
+		dma_ctrl &= ~DMA_TC_STATUS_BITMASK; // clear the status bit
 		irq_status &= 0x7f;
 		CheckIrq();
 		return static_cast<uint16_t>(reg << 8);
-	case 0x42: // Dma address register
+	case 0x42: // DMA address register
 		return dma_addr;
 	case 0x45: // Timer control register matches Adlib's behavior
 		return static_cast<uint16_t>(timer_ctrl << 8);
-	case 0x49: // Dma sample register
+	case 0x49: // DMA sample register
 		reg = dma_ctrl & 0xbf;
-		reg |= (irq_status & 0x80) >> 1;
+		// get the status and store it in bit 6 of the register
+		reg |= (dma_ctrl & DMA_TC_STATUS_BITMASK) >> 2;
 		return static_cast<uint16_t>(reg << 8);
 	case 0x8f: // General voice IRQ status register
 		reg = voice_irq.status | 0x20;
@@ -1269,8 +1277,11 @@ void Gus::WriteToRegister()
 		return;
 	case 0x10: // Undocumented register used in Fast Tracker 2
 		return;
-	case 0x41: // Dma control register
-		dma_ctrl = register_data >> 8;
+	case 0x41: // DMA control register
+		// Clear all bits except the status and then replace dma_ctrl's
+		// lower bits with reg's top 8 bits
+		dma_ctrl &= DMA_TC_STATUS_BITMASK;
+		dma_ctrl |= register_data >> 8;
 		if (dma_ctrl & 1)
 			StartDmaTransfers();
 		return;
