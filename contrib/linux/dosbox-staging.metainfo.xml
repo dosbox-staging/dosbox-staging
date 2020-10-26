@@ -1,63 +1,78 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (C) 2020  The DOSBox Staging Team -->
 <component type="desktop">
   <id>io.github.dosbox-staging</id>
-  <project_license>GPL-2.0-or-later</project_license>
   <metadata_license>CC0-1.0</metadata_license>
-  <provides>
-    <binary>dosbox</binary>
-  </provides>
+  <project_license>GPL-2.0-or-later</project_license>
   <name>DOSBox Staging</name>
   <summary>DOS/x86 emulator focusing on ease of use</summary>
   <description>
     <p>
-      DOSBox Staging is a full x86 CPU emulator (independent of host architecture),
-      capable of running DOS programs that require real or protected mode.
+      DOSBox Staging is a full x86 CPU emulator (independent of host
+      architecture), capable of running DOS programs that require real or
+      protected mode.
     </p>
-    <p>
-      It features:
-    </p>
+    <p>It features:</p>
     <ul>
       <li>A built-in DOS-like console</li>
-      <li>Emulation of several PC variants: IBM PC, IBM PCjr, Tandy 1000), and CPUs
-          (286, 386, 486, and Pentium I)</li>
+      <li>Emulation of several PC variants: IBM PC, IBM PCjr, Tandy 1000),
+          and CPUs (286, 386, 486, and Pentium I)</li>
       <li>Graphics chipsets: Hercules, CGA, EGA, VGA, and SVGA</li>
       <li>Audio solutions: PC Speaker, Tandy Sound System, Disney Sound Source,
           Sound Blaster series, and Gravis UltraSound</li>
-      <li>CDROM and CD Digital Audio with audio optionally encoded as FLAC, Opus,
-          OGG/Vorbis, MP3 or WAV</li>
+      <li>CDROM and CD Digital Audio with audio optionally encoded as FLAC,
+	  Opus, OGG/Vorbis, MP3 or WAV</li>
       <li>Joystick emulation working with modern game controllers</li>
       <li>Serial port emulation including IPX over UDP and Telnet over TCP/IP</li>
-      <li>Hardware-accelerated video output including integer (pixel-perfect) scaling,
-          sharp-bilinear scaling, OpenGL shaders, and more</li>
+      <li>Hardware-accelerated video output including integer (pixel-perfect)
+          scaling, sharp-bilinear scaling, OpenGL shaders, and more</li>
     </ul>
     <p>
-      DOSBox Staging is highly configurable and sufficiently-optimized to run any DOS
-      game on a modern computer.
+      DOSBox Staging is highly configurable and sufficiently-optimized to run
+      any DOS game on a modern computer.
     </p>
   </description>
-  <launchable type="desktop-id">dosbox-staging.desktop</launchable>
-  <url type="homepage">https://dosbox-staging.github.io/</url>
-  <url type="bugtracker">https://github.com/dosbox-staging/dosbox-staging/issues</url>
+  <screenshots>
+    <screenshot type="default">
+      <caption>DOSBox Staging window (splash screen)</caption>
+      <image type="source" width="660" height="535">https://dosbox-staging.github.io/gnome-splash-screen.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>DOSBox Staging window</caption>
+      <image type="source" width="660" height="535">https://dosbox-staging.github.io/gnome-init-screen.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Heroes of Might and Magic 2 (1996), pixel-perfect</caption>
+      <image type="source" width="1920" height="1080">https://dosbox-staging.github.io/homm2-pp-2x2.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Wolfenstein 3D (1992), pixel-perfect</caption>
+      <image type="source" width="1920" height="1080">https://dosbox-staging.github.io/wolf3d-pp-4x5.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Battle Chess (1988), sharp-bilinear scaling</caption>
+      <image type="source" width="1920" height="1080">https://dosbox-staging.github.io/bc.png</image>
+    </screenshot>
+  </screenshots>
+  <categories>
+    <category>Emulator</category>
+  </categories>
   <releases>
     <release version="0.75.1" date="2020-07-19"/>
   </releases>
-  <screenshots>
-    <screenshot type="default">
-      <caption>Heroes of Might and Magic 2 (1996), 640x480</caption>
-      <image>https://dosbox-staging.github.io/homm2-pp-2x2-min.png</image>
-    </screenshot>
-    <screenshot>
-      <caption>Wolfenstein 3D (1992), 320x200 with a PAR</caption>
-      <image>https://dosbox-staging.github.io/wolf3d-pp-4x5-min.png</image>
-    </screenshot>
-    <screenshot>
-      <caption>Battle Chess (1988) at 1080p</caption>
-      <image>https://dosbox-staging.github.io/bc.png</image>
-    </screenshot>
-    <screenshot>
-      <caption>Maniac Mansion (1987) - forced CGA mode</caption>
-      <image>https://dosbox-staging.github.io/cga-showcase-1-min.png</image>
-    </screenshot>
-  </screenshots>
+  <provides>
+    <binary>dosbox</binary>
+  </provides>
+  <recommends>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>console</control>
+    <control>gamepad</control>
+  </recommends>
+  <launchable type="desktop-id">dosbox-staging.desktop</launchable>
+  <developer_name>The DOSBox Staging Team</developer_name>
   <update_contact>dreamer.tan@gmail.com</update_contact>
+  <url type="homepage">https://dosbox-staging.github.io/</url>
+  <url type="bugtracker">https://github.com/dosbox-staging/dosbox-staging/issues</url>
+  <content_rating type="oars-1.0"/>
 </component>
