@@ -1,5 +1,5 @@
 Name:    dosbox-staging
-Version: 0.75.1
+Version: 0.75.2
 Release: 1%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+
@@ -19,6 +19,7 @@ BuildRequires: SDL2_net-devel
 BuildRequires: opusfile-devel
 BuildRequires: librsvg2-tools
 BuildRequires: desktop-file-utils
+BuildRequires: libappstream-glib
 
 Requires: hicolor-icon-theme
 
@@ -70,6 +71,11 @@ desktop-file-install \
         --dir=%{buildroot}%{_datadir}/applications \
         contrib/linux/%{name}.desktop
 
+install -p -m 0644 -Dt %{buildroot}%{_metainfodir} \
+        contrib/linux/%{name}.metainfo.xml 
+
+appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
+
 
 %files
 %license COPYING
@@ -78,9 +84,14 @@ desktop-file-install \
 %{_mandir}/man1/*
 %{_datadir}/applications/*
 %{_datadir}/icons/hicolor/*/apps/dosbox-staging.*
+%{_metainfodir}/*
 
 
 %changelog
+* Tue Oct 27 2020 Patryk Obara (pbo) <dreamer.tan@gmail.com>
+- 0.75.2-1
+- Update to 0.75.2
+
 * Thu Oct 01 2020 Patryk Obara (pbo) <dreamer.tan@gmail.com>
 - 0.75.1-1
 - Initial release.
