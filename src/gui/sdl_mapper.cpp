@@ -433,7 +433,7 @@ Bitu GetKeyCode(SDL_keysym keysym) {
 			/* try to retrieve key from symbolic key as scancode is zero */
 			if (keysym.sym<MAX_SDLKEYS) key=scancode_map[(Bitu)keysym.sym];
 		} 
-#if !defined (WIN32) && !defined (MACOSX) && !defined(OS2)
+#if !defined (WIN32) && !defined (MACOSX) && !defined(OS2) && !defined(__midipix__)
 		/* Linux adds 8 to all scancodes */
 		else key-=8;
 #endif
