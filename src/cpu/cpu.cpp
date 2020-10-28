@@ -2008,7 +2008,7 @@ bool CPU_CPUID(void) {
 			reg_ecx = 0;     // No features
 			reg_edx = 0x1;   // FPU
 		} else if (CPU_ArchitectureType == CPU_ARCHTYPE_PENTIUMSLOW) {
-			reg_eax = 0x513; // Intel Pentium
+			reg_eax = 0x517; // Intel Pentium P5 60/66 MHz D1-step
 			reg_ebx = 0;     // Not supported
 			reg_ecx = 0;     // No features
 			reg_edx = 0x11;  // FPU+TimeStamp/RDTSC
