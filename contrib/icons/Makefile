@@ -77,7 +77,10 @@ dosbox-staging.iconset: \
 # This is not strictly necessary (just placing scalable icon is enough,
 # but some there are some corner cases where small raster icon looks better).
 #
-hicolor: \
+
+hicolor: \ hicolor
+
+%hicolor: \
 		dosbox-staging.svg \
 		icon_32.png \
 		icon_24.png \
