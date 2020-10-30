@@ -824,13 +824,24 @@ static Bitu INT15_Handler(void) {
 				break;
 			}
 			Bit32u count=(reg_cx<<16)|reg_dx;
+			double timeout=PIC_FullIndex()+((double)count/1000.0)+1.0;
 			mem_writed(BIOS_WAIT_FLAG_POINTER,RealMake(0,BIOS_WAIT_FLAG_TEMP));
 			mem_writed(BIOS_WAIT_FLAG_COUNT,count);
 			mem_writeb(BIOS_WAIT_FLAG_ACTIVE,1);
+			/* Unmask IRQ 8 if masked */
+			Bit8u mask=IO_Read(0xa1);
+			if (mask&1) IO_Write(0xa1,mask&~1);
 			/* Reprogram RTC to start */
 			IO_Write(0x70,0xb);
 			IO_Write(0x71,IO_Read(0x71)|0x40);
 			while (mem_readd(BIOS_WAIT_FLAG_COUNT)) {
+				if (PIC_FullIndex()>timeout) {
+					/* RTC timer not working for some reason */
+					mem_writeb(BIOS_WAIT_FLAG_ACTIVE,0);
+					IO_Write(0x70,0xb);
+					IO_Write(0x71,IO_Read(0x71)&~0x40);
+					break;
+				}
 				CALLBACK_Idle();
 			}
 			CALLBACK_SCF(false);
