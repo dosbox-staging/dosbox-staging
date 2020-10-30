@@ -97,6 +97,8 @@ struct GFGus {
 	Bit8u irq1;
 	Bit8u irq2;
 
+	bool running;
+	bool dacenabled;
 	bool irqenabled;
 	bool ChangeIRQDMA;
 	// IRQ status register values
@@ -314,7 +316,7 @@ public:
 		bool is16 = (WaveCtrl & WCTRL_16BIT)!=0;
 
 		for (Bitu i=0; i < len; i++) {
-			if (VolLeft | VolRight) {
+			if (myGUS.dacenabled && (VolLeft | VolRight)) {
 				// Get sample
 				Bit32s tmpsamp = is16 ? GetSample16():GetSample8();
 				// Output stereo sample
@@ -332,7 +334,7 @@ static GUSChannels *curchan;
 static void GUS_TimerEvent(Bitu val);
 
 static void GUSReset(void) {
-	if((myGUS.gRegData & 0x1) == 0x1) {
+	if((myGUS.gRegData & 0x100) == 0) {
 		// Reset
 		adlib_commandreg = 85;
 		myGUS.IRQStatus = 0;
@@ -361,18 +363,20 @@ static void GUSReset(void) {
 		}
 		myGUS.IRQChan = 0;
 		PIC_RemoveEvents(GUS_TimerEvent);
-	}
-	if ((myGUS.gRegData & 0x4) != 0) {
-		myGUS.irqenabled = true;
+		gus_chan->Enable(false);
+		myGUS.gRegData = 0; // DAC/IRQ disabled on reset
+		myGUS.running = false;
 	} else {
-		myGUS.irqenabled = false;
+		if (!myGUS.running) myGUS.gRegData = 0x100; // DAC/IRQ disabled leaving reset
+		myGUS.running = true;
 	}
+	myGUS.dacenabled = ((myGUS.gRegData & 0x200) != 0);
+	myGUS.irqenabled = ((myGUS.gRegData & 0x400) != 0);
 }
 
 static INLINE void GUS_CheckIRQ(void) {
-	if (myGUS.IRQStatus && (myGUS.mixControl & 0x08)) 
+	if ((myGUS.IRQStatus & (myGUS.irqenabled ? 0xff:0x9f)) && (myGUS.mixControl & 0x08))
 		PIC_ActivateIRQ(myGUS.irq1);
-
 }
 
 static void CheckVoiceIrq(void) {
@@ -404,10 +408,14 @@ static Bit16u ExecuteReadRegister(void) {
 		return myGUS.dmaAddr;
 	case 0x45:  // Timer control register.  Identical in operation to Adlib's timer
 		return (Bit16u)(myGUS.TimerControl << 8);
-		break;
 	case 0x49:  // Dma sample register
 		tmpreg = myGUS.DMAControl & 0xbf;
 		tmpreg |= (myGUS.IRQStatus & 0x80) >> 1;
+		return (Bit16u)(tmpreg << 8);
+	case 0x4c:  // Reset register
+		tmpreg = myGUS.running ? 1:0;
+		if (myGUS.dacenabled) tmpreg |= 2;
+		if (myGUS.irqenabled) tmpreg |= 4;
 		return (Bit16u)(tmpreg << 8);
 	case 0x80: // Channel voice control read register
 		if (curchan) return curchan->ReadWaveCtrl() << 8;
@@ -548,7 +556,7 @@ static void ExecuteGlobRegister(void) {
 #if LOG_GUS
 		LOG_MSG("GUS set to %d channels, freq %d", myGUS.ActiveChannels, myGUS.basefreq);
 #endif
-		if (myGUS.basefreq) {
+		if (myGUS.basefreq && myGUS.running) {
 			gus_chan->SetFreq(myGUS.basefreq);
 			gus_chan->Enable(true);
 		} else gus_chan->Enable(false);
@@ -769,9 +777,11 @@ static void GUS_CallBack(Bitu len) {
 	for (Bitu i = 0; i < myGUS.ActiveChannels; i++) {
 		guschan[i]->generateSamples(buffer[0], len);
 	}
-	for (Bitu i = 0; i < len; i++) {
-		buffer[i][0] >>= VOL_SHIFT;
-		buffer[i][1] >>= VOL_SHIFT;
+	if (myGUS.dacenabled) {
+		for (Bitu i = 0; i < len; i++) {
+			buffer[i][0] >>= VOL_SHIFT;
+			buffer[i][1] >>= VOL_SHIFT;
+		}
 	}
 	gus_chan->AddSamples_s32(len, buffer[0]);
 	CheckVoiceIrq();
@@ -859,9 +869,8 @@ public:
 		}
 		// Register the Mixer CallBack
 		gus_chan=MixerChan.Install(GUS_CallBack,0,"GUS");
-		myGUS.gRegData=0x1;
+		myGUS.gRegData=0;
 		GUSReset();
-		myGUS.gRegData=0x0;
 		Bitu portat = 0x200+GUS_BASE;
 
 		// ULTRASND=Port,DMA1,DMA2,IRQ1,IRQ2
@@ -881,12 +890,9 @@ public:
 		Section_prop * section=static_cast<Section_prop *>(m_configuration);
 		if(!section->Get_bool("gus")) return;
 	
-		myGUS.gRegData=0x1;
+		myGUS.gRegData=0;
 		GUSReset();
-		myGUS.gRegData=0x0;
 
-		gus_chan->Enable(false);
-	
 		for(Bitu i=0;i<32;i++) {
 			delete guschan[i];
 		}
