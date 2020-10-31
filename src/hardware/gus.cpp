@@ -139,7 +139,8 @@ public:
 	                     const ram_array_t &ram,
 	                     const vol_scalars_array_t &vol_scalars,
 	                     const pan_scalars_array_t &pan_scalars,
-	                     const int requested_frames);
+	                     const int requested_frames,
+	                     const bool dac_enabled);
 
 	uint8_t ReadVolState() const noexcept;
 	uint8_t ReadWaveState() const noexcept;
@@ -314,7 +315,10 @@ private:
 	uint8_t irq1 = 0u; // playback IRQ
 	uint8_t irq2 = 0u; // MIDI IRQ
 	uint8_t irq_status = 0u;
+
+	bool dac_enabled = false;
 	bool irq_enabled = false;
+	bool is_running = false;
 	bool should_change_irq_dma = false;
 };
 
@@ -431,7 +435,8 @@ void Voice::GenerateSamples(accumulator_array_t &stream,
                             const ram_array_t &ram,
                             const vol_scalars_array_t &vol_scalars,
                             const pan_scalars_array_t &pan_scalars,
-                            const int requested_frames)
+                            const int requested_frames,
+                            const bool dac_enabled)
 {
 	if (vol_ctrl.state & wave_ctrl.state & CTRL::DISABLED)
 		return;
@@ -446,8 +451,10 @@ void Voice::GenerateSamples(accumulator_array_t &stream,
 	while (v < last_v) {
 		float sample = GetSample(ram);
 		sample *= PopVolScalar(vol_scalars);
-		*v++ += sample * pan_scalar.left;
-		*v++ += sample * pan_scalar.right;
+		if (dac_enabled) {
+			*v++ += sample * pan_scalar.left;
+			*v++ += sample * pan_scalar.right;
+		}
 	}
 	// Keep track of how many ms this voice has generated
 	Is8Bit() ? generated_8bit_ms++ : generated_16bit_ms++;
@@ -644,8 +651,8 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 	auto v = voices.begin();
 	const auto v_end = v + active_voices;
 	while (v < v_end && *v) {
-		v->get()->GenerateSamples(accumulator, ram, vol_scalars,
-		                          pan_scalars, requested_frames);
+		v->get()->GenerateSamples(accumulator, ram, vol_scalars, pan_scalars,
+		                          requested_frames, dac_enabled);
 		++v;
 	}
 
@@ -656,17 +663,22 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 
 void Gus::BeginPlayback()
 {
+	dac_enabled = ((register_data & 0x200) != 0);
+	irq_enabled = ((register_data & 0x400) != 0);
 	audio_channel->Enable(true);
 	if (prev_logged_voices != active_voices) {
 		LOG_MSG("GUS: Activated %u voices at %u Hz", active_voices,
 		        playback_rate);
 		prev_logged_voices = active_voices;
 	}
+	is_running = true;
 }
 
 void Gus::CheckIrq()
 {
-	if (irq_status && (mix_ctrl & 0x08))
+	const bool should_interrupt = irq_status & (irq_enabled ? 0xff : 0x9f);
+	const bool lines_enabled = mix_ctrl & 0x08;
+	if (should_interrupt && lines_enabled)
 		PIC_ActivateIRQ(irq1);
 }
 
@@ -910,6 +922,11 @@ void Gus::PrepareForPlayback() noexcept
 	voice_irq = VoiceIrq{};
 	timer_one = Timer{TIMER_1_DEFAULT_DELAY};
 	timer_two = Timer{TIMER_2_DEFAULT_DELAY};
+
+	if (!is_running) {
+		register_data = 0x100; // DAC/IRQ disabled
+		is_running = true;
+	}
 }
 
 void Gus::PrintStats()
@@ -1020,6 +1037,13 @@ uint16_t Gus::ReadFromRegister()
 		// get the status and store it in bit 6 of the register
 		reg |= (dma_ctrl & DMA_TC_STATUS_BITMASK) >> 2;
 		return static_cast<uint16_t>(reg << 8);
+	case 0x4c: // Reset register
+		reg = is_running ? 1 : 0;
+		if (dac_enabled)
+			reg |= 2;
+		if (irq_enabled)
+			reg |= 4;
+		return static_cast<uint16_t>(reg << 8);
 	case 0x8f: // General voice IRQ status register
 		reg = voice_irq.status | 0x20;
 		uint32_t mask;
@@ -1111,6 +1135,7 @@ void Gus::StopPlayback()
 	// Halt playback before altering the DSP state
 	audio_channel->Enable(false);
 
+	dac_enabled = false;
 	irq_enabled = false;
 	irq_status = 0;
 
@@ -1129,6 +1154,7 @@ void Gus::StopPlayback()
 	selected_register = 0u;
 	should_change_irq_dma = false;
 	PIC_RemoveEvents(GUS_TimerEvent);
+	is_running = false;
 }
 
 static void GUS_TimerEvent(Bitu t)
@@ -1319,7 +1345,6 @@ void Gus::WriteToRegister()
 			StartDmaTransfers();
 		return;
 	case 0x4c: // Runtime control
-		irq_enabled = register_data & 0x4;
 		{
 			const auto state = (register_data >> 8) & 7;
 			if (state == 0)
@@ -1329,7 +1354,6 @@ void Gus::WriteToRegister()
 			else if (active_voices)
 				BeginPlayback();
 		}
-		CheckIrq();
 		return;
 	default:
 		break;
