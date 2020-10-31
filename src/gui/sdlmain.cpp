@@ -44,21 +44,21 @@
 #include <SDL_opengl.h>
 #endif
 
+#include "control.h"
+#include "cpu.h"
 #include "cross.h"
-#include "video.h"
-#include "mouse.h"
+#include "debug.h"
 #include "joystick.h"
+#include "keyboard.h"
+#include "mapper.h"
+#include "mouse.h"
 #include "pic.h"
-#include "timer.h"
+#include "render.h"
 #include "setup.h"
 #include "support.h"
-#include "debug.h"
-#include "mapper.h"
+#include "timer.h"
 #include "vga.h"
-#include "keyboard.h"
-#include "cpu.h"
-#include "control.h"
-#include "render.h"
+#include "video.h"
 
 #include "../libs/ppscale/ppscale.h"
 
