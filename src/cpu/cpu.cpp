@@ -2000,18 +2000,18 @@ bool CPU_CPUID(void) {
 		reg_edx='i' | ('n' << 8) | ('e' << 16) | ('I'<< 24); 
 		reg_ecx='n' | ('t' << 8) | ('e' << 16) | ('l'<< 24); 
 		break;
-	case 1:	/* get processor type/family/model/stepping and feature flags */
-		if ((CPU_ArchitectureType==CPU_ARCHTYPE_486NEWSLOW) ||
-			(CPU_ArchitectureType==CPU_ARCHTYPE_MIXED)) {
-			reg_eax=0x402;		/* intel 486dx */
-			reg_ebx=0;			/* Not Supported */
-			reg_ecx=0;			/* No features */
-			reg_edx=0x00000001;	/* FPU */
-		} else if (CPU_ArchitectureType==CPU_ARCHTYPE_PENTIUMSLOW) {
-			reg_eax=0x513;		/* intel pentium */
-			reg_ebx=0;			/* Not Supported */
-			reg_ecx=0;			/* No features */
-			reg_edx=0x00000011;	/* FPU+TimeStamp/RDTSC */
+	case 1: // Get processor type/family/model/stepping and feature flags
+		if ((CPU_ArchitectureType == CPU_ARCHTYPE_486NEWSLOW) ||
+		    (CPU_ArchitectureType == CPU_ARCHTYPE_MIXED)) {
+			reg_eax = 0x402; // Intel 486DX
+			reg_ebx = 0;     // Not supported
+			reg_ecx = 0;     // No features
+			reg_edx = 0x1;   // FPU
+		} else if (CPU_ArchitectureType == CPU_ARCHTYPE_PENTIUMSLOW) {
+			reg_eax = 0x513; // Intel Pentium
+			reg_ebx = 0;     // Not supported
+			reg_ecx = 0;     // No features
+			reg_edx = 0x11;  // FPU+TimeStamp/RDTSC
 		} else {
 			return false;
 		}
