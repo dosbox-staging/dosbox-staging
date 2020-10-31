@@ -119,7 +119,6 @@ using autoexec_array_t = std::array<AutoexecObject, 2>;
 using pan_scalars_array_t = std::array<AudioFrame, PAN_POSITIONS>;
 using ram_array_t = std::array<uint8_t, RAM_SIZE>;
 using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
-using scaled_array_t = std::array<int16_t, BUFFER_SAMPLES>;
 using vol_scalars_array_t = std::array<float, VOLUME_LEVELS>;
 using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
 
@@ -249,7 +248,6 @@ private:
 	size_t ReadFromPort(const size_t port, const size_t iolen);
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
-	void SoftLimit(const accumulator_array_t &in, scaled_array_t &out) noexcept;
 	void SetLevelCallback(const AudioFrame &level);
 	void StopPlayback();
 	void UpdateDmaAddress(uint8_t new_address);
@@ -261,7 +259,6 @@ private:
 	// Collections
 	vol_scalars_array_t vol_scalars = {{}};
 	accumulator_array_t accumulator = {{0}};
-	scaled_array_t scaled = {{}};
 	pan_scalars_array_t pan_scalars = {{}};
 	ram_array_t ram = {{0u}};
 	read_io_array_t read_handlers = {};   // std::functions
@@ -656,8 +653,8 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 		++v;
 	}
 
-	soft_limiter.Apply(accumulator, scaled, requested_frames);
-	audio_channel->AddSamples_s16(requested_frames, scaled.data());
+	const auto &out_stream = soft_limiter.Apply(accumulator, requested_frames);
+	audio_channel->AddSamples_s16(requested_frames, out_stream.data());
 	CheckVoiceIrq();
 }
 
@@ -1134,6 +1131,8 @@ void Gus::StopPlayback()
 {
 	// Halt playback before altering the DSP state
 	audio_channel->Enable(false);
+
+	soft_limiter.Reset();
 
 	dac_enabled = false;
 	irq_enabled = false;

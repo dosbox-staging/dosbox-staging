@@ -30,7 +30,7 @@
 #include "control.h"
 #include "cross.h"
 
-MidiHandlerFluidsynth MidiHandlerFluidsynth::instance;
+MidiHandlerFluidsynth instance;
 
 static void init_fluid_dosbox_settings(Section_prop &secprop)
 {
@@ -42,7 +42,7 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 
 	// TODO Handle storing soundfonts in specific directory and update
 	// the documentation; right now users need to specify full path or
-	// fall on undecumented FluidSynth internal algorithm for picking
+	// fall on undocumented FluidSynth internal algorithm for picking
 	// sf2 files.
 
 	auto *int_prop = secprop.Add_int("fluid_rate", when_idle, 44100);
@@ -57,6 +57,16 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	        "If set to a value greater than 1, then additional synthesis\n"
 	        "threads will be created to take advantage of many CPU cores.\n"
 	        "(min 1, max 256)");
+}
+
+// SetMixerLevel is a callback that's given the user-desired mixer level,
+// which is a floating point multiplier that we apply internally as
+// FluidSynth's gain value. We then read-back the gain, and use that to
+// derive a pre-scale level.
+void MidiHandlerFluidsynth::SetMixerLevel(const AudioFrame &desired_level) noexcept
+{
+	prescale_level.left = INT16_MAX * desired_level.left;
+	prescale_level.right = INT16_MAX * desired_level.right;
 }
 
 bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
@@ -93,13 +103,45 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	if (!soundfont.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
 	}
-
 	DEBUG_LOG_MSG("MIDI: FluidSynth loaded %d SoundFont files",
 	              fluid_synth_sfcount(fluid_synth.get()));
 
-	mixer_channel_ptr_t mixer_channel(MIXER_AddChannel(mixer_callback,
-	                                                   sample_rate, "FSYNTH"),
-	                                  MIXER_DelChannel);
+	// Uses samples' native amplitudes without suppression or amplification
+	fluid_synth_set_gain(fluid_synth.get(), 1.0);
+
+	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
+	constexpr int all_channels = -1;
+	fluid_synth_set_interp_method(fluid_synth.get(), all_channels,
+	                              FLUID_INTERP_HIGHEST);
+
+	// Apply reasonable chorus and reverb settings matching ScummVM's defaults
+	constexpr int chorus_number = 3;
+	constexpr double chorus_level = 1.2;
+	constexpr double chorus_speed = 0.3;
+	constexpr double chorus_depth = 8.0;
+	fluid_synth_set_chorus_on(fluid_synth.get(), 1);
+	fluid_synth_set_chorus(fluid_synth.get(), chorus_number, chorus_level,
+	                       chorus_speed, chorus_depth, FLUID_CHORUS_MOD_SINE);
+
+	constexpr double reverb_room_size = 0.61;
+	constexpr double reverb_damping = 0.23;
+	constexpr double reverb_width = 0.76;
+	constexpr double reverb_level = 0.56;
+	fluid_synth_set_reverb_on(fluid_synth.get(), 1);
+	fluid_synth_set_reverb(fluid_synth.get(), reverb_room_size,
+	                       reverb_damping, reverb_width, reverb_level);
+
+	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
+	                                      this, std::placeholders::_1);
+	mixer_channel_ptr_t mixer_channel(
+	        MIXER_AddChannel(mixer_callback,
+	                         static_cast<unsigned>(sample_rate), "FSYNTH"),
+	        MIXER_DelChannel);
+
+	// Let the mixer command adjust our internal level
+	const auto set_mixer_level = std::bind(&MidiHandlerFluidsynth::SetMixerLevel,
+	                                       this, std::placeholders::_1);
+	mixer_channel->RegisterLevelCallBack(set_mixer_level);
 	mixer_channel->Enable(true);
 
 	settings = std::move(fluid_settings);
@@ -163,21 +205,38 @@ void MidiHandlerFluidsynth::PlaySysex(uint8_t *sysex, size_t len)
 	fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
 }
 
-void MidiHandlerFluidsynth::mixer_callback(uint16_t frames)
+void MidiHandlerFluidsynth::PrintStats()
 {
-	constexpr uint16_t expected_max_frames = (96000 / 1000) + 4;
-	int16_t data[expected_max_frames * 2]; // two channels per frame
+	// Normally prescale is simply a float-multiplier such as 0.5, 1.0, etc.
+	// However in the case of FluidSynth, it produces 32-bit floats between
+	// -1.0 and +1.0, therefore we scale those up to the 16-bit integer range
+	// in addition to the mixer's FSYNTH levels. Before printing statistics,
+	// we need to back-out this integer multiplier.
+	prescale_level.left /= INT16_MAX;
+	prescale_level.right /= INT16_MAX;
+	soft_limiter.PrintStats();
+}
+
+void MidiHandlerFluidsynth::MixerCallBack(uint16_t frames)
+{
+	constexpr uint16_t max_samples = expected_max_frames * 2; // two channels per frame
+	std::array<float, max_samples> stream;
+
 	while (frames > 0) {
-		const uint16_t len = std::min(frames, expected_max_frames);
-		fluid_synth_write_s16(instance.synth.get(), len, data, 0, 2,
-		                      data, 1, 2);
-		instance.channel->AddSamples_s16(len, data);
+		constexpr uint16_t max_frames = expected_max_frames; // local copy fixes link error
+		const uint16_t len = std::min(frames, max_frames);
+		fluid_synth_write_float(synth.get(), len, stream.data(), 0, 2,
+		                        stream.data(), 1, 2);
+		const auto &out_stream = soft_limiter.Apply(stream, len);
+		channel->AddSamples_s16(len, out_stream.data());
 		frames -= len;
 	}
 }
 
 static void fluid_destroy(MAYBE_UNUSED Section *sec)
-{}
+{
+	instance.PrintStats();
+}
 
 static void fluid_init(Section *sec)
 {
