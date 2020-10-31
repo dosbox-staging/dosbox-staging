@@ -2003,15 +2003,28 @@ bool CPU_CPUID(void) {
 	case 1: // Get processor type/family/model/stepping and feature flags
 		if ((CPU_ArchitectureType == CPU_ARCHTYPE_486NEWSLOW) ||
 		    (CPU_ArchitectureType == CPU_ARCHTYPE_MIXED)) {
+#if (C_FPU)
 			reg_eax = 0x402; // Intel 486DX
-			reg_ebx = 0;     // Not supported
-			reg_ecx = 0;     // No features
 			reg_edx = 0x1;   // FPU
-		} else if (CPU_ArchitectureType == CPU_ARCHTYPE_PENTIUMSLOW) {
-			reg_eax = 0x517; // Intel Pentium P5 60/66 MHz D1-step
+#else
+			reg_eax = 0x422; // Intel 486SX
+			reg_edx = 0x0;   // no FPU
+#endif
 			reg_ebx = 0;     // Not supported
 			reg_ecx = 0;     // No features
-			reg_edx = 0x11;  // FPU+TimeStamp/RDTSC
+		} else if (CPU_ArchitectureType == CPU_ARCHTYPE_PENTIUMSLOW) {
+#if (C_FPU)
+			reg_eax = 0x517; // Intel Pentium P5 60/66 MHz D1-step
+			reg_edx = 0x11;  // FPU + Time Stamp Counter (RDTSC)
+#else
+			// All Pentiums had FPU built-in, so when FPU is
+			// disabled, we pretend to have early Pentium model with
+			// FDIV bug present.
+			reg_eax = 0x513; // Intel Pentium P5 60/66 MHz B1-step
+			reg_edx = 0x10;  // Time Stamp Counter (RDTSC)
+#endif
+			reg_ebx = 0;     // Not supported
+			reg_ecx = 0;     // No features
 		} else {
 			return false;
 		}
