@@ -1756,6 +1756,41 @@ static void change_action_text(const char* text,Bit8u col) {
 	bind_but.action->SetColor(col);
 }
 
+static std::string humanize_mod_name(const CBindList &binds, const std::string &fallback)
+{
+	auto trim_pfx = [](const std::string &pfx, const char *input) {
+		if (starts_with(pfx, input))
+			return input + pfx.size();
+		else
+			return input;
+	};
+
+	char buf_1[20];
+	char buf_2[20];
+	std::string name_1;
+	std::string name_2;
+	const std::string pfx = (fallback.empty() ? "" : fallback + ": ");
+
+	switch (binds.size()) {
+	case 1: // We have a single bind, be specific - e.g. "Right Ctrl"
+		binds.front()->BindName(buf_1);
+		return trim_pfx("Key ", buf_1);
+	case 2: // e.g. "Key Left Alt" and "Key Right Alt" -> "Alt"
+		binds.front()->BindName(buf_1);
+		binds.back()->BindName(buf_2);
+		name_1 = trim_pfx("Key Right ", buf_1);
+		name_2 = trim_pfx("Key Left ", buf_2);
+		if (name_1 == name_2)
+			return pfx + name_1;
+		name_1 = trim_pfx("Key Left ", buf_1);
+		name_2 = trim_pfx("Key Right ", buf_2);
+		if (name_1 == name_2)
+			return pfx + name_1;
+		FALLTHROUGH;
+	default: // use fallback for any other case
+		return fallback;
+	}
+}
 
 static void SetActiveBind(CBind * _bind) {
 	mapper.abind=_bind;
@@ -1781,8 +1816,8 @@ static void SetActiveBind(CBind * _bind) {
 		return;
 	}
 
-	char buf[20];
-	auto set_btn_name = [&](CCheckButton *btn, std::string name, const CEvent *event) {
+	auto set_btn_name = [&](CCheckButton *btn, std::string name,
+	                        std::string label, const CEvent *event) {
 		if (event->GetName() != name)
 			return false;
 		auto *bind = event->bindlist.front();
@@ -1790,17 +1825,16 @@ static void SetActiveBind(CBind * _bind) {
 			btn->Enable(false);
 			return false;
 		}
-		bind->BindName(buf); // GetBindName
-		btn->SetText(buf);
+		btn->SetText(humanize_mod_name(event->bindlist, label));
 		return true;
 	};
 
 	for (auto &event : events) {
-		if (set_btn_name(bind_but.mod1, "mod_1", event))
+		if (set_btn_name(bind_but.mod1, "mod_1", "Mod1", event))
 			continue;
-		if (set_btn_name(bind_but.mod2, "mod_2", event))
+		if (set_btn_name(bind_but.mod2, "mod_2", "Mod2", event))
 			continue;
-		if (set_btn_name(bind_but.mod3, "mod_3", event))
+		if (set_btn_name(bind_but.mod3, "mod_3", "Mod3", event))
 			continue;
 	}
 }
