@@ -801,7 +801,7 @@ private:
 
 	CBind * CreateButtonBind(int button)
 	{
-		if (button < 0 || button >= button_wrap) 
+		if (button < 0 || button >= button_wrap)
 			return nullptr;
 		return new CJButtonBind(&button_lists[button],
 		                        this,
@@ -1227,10 +1227,10 @@ class Typer {
 		}
 	private:
 		void Callback() {
- 			// quit before our initial wait time
- 			if (m_stop_requested)
-				return;
-			std::this_thread::sleep_for(std::chrono::milliseconds(m_wait_ms));
+		        // quit before our initial wait time
+		        if (m_stop_requested)
+			        return;
+		        std::this_thread::sleep_for(std::chrono::milliseconds(m_wait_ms));
 			for (const auto &button : m_sequence) {
 				bool found = false;
 				// comma adds an extra pause, similar to the pause used in a phone number
@@ -1368,10 +1368,13 @@ public:
 	}
 	virtual void BindColor() {}
 	virtual void Click() {}
-	void Enable(bool yes) { 
-		enabled=yes; 
-		mapper.redraw=true;
+
+	void Enable(bool yes)
+	{
+		enabled = yes;
+		mapper.redraw = true;
 	}
+
 	void SetColor(Bit8u _col) { color=_col; }
 protected:
 	Bitu x,y,dx,dy;
@@ -1462,14 +1465,14 @@ void CCaptionButton::Change(const char * format,...) {
 	vsprintf(caption,format,msg);
 	va_end(msg);
 	mapper.redraw=true;
-}		
+}
 
 static void change_action_text(const char* text,Bit8u col);
 
 static void MAPPER_SaveBinds();
 
 class CBindButton : public CClickableTextButton {
-public:	
+public:
 	CBindButton(Bitu _x, Bitu _y, Bitu _dx, Bitu _dy, const char * _text, BB_Types _type)
 		: CClickableTextButton(_x, _y, _dx, _dy, _text),
 		  type(_type)
@@ -1477,7 +1480,7 @@ public:
 
 	void Click() {
 		switch (type) {
-		case BB_Add: 
+		case BB_Add:
 			mapper.addbind=true;
 			SetActiveBind(0);
 			change_action_text("Press a key/joystick button or move the joystick.",CLR_RED);
@@ -1488,23 +1491,23 @@ public:
 				all_binds.remove(active_bind);
 				delete active_bind;
 				mapper.abindit=mapper.aevent->bindlist.erase(mapper.abindit);
-				if (mapper.abindit==mapper.aevent->bindlist.end()) 
+				if (mapper.abindit == mapper.aevent->bindlist.end())
 					mapper.abindit=mapper.aevent->bindlist.begin();
 			}
 			if (mapper.abindit!=mapper.aevent->bindlist.end()) SetActiveBind(*(mapper.abindit));
 			else SetActiveBind(0);
 			break;
 		case BB_Next:
-			if (mapper.abindit!=mapper.aevent->bindlist.end()) 
+			if (mapper.abindit != mapper.aevent->bindlist.end())
 				++mapper.abindit;
-			if (mapper.abindit==mapper.aevent->bindlist.end()) 
-				mapper.abindit=mapper.aevent->bindlist.begin();
+			if (mapper.abindit == mapper.aevent->bindlist.end())
+				mapper.abindit = mapper.aevent->bindlist.begin();
 			SetActiveBind(*(mapper.abindit));
 			break;
 		case BB_Save:
 			MAPPER_SaveBinds();
 			break;
-		case BB_Exit:   
+		case BB_Exit:
 			mapper.exit=true;
 			break;
 		}
@@ -1738,7 +1741,7 @@ static struct {
 	CCaptionButton *  selected;
 	CCaptionButton *  action;
 	CBindButton * save;
-	CBindButton * exit;   
+	CBindButton *exit;
 	CBindButton * add;
 	CBindButton * del;
 	CBindButton * next;
@@ -1892,12 +1895,19 @@ static KeyBlock combo_1[14]={
 	{"=+","equals",KBD_equals},	{"\x1B","bspace",KBD_backspace},
 };
 
-static KeyBlock combo_2[12]={
-	{"Q","q",KBD_q},			{"W","w",KBD_w},	{"E","e",KBD_e},
-	{"R","r",KBD_r},			{"T","t",KBD_t},	{"Y","y",KBD_y},
-	{"U","u",KBD_u},			{"I","i",KBD_i},	{"O","o",KBD_o},
-	{"P","p",KBD_p},			{"[{","lbracket",KBD_leftbracket},
-	{"]}","rbracket",KBD_rightbracket},	
+static KeyBlock combo_2[12] = {
+        {"Q", "q", KBD_q},
+        {"W", "w", KBD_w},
+        {"E", "e", KBD_e},
+        {"R", "r", KBD_r},
+        {"T", "t", KBD_t},
+        {"Y", "y", KBD_y},
+        {"U", "u", KBD_u},
+        {"I", "i", KBD_i},
+        {"O", "o", KBD_o},
+        {"P", "p", KBD_p},
+        {"[{", "lbracket", KBD_leftbracket},
+        {"]}", "rbracket", KBD_rightbracket},
 };
 
 static KeyBlock combo_3[12]={
@@ -1935,7 +1945,7 @@ static void CreateLayout() {
 	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(2),BW,BH,combo_2[i].title,combo_2[i].entry,combo_2[i].key);
 
 	AddKeyButtonEvent(PX(14),PY(2),BW*2,BH*2,"ENTER","enter",KBD_enter);
-	
+
 	caps_lock_event=AddKeyButtonEvent(PX(0),PY(3),BW*2,BH,"CLCK","capslock",KBD_capslock);
 	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(3),BW,BH,combo_3[i].title,combo_3[i].entry,combo_3[i].key);
 
@@ -2094,13 +2104,12 @@ static void CreateLayout() {
 		btn=new CTextButton(PX(XO+8),PY(YO-1),3*BW,20,"Disabled");
 		btn->SetColor(CLR_GREY);
 	}
-   
-   
-   
+
 	/* The modifier buttons */
 	AddModButton(PX(0),PY(14),50,20,"Mod1",1);
 	AddModButton(PX(2),PY(14),50,20,"Mod2",2);
 	AddModButton(PX(4),PY(14),50,20,"Mod3",3);
+
 	/* Create Handler buttons */
 	Bitu xpos=3;Bitu ypos=11;
 	for (CHandlerEventVector_it hit = handlergroup.begin(); hit != handlergroup.end(); ++hit) {
@@ -2120,7 +2129,7 @@ static void CreateLayout() {
 	bind_but.bind_title=new CCaptionButton(0,365,0,0);
 
 	/* Create binding support buttons */
-	
+
 	bind_but.mod1=new CCheckButton(20,410,60,20, "mod1",BC_Mod1);
 	bind_but.mod2=new CCheckButton(20,432,60,20, "mod2",BC_Mod2);
 	bind_but.mod3=new CCheckButton(20,454,60,20, "mod3",BC_Mod3);
@@ -2483,7 +2492,7 @@ void BIND_MappingEvents() {
  *  Also resets mapper.sticks.num_groups to 0, mapper.sticks.num
  *  to the number of found SDL joysticks, and enables the boolean
  *  joysticks_active if joystick support is enabled and are present.
- */ 
+ */
 static void QueryJoysticks() {
 	// Initialize SDL's Joystick and Event subsystems, if needed
 	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
@@ -2504,7 +2513,7 @@ static void QueryJoysticks() {
 
 	// Set the type of joystick based which are useable
 	const bool first_usable = useable[0];
-	const bool second_usable = useable[1];	
+	const bool second_usable = useable[1];
 	if (first_usable && second_usable) {
 		joytype = JOY_2AXIS;
 		LOG_MSG("MAPPER: Found two or more joysticks");
@@ -2644,7 +2653,7 @@ void MAPPER_DisplayUI() {
 		last_clicked=NULL;
 	}
 	/* Go in the event loop */
-	mapper.exit=false;	
+	mapper.exit = false;
 	mapper.redraw=true;
 	SetActiveEvent(0);
 #if defined (REDUCE_JOYSTICK_POLLING)
@@ -2652,7 +2661,7 @@ void MAPPER_DisplayUI() {
 #endif
 	while (!mapper.exit) {
 		if (mapper.redraw) {
-			mapper.redraw=false;		
+			mapper.redraw = false;
 			DrawButtons();
 		} else {
 			SDL_UpdateWindowSurface(mapper.window);
@@ -2680,8 +2689,8 @@ static void MAPPER_Destroy(Section *sec) {
 	// Stop any ongoing typing as soon as possible (because it access events)
 	mapper.typist.Stop();
 
-	// Release all the accumulated allocations by the mapper 
- 	for (auto & ptr : events)
+	// Release all the accumulated allocations by the mapper
+	for (auto &ptr : events)
 		delete ptr;
 	events.clear();
 
@@ -2718,7 +2727,7 @@ static void MAPPER_Destroy(Section *sec) {
 
 void MAPPER_BindKeys() {
 	//Release any keys pressed, or else they'll get stuck
-	GFX_LosingFocus(); 
+	GFX_LosingFocus();
 
 	const Section *section = control->GetSection("joystick");
 	assert(section);
