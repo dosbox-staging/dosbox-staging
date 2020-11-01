@@ -1812,8 +1812,15 @@ static void SetActiveBind(CBind *new_active_bind)
 		bind_but.bind_title->Enable(true);
 		char buf[256];
 		new_active_bind->BindName(buf);
-		bind_but.bind_title->Change("Bind %zu/%zu: %s", active_bind_pos + 1,
-		                            active_event_binds_num, buf);
+		const auto mods = new_active_bind->mods;
+		bind_but.bind_title->Change("Bind %zu/%zu: %s%s%s%s",
+		                            active_bind_pos + 1,
+		                            active_event_binds_num,
+		                            (mods & BMOD_Mod1 ? "Mod1 + " : ""),
+		                            (mods & BMOD_Mod2 ? "Mod2 + " : ""),
+		                            (mods & BMOD_Mod3 ? "Mod3 + " : ""),
+		                            buf);
+
 		bind_but.del->Enable(true);
 		bind_but.next->Enable(true);
 		bind_but.mod1->Enable(true);
@@ -2529,6 +2536,8 @@ void BIND_MappingEvents() {
 					break;
 				}
 			}
+			SetActiveBind(mapper.abind); // force redraw key binding
+			                             // description
 			break;
 		case SDL_WINDOWEVENT:
 			/* The resize event MAY arrive e.g. when the mapper is
