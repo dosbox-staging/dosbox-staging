@@ -2224,7 +2224,7 @@ static void CreateLayout() {
 //	new CTextButton(PX(6),0,124,20,"Keyboard Layout");
 //	new CTextButton(PX(17),0,124,20,"Joystick Layout");
 
-	bind_but.action=new CCaptionButton(180,350,0,0);
+	bind_but.action = new CCaptionButton(0, 335, 0, 0);
 
 	bind_but.event_title=new CCaptionButton(0,350,0,0);
 	bind_but.bind_title=new CCaptionButton(0,365,0,0);
