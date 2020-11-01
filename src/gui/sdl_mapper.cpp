@@ -283,7 +283,7 @@ public:
 		}
 	}
 	virtual void ConfigName(char * buf)=0;
-	virtual void BindName(char * buf)=0;
+	virtual void BindName(char * buf)=0; // TODO make const?
 
 	Bitu mods = 0;
 	Bitu flags = 0;
@@ -1399,11 +1399,13 @@ public:
 		if (!enabled)
 			return;
 		CButton::Draw();
-		DrawText(x + 2, y + 2, text, color);
+		DrawText(x + 2, y + 2, text.c_str(), color);
 	}
 
+	void SetText(const std::string &txt) { text = txt; }
+
 protected:
-	const char *text = nullptr;
+	std::string text;
 };
 
 class CClickableTextButton : public CTextButton {
@@ -1757,6 +1759,7 @@ static void change_action_text(const char* text,Bit8u col) {
 
 static void SetActiveBind(CBind * _bind) {
 	mapper.abind=_bind;
+
 	if (_bind) {
 		bind_but.bind_title->Enable(true);
 		char buf[256];_bind->BindName(buf);
@@ -1775,6 +1778,30 @@ static void SetActiveBind(CBind * _bind) {
 		bind_but.mod2->Enable(false);
 		bind_but.mod3->Enable(false);
 		bind_but.hold->Enable(false);
+		return;
+	}
+
+	char buf[20];
+	auto set_btn_name = [&](CCheckButton *btn, std::string name, const CEvent *event) {
+		if (event->GetName() != name)
+			return false;
+		auto *bind = event->bindlist.front();
+		if (!bind) {
+			btn->Enable(false);
+			return false;
+		}
+		bind->BindName(buf); // GetBindName
+		btn->SetText(buf);
+		return true;
+	};
+
+	for (auto &event : events) {
+		if (set_btn_name(bind_but.mod1, "mod_1", event))
+			continue;
+		if (set_btn_name(bind_but.mod2, "mod_2", event))
+			continue;
+		if (set_btn_name(bind_but.mod3, "mod_3", event))
+			continue;
 	}
 }
 
@@ -2130,10 +2157,10 @@ static void CreateLayout() {
 
 	/* Create binding support buttons */
 
-	bind_but.mod1=new CCheckButton(20,410,60,20, "mod1",BC_Mod1);
-	bind_but.mod2=new CCheckButton(20,432,60,20, "mod2",BC_Mod2);
-	bind_but.mod3=new CCheckButton(20,454,60,20, "mod3",BC_Mod3);
-	bind_but.hold=new CCheckButton(100,410,60,20,"hold",BC_Hold);
+	bind_but.mod1 = new CCheckButton(20, 410, 110, 20, "Mod1", BC_Mod1);
+	bind_but.mod2 = new CCheckButton(20, 432, 110, 20, "Mod2", BC_Mod2);
+	bind_but.mod3 = new CCheckButton(20, 454, 110, 20, "Mod3", BC_Mod3);
+	bind_but.hold = new CCheckButton(150, 410, 60, 20, "Hold", BC_Hold);
 
 	bind_but.next=new CBindButton(250,400,50,20,"Next",BB_Next);
 
