@@ -526,7 +526,9 @@ static bool INT10_SetVideoMode_OTHER(Bit16u mode, bool clearmem)
 {
 	switch (machine) {
 	case MCH_CGA:
-		if (mode>6) return false;
+		if (mode > 6)
+			return false;
+		FALLTHROUGH;
 	case TANDY_ARCH_CASE:
 		if (mode>0xa) return false;
 		if (mode==7) mode=0; // PCJR defaults to 0 on illegal mode 7
