@@ -1798,6 +1798,7 @@ static void SetActiveBind(CBind *new_active_bind)
 
 	mapper.abind = new_active_bind;
 
+	// Count number of bindings for active event and pos of current bind
 	size_t active_event_binds_num = 0;
 	size_t active_bind_pos = 0;
 	if (mapper.aevent) {
@@ -1865,7 +1866,7 @@ static void SetActiveBind(CBind *new_active_bind)
 
 		bind_but.bind_title->Enable(true);
 		bind_but.del->Enable(true);
-		bind_but.next->Enable(true);
+		bind_but.next->Enable(active_event_binds_num > 1);
 		bind_but.hold->Enable(true);
 	} else {
 		bind_but.bind_title->Enable(false);
