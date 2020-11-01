@@ -94,7 +94,7 @@ FULLSCREEN: My fullscreen is too large.
     on top of dosbox resizing the screen, which can happen for the output:
     texture, texturenb, opengl, openglnb. You can disable this Windows behaviour
     by enabling a specific compatibility setting:
- 
+
     - Right-click the DOSBox icon and select "Properties".
     - Go to the "Compatibility" tab.
     - Click on "Change high DPI settings".
@@ -196,9 +196,9 @@ SOUND: What sound hardware does DOSBox presently emulate?
     - MPU-401
       A MIDI passthrough interface is also emulated. This method of sound
       output will only work when used with external device/emulator.
-      Every Windows XP/Vista/7 and Mac OS X has got a default emulator 
-      compatible with: Sound Canvas/SCC/General Standard/General MIDI/Wave 
-      Blaster. A different device/emulator is needed for 
+      Every Windows XP/Vista/7 and Mac OS X has got a default emulator
+      compatible with: Sound Canvas/SCC/General Standard/General MIDI/Wave
+      Blaster. A different device/emulator is needed for
       Roland LAPC/CM-32L/MT-32 compatibility.
 
 
@@ -341,7 +341,7 @@ dosbox -opencaptures program
 
   -userconf
         Start DOSBox with the users specific configuration file. Can be used
-        together with multiple -conf parameters, but -userconf will always be 
+        together with multiple -conf parameters, but -userconf will always be
         loaded before them.
 
   -conf configfilelocation
@@ -603,10 +603,10 @@ CONFIG -get "section property"
   -writeconf filelocation
      (or -wc filelocation)
      Write the current configuration settings to a file in a specified location
-     relative to the DOSBox config directory. Relative and absolute paths are 
-     possible. "filelocation" is located on the local drive, not a mounted 
+     relative to the DOSBox config directory. Relative and absolute paths are
+     possible. "filelocation" is located on the local drive, not a mounted
      drive in DOSBox.
-     
+
      The configuration file controls various settings of DOSBox:
      the amount of emulated memory, the emulated sound cards and many more
      things. It allows access to AUTOEXEC.BAT as well.
@@ -617,16 +617,16 @@ CONFIG -get "section property"
      Write the configuration to the primary loaded config file.
 
   -wcp filelocation
-     Write the current configuration settings to the specified file in or 
-     relative to the DOSBox program start directory. Realtive and absolute 
+     Write the current configuration settings to the specified file in or
+     relative to the DOSBox program start directory. Realtive and absolute
      paths are possible. This is located on a drive on the host, not a mounted
      drive in DOSBox. It is useful if you keep DOSBox on a removable media.
      If file is omitted, the configuration will be written to dosbox.conf.
-     
+
   -wcd
      Write the current configuration to the default config file.
-        
-     
+
+
   -writelang filelocation
      (or -wl filelocation)
      Write the current language settings to a file in a specified location.
@@ -640,7 +640,7 @@ CONFIG -get "section property"
 
   -axclear
      Clears the autoexec section.
-     
+
   -axtype
      Prints the content of the autoexec section.
 
@@ -648,7 +648,7 @@ CONFIG -get "section property"
      Restart DOSBox, either with the parameters that were used to start the
      current instance or any that are appended.
 
-  -l 
+  -l
      lists DOSBox parameters:
      - the configuration directory
      - the config files that were used when starting this session
@@ -659,16 +659,16 @@ CONFIG -get "section property"
 
   -h, -help, -? sections
      Displays the list of sections in the config file.
-  
+
   -h, -help, -? section
      Displays the list of properties contained in the specified section.
-     
+
   -h, -help, -? section property
      Shows information about the specified property in the specified section:
      - purpose of the property
      - possible values, current value, default value
      - wether it can definitely not be changed at runtime
-       
+
   -securemode
      Switches DOSBox to a more secure mode. In this mode the internal
      commands MOUNT, IMGMOUNT and BOOT won't work. It's not possible either
@@ -739,16 +739,16 @@ LOADFIX -f
 RESCAN [Drive:] [-All]
   Make DOSBox reread the directory structure. Useful if you changed something
   on a mounted drive outside of DOSBox. (CTRL - F4 does this as well!)
-  
-  Drive: 
+
+  Drive:
         Drive to refresh.
 
   -All
         Refresh all drives.
 
-  if both a Drive: and -All are missing, then the current drive will be 
+  if both a Drive: and -All are missing, then the current drive will be
   refreshed.
-  
+
 
 MIXER
   Makes DOSBox display its current volume settings.
@@ -776,8 +776,8 @@ MIXER
      'id' is the number for the device as listed by LISTMIDI. eg. midiconfig=2
 
      In Linux this option doesn't work, but you get similar results by using
-     'pmidi -l' in console. Then change the line 'midiconfig=' to 
-     'midiconfig=port', where 'port' is the port for the device as listed by 
+     'pmidi -l' in console. Then change the line 'midiconfig=' to
+     'midiconfig=port', where 'port' is the port for the device as listed by
      'pmidi -l'. eg. midiconfig=128:0
 
 
@@ -857,7 +857,7 @@ BOOT
   the operating system emulation offered by DOSBox. This will allow you to
   play booter floppies or boot other operating systems inside DOSBox.
   If the target emulated system is PCjr (machine=pcjr) the boot command
-  can be used to load PCjr cartridges (.jrc). 
+  can be used to load PCjr cartridges (.jrc).
 
   BOOT [diskimg1.img diskimg2.img .. diskimgN.img] [-l driveletter]
   BOOT [cart.jrc]  (PCjr only)
@@ -1012,11 +1012,11 @@ AUTOTYPE [-list] [-w WAIT] [-p PACE] button_1 [button_2 [...]]
 
   It can be used to reliably skip intros, answer Q&A style questions that
   some games ask on startup, or to script a simple demo.
-  
+
   Typing is initially delayed by the WAIT time, which defaults to 2 seconds.
   The delay between keystrokes is defined by the PACE time, which defaults
   to 0.5 seconds.
-  
+
   The comma character "," adds an extra delay similar to modern phone numbers.
 
   -list: prints all available button names.
@@ -1046,7 +1046,7 @@ For more information use the /? command line switch with the programs.
 ALT-ENTER     Switch to full screen and back.
 ALT-PAUSE     Pause emulation (hit ALT-PAUSE again to continue).
 CTRL-F1       Start the keymapper.
-CTRL-F4       Change between mounted floppy/CD images. Update directory cache 
+CTRL-F4       Change between mounted floppy/CD images. Update directory cache
               for all drives.
 CTRL-ALT-F5   Start/Stop creating a movie of the screen. (avi video capturing)
 CTRL-F5       Save a screenshot. (PNG format)
@@ -1076,10 +1076,10 @@ F11           (machine=hercules) cycle through amber, green, white colouring***.
          a different machine type. So either reassign them or reset the mapper.
 
 These are the default keybindings. They can be changed in the keymapper
-(see Section 7: "KeyMapper"). 
+(see Section 7: "KeyMapper").
 
-In Mac OS X you can try using cmd(applekey) together with Ctrl (and/or ) Fn, 
-if the key doesn't work i.e. fn-cmd-ctrl-F1, but some keys may still need 
+In Mac OS X you can try using cmd(applekey) together with Ctrl (and/or ) Fn,
+if the key doesn't work i.e. fn-cmd-ctrl-F1, but some keys may still need
 remapping (in Linux too).
 
 Saved/recorded files can be found in:
@@ -1133,7 +1133,7 @@ inside DOSBox, try a different 'timed' setting in DOSBox's configuration file.
 =============
 
 Start the DOSBox mapper either with CTRL-F1 (see Section 5: "Special Keys") or
--startmapper (see Section 3: "Command Line Parameters"). 
+-startmapper (see Section 3: "Command Line Parameters").
 You are presented with a virtual keyboard and a virtual joystick.
 
 These virtual devices correspond to the keys and events DOSBox will
@@ -1380,9 +1380,9 @@ To "dial" a BBS:
     configuration option is not applied to your serial port (described
     in step 1), then customize your dial-prefix to enable telnet-mode
     as follows:
-      
+
       AT+NET1DT
-    
+
     If file-transfers fail or are corrupted for a particular, BBS then it's
     likely hosted directly on the Internet using a TCP-to-serial gateway as
     used by vintage BBSes (e.g. Commodore, Apple, Atari, etc.). In this case,

@@ -127,7 +127,7 @@ installed and the license agreed to:
    https://github.com/dosbox-staging/dosbox-staging.git`
 1. Change directories into the repo: `cd dosbox-staging`
 1. Install dependencies:
-  
+
    `brew install $(./scripts/list-build-dependencies.sh -m brew -c gcc)`
 
 #### Install the MacPorts Package Manager and Dependencies
@@ -217,7 +217,7 @@ installed and the license agreed to:
 1. Install the binary: `make install`
 1. Edit your configuration file by running: `dosbox -editconf` and make the
    following suggested changes (leave all other settings as-is):
- 
+
    ``` ini
    [sdl]
    windowresolution = 800x600
@@ -260,7 +260,7 @@ Build release types includes:
     dosbox`, followed by `run mygame.bat`
 - **pgotrain** adds Profile Guided Optimization (PGO) tracking instrumentation
   to the compiled binary.
-  
+
   This allows the recording of profile statistics that can be used to compile a
   PGO-optimized binary. Note that PGO optimization is different from
   Automatic Feedback Directed Optimization (AutoFDO) mentioned below.
@@ -273,7 +273,7 @@ Build release types includes:
 - **$SANITIZER TYPE**, builds a binary instrumented with code to catch issues at
   runtime that relate to the type of sanitizer being used. For example: memory
   leaks, threading issues, and so on. This is for Linux and macOS only.
-  
+
   - see `./scripts/build.sh --help` for a list of sanitizer-types that are
     available.
   - Run your binary like normal and it will generate output describing
@@ -323,7 +323,7 @@ The following modifier flags can be added when building a **release** type:
   FDO dataset. For example:
 
   - GCC: `export FDO_FILE=/full/path/to/current.afdo` and then build with:
-  
+
     `./scripts/builds.sh -c gcc -t release -m fdo -m lto`
 
   - Clang: `export FDO_FILE=/full/path/to/current.profraw`, and then build
@@ -363,7 +363,7 @@ the Linux kernel and using it to direct the compiler's optimizer.
   - **Note about compiler versions** the autofdo binaries need to be compiled
     with the exact version of the compiler that will later be used to compile
     our final optimized version of dosbox-staging.
-  
+
     So for example, if you install autofdo via package-manager, then it will be
     valid for the default version of gcc and clang also installed by your
     package manager.  Where as if you plan to build with  `gcc-<latest>`, then
@@ -392,7 +392,7 @@ the Linux kernel and using it to direct the compiler's optimizer.
       ```
 
     - Clang version 10:
-  
+
       `sudo .github/scripts/build-autofdo.sh`
 
 - The **pmu-tools** software package, which can be downloaded from
@@ -441,7 +441,7 @@ the Linux kernel and using it to direct the compiler's optimizer.
 
    - At this point, you now have a `.profraw` file for each `.prof` file. Merge
      them into a single `current.profraw` file with:
-  
+
      `llvm-profdata-<version> merge -sample -output=current.profraw *.profraw`
 
 ### Build Using AutoFDO Data

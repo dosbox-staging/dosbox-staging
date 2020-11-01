@@ -188,16 +188,16 @@ that does not follow them.  There are no other exceptions.
 - If possible, preserve code formatting used by original author
 - Record the correct author name, date when original author wrote the patch
   (if known), and sign it, e.g:
-  
+
   ```
   $ git commit --amend --author="Original Author <mail-or-identifier>"
   $ git commit --amend --date="15-05-2003 11:45"
   $ git commit --amend --signoff
   ```
-  
+
 - Record the source of the patch so future programmers can find the context
   and discussion surrounding it. Use following trailer:
-  
+
   ```
   Imported-from: <url-or-specific-identifier>
   ```
