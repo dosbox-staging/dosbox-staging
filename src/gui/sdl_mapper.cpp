@@ -1792,13 +1792,28 @@ static std::string humanize_mod_name(const CBindList &binds, const std::string &
 	}
 }
 
-static void SetActiveBind(CBind * _bind) {
-	mapper.abind=_bind;
+static void SetActiveBind(CBind *new_active_bind)
+{
+	mapper.abind = new_active_bind;
 
-	if (_bind) {
+	size_t active_event_binds_num = 0;
+	size_t active_bind_pos = 0;
+	if (mapper.aevent) {
+		const auto &bindlist = mapper.aevent->bindlist;
+		active_event_binds_num = bindlist.size();
+		for (const auto *bind : bindlist) {
+			if (bind == mapper.abind)
+				break;
+			active_bind_pos += 1;
+		}
+	}
+
+	if (new_active_bind) {
 		bind_but.bind_title->Enable(true);
-		char buf[256];_bind->BindName(buf);
-		bind_but.bind_title->Change("BIND:%s",buf);
+		char buf[256];
+		new_active_bind->BindName(buf);
+		bind_but.bind_title->Change("Bind %zu/%zu: %s", active_bind_pos + 1,
+		                            active_event_binds_num, buf);
 		bind_but.del->Enable(true);
 		bind_but.next->Enable(true);
 		bind_but.mod1->Enable(true);
