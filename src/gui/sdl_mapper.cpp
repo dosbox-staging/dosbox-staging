@@ -1799,9 +1799,18 @@ static std::string humanize_mod_name(const CBindList &binds, const std::string &
 
 static void SetActiveBind(CBind *new_active_bind)
 {
-	using namespace std::string_literals;
-
 	mapper.abind = new_active_bind;
+
+	if (new_active_bind == nullptr) {
+		bind_but.bind_title->Enable(false);
+		bind_but.del->Enable(false);
+		bind_but.next->Enable(false);
+		bind_but.mod1->Enable(false);
+		bind_but.mod2->Enable(false);
+		bind_but.mod3->Enable(false);
+		bind_but.hold->Enable(false);
+		return;
+	}
 
 	// Count number of bindings for active event and pos of current bind
 	size_t active_event_binds_num = 0;
@@ -1816,8 +1825,8 @@ static void SetActiveBind(CBind *new_active_bind)
 		}
 	}
 
-	auto set_btn_name = [&](CCheckButton *btn, std::string label,
-	                        const CEvent *event) {
+	auto set_btn_name = [](CCheckButton *btn, const std::string &label,
+	                       const CEvent *event) {
 		assert(btn);
 		assert(event);
 		if (event->bindlist.empty()) {
@@ -1828,58 +1837,48 @@ static void SetActiveBind(CBind *new_active_bind)
 		}
 	};
 
-	if (new_active_bind) {
+	std::string mod_1_desc = "";
+	std::string mod_2_desc = "";
+	std::string mod_3_desc = "";
 
-		std::string mod_1_desc = "";
-		std::string mod_2_desc = "";
-		std::string mod_3_desc = "";
+	// Correlate mod events to key names and button labels
+	for (auto &event : events) {
+		using namespace std::string_literals;
 
-		// Correlate mod events to key names and button labels
-		for (auto &event : events) {
-			if (event->GetName() == "mod_1"s) {
-				set_btn_name(bind_but.mod1, "Mod1", event);
-				mod_1_desc = humanize_mod_name(event->bindlist, "");
-				mod_1_desc += " + ";
-				continue;
-			}
-			if (event->GetName() == "mod_2"s) {
-				set_btn_name(bind_but.mod2, "Mod2", event);
-				mod_2_desc = humanize_mod_name(event->bindlist, "");
-				mod_2_desc += " + ";
-				continue;
-			}
-			if (event->GetName() == "mod_3"s) {
-				set_btn_name(bind_but.mod3, "Mod3", event);
-				mod_3_desc = humanize_mod_name(event->bindlist, "");
-				mod_3_desc += " + ";
-				continue;
-			}
+		if (event->GetName() == "mod_1"s) {
+			set_btn_name(bind_but.mod1, "Mod1", event);
+			mod_1_desc = humanize_mod_name(event->bindlist, "");
+			mod_1_desc += " + ";
+			continue;
 		}
-
-		// Format "Bind: " description
-		const auto mods = new_active_bind->mods;
-		bind_but.bind_title->Change(
-		        "Bind %zu/%zu: %s%s%s%s", active_bind_pos + 1,
-		        active_event_binds_num,
-		        (mods & BMOD_Mod1 ? mod_1_desc.c_str() : ""),
-		        (mods & BMOD_Mod2 ? mod_2_desc.c_str() : ""),
-		        (mods & BMOD_Mod3 ? mod_3_desc.c_str() : ""),
-		        new_active_bind->GetBindName().c_str());
-		bind_but.bind_title->SetColor(CLR_GREEN);
-
-		bind_but.bind_title->Enable(true);
-		bind_but.del->Enable(true);
-		bind_but.next->Enable(active_event_binds_num > 1);
-		bind_but.hold->Enable(true);
-	} else {
-		bind_but.bind_title->Enable(false);
-		bind_but.del->Enable(false);
-		bind_but.next->Enable(false);
-		bind_but.mod1->Enable(false);
-		bind_but.mod2->Enable(false);
-		bind_but.mod3->Enable(false);
-		bind_but.hold->Enable(false);
+		if (event->GetName() == "mod_2"s) {
+			set_btn_name(bind_but.mod2, "Mod2", event);
+			mod_2_desc = humanize_mod_name(event->bindlist, "");
+			mod_2_desc += " + ";
+			continue;
+		}
+		if (event->GetName() == "mod_3"s) {
+			set_btn_name(bind_but.mod3, "Mod3", event);
+			mod_3_desc = humanize_mod_name(event->bindlist, "");
+			mod_3_desc += " + ";
+			continue;
+		}
 	}
+
+	// Format "Bind: " description
+	const auto mods = new_active_bind->mods;
+	bind_but.bind_title->Change("Bind %zu/%zu: %s%s%s%s",
+	                            active_bind_pos + 1, active_event_binds_num,
+	                            (mods & BMOD_Mod1 ? mod_1_desc.c_str() : ""),
+	                            (mods & BMOD_Mod2 ? mod_2_desc.c_str() : ""),
+	                            (mods & BMOD_Mod3 ? mod_3_desc.c_str() : ""),
+	                            new_active_bind->GetBindName().c_str());
+
+	bind_but.bind_title->SetColor(CLR_GREEN);
+	bind_but.bind_title->Enable(true);
+	bind_but.del->Enable(true);
+	bind_but.next->Enable(active_event_binds_num > 1);
+	bind_but.hold->Enable(true);
 }
 
 static void SetActiveEvent(CEvent * event) {
