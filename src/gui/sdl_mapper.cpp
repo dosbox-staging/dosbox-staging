@@ -283,7 +283,8 @@ public:
 		}
 	}
 	virtual void ConfigName(char * buf)=0;
-	virtual void BindName(char * buf)=0; // TODO make const?
+
+	virtual std::string GetBindName() const = 0;
 
 	Bitu mods = 0;
 	Bitu flags = 0;
@@ -342,15 +343,16 @@ public:
 		  key(_key)
 	{}
 
-	void BindName(char *buf)
+	std::string GetBindName() const override
 	{
 		if (key == SDL_SCANCODE_RETURN)
-			strcpy(buf, "Enter");
-		else
-			sprintf(buf, "Key %s", SDL_GetScancodeName(key));
+			return "Enter";
+		char buf[20];
+		snprintf(buf, sizeof(buf), "Key %s", SDL_GetScancodeName(key));
+		return buf;
 	}
 
-	void ConfigName(char *buf)
+	void ConfigName(char *buf) override
 	{
 		sprintf(buf, "key %d", key);
 	}
@@ -446,7 +448,7 @@ public:
 	CJAxisBind(const CJAxisBind&) = delete; // prevent copy
 	CJAxisBind& operator=(const CJAxisBind&) = delete; // prevent assignment
 
-	void ConfigName(char *buf)
+	void ConfigName(char *buf) override
 	{
 		sprintf(buf, "%s axis %d %d",
 		        group->ConfigStart(),
@@ -454,12 +456,12 @@ public:
 		        positive ? 1 : 0);
 	}
 
-	void BindName(char *buf)
+	std::string GetBindName() const override
 	{
-		sprintf(buf, "%s Axis %d%s",
-		        group->BindStart(),
-		        axis,
-		        positive ? "+" : "-");
+		char buf[30];
+		snprintf(buf, sizeof(buf), "%s Axis %d%s", group->BindStart(),
+		         axis, positive ? "+" : "-");
+		return buf;
 	}
 
 protected:
@@ -479,14 +481,16 @@ public:
 	CJButtonBind(const CJButtonBind&) = delete; // prevent copy
 	CJButtonBind& operator=(const CJButtonBind&) = delete; // prevent assignment
 
-	void ConfigName(char *buf)
+	void ConfigName(char *buf) override
 	{
 		sprintf(buf, "%s button %d", group->ConfigStart(), button);
 	}
 
-	void BindName(char *buf)
+	std::string GetBindName() const override
 	{
-		sprintf(buf, "%s Button %d", group->BindStart(), button);
+		char buf[30];
+		snprintf(buf, sizeof(buf), "%s Button %d", group->BindStart(), button);
+		return buf;
 	}
 
 protected:
@@ -518,20 +522,22 @@ public:
 	CJHatBind(const CJHatBind&) = delete; // prevent copy
 	CJHatBind& operator=(const CJHatBind&) = delete; // prevent assignment
 
-	void ConfigName(char *buf)
+	void ConfigName(char *buf) override
 	{
 		sprintf(buf,"%s hat %" PRIu8 " %" PRIu8,
 		        group->ConfigStart(), hat, dir);
 	}
 
-	void BindName(char *buf)
+	std::string GetBindName() const override
 	{
-		sprintf(buf, "%s Hat %" PRIu8 " %s",
-		        group->BindStart(),
-		        hat,
-		        ((dir == SDL_HAT_UP)    ? "up"    :
-		         (dir == SDL_HAT_RIGHT) ? "right" :
-		         (dir == SDL_HAT_DOWN)  ? "down"  : "left"));
+		char buf[30];
+		snprintf(buf, sizeof(buf), "%s Hat %" PRIu8 " %s",
+		         group->BindStart(), hat,
+		         ((dir == SDL_HAT_UP)    ? "up" :
+		          (dir == SDL_HAT_RIGHT) ? "right" :
+		          (dir == SDL_HAT_DOWN)  ? "down" :
+		                                   "left"));
+		return buf;
 	}
 
 protected:
@@ -1761,38 +1767,35 @@ static void change_action_text(const char* text,Bit8u col) {
 
 static std::string humanize_mod_name(const CBindList &binds, const std::string &fallback)
 {
-	auto trim_pfx = [](const std::string &pfx, const char *input) {
+	auto trim_pfx = [](const std::string &pfx, const std::string &input) {
 		if (starts_with(pfx, input))
-			return input + pfx.size();
+			return input.c_str() + pfx.size();
 		else
-			return input;
+			return input.c_str();
 	};
 
-	char buf_1[20];
-	char buf_2[20];
-	std::string name_1;
-	std::string name_2;
-	const std::string pfx = (fallback.empty() ? "" : fallback + ": ");
+	const auto binds_num = binds.size();
 
-	switch (binds.size()) {
-	case 1: // We have a single bind, be specific - e.g. "Right Ctrl"
-		binds.front()->BindName(buf_1);
-		return trim_pfx("Key ", buf_1);
-	case 2: // e.g. "Key Left Alt" and "Key Right Alt" -> "Alt"
-		binds.front()->BindName(buf_1);
-		binds.back()->BindName(buf_2);
-		name_1 = trim_pfx("Key Right ", buf_1);
-		name_2 = trim_pfx("Key Left ", buf_2);
-		if (name_1 == name_2)
-			return pfx + name_1;
-		name_1 = trim_pfx("Key Left ", buf_1);
-		name_2 = trim_pfx("Key Right ", buf_2);
-		if (name_1 == name_2)
-			return pfx + name_1;
-		FALLTHROUGH;
-	default: // use fallback for any other case
-		return fallback;
+	// We have a single bind, be specific - e.g. "Right Ctrl"
+	if (binds_num == 1)
+		return trim_pfx("Key ", binds.front()->GetBindName());
+
+	// Avoid prefix, e.g. "Key Left Alt" and "Key Right Alt" -> "Alt"
+	if (binds_num == 2) {
+		const std::string new_pfx = (fallback.empty() ? "" : fallback + ": ");
+		const std::string name_1 = binds.front()->GetBindName();
+		const std::string name_2 = binds.back()->GetBindName();
+		std::string trimmed_1 = trim_pfx("Key Right ", name_1);
+		std::string trimmed_2 = trim_pfx("Key Left ", name_2);
+		if (trimmed_1 == trimmed_2)
+			return new_pfx + trimmed_1;
+		trimmed_1 = trim_pfx("Key Left ", name_1);
+		trimmed_2 = trim_pfx("Key Right ", name_2);
+		if (trimmed_1 == trimmed_2)
+			return new_pfx + trimmed_1;
 	}
+
+	return fallback;
 }
 
 static void SetActiveBind(CBind *new_active_bind)
@@ -1855,8 +1858,8 @@ static void SetActiveBind(CBind *new_active_bind)
 		}
 
 		// Format "Bind: " description
-		char key_desc[256];
-		new_active_bind->BindName(key_desc);
+		const std::string bind_name = new_active_bind->GetBindName();
+		const char *key_desc = bind_name.c_str();
 		const auto mods = new_active_bind->mods;
 		bind_but.bind_title->Change(
 		        "Bind %zu/%zu: %s%s%s%s", active_bind_pos + 1,
