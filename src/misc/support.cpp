@@ -54,6 +54,12 @@ uint8_t drive_index(char drive)
 	return static_cast<uint8_t>(drive_letter - 'A');
 }
 
+char drive_letter(uint8_t index)
+{
+	assert(index <= 26);
+	return 'A' + index;
+}
+
 std::string get_basename(const std::string &filename)
 {
 	// Guard against corner cases: '', '/', '\', 'a'

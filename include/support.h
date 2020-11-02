@@ -49,6 +49,9 @@ char int_to_char(int val);
 // through to 26 for drive Z.
 uint8_t drive_index(char drive);
 
+// Convert index (0..26) to a drive letter (uppercase).
+char drive_letter(uint8_t index);
+
 /*
  *  Converts a string to a finite number (such as float or double).
  *  Returns the number or quiet_NaN, if it could not be parsed.

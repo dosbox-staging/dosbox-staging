@@ -1346,7 +1346,7 @@ public:
 					}
 
 					LOG_MSG("IMGMOUNT: Path '%s' found on virtual drive %c:",
-					        fullname, 'A' + dummy);
+					        fullname, drive_letter(dummy));
 				}
 			}
 			if (S_ISDIR(test.st_mode)) {
