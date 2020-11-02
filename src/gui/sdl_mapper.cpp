@@ -344,7 +344,10 @@ public:
 
 	void BindName(char *buf)
 	{
-		sprintf(buf, "Key %s", SDL_GetScancodeName(key));
+		if (key == SDL_SCANCODE_RETURN)
+			strcpy(buf, "Enter");
+		else
+			sprintf(buf, "Key %s", SDL_GetScancodeName(key));
 	}
 
 	void ConfigName(char *buf)
@@ -1889,7 +1892,8 @@ static void SetActiveEvent(CEvent * event) {
 		bind_but.add->Enable(false);
 		SetActiveBind(0);
 	} else {
-		change_action_text("Select a different event or hit the Add/Del/Next buttons.",CLR_WHITE);
+		change_action_text("Modify the bindings for this event or select a different event.",
+		                   CLR_WHITE);
 		mapper.abindit=event->bindlist.begin();
 		if (mapper.abindit!=event->bindlist.end()) {
 			SetActiveBind(*(mapper.abindit));
@@ -2236,10 +2240,9 @@ static void CreateLayout() {
 	bind_but.mod3 = new CCheckButton(20, 454, 110, 20, "Mod3", BC_Mod3);
 	bind_but.hold = new CCheckButton(150, 410, 60, 20, "Hold", BC_Hold);
 
-	bind_but.next=new CBindButton(250,400,50,20,"Next",BB_Next);
-
-	bind_but.add=new CBindButton(250,380,50,20,"Add",BB_Add);
-	bind_but.del=new CBindButton(300,380,50,20,"Del",BB_Del);
+	bind_but.add = new CBindButton(250, 380, 100, 20, "Add bind", BB_Add);
+	bind_but.del = new CBindButton(250, 400, 100, 20, "Remove bind", BB_Del);
+	bind_but.next = new CBindButton(250, 420, 100, 20, "Next bind", BB_Next);
 
 	bind_but.save=new CBindButton(400,450,50,20,"Save",BB_Save);
 	bind_but.exit=new CBindButton(450,450,50,20,"Exit",BB_Exit);
