@@ -51,13 +51,13 @@ jobs:
           reportdir="pvs-report/pvs-report-${stamp}"
           mkdir -p "${reportdir}"
           pvs-studio-analyzer analyze -a 63 -s .pvs-suppress -o "${log}" -j "$(nproc)"
-          plog-converter -a "${general_criteria}" -d V1042 -t fullhtml -p dosbox-staging \
+          plog-converter -a "${general_criteria}" -d V1042,V826 -t fullhtml -p dosbox-staging \
           -v "${GITHUB_SHA:0:8}" -o "${reportdir}" "${log}"
           mv "${reportdir}/fullhtml" "${reportdir}/general"
-          plog-converter -a "${mirsa_criteria}" -d V1042 -t fullhtml -p dosbox-staging \
+          plog-converter -a "${mirsa_criteria}" -d V1042,V826 -t fullhtml -p dosbox-staging \
           -v "${GITHUB_SHA:0:8}" -o "${reportdir}" "${log}"
           mv "${reportdir}/fullhtml" "${reportdir}/mirsa"
-          plog-converter -a "${general_criteria}" -d V1042 -t csv -o pvs-report.csv "${log}"
+          plog-converter -a "${general_criteria}" -d V1042,V826 -t csv -o pvs-report.csv "${log}"
           cp -l pvs-report.csv "${reportdir}/general/"
           pvs-studio-analyzer suppress -a "${general_criteria}" \
           -o "${reportdir}/general/supressible-list.json" "${log}"
@@ -68,7 +68,7 @@ jobs:
           path: pvs-report
       - name: Summarize report
         env:
-          MAX_BUGS: 469
+          MAX_BUGS: 464
         run: |
           echo "Full report is included in build Artifacts"
           echo
