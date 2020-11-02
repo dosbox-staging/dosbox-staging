@@ -346,10 +346,9 @@ public:
 	std::string GetBindName() const override
 	{
 		if (key == SDL_SCANCODE_RETURN)
-			return "Enter";
-		char buf[20];
-		snprintf(buf, sizeof(buf), "Key %s", SDL_GetScancodeName(key));
-		return buf;
+			return "Enter"; // instead of "Return"
+		else
+			return SDL_GetScancodeName(key);
 	}
 
 	void ConfigName(char *buf) override
@@ -1776,21 +1775,21 @@ static std::string humanize_mod_name(const CBindList &binds, const std::string &
 
 	const auto binds_num = binds.size();
 
-	// We have a single bind, be specific - e.g. "Right Ctrl"
+	// We have a single bind, just use it
 	if (binds_num == 1)
-		return trim_pfx("Key ", binds.front()->GetBindName());
+		return binds.front()->GetBindName();
 
-	// Avoid prefix, e.g. "Key Left Alt" and "Key Right Alt" -> "Alt"
+	// Avoid prefix, e.g. "Left Alt" and "Right Alt" -> "Alt"
 	if (binds_num == 2) {
 		const std::string new_pfx = (fallback.empty() ? "" : fallback + ": ");
 		const std::string name_1 = binds.front()->GetBindName();
 		const std::string name_2 = binds.back()->GetBindName();
-		std::string trimmed_1 = trim_pfx("Key Right ", name_1);
-		std::string trimmed_2 = trim_pfx("Key Left ", name_2);
+		std::string trimmed_1 = trim_pfx("Right ", name_1);
+		std::string trimmed_2 = trim_pfx("Left ", name_2);
 		if (trimmed_1 == trimmed_2)
 			return new_pfx + trimmed_1;
-		trimmed_1 = trim_pfx("Key Left ", name_1);
-		trimmed_2 = trim_pfx("Key Right ", name_2);
+		trimmed_1 = trim_pfx("Left ", name_1);
+		trimmed_2 = trim_pfx("Right ", name_2);
 		if (trimmed_1 == trimmed_2)
 			return new_pfx + trimmed_1;
 	}
@@ -1858,8 +1857,6 @@ static void SetActiveBind(CBind *new_active_bind)
 		}
 
 		// Format "Bind: " description
-		const std::string bind_name = new_active_bind->GetBindName();
-		const char *key_desc = bind_name.c_str();
 		const auto mods = new_active_bind->mods;
 		bind_but.bind_title->Change(
 		        "Bind %zu/%zu: %s%s%s%s", active_bind_pos + 1,
@@ -1867,7 +1864,7 @@ static void SetActiveBind(CBind *new_active_bind)
 		        (mods & BMOD_Mod1 ? mod_1_desc.c_str() : ""),
 		        (mods & BMOD_Mod2 ? mod_2_desc.c_str() : ""),
 		        (mods & BMOD_Mod3 ? mod_3_desc.c_str() : ""),
-		        (starts_with("Key ", key_desc) ? key_desc + 4 : key_desc));
+		        new_active_bind->GetBindName().c_str());
 		bind_but.bind_title->SetColor(CLR_GREEN);
 
 		bind_but.bind_title->Enable(true);
