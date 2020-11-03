@@ -864,6 +864,7 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 	case M_EGA:
 		if (!(vga.crtc.mode_control&0x1)) vga.draw.linear_mask &= ~0x10000;
 		else vga.draw.linear_mask |= 0x10000;
+		FALLTHROUGH;
 	case M_LIN4:
 		vga.draw.byte_panning_shift = 8;
 		vga.draw.address += vga.draw.bytes_skip;
@@ -881,6 +882,7 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 			vga.draw.linear_base = vga.mem.linear;
 			vga.draw.linear_mask = vga.vmemwrap - 1;
 		}
+		FALLTHROUGH;
 	case M_LIN8:
 	case M_LIN15:
 	case M_LIN16:
