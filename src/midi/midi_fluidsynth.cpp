@@ -25,6 +25,7 @@
 #if C_FLUIDSYNTH
 
 #include <cassert>
+#include <cstdlib>
 #include <string>
 
 #include "control.h"
@@ -36,9 +37,15 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto *str_prop = secprop.Add_string("soundfont", when_idle, "");
-	str_prop->Set_help(
-	        "Path to a SoundFont file in .sf2 format to use with FluidSynth.");
+	auto *multi_prop = secprop.Add_multiremain("soundfont", when_idle, " ");
+
+	multi_prop->Set_help(
+	        "Path to a MIDI SoundFont file in .sf2 format to use with FluidSynth.\n"
+	        "An optional second parameter, in percent from 1 to 500, scales this SF2's volume.\n"
+	        "For example, soundfont = /path/to/my.sf2 50 will attenuate its volume by 50%\n.");
+	multi_prop->GetSection()->Add_string("soundfont_path", when_idle, "");
+	multi_prop->GetSection()->Add_string("soundfont_scale", when_idle, "100");
+	multi_prop->SetValue("");
 
 	// TODO Handle storing soundfonts in specific directory and update
 	// the documentation; right now users need to specify full path or
@@ -100,16 +107,40 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 		return false;
 	}
 
-	std::string soundfont = section->Get_string("soundfont");
+	// Load the requested SoundFont or quit if none provided
+	const auto *multi_prop = section->Get_multival("soundfont");
+	std::string soundfont = multi_prop->GetSection()->Get_string("soundfont_path");
 	Cross::ResolveHomedir(soundfont);
 	if (!soundfont.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
 	}
-	DEBUG_LOG_MSG("MIDI: FluidSynth loaded %d SoundFont files",
-	              fluid_synth_sfcount(fluid_synth.get()));
+	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
+		LOG_MSG("MIDI: FluidSynth failed to load %s, check the path.",
+		        soundfont.c_str());
+		return false;
+	}
 
-	// Uses samples' native amplitudes without suppression or amplification
-	fluid_synth_set_gain(fluid_synth.get(), 1.0);
+	// Adjust the SoundFont's sample amplitudes by an optional scaling percent
+	CommandLine cmd(0, multi_prop->GetSection()->Get_string("soundfont_scale"));
+	std::string scale_as_string;
+	const bool scalar_provided = cmd.FindCommand(1, scale_as_string);
+	int scale_by_percent = scalar_provided ? atoi(scale_as_string.c_str()) : 100;
+	if (scale_by_percent < 1 || scale_by_percent > 500) {
+		LOG_MSG("MIDI: FluidSynth invalid scaling of %d%% provided; resetting to 100%%",
+		        scale_by_percent);
+		scale_by_percent = 100;
+	}
+	fluid_synth_set_gain(fluid_synth.get(),
+	                     static_cast<float>(scale_by_percent) / 100.0f);
+
+	// Let the user know that the SoundFont was loaded
+	if (scale_by_percent == 100)
+		LOG_MSG("MIDI: FluidSynth loaded %s.", soundfont.c_str());
+	else
+		LOG_MSG("MIDI: FluidSynth loaded %s with levels %s by %d%%.",
+		        soundfont.c_str(),
+		        scale_by_percent > 100 ? "amplified" : "attenuated",
+		        scale_by_percent);
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
 	constexpr int all_channels = -1;
