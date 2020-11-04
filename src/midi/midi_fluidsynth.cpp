@@ -25,8 +25,8 @@
 #if C_FLUIDSYNTH
 
 #include <cassert>
-#include <cstdlib>
 #include <string>
+#include <tuple>
 
 #include "control.h"
 #include "cross.h"
@@ -37,15 +37,12 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto *multi_prop = secprop.Add_multiremain("soundfont", when_idle, " ");
+	auto *str_prop = secprop.Add_string("soundfont", when_idle, "");
 
-	multi_prop->Set_help(
-	        "Path to a MIDI SoundFont file in .sf2 format to use with FluidSynth.\n"
-	        "An optional second parameter, in percent from 1 to 500, scales this SF2's volume.\n"
-	        "For example, soundfont = /path/to/my.sf2 50 will attenuate its volume by 50%\n.");
-	multi_prop->GetSection()->Add_string("soundfont_path", when_idle, "");
-	multi_prop->GetSection()->Add_string("soundfont_scale", when_idle, "100");
-	multi_prop->SetValue("");
+	str_prop->Set_help("Path to a MIDI SoundFont file in .sf2 format.\n"
+	                   "An optional percentage will scale the SoundFont's levels.\n"
+	                   "For example: soundfont.sf2 50 will attenuate it by 50 percent.\n"
+	                   "The scaling percentage can range from 1 to 500.");
 
 	// TODO Handle storing soundfonts in specific directory and update
 	// the documentation; right now users need to specify full path or
@@ -70,6 +67,40 @@ void MidiHandlerFluidsynth::SetMixerLevel(const AudioFrame &desired_level) noexc
 	prescale_level.right = INT16_MAX * desired_level.right;
 }
 
+// Takes in the user's soundfont = configuration value consisting
+// of the SF2 filename followed by an optional scaling percentage.
+// This function returns the filename and percentage as a tuple.
+// If a percentage isn't provided, then it returns 'default_percent'.
+std::tuple<std::string, int> parse_sf_pref(const std::string &line,
+                                           const int default_percent)
+{
+	if (line.empty())
+		return {line, default_percent};
+
+	// Look for a space in the last 4 characters of the string
+	const auto len = line.length();
+	const auto from_pos = len < 4 ? 0 : len - 4;
+	auto last_space_pos = line.substr(from_pos).find_last_of(' ');
+	if (last_space_pos == std::string::npos)
+		return {line, default_percent};
+
+	// Ensure the position is relative to the start of the entire string
+	last_space_pos += from_pos;
+
+	// Is the stuff after the last space convertable to a number?
+	int percent = 0;
+	try {
+		percent = stoi(line.substr(last_space_pos + 1));
+	} catch (...) {
+		return {line, default_percent};
+	}
+	// A number was provided, so split it from the line
+	std::string filename = line.substr(0, last_space_pos);
+	trim(filename); // drop any extra whitespace prior to the number
+
+	return {filename, percent};
+}
+
 bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 {
 	Close();
@@ -80,7 +111,6 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 		LOG_MSG("MIDI: new_fluid_settings failed");
 		return false;
 	}
-
 	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
 
 	// Detailed explanation of all available FluidSynth settings:
@@ -108,8 +138,10 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	}
 
 	// Load the requested SoundFont or quit if none provided
-	const auto *multi_prop = section->Get_multival("soundfont");
-	std::string soundfont = multi_prop->GetSection()->Get_string("soundfont_path");
+	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"), 100);
+	auto soundfont = std::get<std::string>(sf_spec);
+	auto scale_by_percent = std::get<int>(sf_spec);
+
 	Cross::ResolveHomedir(soundfont);
 	if (!soundfont.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
@@ -120,11 +152,6 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 		return false;
 	}
 
-	// Adjust the SoundFont's sample amplitudes by an optional scaling percent
-	CommandLine cmd(0, multi_prop->GetSection()->Get_string("soundfont_scale"));
-	std::string scale_as_string;
-	const bool scalar_provided = cmd.FindCommand(1, scale_as_string);
-	int scale_by_percent = scalar_provided ? atoi(scale_as_string.c_str()) : 100;
 	if (scale_by_percent < 1 || scale_by_percent > 500) {
 		LOG_MSG("MIDI: FluidSynth invalid scaling of %d%% provided; resetting to 100%%",
 		        scale_by_percent);
@@ -136,11 +163,12 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	// Let the user know that the SoundFont was loaded
 	if (scale_by_percent == 100)
 		LOG_MSG("MIDI: FluidSynth loaded %s.", soundfont.c_str());
+	else if (scale_by_percent > 100)
+		LOG_MSG("MIDI: FluidSynth loaded %s with levels amplified by %d%%.",
+		        soundfont.c_str(), scale_by_percent);
 	else
-		LOG_MSG("MIDI: FluidSynth loaded %s with levels %s by %d%%.",
-		        soundfont.c_str(),
-		        scale_by_percent > 100 ? "amplified" : "attenuated",
-		        scale_by_percent);
+		LOG_MSG("MIDI: FluidSynth loaded %s with levels attenuated by %d%%.",
+		        soundfont.c_str(), scale_by_percent);
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
 	constexpr int all_channels = -1;
