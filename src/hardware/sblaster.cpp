@@ -1031,6 +1031,7 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0xd5:	/* Halt 16-bit DMA */
 		DSP_SB16_ONLY;
+		FALLTHROUGH;
 	case 0xd0:	/* Halt 8-bit DMA */
 //		DSP_ChangeMode(MODE_NONE);
 		LOG(LOG_SB, LOG_NORMAL)("Halt DMA Command");
@@ -1055,6 +1056,7 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0xd6:	/* Continue DMA 16-bit */
 		DSP_SB16_ONLY;
+		FALLTHROUGH;
 	case 0xd4:	/* Continue DMA 8-bit*/
 		LOG(LOG_SB, LOG_NORMAL)("Continue DMA command");
 		if (sb.mode==MODE_DMA_PAUSE) {
@@ -1064,6 +1066,7 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0xd9:  /* Exit Autoinitialize 16-bit */
 		DSP_SB16_ONLY;
+		FALLTHROUGH;
 	case 0xda:	/* Exit Autoinitialize 8-bit */
 		DSP_SB2_ABOVE;
 		LOG(LOG_SB, LOG_NORMAL)("Exit Autoinit command");
