@@ -605,7 +605,7 @@ void Module::PortWrite( Bitu port, Bitu val, Bitu iolen ) {
 					break;
 				}
 			}
-			//Fall-through if not handled by control chip
+			FALLTHROUGH;
 		case MODE_OPL2:
 		case MODE_OPL3:
 			if ( !chip[0].Write( reg.normal, val ) ) {
@@ -645,7 +645,7 @@ void Module::PortWrite( Bitu port, Bitu val, Bitu iolen ) {
 					break;
 				}
 			}
-			//Fall-through if not handled by control chip
+			FALLTHROUGH;
 		case MODE_OPL3:
 			reg.normal = handler->WriteAddr( port, val ) & 0x1ff;
 			break;
@@ -688,7 +688,7 @@ Bitu Module::PortRead( Bitu port, Bitu iolen ) {
 				return CtrlRead();
 			}
 		}
-		//Fall-through if not handled by control chip
+		FALLTHROUGH;
 	case MODE_OPL3:
 		//We allocated 4 ports, so just return -1 for the higher ones
 		if ( !(port & 3 ) ) {
