@@ -108,14 +108,17 @@ lib/libfluidsynth.a: fluidsynth/build/Makefile
 	&& ar -qc ../../lib/libfluidsynth.a src/CMakeFiles/libfluidsynth-OBJ.dir/*/*.o \
 	&& ranlib ../../lib/libfluidsynth.a
 
+
 define FLUIDSYNTH_EXPORTS
 
 Export the following to configure dosbox-staging without pkg-config
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-export FLUIDSYNTH_CFLAGS="-I$(CURDIR)/include"
-export FLUIDSYNTH_LIBS="$(CURDIR)/lib/libfluidsynth.a -lm"
+export FLUIDSYNTH_CFLAGS="-I$(CURDIR)/include $(GLIB_CFLAGS)"
+export FLUIDSYNTH_LIBS="$(CURDIR)/lib/libfluidsynth.a $(GLIB_LIBS) -lm"
 endef
 
+GLIB_LIBS = $(shell pkg-config --libs gthread-2.0 glib-2.0)
+GLIB_CFLAGS = $(shell pkg-config --cflags gthread-2.0 glib-2.0)
 .PHONY: fluidsynth-message
 fluidsynth-message: lib/libfluidsynth.a
 	$(info $(FLUIDSYNTH_EXPORTS))
