@@ -427,8 +427,9 @@ Bits Operator::TemplateVolume(  ) {
 		if ( reg20 & MASK_SUSTAIN ) {
 			return vol;
 		}
-		//In sustain phase, but not sustaining, do regular release
-	case RELEASE: 
+		// In sustain phase, but not sustaining, do regular release
+		FALLTHROUGH;
+	case RELEASE:
 		vol += RateForward( releaseAdd );;
 		if ( GCC_UNLIKELY(vol >= ENV_MAX) ) {
 			volume = ENV_MAX;
