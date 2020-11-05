@@ -119,18 +119,21 @@ static void dyn_string(STRING_OP op) {
 		switch (op) {
 		case STR_INSB:
 			gen_call_function((void*)&IO_ReadB,"%Dw%Rl",DREG(EDX),tmp_reg);
+			FALLTHROUGH;
 		case STR_MOVSB:
 		case STR_STOSB:
 			dyn_write_byte(DREG(EA),tmp_reg,false);
 			break;
 		case STR_INSW:
 			gen_call_function((void*)&IO_ReadW,"%Dw%Rw",DREG(EDX),tmp_reg);
+			FALLTHROUGH;
 		case STR_MOVSW:
 		case STR_STOSW:
 			dyn_write_word(DREG(EA),tmp_reg,false);
 			break;
 		case STR_INSD:
 			gen_call_function((void*)&IO_ReadD,"%Dw%Rd",DREG(EDX),tmp_reg);
+			FALLTHROUGH;
 		case STR_MOVSD:
 		case STR_STOSD:
 			dyn_write_word(DREG(EA),tmp_reg,true);
