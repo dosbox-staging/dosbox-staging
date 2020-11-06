@@ -1764,13 +1764,14 @@ static void change_action_text(const char* text,Bit8u col) {
 	bind_but.action->SetColor(col);
 }
 
-static std::string humanize_mod_name(const CBindList &binds, const std::string &fallback)
+static std::string humanize_key_name(const CBindList &binds, const std::string &fallback)
 {
-	auto trim_pfx = [](const std::string &pfx, const std::string &input) {
-		if (starts_with(pfx, input))
-			return input.c_str() + pfx.size();
-		else
-			return input.c_str();
+	auto trim_prefix = [](const std::string &bind_name) {
+		if (starts_with("Left ", bind_name))
+			return bind_name.substr(sizeof("Left"));
+		if (starts_with("Right ", bind_name))
+			return bind_name.substr(sizeof("Right"));
+		return bind_name;
 	};
 
 	const auto binds_num = binds.size();
@@ -1781,17 +1782,14 @@ static std::string humanize_mod_name(const CBindList &binds, const std::string &
 
 	// Avoid prefix, e.g. "Left Alt" and "Right Alt" -> "Alt"
 	if (binds_num == 2) {
-		const std::string new_pfx = (fallback.empty() ? "" : fallback + ": ");
-		const std::string name_1 = binds.front()->GetBindName();
-		const std::string name_2 = binds.back()->GetBindName();
-		std::string trimmed_1 = trim_pfx("Right ", name_1);
-		std::string trimmed_2 = trim_pfx("Left ", name_2);
-		if (trimmed_1 == trimmed_2)
-			return new_pfx + trimmed_1;
-		trimmed_1 = trim_pfx("Left ", name_1);
-		trimmed_2 = trim_pfx("Right ", name_2);
-		if (trimmed_1 == trimmed_2)
-			return new_pfx + trimmed_1;
+		const auto key_name_1 = trim_prefix(binds.front()->GetBindName());
+		const auto key_name_2 = trim_prefix(binds.back()->GetBindName());
+		if (key_name_1 == key_name_2) {
+			if (fallback.empty())
+				return key_name_1;
+			else
+				return fallback + ": " + key_name_1;
+		}
 	}
 
 	return fallback;
@@ -1825,42 +1823,37 @@ static void SetActiveBind(CBind *new_active_bind)
 		}
 	}
 
-	auto set_btn_name = [](CCheckButton *btn, const std::string &label,
-	                       const CEvent *event) {
-		assert(btn);
-		assert(event);
-		if (event->bindlist.empty()) {
-			btn->Enable(false);
-		} else {
-			btn->Enable(true);
-			btn->SetText(humanize_mod_name(event->bindlist, label));
-		}
-	};
-
 	std::string mod_1_desc = "";
 	std::string mod_2_desc = "";
 	std::string mod_3_desc = "";
 
-	// Correlate mod events to key names and button labels
+	// Correlate mod event bindlists to button labels and prepare
+	// human-readable mod key names.
 	for (auto &event : events) {
 		using namespace std::string_literals;
 
+		assert(event);
+		const auto bindlist = event->bindlist;
+
 		if (event->GetName() == "mod_1"s) {
-			set_btn_name(bind_but.mod1, "Mod1", event);
-			mod_1_desc = humanize_mod_name(event->bindlist, "");
-			mod_1_desc += " + ";
+			bind_but.mod1->Enable(!bindlist.empty());
+			bind_but.mod1->SetText(humanize_key_name(bindlist, "Mod1"));
+			const std::string txt = humanize_key_name(bindlist, "");
+			mod_1_desc = (txt.empty() ? "Mod1" : txt) + " + ";
 			continue;
 		}
 		if (event->GetName() == "mod_2"s) {
-			set_btn_name(bind_but.mod2, "Mod2", event);
-			mod_2_desc = humanize_mod_name(event->bindlist, "");
-			mod_2_desc += " + ";
+			bind_but.mod2->Enable(!bindlist.empty());
+			bind_but.mod2->SetText(humanize_key_name(bindlist, "Mod2"));
+			const std::string txt = humanize_key_name(bindlist, "");
+			mod_2_desc = (txt.empty() ? "Mod1" : txt) + " + ";
 			continue;
 		}
 		if (event->GetName() == "mod_3"s) {
-			set_btn_name(bind_but.mod3, "Mod3", event);
-			mod_3_desc = humanize_mod_name(event->bindlist, "");
-			mod_3_desc += " + ";
+			bind_but.mod3->Enable(!bindlist.empty());
+			bind_but.mod3->SetText(humanize_key_name(bindlist, "Mod3"));
+			const std::string txt = humanize_key_name(bindlist, "");
+			mod_3_desc = (txt.empty() ? "Mod1" : txt) + " + ";
 			continue;
 		}
 	}
