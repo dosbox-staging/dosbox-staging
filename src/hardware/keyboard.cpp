@@ -150,7 +150,7 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 		MEM_A20_Enable((val & 2)>0);
 		keyb.command = CMD_NONE;
 		break;
-	case CMD_SETTYPERATE: 
+	case CMD_SETTYPERATE:
 		{
 			static const int delay[] = { 250, 500, 750, 1000 };
 			static const int repeat[] = 
@@ -161,7 +161,7 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 			keyb.repeat.rate = repeat[val&0x1f];
 			keyb.command=CMD_NONE;
 		}
-		/* Fallthrough! as setleds does what we want */
+		FALLTHROUGH; // CMD_SETLEDS does what we want
 	case CMD_SETLEDS:
 		keyb.command=CMD_NONE;
 		KEYBOARD_ClrBuffer();
