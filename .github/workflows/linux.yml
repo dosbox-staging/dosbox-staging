@@ -94,7 +94,7 @@ jobs:
         if:   matrix.conf.run_tests != true
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run:  ./scripts/count-warnings.py -f build.log
+        run:  ./scripts/count-warnings.py -lf build.log
 
   build_linux_release_dynamic:
     name: Release build

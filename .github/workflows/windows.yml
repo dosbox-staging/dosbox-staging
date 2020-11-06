@@ -67,7 +67,7 @@ jobs:
         shell: pwsh
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run: python scripts\count-warnings.py --msvc vs\build.log
+        run: python scripts\count-warnings.py -lf --msvc vs\build.log
 
 
   build_windows_vs_release:

@@ -48,7 +48,7 @@ jobs:
       - name: Summarize warnings
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run:  python3 ./scripts/count-warnings.py -f build.log
+        run:  python3 ./scripts/count-warnings.py -lf build.log
 
   build_macos_release:
     name: Release build
