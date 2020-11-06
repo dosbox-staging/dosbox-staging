@@ -342,9 +342,11 @@ run_block:
 	case BR_CallBack:
 		return core_dyn.callback;
 	case BR_SMCBlock:
-//		LOG_MSG("selfmodification of running block at %x:%x",SegValue(cs),reg_eip);
+		// LOG_MSG("selfmodification of running block at %x:%x",
+		//         SegValue(cs), reg_eip);
 		cpu.exception.which=0;
-		// fallthrough, let the normal core handle the block-modifying instruction
+		FALLTHROUGH; // let the normal core handle the block-modifying
+		             // instruction
 	case BR_Opcode:
 		CPU_CycleLeft+=CPU_Cycles;
 		CPU_Cycles=1;
