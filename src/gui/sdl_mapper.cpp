@@ -1795,11 +1795,9 @@ static std::string humanize_key_name(const CBindList &binds, const std::string &
 	return fallback;
 }
 
-static void SetActiveBind(CBind *new_active_bind)
+static void update_active_bind_ui()
 {
-	mapper.abind = new_active_bind;
-
-	if (new_active_bind == nullptr) {
+	if (mapper.abind == nullptr) {
 		bind_but.bind_title->Enable(false);
 		bind_but.del->Enable(false);
 		bind_but.next->Enable(false);
@@ -1810,7 +1808,8 @@ static void SetActiveBind(CBind *new_active_bind)
 		return;
 	}
 
-	// Count number of bindings for active event and pos of current bind
+	// Count number of bindings for active event and the number (pos)
+	// of active bind
 	size_t active_event_binds_num = 0;
 	size_t active_bind_pos = 0;
 	if (mapper.aevent) {
@@ -1859,19 +1858,25 @@ static void SetActiveBind(CBind *new_active_bind)
 	}
 
 	// Format "Bind: " description
-	const auto mods = new_active_bind->mods;
+	const auto mods = mapper.abind->mods;
 	bind_but.bind_title->Change("Bind %zu/%zu: %s%s%s%s",
 	                            active_bind_pos + 1, active_event_binds_num,
 	                            (mods & BMOD_Mod1 ? mod_1_desc.c_str() : ""),
 	                            (mods & BMOD_Mod2 ? mod_2_desc.c_str() : ""),
 	                            (mods & BMOD_Mod3 ? mod_3_desc.c_str() : ""),
-	                            new_active_bind->GetBindName().c_str());
+	                            mapper.abind->GetBindName().c_str());
 
 	bind_but.bind_title->SetColor(CLR_GREEN);
 	bind_but.bind_title->Enable(true);
 	bind_but.del->Enable(true);
 	bind_but.next->Enable(active_event_binds_num > 1);
 	bind_but.hold->Enable(true);
+}
+
+static void SetActiveBind(CBind *new_active_bind)
+{
+	mapper.abind = new_active_bind;
+	update_active_bind_ui();
 }
 
 static void SetActiveEvent(CEvent * event) {
