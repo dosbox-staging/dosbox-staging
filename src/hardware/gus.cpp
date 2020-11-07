@@ -1313,13 +1313,13 @@ void Gus::WriteToRegister()
 	case 0x42: // Gravis DRAM DMA address register
 		dma_addr = register_data;
 		return;
-	case 0x43: // MSB Peek/poke DRAM position
-		dram_addr = (0xff0000 & dram_addr) |
+	case 0x43: // LSW Peek/poke DRAM position
+		dram_addr = (0xf0000 & dram_addr) |
 		            (static_cast<uint32_t>(register_data));
 		return;
-	case 0x44: // LSW Peek/poke DRAM position
-		dram_addr = (0xffff & dram_addr) |
-		            (static_cast<uint32_t>(register_data >> 8)) << 16;
+	case 0x44: // MSB Peek/poke DRAM position
+		dram_addr = (0x0ffff & dram_addr) |
+		            (static_cast<uint32_t>(register_data) & 0x0f00) << 8;
 		return;
 	case 0x45: // Timer control register.  Identical in operation to Adlib's
 		timer_ctrl = static_cast<uint8_t>(register_data >> 8);
