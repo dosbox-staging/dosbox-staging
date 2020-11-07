@@ -753,11 +753,15 @@ public:
 		Prop_path* proppath= section->Get_path("captures");
 		capturedir = proppath->realpath;
 		CaptureState = 0;
-		MAPPER_AddHandler(CAPTURE_WaveEvent,MK_f6,MMOD1,"recwave","Rec Wave");
-		MAPPER_AddHandler(CAPTURE_MidiEvent,MK_f8,MMOD1|MMOD2,"caprawmidi","Cap MIDI");
+		MAPPER_AddHandler(CAPTURE_WaveEvent, SDL_SCANCODE_F6, MMOD1,
+		                  "recwave", "Rec. Audio");
+		MAPPER_AddHandler(CAPTURE_MidiEvent, SDL_SCANCODE_UNKNOWN, 0,
+		                  "caprawmidi", "Rec. MIDI");
 #if (C_SSHOT)
-		MAPPER_AddHandler(CAPTURE_ScreenShotEvent,MK_f5,MMOD1,"scrshot","Screenshot");
-		MAPPER_AddHandler(CAPTURE_VideoEvent,MK_f5,MMOD1|MMOD2,"video","Video");
+		MAPPER_AddHandler(CAPTURE_ScreenShotEvent, SDL_SCANCODE_F5, MMOD1,
+		                  "scrshot", "Screenshot");
+		MAPPER_AddHandler(CAPTURE_VideoEvent, SDL_SCANCODE_F5, MMOD1 | MMOD2,
+		                  "video", "Video");
 #endif
 	}
 	~HARDWARE(){

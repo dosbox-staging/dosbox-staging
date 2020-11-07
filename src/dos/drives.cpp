@@ -226,9 +226,11 @@ void DriveManager::Init(Section* /* sec */) {
 	for(int i = 0; i < DOS_DRIVES; i++) {
 		driveInfos[i].currentDisk = 0;
 	}
-	
-//	MAPPER_AddHandler(&CycleDisk, MK_f3, MMOD1, "cycledisk", "Cycle Disk");
-//	MAPPER_AddHandler(&CycleDrive, MK_f3, MMOD2, "cycledrive", "Cycle Drv");
+
+	// MAPPER_AddHandler(&CycleDisk, SDL_SCANCODE_F3, MMOD1,
+	//                   "cycledisk", "Cycle Disk");
+	// MAPPER_AddHandler(&CycleDrive, SDL_SCANCODE_F3, MMOD2,
+	//                   "cycledrive", "Cycle Drv");
 }
 
 void DRIVES_Init(Section* sec) {

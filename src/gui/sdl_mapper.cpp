@@ -68,9 +68,9 @@ enum BC_Types {
 	BC_Hold
 };
 
-#define BMOD_Mod1 0x0001
-#define BMOD_Mod2 0x0002
-#define BMOD_Mod3 0x0004
+#define BMOD_Mod1 MMOD1
+#define BMOD_Mod2 MMOD2
+#define BMOD_Mod3 MMOD3
 
 #define BFLG_Hold 0x0001
 #define BFLG_Repeat 0x0004
@@ -1685,15 +1685,20 @@ protected:
 
 class CHandlerEvent : public CTriggeredEvent {
 public:
-	CHandlerEvent(char const * const entry, MAPPER_Handler *handle, MapKeys k, Bitu mod, char const * const bname)
-		: CTriggeredEvent(entry),
-		  defkey(k),
-		  defmod(mod),
-		  handler(handle),
-		  buttonname(bname)
+	CHandlerEvent(const char *entry,
+	              MAPPER_Handler *handle,
+	              SDL_Scancode k,
+	              uint32_t mod,
+	              const char *bname)
+	        : CTriggeredEvent(entry),
+	          defkey(k),
+	          defmod(mod),
+	          handler(handle),
+	          button_name(bname)
 	{
 		handlergroup.push_back(this);
 	}
+
 	~CHandlerEvent() = default;
 	CHandlerEvent(const CHandlerEvent&) = delete; // prevent copy
 	CHandlerEvent& operator=(const CHandlerEvent&) = delete; // prevent assignment
@@ -1702,48 +1707,27 @@ public:
 
 	const char * ButtonName()
 	{
-		return buttonname;
+		return button_name.c_str();
 	}
 
 	void MakeDefaultBind(char *buf)
 	{
-		SDL_Scancode key = SDL_SCANCODE_UNKNOWN;
-		switch (defkey) {
-		case MK_f1:          key = SDL_SCANCODE_F1; break;
-		case MK_f2:          key = SDL_SCANCODE_F2; break;
-		case MK_f3:          key = SDL_SCANCODE_F3; break;
-		case MK_f4:          key = SDL_SCANCODE_F4; break;
-		case MK_f5:          key = SDL_SCANCODE_F5; break;
-		case MK_f6:          key = SDL_SCANCODE_F6; break;
-		case MK_f7:          key = SDL_SCANCODE_F7; break;
-		case MK_f8:          key = SDL_SCANCODE_F8; break;
-		case MK_f9:          key = SDL_SCANCODE_F9; break;
-		case MK_f10:         key = SDL_SCANCODE_F10; break;
-		case MK_f11:         key = SDL_SCANCODE_F11; break;
-		case MK_f12:         key = SDL_SCANCODE_F12; break;
-		case MK_return:      key = SDL_SCANCODE_RETURN; break;
-		case MK_kpminus:     key = SDL_SCANCODE_KP_MINUS; break;
-		case MK_scrolllock:  key = SDL_SCANCODE_SCROLLLOCK; break;
-		case MK_pause:       key = SDL_SCANCODE_PAUSE; break;
-		case MK_printscreen: key = SDL_SCANCODE_PRINTSCREEN; break;
-		case MK_home:        key = SDL_SCANCODE_HOME; break;
-		}
+		if (defkey == SDL_SCANCODE_UNKNOWN)
+			return;
 		sprintf(buf, "%s \"key %d%s%s%s\"",
-		        entry,
-		        static_cast<int>(key),
-		        defmod & 1 ? " mod1" : "",
-		        defmod & 2 ? " mod2" : "",
-		        defmod & 4 ? " mod3" : "");
+		        entry, static_cast<int>(defkey),
+		        defmod & MMOD1 ? " mod1" : "",
+		        defmod & MMOD2 ? " mod2" : "",
+		        defmod & MMOD3 ? " mod3" : "");
 	}
 
 protected:
-	MapKeys defkey;
-	Bitu defmod;
+	SDL_Scancode defkey;
+	uint32_t defmod;
 	MAPPER_Handler * handler;
 public:
-	const char * buttonname;
+	std::string button_name;
 };
-
 
 static struct {
 	CCaptionButton *  event_title;
@@ -2430,15 +2414,22 @@ static void CreateDefaultBinds() {
 	LOG_MSG("MAPPER: Loaded default key bindings");
 }
 
-void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key, Bitu mods,char const * const eventname,char const * const buttonname) {
+void MAPPER_AddHandler(MAPPER_Handler *handler,
+                       SDL_Scancode key,
+                       uint32_t mods,
+                       const char *event_name,
+                       const char *button_name)
+{
 	//Check if it already exists=> if so return.
-	for(CHandlerEventVector_it it=handlergroup.begin(); it != handlergroup.end(); ++it)
-		if(strcmp((*it)->buttonname,buttonname) == 0) return;
+	for (const auto &handler_event : handlergroup) {
+		if (handler_event->button_name == button_name)
+			return;
+	}
 
 	char tempname[17];
 	safe_strcpy(tempname, "hand_");
-	safe_strcat(tempname, eventname);
-	new CHandlerEvent(tempname,handler,key,mods,buttonname);
+	safe_strcat(tempname, event_name);
+	new CHandlerEvent(tempname, handler, key, mods, button_name);
 	return ;
 }
 
@@ -2909,5 +2900,5 @@ void MAPPER_StartUp(Section * sec) {
 
 	// runs one-time on shutdown
 	section->AddDestroyFunction(&MAPPER_Destroy, false);
-	MAPPER_AddHandler(&MAPPER_Run,MK_f1,MMOD1,"mapper","Mapper");
+	MAPPER_AddHandler(&MAPPER_Run, SDL_SCANCODE_F1, MMOD1, "mapper", "Mapper");
 }
