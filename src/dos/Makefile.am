@@ -7,4 +7,4 @@ libdos_a_SOURCES = dos.cpp dos_devices.cpp dos_execute.cpp dos_files.cpp dos_ioc
 		   drives.cpp drive_virtual.cpp drive_local.cpp drive_cache.cpp drive_fat.cpp \
 		   drive_iso.cpp dev_con.h dos_mscdex.cpp dos_keyboard_layout.cpp \
 		   cdrom.h cdrom.cpp cdrom_image.cpp \
-		   drive_overlay.cpp
+		   drive_overlay.cpp program_autotype.h dos_mscdex.h

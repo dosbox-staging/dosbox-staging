@@ -29,4 +29,4 @@ dosbox_LDADD = cpu/libcpu.a \
                misc/libmisc.a \
                shell/libshell.a
 
-EXTRA_DIST = winres.rc dosbox.ico
+EXTRA_DIST = winres.rc
