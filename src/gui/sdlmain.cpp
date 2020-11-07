@@ -2271,7 +2271,8 @@ static void GUI_StartUp(Section *sec)
 
 	// Only setup the Ctrl+F10 handler if the mouse is capturable
 	if (sdl.mouse.control_choice & (CaptureOnStart | CaptureOnClick)) {
-		MAPPER_AddHandler(ToggleMouseCapture,MK_f10,MMOD1,"capmouse","Cap Mouse");
+		MAPPER_AddHandler(ToggleMouseCapture, SDL_SCANCODE_F10, MMOD1,
+		                  "capmouse", "Cap Mouse");
 	}
 
 	// Apply the user's mouse sensitivity settings
@@ -2285,13 +2286,17 @@ static void GUI_StartUp(Section *sec)
 	                        SDL_HINT_OVERRIDE);
 
 	/* Get some Event handlers */
-	MAPPER_AddHandler(KillSwitch,MK_f9,MMOD1,"shutdown","ShutDown");
-	MAPPER_AddHandler(SwitchFullScreen,MK_return,MMOD2,"fullscr","Fullscreen");
-	MAPPER_AddHandler(Restart,MK_home,MMOD1|MMOD2,"restart","Restart");
+	MAPPER_AddHandler(KillSwitch, SDL_SCANCODE_F9, MMOD1,
+	                  "shutdown", "Shutdown");
+	MAPPER_AddHandler(SwitchFullScreen, SDL_SCANCODE_RETURN, MMOD2,
+	                  "fullscr", "Fullscreen");
+	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2,
+	                  "restart", "Restart");
 #if C_DEBUG
 	/* Pause binds with activate-debugger */
 #else
-	MAPPER_AddHandler(&PauseDOSBox, MK_pause, MMOD2, "pause", "Pause DBox");
+	MAPPER_AddHandler(&PauseDOSBox, SDL_SCANCODE_PAUSE, MMOD2,
+	                  "pause", "Pause Emu.");
 #endif
 	/* Get Keyboard state of numlock and capslock */
 	SDL_Keymod keystate = SDL_GetModState();

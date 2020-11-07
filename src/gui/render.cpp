@@ -757,8 +757,10 @@ void RENDER_Init(Section * sec) {
 	if(!running) render.updating=true;
 	running = true;
 
-	MAPPER_AddHandler(DecreaseFrameSkip,MK_f7,MMOD1,"decfskip","Dec Fskip");
-	MAPPER_AddHandler(IncreaseFrameSkip,MK_f8,MMOD1,"incfskip","Inc Fskip");
+	MAPPER_AddHandler(DecreaseFrameSkip, SDL_SCANCODE_F7, MMOD1, "decfskip",
+	                  "Dec Fskip");
+	MAPPER_AddHandler(IncreaseFrameSkip, SDL_SCANCODE_F8, MMOD1, "incfskip",
+	                  "Inc Fskip");
 	GFX_SetTitle(-1,render.frameskip.max,false);
 }
 
