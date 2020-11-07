@@ -571,11 +571,11 @@ static void ExecuteGlobRegister(void) {
 	case 0x42:  // Gravis DRAM DMA address register
 		myGUS.dmaAddr = myGUS.gRegData;
 		break;
-	case 0x43:  // MSB Peek/poke DRAM position
-		myGUS.gDramAddr = (0xff0000 & myGUS.gDramAddr) | ((Bit32u)myGUS.gRegData);
+	case 0x43:  // LSW Peek/poke DRAM position
+		myGUS.gDramAddr = (0xf0000 & myGUS.gDramAddr) | ((Bit32u)myGUS.gRegData);
 		break;
-	case 0x44:  // LSW Peek/poke DRAM position
-		myGUS.gDramAddr = (0xffff & myGUS.gDramAddr) | ((Bit32u)myGUS.gRegData>>8) << 16;
+	case 0x44:  // MSB Peek/poke DRAM position
+		myGUS.gDramAddr = (0x0ffff & myGUS.gDramAddr) | ((Bit32u)myGUS.gRegData & 0x0f00) << 8;
 		break;
 	case 0x45:  // Timer control register.  Identical in operation to Adlib's timer
 		myGUS.TimerControl = (Bit8u)(myGUS.gRegData>>8);
