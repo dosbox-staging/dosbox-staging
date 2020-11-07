@@ -1741,7 +1741,6 @@ void DOS_SetupPrograms(void) {
 		"\033[33;1mCTRL-ALT-F5\033[0m : Start/Stop creating a movie of the screen.\n"
 		"\033[33;1mCTRL-F5\033[0m     : Save a screenshot.\n"
 		"\033[33;1mCTRL-F6\033[0m     : Start/Stop recording sound output to a wave file.\n"
-		"\033[33;1mCTRL-ALT-F7\033[0m : Start/Stop recording of OPL commands.\n"
 		"\033[33;1mCTRL-ALT-F8\033[0m : Start/Stop the recording of raw MIDI commands.\n"
 		"\033[33;1mCTRL-F7\033[0m     : Decrease frameskip.\n"
 		"\033[33;1mCTRL-F8\033[0m     : Increase frameskip.\n"

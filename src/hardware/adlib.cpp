@@ -885,8 +885,8 @@ Module::Module(Section *configuration)
 	WriteHandler[2].Install(base+8,OPL_Write,IO_MB, 2);
 	ReadHandler[2].Install(base+8,OPL_Read,IO_MB, 1);
 
-	MAPPER_AddHandler(OPL_SaveRawEvent, SDL_SCANCODE_F7, MMOD1 | MMOD2,
-	                  "caprawopl", "Cap OPL");
+	MAPPER_AddHandler(OPL_SaveRawEvent, SDL_SCANCODE_UNKNOWN, 0,
+	                  "caprawopl", "Rec. OPL");
 }
 
 Module::~Module() {

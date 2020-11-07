@@ -1051,7 +1051,6 @@ CTRL-F4       Change between mounted floppy/CD images. Update directory cache
 CTRL-ALT-F5   Start/Stop creating a movie of the screen. (avi video capturing)
 CTRL-F5       Save a screenshot. (PNG format)
 CTRL-F6       Start/Stop recording sound output to a wave file.
-CTRL-ALT-F7   Start/Stop recording of OPL commands. (DRO format)
 CTRL-ALT-F8   Start/Stop the recording of raw MIDI commands.
 CTRL-F7       Decrease frameskip.
 CTRL-F8       Increase frameskip.
