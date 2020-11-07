@@ -81,7 +81,7 @@ static inline uint32_t var_read(uint32_t *var)
 	return host_readd((HostPt)var);
 }
 
-/* The Folowing six functions are slower but they recognize the paged memory
+/* The Following six functions are slower but they recognize the paged memory
  * system */
 
 uint8_t mem_readb(PhysPt pt);
@@ -133,7 +133,7 @@ void mem_memcpy(PhysPt dest, PhysPt src, Bitu size);
 Bitu mem_strlen(PhysPt pt);
 void mem_strcpy(PhysPt dest, PhysPt src);
 
-/* The folowing functions are all shortcuts to the above functions using
+/* The following functions are all shortcuts to the above functions using
  * physical addressing */
 
 static inline uint8_t real_readb(uint16_t seg, uint16_t off)

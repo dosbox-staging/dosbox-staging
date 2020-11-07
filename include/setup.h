@@ -95,7 +95,7 @@ public:
 	/* Destructor */
 	virtual ~Value() { destroy(); }
 
-	/* Assigment operators */
+	/* Assignment operators */
 	Value &operator=(Hex in) { return copy(Value(in)); }
 	Value &operator=(int in) { return copy(Value(in)); }
 	Value &operator=(bool in) { return copy(Value(in)); }
@@ -169,7 +169,7 @@ public:
 
 protected:
 	//Set interval value to in or default if in is invalid. force always sets the value.
-	//Can be overriden to set a different value if invalid.
+	//Can be overridden to set a different value if invalid.
 	virtual bool SetVal(Value const& in, bool forced,bool warn=true) {
 		if(forced || CheckValue(in,warn)) {
 			value = in; return true;

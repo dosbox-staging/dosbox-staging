@@ -45,7 +45,7 @@ function parse_args() {
 	if [[ -z "${selected_type:-}" ]]; then arg_error "--compiler" "${TYPES[*]}"; fi
 
 	# If a version was provided then construct a postfix string given the manager's
-	# potential unique delimeter (ie: gcc@9 for brew, gcc-9 for apt).
+	# potential unique delimiter (ie: gcc@9 for brew, gcc-9 for apt).
 	# shellcheck disable=SC2034,SC2154
 	postfix=$([[ -n "${version:-}" ]] && echo "${delim}${version}" || echo "")
 	import "${selected_type:-}" "${manager:-}"

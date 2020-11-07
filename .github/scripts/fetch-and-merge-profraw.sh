@@ -7,7 +7,7 @@
 # (.prof) files (collected during prior DOSBox testing) into a single
 # LLVM-compatible Raw Profile record that can be used to optimize builds.
 
-# Depedencies:
+# Dependencies:
 #   - zstd
 #   - autofdo
 

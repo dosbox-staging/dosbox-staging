@@ -539,7 +539,7 @@ private:
 	struct sDTA {
 		Bit8u sdrive;						/* The Drive the search is taking place */
 		Bit8u sname[8];						/* The Search pattern for the filename */
-		Bit8u sext[3];						/* The Search pattern for the extenstion */
+		Bit8u sext[3];						/* The Search pattern for the extension */
 		Bit8u sattr;						/* The Attributes that need to be found */
 		Bit16u dirID;						/* custom: dir-search ID for multiple searches at the same time */
 		Bit16u dirCluster;					/* custom (drive_fat only): cluster number for multiple searches at the same time */

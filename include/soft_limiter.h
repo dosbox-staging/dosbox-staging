@@ -396,7 +396,7 @@ void SoftLimiter<array_frames>::PrintStats() const
 	if (minutes_total < 0.5)
 		return;
 
-	// Only print information if there was atleast some amplitude
+	// Only print information if there was at least some amplitude
 	const auto peak_sample = std::max(global_peaks.left, global_peaks.right);
 	constexpr auto two_percent_of_max = 0.02f * bounds;
 	if (peak_sample < two_percent_of_max)

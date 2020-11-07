@@ -28,7 +28,7 @@
 
 typedef void (*TIMER_TickHandler)(void);
 
-/* Register a function that gets called everytime if 1 or more ticks pass */
+/* Register a function that gets called every time if 1 or more ticks pass */
 void TIMER_AddTickHandler(TIMER_TickHandler handler);
 void TIMER_DelTickHandler(TIMER_TickHandler handler);
 

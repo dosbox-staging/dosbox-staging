@@ -35,7 +35,7 @@
  * Examples used in comments throughout this file are NOT alignment safe - they
  * exist only for illustrative purposes; they will work on x86 architecture in
  * practice, but depend on undefined behaviour, might generate slow code or
- * outright crash when targetting different architectures.
+ * outright crash when targeting different architectures.
  */
 
 #include <cstdint>

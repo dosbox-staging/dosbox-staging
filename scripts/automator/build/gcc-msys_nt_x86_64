@@ -1,4 +1,4 @@
-# Enable math vectorizations using instructions avaiable in circa-2008+ CPUs
+# Enable math vectorizations using instructions available in circa-2008+ CPUs
 x86_math=(-mfpmath=sse -msse4.2)
 cflags_release+=("${x86_math[@]}")
 cflags_optinfo+=("${x86_math[@]}")
