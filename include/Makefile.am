@@ -39,6 +39,7 @@ noinst_HEADERS = \
 	serialport.h \
 	setup.h \
 	shell.h \
+	soft_limiter.h \
 	support.h \
 	timer.h \
 	types.h \
