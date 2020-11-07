@@ -1741,8 +1741,6 @@ void DOS_SetupPrograms(void) {
 		"\033[33;1mCTRL-ALT-F5\033[0m : Start/Stop creating a movie of the screen.\n"
 		"\033[33;1mCTRL-F5\033[0m     : Save a screenshot.\n"
 		"\033[33;1mCTRL-F6\033[0m     : Start/Stop recording sound output to a wave file.\n"
-		"\033[33;1mCTRL-F7\033[0m     : Decrease frameskip.\n"
-		"\033[33;1mCTRL-F8\033[0m     : Increase frameskip.\n"
 		"\033[33;1mCTRL-F9\033[0m     : Kill DOSBox.\n"
 		"\033[33;1mCTRL-F10\033[0m    : Capture/Release the mouse.\n"
 		"\033[33;1mCTRL-F11\033[0m    : Slow down emulation (Decrease DOSBox Cycles).\n"

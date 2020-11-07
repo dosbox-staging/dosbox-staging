@@ -1051,8 +1051,6 @@ CTRL-F4       Change between mounted floppy/CD images. Update directory cache
 CTRL-ALT-F5   Start/Stop creating a movie of the screen. (avi video capturing)
 CTRL-F5       Save a screenshot. (PNG format)
 CTRL-F6       Start/Stop recording sound output to a wave file.
-CTRL-F7       Decrease frameskip.
-CTRL-F8       Increase frameskip.
 CTRL-F9       Kill DOSBox.
 CTRL-F10      Capture/Release the mouse.
 CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
@@ -1469,12 +1467,15 @@ CPU Core (speed up)
 
 Graphics emulation (speed up)
   VGA emulation is a demanding part of DOSBox in terms of actual CPU usage.
-  Increase the number of frames skipped (in increments of one) by pressing
-  CTRL-F8. Your CPU usage should decrease when using a fixed cycle setting,
-  and you will be able to increase cycles with CTRL-F12.
+  On systems with limited CPU performance, consider binding a hotkey to the
+  "Increase frameskip" action ("Inc Fskip") using the keymapper. Skipping
+  frames generally frees up your CPU, providing faster emulation when using
+  max cycles or affording a greater number of fixed cycles with CTRL+F12.
+
   You can repeat this until the game runs fast enough for you.
   Please note that this is a trade-off: you lose in fluidity of video what
-  you gain in speed.
+  you gain in speed.  Once you'll find the perfect combination for the
+  game and your hardware, you can save it in game-specific conf file.
 
 Sound emulation (speed up)
   You can also try to disable the sound through the setup utility of the game
