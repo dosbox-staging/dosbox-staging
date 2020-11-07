@@ -96,7 +96,7 @@ public:
 	void AddSamples_m32_nonnative(Bitu len, const Bit32s * data);
 	void AddSamples_s32_nonnative(Bitu len, const Bit32s * data);
 	
-	void AddStretched(Bitu len,Bit16s * data);		//Strech block up into needed data
+	void AddStretched(Bitu len,Bit16s * data);		//Stretch block up into needed data
 
 	void FillUp();
 	void Enable(bool should_enable);

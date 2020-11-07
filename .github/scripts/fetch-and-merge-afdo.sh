@@ -7,7 +7,7 @@
 # (.prof) files (collected during prior DOSBox testing) into a single
 # GCC-compatible AutoFDO record that can be used to optimize builds.
 
-# Depedencies:
+# Dependencies:
 #   - zstd
 #   - autofdo
 

@@ -2,7 +2,7 @@
 
 1. Every 6 months check <https://scan.coverity.com/download> for
    a package newer than 2019.03
-1. Download it, extract it, and remove unecessary content:
+1. Download it, extract it, and remove unnecessary content:
 
    ``` shell
    rm -rf closure-compiler jars jdk11 jre node support-angularjs

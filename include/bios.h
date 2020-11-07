@@ -77,7 +77,7 @@
 #define BIOS_COM3_TIMEOUT               0x47e
 #define BIOS_COM4_TIMEOUT               0x47f
 /* 0x47e is reserved */ //<- why that?
-/* 0x47f-0x4ff is unknow for me */
+/* 0x47f-0x4ff is unknown for me */
 #define BIOS_KEYBOARD_BUFFER_START      0x480
 #define BIOS_KEYBOARD_BUFFER_END        0x482
 

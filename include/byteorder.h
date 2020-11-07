@@ -21,7 +21,7 @@
 #ifndef DOSBOX_BYTEORDER_H
 #define DOSBOX_BYTEORDER_H
 
-/* Usual way of handling endianess and byteswapping is via endian.h
+/* Usual way of handling endianness and byteswapping is via endian.h
  * (for e.g. htole* functions) or byteswap.h (e.g. bswap_16 macro).
  *
  * However, these headers are non-standard and almost every OS has their own

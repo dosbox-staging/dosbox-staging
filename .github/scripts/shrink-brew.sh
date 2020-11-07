@@ -7,7 +7,7 @@
 # Its main use is to shrink this area to fit within GitHub's cache
 # limits however it can also be used by end-users wanting to save space.
 #
-# Note that this script remove alot of content deemed unecessary for our
+# Note that this script remove a lot of content deemed unnecessary for our
 # purposes such as ruby, go, grade, azure, etc..) so using on your
 # home system is probably not what you want :-)
 #
@@ -24,7 +24,7 @@ group="$(id -g "${user}")"
 # If we don't have /usr/local then brew hasn't installed anything yet
 cd /usr/local || exit 0
 
-# Purge unecessary bloat
+# Purge unnecessary bloat
 for dir in lib/ruby Cellar/go Cellar/gradle Cellar/azure-cli lib/node_modules \
 share/powershell Caskroom/fastlane Cellar/ruby opt/AGPM Caskroom Cellar/node \
 miniconda Cellar/python@2 Cellar/git lib/python2.7 Cellar/git-lfs Cellar/subversion \

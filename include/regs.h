@@ -53,7 +53,7 @@
 
 struct Segment {
 	Bit16u val;
-	PhysPt phys;							/* The phyiscal address start in emulated machine */
+	PhysPt phys;							/* The physical address start in emulated machine */
 };
 
 enum SegNames { es=0,cs,ss,ds,fs,gs};

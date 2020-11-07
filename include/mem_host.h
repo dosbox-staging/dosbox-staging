@@ -25,7 +25,7 @@
  * byte-arrays using DOS/little-endian byte ordering.
  *
  * Values returned or passed to these functions are expected to be integers
- * using native endianess representation for the host machine.
+ * using native endianness representation for the host machine.
  *
  * They are safe to use even when byte-array address is not aligned according
  * to desired integer width.

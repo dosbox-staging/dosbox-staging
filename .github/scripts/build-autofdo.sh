@@ -54,7 +54,7 @@ flags="-Os -DNDEBUG -pipe"
 
 # Build and install
 # Note: make cannot be run in parallel because the sub-projects'
-#       need to be configured serially with respect to eachother
+#       need to be configured serially with respect to each other
 make
 make install
 popd

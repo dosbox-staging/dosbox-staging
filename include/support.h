@@ -55,7 +55,7 @@ char drive_letter(uint8_t index);
 /*
  *  Converts a string to a finite number (such as float or double).
  *  Returns the number or quiet_NaN, if it could not be parsed.
- *  This function does not attemp to capture exceptions that may
+ *  This function does not attempt to capture exceptions that may
  *  be thrown from std::stod(...)
  */
 template<typename T>
@@ -75,7 +75,7 @@ T to_finite(const std::string& input) {
 }
 
 // Returns the filename with the prior path stripped.
-// Works with both \ and / directory delimeters.
+// Works with both \ and / directory delimiters.
 std::string get_basename(const std::string& filename);
 
 // Unsigned-only integer division with ceiling

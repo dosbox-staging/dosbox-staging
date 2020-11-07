@@ -6,7 +6,7 @@
 # Automator is a generic automation tool that helps separate data
 # from logical code.  It uses one or more "variables" files placed
 # in a single sub-directory, that are sourced in logical succession,
-# such as variables defined in earler files are either added-to or
+# such as variables defined in earlier files are either added-to or
 # overridden in subsequent files.
 #
 # For a thorough example, see scripts/build.sh and its data files
@@ -14,7 +14,7 @@
 #
 # TODO: This script manages variables using eval meta-programming.
 #       Although the syntax is quite readable under bash 4.x,
-#       we have limitted our syntax to the uglier and heavier bash 3.x
+#       we have limited our syntax to the uglier and heavier bash 3.x
 #       because Apple is still only shipping bash 3.x, even on their
 #       latest operating system (Nov-2019).
 #
