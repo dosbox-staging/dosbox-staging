@@ -16,16 +16,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <string.h>
-#include <math.h>
 #include "dosbox.h"
+
+#include <cmath>
+#include <cstring>
+
 #include "inout.h"
-#include "vga.h"
+#include "mapper.h"
 #include "mem.h"
 #include "pic.h"
 #include "render.h"
-#include "mapper.h"
+#include "support.h"
+#include "vga.h"
 
 static void write_crtc_index_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	vga.other.index=(Bit8u)val;
