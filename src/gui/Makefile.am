@@ -5,6 +5,7 @@ libgui_a_SOURCES = \
 	dosbox_logo.h \
 	gui_msgs.h \
 	render.cpp \
+	render_crt_glsl.h \
 	render_glsl.h \
 	render_loops.h \
 	render_scalers.cpp \

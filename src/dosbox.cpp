@@ -507,12 +507,14 @@ void DOSBOX_Init(void) {
 	pstring->Set_values(force);
 
 #if C_OPENGL
-	Pstring = secprop->Add_path("glshader", Property::Changeable::Always, "sharp");
-	Pstring->Set_help("Path to GLSL shader source to use with OpenGL output (\"none\" to disable).\n"
-	                  "Can be either an absolute path, a file in the \"glshaders\" subdirectory\n"
-	                  "of the DOSBox configuration directory, or one of the built-in shaders:\n"
-	                  "advinterp2x, advinterp3x, advmame2x, advmame3x, rgb2x, rgb3x, scan2x,\n"
-	                  "scan3x, tv2x, tv3x, sharp.");
+	pstring = secprop->Add_path("glshader", always, "sharp");
+	pstring->Set_help("Either 'none' or a GLSL shader name. Works only with\n"
+	                  "OpenGL output.  Can be either an absolute path, a file\n"
+	                  "in the 'glshaders' subdirectory of the DOSBox\n"
+	                  "configuration directory, or one of the built-in shaders:\n"
+	                  "advinterp2x, advinterp3x, advmame2x, advmame3x,\n"
+	                  "crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,\n"
+	                  "scan2x, scan3x, tv2x, tv3x, sharp.");
 #endif
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init,true);//done

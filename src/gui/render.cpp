@@ -18,12 +18,14 @@
 
 #include "dosbox.h"
 
-#include <sys/types.h>
-#include <assert.h>
+#include <cassert>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
-#include <stdlib.h>
+#include <unordered_map>
+
+#include <sys/types.h>
 
 #include "video.h"
 #include "render.h"
@@ -36,8 +38,9 @@
 #include "shell.h"
 #include "vga.h"
 
-#include "render_scalers.h"
+#include "render_crt_glsl.h"
 #include "render_glsl.h"
+#include "render_scalers.h"
 
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
@@ -615,26 +618,35 @@ void RENDER_SetForceUpdate(bool f) {
 }
 
 #if C_OPENGL
-static bool RENDER_GetShader(std::string& shader_path, char *old_src) {
+static bool RENDER_GetShader(std::string &shader_path, char *old_src)
+{
+	const std::unordered_map<std::string, const char *> builtin_shaders = {
+	        {"advinterp2x", advinterp2x_glsl},
+	        {"advinterp3x", advinterp3x_glsl},
+	        {"advmame2x", advmame2x_glsl},
+	        {"advmame3x", advmame3x_glsl},
+	        {"crt-easymode-flat", crt_easymode_tweaked_glsl},
+	        {"crt-fakelottes-flat", crt_fakelottes_tweaked_glsl},
+	        {"rgb2x", rgb2x_glsl},
+	        {"rgb3x", rgb3x_glsl},
+	        {"scan2x", scan2x_glsl},
+	        {"scan3x", scan3x_glsl},
+	        {"sharp", sharp_glsl},
+	        {"tv2x", tv2x_glsl},
+	        {"tv3x", tv3x_glsl},
+	};
+
 	char* src;
 	std::stringstream buf;
 	std::ifstream fshader(shader_path.c_str(), std::ios_base::binary);
-	if (!fshader.is_open()) fshader.open((shader_path + ".glsl").c_str(), std::ios_base::binary);
+	if (!fshader.is_open())
+		fshader.open(shader_path + ".glsl", std::ios_base::binary);
 	if (fshader.is_open()) {
 		buf << fshader.rdbuf();
 		fshader.close();
+	} else if (builtin_shaders.count(shader_path) > 0) {
+		buf << builtin_shaders.at(shader_path);
 	}
-	else if (shader_path == "advinterp2x") buf << advinterp2x_glsl;
-	else if (shader_path == "advinterp3x") buf << advinterp3x_glsl;
-	else if (shader_path == "advmame2x")   buf << advmame2x_glsl;
-	else if (shader_path == "advmame3x")   buf << advmame3x_glsl;
-	else if (shader_path == "rgb2x")       buf << rgb2x_glsl;
-	else if (shader_path == "rgb3x")       buf << rgb3x_glsl;
-	else if (shader_path == "scan2x")      buf << scan2x_glsl;
-	else if (shader_path == "scan3x")      buf << scan3x_glsl;
-	else if (shader_path == "tv2x")        buf << tv2x_glsl;
-	else if (shader_path == "tv3x")        buf << tv3x_glsl;
-	else if (shader_path == "sharp")       buf << sharp_glsl;
 
 	if (!buf.str().empty()) {
 		std::string s = buf.str() + '\n';
