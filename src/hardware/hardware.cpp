@@ -760,8 +760,8 @@ public:
 #if (C_SSHOT)
 		MAPPER_AddHandler(CAPTURE_ScreenShotEvent, SDL_SCANCODE_F5, MMOD1,
 		                  "scrshot", "Screenshot");
-		MAPPER_AddHandler(CAPTURE_VideoEvent, SDL_SCANCODE_F5, MMOD1 | MMOD2,
-		                  "video", "Video");
+		MAPPER_AddHandler(CAPTURE_VideoEvent, SDL_SCANCODE_F7, MMOD1,
+		                  "video", "Rec. Video");
 #endif
 	}
 	~HARDWARE(){
