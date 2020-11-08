@@ -96,7 +96,7 @@
   <launchable type="desktop-id">dosbox-staging.desktop</launchable>
   <developer_name>The DOSBox Staging Team</developer_name>
   <update_contact>dreamer.tan@gmail.com</update_contact>
-  <url type="homepage">https://dosbox-staging.github.io/</url>
+  <url type="homepage">https://dosbox-staging.github.io/about/</url>
   <url type="bugtracker">https://github.com/dosbox-staging/dosbox-staging/issues</url>
   <content_rating type="oars-1.0"/>
 </component>
