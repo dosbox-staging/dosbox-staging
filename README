@@ -1048,9 +1048,9 @@ ALT-PAUSE     Pause emulation (hit ALT-PAUSE again to continue).
 CTRL-F1       Start the keymapper.
 CTRL-F4       Change between mounted floppy/CD images. Update directory cache
               for all drives.
-CTRL-ALT-F5   Start/Stop creating a movie of the screen. (avi video capturing)
 CTRL-F5       Save a screenshot. (PNG format)
 CTRL-F6       Start/Stop recording sound output to a wave file.
+CTRL-F7       Start/Stop recording video output to a zmbv file.
 CTRL-F9       Kill DOSBox.
 CTRL-F10      Capture/Release the mouse.
 CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
