@@ -2,7 +2,7 @@
 
 AM_MAKEFLAGS ?= --no-print-directory
 
-EXTRA_DIST = autogen.sh
+EXTRA_DIST = autogen.sh contrib
 
 SUBDIRS = docs include src tests
 
