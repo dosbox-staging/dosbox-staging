@@ -1043,15 +1043,15 @@ For more information use the /? command line switch with the programs.
 5. Special Keys:
 ================
 
-ALT-ENTER     Switch to full screen and back.
-ALT-PAUSE     Pause emulation (hit ALT-PAUSE again to continue).
+ALT-ENTER     Switch between fullscreen and window mode.
+ALT-PAUSE     Pause/Unpause emulator.
 CTRL-F1       Start the keymapper.
 CTRL-F4       Change between mounted floppy/CD images. Update directory cache
               for all drives.
 CTRL-F5       Save a screenshot. (PNG format)
 CTRL-F6       Start/Stop recording sound output to a wave file.
 CTRL-F7       Start/Stop recording video output to a zmbv file.
-CTRL-F9       Kill DOSBox.
+CTRL-F9       Shutdown emulator.
 CTRL-F10      Capture/Release the mouse.
 CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
 CTRL-F12      Speed up emulation (Increase DOSBox Cycles)*.
