@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <sys/types.h>
+#include <tuple>
 #include <math.h>
 #ifdef WIN32
 #include <signal.h>
@@ -448,8 +449,8 @@ static int watch_sdl_events(void *userdata, SDL_Event *e)
 		if (win == (SDL_Window *)userdata) {
 			const int w = e->window.data1;
 			const int h = e->window.data2;
-			const int id = e->window.windowID;
-			DEBUG_LOG_MSG("SDL: Resizing window %d to %dx%d", id, w, h);
+			// const int id = e->window.windowID;
+			// DEBUG_LOG_MSG("SDL: Resizing window %d to %dx%d", id, w, h);
 			HandleVideoResize(w, h);
 		}
 	}
@@ -1897,7 +1898,21 @@ static std::string NormalizeConfValue(const char *val)
 	return pref;
 }
 
-static bool DetectResizableWindow()
+static std::string get_glshader_value()
+{
+#if C_OPENGL
+	assert(control);
+	const Section *rs = control->GetSection("render");
+	assert(rs);
+	return rs->GetPropValue("glshader");
+#else
+	return "";
+#endif // C_OPENGL
+}
+
+
+
+static bool detect_resizable_window()
 {
 #if C_OPENGL
 	if (sdl.desktop.want_type != SCREEN_OPENGL) {
@@ -1906,10 +1921,7 @@ static bool DetectResizableWindow()
 		return false;
 	}
 
-	assert(control);
-	const Section *rs = control->GetSection("render");
-	assert(rs);
-	const std::string sname = rs->GetPropValue("glshader");
+	const std::string sname = get_glshader_value();
 
 	if (sname != "sharp" && sname != "none") {
 		LOG_MSG("MAIN: Disabling resizable window, because it's not "
@@ -1924,6 +1936,36 @@ static bool DetectResizableWindow()
 #endif // C_OPENGL
 }
 
+static bool detect_shader_fixed_size()
+{
+#if C_OPENGL
+	if (sdl.desktop.want_type != SCREEN_OPENGL)
+		return false;
+
+	const std::string sname = get_glshader_value();
+	return (sname == "crt-fakelottes-flat" || sname == "crt-easymode-flat");
+#else
+	return false;
+#endif // C_OPENGL
+}
+
+static std::tuple<int, int> detect_window_size()
+{
+	SDL_Rect bounds;
+	SDL_GetDisplayBounds(sdl.display_number, &bounds);
+	constexpr int resolutions[][2] = {
+	        {1600, 1200},
+	        {1280, 960},
+	        {1024, 768},
+	        {800, 600},
+	};
+	for (const auto &wh : resolutions) {
+		if (bounds.w > wh[0] && bounds.h > wh[1])
+			return std::make_tuple(wh[0], wh[1]);
+	}
+	return std::make_tuple(640, 480);
+}
+
 static void SetupWindowResolution(const char *val)
 {
 	assert(sdl.display_number >= 0);
@@ -1931,16 +1973,24 @@ static void SetupWindowResolution(const char *val)
 
 	if (pref == "default" || pref.empty()) {
 #if defined(LINUX)
-		sdl.desktop.want_resizable_window = DetectResizableWindow();
+		sdl.desktop.want_resizable_window = detect_resizable_window();
 #else
 		sdl.desktop.want_resizable_window = false;
 #endif
 		sdl.desktop.window.use_original_size = true;
+
+		if (!sdl.desktop.want_resizable_window &&
+		    detect_shader_fixed_size()) {
+			const auto wh = detect_window_size();
+			sdl.desktop.window.use_original_size = false;
+			sdl.desktop.window.width = std::get<0>(wh);
+			sdl.desktop.window.height = std::get<1>(wh);
+		}
 		return;
 	}
 
 	if (pref == "resizable") {
-		sdl.desktop.want_resizable_window = DetectResizableWindow();
+		sdl.desktop.want_resizable_window = detect_resizable_window();
 		sdl.desktop.window.use_original_size = true;
 		return;
 	}
