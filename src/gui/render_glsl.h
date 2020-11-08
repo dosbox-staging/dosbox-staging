@@ -16,6 +16,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef DOSBOX_RENDER_GLSL_H
+#define DOSBOX_RENDER_GLSL_H
+
 #if C_OPENGL
 
 static const char advinterp2x_glsl[] = R"GLSL(
@@ -583,5 +586,6 @@ void main() {
 #endif
 )GLSL";
 
-#endif
+#endif // C_OPENGL
 
+#endif
