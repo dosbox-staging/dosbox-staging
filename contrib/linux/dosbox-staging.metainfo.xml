@@ -31,6 +31,11 @@
       DOSBox Staging is highly configurable and sufficiently-optimized to run
       any DOS game on a modern computer.
     </p>
+    <p>Relationship to DOSBox:</p>
+    <p>
+      DOSBox Staging is separate from and not supported by the SourceForge-hosted
+      DOSBox project or its development team, the DOSBox Team.
+    </p>
   </description>
   <screenshots>
     <screenshot type="default">
