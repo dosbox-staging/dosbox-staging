@@ -105,7 +105,6 @@ typedef std::list<CEvent *>::iterator CEventList_it;
 typedef std::list<CBind *>::iterator CBindList_it;
 typedef std::vector<CButton *>::iterator CButton_it;
 typedef std::vector<CEvent *>::iterator CEventVector_it;
-typedef std::vector<CHandlerEvent *>::iterator CHandlerEventVector_it;
 typedef std::vector<CBindGroup *>::iterator CBindGroup_it;
 
 static CBindList holdlist;
@@ -1705,11 +1704,6 @@ public:
 
 	void Active(bool yesno) { (*handler)(yesno); }
 
-	const char * ButtonName()
-	{
-		return button_name.c_str();
-	}
-
 	void MakeDefaultBind(char *buf)
 	{
 		if (defkey == SDL_SCANCODE_UNKNOWN)
@@ -2198,8 +2192,9 @@ static void CreateLayout() {
 
 	/* Create Handler buttons */
 	Bitu xpos=3;Bitu ypos=11;
-	for (CHandlerEventVector_it hit = handlergroup.begin(); hit != handlergroup.end(); ++hit) {
-		new CEventButton(PX(xpos*3),PY(ypos),BW*3,BH,(*hit)->ButtonName(),(*hit));
+	for (const auto &handler_event : handlergroup) {
+		new CEventButton(PX(xpos * 3), PY(ypos), BW * 3, BH,
+		                 handler_event->button_name.c_str(), handler_event);
 		xpos++;
 		if (xpos>6) {
 			xpos=3;ypos++;
@@ -2375,8 +2370,8 @@ static void CreateDefaultBinds() {
 	CreateStringBind(buffer);
 	sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_LALT);
 	CreateStringBind(buffer);
-	for (CHandlerEventVector_it hit = handlergroup.begin(); hit != handlergroup.end(); ++hit) {
-		(*hit)->MakeDefaultBind(buffer);
+	for (const auto &handler_event : handlergroup) {
+		handler_event->MakeDefaultBind(buffer);
 		CreateStringBind(buffer);
 	}
 
