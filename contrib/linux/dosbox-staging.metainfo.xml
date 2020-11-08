@@ -63,7 +63,26 @@
     <category>Emulator</category>
   </categories>
   <releases>
-    <release version="0.75.1" date="2020-07-19"/>
+    <release version="0.76.0-alpha-git" type="development">
+    </release>
+    <release version="0.75.2" date="2020-10-26">
+      <description>
+        <p>dosbox-staging 0.75.2 maintenance release</p>
+      </description>
+      <url>https://dosbox-staging.github.io/v0-75-2/</url>
+    </release>
+    <release version="0.75.1" date="2020-07-19">
+      <description>
+        <p>dosbox-staging 0.75.1 bugfix release</p>
+      </description>
+      <url>https://dosbox-staging.github.io/v0-75-1/</url>
+    </release>
+    <release version="0.75.0" date="2020-05-06">
+      <description>
+        <p>dosbox-staging 0.75.0 final release</p>
+      </description>
+      <url>https://dosbox-staging.github.io/v0-75-0/</url>
+    </release>
   </releases>
   <provides>
     <binary>dosbox</binary>
