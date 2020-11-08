@@ -15,8 +15,8 @@
     <p>It features:</p>
     <ul>
       <li>A built-in DOS-like console</li>
-      <li>Emulation of several PC variants: IBM PC, IBM PCjr, Tandy 1000),
-          and CPUs (286, 386, 486, and Pentium I)</li>
+      <li>Emulation of several PC variants: ( IBM PC, IBM PCjr, Tandy 1000 ),
+          and CPUs ( 286, 386, 486, and Pentium I )</li>
       <li>Graphics chipsets: Hercules, CGA, EGA, VGA, and SVGA</li>
       <li>Audio solutions: PC Speaker, Tandy Sound System, Disney Sound Source,
           Sound Blaster series, and Gravis UltraSound</li>
