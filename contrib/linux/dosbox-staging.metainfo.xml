@@ -21,7 +21,7 @@
       <li>Audio solutions: PC Speaker, Tandy Sound System, Disney Sound Source,
           Sound Blaster series, and Gravis UltraSound</li>
       <li>CDROM and CD Digital Audio with audio optionally encoded as FLAC,
-	  Opus, OGG/Vorbis, MP3 or WAV</li>
+          Opus, OGG/Vorbis, MP3 or WAV</li>
       <li>Joystick emulation working with modern game controllers</li>
       <li>Serial port emulation including IPX over UDP and Telnet over TCP/IP</li>
       <li>Hardware-accelerated video output including integer (pixel-perfect)
