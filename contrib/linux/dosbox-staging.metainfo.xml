@@ -15,13 +15,13 @@
     <p>It features:</p>
     <ul>
       <li>A built-in DOS-like console</li>
-      <li>Emulation of several PC variants: IBM PC, IBM PCjr, Tandy 1000),
+      <li>Emulation of several PC variants: (IBM PC, IBM PCjr, Tandy 1000),
           and CPUs (286, 386, 486, and Pentium I)</li>
       <li>Graphics chipsets: Hercules, CGA, EGA, VGA, and SVGA</li>
       <li>Audio solutions: PC Speaker, Tandy Sound System, Disney Sound Source,
           Sound Blaster series, and Gravis UltraSound</li>
       <li>CDROM and CD Digital Audio with audio optionally encoded as FLAC,
-	  Opus, OGG/Vorbis, MP3 or WAV</li>
+          Opus, OGG/Vorbis, MP3 or WAV</li>
       <li>Joystick emulation working with modern game controllers</li>
       <li>Serial port emulation including IPX over UDP and Telnet over TCP/IP</li>
       <li>Hardware-accelerated video output including integer (pixel-perfect)
@@ -58,7 +58,9 @@
     <category>Emulator</category>
   </categories>
   <releases>
+    <release version="0.75.2" date="2020-10-26"/>
     <release version="0.75.1" date="2020-07-19"/>
+    <release version="0.75.0" date="2020-05-06"/>
   </releases>
   <provides>
     <binary>dosbox</binary>
