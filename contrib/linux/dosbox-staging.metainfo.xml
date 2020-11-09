@@ -63,7 +63,7 @@
     <category>Emulator</category>
   </categories>
   <releases>
-    <release version="0.76.0-alpha-git" type="development">
+    <release version="0.76.0-alpha-git" type="development" date="1970-01-01">
     </release>
     <release version="0.75.2" date="2020-10-26">
       <description>
