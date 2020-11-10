@@ -8,7 +8,8 @@ _dosbox()
   _init_completion -s || return
   local IFS=$'|\t\n'
   local words_filter="${words[*]:1:$(( cword - 1 ))}"
-  # shellcheck disable=SC2034 # using nameref
+  # using nameref
+  # shellcheck disable=SC2034
   local -a \
        _main_opts=(
                     -h --help -fullscreen -startmapper -noautoexec -securemode
@@ -50,11 +51,13 @@ _dosbox()
        [[ -e /usr/share/doc/dosbox-staging/README.gz ]] &&
        printf "%s\n" "--README"
      )
-  # shellcheck disable=SC2034 # using nameref _sub_opts
+  # using nameref _sub_opts
+  # shellcheck disable=SC2034
   local _conf="${DOSBOX_STAGING_CONF_DIR:-$XDG_CONFIG_HOME/dosbox/}"
         #TODO validate the dir exists
   # forcescaler uses same sub. options as scaler, so setup a nameref to it
-  # shellcheck disable=SC2034 # using nameref _sub_opts
+  # using nameref _sub_opts
+  # shellcheck disable=SC2034
   local -n _forcescaler=_scaler
 
   # setup nameref to point to array
