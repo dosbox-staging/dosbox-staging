@@ -9,11 +9,29 @@
 #
 # $ ./verify-bash.sh --format=json
 
+### 2020-11-10 Feignint
+# Added extra_bash_files array, for files that should be shellchecked but
+# are not identified by file, e.g. bash-completion shell function script.
+
+extra_bash_files=(
+	contrib/linux/bash-completion/dosbox
+)
+
 list_bash_files () {
 	git ls-files \
 		| xargs file \
 		| grep "Bourne-Again shell script" \
 		| cut -d ':' -f 1
+
+	for extra_file in "${extra_bash_files[@]}"
+	do
+		if [[ -e "${extra_file}" ]]
+		then
+			echo "${extra_file}"
+		else
+			true # Don't leak none zero exit if file no longer exists
+		fi
+	done
 }
 
 main () {
