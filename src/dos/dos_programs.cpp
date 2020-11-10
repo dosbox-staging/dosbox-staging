@@ -37,6 +37,7 @@
 #include "fs_utils.h"
 #include "inout.h"
 #include "program_autotype.h"
+#include "program_ls.h"
 #include "regs.h"
 #include "setup.h"
 #include "shell.h"
@@ -1905,6 +1906,7 @@ void DOS_SetupPrograms(void) {
 	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);
 	PROGRAMS_MakeFile("LOADFIX.COM", LOADFIX_ProgramStart);
 	PROGRAMS_MakeFile("LOADROM.COM", LOADROM_ProgramStart);
+	PROGRAMS_MakeFile("LS.COM", LS_ProgramStart);
 	PROGRAMS_MakeFile("MEM.COM", MEM_ProgramStart);
 	PROGRAMS_MakeFile("MOUNT.COM", MOUNT_ProgramStart);
 	PROGRAMS_MakeFile("RESCAN.COM", RESCAN_ProgramStart);

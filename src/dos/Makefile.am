@@ -1,7 +1,7 @@
 AM_CPPFLAGS = -I$(top_srcdir)/include
 
 noinst_LIBRARIES = libdos.a
-EXTRA_DIST = dos_codepages.h dos_keyboard_layout_data.h
+
 libdos_a_SOURCES = \
 	cdrom.cpp \
 	cdrom.h \
@@ -28,4 +28,8 @@ libdos_a_SOURCES = \
 	drive_virtual.cpp \
 	drives.cpp \
 	program_autotype.cpp \
-	program_autotype.h
+	program_autotype.h \
+	program_ls.cpp \
+	program_ls.h
+
+EXTRA_DIST = dos_codepages.h dos_keyboard_layout_data.h
