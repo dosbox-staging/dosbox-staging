@@ -719,7 +719,7 @@ Bitu Module::PortRead( Bitu port, Bitu iolen ) {
 
 void Module::Init( Mode m ) {
 	mode = m;
-	memset(cache, 0, sizeof(cache));
+	memset(cache, 0, ARRAY_LEN(cache));
 	switch ( mode ) {
 	case MODE_OPL3:
 	case MODE_OPL3GOLD:
