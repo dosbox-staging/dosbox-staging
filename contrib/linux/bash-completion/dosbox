@@ -11,8 +11,8 @@ _dosbox()
   # shellcheck disable=SC2034 # using nameref
   local -a \
        _main_opts=(
-                    -fullscreen -startmapper -noautoexec -securemode -scaler
-                    -forcescaler -lang -machine -socket -exit
+                    -h --help -fullscreen -startmapper -noautoexec -securemode
+                    -scaler -forcescaler -lang -machine -socket -exit
                   )\
      _repeat_opts=(
                     -c -conf
@@ -33,14 +33,19 @@ _dosbox()
                     advinterp3x hq2x hq3x 2xsai super2xsai supereagle tv2x
                     tv3x rgb2x rgb3x scan2x scan3x
                   )\
+
+  # can we get hints from manpage?
+  man -w dosbox >/dev/null 2>&1 && local manpage_hints=true
+
+  # pager may not exist, README might not be where I expect
   local -a _pager
   readarray -t -O 0 _pager < <( type -p zless zmore || true; )
-  # man or pager may not exist, README might not be where I expect
 
   local -a _help_opts
   readarray -t -O 0 _help_opts < <(
-     man -w dosbox >/dev/null 2>&1 &&
-       printf "%s\n"  "--help"
+     [[ ${manpage_hints} == true ]] &&
+       printf "%s\n" "--MANPAGE"
+
      [[ ${_pager[*]} ]] &&
        [[ -e /usr/share/doc/dosbox-staging/README.gz ]] &&
        printf "%s\n" "--README"
@@ -56,7 +61,7 @@ _dosbox()
   [[ ${prev:0:1} == - ]] && local -n _sub_opts=${prev//+(-)/_}
 
   case "$cur" in
-    --h*)
+    --M*)
       compopt -o nospace
       # have to hope they tabbed
       man dosbox
@@ -104,8 +109,8 @@ _dosbox()
         < <( compgen -W "${_sub_opts[*]}" -- "${cur}" )
       return;;
     -socket|-lang|-c)
-      [[ ${_help_opts[*]} =~ help && -z ${cur} ]] &&
       # man and the manpage required for hints
+      [[ ${manpage_hints} == true && -z ${cur} ]] &&
         readarray -t -O ${#COMPREPLY[@]} COMPREPLY \
         < <(
           # shellcheck disable=SC2046
