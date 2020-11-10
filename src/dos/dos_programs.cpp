@@ -1895,19 +1895,17 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_KEYB_LAYOUTNOTFOUND","No layout in %s for codepage %i\n");
 	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n\n");
 
-	/*regular setup*/
 	PROGRAMS_MakeFile("AUTOTYPE.COM", AUTOTYPE_ProgramStart);
-	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
-	PROGRAMS_MakeFile("MEM.COM",MEM_ProgramStart);
-	PROGRAMS_MakeFile("LOADFIX.COM",LOADFIX_ProgramStart);
-	PROGRAMS_MakeFile("RESCAN.COM",RESCAN_ProgramStart);
-	PROGRAMS_MakeFile("INTRO.COM",INTRO_ProgramStart);
-	PROGRAMS_MakeFile("BOOT.COM",BOOT_ProgramStart);
 #if C_DEBUG
 	PROGRAMS_MakeFile("BIOSTEST.COM", BIOSTEST_ProgramStart);
 #endif
-	PROGRAMS_MakeFile("LOADROM.COM", LOADROM_ProgramStart);
+	PROGRAMS_MakeFile("BOOT.COM", BOOT_ProgramStart);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
+	PROGRAMS_MakeFile("INTRO.COM", INTRO_ProgramStart);
 	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);
-
+	PROGRAMS_MakeFile("LOADFIX.COM", LOADFIX_ProgramStart);
+	PROGRAMS_MakeFile("LOADROM.COM", LOADROM_ProgramStart);
+	PROGRAMS_MakeFile("MEM.COM", MEM_ProgramStart);
+	PROGRAMS_MakeFile("MOUNT.COM", MOUNT_ProgramStart);
+	PROGRAMS_MakeFile("RESCAN.COM", RESCAN_ProgramStart);
 }
