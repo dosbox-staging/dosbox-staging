@@ -29,10 +29,10 @@ git_svn_clone_dosbox () {
 	local -r svn_rev_range=$1
 	local -r repo_name=$2
 
-	git svn init \
-		--stdlayout \
-		"$svn_url" \
-		"$repo_name"
+	if ! git svn init --stdlayout "$svn_url" "$repo_name" ; then
+		echo_err "'git svn init' failed. Do you have git-svn installed?"
+		exit 1
+	fi
 
 	local -r authors_file=$PWD/svn-dosbox-authors
 	#
@@ -132,7 +132,7 @@ full_import () {
 	local -r repo=$1
 
 	if ! git_svn_clone_dosbox "1:HEAD" "$repo" ; then
-		echo_err "TODO" # TODO
+		echo_err "Preparing git-svn repo failed."
 		exit 1
 	fi
 
