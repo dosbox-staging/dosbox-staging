@@ -1,2 +1,2 @@
 #!/bin/bash
-git fetch origin refs/notes/*:refs/notes/*
+git push origin refs/notes/*
