@@ -467,7 +467,7 @@ public:
 			return;
 		spkr.rate = std::max(section->Get_int("pcrate"), 8000);
 
-		std::string dc_offset_pref = section->Get_string("pc_zero_offset");
+		std::string dc_offset_pref = section->Get_string("zero_offset");
 		if (dc_offset_pref == "auto")
 #if !defined(WIN32)
 			spkr.neutralize_dc_offset = true;

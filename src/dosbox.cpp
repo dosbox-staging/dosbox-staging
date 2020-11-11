@@ -714,9 +714,9 @@ void DOSBOX_Init(void) {
 	pint->SetMinMax(8000, 48000);
 	pint->Set_help("Sample rate of the PC-Speaker sound generation.");
 
-	const char *pc_zero_offset_opts[] = {"auto", "true", "false", 0};
-	pstring = secprop->Add_string("pc_zero_offset", when_idle, pc_zero_offset_opts[0]);
-	pstring->Set_values(pc_zero_offset_opts);
+	const char *zero_offset_opts[] = {"auto", "true", "false", 0};
+	pstring = secprop->Add_string("zero_offset", when_idle, zero_offset_opts[0]);
+	pstring->Set_values(zero_offset_opts);
 	pstring->Set_help(
 	        "Neutralizes and prevents the PC speaker's DC-offset from harming other sources.\n"
 	        "'auto' enables this for non-Windows systems and disables it on Windows.\n"
