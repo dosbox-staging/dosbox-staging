@@ -130,6 +130,14 @@
             "Message": "Expression is always false."
         },
         {
+            "CodeCurrent": 1849716353,
+            "CodeNext": 11359373,
+            "CodePrev": 2663124891,
+            "ErrorCode": "V1051",
+            "FileName": "dr_wav.h",
+            "Message": "Consider checking for misprints. It's possible that the 'sampleCountFromFactChunk' should be used inside 'drwav__seek_forward' function."
+        },
+        {
             "CodeCurrent": 3210175261,
             "CodeNext": 11069,
             "CodePrev": 2952291276,
