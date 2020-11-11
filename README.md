@@ -53,8 +53,8 @@ Codecs supported for CD-DA emulation:
 | **WAV**        | Yes (built-in)             | Yes - SDL\_sound 1.2 (built-in)<sup>[7],＊</sup>
 | **AIFF**       | No                         | Yes - SDL\_sound 1.2 (built-in)<sup>[7],＊</sup>
 
+<sup>† - 8/16/24 bit-depth, 22.05/44.1/48 kHz, and mono or stereo</sup>\
 <sup>＊- SDL 1.2 was last updated 2013-08-17 and SDL\_sound 2008-04-20</sup>\
-<sup>† - 22.05 kHz, 44.1 kHz, 48 kHz; mono, stereo</sup>\
 <sup>‡ - 44.1 kHz stereo only</sup>\
 <sup>§ - Broken or unsupported in either SDL\_sound or DOSBox</sup>
 
