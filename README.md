@@ -13,7 +13,7 @@ support today's systems.
 
 ### For developers
 
-|                                | dosbox-staging              | DOSBox
+|                                | DOSBox Staging              | DOSBox
 |-                               |-                            |-
 | **Version control**            | Git                         | [SVN]
 | **Language**                   | C++14                       | C++03<sup>[1]</sup>
