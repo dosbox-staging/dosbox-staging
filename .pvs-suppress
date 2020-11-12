@@ -130,6 +130,14 @@
             "Message": "Expression is always false."
         },
         {
+            "CodeCurrent": 1596023591,
+            "CodeNext": 1281436681,
+            "CodePrev": 4081771348,
+            "ErrorCode": "V547",
+            "FileName": "dr_wav.h",
+            "Message": "Expression 'bytesToRead > (_UL)' is always false."
+        },
+        {
             "CodeCurrent": 1849716353,
             "CodeNext": 11359373,
             "CodePrev": 2663124891,
