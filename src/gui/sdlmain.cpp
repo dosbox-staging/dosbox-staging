@@ -2141,6 +2141,12 @@ static void GUI_StartUp(Section *sec)
 		sdl.desktop.want_type=SCREEN_SURFACE;//SHOULDN'T BE POSSIBLE anymore
 	}
 
+	const std::string screensaver = section->Get_string("screensaver");
+	if (screensaver == "allow")
+		SDL_EnableScreenSaver();
+	if (screensaver == "block")
+		SDL_DisableScreenSaver();
+
 	sdl.texture.texture = 0;
 	sdl.texture.pixelFormat = 0;
 	sdl.render_driver = section->Get_string("texture_renderer");
@@ -2905,6 +2911,14 @@ void Config_Add_SDL() {
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
 	pstring->Set_help("File used to load/save the key/event mappings from.\n"
 	                  "Resetmapper only works with the default value.");
+
+	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");
+	pstring->Set_help(
+	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER\n"
+	        "environment variable (which usually blocks the OS screensaver\n"
+	        "while the emulator is running).");
+	const char *ssopts[] = {"auto", "allow", "block", 0};
+	pstring->Set_values(ssopts);
 }
 
 static void show_warning(char const * const message) {
