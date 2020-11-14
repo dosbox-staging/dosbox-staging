@@ -394,6 +394,12 @@
     <ClCompile Include="..\src\midi\midi_fluidsynth.cpp">
       <Filter>src\midi</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\program_ls.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\fs_utils_win32.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\bios.h">
@@ -624,15 +630,6 @@
     <ClInclude Include="..\src\dos\dos_mscdex.h">
       <Filter>src\dos</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\dos\Ntddcdrm.h">
-      <Filter>src\dos</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\dos\Ntddscsi.h">
-      <Filter>src\dos</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\dos\Ntddstor.h">
-      <Filter>src\dos</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\fpu\fpu_instructions.h">
       <Filter>src\fpu</Filter>
     </ClInclude>
@@ -746,6 +743,18 @@
     </ClInclude>
     <ClInclude Include="..\include\compiler.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fs_utils.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\string_utils.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_ls.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\gui_msgs.h">
+      <Filter>src\gui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

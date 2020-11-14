@@ -454,9 +454,6 @@
     <ClInclude Include="..\src\dos\cdrom.h" />
     <ClInclude Include="..\src\dos\dev_con.h" />
     <ClInclude Include="..\src\dos\dos_mscdex.h" />
-    <ClInclude Include="..\src\dos\Ntddcdrm.h" />
-    <ClInclude Include="..\src\dos\Ntddscsi.h" />
-    <ClInclude Include="..\src\dos\Ntddstor.h" />
     <ClInclude Include="..\src\dos\program_autotype.h" />
     <ClInclude Include="..\src\dos\program_ls.h" />
     <ClInclude Include="..\src\fpu\fpu_instructions.h" />
