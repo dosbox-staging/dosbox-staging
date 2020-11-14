@@ -40,6 +40,7 @@ noinst_HEADERS = \
 	setup.h \
 	shell.h \
 	soft_limiter.h \
+	string_utils.h \
 	support.h \
 	timer.h \
 	types.h \
