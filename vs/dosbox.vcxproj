@@ -412,6 +412,7 @@
     <ClInclude Include="..\include\serialport.h" />
     <ClInclude Include="..\include\setup.h" />
     <ClInclude Include="..\include\shell.h" />
+    <ClInclude Include="..\include\string_utils.h" />
     <ClInclude Include="..\include\support.h" />
     <ClInclude Include="..\include\timer.h" />
     <ClInclude Include="..\include\vga.h" />

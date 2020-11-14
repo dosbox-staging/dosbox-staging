@@ -15,9 +15,10 @@ endif
 
 tests_SOURCES = \
 	example.cpp \
+	fs_utils.cpp \
 	soft_limiter.cpp \
-	support.cpp \
-	fs_utils.cpp
+	string_utils.cpp \
+	support.cpp
 
 tests_LDADD = ../src/misc/libmisc.a
 

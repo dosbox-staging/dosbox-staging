@@ -41,6 +41,7 @@
 #include "mapper.h"
 #include "pic.h"
 #include "setup.h"
+#include "string_utils.h"
 #include "support.h"
 #include "video.h"
 

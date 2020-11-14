@@ -56,6 +56,7 @@
 #include "pic.h"
 #include "render.h"
 #include "setup.h"
+#include "string_utils.h"
 #include "support.h"
 #include "timer.h"
 #include "vga.h"
