@@ -218,6 +218,12 @@ bool localDrive::GetSystemFilename(char *sysName, char const * const dosName) {
 
 // Attempt to delete the file name from our local drive mount
 bool localDrive::FileUnlink(char * name) {
+	if (!FileExists(name)) {
+		DEBUG_LOG_MSG("FS: Skipping removal of %s because it doesn't exist",
+		              name);
+		return true;
+	}
+
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
