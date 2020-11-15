@@ -221,7 +221,8 @@ bool localDrive::FileUnlink(char * name) {
 	if (!FileExists(name)) {
 		DEBUG_LOG_MSG("FS: Skipping removal of %s because it doesn't exist",
 		              name);
-		return true;
+		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		return false;
 	}
 
 	char newname[CROSS_LEN];
