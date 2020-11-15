@@ -648,13 +648,21 @@ bool DOS_OpenFileExtended(char const * name, Bit16u flags, Bit16u createAttr, Bi
 }
 
 bool DOS_UnlinkFile(char const * const name) {
-	char fullname[DOS_PATHLENGTH];Bit8u drive;
-	// An existing device returns an access denied error
+	char fullname[DOS_PATHLENGTH];
+	uint8_t drive;
+
+	// An non-existing device returns an access denied error
 	if (DOS_FindDevice(name) != DOS_DEVICES) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-	if (!DOS_MakeName(name,fullname,&drive)) return false;
+
+	// If a proper DOS path cannot be constructed ...
+	if (!DOS_MakeName(name, fullname, &drive)) {
+		DOS_SetError(DOSERR_PATH_NOT_FOUND);
+		return false;
+	}
+
 	return Drives[drive]->FileUnlink(fullname);
 }
 
