@@ -211,6 +211,8 @@ class MIDI : public Module_base {
 public:
 	MIDI(Section *configuration) : Module_base(configuration)
 	{
+		using namespace std::string_literals;
+
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		std::string dev = section->Get_string("mididevice");
 		lowcase(dev);
@@ -252,18 +254,23 @@ public:
 		LOG_MSG("MIDI: Can't find device: %s, using default handler.",
 		        dev.c_str());
 getdefault:
-		handler=handler_list;
-		while (handler) {
+		for (handler = handler_list; handler; handler = handler->next) {
+			const std::string name = handler->GetName();
+			if (name == "fluidsynth") {
+				// Never select fluidsynth automatically.
+				// Users needs to opt-in, otherwise
+				// fluidsynth will slow down emulator
+				// startup for all games.
+				continue;
+			}
 			if (handler->Open(conf)) {
 				midi.available=true;
 				midi.handler=handler;
-				LOG_MSG("MIDI: Opened device: %s",
-				        handler->GetName());
+				LOG_MSG("MIDI: Opened device: %s", name.c_str());
 				return;
 			}
-			handler=handler->next;
 		}
-		/* This shouldn't be possible */
+		assert((handler != nullptr) && (handler->GetName() == "none"s));
 	}
 
 	~MIDI(){
