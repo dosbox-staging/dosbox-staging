@@ -593,11 +593,6 @@ void DOSBOX_Init(void) {
 	secprop = control->AddSection_prop("midi", &MIDI_Init, true);
 	secprop->AddInitFunction(&MPU401_Init, true);
 
-	pstring = secprop->Add_string("mpu401", when_idle, "intelligent");
-	const char *mputypes[] = {"intelligent", "uart", "none", 0};
-	pstring->Set_values(mputypes);
-	pstring->Set_help("Type of MPU-401 to emulate.");
-
 	pstring = secprop->Add_string("mididevice", when_idle, "auto");
 	const char *midi_devices[] = {
 		"auto",
@@ -638,6 +633,12 @@ void DOSBOX_Init(void) {
 	                  "When using a Roland MT-32 rev. 0 as midi output device, some games may require a delay in order to prevent 'buffer overflow' issues.\n"
 	                  "In that case, add 'delaysysex', for example: midiconfig=2 delaysysex\n"
 	                  "See the README/Manual for more details.");
+
+	pstring = secprop->Add_string("mpu401", when_idle, "intelligent");
+	const char *mputypes[] = {"intelligent", "uart", "none", 0};
+	pstring->Set_values(mputypes);
+	pstring->Set_help("Type of MPU-401 to emulate.");
+
 #if C_FLUIDSYNTH
 	FLUID_AddConfigSection(control);
 #endif
