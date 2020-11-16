@@ -619,20 +619,37 @@ void DOSBOX_Init(void) {
 	};
 	pstring->Set_values(midi_devices);
 	pstring->Set_help(
-	        "Device that will receive the MIDI data from emulated MPU-401.\n"
+	        "Device that will receive the MIDI data (from the emulated MIDI\n"
+	        "interface - MPU-401).\n"
 #if C_FLUIDSYNTH
 	        "Use 'fluidsynth' to select built-in software synthesiser,\n"
 	        "see the fluidsynth section for detailed configuration.\n"
 #endif
-	        "Use 'auto' to pick the first working device.");
+	        "Use 'auto' to pick the first working external device.");
 
-	Pstring = secprop->Add_string("midiconfig",Property::Changeable::WhenIdle,"");
-	Pstring->Set_help("Special configuration options for the device driver. This is usually the id or part of the name of the device you want to use\n"
-	                  "(find the id/name with mixer/listmidi).\n"
-	                  "Or in the case of coreaudio, you can specify a soundfont here.\n"
-	                  "When using a Roland MT-32 rev. 0 as midi output device, some games may require a delay in order to prevent 'buffer overflow' issues.\n"
-	                  "In that case, add 'delaysysex', for example: midiconfig=2 delaysysex\n"
-	                  "See the README/Manual for more details.");
+	pstring = secprop->Add_string("midiconfig", when_idle, "");
+	pstring->Set_help(
+	        "Configuration options for the selected MIDI interface.\n"
+	        "This is usually the id or name of the MIDI synthesiser you want\n"
+	        "to use (find the id/name with DOS command 'mixer /listmidi').\n"
+#if C_FLUIDSYNTH
+	        "- When using the built-in FluidSynth (mididevice = fluidsynth),\n"
+	        "  this option has no effect. Instead, configure FluidSynth using\n"
+	        "  the dedicated [fluidsynth] section below.\n"
+#endif
+#ifdef C_SUPPORTS_COREAUDIO
+	        "- When using CoreAudio, you can specify a soundfont here.\n"
+#endif
+#if defined(HAVE_ALSA)
+	        "- When using ALSA, use Linux command 'aconnect -l' to list open\n"
+	        "  MIDI ports, and select one (for example 'midiconfig=14:0'\n"
+	        "  for sequencer client 14, port 0).\n"
+#endif
+	        "- When using a Roland MT-32 rev.0 as midi output device, some\n"
+	        "  games may require a delay in order to prevent MT-32 hardware\n"
+	        "  buffer overflow issues. In that case, add 'delaysysex',\n"
+	        "  for example: 'midiconfig=2 delaysysex'.\n"
+	        "See the README/Manual for more details.");
 
 	pstring = secprop->Add_string("mpu401", when_idle, "intelligent");
 	const char *mputypes[] = {"intelligent", "uart", "none", 0};
