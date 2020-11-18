@@ -1,6 +1,16 @@
 # bash completion for dosbox                               -*- shell-script -*-
 # shellcheck shell=bash
 # vim: st=2:sw=2:et:ai:ft=bash
+### EDITING NOTES:
+# As this is a bash function, when adding variables or arrays it is important
+# to initialise with local. This prevents the var./array polluting the users
+# env. Please check output of:
+#    declare -x ; declare -a
+# after testing your new completion script
+#
+# Notable exception is COMPREPLY, this needs to persist for communication with
+# bash_completion
+####
 _dosbox()
 {
   COMPREPLY=()
@@ -8,6 +18,8 @@ _dosbox()
   _init_completion -s || return
   local IFS=$'|\t\n'
   local words_filter="${words[*]:1:$(( cword - 1 ))}"
+
+  ### Main options, note the \ line cont.
   # using nameref
   # shellcheck disable=SC2034
   local -a \
@@ -22,9 +34,20 @@ _dosbox()
                     --version --printconf --editconf -resetconf -eraseconf
                     -opencaptures -erasemapper -resetmapper
                   )\
-    _opencaptures=(
-                    "$BROWSER" firefox mpv pcmanfm pcmanfm-qt
-                  )\
+  ####
+
+  # setup nameref to point to array
+  [[ ${prev:0:1} == - ]] && local -n _sub_opts=${prev//+(-)/_}
+
+  ### Arrays holding sub. options
+  # The name should be the trigger option with leading "-"s replaced with "_"
+  # for example, --machine => _machine
+  # latter parts of the script will reference these arrays via a "nameref"
+  # i.e. The last option dictates the available sub. options
+
+  #
+  # shellcheck disable=SC2034
+  local -a \
          _machine=(
                     hercules cga tandy pcjr ega vgaonly svga_s3 svga_et3000
                     svga_et4000 svga_paradise vesa_nolfb vesa_oldvbe
@@ -34,6 +57,30 @@ _dosbox()
                     advinterp3x hq2x hq3x 2xsai super2xsai supereagle tv2x
                     tv3x rgb2x rgb3x scan2x scan3x
                   )\
+    _opencaptures=(
+                    "$BROWSER" firefox mpv pcmanfm pcmanfm-qt
+                  )\
+  # A note on -opencaptures, it launches the provided  prog. and points it to
+  # the dir. containing captured media (screenshots, video and audio)
+  # The above list needs expansion.
+  # Availability is determined via $( type -P ) later in script
+  # ( see opencaptures in case statement below )
+  # TODO tack on "$XDG_CONFIG_HOME/dosbox/opencaptures.sh" if it exists
+  # thereby giving user ability to provide there own wrapper to some browser,
+  # dlna server or whatever..
+  ####
+
+  ### Offer ability for the user to override the default .conf dir.
+  # shellcheck disable=SC2034
+  local _conf="${DOSBOX_STAGING_CONF_DIR:-$XDG_CONFIG_HOME/dosbox/}"
+  #TODO validate the dir exists
+  #TODO document DOSBOX_STAGING_CONF_DIR var.
+  ####
+
+  # forcescaler uses same sub. options as scaler, so setup a nameref to it
+  # using nameref _sub_opts
+  # shellcheck disable=SC2034
+  local -n _forcescaler=_scaler
 
   # can we get hints from manpage?
   man -w dosbox >/dev/null 2>&1 && local manpage_hints=true
@@ -50,18 +97,8 @@ _dosbox()
      [[ ${_pager[*]} ]] &&
        [[ -e /usr/share/doc/dosbox-staging/README.gz ]] &&
        printf "%s\n" "--README"
+     #TODO try harder to find README
      )
-  # using nameref _sub_opts
-  # shellcheck disable=SC2034
-  local _conf="${DOSBOX_STAGING_CONF_DIR:-$XDG_CONFIG_HOME/dosbox/}"
-        #TODO validate the dir exists
-  # forcescaler uses same sub. options as scaler, so setup a nameref to it
-  # using nameref _sub_opts
-  # shellcheck disable=SC2034
-  local -n _forcescaler=_scaler
-
-  # setup nameref to point to array
-  [[ ${prev:0:1} == - ]] && local -n _sub_opts=${prev//+(-)/_}
 
   case "$cur" in
     --M*)
@@ -106,6 +143,9 @@ _dosbox()
       readarray -t -O 0 COMPREPLY \
         < <( compgen -W "$( type -P "${_sub_opts[@]}" )" -- "${cur}" )
       # include filenames plusdirs ?
+      # TODO "re-write" array prior to entering case
+      # i.e. move opencaptures into generic pattern below
+      # This would also make tacking on a wrapper script easier.
       return;;
     -?(-)@(?(force)scaler|machine))
       readarray -t -O 0 COMPREPLY \
