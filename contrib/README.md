@@ -16,6 +16,7 @@ itself.
   by `./configure` in the absence of `pkg-config`
 - **macos**: Files required for creating macOS App bundle
 - **linux**: Desktop file for Linux
+- **linux/bash-completion**: Contains dosbox bash completion script
 - **translations**: Translations for DOSBox Staging
 - **old-translation**: Translated language files and manuals for old
   DOSBox versions
