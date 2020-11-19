@@ -1221,11 +1221,17 @@ public:
 		std::string fstype = "fat";
 		cmd->FindString("-t",type,true);
 		cmd->FindString("-fs",fstype,true);
-		if (type == "cdrom") type = "iso"; //Tiny hack for people who like to type -t cdrom
 
-		//Check type and exit early.
+		// Types 'cdrom' and 'iso' are synonyms. Name 'cdrom' is easier
+		// to remember and makes more sense, while name 'iso' is
+		// required for backwards compatibility and for users conflating
+		// -fs and -t parameters.
+		if (type == "cdrom")
+			type = "iso";
+
 		if (type != "floppy" && type != "hdd" && type != "iso") {
-			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED"),type.c_str());
+			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED"),
+			         type.c_str());
 			return;
 		}
 
@@ -1781,7 +1787,7 @@ void DOS_SetupPrograms(void) {
 	        "Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mCDROM-SET\033[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom \n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mCDROM-SET\033[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso \n"
 	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mIMAGEFILE\033[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy\n"
 	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mBOOTIMAGE\033[0m [-fs fat|none] -t hdd -size GEOMETRY\n"
 	        "  \033[32;1mimgmount\033[0m -u \033[37;1mDRIVE\033[0m  (unmounts the DRIVE's image)\n"
@@ -1870,7 +1876,8 @@ void DOS_SetupPrograms(void) {
 		"Check that the path is correct and the image is accessible.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_INVALID_GEOMETRY","Could not extract drive geometry from image.\n"
 		"Use parameter -size bps,spc,hpc,cyl to specify the geometry.\n");
-	MSG_Add("PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED","Type \"%s\" is unsupported. Specify \"hdd\" or \"floppy\" or\"iso\".\n");
+	MSG_Add("PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED",
+	        "Type '%s' is unsupported. Specify 'floppy', 'hdd', 'cdrom', or 'iso'.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED","Format \"%s\" is unsupported. Specify \"fat\" or \"iso\" or \"none\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_FILE","Must specify file-image to mount.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_FILE_NOT_FOUND","Image file not found.\n");
