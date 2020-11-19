@@ -127,15 +127,6 @@ _dosbox()
       readarray -t -O ${#COMPREPLY[@]} COMPREPLY \
         < <( compgen -f -X '!*.@(conf|CONF)' -- "${_sub_opts%/}/${cur##*/}" )
 
-      # experimental, indicate the above path.
-      #[[ ${cur} =~ ^[.]|[/\~] ]] ||
-      #readarray -t -O ${#COMPREPLY[@]} COMPREPLY \
-      #  < <(
-      #        printf "%s%*s\n"            \
-      #               "${_sub_opts//\//»}" \
-      #               "$(( ${COLUMNS} / 2 - ${#_sub_opts} ))" " "
-      #     )
-
       # filter out previously selected confs
       COMPREPLY=( "${COMPREPLY[@]#@(${words_filter})}" )
       return;;
