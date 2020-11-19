@@ -60,14 +60,22 @@ _dosbox()
     _opencaptures=(
                     "$BROWSER" firefox mpv pcmanfm pcmanfm-qt
                   )\
-  # A note on -opencaptures, it launches the provided  prog. and points it to
-  # the dir. containing captured media (screenshots, video and audio)
-  # The above list needs expansion.
-  # Availability is determined via $( type -P ) later in script
-  # ( see opencaptures in case statement below )
-  # TODO tack on "$XDG_CONFIG_HOME/dosbox/opencaptures.sh" if it exists
-  # thereby giving user ability to provide there own wrapper to some browser,
-  # dlna server or whatever..
+  # A note on -opencaptures, it launches the provided prog. and points it to
+  # the dir. containing captured media (screenshots, video, audio)
+  # TODO add more media browser programs
+
+  [[ $prev =~ ^-{1,2}opencaptures$ ]] &&
+    readarray -t -O 0 _opencaptures < <(
+      # do we have a custom wrapper script available?
+      [[ -x "$XDG_CONFIG_HOME/dosbox/opencaptures.sh" ]] &&
+        printf "%s\n" "$XDG_CONFIG_HOME/dosbox/opencaptures.sh"
+      # TODO provide example script
+      # may not be worth it..
+
+      # filter out unavailable media browsers
+      type -P "${_opencaptures[@]}"
+      # TODO document recommended "media browsers"
+    )
   ####
 
   ### Offer ability for the user to override the default .conf dir.
@@ -130,15 +138,7 @@ _dosbox()
       # filter out previously selected confs
       COMPREPLY=( "${COMPREPLY[@]#@(${words_filter})}" )
       return;;
-    -?(-)opencaptures)
-      readarray -t -O 0 COMPREPLY \
-        < <( compgen -W "$( type -P "${_sub_opts[@]}" )" -- "${cur}" )
-      # include filenames plusdirs ?
-      # TODO "re-write" array prior to entering case
-      # i.e. move opencaptures into generic pattern below
-      # This would also make tacking on a wrapper script easier.
-      return;;
-    -?(-)@(?(force)scaler|machine))
+    -?(-)@(?(force)scaler|machine|opencaptures))
       readarray -t -O 0 COMPREPLY \
         < <( compgen -W "${_sub_opts[*]}" -- "${cur}" )
       return;;
