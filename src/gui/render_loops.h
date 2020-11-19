@@ -78,6 +78,7 @@ lastagain:
 			line2 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 2);
 #endif
 			SCALERFUNC;
+			FALLTHROUGH;
 		case SCALE_RIGHT:
 #if (SCALERHEIGHT > 1) 			
 			line1 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch);
