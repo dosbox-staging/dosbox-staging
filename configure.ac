@@ -96,6 +96,41 @@ else
   AC_MSG_RESULT([no])
 fi
 
+dnl SDL2_Image Support
+dnl ------------------
+dnl
+AH_TEMPLATE(C_SDL_IMAGE, [Define to 1 to enable SDL2_Image Support])
+AC_ARG_ENABLE(sdl_image,
+              AS_HELP_STRING([--disable-sdl-image],
+                             [Disable SDL2_Image: display captures will be saved as BMP]))
+if test "${enable_sdl_image}" != "no" ; then
+    PKG_CHECK_MODULES([SDL_IMAGE],
+                      [SDL2_image],
+                      [CPPFLAGS="$CPPFLAGS $SDL_IMAGE_CFLAGS"
+                       have_sdl_image=yes], [have_sdl_image=no])
+    if test x$have_sdl_image = xyes; then
+        if test x$enable_sdl_static = xyes; then
+            case "$host" in
+            *-*-darwin*)
+                LIBS="/usr/local/lib/libjpeg.a /usr/local/lib/libtiff.a /usr/local/lib/libwebp.a /usr/local/lib/libSDL2_image.a $LIBS"
+                ;;
+            *)
+                AC_MSG_WARN(m4_normalize([Statically linking SDL2 is unreliable.
+                  Please ensure that "libSDL2_image.a" is available.]))
+                LIBS="-Wl,-Bstatic -ljpeg -ltiff -lwebp -lSDL2_image -Wl,-Bdynamic $LIBS"
+                ;;
+            esac
+        else
+            LIBS="$SDL_IMAGE_LIBS $LIBS"
+        fi
+        AC_DEFINE(C_SDL_IMAGE,1)
+    else
+        AC_DEFINE(C_SDL_IMAGE,0)
+        AC_MSG_WARN([SDL2_Image support disabled])
+    fi
+fi
+
+
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
 AC_C_BIGENDIAN

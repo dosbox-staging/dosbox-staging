@@ -42,7 +42,7 @@ jobs:
         run: |
           rm -R c:\vcpkg
           mv c:\vcpkg-bak c:\vcpkg
-          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net opusfile fluidsynth
+          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-image sdl2-net opusfile fluidsynth
           if (-not $?) { throw "vcpkg failed to install library dependencies" }
 
       - name:  Integrate packages
@@ -150,6 +150,7 @@ jobs:
           cp vs/$RELEASE_DIR/ogg.dll              dest/
           cp vs/$RELEASE_DIR/opus.dll             dest/
           cp vs/$RELEASE_DIR/SDL2.dll             dest/
+          cp vs/$RELEASE_DIR/SDL2_image.dll       dest/
           cp vs/$RELEASE_DIR/SDL2_net.dll         dest/
           cp vs/$RELEASE_DIR/libpng16.dll         dest/
           cp src/libs/zmbv/$RELEASE_DIR/zlib1.dll dest/ # libpng dependency
