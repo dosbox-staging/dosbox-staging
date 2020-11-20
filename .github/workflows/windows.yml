@@ -131,9 +131,12 @@ jobs:
           VC_REDIST_PATH: 'C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Redist/MSVC'
         run: |
           set -x
+          readonly RELEASE_DIR=${{ matrix.conf.vs-release-dirname }}/Release
+
+          # List vcpkg installed DLL dependencies available for packaging
+          ls -l vs/$RELEASE_DIR/*.dll
 
           # Prepare content
-          readonly RELEASE_DIR=${{ matrix.conf.vs-release-dirname }}/Release
           mkdir -p dest/doc
           cp vs/$RELEASE_DIR/dosbox.exe           dest/
           cp COPYING                              dest/COPYING.txt
