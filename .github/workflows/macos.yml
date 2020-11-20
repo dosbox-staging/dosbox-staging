@@ -45,6 +45,8 @@ jobs:
         run:  ./scripts/log-env.sh
       - name: Build
         run:  ./scripts/build.sh --build-type Debug ${{ matrix.conf.flags }}
+      - name: Dump dynamic libraries on-start
+        run:  DYLD_PRINT_LIBRARIES=1 ./src/dosbox -c exit
       - name: Summarize warnings
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
@@ -158,7 +160,7 @@ jobs:
           dep_archive="/tmp/$$-deps.tar"
           tar -cvPf "$dep_archive" "$gthread" "$glib" "$glib_cellar" "$intl" "$pcre"
           rm -f "$gthread" "$glib" "$glib_cellar" "$intl" "$pcre"
-          "$dst/MacOS/dosbox" -c exit
+          DYLD_PRINT_LIBRARIES=1 "$dst/MacOS/dosbox" -c exit
           tar -xvPf "$dep_archive" -C /
 
           # Fill README template file
