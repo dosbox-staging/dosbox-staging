@@ -80,8 +80,9 @@ static struct {
 #endif
 } capture;
 
-FILE * OpenCaptureFile(const char * type,const char * ext) {
-	if(capturedir.empty()) {
+std::string GetCaptureName(const char *type, const char *ext)
+{
+	if (capturedir.empty()) {
 		LOG_MSG("Please specify a capture directory");
 		return 0;
 	}
@@ -94,8 +95,7 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 		//Try creating it first
 		Cross::CreateDir(capturedir);
 		dir=open_directory(capturedir.c_str());
-		if(!dir) {
-		
+		if (!dir) {
 			LOG_MSG("Can't open dir %s for capturing %s",capturedir.c_str(),type);
 			return 0;
 		}
@@ -121,12 +121,17 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	char file_name[CROSS_LEN];
 	sprintf(file_name, "%s%c%s%03d%s",
 	        capturedir.c_str(), CROSS_FILESPLIT, file_start, last, ext);
-	/* Open the actual file */
-	FILE * handle=fopen(file_name,"wb");
+	return file_name;
+}
+
+FILE *OpenCaptureFile(const char *type, const char *ext)
+{
+	const auto file_name = GetCaptureName(type, ext);
+	FILE *handle = fopen(file_name.c_str(), "wb");
 	if (handle) {
-		LOG_MSG("Capturing %s to %s",type,file_name);
+		LOG_MSG("Capturing %s to %s", type, file_name.c_str());
 	} else {
-		LOG_MSG("Failed to open %s for capturing %s",file_name,type);
+		LOG_MSG("Failed to open %s for capturing %s", file_name.c_str(), type);
 	}
 	return handle;
 }
