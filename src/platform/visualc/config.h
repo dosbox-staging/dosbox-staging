@@ -7,6 +7,9 @@
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0
 
+/* Define to 1 to enable SDL2_Image Support */
+#define C_SDL_IMAGE 1
+
 /* Define to 1 to enable screenshots, requires libpng */
 #define C_SSHOT 1
 
