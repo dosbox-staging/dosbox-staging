@@ -28,12 +28,14 @@
 #include <array>
 #include <cassert>
 #include <cstdlib>
+#include <functional>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <sys/types.h>
 #include <math.h>
+#include <vector>
 #ifdef WIN32
 #include <signal.h>
 #include <process.h>
@@ -43,12 +45,16 @@
 #if C_OPENGL
 #include <SDL_opengl.h>
 #endif
+#if C_SDL_IMAGE == 1
+#include <SDL_image.h>
+#endif
 
 #include "control.h"
 #include "cpu.h"
 #include "cross.h"
 #include "debug.h"
 #include "gui_msgs.h"
+#include "hardware.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
@@ -199,8 +205,6 @@ extern char** environ;
 SDL_bool mouse_is_captured = SDL_FALSE; // global for mapper
 
 // Masks to be passed when creating SDL_Surface.
-// Remove ifndef if they'll be needed for MacOS X builds.
-#ifndef MACOSX
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 constexpr uint32_t RMASK = 0xff000000;
 constexpr uint32_t GMASK = 0x00ff0000;
@@ -212,7 +216,6 @@ constexpr uint32_t GMASK = 0x0000ff00;
 constexpr uint32_t BMASK = 0x00ff0000;
 constexpr uint32_t AMASK = 0xff000000;
 #endif
-#endif // !MACOSX
 
 enum MouseControlType {
 	CaptureOnClick = 1 << 0,
@@ -2028,7 +2031,94 @@ static SDL_Rect calc_viewport(int width, int height)
 		return calc_viewport_fit(width, height);
 }
 
-//extern void UI_Run(bool);
+SDL_Surface *get_rendered_surface()
+{
+	// Capture from OpenGL renderer
+	// ----------------------------
+#if C_OPENGL
+	if (sdl.desktop.type == SCREEN_OPENGL) {
+		// Setup our OpenGL image properties
+		int w = 0;
+		int h = 0;
+		SDL_GetWindowSize(sdl.window, &w, &h);
+		constexpr int gl_channels = 3; // RBG (no alpha)
+		constexpr int gl_bits_per_pixel = 8 * gl_channels; // 8-bpp
+		const size_t bytes_per_row = w * gl_channels;
+
+		// Allocate a 24-bit surface to be populated
+		auto surface = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h,
+		                                    gl_bits_per_pixel, RMASK,
+		                                    GMASK, BMASK, AMASK);
+		if (!surface) {
+			LOG_MSG("SDL: Failed create a surface for OpenGL because %s",
+			        SDL_GetError());
+			return nullptr;
+		}
+		// Per OpenGL's documentation:
+		// glReadPixels returns values from each pixel with lower left
+		// corner at x + i y + j for 0 <= i < width and 0 <= j < height.
+		// This pixel is said to be the ith pixel in the jth row.
+		// Pixels are returned in row order from the lowest to the
+		// highest row, left to right in each row.
+		std::vector<uint8_t> pixels;
+		pixels.reserve(bytes_per_row * h);
+		glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+
+		// Therefore, we invert the rows (outer) and lines (inner):
+		auto surface_pixels = static_cast<char *>(surface->pixels);
+		for (int i = 0; i < h; ++i) {
+			auto target_row = surface_pixels + surface->pitch * i;
+			const auto source_row = pixels.data() +
+			                        bytes_per_row * (h - i - 1);
+			memcpy(target_row, source_row, bytes_per_row);
+		}
+		return surface;
+	}
+#endif
+
+	// Capture from Texture and Software renderers
+	// -------------------------------------------
+	auto surface = SDL_GetWindowSurface(sdl.window);
+	const auto renderer = SDL_GetRenderer(sdl.window);
+	if (!surface || !renderer) {
+		LOG_MSG("SDL: Failed to get a surface or renderer because %s",
+		        SDL_GetError());
+		return nullptr;
+	}
+	if (SDL_RenderReadPixels(renderer, NULL, surface->format->format,
+	                         surface->pixels, surface->pitch) != 0) {
+		LOG_MSG("SDL: Failed rendering the surface because %s",
+		        SDL_GetError());
+	}
+	return surface;
+}
+
+static void CaptureDisplay(bool pressed)
+{
+	if (!pressed)
+		return;
+
+	const auto surface = get_rendered_surface();
+	if (!surface)
+		return;
+
+#if C_SDL_IMAGE == 1
+	const auto filename = GetCaptureName("Screenshot", ".png");
+	const bool is_saved = IMG_SavePNG(surface, filename.c_str()) == 0;
+#else
+	const auto filename = GetCaptureName("Screenshot", ".bmp");
+	const bool is_saved = SDL_SaveBMP(surface, filename.c_str()) == 0;
+#endif
+	SDL_FreeSurface(surface);
+
+	if (is_saved)
+		LOG_MSG("SDL: Captured display to %s", filename.c_str());
+	else
+		LOG_MSG("SDL: Failed to capture display to %s because %s",
+		        filename.c_str(), SDL_GetError());
+}
+
+// extern void UI_Run(bool);
 void Restart(bool pressed);
 
 static void GUI_StartUp(Section *sec)
@@ -2293,8 +2383,9 @@ static void GUI_StartUp(Section *sec)
 	                        SDL_HINT_OVERRIDE);
 
 	/* Get some Event handlers */
-	MAPPER_AddHandler(KillSwitch, SDL_SCANCODE_F9, MMOD1,
-	                  "shutdown", "Shutdown");
+	MAPPER_AddHandler(CaptureDisplay, SDL_SCANCODE_F3, MMOD1, "capdisp",
+	                  "CapDisplay");
+	MAPPER_AddHandler(KillSwitch, SDL_SCANCODE_F9, MMOD1, "shutdown", "Shutdown");
 	MAPPER_AddHandler(SwitchFullScreen, SDL_SCANCODE_RETURN, MMOD2,
 	                  "fullscr", "Fullscreen");
 	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2,
