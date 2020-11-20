@@ -15,6 +15,7 @@ BuildRequires: automake
 BuildRequires: alsa-lib-devel
 BuildRequires: libpng-devel
 BuildRequires: SDL2-devel
+BuildRequires: SDL2_image-devel
 BuildRequires: SDL2_net-devel
 BuildRequires: opusfile-devel
 BuildRequires: librsvg2-tools

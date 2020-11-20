@@ -34,7 +34,7 @@ jobs:
         id:   cache-vcpkg
         with:
           path: c:\vcpkg
-          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-1
+          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-2
 
       - name:  Install new packages using vcpkg
         if:    steps.cache-vcpkg.outputs.cache-hit != 'true'
