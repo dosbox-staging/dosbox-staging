@@ -159,7 +159,7 @@ jobs:
           ls -l "$VC_REDIST_PATH"
 
           # Include the necessary dlls from one of available versions
-          readonly VC_REDIST_VERSION="14.27.29016"
+          readonly VC_REDIST_VERSION="14.28.29325"
           readonly VC_REDIST_DIR="$VC_REDIST_PATH/$VC_REDIST_VERSION/${{ matrix.conf.arch }}/Microsoft.VC142.CRT"
           cp "$VC_REDIST_DIR/msvcp140.dll"       dest/
           cp "$VC_REDIST_DIR/vcruntime140.dll"   dest/
