@@ -639,23 +639,26 @@ void Gus::SetLevelCallback(const AudioFrame &requested_level)
 
 void Gus::AudioCallback(const uint16_t requested_frames)
 {
-	assert(requested_frames <= BUFFER_FRAMES);
+	uint16_t generated_frames = 0;
+	while (generated_frames < requested_frames) {
+		// Zero the accumulator array values
+		for (auto &val : accumulator)
+			val = 0;
 
-	// Zero the accumulator array values
-	for (auto &val : accumulator)
-		val = 0;
-
-	auto v = voices.begin();
-	const auto v_end = v + active_voices;
-	while (v < v_end && *v) {
-		v->get()->GenerateSamples(accumulator, ram, vol_scalars, pan_scalars,
-		                          requested_frames, dac_enabled);
-		++v;
+		const uint16_t frames = std::min(BUFFER_FRAMES,
+		                                 requested_frames - generated_frames);
+		auto v = voices.begin();
+		const auto v_end = v + active_voices;
+		while (v < v_end && *v) {
+			v->get()->GenerateSamples(accumulator, ram, vol_scalars,
+			                          pan_scalars, frames, dac_enabled);
+			++v;
+		}
+		const auto &out_stream = soft_limiter.Apply(accumulator, frames);
+		audio_channel->AddSamples_s16(frames, out_stream.data());
+		CheckVoiceIrq();
+		generated_frames += frames;
 	}
-
-	const auto &out_stream = soft_limiter.Apply(accumulator, requested_frames);
-	audio_channel->AddSamples_s16(requested_frames, out_stream.data());
-	CheckVoiceIrq();
 }
 
 void Gus::BeginPlayback()
