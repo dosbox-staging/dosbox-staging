@@ -18,6 +18,7 @@
 
 #include "cross.h"
 
+#include <cerrno>
 #include <string>
 #include <vector>
 
@@ -140,7 +141,8 @@ static void W32_ConfDir(std::string& in,bool create) {
 		size_t len = strlen(result);
 		if (len + strlen(appdata) < MAX_PATH)
 			safe_strcat(result, appdata);
-		if(create) mkdir(result);
+		if (create)
+			_mkdir(result);
 	}
 	in = result;
 }
@@ -168,14 +170,26 @@ void Cross::CreatePlatformConfigDir(std::string &in)
 #ifdef WIN32
 	W32_ConfDir(in,true);
 	in += "\\DOSBox";
-	mkdir(in.c_str());
 #else
 	assert(!cached_conf_path.empty());
 	in = cached_conf_path.c_str();
-	mkdir(in.c_str(), 0700);
 #endif
 	if (in.back() != CROSS_FILESPLIT)
 		in += CROSS_FILESPLIT;
+
+	if (create_dir(in.c_str(), 0700) != 0) {
+		// If creation failed because directory already exists, then silently
+		// return. Otherwise leave a log for user because something unexpected
+		// happened.
+		if (errno == EEXIST) {
+			struct stat cstat;
+			if ((stat(in.c_str(), &cstat) == 0) &&
+			    (cstat.st_mode & S_IFDIR))
+				return;
+		}
+		LOG_MSG("ERROR: Creation of config directory '%s' failed: %s",
+		        in.c_str(), strerror(errno));
+	}
 }
 
 void Cross::ResolveHomedir(std::string & temp_line) {
@@ -193,14 +207,6 @@ void Cross::ResolveHomedir(std::string & temp_line) {
 		if(pass) temp_line.replace(0,namelen,pass->pw_dir); //namelen -1 +1(for the ~)
 #endif // USERNAME lookup code
 	}
-}
-
-void Cross::CreateDir(std::string const& in) {
-#ifdef WIN32
-	mkdir(in.c_str());
-#else
-	mkdir(in.c_str(),0700);
-#endif
 }
 
 bool Cross::IsPathAbsolute(std::string const& in) {

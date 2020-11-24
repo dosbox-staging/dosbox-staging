@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cerrno>
 #include <string>
 
 namespace {
@@ -69,6 +70,32 @@ TEST(PathConversion, MissingFile)
 	constexpr auto nonexistent_file = "tests/files/paths/missing.txt";
 	ASSERT_FALSE(path_exists(nonexistent_file));
 	EXPECT_FALSE(path_exists(to_native_path(nonexistent_file)));
+}
+
+constexpr char TEST_DIR[] = "tests/files/no_path";
+
+struct CreateDirTest : public testing::Test {
+	~CreateDirTest() {
+		if (path_exists(TEST_DIR))
+			rmdir(TEST_DIR);
+	}
+};
+
+TEST_F(CreateDirTest, CreateDir)
+{
+	ASSERT_FALSE(path_exists(TEST_DIR));
+	EXPECT_EQ(create_dir(TEST_DIR, 0700), 0);
+	EXPECT_TRUE(path_exists(TEST_DIR));
+	EXPECT_EQ(create_dir(TEST_DIR, 0700), -1);
+	EXPECT_EQ(errno, EEXIST);
+}
+
+TEST_F(CreateDirTest, FailDueToFileExisting)
+{
+	constexpr char path[] = "tests/files/paths/empty.txt";
+	ASSERT_TRUE(path_exists(path));
+	EXPECT_EQ(create_dir(path, 0700), -1);
+	EXPECT_EQ(errno, EEXIST);
 }
 
 } // namespace
