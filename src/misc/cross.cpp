@@ -187,8 +187,10 @@ void Cross::CreatePlatformConfigDir(std::string &in)
 			    (cstat.st_mode & S_IFDIR))
 				return;
 		}
+		char desc[STRERR_LEN];
+		safe_strerror(desc, errno);
 		LOG_MSG("ERROR: Creation of config directory '%s' failed: %s",
-		        in.c_str(), strerror(errno));
+		        in.c_str(), desc);
 	}
 }
 

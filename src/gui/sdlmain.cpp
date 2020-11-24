@@ -3069,8 +3069,10 @@ static void launchcaptures(std::string const& edit) {
 				dir_exists = true;
 		}
 		if (!dir_exists) {
+			char desc[STRERR_LEN];
+			safe_strerror(desc, errno);
 			fprintf(stderr, "Can't access capture dir '%s': %s\n",
-			        path.c_str(), strerror(errno));
+			        path.c_str(), desc);
 			exit(1);
 		}
 	}
