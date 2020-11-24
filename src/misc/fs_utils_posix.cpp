@@ -24,6 +24,8 @@
 
 #include <cctype>
 #include <glob.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "logging.h"
@@ -93,6 +95,12 @@ std::string to_native_path(const std::string &path) noexcept
 	const std::string ret = pglob.gl_pathv[0];
 	globfree(&pglob);
 	return ret;
+}
+
+int create_dir(const char *path, uint32_t mode)
+{
+	static_assert(sizeof(uint32_t) >= sizeof(mode_t), "");
+	return mkdir(path, mode);
 }
 
 #endif

@@ -21,6 +21,7 @@
 #ifndef DOSBOX_FS_UTILS_H
 #define DOSBOX_FS_UTILS_H
 
+#include <cinttypes>
 #include <string>
 
 /* Check if the given path corresponds to an existing file or directory.
@@ -51,5 +52,13 @@ inline bool path_exists(const std::string &path) noexcept
  */
 
 std::string to_native_path(const std::string &path) noexcept;
+
+/* Cross-platform wrapper for following functions:
+ *
+ * - Unix: mkdir(const char *, mode_t)
+ * - Windows: _mkdir(const char *)
+ */
+
+int create_dir(const char *path, uint32_t mode);
 
 #endif

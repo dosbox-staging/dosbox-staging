@@ -33,6 +33,8 @@
 #include <time.h>
 #include <errno.h>
 
+#include "fs_utils.h"
+
 #define OVERLAY_DIR 1
 bool logoverlay = false;
 using namespace std;
@@ -157,11 +159,7 @@ bool Overlay_Drive::MakeDir(char * dir) {
 	safe_strcpy(newdir, overlaydir);
 	safe_strcat(newdir, dir);
 	CROSS_FILENAME(newdir);
-#if defined (WIN32)						/* MS Visual C++ */
-	int temp = mkdir(newdir);
-#else
-	int temp = mkdir(newdir,0775);
-#endif
+	const int temp = create_dir(newdir, 0775);
 	if (temp==0) {
 		char fakename[CROSS_LEN];
 		safe_strcpy(fakename, basedir);
@@ -550,12 +548,8 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 			} else {
 				//folder does not exist, make it
 				if (logoverlay) LOG_MSG("creating %s",dirnameoverlay);
-#if defined (WIN32)						/* MS Visual C++ */
-				int temp = mkdir(dirnameoverlay);
-#else
-				int temp = mkdir(dirnameoverlay,0700);
-#endif
-				if (temp != 0) return false;
+				if (create_dir(dirnameoverlay, 0700) != 0)
+					return false;
 			}
 		}
 		leaddir = leaddir + 1; //Move to next

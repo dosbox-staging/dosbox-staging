@@ -27,6 +27,7 @@
 
 #include <array>
 #include <cassert>
+#include <cerrno>
 #include <cstdlib>
 #include <string.h>
 #include <stdio.h>
@@ -48,6 +49,7 @@
 #include "cpu.h"
 #include "cross.h"
 #include "debug.h"
+#include "fs_utils.h"
 #include "gui_msgs.h"
 #include "joystick.h"
 #include "keyboard.h"
@@ -3057,20 +3059,25 @@ static void launchcaptures(std::string const& edit) {
 	}
 	Cross::CreatePlatformConfigDir(path);
 	path += file;
-	Cross::CreateDir(path);
-	struct stat cstat;
-	if(stat(path.c_str(),&cstat) || (cstat.st_mode & S_IFDIR) == 0) {
-		printf("%s doesn't exists or isn't a directory.\n",path.c_str());
-		exit(1);
+
+	if (create_dir(path.c_str(), 0700) != 0) {
+		bool dir_exists = false;
+		if (errno == EEXIST) {
+			struct stat cstat;
+			if ((stat(path.c_str(), &cstat) == 0) &&
+			    (cstat.st_mode & S_IFDIR))
+				dir_exists = true;
+		}
+		if (!dir_exists) {
+			fprintf(stderr, "Can't access capture dir '%s': %s\n",
+			        path.c_str(), strerror(errno));
+			exit(1);
+		}
 	}
-/*	if(edit.empty()) {
-		printf("no editor specified.\n");
-		exit(1);
-	}*/
 
 	execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) 0);
 	//if you get here the launching failed!
-	printf("can't find filemanager %s\n",edit.c_str());
+	fprintf(stderr, "can't find filemanager %s\n", edit.c_str());
 	exit(1);
 }
 
