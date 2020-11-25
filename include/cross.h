@@ -70,6 +70,7 @@
 #endif
 
 void CROSS_DetermineConfigPaths();
+std::string CROSS_GetPlatformConfigDir();
 
 class Cross {
 public:
