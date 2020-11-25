@@ -30,6 +30,7 @@
 
 #include "control.h"
 #include "cross.h"
+#include "fs_utils.h"
 
 MidiHandlerFluidsynth instance;
 
@@ -37,17 +38,17 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto *str_prop = secprop.Add_string("soundfont", when_idle, "");
-
-	str_prop->Set_help("Path to a MIDI SoundFont file in .sf2 format.\n"
-	                   "An optional percentage will scale the SoundFont's levels.\n"
-	                   "For example: soundfont.sf2 50 will attenuate it by 50 percent.\n"
-	                   "The scaling percentage can range from 1 to 500.");
-
-	// TODO Handle storing soundfonts in specific directory and update
-	// the documentation; right now users need to specify full path or
-	// fall on undocumented FluidSynth internal algorithm for picking
-	// sf2 files.
+	// Name 'default.sf2' picks the default soundfont if it's installed
+	// it the OS. Usually it's Fluid_R3.
+	auto *str_prop = secprop.Add_string("soundfont", when_idle, "default.sf2");
+	str_prop->Set_help(
+	        "Path to a SoundFont file in .sf2 format. You can use an\n"
+	        "absolute or relative path, or the name of an .sf2 inside\n"
+	        "the 'soundfonts' directory within your DOSBox configuration\n"
+	        "directory.\n"
+	        "An optional percentage will scale the SoundFont's volume.\n"
+	        "For example: 'soundfont.sf2 50' will attenuate it by 50 percent.\n"
+	        "The scaling percentage can range from 1 to 500.");
 
 	auto *int_prop = secprop.Add_int("synth_threads", when_idle, 1);
 	int_prop->SetMinMax(1, 256);
@@ -101,6 +102,63 @@ std::tuple<std::string, int> parse_sf_pref(const std::string &line,
 	return {filename, percent};
 }
 
+#if defined(WIN32)
+
+static std::vector<std::string> get_data_dirs()
+{
+	return {
+	        CROSS_GetPlatformConfigDir() + "soundfonts\\",
+	        "C:\\soundfonts\\",
+	};
+}
+
+#elif defined(MACOSX)
+
+static std::vector<std::string> get_data_dirs()
+{
+	return {
+	        CROSS_GetPlatformConfigDir() + "soundfonts/",
+	        CROSS_ResolveHome("~/Library/Audio/Sounds/Banks/"),
+	        // TODO: check /usr/local/share/soundfonts
+	        // TODO: check /usr/share/soundfonts
+	};
+}
+
+#else
+
+static std::vector<std::string> get_data_dirs()
+{
+	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
+	const auto xdg_data_home = CROSS_ResolveHome(
+	        xdg_data_home_env ? xdg_data_home_env : "~/.local/share");
+
+	return {
+	        CROSS_GetPlatformConfigDir() + "soundfonts/",
+	        xdg_data_home + "/soundfonts/",
+	        xdg_data_home + "/sounds/sf2/",
+	        "/usr/local/share/soundfonts/",
+	        "/usr/local/share/sounds/sf2/",
+	        "/usr/share/soundfonts/",
+	        "/usr/share/sounds/sf2/",
+	};
+}
+
+#endif
+
+static std::string find_sf_file(const std::string &name)
+{
+	const std::string sf_path = CROSS_ResolveHome(name);
+	if (path_exists(sf_path))
+		return sf_path;
+	for (const auto &dir : get_data_dirs()) {
+		for (const auto &sf : {dir + name, dir + name + ".sf2"}) {
+			if (path_exists(sf))
+				return sf;
+		}
+	}
+	return "";
+}
+
 bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 {
 	Close();
@@ -139,15 +197,14 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 
 	// Load the requested SoundFont or quit if none provided
 	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"), 100);
-	auto soundfont = std::get<std::string>(sf_spec);
+	const auto soundfont = find_sf_file(std::get<std::string>(sf_spec));
 	auto scale_by_percent = std::get<int>(sf_spec);
 
-	Cross::ResolveHomedir(soundfont);
 	if (!soundfont.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
 	}
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		LOG_MSG("MIDI: FluidSynth failed to load %s, check the path.",
+		LOG_MSG("MIDI: FluidSynth failed to load '%s', check the path.",
 		        soundfont.c_str());
 		return false;
 	}
@@ -162,12 +219,12 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 
 	// Let the user know that the SoundFont was loaded
 	if (scale_by_percent == 100)
-		LOG_MSG("MIDI: FluidSynth loaded %s.", soundfont.c_str());
+		LOG_MSG("MIDI: Using SoundFont '%s'", soundfont.c_str());
 	else if (scale_by_percent > 100)
-		LOG_MSG("MIDI: FluidSynth loaded %s with levels amplified by %d%%.",
+		LOG_MSG("MIDI: Using SoundFont '%s' with levels amplified by %d%%",
 		        soundfont.c_str(), scale_by_percent);
 	else
-		LOG_MSG("MIDI: FluidSynth loaded %s with levels attenuated by %d%%.",
+		LOG_MSG("MIDI: Using SoundFont '%s' with levels attenuated by %d%%",
 		        soundfont.c_str(), scale_by_percent);
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
