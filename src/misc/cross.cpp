@@ -177,16 +177,7 @@ void Cross::CreatePlatformConfigDir(std::string &in)
 	if (in.back() != CROSS_FILESPLIT)
 		in += CROSS_FILESPLIT;
 
-	if (create_dir(in.c_str(), 0700) != 0) {
-		// If creation failed because directory already exists, then silently
-		// return. Otherwise leave a log for user because something unexpected
-		// happened.
-		if (errno == EEXIST) {
-			struct stat cstat;
-			if ((stat(in.c_str(), &cstat) == 0) &&
-			    (cstat.st_mode & S_IFDIR))
-				return;
-		}
+	if (create_dir(in.c_str(), 0700, OK_IF_EXISTS) != 0) {
 		LOG_MSG("ERROR: Creation of config directory '%s' failed: %s",
 		        in.c_str(), safe_strerror(errno).c_str());
 	}
