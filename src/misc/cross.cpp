@@ -148,16 +148,24 @@ static void W32_ConfDir(std::string& in,bool create) {
 }
 #endif
 
-void Cross::GetPlatformConfigDir(std::string& in) {
+std::string CROSS_GetPlatformConfigDir()
+{
+	std::string conf_dir = "";
 #ifdef WIN32
-	W32_ConfDir(in,false);
-	in += "\\DOSBox";
+	W32_ConfDir(conf_dir, false);
+	conf_dir += "\\DOSBox\\";
 #else
 	assert(!cached_conf_path.empty());
-	in = cached_conf_path;
+	conf_dir = cached_conf_path;
+	if (conf_dir.back() != CROSS_FILESPLIT)
+		conf_dir += CROSS_FILESPLIT;
 #endif
-	if (in.back() != CROSS_FILESPLIT)
-		in += CROSS_FILESPLIT;
+	return conf_dir;
+}
+
+void Cross::GetPlatformConfigDir(std::string &in)
+{
+	in = CROSS_GetPlatformConfigDir();
 }
 
 void Cross::GetPlatformConfigName(std::string &in)
