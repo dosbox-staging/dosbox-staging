@@ -238,15 +238,6 @@ constexpr size_t static_if_array_then_zero()
 
 // Thread-safe replacement for strerror.
 //
-// Usage:
-//     char desc[STRERR_LEN];
-//     safe_strerror(desc, errno);
-//
-#define STRERR_LEN 128
-#ifdef _MSC_VER
-#define safe_strerror(buf, err) strerror_s(buf, ARRAY_LEN(buf), err)
-#else
-#define safe_strerror(buf, err) strerror_r(err, buf, ARRAY_LEN(buf))
-#endif
+std::string safe_strerror(int err) noexcept;
 
 #endif
