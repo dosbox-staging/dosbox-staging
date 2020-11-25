@@ -57,8 +57,15 @@ std::string to_native_path(const std::string &path) noexcept;
  *
  * - Unix: mkdir(const char *, mode_t)
  * - Windows: _mkdir(const char *)
+ *
+ * Normal behaviour of mkdir is to fail when directory exists already,
+ * you can override this behaviour by calling:
+ *
+ *     create_dir(path, 0700, OK_IF_EXISTS)
  */
 
-int create_dir(const char *path, uint32_t mode);
+constexpr uint32_t OK_IF_EXISTS = 0x1;
+
+int create_dir(const char *path, uint32_t mode, uint32_t flags = 0x0) noexcept;
 
 #endif

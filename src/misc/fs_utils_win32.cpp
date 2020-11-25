@@ -39,9 +39,16 @@ std::string to_native_path(const std::string &path) noexcept
 	return "";
 }
 
-int create_dir(const char *path, MAYBE_UNUSED uint32_t mode)
+int create_dir(const char *path, MAYBE_UNUSED uint32_t mode, uint32_t flags) noexcept
 {
-	return _mkdir(path);
+	const int err = _mkdir(path);
+	if ((errno == EEXIST) && (flags & OK_IF_EXISTS)) {
+		struct _stat pstat;
+		if ((_stat(path, &pstat) == 0) &&
+		    ((pstat.st_mode & S_IFMT) == S_IFDIR))
+			return 0;
+	}
+	return err;
 }
 
 #endif

@@ -3060,21 +3060,12 @@ static void launchcaptures(std::string const& edit) {
 	Cross::CreatePlatformConfigDir(path);
 	path += file;
 
-	if (create_dir(path.c_str(), 0700) != 0) {
-		bool dir_exists = false;
-		if (errno == EEXIST) {
-			struct stat cstat;
-			if ((stat(path.c_str(), &cstat) == 0) &&
-			    (cstat.st_mode & S_IFDIR))
-				dir_exists = true;
-		}
-		if (!dir_exists) {
-			char desc[STRERR_LEN];
-			safe_strerror(desc, errno);
-			fprintf(stderr, "Can't access capture dir '%s': %s\n",
-			        path.c_str(), desc);
-			exit(1);
-		}
+	if (create_dir(path.c_str(), 0700, OK_IF_EXISTS) != 0) {
+		char desc[STRERR_LEN];
+		safe_strerror(desc, errno);
+		fprintf(stderr, "Can't access capture dir '%s': %s\n",
+		        path.c_str(), desc);
+		exit(1);
 	}
 
 	execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) 0);
