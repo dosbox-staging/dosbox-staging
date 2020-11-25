@@ -3230,8 +3230,9 @@ int main(int argc, char* argv[]) {
 	atexit(QuitSDL);
 
 	/* Parse configuration files */
-	std::string config_file, config_path, config_combined;
-	Cross::GetPlatformConfigDir(config_path);
+	std::string config_file, config_combined;
+
+	std::string config_path = CROSS_GetPlatformConfigDir();
 
 	//First parse -userconf
 	if(control->cmdline->FindExist("-userconf",true)){
@@ -3292,6 +3293,18 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+#if C_OPENGL
+	const std::string glshaders_dir = config_path + "glshaders";
+	if (create_dir(glshaders_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
+		LOG_MSG("CONFIG: Can't create dir '%s': %s",
+			glshaders_dir.c_str(), safe_strerror(errno).c_str());
+#endif // C_OPENGL
+#if C_FLUIDSYNTH
+	const std::string soundfonts_dir = config_path + "soundfonts";
+	if (create_dir(soundfonts_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
+		LOG_MSG("CONFIG: Can't create dir '%s': %s",
+			soundfonts_dir.c_str(), safe_strerror(errno).c_str());
+#endif // C_FLUIDSYNTH
 
 #if (ENVIRON_LINKED)
 		control->ParseEnv(environ);
