@@ -71,6 +71,7 @@
 
 void CROSS_DetermineConfigPaths();
 std::string CROSS_GetPlatformConfigDir();
+std::string CROSS_ResolveHome(const std::string &str);
 
 class Cross {
 public:
