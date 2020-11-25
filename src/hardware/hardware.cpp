@@ -93,10 +93,8 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	if (!dir) {
 		// Try creating it first
 		if (create_dir(capturedir.c_str(), 0700, OK_IF_EXISTS) != 0) {
-			char desc[STRERR_LEN];
-			safe_strerror(desc, errno);
 			LOG_MSG("ERROR: Can't create dir '%s': %s",
-			        capturedir.c_str(), desc);
+			        capturedir.c_str(), safe_strerror(errno).c_str());
 		}
 
 		dir = open_directory(capturedir.c_str());

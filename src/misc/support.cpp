@@ -254,3 +254,22 @@ void E_Exit(const char * format,...) {
 
 	throw(buf);
 }
+
+std::string safe_strerror(int err) noexcept
+{
+	char buf[128];
+#if defined(_MSC_VER)
+	// C11 version; unavailable in C++14 in general.
+	strerror_s(buf, ARRAY_LEN(buf), err);
+	return buf;
+#elif defined(_GNU_SOURCE)
+	// GNU has POSIX-incompatible version, which fills the buffer
+	// only when unknown error is passed, otherwise it returns
+	// the internal glibc buffer.
+	return strerror_r(err, buf, ARRAY_LEN(buf));
+#else
+	// POSIX version
+	strerror_r(err, buf, ARRAY_LEN(buf));
+	return buf;
+#endif
+}

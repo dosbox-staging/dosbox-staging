@@ -19,10 +19,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
 #include "dosbox.h"
 
 #include <array>
@@ -3061,10 +3057,8 @@ static void launchcaptures(std::string const& edit) {
 	path += file;
 
 	if (create_dir(path.c_str(), 0700, OK_IF_EXISTS) != 0) {
-		char desc[STRERR_LEN];
-		safe_strerror(desc, errno);
 		fprintf(stderr, "Can't access capture dir '%s': %s\n",
-		        path.c_str(), desc);
+		        path.c_str(), safe_strerror(errno).c_str());
 		exit(1);
 	}
 
