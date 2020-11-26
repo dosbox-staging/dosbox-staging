@@ -80,8 +80,8 @@ l_MODRMswitch:
 		case M_EwxIwx:
 			inst_op2_ds=Fetchws();
 			FALLTHROUGH;
-l_M_Ewx:		
 		case M_Ewx:
+l_M_Ewx:
 			if (inst.rm<0xc0) inst_op1_ds=(Bit16s)LoadMw(inst.rm_eaa);
 			else inst_op1_ds=(Bit16s)reg_16(inst.rm_eai);
 			break;
@@ -104,12 +104,12 @@ l_M_Ewx:
 			inst_op2_d=reg_16(inst.rm_index);
 			inst.rm_eaa+=((Bit16s)inst_op2_d >> 4) * 2;
 			goto l_M_Ew;
-l_M_EwGw:
 		case M_EwGw:
+l_M_EwGw:
 			inst_op2_d=reg_16(inst.rm_index);
 			FALLTHROUGH;
-l_M_Ew:
 		case M_Ew:
+l_M_Ew:
 			if (inst.rm<0xc0) inst_op1_d=LoadMw(inst.rm_eaa);
 			else inst_op1_d=reg_16(inst.rm_eai);
 			break;
@@ -150,12 +150,12 @@ l_M_Ew:
 		case M_EdGdIb:
 			inst_imm_d=Fetchb();
 			goto l_M_EdGd;
-l_M_EdGd:
 		case M_EdGd:
+l_M_EdGd:
 			inst_op2_d=reg_32(inst.rm_index);
 			FALLTHROUGH;
-l_M_Ed:
 		case M_Ed:
+l_M_Ed:
 			if (inst.rm<0xc0) inst_op1_d=LoadMd(inst.rm_eaa);
 			else inst_op1_d=reg_32(inst.rm_eai);
 			break;
