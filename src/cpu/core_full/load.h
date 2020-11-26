@@ -50,6 +50,7 @@ l_MODRMswitch:
 			break;
 		case M_EbIb:
 			inst_op2_d=Fetchb();
+			FALLTHROUGH;
 		case M_Eb:
 			if (inst.rm<0xc0) inst_op1_d=LoadMb(inst.rm_eaa);
 			else inst_op1_d=reg_8(inst.rm_eai);
@@ -62,6 +63,7 @@ l_MODRMswitch:
 		case M_GbEb:
 			if (inst.rm<0xc0) inst_op2_d=LoadMb(inst.rm_eaa);
 			else inst_op2_d=reg_8(inst.rm_eai);
+			FALLTHROUGH;
 		case M_Gb:
 			inst_op1_d=reg_8(inst.rm_index);;
 			break;
@@ -77,6 +79,7 @@ l_MODRMswitch:
 			goto l_M_Ewx;
 		case M_EwxIwx:
 			inst_op2_ds=Fetchws();
+			FALLTHROUGH;
 l_M_Ewx:		
 		case M_Ewx:
 			if (inst.rm<0xc0) inst_op1_ds=(Bit16s)LoadMw(inst.rm_eaa);
@@ -87,7 +90,7 @@ l_M_Ewx:
 			goto l_M_Ew;
 		case M_EwIbx:
 			inst_op2_ds=Fetchbs();
-			goto l_M_Ew;		
+			goto l_M_Ew;
 		case M_EwIw:
 			inst_op2_d=Fetchw();
 			goto l_M_Ew;
@@ -101,9 +104,10 @@ l_M_Ewx:
 			inst_op2_d=reg_16(inst.rm_index);
 			inst.rm_eaa+=((Bit16s)inst_op2_d >> 4) * 2;
 			goto l_M_Ew;
-l_M_EwGw:			
+l_M_EwGw:
 		case M_EwGw:
 			inst_op2_d=reg_16(inst.rm_index);
+			FALLTHROUGH;
 l_M_Ew:
 		case M_Ew:
 			if (inst.rm<0xc0) inst_op1_d=LoadMw(inst.rm_eaa);
@@ -112,6 +116,7 @@ l_M_Ew:
 		case M_GwEw:
 			if (inst.rm<0xc0) inst_op2_d=LoadMw(inst.rm_eaa);
 			else inst_op2_d=reg_16(inst.rm_eai);
+			FALLTHROUGH;
 		case M_Gw:
 			inst_op1_d=reg_16(inst.rm_index);;
 			break;
@@ -121,6 +126,7 @@ l_M_Ew:
 			break;
 		case M_EdxGdx:
 			inst_op2_ds=(Bit32s)reg_32(inst.rm_index);
+			FALLTHROUGH;
 		case M_Edx:
 			if (inst.rm<0xc0) inst_op1_d=(Bit32s)LoadMd(inst.rm_eaa);
 			else inst_op1_d=(Bit32s)reg_32(inst.rm_eai);
@@ -133,7 +139,7 @@ l_M_Ew:
 			goto l_M_Ed;
 		case M_EdId:
 			inst_op2_d=Fetchd();
-			goto l_M_Ed;			
+			goto l_M_Ed;
 		case M_EdGdCL:
 			inst_imm_d=reg_cl;
 			goto l_M_EdGd;
@@ -147,6 +153,7 @@ l_M_Ew:
 l_M_EdGd:
 		case M_EdGd:
 			inst_op2_d=reg_32(inst.rm_index);
+			FALLTHROUGH;
 l_M_Ed:
 		case M_Ed:
 			if (inst.rm<0xc0) inst_op1_d=LoadMd(inst.rm_eaa);
@@ -155,11 +162,11 @@ l_M_Ed:
 		case M_GdEd:
 			if (inst.rm<0xc0) inst_op2_d=LoadMd(inst.rm_eaa);
 			else inst_op2_d=reg_32(inst.rm_eai);
+			FALLTHROUGH;
 		case M_Gd:
 			inst_op1_d=reg_32(inst.rm_index);
 			break;
-/* Others */		
-
+/* Others */
 		case M_SEG:
 			//TODO Check for limit
 			inst_op1_d=SegValue((SegNames)inst.rm_index);
@@ -250,16 +257,19 @@ l_M_Ed:
 /* Direct load of registers */
 	case L_REGbIb:
 		inst_op2_d=Fetchb();
+		FALLTHROUGH;
 	case L_REGb:
 		inst_op1_d=reg_8(inst.code.extra);
 		break;
 	case L_REGwIw:
 		inst_op2_d=Fetchw();
+		FALLTHROUGH;
 	case L_REGw:
 		inst_op1_d=reg_16(inst.code.extra);
 		break;
 	case L_REGdId:
 		inst_op2_d=Fetchd();
+		FALLTHROUGH;
 	case L_REGd:
 		inst_op1_d=reg_32(inst.code.extra);
 		break;
