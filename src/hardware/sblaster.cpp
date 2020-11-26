@@ -1733,7 +1733,7 @@ public:
 			break;
 		case OPL_opl2:
 			CMS_Init(section);
-			// fall-through
+			FALLTHROUGH;
 		case OPL_dualopl2:
 		case OPL_opl3:
 		case OPL_opl3gold:
@@ -1785,7 +1785,7 @@ public:
 			break;
 		case OPL_opl2:
 			CMS_ShutDown(m_configuration);
-			// fall-through
+			FALLTHROUGH;
 		case OPL_dualopl2:
 		case OPL_opl3:
 		case OPL_opl3gold:

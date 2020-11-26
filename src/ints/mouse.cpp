@@ -723,7 +723,8 @@ static Bitu INT33_Handler(void) {
 //	LOG(LOG_MOUSE,LOG_NORMAL)("MOUSE: %04X %X %X %d %d",reg_ax,reg_bx,reg_cx,POS_X,POS_Y);
 	switch (reg_ax) {
 	case 0x00:	/* Reset Driver and Read Status */
-		Mouse_ResetHardware(); /* fallthrough */
+		Mouse_ResetHardware();
+		FALLTHROUGH;
 	case 0x21:	/* Software Reset */
 		reg_ax=0xffff;
 		reg_bx=MOUSE_BUTTONS;

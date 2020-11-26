@@ -303,7 +303,9 @@ run_block:
 		case BR_SMCBlock:
 //			LOG_MSG("selfmodification of running block at %x:%x",SegValue(cs),reg_eip);
 			cpu.exception.which=0;
-			// fallthrough, let the normal core handle the block-modifying instruction
+			// let the normal core handle the block-modifying
+			// instruction
+			FALLTHROUGH;
 		case BR_Opcode:
 			// some instruction has been encountered that could not be translated
 			// (thus it is not part of the code block), the normal core will

@@ -1370,7 +1370,8 @@ att_text16:
 					}
 				}
 				break;
-			} //FALLTHROUGH!!!!
+			}
+			FALLTHROUGH;
 		case M_LIN4: //Added for CAD Software
 dac_text16:
 			for (i=0;i<64;i++) {

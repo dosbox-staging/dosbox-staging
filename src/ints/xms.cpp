@@ -300,7 +300,7 @@ Bitu XMS_Handler(void) {
 		break;
 	case XMS_ALLOCATE_ANY_MEMORY:								/* 89 */
 		reg_edx &= 0xffff;
-		// fall through
+		FALLTHROUGH;
 	case XMS_ALLOCATE_EXTENDED_MEMORY:							/* 09 */
 		{
 		Bit16u handle = 0;
@@ -331,7 +331,7 @@ Bitu XMS_Handler(void) {
 		break;
 	case XMS_RESIZE_ANY_EXTENDED_MEMORY_BLOCK:					/* 0x8f */
 		if(reg_ebx > reg_bx) LOG_MSG("64MB memory limit!");
-		//fall through
+		FALLTHROUGH;
 	case XMS_RESIZE_EXTENDED_MEMORY_BLOCK:						/* 0f */
 		SET_RESULT(XMS_ResizeMemory(reg_dx, reg_bx));
 		break;
