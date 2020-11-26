@@ -181,7 +181,9 @@ void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal) {
 		break;
 	case M_VGA:
 		// used by copper demo; almost no video card seems to suport it
-		if(!IS_VGA_ARCH || (svgaCard!=SVGA_None)) break;
+		if (!IS_VGA_ARCH || (svgaCard != SVGA_None))
+			break;
+		FALLTHROUGH;
 	default:
 		VGA_DAC_SendColor( attr, pal );
 	}
