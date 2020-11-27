@@ -21,48 +21,49 @@ switch (inst.code.save) {
 /* Byte */
 	case S_C_Eb:
 		inst_op1_b=inst.cond ? 1 : 0;
+		FALLTHROUGH;
 	case S_Eb:
 		if (inst.rm<0xc0) SaveMb(inst.rm_eaa,inst_op1_b);
 		else reg_8(inst.rm_eai)=inst_op1_b;
-		break;	
+		break;
 	case S_Gb:
 		reg_8(inst.rm_index)=inst_op1_b;
-		break;	
+		break;
 	case S_EbGb:
 		if (inst.rm<0xc0) SaveMb(inst.rm_eaa,inst_op1_b);
 		else reg_8(inst.rm_eai)=inst_op1_b;
 		reg_8(inst.rm_index)=inst_op2_b;
-		break;	
+		break;
 /* Word */
 	case S_Ew:
 		if (inst.rm<0xc0) SaveMw(inst.rm_eaa,inst_op1_w);
 		else reg_16(inst.rm_eai)=inst_op1_w;
-		break;	
+		break;
 	case S_Gw:
 		reg_16(inst.rm_index)=inst_op1_w;
-		break;	
+		break;
 	case S_EwGw:
 		if (inst.rm<0xc0) SaveMw(inst.rm_eaa,inst_op1_w);
 		else reg_16(inst.rm_eai)=inst_op1_w;
 		reg_16(inst.rm_index)=inst_op2_w;
-		break;	
+		break;
 /* Dword */
 	case S_Ed:
 		if (inst.rm<0xc0) SaveMd(inst.rm_eaa,inst_op1_d);
 		else reg_32(inst.rm_eai)=inst_op1_d;
-		break;	
+		break;
 	case S_EdMw:		/* Special one 16 to memory, 32 zero extend to reg */
 		if (inst.rm<0xc0) SaveMw(inst.rm_eaa,inst_op1_w);
 		else reg_32(inst.rm_eai)=inst_op1_d;
 		break;
 	case S_Gd:
 		reg_32(inst.rm_index)=inst_op1_d;
-		break;	
+		break;
 	case S_EdGd:
 		if (inst.rm<0xc0) SaveMd(inst.rm_eaa,inst_op1_d);
 		else reg_32(inst.rm_eai)=inst_op1_d;
 		reg_32(inst.rm_index)=inst_op2_d;
-		break;	
+		break;
 
 	case S_REGb:
 		reg_8(inst.code.extra)=inst_op1_b;
@@ -72,7 +73,7 @@ switch (inst.code.save) {
 		break;
 	case S_REGd:
 		reg_32(inst.code.extra)=inst_op1_d;
-		break;	
+		break;
 	case S_SEGm:
 		if (CPU_SetSegGeneral((SegNames)inst.rm_index,inst_op1_w)) RunException();
 		break;
@@ -93,6 +94,7 @@ switch (inst.code.save) {
 
 	case S_C_AIPw:
 		if (!inst.cond) goto nextopcode;
+		FALLTHROUGH;
 	case S_AIPw:
 		SaveIP();
 		reg_eip+=inst_op1_d;
@@ -100,12 +102,14 @@ switch (inst.code.save) {
 		continue;
 	case S_C_AIPd:
 		if (!inst.cond) goto nextopcode;
+		FALLTHROUGH;
 	case S_AIPd:
 		SaveIP();
 		reg_eip+=inst_op1_d;
 		continue;
 	case S_IPIw:
 		reg_esp+=Fetchw();
+		FALLTHROUGH;
 	case S_IP:
 		SaveIP();
 		reg_eip=inst_op1_d;
