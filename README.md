@@ -65,7 +65,7 @@ Other differences:
 
 |                          | DOSBox Staging                               | DOSBox SVN
 |-                         |-                                             |-
-| **Pixel-perfect mode**   | Yes (`output=texturepp`)<sup>[7]</sup>       | N/A
+| **Pixel-perfect mode**   | Yes (`output=openglpp` or `output=texturepp`)| N/A
 | **Resizable window**     | Experimental (`windowresolution=resizable`)  | N/A
 | **Relative window size** | N/A                                          | `windowresolution=X%`
 | **[OPL] emulators**      | compat, fast, mame, nuked<sup>[8]</sup>      | compat, fast, mame
@@ -74,18 +74,21 @@ Other differences:
 | **Modem phonebook file** | Yes (`phonebookfile=<name>`)                 | N/A
 | **Autotype command**     | Yes<sup>[10]</sup>                           | N/A
 | **Startup verbosity**    | Yes<sup>[11]</sup>                           | N/A
-| **GUS Enhancements**     | Yes<sup>[12]</sup>                           | N/A
+| **[GUS] enhancements**   | Yes<sup>[12]</sup>                           | N/A
 | **Raw mouse input**      | Yes (`raw_mouse_input=true`)                 | N/A
+| **[FluidSynth] MIDI**    | Yes<sup>[13]</sup> (FluidSynth 2.x)          | Only external synths
 
 [OPL]:https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]:https://en.wikipedia.org/wiki/Color_Graphics_Adapter
 [Wayland]:https://en.wikipedia.org/wiki/Wayland_(display_server_protocol)
-[7]:https://github.com/dosbox-staging/dosbox-staging/commit/d1be65b105de714924947df4a7909e684d283385
+[GUS]: https://en.wikipedia.org/wiki/Gravis_Ultrasound
+[FluidSynth]: http://www.fluidsynth.org/
 [8]:https://www.vogons.org/viewtopic.php?f=9&t=37782
 [9]:https://github.com/dosbox-staging/dosbox-staging/commit/ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
 [10]:https://github.com/dosbox-staging/dosbox-staging/commit/239396fec83dbba6a1eb1a0f4461f4a427d2be38
 [11]: https://github.com/dosbox-staging/dosbox-staging/pull/477
 [12]: https://github.com/dosbox-staging/dosbox-staging/wiki/Gravis-UltraSound-Enhancements
+[13]: https://github.com/dosbox-staging/dosbox-staging/issues/262#issuecomment-734719260
 
 ## Stable release builds
 
