@@ -16,11 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <string.h>
-#include <ctype.h>
-
 #include "dosbox.h"
+
+#include <algorithm>
+#include <ctype.h>
+#include <string.h>
+#include <tuple>
 
 #include "inout.h"
 #include "pic.h"
@@ -1002,6 +1003,21 @@ void CSerial::setCTS (bool value) {
 	//else no change
 }
 
+static constexpr std::tuple<uint8_t, uint8_t> baud_to_regs(uint32_t baud_rate)
+{
+	// Cap the lower-bound to 300 baud. Although the first 1950s modem
+	// offered 110 baud, by the time DOS was available 8-bit ISA modems
+	// offered at least 300 and even 1200 baud.
+	baud_rate = std::max(300u, baud_rate);
+
+	constexpr auto max_baud = 115200u;
+	const auto delay_ratio = static_cast<uint16_t>(max_baud / baud_rate);
+
+	const uint8_t transmit_reg = delay_ratio & 0xff;  // bottom byte
+	const uint8_t interrupt_reg = delay_ratio >> 8;   // top byte
+	return std::make_tuple(transmit_reg, interrupt_reg);
+}
+
 /*****************************************************************************/
 /* Initialisation                                                           **/
 /*****************************************************************************/
@@ -1010,12 +1026,15 @@ void CSerial::Init_Registers () {
 	irq_active=false;
 	waiting_interrupts = 0x0;
 
-	uint32_t initbps = 9600;
+	// Initialize at 9600 Baud
+	constexpr auto baud_spec = baud_to_regs(9600u);
+	constexpr uint8_t transmit_reg = std::get<0>(baud_spec);
+	constexpr uint8_t interrupt_reg = std::get<1>(baud_spec);
+
 	uint8_t bytesize = 8;
 	char parity = 'N';
 
 	uint8_t lcrresult = 0;
-	uint16_t baudresult = 0;
 
 	IER = 0;
 	ISR = 0x1;
@@ -1081,16 +1100,10 @@ void CSerial::Init_Registers () {
 		break;
 	}
 
-	// baudrate
-	if (initbps > 0)
-		baudresult = (uint16_t)(115200 / initbps);
-	else
-		baudresult = 12;			// = 9600 baud
-
 	Write_MCR (0);
 	Write_LCR (LCR_DIVISOR_Enable_MASK);
-	Write_THR((uint8_t)baudresult & 0xff);
-	Write_IER((uint8_t)(baudresult >> 8));
+	Write_THR(transmit_reg);
+	Write_IER(interrupt_reg);
 	Write_LCR(lcrresult);
 	updateMSR();
 	Read_MSR();
