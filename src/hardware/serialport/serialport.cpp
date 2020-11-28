@@ -1113,8 +1113,10 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 	const uint16_t base = serial_baseaddr[port_index];
 
 	irq = serial_defaultirq[port_index];
-	getUintFromString("irq:", irq, cmd);
-	if (irq < 2 || irq > 15)
+	
+	const bool configured = getUintFromString("irq:", irq, cmd);
+	// Only change the port's IRQ if it's outside the conflict range
+	if (configured && (irq < 2 || irq > 15))
 		irq = serial_defaultirq[port_index];
 
 #if SERIAL_DEBUG
