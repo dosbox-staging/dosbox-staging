@@ -1,9 +1,10 @@
 # DOSBox Staging
 
-[![Linux x86\_64 build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Linux%20builds?label=Linux%20builds%20(x86_64))](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22)
-[![Linux other build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Platform%20builds?label=Linux%20builds%20(ARM,%20S390x,%20ppc64le))](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Platform+builds%22)
-[![Windows build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Windows%20builds?label=Windows%20builds)](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22)
-[![macOS build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/macOS%20builds?label=macOS%20builds)](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22)
+![GPL-2.0-or-later](https://img.shields.io/badge/license-GPL--2.0--or--later-blue)
+[![Linux x86\_64 build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Linux%20builds?label=Linux%20(x86_64))](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22)
+[![Linux other build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Platform%20builds?label=Linux%20(ARM,%20S390x,%20ppc64le))](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Platform+builds%22)
+[![Windows build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Windows%20builds?label=Windows)](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22)
+[![macOS build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/macOS%20builds?label=macOS)](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22)
 
 This repository attempts to modernize the DOSBox codebase by using current
 development practices and tools, fixing issues, and adding features that better
