@@ -1233,16 +1233,16 @@ bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeo
 	}
 	// wait for DSR+CTS on
 	if(wait_dsr||wait_cts) {
-		if(wait_dsr||wait_cts) {
+		if (wait_dsr && wait_cts) {
 			while(((Read_MSR()&0x30)!=0x30)&&(starttime>PIC_FullIndex()-timeout))
 				CALLBACK_Idle();
-		} else if(wait_dsr) {
+		} else if (wait_dsr) {
 			while(!(Read_MSR()&0x20)&&(starttime>PIC_FullIndex()-timeout))
 				CALLBACK_Idle();
-		} else if(wait_cts) {
+		} else if (wait_cts) {
 			while(!(Read_MSR()&0x10)&&(starttime>PIC_FullIndex()-timeout))
 				CALLBACK_Idle();
-		} 
+		}
 		if(!(starttime>PIC_FullIndex()-timeout)) {
 #if SERIAL_DEBUG
 			log_ser(dbg_aux,"Putchar timeout: MSR 0x%x",Read_MSR());
