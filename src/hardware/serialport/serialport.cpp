@@ -1018,6 +1018,42 @@ static constexpr std::tuple<uint8_t, uint8_t> baud_to_regs(uint32_t baud_rate)
 	return std::make_tuple(transmit_reg, interrupt_reg);
 }
 
+static uint8_t line_control_to_reg(const uint8_t data_bits,
+                                   const char parity_type,
+                                   const uint8_t stop_bits)
+{
+	uint8_t reg = 0;
+
+	switch (data_bits) {
+	case 5: reg |= LCR_DATABITS_5; break;
+	case 6: reg |= LCR_DATABITS_6; break;
+	case 7: reg |= LCR_DATABITS_7; break;
+	default: reg |= LCR_DATABITS_8; break;
+	}
+
+	// Explanation of the parity types:
+	// - Odd: If an odd number of 1s in the data then parity bit is 1
+	// - Even: If an even number of 1s in the data then parity bit is 1
+	// - Mark: the parity bit is expected to always be 1
+	// - Space: the parity bit is expected to always be 0
+	// - None: no parity bit is present or transmitted, which is the default
+	assert(isupper(parity_type));
+	switch (parity_type) {
+	case 'O': reg |= LCR_PARITY_ODD; break;
+	case 'E': reg |= LCR_PARITY_EVEN; break;
+	case 'M': reg |= LCR_PARITY_MARK; break;
+	case 'S': reg |= LCR_PARITY_SPACE; break;
+	default: reg |= LCR_PARITY_NONE; break;
+	}
+
+	if (stop_bits <= 1)
+		reg |= LCR_STOPBITS_1;
+	else
+		reg |= LCR_STOPBITS_MORE_THAN_1;
+
+	return reg;
+}
+
 /*****************************************************************************/
 /* Initialisation                                                           **/
 /*****************************************************************************/
@@ -1026,15 +1062,11 @@ void CSerial::Init_Registers () {
 	irq_active=false;
 	waiting_interrupts = 0x0;
 
-	// Initialize at 9600 Baud
-	constexpr auto baud_spec = baud_to_regs(9600u);
+	// Initialize at 9600 baud, 8-N-1 (data, parity, stop)
+	const auto line_reg = line_control_to_reg(8, 'N', 1);
+	constexpr auto baud_spec = baud_to_regs(9600);
 	constexpr uint8_t transmit_reg = std::get<0>(baud_spec);
 	constexpr uint8_t interrupt_reg = std::get<1>(baud_spec);
-
-	uint8_t bytesize = 8;
-	char parity = 'N';
-
-	uint8_t lcrresult = 0;
 
 	IER = 0;
 	ISR = 0x1;
@@ -1065,46 +1097,11 @@ void CSerial::Init_Registers () {
 
 	baud_divider=0x0;
 
-	// make lcr: byte size, parity, stopbits, baudrate
-
-	if (bytesize == 5)
-		lcrresult |= LCR_DATABITS_5;
-	else if (bytesize == 6)
-		lcrresult |= LCR_DATABITS_6;
-	else if (bytesize == 7)
-		lcrresult |= LCR_DATABITS_7;
-	else
-		lcrresult |= LCR_DATABITS_8;
-
-	switch(parity)
-	{
-	case 'N':
-	case 'n':
-		lcrresult |= LCR_PARITY_NONE;
-		break;
-	case 'O':
-	case 'o':
-		lcrresult |= LCR_PARITY_ODD;
-		break;
-	case 'E':
-	case 'e':
-		lcrresult |= LCR_PARITY_EVEN;
-		break;
-	case 'M':
-	case 'm':
-		lcrresult |= LCR_PARITY_MARK;
-		break;
-	case 'S':
-	case 's':
-		lcrresult |= LCR_PARITY_SPACE;
-		break;
-	}
-
 	Write_MCR (0);
 	Write_LCR (LCR_DIVISOR_Enable_MASK);
 	Write_THR(transmit_reg);
 	Write_IER(interrupt_reg);
-	Write_LCR(lcrresult);
+	Write_LCR(line_reg);
 	updateMSR();
 	Read_MSR();
 	PIC_DeActivateIRQ(irq);
