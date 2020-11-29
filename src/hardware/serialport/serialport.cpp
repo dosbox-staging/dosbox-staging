@@ -219,8 +219,10 @@ void CSerial::changeLineProperties() {
 
 static void Serial_EventHandler(Bitu val) {
 	const uint32_t serclassid = val & 0x3;
-	if(serialports[serclassid]!=0)
-		serialports[serclassid]->handleEvent(val>>2);
+	if (serialports[serclassid] != 0) {
+		const auto event_type = static_cast<uint16_t>(val >> 2);
+		serialports[serclassid]->handleEvent(event_type);
+	}
 }
 
 void CSerial::setEvent(uint16_t type, float duration)
