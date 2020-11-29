@@ -1113,7 +1113,7 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 	const uint16_t base = serial_baseaddr[port_index];
 
 	irq = serial_defaultirq[port_index];
-	
+
 	const bool configured = getUintFromString("irq:", irq, cmd);
 	// Only change the port's IRQ if it's outside the conflict range
 	if (configured && (irq < 2 || irq > 15))
@@ -1197,7 +1197,8 @@ bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeo
 	const double starttime = PIC_FullIndex();
 	// wait for DSR on
 	if(wait_dsr) {
-		while((!(Read_MSR()&0x20))&&(starttime>PIC_FullIndex()-timeout))
+		while (!(Read_MSR() & MSR_DSR_MASK) &&
+		       (starttime > PIC_FullIndex() - timeout))
 			CALLBACK_Idle();
 		if(!(starttime>PIC_FullIndex()-timeout)) {
 #if SERIAL_DEBUG
@@ -1207,9 +1208,10 @@ bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeo
 		}
 	}
 	// wait for a byte to arrive
-	while((!((*lsr=Read_LSR())&0x1))&&(starttime>PIC_FullIndex()-timeout))
+	while ((!((*lsr = Read_LSR()) & LSR_RX_DATA_READY_MASK)) &&
+	       (starttime > PIC_FullIndex() - timeout))
 		CALLBACK_Idle();
-	
+
 	if(!(starttime>PIC_FullIndex()-timeout)) {
 #if SERIAL_DEBUG
 		log_ser(dbg_aux,"Getchar data timeout: MSR 0x%x",Read_MSR());
@@ -1228,24 +1230,31 @@ bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeo
 {
 	const double starttime = PIC_FullIndex();
 	// wait for it to become empty
-	while(!(Read_LSR()&0x20)) {
+	while (!(Read_LSR() & LSR_TX_HOLDING_EMPTY_MASK)) {
 		CALLBACK_Idle();
 	}
 	// wait for DSR+CTS on
-	if(wait_dsr||wait_cts) {
+	if (wait_dsr || wait_cts) {
 		if (wait_dsr && wait_cts) {
-			while(((Read_MSR()&0x30)!=0x30)&&(starttime>PIC_FullIndex()-timeout))
+			constexpr auto dsr_cts_mask = MSR_DSR_MASK | MSR_CTS_MASK;
+			while (((Read_MSR() & dsr_cts_mask) != dsr_cts_mask) &&
+			       (starttime > PIC_FullIndex() - timeout)) {
 				CALLBACK_Idle();
+			}
 		} else if (wait_dsr) {
-			while(!(Read_MSR()&0x20)&&(starttime>PIC_FullIndex()-timeout))
+			while (!(Read_MSR() & MSR_DSR_MASK) &&
+			       (starttime > PIC_FullIndex() - timeout)) {
 				CALLBACK_Idle();
+			}
 		} else if (wait_cts) {
-			while(!(Read_MSR()&0x10)&&(starttime>PIC_FullIndex()-timeout))
+			while (!(Read_MSR() & MSR_CTS_MASK) &&
+			       (starttime > PIC_FullIndex() - timeout)) {
 				CALLBACK_Idle();
+			}
 		}
-		if(!(starttime>PIC_FullIndex()-timeout)) {
+		if (!(starttime > PIC_FullIndex() - timeout)) {
 #if SERIAL_DEBUG
-			log_ser(dbg_aux,"Putchar timeout: MSR 0x%x",Read_MSR());
+			log_ser(dbg_aux, "Putchar timeout: MSR 0x%x", Read_MSR());
 #endif
 			return false;
 		}
