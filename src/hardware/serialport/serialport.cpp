@@ -1211,7 +1211,7 @@ bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeo
 		}
 	}
 	// wait for a byte to arrive
-	while ((!((*lsr = Read_LSR()) & LSR_RX_DATA_READY_MASK)) &&
+	while (!((*lsr = static_cast<uint8_t>(Read_LSR())) & LSR_RX_DATA_READY_MASK) &&
 	       (starttime > PIC_FullIndex() - timeout))
 		CALLBACK_Idle();
 
@@ -1221,7 +1221,7 @@ bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeo
 #endif
 		return false;
 	}
-	*data=Read_RHR();
+	*data = static_cast<uint8_t>(Read_RHR());
 
 #if SERIAL_DEBUG
 	log_ser(dbg_aux,"Getchar read 0x%x",*data);
