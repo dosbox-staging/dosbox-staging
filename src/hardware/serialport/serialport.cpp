@@ -1191,7 +1191,7 @@ bool CSerial::getUintFromString(const char *name, uint32_t &data, CommandLine *c
 
 CSerial::~CSerial() {
 	DOS_DelDevice(mydosdevice);
-	for (uint32_t i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++)
+	for (uint16_t i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++)
 		removeEvent(i);
 }
 
