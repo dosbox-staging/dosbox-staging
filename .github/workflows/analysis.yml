@@ -25,7 +25,8 @@ jobs:
         run:  ./scripts/verify-python.sh
       - name: Install markdownlint
         run: |
-          sudo apt-get install ruby
+          sudo apt-get install ruby-full
+          ruby --version
           sudo gem install mdl
           sudo chmod go-w /usr/share/rust/.cargo/bin
       - name: Run markdownlint
