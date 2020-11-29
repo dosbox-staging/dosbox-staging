@@ -138,7 +138,8 @@ static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
 #endif
 	return static_cast<Bitu>(retval);
 }
-static void SERIAL_Write (Bitu port, Bitu val, Bitu) {
+static void SERIAL_Write(Bitu port, uint8_t val, Bitu)
+{
 	uint32_t i;
 	const uint8_t offset_type = static_cast<uint8_t>(port) & 0x7;
 	switch(port&0xff8) {
