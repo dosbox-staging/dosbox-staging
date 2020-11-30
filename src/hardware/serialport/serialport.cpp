@@ -1195,6 +1195,12 @@ CSerial::~CSerial() {
 		removeEvent(i);
 }
 
+static bool idle(const double start, const uint32_t timeout)
+{
+	CALLBACK_Idle();
+	return PIC_FullIndex() - start > timeout;
+}
+
 bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeout)
 {
 	const double starttime = PIC_FullIndex();
@@ -1232,38 +1238,31 @@ bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeo
 bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeout)
 {
 	const double starttime = PIC_FullIndex();
-	// wait for it to become empty
-	while (!(Read_LSR() & LSR_TX_HOLDING_EMPTY_MASK)) {
-		CALLBACK_Idle();
+	bool timed_out = false;
+	auto status = Read_MSR();
+
+	// First wait until our transmit queue is empty
+	while (!timed_out && !(status & LSR_TX_HOLDING_EMPTY_MASK)) {
+		timed_out = idle(starttime, timeout);
+		status = Read_MSR();
 	}
-	// wait for DSR+CTS on
-	if (wait_dsr || wait_cts) {
-		if (wait_dsr && wait_cts) {
-			constexpr auto dsr_cts_mask = MSR_DSR_MASK | MSR_CTS_MASK;
-			while (((Read_MSR() & dsr_cts_mask) != dsr_cts_mask) &&
-			       (starttime > PIC_FullIndex() - timeout)) {
-				CALLBACK_Idle();
-			}
-		} else if (wait_dsr) {
-			while (!(Read_MSR() & MSR_DSR_MASK) &&
-			       (starttime > PIC_FullIndex() - timeout)) {
-				CALLBACK_Idle();
-			}
-		} else if (wait_cts) {
-			while (!(Read_MSR() & MSR_CTS_MASK) &&
-			       (starttime > PIC_FullIndex() - timeout)) {
-				CALLBACK_Idle();
-			}
-		}
-		if (!(starttime > PIC_FullIndex() - timeout)) {
+
+	// If waits are disabled, then the ready-checks are simply true.
+	// Otherwise we check the actual line status and keep waiting until
+	// their ready bits are present.
+	while (!timed_out && (!(wait_dsr ? status & MSR_DSR_MASK : true) ||
+	                      !(wait_cts ? status & MSR_CTS_MASK : true))) {
+		timed_out = idle(starttime, timeout);
+		status = Read_MSR();
+	}
+
+	if (timed_out) {
 #if SERIAL_DEBUG
-			log_ser(dbg_aux, "Putchar timeout: MSR 0x%x", Read_MSR());
+		log_ser(dbg_aux, "Putchar timeout: MSR 0x%x", Read_MSR());
 #endif
-			return false;
-		}
+		return false;
 	}
 	Write_THR(data);
-
 #if SERIAL_DEBUG
 	log_ser(dbg_aux,"Putchar 0x%x",data);
 #endif 
