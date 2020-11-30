@@ -1204,24 +1204,21 @@ static bool idle(const double start, const uint32_t timeout)
 bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeout)
 {
 	const double starttime = PIC_FullIndex();
-	// wait for DSR on
-	if(wait_dsr) {
-		while (!(Read_MSR() & MSR_DSR_MASK) &&
-		       (starttime > PIC_FullIndex() - timeout))
-			CALLBACK_Idle();
-		if(!(starttime>PIC_FullIndex()-timeout)) {
-#if SERIAL_DEBUG
-			log_ser(dbg_aux,"Getchar status timeout: MSR 0x%x",Read_MSR());
-#endif
-			return false;
-		}
-	}
-	// wait for a byte to arrive
-	while (!((*lsr = static_cast<uint8_t>(Read_LSR())) & LSR_RX_DATA_READY_MASK) &&
-	       (starttime > PIC_FullIndex() - timeout))
-		CALLBACK_Idle();
+	bool timed_out = false;
 
-	if(!(starttime>PIC_FullIndex()-timeout)) {
+	// Wait until we're ready to receive (or we've timed out)
+	const uint32_t ready_flag = (wait_dsr ? MSR_DSR_MASK : 0x0);
+	while ((Read_MSR() & ready_flag) != ready_flag && !timed_out)
+		timed_out = idle(starttime, timeout);
+
+	// wait for a byte to arrive (or we've timed out)
+	*lsr = static_cast<uint8_t>(Read_LSR());
+	while (!(*lsr & LSR_RX_DATA_READY_MASK) && !timed_out) {
+		timed_out = idle(starttime, timeout);
+		*lsr = static_cast<uint8_t>(Read_LSR());
+	}
+
+	if (timed_out) {
 #if SERIAL_DEBUG
 		log_ser(dbg_aux,"Getchar data timeout: MSR 0x%x",Read_MSR());
 #endif
