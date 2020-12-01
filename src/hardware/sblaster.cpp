@@ -1503,12 +1503,14 @@ static Bit8u CTMIXER_Read(void) {
 		ret=0xa;
 		break;
 	case 0x80:		/* IRQ Select */
+		ret = 0;
 		switch (sb.hw.irq) {
 		case 2:  return 0x1;
 		case 5:  return 0x2;
 		case 7:  return 0x4;
 		case 10: return 0x8;
 		}
+		break;
 	case 0x81:		/* DMA Select */
 		ret=0;
 		switch (sb.hw.dma8) {
