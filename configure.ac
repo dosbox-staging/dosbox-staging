@@ -498,6 +498,7 @@ AC_ARG_ENABLE(opus-cdda,
               AS_HELP_STRING([--disable-opus-cdda],
                              [Disable Opus CD audio track support]))
 AS_IF([test "x${enable_opus_cdda}" != "xno"],
+      AC_MSG_NOTICE([OPUSFILE dependency can be disabled with --disable-opus-cdda])
       [PKG_CHECK_MODULES([OPUSFILE],
                          [opusfile],
                          [LIBS="$LIBS $OPUSFILE_LIBS" HAVE_OPUS=yes])])
@@ -514,6 +515,7 @@ AC_ARG_ENABLE(fluidsynth,
                              [Disable FluidSynth integration]))
 
 if test "${enable_fluidsynth}" != "no" ; then
+    AC_MSG_NOTICE([FLUIDSYNTH dependency can be disabled with --disable-fluidsynth])
     PKG_CHECK_MODULES(FLUIDSYNTH,
                       fluidsynth >= 2,
                       [LIBS="$LIBS $FLUIDSYNTH_LIBS $GLIB_LIBS"
