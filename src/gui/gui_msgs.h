@@ -37,54 +37,45 @@ Read AUTHORS file for more details.
 )";
 
 constexpr char help_msg[] =
-        R"(Usage: dosbox [-fullscreen] [-startmapper] [-noautoexec] [-securemode]
-[-user‐conf] [-scaler scaler|-forcescaler scaler] [-conf configfile]
-[-lang langfile] [-machine machinetype] [-socket socketnumber] [-c command]
-[-exit] [-v, --version] [-h, --help] [NAME]
-Options:
-  -h, --help              Displays this message.
-  -fullscreen             Start dosbox in fullscreen mode.
-  -startmapper            Start the internal keymapper on startup of dosbox.
-  -noautoexec             Skips the [autoexec] section of the loaded
-                          configuration file.
+        R"(Usage: dosbox [OPTION]... [FILE]
 
-  -securemode             Same as -noautoexec, but adds config.com -securemode
-                          at the end of AUTOEXEC.BAT
+These are common options:
 
-  -userconf               Load the configuration file located in
-                          ~/.config/dosbox. Can be combined with the -conf
-                          option.
+  -h, --help          Displays this message.
 
-  -scaler <scaler>        Uses the graphical scaler specified by <scaler>.
-  -forcescaler <scaler>   Similar to the -scaler parameter, but tries to force
-                          usage of the specified scaler even if it might not
-                          fit.
+  --printconf         Prints the location of the default configuration file.
 
-  -conf <configfile>      Start dosbox with the options specified in
-                          <configfile>. Multiple configfiles can be present at
-                          the commandline.
+  --editconf          Open the default configuration file in a text editor.
 
-  -lang <langfile>        Start dosbox with the language specified in
-                          <langfile>.
+  -c <command>        Runs the specified DOS command before running FILE.
+                      Multiple commands can be specified.
 
-  -machine {hercules|cga|tandy|pcjr|ega|vgaonly|svga_s3|svga_et3000|
-            svga_et4000|svga_paradise|vesa_nolfb|vesa_oldvbe}
+  -conf <configfile>  Start dosbox with the options specified in <configfile>.
+                      Multiple configfiles can be present at the commandline.
 
-                          Setup dosbox to emulate a specific type of machine.
-                          The default value is 'svga_s3'. The machinetype has
-                          influence on both the videocard and the available
-                          soundcards.
+  -userconf           Load the configuration file located in
+                      ~/.config/dosbox. Can be combined with the -conf
+                      option.
 
-  -socket <socketnumber>  Passes the socket number <socketnumber> to the
-                          nullmodem emulation. See README for details.
+  -fullscreen         Start dosbox in fullscreen mode.
 
-  -c <command>            Runs the specified command before running file.
-                          Multiple commands can be specified.
+  -lang <langfile>    Start dosbox with the language specified in
+                      <langfile>.
 
-  -exit                   Dosbox will close itself when the DOS program
-                          specified by file ends.
+  -machine <type>     Setup dosbox to emulate a specific type of machine.
+                      The machine type has influence on both the videocard
+                      and the emulated soundcards.  Valid choices are:
+                      hercules, cga, cga_mono, tandy, pcjr, ega, vgaonly,
+                      svga_s3 (default), svga_et3000, svga_et4000,
+                      svga_paradise, vesa_nolfb, vesa_oldvbe.
 
-  -v, --version           Output version information and exit.
+  -exit               Dosbox will close itself when the DOS program
+                      specified by FILE ends.
+
+  -v, --version       Output version information and exit.
+
+You can find full list of options in the man page: dosbox(1)
+And in file: /usr/share/doc/dosbox-staging/README
 )";
 
 #endif
