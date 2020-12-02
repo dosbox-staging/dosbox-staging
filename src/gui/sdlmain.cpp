@@ -1949,21 +1949,34 @@ static bool detect_shader_fixed_size()
 #endif // C_OPENGL
 }
 
-static std::tuple<int, int> detect_window_size()
+static SDL_Point detect_window_size()
 {
 	SDL_Rect bounds;
 	SDL_GetDisplayBounds(sdl.display_number, &bounds);
-	constexpr int resolutions[][2] = {
-	        {1600, 1200},
+	constexpr SDL_Point resolutions[] = {
+	        // TODO: these resolutions are disabled for now due to
+	        // compatibility with users using pixel-doubling on high-density
+	        // displays. For example: if we pick 1600x1200 window resolution
+	        // and OS scales it 2x it might end up being larger than really
+	        // available screen area. To fix this we need to avoid currently
+	        // used hacks for OS-level window scaling.
+	        //
+	        // {2560, 1920},
+	        // {2400, 1800},
+	        // {2048, 1536},
+	        // {1920, 1440},
+	        // {1600, 1200},
 	        {1280, 960},
 	        {1024, 768},
 	        {800, 600},
 	};
-	for (const auto &wh : resolutions) {
-		if (bounds.w > wh[0] && bounds.h > wh[1])
-			return std::make_tuple(wh[0], wh[1]);
+	// Pick the biggest window size, that neatly fits in user's available
+	// screen area.
+	for (const auto &size : resolutions) {
+		if (bounds.w > size.x && bounds.h > size.y)
+			return size;
 	}
-	return std::make_tuple(640, 480);
+	return {640, 480};
 }
 
 static void SetupWindowResolution(const char *val)
@@ -1981,10 +1994,10 @@ static void SetupWindowResolution(const char *val)
 
 		if (!sdl.desktop.want_resizable_window &&
 		    detect_shader_fixed_size()) {
-			const auto wh = detect_window_size();
+			const auto ws = detect_window_size();
 			sdl.desktop.window.use_original_size = false;
-			sdl.desktop.window.width = std::get<0>(wh);
-			sdl.desktop.window.height = std::get<1>(wh);
+			sdl.desktop.window.width = ws.x;
+			sdl.desktop.window.height = ws.y;
 		}
 		return;
 	}
