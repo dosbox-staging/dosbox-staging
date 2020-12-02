@@ -239,20 +239,18 @@ Bits ConvHexWord(char * word) {
 	return ret;
 }
 
-static char buf[1024];           //greater scope as else it doesn't always gets thrown right (linux/gcc2.95)
-void E_Exit(const char * format,...) {
+static char e_exit_buf[1024]; // greater scope as else it doesn't always gets
+                              // thrown right
+void E_Exit(const char *format, ...)
+{
 #if C_DEBUG && C_HEAVY_DEBUG
- 	DEBUG_HeavyWriteLogInstruction();
+	DEBUG_HeavyWriteLogInstruction();
 #endif
 	va_list msg;
-	va_start(msg,format);
-	vsnprintf(buf,sizeof(buf),format,msg);
+	va_start(msg, format);
+	vsnprintf(e_exit_buf, ARRAY_LEN(e_exit_buf), format, msg);
 	va_end(msg);
-
-	buf[sizeof(buf) - 1] = '\0';
-	//strcat(buf,"\n"); catcher should handle the end of line.. 
-
-	throw(buf);
+	throw(e_exit_buf);
 }
 
 std::string safe_strerror(int err) noexcept
