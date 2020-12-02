@@ -627,6 +627,7 @@ static bool RENDER_GetShader(std::string &shader_path, char *old_src)
 	        {"advmame3x", advmame3x_glsl},
 	        {"crt-easymode-flat", crt_easymode_tweaked_glsl},
 	        {"crt-fakelottes-flat", crt_fakelottes_tweaked_glsl},
+	        {"default", sharp_glsl},
 	        {"rgb2x", rgb2x_glsl},
 	        {"rgb3x", rgb3x_glsl},
 	        {"scan2x", scan2x_glsl},
