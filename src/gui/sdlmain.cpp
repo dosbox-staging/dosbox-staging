@@ -1923,7 +1923,7 @@ static bool detect_resizable_window()
 
 	const std::string sname = get_glshader_value();
 
-	if (sname != "sharp" && sname != "none") {
+	if (sname != "sharp" && sname != "none" && sname != "default") {
 		LOG_MSG("MAIN: Disabling resizable window, because it's not "
 		        "compatible with selected render.glshader\n"
 		        "MAIN: Use 'sharp' or 'none' to keep resizable window.");
