@@ -1,0 +1,15 @@
+extraction:
+  cpp:
+    prepare:
+      packages:
+      - "libpng-dev"
+      - "libsdl2-dev"
+      - "libsdl2-net-dev"
+      - "libopusfile-dev"
+    configure:
+      command:
+      - "./autogen.sh"
+      - "./configure --disable-fluidsynth"
+  python:
+    python_setup:
+      version: 3
