@@ -386,7 +386,9 @@ void DrawCursor() {
 
 	// Check video page. Seems to be ignored for text mode. 
 	// hence the text mode handled above this
-	if (real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE)!=mouse.page) return;
+	// >>> removed because BIOS page is not actual page in some cases, e.g. QQP games
+//	if (real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE)!=mouse.page) return;
+
 // Check if cursor in update region
 /*	if ((POS_X >= mouse.updateRegion_x[0]) && (POS_X <= mouse.updateRegion_x[1]) &&
 	    (POS_Y >= mouse.updateRegion_y[0]) && (POS_Y <= mouse.updateRegion_y[1])) {
@@ -769,8 +771,8 @@ static Bitu INT33_Handler(void) {
 			reg_dx=mouse.last_pressed_y[but];
 			reg_bx=mouse.times_pressed[but];
 			mouse.times_pressed[but]=0;
-			break;
 		}
+		break;
 	case 0x06:	/* Return Button Release Data */
 		{
 			Bit16u but=reg_bx;
@@ -780,8 +782,8 @@ static Bitu INT33_Handler(void) {
 			reg_dx=mouse.last_released_y[but];
 			reg_bx=mouse.times_released[but];
 			mouse.times_released[but]=0;
-			break;
 		}
+		break;
 	case 0x07:	/* Define horizontal cursor range */
 		{	//lemmings set 1-640 and wants that. iron seeds set 0-640 but doesn't like 640
 			//Iron seed works if newvideo mode with mode 13 sets 0-639
