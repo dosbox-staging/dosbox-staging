@@ -76,14 +76,14 @@ std::tuple<std::string, int> parse_sf_pref(const std::string &line,
                                            const int default_percent)
 {
 	if (line.empty())
-		return {line, default_percent};
+		return std::make_tuple(line, default_percent);
 
 	// Look for a space in the last 4 characters of the string
 	const auto len = line.length();
 	const auto from_pos = len < 4 ? 0 : len - 4;
 	auto last_space_pos = line.substr(from_pos).find_last_of(' ');
 	if (last_space_pos == std::string::npos)
-		return {line, default_percent};
+		return std::make_tuple(line, default_percent);
 
 	// Ensure the position is relative to the start of the entire string
 	last_space_pos += from_pos;
@@ -93,13 +93,13 @@ std::tuple<std::string, int> parse_sf_pref(const std::string &line,
 	try {
 		percent = stoi(line.substr(last_space_pos + 1));
 	} catch (...) {
-		return {line, default_percent};
+		return std::make_tuple(line, default_percent);
 	}
 	// A number was provided, so split it from the line
 	std::string filename = line.substr(0, last_space_pos);
 	trim(filename); // drop any extra whitespace prior to the number
 
-	return {filename, percent};
+	return std::make_tuple(filename, percent);
 }
 
 #if defined(WIN32)
