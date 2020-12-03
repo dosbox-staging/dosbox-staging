@@ -37,6 +37,8 @@
 #include "programs.h"
 #endif
 
+#include "../src/hardware/serialport/fifo.h"
+
 // set this to 1 for serial debugging in release mode
 #define SERIAL_DBG_FORCED 0
 
@@ -48,100 +50,7 @@
 #include "hardware.h"
 #endif
 
-// Serial port interface
-#define SERIAL_IO_HANDLERS 8
-#define SERIAL_MAX_FIFO_SIZE 256
-/* Note: Almost all DOS-era universal asynchronous receiver-transmitter
- *       (UART)'s permitted up to a 16-byte receive and transmit
- *       first-in/first-out (FIFO) buffer, however some specialty
- *       controller cards allowed up to 64-bytes and later 256-bytes.
- */
-
-class MyFifo {
-public:
-	MyFifo(const MyFifo &) = delete;            // prevent copying
-	MyFifo &operator=(const MyFifo &) = delete; // prevent assignment
-
-	MyFifo(size_t n) : data(n, 0), maxsize(n), size(n)
-	{
-		assert(n <= SERIAL_MAX_FIFO_SIZE);
-	}
-	size_t getFree() { return size - used; }
-	bool isEmpty() { return used == 0; }
-	bool isFull() { return (size - used) == 0; }
-	size_t getUsage() { return used; }
-	void setSize(size_t n)
-	{
-		assert(n <= SERIAL_MAX_FIFO_SIZE);
-		data.resize(n);
-		size = n;
-		maxsize = n;
-		pos = used = 0;
-	}
-	void clear() {
-		pos = used = 0;
-		if (data.size() > 0)
-			std::fill(data.begin(), data.end(), 0);
-	}
-
-	bool addb(uint8_t val)
-	{
-		size_t where = pos + used;
-		if (where >= size)
-			where -= size;
-		if (used >= size) {
-			// overwrite last byte
-			if (where == 0)
-				where = size - 1;
-			else where--;
-			assert(where < data.size());
-			data[where] = val;
-			return false;
-		}
-		assert(where < data.size());
-		data[where] = val;
-		used++;
-		return true;
-	}
-	uint8_t getb()
-	{
-		if (!used)
-			return data[pos];
-		size_t where = pos;
-		used--;
-		if(used) pos++;
-		if (pos>=size) pos-=size;
-		assert(where < data.size());
-		return data[where];
-	}
-	uint8_t getTop()
-	{
-		size_t where = pos + used;
-		if (where >= size)
-			where -= size;
-		if (used >= size) {
-			if (where == 0)
-				where = size - 1;
-			else
-				where--;
-		}
-		assert(where < data.size());
-		return data[where];
-	}
-
-	uint8_t probeByte()
-	{
-		assert(pos < data.size());
-		return data[pos];
-	}
-
-private:
-	std::vector<uint8_t> data;
-	size_t maxsize = 0;
-	size_t size = 0;
-	size_t pos = 0;
-	size_t used = 0;
-};
+constexpr uint8_t SERIAL_IO_HANDLERS = 8;
 
 class CSerial {
 public:
@@ -436,14 +345,23 @@ private:
 
 	// 16C550 (FIFO)
 public: // todo remove
-	MyFifo *rxfifo = nullptr;
+	Fifo *rxfifo = nullptr;
 
 private:
-	MyFifo *txfifo = nullptr;
-	MyFifo *errorfifo = nullptr;
+	Fifo *txfifo = nullptr;
+	Fifo *errorfifo = nullptr;
+	// Universal Asynchronous Receiver Transmitter (UARTs) were largely
+	// defined by their buffer sizes:
+	// - 8250, 16450, and early 16550: 1-byte buffer and are obsolete
+	// - 16550A and 16C552: 16-byte buffer
+	// - 16650: 32-byte buffer
+	// - 16750: 64-byte buffer
+	// - 16850 and 16C850: 128-byte buffer
+	// - 16950: up to 512-byte buffer
+	// - Hayes ESP accelerator: 1024-byte buffer
+	const uint16_t fifo_size = 16; // emulate the 16550A
 	uint32_t errors_in_fifo = 0;
 	uint32_t rx_interrupt_threshold = 0;
-	uint32_t fifosize = 0;
 	uint8_t FCR = 0;
 	bool sync_guardtime = false;
 
