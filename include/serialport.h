@@ -343,13 +343,7 @@ private:
 	uint8_t loopback_data = 0;
 	void transmitLoopbackByte(uint8_t val, bool value);
 
-	// 16C550 (FIFO)
-public: // todo remove
-	Fifo *rxfifo = nullptr;
-
 private:
-	Fifo *txfifo = nullptr;
-	Fifo *errorfifo = nullptr;
 	// Universal Asynchronous Receiver Transmitter (UARTs) were largely
 	// defined by their buffer sizes:
 	// - 8250, 16450, and early 16550: 1-byte buffer and are obsolete
@@ -360,6 +354,9 @@ private:
 	// - 16950: up to 512-byte buffer
 	// - Hayes ESP accelerator: 1024-byte buffer
 	const uint16_t fifo_size = 16; // emulate the 16550A
+	Fifo errorfifo;
+	Fifo rxfifo;
+	Fifo txfifo;
 	uint32_t errors_in_fifo = 0;
 	uint32_t rx_interrupt_threshold = 0;
 	uint8_t FCR = 0;
