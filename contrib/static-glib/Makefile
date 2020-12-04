@@ -1,8 +1,9 @@
 ##
 #  Fetch the latest dependencies from upstream
 #  -------------------------------------------
-GLIB_ARCHIVE = glib.tar.xz
-GLIB_URL = https://download.gnome.org/sources/glib/2.66/glib-2.66.3.tar.xz
+GLIB_ARCHIVE = glib.tar.gz
+GLIB_URL = https://gitlab.gnome.org/GNOME/glib/-/archive/2.67.0/glib-2.67.0.tar.gz
+GLIB_SHA256 = a6df47c78dc8793dac80edecd9602c53a517ec2d30e9f7832a25eb554fa5ddb6
 
 ##
 #  Common commands and arguments
@@ -12,7 +13,7 @@ CURL_FLAGS = --progress-bar
 CURL = curl --location $(CURL_FLAGS)
 WGET_FLAGS = --no-verbose --progress=bar
 WGET = wget --no-clobber $(WGET_FLAGS)
-EXTRACT = tar --strip 1 -Jxof
+EXTRACT = tar --strip 1 -zxof
 DIR := ${CURDIR}
 
 ##
@@ -52,6 +53,10 @@ define download
 	   )
 endef
 
+define checksum
+	echo $(SUM) $(FILENAME) | sha256sum --check
+endef
+
 ##
 #  GLib Library
 #  ------------
@@ -62,6 +67,9 @@ glib: lib/libglib-2.0.a
 $(GLIB_ARCHIVE):
 	$(eval URL := $(GLIB_URL))
 	@$(download)
+	$(eval SUM := $(GLIB_SHA256))
+	$(eval FILENAME := $(GLIB_ARCHIVE))
+	@$(checksum)
 
 glib/build: $(GLIB_ARCHIVE)
 	@test -f $@ \
@@ -72,12 +80,21 @@ glib/build/build.ninja: glib/build
 	cd glib \
 	&& cd build \
 	&& meson \
-	--prefix="$(DIR)" \
-	--optimization=3 \
+	--auto-features=disabled \
 	--buildtype=release \
 	--default-library=static \
-        --auto-features=disabled \
+	--prefix="$(DIR)" \
 	--strip \
+	-Dbsymbolic_functions=false \
+	-Dfam=false \
+	-Dglib_assert=false \
+	-Dinstalled_tests=false \
+	-Dinternal_pcre=true \
+	-Dlibmount=disabled \
+	-Dman=false \
+	-Dnls=disabled \
+	-Dselinux=disabled \
+	-Dxattr=false \
 	..
 
 lib/libglib-2.0.a: glib/build/build.ninja
@@ -85,7 +102,7 @@ lib/libglib-2.0.a: glib/build/build.ninja
 	&& strings config.h \
 	&& ninja \
 	&& ninja install \
-	&& cd ../../lib \
+	&& cd "$(DIR)"/lib \
 	&& ln -sf */* .
 
 define GLIB_EXPORTS
