@@ -30,6 +30,7 @@ libhardware_sources = files([
   'pic.cpp',
   'sblaster.cpp',
   'serialport/directserial.cpp',
+  'serialport/fifo.cpp',
   'serialport/libserial.cpp',
   'serialport/misc_util.cpp',
   'serialport/nullmodem.cpp',
