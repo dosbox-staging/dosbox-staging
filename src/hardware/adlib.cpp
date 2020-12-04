@@ -27,7 +27,7 @@
 #include "mapper.h"
 #include "mem.h"
 #include "dbopl.h"
-#include "../libs/nuked/nukedopl.h"
+#include "../libs/nuked/opl3.h"
 
 #include "mame/emu.h"
 #include "mame/fmopl.h"

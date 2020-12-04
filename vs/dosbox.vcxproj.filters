@@ -349,7 +349,7 @@
     <ClCompile Include="..\src\libs\decoders\wav.c">
       <Filter>src\libs\decoders</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libs\nuked\nukedopl.cpp">
+    <ClCompile Include="..\src\libs\nuked\opl3.c">
       <Filter>src\libs\nuked</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\ppscale\ppscale.c">
@@ -717,7 +717,7 @@
     <ClInclude Include="..\src\libs\decoders\xxhash.h">
       <Filter>src\libs\decoders</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\libs\nuked\nukedopl.h">
+    <ClInclude Include="..\src\libs\nuked\opl3.h">
       <Filter>src\libs\nuked</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libs\ppscale\ppscale.h">

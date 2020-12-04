@@ -356,7 +356,7 @@
     <ClCompile Include="..\src\libs\decoders\SDL_sound.c" />
     <ClCompile Include="..\src\libs\decoders\vorbis.c" />
     <ClCompile Include="..\src\libs\decoders\wav.c" />
-    <ClCompile Include="..\src\libs\nuked\nukedopl.cpp" />
+    <ClCompile Include="..\src\libs\nuked\opl3.c" />
     <ClCompile Include="..\src\libs\ppscale\ppscale.c" />
     <ClCompile Include="..\src\midi\midi.cpp" />
     <ClCompile Include="..\src\midi\midi_fluidsynth.cpp" />
@@ -488,7 +488,7 @@
     <ClInclude Include="..\src\libs\decoders\stb.h" />
     <ClInclude Include="..\src\libs\decoders\stb_vorbis.h" />
     <ClInclude Include="..\src\libs\decoders\xxhash.h" />
-    <ClInclude Include="..\src\libs\nuked\nukedopl.h" />
+    <ClInclude Include="..\src\libs\nuked\opl3.h" />
     <ClInclude Include="..\src\libs\ppscale\ppscale.h" />
     <ClInclude Include="..\src\midi\midi_fluidsynth.h" />
     <ClInclude Include="..\src\midi\midi_handler.h" />
