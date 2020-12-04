@@ -1,7 +1,7 @@
 AM_CPPFLAGS = -I$(top_srcdir)/include
 
-EXTRA_DIST = nukedopl.h
+EXTRA_DIST = opl3.h
 
 noinst_LIBRARIES = libnuked.a
 
-libnuked_a_SOURCES = nukedopl.cpp
+libnuked_a_SOURCES = opl3.c
