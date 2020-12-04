@@ -1,0 +1,6 @@
+bin
+include
+lib*
+glib
+glib.tar.gz
+share
