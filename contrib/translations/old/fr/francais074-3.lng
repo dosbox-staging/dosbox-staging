@@ -1,0 +1,1007 @@
+:CONFIG_FULLSCREEN
+Démarrer DOSBox directement en mode plein écran. (Appuyer sur Alt-Entrée pour revenir en mode fenêtre)
+.
+:CONFIG_FULLDOUBLE
+Utiliser le double buffering en mode plein écran. Cela peut réduire le scintillement de l'écran, mais aussi ralentir DOSBox.
+.
+:CONFIG_FULLRESOLUTION
+Résolution à utiliser pour le plein écran: original, bureau (desktop) ou taille fixe (ex: 1024x768).
+  Utiliser la résolution native de votre écran avec aspect=true pourrait donner les meilleurs résultats.
+  Si vous obtenez une petite fenêtre sur un grand écran, essayer une valeur de "output" différente de surface.
+  Sous Windows 10, avec les paramètres de mise à l'échelle et disposition défini au dessus de 100%,
+  Il est recommandé d'utiliser une résolution plus faible, pour éviter les problèmes de taille de fenêtre.
+.
+:CONFIG_WINDOWRESOLUTION
+Mettre l'échelle de la fenêtre à cette taille SI le mode de sortie supporte le hardware scaling (mise à l'échelle matérielle).
+  (output=surface ne le fait pas!)
+.
+:CONFIG_OUTPUT
+Système vidéo à utiliser pour la sortie.
+.
+:CONFIG_AUTOLOCK
+La souris se verrouillera automatiquement en cliquant sur l'écran. (Appuyer sur CTRL-F10 pour déverrouiller)
+.
+:CONFIG_SENSITIVITY
+Sensibilité de la souris.
+.
+:CONFIG_WAITONERROR
+Attendre avant de fermer la console si une erreur se produit dans DOSBox.
+.
+:CONFIG_PRIORITY
+Niveaux de priorité pour DOSBox. La deuxième valeur après la virgule est lorsque DOSBox n'est pas actif/réduit.
+  pause n'est valable que pour la seconde entrée.
+.
+:CONFIG_MAPPERFILE
+Fichier utilisé pour charger/sauver les correspondances touche/événement. Resetmapper ne fonctionne qu'avec la valeur par défaut.
+.
+:CONFIG_USESCANCODES
+Empêche l'utilisation des symkeys, peut ne pas fonctionner sur tous les systèmes d'exploitation.
+.
+:CONFIG_LANGUAGE
+Sélectionner un autre fichier de langue.
+.
+:CONFIG_MACHINE
+Type de machine que DOSBox essaie d'émuler.
+.
+:CONFIG_CAPTURES
+Répertoire où les objets comme les sons wave, musiques midi, et captures d'écran sont enregistrés.
+.
+:CONFIG_MEMSIZE
+Quantité de mémoire dont DOSBox dispose, en Mégaoctets.
+  Il est mieux de laisser cette valeur d'origine pour éviter les problèmes avec certains jeux,
+  bien que quelques jeux puissent nécessiter une valeur plus élevée.
+  Il n'y a généralement pas de gain de vitesse en augmentant cette valeur.
+.
+:CONFIG_FRAMESKIP
+Nombre d'images que DOSBox saute avant d'en afficher une autre.
+.
+:CONFIG_ASPECT
+Applique une correction d'aspect, si le mode de sortie ne supporte pas le scaling, cela peut ralentir le fonctionnement !
+.
+:CONFIG_SCALER
+Scaler utilisé pour agrandir/améliorer les modes basse résolution. Si l'option "forced" est ajoutée,
+  alors le scaler sera utilisé même si le résultat ne semble pas celui escompté.
+  Pour ajuster un scaler à la résolution utilisé en plein écran, des barres noires peuvent être nécéssaires,
+  pour remplir entièrement l'écran, selon votre matériel, un scaler/résolution différentes peuvent marcher.
+.
+:CONFIG_CORE
+Core CPU utilisé dans l'émulation. "auto" bascule de "normal" à "dynamic" si c'est disponible et
+approprié.
+.
+:CONFIG_CPUTYPE
+Type de CPU utilisés dans l'émulation. "auto" est le choix le plus rapide.
+.
+:CONFIG_CYCLES
+Nombre d'instructions que DOSBox essaye d'émuler à chaque milliseconde.
+Paramétrer une trop grande valeur donne des coupures de son et des saccades.
+Les cycles peuvent être définis de 3 façons:
+  'auto'          essaye de deviner ce dont un jeu a besoin.
+                  Cela fonctionne généralement, mais peut échouer avec certains jeux.
+  'fixed #nombre' définira une quantité fixe de cycles. C'est généralement ce qu'il faut 
+		  si 'auto' échoue. (Exemple: fixed 4000)
+  'max'           allouera autant de cycles que votre ordinateur est capable 
+		  de gérer.
+
+.
+:CONFIG_CYCLEUP
+Nombre de cycles à ajouter/réduire avec la combinaison de touches.(CTRL-F11/CTRL-F12)
+.
+:CONFIG_CYCLEDOWN
+Le paramétrer à moins de 100 donnera un pourcentage.
+.
+:CONFIG_NOSOUND
+Activer le mode sourdine, le son étant cependant toujours émulé.
+.
+:CONFIG_RATE
+Taux d'échantillonnage du Mixer, paramétrer tout taux d'un périphérique plus haut que cela va probablement déteriorer leur qualité sonore.
+.
+:CONFIG_BLOCKSIZE
+Taille de bloc du Mixer, des blocs plus gros peuvent aider pour les saccades de son mais il sera aussi moins en phase.
+.
+:CONFIG_PREBUFFER
+Nombre de millisecondes de données à garder en amont du paramètre blocksize.
+.
+:CONFIG_MPU401
+Type de MPU-401 à émuler.
+.
+:CONFIG_MIDIDEVICE
+Périphérique qui recevra les données MIDI du MPU-401.
+.
+:CONFIG_MIDICONFIG
+Options de configuration spécifique pour le pilote de périphérique. C'est généralement l'ID du périphérique que vous voulez utiliser.
+  (Trouvez l'id avec mixer/listmidi).
+  Ou dans le cas de coreaudio, vous pouvez spécifier un soundfont ici.
+  Voir le LISEZ-MOI/Manuel pour les détails.
+.
+:CONFIG_SBTYPE
+Type de Soundblaster à émuler. gb est pour Gameblaster.
+.
+:CONFIG_SBBASE
+Adresse IO de la Soundblaster.
+.
+:CONFIG_IRQ
+Numéro d'IRQ de la Soundblaster.
+.
+:CONFIG_DMA
+Numéro DMA de la Soundblaster.
+.
+:CONFIG_HDMA
+Numéro DMA Haut de la Soundblaster.
+.
+:CONFIG_SBMIXER
+Permet au mixer Soundblaster de modifier le mixer de DOSBox.
+.
+:CONFIG_OPLMODE
+Type d'émulation OPL. Pour "auto", le mode est déterminé par le type de Soundblaster. Tous les modes OPL sont compatibles Adlib, sauf pour CMS.
+.
+:CONFIG_OPLEMU
+Source pour l'émulation OPL. "compat" pourait offrir une meilleure qualité (voir également oplrate).
+.
+:CONFIG_OPLRATE
+Taux d'échantillonnage de l'émulation musicale OPL. Utiliser 49716 pour la meilleure qualité (paramétrer le taux du mixer en conséquence).
+.
+:CONFIG_GUS
+Activer l'émulation Gravis Ultrasound.
+.
+:CONFIG_GUSRATE
+Taux d'échantillonnage de l'émulation Ultrasound.
+.
+:CONFIG_GUSBASE
+Adresse de base IO de la Gravis Ultrasound.
+.
+:CONFIG_GUSIRQ
+Numéro d'IRQ de la Gravis Ultrasound.
+.
+:CONFIG_GUSDMA
+Canal DMA de la Gravis Ultrasound.
+.
+:CONFIG_ULTRADIR
+Chemin vers le répertoire Ultrasound. Dans ce répertoire,
+il devrait y avoir un répertoire MIDI qui contient
+les fichiers patch pour l'écoute en GUS. Le jeu de patch
+utilisé avec Timidity devrait bien fonctionner.
+.
+:CONFIG_PCSPEAKER
+Activer l'émulation Haut-Parleur PC.
+.
+:CONFIG_PCRATE
+Taux d'échantillonnage de la génération de son du Haut-Parleur PC.
+.
+:CONFIG_TANDY
+Activer l'émulation du Tandy Sound System. Pour "auto", l'émulation est présente seulement si la machine est paramétrée sur "tandy".
+.
+:CONFIG_TANDYRATE
+Taux d'échantillonnage de la génération 3-Voix Tandy.
+.
+:CONFIG_DISNEY
+Activer l'émulation Disney Sound Source. (Covox Voice Master et Speech Thing compatibles).
+.
+:CONFIG_JOYSTICKTYPE
+Type de manette à émuler: auto (défaut), none(aucun)
+2axis (supporte deux manettes),
+4axis (supporte une manette, première manette utilisée),
+4axis_2 (supporte une manette, seconde manette utilisée),
+fcs (Thrustmaster), ch (CH Flightstick).
+"none" désactive l'émulation de la manette.
+"auto" choisit l'émulation selon la(les) manette(s) réelle(s).
+(Rappelez-vous de réinitialiser le fichier de correspondance des touches de DOSBox si vous l'avez sauvé plus tôt)
+.
+:CONFIG_TIMED
+Activer des intervalles de temps pour les axes. Tester cette option si votre manette dérive.
+.
+:CONFIG_AUTOFIRE
+Tirer continuellement tant que le bouton est pressé.
+.
+:CONFIG_SWAP34
+Echanger les 3ème et 4ème axes. Peut ˆtre utile avec certaines manettes.
+.
+:CONFIG_BUTTONWRAP
+Activer l'inversion de bouton pour le nombre de boutons émulés.
+.
+:CONFIG_SERIAL1
+Définir le type de périphérique connecté au port série.
+Peut être disabled(désactivé), dummy(factice), modem, nullmodem, directserial.
+Les paramètres additionnels doivent être sur la même ligne sous la forme
+paramètre:valeur. Le paramètre pour tous les types est irq (optionnel).
+Pour directserial: realport (requis), rxdelay (optionnel).
+                  (realport:COM1 realport:ttyS0).
+Pour modem: listenport (optionnel).
+Pour nullmodem: server, rxdelay, txdelay, telnet, usedtr,
+                transparent, port, inhsocket (tous optionnels).
+Exemple: serial1=modem listenport:5000.
+.
+:CONFIG_SERIAL2
+voir serial1.
+.
+:CONFIG_SERIAL3
+voir serial1.
+.
+:CONFIG_SERIAL4
+voir serial1.
+.
+:CONFIG_XMS
+Activer la prise en charge de mémoire XMS (ou étendue).
+.
+:CONFIG_EMS
+Activer la prise en charge de mémoire EMS (ou paginée).
+.
+:CONFIG_UMB
+Activer la prise en charge des UMB (bloc mémoire supérieure).
+.
+:CONFIG_KEYBOARDLAYOUT
+Code langue pour la disposition du clavier (ou aucun).
+.
+:CONFIG_IPX
+ipx -- Activer l'émulation ipx … travers UDP/IP.
+.
+:AUTOEXEC_CONFIGFILE_HELP
+Les lignes de cette section seront lancées au démarrage.
+Vous pouvez mettre vos commandes MOUNT ici.
+
+.
+:CONFIGFILE_INTRO
+# Ceci est le fichier de configuration pour DOSBox %s. (Utilisez s'il vous plait la dernière version de DOSBox)
+# Les lignes commençant avec un # sont des lignes de commentaires et sont ignorées par DOSBox.
+# Elles servent à documenter (brièvement) la fonction de chaque option.
+
+.
+:CONFIG_SUGGESTED_VALUES
+Valeurs possibles
+.
+:PROGRAM_CONFIG_FILE_ERROR
+Impossible d'ouvrir le fichier %s
+
+.
+:PROGRAM_CONFIG_USAGE
+Outil de configuration:
+Utiliser -writeconf nom_de_fichier pour ‚crire la configuration actuelle.
+Utiliser -writelang nom_de_fichier pour ‚crire le fichier de langue actuel.
+
+.
+:PROGRAM_CONFIG_SECURE_ON
+Bascul‚ en mode s‚curis‚.
+
+.
+:PROGRAM_CONFIG_SECURE_DISALLOW
+Cette op‚ration n'est pas permise en mode s‚curis‚.
+
+.
+:PROGRAM_CONFIG_SECTION_ERROR
+La section %s n'existe pas.
+
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Pas de section ou propri‚t‚ appropri‚e.
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Il n'y a pas de propri‚t‚ %s dans la section %s.
+
+.
+:PROGRAM_CONFIG_GET_SYNTAX
+Syntaxe correcte: config -get "propri‚t‚ de la section".
+
+.
+:PROGRAM_MOUNT_CDROMS_FOUND
+CDROM(s) trouv‚(s): %d
+
+.
+:PROGRAM_MOUNT_STATUS_FORMAT
+%-5s  %-58s %-12s
+
+.
+:PROGRAM_MOUNT_STATUS_2
+Le lecteur %c est mont‚ en tant que %s
+
+.
+:PROGRAM_MOUNT_STATUS_1
+Les lecteurs actuellement mont‚s sont:
+
+.
+:PROGRAM_MOUNT_ERROR_1
+Le r‚pertoire %s n'existe pas.
+
+.
+:PROGRAM_MOUNT_ERROR_2
+%s n'est pas un r‚pertoire
+
+.
+:PROGRAM_MOUNT_ILL_TYPE
+Type %s incorrect
+
+.
+:PROGRAM_MOUNT_ALREADY_MOUNTED
+Le lecteur %c est d‚j… mont‚ en tant que %s
+
+.
+:PROGRAM_MOUNT_USAGE
+Utiliser [34;1mMOUNT Lettre_de_lecteur R‚pertoire_local[0m
+Par exemple: MOUNT c %s
+Ceci fait agir le r‚pertoire %s comme le lecteur C: dans DOSBox.
+Le r‚pertoire doit d‚j… exister sur l'ordinateur.
+Ainsi, un MOUNT [31;1mc[0m [32;1mc:\windows[0m monte le r‚pertoire [32;1mc:\windows[0m comme lecteur [31;1mc:[0m
+dans DOSBox.
+
+.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+Le lecteur %c n'est pas mont‚.
+
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCES
+Le lecteur %c a ‚t‚ retir‚ avec succŠs.
+
+.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+Les lecteurs virtuels ne peuvent pas ˆtre d‚mont‚s.
+
+.
+:PROGRAM_MOUNT_WARNING_WIN
+[31;1mMonter c:\ n'est PAS recommand‚. Mieux vaudrait monter un (sous)r‚pertoire la prochaine fois.[0m
+
+.
+:PROGRAM_MOUNT_WARNING_OTHER
+[31;1mMonter / n'est PAS recommand‚. Mieux vaudrait monter un (sous)r‚pertoire la prochaine fois.[0m
+
+.
+:PROGRAM_MEM_CONVEN
+%10d Ko de m‚moire conventionnelle libres
+
+.
+:PROGRAM_MEM_EXTEND
+%10d Ko de m‚moire ‚tendue (XMS) libres
+
+.
+:PROGRAM_MEM_EXPAND
+%10d Ko de m‚moire pagin‚e (EMS) libres
+
+.
+:PROGRAM_MEM_UPPER
+%10d Ko de m‚moire sup‚rieure (UMB) libres dans %d bloc(s)
+              (plus gros bloc UMB %d Ko)
+
+.
+:PROGRAM_LOADFIX_ALLOC
+%d Ko allou‚s.
+
+.
+:PROGRAM_LOADFIX_DEALLOC
+%d Ko lib‚r‚s.
+
+.
+:PROGRAM_LOADFIX_DEALLOCALL
+M‚moire utilis‚e lib‚r‚e.
+
+.
+:PROGRAM_LOADFIX_ERROR
+Erreur d'allocation m‚moire.
+
+.
+:MSCDEX_SUCCESS
+MSCDEX install‚.
+
+.
+:MSCDEX_ERROR_MULTIPLE_CDROMS
+MSCDEX: Echec: Les lettres de lecteur d'unit‚s CDRom multiples doivent ˆtre
+               cons‚cutives.
+
+.
+:MSCDEX_ERROR_NOT_SUPPORTED
+MSCDEX: Echec: Pas encore support‚.
+
+.
+:MSCDEX_ERROR_OPEN
+MSCDEX: Echec: Fichier non valide ou impossible d'ouvrir.
+
+.
+:MSCDEX_TOO_MANY_DRIVES
+MSCDEX: Echec: Trop d'unit‚s CDRom (max: 5). L'installation de MSCDEX a ‚chou‚.
+
+.
+:MSCDEX_LIMITED_SUPPORT
+MSCDEX: Sous-r‚pertoire mont‚: support limit‚.
+
+.
+:MSCDEX_INVALID_FILEFORMAT
+MSCDEX: Echec: Le fichier n'est pas une image iso/cue ou contient des erreurs.
+
+.
+:MSCDEX_UNKNOWN_ERROR
+MSCDEX: Echec: Erreur inconnue.
+
+.
+:PROGRAM_RESCAN_SUCCESS
+Cache du lecteur vid‚.
+
+.
+:PROGRAM_INTRO
+[2J[32;1mBienvenue dans DOSBox[0m, un ‚mulateur x86 avec sons et graphiques.
+DOSBox cr‚e pour vous un shell qui ressemble au bon vieux DOS.
+
+Pour des informations basiques … propos du montage taper [34;1mintro mount[0m
+Pour des informations sur le support des CD-ROM taper [34;1mintro cdrom[0m
+Pour des informations sur les touches sp‚ciales taper [34;1mintro special[0m
+Pour plus d'informations sur DOSBox, visiter [34;1mhttp://www.dosbox.com/wiki[0m
+
+[31;1mDOSBox s'arrˆtera/sortira sans avertissement si une erreur est survenue![0m
+
+
+.
+:PROGRAM_INTRO_MOUNT_START
+[32;1mVoici quelques commandes pour commencer:[0m
+Avant de pouvoir utiliser les fichiers pr‚sents sur votre propre
+systŠme de fichier, vous devez monter les r‚pertoires contenant
+les fichiers.
+
+
+.
+:PROGRAM_INTRO_MOUNT_WINDOWS
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mmount c c:\dosprogs\[37m cr‚era un lecteur C avec c:\dosprogs pour contenu.    º
+º                                                                            º
+º [32mc:\dosprogs\[37m est un exemple. Le remplacer avec votre propre r‚pertoire     º
+º de jeux.                                                                   [37mº
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+
+.
+:PROGRAM_INTRO_MOUNT_OTHER
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mmount c ~/dosprogs[37m cr‚era un lecteur C avec ~/dosprogs pour contenu. º
+º                                                                     º
+º [32m~/dosprogs[37m est un exemple. Le remplacer avec votre propre r‚pertoire      º
+º de jeux.                                                                   [37mº
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+
+.
+:PROGRAM_INTRO_MOUNT_END
+Quand le montage est termin‚ avec succŠs, vous pouvez taper [34;1mc:[0m pour aller
+sur votre tout nouveau lecteur C mont‚.
+Taper [34;1mdir[0m … cet endroit montrera son contenu.
+[34;1mcd[0m vous permettra d'entrer dans un r‚pertoire (reconnaissable par les [33;1m<>[0m dans
+un listing de r‚pertoire).
+Vous pouvez ex‚cuter des programmes/fichiers finissant par [31m.exe .bat[0m et [31m.com[0m.
+.
+:PROGRAM_INTRO_CDROM
+[2J[32;1mComment monter un lecteur CD-ROM r‚el/virtuel dans DOSBox:[0m
+DOSBox supporte l'‚mulation CD-ROM … plusieurs niveaux.
+
+Le niveau [33mbasique[0m fonctionne sur tous les lecteurs CD-ROM et les r‚pertoires
+normaux.
+Il installe MSCDEX et marque les fichiers en lecture seule.
+G‚n‚ralement, cela suffit pour la plupart des jeux:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom[0m   ou   [34;1mmount d C:\exemple -t cdrom[0m
+Si ‡a ne marche pas, vous devriez indiquer … DOSBox le label du CD-ROM:
+[34;1mmount d C:\exemple -t cdrom -label CDLABEL[0m
+
+Le niveau [33msuivant[0m ajoute du support bas niveau.
+Par cons‚quent, il fonctionne seulement sur les lecteurs CD-ROM:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
+
+Le [33mdernier[0m niveau de support d‚pend du systŠme d'exploitation:
+Pour [1mWindows 2000[0m, [1mWindows XP[0m et [1mLinux[0m:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-ioctl[0m
+Pour [1mWindows 9x[0m avec une couche ASPI install‚e:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-aspi[0m
+
+Remplacer [0;31mD:\[0m par l'emplacement de votre CD-ROM.
+Remplacer le [33;1m0[0m dans [34;1m-usecd [33m0[0m avec le num‚ro rapport‚ pour votre CD-ROM si
+vous tapez: [34;1mmount -cd[0m.
+
+.
+:PROGRAM_INTRO_SPECIAL
+[2J[32;1mTouches sp‚ciales:[0m
+Voici les combinaisons de touches par d‚faut.
+Elles peuvent ˆtre chang‚es dans le [33mkeymapper[0m.
+
+[33;1mALT-ENTER[0m   : Activer/d‚sactiver le plein ‚cran.
+[33;1mALT-PAUSE[0m   : Mettre en pause DOSBox.
+[33;1mCTRL-F1[0m     : D‚marrer le [33mkeymapper[0m.
+[33;1mCTRL-F4[0m     : Actualiser le cache r‚pertoire de tous les lecteurs!
+              Basculer entre les disques images mont‚s.
+[33;1mCTRL-ALT-F5[0m : D‚marrer/Arrˆter la cr‚ation d'un film de la sortie ‚cran.
+[33;1mCTRL-F5[0m     : Sauvegarder une capture d'‚cran.
+[33;1mCTRL-F6[0m     : D‚marrrer/Arrˆter l'enregistrement de la sortie son en un
+              fichier wave.
+[33;1mCTRL-ALT-F7[0m : D‚marrer/Arrˆter l'enregistrement des commandes OPL.
+[33;1mCTRL-ALT-F8[0m : D‚marrer/Arrˆter l'enregistrement des commandes brutes MIDI.
+[33;1mCTRL-F7[0m     : Diminuer le saut d'images.
+[33;1mCTRL-F8[0m     : Augmenter le saut d'images.
+[33;1mCTRL-F9[0m     : Terminer DOSBox.
+[33;1mCTRL-F10[0m    : Capturer/Lib‚rer la souris.
+[33;1mCTRL-F11[0m    : Ralentir l'‚mulation (Diminuer les cycles DOSBox).
+[33;1mCTRL-F12[0m    : Acc‚l‚rer l'‚mulation (Augmenter les cycles DOSBox).
+[33;1mALT-F12[0m     : D‚bloquer la vitesse (bouton turbo/avance rapide).
+
+.
+:PROGRAM_BOOT_NOT_EXIST
+Le fichier de disque de d‚marrage n'existe pas.  Echec.
+
+.
+:PROGRAM_BOOT_NOT_OPEN
+Impossible d'ouvrir le fichier du disque de d‚marrage.  Echec
+
+.
+:PROGRAM_BOOT_WRITE_PROTECTED
+Le fichier image est en lecture seule! Cela pourrait causer des problŠmes.
+
+.
+:PROGRAM_BOOT_PRINT_ERROR
+Cette commande d‚marre DosBox … partir d'une disquette ou d'une image sur
+disque dur.
+
+Pour cette commande, on peut sp‚cifier une succession de disquettes entre
+lesquelles basculer en pressant Ctrl-F4, et -l sp‚cifie le lecteur mont‚
+… partir duquel d‚marrer. Si aucune lettre de lecteur n'est sp‚cifi‚e,
+cela met par d‚faut le d‚marrage … partir du lecteur A.
+Les seules lettres de lecteur d‚marrables sont A, C, et D.  Pour d‚marrer
+… partir d'un disque dur (C ou D), l'image doit avoir au pr‚alable ‚t‚ mont‚e
+en utilisant la commande [34;1mIMGMOUNT[0m.
+
+La syntaxe de cette commande est:
+
+[34;1mBOOT [diskimg1.img diskimg2.img] [-l lettre_de_lecteur][0m
+
+.
+:PROGRAM_BOOT_UNABLE
+Impossible de d‚marrer … partir du lecteur %c.
+
+.
+:PROGRAM_BOOT_IMAGE_OPEN
+Ouverture du fichier image: %s
+
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+Ne peut pas ouvrir %s.
+
+.
+:PROGRAM_BOOT_BOOT
+D‚marrage du lecteur %c...
+
+.
+:PROGRAM_BOOT_CART_WO_PCJR
+Cartouche PCJr trouv‚e, mais la machine n'est pas PCJr.
+
+.
+:PROGRAM_BOOT_CART_LIST_CMDS
+Cartouche de commandes PCjr disponible:%s.
+
+.
+:PROGRAM_BOOT_CART_NO_CMDS
+Pas de commande cartouche PCjr trouv‚e.
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
+Il faut sp‚cifier la lettre de lecteur o— monter l'image.
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY2
+Il faut sp‚cifier le num‚ro de lecteur (0 … 3) o— monter l'image (0,1=fda,fdb;2,3=hda,hdb).
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
+Pour des images de [33mCD-ROM[0m: [34;1mIMGMOUNT lettre_de_lecteur emplacement_image -t iso[0m
+
+Pour des images de [33mdisque dur[0m: Il faut sp‚cifier la g‚om‚trie du lecteur pour les
+disques durs:
+octets_par_secteur, secteurs_par_plateau, tˆtes_par_plateau, nombre_de_plateaux.
+[34;1mIMGMOUNT lettre_de_lecteur emplacement_image -taille ops,spp,tpp,ndp[0m
+
+.
+:PROGRAM_IMGMOUNT_INVALID_IMAGE
+Impossible de charger le fichier image.
+V‚rifier que le chemin est correct et que l'image est accessible.
+
+.
+:PROGRAM_IMGMOUNT_INVALID_GEOMETRY
+Impossible d'extraire la g‚om‚trie du lecteur … partir de l'image.
+Utiliser les paramŠtres -taille ops,spp,tpp,ndp pour sp‚cifier la g‚om‚trie.
+
+.
+:PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
+Type "%s" non support‚. Sp‚cifier "hdd"(disque dur) ou "floppy"(lecteur disquette) ou "iso"(image).
+
+.
+:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
+Format "%s" non support‚. Sp‚cifier "fat" ou "iso" ou "none"(aucun).
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_FILE
+Il faut sp‚cifier le fichier_image … monter.
+
+.
+:PROGRAM_IMGMOUNT_FILE_NOT_FOUND
+Fichier image non trouv‚.
+
+.
+:PROGRAM_IMGMOUNT_MOUNT
+Pour monter un r‚pertoire, utiliser la commande [34;1mMOUNT[0m, pas la commande [34;1mIMGMOUNT[0m.
+
+.
+:PROGRAM_IMGMOUNT_ALREADY_MOUNTED
+Lecteur d‚j… mont‚ avec cette lettre.
+
+.
+:PROGRAM_IMGMOUNT_CANT_CREATE
+Impossible de cr‚er un lecteur … partir du fichier.
+
+.
+:PROGRAM_IMGMOUNT_MOUNT_NUMBER
+num‚ro de lecteur %d mont‚ en tant que %s
+
+.
+:PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
+Cette image doit ˆtre sur un h“te ou un disque local.
+
+.
+:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
+L'utilisation de fichiers multiples n'est support‚ que pour les images cue/iso.
+
+.
+:PROGRAM_KEYB_INFO
+La page de code %i a ‚t‚ charg‚e.
+
+.
+:PROGRAM_KEYB_INFO_LAYOUT
+La page de code %i a ‚t‚ charg‚e pour la disposition %s
+
+.
+:PROGRAM_KEYB_SHOWHELP
+[32;1mKEYB[0m [ID disposition clavier[ num‚ro page de code[ fichier page de code]]]
+
+Quelques exemples:
+  [32;1mKEYB[0m: Affiche la page de code actuellement charg‚e. 
+  [32;1mKEYB[0m sp: Charge la disposition espagnole(SP), utilise une page de code
+           appropri‚e.          
+  [32;1mKEYB[0m sp 850: Charge la disposition espagnole(SP), utilise la page de code 850.
+  [32;1mKEYB[0m sp 850 mapc.cpi: Idem ci-dessus, mais utilise le fichier mapc.cpi.
+
+.
+:PROGRAM_KEYB_NOERROR
+La disposition clavier %s est charg‚e pour la page de code %i
+
+.
+:PROGRAM_KEYB_FILENOTFOUND
+Fichier de clavier %s non trouv‚
+
+
+.
+:PROGRAM_KEYB_INVALIDFILE
+Fichier de clavier %s non valide
+
+.
+:PROGRAM_KEYB_LAYOUTNOTFOUND
+Aucune disposition dans %s pour la page de code %i
+
+.
+:PROGRAM_KEYB_INVCPFILE
+Aucun fichier ou fichier page de code invalide pour la disposition %s
+
+
+.
+:SHELL_ILLEGAL_PATH
+Chemin incorrect.
+
+.
+:SHELL_CMD_HELP
+Pour avoir une liste de toutes les commandes support‚es, taper [33;1mhelp /all[0m.
+Liste rapide des commandes les plus souvent utilis‚es:
+
+.
+:SHELL_CMD_ECHO_ON
+ECHO est activ‚.
+
+.
+:SHELL_CMD_ECHO_OFF
+ECHO est d‚sactiv‚.
+
+.
+:SHELL_ILLEGAL_SWITCH
+ParamŠtre incorrect: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+ParamŠtre requis manquant.
+
+.
+:SHELL_CMD_CHDIR_ERROR
+Impossible de changer vers: %s.
+
+.
+:SHELL_CMD_CHDIR_HINT
+Pour changer vers un lecteur diff‚rent taper [31m%c:[0m
+
+.
+:SHELL_CMD_CHDIR_HINT_2
+Le nom de r‚pertoire est plus long que 8 caractŠres et/ou contient des espaces.
+Essayer [31mcd %s[0m
+
+.
+:SHELL_CMD_CHDIR_HINT_3
+Vous ˆtes toujours sur le lecteur Z:, changez vers un lecteur mont‚ avec [31mC:[0m.
+
+.
+:SHELL_CMD_MKDIR_ERROR
+Impossible de cr‚er: %s.
+
+.
+:SHELL_CMD_RMDIR_ERROR
+Impossible de supprimer: %s.
+
+.
+:SHELL_CMD_DEL_ERROR
+Impossible d'effacer: %s.
+
+.
+:SHELL_SYNTAXERROR
+La syntaxe de la commande est incorrecte.
+
+.
+:SHELL_CMD_SET_NOT_SET
+La variable d'environnement %s n'est pas d‚finie.
+
+.
+:SHELL_CMD_SET_OUT_OF_SPACE
+Pas assez d'espace d'environnement disponible.
+
+.
+:SHELL_CMD_IF_EXIST_MISSING_FILENAME
+IF EXIST: Nom de fichier manquant.
+
+.
+:SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
+IF ERRORLEVEL: Nombre manquant.
+
+.
+:SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
+IF ERRORLEVEL: Nombre incorrect.
+
+.
+:SHELL_CMD_GOTO_MISSING_LABEL
+Aucune ‚tiquette indiqu‚e avec la commande GOTO.
+
+.
+:SHELL_CMD_GOTO_LABEL_NOT_FOUND
+GOTO: Etiquette %s non trouv‚e.
+
+.
+:SHELL_CMD_FILE_NOT_FOUND
+Fichier %s non trouv‚.
+
+.
+:SHELL_CMD_FILE_EXISTS
+Le fichier %s existe d‚j….
+
+.
+:SHELL_CMD_DIR_INTRO
+Arborescence de %s.
+
+.
+:SHELL_CMD_DIR_BYTES_USED
+%5d Fichier(s)    %17s Octets.
+
+.
+:SHELL_CMD_DIR_BYTES_FREE
+%5d R‚pertoire(s) %17s Octets libres.
+
+.
+:SHELL_EXECUTE_DRIVE_NOT_FOUND
+Le lecteur %c n'existe pas!
+Il faut le [31mmonter[0m d'abord. Taper [1;33mintro[0m ou [1;33mintro mount[0m pour plus d'informations.
+
+.
+:SHELL_EXECUTE_ILLEGAL_COMMAND
+Commande invalide: %s.
+
+.
+:SHELL_CMD_PAUSE
+Appuyer sur une touche pour continuer.
+
+.
+:SHELL_CMD_PAUSE_HELP
+Attendre l'appui sur une touche pour continuer.
+
+.
+:SHELL_CMD_COPY_FAILURE
+Echec de la copie: %s.
+
+.
+:SHELL_CMD_COPY_SUCCESS
+   %d Fichier(s) copi‚(s).
+
+.
+:SHELL_CMD_SUBST_NO_REMOVE
+Retirer un lecteur n'est pas support‚. Rien … effectuer.
+
+.
+:SHELL_CMD_SUBST_FAILURE
+SUBST a ‚chou‚. Vous avez fait une erreur dans la ligne de commande
+ou bien le lecteur cible est d‚j… utilis‚.
+Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
+
+.
+:SHELL_STARTUP_BEGIN
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mBienvenue dans DOSBox v%-8s[37m                                            º
+º                                                                            º
+º Pour une courte introduction pour les nouveaux utilisateurs, taper: [33mINTRO[37m  º
+º Pour la liste des commandes support‚es par le shell, taper: [1;33mHELP[37m           º
+º                                                                            º
+º Pour ajuster la vitesse du CPU ‚mul‚, essayer [31mCtrl-F8[37m et [31mCtrl-F12[37m.         º
+º Pour activer le keymapper [31mCtrl-F1[37m.                                         º
+º Pour plus d'informations, lire le fichier [36mREADME[37m dans le r‚pertoire de     º
+º DOSBox.                                                                    º
+º                                                                            º
+
+.
+:SHELL_STARTUP_CGA
+º DOSBox supporte le mode composite CGA.                                     º
+º Utiliser [31m(Alt-)F11[37m pour changer les couleurs dans ce mode.                 º
+º                                                                            º
+
+.
+:SHELL_STARTUP_HERC
+º Utiliser [31mF11[37m pour basculer la couleur monochrome en blanc, ambre, ou vert. º
+º                                                                            º
+
+.
+:SHELL_STARTUP_DEBUG
+º Appuyer sur [31mAlt-Pause[37m pour entrer dans le debugger ou d‚marrer le fichier  º
+º exe avec [33mDEBUG[37m.                                                            º
+º                                                                            º
+.
+:SHELL_STARTUP_END
+º [32mAMUSEZ-VOUS BIEN ![37m                                                         º
+º [32mL'‚quipe DOSBox [33mhttp://dosbox.com[37m                                          º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+
+.
+:SHELL_CMD_CHDIR_HELP
+Afficher/changer le r‚pertoire courant.
+
+.
+:SHELL_CMD_CHDIR_HELP_LONG
+CHDIR [lecteur:][chemin]
+CHDIR [..]
+CD [lecteur:][chemin]
+CD [..]
+
+  ..   Indique que vous voulez chnger vers le r‚pertoire parent.
+
+Taper CD lecteur: pour afficher le r‚pertoire courant dans le lecteur sp‚cifi‚.
+Taper CD sans paramŠtre pour afficher le lecteur et le r‚pertoire courants.
+
+.
+:SHELL_CMD_CLS_HELP
+Effacer l'‚cran.
+
+.
+:SHELL_CMD_DIR_HELP
+Voir l'arborescence.
+
+.
+:SHELL_CMD_ECHO_HELP
+Afficher des messages et activer/d‚sactiver la commande echo.
+
+.
+:SHELL_CMD_EXIT_HELP
+Sortir du shell.
+
+.
+:SHELL_CMD_HELP_HELP
+Montrer l'aide.
+
+.
+:SHELL_CMD_MKDIR_HELP
+Cr‚er un r‚pertoire.
+
+.
+:SHELL_CMD_MKDIR_HELP_LONG
+MKDIR [lecteur:][chemin]
+MD [lecteur:][chemin]
+
+.
+:SHELL_CMD_RMDIR_HELP
+Supprimer un r‚pertoire.
+
+.
+:SHELL_CMD_RMDIR_HELP_LONG
+RMDIR [lecteur:][chemin]
+RD [lecteur:][chemin]
+
+.
+:SHELL_CMD_SET_HELP
+Changer les variables d'environnement.
+
+.
+:SHELL_CMD_IF_HELP
+Effectuer un processus avec condition dans les programmes batch.
+
+.
+:SHELL_CMD_GOTO_HELP
+Aller … ligne de l'‚tiquette d‚finie dans un script batch.
+
+.
+:SHELL_CMD_SHIFT_HELP
+D‚caler les paramŠtres de ligne de commande vers la gauche dans un
+script batch.
+
+.
+:SHELL_CMD_TYPE_HELP
+Afficher le contenu d'un fichier texte.
+
+.
+:SHELL_CMD_TYPE_HELP_LONG
+TYPE [lecteur:][chemin][nom_de_fichier]
+
+.
+:SHELL_CMD_REM_HELP
+Ajouter des commentaires dans un fichier batch.
+
+.
+:SHELL_CMD_REM_HELP_LONG
+REM [commentaire]
+
+.
+:SHELL_CMD_NO_WILD
+C'est une version simple de la commande, aucun paramŠtre autoris‚!
+
+.
+:SHELL_CMD_RENAME_HELP
+Renommer un ou des fichiers.
+
+.
+:SHELL_CMD_RENAME_HELP_LONG
+RENAME [lecteur:][chemin]nom_de_fichier1 nom_de_fichier2.
+REN [lecteur:][chemin]nom_de_fichier1 nom_de_fichier2.
+
+Notez que vous ne pouvez pas sp‚cifier un nouveau lecteur ou chemin pour votre
+fichier cible.
+
+.
+:SHELL_CMD_DELETE_HELP
+Supprimer un ou des fichiers.
+
+.
+:SHELL_CMD_COPY_HELP
+Copier des fichiers.
+
+.
+:SHELL_CMD_CALL_HELP
+Lancer un fichier batch … partir d'un autre fichier batch.
+
+.
+:SHELL_CMD_SUBST_HELP
+Assigner un r‚pertoire interne … un lecteur.
+
+.
+:SHELL_CMD_LOADHIGH_HELP
+Charger un programme en m‚moire haute (mettre xms=true et umb=true).
+
+.
+:SHELL_CMD_CHOICE_HELP
+Attendre l'appui sur une touche et d‚finir le ERRORLEVEL.
+
+.
+:SHELL_CMD_CHOICE_HELP_LONG
+CHOICE [/C:choix] [/N] [/S] texte
+  /C[:]choix  -  Sp‚cifie les touches utilisables.  Par d‚faut: yn.
+  /N  -  N'affiche pas les choix … la fin du prompt.
+  /S  -  Active le choix … utiliser suivant la casse.
+  texte  -  Texte … afficher au prompt.
+
+.
+:SHELL_CMD_ATTRIB_HELP
+Ne fait rien. Uniquement fourni pour compatibilit‚.
+
+.
+:SHELL_CMD_PATH_HELP
+Fourni pour compatibilit‚.
+
+.
+:SHELL_CMD_VER_HELP
+Voir et indiquer la version de DOS report‚e.
+
+.
+:SHELL_CMD_VER_VER
+DOSBox version %s. Version de DOS report‚e %d.%02d.
+
+.

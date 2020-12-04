@@ -1,0 +1,57 @@
+06/04/2020
+Ce fichier archive contient un pack de traduction en français des commandes et messages
+ainsi que du fichier de configuration s'affichant sous dosbox 0.74-3.
+Ce pack n'est pas compatible avec les versions précédentes de dosbox, consulter le site pour
+télécharger la version appropriée.
+
+-------------
+
+Procédure d'installation facile pour Windows :
+
+
+1a. Pour Windows Vista et 7
+Copier le fichier "francais074-3.lng" et "dosbox-0.74-3.conf" contenus dans l'archive vers le répertoire de dosbox 0.74-3 pour votre profil
+"C:\Users\[votre nom]\AppData\Local\DOSBox" par défaut
+ATTENTION, faites une copie de sauvegarde du fichier "dosbox-074-3.conf" déjà présent par sécurité (voir nota sinon).
+
+1b. Pour Windows XP
+Copier le fichier "francais074-3.lng" et "dosbox-074-3.conf" contenus dans l'archive vers le répertoire de dosbox 0.74-3 pour votre profil
+"C:\Documents and Settings\[votre nom]\Local Settings\Application Data\DOSBox" par défaut
+ATTENTION, faites une copie de sauvegarde du fichier "dosbox-074-3.conf" déjà présent par sécurité (voir nota sinon).
+
+-------------
+
+2. Le fichier de configuration est déjà modifié pour prendre en compte le fichier de traduction.
+Ouvrir avec un éditeur de texte ou notepad le fichier "dosbox-074-3.conf" ou cliquer sur 
+le raccourci "DOSBox 0.74-3 options" dans la section "Options" du groupe de programmes "DOSBox-0.74-3"
+
+
+3. Lancer Dosbox. Il s'affiche maintenant en français!  :)
+
+4. A l'invite de commande si le clavier n'est pas automatiquement configuré pour utiliser un clavier français, taper:
+keyb fr
+
+-------------
+
+nota:
+- Il est possible que la traduction ne concerne pas tous les messages d'information utilisables du programme.
+
+- N'ont été traduits que les messages et les commandes disponibles en lançant sans fichier de langue
+"CONFIG -writelang nom_de_fichier" sous DOSbox.
+
+- Réécrire le fichier de configuration modifié à partir d'un fichier de langue en lançant (un fichier de langue étant chargé, sinon le fichier sera en anglais)
+"CONFIG -writeconf nom_de_fichier" sous DOSbox.
+Le fichier créé se trouve dans le répertoire d'installation de DOSbox ("C:\Program Files\DOSBox-0.74-3" par défaut).
+
+- Réinitialiser le fichier de configuration en cliquant sur le raccourci "Reset Options" dans la section "Options" du groupe de programmes "DOSBox-0.74"
+Le fichier créé se trouve dans le répertoire d'installation de DOSbox ("C:\Program Files\DOSBox-0.74-3" par défaut) et sera identique à celui par défaut.
+
+- Si vous trouvez des fautes de frappe ou d'orthographe, n'hésitez pas les signaler à l'équipe de développement qui transmettra ou bien directement
+sur le forum http://www.abandonware-forums.org à mon intention.
+
+-------------
+
+Bons jeux !!!
+Victor
+
+Mise à jour pour la version 0.74-3 par Choum

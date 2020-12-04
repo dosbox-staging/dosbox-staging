@@ -1,0 +1,736 @@
+:CONFIG_FULLSCREEN
+Wà•caz dosboxa w trybie peànoekranowym..
+:CONFIG_FULLDOUBLE
+Uæywa podw¢jnego buforowania w trybie peànoekranowym..
+:CONFIG_FULLRESOLUTION
+Jakiej rozdzielczoòci uæywaÜ w trybie peànoekranowym: oryginalnej czy narzuconej (np. 1024x768)..
+:CONFIG_WINDOWRESOLUTION
+Przeskalowuje okno do tego rozmiaru O ILE urz•dzenie wyjòcia obsàuguje sprz©towe skalowanie..
+
+:CONFIG_OUTPUT
+Jakiego systemu obrazu uæywaÜ dla wyjòcia..
+:CONFIG_AUTOLOCK
+Mysz zostanie automatycznie zablokowana, kiedy klikniesz na ekranie..
+:CONFIG_SENSITIVITY
+CzuàoòÜ myszy..
+:CONFIG_WAITONERROR
+Zatrzymuje przed zamkni©ciem konsoli, jeòli dosbox zgàosià bà•d..
+:CONFIG_PRIORITY
+Priorytety dla dosboxa. Druga wartoòÜ po przecinku dotyczy okna dosboxa, kt¢re jest nieaktywne/zminimalizowane. ('pause' moæna uæywaÜ tylko jako drugiej wartoòci).
+:CONFIG_MAPPERFILE
+Plik uæywany do wczytywania/zapisywania skr¢t¢w klawiszowych..
+:CONFIG_USESCANCODES
+Unika symulowania klawiszy, moæe nie dziaàaÜ na wszystkich systemach operacyjnych..
+:CONFIG_LANGUAGE
+Wybiera inny plik j©zykowy..
+:CONFIG_MACHINE
+Typ maszyny, kt¢ry dosbox pr¢buje naòladowaÜ..
+:CONFIG_CAPTURES
+Katalog, w kt¢rym s• przechowywane przechwycone pliki wave i midi oraz zrzuty ekranu..
+:CONFIG_MEMSIZE
+Rozmiar pami©ci DOSBoxa w megabajtach.
+  Tej wartoòci lepiej nie zmieniaÜ aby unikn•Ü problem¢w z niekt¢rymi grami,
+  choÜ niekt¢re gry mog• wymagaÜ wi©kszej wartoòci.
+  Generalnie podniesienie tej wartoòci nie powoduje przyòpieszenia..
+:CONFIG_FRAMESKIP
+Jak wiele ramek DOSBox przeskakuje zanim jak•ò narysuje..
+:CONFIG_ASPECT
+Dokonuj korekcji aspektu. Jeòli wybrana metoda wyòwietlania nie wspiera skalowania, ustawienie tej opcji moæe spowodowaÜ spowolnienie!.
+:CONFIG_SCALER
+Metoda skalowania uæywana do powi©kszania/polepszania obrazu w niskiej rozdzielczoòci. Dopisanie 'forced' powoduje uæywanie metody nawet gdy wynik moæe nie byÜ poæ•dany..
+:CONFIG_CORE
+J•dro procesora uæywane do emulacji. auto przeà•cza w tryb dynamic jeòli jest dost©pny i wàaòciwy..
+:CONFIG_CPUTYPE
+Typ procesora uæywanego w emulacji. auto to wyb¢r najszybszego..
+:CONFIG_CYCLES
+Liczba instrukcji kt¢re DOSBox pr¢buje emulowaÜ w kaædej milisekundzie. Ustawienie tej wartoòci na zbyt duæ• powoduje przerwy w d´wi©ku i zacinanie si© obrazu. Cykle moæna ustawiÜ na 3 sposoby:
+  'auto'          pr¢buje odgadn•Ü czego potrzebuje gra.
+                  Przewaænie dziaàa, ale moæe nie sprawdzaÜ si© dla pewnych gier.
+  'fixed #numer'  ustawi narzucon• liczb© cykli. Tego przewaænie potrzebujesz jeòli 'auto' zawiedzie.
+                  (Przykàad: fixed 4000)
+  'max'           zaalokuje tyle cykli ile tylko komputer jest w stanie obsàuæyÜ.
+:CONFIG_CYCLEUP
+Liczba cykli o kt¢r• wartoòÜ zwi©ksza/zmniejsza kombinacja klawiszy..
+:CONFIG_CYCLEDOWN
+Ustawienie tej wartoòci na mniejsz• niæ 100 powoduje odpowiedni• zmian© procentow•.
+:CONFIG_NOSOUND
+Wà•cz tryb cichy, choÜ d´wi©k nadal jest emulowany..
+:CONFIG_RATE
+Cz©stotliwoòÜ pr¢bkowania miksera, ustawienie cz©stotliwoòci urz•dzenia ponad t• wartoòÜ prawdopodobnie obniæy jakoòÜ d´wi©ku..
+:CONFIG_BLOCKSIZE
+WielkoòÜ bloku miksera, wi©ksze bloki mog• pom¢c na "zaj•kiwania si©" d´wi©ku, ale b©dzie teæ wi©cej zaci©Ü..
+:CONFIG_PREBUFFER
+Jak wiele milisekund danych przechowywaÜ..
+:CONFIG_MPU401
+Typ emulowanego MPU-401..
+:CONFIG_MIDIDEVICE
+Urz•dzenie, kt¢re b©dzie otrzymywaÜ dane MIDI z MPU-401..
+:CONFIG_MIDICONFIG
+Specjalne opcje konfiguracji dla sterownika urz•dzenia. Przewaænie jest to identyfikator urz•dzenia, kt¢rego chcesz uæyÜ. Szczeg¢ày znajduj• si© w pliku README..
+:CONFIG_SBTYPE
+Typ emulowanego sblastera..
+:CONFIG_SBBASE
+Adres IO soundblastera..
+:CONFIG_IRQ
+Numer IRQ soundblastera..
+:CONFIG_DMA
+Numer DMA soundblastera..
+:CONFIG_HDMA
+Numer High DMA soundblastera..
+
+:CONFIG_SBMIXER
+Pozwala mixerowi soundblastera na modyfikowanie mixera DOSboxa..
+:CONFIG_OPLMODE
+Typ emulacji OPL. 'auto' powoduje wybranie trybu na podstawie typu soundblastera. Wszystkie tryby OPL, opr¢cz trybu 'cms', s• kompatybilne z Adlib..
+:CONFIG_OPLEMU
+Dostawca emulacji OPL. compat lub old mog• dawaÜ lepsz• jakoòÜ (zobacz teæ oplrate)..
+:CONFIG_OPLRATE
+Cz©stotliwoòÜ pr¢bkowania emulacji muzyki OPL. Uæyj 49716 dla najlepszej jakoòci (ustaw odpowiedni• cz©stotliwoòÜ miksera)..
+:CONFIG_GUS
+Wà•cz emulacj© karty Gravis Ultrasound..
+:CONFIG_GUSRATE
+Cz©stotliwoòÜ pr¢bkowania emulacji Ultrasounda..
+:CONFIG_GUSBASE
+Bazowy adres IO karty Gravis Ultrasound..
+:CONFIG_GUSIRQ
+Numer IRQ karty Gravis Ultrasound..
+:CONFIG_GUSDMA
+Kanaà DMA karty Gravis Ultrasound..
+:CONFIG_ULTRADIR
+ócieæka do katalogu Ultrasounda. W tym katalogu
+powinien znajdowaÜ si© katalog MIDI, zawieraj•cy
+patche dla odtwarzania GUS. Zestawy patchy uæywane
+z Timidity powinny dziaàaÜ dobrze..
+:CONFIG_PCSPEAKER
+Wà•cz emulacj© PC-Spekera..
+:CONFIG_PCRATE
+Cz©stotliwoòÜ pr¢bkowania d´wi©ku generowanego przez PC-Speakera..
+:CONFIG_TANDY
+Wà•cz emulacj© Tandy Sound System. Przy 'auto' emulacja odbywa si© tylko jeòli maszyna jest ustawiona na 'tandy'..
+:CONFIG_TANDYRATE
+Cz©stotliwoòÜ pr¢bkowania Tandy 3-Voice generation..
+:CONFIG_DISNEY
+Wà•cza emulacj© Disney Sound Source. (kompatybilne z Covox Voice Master and Speech Thing)..
+:CONFIG_JOYSTICKTYPE
+Typ emulowanego joystika; auto (domyòlny), brak,
+2axis (wspiera dwa joysticki),
+4axis (wspiera jeden joystick, uæywany jest pierwszy),
+4axis_2 (wspiera jeden joystick, uæywany jest drugi),
+fcs (Thrustmaster), ch (CH Flightstick).
+none wyà•cza emulacj© joystick¢w.
+auto wybiera typ emulacji zaleænie od prawdziwych joystick¢w..
+:CONFIG_TIMED
+Wà•cz ograniczone interwaày dla osi (false powoduje stare zachowanie)..
+:CONFIG_AUTOFIRE
+strzela ci•gle tak dàugo jak dàugo wciòni©ty jest klawisz..
+:CONFIG_SWAP34
+Zamienia 3 i 4 oò. Moæe byÜ przydatne dla pewnych joystick¢w..
+:CONFIG_BUTTONWRAP
+Wà•cza zawijanie numer¢w przycisk¢w ze wzgl©du na liczb© emulowanych przycisk¢w..
+:CONFIG_SERIAL1
+Ustawia typ urz•dzenia podà•czonego do portu com.
+Moæliwe wartoòci to: disabled, dummy, modem, nullmodem, directserial.
+Dodatkowe parametry musz• znale´Ü si© w tej samej linii w formacie parametr:wartoòÜ. Parametrem dla wszystkich wartoòci jest irq.
+dla directserial: realport (wymagany), rxdelay (opcjonalny).
+                 (realport:COM1 realport:ttyS0).
+dla modem: listenport (opcjonalny).
+dla nullmodem: server, rxdelay, txdelay, telnet, usedtr,
+               transparent, port, inhsocket (wszystkie opcjonalne).
+Przykàad: serial1=modem listenport:5000.
+:CONFIG_SERIAL2
+Zobacz serial1.
+:CONFIG_SERIAL3
+Zobacz serial1.
+:CONFIG_SERIAL4
+Zobacz serial1.
+:CONFIG_XMS
+Wà•cz obsàug© XMS..
+:CONFIG_EMS
+Wà•cz obsàug© EMS..
+:CONFIG_UMB
+Wà•cz obsàug© UMB..
+:CONFIG_KEYBOARDLAYOUT
+Kod j©zyka layoutu klawiatury (lub none)..
+:CONFIG_IPX
+Wà•cz ipx dla emulacji UDP/IP..
+:AUTOEXEC_CONFIGFILE_HELP
+Linie w tej sekcji zostan• uruchomione przy starcie.
+.
+:CONFIGFILE_INTRO
+# To jest plik konfiguracyjny dla DOSBOXa %s.
+# Linie zaczynaj•ce si© od # s• komentarzami.
+# S• one uæywane do (pobieænego) udokumentowania efektu kaædej opcji.
+.
+:CONFIG_SUGGESTED_VALUES
+Moæliwe wartoòci.
+:PROGRAM_CONFIG_FILE_ERROR
+Nie moæna otworzyÜ pliku %s
+.
+:PROGRAM_CONFIG_USAGE
+Narz©dzie Config:
+Uæyj -writeconf nazwapliku do zapisania aktualnej konfiguracji.
+Uæyj -writelang nazwapliku do zapisania aktualnych napis¢w j©zykowych.
+.
+:PROGRAM_CONFIG_SECURE_ON
+Przeà•czono w tryb bezpieczny.
+.
+:PROGRAM_CONFIG_SECURE_DISALLOW
+Ta operacja nie jest moæliwa w trybie bezpiecznym.
+.
+:PROGRAM_CONFIG_SECTION_ERROR
+Sekcja %s nie istnieje.
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Brak takiej sekcji lub wàaòciwoòci.
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Nie ma wàaòciwoòci %s w sekcji %s.
+.
+:PROGRAM_CONFIG_GET_SYNTAX
+Poprawna skàadnia: config -get "sekcja wàaòciwoòÜ".
+.
+:PROGRAM_MOUNT_CDROMS_FOUND
+Znalezione CDROMy: %d
+.
+:PROGRAM_MOUNT_STATUS_2
+Dysk %c jest zamontowany jako %s
+.
+:PROGRAM_MOUNT_STATUS_1
+Aktualnie zamontowane dyski:
+.
+:PROGRAM_MOUNT_ERROR_1
+Katalog %s nie istnieje.
+.
+:PROGRAM_MOUNT_ERROR_2
+%s nie jest katalogiem
+.
+:PROGRAM_MOUNT_ILL_TYPE
+Nieprawidàowy typ %s
+.
+:PROGRAM_MOUNT_ALREADY_MOUNTED
+Dysk %c jest juæ zamontowany jako %s
+.
+:PROGRAM_MOUNT_USAGE
+Spos¢b uæywania [34;1mMOUNT Litera-Dysku Lokalny-Katalog[0m
+Tak wi©c MOUNT c c:\windows zamontuje katalog windows w DOSBoxie jako dysk c:.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+Dysk %c nie jest zamontowany.
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCES
+Dysk %c zostaà pomyòlnie usuni©ty.
+.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+Dyski Wirtualne nie mog• zostaÜ odmontowane.
+.
+:PROGRAM_MOUNT_WARNING_WIN
+[31;1mMontowanie dysku c:\ NIE jest zalecane. Prosz© nast©pnym razem zamontowaÜ (pod)katalog.[0m
+.
+:PROGRAM_MOUNT_WARNING_OTHER
+[31;1mMontowanie / nie jest zalecane.Prosz© nast©pnym razem zamontowaÜ (pod)katalog.[0m
+.
+:PROGRAM_MEM_CONVEN
+%10d Kb wolnej pami©ci konwencjonalnej
+.
+:PROGRAM_MEM_EXTEND
+%10d Kb wolnej pami©ci rozszerzonej
+.
+:PROGRAM_MEM_EXPAND
+%10d Kb wolnej pami©ci stronicowej
+.
+:PROGRAM_MEM_UPPER
+%10d Kb wolnej pami©ci g¢rnej w %d blokach (najwi©kszy blok %d Kb)
+.
+:PROGRAM_LOADFIX_ALLOC
+%d kb zaalokowanych.
+.
+:PROGRAM_LOADFIX_DEALLOC
+%d kb zwolnionych.
+.
+:PROGRAM_LOADFIX_DEALLOCALL
+Uæyta pami©Ü zwolniona.
+.
+:PROGRAM_LOADFIX_ERROR
+Bà•d alokacji pami©ci.
+.
+:MSCDEX_SUCCESS
+MSCDEX zainstalowany.
+.
+:MSCDEX_ERROR_MULTIPLE_CDROMS
+MSCDEX: Poraæka: Litery dysk¢w wielu nap©d¢w CDRom musz• nast©powaÜ po sobie.
+.
+:MSCDEX_ERROR_NOT_SUPPORTED
+MSCDEX: Poraæka: jeszcze nie obsàugiwane.
+.
+:MSCDEX_ERROR_PATH
+MSCDEX: Poraæka: ócieæka nieprawidàowa.
+.
+:MSCDEX_TOO_MANY_DRIVES
+MSCDEX: Poraæka: Za duæo nap©d¢w CDRom. (maksymalnie: 5). Instalacja MSCDEX nieudana.
+.
+:MSCDEX_LIMITED_SUPPORT
+MSCDEX: Zamontowano podkatalog: ograniczone wsparcie.
+.
+:MSCDEX_INVALID_FILEFORMAT
+MSCDEX: Poraæka: Plik nie jest obrazem iso/cue lub zawiera bà©dy.
+.
+:MSCDEX_UNKNOWN_ERROR
+MSCDEX: Poraæka: Nieznany bà•d.
+.
+:PROGRAM_RESCAN_SUCCESS
+Cache dysku wyczyszczony.
+.
+:PROGRAM_INTRO
+[2J[32;1mWitaj w DOSBoxie[0m, emulatorze x86 z d´wi©kiem i grafik•.
+DOSBox tworzy dla Ciebie shella, kt¢ry wygl•da jest stary, prosty DOS.
+
+Informacja o podstawowach montowania napisz[34;1mintro mount[0m
+Informacja o wsparciu dla CD-ROM¢w napisz [34;1mintro cdrom[0m
+Informacja o klawiszach specjalnych napisz [34;1mintro special[0m
+Wi©cej informacji o DOSBoxie, zobacz na [34;1mhttp://dosbox.sourceforge.net/wiki[0m
+
+[31;1mDOSBox zatrzyma/wyà•czy si© bez ostrzeæenia jeòli wyst•pi bà•d![0m
+
+
+.
+:PROGRAM_INTRO_MOUNT_START
+[32;1mTu znajduje si© kilka komend potrzebnych na pocz•tek:[0m
+Zanim uæyjesz plik¢w z wàasnego systemu plik¢w,
+musisz zamontowaÜ katalog zawieraj•cy te pliki.
+
+.
+:PROGRAM_INTRO_MOUNT_WINDOWS
+[44;1m…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª
+∫ [32mmount c c:\dosprog\[37m utworzy dysk C z c:\dosprog jako zawartoòci•.      ∫
+∫                                                                        ∫
+∫ [32mc:\dosprog\[37m to przykàad. Zamie‰ go na Tw¢j wàasny katalog z grami.  [37m           ∫
+»ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº[0m
+.
+:PROGRAM_INTRO_MOUNT_OTHER
+[44;1m…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª
+∫ [32mmount c ~/dosprog[37m utworzy dysk C z ~/dosprog jako zawartoòci•. ∫
+∫                                                                     ∫
+∫ [32m~/dosprog[37m to przykàad. Zamie‰ go na Tw¢j wàasny katalog z grami.  [37m ∫
+»ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº[0m
+.
+:PROGRAM_INTRO_MOUNT_END
+Gdy montowanie zostanie zako‰czone, moæesz wpisaÜ [34;1mc:[0m aby przejòÜ do nowo
+utworzonego dysku C. Wpisanie tam [34;1mdir[0m pokaæe jego zawartoòÜ. [34;1mcd[0m pozwoli Ci
+na wpisanie katalogu (Rozpoznawany poprzez [33;1m[][0m w listingu katalogu).
+Moæesz uruchomiÜ programy/pliki z rozszerzeniem [31m.exe .bat[0m i [31m.com[0m.
+.
+:PROGRAM_INTRO_CDROM
+[2J[32;1mJak zamontowaÜ fizyczny/wirtualny nap©d CD-ROM w DOSBoxie:[0m
+DOSBox dostarcza kilka poziom¢w emulacji pàyt CD.
+
+Poziom [33mpodstawowy[0m dziaàa na wszystkich nap©dach CD-ROM i normalnych katalogach.
+Instaluje MSCDEX i oznacza pliki jako tylko-do-odczytu.
+Przewaænie jest to wystarczaj•ce dla wi©kszoòci gier:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom[0m   or   [34;1mmount d C:\example -t cdrom[0m
+Jeòli to nie dziaàa, moæesz byÜ zmuszony do podania etykiety pàyty CD:
+[34;1mmount d C:\example -t cdrom -label ETYKIETA[0m
+
+[33mNast©pny[0m poziom dodaje troch© wsaprcie niskopoziomowego.
+Dlatego dziaàa jedynie na nap©dach CD-ROM.
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
+
+[33mOstatni[0m poziom wsparcia zaleæy od systemu operacyjnego:
+Dla [1mWindows 2000[0m, [1mWindows XP[0m i [1mLinuxa[0m:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-ioctl[0m
+Dla [1mWindows 9x[0m z zainstalowan• warstw• ASPI:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-aspi[0m
+
+Zamie‰ [0;31mD:\[0m na poàoæenie nap©du CD-ROM.
+Zamie‰ [33;1m0[0m w [34;1m-usecd [33m0[0m na numer wyòwietlany przy CD-ROMie po wpisaniu komendy:
+[34;1mmount -cd[0m
+.
+:PROGRAM_INTRO_SPECIAL
+[2J[32;1mKlawisze specjalne:[0m
+Domyòlne dowi•zania klawiszowe.
+Mog• zostaÜ zmienione narz©dziem [33mkeymapper[0m.
+
+[33;1mALT-ENTER[0m   : Przejd´ do trybu peànoekranowego i spowrotem.
+[33;1mALT-PAUSE[0m   : Zapauzuj DOSBoxa.
+[33;1mCTRL-F1[0m     : Uruchom [33mkeymappera[0m.
+[33;1mCTRL-F4[0m     : Zaaktualizuj cache katalog¢w dla wszystkich dysk¢w! Przeàaduj zamontowany obraz dysku.
+[33;1mCTRL-ALT-F5[0m : Rozpocznij/zatrzymaj nagrywanie filmu z zawartoòci• ekranu.
+[33;1mCTRL-F5[0m     : Zr¢b i zapisz zrzut ekranu.
+[33;1mCTRL-F6[0m     : Rozpocznij/zatrzymaj nagrywanie d´wi©ku do pliku wave.
+[33;1mCTRL-ALT-F7[0m : Rozpocznij/zatrzymaj nagrywanie komend OPL.
+[33;1mCTRL-ALT-F8[0m : Rozpocznij/zatrzymaj nagrywanie komend raw MIDI.
+[33;1mCTRL-F7[0m     : Zmniejsz frameskip.
+[33;1mCTRL-F8[0m     : Zwi©ksz frameskip.
+[33;1mCTRL-F9[0m     : Wyà•cz DOSBoxa.
+[33;1mCTRL-F10[0m    : PrzechwyÜ/Zwolnij myszk©.
+[33;1mCTRL-F11[0m    : Spowolnij emulacj© (Obniæ liczb© cykli DOSBoxa).
+[33;1mCTRL-F12[0m    : Przyòpiesz emulacj© (Zwi©ksz liczb© cykli DOSBoxa).
+[33;1mALT-F12[0m     : Uwolnij pr©dkoòÜ (przycisk "turbo").
+.
+:PROGRAM_BOOT_NOT_EXIST
+Plik z dyskiem bootuj•cym nie istnieje. Ko‰czenie pracy.
+.
+:PROGRAM_BOOT_NOT_OPEN
+Nie moæna otworzyÜ pliku z dyskiem bootuj•cym. Ko‰czenie pracy.
+.
+:PROGRAM_BOOT_WRITE_PROTECTED
+Plik obrazu jest tylko do odczytu! Moæe to spowodowaÜ problemy.
+.
+:PROGRAM_BOOT_PRINT_ERROR
+Ta komenda bootuje DOSBoxa z dyskietki lub obrazu dysku twardego.
+
+Do tej komendy moæna wà•czyÜ wyb¢r kolejnoòci dysk¢w
+kombinacj• klawiszy Ctrl-F4, wtedy opcja -l okreòla zamontowany dysk do zbootowania.
+Jeòli nie podano litery dysku, domyòlnie bootowany jest dysk A.
+Jedynymi literami bootowalnych dysk¢w s• litery A, C i D. Aby zbootowaÜ z dysku
+twardego (C lub D), obraz powinien byÜ zamontowany komend•
+[34;1mIMGMOUNT[0m command.
+
+Skàadnia tej komendy jest nast©puj•ca:
+
+[34;1mBOOT [obrazdysku1.img obrazdysku1.img] [-l literadysku][0m
+.
+:PROGRAM_BOOT_UNABLE
+Nie udaào si© zbootowaÜ z dysku %c.
+:PROGRAM_BOOT_IMAGE_OPEN
+Otwieranie pliku obrazu: %s
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+Nie moæna otworzyÜ %s.
+:PROGRAM_BOOT_BOOT
+Bootowanie z dysku %c...
+.
+:PROGRAM_BOOT_CART_WO_PCJR
+Znaleziono kartridæ PCjr, ale maszyna nie jest typu PCjr.
+:PROGRAM_BOOT_CART_LIST_CMDS
+Dost©pne komendy kartridæy PCjr:%s.
+:PROGRAM_BOOT_CART_NO_CMDS
+Nie znaleziono komend kartidæy PCjr.
+:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
+Musisz podaÜ liter© dysku, na kt¢rym zamontowany b©dzie obraz.
+.
+:PROGRAM_IMGMOUNT_SPECIFY2
+Musisz podaÜ numer dysku (0 - 3), gdzie zamontowany b©dzie obraz (0,1=fda,fdb;2,3=hda,hdb).
+.
+:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
+Dla obraz¢w [33mCD-ROM[0m:   [34;1mIMGMOUNT litera-dysku lokalizacja-obrazu -t iso[0m
+
+Dla obraz¢w [33mdysk¢w twardych[0m : Musisz zdefiniowaÜ geometri© dysku:
+bajt¢w_na_sektor, sektor¢w_na_cylinder, gàowic_na_cylinder, liczba cylindr¢w.
+[34;1mIMGMOUNT  litera-dysku lokalizacja-obrazu -size bns,snc,gnc,cyl[0m
+.
+:PROGRAM_IMGMOUNT_INVALID_IMAGE
+Nie udaào si© wczytaÜ pliku obrazu.
+Sprawd´ czy òcieæka jest poprawna, a obraz dost©pny.
+.
+:PROGRAM_IMGMOUNT_INVALID_GEOMETRY
+Nie udaào si© odczytaÜ geometrii dysku z obrazu.
+Uæyj parametru -size bns,snc,gnc,cyl aby zdefiniowaÜ geometri©.
+.
+:PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
+Typ "%s" nie jest obsàugiwany. Uæyj "hdd", "floppy" lub "iso".
+.
+:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
+Format "%s" nie jest obsàugiwany. Uæyj "fat", "iso" lub "none".
+.
+:PROGRAM_IMGMOUNT_SPECIFY_FILE
+Musisz zdefiniowaÜ plik obrazu do zamontowania.
+.
+:PROGRAM_IMGMOUNT_FILE_NOT_FOUND
+Nie znaleziono pliku obrazu.
+.
+:PROGRAM_IMGMOUNT_MOUNT
+Do montowania katalog¢w sàuæy komenda [34;1mMOUNT[0m command, a nie [34;1mIMGMOUNT[0m.
+.
+:PROGRAM_IMGMOUNT_ALREADY_MOUNTED
+Na tej literze jest juæ zamontowany dysk.
+.
+:PROGRAM_IMGMOUNT_CANT_CREATE
+Nie da si© utworzyÜ dysku z tego pliku.
+.
+:PROGRAM_IMGMOUNT_MOUNT_NUMBER
+Numer dysku %d jst zamontowany jako %s
+.
+:PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
+Obraz musi byÜ na dysku gà¢wnym lub lokalnym.
+.
+:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
+Uæywanie wielu plik¢w jest obsàugiwane tylko dla obraz¢w cue/iso.
+.
+:PROGRAM_KEYB_INFO
+Strona kodowa %i zostaàa zaàadowana
+.
+:PROGRAM_KEYB_INFO_LAYOUT
+Strona kodowa %i zostaàa zaàadowana dla layoutu %s
+.
+:PROGRAM_KEYB_SHOWHELP
+[32;1mKEYB[0m [ID layoutu klawiatury[ numer strony kodowej[ plik strony kodowej]]]
+
+Kilka przykàad¢w:
+  [32;1mKEYB[0m: Wyòwietla aktualnie wczytan• stron© kodow•.
+  [32;1mKEYB[0m sp: Wczytuje hiszpa‰ski (SP) layout, uæywa odpowiedniej strony kodowej.
+  [32;1mKEYB[0m sp 850: Wczytuje hiszpa‰ski (SP) layout, uæywa strony kodowej 850.
+  [32;1mKEYB[0m sp 850 mycp.cpi: Tak jak wyæej, ale uæywa pliku mycp.cpi.
+.
+:PROGRAM_KEYB_NOERROR
+Layout klawiatury %s zostaà wczytany dla strony kodowej %i.
+.
+:PROGRAM_KEYB_FILENOTFOUND
+Nie znaleziono pliku klawiatury %s
+
+.
+:PROGRAM_KEYB_INVALIDFILE
+Plik klawiatury %s jest nieprawidàowy
+.
+:PROGRAM_KEYB_LAYOUTNOTFOUND
+Brak layoutu w %s dla strony kodowej %i
+.
+:PROGRAM_KEYB_INVCPFILE
+Brak lub nieprawidàowy plik strony kodowej dla layoutu %s
+
+.
+:SHELL_ILLEGAL_PATH
+Nieprawidàowa òcieæka
+.
+:SHELL_CMD_HELP
+Jeòli chcesz zobaczyÜ list© wszystkich obsàugiwanych komend, wpisz [33;1mhelp /all[0m .
+Kr¢tka lista najcz©òciej uæywanych komend:
+.
+:SHELL_CMD_ECHO_ON
+ECHO jest wà•czone.
+.
+:SHELL_CMD_ECHO_OFF
+ECHO jest wyà•czone.
+.
+:SHELL_ILLEGAL_SWITCH
+Nieprawidàowy przeà•cznik: %s.
+.
+:SHELL_MISSING_PARAMETER
+Brak wymaganego parametru.
+.
+:SHELL_CMD_CHDIR_ERROR
+Nie moæna przejòÜ do: %s.
+.
+:SHELL_CMD_CHDIR_HINT
+Aby przejòÜ do innego dysku wpisz [31m%c:[0m
+.
+:SHELL_CMD_CHDIR_HINT_2
+Nazwa katalogu jest dàuæsza niæ 8 znak¢w i/lub zawiera spacje.
+Spr¢buj [31mcd %s[0m
+.
+:SHELL_CMD_CHDIR_HINT_3
+Ci•gle jesteò na dysku Z:, Wpisz [31mC:[0m aby przejòÜ na zamontowany dysk.
+.
+:SHELL_CMD_MKDIR_ERROR
+Nie moæna utworzyÜ: %s.
+.
+:SHELL_CMD_RMDIR_ERROR
+Nie moæna usun•Ü: %s.
+.
+:SHELL_CMD_DEL_ERROR
+Nie moæna usun•Ü: %s.
+.
+:SHELL_SYNTAXERROR
+Skàadnia komendy jest nieprawidàowa.
+.
+:SHELL_CMD_SET_NOT_SET
+Zmienna òrodowiskowa %s jest jest zdefiniowana.
+.
+:SHELL_CMD_SET_OUT_OF_SPACE
+Niewystarczaj•ca iloòÜ miejsca w òrodowisku.
+.
+:SHELL_CMD_IF_EXIST_MISSING_FILENAME
+IF EXIST: Brakuje nazwy pliku.
+.
+:SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
+IF ERRORLEVEL: Brakuje numeru.
+.
+:SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
+IF ERRORLEVEL: Nieprawidàowy numer.
+.
+:SHELL_CMD_GOTO_MISSING_LABEL
+Brakuje etykiety dla komendy GOTO.
+.
+:SHELL_CMD_GOTO_LABEL_NOT_FOUND
+GOTO: Nie odnaleziono etykiety %s.
+.
+:SHELL_CMD_FILE_NOT_FOUND
+Nie odnaleziono pliku %s.
+.
+:SHELL_CMD_FILE_EXISTS
+Plik %s juæ istnieje.
+.
+:SHELL_CMD_DIR_INTRO
+Katalog %s.
+.
+:SHELL_CMD_DIR_BYTES_USED
+%5d plik(¢w) %17s bajt¢w.
+.
+:SHELL_CMD_DIR_BYTES_FREE
+%5d katalog(¢w)  %17s bajt¢w wolnych.
+.
+:SHELL_EXECUTE_DRIVE_NOT_FOUND
+Dysk %c nie istnieje!
+Musisz go najpierw [31mzamontowaÜ[0m . Wpisz [1;33mintro[0m lub [1;33mintro mount[0m aby uzyskaÜ wi©cej informacji.
+.
+:SHELL_EXECUTE_ILLEGAL_COMMAND
+Nieprawidàowa komenda: %s.
+.
+:SHELL_CMD_PAUSE
+Naciònij dowolny klawisz, aby kontynuowaÜ.
+.
+:SHELL_CMD_PAUSE_HELP
+Czeka na 1 uderzenie w klawisz aby kontynuowaÜ.
+.
+:SHELL_CMD_COPY_FAILURE
+Nie udaào si© skopiowaÜ: %s.
+.
+:SHELL_CMD_COPY_SUCCESS
+   %d skopiowanych plik(¢w).
+.
+:SHELL_CMD_SUBST_NO_REMOVE
+Usuwanie dysku nie jest obsàugiwane. Nic nie zrobiono.
+.
+:SHELL_CMD_SUBST_FAILURE
+Wykonanie polecenia SUBST nie powiodào si©. Moæe to byÜ spowodowane bà©dem w linii komend lub tym, æe docelowy dysk jest uæywany.
+Polecenia SUBST moæna uæyÜ jedynie na lokalnych dyskach.
+:SHELL_STARTUP_BEGIN
+[44;1m…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª
+∫ [32mWitaj w DOSBox v%-8s[37m                                           ∫
+∫                                                                    ∫
+∫ Kr¢tki wst©p dla nowych uæytkownik¢w wpisz: [33mINTRO[37m                  ∫
+∫ Wspierane komendy shella wpisz: [33mHELP[37m                               ∫
+∫                                                                    ∫
+∫ Jeòli chcesz zwi©kszyÜ pr©dkoòÜ, spr¢buj [31mctrl-F8[37m oraz [31mctrl-F12[37m.    ∫
+∫ Aby aktywowaÜ keymappera, wciònij [31mctrl-F1[37m.                                  ∫
+∫ Wi©cej informacji w pliku [36mREADME[37m w katalogu DOSBoxa.               ∫
+∫                                                                    ∫
+.
+:SHELL_STARTUP_CGA
+∫ DOSBox wspiera tryb Composite CGA.                                 ∫
+∫ Uæyj [31m(alt-)F11[37m aby zmieniÜ kolory w tyb trybie.       ∫
+∫                                                                    ∫
+.
+:SHELL_STARTUP_DEBUG
+∫ Wciònij [31malt-Pause[37m aby wà•czyÜ debuggera albo wà•cz plik exe komend• [33mDEBUG[37m. ∫
+∫                                                                    ∫
+.
+:SHELL_STARTUP_END
+∫ [32mMIùEJ ZABAWY![37m                                                      ∫
+∫ [32mZesp¢à DOSBoxa [33mhttp://www.dosbox.com[37m                               ∫
+»ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº[0m
+.
+:SHELL_CMD_CHDIR_HELP
+Wyòwietla/zmienia aktualny katalog.
+.
+:SHELL_CMD_CHDIR_HELP_LONG
+CHDIR [dysk:][òcieæka]
+CHDIR [..]
+CD [dysk:][òcieæka]
+CD [..]
+
+  ..   oznacza, æe chcesz przejòÜ do katalogu powyæej.
+
+Wpisz CD dysk: aby wyòwietliÜ aktualn• òcieæk© na okreòlonym dysku.
+Wpisz CD bez parametr¢w aby wyòwietliÜ aktualny dysk i katalog.
+.
+:SHELL_CMD_CLS_HELP
+Czyòci ekran.
+.
+:SHELL_CMD_DIR_HELP
+Podgl•d òcieæki.
+.
+:SHELL_CMD_ECHO_HELP
+Wyòwietla wiadomoòci i wà•cza/wyà•cza wypisywanie wykonywanych komend.
+.
+:SHELL_CMD_EXIT_HELP
+Wyà•cza konsol©.
+.
+:SHELL_CMD_HELP_HELP
+Wà•cza pomoc.
+.
+:SHELL_CMD_MKDIR_HELP
+Tworzy katalog.
+.
+:SHELL_CMD_MKDIR_HELP_LONG
+MKDIR [dysk:][òcieæka]
+MD [dysk:][òcieæka]
+.
+:SHELL_CMD_RMDIR_HELP
+Usuwa katalog.
+.
+:SHELL_CMD_RMDIR_HELP_LONG
+RMDIR [dysk:][òcieæka]
+RD [dysk:][òcieæka]
+.
+:SHELL_CMD_SET_HELP
+Zmienia wartoòci zmiennych òrodowiskowych.
+.
+:SHELL_CMD_IF_HELP
+W skrypcie powoduje warunkowe przetwarzanie.
+.
+:SHELL_CMD_GOTO_HELP
+W skrypcie przeskakuje do linii o danej etykiecie.
+.
+:SHELL_CMD_SHIFT_HELP
+Uæyty w skrypcie zamienia miejscami 2 kolejne parametry linii komend.
+.
+:SHELL_CMD_TYPE_HELP
+Wyòwieta zawartoòÜ pliku tekstowego.
+.
+:SHELL_CMD_TYPE_HELP_LONG
+TYPE [dysk:][òcieæka][nazwapliku]
+.
+:SHELL_CMD_REM_HELP
+Dodaje komentarz w skrypcie.
+.
+:SHELL_CMD_REM_HELP_LONG
+REM [komentarz]
+.
+:SHELL_CMD_NO_WILD
+To prosta wersja komendy, symbole wieloznaczne nie s• dozwolone!
+.
+:SHELL_CMD_RENAME_HELP
+Zmienia nazw© jednego lub wielu plik¢w.
+.
+:SHELL_CMD_RENAME_HELP_LONG
+RENAME [dysk:][òcieæka]nazwapliku1 nazwapliku2.
+REN [dysk:][òcieæka]nazwapliku1 nazwapliku2.
+
+Pami©taj, æe nie moæesz okreòliÜ nowego dysku i òcieæki dla pliku docelowego.
+.
+:SHELL_CMD_DELETE_HELP
+Usuwa jeden lub wiele plik¢w.
+.
+:SHELL_CMD_COPY_HELP
+Kopiuje pliki.
+.
+:SHELL_CMD_CALL_HELP
+Uruchamia skrypt z innego skryptu.
+.
+:SHELL_CMD_SUBST_HELP
+Przyporz•dkowuje wewn©trzny katalog do dysku.
+.
+:SHELL_CMD_LOADHIGH_HELP
+Wczytuje program do pami©ci g¢rnej (wymaga xms=true,umb=true).
+.
+:SHELL_CMD_CHOICE_HELP
+Czeka na wciòni©cie klawisza i ustawia ERRORLEVEL.
+.
+:SHELL_CMD_CHOICE_HELP_LONG
+CHOICE [/C:moæliwoòci] [/N] [/S] tekst
+  /C[:]moæliwoòcie  -  Okreòla dost©pne klawisze.  Domyòlnie: yn.
+  /N  -  Nie wyòwietlaj moæliwoòci na koniec zgàoszenia.
+  /S  -  Wà•cza rozr¢ænianie wielkoòci liter moæliwoòci.
+  tekst  -  Tekst wyòwietlany w zgàoszeniu.
+.
+:SHELL_CMD_ATTRIB_HELP
+Nie powoduje æadnego efektu. Dostarczone dla zachowania kompatybilnoòci.
+.
+:SHELL_CMD_PATH_HELP
+Dostarczono dla zachowania kompatybilnoòci.
+.
+:SHELL_CMD_VER_HELP
+Zobacz i ustaw zgàoszon• wersj© DOSa.
+.
+:SHELL_CMD_VER_VER
+Wersja DOSBoxa %s. Zgàoszona wersja DOSa %d.%02d.
+.

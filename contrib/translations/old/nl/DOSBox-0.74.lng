@@ -1,0 +1,971 @@
+:CONFIG_FULLSCREEN
+DOSBox rechtstreeks op volledig scherm starten. (Druk op Alt+Enter om terug te gaan).
+.
+:CONFIG_FULLDOUBLE
+Dubbele buffering gebruiken bij weergave op volledig scherm. Hierdoor gaat het beeldscherm mogelijk minder flikkeren, maar wordt DOSBox mogelijk ook traag.
+.
+:CONFIG_FULLRESOLUTION
+De resolutie die moet worden gebruikt voor weergave op volledig scherm: oorspronkelijk of vaste grootte (bijv. 1024ื768).
+  Het resultaat is mogelijk optimaal als je de eigen resolutie van je beeldscherm gebruikt en ASPECT instelt op TRUE.
+  Heb je een groot scherm en zie je een klein venster, kies dan een uitvoerindeling die verschilt van het beeldoppervlak.
+.
+:CONFIG_WINDOWRESOLUTION
+Het venster op dit formaat schalen mํts het uitvoerapparaat hardwareschaling ondersteunt.
+  (Schalen wordt niet ondersteund als OUTPUT is ingesteld op SURFACE!)
+.
+:CONFIG_OUTPUT
+Het videosysteem dat voor de uitvoer wordt gebruikt.
+.
+:CONFIG_AUTOLOCK
+De muis automatisch blokkeren bij het klikken op het scherm. (Druk op Ctrl+F10 om de blokkering op te heffen.)
+.
+:CONFIG_SENSITIVITY
+De gevoeligheid van de muis.
+.
+:CONFIG_WAITONERROR
+Als in DOSBox een fout is opgetreden: wachten voordat de console wordt gesloten.
+.
+:CONFIG_PRIORITY
+Prioriteitniveaus voor DOSBox. De tweede waarde achter de komma wordt gebruikt wanneer DOSBox niet de focus heeft of is geminimaliseerd.
+  Voor de tweede waarde kun je alleen PAUSE opgeven.
+.
+:CONFIG_MAPPERFILE
+Het bestand waaruit de toets-/gebeurtenisparen worden geladen of het bestand waarin deze worden opgeslagen. RESETMAPPER werkt alleen met de standaardwaarde.
+.
+:CONFIG_USESCANCODES
+Het gebruik van Symkeys vermijden. Deze optie werkt mogelijk niet op alle besturingssystemen.
+.
+:CONFIG_LANGUAGE
+Een ander taalbestand selecteren.
+.
+:CONFIG_MACHINE
+Het type computer dat moet worden ge๋muleerd.
+.
+:CONFIG_CAPTURES
+De directory waarin bijvoorbeeld WAVE- en MIDI-bestanden en schermopnamen worden vastgelegd.
+.
+:CONFIG_MEMSIZE
+De hoeveelheid geheugen voor DOSBox in megabytes.
+  Laat de standaardwaarde ongewijzigd om problemen met sommige spellen te voorkomen,
+  tenzij je de waarde voor bepaalde spellen moet verhogen.
+  DOSBox wordt meestal niet sneller als je deze waarde verhoogt.
+.
+:CONFIG_FRAMESKIP
+Het aantal frames dat DOSBox moet overslaan voordat een nieuw frame wordt getekend.
+.
+:CONFIG_ASPECT
+De beeldverhouding corrigeren. Als de gekozen uitvoermethode geen ondersteuning voor schalen biedt, kan DOSBox met deze optie trager worden!
+.
+:CONFIG_SCALER
+De schaalmethode waarmee lage-resolutiemodi worden vergroot/verbeterd.
+  Als je FORCED toevoegt, wordt de schaalmethode zelfs gebruikt wanneer het resultaat mogelijk niet gewenst is.
+.
+:CONFIG_CORE
+De CPU-kern die bij de emulatie wordt gebruikt. Indien mogelijk wordt AUTO gewijzigd in DYNAMIC.
+.
+:CONFIG_CPUTYPE
+Het CPU-type dat bij de emulatie wordt gebruikt. AUTO geeft het snelste resultaat.
+.
+:CONFIG_CYCLES
+Het aantal instructies dat DOSBox per milliseconde moet emuleren.
+Als je een te hoge waarde instelt, kan het geluid wegvallen of een vertraging vertonen.
+Je kunt de cycli op drie manieren instellen:
+  auto            Het geschikte aantal voor een spel proberen vast te stellen.
+                  Deze instelling werkt met de meeste spellen.
+  fixed #aantal   Een vast aantal cycli instellen. Meestal moet je deze instelling gebruiken als AUTO mislukt.
+                  (Voorbeeld: fixed 4000).
+  max             Het maximumaantal cycli laten toewijzen dat je computer kan verwerken.
+
+.
+:CONFIG_CYCLEUP
+Het aantal cycli dat met Ctrl+F11/Ctrl+F12 kan worden verlaagd/verhoogd.
+.
+:CONFIG_CYCLEDOWN
+Als je een kleinere waarde dan 100 opgeeft, wordt deze als percentage ge๏nterpreteerd.
+.
+:CONFIG_NOSOUND
+De stille modus inschakelen. Het geluid wordt wel nog steeds ge๋muleerd.
+.
+:CONFIG_RATE
+De sampling-frequentie voor de mixer. Als je een hogere frequentie voor een apparaat instelt, neemt de geluidskwaliteit waarschijnlijk af.
+.
+:CONFIG_BLOCKSIZE
+De blokgrootte voor de mixer. Met grotere blokken kun je 'stotterend' geluid mogelijk voorkomen, maar kan een vertraging optreden.
+.
+:CONFIG_PREBUFFER
+Het aantal milliseconden gegevens dat boven op de blokgrootte moet worden bewaard.
+.
+:CONFIG_MPU401
+Het type MPU-401 dat moet worden ge๋muleerd.
+.
+:CONFIG_MIDIDEVICE
+Het apparaat dat de MIDI-gegevens van MPU-401 ontvangt.
+.
+:CONFIG_MIDICONFIG
+Speciale configuratieopties voor het apparaatstuurprogramma. Dit is meestal de ID van het apparaat dat je wilt gebruiken.
+  Zie de leesmij/handleiding voor meer informatie.
+.
+:CONFIG_SBTYPE
+Het type Soundblaster dat moet worden ge๋muleerd. GB staat voor Gameblaster.
+.
+:CONFIG_SBBASE
+Het I/O-adres van Soundblaster.
+.
+:CONFIG_IRQ
+Het IRQ-nummer van Soundblaster.
+.
+:CONFIG_DMA
+Het DMA-nummer van Soundblaster.
+.
+:CONFIG_HDMA
+Het hoge DMA-nummer van Soundblaster.
+.
+:CONFIG_SBMIXER
+De Soundblaster-mixer toestaan de DOSBox-mixer te wijzigen.
+.
+:CONFIG_OPLMODE
+Het type OPL-emulatie. Met AUTO wordt de modus vastgesteld door het type Soundblaster. Alle OPL-modi behalve CMS zijn compatibel met Adlib.
+.
+:CONFIG_OPLEMU
+De provider voor de OPL-emulatie. COMPAT geeft mogelijk een hogere kwaliteit (zie ook OPLRATE).
+.
+:CONFIG_OPLRATE
+De sampling-frequentie voor de emulatie van OPL-muziek. Gebruik 49716 voor de hoogste kwaliteit (stel de mixerfrequentie op een overeenkomende waarde in.)
+.
+:CONFIG_GUS
+Emulatie van Gravis Ultrasound inschakelen.
+.
+:CONFIG_GUSRATE
+De sampling-frequentie voor Gravis Ultrasound-emulatie.
+.
+:CONFIG_GUSBASE
+Het I/O-basisadres van Gravis Ultrasound.
+.
+:CONFIG_GUSIRQ
+Het IRQ-nummer van Gravis Ultrasound.
+.
+:CONFIG_GUSDMA
+Het DMA-kanaal van Gravis Ultrasound.
+.
+:CONFIG_ULTRADIR
+Het pad naar de Gravis Ultrasound-directory. Deze moet een MIDI-directory bevatten
+met de patchbestanden
+voor GUS-weergave. Patchsets voor Timidity
+zijn waarschijnlijk geschikt.
+.
+:CONFIG_PCSPEAKER
+Emulatie van de pc-luidspreker inschakelen.
+.
+:CONFIG_PCRATE
+De sampling-frequentie waarmee geluid via de pc-luidspreker wordt gegenereerd.
+.
+:CONFIG_TANDY
+Emulatie van Tandy Sound System inschakelen. Met AUTO is emulatie alleen beschikbaar als de computer is ingesteld op TANDY.
+.
+:CONFIG_TANDYRATE
+De sampling-frequentie voor de Tandy 3-Voice-generatie.
+.
+:CONFIG_DISNEY
+Emulatie van Disney Sound Source inschakelen (compatibel met Covox Voice Master en Speech Thing).
+.
+:CONFIG_JOYSTICKTYPE
+Het type joystick dat moet worden ge๋muleerd: AUTO (standaard), NONE (geen),
+2AXIS (ondersteunt twee joysticks),
+4AXIS (ondersteunt ้้n joystick, eerste joystick gebruikt),
+4AXIS_2 (ondersteunt ้้n joystick, tweede joystick gebruikt),
+FCS (Thrustmaster), CH (CH Flightstick).
+Met NONE wordt joystick-emulatie uitgeschakeld.
+Met AUTO wordt de emulatie gekozen op basis van echte joystick(s).
+(Onthoud dat je het DOSBox-toewijzingsbestand opnieuw moet instellen als je dit eerder hebt opgeslagen.)
+.
+:CONFIG_TIMED
+Periodieke intervallen voor de as inschakelen. Experimenteer met deze optie als de joystick een afwijking vertoont.
+.
+:CONFIG_AUTOFIRE
+Blijven vuren zolang de knop wordt ingedrukt.
+.
+:CONFIG_SWAP34
+De derde en vierde as verwisselen. Dit kan handig zijn voor bepaalde joysticks.
+.
+:CONFIG_BUTTONWRAP
+'Button wrapping' inschakelen bij het aantal ge๋muleerde knoppen.
+.
+:CONFIG_SERIAL1
+Het type apparaat instellen dat op de COM-poort is aangesloten.
+Kan worden ingesteld op DISABLED, DUMMY, MODEM, NULLMODEM of DIRECTSERIAL.
+Aanvullende parameters moeten op dezelfde regel worden opgegeven met de notatie
+parameter:waarde. De parameter voor alle typen is IRQ (optioneel).
+Voor DIRECTSERIAL: REALPORT (vereist), RXDELAY (optioneel).
+                 (realport:COM1 realport:ttyS0).
+Voor MODEM: LISTENPORT (optioneel).
+Voor NULLMODEM: SERVER, RXDELAY, TXDELAY, TELNET, USEDTR,
+               TRANSPARENT, PORT, INHSOCKET (allemaal optioneel).
+Voorbeeld: serial1=modem listenport:5000
+.
+:CONFIG_SERIAL2
+Zie SERIAL1.
+.
+:CONFIG_SERIAL3
+Zie SERIAL1.
+.
+:CONFIG_SERIAL4
+Zie SERIAL1.
+.
+:CONFIG_XMS
+XMS-ondersteuning inschakelen.
+.
+:CONFIG_EMS
+EMS-ondersteuning inschakelen.
+.
+:CONFIG_UMB
+UMB-ondersteuning inschakelen.
+.
+:CONFIG_KEYBOARDLAYOUT
+De taalcode van de toetsenbordindeling (of geen).
+.
+:CONFIG_IPX
+IPX via UDP/IP-emulatie inschakelen.
+.
+:AUTOEXEC_CONFIGFILE_HELP
+De regels in deze sectie worden tijdens het opstarten uitgevoerd.
+Je kunt hier MOUNT-regels opgeven.
+
+.
+:CONFIGFILE_INTRO
+# Dit is het configuratiebestand voor DOSBox %s. (Gebruik de nieuwste versie van DOSBox.)
+# Regels die met # beginnen, worden als commentaar ge๏nterpreteerd en door DOSBox genegeerd.
+# Met commentaarregels kun je een (korte) beschrijving van elke optie geven.
+
+.
+:CONFIG_SUGGESTED_VALUES
+Mogelijke waarden
+.
+:PROGRAM_CONFIG_FILE_ERROR
+Kan het bestand %s niet openen.
+
+.
+:PROGRAM_CONFIG_USAGE
+Configuratieprogramma:
+Typ -writeconf bestandsnaam om de huidige configuratie weg te schrijven.
+Typ -writelang bestandsnaam om de huidige taaltekenreeksen weg te schrijven.
+
+.
+:PROGRAM_CONFIG_SECURE_ON
+De beveiligde modus is geactiveerd.
+
+.
+:PROGRAM_CONFIG_SECURE_DISALLOW
+Deze bewerking is niet toegestaan in de beveiligde modus.
+
+.
+:PROGRAM_CONFIG_SECTION_ERROR
+De sectie %s bestaat niet.
+
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Sectie of eigenschap is niet gevonden.
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+De eigenschap %s is niet gevonden in de sectie %s.
+
+.
+:PROGRAM_CONFIG_GET_SYNTAX
+Juiste syntaxis: config -get "sectie-eigenschap".
+
+.
+:PROGRAM_MOUNT_CDROMS_FOUND
+Gevonden cd-rom's: %d
+
+.
+:PROGRAM_MOUNT_STATUS_2
+Station %c is aangekoppeld als %s.
+
+.
+:PROGRAM_MOUNT_STATUS_1
+Momenteel aangekoppelde stations:
+
+.
+:PROGRAM_MOUNT_ERROR_1
+De directory %s bestaat niet.
+
+.
+:PROGRAM_MOUNT_ERROR_2
+%s is geen directory.
+
+.
+:PROGRAM_MOUNT_ILL_TYPE
+Ongeldig type: %s.
+
+.
+:PROGRAM_MOUNT_ALREADY_MOUNTED
+Station %c is al aangekoppeld als %s.
+
+.
+:PROGRAM_MOUNT_USAGE
+Syntaxis: [34;1mMOUNT stationsletter lokale_directory[0m
+Voorbeeld: MOUNT c %s
+Hiermee fungeert de directory %s in DOSBox als station C:.
+De directory moet wel bestaan.
+
+.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+Station %c is niet aangekoppeld.
+
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCESS
+Station %c is verwijderd.
+
+.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+Virtuele stations kunnen niet worden ontkoppeld.
+
+.
+:PROGRAM_MOUNT_WARNING_WIN
+[31;1mc:\ aankoppelen wordt NIET aanbevolen. Koppel voortaan een (sub)directory aan.[0m
+
+.
+:PROGRAM_MOUNT_WARNING_OTHER
+[31;1m/ aankoppelen wordt NIET aanbevolen. Koppel voortaan een (sub)directory aan.[0m
+
+.
+:PROGRAM_MEM_CONVEN
+%10d kB conventioneel geheugen beschikbaar.
+
+.
+:PROGRAM_MEM_EXTEND
+%10d kB uitgebreid (extended) geheugen beschikbaar.
+
+.
+:PROGRAM_MEM_EXPAND
+%10d kB extra (expanded) geheugen beschikbaar.
+
+.
+:PROGRAM_MEM_UPPER
+%10d kB hoger geheugen beschikbaar in %d blokken (grootste UMB: %d kB)
+
+.
+:PROGRAM_LOADFIX_ALLOC
+%d kB gealloceerd.
+
+.
+:PROGRAM_LOADFIX_DEALLOC
+%d kB vrijgegeven.
+
+.
+:PROGRAM_LOADFIX_DEALLOCALL
+Gebruikt geheugen is vrijgegeven.
+
+.
+:PROGRAM_LOADFIX_ERROR
+Fout van geheugenallocatie.
+
+.
+:MSCDEX_SUCCESS
+Installatie van MSCDEX is geslaagd.
+
+.
+:MSCDEX_ERROR_MULTIPLE_CDROMS
+MSCDEX: Fout: letters van meerdere cd-romstations moeten elkaar opvolgen.
+
+.
+:MSCDEX_ERROR_NOT_SUPPORTED
+MSCDEX: Fout: wordt nog niet ondersteund.
+
+.
+:MSCDEX_ERROR_OPEN
+MSCDEX: Fout: bestand is ongeldig of kan niet worden geopend.
+
+.
+:MSCDEX_TOO_MANY_DRIVES
+MSCDEX: Fout: te veel cd-romstations (max. 5). MSCDEX-installatie is mislukt.
+
+.
+:MSCDEX_LIMITED_SUPPORT
+MSCDEX: Subdirectory aangekoppeld: beperkte ondersteuning.
+
+.
+:MSCDEX_INVALID_FILEFORMAT
+MSCDEX: Fout: bestand is geen ISO- of CUE-image of bevat fouten.
+
+.
+:MSCDEX_UNKNOWN_ERROR
+MSCDEX: Fout: onbekende fout.
+
+.
+:PROGRAM_RESCAN_SUCCESS
+De stationscache is leeggemaakt.
+
+.
+:PROGRAM_INTRO
+[2J[32;1mWelkom bij DOSBox[0m, een x86-emulator met geluid en graphics.
+DOSBox is een omgeving die eruitziet als het DOS van voorheen.
+
+Voor informatie over standaardaankoppeling typ je [34;1mintro mount[0m.
+Voor informatie over cd-romondersteuning typ je [34;1mintro cdrom[0m.
+Voor informatie over speciale toetsen typ je [34;1mintro special[0m.
+Voor meer informatie over DOSBox ga ja naar [34;1mhttp://www.dosbox.com/wiki[0m.
+
+[31;1mAls er een fout optreedt, wordt DOSBox zonder waarschuwing gestopt/afgesloten![0m
+
+
+
+.
+:PROGRAM_INTRO_MOUNT_START
+[32;1mDit zijn enkele opdrachten waarmee je aan de slag kunt gaan:[0m
+Voordat je de bestanden in je eigen bestandssysteem kunt gebruiken,
+moet je de directory met die bestanden aankoppelen.
+
+
+.
+:PROGRAM_INTRO_MOUNT_WINDOWS
+[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c c:\dosprogs\[37m: station C aankoppelen met daarin c:\dosprogs.         บ
+บ                                                                             บ
+บ [32mc:\dosprogs\[37m is een voorbeeld. Typ in plaats hiervan je eigen directory.[37m    บ
+ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+
+.
+:PROGRAM_INTRO_MOUNT_OTHER
+[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c ~/dosprogs[37m: station C aankoppelen met daarin ~/dosprogs.            บ
+บ                                                                          บ
+บ [32m~/dosprogs[37m is een voorbeeld. Typ in plaats hiervan je eigen directory.[37m      บ
+ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+
+.
+:PROGRAM_INTRO_MOUNT_END
+Nadat de aankoppeling is voltooid, kun je [34;1mc:[0m typen om naar het nieuwe station
+C: te gaan. Typ daarna [34;1mdir[0m om de inhoud van het station te bekijken. Met [34;1mcd[0m kun je een directory opgeven.
+(Directory's worden in een directorylijst aangegeven met [33;1m[][0m.)
+Je kunt programma's/bestanden uitvoeren die eindigen op [31m.exe, .bat[0m of [31m.com[0m.
+
+.
+:PROGRAM_INTRO_CDROM
+[2J[32;1mEen echt/virtueel cd-romstation aankoppelen in DOSBox:[0m
+DOSBox biedt cd-rom-emulatie voor verschillende niveaus.
+
+Het [33mbasis[0mniveau is geschikt voor alle cd-romstations en gewone directory's.
+Hiermee wordt MSCDEX geconfigureerd en zijn de bestanden alleen-lezen.
+Dit volstaat normaal gesproken voor de meeste spellen:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom[0m   of   [34;1mmount d C:\voorbeeld -t cdrom[0m
+Als dit niet werkt, moet je de cd-rom-aanduiding aan DOSBox doorgeven:
+[34;1mmount d C:\voorbeeld -t cdrom -label CDLABEL[0m
+
+Met het [33mvolgende[0m niveau wordt low-levelondersteuning toegevoegd.
+Dit is dan ook alleen geschikt voor cd-romstations:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
+
+Het [33mlaatste[0m ondersteuningsniveau is afhankelijk van je besturingssysteem:
+Voor [1mWindows 2000[0m, [1mWindows XP[0m of [1mLinux[0m:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-ioctl[0m
+Voor [1mWindows 9x[0m met een ASPI-laag:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-aspi[0m
+
+Vervang [0;31mD:\[0m door de locatie van je cd-romstation.
+Vervang [33;1m0[0m in [34;1m-usecd [33m0[0m door het nummer van het cd-romstation in deze opdracht:
+[34;1mmount -cd[0m
+
+.
+:PROGRAM_INTRO_SPECIAL
+[2J[32;1mSpeciale toetsen:[0m
+Dit zijn de standaardtoetscombinaties.
+Je kunt deze wijzigen via de [33mtoetstoewijzingsfunctie[0m.
+
+[33;1mAlt+Enter[0m   : volledig scherm in- of uitschakelen.
+[33;1mAlt+Pause[0m   : DOSBox onderbreken
+[33;1mCtrl+F1[0m     : [33mtoetstoewijzingsfunctie[0m starten
+[33;1mCtrl+F4[0m     : dir.cache alle stations bijwerken. Aangek. schijfimage verwiss.
+[33;1mCtrl+Alt+F5[0m : video van het scherm vastleggen starten/stoppen
+[33;1mCtrl+F5[0m     : een schermopname opslaan
+[33;1mCtrl+F6[0m     : vastleggen van geluid in een WAVE-bestand starten/stoppen
+[33;1mCtrl+Alt+F7[0m : vastleggen van OPL-opdrachten starten/stoppen
+[33;1mCtrl+Alt+F8[0m : vastleggen van ruwe MIDI-opdrachten starten/stoppen
+[33;1mCtrl+F7[0m     : aantal overgeslagen frames verlagen
+[33;1mCtrl+F8[0m     : aantal overgeslagen frames verhogen
+[33;1mCtrl+F9[0m     : DOSBox afsluiten
+[33;1mCtrl+F10[0m    : muis vastzetten/vrijgeven
+[33;1mCtrl+F11[0m    : emulatie vertragen (aantal DOSBox-cycli verlagen)
+[33;1mCtrl+F12[0m    : emulatie versnellen (aantal DOSBox-cycli verhogen)
+[33;1mAlt+F12[0m     : ontgrendelingssnelheid (turboknop/snel vooruit)
+
+.
+:PROGRAM_BOOT_NOT_EXIST
+Opstartschijfbestand bestaat niet.  Bewerking mislukt.
+
+.
+:PROGRAM_BOOT_NOT_OPEN
+Kan het opstartschijfbestand niet openen.  Bewerking mislukt.
+
+.
+:PROGRAM_BOOT_WRITE_PROTECTED
+Imagebestand is alleen-lezen! Dit kan tot problemen leiden.
+
+.
+:PROGRAM_BOOT_PRINT_ERROR
+Hiermee wordt DOSBox opgestart vanaf een diskette of harde-schijfimage.
+
+Je kunt een reeks diskettes typen (te verwisselen door op Ctrl+F4 te drukken),
+of je kunt met -l het aangekoppelde station typen waarvan moet worden opgestart.   
+Als je geen stationsletter opgeeft, wordt standaard vanaf station A: opgestart.
+De enige opstartbare stationsletters zijn A, C en D.
+Als je vanaf een harde schijf (C of D) wilt opstarten,
+ moet deze al zijn aangekoppeld met [34;1mIMGMOUNT[0m.
+
+De syntaxis van deze opdracht is:
+
+[34;1mBOOT [schijfimage1.img schijfimage2.img] [-l stationsletter][0m
+
+.
+:PROGRAM_BOOT_UNABLE
+Kan niet opstarten vanaf station %c.
+.
+:PROGRAM_BOOT_IMAGE_OPEN
+Imagebestand openen: %s
+
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+Kan %s niet openen.
+.
+:PROGRAM_BOOT_BOOT
+Opstarten vanaf station %c...
+
+.
+:PROGRAM_BOOT_CART_WO_PCJR
+Er is een PCjr-cartridge gevonden, maar de computer is niet PCjr.
+.
+:PROGRAM_BOOT_CART_LIST_CMDS
+Beschikbare opdrachten voor PCjr-cartridges: %s
+.
+:PROGRAM_BOOT_CART_NO_CMDS
+Er zijn geen opdrachten voor PCjr-cartridges gevonden.
+.
+:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
+Je moet de stationsletter opgeven waarop je het image wilt aankoppelen.
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY2
+Typ het stationsnr. (0 of 3) om het image te kopp. (0,1=fda,fdb;2,3=hda,hdb).
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
+Voor [33mcd-rom[0m-images:   [34;1mIMGMOUNT stationsletter imagelocatie -t iso[0m
+
+Voor [33mharde-schijf[0mimages: geef de schijfgeometrie op voor harde schijven:
+bytes_per_sector, sectoren_per_cylinder, koppen_per_cilinder, aantal_cilinders.
+[34;1mIMGMOUNT stationsletter imagelocatie -size bps,spc,kpc,cil[0m
+
+.
+:PROGRAM_IMGMOUNT_INVALID_IMAGE
+Kan het imagebestand niet laden.
+Controleer of het pad juist is en het image toegankelijk is.
+
+.
+:PROGRAM_IMGMOUNT_INVALID_GEOMETRY
+Kan de schijfgeometrie niet uit het image extraheren.
+Geef deze op met de parameter -size bps,spc,kpc,cil.
+
+.
+:PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
+Het type %s wordt niet ondersteund. Geef HDD, FLOPPY of ISO op.
+
+.
+:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
+De indeling %s wordt niet ondersteund. Geef FAT, ISO of NONE op.
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_FILE
+Je moet het bestandsimage opgeven dat je wilt aankoppelen.
+
+.
+:PROGRAM_IMGMOUNT_FILE_NOT_FOUND
+Imagebestand niet gevonden.
+
+.
+:PROGRAM_IMGMOUNT_MOUNT
+Om een directory aan te koppelen, typ je [34;1mMOUNT[0m in plaats van [34;1mIMGMOUNT[0m.
+
+.
+:PROGRAM_IMGMOUNT_ALREADY_MOUNTED
+Het station is al met deze letter aangekoppeld.
+
+.
+:PROGRAM_IMGMOUNT_CANT_CREATE
+Kan geen station maken van een bestand.
+
+.
+:PROGRAM_IMGMOUNT_MOUNT_NUMBER
+Stationsnummer %d is aangekoppeld als %s.
+
+.
+:PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
+Het image moet zich op een host of lokaal station bevinden.
+
+.
+:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
+Meerdere bestanden worden alleen ondersteund voor CUE- of ISO-images.
+
+.
+:PROGRAM_KEYB_INFO
+De codetabel %i is geladen.
+
+.
+:PROGRAM_KEYB_INFO_LAYOUT
+De codetabel %i is geladen voor de indeling %s.
+
+.
+:PROGRAM_KEYB_SHOWHELP
+[32;1mKEYB[0m [toetsenbordindeling-ID[ codetabelnummer[ codetabelbestand]]]
+
+Enkele voorbeelden:
+  [32;1mKEYB[0m: momenteel geladen codetabel weergeven.
+  [32;1mKEYB[0m sp: de Spaanse (SP) indeling laden met een geschikte codetabel.
+  [32;1mKEYB[0m sp 850: de Spaanse (SP) indeling laden met codetabel 850.
+  [32;1mKEYB[0m sp 850 mycp.cpi: idem, maar met gebruikmaking van het bestand mycp.cpi.
+
+.
+:PROGRAM_KEYB_NOERROR
+De toetsenbordindeling %s is geladen voor de codetabel %i.
+
+.
+:PROGRAM_KEYB_FILENOTFOUND
+Het toetsenbordbestand %s is niet gevonden.
+
+
+.
+:PROGRAM_KEYB_INVALIDFILE
+Het toetsenbordbestand %s is ongeldig.
+
+.
+:PROGRAM_KEYB_LAYOUTNOTFOUND
+Er is in %s geen indeling gevonden voor de codetabel %i.
+
+.
+:PROGRAM_KEYB_INVCPFILE
+Het codetabelbestand voor de indeling %s ontbreekt of is ongeldig.
+
+
+.
+:SHELL_ILLEGAL_PATH
+Ongeldig pad.
+
+.
+:SHELL_CMD_HELP
+Om een lijst met alle ondersteunde opdrachten weer te geven, typ je [33;1mhelp /all[0m.
+Een korte lijst met de meest gebruikte opdrachten:
+
+.
+:SHELL_CMD_ECHO_ON
+ECHO is ingeschakeld.
+
+.
+:SHELL_CMD_ECHO_OFF
+ECHO is uitgeschakeld.
+
+.
+:SHELL_ILLEGAL_SWITCH
+Ongeldige schakeloptie: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Vereiste parameter ontbreekt.
+
+.
+:SHELL_CMD_CHDIR_ERROR
+Kan niet navigeren naar: %s.
+
+.
+:SHELL_CMD_CHDIR_HINT
+Als je naar een ander station wilt navigeren, typ je [31m%c:[0m
+
+.
+:SHELL_CMD_CHDIR_HINT_2
+De directorynaam is langer dan 8 tekens en/of bevat spaties.
+Probeer [31mcd %s[0m.
+
+.
+:SHELL_CMD_CHDIR_HINT_3
+Je bent nog op station Z:. Navigeer naar een aangekoppeld station met [31mC:[0m.
+
+.
+:SHELL_CMD_MKDIR_ERROR
+Maken mislukt: %s.
+
+.
+:SHELL_CMD_RMDIR_ERROR
+Verwijderen mislukt: %s.
+
+.
+:SHELL_CMD_DEL_ERROR
+Wissen mislukt: %s.
+
+.
+:SHELL_SYNTAXERROR
+De syntaxis van de opdracht is onjuist.
+
+.
+:SHELL_CMD_SET_NOT_SET
+De omgevingsvariabele %s is niet gedefinieerd.
+
+.
+:SHELL_CMD_SET_OUT_OF_SPACE
+Onvoldoende omgevingsruimte.
+
+.
+:SHELL_CMD_IF_EXIST_MISSING_FILENAME
+IF EXIST: Bestandsnaam ontbreekt.
+
+.
+:SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
+IF ERRORLEVEL: Nummer ontbreekt.
+
+.
+:SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
+IF ERRORLEVEL: Ongeldig nummer.
+
+.
+:SHELL_CMD_GOTO_MISSING_LABEL
+Er is geen label opgegeven voor de opdracht GOTO.
+
+.
+:SHELL_CMD_GOTO_LABEL_NOT_FOUND
+GOTO: Het label %s is niet gevonden.
+
+.
+:SHELL_CMD_FILE_NOT_FOUND
+Het bestand %s is niet gevonden.
+
+.
+:SHELL_CMD_FILE_EXISTS
+Het bestand %s bestaat al.
+
+.
+:SHELL_CMD_DIR_INTRO
+Directory van %s.
+
+.
+:SHELL_CMD_DIR_BYTES_USED
+%5d bestand(en), %17s bytes.
+
+.
+:SHELL_CMD_DIR_BYTES_FREE
+%5d directory('s), %17s bytes beschikbaar.
+
+.
+:SHELL_EXECUTE_DRIVE_NOT_FOUND
+Het station %c bestaat niet!
+Koppel dit eerst aan met [31mmount[0m. Typ [1;33mintro[0m of [1;33mintro mount[0m voor meer informatie.
+
+.
+:SHELL_EXECUTE_ILLEGAL_COMMAND
+Ongeldige opdracht: %s.
+
+.
+:SHELL_CMD_PAUSE
+Druk op een toets om door te gaan.
+
+.
+:SHELL_CMD_PAUSE_HELP
+Wachten op 1 toetsaanslag
+
+.
+:SHELL_CMD_COPY_FAILURE
+Kopie maken mislukt: %s.
+
+.
+:SHELL_CMD_COPY_SUCCESS
+   %d bestand(en) gekopieerd.
+
+.
+:SHELL_CMD_SUBST_NO_REMOVE
+Verwijderen van station wordt niet ondersteund. Er wordt geen actie uitgevoerd.
+
+.
+:SHELL_CMD_SUBST_FAILURE
+SUBST is mislukt. De opdrachtregel bevat een fout of het doelstation
+wordt al gebruikt. Je kunt SUBST alleen gebruiken met lokale stations.
+.
+:SHELL_STARTUP_BEGIN
+[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mWelkom bij DOSBox v%-8s[37m (Nederlandse vertaling: Mark Haasen, 2010)      บ
+บ                                                                             บ
+บ Korte inleiding voor nieuwe gebruikers: typ [33mINTRO[37m                           บ
+บ Lijst van ondersteunde shellopdrachten: typ [33mHELP[37m                            บ
+บ                                                                             บ
+บ Druk op [31mCtrl+F11[37m of [31mCtrl+F12[37m om de CPU-emulatiesnelheid aan te passen.      บ
+บ Druk op [31mCtrl+F1[37m om de toetstoewijzingsfunctie te activeren.                 บ
+บ Zie het bestand [36mREADME[37m in de directory van DOSBox voor meer informatie.     บ
+บ                                                                             บ
+
+.
+:SHELL_STARTUP_CGA
+บ DOSBox ondersteunt de samengestelde CGA-modus.                              บ
+บ Druk op [31m(Alt+)F11[37m om de kleuren in deze modus te wijzigen.                  บ
+บ                                                                    บ
+
+.
+:SHELL_STARTUP_HERC
+บ Druk op [31mF11[37m om te wisselen tussen wit, oranje en groen-monochroom.          บ
+บ                                                                    บ
+
+.
+:SHELL_STARTUP_DEBUG
+บ Activeer de foutopsporing met [31mAlt+Pause[37m of start het EXE-bestand met [33mDEBUG[37m. บ
+บ                                                                    บ
+
+.
+:SHELL_STARTUP_END
+บ [32mVEEL PLEZIER![37m                                                               บ
+บ [32mHet DOSBox-team [33mhttp://www.dosbox.com[37m                                       บ
+ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+
+.
+:SHELL_CMD_CHDIR_HELP
+De huidige directory bekijken of wijzigen
+
+.
+:SHELL_CMD_CHDIR_HELP_LONG
+CHDIR [station:][pad]
+CHDIR [..]
+CD [station:][pad]
+CD [..]
+
+  ..   Naar de bovenliggende directory navigeren
+
+Typ CD station: voor de huidige directory in het opgegeven station.
+Typ CD zonder parameters voor het huidige station en de huidige directory.
+
+.
+:SHELL_CMD_CLS_HELP
+Het scherm wissen
+
+.
+:SHELL_CMD_DIR_HELP
+De inhoud van een directory bekijken
+
+.
+:SHELL_CMD_ECHO_HELP
+Berichten weergeven en ECHO-uitvoer voor opdrachten in-/uitschakelen
+
+.
+:SHELL_CMD_EXIT_HELP
+De shell afsluiten
+
+.
+:SHELL_CMD_HELP_HELP
+Help weergeven
+
+.
+:SHELL_CMD_MKDIR_HELP
+Een directory maken
+
+.
+:SHELL_CMD_MKDIR_HELP_LONG
+MKDIR [station:][pad]
+MD [station:][pad]
+
+.
+:SHELL_CMD_RMDIR_HELP
+Een directory verwijderen
+
+.
+:SHELL_CMD_RMDIR_HELP_LONG
+RMDIR [station:][pad]
+RD [station:][pad]
+
+.
+:SHELL_CMD_SET_HELP
+Omgevingsvariabelen wijzigen
+
+.
+:SHELL_CMD_IF_HELP
+Instructies in batchprogramma's voorwaardelijk verwerken
+
+.
+:SHELL_CMD_GOTO_HELP
+Naar een gelabelde regel gaan in een batchscript
+
+.
+:SHELL_CMD_SHIFT_HELP
+Shift-links toepassen op opdrachtregelparameters in een batchscript
+
+.
+:SHELL_CMD_TYPE_HELP
+De inhoud van een tekstbestand bekijken
+
+.
+:SHELL_CMD_TYPE_HELP_LONG
+TYPE [station:][pad][bestandsnaam]
+
+.
+:SHELL_CMD_REM_HELP
+Opmerkingen aan een batchbestand toevoegen
+
+.
+:SHELL_CMD_REM_HELP_LONG
+REM [opmerking]
+
+.
+:SHELL_CMD_NO_WILD
+Dit is een eenvoudige versie van de opdracht. Jokertekens zijn niet toegestaan
+
+.
+:SHELL_CMD_RENAME_HELP
+De naam van een of meer bestanden wijzigen
+
+.
+:SHELL_CMD_RENAME_HELP_LONG
+RENAME [station:][pad]bestandsnaam1 bestandsnaam2.
+REN [station:][pad]bestandsnaam1 bestandsnaam2.
+
+Je kunt geen nieuw station of pad opgeven voor het doelbestand
+
+.
+:SHELL_CMD_DELETE_HELP
+Een of meer bestanden verwijderen
+
+.
+:SHELL_CMD_COPY_HELP
+Een kopie maken van bestanden
+
+.
+:SHELL_CMD_CALL_HELP
+Een batchbestand starten vanuit een ander batchbestand
+
+.
+:SHELL_CMD_SUBST_HELP
+Een interne directory aan een station toewijzen
+
+.
+:SHELL_CMD_LOADHIGH_HELP
+Een programma in het bovengeheugen laden (vereist xms=true,umb=true)
+
+.
+:SHELL_CMD_CHOICE_HELP
+Wachten op een toetsaanslag en ERRORLEVEL instellen
+
+.
+:SHELL_CMD_CHOICE_HELP_LONG
+CHOICE [/C:opties] [/N] [/S] tekst
+  /C[:]opties - Toegestane toetsen opgeven.  De standaardwaarde is yn (ja/nee).
+  /N - Opties niet weergeven aan het einde van een bericht.
+  /S - Hoofdlettergevoelige selectie van opties inschakelen.
+  tekst - De tekst die in het bericht moet worden afgebeeld.
+
+.
+:SHELL_CMD_ATTRIB_HELP
+Heeft geen functie en is beschikbaar voor compatibiliteit
+
+.
+:SHELL_CMD_PATH_HELP
+Beschikbaar voor compatibiliteit
+
+.
+:SHELL_CMD_VER_HELP
+De gerapporteerde DOS-versie bekijken of instellen
+
+.
+:SHELL_CMD_VER_VER
+DOSBox-versie %s. DOSBox-versie %s. Gerapporteerde DOS-versie %d.%02d.
+
+.

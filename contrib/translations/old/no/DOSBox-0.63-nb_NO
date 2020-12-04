@@ -1,0 +1,477 @@
+:Translated by Alexander Nicolaysen S¯rnes <alex@thehandofagony.com>
+:Oversatt av Alexander Nicolaysen S¯rnes <alex@thehandofagony.com>
+:
+:DIRECTSERIAL_CONFIGFILE_HELP
+directserial -- Aktiver seriell passeringsst¯tte.
+comport -- COM-port inne i DOSBox.
+realport -- COM-port pÂ maskinen.
+defaultbps -- Standardhastighet (BPS).
+parity -- Pariteten til pakkene. Dette kan vÊre N, E eller O.
+bytesize -- St¯rrelse pÂ hver pakke. Dette kan vÊre 5 eller 8.
+stopbit -- Antall stoppbiter. Dette kan vÊre 1 eller 2.
+.
+:IPX_CONFIGFILE_HELP
+ipx -- SlÂ pÂ IPX over UDP/IP-emulering.
+.
+:SDL_CONFIGFILE_HELP
+fullscreen -- Start DOSBox direkte i fullskjerm.
+fulldouble -- Bruk dobbel bufring i fullskjerm.
+fullfixed -- Ikke endre skjermoppl¯sningen i fullskjermmodues.
+fullwidth/height -- Hvilken oppl¯sning som skal brukes i fullskjermmodues, bruk sammen med "fullfixed".
+output -- Hva som skal brukes for utdata: "surface", "overlay", "opengl", eller "openglnb".
+hwscale -- Ekstra skalering av vinduet hvis utdata-enheten st¯tter maskinvareskalering.
+autolock -- Musen vil automatisk lÂses hvis du klikker pÂ skjermen.
+sensitiviy -- Mussensitivitet.
+waitonerror -- Vent f¯r konsollet renses hvis det oppstÂr en feil i DOSBox.
+.
+:DOSBOX_CONFIGFILE_HELP
+language -- Velg en annen sprÂkfil.
+memsize -- Mengden minne DOSBox har i megabyte.
+machine -- Maskintypen som skal emuleres: "auto", "hercules", "cga", "tandy" eller "vga".
+           Pr¯v en spesifik type hvis spillet ditt har problemer med "auto".
+.
+:RENDER_CONFIGFILE_HELP
+frameskip -- Hvor mange bilder DOSBox hopper over f¯r det tegner et.
+snapdir -- Mappen hvor skjermdumper lagres.
+aspect -- Foreta aspektkorreksjon.
+scaler -- Skalering bruk til Â forst¯rre/forbedre lave skjermmodi.
+          St¯ttede valg er "none", "normal2x" og "advance2x".
+.
+:CPU_CONFIGFILE_HELP
+core -- Prosessorkjerne brukt i emulering: "normal", "full" eller "dynamic".
+cycles -- Mengde instruksjoner DOSBox pr¯ver Â emulere hvert millisekund.
+          ≈ sette dette h¯yere enn maskinen din kan takle er fÊlt!
+cycleup   -- Antall instruksjoner Â ¯ke/senke med "keycombo".
+cycledown    ≈ sette den lavere enn 100 vil bli en prosentandel.
+.
+:MIXER_CONFIGFILE_HELP
+nosound -- Aktiver stille modus, dog lyden blir fortsatt emulert.
+rate -- Samplingsrate for mikser. ≈ sette en enhet h¯yere enn dette vil
+        sansynligvis redusere lydkvaliteten dens.
+blocksize -- Blokkst¯rrelse for mikser. St¯rre blokker kan kanskje
+             hjelpe stutrende lyd, men den vil ogsÂ bli tregere.
+wavedir -- Mappe hvor lagret lyd oppbevares nÂr du bruker
+           tastekombinasjonen for lydopptak. Se filen "README".
+.
+:MIDI_CONFIGFILE_HELP
+mpu401 -- Aktiver emulering av MPU-401.
+device -- Enhet som skal motta MIDI-data fra MPU-401. Dette kan vÊre "default",
+          "alsa", "oss", "win32", "coreaudio" eller "none".
+config -- Spesielle konfigureringsmuligheter for enheten.
+.
+:SBLASTER_CONFIGFILE_HELP
+sblaster -- Aktiver emulering av SoundBlaster.
+base,irq,dma -- IO/IRQ/DMA-adressen for SoundBlaster.
+sbrate -- Samplingsrate for SoundBlaster-emuleringen.
+adlib -- Aktiver emulering av AdLib.
+adlibrate -- Samplingsrate for AdLib-emulering.
+cms -- Aktiver emulering av Creative Music System/GameBlaster.
+       ≈ aktivere bÂde Adlib og CMS kan skape konflikter.
+cmsrate -- Samplingsrate for CMS-emulering.
+.
+:GUS_CONFIGFILE_HELP
+gus -- Aktiver emulering av Gravis UltraSound.
+base,irq1,irq2,dma1,dma2 -- IO/IRQ/DMA-adressen til
+           Gravis UltraSound. (Lik IRQ og DMA er OK.)
+rate -- Samplingsrate for UltraSound-emulering.
+ultradir -- Sti til UltraSound-mappen. I denne mappen b¯r det
+            vÊre en MIDI-mappe som inneholder oppdateringsfilene
+	    for GUS-avspilling. Oppdateringssett bruk med
+	    Timidity b¯r virke fint.
+.
+:SPEAKER_CONFIGFILE_HELP
+pcspeaker -- Aktiver emulering av PC-Speaker.
+pcrate -- Samplingsrate for PC-Speaker-lydgeneratoren.
+tandy -- Aktiver emulering av Tandy 3-Voice.
+tandyrate -- Samplingsrate for Tandy 3-Voice-lydgenereringen.
+disney -- Aktiver emulering av Dysney Sound Source.
+.
+:DOS_CONFIGFILE_HELP
+xms -- Aktiver XMS-st¯tte.
+ems -- Aktiver EMS-st¯tte.
+.
+:MODEM_CONFIGFILE_HELP
+modem -- Aktiver emulering av virtuelt modem.
+comport -- COM-porten modemet er koblet til.
+listenport -- TCP-porten modemet lytter pÂ for inkommende forbindelser.
+.
+:AUTOEXEC_CONFIGFILE_HELP
+Linjer i dette omrÂdet vil bli kj¯rt ved oppstart.
+.
+:PROGRAM_CONFIG_FILE_ERROR
+Kan ikke Âpne filen %s.
+.
+:PROGRAM_CONFIG_USAGE
+Konfigureringsverktoey:
+Bruk "-writeconf FILNAVN" for Ü skrive gjeldende konfigurasjon.
+Bruk "-writelang FILNAVN" for Ü skrive gjeldende sprÜkstrenger.
+.
+:DISNEY_CONFIGFILE_HELP
+Ingenting Â forandre pÂ ennÂ.
+.
+:BIOS_CONFIGFILE_HELP
+Ingenting Â forandre pÂ ennÂ.
+.
+:PROGRAM_MOUNT_STATUS_2
+Stasjon %c er montert som %s.
+.
+:PROGRAM_MOUNT_STATUS_1
+NÜvërende monterte stasjoner er:
+.
+:PROGRAM_MOUNT_ERROR_1
+Katalogen %s eksisterer ikke.
+.
+:PROGRAM_MOUNT_ERROR_2
+%s er ikke en katalog.
+.
+:PROGRAM_MOUNT_ILL_TYPE
+Ugyldig type %s.
+.
+:PROGRAM_MOUNT_ALLREADY_MOUNTED
+Stasjon %c er allerede montert med %s.
+.
+:PROGRAM_MOUNT_USAGE
+Bruk "MOUNT STASJONSBOKSTAV LOKAL_MAPPE".
+For eksempel vil "MOUNT c c:\windows" montere mappen "windows" som stasjon C: i DOSBox.
+.
+:PROGRAM_MEM_CONVEN
+%10d kB ledig konvensjonelt minne
+.
+:PROGRAM_MEM_EXTEND
+%10d kB ledig utvidet minne (EMS)
+.
+:PROGRAM_MEM_EXPAND
+%10d kB ledig utvidet minne (XMS)
+.
+:PROGRAM_LOADFIX_ALLOC
+%d kB allokert.
+.
+:PROGRAM_LOADFIX_DEALLOC
+%d kB frigjort.
+.
+:PROGRAM_LOADFIX_DEALLOCALL
+Brukt minne frigjort.
+.
+:PROGRAM_LOADFIX_ERROR
+Minneallokeringsfeil.
+.
+:MSCDEX_SUCCESS
+MSCDEX installert.
+.
+:MSCDEX_ERROR_MULTIPLE_CDROMS
+MSCDEX: Feil: Stasjonsbokstaver for flere CD-ROM-stasjoner mÜ vëre etter hverandre.
+.
+:MSCDEX_ERROR_NOT_SUPPORTED
+MSCDEX: Feil: Ikke stoettet ennÜ.
+.
+:MSCDEX_ERROR_PATH
+MSCDEX: Feil: Banen er ikke gyldig.
+.
+:MSCDEX_TOO_MANY_DRIVES
+MSCDEX: Feil: For mange CD-ROM-stasjoner (maks. 5). MSCDEX-installasjon feilet.
+.
+:MSCDEX_LIMITED_SUPPORT
+MSCDEX: Monterte underkatalog: begrenset stoette.
+.
+:MSCDEX_UNKNOWN_ERROR
+MSCDEX: Feil: Ukjent problem.
+.
+:PROGRAM_RESCAN_SUCCESS
+Stasjonshurtigminne renset.
+.
+:PROGRAM_INTRO
+[2J[32;1mVelkommen til DOSBox[0m, en x86-emulator med lyd og grafikk.
+DOSBox lager et skall for deg som ser ut som gamle, enkle DOS.
+
+Her er noen kommandoer for Ü sette deg igang:
+Foer du kan bruke filene pÜ ditt eget filsystem,
+mÜ du montere mappen som inneholder filene.
+For Windows:
+[33mmount c c:\dosprog[0m vil opprette stasjon C: i DOSBox med c:\dosprog som innhold.
+
+For andre plattformer:
+[33mmount c /home/user/dosprog[0m vil gjoere det samme.
+
+NÜr monteringen er ferdig kan du skrive [33mc:[0m for Ü gÜ til din ferskt monterte 
+C-stasjon. è skrive [33mdir[0m der vil vise innholdet i katalogen. [33mcd[0m vil tillate deg ÜgÜ inn i en katalog (gjenkjent med <DIR> i en kataloglisting).
+Du kan kjoere programmer/filer som ender med [31m.exe[0m,[31m .bat[0m og [31m.com[0m.
+
+[43;30mDOSBox vil avslutte uten en advarsel hvis det oppstÜr en feil![0m
+.
+:SHELL_ILLEGAL_PATH
+Ugyldig bane.
+.
+:SHELL_CMD_HELP
+Stoettede kommandoer er:
+.
+:SHELL_CMD_ECHO_ON
+ECHO er pÜ.
+.
+:SHELL_CMD_ECHO_OFF
+ECHO er av.
+.
+:SHELL_ILLEGAL_SWITCH
+Ugyldig bryter: %s.
+.
+:SHELL_CMD_CHDIR_ERROR
+Kan ikke bytte arbeidskatalog til %s.
+.
+:SHELL_CMD_MKDIR_ERROR
+Kan ikke opprette %s.
+.
+:SHELL_CMD_RMDIR_ERROR
+Kan ikke fjerne %s.
+.
+:SHELL_CMD_DEL_ERROR
+Kan ikke slette %s.
+.
+:SHELL_SYNTAXERROR
+Syntaksen i kommandoen er ukorrekt.
+.
+:SHELL_CMD_SET_NOT_SET
+Miljoevariabel %s er ikke definert.
+.
+:SHELL_CMD_SET_OUT_OF_SPACE
+Ikke nok miljoeplass igjen.
+.
+:SHELL_CMD_IF_EXIST_MISSING_FILENAME
+IF EXIST: Manglende filnavn.
+.
+:SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
+IF ERRORLEVEL: Manglende nummer.
+.
+:SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
+IF ERRORLEVEL: Ugyldig nummer.
+.
+:SHELL_CMD_GOTO_MISSING_LABEL
+Ingen etikett gitt til GOTO-kommandoen.
+.
+:SHELL_CMD_GOTO_LABEL_NOT_FOUND
+GOTO: Etiketten %s ikke funnet.
+.
+:SHELL_CMD_FILE_NOT_FOUND
+Filen %s ble ikke funnet.
+.
+:SHELL_CMD_FILE_EXISTS
+Filen %s finnes allerede.
+.
+:SHELL_CMD_DIR_INTRO
+Innhold i %s
+.
+:SHELL_CMD_DIR_BYTES_USED
+%5d fil(er) %17s Byte.
+.
+:SHELL_CMD_DIR_BYTES_FREE
+%5d katalog(er) %17s Byte ledig.
+.
+:SHELL_EXECUTE_DRIVE_NOT_FOUND
+Stasjon %c finnes ikke.
+.
+:SHELL_EXECUTE_ILLEGAL_COMMAND
+Ugyldig kommando: %s.
+.
+:SHELL_CMD_PAUSE
+Trykk en tast for Ü fortsette.
+.
+:SHELL_CMD_PAUSE_HELP
+Venter pÜ et tastetrykk for Ü fortsette.
+.
+:SHELL_CMD_COPY_FAILURE
+Kopieringsfeil: %s.
+.
+:SHELL_CMD_COPY_SUCCESS
+   %d fil(er) kopiert.
+.
+:SHELL_CMD_SUBST_NO_REMOVE
+Fjerning av stasjon stoettes ikke. Ingenting blir gjort.
+.
+:SHELL_STARTUP
+[44;1m…ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª
+∫ [32mDOSBox-skall versjon 0.63[37m                                          ∫
+∫ DOSBox kjoerer spill for MS-DOS.                                   ∫
+∫ For skallkommandoer, skriv [1;33mHELP[37m                                    ∫
+∫ For en kort introduksjon, skriv [33mINTRO[37m                              ∫
+∫                                                                    ∫
+∫ Hvis du oensker stoerre fart, proev [31mctrl-F8[37m og [31mctrl-F12[37m.           ∫
+∫ Trykk [31mctrl-F1[37m for Ü aktivere tastaturkartleggeren.                 ∫
+∫ Les filen [36mREADME[37m i DOSBox-mappen for mer informasjon.              ∫
+∫                                                                    ∫
+∫ [32mHA DET GOEY![37m                                                       ∫
+∫ [32m-DOSBox-laget[37m                                                      ∫
+»ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº[0m
+.
+:SHELL_CMD_CHDIR_HELP
+Endrer arbeidskatalog.
+.
+:SHELL_CMD_CLS_HELP
+Toemmer skjermen.
+.
+:SHELL_CMD_DIR_HELP
+Viser innholdet i en katalog.
+.
+:SHELL_CMD_ECHO_HELP
+Viser meldinger og slÜr av/pÜ kommando-ekko.
+.
+:SHELL_CMD_EXIT_HELP
+Avslutter skallet.
+.
+:SHELL_CMD_HELP_HELP
+Viser hjelp.
+.
+:SHELL_CMD_MKDIR_HELP
+Oppretter en katalog.
+.
+:SHELL_CMD_RMDIR_HELP
+Fjerner en katalog.
+.
+:SHELL_CMD_SET_HELP
+Endrer miljoevariabler.
+.
+:SHELL_CMD_IF_HELP
+Utfoerer forholdsbehandling i satsvise programmer.
+.
+:SHELL_CMD_GOTO_HELP
+Hopper til en etikett i en satsvis fil.
+.
+:SHELL_CMD_TYPE_HELP
+Viser innholdet i en tekstfil.
+.
+:SHELL_CMD_REM_HELP
+Legger til kommentarer i en satsvis fil.
+.
+:SHELL_CMD_NO_WILD
+Dette er en simpel versjon av kommandoen, ingen jokersymbol tillat.
+.
+:SHELL_CMD_RENAME_HELP
+Endrer navn pÜ filer.
+.
+:SHELL_CMD_DELETE_HELP
+Sletter filer.
+.
+:SHELL_CMD_COPY_HELP
+Kopier filer.
+.
+:SHELL_CMD_CALL_HELP
+Starter en satsvis fil fra en annen satsvis fil.
+.
+:SHELL_CMD_SUBST_HELP
+Oppnevner en intern katalog til en stasjon.
+.
+:SHELL_CMD_LOADHIGH_HELP
+Kjoerer et program. Kun for kompatibilitet med satsvise filer.
+.
+:PROGRAM_MOUNT_CDROMS_FOUND
+CD-ROM'er funnet: %d
+.
+:PROGRAM_INTRO_CDROM
+[2J[32;1mHvordan man monterer en fysisk/virtuell CD-ROM-stasjon i DOSBox:[0m
+DOSBox kan emulere CD-ROM'er pÜ flere nivÜer.
+
+[33mBasis[0m-nivÜet virker med alle CD-ROM-stasjoner og vanlige mapper.
+Det installerer MSCDEX og markerer filene som skrivebeskyttet.
+Dette er nok for de fleste spillene:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom[0m   eller   [34;1mmount d C:\eksempel -t cdrom[0m
+Hvis dette ikke virker, mÜ du kanskje fortelle DOSBox etiketten pÜ CD-ROM'en:
+[34;1mmount d C:\eksempel -t cdrom -label ETIKETT[0m
+
+Det [33mneste[0m nivÜet legger til litt lavnivÜtilgang til CD-ROM-stasjonen, og
+virker derfor ikke med mapper:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
+
+Det [33msiste[0m nivÜet med CD-ROM-emulering avhenger av ditt operativsystem:
+For [1mWindows 2000[0m, [1mWindows XP[0m og [1mLinux[0m:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-ioctl[0m
+For [1mWindows 9x[0m med et ASPI-lag installert:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-aspi[0m
+Erstatt [0;31mD:\[0m med plasseringen til din CD-ROM.
+Erstatt [33;1m0[0m i [34;1m-usecd [33m0[0m med ned nummeret pÜ CD-ROM-stasjonen, som du fÜr ved Ü
+skrive:
+[34;1mmount -cd[0m
+.
+:PROGRAM_BOOT_NOT_EXIST
+Oppstartsdisk-filen finnes ikke; avbryter.
+.
+:PROGRAM_BOOT_NOT_OPEN
+Kan ikke Üpne oppstartsdisk-filen; avbryter.
+.
+:PROGRAM_BOOT_PRINT_ERROR
+Denne kommandoen starter DOSBox fra et diskett- eller harddiskbilde.
+
+For denne kommandoen kan du oppgi flere disketter som du kan bytte mellom ved Ü trykke Ctrl-F4, hvor -l spesifiserer den monterte stasjonen du skal starte opp fra. Hvis du ikke har oppgitt en stasjonsbokstav, blir dette stasjon A.
+De eneste stasjonene du kan starte opp fra er A, C og D. Skal du starte fra en harddisk-stasjon (C eller D), mÜ du foerst montere bildet med 
+[34;1mIMGMOUNT[0m-kommandoen.
+
+Syntaksen for denne kommandoen er:
+
+[34;1mBOOT [bilde1.img bilde2.img] [-l stasjonsbokstav][0m
+.
+:PROGRAM_BOOT_UNABLE
+Kan ikke starte opp fra stasjon %c.
+.
+:PROGRAM_BOOT_IMAGE_OPEN
+èpner bildefil: %s
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+Kan ikke Üpne %s.
+.
+:PROGRAM_BOOT_BOOT
+Starter opp fra stasjon %c...
+.
+:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
+Du mÜ oppgi stasjonsbokstaven som bildet skal monteres som.
+.
+:PROGRAM_IMGMOUNT_SPECIFY2
+Du mÜ oppgi stasjonsbokstaven (0 eller 3) som du vil montere bildet som (0,1=fda,fdb;2,3=hda,hdb).
+.
+:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
+For [33mCD-ROM[0m-bilder:   [34;1mimgmount stasjonsbokstav bildeplassering -t iso[0m
+
+For [33mharddisk[0m-bilder mÜ du du oppgi diskgeometrien:
+bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
+.
+:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
+Format "%s" stoettes ikke. Oppgi "fat", "iso" eller "none".
+.
+:PROGRAM_IMGMOUNT_SPECIFY_FILE
+Du mÜ oppgi filbildet du oensker Ü montere.
+.
+:PROGRAM_IMGMOUNG_FILE_NOT_FOUND
+Bildefilen ble ikke funnet.
+.
+:PROGRAM_IMGMOUNG_MOUNT
+Bruk [34;1mMOUNT[0m-kommandoen for Ü montere mapper, ikke [34;1mIMGMOUNT[0m-kommandoen.
+.
+:PROGRAM_IMGMOUNT_ALLREADY_MOUNTED
+En stasjon er allerede montert som den bokstaven.
+.
+:PROGRAM_IMGMOUNT_CANT_CREATE
+Kan ikke opprette stasjon fra filen.
+.
+:PROGRAM_IMGMOUNT_MOUNT_NUMBER
+Stasjon %d montert som %s
+.
+:SHELL_CMD_SUBST_FAILURE
+SUBST feilet. Enten skrev du feil i kommandolinjen, eller sÜ er mÜlstasjonen allerede i bruk.
+Det er bare mulig Ü bruke SUBST pÜ lokale stasjoner.
+.
+:SHELL_CMD_CHOICE_HELP
+Venter pÜ et tastetrykk og setter ERRORLEVEL.
+.
+:SHELL_CMD_ATTRIB_HELP
+Gjoer ingenting; kun for kompatibilitet.
+.
+:PROGRAM_MOUNT_UMOUNT_CURRENT
+Du kan ikke avmontere den aktive stasjonen.
+.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+Stasjon %c er ikke montert.
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCES
+Stasjon %c er fjernet.
+.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+Virtuelle stasjoner kan ikke avmonteres.
+.
+:SHELL_CMD_PATH_HELP
+Tatt med for kompatibilitet.
+.

@@ -1,0 +1,684 @@
+:SDL_CONFIGFILE_HELP
+fullscreen -- DOSBox¸¦ ÀüÃ¼ È­¸éÀ¸·Î ½ÇÇàÇÕ´Ï´Ù.
+fulldouble -- ÀüÃ¼ È­¸éÀÏ ¶§ ÀÌÁß ¹öÆÛ¸¦ »ç¿ëÇÕ´Ï´Ù.
+fullresolution -- ÀüÃ¼ È­¸éÀÇ ÇØ»óµµ: original ¶Ç´Â °íÁ¤ Å©±â (º¸±â: 1024x768).
+windowresolution -- Ãâ·Â ÀåÄ¡°¡ ÇÏµå¿þ¾î ½ºÄÉÀÏ¸µÀ» Áö¿øÇÒ ¶§ »ç¿ëÇÒ Ã¢ÀÇ Å©±â.
+output -- È­¸é Ãâ·Â: surface,overlay,opengl,openglnb,ddraw.
+autolock -- È­¸éÀ» Å¬¸¯ÇÏ¸é ¸¶¿ì½º´Â ÀÚµ¿À¸·Î Àá±é´Ï´Ù.
+sensitiviy -- ¸¶¿ì½º ¹ÝÀÀ ¼Óµµ.
+waitonerror -- DOSBox¿¡ ¿À·ù°¡ ÀÖÀ¸¸é ÄÜ¼ÖÀÌ ´ÝÈú ¶§ ±îÁö ±â´Ù¸³´Ï´Ù.
+priority -- DOSBoxÀÇ ¿ì¼± ¼øÀ§: lowest,lower,normal,higher,highest,pause (Ã¢ÀÌ È°¼ºÈ­µÇ¾î ÀÖÁö ¾ÊÀ» ¶§).
+            ½°Ç¥ µÚÀÇ µÎ ¹øÂ° Ç×¸ñÀº DOSBox°¡ È°¼ºÈ­µÇ¾î ÀÖÁö ¾Ê°Å³ª ÃÖ¼ÒÈ­µÇ¾î ÀÖÀ» ¶§ÀÇ »óÅÂÀÔ´Ï´Ù.
+mapperfile -- Å° ¶Ç´Â ÀÌº¥Æ® ¸ÅÇÎÀ» ºÒ·¯¿À°Å³ª ÀúÀåÇÒ ¶§ ¾²ÀÌ´Â ÆÄÀÏ.
+usescancodes -- Æ¯¼ö Å°¸¦ »ç¿ëÇÏÁö ¸øÇÏ°Ô ÇÕ´Ï´Ù. ¸ðµç ¿î¿µÃ¼Á¦¿¡¼­ Áö¿øµÇ´Â °ÍÀº ¾Æ´Õ´Ï´Ù.
+.
+:DOSBOX_CONFIGFILE_HELP
+language -- ´Ù¸¥ ¾ð¾î ÆÄÀÏ ¼±ÅÃ.
+memsize -- DOSBoxÀÇ ¸Þ¸ð¸® Å©±â (MB).
+machine -- °¡»óÀ¸·Î ±¸ÇöÇÒ ±â±âÀÇ Á¾·ù:hercules,cga,tandy,pcjr,vga.
+captures -- ¿þÀÌºê, ¹Ìµð, ±×¸²ÀÌ Ä¸Ã³µÇ´Â µð·ºÅÍ¸®.
+.
+:RENDER_CONFIGFILE_HELP
+frameskip -- ÇÑ ¹ø ±×¸®±â ¾Õ¼­ DOSBox°¡ ¾ó¸¶³ª ¸¹Àº ÇÁ·¹ÀÓÀ» ¹«½ÃÇÒ °ÍÀÎÁö Á¤ÇÕ´Ï´Ù.
+aspect -- ºñÀ²À» ¼öÁ¤ÇÒ ¼ö ÀÖ°Ô ÇÕ´Ï´Ù. Ãâ·ÂÀÌ ½ºÄÉÀÏ¸µÀ» Áö¿øÇÏÁö ¾ÊÀ¸¸é ´À·ÁÁú ¼ö ÀÖ½À´Ï´Ù!.
+scaler -- ³·Àº ÇØ»óµµ¸¦ È®´ëÇÏ°Å³ª °­È­ÇÏ´Â ½ºÄÉÀÏ·¯.
+          Áö¿øÇÏ´Â Ç×¸ñÀº none,normal2x,normal3x,advmame2x,advmame3x,hq2x,hq3x,
+                        2xsai,super2xsai,supereagle,advinterp2x,advinterp3x,
+                        tv2x,tv3x,rgb2x,rgb3x,scan2x,scan3xÀÔ´Ï´Ù.
+          forced°¡ µÚ¿¡ ºÙÀ¸¸é (scaler=hq2x forcedÃ³·³), ½ºÄÉÀÏ·¯´Â ¾î¶°ÇÑ °á°ú¿¡¼­µµ
+          »ç¿ëµË´Ï´Ù.
+.
+:CPU_CONFIGFILE_HELP
+core -- °¡»ó ±¸Çö¿¡ ¾²ÀÌ´Â CPU ÄÚ¾î: normal,simple,dynamic,auto.
+        auto´Â °æ¿ì¿¡ µû¶ó normalÀ» dynamicÀ¸·Î ¹Ù²ß´Ï´Ù.
+cycles -- ¹Ð¸®ÃÊ¸¶´Ù DOSBox°¡ °¡»óÀ¸·Î ±¸ÇöÇÒ ÇÔ¼öÀÇ ¾ç.
+          ÀÌ °ªÀ» ³Ê¹« ³ô°Ô ÀâÀ¸¸é ¼Ò¸®°¡ ³ª¿ÀÁö ¾Ê°Å³ª ·ºÀÌ °É¸± ¼ö ÀÖ½À´Ï´Ù.
+          max·Î ¼³Á¤ÇÏ¿© DOSBox°¡ ¿Ã¹Ù¸¥ °ªÀ» Ã£¾Æ³»µµ·Ï ÇÒ ¼öµµ ÀÖ½À´Ï´Ù.
+          ±âº»°ª (auto)Àº ÀûÀýÇÑ °æ¿ì max·Î ¹Ù²ß´Ï´Ù.
+cycleup   -- ´ÜÃàÅ°·Î ³ôÀÌ°í ³·Ãâ »çÀÌÅ¬ÀÇ ¹üÀ§.
+cycledown    100º¸´Ù ³·À¸¸é ÆÛ¼¾Å×ÀÌÁö°¡ µË´Ï´Ù.
+.
+:MIXER_CONFIGFILE_HELP
+nosound -- ¼Ò¸®¸¸ ¼Ò°ÅÇÕ´Ï´Ù. »ç¿îµå´Â °è¼Ó °¡»óÀ¸·Î ±¸ÇöµË´Ï´Ù.
+rate -- ¹Í¼­ »ùÇÃ ¼Óµµ, ¾Æ¹« ÀåÄ¡³ª ÀÌ º¸´Ù ´õ ³ô°Ô ÀâÀ¸¸é
+        À½ÁúÀÌ ¶³¾îÁú ¼ö ÀÖ½À´Ï´Ù.
+blocksize -- ÀâÀ½Àº »ç¶óÁö´Â µ¥ µµ¿òÀÌ µÇÁö¸¸ ¿ÀÈ÷·Á ¹ö¹÷ÀÏ ¼öµµ ÀÖ½À´Ï´Ù
+prebuffer -- ºí·Ï Å©±â À§¿¡ ¾ó¸¸Å­ÀÇ µ¥ÀÌÅÍ¸¦ »ç¿ëÇÒ Áö ÁöÁ¤ÇÒ ¼ö ÀÖ½À´Ï´Ù. (´ÜÀ§ : ms)
+.
+:MIDI_CONFIGFILE_HELP
+mpu401      -- °¡»óÀ¸·Î ±¸ÇöÇÒ MPU-401ÀÇ Á¾·ù: none, uart ¶Ç´Â intelligent.
+device      -- MPU-401 ·ÎºÎÅÍ MIDI µ¥ÀÌÅÍ¸¦ ¼ö½ÅÇÑ ÀåÄ¡¸¦ ¼±ÅÃÇÕ´Ï´Ù.
+               default,alsa,oss,win32,coreaudio,none°¡ µÉ ¼ö ÀÖ½À´Ï´Ù.
+config      -- ÀåÄ¡¸¦ À§ÇÑ Æ¯º°ÇÑ ±¸¼º ¿É¼Ç. Windows¿¡¼­´Â »ç¿ëÇÏ°íÀÚ ÇÏ´Â ÀåÄ¡ÀÇ
+               ID¸¦ ³ÖÀ¸½Ê½Ã¿À. ÀÚ¼¼È÷ º¸·Á¸é README¸¦ ÀÐ¾î º¸½Ê½Ã¿À.
+.
+:SBLASTER_CONFIGFILE_HELP
+sbtype -- °¡»óÀ¸·Î ±¸ÇöÇÒ »ç¿îµå ºí¶ó½ºÅÍÀÇ Á¾·ù:none,sb1,sb2,sbpro1,sbpro2,sb16.
+sbbase,irq,dma,hdma -- »ç¿îµå ºí¶ó½ºÅÍÀÇ IO/IRQ/DMA/High DMA ÁÖ¼Ò
+mixer -- SoundBlaste°¡ DOSBoxÀÇ ¼Ò¸® Å©±â¸¦ Á¶ÀýÇÒ ¼ö ÀÖ°Ô ÇÕ´Ï´Ù.
+oplmode -- OPL °¡»ó ±¸ÇöÀÇ Á¾·ù: auto,cms,opl2,dualopl2,opl3.
+           autoÀÇ °æ¿ì Sound BlasterÀÇ Çü½Ä¿¡ µû¶ó ¾Ë¾Æ¼­ °áÁ¤µË´Ï´Ù.
+           ¸ðµç OPL ¸ðµå´Â CMS¸¦ Á¦¿ÜÇÏ°í AdlibÀÔ´Ï´Ù.
+oplrate -- OPL À½¾Ç °¡»ó ±¸ÇöÀÇ »ùÇÃ ¼Óµµ.
+.
+:GUS_CONFIGFILE_HELP
+gus -- Gravis UltrasoundÀ» °¡»ó ±¸ÇöÇÕ´Ï´Ù.
+gusbase,irq1,irq2,dma1,dma2 -- Gravis UltrasoundÀÇ IO/IRQ/DMA ÁÖ¼Ò
+           (IRQ¿Í DMA°¡ °°¾Æµµ ±¦Âú½À´Ï´Ù)
+gusrate -- Ultrasound °¡»ó ±¸ÇöÀÇ »ùÇÃ ¼Óµµ
+ultradir -- Gravis UltraSound µð·ºÅä¸®ÀÇ °æ·Î. GUS Àç»ý¿¡ ÇÊ¿äÇÑ
+            ÆÐÄ¡ ÆÄÀÏÀÌ µé¾îÀÖ´Â Æú´õ¸¦ ÁöÁ¤ÇÏ½Ã¸é µË´Ï´Ù.
+            Timidity·Î »ç¿ëµÈ ÆÐÄ¡°¡ Á¦´ë·Î µ¿ÀÛÇÕ´Ï´Ù.
+.
+:SPEAKER_CONFIGFILE_HELP
+pcspeaker -- PC ½ºÇÇÄ¿¸¦ °¡»ó ±¸ÇöÇÕ´Ï´Ù.
+pcrate -- PC ½ºÇÇÄ¿ »ç¿îµå ¹ß»ýÀÇ »ùÇÃ ¼Óµµ
+tandy -- Tandy »ç¿îµå ½Ã½ºÅÛÀ» °¡»ó ±¸ÇöÇÕ´Ï´Ù. (off,on,auto).
+         autoÀÇ °æ¿ì machineÀÌ tandy·Î ¼³Á¤µÇ¾î ÀÖÀ» ¶§¿¡¸¸ Tandysound¸¦ °¡»ó ±¸ÇöÇÕ´Ï´Ù.
+tandyrate -- Tandy 3-Voice ¹ß»ýÀÇ »ùÇÃ ¼Óµµ.
+disney -- Disney Source °¡»ó ±¸ÇöÀ» »ç¿ëÇÕ´Ï´Ù. Covox Voice Master¿Í Speech Thing È£È¯.
+.
+:JOYSTICK_CONFIGFILE_HELP
+joysticktype -- °¡»ó ±¸ÇöÇÒ Á¶ÀÌ½ºÆ½ÀÇ Á¾·ù: auto (±âº»°ª), none,
+                2axis (µÎ °³ÀÇ Á¶ÀÌ½ºÆ½ Áö¿ø),
+                4axis (ÇÑ °³ÀÇ Á¶ÀÌ½ºÆ½À» Áö¿øÇÏ¸ç Ã¹ ¹øÂ° Á¶ÀÌ½ºÆ½ »ç¿ë),
+                4axis_2 (ÇÑ °³ÀÇ Á¶ÀÌ½ºÆ½À» Áö¿øÇÏ¸ç µÎ ¹øÂ° Á¶ÀÌ½ºÆ½ »ç¿ë),
+                fcs (Thrustmaster), ch (CH Flightstick).
+                noneÀº Á¶ÀÌ½ºÆ½À» °¡»óÀ¸·Î ±¸ÇöÇÏÁö ¾Ê½À´Ï´Ù.
+                auto´Â ½ÇÁ¦ Á¶ÀÌ½ºÆ½¿¡ µû¶ó °¡»ó ±¸ÇöÀ» Á¤ÇÕ´Ï´Ù.
+timed -- Ãà¿¡ ´ëÇÑ ½Ã°£ ÁÖ±â¸¦ »ç¿ëÇÕ´Ï´Ù. false·Î µÎ¸é ¿¾³¯ ¹æ½ÄÀ» »ç¿ëÇÏ°Ô µË´Ï´Ù.
+autofire -- ´ÜÃß¸¦ ´©¸£¸é °è¼Ó ¹ß»çÇÕ´Ï´Ù. (ÀÚµ¿ ¹ß»ç)
+swap34 -- 3´ÜÃß¿Í 4´ÜÃß¸¦ ¹Ù²ß´Ï´Ù. ÀÏºÎ Á¶ÀÌ½ºÆ½¿¡ À¯¿ëÇÕ´Ï´Ù.
+buttonwrap -- °¡»óÀ¸·Î ±¸ÇöµÇ´Â ´ÜÃßµéÀÇ ¼ö¿¡ button wrappingÀ» »ç¿ëÇÕ´Ï´Ù.
+.
+:SERIAL_CONFIGFILE_HELP
+serial1-4 -- COM Æ÷Æ®¿¡ ¿¬°áµÈ ÀåÄ¡ÀÇ Á¾·ù¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+             disabled, dummy, modem, nullmodem, directserial°¡ µÉ ¼ö ÀÖ½À´Ï´Ù.
+             ºÎ°¡µÇ´Â ¸Å°³ º¯¼ö´Â ¸Å°³ º¯¼öÀÇ Çü½ÄÀÌ ÀÖ´Â ÁÙ°ú °°Àº ÁÙ¿¡ ÀÖ¾î¾ß ÇÕ´Ï´Ù.
+             ¸ðµç Á¾·ù¿¡ ¾²ÀÏ ¼ö ÀÖ´Â ¸Å°³ º¯¼ö´Â IRQ·Î ÀÌ·ç¾îÁý´Ï´Ù.
+             DirectSerialÀÇ °æ¿ì: realport (ÇÊ¼ö), rxdelay (¼±ÅÃ »çÇ×).
+             ¸ðµ©ÀÇ °æ¿ì: listenport (¼±ÅÃ »çÇ×).
+             ³Î ¸ðµ©ÀÇ °æ¿ì: server, rxdelay, txdelay, telnet, usedtr,
+                            transparent, port, inhsocket (¸ðµÎ ¼±ÅÃ »çÇ×).
+             º¸±â: serial1=modem listenport:5000
+.
+:DOS_CONFIGFILE_HELP
+xms -- XMS Áö¿øÀ» »ç¿ëÇÕ´Ï´Ù.
+ems -- EMS Áö¿øÀ» »ç¿ëÇÕ´Ï´Ù.
+umb -- UMB Áö¿øÀ» »ç¿ëÇÕ´Ï´Ù.
+keyboardlayout -- Å°º¸µå ·¹ÀÌ¾Æ¿ôÀÇ ¾ð¾î ÄÚµå (¶Ç´Â none).
+.
+:IPX_CONFIGFILE_HELP
+ipx -- UDP/IP °¡»ó ±¸ÇöÀ» °ÅÃÄ IPX¸¦ »ç¿ëÇÕ´Ï´Ù.
+.
+:AUTOEXEC_CONFIGFILE_HELP
+ÀÌ ¼½¼ÇÀÇ ÁÙµéÀº Ã³À½¿¡ ½ÃÀÛÇÏÀÚ¸¶ÀÚ ½ÇÇàµË´Ï´Ù.
+.
+:CONFIGFILE_INTRO
+# DOSBox %s¸¦ À§ÇÑ ±¸¼º ÆÄÀÏÀÔ´Ï´Ù.
+# #·Î ½ÃÀÛµÇ´Â ÁÙµéÀº ÁÖ¼®ÀÌ¸ç
+# °¢ ¿É¼ÇÀÇ °á°ú¸¦ °£·«ÇÏ°Ô ¹®¼­È­ÇÏ´Â µ¥ ¾²ÀÔ´Ï´Ù.
+.
+:PROGRAM_CONFIG_FILE_ERROR
+%s ÆÄÀÏÀ» ¿­ ¼ö ¾ø½À´Ï´Ù
+.
+:PROGRAM_CONFIG_USAGE
+Config µµ±¸:
+ÇöÀçÀÇ ±¸¼ºÀ» ÀúÀåÇÏ·Á¸é "-writeconf ÆÄÀÏ ÀÌ¸§"À» »ç¿ëÇÏ½Ê½Ã¿À.
+ÇöÀçÀÇ ¾ð¾î ¹®ÀÚ¿­À» ÀúÀåÇÏ·Á¸é "-writelang ÆÄÀÏ ÀÌ¸§"À» »ç¿ëÇÏ½Ê½Ã¿À.
+.
+:PROGRAM_CONFIG_SECTION_ERROR
+%s ¼½¼ÇÀÌ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+ÁöÁ¤µÈ ¼½¼ÇÀÌ³ª ¼Ó¼ºÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù.
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+%s ¼Ó¼ºÀÌ ¼½¼Ç %s¿¡ ¾ø½À´Ï´Ù.
+.
+:PROGRAM_CONFIG_GET_SYNTAX
+¿Ã¹Ù¸¥ ±¸¹®: config -get "¼½¼Ç" "¼Ó¼º".
+.
+:PROGRAM_MOUNT_CDROMS_FOUND
+CDROMÀ» Ã£¾Ò½À´Ï´Ù: %d
+.
+:PROGRAM_MOUNT_STATUS_2
+%c µå¶óÀÌºê°¡ %s·Î ¸¶¿îÆ®µÇ¾ú½À´Ï´Ù
+.
+:PROGRAM_MOUNT_STATUS_1
+ÇöÀç ¸¶¿îÆ®µÇ¾î ÀÖ´Â µå¶óÀÌºê:
+.
+:PROGRAM_MOUNT_ERROR_1
+%s µð·ºÅÍ¸®°¡ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.
+.
+:PROGRAM_MOUNT_ERROR_2
+%sÀº(´Â) µð·ºÅÍ¸®°¡ ¾Æ´Õ´Ï´Ù
+.
+:PROGRAM_MOUNT_ILL_TYPE
+Àß¸øµÈ À¯Çü %s
+.
+:PROGRAM_MOUNT_ALREADY_MOUNTED
+%c µå¶óÀÌºê°¡ ÀÌ¹Ì %s·Î ¸¶¿îÆ®µÇ¾î ÀÖ½À´Ï´Ù
+.
+:PROGRAM_MOUNT_USAGE
+»ç¿ë¹ý [34;1mMOUNT 'µå¶óÀÌºê ¹®ÀÚ¿­' '·ÎÄÃ µð·ºÅÍ¸®'[0m
+MOUNT c c:\windows´Â Windows µð·ºÅÍ¸®¸¦ DOSBoxÀÇ C µå¶óÀÌºê·Î ¸¶¿îÆ®ÇÕ´Ï´Ù
+.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+%c µå¶óÀÌºê°¡ ¸¶¿îÆ®µÇ¾î ÀÖÁö ¾Ê½À´Ï´Ù.
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCES
+%c µå¶óÀÌºê°¡ Á¦°ÅµÇ¾ú½À´Ï´Ù.
+.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+°¡»ó µå¶óÀÌºê¸¦ ¸¶¿îÆ®ÇÒ ¼ö ¾ø½À´Ï´Ù.
+.
+:PROGRAM_MOUNT_WARNING_WIN
+[31;1mc:\·Î ¸¶¿îÆ®ÇÏÁö ¾Ê´Â °ÍÀÌ ÁÁ½À´Ï´Ù. ´ÙÀ½¿¡´Â ÇÏÀ§ µð·ºÅÍ¸®¸¦ ¸¶¿îÆ®ÇØ ÁÖ½Ê½Ã¿À.[0m
+.
+:PROGRAM_MOUNT_WARNING_OTHER
+[31;1m/·Î ¸¶¿îÆ®ÇÏÁö ¾Ê´Â °ÍÀÌ ÁÁ½À´Ï´Ù. ´ÙÀ½¿¡´Â ÇÏÀ§ µð·ºÅÍ¸®¸¦ ¸¶¿îÆ®ÇØ ÁÖ½Ê½Ã¿À.[0m
+.
+:PROGRAM_MEM_CONVEN
+±âº» ¸Þ¸ð¸® %10d Kb ³²À½
+.
+:PROGRAM_MEM_EXTEND
+È®Àå(EMS) ¸Þ¸ð¸® %10d Kb ³²À½
+.
+:PROGRAM_MEM_EXPAND
+¿¬¼Ó È®Àå(XMS) ¸Þ¸ð¸® %10d Kb ³²À½
+.
+:PROGRAM_MEM_UPPER
+»óÀ§ ¸Þ¸ð¸® %10d Kb ³²À½ - %d ºí·° (ÃÖ´ë UMB %d Kb)
+.
+:PROGRAM_LOADFIX_ALLOC
+%d kb°¡ ÇÒ´çµÇ¾ú½À´Ï´Ù.
+.
+:PROGRAM_LOADFIX_DEALLOC
+%d kb°¡ ÇÒ´ç¿¡¼­ ¹þ¾î³ª ¿©À¯ ¸Þ¸ð¸®°¡ »ý°å½À´Ï´Ù.
+.
+:PROGRAM_LOADFIX_DEALLOCALL
+»ç¿ëÇß´ø ¸ðµç ¸Þ¸ð¸®ÀÇ ÇÒ´ç¿¡¼­ ¹þ¾î³ª ¿©À¯ ¸Þ¸ð¸®°¡ »ý°å½À´Ï´Ù.
+.
+:PROGRAM_LOADFIX_ERROR
+¸Þ¸ð¸® ÇÒ´ç ¿À·ù.
+.
+:MSCDEX_SUCCESS
+MSCDEX°¡ ¼³Ä¡µÇ¾ú½À´Ï´Ù.
+.
+:MSCDEX_ERROR_MULTIPLE_CDROMS
+MSCDEX: ½ÇÆÐ: ¿©·¯ °³ÀÇ CD-ROM µå¶óÀÌºêÀÇ ¹®ÀÚ¿­Àº ¿¬¼ÓÀ¸·Î ÀÌ¾îÁ®¾ß ÇÕ´Ï´Ù.
+.
+:MSCDEX_ERROR_NOT_SUPPORTED
+MSCDEX: ½ÇÆÐ: ¾ÆÁ÷ Áö¿øµÇÁö ¾Ê½À´Ï´Ù.
+.
+:MSCDEX_ERROR_PATH
+MSCDEX: ½ÇÆÐ: °æ·Î°¡ ¿Ã¹Ù¸£Áö ¾Ê½À´Ï´Ù.
+.
+:MSCDEX_TOO_MANY_DRIVES
+MSCDEX: ½ÇÆÐ: CD-ROM µå¶óÀÌºê°¡ ³Ê¹« ¸¹½À´Ï´Ù. ÃÖ´ë 5°³ÀÔ´Ï´Ù. MSCDEX ¼³Ä¡°¡ ½ÇÆÐµÇ¾ú½À´Ï´Ù.
+.
+:MSCDEX_LIMITED_SUPPORT
+MSCDEX: ¸¶¿îÆ®µÈ ÇÏÀ§ µð·ºÅÍ¸®: Á¦ÇÑµÈ Áö¿ø.
+.
+:MSCDEX_INVALID_FILEFORMAT
+MSCDEX: ½ÇÆÐ: ÆÄÀÏÀÌ ISO/CUE ÀÌ¹ÌÁö°¡ ¾Æ´Ï°Å³ª Àß¸øµÈ Á¤º¸°¡ Æ÷ÇÔµÇ¾î ÀÖ½À´Ï´Ù.
+.
+:MSCDEX_UNKNOWN_ERROR
+MSCDEX: ½ÇÆÐ: ¾Ë ¼ö ¾ø´Â ¿À·ù.
+.
+:PROGRAM_RESCAN_SUCCESS
+µå¶óÀÌºê Ä³½Ã¸¦ °»½ÅÇß½À´Ï´Ù.
+.
+:PROGRAM_INTRO
+[2J[32;1mDOSBox[0m´Â ¼Ò¸®¿Í ±×·¡ÇÈÀ» Á¦°øÇÏ´Â x86 ¿¡¹Ä·¹ÀÌÅÍÀÔ´Ï´Ù.
+DOSBox´Â ¿¾ ½ÃÀýÀÇ DOS¿Í °°Àº ¼ÐÀ» Á¦°øÇÕ´Ï´Ù.
+
+±âº» ¸¶¿îÆ®¿¡ ´ëÇÑ Á¤º¸¸¦ º¸·Á¸é ´ÙÀ½°ú °°ÀÌ ÀÔ·ÂÇÏ½Ê½Ã¿À: [34;1mintro mount[0m
+CD-ROM Áö¿ø¿¡ ´ëÇÑ Á¤º¸¸¦ º¸·Á¸é ´ÙÀ½°ú °°ÀÌ ÀÔ·ÂÇÏ½Ê½Ã¿À: [34;1mintro cdrom[0m
+´ÜÃà Å°¿¡ ´ëÇÑ Á¤º¸¸¦ º¸·Á¸é ´ÙÀ½°ú °°ÀÌ ÀÔ·ÂÇÏ½Ê½Ã¿À: [34;1mintro special[0m
+DOSBox¿¡ ´ëÇÑ ´õ ¸¹Àº Á¤º¸¸¦ º¸·Á¸é: [34;1mhttp://dosbox.sourceforge.net/wiki[0m
+
+[31;1mDOSBox´Â ¿À·ù°¡ ÀÖÀ¸¸é ¾Æ¹«·± °æ°í ¾øÀÌ ¸ØÃß°í Á¾·áÇÕ´Ï´Ù![0m
+
+
+.
+:PROGRAM_INTRO_MOUNT_START
+[32;1mÃ³À½ ½ÃÀÛÇÒ ¶§ »ç¿ëÇÒ ¸í·É¾îµé ¸î °¡Áö°¡ ¿©±â¿¡ ³ª¿Í ÀÖ½À´Ï´Ù:[0m
+ÆÄÀÏ ½Ã½ºÅÛ¿¡ À§Ä¡ÇÑ ÆÄÀÏµéÀ» »ç¿ëÇÏ±â ¾Õ¼­,
+¸ÕÀú ÆÄÀÏµéÀÌ µé¾î ÀÖ´Â µð·ºÅÍ¸®¸¦ ¸¶¿îÆ®ÇØ¾ß ÇÕ´Ï´Ù.
+
+.
+:PROGRAM_INTRO_MOUNT_WINDOWS
+[44;1m¦£¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¤
+¦¢[32mmount c c:\dosprog\[37m´Â c:\dosprog¸¦ C µå¶óÀÌºê·Î ¸¸µì´Ï´Ù.             ¦¢
+¦¢                                                                      ¦¢
+¦¢[32mc:\dosprog\[37m°¡ ¿¹Á¦ÀÔ´Ï´Ù. ÀÌ°ÍÀ» ¿©·¯ºÐÀÇ °ÔÀÓ µð·ºÅÍ¸®·Î ¹Ù²Ù½Ê½Ã¿À. [37m¦¢
+¦¦¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¥[0m
+.
+:PROGRAM_INTRO_MOUNT_OTHER
+[44;1m¦£¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¤
+¦¢[32mmount c ~/dosprog[37m´Â ~/dosprog¸¦ C µå¶óÀÌºê·Î ¸¸µì´Ï´Ù.                ¦¢
+¦¢                                                                      ¦¢
+¦¢[32m~/dosprog[37m°¡ ¿¹Á¦ÀÔ´Ï´Ù. ÀÌ°ÍÀ» ¿©·¯ºÐÀÇ °ÔÀÓ µð·ºÅÍ¸®·Î ¹Ù²Ù½Ê½Ã¿À. [37m  ¦¢
+¦¦¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¥[0m
+.
+:PROGRAM_INTRO_MOUNT_END
+¸¶¿îÆ®°¡ Á¦´ë·Î µÇ¸é [34;1mc:[0m¶ó°í ÀÔ·ÂÇÏ¿© »õ·Î ¸¸µé¾îÁø C µå¶óÀÌºê·Î ÀÌµ¿ÇÒ ¼ö
+ÀÖ½À´Ï´Ù. [34;1mdir[0m¶ó°í ÀÔ·ÂÇÏ¸é ±× µå¶óÀÌºêÀÇ ³»¿ëÀ» º¸¿©ÁÝ´Ï´Ù. [34;1mcd[0m·Î µð·ºÅÍ¸®¸¦
+µé¾î°¥ ¼ö ÀÖ½À´Ï´Ù. (µð·ºÅä¸® ³ª¿­ ±¸¹® [33;1m[][0mÀ¸·Î µð·ºÅÍ¸®¸¦ ¾Ë¾Æº¼ ¼ö ÀÖÀ½).
+´ÙÀ½ÀÇ ¹®ÀÚ¿­·Î ³¡³ª´Â ÇÁ·Î±×·¥ÀÌ³ª ÆÄÀÏÀ» ½ÇÇàÇÒ ¼ö ÀÖ½À´Ï´Ù: [31m.exe .bat[0m [31m.com[0m.
+.
+:PROGRAM_INTRO_CDROM
+[2J[32;1m½ÇÁ¦/°¡»ó CD-ROM µå¶óÀÌºê¸¦ DOSBox¿¡¼­ ¸¶¿îÆ®ÇÏ´Â ¹æ¹ý:[0m
+DOSBox´Â ¿©·¯ ¼öÁØ¿¡ °ÉÃÄ CD-ROM °¡»ó ±¸ÇöÀ» Á¦°øÇÕ´Ï´Ù.
+
+[33m±âº»[0m ¼öÁØÀº ¸ðµç CD-ROM µå¶óÀÌºê¿Í ÀÏ¹Ý µð·ºÅÍ¸®¿¡¼­ µ¿ÀÛÇÕ´Ï´Ù.
+MSCDEX¸¦ ¼³Ä¡ÇÏ°í ÆÄÀÏÀ» ÀÐ±â Àü¿ëÀ¸·Î ¸¸µì´Ï´Ù.
+¾Æ·¡ÀÇ ¹æ¹ýÀº ´ëºÎºÐÀÇ °ÔÀÓ¿¡¼­ ¾²ÀÏ ¼ö ÀÖ½À´Ï´Ù:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom[0m  ¶Ç´Â  [34;1mmount d C:\example -t cdrom[0m
+µ¿ÀÛÇÏÁö ¾ÊÀ¸¸é CD-ROMÀÇ ·¹ÀÌºíÀ» ÁöÁ¤ÇØ º¸½Ê½Ã¿À:
+[34;1mmount d C:\example -t cdrom -label CD·¹ÀÌºí[0m
+
+[33m´ÙÀ½[0m ¼öÁØÀº ¸î °¡Áö ³·Àº ¼öÁØÀÇ Áö¿øÀ» Á¦°øÇÕ´Ï´Ù.
+±×·¯¹Ç·Î CD-ROM µå¶óÀÌºê¿¡¼­¸¸ µ¿ÀÛÇÕ´Ï´Ù:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
+
+[33m¸¶Áö¸·[0m ¼öÁØÀÇ Áö¿øÀº ¿î¿µ Ã¼Á¦¿¡ µû¶ó ´Þ¶óÁý´Ï´Ù:
+[1mWindows 2000[0m, [1mWindows XP[0m ±×¸®°í [1mLinux[0m:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-ioctl[0m
+ASPI ·¹ÀÌ¾î°¡ ¼³Ä¡µÈ [1mWindows 9x[0m:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-aspi[0m
+
+CD-ROMÀÇ À§Ä¡¸¦ ¹Ù²Ù·Á¸é À§ÀÇ [0;31mD:\[0m¸¦ ´Ù¸¥ °ÍÀ¸·Î ¹Ù²Ù½Ê½Ã¿À.
+[33;1m0[0m in [34;1m-usecd [33m0[0mÀÇ ¼ýÀÚ¸¦ ¹Ù²Ù·Á¸é ´ÙÀ½°ú °°ÀÌ CD-ROM º¸°í ¼ýÀÚ¸¦ È®ÀÎÇÏ½Ê½Ã¿À:
+[34;1mmount -cd[0m
+.
+:PROGRAM_INTRO_SPECIAL
+[2J[32;1m´ÜÃà Å°:[0m
+±âº»ÀûÀÎ Å°º¸µå Á¶ÇÕÀº ´ÙÀ½°ú °°½À´Ï´Ù.
+ÀÌ Å°µéÀº [33m¸ÅÇÎ ÇÁ·Î±×·¥[0m¿¡¼­ ¹Ù²Ü ¼ö ÀÖ½À´Ï´Ù.
+
+[33;1mALT-ENTER[0m   : ÀüÃ¼ È­¸é¿¡¼­ Ã¢ / Ã¢¿¡¼­ ÀüÃ¼ È­¸é
+[33;1mALT-PAUSE[0m   : Àá±ñ ¸ØÃã
+[33;1mCTRL-F1[0m     : [33m¸ÅÇÎ ÇÁ·Î±×·¥[0m ½ÇÇà.
+[33;1mCTRL-F4[0m     : µå¶óÀÌºê Ä³½Ã °»½Å, ¸¶¿îÆ®µÈ ¿©·¯ °³ÀÇ µð½ºÅ© ÀÌ¹ÌÁöµé ¼øÈ¯
+[33;1mCTRL-ALT-F5[0m : È­¸éÀÇ µ¿¿µ»ó ³ìÈ­ ½ÇÇà / ÁßÁö
+[33;1mCTRL-F5[0m     : ½ºÅ©¸°¼¦ ÀúÀå
+[33;1mCTRL-F6[0m     : ¼Ò¸® Ãâ·ÂÀ» ¿þÀÌºê(WAV) ÆÄÀÏ·Î ±â·Ï / ÁßÁö
+[33;1mCTRL-ALT-F7[0m : OPL ³ìÀ½ ¸í·É ½ÇÇà / ÁßÁö
+[33;1mCTRL-ALT-F8[0m : MIDI ³ìÀ½ ¸í·É ½ÇÇà / ÁßÁö
+[33;1mCTRL-F7[0m     : ÇÁ·¹ÀÓ ¹«½Ã ÁÙÀÓ
+[33;1mCTRL-F8[0m     : ÇÁ·¹ÀÓ ¹«½Ã ³ôÀÓ
+[33;1mCTRL-F9[0m     : DOSBox ³¡³»±â
+[33;1mCTRL-F10[0m    : ¸¶¿ì½º Àá±Ý / Àá±Ý Ç®±â
+[33;1mCTRL-F11[0m    : °¡»ó ±¸Çö ´À¸®°Ô (»çÀÌÅ¬ ÁÙÀÓ)
+[33;1mCTRL-F12[0m    : °¡»ó ±¸Çö ºü¸£°Ô (»çÀÌÅ¬ ´Ã¸²)
+[33;1mALT-F12[0m     : ¼Óµµ Á¦ÇÑ ÇØÁ¦ (ÅÍº¸ ´ÜÃß)
+.
+:PROGRAM_BOOT_NOT_EXIST
+½ÇÆÐ - ½Ãµ¿ µð½ºÅ© ÆÄÀÏÀÌ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.
+.
+:PROGRAM_BOOT_NOT_OPEN
+½ÇÆÐ - ½Ãµ¿ µð½ºÅ© ÆÄÀÏÀ» ¿­ ¼ö ¾ø½À´Ï´Ù.
+.
+:PROGRAM_BOOT_WRITE_PROTECTED
+ÀÌ¹ÌÁö ÆÄÀÏÀÌ ÀÐ±â Àü¿ëÀÔ´Ï´Ù! ¹®Á¦°¡ ÀÏ¾î³¯ ¼ö ÀÖ½À´Ï´Ù.
+.
+:PROGRAM_BOOT_PRINT_ERROR
+ÀÌ ¸í·É¾î´Â ÇÃ·ÎÇÇ ¶Ç´Â ÇÏµå µå¶óÀÌºê ÀÌ¹ÌÁö·Î DOSBox¸¦ ½Ãµ¿ÇÕ´Ï´Ù.
+
+ÀÌ ¸í·É¾î·Î Ctrl-F4¸¦ ´­·¯¼­ ÇÃ·ÎÇÇ µð½ºÅ©µéÀ» ´ÙÀ½ µð½ºÅ©·Î ³Ñ±æ ¼ö ÀÖÀ¸¸ç
+-lÀº ½Ãµ¿ÇÒ ¸¶¿îÆ®µÈ µå¶óÀÌºê¸¦ ÁöÁ¤ÇÕ´Ï´Ù. µå¶óÀÌºê ¹®ÀÚ¿­ÀÌ ÁöÁ¤µÇÁö
+¾ÊÀ¸¸é ½Ãµ¿µÇ´Â ±âº»°ªÀº A µå¶óÀÌºê°¡ µË´Ï´Ù.
+½Ãµ¿ÇÒ ¼ö ÀÖ´Â µå¶óÀÌºê ¹®ÀÚ¿­Àº A, C, ±×¸®°í DÀÔ´Ï´Ù. ÇÏµå µå¶óÀÌºê(C ¶Ç´Â D)·ÎºÎÅÍ
+½Ãµ¿ÇÒ ¶§´Â, ÀÌ¹ÌÁö°¡ [34;1mIMGMOUNT[0m ¸í·É¾î¸¦ ÅëÇØ ¸¶¿îÆ®µÇ¾î ÀÖ¾î¾ß
+ÇÕ´Ï´Ù.
+
+ÀÌ ¸í·É¾î ±¸¹®Àº ´ÙÀ½°ú °°½À´Ï´Ù:
+
+[34;1mBOOT [µð½ºÅ©ÀÌ¹ÌÁö1.img µð½ºÅ©ÀÌ¹ÌÁö2.img ¡¦ µð½ºÅ©ÀÌ¹ÌÁöN.img] [-l µå¶óÀÌºê ¹®ÀÚ¿­][0m
+.
+:PROGRAM_BOOT_UNABLE
+µå¶óÀÌºê %c·Î ½Ãµ¿ÇÒ ¼ö ¾ø½À´Ï´Ù.
+:PROGRAM_BOOT_IMAGE_OPEN
+ÀÌ¹ÌÁö ÆÄÀÏÀ» ¿­°í ÀÖ½À´Ï´Ù: %s
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+%sÀ»(¸¦) ¿­ ¼ö ¾ø½À´Ï´Ù.
+:PROGRAM_BOOT_BOOT
+µå¶óÀÌºê %c·Î ½Ãµ¿ Áß...
+.
+:PROGRAM_BOOT_CART_WO_PCJR
+PCjr Ä«Æ®¸®Áö¸¦ Ã£¾ÒÀ¸³ª ±â±â°¡ PCjrÀÌ ¾Æ´Õ´Ï´Ù.
+:PROGRAM_BOOT_CART_LIST_CMDS
+»ç¿ëÇÒ ¼ö ÀÖ´Â PCjr Ä«Æ®¸®Áö Ä¿¸Ç´õµé:%s.
+:PROGRAM_BOOT_CART_NO_CMDS
+PCjr Ä«Æ®¸®Áö Ä¿¸Ç´õ¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù.
+:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
+ÀÌ¹ÌÁö¸¦ ¸¶¿îÆ®ÇÒ µå¶óÀÌºê ¹®ÀÚ¿­À» ÁöÁ¤ÇØ ÁÖ½Ê½Ã¿À.
+.
+:PROGRAM_IMGMOUNT_SPECIFY2
+Æ¯Á¤ À§Ä¡(0,1=fda,fdb;2,3=hda,hdb)¿¡¼­ ÀÌ¹ÌÁö¸¦ ¸¶¿îÆ®ÇÒ µå¶óÀÌºê ¹øÈ£(0 ¶Ç´Â 3)¸¦ ÁöÁ¤ÇØ ÁÖ½Ê½Ã¿À.
+.
+:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
+[33mCD-ROM[0m ÀÌ¹ÌÁöÀÇ °æ¿ì:   [34;1mIMGMOUNT 'µå¶óÀÌºê ¹®ÀÚ¿­' 'ÀÌ¹ÌÁö À§Ä¡' -t iso[0m
+
+[33mÇÏµå µå¶óÀÌºê[0m ÀÌ¹ÌÁöÀÇ °æ¿ì: ÇÏµå µå¶óÀÌºêÀÇ Å©±â¸¦ ÁöÁ¤ÇÏ½Ê½Ã¿À:
+¼½ÅÍ ´ç ¹ÙÀÌÆ®, ½Ç¸°´õ ´ç ¼½ÅÍ, ½Ç¸°´õ ´ç Çìµå, ½Ç¸°´õ ¼ö
+[34;1mIMGMOUNT 'µå¶óÀÌºê ¹®ÀÚ¿­' 'ÀÌ¹ÌÁö À§Ä¡' -size bps,spc,hpc,cyl[0m
+.
+:PROGRAM_IMGMOUNT_INVALID_IMAGE
+ÀÌ¹ÌÁö¸¦ ºÒ·¯¿Ã ¼ö ¾ø½À´Ï´Ù.
+°æ·Î°¡ ¿Ã¹Ù¸¥Áö, ±×¸®°í ÀÌ¹ÌÁö¸¦ »ç¿ëÇÒ ¼ö ÀÖ´ÂÁö È®ÀÎÇÏ½Ê½Ã¿À.
+.
+:PROGRAM_IMGMOUNT_INVALID_GEOMETRY
+ÀÌ¹ÌÁö¿¡¼­ µå¶óÀÌºê Å©±â¸¦ ¾Ë ¼ö ¾ø½À´Ï´Ù.
+º¯¼ö -size bps,spc,hpc,cyl¸¦ »ç¿ëÇÏ¿© Å©±â¸¦ ÁöÁ¤ÇÏ½Ê½Ã¿À.
+.
+:PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
+"%s"Àº(´Â) Áö¿øÇÏÁö ¾Ê´Â À¯ÇüÀÔ´Ï´Ù. "hdd", "floppy", ¶Ç´Â "iso"·Î ÁöÁ¤ÇÏ½Ê½Ã¿À.
+.
+:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
+"%s"Àº(´Â) ÁöŸnÇÏÁö ¾Ê´Â Æ÷¸ËÀÔ´Ï´Ù. "fat", "iso", ¶Ç´Â "none"À¸·Î ÁöÁ¤ÇÏ½Ê½Ã¿À.
+.
+:PROGRAM_IMGMOUNT_SPECIFY_FILE
+¸¶¿îÆ®ÇÒ ÆÄÀÏ ÀÌ¹ÌÁö¸¦ ÁöÁ¤ÇØ¾ß ÇÕ´Ï´Ù.
+.
+:PROGRAM_IMGMOUNT_FILE_NOT_FOUND
+ÀÌ¹ÌÁö ÆÄÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù.
+.
+:PROGRAM_IMGMOUNT_MOUNT
+µð·ºÅÍ¸®¸¦ ¸¶¿îÆ®ÇÏ·Á¸é, [34;1mIMGMOUNT[0m ¸í·É¾î°¡ ¾Æ´Ñ [34;1mMOUNT[0m ¸í·É¾î¸¦ »ç¿ëÇÏ½Ê½Ã¿À.
+.
+:PROGRAM_IMGMOUNT_ALREADY_MOUNTED
+ÁöÁ¤µÈ ¹®ÀÚ¿­·Î ÀÌ¹Ì µå¶óÀÌºê°¡ ¸¶¿îÆ®µÇ¾î ÀÖ½À´Ï´Ù.
+.
+:PROGRAM_IMGMOUNT_CANT_CREATE
+µå¶óÀÌºê¸¦ ÆÄÀÏ·ÎºÎÅÍ ¸¸µé¾î³¾ ¼ö ¾ø½À´Ï´Ù.
+.
+:PROGRAM_IMGMOUNT_MOUNT_NUMBER
+µå¶óÀÌºê ¼ýÀÚ %dÀÌ(°¡) %s·Î ¸¶¿îÆ®µÇ¾ú½À´Ï´Ù
+.
+:PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
+ÀÌ¹ÌÁö´Â È£½ºÆ® ¶Ç´Â »ç¿ëÀÚÀÇ µå¶óÀÌºê¿¡ Á¸ÀçÇØ¾ß ÇÕ´Ï´Ù.
+.
+:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
+CUE/ISO ÀÌ¹ÌÁö¸¸ ¿©·¯ °³ÀÇ ÆÄÀÏ »ç¿ëÀ» Áö¿øÇÕ´Ï´Ù.
+.
+:PROGRAM_KEYB_INFO
+%i ÄÚµåÆäÀÌÁö¸¦ »ç¿ëÇÕ´Ï´Ù
+.
+:PROGRAM_KEYB_SHOWHELP
+[32;1mKEYB[0m [Å°º¸µå ·¹ÀÌ¾Æ¿ô ID[ ÄÚµåÆäÀÌÁö ¹øÈ£[ ÄÚµåÆäÀÌÁö ÆÄÀÏ]]]
+
+Some examples:
+  [32;1mKEYB[0m: ÇöÀç »ç¿ëÇÏ°í ÀÖ´Â ÄÚµå ÆäÀÌÁö¸¦ º¸¿© ÁÝ´Ï´Ù.
+  [32;1mKEYB[0m sp: ½ºÆäÀÎ¾î (SP) ·¹ÀÌ¾Æ¿ôÀ» ºÒ·¯¿À°í ±×¿¡ ¸Â´Â ÄÚµåÆäÀÌÁö¸¦ »ç¿ëÇÕ´Ï´Ù.
+  [32;1mKEYB[0m sp 850: ½ºÆäÀÎ¾î (SP) ·¹ÀÌ¾Æ¿ôÀ» ºÒ·¯¿À°í ÄÚµåÆäÀÌÁö 850À» »ç¿ëÇÕ´Ï´Ù.
+  [32;1mKEYB[0m sp 850 mycp.cpi: À§¿Í °°Áö¸¸ mycp.cpi ÆÄÀÏÀ» »ç¿ëÇÕ´Ï´Ù.
+.
+:PROGRAM_KEYB_NOERROR
+%s Å°º¸µå ·¹ÀÌ¾Æ¿ôÀ» ÄÚµåÆäÀÌÁö %i·Î ºÒ·¯µé¿´½À´Ï´Ù
+.
+:PROGRAM_KEYB_FILENOTFOUND
+%s Å°º¸µå ÆÄÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù
+
+.
+:PROGRAM_KEYB_INVALIDFILE
+%s Å°º¸µå ÆÄÀÏÀÌ ¿Ã¹Ù¸£Áö ¾Ê½À´Ï´Ù
+.
+:PROGRAM_KEYB_LAYOUTNOTFOUND
+·¹ÀÌ¾Æ¿ôÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù - %s, ÄÚµå ÆäÀÌÁö %i
+.
+:PROGRAM_KEYB_INVCPFILE
+·¹ÀÌ¾Æ¿ô %s¿¡ ´ëÇÑ ÄÚµå ÆäÀÌÁö ÆÄÀÏÀÌ ¾ø°Å³ª ¿Ã¹Ù¸£Áö ¾Ê½À´Ï´Ù
+
+.
+:SHELL_ILLEGAL_PATH
+Àß¸øµÈ °æ·ÎÀÔ´Ï´Ù.
+.
+:SHELL_CMD_HELP
+Áö¿øµÇ´Â ¸ðµç ¸í·É¾î¸¦ ³ª¿­ÇÏ·Á¸é [33;1mhelp /all[0m¶ó°í ÀÔ·ÂÇÏ½Ê½Ã¿À.
+ÀÚÁÖ ¾²ÀÌ´Â ¸í·É¾î´Â ´ÙÀ½°ú °°½À´Ï´Ù:
+.
+:SHELL_CMD_ECHO_ON
+ECHO°¡ ¼³Á¤µÇ¾î ÀÖ½À´Ï´Ù.
+.
+:SHELL_CMD_ECHO_OFF
+ECHO°¡ ¼³Á¤µÇ¾î ÀÖÁö ¾Ê½À´Ï´Ù.
+.
+:SHELL_ILLEGAL_SWITCH
+¿Ã¹Ù¸£Áö ¾ÊÀº ½ºÀ§Ä¡: %s.
+.
+:SHELL_MISSING_PARAMETER
+¸Å°³ º¯¼ö¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù.
+.
+:SHELL_CMD_CHDIR_ERROR
+ÁöÁ¤µÈ °æ·Î·Î ¹Ù²Ü ¼ö ¾ø½À´Ï´Ù: %s.
+.
+:SHELL_CMD_CHDIR_HINT
+´Ù¸¥ µå¶óÀÌºê·Î ¹Ù²Ù·Á¸é [31m%c:[0m¶ó°í ÀÔ·ÂÇÏ½Ê½Ã¿À
+.
+:SHELL_CMD_CHDIR_HINT_2
+µð·ºÅÍ¸® ÀÌ¸§ÀÌ 8ÀÚ°¡ ³Ñ°Å³ª °ø¹éÀÌ µé¾î ÀÖ½À´Ï´Ù.
+[31mcd %s[0m¶ó°í ÀÔ·ÂÇØ º¸½Ê½Ã¿À.
+.
+:SHELL_CMD_CHDIR_HINT_3
+µå¶óÀÌºê°¡ ¿©ÀüÈ÷ Z:¿¡ ÀÖ½À´Ï´Ù. [31mC:[0m¿Í °°ÀÌ ÀÔ·ÂÇÏ¿© ¸¶¿îÆ®µÈ µå¶óÀÌºê·Î ÀÌµ¿ÇÏ½Ê½Ã¿À.
+.
+:SHELL_CMD_MKDIR_ERROR
+¸¸µé ¼ö ¾ø½À´Ï´Ù: %s.
+.
+:SHELL_CMD_RMDIR_ERROR
+Áö¿ï ¼ö ¾ø½À´Ï´Ù: %s.
+.
+:SHELL_CMD_DEL_ERROR
+Áö¿ï ¼ö ¾ø½À´Ï´Ù: %s.
+.
+:SHELL_SYNTAXERROR
+¸í·É¾î ±¸¹®ÀÌ ¿Ã¹Ù¸£Áö ¾Ê½À´Ï´Ù.
+.
+:SHELL_CMD_SET_NOT_SET
+È¯°æ º¯¼ö %sÀÌ(°¡) Á¤ÀÇµÇÁö ¾Ê¾Ò½À´Ï´Ù.
+.
+:SHELL_CMD_SET_OUT_OF_SPACE
+È¯°æ °ø°£ÀÌ ÃæºÐÇÏÁö ¾Ê½À´Ï´Ù.
+.
+:SHELL_CMD_IF_EXIST_MISSING_FILENAME
+IF EXIST: ÆÄÀÏ ÀÌ¸§À» Ã£À» ¼ö ¾ø½À´Ï´Ù.
+.
+:SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
+IF ERRORLEVEL: ¼ýÀÚ°¡ ÁöÁ¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.
+.
+:SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
+IF ERRORLEVEL: ¿Ã¹Ù¸£Áö ¾ÊÀº ¼ýÀÚ.
+.
+:SHELL_CMD_GOTO_MISSING_LABEL
+GOTO ¸í·É¾î¿¡ ·¹ÀÌºíÀÌ ÁöÁ¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.
+.
+:SHELL_CMD_GOTO_LABEL_NOT_FOUND
+GOTO: %s ·¹ÀÌºíÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù.
+.
+:SHELL_CMD_FILE_NOT_FOUND
+%s ÆÄÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù.
+.
+:SHELL_CMD_FILE_EXISTS
+%s ÆÄÀÏÀÌ ÀÌ¹Ì Á¸ÀçÇÕ´Ï´Ù.
+.
+:SHELL_CMD_DIR_INTRO
+%s  µð·ºÅÍ¸®
+.
+:SHELL_CMD_DIR_BYTES_USED
+%5d°³ ÆÄÀÏ  %17s ¹ÙÀÌÆ®.
+.
+:SHELL_CMD_DIR_BYTES_FREE
+%5d°³ µð·ºÅÍ¸®  %17s ¹ÙÀÌÆ® ³²À½.
+.
+:SHELL_EXECUTE_DRIVE_NOT_FOUND
+%c µå¶óÀÌºê°¡ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù!
+¸ÕÀú [31m¸¶¿îÆ®[0m¸¦ ÇÏ½Ê½Ã¿À. ´õ ÀÚ¼¼ÇÑ Á¤º¸¸¦ º¸·Á¸é [1;33mintro[0m ¶Ç´Â [1;33mintro mount[0m¶ó°í ÀÔ·ÂÇÏ½Ê½Ã¿À.
+.
+:SHELL_EXECUTE_ILLEGAL_COMMAND
+¿Ã¹Ù¸£Áö ¾ÊÀº ¸í·É¾îÀÔ´Ï´Ù: %s.
+.
+:SHELL_CMD_PAUSE
+°è¼ÓÇÏ·Á¸é ¾Æ¹« Å°³ª ´©¸£½Ê½Ã¿À.
+.
+:SHELL_CMD_PAUSE_HELP
+Å°¸¦ ÇÑ ¹ø ´©¸¦ ¶§±îÁö ±â´Ù¸®´Ù°¡ °è¼ÓÇÕ´Ï´Ù.
+.
+:SHELL_CMD_COPY_FAILURE
+º¹»ç ½ÇÆÐ : %s.
+.
+:SHELL_CMD_COPY_SUCCESS
+   %d°³ÀÇ ÆÄÀÏÀÌ º¹»çµÇ¾ú½À´Ï´Ù.
+.
+:SHELL_CMD_SUBST_NO_REMOVE
+µå¶óÀÌºê Á¦°Å¸¦ Áö¿øÇÏÁö ¾Ê½À´Ï´Ù. ¾Æ¹« °Íµµ ÇÏÁö ¾Ê½À´Ï´Ù.
+.
+:SHELL_CMD_SUBST_FAILURE
+SUBST ½ÇÆÐ. ¸í·É ÁÙ¿¡¼­ Àß¸ø ÀÔ·ÂÇÏ¿´°Å³ª ´ë»ó µå¶óÀÌºê°¡ ÀÌ¹Ì »ç¿ë ÁßÀÔ´Ï´Ù.
+·ÎÄÃ µå¶óÀÌºê¿¡¸¸ SUBST¸¦ »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.
+:SHELL_STARTUP_BEGIN
+[44;1m¦£¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¤
+¦¢[32mDOSBox v%-8s[37m                                                ¦¢
+¦¢                                                                ¦¢
+¦¢»õ·Î ¿À½Å ºÐµéÀ» À§ÇÑ ÂªÀº ¼Ò°¹¸»À» º¸·Á¸é ÀÔ·ÂÇÏ½Ê½Ã¿À: [33mINTRO[37m  ¦¢
+¦¢Áö¿øµÇ´Â ¼Ð ¸í·É¾î¸¦ º¸·Á¸é ÀÔ·ÂÇÏ½Ê½Ã¿À: [33mHELP[37m                  ¦¢
+¦¢                                                                ¦¢
+¦¢¼Óµµ¸¦ ³ôÀÌ·Á¸é ´©¸£½Ê½Ã¿À: [31mCtrl-F8[37m ¹× [31mctrl-F12[37m.                ¦¢
+¦¢¸ÅÇÎ ÇÁ·Î±×·¥À» ¿­·Á¸é: [31mCtrl-F1[37m.                                ¦¢
+¦¢´õ ¸¹Àº Á¤º¸´Â DOSBox µð·ºÅÍ¸®ÀÇ [36mREADME[37m ÆÄÀÏ¿¡ ÀÖ½À´Ï´Ù.        ¦¢
+¦¢                                                                ¦¢
+.
+:SHELL_STARTUP_CGA
+¦¢DOSBox´Â ÄÄÆ÷ÁöÆ® CGA ¹æ½ÄÀ» Áö¿øÇÕ´Ï´Ù.                        ¦¢
+¦¢ÀÌ ¸ðµåÀÏ ¶§ »öÀ» ¹Ù²Ù·Á¸é [31m(alt-)F11[37mÀ» »ç¿ëÇÏ½Ê½Ã¿À.            ¦¢
+¦¢                                                                ¦¢
+.
+:SHELL_STARTUP_DEBUG
+¦¢[31mAlt-Pause[37m¸¦ ´­·¯ µð¹ö±ëÇÏ°Å³ª, [33mDEBUG[37m ¸í·É¾î·Î EXE¸¦ ½ÇÇàÇÕ´Ï´Ù. ¦¢
+¦¢                                                                ¦¢
+.
+:SHELL_STARTUP_END
+¦¢[32mÁñ°Å¿î ÇÏ·ç µÇ½Ê½Ã¿À![37m                                           ¦¢
+¦¢[32mDOSBox ÆÀ[37m                                                       ¦¢
+¦¦¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¥[0m
+.
+:SHELL_CMD_CHDIR_HELP
+ÇöÀç µð·ºÅÍ¸®¸¦ º¸¿© ÁÖ°Å³ª ¹Ù²ß´Ï´Ù.
+.
+:SHELL_CMD_CHDIR_HELP_LONG
+CHDIR [µå¶óÀÌºê:][°æ·Î]
+CHDIR [..]
+CD [µå¶óÀÌºê:][°æ·Î]
+CD [..]
+
+  ..   »óÀ§ µð·ºÅÍ¸®·Î ¹Ù²ß´Ï´Ù.
+
+Æ¯Á¤ µå¶óÀÌºêÀÇ µð·ºÅÍ¸®¸¦ Ç¥½ÃÇÏ·Á¸é 'CD µå¶óÀÌºê:'¸¦ ÀÔ·ÂÇÏ½Ê½Ã¿À.
+ÇöÀç µå¶óÀÌºê¿Í µð·ºÅÍ¸®¸¦ Ç¥½ÃÇÏ·Á¸é ¸Å°³ º¯¼ö ¾øÀÌ 'CD'¸¦ ÀÔ·ÂÇÏ½Ê½Ã¿À.
+.
+:SHELL_CMD_CLS_HELP
+È­¸éÀ» Áö¿ó´Ï´Ù.
+.
+:SHELL_CMD_DIR_HELP
+µð·ºÅÍ¸®¸¦ º¸¿© ÁÝ´Ï´Ù.
+.
+:SHELL_CMD_ECHO_HELP
+¸Þ½ÃÁö¸¦ º¸¿©ÁÖ°Å³ª, ¸í·É¾î ¹ÝÇâÀ» ÄÑ°Å³ª ²ü´Ï´Ù.
+.
+:SHELL_CMD_EXIT_HELP
+¼Ð¿¡¼­ ºüÁ® ³ª°©´Ï´Ù.
+.
+:SHELL_CMD_HELP_HELP
+µµ¿ò¸»À» º¸¿© ÁÝ´Ï´Ù.
+.
+:SHELL_CMD_MKDIR_HELP
+µð·ºÅÍ¸®¸¦ ¸¸µì´Ï´Ù.
+.
+:SHELL_CMD_MKDIR_HELP_LONG
+MKDIR [µå¶óÀÌºê:][°æ·Î]
+MD [µå¶óÀÌºê:][°æ·Î]
+.
+:SHELL_CMD_RMDIR_HELP
+µð·ºÅÍ¸®¸¦ Áö¿ó´Ï´Ù.
+.
+:SHELL_CMD_RMDIR_HELP_LONG
+RMDIR [µå¶óÀÌºê:][°æ·Î]
+RD [µå¶óÀÌºê:][°æ·Î]
+.
+:SHELL_CMD_SET_HELP
+È¯°æ º¯¼ö¸¦ ¹Ù²ß´Ï´Ù.
+.
+:SHELL_CMD_IF_HELP
+ÀÏ°ý ÇÁ·Î±×·¥¿¡¼­ Á¶°Ç Ã³¸®¸¦ ¼öÇàÇÕ´Ï´Ù.
+.
+:SHELL_CMD_GOTO_HELP
+ÀÏ°ý ½ºÅ©¸³Æ®¿¡¼­ ·¹ÀÌºíÀÌ ÀÖ´Â ÁÙ·Î ÀÌµ¿ÇÕ´Ï´Ù.
+.
+:SHELL_CMD_SHIFT_HELP
+ÀÏ°ý ½ºÅ©¸³Æ®¿¡¼­ ¹Ù²Ü ¼ö ÀÖ´Â ¸Å°³ º¯¼öÀÇ À§Ä¡¸¦ ¿ÞÂÊÀ¸·Î ¿òÁ÷ÀÔ´Ï´Ù.
+.
+:SHELL_CMD_TYPE_HELP
+ÅØ½ºÆ® ÆÄÀÏÀÇ ³»¿ëÀ» º¸¿©ÁÝ´Ï´Ù.
+.
+:SHELL_CMD_TYPE_HELP_LONG
+TYPE [µå¶óÀÌºê:][°æ·Î][ÆÄÀÏÀÌ¸§]
+.
+:SHELL_CMD_REM_HELP
+ÀÏ°ý ÆÄÀÏ¿¡ ÁÖ¼®À» ±â·ÏÇÕ´Ï´Ù.
+.
+:SHELL_CMD_REM_HELP_LONG
+REM [ÁÖ¼®]
+.
+:SHELL_CMD_NO_WILD
+°£´Ü ¹öÀüÀÇ ¸í·É¾îÀÌ¹Ç·Î Æ¯¼ö ¹®ÀÚ¸¦ Çã¿ëÇÏÁö ¾Ê½À´Ï´Ù!
+.
+:SHELL_CMD_RENAME_HELP
+ÇÏ³ª ÀÌ»óÀÇ ÆÄÀÏ ÀÌ¸§À» ¹Ù²ß´Ï´Ù.
+.
+:SHELL_CMD_RENAME_HELP_LONG
+RENAME [µå¶óÀÌºê:][°æ·Î]ÆÄÀÏÀÌ¸§1 ÆÄÀÏÀÌ¸§2.
+REN [µå¶óÀÌºê:][°æ·Î]ÆÄÀÏÀÌ¸§1 ÆÄÀÏÀÌ¸§2.
+
+´ë»ó ÆÄÀÏ·Î »õ µå¶óÀÌºê³ª °æ·Î¸¦ ÁöÁ¤ÇÒ ¼ö ¾øÀ½À» ÁÖÀÇÇÏ½Ê½Ã¿À.
+.
+:SHELL_CMD_DELETE_HELP
+ÇÏ³ª ÀÌ»óÀÇ ÆÄÀÏÀ» »èÁ¦ÇÕ´Ï´Ù.
+.
+:SHELL_CMD_COPY_HELP
+ÆÄÀÏÀ» º¹»çÇÕ´Ï´Ù.
+.
+:SHELL_CMD_CALL_HELP
+´Ù¸¥ ÀÏ°ý ÆÄÀÏ ¾È¿¡¼­ ÀÏ°ý ÆÄÀÏÀ» ½ÇÇàÇÕ´Ï´Ù.
+.
+:SHELL_CMD_SUBST_HELP
+³»ºÎ µð·ºÅÍ¸®¸¦ µå¶óÀÌºê·Î ÇÒ´çÇÕ´Ï´Ù.
+.
+:SHELL_CMD_LOADHIGH_HELP
+ÇÁ·Î±×·¥À» »óÀ§ ¸Þ¸ð¸®¿¡ ºÒ·¯µéÀÔ´Ï´Ù (xms=true, umb=true°¡ µÇ¾î ÀÖ¾î¾ß ÇÕ´Ï´Ù).
+.
+:SHELL_CMD_CHOICE_HELP
+»ç¿ëÀÚÀÇ Å°¸¦ ±â´Ù¸®°í ERRORLEVELÀ» ¼³Á¤ÇÕ´Ï´Ù.
+.
+:SHELL_CMD_CHOICE_HELP_LONG
+CHOICE [/C:¼±ÅÃ Ç×¸ñ] [/N] [/S] ¹®ÀÚ¿­
+  /C[:]¼±ÅÃ Ç×¸ñ  -  Çã¿ëÇÒ Å°¸¦ ÁöÁ¤ÇÕ´Ï´Ù.  ±âº» ¸ñ·ÏÀº ynÀÔ´Ï´Ù.
+  /N  -  ÇÁ·ÒÇÁÆ®¿¡ ¼±ÅÃ ¸ñ·ÏÀ» ¼û±é´Ï´Ù.
+  /S  -  ´ë/¼Ò¹®ÀÚ·Î ±¸º°µÈ ¼±ÅÃ Ç×¸ñÀ» ¼±ÅÃÇÒ ¼ö ÀÖµµ·Ï ÇÕ´Ï´Ù.
+  text  -  ÇÁ·ÒÇÁÆ® ¾Õ¿¡ Ç¥½ÃµÉ ¹®ÀÚ¿­ÀÔ´Ï´Ù.
+.
+:SHELL_CMD_ATTRIB_HELP
+¾Æ¹« °Íµµ ÇÏÁö ¾Ê½À´Ï´Ù. È£È¯¼ºÀ» À§ÇØ ³²°ÜµÓ´Ï´Ù.
+.
+:SHELL_CMD_PATH_HELP
+È£È¯¼ºÀ» À§ÇØ ³²°ÜµÓ´Ï´Ù.
+.
+:SHELL_CMD_VER_HELP
+DOS ¹öÀüÀ» º¸¿© ÁÖ°í ¼³Á¤ÇÕ´Ï´Ù.
+.
+:SHELL_CMD_VER_VER
+DOSBox ¹öÀü %s. DOS ¹öÀü %d.%d.
+.

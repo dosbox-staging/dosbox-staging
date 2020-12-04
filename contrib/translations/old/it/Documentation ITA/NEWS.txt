@@ -1,0 +1,673 @@
+0.74
+  - Diverse correzioni piccolo gioco specifico / hack / support. (Offensive,
+    Che impedisce sorpasso, installatore GTA, scheda audio Regno O 'Magic rilevazione,
+    Pirate booter, Armored Fist installer)
+  - Aggiungere la S3-specifico 640x480 256 colori. (Regressione correzioni in "Legno
+    Le navi e gli uomini di ferro "e" I Have No Mouth And I Must Scream ")
+  - Fissare uno stack overflow che potrebbe crash DOSBox.
+  - Aggiungi ingresso finto microfono. (Correzioni Talking Parrot)
+  - ADLIB Modificare disattivare il codice, in modo che non si spegne in
+    casi in cui si ripete lo stesso suono più e più volte.
+  - Diverse piccole correzioni al codice del CD audio. (HOMM2, Redneck
+    Rampage e altri)
+  - Diversi miglioramenti al codice di emulazione CDROM. (Correzioni di Alpha
+    Tempesta e GT Racing 97)
+  - Alcune correzioni CPU di piccole dimensioni che potrebbe risolvere qualcosa.
+  - Maniglia opcode 0xff sottocodice 7 come un'istruzione non valida. (Correzioni DIF-2 e altri)
+  - Alcune correzioni Ercole. (Testdrive)
+  - Migliorare il supporto per i pezzi tranciati che avvolgono l'inizio della
+    lo schermo. (Correzioni Magic Circle demo e Sid & Al)
+  - Rimuovere i vecchi nuclei OPL come quelli nuovi sembrano funzionare molto bene.
+  - Modificare il codice film di registrazione in modo che i film non siano corrotti, quando
+    si esce dosbox senza fermare il filmato.
+  - Cambia scaler RGB3x a guardare più bella.
+  - Migliorare la registrazione dei valori iniziali di compatibilità di GUS.
+  - Aggiunto il rilevamento automatico per Gameblaster. (Giochi può trovare ora)
+  - Cambia preferenze rendere un po 'per essere più compatibili con Windows 7.
+  - Aggiungi DOS correzioni per terminare programma. (Correzioni Fortune Teller)
+  - Aggiungi FFREEP. (Correzioni Trucks)
+  - Migliorare ST80 FPU in modalità C durante la scrittura di zero. (Correzioni Antigok)
+  - Aggiunta la funzione speciale int10 scanline. (Correzioni mz700 e probabilmente un sacco
+    di giochi che pasticcio con loro)
+  - Fissare lo scorrimento in modalità video usato raramente. (Correzioni Orphee)
+  - Modificare gioco hack specifici un po 'così che Kick Off 3 funziona di nuovo.
+  - Un sacco di correzioni per la tabella dei parametri INT10 video. (Sette spiriti
+    di RA ed altri)
+  - Aggiungi blanking VGA in macchina = vgaonly. (Utilizzato da Alien Carnage)
+  - CGA, PCjr, Tandy: tranciatura video aggiuntivi, avviare display cambia fermo
+    temporizzazione, sincronizzazione larghezza di impulso di correzione.
+  - PCjr, Tandy: attuare ritracciamento verticale interrupt.
+  - PCjr, CGA: video linea per linea emulazione.
+  - PCjr: supporto per il cambio on-screen di colore 4medium modalità per 16low. (Usato
+    da booter Ghostbusters)
+  - Hercules: Aggiungere il supporto monocromatico verde e ambra.
+  - Tutte le macchine: solo aggiornare i tempi del video, se necessario. (Jungle Hunt,
+    altri che sincronizzare allo schermo del video potrebbe trarre vantaggio)
+  - Diverse correzioni DOS di piccole dimensioni.
+  - Alcune correzioni UMB correlati. (L'eredità senza UMB)
+  - Fissare il numero di versione di DSP per SB 1.5. (Corregge un paio di partite)
+  - Numerosi miglioramenti emulazione VGA. (Allenatore di calcio Allertone)
+  - Alcune correzioni Tandy. (Mech Warrior)
+  - Piccoli miglioramenti e correzioni per l'emulazione OPL.
+  - Aggiungi a basso livello di emulazione Tandy DAC.
+  - Alcune correzioni EMS. (Correzioni di Mortal Kombat e altri)
+  - Cambia SoundBlaster meccanismo DSP reset, irq sb aggiungere riconoscere la logica.
+    (Applicazioni correzioni stmik-based)
+  - Alcune modifiche interrompere posizione del puntatore. (Correzioni Tales Tinker)
+  - Alcune correzioni al codice di avvio. (Correzioni Last Mission)
+  - Rispettare le informazioni sui file di sola scrittura. (Champions correzioni di Zulala)
+  - Alcuni fix RTC. (Correzioni Tully Bodine e altri)
+  - Migliorare l'emulazione del mouse per lavorare meglio con Water World.
+  - Speriamo che fissare la traduzione del file di configurazione.
+  - Accelerare e correzioni per il nucleo ricompilatore. (Pitfall2 PCjr)
+  - Cambiare posizione di memoria inizio. (Correzioni di installazione settimo Guest)
+  - Diverse correzioni alla gestione dei file batch. (Shift e
+    utilizzare il primo 0% digitato al posto del% analizzata 0)
+  - Migliorare la redirezione di file e la linea reindirizzato finisce. (Correzioni
+    Phantasmagoria 2 installer DOS)
+  - Fix compilation con i nuovi MAC OS X versione.
+  - Aggiungi 16C550A FIFO sostegno alla emulazione porta seriale.
+  - Migliorare l'emulazione modem per ottenere velocità più elevate.
+  - Default Cambia samplerates a 44100, a 1024 dei blocchi e prebuffer a 20,
+    in modo che alcune schede audio si spera produrre più fluida la riproduzione del suono.
+  - Aggiungete un po 'raramente utilizzato, ma per alcuni giochi di bandiere critiche
+    i comandi interni.
+  - Bandiera aggiuntivi userconf, in modo che la configurazione può userspecific
+    facilmente essere utilizzati insieme con configfile-conf.
+  - Migliorare la sincronizzazione interna con timer a ripetizione (in particolare con
+    il nucleo dinamico).
+
+0.73
+  - Aggiungere due nuove OPL2 + OPL3 emulatori. (Migliore di velocità, di attuazione diverse
+    approccio)
+  - Migliorata DRO registrazione / struttura del file di meglio.
+  - Aggiungi EGA emulazione.
+  - Aggiunta la modalità speciale macchina vga. Supporta più dei trucchi esotici come
+    cambiare la tavolozza durante gli aggiornamenti dello schermo, caratteri ecc 9x16
+  - Aggiunta la modalità di macchina speciale per le schede SVGA seguenti:
+     - S3
+     - Paradise
+     - Tseng
+  - Risolvi i problemi con la funzione di linea vga split.
+  - Migliorare vesa emulazione.
+  - Aggiungere la selezione della modalità VESA opzionale vecchio per i giochi che non funzionano
+    con caratteristiche determinate vesa.
+  - Migliorare video BIOS l'emulazione di comportarsi più come una vera e propria bios.
+  - Risolve per emulare i modi 4bpp grafica.
+  - Correzioni al sistema di paging.
+  - Varie correzioni e miglioramenti per il nucleo ricompilazione.
+  - Aggiungi braccio backend per il nucleo ricompilazione.
+  - Aggiungere alcune stranezze mscdex quando si tratta di file che sono esattamente 8,3 lunghi.
+  - Piccole correzioni alla manipolazione di file batch.
+  - Piccole correzioni alla gestione della memoria XMS.
+  - Correzioni varie per la memoria allineata su host che si desidera.
+  - Vari miglioramenti al mouse.
+  - Correzioni e velocità up piccolo al debugger.
+  - Fix e migliorare il lotto di problemi di compilazione. (Rilevamento maledizioni,
+    GCC 3.4 e GCC 4.X correzioni)
+  - Aggiunte alcune di base della tastiera di movimentazione automatica di layout. (Attualmente solo Windows)
+  - Aggiunto il supporto di base per il driver evdev tastiera.
+  - Varie correzioni al timer. (Migliorare la modalità 2 cambi timer,
+    implementare la modalità 1, migliorare Porta2 imballaggio)
+  - Aggiungere l'estrazione audio e MCI supporto audio. Dovrebbe consentire di CDROM audio
+    per Vista e aggiunge il controllo del volume.
+  - Migliorare la velocità di cache di directory molto, soprattutto con il montaggio lento
+    mezzi di comunicazione come i percorsi di rete.
+  - Varie correzioni alla realizzazione del file temporaneo.
+  - Non tenere batchfiles aperto durante l'esecuzione. Permette di riscrittura del
+    batchfile attiva. (Programmi di menu usare questo trucco a volte)
+  - Risolvi i problemi con nomi di file con 2 estensioni.
+  - Aggiungete un po 'le tabelle più basso livello dos.
+  - Risolve all'emulazione Ercole.
+  - Fissare la movimentazione di bandiera per caso speciale di ROR.
+  - Effettuare la movimentazione batchfile in materia di IF più flessibile.
+  - Risolve a scorrimento / panning funzione.
+  - Aggiunta l'emulazione coda di prefetch.
+  - Fare il tipo di CPU emulate selezionabili. Questo è principalmente il
+    comandi di identificazione e la filosofia stessa di paging.
+  - Alcune funzionalità speciali EMS aggiunto. (OS maniglie, movimentazione zero-page)
+  - Migliorare il sostegno ai sistemi di gestione ambientale quando si avvia un sistema operativo diverso.
+  - Migliorare il rilevamento della velocità da cdrom giochi.
+  - Migliorare la stabilità del codice ciclo di indovinare, quando c'è sfondo
+    attività.
+  - MSCDEX Fix vari schemi di riconoscimento cdrom.
+  - Aggiunto il supporto CoreMIDI su Mac OS X.
+  - Migliorare il supporto per i dispositivi DOS quando usato per rilevare l'esistenza
+    di directory in vari modi.
+  - Aggiungi IRQ 2 emulazione su VRET. (EGA solo)
+  - Aggiunta la tabella dei parametri video e lo stato di funzionalità video.
+  - Aumentare FreeSpace default a 250 MB.
+  - Alcune correzioni al trattamento filesystem FAT per le immagini disco.
+  - Alcune correzioni e integrazioni SoundBlaster comando.
+  - Fix mixer trasferimenti diretti a 16bit su host bigendian.
+  
+0.72
+  - Risolto variabile non inizializzate in joystick. (Correzioni di crash su Vista e
+    Mac OS X)
+  - Alcuni bug risolti e velocizza il core a 64 bit ricompilazione.
+  - Flag di segno fisso sui trasferimenti DMA SoundBlaster (Space Quest 6 intro)
+  - Corretto un bug nel codice di elaborazione layout della tastiera e fissa alcuni
+    layout.
+  - Dreamweb fisso.
+  - Migliorata la velocità di sblocco quando i cicli di esecuzione = max.
+  - Risolto un crash per il completamento tab nella shell.
+  - Migliorata la funzione di correzione del codice. Ora dovrebbe essere come come un vero e proprio monitor
+    le gestisce.
+  - Corretto un bug nel codice di XMS rapporto di stato. (Blake Stone 1,0 shareware)
+  - Aggiunto il layout di tastiera molto di più.
+  - Fix crash legati alla modifica della scaler prima di uno schermo è stato creato.
+  - Compilazione Speriamo fisso su * BSD.
+  - Abilitato auto core selezione di CPU per ricompilare core pure.
+  - Fatto il joystick usato selezionabile quando 4axis è specificato.
+  - Aggiunte alcune note per gli utenti inesperti DOS per la shell.
+
+0.71
+  - Aggiungere un nuovo core CPU ricompilazione, che dovrebbe essere più facile in porto.
+  - Aggiungi la versione a 64 bit del nucleo ricompilazione.
+  - Aggiungi mipsel versione a 32 bit del nucleo ricompilazione.
+  - Fissare alcuni piccoli problemi con la FCB. (Gioielli correzioni delle tenebre e
+    cyrus scacchi)
+  - Sollevare alcune eccezioni più. (Correzioni vbdos)
+  - Fissare alcuni problemi con il nucleo dinamico. (Correzioni Inner Parole,
+    Archmimedean Dynasty e altri)
+  - Migliorare / codice fisso di riserva per alcune schede grafiche.
+  - Risolto un bug di alcuni cd audio collegato.
+  - Aggiunta una funzionalità non documentata MSCDEX. (Domain Correzioni Ultimate)
+  - Fissare un qualche modo pcspeaker. (Correzioni di Test Drive e giochi simili)
+  - Migliorare dos keyinput manipolazione. (Correzioni di Wing Commander 3 di dialogo uscita)
+  - Rimuovere condizione d'uscita in modalità completamente nidificati. (Corregge alcuni demo)
+  - Aggiungere file di immagini di rilevamento dimensione.
+  - Aggiungi / Fix alcuni codici ANSI. (Correzioni PC Larn e alcune versioni del
+    Infocom giochi)
+  - Diverse correzioni DOS generale. (Correzioni nba95, hexit e vari altri giochi)
+  - Aggiungere alcuni controlli di input valido. (Correzioni di avventura 3D del corpo e simili
+    giochi)
+  - Fix joystick digitale centraggio problema.
+  - Riattivare textmode 54 e 55.
+  - Risolto un problema con pelmask UniVBE 5,0 lite. (Correzioni Panzer General)
+  - Fix underflow mixer minori.
+  - Qualche immagine generale e bios corregge l'emulazione del disco.
+  - Speriamo fix compilation su BSD e Darwin.
+  - Provare a utilizzare l'accesso ioctl cdrom per default, se possibile.
+  - Fissare alcune routine di rilevamento SVGA. (Correzioni più grande flotta 2 e Bobby Fischer
+    Insegna gli scacchi)
+  - È ora possibile chiudere DOSBox utilizzando la finestra di stato in Win32.
+  - Aggiungere il supporto per NX sistemi abilitati.
+  - Risolto un errore di casting che ha mostrato soltanto con alcuni compilatori. (Correzioni
+    vari giochi sotto Mac OS X e Linux 64 bit)
+  - Migliorare e timer aggiungere Gate 2 di sostegno. (Giochi e varie correzioni
+    joystick problemi)
+  - Migliorare il mouse. Aggiungi backdoor privi di documenti. (Metà correzioni ultima delle Tenebre,
+    PC-BLOX e altri)
+  - Aggiungi / migliorare il supporto per ~ ~ e nome utente in tutti i comandi.
+  - Risolto un problema con il font PCjr / Tandy. (Deskmate correzioni personale 2)
+  - Routine dma Cambia un po '. (Zecche correzioni nel suono in vari giochi)
+  - Lasciare diskimages in sola lettura per essere avviato. (Correzioni varie booter
+    giochi)
+  - Aggiunto il supporto di base di file nascosto sulle immagini cdrom. (Correzioni Player
+    Manager 2)
+  - Aggiungere alcune funzionalità raramente utilizzata per l'installazione int10 modalità. (Correzioni
+    WW2 battaglie del Pacifico del Sud)
+  - Aggiunta possibilità di forzare scaler utilizzo.
+  - Accelerare generazione di bandiera e di renderla più 386-simile.
+  - Alcuni feedback colorato nel mapper.
+  - General codice di pulitura.
+
+0.70
+  - Migliorare registro di movimentazione e di supporto con XMS.
+  -. Risolti alcuni problemi con l'eliminazione di file aperti (Windows solo rilascio)
+  - Aggiungi manichino classe LPT1. (Solo per Windows rilascio)
+  - Migliorare alcuni dei comandi interni DOS. (Scelta, copia e spostamento)
+  - Migliorare ROM zona. (Per i giochi che lo utilizzano per i numeri casuali o
+    sovrascriverlo come una sorta di cosa di rilevamento)
+  - Migliora la compatibilità del nucleo dinamico, rendendo lo svolgimento di alcuni
+    pagefaults precedenti.
+  - Spostare le tabelle interne dos in giro così abbiamo più memoria UMB.
+  - Aggiungere alcune tabelle dos.
+  - Nucleo dinamici supporta le eccezioni IO.
+  - Spostare alcuni gestori di interrupt per XT posizioni Bios.
+  - Aggiunta una FPU dinamico su x86.
+  - Migliorare la FPU sulla non-x86.
+  - Trapflag ha la priorità più rigoroso IRQ hardware.
+  - Il sostegno Trapflag per il nucleo dinamico.
+  - Aggiungi fittizio trattamento TRx.
+  - Fissare alcune funzioni di carattere usato raramente.
+  - Ciclo di auto Migliorare indovinare il codice.
+  - Migliorare ed estendere il supporto per il joystick.
+  - Aggiunto il supporto autofire.
+  - Migliorare il mapper in modo da poter mappare i tasti per il joystick e viceversa.
+  - Un paio di correzioni di gioco specifico della scheda video.
+  - Correzione di alcuni bug della CPU a 64 bit.
+  - Aggiunto il supporto per alcuni regimi di rilevazione cdrom.
+  - Migliorare HSG / supporto di Red Book.
+  - Migliorare MSCDEX.
+  - Miglioramento del supporto dinamico core sotto Mac Intel.
+  - Aggiunto il supporto di base per i programmi Clipper.
+  - Aggiunto il supporto per diversi layout di tastiera.
+  - Aggiungi core auto indovinare.
+  - Fissare alcuni bug bandiere.
+  - Fissare alcuni bug della CPU di piccole dimensioni.
+  - Tasso di SoundBlaster migliorare l'individuazione da parte dei vari programmi.
+  - Migliorare EMS emulazione. (Consentono la mappatura delle regioni non standard)
+  - Migliorare i codici input da tastiera su diversi OS-es.
+  - Risolvi i problemi con nomi di file che hanno stackdata in loro.
+  - Cambiato alcune operazioni di base in modo da prendere DOSBox emulato tempo.
+  - Migliorare dos funzioni ioctl.
+  - Estendere core della CPU in modo che siano in grado di rilevare e di sollevare qualche
+    tipi di eccezione di più.
+  - Migliorare le funzioni DOS quando si tratta di un'unità virtuale.
+  - Migliorare le unità FAT.
+  - Migliore gestione del volume-label nelle funzioni di file.
+  - Immagine disco capacità di ciclismo. (Prompt)
+  - Cercare di ridurre l'impatto dell'uso di un joystick analogico.
+  - Diverse misure per non invalidare il codice su alcuni tipi
+    di modificazione di sé nel nucleo dinamico.
+  - Aggiungere memoria dinamica inlining funzione di base.
+  - Alcuni miglioramenti piccolo topo. (Alcuni giochi sono di ciò che hanno
+    non dovrebbe)
+  - Aggiunta l'emulazione nullmodem (h-a-l-9000).
+  - Alcuni CGA piccole e correzioni Ercole.
+  - Aggiungere più scaler (hq2x/hq3x/sai). (Kronuz)
+  - Cambia supportano il caricamento del file di configurazione. Ora supporta
+    più file di configurazione.
+  - Fare nucleo dinamico in grado di eseguire alcuni programmi Win32s.
+  - Fix e aggiungere alcune modalità soundblaster rare. (Srecko)
+  - Un migliore controllo del mixer soundblaster. (Srecko)
+  - Effettuare l'installazione soundblaster sotto le finestre molto più facile.
+  - Aggiungere il controllo di gestione del dispositivo canale.
+  - Supporto GEMMIS (EMS sotto Windows).
+  - Supporto di più colori a vincere 3. (Vasyl)
+  - Non visualizza le unità montate in file manager di Windows.
+  - Correzione di alcuni bug nel gestore INT13.
+  - Simulazione di alcuni effetti collaterali di bios gestori di interrupt sulle bandiere.
+  - Aggiungi IPX funzioni necessarie NetBIOS.
+  - Rendere i porti prendere tempo emulato.
+  - Tabcompletion è ormai consapevole del comando CD.
+  - Aggiungere suppport per la maschera pel dac.
+  - Risolve all'emulazione Ercole, migliora l'individuazione e la commutazione della banca.
+  - Risolve all'emulazione Tandy, 640x200x16 modalità e le diverse dimensioni della banca.
+  - EGA / VGA rilevazione memoria modifiche per un rendering più veloce.
+  - Gus 16 descrive bit.
+  - Molti miglioramenti timer.
+  - Alcune correzioni PCjr.
+  - Alcune correzioni booter.
+  - Molte correzioni di piccole dimensioni.
+
+0.65
+  - La scrittura fissa FAT.
+  - Aggiunte alcune funzioni più mancante DOS.
+  - Migliorata PIC in modo che onori effettivamente irq 2 / 9.
+  - Migliore intelligente MPU-401, in modo che più giochi funzionano con esso.
+  - Alcune correzioni mouse.
+  - Cambiato il trasferimento DMA un po 'in modo da aggirare le tabelle paging.
+  - Aggiunta la funzionalità di S3 XGA.
+  - Migliorato il paging in modo che leggere e scrivere i guasti sono gestiti diversamente.
+  - Riscritta la gestione delle eccezioni un po '(non 0x0B eccezione con dos4gw più).
+  - Aggiunto IO eccezioni in tutti, ma il nucleo dinamico.
+  - Alcuni miglioramenti ems.
+  - Aggiunta la selezione del codice midi-device per i padroni di casa Windows.
+  - Fix crash / segfaults legati alla disattivazione del pcspeaker.
+  - Aggiunta di più alcuni file = trucchi rilevazione XX.
+  - Correzione di alcuni schemi di vga di rilevazione.
+  - La corruzione screenshot fisso quando si utilizza-NOCONSOLE in una directory di sola lettura.
+  - Fissare sbagliato screenshots in scala.
+  - Aggiunte alcune funzioni di file nascosto quando si utilizza diskimages. (Aiuta con CD-Rom
+    sistemi di rilevamento)
+  - Corretto un bug nel codice del mixer, che la musica in sordina alcuni giochi.
+  - Aggiunto un nucleo FPU assembly.
+  - Fatto il guscio più flessibili per i file batch.
+  - Controllare che non allineati accesso memoria fissa hangups su processori ARM.
+  - Circa il 64 correzioni bit.
+  - Aggiunto il codice per modificare la configurazione in fase di runtime.
+  - Migliorata l'emulazione ADPCM.
+  - Corretto un paio di istruzioni della CPU.
+  - Vesa relazione sempre 2.0 e risolvere alcuni problemi di colore con i giochi VESA.
+  - Fissare 0x06 modalità video e 0x0A.
+  - Miglioramenti per l'emulazione joystick. 4 tasti sono supportati.
+  - Aggiunta l'emulazione VCPI per i giochi di origine.
+  - Corretto un sacco di cose nel codice di avvio. La maggior parte booters lavoro adesso.
+  - Un sacco di miglioramenti per l'emulazione IPX.
+  - Riscritto modem emulazione. Dovrebbe funzionare con più giochi.
+  - Miglioramenti alle routine di dos gestione della memoria.
+  - Aggiungi UMB (blocchi di memoria superiore) di sostegno.
+  - Emulare il tasto pausa.
+  - Migliorare Composite CGA modalità di emulazione.
+  - Un sacco di cambiamenti compatibilità vga.
+  - Migliorato il supporto per la modalità video incatenato.
+  - Migliorata la modalità e la movimentazione palette in modalità CGA.
+  - Montare accetta ~ adesso.
+  - Aggiunto alcune delle funzioni RIL EGA.
+  - Aggiunta l'emulazione TandyDAC.
+  - OS / 2 di sostegno.
+  - Migliorata la velocità e il nucleo dinamico cpu.
+  - Risolti alcuni errori nel livello di emulazione CD-ROM.
+  - Aggiunto un sistema automatico work-around per alcuni chipset grafici.
+  - Aggiunto il supporto PCjr.
+  - Lasciare mousedriver essere sostituito. Risolve alcuni giochi che vengono con i loro
+    proprio (interno) del conducente.
+  - CPU migliorata dinamica in modo che possa gestire pagefaults e qualche oscuro
+    tipi di codice auto-modificante.
+  - Aggiunto switch-noautoexec per saltare il contenuto di [autoexec] nel
+    file di configurazione.
+  - Migliorata la modalità di emulazione V86 (principalmente per Strike Commander).
+  - Migliorata timer comportamento.
+  - Migliorato il supporto per la tastiera estesa.
+  - Enhanced e ha aggiunto alcuni tavoli DOS.
+  - Endian core_full messa in sicurezza.
+  - Endian Made pagefaults sicuro.
+  - Aggiunto il supporto per moviecapturing
+  - Aggiunto il supporto per il 15/16/32 videomodes bit.
+  - Aggiungete un po 'più modi VESA (4 bit).
+  - Aggiungi 1024x768 uscita.
+  - Screenrendering cambiato così attira solo le modifiche allo schermo.
+  - Lasciare rimappatura della pagina EMS quando il trasferimento DMA è stato avviato da
+    frame della pagina
+  - Made EMS e DMA lavorare insieme quando si gioca da una pagina di memoria mappata.
+  - Rinominato diverse opzioni di configurazione, in modo che siano unici.
+  - Fusione MPU e intelligente in un'unica opzione.
+  - Fusione fullfixed e fullresolution.
+  - Chiavi Extended devono essere maneggiati meglio.
+  - F11 e F12 di lavoro.
+  - Raccolta correzioni per varie piattaforme.
+  - Fissare qualche infortunio nel dare input non validi.
+  - Rimosso interp2x e ha aggiunto qualche nuovo scaler.
+  - Reintrodurre il mouse lockfree. (Blocco automatico = false)
+  - Aggiungi una cache più grande per il core della CPU dinamico.
+  - Migliorata la SoundBlaster DSP, in modo che venga rilevato da strumenti creativi.
+  - Un sacco di correzioni di bug.
+  - Anche correzioni più.
+
+0.63
+  - Risolto crash con keymapper (Ctrl-F1) e output = superficie.
+  - Aggiunto smontare.
+  - Risolti i problemi con le etichette più unità.
+  - Risolto la maggior parte se non tutti i file = problemi XX.
+  - Aggiunto il reindirizzamento nella shell.
+  - Risolto crash con subst.
+  - Corretti i crash multipli con il supporto di unità immagini.
+  - Aggiunta una istruzione FPU mancante.
+  - Corretti alcuni istruzioni della CPU e FPU.
+  - Corretto un piccolo bug relativi al caricamento dei font.
+  - Ha riscritto il supporto dei dispositivi.
+  - Aggiunto capslock / controlli numlock all'avvio.
+  - La scrittura onda fissa.
+  - Un paio di correzioni interno DOS.
+  - Timer correzioni per la pala ibrida.
+  - Alcune correzioni soundblaster di piccole dimensioni.
+  - La cache del disco può ora essere regolato da una keycombo. (CTRL-F4)
+  - Un paio di correzioni di tastiera.
+  - Raccolta correzioni su varie piattaforme.
+  - Abbastanza alcuni miglioramenti debugger.
+  - Risolto dir solo di visualizzazione dei file dopo la prima manche sulle unità CD-Rom.
+  - Aggiunti alcuni controlli cdrom rilevazione.
+  - Inserire Abilitato nella shell. (Editing più semplice dei comandi)
+  - Cambiato ordine in cui appaiono eseguibili con scheda di completamento.
+  - Corretti alcuni problemi con la registrazione OPL prime e con un po 'diverso
+    formato
+
+0.62
+  - Aggiunto il supporto lampeggiante nella shell e alcune correzioni di colore.
+  -. Parsing di comando fisso quando i file bat coinvolti (fix-uscita)
+  - Non Problemi risolti con schede di comando in fase di elaborazione in modo corretto.
+  - Puliti / sequenza di spegnimento migliorato.
+  - Aggiunte alcune funzioni più bios (funzioni di attesa e ritardo).
+  - Fatto il nostro driver XMS conformarsi le specifiche meglio. (C2woody)
+  - Aggiunto il supporto per alcune funzioni più ems.
+  - Aggiunto intelligente MPU401 emulazione. (Srecko)
+  - Aggiunta la SoundBlaster 16 emulazione.
+  - Riscritta emulazione GUS al suono più autentico.
+  - Migliorata l'emulazione speaker pc.
+  - Aggiunto un interno (programmabile) mixer.
+  - Aggiunto il supporto una SoundBlaster pochi / routine di rilevamento ADLIB.
+  - Lotto fisso di bug relativi ai trasferimenti DMA.
+  - Aggiunto interpolando prebuffering routine mixer.
+  - Aggiunta la registrazione di comandi OPL e midi prime.
+  - Corretti alcuni bug con la registrazione delle onde.
+  - Cambiato impostazioni di sensibilità del mouse.
+  - Aggiunto il mouse ps2-emulazione in interrupt BIOS (c2woody).
+  - Corretti alcuni bug con i limiti di emulazione del mouse.
+  - Corretto un bug con una stringa non terminata nel drivelabel.
+  - Ricerca di file modificati routine un po 'per essere più compatibili.
+  - Aggiunto il supporto per l'attributo-ricerca con la FCB.
+  - Aggiunta di base SDA.
+  - Aggiunto il TPA e DIB.
+  - Aggiunto il lotto di tabelle mancanti dos (c2woody).
+  - Cambiato psp e funzioni dta da usare dta.
+  - Rinviato il nome del file in DS: DX in create-random-file (c2woody).
+  - Corretto un bug con data e ora usato su file aperti.
+  - Alcune correzioni MSCDEX.
+  - Aggiunta l'opzione-version, il che rende dosbox riferire la sua versione.
+  - Aggiunto un keymapper.
+  - Aggiunta di base emulazione IPX.
+  - Aggiunto il supporto iso cdrom e floppy supporta le immagini.
+  - Aggiunta la possibity per avviare un'altra versione DOS.
+  - Aggiunto il supporto Serial passthrough (solo per Win32).
+  - Aggiunta la possibilità di dosbox pausa.
+  - Cambiato OpenGL in modo che sia inizializzato solo se utilizzato.
+  - Fare funzionare dosbox a priorità più alta quando è attivo e più basso quando inattivo.
+  - Aggiunto il supporto diretto di uscita Draw (solo per Win32).
+  - Aggiunto attuale programma in esecuzione a barra del titolo.
+  - Emulazione video Riscritta per supportare nuovi scaler.
+  - Aggiunta una nuova grafica come scaler advmame3x, tv2x.
+  - Aggiunto il supporto per alcuni trucchi anti-debugger.
+  - Migliorata la gestione del tasto tab.
+  - Migliorato il supporto per la tastiera numerica.
+  - Corretto un opcode cpu pochi.
+  - Aggiunto il semplice cpu core (per le macchine lowerend)
+  - Corretti alcuni bug brutto nel core della CPU dinamico.
+  - Aggiunto un paio di codici operativi FPU (raramente usato).
+  - Problemi risolti vari con GCC 3.4.
+  - Molti miglioramenti timer interno (PIT e PIC).
+  - Aggiunto alcuni comandi PIC più (c2woody).
+  - Aggiunto BCD conteggio al timer.
+  - Fissare alcune funzioni VESA.
+  - Aggiungere il supporto di base per 132x25 e 132x45 textmodes.
+  - Migliorata l'emulazione Tandy molto.
+  - L'utilizzo della CPU si abbassa quando dosbox è inattivo.
+  - Lasciare la virtualizzazione di alcuni fondamentali IO-porte (c2woody).
+
+0.61
+  - Aggiunta una cpu beta dinamico per gli host x86 (molto instabile)
+  - Aggiunto hardware OpenGL e uscita video overlay
+  - Riscritta gli aggiornamenti vga schermo per andare in linee
+  - Aggiunto il paging e V86 supporto all'emulazione cpu
+  - Aggiunta una opzione di configurazione per simulare un certo tipo di macchina
+  - Aggiunta l'emulazione grafica Hercules
+  - Fatto CGA / TANDY modi più compatibili
+  - Aggiornata textmode routine di disegno per sostenere lampeggiante colori
+  - Risolto VESA set di funzioni di pagina che è stata documentata sbagliato
+  - Corretti alcuni opcode cpu erroneamente emulato.
+  - Fatta eccezione per una migliore gestione
+  - Debugger: correzioni; registrazione dei GDT, la LGT, IDT, nuovi comandi (Fizzban)
+  - Corretti alcuni problemi mscdex (lettera di errori del disco colpo di testa, ha aggiunto ottenere voce di directory)
+  - Ha aggiunto / corretti alcuni funcs bios
+  - Ha aggiunto alcune funzioni usate raramente XMS (c2woody grazie!)
+  - Attuazione di emulazione GUS
+  - Aggiunto il supporto 16-bit DMA (per GUS ed eventualmente SB16)
+  - Risolti molti bug piccoli filehandling routine
+  - Molte correzioni FPU piccolo (c2woody/Fizzban)
+  - Alcuni miglioramenti tastiera (giochi pharlab)
+  - Alcuni Timer e CMOS e risoluzione di RTC (Mirek / Srecko / Altri)
+  - Lotto di correzioni di mouse (Aiuto da diverse persone)
+  - Abilitato modem interno
+  - Fatta la routine di analisi DOS un po 'più flessibile
+  - Aggiunto Subst (Srecko)
+  - Aggiunto il supporto cdrom ioctl per Linux (prompt)
+  - Molte correzioni interno DOS: memoria / files / datastructures.
+  - Hai qualche aiuto da c2woody nel permettere più di 1 irq di essere servito
+  - Disabled DPMI (non più necessario DOSBox gestisce quasi tutti i extender.)
+  - Configfile Cerca in $ HOME directory se nessuno presente nella directory corrente
+  - Aggiunto un altro modo per passare alla modalità protetta. (Grazie Morten Eriksen!)
+  - Correzione di alcuni comportamenti strani mal documentato con PSP / DTA
+  - Aggiunte alcune avvertenze per l'apertura dei file di sola lettura in writemode (default DOS).
+  - Molti enhanchements shell
+  - Corretto un bug specifico win32 che fare con nomi di file iniziano con un "."
+  - Corretti alcuni bug con la struttura di directory: non trovato / può 't salvare gli errori
+
+0.60
+  - Memoria di sistema ha riscritto per il supporto futuro di paging
+  - Fisso EMS e diversi bug XMS e riscrivere per il sistema di nuova memoria
+  - Ha aggiunto il supporto per alcune modalità video Tandy
+  - Ha aggiunto MAME Tandy 3 emulazione vocale
+  - Ha aggiunto MAME CMS / emulazione GameBlaster
+  - Ha aggiunto l'emulazione della porta seriale virtuale con il protocollo TCP / IP del modem (un po 'buggy)
+  - Blaster emulazione del suono è ora SB Pro 2.0 compatibile
+  - Aggiunto il supporto di base per 32-bit in modalità protetta
+  - VGA ora tenta di emulare una scheda S3 Trio 64 con 2 MB
+  - VESA 2.0, il supporto per alcune modalità di colore 256
+  - Ha riscritto gran pezzo di codice BIOS video per una migliore compatibilità
+  - Aggiunto il supporto per i non flag di ereditarietà.
+  - Creato funzioni per la creazione psp bambino.
+  - Aggiornato errorcodes di FindFirst (grazie Mirek!)
+  - Loggingsystem riscritto per generare meno avvisi
+  - Ha aggiunto dos interfaccia in modalità protetta (DPMI)
+  - Ha aggiunto l'etichetta supporto CD-Rom
+  - Una migliore riproduzione audio cdrom
+  - Cache directory fisso e migliorato
+  - Selettore debugger spettacoli-e cpu info modalità
+  - Ha aggiunto SELINFO (selettore informazioni) comando al debugger
+  - Ha aggiunto il conteggio dei riferimenti per i file DOS
+  - Ha aggiunto scheda di completamento
+  - Aggiunto il supporto di base FPU.
+  - Corretti diversi bug con filesystem case sensitive.
+  - Ha aggiunto comandi di shell di più e migliorare il loro comportamento.
+  - Mouse miglioramenti.
+  - Orologio in tempo reale miglioramento.
+  - DMA correzioni.
+  - Migliorato il supporto per i file BAT..
+
+0.58
+  - Data fissata e le questioni di tempo con FCB
+  - Ha aggiunto più comandi al interno della Shell
+  - Corretta configurazione del sistema, quando un vecchio configfile è stato utilizzato
+  - CGA fisso put e get pixel
+  - Corretti alcuni vga registro a reimpostare i valori errati
+  - Migliorato il supporto per le tastiere straniere
+  - Supporto per il joystick migliorato
+  - Dosbox fatto multithreaded di nuovo
+  - Lotto di correzioni soundblaster
+  - Dma correzioni
+  - Supporto cdrom
+  - Supporto MIDI
+  - Ha aggiunto scale2x
+  - Riattivato il supporto screenshot
+  - Supporto per il joystick correzioni
+  - Mouse miglioramenti
+  - Supporto per la scrittura wavefiles
+  - Ha aggiunto la directory della cache e LongFileName supporto (longfilenames saranno alterati)
+  - Correzioni di mouse
+  
+  
+0.57
+  - Aggiunto il supporto per il comando / C
+  - Risolto tutti FCB-scrivere le funzioni
+  - Fisso FCB-parseline
+  - Ha aggiunto debugger sotto Linux / FreeBSD
+  - Ha aggiunto breakpoint memoria debugger e le funzioni AutoLog (debug pesanti)
+  - Ha aggiunto programma loadfix.com che divora memoria (default 64kb)
+    Uso: loadfix [-opzione] [nomeprogramma] [parametri] ...
+    Esempio: loadfix mm2 (64kb Alloca e comincia eseguibile mm2)
+             loadfix -32 mm2 (32kb Alloca e comincia eseguibile mm2)
+             loadfix -128 (alloca 128kb)
+             loadfix-f (libera tutta la memoria assegnata precedente)
+  - Ha aggiunto riecheggiando di caratteri per la funzione di ingresso
+  - Aggiunto il supporto per backspace per la funzione di ingresso
+  - Aggiunto il supporto parziale per int10: 01 CursorType set
+  - Fissa la maggior parte dei problemi / bug con l'input di caratteri.
+  - Chiamata allocationinfo fisso (serie Darksun).
+  - Migliorato il supporto per funzioni dos inesistenti
+  - Split screen sostegno
+  - 66 67 prefisso sostegno
+  - Timingscheme riscritto in modo da 1.000 Hz timer non causano problemi più
+  - Aggiornamento emulazione ADLIB
+  - Corretti alcuni isues con il mouse (doppio clic e visibile quando non dovrebbe essere)
+  - Il comportamento del mouse migliorata (Mickey / tasso di pixel) e le routine di rilevamento.
+  - Supporto di base ANSI.SYS
+  - Disney emulazione sistema audio
+  - Upcase riscritto / funzioni lowcase in modo che funzioni bene con gcc3.2
+  - SHELL: aggiunto rinominare e cancellare
+  - Aggiunto il supporto per il comando / C. crash nella shell
+  - Risolto vari bug quando si esce dosbox
+  - Corretto un bug nella XMS
+  - Corretto un bug con il joystick quando si preme un pulsante
+  - Creare più bello configfiles.
+  - Funzione di bios_disk migliorato.
+  - Trapflag supporto
+  - Timing migliore ritracciamento verticale.
+  - PIT miglioramenti Timer e molte correzioni di bug
+  - Molti bug fixes molti al sottosistema DOS
+  - Supporto per la strategia di allocazione di memoria
+  - Mainloop cpu riscritto ad agire più come una vera e propria cpu
+  
+0.56
+  - Aggiunto il supporto per un configclass / configfile
+  - Aggiunto il supporto per la scrittura la configclass in un configfile
+  - Rimosso il file della lingua e reso interno
+  - Aggiunto il supporto per la scrittura del file di lingua (si sovrappone quello interno)
+  - Mousesupport migliorato
+  - Aggiornato readme
+  - Supporto per gli screenshots
+  - Alcune correzioni di cpu-bug
+  - Dma modifiche
+  - Supporto Real Sound
+  - Correzioni di EMM e nuove funzioni.
+  - Risolve VGA
+  - Wildcompare nuovo
+  - Supporto per il formato e disktype a montare.
+  - Ha aggiunto funzionalità nuovo debugger: start / traccia in INT, scrivere status di registro del processore,
+    scavalcare le istruzioni rep e loop, il supporto di breakpoint senza usare INT 03 (interruttore di debug pesanti)
+  - Aggiunto istruzioni della CPU più e ha cambiato le operazioni sulle stringhe.
+  - Aggiunte classi per la maggior parte delle strutture interne dos.
+  - Riscritta la maggior parte dei FCB chiamate a un uso normale chiamate DOS.
+  
+0.55
+  - Fissa gli errori / warning in prefix_66.h e prefix_66_of.h (decimale troppo grande diventa unsigned).
+  - Errore di compilazione fissato su FreeBSD quando # disable_joystick è stato definito
+  - Int10_writechar è stato aggiornato per spostare il cursore.
+  - Cambiato il basedir routine per utilizzare la directory di lavoro corrente, invece di argv [0]. Questo consentirà di correggere e cose del freno:)
+  - Comando illegali, visualizza ora il comando
+  - Wildcmp aggiornato per essere case insensitive
+  - Ha aggiunto FCB: aprire, chiudere, FindFirst, FindNext.
+  - Rinominare fisso in drive_local
+  - Ha aggiunto nuove funzionalità per il debugger: supporto punto di interruzione / visualizzazione dati / riga di comando
+  - Il sostegno parziale di lista di elenchi (dos blocco info)
+  - EMM pieno sostegno 3,2
+  - EMM parziale 4.0 Supporto
+  - Le correzioni per i caratteri grafici di base (testo in giochi di Sierra è ora corretto)
+  - Supporto migliorato per mousehandlers utente
+  - Fissa grafica EGA
+  - Fissa grafica VGA
+  - Scrivere fisso con dimensione 0
+  - Gestione della memoria cambiato.
+  - Fisso e ripulito le bandiere cpu.
+  - Cambiato gestore di interrupt.
+  - Accelerare la grafica.
+  - Accelerare il nucleo cpu-
+  - Dma cambiato
+  - DMA migliorato i flussi dalla memoria EMM
+  - Ha aggiunto alcuni videomodes CGA
+  - Ha aggiunto più funtions al gestore della tastiera
+
+0.50:
+      -Ha aggiunto F3 per ripetere l'ultimo comando digitato.
+      -Ha permesso di cambiare la shellmessages (dosshell). così
+      si può costumize. (dosbox.lang)
+      -Core cpu cambiato.
+      -Corretto un sacco di errori con la tastiera: Shift-F1 e
+      Alt-F1 ora funziona.
+      -Corretti alcuni errori di divisione.
+      Fatti un sistema di plugin.
+      Aggiunto un sacco di modalità reale 386 istruzioni.
+      -Ha permesso di ridimensionare lo schermo.
+      -Il sindaco di pulitura source / riorganizzazione.
+      -Completa riscrittura delle routine grafiche. Dovrebbe rendere
+      possibile realizzare le cose più elaborate come 2xsai, interpolazione.
+      -Cambiato la riproduzione del suono.
+      -Cambiato il vga di disegno per disegnare solo sulle variazioni di memoria, invece
+      disegno di un intero fotogramma.
+      -Fix per la SoundBlaster / codice DMA dovrebbe essere in grado di giocare a 4-bit
+      ADPCM compressi suoni.
+      -Ha aggiunto il momento giusto per dir.
+      -Bugfixes per la gestione di file batch.
+      s-bel po 'di piccole correzioni. (Dune1 & 2, wolf3d, molti di più).
+      -Data di pubblicazione la fonte.

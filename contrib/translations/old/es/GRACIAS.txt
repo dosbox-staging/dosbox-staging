@@ -1,0 +1,30 @@
+Quisiéramos agradecer a:
+
+
+Vlad R. del proyecto vdmsound por la excelente información de sound blaster.
+Tatsuyuki Satoh del Equipo Mame por hacer un excelente emulador de FM.
+Jarek Burczynski por el nuevo emulador de OPL3.
+Ken Silverman por su trabajo en un emulador de OPL2.
+
+Los proyectos Bochs y DOSemu, los cuales usé para obtener información.
+FreeDOS por las ideas para hacer mi línea de comandos.
+
+Pierre-Yves Gérardy por alojar el antiguo tablón de anuncios.
+Colin Snover por alojar nuestro foro.
+
+Sourceforge por alojar nuestra página principal y otras herramientas de
+desarrollo.
+Mirek Luza, por la moderación de los foros.
+eL_Pusher, DosFreak y MiniMax por la moderación del foro VOGONS.
+
+crazyc, gulikoza, M-HT por su trabajo en el núcleo dynrec.
+
+Jantien por el control de versiones.
+Shawn, Johannes y Marcus por crear la versión para MAC OS X.
+Jochen por crear la versión para OS/2.
+Ido Beeri por el ícono.
+ripsaw8080 por su duro trabajo de depurado.
+El Equipo GOG por la pantalla de bienvenida.
+Toda la gente que envió un reporte de errores.
+Los Beta Testers.
+

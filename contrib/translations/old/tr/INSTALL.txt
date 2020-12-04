@@ -1,0 +1,105 @@
+Derleme için gerekli þeyler.
+
+SDL
+    Simple DirectMedia Library http://www.libsdl.org'ta vardýr.
+    DOSBox'un Windows sürümü ile daðýtýlan dll çok az geliþtirilmiþtir.
+    DOSBox kaynak paketinde (src/platform/sdl-win32.diff) deðiþiklikleri
+    bulabilirsiniz. Eðer kaynak aðacýna düzeltme yapmak isterseniz bize
+    e-posta gönderin. (README'ye bakýn)send us an email.
+    LGPL altýnda lisanslanmýþtýr. 
+    Þimdilik, yalnýzca 1.2 ile alt sürümleri (1.2.8, 1.2.13 etc.)
+    desteklendiðini unutmayýn.
+
+Curses (isteðe baðlý)
+    Eðer, ata ayýklayýcýyý etkinleþtirmek isterseniz curses kütüphanesine
+    gereksinim duyarsýnýz. ncurses, aþaðý yukarý her unix daðýtýmýnda kurulu olmalý.
+    win32 için http://pdcurses.sourceforge.net'ten pdcurses indirin.
+    Lisans: Açýk Kaynak
+
+Libpng (optional)
+    Ekran görüntüleri için gerekli.
+    win32 için http://gnuwin32.sourceforge.net/packages.html'den libpng'yi indirin.
+    Daha çok bilgi için http://www.libpng.org/pub/png/'e bakýn.
+    Lisans: Açýk Kaynak
+
+Zlib (optional)
+    libpng tarafýndan gereklidir.
+    win32 için http://gnuwin32.sourceforge.net/packages.html'den libz (zlib olarak
+    yeniden isimlendirildi) indirin. Daha çok bilgi için http://www.zlib.net'e
+    bakýn.
+    Lisans: Açýk Kaynak
+
+SDL_Net (optional)
+    Modem/IPX desteði için. Onu http://www.libsdl.org/projects/SDL_net/'ten indirin.
+    LGPL altýnda lisanslanmýþtýr.
+
+SDL_Sound 
+    Disk kalýplarýnda sýkýþtýrýlmýþ ses için gereklidir. (isteðe baðlý)
+    Bu cue/iso CD-ROM kalýplarýnda sýkýþtýrýlmýþ (mp3/ogg) ses izleri içindir.
+    Bunu http://icculus.org/SDL_sound'ten indirin.
+    Licenced under LGPL
+
+ALSA_Headers
+    (isteðe baðlý)
+    Linux altýnda Alsa desteði içindir. Linux çekirdek kaynaðýnýn parçasýdýr.
+    LGPL altýnda lisanslanmýþtýr.
+
+Eðer, unix sisteminde CVS altýnda derlemek isterseniz, ayrýca automake (>=1.6),
+autoconf'a (>=2.50) gereksinim duyacaksýnýz. http://www.gnu.org'ta var olmalý.
+
+For building on unix systems.
+If you are building from the cvs run ./autogen.sh first before doing the following.
+
+1. ./configure
+2. make
+
+In step 1 you could add the following switches:
+--enable-debug 
+        enables the internal debugger. --enable-debug=heavy enables even more 
+        debug options. DOSBox should then be run from a xterm and when the sdl-
+        window is active press alt-pause to enter the debugger.
+
+--enable-core-inline
+        enables some memory increasing inlines. This greatly increases 
+        compiletime for maybe a increase in speed.
+
+--disable-fpu
+        disables the emulated fpu. Although the fpu emulation code isn't 
+        finished and isn't entirely accurate it's advised to leave it on. 
+
+--disable-fpu-x86
+        disables the assembly fpu core. Although relatively new the x86 fpu 
+        core has more accuracy then the regular fpu core. 
+
+--disable-dynamic-x86
+        disables the dynamic x86 specific cpu core. Although it might be 
+        be a bit unstable, it can greatly improve the speed of dosbox on x86 
+        hosts.
+        Please note that this option on x86 will result in a different
+        dynamic/recompiling cpu core being compiled then the default.
+        For more information see the option --disable-dynrec
+
+--disable-dynrec
+        disables the recompiling cpu core. Currently x86 and x86_64 only.
+        You can activate this core on x86 by disabling the dynamic-x86 core.
+
+--disable-dynamic-core
+        disables all dynamic cores. (same effect as 
+        --disable-dynamic-x86 --disable-dynrec)
+
+--disable-opengl
+        disables OpenGL-support (output mode that can be selected in the
+        DOSBox configuration file).
+
+--disable-unaligned-memory
+        disables unaligned memory access.
+
+Check the src subdir for the binary.
+
+NOTE: If capslock and numlock appear to be broken. open
+src/ints/bios_keyboard.cpp and go to line 30 and read there how to fix it.
+
+
+Build instructions for VC++6 
+Don't use VC++ 6: it creates faulty code in core_normal.cpp
+Later Visual Studio versions work fine (vs2003/.net, vs2005, vs2008)

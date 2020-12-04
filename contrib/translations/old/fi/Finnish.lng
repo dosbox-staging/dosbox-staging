@@ -1,0 +1,661 @@
+:SDL_CONFIGFILE_HELP
+fullscreen -- K„ynnist„ Dosbox heti koko n„yt”n tilassa.
+fulldouble -- K„yt„ kaksoispuskurointia koko n„yt”n tilassa.
+fullresolution -- Mit„ tarkkuutta k„ytet„„n koko n„yt”n tilassa: alkuper„ist„ vai kiinte„t„ kokoa (esim. 1024x768).
+windowresolution -- Porrasta ikkuna t„h„n kokoon, mik„li n„ytt”laite tukee laitteistoporrastusta.
+output -- Mit„ tulostelaitetta k„ytet„„n: surface,overlay,opengl,openglnb,ddraw.
+autolock -- Hiiri lukittuu itsest„„n kuvaruutua napsauttaessa.
+sensitiviy -- Hiiren herkkyys.
+waitonerror -- Odottaa, ennen konsolin sulkemista, mik„li Dosbox on kohdannut virheen.
+priority -- Dosboxin prioriteettitasot: lowest,lower,normal,higher,highest,pause (mik„li ei p„„llimm„isen„).
+            Pilkun per„ss„ olevaa toista kohtaa k„ytet„„n silloin kun Dosbox ei ole p„„llimm„isen„ tai on pienennetty.
+mapperfile -- N„pp„in- ja tapahtumakartoitusten lataamiseen ja tallentamiseen k„ytett„v„ tiedosto
+usescancodes -- V„lt„ symkeys-n„pp„inten k„ytt”„, ei v„ltt„m„tt„ toimi kaikilla k„ytt”j„rjestelmill„.
+.
+:DOSBOX_CONFIGFILE_HELP
+language -- Valitse muu kielitiedosto.
+memsize -- Dosboxin muistin m„„r„ megatavuina.
+machine -- Emuloitavan koneen tyyppi:hercules,cga,tandy,pcjr,vga.
+captures -- Hakemisto, jonne aalto„„ni-, midi- ja n„ytt”kuvatiedostot kaapataan.
+.
+:RENDER_CONFIGFILE_HELP
+frameskip -- Kuinka monta kehyst„ Dosbox ohittaa ennen kehyksen piirt„mist„.
+aspect -- Suorita suhteen oikaisu. Jos tulostemenetelm„si ei tue porrastusta, t„m„ saattaa hidastaa emulointia!
+scaler -- Pientarkkuuksisten tilojen suurentamiseen ja parantamiseen k„ytett„v„ porrastin
+          Tuetut valinnat ovat: none,normal2x,normal3x,advmame2x,advmame3x,hq2x,hq3x,
+                                2xsai,super2xsai,supereagle,advinterp2x,advinterp3x,
+                                tv2x,tv3x,rgb2x,rgb3x,scan2x,scan3x.
+.
+:CPU_CONFIGFILE_HELP
+core -- emuloinnissa k„ytetty suoritinydin: normal,simple,dynamic,auto.
+        auto switches from normal to dynamic if appropriate.
+cycles -- M„„r„„, kuinka monta k„sky„ Dosbox pyrkii millisekunnissa emuloida.
+          T„m„n arvon asettaminen liian suureksi aiheuttaa „„nen katkoilua ja viiv„stymisi„.
+          Dosboxin voi my”s panna arvaamaan sopiva arvo k„ytt„m„ll„ asetusta max.
+          Oletusasetus (auto) vaihtuu tarpeen vaatien arvoksi max.
+cycleup   -- M„„r„„, kuinka paljon n„pp„inyhdistelm„ nostaa tai laskee suoritinjaksojen m„„r„„.
+cycledown    Arvon asettaminen lukua 100 pienemm„ksi kertoo prosenttiosuudesta.
+.
+:MIXER_CONFIGFILE_HELP
+nosound -- K„ytt„„ hiljaista tilaa, „„ni emuloidaan kuitenkin.
+rate -- Mikserin n„ytteenottotaajuus, laitteiden asettaminen t„t„ suuremmaksi
+        saattaa laskea laitteiden „„nenlaatua.
+blocksize -- Mikserin lohkokoko, suuremmat lohkot saattavat auttaa „„nen katkoilua,
+             mutta „„ni samalla viiv„styy.
+prebuffer -- How many milliseconds of data to keep on top of the blocksize.
+.
+:MIDI_CONFIGFILE_HELP
+mpu401      -- Emuloitavan MPU-401-laitteen tyyppi: none, uart vai intelligent.
+device      -- Laite, joka vastaanottaa MIDI-tietoa MPU-401-laitteelta.
+               T„m„ voi olla default,alsa,oss,win32,coreaudio,none.
+config      -- Laitteen erityisasetukset. Windowsissa pane haluamasi laitteen
+               id-tunniste. Katso lis„tietoja README-tiedostosta.
+.
+:SBLASTER_CONFIGFILE_HELP
+sbtype -- Emuloitavan SoundBlasterin tyyppi:none,sb1,sb2,sbpro1,sbpro2,sb16.
+sbbase,irq,dma,hdma -- SoundBlasterin IO/IRQ/DMA/High DMA-osoitteet.
+mixer -- Anna SoundBlasterin mikserin muokata Dosboxin mikseri„.
+oplmode -- OPL-emuloinnin tyyppi: auto,cms,opl2,dualopl2,opl3.
+           Auto-tilassa tila m„„ritet„„n sblaster-tyypin mukaan.
+           Kaikki OPL-tilat ovat 'Adlib'-tyyppisi„ paitsi CMS.
+oplrate -- OPL-musiikkiemuloinnin n„ytteenottotaajuus.
+.
+:GUS_CONFIGFILE_HELP
+gus -- Ota k„ytt””n Gravis Ultrasound -emulointi
+gusbase,irq1,irq2,dma1,dma2 -- Gravis Ultrasoundin IO-, IRQ- ja DMA-osoitteet.
+           (Sama IRQ ja DMA kelpaa.)
+gusrate -- Ultrasound-emuloinnin n„ytteenottotaajuus.
+ultradir -- Ultrasound-hakemistopolku. T„ss„ hakemistossa
+            pit„isi olla MIDI-hakemisto, joka sis„lt„„
+            GUS-toiston paikkaustiedostot. Timidityn yhteydess„
+            k„ytett„vien paikkausasetelmien pit„isi toimia mainiosti.
+.
+:SPEAKER_CONFIGFILE_HELP
+pcspeaker -- K„yt„ PC-speaker-kaiuttimen emulointia.
+pcrate -- PC-speaker-kaiuttimen „„nentuoton n„ytteenottotaajuus.
+tandy -- K„yt„ Tandy Sound System -emulointia (off,on,auto).
+         Auto-tilassa Tandy Sound System -emulointi on saatavilla vain, jos machine-arvolle on asetettu arvo tandy.
+tandyrate -- Tandy 3-Voice -perheen n„ytteenottotaajuus.
+disney -- K„yt„ Disney Sound Source -emulointia.
+.
+:JOYSTICK_CONFIGFILE_HELP
+joysticktype -- Emuloitavan peliohjaimen tyyppi: auto (default), none,
+                2axis (tukee kahta peliohjainta), 4axis,
+                fcs (Thrustmaster), ch (CH Flightstick).
+                none poistaa k„yt”st„ peliohjaimen emuloinnin.
+                auto valitsee emuloinnin todellisten peliohjainten mukaan.
+timed -- k„ytt„„ akselissa ajastettuja intervalleja. (false on vanhanmallinen tapa).
+autofire -- ampuu jatkuvasti niin kauan kuin painiketta pidet„„n painettuna.
+swap34 -- vaihtaa 3. ja 4. akseleiden paikkaa. voi olla hy”dyllinen tietyill„ peliohjaimilla.
+buttonwrap -- k„ytt„„ painikkeen vaihtoa tietyll„ m„„r„ll„ emuloituja painikkeita.
+.
+:SERIAL_CONFIGFILE_HELP
+serial1-4 -- Aseta com-porttiin kytketyn laitteen tyyppi.
+             Voi olla: disabled, dummy, modem, nullmodem, directserial.
+             Lis„parametrien on oltava samalla rivill„ parametri:arvo-
+             muodossa. Kaikkien tyyppien parametrina on irq.
+             tyypille directserial: realport (pakollinen), rxdelay (valinnainen).
+             tyypille modem: listenport (valinnainen).
+             tyypille nullmodem: server, rxdelay, txdelay, telnet, usedtr,
+                            transparent, port, inhsocket (kaikki valinnaisia).
+             Esimerkki: serial1=modem listenport:5000
+.
+:DOS_CONFIGFILE_HELP
+xms -- K„yt„ XMS-tukea.
+ems -- K„yt„ EMS-tukea.
+umb -- K„yt„ UMB-tukea.
+keyboardlayout -- N„pp„imist”asettelun kielikoodi (tai none)
+.
+:IPX_CONFIGFILE_HELP
+ipx -- K„yt„ ipx:„„ UDP/IP-emuloinnin p„„ll„.
+.
+:AUTOEXEC_CONFIGFILE_HELP
+T„m„n lohkon rivit ajetaan k„ynnistyksen yhteydess„.
+.
+:PROGRAM_CONFIG_FILE_ERROR
+Tiedostoa %s ei voitu avata
+.
+:PROGRAM_CONFIG_USAGE
+Asetusty”kalu:
+K„yt„ komentoa -writeconf tiednimi kirjoittaaksesi nykyiset asetukset.
+K„yt„ komentoa -writelang tiednimi kirjoittaaksesi nykyiset kielimerkkijonot.
+.
+:PROGRAM_CONFIG_SECTION_ERROR
+Lohkoa %s ei ole olemassa.
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Kyseist„ lohkoa tai ominaisuutta ei ole.
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Ominaisuutta %s ei ole lohkossa %s.
+.
+:PROGRAM_CONFIG_GET_SYNTAX
+Oikea syntaksi: config -get "lohkon ominaisuus".
+.
+:PROGRAM_MOUNT_CDROMS_FOUND
+CD-ROM-asemia l”ytyi: %d
+.
+:PROGRAM_MOUNT_STATUS_2
+Asema %c liitetty kohteeseen %s
+.
+:PROGRAM_MOUNT_STATUS_1
+T„ll„ hetkell„ seuraavat asemat on liitetty:
+.
+:PROGRAM_MOUNT_ERROR_1
+Hakemistoa %s ei ole olemassa.
+.
+:PROGRAM_MOUNT_ERROR_2
+%s ei ole hakemisto
+.
+:PROGRAM_MOUNT_ILL_TYPE
+Laiton tyyppi %s
+.
+:PROGRAM_MOUNT_ALREADY_MOUNTED
+Asema %c on jo liitetty kohteeseen %s
+.
+:PROGRAM_MOUNT_USAGE
+K„ytt” [34;1mMOUNT Asematunnus Paikallishakemisto[0m
+Eli MOUNT c c:\windows liitt„„ windows-hakemiston Dosboxin c-asematunnukseen.
+.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+Asemaa %c ei ole liitetty.
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCES
+Aseman %c poisto onnistui.
+.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+N„enn„isasemia ei voida irrottaa.
+.
+:PROGRAM_MOUNT_WARNING_WIN
+[31;1mAseman c:\ liitt„mist„ ei suositella. Liit„ ensi kerralla (ali)hakemisto.[0m
+.
+:PROGRAM_MOUNT_WARNING_OTHER
+[31;1mHakemiston / liitt„mist„ ei suositella. Liit„ ensi kerralla (ali)hakemisto.[0m
+.
+:PROGRAM_MEM_CONVEN
+%10d kt perusmuistia vapaana
+.
+:PROGRAM_MEM_EXTEND
+%10d kt jatkomuistia vapaana
+.
+:PROGRAM_MEM_EXPAND
+%10d kt laajennusmuistia vapaana
+.
+:PROGRAM_MEM_UPPER
+%10d kt yl„muistia vapaana %d lohkossa (suurin UMB-lohko %d kt)
+.
+:PROGRAM_LOADFIX_ALLOC
+%d kt varattu.
+.
+:PROGRAM_LOADFIX_DEALLOC
+%d kt vapautettuna.
+.
+:PROGRAM_LOADFIX_DEALLOCALL
+K„yt”ss„ ollut muisti vapautettu.
+.
+:PROGRAM_LOADFIX_ERROR
+Muistinvarausvirhe.
+.
+:MSCDEX_SUCCESS
+MSCDEX asennettu.
+.
+:MSCDEX_ERROR_MULTIPLE_CDROMS
+MSCDEX: H„iri”: Usean CD-ROM-aseman asematunnusten on oltava yht„jaksoiset.
+.
+:MSCDEX_ERROR_NOT_SUPPORTED
+MSCDEX: H„iri”: Toimintoa ei viel„ tueta.
+.
+:MSCDEX_ERROR_PATH
+MSCDEX: H„iri”: Virheellinen polku.
+.
+:MSCDEX_TOO_MANY_DRIVES
+MSCDEX: H„iri”: Liikaa CD-ROM-asemia (enimm. 5). MSCDEXin asennus ep„onnistui.
+.
+:MSCDEX_LIMITED_SUPPORT
+MSCDEX: Alihakemisto liitetty: rajoitettu tuki.
+.
+:MSCDEX_INVALID_FILEFORMAT
+MSCDEX: H„iri”: Tiedosto ei ole iso- tai cue-levykuva tai se on virheellinen.
+.
+:MSCDEX_UNKNOWN_ERROR
+MSCDEX: H„iri”: Tuntematon virhe.
+.
+:PROGRAM_RESCAN_SUCCESS
+Aseman v„limuisti tyhjennetty.
+.
+:PROGRAM_INTRO
+[2J[32;1mTervetuloa, toivottaa Dosbox[0m, „„nin ja grafiikoin varustettu x86-emulaattori.
+Dosbox luo vanhaa Dosia muistuttavan komentorivin.
+
+Perustietoja liitt„misest„ saa kirjoittamalla [34;1mintro mount[0m
+Tietoja CD-ROM-tuesta saa kirjoittamalla [34;1mintro cdrom[0m
+Tietoja erityisn„pp„imist„ saa kirjoittamalla [34;1mintro special[0m
+Lis„tietoja Dosboxista saa sivulta [34;1mhttp://dosbox.sourceforge.net/wiki[0m
+
+[31;1mDosbox keskeytyy ja sulkeutuu virheen sattuessa varoituksitta![0m
+
+
+.
+:PROGRAM_INTRO_MOUNT_START
+[32;1mT„ss„ on muutamia komentoja, joilla p„„see alkuun:[0m
+Jotta oman tiedostoj„rjestelm„n tiedostoja voisi k„ytt„„ on
+hakemisto, jossa tiedostot ovat, liitett„v„ johonkin asemaan.
+
+.
+:PROGRAM_INTRO_MOUNT_WINDOWS
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mmount c c:\dosprog\[37m luo C-aseman sis„lt„en hakemiston c:\dosprog sis„ll”n. º
+º                                                                            º
+º [32mc:\dosprog\[37m on esimerkki. Vaihda sen tilalle oma pelihakemistosi.  [37m        º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+.
+:PROGRAM_INTRO_MOUNT_OTHER
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mmount c ~/dosprog[37m luo C-aseman sis„lt„en hakemiston ~/dosprog sis„ll”n. º
+º                                                                     º
+º [32m~/dosprog[37m on esimerkki. Vaihda sen tilalle oma pelihakemistosi. [37m º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+.
+:PROGRAM_INTRO_MOUNT_END
+Liitetty„si aseman oikein kirjoita [34;1mc:[0m siirty„ksesi „skett„in liitettyyn
+C-asemaan. Komento [34;1mdir[0m n„ytt„„ aseman sis„ll”n. Komennolla [34;1mcd[0m p„„set
+hakemistoon sis„„n (ilmaistu hakemistolistauksessa merkinn„ll„ [33;1m[][0m).
+Ohjelmia tai tiedostoja, joiden p„„tteen„ on [31m.exe[0m, [31m.bat[0m tai [31m.com[0m, voi ajaa.
+.
+:PROGRAM_INTRO_CDROM
+[2J[32;1mKuinka Dosboxissa liitet„„n todellinen tai n„enn„inen CD-ROM-asema:[0m
+Dosboxissa on usean eri tason CD-ROM-emulaattoreita.
+
+[33mPerustaso[0m toimii kaikissa CD-ROM-asemissa ja tavallisin hakemistoin.
+T„m„ asentaa MSCDEX-ajurin ja merkitsee tiedostot Vain luku -merkinn”in.
+Melkein kaikkia pelej„ varten riitt„„ t„m„:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom[0m   tai   [34;1mmount d C:\esimerkki -t cdrom[0m
+Mik„li se ei toimi, Dosboxille t„ytynee kertoa CD-ROM-aseman nimi:
+[34;1mmount d C:\esimerkki -t cdrom -label CDNIMI[0m
+
+[33mSeuraava[0m taso lis„„ tuen alatasolle.
+Siten se toimii vain CD-ROM-asemien yhteydess„:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
+
+[33mViimeinen[0m taso on riippuvainen k„ytt”j„rjestelm„st„:
+J„rjestelmiss„ [1mWindows 2000[0m, [1mWindows XP[0m ja [1mLinux[0m:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-ioctl[0m
+[1mWindows 9x[0m -j„rjestelmiss„, joihin on asennettu ASPI-kerros:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-aspi[0m
+
+Korvaa [0;31mD:\[0m CD-ROM-asemasi sijainnilla.
+Korvaa "[34;1m-usecd [33m0[0m" -asetuksen [33;1m0[0m CD-ROM-aseman numerolla, joka on n„ht„viss„,
+kun kirjoitat komennon:
+[34;1mmount -cd[0m
+.
+:PROGRAM_INTRO_SPECIAL
+[2J[32;1mErikoisn„pp„imet:[0m
+N„m„ ovat oletusarvoiset pikan„pp„imet.
+Niit„ voi muuttaa [33mn„pp„inkartoittimella[0m.
+
+[33;1mALT-ENTER[0m   : Siirry koko n„yt”n tilaan ja takaisin.
+[33;1mALT-PAUSE[0m   : Keskeyt„ Dosbox.
+[33;1mCTRL-F1[0m     : K„ynnist„ [33mn„pp„inkartoitin[0m.
+[33;1mCTRL-F4[0m     : P„ivit„ kaikkien asemien hakemistov„limuisti.
+              Vaihda liitetty„ levykuvaa.
+[33;1mCTRL-ALT-F5[0m : K„ynnist„ tai lopeta elokuvan luominen ruudusta.
+[33;1mCTRL-F5[0m     : Tallenna kuvakaappaus.
+[33;1mCTRL-F6[0m     : K„ynnist„ tai lopeta „„nen nauhoitus wav-tiedostoon.
+[33;1mCTRL-ALT-F7[0m : K„ynnist„ tai lopeta OPL-komentojen nauhoitus.
+[33;1mCTRL-ALT-F8[0m : K„ynnist„ tai lopeta k„sittelem„tt”mien MIDI-komentojen nauhoitus
+[33;1mCTRL-F7[0m     : V„henn„ ohitettavien kehysten m„„r„„ (frameskip).
+[33;1mCTRL-F8[0m     : Lis„„ ohitettavien kehysten m„„r„„ (frameskip).
+[33;1mCTRL-F9[0m     : Pakota Dosbox lopettamaan.
+[33;1mCTRL-F10[0m    : Sieppaa tai vapauta hiiri.
+[33;1mCTRL-F11[0m    : Hidasta emulointia (V„henn„ Dosboxin jaksoja).
+[33;1mCTRL-F12[0m    : Nopeuta emulointia (Lis„„ Dosboxin jaksoja).
+[33;1mALT-F12[0m     : K„yt„ nopeaa tilaa (Turbo-nappi).
+.
+:PROGRAM_BOOT_NOT_EXIST
+K„ynnistyslevytiedostoa ei ole olemassa.  Ei onnistu.
+.
+:PROGRAM_BOOT_NOT_OPEN
+K„ynnistyslevytiedostoa ei voitu avata.  Ei onnistu.
+.
+:PROGRAM_BOOT_PRINT_ERROR
+T„m„ komento k„ynnist„„ Dosboxin joko levyke- tai kiintolevykuvalta.
+
+T„t„ komentoa varten voidaan m„„ritt„„ levykkeiden sarja, joiden v„lill„
+vaihdellaan painamalla Ctrl-F4. Valinta -l m„„ritt„„ liitetyn aseman, jolta
+j„rjestelm„ k„ynnistet„„n. Jos asematunnusta ei m„„ritet„, k„ynnistet„„n
+oletusarvoisesti asemalta A. K„ynnistett„vi„ asematunnuksia ovat ainoastaan
+A, C ja D. Kiintolevylt„ (C tai D) k„ynnist„mist„ varten levykuvan on oltava
+jo valmiiksi liitettyn„ [34;1mIMGMOUNT[0m-komentoa k„ytt„en.
+
+T„m„n komennon syntaksi on:
+
+[34;1mBOOT [diskimg1.img diskimg2.img] [-l asematunnus][0m
+.
+:PROGRAM_BOOT_UNABLE
+K„ynnistys asemalta %c ei onnistu.
+:PROGRAM_BOOT_IMAGE_OPEN
+Avataan levykuvatiedostoa: %s
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+Tiedostoa %s ei voitu avata.
+:PROGRAM_BOOT_BOOT
+K„ynnistett„„n asemalta %c...
+.
+:PROGRAM_BOOT_CART_WO_PCJR
+PCjr-kasetti l”ytyi, mutta kone ei ole PCjr.
+:PROGRAM_BOOT_CART_LIST_CMDS
+K„ytett„viss„ olevat PCjr-kasetin komennot:%s.
+:PROGRAM_BOOT_CART_NO_CMDS
+PCjr-kasetin komentoja ei l”ytynyt.
+:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
+Asematunnus, johon levykuva halutaan liitt„„, on m„„ritett„v„.
+.
+:PROGRAM_IMGMOUNT_SPECIFY2
+Asemanumero (0 tai 3), johon levykuva liitet„„n (0,1=fda,fdb;2,3=hda,hdb), on m„„ritett„v„.
+.
+:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
+[33mCD-ROM[0m-levykuvia varten:   [34;1mIMGMOUNT asematunnus levykuvan-sijainti -t iso[0m
+
+[33mKiintolevy[0mkuvia varten: Kiintolevyille on m„„ritett„v„ aseman geometria:
+bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
+[34;1mIMGMOUNT asematunnus levykuvan-sijainti -size bps,spc,hpc,cyl[0m
+.
+:PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
+Tyyppi„ "%s" ei tueta. M„„rit„ hdd", "floppy" tai "iso".
+.
+:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
+Muotoa "%s" ei tueta. M„„rit„ "fat", "iso" tai "none".
+.
+:PROGRAM_IMGMOUNT_SPECIFY_FILE
+Liitett„v„ levykuva on m„„ritett„v„.
+.
+:PROGRAM_IMGMOUNT_FILE_NOT_FOUND
+Levykuvatiedostoa ei l”ydy.
+.
+:PROGRAM_IMGMOUNT_MOUNT
+Liitt„„ksesi hakemistoja k„yt„ [34;1mMOUNT[0m-komentoa, „l„ [34;1mIMGMOUNT[0m-komentoa.
+.
+:PROGRAM_IMGMOUNT_ALREADY_MOUNTED
+Kyseiseen tunnukseen on jo liitetty asema.
+.
+:PROGRAM_IMGMOUNT_CANT_CREATE
+Asemaa ei voida luoda tiedostosta.
+.
+:PROGRAM_IMGMOUNT_MOUNT_NUMBER
+Asenanumero %d liitetty kohteeseen %s
+.
+:PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
+Levykuvan on sijaittava is„nt„- tai paikallisasemalla.
+.
+:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
+Useiden tiedostojen k„ytt”„ tuetaan vain cue- ja iso-levykuvissa.
+.
+:PROGRAM_KEYB_INFO
+Koodisivu %i on ladattu
+.
+:PROGRAM_KEYB_SHOWHELP
+[32;1mKEYB[0m [n„pp„imist”asettelun tunnus[ koodisivun numero[ koodisivun tiedosto]]]
+
+Muutama esimerkki:
+  [32;1mKEYB[0m: N„yt„ t„ll„ hetkell„ ladattuna oleva koodisivu.
+  [32;1mKEYB[0m sp: Lataa espanjalainen (SP) asettelu, k„yt„ haluamaasi koodisivua.
+  [32;1mKEYB[0m sp 850: Lataa espanjalainen (SP) asettelu, k„yt„ koodisivua 850.
+  [32;1mKEYB[0m sp 850 mycp.cpi: Sama kuin yll„, mutta k„yt„ tiedostoa mycp.cpi.
+.
+:PROGRAM_KEYB_NOERROR
+N„pp„imist”asettelu %s ladattu koodisivulle %i
+.
+:PROGRAM_KEYB_FILENOTFOUND
+N„pp„imist”tiedostoa %s ei l”ydy
+
+.
+:PROGRAM_KEYB_INVALIDFILE
+N„pp„imist”tiedosto %s virheellinen
+.
+:PROGRAM_KEYB_LAYOUTNOTFOUND
+Ei asettelua kohteessa %s koodisivulle %i
+.
+:PROGRAM_KEYB_INVCPFILE
+Ei koodisivutiedostoa asettelu %s tai se on virheellinen
+
+.
+:SHELL_ILLEGAL_PATH
+Laiton polku.
+.
+:SHELL_CMD_HELP
+Saat luettelon kaikista tuetuista komennoista kirjoittamalla [33;1mhelp /all[0m .
+Pikaluettelo k„ytetyimmist„ komennoista:
+.
+:SHELL_CMD_ECHO_ON
+ECHO on p„„ll„.
+.
+:SHELL_CMD_ECHO_OFF
+ECHO on pois p„„lt„.
+.
+:SHELL_ILLEGAL_SWITCH
+Laiton valinta: %s.
+.
+:SHELL_MISSING_PARAMETER
+Tarvittava parametri puuttuu.
+.
+:SHELL_CMD_CHDIR_ERROR
+En voi siirty„ hakemistoon: %s.
+.
+:SHELL_CMD_CHDIR_HINT
+Siirty„ksesi eri asemaan kirjoita [31m%c:[0m
+.
+:SHELL_CMD_MKDIR_ERROR
+En voi luoda hakemistoa: %s.
+.
+:SHELL_CMD_RMDIR_ERROR
+En voi poistaa hakemistoa: %s.
+.
+:SHELL_CMD_DEL_ERROR
+En voi poistaa tiedostoa: %s.
+.
+:SHELL_SYNTAXERROR
+Komennon syntaksi on v„„r„.
+.
+:SHELL_CMD_SET_NOT_SET
+Ymp„rist”muuttujaa %s ei ole m„„ritelty.
+.
+:SHELL_CMD_SET_OUT_OF_SPACE
+Ymp„rist”tilaa ei ole tarpeeksi j„ljell„.
+.
+:SHELL_CMD_IF_EXIST_MISSING_FILENAME
+IF EXIST: Tiedostonimi puuttuu.
+.
+:SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
+IF ERRORLEVEL: Numero puuttuu.
+.
+:SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
+IF ERRORLEVEL: Virheellinen numero.
+.
+:SHELL_CMD_GOTO_MISSING_LABEL
+Nime„ ei annettu GOTO-komentoon.
+.
+:SHELL_CMD_GOTO_LABEL_NOT_FOUND
+GOTO: Nime„ %s ei l”ydy.
+.
+:SHELL_CMD_FILE_NOT_FOUND
+Tiedostoa %s ei l”ydy.
+.
+:SHELL_CMD_FILE_EXISTS
+Tiedosto %s on jo olemassa.
+.
+:SHELL_CMD_DIR_INTRO
+Hakemisto %s.
+.
+:SHELL_CMD_DIR_BYTES_USED
+%5d tiedosto(a) %17s tavua.
+.
+:SHELL_CMD_DIR_BYTES_FREE
+%5d kansio(ta)  %17s tavua vapaana.
+.
+:SHELL_EXECUTE_DRIVE_NOT_FOUND
+Asemaa %c ei ole olemassa!
+Se on ensin [31mliitett„v„[0m. Kirjoita [1;33mintro[0m tai [1;33mintro mount[0m saadaksesi lis„tietoja.
+.
+:SHELL_EXECUTE_ILLEGAL_COMMAND
+Laiton komento: %s.
+.
+:SHELL_CMD_PAUSE
+Jatka painamalla mit„ tahansa n„pp„int„.
+.
+:SHELL_CMD_PAUSE_HELP
+Jatkaa yhden n„pp„inpainalluksen j„lkeen.
+.
+:SHELL_CMD_COPY_FAILURE
+Kopiointih„iri” : %s.
+.
+:SHELL_CMD_COPY_SUCCESS
+   %d tiedosto(a) kopioitu.
+.
+:SHELL_CMD_SUBST_NO_REMOVE
+Aseman poistoa ei tueta. Mit„„n ei tehd„.
+.
+:SHELL_CMD_SUBST_FAILURE
+SUBST ep„onnistui. Komentorivill„ on tehty virhe tai kohdeasema on jo k„yt”ss„.
+SUBST-komentoa voidaan k„ytt„„ vain paikallisiin asemiin.
+:SHELL_STARTUP_BEGIN
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mTervetuloa, toivottaa Dosbox v%-8s[37m                               º
+º                                                                      º
+º Uusien k„ytt„jien pikaopas aukeaa komennolla: [33mINTRO[37m                  º
+º N„yt„ tuetut komennot kirjoittamalla: [33mHELP[37m                           º
+º                                                                      º
+º Saat s„„detty„ suoritustehoa n„pp„inyhdistelmin [31mctrl-F8[37m ja [31mctrl-F12[37m. º
+º Avataksesi n„pp„inkartottimen paina [31mctrl-F1[37m.                         º
+º Lue lis„tietoja Dosbox-hakemiston [36mREADME[37m-tiedostosta.                º
+º                                                                      º
+.
+:SHELL_STARTUP_CGA
+º Dosbox tukee Composite CGA -tilaa.                                   º
+º T„m„n tilan ollessa p„„ll„ paina [31m(alt-)F11[37m vaihtaaksesi v„rej„.      º
+º                                                                      º
+.
+:SHELL_STARTUP_DEBUG
+º Paina [31malt-Pause[37m siirty„ksesi virheenkorjaussovellukseen    º
+º k„ynnist„ sovellus parametrill„ [33mDEBUG[37m.                     º
+.
+:SHELL_STARTUP_END
+º [32mPid„ hauskaa![37m                                                        º
+º [32mDosbox-tiimi[37m                                                         º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+.
+:SHELL_CMD_CHDIR_HELP
+N„ytt„„ tai vaihtaa nykyisen hakemiston.
+.
+:SHELL_CMD_CHDIR_HELP_LONG
+CHDIR [asema:][polku]
+CHDIR [..]
+CD [asema:][polku]
+CD [..]
+
+  ..   M„„ritt„„, ett„ haluat siirty„ yl„hakemistoon.
+
+Sy”t„ CD asema: n„ytt„„ksesi m„„ritetyn aseman nykyisen hakemiston.
+Sy”t„ CD parametreitta n„ytt„„ksesi nykyisen aseman ja hekemiston.
+.
+:SHELL_CMD_CLS_HELP
+Tyhjenn„ kuvaruutu.
+.
+:SHELL_CMD_DIR_HELP
+Hakemiston„kym„.
+.
+:SHELL_CMD_ECHO_HELP
+N„ytt„„ sanomat, aloittaa tai lopettaa komentokaiutuksen.
+.
+:SHELL_CMD_EXIT_HELP
+Poistuu komentorivilt„.
+.
+:SHELL_CMD_HELP_HELP
+N„yt„ ohje.
+.
+:SHELL_CMD_MKDIR_HELP
+Luo hakemiston.
+.
+:SHELL_CMD_MKDIR_HELP_LONG
+MKDIR [asema:][polku]
+MD [asema:][polku]
+.
+:SHELL_CMD_RMDIR_HELP
+Poistaa hakemiston.
+.
+:SHELL_CMD_RMDIR_HELP_LONG
+RMDIR [asema:][polku]
+RD [asema:][polku]
+.
+:SHELL_CMD_SET_HELP
+Muuttaa ymp„rist”muuttujia.
+.
+:SHELL_CMD_IF_HELP
+Aiheuttaa ehdollisen suorituksen komentojono-ohjelmassa.
+.
+:SHELL_CMD_GOTO_HELP
+Siirtyy nimetylle riville komentojono-ohjelmassa.
+.
+:SHELL_CMD_SHIFT_HELP
+Siirt„„ parametrien paikkaa komentojono-ohjelmassa vasemmalle.
+.
+:SHELL_CMD_TYPE_HELP
+N„ytt„„ tekstitiedoston sis„ll”n.
+.
+:SHELL_CMD_TYPE_HELP_LONG
+TYPE [asema:][polku][tiedostonimi]
+.
+:SHELL_CMD_REM_HELP
+Lis„„ kommentteja komentojonotiedostoon.
+.
+:SHELL_CMD_REM_HELP_LONG
+REM [kommentti]
+.
+:SHELL_CMD_NO_WILD
+T„m„ on yksinkertainen versio komennosta, jokerimerkkej„ ei voi k„ytt„„!
+.
+:SHELL_CMD_RENAME_HELP
+Nime„„ uudelleen yhden tai useamman tiedoston.
+.
+:SHELL_CMD_RENAME_HELP_LONG
+RENAME [asema:][polku]tiedostonimi1 tiedostonimi2.
+REN [asema:][polku]tiedostonimi1 tiedostonimi2.
+
+Huomaa, ett„ kohdetiedostolle ei voi m„„ritt„„ uutta asemaa tai polkua.
+.
+:SHELL_CMD_DELETE_HELP
+Poistaa yhden tai useamman tiedoston.
+.
+:SHELL_CMD_COPY_HELP
+Kopioi tiedostoja.
+.
+:SHELL_CMD_CALL_HELP
+K„ynnist„„ komentojonotiedoston toisesta komentojonotiedostosta k„sin.
+.
+:SHELL_CMD_SUBST_HELP
+Kytkee sis„isen polun aseman kirjaimeen.
+.
+:SHELL_CMD_LOADHIGH_HELP
+Lataa ohjelman yl„muistiin (vaatii asetuksen xms=true,umb=true).
+.
+:SHELL_CMD_CHOICE_HELP
+Odottaa n„pp„inpainallusta ja asettaa ERRORLEVEL-muuttujan.
+.
+:SHELL_CMD_CHOICE_HELP_LONG
+CHOICE [/C:vaihtoehdot] [/N] [/S] teksti
+  /C[:]vaihtoehdot  -  M„„ritt„„ sallittavat n„pp„imet. Oletusarvo on: yn.
+  /N  -  l„ n„yt„ vaihtoehtoja kehotteen alalaidassa.
+  /S  -  Piittaa vaihtoehtojen kirjainkoosta.
+  text  -  Kehotteella n„ytett„v„ teksti
+.
+:SHELL_CMD_ATTRIB_HELP
+Ei tee mit„„n. Mukana yhteensopivuuden vuoksi.
+.
+:SHELL_CMD_PATH_HELP
+Mukana yhteensopivuuden vuoksi.
+.
+:SHELL_CMD_VER_HELP
+N„ytt„„ ja asettaa ilmoitettavan DOS-version.
+.
+:SHELL_CMD_VER_VER
+Dosbox [versio %s]. Ilmoitettava DOS-versio %d.%d.
+.

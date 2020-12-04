@@ -1,0 +1,35 @@
+Sürüm 0.65'ten beri, DOSBox ekran çýkýþýnda film oluþturmanýzý saðlar.
+
+Bir film kaydý için, CTRL-ALT-F5'e basýn.
+Kayýdý durdurmak/sonlandýrmak için, yeniden CTRL-ALT-F5'e basýn.
+
+Kaydedilmiþ filmi oynatmak için, ZMBV çözücüsü kullanabilir film oynatýcýsýna
+gereksinim duyarsýnýz. MS Windows kullanýcýlarý DOSBox'un baþlat menüsünde
+bulabilir.  Linux ile diðer iþletim sistemleri kullanýcýlarý için ffmpeg
+kütüphanesini kullanan film oynatýcýsý araþtýrmalýsýnýz.(siz güncellemeye ya da
+daðýtýmýnýza yükseltmesini istemeye gereksinim duyabilirsiniz).
+
+Sýk Sorulan Sorular:
+Soru: Filmin görüntülenme sýrasýnda ses gecikiyor.
+Yanýt: Görüntü özellikleri, yenileme hýzýen az 70 hz olup olmadýðýný denetleyin.
+Filmi virtualdub (http://virtualdub.sf.net) ile oynatmayý deneyin.
+
+Soru: Neden elde edilen film birçok dosyadan oluþur?
+Yanýt: Oyun, çözünürlüðü her zaman deðiþtirdiðinde, DOSBox bir yeni film dosyasý
+oluþturur, çünkü bir film dosyasý yalnýzca bir çözünürlükte olabilir.
+
+Soru: Kayýt sýrasýnda devri bilgisayarýmýn iþleyebileceðinden daha yükseðe
+ayarlayabilir miyim?
+Yanýt: Evet. Kayýt sýrasýnda, oyun yavaþ ve takýlmalarla yürütülür, ama
+elde edilen film istenilen hýzda yürütülmeli ve hiç takýlma olmamalý.
+
+Soru: Linux altýnda CTRL-ALT-F5 konsola geçer.
+Yanýt: 1. DOSBOX'u böyle baþlatýn: dosbox -startmapper
+       2. Video'ya týklayýn, Add'a týklayýn
+       3. Ýstediðiniz tuþa basýn (örnek için scroll lock ya da printscreen)
+       4. Exit'e týklayýn.
+       5. Scroll lock'a ya da seçtiðiniz herhangi tuþa basarak filimler
+          yapabilirsiniz.
+
+Soru: Renkler yanlýþ ve 64 bit Windows kullanýyorum.
+Yanýt: Buraya bakýn: http://vogons.zetafleet.com/viewtopic.php?t=12133

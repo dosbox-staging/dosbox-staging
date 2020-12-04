@@ -1,0 +1,104 @@
+Cose necessarie per la compilazione.
+
+SDL
+    Il Simple DirectMedia Biblioteca disponibili a http://www.libsdl.org
+    La dll distribuito con la versione Windows di DOSBox è leggermente
+    modificati. Potete trovare i cambiamenti nel SourcePackage di DOSBox
+    (Src/platform/sdl-win32.diff). Se si desidera che il Sorgenti del patch
+    inviare un'e-mail. (Vedi file README)
+    Distribuito sotto licenza LGPL
+    Si noti che la versione 1.2 e solo la sua sovversioni (1.2.8, 1.2.13, ecc)
+    sono attualmente supportati.
+
+Curses (opzionale)
+    Se si desidera attivare il debugger hai bisogno di una libreria curses.
+    ncurses deve essere installato su quasi tutte le distro unix.
+    Per ottenere win32 pdcurses a http://pdcurses.sourceforge.net
+    Licenza: Open Source
+
+Libpng (opzionale)
+    Necessario per gli screenshot.
+    Per ottenere win32 libpng da http://gnuwin32.sourceforge.net/packages.html
+    Vedi http://www.libpng.org/pub/png/ per maggiori dettagli.
+    Licenza: Open Source
+
+Zlib (opzionale)
+    Necessari libpng.
+    Per ottenere libz win32 (rinominare in zlib) da http://gnuwin32.sourceforge.net/packages.html
+    Vedi http://www.zlib.net per maggiori dettagli.
+    Licenza: Open Source
+
+SDL_Net (opzionale)
+    Per i modem / supporto IPX. Scaricalo da http://www.libsdl.org/projects/SDL_net/
+    Distribuito sotto licenza LGPL
+
+SDL_Sound
+    Per l'audio compresso diskimages. (Opzionale)
+    Questo è per le immagini cue bin / cdrom con compresso (mp3/ogg) brani audio.
+    Scaricalo da http://icculus.org/SDL_sound
+    Licenza sotto LGPL
+
+ALSA_Headers
+    (Opzionale)
+    per il sostegno Alsa sotto Linux. Parte delle sorgenti del kernel linux
+    Distribuito sotto licenza LGPL
+
+Se si vuole compilare da CVS in un sistema unix, avrete anche bisogno
+automake (> = 1.6), autoconf (> = 2.50). Dovrebbero essere disponibili presso http://www.gnu.org
+
+Per la costruzione sui sistemi UNIX.
+Se si crea dalla pista di cvs. / Autogen.sh prima prima di fare quanto segue.
+
+1. . / Configure
+2. fare
+
+In fase 1 è possibile aggiungere i seguenti parametri:
+- Enable-debug
+        consente al debugger interno. - Enable-debug = pesante permette ancora di più
+        opzioni di debug. DOSBox dovrebbe quindi essere eseguito da un xterm e quando il sdl-
+        finestra è attiva premere alt-pausa per entrare nel debugger.
+
+- Enable-core-inline
+        consente qualche ricordo crescente inline. Ciò aumenta notevolmente
+        compiletime forse per un aumento della velocità.
+
+- Disable-FPU
+        disattiva la FPU emulato. Anche se il codice di emulazione FPU, non è
+        finito e non è del tutto esatto è consigliato di lasciarlo acceso.
+
+- Disable-FPU x86
+        disattiva il nucleo FPU montaggio. Anche se relativamente nuovo, la FPU x86
+        nucleo ha quindi una maggiore accuratezza il nucleo FPU regolare.
+
+- Disable-dinamico-x86
+        disattiva il dinamico core della CPU x86 specifiche. Anche se potrebbe essere
+        essere un po 'instabile, può notevolmente migliorare la velocità di dosbox su x86
+        padroni di casa.
+        Si prega di notare che questa opzione su x86 si tradurrà in un diverso
+        dinamico / core della CPU ricompilazione in fase di compilazione il valore predefinito.
+        Per ulteriori informazioni vedi l'opzione - disable-dynrec
+
+- Disable-dynrec
+        disattiva il core della CPU ricompilazione. Attualmente x86 e x86_64 solo.
+        È possibile attivare questo core su x86 disabilitando il nucleo dinamico-x86.
+
+- Disable-dinamico-core
+        disattiva tutti i core dinamica. (Stesso effetto di
+        - Disable-dinamico-x86 - disable-dynrec)
+
+- Disable-opengl
+        disabilita il supporto OpenGL (modalità di uscita che possono essere selezionati in
+        DOSBox file di configurazione).
+
+- Disable-allineati-memory
+        disabilita l'accesso alla memoria non allineato.
+
+Controllare la subdir src i binari.
+
+NOTA: Se capslock e numlock sembra essere rotto. aperto
+src / int / bios_keyboard.cpp e andare alla riga 30 e leggere lì come risolvere il problema.
+
+
+Le istruzioni per compilare per VC + +6
+Non usare VC + + 6: crea codice difettoso in core_normal.cpp
+Più tardi versioni di Visual Studio funzionano bene (vs2003/.net, VS2005, VS2008)

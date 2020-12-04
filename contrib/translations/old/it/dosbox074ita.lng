@@ -1,0 +1,999 @@
+:CONFIG_FULLSCREEN
+Avvia dosbox direttamente a schermo intero.
+
+.
+:CONFIG_FULLDOUBLE
+Usa il doppio buffering a schermo intero.
+
+.
+:CONFIG_FULLRESOLUTION
+Risoluzione da usare a schermo intero: 'original' o dimensione fissa (es. 1024x768).
+
+.
+:CONFIG_WINDOWRESOLUTION
+Ridimensiona la finestra a questa dimensione SE il dispositivo di output supporta l'hardware scaling.
+
+.
+:CONFIG_OUTPUT
+Sistema video da usare per l'output.
+
+.
+:CONFIG_AUTOLOCK
+Il mouse verrเ catturato automaticamente, cliccando sullo schermo.
+
+.
+:CONFIG_SENSITIVITY
+Sensibilitเ del mouse.
+
+.
+:CONFIG_WAITONERROR
+Aspetta prima di chiudere la console in caso di errore di dosbox.
+
+.
+:CONFIG_PRIORITY
+Livelli di prioritเ di dosbox. La seconda voce dopo la virgola ่ per quando dosbox ่ minimizzato o non in primo piano ('pause' pu๒ essere usato solo per la seconda voce).
+
+.
+:CONFIG_MAPPERFILE
+File usato per caricare/salvare le associazioni tasto/evento mappings.
+
+.
+:CONFIG_USESCANCODES
+Evita l'uso delle symkeys, potrebbe non funzionare su tutti i sistemi operativi.
+
+.
+:CONFIG_LANGUAGE
+Sceglie un altro file linguaggio.
+
+.
+:CONFIG_MACHINE
+Il tipo di macchina da provare a emulare.
+
+.
+:CONFIG_CAPTURES
+Directory dove vanno a finire wave, midi, screenshot, ecc.
+
+.
+:CONFIG_MEMSIZE
+Quantitเ di memoria a disposizione di DOSBox, in megabytes.
+  Si consiglia di non modificare questo valore per evitare problemi con alcuni giochi,
+  anche se potrebbe essere necessario aumentarlo per farne funzionare alcuni.
+  Di solito non vi ่ nessun guadagno in velocitเ alzando questo valore.
+
+.
+:CONFIG_FRAMESKIP
+Determina il numero di frame (fotogrammi) saltati da DOSBox prima di disegnarne uno.
+
+.
+:CONFIG_ASPECT
+Esegue la correzione dell'aspetto. Se il tuo metodo di output non supporta lo scaling, questo potrebbe rallentare tutto!.
+
+.
+:CONFIG_SCALER
+Scaler usato per ingrandire/migliorare le modalitเ a bassa risoluzione. Se viene aggiunto 'forced', lo scaler sarเ usato anche se i risultati potrebbero essere indesiderati.
+
+.
+:CONFIG_CORE
+CPU Core usato nell' emulazione. 'auto' diventerเ 'dynamic' quando possibile e appropriato.
+
+.
+:CONFIG_CPUTYPE
+Tipo di CPU usata nell'emulazione. 'auto' ่ la scelta pi๙ veloce.
+
+.
+:CONFIG_CYCLES
+Quantitเ di istruzioni che DOSBox prova a emulare ogni millisecondo. Un valore troppo alto produrrเ perdite nell'audio e ritardi.
+I cicli possono essere impostati in 3 modi:
+  'auto'          prova a indovinare le necessitเ del gioco Di solito funziona, ma pu๒ fallire con certi giochi.
+  'fixed #numero' imposta un numero fisso di cicli. Questo ่ ci๒ che ti serve quando 'auto' non funziona.(Esempio: fixed 4000)
+  'max'           allocherเ tanti cicli quanti il tuo computer ่ in grado di gestire
+:CONFIG_CYCLEUP
+Quantitเ di cicli di cui aumentare/diminuire usando gli appositi tasti(CTRL-F11/CTRL-F12).
+
+.
+:CONFIG_CYCLEDOWN
+Un valore pi๙ basso di 100 indica una percentuale.
+
+.
+:CONFIG_NOSOUND
+Attiva la modalitเ silenziosa, ma il suono viene comunque emulato.
+
+.
+:CONFIG_RATE
+Frequenza del mixer, impostare la frequenza di qualsiasi dispositivo ad un valore pi๙ alto di questo, ne peggiorerเ la qualitเ sonora.
+
+.
+:CONFIG_BLOCKSIZE
+Dimensione blocchi mixer, blocchi pi๙ grandi riducono l'audio a singhiozzo ma possono introdurre ritardi.
+
+.
+:CONFIG_PREBUFFER
+Quantitเ di millisecondi di dati da tenere in cima alla dimensione dei blocchi.
+
+.
+:CONFIG_MPU401
+Tipo di MPU-401 da emulare.
+
+.
+:CONFIG_MIDIDEVICE
+Dispositivo che riceverเ i dati MIDI da MPU-401.
+
+.
+:CONFIG_MIDICONFIG
+Opzioni speciali di configurazione per il driver di dispositivo. Di solito ่ l'id del dispositivo che vuoi usare.
+
+.
+:CONFIG_SBTYPE
+Tipo di sblaster da emulare.
+
+.
+:CONFIG_SBBASE
+L'indirizzo IO della soundblaster.
+
+.
+:CONFIG_IRQ
+Il numero IRQ della soundblaster.
+
+.
+:CONFIG_DMA
+Il numero DMA della soundblaster.
+
+.
+:CONFIG_HDMA
+Il numero High DMA della soundblaster.
+
+.
+:CONFIG_SBMIXER
+Permetti al mixer della soundbaster di modificare il mixer di DOSBox.
+
+.
+:CONFIG_OPLMODE
+Tipo di emulazione OPL. Se 'auto' la modalitเ ่ determinata dal tipo di sblaster.
+
+.
+:CONFIG_OPLEMU
+Provider per l'emulazione OPL.
+
+.
+:CONFIG_OPLRATE
+Frequenza dell'emulazione musicale OPL. Usa 49716 per la migliore qualitเ.
+
+.
+:CONFIG_GUS
+Abilita l'emulazione di Gravis Ultrasound.
+
+.
+:CONFIG_GUSRATE
+Frequenza dell'emulazione Ultrasound.
+
+.
+:CONFIG_GUSBASE
+L'indirizzo base IO di Gravis Ultrasound.
+
+.
+:CONFIG_GUSIRQ
+Il numero IRQ number di Gravis Ultrasound.
+
+.
+:CONFIG_GUSDMA
+Il canale DMA di Gravis Ultrasound.
+
+.
+:CONFIG_ULTRADIR
+Percorso per la directory Ultrasound. La directory dovrebbe contenere una directory MIDI
+  che contiene i patch file per la riproduzione GUS.
+  I patch set usati con Timidity dovrebbero funzionare correttamente..
+
+.
+:CONFIG_PCSPEAKER
+Attiva l'emulazione del PC-Speaker (altoparlante interno del PC).
+
+.
+:CONFIG_PCRATE
+Frequenza della generazione del suono del PC-Speaker.
+
+.
+:CONFIG_TANDY
+Attiva l'emulazione di Tandy Sound System. Se 'auto', l'emulazione ่ presente solo se la macchina ่ impostata a 'tandy'.
+
+.
+:CONFIG_TANDYRATE
+Frequenza della generazione Tandy 3-Voice.
+
+.
+:CONFIG_DISNEY
+Attiva l'emulazione Disney Sound Source. (Compatibile con Covox Voice Master e Speech Thing).
+
+.
+:CONFIG_JOYSTICKTYPE
+Tipo di joystick da emulare: auto (default), none,
+2axis (supporta due joystick),
+4axis (supporta un joystick, viene usato il primo),
+4axis_2 (supporta un joystick, viene usatot il secondo),
+fcs (Thrustmaster), ch (CH Flightstick).
+none disattiva l'emulazione joystick.
+auto sceglie l'emulazione in base ai joystick reali.
+
+.
+:CONFIG_TIMED
+attiva gli intervalli temporizzati per gli assi. ('false' ่ il comportamento vecchio stile).
+
+.
+:CONFIG_AUTOFIRE
+continua a fare fuoco finch้ tieni il bottone premuto.
+
+.
+:CONFIG_SWAP34
+scambia il 3ฐ e 4ฐ asse. pu๒ essere utile per alcuni joystick.
+
+.
+:CONFIG_BUTTONWRAP
+attiva il wrapping dei bottoni al numero di bottoni emulati.
+
+.
+:CONFIG_SERIAL1
+imposta il tipo di dispositivo connesso alla porta com.
+Pu๒ essere disabled, dummy, modem, nullmodem, directserial.
+Eventuali parametri aggiuntivi devono essere sulla stessa riga nella forma di
+parametro:valore. Un parametro per tutti i tipi ่ 'irq'.
+per directserial: realport (richiesto), rxdelay (opzionale).
+                 (realport:COM1 realport:ttyS0).
+per modem: listenport (opzionale).
+per nullmodem: server, rxdelay, txdelay, telnet, usedtr,
+               transparent, port, inhsocket (tutti opzionali).
+Esempio: serial1=modem listenport:5000
+:CONFIG_SERIAL2
+vedi serial1
+:CONFIG_SERIAL3
+vedi serial1
+:CONFIG_SERIAL4
+vedi serial1
+:CONFIG_XMS
+Abilita supporto XMS.
+
+.
+:CONFIG_EMS
+Abilita supporto EMS.
+
+.
+:CONFIG_UMB
+Abilita supporto UMB.
+
+.
+:CONFIG_KEYBOARDLAYOUT
+Codice linguaggio del layout tastiera (o 'none').
+
+.
+:CONFIG_IPX
+Abilita l'emulazione di ipx attraverso UDP/IP.
+
+.
+:AUTOEXEC_CONFIGFILE_HELP
+Le righe in questa sezione verranno eseguite ad ogni avvio.
+
+.
+:CONFIGFILE_INTRO
+# Le righe in questa sezione verranno eseguite ad ogni avvio di DOSBox %s.
+# e linee che iniziano per # sono commenti e sono ignorati da DOSBox.
+# Queste vengono usati per descrivere (brevemente) l'effetto di ogni opzione.
+
+.
+:CONFIG_SUGGESTED_VALUES
+Possibili valori.
+:PROGRAM_CONFIG_FILE_ERROR
+Impossibile aprire il file %s
+.
+:PROGRAM_CONFIG_USAGE
+Strumento Config:
+Usa -writeconf nomefile per scrivere la configurazione attuale.
+Usa -writelang nomefile per scrivere le stringhe di linguaggio attuali.
+
+.
+:PROGRAM_CONFIG_SECURE_ON
+Modalit… sicura attivata.
+
+.
+:PROGRAM_CONFIG_SECURE_DISALLOW
+Operazione non consentita in modalit… sicura.
+
+.
+:PROGRAM_CONFIG_SECTION_ERROR
+La sezione %s  inesistente.
+
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Sezione o propriet… non trovata.
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Non c' la propriet… %s nella sezione %s.
+
+.
+:PROGRAM_CONFIG_GET_SYNTAX
+Sintassi corretta: config -get "sezione propriet…".
+
+.
+:PROGRAM_MOUNT_CDROMS_FOUND
+CDROM trovati: %d
+
+.
+:PROGRAM_MOUNT_STATUS_2
+Drive %c montato come %s
+
+.
+:PROGRAM_MOUNT_STATUS_1
+I drive attualmente montati sono:
+
+.
+:PROGRAM_MOUNT_ERROR_1
+La directory %s  inesistente.
+
+.
+:PROGRAM_MOUNT_ERROR_2
+%s non  una directory
+
+.
+:PROGRAM_MOUNT_ILL_TYPE
+Tipo non valido %s
+
+.
+:PROGRAM_MOUNT_ALREADY_MOUNTED
+Drive %c gi… montato con %s
+
+.
+:PROGRAM_MOUNT_USAGE
+Modalit… d'uso: [34;1mMOUNT Lettera-Drive Directory-Locale[0m
+Quindi MOUNT c c:\windows monta la directory di windows come drive C in DOSBox
+
+.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+Il drive %c non  montato.
+
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCES
+Drive %c rimosso con successo.
+
+.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+I drive virtuali non possono essere smontati.
+
+.
+:PROGRAM_MOUNT_WARNING_WIN
+[31;1mMontare c:\  sconsigliato. Si raccomanda di montare una (sotto)directory.[0m
+
+.
+:PROGRAM_MOUNT_WARNING_OTHER
+[31;1mMontare /  sconsigliato. Si raccomanda di montare una (sotto)directory.[0m
+
+.
+:PROGRAM_MEM_CONVEN
+%10d Kb di memoria convenzionale liberi
+
+.
+:PROGRAM_MEM_EXTEND
+%10d Kb di memoria estesa liberi
+
+.
+:PROGRAM_MEM_EXPAND
+%10d Kb di memoria espansa liberi
+
+.
+:PROGRAM_MEM_UPPER
+%10d Kb di memoria superiore liberi, in %d blocchi (maggiore UMB: %d Kb)
+
+.
+:PROGRAM_LOADFIX_ALLOC
+%d kb allocati.
+
+.
+:PROGRAM_LOADFIX_DEALLOC
+%d kb liberati.
+
+.
+:PROGRAM_LOADFIX_DEALLOCALL
+Memoria in uso liberata.
+
+.
+:PROGRAM_LOADFIX_ERROR
+Errore allocazione di memoria.
+
+.
+:MSCDEX_SUCCESS
+MSCDEX installato.
+
+.
+:MSCDEX_ERROR_MULTIPLE_CDROMS
+MSCDEX: Fallimento: Le lettere di drive di CDRom multipli devono essere contigue.
+
+.
+:MSCDEX_ERROR_NOT_SUPPORTED
+MSCDEX: Fallimento: Non ancora supportato.
+
+.
+:MSCDEX_ERROR_PATH
+MSCDEX: Fallimento: Percorso non valido.
+
+.
+:MSCDEX_TOO_MANY_DRIVES
+MSCDEX: Fallimento: Troppi drive CDRom (max: 5). Installazione MSCDEX fallita.
+
+.
+:MSCDEX_LIMITED_SUPPORT
+MSCDEX: Sottodirectory montata: supporto limitato.
+
+.
+:MSCDEX_INVALID_FILEFORMAT
+MSCDEX: Fallimento: Il file contiene errori o non  un'immagine iso/cue.
+
+.
+:MSCDEX_UNKNOWN_ERROR
+MSCDEX: Fallimento: Errore sconosciuto.
+
+.
+:PROGRAM_RESCAN_SUCCESS
+Cache del drive ripulita.
+
+.
+:PROGRAM_INTRO
+[2J[32;1mBenvenuto in DOSBox[0m, un emulatore di x86 con suono e grafica.
+DOSBox crea una shell simile al vecchio DOS.
+
+Per informazioni di base sul mount dei drive digita [34;1mintro mount[0m
+Per informazioni sul supporto CD-ROM digita [34;1mintro cdrom[0m
+Per informazioni sui tasti speciali digita [34;1mintro special[0m
+Per ulteriori informazioni su DOSBox, vai a [34;1mhttp://dosbox.sourceforge.net/wiki[0m
+
+[31;1mIn caso di errori, DOSBox si interromper… e terminer… senza preavvisi![0m
+
+
+.
+:PROGRAM_INTRO_MOUNT_START
+[32;1mEcco alcuni comandi utili per iniziare:[0m
+Prima di poter usare i file nel tuo filesystem,
+Devi montare la directory che contiene i file.
+
+.
+:PROGRAM_INTRO_MOUNT_WINDOWS
+[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c c:\dosprog\[37m crea un drive C con i contenuti di c:\dosprog.     บ
+บ                                                                        บ
+บ [32mc:\dosprog\[37m  un esempio. Rimpiazzalo con la tua directory dei giochi.[37m บ
+ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+
+.
+:PROGRAM_INTRO_MOUNT_OTHER
+[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c ~/dosprog[37m crea un drive C con i contenuti di ~/dosprog.     บ
+บ                                                                     บ
+บ [32m~/dosprog[37m  un esempio. Rimpiazzalo con la tua directory dei giochi.[37mบ
+ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+
+.
+:PROGRAM_INTRO_MOUNT_END
+Quando il mount  terminato con successo, puoi digitare [34;1mc:[0m per spostarti sul tuo
+nuovo drive C. Una volta qui, digita [34;1mdir[0m per visualizzarne il contenuto. [34;1mcd[0m ti
+permette di entrare in una directory (riconoscibile dai [33;1m[][0m nella lista).
+Puoi eseguire programmi/file che finiscano con [31m.exe .bat[0m e [31m.com[0m.
+
+.
+:PROGRAM_INTRO_CDROM
+[2J[32;1mCome montare un CD-ROM Reale/Virtuale in DOSBox:[0m
+DOSBox fornisce emulazione CD-ROM a vari livelli.
+
+Il livello [33mbase[0m funziona su tutti i drive CD-ROM e normali directory.
+Installa MSCDEX e imposta tutti i file come sola lettura.
+Di solito questo va bene per la maggior parte dei giochi:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom[0m o [34;1mmount d C:\esempio -t cdrom[0m
+Se non funziona, potresti dover dire a DOSBox l'etichetta del CD-ROM:
+[34;1mmount d C:\esempio -t cdrom -label ETICHETTA[0m
+
+Il [33msuccessivo[0m livello, aggiunge il supporto a basso livello.
+Di conseguenza, funziona solo sui drive CD-ROM:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
+
+L'[33multimo[0m livello di supporto dipende dal tuo Sistema Operativo:
+Per [1mWindows 2000[0m, [1mWindows XP[0m e [1mLinux[0m:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-ioctl[0m
+Per [1mWindows 9x[0m con l'ASPI layer installato:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-aspi[0m
+
+Sostituisci [0;31mD:\[0m con la locazione del tuo CD-ROM.
+Sostituisci lo [33;1m0[0m in [34;1m-usecd [33m0[0m con il numero associato al tuo CD-ROM digitando:
+[34;1mmount -cd[0m
+
+.
+:PROGRAM_INTRO_SPECIAL
+[2J[32;1mTasti speciali:[0m
+Questi sono i tasti predefiniti.
+Possono essere modificati col [33mkeymapper[0m.
+
+[33;1mALT-ENTER[0m   : Avvia/ferma la visualizzazione a schermo intero.
+[33;1mALT-PAUSE[0m   : Mette DOSBox in pausa.
+[33;1mCTRL-F1[0m     : Avvia il [33mkeymapper[0m.
+[33;1mCTRL-F4[0m     : Aggiorna la cache directory per tutti i drive e immagini disco.
+[33;1mCTRL-ALT-F5[0m : Avvia/ferma la registrazione di un video dello schermo.
+[33;1mCTRL-F5[0m     : Scatta un'istantanea dello schermo (screenshot).
+[33;1mCTRL-F6[0m     : Avvia/ferma la registrazione dell'output audio su un file wave.
+[33;1mCTRL-ALT-F7[0m : Avvia/ferma la registrazione dei comandi OPL.
+[33;1mCTRL-ALT-F8[0m : Avvia/ferma la registrazione dei comandi grezzi MIDI.
+[33;1mCTRL-F7[0m     : Decrementa il frameskip.
+[33;1mCTRL-F8[0m     : Incrementa il frameskip.
+[33;1mCTRL-F9[0m     : Uccide DOSBox.
+[33;1mCTRL-F10[0m    : Cattura/Rilascia il mouse.
+[33;1mCTRL-F11[0m    : Rallenta l'emulazione (Decrementa Cicli DOSBox).
+[33;1mCTRL-F12[0m    : Accelera l'emulazione (Incrementa Cicli DOSBox).
+[33;1mALT-F12[0m     : Sblocca la velocit… (bottone turbo).
+
+.
+:PROGRAM_BOOT_NOT_EXIST
+Il file bootdisk non esiste.  Fallimento.
+
+.
+:PROGRAM_BOOT_NOT_OPEN
+Impossibile aprire il file bootdisk.  Fallimento.
+
+.
+:PROGRAM_BOOT_WRITE_PROTECTED
+Il file immagine  di sola lettura! Potrebbe creare dei problemi.
+
+.
+:PROGRAM_BOOT_PRINT_ERROR
+Questo comando avvia DOSBox da un floppy o da una immagine hard disk.
+
+Per questo comando, si pu• specificare una successione di floppy disk
+successivamente selezionabili premendo Ctrl-F4, e -l specifica il drive
+montato da cui avviare. Se non viene specificata nessuna lettera di drive,
+l'avvio  effettuato dal drive A. Le uniche lettere di drive avviabili sono
+A, C, e D.  Per avviare da un hard disk (C o D), l'immagine dovrebbe gi…
+essere stata montata usando il comando [34;1mIMGMOUNT[0m.
+
+La sintassi di questo comando :
+
+[34;1mBOOT [imgdisco1.img imgdisco2.img] [-l letteradrive][0m
+
+.
+:PROGRAM_BOOT_UNABLE
+Impossibile avviare dal drive %c.
+:PROGRAM_BOOT_IMAGE_OPEN
+Apertura file immagine: %s
+
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+Impossibile aprire %s.
+:PROGRAM_BOOT_BOOT
+Avvio dal drive %c...
+
+.
+:PROGRAM_BOOT_CART_WO_PCJR
+Trovata cartuccia PCjr, ma la macchina non  PCjr.
+:PROGRAM_BOOT_CART_LIST_CMDS
+Comandi PCjr disponibili:%s.
+:PROGRAM_BOOT_CART_NO_CMDS
+Nessun comando cartuccia PCjr trovato.
+:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
+Devi specificare la lettera di drive dove montare l'immagine.
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY2
+Devi specificare il numero di drive (0 o 3) dove montare l'immagine (0,1=fda,fdb;2,3=hda,hdb).
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
+Per le immagini [33mCD-ROM[0m:   [34;1mIMGMOUNT lettera-drive posizione-dell-immagine -t iso[0m
+
+Per le immagini [33mhard disk[0m: Va specificata la geometria del drive:
+bytes_per_settore, settori_per_cilindro, testine_per_cilindro, numero_cilindri.
+[34;1mIMGMOUNT lettera-drive posizione-dell-immagine -size bps,spc,hpc,cyl[0m
+
+.
+:PROGRAM_IMGMOUNT_INVALID_IMAGE
+Impossibile caricare il file immagine.
+Controlla che il percorso sia corretto e l'immagine accessibile.
+
+.
+:PROGRAM_IMGMOUNT_INVALID_GEOMETRY
+Impossibile estrarre la geometria del drive dall'immagine.
+Usa il parametro -size bps,spc,hpc,cyl per specificare la geometria.
+
+.
+:PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
+Il tipo "%s" non  supportato. Specifica "hdd" o "floppy" o "iso".
+
+.
+:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
+Format "%s" non  supportato. Specifica "fat" o "iso" o "none".
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_FILE
+Devi specificare il file-immagine da montare.
+
+.
+:PROGRAM_IMGMOUNT_FILE_NOT_FOUND
+File immagine non trovato.
+
+.
+:PROGRAM_IMGMOUNT_MOUNT
+Per montare directory, usa il comando [34;1mMOUNT[0m, non il comando [34;1mIMGMOUNT[0m.
+
+.
+:PROGRAM_IMGMOUNT_ALREADY_MOUNTED
+Drive gi… montato con quella lettera.
+
+.
+:PROGRAM_IMGMOUNT_CANT_CREATE
+Impossibile creare il drive dal file.
+
+.
+:PROGRAM_IMGMOUNT_MOUNT_NUMBER
+Drive numero %d montato come %s
+
+.
+:PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
+L'immagine deve stare su un drive host o locale.
+
+.
+:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
+L'uso di file multipli  supportato solo per le immagini cue/iso.
+
+.
+:PROGRAM_KEYB_INFO
+Codepage %i caricato
+
+.
+:PROGRAM_KEYB_INFO_LAYOUT
+Codepage %i caricato per il layout %s
+
+.
+:PROGRAM_KEYB_SHOWHELP
+[32;1mKEYB[0m [ID layout tastiera[ numero codepage[ file codepage]]]
+
+Alcuni esempi:
+  [32;1mKEYB[0m: Visualizza il codepage attualmente caricato.
+  [32;1mKEYB[0m sp: Carica il layout spagnolo (SP), usando un codepage appropriato.
+  [32;1mKEYB[0m sp 850: Carica il layout spagnolo (SP), usando il codepage 850.
+  [32;1mKEYB[0m sp 850 miocp.cpi: Come sopra, ma usa i file miocp.cpi.
+
+.
+:PROGRAM_KEYB_NOERROR
+Layout di tastiera %s caricato per codepage %i
+
+.
+:PROGRAM_KEYB_FILENOTFOUND
+File di tastiera %s non trovato
+
+.
+:PROGRAM_KEYB_INVALIDFILE
+File di tastiera %s non valido
+
+.
+:PROGRAM_KEYB_LAYOUTNOTFOUND
+Impossibile trovare il layout %s per il codepage %i
+
+.
+:PROGRAM_KEYB_INVCPFILE
+File codepage mancante o non valido per il layout %s
+
+.
+:SHELL_ILLEGAL_PATH
+Percorso non valido.
+
+.
+:SHELL_CMD_HELP
+Per una lista di tutti i comandi supportati digita [33;1mhelp /all[0m.
+Segue una breve lista dei comandi pi— comuni:
+
+.
+:SHELL_CMD_ECHO_ON
+ECHO attivato.
+
+.
+:SHELL_CMD_ECHO_OFF
+ECHO disattivato.
+
+.
+:SHELL_ILLEGAL_SWITCH
+Opzione non valida: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Parametro richiesto mancante.
+
+.
+:SHELL_CMD_CHDIR_ERROR
+Impossibile spostarsi su: %s.
+
+.
+:SHELL_CMD_CHDIR_HINT
+Per spostarti su un altro drive digita [31m%c:[0m
+
+.
+:SHELL_CMD_CHDIR_HINT_2
+il nome della directory supera gli 8 caratteri e/o contiene spazi.
+Prova [31mcd %s[0m
+
+.
+:SHELL_CMD_CHDIR_HINT_3
+Sei ancora nel drive Z:, spostati su un drive montato con [31mC:[0m.
+
+.
+:SHELL_CMD_MKDIR_ERROR
+Impossibile creare: %s.
+
+.
+:SHELL_CMD_RMDIR_ERROR
+Impossibile rimuovere: %s.
+
+.
+:SHELL_CMD_DEL_ERROR
+Impossibile rimuovere: %s.
+
+.
+:SHELL_SYNTAXERROR
+La sintassi del comando non  corretta.
+
+.
+:SHELL_CMD_SET_NOT_SET
+Variabile di ambiente %s non definita.
+
+.
+:SHELL_CMD_SET_OUT_OF_SPACE
+Spazio di ambiente esaurito.
+
+.
+:SHELL_CMD_IF_EXIST_MISSING_FILENAME
+IF EXIST: Manca il nome del file.
+
+.
+:SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
+IF ERRORLEVEL: Manca il numero.
+
+.
+:SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
+IF ERRORLEVEL: Numero non valido.
+
+.
+:SHELL_CMD_GOTO_MISSING_LABEL
+Non  stata fornita una etichetta al comando GOTO.
+
+.
+:SHELL_CMD_GOTO_LABEL_NOT_FOUND
+GOTO: Impossibile trovare l'etichetta %s.
+
+.
+:SHELL_CMD_FILE_NOT_FOUND
+File %s non trovato.
+
+.
+:SHELL_CMD_FILE_EXISTS
+File %s gi… esistente.
+
+.
+:SHELL_CMD_DIR_INTRO
+Directory di %s.
+
+.
+:SHELL_CMD_DIR_BYTES_USED
+%5d File %17s Byte.
+
+.
+:SHELL_CMD_DIR_BYTES_FREE
+%5d Dir  %17s Byte liberi.
+
+.
+:SHELL_EXECUTE_DRIVE_NOT_FOUND
+Drive %c inesistente!
+Prima devi montarlo ([31mmount[0m). Digita [1;33mintro[0m o [1;33mintro mount[0m per altre informazioni.
+
+.
+:SHELL_EXECUTE_ILLEGAL_COMMAND
+Comando non valido: %s.
+
+.
+:SHELL_CMD_PAUSE
+Premere un tasto per continuare.
+
+.
+:SHELL_CMD_PAUSE_HELP
+Aspetta la pressione di un tasto per continuare.
+
+.
+:SHELL_CMD_COPY_FAILURE
+Errore durante la copia : %s.
+
+.
+:SHELL_CMD_COPY_SUCCESS
+   %d File copiato/i.
+
+.
+:SHELL_CMD_SUBST_NO_REMOVE
+La rimozione del drive non  supportata. Niente di fatto.
+
+.
+:SHELL_CMD_SUBST_FAILURE
+SUBST fallito. Hai sbagliato qualcosa nella linea di comando, o il drive di
+destinazione  gi… in uso. SUBST va usato soltanto sui drive locali.
+
+.
+:SHELL_STARTUP_BEGIN
+ [44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป[0m
+ [44;1mบ [32mBenvenuto in DOSBox v%-8s[37m                                      บ[0m
+ [44;1mบ                                                                    บ[0m
+ [44;1mบ Per una breve introduzione per neofiti digita: [33mINTRO[37m               บ[0m
+ [44;1mบ Per la lista dei comandi shell supportati digita: [33mHELP[37m             บ[0m
+ [44;1mบ                                                                    บ[0m
+ [44;1mบ Per aumentare la velocit…, prova [31mctrl-F8[37m e [31mctrl-F12[37m.               บ[0m
+ [44;1mบ Per attivare il keymapper [31mctrl-F1[37m.                                 บ[0m
+ [44;1mบ Ulteriori informazioni nel file [36mREADME[37m nella directory DOSBox.     บ[0m
+ [44;1mบ                                                                    บ[0m
+
+.
+:SHELL_STARTUP_CGA
+ [44;1mบ DOSBox supporta la modalit… CGA Composita.                         บ[0m
+ [44;1mบ Usa [31m(alt-)F11[37m per cambiare i colori in questa modalit….            บ[0m
+ [44;1mบ                                                                    บ[0m
+
+.
+:SHELL_STARTUP_HERC
+ [44;1mบ Usa [31mF11[37m per cambiare i colori in monochrome e bianco, ambra, e verde.        บ[0m
+ [44;1mบ                                                                    บ[0m
+ 
+.
+:SHELL_STARTUP_DEBUG
+ [44;1mบ Premi [31malt-Pausa[37m per avviare il debugger o avvia l'exe con [33mDEBUG[37m.   บ[0m
+ [44;1mบ                                                                    บ[0m
+
+.
+:SHELL_STARTUP_END
+ [44;1mบ [32mBUON DIVERTIMENTO![37m                                                 บ[0m
+ [44;1mบ [32mIl Team DOSBox [33mhttp://www.dosbox.com[37m                               บ[0m
+ [44;1mศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+
+.
+:SHELL_CMD_CHDIR_HELP
+Visualizza/cambia la directory corrente.
+
+.
+:SHELL_CMD_CHDIR_HELP_LONG
+CHDIR [drive:][percorso]
+CHDIR [..]
+CD [drive:][percorso]
+CD [..]
+
+  ..   Specifica lo spostamento nella directory superiore
+
+Scrivi CD drive: per mostrare la directory corrente nel drive specificato.
+Scrivi CD senza parametri per visualizzare il drive e directory correnti.
+
+.
+:SHELL_CMD_CLS_HELP
+Pulisce lo schermo.
+
+.
+:SHELL_CMD_DIR_HELP
+Visualizzazione della Directory.
+
+.
+:SHELL_CMD_ECHO_HELP
+Visualizza messaggi e abilita/disabilita l'eco dei comandi.
+
+.
+:SHELL_CMD_EXIT_HELP
+Esce dalla shell.
+
+.
+:SHELL_CMD_HELP_HELP
+Visualizza l'Help.
+
+.
+:SHELL_CMD_MKDIR_HELP
+Crea una Directory.
+
+.
+:SHELL_CMD_MKDIR_HELP_LONG
+MKDIR [drive:][percorso]
+MD [drive:][percorso]
+
+.
+:SHELL_CMD_RMDIR_HELP
+Rimuove una Directory.
+
+.
+:SHELL_CMD_RMDIR_HELP_LONG
+RMDIR [drive:][percorso]
+RD [drive:][percorso]
+
+.
+:SHELL_CMD_SET_HELP
+Cambia le variabili di ambiente.
+
+.
+:SHELL_CMD_IF_HELP
+Esegue dei processi condizionali nei programmi batch.
+
+.
+:SHELL_CMD_GOTO_HELP
+Salta a una riga etichettata in uno script batch.
+
+.
+:SHELL_CMD_SHIFT_HELP
+Sposta a sinistra i parametri linea di comando negli script batch.
+
+.
+:SHELL_CMD_TYPE_HELP
+Visualizza i contenuti di un file di testo.
+
+.
+:SHELL_CMD_TYPE_HELP_LONG
+TYPE [drive:][percorso][nomefile]
+
+.
+:SHELL_CMD_REM_HELP
+Aggiunge commenti in un file batch.
+
+.
+:SHELL_CMD_REM_HELP_LONG
+REM [commento]
+
+.
+:SHELL_CMD_NO_WILD
+Questa  una versione semplificata del comando, non puoi usare asterischi!
+
+.
+:SHELL_CMD_RENAME_HELP
+Rinomina uno o pi— file.
+
+.
+:SHELL_CMD_RENAME_HELP_LONG
+RENAME [drive:][percorso]nomefile1 nomefile2.
+REN [drive:][percorso]nomefile1 nomefile2.
+
+Nota che non puoi specificare un nuovo drive o percorso per il file di destinazione.
+
+.
+:SHELL_CMD_DELETE_HELP
+Elimina uno o pi— file.
+
+.
+:SHELL_CMD_COPY_HELP
+Copia file.
+
+.
+:SHELL_CMD_CALL_HELP
+Avvia un file batch dall'interno di un altro file batch.
+
+.
+:SHELL_CMD_SUBST_HELP
+Assegna una directory interna ad un drive.
+
+.
+:SHELL_CMD_LOADHIGH_HELP
+Carica programma in memoria superiore (richiede xms=true,umb=true).
+
+.
+:SHELL_CMD_CHOICE_HELP
+Attende la pressione di un tasto e imposta ERRORLEVEL.
+
+.
+:SHELL_CMD_CHOICE_HELP_LONG
+CHOICE [/C:scelte] [/N] [/S] testo
+  /C[:]scelte  -  Specifica i tasti permessi. Predefiniti: yn.
+  /N  -  Non visualizza le scelte alla fine del prompt.
+  /S  -  Permette che le scelte distinguano tra maiuscole e minuscole.
+  testo  -  Il testo da visualizzare come prompt.
+
+.
+:SHELL_CMD_ATTRIB_HELP
+Non fa niente. Fornito per compatibilit….
+
+.
+:SHELL_CMD_PATH_HELP
+Fornito per compatibilit….
+
+.
+:SHELL_CMD_VER_HELP
+Visualizza e imposta la versione DOS riportata.
+
+.
+:SHELL_CMD_VER_VER
+DOSBox versione %s. Versione DOS riportata %d.%02d.
+.

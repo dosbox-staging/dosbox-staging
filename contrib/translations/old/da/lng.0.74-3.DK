@@ -1,0 +1,1034 @@
+:CONFIG_FULLSCREEN
+Starter DOSBox i helskærm/fuldskærm.(Tryk ALT-Enter for at gå tilbage)
+.
+:CONFIG_FULLDOUBLE
+Helskærm/fuldskærm i Double Buffering mode. Kan reducére skærm-flimmer, men kan også sløve DOSBox.
+.
+:CONFIG_FULLRESOLUTION
+Hvilken opløsning der skal anvendes i helskærm/fuldskærm: "original", "desktop" eller fixeret (F.eks. 1024x768).
+  At bruge din monitors oprindelig opløsning (desktop) med aspect=true, kunne give det bedste resultat.
+  Prøv, et output som ikke er surface, hvis du får et lille vindue på en stor skærm.
+  Prøv på Windows 10, med display skaléring (Skaléring og Layout) sat til en værdi over 100%, at bruge
+  en lavere fuldskærmsopløsning, for at undgå vindue-skaléringsproblemer.
+.
+:CONFIG_WINDOWRESOLUTION
+Tilpasser vinduet til angivet format (kun hvis "hardwaren" er istand til det).
+  (output=surface er ikke!)
+.
+:CONFIG_OUTPUT
+Hvilket video system der skal bruges til output.
+.
+:CONFIG_AUTOLOCK
+Automatisk binding af musen ved klik på skærmen(Press CTRL-F10 for at frigøre).
+.
+:CONFIG_SENSITIVITY
+Mus'-følsomhed.
+.
+:CONFIG_WAITONERROR
+Ventetid, inden nedlukning af konsollen, ved evt.fejl i DOSBox.
+.
+:CONFIG_PRIORITY
+DOSBox-Prioriterings-niveauer. "Anden indtastning" efter kommaet er beregnet til når DOSBOX ikke er i focus/minimeret.
+ pause er kun gangbar for "anden indtastning").
+.
+:CONFIG_MAPPERFILE
+Fil brugt til at Keymapper-indstillinger.Resetmapper virker kun med standard værdi.
+.
+:CONFIG_USESCANCODES
+Undgå brug af Symboltaster, virker måske ikke med alle systemer.
+.
+:CONFIG_LANGUAGE
+Vælg en anden sprogfil/language-file.
+.
+:CONFIG_MACHINE
+Hvilken type maskine DOSBox prøver at emulere.
+.
+:CONFIG_CAPTURES
+Directory(Mappen,Folderen,Biblioteket) hvor captured/indfangede Wave-, Midi-filer og Screenshots gemmes.
+.
+:CONFIG_MEMSIZE
+DOSBox's hukommelseslager i MB.
+   Det er bedst, for at undgå problemer med nogle spil, ikke at ændre denne værdi,
+   Selvom få spil måske kræver en højere værdi.
+   Der er generelt ingen hastighedsforøgelse ved at forhøje denne værdi.
+.
+:CONFIG_FRAMESKIP
+Antal billeder/"frames" Dosbox dropper inden der tegnes 1.
+.
+:CONFIG_ASPECT
+Aspekt-korrektion, kan hvis din output-metode ikke virker med skaléring, virke neddroslende.
+.
+:CONFIG_SCALER
+Filtermethode til at udvidde/forbedre lave opløsningerer. Hvis 'forced' bliver tilføjet,
+  bliver scaleren brugt, selvom resutatet måske bliver uønsket.
+  Det kan kræve en ramme eller sidebjælker, at tilpasse en scaler, i opløsningen brugt ved fuldskærm,
+  for at udfylde skærmen hélt. Afhængigt af dit hardware, virker en anden scaler/fuldskærmsopløsning måské.
+.
+:CONFIG_CORE
+CPU Core brugt til emulering. 'auto' skifter til dynamic, hvis passende og til stede...
+.
+:CONFIG_CPUTYPE
+CPU Type brugt til emulering. 'auto' er hurtigste valg..
+.
+:CONFIG_CYCLES
+Antal udregninger DOSBOX vil emulere pr. milli-sekund.
+Er denne værdi sat for højt, resulterer det i udfald og hakken.
+Cycles kan indstilles på 3 måder:
+  'auto'         Prøver på at "gætte" hvad spillet/programmet har brug for,
+                 det virker som regel, men kan fejle for enkelte spil.
+  'fixed #ant.'  Angiver et fast tal for antal 'cycles'. Dette er normalt hvad er nødvendigt
+                 hvis 'auto' fejler. (Eksempel: fixed 4000)
+  'max'          Tildeler så mange 'cycles' som din computer kan klare.
+
+.
+:CONFIG_CYCLEUP
+Antal 'cycles', der kan skiftes med tastekombinationer.(CTRL-F11/CTRL-F12)
+.
+:CONFIG_CYCLEDOWN
+Et tal lavere end 100 antages som værende i procent.
+.
+:CONFIG_NOSOUND
+Stille/tavs, lyden bliver dog stadig emuleret.
+.
+:CONFIG_RATE
+Mixer-Sampling-Rate; en højere værdi vil sandsynligvis forringe lyd-kvaliteten.
+.
+:CONFIG_BLOCKSIZE
+Mixerens blokstørrelse; større Blokke kan muligvis forhindre hak i lyden, men lyden får mere 'lag'.
+.
+:CONFIG_PREBUFFER
+Hvor mange millisekunders data der skal beholdes på toppen af blokstørrelsen
+.
+:CONFIG_MPU401
+Type MPU-401 at emulere.
+.
+:CONFIG_MIDIDEVICE
+Enhed, til at behandle MIDI data fra MPU-401.
+.
+:CONFIG_MIDICONFIG
+Specielle konfigurationsmuligheder for enhedsdriveren. Dette er sædvanligvis id'et på enheden du ønsker at bruge
+   (Find id med "mixer /listmidi").
+   i tilfælde med coreaudio, kan du specificere en soundfont her.
+   Se README/Manual for flere detaljer.
+.
+:CONFIG_SBTYPE
+Type SoundBlaster at emulere. gb er Gameblaster.
+.
+:CONFIG_SBBASE
+Soundblaster IO address.
+.
+:CONFIG_IRQ
+Soundblaster IRQ nummer.
+.
+:CONFIG_DMA
+Soundblaster DMA nummer.
+.
+:CONFIG_HDMA
+Soundblaster High DMA nummer.
+.
+:CONFIG_SBMIXER
+Tillad SoundBlaster-Mixeren at indstille DOSBox-Mixeren.
+.
+:CONFIG_OPLMODE
+Type OPL emulering. På 'auto' bestemmer sblaster-typen. Alle OPL modes er Adlib-kompatible, undtage. 'cms'.
+.
+:CONFIG_OPLEMU
+Kilden for OPL emulering. compat eller old leverer måske bedre kvalitet (se også oplrate).
+.
+:CONFIG_OPLRATE
+OPL-Musik-Emulering Sampling-Rate. Brug 49716 for højeste kvalitet (sæt mixerens rate forholdsvis).
+.
+:CONFIG_GUS
+Aktivere Gravis Ultrasound-Emulering.
+.
+:CONFIG_GUSRATE
+Sampling-rate' for Ultrasound-Emulering.
+.
+:CONFIG_GUSBASE
+Gravis Ultrasound IO base addresse.
+.
+:CONFIG_GUSIRQ
+Gravis Ultrasound IRQ nummer.
+.
+:CONFIG_GUSDMA
+Gravis Ultrasound DMA channel.
+.
+:CONFIG_ULTRADIR
+Sti/path til Ultrasound-Directory.
+Der skal eksistere en MIDI-Mappe i denne Mappe
+ med "patch-filer" til GUS-playback.
+Timidity-Patches skulle virke ok.
+.
+:CONFIG_PCSPEAKER
+Aktivér PC-højtaler-Emulering.
+.
+:CONFIG_PCRATE
+PC-højtaler-Emulerings Sampling-Rate.
+.
+:CONFIG_TANDY
+Tandy Sound System-Emulering. Hvis 'auto' kun emulering når maskine er sat til 'tandy'.
+.
+:CONFIG_TANDYRATE
+Sampling-Rate for Tandy 3-Voice-Generering.
+.
+:CONFIG_DISNEY
+Aktiver Disney Sound Source-Emulering. (Covox Voice Master and Speech Thing compatible).
+.
+:CONFIG_JOYSTICKTYPE
+Joysticks-type at emulere: auto (Standard), none (ingen),
+2axis (op til 2 Joysticks),
+4axis (1joystick, første joystick der bruges),
+4axis_2 (1joystick, andet joystick der bruges),
+fcs (Thrustmaster),
+ch (CH Flightstick),
+none deaktiverer joystick-emulering.
+auto vælger emulering afhægigt af rigtigt joystick(s).
+(Husk at resette DOSBox's mapperfil, hvis du har gemt den tidlgere).
+.
+:CONFIG_TIMED
+Aktiver timede intervaller for Axis. Eksperimentér med disse, hvis dit Joystick 'flyder' bort.
+.
+:CONFIG_AUTOFIRE
+Fortsat "skydning" medens knappen er trykket ned.
+.
+:CONFIG_SWAP34
+Byt 3 og 4 Axis: kan vise sig brugbart for visse joysticks.
+.
+:CONFIG_BUTTONWRAP
+Aktiver "button wrapping" ved antallet af emulerede antal knapper.
+.
+:CONFIG_SERIAL1
+Angiv enheds-type tilsluttet com port.
+Kan være :disabled, dummy, modem, nullmodem, directserial.
+Yderligere parametre skal findes i samme linie i formatet
+ "Parameter:værdi". Parameter for alle typer er irq.
+for directserial: realport (required), rxdelay (optional).
+                 (realport:COM1 realport:ttyS0).
+for modem: listenport (optional).
+for nullmodem: server, rxdelay, txdelay, telnet, usedtr,
+               transparent, port, inhsocket (alle optional).
+Eksempel: serial1=modem listenport:5000.
+.
+:CONFIG_SERIAL2
+Se serial1.
+.
+:CONFIG_SERIAL3
+Se serial1.
+.
+:CONFIG_SERIAL4
+Se serial1.
+.
+:CONFIG_XMS
+XMS aktiveret.
+.
+:CONFIG_EMS
+EMS aktiveret.
+.
+:CONFIG_UMB
+UMB aktiveret.
+.
+:CONFIG_KEYBOARDLAYOUT
+keyboardlayout -- Sprogkode for Tastatur-Layout (eller 'none').
+.
+:CONFIG_IPX
+IPX over UDP/IP-Emulering aktiveret.
+.
+:AUTOEXEC_CONFIGFILE_HELP
+Linier i denne sektion eksekveres under DOSBOX's opstart.
+Du kan bla. indsætte MOUNT(og IMGMOUNT) kommandoer her.
+
+.
+:CONFIGFILE_INTRO
+# Dette er config-filen til DOSBox %s. (Brug venligst seneste version af DOSBox)
+# Linier som starter med # er kommentarlinier, og ignoreres af DosBox.
+# De bruges til (kort) at dokumentere effekten af hver mulighed.
+
+.
+:CONFIG_SUGGESTED_VALUES
+Mulige værdier
+.
+:PROGRAM_CONFIG_FILE_ERROR
+Kan ikke †bne filen: %s
+
+.
+:PROGRAM_CONFIG_USAGE
+Konfigurations-muligheder:
+CONFIG -writeconf  Skriver den aktuelle konfiguration til disk.
+CONFIG -writelang  Skriver de aktuelle sprogstrenge til disk.
+
+.
+:PROGRAM_CONFIG_SECURE_ON
+Skiftede til 'sikker modus'.
+
+.
+:PROGRAM_CONFIG_SECURE_DISALLOW
+Handling ikke tilladt i 'sikker modus'.
+
+.
+:PROGRAM_CONFIG_SECTION_ERROR
+Afsnit ikke fundet: %s
+
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Afsnit eller tilh›rsforhold ikke tilstede.
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Tilh›rsforhold %s i Afsnit %s eksisterer ikke.
+
+.
+:PROGRAM_CONFIG_GET_SYNTAX
+Korrekt Syntax: CONFIG -get Afsnit Egenskab
+
+.
+
+:PROGRAM_MOUNT_CDROMS_FOUND
+Der blev fundet %d CD-ROM-Drev.
+.
+
+:PROGRAM_MOUNT_STATUS_FORMAT
+%-5s  %-58s %-12s
+.
+
+.
+:PROGRAM_MOUNT_STATUS_2
+Drev %c Monteret som %s.
+
+.
+:PROGRAM_MOUNT_STATUS_1
+Monterede Drev er:
+
+.
+:PROGRAM_MOUNT_ERROR_1
+Directory %s eksisterer ikke!
+
+.
+:PROGRAM_MOUNT_ERROR_2
+ %s er ikke Directory(Mappe,Folder,Bibliotek)!
+
+.
+:PROGRAM_MOUNT_ILL_TYPE
+Ugyldig type %s.
+
+.
+:PROGRAM_MOUNT_ALREADY_MOUNTED
+Drev %c er allerede monteret med %s.
+
+.
+:PROGRAM_MOUNT_USAGE
+Brug [34;1mMOUNT Drev-Bogstav lokal Directory(Mappe,Folder,Bibliotek)[0m
+For eks. MOUNT c %s
+F†r Mappen %s til at virke som C: drevet i DOSBox
+Mappen skal eksistere.
+
+.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+%c Drev ikke monteret.
+
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCES
+Drev %c afmonteret.
+
+.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+Kan ikke afmontere virtuelt Drev.
+
+.
+:PROGRAM_MOUNT_WARNING_WIN
+[31;1mDet anbefales IKKE at montere C:\ , brug venligst et under-Directory(under-Mappe,under-Folder,under-Bibliotek)![0m
+
+.
+:PROGRAM_MOUNT_WARNING_OTHER
+[31;1mDet anbefales IKKE at montere / brug venligst et under-Directory(under-Mappe,under-Folder,under-Bibliotek)![0m
+
+.
+:PROGRAM_MEM_CONVEN
+%10d Kb Ledig konventionel hukommelse.
+
+.
+:PROGRAM_MEM_EXTEND
+%10d Kb Ledig udvidet hukommelse. (XMS).
+
+.
+:PROGRAM_MEM_EXPAND
+%10d Kb Ledig Expanded hukommelse. (EMS).
+
+.
+:PROGRAM_MEM_UPPER
+%10d Kb Ledig "Øvre" hukommelse. i %d blokke (st›rste UMB: %d Kb).
+
+.
+:PROGRAM_LOADFIX_ALLOC
+%d Kb allokeret.
+
+.
+:PROGRAM_LOADFIX_DEALLOC
+%d Kb frigjort.
+
+.
+:PROGRAM_LOADFIX_DEALLOCALL
+Brugt hukommelse frigjort.
+
+.
+:PROGRAM_LOADFIX_ERROR
+Hukommelses-allokeringsfejl.
+
+.
+:MSCDEX_SUCCESS
+MSCDEX installeret.
+
+.
+:MSCDEX_ERROR_MULTIPLE_CDROMS
+MSCDEX-fejl: CDDREV-bogstaver skal komme direkte efter hinanden!
+
+.
+:MSCDEX_ERROR_NOT_SUPPORTED
+MSCDEX-fejl: Endnu ikke underst›ttet.
+
+.
+:MSCDEX_ERROR_OPEN
+MSCDEX-fejl: Ukorrekt fil, eller umulig at †bne.
+
+.
+:MSCDEX_TOO_MANY_DRIVES
+MSCDEX-fejl: For mange CD-ROM-Drev (maximalt 5). MSCDEX ikke installeret.
+
+.
+:MSCDEX_LIMITED_SUPPORT
+MSCDEX: UnderDirectory(underMappe,under-Folder,under-Bibliotek) monteret - begr?nset brug.
+
+.
+:MSCDEX_INVALID_FILEFORMAT
+MSCDEX-fejl: Ugyldig eller fejlende ISO/CUE-Image.
+
+.
+:MSCDEX_UNKNOWN_ERROR
+Ukendt MSCDEX-Fejl.
+
+.
+:PROGRAM_RESCAN_SUCCESS
+Drev cache t›mt.
+
+.
+:PROGRAM_INTRO
+[2J[32;1mVelkommen til DOSBox[0m, en x86-Emulator med Grafik og Lyd!
+DOSBox laver en skal/shell til dig som ser ud som gammeldags DOS.
+
+Assistance til at montere et Drev med kommandoen : [34;1mINTRO MOUNT[0m.
+Assistance til at montere et CD-ROM-Drev med kommandoen : [34;1mINTRO CDROM[0m.
+Assistance til tastaturgenveje med kommandoen : [34;1mINTRO SPECIAL[0m.
+Mere Informationen om DOSBox, bes›g [34;1mhttp://www.dosbox.com/wiki[0m.
+
+[31;1mVed fejl kan DOSBox lukke uden advarsel![0m
+
+
+
+.
+:PROGRAM_INTRO_MOUNT_START
+[32;1mDOSBox-Hurtigstart:[0m
+For at bruge filer som er lokaliseret i dit eget filsystem,
+skal du montere det Directory(Mappe,Folder,Bibliotek) som indeholder filerne.
+
+
+.
+:PROGRAM_INTRO_MOUNT_WINDOWS
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mmount c c:\dosprog\[37m skaber et a C drev med c:\dosprog som indhold.     º
+º                                                                        º
+º [32mc:\dosprog\[37m er et eksempel. erstat det med dit eget spil Directory.   [37m º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+
+.
+:PROGRAM_INTRO_MOUNT_OTHER
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mmount c c:\dosprog\[37m skaber et a C drev med ~/dosprog som indhold.     º
+º                                                                        º
+º [32m~/dosprog\[37m er et eksempel. erstat det med dit eget spil Directory .   [37m º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+
+.
+:PROGRAM_INTRO_MOUNT_END
+
+Hvis monteringen er succes tastes [34;1mc:[0m(Enter) for at bruge det nu monterede C-drev.
+[34;1mdir[0m (Enter) viser indholdet. [34;1mcd[0m (navn, Enter)skifter Directory (genkendt ved [33;1m[][0m i outputtet fra en dir-kommando).
+Programmer/Data med endelsen [31m.exe .bat[0m og [31m.com[0m kan startes med filnavnet efterfulgt af Enter.
+
+.
+:PROGRAM_INTRO_CDROM
+[2J[32;1mHvordan man monterer et virtuelt eller fysisk CD-ROM-Drev i DOSBox:[0m
+DOSBox leverer emulering af CD-ROM-Drev i flere niveauer.
+
+Det [33mbasale[0m niveau fungerer med alle CD-ROM-Drev og almindelige Directories.
+MSCDEX installeres og alle data bliver markeret som skrivebeskyttet.
+For de fleste spil bruges:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom[0m eller [34;1mmount d C:\example -t cdrom[0m
+hvis dette ikke virker, skal CDLabel evt. angives:
+[34;1mmount d C:\example -t cdrom -label CDLABEL[0m
+
+Det [33mn‘ste[0m niveau tilf›jer noget lav-niveau support.
+og virker derfor kun med rigtige CD-ROM-Drev:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
+
+Det [33msidste[0m niveau er systembestemt:
+For [1mWindows 2000[0m, [1mWindows XP[0m and [1mLinux[0m:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-ioctl[0m
+For [1mWindows 9x[0m med ASPI layer installeret :
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-aspi[0m
+
+Erstat [0;31mD:\[0m med CD-ROM drevets adresse(f.eks d:\).
+Erstat [33;1m0[0m i [34;1m-usecd [33m0[0m med Nummeret for din CDROM, der findes med kommandoen
+[34;1mmount -cd[0m
+
+.
+:PROGRAM_INTRO_SPECIAL
+[2J[32;1mTastaurgenveje:[0m
+Standardindstillinger,
+som kan laves om med [33mkeymapper[0m.
+
+[33;1mALT-ENTER[0m   : Fuldsk‘rm Til/Fra
+[33;1mALT-PAUSE[0m   : Pause DOSBox.
+[33;1mCTRL-F1[0m     : Starte [33mkeymapper[0m.
+[33;1mCTRL-F4[0m     : Skifte Diskette-Image; genopfriske Directory-struktur
+[33;1mCTRL-ALT-F5[0m : Optage film Til/Fra
+[33;1mCTRL-F5[0m     : Gemme Screenshot (PNG-type)
+[33;1mCTRL-F6[0m     : Optage Lydoutput til Wave-fil Til/Fra
+[33;1mCTRL-ALT-F7[0m : Optage OPL-Data (DRO format) Til/Fra
+[33;1mCTRL-ALT-F8[0m : Optage Raw-MIDI-Data Til/Fra
+[33;1mCTRL-F7[0m     : Formindske Frames-tab
+[33;1mCTRL-F8[0m     : Forst›rre Frames-tab
+[33;1mCTRL-F9[0m     : Afslutte DOSBox
+[33;1mCTRL-F10[0m    : Binde/Frig›e mus
+[33;1mCTRL-F11[0m    : Langsommere emulering (mindre antal DOSBox-Cycles)
+[33;1mCTRL-F12[0m    : Hurtigere emulering (flere DOSBox-Cycles)
+[33;1mALT-F12[0m     : Frigiv hastighed (Turbo-Knap)
+
+.
+:PROGRAM_BOOT_NOT_EXIST
+Fejl: Bootdisk-Fil ikke fundet.
+
+.
+:PROGRAM_BOOT_NOT_OPEN
+Fejl: Kan ikke †bne Bootdisk-Fil.
+
+.
+:PROGRAM_BOOT_WRITE_PROTECTED
+Image-Fil er skrivebeskyttet(read-only)! Kan skabe problemer.
+
+.
+:PROGRAM_BOOT_PRINT_ERROR
+Denne kommando starter DOSBox fra enten floppy eller harddisk image.
+
+Med denne kommando, kan specificeres en liste af floppydiske som kan
+skiftes med Ctrl-F4, -l specificerer det monterede drev der skal Bootes fra.
+Hvis der ikke er opgivet et drevbogstav, vil der blive booted fra drev A.
+De eneste boot(able) drev er A, C, og D. Hvis der skal bootes fra harddisk
+(C eller D), er drevet monteret med kommandoen :
+[34;1mIMGMOUNT[0m
+
+Syntaks for kommandoen er:
+
+[34;1mBOOT [diskimg1.img diskimg2.img] [-l Drevbogstav][0m
+
+.
+:PROGRAM_BOOT_UNABLE
+Kan ikke boote fra drev %c.
+.
+:PROGRAM_BOOT_IMAGE_OPEN
+†bner Image: %s
+
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+Kan ikke †bne %s
+.
+:PROGRAM_BOOT_BOOT
+Booter fra drev %c...
+
+.
+:PROGRAM_BOOT_CART_WO_PCJR
+PCjr-Cartridge: Maskine er ikke PCjr.
+.
+:PROGRAM_BOOT_CART_LIST_CMDS
+Tilg‘ngelige PCjr cartridge kommandoer:%s.
+.
+:PROGRAM_BOOT_CART_NO_CMDS
+Der er ingen PCjr cartridge Kommandoer fundet.
+.
+:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
+Der er ikke angivet Drev-bogstav for Image
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY2
+Opgiv drevnummer (0-3): 0=FDa, 1=FDb, 2=HDa, 3=HDb
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
+Syntaks for [33mCD-ROM[0m image:   [34;1mIMGMOUNT drev-bogstav placering-af-image -t iso[0m
+
+Syntaks for [33mharddisk[0m image: specificer drev geometry for harddisk :
+bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
+[34;1mIMGMOUNT drev-bogstav placering-af-image -size bps,spc,hpc,cyl[0m
+
+.
+:PROGRAM_IMGMOUNT_INVALID_IMAGE
+Kunne ikke indl‘se image fil.
+Unders›g om stien(path) er korrekt og at dit image er tilg‘geligt.
+
+.
+:PROGRAM_IMGMOUNT_INVALID_GEOMETRY
+Kunne ikke hente drev geometri fra image.
+Brug parametrene -size bps,spc,hpc,cyl til at specificere geometrien.
+
+.
+:PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
+Image-Type %s kan ikke bruges. Specific‚r "hdd" , "floppy" ell. "iso".
+
+.
+:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
+%s Ukendt Format. Specific‚r "fat" , "iso" ell. "none".
+
+.
+:PROGRAM_IMGMOUNT_SPECIFY_FILE
+Opgiv fil-image at montere.
+
+.
+:PROGRAM_IMGMOUNT_FILE_NOT_FOUND
+Image ikke fundet
+
+.
+:PROGRAM_IMGMOUNT_MOUNT
+Brug kommandoen : [34;1mMOUNT[0m, ved montering af Mappe, ikke [34;1mIMGMOUNT[0m kommandoen.
+
+.
+:PROGRAM_IMGMOUNT_ALREADY_MOUNTED
+Drev-bogstav allerede benyttet.
+
+.
+:PROGRAM_IMGMOUNT_CANT_CREATE
+Kan ikke oprette drev ud fra fil.
+
+.
+:PROGRAM_IMGMOUNT_MOUNT_NUMBER
+Drev %d monteret som %s.
+
+.
+:PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
+Et Image skal ligge p† fysisk eller lokal drev.
+
+.
+:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
+Hvis der benyttes flere image(s) SKAL bruges CUE/ISO-filer.
+
+.
+:PROGRAM_KEYB_INFO
+Aktuel tastaturkode(codepage): %i
+
+.
+:PROGRAM_KEYB_INFO_LAYOUT
+Codepage %i valgt for %s layout
+
+.
+:PROGRAM_KEYB_SHOWHELP
+[32;1mKEYB[0m [keyboard layout ID[ kodeside nummer[ tastaturkode-fil]]]
+
+Eksempler:
+  [32;1mKEYB[0m: viser aktuelle sidekode.
+  [32;1mKEYB[0m DK: aktiverer dansk (DK) layout, brug en passende sidekode.
+  [32;1mKEYB[0m DK 850: aktiverer Dansk (DK) layout, med sidekode 850.
+  [32;1mKEYB[0m DK 850 mycp.cpi: Samme som ovenover, men bruger filen mycp.cpi.
+
+.
+:PROGRAM_KEYB_NOERROR
+Tastatur layout %s %i aktiveret.
+
+.
+:PROGRAM_KEYB_FILENOTFOUND
+Tastatur-fil: %s ikke fundet.
+
+
+.
+:PROGRAM_KEYB_INVALIDFILE
+Tastatur-fil : %s i virker ikke.
+
+.
+:PROGRAM_KEYB_LAYOUTNOTFOUND
+Intet layout i %s for Sidekode %i
+
+.
+:PROGRAM_KEYB_INVCPFILE
+Ingen eller ubrugelig sidekode-fil for layout: %s.
+
+.
+:SHELL_ILLEGAL_PATH
+ukorrekt sti/path
+
+.
+:SHELL_CMD_HELP
+
+For liste over alle kommandoer : [33;1mhelp /all[0m .
+En kort liste over de mest benyttede kommandoer:
+
+.
+:SHELL_CMD_ECHO_ON
+ECHO er sl†et til
+
+.
+:SHELL_CMD_ECHO_OFF
+ECHO er sl†et fra.
+
+.
+:SHELL_ILLEGAL_SWITCH
+Ugyldig Switch: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Manglende parameter.
+
+.
+:SHELL_CMD_CHDIR_ERROR
+Kan ikke skifte til: %s
+
+.
+:SHELL_CMD_CHDIR_HINT
+Skift drev med : [31m%c:[0m
+
+.
+:SHELL_CMD_CHDIR_HINT_2
+Directory-navn (Mappe-navn/Folder-navn/Biblioteks-navn) er mere end 8 tegn langt og/eller indeholder mellemrum.
+Pr›v [31mcd %s[0m
+
+.
+:SHELL_CMD_CHDIR_HINT_3
+Du er stadig p† drev Z:, skift til et monteret drev med [31mC:[0m.
+
+.
+:SHELL_CMD_MKDIR_ERROR
+Kan ikke oprette %s
+
+.
+:SHELL_CMD_RMDIR_ERROR
+Kan ikke fjerne %s
+
+.
+:SHELL_CMD_DEL_ERROR
+Kan ikke slette %s
+
+.
+:SHELL_SYNTAXERROR
+Forkert kommando-syntax
+
+.
+:SHELL_CMD_SET_NOT_SET
+Milj›variabel %s ikke defineret
+
+.
+:SHELL_CMD_SET_OUT_OF_SPACE
+For lidt milj›-plads
+
+.
+:SHELL_CMD_IF_EXIST_MISSING_FILENAME
+IF EXIST: Manglende filnavn
+
+.
+:SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
+IF ERRORLEVEL: Tal mangler.
+
+.
+:SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
+IF ERRORLEVEL: Ugyldigt tal
+
+.
+:SHELL_CMD_GOTO_MISSING_LABEL
+label mangler i GOTO kommando
+
+.
+:SHELL_CMD_GOTO_LABEL_NOT_FOUND
+GOTO: Label %s ikke fundet
+
+.
+:SHELL_CMD_FILE_NOT_FOUND
+Filen %s ikke fundet
+
+.
+:SHELL_CMD_FILE_EXISTS
+Filen %s eksisterer allerede
+
+.
+:SHELL_CMD_DIR_INTRO
+Indhold af %s.
+
+.
+:SHELL_CMD_DIR_BYTES_USED
+%5d Fil(er)           %17s Byte
+
+.
+:SHELL_CMD_DIR_BYTES_FREE
+%5d Dir(s) {Mappe(r)} %17s Byte fri
+
+.
+:SHELL_EXECUTE_DRIVE_NOT_FOUND
+Ugyldig drev-angivelse: %c!
+Der skal eksistere et drev som er monteret med kommandoen : [31mmount[0m.
+Mere Information med [1;33mintro[0m eller [1;33mintro mount[0m.
+.
+:SHELL_EXECUTE_ILLEGAL_COMMAND
+Ugyldig kommando : %s
+
+.
+:SHELL_CMD_PAUSE
+Tryk en tast, for at forts?tte ...
+
+.
+:SHELL_CMD_PAUSE_HELP
+Afventer tastetryk ...
+
+.
+:SHELL_CMD_COPY_FAILURE
+Fejl under kopiering: %s
+
+.
+:SHELL_CMD_COPY_SUCCESS
+        %d Fil(er) kopieret
+
+.
+:SHELL_CMD_SUBST_NO_REMOVE
+Sletning af SUBST-drev er ikke muligt.
+
+.
+:SHELL_CMD_SUBST_FAILURE
+SUBST-fejl enten er der en fejl i kommandolinie, eller drevet er bruges:
+SUBST virker kun med lokale drev.
+.
+:SHELL_STARTUP_BEGIN
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mVelkommen til DOSBox v%-8s[37m                                     º
+º                                                                    º
+º For en kort introduktion til nye brugere tast: [33mINTRO[37m               º
+º For brugbare skal/shell kommandoer tast: [33mHELP[37m                      º
+º                                                                    º
+º Hvis du vil have mere fart, tast [31mctrl-F8[37m eller [31mctrl-F12[37m.           º
+º For at aktivere "keymapper" [31mctrl-F1[37m.                               º
+º For mere information se [36mREADME[37m filen i DOSBox-mappen.              º
+º                                                                    º
+
+.
+:SHELL_STARTUP_CGA
+º DOSBox underst?tter Composite CGA mode.                            º
+º Brug [31m(alt-)F11[37m til at skifte farver n†r du er i denne mode.        º
+º                                                                    º
+
+.
+:SHELL_STARTUP_HERC
+º Brug [31mF11[37m til at skifte farver n†r du er i denne mode.        º
+º                                                                    º
+
+.
+:SHELL_STARTUP_DEBUG
+º Tast [31mAlt-Pause[37m for at starte debuggeren eller start exe-filen med [33mDEBUG[37m.     º
+º                                                                     º
+
+.
+:SHELL_STARTUP_END
+º [32mMor jer![37m                                                           º
+º [32mDOSBox Teamet.[33mhttp://www.dosbox.com[37m                                º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+
+.
+:SHELL_CMD_CHDIR_HELP
+Viser/skifter det aktuelle Directory(Mappe-Folder,Bibliotek).
+
+.
+:SHELL_CMD_CHDIR_HELP_LONG
+CHDIR [Drev:][Sti]
+CHDIR[..]
+CD [Drev:][Sti]
+CD[..]
+
+ ..   Specificerer at du vil skifte til "parent"-Directory.
+
+CD Drev:   Skifter til det valgte Drev's aktuelle Directory.
+CD     Viser det aktuelle Drev og Directory.
+
+.
+:SHELL_CMD_CLS_HELP
+Renser sk‘rmen.
+
+.
+:SHELL_CMD_DIR_HELP
+Lister filer og under-dir(s)(under-mapper,under-foldere,under-biblioteker).
+
+.
+:SHELL_CMD_DIR_HELP_LONG
+DIR [Drev:][Sti][Filnavn] [/P] [/W]
+
+Dir /w : output wide-format
+Dir /p : output pages-format(sider) samme som Dir |more
+.
+:SHELL_CMD_ECHO_HELP
+Viser meddelelser og sl†r kommando- Til/Fra.
+
+.
+:SHELL_CMD_ECHO_HELP_LONG
+ECHO efterfulgt af text viser tekst i batchfil.
+ECHO efterfulgt af . (ECHO.) viser en tom linie i batchfil.
+ECHO off sl†r ekko fra - ECHO on sl†r 'ekko' til.
+.
+:SHELL_CMD_EXIT_HELP
+Slutter skallen/shellen og DOSBox.
+
+.
+:SHELL_CMD_HELP_HELP
+Viser assistance.
+
+.
+:SHELL_CMD_MKDIR_HELP
+Opretter Directory(Mappe,Folder,Bibliotek).
+
+.
+:SHELL_CMD_MKDIR_HELP_LONG
+MKDIR [Drev:]Sti
+MD    [Drev:]Sti
+
+.
+:SHELL_CMD_RMDIR_HELP
+Fjerner Directory(Mappe,Folder,Bibliotek).
+
+.
+:SHELL_CMD_RMDIR_HELP_LONG
+RMDIR [Drev:]Sti
+RD    [Drev:]Sti
+
+.
+:SHELL_CMD_SET_HELP
+Skriver/fjerner/viser indhold af DOS-milj›variablen.
+
+.
+:SHELL_CMD_SET_HELP_LONG
+SET viser milj›variabler.
+SET navn=v‘rdi  s‘tter milj›ariabel.
+SET navn=  sletter milj›variabel.
+.
+:SHELL_CMD_IF_HELP
+Tillader betingede operationer i batch filer.
+
+.
+:SHELL_CMD_GOTO_HELP
+Flytter til Etiket/Label i batch-fil.
+
+.
+:SHELL_CMD_GOTO_HELP_LONG
+GOTO :Label/Etiket i batchfil flytter kommandoen til Labelen/Etiketen
+.
+:SHELL_CMD_SHIFT_HELP
+Flytter udskiftelige parametre i batch-fil.
+
+.
+:SHELL_CMD_TYPE_HELP
+Viser indholdet af tekstfil.
+
+.
+:SHELL_CMD_TYPE_HELP_LONG
+TYPE [Drev:][Sti]Filnavn
+
+.
+:SHELL_CMD_REM_HELP
+Tillader Kommentarer i en batch-fil.
+
+.
+:SHELL_CMD_REM_HELP_LONG
+REM [Kommentar]
+
+.
+:SHELL_CMD_NO_WILD
+Dette er den simple version af kommando-fortolkeren, ingen wildcards.
+
+.
+:SHELL_CMD_RENAME_HELP
+Omd›ber en eller flere filer.
+
+.
+:SHELL_CMD_RENAME_HELP_LONG
+RENAME [Drev:][Sti]Filnavn1 Filnavn2.
+REN    [Drev:][Sti]Filnavn1 Filnavn2.
+
+Der kan ikke angives andet Drev eller Sti for destinationsfilen(Filnavn 2).
+
+.
+:SHELL_CMD_DELETE_HELP
+Sletter en eller flere filer.
+
+.
+:SHELL_CMD_DELETE_HELP_LONG
+DEL filnavn(e)
+.
+:SHELL_CMD_COPY_HELP
+Kopierer en eller flere filer til andet sted.
+
+.
+:SHELL_CMD_COPY_HELP_LONG
+COPY fil(er)1 fil(er)2
+
+.
+:SHELL_CMD_CALL_HELP
+Kalder en anden batch-fil fra batch-fil.
+
+.
+:SHELL_CMD_CALL_HELP_LONG
+CALL "Batchfil"
+
+.
+:SHELL_CMD_SUBST_HELP
+Tildeler Directory(Mappe,Folder,Bibliotek) Drevbogstav.
+
+.
+:SHELL_CMD_SUBST_HELP_LONG
+SUBST F: .  (punktummet skal med) tildeler alle filer i mappen drevet F
+.
+:SHELL_CMD_LOADHIGH_HELP
+Starter program i "upper" hukommelse (XMS, UMB betingelse).
+
+.
+:SHELL_CMD_LOADHIGH_HELP_LONG
+LOADHIGH "Program"
+.
+:SHELL_CMD_CHOICE_HELP
+Afventer tastetryk og skriver ERRORLEVEL.
+
+.
+:SHELL_CMD_CHOICE_HELP_LONG
+CHOICE [/C[:]Tast] [/N] [/S] [Text]
+
+/C[:]'Tasten'  Angiver tilladte taster. Standard er YN.
+/N           Vis ikke tastetryk ved prompten.
+/S           Skelner mellem Store-/Lille bogstaver.
+Text         Teksten der skal vises ved prompten.
+
+ERRORLEVEL skrives som positionen af den trykkede tast i listen
+af valgbare taster.
+.
+:SHELL_CMD_ATTRIB_HELP
+Virker ikke, kun med for kompabillitet.
+
+.
+:SHELL_CMD_PATH_HELP
+Virker ikke, kun med for kompabillitet.
+
+.
+:SHELL_CMD_VER_HELP
+Viser og skriver dosver.(SET).
+
+.
+:SHELL_CMD_VER_HELP_LONG
+VER [SET HOVEDversionsnummer [UNDERversionsnummer]]
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCESS
+Drive %c er afmonteret
+
+.
+:SHELL_ILLEGAL_PATH
+Illegal Path.
+
+.
+:SHELL_CMD_VER_VER
+DOSBox version %s. Reported DOS version %d.%02d.
+
+.

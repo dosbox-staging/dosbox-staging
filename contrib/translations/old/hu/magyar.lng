@@ -1,0 +1,689 @@
+:SDL_CONFIGFILE_HELP
+fullscreen -- Teljes k‚perny”n ind¡tja a DOSBoxot.
+fulldouble -- K‚tszeres pufferel‚st haszn l teljes k‚perny” alatt.
+fullresolution -- A teljes k‚perny” felbont sa: eredeti, vagy r”gz¡tett (pl. 1024x768)
+windowresolution -- µtm‚retezi az ablakot ebbe a m‚retbe,
+                    ha a kimeneti eszk”z t mogatja a hardware-s  tm‚retez‚st.
+output -- Mi a kimeneti eszk”z: surface, overlay, opengl, openglnb, ddraw.
+autolock -- Az eg‚r automatikusan lez r¢dik, ha a k‚perny”re kattintasz.
+sensitiviy -- Az eg‚r ‚rz‚kenys‚ge.
+waitonerror -- V r, miel”tt bez rja a konzolt, ha a DOSBox hib t okoz.
+priority -- A DOSBox priorit sa: lowest, lower, normal, higher, highest, pause (amikor nincs f¢kuszban).
+            A m sodik bejegyz‚s a vessz” m”g”tt arra vonatkozik,
+            amikor a DOSBox nincs f¢kusz lva/minimaliz lva.
+mapperfile -- A billentyzetkioszt s elment‚s‚re/bet”lt‚s‚re haszn lt f jl megad sa.
+usescancodes -- A szimbolikus billentyzetek elkerl‚se,
+                lehet, hogy nem mk”dik minden oper ci¢s rendszeren.
+.
+:DOSBOX_CONFIGFILE_HELP
+language -- M sik nyelvi f jl kiv laszt sa.
+memsize -- A DOSBox  ltal haszn lhat¢ mem¢ria nagys ga megab jtokban megadva.
+machine -- Az emul lni k¡v nt g‚p t¡pusa: hercules, cga, tandy, pcjr, vga.
+captures -- Az a k”nyvt r ahova a kimentett hangok, midik ‚s k‚pek kerlnek.
+.
+:RENDER_CONFIGFILE_HELP
+frameskip -- H ny k‚pkock t hagy ki a DOSBox, miel”tt egyet kihagy.
+aspect -- K‚pkorrekci¢, ami - ha a kimeneti m¢d nem t mogatja - lelass¡thatja a fut st.
+scaler -- Az alacsony felbont sok kinagy¡t s ra, jav¡t s ra haszn lt  tm‚retez”.
+          A k”vetkez”k lehetnek: none,normal2x,normal3x,advmame2x,advmame3x,hq2x,hq3x,
+                        2xsai,super2xsai,supereagle,advinterp2x,advinterp3x,
+                        tv2x,tv3x,rgb2x,rgb3x,scan2x,scan3x.
+          Ha "forced" param is van (pl scaler=hq2x forced), akkor a scaler lesz,
+          akkor is, ha az eredm‚ny rossz lesz.
+.
+:CPU_CONFIGFILE_HELP
+core -- A haszn lt processzor magt¡pus: normal, simple, full, dynamic, auto.
+        Az auto  tkapcsol normal-r¢l dynamic-ra, ha szks‚ges.
+cycles -- Az egy ezredm sodperc alatt v‚grehajtott utas¡t sok sz ma.
+        Ha magasabbra  ll¡tod, mint amit a g‚p kezelni tud, az kifagy shoz vezethet.
+        Ha "auto"-ra  ll¡tod, akkor a DOSBox pr¢b lja meg meg llap¡tani, hogy mennyi az ide lis.
+        Ez a kieg‚sz¡t” csak k¡s‚rleti st diumban van.
+cycleup/cycledown  -- A billentykomb¢val ennyit n”/cs”kken a ciklussz m. 100 alatti ‚rt‚k sz zal‚kot jelez.
+.
+:MIXER_CONFIGFILE_HELP
+nosound -- Cs”ndes m¢d enged‚lyez‚se. A hang emul l s t ez nem kapcsolja ki.
+rate -- A kever” mintav‚telez‚si frekvenci ja. 22050 Hz-n‚l magasabb ‚rt‚kn‚l val¢sz¡nleg cs”kken a hangmin”s‚g.
+blocksize -- A kever” blokkm‚rete. A nagyob blokkm‚ret val¢sz¡nleg seg¡t a sisterg‚sen, de a hang jobban fog akadni.
+prebuffer -- H ny ezredm sodpercnyi adatot tart a blokkm‚ret tetej‚n.
+.
+:MIDI_CONFIGFILE_HELP
+mpu401 -- Az MPU-401 emul ci¢ t¡pusa: none, uart, intelligent.
+device -- Az eszk”z ami a midi adatokat fogadja az MPU-401-t”l:
+          default, alsa, oss, win32, coreaudio, none.
+config -- Az eszk”z speci lis be ll¡t sai. Windows alatt az eszk”z azonos¡t¢j t ¡rd be ide
+          L sd a README.txt-t a r‚szletek‚rt.
+.
+:SBLASTER_CONFIGFILE_HELP
+sbtype -- Emul lt SoundBlaster t¡pus: none, sb1, sb2, sbpro1, sbpro2, sb16.
+sbbase,irq,dma,hdma -- IO/IRQ/DMA/High DMA c¡mz‚sek a SoundBlasternek.
+mixer -- Enged‚lyezi a SoundBlaster kever”nek, hogy m¢dos¡tsa a DOSBox kever”t.
+         true, false.
+oplmode -- OPL emul ci¢ t¡pusa: auto, cms, opl2, dualopl2, opl3.
+           Auto m¢dban a SoundBlaster fogja meg llap¡tani. Minden OPL m¢d AdLib,
+           kiv‚ve a CMS-t.
+oplrate -- Az OPL zeneemul ci¢ mintav‚telez‚si frekvenci ja.
+.
+:GUS_CONFIGFILE_HELP
+gus -- Gravis Ultrasound emul ci¢ bekapcsol sa.
+gusbase, irq1, irq2, dma1, dma2 -- A Gravis Ultrasound IO/IRQ/DMA c¡mei (IRQ=DMA).
+gusrate -- A Gravis Ultrasound emul ci¢ mintav‚telez‚si frekvenci ja.
+ultradir -- A Gravis Ultrasound k”nyvt ra, ahol egy MIDI k”nyvt rnak is lennie k‚ne, ami a  GUS visszaj tsz s jav¡t sait tartalmazza.
+.
+:SPEAKER_CONFIGFILE_HELP
+pcspeaker -- PC-Speaker emul ci¢ bekapcsol sa.
+pcrate -- A PC-Speaker mintav‚telez‚si frekvenci ja.
+tandy -- A Tandy Sound System emul ci¢j nak a bekapcsol sa: off, on, auto.
+         Auto be ll¡t s eset‚n, csak akkor kapcsol be, ha a g‚p Tandy m¢dban van.
+tandyrate -- A Tandy 3 Mintav‚telez‚si frekvenci ja.
+disney -- Disney Sound Source emul ci¢ bekapcsol sa. Covox Voice Master ‚s Speech Thing kompatibilis.
+.
+:JOYSTICK_CONFIGFILE_HELP
+joysticktype -- A Joystick t¡pusa: auto (alap), none,
+                2axis (k‚t joystickot t mogat),
+                4axis (egy joystickot t mogat, az els” van haszn latban),
+                4axis_2 (egy joystickot t mogat, a m sodik van haszn latban),
+                fcs (Thrustmaster), ch (CH Flightstick).
+                none Josytick emul ci¢ kikapcsolva.
+                auto A val¢di joysticknak megfelel”en v lasztja ki a mk”d‚st.
+timed -- Bekapcsolja az id”z¡tett id”intervallumokat a tengelyre. (false a r‚gi m¢d).
+autofire -- Folyamatosan l”, am¡g a gombot nyomvatartod.
+swap34 -- Felcser‚li a 3. ‚s a 4. tengelyt. N‚melyik jostickn l hasznos lehet.
+buttonwrap -- enged‚lyezi a gombt”rdel‚st az emul lt gombok sz m ra.
+.
+:SERIAL_CONFIGFILE_HELP
+serial1-4 -- A COM-port-ra csatlakoztatott eszk”z: disabled, dummy, modem, nullmodem, directserial.
+        Egy‚b param‚tereket ugyanabban a sorban adhatsz meg a "value" param‚terrel.
+        A param‚terek a k”vetkez”ek: irq, startbps, bytesize, stopbits, parity (nem k”telez”ek).
+        A directserial-hoz: realport (szks‚ges), rxdelay (nem k”telez”).
+        modem: listenport (nem k”telez”).
+        nullmodem: server, rxdelay, txdelay, telnet, usedtr
+                   transparent, port, inhsocket (mind opcion lis).
+        P‚lda: serial1=modem listenport:5000       
+.
+:DOS_CONFIGFILE_HELP
+xms -- XMS t mogat s bekapcsolva.
+ems -- EMS t mogat s bekapcsolva.
+umb -- UMB t mogat s bekapcsolva.
+keyboardlayout -- A billentyzet kioszt s nak nyelvi k¢dja (vagy none).
+.
+:IPX_CONFIGFILE_HELP
+ipx -- Bakapcsolja az "IPX over UDP/IP" emul ci¢t.
+.
+:AUTOEXEC_CONFIGFILE_HELP
+Az ebben a szekci¢ban l‚v” sorokat ind¡t skor mag t¢l v‚grehajtja a DOSBox.
+.
+:CONFIGFILE_INTRO
+# Ez a konfigur ci¢s f jlja a DOSBox %s sz m ra.
+# Azok a sorok melyek elej‚n # van, azok megjegyz‚sek.
+# Az‚rt vannak, hogy minden funkci¢t (r”viden) dokument lhatni lehessen.
+.
+:PROGRAM_CONFIG_FILE_ERROR
+Nem tudom megnyitni a %s f jlt.
+.
+:PROGRAM_CONFIG_USAGE
+DOSBox konfigur ci¢s eszk”z:
+CONFIG -writeconf [f jl] ki¡rja a jelenlegi konfigur ci¢t a megadott f jlba.
+CONFIG -writelang [f jl] ki¡rja a jelenlegi nyelv sz”vegeit a f jlba.
+.
+:PROGRAM_CONFIG_SECTION_ERROR
+A(z) %s szekci¢ nem l‚tezik.
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Nincs ilyen szekci¢ vagy tulajdons g.
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Nincs %s tulajdons g a(z) %s szekci¢ban.
+.
+:PROGRAM_CONFIG_GET_SYNTAX
+Helyes szintaxis: config -get "szekci¢ tulajdons g".
+.
+:PROGRAM_MOUNT_CDROMS_FOUND
+CDROM-ok sz ma: %d
+.
+:PROGRAM_MOUNT_STATUS_2
+A(z) %c meghajt¢ most %s alatt el‚rhet”.
+.
+:PROGRAM_MOUNT_STATUS_1
+Jelenleg el‚rhet” meghajt¢k:
+.
+:PROGRAM_MOUNT_ERROR_1
+A(z) %s k”nyvt r nem l‚tezik.
+.
+:PROGRAM_MOUNT_ERROR_2
+%s nem k”nyvt r.
+.
+:PROGRAM_MOUNT_ILL_TYPE
+Nem megengedett t¡pus: %s 
+.
+:PROGRAM_MOUNT_ALREADY_MOUNTED
+A(z) %c meghajt¢ m r hozz  van rendelve a(z) %s meghajt¢hoz.
+.
+:PROGRAM_MOUNT_USAGE
+Haszn lat [36mMOUNT [meghajt¢] [k”nyvt r][0m
+Pl a MOUNT C: C:\WINNT parancs csatolja a C: meghajt¢hoz az C:\WINNT k”nyvt rat.
+.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+A(z) %c meghajt¢ nincs hozz rendelve semmihez.
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCES
+A(z) %c meghajt¢ sikeresen le lett v lasztva.
+.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+Virtu lis meghajt¢kat nem lehet lev lasztani.
+.
+:PROGRAM_MOUNT_WARNING_WIN
+[31;1mA c:\ meghajt¢ csatol sa nem javasolt. Legk”zelebb egy k”nyvt rat adj meg.[0m
+.
+:PROGRAM_MOUNT_WARNING_OTHER
+[31;1mA / csatol sa nem javasolt. Legk”zelebb egy k”nyvt rat adj meg.
+.
+:PROGRAM_MEM_CONVEN
+%10d KByte szabad hagyom nyos mem¢ria.
+.
+:PROGRAM_MEM_EXTEND
+%10d KByte szabad b”v¡tett mem¢riar. (XMS)
+.
+:PROGRAM_MEM_EXPAND
+%10d KByte szabad kiterjesztett mem¢ria. (EMS)
+.
+:PROGRAM_MEM_UPPER
+%10d KByte szabad fels” mem¢ria %d blockban (legnagyobb UMB %d KByte)
+.
+:PROGRAM_LOADFIX_ALLOC
+%d KByte lefoglalva.
+.
+:PROGRAM_LOADFIX_DEALLOC
+%d KByte felszabad¡tva.
+.
+:PROGRAM_LOADFIX_DEALLOCALL
+Haszn lt mem¢ria felszabad¡tva.
+.
+:PROGRAM_LOADFIX_ERROR
+Mem¢riafoglal si hiba.
+.
+:MSCDEX_SUCCESS
+MSCDEX telep¡tve.
+.
+:MSCDEX_ERROR_MULTIPLE_CDROMS
+MSCDEX: Hiba: T”bb CDROM eset‚n a betknek folytat¢lagosoknak kell lennik.
+.
+:MSCDEX_ERROR_NOT_SUPPORTED
+MSCDEX: Hiba: M‚g nincs t mogatva.
+.
+:MSCDEX_ERROR_PATH
+MSCDEX: Hiba: Hib s el‚r‚si £t.
+.
+:MSCDEX_TOO_MANY_DRIVES
+MSCDEX: Hiba: T£l sok CDROM meghajt¢: (max: 5) Sikertelen telep¡t‚s.
+.
+:MSCDEX_LIMITED_SUPPORT
+MSCDEX: Csatolt k”nyvt r: korl tozott t mogat s.
+.
+:MSCDEX_INVALID_FILEFORMAT
+MSCDEX: Hiba: A f jl nem iso/cue lemezk‚p vagy hib kat tartalmaz.
+.
+:MSCDEX_UNKNOWN_ERROR
+MSCDEX: Hiba: Ismeretlen hiba.
+.
+:PROGRAM_RESCAN_SUCCESS
+A meghajt¢ gyors¡t¢t ra kir¡tve.
+.
+:PROGRAM_INTRO
+[2J[32;1mšdv. Ez itt a DOSBox[0m, egy x86 emul tor hanggal ‚s grafik val.
+A DOSBox egy h‚jat biztos¡t neked, ami olyan mint a r‚gi DOS.
+
+Az alap csatol si tipusok le¡r s hoz ¡rd be: [34mINTRO MOUNT[0m.
+A CDROM-ok csatol si inform ci¢i‚rt ¡rd be: [34mINTRO CDROM[0m.
+Speci lis billentytipusok‚rt ¡rd be: [34mINTRO SPECIAL[0m.
+Tov bbi inform ci¢kat a DOSBox weboldal n tal lsz:
+[34;1mhttp://dosbox.sourceforge.net/wiki[0m
+
+[31;1mA DOSBox figyelmeztet‚s n‚lkl kil‚p, ha valami hiba t”rt‚nik![0m
+
+.
+:PROGRAM_INTRO_MOUNT_START
+[2J[32;1mN‚h ny parancs az indul shoz:[0m
+Miel”tt haszn lni tudn d a meghajt¢idon tal lhat¢ f jlokat,
+csatolnod kell a k”nyvt rat ami a f jlokat tartalmazza.
+
+
+.
+:PROGRAM_INTRO_MOUNT_WINDOWS
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mmount c c:\dosprog\[37m l‚trehozza a C meghajt¢t a c:\dosprog k”tet alatt. º
+º                                                                        º
+º [32mc:\dosprog\[37m egy p‚lda. Helyettes¡tsd be a saj t j t‚kk”nyvt raddal.   [37m º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+.
+:PROGRAM_INTRO_MOUNT_OTHER
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mmount c ~/dosprog[37m l‚trehozza a C meghajt¢t a ~/dosprog k”tet alatt. º
+º                                                                     º
+º [32m~/dosprog[37m egy p‚lda. Helyettes¡tsd be a saj t j t‚kk”nyvt raddal.  [37m º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+.
+:PROGRAM_INTRO_MOUNT_END
+Amikor a csatol s k‚szen van be¡rhatod [34;1mc:[0m
+hogy  tv lts a frissen l‚trehozott C meghajt¢dra.
+A [34;1mdir[0m parancs beg‚pel‚se megmutatja a tartalm t.
+A [34;1mcd[0m paranccsal v lthatsz k”nyvt rat (a [33;1m[][0m jelek jelzik a k”nyvt rlist ban.).
+A [31m.exe .bat[0m ‚s [31m.com[0m v‚g f jlokat tudod futtatni.
+.
+:PROGRAM_INTRO_CDROM
+[2J[32;1mHow to mount a Real/Virtual CD-ROM Drive in DOSBox:[0m
+DOSBox provides CD-ROM emulation on several levels.
+
+Az [33malap[0m szint minden CDROM meghajt¢val ‚s k”nyvt rral mk”dik.
+Telep¡ti a MSCDEX-et ‚s ¡r sv‚dettnek jel”li meg a f jokat.
+A legt”bb j t‚knak el‚g ennyi:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom[0m   vagy   [34;1mmount d C:\pelda -t cdrom[0m
+Ha nem mk”dik, lehet, hogy meg kell mondanod a CD c¡mk‚j‚t a DOSBoxnak:
+[34;1mmount d C:\pelda -t cdrom -label CIMKE[0m
+
+A [33mk”vetkez”[0m szint ad n‚mi alacsonyszint t mogat st.
+Vagyis csak CDROM meghajt¢kon mk”dik:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
+
+Az [33mutols¢[0m szintje a t mogat snak az oper ci¢s rendszeredt”l fgg:
+[1mWindows 2000[0m, [1mWindows XP[0m ‚s [1mLinux[0m:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-ioctl[0m
+[1mWindows 9x[0m telep¡tett ASPI r‚teggel:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-aspi[0m
+
+Helyettes¡tsd be a [0;31mD:\[0m-t a saj t CDROM-od betjel‚vel.
+Helyettes¡tsd be a [33;1m0[0m- t az [34;1m-usecd [33m0[0m param‚terben a CDROM-od sz m t,
+amit megkapsz, ha be¡rod: [34;1mmount -cd[0m
+.
+:PROGRAM_INTRO_SPECIAL
+[2J[32;1mSpeci lis billentykomb¢k:[0m
+Ezek az alap be ll¡t sok.
+Le lehet ”ket cser‚lni a [33mbillentyt‚rk‚pben[0m-ben.
+
+[33;1mALT-ENTER[0m   : Teljesk‚perny” be/ki.
+[33;1mALT-PAUSE[0m   : DOSBox pillanatstop.
+[33;1mCTRL-F1[0m     : Elind¡tja a [33mbillentyt‚rk‚pet[0m.
+[33;1mCTRL-F4[0m     : Friss¡ti a k”tetek gyors¡t¢t r t. Cser‚li a csatolt lemezk‚peket.
+[33;1mCTRL-ALT-F5[0m : Elind¡tja/Meg ll¡tja a filmfelv‚telt a k‚perny”r”l.
+[33;1mCTRL-F5[0m     : Kimenti egy k‚pbe a jelenlegi k‚perny”t.
+[33;1mCTRL-F6[0m     : Elind¡tja/Meg ll¡tja a hangfelv‚telt.
+[33;1mCTRL-ALT-F7[0m : Elind¡tja/Meg ll¡tja az OPL parancsok felv‚tel‚t.
+[33;1mCTRL-ALT-F8[0m : Elind¡tja/Meg ll¡tja a nyers MIDI parancsok felv‚tel‚t.
+[33;1mCTRL-F7[0m     : Cs”kkenti a k‚pkockakihagy st.
+[33;1mCTRL-F8[0m     : N”veli a k‚pkockakihagy st.
+[33;1mCTRL-F9[0m     : Meg ll¡tja a DOSBox.
+[33;1mCTRL-F10[0m    : Megfogja/Elengedi az egeret.
+[33;1mCTRL-F11[0m    : Lelass¡tja az emul ci¢t (Cs”kkenti a DOSBox ciklusokat).
+[33;1mCTRL-F12[0m    : Felgyors¡tja az emul ci¢t (N”veli DOSBox Ciklusokat).
+[33;1mALT-F12[0m     : kikapcsolja sebess‚gr”gz¡t‚st (turbo gomb).
+.
+:PROGRAM_BOOT_NOT_EXIST
+Az ind¡t¢lemezf jl nem l‚tezik. Kihagyva.
+.
+:PROGRAM_BOOT_NOT_OPEN
+A program nem tudja megnyitni az ind¡t¢lemezf jlt. Kihagyva.
+.
+:PROGRAM_BOOT_WRITE_PROTECTED
+A lemezk‚p ¡r sv‚dett! Lehet, hogy probl‚m t okozhat.
+.
+:PROGRAM_BOOT_PRINT_ERROR
+Ez a parancs elind¡tja a DOSBox-ot ak r floppy ak r merevlemezk‚pr”l.
+
+Erre a parancsra defini lhatsz ”r”kl‚st a floppyk cser‚lhet”s‚g‚r”l
+a CRL+F4 gombok lenyom s val ‚s -l jel”li ki a csatolt meghajt¢t ahonnan
+indulni fog. Ha nincs meghajt¢jel defini lva, akkor az alapb¢l
+az A meghajt¢r¢l akar indulni. Az ind¡that¢ meghajt¢k: A, C, D.
+Merevlemezr”l val¢ ind¡t skor a k‚pnek m r csatolva kell lennie. [34;1mIMGMOUNT[0m.
+
+A parancs haszn lata:
+
+[34;1mBOOT [diskimg1.img diskimg2.img] [-l meghajt¢bet][0m
+.
+:PROGRAM_BOOT_UNABLE
+A program nem tud indzlni a(z) %c meghajt¢r¢l.
+:PROGRAM_BOOT_IMAGE_OPEN
+%s lemezk‚p nyit sa.
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+Nem tudom megnyitni a(z) %s lemezk‚pf jlt.
+:PROGRAM_BOOT_BOOT
+Indul s a(z) %c meghajt¢r¢l...
+.
+:PROGRAM_BOOT_CART_WO_PCJR
+PCJr k rty t ‚szlelt a program, de a g‚p nem PCJr.
+.
+:PROGRAM_BOOT_CART_LIST_CMDS
+PCJr cartridge commando-k:%s.
+.
+:PROGRAM_BOOT_CART_NO_CMDS
+Nincsenek PCjr cartridge commando-k.
+.
+:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
+Egy k‚pcsatol shoz meg kell adnod a meghajt¢ betjel‚t.
+.
+:PROGRAM_IMGMOUNT_SPECIFY2
+Musz j kijel”lni egy meghajt¢sz mot,
+(0 vagy 3) hogy csatolni lehessen (0,1=fda,fdb;2,3=hda,hdb).
+.
+:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
+[33mCD-ROM[0m lemezk‚phez:   [34;1mimgmount meghajt¢bet a-lemezk‚p-neve -t iso[0m
+
+[33mharddrive[0m lemezk‚phez: meg kell hat rozni a lemezt‚rk‚p geometri j t:
+bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
+[34;1mIMGMOUNT meghajt¢bet a-lemezk‚p-neve -size bps,spc,hpc,cyl[0m
+.
+:PROGRAM_IMGMOUNT_INVALID_IMAGE
+Nem tudom bet”lteni a lemezk‚pet.
+Ellen‹rizd, hogy az £tvonal helyes ‚s a lemezk‚p hozz f‚rhet‹-e.
+.
+:PROGRAM_IMGMOUNT_INVALID_GEOMETRY
+Nem tudom kitolvasni a meghajt¢ geometri j t a lemezk‚pb‹l.
+Haszn ld a -size bps,spc,hpc,cyl param‚tereket, hogy meghat rozd a geometri t.
+.
+:PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
+A(z) "%s" typus nincs t mogatva. Lehet: "hdd" vagy "floppy" vagy "iso".
+.
+:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
+A(z) "%s" form tum nincs t mogatva. Lehet: "fat" vagy "iso" vagy "none".
+.
+:PROGRAM_IMGMOUNT_SPECIFY_FILE
+Musz j kijel”lni a csatolni k¡v nt lemezk‚pet.
+.
+:PROGRAM_IMGMOUNT_FILE_NOT_FOUND
+A lemezk‚p nem tal lhat¢.
+.
+:PROGRAM_IMGMOUNT_MOUNT
+K”nyvt rak csatol s hoz haszn ld a [34;1mMOUNT[0m parancsot, ne a [34;1mIMGMOUNT[0m parancsot.
+.
+:PROGRAM_IMGMOUNT_ALREADY_MOUNTED
+Ehhez a beth”z m r van csatolt meghajt¢ rendelve.
+.
+:PROGRAM_IMGMOUNT_CANT_CREATE
+A program nem tudja l‚trehozni a meghajt¢t a lemezk‚pb”l.
+.
+:PROGRAM_IMGMOUNT_MOUNT_NUMBER
+A %d sz m£ meghajt¢ csatolva lett mint %s.
+.
+:PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
+A lemezk‚pnek hl¢zati, vagy helyi meghajt¢n kell lennie.
+.
+:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
+A t”bbf jlos t mogat s csak cue/iso f jlokra vonatkozik.
+.
+:PROGRAM_KEYB_INFO
+A %i sz m£ k¢dlap bet”ltve
+.
+:PROGRAM_KEYB_SHOWHELP
+[32;1mKEYB[0m [kioszt s azonos¡t¢ja[ k¢dlap sz ma[ k¢dlap f jl]]]
+
+Some examples:
+  [32;1mKEYB[0m: Jelenleg bet”lt”tt k¢dlap mutat sa.
+  [32;1mKEYB[0m sp: Bet”lti a Spanyol (SP) kioszt st ‚s egy alkalmas k¢dlapot haszn l.
+  [32;1mKEYB[0m sp 850: Bet”lti a Spanyol (SP) kioszt st ‚s a 850-es k¢dlapot haszn lja.
+  [32;1mKEYB[0m sp 850 mycp.cpi: Ugyanaz, de a mycp.cpi f jlt haszn lja.
+.
+:PROGRAM_KEYB_NOERROR
+%s billentyzetkioszt s bet”ltve a %i sz m£ k¢dlaphoz
+.
+:PROGRAM_KEYB_FILENOTFOUND
+%s: Nincs ilyen billentyzetf jl
+
+.
+:PROGRAM_KEYB_INVALIDFILE
+%s: rv‚nytelen billentyzetf jl
+.
+:PROGRAM_KEYB_LAYOUTNOTFOUND
+A %i sz m£ k¢dlap sz m ra nincs %s billentyzetkioszt s.
+.
+:PROGRAM_KEYB_INVCPFILE
+%s: Hib s vagy nem l‚tez” kioszt s.
+
+.
+:SHELL_ILLEGAL_PATH
+Hib s el‚r‚si £t.
+.
+:SHELL_CMD_HELP
+A t mogatott parancsok list j hoz ¡rd be: [33;1mhelp /all[0m .
+Egy r”vid lista a leggyakrabban haszn lt parancsokr¢l:
+.
+:SHELL_CMD_ECHO_ON
+ECHO bekapcsolva.
+.
+:SHELL_CMD_ECHO_OFF
+ECHO kikapcsolva.
+.
+:SHELL_ILLEGAL_SWITCH
+Nem megengedett kapcsol¢: %s.
+.
+:SHELL_MISSING_PARAMETER
+Hi nyz¢ param‚ter,
+.
+:SHELL_CMD_CHDIR_ERROR
+Nem lehet  tv ltani: %s.
+.
+:SHELL_CMD_CHDIR_HINT
+M sik meghajt¢ra val¢ v lt shoz ¡rd be: [31m%c:[0m
+.
+:SHELL_CMD_CHDIR_HINT_2
+A k”nyvt rn‚v hosszabb mint 8 karakter ‚s/vagy sz¢k”z”ket tartalmaz.
+Pr¢b ld ¡gy: [31mcd %s[0m
+.
+:SHELL_CMD_CHDIR_HINT_3
+M‚g mindig a Z: meghajt¢n vagy, v lts  t egy csatolt meghajt¢ra: [31mC:[0m.
+.
+:SHELL_CMD_MKDIR_ERROR
+A k”nyvt rat nem lehet l‚trehozni: %s.
+.
+:SHELL_CMD_RMDIR_ERROR
+A k”nyvt rat nem lehet let”r”lni: %s.
+.
+:SHELL_CMD_DEL_ERROR
+A f jlt nem lehet let”r”lni: %s.
+.
+:SHELL_SYNTAXERROR
+Hib s szintaxis.
+.
+:SHELL_CMD_SET_NOT_SET
+A(z) %s k”rnyezeti v ltoz¢ nincs defini lva.
+.
+:SHELL_CMD_SET_OUT_OF_SPACE
+Elfogyott a k”rnyezeti v ltoz¢khoz szks‚ges hely.
+.
+:SHELL_CMD_IF_EXIST_MISSING_FILENAME
+IF EXIST: Hi nyz¢ f jln‚v.
+.
+:SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
+IF ERRORLEVEL: Hi nyz¢ sz m.
+.
+:SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
+IF ERRORLEVEL: Hib s sz m.
+.
+:SHELL_CMD_GOTO_MISSING_LABEL
+Nincs c¡mk‚vel ell tva a GOTO parancs.
+.
+:SHELL_CMD_GOTO_LABEL_NOT_FOUND
+GOTO: A(z) %s c¡mke nem tal lhat¢.
+.
+:SHELL_CMD_FILE_NOT_FOUND
+A(z) %s f jl nem l‚tezik.
+.
+:SHELL_CMD_FILE_EXISTS
+A(z) %s f jl m r l‚tezik.
+.
+:SHELL_CMD_DIR_INTRO
+%s k”nyvt r.
+.
+:SHELL_CMD_DIR_BYTES_USED
+%5d F jl %17s Byte.
+.
+:SHELL_CMD_DIR_BYTES_FREE
+%5d K”nyvt r %17s Byte szabad.
+.
+:SHELL_EXECUTE_DRIVE_NOT_FOUND
+A(z) %c meghajt¢ nem l‚tezik.
+Haszn ld a [31mmount[0m parancsot.
+Örd be [1;33mintro[0m vagy [1;33mintro mount[0m ha t”bb inform ci¢t szeretn‚l.
+.
+:SHELL_EXECUTE_ILLEGAL_COMMAND
+Rossz parancs: %s.
+.
+:SHELL_CMD_PAUSE
+šss egy billentyt a folytat shoz.
+.
+:SHELL_CMD_PAUSE_HELP
+Egy billentyt‚sre v r a folytat shoz.
+.
+:SHELL_CMD_COPY_FAILURE
+Hiba a m sol s sor n: %s.
+.
+:SHELL_CMD_COPY_SUCCESS
+   %d F jl m sol sa megt”rt‚nt.
+.
+:SHELL_CMD_SUBST_NO_REMOVE
+A meghajt¢ elt vol¡t sa nem t mogatott. Nem csin l semmit.
+.
+:SHELL_CMD_SUBST_FAILURE
+SUBST sikertelen. Hib s a parancssor vagy a meghajt¢ m r haszn latban van.
+Csak ¡gy lehet haszn lni a SUBST-ot a helyi meghajt¢kon.
+:SHELL_STARTUP_BEGIN
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mDOSBox v%-8s      [37m                                             º
+º                                                                    º
+º T mogatott shell-parancsok‚rt ¡rd be: [33mHELP[37m                         º
+º Egy r”vid ismertet”r‚rt ¡rd be: [33mINTRO[37m                              º
+º                                                                    º
+º Ha t”bb sebss‚get akarsz: [31mctrl-F8[37m ‚s [31mctrl-F12[37m.                     º
+º Billentyzett‚rk‚p: [31mctrl-F1[37m.                                       º
+º T”bb inform ci¢‚rt olvasd el a [36mREADME[37m f jlt a DOSBox k”nyvt rban.  º
+º                                                                    º
+.
+:SHELL_STARTUP_CGA
+º DOSBox t mogatja a kompozit CGA m¢dot.                             º
+º šss [31m(alt-)F11[37m-et a sz¡nek lecser‚l‚s‚hez ebben a m¢dban.           º
+º                                                                    º
+.
+:SHELL_STARTUP_DEBUG
+º šss [31malt-Pause[37m-t a debughoz, vagy ind¡ts [33m DEBUG[37m parammal. º
+º                                                                    º
+.
+:SHELL_STARTUP_END
+º [32mJ¢ sz¢rakoz st![37m                                                    º
+º [32mA DOSBox Csapat[37m                                                    º
+º (Magyar ford¡t s: TCH  http://bgafc.t-hosting.hu http://oscomp.hu) º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+.
+:SHELL_CMD_CHDIR_HELP
+K”nyvt rv lt s.
+.
+:SHELL_CMD_CHDIR_HELP_LONG
+CHDIR [meghajt¢:][£tvonal]
+CHDIR [..]
+CD [meghajt¢:][£tvonal]
+CD [..]
+
+  ..   Szl” k”nyvt r
+
+Örd be: CD meghajt¢: a jelenlegi k”nyvt r megmutat s hoz a kijel”lt meghajt¢n.
+Örd be: CD param‚terek n‚lkl, a jelenlegi meghajt¢ ‚s k”nyvt r megmutat s hoz.
+.
+:SHELL_CMD_CLS_HELP
+K‚perny”t”rl‚s.
+.
+:SHELL_CMD_DIR_HELP
+K”nyvt r kilist z sa.
+.
+:SHELL_CMD_ECHO_HELP
+šzeneteket jelen¡t meg, vagy bekapcsolja/kikapcsolja az zeneteket.
+.
+:SHELL_CMD_EXIT_HELP
+Kisz ll a parancssorb¢l.
+.
+:SHELL_CMD_HELP_HELP
+Megmutatja a s£g¢t.
+.
+:SHELL_CMD_MKDIR_HELP
+L‚trehoz egy k”nyvt rat.
+.
+:SHELL_CMD_MKDIR_HELP_LONG
+MKDIR [meghajt¢:][£tvonal]
+MD [meghajt¢:][£tvonal]
+.
+:SHELL_CMD_RMDIR_HELP
+Let”r”l egy k”nyvt rat.
+.
+:SHELL_CMD_RMDIR_HELP_LONG
+RMDIR [meghajt¢:][£tvonal]
+RD [meghajt¢:][£tvonal]
+.
+:SHELL_CMD_SET_HELP
+Megv ltoztatja a k”rnyezeti v ltoz¢kat.
+.
+:SHELL_CMD_IF_HELP
+A felt‚teles feladatok kezel‚s‚t biztos¡tja a batch f jlokon bell.
+.
+:SHELL_CMD_GOTO_HELP
+A megc¡mzett sorra ugrik a batchf jlon bell.
+.
+:SHELL_CMD_SHIFT_HELP
+Bal shift parancssori param‚ter egy batch scripten bell.
+.
+:SHELL_CMD_TYPE_HELP
+Megmutatja egy sz”vegf jl tartalm t.
+.
+:SHELL_CMD_TYPE_HELP_LONG
+TYPE [meghajt¢:][£tvonal][f jln‚v]
+.
+:SHELL_CMD_REM_HELP
+Megjegyz‚s a batch f jlon bell.
+.
+:SHELL_CMD_REM_HELP_LONG
+REM [megjegyz‚s]
+.
+:SHELL_CMD_NO_WILD
+A parancs egyszer v ltozata. Helyettes¡t” karakterek itt nem enged‚lyezettek.
+.
+:SHELL_CMD_RENAME_HELP
+µtnevez egy vagy t”bb f jlt.
+.
+:SHELL_CMD_RENAME_HELP_LONG
+RENAME [meghajt¢:][£tvonal]f jln‚v1 f jln‚v2.
+REN [meghajt¢:][£tvonal]f jln‚v1 f jln‚v2.
+
+Nem adhatsz meg £j meghajt¢t vagy k”nyvt rat az £j f jln‚vhez.
+.
+:SHELL_CMD_DELETE_HELP
+Let”r”l egy vagy t”bb f jlt.
+.
+:SHELL_CMD_COPY_HELP
+F jlokat m sol.
+.
+:SHELL_CMD_CALL_HELP
+Elind¡t egy batch f jlt egy m sik batch f jlb¢l.
+.
+:SHELL_CMD_SUBST_HELP
+Egy bels” k”nyvt rat egy meghajt¢hoz rendel.
+.
+:SHELL_CMD_LOADHIGH_HELP
+Bet”lt egy programot a fels” mem¢ri ba (szks‚ges: xms=true,umb=true).
+.
+:SHELL_CMD_CHOICE_HELP
+Egy billentyt‚sre v r ‚s be ll¡tja az ERRORLEVEL v ltoz¢t.
+.
+:SHELL_CMD_CHOICE_HELP_LONG
+CHOICE [/C:lehet”s‚gek] [/N] [/S] sz”veg
+  /C[:]lehet”s‚gek  -  Be ll¡tja a lehets‚ges billentyket.  alap: yn.
+  /N  -  Ne mutassa a lehet”s‚geket a v‚g‚n.
+  /S  -  Kisbet-nagybet ‚rz‚keny v laszt s enged‚lyez‚se.
+  text  -  A sz”veg megjelen¡t‚se.
+.
+:SHELL_CMD_ATTRIB_HELP
+Kompatibilit s miatt kerlt be.
+.
+:SHELL_CMD_PATH_HELP
+Kompatibilit s miatt kerlt be.
+.
+:SHELL_CMD_VER_HELP
+Megn‚zi ‚s be ll¡tja a bejelentett DOS verzi¢t.
+.
+:SHELL_CMD_VER_VER
+DOSBox verzi¢ %s. Bejelentett DOS verzi¢ %d.%d.
+.

@@ -1,0 +1,727 @@
+<30.8.2007> S pouzitim prekladu od pitel.borec.cz upgradoval martin.sova@atlas.cz pro DOSBox O.7x
+
+:SDL_CONFIGFILE_HELP
+fullscreen -- Spouštìt DOSBox pøímo pøes celou obrazovku.
+fulldouble -- Pouívat dvojité bufferování na celé obrazovce.
+fullfixed -- Nemìnit velikost obrazu kdy je pøes celou obrazovku.
+fullresolution -- Jeké rozlišení pouít pøes celou obrazovku, pouití spoleènì s fullfixed.
+output -- Co pouít jako vıstup: surface, overlay, opengl, openglnb nebo ddraw.
+hwscale -- Extra roztaení okna pokud vıstupní zaøízení podporuje hardwarové roztaení.
+autolock -- Automaticky uzamknout myš, kdy se klikne na obrazovku.
+sensitiviy -- Citlivost myši.
+waitonerror -- Poèkat pøed zavøením konzole pokud má DOSBox chybu.
+priority -- Úrovnì priority pro DOSBox: lower, normal, higher nebo highest.
+            Druhé zadání za èárkou se pouije kdy DOSBox nemá focus/je minimalizován.
+mapperfile -- Soubor pouitı pro otevírání/ukládání událostí/mapování kláves.
+usescancodes -- zakazuje pouívání diakritickıch znakù (pro neanglické klávesnice)
+                nefunguje se všemi operaèními systémy!
+.
+:DOSBOX_CONFIGFILE_HELP
+language -- Vybere jinı jazykovı soubor.
+memsize -- Mnoství pamìti, které má DOSBox v megabytech.
+machine -- Typ stroje pro emulaci: hercules, cga, tandy nebo vga.
+captures -- Adresáø, kam se zapisují vìci jako wavy, midi a screenshoty.
+.
+:RENDER_CONFIGFILE_HELP
+frameskip -- Kolik snímkù DOSBox pøeskoèí, ne jeden vykreslí.
+aspect -- Dìlat korekci pomìru.
+scaler -- Roztahovaè pouitı pro zvìtšení/rozšíøení nízkého rozlišení.
+          Podporovány jsou none, normal2x, advmame2x, advmame3x, advinterp2x, interp2x nebo tv2x.
+.
+:CPU_CONFIGFILE_HELP
+core -- Jádro CPU pouité pøi emulaci: simple, normal, full, dynamic.
+cycles -- Mnoství instrukcí které se DOSBox snaí emulovat kadou milisekundu.
+          Nastavit tohle vıš ne zvládne váš stroj je špatné!
+cycleup/cycledown -- Mnoství cyklù, které se pøidá/ubere pøi kombinaci kláves Ctrl-F11/Ctrl-F12.
+                      Pokud je menší ne 100, èíselnı údaj se interpretuje jako procenta.
+.
+:MIXER_CONFIGFILE_HELP
+nosound -- Povolit tichı mód, zvuk byde ale stále emulován.
+rate -- Vzorkovací frekvence mixéru, nastavení jakéhokoliv zaøízení vıš ne tohle
+        pravdìpodobnì zpùsobí sníení kvality jeho zvuku.
+blocksize -- Velikost bloku mixéru, vìtší bloky mouhou pomoct koktání zvuku
+             ale zvuk bude také zpodìnìjší.
+prebuffer -- Kolik milisekund dat nechat na vrcholu blocksize.
+.
+:MIDI_CONFIGFILE_HELP
+mpu401      -- Povolit MPU-401 Emulaci.
+intelligent -- Operovat v Inteligentním módu.
+device      -- Zaøízení které bude dostávat MIDI data z MPU-401.
+               Mùe to bıt default, alsa, oss, win32, coreaudio nebo none.
+config      -- Speciální volby konfigurace pro zaøízení.
+.
+:SBLASTER_CONFIGFILE_HELP
+type -- Jakı typ sblasteru emulovat: none, sb1, sb2, sbpro1, sbpro2 nebo sb16.
+base, irq, dma, hdma -- IO/IRQ/DMA/Vysoká DMA adresa soundblasteru.
+mixer -- Povolit soundblaster mixéru mìnit DOSBox mixér.
+oplmode -- Typ OPL emulace: auto, cms, opl2, dualopl2 nebo opl3.
+           Pøi auto se mód urèuje podle typu soundblasteru.
+oplrate -- Vzorkovací frekvence OPL hudební emulace.
+.
+:GUS_CONFIGFILE_HELP
+gus -- Povolit emulaci Gravis Ultrasound.
+base, irq1, irq2, dma1, dma2 -- IO/IRQ/DMA adresy
+           Gravis Ultrasound. (Stejné IRQ a DMA jsou v poøádku.)
+rate -- Vzorkovací frekvence Ultrasound emulace.
+ultradir -- Cesta do Ultrasound adresáøe. V tomto adresáøi
+            by mìl bıt MIDI adresáø kterı obsahuje
+            záplatové soubory pro GUS pøehrávání. Sady záplat pouité
+            s Timidity by mìly dobøe fungovat.
+.
+:SPEAKER_CONFIGFILE_HELP
+pcspeaker -- Povolit PC-Speaker emulation.
+pcrate -- Vzorkovací frekvence zvuku generovaného PC-Speakerem.
+tandyrate -- Vzorokovací frkevence zvuku generovaného 3-Hlasım Tandy.
+             Tandysound emulace je pøítomna kdy je stroj nastaven na tandy.
+disney -- Povolit Disney Sound Source emulaci.
+.
+:JOYSTICK_CONFIGFILE_HELP
+joysticktype -- Typ emulovaného joystiku: auto (podle pøipojeného zaøízení), none (ádnı),
+                2axis (do 2 joystikù), 4axis, fcs (Thrustmaster), ch (CH Flightstick)
+timed -- èasování intrvalù k zapínání osy (vıchozí je "false")
+autofire -- Autofire zapnout?
+swap34 -- prohodit tøetí a ètvrtou osu: pro nìkteré joystiky nutné
+buttonwrap -- povolit wrapping tlaèítek na èísla emulovanıch tlaèítek
+.
+:SERIAL_CONFIGFILE_HELP
+serial1-4 -- specifikovat zaøízení pøipojená na portech COM:
+             disabled, dummy, modem, nullmodem, directserial
+             Dodateèné parametry se zadávejí ve formátu "parametr:hodnota" na stejnı øádek.
+             Parametr pro všechna zaøízení: irq
+               pro "directserial": realport (vyaduje-li), rxdelay (volitelnı)
+               pro "modem": listenport (volitelnı)
+               pro "nullmodem": server, rxdelay, txdelay, telnet, usedtr,
+                                transparent, port, inhsocket (všechny volitelné)
+             Pøíklad: serial1=modem listenport:5000
+.
+:DOS_CONFIGFILE_HELP
+xms -- Povolit XMS podporu.
+ems -- Povolit EMS podporu.
+umb -- povolit UMB podporu.
+keyboardlayout -- zadat zkratku øeèi pro zmìnu klávesnice (nebo "none")
+.
+:MODEM_CONFIGFILE_HELP
+modem -- Povolit emulaci virtuálního modemu.
+comport -- COM Port ke kterému je modem pøipojen.
+listenport -- TCP Port kde modem naslouchá pøíchozím spojením.
+.
+:DIRECTSERIAL_CONFIGFILE_HELP
+directserial -- Povolit podporu sériového pøesmìrování.
+comport -- COM Port uvnitø DOSBoxu.
+realport -- COM Port na Hostovi.
+defaultbps -- Základní BPS.
+parity -- Parita paketù. Mùe bıt N, E nebo O.
+bytesize -- Velikost kadého paketu. Mùe bıt 5 nebo 8.
+stopbit -- Poèet stopbitù. Mùe bıt 1 nebo 2.
+.
+:IPX_CONFIGFILE_HELP
+ipx -- Povolit ipx pøes UDP/IP emulaci.
+.
+:AUTOEXEC_CONFIGFILE_HELP
+Øádky v této sekci se spustí pøi startu.
+.
+:PROGRAM_CONFIG_FILE_ERROR
+Nelze otevøít soubor %s
+.
+:PROGRAM_CONFIG_USAGE
+Nastroj Config
+
+CONFIG -writeconf [jednotka:][cesta]jmeno_souboru
+CONFIG -writelang [jednotka:][cesta]jmeno_souboru
+CONFIG -set oddil promenna=hodnota
+CONFIG -get oddil promenna
+
+ -writeconf  Ulozi aktualni konfiguraci.
+ -writelang  Ulozi aktualni nastaveni jazyka.
+ -set        meni konfiguracni promenne.
+ -get        Ziska soucasnou hodnotu promenne a ulozi ji v 
+             do CONFIG.            
+.
+:PROGRAM_CONFIG_SECTION_ERROR
+Oddil nenalezen: %s
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Oddil nebo promenna nenalezena
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Promenna %s v oddilu %s nenalezena
+.
+:PROGRAM_CONFIG_GET_SYNTAX
+Spravna syntaxe: CONFIG -get oddil promenna
+.
+:DISNEY_CONFIGFILE_HELP
+Zatím není co nastavit!
+.
+:BIOS_CONFIGFILE_HELP
+Zatím není co nastavit!
+.
+:PROGRAM_MOUNT_CDROMS_FOUND
+CDROMky nalezeny: %d
+.
+:PROGRAM_MOUNT_STATUS_2
+Jednotka %c je pripojena jako %s
+.
+:PROGRAM_MOUNT_STATUS_1
+Prave jsou pripojeny jednotky:
+.
+:PROGRAM_MOUNT_ERROR_1
+Adresar %s neexistuje.
+.
+:PROGRAM_MOUNT_ERROR_2
+%s neni adresar
+.
+:PROGRAM_MOUNT_ILL_TYPE
+Neplatny typ %s
+.
+:PROGRAM_MOUNT_ALLREADY_MOUNTED
+Jednotka %c je uz pripojena s %s
+.
+:PROGRAM_MOUNT_USAGE
+Pripoji interni disk.
+
+MOUNT pismeno_disku "adresar_na_disku"
+
+Priklad:
+ MOUNT C D:\DOS prideli D:\DOS DOSboxovemu disku C:
+
+Viz take: [36mINTRO MOUNT[0m
+.
+:PROGRAM_MOUNT_UMOUNT_CURRENT
+Nemuzete odpojit aktivni jednotku.
+.
+:PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
+Jednotka %c neni pripojena.
+.
+:PROGRAM_MOUNT_UMOUNT_SUCCES
+Jednotka %c byla uspesne odstranena.
+.
+:PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
+Virtualni jednotky nemohou byt odpojeny.
+.
+:PROGRAM_MOUNT_WARNING_WIN
+[31;1mNeni doporuceno pripojovat C:\,
+priste prosim zvolte (pod)adresar![0m
+.
+:PROGRAM_MOUNT_WARNING_OTHER
+[31;1mNeni doporuceno pripojovat /,
+priste prosim zvolte (pod)adresar![0m
+.
+:PROGRAM_MEM_CONVEN
+%10d Kb volnych konvencni pameti
+.
+:PROGRAM_MEM_EXTEND
+%10d Kb volnych rozsirene pameti
+.
+:PROGRAM_MEM_EXPAND
+%10d Kb volnych expandovane pameti
+.
+:PROGRAM_MEM_UPPER
+%10dK volnych vyssi pameti v %d blocich (UMB: %dK)
+.
+:PROGRAM_LOADFIX_ALLOC
+%d kb alokovano.
+.
+:PROGRAM_LOADFIX_DEALLOC
+%d kb uvolneno.
+.
+:PROGRAM_LOADFIX_DEALLOCALL
+Pouzita pamet uvolnena.
+.
+:PROGRAM_LOADFIX_ERROR
+Chyba alokace pameti.
+.
+:MSCDEX_SUCCESS
+MSCDEX instalovan.
+.
+:MSCDEX_ERROR_MULTIPLE_CDROMS
+MSCDEX: Chyba: Pismena jednotek vice CDRom jednotek musi byt postupna.
+.
+:MSCDEX_ERROR_NOT_SUPPORTED
+MSCDEX: Chyba: Neni dosud podporovano.
+.
+:MSCDEX_ERROR_PATH
+MSCDEX: Chyba: Neplatna cesta.
+.
+:MSCDEX_TOO_MANY_DRIVES
+MSCDEX: Chyba: Prilis mnoho CDRom jednotek (max: 5). Chyba MSCDEX Instalace.
+.
+:MSCDEX_LIMITED_SUPPORT
+MSCDEX: Pripojeny podadresar: omezena podpora.
+.
+:MSCDEX_INVALID_FILEFORMAT
+MSCDEX: Chyba: Neplatny nebo chybny ISO/CUE-obraz
+.
+:MSCDEX_UNKNOWN_ERROR
+MSCDEX: Chyba: Neznama chyba.
+.
+:PROGRAM_RESCAN_SUCCESS
+Cache jednotek vycistena.
+.
+:PROGRAM_INTRO
+[2J
+[33;1mVitejte v DOSBoxu[0m, x86 emulatoru se zvukem a grafikou
+DOSBox pro vas vytvari shell, ktery vypada jako stary dobry DOS.
+
+Pro pomoc s nactenim disku zadejte [36mINTRO MOUNT[0m.
+Pro pomoc s CD-ROM zadejte [36mINTRO CDROM[0m.
+Pro pomoc s klavesovymi zkratkami zadejte [36mINTRO SPECIAL[0m.
+
+Vice informaci o DOSBoxu naleznete na:
+[32;1mhttp://dosbox.sourceforge.net/wiki[0m
+
+[32;1mPokud dojde k chybe, DOSBox se muze bez varovani zastavit nebo vypnout![0m
+.
+:PROGRAM_INTRO_MOUNT_START
+[2J
+[33;1mDOSBox-rychly start:[0m
+
+Aby DOSBox mohl spustit program, musi byt nejdriv adresar s programem zapojen 
+jako virtualni disk:
+
+.
+:PROGRAM_INTRO_MOUNT_WINDOWS
+[46;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [36mMOUNT C D:\DOS[37m vytvori pro DOSBox virtualni disk C,               º
+º jehoz obsahem bude adresar C:\DOS                                 º
+º                                                                   º
+º D:\DOS je jen priklad, nahradte ho vlastnim adresarem.[37m            º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+.
+:PROGRAM_INTRO_MOUNT_OTHER
+[46;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [36mMOUNT C ~/DOS[37m vytvori pro DOSBox virtualni disk C,            º
+º jehoz obsahem bude adresar ~/DOS                               º
+º                                                                   º
+º ~/DOS je jen priklad, nahradte ho vlastnim adresarem.[37m        º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+.
+:PROGRAM_INTRO_MOUNT_END
+
+Kdyz pripojeni uspesne skonci, muzete napsat [34;1mc:[0m, abyste sli do vasi cerstve
+pripojene C jednotky. Napsanim [34;1mdir[0m zobrazite jeji obsah. [34;1mcd[0m vam umozni
+vstoupit do adresare (rozpoznaneho podle [1m[][0m v senzamu adresaru).
+Muzete spoustet soubory, ktere konci [31m.exe .bat[0m a [31m.com[0m.
+
+Pro informace o podpore CD-ROM napiste [34;1mintro cdrom[0m
+
+.
+:PROGRAM_INTRO_CDROM
+[2J[32;1mJak pripojit Skoutecnou/Virtualni CD-ROM Jednotku v DOSBoxu:[0m
+DOSBox poskytuje emulaci CD-ROM na nekolika urovnich.
+
+[33mZakladni[0m uroven funguje na vsech CD-ROM jednotkach a normalnich adresarich.
+Nainstaluje to MSCDEX a oznaci soubory pouze pro cteni.
+To vetsinou staci pro vetsinu her:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom[0m   nebo   [34;1mmount d C:\priklad -t cdrom[0m
+Kdyz to nefunguje, meli byste DOSBoxu rict jmenovku CD-ROM:
+[34;1mmount d C:\priklad -t cdrom -label JMENOVKACD[0m
+
+[33mDalsi[0m uroven prida nejakou nizkourovnovou podporu.
+Proto to funguje jen na CD-ROM jednotkach:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
+
+[33mPosledni[0m uroven podpory zavisi na vasem operacnim systemu:
+Pro [1mWindows 2000[0m, [1mWindows XP[0m, [1mWindows Vista[0m a [1mLinux[0m:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-ioctl[0m
+Pro [1mWindows 9x[0m s nainstalovanou ASPI vrstvou:
+[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0 [34m-aspi[0m
+
+Nahradte [0;31mD:\[0m umistenim vasi CD-ROM.
+Nahradte [33;1m0[0m v [34;1m-usecd [33m0[0m cislem nahlasenym pro vasi CD-ROM kdyz napisete:
+[34;1mmount -cd[0m.
+.
+:PROGRAM_INTRO_SPECIAL
+[2J
+[33;1mSpecialni klavesy:[0m
+(Takto jsou standartne nastaveny, menit je muzete v keymapperu.)
+
+[36mAlt-Enter[0m    Celoobrazovkovy mod on/off
+[36mAlt-Pause[0m    Prerusit emulaci
+[36mCtrl-F1[0m      Spustit keymapper
+[36mStrg-F4[0m      Aktualizovat obraz disku; znovu nacist adresar
+[36mCtrl-F5[0m      Ulozit sreenshot jako soubor PNG
+[36mCtrl-Alt-F5[0m  Obrazovy vystup a zvuk nahravat jako videoklip on/off
+[36mCtrl-F6[0m      Zapisovat zvukovy vystup do WAV on/off
+[36mCtrl-Alt-F7[0m  Zaznamenavat data OPL on/off
+[36mCtrl-Alt-F8[0m  Zaznamenavat dat Raw-MIDI on/off
+[36mCtrl-F7[0m      Preskakovani framesu -1
+[36mCtrl-F8[0m      Preskakovani framesu +1
+[36mCtrl-F9[0m      Zavrit DOSBox
+[36mCtrl-F10[0m     Mys povolit/zakazat
+[36mCtrl-F11[0m     Zpomalit emulaci (DOSBox-Cycles snizit)
+[36mCtrl-F12[0m     Zrychlit emulaci (DOSBox-Cycles zvysit)
+[36mAlt-F12[0m      Vypnout zpomalovani (tlacitko Turbo)
+.
+:PROGRAM_BOOT_NOT_EXIST
+Soubor s bootovacim diskem neexistuje. Chyba.
+.
+:PROGRAM_BOOT_NOT_OPEN
+Nelze otevrit soubor s bootovacim diskem. Chyba.
+.
+:PROGRAM_BOOT_PRINT_ERROR
+Tento prikaz nabootuje DOSBox z obrazu diskety nebo pevneho disku.
+
+Pro tento prikaz lze specifikovat poradi prepinani disket stikem Ctrl-F4,
+a -l specifikuje z jake pripojene jednotky bootovat. Pokud neni urceno zadne
+pismeno, bootuje se standardne z jednotky A. Jedina bootovatelne pismena
+jednotek jsou A, C a D. Pro bootovani z pevneho disku (C nebo D) by mel byt
+obraz uz pripojen pouzitim prikazu [34;1mIMGMOUNT[0m.
+
+Syntaxe tohoto prikazu je:
+
+[34;1mBOOT [obrazdisku1.img obrazdisku2.img] [-l pismenojednotky][0m
+.
+:PROGRAM_BOOT_UNABLE
+Nelze bootovat z jednotky %c.
+.
+:PROGRAM_BOOT_IMAGE_OPEN
+Otevoram obraz: %s
+.
+:PROGRAM_BOOT_IMAGE_NOT_OPEN
+Nelze otevrit %s.
+.
+:PROGRAM_BOOT_BOOT
+Bootuji z jednotky %c...
+.
+:PROGRAM_BOOT_CART_WO_PCJR
+PCjr-Cartridge: falsches Computersystem
+.
+:PROGRAM_BOOT_CART_LIST_CMDS
+Prikazy pro PCjr-Cartridge k dispozici: %s
+:PROGRAM_BOOT_CART_NO_CMDS
+Zadne prikazy pro PCjr-Cartridge k dispozici
+:PROGRAM_IMGMOUNT_SPECIFY_DRIVE
+Musite urcit pismeno jednotky kam pripojit obraz.
+.
+:PROGRAM_IMGMOUNT_SPECIFY2
+Musite urcit cislo jednotky (0 az 3) kam pripojit obraz (0, 1=fda, fdb; 2, 3=hda, hdb).
+.
+:PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
+Pro obrazy [33mCD-ROM[0m: [34;1mimgmount Pismeno-Jednotky umisteni-obrazu -t iso[0m
+
+Pro obrazy [33mpevneho disku[0m: Musite urcit geometrie pro pevne disky:
+bytu_na_sektor, sektoru_na_plotnu, hlavicek_na_plotnu, pocet_ploten.
+.
+:PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
+Neznamy typ nebo obraz disku: %s
+Platne obrazy: hdd, floppy, iso
+.
+:PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
+Format "%s" neni podporovan. Urcete "fat" nebo "iso" nebo "none".
+.
+:PROGRAM_IMGMOUNT_SPECIFY_FILE
+Musite urcit soubor-obrazu pro pripojeni.
+.
+:PROGRAM_IMGMOUNG_FILE_NOT_FOUND
+Soubor obrazu nenalezen.
+.
+:PROGRAM_IMGMOUNG_MOUNT
+Pro pripojeni adresaru pouzijte prikaz [34;1mMOUNT[0m, ne prikaz [34;1mIMGMOUNT[0m.
+.
+:PROGRAM_IMGMOUNT_ALREADY_MOUNTED
+Jednotka uz je na tomto pismene pripojena.
+.
+:PROGRAM_IMGMOUNT_CANT_CREATE
+Nelze vytvorit jednotku ze souboru.
+.
+:PROGRAM_IMGMOUNT_MOUNT_NUMBER
+Jednotka cislo %d pripojena jako %s
+.
+:PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
+Obraz disku musi lezet na lokalnim nebo namountovanem disku.
+.
+:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
+Pokud chcete pouzit vice obrazu disku, musi byt ve formatu CUE/ISO.
+.
+:PROGRAM_KEYB_INFO
+Aktualni kodova stranka: %i
+.
+:PROGRAM_KEYB_SHOWHELP
+KEYB [xx [yyy] [[disk:][cesta]jmeno_souboru]]
+
+ xx             Kod zeme sestavajici ze dvou pismen (napr. en).
+ yyy            Kodova stranka s vybranym souborem znaku.
+ [disk:][cesta]jmeno_souboru  Soubor obsahujici definice klavesnice.
+
+Priklady:
+ KEYB           Ukaze aktualni kodovou stranku.
+ KEYB GR        Nacist nemeckou (GR) klavesnici a odpovidajici kodovou stranku.
+ KEYB GR 850    Nacist nemeckou (GR) klavesnici a kodovou stranku 850.
+ KEYB GR 850 CPAGE.CPI  Viz vyse, kodova stranka bude nactena z CPAGE.CPI
+.
+:PROGRAM_KEYB_NOERROR
+Klavesnice %s a kodova stranka %i nactena
+.
+:PROGRAM_KEYB_FILENOTFOUND
+
+Neplatny kod klavesnice - soubor nenalezen: %s
+
+.
+:PROGRAM_KEYB_INVALIDFILE
+
+Neplatny kod klavesnice - soubor chybi: %s
+
+.
+:PROGRAM_KEYB_LAYOUTNOTFOUND
+Zadna klavesnice %s pro kodovou stranku %i
+.
+:PROGRAM_KEYB_INVCPFILE
+
+Chybny nebo chybejici soubor definice klavesnice: %s
+
+.
+:SHELL_ILLEGAL_PATH
+Neplatna cesta.
+.
+:SHELL_CMD_HELP
+podporovane prikazy jsou:
+.
+:SHELL_CMD_ECHO_ON
+ECHO je zapnuto.
+.
+:SHELL_CMD_ECHO_OFF
+ECHO je vypnuto.
+.
+:SHELL_ILLEGAL_SWITCH
+Neplatny prepinac: %s.
+.
+:SHELL_CMD_CHDIR_ERROR
+Nelze zmenit na: %s.
+.
+:SHELL_CMD_CHDIR_HINT
+Ke zmene disku pouzijte [36m%c:[0m
+.
+:SHELL_CMD_MKDIR_ERROR
+Nelze vytvorit: %s.
+.
+:SHELL_CMD_RMDIR_ERROR
+Neplatna cesta, zadny adresar
+nebo neprazdny adresar: %s.
+.
+:SHELL_CMD_DEL_ERROR
+Nelze smazat: %s.
+.
+:SHELL_SYNTAXERROR
+Spatna syntaxe prikazu.
+.
+:SHELL_CMD_SET_NOT_SET
+Promenna prostredi %s neni urcena.
+.
+:SHELL_CMD_SET_OUT_OF_SPACE
+Nedostatek volneho prostoru prostredi.
+.
+:SHELL_CMD_IF_EXIST_MISSING_FILENAME
+IF EXIST: Chybejici nazev souboru.
+.
+:SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
+IF ERRORLEVEL: Chybejici cislo.
+.
+:SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
+IF ERRORLEVEL: Neplatne cislo.
+.
+:SHELL_CMD_GOTO_MISSING_LABEL
+Zadne navesti pripojene na GOTO prikaz.
+.
+:SHELL_CMD_GOTO_LABEL_NOT_FOUND
+GOTO: Navesti %s nenalezeno.
+.
+:SHELL_CMD_FILE_NOT_FOUND
+Soubor %s nenalezen.
+.
+:SHELL_CMD_FILE_EXISTS
+Soubor %s neexistuje.
+.
+:SHELL_CMD_DIR_INTRO
+Adresar %s.
+.
+:SHELL_CMD_DIR_BYTES_USED
+%5d Soubor(u) %17s Bytu.
+.
+:SHELL_CMD_DIR_BYTES_FREE
+%5d Adresar(u)  %17s Bytu volnych.
+.
+:SHELL_EXECUTE_DRIVE_NOT_FOUND
+Jednotka %c neexistuje!
+Musite ji nejdriv [31mmount[0m. Napiste [1;33mintro[0m pro vice informaci.
+.
+:SHELL_EXECUTE_ILLEGAL_COMMAND
+Neplatny prikaz: %s.
+.
+:SHELL_CMD_PAUSE
+Pokracujte libovolnou klavesou...
+.
+:SHELL_CMD_PAUSE_HELP
+Ceka na 1 stisk klavesy pro pokracovani.
+.
+:SHELL_CMD_COPY_FAILURE
+Chyba kopirovani: %s.
+.
+:SHELL_CMD_COPY_SUCCESS
+   %d Soubor(u) zkopirovano.
+.
+:SHELL_CMD_SUBST_NO_REMOVE
+Odstranovani jednotky neni podporovani. Nic nedelam.
+.
+:SHELL_CMD_SUBST_FAILURE
+SUBST selhalo. Bud jste udelali chybu v prikazove radce nebo je cilova jednotka
+pouzivana.
+SUBST lze pouzit jen u Mistnich jednotek.
+.
+:SHELL_STARTUP_BEGIN
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [33mVitejte v DOSBoxu[37m                                                   º
+º                                                                     º
+º Prikazem [36mHELP[37m zobrazite seznam platnych prikazu.                    º
+º Prikazem [36mINTRO[37m zobrazite kratky uvod do programu.                   º
+º                                                                     º
+º Rychlost se zvysuje pomoci [36;1mCtrl-F8[37m a [36;1mCtrl-F12[37m.                      º
+º Pro zobrazeni mapy klaves stisknete [36;1mCtrl-F1[37m.                        º
+º Navod naleznete v souboru [36;1mREADME[37m v adresari DOSBox.                 º
+º                                                                     º
+.
+:SHELL_STARTUP_CGA
+º DOSBox podporuje Composite-CGA-Modus.                         º
+º Benutzen Sie [36;1mAlt-F11[37m, um in diesem Modus die Farben zu wechseln.    º
+º                                                                     º
+.
+:SHELL_STARTUP_DEBUG
+º Um den Debugger zu laden, drcken Sie entweder [36;1mAlt-Pause[37m oder       º
+º starten Sie die EXE mit [36mDEBUG[37m.                                      º
+º                                                                     º
+.
+:SHELL_STARTUP_END
+º Prijemnou zabavu preje DOSBox-Team!                                 º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+.
+:SHELL_CMD_CHDIR_HELP
+Zmeni adresar.
+.
+:SHELL_CMD_CHDIR_HELP_LONG
+CHDIR [disk:][cesta]
+CHDIR[..]
+CD [disk:][cesta]
+CD[..]
+
+ ..   Symbol pro prechod do nadrizeneho adresare.
+
+CD disk:   Zobrazi aktualni adresar na nactenem disku.
+CD         Zobrazi aktualni disk a adresar.
+.
+:SHELL_CMD_CLS_HELP
+Smaze obrazovku.
+.
+:SHELL_CMD_DIR_HELP
+Zobrazi adresar, jeho podadresare a soubory.
+.
+:SHELL_CMD_DIR_HELP_LONG
+DIR [disk:][cesta][jmeno_souboru] [/P] [/W]
+
+ [disk:][cesta][jmeno_souboru]  Nalistovany disk, adresar a/nebo soubory.
+ /P          Zastavi se po kazde popsane obrazovce.
+ /W          K listovani pouzit siroky format.
+.
+:SHELL_CMD_ECHO_HELP
+Zobrazuje zpravy a zapina/vypina upozorneni.
+.
+:SHELL_CMD_EXIT_HELP
+Ukonci prikazovy radek/DOSBox.
+.
+:SHELL_CMD_HELP_HELP
+Zobrazi napovedu prikazu pro DOS.
+.
+:SHELL_CMD_MKDIR_HELP
+Vytvori adresar.
+.
+:SHELL_CMD_MKDIR_HELP_LONG
+MKDIR [disk:]cesta
+MD    [disk:]cesta
+.
+:SHELL_CMD_RMDIR_HELP
+Smaze adresar.
+.
+:SHELL_CMD_RMDIR_HELP_LONG
+RMDIR [disk:]cesta
+RD    [disk:]cesta
+.
+:SHELL_CMD_SET_HELP
+Mìní promìnné prostøedí nebo je zobrazí.
+.
+:SHELL_CMD_IF_HELP
+Zpracovava podminene procesy v davkovych souborech.
+.
+:SHELL_CMD_GOTO_HELP
+Skoci v davkovem skriptu na oznaceny radek.
+.
+:SHELL_CMD_SHIFT_HELP
+Meni pozici menitelneho parametru v souboru s nastavenim.
+.
+:SHELL_CMD_TYPE_HELP
+Zobrazi obsah textoveho souboru.
+.
+:SHELL_CMD_TYPE_HELP_LONG
+TYPE [disk:][cesta]jmeno_souboru
+.
+:SHELL_CMD_REM_HELP
+Prida komentare do davkoveho souboru.
+.
+:SHELL_CMD_REM_HELP_LONG
+REM [komentar]
+.
+:SHELL_CMD_NO_WILD
+Toto je zjednodusena verze prikazu, zadne wildcardy nejsou povoleny!
+.
+:SHELL_CMD_RENAME_HELP
+Prejmenovava soubory.
+.
+:SHELL_CMD_RENAME_HELP_LONG
+RENAME [disk:][cesta]soubor1 soubor2
+REN    [disk:][cesta]soubor1 soubor2
+
+Pri prejmenovani souboru1 na soubor2 nemuzete zmenit disk nebo adresar souboru.
+.
+:SHELL_CMD_DELETE_HELP
+Maze soubor nebo soubory.
+.
+:SHELL_CMD_COPY_HELP
+Kopiruje soubor nebo soubory na jine umisteni.
+.
+:SHELL_CMD_CALL_HELP
+Spusti davkovy soubor pomoci jineho davkoveho souboru.
+.
+:SHELL_CMD_SUBST_HELP
+Priradi internimu adresari oznaceni virtualniho disku.
+.
+:SHELL_CMD_LOADHIGH_HELP
+Spusti program ve vysoke pametove oblasti. (Vyzaduje XMS, UBS)
+.
+:SHELL_CMD_CHOICE_HELP
+Ceka na stisk klavesy a vypise odpovidajici ERRORLEVEL.
+.
+:SHELL_CMD_CHOICE_HELP_LONG
+CHOICE [/C[:]klavesa] [/N] [/S] [Text]
+
+/C[:]klavesa  Oznameni povolene klavesy. Standartne je YN.
+/N            Zadne hlaseni povolenych klaves na konci hlaseni neni k dispozici.
+/S            Detekuje zapnuti CapsLocku.
+Text          Hlaseni, ktere bude zobrazeno.
+
+ERRORLEVEL se zobrzi na miste pro vypis
+stisknute klavesy.
+.
+:SHELL_CMD_ATTRIB_HELP
+Nic nedela. Jen pro ucely kompatibility.
+.
+:SHELL_CMD_PATH_HELP
+Nic nedela. Jen pro ucely kompatibility.
+.
+:SHELL_CMD_VER_HELP
+Zobrazi nebo zmeni cislo pouzivane verze DOSu.
+.
+:SHELL_CMD_VER_HELP_LONG
+VER [SET hlavni_cislo_verze [vedlejsi_cislo_verze]]
+.
+:SHELL_CMD_VER_VER
+
+Verze DOSBoxu: %s, pouzivana verze DOSu: %d.%d
+
+.
