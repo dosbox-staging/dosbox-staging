@@ -79,9 +79,20 @@ jobs:
             ccache-macos-release-${{ steps.prep-ccache.outputs.yesterday }}
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - name: Build FluidSynth library
+      - name: Build static Glib libraries
+        run: |
+          set -x
+          brew install meson
+          cd contrib/static-glib
+          gmake
+      - name: Build static FluidSynth library
+        env:
+          GLIB_LIBS:        ${{ github.workspace }}/contrib/static-glib/lib/libglib-2.0.a
+          GTHREAD_LIBS:     ${{ github.workspace }}/contrib/static-glib/lib/libgthread-2.0.a
+          GLIB_CFLAGS:    -I${{ github.workspace }}/contrib/static-glib/include/glib-2.0
+          GTHREAD_CFLAGS: -I${{ github.workspace }}/contrib/static-glib/include/glib-2.0
         run:  cd contrib/static-fluidsynth && gmake
-      - name: Build Opus libraries
+      - name: Build static Opus libraries
         run: |
           set -x
           cd contrib/static-opus
@@ -97,10 +108,21 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Build
         env:
-          FLUIDSYNTH_CFLAGS: -I${{ github.workspace }}/contrib/static-fluidsynth/include
-          FLUIDSYNTH_LIBS: ${{ github.workspace }}/contrib/static-fluidsynth/lib/libfluidsynth.a -lm -L/usr/local/Cellar/glib/$(pkg-config --modversion glib-2.0)/lib -L/usr/local/opt/gettext/lib -lgthread-2.0 -lglib-2.0 -lintl
-          OPUSFILE_CFLAGS: -I${{ github.workspace }}/contrib/static-opus/include -I${{ github.workspace }}/contrib/static-opus/include/opus
-          OPUSFILE_LIBS: ${{ github.workspace }}/contrib/static-opus/lib/libopusfile.a ${{ github.workspace }}/contrib/static-opus/lib/libogg.a ${{ github.workspace }}/contrib/static-opus/lib/libopus.a -lm
+          FLUIDSYNTH_CFLAGS: >-
+            -I${{ github.workspace }}/contrib/static-fluidsynth/include -pthread
+            -I${{ github.workspace }}/contrib/static-glib/include/glib-2.0
+          FLUIDSYNTH_LIBS: >-
+            ${{ github.workspace }}/contrib/static-fluidsynth/lib/libfluidsynth.a
+            ${{ github.workspace }}/contrib/static-glib/lib/libgthread-2.0.a -pthread
+            ${{ github.workspace }}/contrib/static-glib/lib/libglib-2.0.a
+            /usr/local/lib/libintl.a -lm
+          OPUSFILE_CFLAGS: >-
+            -I${{ github.workspace }}/contrib/static-opus/include
+            -I${{ github.workspace }}/contrib/static-opus/include/opus
+          OPUSFILE_LIBS: >-
+            ${{ github.workspace }}/contrib/static-opus/lib/libopusfile.a
+            ${{ github.workspace }}/contrib/static-opus/lib/libogg.a
+            ${{ github.workspace }}/contrib/static-opus/lib/libopus.a -lm
         run: |
           set -x
           ./autogen.sh
@@ -133,33 +155,6 @@ jobs:
           install -m 644 "COPYING"                           "$dst/SharedSupport/COPYING"
           install -m 644 "README"                            "$dst/SharedSupport/manual.txt"
           install -m 644 "docs/README.video"                 "$dst/SharedSupport/video.txt"
-
-          # Inventory the brew dependencies residing in /usr/local
-          gthread="/usr/local/opt/glib/lib/libgthread-2.0.0.dylib"
-          glib="/usr/local/opt/glib/lib/libglib-2.0.0.dylib"
-          glib_version="$(pkg-config --modversion glib-2.0)"
-          glib_cellar="/usr/local/Cellar/glib/${glib_version}_1/lib/libglib-2.0.0.dylib"
-          intl="/usr/local/opt/gettext/lib/libintl.8.dylib"
-          pcre="/usr/local/opt/pcre/lib/libpcre.1.dylib"
-
-          # Bundle brew dependencies along-side the dosbox executable
-          install -m 644 "$gthread" "$dst/MacOS/"
-          install -m 644 "$glib"    "$dst/MacOS/"
-          install -m 644 "$intl"    "$dst/MacOS/"
-          install -m 644 "$pcre"    "$dst/MacOS/"
-          install_name_tool -change "$glib_cellar" "@executable_path/${glib##*/}"    "$dst/MacOS/${gthread##*/}"
-          install_name_tool -change "$intl"        "@executable_path/${intl##*/}"    "$dst/MacOS/${glib##*/}"
-          install_name_tool -change "$pcre"        "@executable_path/${pcre##*/}"    "$dst/MacOS/${glib##*/}"
-          install_name_tool -change "$gthread"     "@executable_path/${gthread##*/}" "$dst/MacOS/dosbox"
-          install_name_tool -change "$glib"        "@executable_path/${glib##*/}"    "$dst/MacOS/dosbox"
-          install_name_tool -change "$intl"        "@executable_path/${intl##*/}"    "$dst/MacOS/dosbox"
-
-          # Perform a stand-alone execution test with /usr/local dependencies temporarily removed
-          dep_archive="/tmp/$$-deps.tar"
-          tar -cvPf "$dep_archive" "$gthread" "$glib" "$glib_cellar" "$intl" "$pcre"
-          rm -f "$gthread" "$glib" "$glib_cellar" "$intl" "$pcre"
-          "$dst/MacOS/dosbox" -c exit
-          tar -xvPf "$dep_archive" -C /
 
           # Fill README template file
           sed -i -e "s|%VERSION%|${{ env.VERSION }}|"           "$dst/Info.plist"
