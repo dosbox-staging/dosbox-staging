@@ -677,11 +677,20 @@ void CSerial::Write_FCR(uint8_t data)
 	if (FCR & FCR_CLEAR_TX)
 		txfifo.clear();
 	if(FCR&FCR_ACTIVATE) {
+		constexpr auto uart_size_divider = 16u;
 		switch(FCR>>6) {
-			case 0: rx_interrupt_threshold=1; break;
-			case 1: rx_interrupt_threshold=4; break;
-			case 2: rx_interrupt_threshold=8; break;
-			case 3: rx_interrupt_threshold=14; break;
+		case 0: // inactive: interrupt every byte
+			rx_interrupt_threshold = 1;
+			break;
+		case 1: // low water-mark: interrupt every 25%-of-FIFO bytes
+			rx_interrupt_threshold = 4 * fifo_size / uart_size_divider;
+			break;
+		case 2: // medium water-mark: interrupt every 50%-of-FIFO bytes
+			rx_interrupt_threshold = 8 * fifo_size / uart_size_divider;
+			break;
+		case 3: // high water-mark: interrupt every 87.5%-of-FIFO bytes
+			rx_interrupt_threshold = 14 * fifo_size / uart_size_divider;
+			break;
 		}
 		DEBUG_LOG_MSG("SERIAL: Port %" PRIu8
 		              " FIFO interrupting every %u bytes",
