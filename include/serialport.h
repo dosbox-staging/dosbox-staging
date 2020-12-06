@@ -353,7 +353,7 @@ private:
 	// - 16850 and 16C850: 128-byte buffer
 	// - 16950: up to 512-byte buffer
 	// - Hayes ESP accelerator: 1024-byte buffer
-	const uint16_t fifo_size = 16; // emulate the 16550A
+	const uint16_t fifo_size = 1024; // emulate the Hayes ESP
 	Fifo errorfifo;
 	Fifo rxfifo;
 	Fifo txfifo;
