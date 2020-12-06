@@ -256,7 +256,7 @@ void E_Exit(const char *format, ...)
 std::string safe_strerror(int err) noexcept
 {
 	char buf[128];
-#if defined(_MSC_VER)
+#if defined(WIN32)
 	// C11 version; unavailable in C++14 in general.
 	strerror_s(buf, ARRAY_LEN(buf), err);
 	return buf;

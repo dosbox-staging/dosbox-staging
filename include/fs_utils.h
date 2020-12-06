@@ -21,6 +21,8 @@
 #ifndef DOSBOX_FS_UTILS_H
 #define DOSBOX_FS_UTILS_H
 
+#include "config.h"
+
 #include <cinttypes>
 #include <string>
 

@@ -136,7 +136,7 @@ static void W32_ConfDir(std::string& in,bool create) {
 		if (len + strlen(appdata) < MAX_PATH)
 			safe_strcat(result, appdata);
 		if (create)
-			_mkdir(result);
+			mkdir(result);
 	}
 	in = result;
 }
