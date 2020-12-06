@@ -24,6 +24,7 @@
 
 #include <direct.h>
 #include <io.h>
+#include <sys/stat.h>
 
 #include "compiler.h"
 
@@ -41,11 +42,11 @@ std::string to_native_path(const std::string &path) noexcept
 
 int create_dir(const char *path, MAYBE_UNUSED uint32_t mode, uint32_t flags) noexcept
 {
-	const int err = _mkdir(path);
+	const int err = mkdir(path);
 	if ((errno == EEXIST) && (flags & OK_IF_EXISTS)) {
 		struct _stat pstat;
 		if ((_stat(path, &pstat) == 0) &&
-		    ((pstat.st_mode & S_IFMT) == S_IFDIR))
+		    ((pstat.st_mode & _S_IFMT) == _S_IFDIR))
 			return 0;
 	}
 	return err;
