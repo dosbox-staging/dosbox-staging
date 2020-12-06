@@ -3,6 +3,7 @@
 #  -------------------------------------------
 GLIB_ARCHIVE = glib.tar.gz
 GLIB_URL = https://gitlab.gnome.org/GNOME/glib/-/archive/2.67.0/glib-2.67.0.tar.gz
+GLIB_SHA256 = a6df47c78dc8793dac80edecd9602c53a517ec2d30e9f7832a25eb554fa5ddb6
 
 ##
 #  Common commands and arguments
@@ -52,6 +53,10 @@ define download
 	   )
 endef
 
+define checksum
+	echo $(SUM) $(FILENAME) | sha256sum --check
+endef
+
 ##
 #  GLib Library
 #  ------------
@@ -62,6 +67,9 @@ glib: lib/libglib-2.0.a
 $(GLIB_ARCHIVE):
 	$(eval URL := $(GLIB_URL))
 	@$(download)
+	$(eval SUM := $(GLIB_SHA256))
+	$(eval FILENAME := $(GLIB_ARCHIVE))
+	@$(checksum)
 
 glib/build: $(GLIB_ARCHIVE)
 	@test -f $@ \
