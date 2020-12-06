@@ -45,22 +45,37 @@ jobs:
         run: |
           set -xeu
           log="pvs-analysis.log"
-          mirsa_criteria="MISRA:1,2"
           general_criteria="GA:1,2;64:1;OP:1,2,3;CS:1"
           stamp="$(date +'%Y-%m-%d_T%H%M')-${GITHUB_SHA:0:8}"
           reportdir="pvs-report/pvs-report-${stamp}"
+          disable_warnings="V1042,V826"
           mkdir -p "${reportdir}"
-          pvs-studio-analyzer analyze -a 63 -s .pvs-suppress -o "${log}" -j "$(nproc)"
-          plog-converter -a "${general_criteria}" -d V1042,V826 -t fullhtml -p dosbox-staging \
-          -v "${GITHUB_SHA:0:8}" -o "${reportdir}" "${log}"
+          pvs-studio-analyzer analyze \
+            --disableLicenseExpirationCheck \
+            -a 63 \
+            -s .pvs-suppress \
+            -j "$(nproc)" \
+            -o "${log}"
+          plog-converter \
+            -p dosbox-staging \
+            -v "${GITHUB_SHA:0:8}" \
+            -a "${general_criteria}" \
+            -d "${disable_warnings}" \
+            -t fullhtml \
+            -o "${reportdir}" \
+            "${log}"
           mv "${reportdir}/fullhtml" "${reportdir}/general"
-          plog-converter -a "${mirsa_criteria}" -d V1042,V826 -t fullhtml -p dosbox-staging \
-          -v "${GITHUB_SHA:0:8}" -o "${reportdir}" "${log}"
-          mv "${reportdir}/fullhtml" "${reportdir}/mirsa"
-          plog-converter -a "${general_criteria}" -d V1042,V826 -t csv -o pvs-report.csv "${log}"
+          plog-converter \
+            -a "${general_criteria}" \
+            -d "${disable_warnings}" \
+            -t csv \
+            -o pvs-report.csv \
+            "${log}"
           cp -l pvs-report.csv "${reportdir}/general/"
-          pvs-studio-analyzer suppress -a "${general_criteria}" \
-          -o "${reportdir}/general/supressible-list.json" "${log}"
+          pvs-studio-analyzer suppress \
+            -a "${general_criteria}" \
+            -o "${reportdir}/general/supressible-list.json" \
+            "${log}"
       - name: Upload report
         uses: actions/upload-artifact@v2
         with:
@@ -68,7 +83,7 @@ jobs:
           path: pvs-report
       - name: Summarize report
         env:
-          MAX_BUGS: 458
+          MAX_BUGS: 459
         run: |
           echo "Full report is included in build Artifacts"
           echo
