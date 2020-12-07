@@ -133,6 +133,20 @@ jobs:
             ccache-linux-release-${{ steps.prep-ccache.outputs.yesterday }}
       - name: Log environment
         run:  ./scripts/log-env.sh
+      - name: Build FluidSynth libraries
+        run: |
+          set -x
+          sudo apt-get install -y python3-setuptools cmake 
+          sudo pip3 install meson ninja
+          pushd contrib/static-glib
+          make
+          popd
+          cd contrib/static-fluidsynth
+          GLIB_LIBS="$PWD/../static-glib/lib/libglib-2.0.a" \
+          GTHREAD_LIBS="$PWD/../static-glib/lib/libgthread-2.0.a" \
+          GLIB_CFLAGS="-I$PWD/../static-glib/include/glib-2.0" \
+          GTHREAD_CFLAGS="-I$PWD/../static-glib/include/glib-2.0" \
+          make
       - name: Inject version string
         run: |
           set -x
@@ -144,9 +158,15 @@ jobs:
         run: |
           set -x
           ./autogen.sh
+          FLUIDSYNTH_CFLAGS="\
+              -I$PWD/contrib/static-fluidsynth/include \
+              -pthread -I$PWD/contrib/static-glib/include/glib-2.0" \
+          FLUIDSYNTH_LIBS="\
+              $PWD/contrib/static-fluidsynth/lib/libfluidsynth.a \
+              $PWD/contrib/static-glib/lib/libgthread-2.0.a -pthread \
+              $PWD/contrib/static-glib/lib/libglib-2.0.a -lm" \
           ./configure \
               --enable-png-static \
-              --disable-fluidsynth \
               CFLAGS="$FLAGS" \
               CXXFLAGS="$FLAGS" \
               LDFLAGS="$FLAGS $LINKFLAGS -flto=$(nproc)"
