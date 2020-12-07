@@ -134,6 +134,7 @@ jobs:
 
           # Prepare content
           readonly RELEASE_DIR=${{ matrix.conf.vs-release-dirname }}/Release
+          ls "vs/$RELEASE_DIR"
           mkdir -p dest/doc
           cp vs/$RELEASE_DIR/dosbox.exe           dest/
           cp COPYING                              dest/COPYING.txt
@@ -143,10 +144,9 @@ jobs:
           cp README                               dest/doc/manual.txt
           cp vs/$RELEASE_DIR/libfluidsynth-2.dll  dest/
           cp vs/$RELEASE_DIR/glib-2.dll           dest/ # fluidsynth dependency
-          cp vs/$RELEASE_DIR/libintl.dll          dest/ # glib dependency
+          cp vs/$RELEASE_DIR/intl-8.dll           dest/ # glib dependency
           cp vs/$RELEASE_DIR/pcre.dll             dest/ # glib dependency
-          cp vs/$RELEASE_DIR/libiconv.dll         dest/ # glib dependency
-          cp vs/$RELEASE_DIR/libcharset.dll       dest/ # iconv dependency
+          cp vs/$RELEASE_DIR/iconv-2.dll          dest/ # glib dependency
           cp vs/$RELEASE_DIR/ogg.dll              dest/
           cp vs/$RELEASE_DIR/opus.dll             dest/
           cp vs/$RELEASE_DIR/SDL2.dll             dest/
