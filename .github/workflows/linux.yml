@@ -100,6 +100,17 @@ jobs:
     name: Release build
     runs-on: ubuntu-18.04
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
+    env:
+      AR: gcc-ar
+      CC: ccache gcc
+      CXX: ccache g++
+      LD: gcc
+      RANLIB: gcc-ranlib
+      FLAGS: >-
+        -O3 -fstrict-aliasing -fno-signed-zeros -fno-trapping-math
+        -fassociative-math -mfpmath=sse -msse4.2 -flto -ffunction-sections
+        -fdata-sections -DNDEBUG -pipe
+      LINKFLAGS: -Wl,--as-needed
     steps:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update
@@ -130,17 +141,6 @@ jobs:
           sed -i "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Build
-        env:
-          AR: gcc-ar
-          CC: ccache gcc
-          CXX: ccache g++
-          LD: gcc
-          RANLIB: gcc-ranlib
-          FLAGS: >-
-            -O3 -fstrict-aliasing -fno-signed-zeros -fno-trapping-math
-            -fassociative-math -mfpmath=sse -msse4.2 -flto -ffunction-sections
-            -fdata-sections -DNDEBUG -pipe
-          LINKFLAGS: -Wl,--as-needed
         run: |
           set -x
           ./autogen.sh
