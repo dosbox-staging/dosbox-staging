@@ -9,13 +9,6 @@ set -e
 # Note: if src/dosbox exists it will also be checked
 check_files=( "*.ac" "*.md" "*.MD" "README*" "dosbox.1" "INSTALL" )
 
-# The following patterns should be ignored
-  filter="README: esc esc"
-filter+="|README: tcl -> Tcl"
-filter+="|stb_vorbis.h: finalY"
-filter+="|duplicate word"
-#TODO improve filter maintenance
-
 main ()
 {
   for opt in "${@}"
@@ -54,6 +47,11 @@ main ()
   # If no files to check, --dosbox was passed and either compile failed or
   # this script executed before compiling, exit with error code.
   [[ ${#file_list[@]} == 0 ]] && exit 42
+
+  # Load ignore list
+  readarray -t  < <( grep -v "^#" <"${repo_root}/.spellintian-ignore" )
+  printf -v filter "%s" "${MAPFILE[@]/%/|}" ; unset MAPFILE
+  filter+="\(duplicate word\)"
 
   _github_output
 }
@@ -97,10 +95,13 @@ _github_output ()
     FILENAME="${FILENAME#${repo_root}/}"
     TYPO_FIX="${TYPO_FIX//\"}"
 
-    [[ "${FILENAME} ${TYPO_FIX}" =~ (${filter}) ]] && continue
+    [[ "${FILENAME} ${TYPO_FIX}" =~ ^(${filter})$ ]] && continue
 
     [[ ${FILENAME%:} == src/dosbox ]] &&
       warning=error || warning=warning
+
+    # TODO Reduce error level by one if Capitalisation
+    # i.e. [[ ${TYPO,,} == ${FIX,,} ]]
 
     # shellcheck disable=2034
     while IFS=: read -r FN LN LINE

@@ -1,0 +1,24 @@
+# This file is used by .github/scripts/verify-spelling-spellintian.sh
+.spellintian-ignore:.+
+# Lines starting with # will be ignored
+# One 'rule' per line
+#     path/to/filename: suspect_spelling -> suggested_fix
+# The full path, relative to the git repo's root, is required
+# I have anchored the pattern  ^("$filter")$
+# Real World example, finalY is not a spelling mistake
+# but spellintian suggests "finally"
+src/libs/decoders/stb_vorbis.h: finalY -> finally
+# That will now be ignored
+#
+# In README tcl is not related to Tcl, the interpreted scripting language
+README: tcl -> Tcl
+# Feel free to not comment
+.lgtm.yml: python -> Python
+.pylint: python -> Python
+src/libs/decoders/opus.cpp: ot -> to
+.github/scripts/reset-brew.sh: python -> Python
+.github/workflows/config.yml: python -> Python
+.github/workflows/dormant/windows-msys2.yml: python -> Python
+.github/workflows/windows.yml-disable: python -> Python
+scripts/automator/main.sh: python -> Python
+src/libs/gui_tk/Doxyfile: latex -> LaTeX
