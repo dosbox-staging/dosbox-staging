@@ -84,14 +84,14 @@ Get_context ()
   BinaryMIMEtypes="application/(x-pie-executable|x-sharedlib)"
 
   # shellcheck disable=2046
-  git -C "${repo_root}" grep -h -n "${TYPO_FIX% ->*}" \
+  git -C "${repo_root}" grep -n "${TYPO_FIX% ->*}" \
       $( [[ ${MIMEtype#*: }  =~ ${BinaryMIMEtypes}$ ]] ||
            printf "%s" "-- ${FILENAME%:}" )
 }
 
 _github_output ()
 {
-  echo "::group::Spellintian"
+  echo "::group::Spellcheck"
   while read -r FILENAME TYPO_FIX
   do
     FILENAME="${FILENAME#${repo_root}/}"
@@ -102,19 +102,10 @@ _github_output ()
     [[ ${FILENAME%:} == src/dosbox ]] &&
       warning=error || warning=warning
 
-    while IFS=: read -r LN LINE
+    # shellcheck disable=2034
+    while IFS=: read -r FN LN LINE
     do
-      # get column, bash indexes from 0, prefix with _ for a cheap +1
-      COL="_${LINE%%${TYPO_FIX% ->*}*}"
-      # WIP This Creates Annotations
-      echo "::$warning file=${FILENAME%:},line=${LN},col=${#COL}::${TYPO_FIX}"
-      # FIXME I think I have to do some magic to get the correct line number
-      # It appears to work fine if the file is not touched by commit
-      # so I think the line number needs to be relative to the diff
-      ###
-      # I think this, a plain old echo will, I hope, show up in the log
-      # thing that never expands
-      echo "$warning ${TYPO_FIX} file=${FILENAME%:} line=${LN} col=${#COL}"
+      echo "::$warning file=${FN},line=${LN}::${TYPO_FIX}"
 
       if [[ ${warning} == error ]]
       then
