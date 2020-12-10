@@ -27,10 +27,8 @@
 #include "opl.h"
 
 #include <cmath>
-#include <stdlib.h> // rand()
-#include <string.h> // memset()
-
-#include "dosbox.h"
+#include <cstdlib>
+#include <cstring>
 
 static fltype recipsamp;	// inverse of sampling rate
 static Bit16s wavtable[WAVEPREC*3];	// wave form table
@@ -925,7 +923,8 @@ void adlib_write_index(Bitu port, Bit8u val) {
 #endif
 }
 
-static void OPL_INLINE clipit16(Bit32s ival, Bit16s* outval) {
+static INLINE void clipit16(int32_t ival, int16_t *outval)
+{
 	if (ival<32768) {
 		if (ival>-32769) {
 			*outval=(Bit16s)ival;
@@ -936,8 +935,6 @@ static void OPL_INLINE clipit16(Bit32s ival, Bit16s* outval) {
 		*outval = 32767;
 	}
 }
-
-
 
 // be careful with this
 // uses cptr and chanval, outputs into outbufl(/outbufr)
