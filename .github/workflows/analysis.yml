@@ -21,6 +21,10 @@ jobs:
         run: |
           sudo apt-get install python3-setuptools
           sudo pip3 install pylint beautifulsoup4 html5lib
+      - name: Run spellintian
+        run: |
+          sudo apt-get install lintian
+          .github/scripts/verify-spelling-spellintian.sh --picky --github-PR --docs
       - name: Run pylint
         run:  ./scripts/verify-python.sh
       - name: Install markdownlint
