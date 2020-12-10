@@ -9,6 +9,12 @@ set -e
 # Note: if src/dosbox exists it will also be checked
 check_files=( "*.ac" "*.md" "*.MD" "README*" "dosbox.1" "INSTALL" )
 
+# Annotations
+errlevels=( debug warning error )
+# default is warning
+# Anything in src/dosbox is error
+# however: Capitalisation errors reduce level by one
+
 main ()
 {
   for opt in "${@}"
@@ -82,39 +88,44 @@ Get_context ()
   BinaryMIMEtypes="application/(x-pie-executable|x-sharedlib)"
 
   # shellcheck disable=2046
-  git -C "${repo_root}" grep -n "${TYPO_FIX% ->*}" \
+  git -C "${repo_root}" grep -n -P "\b${TYPO}\b" \
       $( [[ ${MIMEtype#*: }  =~ ${BinaryMIMEtypes}$ ]] ||
            printf "%s" "-- ${FILENAME%:}" )
 }
 
 _github_output ()
 {
-  echo "::group::Spellcheck"
+  # I have not managed to get ::group:: to work
+  #echo "::group::Spellcheck"
   while read -r FILENAME TYPO_FIX
   do
     FILENAME="${FILENAME#${repo_root}/}"
     TYPO_FIX="${TYPO_FIX//\"}"
+        TYPO="${TYPO_FIX% ->*}"
+         FIX="${TYPO_FIX#*-> }"
 
     [[ "${FILENAME} ${TYPO_FIX}" =~ ^(${filter})$ ]] && continue
 
-    [[ ${FILENAME%:} == src/dosbox ]] &&
-      warning=error || warning=warning
+    [[ ${FILENAME%:} == src/dosbox ]] && errlevel=2 || errlevel=1
 
-    # TODO Reduce error level by one if Capitalisation
-    # i.e. [[ ${TYPO,,} == ${FIX,,} ]]
+    # Reduce error level by one if Capitalisation
+    [[ "${TYPO,,}" != "${FIX,,}" ]] || (( errlevel -- ))
 
     # shellcheck disable=2034
     while IFS=: read -r FN LN LINE
     do
-      echo "::$warning file=${FN},line=${LN}::${TYPO_FIX}"
+      printf  "::%s file=%s,line=%d::%s: %s\n" \
+              "${errlevels[$errlevel]}"  \
+              "${FN}" "${LN}" "${FN}" "${TYPO_FIX}"
 
-      if [[ ${warning} == error ]]
+      if [[ ${errlevels[${errlevel}]} == error ]]
       then
         Canary=dead
       fi
     done < <( Get_context )
   done < <( check_spelling )
-  echo "::endgroup::"
+  # I have not managed to get ::group:: to work
+  #echo "::endgroup::"
 }
 
 
@@ -122,4 +133,3 @@ Canary=alive
 
 main "${@}"
 
-[[ $Canary == alive ]]
