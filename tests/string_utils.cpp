@@ -56,4 +56,22 @@ TEST(StartsWith, EmptyString)
 	EXPECT_FALSE(starts_with("ab", std::string{""}));
 }
 
+TEST(SafeSprintF, PreventOverflow)
+{
+	char buf[3];
+	const int full_msg_len = safe_sprintf(buf, "%d", 98765);
+	EXPECT_EQ(buf[0], '9');
+	EXPECT_EQ(buf[1], '8');
+	EXPECT_EQ(buf[2], '\0');
+	EXPECT_EQ(full_msg_len, 5);
+}
+
+TEST(SafeSprintF, PreventUnderflow)
+{
+	char buf[10];
+	const int full_msg_len = safe_sprintf(buf, "%d", 987);
+	EXPECT_STREQ(buf, "987");
+	EXPECT_EQ(full_msg_len, 3);
+}
+
 } // namespace

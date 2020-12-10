@@ -21,8 +21,26 @@
 #ifndef DOSBOX_STRING_UTILS_H
 #define DOSBOX_STRING_UTILS_H
 
+#include <cstdarg>
 #include <cstring>
 #include <string>
+
+#include "support.h"
+
+
+template <size_t N>
+int safe_sprintf(char (&dst)[N], const char *fmt, ...)
+        GCC_ATTRIBUTE(format(printf, 2, 3));
+
+template <size_t N>
+int safe_sprintf(char (&dst)[N], const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	const int ret = vsnprintf(dst, N, fmt, args);
+	va_end(args);
+	return ret;
+}
 
 template <size_t N>
 bool starts_with(const char (&pfx)[N], const char *str) noexcept
