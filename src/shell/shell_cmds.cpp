@@ -777,11 +777,11 @@ void DOS_Shell::CMD_DIR(char * args) {
 		}
 
 		if (is_dir) {
-			WriteOut("%-8s %-3s   %-16s %02d-%02d-%04d %2d:%02d\n",
+			WriteOut("%-8s %-3s   %-21s %02d-%02d-%04d %2d:%02d\n",
 			         name, ext, "<DIR>", day, month, year, hour, minute);
 		} else {
 			const auto file_size = format_number(size);
-			WriteOut("%-8s %-3s   %16s %02d-%02d-%04d %2d:%02d\n",
+			WriteOut("%-8s %-3s   %21s %02d-%02d-%04d %2d:%02d\n",
 			         name, ext, file_size.c_str(), day, month, year,
 			         hour, minute);
 		}
