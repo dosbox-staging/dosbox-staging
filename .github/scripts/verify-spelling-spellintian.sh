@@ -177,3 +177,4 @@ Canary=alive
 
 main "${@}"
 
+[[ $Canary == alive ]]
