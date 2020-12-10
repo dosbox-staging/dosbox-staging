@@ -26,12 +26,14 @@ main ()
         # prone to false positives
         ;;
       --source|--more)
+        extrafiles=yes
         check_files+=( "*.h" "*.cpp" "*.c" )
         # mostly seems to pick-up typos in comments
         # important typos will be picked up in the src/dosbox
         # no real need for this in github_CI
         ;;
       --all)
+        extrafiles=yes
         check_files+=( "." )
         # will check everything
         # well, nearly everything,
@@ -39,6 +41,14 @@ main ()
         ;;
       --dosbox|--binary)
         skip_list_files="true"
+        ;;
+      --github-PR)
+        github_PR=yes
+        # will only check files changed by the PR
+        # This is recomended mode for github_CI
+        ;;
+      --docs)
+        extrafiles=yes
         ;;
       *)
         : # do nothing, for now
@@ -48,11 +58,11 @@ main ()
 
   repo_root="$( git -C "${0%/*}" rev-parse --show-toplevel )"
 
+  [[ -z $github_PR ]] || _github_PR
   readarray -t -O 0 file_list < <( list_files )
 
-  # If no files to check, --dosbox was passed and either compile failed or
-  # this script executed before compiling, exit with error code.
-  [[ ${#file_list[@]} == 0 ]] && exit 42
+  # If no files to check
+  [[ ${#file_list[@]} -gt 0 ]] || exit 0
 
   # Load ignore list
   readarray -t  < <( grep -v "^#" <"${repo_root}/.spellintian-ignore" )
@@ -128,6 +138,40 @@ _github_output ()
   #echo "::endgroup::"
 }
 
+_github_PR ()
+{
+  # These will be set by the github runner
+  #local GITHUB_REF="refs/pull/763/merge"
+  #local GITHUB_API_URL="https://api.github.com"
+  #local GITHUB_REPOSITORY="dosbox-staging/dosbox-staging"
+  ## uncomment if testing this function locally
+  # or download the json to local file, e.g.
+  # local GITHUB_REF="pulls_763_files.json"
+
+  PULL_NUMBER="${GITHUB_REF//[^0-9]}"
+
+  local PULLS="${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/pulls/"
+
+  [[ -z $PULL_NUMBER ]] && return ||
+  PR_FILES_JSON="$(
+      if [[ -f "$GITHUB_REF" ]]
+      then
+        cat "$GITHUB_REF"
+      else
+        curl -s -H "Accept: application/vnd.github.v3+json" \
+             "${PULLS}${PULL_NUMBER}/files"
+      # FIXME do something if curl fails
+      fi
+  )"
+
+  [[ $extrafiles ]] || unset check_files
+
+  < <( <<<"${PR_FILES_JSON}" jq '.[]|.patch' ) spellintian $picky \
+    | grep -q . || return
+  readarray -t -O "${#check_files[@]}" check_files < <(
+    jq -r '.[]|.filename' <<<"$PR_FILES_JSON"
+  )
+}
 
 Canary=alive
 
