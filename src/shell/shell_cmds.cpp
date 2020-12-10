@@ -802,18 +802,20 @@ void DOS_Shell::CMD_DIR(char * args) {
 		         bytes_used.c_str());
 		show_press_any_key();
 
-		Bit8u drive = dta.GetSearchDrive();
-		Bitu free_space = 1024 * 1024 * 100;
+		uint8_t drive = dta.GetSearchDrive();
+		size_t free_space = 1024 * 1024 * 100;
 		if (Drives[drive]) {
-			Bit16u bytes_sector;
-			Bit8u  sectors_cluster;
-			Bit16u total_clusters;
-			Bit16u free_clusters;
+			uint16_t bytes_sector;
+			uint8_t sectors_cluster;
+			uint16_t total_clusters;
+			uint16_t free_clusters;
 			Drives[drive]->AllocationInfo(&bytes_sector,
 			                              &sectors_cluster,
 			                              &total_clusters,
 			                              &free_clusters);
-			free_space = bytes_sector * sectors_cluster * free_clusters;
+			free_space = bytes_sector;
+			free_space *= sectors_cluster;
+			free_space *= free_clusters;
 		}
 		const auto bytes = format_number(free_space);
 		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"), dir_count,
