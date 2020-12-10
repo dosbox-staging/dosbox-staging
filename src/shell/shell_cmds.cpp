@@ -28,13 +28,14 @@
 #include <string>
 #include <vector>
 
-#include "callback.h"
-#include "regs.h"
 #include "bios.h"
-#include "drives.h"
-#include "support.h"
+#include "callback.h"
 #include "control.h"
+#include "drives.h"
 #include "paging.h"
+#include "regs.h"
+#include "string_utils.h"
+#include "support.h"
 #include "../ints/int10.h"
 
 // clang-format off
@@ -401,28 +402,38 @@ void DOS_Shell::CMD_RMDIR(char * args) {
 	}
 }
 
-static void FormatNumber(Bit32u num,char * buf) {
-	Bit32u numm,numk,numb,numg;
-	numb=num % 1000;
-	num/=1000;
-	numk=num % 1000;
-	num/=1000;
-	numm=num % 1000;
-	num/=1000;
-	numg=num;
-	if (numg) {
-		sprintf(buf,"%d,%03d,%03d,%03d",numg,numm,numk,numb);
-		return;
-	};
-	if (numm) {
-		sprintf(buf,"%d,%03d,%03d",numm,numk,numb);
-		return;
-	};
-	if (numk) {
-		sprintf(buf,"%d,%03d",numk,numb);
-		return;
-	};
-	sprintf(buf,"%d",numb);
+static std::string format_number(size_t num)
+{
+	constexpr size_t petabyte_si = 1'000'000'000'000'000;
+	assert(num <= petabyte_si);
+	const auto b = static_cast<unsigned>(num % 1000);
+	num /= 1000;
+	const auto kb = static_cast<unsigned>(num % 1000);
+	num /= 1000;
+	const auto mb = static_cast<unsigned>(num % 1000);
+	num /= 1000;
+	const auto gb = static_cast<unsigned>(num % 1000);
+	num /= 1000;
+	const auto tb = static_cast<unsigned>(num);
+	char buf[22];
+	if (tb) {
+		safe_sprintf(buf, "%u,%03u,%03u,%03u,%03u", tb, gb, mb, kb, b);
+		return buf;
+	}
+	if (gb) {
+		safe_sprintf(buf, "%u,%03u,%03u,%03u", gb, mb, kb, b);
+		return buf;
+	}
+	if (mb) {
+		safe_sprintf(buf, "%u,%03u,%03u", mb, kb, b);
+		return buf;
+	}
+	if (kb) {
+		safe_sprintf(buf, "%u,%03u", kb, b);
+		return buf;
+	}
+	sprintf(buf, "%u", b);
+	return buf;
 }
 
 struct DtaResult {
@@ -544,7 +555,6 @@ static std::vector<int> calc_column_widths(const std::vector<int> &word_widths,
 
 void DOS_Shell::CMD_DIR(char * args) {
 	HELP("DIR");
-	char numformat[16];
 
 	std::string line;
 	if (GetEnvStr("DIRCMD",line)){
@@ -770,9 +780,10 @@ void DOS_Shell::CMD_DIR(char * args) {
 			WriteOut("%-8s %-3s   %-16s %02d-%02d-%04d %2d:%02d\n",
 			         name, ext, "<DIR>", day, month, year, hour, minute);
 		} else {
-			FormatNumber(size, numformat);
+			const auto file_size = format_number(size);
 			WriteOut("%-8s %-3s   %16s %02d-%02d-%04d %2d:%02d\n",
-			         name, ext, numformat, day, month, year, hour, minute);
+			         name, ext, file_size.c_str(), day, month, year,
+			         hour, minute);
 		}
 		show_press_any_key();
 	}
@@ -786,8 +797,9 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 	// Show the summary of results
 	if (!optB) {
-		FormatNumber(byte_count, numformat);
-		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_USED"), file_count, numformat);
+		const auto bytes_used = format_number(byte_count);
+		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_USED"), file_count,
+		         bytes_used.c_str());
 		show_press_any_key();
 
 		Bit8u drive = dta.GetSearchDrive();
@@ -803,8 +815,9 @@ void DOS_Shell::CMD_DIR(char * args) {
 			                              &free_clusters);
 			free_space = bytes_sector * sectors_cluster * free_clusters;
 		}
-		FormatNumber(free_space, numformat);
-		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"), dir_count, numformat);
+		const auto bytes = format_number(free_space);
+		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"), dir_count,
+		         bytes.c_str());
 	}
 	dos.dta(save_dta);
 }
