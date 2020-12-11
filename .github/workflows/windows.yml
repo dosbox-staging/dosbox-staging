@@ -15,7 +15,7 @@ jobs:
             max_warnings: 295
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 2009
+            max_warnings: 2006
     steps:
       - name:  Backup existing vcpkg installation
         shell: pwsh
@@ -67,7 +67,7 @@ jobs:
         shell: pwsh
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run: python scripts\count-warnings.py -lf --msvc vs\build.log
+        run: python scripts\count-warnings.py -f --msvc vs\build.log
 
 
   build_windows_vs_release:
