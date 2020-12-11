@@ -45,7 +45,7 @@ main ()
       --github-PR)
         github_PR=yes
         # will only check files changed by the PR
-        # This is recomended mode for github_CI
+        # This is recommended mode for github_CI
         ;;
       --docs)
         extrafiles=yes
@@ -93,6 +93,7 @@ check_spelling ()
 Get_context ()
 {
   # get "offending" lines to offer context
+  # This is actually to get line numbers now
   local MIMEtype
   MIMEtype="$( file --brief --mime-type "${repo_root}/${FILENAME%:}" )"
   BinaryMIMEtypes="application/(x-pie-executable|x-sharedlib)"
@@ -166,7 +167,8 @@ _github_PR ()
 
   [[ $extrafiles ]] || unset check_files
 
-  < <( <<<"${PR_FILES_JSON}" jq '.[]|.patch' ) spellintian $picky \
+  spellintian $picky \
+    < <( <<<"${PR_FILES_JSON}" jq -r '.[]|select(.patch != null)|.patch' | grep ^+ ) \
     | grep -q . || return
   readarray -t -O "${#check_files[@]}" check_files < <(
     jq -r '.[]|.filename' <<<"$PR_FILES_JSON"
