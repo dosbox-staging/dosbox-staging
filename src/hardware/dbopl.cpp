@@ -982,8 +982,8 @@ Chip::Chip() {
 
 INLINE Bit32u Chip::ForwardNoise() {
 	noiseCounter += noiseAdd;
-	Bitu count = noiseCounter >> WAVE_SH;
-	noiseCounter &= WAVE_MASK;
+	Bitu count = noiseCounter >> LFO_SH;
+	noiseCounter &= ((1<<LFO_SH) - 1);
 	for ( ; count > 0; --count ) {
 		//Noise calculation from mame
 		noiseValue ^= ( 0x800302 ) & ( 0 - (noiseValue & 1 ) );
@@ -1217,7 +1217,7 @@ void Chip::Setup( Bit32u rate ) {
 	double scale = original / (double)rate;
 
 	//Noise counter is run at the same precision as general waves
-	noiseAdd = (Bit32u)( 0.5 + scale * ( 1 << WAVE_SH ) );
+	noiseAdd = (Bit32u)( 0.5 + scale * ( 1 << LFO_SH ) );
 	noiseCounter = 0;
 	noiseValue = 1;	//Make sure it triggers the noise xor the first time
 	//The low frequency oscillation counter
