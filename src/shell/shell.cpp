@@ -515,10 +515,11 @@ public:
 	}
 };
 
-static AUTOEXEC* test;
+static AUTOEXEC *autoexec_module;
 
-void AUTOEXEC_Init(Section * sec) {
-	test = new AUTOEXEC(sec);
+void AUTOEXEC_Init(Section *sec)
+{
+	autoexec_module = new AUTOEXEC(sec);
 }
 
 static Bitu INT2E_Handler(void) {
