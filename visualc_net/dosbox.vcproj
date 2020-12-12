@@ -165,6 +165,9 @@
 				Name="cpu"
 				Filter="">
 				<File
+					RelativePath="..\src\cpu\dyn_cache.h">
+				</File>
+				<File
 					RelativePath="..\src\cpu\callback.cpp">
 				</File>
 				<File
@@ -266,9 +269,6 @@
 					Name="core_dyn_x86"
 					Filter="">
 					<File
-						RelativePath="..\src\cpu\core_dyn_x86\cache.h">
-					</File>
-					<File
 						RelativePath="..\src\cpu\core_dyn_x86\decoder.h">
 					</File>
 					<File
@@ -290,9 +290,6 @@
 				<Filter
 					Name="core_dynrec"
 					Filter="">
-					<File
-						RelativePath="..\src\cpu\core_dynrec\cache.h">
-					</File>
 					<File
 						RelativePath="..\src\cpu\core_dynrec\decoder.h">
 					</File>

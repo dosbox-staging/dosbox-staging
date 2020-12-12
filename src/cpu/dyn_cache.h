@@ -141,6 +141,10 @@ public:
 
 	// the following functions will clean all cache blocks that are invalid now due to the write
 	void writeb(PhysPt addr,Bitu val){
+		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
+		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+			E_Exit("wb:non-readable code page found that is no ROM page");
+		}
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return;
 		host_writeb(hostmem+addr,val);
@@ -158,6 +162,10 @@ public:
 		InvalidateRange(addr,addr);
 	}
 	void writew(PhysPt addr,Bitu val){
+		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
+		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+			E_Exit("ww:non-readable code page found that is no ROM page");
+		}
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return;
 		host_writew(hostmem+addr,val);
@@ -180,6 +188,10 @@ public:
 		InvalidateRange(addr,addr+1);
 	}
 	void writed(PhysPt addr,Bitu val){
+		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
+		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+			E_Exit("wd:non-readable code page found that is no ROM page");
+		}
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return;
 		host_writed(hostmem+addr,val);
@@ -202,6 +214,10 @@ public:
 		InvalidateRange(addr,addr+3);
 	}
 	bool writeb_checked(PhysPt addr,Bitu val) {
+		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return false;
+		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+			E_Exit("cb:non-readable code page found that is no ROM page");
+		}
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return false;
 		// see if there's code where we are writing to
@@ -226,6 +242,10 @@ public:
 		return false;
 	}
 	bool writew_checked(PhysPt addr,Bitu val) {
+		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return false;
+		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+			E_Exit("cw:non-readable code page found that is no ROM page");
+		}
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return false;
 		// see if there's code where we are writing to
@@ -255,6 +275,10 @@ public:
 		return false;
 	}
 	bool writed_checked(PhysPt addr,Bitu val) {
+		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return false;
+		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+			E_Exit("cd:non-readable code page found that is no ROM page");
+		}
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return false;
 		// see if there's code where we are writing to
@@ -500,8 +524,8 @@ static void cache_closeblock(void) {
 	Bitu written=(Bitu)(cache.pos-block->cache.start);
 	if (written>block->cache.size) {
 		if (!block->cache.next) {
-			if (written>block->cache.size+CACHE_MAXSIZE) E_Exit("CacheBlock overrun 1 %d",written-block->cache.size);	
-		} else E_Exit("CacheBlock overrun 2 written %d size %d",written,block->cache.size);	
+			if (written>block->cache.size+CACHE_MAXSIZE) E_Exit("CacheBlock overrun 1 %" sBitfs(d),written-block->cache.size);
+		} else E_Exit("CacheBlock overrun 2 written %" sBitfs(d) " size %" sBitfs(d),written,block->cache.size);
 	} else {
 		Bitu new_size;
 		Bitu left=block->cache.size-written;
@@ -622,10 +646,12 @@ static void cache_init(bool enable) {
 		// link code that returns with a special return code
 		dyn_return(BR_Link2,false);
 
+#if (C_DYNREC)
 		cache.pos=&cache_code_link_blocks[64];
 		core_dynrec.runcode=(BlockReturn (*)(Bit8u*))cache.pos;
 //		link_blocks[1].cache.start=cache.pos;
 		dyn_run_code();
+#endif
 
 		cache.free_pages=0;
 		cache.last_page=0;

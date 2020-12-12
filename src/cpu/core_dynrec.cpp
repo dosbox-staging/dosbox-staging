@@ -131,7 +131,7 @@ static struct {
 } core_dynrec;
 
 
-#include "core_dynrec/cache.h"
+#include "dyn_cache.h"
 
 #define X86			0x01
 #define X86_64		0x02
