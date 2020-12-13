@@ -118,8 +118,10 @@ bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate);
 bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate);
 
 // Date and Time Conversion
-uint16_t DOS_PackTime(uint16_t hour, uint16_t min, uint16_t sec);
-uint16_t DOS_PackDate(uint16_t year, uint16_t mon, uint16_t day);
+uint16_t DOS_PackTime(uint16_t hour, uint16_t min, uint16_t sec) noexcept;
+uint16_t DOS_PackTime(const struct tm &datetime) noexcept;
+uint16_t DOS_PackDate(uint16_t year, uint16_t mon, uint16_t day) noexcept;
+uint16_t DOS_PackDate(const struct tm &datetime) noexcept;
 
 /* Routines for Drive Class */
 bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry,bool fcb = false);
