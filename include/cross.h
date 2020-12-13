@@ -23,6 +23,7 @@
 
 #include <cstdio>
 #include <string>
+#include <ctime>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -67,6 +68,10 @@
 #define cross_fileno(s) _fileno(s)
 #else
 #define cross_fileno(s) fileno(s)
+#endif
+
+#if defined(WIN32)
+struct tm *localtime_r(const time_t *timep, struct tm *result);
 #endif
 
 void CROSS_DetermineConfigPaths();
