@@ -31,6 +31,7 @@
 #include "bios.h"
 #include "callback.h"
 #include "control.h"
+#include "cross.h"
 #include "drives.h"
 #include "paging.h"
 #include "regs.h"
@@ -1326,18 +1327,15 @@ void DOS_Shell::CMD_CALL(char * args){
 
 void DOS_Shell::CMD_DATE(char * args) {
 	HELP("DATE");
-	if (ScanCMDBool(args,"H")) {
-		// synchronize date with host parameter
-		time_t curtime;
-		struct tm *loctime;
-		curtime = time (NULL);
-		loctime = localtime (&curtime);
-
-		reg_cx = loctime->tm_year+1900;
-		reg_dh = loctime->tm_mon+1;
-		reg_dl = loctime->tm_mday;
-
-		reg_ah=0x2b; // set system date
+	if (ScanCMDBool(args, "H")) {
+		// synchronize date with host
+		const time_t curtime = time(nullptr);
+		struct tm datetime;
+		localtime_r(&curtime, &datetime);
+		reg_ah = 0x2b; // set system date
+		reg_cx = static_cast<uint16_t>(datetime.tm_year + 1900);
+		reg_dh = static_cast<uint8_t>(datetime.tm_mon + 1);
+		reg_dl = static_cast<uint8_t>(datetime.tm_mday);
 		CALLBACK_RunRealInt(0x21);
 		return;
 	}

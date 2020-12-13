@@ -820,10 +820,10 @@ again:
 	} 
 
 	find_size=(Bit32u) stat_block.st_size;
-	struct tm *time;
-	if((time=localtime(&stat_block.st_mtime))!=0){
-		find_date=DOS_PackDate((Bit16u)(time->tm_year+1900),(Bit16u)(time->tm_mon+1),(Bit16u)time->tm_mday);
-		find_time=DOS_PackTime((Bit16u)time->tm_hour,(Bit16u)time->tm_min,(Bit16u)time->tm_sec);
+	struct tm datetime;
+	if (localtime_r(&stat_block.st_mtime, &datetime)) {
+		find_date = DOS_PackDate(datetime);
+		find_time = DOS_PackTime(datetime);
 	} else {
 		find_time=6; 
 		find_date=4;
@@ -1202,12 +1202,12 @@ bool Overlay_Drive::FileStat(const char* name, FileStat_Block * const stat_block
 		return localDrive::FileStat(name,stat_block);
 	}
 	/* Convert the stat to a FileStat */
-	struct tm *time;
-	if((time=localtime(&temp_stat.st_mtime))!=0) {
-		stat_block->time=DOS_PackTime((Bit16u)time->tm_hour,(Bit16u)time->tm_min,(Bit16u)time->tm_sec);
-		stat_block->date=DOS_PackDate((Bit16u)(time->tm_year+1900),(Bit16u)(time->tm_mon+1),(Bit16u)time->tm_mday);
+	struct tm datetime;
+	if (localtime_r(&temp_stat.st_mtime, &datetime)) {
+		stat_block->time = DOS_PackTime(datetime);
+		stat_block->date = DOS_PackDate(datetime);
 	} else {
-			// ... But this function is not used at the moment.
+		LOG_MSG("OVERLAY: Error while converting date in: %s", name);
 	}
 	stat_block->size=(Bit32u)temp_stat.st_size;
 	return true;
