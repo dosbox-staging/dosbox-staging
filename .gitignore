@@ -99,3 +99,7 @@ suppress_base.json
 .clangd
 .cache
 compile_commands.json
+
+# meson ephemerals
+build
+subprojects

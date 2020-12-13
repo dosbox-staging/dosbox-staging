@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/munt/munt.git
+revision = master
+depth = 1
+
+[provide]
+dependency_names = libmt32emu
