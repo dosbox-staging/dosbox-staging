@@ -392,3 +392,11 @@ FILE *fopen_wrap(const char *path, const char *mode) {
 
 	return fopen(path,mode);
 }
+
+#if defined(WIN32)
+struct tm *localtime_r(const time_t *timep, struct tm *result)
+{
+	const errno_t err = localtime_s(result, timep);
+	return (err == 0 ? result : nullptr);
+}
+#endif
