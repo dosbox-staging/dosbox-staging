@@ -528,6 +528,29 @@ else
 fi
 
 
+dnl Munt Roland MT-32 audio synthesiser
+dnl -----------------------------------
+dnl
+AH_TEMPLATE(C_MT32EMU, [Define to 1 to enable Munt, an MT-32 audio synthesiser])
+# AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
+# AC_CHECK_HEADER(GL/gl.h, have_gl_h=yes , have_gl_h=no , )
+AC_ARG_ENABLE(mt32,
+              AS_HELP_STRING(--enable-mt32, Enable Munt MT-32 emulation),
+              disable_mt32=no)
+if test "${disable_mt32}" != "no" -o "${enable_mt32}" != "yes"; then
+    AC_DEFINE(C_MT32EMU,0)
+    AC_MSG_WARN([MT-32 emulation can be enabled with --enable-mt32])
+else
+    LIBS="$LIBS $ac_pwd/build/subprojects/munt/libcm_mt32emu.a"
+    CPPFLAGS="$CPPFLAGS -I$ac_pwd/build/subprojects/munt/__CMake_build/mt32emu/include/"
+    AC_CHECK_HEADER(mt32emu/mt32emu.h, HAVE_MT32EMU_H=yes , HAVE_MT32EMU_H=no , )
+    AS_IF([test "${HAVE_MT32EMU_H}" != "yes"],
+          [AC_MSG_ERROR(Munt MT-32 header not found! Try: meson setup build && meson compile -C build)])
+    AC_DEFINE(C_MT32EMU, 1)
+    AC_MSG_NOTICE([MT-32 emulation enabled])
+fi
+
+
 dnl OpenGL support
 dnl --------------
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
