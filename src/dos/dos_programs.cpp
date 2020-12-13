@@ -36,6 +36,7 @@
 #include "drives.h"
 #include "fs_utils.h"
 #include "inout.h"
+#include "mem.h"
 #include "program_autotype.h"
 #include "program_ls.h"
 #include "regs.h"
@@ -771,8 +772,7 @@ public:
 				}
 
 				disable_umb_ems_xms();
-				void PreparePCJRCartRom(void);
-				PreparePCJRCartRom();
+				MEM_PreparePCJRCartRom();
 
 				if (usefile_1==NULL) return;
 
@@ -862,8 +862,7 @@ public:
 			}
 		} else {
 			disable_umb_ems_xms();
-			void RemoveEMSPageFrame(void);
-			RemoveEMSPageFrame();
+			MEM_RemoveEMSPageFrame();
 			WriteOut(MSG_Get("PROGRAM_BOOT_BOOT"), drive);
 			for (i = 0; i < 512; i++) real_writeb(0, 0x7c00 + i, bootarea.rawdata[i]);
 

@@ -525,14 +525,16 @@ static Bitu read_p92(Bitu port,Bitu iolen) {
 	return memory.a20.controlport | (memory.a20.enabled ? 0x02 : 0);
 }
 
-void RemoveEMSPageFrame(void) {
+void MEM_RemoveEMSPageFrame()
+{
 	/* Setup rom at 0xe0000-0xf0000 */
 	for (Bitu ct=0xe0;ct<0xf0;ct++) {
 		memory.phandlers[ct] = &rom_page_handler;
 	}
 }
 
-void PreparePCJRCartRom(void) {
+void MEM_PreparePCJRCartRom()
+{
 	/* Setup rom at 0xd0000-0xe0000 */
 	for (Bitu ct=0xd0;ct<0xe0;ct++) {
 		memory.phandlers[ct] = &rom_page_handler;

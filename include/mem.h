@@ -52,6 +52,8 @@ MemHandle MEM_GetNextFreePage();
 PhysPt MEM_AllocatePage();
 void MEM_ReleasePages(MemHandle handle);
 bool MEM_ReAllocatePages(MemHandle &handle, Bitu pages, bool sequence);
+void MEM_RemoveEMSPageFrame();
+void MEM_PreparePCJRCartRom();
 
 MemHandle MEM_NextHandle(MemHandle handle);
 MemHandle MEM_NextHandleAt(MemHandle handle, Bitu where);
