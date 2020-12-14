@@ -63,7 +63,6 @@ private:
 
 	void MixerCallBack(uint16_t len);
 	static int processingThread(void *);
-	static void makeROMPathName(char pathName[], const char romDir[], const char fileName[], bool addPathSeparator);
 	static mt32emu_report_handler_i getReportHandlerInterface();
 
 	Bit32u inline getMidiEventTimestamp() {
