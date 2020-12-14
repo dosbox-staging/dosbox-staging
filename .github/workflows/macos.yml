@@ -17,15 +17,21 @@ jobs:
       matrix:
         conf:
           - name: Clang
+            packages: meson
             flags: -c clang
             max_warnings: 0
-          - name: GCC-9
-            flags: -c gcc -v 9
-            max_warnings: 0
+          # - name: GCC-9
+          #   flags: -c gcc -v 9
+          #   max_warnings: 0
     steps:
       - uses: actions/checkout@v2
+
       - name: Install C++ compiler and libraries
-        run:  brew install $(./scripts/list-build-dependencies.sh -m brew ${{ matrix.conf.flags}})
+        run: |
+          brew install \
+            ${{ matrix.conf.packages }} \
+            $(./scripts/list-build-dependencies.sh -m brew ${{ matrix.conf.flags}})
+
       - name:  Prepare compiler cache
         id:    prep-ccache
         shell: bash
@@ -34,6 +40,7 @@ jobs:
           echo "::set-output name=dir::$CCACHE_DIR"
           echo "::set-output name=today::$(gdate -I)"
           echo "::set-output name=yesterday::$(gdate --date=yesterday -I)"
+
       - uses:  actions/cache@v2
         id:    cache-ccache
         with:
@@ -41,14 +48,21 @@ jobs:
           key:  ccache-macos-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.today }}
           restore-keys: |
             ccache-macos-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.yesterday }}
+
       - name: Log environment
         run:  ./scripts/log-env.sh
+
       - name: Build
-        run:  ./scripts/build.sh --build-type Debug ${{ matrix.conf.flags }}
+        run: |
+          set -xo pipefail
+          meson setup ${{ matrix.conf.build_flags }} build
+          meson compile -C build 2>&1 | tee build.log
+
       - name: Summarize warnings
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:  python3 ./scripts/count-warnings.py -lf build.log
+
 
   build_macos_release:
     name: Release build
