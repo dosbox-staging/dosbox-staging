@@ -77,21 +77,26 @@ for other build systems by running script `./scripts/list-build-dependencies.sh`
 
 Detailed build instructions are in [BUILD.md][build-doc] file.
 
+For ongoing development it's recommended to install `ccache` (meson will pick
+it up automatically for speeding up builds).
+
 Example build instructions appropriate for development:
 
 ``` shell
-./autogen.sh
-./configure CFLAGS="-g -fdiagnostics-color -O0 -Wall -Weffc++" \
-            CXXFLAGS="-g -fdiagnostics-color -O0 -Wall -Weffc++"
-make -j$(nproc) |& tee build.log
-./scripts/count-warnings.py build.log
+meson setup build
+cd build
+ninja
 ```
 
-You can also use `./scripts/build.sh` script, which includes configurations
-for various build types and operating systems.
+With the new meson versions you can run:
 
-For development, it's recommended to use `ccache` - it can speed up your clean
-builds by up to 60x.
+``` shell
+meson setup build
+meson compile -C build
+```
+
+Command `meson configure` summarizes all configuration options you can pass to
+`meson setup` (or describe how build directory is currently configured).
 
 [readme-b]: https://github.com/dosbox-staging/dosbox-staging#build-instructions
 [install]: https://github.com/dosbox-staging/dosbox-staging/blob/master/INSTALL

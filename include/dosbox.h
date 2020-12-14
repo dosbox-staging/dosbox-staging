@@ -23,6 +23,8 @@
 #include "compiler.h"
 #include "types.h"
 
+int sdl_main(int argc, char *argv[]);
+
 [[noreturn]] void E_Exit(const char *message, ...)
         GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 

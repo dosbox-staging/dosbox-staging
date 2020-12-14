@@ -35,9 +35,6 @@
 aclocal.m4
 autom4te.cache
 ar-lib
-config.h
-config.h.in
-config.h.in~
 config.log
 config.status
 config.guess
@@ -64,6 +61,10 @@ make.log
 .current_build
 *.defines
 missed.txt
+
+# Common names for meson build dirs
+build
+builddir
 
 # Visual Studio
 .vs
