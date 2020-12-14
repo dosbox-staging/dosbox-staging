@@ -3,17 +3,12 @@
 # Copyright (C) 2020  Feignint <feignint@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 
+##
+# TODO Usage / Summary
+#
+##
+
 set -e
-
-# files to check by default
-# Note: if src/dosbox exists it will also be checked
-check_files=( "*.ac" "*.md" "*.MD" "README*" "dosbox.1" "INSTALL" )
-
-# Annotations
-errlevels=( debug warning error )
-# default is warning
-# Anything in src/dosbox is error
-# however: Capitalisation errors reduce level by one
 
 main ()
 {
@@ -25,31 +20,6 @@ main ()
         picky="--picky"
         # prone to false positives
         ;;
-      --source|--more)
-        extrafiles=yes
-        check_files+=( "*.h" "*.cpp" "*.c" )
-        # mostly seems to pick-up typos in comments
-        # important typos will be picked up in the src/dosbox
-        # no real need for this in github_CI
-        ;;
-      --all)
-        extrafiles=yes
-        check_files+=( "." )
-        # will check everything
-        # well, nearly everything,
-        # contrib/translations and .gitignore have been 'hardcode' excluded
-        ;;
-      --dosbox|--binary)
-        skip_list_files="true"
-        ;;
-      --github-PR)
-        github_PR=yes
-        # will only check files changed by the PR
-        # This is recommended mode for github_CI
-        ;;
-      --docs)
-        extrafiles=yes
-        ;;
       *)
         : # do nothing, for now
         ;;
@@ -58,97 +28,45 @@ main ()
 
   repo_root="$( git -C "${0%/*}" rev-parse --show-toplevel )"
 
-  [[ -z $github_PR ]] || _github_PR
-  readarray -t -O 0 file_list < <( list_files )
-
-  # If no files to check
-  [[ ${#file_list[@]} -gt 0 ]] || exit 0
-
   # Load ignore list
   readarray -t  < <( grep -v "^#" <"${repo_root}/.spellintian-ignore" )
   printf -v filter "%s" "${MAPFILE[@]/%/|}" ; unset MAPFILE
   filter+="\(duplicate word\)"
 
-  _github_output
+  if [[ -e "src/dosbox" ]]
+  then
+      check_binary "src/dosbox"
+  else
+      :
+  fi
+
+  _github_PR
 }
 
-list_files ()
+check_patchset_in_json ()
 {
-  [[ ${skip_list_files} ]] ||
-    git -C "${repo_root}" ls-files -- \
-      ':!contrib/translations' \
-      ':!.gitignore' \
-      "${check_files[@]}"
-
-  [[ -e ${repo_root}/src/dosbox ]] &&
-    printf "%s\n" "src/dosbox"
+  # find suspect words
+  spellintian $picky < <(
+    jq -r '.hunk_line|sub("\\+";"")
+          ' <<<"$patch_additions_json"
+  )
+  # outputs:
+  #     misspelt -> correction
 }
 
-check_spelling ()
+Get_filename_range ()
 {
-  # shellcheck disable=SC2086
-  spellintian $picky "${file_list[@]/#/${repo_root}\/}"
-}
-
-Get_context ()
-{
-  # get "offending" lines to offer context
-  # This is actually to get line numbers now
-  local MIMEtype
-  MIMEtype="$( file --brief --mime-type "${repo_root}/${FILENAME%:}" )"
-  BinaryMIMEtypes="application/(x-pie-executable|x-sharedlib)"
-
-  # shellcheck disable=2046
-  git -C "${repo_root}" grep -n -P "\b${TYPO}\b" \
-      $( [[ ${MIMEtype#*: }  =~ ${BinaryMIMEtypes}$ ]] ||
-           printf "%s" "-- ${FILENAME%:}" )
-}
-
-_github_output ()
-{
-  # I have not managed to get ::group:: to work
-  #echo "::group::Spellcheck"
-  while read -r FILENAME TYPO_FIX
-  do
-    FILENAME="${FILENAME#${repo_root}/}"
-    TYPO_FIX="${TYPO_FIX//\"}"
-        TYPO="${TYPO_FIX% ->*}"
-         FIX="${TYPO_FIX#*-> }"
-
-    [[ "${FILENAME} ${TYPO_FIX}" =~ ^(${filter})$ ]] && continue
-
-    [[ ${FILENAME%:} == src/dosbox ]] && errlevel=2 || errlevel=1
-
-    # Reduce error level by one if Capitalisation
-    [[ "${TYPO,,}" != "${FIX,,}" ]] || (( errlevel -- ))
-
-    # shellcheck disable=2034
-    while IFS=: read -r FN LN LINE
-    do
-      printf  "::%s file=%s,line=%d::%s: %s\n" \
-              "${errlevels[$errlevel]}"  \
-              "${FN}" "${LN}" "${FN}" "${TYPO_FIX}"
-
-      if [[ ${errlevels[${errlevel}]} == error ]]
-      then
-        Canary=dead
-      fi
-    done < <( Get_context )
-  done < <( check_spelling )
-  # I have not managed to get ::group:: to work
-  #echo "::endgroup::"
+  # find the typo, and get which filename it belongs to along with range
+  # so we don't end up highlighting every occurrence in the file
+  # We only want to guard against new typos
+  jq -r '
+          .|select(.hunk_line|test("\\b'"${TYPO//\"}"'\\b"))
+           |.filename + ":" + .range|sub(",";",+")
+        ' <<<"$patch_additions_json"
 }
 
 _github_PR ()
 {
-  # These will be set by the github runner
-  #local GITHUB_REF="refs/pull/763/merge"
-  #local GITHUB_API_URL="https://api.github.com"
-  #local GITHUB_REPOSITORY="dosbox-staging/dosbox-staging"
-  ## uncomment if testing this function locally
-  # or download the json to local file, e.g.
-  # local GITHUB_REF="pulls_763_files.json"
-
   PULL_NUMBER="${GITHUB_REF//[^0-9]}"
 
   local PULLS="${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/pulls/"
@@ -157,25 +75,107 @@ _github_PR ()
   PR_FILES_JSON="$(
       if [[ -f "$GITHUB_REF" ]]
       then
+        # craft your own json, to test stuff
         cat "$GITHUB_REF"
       else
+        # easier to get details of the PR from github's API than messing about
+        # with git, which I'm guessing will be a shallow checkout.
         curl -s -H "Accept: application/vnd.github.v3+json" \
              "${PULLS}${PULL_NUMBER}/files"
-      # FIXME do something if curl fails
+        # FIXME do something if curl fails
       fi
   )"
 
-  [[ $extrafiles ]] || unset check_files
+  patch_hunks_json="$(
+    jq '
+        .[]|select(.patch != null)
+           | {
+               "filename"   : .filename,
+               "patch_hunk" : .patch
+                            | split("\n@@")
+                            | .[]
+                            | split("\n")
+                            | group_by(test("@@"))
+             }
+       ' <<<"${PR_FILES_JSON}"
 
-  spellintian $picky \
-    < <( <<<"${PR_FILES_JSON}" jq -r '.[]|select(.patch != null)|.patch' | grep ^+ ) \
-    | grep -q . || return
-  readarray -t -O "${#check_files[@]}" check_files < <(
-    jq -r '.[]|.filename' <<<"$PR_FILES_JSON"
-  )
+   # The splits are not very clean
+   # but I'm only interested in the "+" lines, so doesn't matter
+  )"
+  patch_additions_json="$(
+    jq '
+        .| {
+             "filename"   : .filename,
+             "hunk_line"  : .patch_hunk[0]|.[]|select(startswith("+")),
+             "range"      : .patch_hunk[1]|tostring|gsub(".+\\+| @@.+";"")
+           }
+       ' <<<"$patch_hunks_json"
+  )"
+
+  while read -r
+  do
+    local TYPO="${REPLY% ->*}"
+    local FIX="${REPLY#*-> }"
+    while IFS="${IFS/#/:}" read -r FN RANGE
+    do
+      # Reconstruct "filename: typo -> fix" and see if we should ignore it
+      [[ "${FN}: ${REPLY}" =~ ^(${filter})$ ]] && continue
+
+      # Get line number.
+      LN="$(
+             git -C "${repo_root}" grep -h -n "" -- "${FN}" \
+             | sed -E -n ''"${RANGE}"'{s/^([0-9]+):.*\b'"${TYPO}"'\b.*/\1/p}'
+           )"
+      # That looks like cheating but:
+      # Consider a patchset with a !fixup that corrects spelling, a prior patch
+      # would have the typo that is fixed by the later fixup patch.
+      # Without grep|sed one would have to dance to find the offending line's
+      # offset from the diff hunk's start line, which is more complicated than
+      # it should be ( in jq need to define a for loop to get index of array
+      # element containing the typo ) and would still have the !fixup problem.
+      # tl;dr *must* double check final file regardless, so use the easy route.
+
+      [[ -z $LN ]] && continue # If we didn't get a line number, assume typo
+                               # was fixed by a later commit, e.g. a !fixup
+
+      (
+         # subshell, so we can change errlevel without effecting default
+
+         # Lower level if capitalisation correction suggested.
+         [[ "${TYPO,,}" == "${FIX,,}" ]] && (( errlevel -- ))
+
+         # Bump warning level if typo was in binary
+         [[ ${REPLY} =~ ^(${in_binary})$ ]] && (( errlevel ++ ))
+
+         printf "::%s file=%s,line=%d::%s: %s\n" \
+                "${errlevels[$errlevel]}" "${FN}" "${LN}" "${FN}" "${REPLY}"
+      )
+    done < <( Get_filename_range )
+  done < <( check_patchset_in_json )
+}
+
+check_binary ()
+{
+  while read -r
+  do
+    typo_in_binary+=( "${REPLY#*: }" )
+    printf "::error::%s\n" "${REPLY}"
+  done < <( spellintian $picky "${1:-src/dosbox}" )
+  local IFS="|"
+  printf -v in_binary "%s" "${typo_in_binary[*]}"
+  # If typo was in binary, kill the bird.
+  [[ -z ${in_binary} ]] || Canary=dead
+}
+
+PR_comment ()
+{
+  : # TODO
 }
 
 Canary=alive
+# Annotations
+errlevels=( debug warning error )
+errlevel=1 # default, warning
 
 main "${@}"
 
