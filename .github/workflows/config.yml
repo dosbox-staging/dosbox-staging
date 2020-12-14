@@ -52,6 +52,7 @@ jobs:
           - configure_flags:  --disable-screenshots
           - configure_flags:  --disable-unaligned-memory
           - configure_flags:  --disable-fluidsynth
+          - configure_flags:  --disable-mt32
           - without_packages: -x net
           - without_packages: -x curses
           - without_packages: -x net -x curses
