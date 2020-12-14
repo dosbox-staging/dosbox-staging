@@ -32,16 +32,12 @@
 #include "midi.h"
 #endif
 
-#include "midi_mt32.h"
+MidiHandler_mt32 mt32_instance;
 
 static const Bitu MILLIS_PER_SECOND = 1000;
 
-MidiHandler_mt32 &MidiHandler_mt32::GetInstance() {
-	static MidiHandler_mt32 midiHandler_mt32;
-	return midiHandler_mt32;
-}
-
-bool MidiHandler_mt32::Open(const char *conf) {
+bool MidiHandler_mt32::Open(const char *conf)
+{
 	service = new MT32Emu::Service();
 	Bit32u version = service->getLibraryVersionInt();
 	if (version < 0x020100) {
@@ -123,7 +119,10 @@ bool MidiHandler_mt32::Open(const char *conf) {
 	if (noise) LOG_MSG("MT32: Set maximum number of partials %d", service->getPartialCount());
 
 	if (noise) LOG_MSG("MT32: Adding mixer channel at sample rate %d", sampleRate);
-	chan = MIXER_AddChannel(mixerCallBack, sampleRate, "MT32");
+
+	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
+	                                      this, std::placeholders::_1);
+	chan = MIXER_AddChannel(mixer_callback, sampleRate, "MT32");
 
 	if (renderInThread) {
 		stopProcessing = false;
@@ -193,12 +192,8 @@ void MidiHandler_mt32::PlaySysex(Bit8u *sysex, Bitu len) {
 	}
 }
 
-void MidiHandler_mt32::mixerCallBack(Bitu len) {
-	MidiHandler_mt32::GetInstance().handleMixerCallBack(len);
-}
-
 int MidiHandler_mt32::processingThread(void *) {
-	MidiHandler_mt32::GetInstance().renderingLoop();
+	mt32_instance.renderingLoop();
 	return 0;
 }
 
@@ -259,7 +254,8 @@ MidiHandler_mt32::~MidiHandler_mt32() {
 	Close();
 }
 
-void MidiHandler_mt32::handleMixerCallBack(Bitu len) {
+void MidiHandler_mt32::MixerCallBack(uint16_t len)
+{
 	if (renderInThread) {
 		while (renderPos == playPos) {
 			SDL_LockMutex(lock);
