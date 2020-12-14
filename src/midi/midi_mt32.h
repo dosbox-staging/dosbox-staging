@@ -64,7 +64,6 @@ private:
 
 	void MixerCallBack(uint16_t len);
 	static int processingThread(void *);
-	static mt32emu_report_handler_i getReportHandlerInterface();
 
 	Bit32u inline getMidiEventTimestamp() {
 		return service->convertOutputToSynthTimestamp(Bit32u(playedBuffers * framesPerAudioBuffer + (playPos >> 1)));
