@@ -119,7 +119,9 @@ struct DB_Midi {
 };
 
 #include "midi_mt32.h"
+#if C_MT32EMU
 static MidiHandler_mt32 &Midi_mt32 = MidiHandler_mt32::GetInstance();
+#endif
 
 DB_Midi midi;
 
