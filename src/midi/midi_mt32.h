@@ -46,6 +46,7 @@ public:
 	void Close() override;
 	void PlayMsg(const uint8_t *msg) override;
 	void PlaySysex(uint8_t *sysex, size_t len) override;
+	bool noise = false; // extra logging verbosity (to-be-renamed)
 
 private:
 	MixerChannel *chan;
@@ -59,7 +60,7 @@ private:
 	Bitu minimumRenderFrames;
 	volatile Bitu renderPos, playPos, playedBuffers;
 	volatile bool stopProcessing;
-	bool open, noise, renderInThread;
+	bool open, renderInThread;
 
 	void MixerCallBack(uint16_t len);
 	static int processingThread(void *);
