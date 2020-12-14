@@ -165,6 +165,18 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "Default is true.");
 }
 
+// TODO: use std::strings
+static void make_rom_path(char pathName[],
+                          const char romDir[],
+                          const char fileName[],
+                          bool addPathSeparator)
+{
+	strcpy(pathName, romDir);
+	if (addPathSeparator)
+		strcat(pathName, "/");
+	strcat(pathName, fileName);
+}
+
 bool MidiHandler_mt32::Open(const char *conf)
 {
 	service = new MT32Emu::Service();
@@ -197,9 +209,9 @@ bool MidiHandler_mt32::Open(const char *conf)
 
 	char pathName[4096];
 
-	makeROMPathName(pathName, romDir, "CM32L_CONTROL.ROM", addPathSeparator);
+	make_rom_path(pathName, romDir, "CM32L_CONTROL.ROM", addPathSeparator);
 	if (MT32EMU_RC_ADDED_CONTROL_ROM != service->addROMFile(pathName)) {
-		makeROMPathName(pathName, romDir, "MT32_CONTROL.ROM", addPathSeparator);
+		make_rom_path(pathName, romDir, "MT32_CONTROL.ROM", addPathSeparator);
 		if (MT32EMU_RC_ADDED_CONTROL_ROM != service->addROMFile(pathName)) {
 			delete service;
 			service = NULL;
@@ -207,9 +219,9 @@ bool MidiHandler_mt32::Open(const char *conf)
 			return false;
 		}
 	}
-	makeROMPathName(pathName, romDir, "CM32L_PCM.ROM", addPathSeparator);
+	make_rom_path(pathName, romDir, "CM32L_PCM.ROM", addPathSeparator);
 	if (MT32EMU_RC_ADDED_PCM_ROM != service->addROMFile(pathName)) {
-		makeROMPathName(pathName, romDir, "MT32_PCM.ROM", addPathSeparator);
+		make_rom_path(pathName, romDir, "MT32_PCM.ROM", addPathSeparator);
 		if (MT32EMU_RC_ADDED_PCM_ROM != service->addROMFile(pathName)) {
 			delete service;
 			service = NULL;
@@ -328,14 +340,6 @@ void MidiHandler_mt32::PlaySysex(Bit8u *sysex, Bitu len) {
 int MidiHandler_mt32::processingThread(void *) {
 	mt32_instance.renderingLoop();
 	return 0;
-}
-
-void MidiHandler_mt32::makeROMPathName(char pathName[], const char romDir[], const char fileName[], bool addPathSeparator) {
-	strcpy(pathName, romDir);
-	if (addPathSeparator) {
-		strcat(pathName, "/");
-	}
-	strcat(pathName, fileName);
 }
 
 mt32emu_report_handler_i MidiHandler_mt32::getReportHandlerInterface() {
