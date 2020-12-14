@@ -1,0 +1,112 @@
+/*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2020-2020  The dosbox-staging team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+#ifndef DOSBOX_CONFIG_H
+#define DOSBOX_CONFIG_H
+
+/* Version and branding tweaks
+ */
+
+// Emulator version
+#define VERSION "@version@"
+
+// TODO make it a suffix, configurable via meson
+#define CONF_BRAND "staging-git"
+
+/* CPU and FPU emulation
+ *
+ * These defines are mostly relevant to modules src/cpu/ and src/fpu/
+ */
+
+// TODO The type of cpu this target has
+#define C_TARGETCPU X86_64
+
+// TODO Define to 1 if target CPU supports unaligned memory access
+#define C_UNALIGNED_MEMORY 1
+
+// TODO Define to 1 to use x86/x64 dynamic cpu core
+#define C_DYNAMIC_X86 1
+
+// TODO Define to 1 to enable floating point emulation
+#define C_FPU 1
+
+// TODO Define to 1 to use a x86/x64 assembly fpu core
+#define C_FPU_X86 1
+
+// TODO Define to 1 to use inlined memory functions in cpu core
+#define C_CORE_INLINE 1
+
+/* Emulator features
+ *
+ * Turn on or off optional emulator features that depend on external libraries.
+ * This way it's easier to port or package on a new platform, where these
+ * libraries might be missing.
+ */
+
+// Define to 1 to enable internal modem emulation (using SDL2_net)
+#mesondefine C_MODEM
+
+// Define to 1 to enable IPX over Internet networking (using SDL2_net)
+#mesondefine C_IPX
+
+// Define to 1 to enable serial port passthrough support
+// TODO change to 1 after defining OSes
+#define C_DIRECTSERIAL 0
+
+// Define to 1 to use opengl display output support
+#mesondefine C_OPENGL
+
+// Define to 1 to enable FluidSynth integration (built-in MIDI synth)
+#mesondefine C_FLUIDSYNTH
+
+// Define to 1 to enable screenshots in .png format
+#mesondefine C_SSHOT
+
+/* Compiler features and extensions
+ *
+ * These are defines for compiler features we can't reliably verify
+ */
+
+// TODO generate ; support for __attribute__ syntax
+#define C_HAS_ATTRIBUTE 1
+
+// TODO generate ; support for __builtin_expect
+#define C_HAS_BUILTIN_EXPECT 1
+
+// TODO: move this to compiler.h MSVC: #define INLINE __forceinline
+#define INLINE inline __attribute__((always_inline))
+
+/* Quirks and toggles for standard headers and libraries
+ *
+ * Sometimes available functions, structs, or struct fields differ slightly
+ * between operating systems.
+ */
+
+// Defined if function clock_gettime is available
+#mesondefine DB_HAVE_CLOCK_GETTIME
+
+// field d_type in struct dirent is not defined in POSIX
+// Some OSes do not implement it (e.g. Haiku)
+#mesondefine DIRENT_HAS_D_TYPE
+
+// TODO: generate; Define to 1 if you have the mprotect function
+#define C_HAVE_MPROTECT 1
+
+#endif

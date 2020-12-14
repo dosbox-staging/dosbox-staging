@@ -19,6 +19,7 @@ support today's systems.
 | **Version control**            | Git                         | [SVN]
 | **Language**                   | C++14                       | C++03<sup>[1]</sup>
 | **SDL**                        | 2.0.2                       | 1.2<sup>＊</sup>
+| **Buildsystem**                | Meson (WIP)                 | Autotools
 | **CI**                         | Yes                         | No
 | **Static analysis**            | Yes<sup>[2],[3],[4]</sup>   | No
 | **Dynamic analysis**           | Yes                         | No
@@ -115,37 +116,36 @@ Install build dependencies appropriate for your OS:
 
 ``` shell
 # Fedora
-sudo dnf install gcc-c++ make automake alsa-lib-devel libpng-devel SDL2-devel \
+sudo dnf install gcc-c++ meson alsa-lib-devel libpng-devel SDL2-devel \
                  SDL2_net-devel opusfile-devel fluidsynth-devel
 ```
 
 ``` shell
 # Debian, Ubuntu
-sudo apt install build-essential automake libasound2-dev libpng-dev \
+sudo apt install build-essential meson libasound2-dev libpng-dev \
                  libsdl2-dev libsdl2-net-dev libopusfile-dev libfluidsynth-dev
 ```
 
 ``` shell
 # Arch, Manjaro
-sudo pacman -S gcc automake alsa-lib libpng sdl2 sdl2_net opusfile fluidsynth
+sudo pacman -S gcc meson alsa-lib libpng sdl2 sdl2_net opusfile fluidsynth
 ```
 
 ``` shell
 # macOS
 xcode-select --install
-brew install autogen automake libpng sdl2 sdl2_net opusfile fluid-synth
+brew install meson libpng sdl2 sdl2_net opusfile fluid-synth
 ```
 
-Compilation flags suggested for local optimised builds:
+Instructions for creating a release build:
 
 ``` shell
 git clone https://github.com/dosbox-staging/dosbox-staging.git
 cd dosbox-staging
-./autogen.sh
-./configure CPPFLAGS="-DNDEBUG" \
-            CFLAGS="-O3 -march=native" \
-            CXXFLAGS="-O3 -march=native"
-make -j$(nproc)
+meson setup -Dbuildtype=release build
+cd build
+ninja
+./dosbox
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md#build-dosbox-staging) for compilation

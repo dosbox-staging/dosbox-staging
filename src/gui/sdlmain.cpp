@@ -3203,8 +3203,15 @@ void OverrideWMClass()
 #endif
 }
 
-//extern void UI_Init(void);
-int main(int argc, char* argv[]) {
+void GFX_GetSize(int &width, int &height, bool &fullscreen)
+{
+	width = sdl.draw.width;
+	height = sdl.draw.height;
+	fullscreen = sdl.desktop.fullscreen;
+}
+
+int sdl_main(int argc, char *argv[])
+{
 	int rcode = 0; // assume good until proven otherwise
 	try {
 		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
@@ -3423,10 +3430,4 @@ int main(int argc, char* argv[]) {
 	QuitSDL();
 
 	return rcode;
-}
-
-void GFX_GetSize(int &width, int &height, bool &fullscreen) {
-	width = sdl.draw.width;
-	height = sdl.draw.height;
-	fullscreen = sdl.desktop.fullscreen;
 }

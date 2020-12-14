@@ -1,0 +1,24 @@
+option('use_sdl2_net',
+       type : 'boolean',
+       value : true,
+       description : 'Enable networking features via SDL2_net (modem, ipx)')
+
+option('use_opengl',
+       type : 'boolean',
+       value : true,
+       description : 'Enable OpenGL support')
+
+option('use_fluidsynth',
+       type : 'boolean',
+       value : true,
+       description : 'Enable built-in MIDI support via FluidSynth')
+
+option('use_opusfile',
+       type : 'boolean',
+       value : true,
+       description : 'Enable Opus codec for CD-DA emulation')
+
+option('use_png',
+       type : 'boolean',
+       value : true,
+       description : 'Enable saving screenshots in .png format')

@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "compiler.h"
 #include "regs.h"
 #include "callback.h"
 #include "dos_system.h"
