@@ -147,6 +147,11 @@ jobs:
           GLIB_CFLAGS="-I$PWD/../static-glib/include/glib-2.0" \
           GTHREAD_CFLAGS="-I$PWD/../static-glib/include/glib-2.0" \
           make
+      - name: Build Munt, Roland MT-32 support library
+        run: |
+          set -x
+          meson setup build
+          meson compile -C build
       - name: Inject version string
         run: |
           set -x
@@ -167,6 +172,7 @@ jobs:
               $PWD/contrib/static-glib/lib/libglib-2.0.a -lm" \
           ./configure \
               --enable-png-static \
+              --enable-mt32 \
               CFLAGS="$FLAGS" \
               CXXFLAGS="$FLAGS" \
               LDFLAGS="$FLAGS $LINKFLAGS -flto=$(nproc)"
