@@ -670,7 +670,7 @@ void DOSBOX_Init(void) {
 #endif
 
 #if C_MT32EMU
-#include "mt32options.h"
+	MT32_AddConfigSection(control);
 #endif
 
 #if C_DEBUG

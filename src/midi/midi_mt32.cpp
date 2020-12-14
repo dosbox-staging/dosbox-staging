@@ -36,6 +36,135 @@ MidiHandler_mt32 mt32_instance;
 
 static const Bitu MILLIS_PER_SECOND = 1000;
 
+static void init_mt32_dosbox_settings(Section_prop &sec_prop)
+{
+	constexpr auto when_idle = Property::Changeable::WhenIdle;
+
+	auto *str_prop = sec_prop.Add_string("romdir", when_idle, "");
+	str_prop->Set_help(
+	        "The directory holding the required MT-32 Control and PCM ROMs.\n"
+	        "The ROM files should be named as follows:\n"
+	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
+	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
+
+	auto *bool_prop = sec_prop.Add_bool("reverse.stereo", when_idle, false);
+	bool_prop->Set_help("Reverse stereo channels for MT-32 output");
+
+	bool_prop = sec_prop.Add_bool("verbose", when_idle, false);
+	bool_prop->Set_help("MT-32 debug logging");
+
+	bool_prop = sec_prop.Add_bool("thread", when_idle, false);
+	bool_prop->Set_help("MT-32 rendering in separate thread");
+
+	auto *int_prop = sec_prop.Add_int("chunk", when_idle, 16);
+	int_prop->SetMinMax(2, 100);
+	int_prop->Set_help(
+	        "Minimum milliseconds of data to render at once. (min 2, max 100)\n"
+	        "Increasing this value reduces rendering overhead which may improve"
+			" performance but also increases audio lag.\n"
+	        "Valid for rendering in separate thread only.");
+
+	int_prop = sec_prop.Add_int("prebuffer", when_idle, 32);
+	int_prop->SetMinMax(3, 200);
+	int_prop->Set_help(
+	        "How many milliseconds of data to render ahead. (min 3, max 200)\n"
+	        "Increasing this value may help to avoid underruns but also increases audio lag.\n"
+	        "Cannot be set less than or equal to mt32.chunk value.\n"
+	        "Valid for rendering in separate thread only.");
+
+	int_prop = sec_prop.Add_int("partials", when_idle, 32);
+	int_prop->SetMinMax(8, 256);
+	int_prop->Set_help(
+	        "The maximum number of partials playing simultaneously. (min 8, max 256");
+
+	const char *mt32DACModes[] = {"0", "1", "2", "3", 0};
+	int_prop = sec_prop.Add_int("dac", when_idle, 0);
+	int_prop->Set_values(mt32DACModes);
+	int_prop->Set_help(
+	        "MT-32 DAC input emulation mode\n"
+	        "Nice = 0 - default\n"
+	        "Produces samples at double the volume, without tricks.\n"
+	        "Higher quality than the real devices\n\n"
+
+	        "Pure = 1\n"
+	        "Produces samples that exactly match the bits output from the emulated LA32.\n"
+	        "Nicer overdrive characteristics than the DAC hacks (it simply clips samples within range)\n"
+	        "Much less likely to overdrive than any other mode.\n"
+	        "Half the volume of any of the other modes.\n"
+	        "Perfect for developers while debugging :)\n\n"
+
+	        "GENERATION1 = 2\n"
+	        "Re-orders the LA32 output bits as in early generation MT-32s (according to Wikipedia).\n"
+	        "Bit order at DAC (where each number represents the original LA32 output bit number, and XX means the bit is always low):\n"
+	        "15 13 12 11 10 09 08 07 06 05 04 03 02 01 00 XX\n\n"
+
+	        "GENERATION2 = 3\n"
+	        "Re-orders the LA32 output bits as in later generations (personally confirmed on my CM-32L - KG).\n"
+	        "Bit order at DAC (where each number represents the original LA32 output bit number):\n"
+	        "15 13 12 11 10 09 08 07 06 05 04 03 02 01 00 14");
+
+	const char *mt32analogModes[] = {"0", "1", "2", "3", 0};
+	int_prop = sec_prop.Add_int("analog", when_idle, 2);
+	int_prop->Set_values(mt32analogModes);
+	int_prop->Set_help(
+	        "MT-32 analogue output emulation mode\n"
+	        "Digital = 0\n"
+	        "Only digital path is emulated. The output samples correspond to the digital output signal appeared at the DAC entrance.\n"
+	        "Fastest mode.\n\n"
+
+	        "Coarse = 1\n"
+	        "Coarse emulation of LPF circuit. High frequencies are boosted, sample rate remains unchanged.\n"
+	        "A bit better sounding but also a bit slower.\n\n"
+
+	        "Accurate = 2 - default\n"
+	        "Finer emulation of LPF circuit. Output signal is upsampled to 48 kHz to allow emulation of audible mirror spectra above 16 kHz,\n"
+	        "which is passed through the LPF circuit without significant attenuation.\n"
+	        "Sounding is closer to the analog output from real hardware but also slower than the modes 0 and 1.\n\n"
+
+	        "Oversampled = 3\n"
+	        "Same as the default mode 2 but the output signal is 2x oversampled, i.e. the output sample rate is 96 kHz.\n"
+	        "Even slower than all the other modes but better retains highest frequencies while further resampled in DOSBox mixer.");
+
+	const char *mt32reverbModes[] = {"0", "1", "2", "3", "auto", 0};
+	str_prop = sec_prop.Add_string("reverb.mode", when_idle, "auto");
+	str_prop->Set_values(mt32reverbModes);
+	str_prop->Set_help("MT-32 reverb mode");
+
+	const char *mt32reverbTimes[] = {"0", "1", "2", "3", "4",
+	                                 "5", "6", "7", 0};
+	int_prop = sec_prop.Add_int("reverb.time", when_idle, 5);
+	int_prop->Set_values(mt32reverbTimes);
+	int_prop->Set_help("MT-32 reverb decaying time");
+
+	const char *mt32reverbLevels[] = {"0", "1", "2", "3", "4",
+	                                  "5", "6", "7", 0};
+	int_prop = sec_prop.Add_int("reverb.level", when_idle, 3);
+	int_prop->Set_values(mt32reverbLevels);
+	int_prop->Set_help("MT-32 reverb level");
+
+	// Some frequently used option sets
+	const char *rates[] = {"44100", "48000", "32000", "22050", "16000",
+	                       "11025", "8000",  "49716", 0};
+	int_prop = sec_prop.Add_int("rate", when_idle, 44100);
+	int_prop->Set_values(rates);
+	int_prop->Set_help("Sample rate of MT-32 emulation.");
+
+	const char *mt32srcQuality[] = {"0", "1", "2", "3", 0};
+	int_prop = sec_prop.Add_int("src.quality", when_idle, 2);
+	int_prop->Set_values(mt32srcQuality);
+	int_prop->Set_help(
+	        "MT-32 sample rate conversion quality\n"
+	        "Value '0' is for the fastest conversion, value '3' provides for the best conversion quality. Default is 2.");
+
+	bool_prop = sec_prop.Add_bool("niceampramp", when_idle, true);
+	bool_prop->Set_help(
+	        "Toggles \"Nice Amp Ramp\" mode that improves amplitude ramp for sustaining instruments.\n"
+	        "Quick changes of volume or expression on a MIDI channel may result in amp jumps on real hardware.\n"
+	        "When \"Nice Amp Ramp\" mode is enabled, amp changes gradually instead.\n"
+	        "Otherwise, the emulation accuracy is preserved.\n"
+	        "Default is true.");
+}
+
 bool MidiHandler_mt32::Open(const char *conf)
 {
 	service = new MT32Emu::Service();
@@ -49,9 +178,11 @@ bool MidiHandler_mt32::Open(const char *conf)
 	service->createContext(getReportHandlerInterface(), this);
 	mt32emu_return_code rc;
 
-	Section_prop *section = static_cast<Section_prop *>(control->GetSection("midi"));
-	const char *romDir = section->Get_string("mt32.romdir");
-	if (romDir == NULL) romDir = "./"; // Paranoid NULL-check, should never happen
+	Section_prop *section = static_cast<Section_prop *>(
+	        control->GetSection("mt32"));
+	const char *romDir = section->Get_string("romdir");
+	if (romDir == NULL)
+		romDir = "./"; // Paranoid NULL-check, should never happen
 	size_t romDirLen = strlen(romDir);
 	bool addPathSeparator = false;
 	if (romDirLen < 1) {
@@ -87,11 +218,13 @@ bool MidiHandler_mt32::Open(const char *conf)
 		}
 	}
 
-	service->setPartialCount(Bit32u(section->Get_int("mt32.partials")));
-	service->setAnalogOutputMode((MT32Emu::AnalogOutputMode)section->Get_int("mt32.analog"));
-	int sampleRate = section->Get_int("mt32.rate");
+	service->setPartialCount(Bit32u(section->Get_int("partials")));
+	service->setAnalogOutputMode(
+	        (MT32Emu::AnalogOutputMode)section->Get_int("analog"));
+	int sampleRate = section->Get_int("rate");
 	service->setStereoOutputSampleRate(sampleRate);
-	service->setSamplerateConversionQuality((MT32Emu::SamplerateConversionQuality)section->Get_int("mt32.src.quality"));
+	service->setSamplerateConversionQuality(
+	        (MT32Emu::SamplerateConversionQuality)section->Get_int("src.quality"));
 
 	if (MT32EMU_RC_OK != (rc = service->openSynth())) {
 		delete service;
@@ -100,21 +233,21 @@ bool MidiHandler_mt32::Open(const char *conf)
 		return false;
 	}
 
-	if (strcmp(section->Get_string("mt32.reverb.mode"), "auto") != 0) {
+	if (strcmp(section->Get_string("reverb.mode"), "auto") != 0) {
 		Bit8u reverbsysex[] = {0x10, 0x00, 0x01, 0x00, 0x05, 0x03};
-		reverbsysex[3] = (Bit8u)atoi(section->Get_string("mt32.reverb.mode"));
-		reverbsysex[4] = (Bit8u)section->Get_int("mt32.reverb.time");
-		reverbsysex[5] = (Bit8u)section->Get_int("mt32.reverb.level");
+		reverbsysex[3] = (Bit8u)atoi(section->Get_string("reverb.mode"));
+		reverbsysex[4] = (Bit8u)section->Get_int("reverb.time");
+		reverbsysex[5] = (Bit8u)section->Get_int("reverb.level");
 		service->writeSysex(16, reverbsysex, 6);
 		service->setReverbOverridden(true);
 	}
 
-	service->setDACInputMode((MT32Emu::DACInputMode)section->Get_int("mt32.dac"));
+	service->setDACInputMode((MT32Emu::DACInputMode)section->Get_int("dac"));
 
-	service->setReversedStereoEnabled(section->Get_bool("mt32.reverse.stereo"));
-	service->setNiceAmpRampEnabled(section->Get_bool("mt32.niceampramp"));
-	noise = section->Get_bool("mt32.verbose");
-	renderInThread = section->Get_bool("mt32.thread");
+	service->setReversedStereoEnabled(section->Get_bool("reverse.stereo"));
+	service->setNiceAmpRampEnabled(section->Get_bool("niceampramp"));
+	noise = section->Get_bool("verbose");
+	renderInThread = section->Get_bool("thread");
 
 	if (noise) LOG_MSG("MT32: Set maximum number of partials %d", service->getPartialCount());
 
@@ -127,9 +260,9 @@ bool MidiHandler_mt32::Open(const char *conf)
 	if (renderInThread) {
 		stopProcessing = false;
 		playPos = 0;
-		int chunkSize = section->Get_int("mt32.chunk");
+		int chunkSize = section->Get_int("chunk");
 		minimumRenderFrames = (chunkSize * sampleRate) / MILLIS_PER_SECOND;
-		int latency = section->Get_int("mt32.prebuffer");
+		int latency = section->Get_int("prebuffer");
 		if (latency <= chunkSize) {
 			latency = 2 * chunkSize;
 			LOG_MSG("MT32: chunk length must be less than prebuffer length, prebuffer length reset to %i ms.", latency);
@@ -317,5 +450,16 @@ void MidiHandler_mt32::renderingLoop() {
 	}
 }
 
+static void mt32_init(Section *sec)
+{
+}
+
+void MT32_AddConfigSection(Config *conf)
+{
+	assert(conf);
+	Section_prop *sec = conf->AddSection_prop("mt32", &mt32_init);
+	assert(sec);
+	init_mt32_dosbox_settings(*sec);
+}
 
 #endif // C_MT32EMU
