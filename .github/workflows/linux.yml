@@ -17,52 +17,45 @@ jobs:
       max-parallel: 3
       matrix:
         conf:
-          # - name: Clang, Ubuntu 20.04
-          #   os: ubuntu-20.04
-          #   flags: -c clang -v 10
-          #   max_warnings: 0
+          - name: Clang, Ubuntu 20.04
+            os: ubuntu-20.04
+            packages: meson clang
+            build_flags: --native-file=.github/meson/native-clang.ini
+            max_warnings: 0
           - name: GCC, Ubuntu 20.04
             os: ubuntu-20.04
             packages: meson
-            flags: -c gcc
             max_warnings: 0
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
             packages: meson
-            flags: -c gcc
             build_flags: -Duse_fluidsynth=false
             max_warnings: 0
           - name: GCC, Ubuntu 16.04
             os: ubuntu-16.04
-            flags: -c gcc
             build_flags: -Duse_fluidsynth=false
             max_warnings: 0
           # - name: GCC, +tests
           #   os: ubuntu-20.04
           #   packages: libgtest-dev
           #   config_flags: --enable-tests
-          #   flags: -c gcc
           #   run_tests: true
           #   max_warnings: -1
           # - name: GCC, +debug
           #   os: ubuntu-20.04
-          #   flags: -c gcc
           #   config_flags: --enable-debug
           #   max_warnings: 107
           # - name: GCC, +dynrec, -dyn_x86
           #   os: ubuntu-20.04
-          #   flags: -c gcc
           #   config_flags: --disable-dynamic-x86
           #   max_warnings: 0
           # - name: GCC, +dynrec, +debug, -dyn_x86
           #   os: ubuntu-20.04
-          #   flags: -c gcc
           #   config_flags: --disable-dynamic-x86 --enable-debug
           #   max_warnings: 144
           - name: GCC, -network
             os: ubuntu-20.04
             packages: meson
-            flags: -c gcc
             build_flags: -Duse_sdl2_net=false
             max_warnings: 0
 
@@ -74,7 +67,7 @@ jobs:
         run: |
           sudo apt-get install -y \
             ${{ matrix.conf.packages }} \
-            $(./scripts/list-build-dependencies.sh -m apt ${{ matrix.conf.flags }})
+            $(cat ./.github/packages/ubuntu-apt.txt)
 
       # We want to use meson provided via apt whenever possible, but
       # Ubuntu 16.04 has very old version (and is close to EOL).
