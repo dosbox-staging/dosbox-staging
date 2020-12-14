@@ -165,6 +165,53 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "Default is true.");
 }
 
+static mt32emu_report_handler_i get_report_handler_interface()
+{
+	class ReportHandler {
+	public:
+		static mt32emu_report_handler_version getReportHandlerVersionID(mt32emu_report_handler_i)
+		{
+			return MT32EMU_REPORT_HANDLER_VERSION_0;
+		}
+
+		static void printDebug(void *instance_data, const char *fmt, va_list list)
+		{
+			MidiHandler_mt32 &midiHandler_mt32 = *(
+			        MidiHandler_mt32 *)instance_data;
+			if (midiHandler_mt32.noise) {
+				char s[1024];
+				vsnprintf(s, 1023, fmt, list);
+				LOG_MSG("MT32: %s", s);
+			}
+		}
+
+		static void onErrorControlROM(void *)
+		{
+			LOG_MSG("MT32: Couldn't open Control ROM file");
+		}
+
+		static void onErrorPCMROM(void *)
+		{
+			LOG_MSG("MT32: Couldn't open PCM ROM file");
+		}
+
+		static void showLCDMessage(void *, const char *message)
+		{
+			LOG_MSG("MT32: LCD-Message: %s", message);
+		}
+	};
+
+	static const mt32emu_report_handler_i_v0 REPORT_HANDLER_V0_IMPL = {
+	        ReportHandler::getReportHandlerVersionID,
+	        ReportHandler::printDebug, ReportHandler::onErrorControlROM,
+	        ReportHandler::onErrorPCMROM, ReportHandler::showLCDMessage};
+
+	static const mt32emu_report_handler_i REPORT_HANDLER_I = {
+	        &REPORT_HANDLER_V0_IMPL};
+
+	return REPORT_HANDLER_I;
+}
+
 // TODO: use std::strings
 static void make_rom_path(char pathName[],
                           const char romDir[],
@@ -187,7 +234,7 @@ bool MidiHandler_mt32::Open(const char *conf)
 		LOG_MSG("MT32: libmt32emu version is too old: %s", service->getLibraryVersionString());
 		return false;
 	}
-	service->createContext(getReportHandlerInterface(), this);
+	service->createContext(get_report_handler_interface(), this);
 	mt32emu_return_code rc;
 
 	Section_prop *section = static_cast<Section_prop *>(
@@ -340,48 +387,6 @@ void MidiHandler_mt32::PlaySysex(Bit8u *sysex, Bitu len) {
 int MidiHandler_mt32::processingThread(void *) {
 	mt32_instance.renderingLoop();
 	return 0;
-}
-
-mt32emu_report_handler_i MidiHandler_mt32::getReportHandlerInterface() {
-	class ReportHandler {
-	public:
-		static mt32emu_report_handler_version getReportHandlerVersionID(mt32emu_report_handler_i) {
-			return MT32EMU_REPORT_HANDLER_VERSION_0;
-		}
-
-		static void printDebug(void *instance_data, const char *fmt, va_list list) {
-			MidiHandler_mt32 &midiHandler_mt32 = *(MidiHandler_mt32 *)instance_data;
-			if (midiHandler_mt32.noise) {
-				char s[1024];
-				vsnprintf(s, 1023, fmt, list);
-				LOG_MSG("MT32: %s", s);
-			}
-		}
-
-		static void onErrorControlROM(void *) {
-			LOG_MSG("MT32: Couldn't open Control ROM file");
-		}
-
-		static void onErrorPCMROM(void *) {
-			LOG_MSG("MT32: Couldn't open PCM ROM file");
-		}
-
-		static void showLCDMessage(void *, const char *message) {
-			LOG_MSG("MT32: LCD-Message: %s", message);
-		}
-	};
-
-	static const mt32emu_report_handler_i_v0 REPORT_HANDLER_V0_IMPL = {
-		ReportHandler::getReportHandlerVersionID,
-		ReportHandler::printDebug,
-		ReportHandler::onErrorControlROM,
-		ReportHandler::onErrorPCMROM,
-		ReportHandler::showLCDMessage
-	};
-
-	static const mt32emu_report_handler_i REPORT_HANDLER_I = { &REPORT_HANDLER_V0_IMPL };
-
-	return REPORT_HANDLER_I;
 }
 
 MidiHandler_mt32::MidiHandler_mt32() : open(false), chan(NULL), service(NULL), thread(NULL) {
