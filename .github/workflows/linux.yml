@@ -238,7 +238,7 @@ jobs:
   publish_additional_artifacts:
     name: Publish additional artifacts
     needs: build_linux_release_dynamic
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     steps:
       - uses: actions/checkout@v2
