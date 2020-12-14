@@ -264,6 +264,11 @@ getdefault:
 				// startup for all games.
 				continue;
 			}
+			if (name == "mt32") {
+				// Never select mt32 automatically.
+				// Users needs to opt-in.
+				continue;
+			}
 			if (handler->Open(conf)) {
 				midi.available=true;
 				midi.handler=handler;
