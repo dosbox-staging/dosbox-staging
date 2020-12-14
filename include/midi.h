@@ -37,4 +37,8 @@ void MIDI_RawOutByte(uint8_t data);
 void FLUID_AddConfigSection(Config *conf);
 #endif
 
+#if C_MT32EMU
+void MT32_AddConfigSection(Config *conf);
+#endif
+
 #endif
