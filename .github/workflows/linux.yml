@@ -17,57 +17,74 @@ jobs:
       max-parallel: 3
       matrix:
         conf:
-          - name: Clang, Ubuntu 20.04
-            os: ubuntu-20.04
-            flags: -c clang -v 10
-            max_warnings: 0
+          # - name: Clang, Ubuntu 20.04
+          #   os: ubuntu-20.04
+          #   flags: -c clang -v 10
+          #   max_warnings: 0
           - name: GCC, Ubuntu 20.04
             os: ubuntu-20.04
+            packages: meson
             flags: -c gcc
             max_warnings: 0
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
+            packages: meson
             flags: -c gcc
-            config_flags: --disable-fluidsynth
+            build_flags: -Duse_fluidsynth=false
             max_warnings: 0
           - name: GCC, Ubuntu 16.04
             os: ubuntu-16.04
             flags: -c gcc
-            config_flags: --disable-fluidsynth
+            build_flags: -Duse_fluidsynth=false
             max_warnings: 0
-          - name: GCC, +tests
-            os: ubuntu-20.04
-            config_flags: --enable-tests
-            add_packages: libgtest-dev
-            flags: -c gcc
-            run_tests: true
-            max_warnings: -1
-          - name: GCC, +debug
-            os: ubuntu-20.04
-            flags: -c gcc
-            config_flags: --enable-debug
-            max_warnings: 107
-          - name: GCC, +dynrec, -dyn_x86
-            os: ubuntu-20.04
-            flags: -c gcc
-            config_flags: --disable-dynamic-x86
-            max_warnings: 0
-          - name: GCC, +dynrec, +debug, -dyn_x86
-            os: ubuntu-20.04
-            flags: -c gcc
-            config_flags: --disable-dynamic-x86 --enable-debug
-            max_warnings: 144
+          # - name: GCC, +tests
+          #   os: ubuntu-20.04
+          #   packages: libgtest-dev
+          #   config_flags: --enable-tests
+          #   flags: -c gcc
+          #   run_tests: true
+          #   max_warnings: -1
+          # - name: GCC, +debug
+          #   os: ubuntu-20.04
+          #   flags: -c gcc
+          #   config_flags: --enable-debug
+          #   max_warnings: 107
+          # - name: GCC, +dynrec, -dyn_x86
+          #   os: ubuntu-20.04
+          #   flags: -c gcc
+          #   config_flags: --disable-dynamic-x86
+          #   max_warnings: 0
+          # - name: GCC, +dynrec, +debug, -dyn_x86
+          #   os: ubuntu-20.04
+          #   flags: -c gcc
+          #   config_flags: --disable-dynamic-x86 --enable-debug
+          #   max_warnings: 144
           - name: GCC, -network
             os: ubuntu-20.04
+            packages: meson
             flags: -c gcc
-            config_flags: --disable-network
+            build_flags: -Duse_sdl2_net=false
             max_warnings: 0
 
     steps:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update
+
       - name: Install C++ compiler and libraries
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt ${{ matrix.conf.flags }}) ${{ matrix.conf.add_packages }}
+        run: |
+          sudo apt-get install -y \
+            ${{ matrix.conf.packages }} \
+            $(./scripts/list-build-dependencies.sh -m apt ${{ matrix.conf.flags }})
+
+      # We want to use meson provided via apt whenever possible, but
+      # Ubuntu 16.04 has very old version (and is close to EOL).
+      # We need meson 0.45.1 or newer.
+      - name: Install Meson via pip3
+        if:   contains(matrix.conf.packages, 'meson') == false
+        run: |
+          sudo apt-get install python3-setuptools
+          sudo pip3 install meson ninja
+
       - name:  Prepare compiler cache
         id:    prep-ccache
         shell: bash
@@ -76,6 +93,7 @@ jobs:
           echo "::set-output name=dir::$CCACHE_DIR"
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+
       - uses:  actions/cache@v2
         id:    cache-ccache
         with:
@@ -83,18 +101,27 @@ jobs:
           key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.today }}
           restore-keys: |
             ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.yesterday }}
+
       - name: Log environment
         run:  ./scripts/log-env.sh
+
       - name: Build
-        run:  ./scripts/build.sh -t Debug ${{ matrix.conf.flags }} ${{ matrix.conf.config_flags }}
+        run: |
+          set -xo pipefail
+          meson setup ${{ matrix.conf.build_flags }} build
+          cd build
+          ninja |& tee ../build.log
+
       - name: Run tests
         if:   matrix.conf.run_tests
         run:  ./tests/tests
+
       - name: Summarize warnings
         if:   matrix.conf.run_tests != true
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:  ./scripts/count-warnings.py -lf build.log
+
 
   build_linux_release_dynamic:
     name: Release build
