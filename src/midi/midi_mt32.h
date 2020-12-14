@@ -36,9 +36,10 @@
 
 struct SDL_Thread;
 
-class MidiHandler_mt32 : public MidiHandler {
+class MidiHandler_mt32 final : public MidiHandler {
 public:
-	static MidiHandler_mt32 &GetInstance();
+	MidiHandler_mt32();
+	~MidiHandler_mt32();
 
 	const char *GetName() const override { return "mt32"; }
 	bool Open(const char *conf) override;
@@ -60,19 +61,15 @@ private:
 	volatile bool stopProcessing;
 	bool open, noise, renderInThread;
 
-	static void mixerCallBack(Bitu len);
+	void MixerCallBack(uint16_t len);
 	static int processingThread(void *);
 	static void makeROMPathName(char pathName[], const char romDir[], const char fileName[], bool addPathSeparator);
 	static mt32emu_report_handler_i getReportHandlerInterface();
-
-	MidiHandler_mt32();
-	~MidiHandler_mt32();
 
 	Bit32u inline getMidiEventTimestamp() {
 		return service->convertOutputToSynthTimestamp(Bit32u(playedBuffers * framesPerAudioBuffer + (playPos >> 1)));
 	}
 
-	void handleMixerCallBack(Bitu len);
 	void renderingLoop();
 };
 
