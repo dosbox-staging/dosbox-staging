@@ -506,10 +506,10 @@ AS_IF([test "x${enable_opus_cdda}" != "xno"],
 AM_CONDITIONAL(USE_OPUS, test "${HAVE_OPUS}" = "yes")
 
 
-dnl FluidSynth software MIDI synthesiser
+dnl FluidSynth software MIDI synthesizer
 dnl ------------------------------------
 dnl
-AH_TEMPLATE(C_FLUIDSYNTH, [Define to 1 to enable FluidSynth MIDI synthesiser])
+AH_TEMPLATE(C_FLUIDSYNTH, [Define to 1 to enable FluidSynth MIDI synthesizer])
 AC_ARG_ENABLE(fluidsynth,
               AS_HELP_STRING([--disable-fluidsynth],
                              [Disable FluidSynth integration]))
@@ -528,10 +528,10 @@ else
 fi
 
 
-dnl Munt Roland MT-32 audio synthesiser
+dnl Munt Roland MT-32 audio synthesizer
 dnl -----------------------------------
 dnl
-AH_TEMPLATE(C_MT32EMU, [Define to 1 to enable Munt, an MT-32 audio synthesiser])
+AH_TEMPLATE(C_MT32EMU, [Define to 1 to enable Munt, an MT-32 audio synthesizer])
 # AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
 # AC_CHECK_HEADER(GL/gl.h, have_gl_h=yes , have_gl_h=no , )
 AC_ARG_ENABLE(mt32,
