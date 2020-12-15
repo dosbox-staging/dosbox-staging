@@ -1,6 +1,10 @@
 This directory contains resources to re-build icon files for various operating
 systems.
 
+# Install
+
+Run `make help` to see usage examples.
+
 # Base design
 
 Base icon source file is `dosbox-staging.svg`. It contains scalable icon of
