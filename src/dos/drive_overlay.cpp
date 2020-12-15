@@ -305,7 +305,7 @@ Overlay_Drive::Overlay_Drive(const char * startdir,const char* overlay, Bit16u _
 :localDrive(startdir,_bytes_sector,_sectors_cluster,_total_clusters,_free_clusters,_mediaid),special_prefix("DBOVERLAY") {
 	optimize_cache_v1 = true; //Try to not reread overlay files on deletes. Ideally drive_cache should be improved to handle deletes properly.
 	//Currently this flag does nothing, as the current behavior is to not reread due to caching everything.
-#if defined (WIN32)	
+#if defined (WIN32) || defined(OS2)	
 	if (strcasecmp(startdir,overlay) == 0) {
 #else 
 	if (strcmp(startdir,overlay) == 0) {
@@ -343,8 +343,7 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 	dirname[0] = 0;//ensure good return string
 	if (strlen(overlaydir) >= strlen(basedir) ) {
 		//Needs to be longer at least.
-#if defined (WIN32)
-//OS2 ?	
+#if defined (WIN32) || defined(OS2)
 		if (strncasecmp(overlaydir,basedir,strlen(basedir)) == 0) {
 #else
 		if (strncmp(overlaydir,basedir,strlen(basedir)) == 0) {

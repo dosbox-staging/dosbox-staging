@@ -23,7 +23,7 @@ dnl Some needed libaries for OS2
 dnl perharps join this with the other target depended checks. move them upwards
 if test x$host = xi386-pc-os2-emx ; then
     CXXFLAGS="$CXXFLAGS -Zmt"
-    LDFLAGS="$LDFLAGS -Zomf -Zmt"
+    LDFLAGS="$LDFLAGS -Zmt"
 fi
 
 dnl Check for SDL
@@ -245,6 +245,9 @@ AC_ARG_ENABLE(debug,AC_HELP_STRING([--enable-debug],[Enable debug mode]),[
      AC_MSG_RESULT([Debugger not enabled])
    elif test x$have_ncurses_lib = xyes -a x$have_curses_h = xyes ; then
      LIBS="$LIBS -lncurses"
+     if test x$host = xi386-pc-os2-emx ; then
+     	LIBS="$LIBS -ltinfo"
+     fi
      AC_DEFINE(C_DEBUG,1)
      if test x$enable_debug = xheavy ; then 
        AC_DEFINE(C_HEAVY_DEBUG,1)
@@ -564,6 +567,21 @@ AH_TEMPLATE(C_SDL_SOUND,[Define to 1 to enable SDL_sound support])
 AC_CHECK_HEADER(SDL_sound.h,have_SDL_sound_h=yes,)
 AC_CHECK_LIB(SDL_sound, Sound_Init, have_SDL_sound_init=yes,,)
 AC_CHECK_LIB(SDL_sound, Sound_Seek, have_SDL_sound_seek=yes,,)
+if test x$host = xi386-pc-os2-emx -a x$have_SDL_sound_init != xyes ; then
+  LIBS_BACKUP=$LIBS;
+  LIBS="$LIBS -lSDL_Sound -Zomf -lstdc++ -lmodplug -lsmpeg -lmikmod -logg -lspeex -lvorbis -lflac -lvorbisfile";
+  AC_MSG_CHECKING(for Sound_Init in SDL_Sound on OS/2);
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <SDL_Sound.h>]],[[
+	Sound_Init ();
+  ]])], [AC_MSG_RESULT(yes); have_SDL_sound_init=yes], AC_MSG_RESULT(no))
+  AC_MSG_CHECKING(for Sound_Seek in SDL_Sound on OS/2);
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <SDL_Sound.h>]],[[
+	Sound_Seek (NULL, 0);
+  ]])], [AC_MSG_RESULT(yes); have_SDL_sound_seek=yes], AC_MSG_RESULT(no))
+  if test x$have_SDL_sound_init != xyes ; then
+     LIBS=$LIBS_BACKUP
+  fi
+fi
 if test x$have_SDL_sound_h = xyes -a x$have_SDL_sound_init = xyes ; then
   if test x$have_SDL_sound_seek = xyes ; then
     LIBS="-lSDL_sound $LIBS"
