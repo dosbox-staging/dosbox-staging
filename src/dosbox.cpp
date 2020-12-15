@@ -627,11 +627,11 @@ void DOSBOX_Init(void) {
 	        "Device that will receive the MIDI data (from the emulated MIDI\n"
 	        "interface - MPU-401). Choose one of the following:\n"
 #if C_FLUIDSYNTH
-	        "'fluidsynth', to use the built-in MIDI synthesiser. See the\n"
+	        "'fluidsynth', to use the built-in MIDI synthesizer. See the\n"
 	        "       [fluidsynth] section for detailed configuration.\n"
 #endif
 #if C_MT32EMU
-	        "'mt32', to use the built-in Roland MT-32 synthesiser.\n"
+	        "'mt32', to use the built-in Roland MT-32 synthesizer.\n"
 	        "       See the [mt32] section for detailed configuration.\n"
 #endif
 	        "'auto', to use the first working external MIDI player. This\n"
@@ -640,10 +640,10 @@ void DOSBOX_Init(void) {
 	pstring = secprop->Add_string("midiconfig", when_idle, "");
 	pstring->Set_help(
 	        "Configuration options for the selected MIDI interface.\n"
-	        "This is usually the id or name of the MIDI synthesiser you want\n"
+	        "This is usually the id or name of the MIDI synthesizer you want\n"
 	        "to use (find the id/name with DOS command 'mixer /listmidi').\n"
 #if (C_FLUIDSYNTH == 1 || C_MT32EMU == 1)
-	        "- This option has no effect when using the built-in sythensizers\n"
+	        "- This option has no effect when using the built-in synthesizers\n"
 	        "  (mididevice = fluidsynth or mt32).\n"
 #endif
 #ifdef C_SUPPORTS_COREAUDIO
