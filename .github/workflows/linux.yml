@@ -61,6 +61,8 @@ jobs:
             os: ubuntu-20.04
             flags: -c gcc
             config_flags: --disable-network
+            spellintian: true
+            add_packages: lintian
             max_warnings: 0
 
     steps:
@@ -95,6 +97,9 @@ jobs:
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:  ./scripts/count-warnings.py -lf build.log
+      - name: Spellcheck
+        if:   matrix.conf.spellintian
+        run:  ./.github/scripts/verify-spelling-spellintian.sh --picky
 
   build_linux_release_dynamic:
     name: Release build
