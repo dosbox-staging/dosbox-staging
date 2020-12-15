@@ -654,9 +654,9 @@ void DOSBOX_Init(void) {
 	        "  MIDI ports, and select one (for example 'midiconfig=14:0'\n"
 	        "  for sequencer client 14, port 0).\n"
 #endif
-	        "- When using a Roland MT-32 rev.0 as MIDI output device, some\n"
-	        "  games may require a delay in order to prevent MT-32 hardware\n"
-	        "  buffer overflow issues. In that case, add 'delaysysex',\n"
+	        "- If you're using a physical Roland MT-32 with revision 0 PCB,\n"
+	        "  the hardware may require a delay in order to prevent its\n"
+	        "  buffer from overflowing. In that case, add 'delaysysex',\n"
 	        "  for example: 'midiconfig=2 delaysysex'.\n"
 	        "See the README/Manual for more details.");
 
