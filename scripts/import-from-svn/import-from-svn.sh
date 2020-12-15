@@ -180,7 +180,7 @@ fast_import () {
 	echo "Inspect new commits in $repo in detail."
 	echo "If the import looks good, invoke:"
 	echo
-	echo "    $ git push dosbox-staging svn/trunk:svn/trunk"
+	echo "    $ git -C $repo push dosbox-staging svn/trunk:svn/trunk"
 	echo
 }
 
