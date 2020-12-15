@@ -62,6 +62,8 @@ git_rewrite_import_links () {
 git_rewrite_committers () {
 	local -r repo_name=$1
 	local -r rev_list=$2
+	# shellcheck disable=SC2016
+	# --env-filter is going to evaluate the variables
 	git -C "$repo_name" filter-branch \
 		-f --env-filter '
 			GIT_COMMITTER_NAME=$GIT_AUTHOR_NAME
