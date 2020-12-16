@@ -5,6 +5,9 @@ project('dosbox-staging', 'c', 'cpp',
 
 # compiler flags
 #
+# Warnings enabled below are our baseline; use '-Dwarning_level=3' to
+# turn on more.  The default level is 1 (meson turns on -Wall).
+#
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
 

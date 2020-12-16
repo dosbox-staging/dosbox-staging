@@ -58,6 +58,11 @@ jobs:
             packages: meson
             build_flags: -Duse_sdl2_net=false
             max_warnings: 0
+          - name: GCC, warning_level=3
+            os: ubuntu-20.04
+            packages: meson
+            build_flags: -Dwarning_level=3
+            max_warnings: 236
 
     steps:
       - uses: actions/checkout@v2
