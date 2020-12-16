@@ -9,47 +9,6 @@ env:
   CLAMDB_DIR:      "/usr/local/Cellar/clamav"
 
 jobs:
-  build_macos:
-    name: ${{ matrix.conf.name }}
-    runs-on: macos-latest
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
-    strategy:
-      matrix:
-        conf:
-          - name: Clang
-            flags: -c clang
-            max_warnings: 0
-          - name: GCC-9
-            flags: -c gcc -v 9
-            max_warnings: 0
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install C++ compiler and libraries
-        run:  brew install $(./scripts/list-build-dependencies.sh -m brew ${{ matrix.conf.flags}})
-      - name:  Prepare compiler cache
-        id:    prep-ccache
-        shell: bash
-        run: |
-          mkdir -p "${CCACHE_DIR}"
-          echo "::set-output name=dir::$CCACHE_DIR"
-          echo "::set-output name=today::$(gdate -I)"
-          echo "::set-output name=yesterday::$(gdate --date=yesterday -I)"
-      - uses:  actions/cache@v2
-        id:    cache-ccache
-        with:
-          path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-macos-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.today }}
-          restore-keys: |
-            ccache-macos-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.yesterday }}
-      - name: Log environment
-        run:  ./scripts/log-env.sh
-      - name: Build
-        run:  ./scripts/build.sh --build-type Debug ${{ matrix.conf.flags }}
-      - name: Summarize warnings
-        env:
-          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run:  python3 ./scripts/count-warnings.py -lf build.log
-
   build_macos_release:
     name: Release build
     runs-on: macos-latest
@@ -133,6 +92,10 @@ jobs:
           gmake -j "$(sysctl -n hw.physicalcpu)"
           strip src/dosbox
           otool -L src/dosbox
+
+      - name: Benchmark threading techniques
+        run: ./src/dosbox 2 10000000 16
+
       - name: Package
         run: |
           set -x
