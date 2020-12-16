@@ -231,7 +231,8 @@ bool MidiHandler_mt32::Open(const char *conf)
 	if (version < 0x020100) {
 		delete service;
 		service = NULL;
-		LOG_MSG("MT32: libmt32emu version is too old: %s", service->getLibraryVersionString());
+		LOG_MSG("MT32: libmt32emu version is too old: %s",
+		        service->getLibraryVersionString());
 		return false;
 	}
 	service->createContext(get_report_handler_interface(), this);
@@ -308,9 +309,12 @@ bool MidiHandler_mt32::Open(const char *conf)
 	noise = section->Get_bool("verbose");
 	renderInThread = section->Get_bool("thread");
 
-	if (noise) LOG_MSG("MT32: Set maximum number of partials %d", service->getPartialCount());
+	if (noise)
+		LOG_MSG("MT32: Set maximum number of partials %d",
+		        service->getPartialCount());
 
-	if (noise) LOG_MSG("MT32: Adding mixer channel at sample rate %d", sampleRate);
+	if (noise)
+		LOG_MSG("MT32: Adding mixer channel at sample rate %d", sampleRate);
 
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
 	                                      this, std::placeholders::_1);
@@ -324,7 +328,8 @@ bool MidiHandler_mt32::Open(const char *conf)
 		int latency = section->Get_int("prebuffer");
 		if (latency <= chunkSize) {
 			latency = 2 * chunkSize;
-			LOG_MSG("MT32: chunk length must be less than prebuffer length, prebuffer length reset to %i ms.", latency);
+			LOG_MSG("MT32: chunk length must be less than prebuffer length, prebuffer length reset to %i ms.",
+			        latency);
 		}
 		framesPerAudioBuffer = (latency * sampleRate) / MILLIS_PER_SECOND;
 		audioBufferSize = framesPerAudioBuffer << 1;
@@ -342,8 +347,10 @@ bool MidiHandler_mt32::Open(const char *conf)
 	return true;
 }
 
-void MidiHandler_mt32::Close(void) {
-	if (!open) return;
+void MidiHandler_mt32::Close(void)
+{
+	if (!open)
+		return;
 	chan->Enable(false);
 	if (renderInThread) {
 		stopProcessing = true;
@@ -370,13 +377,15 @@ void MidiHandler_mt32::Close(void) {
 void MidiHandler_mt32::PlayMsg(const uint8_t *msg)
 {
 	if (renderInThread) {
-		service->playMsgAt(SDL_SwapLE32(*(Bit32u *)msg), getMidiEventTimestamp());
+		service->playMsgAt(SDL_SwapLE32(*(Bit32u *)msg),
+		                   getMidiEventTimestamp());
 	} else {
 		service->playMsg(SDL_SwapLE32(*(Bit32u *)msg));
 	}
 }
 
-void MidiHandler_mt32::PlaySysex(Bit8u *sysex, Bitu len) {
+void MidiHandler_mt32::PlaySysex(Bit8u *sysex, Bitu len)
+{
 	if (renderInThread) {
 		service->playSysexAt(sysex, len, getMidiEventTimestamp());
 	} else {
@@ -384,15 +393,21 @@ void MidiHandler_mt32::PlaySysex(Bit8u *sysex, Bitu len) {
 	}
 }
 
-int MidiHandler_mt32::processingThread(void *) {
+int MidiHandler_mt32::processingThread(void *)
+{
 	mt32_instance.renderingLoop();
 	return 0;
 }
 
-MidiHandler_mt32::MidiHandler_mt32() : open(false), chan(NULL), service(NULL), thread(NULL) {
-}
+MidiHandler_mt32::MidiHandler_mt32()
+        : open(false),
+          chan(NULL),
+          service(NULL),
+          thread(NULL)
+{}
 
-MidiHandler_mt32::~MidiHandler_mt32() {
+MidiHandler_mt32::~MidiHandler_mt32()
+{
 	Close();
 }
 
@@ -403,11 +418,14 @@ void MidiHandler_mt32::MixerCallBack(uint16_t len)
 			SDL_LockMutex(lock);
 			SDL_CondWait(framesInBufferChanged, lock);
 			SDL_UnlockMutex(lock);
-			if (stopProcessing) return;
+			if (stopProcessing)
+				return;
 		}
 		Bitu renderPosSnap = renderPos;
 		Bitu playPosSnap = playPos;
-		Bitu samplesReady = (renderPosSnap < playPosSnap) ? audioBufferSize - playPosSnap : renderPosSnap - playPosSnap;
+		Bitu samplesReady = (renderPosSnap < playPosSnap)
+		                            ? audioBufferSize - playPosSnap
+		                            : renderPosSnap - playPosSnap;
 		if (len > (samplesReady >> 1)) {
 			len = samplesReady >> 1;
 		}
@@ -419,7 +437,10 @@ void MidiHandler_mt32::MixerCallBack(uint16_t len)
 		}
 		playPos = playPosSnap;
 		renderPosSnap = renderPos;
-		const Bitu samplesFree = (renderPosSnap < playPosSnap) ? playPosSnap - renderPosSnap : audioBufferSize + playPosSnap - renderPosSnap;
+		const Bitu samplesFree = (renderPosSnap < playPosSnap)
+		                                 ? playPosSnap - renderPosSnap
+		                                 : audioBufferSize + playPosSnap -
+		                                           renderPosSnap;
 		if (minimumRenderFrames <= (samplesFree >> 1)) {
 			SDL_LockMutex(lock);
 			SDL_CondSignal(framesInBufferChanged);
@@ -431,7 +452,8 @@ void MidiHandler_mt32::MixerCallBack(uint16_t len)
 	}
 }
 
-void MidiHandler_mt32::renderingLoop() {
+void MidiHandler_mt32::renderingLoop()
+{
 	while (!stopProcessing) {
 		const Bitu renderPosSnap = renderPos;
 		const Bitu playPosSnap = playPos;
@@ -440,15 +462,18 @@ void MidiHandler_mt32::renderingLoop() {
 			samplesToRender = playPosSnap - renderPosSnap - 2;
 		} else {
 			samplesToRender = audioBufferSize - renderPosSnap;
-			if (playPosSnap == 0) samplesToRender -= 2;
+			if (playPosSnap == 0)
+				samplesToRender -= 2;
 		}
 		Bitu framesToRender = samplesToRender >> 1;
-		if ((framesToRender == 0) || ((framesToRender < minimumRenderFrames) && (renderPosSnap < playPosSnap))) {
+		if ((framesToRender == 0) || ((framesToRender < minimumRenderFrames) &&
+		                              (renderPosSnap < playPosSnap))) {
 			SDL_LockMutex(lock);
 			SDL_CondWait(framesInBufferChanged, lock);
 			SDL_UnlockMutex(lock);
 		} else {
-			service->renderBit16s(audioBuffer + renderPosSnap, framesToRender);
+			service->renderBit16s(audioBuffer + renderPosSnap,
+			                      framesToRender);
 			renderPos = (renderPosSnap + samplesToRender) % audioBufferSize;
 			if (renderPosSnap == playPos) {
 				SDL_LockMutex(lock);
@@ -460,8 +485,7 @@ void MidiHandler_mt32::renderingLoop() {
 }
 
 static void mt32_init(Section *sec)
-{
-}
+{}
 
 void MT32_AddConfigSection(Config *conf)
 {
