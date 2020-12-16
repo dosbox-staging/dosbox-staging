@@ -8,12 +8,10 @@ itself.
 
 - **icons**: Vector graphics and makefiles to re-create icons in .ico
   and .icns formats; read icons.md file for details
-- **static-fluidsynth**: Compiles a static FluidSynth library that can
-  be used by `./configure` in the absense of `pkg-config`
-- **static-glib**: Compiles a static Glib library that can be used by
- `./configure` in the absense of `pkg-config`
-- **static-opus**: Compiles a static Opusfile library that can be used
-  by `./configure` in the absense of `pkg-config`
-- **macos**: Files required for creating macOS App bundle
 - **linux**: Desktop file for Linux
-
+- **macos**: Files required for creating macOS App bundle
+- **static-<library>**: Static library builder when your host OS is
+  missing the given dependency or doesn't support `pkg-config`
+- **thread-benchmarks**: A stand-alone benchmark of thread-locking
+  techniques. Results used as the technical basis for how DOSBox
+  Staging has threaded MIDI and MT-32 operations.
