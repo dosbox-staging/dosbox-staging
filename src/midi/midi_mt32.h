@@ -54,7 +54,7 @@ private:
 	SDL_Thread *thread;
 	SDL_mutex *lock;
 	SDL_cond *framesInBufferChanged;
-	Bit16s *audioBuffer;
+	int16_t *audioBuffer = nullptr;
 	Bitu audioBufferSize;
 	Bitu framesPerAudioBuffer;
 	Bitu minimumRenderFrames;
