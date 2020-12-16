@@ -333,7 +333,7 @@ bool MidiHandler_mt32::Open(const char *conf)
 		}
 		framesPerAudioBuffer = (latency * sampleRate) / MILLIS_PER_SECOND;
 		audioBufferSize = framesPerAudioBuffer << 1;
-		audioBuffer = new Bit16s[audioBufferSize];
+		audioBuffer = new int16_t[audioBufferSize];
 		service->renderBit16s(audioBuffer, framesPerAudioBuffer - 1);
 		renderPos = (framesPerAudioBuffer - 1) << 1;
 		playedBuffers = 1;
