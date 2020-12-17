@@ -61,7 +61,6 @@ private:
 	volatile uint32_t playedBuffers = 0;
 	volatile bool stopProcessing = true;
 	bool open = false;
-	bool renderInThread = false;
 	void MixerCallBack(uint16_t len);
 	static int processingThread(void *);
 	uint32_t GetMidiEventTimestamp();
