@@ -58,5 +58,6 @@ std::vector<std::string> MAPPER_GetEventNames(const std::string &prefix);
 void MAPPER_AutoType(std::vector<std::string> &sequence,
                      const uint32_t wait_ms,
                      const uint32_t pacing_ms);
+void MAPPER_CheckEvent(SDL_Event *event);
 
 #endif
