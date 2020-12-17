@@ -245,7 +245,7 @@ static void make_rom_path(char pathName[],
 bool MidiHandler_mt32::Open(const char * /* conf */)
 {
 	service = new MT32Emu::Service();
-	Bit32u version = service->getLibraryVersionInt();
+	uint32_t version = service->getLibraryVersionInt();
 	if (version < 0x020100) {
 		delete service;
 		service = nullptr;
@@ -296,10 +296,11 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 		}
 	}
 
-	service->setPartialCount(Bit32u(section->Get_int("partials")));
+	const auto num_partials = static_cast<uint32_t>(section->Get_int("partials"));
+	service->setPartialCount(num_partials);
 	service->setAnalogOutputMode(
 	        (MT32Emu::AnalogOutputMode)section->Get_int("analog"));
-	int sampleRate = section->Get_int("rate");
+	const auto sampleRate = static_cast<uint32_t>(section->Get_int("rate"));
 	service->setStereoOutputSampleRate(sampleRate);
 	service->setSamplerateConversionQuality(
 	        (MT32Emu::SamplerateConversionQuality)section->Get_int("src.quality"));
@@ -312,10 +313,10 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 	}
 
 	if (strcmp(section->Get_string("reverb.mode"), "auto") != 0) {
-		Bit8u reverbsysex[] = {0x10, 0x00, 0x01, 0x00, 0x05, 0x03};
-		reverbsysex[3] = (Bit8u)atoi(section->Get_string("reverb.mode"));
-		reverbsysex[4] = (Bit8u)section->Get_int("reverb.time");
-		reverbsysex[5] = (Bit8u)section->Get_int("reverb.level");
+		uint8_t reverbsysex[] = {0x10, 0x00, 0x01, 0x00, 0x05, 0x03};
+		reverbsysex[3] = static_cast<uint8_t>(atoi(section->Get_string("reverb.mode")));
+		reverbsysex[4] = static_cast<uint8_t>(section->Get_int("reverb.time"));
+		reverbsysex[5] = static_cast<uint8_t>(section->Get_int("reverb.level"));
 		service->writeSysex(16, reverbsysex, 6);
 		service->setReverbOverridden(true);
 	}
