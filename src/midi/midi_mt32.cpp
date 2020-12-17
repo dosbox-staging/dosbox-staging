@@ -34,9 +34,13 @@
 #include "midi.h"
 #endif
 
-MidiHandler_mt32 mt32_instance;
+// MT-32 Constants
+// ---------------
+constexpr uint16_t MS_PER_S = 1000;
+constexpr uint8_t CH_PER_FRAME = 2; // left and right channels
 
-static const Bitu MILLIS_PER_SECOND = 1000;
+
+MidiHandler_mt32 mt32_instance;
 
 static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 {
@@ -337,19 +341,19 @@ bool MidiHandler_mt32::Open(const char *conf)
 	if (renderInThread) {
 		stopProcessing = false;
 		playPos = 0;
-		int chunkSize = section->Get_int("chunk");
-		minimumRenderFrames = (chunkSize * sampleRate) / MILLIS_PER_SECOND;
-		int latency = section->Get_int("prebuffer");
+		const auto chunkSize = static_cast<uint16_t>(section->Get_int("chunk"));
+		minimumRenderFrames = static_cast<uint16_t>(chunkSize * sampleRate / MS_PER_S);
+		auto latency = static_cast<uint16_t>(section->Get_int("prebuffer"));
 		if (latency <= chunkSize) {
-			latency = 2 * chunkSize;
+			latency = CH_PER_FRAME * chunkSize;
 			LOG_MSG("MT32: chunk length must be less than prebuffer length, prebuffer length reset to %i ms.",
 			        latency);
 		}
-		framesPerAudioBuffer = (latency * sampleRate) / MILLIS_PER_SECOND;
-		audioBufferSize = framesPerAudioBuffer << 1;
+		framesPerAudioBuffer = static_cast<uint16_t>( latency * sampleRate / MS_PER_S);
+		audioBufferSize = framesPerAudioBuffer * CH_PER_FRAME;
 		audioBuffer = new int16_t[audioBufferSize];
 		service->renderBit16s(audioBuffer, framesPerAudioBuffer - 1);
-		renderPos = (framesPerAudioBuffer - 1) << 1;
+		renderPos = (framesPerAudioBuffer - 1) * CH_PER_FRAME;
 		playedBuffers = 1;
 		lock = SDL_CreateMutex();
 		framesInBufferChanged = SDL_CreateCond();
@@ -433,11 +437,12 @@ void MidiHandler_mt32::MixerCallBack(uint16_t len)
 		Bitu samplesReady = (renderPosSnap < playPosSnap)
 		                            ? audioBufferSize - playPosSnap
 		                            : renderPosSnap - playPosSnap;
-		if (len > (samplesReady >> 1)) {
-			len = samplesReady >> 1;
+		if (len > (samplesReady / CH_PER_FRAME)) {
+			assert(samplesReady <= UINT16_MAX);
+			len = samplesReady / CH_PER_FRAME;
 		}
 		chan->AddSamples_s16(len, audioBuffer + playPosSnap);
-		playPosSnap += (len << 1);
+		playPosSnap += (len * CH_PER_FRAME);
 		while (audioBufferSize <= playPosSnap) {
 			playPosSnap -= audioBufferSize;
 			playedBuffers++;
@@ -446,9 +451,7 @@ void MidiHandler_mt32::MixerCallBack(uint16_t len)
 		renderPosSnap = renderPos;
 		const Bitu samplesFree = (renderPosSnap < playPosSnap)
 		                                 ? playPosSnap - renderPosSnap
-		                                 : audioBufferSize + playPosSnap -
-		                                           renderPosSnap;
-		if (minimumRenderFrames <= (samplesFree >> 1)) {
+		if (minimumRenderFrames <= (samplesFree / CH_PER_FRAME)) {
 			SDL_LockMutex(lock);
 			SDL_CondSignal(framesInBufferChanged);
 			SDL_UnlockMutex(lock);
@@ -466,13 +469,13 @@ void MidiHandler_mt32::renderingLoop()
 		const Bitu playPosSnap = playPos;
 		Bitu samplesToRender;
 		if (renderPosSnap < playPosSnap) {
-			samplesToRender = playPosSnap - renderPosSnap - 2;
+			samplesToRender = playPosSnap - renderPosSnap - CH_PER_FRAME;
 		} else {
 			samplesToRender = audioBufferSize - renderPosSnap;
 			if (playPosSnap == 0)
-				samplesToRender -= 2;
+				samplesToRender -= CH_PER_FRAME;
 		}
-		Bitu framesToRender = samplesToRender >> 1;
+		uint16_t framesToRender = samplesToRender / CH_PER_FRAME;
 		if ((framesToRender == 0) || ((framesToRender < minimumRenderFrames) &&
 		                              (renderPosSnap < playPosSnap))) {
 			SDL_LockMutex(lock);
