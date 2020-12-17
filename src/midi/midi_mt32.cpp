@@ -35,6 +35,10 @@
 
 // Munt Settings
 // -------------
+// Render enough audio at a minimum for one video-frame (1000 ms / 70 Hz = 14.2 ms)
+constexpr uint8_t RENDER_MIN_MS = 15;
+// Render enough audio at a maximum for three video-frames, capping latency
+constexpr uint8_t RENDER_MAX_MS = RENDER_MIN_MS * 3;
 // Perform rendering in separate thread concurrent to DOSBox's 1-ms timer loop
 constexpr bool USE_THREADED_RENDERING = true;
 
@@ -57,23 +61,7 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
 	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
 
-	auto *int_prop = sec_prop.Add_int("chunk", when_idle, 16);
-	int_prop->SetMinMax(2, 100);
-	int_prop->Set_help(
-	        "Minimum milliseconds of data to render at once. (min 2, max 100)\n"
-	        "Increasing this value reduces rendering overhead which may improve"
-			" performance but also increases audio lag.\n"
-	        "Valid for rendering in separate thread only.");
-
-	int_prop = sec_prop.Add_int("prebuffer", when_idle, 32);
-	int_prop->SetMinMax(3, 200);
-	int_prop->Set_help(
-	        "How many milliseconds of data to render ahead. (min 3, max 200)\n"
-	        "Increasing this value may help to avoid underruns but also increases audio lag.\n"
-	        "Cannot be set less than or equal to mt32.chunk value.\n"
-	        "Valid for rendering in separate thread only.");
-
-	int_prop = sec_prop.Add_int("partials", when_idle, 32);
+	auto *int_prop = sec_prop.Add_int("partials", when_idle, 32);
 	int_prop->SetMinMax(8, 256);
 	int_prop->Set_help(
 	        "The maximum number of partials playing simultaneously. (min 8, max 256");
@@ -326,17 +314,24 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 	chan = MIXER_AddChannel(mixer_callback, sampleRate, "MT32");
 
 	if (USE_THREADED_RENDERING) {
+		static_assert(RENDER_MIN_MS <= RENDER_MAX_MS, "Incorrect rendering sizes");
+		static_assert(RENDER_MAX_MS <= 333, "Excessive latency, use a smaller duration");
 		stopProcessing = false;
 		playPos = 0;
-		const auto chunkSize = static_cast<uint16_t>(section->Get_int("chunk"));
-		minimumRenderFrames = static_cast<uint16_t>(chunkSize * sampleRate / MS_PER_S);
-		auto latency = static_cast<uint16_t>(section->Get_int("prebuffer"));
-		if (latency <= chunkSize) {
-			latency = CH_PER_FRAME * chunkSize;
-			LOG_MSG("MT32: chunk length must be less than prebuffer length, prebuffer length reset to %i ms.",
-			        latency);
-		}
-		framesPerAudioBuffer = static_cast<uint16_t>( latency * sampleRate / MS_PER_S);
+
+		// In the scenario where the mixer playback thread waits on the
+		// rendering thread because its fallen behind), then at a
+		// minimum we will render RENDER_MIN_MS of audio (and force the
+		// main thread to wait)
+		minimumRenderFrames = static_cast<uint16_t>(
+		        RENDER_MIN_MS * sampleRate / MS_PER_S);
+
+		// In the scenario where the rendering thread is able to keep up
+		// with the playback thread, we allow it to "render ahead" by
+		// RENDER_MAX_MS to keep the audio buffer topped-up.
+		framesPerAudioBuffer = static_cast<uint16_t>(
+		        RENDER_MAX_MS * sampleRate / MS_PER_S);
+
 		audioBufferSize = framesPerAudioBuffer * CH_PER_FRAME;
 		audioBuffer = new int16_t[audioBufferSize];
 		service->renderBit16s(audioBuffer, framesPerAudioBuffer - 1);
