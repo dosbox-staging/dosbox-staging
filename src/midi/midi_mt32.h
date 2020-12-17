@@ -38,7 +38,6 @@ struct SDL_Thread;
 
 class MidiHandler_mt32 final : public MidiHandler {
 public:
-	MidiHandler_mt32();
 	~MidiHandler_mt32();
 
 	const char *GetName() const override { return "mt32"; }
@@ -49,11 +48,11 @@ public:
 	bool noise = false; // extra logging verbosity (to-be-renamed)
 
 private:
-	MixerChannel *chan;
-	MT32Emu::Service *service;
-	SDL_Thread *thread;
-	SDL_mutex *lock;
-	SDL_cond *framesInBufferChanged;
+	MixerChannel *chan = nullptr;
+	MT32Emu::Service *service = nullptr;
+	SDL_Thread *thread = nullptr;
+	SDL_mutex *lock = nullptr;
+	SDL_cond *framesInBufferChanged = nullptr;
 	int16_t *audioBuffer = nullptr;
 	Bitu audioBufferSize;
 	Bitu framesPerAudioBuffer;

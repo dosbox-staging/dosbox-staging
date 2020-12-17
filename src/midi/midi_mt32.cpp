@@ -203,8 +203,20 @@ static mt32emu_report_handler_i get_report_handler_interface()
 
 	static const mt32emu_report_handler_i_v0 REPORT_HANDLER_V0_IMPL = {
 	        ReportHandler::getReportHandlerVersionID,
-	        ReportHandler::printDebug, ReportHandler::onErrorControlROM,
-	        ReportHandler::onErrorPCMROM, ReportHandler::showLCDMessage};
+	        ReportHandler::printDebug,
+	        ReportHandler::onErrorControlROM,
+	        ReportHandler::onErrorPCMROM,
+	        ReportHandler::showLCDMessage,
+	        nullptr, // explicit empty function pointers
+	        nullptr,
+	        nullptr,
+	        nullptr,
+	        nullptr,
+	        nullptr,
+	        nullptr,
+	        nullptr,
+	        nullptr,
+	        nullptr};
 
 	static const mt32emu_report_handler_i REPORT_HANDLER_I = {
 	        &REPORT_HANDLER_V0_IMPL};
@@ -230,7 +242,7 @@ bool MidiHandler_mt32::Open(const char *conf)
 	Bit32u version = service->getLibraryVersionInt();
 	if (version < 0x020100) {
 		delete service;
-		service = NULL;
+		service = nullptr;
 		LOG_MSG("MT32: libmt32emu version is too old: %s",
 		        service->getLibraryVersionString());
 		return false;
@@ -241,8 +253,8 @@ bool MidiHandler_mt32::Open(const char *conf)
 	Section_prop *section = static_cast<Section_prop *>(
 	        control->GetSection("mt32"));
 	const char *romDir = section->Get_string("romdir");
-	if (romDir == NULL)
-		romDir = "./"; // Paranoid NULL-check, should never happen
+	if (romDir == nullptr)
+		romDir = "./"; // Paranoid check, should never happen
 	size_t romDirLen = strlen(romDir);
 	bool addPathSeparator = false;
 	if (romDirLen < 1) {
@@ -262,7 +274,7 @@ bool MidiHandler_mt32::Open(const char *conf)
 		make_rom_path(pathName, romDir, "MT32_CONTROL.ROM", addPathSeparator);
 		if (MT32EMU_RC_ADDED_CONTROL_ROM != service->addROMFile(pathName)) {
 			delete service;
-			service = NULL;
+			service = nullptr;
 			LOG_MSG("MT32: Control ROM file not found");
 			return false;
 		}
@@ -272,7 +284,7 @@ bool MidiHandler_mt32::Open(const char *conf)
 		make_rom_path(pathName, romDir, "MT32_PCM.ROM", addPathSeparator);
 		if (MT32EMU_RC_ADDED_PCM_ROM != service->addROMFile(pathName)) {
 			delete service;
-			service = NULL;
+			service = nullptr;
 			LOG_MSG("MT32: PCM ROM file not found");
 			return false;
 		}
@@ -288,7 +300,7 @@ bool MidiHandler_mt32::Open(const char *conf)
 
 	if (MT32EMU_RC_OK != (rc = service->openSynth())) {
 		delete service;
-		service = NULL;
+		service = nullptr;
 		LOG_MSG("MT32: Error initialising emulation: %i", rc);
 		return false;
 	}
@@ -339,7 +351,7 @@ bool MidiHandler_mt32::Open(const char *conf)
 		playedBuffers = 1;
 		lock = SDL_CreateMutex();
 		framesInBufferChanged = SDL_CreateCond();
-		thread = SDL_CreateThread(processingThread, "mt32emu", NULL);
+		thread = SDL_CreateThread(processingThread, "mt32emu", nullptr);
 	}
 	chan->Enable(true);
 
@@ -357,20 +369,20 @@ void MidiHandler_mt32::Close(void)
 		SDL_LockMutex(lock);
 		SDL_CondSignal(framesInBufferChanged);
 		SDL_UnlockMutex(lock);
-		SDL_WaitThread(thread, NULL);
-		thread = NULL;
+		SDL_WaitThread(thread, nullptr);
+		thread = nullptr;
 		SDL_DestroyMutex(lock);
-		lock = NULL;
+		lock = nullptr;
 		SDL_DestroyCond(framesInBufferChanged);
-		framesInBufferChanged = NULL;
+		framesInBufferChanged = nullptr;
 		delete[] audioBuffer;
-		audioBuffer = NULL;
+		audioBuffer = nullptr;
 	}
 	MIXER_DelChannel(chan);
-	chan = NULL;
+	chan = nullptr;
 	service->closeSynth();
 	delete service;
-	service = NULL;
+	service = nullptr;
 	open = false;
 }
 
@@ -398,13 +410,6 @@ int MidiHandler_mt32::processingThread(void *)
 	mt32_instance.renderingLoop();
 	return 0;
 }
-
-MidiHandler_mt32::MidiHandler_mt32()
-        : open(false),
-          chan(NULL),
-          service(NULL),
-          thread(NULL)
-{}
 
 MidiHandler_mt32::~MidiHandler_mt32()
 {
