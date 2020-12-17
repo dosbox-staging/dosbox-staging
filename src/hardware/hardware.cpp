@@ -779,13 +779,15 @@ public:
 	}
 };
 
-static HARDWARE* test;
+static HARDWARE *hardware_module;
 
-void HARDWARE_Destroy(Section * sec) {
-	delete test;
+void HARDWARE_Destroy(Section *sec)
+{
+	delete hardware_module;
 }
 
-void HARDWARE_Init(Section * sec) {
-	test = new HARDWARE(sec);
-	sec->AddDestroyFunction(&HARDWARE_Destroy,true);
+void HARDWARE_Init(Section *sec)
+{
+	hardware_module = new HARDWARE(sec);
+	sec->AddDestroyFunction(&HARDWARE_Destroy, true);
 }
