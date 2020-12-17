@@ -63,13 +63,7 @@ private:
 
 	void MixerCallBack(uint16_t len);
 	static int processingThread(void *);
-
-	Bit32u inline getMidiEventTimestamp()
-	{
-		return service->convertOutputToSynthTimestamp(Bit32u(
-		        playedBuffers * framesPerAudioBuffer + (playPos >> 1)));
-	}
-
+	uint32_t GetMidiEventTimestamp();
 	void renderingLoop();
 };
 

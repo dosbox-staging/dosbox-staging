@@ -392,6 +392,13 @@ void MidiHandler_mt32::Close()
 	open = false;
 }
 
+uint32_t MidiHandler_mt32::GetMidiEventTimestamp()
+{
+	const uint32_t played_frames = playedBuffers * framesPerAudioBuffer;
+	const uint16_t current_frame = playPos / CH_PER_FRAME;
+	return service->convertOutputToSynthTimestamp(played_frames + current_frame);
+}
+
 void MidiHandler_mt32::PlayMsg(const uint8_t *msg)
 {
 	if (renderInThread) {
