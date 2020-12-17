@@ -26,7 +26,9 @@
 
 #include <SDL_thread.h>
 #include <SDL_endian.h>
+
 #include "control.h"
+#include "string_utils.h"
 
 #ifndef DOSBOX_MIDI_H
 #include "midi.h"
@@ -180,7 +182,7 @@ static mt32emu_report_handler_i get_report_handler_interface()
 			        MidiHandler_mt32 *)instance_data;
 			if (midiHandler_mt32.noise) {
 				char s[1024];
-				vsnprintf(s, 1023, fmt, list);
+				safe_sprintf(s, fmt, list);
 				LOG_MSG("MT32: %s", s);
 			}
 		}
