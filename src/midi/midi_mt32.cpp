@@ -401,12 +401,11 @@ uint32_t MidiHandler_mt32::GetMidiEventTimestamp()
 
 void MidiHandler_mt32::PlayMsg(const uint8_t *msg)
 {
-	if (renderInThread) {
-		service->playMsgAt(SDL_SwapLE32(*(Bit32u *)msg),
-		                   getMidiEventTimestamp());
-	} else {
-		service->playMsg(SDL_SwapLE32(*(Bit32u *)msg));
-	}
+	const auto msg_words = reinterpret_cast<const uint32_t *>(msg);
+	if (renderInThread)
+		service->playMsgAt(SDL_SwapLE32(*msg_words), GetMidiEventTimestamp());
+	else
+		service->playMsg(SDL_SwapLE32(*msg_words));
 }
 
 void MidiHandler_mt32::PlaySysex(uint8_t *sysex, size_t len)
@@ -466,8 +465,9 @@ void MidiHandler_mt32::MixerCallBack(uint16_t len)
 			SDL_UnlockMutex(lock);
 		}
 	} else {
-		service->renderBit16s((Bit16s *)MixTemp, len);
-		chan->AddSamples_s16(len, (Bit16s *)MixTemp);
+		auto buffer = reinterpret_cast<int16_t *>(MixTemp);
+		service->renderBit16s(buffer, len);
+		chan->AddSamples_s16(len, buffer);
 	}
 }
 
