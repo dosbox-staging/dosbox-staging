@@ -54,13 +54,15 @@ private:
 	SDL_mutex *lock = nullptr;
 	SDL_cond *framesInBufferChanged = nullptr;
 	int16_t *audioBuffer = nullptr;
-	Bitu audioBufferSize;
-	Bitu framesPerAudioBuffer;
-	Bitu minimumRenderFrames;
-	volatile Bitu renderPos, playPos, playedBuffers;
-	volatile bool stopProcessing;
-	bool open, renderInThread;
-
+	uint16_t audioBufferSize = 0;
+	uint16_t framesPerAudioBuffer = 0;
+	uint16_t minimumRenderFrames = 0;
+	volatile uint16_t renderPos = 0;
+	volatile uint16_t playPos = 0;
+	volatile uint32_t playedBuffers = 0;
+	volatile bool stopProcessing = true;
+	bool open = false;
+	bool renderInThread = false;
 	void MixerCallBack(uint16_t len);
 	static int processingThread(void *);
 	uint32_t GetMidiEventTimestamp();
