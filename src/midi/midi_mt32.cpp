@@ -65,27 +65,10 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
 	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
 
-	const char *mt32reverbModes[] = {"0", "1", "2", "3", "auto", 0};
-	str_prop = sec_prop.Add_string("reverb.mode", when_idle, "auto");
-	str_prop->Set_values(mt32reverbModes);
-	str_prop->Set_help("MT-32 reverb mode");
-
-	const char *mt32reverbTimes[] = {"0", "1", "2", "3", "4",
-	                                 "5", "6", "7", 0};
-	auto *int_prop = sec_prop.Add_int("reverb.time", when_idle, 5);
-	int_prop->Set_values(mt32reverbTimes);
-	int_prop->Set_help("MT-32 reverb decaying time");
-
-	const char *mt32reverbLevels[] = {"0", "1", "2", "3", "4",
-	                                  "5", "6", "7", 0};
-	int_prop = sec_prop.Add_int("reverb.level", when_idle, 3);
-	int_prop->Set_values(mt32reverbLevels);
-	int_prop->Set_help("MT-32 reverb level");
-
 	// Some frequently used option sets
 	const char *rates[] = {"44100", "48000", "32000", "22050", "16000",
 	                       "11025", "8000",  "49716", 0};
-	int_prop = sec_prop.Add_int("rate", when_idle, 44100);
+	auto *int_prop = sec_prop.Add_int("rate", when_idle, 44100);
 	int_prop->Set_values(rates);
 	int_prop->Set_help("Sample rate of MT-32 emulation.");
 
@@ -237,15 +220,6 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 		service = nullptr;
 		LOG_MSG("MT32: Error initialising emulation: %i", rc);
 		return false;
-	}
-
-	if (strcmp(section->Get_string("reverb.mode"), "auto") != 0) {
-		uint8_t reverbsysex[] = {0x10, 0x00, 0x01, 0x00, 0x05, 0x03};
-		reverbsysex[3] = static_cast<uint8_t>(atoi(section->Get_string("reverb.mode")));
-		reverbsysex[4] = static_cast<uint8_t>(section->Get_int("reverb.time"));
-		reverbsysex[5] = static_cast<uint8_t>(section->Get_int("reverb.level"));
-		service->writeSysex(16, reverbsysex, 6);
-		service->setReverbOverridden(true);
 	}
 
 	service->setDACInputMode(DAC_MODE);
