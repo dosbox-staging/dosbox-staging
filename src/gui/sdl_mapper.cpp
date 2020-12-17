@@ -2470,10 +2470,11 @@ static bool MAPPER_CreateBindsFromFile() {
 	return true;
 }
 
-void MAPPER_CheckEvent(SDL_Event * event) {
-	for (CBindGroup_it it = bindgroups.begin(); it != bindgroups.end(); ++it) {
-		if ((*it)->CheckEvent(event)) return;
-	}
+void MAPPER_CheckEvent(SDL_Event *event)
+{
+	for (auto &group : bindgroups)
+		if (group->CheckEvent(event))
+			return;
 }
 
 void BIND_MappingEvents() {
