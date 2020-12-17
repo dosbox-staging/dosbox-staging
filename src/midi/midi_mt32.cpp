@@ -24,7 +24,6 @@
 
 #if C_MT32EMU
 
-#include <SDL_thread.h>
 #include <SDL_endian.h>
 
 #include "control.h"
@@ -345,7 +344,7 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 		playedBuffers = 1;
 		lock = SDL_CreateMutex();
 		framesInBufferChanged = SDL_CreateCond();
-		thread = SDL_CreateThread(processingThread, "mt32emu", nullptr);
+		thread = SDL_CreateThread(ProcessingThread, "mt32emu", nullptr);
 	}
 	chan->Enable(true);
 
@@ -380,7 +379,7 @@ void MidiHandler_mt32::Close()
 	open = false;
 }
 
-uint32_t MidiHandler_mt32::GetMidiEventTimestamp()
+uint32_t MidiHandler_mt32::GetMidiEventTimestamp() const
 {
 	const uint32_t played_frames = playedBuffers * framesPerAudioBuffer;
 	const uint16_t current_frame = playPos / CH_PER_FRAME;
@@ -406,9 +405,9 @@ void MidiHandler_mt32::PlaySysex(uint8_t *sysex, size_t len)
 		service->playSysex(sysex, msg_len);
 }
 
-int MidiHandler_mt32::processingThread(void *)
+int MidiHandler_mt32::ProcessingThread(void *)
 {
-	mt32_instance.renderingLoop();
+	mt32_instance.RenderingLoop();
 	return 0;
 }
 
@@ -459,7 +458,7 @@ void MidiHandler_mt32::MixerCallBack(uint16_t len)
 	}
 }
 
-void MidiHandler_mt32::renderingLoop()
+void MidiHandler_mt32::RenderingLoop()
 {
 	while (!stopProcessing) {
 		const uint16_t renderPosSnap = renderPos;

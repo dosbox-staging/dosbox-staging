@@ -32,39 +32,46 @@
 #error Incompatible mt32emu library version
 #endif
 
-#include "mixer.h"
+#include <SDL_thread.h>
 
-struct SDL_Thread;
+#include "mixer.h"
 
 class MidiHandler_mt32 final : public MidiHandler {
 public:
 	~MidiHandler_mt32();
 
+	void Close() override;
 	const char *GetName() const override { return "mt32"; }
 	bool Open(const char *conf) override;
-	void Close() override;
 	void PlayMsg(const uint8_t *msg) override;
 	void PlaySysex(uint8_t *sysex, size_t len) override;
 
 private:
+	uint32_t GetMidiEventTimestamp() const;
+	void MixerCallBack(uint16_t len);
+	static int ProcessingThread(void *);
+	void RenderingLoop();
+
+	// TODO: replace pointers with std::unique_ptr
 	MixerChannel *chan = nullptr;
 	MT32Emu::Service *service = nullptr;
 	SDL_Thread *thread = nullptr;
 	SDL_mutex *lock = nullptr;
 	SDL_cond *framesInBufferChanged = nullptr;
 	int16_t *audioBuffer = nullptr;
+
+	// Ongoing state-tracking
+	volatile uint32_t playedBuffers = 0;
+	volatile uint16_t renderPos = 0;
+	volatile uint16_t playPos = 0;
+
+	// Buffer properties
 	uint16_t audioBufferSize = 0;
 	uint16_t framesPerAudioBuffer = 0;
 	uint16_t minimumRenderFrames = 0;
-	volatile uint16_t renderPos = 0;
-	volatile uint16_t playPos = 0;
-	volatile uint32_t playedBuffers = 0;
-	volatile bool stopProcessing = true;
+
 	bool open = false;
-	void MixerCallBack(uint16_t len);
-	static int processingThread(void *);
-	uint32_t GetMidiEventTimestamp();
-	void renderingLoop();
+	volatile bool stopProcessing = true;
 };
 
 #endif // C_MT32EMU
