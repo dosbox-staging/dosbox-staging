@@ -43,6 +43,8 @@ constexpr auto DAC_MODE = MT32Emu::DACInputMode_NICE;
 constexpr uint8_t RENDER_MIN_MS = 15;
 // Render enough audio at a maximum for three video-frames, capping latency
 constexpr uint8_t RENDER_MAX_MS = RENDER_MIN_MS * 3;
+// Sample rate conversion quality: FASTEST, FAST, GOOD, BEST
+constexpr auto RATE_CONVERSION_QUALITY = MT32Emu::SamplerateConversionQuality_BEST;
 // Perform rendering in separate thread concurrent to DOSBox's 1-ms timer loop
 constexpr bool USE_THREADED_RENDERING = true;
 
@@ -64,13 +66,6 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "The ROM files should be named as follows:\n"
 	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
 	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
-
-	const char *mt32srcQuality[] = {"0", "1", "2", "3", 0};
-	auto *int_prop = sec_prop.Add_int("src.quality", when_idle, 2);
-	int_prop->Set_values(mt32srcQuality);
-	int_prop->Set_help(
-	        "MT-32 sample rate conversion quality\n"
-	        "Value '0' is for the fastest conversion, value '3' provides for the best conversion quality. Default is 2.");
 
 	auto *bool_prop = sec_prop.Add_bool("niceampramp", when_idle, true);
 	bool_prop->Set_help(
@@ -210,8 +205,7 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 
 	service->setAnalogOutputMode(ANALOG_MODE);
 	service->setStereoOutputSampleRate(sample_rate);
-	service->setSamplerateConversionQuality(
-	        (MT32Emu::SamplerateConversionQuality)section->Get_int("src.quality"));
+	service->setSamplerateConversionQuality(RATE_CONVERSION_QUALITY);
 
 	if (MT32EMU_RC_OK != (rc = service->openSynth())) {
 		delete service;
