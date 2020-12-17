@@ -439,11 +439,11 @@ void MidiHandler_mt32::MixerCallBack(uint16_t len)
 			if (stopProcessing)
 				return;
 		}
-		Bitu renderPosSnap = renderPos;
-		Bitu playPosSnap = playPos;
-		Bitu samplesReady = (renderPosSnap < playPosSnap)
-		                            ? audioBufferSize - playPosSnap
-		                            : renderPosSnap - playPosSnap;
+		uint16_t renderPosSnap = renderPos;
+		uint16_t playPosSnap = playPos;
+		const uint16_t samplesReady = (renderPosSnap < playPosSnap)
+		                                      ? audioBufferSize - playPosSnap
+		                                      : renderPosSnap - playPosSnap;
 		if (len > (samplesReady / CH_PER_FRAME)) {
 			assert(samplesReady <= UINT16_MAX);
 			len = samplesReady / CH_PER_FRAME;
@@ -456,8 +456,9 @@ void MidiHandler_mt32::MixerCallBack(uint16_t len)
 		}
 		playPos = playPosSnap;
 		renderPosSnap = renderPos;
-		const Bitu samplesFree = (renderPosSnap < playPosSnap)
-		                                 ? playPosSnap - renderPosSnap
+		const uint16_t samplesFree = (renderPosSnap < playPosSnap)
+		                                     ? playPosSnap - renderPosSnap
+		                                     : audioBufferSize + playPosSnap - renderPosSnap;
 		if (minimumRenderFrames <= (samplesFree / CH_PER_FRAME)) {
 			SDL_LockMutex(lock);
 			SDL_CondSignal(framesInBufferChanged);
@@ -472,9 +473,9 @@ void MidiHandler_mt32::MixerCallBack(uint16_t len)
 void MidiHandler_mt32::renderingLoop()
 {
 	while (!stopProcessing) {
-		const Bitu renderPosSnap = renderPos;
-		const Bitu playPosSnap = playPos;
-		Bitu samplesToRender;
+		const uint16_t renderPosSnap = renderPos;
+		const uint16_t playPosSnap = playPos;
+		uint16_t samplesToRender = 0;
 		if (renderPosSnap < playPosSnap) {
 			samplesToRender = playPosSnap - renderPosSnap - CH_PER_FRAME;
 		} else {
