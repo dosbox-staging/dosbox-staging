@@ -242,7 +242,7 @@ static void make_rom_path(char pathName[],
 	strcat(pathName, fileName);
 }
 
-bool MidiHandler_mt32::Open(const char *conf)
+bool MidiHandler_mt32::Open(const char * /* conf */)
 {
 	service = new MT32Emu::Service();
 	Bit32u version = service->getLibraryVersionInt();
@@ -365,7 +365,7 @@ bool MidiHandler_mt32::Open(const char *conf)
 	return true;
 }
 
-void MidiHandler_mt32::Close(void)
+void MidiHandler_mt32::Close()
 {
 	if (!open)
 		return;
@@ -494,15 +494,15 @@ void MidiHandler_mt32::renderingLoop()
 	}
 }
 
-static void mt32_init(Section *sec)
+static void mt32_init(Section * /* sec */)
 {}
 
 void MT32_AddConfigSection(Config *conf)
 {
 	assert(conf);
-	Section_prop *sec = conf->AddSection_prop("mt32", &mt32_init);
-	assert(sec);
-	init_mt32_dosbox_settings(*sec);
+	Section_prop *sec_prop = conf->AddSection_prop("mt32", &mt32_init);
+	assert(sec_prop);
+	init_mt32_dosbox_settings(*sec_prop);
 }
 
 #endif // C_MT32EMU
