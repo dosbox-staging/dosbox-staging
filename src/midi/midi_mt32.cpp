@@ -65,15 +65,8 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
 	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
 
-	// Some frequently used option sets
-	const char *rates[] = {"44100", "48000", "32000", "22050", "16000",
-	                       "11025", "8000",  "49716", 0};
-	auto *int_prop = sec_prop.Add_int("rate", when_idle, 44100);
-	int_prop->Set_values(rates);
-	int_prop->Set_help("Sample rate of MT-32 emulation.");
-
 	const char *mt32srcQuality[] = {"0", "1", "2", "3", 0};
-	int_prop = sec_prop.Add_int("src.quality", when_idle, 2);
+	auto *int_prop = sec_prop.Add_int("src.quality", when_idle, 2);
 	int_prop->Set_values(mt32srcQuality);
 	int_prop->Set_help(
 	        "MT-32 sample rate conversion quality\n"
@@ -209,15 +202,22 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 		}
 	}
 
+	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
+	                                      this, std::placeholders::_1);
+	chan = MIXER_AddChannel(mixer_callback, 0, "MT32");
+	assert(chan);
+	const auto sample_rate = chan->GetSampleRate();
+
 	service->setAnalogOutputMode(ANALOG_MODE);
-	const auto sampleRate = static_cast<uint32_t>(section->Get_int("rate"));
-	service->setStereoOutputSampleRate(sampleRate);
+	service->setStereoOutputSampleRate(sample_rate);
 	service->setSamplerateConversionQuality(
 	        (MT32Emu::SamplerateConversionQuality)section->Get_int("src.quality"));
 
 	if (MT32EMU_RC_OK != (rc = service->openSynth())) {
 		delete service;
 		service = nullptr;
+		MIXER_DelChannel(chan);
+		chan = nullptr;
 		LOG_MSG("MT32: Error initialising emulation: %i", rc);
 		return false;
 	}
@@ -225,12 +225,6 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 	service->setDACInputMode(DAC_MODE);
 
 	service->setNiceAmpRampEnabled(section->Get_bool("niceampramp"));
-
-	DEBUG_LOG_MSG("MT32: Adding mixer channel at sample rate %d", sampleRate);
-
-	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
-	                                      this, std::placeholders::_1);
-	chan = MIXER_AddChannel(mixer_callback, sampleRate, "MT32");
 
 	if (USE_THREADED_RENDERING) {
 		static_assert(RENDER_MIN_MS <= RENDER_MAX_MS, "Incorrect rendering sizes");
@@ -243,13 +237,13 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 		// minimum we will render RENDER_MIN_MS of audio (and force the
 		// main thread to wait)
 		minimumRenderFrames = static_cast<uint16_t>(
-		        RENDER_MIN_MS * sampleRate / MS_PER_S);
+		        RENDER_MIN_MS * sample_rate / MS_PER_S);
 
 		// In the scenario where the rendering thread is able to keep up
 		// with the playback thread, we allow it to "render ahead" by
 		// RENDER_MAX_MS to keep the audio buffer topped-up.
 		framesPerAudioBuffer = static_cast<uint16_t>(
-		        RENDER_MAX_MS * sampleRate / MS_PER_S);
+		        RENDER_MAX_MS * sample_rate / MS_PER_S);
 
 		audioBufferSize = framesPerAudioBuffer * CH_PER_FRAME;
 		audioBuffer = new int16_t[audioBufferSize];
