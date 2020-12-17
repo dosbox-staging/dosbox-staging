@@ -35,6 +35,8 @@
 
 // Munt Settings
 // -------------
+// Analogue circuit modes: DIGITAL_ONLY, COARSE, ACCURATE, OVERSAMPLED
+constexpr auto ANALOG_MODE = MT32Emu::AnalogOutputMode_ACCURATE;
 // DAC Emulation modes: NICE, PURE, GENERATION1, and GENERATION2
 constexpr auto DAC_MODE = MT32Emu::DACInputMode_NICE;
 // Render enough audio at a minimum for one video-frame (1000 ms / 70 Hz = 14.2 ms)
@@ -63,28 +65,6 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
 	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
 
-	const char *mt32analogModes[] = {"0", "1", "2", "3", 0};
-	auto *int_prop = sec_prop.Add_int("analog", when_idle, 2);
-	int_prop->Set_values(mt32analogModes);
-	int_prop->Set_help(
-	        "MT-32 analogue output emulation mode\n"
-	        "Digital = 0\n"
-	        "Only digital path is emulated. The output samples correspond to the digital output signal appeared at the DAC entrance.\n"
-	        "Fastest mode.\n\n"
-
-	        "Coarse = 1\n"
-	        "Coarse emulation of LPF circuit. High frequencies are boosted, sample rate remains unchanged.\n"
-	        "A bit better sounding but also a bit slower.\n\n"
-
-	        "Accurate = 2 - default\n"
-	        "Finer emulation of LPF circuit. Output signal is upsampled to 48 kHz to allow emulation of audible mirror spectra above 16 kHz,\n"
-	        "which is passed through the LPF circuit without significant attenuation.\n"
-	        "Sounding is closer to the analog output from real hardware but also slower than the modes 0 and 1.\n\n"
-
-	        "Oversampled = 3\n"
-	        "Same as the default mode 2 but the output signal is 2x oversampled, i.e. the output sample rate is 96 kHz.\n"
-	        "Even slower than all the other modes but better retains highest frequencies while further resampled in DOSBox mixer.");
-
 	const char *mt32reverbModes[] = {"0", "1", "2", "3", "auto", 0};
 	str_prop = sec_prop.Add_string("reverb.mode", when_idle, "auto");
 	str_prop->Set_values(mt32reverbModes);
@@ -92,7 +72,7 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 
 	const char *mt32reverbTimes[] = {"0", "1", "2", "3", "4",
 	                                 "5", "6", "7", 0};
-	int_prop = sec_prop.Add_int("reverb.time", when_idle, 5);
+	auto *int_prop = sec_prop.Add_int("reverb.time", when_idle, 5);
 	int_prop->Set_values(mt32reverbTimes);
 	int_prop->Set_help("MT-32 reverb decaying time");
 
@@ -246,8 +226,7 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 		}
 	}
 
-	service->setAnalogOutputMode(
-	        (MT32Emu::AnalogOutputMode)section->Get_int("analog"));
+	service->setAnalogOutputMode(ANALOG_MODE);
 	const auto sampleRate = static_cast<uint32_t>(section->Get_int("rate"));
 	service->setStereoOutputSampleRate(sampleRate);
 	service->setSamplerateConversionQuality(
