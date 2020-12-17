@@ -1,15 +1,5 @@
 TODO: Add these two dependencies to meson.build and remove the file
 
-Curses (optional)
-    If you want to enable the debugger you need a curses library.
-    On Linux, install ncurses-devel via your distro package manager.
-    On macOS, install ncurses via brew or macports.
-    On Windows, install pdcurses at https://pdcurses.org/, or ncurses
-    via package-manager such as pacman within an MSYS2 environment.
-    Licenses:
-      ncurses - MIT License
-      pdcurses - Public Domain
-
 alsa-lib (mandatory, Linux only)
     For ALSA audio support under linux.
     See https://www.alsa-project.org/
