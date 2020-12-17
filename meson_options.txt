@@ -22,3 +22,9 @@ option('use_png',
        type : 'boolean',
        value : true,
        description : 'Enable saving screenshots in .png format')
+
+option('enable_debugger',
+       type : 'combo',
+       choices : ['normal', 'heavy', 'none'],
+       value : 'none',
+       description : 'Build emulator with internal debugger feature.')

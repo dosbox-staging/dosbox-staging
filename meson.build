@@ -35,6 +35,14 @@ if cc.has_member('struct dirent', 'd_type', prefix : '#include<dirent.h>')
   conf_data.set('DIRENT_HAS_D_TYPE', true)
 endif
 
+if get_option('enable_debugger') != 'none'
+  conf_data.set10('C_DEBUG', true)
+endif
+
+if get_option('enable_debugger') == 'heavy'
+  conf_data.set10('C_HEAVY_DEBUG', true)
+endif
+
 configure_file(input : 'src/config.h.in', output : 'config.h',
                configuration : conf_data)
 
@@ -78,6 +86,12 @@ if get_option('use_png')
 else
   png_dep = dummy_dep
   z_dep = dummy_dep
+endif
+
+if get_option('enable_debugger') == 'none'
+  curses_dep = dummy_dep
+else
+  curses_dep = dependency('ncurses') # or pdcurses on Windows
 endif
 
 

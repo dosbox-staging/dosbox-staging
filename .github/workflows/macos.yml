@@ -14,6 +14,7 @@ jobs:
     runs-on: macos-latest
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     strategy:
+      max-parallel: 3
       matrix:
         conf:
           - name: Clang
@@ -23,6 +24,10 @@ jobs:
             packages: meson gcc@9
             build_flags: --native-file=.github/meson/native-gcc-9.ini
             max_warnings: 0
+          - name: Clang, +debug
+            packages: meson
+            build_flags: -Denable_debugger=normal
+            max_warnings: 165
           - name: Clang, warning_level=3
             packages: meson
             build_flags: -Dwarning_level=3

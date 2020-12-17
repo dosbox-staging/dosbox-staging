@@ -41,10 +41,10 @@ jobs:
           #   config_flags: --enable-tests
           #   run_tests: true
           #   max_warnings: -1
-          # - name: GCC, +debug
-          #   os: ubuntu-20.04
-          #   config_flags: --enable-debug
-          #   max_warnings: 107
+          - name: GCC, +debug
+            os: ubuntu-20.04
+            build_flags: -Denable_debugger=normal
+            max_warnings: 132
           # - name: GCC, +dynrec, -dyn_x86
           #   os: ubuntu-20.04
           #   config_flags: --disable-dynamic-x86
