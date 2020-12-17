@@ -34,6 +34,11 @@
 #include "midi.h"
 #endif
 
+// Munt Settings
+// -------------
+// Perform rendering in separate thread concurrent to DOSBox's 1-ms timer loop
+constexpr bool USE_THREADED_RENDERING = true;
+
 // MT-32 Constants
 // ---------------
 constexpr uint16_t MS_PER_S = 1000;
@@ -52,9 +57,6 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "The ROM files should be named as follows:\n"
 	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
 	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
-
-	bool_prop = sec_prop.Add_bool("thread", when_idle, false);
-	bool_prop->Set_help("MT-32 rendering in separate thread");
 
 	auto *int_prop = sec_prop.Add_int("chunk", when_idle, 16);
 	int_prop->SetMinMax(2, 100);
@@ -314,7 +316,6 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 	service->setDACInputMode((MT32Emu::DACInputMode)section->Get_int("dac"));
 
 	service->setNiceAmpRampEnabled(section->Get_bool("niceampramp"));
-	renderInThread = section->Get_bool("thread");
 
 	DEBUG_LOG_MSG("MT32: Set maximum number of partials %d",
 	              service->getPartialCount());
@@ -325,7 +326,7 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 	                                      this, std::placeholders::_1);
 	chan = MIXER_AddChannel(mixer_callback, sampleRate, "MT32");
 
-	if (renderInThread) {
+	if (USE_THREADED_RENDERING) {
 		stopProcessing = false;
 		playPos = 0;
 		const auto chunkSize = static_cast<uint16_t>(section->Get_int("chunk"));
@@ -357,7 +358,7 @@ void MidiHandler_mt32::Close()
 	if (!open)
 		return;
 	chan->Enable(false);
-	if (renderInThread) {
+	if (USE_THREADED_RENDERING) {
 		stopProcessing = true;
 		SDL_LockMutex(lock);
 		SDL_CondSignal(framesInBufferChanged);
@@ -389,7 +390,7 @@ uint32_t MidiHandler_mt32::GetMidiEventTimestamp()
 void MidiHandler_mt32::PlayMsg(const uint8_t *msg)
 {
 	const auto msg_words = reinterpret_cast<const uint32_t *>(msg);
-	if (renderInThread)
+	if (USE_THREADED_RENDERING)
 		service->playMsgAt(SDL_SwapLE32(*msg_words), GetMidiEventTimestamp());
 	else
 		service->playMsg(SDL_SwapLE32(*msg_words));
@@ -399,7 +400,7 @@ void MidiHandler_mt32::PlaySysex(uint8_t *sysex, size_t len)
 {
 	assert(len <= UINT32_MAX);
 	const auto msg_len = static_cast<uint32_t>(len);
-	if (renderInThread)
+	if (USE_THREADED_RENDERING)
 		service->playSysexAt(sysex, msg_len, GetMidiEventTimestamp());
 	else
 		service->playSysex(sysex, msg_len);
@@ -418,7 +419,7 @@ MidiHandler_mt32::~MidiHandler_mt32()
 
 void MidiHandler_mt32::MixerCallBack(uint16_t len)
 {
-	if (renderInThread) {
+	if (USE_THREADED_RENDERING) {
 		while (renderPos == playPos) {
 			SDL_LockMutex(lock);
 			SDL_CondWait(framesInBufferChanged, lock);
