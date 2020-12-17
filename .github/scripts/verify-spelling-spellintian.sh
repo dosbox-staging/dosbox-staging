@@ -3,15 +3,74 @@
 # Copyright (C) 2020  Feignint <feignint@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-##
-# TODO Usage / Summary
+# Uses spellintian from Debian's lintian package to check pull requests
+# for common spelling mistakes.
 #
+# Prerequisites:
+#
+#     lintian # sudo apt-get install lintian
+#
+# Also required but included in base (Linux) github runners:
+#
+#     bash (>= 4), jq, curl, git, grep, sed
+#
+# Usage:
+#
+#     .github/scripts/verify-spelling-spellintian.sh [--picky]
+#
+###############################################################################
+#
+# The script automatically operates in two modes: pre-build and post-build
+#
+# - pre-build  checks the lines added by commit(s) for spelling mistakes and
+# reports: "filename:line no.:: misspelt -> correction" to github's API which
+# Annotates "Files Changed" and "Job Summary" Page.
+#
+# - post-build If the script detects src/dosbox, spellintian checks the binary
+# Any results from the scan are used to "Bump" the error level of pre-build
+# detections, anything at level "error" flags the script to exit non-zero,
+# effectivly failing the job run.
+#
+# As the current verify-bash.sh script stops the job run, it makes sense to run
+# this spell check script prior to that, thus typos and shell scripting errors
+# can be fixed at the same time.
+#
+# The post-build run only need be executed on one Linux build job, preferably
+# the most recent Ubuntu version available thus newest lintian version.
+#
+# --picky is an optional mode which includes common capitalisation corrections
+#
+#     e.g. python -> Python , Gnome -> GNOME
+#
+# Since this is prone to being incorrect their error level is reduced by one
+# meaning the script will not exit non-zero as a result even if in the binary.
+# (The script will still exit non-zero if triggered by other spelling errors)
 ##
+# Alternatives
+# Since writing this script, codespell has come to my attention
+#     https://github.com/codespell-project/codespell
+# This does appear to have a superior word list and the output format is much
+# better as it includes line number and optionally context. It does lack the
+# ability to scan a binary out-of-the-box
 
 set -e
 
+is_pull ()
+{
+  # "." vs "/" . I've been using refs_pull_nnn_merge.json
+  # locally for testing ;)
+  [[ ${GITHUB_REF} =~ refs.pull.[0-9]+.merge ]] ||
+    {
+      >&2 printf "%s " "${0}:" "${GITHUB_REF}" "not a PR, skipped"
+      >&2 printf "\n"
+      exit 0
+    }
+}
+
 main ()
 {
+  is_pull
+
   for opt in "${@}"
   do
     case ${opt} in
@@ -26,7 +85,11 @@ main ()
     esac
   done
 
+  # report spellintian version
+  spellintian --version >&2
+
   repo_root="$( git -C "${0%/*}" rev-parse --show-toplevel )"
+  # really script should bail here if no git
 
   # Load ignore list
   readarray -t  < <( grep -v "^#" <"${repo_root}/.spellintian-ignore" )
@@ -63,6 +126,8 @@ Get_filename_range ()
           .|select(.hunk_line|test("\\b'"${TYPO//\"}"'\\b"))
            |.filename + ":" + .range|sub(",";",+")
         ' <<<"$patch_additions_json"
+  # outputs:
+  #     filename:nnn,+n
 }
 
 _github_PR ()
@@ -165,11 +230,8 @@ check_binary ()
   printf -v in_binary "%s" "${typo_in_binary[*]}"
   # If typo was in binary, kill the bird.
   [[ -z ${in_binary} ]] || Canary=dead
-}
-
-PR_comment ()
-{
-  : # TODO
+  # NOTE: The ignore list is not used here
+  # This hasn't been a problem thus far
 }
 
 Canary=alive
