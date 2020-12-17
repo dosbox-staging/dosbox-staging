@@ -409,13 +409,14 @@ void MidiHandler_mt32::PlayMsg(const uint8_t *msg)
 	}
 }
 
-void MidiHandler_mt32::PlaySysex(Bit8u *sysex, Bitu len)
+void MidiHandler_mt32::PlaySysex(uint8_t *sysex, size_t len)
 {
-	if (renderInThread) {
-		service->playSysexAt(sysex, len, getMidiEventTimestamp());
-	} else {
-		service->playSysex(sysex, len);
-	}
+	assert(len <= UINT32_MAX);
+	const auto msg_len = static_cast<uint32_t>(len);
+	if (renderInThread)
+		service->playSysexAt(sysex, msg_len, GetMidiEventTimestamp());
+	else
+		service->playSysex(sysex, msg_len);
 }
 
 int MidiHandler_mt32::processingThread(void *)
