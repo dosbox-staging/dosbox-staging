@@ -35,6 +35,8 @@
 
 // Munt Settings
 // -------------
+// DAC Emulation modes: NICE, PURE, GENERATION1, and GENERATION2
+constexpr auto DAC_MODE = MT32Emu::DACInputMode_NICE;
 // Render enough audio at a minimum for one video-frame (1000 ms / 70 Hz = 14.2 ms)
 constexpr uint8_t RENDER_MIN_MS = 15;
 // Render enough audio at a maximum for three video-frames, capping latency
@@ -61,34 +63,8 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
 	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
 
-	const char *mt32DACModes[] = {"0", "1", "2", "3", 0};
-	auto *int_prop = sec_prop.Add_int("dac", when_idle, 0);
-	int_prop->Set_values(mt32DACModes);
-	int_prop->Set_help(
-	        "MT-32 DAC input emulation mode\n"
-	        "Nice = 0 - default\n"
-	        "Produces samples at double the volume, without tricks.\n"
-	        "Higher quality than the real devices\n\n"
-
-	        "Pure = 1\n"
-	        "Produces samples that exactly match the bits output from the emulated LA32.\n"
-	        "Nicer overdrive characteristics than the DAC hacks (it simply clips samples within range)\n"
-	        "Much less likely to overdrive than any other mode.\n"
-	        "Half the volume of any of the other modes.\n"
-	        "Perfect for developers while debugging :)\n\n"
-
-	        "GENERATION1 = 2\n"
-	        "Re-orders the LA32 output bits as in early generation MT-32s (according to Wikipedia).\n"
-	        "Bit order at DAC (where each number represents the original LA32 output bit number, and XX means the bit is always low):\n"
-	        "15 13 12 11 10 09 08 07 06 05 04 03 02 01 00 XX\n\n"
-
-	        "GENERATION2 = 3\n"
-	        "Re-orders the LA32 output bits as in later generations (personally confirmed on my CM-32L - KG).\n"
-	        "Bit order at DAC (where each number represents the original LA32 output bit number):\n"
-	        "15 13 12 11 10 09 08 07 06 05 04 03 02 01 00 14");
-
 	const char *mt32analogModes[] = {"0", "1", "2", "3", 0};
-	int_prop = sec_prop.Add_int("analog", when_idle, 2);
+	auto *int_prop = sec_prop.Add_int("analog", when_idle, 2);
 	int_prop->Set_values(mt32analogModes);
 	int_prop->Set_help(
 	        "MT-32 analogue output emulation mode\n"
@@ -293,7 +269,7 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 		service->setReverbOverridden(true);
 	}
 
-	service->setDACInputMode((MT32Emu::DACInputMode)section->Get_int("dac"));
+	service->setDACInputMode(DAC_MODE);
 
 	service->setNiceAmpRampEnabled(section->Get_bool("niceampramp"));
 
