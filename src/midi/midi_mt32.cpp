@@ -61,13 +61,8 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
 	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
 
-	auto *int_prop = sec_prop.Add_int("partials", when_idle, 32);
-	int_prop->SetMinMax(8, 256);
-	int_prop->Set_help(
-	        "The maximum number of partials playing simultaneously. (min 8, max 256");
-
 	const char *mt32DACModes[] = {"0", "1", "2", "3", 0};
-	int_prop = sec_prop.Add_int("dac", when_idle, 0);
+	auto *int_prop = sec_prop.Add_int("dac", when_idle, 0);
 	int_prop->Set_values(mt32DACModes);
 	int_prop->Set_help(
 	        "MT-32 DAC input emulation mode\n"
@@ -275,8 +270,6 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 		}
 	}
 
-	const auto num_partials = static_cast<uint32_t>(section->Get_int("partials"));
-	service->setPartialCount(num_partials);
 	service->setAnalogOutputMode(
 	        (MT32Emu::AnalogOutputMode)section->Get_int("analog"));
 	const auto sampleRate = static_cast<uint32_t>(section->Get_int("rate"));
@@ -303,9 +296,6 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 	service->setDACInputMode((MT32Emu::DACInputMode)section->Get_int("dac"));
 
 	service->setNiceAmpRampEnabled(section->Get_bool("niceampramp"));
-
-	DEBUG_LOG_MSG("MT32: Set maximum number of partials %d",
-	              service->getPartialCount());
 
 	DEBUG_LOG_MSG("MT32: Adding mixer channel at sample rate %d", sampleRate);
 
