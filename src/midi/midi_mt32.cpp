@@ -53,9 +53,6 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
 	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
 
-	bool_prop = sec_prop.Add_bool("verbose", when_idle, false);
-	bool_prop->Set_help("MT-32 debug logging");
-
 	bool_prop = sec_prop.Add_bool("thread", when_idle, false);
 	bool_prop->Set_help("MT-32 rendering in separate thread");
 
@@ -177,15 +174,11 @@ static mt32emu_report_handler_i get_report_handler_interface()
 			return MT32EMU_REPORT_HANDLER_VERSION_0;
 		}
 
-		static void printDebug(void *instance_data, const char *fmt, va_list list)
+		static void printDebug(void * /*instance_data*/, const char *fmt, va_list list)
 		{
-			MidiHandler_mt32 &midiHandler_mt32 = *(
-			        MidiHandler_mt32 *)instance_data;
-			if (midiHandler_mt32.noise) {
-				char s[1024];
-				safe_sprintf(s, fmt, list);
-				LOG_MSG("MT32: %s", s);
-			}
+			char s[1024];
+			safe_sprintf(s, fmt, list);
+			DEBUG_LOG_MSG("MT32: %s", s);
 		}
 
 		static void onErrorControlROM(void *)
@@ -321,15 +314,12 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 	service->setDACInputMode((MT32Emu::DACInputMode)section->Get_int("dac"));
 
 	service->setNiceAmpRampEnabled(section->Get_bool("niceampramp"));
-	noise = section->Get_bool("verbose");
 	renderInThread = section->Get_bool("thread");
 
-	if (noise)
-		LOG_MSG("MT32: Set maximum number of partials %d",
-		        service->getPartialCount());
+	DEBUG_LOG_MSG("MT32: Set maximum number of partials %d",
+	              service->getPartialCount());
 
-	if (noise)
-		LOG_MSG("MT32: Adding mixer channel at sample rate %d", sampleRate);
+	DEBUG_LOG_MSG("MT32: Adding mixer channel at sample rate %d", sampleRate);
 
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
 	                                      this, std::placeholders::_1);
