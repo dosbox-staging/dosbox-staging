@@ -45,6 +45,8 @@ constexpr uint8_t RENDER_MIN_MS = 15;
 constexpr uint8_t RENDER_MAX_MS = RENDER_MIN_MS * 3;
 // Sample rate conversion quality: FASTEST, FAST, GOOD, BEST
 constexpr auto RATE_CONVERSION_QUALITY = MT32Emu::SamplerateConversionQuality_BEST;
+// Use improved amplitude ramp characteristics for sustaining instruments
+constexpr bool USE_NICE_RAMP = true;
 // Perform rendering in separate thread concurrent to DOSBox's 1-ms timer loop
 constexpr bool USE_THREADED_RENDERING = true;
 
@@ -59,21 +61,12 @@ MidiHandler_mt32 mt32_instance;
 static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
-
 	auto *str_prop = sec_prop.Add_string("romdir", when_idle, "");
 	str_prop->Set_help(
 	        "The directory holding the required MT-32 Control and PCM ROMs.\n"
 	        "The ROM files should be named as follows:\n"
 	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
 	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
-
-	auto *bool_prop = sec_prop.Add_bool("niceampramp", when_idle, true);
-	bool_prop->Set_help(
-	        "Toggles \"Nice Amp Ramp\" mode that improves amplitude ramp for sustaining instruments.\n"
-	        "Quick changes of volume or expression on a MIDI channel may result in amp jumps on real hardware.\n"
-	        "When \"Nice Amp Ramp\" mode is enabled, amp changes gradually instead.\n"
-	        "Otherwise, the emulation accuracy is preserved.\n"
-	        "Default is true.");
 }
 
 static mt32emu_report_handler_i get_report_handler_interface()
@@ -217,8 +210,7 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 	}
 
 	service->setDACInputMode(DAC_MODE);
-
-	service->setNiceAmpRampEnabled(section->Get_bool("niceampramp"));
+	service->setNiceAmpRampEnabled(USE_NICE_RAMP);
 
 	if (USE_THREADED_RENDERING) {
 		static_assert(RENDER_MIN_MS <= RENDER_MAX_MS, "Incorrect rendering sizes");
