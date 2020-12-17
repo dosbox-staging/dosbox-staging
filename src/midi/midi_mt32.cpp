@@ -53,9 +53,6 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
 	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
 
-	auto *bool_prop = sec_prop.Add_bool("reverse.stereo", when_idle, false);
-	bool_prop->Set_help("Reverse stereo channels for MT-32 output");
-
 	bool_prop = sec_prop.Add_bool("verbose", when_idle, false);
 	bool_prop->Set_help("MT-32 debug logging");
 
@@ -162,7 +159,7 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "MT-32 sample rate conversion quality\n"
 	        "Value '0' is for the fastest conversion, value '3' provides for the best conversion quality. Default is 2.");
 
-	bool_prop = sec_prop.Add_bool("niceampramp", when_idle, true);
+	auto *bool_prop = sec_prop.Add_bool("niceampramp", when_idle, true);
 	bool_prop->Set_help(
 	        "Toggles \"Nice Amp Ramp\" mode that improves amplitude ramp for sustaining instruments.\n"
 	        "Quick changes of volume or expression on a MIDI channel may result in amp jumps on real hardware.\n"
@@ -323,7 +320,6 @@ bool MidiHandler_mt32::Open(const char * /* conf */)
 
 	service->setDACInputMode((MT32Emu::DACInputMode)section->Get_int("dac"));
 
-	service->setReversedStereoEnabled(section->Get_bool("reverse.stereo"));
 	service->setNiceAmpRampEnabled(section->Get_bool("niceampramp"));
 	noise = section->Get_bool("verbose");
 	renderInThread = section->Get_bool("thread");
