@@ -75,6 +75,7 @@ MidiHandler Midi_none;
    Each header provides an independent midi interface. */
 
 #include "midi_fluidsynth.h"
+#include "midi_mt32.h"
 
 #if defined(MACOSX)
 
@@ -261,6 +262,11 @@ getdefault:
 				// Users needs to opt-in, otherwise
 				// fluidsynth will slow down emulator
 				// startup for all games.
+				continue;
+			}
+			if (name == "mt32") {
+				// Never select mt32 automatically.
+				// Users needs to opt-in.
 				continue;
 			}
 			if (handler->Open(conf)) {

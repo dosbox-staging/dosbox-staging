@@ -39,7 +39,7 @@
 /* Enable memory function inlining in */
 #define C_CORE_INLINE 1
 
-/* Define to 1 to enable FluidSynth MIDI synthesiser */
+/* Define to 1 to enable FluidSynth MIDI synthesizer */
 #define C_FLUIDSYNTH 1
 
 /* Enable the FPU module, still only for beta testing */

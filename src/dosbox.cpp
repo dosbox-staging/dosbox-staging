@@ -616,28 +616,35 @@ void DOSBOX_Init(void) {
 #if C_FLUIDSYNTH
 		"fluidsynth",
 #endif
+#if C_MT32EMU
+		"mt32",
+#endif
 		"none",
-		0
-	};
+		0 };
+
 	pstring->Set_values(midi_devices);
 	pstring->Set_help(
 	        "Device that will receive the MIDI data (from the emulated MIDI\n"
-	        "interface - MPU-401).\n"
+	        "interface - MPU-401). Choose one of the following:\n"
 #if C_FLUIDSYNTH
-	        "Use 'fluidsynth' to select built-in software synthesiser,\n"
-	        "see the fluidsynth section for detailed configuration.\n"
+	        "'fluidsynth', to use the built-in MIDI synthesizer. See the\n"
+	        "       [fluidsynth] section for detailed configuration.\n"
 #endif
-	        "Use 'auto' to pick the first working external device.");
+#if C_MT32EMU
+	        "'mt32', to use the built-in Roland MT-32 synthesizer.\n"
+	        "       See the [mt32] section for detailed configuration.\n"
+#endif
+	        "'auto', to use the first working external MIDI player. This\n"
+	        "       might be a software synthesizer or physical device.");
 
 	pstring = secprop->Add_string("midiconfig", when_idle, "");
 	pstring->Set_help(
 	        "Configuration options for the selected MIDI interface.\n"
-	        "This is usually the id or name of the MIDI synthesiser you want\n"
+	        "This is usually the id or name of the MIDI synthesizer you want\n"
 	        "to use (find the id/name with DOS command 'mixer /listmidi').\n"
-#if C_FLUIDSYNTH
-	        "- When using the built-in FluidSynth (mididevice = fluidsynth),\n"
-	        "  this option has no effect. Instead, configure FluidSynth using\n"
-	        "  the dedicated [fluidsynth] section below.\n"
+#if (C_FLUIDSYNTH == 1 || C_MT32EMU == 1)
+	        "- This option has no effect when using the built-in synthesizers\n"
+	        "  (mididevice = fluidsynth or mt32).\n"
 #endif
 #ifdef C_SUPPORTS_COREAUDIO
 	        "- When using CoreAudio, you can specify a soundfont here.\n"
@@ -647,9 +654,9 @@ void DOSBOX_Init(void) {
 	        "  MIDI ports, and select one (for example 'midiconfig=14:0'\n"
 	        "  for sequencer client 14, port 0).\n"
 #endif
-	        "- When using a Roland MT-32 rev.0 as midi output device, some\n"
-	        "  games may require a delay in order to prevent MT-32 hardware\n"
-	        "  buffer overflow issues. In that case, add 'delaysysex',\n"
+	        "- If you're using a physical Roland MT-32 with revision 0 PCB,\n"
+	        "  the hardware may require a delay in order to prevent its\n"
+	        "  buffer from overflowing. In that case, add 'delaysysex',\n"
 	        "  for example: 'midiconfig=2 delaysysex'.\n"
 	        "See the README/Manual for more details.");
 
@@ -660,6 +667,10 @@ void DOSBOX_Init(void) {
 
 #if C_FLUIDSYNTH
 	FLUID_AddConfigSection(control);
+#endif
+
+#if C_MT32EMU
+	MT32_AddConfigSection(control);
 #endif
 
 #if C_DEBUG

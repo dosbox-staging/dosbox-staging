@@ -506,10 +506,10 @@ AS_IF([test "x${enable_opus_cdda}" != "xno"],
 AM_CONDITIONAL(USE_OPUS, test "${HAVE_OPUS}" = "yes")
 
 
-dnl FluidSynth software MIDI synthesiser
+dnl FluidSynth software MIDI synthesizer
 dnl ------------------------------------
 dnl
-AH_TEMPLATE(C_FLUIDSYNTH, [Define to 1 to enable FluidSynth MIDI synthesiser])
+AH_TEMPLATE(C_FLUIDSYNTH, [Define to 1 to enable FluidSynth MIDI synthesizer])
 AC_ARG_ENABLE(fluidsynth,
               AS_HELP_STRING([--disable-fluidsynth],
                              [Disable FluidSynth integration]))
@@ -525,6 +525,26 @@ if test "${enable_fluidsynth}" != "no" ; then
 else
     AC_DEFINE(C_FLUIDSYNTH,0)
     AC_MSG_WARN([FluidSynth integration disabled])
+fi
+
+
+dnl mt32emu Roland MT-32 audio synthesizer
+dnl --------------------------------------
+dnl
+AH_TEMPLATE(C_MT32EMU, [Define to 1 to enable mt32emu, an MT-32 audio synthesizer])
+AC_ARG_ENABLE(mt32,
+              AS_HELP_STRING(--enable-mt32, Enable Roland MT-32 audio synthesizer support),
+              disable_mt32=no)
+if test "${disable_mt32}" != "no" -o "${enable_mt32}" != "yes"; then
+    AC_DEFINE(C_MT32EMU, 0)
+    AC_MSG_WARN([Roland MT-32 audio synthesizer support disabled. Enable it with --enable-mt32])
+else
+    LIBS="$LIBS -lmt32emu"
+    AC_CHECK_HEADER(mt32emu/mt32emu.h, HAVE_MT32EMU_H=yes, HAVE_MT32EMU_H=no)
+    AS_IF(test "${HAVE_MT32EMU_H}" != "yes",
+          AC_MSG_ERROR(Munt's mt32emu header <mt32emu/mt32emu.h> not found in include path))
+    AC_DEFINE(C_MT32EMU, 1)
+    AC_MSG_NOTICE([Roland MT-32 audio synthesizer support enabled])
 fi
 
 

@@ -2763,9 +2763,7 @@ void GFX_Events() {
 				break;
 			}
 #endif
-		default:
-			void MAPPER_CheckEvent(SDL_Event * event);
-			MAPPER_CheckEvent(&event);
+		default: MAPPER_CheckEvent(&event);
 		}
 	}
 }

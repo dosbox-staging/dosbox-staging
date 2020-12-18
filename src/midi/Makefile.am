@@ -10,5 +10,7 @@ libmidi_a_SOURCES = \
 	midi_fluidsynth.cpp \
 	midi_fluidsynth.h \
 	midi_handler.h \
+	midi_mt32.cpp \
+	midi_mt32.h \
 	midi_oss.h \
 	midi_win32.h
