@@ -22,4 +22,21 @@ main () {
 	list_bash_files | xargs -L 1000 shellcheck --color "$@"
 }
 
-main "$@"
+Anotate_github () {
+	jq -r -j \
+		'.comments[]
+		 |"::error"
+		 ," file=",.file
+		 ,",line=",.line
+		 ,"::SC",.code,": ",.message
+		 ,"\n"
+		' | grep "" || return 0 && return 123
+# return 123 same as xargs return code would be
+}
+
+if [[ -z $GITHUB_ACTOR ]]
+then
+	main "$@"
+else
+	Anotate_github < <( main --format=json1 "$@" )
+fi
