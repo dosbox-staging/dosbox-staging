@@ -33,15 +33,15 @@
 #include "midi.h"
 #endif
 
-// Munt Settings
-// -------------
+// mt32emu Settings
+// ----------------
 // Analogue circuit modes: DIGITAL_ONLY, COARSE, ACCURATE, OVERSAMPLED
 constexpr auto ANALOG_MODE = MT32Emu::AnalogOutputMode_ACCURATE;
 // DAC Emulation modes: NICE, PURE, GENERATION1, and GENERATION2
 constexpr auto DAC_MODE = MT32Emu::DACInputMode_NICE;
-// Render enough audio at a minimum for one video-frame (1000 ms / 70 Hz = 14.2 ms)
+// Render at least one video-frames worth of audio (1000 ms / 70 Hz = 14.2 ms)
 constexpr uint8_t RENDER_MIN_MS = 15;
-// Render enough audio at a maximum for three video-frames, capping latency
+// Render up to three video-frames at most, capping latency to 45ms
 constexpr uint8_t RENDER_MAX_MS = RENDER_MIN_MS * 3;
 // Sample rate conversion quality: FASTEST, FAST, GOOD, BEST
 constexpr auto RATE_CONVERSION_QUALITY = MT32Emu::SamplerateConversionQuality_BEST;
@@ -50,8 +50,8 @@ constexpr bool USE_NICE_RAMP = true;
 // Perform rendering in separate thread concurrent to DOSBox's 1-ms timer loop
 constexpr bool USE_THREADED_RENDERING = true;
 
-// MT-32 Constants
-// ---------------
+// mt32emu Constants
+// -----------------
 constexpr uint16_t MS_PER_S = 1000;
 constexpr uint8_t CH_PER_FRAME = 2; // left and right channels
 
@@ -220,16 +220,14 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 		stopProcessing = false;
 		playPos = 0;
 
-		// In the scenario where the mixer playback thread waits on the
-		// rendering thread because its fallen behind), then at a
-		// minimum we will render RENDER_MIN_MS of audio (and force the
-		// main thread to wait)
+		// If the mixer's playback thread stalls waiting for the
+		// rendering thread to produce samples, then at a minimum we
+		// will RENDER_MIN_MS of audio.
 		minimumRenderFrames = static_cast<uint16_t>(
 		        RENDER_MIN_MS * sample_rate / MS_PER_S);
 
-		// In the scenario where the rendering thread is able to keep up
-		// with the playback thread, we allow it to "render ahead" by
-		// RENDER_MAX_MS to keep the audio buffer topped-up.
+		// Allow the rendering thread to synthesize up to RENDER_MAX_MS
+		// of audio (to keep the buffer topped-up).
 		framesPerAudioBuffer = static_cast<uint16_t>(
 		        RENDER_MAX_MS * sample_rate / MS_PER_S);
 
