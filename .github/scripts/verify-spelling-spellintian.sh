@@ -188,6 +188,7 @@ _github_PR ()
 
       # Get line number.
       LN="$(
+             set -x
              git -C "${repo_root}" grep -h -n "" -- "${FN}" \
              | sed -E -n ''"${RANGE}"'{s/^([0-9]+):.*\b'"${TYPO}"'\b.*/\1/p}'
            )"
@@ -242,3 +243,4 @@ errlevel=1 # default, warning
 main "${@}"
 
 [[ $Canary == alive ]]
+exit 1
