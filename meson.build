@@ -2,6 +2,8 @@ project('dosbox-staging', 'c', 'cpp',
         default_options : ['cpp_std=c++14', 'b_ndebug=if-release'],
         version : '0.77.0')
 
+assert(meson.version().version_compare('>= 0.45.1'),
+       'Expecting meson 0.45.1 or newer.')
 
 # compiler flags
 #
@@ -124,6 +126,19 @@ subdir('src/ints')
 subdir('src/midi')
 subdir('src/misc')
 subdir('src/shell')
+
+
+# tests
+#
+# We use dictionaries for test declarations, dictionaries were added
+# in meson 0.47.0.
+#
+if meson.version().version_compare('>= 0.47.0')
+  # Some tests use relative paths; in meson 0.56.0 this can be replaced
+  # with meson.project_source_root().
+  project_source_root = meson.current_source_dir()
+  subdir('tests')
+endif
 
 
 # dosbox executable
