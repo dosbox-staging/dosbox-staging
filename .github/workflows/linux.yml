@@ -35,12 +35,11 @@ jobs:
             os: ubuntu-16.04
             build_flags: -Duse_fluidsynth=false
             max_warnings: 0
-          # - name: GCC, +tests
-          #   os: ubuntu-20.04
-          #   packages: libgtest-dev
-          #   config_flags: --enable-tests
-          #   run_tests: true
-          #   max_warnings: -1
+          - name: GCC, +tests
+            os: ubuntu-20.04
+            packages: libgtest-dev
+            run_tests: true
+            max_warnings: -1
           - name: GCC, +debug
             os: ubuntu-20.04
             build_flags: -Denable_debugger=normal
@@ -112,7 +111,7 @@ jobs:
 
       - name: Run tests
         if:   matrix.conf.run_tests
-        run:  ./tests/tests
+        run:  meson test -C build
 
       - name: Summarize warnings
         if:   matrix.conf.run_tests != true

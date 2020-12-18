@@ -24,6 +24,10 @@ jobs:
             packages: meson gcc@9
             build_flags: --native-file=.github/meson/native-gcc-9.ini
             max_warnings: 0
+          - name: Clang, +tests
+            packages: meson
+            run_tests: true
+            max_warnings: -1
           - name: Clang, +debug
             packages: meson
             build_flags: -Denable_debugger=normal
@@ -55,9 +59,9 @@ jobs:
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-macos-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.today }}
+          key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.today }}
           restore-keys: |
-            ccache-macos-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.yesterday }}
+            ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.yesterday }}
 
       - name: Log environment
         run:  ./scripts/log-env.sh
@@ -68,7 +72,12 @@ jobs:
           meson setup ${{ matrix.conf.build_flags }} build
           meson compile -C build 2>&1 | tee build.log
 
+      - name: Run tests
+        if:   matrix.conf.run_tests
+        run:  meson test -C build
+
       - name: Summarize warnings
+        if:   matrix.conf.run_tests != true
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:  python3 ./scripts/count-warnings.py -lf build.log
