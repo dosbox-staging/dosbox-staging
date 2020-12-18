@@ -78,7 +78,9 @@ static mt32emu_report_handler_i get_report_handler_interface()
 			return MT32EMU_REPORT_HANDLER_VERSION_0;
 		}
 
-		static void printDebug(void * /*instance_data*/, const char *fmt, va_list list)
+		static void printDebug(MAYBE_UNUSED void *instance_data,
+		                       const char *fmt,
+		                       va_list list)
 		{
 			char s[1024];
 			safe_sprintf(s, fmt, list);
@@ -136,7 +138,7 @@ static void make_rom_path(char pathName[],
 	strcat(pathName, fileName);
 }
 
-bool MidiHandler_mt32::Open(const char * /* conf */)
+bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 {
 	service = new MT32Emu::Service();
 	uint32_t version = service->getLibraryVersionInt();
@@ -299,7 +301,7 @@ void MidiHandler_mt32::PlaySysex(uint8_t *sysex, size_t len)
 		service->playSysex(sysex, msg_len);
 }
 
-int MidiHandler_mt32::ProcessingThread(void *)
+int MidiHandler_mt32::ProcessingThread(MAYBE_UNUSED void *data)
 {
 	mt32_instance.RenderingLoop();
 	return 0;
@@ -384,7 +386,7 @@ void MidiHandler_mt32::RenderingLoop()
 	}
 }
 
-static void mt32_init(Section * /* sec */)
+static void mt32_init(MAYBE_UNUSED Section *sec)
 {}
 
 void MT32_AddConfigSection(Config *conf)

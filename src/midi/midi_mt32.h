@@ -49,7 +49,7 @@ public:
 private:
 	uint32_t GetMidiEventTimestamp() const;
 	void MixerCallBack(uint16_t len);
-	static int ProcessingThread(void *);
+	static int ProcessingThread(void *data);
 	void RenderingLoop();
 
 	// TODO: replace pointers with std::unique_ptr
