@@ -1,13 +1,5 @@
 /*
- * DOSBox MP3 Seek Table Handler
- * -----------------------------
- * See mp3_seek_table.cpp for more documentation.
- *
- * The seek table handler makes use of the following single-header
- * public libraries:
- *   - dr_mp3: http://mackron.github.io/dr_mp3.html, by David Reid
- *   - archive: https://github.com/voidah/archive, by Arthur Ouellet
- *   - xxHash: http://cyan4973.github.io/xxHash, by Yann Collet
+ *  SPDX-License-Identifier: GPL-2.0-or-later
  *
  *  Copyright (C) 2020       The dosbox-staging team
  *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
@@ -26,6 +18,22 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+
+#ifndef DOSBOX_MP3_SEEK_TABLE_H
+#define DOSBOX_MP3_SEEK_TABLE_H
+
+/* DOSBox MP3 Seek Table Handler
+ * -----------------------------
+ * See mp3_seek_table.cpp for more documentation.
+ *
+ * The seek table handler makes use of the following single-header
+ * public libraries:
+ *   - dr_mp3: http://mackron.github.io/dr_mp3.html, by David Reid
+ *   - archive: https://github.com/voidah/archive, by Arthur Ouellet
+ *   - xxHash: http://cyan4973.github.io/xxHash, by Yann Collet
+ */
+
+#include "config.h"
 
 #include <vector>    // provides: vector
 #include <SDL.h>     // provides: SDL_RWops
@@ -63,3 +71,5 @@ uint64_t populate_seek_points(struct SDL_RWops* const context,
                               mp3_t* p_mp3,
                               const char* seektable_filename,
                               bool &result);
+
+#endif

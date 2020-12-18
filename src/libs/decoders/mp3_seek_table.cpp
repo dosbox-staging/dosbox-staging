@@ -1,5 +1,25 @@
 /*
- *  DOSBox MP3 Seek Table Handler
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2020       The dosbox-staging team
+ *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+/*  DOSBox MP3 Seek Table Handler
  *  -----------------------------
  *
  * Problem:
@@ -49,33 +69,9 @@
  *          The seek-table file is versioned (see SEEK_TABLE_IDENTIFIER befow),
  *          therefore, if the format and version is updated, then the seek-table
  *          will be regenerated.
-
- * The seek table handler makes use of the following single-header public libraries:
- *   - dr_mp3:   http://mackron.github.io/dr_mp3.html, by David Reid
- *   - archive:  https://github.com/voidah/archive, by Arthur Ouellet
- *   - xxHash:   http://cyan4973.github.io/xxHash, by Yann Collet
- *
- *  Copyright (C) 2020       The dosbox-staging team
- *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#if HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include "mp3_seek_table.h"
 
 // System headers
 #include <sys/stat.h>
@@ -88,7 +84,6 @@
 
 #define XXH_INLINE_ALL
 #include "xxhash.h"
-#include "mp3_seek_table.h"
 
 // C++ scope modifiers
 using std::map;
