@@ -25,17 +25,15 @@
 #if C_MT32EMU
 
 #include <cassert>
-#include <list>
+#include <vector>
+
 #include <SDL_endian.h>
 
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
-#include "string_utils.h"
-
-#ifndef DOSBOX_MIDI_H
 #include "midi.h"
-#endif
+#include "string_utils.h"
 
 // mt32emu Settings
 // ----------------
@@ -88,7 +86,7 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 
 #if defined(WIN32)
 
-static std::list<std::string> get_rom_dirs(const std::string &preferred_dir)
+static std::vector<std::string> get_rom_dirs(const std::string &preferred_dir)
 {
 	return {
 	        preferred_dir,
@@ -99,7 +97,7 @@ static std::list<std::string> get_rom_dirs(const std::string &preferred_dir)
 
 #elif defined(MACOSX)
 
-static std::list<std::string> get_rom_dirs(const std::string &preferred_dir)
+static std::vector<std::string> get_rom_dirs(const std::string &preferred_dir)
 {
 	return {
 	        preferred_dir,
@@ -112,7 +110,7 @@ static std::list<std::string> get_rom_dirs(const std::string &preferred_dir)
 
 #else
 
-static std::list<std::string> get_rom_dirs(const std::string &preferred_dir)
+static std::vector<std::string> get_rom_dirs(const std::string &preferred_dir)
 {
 	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
 	const auto xdg_data_home = CROSS_ResolveHome(
@@ -146,7 +144,7 @@ static bool load_rom_set(const std::string &ctr_path,
 }
 
 static bool find_and_load(const std::string &model,
-                          const std::list<std::string> &rom_dirs,
+                          const std::vector<std::string> &rom_dirs,
                           MT32Emu::Service *service)
 {
 	const std::string ctr_rom = model + "_CONTROL.ROM";
