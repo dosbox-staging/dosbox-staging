@@ -384,7 +384,7 @@ MidiHandler_mt32::~MidiHandler_mt32()
 	Close();
 }
 
-void MidiHandler_mt32::MixerCallBack(uint16_t len)
+void MidiHandler_mt32::MixerCallBack(uint16_t frames)
 {
 	if (USE_THREADED_RENDERING) {
 		while (renderPos == playPos) {
@@ -399,12 +399,12 @@ void MidiHandler_mt32::MixerCallBack(uint16_t len)
 		const uint16_t samplesReady = (renderPosSnap < playPosSnap)
 		                                      ? audioBufferSize - playPosSnap
 		                                      : renderPosSnap - playPosSnap;
-		if (len > (samplesReady / CH_PER_FRAME)) {
+		if (frames > (samplesReady / CH_PER_FRAME)) {
 			assert(samplesReady <= UINT16_MAX);
-			len = samplesReady / CH_PER_FRAME;
+			frames = samplesReady / CH_PER_FRAME;
 		}
-		chan->AddSamples_s16(len, audioBuffer + playPosSnap);
-		playPosSnap += (len * CH_PER_FRAME);
+		chan->AddSamples_s16(frames, audioBuffer + playPosSnap);
+		playPosSnap += (frames * CH_PER_FRAME);
 		while (audioBufferSize <= playPosSnap) {
 			playPosSnap -= audioBufferSize;
 			playedBuffers++;
@@ -421,8 +421,8 @@ void MidiHandler_mt32::MixerCallBack(uint16_t len)
 		}
 	} else {
 		auto buffer = reinterpret_cast<int16_t *>(MixTemp);
-		service->renderBit16s(buffer, len);
-		chan->AddSamples_s16(len, buffer);
+		service->renderBit16s(buffer, frames);
+		chan->AddSamples_s16(frames, buffer);
 	}
 }
 
