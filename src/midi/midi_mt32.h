@@ -38,6 +38,8 @@
 
 #include "mixer.h"
 
+using mt32_service_ptr_t = std::unique_ptr<MT32Emu::Service>;
+
 class MidiHandler_mt32 final : public MidiHandler {
 private:
 	using mixer_channel_ptr_t =
@@ -59,9 +61,9 @@ private:
 	void RenderingLoop();
 
 	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
+	mt32_service_ptr_t service{};
 
 	// TODO: replace pointers with std::unique_ptr
-	MT32Emu::Service *service = nullptr;
 	SDL_Thread *thread = nullptr;
 	SDL_mutex *lock = nullptr;
 	SDL_cond *framesInBufferChanged = nullptr;
