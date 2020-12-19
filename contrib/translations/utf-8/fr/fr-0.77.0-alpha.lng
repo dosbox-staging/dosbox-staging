@@ -926,11 +926,11 @@ Using multiple files is only supported for cue/iso images.
 
 .
 :PROGRAM_KEYB_INFO
-Codepage %i has been loaded
+La page de code %i a été chargée
 
 .
 :PROGRAM_KEYB_INFO_LAYOUT
-Codepage %i has been loaded for layout %s
+La page de code %i a été chargée pour la disposition %s
 
 .
 :PROGRAM_KEYB_SHOWHELP
@@ -944,7 +944,7 @@ Some examples:
 
 .
 :PROGRAM_KEYB_NOERROR
-Keyboard layout %s loaded for codepage %i
+La disposition clavier %s est chargée pour la page de code %i
 
 .
 :PROGRAM_KEYB_FILENOTFOUND
@@ -1155,16 +1155,17 @@ SUBST failed. You either made an error in your commandline or the target drive i
 It's only possible to use SUBST on Local drives
 .
 :SHELL_STARTUP_BEGIN
-[44;1m╔════════════════════════════════════════════════════════════════════╗
-║ [32mWelcome to DOSBox Staging %-40s[37m ║
-║                                                                    ║
-║ For a short introduction for new users type: [33mINTRO[37m                 ║
-║ For supported shell commands type: [33mHELP[37m                            ║
-║                                                                    ║
-║ To adjust the emulated CPU speed, use [31mctrl-F11[37m and [31mctrl-F12[37m.       ║
-║ To activate the keymapper [31mctrl-F1[37m.                                 ║
-║ For more information read the [36mREADME[37m file in the DOSBox directory. ║
-║                                                                    ║
+[44;1m╔════════════════════════════════════════════════════════════════════════════╗
+║ [32mBienvenue dans DOSBox Staging %-44s[37m ║
+║                                                                            ║
+║ Pour une courte introduction pour les nouveaux utilisateurs, taper: [33mINTRO[37m  ║
+║ Pour la liste des commandes supportées par le shell, taper: [1;33mHELP[37m           ║
+║                                                                            ║
+║ Pour ajuster la vitesse du CPU émulé, essayer [31mCtrl-F11[37m et [31mCtrl-F12[37m.        ║
+║ Pour activer le keymapper [31mCtrl-F1[37m.                                         ║
+║ Pour plus d'informations, lire le fichier [36mREADME[37m dans le répertoire de     ║
+║ DOSBox.                                                                    ║
+║                                                                            ║
 
 .
 :SHELL_STARTUP_CGA
@@ -1190,8 +1191,8 @@ It's only possible to use SUBST on Local drives
 
 .
 :SHELL_STARTUP_END
-║ [33mhttps://dosbox-staging.github.io[37m                                   ║
-╚════════════════════════════════════════════════════════════════════╝[0m
+║ [33mhttps://dosbox-staging.github.io[37m                                           ║
+╚════════════════════════════════════════════════════════════════════════════╝[0m
 
 
 .

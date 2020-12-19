@@ -944,7 +944,7 @@ Some examples:
 
 .
 :PROGRAM_KEYB_NOERROR
-Keyboard layout %s loaded for codepage %i
+Ukad klawiatury %s zosta wczytany dla strony kodowej %i
 
 .
 :PROGRAM_KEYB_FILENOTFOUND
@@ -1156,14 +1156,14 @@ It's only possible to use SUBST on Local drives
 .
 :SHELL_STARTUP_BEGIN
 [44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mWelcome to DOSBox Staging %-40s[37m บ
+บ [32mWitaj w DOSBox Staging %-43s[37m บ
 บ                                                                    บ
-บ For a short introduction for new users type: [33mINTRO[37m                 บ
-บ For supported shell commands type: [33mHELP[37m                            บ
+บ Krขtki wstฉp dla nowych uพytkownikขw, wpisz: [33mINTRO[37m                 บ
+บ Aby zobaczy listฉ wspieranych komend, wpisz: [33mHELP[37m                 บ
 บ                                                                    บ
-บ To adjust the emulated CPU speed, use [31mctrl-F11[37m and [31mctrl-F12[37m.       บ
-บ To activate the keymapper [31mctrl-F1[37m.                                 บ
-บ For more information read the [36mREADME[37m file in the DOSBox directory. บ
+บ Aby dostosowa prฉdko emulatora, uพyj [31mCtrl-F11[37m i [31mCtrl-F12[37m.       บ
+บ Aby zmieni skrขty klawiaturowe [31mCtrl-F1[37m.                           บ
+บ Wiฉcej informacji w pliku [36mREADME[37m w katalogu DOSBoxa.               บ
 บ                                                                    บ
 
 .

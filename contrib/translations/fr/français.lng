@@ -926,11 +926,11 @@ Using multiple files is only supported for cue/iso images.
 
 .
 :PROGRAM_KEYB_INFO
-Codepage %i has been loaded
+La page de code %i a t charge
 
 .
 :PROGRAM_KEYB_INFO_LAYOUT
-Codepage %i has been loaded for layout %s
+La page de code %i a t charge pour la disposition %s
 
 .
 :PROGRAM_KEYB_SHOWHELP
@@ -944,7 +944,7 @@ Some examples:
 
 .
 :PROGRAM_KEYB_NOERROR
-Keyboard layout %s loaded for codepage %i
+La disposition clavier %s est charge pour la page de code %i
 
 .
 :PROGRAM_KEYB_FILENOTFOUND
@@ -1155,16 +1155,17 @@ SUBST failed. You either made an error in your commandline or the target drive i
 It's only possible to use SUBST on Local drives
 .
 :SHELL_STARTUP_BEGIN
-[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mWelcome to DOSBox Staging %-40s[37m บ
-บ                                                                    บ
-บ For a short introduction for new users type: [33mINTRO[37m                 บ
-บ For supported shell commands type: [33mHELP[37m                            บ
-บ                                                                    บ
-บ To adjust the emulated CPU speed, use [31mctrl-F11[37m and [31mctrl-F12[37m.       บ
-บ To activate the keymapper [31mctrl-F1[37m.                                 บ
-บ For more information read the [36mREADME[37m file in the DOSBox directory. บ
-บ                                                                    บ
+[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mBienvenue dans DOSBox Staging %-44s[37m บ
+บ                                                                            บ
+บ Pour une courte introduction pour les nouveaux utilisateurs, taper: [33mINTRO[37m  บ
+บ Pour la liste des commandes supportes par le shell, taper: [1;33mHELP[37m           บ
+บ                                                                            บ
+บ Pour ajuster la vitesse du CPU mul, essayer [31mCtrl-F11[37m et [31mCtrl-F12[37m.        บ
+บ Pour activer le keymapper [31mCtrl-F1[37m.                                         บ
+บ Pour plus d'informations, lire le fichier [36mREADME[37m dans le rpertoire de     บ
+บ DOSBox.                                                                    บ
+บ                                                                            บ
 
 .
 :SHELL_STARTUP_CGA
@@ -1190,8 +1191,8 @@ It's only possible to use SUBST on Local drives
 
 .
 :SHELL_STARTUP_END
-บ [33mhttps://dosbox-staging.github.io[37m                                   บ
-ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+บ [33mhttps://dosbox-staging.github.io[37m                                           บ
+ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 
 .
