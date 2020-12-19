@@ -316,10 +316,15 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 		// of audio (to keep the buffer topped-up).
 		framesPerAudioBuffer = static_cast<uint16_t>(
 		        RENDER_MAX_MS * sample_rate / MS_PER_S);
+		audioBuffer.resize(framesPerAudioBuffer * CH_PER_FRAME);
 
-		audioBufferSize = framesPerAudioBuffer * CH_PER_FRAME;
-		audioBuffer = new int16_t[audioBufferSize];
-		mt32_service->renderBit16s(audioBuffer, framesPerAudioBuffer - 1);
+		// Ensure the buffer is bounded to the same type and size as the
+		// mixer's primary mixing buffer
+		assert(audioBuffer.size() <= UINT16_MAX &&
+		       audioBuffer.size() <= MIXER_BUFSIZE);
+
+		mt32_service->renderBit16s(audioBuffer.data(),
+		                           framesPerAudioBuffer - 1);
 		renderPos = (framesPerAudioBuffer - 1) * CH_PER_FRAME;
 		playedBuffers = 1;
 		lock.reset(SDL_CreateMutex());
@@ -348,8 +353,6 @@ void MidiHandler_mt32::Close()
 		thread.reset();
 		lock.reset();
 		framesInBufferChanged.reset();
-		delete[] audioBuffer;
-		audioBuffer = nullptr;
 	}
 	service->closeSynth();
 	open = false;
@@ -405,23 +408,23 @@ void MidiHandler_mt32::MixerCallBack(uint16_t frames)
 		uint16_t cur_render_pos = renderPos;
 		uint16_t cur_play_pos = playPos;
 		const uint16_t samplesReady = (cur_render_pos < cur_play_pos)
-		                                      ? audioBufferSize - cur_play_pos
+		                                      ? audioBuffer.size() - cur_play_pos
 		                                      : cur_render_pos - cur_play_pos;
 		if (frames > (samplesReady / CH_PER_FRAME)) {
 			assert(samplesReady <= UINT16_MAX);
 			frames = samplesReady / CH_PER_FRAME;
 		}
-		channel->AddSamples_s16(frames, audioBuffer + cur_play_pos);
+		channel->AddSamples_s16(frames, audioBuffer.data() + cur_play_pos);
 		cur_play_pos += (frames * CH_PER_FRAME);
-		while (audioBufferSize <= cur_play_pos) {
-			cur_play_pos -= audioBufferSize;
+		while (audioBuffer.size() <= cur_play_pos) {
+			cur_play_pos -= audioBuffer.size();
 			playedBuffers++;
 		}
 		playPos = cur_play_pos;
 		cur_render_pos = renderPos;
 		const uint16_t samplesFree = (cur_render_pos < cur_play_pos)
 		                                     ? cur_play_pos - cur_render_pos
-		                                     : audioBufferSize +
+		                                     : audioBuffer.size() +
 		                                               cur_play_pos -
 		                                               cur_render_pos;
 		if (minimumRenderFrames <= (samplesFree / CH_PER_FRAME)) {
@@ -446,7 +449,7 @@ void MidiHandler_mt32::RenderingLoop()
 			samples_to_render = cur_play_pos - cur_render_pos -
 			                    CH_PER_FRAME;
 		} else {
-			samples_to_render = audioBufferSize - cur_render_pos;
+			samples_to_render = audioBuffer.size() - cur_render_pos;
 			if (cur_play_pos == 0) {
 				samples_to_render -= CH_PER_FRAME;
 			}
@@ -458,10 +461,10 @@ void MidiHandler_mt32::RenderingLoop()
 			SDL_CondWait(framesInBufferChanged.get(), lock.get());
 			SDL_UnlockMutex(lock.get());
 		} else {
-			service->renderBit16s(audioBuffer + cur_render_pos,
+			service->renderBit16s(audioBuffer.data() + cur_render_pos,
 			                      frames_to_render);
 			renderPos = (cur_render_pos + samples_to_render) %
-			            audioBufferSize;
+			            audioBuffer.size();
 			if (cur_render_pos == playPos) {
 				SDL_LockMutex(lock.get());
 				SDL_CondSignal(framesInBufferChanged.get());
