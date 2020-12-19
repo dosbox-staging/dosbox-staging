@@ -19,10 +19,11 @@ jobs:
         conf:
           - name: Clang
             packages: meson
+            build_flags: --wrap-mode=nofallback
             max_warnings: 0
           - name: GCC
             packages: meson gcc@9
-            build_flags: --native-file=.github/meson/native-gcc-9.ini
+            build_flags: --wrap-mode=nofallback --native-file=.github/meson/native-gcc-9.ini
             max_warnings: 0
           - name: Clang, +tests
             packages: meson
@@ -30,11 +31,11 @@ jobs:
             max_warnings: -1
           - name: Clang, +debug
             packages: meson
-            build_flags: -Denable_debugger=normal
+            build_flags: --wrap-mode=nofallback -Denable_debugger=normal
             max_warnings: 165
           - name: Clang, warning_level=3
             packages: meson
-            build_flags: -Dwarning_level=3
+            build_flags: --wrap-mode=nofallback -Dwarning_level=3
             max_warnings: 286
 
     steps:
