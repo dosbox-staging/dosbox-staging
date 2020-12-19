@@ -289,9 +289,9 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
 	                                      this, std::placeholders::_1);
-	chan = MIXER_AddChannel(mixer_callback, 0, "MT32");
-	assert(chan);
-	const auto sample_rate = chan->GetSampleRate();
+	mixer_channel_ptr_t mixer_channel(MIXER_AddChannel(mixer_callback, 0, "MT32"),
+	                                  MIXER_DelChannel);
+	const auto sample_rate = mixer_channel->GetSampleRate();
 
 	service->setAnalogOutputMode(ANALOG_MODE);
 	service->setStereoOutputSampleRate(sample_rate);
@@ -301,8 +301,6 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	if (rc != MT32EMU_RC_OK) {
 		delete service;
 		service = nullptr;
-		MIXER_DelChannel(chan);
-		chan = nullptr;
 		LOG_MSG("MT32: Error initialising emulation: %i", rc);
 		return false;
 	}
@@ -337,7 +335,9 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 		thread = SDL_CreateThread(ProcessingThread, "mt32emu", nullptr);
 	}
 
-	chan->Enable(true);
+	channel = std::move(mixer_channel);
+
+	channel->Enable(true);
 	open = true;
 	return true;
 }
@@ -346,7 +346,7 @@ void MidiHandler_mt32::Close()
 {
 	if (!open)
 		return;
-	chan->Enable(false);
+	channel->Enable(false);
 	if (USE_THREADED_RENDERING) {
 		stopProcessing = true;
 		SDL_LockMutex(lock);
@@ -361,8 +361,6 @@ void MidiHandler_mt32::Close()
 		delete[] audioBuffer;
 		audioBuffer = nullptr;
 	}
-	MIXER_DelChannel(chan);
-	chan = nullptr;
 	service->closeSynth();
 	delete service;
 	service = nullptr;
@@ -425,7 +423,7 @@ void MidiHandler_mt32::MixerCallBack(uint16_t frames)
 			assert(samplesReady <= UINT16_MAX);
 			frames = samplesReady / CH_PER_FRAME;
 		}
-		chan->AddSamples_s16(frames, audioBuffer + cur_play_pos);
+		channel->AddSamples_s16(frames, audioBuffer + cur_play_pos);
 		cur_play_pos += (frames * CH_PER_FRAME);
 		while (audioBufferSize <= cur_play_pos) {
 			cur_play_pos -= audioBufferSize;
@@ -446,7 +444,7 @@ void MidiHandler_mt32::MixerCallBack(uint16_t frames)
 	} else {
 		auto buffer = reinterpret_cast<int16_t *>(MixTemp);
 		service->renderBit16s(buffer, frames);
-		chan->AddSamples_s16(frames, buffer);
+		channel->AddSamples_s16(frames, buffer);
 	}
 }
 

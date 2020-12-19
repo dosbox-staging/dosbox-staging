@@ -26,6 +26,8 @@
 
 #if C_MT32EMU
 
+#include <memory>
+
 #define MT32EMU_API_TYPE 3
 #include <mt32emu/mt32emu.h>
 #if MT32EMU_VERSION_MAJOR != 2 || MT32EMU_VERSION_MINOR < 1
@@ -37,6 +39,10 @@
 #include "mixer.h"
 
 class MidiHandler_mt32 final : public MidiHandler {
+private:
+	using mixer_channel_ptr_t =
+	        std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
+
 public:
 	~MidiHandler_mt32();
 
@@ -52,8 +58,9 @@ private:
 	static int ProcessingThread(void *data);
 	void RenderingLoop();
 
+	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
+
 	// TODO: replace pointers with std::unique_ptr
-	MixerChannel *chan = nullptr;
 	MT32Emu::Service *service = nullptr;
 	SDL_Thread *thread = nullptr;
 	SDL_mutex *lock = nullptr;
