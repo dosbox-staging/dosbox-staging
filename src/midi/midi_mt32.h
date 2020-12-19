@@ -76,7 +76,7 @@ private:
 	uint16_t framesPerAudioBuffer = 0;
 	uint16_t minimumRenderFrames = 0;
 
-	bool open = false;
+	bool is_open = false;
 	volatile bool stopProcessing = true;
 };
 
