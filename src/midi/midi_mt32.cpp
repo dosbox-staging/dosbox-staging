@@ -433,15 +433,17 @@ void MidiHandler_mt32::RenderingLoop()
 	while (!stopProcessing) {
 		const uint16_t cur_render_pos = renderPos;
 		const uint16_t cur_play_pos = playPos;
-		uint16_t samplesToRender = 0;
+		uint16_t samples_to_render = 0;
 		if (cur_render_pos < cur_play_pos) {
-			samplesToRender = cur_play_pos - cur_render_pos - CH_PER_FRAME;
+			samples_to_render = cur_play_pos - cur_render_pos -
+			                    CH_PER_FRAME;
 		} else {
-			samplesToRender = audioBufferSize - cur_render_pos;
-			if (cur_play_pos == 0)
-				samplesToRender -= CH_PER_FRAME;
+			samples_to_render = audioBufferSize - cur_render_pos;
+			if (cur_play_pos == 0) {
+				samples_to_render -= CH_PER_FRAME;
+			}
 		}
-		uint16_t framesToRender = samplesToRender / CH_PER_FRAME;
+		uint16_t framesToRender = samples_to_render / CH_PER_FRAME;
 		if ((framesToRender == 0) || ((framesToRender < minimumRenderFrames) &&
 		                              (cur_render_pos < cur_play_pos))) {
 			SDL_LockMutex(lock);
@@ -450,7 +452,7 @@ void MidiHandler_mt32::RenderingLoop()
 		} else {
 			service->renderBit16s(audioBuffer + cur_render_pos,
 			                      framesToRender);
-			renderPos = (cur_render_pos + samplesToRender) %
+			renderPos = (cur_render_pos + samples_to_render) %
 			            audioBufferSize;
 			if (cur_render_pos == playPos) {
 				SDL_LockMutex(lock);
