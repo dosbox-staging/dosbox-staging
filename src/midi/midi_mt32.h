@@ -65,9 +65,7 @@ private:
 	sdl_thread_ptr_t thread{nullptr, &sdl_thread_deleter};
 	sdl_mutex_ptr_t lock{nullptr, &SDL_DestroyMutex};
 	sdl_cond_ptr_t framesInBufferChanged{nullptr, &SDL_DestroyCond};
-
-	// TODO: replace pointers with std::unique_ptr
-	int16_t *audioBuffer = nullptr;
+	std::vector<int16_t> audioBuffer = {};
 
 	// Ongoing state-tracking
 	volatile uint32_t playedBuffers = 0;
@@ -75,7 +73,6 @@ private:
 	volatile uint16_t playPos = 0;
 
 	// Buffer properties
-	uint16_t audioBufferSize = 0;
 	uint16_t framesPerAudioBuffer = 0;
 	uint16_t minimumRenderFrames = 0;
 
