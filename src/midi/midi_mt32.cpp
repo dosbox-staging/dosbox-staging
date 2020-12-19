@@ -65,7 +65,17 @@ MidiHandler_mt32 mt32_instance;
 static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
-	auto *str_prop = sec_prop.Add_string("romdir", when_idle, "");
+
+	const char *models[] = {"auto", "cm32l", "mt32", 0};
+	auto *str_prop = sec_prop.Add_string("model", when_idle, "auto");
+	str_prop->Set_values(models);
+	str_prop->Set_help(
+	        "Model of synthesizer to use. The default (auto) prefers CM-32L\n"
+	        "if both sets of ROMs are provided. For early Sierra games and Dune 2\n"
+	        "it's recommended to use 'mt32', while newer games typically made\n"
+	        "use of the CM-32L's extra sound effects (use 'auto' or 'cm32l')");
+
+	str_prop = sec_prop.Add_string("romdir", when_idle, "");
 	str_prop->Set_help(
 	        "The directory holding the required MT-32 and/or CM-32L ROMs\n"
 	        "named as follows:\n"
@@ -226,20 +236,28 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	service->createContext(get_report_handler_interface(), this);
 	mt32emu_return_code rc;
 
-	// Get and sanitize ROM directory
 	Section_prop *section = static_cast<Section_prop *>(
 	        control->GetSection("mt32"));
 	assert(section);
+
+	// Get and sanitize ROM directory
 	std::string user_rom_dir = section->Get_string("romdir");
 	if (user_rom_dir.empty())
 		user_rom_dir = "mt32-roms/";
 	else if (user_rom_dir.back() != '/' && user_rom_dir.back() != '\\')
 		user_rom_dir += CROSS_FILESPLIT;
-
-	// Load the ROMs
 	const auto rom_dirs = get_rom_dirs(user_rom_dir);
-	const bool roms_loaded = find_and_load("CM32L", rom_dirs, service) ||
-	                         find_and_load("MT32", rom_dirs, service);
+
+	// Load the ROMs for the selected model
+	bool roms_loaded = false;
+	const std::string model = section->Get_string("model");
+	// Prefer CM-32L if auto or cm32l was selected
+	if (model != "mt32")
+		roms_loaded = find_and_load("CM32L", rom_dirs, service);
+	// If we need to fallback or if mt32 was selected
+	if (!roms_loaded && model != "cm32l")
+		roms_loaded = find_and_load("MT32", rom_dirs, service);
+
 	if (!roms_loaded) {
 		for (const auto &dir : rom_dirs) {
 			LOG_MSG("MT32: Failed to load Control and PCM ROMs from '%s'",
