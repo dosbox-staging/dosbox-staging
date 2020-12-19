@@ -1107,19 +1107,19 @@ File %s already exists.
 
 .
 :SHELL_CMD_DIR_VOLUME
- Volume in drive %c is %s
+ Wolumin w stacji %c to %s
 
 .
 :SHELL_CMD_DIR_INTRO
- Directory of %s
+ Katalog: %s
 
 .
 :SHELL_CMD_DIR_BYTES_USED
-%17d file(s) %21s bytes
+%17d plik(ów)    %21s bajtów
 
 .
 :SHELL_CMD_DIR_BYTES_FREE
-%17d dir(s)  %21s bytes free
+%17d katalog(ów) %21s bajtów wolnych
 
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
@@ -1132,7 +1132,7 @@ Illegal command: %s.
 
 .
 :SHELL_CMD_PAUSE
-Press any key to continue...
+Naciśnij dowolny klawisz, aby kontynuować...
 .
 :SHELL_CMD_PAUSE_HELP
 Waits for 1 keystroke to continue.
