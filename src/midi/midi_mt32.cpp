@@ -330,13 +330,13 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	service = std::move(mt32_service);
 	channel = std::move(mixer_channel);
 	channel->Enable(true);
-	open = true;
+	is_open = true;
 	return true;
 }
 
 void MidiHandler_mt32::Close()
 {
-	if (!open)
+	if (!is_open)
 		return;
 	channel->Enable(false);
 
@@ -349,7 +349,7 @@ void MidiHandler_mt32::Close()
 	framesInBufferChanged.reset();
 
 	service->closeSynth();
-	open = false;
+	is_open = false;
 }
 
 uint32_t MidiHandler_mt32::GetMidiEventTimestamp() const
