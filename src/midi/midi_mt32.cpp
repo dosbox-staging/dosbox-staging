@@ -395,25 +395,26 @@ void MidiHandler_mt32::MixerCallBack(uint16_t frames)
 				return;
 		}
 		uint16_t cur_render_pos = renderPos;
-		uint16_t playPosSnap = playPos;
-		const uint16_t samplesReady = (cur_render_pos < playPosSnap)
-		                                      ? audioBufferSize - playPosSnap
-		                                      : cur_render_pos - playPosSnap;
+		uint16_t cur_play_pos = playPos;
+		const uint16_t samplesReady = (cur_render_pos < cur_play_pos)
+		                                      ? audioBufferSize - cur_play_pos
+		                                      : cur_render_pos - cur_play_pos;
 		if (frames > (samplesReady / CH_PER_FRAME)) {
 			assert(samplesReady <= UINT16_MAX);
 			frames = samplesReady / CH_PER_FRAME;
 		}
-		chan->AddSamples_s16(frames, audioBuffer + playPosSnap);
-		playPosSnap += (frames * CH_PER_FRAME);
-		while (audioBufferSize <= playPosSnap) {
-			playPosSnap -= audioBufferSize;
+		chan->AddSamples_s16(frames, audioBuffer + cur_play_pos);
+		cur_play_pos += (frames * CH_PER_FRAME);
+		while (audioBufferSize <= cur_play_pos) {
+			cur_play_pos -= audioBufferSize;
 			playedBuffers++;
 		}
-		playPos = playPosSnap;
+		playPos = cur_play_pos;
 		cur_render_pos = renderPos;
-		const uint16_t samplesFree = (cur_render_pos < playPosSnap)
-		                                     ? playPosSnap - cur_render_pos
-		                                     : audioBufferSize + playPosSnap -
+		const uint16_t samplesFree = (cur_render_pos < cur_play_pos)
+		                                     ? cur_play_pos - cur_render_pos
+		                                     : audioBufferSize +
+		                                               cur_play_pos -
 		                                               cur_render_pos;
 		if (minimumRenderFrames <= (samplesFree / CH_PER_FRAME)) {
 			SDL_LockMutex(lock);
@@ -431,18 +432,18 @@ void MidiHandler_mt32::RenderingLoop()
 {
 	while (!stopProcessing) {
 		const uint16_t cur_render_pos = renderPos;
-		const uint16_t playPosSnap = playPos;
+		const uint16_t cur_play_pos = playPos;
 		uint16_t samplesToRender = 0;
-		if (cur_render_pos < playPosSnap) {
-			samplesToRender = playPosSnap - cur_render_pos - CH_PER_FRAME;
+		if (cur_render_pos < cur_play_pos) {
+			samplesToRender = cur_play_pos - cur_render_pos - CH_PER_FRAME;
 		} else {
 			samplesToRender = audioBufferSize - cur_render_pos;
-			if (playPosSnap == 0)
+			if (cur_play_pos == 0)
 				samplesToRender -= CH_PER_FRAME;
 		}
 		uint16_t framesToRender = samplesToRender / CH_PER_FRAME;
 		if ((framesToRender == 0) || ((framesToRender < minimumRenderFrames) &&
-		                              (cur_render_pos < playPosSnap))) {
+		                              (cur_render_pos < cur_play_pos))) {
 			SDL_LockMutex(lock);
 			SDL_CondWait(framesInBufferChanged, lock);
 			SDL_UnlockMutex(lock);
