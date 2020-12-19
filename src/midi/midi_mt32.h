@@ -62,11 +62,11 @@ private:
 
 	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
 	mt32_service_ptr_t service{};
+	sdl_thread_ptr_t thread{nullptr, &sdl_thread_deleter};
+	sdl_mutex_ptr_t lock{nullptr, &SDL_DestroyMutex};
+	sdl_cond_ptr_t framesInBufferChanged{nullptr, &SDL_DestroyCond};
 
 	// TODO: replace pointers with std::unique_ptr
-	SDL_Thread *thread = nullptr;
-	SDL_mutex *lock = nullptr;
-	SDL_cond *framesInBufferChanged = nullptr;
 	int16_t *audioBuffer = nullptr;
 
 	// Ongoing state-tracking

@@ -322,9 +322,9 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 		mt32_service->renderBit16s(audioBuffer, framesPerAudioBuffer - 1);
 		renderPos = (framesPerAudioBuffer - 1) * CH_PER_FRAME;
 		playedBuffers = 1;
-		lock = SDL_CreateMutex();
-		framesInBufferChanged = SDL_CreateCond();
-		thread = SDL_CreateThread(ProcessingThread, "mt32emu", nullptr);
+		lock.reset(SDL_CreateMutex());
+		framesInBufferChanged.reset(SDL_CreateCond());
+		thread.reset(SDL_CreateThread(ProcessingThread, "mt32emu", nullptr));
 	}
 
 	service = std::move(mt32_service);
@@ -342,15 +342,12 @@ void MidiHandler_mt32::Close()
 	channel->Enable(false);
 	if (USE_THREADED_RENDERING) {
 		stopProcessing = true;
-		SDL_LockMutex(lock);
-		SDL_CondSignal(framesInBufferChanged);
-		SDL_UnlockMutex(lock);
-		SDL_WaitThread(thread, nullptr);
-		thread = nullptr;
-		SDL_DestroyMutex(lock);
-		lock = nullptr;
-		SDL_DestroyCond(framesInBufferChanged);
-		framesInBufferChanged = nullptr;
+		SDL_LockMutex(lock.get());
+		SDL_CondSignal(framesInBufferChanged.get());
+		SDL_UnlockMutex(lock.get());
+		thread.reset();
+		lock.reset();
+		framesInBufferChanged.reset();
 		delete[] audioBuffer;
 		audioBuffer = nullptr;
 	}
@@ -399,9 +396,9 @@ void MidiHandler_mt32::MixerCallBack(uint16_t frames)
 {
 	if (USE_THREADED_RENDERING) {
 		while (renderPos == playPos) {
-			SDL_LockMutex(lock);
-			SDL_CondWait(framesInBufferChanged, lock);
-			SDL_UnlockMutex(lock);
+			SDL_LockMutex(lock.get());
+			SDL_CondWait(framesInBufferChanged.get(), lock.get());
+			SDL_UnlockMutex(lock.get());
 			if (stopProcessing)
 				return;
 		}
@@ -428,9 +425,9 @@ void MidiHandler_mt32::MixerCallBack(uint16_t frames)
 		                                               cur_play_pos -
 		                                               cur_render_pos;
 		if (minimumRenderFrames <= (samplesFree / CH_PER_FRAME)) {
-			SDL_LockMutex(lock);
-			SDL_CondSignal(framesInBufferChanged);
-			SDL_UnlockMutex(lock);
+			SDL_LockMutex(lock.get());
+			SDL_CondSignal(framesInBufferChanged.get());
+			SDL_UnlockMutex(lock.get());
 		}
 	} else {
 		auto buffer = reinterpret_cast<int16_t *>(MixTemp);
@@ -457,18 +454,18 @@ void MidiHandler_mt32::RenderingLoop()
 		uint16_t frames_to_render = samples_to_render / CH_PER_FRAME;
 		if (frames_to_render == 0 || (frames_to_render < minimumRenderFrames &&
 		                              cur_render_pos < cur_play_pos)) {
-			SDL_LockMutex(lock);
-			SDL_CondWait(framesInBufferChanged, lock);
-			SDL_UnlockMutex(lock);
+			SDL_LockMutex(lock.get());
+			SDL_CondWait(framesInBufferChanged.get(), lock.get());
+			SDL_UnlockMutex(lock.get());
 		} else {
 			service->renderBit16s(audioBuffer + cur_render_pos,
 			                      frames_to_render);
 			renderPos = (cur_render_pos + samples_to_render) %
 			            audioBufferSize;
 			if (cur_render_pos == playPos) {
-				SDL_LockMutex(lock);
-				SDL_CondSignal(framesInBufferChanged);
-				SDL_UnlockMutex(lock);
+				SDL_LockMutex(lock.get());
+				SDL_CondSignal(framesInBufferChanged.get());
+				SDL_UnlockMutex(lock.get());
 			}
 		}
 	}
