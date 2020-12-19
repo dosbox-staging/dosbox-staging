@@ -394,11 +394,11 @@ void MidiHandler_mt32::MixerCallBack(uint16_t frames)
 			if (stopProcessing)
 				return;
 		}
-		uint16_t renderPosSnap = renderPos;
+		uint16_t cur_render_pos = renderPos;
 		uint16_t playPosSnap = playPos;
-		const uint16_t samplesReady = (renderPosSnap < playPosSnap)
+		const uint16_t samplesReady = (cur_render_pos < playPosSnap)
 		                                      ? audioBufferSize - playPosSnap
-		                                      : renderPosSnap - playPosSnap;
+		                                      : cur_render_pos - playPosSnap;
 		if (frames > (samplesReady / CH_PER_FRAME)) {
 			assert(samplesReady <= UINT16_MAX);
 			frames = samplesReady / CH_PER_FRAME;
@@ -410,10 +410,11 @@ void MidiHandler_mt32::MixerCallBack(uint16_t frames)
 			playedBuffers++;
 		}
 		playPos = playPosSnap;
-		renderPosSnap = renderPos;
-		const uint16_t samplesFree = (renderPosSnap < playPosSnap)
-		                                     ? playPosSnap - renderPosSnap
-		                                     : audioBufferSize + playPosSnap - renderPosSnap;
+		cur_render_pos = renderPos;
+		const uint16_t samplesFree = (cur_render_pos < playPosSnap)
+		                                     ? playPosSnap - cur_render_pos
+		                                     : audioBufferSize + playPosSnap -
+		                                               cur_render_pos;
 		if (minimumRenderFrames <= (samplesFree / CH_PER_FRAME)) {
 			SDL_LockMutex(lock);
 			SDL_CondSignal(framesInBufferChanged);
@@ -429,27 +430,28 @@ void MidiHandler_mt32::MixerCallBack(uint16_t frames)
 void MidiHandler_mt32::RenderingLoop()
 {
 	while (!stopProcessing) {
-		const uint16_t renderPosSnap = renderPos;
+		const uint16_t cur_render_pos = renderPos;
 		const uint16_t playPosSnap = playPos;
 		uint16_t samplesToRender = 0;
-		if (renderPosSnap < playPosSnap) {
-			samplesToRender = playPosSnap - renderPosSnap - CH_PER_FRAME;
+		if (cur_render_pos < playPosSnap) {
+			samplesToRender = playPosSnap - cur_render_pos - CH_PER_FRAME;
 		} else {
-			samplesToRender = audioBufferSize - renderPosSnap;
+			samplesToRender = audioBufferSize - cur_render_pos;
 			if (playPosSnap == 0)
 				samplesToRender -= CH_PER_FRAME;
 		}
 		uint16_t framesToRender = samplesToRender / CH_PER_FRAME;
 		if ((framesToRender == 0) || ((framesToRender < minimumRenderFrames) &&
-		                              (renderPosSnap < playPosSnap))) {
+		                              (cur_render_pos < playPosSnap))) {
 			SDL_LockMutex(lock);
 			SDL_CondWait(framesInBufferChanged, lock);
 			SDL_UnlockMutex(lock);
 		} else {
-			service->renderBit16s(audioBuffer + renderPosSnap,
+			service->renderBit16s(audioBuffer + cur_render_pos,
 			                      framesToRender);
-			renderPos = (renderPosSnap + samplesToRender) % audioBufferSize;
-			if (renderPosSnap == playPos) {
+			renderPos = (cur_render_pos + samplesToRender) %
+			            audioBufferSize;
+			if (cur_render_pos == playPos) {
 				SDL_LockMutex(lock);
 				SDL_CondSignal(framesInBufferChanged);
 				SDL_UnlockMutex(lock);
