@@ -234,6 +234,11 @@ char * lowcase(char * str) {
 	return str;
 }
 
+void sdl_thread_deleter(SDL_Thread *t)
+{
+	SDL_WaitThread(t, nullptr);
+}
+
 bool ScanCMDBool(char * cmd, char const * const check)
 {
 	if (cmd == nullptr)
