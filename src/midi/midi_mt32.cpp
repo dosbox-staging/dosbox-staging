@@ -232,7 +232,6 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	}
 
 	service->createContext(get_report_handler_interface(), this);
-	mt32emu_return_code rc;
 
 	Section_prop *section = static_cast<Section_prop *>(
 	        control->GetSection("mt32"));
@@ -276,7 +275,8 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	service->setStereoOutputSampleRate(sample_rate);
 	service->setSamplerateConversionQuality(RATE_CONVERSION_QUALITY);
 
-	if (MT32EMU_RC_OK != (rc = service->openSynth())) {
+	const auto rc = service->openSynth();
+	if (rc != MT32EMU_RC_OK) {
 		delete service;
 		service = nullptr;
 		MIXER_DelChannel(chan);
@@ -314,8 +314,8 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 		framesInBufferChanged = SDL_CreateCond();
 		thread = SDL_CreateThread(ProcessingThread, "mt32emu", nullptr);
 	}
-	chan->Enable(true);
 
+	chan->Enable(true);
 	open = true;
 	return true;
 }
