@@ -444,9 +444,8 @@ void MidiHandler_mt32::RenderingLoop()
 			}
 		}
 		uint16_t frames_to_render = samples_to_render / CH_PER_FRAME;
-		if ((frames_to_render == 0) ||
-		    ((frames_to_render < minimumRenderFrames) &&
-		     (cur_render_pos < cur_play_pos))) {
+		if (frames_to_render == 0 || (frames_to_render < minimumRenderFrames &&
+		                              cur_render_pos < cur_play_pos)) {
 			SDL_LockMutex(lock);
 			SDL_CondWait(framesInBufferChanged, lock);
 			SDL_UnlockMutex(lock);
