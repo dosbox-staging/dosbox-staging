@@ -443,15 +443,16 @@ void MidiHandler_mt32::RenderingLoop()
 				samples_to_render -= CH_PER_FRAME;
 			}
 		}
-		uint16_t framesToRender = samples_to_render / CH_PER_FRAME;
-		if ((framesToRender == 0) || ((framesToRender < minimumRenderFrames) &&
-		                              (cur_render_pos < cur_play_pos))) {
+		uint16_t frames_to_render = samples_to_render / CH_PER_FRAME;
+		if ((frames_to_render == 0) ||
+		    ((frames_to_render < minimumRenderFrames) &&
+		     (cur_render_pos < cur_play_pos))) {
 			SDL_LockMutex(lock);
 			SDL_CondWait(framesInBufferChanged, lock);
 			SDL_UnlockMutex(lock);
 		} else {
 			service->renderBit16s(audioBuffer + cur_render_pos,
-			                      framesToRender);
+			                      frames_to_render);
 			renderPos = (cur_render_pos + samples_to_render) %
 			            audioBufferSize;
 			if (cur_render_pos == playPos) {
