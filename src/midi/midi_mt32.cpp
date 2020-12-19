@@ -145,7 +145,7 @@ static std::deque<std::string> get_rom_dirs()
 
 static bool load_rom_set(const std::string &ctr_path,
                          const std::string &pcm_path,
-                         MT32Emu::Service *service)
+                         mt32_service_ptr_t &service)
 {
 	const bool paths_exist = path_exists(ctr_path) && path_exists(pcm_path);
 	if (!paths_exist)
@@ -160,7 +160,7 @@ static bool load_rom_set(const std::string &ctr_path,
 
 static bool find_and_load(const std::string &model,
                           const std::deque<std::string> &rom_dirs,
-                          MT32Emu::Service *service)
+                          mt32_service_ptr_t &service)
 {
 	const std::string ctr_rom = model + "_CONTROL.ROM";
 	const std::string pcm_rom = model + "_PCM.ROM";
@@ -233,20 +233,17 @@ static mt32emu_report_handler_i get_report_handler_interface()
 
 bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 {
-	service = new MT32Emu::Service();
-	assert(service);
+	mt32_service_ptr_t mt32_service = std::make_unique<MT32Emu::Service>();
 
 	// Check version
-	uint32_t version = service->getLibraryVersionInt();
+	uint32_t version = mt32_service->getLibraryVersionInt();
 	if (version < 0x020100) {
-		delete service;
-		service = nullptr;
 		LOG_MSG("MT32: libmt32emu version is too old: %s",
-		        service->getLibraryVersionString());
+		        mt32_service->getLibraryVersionString());
 		return false;
 	}
 
-	service->createContext(get_report_handler_interface(), this);
+	mt32_service->createContext(get_report_handler_interface(), this);
 
 	Section_prop *section = static_cast<Section_prop *>(
 	        control->GetSection("mt32"));
@@ -271,19 +268,16 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	// Try the CM-32L ROMs if the user's model is "auto" or "cm32l"
 	bool roms_loaded = false;
 	if (model != "mt32")
-		roms_loaded = find_and_load("CM32L", rom_dirs, service);
-
-	// Try the MT-32 ROMs if the user's model is "auto" or "mt32"
+		roms_loaded = find_and_load("CM32L", rom_dirs, mt32_service);
+	// If we need to fallback or if mt32 was selected
 	if (!roms_loaded && model != "cm32l")
-		roms_loaded = find_and_load("MT32", rom_dirs, service);
+		roms_loaded = find_and_load("MT32", rom_dirs, mt32_service);
 
 	if (!roms_loaded) {
 		for (const auto &dir : rom_dirs) {
 			LOG_MSG("MT32: Failed to load Control and PCM ROMs from '%s'",
 			        dir.c_str());
 		}
-		delete service;
-		service = nullptr;
 		return false;
 	}
 
@@ -293,20 +287,18 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	                                  MIXER_DelChannel);
 	const auto sample_rate = mixer_channel->GetSampleRate();
 
-	service->setAnalogOutputMode(ANALOG_MODE);
-	service->setStereoOutputSampleRate(sample_rate);
-	service->setSamplerateConversionQuality(RATE_CONVERSION_QUALITY);
+	mt32_service->setAnalogOutputMode(ANALOG_MODE);
+	mt32_service->setStereoOutputSampleRate(sample_rate);
+	mt32_service->setSamplerateConversionQuality(RATE_CONVERSION_QUALITY);
 
-	const auto rc = service->openSynth();
+	const auto rc = mt32_service->openSynth();
 	if (rc != MT32EMU_RC_OK) {
-		delete service;
-		service = nullptr;
 		LOG_MSG("MT32: Error initialising emulation: %i", rc);
 		return false;
 	}
 
-	service->setDACInputMode(DAC_MODE);
-	service->setNiceAmpRampEnabled(USE_NICE_RAMP);
+	mt32_service->setDACInputMode(DAC_MODE);
+	mt32_service->setNiceAmpRampEnabled(USE_NICE_RAMP);
 
 	if (USE_THREADED_RENDERING) {
 		static_assert(RENDER_MIN_MS <= RENDER_MAX_MS, "Incorrect rendering sizes");
@@ -327,7 +319,7 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 
 		audioBufferSize = framesPerAudioBuffer * CH_PER_FRAME;
 		audioBuffer = new int16_t[audioBufferSize];
-		service->renderBit16s(audioBuffer, framesPerAudioBuffer - 1);
+		mt32_service->renderBit16s(audioBuffer, framesPerAudioBuffer - 1);
 		renderPos = (framesPerAudioBuffer - 1) * CH_PER_FRAME;
 		playedBuffers = 1;
 		lock = SDL_CreateMutex();
@@ -335,6 +327,7 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 		thread = SDL_CreateThread(ProcessingThread, "mt32emu", nullptr);
 	}
 
+	service = std::move(mt32_service);
 	channel = std::move(mixer_channel);
 
 	channel->Enable(true);
@@ -362,8 +355,6 @@ void MidiHandler_mt32::Close()
 		audioBuffer = nullptr;
 	}
 	service->closeSynth();
-	delete service;
-	service = nullptr;
 	open = false;
 }
 
