@@ -636,7 +636,8 @@ void CSerialModem::DoCommand()
 				while (scanbuf[0] == ' ')
 					scanbuf++; // skip spaces
 				const uint32_t val = ScanNumber(scanbuf);
-				reg[index] = val;
+				assert(val <= UINT8_MAX);
+				reg[index] = static_cast<uint8_t>(val);
 				break;
 			}
 			else if (scanbuf[0] == '?') { // get register
