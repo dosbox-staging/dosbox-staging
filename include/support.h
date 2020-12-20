@@ -31,6 +31,7 @@
 #include <stdexcept>
 #include <string.h>
 #include <string>
+#include <vector>
 
 #include <SDL.h>
 
@@ -184,6 +185,14 @@ void trim(std::string& str);
 void upcase(std::string &str);
 void lowcase(std::string &str);
 void strip_punctuation(std::string &str);
+
+// Split a string on an arbitrary character delimiter. Absent string content on
+// either side of a delimiter is treated as an empty string. For example:
+//   split("abc:", ':') returns {"abc", ""}
+//   split(":def", ':') returns {"", "def"}
+//   split(":", ':') returns {"", ""}
+//   split("::", ':') returns {"", "", ""}
+std::vector<std::string> split(const std::string &seq, const char delim);
 
 bool is_executable_filename(const std::string &filename) noexcept;
 

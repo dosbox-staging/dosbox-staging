@@ -82,4 +82,87 @@ TEST(DriveIndex, DriveZ)
 	EXPECT_EQ(25, drive_index('Z'));
 }
 
+TEST(Support_split_delim, NoBoundingDelims)
+{
+	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/"});
+	EXPECT_EQ(split("a:/b:/c/d:/e/f/", ':'), expected);
+	EXPECT_EQ(split("a /b /c/d /e/f/", ' '), expected);
+	EXPECT_EQ(split("abc", 'x'), std::vector<std::string>{"abc"});
+}
+
+TEST(Support_split_delim, DelimAtStartNotEnd)
+{
+	const std::vector<std::string> expected({"", "a", "/b", "/c/d", "/e/f/"});
+	EXPECT_EQ(split(":a:/b:/c/d:/e/f/", ':'), expected);
+	EXPECT_EQ(split(" a /b /c/d /e/f/", ' '), expected);
+}
+
+TEST(Support_split_delim, DelimAtEndNotStart)
+{
+	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/", ""});
+	EXPECT_EQ(split("a:/b:/c/d:/e/f/:", ':'), expected);
+	EXPECT_EQ(split("a /b /c/d /e/f/ ", ' '), expected);
+}
+
+TEST(Support_split_delim, DelimsAtBoth)
+{
+	const std::vector<std::string> expected({"", "a", "/b", "/c/d", "/e/f/", ""});
+	EXPECT_EQ(split(":a:/b:/c/d:/e/f/:", ':'), expected);
+	EXPECT_EQ(split(" a /b /c/d /e/f/ ", ' '), expected);
+}
+
+TEST(Support_split_delim, MultiInternalDelims)
+{
+	const std::vector<std::string> expected(
+	        {"a", "/b", "", "/c/d", "", "", "/e/f/"});
+	EXPECT_EQ(split("a:/b::/c/d:::/e/f/", ':'), expected);
+	EXPECT_EQ(split("a /b  /c/d   /e/f/", ' '), expected);
+}
+
+TEST(Support_split_delim, MultiBoundingDelims)
+{
+	const std::vector<std::string> expected(
+	        {"", "", "a", "/b", "/c/d", "/e/f/", "", "", ""});
+	EXPECT_EQ(split("::a:/b:/c/d:/e/f/:::", ':'), expected);
+	EXPECT_EQ(split("  a /b /c/d /e/f/   ", ' '), expected);
+}
+
+TEST(Support_split_delim, MixedDelims)
+{
+	const std::vector<std::string> expected(
+	        {"", "", "a", "/b", "", "/c/d", "/e/f/"});
+	EXPECT_EQ(split("::a:/b::/c/d:/e/f/", ':'), expected);
+	EXPECT_EQ(split("  a /b  /c/d /e/f/", ' '), expected);
+}
+
+TEST(Support_split_delim, Empty)
+{
+	const std::vector<std::string> empty;
+	const std::vector<std::string> two({"", ""});
+	const std::vector<std::string> three({"", "", ""});
+
+	EXPECT_EQ(split("", ':'), empty);
+	EXPECT_EQ(split(":", ':'), two);
+	EXPECT_EQ(split("::", ':'), three);
+	EXPECT_EQ(split("", ' '), empty);
+	EXPECT_EQ(split(" ", ' '), two);
+	EXPECT_EQ(split("  ", ' '), three);
+}
+{
+	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/"});
+	EXPECT_EQ(split("::::a:/b::::/c/d:/e/f/", ':'), expected);
+	EXPECT_EQ(split("a /b  /c/d   /e/f/    ", ' '), expected);
+}
+
+TEST(Support_split, Empty)
+{
+	const std::vector<std::string> expected;
+	EXPECT_EQ(split("", ':'), expected);
+	EXPECT_EQ(split(":", ':'), expected);
+	EXPECT_EQ(split("::", ':'), expected);
+	EXPECT_EQ(split(" ", ' '), expected);
+	EXPECT_EQ(split("  ", ' '), expected);
+	EXPECT_EQ(split("   ", ' '), expected);
+}
+
 } // namespace

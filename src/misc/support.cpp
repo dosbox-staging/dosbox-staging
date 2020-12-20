@@ -124,6 +124,33 @@ void trim(std::string &str)
 	str.erase(0, empty_pfx);
 }
 
+std::vector<std::string> split(const std::string &seq, const char delim)
+{
+	std::vector<std::string> words;
+	if (seq.empty())
+		return words;
+
+	// count delimeters to reserve space in our vector of words
+	const size_t n = 1u + std::count(seq.begin(), seq.end(), delim);
+	words.reserve(n);
+
+	std::string::size_type head = 0;
+	while (head != std::string::npos) {
+		const auto tail = seq.find_first_of(delim, head);
+		const auto word_len = tail - head;
+		words.emplace_back(seq.substr(head, word_len));
+		if (tail == std::string::npos) {
+			break;
+		}
+		head += word_len + 1;
+	}
+
+	// did we reserve the exact space needed?
+	assert(n == words.size());
+
+	return words;
+}
+
 void strip_punctuation(std::string &str) {
 	str.erase(
 		std::remove_if(
