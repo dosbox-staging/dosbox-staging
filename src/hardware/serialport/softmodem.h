@@ -61,105 +61,6 @@ enum ResTypes {
 bool MODEM_ReadPhonebook(const std::string &filename);
 void MODEM_ClearPhonebook();
 
-class CFifo {
-public:
-	CFifo(const size_t n) : data(n), size(n) {}
-
-	uint32_t left() const { return size - used; }
-	uint32_t inuse() const { return used; }
-	void clear()
-	{
-		used = 0;
-		pos = 0;
-	}
-
-	void addb(uint8_t val)
-	{
-		if (used >= size) {
-			static uint16_t lcount = 0;
-			if (lcount < 1000) {
-				lcount++;
-				LOG_MSG("MODEM: FIFO Overflow! (addb)");
-			}
-			return;
-		}
-		//assert(used<size);
-		size_t where = pos + used;
-		if (where >= size)
-			where -= size;
-		data[where] = val;
-		//LOG_MSG("+%x", val);
-		used++;
-	}
-
-	void adds(uint8_t *str, size_t len)
-	{
-		if ((used + len) > size) {
-			static uint16_t lcount = 0;
-			if (lcount < 1000) {
-				lcount++;
-				LOG_MSG("MODEM: FIFO Overflow! (adds len %u)",
-				        static_cast<unsigned>(len));
-			}
-			return;
-		}
-
-		//assert((used + len) <= size);
-		size_t where = pos + used;
-		used += len;
-		while (len--) {
-			if (where >= size)
-				where -= size;
-			//LOG_MSG("+'%x'", *str);
-			data[where++] = *str++;
-		}
-	}
-
-	uint8_t getb()
-	{
-		if (!used) {
-			static uint16_t lcount = 0;
-			if (lcount < 1000) {
-				lcount++;
-				LOG_MSG("MODEM: FIFO UNDERFLOW! (getb)");
-			}
-			return data[pos];
-		}
-		const size_t where = pos;
-		if (++pos >= size)
-			pos -= size;
-		used--;
-		//LOG_MSG("-%x",data[where]);
-		return data[where];
-	}
-
-	void gets(uint8_t *str, size_t len)
-	{
-		if (!used) {
-			static uint16_t lcount = 0;
-			if (lcount < 1000) {
-				lcount++;
-				LOG_MSG("MODEM: FIFO UNDERFLOW! (gets len %u)",
-				        static_cast<unsigned>(len));
-			}
-			return;
-		}
-		// assert(used >= len);
-		used -= len;
-		while (len--) {
-			//LOG_MSG("-%x", data[pos]);
-			*str++ = data[pos];
-			if (++pos >= size)
-				pos -= size;
-		}
-	}
-
-private:
-	std::vector<uint8_t> data;
-	size_t size = 0;
-	size_t pos = 0;
-	size_t used = 0;
-};
 #define MREG_AUTOANSWER_COUNT 0
 #define MREG_RING_COUNT 1
 #define MREG_ESCAPE_CHAR 2
@@ -209,8 +110,8 @@ public:
 	void setRTS(bool val);
 	void setDTR(bool val);
 
-	std::unique_ptr<CFifo> rqueue;
-	std::unique_ptr<CFifo> tqueue;
+	Fifo rqueue;
+	Fifo tqueue;
 
 protected:
 	// The AT command line can consist of a 99-character command sequence
