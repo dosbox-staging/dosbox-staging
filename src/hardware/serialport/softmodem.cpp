@@ -122,8 +122,10 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 
 	// Setup the listening port
 	uint32_t val;
-	if (getUintFromString("listenport:", val, cmd))
-		listenport = val;
+	if (getUintFromString("listenport:", val, cmd)) {
+		assert(val <= UINT16_MAX);
+		listenport = static_cast<uint16_t>(val);
+	}
 	// Otherwise the default listenport will be used
 
 	// TODO: Fix dialtones if requested
