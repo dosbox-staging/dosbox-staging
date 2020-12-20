@@ -147,7 +147,7 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 
 CSerialModem::~CSerialModem() {
 	// remove events
-	for (uint32_t i = SERIAL_BASE_EVENT_COUNT + 1;
+	for (uint16_t i = SERIAL_BASE_EVENT_COUNT + 1;
 	     i <= SERIAL_MODEM_EVENT_COUNT; i++)
 		removeEvent(i);
 }
