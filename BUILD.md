@@ -450,3 +450,89 @@ You can now use your merged `.afdo` or `.profraw` file to build with the `-m
 fdo` modifier by  placing your `current.afdo/.profraw` file in the repo's root
 directory, or point to it using the FDO_FILE environment variable, and launch
 the build with `./scripts/build.sh -c <gcc or clang> -t release -m lto -m fdo`.
+
+## Meson build snippets
+
+### Make a debug build
+
+Install dependencies listed in README.md. Some optional, recommended
+dependencies are:
+
+``` shell
+# Fedora
+sudo dnf install ccache
+```
+``` shell
+# Debian, Ubuntu
+sudo apt install ccache
+```
+``` shell
+# macOS
+brew install ccache
+```
+
+Build steps :
+
+``` shell
+meson setup build
+
+# for meson >= 0.54.0
+meson compile -C build
+
+# for older versions
+cd build
+ninja
+```
+
+### Run unit tests
+
+Prerequisites:
+
+``` shell
+# Fedora
+sudo dnf install gtest-devel
+```
+``` shell
+# Debian, Ubuntu
+sudo apt install libgtest-dev
+```
+If `gtest` is not available/installed on the OS, Meson will download it
+automatically.
+
+Build and run tests:
+
+``` shell
+meson setup build
+meson test -C build
+```
+
+### Run unit tests (with user-supplied gtest sources)
+
+*Appropriate during packaging or when user is behind a proxy or without
+internet access.*
+
+Place files described in `subprojects/gtest.wrap` file in
+`subprojects/packagecache/` directory, and then:
+
+``` shell
+meson setup --wrap-mode=nodownload build
+meson test -C build
+```
+
+### Build test coverate report
+
+Prerequisites:
+
+``` shell
+# Fedora
+sudo dnf install gcovr lcov
+```
+
+Run tests and generate report:
+
+``` shell
+meson setup -Db_coverage=true build
+meson test -C build
+cd build
+ninja coverage-html
+```
