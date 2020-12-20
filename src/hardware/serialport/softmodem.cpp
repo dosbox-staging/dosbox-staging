@@ -311,8 +311,9 @@ uint32_t CSerialModem::ScanNumber(char *&scan) const
 	uint32_t ret = 0;
 	while (char c = *scan) {
 		if (c >= '0' && c <= '9') {
-			ret*=10;
-			ret+=c-'0';
+			const auto uchar = static_cast<uint8_t>(c);
+			ret *= 10;
+			ret += uchar - '0';
 			scan++;
 		} else
 			break;
