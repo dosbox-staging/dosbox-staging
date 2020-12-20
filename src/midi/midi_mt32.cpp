@@ -24,14 +24,16 @@
 
 #if C_MT32EMU
 
+#include <cassert>
+#include <vector>
+
 #include <SDL_endian.h>
 
 #include "control.h"
-#include "string_utils.h"
-
-#ifndef DOSBOX_MIDI_H
+#include "cross.h"
+#include "fs_utils.h"
 #include "midi.h"
-#endif
+#include "string_utils.h"
 
 // mt32emu Settings
 // ----------------
@@ -61,12 +63,100 @@ MidiHandler_mt32 mt32_instance;
 static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
-	auto *str_prop = sec_prop.Add_string("romdir", when_idle, "");
+
+	const char *models[] = {"auto", "cm32l", "mt32", 0};
+	auto *str_prop = sec_prop.Add_string("model", when_idle, "auto");
+	str_prop->Set_values(models);
 	str_prop->Set_help(
-	        "The directory holding the required MT-32 Control and PCM ROMs.\n"
-	        "The ROM files should be named as follows:\n"
-	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM file.\n"
-	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file.");
+	        "Model of synthesizer to use. The default (auto) prefers CM-32L\n"
+	        "if both sets of ROMs are provided. For early Sierra games and Dune 2\n"
+	        "it's recommended to use 'mt32', while newer games typically made\n"
+	        "use of the CM-32L's extra sound effects (use 'auto' or 'cm32l')");
+
+	str_prop = sec_prop.Add_string("romdir", when_idle, "");
+	str_prop->Set_help(
+	        "The directory holding the required MT-32 and/or CM-32L ROMs\n"
+	        "named as follows:\n"
+	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM files(s).\n"
+	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file(s).\n"
+	        "The directory can be absolute or relative, or leave it blank to\n"
+	        "use the 'mt32-roms' directory in your DOSBox configuration\n"
+	        "directory, followed by checking other common system locations.");
+}
+
+#if defined(WIN32)
+
+static std::vector<std::string> get_rom_dirs(const std::string &preferred_dir)
+{
+	return {
+	        preferred_dir,
+	        CROSS_GetPlatformConfigDir() + "mt32-roms\\",
+	        "C:\\mt32-rom-data\\",
+	};
+}
+
+#elif defined(MACOSX)
+
+static std::vector<std::string> get_rom_dirs(const std::string &preferred_dir)
+{
+	return {
+	        preferred_dir,
+	        CROSS_GetPlatformConfigDir() + "mt32-roms/",
+	        CROSS_ResolveHome("~/Library/Audio/Sounds/MT32-Roms/"),
+	        "/usr/local/share/mt32-rom-data/",
+	        "/usr/share/mt32-rom-data/",
+	};
+}
+
+#else
+
+static std::vector<std::string> get_rom_dirs(const std::string &preferred_dir)
+{
+	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
+	const auto xdg_data_home = CROSS_ResolveHome(
+	        xdg_data_home_env ? xdg_data_home_env : "~/.local/share");
+
+	return {
+	        preferred_dir,
+	        CROSS_GetPlatformConfigDir() + "mt32-roms/",
+	        xdg_data_home + "/mt32-roms/",
+	        xdg_data_home + "/mt32-rom-data/",
+	        "/usr/local/share/mt32-rom-data/",
+	        "/usr/share/mt32-rom-data/",
+	};
+}
+
+#endif
+
+static bool load_rom_set(const std::string &ctr_path,
+                         const std::string &pcm_path,
+                         MT32Emu::Service *service)
+{
+	const bool paths_exist = path_exists(ctr_path) && path_exists(pcm_path);
+	if (!paths_exist)
+		return false;
+
+	const bool roms_loaded = (service->addROMFile(ctr_path.c_str()) ==
+	                          MT32EMU_RC_ADDED_CONTROL_ROM) &&
+	                         (service->addROMFile(pcm_path.c_str()) ==
+	                          MT32EMU_RC_ADDED_PCM_ROM);
+	return roms_loaded;
+}
+
+static bool find_and_load(const std::string &model,
+                          const std::vector<std::string> &rom_dirs,
+                          MT32Emu::Service *service)
+{
+	const std::string ctr_rom = model + "_CONTROL.ROM";
+	const std::string pcm_rom = model + "_PCM.ROM";
+	for (const auto &dir : rom_dirs) {
+		if (load_rom_set(dir + ctr_rom, dir + pcm_rom, service)) {
+			LOG_MSG("MT32: Loaded %s-model ROMs from %s",
+			        model.c_str(), dir.c_str());
+			return true;
+		}
+	}
+	return false;
 }
 
 static mt32emu_report_handler_i get_report_handler_interface()
@@ -126,21 +216,12 @@ static mt32emu_report_handler_i get_report_handler_interface()
 	return REPORT_HANDLER_I;
 }
 
-// TODO: use std::strings
-static void make_rom_path(char pathName[],
-                          const char romDir[],
-                          const char fileName[],
-                          bool addPathSeparator)
-{
-	strcpy(pathName, romDir);
-	if (addPathSeparator)
-		strcat(pathName, "/");
-	strcat(pathName, fileName);
-}
-
 bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 {
 	service = new MT32Emu::Service();
+	assert(service);
+
+	// Check version
 	uint32_t version = service->getLibraryVersionInt();
 	if (version < 0x020100) {
 		delete service;
@@ -149,47 +230,40 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 		        service->getLibraryVersionString());
 		return false;
 	}
+
 	service->createContext(get_report_handler_interface(), this);
 	mt32emu_return_code rc;
 
 	Section_prop *section = static_cast<Section_prop *>(
 	        control->GetSection("mt32"));
-	const char *romDir = section->Get_string("romdir");
-	if (romDir == nullptr)
-		romDir = "./"; // Paranoid check, should never happen
-	size_t romDirLen = strlen(romDir);
-	bool addPathSeparator = false;
-	if (romDirLen < 1) {
-		romDir = "./";
-	} else if (4080 < romDirLen) {
-		LOG_MSG("MT32: mt32.romdir is too long, using the current dir.");
-		romDir = "./";
-	} else {
-		char lastChar = romDir[strlen(romDir) - 1];
-		addPathSeparator = lastChar != '/' && lastChar != '\\';
-	}
+	assert(section);
 
-	char pathName[4096];
+	// Get and sanitize ROM directory
+	std::string user_rom_dir = section->Get_string("romdir");
+	if (user_rom_dir.empty())
+		user_rom_dir = "mt32-roms/";
+	else if (user_rom_dir.back() != '/' && user_rom_dir.back() != '\\')
+		user_rom_dir += CROSS_FILESPLIT;
+	const auto rom_dirs = get_rom_dirs(user_rom_dir);
 
-	make_rom_path(pathName, romDir, "CM32L_CONTROL.ROM", addPathSeparator);
-	if (MT32EMU_RC_ADDED_CONTROL_ROM != service->addROMFile(pathName)) {
-		make_rom_path(pathName, romDir, "MT32_CONTROL.ROM", addPathSeparator);
-		if (MT32EMU_RC_ADDED_CONTROL_ROM != service->addROMFile(pathName)) {
-			delete service;
-			service = nullptr;
-			LOG_MSG("MT32: Control ROM file not found");
-			return false;
+	// Load the ROMs for the selected model
+	bool roms_loaded = false;
+	const std::string model = section->Get_string("model");
+	// Prefer CM-32L if auto or cm32l was selected
+	if (model != "mt32")
+		roms_loaded = find_and_load("CM32L", rom_dirs, service);
+	// If we need to fallback or if mt32 was selected
+	if (!roms_loaded && model != "cm32l")
+		roms_loaded = find_and_load("MT32", rom_dirs, service);
+
+	if (!roms_loaded) {
+		for (const auto &dir : rom_dirs) {
+			LOG_MSG("MT32: Failed to load Control and PCM ROMs from '%s'",
+			        dir.c_str());
 		}
-	}
-	make_rom_path(pathName, romDir, "CM32L_PCM.ROM", addPathSeparator);
-	if (MT32EMU_RC_ADDED_PCM_ROM != service->addROMFile(pathName)) {
-		make_rom_path(pathName, romDir, "MT32_PCM.ROM", addPathSeparator);
-		if (MT32EMU_RC_ADDED_PCM_ROM != service->addROMFile(pathName)) {
-			delete service;
-			service = nullptr;
-			LOG_MSG("MT32: PCM ROM file not found");
-			return false;
-		}
+		delete service;
+		service = nullptr;
+		return false;
 	}
 
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
