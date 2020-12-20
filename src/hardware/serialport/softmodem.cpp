@@ -227,7 +227,7 @@ void CSerialModem::SendNumber(uint32_t val)
 
 void CSerialModem::SendRes(const ResTypes response) {
 	char const * string = nullptr;
-	uint32_t code = -1;
+	uint32_t code = UINT32_MAX;
 	switch (response) {
 		case ResOK:         code = 0; string = "OK"; break;
 		case ResCONNECT:    code = 1; string = "CONNECT 57600"; break;
@@ -244,7 +244,7 @@ void CSerialModem::SendRes(const ResTypes response) {
 		if (doresponse == 2 && (response == ResRING ||
 			response == ResCONNECT || response == ResNOCARRIER))
 			return;
-		if (numericresponse && code != static_cast<uint32_t>(-1))
+		if (numericresponse && code != UINT32_MAX)
 			SendNumber(code);
 		else if (string != nullptr)
 			SendLine(string);
