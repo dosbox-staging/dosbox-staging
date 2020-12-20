@@ -75,7 +75,7 @@ jobs:
 
       - name: Run tests
         if:   matrix.conf.run_tests
-        run:  meson test -C build
+        run:  meson test -C build --print-errorlogs
 
       - name: Summarize warnings
         if:   matrix.conf.run_tests != true
