@@ -35,20 +35,25 @@
  * These defines are mostly relevant to modules src/cpu/ and src/fpu/
  */
 
-// TODO The type of cpu this target has
-#define C_TARGETCPU X86_64
+// The type of cpu this target has
+#mesondefine C_TARGETCPU
 
-// TODO Define to 1 if target CPU supports unaligned memory access
-#define C_UNALIGNED_MEMORY 1
+// Define to 1 if target CPU supports unaligned memory access
+#mesondefine C_UNALIGNED_MEMORY
 
-// TODO Define to 1 to use x86/x64 dynamic cpu core
-#define C_DYNAMIC_X86 1
+// Define to 1 to use x86/x86_64 dynamic cpu core
+// Can not be used together with C_DYNREC
+#mesondefine C_DYNAMIC_X86
+
+// Define to 1 to use recompiling cpu core
+// Can not be used together with C_DYNAMIC_X86
+#mesondefine C_DYNREC
 
 // TODO Define to 1 to enable floating point emulation
 #define C_FPU 1
 
 // TODO Define to 1 to use a x86/x64 assembly fpu core
-#define C_FPU_X86 1
+#define C_FPU_X86 0
 
 // TODO Define to 1 to use inlined memory functions in cpu core
 #define C_CORE_INLINE 1

@@ -28,3 +28,9 @@ option('enable_debugger',
        choices : ['normal', 'heavy', 'none'],
        value : 'none',
        description : 'Build emulator with internal debugger feature.')
+
+option('dynamic_core',
+       type : 'combo',
+       choices : ['auto', 'dyn-x86', 'dynrec', 'none'],
+       value : 'auto',
+       description : 'Select the dynamic core implementation.')
