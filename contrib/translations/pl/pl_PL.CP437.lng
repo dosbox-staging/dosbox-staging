@@ -499,35 +499,35 @@ CDROMs found: %d
 
 .
 :PROGRAM_MOUNT_STATUS_2
-Drive %c is mounted as %s
+Dysk %c jest zamontowany jako %s
 
 .
 :PROGRAM_MOUNT_STATUS_1
-The currently mounted drives are:
+Zamontowane dyski:
 
 .
 :PROGRAM_MOUNT_ERROR_1
-Directory %s doesn't exist.
+Katalog %s nie istnieje.
 
 .
 :PROGRAM_MOUNT_ERROR_2
-%s isn't a directory
+%s nie jest katalogiem
 
 .
 :PROGRAM_MOUNT_ILL_TYPE
-Illegal type %s
+Nieprawidlowy typ %s
 
 .
 :PROGRAM_MOUNT_ALREADY_MOUNTED
-Drive %c already mounted with %s
+Dysk %c jest juz zamontowany jako %s
 
 .
 :PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
-Drive %c isn't mounted.
+Dysk %c nie jest zamontowany.
 
 .
 :PROGRAM_MOUNT_UMOUNT_SUCCESS
-Drive %c has successfully been removed.
+Dysk %c zostal pomyslnie odmontowany.
 
 .
 :PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
