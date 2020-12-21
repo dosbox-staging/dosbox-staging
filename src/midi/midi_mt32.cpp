@@ -25,7 +25,8 @@
 #if C_MT32EMU
 
 #include <cassert>
-#include <vector>
+#include <deque>
+#include <string>
 
 #include <SDL_endian.h>
 
@@ -86,10 +87,9 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 
 #if defined(WIN32)
 
-static std::vector<std::string> get_rom_dirs(const std::string &preferred_dir)
+static std::deque<std::string> get_rom_dirs()
 {
 	return {
-	        preferred_dir,
 	        CROSS_GetPlatformConfigDir() + "mt32-roms\\",
 	        "C:\\mt32-rom-data\\",
 	};
@@ -97,10 +97,9 @@ static std::vector<std::string> get_rom_dirs(const std::string &preferred_dir)
 
 #elif defined(MACOSX)
 
-static std::vector<std::string> get_rom_dirs(const std::string &preferred_dir)
+static std::deque<std::string> get_rom_dirs()
 {
 	return {
-	        preferred_dir,
 	        CROSS_GetPlatformConfigDir() + "mt32-roms/",
 	        CROSS_ResolveHome("~/Library/Audio/Sounds/MT32-Roms/"),
 	        "/usr/local/share/mt32-rom-data/",
@@ -110,20 +109,36 @@ static std::vector<std::string> get_rom_dirs(const std::string &preferred_dir)
 
 #else
 
-static std::vector<std::string> get_rom_dirs(const std::string &preferred_dir)
+static std::deque<std::string> get_rom_dirs()
 {
+	// First priority is $XDG_DATA_HOME
 	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
 	const auto xdg_data_home = CROSS_ResolveHome(
 	        xdg_data_home_env ? xdg_data_home_env : "~/.local/share");
 
-	return {
-	        preferred_dir,
-	        CROSS_GetPlatformConfigDir() + "mt32-roms/",
-	        xdg_data_home + "/mt32-roms/",
+	std::deque<std::string> dirs = {
+	        xdg_data_home + "/dosbox/mt32-roms/",
 	        xdg_data_home + "/mt32-rom-data/",
-	        "/usr/local/share/mt32-rom-data/",
-	        "/usr/share/mt32-rom-data/",
 	};
+
+	// Second priority are the $XDG_DATA_DIRS
+	const char *xdg_data_dirs_env = getenv("XDG_DATA_DIRS");
+	if (!xdg_data_dirs_env)
+		xdg_data_dirs_env = "/usr/local/share:/usr/share";
+
+	for (auto xdg_data_dir : split(xdg_data_dirs_env, ':')) {
+		trim(xdg_data_dir);
+		if (xdg_data_dir.empty()) {
+			continue;
+		}
+		const auto resolved_dir = CROSS_ResolveHome(xdg_data_dir);
+		dirs.emplace_back(resolved_dir + "/mt32-rom-data/");
+	}
+
+	// Third priority is $XDG_CONF_HOME, for convenience
+	dirs.emplace_back(CROSS_GetPlatformConfigDir() + "mt32-roms/");
+
+	return dirs;
 }
 
 #endif
@@ -144,7 +159,7 @@ static bool load_rom_set(const std::string &ctr_path,
 }
 
 static bool find_and_load(const std::string &model,
-                          const std::vector<std::string> &rom_dirs,
+                          const std::deque<std::string> &rom_dirs,
                           MT32Emu::Service *service)
 {
 	const std::string ctr_rom = model + "_CONTROL.ROM";
@@ -237,21 +252,28 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	        control->GetSection("mt32"));
 	assert(section);
 
-	// Get and sanitize ROM directory
-	std::string user_rom_dir = section->Get_string("romdir");
-	if (user_rom_dir.empty())
-		user_rom_dir = "mt32-roms/";
-	else if (user_rom_dir.back() != '/' && user_rom_dir.back() != '\\')
-		user_rom_dir += CROSS_FILESPLIT;
-	const auto rom_dirs = get_rom_dirs(user_rom_dir);
-
-	// Load the ROMs for the selected model
-	bool roms_loaded = false;
+	// Which Roland model does the user want?
 	const std::string model = section->Get_string("model");
-	// Prefer CM-32L if auto or cm32l was selected
+
+	// Get potential ROM directories from the environment and/or system
+	auto rom_dirs = get_rom_dirs();
+
+	// Get the user's configured ROM directory; otherwise use 'mt32-roms'
+	std::string preferred_dir = section->Get_string("romdir");
+	if (preferred_dir.empty()) // already trimmed
+		preferred_dir = "mt32-roms";
+	if (preferred_dir.back() != '/' && preferred_dir.back() != '\\')
+		preferred_dir += CROSS_FILESPLIT;
+
+	// Make sure we search the user's configured directory first
+	rom_dirs.emplace_front(CROSS_ResolveHome((preferred_dir)));
+
+	// Try the CM-32L ROMs if the user's model is "auto" or "cm32l"
+	bool roms_loaded = false;
 	if (model != "mt32")
 		roms_loaded = find_and_load("CM32L", rom_dirs, service);
-	// If we need to fallback or if mt32 was selected
+
+	// Try the MT-32 ROMs if the user's model is "auto" or "mt32"
 	if (!roms_loaded && model != "cm32l")
 		roms_loaded = find_and_load("MT32", rom_dirs, service);
 
