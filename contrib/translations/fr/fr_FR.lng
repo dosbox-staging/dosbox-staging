@@ -676,7 +676,7 @@ Cache de lecteur vid‚.
 
 .
 :PROGRAM_INTRO
-[2J[32;Bienvenue dans DOSBox Staging[0m, un ‚mulateur x86 avec son et graphismes.
+[2J[32;1mBienvenue dans DOSBox Staging[0m, un ‚mulateur x86 avec son et graphismes.
 DOSBox cr‚e un shell pour vous qui ressemble au vieux DOS ordinaire.
 
 Pour des informations basqiues … propos du montage tapez [34;1mintro mount[0m
@@ -845,7 +845,7 @@ Usage :
 Avec :
   [37;1mLECTEUR[0m        est la lettre de lecteur o— l'image sera mont‚e : a, c, d, ...
   [36;1mCDROM-SET[0m      est ISO, CUE+BIN, CUE+ISO, ou CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [36;1mFICHIERIMAGE[0m   est une image de disque dur ou disquette format‚ FAT16 ou FAT12
+  [36;1mFICHIERIMAGE[0m   est une image de disque dur ou disquette format‚ FAT16/FAT12
   [36;1mIMAGEDMARRAGE[0m est une image de d‚marrage de disque dur avec une taille
         -size GEOMETRIE : bytes-par-secteur,secteurs-par-tˆte,tˆtes,cylindres
 Notes :
@@ -870,9 +870,9 @@ Usage :
   [32;1mmount[0m -u [37;1mLECTEUR[0m  (d‚monte le r‚pertoire du LECTEUR)
 
 Avec :
-  [37;1mLECTEUR[0m     la lettre de lecteur o— sera mont‚ le r‚pertoire : A, C, D, ...
+  [37;1mLECTEUR[0m    la lettre de lecteur o— sera mont‚ le r‚pertoire : A, C, D, ...
   [36;1mRPERTOIRE[0m est le r‚pertoire de l'OS h“te qui sera mont‚
-  TYPE       type de r‚pertoire … monter : 'dir', 'floppy', 'cdrom' ou 'overlay'
+  TYPE       type de r‚pertoire … monter : 'dir', 'floppy', 'cdrom', 'overlay'
   TAILLE     espace libre sur le disque virtuel
              (KiB pour les disquettes, MiB sinon)
   NOM_VOLUME nom de volume … utiliser
@@ -1185,14 +1185,14 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 .
 :SHELL_STARTUP_BEGIN
 [44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [32mBienvenue dans DOSBox Staging %-40s[37m º
+º [32mBienvenue dans DOSBox Staging %-44s[37m º
 º                                                                            º
 º Pour une courte introduction pour les nouveaux utilisateurs, tapez: [33mINTRO[37m  º
-º Pour la liste des commandes support‚es par le shell, tapez : [1;33mHELP[37m           º
+º Pour la liste des commandes support‚es par le shell, tapez : [1;33mHELP[37m          º
 º                                                                            º
 º Pour ajuster la vitesse du CPU ‚mul‚, essayez [31mCtrl-F11[37m et [31mCtrl-F12[37m.        º
 º Pour activer le keymapper [31mCtrl-F1[37m.                                         º
-º Pour plus d'informations, lisez le fichier [36mREADME[37m dans le r‚pertoire de     º
+º Pour plus d'informations, lisez le fichier [36mREADME[37m dans le r‚pertoire de    º
 º DOSBox.                                                                    º
 º                                                                            º
 
