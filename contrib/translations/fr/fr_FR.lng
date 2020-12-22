@@ -3,7 +3,7 @@ D‚marrer DOSBox directement en mode plein ‚cran.
 Pressez Alt-Entr‚e pour revenir en mode fenˆtre.
 .
 :CONFIG_DISPLAY
-Nombre d'affichages … utiliser ; les valeurs d‚pendent de l'OS et des paramŠtres utilisateur.
+Nombre d'‚crans … utiliser ; les valeurs d‚pendent de l'OS et des paramŠtres utilisateur.
 .
 :CONFIG_VSYNC
 ParamŠtre de synchro verticale non impl‚ment‚ (paramŠtre ignor‚)
@@ -548,18 +548,18 @@ Attention: option '%s' non support‚e et ignor‚e.
 
 .
 :PROGRAM_MOUNT_OVERLAY_NO_BASE
-Un r‚pertoire normal doit ˆtre mont‚ d'abord avant qu'une surcouche soit possible.
+Un r‚pertoire normal doit ˆtre mont‚ d'abord avant qu'une redirection soit possible.
 
 .
 :PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE
-Cette surcouche n'est PAS compatible avec le lecteur sp‚cifi‚.
+Cette redirection n'est PAS compatible avec le lecteur sp‚cifi‚.
 
 .
 :PROGRAM_MOUNT_OVERLAY_MIXED_BASE
-La sucrouche doit ˆtre sp‚cifi‚ en utilisant le mˆme adressage que le disque sous-jacent. Pas de m‚lange de chemins relatifs et absolus.
+La redirection doit ˆtre sp‚cifi‚e en utilisant le mˆme adressage que le disque sous-jacent. Pas de m‚lange de chemins relatifs et absolus.
 .
 :PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE
-Le r‚pertoire de surcouche ne peut pas ˆtre le mˆme que celui du lecteur sous-jacent.
+Le r‚pertoire de redirection ne peut pas ˆtre le mˆme que celui du lecteur sous-jacent.
 
 .
 :PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR
@@ -567,7 +567,7 @@ Quelque chose s'est mal d‚roul‚.
 
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
-Surcouche %s sur lecteur %c mont‚e.
+Redirection %s sur lecteur %c mont‚e.
 
 .
 :PROGRAM_MEM_CONVEN
@@ -844,7 +844,7 @@ Usage :
 Avec :
   [37;1mLETEUR[0m     la lettre de lecteur o— sera mont‚ le r‚pertoire : A, C, D, ...
   [36;1mRPERTOIRE[0m est le r‚pertoire de l'OS h“te qui sera mont‚
-  TYPE        type de r‚pertoire … monter : 'dir' (r‚pertoire), 'floppy' (disquette), 'cdrom', ou 'overlay' (surcouche)
+  TYPE        type de r‚pertoire … monter : 'dir' (r‚pertoire), 'floppy' (disquette), 'cdrom', ou 'overlay' (redirection)
   TAILLE      espace libre sur le disque virtuel (KiB pour les disquettes, MiB sinon)
   NOM_VOLUME  nom de volume … utiliser
 

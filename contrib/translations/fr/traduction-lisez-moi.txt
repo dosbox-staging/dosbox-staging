@@ -1,0 +1,15 @@
+Traduction française pour dosbox (dosbox-staging)
+----
+Auteurs :
+- Victor (https://www.abandonware-forums.org/member/10497-victor) : base DOSBox : https://www.abandonware-forums.org/forum/forum-ltf-abandonware-france/aide-de-jeux-probl%C3%A8mes-techniques/20959-dosbox-en-fran%C3%A7ais
+- Choum (https://www.abandonware-forums.org/member/38656-choum) : mise à jour 0.74-3
+- Draky50110 : adaptation sur DOSBox-Staging
+
+Utilisation :
+- téléchargez et copiez le fichier de langue "fr_FR.lng" dans le répertoire de configuration de DOSBox-Staging (Lancez "dosbox -printconf" pour le connaître).
+- ouvrez le fichier de configuration de base "dosbox-staging.conf" et modifiez "language=" pour y ajouter le nom du fichier. Cela donnera "language=fr_FR.lng".
+- lancez DOSBox-Staging : tout doit être en français.
+
+Aide :
+- Issue GitHub pour la traduction française : https://github.com/dosbox-staging/dosbox-staging/issues/776
+- Discussion sur LTF : https://www.abandonware-forums.org/forum/forum-ltf-abandonware-france/le-bar-des-amis/818418-dosbox-staging-traduction-fran%C3%A7aise
