@@ -147,8 +147,8 @@ Param‚trer une trop grande valeur donne des coupures de son et des saccades.
 Les cycles peuvent ˆtre d‚finis de 3 fa‡ons :
   'auto'          essaye de deviner ce dont un jeu a besoin.
                   Cela fonctionne g‚n‚ralement, mais peut ‚chouer avec certains jeux.
-  'fixed #fixed'  d‚finira une quantit‚ fixe de cycles. C'est g‚n‚ralement ce qu'il faut 
-		          si 'auto' ‚choue. (Exemple : fixed 4000)
+  '#nombre'       d‚finira une quantit‚ fixe de cycles. C'est g‚n‚ralement ce qu'il faut 
+		          si 'auto' ‚choue. (Exemple : '4000')
   'max'           allouera autant de cycles que votre ordinateur est capable 
 		          de g‚rer.
 

@@ -147,8 +147,8 @@ Paramétrer une trop grande valeur donne des coupures de son et des saccades.
 Les cycles peuvent être définis de 3 façons :
   'auto'          essaye de deviner ce dont un jeu a besoin.
                   Cela fonctionne généralement, mais peut échouer avec certains jeux.
-  'fixed #fixed'  définira une quantité fixe de cycles. C'est généralement ce qu'il faut 
-		          si 'auto' échoue. (Exemple : fixed 4000)
+  '#nombre'       définira une quantité fixe de cycles. C'est généralement ce qu'il faut 
+		          si 'auto' échoue. (Exemple : '4000')
   'max'           allouera autant de cycles que votre ordinateur est capable 
 		          de gérer.
 
