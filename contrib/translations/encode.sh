@@ -28,18 +28,18 @@ echo "In directory $trans_dir:"
 # (default)
 # keyb us 437
 # keyb us 858
-tconv_l CP437 "utf-8/en/en-0.77.0-alpha.lng" en/en_US
+tconv_l CP437 "utf-8/en/en-0.77.0-alpha.txt" en/en_US
 
 # keyb fr
 # keyb fr 437
 # keyb fr 858
-tconv_l CP858 "utf-8/fr/fr-0.77.0-alpha.lng" fr/fr_FR
+tconv_l CP858 "utf-8/fr/fr-0.77.0-alpha.txt" fr/fr_FR
 
 # keyb pl
 # keyb pl 852
-tconv_l CP852 "utf-8/pl/pl-0.77.0-alpha.lng" pl/pl_PL
+tconv_l CP852 "utf-8/pl/pl-0.77.0-alpha.txt" pl/pl_PL
 
 # keyb pl 437
-tconv_t CP437 "utf-8/pl/pl-0.77.0-alpha.lng" pl/pl_PL
+tconv_t CP437 "utf-8/pl/pl-0.77.0-alpha.txt" pl/pl_PL
 
 popd > /dev/null || exit
