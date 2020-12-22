@@ -137,7 +137,10 @@ public:
 		DOS_DTA dta(dos.dta());
 
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_FORMAT"),"Drive","Type","Label");
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_FORMAT"),
+		         MSG_Get("PROGRAM_MOUNT_STATUS_DRIVE"),
+		         MSG_Get("PROGRAM_MOUNT_STATUS_TYPE"),
+		         MSG_Get("PROGRAM_MOUNT_STATUS_LABEL"));
 		for (int p = 0;p < 8;p++) WriteOut("----------");
 
 		for (int d = 0; d < DOS_DRIVES; d++) {
@@ -1627,8 +1630,11 @@ void DOS_SetupPrograms(void) {
 
 	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CDROMs found: %d\n");
 	MSG_Add("PROGRAM_MOUNT_STATUS_FORMAT","%-5s  %-58s %-12s\n");
+	MSG_Add("PROGRAM_MOUNT_STATUS_DRIVE", "Drive");
+	MSG_Add("PROGRAM_MOUNT_STATUS_TYPE", "Type");
+	MSG_Add("PROGRAM_MOUNT_STATUS_LABEL", "Label");
 	MSG_Add("PROGRAM_MOUNT_STATUS_2","Drive %c is mounted as %s\n");
-	MSG_Add("PROGRAM_MOUNT_STATUS_1","The currently mounted drives are:\n");
+	MSG_Add("PROGRAM_MOUNT_STATUS_1", "The currently mounted drives are:\n");
 	MSG_Add("PROGRAM_MOUNT_ERROR_1","Directory %s doesn't exist.\n");
 	MSG_Add("PROGRAM_MOUNT_ERROR_2","%s isn't a directory\n");
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE","Illegal type %s\n");
