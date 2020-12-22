@@ -15,12 +15,15 @@ endif
 
 tests_SOURCES = \
 	example.cpp \
+	cfifo.cpp \
+	myfifo.cpp \
 	fs_utils.cpp \
+	log_msg_knockout.cpp \
 	soft_limiter.cpp \
 	string_utils.cpp \
 	support.cpp
 
-tests_LDADD = ../src/misc/libmisc.a
+tests_LDADD = ../src/hardware/serialport/libserial.a ../src/misc/libmisc.a
 
 # Override automake's distclean target to prevent it recursing into
 # SUBDIRS and failing (it was already invoked in there via src/Makefile.am).
