@@ -57,7 +57,7 @@ Sensibilité de la souris. Le second paramètre optionnel spécifie la sensibili
 .
 :CONFIG_RAW_MOUSE_INPUT
 Outrepasse les paramètres de votre système pour l'accélération et la sensibilité
-de la souris. Cel marche en mode plein écran
+de la souris. CelA marche en mode plein écran
 ou quand la souris est capturé en mode fenêtré.
 .
 :CONFIG_WAITONERROR
@@ -77,7 +77,7 @@ SDL_VIDEO_ALLOW_SCREENSAVER (qui bloque généralement la capture d'écran de l'
 pendant que l'émulateur est lancé).
 .
 :CONFIG_LANGUAGE
-Selectionner un autre fichier de langue.
+Sélectionner un autre fichier de langue.
 .
 :CONFIG_MACHINE
 Type de machine que DOSBox essaye d'émuler.
@@ -120,7 +120,7 @@ Vous pouvez aussi faire défiler les couleurs disponibles avec F11.
 Scaler utilisé pour agrandir/améliorer les modes basse résolution.
 Si l'option "forced" est ajoutée, alors le scaler sera utilisé même si
 le résultat ne semble pas celui escompté.
-Notez que certains scalers peuvent utiliser des bords noirs pour remplirl'image
+Notez que certains scalers peuvent utiliser des bords noirs pour remplir l'image
 dans la résolution configuré. Si ce n'est pas l'effet voulu,
 essayez un scaler différent ou activez le mode plein écran.
 
@@ -135,8 +135,8 @@ crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
 scan2x, scan3x, tv2x, tv3x, sharp (défaut).
 .
 :CONFIG_CORE
-CPU Core used in emulation. auto will switch to dynamic if available and
-appropriate.
+Core CPU utilisé dans l'émulation. 'auto' bascule de 'normal' à 'dynamic' si c'est disponible et
+approprié.
 .
 :CONFIG_CPUTYPE
 Coeur de CPU utilisé dans l'émulation. 'auto' est le choix le plus rapide.
@@ -148,9 +148,9 @@ Les cycles peuvent être définis de 3 façons :
   'auto'          essaye de deviner ce dont un jeu a besoin.
                   Cela fonctionne généralement, mais peut échouer avec certains jeux.
   'fixed #fixed'  définira une quantité fixe de cycles. C'est généralement ce qu'il faut 
-		  si 'auto' échoue. (Exemple : fixed 4000)
+		          si 'auto' échoue. (Exemple : fixed 4000)
   'max'           allouera autant de cycles que votre ordinateur est capable 
-		  de gérer.
+		          de gérer.
 
 .
 :CONFIG_CYCLEUP
@@ -163,7 +163,7 @@ Le paramétrer à moins de 100 donnera un pourcentage.
 Activer le mode silencieux, le son étant cependant toujours émulé.
 .
 :CONFIG_RATE
-Taux d'échantillonnage du mixer, paramétrer tout taux d'un périphérique plus haut que cela va probablement déteriorer sa qualité sonore.
+Taux d'échantillonnage du mixer, paramétrer tout taux d'un périphérique plus haut que cela va probablement détériorer sa qualité sonore.
 .
 :CONFIG_BLOCKSIZE
 Taille de bloc du mixer, des blocs plus grands peuvent aider pour les saccades de son mais il sera aussi moins en phase.
@@ -176,7 +176,9 @@ Préiphérique qui recevra les données MIDI (depuis l'interface
 émulée - MPU-401). Choisissez l'un des suivants :
 'fluidsynth', pour utiliser le synthétiseur MIDI intégré. Reportez-vous
        à la section [fluidsynth] pour la configuration détaillée.
-'auto', pour utiliser le premier lecteur MIDI externe dispoible. Cela
+'mt32', pour utiliser le synthétiseur Roland MT-32 intégré. Reportez-vous
+       à la section [mt32] pour la configuration détaillée.
+'auto', pour utiliser le premier lecteur MIDI externe disponible. Cela
        peut être un synthétiseur logiciel ou un périphérique matériel.
 .
 :CONFIG_MIDICONFIG
@@ -185,6 +187,9 @@ Il s'agit généralement de l'ID ou du nom du synthétiseur MIDI que vous voulez
 utiliser (trouver son ID/nom avec la commande DOS 'mixer /listmidi').
 - Cette option n'a aucun effet lors de l'utilisation d'un synthétiseur intégré
   (mididevice = 'fluidsynth' ou 'mt32').
+- Lors de l'utilisation d'ALSA, utiliser la commande Linux 'aconnect -l' pour lister
+  les ports MIDI et en sélectionner un (par exemple 'midiconfig=14:0'
+  pour le séquenceur client 14, port 0).
 - Si vous utiliser un Roland MT-32 avec un PCB en révision 0,
   le matériel peut demander un délai afin d'éviter que son
   tampon ne déborde. Dans ce cas, ajoutez 'delaysysex',
@@ -199,7 +204,7 @@ Chemin pour un fichier SoundFont au format .sf2. Vous pouvez utiliser
 un chemin relatif ou absolu, ou le nom d'un fichier .sf2 dans
 le répertoire 'soundfonts' à l'intérieur de votre répertoire de configuration
 de DOSBox.
-Un pourcentage optionnel règlera le volume du SoundFont.
+Un pourcentage optionnel réglera le volume du SoundFont.
 Par exemple: 'soundfont.sf2 50' le diminuera de 50 pourcents.
 L'échelle de pourcentage peut aller de 1 à 500.
 .
@@ -208,11 +213,26 @@ Si paramétré à une valeur supérieure à 1, alors des processus additionnels
 de synthétiseurs seront créés pour profiter de multiples coeurs CPU.
 (min 1, max 256)
 .
+:CONFIG_MODEL
+Modèle de synthétiseur à utiliser. Par défaut, préfère CM-32L
+si les deux sets de ROMs sont fournis. Pour les premiers jeux Sierra et Dune 2,
+il est recommandé d'utiliser 'mt32', alors qu les jeux récents utilisent
+plutôt les effets sonores supplémentaires CM-32L (utilisez 'auto' ou 'cm32l')
+.
+:CONFIG_ROMDIR
+Répertoire contenant les ROMs nécessaires MT-32 et/ou CM-32L
+nommés comme ceci :
+  MT32_CONTROL.ROM ou CM32L_CONTROL.ROM - fichier(s) de contrôle ROM.
+  MT32_PCM.ROM ou CM32L_PCM.ROM - fichier(s) PCM ROM.
+Le répertoire peut être absolu ou relatif, ou laisser vide pour
+utiliser le répertoire 'mt32-roms' dans le répertoire de configuration
+de DOSBox, ou un autre répertoire habituel du système.
+.
 :CONFIG_SBTYPE
 Type de Sound Blaster à émuler. 'gb' pour Game Blaster.
 .
 :CONFIG_SBBASE
-Addresse IO de la Sound Blaster.
+Adresse IO de la Sound Blaster.
 .
 :CONFIG_IRQ
 Numéro d'IRQ de la Sound Blaster.
@@ -228,7 +248,7 @@ Permet au mixer Sound Blaster de modifier le mixer de DOSBox.
 .
 :CONFIG_OPLRATE
 oplrate est déprécié . La forme d'onde OPL waveform est maintenant échantillonnée
-        au rythme de lecture du mixer pour éviter le rééchantillonage.
+        au rythme de lecture du mixer pour éviter le rééchantillonnage.
 .
 :CONFIG_OPLMODE
 Type d'émulation OPL. Sur 'auto' le mode est déterminé par 'sbtype'.
@@ -263,7 +283,7 @@ Activer l'émulation du haut-parleur PC.
 Taux d'échantillonnage de la génération de son du haut-parleur PC.
 .
 :CONFIG_ZERO_OFFSET
-Neutralise et empêche DC-offset du haut-parleur PC d'endommager d'autres sourcesfrom harming other sources.
+Neutralise et empêche DC-offset du haut-parleur PC d'endommager d'autres sources.
 'auto' active ceci pour les systèmes non-Windows et le désactive pour Windows.
 Si votre OS corrige lui-même le DC-offset, alors paramétrez ceci à 'false'.
 .
@@ -293,7 +313,7 @@ Activer des intervalles de temps pour les axes. Tester cette option si votre man
 Tirer continuellement tant que le bouton est pressé.
 .
 :CONFIG_SWAP34
-Echanger les 3ème et 4ème axes. Peut être utile avec certaines manettes.
+Échanger les 3ème et 4ème axes. Peut être utile avec certaines manettes.
 .
 :CONFIG_BUTTONWRAP
 Activer l'inversion de bouton pour le nombre de boutons émulés.
@@ -342,7 +362,7 @@ pour fonctionner.
 Activer la prise en charge des UMB (bloc mémoire supérieure).
 .
 :CONFIG_VER
-Paramètrer la version de DOS (5.0 par défaut). Formater selon majeure.mineure.
+Paramétrer la version de DOS (5.0 par défaut). Formater selon majeure.mineure.
 Un nombre seul est traité comme une version majeure.
 Les paramètres communs sont 3.3, 5.0, 6.22, and 7.1.
 .
@@ -497,7 +517,16 @@ CDROMs trouvés : %d
 .
 :PROGRAM_MOUNT_STATUS_FORMAT
 %-5s  %-58s %-12s
+.
 
+:PROGRAM_MOUNT_STATUS_DRIVE
+Lecteur
+.
+:PROGRAM_MOUNT_STATUS_TYPE
+Type
+.
+:PROGRAM_MOUNT_STATUS_LABEL
+Nom de volume
 .
 :PROGRAM_MOUNT_STATUS_2
 Lecteur %c monté en tant que %s
@@ -668,7 +697,7 @@ vous devez monter les répertoires contenant les fichiers.
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
 [44;1m╔═════════════════════════════════════════════════════════════════════════╗
-║ [32mmount c c:\dosgames\[37m créera un lecteur C avec c:\dosgames pour contenu.║
+║ [32mmount c c:\dosgames\[37m créera un lecteur C avec c:\dosgames pour contenu. ║
 ║                                                                         ║
 ║ [32mc:\dosgames\[37m est un exemple. Remplacez-le par votre propre répertoire de jeux.  [37m 
 ╚═════════════════════════════════════════════════════════════════════════╝[0m
@@ -676,7 +705,7 @@ vous devez monter les répertoires contenant les fichiers.
 .
 :PROGRAM_INTRO_MOUNT_OTHER
 [44;1m╔══════════════════════════════════════════════════════════════════════╗
-║ [32mmount c ~/dosgames[37m créera un lecteur C avec ~/dosgames pour contenu.║
+║ [32mmount c ~/jeuxdos[37m créera un lecteur C avec ~/jeuxdos pour contenu. ║
 ║                                                                      ║
 ║ [32m~/dosgames[37m est un exemple. Remplacez-le par votre propre répertoire de jeux.[37m  ║
 ╚══════════════════════════════════════════════════════════════════════╝[0m
@@ -686,14 +715,14 @@ vous devez monter les répertoires contenant les fichiers.
 Quand le montage est complété avec succès, tapez [34;1mc:[0m pour aller your freshly
 sur votre nouveau lecteur C monté. Taper [34;1mdir[0m à cet endroit montrera son contenu. [34;1mcd[0m vous permettra
 d'entrer dans un répertoire (reconnaissable par les [33;1m[][0m dans le listing du répertoire).
-Vous pouvez exécutez des programmes/fichiers finissant par [31m.exe .bat[0m and [31m.com[0m.
+Vous pouvez exécutez des programmes/fichiers finissant par [31m.exe .bat[0m et [31m.com[0m.
 
 .
 :PROGRAM_INTRO_CDROM
 [2J[32;1mComment monter un lecteur CD-ROM réel/virtuel dans DOSBox :[0m
 DOSBox supporte l'émulation CD-ROM à plusieurs niveaux.
 
-Cecifonctionne sur tous les répertoires ordinaires, installe MSCDEX et marque les fichiers
+Ceci fonctionne sur tous les répertoires ordinaires, installe MSCDEX et marque les fichiers
 en lecteur seule. Généralement c'est suffisant pour la plupart des jeux :
 
 [34;1mmount D C:\exemple -t cdrom[0m
@@ -735,7 +764,7 @@ Impossible d'ouvrir le fichier de disque de démarrage.  Échec.
 
 .
 :PROGRAM_BOOT_WRITE_PROTECTED
-Le fichier image est en lecteur seule ! Cela peut créer des problèmes.
+Le fichier image est en lecture seule ! Cela peut créer des problèmes.
 
 .
 :PROGRAM_BOOT_PRINT_ERROR
@@ -812,16 +841,15 @@ Usage :
   [32;1mimgmount[0m [37;1mLECTEUR[0m [36;1mFICHIERIMAGE[0m [FICHIERIMAGE2 [..]] [-fs fat] -t hdd|floppy
   [32;1mimgmount[0m [37;1mLECTEUR[0m [36;1mIMAGEDÉMARRAGE[0m [-fs fat|none] -t hdd -size GEOMETRIE
   [32;1mimgmount[0m -u [37;1mLECTEUR[0m  (démonte l'image du LECTEUR)
+
 Avec :
   [37;1mLECTEUR[0m        est la lettre de lecteur où l'image sera montée : a, c, d, ...
   [36;1mCDROM-SET[0m      est ISO, CUE+BIN, CUE+ISO, ou CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [36;1mFICHIERIMAGE[0m   est une image de disque dur ou de disquette au format FAT16 ou FAT12
-  [36;1mIMAGEDÉMARRAGE[0m est une image de démarrage de disque dur avec une taille -size GEOMETRIE :
-            bytes-par-secteur,secteurs-par-tête,têtes,cylindres
+  [36;1mFICHIERIMAGE[0m   est une image de disque dur ou disquette formaté FAT16 ou FAT12
+  [36;1mIMAGEDÉMARRAGE[0m est une image de démarrage de disque dur avec une taille
+        -size GEOMETRIE : bytes-par-secteur,secteurs-par-tête,têtes,cylindres
 Notes :
-  - Leschemins des images et les noms de fichier sont insensibles à la casse et soit relatifs ou
-    absolus par rapport au répertoire de lancement de DOSBox.
-  - Ctrl+F4 échange & monte le CDROM-SET ou le FICHIERIMAGE suivant, si spécifié.
+  - Ctrl+F4 échange & monte le CDROM-SET ou le FICHIERIMAGE suivant si spécifié.
 Exemples :
   [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/jeux/doom.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
@@ -842,22 +870,22 @@ Usage :
   [32;1mmount[0m -u [37;1mLECTEUR[0m  (démonte le répertoire du LECTEUR)
 
 Avec :
-  [37;1mLETEUR[0m     la lettre de lecteur où sera monté le répertoire : A, C, D, ...
+  [37;1mLECTEUR[0m     la lettre de lecteur où sera monté le répertoire : A, C, D, ...
   [36;1mRÉPERTOIRE[0m est le répertoire de l'OS hôte qui sera monté
-  TYPE        type de répertoire à monter : 'dir' (répertoire), 'floppy' (disquette), 'cdrom', ou 'overlay' (redirection)
-  TAILLE      espace libre sur le disque virtuel (KiB pour les disquettes, MiB sinon)
-  NOM_VOLUME  nom de volume à utiliser
+  TYPE       type de répertoire à monter : 'dir', 'floppy', 'cdrom' ou 'overlay'
+  TAILLE     espace libre sur le disque virtuel
+             (KiB pour les disquettes, MiB sinon)
+  NOM_VOLUME nom de volume à utiliser
 
 Notes :
-  - [36;1mRÉPERTOIRE[0m est un chemin insensible à la casse, relatif ou absolu par rapport au
-    répertoire de lancement de DOSBox.
-  - '-t overlay' redirige les accès en écriture du disque monté vers un autre répertoire.
-  - Des options additionnelles sont décrites dans le manuel (fichier README, chapitre 4).
+  - '-t overlay' redirige les accès en écriture du disque monté
+    vers un autre répertoire.
+  - Options disponibles dans le manuel (fichier README, chapitre 4).
 
 Exemples :
   [32;1mmount[0m [37;1mC[0m [36;1m~/jeuxdos[0m
   [32;1mmount[0m [37;1mD[0m [36;1m"/media/USERNAME/JEU CD"[0m -t cdrom
-  [32;1mmount[0m [37;1mC[0m [36;1mmes_fichers_de_sauvegarde[0m -t overlay
+  [32;1mmount[0m [37;1mC[0m [36;1mmes_fichiers_de_sauvegarde[0m -t overlay
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
@@ -923,7 +951,7 @@ L'image doit être sur un hôte ou sur un disque local.
 
 .
 :PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
-L'utilisation de fichers multiples n'est supportée que pour les images CUE/ISO.
+L'utilisation de fichiers multiples n'est supportée que pour les images CUE/ISO.
 
 .
 :PROGRAM_KEYB_INFO
