@@ -394,24 +394,25 @@ void MidiHandler_mt32::MixerCallBack(uint16_t frames)
 	}
 	uint16_t cur_render_pos = renderPos;
 	uint16_t cur_play_pos = playPos;
-	const uint16_t samplesReady = (cur_render_pos < cur_play_pos)
-	                                      ? audioBuffer.size() - cur_play_pos
-	                                      : cur_render_pos - cur_play_pos;
-	if (frames > (samplesReady / CH_PER_FRAME)) {
-		assert(samplesReady <= UINT16_MAX);
-		frames = samplesReady / CH_PER_FRAME;
+	const auto total_samples = static_cast<uint16_t>(audioBuffer.size());
+	const uint16_t unplayed_samples = (cur_render_pos < cur_play_pos)
+	                                          ? total_samples - cur_play_pos
+	                                          : cur_render_pos - cur_play_pos;
+	if (frames > (unplayed_samples / CH_PER_FRAME)) {
+		assert(unplayed_samples <= UINT16_MAX);
+		frames = unplayed_samples / CH_PER_FRAME;
 	}
 	channel->AddSamples_s16(frames, audioBuffer.data() + cur_play_pos);
 	cur_play_pos += (frames * CH_PER_FRAME);
-	while (audioBuffer.size() <= cur_play_pos) {
-		cur_play_pos -= audioBuffer.size();
+	while (total_samples <= cur_play_pos) {
+		cur_play_pos -= total_samples;
 		playedBuffers++;
 	}
 	playPos = cur_play_pos;
 	cur_render_pos = renderPos;
 	const uint16_t samplesFree = (cur_render_pos < cur_play_pos)
 	                                     ? cur_play_pos - cur_render_pos
-	                                     : audioBuffer.size() + cur_play_pos -
+	                                     : total_samples + cur_play_pos -
 	                                               cur_render_pos;
 	if (minimumRenderFrames <= (samplesFree / CH_PER_FRAME)) {
 		SDL_LockMutex(lock.get());
@@ -425,12 +426,15 @@ void MidiHandler_mt32::RenderingLoop()
 	while (!stopProcessing) {
 		const uint16_t cur_render_pos = renderPos;
 		const uint16_t cur_play_pos = playPos;
+
 		uint16_t samples_to_render = 0;
 		if (cur_render_pos < cur_play_pos) {
 			samples_to_render = cur_play_pos - cur_render_pos -
 			                    CH_PER_FRAME;
 		} else {
-			samples_to_render = audioBuffer.size() - cur_render_pos;
+			const auto total_samples = static_cast<uint16_t>(
+			        audioBuffer.size());
+			samples_to_render = total_samples - cur_render_pos;
 			if (cur_play_pos == 0) {
 				samples_to_render -= CH_PER_FRAME;
 			}
