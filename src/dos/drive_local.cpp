@@ -259,7 +259,65 @@ bool localDrive::FileUnlink(char * name) {
 	return false;
 }
 
-bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
+#if defined(WIN32)
+// Return the timestamp of a local file, given by hFile, for the *local* time
+// zone in packed DOS format
+bool GetLocalFatDateTime(HANDLE hFile, WORD *fatDate, WORD *fatTime)
+{
+	FILETIME fileTimeLocal, fileTimeUTC;
+	SYSTEMTIME systemTimeLocal, systemTimeUTC;
+
+	if (!GetFileTime(hFile, NULL, NULL, &fileTimeUTC)) {
+		LOG_MSG("GetLocalFileTime: GetFileTime error returned %d",
+		        GetLastError());
+		return false;
+	}
+	if (!FileTimeToSystemTime(&fileTimeUTC, &systemTimeUTC)) {
+		LOG_MSG("GetLocalFileTime: FileTimeToSystemTime returned error %d",
+		        GetLastError());
+		return false;
+	}
+	if (!SystemTimeToTzSpecificLocalTime(NULL, &systemTimeUTC, &systemTimeLocal)) {
+		LOG_MSG("GetLocalFileTime: SystemTimeToTzSpecificLocalTime returned error %d",
+		        GetLastError());
+		return false;
+	}
+	if (!SystemTimeToFileTime(&systemTimeLocal, &fileTimeLocal)) {
+		LOG_MSG("GetLocalFileTime: SystemTimeToFileTime returned error %d",
+		        GetLastError());
+		return false;
+	}
+	if (!FileTimeToDosDateTime(&fileTimeLocal, fatDate, fatTime)) {
+		LOG_MSG("GetLocalFileTime: DosDateTimeToFileTime returned error %d",
+		        GetLastError());
+		return false;
+	}
+	return true;
+}
+
+// Same as above, but provide the name of the local file instead of the handle
+bool GetLocalFatDateTime(char *name, WORD *fatDate, WORD *fatTime)
+{
+	HANDLE hFile;
+
+	hFile = CreateFile(name, FILE_READ_ATTRIBUTES, FILE_SHARE_READ, NULL,
+	                   OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+	if (hFile == INVALID_HANDLE_VALUE) {
+		LOG_MSG("GetLocalFileTime: CreateFile returned error %d on file %s",
+		        GetLastError(), name);
+		return false;
+	}
+	if (!GetLocalFatDateTime(hFile, fatDate, fatTime)) {
+		CloseHandle(hFile);
+		return false;
+	}
+	CloseHandle(hFile);
+	return true;
+}
+#endif
+
+bool localDrive::FindFirst(char *_dir, DOS_DTA &dta, bool fcb_findfirst)
+{
 	char tempDir[CROSS_LEN];
 	safe_strcpy(tempDir, basedir);
 	safe_strcat(tempDir, _dir);
@@ -360,15 +418,29 @@ again:
 	} 
 
 	find_size=(Bit32u) stat_block.st_size;
-	struct tm *time;
-	if ((time=localtime(&stat_block.st_mtime))!=0) {
-		find_date=DOS_PackDate((Bit16u)(time->tm_year+1900),(Bit16u)(time->tm_mon+1),(Bit16u)time->tm_mday);
-		find_time=DOS_PackTime((Bit16u)time->tm_hour,(Bit16u)time->tm_min,(Bit16u)time->tm_sec);
-	} else {
-		find_time=6; 
-		find_date=4;
+#if defined(WIN32)
+
+	// If getting the local time using Win32 API function calls fails, try
+	// it using POSIX function calls
+	if (!GetLocalFatDateTime(dirCache.GetExpandName(full_name), &find_date,
+	                         &find_time)) {
+#endif
+		struct tm *time;
+		if ((time = localtime(&stat_block.st_mtime)) != 0) {
+			find_date = DOS_PackDate((Bit16u)(time->tm_year + 1900),
+			                         (Bit16u)(time->tm_mon + 1),
+			                         (Bit16u)time->tm_mday);
+			find_time = DOS_PackTime((Bit16u)time->tm_hour,
+			                         (Bit16u)time->tm_min,
+			                         (Bit16u)time->tm_sec);
+		} else {
+			find_time = 6;
+			find_date = 4;
+		}
+#if defined(WIN32)
 	}
-	dta.SetResult(find_name,find_size,find_date,find_time,find_attr);
+#endif
+	dta.SetResult(find_name, find_size, find_date, find_time, find_attr);
 	return true;
 }
 
@@ -473,14 +545,24 @@ bool localDrive::FileStat(const char* name, FileStat_Block * const stat_block) {
 	struct stat temp_stat;
 	if (stat(newname,&temp_stat)!=0) return false;
 	/* Convert the stat to a FileStat */
-	struct tm *time;
-	if ((time=localtime(&temp_stat.st_mtime))!=0) {
-		stat_block->time=DOS_PackTime((Bit16u)time->tm_hour,(Bit16u)time->tm_min,(Bit16u)time->tm_sec);
-		stat_block->date=DOS_PackDate((Bit16u)(time->tm_year+1900),(Bit16u)(time->tm_mon+1),(Bit16u)time->tm_mday);
-	} else {
-
+#if defined(WIN32)
+	// If getting the local time using Win32 API function calls fails, try
+	// it using POSIX function calls
+	if (!GetLocalFatDateTime(newname, &stat_block->date, &stat_block->time)) {
+#endif
+		struct tm *time;
+		if ((time = localtime(&temp_stat.st_mtime)) != 0) {
+			stat_block->date = DOS_PackDate((Bit16u)(time->tm_year + 1900),
+			                                (Bit16u)(time->tm_mon + 1),
+			                                (Bit16u)time->tm_mday);
+			stat_block->time = DOS_PackTime((Bit16u)time->tm_hour,
+			                                (Bit16u)time->tm_min,
+			                                (Bit16u)time->tm_sec);
+		}
+#if defined(WIN32)
 	}
-	stat_block->size=(Bit32u)temp_stat.st_size;
+#endif
+	stat_block->size = (Bit32u)temp_stat.st_size;
 	return true;
 }
 
@@ -674,16 +756,63 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 }
 
 bool localFile::Close() {
-	// only close if one reference left
-	if (refCtr==1) {
-		if (fhandle) fclose(fhandle);
-		fhandle = 0;
-		open = false;
-	};
+	if (refCtr > 0 && newtime) {
+		// prevent low level write access of buffered data after we have
+		// set the time
+		if (open) {
+			fflush(fhandle);
+		}
+#if defined(WIN32)
+		// Windows' API implements neither "utime" nor
+		// "LocalFileTimeToFileTime" properly. Instead of looking at the
+		// file date to determine whether daylight savings time is
+		// active, it just looks at the current host system time, which
+		// is nonsense. Only TzSpecificLocalTimeToSystemTime does
+		// it properly. Source:
+		// http://nogeekhere.blogspot.de/2008/11/what-happened-in-localfiletimetofiletim.html
+		FILETIME fileTimeLocal;
+		if (DosDateTimeToFileTime(date, time, &fileTimeLocal)) {
+			SYSTEMTIME systemTimeLocal;
+			if (FileTimeToSystemTime(&fileTimeLocal, &systemTimeLocal)) {
+				SYSTEMTIME systemTimeUTC;
+				if (TzSpecificLocalTimeToSystemTime(NULL, &systemTimeLocal,
+				                                    &systemTimeUTC)) {
+					FILETIME fileTimeUTC;
+					if (SystemTimeToFileTime(&systemTimeUTC,
+					                         &fileTimeUTC)) {
+						HANDLE hFile = (HANDLE)_get_osfhandle(
+						        fileno(fhandle));
+						if (SetFileTime(hFile, &fileTimeUTC,
+						                &fileTimeUTC,
+						                &fileTimeUTC)) {
+							newtime = false;
+						} else {
+							LOG_MSG("FS: failed SetFileTime for '%s' (code: %d)",
+							        name.c_str(),
+							        GetLastError());
+						}
+					} else {
+						LOG_MSG("FS: failed SystemTimeToFileTime for '%s' (code: %d)",
+						        name.c_str(),
+						        GetLastError());
+					}
+				} else {
+					LOG_MSG("FS: failed TzSpecificLocalTimeToSystemTime for '%s' (code: %d)",
+					        name.c_str(), GetLastError());
+				}
+			} else {
+				LOG_MSG("FS: failed FileTimeToSystemTime for '%s' (code: %d)",
+				        name.c_str(), GetLastError());
+			}
+		} else {
+			LOG_MSG("FS: failed DosDateTimeToFileTime for '%s' (code: %d)",
+			        name.c_str(), GetLastError());
+		}
 
-	if (newtime) {
+#else
+
 		// backport from DOS_PackDate() and DOS_PackTime()
-		tm tim = {0};
+		tm tim = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		tim.tm_sec = (time & 0x1f) * 2;
 		tim.tm_min = (time >> 5) & 0x3f;
 		tim.tm_hour = (time >> 11) & 0x1f;
@@ -696,20 +825,29 @@ bool localFile::Close() {
 		// serialize time
 		mktime(&tim);
 
-		utimbuf ftim;
-		ftim.actime = ftim.modtime = mktime(&tim);
+		struct timespec ftim[2];
+		ftim[0].tv_sec = mktime(&tim);
+		ftim[0].tv_nsec = 10;
+		ftim[1].tv_sec = mktime(&tim);
+		ftim[1].tv_nsec = 10;
 
-		char fullname[CROSS_LEN];
-		snprintf(fullname, sizeof(fullname), "%s%s", basedir, name.c_str());
-		CROSS_FILENAME(fullname);
-
-		// FIXME: utime is deprecated, need a modern cross-platform
-		// implementation.
-		if (utime(fullname, &ftim)) {
+		if (futimens(fileno(fhandle), ftim)) {
+			LOG_MSG("FS: failed setting time for '%s' (%s)",
+			        name.c_str(), strerror(errno));
 			return false;
 		}
+#endif
+		newtime = false;
 	}
 
+	// only close if one reference left
+	if (refCtr == 1) {
+		if (fhandle) {
+			fclose(fhandle);
+		}
+		fhandle = 0;
+		open = false;
+	}
 	return true;
 }
 
@@ -745,6 +883,11 @@ bool localFile::UpdateDateTimeFromHost()
 		return true; // use defaults
 
 	struct stat temp_stat;
+#if defined(WIN32)
+	const auto win_handle = _get_osfhandle(fileno(fhandle));
+	if (!GetLocalFatDateTime(win_handle, &date, &time))
+		return true; // use defaults
+#endif
 	if (fstat(file, &temp_stat) == -1)
 		return true; // use defaults
 
