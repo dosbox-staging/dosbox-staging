@@ -194,6 +194,22 @@ void strip_punctuation(std::string &str);
 //   split("::", ':') returns {"", "", ""}
 std::vector<std::string> split(const std::string &seq, const char delim);
 
+// Split a string on whitespace, where whitespace can be any of the following:
+// ' '    (0x20)  space (SPC)
+// '\t'   (0x09)  horizontal tab (TAB)
+// '\n'   (0x0a)  newline (LF)
+// '\v'   (0x0b)  vertical tab (VT)
+// '\f'   (0x0c)  feed (FF)
+// '\r'   (0x0d)  carriage return (CR)
+// Absent string content on either side of a delimiter is omitted. For example:
+//   split("abc") returns {"abc"}
+//   split("  a   b   c  ") returns {"a", "b", "c"}
+//   split("\t \n abc \r \v def \f \v ") returns {"abc", "def"}
+//   split("a\tb\nc\vd e\rf") returns {"a", "b", "c", "d", "e", "f"}
+//   split("  ") returns {}
+//   split(" ") returns {}
+std::vector<std::string> split(const std::string &seq);
+
 bool is_executable_filename(const std::string &filename) noexcept;
 
 // Coarse but fast sine and cosine approximations. Accuracy ranges from 0.0005
