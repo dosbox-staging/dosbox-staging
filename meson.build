@@ -47,7 +47,9 @@ endif
 
 # prepare configuration for dynrec core
 #
-# host_machine is a machine we're building for
+# host_machine is a machine we're building for; meson reference:
+# https://mesonbuild.com/Reference-manual.html#host_machine-object
+# https://mesonbuild.com/Reference-tables.html#cpu-families
 #
 # In code we have code paths for two additional architectures:
 #
@@ -97,6 +99,13 @@ elif conf_data.has('C_DYNREC')
   message('Building dynamic core (dynrec) for ' + target_cpu)
 else
   warning('Building without dynamic core support')
+endif
+
+if host_machine.endian() == 'big'
+  conf_data.set('WORDS_BIGENDIAN', 1)
+  message('Building for big-endian architecture')
+else
+  message('Building for little-endian architecture')
 endif
 
 

@@ -105,7 +105,7 @@
 // TODO: move this to compiler.h MSVC: #define INLINE __forceinline
 #define INLINE inline __attribute__((always_inline))
 
-/* Quirks and toggles for standard headers and libraries
+/* Quirks and toggles for standard headers, libraries, and other stuff
  *
  * Sometimes available functions, structs, or struct fields differ slightly
  * between operating systems.
@@ -120,5 +120,8 @@
 
 // TODO: generate; Define to 1 if you have the mprotect function
 #define C_HAVE_MPROTECT 1
+
+// Define to 1 when host/target processor uses big endian byte ordering
+#mesondefine WORDS_BIGENDIAN
 
 #endif
