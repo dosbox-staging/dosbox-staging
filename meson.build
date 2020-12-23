@@ -108,6 +108,11 @@ else
   message('Building for little-endian architecture')
 endif
 
+# It might be a good idea to disable C_FPU when porting dynamic core to
+# a new hardware architecture.
+conf_data.set10('C_FPU', true)
+conf_data.set10('C_FPU_X86', (host_cpu == 'x86' or host_cpu == 'x86_64'))
+
 
 # generate config.h
 #
