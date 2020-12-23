@@ -151,6 +151,38 @@ std::vector<std::string> split(const std::string &seq, const char delim)
 	return words;
 }
 
+std::vector<std::string> split(const std::string &seq)
+{	
+	std::vector<std::string> words;
+	if (seq.empty())
+		return words;
+
+	constexpr auto whitespace = " \f\n\r\t\v";
+
+	// count words to reserve space in our vector
+	size_t n = 0;
+	auto head = seq.find_first_not_of(whitespace, 0);
+	while (head != std::string::npos) {
+		const auto tail = seq.find_first_of(whitespace, head);
+		head = seq.find_first_not_of(whitespace, tail);
+		++n;
+	}
+	words.reserve(n);
+
+	// populate the vector with the words
+	head = seq.find_first_not_of(whitespace, 0);
+	while (head != std::string::npos) {
+		const auto tail = seq.find_first_of(whitespace, head);
+		words.emplace_back(seq.substr(head, tail - head));
+		head = seq.find_first_not_of(whitespace, tail);
+	}
+
+	// did we reserve the exact space needed?
+	assert(n == words.size());
+
+	return words;
+}
+
 void strip_punctuation(std::string &str) {
 	str.erase(
 		std::remove_if(

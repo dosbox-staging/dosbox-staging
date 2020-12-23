@@ -148,21 +148,57 @@ TEST(Support_split_delim, Empty)
 	EXPECT_EQ(split(" ", ' '), two);
 	EXPECT_EQ(split("  ", ' '), three);
 }
+ 
+TEST(Support_split, NoBoundingWhitespace)
 {
 	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/"});
-	EXPECT_EQ(split("::::a:/b::::/c/d:/e/f/", ':'), expected);
-	EXPECT_EQ(split("a /b  /c/d   /e/f/    ", ' '), expected);
+	EXPECT_EQ(split("a /b /c/d /e/f/"), expected);
+	EXPECT_EQ(split("abc"), std::vector<std::string>{"abc"});
+}
+TEST(Support_split, WhitespaceAtStartNotEnd)
+{
+	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/"});
+	EXPECT_EQ(split(" a /b /c/d /e/f/"), expected);
+}
+
+TEST(Support_split, WhitespaceAtEndNotStart)
+{
+	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/"});
+	EXPECT_EQ(split("a /b /c/d /e/f/ "), expected);
+}
+
+TEST(Support_split, WhitespaceAtBoth)
+{
+	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/"});
+	EXPECT_EQ(split(" a /b /c/d /e/f/ "), expected);
+}
+
+TEST(Support_split, MultiInternalWhitespace)
+{
+	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/"});
+	EXPECT_EQ(split("a /b  /c/d   /e/f/"), expected);
+}
+
+TEST(Support_split, MultiBoundingWhitespace)
+{
+	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/"});
+	EXPECT_EQ(split("  a /b /c/d /e/f/   "), expected);
+}
+
+TEST(Support_split, MixedWhitespace)
+{
+	const std::vector<std::string> expected({"a", "b", "c"});
+	EXPECT_EQ(split("\t\na\f\vb\rc"), expected);
+	EXPECT_EQ(split("a\tb\f\vc"), expected);
+	EXPECT_EQ(split(" a \n \v \r b \f \r c "), expected);
 }
 
 TEST(Support_split, Empty)
 {
-	const std::vector<std::string> expected;
-	EXPECT_EQ(split("", ':'), expected);
-	EXPECT_EQ(split(":", ':'), expected);
-	EXPECT_EQ(split("::", ':'), expected);
-	EXPECT_EQ(split(" ", ' '), expected);
-	EXPECT_EQ(split("  ", ' '), expected);
-	EXPECT_EQ(split("   ", ' '), expected);
+	const std::vector<std::string> empty;
+	EXPECT_EQ(split(""), empty);
+	EXPECT_EQ(split(" "), empty);
+	EXPECT_EQ(split("   "), empty);
 }
 
 } // namespace
