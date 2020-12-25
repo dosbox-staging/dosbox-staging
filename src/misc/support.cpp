@@ -19,20 +19,18 @@
 #include "support.h"
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <cctype>
 #include <climits>
 #include <cmath>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
-#include <ctype.h>
 #include <functional>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
 #include <stdexcept>
+#include <string>
 
-#include "dosbox.h"
 #include "cross.h"
 #include "debug.h"
 #include "video.h"
