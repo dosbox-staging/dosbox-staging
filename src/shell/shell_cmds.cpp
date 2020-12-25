@@ -1385,24 +1385,27 @@ void DOS_Shell::CMD_DATE(char * args) {
 
 void DOS_Shell::CMD_TIME(char * args) {
 	HELP("TIME");
-	if (ScanCMDBool(args,"H")) {
-		// synchronize time with host parameter
-		time_t curtime;
-		struct tm *loctime;
-		curtime = time (NULL);
-		loctime = localtime (&curtime);
+	if (ScanCMDBool(args, "H")) {
+		// synchronize time with host
+		const time_t curtime = time(NULL);
+		struct tm datetime;
+		localtime_r(&curtime, &datetime);
 
-		//reg_cx = loctime->;
-		//reg_dh = loctime->;
-		//reg_dl = loctime->;
-
-		// reg_ah=0x2d; // set system time TODO
-		// CALLBACK_RunRealInt(0x21);
-
-		Bit32u ticks=(Bit32u)(((double)(loctime->tm_hour*3600+
-										loctime->tm_min*60+
-										loctime->tm_sec))*18.206481481);
-		mem_writed(BIOS_TIMER,ticks);
+		// Original IBM PC used ~1.19MHz crystal for timer, because at
+		// 1.19MHz, 2^16 ticks is ~1 hour, making it easy to count
+		// hours and days. More precisely:
+		//
+		// clock updates at 1193180/65536 ticks per second.
+		// ticks per second ≈ 18.2
+		// ticks per hour   ≈ 65543
+		// ticks per day    ≈ 1573040
+		//
+		constexpr uint64_t ticks_per_day = 1573040;
+		const uint64_t seconds_now = (datetime.tm_hour * 3600 +
+		                              datetime.tm_min * 60 +
+		                              datetime.tm_sec);
+		const auto ticks_now = ticks_per_day * seconds_now / (24 * 3600);
+		mem_writed(BIOS_TIMER, static_cast<uint32_t>(ticks_now));
 		return;
 	}
 	bool timeonly = ScanCMDBool(args,"T");
