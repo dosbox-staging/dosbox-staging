@@ -25,11 +25,9 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
-#include <ctype.h>
+#include <cstring>
 #include <limits>
-#include <math.h>
 #include <stdexcept>
-#include <string.h>
 #include <string>
 #include <vector>
 

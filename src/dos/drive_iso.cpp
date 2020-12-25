@@ -16,15 +16,15 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "drives.h"
 
 #include <cctype>
 #include <cstring>
+
 #include "cdrom.h"
-#include "dosbox.h"
 #include "dos_mscdex.h"
 #include "dos_system.h"
 #include "support.h"
-#include "drives.h"
 
 #define FLAGS1	((iso) ? de.fileFlags : de.timeZone)
 #define FLAGS2	((iso) ? de->fileFlags : de->timeZone)
