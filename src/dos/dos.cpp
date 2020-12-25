@@ -16,19 +16,19 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include "dosbox.h"
-#include "bios.h"
-#include "mem.h"
-#include "callback.h"
-#include "regs.h"
 #include "dos_inc.h"
+
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
+
+#include "bios.h"
+#include "callback.h"
+#include "mem.h"
+#include "regs.h"
+#include "serialport.h"
 #include "setup.h"
 #include "support.h"
-#include "serialport.h"
 
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
