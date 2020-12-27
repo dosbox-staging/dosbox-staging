@@ -393,7 +393,7 @@ FILE *fopen_wrap(const char *path, const char *mode) {
 	return fopen(path,mode);
 }
 
-#if defined(WIN32)
+#if defined(_MSC_VER)
 struct tm *localtime_r(const time_t *timep, struct tm *result)
 {
 	const errno_t err = localtime_s(result, timep);

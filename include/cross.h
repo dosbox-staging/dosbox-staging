@@ -70,7 +70,7 @@
 #define cross_fileno(s) fileno(s)
 #endif
 
-#if defined(WIN32)
+#if defined(_MSC_VER)
 struct tm *localtime_r(const time_t *timep, struct tm *result);
 #endif
 
