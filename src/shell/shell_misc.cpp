@@ -167,11 +167,11 @@ void DOS_Shell::InputCommand(char * line) {
 				case 0x53:/* DELETE */
 					{
 						if(str_index>=str_len) break;
-						Bit16u a=str_len-str_index-1;
+						auto text_len = static_cast<uint16_t>(str_len - str_index - 1);
 						Bit8u* text=reinterpret_cast<Bit8u*>(&line[str_index+1]);
-						DOS_WriteFile(STDOUT,text,&a);//write buffer to screen
+						DOS_WriteFile(STDOUT, text, &text_len); // write buffer to screen
 						outc(' ');outc(8);
-						for(Bitu i=str_index;i<str_len-1;i++) {
+						for (auto i = str_index; i < str_len-1; i++) {
 							line[i]=line[i+1];
 							outc(8);
 						}
@@ -343,11 +343,11 @@ void DOS_Shell::InputCommand(char * line) {
 			if (l_completion.size()) l_completion.clear();
 			if(str_index < str_len && true) { //mem_readb(BIOS_KEYBOARD_FLAGS1)&0x80) dev_con.h ?
 				outc(' ');//move cursor one to the right.
-				Bit16u a = str_len - str_index;
+				auto text_len = static_cast<uint16_t>(str_len - str_index);
 				Bit8u* text=reinterpret_cast<Bit8u*>(&line[str_index]);
-				DOS_WriteFile(STDOUT,text,&a);//write buffer to screen
+				DOS_WriteFile(STDOUT, text, &text_len); // write buffer to screen
 				outc(8);//undo the cursor the right.
-				for(Bitu i=str_len;i>str_index;i--) {
+				for (auto i = str_len; i > str_index; i--) {
 					line[i]=line[i-1]; //move internal buffer
 					outc(8); //move cursor back (from write buffer to screen)
 				}
