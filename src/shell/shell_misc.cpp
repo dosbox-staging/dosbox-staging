@@ -46,7 +46,8 @@ static void outc(Bit8u c) {
 void DOS_Shell::InputCommand(char * line) {
 	Bitu size=CMD_MAXLINE-2; //lastcharacter+0
 	Bit8u c;Bit16u n=1;
-	Bitu str_len=0;Bitu str_index=0;
+	size_t str_len = 0;
+	size_t str_index = 0;
 	Bit16u len=0;
 	bool current_hist=false; // current command stored in history?
 
@@ -81,7 +82,7 @@ void DOS_Shell::InputCommand(char * line) {
 							line[str_index ++] = c;
 							DOS_WriteFile(STDOUT,&c,&n);
 						}
-						str_len = str_index = (Bitu)it_history->length();
+						str_len = str_index = it_history->length();
 						size = CMD_MAXLINE - str_index - 2;
 						line[str_len] = 0;
 					}
@@ -204,14 +205,14 @@ void DOS_Shell::InputCommand(char * line) {
 		case 0x08:				/* BackSpace */
 			if (str_index) {
 				outc(8);
-				Bit32u str_remain=str_len - str_index;
+				size_t str_remain = str_len - str_index;
 				size++;
 				if (str_remain) {
 					memmove(&line[str_index-1],&line[str_index],str_remain);
 					line[--str_len]=0;
 					str_index --;
 					/* Go back to redraw */
-					for (Bit16u i=str_index; i < str_len; i++)
+					for (size_t i = str_index; i < str_len; i++)
 						outc(line[i]);
 				} else {
 					line[--str_index] = '\0';
