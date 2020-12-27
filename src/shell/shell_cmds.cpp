@@ -1401,9 +1401,9 @@ void DOS_Shell::CMD_TIME(char * args) {
 		// ticks per day    ≈ 1573040
 		//
 		constexpr uint64_t ticks_per_day = 1573040;
-		const uint64_t seconds_now = (datetime.tm_hour * 3600 +
-		                              datetime.tm_min * 60 +
-		                              datetime.tm_sec);
+		const auto seconds_now = (datetime.tm_hour * 3600 +
+		                          datetime.tm_min * 60 +
+		                          datetime.tm_sec);
 		const auto ticks_now = ticks_per_day * seconds_now / (24 * 3600);
 		mem_writed(BIOS_TIMER, static_cast<uint32_t>(ticks_now));
 		return;
