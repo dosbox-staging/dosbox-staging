@@ -1331,7 +1331,7 @@ void DOS_Shell::CMD_DATE(char * args) {
 		// synchronize date with host
 		const time_t curtime = time(nullptr);
 		struct tm datetime;
-		localtime_r(&curtime, &datetime);
+		cross::localtime_r(&curtime, &datetime);
 		reg_ah = 0x2b; // set system date
 		reg_cx = static_cast<uint16_t>(datetime.tm_year + 1900);
 		reg_dh = static_cast<uint8_t>(datetime.tm_mon + 1);
@@ -1389,7 +1389,7 @@ void DOS_Shell::CMD_TIME(char * args) {
 		// synchronize time with host
 		const time_t curtime = time(NULL);
 		struct tm datetime;
-		localtime_r(&curtime, &datetime);
+		cross::localtime_r(&curtime, &datetime);
 
 		// Original IBM PC used ~1.19MHz crystal for timer, because at
 		// 1.19MHz, 2^16 ticks is ~1 hour, making it easy to count
