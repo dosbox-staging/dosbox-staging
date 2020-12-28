@@ -361,7 +361,7 @@ again:
 
 	find_size=(Bit32u) stat_block.st_size;
 	struct tm datetime;
-	if (localtime_r(&stat_block.st_mtime, &datetime)) {
+	if (cross::localtime_r(&stat_block.st_mtime, &datetime)) {
 		find_date = DOS_PackDate(datetime);
 		find_time = DOS_PackTime(datetime);
 	} else {
@@ -474,7 +474,7 @@ bool localDrive::FileStat(const char* name, FileStat_Block * const stat_block) {
 	if (stat(newname,&temp_stat)!=0) return false;
 	/* Convert the stat to a FileStat */
 	struct tm datetime;
-	if (localtime_r(&temp_stat.st_mtime, &datetime)) {
+	if (cross::localtime_r(&temp_stat.st_mtime, &datetime)) {
 		stat_block->time = DOS_PackTime(datetime);
 		stat_block->date = DOS_PackDate(datetime);
 	} else {
@@ -749,7 +749,7 @@ bool localFile::UpdateDateTimeFromHost()
 		return true; // use defaults
 
 	struct tm datetime;
-	if (!localtime_r(&temp_stat.st_mtime, &datetime))
+	if (!cross::localtime_r(&temp_stat.st_mtime, &datetime))
 		return true; // use defaults
 
 	time = DOS_PackTime(datetime);

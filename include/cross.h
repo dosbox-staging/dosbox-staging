@@ -70,9 +70,19 @@
 #define cross_fileno(s) fileno(s)
 #endif
 
-#if defined(_MSC_VER)
+namespace cross {
+
+#if defined(WIN32)
+
 struct tm *localtime_r(const time_t *timep, struct tm *result);
+
+#else
+
+constexpr auto localtime_r = ::localtime_r;
+
 #endif
+
+} // namespace cross
 
 void CROSS_DetermineConfigPaths();
 std::string CROSS_GetPlatformConfigDir();
