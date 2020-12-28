@@ -552,26 +552,43 @@ static void cache_closeblock(void) {
 
 
 // place an 8bit value into the cache
+static INLINE void cache_addb(Bit8u val,Bit8u *pos) {
+	*pos=val;
+}
 static INLINE void cache_addb(Bit8u val) {
-	*cache.pos++=val;
+	Bit8u *pos=cache.pos+1;
+	cache_addb(val,cache.pos);
+	cache.pos=pos;
 }
 
 // place a 16bit value into the cache
+static INLINE void cache_addw(Bit16u val,Bit8u *pos) {
+	*(Bit16u*)pos=val;
+}
 static INLINE void cache_addw(Bit16u val) {
-	*(Bit16u*)cache.pos=val;
-	cache.pos+=2;
+	Bit8u *pos=cache.pos+2;
+	cache_addw(val,cache.pos);
+	cache.pos=pos;
 }
 
 // place a 32bit value into the cache
+static INLINE void cache_addd(Bit32u val,Bit8u *pos) {
+	*(Bit32u*)pos=val;
+}
 static INLINE void cache_addd(Bit32u val) {
-	*(Bit32u*)cache.pos=val;
-	cache.pos+=4;
+	Bit8u *pos=cache.pos+4;
+	cache_addd(val,cache.pos);
+	cache.pos=pos;
 }
 
 // place a 64bit value into the cache
+static INLINE void cache_addq(Bit64u val,Bit8u *pos) {
+	*(Bit64u*)pos=val;
+}
 static INLINE void cache_addq(Bit64u val) {
-	*(Bit64u*)cache.pos=val;
-	cache.pos+=8;
+	Bit8u *pos=cache.pos+8;
+	cache_addq(val,cache.pos);
+	cache.pos=pos;
 }
 
 
