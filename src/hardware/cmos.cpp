@@ -16,18 +16,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <time.h>
-#include <math.h>
-
 #include "dosbox.h"
-#include "timer.h"
-#include "pic.h"
+
+#include <cmath>
+#include <ctime>
+
+#include "bios_disk.h"
+#include "cross.h"
 #include "inout.h"
 #include "mem.h"
-#include "bios_disk.h"
+#include "pic.h"
 #include "setup.h"
-#include "cross.h" //fmod on certain platforms
+#include "timer.h"
 
 static struct {
 	Bit8u regs[0x40];
@@ -130,31 +130,28 @@ static Bitu cmos_readreg(Bitu port,Bitu iolen) {
 	}
 	Bitu drive_a, drive_b;
 	Bit8u hdparm;
-	time_t curtime;
-	struct tm *loctime;
-	/* Get the current time. */
-	curtime = time (NULL);
 
-	/* Convert it to local time representation. */
-	loctime = localtime (&curtime);
+	const time_t curtime = time(nullptr);
+	struct tm datetime;
+	cross::localtime_r(&curtime, &datetime);
 
 	switch (cmos.reg) {
 	case 0x00:		/* Seconds */
-		return 	MAKE_RETURN(loctime->tm_sec);
+		return MAKE_RETURN(datetime.tm_sec);
 	case 0x02:		/* Minutes */
-		return 	MAKE_RETURN(loctime->tm_min);
+		return MAKE_RETURN(datetime.tm_min);
 	case 0x04:		/* Hours */
-		return 	MAKE_RETURN(loctime->tm_hour);
+		return MAKE_RETURN(datetime.tm_hour);
 	case 0x06:		/* Day of week */
-		return 	MAKE_RETURN(loctime->tm_wday + 1);
+		return MAKE_RETURN(datetime.tm_wday + 1);
 	case 0x07:		/* Date of month */
-		return 	MAKE_RETURN(loctime->tm_mday);
+		return MAKE_RETURN(datetime.tm_mday);
 	case 0x08:		/* Month */
-		return 	MAKE_RETURN(loctime->tm_mon + 1);
+		return MAKE_RETURN(datetime.tm_mon + 1);
 	case 0x09:		/* Year */
-		return 	MAKE_RETURN(loctime->tm_year % 100);
+		return MAKE_RETURN(datetime.tm_year % 100);
 	case 0x32:		/* Century */
-		return 	MAKE_RETURN(loctime->tm_year / 100 + 19);
+		return MAKE_RETURN(datetime.tm_year / 100 + 19);
 	case 0x01:		/* Seconds Alarm */
 	case 0x03:		/* Minutes Alarm */
 	case 0x05:		/* Hours Alarm */
