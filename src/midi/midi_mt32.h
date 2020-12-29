@@ -38,14 +38,18 @@
 
 #include "mixer.h"
 
-using mt32_service_ptr_t = std::unique_ptr<MT32Emu::Service>;
-
 class MidiHandler_mt32 final : public MidiHandler {
 private:
-	using mixer_channel_ptr_t =
-	        std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
+	// Scoped types
+	using channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
+	using conditional_t = std::unique_ptr<SDL_cond, decltype(&SDL_DestroyCond)>;
+	using mutex_t = std::unique_ptr<SDL_mutex, decltype(&SDL_DestroyMutex)>;
+	static void DeleteThread(SDL_Thread *t);
+	using thread_t = std::unique_ptr<SDL_Thread, decltype(&MidiHandler_mt32::DeleteThread)>;
 
 public:
+	using service_t = std::unique_ptr<MT32Emu::Service>;
+
 	~MidiHandler_mt32();
 
 	void Close() override;
@@ -60,11 +64,13 @@ private:
 	static int ProcessingThread(void *data);
 	void RenderingLoop();
 
-	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
-	mt32_service_ptr_t service{};
-	sdl_thread_ptr_t thread{nullptr, &sdl_thread_deleter};
-	sdl_mutex_ptr_t lock{nullptr, &SDL_DestroyMutex};
-	sdl_cond_ptr_t framesInBufferChanged{nullptr, &SDL_DestroyCond};
+	// Managed objects
+	channel_t channel{nullptr, MIXER_DelChannel};
+	conditional_t framesInBufferChanged{nullptr, &SDL_DestroyCond};
+	mutex_t lock{nullptr, &SDL_DestroyMutex};
+	thread_t thread{nullptr, &MidiHandler_mt32::DeleteThread};
+	service_t service{};
+
 	std::vector<int16_t> audioBuffer = {};
 
 	// Ongoing state-tracking
