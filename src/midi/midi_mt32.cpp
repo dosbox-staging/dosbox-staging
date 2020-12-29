@@ -143,7 +143,7 @@ static std::deque<std::string> get_rom_dirs()
 
 static bool load_rom_set(const std::string &ctr_path,
                          const std::string &pcm_path,
-                         mt32_service_ptr_t &service)
+                         MidiHandler_mt32::service_t &service)
 {
 	const bool paths_exist = path_exists(ctr_path) && path_exists(pcm_path);
 	if (!paths_exist)
@@ -158,7 +158,7 @@ static bool load_rom_set(const std::string &ctr_path,
 
 static bool find_and_load(const std::string &model,
                           const std::deque<std::string> &rom_dirs,
-                          mt32_service_ptr_t &service)
+                          MidiHandler_mt32::service_t &service)
 {
 	const std::string ctr_rom = model + "_CONTROL.ROM";
 	const std::string pcm_rom = model + "_PCM.ROM";
@@ -231,7 +231,7 @@ static mt32emu_report_handler_i get_report_handler_interface()
 
 bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 {
-	mt32_service_ptr_t mt32_service = std::make_unique<MT32Emu::Service>();
+	service_t mt32_service = std::make_unique<MT32Emu::Service>();
 
 	// Check version
 	uint32_t version = mt32_service->getLibraryVersionInt();
@@ -281,8 +281,8 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
 	                                      this, std::placeholders::_1);
-	mixer_channel_ptr_t mixer_channel(MIXER_AddChannel(mixer_callback, 0, "MT32"),
-	                                  MIXER_DelChannel);
+	channel_t mixer_channel(MIXER_AddChannel(mixer_callback, 0, "MT32"),
+	                        MIXER_DelChannel);
 	const auto sample_rate = mixer_channel->GetSampleRate();
 
 	mt32_service->setAnalogOutputMode(ANALOG_MODE);
@@ -457,6 +457,11 @@ void MidiHandler_mt32::RenderingLoop()
 			}
 		}
 	}
+}
+
+void MidiHandler_mt32::DeleteThread(SDL_Thread *t)
+{
+	SDL_WaitThread(t, nullptr);
 }
 
 static void mt32_init(MAYBE_UNUSED Section *sec)

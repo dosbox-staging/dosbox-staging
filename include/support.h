@@ -34,12 +34,6 @@
 
 #include <SDL.h>
 
-// General-use unique-pointer types
-void sdl_thread_deleter(SDL_Thread *t);
-using sdl_thread_ptr_t = std::unique_ptr<SDL_Thread, decltype(&sdl_thread_deleter)>;
-using sdl_mutex_ptr_t = std::unique_ptr<SDL_mutex, decltype(&SDL_DestroyMutex)>;
-using sdl_cond_ptr_t = std::unique_ptr<SDL_cond, decltype(&SDL_DestroyCond)>;
-
 #ifdef _MSC_VER
 #define strcasecmp(a, b) _stricmp(a, b)
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
