@@ -514,10 +514,6 @@ Missing parameter.
 CDROMs found: %d
 
 .
-:PROGRAM_MOUNT_STATUS_FORMAT
-%-5s  %-58s %-12s
-
-.
 :PROGRAM_MOUNT_STATUS_DRIVE
 Drive
 .
