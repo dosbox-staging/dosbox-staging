@@ -43,6 +43,7 @@
 #include "setup.h"
 #include "shell.h"
 #include "support.h"
+#include "../ints/int10.h"
 
 #if defined(WIN32)
 #ifndef S_ISDIR
@@ -129,7 +130,9 @@ public:
 			if (DOS_GetDefaultDrive() == 25) DOS_SetDrive(i_newz);
 		}
 	}
-	void ListMounts(void) {
+
+	void ListMounts()
+	{
 		char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
 		/* Command uses dta so set it to our internal dta */
 		RealPt save_dta = dos.dta();
@@ -137,11 +140,28 @@ public:
 		DOS_DTA dta(dos.dta());
 
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_FORMAT"),
-		         MSG_Get("PROGRAM_MOUNT_STATUS_DRIVE"),
-		         MSG_Get("PROGRAM_MOUNT_STATUS_TYPE"),
-		         MSG_Get("PROGRAM_MOUNT_STATUS_LABEL"));
-		for (int p = 0;p < 8;p++) WriteOut("----------");
+
+		const std::string header_drive = MSG_Get("PROGRAM_MOUNT_STATUS_DRIVE");
+		const std::string header_type = MSG_Get("PROGRAM_MOUNT_STATUS_TYPE");
+		const std::string header_label = MSG_Get("PROGRAM_MOUNT_STATUS_LABEL");
+
+		const int term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+		const auto col_1_width = static_cast<int>(header_drive.size());
+		const auto col_3_width = std::max(11, static_cast<int>(header_label.size()));
+		const auto col_2_width = term_width - 3 - col_1_width - col_3_width;
+
+		auto print_row = [&](const std::string &txt_1,
+		                     const std::string &txt_2,
+		                     const std::string &txt_3) {
+			WriteOut("%-*s %-*s %-*s\n", col_1_width, txt_1.c_str(),
+			         col_2_width, txt_2.c_str(), col_3_width,
+			         txt_3.c_str());
+		};
+
+		print_row(header_drive, header_type, header_label);
+
+		for (int i = 0; i < term_width; i++)
+			WriteOut_NoParsing("-");
 
 		for (int d = 0; d < DOS_DRIVES; d++) {
 			if (!Drives[d]) continue;
@@ -154,10 +174,8 @@ public:
 			} else {
 				name[0] = 0;
 			}
-			std::string label = To_Label(name);
-			root[1] = 0; //This way, the format string can be reused.
-			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_FORMAT"),
-			                 root, Drives[d]->GetInfo(), label.c_str());
+			print_row(std::string{root[0]}, Drives[d]->GetInfo(),
+			          To_Label(name));
 		}
 		dos.dta(save_dta);
 	}
@@ -1629,7 +1647,6 @@ void DOS_SetupPrograms(void) {
 	/*Add Messages */
 
 	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CDROMs found: %d\n");
-	MSG_Add("PROGRAM_MOUNT_STATUS_FORMAT","%-5s  %-58s %-12s\n");
 	MSG_Add("PROGRAM_MOUNT_STATUS_DRIVE", "Drive");
 	MSG_Add("PROGRAM_MOUNT_STATUS_TYPE", "Type");
 	MSG_Add("PROGRAM_MOUNT_STATUS_LABEL", "Label");
