@@ -629,8 +629,9 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 	if (!optB) {
 		if (print_label) {
-			const char *label = Drives[drive_idx]->GetLabel();
-			WriteOut(MSG_Get("SHELL_CMD_DIR_VOLUME"), drive_letter, label);
+			const auto label = To_Label(Drives[drive_idx]->GetLabel());
+			WriteOut(MSG_Get("SHELL_CMD_DIR_VOLUME"), drive_letter,
+			         label.c_str());
 			p_count += 1;
 		}
 		WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"), path);
