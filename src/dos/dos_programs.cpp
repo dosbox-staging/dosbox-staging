@@ -139,25 +139,25 @@ public:
 		dos.dta(dos.tables.tempdta);
 		DOS_DTA dta(dos.dta());
 
-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
-
 		const std::string header_drive = MSG_Get("PROGRAM_MOUNT_STATUS_DRIVE");
 		const std::string header_type = MSG_Get("PROGRAM_MOUNT_STATUS_TYPE");
 		const std::string header_label = MSG_Get("PROGRAM_MOUNT_STATUS_LABEL");
 
 		const int term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
-		const auto col_1_width = static_cast<int>(header_drive.size());
-		const auto col_3_width = std::max(11, static_cast<int>(header_label.size()));
-		const auto col_2_width = term_width - 3 - col_1_width - col_3_width;
+		const auto width_1 = static_cast<int>(header_drive.size());
+		const auto width_3 = std::max(11, static_cast<int>(header_label.size()));
+		const auto width_2 = term_width - 3 - width_1 - width_3;
 
 		auto print_row = [&](const std::string &txt_1,
 		                     const std::string &txt_2,
 		                     const std::string &txt_3) {
-			WriteOut("%-*s %-*s %-*s\n", col_1_width, txt_1.c_str(),
-			         col_2_width, txt_2.c_str(), col_3_width,
-			         txt_3.c_str());
+			WriteOut("%-*s %-*s %-*s\n",
+			         width_1, txt_1.c_str(),
+			         width_2, txt_2.c_str(),
+			         width_3, txt_3.c_str());
 		};
 
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
 		print_row(header_drive, header_type, header_label);
 
 		for (int i = 0; i < term_width; i++)
