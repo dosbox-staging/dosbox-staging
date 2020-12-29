@@ -2265,8 +2265,10 @@ static void GUI_StartUp(Section *sec)
 			glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
 			glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
 
-			// FIXME: according to Khronos documentation, the correct way to
-			//        query GL_EXTENSIONS is using glGetStringi from OpenGL 3.0
+			// TODO According to Khronos documentation, the correct
+			// way to query GL_EXTENSIONS is using glGetStringi from
+			// OpenGL 3.0; replace with OpenGL loading library (such
+			// as GLEW or libepoxy)
 			const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
 			if(gl_ext && *gl_ext){
 				sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") != NULL);
