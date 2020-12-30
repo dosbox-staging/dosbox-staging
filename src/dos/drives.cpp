@@ -73,7 +73,13 @@ checkext:
 	return true;
 }
 
-
+// TODO Right now label formatting seems to be a bit of mess, with various
+// places in code setting/expecting different format, so simple GetLabel() on
+// a drive object might not yield an expected result. Not sure how to sort it
+// out, but it will require some attention to detail.
+// Also: this function is too strict - it removes all punctuation when *some*
+// punctuation is acceptable in drive labels (e.g. '_' or '-').
+//
 std::string To_Label(const char* name) {
 	// Reformat the name per the DOS label specification:
 	// - Upper-case, up to 11 ASCII characters
