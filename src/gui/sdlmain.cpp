@@ -2294,8 +2294,6 @@ static void GUI_StartUp(Section *sec)
 	if (!SetDefaultWindowMode())
 		E_Exit("Could not initialize video: %s", SDL_GetError());
 
-	// FIXME the code updated sdl.desktop.bpp in here (has effect in setting up scalers)
-
 	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
 	SetIcon();
 
