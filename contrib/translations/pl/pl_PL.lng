@@ -1,16 +1,16 @@
 :CONFIG_FULLSCREEN
 Wˆ¥cz DOSBoxa na peˆnym ekranie.
-Wci˜nig Alt-Enter aby przeˆ¥czy† si© do okna.
+Wci˜nij Alt-Enter aby przeˆ¥czy† si© do okna.
 .
 :CONFIG_DISPLAY
-Number of display to use; values depend on OS and user settings.
+Numer ekranu do u¾ycia; warto˜† zale¾y od ustawieä u¾ytkownika.
 .
 :CONFIG_VSYNC
 Vertical sync setting not implemented (setting ignored)
 .
 :CONFIG_FULLRESOLUTION
-What resolution to use for fullscreen: 'original', 'desktop'
-or a fixed size (e.g. 1024x768).
+Jakiej rozdzielczo˜ci u¾y† w peˆnym ekranie: 'original', 'desktop',
+lub dokˆadna rozdzielczo˜† (np. 1024x768).
 .
 :CONFIG_WINDOWRESOLUTION
 Set window size to be used when running in windowed mode:
@@ -1151,7 +1151,7 @@ You must [31mmount[0m it first. Type [1;33mintro[0m or [1;33mintro mount[0
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
-Illegal command: %s.
+Nieprawidˆowa komenda: %s.
 
 .
 :SHELL_CMD_PAUSE
@@ -1239,7 +1239,7 @@ Type CD without parameters to display the current drive and directory.
 
 .
 :SHELL_CMD_CLS_HELP
-Clear the screen.
+Wyczy˜† ekran.
 
 .
 :SHELL_CMD_DIR_HELP
