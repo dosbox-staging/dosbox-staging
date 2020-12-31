@@ -505,7 +505,8 @@ public:
 		  hat(_hat),
 		  dir(_dir)
 	{
-		/* allow only one hat position */ // FIXME why?
+		// TODO this code allows to bind only a single hat position, but
+		// perhaps we should allow 8-way positioning?
 		if (dir & SDL_HAT_UP)
 			dir = SDL_HAT_UP;
 		else if (dir & SDL_HAT_RIGHT)
