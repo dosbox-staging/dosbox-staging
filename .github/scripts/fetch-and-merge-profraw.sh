@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Copyright (c) 2020 Kevin R Croft <krcroft@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Copyright (C) 2020-2021  Kevin R. Croft <krcroft@gmail.com>
 
 # A helper script that fetches, converts, and merges kernel sample
 # (.prof) files (collected during prior DOSBox testing) into a single

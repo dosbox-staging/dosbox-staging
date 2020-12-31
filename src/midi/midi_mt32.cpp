@@ -1,9 +1,9 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2012-2020  sergm <sergm@bigmir.net>
- *  Copyright (C) 2020       Nikos Chantziaras <realnc@gmail.com> (settings)
- *  Copyright (C) 2020       The dosbox-staging team
+ *  Copyright (C) 2012-2021  sergm <sergm@bigmir.net>
+ *  Copyright (C) 2020-2021  Nikos Chantziaras <realnc@gmail.com> (settings)
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

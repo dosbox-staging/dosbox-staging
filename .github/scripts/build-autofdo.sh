@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Copyright (c) 2020 Kevin R Croft <krcroft@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Copyright (C) 2020-2021  Kevin R. Croft <krcroft@gmail.com>
 
 # Builds and installs the AutoFDO package from
 # https://github.com/google/autofdo

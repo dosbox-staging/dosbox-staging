@@ -1,13 +1,8 @@
 /*
- *  DOSBox MP3 decoder API implementation
- *  -------------------------------------
- *  It makes use of the dr_wav library by David Reid (mackron@gmail.com)
- *  Source links:
- *   - dr_libs: https://github.com/mackron/dr_libs (source)
- *   - dr_wav: http://mackron.github.io/dr_wav.html (website)
+ *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020       The dosbox-staging team
- *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
+ *  Copyright (C) 2018-2021  Kevin R. Croft <krcroft@gmail.com>
  *  Copyright (C) 2001-2017  Ryan C. Gordon <icculus@icculus.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -23,6 +18,15 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+/*
+ *  DOSBox WAV decoder API implementation
+ *  -------------------------------------
+ *  It makes use of the dr_wav library by David Reid (mackron@gmail.com)
+ *  Source links:
+ *   - dr_libs: https://github.com/mackron/dr_libs (source)
+ *   - dr_wav: http://mackron.github.io/dr_wav.html (website)
  */
 
 #if HAVE_CONFIG_H
@@ -167,7 +171,7 @@ const Sound_DecoderFunctions __Sound_DecoderFunctions_WAV =
     {
         extensions_wav,
         "WAV Audio Codec",
-        "The dosbox-staging team"
+        "The DOSBox Staging Team"
     },
 
     WAV_init,       /*   init() method */

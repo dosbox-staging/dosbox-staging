@@ -1,16 +1,8 @@
 /*
- *  Modified SDL Sound API implementation
- *  -------------------------------------
- *  This file implements the API, the documentation for which can
- *  be found in SDL_sound.h.  This API has been changed from its
- *  original implementation as follows:
- *    - Cut down in size; most notably exclusion of the conversion routines
- *    - Small bug fixes and warnings cleaned up
- *    - Elimination of intermediate buffers, allowing direct decoding
- *    - Moved from sample-based logic to frame-based (channel-agnostic)
+ *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020       The dosbox-staging team
- *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
+ *  Copyright (C) 2018-2021  Kevin R. Croft <krcroft@gmail.com>
  *  Copyright (C) 2001-2017  Ryan C. Gordon <icculus@icculus.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,6 +18,18 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+/*
+ *  Modified SDL Sound API implementation
+ *  -------------------------------------
+ *  This file implements the API, the documentation for which can
+ *  be found in SDL_sound.h.  This API has been changed from its
+ *  original implementation as follows:
+ *    - Cut down in size; most notably exclusion of the conversion routines
+ *    - Small bug fixes and warnings cleaned up
+ *    - Elimination of intermediate buffers, allowing direct decoding
+ *    - Moved from sample-based logic to frame-based (channel-agnostic)
  */
 
 #include <stdio.h>

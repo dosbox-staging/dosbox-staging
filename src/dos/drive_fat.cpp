@@ -16,15 +16,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "drives.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-#include "dosbox.h"
 #include "dos_inc.h"
-#include "drives.h"
 #include "support.h"
 #include "cross.h"
 #include "bios.h"
@@ -1519,4 +1518,3 @@ bool fatDrive::TestDir(char *dir) {
 	Bit32u dummyClust;
 	return getDirClustNum(dir, &dummyClust, false);
 }
-

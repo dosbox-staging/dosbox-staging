@@ -1,4 +1,5 @@
-// license:BSD-3-Clause
+// SPDX-License-Identifier: BSD-3-Clause
+//
 // copyright-holders:Nicola Salmoria
 /***************************************************************************
 

@@ -1,5 +1,8 @@
 /*
- *  Copyright (C)  Henrique Peron
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
+ *  Copyright (C) 2006-2019  Henrique Peron
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,14 +19,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 /* This file contains data of .KL-files. They have been generated
    by Henrique Peron using FreeDOS KC and are combined into .SYS files. */
 
 /* KC: compiles keyboard descriptors in KEY language to a KeybCB,
    wrapped in a KL file (for use of FD-KEYB 2.X)
    Copyright (C) 2004 by Aitor SANTAMARIA_MERINO */
-
 
 Bit8u layout_keyboardsys[33196] = {
 0x4b, 0x43, 0x46, 0x00, 0x01, 0x01, 0x2e, 0x48, 0x65, 0x6e, 0x72, 0x69, 0x71, 0x75, 0x65, 0x20, 

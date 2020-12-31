@@ -1,4 +1,7 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2019-2021  The DOSBox Staging Team
  *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -16,8 +19,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __CDROM_INTERFACE__
-#define __CDROM_INTERFACE__
+#ifndef DOSBOX_CDROM_H
+#define DOSBOX_CDROM_H
 
 #include "dosbox.h"
 
@@ -286,4 +289,4 @@ private:
 	static int           refCount;
 };
 
-#endif /* __CDROM_INTERFACE__ */
+#endif

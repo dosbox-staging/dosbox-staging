@@ -1,9 +1,9 @@
-// license:GPL-2.0+
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
 // copyright-holders:Jarek Burczynski
+
 #ifndef MAME_SOUND_YMF262_H
 #define MAME_SOUND_YMF262_H
-
-#pragma once
 
 /* select number of output bits: 8 or 16 */
 #define OPL3_SAMPLE_BITS 16
@@ -35,6 +35,5 @@ void ymf262_update_one(void *chip, OPL3SAMPLE **buffers, int length);
 void ymf262_set_timer_handler(void *chip, OPL3_TIMERHANDLER TimerHandler, device_t *device);
 void ymf262_set_irq_handler(void *chip, OPL3_IRQHANDLER IRQHandler, device_t *device);
 void ymf262_set_update_handler(void *chip, OPL3_UPDATEHANDLER UpdateHandler, device_t *device);
-
 
 #endif // MAME_SOUND_YMF262_H

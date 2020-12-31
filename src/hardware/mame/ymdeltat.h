@@ -1,10 +1,9 @@
-// license:GPL-2.0+
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
 // copyright-holders:Jarek Burczynski
+
 #ifndef MAME_SOUND_YMDELTAT_H
 #define MAME_SOUND_YMDELTAT_H
-
-#pragma once
-
 
 typedef void (*STATUS_CHANGE_HANDLER)(void *chip, uint8_t status_bits);
 

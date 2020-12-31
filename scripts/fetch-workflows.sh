@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Copyright (C) 2020  Kevin R Croft <krcroft@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Copyright (C) 2020-2021  Kevin R. Croft <krcroft@gmail.com>
 
 ##
 #  This script craws the current repo's GitHub workflow content.

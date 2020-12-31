@@ -1,19 +1,8 @@
 /*
- *  DOSBox Opus decoder API implementation
- *  --------------------------------------
- *  This decoders makes use of:
- *    - libopusfile, for .opus file handing and frame decoding
+ *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Source links
- *    - opusfile:   https://github.com/xiph/opusfile
- *    - opus-tools: https://github.com/xiph/opus-tools
- *
- * Documentation references
- *    - Ogg Opus:  https://www.opus-codec.org/docs
- *    - OpusFile:  https://mf4.xiph.org/jenkins/view/opus/job/opusfile-unix/ws/doc/html/index.html
- *
- *  Copyright (C) 2020       The dosbox-staging team
- *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
+ *  Copyright (C) 2018-2021  Kevin R. Croft <krcroft@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,6 +17,21 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+/*
+ *  DOSBox Opus decoder API implementation
+ *  --------------------------------------
+ *  This decoders makes use of:
+ *    - libopusfile, for .opus file handing and frame decoding
+ *
+ *  Source links
+ *    - opusfile:   https://github.com/xiph/opusfile
+ *    - opus-tools: https://github.com/xiph/opus-tools
+ *
+ * Documentation references
+ *    - Ogg Opus:  https://www.opus-codec.org/docs
+ *    - OpusFile:  https://mf4.xiph.org/jenkins/view/opus/job/opusfile-unix/ws/doc/html/index.html
  */
 
 // #define DEBUG_CHATTER 1
@@ -397,7 +401,7 @@ extern const Sound_DecoderFunctions __Sound_DecoderFunctions_OPUS =
     {
         extensions_opus,
         "Ogg Opus audio using libopusfile",
-        "The dosbox-staging team"
+        "The DOSBox Staging Team"
     },
 
     opus_init,   /*   init() method */

@@ -2,8 +2,8 @@
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2020-2020  Patryk Obara <patryk.obara@gmail.com>
-#
+# Copyright (C) 2020-2021  Patryk Obara <patryk.obara@gmail.com>
+ 
 # Encode translation files in old .lng format from utf-8 to the codepage
 # appropriate in DOS for a particular language.
 

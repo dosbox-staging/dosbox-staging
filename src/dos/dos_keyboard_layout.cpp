@@ -16,8 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include "dosbox.h"
+
 #include "bios.h"
 #include "bios_disk.h"
 #include "setup.h"

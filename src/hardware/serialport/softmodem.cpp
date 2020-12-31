@@ -19,6 +19,7 @@
 #include "dosbox.h"
 
 #if C_MODEM
+
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1048,4 +1049,4 @@ void CSerialModem::updateModemControlLines() {
 }
 */
 
-#endif
+#endif // C_MODEM
