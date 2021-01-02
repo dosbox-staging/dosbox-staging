@@ -16,7 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include "dosbox.h"
 
 #if C_DIRECTSERIAL
@@ -320,4 +319,4 @@ void CDirectSerial::setDTR(bool val) {
 	SERIAL_setDTR(comport,val);
 }
 
-#endif
+#endif // C_DIRECTSERIAL

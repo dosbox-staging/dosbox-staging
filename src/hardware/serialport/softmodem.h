@@ -16,15 +16,16 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef DOSBOX_SERIALMODEM_H
 #define DOSBOX_SERIALMODEM_H
+
+#include "dosbox.h"
+
+#if C_MODEM
 
 #include <vector>
 #include <memory>
 
-#include "dosbox.h"
-#if C_MODEM
 #include "serialport.h"
 #include "misc_util.h"
 
@@ -263,5 +264,7 @@ protected:
 		char str[256] = {0};
 	} dial;
 };
-#endif
+
+#endif // C_MODEM
+
 #endif

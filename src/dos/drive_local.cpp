@@ -1,4 +1,7 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
  *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,11 +27,11 @@
 #include <cerrno>
 #include <climits>
 #include <cstdio>
+#include <ctime>
 #include <limits>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <time.h>
 
 #ifdef _MSC_VER
 #include <sys/utime.h>
@@ -360,10 +363,10 @@ again:
 	} 
 
 	find_size=(Bit32u) stat_block.st_size;
-	struct tm *time;
-	if ((time=localtime(&stat_block.st_mtime))!=0) {
-		find_date=DOS_PackDate((Bit16u)(time->tm_year+1900),(Bit16u)(time->tm_mon+1),(Bit16u)time->tm_mday);
-		find_time=DOS_PackTime((Bit16u)time->tm_hour,(Bit16u)time->tm_min,(Bit16u)time->tm_sec);
+	struct tm datetime;
+	if (cross::localtime_r(&stat_block.st_mtime, &datetime)) {
+		find_date = DOS_PackDate(datetime);
+		find_time = DOS_PackTime(datetime);
 	} else {
 		find_time=6; 
 		find_date=4;
@@ -473,12 +476,12 @@ bool localDrive::FileStat(const char* name, FileStat_Block * const stat_block) {
 	struct stat temp_stat;
 	if (stat(newname,&temp_stat)!=0) return false;
 	/* Convert the stat to a FileStat */
-	struct tm *time;
-	if ((time=localtime(&temp_stat.st_mtime))!=0) {
-		stat_block->time=DOS_PackTime((Bit16u)time->tm_hour,(Bit16u)time->tm_min,(Bit16u)time->tm_sec);
-		stat_block->date=DOS_PackDate((Bit16u)(time->tm_year+1900),(Bit16u)(time->tm_mon+1),(Bit16u)time->tm_mday);
+	struct tm datetime;
+	if (cross::localtime_r(&temp_stat.st_mtime, &datetime)) {
+		stat_block->time = DOS_PackTime(datetime);
+		stat_block->date = DOS_PackDate(datetime);
 	} else {
-
+		LOG_MSG("FS: error while converting date in: %s", name);
 	}
 	stat_block->size=(Bit32u)temp_stat.st_size;
 	return true;
@@ -748,17 +751,12 @@ bool localFile::UpdateDateTimeFromHost()
 	if (fstat(file, &temp_stat) == -1)
 		return true; // use defaults
 
-	const tm *ltime = localtime(&temp_stat.st_mtime);
-	if (!ltime)
+	struct tm datetime;
+	if (!cross::localtime_r(&temp_stat.st_mtime, &datetime))
 		return true; // use defaults
 
-	time = DOS_PackTime(static_cast<uint16_t>(ltime->tm_hour),
-	                    static_cast<uint16_t>(ltime->tm_min),
-	                    static_cast<uint16_t>(ltime->tm_sec));
-
-	date = DOS_PackDate(static_cast<uint16_t>(ltime->tm_year + 1900),
-	                    static_cast<uint16_t>(ltime->tm_mon + 1),
-	                    static_cast<uint16_t>(ltime->tm_mday));
+	time = DOS_PackTime(datetime);
+	date = DOS_PackDate(datetime);
 	return true;
 }
 

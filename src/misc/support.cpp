@@ -1,4 +1,7 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
  *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,20 +22,18 @@
 #include "support.h"
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <cctype>
 #include <climits>
 #include <cmath>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
-#include <ctype.h>
 #include <functional>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
 #include <stdexcept>
+#include <string>
 
-#include "dosbox.h"
 #include "cross.h"
 #include "debug.h"
 #include "video.h"
@@ -122,6 +123,65 @@ void trim(std::string &str)
 	const auto empty_sfx = str.find_last_not_of(whitespace);
 	str.erase(empty_sfx + 1);
 	str.erase(0, empty_pfx);
+}
+
+std::vector<std::string> split(const std::string &seq, const char delim)
+{
+	std::vector<std::string> words;
+	if (seq.empty())
+		return words;
+
+	// count delimeters to reserve space in our vector of words
+	const size_t n = 1u + std::count(seq.begin(), seq.end(), delim);
+	words.reserve(n);
+
+	std::string::size_type head = 0;
+	while (head != std::string::npos) {
+		const auto tail = seq.find_first_of(delim, head);
+		const auto word_len = tail - head;
+		words.emplace_back(seq.substr(head, word_len));
+		if (tail == std::string::npos) {
+			break;
+		}
+		head += word_len + 1;
+	}
+
+	// did we reserve the exact space needed?
+	assert(n == words.size());
+
+	return words;
+}
+
+std::vector<std::string> split(const std::string &seq)
+{	
+	std::vector<std::string> words;
+	if (seq.empty())
+		return words;
+
+	constexpr auto whitespace = " \f\n\r\t\v";
+
+	// count words to reserve space in our vector
+	size_t n = 0;
+	auto head = seq.find_first_not_of(whitespace, 0);
+	while (head != std::string::npos) {
+		const auto tail = seq.find_first_of(whitespace, head);
+		head = seq.find_first_not_of(whitespace, tail);
+		++n;
+	}
+	words.reserve(n);
+
+	// populate the vector with the words
+	head = seq.find_first_not_of(whitespace, 0);
+	while (head != std::string::npos) {
+		const auto tail = seq.find_first_of(whitespace, head);
+		words.emplace_back(seq.substr(head, tail - head));
+		head = seq.find_first_not_of(whitespace, tail);
+	}
+
+	// did we reserve the exact space needed?
+	assert(n == words.size());
+
+	return words;
 }
 
 void strip_punctuation(std::string &str) {

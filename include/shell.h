@@ -16,20 +16,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef DOSBOX_SHELL_H
 #define DOSBOX_SHELL_H
 
-#include <ctype.h>
-#ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
-#endif
+
+#include <cctype>
+#include <list>
+#include <string>
+
 #ifndef DOSBOX_PROGRAMS_H
 #include "programs.h"
 #endif
-
-#include <string>
-#include <list>
 
 #define CMD_MAXLINE 4096
 #define CMD_MAXCMDS 20

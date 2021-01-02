@@ -16,12 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "cpu.h"
 
 #include <assert.h>
 #include <sstream>
 #include <stddef.h>
-#include "dosbox.h"
-#include "cpu.h"
+
 #include "memory.h"
 #include "debug.h"
 #include "mapper.h"

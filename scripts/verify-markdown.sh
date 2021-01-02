@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# Copyright (C) 2020  Kevin Croft <krcroft@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
+# Copyright (C) 2020-2021  Kevin R. Croft <krcroft@gmail.com>
+ 
 # This script exists only to easily run mdl (markdownlint) on all
 # *.md files in the repo.
 #

@@ -16,8 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-// include guard
 #ifndef DOSBOX_DIRECTSERIAL_WIN32_H
 #define DOSBOX_DIRECTSERIAL_WIN32_H
 
@@ -70,4 +68,5 @@ private:
 };
 
 #endif	// C_DIRECTSERIAL
-#endif	// include guard
+
+#endif

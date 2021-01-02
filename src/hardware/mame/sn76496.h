@@ -1,10 +1,9 @@
-// license:BSD-3-Clause
+// SPDX-License-Identifier: BSD-3-Clause
+//
 // copyright-holders:Nicola Salmoria
+
 #ifndef MAME_SOUND_SN76496_H
 #define MAME_SOUND_SN76496_H
-
-#pragma once
-
 
 DECLARE_DEVICE_TYPE(SN76496,  sn76496_device)
 DECLARE_DEVICE_TYPE(U8106,    u8106_device)

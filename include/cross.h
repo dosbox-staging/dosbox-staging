@@ -23,6 +23,7 @@
 
 #include <cstdio>
 #include <string>
+#include <ctime>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -68,6 +69,20 @@
 #else
 #define cross_fileno(s) fileno(s)
 #endif
+
+namespace cross {
+
+#if defined(WIN32)
+
+struct tm *localtime_r(const time_t *timep, struct tm *result);
+
+#else
+
+constexpr auto localtime_r = ::localtime_r;
+
+#endif
+
+} // namespace cross
 
 void CROSS_DetermineConfigPaths();
 std::string CROSS_GetPlatformConfigDir();

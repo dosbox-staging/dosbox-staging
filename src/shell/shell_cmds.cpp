@@ -1,4 +1,7 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
  *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -31,6 +34,7 @@
 #include "bios.h"
 #include "callback.h"
 #include "control.h"
+#include "cross.h"
 #include "drives.h"
 #include "paging.h"
 #include "regs.h"
@@ -628,8 +632,9 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 	if (!optB) {
 		if (print_label) {
-			const char *label = Drives[drive_idx]->GetLabel();
-			WriteOut(MSG_Get("SHELL_CMD_DIR_VOLUME"), drive_letter, label);
+			const auto label = To_Label(Drives[drive_idx]->GetLabel());
+			WriteOut(MSG_Get("SHELL_CMD_DIR_VOLUME"), drive_letter,
+			         label.c_str());
 			p_count += 1;
 		}
 		WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"), path);
@@ -1326,18 +1331,15 @@ void DOS_Shell::CMD_CALL(char * args){
 
 void DOS_Shell::CMD_DATE(char * args) {
 	HELP("DATE");
-	if (ScanCMDBool(args,"H")) {
-		// synchronize date with host parameter
-		time_t curtime;
-		struct tm *loctime;
-		curtime = time (NULL);
-		loctime = localtime (&curtime);
-
-		reg_cx = loctime->tm_year+1900;
-		reg_dh = loctime->tm_mon+1;
-		reg_dl = loctime->tm_mday;
-
-		reg_ah=0x2b; // set system date
+	if (ScanCMDBool(args, "H")) {
+		// synchronize date with host
+		const time_t curtime = time(nullptr);
+		struct tm datetime;
+		cross::localtime_r(&curtime, &datetime);
+		reg_ah = 0x2b; // set system date
+		reg_cx = static_cast<uint16_t>(datetime.tm_year + 1900);
+		reg_dh = static_cast<uint8_t>(datetime.tm_mon + 1);
+		reg_dl = static_cast<uint8_t>(datetime.tm_mday);
 		CALLBACK_RunRealInt(0x21);
 		return;
 	}
@@ -1387,24 +1389,27 @@ void DOS_Shell::CMD_DATE(char * args) {
 
 void DOS_Shell::CMD_TIME(char * args) {
 	HELP("TIME");
-	if (ScanCMDBool(args,"H")) {
-		// synchronize time with host parameter
-		time_t curtime;
-		struct tm *loctime;
-		curtime = time (NULL);
-		loctime = localtime (&curtime);
+	if (ScanCMDBool(args, "H")) {
+		// synchronize time with host
+		const time_t curtime = time(NULL);
+		struct tm datetime;
+		cross::localtime_r(&curtime, &datetime);
 
-		//reg_cx = loctime->;
-		//reg_dh = loctime->;
-		//reg_dl = loctime->;
-
-		// reg_ah=0x2d; // set system time TODO
-		// CALLBACK_RunRealInt(0x21);
-
-		Bit32u ticks=(Bit32u)(((double)(loctime->tm_hour*3600+
-										loctime->tm_min*60+
-										loctime->tm_sec))*18.206481481);
-		mem_writed(BIOS_TIMER,ticks);
+		// Original IBM PC used ~1.19MHz crystal for timer, because at
+		// 1.19MHz, 2^16 ticks is ~1 hour, making it easy to count
+		// hours and days. More precisely:
+		//
+		// clock updates at 1193180/65536 ticks per second.
+		// ticks per second ≈ 18.2
+		// ticks per hour   ≈ 65543
+		// ticks per day    ≈ 1573040
+		//
+		constexpr uint64_t ticks_per_day = 1573040;
+		const auto seconds_now = (datetime.tm_hour * 3600 +
+		                          datetime.tm_min * 60 +
+		                          datetime.tm_sec);
+		const auto ticks_now = ticks_per_day * seconds_now / (24 * 3600);
+		mem_writed(BIOS_TIMER, static_cast<uint32_t>(ticks_now));
 		return;
 	}
 	bool timeonly = ScanCMDBool(args,"T");

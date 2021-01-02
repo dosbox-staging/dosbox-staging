@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2020  The dosbox-staging team
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,17 +23,13 @@
 
 constexpr char version_msg[] =
         R"(dosbox (dosbox-staging), version %s
-Copyright (C) 2020 The dosbox-staging team.
+Copyright (C) 2020-2021  The DOSBox Staging Team.
 License GPLv2+: GNU GPL version 2 or later
 <https://www.gnu.org/licenses/gpl-2.0.html>
 
 This is free software, and you are welcome to change and redistribute it
 under certain conditions; please read the COPYING file thoroughly before
 doing so.  There is NO WARRANTY, to the extent permitted by law.
-
-This program (dosbox-staging) is modified version of DOSBox.
-Copyright (C) 2020 The DOSBox Team, published under GNU GPLv2+
-Read AUTHORS file for more details.
 )";
 
 constexpr char help_msg[] =

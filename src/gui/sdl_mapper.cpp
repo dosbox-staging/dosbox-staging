@@ -1,4 +1,7 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
  *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -505,7 +508,8 @@ public:
 		  hat(_hat),
 		  dir(_dir)
 	{
-		/* allow only one hat position */ // FIXME why?
+		// TODO this code allows to bind only a single hat position, but
+		// perhaps we should allow 8-way positioning?
 		if (dir & SDL_HAT_UP)
 			dir = SDL_HAT_UP;
 		else if (dir & SDL_HAT_RIGHT)

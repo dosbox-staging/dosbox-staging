@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2020  Patryk Obara <patryk.obara@gmail.com>
+# Copyright (C) 2020-2021  Patryk Obara <patryk.obara@gmail.com>
 
 readonly SCRIPT=$(basename "$0")
 

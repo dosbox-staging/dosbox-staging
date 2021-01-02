@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Copyright (c) 2019-2020 Kevin R Croft <krcroft@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Copyright (C) 2019-2021  Kevin R. Croft <krcroft@gmail.com>
 
 # This script reduces the size of a MacPorts installation
 # under macOS. Its main use is to shrink this area to fit within

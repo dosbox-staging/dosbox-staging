@@ -1,9 +1,9 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2020-2021  Nikos Chantziaras <realnc@gmail.com>
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
  *  Copyright (C) 2002-2011  The DOSBox Team
- *  Copyright (C) 2020       Nikos Chantziaras <realnc@gmail.com>
- *  Copyright (C) 2020       The dosbox-staging team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #if C_FLUIDSYNTH
 
 #include <cassert>
+#include <deque>
 #include <string>
 #include <tuple>
 
@@ -104,7 +105,7 @@ std::tuple<std::string, int> parse_sf_pref(const std::string &line,
 
 #if defined(WIN32)
 
-static std::vector<std::string> get_data_dirs()
+static std::deque<std::string> get_data_dirs()
 {
 	return {
 	        CROSS_GetPlatformConfigDir() + "soundfonts\\",
@@ -114,7 +115,7 @@ static std::vector<std::string> get_data_dirs()
 
 #elif defined(MACOSX)
 
-static std::vector<std::string> get_data_dirs()
+static std::deque<std::string> get_data_dirs()
 {
 	return {
 	        CROSS_GetPlatformConfigDir() + "soundfonts/",
@@ -126,21 +127,38 @@ static std::vector<std::string> get_data_dirs()
 
 #else
 
-static std::vector<std::string> get_data_dirs()
+static std::deque<std::string> get_data_dirs()
 {
+	// First priority is $XDG_DATA_HOME
 	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
 	const auto xdg_data_home = CROSS_ResolveHome(
 	        xdg_data_home_env ? xdg_data_home_env : "~/.local/share");
 
-	return {
-	        CROSS_GetPlatformConfigDir() + "soundfonts/",
+	std::deque<std::string> dirs = {
+	        xdg_data_home + "/dosbox/soundfonts/",
 	        xdg_data_home + "/soundfonts/",
 	        xdg_data_home + "/sounds/sf2/",
-	        "/usr/local/share/soundfonts/",
-	        "/usr/local/share/sounds/sf2/",
-	        "/usr/share/soundfonts/",
-	        "/usr/share/sounds/sf2/",
 	};
+
+	// Second priority are the $XDG_DATA_DIRS
+	const char *xdg_data_dirs_env = getenv("XDG_DATA_DIRS");
+	if (!xdg_data_dirs_env)
+		xdg_data_dirs_env = "/usr/local/share:/usr/share";
+
+	for (auto xdg_data_dir : split(xdg_data_dirs_env, ':')) {
+		trim(xdg_data_dir);
+		if (xdg_data_dir.empty()) {
+			continue;
+		}
+		const auto resolved_dir = CROSS_ResolveHome(xdg_data_dir);
+		dirs.emplace_back(resolved_dir + "/soundfonts/");
+		dirs.emplace_back(resolved_dir + "/sounds/sf2/");
+	}
+
+	// Third priority is $XDG_CONF_HOME, for convenience
+	dirs.emplace_back(CROSS_GetPlatformConfigDir() + "soundfonts/");
+
+	return dirs;
 }
 
 #endif
@@ -152,6 +170,7 @@ static std::string find_sf_file(const std::string &name)
 		return sf_path;
 	for (const auto &dir : get_data_dirs()) {
 		for (const auto &sf : {dir + name, dir + name + ".sf2"}) {
+			// DEBUG_LOG_MSG("MIDI: FluidSynth checking if '%s' exists", sf.c_str());
 			if (path_exists(sf))
 				return sf;
 		}

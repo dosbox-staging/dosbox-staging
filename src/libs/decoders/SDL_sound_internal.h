@@ -1,11 +1,8 @@
 /*
- *  Modified SDL Sound API implementation
- *  -------------------------------------
- *  Internal function/structure declaration. Do NOT include in your
- *  application.
+ *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020       The dosbox-staging team
- *  Copyright (C) 2018-2019  Kevin R. Croft <krcroft@gmail.com>
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
+ *  Copyright (C) 2018-2021  Kevin R. Croft <krcroft@gmail.com>
  *  Copyright (C) 2001-2017  Ryan C. Gordon <icculus@icculus.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,6 +18,13 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+/*
+ *  Modified SDL Sound API implementation
+ *  -------------------------------------
+ *  Internal function/structure declaration. Do NOT include in your
+ *  application.
  */
 
 #ifndef _INCLUDE_SDL_SOUND_INTERNAL_H_
@@ -294,4 +298,3 @@ extern "C" {
 #endif /* defined _INCLUDE_SDL_SOUND_INTERNAL_H_ */
 
 /* end of SDL_sound_internal.h ... */
-

@@ -1,11 +1,8 @@
 /*
- *  DOSBox MP3 decoder API implementation
- *  -------------------------------------
- *  It makes use of the stand-alone STB Vorbis library:
- *   - STB: https://github.com/nothings/stb (source)
- *   - STB: https://twitter.com/nothings (website/author info)
+ *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2018-2020  The dosbox-staging team
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
+ *  Copyright (C) 2018-2021  Kevin R. Croft <krcroft@gmail.com>
  *  Copyright (C) 2001-2017  Ryan C. Gordon <icculus@icculus.org>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,6 +18,14 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+/*
+ *  DOSBox Vorbis decoder API implementation
+ *  -------------------------------------
+ *  It makes use of the stand-alone STB Vorbis library:
+ *   - STB: https://github.com/nothings/stb (source)
+ *   - STB: https://twitter.com/nothings (website/author info)
  */
 
 #if HAVE_CONFIG_H
@@ -210,7 +215,7 @@ const Sound_DecoderFunctions __Sound_DecoderFunctions_VORBIS =
     {
         extensions_vorbis,
         "Ogg Vorbis audio",
-        "The dosbox-staging team"
+        "The DOSBox Staging Team"
     },
 
     VORBIS_init,       /*   init() method */

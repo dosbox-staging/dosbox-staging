@@ -1,8 +1,8 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2020-2021  The DOSBox Staging Team
  *  Copyright (C) 2002-2020  The DOSBox Team
- *  Copyright (C) 2019-2020  The dosbox-staging team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -2265,8 +2265,10 @@ static void GUI_StartUp(Section *sec)
 			glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
 			glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
 
-			// FIXME: according to Khronos documentation, the correct way to
-			//        query GL_EXTENSIONS is using glGetStringi from OpenGL 3.0
+			// TODO According to Khronos documentation, the correct
+			// way to query GL_EXTENSIONS is using glGetStringi from
+			// OpenGL 3.0; replace with OpenGL loading library (such
+			// as GLEW or libepoxy)
 			const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
 			if(gl_ext && *gl_ext){
 				sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") != NULL);
@@ -2291,8 +2293,6 @@ static void GUI_StartUp(Section *sec)
 
 	if (!SetDefaultWindowMode())
 		E_Exit("Could not initialize video: %s", SDL_GetError());
-
-	// FIXME the code updated sdl.desktop.bpp in here (has effect in setting up scalers)
 
 	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
 	SetIcon();

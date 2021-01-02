@@ -16,11 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-
 #ifndef DOSBOX_MOUSE_H
 #define DOSBOX_MOUSE_H
-
 
 void Mouse_ShowCursor(void);
 void Mouse_HideCursor(void);

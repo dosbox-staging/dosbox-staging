@@ -16,7 +16,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include "libserial.h"
 
 #include "config.h"
@@ -476,5 +475,5 @@ void SERIAL_setRTS(COMPORT port, bool value) {
 	long flag = TIOCM_RTS;
 	ioctl(port->porthandle, value?TIOCMBIS:TIOCMBIC, &flag);
 }
-#endif
 
+#endif

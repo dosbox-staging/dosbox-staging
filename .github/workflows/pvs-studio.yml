@@ -12,7 +12,7 @@ jobs:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-20.04
     env:
-      debfile: pvs-studio-7.10.43754.94-amd64.deb
+      debfile: pvs-studio-7.11.44138.98-amd64.deb
     steps:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update
@@ -83,7 +83,7 @@ jobs:
           path: pvs-report
       - name: Summarize report
         env:
-          MAX_BUGS: 459
+          MAX_BUGS: 458
         run: |
           echo "Full report is included in build Artifacts"
           echo

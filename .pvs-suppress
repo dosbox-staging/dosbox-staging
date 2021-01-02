@@ -2,6 +2,14 @@
     "version": 1,
     "warnings": [
         {
+            "CodeCurrent": 0,
+            "CodeNext": 0,
+            "CodePrev": 0,
+            "ErrorCode": "Renew",
+            "FileName": " ",
+            "Message": "Your license will expire in _ days. Click 'Renew' to learn more or contact us at support@viva_.com."
+        },
+        {
             "CodeCurrent": 99146737,
             "CodeNext": 3299936121,
             "CodePrev": 2974951853,

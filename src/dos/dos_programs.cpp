@@ -43,6 +43,7 @@
 #include "setup.h"
 #include "shell.h"
 #include "support.h"
+#include "../ints/int10.h"
 
 #if defined(WIN32)
 #ifndef S_ISDIR
@@ -129,34 +130,39 @@ public:
 			if (DOS_GetDefaultDrive() == 25) DOS_SetDrive(i_newz);
 		}
 	}
-	void ListMounts(void) {
-		char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
-		/* Command uses dta so set it to our internal dta */
-		RealPt save_dta = dos.dta();
-		dos.dta(dos.tables.tempdta);
-		DOS_DTA dta(dos.dta());
+
+	void ListMounts()
+	{
+		const std::string header_drive = MSG_Get("PROGRAM_MOUNT_STATUS_DRIVE");
+		const std::string header_type = MSG_Get("PROGRAM_MOUNT_STATUS_TYPE");
+		const std::string header_label = MSG_Get("PROGRAM_MOUNT_STATUS_LABEL");
+
+		const int term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+		const auto width_1 = static_cast<int>(header_drive.size());
+		const auto width_3 = std::max(11, static_cast<int>(header_label.size()));
+		const auto width_2 = term_width - 3 - width_1 - width_3;
+
+		auto print_row = [&](const std::string &txt_1,
+		                     const std::string &txt_2,
+		                     const std::string &txt_3) {
+			WriteOut("%-*s %-*s %-*s\n",
+			         width_1, txt_1.c_str(),
+			         width_2, txt_2.c_str(),
+			         width_3, txt_3.c_str());
+		};
 
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_FORMAT"),"Drive","Type","Label");
-		for (int p = 0;p < 8;p++) WriteOut("----------");
+		print_row(header_drive, header_type, header_label);
+		for (int i = 0; i < term_width; i++)
+			WriteOut_NoParsing("-");
 
-		for (int d = 0; d < DOS_DRIVES; d++) {
-			if (!Drives[d]) continue;
-
-			char root[7] = {static_cast<char>('A' + d),':','\\','*','.','*',0};
-			bool ret = DOS_FindFirst(root,DOS_ATTR_VOLUME);
-			if (ret) {
-				dta.GetResult(name,size,date,time,attr);
-				DOS_FindNext(); //Mark entry as invalid
-			} else {
-				name[0] = 0;
+		for (uint8_t d = 0; d < DOS_DRIVES; d++) {
+			if (Drives[d]) {
+				print_row(std::string{drive_letter(d)},
+				          Drives[d]->GetInfo(),
+				          To_Label(Drives[d]->GetLabel()));
 			}
-			std::string label = To_Label(name);
-			root[1] = 0; //This way, the format string can be reused.
-			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_FORMAT"),
-			                 root, Drives[d]->GetInfo(), label.c_str());
 		}
-		dos.dta(save_dta);
 	}
 
 	void Run(void) {
@@ -1626,9 +1632,11 @@ void DOS_SetupPrograms(void) {
 	/*Add Messages */
 
 	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CDROMs found: %d\n");
-	MSG_Add("PROGRAM_MOUNT_STATUS_FORMAT","%-5s  %-58s %-12s\n");
+	MSG_Add("PROGRAM_MOUNT_STATUS_DRIVE", "Drive");
+	MSG_Add("PROGRAM_MOUNT_STATUS_TYPE", "Type");
+	MSG_Add("PROGRAM_MOUNT_STATUS_LABEL", "Label");
 	MSG_Add("PROGRAM_MOUNT_STATUS_2","Drive %c is mounted as %s\n");
-	MSG_Add("PROGRAM_MOUNT_STATUS_1","The currently mounted drives are:\n");
+	MSG_Add("PROGRAM_MOUNT_STATUS_1", "The currently mounted drives are:\n");
 	MSG_Add("PROGRAM_MOUNT_ERROR_1","Directory %s doesn't exist.\n");
 	MSG_Add("PROGRAM_MOUNT_ERROR_2","%s isn't a directory\n");
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE","Illegal type %s\n");
@@ -1790,6 +1798,7 @@ void DOS_SetupPrograms(void) {
 	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mIMAGEFILE\033[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy\n"
 	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mBOOTIMAGE\033[0m [-fs fat|none] -t hdd -size GEOMETRY\n"
 	        "  \033[32;1mimgmount\033[0m -u \033[37;1mDRIVE\033[0m  (unmounts the DRIVE's image)\n"
+		"\n"
 	        "Where:\n"
 	        "  \033[37;1mDRIVE\033[0m     is the drive letter where the image will be mounted: a, c, d, ...\n"
 	        "  \033[36;1mCDROM-SET\033[0m is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
@@ -1797,9 +1806,8 @@ void DOS_SetupPrograms(void) {
 	        "  \033[36;1mBOOTIMAGE\033[0m is a bootable disk image with specified -size GEOMETRY:\n"
 	        "            bytes-per-sector,sectors-per-head,heads,cylinders\n"
 	        "Notes:\n"
-	        "  - Image paths and filenames are case-insensitive and either relative or\n"
-	        "    absolute with respect to dosbox's current-working directory.\n"
 	        "  - Ctrl+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.\n"
+		"\n"
 	        "Examples:\n"
 #if defined(WIN32)
 	        "  \033[32;1mimgmount\033[0m \033[37;1mD\033[0m \033[36;1mC:\\games\\doom.iso\033[0m -t cdrom\n"
@@ -1840,8 +1848,6 @@ void DOS_SetupPrograms(void) {
 	        "  LABEL     drive label name to be used\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - \033[36;1mDIRECTORY\033[0m is case-insensitive path, relative or absolute with respect to\n"
-	        "    dosbox's current-working directory.\n"
 	        "  - '-t overlay' redirects writes for mounted drive to another directory.\n"
 	        "  - Additional options are described in the manual (README file, chapter 4).\n"
 	        "\n"

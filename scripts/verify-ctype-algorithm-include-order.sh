@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# Copyright (C) 2020  Kevin Croft <krcroft@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
+# Copyright (C) 2020-2021  Kevin R. Croft <krcroft@gmail.com>
+ 
 # This script checks if <ctype> is included before <algorithm> by
 # querying records written by the dump-preprocessor-defines.sh
 # script.  It prints details and returns a non-zero exit code to

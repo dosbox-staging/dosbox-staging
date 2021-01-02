@@ -1,5 +1,7 @@
-// license:GPL-2.0+
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
 // copyright-holders:Jarek Burczynski,Tatsuyuki Satoh
+
 #ifndef MAME_SOUND_FMOPL_H
 #define MAME_SOUND_FMOPL_H
 

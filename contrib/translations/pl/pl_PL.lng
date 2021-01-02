@@ -1,16 +1,16 @@
 :CONFIG_FULLSCREEN
-Start DOSBox directly in fullscreen.
-Press Alt-Enter to switch back to window.
+Wˆ¥cz DOSBoxa na peˆnym ekranie.
+Wci˜nij Alt-Enter aby przeˆ¥czy† si© do okna.
 .
 :CONFIG_DISPLAY
-Number of display to use; values depend on OS and user settings.
+Numer ekranu do u¾ycia; warto˜† zale¾y od ustawieä u¾ytkownika.
 .
 :CONFIG_VSYNC
 Vertical sync setting not implemented (setting ignored)
 .
 :CONFIG_FULLRESOLUTION
-What resolution to use for fullscreen: 'original', 'desktop'
-or a fixed size (e.g. 1024x768).
+Jakiej rozdzielczo˜ci u¾y† w peˆnym ekranie: 'original', 'desktop',
+lub dokˆadna rozdzielczo˜† (np. 1024x768).
 .
 :CONFIG_WINDOWRESOLUTION
 Set window size to be used when running in windowed mode:
@@ -175,6 +175,8 @@ Device that will receive the MIDI data (from the emulated MIDI
 interface - MPU-401). Choose one of the following:
 'fluidsynth', to use the built-in MIDI synthesizer. See the
        [fluidsynth] section for detailed configuration.
+'mt32', to use the built-in Roland MT-32 synthesizer.
+       See the [mt32] section for detailed configuration.
 'auto', to use the first working external MIDI player. This
        might be a software synthesizer or physical device.
 .
@@ -184,6 +186,9 @@ This is usually the id or name of the MIDI synthesizer you want
 to use (find the id/name with DOS command 'mixer /listmidi').
 - This option has no effect when using the built-in synthesizers
   (mididevice = fluidsynth or mt32).
+- When using ALSA, use Linux command 'aconnect -l' to list open
+  MIDI ports, and select one (for example 'midiconfig=14:0'
+  for sequencer client 14, port 0).
 - If you're using a physical Roland MT-32 with revision 0 PCB,
   the hardware may require a delay in order to prevent its
   buffer from overflowing. In that case, add 'delaysysex',
@@ -206,6 +211,21 @@ The scaling percentage can range from 1 to 500.
 If set to a value greater than 1, then additional synthesis
 threads will be created to take advantage of many CPU cores.
 (min 1, max 256)
+.
+:CONFIG_MODEL
+Model of synthesizer to use. The default (auto) prefers CM-32L
+if both sets of ROMs are provided. For early Sierra games and Dune 2
+it's recommended to use 'mt32', while newer games typically made
+use of the CM-32L's extra sound effects (use 'auto' or 'cm32l')
+.
+:CONFIG_ROMDIR
+The directory holding the required MT-32 and/or CM-32L ROMs
+named as follows:
+  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM files(s).
+  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file(s).
+The directory can be absolute or relative, or leave it blank to
+use the 'mt32-roms' directory in your DOSBox configuration
+directory, followed by checking other common system locations.
 .
 :CONFIG_SBTYPE
 Type of Sound Blaster to emulate. 'gb' is Game Blaster.
@@ -494,40 +514,45 @@ Missing parameter.
 CDROMs found: %d
 
 .
-:PROGRAM_MOUNT_STATUS_FORMAT
-%-5s  %-58s %-12s
-
+:PROGRAM_MOUNT_STATUS_DRIVE
+Dysk
+.
+:PROGRAM_MOUNT_STATUS_TYPE
+Typ
+.
+:PROGRAM_MOUNT_STATUS_LABEL
+Etykieta
 .
 :PROGRAM_MOUNT_STATUS_2
-Drive %c is mounted as %s
+Dysk %c jest zamontowany jako %s
 
 .
 :PROGRAM_MOUNT_STATUS_1
-The currently mounted drives are:
+Zamontowane dyski:
 
 .
 :PROGRAM_MOUNT_ERROR_1
-Directory %s doesn't exist.
+Katalog %s nie istnieje.
 
 .
 :PROGRAM_MOUNT_ERROR_2
-%s isn't a directory
+%s nie jest katalogiem
 
 .
 :PROGRAM_MOUNT_ILL_TYPE
-Illegal type %s
+Nieprawidˆowy typ %s
 
 .
 :PROGRAM_MOUNT_ALREADY_MOUNTED
-Drive %c already mounted with %s
+Dysk %c jest ju¾ zamontowany jako %s
 
 .
 :PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
-Drive %c isn't mounted.
+Dysk %c nie jest zamontowany.
 
 .
 :PROGRAM_MOUNT_UMOUNT_SUCCESS
-Drive %c has successfully been removed.
+Dysk %c zostaˆ pomy˜lnie odmontowany.
 
 .
 :PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
@@ -811,6 +836,7 @@ Usage:
   [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mIMAGEFILE[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy
   [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -size GEOMETRY
   [32;1mimgmount[0m -u [37;1mDRIVE[0m  (unmounts the DRIVE's image)
+
 Where:
   [37;1mDRIVE[0m     is the drive letter where the image will be mounted: a, c, d, ...
   [36;1mCDROM-SET[0m is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
@@ -818,9 +844,8 @@ Where:
   [36;1mBOOTIMAGE[0m is a bootable disk image with specified -size GEOMETRY:
             bytes-per-sector,sectors-per-head,heads,cylinders
 Notes:
-  - Image paths and filenames are case-insensitive and either relative or
-    absolute with respect to dosbox's current-working directory.
   - Ctrl+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.
+
 Examples:
   [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/games/doom.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
@@ -848,8 +873,6 @@ Where:
   LABEL     drive label name to be used
 
 Notes:
-  - [36;1mDIRECTORY[0m is case-insensitive path, relative or absolute with respect to
-    dosbox's current-working directory.
   - '-t overlay' redirects writes for mounted drive to another directory.
   - Additional options are described in the manual (README file, chapter 4).
 
@@ -1128,7 +1151,7 @@ You must [31mmount[0m it first. Type [1;33mintro[0m or [1;33mintro mount[0
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
-Illegal command: %s.
+Nieprawidˆowa komenda: %s.
 
 .
 :SHELL_CMD_PAUSE
@@ -1216,7 +1239,7 @@ Type CD without parameters to display the current drive and directory.
 
 .
 :SHELL_CMD_CLS_HELP
-Clear the screen.
+Wyczy˜† ekran.
 
 .
 :SHELL_CMD_DIR_HELP
@@ -1252,7 +1275,7 @@ Show help.
 
 .
 :SHELL_CMD_MKDIR_HELP
-Make Directory.
+Stw¢rz katalog.
 
 .
 :SHELL_CMD_MKDIR_HELP_LONG
@@ -1261,7 +1284,7 @@ MD [drive:][path]
 
 .
 :SHELL_CMD_RMDIR_HELP
-Remove Directory.
+Usuä katalog.
 
 .
 :SHELL_CMD_RMDIR_HELP_LONG
@@ -1286,15 +1309,15 @@ Leftshift commandline parameters in a batch script.
 
 .
 :SHELL_CMD_TYPE_HELP
-Display the contents of a text-file.
+Wy˜wietl zawarto˜† pliku testowego.
 
 .
 :SHELL_CMD_TYPE_HELP_LONG
-TYPE [drive:][path][filename]
+TYPE [DYSK:][—CIE½KA][PLIK]
 
 .
 :SHELL_CMD_REM_HELP
-Add comments in a batch file.
+Dodaj komentarz w skrypcie.
 
 .
 :SHELL_CMD_REM_HELP_LONG
@@ -1317,11 +1340,11 @@ Note that you can not specify a new drive or path for your destination file.
 
 .
 :SHELL_CMD_DELETE_HELP
-Removes one or more files.
+Usuä pliki.
 
 .
 :SHELL_CMD_COPY_HELP
-Copy files.
+Kopiuj plik.
 
 .
 :SHELL_CMD_CALL_HELP
@@ -1383,6 +1406,6 @@ DOSBox Staging version %s. Reported DOS version %d.%02d.
 
 .
 :SHELL_CMD_VER_INVALID
-The specified DOS version is not correct.
+Podana wersja DOSa jest nieprawidˆowa.
 
 .
