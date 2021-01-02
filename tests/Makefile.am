@@ -8,14 +8,15 @@ bin_PROGRAMS = tests
 
 tests_CXXFLAGS = $(AM_CXXFLAGS) $(CXXFLAGS)
 if USE_GTEST_STATIC
-tests_CXXFLAGS += -Wl,-Bstatic -lgtest_main -lgtest -Wl,-Bdynamic
+tests_CXXFLAGS += -Wl,-Bstatic -lgtest_main -lgtest -Wl,-Bdynamic -pthread
 else
-tests_CXXFLAGS += -lgtest_main -lgtest
+tests_CXXFLAGS += -lgtest_main -lgtest -pthread
 endif
 
 tests_SOURCES = \
 	example.cpp \
 	fs_utils.cpp \
+	readerwritercircularbuffer.cpp \
 	soft_limiter.cpp \
 	string_utils.cpp \
 	support.cpp
