@@ -48,7 +48,7 @@ jobs:
           - name: GCC, -dyn-x86, +debugger
             os: ubuntu-20.04
             build_flags: -Ddynamic_core=dynrec -Denable_debugger=normal
-            max_warnings: 144
+            max_warnings: 169
           - name: GCC, -network
             os: ubuntu-20.04
             build_flags: -Duse_sdl2_net=false
