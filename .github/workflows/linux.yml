@@ -19,50 +19,42 @@ jobs:
         conf:
           - name: Clang, Ubuntu 20.04
             os: ubuntu-20.04
-            packages: meson clang
+            packages: clang
             build_flags: --native-file=.github/meson/native-clang.ini
             max_warnings: 0
           - name: GCC, Ubuntu 20.04
             os: ubuntu-20.04
-            packages: meson
             max_warnings: 0
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
-            packages: meson
-            build_flags: -Duse_fluidsynth=false
+            build_flags: -Duse_fluidsynth=false --wrap-mode=nofallback
             max_warnings: 0
           - name: GCC, Ubuntu 16.04
             os: ubuntu-16.04
-            build_flags: -Duse_fluidsynth=false
+            build_flags: -Duse_fluidsynth=false --wrap-mode=nofallback
             max_warnings: 0
           - name: GCC, +tests
             os: ubuntu-20.04
-            packages: meson libgtest-dev
             run_tests: true
             max_warnings: -1
           - name: GCC, +debugger
             os: ubuntu-20.04
-            packages: meson
             build_flags: -Denable_debugger=normal
             max_warnings: 132
           - name: GCC, -dyn-x86
             os: ubuntu-20.04
-            packages: meson
             build_flags: -Ddynamic_core=dynrec
             max_warnings: 0
           - name: GCC, -dyn-x86, +debugger
             os: ubuntu-20.04
-            packages: meson
             build_flags: -Ddynamic_core=dynrec -Denable_debugger=normal
             max_warnings: 144
           - name: GCC, -network
             os: ubuntu-20.04
-            packages: meson
             build_flags: -Duse_sdl2_net=false
             max_warnings: 0
           - name: GCC, warning_level=3
             os: ubuntu-20.04
-            packages: meson
             build_flags: -Dwarning_level=3
             max_warnings: 236
 
@@ -74,13 +66,10 @@ jobs:
         run: |
           sudo apt-get install -y \
             ${{ matrix.conf.packages }} \
-            $(cat ./.github/packages/ubuntu-apt.txt)
+            $(cat ./.github/packages/${{ matrix.conf.os }}-apt.txt)
 
-      # We want to use meson provided via apt whenever possible, but
-      # Ubuntu 16.04 has very old version (and is close to EOL).
-      # We need meson 0.45.1 or newer.
       - name: Install Meson via pip3
-        if:   contains(matrix.conf.packages, 'meson') == false
+        if:   matrix.conf.os == 'ubuntu-16.04'
         run: |
           sudo apt-get install python3-setuptools
           sudo pip3 install meson ninja
