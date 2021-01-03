@@ -1,7 +1,7 @@
 name: Platform builds
 
-on:
-  schedule: [cron: '0 14 * * *']
+on: [push]
+        #  schedule: [cron: '0 14 * * *']
 
 jobs:
   repo-check:
@@ -22,21 +22,21 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: ARMv6 (Debian Buster)
-            architecture: armv6
-            distribution: buster
-          - name: ARMv7 (Debian Buster)
-            architecture: armv7
-            distribution: buster
-          - name: ARMv8 AArch64 (Ubuntu 18.04)
-            architecture: aarch64
-            distribution: ubuntu18.04
+          # - name: ARMv6 (Debian Buster)
+          #   arch: armv6
+          #   distro: buster
+          # - name: ARMv7 (Debian Buster)
+          #   arch: armv7
+          #   distro: buster
+          # - name: ARMv8 AArch64 (Ubuntu 18.04)
+          #   arch: aarch64
+          #   distro: ubuntu18.04
           - name: s390x (Ubuntu 18.04)
-            architecture: s390x
-            distribution: ubuntu18.04
+            arch: s390x
+            distro: ubuntu18.04
           - name: ppc64le (Ubuntu 18.04)
-            architecture: ppc64le
-            distribution: ubuntu18.04
+            arch: ppc64le
+            distro: ubuntu18.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -52,14 +52,16 @@ jobs:
       - name: Build
         uses: uraimo/run-on-arch-action@master
         with:
-          architecture: ${{ matrix.conf.architecture }}
-          distribution: ${{ matrix.conf.distribution }}
+          arch:   ${{ matrix.conf.arch }}
+          distro: ${{ matrix.conf.distro }}
           run: |
-            set -x
+            set -xo pipefail
             apt-get update
-            apt-get install -y libpng-dev $(./scripts/list-build-dependencies.sh -c gcc -m apt)
+            apt-get install -y $(cat ./.github/packages/ubuntu-18.04-apt.txt)
             ./scripts/log-env.sh
-            ./scripts/build.sh -c gcc -t release -m lto --disable-fluidsynth
+            meson build -Duse_fluidsynth=false --wrap-mode=nofallback
+            ninja -C build |& tee build.log
+
 
       - name: Summarize warnings
         run:  ./scripts/count-warnings.py --max-warnings -1 build.log
@@ -69,7 +71,7 @@ jobs:
           set -x
 
           # Prepare content
-          install -DT        src/dosbox           dest/dosbox
+          install -DT        build/dosbox         dest/dosbox
           install -DT -m 644 docs/README.template dest/README
           install -DT -m 644 COPYING              dest/COPYING
           install -DT -m 644 README               dest/doc/manual.txt
