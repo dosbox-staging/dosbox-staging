@@ -1,7 +1,6 @@
 build-essential
 ccache
 libasound2-dev
-libfluidsynth-dev
 libopusfile-dev
 libpng-dev
 libsdl2-dev
