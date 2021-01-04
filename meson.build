@@ -59,6 +59,22 @@ if cc.has_member('struct dirent', 'd_type', prefix : '#include <dirent.h>')
   conf_data.set10('HAVE_STRUCT_DIRENT_D_TYPE', true)
 endif
 
+if cc.has_header('netinet/in.h')
+  conf_data.set10('HAVE_NETINET_IN_H', true)
+endif
+
+if cc.has_header('pwd.h')
+  conf_data.set10('HAVE_PWD_H', true)
+endif
+
+if cc.has_header('strings.h')
+  conf_data.set10('HAVE_STRINGS_H', true)
+endif
+
+if cc.has_header('sys/socket.h')
+  conf_data.set10('HAVE_SYS_SOCKET_H', true)
+endif
+
 if host_machine.endian() == 'big'
   conf_data.set('WORDS_BIGENDIAN', 1)
 endif
