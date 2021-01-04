@@ -85,6 +85,11 @@ if cc.has_function('mprotect', prefix : '#include <sys/mman.h>')
   conf_data.set10('HAVE_MPROTECT', true)
 endif
 
+if cxx.has_function('pthread_setname_np', prefix : '#include <pthread.h>',
+                    dependencies : dependency('threads'))
+  conf_data.set10('HAVE_PTHREAD_SETNAME_NP', true)
+endif
+
 if cc.has_function('realpath', prefix : '#include <stdlib.h>')
   conf_data.set10('HAVE_REALPATH', true)
 endif
@@ -251,7 +256,6 @@ if host_machine.system() in ['windows', 'cygwin']
   winsock2_dep = cxx.find_library('ws2_32', required : true)
   winmm_dep = cxx.find_library('winmm', required : true)
 endif
-
 
 # include directories
 #
