@@ -90,6 +90,9 @@
 // Define to 1 to enable heavy debugging (requires C_DEBUG)
 #mesondefine C_HEAVY_DEBUG
 
+// Define to 1 to enable MT-32 emulator
+#define C_MT32EMU 0
+
 /* Compiler features and extensions
  *
  * These are defines for compiler features we can't reliably verify during
