@@ -139,6 +139,9 @@
 // Defined if function mprotect is available
 #mesondefine HAVE_MPROTECT
 
+// Defined if function pthread_setname_np is available
+#mesondefine HAVE_PTHREAD_SETNAME_NP
+
 // Defined if function realpath is available
 #mesondefine HAVE_REALPATH
 

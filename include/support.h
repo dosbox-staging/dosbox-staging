@@ -33,6 +33,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 #ifdef _MSC_VER
@@ -229,3 +230,5 @@ constexpr size_t static_if_array_then_zero()
 std::string safe_strerror(int err) noexcept;
 
 #endif
+
+void set_thread_name(std::thread &thread, const char *name);

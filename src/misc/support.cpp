@@ -331,3 +331,12 @@ std::string safe_strerror(int err) noexcept
 	return buf;
 #endif
 }
+
+void set_thread_name(MAYBE_UNUSED std::thread& thread, MAYBE_UNUSED const char *name)
+{
+#if defined(HAVE_PTHREAD_SETNAME_NP) && defined(_GNU_SOURCE)
+	assert(strlen(name) < 16);
+	pthread_t handle = thread.native_handle();
+	pthread_setname_np(handle, name);
+#endif
+}
