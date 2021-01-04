@@ -30,6 +30,21 @@
 // TODO make it a suffix, configurable via meson
 #define CONF_BRAND "staging-git"
 
+/* Operating System
+ */
+
+// Defined if compiling for OS from BSD family
+#mesondefine BSD
+
+// Defined if compiling for Linux (non-Android)
+#mesondefine LINUX
+
+// Defined if compiling for macOS
+#mesondefine MACOSX
+
+// Defined if compiling for Windows (any option)
+#mesondefine WIN32
+
 /* CPU and FPU emulation
  *
  * These defines are mostly relevant to modules src/cpu/ and src/fpu/
@@ -71,9 +86,10 @@
 // Define to 1 to enable IPX over Internet networking (using SDL2_net)
 #mesondefine C_IPX
 
-// Define to 1 to enable serial port passthrough support
-// TODO change to 1 after defining OSes
-#define C_DIRECTSERIAL 0
+// Enable serial port passthrough support
+#if defined(LINUX) || defined(WIN32) || defined(MACOSX) || defined(BSD)
+#define C_DIRECTSERIAL 1
+#endif
 
 // Define to 1 to use opengl display output support
 #mesondefine C_OPENGL
