@@ -118,6 +118,9 @@
 // Defined if function mprotect is available
 #mesondefine HAVE_MPROTECT
 
+// Defined if function realpath is available
+#mesondefine HAVE_REALPATH
+
 // field d_type in struct dirent is not defined in POSIX
 // Some OSes do not implement it (e.g. Haiku)
 #mesondefine HAVE_STRUCT_DIRENT_D_TYPE

@@ -51,6 +51,10 @@ if cc.has_function('mprotect', prefix : '#include <sys/mman.h>')
   conf_data.set10('HAVE_MPROTECT', true)
 endif
 
+if cc.has_function('realpath', prefix : '#include <stdlib.h>')
+  conf_data.set10('HAVE_REALPATH', true)
+endif
+
 if cc.has_member('struct dirent', 'd_type', prefix : '#include <dirent.h>')
   conf_data.set10('HAVE_STRUCT_DIRENT_D_TYPE', true)
 endif
