@@ -26,6 +26,18 @@ endif
 #
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
+
+host_os = host_machine.system()
+if host_os == 'linux'
+  conf_data.set('LINUX', 1)
+elif host_os == 'windows' or host_os == 'cygwin'
+  conf_data.set('WIN32', 1)
+elif host_os == 'darwin'
+  conf_data.set('MACOSX', 1)
+elif host_os.endswith('bsd') or host_os == 'dragonfly'
+  conf_data.set('BSD', 1)
+endif
+
 conf_data.set10('C_MODEM', get_option('use_sdl2_net'))
 conf_data.set10('C_IPX', get_option('use_sdl2_net'))
 conf_data.set10('C_OPENGL', get_option('use_opengl'))
