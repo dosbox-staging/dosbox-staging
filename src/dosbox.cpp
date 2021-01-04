@@ -677,14 +677,14 @@ void DOSBOX_Init(void) {
 	Pstring = secprop->Add_string("joysticktype",Property::Changeable::WhenIdle,"auto");
 	Pstring->Set_values(joytypes);
 	Pstring->Set_help(
-		"Type of joystick to emulate: auto (default), none,\n"
+		"Type of joystick to emulate: auto (default),\n"
+		"none (disables joystick emulation),\n"
 		"2axis (supports two joysticks),\n"
 		"4axis (supports one joystick, first joystick used),\n"
 		"4axis_2 (supports one joystick, second joystick used),\n"
 		"fcs (Thrustmaster), ch (CH Flightstick).\n"
-		"none disables joystick emulation.\n"
 		"auto chooses emulation depending on real joystick(s).\n"
-		"(Remember to reset dosbox's mapperfile if you saved it earlier)");
+		"(Remember to reset DOSBox's mapperfile if you saved it earlier)");
 
 	Pbool = secprop->Add_bool("timed",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("enable timed intervals for axis. Experiment with this option, if your joystick drifts (away).");
