@@ -822,6 +822,16 @@ bool Config::PrintConfig(const std::string &filename) const
 	return true;
 }
 
+Section_prop *Config::AddEarlySection_prop(const char *name,
+                                           SectionFunction func,
+                                           bool canchange)
+{
+	Section_prop *s = new Section_prop(name);
+	s->AddEarlyInitFunction(func, canchange);
+	sectionlist.push_back(s);
+	return s;
+}
+
 Section_prop *Config::AddSection_prop(char const *const _name,
                                       SectionFunction func,
                                       bool canchange)
@@ -849,10 +859,14 @@ Section_line *Config::AddSection_line(char const *const _name, SectionFunction f
 	return blah;
 }
 
-void Config::Init() {
-	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); ++tel) {
-		(*tel)->ExecuteInit();
-	}
+void Config::Init() const
+{
+	for (const auto &sec : sectionlist)
+		sec->ExecuteEarlyInit();
+
+	for (const auto &sec : sectionlist)
+		sec->ExecuteInit();
+}
 
 void Section::AddEarlyInitFunction(SectionFunction func, bool canchange)
 {
