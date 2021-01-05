@@ -853,6 +853,10 @@ void Config::Init() {
 	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); ++tel) {
 		(*tel)->ExecuteInit();
 	}
+
+void Section::AddEarlyInitFunction(SectionFunction func, bool canchange)
+{
+	early_init_functions.emplace_back(func, canchange);
 }
 
 void Section::AddInitFunction(SectionFunction func, bool canchange)
@@ -863,6 +867,13 @@ void Section::AddInitFunction(SectionFunction func, bool canchange)
 void Section::AddDestroyFunction(SectionFunction func, bool canchange)
 {
 	destroyfunctions.emplace_front(func, canchange);
+}
+
+void Section::ExecuteEarlyInit(bool init_all)
+{
+	for (const auto &fn : early_init_functions)
+		if (init_all || fn.canchange)
+			fn.function(this);
 }
 
 void Section::ExecuteInit(bool initall) {
