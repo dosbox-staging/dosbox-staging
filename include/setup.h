@@ -290,14 +290,15 @@ typedef void (*SectionFunction)(Section *);
 class Section {
 private:
 	/* Wrapper class around startup and shutdown functions. the variable
-	 * canchange indicates it can be called on configuration changes */
+	 * changeable_at_runtime indicates it can be called on configuration
+	 * changes */
 	struct Function_wrapper {
 		SectionFunction function;
-		bool canchange;
+		bool changeable_at_runtime;
 
 		Function_wrapper(SectionFunction const fn, bool ch)
 		        : function(fn),
-		          canchange(ch)
+		          changeable_at_runtime(ch)
 		{}
 	};
 
@@ -310,9 +311,11 @@ public:
 
 	virtual ~Section() = default; // Children must call executedestroy!
 
-	void AddEarlyInitFunction(SectionFunction func, bool canchange = false);
-	void AddInitFunction(SectionFunction func, bool canchange = false);
-	void AddDestroyFunction(SectionFunction func, bool canchange = false);
+	void AddEarlyInitFunction(SectionFunction func,
+	                          bool changeable_at_runtime = false);
+	void AddInitFunction(SectionFunction func, bool changeable_at_runtime = false);
+	void AddDestroyFunction(SectionFunction func,
+	                        bool changeable_at_runtime = false);
 
 	void ExecuteEarlyInit(bool initall = true);
 	void ExecuteInit(bool initall=true);

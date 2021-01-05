@@ -822,14 +822,24 @@ bool Config::PrintConfig(const std::string &filename) const
 	return true;
 }
 
-Section_prop *Config::AddSection_prop(char const *const _name,
-                                      SectionFunction func,
-                                      bool canchange)
+Section_prop *Config::AddEarlySectionProp(const char *name,
+                                          SectionFunction func,
+                                          bool changeable_at_runtime)
 {
-	Section_prop *blah = new Section_prop(_name);
-	blah->AddInitFunction(func, canchange);
-	sectionlist.push_back(blah);
-	return blah;
+	Section_prop *s = new Section_prop(name);
+	s->AddEarlyInitFunction(func, changeable_at_runtime);
+	sectionlist.push_back(s);
+	return s;
+}
+
+Section_prop *Config::AddSection_prop(char const *const name,
+                                      SectionFunction func,
+                                      bool changeable_at_runtime)
+{
+	Section_prop *s = new Section_prop(name);
+	s->AddInitFunction(func, changeable_at_runtime);
+	sectionlist.push_back(s);
+	return s;
 }
 
 Section_prop::~Section_prop()
@@ -849,47 +859,53 @@ Section_line *Config::AddSection_line(char const *const _name, SectionFunction f
 	return blah;
 }
 
-void Config::Init() {
-	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); ++tel) {
-		(*tel)->ExecuteInit();
-	}
-
-void Section::AddEarlyInitFunction(SectionFunction func, bool canchange)
+void Config::Init() const
 {
-	early_init_functions.emplace_back(func, canchange);
+	for (const auto &sec : sectionlist)
+		sec->ExecuteEarlyInit();
+
+	for (const auto &sec : sectionlist)
+		sec->ExecuteInit();
 }
 
-void Section::AddInitFunction(SectionFunction func, bool canchange)
+void Section::AddEarlyInitFunction(SectionFunction func, bool changeable_at_runtime)
 {
-	initfunctions.emplace_back(func, canchange);
+	early_init_functions.emplace_back(func, changeable_at_runtime);
 }
 
-void Section::AddDestroyFunction(SectionFunction func, bool canchange)
+void Section::AddInitFunction(SectionFunction func, bool changeable_at_runtime)
 {
-	destroyfunctions.emplace_front(func, canchange);
+	initfunctions.emplace_back(func, changeable_at_runtime);
+}
+
+void Section::AddDestroyFunction(SectionFunction func, bool changeable_at_runtime)
+{
+	destroyfunctions.emplace_front(func, changeable_at_runtime);
 }
 
 void Section::ExecuteEarlyInit(bool init_all)
 {
 	for (const auto &fn : early_init_functions)
-		if (init_all || fn.canchange)
+		if (init_all || fn.changeable_at_runtime)
 			fn.function(this);
 }
 
 void Section::ExecuteInit(bool initall) {
 	typedef std::deque<Function_wrapper>::iterator func_it;
 	for (func_it tel = initfunctions.begin(); tel != initfunctions.end(); ++tel) {
-		if (initall || (*tel).canchange) (*tel).function(this);
+		if (initall || (*tel).changeable_at_runtime)
+			(*tel).function(this);
 	}
 }
 
 void Section::ExecuteDestroy(bool destroyall) {
 	typedef std::deque<Function_wrapper>::iterator func_it;
 	for (func_it tel = destroyfunctions.begin(); tel != destroyfunctions.end(); ) {
-		if (destroyall || (*tel).canchange) {
+		if (destroyall || (*tel).changeable_at_runtime) {
 			(*tel).function(this);
 			tel = destroyfunctions.erase(tel); //Remove destroyfunction once used
-		} else ++tel;
+		} else
+			++tel;
 	}
 }
 

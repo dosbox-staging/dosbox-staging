@@ -23,6 +23,7 @@
 
 #include <cassert>
 #include <deque>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -70,17 +71,22 @@ public:
 
 	~Config();
 
+	Section_prop *AddEarlySectionProp(const char *name,
+	                                  SectionFunction func,
+	                                  bool changeable_at_runtime = false);
+
 	Section_line *AddSection_line(char const *const _name, SectionFunction func);
 
 	Section_prop *AddSection_prop(char const *const _name,
 	                              SectionFunction func,
-	                              bool canchange = false);
+	                              bool changeable_at_runtime = false);
+
 	Section *GetSection(int index);
-	Section* GetSection(std::string const&_sectionname) const;
+	Section *GetSection(std::string const &_sectionname) const;
 	Section* GetSectionFromProperty(char const * const prop) const;
 
 	void SetStartUp(void (*_function)(void));
-	void Init();
+	void Init() const;
 	void ShutDown();
 	void StartUp();
 	bool PrintConfig(const std::string &filename) const;
