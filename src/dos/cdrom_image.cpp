@@ -131,7 +131,7 @@ int CDROM_Interface_Image::AudioFile::getLength()
 int CDROM_Interface_Image::refCount = 0;
 CDROM_Interface_Image* CDROM_Interface_Image::images[26] = {};
 CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player = {
-	NULL, NULL, NULL, {0}, 0, 0, 0, false, false, false, {0} };
+	NULL, NULL, NULL, {0}, 0, 0, 0, false, false, false, { {0,0,0,0},{0,0,0,0} } };
 
 	
 CDROM_Interface_Image::CDROM_Interface_Image(Bit8u subUnit)
@@ -163,7 +163,7 @@ void CDROM_Interface_Image::InitNewMedia()
 {
 }
 
-bool CDROM_Interface_Image::SetDevice(char* path, int forceCD)
+bool CDROM_Interface_Image::SetDevice(char* path, int /*forceCD*/)
 {
 	if (LoadCueSheet(path)) return true;
 	if (LoadIsoFile(path)) return true;
@@ -284,7 +284,7 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer, bool raw, unsigned long s
 	return success;
 }
 
-bool CDROM_Interface_Image::LoadUnloadMedia(bool unload)
+bool CDROM_Interface_Image::LoadUnloadMedia(bool /*unload*/)
 {
 	return true;
 }
