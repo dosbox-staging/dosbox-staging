@@ -285,10 +285,10 @@ public:
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
 
+typedef void (*SectionFunction)(Section *);
+
 class Section {
 private:
-	typedef void (*SectionFunction)(Section*);
-
 	/* Wrapper class around startup and shutdown functions. the variable
 	 * canchange indicates it can be called on configuration changes */
 	struct Function_wrapper {
