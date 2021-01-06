@@ -27,7 +27,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <list>
+#include <deque>
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits>
@@ -863,14 +863,14 @@ void Section::AddDestroyFunction(SectionFunction func, bool canchange)
 }
 
 void Section::ExecuteInit(bool initall) {
-	typedef std::list<Function_wrapper>::iterator func_it;
+	typedef std::deque<Function_wrapper>::iterator func_it;
 	for (func_it tel = initfunctions.begin(); tel != initfunctions.end(); ++tel) {
 		if (initall || (*tel).canchange) (*tel).function(this);
 	}
 }
 
 void Section::ExecuteDestroy(bool destroyall) {
-	typedef std::list<Function_wrapper>::iterator func_it;
+	typedef std::deque<Function_wrapper>::iterator func_it;
 	for (func_it tel = destroyfunctions.begin(); tel != destroyfunctions.end(); ) {
 		if (destroyall || (*tel).canchange) {
 			(*tel).function(this);
