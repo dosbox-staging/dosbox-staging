@@ -822,9 +822,12 @@ bool Config::PrintConfig(const std::string &filename) const
 	return true;
 }
 
-Section_prop* Config::AddSection_prop(char const * const _name,void (*_initfunction)(Section*),bool canchange) {
-	Section_prop* blah = new Section_prop(_name);
-	blah->AddInitFunction(_initfunction,canchange);
+Section_prop *Config::AddSection_prop(char const *const _name,
+                                      SectionFunction func,
+                                      bool canchange)
+{
+	Section_prop *blah = new Section_prop(_name);
+	blah->AddInitFunction(func, canchange);
 	sectionlist.push_back(blah);
 	return blah;
 }
@@ -838,13 +841,13 @@ Section_prop::~Section_prop()
 		delete (*prop);
 }
 
-Section_line* Config::AddSection_line(char const * const _name,void (*_initfunction)(Section*)) {
+Section_line *Config::AddSection_line(char const *const _name, SectionFunction func)
+{
 	Section_line* blah = new Section_line(_name);
-	blah->AddInitFunction(_initfunction);
+	blah->AddInitFunction(func);
 	sectionlist.push_back(blah);
 	return blah;
 }
-
 
 void Config::Init() {
 	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); ++tel) {
