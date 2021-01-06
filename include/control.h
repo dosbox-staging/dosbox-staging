@@ -22,7 +22,7 @@
 #include "dosbox.h"
 
 #include <cassert>
-#include <list>
+#include <deque>
 #include <string>
 #include <vector>
 
@@ -41,11 +41,11 @@ class Config {
 public:
 	CommandLine * cmdline;
 private:
-	std::list<Section*> sectionlist;
-	typedef std::list<Section*>::iterator it;
-	typedef std::list<Section*>::reverse_iterator reverse_it;
-	typedef std::list<Section*>::const_iterator const_it;
-	typedef std::list<Section*>::const_reverse_iterator const_reverse_it;
+	std::deque<Section*> sectionlist;
+	typedef std::deque<Section*>::iterator it;
+	typedef std::deque<Section*>::reverse_iterator reverse_it;
+	typedef std::deque<Section*>::const_iterator const_it;
+	typedef std::deque<Section*>::const_reverse_iterator const_reverse_it;
 	void (* _start_function)(void);
 	bool secure_mode; //Sandbox mode
 public:

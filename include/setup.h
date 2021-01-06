@@ -23,7 +23,7 @@
 #define DOSBOX_SETUP_H
 
 #include <cstdio>
-#include <list>
+#include <deque>
 #include <memory>
 #include <string>
 #include <vector>
@@ -301,8 +301,8 @@ private:
 		{}
 	};
 
-	std::list<Function_wrapper> initfunctions = {};
-	std::list<Function_wrapper> destroyfunctions = {};
+	std::deque<Function_wrapper> initfunctions = {};
+	std::deque<Function_wrapper> destroyfunctions = {};
 	std::string sectionname;
 public:
 	Section(const std::string &name) : sectionname(name) {}
@@ -325,9 +325,9 @@ class Prop_multival_remain;
 
 class Section_prop : public Section {
 private:
-	std::list<Property *> properties = {};
-	typedef std::list<Property*>::iterator it;
-	typedef std::list<Property*>::const_iterator const_it;
+	std::deque<Property *> properties = {};
+	typedef std::deque<Property*>::iterator it;
+	typedef std::deque<Property*>::const_iterator const_it;
 
 public:
 	Section_prop(const std::string &name) : Section(name) {}
