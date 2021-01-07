@@ -57,7 +57,7 @@ constexpr uint16_t MS_PER_S = 1000;
 constexpr uint8_t CH_PER_FRAME = 2; // left and right channels
 
 
-MidiHandler_mt32 mt32_instance;
+static std::unique_ptr<MidiHandler_mt32> mt32_instance;
 
 static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 {
@@ -344,11 +344,14 @@ void MidiHandler_mt32::Close()
 	SDL_LockMutex(lock.get());
 	SDL_CondSignal(framesInBufferChanged.get());
 	SDL_UnlockMutex(lock.get());
+
 	thread.reset();
 	lock.reset();
 	framesInBufferChanged.reset();
-
+	channel.reset();
 	service->closeSynth();
+	service.reset();
+	
 	is_open = false;
 }
 
@@ -374,7 +377,8 @@ void MidiHandler_mt32::PlaySysex(uint8_t *sysex, size_t len)
 
 int MidiHandler_mt32::ProcessingThread(MAYBE_UNUSED void *data)
 {
-	mt32_instance.RenderingLoop();
+	assert(mt32_instance);
+	mt32_instance->RenderingLoop();
 	return 0;
 }
 
@@ -464,8 +468,16 @@ void MidiHandler_mt32::DeleteThread(SDL_Thread *t)
 	SDL_WaitThread(t, nullptr);
 }
 
-static void mt32_init(MAYBE_UNUSED Section *sec)
-{}
+static void mt32_destroy(MAYBE_UNUSED Section *sec)
+{
+	mt32_instance.reset();
+}
+
+static void mt32_init(Section *sec)
+{
+	mt32_instance = std::make_unique<MidiHandler_mt32>();
+	sec->AddDestroyFunction(&mt32_destroy, true);
+}
 
 void MT32_AddConfigSection(Config *conf)
 {
