@@ -33,8 +33,6 @@
 #include "cross.h"
 #include "fs_utils.h"
 
-MidiHandlerFluidsynth instance;
-
 static void init_fluid_dosbox_settings(Section_prop &secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
@@ -363,13 +361,20 @@ void MidiHandlerFluidsynth::MixerCallBack(uint16_t frames)
 	}
 }
 
+static std::unique_ptr<MidiHandlerFluidsynth> fluidsynth_instance;
+
 static void fluid_destroy(MAYBE_UNUSED Section *sec)
 {
-	instance.PrintStats();
+	if (!fluidsynth_instance)
+		return;
+	
+	fluidsynth_instance->PrintStats();
+	fluidsynth_instance.reset();
 }
 
 static void fluid_init(Section *sec)
 {
+	fluidsynth_instance = std::make_unique<MidiHandlerFluidsynth>();
 	sec->AddDestroyFunction(&fluid_destroy, true);
 }
 
