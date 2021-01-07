@@ -596,6 +596,13 @@ void DOSBOX_Init(void) {
 	Pint->SetMinMax(0,100);
 	Pint->Set_help("How many milliseconds of data to keep on top of the blocksize.");
 
+// Registered MIDI handlers before running MIDI_Init(), which queries them.
+#if C_FLUIDSYNTH
+	FLUID_AddConfigSection(control); // a MIDI handler
+#endif
+#if C_MT32EMU
+	MT32_AddConfigSection(control); // a MIDI handler
+#endif
 	secprop = control->AddSection_prop("midi", &MIDI_Init, true);
 	secprop->AddInitFunction(&MPU401_Init, true);
 
@@ -668,14 +675,6 @@ void DOSBOX_Init(void) {
 	const char *mputypes[] = {"intelligent", "uart", "none", 0};
 	pstring->Set_values(mputypes);
 	pstring->Set_help("Type of MPU-401 to emulate.");
-
-#if C_FLUIDSYNTH
-	FLUID_AddConfigSection(control);
-#endif
-
-#if C_MT32EMU
-	MT32_AddConfigSection(control);
-#endif
 
 #if C_DEBUG
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
