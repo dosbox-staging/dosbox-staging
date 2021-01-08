@@ -28,6 +28,11 @@
 #include "callback.h"
 #include "support.h"
 
+DOS_Shell::~DOS_Shell() {
+	delete bf;
+	bf = nullptr;
+}
+
 void DOS_Shell::ShowPrompt(void) {
 	Bit8u drive=DOS_GetDefaultDrive()+'A';
 	char dir[DOS_PATHLENGTH];
