@@ -21,6 +21,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <memory>
 
 #include "callback.h"
 #include "control.h"
@@ -518,11 +519,11 @@ public:
 	}
 };
 
-static AUTOEXEC *autoexec_module;
+static std::unique_ptr<AUTOEXEC> autoexec_module{};
 
 void AUTOEXEC_Init(Section *sec)
 {
-	autoexec_module = new AUTOEXEC(sec);
+	autoexec_module = std::make_unique<AUTOEXEC>(sec);
 }
 
 static Bitu INT2E_Handler()
