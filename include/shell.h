@@ -71,6 +71,7 @@ private:
 public:
 
 	DOS_Shell();
+	~DOS_Shell() override;
 	DOS_Shell(const DOS_Shell&) = delete; // prevent copy
 	DOS_Shell& operator=(const DOS_Shell&) = delete; // prevent assignment
 	void Run() override;
