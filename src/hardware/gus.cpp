@@ -121,6 +121,7 @@ using ram_array_t = std::array<uint8_t, RAM_SIZE>;
 using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
 using vol_scalars_array_t = std::array<float, VOLUME_LEVELS>;
 using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
+using mixer_channel_ptr_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
 // A Voice is used by the Gus class and instantiates 32 of these.
 // Each voice represents a single "mono" stream of audio having its own
@@ -209,6 +210,7 @@ using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
 class Gus {
 public:
 	Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &dir);
+	virtual ~Gus();
 	bool CheckTimer(size_t t);
 	void PrintStats();
 
@@ -272,12 +274,11 @@ private:
 
 	// Struct and pointer members
 	VoiceIrq voice_irq = {};
-	MixerObject mixer_channel = {};
 	AudioFrame mixer_level = {1, 1};
 	SoftLimiter<BUFFER_FRAMES> soft_limiter;
 	Voice *voice = nullptr;
 	DmaChannel *dma_channel = nullptr;
-	MixerChannel *audio_channel = nullptr;
+	mixer_channel_ptr_t audio_channel{nullptr, MIXER_DelChannel};
 	uint8_t &adlib_command_reg = adlib_commandreg;
 
 	// Port address
@@ -602,8 +603,11 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	RegisterIoHandlers();
 
 	// Register the Audio and DMA channels
-	audio_channel = mixer_channel.Install(
-		std::bind(&Gus::AudioCallback, this, std::placeholders::_1), 1, "GUS");
+
+	const auto mixer_callback = std::bind(&Gus::AudioCallback, this,
+	                                      std::placeholders::_1);
+	audio_channel = mixer_channel_ptr_t(MIXER_AddChannel(mixer_callback, 1, "GUS"),
+	                                    MIXER_DelChannel);
 	assert(audio_channel);
 	// Let the mixer command adjust the GUS's internal amplitude level's
 	const auto set_level_callback = std::bind(&Gus::SetLevelCallback, this, _1);
@@ -1433,11 +1437,31 @@ void Gus::WriteToRegister()
 	return;
 }
 
+Gus::~Gus()
+{
+	DEBUG_LOG_MSG("GUS: Shutting down");
+	StopPlayback();
+
+	// remove the mixer channel
+	audio_channel.reset();
+
+	// remove the IO handlers
+	for (auto &rh : read_handlers)
+		rh.Uninstall();
+	for (auto &wh : write_handlers)
+		wh.Uninstall();
+}
+
 static void gus_destroy(MAYBE_UNUSED Section *sec)
 {
+	// GUS destroy is run when the user wants to deactivate the GUS:
+	// C:\> config -set gus=false
+	// TODO: therefore, this function should also remove the
+	//       ULTRASND and ULTRADIR environment variables.
+
 	if (gus) {
 		gus->PrintStats();
-		gus.reset(nullptr);
+		gus.reset();
 	}
 }
 
@@ -1498,7 +1522,7 @@ void init_gus_dosbox_settings(Section_prop &secprop)
 void GUS_AddConfigSection(Config *conf)
 {
 	assert(conf);
-	Section_prop *sec = conf->AddSection_prop("gus", &gus_init);
+	Section_prop *sec = conf->AddSection_prop("gus", &gus_init, true);
 	assert(sec);
 	init_gus_dosbox_settings(*sec);
 }
