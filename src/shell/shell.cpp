@@ -32,7 +32,7 @@
 Bitu call_shellstop;
 /* Larger scope so shell_del autoexec can use it to
  * remove things from the environment */
-DOS_Shell * first_shell = 0;
+DOS_Shell *first_shell = nullptr;
 
 static Bitu shellstop_handler(void) {
 	return CBRET_STOP;
@@ -826,5 +826,5 @@ void SHELL_Init() {
 	SHELL_ProgramStart_First_shell(&first_shell);
 	first_shell->Run();
 	delete first_shell;
-	first_shell = 0;//Make clear that it shouldn't be used anymore
+	first_shell = nullptr; // Make clear that it shouldn't be used anymore
 }
