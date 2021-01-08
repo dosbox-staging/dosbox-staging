@@ -43,7 +43,7 @@ namespace OPL2 {
 		virtual void WriteReg( Bit32u reg, Bit8u val ) {
 			adlib_write(reg,val);
 		}
-		virtual Bit32u WriteAddr( Bit32u port, Bit8u val ) {
+		virtual Bit32u WriteAddr( Bit32u /*port*/, Bit8u val ) {
 			return val;
 		}
 
@@ -102,7 +102,7 @@ struct Handler : public Adlib::Handler {
 		ym3812_write(chip, 0, reg);
 		ym3812_write(chip, 1, val);
 	}
-	virtual Bit32u WriteAddr(Bit32u port, Bit8u val) {
+	virtual Bit32u WriteAddr(Bit32u /*port*/, Bit8u val) {
 		return val;
 	}
 	virtual void Generate(MixerChannel* chan, Bitu samples) {
@@ -134,7 +134,7 @@ struct Handler : public Adlib::Handler {
 		ymf262_write(chip, 0, reg);
 		ymf262_write(chip, 1, val);
 	}
-	virtual Bit32u WriteAddr(Bit32u port, Bit8u val) {
+	virtual Bit32u WriteAddr(Bit32u /*port*/, Bit8u val) {
 		return val;
 	}
 	virtual void Generate(MixerChannel* chan, Bitu samples) {
@@ -560,7 +560,7 @@ Bitu Module::CtrlRead( void ) {
 }
 
 
-void Module::PortWrite( Bitu port, Bitu val, Bitu iolen ) {
+void Module::PortWrite( Bitu port, Bitu val, Bitu /*iolen*/ ) {
 	//Keep track of last write time
 	lastUsed = PIC_Ticks;
 	//Maybe only enable with a keyon?
@@ -575,8 +575,8 @@ void Module::PortWrite( Bitu port, Bitu val, Bitu iolen ) {
 					CtrlWrite( val );
 					break;
 				}
-			}
-			//Fall-through if not handled by control chip
+			} //Fall-through if not handled by control chip
+			/* FALLTHROUGH */
 		case MODE_OPL2:
 		case MODE_OPL3:
 			if ( !chip[0].Write( reg.normal, val ) ) {
@@ -615,8 +615,8 @@ void Module::PortWrite( Bitu port, Bitu val, Bitu iolen ) {
 					ctrl.index = val & 0xff;
 					break;
 				}
-			}
-			//Fall-through if not handled by control chip
+			} //Fall-through if not handled by control chip
+			/* FALLTHROUGH */
 		case MODE_OPL3:
 			reg.normal = handler->WriteAddr( port, val ) & 0x1ff;
 			break;
@@ -635,7 +635,7 @@ void Module::PortWrite( Bitu port, Bitu val, Bitu iolen ) {
 }
 
 
-Bitu Module::PortRead( Bitu port, Bitu iolen ) {
+Bitu Module::PortRead( Bitu port, Bitu /*iolen*/ ) {
 	//roughly half a micro (as we already do 1 micro on each port read and some tests revealed it taking 1.5 micros to read an adlib port)
 	Bits delaycyc = (CPU_CycleMax/2048); 
 	if(GCC_UNLIKELY(delaycyc > CPU_Cycles)) delaycyc = CPU_Cycles;
@@ -658,8 +658,8 @@ Bitu Module::PortRead( Bitu port, Bitu iolen ) {
 			} else if ( port == 0x38b ) {
 				return CtrlRead();
 			}
-		}
-		//Fall-through if not handled by control chip
+		} //Fall-through if not handled by control chip
+		/* FALLTHROUGH */
 	case MODE_OPL3:
 		//We allocated 4 ports, so just return -1 for the higher ones
 		if ( !(port & 3 ) ) {
@@ -724,6 +724,7 @@ void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
 /*
 	Save the current state of the operators as instruments in an reality adlib tracker file
 */
+#if 0
 static void SaveRad() {
 	char b[16 * 1024];
 	int w = 0;
@@ -762,7 +763,7 @@ static void SaveRad() {
 	fwrite( b, 1, w, handle );
 	fclose( handle );
 };
-
+#endif
 
 static void OPL_SaveRawEvent(bool pressed) {
 	if (!pressed)
@@ -876,7 +877,7 @@ void OPL_Init(Section* sec,OPL_Mode oplmode) {
 	module = new Adlib::Module( sec );
 }
 
-void OPL_ShutDown(Section* sec){
+void OPL_ShutDown(Section* /*sec*/){
 	delete module;
 	module = 0;
 

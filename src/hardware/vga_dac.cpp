@@ -66,7 +66,7 @@ static void VGA_DAC_UpdateColor( Bitu index ) {
 	VGA_DAC_SendColor( index, maskIndex );
 }
 
-static void write_p3c6(Bitu port,Bitu val,Bitu iolen) {
+static void write_p3c6(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	if ( vga.dac.pel_mask != val ) {
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:DCA:Pel Mask set to %X", val);
 		vga.dac.pel_mask = val;
@@ -76,35 +76,35 @@ static void write_p3c6(Bitu port,Bitu val,Bitu iolen) {
 }
 
 
-static Bitu read_p3c6(Bitu port,Bitu iolen) {
+static Bitu read_p3c6(Bitu /*port*/,Bitu /*iolen*/) {
 	return vga.dac.pel_mask;
 }
 
 
-static void write_p3c7(Bitu port,Bitu val,Bitu iolen) {
+static void write_p3c7(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	vga.dac.read_index=val;
 	vga.dac.pel_index=0;
 	vga.dac.state=DAC_READ;
 	vga.dac.write_index= val + 1;
 }
 
-static Bitu read_p3c7(Bitu port,Bitu iolen) {
+static Bitu read_p3c7(Bitu /*port*/,Bitu /*iolen*/) {
 	if (vga.dac.state==DAC_READ) return 0x3;
 	else return 0x0;
 }
 
-static void write_p3c8(Bitu port,Bitu val,Bitu iolen) {
+static void write_p3c8(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	vga.dac.write_index=val;
 	vga.dac.pel_index=0;
 	vga.dac.state=DAC_WRITE;
 	vga.dac.read_index= val - 1;
 }
 
-static Bitu read_p3c8(Bitu port, Bitu iolen){
+static Bitu read_p3c8(Bitu /*port*/, Bitu /*iolen*/){
 	return vga.dac.write_index;
 }
 
-static void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
+static void write_p3c9(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	val&=0x3f;
 	switch (vga.dac.pel_index) {
 	case 0:
@@ -148,7 +148,7 @@ static void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
 	};
 }
 
-static Bitu read_p3c9(Bitu port,Bitu iolen) {
+static Bitu read_p3c9(Bitu /*port*/,Bitu /*iolen*/) {
 	Bit8u ret;
 	switch (vga.dac.pel_index) {
 	case 0:
@@ -182,6 +182,7 @@ void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal) {
 	case M_VGA:
 		// used by copper demo; almost no video card seems to suport it
 		if(!IS_VGA_ARCH || (svgaCard!=SVGA_None)) break;
+		/* FALLTHROUGH */
 	default:
 		VGA_DAC_SendColor( attr, pal );
 	}
