@@ -60,7 +60,7 @@ void DOS_Shell::InputCommand(char * line) {
 
 	std::list<std::string>::iterator it_history = l_history.begin(), it_completion = l_completion.begin();
 
-	while (size) {
+	while (size && !exit_requested) {
 		dos.echo=false;
 		while(!DOS_ReadFile(input_handle,&c,&n)) {
 			Bit16u dummy;
