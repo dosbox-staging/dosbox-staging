@@ -51,7 +51,11 @@ typedef void (*GFX_CallBack_t)( GFX_CallBackFunctions_t function );
 #define GFX_CAN_RANDOM  0x4000 //If the interface can also do random access surface
 #define GFX_UNITY_SCALE 0x8000 /* turn of all scaling in render.cpp */
 
-void GFX_Events(void);
+// return code of:
+// - true means event loop can keep running.
+// - false means event loop wants to quit.
+bool GFX_Events();
+
 Bitu GFX_GetBestMode(Bitu flags);
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
 void GFX_SetShader(const char* src);

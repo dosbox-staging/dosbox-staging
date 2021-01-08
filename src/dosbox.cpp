@@ -38,6 +38,7 @@
 #include "timer.h"
 #include "dos_inc.h"
 #include "setup.h"
+#include "shell.h"
 #include "control.h"
 #include "cross.h"
 #include "programs.h"
@@ -152,8 +153,9 @@ static Bitu Normal_Loop(void) {
 			if (DEBUG_ExitLoop()) return 0;
 #endif
 		} else {
-			GFX_Events();
-			if (ticksRemain>0) {
+			if (!GFX_Events())
+				return 0;
+			if (ticksRemain > 0) {
 				TIMER_AddTick();
 				ticksRemain--;
 			} else {increaseticks();return 0;}
