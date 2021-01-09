@@ -49,7 +49,7 @@
 #endif
 
 // Serial port interface
-
+#define SERIAL_IO_HANDLERS 8
 #define SERIAL_MAX_FIFO_SIZE 256
 /* Note: Almost all DOS-era universal asynchronous receiver-transmitter
  *       (UART)'s permitted up to a 16-byte receive and transmit
@@ -173,8 +173,8 @@ public:
 	CSerial(const uint8_t port_idx, CommandLine *cmd);
 	virtual ~CSerial();
 
-	IO_ReadHandleObject ReadHandler[8];
-	IO_WriteHandleObject WriteHandler[8];
+	IO_ReadHandleObject ReadHandler[SERIAL_IO_HANDLERS];
+	IO_WriteHandleObject WriteHandler[SERIAL_IO_HANDLERS];
 
 	float bytetime = 0.0f; // how long a byte takes to transmit/receive in
 	                       // milliseconds
