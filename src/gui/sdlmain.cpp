@@ -2035,11 +2035,19 @@ void GFX_Events() {
 #if SDL_XORG_FIX
 		// Special code for broken SDL with Xorg 1.20.1, where pairs of inputfocus gain and loss events are generated
 		// when locking the mouse in windowed mode.
+		// This also seems to give wrong key up events in fullscreen mode.
+		// sdl-1.2 has a fix in hg, but this shouldn't interfere with that fix.
 		if (event.type == SDL_ACTIVEEVENT && event.active.state == SDL_APPINPUTFOCUS && event.active.gain == 0) {
 			SDL_Event test; //Check if the next event would undo this one.
 			if (SDL_PeepEvents(&test,1,SDL_PEEKEVENT,SDL_ACTIVEEVENTMASK) == 1 && test.active.state == SDL_APPINPUTFOCUS && test.active.gain == 1) {
 				// Skip both events.
 				SDL_PeepEvents(&test,1,SDL_GETEVENT,SDL_ACTIVEEVENTMASK);
+				// Look for KEY UP events and check their validity.
+				while(SDL_PeepEvents(&test,1,SDL_PEEKEVENT,SDL_KEYUPMASK) == 1) {
+					const Uint8* kstate = SDL_GetKeyState(NULL);
+					if ( kstate[test.key.keysym.sym] != SDL_PRESSED) break;
+					SDL_PeepEvents(&test,1,SDL_GETEVENT,SDL_KEYUPMASK);
+				}
 				continue;
 			}
 		}
