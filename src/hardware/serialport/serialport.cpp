@@ -1174,7 +1174,7 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 	overrunIF0=0;
 	breakErrors=0;
 
-	for (uint32_t i = 0; i <= 7; i++) {
+	for (uint32_t i = 0; i < SERIAL_IO_HANDLERS; ++i) {
 		WriteHandler[i].Install (i + base, SERIAL_Write, IO_MB);
 		ReadHandler[i].Install(i + base, SERIAL_Read, IO_MB);
 	}
@@ -1193,6 +1193,20 @@ CSerial::~CSerial() {
 	DOS_DelDevice(mydosdevice);
 	for (uint16_t i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++)
 		removeEvent(i);
+
+	// Free the fifos and devices
+	delete(errorfifo);
+	errorfifo = nullptr;
+	delete(rxfifo);
+	rxfifo = nullptr;
+	delete(txfifo);
+	txfifo = nullptr;
+
+	// Uninstall the IO handlers
+	for (uint32_t i = 0; i < SERIAL_IO_HANDLERS; ++i) {
+		WriteHandler[i].Uninstall();
+		ReadHandler[i].Uninstall();
+	}
 }
 
 static bool idle(const double start, const uint32_t timeout)
