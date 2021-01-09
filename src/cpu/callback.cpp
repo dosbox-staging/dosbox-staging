@@ -18,6 +18,7 @@
 
 
 #include <stdlib.h>
+#include <string>
 #include <string.h>
 
 #include "dosbox.h"
@@ -31,7 +32,7 @@
 */
 
 CallBack_Handler CallBack_Handlers[CB_MAX];
-char* CallBack_Description[CB_MAX];
+std::string CallBack_Description[CB_MAX];
 
 static Bitu call_stop,call_idle,call_default;
 Bitu call_priv_io;
@@ -130,15 +131,14 @@ void CALLBACK_SIF(bool val) {
 
 void CALLBACK_SetDescription(Bitu nr, const char* descr) {
 	if (descr) {
-		CallBack_Description[nr] = new char[strlen(descr)+1];
-		strcpy(CallBack_Description[nr],descr);
+		CallBack_Description[nr] = descr;
 	} else
-		CallBack_Description[nr] = 0;
+		CallBack_Description[nr].clear();
 }
 
 const char* CALLBACK_GetDescription(Bitu nr) {
 	if (nr>=CB_MAX) return 0;
-	return CallBack_Description[nr];
+	return CallBack_Description[nr].c_str();
 }
 
 Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_cb=true) {
@@ -572,8 +572,10 @@ void CALLBACK_HandlerObject::Uninstall(){
 	} else if(m_type == CALLBACK_HandlerObject::NONE){
 		//Do nothing. Merely DeAllocate the callback
 	} else E_Exit("what kind of callback is this!");
-	if(CallBack_Description[m_callback]) delete [] CallBack_Description[m_callback];
-	CallBack_Description[m_callback] = 0;
+	
+	if(!CallBack_Description[m_callback].empty())
+		CallBack_Description[m_callback].clear();
+
 	CALLBACK_DeAllocate(m_callback);
 	installed=false;
 }
