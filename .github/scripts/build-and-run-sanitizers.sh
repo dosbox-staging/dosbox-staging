@@ -35,6 +35,9 @@ cd "$(dirname "${0}")/../.."
 # Make a directory to hold our build and run output
 mkdir -p "${logs}"
 
+# SAN-specific environment variables
+export LSAN_OPTIONS="suppressions=.lsan-suppress:verbosity=0"
+
 for sanitizer in "${sanitizers[@]}"; do
 
 	# Build DOSBox for each sanitizer
@@ -47,7 +50,7 @@ for sanitizer in "${sanitizers[@]}"; do
 	# Exercise the testcase(s) for each sanitizer
 	# Sanitizers return non-zero if one or more issues were found,
 	# so we or-to-true to ensure our script doesn't end here.
-	time xvfb-run ./src/dosbox -c exit \
+	time xvfb-run ./src/dosbox -c "autotype -w 0.1 e x i t enter" \
 		&> "${logs}/${compiler}-${sanitizer}-EnterExit.log" || true
 
 done
