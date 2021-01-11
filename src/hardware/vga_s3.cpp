@@ -22,7 +22,7 @@
 #include "vga.h"
 #include "mem.h"
 
-void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
+void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu /*iolen*/) {
 	switch (reg) {
 	case 0x31:	/* CR31 Memory Configuration */
 //TODO Base address
@@ -128,7 +128,7 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		vga.s3.hgc.startaddr |= ((val & 0xf) << 8);
 		if ((((Bitu)vga.s3.hgc.startaddr)<<10)+((64*64*2)/8) > vga.vmemsize) {
 			vga.s3.hgc.startaddr &= 0xff;	// put it back to some sane area;
-											// if read back of this address is ever implemented this needs to change
+			                                // if read back of this address is ever implemented this needs to change
 			LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:S3:CRTC: HGC pattern address beyond video memory" );
 		}
 		break;
@@ -163,7 +163,7 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		vga.config.display_start&=0xF3FFFF;
 		vga.config.display_start|=(val & 3) << 18;
 		if ((vga.svga.bank_read&0x30) ^ ((val&0xc)<<2)) {
-			vga.svga.bank_read&=0xcf; 
+			vga.svga.bank_read&=0xcf;
 			vga.svga.bank_read|=(val&0xc)<<2;
 			vga.svga.bank_write = vga.svga.bank_read;
 			VGA_SetupHandlers();
@@ -350,7 +350,7 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 	}
 }
 
-Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
+Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu /*iolen*/) {
 	switch (reg) {
 	case 0x24:	/* attribute controller index (read only) */
 	case 0x26:
@@ -358,7 +358,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 	case 0x2d:	/* Extended Chip ID (high byte of PCI device ID) */
 		return 0x88;
 	case 0x2e:	/* New Chip ID  (low byte of PCI device ID) */
-		return 0x11;	// Trio64	
+		return 0x11;	// Trio64
 	case 0x2f:	/* Revision */
 		return 0x00;	// Trio64 (exact value?)
 //		return 0x44;	// Trio64 V+
@@ -366,7 +366,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 		return 0xe1;	// Trio+ dual byte
 	case 0x31:	/* CR31 Memory Configuration */
 //TODO mix in bits from baseaddress;
-		return 	vga.s3.reg_31;	
+		return 	vga.s3.reg_31;
 	case 0x35:	/* CR35 CRT Register Lock */
 		return vga.s3.reg_35|(vga.svga.bank_read & 0xf);
 	case 0x36: /* CR36 Reset State Read 1 */
@@ -426,20 +426,20 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 		return vga.s3.ex_hor_overflow;
 	case 0x5e:	/* Extended Vertical Overflow */
 		return vga.s3.ex_ver_overflow;
-	case 0x67:	/* Extended Miscellaneous Control 2 */		
+	case 0x67:	/* Extended Miscellaneous Control 2 */
 		return vga.s3.misc_control_2;
 	case 0x69:	/* Extended System Control 3 */
-		return (Bit8u)((vga.config.display_start & 0x1f0000)>>16); 
+		return (Bit8u)((vga.config.display_start & 0x1f0000)>>16);
 	case 0x6a:	/* Extended System Control 4 */
 		return (Bit8u)(vga.svga.bank_read & 0x7f);
 	case 0x6b:	// BIOS scatchpad: LFB address
-		return vga.s3.reg_6b; 
+		return vga.s3.reg_6b;
 	default:
 		return 0x00;
 	}
 }
 
-void SVGA_S3_WriteSEQ(Bitu reg,Bitu val,Bitu iolen) {
+void SVGA_S3_WriteSEQ(Bitu reg,Bitu val,Bitu /*iolen*/) {
 	if (reg>0x8 && vga.s3.pll.lock!=0x6) return;
 	switch (reg) {
 	case 0x08:
@@ -469,7 +469,7 @@ void SVGA_S3_WriteSEQ(Bitu reg,Bitu val,Bitu iolen) {
 	}
 }
 
-Bitu SVGA_S3_ReadSEQ(Bitu reg,Bitu iolen) {
+Bitu SVGA_S3_ReadSEQ(Bitu reg,Bitu /*iolen*/) {
 	/* S3 specific group */
 	if (reg>0x8 && vga.s3.pll.lock!=0x6) {
 		if (reg<0x1b) return 0;
@@ -479,11 +479,11 @@ Bitu SVGA_S3_ReadSEQ(Bitu reg,Bitu iolen) {
 	case 0x08:		/* PLL Unlock */
 		return vga.s3.pll.lock;
 	case 0x10:		/* Memory PLL Data Low */
-		return vga.s3.mclk.n || (vga.s3.mclk.r << 5);
+		return vga.s3.mclk.n | (vga.s3.mclk.r << 5);
 	case 0x11:		/* Memory PLL Data High */
 		return vga.s3.mclk.m;
 	case 0x12:		/* Video PLL Data Low */
-		return vga.s3.clk[3].n || (vga.s3.clk[3].r << 5);
+		return vga.s3.clk[3].n | (vga.s3.clk[3].r << 5);
 	case 0x13:		/* Video Data High */
 		return vga.s3.clk[3].m;
 	case 0x15:
@@ -500,7 +500,7 @@ Bitu SVGA_S3_GetClock(void) {
 		clock = 25175000;
 	else if (clock == 1)
 		clock = 28322000;
-	else 
+	else
 		clock=1000*S3_CLOCK(vga.s3.clk[clock].m,vga.s3.clk[clock].n,vga.s3.clk[clock].r);
 	/* Check for dual transfer, master clock/2 */
 	if (vga.s3.pll.cmd & 0x10) clock/=2;
