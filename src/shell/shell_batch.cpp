@@ -278,6 +278,7 @@ again:
 	return false;
 }
 
-void BatchFile::Shift(void) {
+void BatchFile::Shift()
+{
 	cmd->Shift(1);
 }
