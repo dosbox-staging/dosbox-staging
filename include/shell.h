@@ -48,7 +48,7 @@ public:
 	virtual ~BatchFile();
 	virtual bool ReadLine(char * line);
 	bool Goto(char * where);
-	void Shift(void);
+	void Shift();
 	uint16_t file_handle = 0;
 	uint32_t location = 0;
 	bool echo = false;
@@ -74,8 +74,8 @@ public:
 	DOS_Shell(const DOS_Shell&) = delete; // prevent copy
 	DOS_Shell& operator=(const DOS_Shell&) = delete; // prevent assignment
 	void Run() override;
-	void RunInternal(void); //for command /C
-/* A load of subfunctions */
+	void RunInternal(); // for command /C
+	/* A load of subfunctions */
 	void ParseLine(char * line);
 	Bitu GetRedirection(char *s, char **ifn, char **ofn,bool * append);
 	void InputCommand(char * line);
@@ -108,7 +108,7 @@ public:
 	void CMD_REM(char * args);
 	void CMD_RENAME(char * args);
 	void CMD_CALL(char * args);
-	void SyntaxError(void);
+	void SyntaxError();
 	void CMD_PAUSE(char * args);
 	void CMD_SUBST(char* args);
 	void CMD_LOADHIGH(char* args);
@@ -150,7 +150,7 @@ public:
 	void InstallBefore(std::string const &in);
 	~AutoexecObject();
 private:
-	void CreateAutoexec(void);
+	void CreateAutoexec();
 };
 
 #endif

@@ -34,7 +34,8 @@ Bitu call_shellstop;
  * remove things from the environment */
 DOS_Shell *first_shell = nullptr;
 
-static Bitu shellstop_handler(void) {
+static Bitu shellstop_handler()
+{
 	return CBRET_STOP;
 }
 
@@ -90,7 +91,8 @@ void AutoexecObject::InstallBefore(const std::string &in) {
 	this->CreateAutoexec();
 }
 
-void AutoexecObject::CreateAutoexec(void) {
+void AutoexecObject::CreateAutoexec()
+{
 	/* Remove old autoexec.bat if the shell exists */
 	if(first_shell)	VFILE_Remove("AUTOEXEC.BAT");
 
@@ -302,9 +304,8 @@ void DOS_Shell::ParseLine(char * line) {
 	}
 }
 
-
-
-void DOS_Shell::RunInternal(void) {
+void DOS_Shell::RunInternal()
+{
 	char input_line[CMD_MAXLINE] = {0};
 	while (bf) {
 		if (bf->ReadLine(input_line)) {
@@ -321,7 +322,8 @@ void DOS_Shell::RunInternal(void) {
 	}
 }
 
-void DOS_Shell::Run(void) {
+void DOS_Shell::Run()
+{
 	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
 	if (cmd->FindStringRemainBegin("/C",line)) {
@@ -379,7 +381,8 @@ void DOS_Shell::Run(void) {
 	} while (!exit_flag);
 }
 
-void DOS_Shell::SyntaxError(void) {
+void DOS_Shell::SyntaxError()
+{
 	WriteOut(MSG_Get("SHELL_SYNTAXERROR"));
 }
 
@@ -522,7 +525,8 @@ void AUTOEXEC_Init(Section *sec)
 	autoexec_module = new AUTOEXEC(sec);
 }
 
-static Bitu INT2E_Handler(void) {
+static Bitu INT2E_Handler()
+{
 	/* Save return address and current process */
 	RealPt save_ret=real_readd(SegValue(ss),reg_sp);
 	Bit16u save_psp=dos.psp();
