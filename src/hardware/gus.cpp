@@ -649,8 +649,9 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 		for (auto &val : accumulator)
 			val = 0;
 
-		const uint16_t frames = std::min(BUFFER_FRAMES,
-		                                 requested_frames - generated_frames);
+		const uint16_t frames = static_cast<uint16_t>(
+		        std::min(BUFFER_FRAMES, requested_frames - generated_frames));
+
 		auto v = voices.begin();
 		const auto v_end = v + active_voices;
 		while (v < v_end && *v) {
