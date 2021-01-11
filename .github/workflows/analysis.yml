@@ -99,12 +99,11 @@ jobs:
           - name: Clang
             sanitizers: USAN
             usan:  0  # cleared out in our existing tests
-            tsan:  -1
             uasan: -1
           - name: GCC
-            sanitizers: TSAN UASAN
+            # TSAN excluded, harness segfaults inside virual-X11 environment
+            sanitizers: UASAN
             usan:  -1
-            tsan:  0  # our test does not trigger multiple threads yet
             uasan: 15
     steps:
       - uses: actions/checkout@v2
@@ -150,7 +149,6 @@ jobs:
       - name: Summarize issues
         env:
           USAN_LOG:  ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-USAN-EnterExit.log.xz
-          TSAN_LOG:  ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-TSAN-EnterExit.log.xz
           UASAN_LOG: ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-UASAN-EnterExit.log.xz
         run: |
           # summary
@@ -163,12 +161,6 @@ jobs:
             echo_bold "Undefined Behaviour sanitizer:"
             echo
             xzcat "$USAN_LOG" | MAX_ISSUES=${{ matrix.conf.usan }} ./scripts/count-xsan-issues.py -
-          fi
-
-          if [[ -f "$TSAN_LOG" ]] ; then
-            echo_bold "Thread sanitizer:"
-            echo
-            xzcat "$TSAN_LOG" | MAX_ISSUES=${{ matrix.conf.tsan }} ./scripts/count-xsan-issues.py -
           fi
 
           if [[ -f "$UASAN_LOG" ]] ; then
