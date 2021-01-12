@@ -12,37 +12,36 @@
 # - MIPSEL - which used to be called MIPSEL32, and seems to be never hooked
 #   into the autoconf buildsystem (but it was used by several DOSBox ports)
 #
-selected_core = get_option('dynamic_core')
 conf_data.set('C_TARGETCPU', 'UNKNOWN')
-cpu_handles_unaligned_memory = false
+conf_data.set('C_UNALIGNED_MEMORY', 0)
 
 core_selection = [
-  # cpu_family selected_core        dynrec_define    target_cpu
-  [ 'x86_64',  ['auto', 'dyn-x86'], 'C_DYNAMIC_X86', 'X86_64'    ],
-  [ 'x86',     ['auto', 'dyn-x86'], 'C_DYNAMIC_X86', 'X86'       ],
-  [ 'x86_64',  ['dynrec'],          'C_DYNREC',      'X86_64'    ],
-  [ 'x86',     ['dynrec'],          'C_DYNREC',      'X86'       ],
-  [ 'aarch64', ['auto', 'dynrec'],  'C_DYNREC',      'ARMV8LE'   ],
-  [ 'arm',     ['auto', 'dynrec'],  'C_DYNREC',      'ARMV7LE'   ],
-  [ 'ppc64',   ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE'   ],
-  [ 'ppc64le', ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE'   ], # for meson < 0.50
-  [ 'ppc',     ['auto', 'dynrec'],  'C_DYNREC',      'POWERPC'   ],
+  # cpu_family selected_core        dynrec_define    target     unaligned_mem
+  [ 'x86_64',  ['auto', 'dyn-x86'], 'C_DYNAMIC_X86', 'X86_64',  1 ],
+  [ 'x86',     ['auto', 'dyn-x86'], 'C_DYNAMIC_X86', 'X86',     1 ],
+  [ 'x86_64',  ['dynrec'],          'C_DYNREC',      'X86_64',  1 ],
+  [ 'x86',     ['dynrec'],          'C_DYNREC',      'X86',     1 ],
+  [ 'aarch64', ['auto', 'dynrec'],  'C_DYNREC',      'ARMV8LE', 1 ],
+  [ 'arm',     ['auto', 'dynrec'],  'C_DYNREC',      'ARMV7LE', 1 ],
+  [ 'ppc64',   ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1 ],
+  [ 'ppc64le', ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1 ], # for meson < 0.50
+  [ 'ppc',     ['auto', 'dynrec'],  'C_DYNREC',      'POWERPC', 1 ],
 ]
 
+selected_core = get_option('dynamic_core')
+
 foreach line : core_selection 
-  cpu = line[0]
+  cpu_family    = line[0]
   opts_for_arch = line[1]
   dynrec_define = line[2]
-  target_cpu = line[3]
-
-  if (host_machine.cpu_family() == cpu) and opts_for_arch.contains(selected_core)
+  target_cpu    = line[3]
+  unaligned_mem = line[4]
+  if (host_machine.cpu_family() == cpu_family) and opts_for_arch.contains(selected_core)
     conf_data.set('C_TARGETCPU', target_cpu)
+    conf_data.set('C_UNALIGNED_MEMORY', unaligned_mem)
     conf_data.set(dynrec_define, 1)
-    cpu_handles_unaligned_memory = true
   endif
 endforeach
-
-conf_data.set10('C_UNALIGNED_MEMORY', cpu_handles_unaligned_memory)
 
 target_cpu = conf_data.get('C_TARGETCPU')
 if conf_data.has('C_DYNAMIC_X86')
