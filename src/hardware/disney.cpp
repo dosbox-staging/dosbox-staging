@@ -349,16 +349,16 @@ static void DISNEY_CallBack(uint16_t len)
 			const uint8_t gapfiller1 =
 			        real_used ? disney.da[1].buffer[real_used - 1] : 128u;
 
-			memset(disney.da[0].buffer+real_used,
-				gapfiller0,len-real_used);
-			memset(disney.da[1].buffer+real_used,
-				gapfiller1,len-real_used);
+			memset(disney.da[0].buffer + real_used, gapfiller0,
+			       len - real_used);
+			memset(disney.da[1].buffer + real_used, gapfiller1,
+			       len - real_used);
 
 			DISNEY_PlayStereo(len, disney.da[0].buffer, disney.da[1].buffer);
 			len -= real_used;
 
 		} else { // mono
-			Bit8u gapfiller = 128; //Keep the middle
+			uint8_t gapfiller = 128; // Keep the middle
 			if(real_used) {
 				// fix for some stupid game; it outputs 0 at the end of the stream
 				// causing a click. So if we have at least two bytes availible in the
@@ -388,7 +388,7 @@ static void DISNEY_CallBack(uint16_t len)
 void DISNEY_ShutDown(MAYBE_UNUSED Section *sec)
 {
 	DEBUG_LOG_MSG("DISNEY: Shutting down");
-	
+
 	// Remove interrupt events
 	PIC_RemoveEvents(DISNEY_disable);
 
