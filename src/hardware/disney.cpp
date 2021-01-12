@@ -17,6 +17,7 @@
  */
 
 
+#include <memory>
 #include <string.h>
 #include "dosbox.h"
 #include "inout.h"
@@ -37,6 +38,7 @@ typedef struct _dac_channel {
 	bool speedcheck_init;
 } dac_channel;
 
+using mixer_channel_ptr_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 static struct {
 	// parallel port stuff
 	Bit8u data;
@@ -45,10 +47,9 @@ static struct {
 	// the D/A channels
 	dac_channel da[2];
 
-	Bitu last_used;
-	MixerObject * mo;
-	MixerChannel * chan;
-	bool stereo;
+	Bitu last_used = 0;
+	mixer_channel_ptr_t chan{nullptr, MIXER_DelChannel};
+	bool stereo = false;
 	// which channel do we use for mono output?
 	// and the channel used for stereo
 	dac_channel* leader;
@@ -63,10 +64,9 @@ static struct {
 #define DS_FINISH 2
 #define DS_ANALYZING 3
 
-static void DISNEY_CallBack(Bitu len);
-
 static void DISNEY_disable(Bitu) {
-	if(disney.mo) {
+	// Stop playback
+	if (disney.chan) {
 		disney.chan->AddSilence();
 		disney.chan->Enable(false);
 	}
@@ -292,8 +292,10 @@ static void DISNEY_PlayStereo(Bitu len, Bit8u* l, Bit8u* r) {
 	disney.chan->AddSamples_s8(len,stereodata);
 }
 
-static void DISNEY_CallBack(Bitu len) {
-	if (!len) return;
+static void DISNEY_CallBack(uint16_t len)
+{
+	if (!len || !disney.chan)
+		return;
 
 	// get the smaller used
 	Bitu real_used;
@@ -377,15 +379,11 @@ public:
 		disney.control=0;
 		disney.last_used=0;
 
-		disney.mo = new MixerObject();
-		disney.chan=disney.mo->Install(&DISNEY_CallBack,10000,"DISNEY");
 		DISNEY_disable(0);
 	}
 
 	~DISNEY(){
 		DISNEY_disable(0);
-		if (disney.mo)
-			delete disney.mo;
 	}
 };
 
@@ -397,5 +395,12 @@ static void DISNEY_ShutDown(Section* sec){
 
 void DISNEY_Init(Section* sec) {
 	test = new DISNEY(sec);
+
+	// Setup the mixer callback
+	disney.chan = mixer_channel_ptr_t(MIXER_AddChannel(DISNEY_CallBack,
+	                                                   10000, "DISNEY"),
+	                                  MIXER_DelChannel);
+	assert(disney.chan);
+
 	sec->AddDestroyFunction(&DISNEY_ShutDown,true);
 }
