@@ -138,32 +138,22 @@ static void DISNEY_analyze(Bitu channel){
 			break;
 
 		case DS_STATE::FINISH: {
-			// Stereo-mode if both DACs are similarly filled
-			Bits st_diff = disney.da[0].used - disney.da[1].used;
-
 			// Pick the DAC with the most samples as leader.
 			// (This is good for the stereo case?)
 			if (disney.da[0].used > disney.da[1].used)
 				disney.leader = &disney.da[0];
 			else
 				disney.leader = &disney.da[1];
-			
-			if((st_diff < 5) && (st_diff > -5)) disney.stereo = true;
-			else disney.stereo = false;
 
-			// calculate rate for both channels
-			Bitu ch_speed[2];
+			// Stereo-mode if both DACs are similarly filled
+			const auto st_diff = abs(disney.da[0].used -
+			                         disney.da[1].used);
+			disney.stereo = (st_diff < 5);
 
-			for(Bitu i = 0; i < 2; i++) {
-				if(disney.da[i].used > 1) { // avoid dividing by zero
-					ch_speed[i] = (Bitu)(1.0/((disney.da[i].speedcheck_sum/1000.0) /
-					(float)(((float)disney.da[i].used)-1.0))); // -1.75
-				} else ch_speed[i] = 0;
-			}
-			
-			// choose the larger value
-			DISNEY_enable(ch_speed[0] > ch_speed[1]?
-				ch_speed[0]:ch_speed[1]); // TODO
+			// Run the generator with the greater DAC frequency
+			const auto max_freq = std::max(calc_frequency(disney.da[0]),
+			                               calc_frequency(disney.da[1]));
+			DISNEY_enable(max_freq);
 			break;
 		}
 		case DS_STATE::ANALYZING: {
