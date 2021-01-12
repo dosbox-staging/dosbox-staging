@@ -20,6 +20,7 @@
 
 #include "midi_oss.h"
 
+#include <cassert>
 #include <cstdlib>
 #include <cstring>
 
@@ -64,9 +65,10 @@ void MidiHandler_oss::Close()
 
 void MidiHandler_oss::PlayMsg(const uint8_t *msg)
 {
-	uint8_t buf[128];
-	size_t pos = 0;
 	const uint8_t len = MIDI_evt_len[*msg];
+	uint8_t buf[128];
+	assert(len * 4 <= sizeof(buf));
+	size_t pos = 0;
 	for (uint8_t i = 0; i < len; i++) {
 		buf[pos++] = SEQ_MIDIPUTC;
 		buf[pos++] = *msg;
@@ -80,6 +82,7 @@ void MidiHandler_oss::PlayMsg(const uint8_t *msg)
 void MidiHandler_oss::PlaySysex(uint8_t *sysex, size_t len)
 {
 	uint8_t buf[SYSEX_SIZE * 4];
+	assert(len <= SYSEX_SIZE);
 	size_t pos = 0;
 	for (size_t i = 0; i < len; i++) {
 		buf[pos++] = SEQ_MIDIPUTC;
