@@ -31,8 +31,8 @@ public:
 	bool Seek(Bit32u * pos,Bit32u type);
 	bool Close();
 	Bit16u GetInformation(void);
-	bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
-	bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
+	bool ReadFromControlChannel(PhysPt /*bufptr*/,Bit16u /*size*/,Bit16u * /*retcode*/){return false;}
+	bool WriteToControlChannel(PhysPt /*bufptr*/,Bit16u /*size*/,Bit16u * /*retcode*/){return false;}
 private:
 	void ClearAnsi(void);
 	void Output(Bit8u chr);
@@ -379,7 +379,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 	return true;
 }
 
-bool device_CON::Seek(Bit32u * pos,Bit32u type) {
+bool device_CON::Seek(Bit32u * pos,Bit32u /*type*/) {
 	// seek is valid
 	*pos = 0;
 	return true;
