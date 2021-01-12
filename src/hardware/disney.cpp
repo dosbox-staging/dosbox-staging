@@ -29,6 +29,8 @@
 
 #define DISNEY_SIZE 128
 
+constexpr uint8_t DISNEY_INIT_STATUS = 0b1000'0100; // 0x84
+
 typedef struct _dac_channel {
 	Bit8u buffer[DISNEY_SIZE];	// data buffer
 	Bitu used;					// current data buffer level
@@ -40,10 +42,13 @@ typedef struct _dac_channel {
 
 using mixer_channel_ptr_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 static struct {
+	IO_ReadHandleObject read_handler{};
+	IO_WriteHandleObject write_handler{};
+
 	// parallel port stuff
 	Bit8u data;
-	Bit8u status;
-	Bit8u control;
+	uint8_t status = DISNEY_INIT_STATUS;
+	uint8_t control = 0;
 	// the D/A channels
 	dac_channel da[2];
 
@@ -361,40 +366,33 @@ static void DISNEY_CallBack(uint16_t len)
 	}
 }
 
-class DISNEY : public Module_base {
-private:
-	IO_ReadHandleObject ReadHandler = {};
-	IO_WriteHandleObject WriteHandler = {};
-
-public:
-	DISNEY(Section *configuration) : Module_base(configuration)
-	{
-		Section_prop * section=static_cast<Section_prop *>(configuration);
-		if(!section->Get_bool("disney")) return;
+void DISNEY_ShutDown(MAYBE_UNUSED Section *sec)
+{
+	DEBUG_LOG_MSG("DISNEY: Shutting down");
 	
-		WriteHandler.Install(DISNEY_BASE,disney_write,IO_MB,3);
-		ReadHandler.Install(DISNEY_BASE,disney_read,IO_MB,3);
-	
-		disney.status=0x84;
-		disney.control=0;
-		disney.last_used=0;
+	// Remove interrupt events
+	PIC_RemoveEvents(DISNEY_disable);
 
-		DISNEY_disable(0);
+	// Stop the game from accessing the IO ports
+	disney.read_handler.Uninstall();
+	disney.write_handler.Uninstall();
+
+	// Stop and remove the mixer callback
+	if (disney.chan) {
+		disney.chan->Enable(false);
+		disney.chan.reset();
 	}
 
-	~DISNEY(){
-		DISNEY_disable(0);
-	}
-};
-
-static DISNEY* test;
-
-static void DISNEY_ShutDown(Section* sec){
-	delete test;
+	// Shudown the device state
+	DISNEY_disable(0);
 }
 
-void DISNEY_Init(Section* sec) {
-	test = new DISNEY(sec);
+void DISNEY_Init(Section *sec)
+{
+	Section_prop *section = static_cast<Section_prop *>(sec);
+	assert(section);
+	if (!section->Get_bool("disney"))
+		return;
 
 	// Setup the mixer callback
 	disney.chan = mixer_channel_ptr_t(MIXER_AddChannel(DISNEY_CallBack,
@@ -402,5 +400,12 @@ void DISNEY_Init(Section* sec) {
 	                                  MIXER_DelChannel);
 	assert(disney.chan);
 
-	sec->AddDestroyFunction(&DISNEY_ShutDown,true);
+	// Register port handlers for 8-bit IO
+	disney.write_handler.Install(DISNEY_BASE, disney_write, IO_MB, 3);
+	disney.read_handler.Install(DISNEY_BASE, disney_read, IO_MB, 3);
+
+	// Reset DSP
+	disney.status = DISNEY_INIT_STATUS;
+
+	sec->AddDestroyFunction(&DISNEY_ShutDown, true);
 }
