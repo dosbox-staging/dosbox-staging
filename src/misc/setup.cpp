@@ -915,13 +915,6 @@ Config::~Config()
 		delete (*cnt);
 }
 
-Section* Config::GetSection(int index) {
-	for (it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
-		if (!index--) return (*tel);
-	}
-	return NULL;
-}
-
 Section* Config::GetSection(string const& _sectionname) const {
 	for (const_it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
 		if (!strcasecmp((*tel)->GetName(),_sectionname.c_str())) return (*tel);

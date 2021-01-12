@@ -453,10 +453,7 @@ void CONFIG::Run(void) {
 				if (!strcasecmp("sections",pvars[0].c_str())) {
 					// list the sections
 					WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTLIST"));
-					Bitu i = 0;
-					while (true) {
-						Section* sec = control->GetSection(i++);
-						if (!sec) break;
+					for (const Section *sec : *control) {
 						WriteOut("%s\n",sec->GetName());
 					}
 					return;
