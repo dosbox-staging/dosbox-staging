@@ -4,28 +4,22 @@
 # https://mesonbuild.com/Reference-manual.html#host_machine-object
 # https://mesonbuild.com/Reference-tables.html#cpu-families
 #
-# In code we have code paths for two additional architectures:
-#
-# - ARMV4LE - autoconf used to set it when "armv6l" was reported, presumably
-#   it covers everything up to ARMv7.  Notably, Raspberry Pi 1 is using ARMv6.
-#   This arch was marked as NOT handling unaligned memory.
-# - MIPSEL - which used to be called MIPSEL32, and seems to be never hooked
-#   into the autoconf buildsystem (but it was used by several DOSBox ports)
-#
 conf_data.set('C_TARGETCPU', 'UNKNOWN')
 conf_data.set('C_UNALIGNED_MEMORY', 0)
 
 core_selection = [
-  # cpu_family selected_core        dynrec_define    target     unaligned_mem
+#   cpu_family selected_core        dynrec_define    target     unaligned_mem
   [ 'x86_64',  ['auto', 'dyn-x86'], 'C_DYNAMIC_X86', 'X86_64',  1 ],
   [ 'x86',     ['auto', 'dyn-x86'], 'C_DYNAMIC_X86', 'X86',     1 ],
   [ 'x86_64',  ['dynrec'],          'C_DYNREC',      'X86_64',  1 ],
   [ 'x86',     ['dynrec'],          'C_DYNREC',      'X86',     1 ],
   [ 'aarch64', ['auto', 'dynrec'],  'C_DYNREC',      'ARMV8LE', 1 ],
   [ 'arm',     ['auto', 'dynrec'],  'C_DYNREC',      'ARMV7LE', 1 ],
+# [  ???       ['auto', 'dynrec'],  'C_DYNREC',      'ARMV4LE', 0 ], # ARMv6 or older (?)
   [ 'ppc64',   ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1 ],
   [ 'ppc64le', ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1 ], # for meson < 0.50
   [ 'ppc',     ['auto', 'dynrec'],  'C_DYNREC',      'POWERPC', 1 ],
+# [ 'mips',    ['auto', 'dynrec'],  'C_DYNREC',      'MIPSEL',  ? ], # disabled in old buildsystem, but code is still there
 ]
 
 selected_core = get_option('dynamic_core')
