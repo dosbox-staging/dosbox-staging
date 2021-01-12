@@ -28,6 +28,8 @@
 
 class Program;
 
+extern uint8_t MIDI_evt_len[256];
+
 void MIDI_Init(Section *sec);
 bool MIDI_Available();
 void MIDI_ListAll(Program *output_handler);

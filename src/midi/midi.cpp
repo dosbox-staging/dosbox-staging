@@ -40,7 +40,7 @@
 
 #define RAWBUF	1024
 
-Bit8u MIDI_evt_len[256] = {
+uint8_t MIDI_evt_len[256] = {
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x00
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x10
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x20
@@ -95,6 +95,8 @@ MidiHandler Midi_none;
 #else
 
 #include "midi_oss.h"
+
+MidiHandler_oss Midi_oss;
 
 #endif
 

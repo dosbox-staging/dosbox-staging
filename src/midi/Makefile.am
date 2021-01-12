@@ -12,5 +12,6 @@ libmidi_a_SOURCES = \
 	midi_handler.h \
 	midi_mt32.cpp \
 	midi_mt32.h \
+	midi_oss.cpp \
 	midi_oss.h \
 	midi_win32.h
