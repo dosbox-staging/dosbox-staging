@@ -31,6 +31,12 @@
 
 #define SEQ_MIDIPUTC 5
 
+MidiHandler_oss::~MidiHandler_oss()
+{
+	if (device > 0)
+		close(device);
+}
+
 bool MidiHandler_oss::Open(const char *conf)
 {
 	char devname[512];
