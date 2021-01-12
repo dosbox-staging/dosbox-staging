@@ -36,6 +36,8 @@ public:
 	MidiHandler_oss(const MidiHandler_oss &) = delete; // prevent copying
 	MidiHandler_oss &operator=(const MidiHandler_oss &) = delete; // prevent assignment
 
+	~MidiHandler_oss() override;
+
 	const char *GetName() const override { return "oss"; }
 
 	bool Open(const char *conf) override;
