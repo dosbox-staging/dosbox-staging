@@ -51,7 +51,7 @@ void DCSilencer::Configure(const uint32_t sequence_hz,
 bool DCSilencer::Generate(const int16_t dc_offset, const size_t samples, int16_t *buffer)
 {
 	assertm(rad_dt > 0 && vol_dt > 0, "Configure the silencer first");
-	uint16_t i = 0;
+	size_t i = 0;
 	while (vol_pos > 0 && i < samples) {
 		vol_pos -= vol_dt; // keep turning down the volume ..
 		rad_pos += rad_dt; // keep walking around our circle ..
