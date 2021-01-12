@@ -80,7 +80,9 @@ static void DISNEY_disable(Bitu) {
 		disney.chan->AddSilence();
 		disney.chan->Enable(false);
 	}
-	disney.leader = 0;
+
+	// Halt control states
+	disney.leader = nullptr;
 	disney.last_used = 0;
 	disney.state = DS_STATE::IDLE;
 	disney.interface_det = 0;
@@ -88,20 +90,18 @@ static void DISNEY_disable(Bitu) {
 	disney.stereo = false;
 }
 
-static void DISNEY_enable(Bitu freq) {
-	if(freq < 500 || freq > 100000) {
-		// try again..
+static void DISNEY_enable(uint32_t freq)
+{
+	if (freq < 500 || freq > 100000) {
 		disney.state = DS_STATE::IDLE;
-		return;	
-	} else {
-#if 0
-		if(disney.stereo) LOG(LOG_MISC,LOG_NORMAL)("disney enable %d Hz, stereo",freq);
-		else LOG(LOG_MISC,LOG_NORMAL)("disney enable %d Hz, mono",freq);
-#endif
-		disney.chan->SetFreq(freq);
-		disney.chan->Enable(true);
-		disney.state = DS_STATE::RUNNING;
+		return;
 	}
+
+	assert(disney.chan);
+	disney.chan->SetFreq(freq);
+	disney.chan->Enable(true);
+	disney.state = DS_STATE::RUNNING;
+}
 }
 
 static void DISNEY_analyze(Bitu channel){
