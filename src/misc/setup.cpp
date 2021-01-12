@@ -749,7 +749,7 @@ bool Config::PrintConfig(const std::string &filename) const
 	fprintf(outfile, MSG_Get("CONFIGFILE_INTRO"), VERSION);
 	fprintf(outfile, "\n");
 
-	for (const_it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
+	for (auto tel = sectionlist.cbegin(); tel != sectionlist.cend(); ++tel) {
 		/* Print out the Section header */
 		safe_strcpy(temp, (*tel)->GetName());
 		lowcase(temp);
@@ -915,18 +915,22 @@ Config::~Config()
 		delete (*cnt);
 }
 
-Section* Config::GetSection(string const& _sectionname) const {
-	for (const_it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
-		if (!strcasecmp((*tel)->GetName(),_sectionname.c_str())) return (*tel);
+Section *Config::GetSection(const std::string &section_name) const
+{
+	for (auto *el : sectionlist) {
+		if (!strcasecmp(el->GetName(), section_name.c_str()))
+			return el;
 	}
-	return NULL;
+	return nullptr;
 }
 
-Section* Config::GetSectionFromProperty(char const * const prop) const {
-   	for (const_it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
-		if ((*tel)->GetPropValue(prop) != NO_SUCH_PROPERTY) return (*tel);
+Section *Config::GetSectionFromProperty(const char *prop) const
+{
+	for (auto *el : sectionlist) {
+		if (el->GetPropValue(prop) != NO_SUCH_PROPERTY)
+			return el;
 	}
-	return NULL;
+	return nullptr;
 }
 
 bool Config::ParseConfigFile(char const * const configfilename) {
