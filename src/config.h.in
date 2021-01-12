@@ -119,8 +119,8 @@
 // Some OSes do not implement it (e.g. Haiku)
 #mesondefine DIRENT_HAS_D_TYPE
 
-// TODO: generate; Define to 1 if you have the mprotect function
-#define C_HAVE_MPROTECT 1
+// Define to 1 when you have the mprotect function
+#mesondefine C_HAVE_MPROTECT
 
 // Define to 1 when host/target processor uses big endian byte ordering
 #mesondefine WORDS_BIGENDIAN
