@@ -189,9 +189,14 @@ static void DISNEY_analyze(Bitu channel){
 	}
 }
 
-static void disney_write(Bitu port,Bitu val,Bitu iolen) {
-	//LOG_MSG("write disney time %f addr%x val %x",PIC_FullIndex(),port,val);
-	disney.last_used=PIC_Ticks;
+static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
+{
+	// Convert the IO data into a single byte-value, as Disney only
+	// operates on 8-bit values (IO ports also registered as IO_MB)
+	const auto val = static_cast<uint8_t>(data);
+
+	// LOG_MSG("write disney time %f addr%x val %x",PIC_FullIndex(),port,val);
+	disney.last_used = PIC_Ticks;
 	switch (port - DS_PORT_BASE) {
 	case 0:		/* Data Port */
 	{
@@ -215,6 +220,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Status write %x",val);
 		break;
 	case 2:		/* Control Port */
+		// TODO: move to named BIT-MASK
 		if((disney.control & 0x2) && !(val & 0x2)) {
 			if (disney.state != DS_STATE::RUNNING) {
 				disney.interface_det = 0;
@@ -228,7 +234,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 				disney.da[1].used++;
 			} // else LOG_MSG("disney overflow 1");
 		}
-
+		// TODO: move to named BIT-MASK
 		if((disney.control & 0x1) && !(val & 0x1)) {
 			if (disney.state != DS_STATE::RUNNING) {
 				disney.interface_det = 0;
@@ -241,12 +247,13 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 				disney.da[0].used++;
 			} // else LOG_MSG("disney overflow 0");
 		}
-
+		// TODO: move to named BIT-MASK
 		if((disney.control & 0x8) && !(val & 0x8)) {
 			// emulate a device with 16-byte sound FIFO
 			if (disney.state != DS_STATE::RUNNING) {
 				disney.interface_det_ext++;
 				disney.interface_det = 0;
+				// TODO: move magic-number 5 to named value
 				if(disney.interface_det_ext > 5) {
 					disney.leader = &disney.da[0];
 					DISNEY_enable(7000);
@@ -261,8 +268,10 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 		}
 
 //		LOG_WARN("DISNEY:Control write %x",val);
-		if (val&0x10) LOG(LOG_MISC,LOG_ERROR)("DISNEY:Parallel IRQ Enabled");
-		disney.control=val;
+		if (val & DS_PARALLEL_IRQ_BIT)
+			LOG(LOG_MISC, LOG_ERROR)("DISNEY:Parallel IRQ Enabled");
+
+		disney.control = val;
 		break;
 	}
 }
