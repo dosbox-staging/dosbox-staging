@@ -33,12 +33,13 @@
 
 MidiHandler_oss::~MidiHandler_oss()
 {
-	if (device > 0)
+	if (is_open)
 		close(device);
 }
 
 bool MidiHandler_oss::Open(const char *conf)
 {
+	Close();
 	char devname[512];
 	safe_strcpy(devname, (is_empty(conf) ? "/dev/sequencer" : conf));
 	char *devfind = strrchr(devname, ',');
@@ -48,20 +49,17 @@ bool MidiHandler_oss::Open(const char *conf)
 	} else {
 		device_num = 0;
 	}
-	if (is_open)
-		return false;
 	device = open(devname, O_WRONLY, 0);
-	if (device < 0)
-		return false;
-	return true;
+	is_open = (device >= 0);
+	return is_open;
 }
 
 void MidiHandler_oss::Close()
 {
 	if (!is_open)
 		return;
-	if (device > 0)
-		close(device);
+	close(device);
+	is_open = false;
 }
 
 void MidiHandler_oss::PlayMsg(const uint8_t *msg)
