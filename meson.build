@@ -55,6 +55,11 @@ if host_machine.endian() == 'big'
   conf_data.set('WORDS_BIGENDIAN', 1)
 endif
 
+# Non-4K memory page size is supported only for ppc64 at the moment.
+if host_machine.cpu_family() == 'ppc64' or host_machine.cpu_family() == 'ppc64le'
+  conf_data.set('PAGESIZE', 65536)
+endif
+
 
 # external dependencies
 #

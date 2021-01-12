@@ -105,7 +105,8 @@
 // TODO: move this to compiler.h MSVC: #define INLINE __forceinline
 #define INLINE inline __attribute__((always_inline))
 
-/* Quirks and toggles for standard headers, libraries, and other stuff
+/* Quirks and toggles for standard headers, libraries, hardware-related
+ * defines, etc.
  *
  * Sometimes available functions, structs, or struct fields differ slightly
  * between operating systems.
@@ -123,5 +124,8 @@
 
 // Define to 1 when host/target processor uses big endian byte ordering
 #mesondefine WORDS_BIGENDIAN
+
+// Non-4K page size (only on selected architectures)
+#mesondefine PAGESIZE
 
 #endif
