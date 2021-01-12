@@ -37,11 +37,12 @@ foreach line : core_selection
   endif
 endforeach
 
-target_cpu = conf_data.get('C_TARGETCPU')
 if conf_data.has('C_DYNAMIC_X86')
-  message('Building dynamic core optimized for x86/x86_64 (dyn-x86) for ' + target_cpu)
+  message('Building dynamic core optimized for x86/x86_64 (dyn-x86) ' +
+          'for ' + conf_data.get('C_TARGETCPU'))
 elif conf_data.has('C_DYNREC')
-  message('Building dynamic core (dynrec) for ' + target_cpu)
+  message('Building dynamic core (dynrec) ' +
+          'for ' + conf_data.get('C_TARGETCPU'))
 else
   warning('Building without dynamic core support')
 endif
