@@ -289,9 +289,14 @@ static BlockReturn gen_runcodeInit(Bit8u *code) {
 	opcode(5).Emit8Reg(0x50);  // push rbp
 	opcode(15).Emit8Reg(0x50); // push r15
 	opcode(14).Emit8Reg(0x50); // push r14
+
 	// mov rbp, &cpu_regs
-	if ((Bit32u)(Bitu)&cpu_regs == (Bitu)&cpu_regs) opcode(5).setimm((Bitu)&cpu_regs,4).Emit8Reg(0xB8);
-	else opcode(5).set64().setimm((Bitu)&cpu_regs,8).Emit8Reg(0xB8);
+	const auto regs_addr = reinterpret_cast<uintptr_t>(&cpu_regs);
+	if (regs_addr > UINT32_MAX) // above 4 GiB
+		opcode(5).set64().setimm(regs_addr, 8).Emit8Reg(0xB8);
+	else
+		opcode(5).setimm(regs_addr, 4).Emit8Reg(0xB8);
+
 	opcode(13).Emit8Reg(0x50); // push r13
 	opcode(12).Emit8Reg(0x50); // push r12
 	opcode(3).Emit8Reg(0x50);  // push rbx

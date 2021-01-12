@@ -27,7 +27,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <list>
+#include <deque>
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits>
@@ -749,7 +749,7 @@ bool Config::PrintConfig(const std::string &filename) const
 	fprintf(outfile, MSG_Get("CONFIGFILE_INTRO"), VERSION);
 	fprintf(outfile, "\n");
 
-	for (const_it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
+	for (auto tel = sectionlist.cbegin(); tel != sectionlist.cend(); ++tel) {
 		/* Print out the Section header */
 		safe_strcpy(temp, (*tel)->GetName());
 		lowcase(temp);
@@ -822,11 +822,24 @@ bool Config::PrintConfig(const std::string &filename) const
 	return true;
 }
 
-Section_prop* Config::AddSection_prop(char const * const _name,void (*_initfunction)(Section*),bool canchange) {
-	Section_prop* blah = new Section_prop(_name);
-	blah->AddInitFunction(_initfunction,canchange);
-	sectionlist.push_back(blah);
-	return blah;
+Section_prop *Config::AddEarlySectionProp(const char *name,
+                                          SectionFunction func,
+                                          bool changeable_at_runtime)
+{
+	Section_prop *s = new Section_prop(name);
+	s->AddEarlyInitFunction(func, changeable_at_runtime);
+	sectionlist.push_back(s);
+	return s;
+}
+
+Section_prop *Config::AddSection_prop(char const *const name,
+                                      SectionFunction func,
+                                      bool changeable_at_runtime)
+{
+	Section_prop *s = new Section_prop(name);
+	s->AddInitFunction(func, changeable_at_runtime);
+	sectionlist.push_back(s);
+	return s;
 }
 
 Section_prop::~Section_prop()
@@ -838,74 +851,86 @@ Section_prop::~Section_prop()
 		delete (*prop);
 }
 
-Section_line* Config::AddSection_line(char const * const _name,void (*_initfunction)(Section*)) {
+Section_line *Config::AddSection_line(char const *const _name, SectionFunction func)
+{
 	Section_line* blah = new Section_line(_name);
-	blah->AddInitFunction(_initfunction);
+	blah->AddInitFunction(func);
 	sectionlist.push_back(blah);
 	return blah;
 }
 
+void Config::Init() const
+{
+	for (const auto &sec : sectionlist)
+		sec->ExecuteEarlyInit();
 
-void Config::Init() {
-	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); ++tel) {
-		(*tel)->ExecuteInit();
-	}
+	for (const auto &sec : sectionlist)
+		sec->ExecuteInit();
 }
 
-void Section::AddInitFunction(SectionFunction func, bool canchange)
+void Section::AddEarlyInitFunction(SectionFunction func, bool changeable_at_runtime)
 {
-	initfunctions.emplace_back(func, canchange);
+	early_init_functions.emplace_back(func, changeable_at_runtime);
 }
 
-void Section::AddDestroyFunction(SectionFunction func, bool canchange)
+void Section::AddInitFunction(SectionFunction func, bool changeable_at_runtime)
 {
-	destroyfunctions.emplace_front(func, canchange);
+	initfunctions.emplace_back(func, changeable_at_runtime);
+}
+
+void Section::AddDestroyFunction(SectionFunction func, bool changeable_at_runtime)
+{
+	destroyfunctions.emplace_front(func, changeable_at_runtime);
+}
+
+void Section::ExecuteEarlyInit(bool init_all)
+{
+	for (const auto &fn : early_init_functions)
+		if (init_all || fn.changeable_at_runtime)
+			fn.function(this);
 }
 
 void Section::ExecuteInit(bool initall) {
-	typedef std::list<Function_wrapper>::iterator func_it;
+	typedef std::deque<Function_wrapper>::iterator func_it;
 	for (func_it tel = initfunctions.begin(); tel != initfunctions.end(); ++tel) {
-		if (initall || (*tel).canchange) (*tel).function(this);
+		if (initall || (*tel).changeable_at_runtime)
+			(*tel).function(this);
 	}
 }
 
 void Section::ExecuteDestroy(bool destroyall) {
-	typedef std::list<Function_wrapper>::iterator func_it;
+	typedef std::deque<Function_wrapper>::iterator func_it;
 	for (func_it tel = destroyfunctions.begin(); tel != destroyfunctions.end(); ) {
-		if (destroyall || (*tel).canchange) {
+		if (destroyall || (*tel).changeable_at_runtime) {
 			(*tel).function(this);
 			tel = destroyfunctions.erase(tel); //Remove destroyfunction once used
-		} else ++tel;
+		} else
+			++tel;
 	}
 }
 
-Config::~Config() {
-	reverse_it cnt = sectionlist.rbegin();
-	while (cnt != sectionlist.rend()) {
+Config::~Config()
+{
+	for (auto cnt = sectionlist.rbegin(); cnt != sectionlist.rend(); ++cnt)
 		delete (*cnt);
-		cnt++;
-	}
 }
 
-Section* Config::GetSection(int index) {
-	for (it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
-		if (!index--) return (*tel);
+Section *Config::GetSection(const std::string &section_name) const
+{
+	for (auto *el : sectionlist) {
+		if (!strcasecmp(el->GetName(), section_name.c_str()))
+			return el;
 	}
-	return NULL;
+	return nullptr;
 }
 
-Section* Config::GetSection(string const& _sectionname) const {
-	for (const_it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
-		if (!strcasecmp((*tel)->GetName(),_sectionname.c_str())) return (*tel);
+Section *Config::GetSectionFromProperty(const char *prop) const
+{
+	for (auto *el : sectionlist) {
+		if (el->GetPropValue(prop) != NO_SUCH_PROPERTY)
+			return el;
 	}
-	return NULL;
-}
-
-Section* Config::GetSectionFromProperty(char const * const prop) const {
-   	for (const_it tel = sectionlist.begin(); tel != sectionlist.end(); ++tel){
-		if ((*tel)->GetPropValue(prop) != NO_SUCH_PROPERTY) return (*tel);
-	}
-	return NULL;
+	return nullptr;
 }
 
 bool Config::ParseConfigFile(char const * const configfilename) {

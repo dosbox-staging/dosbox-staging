@@ -23,7 +23,7 @@
 #define DOSBOX_SETUP_H
 
 #include <cstdio>
-#include <list>
+#include <deque>
 #include <memory>
 #include <string>
 #include <vector>
@@ -285,32 +285,39 @@ public:
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
 
+typedef void (*SectionFunction)(Section *);
+
 class Section {
 private:
-	typedef void (*SectionFunction)(Section*);
-
 	/* Wrapper class around startup and shutdown functions. the variable
-	 * canchange indicates it can be called on configuration changes */
+	 * changeable_at_runtime indicates it can be called on configuration
+	 * changes */
 	struct Function_wrapper {
 		SectionFunction function;
-		bool canchange;
+		bool changeable_at_runtime;
 
 		Function_wrapper(SectionFunction const fn, bool ch)
 		        : function(fn),
-		          canchange(ch)
+		          changeable_at_runtime(ch)
 		{}
 	};
 
-	std::list<Function_wrapper> initfunctions = {};
-	std::list<Function_wrapper> destroyfunctions = {};
+	std::deque<Function_wrapper> early_init_functions = {};
+	std::deque<Function_wrapper> initfunctions = {};
+	std::deque<Function_wrapper> destroyfunctions = {};
 	std::string sectionname;
 public:
 	Section(const std::string &name) : sectionname(name) {}
 
 	virtual ~Section() = default; // Children must call executedestroy!
 
-	void AddInitFunction(SectionFunction func, bool canchange = false);
-	void AddDestroyFunction(SectionFunction func, bool canchange = false);
+	void AddEarlyInitFunction(SectionFunction func,
+	                          bool changeable_at_runtime = false);
+	void AddInitFunction(SectionFunction func, bool changeable_at_runtime = false);
+	void AddDestroyFunction(SectionFunction func,
+	                        bool changeable_at_runtime = false);
+
+	void ExecuteEarlyInit(bool initall = true);
 	void ExecuteInit(bool initall=true);
 	void ExecuteDestroy(bool destroyall=true);
 	const char* GetName() const {return sectionname.c_str();}
@@ -325,9 +332,9 @@ class Prop_multival_remain;
 
 class Section_prop : public Section {
 private:
-	std::list<Property *> properties = {};
-	typedef std::list<Property*>::iterator it;
-	typedef std::list<Property*>::const_iterator const_it;
+	std::deque<Property *> properties = {};
+	typedef std::deque<Property*>::iterator it;
+	typedef std::deque<Property*>::const_iterator const_it;
 
 public:
 	Section_prop(const std::string &name) : Section(name) {}

@@ -24,79 +24,29 @@
 
 #include "midi_handler.h"
 
-#include <fcntl.h>
-
-#define SEQ_MIDIPUTC    5
-
 class MidiHandler_oss : public MidiHandler {
 private:
-	int device;
-	uint8_t device_num;
-	bool isOpen;
+	int device = 0;
+	uint8_t device_num = 0;
+	bool is_open = false;
 
 public:
-	MidiHandler_oss()
-	        : MidiHandler(),
-	          device(0),
-	          device_num(0),
-	          isOpen(false)
-	{}
+	MidiHandler_oss() : MidiHandler() {}
 
 	MidiHandler_oss(const MidiHandler_oss &) = delete; // prevent copying
 	MidiHandler_oss &operator=(const MidiHandler_oss &) = delete; // prevent assignment
 
+	~MidiHandler_oss() override;
+
 	const char *GetName() const override { return "oss"; }
 
-	bool Open(const char *conf) override
-	{
-		char devname[512];
-		if (conf && conf[0])
-			safe_strcpy(devname, conf);
-		else strcpy(devname,"/dev/sequencer");
-		char * devfind=(strrchr(devname,','));
-		if (devfind) {
-			*devfind++=0;
-			device_num=atoi(devfind);
-		} else device_num=0;
-		if (isOpen) return false;
-		device=open(devname, O_WRONLY, 0);
-		if (device<0) return false;
-		return true;
-	}
+	bool Open(const char *conf) override;
 
-	void Close() override
-	{
-		if (!isOpen) return;
-		if (device>0) close(device);
-	}
+	void Close() override;
 
-	void PlayMsg(const uint8_t *msg) override
-	{
-		Bit8u buf[128];Bitu pos=0;
-		Bitu len=MIDI_evt_len[*msg];
-		for (;len>0;len--) {
-			buf[pos++] = SEQ_MIDIPUTC;
-			buf[pos++] = *msg;
-			buf[pos++] = device_num;
-			buf[pos++] = 0;
-			msg++;
-		}
-		write(device,buf,pos);
-	}
+	void PlayMsg(const uint8_t *msg) override;
 
-	void PlaySysex(uint8_t *sysex, size_t len) override
-	{
-		Bit8u buf[SYSEX_SIZE*4];Bitu pos=0;
-		for (;len>0;len--) {
-			buf[pos++] = SEQ_MIDIPUTC;
-			buf[pos++] = *sysex++;
-			buf[pos++] = device_num;
-			buf[pos++] = 0;
-		}
-		write(device, buf, pos);
-	}
+	void PlaySysex(uint8_t *sysex, size_t len) override;
 };
-
-MidiHandler_oss Midi_oss;
 
 #endif
