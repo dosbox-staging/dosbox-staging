@@ -27,49 +27,52 @@
 #include "pic.h"
 #include "setup.h"
 
-#define DISNEY_BASE 0x0378
+// Disney Sound Source Constants
+constexpr uint16_t DS_PORT_BASE = 0x0378;
+constexpr uint8_t DS_BUF_SAMPLES = 128;
 
-#define DISNEY_SIZE 128
+constexpr uint8_t DS_ACKNOWLEDGE_BIT = 0b0100'0000;  // 0x40
+constexpr uint8_t DS_INTERRUPT_MASK = 0b1111'1011;   // ~0x4
+constexpr uint8_t DS_INIT_STATUS_BITS = 0b1000'0100; // 0x84
+constexpr uint8_t DS_PARALLEL_IRQ_BIT = 0b0001'0000; // 0x10
+constexpr uint8_t DS_PIN_9_BIT = 0b1000'0000;        // 0x80
 
-constexpr uint8_t DISNEY_INIT_STATUS = 0b1000'0100; // 0x84
+enum DS_STATE { IDLE, RUNNING, FINISH, ANALYZING };
 
 typedef struct _dac_channel {
-	Bit8u buffer[DISNEY_SIZE];	// data buffer
-	Bitu used;					// current data buffer level
-	double speedcheck_sum;
-	double speedcheck_last;
-	bool speedcheck_failed;
-	bool speedcheck_init;
+	uint8_t buffer[DS_BUF_SAMPLES]; // data buffer
+	uint8_t used = 0;               // current data buffer level
+	double speedcheck_sum = 0;
+	double speedcheck_last = 0;
+	bool speedcheck_failed = false;
+	bool speedcheck_init = false;
 } dac_channel;
 
 using mixer_channel_ptr_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
+
 static struct {
 	IO_ReadHandleObject read_handler{};
 	IO_WriteHandleObject write_handler{};
 
 	// parallel port stuff
-	Bit8u data;
-	uint8_t status = DISNEY_INIT_STATUS;
+	uint8_t data = 0;
+	uint8_t status = DS_INIT_STATUS_BITS;
 	uint8_t control = 0;
 	// the D/A channels
-	dac_channel da[2];
+	dac_channel da[2] = {};
 
 	Bitu last_used = 0;
 	mixer_channel_ptr_t chan{nullptr, MIXER_DelChannel};
 	bool stereo = false;
 	// which channel do we use for mono output?
 	// and the channel used for stereo
-	dac_channel* leader;
-	
-	Bitu state;
-	Bitu interface_det;
-	Bitu interface_det_ext;
-} disney;
+	dac_channel *leader = nullptr;
 
-#define DS_IDLE 0
-#define DS_RUNNING 1
-#define DS_FINISH 2
-#define DS_ANALYZING 3
+	Bitu state = DS_STATE::IDLE;
+	Bitu interface_det = 0;
+	Bitu interface_det_ext = 0;
+
+} disney;
 
 static void DISNEY_disable(Bitu) {
 	// Stop playback
@@ -79,7 +82,7 @@ static void DISNEY_disable(Bitu) {
 	}
 	disney.leader = 0;
 	disney.last_used = 0;
-	disney.state = DS_IDLE;
+	disney.state = DS_STATE::IDLE;
 	disney.interface_det = 0;
 	disney.interface_det_ext = 0;
 	disney.stereo = false;
@@ -88,7 +91,7 @@ static void DISNEY_disable(Bitu) {
 static void DISNEY_enable(Bitu freq) {
 	if(freq < 500 || freq > 100000) {
 		// try again..
-		disney.state = DS_IDLE;
+		disney.state = DS_STATE::IDLE;
 		return;	
 	} else {
 #if 0
@@ -97,17 +100,17 @@ static void DISNEY_enable(Bitu freq) {
 #endif
 		disney.chan->SetFreq(freq);
 		disney.chan->Enable(true);
-		disney.state = DS_RUNNING;
+		disney.state = DS_STATE::RUNNING;
 	}
 }
 
 static void DISNEY_analyze(Bitu channel){
 	switch(disney.state) {
-		case DS_RUNNING: // should not get here
+		case DS_STATE::RUNNING: // should not get here
 			break;
-		case DS_IDLE:
+		case DS_STATE::IDLE:
 			// initialize channel data
-			for(int i = 0; i < 2; i++) {
+			for (int i = 0; i < 2; i++) {
 				disney.da[i].used = 0;
 				disney.da[i].speedcheck_sum = 0;
 				disney.da[i].speedcheck_failed = false;
@@ -115,23 +118,20 @@ static void DISNEY_analyze(Bitu channel){
 			}
 			disney.da[channel].speedcheck_last = PIC_FullIndex();
 			disney.da[channel].speedcheck_init = true;
-			
-			disney.state = DS_ANALYZING;
+
+			disney.state = DS_STATE::ANALYZING;
 			break;
 
-		case DS_FINISH: 
-		{
-			// detect stereo: if we have about the same data amount in both channels
+		case DS_STATE::FINISH: {
+			// Stereo-mode if both DACs are similarly filled
 			Bits st_diff = disney.da[0].used - disney.da[1].used;
-			
-			// find leader channel (the one with higher rate) [this good for the stereo case?]
-			if(disney.da[0].used > disney.da[1].used) {
-				//disney.monochannel=0;
+
+			// Pick the DAC with the most samples as leader.
+			// (This is good for the stereo case?)
+			if (disney.da[0].used > disney.da[1].used)
 				disney.leader = &disney.da[0];
-			} else {
-				//disney.monochannel=1;
+			else
 				disney.leader = &disney.da[1];
-			}
 			
 			if((st_diff < 5) && (st_diff > -5)) disney.stereo = true;
 			else disney.stereo = false;
@@ -151,8 +151,7 @@ static void DISNEY_analyze(Bitu channel){
 				ch_speed[0]:ch_speed[1]); // TODO
 			break;
 		}
-		case DS_ANALYZING:
-		{
+		case DS_STATE::ANALYZING: {
 			double current = PIC_FullIndex();
 			dac_channel* cch = &disney.da[channel];
 
@@ -170,16 +169,16 @@ static void DISNEY_analyze(Bitu channel){
 				cch->speedcheck_failed = true;
 			
 			// if both are failed we are back at start
-			if(disney.da[0].speedcheck_failed && disney.da[1].speedcheck_failed) {
-				disney.state=DS_IDLE;
+			if (disney.da[0].speedcheck_failed && disney.da[1].speedcheck_failed) {
+				disney.state = DS_STATE::IDLE;
 				break;
 			}
 
 			cch->speedcheck_last = current;
 			
 			// analyze finish condition
-			if(disney.da[0].used > 30 || disney.da[1].used > 30)
-				disney.state = DS_FINISH;
+			if (disney.da[0].used > 30 || disney.da[1].used > 30)
+				disney.state = DS_STATE::FINISH;
 			break;
 		}
 	}
@@ -188,22 +187,22 @@ static void DISNEY_analyze(Bitu channel){
 static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 	//LOG_MSG("write disney time %f addr%x val %x",PIC_FullIndex(),port,val);
 	disney.last_used=PIC_Ticks;
-	switch (port-DISNEY_BASE) {
+	switch (port - DS_PORT_BASE) {
 	case 0:		/* Data Port */
 	{
 		disney.data=val;
 		// if data is written here too often without using the stereo
-		// mechanism we use the simple DAC machanism. 
-        if(disney.state != DS_RUNNING) {
+		// mechanism we use the simple DAC machanism.
+		if (disney.state != DS_STATE::RUNNING) {
 			disney.interface_det++;
 			if(disney.interface_det > 5)
 				DISNEY_analyze(0);
 		}
 		if(disney.interface_det > 5) {
-			if(disney.da[0].used < DISNEY_SIZE) {
+			if (disney.da[0].used < DS_BUF_SAMPLES) {
 				disney.da[0].buffer[disney.da[0].used] = disney.data;
 				disney.da[0].used++;
-			} //else LOG_MSG("disney overflow 0");
+			} // else LOG_MSG("disney overflow 0");
 		}
 		break;
 	}
@@ -212,35 +211,35 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 2:		/* Control Port */
 		if((disney.control & 0x2) && !(val & 0x2)) {
-			if(disney.state != DS_RUNNING) {
+			if (disney.state != DS_STATE::RUNNING) {
 				disney.interface_det = 0;
 				disney.interface_det_ext = 0;
 				DISNEY_analyze(1);
 			}
 
 			// stereo channel latch
-			if(disney.da[1].used < DISNEY_SIZE) {
+			if (disney.da[1].used < DS_BUF_SAMPLES) {
 				disney.da[1].buffer[disney.da[1].used] = disney.data;
 				disney.da[1].used++;
-			} //else LOG_MSG("disney overflow 1");
+			} // else LOG_MSG("disney overflow 1");
 		}
 
 		if((disney.control & 0x1) && !(val & 0x1)) {
-			if(disney.state != DS_RUNNING) {
+			if (disney.state != DS_STATE::RUNNING) {
 				disney.interface_det = 0;
 				disney.interface_det_ext = 0;
 				DISNEY_analyze(0);
 			}
 			// stereo channel latch
-			if(disney.da[0].used < DISNEY_SIZE) {
+			if (disney.da[0].used < DS_BUF_SAMPLES) {
 				disney.da[0].buffer[disney.da[0].used] = disney.data;
 				disney.da[0].used++;
-			} //else LOG_MSG("disney overflow 0");
+			} // else LOG_MSG("disney overflow 0");
 		}
 
 		if((disney.control & 0x8) && !(val & 0x8)) {
 			// emulate a device with 16-byte sound FIFO
-			if(disney.state != DS_RUNNING) {
+			if (disney.state != DS_STATE::RUNNING) {
 				disney.interface_det_ext++;
 				disney.interface_det = 0;
 				if(disney.interface_det_ext > 5) {
@@ -249,7 +248,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 				}
 			}
 			if(disney.interface_det_ext > 5) {
-				if(disney.da[0].used < DISNEY_SIZE) {
+				if (disney.da[0].used < DS_BUF_SAMPLES) {
 					disney.da[0].buffer[disney.da[0].used] = disney.data;
 					disney.da[0].used++;
 				}
@@ -265,7 +264,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 
 static Bitu disney_read(Bitu port,Bitu iolen) {
 	Bitu retval;
-	switch (port-DISNEY_BASE) {
+	switch (port - DS_PORT_BASE) {
 	case 0:		/* Data Port */
 //		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from data port");
 		return disney.data;
@@ -291,7 +290,7 @@ static Bitu disney_read(Bitu port,Bitu iolen) {
 }
 
 static void DISNEY_PlayStereo(Bitu len, Bit8u* l, Bit8u* r) {
-	static Bit8u stereodata[DISNEY_SIZE*2];
+	static Bit8u stereodata[DS_BUF_SAMPLES * 2];
 	for(Bitu i = 0; i < len; i++) {
 		stereodata[i*2] = l[i];
 		stereodata[i*2+1] = r[i];
@@ -318,8 +317,9 @@ static void DISNEY_CallBack(uint16_t len)
 
 		// put the rest back to start
 		for(int i = 0; i < 2; i++) {
-			// TODO for mono only one 
-			memmove(disney.da[i].buffer,&disney.da[i].buffer[len],DISNEY_SIZE/*real_used*/-len);
+			// TODO for mono only one
+			memmove(disney.da[i].buffer, &disney.da[i].buffer[len],
+			        DS_BUF_SAMPLES /*real_used*/ - len);
 			disney.da[i].used -= len;
 		}
 	// TODO: len > DISNEY
@@ -403,11 +403,11 @@ void DISNEY_Init(Section *sec)
 	assert(disney.chan);
 
 	// Register port handlers for 8-bit IO
-	disney.write_handler.Install(DISNEY_BASE, disney_write, IO_MB, 3);
-	disney.read_handler.Install(DISNEY_BASE, disney_read, IO_MB, 3);
+	disney.write_handler.Install(DS_PORT_BASE, disney_write, IO_MB, 3);
+	disney.read_handler.Install(DS_PORT_BASE, disney_read, IO_MB, 3);
 
 	// Reset DSP
-	disney.status = DISNEY_INIT_STATUS;
+	disney.status = DS_INIT_STATUS_BITS;
 
 	sec->AddDestroyFunction(&DISNEY_ShutDown, true);
 }
