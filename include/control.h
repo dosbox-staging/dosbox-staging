@@ -43,7 +43,6 @@ public:
 	CommandLine * cmdline;
 private:
 	std::deque<Section*> sectionlist;
-	typedef std::deque<Section*>::const_iterator const_it;
 	void (* _start_function)(void);
 	bool secure_mode; //Sandbox mode
 public:
@@ -81,8 +80,8 @@ public:
 	auto begin() { return sectionlist.begin(); }
 	auto end() { return sectionlist.end(); }
 
-	Section *GetSection(std::string const &_sectionname) const;
-	Section* GetSectionFromProperty(char const * const prop) const;
+	Section *GetSection(const std::string &section_name) const;
+	Section *GetSectionFromProperty(const char *prop) const;
 
 	void SetStartUp(void (*_function)(void));
 	void Init() const;
