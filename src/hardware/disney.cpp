@@ -276,31 +276,36 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 	}
 }
 
-static Bitu disney_read(Bitu port,Bitu iolen) {
-	Bitu retval;
+static Bitu disney_read(Bitu port, MAYBE_UNUSED Bitu iolen)
+{
+	uint8_t retval = 0xff; // default
 	switch (port - DS_PORT_BASE) {
-	case 0:		/* Data Port */
-//		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from data port");
-		return disney.data;
+	case 0:
+		// Data Port
+		// LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from data port");
+		retval = disney.data;
 		break;
-	case 1:		/* Status Port */	
-//		LOG(LOG_MISC,"DISNEY:Read from status port %X",disney.status);
-		retval = 0x07;//0x40; // Stereo-on-1 and (or) New-Stereo DACs present
-		if(disney.interface_det_ext > 5) {
-			if (disney.leader && disney.leader->used >= 16){
-				retval |= 0x40; // ack
-				retval &= ~0x4; // interrupt
+	case 1:
+		// Status Port
+		// LOG(LOG_MISC,"DISNEY:Read from status port %X",disney.status);
+		// TODO: move 0x7 to separate stereo and DAC masks and "or" them
+		retval = 0x07; // 0x40; // Stereo-on-1 and (or) New-Stereo DACs
+		if (disney.interface_det_ext > 5) {
+			if (disney.leader && disney.leader->used >= 16) {
+				retval |= DS_ACKNOWLEDGE_BIT;
+				retval &= DS_INTERRUPT_MASK;
 			}
 		}
-		if(!(disney.data&0x80)) retval |= 0x80; // pin 9 is wired to pin 11
-		return retval;
+		if (!(disney.data & DS_PIN_9_BIT))
+			retval |= DS_PIN_9_BIT; // pin 9 is wired to pin 11
 		break;
-	case 2:		/* Control Port */
-		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from control port");
-		return disney.control;
+	case 2:
+		// Control Port
+		// LOG(LOG_MISC, LOG_NORMAL)("DISNEY:Read from control port");
+		retval = disney.control;
 		break;
 	}
-	return 0xff;
+	return retval;
 }
 
 static void DISNEY_PlayStereo(Bitu len, Bit8u* l, Bit8u* r) {
