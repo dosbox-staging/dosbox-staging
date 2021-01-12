@@ -344,12 +344,10 @@ static void DISNEY_CallBack(uint16_t len)
 	// TODO: len > DISNEY
 	} else { // not enough data
 		if(disney.stereo) {
-			Bit8u gapfiller0 = 128;
-			Bit8u gapfiller1 = 128;
-			if(real_used) {
-				gapfiller0 = disney.da[0].buffer[real_used-1];
-				gapfiller1 = disney.da[1].buffer[real_used-1];
-			};
+			const uint8_t gapfiller0 =
+			        real_used ? disney.da[0].buffer[real_used - 1] : 128u;
+			const uint8_t gapfiller1 =
+			        real_used ? disney.da[1].buffer[real_used - 1] : 128u;
 
 			memset(disney.da[0].buffer+real_used,
 				gapfiller0,len-real_used);
