@@ -34,11 +34,8 @@
 bool MidiHandler_oss::Open(const char *conf)
 {
 	char devname[512];
-	if (conf && conf[0])
-		safe_strcpy(devname, conf);
-	else
-		strcpy(devname, "/dev/sequencer");
-	char *devfind = (strrchr(devname, ','));
+	safe_strcpy(devname, (is_empty(conf) ? "/dev/sequencer" : conf));
+	char *devfind = strrchr(devname, ',');
 	if (devfind) {
 		*devfind++ = '\0';
 		device_num = atoi(devfind);
