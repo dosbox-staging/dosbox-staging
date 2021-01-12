@@ -44,7 +44,6 @@ public:
 private:
 	std::deque<Section*> sectionlist;
 	typedef std::deque<Section*>::iterator it;
-	typedef std::deque<Section*>::reverse_iterator reverse_it;
 	typedef std::deque<Section*>::const_iterator const_it;
 	void (* _start_function)(void);
 	bool secure_mode; //Sandbox mode

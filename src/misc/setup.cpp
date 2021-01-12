@@ -909,12 +909,10 @@ void Section::ExecuteDestroy(bool destroyall) {
 	}
 }
 
-Config::~Config() {
-	reverse_it cnt = sectionlist.rbegin();
-	while (cnt != sectionlist.rend()) {
+Config::~Config()
+{
+	for (auto cnt = sectionlist.rbegin(); cnt != sectionlist.rend(); ++cnt)
 		delete (*cnt);
-		cnt++;
-	}
 }
 
 Section* Config::GetSection(int index) {
