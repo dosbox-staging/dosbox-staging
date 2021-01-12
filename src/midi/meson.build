@@ -1,6 +1,7 @@
 libmidi_sources = [
   'midi.cpp',
   'midi_fluidsynth.cpp',
+  'midi_oss.cpp',
 ]
 
 libmidi = static_library('midi', libmidi_sources,
