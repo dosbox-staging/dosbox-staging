@@ -96,6 +96,16 @@ if host_machine.cpu_family() == 'ppc64' or host_machine.cpu_family() == 'ppc64le
   conf_data.set('PAGESIZE', 65536)
 endif
 
+set_prio_code = '''
+#include <sys/resource.h>
+int main() {
+  return setpriority(PRIO_PROCESS, 0, PRIO_MIN + PRIO_MAX);
+}
+'''
+if cc.compiles(set_prio_code, name : 'test for setpriority support')
+  conf_data.set('HAVE_SETPRIORITY', 1)
+endif
+
 
 # external dependencies
 #
