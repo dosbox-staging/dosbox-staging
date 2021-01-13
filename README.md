@@ -18,7 +18,7 @@ support today's systems.
 |-                               |-                            |-
 | **Version control**            | Git                         | [SVN]
 | **Language**                   | C++14                       | C++03<sup>[1]</sup>
-| **SDL**                        | 2.0.2                       | 1.2<sup>＊</sup>
+| **SDL**                        | >= 2.0.2                    | 1.2<sup>＊</sup>
 | **Buildsystem**                | Meson (WIP)                 | Autotools
 | **CI**                         | Yes                         | No
 | **Static analysis**            | Yes<sup>[2],[3],[4]</sup>   | No
@@ -31,7 +31,7 @@ support today's systems.
 [SVN]:https://sourceforge.net/projects/dosbox/
 [1]:https://sourceforge.net/p/dosbox/patches/283/
 [2]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
-[3]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
+[3]:https://lgtm.com/projects/g/dosbox-staging/dosbox-staging/
 [4]:https://scan.coverity.com/projects/dosbox-staging
 [5]:tests/README.md
 [Development builds]:https://dosbox-staging.github.io/downloads/devel/
