@@ -46,14 +46,14 @@ struct PIC_Controller {
 
 	void set_imr(Bit8u val);
 
-	void check_after_EOI(){
+	void check_after_EOI() {
 		//Update the active_irq as an EOI is likely to change that.
 		update_active_irq();
-		if((irr&imrr)&isrr) check_for_irq();
+		if ((irr&imrr)&isrr) check_for_irq();
 	}
 
 	void update_active_irq() {
-		if(isr == 0) {active_irq = 8; return;}
+		if (isr == 0) {active_irq = 8; return;}
 		for(Bit8u i = 0, s = 1; i < 8;i++, s<<=1){
 			if( isr & s){
 				active_irq = i;
@@ -62,7 +62,7 @@ struct PIC_Controller {
 		}
 	}
 
-	void check_for_irq(){
+	void check_for_irq() {
 		const Bit8u possible_irq = (irr&imrr)&isrr;
 		if (possible_irq) {
 			const Bit8u a_irq = special?8:active_irq;
@@ -83,24 +83,24 @@ struct PIC_Controller {
 	//Removes signal to master/cpu that there is an irq ready.
 	void deactivate();
 
-	void raise_irq(Bit8u val){
+	void raise_irq(Bit8u val) {
 		Bit8u bit = 1 << (val);
-		if((irr & bit)==0) { //value changed (as it is currently not active)
-			irr|=bit;
-			if((bit&imrr)&isrr) { //not masked and not in service
-				if(special || val < active_irq) activate();
+		if ((irr & bit) == 0) { //value changed (as it is currently not active)
+			irr |= bit;
+			if ((bit&imrr)&isrr) { //not masked and not in service
+				if (special || val < active_irq) activate();
 			}
 		}
 	}
 
-	void lower_irq(Bit8u val){
+	void lower_irq(Bit8u val) {
 		Bit8u bit = 1 << ( val);
-		if(irr & bit) { //value will change (as it is currently active)
-			irr&=~bit;
-			if((bit&imrr)&isrr) { //not masked and not in service
+		if (irr & bit) { //value will change (as it is currently active)
+			irr &= ~bit;
+			if ((bit&imrr)&isrr) { //not masked and not in service
 				//This irq might have toggled PIC_IRQCheck/caused irq 2 on master, when it was raised.
 				//If it is active, then recheck it, we can't just deactivate as there might be more IRQS raised.
-				if(special || val < active_irq) check_for_irq();
+				if (special || val < active_irq) check_for_irq();
 			}
 		}
 	}
@@ -117,7 +117,7 @@ Bitu PIC_IRQCheck = 0; //Maybe make it a bool and/or ensure 32bit size (x86 dyna
 
 
 void PIC_Controller::set_imr(Bit8u val) {
-	if (GCC_UNLIKELY(machine==MCH_PCJR)) {
+	if (GCC_UNLIKELY(machine == MCH_PCJR)) {
 		//irq 6 is a NMI on the PCJR
 		if (this == &master) val &= ~(1 <<(6));
 	}
@@ -127,12 +127,12 @@ void PIC_Controller::set_imr(Bit8u val) {
 
 	//Test if changed bits are set in irr and are not being served at the moment
 	//Those bits have impact on whether the cpu emulation should be paused or not.
-	if((irr & change)&isrr) check_for_irq();
+	if ((irr & change)&isrr) check_for_irq();
 }
 
-void PIC_Controller::activate() { 
+void PIC_Controller::activate() {
 	//Stops CPU if master, signals master if slave
-	if(this == &master) {
+	if (this == &master) {
 		PIC_IRQCheck = 1;
 		//cycles 0, take care of the port IO stuff added in raise_irq base caller.
 		CPU_CycleLeft += CPU_Cycles;
@@ -143,17 +143,17 @@ void PIC_Controller::activate() {
 	}
 }
 
-void PIC_Controller::deactivate() { 
+void PIC_Controller::deactivate() {
 	//removes irq check value  if master, signals master if slave
-	if(this == &master) {
+	if (this == &master) {
 		PIC_IRQCheck = 0;
 	} else {
 		master.lower_irq(2);
 	}
 }
 
-void PIC_Controller::start_irq(Bit8u val){
-	irr&=~(1<<(val));
+void PIC_Controller::start_irq(Bit8u val) {
+	irr &= ~(1<<(val));
 	if (!auto_eoi) {
 		active_irq = val;
 		isr |= 1<<(val);
@@ -177,8 +177,8 @@ static struct {
 	PICEntry * next_entry;
 } pic_queue;
 
-static void write_command(Bitu port,Bitu val,Bitu iolen) {
-	PIC_Controller * pic=&pics[port==0x20 ? 0 : 1];
+static void write_command(Bitu port,Bitu val,Bitu /*iolen*/) {
+	PIC_Controller * pic = &pics[port==0x20 ? 0 : 1];
 
 	if (GCC_UNLIKELY(val&0x10)) {		// ICW1 issued
 		if (val&0x04) E_Exit("PIC: 4 byte interval not handled");
@@ -199,7 +199,7 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 			else pic->special = false;
 			//Check if there are irqs ready to run, as the priority system has possibly been changed.
 			pic->check_for_irq();
-			LOG(LOG_PIC,LOG_NORMAL)("port %X : special mask %s",port,(pic->special)?"ON":"OFF");
+			LOG(LOG_PIC,LOG_NORMAL)("port %" sBitfs(X) " : special mask %s",port,(pic->special)?"ON":"OFF");
 		}
 	} else {	// OCW2 issued
 		if (val&0x20) {		// EOI commands
@@ -229,59 +229,59 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 	}	// end OCW2
 }
 
-static void write_data(Bitu port,Bitu val,Bitu iolen) {
-	PIC_Controller * pic=&pics[port==0x21 ? 0 : 1];
+static void write_data(Bitu port,Bitu val,Bitu /*iolen*/) {
+	PIC_Controller * pic = &pics[port==0x21 ? 0 : 1];
 	switch(pic->icw_index) {
 	case 0:                        /* mask register */
 		pic->set_imr(val);
 		break;
 	case 1:                        /* icw2          */
-		LOG(LOG_PIC,LOG_NORMAL)("%d:Base vector %X",port==0x21 ? 0 : 1,val);
+		LOG(LOG_PIC,LOG_NORMAL)("%d:Base vector %" sBitfs(X) ,port==0x21 ? 0 : 1,val);
 		pic->vector_base = val&0xf8;
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		else if(pic->single) pic->icw_index=3;		/* skip ICW3 in single mode */
 		break;
 	case 2:							/* icw 3 */
-		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 3 %X",port==0x21 ? 0 : 1,val);
+		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 3 %" sBitfs(X) ,port==0x21 ? 0 : 1,val);
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
 	case 3:							/* icw 4 */
 		/*
 			0	    1 8086/8080  0 mcs-8085 mode
 			1	    1 Auto EOI   0 Normal EOI
-			2-3	   0x Non buffer Mode 
-				   10 Buffer Mode Slave 
-				   11 Buffer mode Master	
-			4		Special/Not Special nested mode 
+			2-3	   0x Non buffer Mode
+				   10 Buffer Mode Slave
+				   11 Buffer mode Master
+			4	      Special/Not Special nested mode
 		*/
 		pic->auto_eoi=(val & 0x2)>0;
-		
-		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 4 %X",port==0x21 ? 0 : 1,val);
 
-		if ((val&0x01)==0) E_Exit("PIC:ICW4: %x, 8085 mode not handled",val);
-		if ((val&0x10)!=0) LOG_MSG("PIC:ICW4: %x, special fully-nested mode not handled",val);
+		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 4 %" sBitfs(X),port==0x21 ? 0 : 1,val);
+
+		if ((val&0x01)==0) E_Exit("PIC:ICW4: %" sBitfs(x) ", 8085 mode not handled",val);
+		if ((val&0x10)!=0) LOG_MSG("PIC:ICW4: %" sBitfs(x) ", special fully-nested mode not handled",val);
 
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
 	default:
-		LOG(LOG_PIC,LOG_NORMAL)("ICW HUH? %X",val);
+		LOG(LOG_PIC,LOG_NORMAL)("ICW HUH? %" sBitfs(X) ,val);
 		break;
 	}
 }
 
 
-static Bitu read_command(Bitu port,Bitu iolen) {
-	PIC_Controller * pic=&pics[port==0x20 ? 0 : 1];
-	if (pic->request_issr){
+static Bitu read_command(Bitu port,Bitu /*iolen*/) {
+	PIC_Controller * pic = &pics[port==0x20 ? 0 : 1];
+	if (pic->request_issr) {
 		return pic->isr;
-	} else { 
+	} else {
 		return pic->irr;
 	}
 }
 
 
-static Bitu read_data(Bitu port,Bitu iolen) {
-	PIC_Controller * pic=&pics[port==0x21 ? 0 : 1];
+static Bitu read_data(Bitu port,Bitu /*iolen*/) {
+	PIC_Controller * pic = &pics[port==0x21 ? 0 : 1];
 	return pic->imr;
 }
 
@@ -315,7 +315,7 @@ void PIC_DeActivateIRQ(Bitu irq) {
 	pic->lower_irq(t);
 }
 
-static void slave_startIRQ(){
+static void slave_startIRQ() {
 	Bit8u pic1_irq = 8;
 	const Bit8u p = (slave.irr & slave.imrr)&slave.isrr;
 	const Bit8u max = slave.special?8:slave.active_irq;
@@ -333,7 +333,7 @@ static void slave_startIRQ(){
 	CPU_HW_Interrupt(slave.vector_base + pic1_irq);
 }
 
-static void inline master_startIRQ(Bitu i){
+static void inline master_startIRQ(Bitu i) {
 	master.start_irq(i);
 	CPU_HW_Interrupt(master.vector_base + i);
 }
@@ -440,7 +440,7 @@ void PIC_RemoveSpecificEvents(PIC_EventHandler handler, Bitu val) {
 		}
 		prev_entry=entry;
 		entry=entry->next;
-	}	
+	}
 }
 
 void PIC_RemoveEvents(PIC_EventHandler handler) {
@@ -465,7 +465,7 @@ void PIC_RemoveEvents(PIC_EventHandler handler) {
 		}
 		prev_entry=entry;
 		entry=entry->next;
-	}	
+	}
 }
 
 
@@ -503,7 +503,7 @@ bool PIC_RunQueue(void) {
 		}
 	} else CPU_Cycles=CPU_CycleLeft;
 	CPU_CycleLeft-=CPU_Cycles;
-	if 	(PIC_IRQCheck)	PIC_runIRQs();
+	if (PIC_IRQCheck) PIC_runIRQs();
 	return true;
 }
 
@@ -615,7 +615,7 @@ public:
 
 static PIC_8259A* test;
 
-void PIC_Destroy(Section* sec){
+void PIC_Destroy(Section* /*sec*/){
 	delete test;
 }
 
