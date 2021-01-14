@@ -33,14 +33,16 @@
 #include <winbase.h>
 #endif
 
-#if (C_HAVE_MPROTECT)
+#if defined(HAVE_MPROTECT)
 #include <sys/mman.h>
 
 #include <limits.h>
+
 #ifndef PAGESIZE
 #define PAGESIZE 4096
 #endif
-#endif /* C_HAVE_MPROTECT */
+
+#endif // HAVE_MPROTECT
 
 #include "callback.h"
 #include "regs.h"

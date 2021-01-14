@@ -622,9 +622,9 @@ AM_CONDITIONAL(BUILD_TESTS, test "${HAVE_GTEST}" = "yes")
 AM_CONDITIONAL(USE_GTEST_STATIC, test "${HAVE_GTEST_STATIC}" = "yes")
 
 dnl Check for mprotect. Needed for 64 bits linux
-AH_TEMPLATE(C_HAVE_MPROTECT,[Define to 1 if you have the mprotect function])
+AH_TEMPLATE(HAVE_MPROTECT,[Define to 1 if you have the mprotect function])
 AC_CHECK_HEADER([sys/mman.h], [
-AC_CHECK_FUNC([mprotect],[AC_DEFINE(C_HAVE_MPROTECT,1)])
+AC_CHECK_FUNC([mprotect],[AC_DEFINE(HAVE_MPROTECT,1)])
 ])
 
 dnl Check for realpath. Used on Linux
