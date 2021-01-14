@@ -169,7 +169,6 @@ DOS_Shell::DOS_Shell()
           input_handle(STDIN),
           bf(nullptr),
           echo(true),
-          exit_flag(false),
           call(false)
 {}
 
@@ -379,7 +378,7 @@ void DOS_Shell::Run()
 			InputCommand(input_line);
 			ParseLine(input_line);
 		}
-	} while (!exit_flag);
+	} while (!exit_requested);
 }
 
 void DOS_Shell::SyntaxError()
