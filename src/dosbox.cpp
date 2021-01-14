@@ -325,10 +325,8 @@ void DOSBOX_SetNormalLoop() {
 
 void DOSBOX_RunMachine()
 {
-	Bitu ret;
-	do {
-		ret=(*loop)();
-	} while (!ret && !exit_requested);
+	while ((*loop)() == 0 && !exit_requested)
+		;
 }
 
 static void DOSBOX_UnlockSpeed( bool pressed ) {
