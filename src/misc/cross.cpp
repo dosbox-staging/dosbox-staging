@@ -305,17 +305,22 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 //	safe_strncpy(entry_name,dentry->d_name,(FILENAME_MAX<MAX_PATH)?FILENAME_MAX:MAX_PATH);	// [include stdio.h], maybe pathconf()
 	safe_strncpy(entry_name,dentry->d_name,CROSS_LEN);
 
-#ifdef DIRENT_HAS_D_TYPE
-	if(dentry->d_type == DT_DIR) {
+	// TODO check if this check can be replaced with glibc-defined
+	// _DIRENT_HAVE_D_TYPE. Non-GNU systems (BSD) provide d_type field as
+	// well, but do they provide define?
+	// Alternatively, maybe we can replace whole directory listing with
+	// C++17 std::filesystem::directory_iterator.
+#ifdef HAVE_STRUCT_DIRENT_D_TYPE
+	if (dentry->d_type == DT_DIR) {
 		is_directory = true;
 		return true;
-	} else if(dentry->d_type == DT_REG) {
+	} else if (dentry->d_type == DT_REG) {
 		is_directory = false;
 		return true;
 	}
 #endif
 
-	//Maybe only for DT_UNKNOWN if DIRENT_HAD_D_TYPE..
+	// Maybe only for DT_UNKNOWN if HAVE_STRUCT_DIRENT_D_TYPE
 	static char buffer[2 * CROSS_LEN + 1] = { 0 };
 	static char split[2] = { CROSS_FILESPLIT , 0 };
 	buffer[0] = 0;
