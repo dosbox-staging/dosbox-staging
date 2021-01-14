@@ -33,7 +33,7 @@
 #include "serialport.h"
 #include <time.h>
 
-#if defined(DB_HAVE_CLOCK_GETTIME) && ! defined(WIN32)
+#if defined(HAVE_CLOCK_GETTIME) && !defined(WIN32)
 //time.h is already included
 #else
 #include <sys/timeb.h>
@@ -494,10 +494,12 @@ static Bitu INT11_Handler(void) {
 
 static void BIOS_HostTimeSync() {
 	Bit32u milli = 0;
-#if defined(DB_HAVE_CLOCK_GETTIME) && ! defined(WIN32)
+	// TODO investigate if clock_gettime and ftime can be replaced
+	// by using C++11 chrono
+#if defined(HAVE_CLOCK_GETTIME) && !defined(WIN32)
 	struct timespec tp;
 	clock_gettime(CLOCK_REALTIME,&tp);
-	
+
 	struct tm *loctime;
 	loctime = localtime(&tp.tv_sec);
 	milli = (Bit32u) (tp.tv_nsec / 1000000);
@@ -505,7 +507,7 @@ static void BIOS_HostTimeSync() {
 	/* Setup time and date */
 	struct timeb timebuffer;
 	ftime(&timebuffer);
-	
+
 	struct tm *loctime;
 	loctime = localtime (&timebuffer.time);
 	milli = (Bit32u) timebuffer.millitm;
