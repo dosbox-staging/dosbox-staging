@@ -120,7 +120,7 @@
 #define GCC_UNLIKELY
 #endif
 
-// XSTR and STR macros can be used turning defines into string literals:
+// XSTR and STR macros can be used for turning defines into string literals:
 //
 // #define FOO 4
 // printf("It's a " STR(FOO));  // prints "It's a FOO"
