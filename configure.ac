@@ -164,12 +164,11 @@ struct dirent d_test;
 d_test.d_type = 0;
 }])],[AC_MSG_RESULT(yes);AC_DEFINE(DIRENT_HAS_D_TYPE,1,[struct dirent has d_type])],AC_MSG_RESULT(no))
 
-
-dnl Look for clock_gettime, a DB_HAVE_CLOCK_GETTIME is set when present
-AH_TEMPLATE([DB_HAVE_CLOCK_GETTIME],[Determines if the function clock_gettime is available.])
+dnl Look for clock_gettime, HAVE_CLOCK_GETTIME is set when present
+AH_TEMPLATE([HAVE_CLOCK_GETTIME],[Determines if the function clock_gettime is available.])
 AC_SEARCH_LIBS([clock_gettime], [rt] , [found_clock_gettime=yes], [found_clock_gettime=no])
 if test x$found_clock_gettime = xyes; then
-  AC_DEFINE(DB_HAVE_CLOCK_GETTIME)
+  AC_DEFINE(HAVE_CLOCK_GETTIME)
 fi
 
 dnl Checks for libraries.
