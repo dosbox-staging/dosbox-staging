@@ -162,14 +162,13 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 void blah(){
 struct dirent d_test;
 d_test.d_type = 0;
-}])],[AC_MSG_RESULT(yes);AC_DEFINE(DIRENT_HAS_D_TYPE,1,[struct dirent has d_type])],AC_MSG_RESULT(no))
+}])],[AC_MSG_RESULT(yes);AC_DEFINE(HAVE_STRUCT_DIRENT_D_TYPE,1,[struct dirent has d_type])],AC_MSG_RESULT(no))
 
-
-dnl Look for clock_gettime, a DB_HAVE_CLOCK_GETTIME is set when present
-AH_TEMPLATE([DB_HAVE_CLOCK_GETTIME],[Determines if the function clock_gettime is available.])
+dnl Look for clock_gettime, HAVE_CLOCK_GETTIME is set when present
+AH_TEMPLATE([HAVE_CLOCK_GETTIME],[Determines if the function clock_gettime is available.])
 AC_SEARCH_LIBS([clock_gettime], [rt] , [found_clock_gettime=yes], [found_clock_gettime=no])
 if test x$found_clock_gettime = xyes; then
-  AC_DEFINE(DB_HAVE_CLOCK_GETTIME)
+  AC_DEFINE(HAVE_CLOCK_GETTIME)
 fi
 
 dnl Checks for libraries.
@@ -185,11 +184,6 @@ typedef struct { } __attribute__((packed)) junk;]],
 #Check if the compiler supports certain attributes
 OLDCFLAGS="$CFLAGS"
 CFLAGS="-Werror"
-
-AH_TEMPLATE([C_ATTRIBUTE_ALWAYS_INLINE],[Determines if the compiler supports always_inline attribute.])
-AC_MSG_CHECKING(if compiler allows __attribute__((always_inline)) )
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([ inline void __attribute__((always_inline)) test(){}
-])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_ALWAYS_INLINE)],AC_MSG_RESULT(no))
 
 CFLAGS="$OLDCFLAGS"
 
@@ -623,23 +617,23 @@ AM_CONDITIONAL(BUILD_TESTS, test "${HAVE_GTEST}" = "yes")
 AM_CONDITIONAL(USE_GTEST_STATIC, test "${HAVE_GTEST_STATIC}" = "yes")
 
 dnl Check for mprotect. Needed for 64 bits linux
-AH_TEMPLATE(C_HAVE_MPROTECT,[Define to 1 if you have the mprotect function])
+AH_TEMPLATE(HAVE_MPROTECT,[Define to 1 if you have the mprotect function])
 AC_CHECK_HEADER([sys/mman.h], [
-AC_CHECK_FUNC([mprotect],[AC_DEFINE(C_HAVE_MPROTECT,1)])
+AC_CHECK_FUNC([mprotect],[AC_DEFINE(HAVE_MPROTECT,1)])
 ])
 
 dnl Check for realpath. Used on Linux
 AC_CHECK_FUNCS([realpath])
 
 dnl Setpriority
-AH_TEMPLATE(C_SET_PRIORITY,[Define to 1 if you have setpriority support])
+AH_TEMPLATE(HAVE_SETPRIORITY,[Define to 1 if you have setpriority support])
 AC_MSG_CHECKING(for setpriority support)
 AC_LINK_IFELSE([AC_LANG_SOURCE([
 #include <sys/resource.h>
 int main(int argc,char * argv[]) {
 	return setpriority (PRIO_PROCESS, 0,PRIO_MIN+PRIO_MAX);
 };
-])],AC_MSG_RESULT(yes);AC_DEFINE(C_SET_PRIORITY,1),AC_MSG_RESULT(no))
+])],AC_MSG_RESULT(yes);AC_DEFINE(HAVE_SETPRIORITY,1),AC_MSG_RESULT(no))
 
 
 dnl Some target detection and actions for them
@@ -713,12 +707,6 @@ AH_TOP([
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 ])
-
-AH_BOTTOM([#if C_ATTRIBUTE_ALWAYS_INLINE
-#define INLINE inline __attribute__((always_inline))
-#else
-#define INLINE inline
-#endif])
 
 AC_CONFIG_FILES([
 Makefile

@@ -190,9 +190,10 @@ extern char** environ;
 #define STDERR_FILE "stderr.txt"
 #endif
 
-#if C_SET_PRIORITY
+#if defined(HAVE_SETPRIORITY)
 #include <sys/resource.h>
-#define PRIO_TOTAL (PRIO_MAX-PRIO_MIN)
+
+#define PRIO_TOTAL (PRIO_MAX - PRIO_MIN)
 #endif
 
 SDL_bool mouse_is_captured = SDL_FALSE; // global for mapper
@@ -1726,9 +1727,10 @@ static void GUI_ShutDown(Section *)
 	CleanupSDLResources();
 }
 
-static void SetPriority(PRIORITY_LEVELS level) {
-
-#if C_SET_PRIORITY
+static void SetPriority(PRIORITY_LEVELS level)
+{
+	// TODO replace platform-specific API with SDL_SetThreadPriority
+#if defined(HAVE_SETPRIORITY)
 // Do nothing if priorties are not the same and not root, else the highest
 // priority can not be set as users can only lower priority (not restore it)
 
@@ -1754,7 +1756,7 @@ static void SetPriority(PRIORITY_LEVELS level) {
 	case PRIORITY_LEVEL_HIGHEST:
 		SetPriorityClass(GetCurrentProcess(),HIGH_PRIORITY_CLASS);
 		break;
-#elif C_SET_PRIORITY
+#elif defined(HAVE_SETPRIORITY)
 /* Linux use group as dosbox has mulitple threads under linux */
 	case PRIORITY_LEVEL_PAUSE:	// if DOSBox is paused, assume idle priority
 	case PRIORITY_LEVEL_LOWEST:

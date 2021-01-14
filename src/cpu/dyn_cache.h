@@ -655,7 +655,7 @@ static void cache_block_closing(uint8_t *block_start, Bitu block_size);
 #endif
 
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
-#if (C_HAVE_MPROTECT)
+#if defined(HAVE_MPROTECT)
 #define PAGESIZE_TEMP PAGESIZE
 #else
 #define PAGESIZE_TEMP 4096
@@ -708,7 +708,7 @@ static void cache_init(bool enable) {
 			cache_code_link_blocks=cache_code;
 			cache_code += PAGESIZE_TEMP;
 
-#if (C_HAVE_MPROTECT)
+#if defined(HAVE_MPROTECT)
 			if(mprotect(cache_code_link_blocks,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP,PROT_WRITE|PROT_READ|PROT_EXEC))
 				LOG_MSG("Setting execute permission on the code cache has failed");
 #endif
