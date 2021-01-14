@@ -35,24 +35,24 @@ conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', (host_machine.cpu_family() == 'x86_64' or
                               host_machine.cpu_family() == 'x86'))
 
-if cc.has_function('clock_gettime', prefix : '#include <time.h>')
-  conf_data.set('DB_HAVE_CLOCK_GETTIME', true)
-endif
-
-if cc.has_function('mprotect', prefix : '#include <sys/mman.h>')
-  conf_data.set('C_HAVE_MPROTECT', 1)
-endif
-
-if cc.has_member('struct dirent', 'd_type', prefix : '#include<dirent.h>')
-  conf_data.set('DIRENT_HAS_D_TYPE', true)
-endif
-
 if get_option('enable_debugger') != 'none'
   conf_data.set10('C_DEBUG', true)
 endif
 
 if get_option('enable_debugger') == 'heavy'
   conf_data.set10('C_HEAVY_DEBUG', true)
+endif
+
+if cc.has_function('clock_gettime', prefix : '#include <time.h>')
+  conf_data.set10('HAVE_CLOCK_GETTIME', true)
+endif
+
+if cc.has_function('mprotect', prefix : '#include <sys/mman.h>')
+  conf_data.set10('HAVE_MPROTECT', true)
+endif
+
+if cc.has_member('struct dirent', 'd_type', prefix : '#include <dirent.h>')
+  conf_data.set10('HAVE_STRUCT_DIRENT_D_TYPE', true)
 endif
 
 if host_machine.endian() == 'big'

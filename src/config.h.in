@@ -102,9 +102,6 @@
 // TODO generate ; support for __builtin_expect
 #define C_HAS_BUILTIN_EXPECT 1
 
-// TODO: move this to compiler.h MSVC: #define INLINE __forceinline
-#define INLINE inline __attribute__((always_inline))
-
 /* Quirks and toggles for standard headers, libraries, hardware-related
  * defines, etc.
  *
@@ -113,14 +110,14 @@
  */
 
 // Defined if function clock_gettime is available
-#mesondefine DB_HAVE_CLOCK_GETTIME
+#mesondefine HAVE_CLOCK_GETTIME
+
+// Defined if function mprotect is available
+#mesondefine HAVE_MPROTECT
 
 // field d_type in struct dirent is not defined in POSIX
 // Some OSes do not implement it (e.g. Haiku)
-#mesondefine DIRENT_HAS_D_TYPE
-
-// Define to 1 when you have the mprotect function
-#mesondefine C_HAVE_MPROTECT
+#mesondefine HAVE_STRUCT_DIRENT_D_TYPE
 
 // Define to 1 when host/target processor uses big endian byte ordering
 #mesondefine WORDS_BIGENDIAN
