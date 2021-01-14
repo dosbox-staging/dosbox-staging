@@ -50,6 +50,7 @@
 #include "hardware.h"
 
 Config * control;
+bool exit_requested = false;
 MachineType machine;
 SVGACards svgaCard;
 
