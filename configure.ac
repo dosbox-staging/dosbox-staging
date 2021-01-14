@@ -162,7 +162,7 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 void blah(){
 struct dirent d_test;
 d_test.d_type = 0;
-}])],[AC_MSG_RESULT(yes);AC_DEFINE(DIRENT_HAS_D_TYPE,1,[struct dirent has d_type])],AC_MSG_RESULT(no))
+}])],[AC_MSG_RESULT(yes);AC_DEFINE(HAVE_STRUCT_DIRENT_D_TYPE,1,[struct dirent has d_type])],AC_MSG_RESULT(no))
 
 dnl Look for clock_gettime, HAVE_CLOCK_GETTIME is set when present
 AH_TEMPLATE([HAVE_CLOCK_GETTIME],[Determines if the function clock_gettime is available.])
