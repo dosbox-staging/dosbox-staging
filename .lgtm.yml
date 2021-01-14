@@ -13,3 +13,6 @@ extraction:
   python:
     python_setup:
       version: 3
+
+queries:
+  - exclude: cpp/short-global-name
