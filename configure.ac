@@ -631,14 +631,14 @@ dnl Check for realpath. Used on Linux
 AC_CHECK_FUNCS([realpath])
 
 dnl Setpriority
-AH_TEMPLATE(C_SET_PRIORITY,[Define to 1 if you have setpriority support])
+AH_TEMPLATE(HAVE_SETPRIORITY,[Define to 1 if you have setpriority support])
 AC_MSG_CHECKING(for setpriority support)
 AC_LINK_IFELSE([AC_LANG_SOURCE([
 #include <sys/resource.h>
 int main(int argc,char * argv[]) {
 	return setpriority (PRIO_PROCESS, 0,PRIO_MIN+PRIO_MAX);
 };
-])],AC_MSG_RESULT(yes);AC_DEFINE(C_SET_PRIORITY,1),AC_MSG_RESULT(no))
+])],AC_MSG_RESULT(yes);AC_DEFINE(HAVE_SETPRIORITY,1),AC_MSG_RESULT(no))
 
 
 dnl Some target detection and actions for them
