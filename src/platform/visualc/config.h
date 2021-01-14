@@ -69,8 +69,6 @@
 /* Define to 1 if you want serial passthrough support. */
 #define C_DIRECTSERIAL 1
 
-#define INLINE __forceinline
-
 // Enables mathematical constants under Visual Studio, such as M_PI
 // https://docs.microsoft.com/en-us/cpp/c-runtime-library/math-constants
 #define _USE_MATH_DEFINES

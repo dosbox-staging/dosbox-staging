@@ -185,11 +185,6 @@ typedef struct { } __attribute__((packed)) junk;]],
 OLDCFLAGS="$CFLAGS"
 CFLAGS="-Werror"
 
-AH_TEMPLATE([C_ATTRIBUTE_ALWAYS_INLINE],[Determines if the compiler supports always_inline attribute.])
-AC_MSG_CHECKING(if compiler allows __attribute__((always_inline)) )
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([ inline void __attribute__((always_inline)) test(){}
-])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_ALWAYS_INLINE)],AC_MSG_RESULT(no))
-
 CFLAGS="$OLDCFLAGS"
 
 
@@ -712,12 +707,6 @@ AH_TOP([
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 ])
-
-AH_BOTTOM([#if C_ATTRIBUTE_ALWAYS_INLINE
-#define INLINE inline __attribute__((always_inline))
-#else
-#define INLINE inline
-#endif])
 
 AC_CONFIG_FILES([
 Makefile
