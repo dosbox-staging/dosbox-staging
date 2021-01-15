@@ -19,19 +19,18 @@
 #include "setup.h"
 
 #include <algorithm>
+#include <climits>
+#include <cstdio>
+#include <cstdlib>
+#include <deque>
+#include <fstream>
+#include <limits>
+#include <sstream>
+#include <string>
 
-#include "dosbox.h"
 #include "cross.h"
 #include "control.h"
 #include "string_utils.h"
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <deque>
-#include <stdlib.h>
-#include <stdio.h>
-#include <limits>
-#include <limits.h>
 
 using namespace std;
 static std::string current_config_dir; // Set by parseconfigfile so Prop_path can use it to construct the realpath

@@ -22,6 +22,8 @@
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
 
+#include "dosbox.h"
+
 #include <cstdio>
 #include <deque>
 #include <memory>
