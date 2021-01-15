@@ -26,11 +26,17 @@
 
 #include <cstdio>
 #include <deque>
+#include <list>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "support.h"
+
+using parse_environ_result_t = std::list<std::tuple<std::string, std::string>>;
+
+parse_environ_result_t parse_environ(const char * const * envp) noexcept;
 
 class Hex {
 private:

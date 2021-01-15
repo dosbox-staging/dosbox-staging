@@ -20,13 +20,10 @@
 
 #include <algorithm>
 #include <climits>
-#include <cstdio>
 #include <cstdlib>
-#include <deque>
 #include <fstream>
 #include <limits>
 #include <sstream>
-#include <string>
 
 #include "cross.h"
 #include "control.h"
@@ -987,6 +984,34 @@ bool Config::ParseConfigFile(char const * const configfilename) {
 	}
 	current_config_dir.clear();//So internal changes don't use the path information
 	return true;
+}
+
+parse_environ_result_t parse_environ(const char * const * envp) noexcept
+{
+	std::list<std::tuple<std::string, std::string>> props_to_set;
+
+	// Filter envirnment variables in following format:
+	// DOSBOX_SECTIONNAME_PROPNAME=VALUE (prefix, section, and property
+	// names are case-insensitive).
+	for (const char * const *str = envp; *str; str++) {
+		const char *env_var = *str;
+		if (strncasecmp(env_var, "DOSBOX_", 7) != 0)
+			continue;
+		const std::string rest = (env_var + 7);
+		const auto section_delimiter = rest.find('_');
+		if (section_delimiter == string::npos)
+			continue;
+		const auto section_name = rest.substr(0, section_delimiter);
+		if (section_name.empty())
+			continue;
+		const auto prop_name_and_value = rest.substr(section_delimiter + 1);
+		if (prop_name_and_value.empty() || !isalpha(prop_name_and_value[0]))
+			continue;
+		props_to_set.emplace_back(std::make_tuple(section_name,
+		                                          prop_name_and_value));
+	}
+
+	return props_to_set;
 }
 
 void Config::ParseEnv(char ** envp) {

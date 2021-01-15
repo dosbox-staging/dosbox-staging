@@ -17,6 +17,7 @@ tests_SOURCES = \
 	example.cpp \
 	fs_utils.cpp \
 	readerwritercircularbuffer.cpp \
+	setup.cpp \
 	soft_limiter.cpp \
 	string_utils.cpp \
 	support.cpp
