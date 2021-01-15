@@ -282,7 +282,8 @@ struct SDL_Block {
 	struct {
 		SDL_Surface * surface;
 #if C_DDRAW
-		RECT rect;
+		RECT rect_dest;
+		RECT rect_src;
 #endif
 	} blit;
 	struct {
@@ -352,7 +353,7 @@ void OPENGL_ERROR(const char*) {
 #define SETMODE_SAVES 1  //Don't set Video Mode if nothing changes.
 #define SETMODE_SAVES_CLEAR 1 //Clear the screen, when the Video Mode is reused
 //Restart graphics subsystem of SDL when switching windowed and fullscreen in OPENGL
-//#define SETMODE_RESTARTS_SUBSYSTEM 1 
+//#define SETMODE_RESTARTS_SUBSYSTEM 1
 
 SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 #if SETMODE_SAVES
@@ -398,7 +399,7 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 	}
 #endif //WIN32
 #endif //SETMODE_SAVES
-	
+
 
 #if C_OPENGL
 #ifdef SETMODE_RESTARTS_SUBSYSTEM
@@ -409,8 +410,8 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 		if (fx & SDL_FULLSCREEN) {
 			if (!(flags & SDL_FULLSCREEN)) {
 				//RESTART FOR MACS
-				
-				//MAYBE move this above the Videomode call above and do not do the setvideomode below. 
+
+				//MAYBE move this above the Videomode call above and do not do the setvideomode below.
 				//Yes this will mess up the title bar and icon. But it is for trying...
 
 				LOG_MSG("HIT RESTART");
@@ -517,7 +518,7 @@ static void PauseDOSBox(bool pressed) {
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
 					MAPPER_LosingFocus();
-					//Not perfect if the pressed alt key is switched, but then we have to 
+					//Not perfect if the pressed alt key is switched, but then we have to
 					//insert the keys into the mapper or create/rewrite the event and push it.
 					//Which is tricky due to possible use of scancodes.
 				}
@@ -837,16 +838,16 @@ dosurface:
 			switch (sdl.surface->format->BitsPerPixel) {
 			case 8:
 				retFlags = GFX_CAN_8;
-                break;
+				break;
 			case 15:
 				retFlags = GFX_CAN_15;
 				break;
 			case 16:
 				retFlags = GFX_CAN_16;
-                break;
+				break;
 			case 32:
 				retFlags = GFX_CAN_32;
-                break;
+				break;
 			}
 			if (retFlags && (sdl.surface->flags & SDL_HWSURFACE))
 				retFlags |= GFX_HARDWARE;
@@ -868,11 +869,11 @@ dosurface:
 		if (flags & GFX_CAN_16) bpp=16;
 		if (flags & GFX_CAN_32) bpp=32;
 		if (!GFX_SetupSurfaceScaled((sdl.desktop.doublebuf && sdl.desktop.fullscreen) ? SDL_DOUBLEBUF : 0,bpp)) goto dosurface;
-		sdl.blit.rect.top=sdl.clip.y;
-		sdl.blit.rect.left=sdl.clip.x;
-		sdl.blit.rect.right=sdl.clip.x+sdl.clip.w;
-		sdl.blit.rect.bottom=sdl.clip.y+sdl.clip.h;
-		sdl.blit.surface=SDL_CreateRGBSurface(SDL_HWSURFACE,sdl.draw.width,sdl.draw.height,
+		sdl.blit.rect_dest.top    = sdl.clip.y;
+		sdl.blit.rect_dest.left   = sdl.clip.x;
+		sdl.blit.rect_dest.right  = sdl.clip.x + sdl.clip.w;
+		sdl.blit.rect_dest.bottom = sdl.clip.y + sdl.clip.h;
+		sdl.blit.surface=SDL_CreateRGBSurface(SDL_HWSURFACE,sdl.draw.width + 2,sdl.draw.height + 2,
 				sdl.surface->format->BitsPerPixel,
 				sdl.surface->format->Rmask,
 				sdl.surface->format->Gmask,
@@ -881,21 +882,27 @@ dosurface:
 		if (!sdl.blit.surface || (!sdl.blit.surface->flags&SDL_HWSURFACE)) {
 			if (sdl.blit.surface) {
 				SDL_FreeSurface(sdl.blit.surface);
-				sdl.blit.surface=0;
+				sdl.blit.surface = 0;
 			}
 			LOG_MSG("Failed to create ddraw surface, back to normal surface.");
 			goto dosurface;
 		}
+		SDL_FillRect(sdl.blit.surface,NULL,SDL_MapRGB(sdl.surface->format,0,0,0));
+		sdl.blit.rect_src.top    = 1;
+		sdl.blit.rect_src.left   = 1;
+		sdl.blit.rect_src.right  = sdl.blit.surface->w - 1;
+		sdl.blit.rect_src.bottom = sdl.blit.surface->h - 1;
+
 		switch (sdl.surface->format->BitsPerPixel) {
 		case 15:
 			retFlags = GFX_CAN_15 | GFX_SCALING | GFX_HARDWARE;
 			break;
 		case 16:
 			retFlags = GFX_CAN_16 | GFX_SCALING | GFX_HARDWARE;
-               break;
+			break;
 		case 32:
 			retFlags = GFX_CAN_32 | GFX_SCALING | GFX_HARDWARE;
-               break;
+			break;
 		}
 		sdl.desktop.type=SCREEN_SURFACE_DDRAW;
 		break;
@@ -908,7 +915,7 @@ dosurface:
 		if (!(flags & GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface;
 		if (!GFX_SetupSurfaceScaled(0,0)) goto dosurface;
 		sdl.overlay = SDL_CreateYUVOverlay(width * 2, height, SDL_UYVY_OVERLAY, sdl.surface);
-		
+
 		if (sdl.overlay && SDL_LockYUVOverlay(sdl.overlay) == 0) {
 			//Need to lock in order to get real pitchdata (at least on windows with dx backend)
 			if (sdl.overlay->pitches[0] < 4 * width) {
@@ -1060,7 +1067,7 @@ dosurface:
 		}
 		sdl.opengl.pitch=width*4;
 
-		if(sdl.clip.x ==0 && sdl.clip.y ==0 && sdl.desktop.fullscreen && !sdl.desktop.full.fixed && (sdl.clip.w != sdl.surface->w || sdl.clip.h != sdl.surface->h)) { 
+		if(sdl.clip.x ==0 && sdl.clip.y ==0 && sdl.desktop.fullscreen && !sdl.desktop.full.fixed && (sdl.clip.w != sdl.surface->w || sdl.clip.h != sdl.surface->h)) {
 //			LOG_MSG("attempting to fix the centering to %d %d %d %d",(sdl.surface->w-sdl.clip.w)/2,(sdl.surface->h-sdl.clip.h)/2,sdl.clip.w,sdl.clip.h);
 			glViewport((sdl.surface->w-sdl.clip.w)/2,(sdl.surface->h-sdl.clip.h)/2,sdl.clip.w,sdl.clip.h);
 		} else {
@@ -1288,9 +1295,10 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 //			LOG_MSG("SDL Lock failed");
 			return false;
 		}
-		pixels=(Bit8u *)sdl.blit.surface->pixels;
-		pitch=sdl.blit.surface->pitch;
-		sdl.updating=true;
+		//Move to 1,1
+		pixels = (Bit8u *)sdl.blit.surface->pixels + sdl.blit.rect_src.left*sdl.blit.surface->format->BytesPerPixel + sdl.blit.rect_src.top*sdl.blit.surface->pitch;
+		pitch = sdl.blit.surface->pitch;
+		sdl.updating = true;
 		return true;
 #endif
 	case SCREEN_OVERLAY:
@@ -1367,8 +1375,8 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 	case SCREEN_SURFACE_DDRAW:
 		SDL_UnlockSurface(sdl.blit.surface);
 		ret=IDirectDrawSurface3_Blt(
-			sdl.surface->hwdata->dd_writebuf,&sdl.blit.rect,
-			sdl.blit.surface->hwdata->dd_surface,0,
+			sdl.surface->hwdata->dd_writebuf,&sdl.blit.rect_dest,
+			sdl.blit.surface->hwdata->dd_surface,&sdl.blit.rect_src,
 			DDBLT_WAIT, NULL);
 		switch (ret) {
 		case DD_OK:
@@ -1697,7 +1705,7 @@ static void GUI_StartUp(Section * sec) {
 			sdl.desktop.full.height = vidinfo->current_h;
 		}
 	}
-	
+
 	if (!sdl.desktop.window.width || !sdl.desktop.window.height) {
 		if (vidinfo && windowspercentage) {
 			sdl.desktop.window.width = ((vidinfo->current_w*windowspercentage)/3200)*32;
@@ -2241,7 +2249,7 @@ void Config_Add_SDL() {
 		"ddraw",
 #endif
 		0 };
- 	
+ 
 
 #if C_OPENGL && defined(MACOSX)
 	Pstring = sdl_sec->Add_string("output",Property::Changeable::Always,"opengl");
@@ -2486,7 +2494,7 @@ void os2_exit()
 
 	SDL_Quit();//Let's hope sdl will quit as well when it catches an exception
         DosGetInfoBlocks(&tib, &pib);
-        if (pib->pib_ultype == 3) 
+        if (pib->pib_ultype == 3)
         	pib->pib_ultype = 2;
 
 	exit(-1);
@@ -2499,7 +2507,7 @@ int main(int argc, char* argv[]) {
 #ifdef OS2
         PPIB pib;
         PTIB tib;
-        
+
         std::set_terminate(os2_exit);
 #endif
 
@@ -2564,7 +2572,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef OS2
         DosGetInfoBlocks(&tib, &pib);
-        if (pib->pib_ultype == 2) 
+        if (pib->pib_ultype == 2)
         	pib->pib_ultype = 3;
         setbuf(stdout, NULL);
         setbuf(stderr, NULL);
@@ -2583,7 +2591,7 @@ int main(int argc, char* argv[]) {
 	 */
 	putenv(const_cast<char*>("SDL_DISABLE_LOCK_KEYS=1"));
 #endif
-	// Don't init timers, GetTicks seems to work fine and they can use a fair amount of power (Macs again) 
+	// Don't init timers, GetTicks seems to work fine and they can use a fair amount of power (Macs again)
 	// Please report problems with audio and other things.
 	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO | /*SDL_INIT_TIMER |*/ SDL_INIT_CDROM
 		|SDL_INIT_NOPARACHUTE
@@ -2746,10 +2754,10 @@ int main(int argc, char* argv[]) {
 	SDL_Quit();//Let's hope sdl will quit as well when it catches an exception
 #ifdef OS2
         DosGetInfoBlocks(&tib, &pib);
-        if (pib->pib_ultype == 3) 
+        if (pib->pib_ultype == 3)
         	pib->pib_ultype = 2;
         exit(0);
-#else	
+#else
 	return 0;
 #endif
 }
