@@ -322,7 +322,7 @@ void DOS_Shell::CMD_ECHO(char * args){
 void DOS_Shell::CMD_EXIT(char *args)
 {
 	HELP("EXIT");
-	exit_flag = true;
+	exit_requested = true;
 }
 
 void DOS_Shell::CMD_CHDIR(char * args) {

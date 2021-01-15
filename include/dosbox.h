@@ -25,6 +25,12 @@
 
 int sdl_main(int argc, char *argv[]);
 
+// The exit_requested bool is a conditional break in the parse-loop and
+// machine-loop. Set it to true to gracefully quit in expected circumstances.
+extern bool exit_requested;
+
+// The E_Exit function throws an exception to quit. Call it in unexpected
+// circumstances.
 [[noreturn]] void E_Exit(const char *message, ...)
         GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 

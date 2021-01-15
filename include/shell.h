@@ -123,7 +123,6 @@ public:
 	uint16_t input_handle = 0;
 	BatchFile *bf = nullptr;
 	bool echo = false;
-	bool exit_flag = false;
 	bool call = false;
 };
 
