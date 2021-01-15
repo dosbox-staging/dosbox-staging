@@ -990,10 +990,6 @@ bool Config::ParseConfigFile(char const * const configfilename) {
 	return true;
 }
 
-/*const char* Config::GetPrimaryConfigFile() {
-	return configfile.c_str();
-}*/
-
 void Config::ParseEnv(char ** envp) {
 	for(char** env=envp; *env;env++) {
 		char copy[1024];
