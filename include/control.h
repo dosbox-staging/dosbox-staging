@@ -71,9 +71,9 @@ public:
 	                                  SectionFunction func,
 	                                  bool changeable_at_runtime = false);
 
-	Section_line *AddSection_line(char const *const _name, SectionFunction func);
+	Section_line *AddSection_line(const char *section_name, SectionFunction func);
 
-	Section_prop *AddSection_prop(char const *const _name,
+	Section_prop *AddSection_prop(const char *section_name,
 	                              SectionFunction func,
 	                              bool changeable_at_runtime = false);
 

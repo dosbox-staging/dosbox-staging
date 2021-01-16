@@ -32,6 +32,7 @@
 #include "render.h"
 #include "setup.h"
 #include "string_utils.h"
+#include "support.h"
 
 #if (C_SSHOT)
 #include <png.h>

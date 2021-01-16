@@ -32,8 +32,6 @@
 #include <tuple>
 #include <vector>
 
-#include "support.h"
-
 using parse_environ_result_t = std::list<std::tuple<std::string, std::string>>;
 
 parse_environ_result_t parse_environ(const char * const * envp) noexcept;
@@ -146,15 +144,7 @@ public:
 
 	const std::string propname;
 
-	Property(const std::string &name, Changeable::Value when)
-		: propname(name),
-		  value(),
-		  suggested_values{},
-		  default_value(),
-		  change(when)
-	{
-		assertm(!name.empty(), "Property name can't be empty.");
-	}
+	Property(const std::string &name, Changeable::Value when);
 
 	virtual ~Property() = default;
 
