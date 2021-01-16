@@ -22,7 +22,7 @@
 #include <string.h>
 #include "dosbox.h"
 #include "cross.h"
-#include "support.h"
+#include "string_utils.h"
 #include "setup.h"
 #include "control.h"
 #include <list>

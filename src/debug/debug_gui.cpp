@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "cross.h"
+#include "string_utils.h"
 #include "support.h"
 #include "regs.h"
 #include "debug.h"

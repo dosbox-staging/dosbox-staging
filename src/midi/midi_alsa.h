@@ -32,6 +32,8 @@
 #include <sstream>
 #define ADDR_DELIM	".:"
 
+#include "string_utils.h"
+
 #if ((SND_LIB_MINOR >= 6) && (SND_LIB_MAJOR == 0)) || (SND_LIB_MAJOR >= 1)
 #define snd_seq_flush_output(x) snd_seq_drain_output(x)
 #define snd_seq_set_client_group(x,name)	/*nop */

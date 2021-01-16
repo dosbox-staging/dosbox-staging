@@ -45,7 +45,7 @@
 #include "timer.h"
 #include "setup.h"
 #include "cross.h"
-#include "support.h"
+#include "string_utils.h"
 #include "mapper.h"
 #include "hardware.h"
 #include "programs.h"

@@ -23,7 +23,7 @@
 #include "dosbox.h"
 #include "cross.h"
 #include "control.h"
-#include "support.h"
+#include "string_utils.h"
 #include <fstream>
 #include <string>
 #include <sstream>

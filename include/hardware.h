@@ -16,9 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #ifndef DOSBOX_HARDWARE_H
 #define DOSBOX_HARDWARE_H
+
+#include "dosbox.h"
 
 #include <stdio.h>
 
