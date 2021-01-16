@@ -1014,23 +1014,16 @@ parse_environ_result_t parse_environ(const char * const * envp) noexcept
 	return props_to_set;
 }
 
-void Config::ParseEnv(char ** envp) {
-	for(char** env=envp; *env;env++) {
-		char copy[1024];
-		safe_strcpy(copy, *env);
-		if(strncasecmp(copy,"DOSBOX_",7))
+void Config::ParseEnv(char **envp)
+{
+	const auto env_filtered = parse_environ(envp);
+	for (const auto &set_prop_desc : env_filtered) {
+		const auto section_name = std::get<0>(set_prop_desc);
+		Section *sec = GetSection(section_name);
+		if (!sec)
 			continue;
-		char* sec_name = &copy[7];
-		if(!(*sec_name))
-			continue;
-		char* prop_name = strrchr(sec_name,'_');
-		if(!prop_name || !(*prop_name))
-			continue;
-		*prop_name++=0;
-		Section* sect = GetSection(sec_name);
-		if(!sect)
-			continue;
-		sect->HandleInputline(prop_name);
+		const auto prop_name_and_value = std::get<1>(set_prop_desc);
+		sec->HandleInputline(prop_name_and_value);
 	}
 }
 
