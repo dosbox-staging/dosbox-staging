@@ -180,10 +180,6 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 
 #endif // C_OPENGL
 
-#if !(ENVIRON_INCLUDED)
-extern char** environ;
-#endif
-
 #ifdef WIN32
 #include <winuser.h>
 #define STDOUT_FILE "stdout.txt"
@@ -3384,9 +3380,7 @@ int main(int argc, char* argv[]) {
 			mt32_rom_dir.c_str(), safe_strerror(errno).c_str());
 #endif // C_MT32EMU
 
-#if (ENVIRON_LINKED)
-		control->ParseEnv(environ);
-#endif
+		control->ParseEnv();
 //		UI_Init();
 //		if (control->cmdline->FindExist("-startui")) UI_Run(false);
 		/* Init all the sections */

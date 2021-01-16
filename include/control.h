@@ -89,7 +89,7 @@ public:
 	void StartUp();
 	bool PrintConfig(const std::string &filename) const;
 	bool ParseConfigFile(char const * const configfilename);
-	void ParseEnv(char ** envp);
+	void ParseEnv();
 	bool SecureMode() const { return secure_mode; }
 	void SwitchToSecureMode() { secure_mode = true; }//can't be undone
 	Verbosity GetStartupVerbosity() const;

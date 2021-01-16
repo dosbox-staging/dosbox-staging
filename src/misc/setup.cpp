@@ -26,9 +26,14 @@
 #include <regex>
 #include <sstream>
 
-#include "cross.h"
 #include "control.h"
 #include "string_utils.h"
+
+#ifdef _MSC_VER
+_CRTIMP extern char **_environ;
+#else
+extern char **environ;
+#endif
 
 using namespace std;
 static std::string current_config_dir; // Set by parseconfigfile so Prop_path can use it to construct the realpath
@@ -1004,11 +1009,12 @@ bool Config::ParseConfigFile(char const * const configfilename) {
 
 parse_environ_result_t parse_environ(const char * const * envp) noexcept
 {
-	std::list<std::tuple<std::string, std::string>> props_to_set;
+	assert(envp);
 
 	// Filter envirnment variables in following format:
 	// DOSBOX_SECTIONNAME_PROPNAME=VALUE (prefix, section, and property
 	// names are case-insensitive).
+	std::list<std::tuple<std::string, std::string>> props_to_set;
 	for (const char * const *str = envp; *str; str++) {
 		const char *env_var = *str;
 		if (strncasecmp(env_var, "DOSBOX_", 7) != 0)
@@ -1030,10 +1036,17 @@ parse_environ_result_t parse_environ(const char * const * envp) noexcept
 	return props_to_set;
 }
 
-void Config::ParseEnv(char **envp)
+void Config::ParseEnv()
 {
-	const auto env_filtered = parse_environ(envp);
-	for (const auto &set_prop_desc : env_filtered) {
+#ifdef _MSC_VER
+	const char *const *envp = _environ;
+#else
+	const char *const *envp = environ;
+#endif
+	if (envp == nullptr)
+		return;
+
+	for (const auto &set_prop_desc : parse_environ(envp)) {
 		const auto section_name = std::get<0>(set_prop_desc);
 		Section *sec = GetSection(section_name);
 		if (!sec)

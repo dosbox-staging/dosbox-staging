@@ -145,16 +145,6 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #endif
 ])],[],[AC_DEFINE([socklen_t],[int],[Define to `int` if you don't have socklen_t])])
 
-AC_MSG_CHECKING(if environ can be included)
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <unistd.h>
-#include <stdlib.h>]],[[*environ;]])],
-[AC_MSG_RESULT(yes);AC_DEFINE(ENVIRON_INCLUDED,1,[environ can be included])],AC_MSG_RESULT(no))
-
-AC_MSG_CHECKING(if environ can be linked)
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern char ** environ;]],[[*environ;]])],
-[AC_MSG_RESULT(yes);AC_DEFINE(ENVIRON_LINKED,1,[environ can be linked])],AC_MSG_RESULT(no))
-
 AC_MSG_CHECKING([if dirent includes d_type])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include <sys/types.h>
