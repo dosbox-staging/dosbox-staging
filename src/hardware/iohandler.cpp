@@ -21,7 +21,9 @@
 
 #include "inout.h"
 
-#include <string.h>
+#include <cassert>
+#include <limits>
+#include <cstring>
 
 #include "setup.h"
 #include "cpu.h"
