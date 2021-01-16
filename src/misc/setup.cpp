@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <limits>
+#include <regex>
 #include <sstream>
 
 #include "cross.h"
@@ -216,6 +217,17 @@ string Value::ToString() const {
 			break;
 	}
 	return oss.str();
+}
+
+Property::Property(const std::string &name, Changeable::Value when)
+        : propname(name),
+          value(),
+          suggested_values{},
+          default_value(),
+          change(when)
+{
+	assertm(std::regex_match(name, std::regex{"[a-zA-Z0-9_]+"}),
+	        "Only letters, digits, and underscores are allowed in property name");
 }
 
 bool Property::CheckValue(Value const& in, bool warn){
@@ -828,11 +840,13 @@ Section_prop *Config::AddEarlySectionProp(const char *name,
 	return s;
 }
 
-Section_prop *Config::AddSection_prop(char const *const name,
+Section_prop *Config::AddSection_prop(const char *section_name,
                                       SectionFunction func,
                                       bool changeable_at_runtime)
 {
-	Section_prop *s = new Section_prop(name);
+	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z]+"}),
+	        "Only letters are allowed in section name");
+	Section_prop *s = new Section_prop(section_name);
 	s->AddInitFunction(func, changeable_at_runtime);
 	sectionlist.push_back(s);
 	return s;
@@ -847,9 +861,11 @@ Section_prop::~Section_prop()
 		delete (*prop);
 }
 
-Section_line *Config::AddSection_line(char const *const _name, SectionFunction func)
+Section_line *Config::AddSection_line(const char *section_name, SectionFunction func)
 {
-	Section_line* blah = new Section_line(_name);
+	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z]+"}),
+	        "Only letters are allowed in section name");
+	Section_line *blah = new Section_line(section_name);
 	blah->AddInitFunction(func);
 	sectionlist.push_back(blah);
 	return blah;

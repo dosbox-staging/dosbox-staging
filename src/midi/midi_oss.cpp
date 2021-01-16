@@ -29,6 +29,7 @@
 
 #include "midi.h"
 #include "string_utils.h"
+#include "support.h"
 
 #define SEQ_MIDIPUTC 5
 

@@ -2312,7 +2312,7 @@ static void GUI_StartUp(Section *sec)
 
 	// Apply the user's mouse settings
 	Section_prop* s = section->Get_multival("capture_mouse")->GetSection();
-	const std::string control_choice = s->Get_string("capture_mouse (first value)");
+	const std::string control_choice = s->Get_string("capture_mouse_first_value");
 	std::string mouse_control_msg;
 	if (control_choice == "onclick") {
 		sdl.mouse.control_choice = CaptureOnClick;
@@ -2329,8 +2329,9 @@ static void GUI_StartUp(Section *sec)
 	} else {
 		assert(sdl.mouse.control_choice == CaptureOnClick);
 	}
-	std:: string middle_control_msg;
-	if (std::string(s->Get_string("capture_mouse (second value)")) == "middlerelease") {
+	const std::string mclick_choice = s->Get_string("capture_mouse_second_value");
+	std::string middle_control_msg;
+	if (mclick_choice == "middlerelease") {
 		sdl.mouse.middle_will_release = true;
 		if (sdl.mouse.control_choice & (CaptureOnClick | CaptureOnStart))
 			middle_control_msg = " and middle-click will uncapture the mouse";
@@ -2834,7 +2835,7 @@ void Config_Add_SDL() {
 	Prop_int *Pint; // use pint for new properties
 	Prop_int *pint;
 	Prop_multival* Pmulti;
-	Section_prop* Psection;
+	Section_prop* psection;
 
 	constexpr auto always = Property::Changeable::Always;
 	constexpr auto deprecated = Property::Changeable::Deprecated;
@@ -2918,9 +2919,11 @@ void Config_Add_SDL() {
 	Pmulti->SetValue(mouse_control_defaults);
 
 	// Add the mouse and middle control as sub-sections
-	Psection = Pmulti->GetSection();
-	Psection->Add_string("capture_mouse (first value)", always, mouse_controls[0])->Set_values(mouse_controls);
-	Psection->Add_string("capture_mouse (second value)", always, middle_controls[0])->Set_values(middle_controls);
+	psection = Pmulti->GetSection();
+	psection->Add_string("capture_mouse_first_value", always, mouse_controls[0])
+	        ->Set_values(mouse_controls);
+	psection->Add_string("capture_mouse_second_value", always, middle_controls[0])
+	        ->Set_values(middle_controls);
 
 	// Construct and set the help block using defaults set above
 	std::string mouse_control_help(
