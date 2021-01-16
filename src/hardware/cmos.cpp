@@ -48,9 +48,9 @@ static struct {
 	bool update_ended;
 } cmos;
 
-static void cmos_timerevent(Bitu val) {
+static void cmos_timerevent(Bitu /*val*/) {
 	if (cmos.timer.acknowledged) {
-		cmos.timer.acknowledged=false;
+		cmos.timer.acknowledged = false;
 		PIC_ActivateIRQ(8);
 	}
 	if (cmos.timer.enabled) {
@@ -60,7 +60,7 @@ static void cmos_timerevent(Bitu val) {
 }
 
 static void cmos_checktimer(void) {
-	PIC_RemoveEvents(cmos_timerevent);	
+	PIC_RemoveEvents(cmos_timerevent);
 	if (cmos.timer.div<=2) cmos.timer.div+=7;
 	cmos.timer.delay=(1000.0f/(32768.0f / (1 << (cmos.timer.div - 1))));
 	if (!cmos.timer.div || !cmos.timer.enabled) return;
@@ -72,12 +72,12 @@ static void cmos_checktimer(void) {
 //	status reg A reading with this (and with other delays actually)
 }
 
-void cmos_selreg(Bitu port,Bitu val,Bitu iolen) {
+void cmos_selreg(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	cmos.reg=val & 0x3f;
 	cmos.nmi=(val & 0x80)>0;
 }
 
-static void cmos_writereg(Bitu port,Bitu val,Bitu iolen) {
+static void cmos_writereg(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	switch (cmos.reg) {
 	case 0x00:		/* Seconds */
 	case 0x02:		/* Minutes */
@@ -123,7 +123,7 @@ static void cmos_writereg(Bitu port,Bitu val,Bitu iolen) {
 
 #define MAKE_RETURN(_VAL) (cmos.bcd ? ((((_VAL) / 10) << 4) | ((_VAL) % 10)) : (_VAL));
 
-static Bitu cmos_readreg(Bitu port,Bitu iolen) {
+static Bitu cmos_readreg(Bitu /*port*/,Bitu /*iolen*/) {
 	if (cmos.reg>0x3f) {
 		LOG(LOG_BIOS,LOG_ERROR)("CMOS:Read from illegal register %x",cmos.reg);
 		return 0xff;
@@ -291,7 +291,7 @@ void CMOS_SetRegister(Bitu regNr, Bit8u val) {
 class CMOS:public Module_base{
 private:
 	IO_ReadHandleObject ReadHandler[2];
-	IO_WriteHandleObject WriteHandler[2];	
+	IO_WriteHandleObject WriteHandler[2];
 public:
 	CMOS(Section* configuration):Module_base(configuration){
 		WriteHandler[0].Install(0x70,cmos_selreg,IO_MB);
@@ -320,7 +320,7 @@ public:
 
 static CMOS* test;
 
-void CMOS_Destroy(Section* sec){
+void CMOS_Destroy(Section* /*sec*/){
 	delete test;
 }
 

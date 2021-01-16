@@ -59,14 +59,14 @@ static void KEYBOARD_SetPort60(Bit8u val) {
 	else PIC_ActivateIRQ(1);
 }
 
-static void KEYBOARD_TransferBuffer(Bitu val) {
-	keyb.scheduled=false;
+static void KEYBOARD_TransferBuffer(Bitu /*val*/) {
+	keyb.scheduled = false;
 	if (!keyb.used) {
 		LOG(LOG_KEYBOARD,LOG_NORMAL)("Transfer started with empty buffer");
 		return;
 	}
 	KEYBOARD_SetPort60(keyb.buffer[keyb.pos]);
-	if (++keyb.pos>=KEYBUFSIZE) keyb.pos-=KEYBUFSIZE;
+	if (++keyb.pos >= KEYBUFSIZE) keyb.pos -= KEYBUFSIZE;
 	keyb.used--;
 }
 
@@ -95,16 +95,16 @@ static void KEYBOARD_AddBuffer(Bit8u data) {
 }
 
 
-static Bitu read_p60(Bitu port,Bitu iolen) {
-	keyb.p60changed=false;
+static Bitu read_p60(Bitu /*port*/,Bitu /*iolen*/) {
+	keyb.p60changed = false;
 	if (!keyb.scheduled && keyb.used) {
-		keyb.scheduled=true;
+		keyb.scheduled = true;
 		PIC_AddEvent(KEYBOARD_TransferBuffer,KEYDELAY);
 	}
 	return keyb.p60data;
-}	
+}
 
-static void write_p60(Bitu port,Bitu val,Bitu iolen) {
+static void write_p60(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	switch (keyb.command) {
 	case CMD_NONE:	/* None */
 		/* No active command this would normally get sent to the keyboard then */
@@ -131,7 +131,7 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 			keyb.scanning=true;
 			break;
 		case 0xf5:	 /* Reset keyboard and disable scanning */
-			LOG(LOG_KEYBOARD,LOG_NORMAL)("Reset, disable scanning");			
+			LOG(LOG_KEYBOARD,LOG_NORMAL)("Reset, disable scanning");
 			keyb.scanning=false;
 			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
 			break;
@@ -142,7 +142,7 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 			break;
 		default:
 			/* Just always acknowledge strange commands */
-			LOG(LOG_KEYBOARD,LOG_ERROR)("60:Unhandled command %X",val);
+			LOG(LOG_KEYBOARD,LOG_ERROR)("60:Unhandled command %" sBitfs(X),val);
 			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
 		}
 		return;
@@ -153,15 +153,15 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 	case CMD_SETTYPERATE: 
 		{
 			static const int delay[] = { 250, 500, 750, 1000 };
-			static const int repeat[] = 
+			static const int repeat[] =
 				{ 33,37,42,46,50,54,58,63,67,75,83,92,100,
 				  109,118,125,133,149,167,182,200,217,233,
 				  250,270,303,333,370,400,435,476,500 };
 			keyb.repeat.pause = delay[(val>>5)&3];
 			keyb.repeat.rate = repeat[val&0x1f];
 			keyb.command=CMD_NONE;
-		}
-		/* Fallthrough! as setleds does what we want */
+		} /* Now go to setleds as it does what we want */
+		/* FALLTHROUGH */
 	case CMD_SETLEDS:
 		keyb.command=CMD_NONE;
 		KEYBOARD_ClrBuffer();
@@ -172,29 +172,29 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 
 extern bool TIMER_GetOutput2(void);
 static Bit8u port_61_data = 0;
-static Bitu read_p61(Bitu port,Bitu iolen) {
-	if (TIMER_GetOutput2()) port_61_data|=0x20;
-	else					port_61_data&=~0x20;
-	port_61_data^=0x10;
+static Bitu read_p61(Bitu /*port*/,Bitu /*iolen*/) {
+	if (TIMER_GetOutput2()) port_61_data |= 0x20;
+	else                    port_61_data &=~0x20;
+	port_61_data ^= 0x10;
 	return port_61_data;
 }
 
 extern void TIMER_SetGate2(bool);
-static void write_p61(Bitu port,Bitu val,Bitu iolen) {
+static void write_p61(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	if ((port_61_data ^ val) & 3) {
-		if((port_61_data ^ val) & 1) TIMER_SetGate2(val&0x1);
+		if ((port_61_data ^ val) & 1) TIMER_SetGate2(val&0x1);
 		PCSPEAKER_SetType(val & 3);
 	}
 	port_61_data = val;
 }
 
-static Bitu read_p62(Bitu port,Bitu iolen) {
-	Bit8u ret=~0x20;
-	if (TIMER_GetOutput2()) ret|=0x20;
+static Bitu read_p62(Bitu /*port*/,Bitu /*iolen*/) {
+	Bit8u ret = ~0x20;
+	if (TIMER_GetOutput2()) ret |= 0x20;
 	return ret;
 }
 
-static void write_p64(Bitu port,Bitu val,Bitu iolen) {
+static void write_p64(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	switch (val) {
 	case 0xae:		/* Activate keyboard */
 		keyb.active=true;
@@ -215,13 +215,13 @@ static void write_p64(Bitu port,Bitu val,Bitu iolen) {
 		keyb.command=CMD_SETOUTPORT;
 		break;
 	default:
-		LOG(LOG_KEYBOARD,LOG_ERROR)("Port 64 write with val %d",val);
+		LOG(LOG_KEYBOARD,LOG_ERROR)("Port 64 write with val %" sBitfs(X) ,val);
 		break;
 	}
 }
 
-static Bitu read_p64(Bitu port,Bitu iolen) {
-	Bit8u status= 0x1c | (keyb.p60changed? 0x1 : 0x0);
+static Bitu read_p64(Bitu /*port*/,Bitu /*iolen*/) {
+	Bit8u status = 0x1c | (keyb.p60changed ? 0x1 : 0x0);
 	return status;
 }
 
@@ -231,13 +231,13 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_esc:ret=1;break;
 	case KBD_1:ret=2;break;
 	case KBD_2:ret=3;break;
-	case KBD_3:ret=4;break;		
+	case KBD_3:ret=4;break;
 	case KBD_4:ret=5;break;
 	case KBD_5:ret=6;break;
-	case KBD_6:ret=7;break;		
+	case KBD_6:ret=7;break;
 	case KBD_7:ret=8;break;
 	case KBD_8:ret=9;break;
-	case KBD_9:ret=10;break;		
+	case KBD_9:ret=10;break;
 	case KBD_0:ret=11;break;
 
 	case KBD_minus:ret=12;break;
@@ -245,15 +245,15 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_backspace:ret=14;break;
 	case KBD_tab:ret=15;break;
 
-	case KBD_q:ret=16;break;		
+	case KBD_q:ret=16;break;
 	case KBD_w:ret=17;break;
-	case KBD_e:ret=18;break;		
+	case KBD_e:ret=18;break;
 	case KBD_r:ret=19;break;
-	case KBD_t:ret=20;break;		
+	case KBD_t:ret=20;break;
 	case KBD_y:ret=21;break;
-	case KBD_u:ret=22;break;		
+	case KBD_u:ret=22;break;
 	case KBD_i:ret=23;break;
-	case KBD_o:ret=24;break;		
+	case KBD_o:ret=24;break;
 	case KBD_p:ret=25;break;
 
 	case KBD_leftbracket:ret=26;break;
@@ -265,10 +265,10 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_s:ret=31;break;
 	case KBD_d:ret=32;break;
 	case KBD_f:ret=33;break;
-	case KBD_g:ret=34;break;		
-	case KBD_h:ret=35;break;		
+	case KBD_g:ret=34;break;
+	case KBD_h:ret=35;break;
 	case KBD_j:ret=36;break;
-	case KBD_k:ret=37;break;		
+	case KBD_k:ret=37;break;
 	case KBD_l:ret=38;break;
 
 	case KBD_semicolon:ret=39;break;
@@ -358,7 +358,7 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	}
 	/* Add the actual key in the keyboard queue */
 	if (pressed) {
-		if (keyb.repeat.key == keytype) keyb.repeat.wait = keyb.repeat.rate;		
+		if (keyb.repeat.key == keytype) keyb.repeat.wait = keyb.repeat.rate;
 		else keyb.repeat.wait = keyb.repeat.pause;
 		keyb.repeat.key = keytype;
 	} else {
@@ -380,24 +380,24 @@ static void KEYBOARD_TickHandler(void) {
 	}
 }
 
-void KEYBOARD_Init(Section* sec) {
+void KEYBOARD_Init(Section* /*sec*/) {
 	IO_RegisterWriteHandler(0x60,write_p60,IO_MB);
 	IO_RegisterReadHandler(0x60,read_p60,IO_MB);
 	IO_RegisterWriteHandler(0x61,write_p61,IO_MB);
 	IO_RegisterReadHandler(0x61,read_p61,IO_MB);
-	if (machine==MCH_CGA || machine==MCH_HERC) IO_RegisterReadHandler(0x62,read_p62,IO_MB);
+	if (machine == MCH_CGA || machine == MCH_HERC) IO_RegisterReadHandler(0x62,read_p62,IO_MB);
 	IO_RegisterWriteHandler(0x64,write_p64,IO_MB);
 	IO_RegisterReadHandler(0x64,read_p64,IO_MB);
 	TIMER_AddTickHandler(&KEYBOARD_TickHandler);
 	write_p61(0,0,0);
 	/* Init the keyb struct */
-	keyb.active=true;
-	keyb.scanning=true;
-	keyb.command=CMD_NONE;
-	keyb.p60changed=false;
-	keyb.repeat.key=KBD_NONE;
-	keyb.repeat.pause=500;
-	keyb.repeat.rate=33;
-	keyb.repeat.wait=0;
+	keyb.active = true;
+	keyb.scanning = true;
+	keyb.command = CMD_NONE;
+	keyb.p60changed = false;
+	keyb.repeat.key = KBD_NONE;
+	keyb.repeat.pause = 500;
+	keyb.repeat.rate = 33;
+	keyb.repeat.wait = 0;
 	KEYBOARD_ClrBuffer();
 }
