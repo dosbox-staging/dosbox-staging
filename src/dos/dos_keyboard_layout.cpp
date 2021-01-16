@@ -22,6 +22,7 @@
 #include "bios_disk.h"
 #include "setup.h"
 #include "support.h"
+#include "string_utils.h"
 #include "../ints/int10.h"
 #include "regs.h"
 #include "callback.h"

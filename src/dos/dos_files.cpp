@@ -29,6 +29,8 @@
 #include "dos_inc.h"
 #include "drives.h"
 #include "cross.h"
+#include "string_utils.h"
+#include "support.h"
 
 #define DOS_FILESTART 4
 

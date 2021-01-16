@@ -29,6 +29,7 @@
 #include "dos_inc.h" /* for Drives[] */
 #include "drives.h"
 #include "mapper.h"
+#include "string_utils.h"
 
 diskGeo DiskGeometryList[] = {
 	{ 160,  8, 1, 40, 0},

@@ -27,7 +27,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "support.h"
+#include "string_utils.h"
 #include "serialport.h"
 #include "softmodem.h"
 #include "misc_util.h"
