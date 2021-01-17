@@ -24,10 +24,6 @@
 
 #include <string>
 
-// stubs
-void GFX_ShowMsg(char const *, ...) {}
-Config *control = nullptr;
-
 namespace {
 
 const parse_environ_result_t expected_empty{};
