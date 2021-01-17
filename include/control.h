@@ -71,9 +71,9 @@ public:
 	                                  SectionFunction func,
 	                                  bool changeable_at_runtime = false);
 
-	Section_line *AddSection_line(char const *const _name, SectionFunction func);
+	Section_line *AddSection_line(const char *section_name, SectionFunction func);
 
-	Section_prop *AddSection_prop(char const *const _name,
+	Section_prop *AddSection_prop(const char *section_name,
 	                              SectionFunction func,
 	                              bool changeable_at_runtime = false);
 
@@ -89,7 +89,7 @@ public:
 	void StartUp();
 	bool PrintConfig(const std::string &filename) const;
 	bool ParseConfigFile(char const * const configfilename);
-	void ParseEnv(char ** envp);
+	void ParseEnv();
 	bool SecureMode() const { return secure_mode; }
 	void SwitchToSecureMode() { secure_mode = true; }//can't be undone
 	Verbosity GetStartupVerbosity() const;

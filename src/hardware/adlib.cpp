@@ -24,6 +24,7 @@
 
 #include "cpu.h"
 #include "setup.h"
+#include "support.h"
 #include "mapper.h"
 #include "mem.h"
 #include "dbopl.h"

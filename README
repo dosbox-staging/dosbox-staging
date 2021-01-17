@@ -430,6 +430,17 @@ dosbox D:\folder\file.exe -c "MOUNT Y H:\MyFolder"
 In Windows, you can also drag directories/files onto the DOSBox executable.
 
 
+Environment variables
+---------------------
+
+Any configuration option can be overriden using an environment variable.
+Environment variables starting with prefix "DOSBOX" are processed and
+interpreted as follows: DOSBOX_SECTIONNAME_PROPERTYNAME=value
+
+For example, you can override render aspect with:
+
+  $ DOSBOX_RENDER_ASPECT=false dosbox
+
 
 =====================
 4. Internal Programs:
