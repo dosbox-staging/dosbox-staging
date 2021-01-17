@@ -910,9 +910,8 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer,
 	return success;
 }
 
-bool CDROM_Interface_Image::LoadUnloadMedia(bool unload)
+bool CDROM_Interface_Image::LoadUnloadMedia(bool /*unload*/)
 {
-	(void)unload; // unused by part of the API
 	return true;
 }
 

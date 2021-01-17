@@ -418,14 +418,15 @@ public:
 	void ClearRelease()
 	{
 		// clear out all cache blocks in this page
-		for (Bitu index=0;index<(1+DYN_PAGE_HASH);index++) {
-			CacheBlock *block = hash_map[index];
-			while (block) {
-				CacheBlock *nextblock = block->hash.next;
-				block->page.handler = 0; // no need, full clear
-				block->Clear();
-				block=nextblock;
-			}
+		Bitu count=active_blocks;
+		CacheBlock **map=hash_map;
+		for (CacheBlock * block=*map;count;count--) {
+			while (block==NULL)
+				block=*++map;
+			CacheBlock * nextblock=block->hash.next;
+			block->page.handler=0;			// no need, full clear
+			block->Clear();
+			block=nextblock;
 		}
 		Release(); // now can release this page
 	}
