@@ -178,9 +178,10 @@ public:
 
 	void writeb(PhysPt addr, Bitu val) override
 	{
-		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
-		assert(old_pagehandler->flags & PFLAG_READABLE);
-
+		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
+		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+			E_Exit("wb:non-readable code page found that is no ROM page");
+		}
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return;
 		host_writeb(hostmem+addr,val);
@@ -202,9 +203,10 @@ public:
 
 	void writew(PhysPt addr, Bitu val) override
 	{
-		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
-		assert(old_pagehandler->flags & PFLAG_READABLE);
-
+		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
+		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+			E_Exit("ww:non-readable code page found that is no ROM page");
+		}
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return;
 		host_writew(hostmem+addr,val);
@@ -226,9 +228,10 @@ public:
 
 	void writed(PhysPt addr, Bitu val) override
 	{
-		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
-		assert(old_pagehandler->flags & PFLAG_READABLE);
-
+		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
+		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+			E_Exit("wd:non-readable code page found that is no ROM page");
+		}
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return;
 		host_writed(hostmem+addr,val);
@@ -250,9 +253,10 @@ public:
 
 	bool writeb_checked(PhysPt addr, Bitu val) override
 	{
-		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
-		assert(old_pagehandler->flags & PFLAG_READABLE);
-
+		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return false;
+		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+			E_Exit("cb:non-readable code page found that is no ROM page");
+		}
 		addr&=4095;
 		if (host_readb(hostmem+addr)==(Bit8u)val) return false;
 		// see if there's code where we are writing to
@@ -279,9 +283,10 @@ public:
 
 	bool writew_checked(PhysPt addr, Bitu val) override
 	{
-		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
-		assert(old_pagehandler->flags & PFLAG_READABLE);
-
+		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return false;
+		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+			E_Exit("cw:non-readable code page found that is no ROM page");
+		}
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return false;
 		// see if there's code where we are writing to
@@ -308,9 +313,10 @@ public:
 
 	bool writed_checked(PhysPt addr, Bitu val) override
 	{
-		assert((old_pagehandler->flags & PFLAG_HASROM) == 0x0);
-		assert(old_pagehandler->flags & PFLAG_READABLE);
-
+		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return false;
+		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+			E_Exit("cd:non-readable code page found that is no ROM page");
+		}
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return false;
 		// see if there's code where we are writing to
@@ -671,8 +677,7 @@ static void cache_init(bool enable) {
 		cache_initialized = true;
 		if (cache_blocks == NULL) {
 			// allocate the cache blocks memory
-			cache_blocks = (CacheBlock *)malloc(CACHE_BLOCKS *
-			                                    sizeof(CacheBlock));
+			cache_blocks = (CacheBlock *)malloc(CACHE_BLOCKS * sizeof(CacheBlock));
 			if (!cache_blocks)
 				E_Exit("Allocating cache_blocks has failed");
 			memset(cache_blocks, 0, sizeof(CacheBlock) * CACHE_BLOCKS);
@@ -706,7 +711,7 @@ static void cache_init(bool enable) {
 			                                              // pointer.
 
 			cache_code_link_blocks=cache_code;
-			cache_code += PAGESIZE_TEMP;
+			cache_code=cache_code+PAGESIZE_TEMP;
 
 #if defined(HAVE_MPROTECT)
 			if(mprotect(cache_code_link_blocks,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP,PROT_WRITE|PROT_READ|PROT_EXEC))
@@ -721,37 +726,19 @@ static void cache_init(bool enable) {
 		}
 		// setup the default blocks for block linkage returns
 		cache.pos=&cache_code_link_blocks[0];
-#if (C_DYNAMIC_X86)
 		link_blocks[0].cache.start=cache.pos;
-		gen_return(BR_Link1);
+		// link code that returns with a special return code
+		dyn_return(BR_Link1,false);
 		cache.pos=&cache_code_link_blocks[32];
 		link_blocks[1].cache.start=cache.pos;
-		gen_return(BR_Link2);
-#elif (C_DYNREC)
-		core_dynrec.runcode = (BlockReturn(*)(uint8_t *))cache.pos;
-		// can use op to PAGESIZE_TEMP-64 bytes
+		// link code that returns with a special return code
+		dyn_return(BR_Link2,false);
+
+#if (C_DYNREC)
+		cache.pos=&cache_code_link_blocks[64];
+		core_dynrec.runcode=(BlockReturn (*)(Bit8u*))cache.pos;
+//		link_blocks[1].cache.start=cache.pos;
 		dyn_run_code();
-		cache_block_before_close();
-		cache_block_closing(cache_code_link_blocks,
-		                    cache.pos - cache_code_link_blocks);
-
-		cache.pos = &cache_code_link_blocks[PAGESIZE_TEMP - 64];
-		link_blocks[0].cache.start = cache.pos;
-		// link code that returns with a special return code
-		// must be less than 32 bytes
-		dyn_return(BR_Link1, false);
-		cache_block_before_close();
-		cache_block_closing(link_blocks[0].cache.start,
-		                    cache.pos - link_blocks[0].cache.start);
-
-		cache.pos = &cache_code_link_blocks[PAGESIZE_TEMP - 32];
-		link_blocks[1].cache.start = cache.pos;
-		// link code that returns with a special return code
-		// must be less than 32 bytes
-		dyn_return(BR_Link2, false);
-		cache_block_before_close();
-		cache_block_closing(link_blocks[1].cache.start,
-		                    cache.pos - link_blocks[1].cache.start);
 #endif
 
 		cache.free_pages=0;

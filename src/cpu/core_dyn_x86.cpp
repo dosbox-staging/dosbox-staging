@@ -135,7 +135,6 @@ enum BlockReturn {
 #define DYNFLG_ACTIVE		0x20	//Register has an active value
 
 class GenReg;
-class CodePageHandler;
 
 struct DynReg {
 	Bitu flags;
@@ -162,7 +161,8 @@ static struct {
 
 #define IllegalOption(msg) E_Exit("DYNX86: illegal option in " msg)
 
-#include "dyn_cache.h" 
+#define dyn_return(a,b) gen_return(a)
+#include "dyn_cache.h"
 
 static struct {
 	Bitu callback;
