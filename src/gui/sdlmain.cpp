@@ -245,6 +245,9 @@ struct SDL_Block {
 		struct {
 			Bit16u width, height;
 		} window;
+		struct {
+			Bit16u width, height;
+		} fullwrap;
 		Bit8u bpp;
 		bool fullscreen;
 		bool lazy_fullscreen;
@@ -356,6 +359,10 @@ void OPENGL_ERROR(const char*) {
 //#define SETMODE_RESTARTS_SUBSYSTEM 1
 
 SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
+	if (flags&SDL_FULLSCREEN && sdl.desktop.fullwrap.height && sdl.desktop.fullwrap.width) {
+		width  = sdl.desktop.fullwrap.width;
+		height = sdl.desktop.fullwrap.height;
+	}
 #if SETMODE_SAVES
 	static int i_height = 0;
 	static int i_width = 0;
@@ -802,6 +809,8 @@ dosurface:
 					SDL_FULLSCREEN | ((flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE) |
 					(sdl.desktop.doublebuf ? SDL_DOUBLEBUF|SDL_ASYNCBLIT : 0) | SDL_HWPALETTE);
 				if (sdl.surface == NULL) E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",sdl.desktop.full.width,sdl.desktop.full.height,bpp,SDL_GetError());
+				sdl.clip.x = (Sint16)((sdl.surface->w - width) / 2);
+				sdl.clip.y = (Sint16)((sdl.surface->h - height) / 2);
 			} else {
 				sdl.clip.x=0;sdl.clip.y=0;
 				sdl.surface=SDL_SetVideoMode_Wrap(width,height,bpp,
@@ -1655,6 +1664,13 @@ static void GUI_StartUp(Section * sec) {
 					*height = 0;
 					sdl.desktop.full.height = (Bit16u)atoi(height+1);
 					sdl.desktop.full.width  = (Bit16u)atoi(res);
+				} else {
+					height = const_cast<char*>(strchr(fullresolution,'*'));
+					if (height && * height) {
+						*height = 0;
+						sdl.desktop.fullwrap.height = (Bit16u)atoi(height+1);
+						sdl.desktop.fullwrap.width  = (Bit16u)atoi(res);
+					}
 				}
 			}
 		}
@@ -1741,6 +1757,19 @@ static void GUI_StartUp(Section * sec) {
 		sdl.desktop.full.height=768;
 #endif
 	}
+	if (sdl.desktop.fullwrap.height && sdl.desktop.fullwrap.width && sdl.desktop.full.width && sdl.desktop.full.height) {
+		//User wants to use desktop size for full resolution and the entered full resolution as window in the fullscreen.
+		//Only do it when smaller or equal
+		if (sdl.desktop.fullwrap.height <= sdl.desktop.full.height && sdl.desktop.fullwrap.width <= sdl.desktop.full.width) {
+			Bit16u tempheight = sdl.desktop.fullwrap.height;
+			sdl.desktop.fullwrap.height = sdl.desktop.full.height;
+			sdl.desktop.full.height = tempheight;
+			Bit16u tempwidth = sdl.desktop.fullwrap.width;
+			sdl.desktop.fullwrap.width = sdl.desktop.full.width;
+			sdl.desktop.full.width = tempwidth;
+		}
+	}
+
 	sdl.mouse.autoenable=section->Get_bool("autolock");
 	if (!sdl.mouse.autoenable) SDL_ShowCursor(SDL_DISABLE);
 	sdl.mouse.autolock=false;
