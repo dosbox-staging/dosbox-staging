@@ -42,7 +42,7 @@
 #include "dos_inc.h"
 #include "dos_mscdex.h"
 #include "fs_utils.h"
-#include "support.h"
+#include "string_utils.h"
 #include "cross.h"
 #include "inout.h"
 

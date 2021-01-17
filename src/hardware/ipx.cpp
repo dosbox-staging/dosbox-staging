@@ -26,7 +26,7 @@
 #include <time.h>
 #include <stdio.h>
 #include "cross.h"
-#include "support.h"
+#include "string_utils.h"
 #include "cpu.h"
 #include "regs.h"
 #include "inout.h"

@@ -44,6 +44,7 @@
 #include "drives.h"
 #include "fs_utils.h"
 #include "setup.h"
+#include "string_utils.h"
 #include "support.h"
 
 using namespace std;

@@ -18,7 +18,7 @@
 
 #include "drives.h"
 
-#include "support.h"
+#include "string_utils.h"
 
 bool WildFileCmp(const char *file, const char *wild)
 {
@@ -127,6 +127,11 @@ DOS_Drive::DOS_Drive()
 {
 	curdir[0] = '\0';
 	info[0] = '\0';
+}
+
+void DOS_Drive::SetDir(const char *path)
+{
+	safe_strcpy(curdir, path);
 }
 
 // static members variables

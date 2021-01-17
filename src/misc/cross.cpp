@@ -41,6 +41,7 @@
 #endif
 
 #include "fs_utils.h"
+#include "string_utils.h"
 #include "support.h"
 
 static std::string GetConfigName()

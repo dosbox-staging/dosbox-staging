@@ -16,21 +16,22 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "hardware.h"
+
 #include <cerrno>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "cross.h"
 #include "dosbox.h"
-#include "hardware.h"
-#include "setup.h"
-#include "support.h"
-#include "mem.h"
+#include "fs_utils.h"
 #include "mapper.h"
+#include "mem.h"
 #include "pic.h"
 #include "render.h"
-#include "cross.h"
-#include "fs_utils.h"
+#include "setup.h"
+#include "string_utils.h"
 
 #if (C_SSHOT)
 #include <png.h>

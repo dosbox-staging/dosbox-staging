@@ -28,7 +28,7 @@
 #include <unistd.h>
 
 #include "midi.h"
-#include "support.h"
+#include "string_utils.h"
 
 #define SEQ_MIDIPUTC 5
 

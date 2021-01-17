@@ -26,7 +26,7 @@
 
 #include "regs.h"
 #include "callback.h"
-#include "support.h"
+#include "string_utils.h"
 
 DOS_Shell::~DOS_Shell() {
 	delete bf;

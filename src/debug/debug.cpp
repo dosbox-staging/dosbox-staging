@@ -42,6 +42,7 @@ using namespace std;
 #include "mixer.h"
 #include "timer.h"
 #include "paging.h"
+#include "string_utils.h"
 #include "support.h"
 #include "shell.h"
 #include "programs.h"

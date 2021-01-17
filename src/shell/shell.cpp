@@ -28,7 +28,7 @@
 #include "dosbox.h"
 #include "fs_utils.h"
 #include "regs.h"
-#include "support.h"
+#include "string_utils.h"
 
 Bitu call_shellstop;
 /* Larger scope so shell_del autoexec can use it to

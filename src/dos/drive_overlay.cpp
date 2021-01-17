@@ -27,7 +27,7 @@
 #include <errno.h>
 
 #include "dos_inc.h"
-#include "support.h"
+#include "string_utils.h"
 #include "cross.h"
 #include "inout.h"
 #include "timer.h"

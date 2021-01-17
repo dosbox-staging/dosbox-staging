@@ -489,10 +489,7 @@ public:
 		spkr.chan->SetPeakAmplitude(
 		        static_cast<uint32_t>(AMPLITUDE_POSITIVE));
 	}
-	~PCSPEAKER(){
-		Section_prop * section=static_cast<Section_prop *>(m_configuration);
-		if(!section->Get_bool("pcspeaker")) return;
-	}
+
 	PCSPEAKER(const PCSPEAKER&) = delete; // prevent copying
 	PCSPEAKER& operator= (const PCSPEAKER&) = delete; // prevent assignment
 };

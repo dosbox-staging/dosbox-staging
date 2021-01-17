@@ -43,6 +43,7 @@
 #include "setup.h"
 #include "shell.h"
 #include "support.h"
+#include "string_utils.h"
 #include "../ints/int10.h"
 
 #if defined(WIN32)

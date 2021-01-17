@@ -23,11 +23,12 @@
 #include <string.h>
 #include <time.h>
 
-#include "dos_inc.h"
-#include "support.h"
-#include "cross.h"
-#include "bios.h"
 #include "bios_disk.h"
+#include "bios.h"
+#include "cross.h"
+#include "dos_inc.h"
+#include "string_utils.h"
+#include "support.h"
 
 #define IMGTYPE_FLOPPY 0
 #define IMGTYPE_ISO    1
