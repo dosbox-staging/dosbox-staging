@@ -35,8 +35,6 @@
 #include <string>
 #include <vector>
 
-#include <SDL.h>
-
 #ifdef _MSC_VER
 #define strcasecmp(a, b) _stricmp(a, b)
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
