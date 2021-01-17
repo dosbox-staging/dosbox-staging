@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Jan 1, 2021"
+.TH DOSBOX 1 "Jan 17, 2021"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 dosbox \- an x86/DOS emulator with sound/graphics
@@ -351,6 +351,15 @@ increments of one) by pressing CTRL\-F8. Your CPU usage should decrease.
 Go back one step and repeat this until the game runs fast enough for you.
 Please note that this is a trade off: you lose in fluidity of video what you
 gain in speed.
+.SH ENVIRONMENT
+Any configuration option can be override using an environment variable.
+.RB "Environment variables starting with prefix " DOSBOX " are processed and
+interpreted as follows:
+.B DOSBOX_SECTIONNAME_PROPERTYNAME=value
+.PP
+.R For example, you can override render aspect this way:
+.PP
+.B $ DOSBOX_RENDER_ASPECT=false dosbox
 .SH NOTES
 .RB "While we hope that, one day, " dosbox " will run virtually all programs ever made for the PC..."
 .RB "we are not there yet. At present, " dosbox " run on a 1.7 Gigahertz PC is roughly the equivalent of a 25MHz 386 PC."
