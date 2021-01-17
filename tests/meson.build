@@ -40,12 +40,13 @@ unit_tests = [
   {'name' : 'readerwritercircularbuffer', 'deps' : []},
   {'name' : 'soft_limiter',               'deps' : [sdl2_dep]},
   {'name' : 'string_utils',               'deps' : []},
+  {'name' : 'setup',                      'deps' : [sdl2_dep, libmisc_dep]},
   {'name' : 'support',                    'deps' : [sdl2_dep, libmisc_dep]},
 ]
 
 foreach ut : unit_tests
   name = ut.get('name')
-  exe = executable(name, name + '.cpp',
+  exe = executable(name, [name + '.cpp', 'stubs.cpp'],
                    dependencies : [gtest_dep] + ut.get('deps'),
                    include_directories : incdir)
   test('gtest ' + name, exe)
