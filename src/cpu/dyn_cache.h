@@ -624,30 +624,54 @@ static void cache_closeblock()
 }
 
 // place an 8bit value into the cache
+
+static INLINE void cache_addb(uint8_t val, uint8_t *pos)
+{
+	*pos = val;
+}
+
 static inline void cache_addb(uint8_t val)
 {
-	*cache.pos = val;
+	cache_addb(val, cache.pos);
 	cache.pos += sizeof(uint8_t);
 }
 
 // place a 16bit value into the cache
+
+static INLINE void cache_addw(uint16_t val, uint8_t *pos)
+{
+	write_unaligned_uint16(pos, val);
+}
+
 static inline void cache_addw(uint16_t val)
 {
-	write_unaligned_uint16(cache.pos, val);
+	cache_addw(val, cache.pos);
 	cache.pos += sizeof(uint16_t);
 }
 
 // place a 32bit value into the cache
+
+static INLINE void cache_addd(uint32_t val, uint8_t *pos)
+{
+	write_unaligned_uint32(pos, val);
+}
+
 static inline void cache_addd(uint32_t val)
 {
-	write_unaligned_uint32(cache.pos, val);
+	cache_addd(val, cache.pos);
 	cache.pos += sizeof(uint32_t);
 }
 
 // place a 64bit value into the cache
+
+static INLINE void cache_addq(uint64_t val, uint8_t *pos)
+{
+	write_unaligned_uint64(pos, val);
+}
+
 static inline void cache_addq(uint64_t val)
 {
-	write_unaligned_uint64(cache.pos, val);
+	cache_addq(val, cache.pos);
 	cache.pos += sizeof(uint64_t);
 }
 

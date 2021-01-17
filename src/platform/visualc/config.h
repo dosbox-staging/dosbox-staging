@@ -57,12 +57,6 @@
 /* Define to 1 to use a unaligned memory access */
 #define C_UNALIGNED_MEMORY 1
 
-/* environ is defined */
-#define ENVIRON_INCLUDED 1
-
-/* environ can be linked */
-#define ENVIRON_LINKED 1
-
 /* Prevent <windows.h> from clobbering std::min and std::max */
 #define NOMINMAX 1
 
