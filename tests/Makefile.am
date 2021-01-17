@@ -20,6 +20,7 @@ tests_SOURCES = \
 	setup.cpp \
 	soft_limiter.cpp \
 	string_utils.cpp \
+	stubs.cpp \
 	support.cpp
 
 tests_LDADD = ../src/misc/libmisc.a
