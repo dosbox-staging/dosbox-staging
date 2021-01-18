@@ -109,6 +109,12 @@
 // Define to 1 to enable MT-32 emulator
 #define C_MT32EMU 0
 
+// Compiler supports Core Audio headers
+#mesondefine C_SUPPORTS_COREAUDIO
+
+// Compiler supports Core MIDI headers
+#mesondefine C_SUPPORTS_COREMIDI
+
 /* Compiler features and extensions
  *
  * These are defines for compiler features we can't reliably verify during

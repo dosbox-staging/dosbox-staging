@@ -6,7 +6,12 @@ libmidi_sources = [
 
 libmidi = static_library('midi', libmidi_sources,
                          include_directories : incdir,
-                         dependencies : [sdl2_dep, fluid_dep])
+                         dependencies : [
+                           sdl2_dep,
+                           fluid_dep,
+                           coreaudio_dep,
+                           coremidi_dep
+                         ])
 
 libmidi_dep = declare_dependency(link_with : libmidi)
 
