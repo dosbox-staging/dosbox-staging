@@ -26,6 +26,7 @@
 // This global variable should be setup/torn down per test.
 Config *control = nullptr;
 
-// During testing we never want to log to stdout/stderr, as it would
+// During testing we never want to log to stdout/stderr, as it could
 // negatively affect test harness.
 void GFX_ShowMsg(const char *, ...) {}
+void DEBUG_ShowMsg(const char *, ...) {}
