@@ -99,48 +99,43 @@ endif
 
 # external dependencies
 #
+optional_dep  = dependency('', required : false)
+threads_dep   = dependency('threads')
+sdl2_dep      = dependency('sdl2', version : '>= 2.0.2')
+sdl2_net_dep  = optional_dep
+opengl_dep    = optional_dep
+fluid_dep     = optional_dep
+opus_dep      = optional_dep
+png_dep       = optional_dep
+z_dep         = optional_dep
+curses_dep    = optional_dep # necessary for debugger builds
+
 msg = 'You can disable this dependency with: -D@0@=false'
-dummy_dep = dependency('', required : false)
-threads_dep = dependency('threads')
-sdl2_dep = dependency('sdl2', version : '>= 2.0.2')
 
 if get_option('use_sdl2_net')
   sdl2_net_dep = dependency('SDL2_net', version : '>= 2.0.1',
                             not_found_message : msg.format('use_sdl2_net'))
-else
-  sdl2_net_dep = dummy_dep
 endif
 
 if get_option('use_opengl')
   opengl_dep = dependency('gl', not_found_message : msg.format('use_opengl'))
-else
-  opengl_dep = dummy_dep
 endif
 
 if get_option('use_fluidsynth')
   fluid_dep = dependency('fluidsynth', version : '>= 2.0.0',
                          not_found_message : msg.format('use_fluidsynth'))
-else
-  fluid_dep = dummy_dep
 endif
 
 if get_option('use_opusfile')
   opus_dep = dependency('opusfile', not_found_message : msg.format('use_opusfile'))
-else
-  opus_dep = dummy_dep
 endif
 
 if get_option('use_png')
   png_dep = dependency('libpng', not_found_message : msg.format('use_png'))
   z_dep = dependency('zlib') # libpng in Ubuntu 16.04 needs zlib linked explicitly
-else
-  png_dep = dummy_dep
-  z_dep = dummy_dep
 endif
 
-if get_option('enable_debugger') == 'none'
-  curses_dep = dummy_dep
-else
+if get_option('enable_debugger') != 'none'
   curses_dep = dependency('ncurses') # or pdcurses on Windows
 endif
 
