@@ -194,6 +194,9 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 
 SDL_bool mouse_is_captured = SDL_FALSE; // global for mapper
 
+// SDL allows pixels sizes (color-depth) from 1 to 4 bytes
+constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
+
 // Masks to be passed when creating SDL_Surface.
 // Remove ifndef if they'll be needed for MacOS X builds.
 #ifndef MACOSX
