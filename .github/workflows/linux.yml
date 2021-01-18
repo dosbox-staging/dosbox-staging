@@ -46,7 +46,7 @@ jobs:
             os: ubuntu-20.04
             flags: -c gcc
             config_flags: --enable-debug
-            max_warnings: 107
+            max_warnings: 101
           - name: GCC, +dynrec, -dyn_x86
             os: ubuntu-20.04
             flags: -c gcc
@@ -56,7 +56,7 @@ jobs:
             os: ubuntu-20.04
             flags: -c gcc
             config_flags: --disable-dynamic-x86 --enable-debug
-            max_warnings: 144
+            max_warnings: 138
           - name: GCC, -network
             os: ubuntu-20.04
             flags: -c gcc
