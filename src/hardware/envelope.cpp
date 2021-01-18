@@ -66,7 +66,7 @@ void Envelope::Update(const uint32_t frame_rate,
 
 bool Envelope::ClampSample(intptr_t &sample, const intptr_t lip)
 {
-	if (abs(sample) > edge) {
+	if (std::abs(sample) > edge) {
 		sample = clamp(sample, -lip, lip);
 		return true;
 	}
