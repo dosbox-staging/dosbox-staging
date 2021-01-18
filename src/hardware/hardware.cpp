@@ -532,6 +532,30 @@ static void CAPTURE_VideoEvent(bool pressed) {
 }
 #endif
 
+void CAPTURE_VideoStart() {
+#if (C_SRECORD)
+	if (CaptureState & CAPTURE_VIDEO) {
+		LOG_MSG("Already capturing video.");
+	} else {
+		CAPTURE_VideoEvent(true);
+	}
+#else
+	LOG_MSG("Avi capturing has not been compiled in");
+#endif
+}
+
+void CAPTURE_VideoStop() {
+#if (C_SRECORD)
+	if (CaptureState & CAPTURE_VIDEO) {
+		CAPTURE_VideoEvent(true);
+	} else {
+		LOG_MSG("Not capturing video.");
+	}
+#else 
+	LOG_MSG("Avi capturing has not been compiled in");
+#endif
+}
+
 void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags, float fps, const Bit8u * data, const Bit8u * pal) {
 	Bitu i;
 	Bit8u doubleRow[SCALER_MAXWIDTH*4];
