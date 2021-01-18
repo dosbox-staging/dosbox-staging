@@ -109,6 +109,8 @@ opus_dep      = optional_dep
 png_dep       = optional_dep
 z_dep         = optional_dep
 curses_dep    = optional_dep # necessary for debugger builds
+coreaudio_dep = optional_dep # macOS only
+coremidi_dep  = optional_dep # macOS only
 
 msg = 'You can disable this dependency with: -D@0@=false'
 
@@ -137,6 +139,28 @@ endif
 
 if get_option('enable_debugger') != 'none'
   curses_dep = dependency('ncurses') # or pdcurses on Windows
+endif
+
+# macOS-only dependencies
+#
+if host_machine.system() == 'darwin'
+  coreaudio_dep = dependency('appleframeworks',
+                             modules : ['CoreAudio', 'AudioUnit', 'AudioToolbox'],
+                             required : false)
+  if coreaudio_dep.found()
+    conf_data.set('C_SUPPORTS_COREAUDIO', 1)
+  else
+    warning('''Core Audio support disabled: compiler can't detect/use Apple Frameworks''')
+  endif
+
+  coremidi_dep = dependency('appleframeworks',
+                             modules : ['CoreMIDI', 'CoreFoundation'],
+                             required : false)
+  if coremidi_dep.found()
+    conf_data.set('C_SUPPORTS_COREMIDI', 1)
+  else
+    warning('''Core MIDI support disabled: compiler can't detect/use Apple Frameworks''')
+  endif
 endif
 
 
