@@ -1,9 +1,9 @@
 ##
 #  Fetch the latest dependencies from upstream
 #  -------------------------------------------
-GLIB_ARCHIVE = glib.tar.gz
-GLIB_URL = https://gitlab.gnome.org/GNOME/glib/-/archive/2.67.0/glib-2.67.0.tar.gz
-GLIB_SHA256 = a6df47c78dc8793dac80edecd9602c53a517ec2d30e9f7832a25eb554fa5ddb6
+GLIB_ARCHIVE = glib.tar.xz
+GLIB_URL = https://download.gnome.org/sources/glib/2.67/glib-2.67.2.tar.xz
+GLIB_SHA256 = b41d42d6c572e1e420ffc38a077e0157e0b53b5a94c9647a3dc3701043c3b69b
 
 ##
 #  Common commands and arguments
@@ -13,7 +13,7 @@ CURL_FLAGS = --progress-bar
 CURL = curl --location $(CURL_FLAGS)
 WGET_FLAGS = --no-verbose --progress=bar
 WGET = wget --no-clobber $(WGET_FLAGS)
-EXTRACT = tar --strip 1 -zxof
+EXTRACT = tar --strip 1 -Jxof
 DIR := ${CURDIR}
 
 ##
