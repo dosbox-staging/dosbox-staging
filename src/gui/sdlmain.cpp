@@ -1278,10 +1278,15 @@ dosurface:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
 
-		Bit8u* emptytex = new Bit8u[texsize * texsize * 4];
-		memset((void*) emptytex, 0, texsize * texsize * 4);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, (const GLvoid*)emptytex);
-		delete [] emptytex;
+		const auto texture_area_bytes = static_cast<size_t>(texsize) *
+		                                texsize * MAX_BYTES_PER_PIXEL;
+		uint8_t *emptytex = new uint8_t[texture_area_bytes];
+		assert(emptytex);
+
+		memset(emptytex, 0, texture_area_bytes);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0,
+		             GL_BGRA_EXT, GL_UNSIGNED_BYTE, emptytex);
+		delete[] emptytex;
 
 		glClearColor (0.0f, 0.0f, 0.0f, 1.0f);
 
