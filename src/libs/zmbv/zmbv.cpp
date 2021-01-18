@@ -16,14 +16,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <cassert>
-#include <zlib.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-
 #include "zmbv.h"
+
+#include <cassert>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #define DBZV_VERSION_HIGH 0
 #define DBZV_VERSION_LOW 1
