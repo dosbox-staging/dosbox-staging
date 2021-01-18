@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "programs.h"
 
 #include <vector>
 #include <sstream>
@@ -24,7 +25,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include "programs.h"
+
 #include "callback.h"
 #include "regs.h"
 #include "support.h"

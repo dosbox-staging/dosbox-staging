@@ -54,10 +54,10 @@
  *  do work.
  */
 
+#include "dosbox.h"
+
 #include <cstdint>
 #include <functional>
-
-#include "compiler.h"
 
 class Envelope {
 public:
