@@ -164,8 +164,14 @@ static bool find_and_load(const std::string &model,
 	const std::string pcm_rom = model + "_PCM.ROM";
 	for (const auto &dir : rom_dirs) {
 		if (load_rom_set(dir + ctr_rom, dir + pcm_rom, service)) {
-			LOG_MSG("MT32: Loaded %s-model ROMs from %s",
-			        model.c_str(), dir.c_str());
+			LOG_MSG("MT32: Found ROM pair in %s", dir.c_str());
+
+			mt32emu_rom_info rom_info;
+			service->getROMInfo(&rom_info);
+			LOG_MSG("MT32: Initialized %s with %s",
+			        rom_info.control_rom_description,
+			        rom_info.pcm_rom_description);
+
 			return true;
 		}
 	}
