@@ -557,9 +557,11 @@ void CAPTURE_VideoStop() {
 }
 
 void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags, float fps, const Bit8u * data, const Bit8u * pal) {
+#if (C_SSHOT) || (C_SRECORD)
 	Bitu i;
 	Bit8u doubleRow[SCALER_MAXWIDTH*4];
 	Bitu countWidth = width;
+#endif
 
 	if (flags & CAPTURE_FLAG_DBLH)
 		height *= 2;
