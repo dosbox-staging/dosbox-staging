@@ -1,6 +1,5 @@
-# bash completion for dosbox                               -*- shell-script -*-
+# dosbox(1) completion                                      -*- shell-script -*-
 # shellcheck shell=bash
-# vim: st=2:sw=2:et:ai:ft=bash
 ### EDITING NOTES:
 # As this is a bash function, when adding variables or arrays it is important
 # to initialise with local. This prevents the var./array polluting the users
