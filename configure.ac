@@ -191,8 +191,7 @@ case "$host" in
    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
    #include <CoreMIDI/MIDIServices.h>
    int blah() { return 0; }
-   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework CoreMIDI -framework CoreFoundation";AC_DEFINE([C_SUPPORTS_COREMIDI], [],
-   [Compiler supports Core MIDI headers])],
+   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework CoreMIDI -framework CoreFoundation";AC_DEFINE(C_COREMIDI,1,[Compiler supports Core MIDI headers])],
    AC_MSG_RESULT(no);AC_MSG_WARN([Compiler can't compile Apple headers. CoreMIDI functionality disabled. Please use the Apple compiler!]))
 
    AC_MSG_CHECKING(if compiler supports Apple's Core Audio headers)
@@ -200,8 +199,7 @@ case "$host" in
    #include <AudioToolbox/AUGraph.h>
    #include <CoreServices/CoreServices.h>
    int blah() { return 0; }
-   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework AudioUnit -framework AudioToolbox";AC_DEFINE([C_SUPPORTS_COREAUDIO], [],
-   [Compiler supports Core Audio headers])],
+   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework AudioUnit -framework AudioToolbox";AC_DEFINE(C_COREAUDIO,1,[Compiler supports Core Audio headers])],
    AC_MSG_RESULT(no);AC_MSG_WARN([Compiler can't compile Apple headers. CoreAudio functionality disabled. Please use the Apple compiler!]))
    ;;
 esac
