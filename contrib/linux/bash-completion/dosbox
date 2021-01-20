@@ -47,15 +47,15 @@ _dosbox()
   #
   # shellcheck disable=SC2034
   local -a \
-         _machine=(
-                    hercules cga tandy pcjr ega vgaonly svga_s3 svga_et3000
-                    svga_et4000 svga_paradise vesa_nolfb vesa_oldvbe
-                  )\
-          _scaler=(
-                    none normal2x normal3x advmame2x advmame3x advinterp2x
-                    advinterp3x hq2x hq3x 2xsai super2xsai supereagle tv2x
-                    tv3x rgb2x rgb3x scan2x scan3x
-                  )
+    _machine=(
+               hercules cga cga_mono tandy pcjr ega vgaonly svga_s3
+               svga_et3000 svga_et4000 svga_paradise vesa_nolfb
+             )\
+     _scaler=(
+               none normal2x normal3x advmame2x advmame3x advinterp2x
+               advinterp3x hq2x hq3x 2xsai super2xsai supereagle tv2x
+               tv3x rgb2x rgb3x scan2x scan3x
+             )
   ### Offer ability for the user to override the default .conf dir.
   # shellcheck disable=SC2034
   local _conf="${DOSBOX_STAGING_CONF_DIR:-$XDG_CONFIG_HOME/dosbox/}"
