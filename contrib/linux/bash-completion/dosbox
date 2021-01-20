@@ -31,8 +31,8 @@ _dosbox()
                   )\
   _exclusive_opts=(
                     --version --printconf --editconf -resetconf -eraseconf
-                    -opencaptures -erasemapper -resetmapper
-                  )\
+                    -erasemapper -resetmapper
+                  )
   ####
 
   # setup nameref to point to array
@@ -55,28 +55,7 @@ _dosbox()
                     none normal2x normal3x advmame2x advmame3x advinterp2x
                     advinterp3x hq2x hq3x 2xsai super2xsai supereagle tv2x
                     tv3x rgb2x rgb3x scan2x scan3x
-                  )\
-    _opencaptures=(
-                    "$BROWSER" firefox mpv pcmanfm pcmanfm-qt
-                  )\
-  # A note on -opencaptures, it launches the provided prog. and points it to
-  # the dir. containing captured media (screenshots, video, audio)
-  # TODO add more media browser programs
-
-  [[ $prev =~ ^-{1,2}opencaptures$ ]] &&
-    readarray -t -O 0 _opencaptures < <(
-      # do we have a custom wrapper script available?
-      [[ -x "$XDG_CONFIG_HOME/dosbox/opencaptures.sh" ]] &&
-        printf "%s\n" "$XDG_CONFIG_HOME/dosbox/opencaptures.sh"
-      # TODO provide example script
-      # may not be worth it..
-
-      # filter out unavailable media browsers
-      type -P "${_opencaptures[@]}"
-      # TODO document recommended "media browsers"
-    )
-  ####
-
+                  )
   ### Offer ability for the user to override the default .conf dir.
   # shellcheck disable=SC2034
   local _conf="${DOSBOX_STAGING_CONF_DIR:-$XDG_CONFIG_HOME/dosbox/}"
@@ -137,7 +116,7 @@ _dosbox()
       # filter out previously selected confs
       COMPREPLY=( "${COMPREPLY[@]#@(${words_filter})}" )
       return;;
-    -?(-)@(?(force)scaler|machine|opencaptures))
+    -?(-)@(?(force)scaler|machine))
       readarray -t -O 0 COMPREPLY \
         < <( compgen -W "${_sub_opts[*]}" -- "${cur}" )
       return;;
