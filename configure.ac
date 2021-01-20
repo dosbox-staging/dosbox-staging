@@ -158,14 +158,6 @@ fi
 
 dnl Checks for libraries.
 
-#Check if the compiler support attributes
-AH_TEMPLATE([C_HAS_ATTRIBUTE],[Determines if the compiler supports attributes for structures.])
-AC_MSG_CHECKING(if compiler allows __attribute__)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-typedef struct { } __attribute__((packed)) junk;]],
-[[ ]])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_HAS_ATTRIBUTE)],AC_MSG_RESULT(no))
-
-
 #Check if the compiler supports certain attributes
 OLDCFLAGS="$CFLAGS"
 CFLAGS="-Werror"
