@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2020  The DOSBox Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -51,6 +51,8 @@ void CAPTURE_AddWave(Bit32u freq, Bit32u len, Bit16s * data);
 #define CAPTURE_FLAG_DBLH	0x2
 void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags, float fps, Bit8u * data, Bit8u * pal);
 void CAPTURE_AddMidi(bool sysex, Bitu len, Bit8u * data);
+void CAPTURE_VideoStart();
+void CAPTURE_VideoStop();
 
 class Config;
 // Gravis UltraSound configuration and initialization

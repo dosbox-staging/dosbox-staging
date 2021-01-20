@@ -87,7 +87,9 @@ jobs:
   build_macos_release:
     name: Release build
     runs-on: macos-latest
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
+    # Disabled pending meson static-SDL solution
+    if: false
+    # github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     env:
       CC: ccache clang
       CXX: ccache clang++

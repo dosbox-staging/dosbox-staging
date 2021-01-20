@@ -2,7 +2,7 @@
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
  *  Copyright (C) 2020-2021  The DOSBox Staging Team
- *  Copyright (C) 2002-2020  The DOSBox Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@
 #define FREQ_NEXT ( 1 << FREQ_SHIFT)
 #define FREQ_MASK ( FREQ_NEXT -1 )
 
-#define TICK_SHIFT 14
+#define TICK_SHIFT 24
 #define TICK_NEXT ( 1 << TICK_SHIFT)
 #define TICK_MASK (TICK_NEXT -1)
 
@@ -358,7 +358,7 @@ void MixerChannel::AddSilence()
 template<class Type,bool stereo,bool signeddata,bool nativeorder>
 inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 	last_samples_were_stereo = stereo;
-	
+
 	//Position where to write the data
 	Bitu mixpos = mixer.pos + done;
 	//Position in the incoming data
@@ -950,6 +950,8 @@ void MIXER_Init(Section* sec) {
 		LOG_MSG("MIXER: Negotiated %u-channel %u-Hz audio in %u-frame blocks",
 		        obtained.channels, mixer.freq, mixer.blocksize);
 	}
+	//1000 = 8 *125
+	mixer.tick_counter = (mixer.freq%125)?TICK_NEXT:0;
 	const auto requested_prebuffer = section->Get_int("prebuffer");
 	mixer.min_needed = static_cast<uint16_t>(clamp(requested_prebuffer, 0, 100));
 	mixer.min_needed = (mixer.freq * mixer.min_needed) / 1000;

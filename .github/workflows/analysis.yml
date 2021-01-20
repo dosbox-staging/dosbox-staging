@@ -104,7 +104,7 @@ jobs:
             # TSAN excluded, harness segfaults inside virual-X11 environment
             sanitizers: UASAN
             usan:  -1
-            uasan: 15
+            uasan: 4
     steps:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2020  The DOSBox Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,6 +16,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef DOSBOX_ZMBV_H
+#define DOSBOX_ZMBV_H
+
 #ifndef DOSBOX_DOSBOX_H
 #ifdef _MSC_VER
 #define INLINE __forceinline
@@ -23,6 +26,8 @@
 #define INLINE inline
 #endif
 #endif
+
+#include <zlib.h>
 
 #define CODEC_4CC "ZMBV"
 
@@ -116,3 +121,6 @@ public:
 	bool DecompressFrame(void * framedata, int size);
 	void Output_UpsideDown_24(void * output);
 };
+
+#endif
+

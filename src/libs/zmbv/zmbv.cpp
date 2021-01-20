@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2020  The DOSBox Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,13 +16,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <zlib.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-
 #include "zmbv.h"
+
+#include <cassert>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #define DBZV_VERSION_HIGH 0
 #define DBZV_VERSION_LOW 1
@@ -324,10 +324,12 @@ int VideoCodec::FinishCompressFrame( void ) {
 		int i;
 		/* Add the full frame data */
 		unsigned char * readFrame = newframe + pixelsize*(MAX_VECTOR+MAX_VECTOR*pitch);	
-		for (i=0;i<height;i++) {
-			memcpy(&work[workUsed], readFrame, width*pixelsize);
-			readFrame += pitch*pixelsize;
-			workUsed += width*pixelsize;
+		const int line_width = width * pixelsize;
+		assert(line_width > 0);
+		for (i = 0; i < height; ++i) {
+			memcpy(&work[workUsed], readFrame, line_width);
+			readFrame += pitch * pixelsize;
+			workUsed += line_width;
 		}
 	} else {
 		/* Add the delta frame data */
@@ -437,11 +439,14 @@ bool VideoCodec::DecompressFrame(void * framedata, int size) {
 		}
 		newframe = buf1;
 		oldframe = buf2;
+
 		unsigned char * writeframe = newframe + pixelsize*(MAX_VECTOR+MAX_VECTOR*pitch);	
-		for (i=0;i<height;i++) {
-			memcpy(writeframe,&work[workPos],width*pixelsize);
-			writeframe+=pitch*pixelsize;
-			workPos+=width*pixelsize;
+		const int line_width = width * pixelsize;
+		assert(line_width > 0);
+		for (i = 0; i < height; ++i) {
+			memcpy(writeframe, &work[workPos], line_width);
+			writeframe += pitch * pixelsize;
+			workPos += line_width;
 		}
 	} else {
 		data = oldframe;

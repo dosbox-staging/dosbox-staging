@@ -296,14 +296,14 @@ Sample rate of the Tandy 3-Voice generation.
 Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).
 .
 :CONFIG_JOYSTICKTYPE
-Type of joystick to emulate: auto (default), none,
+Type of joystick to emulate: auto (default),
+none (disables joystick emulation),
 2axis (supports two joysticks),
 4axis (supports one joystick, first joystick used),
 4axis_2 (supports one joystick, second joystick used),
 fcs (Thrustmaster), ch (CH Flightstick).
-none disables joystick emulation.
 auto chooses emulation depending on real joystick(s).
-(Remember to reset dosbox's mapperfile if you saved it earlier)
+(Remember to reset DOSBox's mapperfile if you saved it earlier)
 .
 :CONFIG_TIMED
 enable timed intervals for axis. Experiment with this option, if your joystick drifts (away).
@@ -432,6 +432,9 @@ Use -writelang or -wl filename to write the current language strings.
 -axadd [line] adds a line to the autoexec section.
 -axtype prints the content of the autoexec section.
 -securemode switches to secure mode.
+-avistart starts AVI recording.
+-avistop stops AVI recording.
+-startmapper starts the keymapper.
 -get "section property" returns the value of the property.
 -set "section property=value" sets the value.
 

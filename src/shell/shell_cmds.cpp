@@ -2,7 +2,7 @@
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
  *  Copyright (C) 2020-2021  The DOSBox Staging Team
- *  Copyright (C) 2002-2020  The DOSBox Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -408,7 +408,7 @@ void DOS_Shell::CMD_RMDIR(char * args) {
 
 static std::string format_number(size_t num)
 {
-	constexpr size_t petabyte_si = 1'000'000'000'000'000;
+	MAYBE_UNUSED constexpr size_t petabyte_si = 1'000'000'000'000'000;
 	assert(num <= petabyte_si);
 	const auto b = static_cast<unsigned>(num % 1000);
 	num /= 1000;

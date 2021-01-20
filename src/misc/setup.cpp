@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2020  The DOSBox Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -849,8 +849,8 @@ Section_prop *Config::AddSection_prop(const char *section_name,
                                       SectionFunction func,
                                       bool changeable_at_runtime)
 {
-	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z]+"}),
-	        "Only letters are allowed in section name");
+	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
+	        "Only letters and digits are allowed in section name");
 	Section_prop *s = new Section_prop(section_name);
 	s->AddInitFunction(func, changeable_at_runtime);
 	sectionlist.push_back(s);
@@ -868,8 +868,8 @@ Section_prop::~Section_prop()
 
 Section_line *Config::AddSection_line(const char *section_name, SectionFunction func)
 {
-	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z]+"}),
-	        "Only letters are allowed in section name");
+	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
+	        "Only letters and digits are allowed in section name");
 	Section_line *blah = new Section_line(section_name);
 	blah->AddInitFunction(func);
 	sectionlist.push_back(blah);

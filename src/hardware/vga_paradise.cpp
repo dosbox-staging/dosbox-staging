@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2020  The DOSBox Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ static void bank_setup_pvga1a() {
 	}
 }
 
-void write_p3cf_pvga1a(Bitu reg,Bitu val,Bitu iolen) {
+void write_p3cf_pvga1a(Bitu reg,Bitu val,Bitu /*iolen*/) {
 	if (pvga1a.locked() && reg >= 0x09 && reg <= 0x0e)
 		return;
 
@@ -108,7 +108,7 @@ void write_p3cf_pvga1a(Bitu reg,Bitu val,Bitu iolen) {
 	}
 }
 
-Bitu read_p3cf_pvga1a(Bitu reg,Bitu iolen) {
+Bitu read_p3cf_pvga1a(Bitu reg,Bitu /*iolen*/) {
 	if (pvga1a.locked() && reg >= 0x09 && reg <= 0x0e)
 		return 0x0;
 
