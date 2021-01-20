@@ -100,11 +100,7 @@ MidiHandler_oss Midi_oss;
 
 #endif
 
-#if defined (HAVE_ALSA)
-
 #include "midi_alsa.h"
-
-#endif
 
 struct DB_Midi {
 	uint8_t status;

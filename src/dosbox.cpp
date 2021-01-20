@@ -616,7 +616,7 @@ void DOSBOX_Init(void) {
 #else
 		"oss",
 #endif
-#if defined(HAVE_ALSA)
+#if C_ALSA
 		"alsa",
 #endif
 #if C_FLUIDSYNTH
@@ -655,7 +655,7 @@ void DOSBOX_Init(void) {
 #ifdef C_SUPPORTS_COREAUDIO
 	        "- When using CoreAudio, you can specify a soundfont here.\n"
 #endif
-#if defined(HAVE_ALSA)
+#if C_ALSA
 	        "- When using ALSA, use Linux command 'aconnect -l' to list open\n"
 	        "  MIDI ports, and select one (for example 'midiconfig=14:0'\n"
 	        "  for sequencer client 14, port 0).\n"
