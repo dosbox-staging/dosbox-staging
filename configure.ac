@@ -215,7 +215,7 @@ AC_HELP_STRING([--enable-alsa-midi],[compile with alsa midi support (default yes
 esac],
 [alsa_midi=true])
 if test x$alsa_midi = xtrue ; then
-  AM_PATH_ALSA(0.9.0, AC_DEFINE(HAVE_ALSA,1,[Define to 1 to use ALSA for MIDI]) , : )
+  AM_PATH_ALSA(0.9.0, AC_DEFINE(C_ALSA,1,[Define to 1 to enable ALSA MIDI support]) , : )
   CXXFLAGS="$CXXFLAGS $ALSA_CFLAGS"
 fi
 
