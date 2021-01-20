@@ -24,6 +24,8 @@
 
 #include "midi_handler.h"
 
+#if C_COREMIDI
+
 #include <CoreMIDI/MIDIServices.h>
 #include <sstream>
 #include <string>
@@ -167,5 +169,7 @@ public:
 };
 
 MidiHandler_coremidi Midi_coremidi;
+
+#endif // C_COREMIDI
 
 #endif

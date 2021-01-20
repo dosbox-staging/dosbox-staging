@@ -605,10 +605,10 @@ void DOSBOX_Init(void) {
 	const char *midi_devices[] = {
 		"auto",
 #if defined(MACOSX)
-#ifdef C_SUPPORTS_COREMIDI
+#if C_COREMIDI
 		"coremidi",
 #endif
-#ifdef C_SUPPORTS_COREAUDIO
+#if C_COREAUDIO
 		"coreaudio",
 #endif
 #elif defined(WIN32)
@@ -652,7 +652,7 @@ void DOSBOX_Init(void) {
 	        "- This option has no effect when using the built-in synthesizers\n"
 	        "  (mididevice = fluidsynth or mt32).\n"
 #endif
-#ifdef C_SUPPORTS_COREAUDIO
+#if C_COREAUDIO
 	        "- When using CoreAudio, you can specify a soundfont here.\n"
 #endif
 #if C_ALSA
