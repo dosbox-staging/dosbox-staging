@@ -32,11 +32,11 @@ jobs:
           - name: Clang, +debugger
             packages: meson
             build_flags: --wrap-mode=nofallback -Denable_debugger=normal
-            max_warnings: 159
+            max_warnings: 157
           - name: Clang, warning_level=3
             packages: meson
             build_flags: --wrap-mode=nofallback -Dwarning_level=3
-            max_warnings: 264
+            max_warnings: 190
 
     steps:
       - uses: actions/checkout@v2
