@@ -112,14 +112,14 @@ static void ClrQueue(void) {
 	mpu.queue_pos=0;
 }
 
-static Bitu MPU401_ReadStatus(Bitu port,Bitu iolen) {
-	Bit8u ret=0x3f;	/* Bits 6 and 7 clear */
-	if (mpu.state.cmd_pending) ret|=0x40;
-	if (!mpu.queue_used) ret|=0x80;
+static Bitu MPU401_ReadStatus(Bitu /*port*/,Bitu /*iolen*/) {
+	Bit8u ret = 0x3f; /* Bits 6 and 7 clear */
+	if (mpu.state.cmd_pending) ret |= 0x40;
+	if (!mpu.queue_used) ret |= 0x80;
 	return ret;
 }
 
-static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
+static void MPU401_WriteCommand(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	if (mpu.mode==M_UART && val!=0xff) return;
 	if (mpu.state.reset) {
 		if (mpu.state.cmd_pending || val!=0xff) {
@@ -135,7 +135,7 @@ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 			case 2: {MIDI_RawOutByte(0xfa);mpu.clock.cth_counter=mpu.clock.cth_savecount=0;break;}
 			case 3: {MIDI_RawOutByte(0xfb);mpu.clock.cth_counter=mpu.clock.cth_savecount;break;}
 		}
-		if (val&0x20) LOG(LOG_MISC,LOG_ERROR)("MPU-401:Unhandled Recording Command %x",val);
+		if (val&0x20) LOG(LOG_MISC,LOG_ERROR)("MPU-401:Unhandled Recording Command %" sBitfs(X),val);
 		switch (val&0xc) {
 			case 0x4:	/* Stop */
 				if (mpu.state.playing && !mpu.clock.clock_to_host)
@@ -254,7 +254,7 @@ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 			mpu.state.irq_pending=true;
 			break;
 		case 0xff:	/* Reset MPU-401 */
-			LOG(LOG_MISC,LOG_NORMAL)("MPU-401:Reset %X",val);
+			LOG(LOG_MISC,LOG_NORMAL)("MPU-401:Reset %" sBitfs(X),val);
 			PIC_AddEvent(MPU401_ResetDone,MPU401_RESETBUSY);
 			mpu.state.reset=true;
 			if (mpu.mode==M_UART) {
@@ -264,7 +264,7 @@ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 			MPU401_Reset();
 			break;
 		case 0x3f:	/* UART mode */
-			LOG(LOG_MISC,LOG_NORMAL)("MPU-401:Set UART mode %X",val);
+			LOG(LOG_MISC,LOG_NORMAL)("MPU-401:Set UART mode %" sBitfs(X),val);
 			mpu.mode=M_UART;
 			break;
 		default:;
@@ -273,7 +273,7 @@ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 	QueueByte(MSG_MPU_ACK);
 }
 
-static Bitu MPU401_ReadData(Bitu port,Bitu iolen) {
+static Bitu MPU401_ReadData(Bitu /*port*/,Bitu /*iolen*/) {
 	Bit8u ret=MSG_MPU_ACK;
 	if (mpu.queue_used) {
 		if (mpu.queue_pos>=MPU401_QUEUE) mpu.queue_pos-=MPU401_QUEUE;
@@ -306,8 +306,10 @@ static Bitu MPU401_ReadData(Bitu port,Bitu iolen) {
 	return ret;
 }
 
-static void MPU401_WriteData(Bitu port,Bitu val,Bitu iolen) {
-	if (mpu.mode==M_UART) {MIDI_RawOutByte(val);return;}
+static void MPU401_WriteData(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
+
+	if (mpu.mode == M_UART) {MIDI_RawOutByte(val);return;}
+
 	switch (mpu.state.command_byte) {	/* 0xe# command data */
 		case 0x00:
 			break;
@@ -531,8 +533,10 @@ static void UpdateConductor(void) {
 	mpu.state.req_mask|=(1<<9);
 }
 
-static void MPU401_Event(Bitu val) {
-	if (mpu.mode==M_UART) return;
+static void MPU401_Event(Bitu /*val*/) {
+
+	if (mpu.mode == M_UART) return;
+
 	if (mpu.state.irq_pending) goto next_event;
 	if (mpu.state.playing) {
 		for (Bitu i=0;i<8;i++) { /* Decrease counters */
@@ -568,7 +572,7 @@ static void MPU401_EOIHandlerDispatch(void) {
 }
 
 //Updates counters and requests new data on "End of Input"
-static void MPU401_EOIHandler(Bitu val) {
+static void MPU401_EOIHandler(Bitu /*val*/) {
 	mpu.state.eoi_scheduled=false;
 	if (mpu.state.send_now) {
 		mpu.state.send_now=false;
@@ -672,7 +676,7 @@ public:
 
 static MPU401* test;
 
-void MPU401_Destroy(Section* sec){
+void MPU401_Destroy(Section* /*sec*/){
 	delete test;
 }
 
