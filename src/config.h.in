@@ -164,4 +164,10 @@
 // Non-4K page size (only on selected architectures)
 #mesondefine PAGESIZE
 
+/* Windows-related defines
+ */
+
+// Prevent <windows.h> from clobbering std::min and std::max
+#mesondefine NOMINMAX
+
 #endif
