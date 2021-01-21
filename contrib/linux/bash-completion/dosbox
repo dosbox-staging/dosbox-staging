@@ -24,10 +24,10 @@ _dosbox()
   local -a \
        _main_opts=(
                     -h --help -fullscreen -startmapper -noautoexec -securemode
-                    -scaler -forcescaler -lang -machine -socket -exit
+                    -scaler -forcescaler -lang -machine -socket -exit -userconf
                   )\
      _repeat_opts=(
-                    -c -conf
+                    -conf -c
                   )\
   _exclusive_opts=(
                     --version --printconf --editconf -resetconf -eraseconf
@@ -146,14 +146,14 @@ _dosbox()
     # Only show exclusive options in initial pass
     [[ $cword -gt 1 ]] || compgen -W "${_exclusive_opts[*]}" -- "${cur}"
 
-    # can be used more than once
-    compgen -W "${_repeat_opts[*]}" -- "${cur}"
-
     # May not be supported ( missing document or reader program )
     [[ ${_help_opts[*]} ]] && compgen -W "${_help_opts[*]}" -- "${cur}"
 
     # Should only be used once, so filtered
     compgen -W "${_main_opts[*]#@(${words_filter})}" -- "${cur}"
+
+    # can be used more than once
+    compgen -W "${_repeat_opts[*]}" -- "${cur}"
 
     compgen -f -X '!*.@(bat|BAT|com|COM|exe|EXE)'    -- "${cur}"
   )
