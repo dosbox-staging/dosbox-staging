@@ -170,4 +170,8 @@
 // Prevent <windows.h> from clobbering std::min and std::max
 #mesondefine NOMINMAX
 
+// Enables mathematical constants (such as M_PI) in Windows math.h header
+// https://docs.microsoft.com/en-us/cpp/c-runtime-library/math-constants
+#mesondefine _USE_MATH_DEFINES
+
 #endif

@@ -89,6 +89,10 @@ if cxx.get_id() == 'msvc'
   conf_data.set('NOMINMAX', true)
 endif
 
+if host_machine.system() == 'windows' or host_machine.system() == 'cygwin'
+  conf_data.set('_USE_MATH_DEFINES', true)
+endif
+
 if host_machine.endian() == 'big'
   conf_data.set('WORDS_BIGENDIAN', 1)
 endif
