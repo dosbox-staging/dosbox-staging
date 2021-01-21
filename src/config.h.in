@@ -110,19 +110,16 @@
 #define C_MT32EMU 0
 
 // Compiler supports Core Audio headers
-#mesondefine C_SUPPORTS_COREAUDIO
+#mesondefine C_COREAUDIO
 
 // Compiler supports Core MIDI headers
-#mesondefine C_SUPPORTS_COREMIDI
+#mesondefine C_COREMIDI
 
 /* Compiler features and extensions
  *
  * These are defines for compiler features we can't reliably verify during
  * compilation time.
  */
-
-// TODO generate ; support for __attribute__ syntax
-#define C_HAS_ATTRIBUTE 1
 
 // TODO generate ; support for __builtin_expect
 #define C_HAS_BUILTIN_EXPECT 1

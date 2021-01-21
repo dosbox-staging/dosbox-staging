@@ -148,7 +148,7 @@ if host_machine.system() == 'darwin'
                              modules : ['CoreAudio', 'AudioUnit', 'AudioToolbox'],
                              required : false)
   if coreaudio_dep.found()
-    conf_data.set('C_SUPPORTS_COREAUDIO', 1)
+    conf_data.set('C_COREAUDIO', 1)
   else
     warning('''Core Audio support disabled: compiler can't detect/use Apple Frameworks''')
   endif
@@ -157,7 +157,7 @@ if host_machine.system() == 'darwin'
                              modules : ['CoreMIDI', 'CoreFoundation'],
                              required : false)
   if coremidi_dep.found()
-    conf_data.set('C_SUPPORTS_COREMIDI', 1)
+    conf_data.set('C_COREMIDI', 1)
   else
     warning('''Core MIDI support disabled: compiler can't detect/use Apple Frameworks''')
   endif
