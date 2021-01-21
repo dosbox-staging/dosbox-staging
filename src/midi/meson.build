@@ -9,6 +9,7 @@ libmidi = static_library('midi', libmidi_sources,
                          dependencies : [
                            sdl2_dep,
                            fluid_dep,
+                           alsa_dep,
                            coreaudio_dep,
                            coremidi_dep
                          ])

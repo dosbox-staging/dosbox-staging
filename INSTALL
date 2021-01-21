@@ -1,6 +1,0 @@
-TODO: Add these two dependencies to meson.build and remove the file
-
-alsa-lib (mandatory, Linux only)
-    For ALSA audio support under linux.
-    See https://www.alsa-project.org/
-    Licensed under LGPL

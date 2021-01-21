@@ -109,8 +109,9 @@ opus_dep      = optional_dep
 png_dep       = optional_dep
 z_dep         = optional_dep
 curses_dep    = optional_dep # necessary for debugger builds
-coreaudio_dep = optional_dep # macOS only
-coremidi_dep  = optional_dep # macOS only
+alsa_dep      = optional_dep # Linux-only
+coreaudio_dep = optional_dep # macOS-only
+coremidi_dep  = optional_dep # macOS-only
 
 msg = 'You can disable this dependency with: -D@0@=false'
 
@@ -161,6 +162,13 @@ if host_machine.system() == 'darwin'
   else
     warning('''Core MIDI support disabled: compiler can't detect/use Apple Frameworks''')
   endif
+endif
+
+# Linux-only dependencies
+#
+if host_machine.system() == 'linux'
+  alsa_dep = dependency('alsa')
+  conf_data.set('C_ALSA', 1)
 endif
 
 

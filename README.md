@@ -104,11 +104,10 @@ Other differences:
 
 ## Build instructions
 
-Read [INSTALL](INSTALL) file for a general summary about dependencies and
-configure options and [BUILD.md](BUILD.md) for the comprehensive
-compilation guide.  You can also use helper script
-[`./scripts/build.sh`](scripts/build.sh), that performs builds for many
-useful scenarios (LTO, FDO, sanitizer builds, many others).
+Read [BUILD.md](BUILD.md) for the comprehensive compilation guide.
+You can also use helper script [`./scripts/build.sh`](scripts/build.sh),
+that performs builds for many useful scenarios (LTO, FDO, sanitizer builds,
+many others).
 
 ### Linux, macOS
 

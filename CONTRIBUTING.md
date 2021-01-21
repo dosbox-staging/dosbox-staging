@@ -71,9 +71,9 @@ discuss it with us early, e.g. by creating a new bugtracker issue.
 
 # Build dosbox-staging
 
-Install dependencies listed in [README.md][readme-b]; take a moment to read
-[INSTALL][install] file as well. You can also learn longer list of dependencies
-for other build systems by running script `./scripts/list-build-dependencies.sh`.
+Install dependencies listed in [README.md][readme-b].  You can also learn
+longer list of dependencies for other build systems by running script
+`./scripts/list-build-dependencies.sh`.
 
 Detailed build instructions are in [BUILD.md][build-doc] file.
 
@@ -99,7 +99,6 @@ Command `meson configure` summarizes all configuration options you can pass to
 `meson setup` (or describe how build directory is currently configured).
 
 [readme-b]: https://github.com/dosbox-staging/dosbox-staging#build-instructions
-[install]: https://github.com/dosbox-staging/dosbox-staging/blob/master/INSTALL
 [build-doc]: https://github.com/dosbox-staging/dosbox-staging/blob/master/BUILD.md
 
 # Contributing code
