@@ -123,8 +123,7 @@
 
 #mesondefine C_HAS_BUILTIN_EXPECT
 
-/* Quirks and toggles for standard headers, libraries, hardware-related
- * defines, etc.
+/* Defines for checking availability of standard functions and structs.
  *
  * Sometimes available functions, structs, or struct fields differ slightly
  * between operating systems.
@@ -146,13 +145,20 @@
 // Some OSes do not implement it (e.g. Haiku)
 #mesondefine HAVE_STRUCT_DIRENT_D_TYPE
 
-// Defines for header availability
+/* Available headers
+ *
+ * Checks for non-POSIX headers and POSIX headers not supported on Windows.
+ */
+
 #mesondefine HAVE_NETINET_IN_H
 #mesondefine HAVE_PWD_H
 #define HAVE_STDLIB_H 1
 #mesondefine HAVE_STRINGS_H
 #mesondefine HAVE_SYS_SOCKET_H
 #define HAVE_SYS_TYPES_H 1
+
+/* Hardware-related defines
+ */
 
 // Define to 1 when host/target processor uses big endian byte ordering
 #mesondefine WORDS_BIGENDIAN
