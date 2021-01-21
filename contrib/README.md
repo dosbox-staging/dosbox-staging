@@ -8,6 +8,8 @@ itself.
 
 - **icons**: Vector graphics and makefiles to re-create icons in .ico
   and .icns formats; read icons.md file for details
+- **roland**: Create interleaved ROMs used by mt32emu from IC dump
+  pairs named prefix.ic27.bin and prefix.ic26.bin
 - **static-fluidsynth**: Compiles a static FluidSynth library that can
   be used by `./configure` in the absense of `pkg-config`
 - **static-glib**: Compiles a static Glib library that can be used by
