@@ -1,0 +1,161 @@
+# dosbox(1) completion                                      -*- shell-script -*-
+# shellcheck shell=bash
+### EDITING NOTES:
+# As this is a bash function, when adding variables or arrays it is important
+# to initialise with local. This prevents the var./array polluting the users
+# env. Please check output of:
+#    declare -x ; declare -a
+# after testing your new completion script
+#
+# Notable exception is COMPREPLY, this needs to persist for communication with
+# bash_completion
+####
+_dosbox()
+{
+  COMPREPLY=()
+  local cur prev words cword
+  _init_completion -s || return
+  local IFS=$'|\t\n'
+  local words_filter="${words[*]:1:$(( cword - 1 ))}"
+
+  ### Main options, note the \ line cont.
+  # using nameref
+  # shellcheck disable=SC2034
+  local -a \
+       _main_opts=(
+                    -h --help -fullscreen -startmapper -noautoexec -securemode
+                    -scaler -forcescaler -lang -machine -socket -exit -userconf
+                  )\
+     _repeat_opts=(
+                    -conf -c
+                  )\
+  _exclusive_opts=(
+                    --version --printconf --editconf -resetconf -eraseconf
+                    -erasemapper -resetmapper
+                  )
+  ####
+
+  # setup nameref to point to array
+  [[ ${prev:0:1} == - ]] && local -n _sub_opts=${prev//+(-)/_}
+
+  ### Arrays holding sub. options
+  # The name should be the trigger option with leading "-"s replaced with "_"
+  # for example, --machine => _machine
+  # latter parts of the script will reference these arrays via a "nameref"
+  # i.e. The last option dictates the available sub. options
+
+  #
+  # shellcheck disable=SC2034
+  local -a \
+    _machine=(
+               hercules cga cga_mono tandy pcjr ega vgaonly svga_s3
+               svga_et3000 svga_et4000 svga_paradise vesa_nolfb
+             )\
+     _scaler=(
+               none normal2x normal3x advmame2x advmame3x advinterp2x
+               advinterp3x hq2x hq3x 2xsai super2xsai supereagle tv2x
+               tv3x rgb2x rgb3x scan2x scan3x
+             )
+  ### Offer ability for the user to override the default .conf dir.
+  # shellcheck disable=SC2034
+  local _conf="${DOSBOX_STAGING_CONF_DIR:-$XDG_CONFIG_HOME/dosbox/}"
+  #TODO validate the dir exists
+  #TODO document DOSBOX_STAGING_CONF_DIR var.
+  ####
+
+  # forcescaler uses same sub. options as scaler, so setup a nameref to it
+  # using nameref _sub_opts
+  # shellcheck disable=SC2034
+  local -n _forcescaler=_scaler
+
+  # can we get hints from manpage?
+  man -w dosbox >/dev/null 2>&1 && local manpage_hints=true
+
+  # pager may not exist, README might not be where I expect
+  local -a _pager
+  readarray -t -O 0 _pager < <( type -p zless zmore || true; )
+
+  local -a _help_opts
+  readarray -t -O 0 _help_opts < <(
+     [[ ${manpage_hints} == true ]] &&
+       printf "%s\n" "--MANPAGE"
+
+     [[ ${_pager[*]} ]] &&
+       [[ -e /usr/share/doc/dosbox-staging/README.gz ]] &&
+       printf "%s\n" "--README"
+     #TODO try harder to find README
+     )
+
+  case "$cur" in
+    --M*)
+      compopt -o nospace
+      # have to hope they tabbed
+      man dosbox
+      # replace cur with space
+      COMPREPLY=( " " )
+      return;;
+    --R*)
+      compopt -o nospace
+      "${_pager[0]}" /usr/share/doc/dosbox-staging/README.gz
+      # replace cur with space
+      COMPREPLY=( " " )
+      return;;
+  esac
+
+  case "$prev" in
+    -?(-)conf)
+      compopt -o plusdirs
+      readarray -t -O ${#COMPREPLY[@]} COMPREPLY \
+        < <( compgen -f -X '!*.@(conf|CONF)' -- "${cur}" )
+
+      # skip configured conf dir if cur looks like it contains a path
+      [[ ${cur} =~ ^[.]|[/\~] ]] ||
+      readarray -t -O ${#COMPREPLY[@]} COMPREPLY \
+        < <( compgen -f -X '!*.@(conf|CONF)' -- "${_sub_opts%/}/${cur##*/}" )
+
+      # filter out previously selected confs
+      COMPREPLY=( "${COMPREPLY[@]#@(${words_filter})}" )
+      return;;
+    -?(-)@(?(force)scaler|machine))
+      readarray -t -O 0 COMPREPLY \
+        < <( compgen -W "${_sub_opts[*]}" -- "${cur}" )
+      return;;
+    -socket|-lang|-c)
+      # man and the manpage required for hints
+      [[ ${manpage_hints} == true && -z ${cur} ]] &&
+        readarray -t -O ${#COMPREPLY[@]} COMPREPLY \
+        < <(
+          # shellcheck disable=SC2046
+          # using IFS=$'|\t\n" I want sed's output split
+          printf "» %s\n"                                        \
+           "no completion support for $prev yet"                 \
+           "hint from manpage:"                                  \
+           $( < <( man dosbox 2>/dev/null )                      \
+              sed -n -E '/ '"${prev#[-]/[-]}"' /,/^$/{s/^ +//p}' )
+        )
+      ;;
+  esac
+
+  # Some options are exclusive, no more options should be available
+  [[ ${words[*]} =~ (${_exclusive_opts[*]}) ]] && return
+
+  # Turn dir listing on
+  compopt -o plusdirs
+
+  readarray -t -O ${#COMPREPLY[@]} COMPREPLY < <(
+    # Only show exclusive options in initial pass
+    [[ $cword -gt 1 ]] || compgen -W "${_exclusive_opts[*]}" -- "${cur}"
+
+    # May not be supported ( missing document or reader program )
+    [[ ${_help_opts[*]} ]] && compgen -W "${_help_opts[*]}" -- "${cur}"
+
+    # Should only be used once, so filtered
+    compgen -W "${_main_opts[*]#@(${words_filter})}" -- "${cur}"
+
+    # can be used more than once
+    compgen -W "${_repeat_opts[*]}" -- "${cur}"
+
+    compgen -f -X '!*.@(bat|BAT|com|COM|exe|EXE)'    -- "${cur}"
+  )
+}
+complete -F _dosbox -o nosort dosbox
