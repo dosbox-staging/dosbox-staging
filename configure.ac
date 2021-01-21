@@ -158,14 +158,6 @@ fi
 
 dnl Checks for libraries.
 
-#Check if the compiler support attributes
-AH_TEMPLATE([C_HAS_ATTRIBUTE],[Determines if the compiler supports attributes for structures.])
-AC_MSG_CHECKING(if compiler allows __attribute__)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-typedef struct { } __attribute__((packed)) junk;]],
-[[ ]])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_HAS_ATTRIBUTE)],AC_MSG_RESULT(no))
-
-
 #Check if the compiler supports certain attributes
 OLDCFLAGS="$CFLAGS"
 CFLAGS="-Werror"
@@ -191,8 +183,7 @@ case "$host" in
    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
    #include <CoreMIDI/MIDIServices.h>
    int blah() { return 0; }
-   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework CoreMIDI -framework CoreFoundation";AC_DEFINE([C_SUPPORTS_COREMIDI], [],
-   [Compiler supports Core MIDI headers])],
+   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework CoreMIDI -framework CoreFoundation";AC_DEFINE(C_COREMIDI,1,[Compiler supports Core MIDI headers])],
    AC_MSG_RESULT(no);AC_MSG_WARN([Compiler can't compile Apple headers. CoreMIDI functionality disabled. Please use the Apple compiler!]))
 
    AC_MSG_CHECKING(if compiler supports Apple's Core Audio headers)
@@ -200,8 +191,7 @@ case "$host" in
    #include <AudioToolbox/AUGraph.h>
    #include <CoreServices/CoreServices.h>
    int blah() { return 0; }
-   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework AudioUnit -framework AudioToolbox";AC_DEFINE([C_SUPPORTS_COREAUDIO], [],
-   [Compiler supports Core Audio headers])],
+   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework AudioUnit -framework AudioToolbox";AC_DEFINE(C_COREAUDIO,1,[Compiler supports Core Audio headers])],
    AC_MSG_RESULT(no);AC_MSG_WARN([Compiler can't compile Apple headers. CoreAudio functionality disabled. Please use the Apple compiler!]))
    ;;
 esac
@@ -215,7 +205,7 @@ AC_HELP_STRING([--enable-alsa-midi],[compile with alsa midi support (default yes
 esac],
 [alsa_midi=true])
 if test x$alsa_midi = xtrue ; then
-  AM_PATH_ALSA(0.9.0, AC_DEFINE(HAVE_ALSA,1,[Define to 1 to use ALSA for MIDI]) , : )
+  AM_PATH_ALSA(0.9.0, AC_DEFINE(C_ALSA,1,[Define to 1 to enable ALSA MIDI support]) , : )
   CXXFLAGS="$CXXFLAGS $ALSA_CFLAGS"
 fi
 

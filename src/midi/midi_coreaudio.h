@@ -24,6 +24,8 @@
 
 #include "midi_handler.h"
 
+#if C_COREAUDIO
+
 #include <AudioToolbox/AUGraph.h>
 #include <CoreServices/CoreServices.h>
 
@@ -212,5 +214,7 @@ public:
 #undef RequireNoErr
 
 MidiHandler_coreaudio Midi_coreaudio;
+
+#endif // C_COREAUDIO
 
 #endif

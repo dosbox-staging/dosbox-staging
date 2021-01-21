@@ -605,10 +605,10 @@ void DOSBOX_Init(void) {
 	const char *midi_devices[] = {
 		"auto",
 #if defined(MACOSX)
-#ifdef C_SUPPORTS_COREMIDI
+#if C_COREMIDI
 		"coremidi",
 #endif
-#ifdef C_SUPPORTS_COREAUDIO
+#if C_COREAUDIO
 		"coreaudio",
 #endif
 #elif defined(WIN32)
@@ -616,7 +616,7 @@ void DOSBOX_Init(void) {
 #else
 		"oss",
 #endif
-#if defined(HAVE_ALSA)
+#if C_ALSA
 		"alsa",
 #endif
 #if C_FLUIDSYNTH
@@ -652,10 +652,10 @@ void DOSBOX_Init(void) {
 	        "- This option has no effect when using the built-in synthesizers\n"
 	        "  (mididevice = fluidsynth or mt32).\n"
 #endif
-#ifdef C_SUPPORTS_COREAUDIO
+#if C_COREAUDIO
 	        "- When using CoreAudio, you can specify a soundfont here.\n"
 #endif
-#if defined(HAVE_ALSA)
+#if C_ALSA
 	        "- When using ALSA, use Linux command 'aconnect -l' to list open\n"
 	        "  MIDI ports, and select one (for example 'midiconfig=14:0'\n"
 	        "  for sequencer client 14, port 0).\n"

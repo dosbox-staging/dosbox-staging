@@ -24,6 +24,8 @@
 
 #include "midi_handler.h"
 
+#if C_ALSA
+
 #define ALSA_PCM_OLD_HW_PARAMS_API
 #define ALSA_PCM_OLD_SW_PARAMS_API
 #include <alsa/asoundlib.h>
@@ -223,5 +225,7 @@ public:
 };
 
 MidiHandler_alsa Midi_alsa;
+
+#endif // C_ALSA
 
 #endif

@@ -80,15 +80,10 @@ MidiHandler Midi_none;
 
 #if defined(MACOSX)
 
-#if defined(C_SUPPORTS_COREMIDI)
 #include "midi_coremidi.h"
-#endif
-
-#if defined(C_SUPPORTS_COREAUDIO)
 #include "midi_coreaudio.h"
-#endif
 
-#elif defined (WIN32)
+#elif defined(WIN32)
 
 #include "midi_win32.h"
 
@@ -100,11 +95,7 @@ MidiHandler_oss Midi_oss;
 
 #endif
 
-#if defined (HAVE_ALSA)
-
 #include "midi_alsa.h"
-
-#endif
 
 struct DB_Midi {
 	uint8_t status;
