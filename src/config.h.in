@@ -121,8 +121,7 @@
  * compilation time.
  */
 
-// TODO generate ; support for __builtin_expect
-#define C_HAS_BUILTIN_EXPECT 1
+#mesondefine C_HAS_BUILTIN_EXPECT
 
 /* Quirks and toggles for standard headers, libraries, hardware-related
  * defines, etc.

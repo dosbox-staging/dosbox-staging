@@ -96,6 +96,23 @@ if cc.compiles(set_prio_code, name : 'test for setpriority support')
   conf_data.set('HAVE_SETPRIORITY', 1)
 endif
 
+# New compilers can check for this feature using __has_builtin, but this is
+# broken prior to Clang 10 and GCC 10, so we prefer to have this compilation
+# check for now:
+builtin_expect_code = '''
+void fun(bool test) {
+  // value of 'test' is usually going to be true
+  if (__builtin_expect(test, true)) {
+    /* likely branch */
+  } else {
+    /* unlikely branch */
+  }
+}
+'''
+if cxx.compiles(builtin_expect_code, name : 'test for __builtin_expect support')
+  conf_data.set('C_HAS_BUILTIN_EXPECT', 1)
+endif
+
 
 # external dependencies
 #
