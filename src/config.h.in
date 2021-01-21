@@ -87,9 +87,7 @@
 #mesondefine C_IPX
 
 // Enable serial port passthrough support
-#if defined(LINUX) || defined(WIN32) || defined(MACOSX) || defined(BSD)
-#define C_DIRECTSERIAL 1
-#endif
+#mesondefine C_DIRECTSERIAL
 
 // Define to 1 to use opengl display output support
 #mesondefine C_OPENGL
