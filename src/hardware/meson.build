@@ -56,6 +56,7 @@ libhardware = static_library('hardware', libhardware_sources,
                              dependencies : [
                                sdl2_dep,
                                sdl2_net_dep,
+                               winsock2_dep,
                                png_dep,
                                z_dep,
                                libnuked_dep
