@@ -145,6 +145,8 @@ curses_dep    = optional_dep # necessary for debugger builds
 alsa_dep      = optional_dep # Linux-only
 coreaudio_dep = optional_dep # macOS-only
 coremidi_dep  = optional_dep # macOS-only
+winsock2_dep  = optional_dep # Windows-only
+winmm_dep     = optional_dep # Windows-only
 
 msg = 'You can disable this dependency with: -D@0@=false'
 
@@ -202,6 +204,13 @@ endif
 if host_machine.system() == 'linux'
   alsa_dep = dependency('alsa')
   conf_data.set('C_ALSA', 1)
+endif
+
+# Windows-only dependencies
+#
+if host_machine.system() == 'windows' or host_machine.system() == 'cygwin'
+  winsock2_dep = cxx.find_library('ws2_32', required : true)
+  winmm_dep = cxx.find_library('winmm', required : true)
 endif
 
 

@@ -11,7 +11,8 @@ libmidi = static_library('midi', libmidi_sources,
                            fluid_dep,
                            alsa_dep,
                            coreaudio_dep,
-                           coremidi_dep
+                           coremidi_dep,
+                           winmm_dep
                          ])
 
 libmidi_dep = declare_dependency(link_with : libmidi)
