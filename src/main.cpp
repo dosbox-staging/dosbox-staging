@@ -20,6 +20,11 @@
 
 #include "dosbox.h"
 
+// When compiling for Windows, SDL converts function 'main' to 'WinMain' and
+// performs some additional initialization.
+//
+#include <SDL.h>
+
 int main(int argc, char *argv[])
 {
 	return sdl_main(argc, argv);
