@@ -1994,3 +1994,45 @@ static Bit32u DRC_CALL_CONV dynrec_pop_dword(void) {
 	reg_esp=(reg_esp&cpu.stack.notmask)|((reg_esp+4)&cpu.stack.mask);
 	return val;
 }
+
+static bool DRC_CALL_CONV dynrec_io_writeB(Bitu port) DRC_FC;
+static bool DRC_CALL_CONV dynrec_io_writeB(Bitu port) {
+	bool ex = CPU_IO_Exception(port,1);
+	if (!ex) IO_WriteB(port,reg_al);
+	return ex;
+}
+
+static bool DRC_CALL_CONV dynrec_io_writeW(Bitu port) DRC_FC;
+static bool DRC_CALL_CONV dynrec_io_writeW(Bitu port) {
+	bool ex = CPU_IO_Exception(port,2);
+	if (!ex) IO_WriteW(port,reg_ax);
+	return ex;
+}
+
+static bool DRC_CALL_CONV dynrec_io_writeD(Bitu port) DRC_FC;
+static bool DRC_CALL_CONV dynrec_io_writeD(Bitu port) {
+	bool ex = CPU_IO_Exception(port,4);
+	if (!ex) IO_WriteD(port,reg_eax);
+	return ex;
+};
+
+static bool DRC_CALL_CONV dynrec_io_readB(Bitu port) DRC_FC;
+static bool DRC_CALL_CONV dynrec_io_readB(Bitu port) {
+	bool ex = CPU_IO_Exception(port,1);
+	if (!ex) reg_al = (Bit8u)IO_ReadB(port);
+	return ex;
+}
+
+static bool DRC_CALL_CONV dynrec_io_readW(Bitu port) DRC_FC;
+static bool DRC_CALL_CONV dynrec_io_readW(Bitu port) {
+	bool ex = CPU_IO_Exception(port,2);
+	if (!ex) reg_ax = (Bit16u)IO_ReadW(port);
+	return ex;
+}
+
+static bool DRC_CALL_CONV dynrec_io_readD(Bitu port) DRC_FC;
+static bool DRC_CALL_CONV dynrec_io_readD(Bitu port) {
+	bool ex = CPU_IO_Exception(port,4);
+	if (!ex) reg_eax = (Bit32u)IO_ReadD(port);
+	return ex;
+}

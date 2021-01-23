@@ -1322,72 +1322,56 @@ static void dyn_string(StringOps op) {
 
 
 static void dyn_read_port_byte_direct(Bit8u port) {
-	dyn_add_iocheck_var(port,1);
-	gen_call_function_I((void*)&IO_ReadB,port);
-	MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,DRC_REG_EAX,0);
+	gen_mov_dword_to_reg_imm(FC_OP1,port);
+	gen_call_function_raw((void*)&dynrec_io_readB);
+	dyn_check_exception(FC_RETOP);
 }
 
 static void dyn_read_port_word_direct(Bit8u port) {
-	dyn_add_iocheck_var(port,decode.big_op?4:2);
-	gen_call_function_I(decode.big_op?((void*)&IO_ReadD):((void*)&IO_ReadW),port);
-	MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,DRC_REG_EAX,decode.big_op);
+	gen_mov_dword_to_reg_imm(FC_OP1,port);
+	gen_call_function_raw(decode.big_op?((void*)&dynrec_io_readD):((void*)&dynrec_io_readW));
+	dyn_check_exception(FC_RETOP);
 }
 
 static void dyn_write_port_byte_direct(Bit8u port) {
-	dyn_add_iocheck_var(port,1);
-	MOV_REG_BYTE_TO_HOST_REG_LOW(FC_RETOP,DRC_REG_EAX,0);
-	gen_extend_byte(false,FC_RETOP);
-	gen_call_function_IR((void*)&IO_WriteB,port,FC_RETOP);
+	gen_mov_dword_to_reg_imm(FC_OP1,port);
+	gen_call_function_raw((void*)&dynrec_io_writeB);
+	dyn_check_exception(FC_RETOP);
 }
 
 static void dyn_write_port_word_direct(Bit8u port) {
-	dyn_add_iocheck_var(port,decode.big_op?4:2);
-	MOV_REG_WORD_TO_HOST_REG(FC_RETOP,DRC_REG_EAX,decode.big_op);
-	if (!decode.big_op) gen_extend_word(false,FC_RETOP);
-	gen_call_function_IR(decode.big_op?((void*)&IO_WriteD):((void*)&IO_WriteW),port,FC_RETOP);
+	gen_mov_dword_to_reg_imm(FC_OP1,port);
+	gen_call_function_raw(decode.big_op?((void*)&dynrec_io_writeD):((void*)&dynrec_io_writeW));
+	dyn_check_exception(FC_RETOP);
 }
 
 
 static void dyn_read_port_byte(void) {
-	MOV_REG_WORD16_TO_HOST_REG(FC_ADDR,DRC_REG_EDX);
-	gen_extend_word(false,FC_ADDR);
-	gen_protect_addr_reg();
-	dyn_add_iocheck(FC_ADDR,1);
-	gen_restore_addr_reg();
-	gen_call_function_R((void*)&IO_ReadB,FC_ADDR);
-	MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,DRC_REG_EAX,0);
+	MOV_REG_WORD16_TO_HOST_REG(FC_OP1,DRC_REG_EDX);
+	gen_extend_word(false,FC_OP1);
+	gen_call_function_raw((void*)&dynrec_io_readB);
+	dyn_check_exception(FC_RETOP);
 }
 
 static void dyn_read_port_word(void) {
-	MOV_REG_WORD16_TO_HOST_REG(FC_ADDR,DRC_REG_EDX);
-	gen_extend_word(false,FC_ADDR);
-	gen_protect_addr_reg();
-	dyn_add_iocheck(FC_ADDR,decode.big_op?4:2);
-	gen_restore_addr_reg();
-	gen_call_function_R(decode.big_op?((void*)&IO_ReadD):((void*)&IO_ReadW),FC_ADDR);
-	MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,DRC_REG_EAX,decode.big_op);
+	MOV_REG_WORD16_TO_HOST_REG(FC_OP1,DRC_REG_EDX);
+	gen_extend_word(false,FC_OP1);
+	gen_call_function_raw(decode.big_op?((void*)&dynrec_io_readD):((void*)&dynrec_io_readW));
+	dyn_check_exception(FC_RETOP);
 }
 
 static void dyn_write_port_byte(void) {
-	MOV_REG_WORD16_TO_HOST_REG(FC_ADDR,DRC_REG_EDX);
-	gen_extend_word(false,FC_ADDR);
-	gen_protect_addr_reg();
-	dyn_add_iocheck(FC_ADDR,1);
-	MOV_REG_BYTE_TO_HOST_REG_LOW(FC_RETOP,DRC_REG_EAX,0);
-	gen_extend_byte(false,FC_RETOP);
-	gen_restore_addr_reg();
-	gen_call_function_RR((void*)&IO_WriteB,FC_ADDR,FC_RETOP);
+	MOV_REG_WORD16_TO_HOST_REG(FC_OP1,DRC_REG_EDX);
+	gen_extend_word(false,FC_OP1);
+	gen_call_function_raw((void*)&dynrec_io_writeB);
+	dyn_check_exception(FC_RETOP);
 }
 
 static void dyn_write_port_word(void) {
-	MOV_REG_WORD16_TO_HOST_REG(FC_ADDR,DRC_REG_EDX);
-	gen_extend_word(false,FC_ADDR);
-	gen_protect_addr_reg();
-	dyn_add_iocheck(FC_ADDR,decode.big_op?4:2);
-	MOV_REG_WORD_TO_HOST_REG(FC_RETOP,DRC_REG_EAX,decode.big_op);
-	if (!decode.big_op) gen_extend_word(false,FC_RETOP);
-	gen_restore_addr_reg();
-	gen_call_function_RR(decode.big_op?((void*)&IO_WriteD):((void*)&IO_WriteW),FC_ADDR,FC_RETOP);
+	MOV_REG_WORD16_TO_HOST_REG(FC_OP1,DRC_REG_EDX);
+	gen_extend_word(false,FC_OP1);
+	gen_call_function_raw(decode.big_op?((void*)&dynrec_io_writeD):((void*)&dynrec_io_writeW));
+	dyn_check_exception(FC_RETOP);
 }
 
 

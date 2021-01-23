@@ -2069,14 +2069,40 @@ static void dyn_interrupt(Bitu num) {
 	dyn_closeblock();
 }
 
-static void dyn_add_iocheck(Bitu access_size) {
-	gen_call_function((void *)&CPU_IO_Exception,"%Dw%Id",DREG(EDX),access_size);
-	dyn_check_bool_exception_al();
+static bool dyn_io_writeB(Bitu port,Bit8u val) {
+	bool ex = CPU_IO_Exception(port,1);
+	if (!ex) IO_WriteB(port,val);
+	return ex;
 }
 
-static void dyn_add_iocheck_var(Bit8u accessed_port,Bitu access_size) {
-	gen_call_function((void *)&CPU_IO_Exception,"%Id%Id",accessed_port,access_size);
-	dyn_check_bool_exception_al();
+static bool dyn_io_writeW(Bitu port,Bit16u val) {
+	bool ex = CPU_IO_Exception(port,2);
+	if (!ex) IO_WriteW(port,val);
+	return ex;
+}
+
+static bool dyn_io_writeD(Bitu port,Bit32u val) {
+	bool ex = CPU_IO_Exception(port,4);
+	if (!ex) IO_WriteD(port,val);
+	return ex;
+}
+
+static bool dyn_io_readB(Bitu port) {
+	bool ex = CPU_IO_Exception(port,1);
+	if (!ex) core_dyn.readdata = IO_ReadB(port);
+	return ex;
+}
+
+static bool dyn_io_readW(Bitu port) {
+	bool ex = CPU_IO_Exception(port,2);
+	if (!ex) core_dyn.readdata = IO_ReadW(port);
+	return ex;
+}
+
+static bool dyn_io_readD(Bitu port) {
+	bool ex = CPU_IO_Exception(port,4);
+	if (!ex) core_dyn.readdata = IO_ReadD(port);
+	return ex;
 }
 
 static void dyn_xlat(void) {
@@ -2651,35 +2677,31 @@ restart_prefix:
 		case 0xe2:dyn_loop(LOOP_NONE);goto finish_block;
 		case 0xe3:dyn_loop(LOOP_JCXZ);goto finish_block;
 		//IN AL/AX,imm
-		case 0xe4: {
-			Bitu port=decode_fetchb();
-			dyn_add_iocheck_var(port,1);
-			gen_call_function((void*)&IO_ReadB,"%Id%Rl",port,DREG(EAX));
-			} break;
-		case 0xe5: {
-			Bitu port=decode_fetchb();
-			dyn_add_iocheck_var(port,decode.big_op?4:2);
-			if (decode.big_op) {
-                gen_call_function((void*)&IO_ReadD,"%Id%Rd",port,DREG(EAX));
-			} else {
-				gen_call_function((void*)&IO_ReadW,"%Id%Rw",port,DREG(EAX));
-			}
-			} break;
+		case 0xe4:
+			gen_call_function((void*)&dyn_io_readB,"%Id",decode_fetchb());
+			dyn_check_bool_exception_al();
+			gen_mov_host(&core_dyn.readdata,DREG(EAX),1);
+			break;
+		case 0xe5:
+			if (!decode.big_op)
+				gen_call_function((void*)&dyn_io_readW,"%Id",decode_fetchb());
+			else
+				gen_call_function((void*)&dyn_io_readD,"%Id",decode_fetchb());
+			dyn_check_bool_exception_al();
+			gen_mov_host(&core_dyn.readdata,DREG(EAX),decode.big_op?4:2);
+			break;
 		//OUT imm,AL
-		case 0xe6: {
-			Bitu port=decode_fetchb();
-			dyn_add_iocheck_var(port,1);
-			gen_call_function((void*)&IO_WriteB,"%Id%Dl",port,DREG(EAX));
-			} break;
-		case 0xe7: {
-			Bitu port=decode_fetchb();
-			dyn_add_iocheck_var(port,decode.big_op?4:2);
-			if (decode.big_op) {
-                gen_call_function((void*)&IO_WriteD,"%Id%Dd",port,DREG(EAX));
-			} else {
-				gen_call_function((void*)&IO_WriteW,"%Id%Dw",port,DREG(EAX));
-			}
-			} break;
+		case 0xe6:
+			gen_call_function((void*)&dyn_io_writeB,"%Id%Dl",decode_fetchb(),DREG(EAX));
+			dyn_check_bool_exception_al();
+			break;
+		case 0xe7:
+			if (!decode.big_op)
+				gen_call_function((void*)&dyn_io_writeW,"%Id%Dw",decode_fetchb(),DREG(EAX));
+			else
+				gen_call_function((void*)&dyn_io_writeD,"%Id%Dd",decode_fetchb(),DREG(EAX));
+			dyn_check_bool_exception_al();
+			break;
 		case 0xe8:		/* CALL Ivx */
 			dyn_call_near_imm();
 			goto finish_block;
@@ -2693,29 +2715,29 @@ restart_prefix:
 		case 0xeb:dyn_exit_link((Bit8s)decode_fetchb());goto finish_block;
 		/* IN AL/AX,DX*/
 		case 0xec:
-			dyn_add_iocheck(1);
-			gen_call_function((void*)&IO_ReadB,"%Dw%Rl",DREG(EDX),DREG(EAX));
+			gen_call_function((void*)&dyn_io_readB,"%Dw",DREG(EDX));
+			dyn_check_bool_exception_al();
+			gen_mov_host(&core_dyn.readdata,DREG(EAX),1);
 			break;
 		case 0xed:
-			dyn_add_iocheck(decode.big_op?4:2);
-			if (decode.big_op) {
-                gen_call_function((void*)&IO_ReadD,"%Dw%Rd",DREG(EDX),DREG(EAX));
-			} else {
-				gen_call_function((void*)&IO_ReadW,"%Dw%Rw",DREG(EDX),DREG(EAX));
-			}
+			if (!decode.big_op)
+				gen_call_function((void*)&dyn_io_readW,"%Dw",DREG(EDX));
+			else
+				gen_call_function((void*)&dyn_io_readD,"%Dw",DREG(EDX));
+			dyn_check_bool_exception_al();
+			gen_mov_host(&core_dyn.readdata,DREG(EAX),decode.big_op?4:2);
 			break;
 		/* OUT DX,AL/AX */
 		case 0xee:
-			dyn_add_iocheck(1);
-			gen_call_function((void*)&IO_WriteB,"%Dw%Dl",DREG(EDX),DREG(EAX));
+			gen_call_function((void*)&dyn_io_writeB,"%Dw%Dl",DREG(EDX),DREG(EAX));
+			dyn_check_bool_exception_al();
 			break;
 		case 0xef:
-			dyn_add_iocheck(decode.big_op?4:2);
-			if (decode.big_op) {
-                gen_call_function((void*)&IO_WriteD,"%Dw%Dd",DREG(EDX),DREG(EAX));
-			} else {
-				gen_call_function((void*)&IO_WriteW,"%Dw%Dw",DREG(EDX),DREG(EAX));
-			}
+			if (!decode.big_op)
+				gen_call_function((void*)&dyn_io_writeW,"%Dw%Dw",DREG(EDX),DREG(EAX));
+			else
+				gen_call_function((void*)&dyn_io_writeD,"%Dw%Dd",DREG(EDX),DREG(EAX));
+			dyn_check_bool_exception_al();
 			break;
 		case 0xf0:		//LOCK
 			goto restart_prefix;
