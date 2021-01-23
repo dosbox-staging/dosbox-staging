@@ -15,7 +15,7 @@ jobs:
       has-commits: ${{ steps.commit-check.outputs.has-commits }}
 
   config_all:
-    name: ${{ matrix.system.name }} ${{ matrix.conf.configure_flags }} ${{ matrix.conf.without_packages }}
+    name: ${{ matrix.system.name }} ${{ matrix.conf.configure_flags }}
     runs-on: ${{ matrix.system.os }}
     needs: repo-check
     if: needs.repo-check.outputs.has-commits == 'true'
@@ -25,41 +25,28 @@ jobs:
         system:
           - name: Windows
             os: windows-latest
-            compiler: gcc
           - name: macOS
             os: macos-latest
-            compiler: clang
-            missing_packages: --disable-fluidsynth
           - name: Linux
             os: ubuntu-20.04
-            compiler: gcc
         conf:
-          - configure_flags:  --enable-debug
-          - configure_flags:  --enable-debug=heavy
-          - configure_flags:  --enable-alsa-midi
-          - configure_flags:  --enable-png-static
-          - configure_flags:  --enable-sdl-static
-          - configure_flags:  --enable-png-static --enable-sdl-static
-          - configure_flags:  --disable-alsa-midi
-          - configure_flags:  --disable-core-inline
-          - configure_flags:  --disable-dynamic-x86
-          - configure_flags:  --disable-dynrec
-          - configure_flags:  --disable-fpu
-          - configure_flags:  --disable-fpu-x64
-          - configure_flags:  --disable-fpu-x86
-          - configure_flags:  --disable-opengl
-          - configure_flags:  --disable-opus-cdda
-          - configure_flags:  --disable-screenshots
-          - configure_flags:  --disable-unaligned-memory
-          - configure_flags:  --disable-fluidsynth
-          - configure_flags:  --disable-mt32
-          - without_packages: -x net
-          - without_packages: -x curses
-          - without_packages: -x net -x curses
+          - configure_flags:  -Duse_sdl2_net=false
+          - configure_flags:  -Duse_opengl=false         # TODO opengl is always disabled on msys2
+          - configure_flags:  -Duse_fluidsynth=false
+          - configure_flags:  -Duse_opusfile=false
+          - configure_flags:  -Duse_png=false
+          # - configure_flags:  -Denable_debugger=normal # TODO broken on msys2
+          # - configure_flags:  -Denable_debugger=heavy  # TODO broken on msys2
+          - configure_flags:  -Ddynamic_core=dyn-x86
+          - configure_flags:  -Ddynamic_core=dynrec
+          - configure_flags:  -Ddynamic_core=none
+
     env:
       CHERE_INVOKING: yes
+
     steps:
       - uses:  actions/checkout@v2
+
       - name:  Check repo for commits
         id:    repo-meta
         shell: bash
@@ -76,7 +63,7 @@ jobs:
         if:    matrix.system.name == 'Windows'
         with:
           path: 'C:/tools/msys64'
-          key: msys2-64-${{ steps.get-date.outputs.date }}-3
+          key: msys2-64-${{ steps.get-date.outputs.date }}-4
 
       - name:  Install MSYS2 (Windows)
         if:    >
@@ -90,35 +77,51 @@ jobs:
           steps.cache-msys2.outputs.cache-hit != 'true'
         shell: python scripts\msys-bash.py {0}
         run: |
-           scripts/list-build-dependencies.sh -m msys2 -c clang ${{ matrix.conf.without_packages }} | xargs pacman -S --noconfirm
+           pacman -S --noconfirm \
+             meson \
+             mingw-w64-x86_64-ccache \
+             mingw-w64-x86_64-fluidsynth \
+             mingw-w64-x86_64-gcc \
+             mingw-w64-x86_64-libpng \
+             mingw-w64-x86_64-ncurses \
+             mingw-w64-x86_64-opusfile \
+             mingw-w64-x86_64-pkg-config \
+             mingw-w64-x86_64-SDL2 \
+             mingw-w64-x86_64-SDL2_net \
+             mingw-w64-x86_64-zlib
            .github/scripts/shrink-msys2.sh
 
-      - name:  Install dependencies ${{ matrix.conf.without_packages }} (Linux)
+      - name:  Install dependencies (Linux)
         if:    matrix.system.name == 'Linux'
         run: |
           sudo apt-get -y update
-          sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt -c gcc ${{ matrix.conf.without_packages }})
+          sudo apt-get install $(cat ./.github/packages/ubuntu-20.04-apt.txt)
 
-      - name:  Install dependencies ${{ matrix.conf.without_packages }} (macOS)
+      - name:  Install dependencies (macOS)
         if:    matrix.system.name == 'macOS'
-        run:   brew install $(./scripts/list-build-dependencies.sh -m brew -c clang ${{ matrix.conf.without_packages }})
+        run: |
+          brew install meson $(cat ./.github/packages/macos-brew.txt)
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Windows)
         if:    matrix.system.name == 'Windows'
         shell: python scripts\msys-bash.py {0}
-        run: >
-          scripts/build.sh -c ${{ matrix.system.compiler }} -t debug --bin-path /mingw64/bin
-          ${{ matrix.conf.configure_flags }} ${{ matrix.system.missing_packages }}
+        run: |
+          export PATH="/mingw64/bin:$PATH"
+          meson setup --wrap-mode=nofallback -Duse_opengl=false \
+            ${{ matrix.conf.configure_flags }} build
+          cat build/meson-logs/meson-log.txt
+          ninja -C build
 
       - name:  Build ${{ matrix.conf.configure_flags }} (macOS)
         if:    matrix.system.name == 'macOS'
-        run: >
-          export PKG_CONFIG_PATH="/usr/local/opt/ncurses/lib/pkgconfig:$PKG_CONFIG_PATH" &&
-          ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug
-          ${{ matrix.conf.configure_flags }} ${{ matrix.system.missing_packages }}
+        run: |
+          meson setup --wrap-mode=nofallback \
+            ${{ matrix.conf.configure_flags }} build
+          ninja -C build
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Linux)
         if:    matrix.system.name == 'Linux'
-        run: >
-          ./scripts/build.sh -c ${{ matrix.system.compiler }} -t debug
-          ${{ matrix.conf.configure_flags }} ${{ matrix.system.missing_packages }}
+        run: |
+          meson setup --wrap-mode=nofallback \
+            ${{ matrix.conf.configure_flags }} build
+          ninja -C build
