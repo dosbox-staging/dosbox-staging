@@ -100,7 +100,7 @@ jobs:
       - name:  Install dependencies (macOS)
         if:    matrix.system.name == 'macOS'
         run: |
-          brew install meson $(cat ./.github/packages/macos-brew.txt)
+          brew install $(cat ./.github/packages/macos-latest-brew.txt)
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Windows)
         if:    matrix.system.name == 'Windows'
