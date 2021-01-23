@@ -16,17 +16,15 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "mouse.h"
 
 #include <string.h>
 #include <math.h>
 
-
-#include "dosbox.h"
 #include "callback.h"
 #include "mem.h"
 #include "regs.h"
 #include "cpu.h"
-#include "mouse.h"
 #include "pic.h"
 #include "inout.h"
 #include "int10.h"

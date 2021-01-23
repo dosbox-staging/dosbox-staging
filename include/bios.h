@@ -19,6 +19,8 @@
 #ifndef DOSBOX_BIOS_H
 #define DOSBOX_BIOS_H
 
+#include "dosbox.h"
+
 #define BIOS_BASE_ADDRESS_COM1          0x400
 #define BIOS_BASE_ADDRESS_COM2          0x402
 #define BIOS_BASE_ADDRESS_COM3          0x404

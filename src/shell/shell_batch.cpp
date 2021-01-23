@@ -16,11 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "shell.h"
+
 #include <climits>
 #include <stdlib.h>
 #include <string.h>
 
-#include "shell.h"
 #include "support.h"
 
 // Permitted ASCII control characters in batch files

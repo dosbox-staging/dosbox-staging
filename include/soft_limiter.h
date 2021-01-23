@@ -84,9 +84,6 @@ duration.
 */
 
 #include "dosbox.h"
-#include "logging.h"
-#include "mixer.h"
-#include "support.h"
 
 #include <algorithm>
 #include <array>
@@ -94,6 +91,10 @@ duration.
 #include <limits>
 #include <cmath>
 #include <string>
+
+#include "logging.h"
+#include "mixer.h"
+#include "support.h"
 
 template <size_t array_frames>
 class SoftLimiter {
