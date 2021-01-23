@@ -16,16 +16,15 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "joystick.h"
 
 #include <string.h>
 #include <math.h>
-#include "dosbox.h"
+
 #include "inout.h"
 #include "setup.h"
-#include "joystick.h"
 #include "pic.h"
 #include "support.h"
-
 
 //TODO: higher axis can't be mapped. Find out why again
 

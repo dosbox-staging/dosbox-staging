@@ -16,6 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "dos_inc.h"
+
 #include <climits>
 #include <ctype.h>
 #include <stdlib.h>
@@ -26,7 +28,6 @@
 #include "bios.h"
 #include "mem.h"
 #include "regs.h"
-#include "dos_inc.h"
 #include "drives.h"
 #include "cross.h"
 #include "string_utils.h"

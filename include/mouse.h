@@ -19,6 +19,8 @@
 #ifndef DOSBOX_MOUSE_H
 #define DOSBOX_MOUSE_H
 
+#include "dosbox.h"
+
 void Mouse_ShowCursor(void);
 void Mouse_HideCursor(void);
 

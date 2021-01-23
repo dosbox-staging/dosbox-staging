@@ -18,9 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#if !defined(WIN32)
-
 #include "fs_utils.h"
+
+#if !defined(WIN32)
 
 #include <cerrno>
 #include <cctype>

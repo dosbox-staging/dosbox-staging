@@ -18,6 +18,9 @@
 
 #ifndef DOSBOX_JOYSTICK_H
 #define DOSBOX_JOYSTICK_H
+
+#include "dosbox.h"
+
 void JOYSTICK_Enable(Bitu which,bool enabled);
 
 void JOYSTICK_Button(Bitu which,Bitu num,bool pressed);
@@ -46,4 +49,5 @@ enum JoystickType {
 
 extern JoystickType joytype;
 extern bool button_wrapping_enabled;
+
 #endif
