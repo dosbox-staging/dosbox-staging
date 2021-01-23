@@ -22,19 +22,16 @@ jobs:
             build_flags: --wrap-mode=nofallback
             max_warnings: 0
           - name: GCC
-            packages: meson gcc@9
+            packages: gcc@9
             build_flags: --wrap-mode=nofallback --native-file=.github/meson/native-gcc-9.ini
             max_warnings: 0
           - name: Clang, +tests
-            packages: meson
             run_tests: true
             max_warnings: -1
           - name: Clang, +debugger
-            packages: meson
             build_flags: --wrap-mode=nofallback -Denable_debugger=normal
             max_warnings: 154
           - name: Clang, warning_level=3
-            packages: meson
             build_flags: --wrap-mode=nofallback -Dwarning_level=3
             max_warnings: 179
 
@@ -45,7 +42,7 @@ jobs:
         run: |
           brew install \
             ${{ matrix.conf.packages }} \
-            $(cat ./.github/packages/macos-brew.txt)
+            $(cat ./.github/packages/macos-latest-brew.txt)
 
       - name:  Prepare compiler cache
         id:    prep-ccache
