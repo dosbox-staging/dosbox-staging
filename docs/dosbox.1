@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Jan 17, 2021"
+.TH DOSBOX 1 "Jan 23, 2021"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 dosbox \- an x86/DOS emulator with sound/graphics
@@ -87,10 +87,45 @@ wish to execute on startup. Multiple
 .IR langfile .
 .TP
 .BI \-machine " machinetype"
-.RB "Setup " dosbox " to emulate a specific type of machine." 
-.RI "Valid choices are: " "hercules, cga, tandy, pcjr, ega, vgaonly, svga_s3(default), svga_et3000, svga_et4000, svga_paradise, vesa_nolfb, vesa_oldvbe".
-The machinetype has influence on both the videocard and the available
-soundcards.
+.RS
+.PP
+Setup DOSBox to emulate a specific type of machine.
+Valid choices are:
+.IP hercules
+Hercules Graphics Card (monochrome)
+.IP cga
+IBM Color Graphics Adapter
+.IP cga_mono
+IBM CGA attached to monochrome display (monochrome)
+.IP pcjr
+IBM PCjr
+.IP tandy
+Tandy Graphics Adapter (Tandy 1000)
+.IP ega
+IBM Enhanced Graphics Adapter
+.IP vgaonly
+IBM Video Graphics Array (see below)
+.IP vesa_oldvbe
+VESA SVGA - VESA BIOS Extensions (VBE) 1.2
+.IP vesa_nolfb
+VESA SVGA - VBE 2.0 with Linear Frame Buffer disabled
+.IP svga_paradise
+VESA SVGA - Paradise Systems PVGA1A - VBE 2.0
+.IP svga_et3000
+VESA SVGA - Tseng ET3000 - VBE 2.0
+.IP svga_et4000
+VESA SVGA - Tseng ET4000 - VBE 2.0
+.IP svga_s3
+VESA SVGA - S3 Trio - VBE 2.0
+.PP
+.RI "The default is " svga_s3 "."
+.PP
+.RI "For some special VGA effects the machinetype " vgaonly " can be used,
+note that this disables SVGA capabilities and might be slower due to the
+higher emulation precision."
+.PP
+The machinetype affects the video card and the available sound cards.
+.RE
 .TP
 .BI \-socket " socketnumber"
 .RI "Passes the socket number " socketnumber " to the nullmodem emulation. See README for details."
