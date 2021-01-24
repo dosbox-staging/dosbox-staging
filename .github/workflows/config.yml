@@ -63,7 +63,7 @@ jobs:
         if:    matrix.system.name == 'Windows'
         with:
           path: 'C:/tools/msys64'
-          key: msys2-64-${{ steps.get-date.outputs.date }}-4
+          key: msys2-64-${{ steps.get-date.outputs.date }}-6
 
       - name:  Install MSYS2 (Windows)
         if:    >
@@ -77,30 +77,19 @@ jobs:
           steps.cache-msys2.outputs.cache-hit != 'true'
         shell: python scripts\msys-bash.py {0}
         run: |
-           pacman -S --noconfirm \
-             meson \
-             mingw-w64-x86_64-ccache \
-             mingw-w64-x86_64-fluidsynth \
-             mingw-w64-x86_64-gcc \
-             mingw-w64-x86_64-libpng \
-             mingw-w64-x86_64-ncurses \
-             mingw-w64-x86_64-opusfile \
-             mingw-w64-x86_64-pkg-config \
-             mingw-w64-x86_64-SDL2 \
-             mingw-w64-x86_64-SDL2_net \
-             mingw-w64-x86_64-zlib
+           pacman -S --noconfirm $(cat .github/packages/windows-latest-msys2.txt)
            .github/scripts/shrink-msys2.sh
 
       - name:  Install dependencies (Linux)
         if:    matrix.system.name == 'Linux'
         run: |
           sudo apt-get -y update
-          sudo apt-get install $(cat ./.github/packages/ubuntu-20.04-apt.txt)
+          sudo apt-get install $(cat .github/packages/ubuntu-20.04-apt.txt)
 
       - name:  Install dependencies (macOS)
         if:    matrix.system.name == 'macOS'
         run: |
-          brew install $(cat ./.github/packages/macos-latest-brew.txt)
+          brew install $(cat .github/packages/macos-latest-brew.txt)
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Windows)
         if:    matrix.system.name == 'Windows'
