@@ -33,7 +33,7 @@ jobs:
             max_warnings: 154
           - name: Clang, warning_level=3
             build_flags: --wrap-mode=nofallback -Dwarning_level=3
-            max_warnings: 179
+            max_warnings: 168
 
     steps:
       - uses: actions/checkout@v2
