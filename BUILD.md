@@ -469,6 +469,23 @@ meson compile -C build
 ninja -C build
 ```
 
+### Disabling unwanted dependencies
+
+The majority of dependencies are optional and can be disabled during build.
+
+For example, to compile without SDL2\_net and OpenGL dependencies try:
+
+``` shell
+meson setup -Duse_sdl2_net=false -Duse_opengl=false build
+ninja -C build
+```
+
+See file [`meson_options.txt`](meson_options.txt) for list of all available
+project-specific build options.
+
+You can also run `meson configure` to see the list of *all* available
+build options (including project-specific ones).
+
 ### Run unit tests
 
 Prerequisites:
