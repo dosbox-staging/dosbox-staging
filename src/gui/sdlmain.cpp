@@ -658,6 +658,7 @@ static SDL_Surface * GFX_SetupSurfaceScaled(Bit32u sdl_flags, Bit32u bpp) {
 		fixedHeight = sdl.desktop.window.height;
 		sdl_flags |= SDL_HWSURFACE;
 	}
+
 	if (fixedWidth && fixedHeight) {
 		double ratio_w=(double)fixedWidth/(sdl.draw.width*sdl.draw.scalex);
 		double ratio_h=(double)fixedHeight/(sdl.draw.height*sdl.draw.scaley);
@@ -672,25 +673,27 @@ static SDL_Surface * GFX_SetupSurfaceScaled(Bit32u sdl_flags, Bit32u bpp) {
 			sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex*ratio_h + 0.4);
 			sdl.clip.h=(Bit16u)fixedHeight;
 		}
+
 		if (sdl.desktop.fullscreen)
 			sdl.surface = SDL_SetVideoMode_Wrap(fixedWidth,fixedHeight,bpp,sdl_flags);
 		else
 			sdl.surface = SDL_SetVideoMode_Wrap(sdl.clip.w,sdl.clip.h,bpp,sdl_flags);
-		if (sdl.surface && sdl.surface->flags & SDL_FULLSCREEN) {
-			sdl.clip.x=(Sint16)((sdl.surface->w-sdl.clip.w)/2);
-			sdl.clip.y=(Sint16)((sdl.surface->h-sdl.clip.h)/2);
-		} else {
-			sdl.clip.x = 0;
-			sdl.clip.y = 0;
-		}
-		return sdl.surface;
 	} else {
 		sdl.clip.x=0;sdl.clip.y=0;
 		sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex);
 		sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley);
 		sdl.surface=SDL_SetVideoMode_Wrap(sdl.clip.w,sdl.clip.h,bpp,sdl_flags);
-		return sdl.surface;
 	}
+
+	if (sdl.surface && sdl.surface->flags & SDL_FULLSCREEN) {
+		sdl.clip.x = (Sint16)((sdl.surface->w-sdl.clip.w)/2);
+		sdl.clip.y = (Sint16)((sdl.surface->h-sdl.clip.h)/2);
+	} else {
+		sdl.clip.x = 0;
+		sdl.clip.y = 0;
+	}
+
+	return sdl.surface;
 }
 
 void GFX_TearDown(void) {
@@ -1076,12 +1079,7 @@ dosurface:
 		}
 		sdl.opengl.pitch=width*4;
 
-		if(sdl.clip.x ==0 && sdl.clip.y ==0 && sdl.desktop.fullscreen && !sdl.desktop.full.fixed && (sdl.clip.w != sdl.surface->w || sdl.clip.h != sdl.surface->h)) {
-//			LOG_MSG("attempting to fix the centering to %d %d %d %d",(sdl.surface->w-sdl.clip.w)/2,(sdl.surface->h-sdl.clip.h)/2,sdl.clip.w,sdl.clip.h);
-			glViewport((sdl.surface->w-sdl.clip.w)/2,(sdl.surface->h-sdl.clip.h)/2,sdl.clip.w,sdl.clip.h);
-		} else {
-			glViewport(sdl.clip.x,sdl.clip.y,sdl.clip.w,sdl.clip.h);
-		}
+		glViewport(sdl.clip.x,sdl.clip.y,sdl.clip.w,sdl.clip.h);
 
 		if (sdl.opengl.texture > 0) {
 			glDeleteTextures(1,&sdl.opengl.texture);
