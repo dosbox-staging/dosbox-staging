@@ -16,8 +16,8 @@ core_selection = [
   [ 'aarch64', ['auto', 'dynrec'],  'C_DYNREC',      'ARMV8LE', 1 ],
   [ 'arm',     ['auto', 'dynrec'],  'C_DYNREC',      'ARMV7LE', 1 ],
 # [  ???       ['auto', 'dynrec'],  'C_DYNREC',      'ARMV4LE', 0 ], # ARMv6 or older (?)
-  [ 'ppc64',   ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1 ],
-  [ 'ppc64le', ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1 ], # for meson < 0.50
+  [ 'ppc64',   ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1 ], # for meson >= 0.47.2
+  [ 'ppc64le', ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1 ], # for meson <  0.47.2
   [ 'ppc',     ['auto', 'dynrec'],  'C_DYNREC',      'POWERPC', 1 ],
 # [ 'mips',    ['auto', 'dynrec'],  'C_DYNREC',      'MIPSEL',  ? ], # disabled in old buildsystem, but code is still there
 ]
