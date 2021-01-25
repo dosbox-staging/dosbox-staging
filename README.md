@@ -142,9 +142,8 @@ Instructions for creating a release build:
 git clone https://github.com/dosbox-staging/dosbox-staging.git
 cd dosbox-staging
 meson setup -Dbuildtype=release build
-cd build
-ninja
-./dosbox
+ninja -C build
+./build/dosbox
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md#build-dosbox-staging) for compilation

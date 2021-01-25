@@ -84,8 +84,7 @@ Example build instructions appropriate for development:
 
 ``` shell
 meson setup build
-cd build
-ninja
+ninja -C build
 ```
 
 With the new meson versions you can run:

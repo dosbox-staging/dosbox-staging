@@ -480,8 +480,7 @@ meson setup build
 meson compile -C build
 
 # for older versions
-cd build
-ninja
+ninja -C build
 ```
 
 ### Run unit tests
