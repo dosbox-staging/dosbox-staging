@@ -455,21 +455,7 @@ the build with `./scripts/build.sh -c <gcc or clang> -t release -m lto -m fdo`.
 
 ### Make a debug build
 
-Install dependencies listed in README.md. Some optional, recommended
-dependencies are:
-
-``` shell
-# Fedora
-sudo dnf install ccache
-```
-``` shell
-# Debian, Ubuntu
-sudo apt install ccache
-```
-``` shell
-# macOS
-brew install ccache
-```
+Install dependencies listed in README.md.
 
 Build steps :
 
