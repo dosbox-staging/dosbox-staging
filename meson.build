@@ -5,6 +5,12 @@ project('dosbox-staging', 'c', 'cpp',
 assert(meson.version().version_compare('>= 0.45.1'),
        'Expecting meson 0.45.1 or newer.')
 
+# https://mesonbuild.com/Release-notes-for-0-51-0.html#n_debugifrelease-and-buildtypeplain-means-no-asserts
+is_plain_build = (get_option('buildtype') == 'plain')
+if meson.version().version_compare('< 0.51.0') and is_plain_build
+  warning('C assertions might be enabled, use buildtype=release instead')
+endif
+
 # compiler flags
 #
 # Warnings enabled below are our baseline; use '-Dwarning_level=3' to
