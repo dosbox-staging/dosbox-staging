@@ -312,10 +312,10 @@ enum save_info_type {db_exception, cycle_check, normal, fpu_restore};
 static struct {
 	save_info_type type;
 	DynState state;
-	Bit8u * branch_pos;
+	const Bit8u * branch_pos;
 	Bit32u eip_change;
 	Bitu cycles;
-	Bit8u * return_pos;
+	const Bit8u * return_pos;
 } save_info[512];
 
 Bitu used_save_info=0;
@@ -523,13 +523,13 @@ static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high,bool release=fals
 	cache_addb(0x85);
 	cache_addd((Bit32u)(&paging.tlb.read[0]));
 	cache_addw(0xc085);		// test eax,eax
-	Bit8u* je_loc=gen_create_branch(BR_Z);
+	const Bit8u* je_loc=gen_create_branch(BR_Z);
 
 
 	cache_addw(0x048a);		// mov al,[eax+ecx]
 	cache_addb(0x08);
 
-	Bit8u* jmp_loc=gen_create_jump();
+	const Bit8u* jmp_loc=gen_create_jump();
 	gen_fill_branch(je_loc);
 	cache_addb(0x51);		// push ecx
 	cache_addb(0xe8);
@@ -593,20 +593,20 @@ static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword,bool release=fal
 	cache_addb(0x0c);
 	cache_addb(0x3d);       // cmp eax, 0xFFD00000/0xFFF00000
 	cache_addd(dword ? 0xffd00000:0xfff00000);
-	Bit8u* jb_loc1=gen_create_branch(BR_NB);
+	const Bit8u* jb_loc1=gen_create_branch(BR_NB);
 	cache_addb(0x25);       // and eax, 0x000FFFFF
 	cache_addd(0x000fffff);
 	cache_addw(0x048b);		// mov eax,paging.tlb.read[eax*TYPE Bit32u]
 	cache_addb(0x85);
 	cache_addd((Bit32u)(&paging.tlb.read[0]));
 	cache_addw(0xc085);		// test eax,eax
-	Bit8u* je_loc=gen_create_branch(BR_Z);
+	const Bit8u* je_loc=gen_create_branch(BR_Z);
 
 	if (!dword) cache_addb(0x66);
 	cache_addw(0x048b+(genreg->index <<(8+3)));		// mov dest,[eax+ecx]
 	cache_addb(0x08);
 
-	Bit8u* jmp_loc=gen_create_jump();
+	const Bit8u* jmp_loc=gen_create_jump();
 	gen_fill_branch(jb_loc1);
 	gen_fill_branch(je_loc);
 
@@ -671,12 +671,12 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 	cache_addb(0x8d);
 	cache_addd((Bit32u)(&paging.tlb.write[0]));
 	cache_addw(0xc985);		// test ecx,ecx
-	Bit8u* je_loc=gen_create_branch(BR_Z);
+	const Bit8u* je_loc=gen_create_branch(BR_Z);
 
 	cache_addw(0x0488+(genreg->index<<11)+(high?0x2000:0));		// mov [eax+ecx],reg
 	cache_addb(0x08);
 
-	Bit8u* jmp_loc=gen_create_jump();
+	const Bit8u* jmp_loc=gen_create_jump();
 	gen_fill_branch(je_loc);
 
 	cache_addb(0x52);	// push edx
@@ -708,20 +708,20 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=fa
 	cache_addb(0x0c);
 	cache_addw(0xf981);     // cmp ecx, 0xFFD00000/0xFFF00000
 	cache_addd(dword ? 0xffd00000:0xfff00000);
-	Bit8u* jb_loc1=gen_create_branch(BR_NB);
+	const Bit8u* jb_loc1=gen_create_branch(BR_NB);
 	cache_addw(0xe181);     // and ecx, 0x000FFFFF
 	cache_addd(0x000fffff);
 	cache_addw(0x0c8b);		// mov ecx,paging.tlb.write[ecx*TYPE Bit32u]
 	cache_addb(0x8d);
 	cache_addd((Bit32u)(&paging.tlb.write[0]));
 	cache_addw(0xc985);		// test ecx,ecx
-	Bit8u* je_loc=gen_create_branch(BR_Z);
+	const Bit8u* je_loc=gen_create_branch(BR_Z);
 
 	if (!dword) cache_addb(0x66);
 	cache_addw(0x0489+(genreg->index <<(8+3)));		// mov [eax+ecx],reg
 	cache_addb(0x08);
 
-	Bit8u* jmp_loc=gen_create_jump();
+	const Bit8u* jmp_loc=gen_create_jump();
 	gen_fill_branch(jb_loc1);
 	gen_fill_branch(je_loc);
 
@@ -783,7 +783,7 @@ static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword,bool release=fal
 	x64gen.regs[reg_args[1]]->notusable=false;
 	dyn_savestate(&callstate);
 
-	Bit8u *page_brk;
+	const Bit8u *page_brk;
 	opcode(tmp).set64().setea(gensrc->index,-1,0,dword?3:1).Emit8(0x8D); // lea tmp, [dst+(dword?3:1)]
 	if (dword) {
 		opcode(4).set64().setimm(~0xFFF,4).setrm(tmp).Emit8(0x81); // and tmp, ~0xFFF
@@ -798,14 +798,14 @@ static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword,bool release=fal
 	// mov tmp, [8*tmp+paging.tlb.read(rbp)]
 	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.read-(Bits)&cpu_regs).Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
-	Bit8u *nomap=gen_create_branch(BR_Z);
+	const Bit8u *nomap=gen_create_branch(BR_Z);
 	//mov dst, [tmp+src]
 	opcode(gendst->index,dword).setea(tmp,gensrc->index).Emit8(0x8B);
-	Bit8u* jmp_loc = gen_create_short_jump();
+	const Bit8u* jmp_loc = gen_create_short_jump();
 
 	gen_fill_branch(page_brk);
 	gen_load_imm(tmp, (Bitu)(dword?(void*)mem_unalignedreadd_checked:(void*)mem_unalignedreadw_checked));
-	Bit8u* page_jmp = gen_create_short_jump();
+	const Bit8u* page_jmp = gen_create_short_jump();
 
 	gen_fill_branch(nomap);
 	gen_load_imm(tmp, (Bitu)(dword?(void*)mem_readd_checked_dcx64:(void*)mem_readw_checked_dcx64));
@@ -844,7 +844,7 @@ static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high,bool release=fals
 	// mov tmp, [8*tmp+paging.tlb.read(rbp)]
 	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.read-(Bits)&cpu_regs).Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
-	Bit8u *nomap=gen_create_branch(BR_Z);
+	const Bit8u *nomap=gen_create_branch(BR_Z);
 
 	int src = gensrc->index;
 	if (high && src>=8) { // can't use REX prefix with high-byte reg
@@ -853,7 +853,7 @@ static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high,bool release=fals
 	}
 	// mov dst, byte [tmp+src]
 	opcode(gendst->index,true,high?4:0).setea(tmp,src).Emit8(0x8A);
-	Bit8u* jmp_loc=gen_create_short_jump();
+	const Bit8u* jmp_loc=gen_create_short_jump();
 
 	gen_fill_branch(nomap);
 	if (gensrc->index != ARG0_REG) {
@@ -886,7 +886,7 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=fa
 	if (release) gen_releasereg(addr);
 	dyn_savestate(&callstate);
 
-	Bit8u *page_brk;
+	const Bit8u *page_brk;
 	opcode(tmp).set64().setea(gendst->index,-1,0,dword?3:1).Emit8(0x8D); // lea tmp, [dst+(dword?3:1)]
 	if (dword) {
 		opcode(4).set64().setimm(~0xFFF,4).setrm(tmp).Emit8(0x81); // and tmp, ~0xFFF
@@ -901,14 +901,14 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=fa
 	// mov tmp, [8*tmp+paging.tlb.write(rbp)]
 	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.write-(Bits)&cpu_regs).Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
-	Bit8u *nomap=gen_create_branch(BR_Z);
+	const Bit8u *nomap=gen_create_branch(BR_Z);
 	//mov [tmp+src], dst
 	opcode(genval->index,dword).setea(tmp,gendst->index).Emit8(0x89);
-	Bit8u* jmp_loc = gen_create_short_jump();
+	const Bit8u* jmp_loc = gen_create_short_jump();
 
 	gen_fill_branch(page_brk);
 	gen_load_imm(tmp, (Bitu)(dword?(void*)mem_unalignedwrited_checked:(void*)mem_unalignedwritew_checked));
-	Bit8u* page_jmp = gen_create_short_jump();
+	const Bit8u* page_jmp = gen_create_short_jump();
 	gen_fill_branch(nomap);
 	gen_load_imm(tmp, (Bitu)(dword?(void*)mem_writed_checked_dcx64:(void*)mem_writew_checked_dcx64));
 	gen_fill_short_jump(page_jmp);
@@ -942,7 +942,7 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 	// mov tmp, [8*tmp+paging.tlb.write(rbp)]
 	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.write-(Bits)&cpu_regs).Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
-	Bit8u *nomap=gen_create_branch(BR_Z);
+	const Bit8u *nomap=gen_create_branch(BR_Z);
 
 	int dst = gendst->index;
 	if (high && dst>=8) { // can't use REX prefix with high-byte reg
@@ -952,7 +952,7 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 	// mov byte [tmp+src], val
 	opcode(genval->index,true,high?4:0).setea(tmp,dst).Emit8(0x88);
 
-	Bit8u* jmp_loc=gen_create_short_jump();
+	const Bit8u* jmp_loc=gen_create_short_jump();
 	gen_fill_branch(nomap);
 
 	if (gendst->index != ARG0_REG) {
@@ -1494,7 +1494,7 @@ static void dyn_cmpxchg_evgv(void) {
 	gen_dop_word(DOP_MOV,decode.big_op,DREG(TMPB),&DynRegs[decode.modrm.reg]);
 	// TMPB=src,TMPW=temp
 	gen_dop_word(DOP_CMP,decode.big_op,DREG(EAX),DREG(TMPW));
-	Bit8u * branch=gen_create_branch(BR_Z);
+	const Bit8u * branch=gen_create_branch(BR_Z);
 	// if eax!=temp: TMPB=temp
 	gen_dop_word(DOP_MOV,decode.big_op,DREG(TMPB),DREG(TMPW));
 	gen_fill_branch(branch);
@@ -1905,7 +1905,7 @@ static void dyn_branched_exit(BranchTypes btype,Bit32s eip_add) {
 	DynReg save_cycles,save_eip;
 	dyn_saveregister(DREG(CYCLES),&save_cycles);
 	dyn_saveregister(DREG(EIP),&save_eip);
-	Bit8u * data=gen_create_branch(btype);
+	const Bit8u * data=gen_create_branch(btype);
 
  	/* Branch not taken */
 	dyn_reduce_cycles();
@@ -1932,7 +1932,7 @@ enum LoopTypes {
 
 static void dyn_loop(LoopTypes type) {
 	Bits eip_add=(Bit8s)decode_fetchb();
-	Bit8u * branch1=0;Bit8u * branch2=0;
+	const Bit8u * branch1=0;const Bit8u * branch2=0;
 	gen_preloadreg(DREG(ECX));
 	gen_preloadreg(DREG(CYCLES));
 	gen_preloadreg(DREG(EIP));
@@ -2126,7 +2126,7 @@ static void dyn_larlsl(bool islar) {
 		gen_releasereg(DREG(TMPW));
 		DynState s;
 		dyn_savestate(&s);
-		Bit8u *is_pmode = gen_create_branch(BR_Z);
+		const Bit8u *is_pmode = gen_create_branch(BR_Z);
 		gen_call_function((void*)CPU_PrepareException,"%Id%Id",EXCEPTION_UD,0);
 		dyn_check_bool_exception_al();
 		gen_fill_branch(is_pmode);
@@ -2145,7 +2145,7 @@ static void dyn_larlsl(bool islar) {
 	dyn_flags_host_to_gen();
 	gen_needflags();
 	gen_preloadreg(&DynRegs[decode.modrm.reg]);
-	Bit8u *br = gen_create_branch(BR_NZ);
+	const Bit8u *br = gen_create_branch(BR_NZ);
 	gen_mov_host(&core_dyn.readdata, &DynRegs[decode.modrm.reg], decode.big_op?4:2);
 	gen_fill_branch(br);
 }
