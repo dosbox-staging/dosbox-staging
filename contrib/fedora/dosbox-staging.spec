@@ -1,19 +1,19 @@
 Name:    dosbox-staging
 Version: 0.76.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+
 URL:     https://dosbox-staging.github.io/
 Source:  https://github.com/dosbox-staging/dosbox-staging/archive/v%{version}/%{name}-%{version}.tar.gz
 
 # This package is a drop-in replacement for dosbox
-Obsoletes: dosbox < %{version}-%{release}
 Provides:  dosbox = %{version}-%{release}
+Obsoletes: dosbox < 0.74.4
 
 BuildRequires: alsa-lib-devel
 BuildRequires: automake
 BuildRequires: desktop-file-utils
-BuildRequires: fluidsynth-devel
+BuildRequires: fluidsynth-devel >= 2.0
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: libappstream-glib
@@ -21,7 +21,7 @@ BuildRequires: libpng-devel
 BuildRequires: librsvg2-tools
 BuildRequires: make
 BuildRequires: opusfile-devel
-BuildRequires: SDL2-devel
+BuildRequires: SDL2-devel >= 2.0.2
 BuildRequires: SDL2_net-devel
 
 Requires: hicolor-icon-theme
@@ -92,6 +92,10 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
 
 %changelog
+* Tue Jan 26 2021 Patryk Obara (pbo) <dreamer.tan@gmail.com>
+- 0.76.0-2
+- Tighten dependencies checks
+
 * Mon Jan 25 2021 Patryk Obara (pbo) <dreamer.tan@gmail.com>
 - 0.76.0-1
 - Update to 0.76.0
