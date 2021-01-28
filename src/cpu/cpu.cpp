@@ -540,6 +540,11 @@ doexception:
 	return CPU_PrepareException(EXCEPTION_GP,0);
 }
 
+void CPU_DebugException(Bit32u triggers,Bitu oldeip) {
+	cpu.drx[6] = (cpu.drx[6] & 0xFFFF1FF0) | triggers;
+	CPU_Interrupt(EXCEPTION_DB,CPU_INT_EXCEPTION,oldeip);
+}
+
 void CPU_Exception(Bitu which,Bitu error ) {
 //	LOG_MSG("Exception %d error %x",which,error);
 	cpu.exception.error=error;
@@ -548,6 +553,10 @@ void CPU_Exception(Bitu which,Bitu error ) {
 
 Bit8u lastint;
 void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
+	if (num == EXCEPTION_DB && (type&CPU_INT_EXCEPTION) == 0) {
+		CPU_DebugException(0,oldeip); // DR6 bits need updating
+		return;
+	}
 	lastint=num;
 	FillFlags();
 #if C_DEBUG
