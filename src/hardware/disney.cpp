@@ -366,22 +366,6 @@ static void DISNEY_CallBack(Bitu len) {
 	}
 }
 
-class DISNEY : public Module_base {
-public:
-	DISNEY(Section *configuration) : Module_base(configuration)
-	{
-		Section_prop * section=static_cast<Section_prop *>(configuration);
-		if(!section->Get_bool("disney")) return;
-
-
-		
-	}
-
-	~DISNEY() { DISNEY_disable(0); }
-};
-
-static DISNEY* test;
-
 static void DISNEY_ShutDown(Section* sec){
 	// Stop the game from accessing the IO ports
 	disney.read_handler.Uninstall();
@@ -394,11 +378,13 @@ static void DISNEY_ShutDown(Section* sec){
 	}
 
 	DISNEY_disable(0);
-	delete test;
 }
 
 void DISNEY_Init(Section* sec) {
-	test = new DISNEY(sec);
+	Section_prop *section = static_cast<Section_prop *>(sec);
+	assert(section);
+	if (!section->Get_bool("disney"))
+		return;
 
 	// Setup the mixer callback
 	disney.chan = mixer_channel_ptr_t(MIXER_AddChannel(DISNEY_CallBack,
