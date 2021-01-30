@@ -67,8 +67,6 @@ static struct {
 	Bitu interface_det_ext;
 } disney;
 
-static void DISNEY_CallBack(Bitu len);
-
 static void DISNEY_disable(Bitu) {
 	if (disney.chan) {
 		disney.chan->AddSilence();
@@ -297,17 +295,17 @@ static Bitu disney_read(Bitu port, MAYBE_UNUSED Bitu iolen)
 	return 0xff;
 }
 
-static void DISNEY_PlayStereo(Bitu len, uint8_t *l, uint8_t *r)
+static void DISNEY_PlayStereo(uint16_t len, const uint8_t *l, const uint8_t *r)
 {
 	static uint8_t stereodata[BUFFER_SAMPLES * 2];
-	for (Bitu i = 0; i < len; i++) {
+	for (uint16_t i = 0; i < len; ++i) {
 		stereodata[i*2] = l[i];
 		stereodata[i*2+1] = r[i];
 	}
 	disney.chan->AddSamples_s8(len,stereodata);
 }
 
-static void DISNEY_CallBack(Bitu len) {
+static void DISNEY_CallBack(uint16_t len) {
 	if (!len || !disney.chan)
 		return;
 
