@@ -26,12 +26,12 @@
 
 // Disney Sound Source Constants
 constexpr uint16_t DISNEY_BASE = 0x0378;
-constexpr uint8_t DISNEY_SIZE = 128;
+constexpr uint8_t BUFFER_SAMPLES = 128;
 
 enum STATE { IDLE, RUNNING, FINISHED, ANALYZING };
 
 typedef struct _dac_channel {
-	Bit8u buffer[DISNEY_SIZE];	// data buffer
+	Bit8u buffer[BUFFER_SAMPLES];
 	Bitu used;					// current data buffer level
 	double speedcheck_sum;
 	double speedcheck_last;
@@ -190,10 +190,10 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 				DISNEY_analyze(0);
 		}
 		if(disney.interface_det > 5) {
-			if(disney.da[0].used < DISNEY_SIZE) {
+			if (disney.da[0].used < BUFFER_SAMPLES) {
 				disney.da[0].buffer[disney.da[0].used] = disney.data;
 				disney.da[0].used++;
-			} //else LOG_MSG("disney overflow 0");
+			} // else LOG_MSG("disney overflow 0");
 		}
 		break;
 	}
@@ -209,10 +209,10 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 			}
 
 			// stereo channel latch
-			if(disney.da[1].used < DISNEY_SIZE) {
+			if (disney.da[1].used < BUFFER_SAMPLES) {
 				disney.da[1].buffer[disney.da[1].used] = disney.data;
 				disney.da[1].used++;
-			} //else LOG_MSG("disney overflow 1");
+			} // else LOG_MSG("disney overflow 1");
 		}
 
 		if((disney.control & 0x1) && !(val & 0x1)) {
@@ -222,10 +222,10 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 				DISNEY_analyze(0);
 			}
 			// stereo channel latch
-			if(disney.da[0].used < DISNEY_SIZE) {
+			if (disney.da[0].used < BUFFER_SAMPLES) {
 				disney.da[0].buffer[disney.da[0].used] = disney.data;
 				disney.da[0].used++;
-			} //else LOG_MSG("disney overflow 0");
+			} // else LOG_MSG("disney overflow 0");
 		}
 
 		if((disney.control & 0x8) && !(val & 0x8)) {
@@ -239,7 +239,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 				}
 			}
 			if(disney.interface_det_ext > 5) {
-				if(disney.da[0].used < DISNEY_SIZE) {
+				if (disney.da[0].used < BUFFER_SAMPLES) {
 					disney.da[0].buffer[disney.da[0].used] = disney.data;
 					disney.da[0].used++;
 				}
@@ -281,7 +281,7 @@ static Bitu disney_read(Bitu port,Bitu iolen) {
 }
 
 static void DISNEY_PlayStereo(Bitu len, Bit8u* l, Bit8u* r) {
-	static Bit8u stereodata[DISNEY_SIZE*2];
+	static Bit8u stereodata[BUFFER_SAMPLES * 2];
 	for(Bitu i = 0; i < len; i++) {
 		stereodata[i*2] = l[i];
 		stereodata[i*2+1] = r[i];
@@ -306,8 +306,9 @@ static void DISNEY_CallBack(Bitu len) {
 
 		// put the rest back to start
 		for(int i = 0; i < 2; i++) {
-			// TODO for mono only one 
-			memmove(disney.da[i].buffer,&disney.da[i].buffer[len],DISNEY_SIZE/*real_used*/-len);
+			// TODO for mono only one
+			memmove(disney.da[i].buffer, &disney.da[i].buffer[len],
+			        BUFFER_SAMPLES /*real_used*/ - len);
 			disney.da[i].used -= len;
 		}
 	// TODO: len > DISNEY
