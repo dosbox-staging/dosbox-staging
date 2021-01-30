@@ -44,7 +44,7 @@ typedef struct _dac_channel {
 
 using mixer_channel_ptr_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
-static struct {
+struct Disney {
 	IO_ReadHandleObject read_handler{};
 	IO_WriteHandleObject write_handler{};
 
@@ -65,7 +65,9 @@ static struct {
 	STATE state = STATE::IDLE;
 	Bitu interface_det;
 	Bitu interface_det_ext;
-} disney;
+};
+
+static Disney disney;
 
 static void DISNEY_disable(Bitu) {
 	if (disney.chan) {
