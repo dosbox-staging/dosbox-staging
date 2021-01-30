@@ -269,9 +269,10 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 	}
 }
 
-static Bitu disney_read(Bitu port,Bitu iolen) {
-	Bitu retval;
-	switch (port-DISNEY_BASE) {
+static Bitu disney_read(Bitu port, MAYBE_UNUSED Bitu iolen)
+{
+	uint8_t retval;
+	switch (port - DISNEY_BASE) {
 	case 0:		/* Data Port */
 //		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from data port");
 		return disney.data;
