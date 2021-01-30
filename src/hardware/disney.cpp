@@ -45,6 +45,9 @@ typedef struct _dac_channel {
 using mixer_channel_ptr_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
 static struct {
+	IO_ReadHandleObject read_handler{};
+	IO_WriteHandleObject write_handler{};
+
 	// parallel port stuff
 	uint8_t data;
 	uint8_t status;
@@ -364,19 +367,12 @@ static void DISNEY_CallBack(Bitu len) {
 }
 
 class DISNEY : public Module_base {
-private:
-	IO_ReadHandleObject ReadHandler = {};
-	IO_WriteHandleObject WriteHandler = {};
-
 public:
 	DISNEY(Section *configuration) : Module_base(configuration)
 	{
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		if(!section->Get_bool("disney")) return;
-	
-		WriteHandler.Install(DISNEY_BASE,disney_write,IO_MB,3);
-		ReadHandler.Install(DISNEY_BASE,disney_read,IO_MB,3);
-	
+
 		disney.status=0x84;
 		disney.control=0;
 		disney.last_used=0;
@@ -384,15 +380,16 @@ public:
 		DISNEY_disable(0);
 	}
 
-	~DISNEY(){
-		DISNEY_disable(0);
-	}
-
+	~DISNEY() { DISNEY_disable(0); }
 };
 
 static DISNEY* test;
 
 static void DISNEY_ShutDown(Section* sec){
+	// Stop the game from accessing the IO ports
+	disney.read_handler.Uninstall();
+	disney.write_handler.Uninstall();
+
 	// Stop and remove the mixer callback
 	if (disney.chan) {
 		disney.chan->Enable(false);
@@ -410,6 +407,10 @@ void DISNEY_Init(Section* sec) {
 	                                                   10000, "DISNEY"),
 	                                  MIXER_DelChannel);
 	assert(disney.chan);
+
+	// Register port handlers for 8-bit IO
+	disney.write_handler.Install(DISNEY_BASE, disney_write, IO_MB, 3);
+	disney.read_handler.Install(DISNEY_BASE, disney_read, IO_MB, 3);
 
 	sec->AddDestroyFunction(&DISNEY_ShutDown, true);
 }
