@@ -28,6 +28,8 @@
 
 #define DISNEY_SIZE 128
 
+enum STATE { IDLE, RUNNING, FINISHED, ANALYZING };
+
 typedef struct _dac_channel {
 	Bit8u buffer[DISNEY_SIZE];	// data buffer
 	Bitu used;					// current data buffer level
@@ -53,15 +55,10 @@ static struct {
 	// and the channel used for stereo
 	dac_channel* leader;
 	
-	Bitu state;
+	STATE state = STATE::IDLE;
 	Bitu interface_det;
 	Bitu interface_det_ext;
 } disney;
-
-#define DS_IDLE 0
-#define DS_RUNNING 1
-#define DS_FINISH 2
-#define DS_ANALYZING 3
 
 static void DISNEY_CallBack(Bitu len);
 
@@ -72,7 +69,7 @@ static void DISNEY_disable(Bitu) {
 	}
 	disney.leader = 0;
 	disney.last_used = 0;
-	disney.state = DS_IDLE;
+	disney.state = STATE::IDLE;
 	disney.interface_det = 0;
 	disney.interface_det_ext = 0;
 	disney.stereo = false;
@@ -81,7 +78,7 @@ static void DISNEY_disable(Bitu) {
 static void DISNEY_enable(Bitu freq) {
 	if(freq < 500 || freq > 100000) {
 		// try again..
-		disney.state = DS_IDLE;
+		disney.state = STATE::IDLE;
 		return;	
 	} else {
 #if 0
@@ -90,15 +87,15 @@ static void DISNEY_enable(Bitu freq) {
 #endif
 		disney.chan->SetFreq(freq);
 		disney.chan->Enable(true);
-		disney.state = DS_RUNNING;
+		disney.state = STATE::RUNNING;
 	}
 }
 
 static void DISNEY_analyze(Bitu channel){
 	switch(disney.state) {
-		case DS_RUNNING: // should not get here
+		case STATE::RUNNING: // should not get here
 			break;
-		case DS_IDLE:
+		case STATE::IDLE:
 			// initialize channel data
 			for(int i = 0; i < 2; i++) {
 				disney.da[i].used = 0;
@@ -109,10 +106,10 @@ static void DISNEY_analyze(Bitu channel){
 			disney.da[channel].speedcheck_last = PIC_FullIndex();
 			disney.da[channel].speedcheck_init = true;
 			
-			disney.state = DS_ANALYZING;
+			disney.state = STATE::ANALYZING;
 			break;
 
-		case DS_FINISH: 
+		case STATE::FINISHED: 
 		{
 			// detect stereo: if we have about the same data amount in both channels
 			Bits st_diff = disney.da[0].used - disney.da[1].used;
@@ -144,7 +141,7 @@ static void DISNEY_analyze(Bitu channel){
 				ch_speed[0]:ch_speed[1]); // TODO
 			break;
 		}
-		case DS_ANALYZING:
+		case STATE::ANALYZING:
 		{
 			double current = PIC_FullIndex();
 			dac_channel* cch = &disney.da[channel];
@@ -164,7 +161,7 @@ static void DISNEY_analyze(Bitu channel){
 			
 			// if both are failed we are back at start
 			if(disney.da[0].speedcheck_failed && disney.da[1].speedcheck_failed) {
-				disney.state=DS_IDLE;
+				disney.state=STATE::IDLE;
 				break;
 			}
 
@@ -172,7 +169,7 @@ static void DISNEY_analyze(Bitu channel){
 			
 			// analyze finish condition
 			if(disney.da[0].used > 30 || disney.da[1].used > 30)
-				disney.state = DS_FINISH;
+				disney.state = STATE::FINISHED;
 			break;
 		}
 	}
@@ -187,7 +184,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 		disney.data=val;
 		// if data is written here too often without using the stereo
 		// mechanism we use the simple DAC machanism. 
-        if(disney.state != DS_RUNNING) {
+        if(disney.state != STATE::RUNNING) {
 			disney.interface_det++;
 			if(disney.interface_det > 5)
 				DISNEY_analyze(0);
@@ -205,7 +202,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 2:		/* Control Port */
 		if((disney.control & 0x2) && !(val & 0x2)) {
-			if(disney.state != DS_RUNNING) {
+			if(disney.state != STATE::RUNNING) {
 				disney.interface_det = 0;
 				disney.interface_det_ext = 0;
 				DISNEY_analyze(1);
@@ -219,7 +216,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 		}
 
 		if((disney.control & 0x1) && !(val & 0x1)) {
-			if(disney.state != DS_RUNNING) {
+			if(disney.state != STATE::RUNNING) {
 				disney.interface_det = 0;
 				disney.interface_det_ext = 0;
 				DISNEY_analyze(0);
@@ -233,7 +230,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 
 		if((disney.control & 0x8) && !(val & 0x8)) {
 			// emulate a device with 16-byte sound FIFO
-			if(disney.state != DS_RUNNING) {
+			if(disney.state != STATE::RUNNING) {
 				disney.interface_det_ext++;
 				disney.interface_det = 0;
 				if(disney.interface_det_ext > 5) {
