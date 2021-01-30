@@ -98,6 +98,19 @@ static void DISNEY_enable(uint32_t freq)
 	disney.state = STATE::RUNNING;
 }
 
+// Calculate the frequency from DAC samples and speed parameters
+// The maximum possible frequency return is 127000 Hz, which
+// occurs when all 128 samples are used and the speedcheck_sum
+// has accumulated only one single tick.
+static uint32_t calc_frequency(const dac_channel &dac)
+{
+	if (dac.used <= 1)
+		return 0;
+	const uint32_t k_samples = 1000 * (dac.used - 1);
+	const auto frequency = k_samples / dac.speedcheck_sum;
+	return static_cast<uint32_t>(frequency);
+}
+
 static void DISNEY_analyze(Bitu channel){
 	switch(disney.state) {
 		case STATE::RUNNING: // should not get here
