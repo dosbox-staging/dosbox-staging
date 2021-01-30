@@ -37,6 +37,7 @@
 #include "midi.h"
 #include "mixer.h"
 #include "string_utils.h"
+#include "support.h"
 
 // mt32emu Settings
 // ----------------
@@ -331,6 +332,7 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	keep_rendering = true;
 	const auto render = std::bind(&MidiHandler_mt32::Render, this);
 	renderer = std::thread(render);
+	set_thread_name(renderer, "dosbox:mt32");
 	play_buffer = playable.Dequeue(); // populate the first play buffer
 
 	// Start playback
