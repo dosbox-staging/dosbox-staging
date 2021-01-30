@@ -32,7 +32,7 @@ constexpr uint8_t BUFFER_SAMPLES = 128;
 enum STATE { IDLE, RUNNING, FINISHED, ANALYZING };
 
 typedef struct _dac_channel {
-	Bit8u buffer[BUFFER_SAMPLES];
+	uint8_t buffer[BUFFER_SAMPLES];
 	Bitu used;					// current data buffer level
 	double speedcheck_sum;
 	double speedcheck_last;
@@ -42,9 +42,9 @@ typedef struct _dac_channel {
 
 static struct {
 	// parallel port stuff
-	Bit8u data;
-	Bit8u status;
-	Bit8u control;
+	uint8_t data;
+	uint8_t status;
+	uint8_t control;
 	// the D/A channels
 	dac_channel da[2];
 
@@ -281,8 +281,8 @@ static Bitu disney_read(Bitu port,Bitu iolen) {
 	return 0xff;
 }
 
-static void DISNEY_PlayStereo(Bitu len, Bit8u* l, Bit8u* r) {
-	static Bit8u stereodata[BUFFER_SAMPLES * 2];
+static void DISNEY_PlayStereo(Bitu len, uint8_t* l, uint8_t* r) {
+	static uint8_t stereodata[BUFFER_SAMPLES * 2];
 	for(Bitu i = 0; i < len; i++) {
 		stereodata[i*2] = l[i];
 		stereodata[i*2+1] = r[i];
@@ -315,8 +315,8 @@ static void DISNEY_CallBack(Bitu len) {
 	// TODO: len > DISNEY
 	} else { // not enough data
 		if(disney.stereo) {
-			Bit8u gapfiller0 = 128;
-			Bit8u gapfiller1 = 128;
+			uint8_t gapfiller0 = 128;
+			uint8_t gapfiller1 = 128;
 			if(real_used) {
 				gapfiller0 = disney.da[0].buffer[real_used-1];
 				gapfiller1 = disney.da[1].buffer[real_used-1];
@@ -331,7 +331,7 @@ static void DISNEY_CallBack(Bitu len) {
 			len -= real_used;
 
 		} else { // mono
-			Bit8u gapfiller = 128; //Keep the middle
+			uint8_t gapfiller = 128; //Keep the middle
 			if(real_used) {
 				// fix for some stupid game; it outputs 0 at the end of the stream
 				// causing a click. So if we have at least two bytes availible in the
