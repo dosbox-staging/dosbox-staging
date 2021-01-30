@@ -373,11 +373,8 @@ public:
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		if(!section->Get_bool("disney")) return;
 
-		disney.status=0x84;
-		disney.control=0;
-		disney.last_used=0;
 
-		DISNEY_disable(0);
+		
 	}
 
 	~DISNEY() { DISNEY_disable(0); }
@@ -396,6 +393,7 @@ static void DISNEY_ShutDown(Section* sec){
 		disney.chan.reset();
 	}
 
+	DISNEY_disable(0);
 	delete test;
 }
 
@@ -411,6 +409,12 @@ void DISNEY_Init(Section* sec) {
 	// Register port handlers for 8-bit IO
 	disney.write_handler.Install(DISNEY_BASE, disney_write, IO_MB, 3);
 	disney.read_handler.Install(DISNEY_BASE, disney_read, IO_MB, 3);
+
+	// Initialize the Disney states
+	disney.status = 0x84;
+	disney.control = 0;
+	disney.last_used = 0;
+	DISNEY_disable(0);
 
 	sec->AddDestroyFunction(&DISNEY_ShutDown, true);
 }
