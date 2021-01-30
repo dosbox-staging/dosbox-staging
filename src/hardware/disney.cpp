@@ -76,20 +76,20 @@ static void DISNEY_disable(Bitu) {
 	disney.stereo = false;
 }
 
-static void DISNEY_enable(Bitu freq) {
-	if(freq < 500 || freq > 100000) {
+static void DISNEY_enable(uint32_t freq)
+{
+	if (freq < 500 || freq > 100000) {
 		// try again..
 		disney.state = STATE::IDLE;
-		return;	
-	} else {
-#if 0
-		if(disney.stereo) LOG(LOG_MISC,LOG_NORMAL)("disney enable %d Hz, stereo",freq);
-		else LOG(LOG_MISC,LOG_NORMAL)("disney enable %d Hz, mono",freq);
-#endif
-		disney.chan->SetFreq(freq);
-		disney.chan->Enable(true);
-		disney.state = STATE::RUNNING;
+		return;
 	}
+#if 0
+	LOG(LOG_MISC,LOG_NORMAL)("DISNEY: enabled at %d Hz in %s", freq,
+	                         disney.stereo ? "stereo" : "mono");
+#endif
+	disney.chan->SetFreq(freq);
+	disney.chan->Enable(true);
+	disney.state = STATE::RUNNING;
 }
 
 static void DISNEY_analyze(Bitu channel){
