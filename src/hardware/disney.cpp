@@ -366,7 +366,13 @@ static void DISNEY_CallBack(Bitu len) {
 	}
 }
 
-static void DISNEY_ShutDown(Section* sec){
+static void DISNEY_ShutDown(Section *sec)
+{
+	DEBUG_LOG_MSG("DISNEY: Shutting down");
+
+	// Remove interrupt events
+	PIC_RemoveEvents(DISNEY_disable);
+
 	// Stop the game from accessing the IO ports
 	disney.read_handler.Uninstall();
 	disney.write_handler.Uninstall();
