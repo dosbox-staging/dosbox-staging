@@ -374,7 +374,7 @@ static void DISNEY_CallBack(uint16_t len) {
 	}
 }
 
-static void DISNEY_ShutDown(Section *sec)
+static void DISNEY_ShutDown(MAYBE_UNUSED Section *sec)
 {
 	DEBUG_LOG_MSG("DISNEY: Shutting down");
 
