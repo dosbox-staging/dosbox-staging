@@ -131,9 +131,6 @@ static void DISNEY_analyze(Bitu channel){
 
 		case STATE::FINISHED: 
 		{
-			// detect stereo: if we have about the same data amount in both channels
-			Bits st_diff = disney.da[0].used - disney.da[1].used;
-			
 			// find leader channel (the one with higher rate) [this good for the stereo case?]
 			if(disney.da[0].used > disney.da[1].used) {
 				//disney.monochannel=0;
@@ -143,9 +140,11 @@ static void DISNEY_analyze(Bitu channel){
 				disney.leader = &disney.da[1];
 			}
 			
-			if((st_diff < 5) && (st_diff > -5)) disney.stereo = true;
-			else disney.stereo = false;
-
+			// Stereo-mode if both DACs are similarly filled
+			const auto st_diff = abs(disney.da[0].used -
+			                         disney.da[1].used);
+			disney.stereo = (st_diff < 5);
+			
 			// Run with the greater DAC frequency
 			const auto max_freq = std::max(calc_frequency(disney.da[0]),
 			                               calc_frequency(disney.da[1]));
