@@ -33,6 +33,7 @@
 #include "cross.h"
 #include "fs_utils.h"
 #include "mixer.h"
+#include "support.h"
 
 static constexpr int FRAMES_PER_BUFFER = 512; // synth granularity
 
@@ -298,6 +299,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	keep_rendering = true;
 	const auto render = std::bind(&MidiHandlerFluidsynth::Render, this);
 	renderer = std::thread(render);
+	set_thread_name(renderer, "dosbox:fsynth");
 	play_buffer = playable.Dequeue(); // populate the first play buffer
 
 	// Start playback

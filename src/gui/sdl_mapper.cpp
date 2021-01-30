@@ -1228,6 +1228,7 @@ class Typer {
 			m_pace_ms = pace_ms;
 			m_stop_requested = false;
 			m_instance = std::thread(&Typer::Callback, this);
+			set_thread_name(m_instance, "dosbox:autotype");
 		}
 		void Wait() {
 			if (m_instance.joinable())
@@ -1237,6 +1238,7 @@ class Typer {
 			m_stop_requested = true;
 			Wait();
 		}
+
 	private:
 		void Callback() {
 		        // quit before our initial wait time
