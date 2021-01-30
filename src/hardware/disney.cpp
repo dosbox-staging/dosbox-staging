@@ -24,9 +24,9 @@
 #include "pic.h"
 #include "setup.h"
 
-#define DISNEY_BASE 0x0378
-
-#define DISNEY_SIZE 128
+// Disney Sound Source Constants
+constexpr uint16_t DISNEY_BASE = 0x0378;
+constexpr uint8_t DISNEY_SIZE = 128;
 
 enum STATE { IDLE, RUNNING, FINISHED, ANALYZING };
 
