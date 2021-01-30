@@ -34,14 +34,14 @@ constexpr uint8_t DISNEY_INIT_STATUS = 0x84;
 
 enum STATE { IDLE, RUNNING, FINISHED, ANALYZING };
 
-typedef struct _dac_channel {
-	uint8_t buffer[BUFFER_SAMPLES];
-	uint8_t used; // current data buffer level
-	double speedcheck_sum;
-	double speedcheck_last;
-	bool speedcheck_failed;
-	bool speedcheck_init;
-} dac_channel;
+struct dac_channel {
+	uint8_t buffer[BUFFER_SAMPLES] = {};
+	uint8_t used = 0; // current data buffer level
+	double speedcheck_sum = 0;
+	double speedcheck_last = 0;
+	bool speedcheck_failed = false;
+	bool speedcheck_init = false;
+};
 
 using mixer_channel_ptr_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
@@ -50,22 +50,22 @@ struct Disney {
 	IO_WriteHandleObject write_handler{};
 
 	// parallel port stuff
-	uint8_t data;
+	uint8_t data = 0;
 	uint8_t status = DISNEY_INIT_STATUS;
-	uint8_t control;
+	uint8_t control = 0;
 	// the D/A channels
-	dac_channel da[2];
+	dac_channel da[2] = {};
 
-	Bitu last_used;
+	Bitu last_used = 0;
 	mixer_channel_ptr_t chan{nullptr, MIXER_DelChannel};
-	bool stereo;
+	bool stereo = false;
 	// which channel do we use for mono output?
 	// and the channel used for stereo
-	dac_channel* leader;
-	
+	dac_channel* leader = nullptr;
+
 	STATE state = STATE::IDLE;
-	Bitu interface_det;
-	Bitu interface_det_ext;
+	Bitu interface_det = 0;
+	Bitu interface_det_ext = 0;
 };
 
 static Disney disney;
