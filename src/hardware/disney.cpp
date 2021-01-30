@@ -30,6 +30,7 @@
 // Disney Sound Source Constants
 constexpr uint16_t DISNEY_BASE = 0x0378;
 constexpr uint8_t BUFFER_SAMPLES = 128;
+constexpr uint8_t DISNEY_INIT_STATUS = 0x84;
 
 enum STATE { IDLE, RUNNING, FINISHED, ANALYZING };
 
@@ -50,7 +51,7 @@ struct Disney {
 
 	// parallel port stuff
 	uint8_t data;
-	uint8_t status;
+	uint8_t status = DISNEY_INIT_STATUS;
 	uint8_t control;
 	// the D/A channels
 	dac_channel da[2];
@@ -413,7 +414,7 @@ void DISNEY_Init(Section* sec) {
 	disney.read_handler.Install(DISNEY_BASE, disney_read, IO_MB, 3);
 
 	// Initialize the Disney states
-	disney.status = 0x84;
+	disney.status = DISNEY_INIT_STATUS;
 	disney.control = 0;
 	disney.last_used = 0;
 	DISNEY_disable(0);
