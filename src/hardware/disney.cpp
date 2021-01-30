@@ -185,8 +185,14 @@ static void DISNEY_analyze(Bitu channel){
 	}
 }
 
-static void disney_write(Bitu port,Bitu val,Bitu iolen) {
-	//LOG_MSG("write disney time %f addr%x val %x",PIC_FullIndex(),port,val);
+static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
+{
+	// Convert the IO data into a single byte-value, as Disney only
+	// operates on 8-bit values (IO ports also registered as IO_MB)
+	assert(data < UINT8_MAX);
+	const auto val = static_cast<uint8_t>(data);
+
+	// LOG_MSG("write disney time %f addr%x val %x",PIC_FullIndex(),port,val);
 	disney.last_used=PIC_Ticks;
 	switch (port-DISNEY_BASE) {
 	case 0:		/* Data Port */
