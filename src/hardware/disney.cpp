@@ -64,8 +64,8 @@ struct Disney {
 	dac_channel *leader = nullptr;
 
 	STATE state = STATE::IDLE;
-	Bitu interface_det = 0;
-	Bitu interface_det_ext = 0;
+	uint32_t interface_det = 0;
+	uint32_t interface_det_ext = 0;
 };
 
 static Disney disney;
