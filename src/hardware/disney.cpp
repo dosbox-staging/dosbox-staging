@@ -150,7 +150,7 @@ static void DISNEY_analyze(Bitu channel){
 		}
 		case STATE::ANALYZING:
 		{
-			double current = PIC_FullIndex();
+			const double current = PIC_FullIndex();
 			dac_channel* cch = &disney.da[channel];
 
 			if(!cch->speedcheck_init) {
