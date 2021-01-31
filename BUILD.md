@@ -535,6 +535,5 @@ Run tests and generate report:
 ``` shell
 meson setup -Db_coverage=true build
 meson test -C build
-cd build
-ninja coverage-html
+ninja -C build coverage-html
 ```
