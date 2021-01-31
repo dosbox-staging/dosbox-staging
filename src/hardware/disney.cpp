@@ -61,7 +61,7 @@ struct Disney {
 	bool stereo = false;
 	// which channel do we use for mono output?
 	// and the channel used for stereo
-	dac_channel* leader = nullptr;
+	dac_channel *leader = nullptr;
 
 	STATE state = STATE::IDLE;
 	Bitu interface_det = 0;
@@ -132,15 +132,11 @@ static void DISNEY_analyze(Bitu channel){
 
 		case STATE::FINISHED: 
 		{
-			// find leader channel (the one with higher rate) [this good for the stereo case?]
-			if(disney.da[0].used > disney.da[1].used) {
-				//disney.monochannel=0;
-				disney.leader = &disney.da[0];
-			} else {
-				//disney.monochannel=1;
-				disney.leader = &disney.da[1];
-			}
-			
+			// The leading channel has the most populated samples
+			disney.leader = disney.da[0].used > disney.da[1].used
+			                        ? &disney.da[0]
+			                        : &disney.da[1];
+
 			// Stereo-mode if both DACs are similarly filled
 			const auto st_diff = abs(disney.da[0].used -
 			                         disney.da[1].used);
