@@ -663,8 +663,15 @@ static SDL_Surface * GFX_SetupSurfaceScaled(Bit32u sdl_flags, Bit32u bpp) {
 		double ratio_w=(double)fixedWidth/(sdl.draw.width*sdl.draw.scalex);
 		double ratio_h=(double)fixedHeight/(sdl.draw.height*sdl.draw.scaley);
 		if ( ratio_w < ratio_h) {
-			sdl.clip.w=fixedWidth;
-			sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley*ratio_w + 0.1); //possible rounding issues
+			sdl.clip.w = fixedWidth;
+			sdl.clip.h = (Bit16u)(sdl.draw.height * sdl.draw.scaley*ratio_w + 0.1); //possible rounding issues
+
+			if(sdl.desktop.want_type == SCREEN_OPENGL && ( (fixedHeight % sdl.draw.height) == 0 && (fixedWidth % sdl.draw.width) == 0))  {
+				//wanted resolution is clear multiple of input
+				//allow this resolution if aspect=true and ratio is somewhat similar to 1.33
+				float r = static_cast<float>(fixedWidth)/static_cast<float>(fixedHeight);
+				if (render.aspect&& r >1.25f && r < 1.40f) sdl.clip.h = fixedHeight;
+			}
 		} else {
 			/*
 			 * The 0.4 is there to correct for rounding issues.
@@ -1129,8 +1136,9 @@ dosurface:
 			if (glIsList(sdl.opengl.displaylist)) glDeleteLists(sdl.opengl.displaylist, 1);
 			sdl.opengl.displaylist = glGenLists(1);
 			glNewList(sdl.opengl.displaylist, GL_COMPILE);
-			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 
+			//Create one huge triangle and only display a portion.
+			//When using a quad, there was scaling bug (certain resolutions on Nvidia chipsets) in the seam
 			glBegin(GL_TRIANGLES);
 			// upper left
 			glTexCoord2f(0,0); glVertex2f(-1.0f, 1.0f);
@@ -1419,14 +1427,12 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		if (sdl.opengl.pixel_buffer_object) {
 			glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
-			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
 					sdl.draw.width, sdl.draw.height, GL_BGRA_EXT,
 					GL_UNSIGNED_INT_8_8_8_8_REV, 0);
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 		} else if (changedLines) {
 			Bitu y = 0, index = 0;
-			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 			while (y < sdl.draw.height) {
 				if (!(index & 1)) {
 					y += changedLines[index];
