@@ -521,7 +521,7 @@ meson setup --wrap-mode=nodownload build
 meson test -C build
 ```
 
-### Build test coverate report
+### Build test coverage report
 
 Prerequisites:
 
