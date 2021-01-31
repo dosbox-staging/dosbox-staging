@@ -321,7 +321,7 @@ static void DISNEY_CallBack(uint16_t len) {
 		else disney.chan->AddSamples_m8(len,disney.leader->buffer);
 
 		// put the rest back to start
-		for(int i = 0; i < 2; i++) {
+		for (uint8_t i = 0; i < 2; ++i) {
 			// TODO for mono only one
 			memmove(disney.da[i].buffer, &disney.da[i].buffer[len],
 			        BUFFER_SAMPLES /*real_used*/ - len);
