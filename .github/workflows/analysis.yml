@@ -42,11 +42,12 @@ jobs:
     needs: run_linters
     steps:
       - uses: actions/checkout@v2
+
       - run:  sudo apt-get update
-      - name: Install C++ compiler and libraries
-        run:  sudo apt-get install python3-setuptools $(./scripts/list-build-dependencies.sh -m apt -c gcc)
-      - name: Install scan-build (Python version)
-        run:  sudo pip3 install scan-build beautifulsoup4 html5lib
+
+      - name: Install dependencies
+        run:  sudo apt-get install clang-tools python3-bs4
+                                   $(cat .github/packages/ubuntu-20.04-apt.txt)
 
       - name:  Prepare compiler cache
         id:    prep-ccache
@@ -56,6 +57,7 @@ jobs:
           echo "::set-output name=dir::$CCACHE_DIR"
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+
       - uses:  actions/cache@v2
         id:    cache-ccache
         with:
@@ -63,23 +65,24 @@ jobs:
           key:  ccache-static-clang-${{ steps.prep-ccache.outputs.today }}
           restore-keys: |
             ccache-static-clang-${{ steps.prep-ccache.outputs.yesterday }}
+
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - name: Build
+
+      - name: Run scan-build
         run: |
           # build steps
           set -x
-          g++ --version
-          ./autogen.sh
-          ./configure CC="ccache gcc" CXX="ccache g++"
-          intercept-build make -j "$(nproc)"
-      - name: Analyze
-        run:  analyze-build -v -o report --html-title="dosbox-staging (${GITHUB_SHA:0:8})"
+          meson setup build
+          ninja -C build scan-build
+          mv build/meson-logs/scanbuild report
+
       - name: Upload report
         uses: actions/upload-artifact@v2
         with:
           name: clang-analysis-report
           path: report
+
       - name: Summarize report
         env:
           MAX_BUGS: 183
