@@ -537,3 +537,23 @@ meson setup -Db_coverage=true build
 meson test -C build
 ninja -C build coverage-html
 ```
+
+### Static analysis report
+
+Prerequisites:
+
+``` shell
+# Fedora
+sudo dnf install clang-analyzer
+```
+``` shell
+# Debian, Ubuntu
+sudo apt install clang-tools
+```
+
+Build and generate report:
+
+``` shell
+meson setup build
+ninja -C build scan-build
+```
