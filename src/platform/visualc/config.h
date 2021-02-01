@@ -42,6 +42,9 @@
 /* Define to 1 to enable FluidSynth MIDI synthesizer */
 #define C_FLUIDSYNTH 1
 
+/* Define to 1 to use Opus-encoded CD-audio tracks, requires opusfile */
+#define USE_OPUS 1
+
 /* Enable the FPU module, still only for beta testing */
 #define C_FPU 1
 
