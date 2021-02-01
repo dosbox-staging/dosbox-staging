@@ -92,6 +92,7 @@ jobs:
           echo
           ./scripts/count-clang-bugs.py report/*/index.html
 
+
   dynamic_matrix:
     name: ${{ matrix.conf.name }} dynamic sanitizers
     needs: run_linters
@@ -99,25 +100,18 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: Clang
-            sanitizers: USAN
-            usan:  0  # cleared out in our existing tests
-            uasan: -1
           - name: GCC
-            # TSAN excluded, harness segfaults inside virual-X11 environment
-            sanitizers: UASAN
-            usan:  -1
-            uasan: 4
+            max-undefined-issues: 0 # undefined behaviour
+            max-address-issues:   0 # address sanitizer
+
     steps:
       - uses: actions/checkout@v2
+
       - run:  sudo apt-get update
+
       - name: Install C++ compiler and libraries
-        env:
-          VERSION_GCC: 9
-          VERSION_Clang: 8
-        run:  >
-          sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt
-          -c ${{ matrix.conf.name }} -v $VERSION_${{ matrix.conf.name }})
+        run:  sudo apt-get install $(cat .github/packages/ubuntu-20.04-apt.txt)
+
       - name:  Prepare compiler cache
         id:    prep-ccache
         shell: bash
@@ -126,6 +120,7 @@ jobs:
           echo "::set-output name=dir::$CCACHE_DIR"
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+
       - uses:  actions/cache@v2
         id:    cache-ccache
         with:
@@ -133,26 +128,24 @@ jobs:
           key:  ccache-sanitizers-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.today }}
           restore-keys: |
             ccache-sanitizers-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.yesterday }}
+
       - name: Log environment
         run:  ./scripts/log-env.sh
+
       - name: Build and run sanitizers
-        env:
-          VERSION_GCC: 9
-          VERSION_Clang: 8
-        run: |
-          ./.github/scripts/build-and-run-sanitizers.sh \
-            ${{ matrix.conf.name }} \
-            $VERSION_${{ matrix.conf.name }} \
-            ${{ matrix.conf.sanitizers }}
+        run: ./.github/scripts/build-and-run-sanitizers.sh ${{ matrix.conf.name }}
+                                                           undefined address
+
       - name: Upload logs
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.conf.name }}-sanitizer-logs
           path: ${{ matrix.conf.name }}-logs
+
       - name: Summarize issues
         env:
-          USAN_LOG:  ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-USAN-EnterExit.log.xz
-          UASAN_LOG: ${{ matrix.conf.name }}-logs/${{ matrix.conf.name }}-UASAN-EnterExit.log.xz
+          USAN_LOG:  ${{ matrix.conf.name }}-logs/undefined-EnterExit.log.xz
+          ASAN_LOG:  ${{ matrix.conf.name }}-logs/address-EnterExit.log.xz
         run: |
           # summary
 
@@ -163,11 +156,17 @@ jobs:
           if [[ -f "$USAN_LOG" ]] ; then
             echo_bold "Undefined Behaviour sanitizer:"
             echo
-            xzcat "$USAN_LOG" | MAX_ISSUES=${{ matrix.conf.usan }} ./scripts/count-xsan-issues.py -
+            xzcat "$USAN_LOG" | MAX_ISSUES=${{ matrix.conf.max-undefined-issues }} ./scripts/count-xsan-issues.py -
+          else
+            echo "No UB sanitizer logs found."
+            echo
           fi
 
-          if [[ -f "$UASAN_LOG" ]] ; then
-            echo_bold "Undefined Behaviour + Address sanitizers:"
+          if [[ -f "$ASAN_LOG" ]] ; then
+            echo_bold "Address sanitizer:"
             echo
-            xzcat "$UASAN_LOG" | MAX_ISSUES=${{ matrix.conf.uasan }} ./scripts/count-xsan-issues.py -
+            xzcat "$ASAN_LOG" | MAX_ISSUES=${{ matrix.conf.max-address-issues}} ./scripts/count-xsan-issues.py -
+          else
+            echo "No address sanitizer logs found."
+            echo
           fi
