@@ -8,11 +8,11 @@
 # various sanitizer-builds.
 #
 # Usage:
-#   ./build-and-run-sanitizers.sh BUILDDIR LOGDIR"
+#   ./run-sanitizers.sh BUILDDIR LOGDIR"
 #
 set -euo pipefail
 
-# let build logs be printed to the output, we don't need them stored in artifacts
+# let run logs be printed to the output, we don't need them stored in artifacts
 set -x
 
 # Check the arguments
@@ -28,7 +28,7 @@ logs="$2"
 # Move to the top of our source directory
 cd "$(git rev-parse --show-toplevel)"
 
-# Make a directory to hold our build and run output
+# Make a directory to hold our run output
 mkdir -p "${logs}"
 
 # SAN-specific environment variables

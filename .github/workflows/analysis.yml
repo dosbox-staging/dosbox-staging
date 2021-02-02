@@ -159,7 +159,7 @@ jobs:
       - run:  ninja -C build
 
       - name: Run sanitizer test cases
-        run:  ./.github/scripts/build-and-run-sanitizers.sh build sanitizer-logs
+        run:  ./.github/scripts/run-sanitizers.sh build sanitizer-logs
 
       - name: Upload logs
         uses: actions/upload-artifact@v2
