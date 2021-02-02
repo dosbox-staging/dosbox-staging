@@ -94,16 +94,39 @@ jobs:
 
 
   dynamic_matrix:
-    name: ${{ matrix.conf.name }} dynamic sanitizers
+    name: ${{ matrix.conf.name }}
     needs: run_linters
     runs-on: ubuntu-20.04
     strategy:
       matrix:
         conf:
-          - name: GCC
-            max-undefined-issues: 0 # undefined behaviour
-            max-address-issues:   0 # address sanitizer
+          # AddressSanitizer is a fast memory error detector. Memory access
+          # instructions are instrumented to detect out-of-bounds and
+          # use-after-free bugs.
+          # See GCC manual to learn more.
+          - name: GCC address sanitizer
+            build_flags: -Db_sanitize=address
+            logs: gcc-asan-logs
+            max_issues: 0
 
+          # UndefinedBehaviorSanitizer is a fast undefined behavior detector.
+          # Various computations are instrumented to detect undefined behavior
+          # at runtime, such as shift operation correctness, integer division by
+          # zero, null-pointer dereference, signed integer overflow,
+          # dereferencing memory with wrong alignment, and more.
+          # See GCC manual to learn more.
+          - name: GCC undefined sanitizer
+            build_flags: -Db_sanitize=undefined
+            logs: gcc-usan-logs
+            max_issues: 0
+
+          # Clang allows enabling both AddressSanitizer and
+          # UndefinedBehaviorSanitizer at the same time.
+          # See Clang manual to learn more.
+          - name: Clang undefined+address sanitizer
+            build_flags: -Db_sanitize=address,undefined --native-file=.github/meson/native-clang.ini
+            logs: clang-uasan-logs
+            max_issues: 4
     steps:
       - uses: actions/checkout@v2
 
@@ -125,48 +148,26 @@ jobs:
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-sanitizers-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.today }}
-          restore-keys: |
-            ccache-sanitizers-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.yesterday }}
+          key:          ccache-sanitizers-${{ steps.prep-ccache.outputs.today }}
+          restore-keys: ccache-sanitizers-${{ steps.prep-ccache.outputs.yesterday }}
 
       - name: Log environment
         run:  ./scripts/log-env.sh
 
-      - name: Build and run sanitizers
-        run: ./.github/scripts/build-and-run-sanitizers.sh ${{ matrix.conf.name }}
-                                                           undefined address
+      - run:  meson setup ${{ matrix.conf.build_flags }} build
+
+      - run:  ninja -C build
+
+      - name: Run sanitizer test cases
+        run:  ./.github/scripts/build-and-run-sanitizers.sh build sanitizer-logs
 
       - name: Upload logs
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.conf.name }}-sanitizer-logs
-          path: ${{ matrix.conf.name }}-logs
+          name: ${{ matrix.conf.logs }}
+          path: sanitizer-logs
 
       - name: Summarize issues
-        env:
-          USAN_LOG:  ${{ matrix.conf.name }}-logs/undefined-EnterExit.log.xz
-          ASAN_LOG:  ${{ matrix.conf.name }}-logs/address-EnterExit.log.xz
-        run: |
-          # summary
-
-          echo_bold () {
-            echo -e "\\033[1m$*\\033[0m"
-          }
-
-          if [[ -f "$USAN_LOG" ]] ; then
-            echo_bold "Undefined Behaviour sanitizer:"
-            echo
-            xzcat "$USAN_LOG" | MAX_ISSUES=${{ matrix.conf.max-undefined-issues }} ./scripts/count-xsan-issues.py -
-          else
-            echo "No UB sanitizer logs found."
-            echo
-          fi
-
-          if [[ -f "$ASAN_LOG" ]] ; then
-            echo_bold "Address sanitizer:"
-            echo
-            xzcat "$ASAN_LOG" | MAX_ISSUES=${{ matrix.conf.max-address-issues}} ./scripts/count-xsan-issues.py -
-          else
-            echo "No address sanitizer logs found."
-            echo
-          fi
+        run: >
+          xzcat sanitizer-logs/EnterExit.log.xz |
+          MAX_ISSUES=${{ matrix.conf.max_issues }} ./scripts/count-xsan-issues.py -
