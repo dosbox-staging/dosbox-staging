@@ -397,7 +397,8 @@ extern const Sound_DecoderFunctions __Sound_DecoderFunctions_OPUS =
     {
         extensions_opus,
         "Ogg Opus audio using libopusfile",
-        "The dosbox-staging team"
+        "The DOSBox Staging Team",
+        "https://dosbox-staging.github.io/",
     },
 
     opus_init,   /*   init() method */
