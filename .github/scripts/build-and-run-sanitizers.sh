@@ -4,18 +4,11 @@
 #
 # Copyright (C) 2019-2021  Kevin R. Croft <krcroft@gmail.com>
 
-# This simple script is used to build, test, and archive the log output from
+# This simple script is used to test, and archive the log output from
 # various sanitizer-builds.
 #
 # Usage:
-#   ./build-and-run-sanitizers.sh COMPILER VERSION SANITIZER [SANITIZER [...]]"
-#
-# Examples:
-#   ./build-and-run-sanitizers.sh gcc address undefined
-#   ./build-and-run-sanitizers.sh clang thread
-#
-# SANITIZER values are the names supported by meson for b_sanitize build
-# option: "address", "thread", "undefined", "memory", "address,undefined"
+#   ./build-and-run-sanitizers.sh BUILDDIR LOGDIR"
 #
 set -euo pipefail
 
@@ -23,16 +16,14 @@ set -euo pipefail
 set -x
 
 # Check the arguments
-#if [[ "$#" -lt 3 ]]; then
-#	echo "Usage: $0 COMPILER SANITIZER [SANITIZER [...]]"
-#	exit 1
-#fi
+if [[ "$#" -lt 2 ]]; then
+	echo "Usage: $0 BUILDDIR LOGDIR"
+	exit 1
+fi
 
 # Defaults and arguments
-compiler="${1}"
-logs="${compiler}-logs"
-shift 1
-sanitizers=("$@")
+build_dir="$1"
+logs="$2"
 
 # Move to the top of our source directory
 cd "$(git rev-parse --show-toplevel)"
@@ -43,20 +34,12 @@ mkdir -p "${logs}"
 # SAN-specific environment variables
 export LSAN_OPTIONS="suppressions=.lsan-suppress:verbosity=0"
 
-for sanitizer in "${sanitizers[@]}"; do
-
-	# Build for each sanitizer
-	meson setup -Db_sanitize="${sanitizer}" "${sanitizer}-build"
-	ninja -C "${sanitizer}-build"
-
-	# Exercise the testcase(s) for each sanitizer
-	# Sanitizers return non-zero if one or more issues were found,
-	# so we or-to-true to ensure our script doesn't end here.
-	time xvfb-run "./${sanitizer}-build/dosbox" \
-		-c "autotype -w 0.1 e x i t enter" \
-		&> "${logs}/${sanitizer}-EnterExit.log" || true
-
-done
+# Sanitizers return non-zero if one or more issues were found,
+# so we or-to-true to ensure our script doesn't end here.
+# We'll detect issues by analyzing logs instead.
+time xvfb-run "./${build_dir}/dosbox" \
+	-c "autotype -w 0.1 e x i t enter" \
+	&> "${logs}/EnterExit.log" || true
 
 # Compress the logs
 (
