@@ -255,19 +255,18 @@ static int32_t opus_open(Sound_Sample * sample, const char * ext)
     assertm(sample, "OPUS: Input is not initialized");
     (void) ext; // deliberately unused, but present for API compliance
 
-    int32_t rcode = 0; // assume failure until determined otherwise
     auto *internal = static_cast<Sound_SampleInternal*>(sample->opaque);
-    OggOpusFile *of = op_open_callbacks(internal->rw, &RWops_opus_callbacks, nullptr, 0, &rcode);
+    int32_t open_result = 1; // op_open will set to 0 on success
+    OggOpusFile *of = op_open_callbacks(internal->rw, &RWops_opus_callbacks,
+                                        nullptr, 0, &open_result);
     internal->decoder_private = of;
 
     // Had a problem during the open
-    if (rcode != 0) { // op_open will set rcode to non-zero
+    if (open_result != 0) {
         opus_close(sample);
-        SNDDBG(("OPUS: open error:        "
-                "'Could not open file due errno: %d'\n", rcode));
+        SNDDBG(("OPUS: open failed, errno: %d'\n", open_result));
         return 0; // We return 0 to indicate failure from opus_open
-    } else
-        rcode = 1; // Otherwise open succeeded, so set rcode to 1
+    }
 
     const OpusHead* oh = op_head(of, -1);
     output_opus_info(of, oh);
@@ -286,7 +285,7 @@ static int32_t opus_open(Sound_Sample * sample, const char * ext)
         constexpr auto frames_per_ms = static_cast<int32_t>(OPUS_SAMPLE_RATE_PER_MS);
         internal->total_time = ceil_sdivide(pcm_result, frames_per_ms);
     }
-    return rcode;
+    return 1; // success!
 } /* opus_open */
 
 /*
