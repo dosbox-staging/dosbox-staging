@@ -37,6 +37,7 @@
 #endif
 
 #include <cassert>
+#include <cinttypes>
 #include <opusfile.h>
 #include <SDL.h>
 
@@ -139,11 +140,10 @@ static int32_t RWops_opus_seek(void * stream, const opus_int64 offset, const int
             "OPUS: The position from where to seek is invalid");
 
     const int64_t offset_after_seek = SDL_RWseek(static_cast<SDL_RWops*>(stream),
-                                                 static_cast<int32_t>(offset),
-                                                 whence);
+                                                 offset, whence);
     SNDDBG(("Opus ops seek:          "
-            "{requested offset: %ld, seeked offset: %ld}\n",
-            offset, offset_after_seek));
+            "requested: %" PRId64 " and got: %" PRId64 "\n",
+            static_cast<int64_t>(offset), offset_after_seek));
     return (offset_after_seek != -1 ? 0 : -1);
 } /* RWops_opus_seek */
 
