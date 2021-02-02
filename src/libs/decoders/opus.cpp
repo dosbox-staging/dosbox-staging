@@ -49,8 +49,8 @@
 #include "SDL_sound_internal.h"
 
 // Opus's internal sampling rates to which all encoded streams get resampled
-#define OPUS_SAMPLE_RATE        48000u
-#define OPUS_SAMPLE_RATE_PER_MS    48u
+constexpr auto OPUS_FRAMES_PER_S = 48000;
+constexpr auto OPUS_FRAMES_PER_MS = 48;
 
 static int32_t opus_init(void)
 {
@@ -272,7 +272,7 @@ static int32_t opus_open(Sound_Sample * sample, const char * ext)
     output_opus_info(of, oh);
 
     // Populate track properties
-    sample->actual.rate = OPUS_SAMPLE_RATE;
+    sample->actual.rate = OPUS_FRAMES_PER_S;
     sample->actual.channels = static_cast<Uint8>(oh->channel_count);
     sample->flags = op_seekable(of) ? SOUND_SAMPLEFLAG_CANSEEK: 0;
     sample->actual.format = AUDIO_S16SYS;
@@ -284,7 +284,7 @@ static int32_t opus_open(Sound_Sample * sample, const char * ext)
         internal->total_time = -1;
         return 0; // couldn't determine length; something's wrong!
     }
-    constexpr int64_t frames_per_ms = OPUS_SAMPLE_RATE_PER_MS;
+    constexpr int64_t frames_per_ms = OPUS_FRAMES_PER_MS;
     const int64_t track_ms = ceil_sdivide(pcm_frames, frames_per_ms);
 
     assertm(track_ms <= INT32_MAX, "OPUS: Irack exceeds 2^31 ms (596 hrs)");
@@ -366,7 +366,7 @@ static int32_t opus_seek(Sound_Sample * sample, const uint32_t ms)
 #endif
 
     // convert the desired ms offset into OPUS PCM samples
-    const ogg_int64_t desired_pcm = ms * OPUS_SAMPLE_RATE_PER_MS;
+    const ogg_int64_t desired_pcm = ms * OPUS_FRAMES_PER_MS;
     rcode = op_pcm_seek(of, desired_pcm);
 
     if (rcode != 0) {
