@@ -349,35 +349,33 @@ static int32_t opus_seek(Sound_Sample * sample, const uint32_t ms)
     // Guard against invalid input
     assertm(sample, "OPUS: Input is not initialized");
 
-    int rcode = -1;
-
     auto *internal = static_cast<Sound_SampleInternal*>(sample->opaque);
     auto *of = static_cast<OggOpusFile*>(internal->decoder_private);
 
-#if (defined DEBUG_CHATTER)
-    const float total_seconds = ms / 1000.0;
-    uint8_t minutes = total_seconds / 60;
-    const double seconds =
-        static_cast<int>(total_seconds) % 60
-        + total_seconds
-        - static_cast<int>(total_seconds);
-    const uint8_t hours = minutes / 60;
-    minutes = minutes % 60;
-#endif
-
     // convert the desired ms offset into OPUS PCM samples
     const ogg_int64_t desired_pcm = ms * OPUS_FRAMES_PER_MS;
-    rcode = op_pcm_seek(of, desired_pcm);
+    const int seek_result = op_pcm_seek(of, desired_pcm);
 
-    if (rcode != 0) {
-        SNDDBG(("Opus seek problem, see errno:        %d\n", rcode));
+#if (defined DEBUG_CHATTER)
+    int milliseconds = static_cast<int>(ms);
+    int seconds = milliseconds / 1000;
+    milliseconds %= 1000;
+    int minutes = seconds / 60;
+    seconds %= 60;
+    const int hours = minutes / 60;
+    minutes %= 60;
+
+    SNDDBG(("Opus seek requested:     "
+            "at time %02d:%02d:%02d.%03d and PCM byte %" PRId64 "}\n",
+            hours, minutes, seconds, milliseconds, desired_pcm));
+#endif
+
+    if (seek_result != 0) {
+        SNDDBG(("Opus seek failed, errno: %d\n", seek_result));
         sample->flags |= SOUND_SAMPLEFLAG_ERROR;
-    } else {
-        SNDDBG(("Opus seek in file:      "
-                "{requested_time: '%02d:%02d:%.2f', becomes_opus_pcm: %ld}\n",
-                hours, minutes, seconds, desired_pcm));
     }
-    return (rcode == 0);
+
+    return (seek_result == 0);
 } /* opus_seek */
 
 /*
