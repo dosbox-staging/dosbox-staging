@@ -278,13 +278,17 @@ static int32_t opus_open(Sound_Sample * sample, const char * ext)
     sample->actual.format = AUDIO_S16SYS;
 
     // Populate the track's duration in milliseconds (or -1 if bad)
-    const auto pcm_result = static_cast<int32_t>(op_pcm_total(of, -1)); 
-    if (pcm_result == OP_EINVAL)
+    const int64_t pcm_frames = op_pcm_total(of, -1);
+
+    if (pcm_frames == OP_EINVAL) {
         internal->total_time = -1;
-    else {
-        constexpr auto frames_per_ms = static_cast<int32_t>(OPUS_SAMPLE_RATE_PER_MS);
-        internal->total_time = ceil_sdivide(pcm_result, frames_per_ms);
+        return 0; // couldn't determine length; something's wrong!
     }
+    constexpr int64_t frames_per_ms = OPUS_SAMPLE_RATE_PER_MS;
+    const int64_t track_ms = ceil_sdivide(pcm_frames, frames_per_ms);
+
+    assertm(track_ms <= INT32_MAX, "OPUS: Irack exceeds 2^31 ms (596 hrs)");
+    internal->total_time = static_cast<int32_t>(track_ms);
     return 1; // success!
 } /* opus_open */
 
