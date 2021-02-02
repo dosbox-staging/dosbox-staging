@@ -177,8 +177,7 @@ static opus_int64 RWops_opus_tell(void * stream)
     assertm(stream, "OPUS: Input is not initialized");
 
     const int64_t current_offset = SDL_RWtell(static_cast<SDL_RWops*>(stream));
-    SNDDBG(("Opus ops tell:          "
-            "%ld\n", current_offset));
+    SNDDBG(("Opus ops tell:          % " PRId64 "\n",current_offset));
     return current_offset;
 } /* RWops_opus_tell */
 
