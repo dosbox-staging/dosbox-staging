@@ -58,15 +58,18 @@ Bitu DEBUG_EnableDebugger(void);
 
 static Bitu ZDRIVE_NUM = 25;
 
-static const char* UnmountHelper(char umount) {
-	int i_drive;
-	if (umount < '0' || umount > 3+'0')
-		i_drive = drive_index(umount);
-	else
-		i_drive = umount - '0';
+static const char *UnmountHelper(char umount)
+{
+	const char drive_id = toupper(umount);
+	const bool using_drive_number = (drive_id >= '0' && drive_id <= '3');
+	const bool using_drive_letter = (drive_id >= 'A' && drive_id <= 'Z');
 
-	if (i_drive >= DOS_DRIVES || i_drive < 0)
-		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
+	if (!using_drive_number && !using_drive_letter)
+		return MSG_Get("PROGRAM_MOUNT_DRIVEID_ERROR");
+
+	const uint8_t i_drive = using_drive_number ? (drive_id - '0')
+	                                           : drive_index(drive_id);
+	assert(i_drive < DOS_DRIVES);
 
 	if (i_drive < MAX_DISK_IMAGES && Drives[i_drive] == NULL && !imageDiskList[i_drive])
 		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
@@ -1645,6 +1648,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED","Drive %c isn't mounted.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCESS","Drive %c has successfully been removed.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL","Virtual Drives can not be unMOUNTed.\n");
+	MSG_Add("PROGRAM_MOUNT_DRIVEID_ERROR", "'%c' is not a valid drive identifier.\n");
 	MSG_Add("PROGRAM_MOUNT_WARNING_WIN","\033[31;1mMounting c:\\ is NOT recommended. Please mount a (sub)directory next time.\033[0m\n");
 	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER","\033[31;1mMounting / is NOT recommended. Please mount a (sub)directory next time.\033[0m\n");
 	MSG_Add("PROGRAM_MOUNT_NO_OPTION", "Warning: Ignoring unsupported option '%s'.\n");
