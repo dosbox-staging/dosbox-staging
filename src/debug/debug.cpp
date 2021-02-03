@@ -346,10 +346,10 @@ private:
 };
 
 CBreakpoint::CBreakpoint(void):
+type(BKPNT_UNKNOWN),
 location(0),oldData(0xCC),
-active(false),once(false),
 segment(0),offset(0),intNr(0),ahValue(0),alValue(0),
-type(BKPNT_UNKNOWN) { };
+active(false),once(false){ };
 
 void CBreakpoint::Activate(bool _active)
 {
@@ -1589,7 +1589,7 @@ Bit32u DEBUG_CheckKeys(void) {
 
 		// Don't redraw the screen if it's going to get redrawn immediately
 		// afterwards, to avoid resetting oldregs.
-		if (ret == debugCallback)
+		if (ret == static_cast<Bits>(debugCallback))
 			skipDraw = true;
 		key = -1;
 	}
@@ -1763,7 +1763,7 @@ Bit32u DEBUG_CheckKeys(void) {
 					break;
 				}
 				// If we aren't stepping over something, do a normal step.
-				// NB: Fall-through
+				/* FALLTHROUGH */
 		case KEY_F(11):	// trace into
 				exitLoop = false;
 				skipFirstInstruction = true; // for heavy debugger
