@@ -99,13 +99,26 @@ static const char *UnmountHelper(char umount)
 
 class MOUNT : public Program {
 public:
-	void Move_Z(char new_z) {
-		char newz_drive = (char) toupper(new_z);
-		int i_newz = drive_index(newz_drive);
-		if (i_newz >= 0 && i_newz < DOS_DRIVES-1 && !Drives[i_newz]) {
-			ZDRIVE_NUM = i_newz;
+	void Move_Z(char new_z)
+	{
+		const char newz_drive = toupper(new_z);
+
+		if (newz_drive < 'A' || newz_drive > 'Z') {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_DRIVEID_ERROR"), newz_drive);
+			return;
+		}
+
+		const uint8_t new_idx = drive_index(newz_drive);
+
+		if (Drives[new_idx]) {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_MOVE_Z_ERROR_1"), newz_drive);
+			return;
+		}
+
+		if (new_idx < DOS_DRIVES - 1) {
+			ZDRIVE_NUM = new_idx;
 			/* remap drives */
-			Drives[i_newz] = Drives[25];
+			Drives[new_idx] = Drives[25];
 			Drives[25] = 0;
 			if (!first_shell) return; //Should not be possible
 			/* Update environment */
@@ -131,7 +144,8 @@ public:
 				if (name.length() > 2 &&  name[0] == 'Z' && name[1] == ':') name[0] = newz_drive;
 			}
 			/* Change the active drive */
-			if (DOS_GetDefaultDrive() == 25) DOS_SetDrive(i_newz);
+			if (DOS_GetDefaultDrive() == 25)
+				DOS_SetDrive(new_idx);
 		}
 	}
 
@@ -1658,6 +1672,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE","The overlay directory can not be the same as underlying drive.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR","Something went wrong.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS","Overlay %s on drive %c mounted.\n");
+	MSG_Add("PROGRAM_MOUNT_MOVE_Z_ERROR_1", "Can't move drive Z. Drive %c is mounted already.\n");
 
 	MSG_Add("PROGRAM_MEM_CONVEN","%10d Kb free conventional memory\n");
 	MSG_Add("PROGRAM_MEM_EXTEND","%10d Kb free extended memory\n");
