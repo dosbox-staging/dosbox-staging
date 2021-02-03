@@ -464,9 +464,10 @@ int CDROM_Interface_Image::AudioFile::getLength()
 		 *  Sound_GetDuration returns milliseconds but getLength()
 		 *  needs to return bytes, so we covert using PCM bytes/s
 		 */
-		length_redbook_bytes = static_cast<int>(
-		        static_cast<float>(Sound_GetDuration(sample)) *
-		        REDBOOK_PCM_BYTES_PER_MS);
+		const auto track_ms = Sound_GetDuration(sample);
+		const auto track_bytes = static_cast<float>(track_ms) * REDBOOK_PCM_BYTES_PER_MS;
+		assert(track_bytes < static_cast<float>(INT32_MAX));
+		length_redbook_bytes = static_cast<int32_t>(track_bytes);
 	}
 	assertm(length_redbook_bytes >= 0,
 	        "Track length could not be determined");

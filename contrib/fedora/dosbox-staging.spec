@@ -1,27 +1,31 @@
 Name:    dosbox-staging
-Version: 0.75.2
-Release: 1%{?dist}
+Version: 0.76.0
+Release: 2%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+
 URL:     https://dosbox-staging.github.io/
 Source:  https://github.com/dosbox-staging/dosbox-staging/archive/v%{version}/%{name}-%{version}.tar.gz
 
 # This package is a drop-in replacement for dosbox
-Provides: dosbox
+Provides:  dosbox = %{version}-%{release}
+Obsoletes: dosbox < 0.74.4
 
-BuildRequires: gcc-c++
-BuildRequires: gcc
-BuildRequires: automake
 BuildRequires: alsa-lib-devel
-BuildRequires: libpng-devel
-BuildRequires: SDL2-devel
-BuildRequires: SDL2_net-devel
-BuildRequires: opusfile-devel
-BuildRequires: librsvg2-tools
+BuildRequires: automake
 BuildRequires: desktop-file-utils
+BuildRequires: fluidsynth-devel >= 2.0
+BuildRequires: gcc
+BuildRequires: gcc-c++
 BuildRequires: libappstream-glib
+BuildRequires: libpng-devel
+BuildRequires: librsvg2-tools
+BuildRequires: make
+BuildRequires: opusfile-devel
+BuildRequires: SDL2-devel >= 2.0.2
+BuildRequires: SDL2_net-devel
 
 Requires: hicolor-icon-theme
+Requires: fluid-soundfont-gm
 
 
 %description
@@ -41,23 +45,23 @@ any old DOS game using modern hardware.
 
 
 %prep
-%autosetup -n %{name}-%{version}
+%autosetup
 
 
 %build
 ./autogen.sh
-%configure \
+%{configure} \
         CPPFLAGS="-DNDEBUG" \
         CFLAGS="${CFLAGS/-O2/-O3}" \
         CXXFLAGS="${CXXFLAGS/-O2/-O3}"
 # binary
-%{__make} %{_smp_mflags}
+%{make_build}
 # icons
 %{__make} -C contrib/icons hicolor
 
 
 %install
-make install DESTDIR=%{buildroot}
+%{make_install}
 
 pushd contrib/icons/hicolor
 install -p -m 0644 -Dt %{buildroot}%{_datadir}/icons/hicolor/16x16/apps    16x16/apps/%{name}.png
@@ -88,6 +92,16 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
 
 %changelog
+* Tue Jan 26 2021 Patryk Obara (pbo) <dreamer.tan@gmail.com>
+- 0.76.0-2
+- Tighten dependencies checks
+
+* Mon Jan 25 2021 Patryk Obara (pbo) <dreamer.tan@gmail.com>
+- 0.76.0-1
+- Update to 0.76.0
+- Add fluidsynth-devel build dependency (new feature)
+- Add fluid-soundfont-gm runtime dependency (default soundfont)
+
 * Tue Oct 27 2020 Patryk Obara (pbo) <dreamer.tan@gmail.com>
 - 0.75.2-1
 - Update to 0.75.2

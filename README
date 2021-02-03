@@ -355,12 +355,26 @@ dosbox -opencaptures program
 
   -machine machinetype
         Setup DOSBox to emulate a specific type of machine. Valid choices are:
-        hercules, cga, ega, pcjr, tandy, svga_s3 (default) as well as
-        the additional SVGA chipsets listed in the DOSBox configuration file.
-        svga_s3 enables VESA emulation as well.
+        - hercules      - Hercules Graphics Card (monochrome)
+        - cga           - IBM Color Graphics Adapter
+        - cga_mono      - IBM CGA attached to monochrome display (monochrome)
+        - pcjr          - IBM PCjr
+        - tandy         - Tandy Graphics Adapter (Tandy 1000)
+        - ega           - IBM Enhanced Graphics Adapter
+        - vgaonly       - IBM Video Graphics Array (see below)
+        - vesa_oldvbe   - VESA SVGA - VESA BIOS Extensions (VBE) 1.2
+        - vesa_nolfb    - VESA SVGA - VBE 2.0 with Linear Frame Buffer disabled
+        - svga_paradise - VESA SVGA - Paradise Systems PVGA1A - VBE 2.0
+        - svga_et3000   - VESA SVGA - Tseng ET3000 - VBE 2.0
+        - svga_et4000   - VESA SVGA - Tseng ET4000 - VBE 2.0
+        - svga_s3       - VESA SVGA - S3 Trio - VBE 2.0
+
+        The default is svga_s3.
+
         For some special VGA effects the machinetype vgaonly can be used,
         note that this disables SVGA capabilities and might be slower due to the
         higher emulation precision.
+
         The machinetype affects the video card and the available sound cards.
 
   -noconsole (Windows Only)

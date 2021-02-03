@@ -23,6 +23,6 @@ Fedora build (via Koji buildsystem):
     $ sudo dnf install -y fedora-packager
     $ echo "<user>" > ~/.fedora.upn
     $ kinit <user>@FEDORAPROJECT.ORG
-    $ koji build --scratch f33 ~/rpmbuild/SRPMS/dosbox-staging-0.75.2-*
+    $ koji build --scratch f33 ~/rpmbuild/SRPMS/dosbox-staging-0.76.0-*
 
 Koji will print build status and URL (Task info).
