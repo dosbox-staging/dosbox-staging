@@ -1134,14 +1134,11 @@ void RESCAN::Run(void)
 
 	if (cmd->FindCommand(1,temp_line)) {
 		//-A -All /A /All
-		if (temp_line.size() >= 2
-			&& (temp_line[0] == '-' ||
-			    temp_line[0] == '/')
-			&& (temp_line[1] == 'a' ||
-			    temp_line[1] == 'A') ) {
-	 		all = true;
-		}
-		else if (temp_line.size() == 2 && temp_line[1] == ':') {
+		if (temp_line.size() >= 2 &&
+		    (temp_line[0] == '-' || temp_line[0] == '/') &&
+		    (temp_line[1] == 'a' || temp_line[1] == 'A')) {
+			all = true;
+		} else if (temp_line.size() == 2 && temp_line[1] == ':') {
 			lowcase(temp_line);
 			drive  = temp_line[0] - 'a';
 		}
