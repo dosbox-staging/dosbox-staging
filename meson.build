@@ -278,4 +278,19 @@ subdir('tests')
 #
 executable('dosbox', ['src/main.cpp', 'src/dosbox.cpp'],
            dependencies : [threads_dep, sdl2_dep] + internal_deps,
-           include_directories : incdir)
+           include_directories : incdir,
+           install : true)
+
+
+# additional files for installation
+#
+data_dir     = get_option('datadir')
+licenses_dir = data_dir / 'licenses' / 'dosbox-staging'
+doc_dir      = data_dir / 'doc' / 'dosbox-staging'
+
+install_man('docs/dosbox.1')
+install_data('COPYING', install_dir : licenses_dir)
+install_data('AUTHORS', 'README', 'THANKS', install_dir : doc_dir)
+
+subdir('contrib/linux')
+subdir('contrib/icons')
