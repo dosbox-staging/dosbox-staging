@@ -4,6 +4,7 @@ libmisc_sources = [
   'fs_utils_win32.cpp',
   'messages.cpp',
   'programs.cpp',
+  'rwqueue.cpp',
   'setup.cpp',
   'soft_limiter.cpp',
   'support.cpp',

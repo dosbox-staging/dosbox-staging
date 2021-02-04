@@ -364,6 +364,9 @@
     <ClCompile Include="..\src\misc\programs.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\misc\rwqueue.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\misc\setup.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
@@ -499,6 +502,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\render.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\rwqueue.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\serialport.h">
