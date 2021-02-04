@@ -101,17 +101,17 @@ class MOUNT : public Program {
 public:
 	void Move_Z(char new_z)
 	{
-		const char newz_drive = toupper(new_z);
+		const char new_drive_z = toupper(new_z);
 
-		if (newz_drive < 'A' || newz_drive > 'Z') {
-			WriteOut(MSG_Get("PROGRAM_MOUNT_DRIVEID_ERROR"), newz_drive);
+		if (new_drive_z < 'A' || new_drive_z > 'Z') {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_DRIVEID_ERROR"), new_drive_z);
 			return;
 		}
 
-		const uint8_t new_idx = drive_index(newz_drive);
+		const uint8_t new_idx = drive_index(new_drive_z);
 
 		if (Drives[new_idx]) {
-			WriteOut(MSG_Get("PROGRAM_MOUNT_MOVE_Z_ERROR_1"), newz_drive);
+			WriteOut(MSG_Get("PROGRAM_MOUNT_MOVE_Z_ERROR_1"), new_drive_z);
 			return;
 		}
 
@@ -123,8 +123,7 @@ public:
 			if (!first_shell) return; //Should not be possible
 			/* Update environment */
 			std::string line = "";
-			char ppp[2] = {newz_drive,0};
-			std::string tempenv = ppp; tempenv += ":\\";
+			std::string tempenv = {new_drive_z, ':', '\\'};
 			if (first_shell->GetEnvStr("PATH",line)) {
 				std::string::size_type idx = line.find('=');
 				std::string value = line.substr(idx +1 , std::string::npos);
@@ -141,7 +140,8 @@ public:
 			/* Update batch file if running from Z: (very likely: autoexec) */
 			if (first_shell->bf) {
 				std::string &name = first_shell->bf->filename;
-				if (name.length() > 2 &&  name[0] == 'Z' && name[1] == ':') name[0] = newz_drive;
+				if (starts_with("Z:", name))
+					name[0] = new_drive_z;
 			}
 			/* Change the active drive */
 			if (DOS_GetDefaultDrive() == 25)
