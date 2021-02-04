@@ -22,14 +22,74 @@
 // Unit tests for moodycamel::ReaderWriterCircularBuffer
 
 #include "../src/libs/rwqueue/readerwritercircularbuffer.h"
+#include "sdl_blocking_queue.h"
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <cstdio>
 #include <thread>
 
 namespace {
 using namespace moodycamel;
+
+constexpr auto zero_duration = std::chrono::duration<double, std::micro>(0);
+auto mq_duration = zero_duration;
+auto bq_duration = zero_duration;
+
+constexpr auto iterations = 5000000;
+
+void bq_consume(blocking_queue<int> *q,
+                const size_t *max_depth,
+                weak_atomic<bool> *got_mismatch)
+{
+	int item;
+	for (int i = 0; i != iterations; ++i) {
+		EXPECT_TRUE(q->size() <= *max_depth);
+		item = q->front();
+		q->pop();
+		if (item != i && got_mismatch->load() == false) {
+			*got_mismatch = true;
+		}
+	}
+}
+
+void bq_produce(blocking_queue<int> *q, const size_t *max_depth)
+{
+	for (int i = 0; i != iterations; ++i) {
+		q->push(i);
+		EXPECT_TRUE(q->size() <= *max_depth);
+	}
+}
+
+TEST(blocking_queue, BoundedAsyncProduceAndConsume)
+{
+	const size_t max_depth = 8;
+	weak_atomic<bool> got_mismatch = false;
+
+	blocking_queue<int> q(max_depth);
+
+	const auto start = std::chrono::high_resolution_clock::now();
+
+	std::thread writer(bq_produce, &q, &max_depth);
+	std::thread reader(bq_consume, &q, &max_depth, &got_mismatch);
+
+	writer.join();
+	reader.join();
+
+	const auto end = std::chrono::high_resolution_clock::now();
+	bq_duration = end - start;
+
+	// Make sure we've consumed all produced items and the queue is empty
+	EXPECT_EQ(q.size(), 0);
+
+	// Make sure there wasn't a single out-of-sequence item consumed
+	EXPECT_FALSE(got_mismatch.load());
+
+	// Confirm both threads report as terminated
+	EXPECT_FALSE(reader.joinable());
+	EXPECT_FALSE(writer.joinable());
+}
 
 TEST(ReaderWriterCircularBuffer, EnqueueDequeue)
 {
@@ -70,28 +130,26 @@ TEST(ReaderWriterCircularBuffer, ZeroCapacity)
 	EXPECT_FALSE(q.wait_enqueue_timed(1, 0));
 }
 
-void consume(BlockingReaderWriterCircularBuffer<int> *q,
-             const size_t *max_depth,
-             weak_atomic<bool> *got_mismatch)
+void mq_consume(BlockingReaderWriterCircularBuffer<int> *q,
+                const size_t *max_depth,
+                weak_atomic<bool> *got_mismatch)
 {
 	int item;
-	for (int i = 0; i != 1000000; ++i) {
+	for (int i = 0; i != iterations; ++i) {
 		EXPECT_TRUE(q->size_approx() <= *max_depth);
 		q->wait_dequeue(item);
 		if (item != i && got_mismatch->load() == false) {
 			*got_mismatch = true;
 		}
 	}
-	// printf("exiting consumer thread on item %d\n", item);
 }
 
-void produce(BlockingReaderWriterCircularBuffer<int> *q, const size_t *max_depth)
+void mq_produce(BlockingReaderWriterCircularBuffer<int> *q, const size_t *max_depth)
 {
-	for (int i = 0; i != 1000000; ++i) {
+	for (int i = 0; i != iterations; ++i) {
 		q->wait_enqueue(i);
 		EXPECT_TRUE(q->size_approx() <= *max_depth);
 	}
-	// printf("exiting producer thread\n");
 }
 
 TEST(ReaderWriterCircularBuffer, BoundedAsyncProduceAndConsume)
@@ -101,11 +159,16 @@ TEST(ReaderWriterCircularBuffer, BoundedAsyncProduceAndConsume)
 
 	BlockingReaderWriterCircularBuffer<int> q(max_depth);
 
-	std::thread writer(produce, &q, &max_depth);
-	std::thread reader(consume, &q, &max_depth, &got_mismatch);
+	const auto start = std::chrono::high_resolution_clock::now();
+
+	std::thread writer(mq_produce, &q, &max_depth);
+	std::thread reader(mq_consume, &q, &max_depth, &got_mismatch);
 
 	writer.join();
 	reader.join();
+
+	const auto end = std::chrono::high_resolution_clock::now();
+	mq_duration = end - start;
 
 	// Make sure we've consumed all produced items and the queue is empty
 	EXPECT_EQ(q.size_approx(), 0);
@@ -116,6 +179,18 @@ TEST(ReaderWriterCircularBuffer, BoundedAsyncProduceAndConsume)
 	// Confirm both threads report as terminated
 	EXPECT_FALSE(reader.joinable());
 	EXPECT_FALSE(writer.joinable());
+}
+
+// For debug-builds, we expect the Moody queue to be twice as fast as our
+// baseline queue. When optiimized, MQ can be 8x or faster on x86-64 and
+// Aarch64.
+TEST(CompareQueues, Durations)
+{
+	// Only compare results when both are populated
+	if (mq_duration == zero_duration || bq_duration == zero_duration)
+		return;
+
+	EXPECT_TRUE(2 * mq_duration < bq_duration);
 }
 
 } // namespace
