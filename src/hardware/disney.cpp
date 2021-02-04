@@ -32,7 +32,7 @@ constexpr uint16_t DISNEY_BASE = 0x0378;
 constexpr uint8_t BUFFER_SAMPLES = 128;
 constexpr uint8_t DISNEY_INIT_STATUS = 0x84;
 
-enum STATE { IDLE, RUNNING, FINISHED, ANALYZING };
+enum DISNEY_STATE { IDLE, RUNNING, FINISHED, ANALYZING };
 
 struct dac_channel {
 	uint8_t buffer[BUFFER_SAMPLES] = {};
@@ -63,7 +63,7 @@ struct Disney {
 	// and the channel used for stereo
 	dac_channel *leader = nullptr;
 
-	STATE state = STATE::IDLE;
+	DISNEY_STATE state = DISNEY_STATE::IDLE;
 	uint32_t interface_det = 0;
 	uint32_t interface_det_ext = 0;
 };
@@ -77,7 +77,7 @@ static void DISNEY_disable(Bitu) {
 	}
 	disney.leader = 0;
 	disney.last_used = 0;
-	disney.state = STATE::IDLE;
+	disney.state = DISNEY_STATE::IDLE;
 	disney.interface_det = 0;
 	disney.interface_det_ext = 0;
 	disney.stereo = false;
@@ -87,7 +87,7 @@ static void DISNEY_enable(uint32_t freq)
 {
 	if (freq < 500 || freq > 100000) {
 		// try again..
-		disney.state = STATE::IDLE;
+		disney.state = DISNEY_STATE::IDLE;
 		return;
 	}
 #if 0
@@ -96,7 +96,7 @@ static void DISNEY_enable(uint32_t freq)
 #endif
 	disney.chan->SetFreq(freq);
 	disney.chan->Enable(true);
-	disney.state = STATE::RUNNING;
+	disney.state = DISNEY_STATE::RUNNING;
 }
 
 // Calculate the frequency from DAC samples and speed parameters
@@ -114,9 +114,9 @@ static uint32_t calc_frequency(const dac_channel &dac)
 
 static void DISNEY_analyze(Bitu channel){
 	switch(disney.state) {
-		case STATE::RUNNING: // should not get here
+		case DISNEY_STATE::RUNNING: // should not get here
 			break;
-		case STATE::IDLE:
+		case DISNEY_STATE::IDLE:
 			// initialize channel data
 			for(int i = 0; i < 2; i++) {
 				disney.da[i].used = 0;
@@ -127,10 +127,10 @@ static void DISNEY_analyze(Bitu channel){
 			disney.da[channel].speedcheck_last = PIC_FullIndex();
 			disney.da[channel].speedcheck_init = true;
 			
-			disney.state = STATE::ANALYZING;
+			disney.state = DISNEY_STATE::ANALYZING;
 			break;
 
-		case STATE::FINISHED: 
+		case DISNEY_STATE::FINISHED: 
 		{
 			// The leading channel has the most populated samples
 			disney.leader = disney.da[0].used > disney.da[1].used
@@ -148,7 +148,7 @@ static void DISNEY_analyze(Bitu channel){
 			DISNEY_enable(max_freq);
 			break;
 		}
-		case STATE::ANALYZING:
+		case DISNEY_STATE::ANALYZING:
 		{
 			const double current = PIC_FullIndex();
 			dac_channel* cch = &disney.da[channel];
@@ -168,7 +168,7 @@ static void DISNEY_analyze(Bitu channel){
 			
 			// if both are failed we are back at start
 			if(disney.da[0].speedcheck_failed && disney.da[1].speedcheck_failed) {
-				disney.state=STATE::IDLE;
+				disney.state=DISNEY_STATE::IDLE;
 				break;
 			}
 
@@ -176,7 +176,7 @@ static void DISNEY_analyze(Bitu channel){
 			
 			// analyze finish condition
 			if(disney.da[0].used > 30 || disney.da[1].used > 30)
-				disney.state = STATE::FINISHED;
+				disney.state = DISNEY_STATE::FINISHED;
 			break;
 		}
 	}
@@ -196,8 +196,8 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 	{
 		disney.data=val;
 		// if data is written here too often without using the stereo
-		// mechanism we use the simple DAC machanism. 
-        if(disney.state != STATE::RUNNING) {
+		// mechanism we use the simple DAC machanism.
+		if (disney.state != DISNEY_STATE::RUNNING) {
 			disney.interface_det++;
 			if(disney.interface_det > 5)
 				DISNEY_analyze(0);
@@ -215,7 +215,7 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 		break;
 	case 2:		/* Control Port */
 		if((disney.control & 0x2) && !(val & 0x2)) {
-			if(disney.state != STATE::RUNNING) {
+			if (disney.state != DISNEY_STATE::RUNNING) {
 				disney.interface_det = 0;
 				disney.interface_det_ext = 0;
 				DISNEY_analyze(1);
@@ -229,7 +229,7 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 		}
 
 		if((disney.control & 0x1) && !(val & 0x1)) {
-			if(disney.state != STATE::RUNNING) {
+			if (disney.state != DISNEY_STATE::RUNNING) {
 				disney.interface_det = 0;
 				disney.interface_det_ext = 0;
 				DISNEY_analyze(0);
@@ -243,7 +243,7 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 
 		if((disney.control & 0x8) && !(val & 0x8)) {
 			// emulate a device with 16-byte sound FIFO
-			if(disney.state != STATE::RUNNING) {
+			if (disney.state != DISNEY_STATE::RUNNING) {
 				disney.interface_det_ext++;
 				disney.interface_det = 0;
 				if(disney.interface_det_ext > 5) {
