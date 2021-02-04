@@ -562,6 +562,10 @@ Drive %c has successfully been removed.
 Virtual Drives can not be unMOUNTed.
 
 .
+:PROGRAM_MOUNT_DRIVEID_ERROR
+'%c' is not a valid drive identifier.
+
+.
 :PROGRAM_MOUNT_WARNING_WIN
 [31;1mMounting c:\ is NOT recommended. Please mount a (sub)directory next time.[0m
 
@@ -595,6 +599,10 @@ Something went wrong.
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
 Overlay %s on drive %c mounted.
+
+.
+:PROGRAM_MOUNT_MOVE_Z_ERROR_1
+Can't move drive Z. Drive %c is mounted already.
 
 .
 :PROGRAM_MEM_CONVEN
