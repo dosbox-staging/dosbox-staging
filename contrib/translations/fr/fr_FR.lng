@@ -297,7 +297,8 @@ Taux d'‚chantillonnage de la g‚n‚ration 3-Voix Tandy.
 Activer l'‚mulation Disney Sound Source. (compatible Covox Voice Master et Speech Thing).
 .
 :CONFIG_JOYSTICKTYPE
-Type de manette … ‚muler : auto (d‚faut), none (aucun)
+Type de manette … ‚muler : auto (d‚faut),
+aucun (d‚sactive l'‚mulation du joystick)
 2axis (supporte deux manettes),
 4axis (supporte une manette, premiŠre manette utilis‚e),
 4axis_2 (supporte une manette, seconde manette utilis‚e),
@@ -433,6 +434,9 @@ Utilisez -writelang ou -wl nom de fichier pour ‚crire les clefs de language cour
 -axadd [ligne] ajoute une ligne … la section autoexec.
 -axtype affiche le contenu de la section autoexec.
 -securemode bascule en mode s‚curis‚.
+-avistart d‚marre l'enregistrement AVI.
+-avistop arrˆte l'enregistrement AVI.
+-startmapper d‚marre le keymapper.
 -get "section propri‚t‚" affiche la valeur de la propri‚t‚.
 -set "section propri‚t‚=valeur" change la valeur.
 
