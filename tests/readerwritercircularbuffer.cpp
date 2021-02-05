@@ -21,7 +21,7 @@
 
 // Unit tests for moodycamel::ReaderWriterCircularBuffer
 
-#include "../src/libs/readerwriterqueue/readerwritercircularbuffer.h"
+#include "../src/libs/rwqueue/readerwritercircularbuffer.h"
 
 #include <gtest/gtest.h>
 
