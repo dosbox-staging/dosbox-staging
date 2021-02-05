@@ -237,6 +237,8 @@ static mt32emu_report_handler_i get_report_handler_interface()
 
 bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 {
+	Close();
+
 	service_t mt32_service = std::make_unique<MT32Emu::Service>();
 
 	// Check version
