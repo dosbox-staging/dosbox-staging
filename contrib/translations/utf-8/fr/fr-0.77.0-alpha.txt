@@ -297,7 +297,8 @@ Taux d'échantillonnage de la génération 3-Voix Tandy.
 Activer l'émulation Disney Sound Source. (compatible Covox Voice Master et Speech Thing).
 .
 :CONFIG_JOYSTICKTYPE
-Type de manette à émuler : auto (défaut), none (aucun)
+Type de manette à émuler : auto (défaut),
+aucun (désactive l'émulation du joystick)
 2axis (supporte deux manettes),
 4axis (supporte une manette, première manette utilisée),
 4axis_2 (supporte une manette, seconde manette utilisée),
@@ -433,6 +434,9 @@ Utilisez -writelang ou -wl nom de fichier pour écrire les clefs de language cou
 -axadd [ligne] ajoute une ligne à la section autoexec.
 -axtype affiche le contenu de la section autoexec.
 -securemode bascule en mode sécurisé.
+-avistart démarre l'enregistrement AVI.
+-avistop arrête l'enregistrement AVI.
+-startmapper démarre le keymapper.
 -get "section propriété" affiche la valeur de la propriété.
 -set "section propriété=valeur" change la valeur.
 
