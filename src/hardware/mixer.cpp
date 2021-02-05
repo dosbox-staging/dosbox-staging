@@ -891,6 +891,9 @@ void MIXER_Init(Section* sec) {
 	mixer.freq = static_cast<uint32_t>(section->Get_int("rate"));
 	mixer.blocksize = static_cast<uint16_t>(section->Get_int("blocksize"));
 
+	// Ensure external order-of-operations have taken care of our dependencies
+	assert(SDL_WasInit(SDL_INIT_AUDIO) || mixer.nosound);
+
 	/* Initialize the internal stuff */
 	mixer.channels=0;
 	mixer.pos=0;
