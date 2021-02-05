@@ -601,7 +601,7 @@ void DOSBOX_Init(void) {
 	Pint->SetMinMax(0,100);
 	Pint->Set_help("How many milliseconds of data to keep on top of the blocksize.");
 
-	secprop = control->AddSection_prop("midi", &MIDI_Init, true);
+	secprop = control->AddEarlySectionProp("midi", &MIDI_Init, true);
 	secprop->AddInitFunction(&MPU401_Init, true);
 
 	pstring = secprop->Add_string("mididevice", when_idle, "auto");
