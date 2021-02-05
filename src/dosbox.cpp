@@ -584,7 +584,7 @@ void DOSBOX_Init(void) {
 
 	MIXER_AddConfigSection(control);
 
-	secprop = control->AddSection_prop("midi", &MIDI_Init, true);
+	secprop = control->AddEarlySectionProp("midi", &MIDI_Init, true);
 	secprop->AddInitFunction(&MPU401_Init, true);
 
 	pstring = secprop->Add_string("mididevice", when_idle, "auto");
