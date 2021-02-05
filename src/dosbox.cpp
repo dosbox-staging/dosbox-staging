@@ -579,8 +579,7 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("pci",&PCI_Init,false); //PCI bus
 #endif
 
-
-	secprop=control->AddSection_prop("mixer",&MIXER_Init);
+	secprop = control->AddEarlySectionProp("mixer", &MIXER_Init);
 	Pbool = secprop->Add_bool("nosound",Property::Changeable::OnlyAtStart,false);
 	Pbool->Set_help("Enable silent mode, sound is still emulated though.");
 
