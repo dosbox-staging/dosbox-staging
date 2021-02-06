@@ -79,6 +79,8 @@ void FPU_Init(Section*);
 void DMA_Init(Section*);
 
 void MIXER_Init(Section*);
+void MIXER_MakeProgram(Section*);
+
 void HARDWARE_Init(Section*);
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
@@ -579,7 +581,9 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("pci",&PCI_Init,false); //PCI bus
 #endif
 
-	secprop = control->AddEarlySectionProp("mixer", &MIXER_Init);
+	(void) control->AddEarlySectionProp("mixer", &MIXER_Init);
+	secprop = control->AddSection_prop("mixer", &MIXER_MakeProgram);
+
 	Pbool = secprop->Add_bool("nosound",Property::Changeable::OnlyAtStart,false);
 	Pbool->Set_help("Enable silent mode, sound is still emulated though.");
 
