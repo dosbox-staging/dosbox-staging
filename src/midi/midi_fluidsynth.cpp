@@ -283,16 +283,21 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	                                       this, std::placeholders::_1);
 	mixer_channel->RegisterLevelCallBack(set_mixer_level);
 
-	if (!LoadSoundFont(section, fluid_synth.get()))
-		return false;
-
-	mixer_channel->Enable(true);
-
 	settings = std::move(fluid_settings);
 	synth = std::move(fluid_synth);
 	channel = std::move(mixer_channel);
 	is_open = true;
+
+	StartBackgroundLoad(section);
 	return true;
+}
+
+void MidiHandlerFluidsynth::StartBackgroundLoad(const Section_prop *section)
+{
+	assert(is_open && synth && channel);
+
+	const bool is_loaded = LoadSoundFont(section, synth.get());
+	channel->Enable(is_loaded);
 }
 
 void MidiHandlerFluidsynth::Close()

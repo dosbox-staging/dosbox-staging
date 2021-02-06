@@ -56,6 +56,7 @@ private:
 	static constexpr uint16_t expected_max_frames = (96000 / 1000) + 4;
 	void MixerCallBack(uint16_t len); // see: MIXER_Handler
 	void SetMixerLevel(const AudioFrame &prescale_level) noexcept;
+	void StartBackgroundLoad(const Section_prop *section);
 
 	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
