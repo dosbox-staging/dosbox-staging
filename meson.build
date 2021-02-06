@@ -2,6 +2,19 @@ project('dosbox-staging', 'c', 'cpp',
         default_options : ['cpp_std=c++14', 'b_ndebug=if-release'],
         version : '0.77.0')
 
+
+# meson version check
+#
+# After increasing the minimum-required meson version, make the following
+# improvements:
+#
+# - 0.47.0 - remove 'if' disabling unit tests on older meson
+# - 0.47.0 - you can use dictionaries
+# - 0.49.0 - you can use string path building using '/' operator
+# - 0.49.0 - you can use 'in' operator for arrays and dictionaries
+# - 0.51.0 - remove warning about assertions in buildtype=plain
+# - 0.56.0 - use meson.current_source_dir() in unit tests
+#
 assert(meson.version().version_compare('>= 0.45.1'),
        'Expecting meson 0.45.1 or newer.')
 
@@ -10,6 +23,7 @@ is_plain_build = (get_option('buildtype') == 'plain')
 if meson.version().version_compare('< 0.51.0') and is_plain_build
   warning('C assertions might be enabled, use buildtype=release instead')
 endif
+
 
 # compiler flags
 #
