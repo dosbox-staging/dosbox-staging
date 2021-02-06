@@ -256,9 +256,6 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 		return false;
 	}
 
-	if (!LoadSoundFont(section, fluid_synth.get()))
-		return false;
-
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
 	constexpr int all_channels = -1;
 	fluid_synth_set_interp_method(fluid_synth.get(), all_channels,
@@ -285,6 +282,10 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	const auto set_mixer_level = std::bind(&MidiHandlerFluidsynth::SetMixerLevel,
 	                                       this, std::placeholders::_1);
 	mixer_channel->RegisterLevelCallBack(set_mixer_level);
+
+	if (!LoadSoundFont(section, fluid_synth.get()))
+		return false;
+
 	mixer_channel->Enable(true);
 
 	settings = std::move(fluid_settings);
