@@ -960,7 +960,11 @@ void MIXER_Init(Section* sec) {
 	mixer.min_needed = (mixer.freq * mixer.min_needed) / 1000;
 	mixer.max_needed = mixer.blocksize * 2 + 2 * mixer.min_needed;
 	mixer.needed = mixer.min_needed + 1;
-	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
+}
+
+void MIXER_MakeProgram(MAYBE_UNUSED Section *sec)
+{
+	PROGRAMS_MakeFile("MIXER.COM", MIXER_ProgramStart);
 }
 
 void MIXER_CloseAudioDevice()
