@@ -178,6 +178,46 @@ static std::string find_sf_file(const std::string &name)
 	return "";
 }
 
+bool LoadSoundFont(const Section_prop *section, fluid_synth_t *synth)
+{
+	// Read the user's configured "soundfont =" file and gain values
+	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"), 100);
+
+	// Apply the gain value or the default
+	auto scale_by_percent = std::get<int>(sf_spec);
+	if (scale_by_percent < 1 || scale_by_percent > 500) {
+		LOG_MSG("MIDI: FluidSynth invalid scaling of %d%% provided; resetting to 100%%",
+		        scale_by_percent);
+		scale_by_percent = 100;
+	}
+	fluid_synth_set_gain(synth, static_cast<float>(scale_by_percent) / 100.0f);
+
+	// Attempt to find the soundfont file
+	const auto soundfont = find_sf_file(std::get<std::string>(sf_spec));
+	if (soundfont.empty()) {
+		LOG_MSG("MIDI: FluidSynth couldn't find the '%s' SoundFont.",
+		        soundfont.c_str());
+		return false;
+	}
+	// Attempt to load the soundfont file
+	fluid_synth_sfload(synth, soundfont.data(), true);
+	if (fluid_synth_sfcount(synth) == 0) {
+		LOG_MSG("MIDI: FluidSynth failed loading the '%s' SoundFont.",
+		        soundfont.c_str());
+		return false;
+	}
+	// Let the user know that the SoundFont was loaded
+	if (scale_by_percent == 100)
+		LOG_MSG("MIDI: Loaded SoundFont '%s'", soundfont.c_str());
+	else if (scale_by_percent > 100)
+		LOG_MSG("MIDI: Loaded SoundFont '%s' with levels amplified by %d%%",
+		        soundfont.c_str(), scale_by_percent);
+	else
+		LOG_MSG("MIDI: Loaded SoundFont '%s' with levels attenuated by %d%%",
+		        soundfont.c_str(), scale_by_percent);
+	return true;
+}
+
 bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 {
 	Close();
@@ -214,37 +254,8 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 		return false;
 	}
 
-	// Load the requested SoundFont or quit if none provided
-	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"), 100);
-	const auto soundfont = find_sf_file(std::get<std::string>(sf_spec));
-	auto scale_by_percent = std::get<int>(sf_spec);
-
-	if (!soundfont.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
-	}
-	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		LOG_MSG("MIDI: FluidSynth failed to load '%s', check the path.",
-		        soundfont.c_str());
+	if (!LoadSoundFont(section, fluid_synth.get()))
 		return false;
-	}
-
-	if (scale_by_percent < 1 || scale_by_percent > 500) {
-		LOG_MSG("MIDI: FluidSynth invalid scaling of %d%% provided; resetting to 100%%",
-		        scale_by_percent);
-		scale_by_percent = 100;
-	}
-	fluid_synth_set_gain(fluid_synth.get(),
-	                     static_cast<float>(scale_by_percent) / 100.0f);
-
-	// Let the user know that the SoundFont was loaded
-	if (scale_by_percent == 100)
-		LOG_MSG("MIDI: Using SoundFont '%s'", soundfont.c_str());
-	else if (scale_by_percent > 100)
-		LOG_MSG("MIDI: Using SoundFont '%s' with levels amplified by %d%%",
-		        soundfont.c_str(), scale_by_percent);
-	else
-		LOG_MSG("MIDI: Using SoundFont '%s' with levels attenuated by %d%%",
-		        soundfont.c_str(), scale_by_percent);
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
 	constexpr int all_channels = -1;
