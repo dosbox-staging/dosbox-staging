@@ -114,6 +114,7 @@ struct DB_Midi {
 		uint32_t start = 0; // ms
 	} sysex{};
 	bool available = false;
+	std::string user_config{};
 	MidiHandler *handler = nullptr;
 };
 
@@ -131,6 +132,34 @@ uint32_t delay_in_ms(size_t sysex_bytes_num)
 	constexpr double midi_baud_rate = 3.125; // bytes per ms
 	const auto delay = (sysex_bytes_num * 1.25) / midi_baud_rate;
 	return static_cast<uint32_t>(delay) + 2;
+}
+
+static void OpenDefaultHandler()
+{
+	MidiHandler *handler = handler_list;
+	const char *conf = midi.user_config.c_str();
+	std::string name{};
+
+	while (handler) {
+		name = handler->GetName();
+
+		// Don't open these: user needs to opt-in
+		if (name == "fluidsynth" || name == "mt32") {
+			handler = handler->next;
+			continue;
+		}
+
+		DEBUG_LOG_MSG("MIDI: Trying default device: %s", name.c_str());
+		if (handler->Open(conf)) {
+			midi.available = true;
+			midi.handler = handler;
+			if (name != "none")
+				LOG_MSG("MIDI: Default device: %s is ready for playback",
+				        name.c_str());
+			return;
+		}
+		handler = handler->next;
+	}
 }
 
 void MIDI_RawOutByte(uint8_t data)
@@ -212,13 +241,9 @@ public:
 	MIDI(Section *configuration) : Module_base(configuration)
 	{
 		using namespace std::string_literals;
+		Section_prop *section = static_cast<Section_prop *>(configuration);
 
-		Section_prop * section=static_cast<Section_prop *>(configuration);
-		std::string dev = section->Get_string("mididevice");
-		lowcase(dev);
-
-		std::string fullconf=section->Get_string("midiconfig");
-		MidiHandler * handler;
+		std::string fullconf = section->Get_string("midiconfig");
 		midi.sysex.delay = 0;
 		midi.sysex.start = 0;
 		if (fullconf.find("delaysysex") != std::string::npos) {
@@ -228,54 +253,39 @@ public:
 		}
 		trim(fullconf);
 		const char * conf = fullconf.c_str();
+		midi.user_config = fullconf;
 		midi.status=0x00;
 		midi.cmd_pos=0;
 		midi.cmd_len=0;
-		// Value "default" exists for backwards-compatibility.
-		// TODO: Rewrite this logic without using goto
-		if (dev == "auto" || dev == "default")
-			goto getdefault;
-		handler=handler_list;
+
+		std::string dev = section->Get_string("mididevice");
+		lowcase(dev);
+
+		// "default" exists for backward-compatibility.
+		if (dev == "auto" || dev == "default") {
+			OpenDefaultHandler();
+			return;
+		}
+
+		MidiHandler *handler = handler_list;
 		while (handler) {
 			if (dev == handler->GetName()) {
 				if (!handler->Open(conf)) {
 					LOG_MSG("MIDI: Can't open device: %s with config: '%s'",
-					        dev.c_str(), conf);
+							dev.c_str(), conf);
 					goto getdefault;
 				}
-				midi.handler=handler;
-				midi.available=true;
+				midi.handler = handler;
+				midi.available = true;
 				LOG_MSG("MIDI: Opened device: %s",
-				        handler->GetName());
+						handler->GetName());
 				return;
 			}
-			handler=handler->next;
+			handler = handler->next;
 		}
 		LOG_MSG("MIDI: Can't find device: %s, using default handler.",
-		        dev.c_str());
-getdefault:
-		for (handler = handler_list; handler; handler = handler->next) {
-			const std::string name = handler->GetName();
-			if (name == "fluidsynth") {
-				// Never select fluidsynth automatically.
-				// Users needs to opt-in, otherwise
-				// fluidsynth will slow down emulator
-				// startup for all games.
-				continue;
-			}
-			if (name == "mt32") {
-				// Never select mt32 automatically.
-				// Users needs to opt-in.
-				continue;
-			}
-			if (handler->Open(conf)) {
-				midi.available=true;
-				midi.handler=handler;
-				LOG_MSG("MIDI: Opened device: %s", name.c_str());
-				return;
-			}
-		}
-		assert((handler != nullptr) && (handler->GetName() == "none"s));
+				dev.c_str());
+		OpenDefaultHandler();
 	}
 
 	~MIDI(){
