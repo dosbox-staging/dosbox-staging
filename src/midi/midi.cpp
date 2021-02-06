@@ -102,19 +102,19 @@ MidiHandler_alsa Midi_alsa;
 #endif
 
 struct DB_Midi {
-	uint8_t status;
-	size_t cmd_len;
-	size_t cmd_pos;
-	uint8_t cmd_buf[8];
-	uint8_t rt_buf[8];
+	uint8_t status = 0;
+	size_t cmd_len = 0;
+	size_t cmd_pos = 0;
+	uint8_t cmd_buf[8] = {0};
+	uint8_t rt_buf[8] = {0};
 	struct {
-		uint8_t buf[MIDI_SYSEX_SIZE];
-		size_t used;
-		uint32_t delay; // ms
-		uint32_t start; // ms
-	} sysex;
-	bool available;
-	MidiHandler * handler;
+		uint8_t buf[MIDI_SYSEX_SIZE] = {};
+		size_t used = 0;
+		uint32_t delay = 0; // ms
+		uint32_t start = 0; // ms
+	} sysex{};
+	bool available = false;
+	MidiHandler *handler = nullptr;
 };
 
 DB_Midi midi;
