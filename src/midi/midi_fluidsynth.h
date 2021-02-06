@@ -28,6 +28,7 @@
 #if C_FLUIDSYNTH
 
 #include <memory>
+#include <thread>
 #include <fluidsynth.h>
 
 #include "mixer.h"
@@ -48,6 +49,7 @@ public:
 	void PrintStats();
 	const char *GetName() const override { return "fluidsynth"; }
 	bool Open(const char *conf) override;
+	void FinishBackgroundLoad();
 	void Close() override;
 	void PlayMsg(const uint8_t *msg) override;
 	void PlaySysex(uint8_t *sysex, size_t len) override;
@@ -63,6 +65,8 @@ private:
 	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
 	AudioFrame prescale_level = {1.0f, 1.0f};
 	SoftLimiter<expected_max_frames> soft_limiter;
+	std::thread background_loader{};
+	bool is_loaded = false;
 
 	bool is_open = false;
 };

@@ -296,8 +296,25 @@ void MidiHandlerFluidsynth::StartBackgroundLoad(const Section_prop *section)
 {
 	assert(is_open && synth && channel);
 
-	const bool is_loaded = LoadSoundFont(section, synth.get());
-	channel->Enable(is_loaded);
+	// Get pointers to members to pass into thread
+	auto synth_p = synth.get();
+	auto channel_p = channel.get();
+	auto is_loaded_p = &is_loaded;
+	background_loader = std::thread([section, synth_p, channel_p, is_loaded_p]() {
+		*is_loaded_p = LoadSoundFont(section, synth_p);
+		channel_p->Enable(*is_loaded_p);
+	});
+}
+
+void MidiHandlerFluidsynth::FinishBackgroundLoad()
+{
+	if (background_loader.joinable())
+		background_loader.join();
+
+	if (!is_loaded) {
+		Close();
+		LOG_MSG("MIDI: Closed device: %s", GetName());
+	}
 }
 
 void MidiHandlerFluidsynth::Close()
@@ -305,10 +322,14 @@ void MidiHandlerFluidsynth::Close()
 	if (!is_open)
 		return;
 
+	if (background_loader.joinable())
+		background_loader.join();
+
 	channel->Enable(false);
 	channel = nullptr;
 	synth = nullptr;
 	settings = nullptr;
+	is_loaded = false;
 	is_open = false;
 }
 
@@ -389,6 +410,8 @@ static void fluid_destroy(MAYBE_UNUSED Section *sec)
 
 static void fluid_init(Section *sec)
 {
+	instance.FinishBackgroundLoad();
+	// ensure loading is complete before destroying the object
 	sec->AddDestroyFunction(&fluid_destroy, true);
 }
 
