@@ -8,15 +8,11 @@ project('dosbox-staging', 'c', 'cpp',
 # After increasing the minimum-required meson version, make the following
 # improvements:
 #
-# - 0.47.0 - remove 'if' disabling unit tests on older meson
-# - 0.47.0 - you can use dictionaries
-# - 0.49.0 - you can use string path building using '/' operator
-# - 0.49.0 - you can use 'in' operator for arrays and dictionaries
 # - 0.51.0 - remove warning about assertions in buildtype=plain
 # - 0.56.0 - use meson.current_source_dir() in unit tests
 #
-assert(meson.version().version_compare('>= 0.45.1'),
-       'Expecting meson 0.45.1 or newer.')
+assert(meson.version().version_compare('>= 0.49.0'),
+       'Expecting meson 0.49.0 or newer.')
 
 # https://mesonbuild.com/Release-notes-for-0-51-0.html#n_debugifrelease-and-buildtypeplain-means-no-asserts
 is_plain_build = (get_option('buildtype') == 'plain')
@@ -50,11 +46,11 @@ conf_data.set('version', meson.project_version())
 host_os = host_machine.system()
 if host_os == 'linux'
   conf_data.set('LINUX', 1)
-elif host_os == 'windows' or host_os == 'cygwin'
+elif host_os in ['windows', 'cygwin']
   conf_data.set('WIN32', 1)
 elif host_os == 'darwin'
   conf_data.set('MACOSX', 1)
-elif host_os.endswith('bsd') or host_os == 'dragonfly'
+elif host_os in ['freebsd', 'netbsd', 'openbsd', 'dragonfly']
   conf_data.set('BSD', 1)
 endif
 
@@ -64,8 +60,7 @@ conf_data.set10('C_OPENGL', get_option('use_opengl'))
 conf_data.set10('C_FLUIDSYNTH', get_option('use_fluidsynth'))
 conf_data.set10('C_SSHOT', get_option('use_png'))
 conf_data.set10('C_FPU', true)
-conf_data.set10('C_FPU_X86', (host_machine.cpu_family() == 'x86_64' or
-                              host_machine.cpu_family() == 'x86'))
+conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
 
 if get_option('enable_debugger') != 'none'
   conf_data.set10('C_DEBUG', true)
@@ -109,7 +104,7 @@ if cxx.get_id() == 'msvc'
   conf_data.set('NOMINMAX', true)
 endif
 
-if host_machine.system() == 'windows' or host_machine.system() == 'cygwin'
+if host_machine.system() in ['windows', 'cygwin']
   conf_data.set('_USE_MATH_DEFINES', true)
 endif
 
@@ -118,7 +113,7 @@ if host_machine.endian() == 'big'
 endif
 
 # Non-4K memory page size is supported only for ppc64 at the moment.
-if host_machine.cpu_family() == 'ppc64' or host_machine.cpu_family() == 'ppc64le'
+if host_machine.cpu_family() in ['ppc64', 'ppc64le']
   conf_data.set('PAGESIZE', 65536)
 endif
 
@@ -228,7 +223,7 @@ endif
 
 # Windows-only dependencies
 #
-if host_machine.system() == 'windows' or host_machine.system() == 'cygwin'
+if host_machine.system() in ['windows', 'cygwin']
   winsock2_dep = cxx.find_library('ws2_32', required : true)
   winmm_dep = cxx.find_library('winmm', required : true)
 endif
@@ -273,15 +268,10 @@ configure_file(input : 'src/config.h.in', output : 'config.h',
 
 # tests
 #
-# We use dictionaries for test declarations, dictionaries were added
-# in meson 0.47.0.
-#
-if meson.version().version_compare('>= 0.47.0')
-  # Some tests use relative paths; in meson 0.56.0 this can be replaced
-  # with meson.project_source_root().
-  project_source_root = meson.current_source_dir()
-  subdir('tests')
-endif
+# Some tests use relative paths; in meson 0.56.0 this can be replaced
+# with meson.project_source_root().
+project_source_root = meson.current_source_dir()
+subdir('tests')
 
 
 # dosbox executable
