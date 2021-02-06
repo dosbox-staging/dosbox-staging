@@ -192,20 +192,22 @@ bool LoadSoundFont(const Section_prop *section, fluid_synth_t *synth)
 	}
 	fluid_synth_set_gain(synth, static_cast<float>(scale_by_percent) / 100.0f);
 
-	// Attempt to find the soundfont file
-	const auto soundfont = find_sf_file(std::get<std::string>(sf_spec));
+	// Attempt to find the SoundFont file
+	const auto filename = std::get<std::string>(sf_spec);
+	const auto soundfont = find_sf_file(filename);
 	if (soundfont.empty()) {
 		LOG_MSG("MIDI: FluidSynth couldn't find the '%s' SoundFont.",
-		        soundfont.c_str());
+		        filename.c_str());
 		return false;
 	}
-	// Attempt to load the soundfont file
+	// Attempt to load the SoundFont into the synthesizer
 	fluid_synth_sfload(synth, soundfont.data(), true);
 	if (fluid_synth_sfcount(synth) == 0) {
 		LOG_MSG("MIDI: FluidSynth failed loading the '%s' SoundFont.",
 		        soundfont.c_str());
 		return false;
 	}
+
 	// Let the user know that the SoundFont was loaded
 	if (scale_by_percent == 100)
 		LOG_MSG("MIDI: Loaded SoundFont '%s'", soundfont.c_str());
