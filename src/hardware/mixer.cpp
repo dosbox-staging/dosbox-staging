@@ -44,6 +44,7 @@
 #include "mixer.h"
 #include "timer.h"
 #include "setup.h"
+#include "control.h"
 #include "cross.h"
 #include "string_utils.h"
 #include "mapper.h"
@@ -965,6 +966,43 @@ void MIXER_Init(Section* sec) {
 void MIXER_MakeProgram(MAYBE_UNUSED Section *sec)
 {
 	PROGRAMS_MakeFile("MIXER.COM", MIXER_ProgramStart);
+}
+
+static void init_mixer_dosbox_settings(Section_prop &secprop)
+{
+	constexpr auto at_start = Property::Changeable::OnlyAtStart;
+
+	auto *bool_prop = secprop.Add_bool("nosound", at_start, false);
+	bool_prop->Set_help("Enable silent mode, sound is still emulated though.");
+
+	// Frequently used rates
+	auto *int_prop = secprop.Add_int("rate", at_start, 44100);
+	const char *rates[] = {"44100", "48000", "32000", "22050", "16000",
+	                       "11025", "8000",  "49716", 0};
+	int_prop->Set_values(rates);
+	int_prop->Set_help(
+	        "Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.");
+
+	const char *blocksizes[] = {"1024", "2048", "4096", "8192",
+	                            "512",  "256",  0};
+	int_prop = secprop.Add_int("blocksize", at_start, 1024);
+	int_prop->Set_values(blocksizes);
+	int_prop->Set_help(
+	        "Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.");
+
+	int_prop = secprop.Add_int("prebuffer", at_start, 25);
+	int_prop->SetMinMax(0, 100);
+	int_prop->Set_help(
+	        "How many milliseconds of data to keep on top of the blocksize.");
+}
+
+void MIXER_AddConfigSection(Config *conf)
+{
+	assert(conf);
+	(void)conf->AddSection_prop("mixercom", &MIXER_MakeProgram);
+	Section_prop *sec = conf->AddEarlySectionProp("mixer", &MIXER_Init);
+	assert(sec);
+	init_mixer_dosbox_settings(*sec);
 }
 
 void MIXER_CloseAudioDevice()

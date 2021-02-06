@@ -164,6 +164,8 @@ public:
 	~MixerObject();
 };
 
+void MIXER_AddConfigSection(Config *conf);
+
 /* PC Speakers functions, tightly related to the timer functions */
 void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode);
 void PCSPEAKER_SetType(Bitu mode);

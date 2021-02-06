@@ -82,10 +82,6 @@ void FPU_Init(Section*);
 #endif
 
 void DMA_Init(Section*);
-
-void MIXER_Init(Section*);
-void MIXER_MakeProgram(Section *);
-
 void HARDWARE_Init(Section*);
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
@@ -419,10 +415,6 @@ void DOSBOX_Init(void) {
 
 	SDLNetInited = false;
 
-	// Some frequently used option sets
-	const char *rates[] = {"44100", "48000", "32000", "22050", "16000",
-	                       "11025", "8000",  "49716", 0};
-
 	/* Setup all the different modules making up DOSBox */
 	const char* machines[] = {
 		"hercules", "cga", "cga_mono", "tandy", "pcjr", "ega",
@@ -590,25 +582,7 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("pci",&PCI_Init,false); //PCI bus
 #endif
 
-	(void)control->AddSection_prop("mixercom", &MIXER_MakeProgram);
-	secprop = control->AddEarlySectionProp("mixer", &MIXER_Init);
-
-	Pbool = secprop->Add_bool("nosound",Property::Changeable::OnlyAtStart,false);
-	Pbool->Set_help("Enable silent mode, sound is still emulated though.");
-
-	Pint = secprop->Add_int("rate",Property::Changeable::OnlyAtStart,44100);
-	Pint->Set_values(rates);
-	Pint->Set_help("Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.");
-
-	const char *blocksizes[] = {
-		 "1024", "2048", "4096", "8192", "512", "256", 0};
-	Pint = secprop->Add_int("blocksize",Property::Changeable::OnlyAtStart,1024);
-	Pint->Set_values(blocksizes);
-	Pint->Set_help("Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.");
-
-	Pint = secprop->Add_int("prebuffer",Property::Changeable::OnlyAtStart,25);
-	Pint->SetMinMax(0,100);
-	Pint->Set_help("How many milliseconds of data to keep on top of the blocksize.");
+	MIXER_AddConfigSection(control);
 
 	secprop = control->AddSection_prop("midi", &MIDI_Init, true);
 	secprop->AddInitFunction(&MPU401_Init, true);
@@ -777,7 +751,10 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(tandys);
 	Pstring->Set_help("Enable Tandy Sound System emulation. For 'auto', emulation is present only if machine is set to 'tandy'.");
 
+	// TODO: make tandy use the negotiated mixer's rate
 	Pint = secprop->Add_int("tandyrate",Property::Changeable::WhenIdle,44100);
+	const char *rates[] = {"44100", "48000", "32000", "22050", "16000",
+	                       "11025", "8000",  "49716", 0};
 	Pint->Set_values(rates);
 	Pint->Set_help("Sample rate of the Tandy 3-Voice generation.");
 
