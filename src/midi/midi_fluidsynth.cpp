@@ -325,8 +325,10 @@ void MidiHandlerFluidsynth::Close()
 	if (background_loader.joinable())
 		background_loader.join();
 
-	channel->Enable(false);
-	channel = nullptr;
+	if (channel) {
+		channel->Enable(false);
+		channel = nullptr;
+	}
 	synth = nullptr;
 	settings = nullptr;
 	is_loaded = false;
