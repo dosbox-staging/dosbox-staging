@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <string>
 #include <algorithm>
+#include <thread>
 
 #include <SDL.h>
 
@@ -116,6 +117,7 @@ struct DB_Midi {
 	bool available = false;
 	std::string user_config{};
 	MidiHandler *handler = nullptr;
+	std::thread opener{};
 };
 
 DB_Midi midi;
@@ -160,6 +162,24 @@ static void OpenDefaultHandler()
 		}
 		handler = handler->next;
 	}
+}
+
+static void OpenInBackground(MidiHandler *handler)
+{
+	const char *conf = midi.user_config.c_str();
+	auto midi_handler = &midi.handler;
+	auto is_available = &midi.available;
+	midi.opener = std::thread([handler, conf, is_available, midi_handler]() {
+		*is_available = handler->Open(conf);
+		*midi_handler = handler;
+	});
+	LOG_MSG("MIDI: Opening device: %s", handler->GetName());
+}
+
+static void FinishOpening()
+{
+	if (midi.opener.joinable())
+		midi.opener.join();
 }
 
 void MIDI_RawOutByte(uint8_t data)
@@ -233,6 +253,11 @@ void MIDI_RawOutByte(uint8_t data)
 
 bool MIDI_Available()
 {
+	FinishOpening();
+
+	if (!midi.available)
+		OpenDefaultHandler();
+
 	return midi.available;
 }
 
@@ -252,7 +277,7 @@ public:
 			LOG_MSG("MIDI: Using delayed SysEx processing");
 		}
 		trim(fullconf);
-		const char * conf = fullconf.c_str();
+
 		midi.user_config = fullconf;
 		midi.status=0x00;
 		midi.cmd_pos=0;
@@ -267,31 +292,23 @@ public:
 			return;
 		}
 
+		// Otherwise open the user's requested handler
 		MidiHandler *handler = handler_list;
 		while (handler) {
-			if (dev == handler->GetName()) {
-				if (!handler->Open(conf)) {
-					LOG_MSG("MIDI: Can't open device: %s with config: '%s'",
-							dev.c_str(), conf);
-					goto getdefault;
-				}
-				midi.handler = handler;
-				midi.available = true;
-				LOG_MSG("MIDI: Opened device: %s",
-						handler->GetName());
+			if (handler->GetName() == dev) {
+				OpenInBackground(handler);
 				return;
 			}
 			handler = handler->next;
 		}
-		LOG_MSG("MIDI: Can't find device: %s, using default handler.",
-				dev.c_str());
-		OpenDefaultHandler();
 	}
 
 	~MIDI(){
-		if(midi.available) midi.handler->Close();
+		FinishOpening();
+		if (midi.available)
+			midi.handler->Close();
 		midi.available = false;
-		midi.handler = 0;
+		midi.handler = nullptr;
 	}
 };
 
