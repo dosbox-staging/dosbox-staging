@@ -69,7 +69,7 @@ jobs:
             $(cat ./.github/packages/${{ matrix.conf.os }}-apt.txt)
 
       - name: Install Meson via pip3
-        if:   matrix.conf.os == 'ubuntu-16.04'
+        if:   matrix.conf.os != 'ubuntu-20.04'
         run: |
           sudo apt-get install python3-setuptools
           sudo pip3 install meson ninja
