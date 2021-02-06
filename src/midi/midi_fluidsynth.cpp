@@ -335,6 +335,11 @@ void MidiHandlerFluidsynth::Close()
 	is_open = false;
 }
 
+MidiHandlerFluidsynth::~MidiHandlerFluidsynth()
+{
+	Close();
+}
+
 void MidiHandlerFluidsynth::PlayMsg(const uint8_t *msg)
 {
 	const int chanID = msg[0] & 0b1111;

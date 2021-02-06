@@ -46,6 +46,7 @@ private:
 
 public:
 	MidiHandlerFluidsynth() : soft_limiter("FSYNTH", prescale_level) {}
+	~MidiHandlerFluidsynth();
 	void PrintStats();
 	const char *GetName() const override { return "fluidsynth"; }
 	bool Open(const char *conf) override;
