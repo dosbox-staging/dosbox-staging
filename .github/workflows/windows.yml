@@ -12,7 +12,7 @@ jobs:
         conf:
           - name: MSVC 32-bit
             arch: x86
-            max_warnings: 269
+            max_warnings: 267
           - name: MSVC 64-bit
             arch: x64
             max_warnings: 1969
