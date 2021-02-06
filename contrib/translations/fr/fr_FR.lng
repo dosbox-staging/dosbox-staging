@@ -564,6 +564,10 @@ Le lecteur %c a ‚t‚ enlev‚ avec succŠs.
 Les lecteurs virtuels ne peuvent pas ˆtre d‚mont‚s.
 
 .
+:PROGRAM_MOUNT_DRIVEID_ERROR
+'%c' n'est pas un identifiant de lecteur valide.
+
+.
 :PROGRAM_MOUNT_WARNING_WIN
 [31;1mMonter c:\ n'est PAS recommand‚. Veuillez monter un (sous-)r‚pertoire la prochaine fois.[0m
 
@@ -597,6 +601,10 @@ Quelque chose s'est mal d‚roul‚.
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
 Redirection %s sur lecteur %c mont‚e.
+
+.
+:PROGRAM_MOUNT_MOVE_Z_ERROR_1
+Impossible de d‚placer le lecteur Z. Lecteur %c d‚j… mont‚.
 
 .
 :PROGRAM_MEM_CONVEN
