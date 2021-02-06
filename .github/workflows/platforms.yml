@@ -31,12 +31,12 @@ jobs:
           # - name: ARMv8 AArch64 (Ubuntu 18.04)
           #   arch: aarch64
           #   distro: ubuntu18.04
-          - name: s390x (Ubuntu 18.04)
+          - name: s390x (Ubuntu 20.04)
             arch: s390x
-            distro: ubuntu18.04
-          - name: ppc64le (Ubuntu 18.04)
+            distro: ubuntu20.04
+          - name: ppc64le (Ubuntu 20.04)
             arch: ppc64le
-            distro: ubuntu18.04
+            distro: ubuntu20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -57,7 +57,7 @@ jobs:
           run: |
             set -xo pipefail
             apt-get update
-            apt-get install -y $(cat ./.github/packages/ubuntu-18.04-apt.txt)
+            apt-get install -y $(cat ./.github/packages/ubuntu-20.04-apt.txt)
             ./scripts/log-env.sh
             meson build -Duse_fluidsynth=false --wrap-mode=nofallback
             ninja -C build |& tee build.log
