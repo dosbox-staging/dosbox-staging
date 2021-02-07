@@ -266,16 +266,38 @@ static void FPU_FST_F80(PhysPt addr) {
 }
 
 static void FPU_FST_I16(PhysPt addr) {
-	mem_writew(addr,static_cast<Bit16s>(FROUND(fpu.regs[TOP].d)));
+	double val = FROUND(fpu.regs[TOP].d);
+	Bit16s v16;
+
+	if (val < 32768.0 && val >= -32768.0)
+		v16 = static_cast<Bit16s>(val);
+	else 
+		v16 = -32768; 
+
+	mem_writew(addr,v16);
 }
 
 static void FPU_FST_I32(PhysPt addr) {
-	mem_writed(addr,static_cast<Bit32s>(FROUND(fpu.regs[TOP].d)));
+	double val = FROUND(fpu.regs[TOP].d);
+	Bit32s v32;
+
+	if (val < 2147483648.0 && val >= -2147483648.0)
+		v32 = static_cast<Bit32s>(val);
+	else 
+		v32 = -2147483648; 
+
+	mem_writed(addr,v32);
 }
 
 static void FPU_FST_I64(PhysPt addr) {
+	double val = FROUND(fpu.regs[TOP].d);
 	FPU_Reg blah;
-	blah.ll = static_cast<Bit64s>(FROUND(fpu.regs[TOP].d));
+
+	if (val < 9223372036854775808.0 && val >= -9223372036854775808.0)
+		blah.ll = static_cast<Bit64s>(val);
+	else 
+		blah.ll = LONGTYPE(0x8000000000000000);
+
 	mem_writed(addr,blah.l.lower);
 	mem_writed(addr+4,blah.l.upper);
 }
