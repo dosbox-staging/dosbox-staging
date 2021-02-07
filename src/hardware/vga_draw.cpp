@@ -380,8 +380,8 @@ static const Bit8u* VGA_Text_Memwrap(Bitu vidstart) {
 }
 
 static Bit32u FontMask[2]={0xffffffff,0x0};
-static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line) {
-	Bits font_addr;
+static uint8_t *VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line)
+{
 	Bit32u * draw=(Bit32u *)TempLine;
 	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart);
 	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
@@ -395,21 +395,23 @@ static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line) {
 		*draw++=(fg&mask1) | (bg&~mask1);
 		*draw++=(fg&mask2) | (bg&~mask2);
 	}
-	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x10)) goto skip_cursor;
-	font_addr = (vga.draw.cursor.address-vidstart) >> 1;
-	if (font_addr>=0 && font_addr<(Bits)vga.draw.blocks) {
-		if (line<vga.draw.cursor.sline) goto skip_cursor;
-		if (line>vga.draw.cursor.eline) goto skip_cursor;
+	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count & 0x10))
+		return TempLine; // skip cursor
+	if (line < vga.draw.cursor.sline || line > vga.draw.cursor.eline)
+		return TempLine; // skip cursor
+	if (vga.draw.cursor.address < vidstart)
+		return TempLine; // skip cursor
+	const Bitu font_addr = (vga.draw.cursor.address - vidstart) >> 1;
+	if (font_addr < vga.draw.blocks) {
 		draw=(Bit32u *)&TempLine[font_addr*8];
 		Bit32u att=TXT_FG_Table[vga.tandy.draw_base[vga.draw.cursor.address+1]&0xf];
 		*draw++=att;*draw++=att;
 	}
-skip_cursor:
 	return TempLine;
 }
 
-static Bit8u * VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line) {
-	Bits font_addr;
+static uint8_t *VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
+{
 	Bit32u * draw=(Bit32u *)TempLine;
 	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart);
 
@@ -444,11 +446,14 @@ static Bit8u * VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line) {
 			*draw++=(fg&mask2) | (bg&~mask2);
 		}
 	}
-	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x10)) goto skip_cursor;
-	font_addr = (vga.draw.cursor.address-vidstart) >> 1;
-	if (font_addr>=0 && font_addr<(Bits)vga.draw.blocks) {
-		if (line<vga.draw.cursor.sline) goto skip_cursor;
-		if (line>vga.draw.cursor.eline) goto skip_cursor;
+	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count & 0x10))
+		return TempLine; // skip cursor
+	if (line < vga.draw.cursor.sline || line > vga.draw.cursor.eline)
+		return TempLine; // skip cursor
+	if (vga.draw.cursor.address < vidstart)
+		return TempLine; // skip cursor
+	const Bitu font_addr = (vga.draw.cursor.address - vidstart) >> 1;
+	if (font_addr < vga.draw.blocks) {
 		draw=(Bit32u *)&TempLine[font_addr*8];
 		Bit8u attr = vga.tandy.draw_base[vga.draw.cursor.address+1];
 		Bit32u cg;
@@ -461,9 +466,9 @@ static Bit8u * VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line) {
 		}
 		*draw++=cg;*draw++=cg;
 	}
-skip_cursor:
 	return TempLine;
 }
+
 /*
 // combined 8/9-dot wide text mode 8bpp line drawing function
 static Bit8u* VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line) {
