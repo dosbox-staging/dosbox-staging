@@ -26,7 +26,9 @@
 
 #if C_MT32EMU
 
+#include <array>
 #include <memory>
+#include <thread>
 
 #define MT32EMU_API_TYPE 3
 #include <mt32emu/mt32emu.h>
@@ -34,24 +36,23 @@
 #error Incompatible mt32emu library version
 #endif
 
-#include <SDL_thread.h>
-
 #include "mixer.h"
+#include "../libs/rwqueue/readerwritercircularbuffer.h"
 
 class MidiHandler_mt32 final : public MidiHandler {
 private:
-	// Scoped types
+	static constexpr int FRAMES_PER_BUFFER = 2048; // synth granularity
+	static constexpr int SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
+
+	using buffer_t = std::array<int16_t, SAMPLES_PER_BUFFER>;
+	using ring_t = moodycamel::BlockingReaderWriterCircularBuffer<buffer_t>;
 	using channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
-	using conditional_t = std::unique_ptr<SDL_cond, decltype(&SDL_DestroyCond)>;
-	using mutex_t = std::unique_ptr<SDL_mutex, decltype(&SDL_DestroyMutex)>;
-	static void DeleteThread(SDL_Thread *t);
-	using thread_t = std::unique_ptr<SDL_Thread, decltype(&MidiHandler_mt32::DeleteThread)>;
+	using conditional_t = moodycamel::weak_atomic<bool>;
 
 public:
 	using service_t = std::unique_ptr<MT32Emu::Service>;
 
-	~MidiHandler_mt32();
-
+	~MidiHandler_mt32() override;
 	void Close() override;
 	const char *GetName() const override { return "mt32"; }
 	bool Open(const char *conf) override;
@@ -61,29 +62,24 @@ public:
 private:
 	uint32_t GetMidiEventTimestamp() const;
 	void MixerCallBack(uint16_t len);
-	static int ProcessingThread(void *data);
-	void RenderingLoop();
+	uint16_t GetRemainingFrames();
+	void Render();
 
 	// Managed objects
+	buffer_t buffer{};
 	channel_t channel{nullptr, MIXER_DelChannel};
-	conditional_t framesInBufferChanged{nullptr, &SDL_DestroyCond};
-	mutex_t lock{nullptr, &SDL_DestroyMutex};
-	thread_t thread{nullptr, &MidiHandler_mt32::DeleteThread};
+	std::thread renderer{};
+	ring_t ring{3}; // Handle up to three buffers in the ring
 	service_t service{};
 
-	std::vector<int16_t> audioBuffer = {};
+	// The following two members let us determine the total number of played
+	// frames, which is used by GetMidiEventTimestamp() to calculate a total
+	// time offset.
+	uint32_t total_buffers_played = 0;
+	uint16_t last_played_frame = 0; // relative frame-offset in the buffer
 
-	// Ongoing state-tracking
-	volatile uint32_t playedBuffers = 0;
-	volatile uint16_t renderPos = 0;
-	volatile uint16_t playPos = 0;
-
-	// Buffer properties
-	uint16_t framesPerAudioBuffer = 0;
-	uint16_t minimumRenderFrames = 0;
-
+	conditional_t keep_rendering = false;
 	bool is_open = false;
-	volatile bool stopProcessing = true;
 };
 
 #endif // C_MT32EMU
