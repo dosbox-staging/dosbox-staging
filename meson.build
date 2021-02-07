@@ -43,16 +43,17 @@ endif
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
 
-host_os = host_machine.system()
-if host_os == 'linux'
-  conf_data.set('LINUX', 1)
-elif host_os in ['windows', 'cygwin']
-  conf_data.set('WIN32', 1)
-elif host_os == 'darwin'
-  conf_data.set('MACOSX', 1)
-elif host_os in ['freebsd', 'netbsd', 'openbsd', 'dragonfly']
-  conf_data.set('BSD', 1)
-endif
+os_family_name = {
+  'linux'     : 'LINUX',
+  'windows'   : 'WIN32',
+  'cygwin'    : 'WIN32',
+  'darwin'    : 'MACOSX',
+  'freebsd'   : 'BSD',
+  'netbsd'    : 'BSD',
+  'openbsd'   : 'BSD',
+  'dragonfly' : 'BSD',
+}.get(host_machine.system(), 'UNKNOWN_OS')
+conf_data.set(os_family_name, 1)
 
 conf_data.set10('C_MODEM', get_option('use_sdl2_net'))
 conf_data.set10('C_IPX', get_option('use_sdl2_net'))
