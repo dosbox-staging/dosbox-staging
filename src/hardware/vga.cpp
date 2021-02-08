@@ -22,6 +22,7 @@
 #include <cstring>
 
 #include "pic.h"
+#include "support.h"
 #include "video.h"
 
 VGA_Type vga;
@@ -129,8 +130,7 @@ void VGA_SetClock(Bitu which,Bitu target) {
 		}
 	}
 	/* Program the s3 clock chip */
-	constexpr size_t vga_s3_clk_len = sizeof(vga.s3.clk) / sizeof(*vga.s3.clk);
-	assert(which < vga_s3_clk_len);
+	assert(which < ARRAY_LEN(vga.s3.clk));
 	vga.s3.clk[which].m = best.m;
 	vga.s3.clk[which].r = r;
 	vga.s3.clk[which].n = best.n;
