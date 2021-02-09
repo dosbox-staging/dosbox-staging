@@ -80,6 +80,7 @@ public:
 	void ParseLine(char * line);
 	Bitu GetRedirection(char *s, char **ifn, char **ofn,bool * append);
 	void InputCommand(char * line);
+	void ProcessCmdLineEnvVarStitution(char *line);
 	void ShowPrompt();
 	void DoCommand(char * cmd);
 	bool Execute(char * name,char * args);
