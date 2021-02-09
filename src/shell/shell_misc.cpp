@@ -384,6 +384,104 @@ void DOS_Shell::InputCommand(char * line) {
 	// add command line to history
 	l_history.push_front(line); it_history = l_history.begin();
 	if (l_completion.size()) l_completion.clear();
+
+	/* DOS %variable% substitution */
+	ProcessCmdLineEnvVarStitution(line);
+}
+
+/* WARNING: Substitution is carried out in-place!
+ * Buffer pointed to by "line" must be at least CMD_MAXLINE+1 bytes long! */
+void DOS_Shell::ProcessCmdLineEnvVarStitution(char *line) {
+	char temp[CMD_MAXLINE]; /* <- NTS: Currently 4096 which is very generous indeed! */
+	char* w = temp;
+	const char* wf = temp + sizeof(temp) - 1;
+	char *r=line;
+	/* initial scan: is there anything to substitute? */
+	/* if not, then return without modifying "line" */
+	while (*r != 0 && *r != '%') r++;
+	if (*r != '%') return;
+	/* if the incoming string is already too long, then that's a problem too! */
+	if (((size_t)(r+1-line)) >= CMD_MAXLINE) {
+		LOG_MSG("DOS_Shell::ProcessCmdLineEnvVarStitution WARNING incoming string to substitute is already too long!\n");
+		goto overflow;
+	}
+	/* copy the string down up to that point */
+	for (const char* c = line; c < r;) {
+		assert(w < wf);
+		*w++ = *c++;
+	}
+	/* begin substitution process */
+	while (*r != 0) {
+		if (*r == '%') {
+			r++;
+			if (*r == '%' || *r == 0) {
+				/* %% or leaving a trailing % at the end (Win95 behavior) becomes a single '%' */
+				if (w >= wf) goto overflow;
+				*w++ = '%';
+				if (*r != 0) r++;
+				else break;
+			}
+			else {
+				const char* name = r; /* store pointer, 'r' is first char of the name following '%' */
+				int spaces = 0,chars = 0;
+				if (isalpha(*r) || *r == ' ') { /* must start with a letter. space is apparently valid too. (Win95) */
+					if (*r == ' ') spaces++;
+					else if (isalpha(*r)) chars++;
+					r++;
+					while (*r != 0 && *r != '%') {
+						if (*r == ' ') spaces++;
+						else chars++;
+						r++;
+					}
+				}
+				if (*r == '%' && ((spaces > 0 && chars == 0) || (spaces == 0 && chars > 0))) {
+					std::string temp2;
+					/* valid name found. substitute */
+					*r++ = 0; /* ASCIIZ snip */
+					if (GetEnvStr(name,temp2)) {
+						size_t equ_pos = temp2.find_first_of('=');
+						if (equ_pos != std::string::npos) {
+							const char *base = temp2.c_str();
+							const char *value = base + equ_pos + 1;
+							const char *fence = base + temp2.length();
+							assert(value >= base && value <= fence);
+							size_t len = (size_t)(fence-value);
+							if ((w+len) > wf) goto overflow;
+							memcpy(w,value,len);
+							w += len;
+						}
+					}
+				}
+				else {
+					/* nope. didn't find a valid name */
+					while (*r == ' ') r++; /* skip spaces */
+					name--; /* step "name" back to cover the first '%' we found */
+					for (const char* c = name; c < r;) {
+						if (w >= wf) goto overflow;
+						*w++ = *c++;
+					}
+				}
+			}
+		}
+		else {
+			if (w >= wf) goto overflow;
+			*w++ = *r++;
+		}
+	}
+	/* complete the C-string */
+	assert(w <= wf);
+	*w = 0;
+	/* copy the string back over the buffer pointed to by line */
+	{
+		size_t out_len = (size_t)(w+1-temp); /* length counting the NUL too */
+		assert(out_len <= CMD_MAXLINE);
+		memcpy(line,temp,out_len);
+	}
+	/* success */
+	return;
+overflow:
+	*line = 0; /* clear string (C-string chop with NUL) */
+	WriteOut("Command input error: string expansion overflow\n");
 }
 
 std::string full_arguments = "";
