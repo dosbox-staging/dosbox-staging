@@ -9,6 +9,8 @@ project('dosbox-staging', 'c', 'cpp',
 # improvements:
 #
 # - 0.51.0 - remove warning about assertions in buildtype=plain
+# - 0.55.0 - subproject wraps are automatically promoted to fallbacks,
+#            stop using: "fallback : ['foo', 'foo_dep']" for dependencies
 # - 0.56.0 - use meson.current_source_dir() in unit tests
 #
 assert(meson.version().version_compare('>= 0.49.0'),
@@ -59,6 +61,7 @@ conf_data.set10('C_MODEM', get_option('use_sdl2_net'))
 conf_data.set10('C_IPX', get_option('use_sdl2_net'))
 conf_data.set10('C_OPENGL', get_option('use_opengl'))
 conf_data.set10('C_FLUIDSYNTH', get_option('use_fluidsynth'))
+conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
 conf_data.set10('C_SSHOT', get_option('use_png'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
@@ -155,6 +158,7 @@ sdl2_net_dep  = optional_dep
 opengl_dep    = optional_dep
 fluid_dep     = optional_dep
 opus_dep      = optional_dep
+mt32emu_dep   = optional_dep
 png_dep       = optional_dep
 z_dep         = optional_dep
 curses_dep    = optional_dep # necessary for debugger builds
@@ -178,6 +182,13 @@ endif
 if get_option('use_fluidsynth')
   fluid_dep = dependency('fluidsynth', version : '>= 2.0.0',
                          not_found_message : msg.format('use_fluidsynth'))
+endif
+
+if get_option('use_mt32emu')
+  # TODO version 2.5.0 will install mt32emu.pc file; upgrade when released
+  mt32emu_dep = dependency('mt32emu', version : '>= 2.4.2',
+                           fallback : ['mt32emu', 'mt32emu_dep'],
+                           not_found_message : msg.format('use_mt32emu'))
 endif
 
 if get_option('use_opusfile')

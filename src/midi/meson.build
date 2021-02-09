@@ -1,6 +1,7 @@
 libmidi_sources = [
   'midi.cpp',
   'midi_fluidsynth.cpp',
+  'midi_mt32.cpp',
   'midi_oss.cpp',
 ]
 
@@ -9,6 +10,7 @@ libmidi = static_library('midi', libmidi_sources,
                          dependencies : [
                            sdl2_dep,
                            fluid_dep,
+                           mt32emu_dep,
                            alsa_dep,
                            coreaudio_dep,
                            coremidi_dep,

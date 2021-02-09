@@ -13,6 +13,11 @@ option('use_fluidsynth',
        value : true,
        description : 'Enable built-in MIDI support via FluidSynth')
 
+option('use_mt32emu',
+       type : 'boolean',
+       value : true,
+       description : 'Enable built-in MT-32 emulation support')
+
 option('use_opusfile',
        type : 'boolean',
        value : true,
