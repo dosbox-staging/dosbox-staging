@@ -59,7 +59,10 @@ jobs:
             apt-get update
             apt-get install -y $(cat ./.github/packages/ubuntu-20.04-apt.txt)
             ./scripts/log-env.sh
-            meson build -Duse_fluidsynth=false --wrap-mode=nofallback
+            meson build \
+              -Duse_fluidsynth=false \
+              -Duse_mt32emu=false \
+              --wrap-mode=nofallback
             ninja -C build |& tee build.log
 
 
