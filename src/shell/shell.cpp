@@ -735,18 +735,18 @@ void SHELL_Init() {
 	        "  \033[32;1mver\033[0m \033[37;1mset\033[0m \033[36;1mVERSION\033[0m  Change the reported version\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mVERSION\033[0m can be a whole number, such as 5, or include a\n"
-	        "  two-digit decimal value, such as: 6.22, 7.01, or 7.10.\n"
+	        "  \033[36;1mVERSION\033[0m can be a whole number, such as \033[36;1m5\033[0m, or include a\n"
+	        "  two-digit decimal value, such as: \033[36;1m6.22\033[0m, \033[36;1m7.01\033[0m, or \033[36;1m7.10\033[0m.\n"
 	        "  The decimal can alternatively be space-separated, such\n"
-	        "  as: 6 22, 7 01, or 7 10.\n"
+	        "  as: \033[36;1m6 22\033[0m, \033[36;1m7 01\033[0m, or \033[36;1m7 10\033[0m.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  The DOS version can also be set in the configuration file\n"
 	        "  under the [dos] section using the \"ver = \033[36;1mVERSION\033[0m\" setting.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mver\033[0m \033[37;1mset\033[0m \033[36;1m6 22\033[0m\n"
-	        "  \033[32;1mver\033[0m \033[37;1mset\033[0m \033[36;1m7.10\033[0m\n");
+	        "  \033[32;1mver\033[0m \033[37;1mset\033[0m \033[36;1m6.22\033[0m\n"
+	        "  \033[32;1mver\033[0m \033[37;1mset\033[0m \033[36;1m7 10\033[0m\n");
 	MSG_Add("SHELL_CMD_VER_VER",
 	        "DOSBox Staging version %s. Reported DOS version %d.%02d.\n");
 	MSG_Add("SHELL_CMD_VER_INVALID", "The specified DOS version is not correct.\n");
