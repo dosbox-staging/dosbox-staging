@@ -69,11 +69,11 @@ jobs:
       - name: Log environment
         run:  ./scripts/log-env.sh
 
-      - name: Run scan-build
+      - run:  meson setup build
+
+      - name: Build and run scan-build
         run: |
-          # build steps
           set -x
-          meson setup build
           ninja -C build scan-build
           mv build/meson-logs/scanbuild report
 
@@ -85,7 +85,7 @@ jobs:
 
       - name: Summarize report
         env:
-          MAX_BUGS: 183
+          MAX_BUGS: 187
         run: |
           # summary
           echo "Full report is included in build Artifacts"
@@ -124,7 +124,7 @@ jobs:
           # UndefinedBehaviorSanitizer at the same time.
           # See Clang manual to learn more.
           - name: Clang undefined+address sanitizer
-            build_flags: -Db_sanitize=address,undefined --native-file=.github/meson/native-clang.ini
+            build_flags: -Db_sanitize=address,undefined --native-file=.github/meson/native-clang.ini -Duse_mt32emu=false
             logs: clang-uasan-logs
             max_issues: 4
     steps:
