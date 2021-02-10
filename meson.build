@@ -31,9 +31,9 @@ endif
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
 
-add_global_arguments('-Weffc++', language : 'cpp')
+add_project_arguments('-Weffc++', language : 'cpp')
 if cxx.has_argument('-Wextra-semi')
-    add_global_arguments('-Wextra-semi', language : 'cpp')
+    add_project_arguments('-Wextra-semi', language : 'cpp')
 endif
 
 
