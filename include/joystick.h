@@ -40,6 +40,7 @@ float JOYSTICK_GetMove_Y(Bitu which);
 void JOYSTICK_ParseConfiguredType();
 
 enum JoystickType {
+	JOY_UNSET,
 	JOY_NONE,
 	JOY_AUTO,
 	JOY_2AXIS,

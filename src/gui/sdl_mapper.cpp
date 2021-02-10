@@ -2099,7 +2099,9 @@ static void CreateLayout() {
 	AddJAxisButton  (PX(XO+2),PY(YO+1),BW,BH,"X+",0,0,true,cjaxis);
 
 	CJAxisEvent * tmp_ptr;
-	if (joytype==JOY_2AXIS) {
+
+	assert(joytype != JOY_UNSET);
+	if (joytype == JOY_2AXIS) {
 		/* Buttons 1+2 of 2nd Joystick */
 		AddJButtonButton(PX(XO+4),PY(YO),BW,BH,"1" ,1,0);
 		AddJButtonButton(PX(XO+4+2),PY(YO),BW,BH,"2" ,1,1);
@@ -2634,6 +2636,7 @@ static void CreateBindGroups() {
 	CKeyBindGroup* key_bind_group = new CKeyBindGroup(SDL_NUM_SCANCODES);
 	keybindgroups.push_back(key_bind_group);
 
+	assert(joytype != JOY_UNSET);
 	if (joytype != JOY_NONE) {
 #if defined (REDUCE_JOYSTICK_POLLING)
 		// direct access to the SDL joystick, thus removed from the event handling

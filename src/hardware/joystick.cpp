@@ -133,7 +133,7 @@ struct JoyStick {
 
 };
 
-JoystickType joytype;
+JoystickType joytype = JOY_UNSET;
 static JoyStick stick[2];
 
 static Bitu last_write = 0;
@@ -307,6 +307,8 @@ void JOYSTICK_ParseConfiguredType()
 		joytype = JOY_CH;
 	else
 		joytype = JOY_AUTO;
+
+	assert(joytype != JOY_UNSET);
 }
 
 class JOYSTICK : public Module_base {
