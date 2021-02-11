@@ -43,6 +43,8 @@
 constexpr auto ANALOG_MODE = MT32Emu::AnalogOutputMode_ACCURATE;
 // DAC Emulation modes: NICE, PURE, GENERATION1, and GENERATION2
 constexpr auto DAC_MODE = MT32Emu::DACInputMode_NICE;
+// Analog rendering types: BITS16S, FLOAT
+constexpr auto RENDERING_TYPE = MT32Emu::RendererType_FLOAT;
 // Sample rate conversion quality: FASTEST, FAST, GOOD, BEST
 constexpr auto RATE_CONVERSION_QUALITY = MT32Emu::SamplerateConversionQuality_BEST;
 // Use improved amplitude ramp characteristics for sustaining instruments
@@ -282,9 +284,16 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	                                      this, std::placeholders::_1);
 	channel_t mixer_channel(MIXER_AddChannel(mixer_callback, 0, "MT32"),
 	                        MIXER_DelChannel);
+
+	// Let the mixer command adjust the MT32's services gain-level
+	const auto set_mixer_level = std::bind(&MidiHandler_mt32::SetMixerLevel,
+	                                       this, std::placeholders::_1);
+	mixer_channel->RegisterLevelCallBack(set_mixer_level);
+
 	const auto sample_rate = mixer_channel->GetSampleRate();
 
 	mt32_service->setAnalogOutputMode(ANALOG_MODE);
+	mt32_service->selectRendererType(RENDERING_TYPE);
 	mt32_service->setStereoOutputSampleRate(sample_rate);
 	mt32_service->setSamplerateConversionQuality(RATE_CONVERSION_QUALITY);
 
@@ -316,6 +325,26 @@ MidiHandler_mt32::~MidiHandler_mt32()
 	Close();
 }
 
+// When the user runs "mixer MT32 <percent-left>:<percent-right>", this function
+// get those percents as floating point ratios (100% being 1.0f). Instead of
+// post-scaling the rendered integer stream in the mixer, we instead provide the
+// desired floating point scalar to the MT32 service via its gain() interface
+// where it can more elegantly adjust the level of the synthesis.
+
+// Another nuance is that MT32's gain interface takes in a single float, but
+// DOSBox's mixer accept left-and-right, so we apply gain using the larger of
+// the two and then use the limiter's left-right ratios to scale down by lesser
+// ratio.
+void MidiHandler_mt32::SetMixerLevel(const AudioFrame &desired) noexcept
+{
+	const float gain = std::max(desired.left, desired.right);
+	if (service)
+		service->setOutputGain(gain);
+
+	limiter_ratio.left = INT16_MAX * desired.left / gain;
+	limiter_ratio.right = INT16_MAX * desired.right / gain;
+}
+
 void MidiHandler_mt32::Close()
 {
 	if (!is_open)
@@ -327,7 +356,7 @@ void MidiHandler_mt32::Close()
 
 	// Stop rendering and drain the ring
 	keep_rendering = false;
-	buffer_t discard_buffer;
+	limited_buffer_t discard_buffer;
 	while (ring.size_approx())
 		ring.wait_dequeue(discard_buffer);
 
@@ -404,10 +433,11 @@ uint16_t MidiHandler_mt32::GetRemainingFrames()
 // released in the ring allowing MT-32 to renderer the next "full buffer".
 void MidiHandler_mt32::Render()
 {
-	buffer_t buf;
+	render_buffer_t buf;
 	while (keep_rendering) {
-		service->renderBit16s(buf.data(), FRAMES_PER_BUFFER);
-		ring.wait_enqueue(buf);
+		service->renderFloat(buf.data(), FRAMES_PER_BUFFER);
+		const auto &out = soft_limiter.Apply(buf, FRAMES_PER_BUFFER);
+		ring.wait_enqueue(out);
 	}
 }
 
