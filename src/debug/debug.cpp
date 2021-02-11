@@ -1572,6 +1572,21 @@ char* AnalyzeInstruction(char* inst, bool saveSelector) {
 };
 
 
+Bit32s DEBUG_Run(Bit32s amount,bool quickexit) {
+	skipFirstInstruction = true;
+	CPU_Cycles = amount;
+	Bit32s ret = (*cpudecoder)();
+	if (quickexit) SetCodeWinStart();
+	else {
+		// ensure all breakpoints are activated
+		CBreakpoint::ActivateBreakpoints();
+		DOSBOX_SetNormalLoop();
+	}
+	return ret;
+}
+
+
+
 Bit32u DEBUG_CheckKeys(void) {
 	Bits ret=0;
 	bool numberrun = false;
@@ -1580,12 +1595,8 @@ Bit32u DEBUG_CheckKeys(void) {
 
 	if (key >='1' && key <='5' && strlen(codeViewData.inputStr) == 0) {
 		const Bit32s v[] ={5,500,1000,5000,10000};
-		CPU_Cycles= v[key - '1'];
 
-		skipFirstInstruction = true;
-
-		ret = (*cpudecoder)();
-		SetCodeWinStart();
+		ret = DEBUG_Run(v[key - '1'],true);
 
 		/* Setup variables so we end up at the proper ret processing */
 		numberrun = true;
@@ -1726,16 +1737,8 @@ Bit32u DEBUG_CheckKeys(void) {
 				debugging=false;
 				DrawCode(); // update code window to show "running" status
 
-				skipFirstInstruction = true; // for heavy debugger
-				CPU_Cycles = 1;
-				ret=(*cpudecoder)();
-
-				// ensure all breakpoints are activated
-				CBreakpoint::ActivateBreakpoints();
-
+				ret = DEBUG_Run(1,false);
 				skipDraw = true; // don't update screen after this instruction
-
-				DOSBOX_SetNormalLoop();
 				break;
 		case KEY_F(8):	// Toggle printable characters
 				showPrintable = !showPrintable;
@@ -1754,14 +1757,7 @@ Bit32u DEBUG_CheckKeys(void) {
 				break;
 		case KEY_F(10):	// Step over inst
 				if (StepOver()) {
-					skipFirstInstruction = true; // for heavy debugger
-					CPU_Cycles = 1;
-					ret=(*cpudecoder)();
-
-					DOSBOX_SetNormalLoop();
-
-					// ensure all breakpoints are activated
-					CBreakpoint::ActivateBreakpoints();
+					ret = DEBUG_Run(1,false);
 					skipDraw = true;
 					break;
 				}
@@ -1769,10 +1765,7 @@ Bit32u DEBUG_CheckKeys(void) {
 				/* FALLTHROUGH */
 		case KEY_F(11):	// trace into
 				exitLoop = false;
-				skipFirstInstruction = true; // for heavy debugger
-				CPU_Cycles = 1;
-				ret = (*cpudecoder)();
-				SetCodeWinStart();
+				ret = DEBUG_Run(1,true);
 				break;
 		case 0x0A: //Parse typed Command
 				codeViewData.inputStr[MAXCMDLEN] = '\0';
