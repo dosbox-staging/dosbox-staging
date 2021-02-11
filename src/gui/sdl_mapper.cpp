@@ -2833,14 +2833,10 @@ void MAPPER_BindKeys() {
 	GFX_LosingFocus();
 
 	// Get the mapper file set by the user
-	const auto sdl_sec = control->GetSection("sdl");
-	assert(sdl_sec);
-
-	const auto sdl_prop = static_cast<Section_prop *>(sdl_sec);
-
-	const auto prop_path = sdl_prop->Get_path("mapperfile");
-	assert(prop_path);
-	mapper.filename = prop_path->realpath;
+	const auto section = static_cast<const Section_prop *>(sec);
+	const auto property = section->Get_path("mapperfile");
+	assert(property && !property->realpath.empty());
+	mapper.filename = property->realpath;
 
 	QueryJoysticks();
 
