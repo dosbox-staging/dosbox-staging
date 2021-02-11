@@ -2828,8 +2828,9 @@ static void MAPPER_Destroy(Section *sec) {
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 }
 
-void MAPPER_BindKeys() {
-	//Release any keys pressed, or else they'll get stuck
+void MAPPER_BindKeys(Section *sec)
+{
+	// Release any keys pressed, or else they'll get stuck
 	GFX_LosingFocus();
 
 	// Get the mapper file set by the user
@@ -2881,32 +2882,11 @@ void MAPPER_AutoType(std::vector<std::string> &sequence,
 	mapper.typist.Start(&events, sequence, wait_ms, pace_ms);
 }
 
-// Activate user-specified or default binds
-static void MAPPER_ConfigureBindings(Section *sec) {
-	(void) sec; // unused but present for API compliance
-	Section_prop const *const section=static_cast<Section_prop *>(sec);
-	Prop_path const *const pp = section->Get_path("mapperfile");
-	mapper.filename = pp->realpath;
-
-	/*  Because the mapper is initialized before several other of DOSBox's
-	 *  submodules have a chance to register their key bindings, we defer
-	 *  the mapper's setup and instead manully BindKeys() in SDL main only
-	 *  after -all- subsystems have been initialized, which ensures that all
-	 *  binding a present, and thus are also layed out in the mapper's GUI.
-	 */
-	static bool init_phase = true;
-	if (init_phase) {
-		init_phase = false;
-		return;
-	}
-	MAPPER_BindKeys();
-}
-
 void MAPPER_StartUp(Section * sec) {
 	Section_prop * section = static_cast<Section_prop *>(sec);
 
 	 //runs after this function ends and for subsequent config -set "sdl mapperfile=file.map" commands
-	section->AddInitFunction(&MAPPER_ConfigureBindings, true);
+	section->AddInitFunction(&MAPPER_BindKeys, true);
 
 	// runs one-time on shutdown
 	section->AddDestroyFunction(&MAPPER_Destroy, false);

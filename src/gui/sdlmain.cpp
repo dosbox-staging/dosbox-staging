@@ -3402,8 +3402,9 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		MAPPER_BindKeys(); // All subsystem handlers need to be
-		                   // registered at this point to be mappable.
+		// All subsystems' hotkeys need to be registered at this point
+		// to ensure their hotkeys appear in the graphical mapper.
+		MAPPER_BindKeys(sdl_sec);
 		if (control->cmdline->FindExist("-startmapper"))
 			MAPPER_DisplayUI();
 

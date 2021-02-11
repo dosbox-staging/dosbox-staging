@@ -51,8 +51,8 @@ void MAPPER_AddHandler(MAPPER_Handler *handler,
                        const char *event_name,
                        const char *button_name);
 
-void MAPPER_BindKeys();
-void MAPPER_StartUp(Section * sec);
+void MAPPER_BindKeys(Section *sec);
+void MAPPER_StartUp(Section *sec);
 void MAPPER_Run(bool pressed);
 void MAPPER_DisplayUI();
 void MAPPER_LosingFocus();
