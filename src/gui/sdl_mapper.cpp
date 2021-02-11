@@ -2592,6 +2592,10 @@ void BIND_MappingEvents() {
  *  joysticks_active if joystick support is enabled and are present.
  */
 static void QueryJoysticks() {
+	JOYSTICK_ParseConfiguredType();
+	if (joytype == JOY_NONE)
+		return;
+
 	// Initialize SDL's Joystick and Event subsystems, if needed
 	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
 		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
@@ -2828,11 +2832,17 @@ void MAPPER_BindKeys() {
 	//Release any keys pressed, or else they'll get stuck
 	GFX_LosingFocus();
 
-	const Section *section = control->GetSection("joystick");
-	assert(section);
-	const std::string joystick_type = section->GetPropValue("joysticktype");
-	if (!joystick_type.empty() && joystick_type != "none")
-		QueryJoysticks();
+	// Get the mapper file set by the user
+	const auto sdl_sec = control->GetSection("sdl");
+	assert(sdl_sec);
+
+	const auto sdl_prop = static_cast<Section_prop *>(sdl_sec);
+
+	const auto prop_path = sdl_prop->Get_path("mapperfile");
+	assert(prop_path);
+	mapper.filename = prop_path->realpath;
+
+	QueryJoysticks();
 
 	// Create the graphical layout for all registered key-binds
 	if (buttons.empty())
