@@ -47,8 +47,10 @@ constexpr auto DAC_MODE = MT32Emu::DACInputMode_NICE;
 constexpr auto RENDERING_TYPE = MT32Emu::RendererType_FLOAT;
 // Sample rate conversion quality: FASTEST, FAST, GOOD, BEST
 constexpr auto RATE_CONVERSION_QUALITY = MT32Emu::SamplerateConversionQuality_BEST;
-// Use improved amplitude ramp characteristics for sustaining instruments
+// Use improved behavior for volume adjustments, panning, and mixing
 constexpr bool USE_NICE_RAMP = true;
+constexpr bool USE_NICE_PANNING = true;
+constexpr bool USE_NICE_PARTIAL_MIXING = true;
 
 MidiHandler_mt32 mt32_instance;
 
@@ -305,6 +307,8 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 
 	mt32_service->setDACInputMode(DAC_MODE);
 	mt32_service->setNiceAmpRampEnabled(USE_NICE_RAMP);
+	mt32_service->setNicePanningEnabled(USE_NICE_PANNING);
+	mt32_service->setNicePartialMixingEnabled(USE_NICE_PARTIAL_MIXING); 
 
 	service = std::move(mt32_service);
 	channel = std::move(mixer_channel);
