@@ -59,9 +59,13 @@ struct Disney {
 	Bitu last_used = 0;
 	mixer_channel_ptr_t chan{nullptr, MIXER_DelChannel};
 	bool stereo = false;
-	// which channel do we use for mono output?
-	// and the channel used for stereo
-	dac_channel *leader = nullptr;
+
+	// For mono-output, the analysis step points the leader to the channel
+	// with the most rendered-samples. We use the left channel as a valid
+	// place-holder prior to the first analysis. This ensures the
+	// leader is always valid, such as in cases where the callback in
+	// enabled before the analysis.
+	dac_channel *leader = &da[0];
 
 	DISNEY_STATE state = DISNEY_STATE::IDLE;
 	uint32_t interface_det = 0;
@@ -75,7 +79,6 @@ static void DISNEY_disable(Bitu) {
 		disney.chan->AddSilence();
 		disney.chan->Enable(false);
 	}
-	disney.leader = 0;
 	disney.last_used = 0;
 	disney.state = DISNEY_STATE::IDLE;
 	disney.interface_det = 0;
