@@ -228,7 +228,9 @@ endif
 
 # Linux-only dependencies
 #
-if host_machine.system() == 'linux'
+using_linux = (host_machine.system() == 'linux')
+force_alsa  = (get_option('use_alsa') == 'true')
+if force_alsa or (using_linux and get_option('use_alsa') == 'auto')
   alsa_dep = dependency('alsa')
   conf_data.set('C_ALSA', 1)
 endif
