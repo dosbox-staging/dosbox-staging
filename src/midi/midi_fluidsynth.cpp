@@ -246,27 +246,48 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 		LOG_MSG("MIDI: Using SoundFont '%s' with levels attenuated by %d%%",
 		        soundfont.c_str(), scale_by_percent);
 
+	constexpr int fx_group = -1; // applies setting to all groups
+
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
-	constexpr int all_channels = -1;
-	fluid_synth_set_interp_method(fluid_synth.get(), all_channels,
+	fluid_synth_set_interp_method(fluid_synth.get(), fx_group,
 	                              FLUID_INTERP_HIGHEST);
 
-	// Apply reasonable chorus and reverb settings matching ScummVM's defaults
+	// Use reasonable chorus and reverb settings matching ScummVM's defaults
 	constexpr int chorus_number = 3;
 	constexpr double chorus_level = 1.2;
 	constexpr double chorus_speed = 0.3;
 	constexpr double chorus_depth = 8.0;
-	fluid_synth_set_chorus_on(fluid_synth.get(), 1);
-	fluid_synth_set_chorus(fluid_synth.get(), chorus_number, chorus_level,
-	                       chorus_speed, chorus_depth, FLUID_CHORUS_MOD_SINE);
-
+	constexpr auto sine = fluid_chorus_mod::FLUID_CHORUS_MOD_SINE;
 	constexpr double reverb_room_size = 0.61;
 	constexpr double reverb_damping = 0.23;
 	constexpr double reverb_width = 0.76;
 	constexpr double reverb_level = 0.56;
+
+// current API calls as of 2.2
+#if FLUIDSYNTH_VERSION_MINOR >= 2
+	fluid_synth_chorus_on(fluid_synth.get(), fx_group, 1);
+	fluid_synth_set_chorus_group_type(fluid_synth.get(), fx_group, sine);
+	fluid_synth_set_chorus_group_nr(fluid_synth.get(), fx_group, chorus_number);
+	fluid_synth_set_chorus_group_level(fluid_synth.get(), fx_group, chorus_level);
+	fluid_synth_set_chorus_group_speed(fluid_synth.get(), fx_group, chorus_speed);
+	fluid_synth_set_chorus_group_depth(fluid_synth.get(), fx_group, chorus_depth);
+
+	fluid_synth_reverb_on(fluid_synth.get(), fx_group, 1);
+	fluid_synth_set_reverb_group_roomsize(fluid_synth.get(), fx_group, reverb_room_size);
+	fluid_synth_set_reverb_group_damp(fluid_synth.get(), fx_group, reverb_damping);
+	fluid_synth_set_reverb_group_width(fluid_synth.get(), fx_group, reverb_width);
+	fluid_synth_set_reverb_group_level(fluid_synth.get(), fx_group, reverb_level);
+
+// deprecated API calls prior to 2.2
+#else
+	fluid_synth_set_chorus_on(fluid_synth.get(), 1);
+	fluid_synth_set_chorus(fluid_synth.get(), chorus_number, chorus_level,
+	                       chorus_speed, chorus_depth, sine);
+
 	fluid_synth_set_reverb_on(fluid_synth.get(), 1);
 	fluid_synth_set_reverb(fluid_synth.get(), reverb_room_size,
 	                       reverb_damping, reverb_width, reverb_level);
+#endif
 
 	// Let the mixer command adjust our internal level
 	const auto set_mixer_level = std::bind(&MidiHandlerFluidsynth::SetMixerLevel,

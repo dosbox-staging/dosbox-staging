@@ -38,20 +38,23 @@
 
 #include "mixer.h"
 #include "../libs/rwqueue/readerwritercircularbuffer.h"
+#include "soft_limiter.h"
 
 class MidiHandler_mt32 final : public MidiHandler {
 private:
-	static constexpr int FRAMES_PER_BUFFER = 2048; // synth granularity
+	static constexpr int FRAMES_PER_BUFFER = 1024; // synth granularity
 	static constexpr int SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
 
-	using buffer_t = std::array<int16_t, SAMPLES_PER_BUFFER>;
-	using ring_t = moodycamel::BlockingReaderWriterCircularBuffer<buffer_t>;
+	using render_buffer_t = std::array<float, SAMPLES_PER_BUFFER>;
+	using limited_buffer_t = std::array<int16_t, SAMPLES_PER_BUFFER>;
+	using ring_t = moodycamel::BlockingReaderWriterCircularBuffer<limited_buffer_t>;
 	using channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 	using conditional_t = moodycamel::weak_atomic<bool>;
 
 public:
 	using service_t = std::unique_ptr<MT32Emu::Service>;
 
+	MidiHandler_mt32() : soft_limiter("MT32", limiter_ratio) {}
 	~MidiHandler_mt32() override;
 	void Close() override;
 	const char *GetName() const override { return "mt32"; }
@@ -62,15 +65,18 @@ public:
 private:
 	uint32_t GetMidiEventTimestamp() const;
 	void MixerCallBack(uint16_t len);
+	void SetMixerLevel(const AudioFrame &desired) noexcept;
 	uint16_t GetRemainingFrames();
 	void Render();
 
 	// Managed objects
-	buffer_t buffer{};
 	channel_t channel{nullptr, MIXER_DelChannel};
-	std::thread renderer{};
-	ring_t ring{3}; // Handle up to three buffers in the ring
+	limited_buffer_t buffer{};
+	ring_t ring{4}; // Handle up to four buffers in the ring
 	service_t service{};
+	std::thread renderer{};
+	AudioFrame limiter_ratio = {1.0f, 1.0f};
+	SoftLimiter<FRAMES_PER_BUFFER> soft_limiter;
 
 	// The following two members let us determine the total number of played
 	// frames, which is used by GetMidiEventTimestamp() to calculate a total

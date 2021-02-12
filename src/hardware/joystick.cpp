@@ -21,8 +21,8 @@
 #include <string.h>
 #include <math.h>
 
+#include "control.h"
 #include "inout.h"
-#include "setup.h"
 #include "pic.h"
 #include "support.h"
 
@@ -133,7 +133,7 @@ struct JoyStick {
 
 };
 
-JoystickType joytype;
+JoystickType joytype = JOY_UNSET;
 static JoyStick stick[2];
 
 static Bitu last_write = 0;
@@ -283,6 +283,34 @@ float JOYSTICK_GetMove_Y(Bitu which) {
 	return stick[1].ypos;
 }
 
+void JOYSTICK_ParseConfiguredType()
+{
+	const auto conf = control->GetSection("joystick");
+	const auto section = static_cast<Section_prop *>(conf);
+	const char *type = section->Get_string("joysticktype");
+
+	if (!strcasecmp(type, "none"))
+		joytype = JOY_NONE;
+	else if (!strcasecmp(type, "false"))
+		joytype = JOY_NONE;
+	else if (!strcasecmp(type, "auto"))
+		joytype = JOY_AUTO;
+	else if (!strcasecmp(type, "2axis"))
+		joytype = JOY_2AXIS;
+	else if (!strcasecmp(type, "4axis"))
+		joytype = JOY_4AXIS;
+	else if (!strcasecmp(type, "4axis_2"))
+		joytype = JOY_4AXIS_2;
+	else if (!strcasecmp(type, "fcs"))
+		joytype = JOY_FCS;
+	else if (!strcasecmp(type, "ch"))
+		joytype = JOY_CH;
+	else
+		joytype = JOY_AUTO;
+
+	assert(joytype != JOY_UNSET);
+}
+
 class JOYSTICK : public Module_base {
 private:
 	IO_ReadHandleObject ReadHandler = {};
@@ -291,18 +319,9 @@ private:
 public:
 	JOYSTICK(Section *configuration) : Module_base(configuration)
 	{
-		Section_prop * section = static_cast<Section_prop *>(configuration);
-		const char * type = section->Get_string("joysticktype");
-		if (!strcasecmp(type,"none"))         joytype = JOY_NONE;
-		else if (!strcasecmp(type,"false"))   joytype = JOY_NONE;
-		else if (!strcasecmp(type,"auto"))    joytype = JOY_AUTO;
-		else if (!strcasecmp(type,"2axis"))   joytype = JOY_2AXIS;
-		else if (!strcasecmp(type,"4axis"))   joytype = JOY_4AXIS;
-		else if (!strcasecmp(type,"4axis_2")) joytype = JOY_4AXIS_2;
-		else if (!strcasecmp(type,"fcs"))     joytype = JOY_FCS;
-		else if (!strcasecmp(type,"ch"))      joytype = JOY_CH;
-		else joytype = JOY_AUTO;
+		JOYSTICK_ParseConfiguredType();
 
+		const auto section = static_cast<Section_prop *>(configuration);
 		bool timed = section->Get_bool("timed");
 		if (timed) {
 			ReadHandler.Install(0x201,read_p201_timed,IO_MB);

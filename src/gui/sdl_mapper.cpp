@@ -2099,7 +2099,9 @@ static void CreateLayout() {
 	AddJAxisButton  (PX(XO+2),PY(YO+1),BW,BH,"X+",0,0,true,cjaxis);
 
 	CJAxisEvent * tmp_ptr;
-	if (joytype==JOY_2AXIS) {
+
+	assert(joytype != JOY_UNSET);
+	if (joytype == JOY_2AXIS) {
 		/* Buttons 1+2 of 2nd Joystick */
 		AddJButtonButton(PX(XO+4),PY(YO),BW,BH,"1" ,1,0);
 		AddJButtonButton(PX(XO+4+2),PY(YO),BW,BH,"2" ,1,1);
@@ -2590,6 +2592,10 @@ void BIND_MappingEvents() {
  *  joysticks_active if joystick support is enabled and are present.
  */
 static void QueryJoysticks() {
+	JOYSTICK_ParseConfiguredType();
+	if (joytype == JOY_NONE)
+		return;
+
 	// Initialize SDL's Joystick and Event subsystems, if needed
 	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
 		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
@@ -2634,6 +2640,7 @@ static void CreateBindGroups() {
 	CKeyBindGroup* key_bind_group = new CKeyBindGroup(SDL_NUM_SCANCODES);
 	keybindgroups.push_back(key_bind_group);
 
+	assert(joytype != JOY_UNSET);
 	if (joytype != JOY_NONE) {
 #if defined (REDUCE_JOYSTICK_POLLING)
 		// direct access to the SDL joystick, thus removed from the event handling
@@ -2821,15 +2828,18 @@ static void MAPPER_Destroy(Section *sec) {
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 }
 
-void MAPPER_BindKeys() {
-	//Release any keys pressed, or else they'll get stuck
+void MAPPER_BindKeys(Section *sec)
+{
+	// Release any keys pressed, or else they'll get stuck
 	GFX_LosingFocus();
 
-	const Section *section = control->GetSection("joystick");
-	assert(section);
-	const std::string joystick_type = section->GetPropValue("joysticktype");
-	if (!joystick_type.empty() && joystick_type != "none")
-		QueryJoysticks();
+	// Get the mapper file set by the user
+	const auto section = static_cast<const Section_prop *>(sec);
+	const auto property = section->Get_path("mapperfile");
+	assert(property && !property->realpath.empty());
+	mapper.filename = property->realpath;
+
+	QueryJoysticks();
 
 	// Create the graphical layout for all registered key-binds
 	if (buttons.empty())
@@ -2872,32 +2882,11 @@ void MAPPER_AutoType(std::vector<std::string> &sequence,
 	mapper.typist.Start(&events, sequence, wait_ms, pace_ms);
 }
 
-// Activate user-specified or default binds
-static void MAPPER_ConfigureBindings(Section *sec) {
-	(void) sec; // unused but present for API compliance
-	Section_prop const *const section=static_cast<Section_prop *>(sec);
-	Prop_path const *const pp = section->Get_path("mapperfile");
-	mapper.filename = pp->realpath;
-
-	/*  Because the mapper is initialized before several other of DOSBox's
-	 *  submodules have a chance to register their key bindings, we defer
-	 *  the mapper's setup and instead manully BindKeys() in SDL main only
-	 *  after -all- subsystems have been initialized, which ensures that all
-	 *  binding a present, and thus are also layed out in the mapper's GUI.
-	 */
-	static bool init_phase = true;
-	if (init_phase) {
-		init_phase = false;
-		return;
-	}
-	MAPPER_BindKeys();
-}
-
 void MAPPER_StartUp(Section * sec) {
 	Section_prop * section = static_cast<Section_prop *>(sec);
 
 	 //runs after this function ends and for subsequent config -set "sdl mapperfile=file.map" commands
-	section->AddInitFunction(&MAPPER_ConfigureBindings, true);
+	section->AddInitFunction(&MAPPER_BindKeys, true);
 
 	// runs one-time on shutdown
 	section->AddDestroyFunction(&MAPPER_Destroy, false);
