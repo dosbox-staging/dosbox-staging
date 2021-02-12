@@ -28,6 +28,17 @@ option('use_png',
        value : true,
        description : 'Enable saving screenshots in .png format')
 
+# This option exists only for rare situations when Linux developer cannot
+# install ALSA library headers on their machine.
+#
+# 'auto' translates to 'true' on Linux systems and 'false' everywhere else.
+#
+option('use_alsa',
+       type : 'combo',
+       choices : ['auto', 'true', 'false'],
+       value : 'auto',
+       description : 'Enable ALSA MIDI support')
+
 option('enable_debugger',
        type : 'combo',
        choices : ['normal', 'heavy', 'none'],
