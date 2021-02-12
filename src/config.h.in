@@ -113,6 +113,9 @@
 // Compiler supports Core MIDI headers
 #mesondefine C_COREMIDI
 
+// Define to 1 to enable ALSA MIDI support
+#mesondefine C_ALSA
+
 /* Compiler features and extensions
  *
  * These are defines for compiler features we can't reliably verify during
