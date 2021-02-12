@@ -28,40 +28,46 @@
 
 #define DISNEY_SIZE 128
 
-typedef struct _dac_channel {
-	Bit8u buffer[DISNEY_SIZE];	// data buffer
-	Bitu used;					// current data buffer level
-	double speedcheck_sum;
-	double speedcheck_last;
-	bool speedcheck_failed;
-	bool speedcheck_init;
-} dac_channel;
-
-static struct {
-	// parallel port stuff
-	Bit8u data;
-	Bit8u status;
-	Bit8u control;
-	// the D/A channels
-	dac_channel da[2];
-
-	Bitu last_used;
-	MixerObject * mo;
-	MixerChannel * chan;
-	bool stereo;
-	// which channel do we use for mono output?
-	// and the channel used for stereo
-	dac_channel* leader;
-	
-	Bitu state;
-	Bitu interface_det;
-	Bitu interface_det_ext;
-} disney;
-
 #define DS_IDLE 0
 #define DS_RUNNING 1
 #define DS_FINISH 2
 #define DS_ANALYZING 3
+
+struct dac_channel {
+	uint8_t buffer[DISNEY_SIZE] = {};
+	Bitu used = 0; // current data buffer level
+	double speedcheck_sum = 0;
+	double speedcheck_last = 0;
+	bool speedcheck_failed = false;
+	bool speedcheck_init = false;
+};
+
+struct Disney {
+	// parallel port stuff
+	uint8_t data = 0;
+	uint8_t status = 0x84;
+	uint8_t control = 0;
+	// the D/A channels
+	dac_channel da[2] = {};
+
+	Bitu last_used = 0;
+	MixerObject * mo = nullptr;
+	MixerChannel * chan = nullptr;
+	bool stereo = false;
+
+	// For mono-output, the analysis step points the leader to the channel
+	// with the most rendered-samples. We use the left channel as a valid
+	// place-holder prior to the first analysis. This ensures the
+	// leader is always valid, such as in cases where the callback in
+	// enabled before the analysis.
+	dac_channel *leader = &da[0];
+
+	Bitu state = DS_IDLE;
+	Bitu interface_det = 0;
+	Bitu interface_det_ext = 0;
+};
+
+static Disney disney;
 
 static void DISNEY_CallBack(Bitu len);
 
@@ -70,7 +76,6 @@ static void DISNEY_disable(Bitu) {
 		disney.chan->AddSilence();
 		disney.chan->Enable(false);
 	}
-	disney.leader = 0;
 	disney.last_used = 0;
 	disney.state = DS_IDLE;
 	disney.interface_det = 0;
