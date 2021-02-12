@@ -1192,12 +1192,12 @@ It's only possible to use SUBST on Local drives
 [44;1m╔════════════════════════════════════════════════════════════════════╗
 ║ [32mWelcome to DOSBox Staging %-40s[37m ║
 ║                                                                    ║
-║ For a short introduction for new users type: [33mINTRO[37m                 ║
-║ For supported shell commands type: [33mHELP[37m                            ║
+║ Для быстрого введения напечатайте: [33mINTRO[37m                           ║
+║ Для поддерживаемых оболочкой команд введите: [33mHELP[37m                  ║
 ║                                                                    ║
-║ To adjust the emulated CPU speed, use [31mctrl-F11[37m and [31mctrl-F12[37m.       ║
-║ To activate the keymapper [31mctrl-F1[37m.                                 ║
-║ For more information read the [36mREADME[37m file in the DOSBox directory. ║
+║ Чтобы подстроть скорость, нажмите [31mctrl-F11[37m и [31mctrl-F12[37m.             ║
+║ Чтобы переназначить клавиши, нажмите [31mctrl-F1[37m.                      ║
+║ Чтобы узнать больше, прочтите файл [36mREADME[37m в директории DOSBox.     ║
 ║                                                                    ║
 
 .
