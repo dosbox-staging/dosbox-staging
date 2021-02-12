@@ -42,4 +42,9 @@ tconv_l CP852 "utf-8/pl/pl-0.77.0-alpha.txt" pl/pl_PL
 # keyb pl 437
 tconv_t CP437 "utf-8/pl/pl-0.77.0-alpha.txt" pl/pl_PL
 
+# keyb ru
+# keyb ru 866
+# keyb ru 808 - CP808 is CP866 with euro sign; iconv does not know 808 (?)
+tconv_l CP866 "utf-8/ru/ru-0.77.0-alpha.txt" ru/ru_RU
+
 popd > /dev/null || exit
