@@ -261,7 +261,7 @@ private:
 		std::size_t i = nextItem++;
 		T& element = reinterpret_cast<T*>(data)[i & mask];
 		item = std::move(element);
-		element.~T();
+		// element.~T();
 		slots->signal();
 	}
 
