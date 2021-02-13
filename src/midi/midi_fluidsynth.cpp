@@ -240,11 +240,8 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	// Let the user know that the SoundFont was loaded
 	if (scale_by_percent == 100)
 		LOG_MSG("MIDI: Using SoundFont '%s'", soundfont.c_str());
-	else if (scale_by_percent > 100)
-		LOG_MSG("MIDI: Using SoundFont '%s' with levels amplified by %d%%",
-		        soundfont.c_str(), scale_by_percent);
 	else
-		LOG_MSG("MIDI: Using SoundFont '%s' with levels attenuated by %d%%",
+		LOG_MSG("MIDI: Using SoundFont '%s' with voices scaled by %d%%",
 		        soundfont.c_str(), scale_by_percent);
 
 	constexpr int fx_group = -1; // applies setting to all groups
