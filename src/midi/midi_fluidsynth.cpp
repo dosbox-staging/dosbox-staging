@@ -378,8 +378,8 @@ void MidiHandlerFluidsynth::MixerCallBack(uint16_t frames)
 		const uint16_t len = std::min(frames, max_frames);
 		fluid_synth_write_float(synth.get(), len, stream.data(), 0, 2,
 		                        stream.data(), 1, 2);
-		const auto &out_stream = soft_limiter.Apply(stream, len);
-		channel->AddSamples_s16(len, out_stream.data());
+		const auto out = soft_limiter.Apply(stream, len);
+		channel->AddSamples_s16(len, out.data());
 		frames -= len;
 	}
 }
