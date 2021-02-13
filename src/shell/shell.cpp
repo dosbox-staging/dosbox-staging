@@ -341,7 +341,8 @@ void DOS_Shell::Run()
 		const bool wants_welcome_banner = control->GetStartupVerbosity() >=
 		                                  Verbosity::Medium;
 		if (wants_welcome_banner) {
-			WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"), VERSION);
+			WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"),
+			         DOSBOX_GetDetailedVersion());
 #if C_DEBUG
 			WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"));
 #endif
@@ -359,7 +360,7 @@ void DOS_Shell::Run()
 		line.erase();
 		ParseLine(input_line);
 	} else {
-		WriteOut(MSG_Get("SHELL_STARTUP_SUB"),VERSION);
+		WriteOut(MSG_Get("SHELL_STARTUP_SUB"), DOSBOX_GetDetailedVersion());
 	}
 	do {
 		if (bf){
@@ -746,8 +747,8 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  \033[32;1mver\033[0m \033[37;1mset\033[0m \033[36;1m6.22\033[0m\n"
 	        "  \033[32;1mver\033[0m \033[37;1mset\033[0m \033[36;1m7 10\033[0m\n");
-	MSG_Add("SHELL_CMD_VER_VER",
-	        "DOSBox Staging version %s. Reported DOS version %d.%02d.\n");
+	MSG_Add("SHELL_CMD_VER_VER", "DOSBox Staging version %s\n"
+	                             "DOS version %d.%02d\n");
 	MSG_Add("SHELL_CMD_VER_INVALID", "The specified DOS version is not correct.\n");
 
 	/* Regular startup */

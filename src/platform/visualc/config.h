@@ -2,7 +2,10 @@
 #define CONF_BRAND "staging-git"
 
 /* Version number of package */
-#define VERSION "git"
+#define VERSION "0.77.0"
+
+/* This macro is going to be overriden via CI */
+#define DOSBOX_DETAILED_VERSION "git"
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0

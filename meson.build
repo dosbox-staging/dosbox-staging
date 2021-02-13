@@ -290,7 +290,8 @@ subdir('tests')
 
 # dosbox executable
 #
-executable('dosbox', ['src/main.cpp', 'src/dosbox.cpp'],
+version_file = vcs_tag(input : 'src/version.cpp.in', output : 'version.cpp')
+executable('dosbox', ['src/main.cpp', 'src/dosbox.cpp', version_file],
            dependencies : [threads_dep, sdl2_dep] + internal_deps,
            include_directories : incdir,
            install : true)
