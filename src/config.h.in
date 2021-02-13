@@ -116,6 +116,9 @@
 // Define to 1 to enable ALSA MIDI support
 #mesondefine C_ALSA
 
+// Define to 1 to use Opus-encoded CD-audio tracks, requires opusfile
+#mesondefine USE_OPUS
+
 /* Compiler features and extensions
  *
  * These are defines for compiler features we can't reliably verify during

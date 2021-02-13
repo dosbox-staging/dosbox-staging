@@ -8,6 +8,7 @@ libdecoders_sources = files([
 ])
 
 if get_option('use_opusfile')
+  conf_data.set('USE_OPUS', 1)
   libdecoders_sources += ['opus.cpp']
 endif
 
