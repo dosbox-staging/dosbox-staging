@@ -50,3 +50,10 @@ option('dynamic_core',
        choices : ['auto', 'dyn-x86', 'dynrec', 'none'],
        value : 'auto',
        description : 'Select the dynamic core implementation.')
+
+# This is NOT guaranteed to work. Use it only as a last resort.
+#
+option('try_sdl2_static',
+       type : 'boolean',
+       value : false,
+       description : 'Hint Meson to try linking SDL2 statically.')
