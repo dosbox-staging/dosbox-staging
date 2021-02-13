@@ -659,8 +659,8 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 			                          pan_scalars, frames, dac_enabled);
 			++v;
 		}
-		const auto &out_stream = soft_limiter.Apply(accumulator, frames);
-		audio_channel->AddSamples_s16(frames, out_stream.data());
+		const auto &&out = soft_limiter.Apply(accumulator, frames);
+		audio_channel->AddSamples_s16(frames, out.data());
 		CheckVoiceIrq();
 		generated_frames += frames;
 	}

@@ -110,7 +110,7 @@ public:
 	using in_array_t = std::array<float, array_samples>;
 	using out_array_t = std::array<int16_t, array_samples>;
 
-	const out_array_t &Apply(const in_array_t &in, uint16_t frames) noexcept;
+	out_array_t Apply(const in_array_t &in, uint16_t frames) noexcept;
 	const AudioFrame &GetPeaks() const noexcept { return global_peaks; }
 	void PrintStats() const;
 	void Reset() noexcept;
@@ -145,7 +145,7 @@ private:
 
 	void Release() noexcept;
 
-	void SaveTailFrame(const uint16_t frames) noexcept;
+	void SaveTailFrame(const uint16_t frames, const out_array_t &out) noexcept;
 
 	template <size_t channel>
 	void ScaleOrCopy(const in_array_t &in,
@@ -154,7 +154,8 @@ private:
 	                 const in_array_iterator_t precross_peak_pos,
 	                 const in_array_iterator_t zero_cross_pos,
 	                 const float global_peak,
-	                 const float tail);
+	                 const float tail,
+	                 out_array_t &out);
 
 	// Const members
 	constexpr static size_t left = 0;
@@ -162,7 +163,6 @@ private:
 	constexpr static float bounds = static_cast<float>(out_limits::max() - 1);
 
 	// Mutable members
-	out_array_t out{};
 	std::string channel_name = {};
 	const AudioFrame &prescale; // values inside struct are mutable
 	in_array_iterator_t zero_cross_left = {};
@@ -187,7 +187,7 @@ SoftLimiter<array_frames>::SoftLimiter(const std::string &name, const AudioFrame
 // Applies the Soft Limiter to the given input sequence and returns the results
 // as a reference to a std::array of 16-bit ints the same length as the input.
 template <size_t array_frames>
-const typename SoftLimiter<array_frames>::out_array_t &SoftLimiter<array_frames>::Apply(
+typename SoftLimiter<array_frames>::out_array_t SoftLimiter<array_frames>::Apply(
         const in_array_t &in, const uint16_t frames) noexcept
 {
 	// Ensure the buffers are large enough to handle the request
@@ -198,13 +198,15 @@ const typename SoftLimiter<array_frames>::out_array_t &SoftLimiter<array_frames>
 
 	// Given the local peaks found in each side channel, scale or copy the
 	// input array into the output array
+	out_array_t out;
 	ScaleOrCopy<left>(in, samples, prescale.left, precross_peak_pos_left,
-	                  zero_cross_left, global_peaks.left, tail_frame.left);
+	                  zero_cross_left, global_peaks.left, tail_frame.left, out);
 
 	ScaleOrCopy<right>(in, samples, prescale.right, precross_peak_pos_right,
-	                   zero_cross_right, global_peaks.right, tail_frame.right);
+	                   zero_cross_right, global_peaks.right,
+	                   tail_frame.right, out);
 
-	SaveTailFrame(frames);
+	SaveTailFrame(frames, out);
 	Release();
 	return out;
 }
@@ -278,7 +280,8 @@ void SoftLimiter<array_frames>::ScaleOrCopy(const in_array_t &in,
                                             const in_array_iterator_t precross_peak_pos,
                                             const in_array_iterator_t zero_cross_pos,
                                             const float global_peak,
-                                            const float tail)
+                                            const float tail,
+                                            out_array_t &out)
 {
 	assert(samples >= 2); // need at least one frame
 	auto in_start = in.begin() + channel;
@@ -366,7 +369,8 @@ void SoftLimiter<array_frames>::LinearScale(in_array_iterator_t in_pos,
 }
 
 template <size_t array_frames>
-void SoftLimiter<array_frames>::SaveTailFrame(const uint16_t frames) noexcept
+void SoftLimiter<array_frames>::SaveTailFrame(const uint16_t frames,
+                                              const out_array_t &out) noexcept
 {
 	const size_t i = (frames - 1) * 2;
 	tail_frame.left = static_cast<float>(out[i]);
