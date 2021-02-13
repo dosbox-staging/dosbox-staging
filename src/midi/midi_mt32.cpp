@@ -440,7 +440,7 @@ void MidiHandler_mt32::Render()
 	render_buffer_t buf;
 	while (keep_rendering) {
 		service->renderFloat(buf.data(), FRAMES_PER_BUFFER);
-		const auto &out = soft_limiter.Apply(buf, FRAMES_PER_BUFFER);
+		auto &&out = soft_limiter.Apply(buf, FRAMES_PER_BUFFER);
 		ring.wait_enqueue(out);
 	}
 }
