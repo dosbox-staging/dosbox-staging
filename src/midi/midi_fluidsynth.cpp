@@ -28,11 +28,12 @@
 #include <deque>
 #include <string>
 #include <tuple>
-#include <vector>
 
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
+
+static constexpr int FRAMES_PER_BUFFER = 512; // synth granularity
 
 MidiHandlerFluidsynth instance;
 
@@ -41,7 +42,7 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	// Name 'default.sf2' picks the default soundfont if it's installed
-	// it the OS. Usually it's Fluid_R3.
+	// in the OS. Usually it's Fluid_R3.
 	auto *str_prop = secprop.Add_string("soundfont", when_idle, "default.sf2");
 	str_prop->Set_help(
 	        "Path to a SoundFont file in .sf2 format. You can use an\n"
@@ -51,13 +52,6 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	        "An optional percentage will scale the SoundFont's volume.\n"
 	        "For example: 'soundfont.sf2 50' will attenuate it by 50 percent.\n"
 	        "The scaling percentage can range from 1 to 500.");
-
-	auto *int_prop = secprop.Add_int("synth_threads", when_idle, 1);
-	int_prop->SetMinMax(1, 256);
-	int_prop->Set_help(
-	        "If set to a value greater than 1, then additional synthesis\n"
-	        "threads will be created to take advantage of many CPU cores.\n"
-	        "(min 1, max 256)");
 }
 
 // SetMixerLevel is a callback that's given the user-desired mixer level,
@@ -180,7 +174,7 @@ static std::string find_sf_file(const std::string &name)
 }
 
 MidiHandlerFluidsynth::MidiHandlerFluidsynth()
-        : soft_limiter("FSYNTH", prescale_level, expected_max_frames)
+        : soft_limiter("FSYNTH", prescale_level, FRAMES_PER_BUFFER)
 {}
 
 bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
@@ -193,22 +187,23 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 		LOG_MSG("MIDI: new_fluid_settings failed");
 		return false;
 	}
-	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
+
+	// Setup the mixer channel and level callback
+	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
+	                                      this, std::placeholders::_1);
+	channel_t mixer_channel(MIXER_AddChannel(mixer_callback, 0, "FSYNTH"),
+	                        MIXER_DelChannel);
+
+	const auto set_mixer_level = std::bind(&MidiHandlerFluidsynth::SetMixerLevel,
+	                                       this, std::placeholders::_1);
+	mixer_channel->RegisterLevelCallBack(set_mixer_level);
 
 	// Detailed explanation of all available FluidSynth settings:
 	// http://www.fluidsynth.org/api/fluidsettings.xml
 
-	const int cpu_cores = section->Get_int("synth_threads");
-	fluid_settings_setint(fluid_settings.get(), "synth.cpu-cores", cpu_cores);
-
-	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
-	                                      this, std::placeholders::_1);
-	mixer_channel_ptr_t mixer_channel(MIXER_AddChannel(mixer_callback, 0, "FSYNTH"),
-	                                  MIXER_DelChannel);
-
-	// Per the FluidSynth API, the sample-rate should be part of the settings used to
-	// instantiate the synth, so we create the mixer channel first and use its native
-	// rate to configure FluidSynth.
+	// Per the FluidSynth API, the sample-rate should be part of the
+	// settings used to instantiate the synth, so we create the mixer
+	// channel first and use its native rate to configure FluidSynth.
 	fluid_settings_setnum(fluid_settings.get(), "synth.sample-rate",
 	                      mixer_channel->GetSampleRate());
 
@@ -220,6 +215,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	}
 
 	// Load the requested SoundFont or quit if none provided
+	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
 	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"), 100);
 	const auto soundfont = find_sf_file(std::get<std::string>(sf_spec));
 	auto scale_by_percent = std::get<int>(sf_spec);
@@ -294,17 +290,25 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	                       reverb_damping, reverb_width, reverb_level);
 #endif
 
-	// Let the mixer command adjust our internal level
-	const auto set_mixer_level = std::bind(&MidiHandlerFluidsynth::SetMixerLevel,
-	                                       this, std::placeholders::_1);
-	mixer_channel->RegisterLevelCallBack(set_mixer_level);
-	mixer_channel->Enable(true);
-
 	settings = std::move(fluid_settings);
 	synth = std::move(fluid_synth);
 	channel = std::move(mixer_channel);
+
+	// Start rendering audio
+	keep_rendering = true;
+	const auto render = std::bind(&MidiHandlerFluidsynth::Render, this);
+	renderer = std::thread(render);
+	ring.wait_dequeue(play_buffer); // populate the first play buffer
+
+	// Start playback
+	channel->Enable(true);
 	is_open = true;
 	return true;
+}
+
+MidiHandlerFluidsynth::~MidiHandlerFluidsynth()
+{
+	Close();
 }
 
 void MidiHandlerFluidsynth::Close()
@@ -312,10 +316,25 @@ void MidiHandlerFluidsynth::Close()
 	if (!is_open)
 		return;
 
-	channel->Enable(false);
-	channel = nullptr;
-	synth = nullptr;
-	settings = nullptr;
+	// Stop playback
+	if (channel)
+		channel->Enable(false);
+
+	// Stop rendering and drain the ring
+	keep_rendering = false;
+	while (ring.size_approx())
+		ring.wait_dequeue(play_buffer);
+
+	// Wait for the rendering thread to finish
+	if (renderer.joinable())
+		renderer.join();
+
+	// Reset the members
+	channel.reset();
+	synth.reset();
+	settings.reset();
+	last_played_frame = 0;
+
 	is_open = false;
 }
 
@@ -375,17 +394,47 @@ void MidiHandlerFluidsynth::PrintStats()
 
 void MidiHandlerFluidsynth::MixerCallBack(uint16_t requested_frames)
 {
-	constexpr uint16_t max_frames = expected_max_frames; // local fixes link error
-	std::vector<float> render_buffer(max_frames * 2);    // L & R channels
+	while (requested_frames) {
+		const auto frames_to_be_played = std::min(GetRemainingFrames(),
+		                                          requested_frames);
+		const auto sample_offset_in_buffer = play_buffer.data() +
+		                                     last_played_frame * 2;
 
-	while (requested_frames > 0) {
-		const uint16_t frames = std::min(requested_frames, max_frames);
+		assert(frames_to_be_played <= play_buffer.size());
+		channel->AddSamples_s16(frames_to_be_played, sample_offset_in_buffer);
 
-		fluid_synth_write_float(synth.get(), frames, render_buffer.data(),
-		                        0, 2, render_buffer.data(), 1, 2);
-		const auto out = soft_limiter.Process(render_buffer, frames);
-		channel->AddSamples_s16(frames, out.data());
-		requested_frames -= frames;
+		requested_frames -= frames_to_be_played;
+		last_played_frame += frames_to_be_played;
+	}
+}
+
+// GetRemainingFrames() gives us the number of unplayed (ie: remaining) frames
+// left in the current play buffer. If it's run out, then we pop a new "full"
+// play buffer out of the ring. If the ring doesn't have any  to offer, then we
+// wait until it does.
+uint16_t MidiHandlerFluidsynth::GetRemainingFrames()
+{
+	// the current play buffer has some frames left, so return those
+	if (last_played_frame < FRAMES_PER_BUFFER)
+		return FRAMES_PER_BUFFER - last_played_frame;
+
+	// Otherwise move the next buffer out of the ring into our play buffer
+	ring.wait_dequeue(play_buffer);
+	last_played_frame = 0;
+
+	return FRAMES_PER_BUFFER;
+}
+
+// After GetRemainingFrames() pops out a buffer for playing, back-pressure is
+// released in the ring allowing FluidSynth to renderer the next buffer.
+void MidiHandlerFluidsynth::Render()
+{
+	std::vector<float> render_buffer(FRAMES_PER_BUFFER * 2); // L & R channels
+	while (keep_rendering) {
+		fluid_synth_write_float(synth.get(), FRAMES_PER_BUFFER,
+		                        render_buffer.data(), 0, 2, render_buffer.data(), 1, 2);
+		auto out = soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER);
+		ring.wait_enqueue(out);
 	}
 }
 

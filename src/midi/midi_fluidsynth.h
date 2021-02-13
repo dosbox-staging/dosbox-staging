@@ -30,22 +30,16 @@
 #include <memory>
 #include <vector>
 #include <fluidsynth.h>
+#include <thread>
 
 #include "mixer.h"
+#include "../libs/rwqueue/readerwritercircularbuffer.h"
 #include "soft_limiter.h"
 
 class MidiHandlerFluidsynth final : public MidiHandler {
-private:
-	using fsynth_ptr_t = std::unique_ptr<fluid_synth_t, decltype(&delete_fluid_synth)>;
-
-	using fluid_settings_ptr_t =
-	        std::unique_ptr<fluid_settings_t, decltype(&delete_fluid_settings)>;
-
-	using mixer_channel_ptr_t =
-	        std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
-
 public:
 	MidiHandlerFluidsynth();
+	~MidiHandlerFluidsynth() override;
 	void PrintStats();
 	const char *GetName() const override { return "fluidsynth"; }
 	bool Open(const char *conf) override;
@@ -54,16 +48,29 @@ public:
 	void PlaySysex(uint8_t *sysex, size_t len) override;
 
 private:
-	static constexpr uint16_t expected_max_frames = (96000 / 1000) + 4;
 	void MixerCallBack(uint16_t requested_frames);
 	void SetMixerLevel(const AudioFrame &prescale_level) noexcept;
+	uint16_t GetRemainingFrames();
+	void Render();
+
+	using fluid_settings_ptr_t =
+	        std::unique_ptr<fluid_settings_t, decltype(&delete_fluid_settings)>;
+	using fsynth_ptr_t = std::unique_ptr<fluid_synth_t, decltype(&delete_fluid_synth)>;
+	using channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
+	using ring_t = moodycamel::BlockingReaderWriterCircularBuffer<std::vector<int16_t>>;
+	using conditional_t = moodycamel::weak_atomic<bool>;
 
 	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
-	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
+	channel_t channel{nullptr, MIXER_DelChannel};
+	std::vector<int16_t> play_buffer = {};
+	ring_t ring{8}; // Handle up to eight buffers in the ring
+	std::thread renderer = {};
 	AudioFrame prescale_level = {1.0f, 1.0f};
 	SoftLimiter soft_limiter;
 
+	uint16_t last_played_frame = 0; // relative frame-offset in the play buffer
+	conditional_t keep_rendering = false;
 	bool is_open = false;
 };
 
