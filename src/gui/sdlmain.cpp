@@ -3278,7 +3278,7 @@ int sdl_main(int argc, char *argv[])
 		if (control->cmdline->FindExist("--version") ||
 		    control->cmdline->FindExist("-version") ||
 		    control->cmdline->FindExist("-v")) {
-			printf(version_msg, VERSION);
+			printf(version_msg, DOSBOX_GetDetailedVersion());
 			return 0;
 		}
 
@@ -3303,7 +3303,7 @@ int sdl_main(int argc, char *argv[])
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
 #endif
 
-	LOG_MSG("dosbox-staging version %s", VERSION);
+	LOG_MSG("dosbox-staging version %s", DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
 
 	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0)

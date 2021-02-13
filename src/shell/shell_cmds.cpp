@@ -1608,7 +1608,8 @@ void DOS_Shell::CMD_VER(char *args)
 			dos.version.minor = new_version.minor;
 		} else
 			WriteOut(MSG_Get("SHELL_CMD_VER_INVALID"));
-	} else
-		WriteOut(MSG_Get("SHELL_CMD_VER_VER"), VERSION,
+	} else {
+		WriteOut(MSG_Get("SHELL_CMD_VER_VER"), DOSBOX_GetDetailedVersion(),
 		         dos.version.major, dos.version.minor);
+	}
 }
