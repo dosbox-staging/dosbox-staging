@@ -153,7 +153,8 @@ endif
 #
 optional_dep  = dependency('', required : false)
 threads_dep   = dependency('threads')
-sdl2_dep      = dependency('sdl2', version : '>= 2.0.2')
+sdl2_dep      = dependency('sdl2', version : '>= 2.0.2',
+                           static : get_option('try_sdl2_static'))
 sdl2_net_dep  = optional_dep
 opengl_dep    = optional_dep
 fluid_dep     = optional_dep
