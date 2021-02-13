@@ -148,6 +148,7 @@ jobs:
 
           # Print shared object dependencies
           otool -L build/dosbox
+          python3 .github/scripts/verify-macos-dylibs.py build/dosbox
 
           # Generate icon
           make -C contrib/icons/ dosbox-staging.icns
