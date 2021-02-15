@@ -235,7 +235,7 @@ public:
 	bool	GetAudioSub             (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
 	bool	GetAudioStatus          (bool& playing, bool& pause);
 	bool	GetMediaTrayStatus      (bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
-	bool	PlayAudioSector         (const uint32_t start, uint32_t len);
+	bool PlayAudioSector(uint32_t start, uint32_t len);
 	bool	PauseAudio              (bool resume);
 	bool	StopAudio               (void);
 	void	ChannelControl          (TCtrl ctrl);
