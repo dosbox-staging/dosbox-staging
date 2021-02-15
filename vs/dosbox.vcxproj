@@ -316,6 +316,7 @@
     <ClCompile Include="..\src\hardware\serialport\serialdummy.cpp" />
     <ClCompile Include="..\src\hardware\serialport\serialport.cpp" />
     <ClCompile Include="..\src\hardware\serialport\softmodem.cpp" />
+    <ClCompile Include="..\src\hardware\soft_limiter.cpp" />
     <ClCompile Include="..\src\hardware\tandy_sound.cpp" />
     <ClCompile Include="..\src\hardware\timer.cpp" />
     <ClCompile Include="..\src\hardware\vga.cpp" />
