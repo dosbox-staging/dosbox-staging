@@ -26,6 +26,7 @@
 #include <memory>
 #include <string>
 #include <unistd.h>
+#include <vector>
 
 #include "control.h"
 #include "dma.h"
@@ -113,7 +114,7 @@ struct VoiceCtrl {
 };
 
 // Collection types involving constant quantities
-using accumulator_array_t = std::array<float, BUFFER_SAMPLES>;
+using accumulator_t = std::vector<float>;
 using address_array_t = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
 using autoexec_array_t = std::array<AutoexecObject, 2>;
 using pan_scalars_array_t = std::array<AudioFrame, PAN_POSITIONS>;
@@ -135,7 +136,7 @@ using mixer_channel_ptr_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelCha
 class Voice {
 public:
 	Voice(uint8_t num, VoiceIrq &irq) noexcept;
-	void GenerateSamples(accumulator_array_t &stream,
+	void GenerateSamples(accumulator_t &stream,
 	                     const ram_array_t &ram,
 	                     const vol_scalars_array_t &vol_scalars,
 	                     const pan_scalars_array_t &pan_scalars,
@@ -260,7 +261,7 @@ private:
 
 	// Collections
 	vol_scalars_array_t vol_scalars = {{}};
-	accumulator_array_t accumulator = {{0}};
+	accumulator_t accumulator{};
 	pan_scalars_array_t pan_scalars = {{}};
 	ram_array_t ram = {{0u}};
 	read_io_array_t read_handlers = {};   // std::functions
@@ -275,7 +276,7 @@ private:
 	// Struct and pointer members
 	VoiceIrq voice_irq = {};
 	AudioFrame mixer_level = {1, 1};
-	SoftLimiter<BUFFER_FRAMES> soft_limiter;
+	SoftLimiter soft_limiter;
 	Voice *voice = nullptr;
 	DmaChannel *dma_channel = nullptr;
 	mixer_channel_ptr_t audio_channel{nullptr, MIXER_DelChannel};
@@ -429,7 +430,7 @@ float Voice::GetSample(const ram_array_t &ram) noexcept
 	return sample;
 }
 
-void Voice::GenerateSamples(accumulator_array_t &stream,
+void Voice::GenerateSamples(accumulator_t &stream,
                             const ram_array_t &ram,
                             const vol_scalars_array_t &vol_scalars,
                             const pan_scalars_array_t &pan_scalars,
@@ -589,7 +590,7 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 }
 
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
-        : soft_limiter("GUS", mixer_level),
+        : soft_limiter("GUS", mixer_level, BUFFER_FRAMES),
           port_base(port - 0x200u),
           dma2(dma),
           irq1(irq),
@@ -599,6 +600,9 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	for (uint8_t i = 0; i < MAX_VOICES; ++i) {
 		voices.at(i) = std::make_unique<Voice>(i, voice_irq);
 	}
+
+	// Size the accumulating write buffer
+	accumulator.resize(BUFFER_SAMPLES);
 
 	RegisterIoHandlers();
 

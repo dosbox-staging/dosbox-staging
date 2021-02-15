@@ -230,6 +230,10 @@ static mt32emu_report_handler_i get_report_handler_interface()
 	return REPORT_HANDLER_I;
 }
 
+MidiHandler_mt32::MidiHandler_mt32()
+        : soft_limiter("MT32", limiter_ratio, FRAMES_PER_BUFFER)
+{}
+
 bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 {
 	Close();
@@ -317,6 +321,7 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	keep_rendering = true;
 	const auto render = std::bind(&MidiHandler_mt32::Render, this);
 	renderer = std::thread(render);
+	ring.wait_dequeue(play_buffer); // populate the first play buffer
 
 	// Start playback
 	channel->Enable(true);
@@ -360,9 +365,8 @@ void MidiHandler_mt32::Close()
 
 	// Stop rendering and drain the ring
 	keep_rendering = false;
-	limited_buffer_t discard_buffer;
 	while (ring.size_approx())
-		ring.wait_dequeue(discard_buffer);
+		ring.wait_dequeue(play_buffer);
 
 	// Wait for the rendering thread to finish
 	if (renderer.joinable())
@@ -408,7 +412,7 @@ void MidiHandler_mt32::MixerCallBack(uint16_t requested_frames)
 	while (requested_frames) {
 		const auto frames_to_be_played = std::min(GetRemainingFrames(),
 		                                          requested_frames);
-		const auto sample_offset_in_buffer = buffer.data() +
+		const auto sample_offset_in_buffer = play_buffer.data() +
 		                                     last_played_frame * 2;
 		channel->AddSamples_s16(frames_to_be_played, sample_offset_in_buffer);
 		requested_frames -= frames_to_be_played;
@@ -417,19 +421,21 @@ void MidiHandler_mt32::MixerCallBack(uint16_t requested_frames)
 }
 
 // GetRemainingFrames() gives us the number of unplayed (ie: remaining) frames
-// left in the current buffer. If it's run out, then we pop a new "full" buffer
-// out of the ring. If the ring doesn't have a buffer to offer, then we (block)
-// and wait until the ring gives us one.
+// left in the current play buffer. If it's run out, then we pop a new "full"
+// play buffer out of the ring. If the ring doesn't have a buffer to offer, then
+// we (block) and wait until the ring gives us one.
 uint16_t MidiHandler_mt32::GetRemainingFrames()
 {
-	// the current buffer has some frames still left to play, so return those
+	// the current play buffer has some frames still left to play
 	if (last_played_frame < FRAMES_PER_BUFFER)
 		return FRAMES_PER_BUFFER - last_played_frame;
 
 	// Otherwise move the next fully rendered buffer out of the ring
-	ring.wait_dequeue(buffer);
+	ring.wait_dequeue(play_buffer);
 	total_buffers_played++;
 	last_played_frame = 0;
+
+	assert(play_buffer.size() == SAMPLES_PER_BUFFER);
 	return FRAMES_PER_BUFFER;
 }
 
@@ -437,10 +443,12 @@ uint16_t MidiHandler_mt32::GetRemainingFrames()
 // released in the ring allowing MT-32 to renderer the next "full buffer".
 void MidiHandler_mt32::Render()
 {
-	render_buffer_t buf;
+	render_buffer_t render_buffer;
+	render_buffer.resize(SAMPLES_PER_BUFFER);
+
 	while (keep_rendering) {
-		service->renderFloat(buf.data(), FRAMES_PER_BUFFER);
-		auto out = soft_limiter.Apply(buf, FRAMES_PER_BUFFER);
+		service->renderFloat(render_buffer.data(), FRAMES_PER_BUFFER);
+		auto out = soft_limiter.Apply(render_buffer, FRAMES_PER_BUFFER);
 		ring.wait_enqueue(out); // moved into the queue
 	}
 }

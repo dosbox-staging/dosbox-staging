@@ -37,6 +37,7 @@ libhardware_a_SOURCES = \
 	pcspeaker.cpp \
 	pic.cpp \
 	sblaster.cpp \
+	soft_limiter.cpp \
 	tandy_sound.cpp \
 	timer.cpp \
 	vga_attr.cpp \

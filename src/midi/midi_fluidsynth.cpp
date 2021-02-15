@@ -28,6 +28,7 @@
 #include <deque>
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "control.h"
 #include "cross.h"
@@ -176,6 +177,12 @@ static std::string find_sf_file(const std::string &name)
 		}
 	}
 	return "";
+}
+
+MidiHandlerFluidsynth::MidiHandlerFluidsynth()
+        : soft_limiter("FSYNTH", prescale_level, expected_max_frames)
+{
+	stream.resize(expected_max_frames * 2); // L & R channels
 }
 
 bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
@@ -368,19 +375,17 @@ void MidiHandlerFluidsynth::PrintStats()
 	soft_limiter.PrintStats();
 }
 
-void MidiHandlerFluidsynth::MixerCallBack(uint16_t frames)
+void MidiHandlerFluidsynth::MixerCallBack(uint16_t requested_frames)
 {
-	constexpr uint16_t max_samples = expected_max_frames * 2; // two channels per frame
-	std::array<float, max_samples> stream;
-
-	while (frames > 0) {
+	while (requested_frames > 0) {
 		constexpr uint16_t max_frames = expected_max_frames; // local copy fixes link error
-		const uint16_t len = std::min(frames, max_frames);
-		fluid_synth_write_float(synth.get(), len, stream.data(), 0, 2,
-		                        stream.data(), 1, 2);
-		const auto out = soft_limiter.Apply(stream, len);
-		channel->AddSamples_s16(len, out.data());
-		frames -= len;
+		const uint16_t frames = std::min(requested_frames, max_frames);
+		assert(frames <= stream.size());
+		fluid_synth_write_float(synth.get(), frames, stream.data(), 0,
+		                        2, stream.data(), 1, 2);
+		const auto out = soft_limiter.Apply(stream, frames);
+		channel->AddSamples_s16(frames, out.data());
+		requested_frames -= frames;
 	}
 }
 

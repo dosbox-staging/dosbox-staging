@@ -28,6 +28,7 @@
 #if C_FLUIDSYNTH
 
 #include <memory>
+#include <vector>
 #include <fluidsynth.h>
 
 #include "mixer.h"
@@ -44,7 +45,7 @@ private:
 	        std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
 public:
-	MidiHandlerFluidsynth() : soft_limiter("FSYNTH", prescale_level) {}
+	MidiHandlerFluidsynth();
 	void PrintStats();
 	const char *GetName() const override { return "fluidsynth"; }
 	bool Open(const char *conf) override;
@@ -54,14 +55,15 @@ public:
 
 private:
 	static constexpr uint16_t expected_max_frames = (96000 / 1000) + 4;
-	void MixerCallBack(uint16_t len); // see: MIXER_Handler
+	void MixerCallBack(uint16_t requested_frames);
 	void SetMixerLevel(const AudioFrame &prescale_level) noexcept;
 
 	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
 	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
 	AudioFrame prescale_level = {1.0f, 1.0f};
-	SoftLimiter<expected_max_frames> soft_limiter;
+	SoftLimiter soft_limiter;
+	std::vector<float> stream{};
 
 	bool is_open = false;
 };
