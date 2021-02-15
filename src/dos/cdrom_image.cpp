@@ -691,7 +691,7 @@ bool CDROM_Interface_Image::GetMediaTrayStatus(bool& mediaPresent, bool& mediaCh
 	return true;
 }
 
-bool CDROM_Interface_Image::PlayAudioSector(const uint32_t start, uint32_t len)
+bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 {
 	// Find the track that holds the requested sector
 	track_const_iter track = GetTrack(start);
@@ -712,31 +712,30 @@ bool CDROM_Interface_Image::PlayAudioSector(const uint32_t start, uint32_t len)
 #endif
 		return false;
 	}
-	/**
-	 *  If the request falls in the pregap we deduct the difference from the
-	 *  playback duration, because we skip the pre-gap area and jump straight to
-	 *  the track start.
-	 */
-	if (start < track->start)
+	// If the request falls into the pregap, which is prior to the track's
+	// actual start but not so earlier that it falls into the prior track's
+	// audio, then we simply skip the pre-gap (beacuse we can't negatively
+	// seek into the track) and instead start playback at the actual track
+	// start.
+	if (start < track->start) {
 		len -= (track->start - start);
+		start = track->start;
+	}
 
-	// Seek to the calculated byte offset, bounded to the valid byte offsets
-	const uint32_t offset = (track->skip
-	                        + clamp(start - static_cast<uint32_t>(track->start),
-	                                0u, track->length - 1)
-	                        * track->sectorSize);
+	// Calculate the requested byte offset from the sector offset
+	const auto sector_offset = start - track->start;
+	const auto byte_offset = track->skip + sector_offset * track->sectorSize;
 
 	// Guard: Bail if our track could not be seeked
-	if (!track_file->seek(offset)) {
+	if (!track_file->seek(byte_offset)) {
 		LOG_MSG("CDROM: Track %d failed to seek to byte %u, so cancelling playback",
-		        track->number,
-		        offset);
+		        track->number, byte_offset);
 		StopAudio();
 		return false;
 	}
 
 	// We're performing an audio-task, so update the audio position
-	track_file->setAudioPosition(offset);
+	track_file->setAudioPosition(byte_offset);
 
 	// Get properties about the current track
 	const uint8_t track_channels = track_file->getChannels();
