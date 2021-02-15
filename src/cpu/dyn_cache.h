@@ -706,7 +706,7 @@ static void gen_return(BlockReturn retcode);
 static void dyn_return(BlockReturn retcode, bool ret_exception);
 static void dyn_run_code();
 static void cache_block_before_close();
-static void cache_block_closing(uint8_t *block_start, Bitu block_size);
+static void cache_block_closing(const uint8_t *block_start, Bitu block_size);
 #endif
 
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */

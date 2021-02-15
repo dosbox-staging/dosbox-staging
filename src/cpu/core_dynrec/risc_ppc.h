@@ -600,7 +600,7 @@ static void gen_fill_branch_long(Bit32u data) {
 	return gen_fill_branch((DRC_PTR_SIZE_IM)data);
 }
 
-static void cache_block_closing(Bit8u* block_start,Bitu block_size)
+static void cache_block_closing(const uint8_t *block_start, Bitu block_size)
 {
 #if defined(__GNUC__)
 	Bit8u* start = (Bit8u*)((Bit32u)block_start & -32);

@@ -562,9 +562,10 @@ static const Bit8u* gen_create_branch_on_nonzero(HostReg reg,bool dword) {
 // calculate relative offset and fill it into the location pointed to by data
 static void gen_fill_branch(const Bit8u* data) {
 #if C_DEBUG
-	Bit64s len=(Bit64u)cache.pos-data;
+	ptrdiff_t len = cache.pos - data;
 	if (len<0) len=-len;
-	if (len>126) LOG_MSG("Big jump %d",len);
+	if (len > 126)
+		LOG_MSG("Big jump %" PRIdPTR, len);
 #endif
 	cache_addb((Bit8u)(cache.pos-data-1),data);
 }
