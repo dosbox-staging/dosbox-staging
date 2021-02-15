@@ -49,7 +49,14 @@ public:
 	} page;
 
 	struct {
-		uint8_t *start; // where in the cache are we
+		// TODO field start used to be a normal pointer, but upstream
+		// changed it to const pointer in r4424 (perhaps by mistake or
+		// as WIP change). Once transition to W^X will be done, decide
+		// if this should be const pointer or not and remove this comment.
+		//
+		// uint8_t *start; // where in the cache are we
+		const uint8_t *start;  // where in the cache are we
+
 		Bitu size;
 		CacheBlock *next;
 		// writemap masking maskpointer/start/length to allow holes in
@@ -82,7 +89,14 @@ static struct {
 		CacheBlock *running; // the last block that was entered for
 		                     // execution
 	} block;
-	uint8_t *pos;                // position in the cache block
+
+	// TODO field pos used to be a normal pointer, but upstream
+	// changed it to const pointer in r4424 (perhaps by mistake or as WIP
+	// change). Once transition to W^X will be done, decide if this
+	// should be const pointer or not and remove this comment.
+	//
+  	//uint8_t *pos;              // position in the cache block
+	const uint8_t *pos;          // position in the cache block
 	CodePageHandler *free_pages; // pointer to the free list
 	CodePageHandler *used_pages; // pointer to the list of used pages
 	CodePageHandler *last_page;  // the last used page
@@ -624,11 +638,21 @@ static void cache_closeblock()
 	}
 }
 
+// TODO functions cache_addb, cache_addw, cache_addd, cache_addq definitely
+// should NOT use const pointer pos (because they treat this point as writable
+// destination), but upstream made it a const pointer in r4424 (perhaps by
+// mistake or as WIP change) and relies on silently C-casting the constness
+// away.
+//
+// Replaced silent C-casting with explicit const-casting; when upstream will
+// revert this change bring back the previous version and remove this comment.
+//
+
 // place an 8bit value into the cache
 
-static INLINE void cache_addb(uint8_t val, uint8_t *pos)
+static INLINE void cache_addb(uint8_t val, const uint8_t *pos)
 {
-	*pos = val;
+	*const_cast<uint8_t *>(pos) = val;
 }
 
 static inline void cache_addb(uint8_t val)
@@ -639,9 +663,9 @@ static inline void cache_addb(uint8_t val)
 
 // place a 16bit value into the cache
 
-static INLINE void cache_addw(uint16_t val, uint8_t *pos)
+static INLINE void cache_addw(uint16_t val, const uint8_t *pos)
 {
-	write_unaligned_uint16(pos, val);
+	write_unaligned_uint16(const_cast<uint8_t *>(pos), val);
 }
 
 static inline void cache_addw(uint16_t val)
@@ -652,9 +676,9 @@ static inline void cache_addw(uint16_t val)
 
 // place a 32bit value into the cache
 
-static INLINE void cache_addd(uint32_t val, uint8_t *pos)
+static INLINE void cache_addd(uint32_t val, const uint8_t *pos)
 {
-	write_unaligned_uint32(pos, val);
+	write_unaligned_uint32(const_cast<uint8_t *>(pos), val);
 }
 
 static inline void cache_addd(uint32_t val)
@@ -665,9 +689,9 @@ static inline void cache_addd(uint32_t val)
 
 // place a 64bit value into the cache
 
-static INLINE void cache_addq(uint64_t val, uint8_t *pos)
+static INLINE void cache_addq(uint64_t val, const uint8_t *pos)
 {
-	write_unaligned_uint64(pos, val);
+	write_unaligned_uint64(const_cast<uint8_t *>(pos), val);
 }
 
 static inline void cache_addq(uint64_t val)
@@ -761,7 +785,7 @@ static void cache_init(bool enable) {
 
 #if (C_DYNREC)
 		cache.pos=&cache_code_link_blocks[64];
-		core_dynrec.runcode=(BlockReturn (*)(Bit8u*))cache.pos;
+		core_dynrec.runcode=(BlockReturn (*)(const Bit8u*))cache.pos;
 //		link_blocks[1].cache.start=cache.pos;
 		dyn_run_code();
 #endif

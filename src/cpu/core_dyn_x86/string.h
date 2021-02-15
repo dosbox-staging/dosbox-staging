@@ -78,8 +78,8 @@ static void dyn_string(STRING_OP op) {
 	}
 	DynState rep_state;
 	dyn_savestate(&rep_state);
-	Bit8u * rep_start=cache.pos;
-	Bit8u * rep_ecx_jmp;
+	const Bit8u * rep_start=cache.pos;
+	const Bit8u * rep_ecx_jmp;
 	/* Check if ECX!=zero */
 	if (decode.rep) {
 		gen_dop_word(DOP_TEST,decode.big_addr,DREG(ECX),DREG(ECX));

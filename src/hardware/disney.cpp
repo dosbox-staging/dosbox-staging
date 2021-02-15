@@ -129,7 +129,7 @@ static void DISNEY_analyze(Bitu channel){
 			}
 			disney.da[channel].speedcheck_last = PIC_FullIndex();
 			disney.da[channel].speedcheck_init = true;
-			
+
 			disney.state = DISNEY_STATE::ANALYZING;
 			break;
 
@@ -156,29 +156,29 @@ static void DISNEY_analyze(Bitu channel){
 			const double current = PIC_FullIndex();
 			dac_channel* cch = &disney.da[channel];
 
-			if(!cch->speedcheck_init) {
+			if (!cch->speedcheck_init) {
 				cch->speedcheck_init = true;
 				cch->speedcheck_last = current;
 				break;
 			}
 			cch->speedcheck_sum += current - cch->speedcheck_last;
 			//LOG_MSG("t=%f",current - cch->speedcheck_last);
-			
+
 			// sanity checks (printer...)
-			if((current - cch-> speedcheck_last) < 0.01 ||
+			if ((current - cch-> speedcheck_last) < 0.01 ||
 				(current - cch-> speedcheck_last) > 2)
 				cch->speedcheck_failed = true;
-			
+
 			// if both are failed we are back at start
-			if(disney.da[0].speedcheck_failed && disney.da[1].speedcheck_failed) {
-				disney.state=DISNEY_STATE::IDLE;
+			if (disney.da[0].speedcheck_failed && disney.da[1].speedcheck_failed) {
+				disney.state = DISNEY_STATE::IDLE;
 				break;
 			}
 
 			cch->speedcheck_last = current;
-			
+
 			// analyze finish condition
-			if(disney.da[0].used > 30 || disney.da[1].used > 30)
+			if (disney.da[0].used > 30 || disney.da[1].used > 30)
 				disney.state = DISNEY_STATE::FINISHED;
 			break;
 		}
@@ -193,7 +193,7 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 	const auto val = static_cast<uint8_t>(data);
 
 	// LOG_MSG("write disney time %f addr%x val %x",PIC_FullIndex(),port,val);
-	disney.last_used=PIC_Ticks;
+	disney.last_used = PIC_Ticks;
 	switch (port-DISNEY_BASE) {
 	case 0:		/* Data Port */
 	{
@@ -205,7 +205,7 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 			if(disney.interface_det > 5)
 				DISNEY_analyze(0);
 		}
-		if(disney.interface_det > 5) {
+		if (disney.interface_det > 5) {
 			if (disney.da[0].used < BUFFER_SAMPLES) {
 				disney.da[0].buffer[disney.da[0].used] = disney.data;
 				disney.da[0].used++;
@@ -213,11 +213,11 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 		}
 		break;
 	}
-	case 1:		/* Status Port */		
-		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Status write %x",val);
+	case 1:		/* Status Port */
+		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Status write %" sBitfs(X),val);
 		break;
 	case 2:		/* Control Port */
-		if((disney.control & 0x2) && !(val & 0x2)) {
+		if ((disney.control & 0x2) && !(val & 0x2)) {
 			if (disney.state != DISNEY_STATE::RUNNING) {
 				disney.interface_det = 0;
 				disney.interface_det_ext = 0;
@@ -231,7 +231,7 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 			} // else LOG_MSG("disney overflow 1");
 		}
 
-		if((disney.control & 0x1) && !(val & 0x1)) {
+		if ((disney.control & 0x1) && !(val & 0x1)) {
 			if (disney.state != DISNEY_STATE::RUNNING) {
 				disney.interface_det = 0;
 				disney.interface_det_ext = 0;
@@ -244,7 +244,7 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 			} // else LOG_MSG("disney overflow 0");
 		}
 
-		if((disney.control & 0x8) && !(val & 0x8)) {
+		if ((disney.control & 0x8) && !(val & 0x8)) {
 			// emulate a device with 16-byte sound FIFO
 			if (disney.state != DISNEY_STATE::RUNNING) {
 				disney.interface_det_ext++;
@@ -254,7 +254,7 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 					DISNEY_enable(7000);
 				}
 			}
-			if(disney.interface_det_ext > 5) {
+			if (disney.interface_det_ext > 5) {
 				if (disney.da[0].used < BUFFER_SAMPLES) {
 					disney.da[0].buffer[disney.da[0].used] = disney.data;
 					disney.da[0].used++;
@@ -277,16 +277,16 @@ static Bitu disney_read(Bitu port, MAYBE_UNUSED Bitu iolen)
 //		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from data port");
 		return disney.data;
 		break;
-	case 1:		/* Status Port */	
+	case 1:		/* Status Port */
 //		LOG(LOG_MISC,"DISNEY:Read from status port %X",disney.status);
 		retval = 0x07;//0x40; // Stereo-on-1 and (or) New-Stereo DACs present
-		if(disney.interface_det_ext > 5) {
+		if (disney.interface_det_ext > 5) {
 			if (disney.leader && disney.leader->used >= 16){
 				retval |= 0x40; // ack
 				retval &= ~0x4; // interrupt
 			}
 		}
-		if(!(disney.data&0x80)) retval |= 0x80; // pin 9 is wired to pin 11
+		if (!(disney.data&0x80)) retval |= 0x80; // pin 9 is wired to pin 11
 		return retval;
 		break;
 	case 2:		/* Control Port */
@@ -313,14 +313,14 @@ static void DISNEY_CallBack(uint16_t len) {
 
 	// get the smaller used
 	Bitu real_used;
-	if(disney.stereo) {
+	if (disney.stereo) {
 		real_used = disney.da[0].used;
 		if(disney.da[1].used < real_used) real_used = disney.da[1].used;
 	} else
 		real_used = disney.leader->used;
 
 	if (real_used >= len) { // enough data for now
-		if(disney.stereo) DISNEY_PlayStereo(len, disney.da[0].buffer, disney.da[1].buffer);
+		if (disney.stereo) DISNEY_PlayStereo(len, disney.da[0].buffer, disney.da[1].buffer);
 		else disney.chan->AddSamples_m8(len,disney.leader->buffer);
 
 		// put the rest back to start
@@ -350,7 +350,7 @@ static void DISNEY_CallBack(uint16_t len) {
 
 		} else { // mono
 			uint8_t gapfiller = 128; // Keep the middle
-			if(real_used) {
+			if (real_used) {
 				// fix for some stupid game; it outputs 0 at the end of the stream
 				// causing a click. So if we have at least two bytes availible in the
 				// buffer and the last one is a 0 then ignore that.
@@ -358,7 +358,7 @@ static void DISNEY_CallBack(uint16_t len) {
 					real_used--;
 			}
 			// do it this way because AddSilence sounds like a gnawing mouse
-			if(real_used)
+			if (real_used)
 				gapfiller = disney.leader->buffer[real_used-1];
 			//LOG_MSG("gapfiller %x, fill len %d, realused %d",gapfiller,len-real_used,real_used);
 			memset(disney.leader->buffer+real_used,	gapfiller, len-real_used);

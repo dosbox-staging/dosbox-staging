@@ -47,7 +47,7 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 
 	// every codeblock that is run sets cache.block.running to itself
 	// so the block linking knows the last executed block
-	gen_mov_direct_ptr(&cache.block.running,(DRC_PTR_SIZE_IM)decode.block);
+	gen_mov_direct_ptr(&cache.block.running,(Bitu)decode.block);
 
 	// start with the cycles check
 	gen_mov_word_to_reg(FC_RETOP,&CPU_Cycles,true);
