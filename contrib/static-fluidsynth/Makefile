@@ -66,7 +66,9 @@ $(FLUIDSYNTH_ARCHIVE):
 fluidsynth/build: $(FLUIDSYNTH_ARCHIVE)
 	@test -f $@ \
 	|| (mkdir -p fluidsynth/build \
-	&& $(EXTRACT) $(FLUIDSYNTH_ARCHIVE) -C fluidsynth)
+	&& $(EXTRACT) $(FLUIDSYNTH_ARCHIVE) -C fluidsynth) \
+	&& sed -i -E 's|^(Libs.+)|\1 $(GLIB_LIBS)|;s|^(Cflags.+)|\1 $(GLIB_CFLAGS)|' \
+		fluidsynth/fluidsynth.pc.in
 
 fluidsynth/build/Makefile: fluidsynth/build
 	cd fluidsynth \
@@ -121,6 +123,10 @@ Export the following to configure dosbox-staging without pkg-config
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 export FLUIDSYNTH_CFLAGS="-I$(CURDIR)/include $(GLIB_CFLAGS)"
 export FLUIDSYNTH_LIBS="$(CURDIR)/lib/libfluidsynth.a $(GLIB_LIBS) -lm"
+
+Export the following to configure dosbox-staging with pkg-config
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+export PKG_CONFIG_PATH="$(CURDIR)/fluidsynth/build"
 endef
 
 GLIB_LIBS = $(shell pkg-config --libs gthread-2.0 glib-2.0)
