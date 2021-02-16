@@ -126,7 +126,7 @@ static void IllegalOptionDynrec(const char* msg) {
 }
 
 struct core_dynrec_t {
-	BlockReturn (*runcode)(Bit8u*);		// points to code that can start a block
+	BlockReturn (*runcode)(const Bit8u*);		// points to code that can start a block
 	Bitu callback;				// the occurred callback
 	Bitu readdata;				// spare space used when reading from memory
 	Bit32u protected_regs[8];	// space to save/restore register values
@@ -345,7 +345,7 @@ Bits CPU_Core_Dynrec_Trap_Run(void) {
 
 	// trap to int1 unless the last instruction deferred this
 	// (allows hardware interrupts to be served without interaction)
-	if (!cpu.trap_skip) CPU_HW_Interrupt(1);
+	if (!cpu.trap_skip) CPU_DebugException(DBINT_STEP,reg_eip);
 
 	CPU_Cycles = oldCycles-1;
 	// continue (either the trapflag was clear anyways, or the int1 cleared it)
