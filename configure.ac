@@ -648,17 +648,25 @@ case "$host" in
        ;;
 esac
 
-dnl Some stuff for the icon.
+dnl Some stuff for the icon and other makefile platform stuff.
+dnl Slightly double with the above, but that deals more with compiled features.
 case "$host" in
     *-*-cygwin* | *-*-mingw* | *-*-msys*)
        dnl Some stuff for the ico
        AC_CHECK_TOOL(WINDRES, windres, :)
+       DBPLATFORM="win"
+    ;;
+    *-*-darwin*)
+       WINDRES=":"
+       DBPLATFORM="mac"
     ;;
     *)
        WINDRES=":"
+       DBPLATFORM="other"
     ;;
 esac
        AM_CONDITIONAL(HAVE_WINDRES, test "x$WINDRES" != "x:")
+       AM_CONDITIONAL(MACOSX, test "x$DBPLATFORM" = "xmac")
        AC_SUBST(WINDRES)
 
 AH_TOP([
@@ -711,6 +719,7 @@ src/midi/Makefile
 src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile
+src/platform/macosx/Makefile
 src/platform/visualc/Makefile
 tests/Makefile
 ])

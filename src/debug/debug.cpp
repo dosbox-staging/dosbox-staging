@@ -350,13 +350,16 @@ private:
 	bool		once;
 
 	static std::list<CBreakpoint*>	BPoints;
+#if C_HEAVY_DEBUG
+	friend bool DEBUG_HeavyIsBreakpoint(void);
+#endif
 };
 
 CBreakpoint::CBreakpoint(void):
+type(BKPNT_UNKNOWN),
 location(0),oldData(0xCC),
-active(false),once(false),
 segment(0),offset(0),intNr(0),ahValue(0),alValue(0),
-type(BKPNT_UNKNOWN) { };
+active(false),once(false){ };
 
 void CBreakpoint::Activate(bool _active)
 {
@@ -1576,6 +1579,21 @@ char* AnalyzeInstruction(char* inst, bool saveSelector) {
 };
 
 
+Bit32s DEBUG_Run(Bit32s amount,bool quickexit) {
+	skipFirstInstruction = true;
+	CPU_Cycles = amount;
+	Bit32s ret = (*cpudecoder)();
+	if (quickexit) SetCodeWinStart();
+	else {
+		// ensure all breakpoints are activated
+		CBreakpoint::ActivateBreakpoints();
+		DOSBOX_SetNormalLoop();
+	}
+	return ret;
+}
+
+
+
 Bit32u DEBUG_CheckKeys(void) {
 	Bits ret=0;
 	bool numberrun = false;
@@ -1584,19 +1602,15 @@ Bit32u DEBUG_CheckKeys(void) {
 
 	if (key >='1' && key <='5' && strlen(codeViewData.inputStr) == 0) {
 		const Bit32s v[] ={5,500,1000,5000,10000};
-		CPU_Cycles= v[key - '1'];
 
-		skipFirstInstruction = true;
-
-		ret = (*cpudecoder)();
-		SetCodeWinStart();
+		ret = DEBUG_Run(v[key - '1'],true);
 
 		/* Setup variables so we end up at the proper ret processing */
 		numberrun = true;
 
 		// Don't redraw the screen if it's going to get redrawn immediately
 		// afterwards, to avoid resetting oldregs.
-		if (ret == debugCallback)
+		if (ret == static_cast<Bits>(debugCallback))
 			skipDraw = true;
 		key = -1;
 	}
@@ -1734,16 +1748,8 @@ Bit32u DEBUG_CheckKeys(void) {
 				debugging=false;
 				DrawCode(); // update code window to show "running" status
 
-				skipFirstInstruction = true; // for heavy debugger
-				CPU_Cycles = 1;
-				ret=(*cpudecoder)();
-
-				// ensure all breakpoints are activated
-				CBreakpoint::ActivateBreakpoints();
-
+				ret = DEBUG_Run(1,false);
 				skipDraw = true; // don't update screen after this instruction
-
-				DOSBOX_SetNormalLoop();
 				break;
 		case KEY_F(8):	// Toggle printable characters
 				showPrintable = !showPrintable;
@@ -1762,25 +1768,15 @@ Bit32u DEBUG_CheckKeys(void) {
 				break;
 		case KEY_F(10):	// Step over inst
 				if (StepOver()) {
-					skipFirstInstruction = true; // for heavy debugger
-					CPU_Cycles = 1;
-					ret=(*cpudecoder)();
-
-					DOSBOX_SetNormalLoop();
-
-					// ensure all breakpoints are activated
-					CBreakpoint::ActivateBreakpoints();
+					ret = DEBUG_Run(1,false);
 					skipDraw = true;
 					break;
 				}
 				// If we aren't stepping over something, do a normal step.
-				// NB: Fall-through
+				/* FALLTHROUGH */
 		case KEY_F(11):	// trace into
 				exitLoop = false;
-				skipFirstInstruction = true; // for heavy debugger
-				CPU_Cycles = 1;
-				ret = (*cpudecoder)();
-				SetCodeWinStart();
+				ret = DEBUG_Run(1,true);
 				break;
 		case 0x0A: //Parse typed Command
 				codeViewData.inputStr[MAXCMDLEN] = '\0';
@@ -2610,7 +2606,7 @@ bool DEBUG_HeavyIsBreakpoint(void) {
 		skipFirstInstruction = false;
 		return false;
 	}
-	if (CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) {
+	if (!CBreakpoint::BPoints.empty() && CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) {
 		return true;
 	}
 	return false;
