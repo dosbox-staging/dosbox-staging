@@ -807,8 +807,15 @@ static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 		double ratio_w=(double)fixedWidth/(sdl.draw.width*sdl.draw.scalex);
 		double ratio_h=(double)fixedHeight/(sdl.draw.height*sdl.draw.scaley);
 		if ( ratio_w < ratio_h) {
-			sdl.clip.w=fixedWidth;
-			sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley*ratio_w + 0.1); //possible rounding issues
+			sdl.clip.w = fixedWidth;
+			sdl.clip.h = (Bit16u)(sdl.draw.height * sdl.draw.scaley*ratio_w + 0.1); //possible rounding issues
+
+			if(sdl.desktop.want_type == SCREEN_OPENGL && ( (fixedHeight % sdl.draw.height) == 0 && (fixedWidth % sdl.draw.width) == 0))  {
+				//wanted resolution is clear multiple of input
+				//allow this resolution if aspect=true and ratio is somewhat similar to 1.33
+				float r = static_cast<float>(fixedWidth)/static_cast<float>(fixedHeight);
+				if (render.aspect&& r >1.25f && r < 1.40f) sdl.clip.h = fixedHeight;
+			}
 		} else {
 			/*
 			 * The 0.4 is there to correct for rounding issues.
@@ -1317,8 +1324,9 @@ dosurface:
 			if (glIsList(sdl.opengl.displaylist)) glDeleteLists(sdl.opengl.displaylist, 1);
 			sdl.opengl.displaylist = glGenLists(1);
 			glNewList(sdl.opengl.displaylist, GL_COMPILE);
-			glClear(GL_COLOR_BUFFER_BIT);
 
+			//Create one huge triangle and only display a portion.
+			//When using a quad, there was scaling bug (certain resolutions on Nvidia chipsets) in the seam
 			glBegin(GL_TRIANGLES);
 			// upper left
 			glTexCoord2f(0,0); glVertex2f(-1.0f, 1.0f);
