@@ -33,10 +33,11 @@ jobs:
             build_flags: -Duse_fluidsynth=false
             max_warnings: 3
 
-          #- name: GCC, Ubuntu 16.04
-          #  os: ubuntu-16.04
-          #  build_flags: -Duse_fluidsynth=false -Duse_mt32emu=false --wrap-mode=nofallback
-          #  max_warnings: 0
+          - name: GCC 5, Ubuntu 18.04
+            os: ubuntu-18.04
+            packages: g++-5
+            build_flags: --native-file=.github/meson/native-gcc-5.ini --wrap-mode=nofallback -Duse_fluidsynth=false -Duse_mt32emu=false
+            max_warnings: 0
 
           - name: GCC, +tests
             os: ubuntu-20.04
