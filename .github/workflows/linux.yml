@@ -46,7 +46,7 @@ jobs:
           - name: GCC, +debugger
             os: ubuntu-20.04
             build_flags: -Denable_debugger=normal
-            max_warnings: 123
+            max_warnings: 124
 
           - name: GCC, -dyn-x86
             os: ubuntu-20.04
@@ -66,7 +66,7 @@ jobs:
           - name: GCC, warning_level=3
             os: ubuntu-20.04
             build_flags: -Dwarning_level=3
-            max_warnings: 116
+            max_warnings: 92
 
     steps:
       - uses: actions/checkout@v2
