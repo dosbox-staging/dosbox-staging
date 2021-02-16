@@ -1,1 +1,1 @@
-SUBDIRS = visualc
+SUBDIRS = visualc macosx
