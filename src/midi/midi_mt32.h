@@ -42,12 +42,7 @@
 
 class MidiHandler_mt32 final : public MidiHandler {
 private:
-	static constexpr int FRAMES_PER_BUFFER = 1024; // synth granularity
-	static constexpr int SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
-
-	using render_buffer_t = std::vector<float>;
-	using play_buffer_t = std::vector<int16_t>;
-	using ring_t = moodycamel::BlockingReaderWriterCircularBuffer<play_buffer_t>;
+	using ring_t = moodycamel::BlockingReaderWriterCircularBuffer<std::vector<int16_t>>;
 	using channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 	using conditional_t = moodycamel::weak_atomic<bool>;
 
@@ -71,7 +66,7 @@ private:
 
 	// Managed objects
 	channel_t channel{nullptr, MIXER_DelChannel};
-	play_buffer_t play_buffer{};
+	std::vector<int16_t> play_buffer = {};
 	ring_t ring{4}; // Handle up to four buffers in the ring
 	service_t service{};
 	std::thread renderer{};

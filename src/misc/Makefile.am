@@ -9,4 +9,5 @@ libmisc_a_SOURCES = \
 	messages.cpp \
 	programs.cpp \
 	setup.cpp \
+	soft_limiter.cpp \
 	support.cpp

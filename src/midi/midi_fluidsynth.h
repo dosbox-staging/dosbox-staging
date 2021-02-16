@@ -63,7 +63,6 @@ private:
 	mixer_channel_ptr_t channel{nullptr, MIXER_DelChannel};
 	AudioFrame prescale_level = {1.0f, 1.0f};
 	SoftLimiter soft_limiter;
-	std::vector<float> stream{};
 
 	bool is_open = false;
 };

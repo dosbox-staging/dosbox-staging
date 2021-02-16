@@ -21,9 +21,13 @@
 
 #include "soft_limiter.h"
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 
 #include "support.h"
+
+constexpr static float bounds = static_cast<float>(INT16_MAX - 1);
 
 SoftLimiter::SoftLimiter(const std::string &name,
                          const AudioFrame &scale,
@@ -33,10 +37,9 @@ SoftLimiter::SoftLimiter(const std::string &name,
           max_samples(max_frames * 2)
 {}
 
-// Applies the Soft Limiter to the given input sequence and returns the results
-// as a reference to a std::vector of 16-bit ints the same length as the input.
-typename SoftLimiter::out_t SoftLimiter::Apply(const in_t &in,
-                                               const uint16_t frames) noexcept
+//  Limit the input array and returned as integer array
+std::vector<int16_t> SoftLimiter::Process(const std::vector<float> &in,
+                                          const uint16_t frames) noexcept
 {
 	// Make sure chunk sizes aren' too big or latent
 	assertm(frames > 0, "need some quantity of frames");
@@ -46,22 +49,27 @@ typename SoftLimiter::out_t SoftLimiter::Apply(const in_t &in,
 	const uint16_t samples = frames * 2; // left and right channels
 	assert(in.size() >= samples);
 
-	FindPeaksAndZeroCrosses(in, samples);
+	auto precross_peak_pos_left = in.end();
+	auto precross_peak_pos_right = in.end();
+	auto zero_cross_left = in.end();
+	auto zero_cross_right = in.end();
 
-	// Size our temporary output vector using the max_samples, which
-	// is typically assigned from constexpr's at compile-time. This followed
-	// by logically sizing the vector downward (if needed) based on runtime
-	// content.
-	out_t out;
-	out.reserve(max_samples);
+	FindPeaksAndZeroCrosses(in, precross_peak_pos_left, precross_peak_pos_right,
+	                        zero_cross_left, zero_cross_right, samples);
+
+	// Size our temporary output vector using max_samples, which is
+	// typically assigned from constexpr, allowing for compile-time
+	// allocation optimizations.
 	assert(samples <= max_samples);
-	out.resize(samples);
+	std::vector<int16_t> out(max_samples);
 
 	// Given the local peaks found in each side channel, scale or copy the
 	// input array into the output array
+	constexpr int8_t left = 0;
 	ScaleOrCopy<left>(in, samples, prescale.left, precross_peak_pos_left,
 	                  zero_cross_left, global_peaks.left, tail_frame.left, out);
 
+	constexpr int8_t right = 1;
 	ScaleOrCopy<right>(in, samples, prescale.right, precross_peak_pos_right,
 	                   zero_cross_right, global_peaks.right,
 	                   tail_frame.right, out);
@@ -75,14 +83,14 @@ typename SoftLimiter::out_t SoftLimiter::Apply(const in_t &in,
 // Saves new local and global peaks, and the input-array iterator of any new
 // peaks before the first zero-crossing, along with the first zero-crossing
 // position.
-void SoftLimiter::FindPeakAndCross(const in_iterator_t in_end,
-                                   const in_iterator_t pos,
-                                   in_iterator_t &prev_pos,
-                                   const float prescalar,
-                                   float &local_peak,
-                                   in_iterator_t &precross_peak_pos,
-                                   in_iterator_t &zero_cross_pos,
-                                   float &global_peak) noexcept
+void FindPeakAndCross(const SoftLimiter::in_iterator_t in_end,
+                      const SoftLimiter::in_iterator_t pos,
+                      SoftLimiter::in_iterator_t &prev_pos,
+                      const float prescalar,
+                      float &local_peak,
+                      SoftLimiter::in_iterator_t &precross_peak_pos,
+                      SoftLimiter::in_iterator_t &zero_cross_pos,
+                      float &global_peak) noexcept
 {
 	const auto val = fabsf(*pos) * prescalar;
 	if (val > bounds && val > local_peak) {
@@ -104,17 +112,18 @@ void SoftLimiter::FindPeakAndCross(const in_iterator_t in_end,
 
 // Sequentially scans the input channels to find new peaks, their positions, and
 // the first zero crossings (saved in member variables).
-void SoftLimiter::FindPeaksAndZeroCrosses(const in_t &in, const uint16_t samples) noexcept
+void SoftLimiter::FindPeaksAndZeroCrosses(const std::vector<float> &in,
+                                          in_iterator_t &precross_peak_pos_left,
+                                          in_iterator_t &precross_peak_pos_right,
+                                          in_iterator_t &zero_cross_left,
+                                          in_iterator_t &zero_cross_right,
+                                          const uint16_t samples) noexcept
 {
 	auto pos = in.begin();
 	const auto pos_end = in.begin() + samples;
 
-	precross_peak_pos_left = in.end();
-	precross_peak_pos_right = in.end();
-	zero_cross_left = in.end();
-	zero_cross_right = in.end();
-	in_iterator_t prev_pos_left = in.end();
-	in_iterator_t prev_pos_right = in.end();
+	auto prev_pos_left = in.end();
+	auto prev_pos_right = in.end();
 	AudioFrame local_peaks = global_peaks;
 
 	while (pos != pos_end) {
@@ -129,15 +138,15 @@ void SoftLimiter::FindPeaksAndZeroCrosses(const in_t &in, const uint16_t samples
 }
 
 // Scale or copy the given channel's samples into the output array
-template <size_t channel>
-void SoftLimiter::ScaleOrCopy(const in_t &in,
-                              const size_t samples,
+template <int8_t channel>
+void SoftLimiter::ScaleOrCopy(const std::vector<float> &in,
+                              const uint16_t samples,
                               const float prescalar,
                               const in_iterator_t precross_peak_pos,
                               const in_iterator_t zero_cross_pos,
                               const float global_peak,
                               const float tail,
-                              out_t &out)
+                              std::vector<int16_t> &out)
 {
 	assert(samples >= 2); // need at least one frame
 	auto in_start = in.begin() + channel;
@@ -200,7 +209,7 @@ void SoftLimiter::PolyFit(in_iterator_t in_pos,
 {
 	while (in_pos != in_end) {
 		const auto fitted = poly_a * (*in_pos * prescalar - poly_b) + poly_b;
-		assert(fabsf(fitted) <= out_limits::max());
+		assert(fabsf(fitted) < INT16_MAX);
 		*out_pos = static_cast<int16_t>(fitted);
 		out_pos += 2;
 		in_pos += 2;
@@ -215,14 +224,15 @@ void SoftLimiter::LinearScale(in_iterator_t in_pos,
 {
 	while (in_pos != in_end) {
 		const auto scaled = (*in_pos) * scalar;
-		assert(fabsf(scaled) <= out_limits::max());
+		assert(fabsf(scaled) < INT16_MAX);
 		*out_pos = static_cast<int16_t>(scaled);
 		out_pos += 2;
 		in_pos += 2;
 	}
 }
 
-void SoftLimiter::SaveTailFrame(const uint16_t frames, const out_t &out) noexcept
+void SoftLimiter::SaveTailFrame(const uint16_t frames,
+                                const std::vector<int16_t> &out) noexcept
 {
 	const size_t i = (frames - 1) * 2;
 	tail_frame.left = static_cast<float>(out[i]);

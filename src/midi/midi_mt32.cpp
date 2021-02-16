@@ -39,14 +39,23 @@
 
 // mt32emu Settings
 // ----------------
+
+// Buffer sizes
+static constexpr int FRAMES_PER_BUFFER = 1024; // synth granularity
+static constexpr int SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
+
 // Analogue circuit modes: DIGITAL_ONLY, COARSE, ACCURATE, OVERSAMPLED
 constexpr auto ANALOG_MODE = MT32Emu::AnalogOutputMode_ACCURATE;
+
 // DAC Emulation modes: NICE, PURE, GENERATION1, and GENERATION2
 constexpr auto DAC_MODE = MT32Emu::DACInputMode_NICE;
+
 // Analog rendering types: BITS16S, FLOAT
 constexpr auto RENDERING_TYPE = MT32Emu::RendererType_FLOAT;
+
 // Sample rate conversion quality: FASTEST, FAST, GOOD, BEST
 constexpr auto RATE_CONVERSION_QUALITY = MT32Emu::SamplerateConversionQuality_BEST;
+
 // Use improved behavior for volume adjustments, panning, and mixing
 constexpr bool USE_NICE_RAMP = true;
 constexpr bool USE_NICE_PANNING = true;
@@ -443,12 +452,10 @@ uint16_t MidiHandler_mt32::GetRemainingFrames()
 // released in the ring allowing MT-32 to renderer the next "full buffer".
 void MidiHandler_mt32::Render()
 {
-	render_buffer_t render_buffer;
-	render_buffer.resize(SAMPLES_PER_BUFFER);
-
+	std::vector<float> render_buffer(SAMPLES_PER_BUFFER);
 	while (keep_rendering) {
 		service->renderFloat(render_buffer.data(), FRAMES_PER_BUFFER);
-		auto out = soft_limiter.Apply(render_buffer, FRAMES_PER_BUFFER);
+		auto out = soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER);
 		ring.wait_enqueue(out); // moved into the queue
 	}
 }

@@ -181,9 +181,7 @@ static std::string find_sf_file(const std::string &name)
 
 MidiHandlerFluidsynth::MidiHandlerFluidsynth()
         : soft_limiter("FSYNTH", prescale_level, expected_max_frames)
-{
-	stream.resize(expected_max_frames * 2); // L & R channels
-}
+{}
 
 bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 {
@@ -377,13 +375,15 @@ void MidiHandlerFluidsynth::PrintStats()
 
 void MidiHandlerFluidsynth::MixerCallBack(uint16_t requested_frames)
 {
+	constexpr uint16_t max_frames = expected_max_frames; // local fixes link error
+	std::vector<float> render_buffer(max_frames * 2);    // L & R channels
+
 	while (requested_frames > 0) {
-		constexpr uint16_t max_frames = expected_max_frames; // local copy fixes link error
 		const uint16_t frames = std::min(requested_frames, max_frames);
-		assert(frames <= stream.size());
-		fluid_synth_write_float(synth.get(), frames, stream.data(), 0,
-		                        2, stream.data(), 1, 2);
-		const auto out = soft_limiter.Apply(stream, frames);
+
+		fluid_synth_write_float(synth.get(), frames, render_buffer.data(),
+		                        0, 2, render_buffer.data(), 1, 2);
+		const auto out = soft_limiter.Process(render_buffer, frames);
 		channel->AddSamples_s16(frames, out.data());
 		requested_frames -= frames;
 	}

@@ -229,9 +229,6 @@
     <ClCompile Include="..\src\hardware\serialport\softmodem.cpp">
       <Filter>src\hardware\serialport</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\soft_limiter.cpp">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\hardware\tandy_sound.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
@@ -368,6 +365,9 @@
       <Filter>src\misc</Filter>
     </ClCompile>
     <ClCompile Include="..\src\misc\setup.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\soft_limiter.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
     <ClCompile Include="..\src\misc\support.cpp">
@@ -508,6 +508,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\shell.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\soft_limiter.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\support.h">
