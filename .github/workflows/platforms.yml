@@ -34,9 +34,9 @@ jobs:
           - name: s390x (Ubuntu 18.04)
             architecture: s390x
             distribution: ubuntu18.04
-          - name: ppc64le (Ubuntu 18.04)
-            architecture: ppc64le
-            distribution: ubuntu18.04
+          #- name: ppc64le (Ubuntu 18.04)
+          #  architecture: ppc64le
+          #  distribution: ubuntu18.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
