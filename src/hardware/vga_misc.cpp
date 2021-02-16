@@ -29,7 +29,7 @@ Bitu vga_read_p3d4(Bitu port,Bitu iolen);
 void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen);
 Bitu vga_read_p3d5(Bitu port,Bitu iolen);
 
-Bitu vga_read_p3da(Bitu port,Bitu iolen) {
+Bitu vga_read_p3da(Bitu /*port*/,Bitu /*iolen*/) {
 	Bit8u retval=4;	// bit 2 set, needed by Blues Brothers
 	double timeInFrame = PIC_FullIndex()-vga.draw.delay.framestart;
 
@@ -55,7 +55,7 @@ Bitu vga_read_p3da(Bitu port,Bitu iolen) {
 	return retval;
 }
 
-static void write_p3c2(Bitu port,Bitu val,Bitu iolen) {
+static void write_p3c2(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	vga.misc_output=val;
 
 	Bitu base=(val & 0x1) ? 0x3d0 : 0x3b0;
@@ -91,20 +91,20 @@ static void write_p3c2(Bitu port,Bitu val,Bitu iolen) {
 }
 
 
-static Bitu read_p3cc(Bitu port,Bitu iolen) {
+static Bitu read_p3cc(Bitu /*port*/,Bitu /*iolen*/) {
 	return vga.misc_output;
 }
 
 // VGA feature control register
-static Bitu read_p3ca(Bitu port,Bitu iolen) {
+static Bitu read_p3ca(Bitu /*port*/,Bitu /*iolen*/) {
 	return 0;
 }
 
-static Bitu read_p3c8(Bitu port,Bitu iolen) {
+static Bitu read_p3c8(Bitu /*port*/,Bitu /*iolen*/) {
 	return 0x10;
 }
 
-static Bitu read_p3c2(Bitu port,Bitu iolen) {
+static Bitu read_p3c2(Bitu /*port*/,Bitu /*iolen*/) {
 	Bit8u retval=0;
 
 	if (machine==MCH_EGA) retval = 0x0F;
