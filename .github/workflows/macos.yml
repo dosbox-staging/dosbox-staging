@@ -33,11 +33,11 @@ jobs:
 
           - name: Clang, +debugger
             build_flags: -Denable_debugger=normal
-            max_warnings: 154
+            max_warnings: 130
 
           - name: Clang, warning_level=3
             build_flags: -Dwarning_level=3
-            max_warnings: 146
+            max_warnings: 145
 
     steps:
       - uses: actions/checkout@v2
