@@ -16,9 +16,9 @@ core_selection = [
   [ 'aarch64', ['auto', 'dynrec'],  'C_DYNREC',      'ARMV8LE', 1 ],
   [ 'arm',     ['auto', 'dynrec'],  'C_DYNREC',      'ARMV7LE', 1 ],
 # [  ???       ['auto', 'dynrec'],  'C_DYNREC',      'ARMV4LE', 0 ], # ARMv6 or older (?)
-  [ 'ppc64',   ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1 ], # for meson >= 0.47.2
-  [ 'ppc64le', ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1 ], # for meson <  0.47.2
-  [ 'ppc',     ['auto', 'dynrec'],  'C_DYNREC',      'POWERPC', 1 ],
+# [ 'ppc64',   ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1 ], # for meson >= 0.47.2 # SVN r4424 broke compilation of PPC64 backend
+# [ 'ppc64le', ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1 ], # for meson <  0.47.2 # SVN r4424 broke compilation of PPC64 backend
+# [ 'ppc',     ['auto', 'dynrec'],  'C_DYNREC',      'POWERPC', 1 ],                       # SVN r4424 broke compilation of PPC backend
 # [ 'mips',    ['auto', 'dynrec'],  'C_DYNREC',      'MIPSEL',  ? ], # disabled in old buildsystem, but code is still there
 ]
 

@@ -113,9 +113,11 @@ if host_machine.endian() == 'big'
 endif
 
 # Non-4K memory page size is supported only for ppc64 at the moment.
-if host_machine.cpu_family() in ['ppc64', 'ppc64le']
-  conf_data.set('PAGESIZE', 65536)
-endif
+# TODO re-enable ppc dynrec while working on W^X stuff
+#      disabled because SVN r4424 broke compilation of ppc backends
+#if host_machine.cpu_family() in ['ppc64', 'ppc64le']
+#  conf_data.set('PAGESIZE', 65536)
+#endif
 
 set_prio_code = '''
 #include <sys/resource.h>
