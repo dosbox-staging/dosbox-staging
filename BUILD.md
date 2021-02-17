@@ -30,7 +30,6 @@ notes below.
     - [Build a Haiku Binary](#build-a-haiku-binary)
   - [Additional Tips](#additional-tips)
     - [Compiler variations](#compiler-variations)
-    - [Release types](#release-types)
     - [Build Results, Rebuilding, and Cleaning](#build-results-rebuilding-and-cleaning)
     - [CCache](#ccache)
     - [Optimization Modifiers](#optimization-modifiers)
@@ -249,68 +248,6 @@ common options to the **list-build-dependencies.sh** and **build.sh** scripts:
   compiler (if available in your package manager)
 - `--bit-depth 32`, to build a 32-bit binary instead of 64-bit
 
-### Release types
-
-Build release types includes:
-
-- **release**, optimizes the binary and disables some checks, such as
-  assertions.
-- **debug**, adds debug symbols and disables optimizations for ideal debugging.
-  - You can run the resulting binary in the GNU debugger: `gdb /path/to/
-    dosbox`, followed by `run mygame.bat`
-- **pgotrain** adds Profile Guided Optimization (PGO) tracking instrumentation
-  to the compiled binary.
-
-  This allows the recording of profile statistics that can be used to compile a
-  PGO-optimized binary. Note that PGO optimization is different from
-  Automatic Feedback Directed Optimization (AutoFDO) mentioned below.
-
-  After compiling your PGO binary, the build script presents instructions
-  describing how to generate and use the profiling data.
-
-- **warnmore**, displays additional helpful C and C++ warnings for developers.
-- **fdotrain**, add tracing symbols used to generate AutoFDO sampling data.
-- **$SANITIZER TYPE**, builds a binary instrumented with code to catch issues at
-  runtime that relate to the type of sanitizer being used. For example: memory
-  leaks, threading issues, and so on. This is for Linux and macOS only.
-
-  - see `./scripts/build.sh --help` for a list of sanitizer-types that are
-    available.
-  - Run your binary like normal and it will generate output describing
-    problematic behavior
-  - Some sanitizers accept runtime options via an environment variables,
-    such as `ASAN_OPTIONS`, described here:
-    <https://github.com/google/sanitizers/wiki/AddressSanitizerFlags>
-
-### Build Results, Rebuilding, and Cleaning
-
-After building, your `dosbox` or `dosbox.exe` binary will reside inside
-`./dosbox-staging/src/`.
-
-The build script records the prior build type and will clean if needed between
-builds.  To manually remove all intermediate object files and ephemeral
-auto-tools outputs, run `make distclean`.
-
-To additionally remove all files except for the repository files, use `git
-clean -fdx`.
-
-### CCache
-
-The build script will make use of ccache, which saves compiled objects for
-potential re-use in future builds (hence the name, "cache") to speed up build
-times. If you performed the one-time installation step above, then you will
-already have ccache installed.
-
-Simply having `ccache` in your path is sufficient to use it; you do not
-need to invasively symlink `/usr/bin/gcc` -> `ccache`.
-
-The build script enables ccache's object compression, which significantly
-reduces the size of the cache. It will also display cache statistics after each
-build. To see more details, run `ccache -s`.
-
-To learn more about ccache run `ccache -h`, and read
-<https://ccache.dev/manual/latest.html>
-
 ### Optimization Modifiers
 
 The following modifier flags can be added when building a **release** type:
@@ -455,7 +392,8 @@ the build with `./scripts/build.sh -c <gcc or clang> -t release -m lto -m fdo`.
 
 ### Make a debug build
 
-Install dependencies listed in README.md.
+Install dependencies listed in README.md. Installing `ccache` is optional,
+but highly recommended - Meson will use it to speed up the build process.
 
 Build steps :
 
@@ -468,6 +406,19 @@ meson compile -C build
 # for older versions
 ninja -C build
 ```
+
+### Other build types
+
+Meson supports several build types, appropriate for various situations:
+`release` for creating optimized release binaries, `debug` (default) for
+builds appropriate for development or `plain` for packaging.
+
+``` shell
+meson setup -Dbuildtype=release build
+```
+Detailed documentation: [Meson: Core options][meson-core]
+
+[meson-core]: https://mesonbuild.com/Builtin-options.html#core-options
 
 ### Disabling unwanted dependencies
 
