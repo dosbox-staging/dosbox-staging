@@ -12,7 +12,6 @@ notes below.
 
 - [Build Script](#build-script)
   - [Introduction](#introduction)
-  - [Requirements](#requirements)
   - [Windows Procedures](#windows-procedures)
     - [Install MSYS2](#install-msys2)
     - [Clone and Build a Windows Binary](#clone-and-build-a-windows-binary)
@@ -37,18 +36,6 @@ notes below.
     - [Prerequisites for AutoFDO](#prerequisites-for-autofdo)
     - [Record Data for AutoFDO Builds](#record-data-for-autofdo-builds)
     - [Build Using AutoFDO Data](#build-using-autofdo-data)
-
-## Requirements
-
-- **Windows newer than XP**
-  - **NTFS-based C:**, because msys2 doesn't work on FAT filesystems
-- **MacOS** 10.x
-- **Haiku** up-to-date
-- **Ubuntu** 16.04 or newer
-- **Fedora** up-to-date
-- **RedHat or CentOS** 7 or newer
-- **Arch-based distribution** up-to-date
-- **OpenSUSE Leap** 15 or newer
 
 ## Windows Procedures
 
