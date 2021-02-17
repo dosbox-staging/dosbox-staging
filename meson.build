@@ -159,7 +159,6 @@ fluid_dep     = optional_dep
 opus_dep      = optional_dep
 mt32emu_dep   = optional_dep
 png_dep       = optional_dep
-z_dep         = optional_dep
 curses_dep    = optional_dep # necessary for debugger builds
 alsa_dep      = optional_dep # Linux-only
 coreaudio_dep = optional_dep # macOS-only
@@ -196,7 +195,6 @@ endif
 
 if get_option('use_png')
   png_dep = dependency('libpng', not_found_message : msg.format('use_png'))
-  z_dep = dependency('zlib') # libpng in Ubuntu 16.04 needs zlib linked explicitly
 endif
 
 if get_option('enable_debugger') != 'none'
