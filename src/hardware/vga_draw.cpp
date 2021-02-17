@@ -527,8 +527,10 @@ static Bit8u* VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line) {
 	return TempLine+16;
 }
 */
+
 // combined 8/9-dot wide text mode 16bpp line drawing function
-static Bit8u* VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line) {
+static uint8_t *VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line)
+{
 	// keep it aligned:
 	Bit16u* draw = ((Bit16u*)TempLine) + 16 - vga.draw.panning;
 	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart); // pointer to chars+attribs
@@ -568,11 +570,10 @@ static Bit8u* VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line) {
 		}
 	}
 	// draw the text mode cursor if needed
-	if ((vga.draw.cursor.count&0x10) && (line >= vga.draw.cursor.sline) &&
-		(line <= vga.draw.cursor.eline) && vga.draw.cursor.enabled) {
+	if (!SkipCursor(vidstart, line)) {
 		// the adress of the attribute that makes up the cell the cursor is in
-		Bits attr_addr = (vga.draw.cursor.address-vidstart) >> 1;
-		if (attr_addr >= 0 && attr_addr < (Bits)vga.draw.blocks) {
+		const Bitu attr_addr = (vga.draw.cursor.address - vidstart) >> 1;
+		if (attr_addr < vga.draw.blocks) {
 			Bitu index = attr_addr * (vga.draw.char9dot? 18:16);
 			draw = (Bit16u*)(&TempLine[index]) + 16 - vga.draw.panning;
 			
