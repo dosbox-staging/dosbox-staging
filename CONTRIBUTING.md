@@ -6,18 +6,17 @@ so here are links to the major sections:
 
 - [1. Feature requests and bug reports](#feature-requests-and-bug-reports)
 - [2. Find something to work on](#find-something-to-work-on)
-- [3. Build dosbox-staging](#build-dosbox-staging)
-- [4. Contributing code](#contributing-code)
-  - [4.1. Coding style](#coding-style)
-    - [4.1.1. Language](#language)
-    - [4.1.2. Code Formatting](#code-formatting)
-    - [4.1.3. Additional Style Rules](#additional-style-rules)
-  - [4.2. Submitting patches / Pull Requests](#submitting-patches--pull-requests)
-    - [4.2.1. Commit messages](#commit-messages)
-    - [4.2.2. Commit messages for patches authored by someone else](#commit-messages-for-patches-authored-by-someone-else)
-- [5. Tools](#tools)
-  - [5.1. Using clang-format](#using-clang-format)
-  - [5.2. Summarize warnings](#summarize-warnings)
+- [3. Contributing code](#contributing-code)
+  - [3.1. Coding style](#coding-style)
+    - [3.1.1. Language](#language)
+    - [3.1.2. Code Formatting](#code-formatting)
+    - [3.1.3. Additional Style Rules](#additional-style-rules)
+  - [3.2. Submitting patches / Pull Requests](#submitting-patches--pull-requests)
+    - [3.2.1. Commit messages](#commit-messages)
+    - [3.2.2. Commit messages for patches authored by someone else](#commit-messages-for-patches-authored-by-someone-else)
+- [4. Tools](#tools)
+  - [4.1. Using clang-format](#using-clang-format)
+  - [4.2. Summarize warnings](#summarize-warnings)
 
 # Feature requests and bug reports
 
@@ -68,37 +67,6 @@ discuss it with us early, e.g. by creating a new bugtracker issue.
 [pvs]: https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
 [code-analysis]: https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
 [coverity]: https://scan.coverity.com/projects/dosbox-staging
-
-# Build dosbox-staging
-
-Install dependencies listed in [README.md][readme-b].  You can also learn
-longer list of dependencies for other build systems by running script
-`./scripts/list-build-dependencies.sh`.
-
-Detailed build instructions are in [BUILD.md][build-doc] file.
-
-For ongoing development it's recommended to install `ccache` (meson will pick
-it up automatically for speeding up builds).
-
-Example build instructions appropriate for development:
-
-``` shell
-meson setup build
-ninja -C build
-```
-
-With the new meson versions you can run:
-
-``` shell
-meson setup build
-meson compile -C build
-```
-
-Command `meson configure` summarizes all configuration options you can pass to
-`meson setup` (or describe how build directory is currently configured).
-
-[readme-b]: https://github.com/dosbox-staging/dosbox-staging#build-instructions
-[build-doc]: https://github.com/dosbox-staging/dosbox-staging/blob/master/BUILD.md
 
 # Contributing code
 
