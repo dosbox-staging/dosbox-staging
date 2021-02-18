@@ -18,9 +18,6 @@ notes below.
   - [Linux Procedures](#linux-procedures)
     - [Install Dependencies under Linux](#install-dependencies-under-linux)
     - [Build a Linux Binary](#build-a-linux-binary)
-  - [Haiku Procedures](#haiku-procedures)
-    - [Install Dependencies under Haiku](#install-dependencies-under-haiku)
-    - [Build a Haiku Binary](#build-a-haiku-binary)
   - [Additional Tips](#additional-tips)
     - [Compiler variations](#compiler-variations)
     - [Build Results, Rebuilding, and Cleaning](#build-results-rebuilding-and-cleaning)
@@ -109,50 +106,6 @@ notes below.
   now. Simply drop the `-m lto` in your build line.
 
 1. To build a debug binary, use `-t debug` in place of `-t release -m lto`.
-
-## Haiku Procedures
-
-### Install Dependencies under Haiku
-
-1. Clone the repository: `git clone
-   https://github.com/dosbox-staging/dosbox-staging.git`
-1. Change directories into the repo: `cd dosbox-staging`
-1. (🏁 first-time-only) Install dependencies:
-
-   `pkgman install -y $(./scripts/list-build-dependencies.sh -m haikuports -c
-   clang -v 9)`
-
-### Build a Haiku Binary
-
-1. Build an optimized binary using various compilers:
-
-- Clang: `./scripts/build.sh --compiler clang -t release -m lto
-  --prefix=$HOME/config/non-packaged`
-- GCC: `./scripts/build.sh -c gcc -t release --prefix=$HOME/config/non-packaged`
-
-1. To build a debug binary, use `-t debug` in place of `-t release`.
-1. Install the binary: `make install`
-1. Edit your configuration file by running: `dosbox -editconf` and make the
-   following suggested changes (leave all other settings as-is):
-
-   ``` ini
-   [sdl]
-   windowresolution = 800x600
-   output = texturenb
-   texture_renderer = software
-
-   [renderer]
-   scaler = none
-   glshader = none
-
-   [cpu]
-   core = normal
-   ```
-
-   The state of Haiku's GPU Hardware-acceleration is being discussed here:
-   https://discuss.haiku-os.org/t/state-of-accelerated-opengl/4163
-
-1. You may now run `dosbox` inside any directory in your Terminal.
 
 ## Additional Tips
 
