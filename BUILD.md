@@ -1,3 +1,23 @@
+## Minimum build requirements
+
+- C/C++ compiler with support for C++14
+- SDL >= 2.0.2
+- Meson >= 0.49.0 or Visual Studio Community Edition
+- OS that is mostly POSIX-compliant or up-to-date Windows system
+
+All other dependencies are optional and can be disabled while configuring the
+build (in `meson setup` step).
+
+## OS-specific instructions
+
+Instructions in this article assume you're using Linux or BSD but will work
+on any modern system. Documentation for programmers using other systems:
+[Windows], [macOS], [Haiku].
+
+[Windows]: docs/build-windows.md
+[macOS]: docs/build-macos.md
+[Haiku]: docs/build-haiku.md
+
 ## Meson build snippets
 
 ### Make a debug build
@@ -12,12 +32,13 @@ Build steps:
 meson setup build
 ninja -C build
 ```
+Directory `build` will contain all compiled files.
 
 ### Other build types
 
 Meson supports several build types, appropriate for various situations:
 `release` for creating optimized release binaries, `debug` (default) for
-builds appropriate for development or `plain` for packaging.
+for development or `plain` for packaging.
 
 ``` shell
 meson setup -Dbuildtype=release build
@@ -30,10 +51,10 @@ Detailed documentation: [Meson: Core options][meson-core]
 
 The majority of dependencies are optional and can be disabled during build.
 
-For example, to compile without SDL2\_net and OpenGL dependencies try:
+For example, to compile without OpenGL dependency try:
 
 ``` shell
-meson setup -Duse_sdl2_net=false -Duse_opengl=false build
+meson setup -Duse_opengl=false build
 ninja -C build
 ```
 

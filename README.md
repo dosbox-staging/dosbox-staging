@@ -165,7 +165,7 @@ These two steps will ensure that MSVC finds and links all dependencies.
 Start Visual Studio and open file: `vs\dosbox.sln`. Make sure you have `x64`
 selected as the solution platform.  Use Ctrl+Shift+B to build all projects.
 
-### Windows (MSYS2, MinGW), macOS (MacPorts), Haiku OS, others
+### Windows (MSYS2), macOS (MacPorts), Haiku, others
 
 Instructions for other build systems and operating systems are documented
 in [BUILD.md](BUILD.md).
