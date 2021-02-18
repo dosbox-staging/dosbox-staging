@@ -182,20 +182,20 @@ void SoftLimiter::ScaleOrCopy(const std::vector<float> &in,
 			LinearScale(precross_peak_pos, in_end, out_start,
 			            postpeak_scalar);
 		}
-		limited_ms++;
+		limited_tally++;
 
 		// We have an existing peak ...
 	} else if (global_peak > bounds) {
 		// so scale the entire sequence a a ratio of the peak.
 		const auto current_scalar = prescalar * bounds / global_peak;
 		LinearScale(in_start, in_end, out_start, current_scalar);
-		limited_ms++;
+		limited_tally++;
 
 		// The current sequence is fully inbounds ...
 	} else {
 		// so simply prescale the entire sequence.
 		LinearScale(in_start, in_end, out_start, prescalar);
-		++non_limited_ms;
+		++non_limited_tally;
 	}
 }
 
@@ -254,22 +254,14 @@ void SoftLimiter::Release() noexcept
 // Print helpful statistics about the signal thus-far
 void SoftLimiter::PrintStats() const
 {
-	// Only print information if we have more than 30 seconds of data
-	constexpr auto ms_per_minute = 1000 * 60;
-	const auto ms_total = static_cast<double>(limited_ms) + non_limited_ms;
-	const auto minutes_total = ms_total / ms_per_minute;
-	if (minutes_total < 0.5)
-		return;
-
-	// Only print information if there was at least some amplitude
 	const auto peak_sample = std::max(global_peaks.left, global_peaks.right);
-	constexpr auto two_percent_of_max = 0.02f * bounds;
-	if (peak_sample < two_percent_of_max)
+	const auto peak_ratio = std::min(peak_sample / bounds, 1.0f);
+
+	// Only print information if the channel reached 2% of full amplitude
+	if (peak_ratio < 0.02f)
 		return;
 
-	// Inform the user what percent of the dynamic-range was used
-	auto peak_ratio = peak_sample / bounds;
-	peak_ratio = std::min(peak_ratio, 1.0f);
+	// Inform the user what percent of the dynamic-range was reached
 	LOG_MSG("%s: Peak amplitude reached %.0f%% of max",
 	        channel_name.c_str(), 100 * static_cast<double>(peak_ratio));
 
@@ -282,15 +274,16 @@ void SoftLimiter::PrintStats() const
 		        channel_name.c_str(), channel_name.c_str(),
 		        static_cast<double>(suggested_mix_val));
 	}
+
 	// Inform if more than 20% of the stream required limiting
-	const auto time_ratio = limited_ms / (ms_total + 1); // one ms avoids div-by-0
-	if (time_ratio > 0.2) {
-		const auto minutes_limited = static_cast<double>(limited_ms) / ms_per_minute;
-		const auto suggested_mix_val = 100 * (1 - time_ratio) *
+	const auto total_tally = limited_tally + non_limited_tally;
+	const auto limited_ratio = limited_tally / (total_tally + 1.0); // +1 avoid div-by-0
+	if (limited_ratio > 0.2) {
+		const auto suggested_mix_pct = 100 * (1 - limited_ratio) *
 		                               static_cast<double>(scale);
-		LOG_MSG("%s: %.1f%% or %.2f of %.2f minutes needed limiting, consider: mixer %s %.0f",
-		        channel_name.c_str(), 100 * time_ratio, minutes_limited,
-		        minutes_total, channel_name.c_str(), suggested_mix_val);
+		LOG_MSG("%s: %.1f%% of the audio needed limiting, consider: mixer %s %.0f",
+		        channel_name.c_str(), 100 * limited_ratio,
+		        channel_name.c_str(), suggested_mix_pct);
 	}
 }
 

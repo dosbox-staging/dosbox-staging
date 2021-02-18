@@ -154,8 +154,8 @@ private:
 	const AudioFrame &prescale; // values inside struct are mutable
 	AudioFrame global_peaks = {0, 0};
 	AudioFrame tail_frame = {0, 0};
-	int limited_ms = 0;
-	int non_limited_ms = 0;
+	int limited_tally = 0;
+	int non_limited_tally = 0;
 	const uint16_t max_samples = 0;
 };
 
