@@ -460,8 +460,27 @@ void MidiHandler_mt32::Render()
 	}
 }
 
-static void mt32_init(MAYBE_UNUSED Section *sec)
-{}
+void MidiHandler_mt32::PrintStats()
+{
+	// Normally prescale is simply a float-multiplier such as 0.5, 1.0, etc.
+	// However in the case of FluidSynth, it produces 32-bit floats between
+	// -1.0 and +1.0, therefore we scale those up to the 16-bit integer
+	// range in addition to the mixer's FSYNTH levels. Before printing
+	// statistics, we need to back-out this integer multiplier.
+	limiter_ratio.left /= INT16_MAX;
+	limiter_ratio.right /= INT16_MAX;
+	soft_limiter.PrintStats();
+}
+
+static void mt32_destroy(MAYBE_UNUSED Section *sec)
+{
+	mt32_instance.PrintStats();
+}
+
+static void mt32_init(Section *sec)
+{
+	sec->AddDestroyFunction(&mt32_destroy, true);
+}
 
 void MT32_AddConfigSection(Config *conf)
 {

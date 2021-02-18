@@ -56,6 +56,7 @@ public:
 	bool Open(const char *conf) override;
 	void PlayMsg(const uint8_t *msg) override;
 	void PlaySysex(uint8_t *sysex, size_t len) override;
+	void PrintStats();
 
 private:
 	uint32_t GetMidiEventTimestamp() const;
