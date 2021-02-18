@@ -367,6 +367,9 @@
     <ClCompile Include="..\src\misc\setup.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\misc\soft_limiter.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\misc\support.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
@@ -505,6 +508,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\shell.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\soft_limiter.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\support.h">

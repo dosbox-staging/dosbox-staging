@@ -38,7 +38,7 @@ test('gtest fs_utils', fs_utils,
 #
 unit_tests = [
   {'name' : 'readerwritercircularbuffer', 'deps' : []},
-  {'name' : 'soft_limiter',               'deps' : [sdl2_dep]},
+  {'name' : 'soft_limiter',               'deps' : [sdl2_dep, libmisc_dep]},
   {'name' : 'string_utils',               'deps' : []},
   {'name' : 'setup',                      'deps' : [sdl2_dep, libmisc_dep]},
   {'name' : 'support',                    'deps' : [sdl2_dep, libmisc_dep]},

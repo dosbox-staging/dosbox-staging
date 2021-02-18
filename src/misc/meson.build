@@ -5,6 +5,7 @@ libmisc_sources = [
   'messages.cpp',
   'programs.cpp',
   'setup.cpp',
+  'soft_limiter.cpp',
   'support.cpp',
 ]
 

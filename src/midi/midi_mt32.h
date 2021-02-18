@@ -26,9 +26,9 @@
 
 #if C_MT32EMU
 
-#include <array>
 #include <memory>
 #include <thread>
+#include <vector>
 
 #define MT32EMU_API_TYPE 3
 #include <mt32emu/mt32emu.h>
@@ -42,25 +42,21 @@
 
 class MidiHandler_mt32 final : public MidiHandler {
 private:
-	static constexpr int FRAMES_PER_BUFFER = 1024; // synth granularity
-	static constexpr int SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
-
-	using render_buffer_t = std::array<float, SAMPLES_PER_BUFFER>;
-	using limited_buffer_t = std::array<int16_t, SAMPLES_PER_BUFFER>;
-	using ring_t = moodycamel::BlockingReaderWriterCircularBuffer<limited_buffer_t>;
+	using ring_t = moodycamel::BlockingReaderWriterCircularBuffer<std::vector<int16_t>>;
 	using channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 	using conditional_t = moodycamel::weak_atomic<bool>;
 
 public:
 	using service_t = std::unique_ptr<MT32Emu::Service>;
 
-	MidiHandler_mt32() : soft_limiter("MT32", limiter_ratio) {}
+	MidiHandler_mt32();
 	~MidiHandler_mt32() override;
 	void Close() override;
 	const char *GetName() const override { return "mt32"; }
 	bool Open(const char *conf) override;
 	void PlayMsg(const uint8_t *msg) override;
 	void PlaySysex(uint8_t *sysex, size_t len) override;
+	void PrintStats();
 
 private:
 	uint32_t GetMidiEventTimestamp() const;
@@ -71,18 +67,18 @@ private:
 
 	// Managed objects
 	channel_t channel{nullptr, MIXER_DelChannel};
-	limited_buffer_t buffer{};
+	std::vector<int16_t> play_buffer = {};
 	ring_t ring{4}; // Handle up to four buffers in the ring
 	service_t service{};
 	std::thread renderer{};
 	AudioFrame limiter_ratio = {1.0f, 1.0f};
-	SoftLimiter<FRAMES_PER_BUFFER> soft_limiter;
+	SoftLimiter soft_limiter;
 
 	// The following two members let us determine the total number of played
 	// frames, which is used by GetMidiEventTimestamp() to calculate a total
 	// time offset.
 	uint32_t total_buffers_played = 0;
-	uint16_t last_played_frame = 0; // relative frame-offset in the buffer
+	uint16_t last_played_frame = 0; // relative frame-offset in the play buffer
 
 	conditional_t keep_rendering = false;
 	bool is_open = false;

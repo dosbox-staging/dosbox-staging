@@ -26,6 +26,7 @@
 #include <memory>
 #include <string>
 #include <unistd.h>
+#include <vector>
 
 #include "control.h"
 #include "dma.h"
@@ -50,7 +51,6 @@ constexpr float AUDIO_SAMPLE_MIN = static_cast<float>(MIN_AUDIO);
 
 // Buffer and memory constants
 constexpr int BUFFER_FRAMES = 48;
-constexpr int BUFFER_SAMPLES = BUFFER_FRAMES * 2; // 2 samples/frame (left & right)
 constexpr uint32_t RAM_SIZE = 1024 * 1024;        // 1 MiB
 
 // DMA transfer size and rate constants
@@ -113,7 +113,6 @@ struct VoiceCtrl {
 };
 
 // Collection types involving constant quantities
-using accumulator_array_t = std::array<float, BUFFER_SAMPLES>;
 using address_array_t = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
 using autoexec_array_t = std::array<AutoexecObject, 2>;
 using pan_scalars_array_t = std::array<AudioFrame, PAN_POSITIONS>;
@@ -124,7 +123,7 @@ using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
 using mixer_channel_ptr_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
 // A Voice is used by the Gus class and instantiates 32 of these.
-// Each voice represents a single "mono" stream of audio having its own
+// Each voice represents a single "mono" render_buffer of audio having its own
 // characteristics defined by the running program, such as:
 //   - being 8bit or 16bit
 //   - having a "position" along a left-right axis (panned)
@@ -135,12 +134,11 @@ using mixer_channel_ptr_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelCha
 class Voice {
 public:
 	Voice(uint8_t num, VoiceIrq &irq) noexcept;
-	void GenerateSamples(accumulator_array_t &stream,
+	void GenerateSamples(std::vector<float> &render_buffer,
 	                     const ram_array_t &ram,
 	                     const vol_scalars_array_t &vol_scalars,
 	                     const pan_scalars_array_t &pan_scalars,
-	                     const int requested_frames,
-	                     const bool dac_enabled);
+	                     uint16_t requested_frames);
 
 	uint8_t ReadVolState() const noexcept;
 	uint8_t ReadWaveState() const noexcept;
@@ -167,8 +165,8 @@ private:
 	float GetSample(const ram_array_t &ram) noexcept;
 	int32_t PopWavePos() noexcept;
 	float PopVolScalar(const vol_scalars_array_t &vol_scalars);
-	float Read8BitSample(const ram_array_t &ram, const int32_t addr) const noexcept;
-	float Read16BitSample(const ram_array_t &ram, const int32_t addr) const noexcept;
+	float Read8BitSample(const ram_array_t &ram, int32_t addr) const noexcept;
+	float Read16BitSample(const ram_array_t &ram, int32_t addr) const noexcept;
 	uint8_t ReadCtrlState(const VoiceCtrl &ctrl) const noexcept;
 	void IncrementCtrlPos(VoiceCtrl &ctrl, bool skip_loop) noexcept;
 	bool UpdateCtrlState(VoiceCtrl &ctrl, uint8_t state) noexcept;
@@ -202,8 +200,8 @@ using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
 //   - Reads or provides audio samples via direct memory access (DMA)
 //   - Provides shared resources to all of the Voices, such as the volume
 //     reducing table, constant-power panning table, and IRQ states.
-//   - Integrates the audio from each active voice into a 16-bit stereo output
-//     stream without resampling.
+//   - Accumulates the audio from each active voice into a floating point
+//     vector (the render_buffer), without resampling.
 //   - Populates an autoexec line (ULTRASND=...) with its port, irq, and dma
 //     addresses.
 //
@@ -247,7 +245,7 @@ private:
 	void PopulatePanScalars() noexcept;
 	void PopulateVolScalars() noexcept;
 	void PrepareForPlayback() noexcept;
-	size_t ReadFromPort(const size_t port, const size_t iolen);
+	size_t ReadFromPort(size_t port, size_t iolen);
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
 	void SetLevelCallback(const AudioFrame &level);
@@ -260,7 +258,7 @@ private:
 
 	// Collections
 	vol_scalars_array_t vol_scalars = {{}};
-	accumulator_array_t accumulator = {{0}};
+	std::vector<float> render_buffer = {};
 	pan_scalars_array_t pan_scalars = {{}};
 	ram_array_t ram = {{0u}};
 	read_io_array_t read_handlers = {};   // std::functions
@@ -275,8 +273,8 @@ private:
 	// Struct and pointer members
 	VoiceIrq voice_irq = {};
 	AudioFrame mixer_level = {1, 1};
-	SoftLimiter<BUFFER_FRAMES> soft_limiter;
-	Voice *voice = nullptr;
+	SoftLimiter soft_limiter;
+	Voice *target_voice = nullptr;
 	DmaChannel *dma_channel = nullptr;
 	mixer_channel_ptr_t audio_channel{nullptr, MIXER_DelChannel};
 	uint8_t &adlib_command_reg = adlib_commandreg;
@@ -429,30 +427,27 @@ float Voice::GetSample(const ram_array_t &ram) noexcept
 	return sample;
 }
 
-void Voice::GenerateSamples(accumulator_array_t &stream,
+void Voice::GenerateSamples(std::vector<float> &render_buffer,
                             const ram_array_t &ram,
                             const vol_scalars_array_t &vol_scalars,
                             const pan_scalars_array_t &pan_scalars,
-                            const int requested_frames,
-                            const bool dac_enabled)
+                            const uint16_t requested_frames)
 {
 	if (vol_ctrl.state & wave_ctrl.state & CTRL::DISABLED)
 		return;
 
 	// Setup our iterators and pan percents
-	auto v = stream.begin();
-	const auto last_v = v + static_cast<size_t>(requested_frames) * 2;
-	assert(last_v <= stream.end());
+	auto val = render_buffer.begin();
+	const auto last_val = val + requested_frames * 2; // L * R channels
+	assert(last_val <= render_buffer.end());
 	const auto pan_scalar = pan_scalars.at(pan_position);
 
-	// Add the samples to the stream, angled in L-R space
-	while (v < last_v) {
+	// Add the samples to the render_buffer, angled in L-R space
+	while (val < last_val) {
 		float sample = GetSample(ram);
 		sample *= PopVolScalar(vol_scalars);
-		if (dac_enabled) {
-			*v++ += sample * pan_scalar.left;
-			*v++ += sample * pan_scalar.right;
-		}
+		*val++ += sample * pan_scalar.left;
+		*val++ += sample * pan_scalar.right;
 	}
 	// Keep track of how many ms this voice has generated
 	Is8Bit() ? generated_8bit_ms++ : generated_16bit_ms++;
@@ -589,7 +584,8 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 }
 
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
-        : soft_limiter("GUS", mixer_level),
+        : render_buffer(BUFFER_FRAMES * 2), // 2 samples/frame (left & right)
+          soft_limiter("GUS", mixer_level, BUFFER_FRAMES),
           port_base(port - 0x200u),
           dma2(dma),
           irq1(irq),
@@ -603,7 +599,6 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	RegisterIoHandlers();
 
 	// Register the Audio and DMA channels
-
 	const auto mixer_callback = std::bind(&Gus::AudioCallback, this,
 	                                      std::placeholders::_1);
 	audio_channel = mixer_channel_ptr_t(MIXER_AddChannel(mixer_callback, 1, "GUS"),
@@ -645,22 +640,26 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 {
 	uint16_t generated_frames = 0;
 	while (generated_frames < requested_frames) {
-		// Zero the accumulator array values
-		for (auto &val : accumulator)
-			val = 0;
-
 		const uint16_t frames = static_cast<uint16_t>(
 		        std::min(BUFFER_FRAMES, requested_frames - generated_frames));
 
-		auto v = voices.begin();
-		const auto v_end = v + active_voices;
-		while (v < v_end && *v) {
-			v->get()->GenerateSamples(accumulator, ram, vol_scalars,
-			                          pan_scalars, frames, dac_enabled);
-			++v;
+		// Zero our buffer. The audio sequence for each active voice
+		// will be accumulated one at a time by the buffer's elements.
+		assert(frames <= render_buffer.size());
+		std::fill(render_buffer.begin(), render_buffer.end(), 0);
+
+		if (dac_enabled) {
+			auto voice = voices.begin();
+			const auto last_voice = voice + active_voices;
+			while (voice < last_voice && *voice) {
+				voice->get()->GenerateSamples(render_buffer,
+				                              ram, vol_scalars,
+				                              pan_scalars, frames);
+				++voice;
+			}
 		}
-		const auto &out_stream = soft_limiter.Apply(accumulator, frames);
-		audio_channel->AddSamples_s16(frames, out_stream.data());
+		const auto out = soft_limiter.Process(render_buffer, frames);
+		audio_channel->AddSamples_s16(frames, out.data());
 		CheckVoiceIrq();
 		generated_frames += frames;
 	}
@@ -845,12 +844,12 @@ void Gus::PopulateVolScalars() noexcept
 {
 	constexpr auto VOLUME_LEVEL_DIVISOR = 1.0 + DELTA_DB;
 	double scalar = 1.0;
-	auto v = vol_scalars.end();
+	auto volume = vol_scalars.end();
 	// The last element starts at 1.0 and we divide downward to
 	// the first element that holds zero, which is directly assigned
 	// after the loop.
-	while (v != vol_scalars.begin()) {
-		*(--v) = static_cast<float>(scalar);
+	while (volume != vol_scalars.begin()) {
+		*(--volume) = static_cast<float>(scalar);
 		scalar /= VOLUME_LEVEL_DIVISOR;
 	}
 	vol_scalars.front() = 0.0f;
@@ -918,8 +917,8 @@ void Gus::PopulatePanScalars() noexcept
 void Gus::PrepareForPlayback() noexcept
 {
 	// Initialize the voice states
-	for (auto &v : voices)
-		v->ResetCtrls();
+	for (auto &voice : voices)
+		voice->ResetCtrls();
 
 	// Initialize the OPL emulator state
 	adlib_command_reg = ADLIB_CMD_DEFAULT;
@@ -941,13 +940,13 @@ void Gus::PrintStats()
 	uint32_t combined_16bit_ms = 0u;
 	uint32_t used_8bit_voices = 0u;
 	uint32_t used_16bit_voices = 0u;
-	for (const auto &v : voices) {
-		if (v->generated_8bit_ms) {
-			combined_8bit_ms += v->generated_8bit_ms;
+	for (const auto &voice : voices) {
+		if (voice->generated_8bit_ms) {
+			combined_8bit_ms += voice->generated_8bit_ms;
 			used_8bit_voices++;
 		}
-		if (v->generated_16bit_ms) {
-			combined_16bit_ms += v->generated_16bit_ms;
+		if (voice->generated_16bit_ms) {
+			combined_16bit_ms += voice->generated_16bit_ms;
 			used_16bit_voices++;
 		}
 	}
@@ -1067,7 +1066,7 @@ uint16_t Gus::ReadFromRegister()
 		// to the voice-specific register switch below.
 	}
 
-	if (!voice)
+	if (!target_voice)
 		return (selected_register == 0x80 || selected_register == 0x8d)
 		               ? 0x0300
 		               : 0u;
@@ -1075,23 +1074,24 @@ uint16_t Gus::ReadFromRegister()
 	// Registers that read from from the current voice
 	switch (selected_register) {
 	case 0x80: // Voice wave control read register
-		return static_cast<uint16_t>(voice->ReadWaveState() << 8);
+		return static_cast<uint16_t>(target_voice->ReadWaveState() << 8);
 	case 0x82: // Voice MSB start address register
-		return static_cast<uint16_t>(voice->wave_ctrl.start >> 16);
+		return static_cast<uint16_t>(target_voice->wave_ctrl.start >> 16);
 	case 0x83: // Voice LSW start address register
-		return static_cast<uint16_t>(voice->wave_ctrl.start);
+		return static_cast<uint16_t>(target_voice->wave_ctrl.start);
 	case 0x89: // Voice volume register
 	{
-		const int i = ceil_sdivide(voice->vol_ctrl.pos, VOLUME_INC_SCALAR);
+		const int i = ceil_sdivide(target_voice->vol_ctrl.pos,
+		                           VOLUME_INC_SCALAR);
 		assert(i >= 0 && i < static_cast<int>(vol_scalars.size()));
 		return static_cast<uint16_t>(i << 4);
 	}
 	case 0x8a: // Voice MSB current address register
-		return static_cast<uint16_t>(voice->wave_ctrl.pos >> 16);
+		return static_cast<uint16_t>(target_voice->wave_ctrl.pos >> 16);
 	case 0x8b: // Voice LSW current address register
-		return static_cast<uint16_t>(voice->wave_ctrl.pos);
+		return static_cast<uint16_t>(target_voice->wave_ctrl.pos);
 	case 0x8d: // Voice volume control register
-		return static_cast<uint16_t>(voice->ReadVolState() << 8);
+		return static_cast<uint16_t>(target_voice->ReadVolState() << 8);
 	default:
 #if LOG_GUS
 		LOG_MSG("GUS: Register %#x not implemented for reading",
@@ -1151,7 +1151,7 @@ void Gus::StopPlayback()
 	timer_ctrl = 0u;
 	sample_ctrl = 0u;
 
-	voice = nullptr;
+	target_voice = nullptr;
 	voice_index = 0u;
 	active_voices = 0u;
 
@@ -1251,7 +1251,7 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		break;
 	case 0x302:
 		voice_index = val & 31;
-		voice = voices.at(voice_index).get();
+		target_voice = voices.at(voice_index).get();
 		break;
 	case 0x303:
 		selected_register = static_cast<uint8_t>(val);
@@ -1301,7 +1301,7 @@ void Gus::WriteToRegister()
 {
 	// Registers that write to the general DSP
 	switch (selected_register) {
-	case 0xe: // Set active voice register
+	case 0xe: // Set number of active voices
 		selected_register = register_data >> 8; // Jazz Jackrabbit needs this
 		{
 			const uint8_t num_voices = 1 + ((register_data >> 8) & 31);
@@ -1365,67 +1365,67 @@ void Gus::WriteToRegister()
 	default:
 		break;
 		// If the above weren't triggered, then fall-through
-		// to the voice-specific switch below.
+		// to the target_voice-specific switch below.
 	}
 
-	// All the registers below here involve voices
-	if (!voice)
+	// All the registers below operated on the target voice
+	if (!target_voice)
 		return;
 
 	uint8_t data = 0;
 	// Registers that write to the current voice
 	switch (selected_register) {
 	case 0x0: // Voice wave control register
-		if (voice->UpdateWaveState(register_data >> 8))
+		if (target_voice->UpdateWaveState(register_data >> 8))
 			CheckVoiceIrq();
 		break;
 	case 0x1: // Voice rate control register
-		voice->WriteWaveRate(register_data);
+		target_voice->WriteWaveRate(register_data);
 		break;
 	case 0x2: // Voice MSW start address register
-		UpdateWaveMsw(voice->wave_ctrl.start);
+		UpdateWaveMsw(target_voice->wave_ctrl.start);
 		break;
 	case 0x3: // Voice LSW start address register
-		UpdateWaveLsw(voice->wave_ctrl.start);
+		UpdateWaveLsw(target_voice->wave_ctrl.start);
 		break;
 	case 0x4: // Voice MSW end address register
-		UpdateWaveMsw(voice->wave_ctrl.end);
+		UpdateWaveMsw(target_voice->wave_ctrl.end);
 		break;
 	case 0x5: // Voice LSW end address register
-		UpdateWaveLsw(voice->wave_ctrl.end);
+		UpdateWaveLsw(target_voice->wave_ctrl.end);
 		break;
 	case 0x6: // Voice volume rate register
-		voice->WriteVolRate(register_data >> 8);
+		target_voice->WriteVolRate(register_data >> 8);
 		break;
 	case 0x7: // Voice volume start register  EEEEMMMM
 		data = register_data >> 8;
 		// Don't need to bounds-check the value because it's implied:
 		// 'data' is a uint8, so is 255 at most. 255 << 4 = 4080, which
 		// falls within-bounds of the 4096-long vol_scalars array.
-		voice->vol_ctrl.start = (data << 4) * VOLUME_INC_SCALAR;
+		target_voice->vol_ctrl.start = (data << 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0x8: // Voice volume end register  EEEEMMMM
 		data = register_data >> 8;
 		// Same as above regarding bound-checking.
-		voice->vol_ctrl.end = (data << 4) * VOLUME_INC_SCALAR;
+		target_voice->vol_ctrl.end = (data << 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0x9: // Voice current volume register
 		// Don't need to bounds-check the value because it's implied:
 		// reg data is a uint16, and 65535 >> 4 takes it down to 4095,
 		// which is the last element in the 4096-long vol_scalars array.
-		voice->vol_ctrl.pos = (register_data >> 4) * VOLUME_INC_SCALAR;
+		target_voice->vol_ctrl.pos = (register_data >> 4) * VOLUME_INC_SCALAR;
 		break;
 	case 0xa: // Voice MSW current address register
-		UpdateWaveMsw(voice->wave_ctrl.pos);
+		UpdateWaveMsw(target_voice->wave_ctrl.pos);
 		break;
 	case 0xb: // Voice LSW current address register
-		UpdateWaveLsw(voice->wave_ctrl.pos);
+		UpdateWaveLsw(target_voice->wave_ctrl.pos);
 		break;
 	case 0xc: // Voice pan pot register
-		voice->WritePanPot(register_data >> 8);
+		target_voice->WritePanPot(register_data >> 8);
 		break;
 	case 0xd: // Voice volume control register
-		if (voice->UpdateVolState(register_data >> 8))
+		if (target_voice->UpdateVolState(register_data >> 8))
 			CheckVoiceIrq();
 		break;
 	default:
