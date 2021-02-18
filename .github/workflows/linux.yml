@@ -69,11 +69,23 @@ jobs:
             build_flags: -Dwarning_level=3
             max_warnings: 91
 
+          - name: GCC, minimum build
+            os: ubuntu-20.04
+            build_flags: --wrap-mode=nofallback -Duse_fluidsynth=false -Duse_sdl2_net=false -Duse_opengl=false -Duse_fluidsynth=false -Duse_mt32emu=false -Duse_opusfile=false -Duse_png=false -Duse_alsa=false
+            min_dependencies: true
+            max_warnings: -1
+
     steps:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update
 
-      - name: Install C++ compiler and libraries
+      - name: Install dependencies (minimum set)
+        if:   matrix.conf.min_dependencies
+        run: |
+          sudo apt-get install -y build-essential ccache meson libsdl2-dev
+
+      - name: Install dependencies
+        if:   matrix.conf.min_dependencies != true
         run: |
           sudo apt-get install -y \
             ${{ matrix.conf.packages }} \
