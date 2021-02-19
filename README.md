@@ -10,6 +10,11 @@ This repository attempts to modernize the DOSBox codebase by using current
 development practices and tools, fixing issues, and adding features that better
 support today's systems.
 
+### Code quality status
+
+[![Coverity status](https://img.shields.io/coverity/scan/dosbox-staging)][4]
+[![LGTM grade](https://img.shields.io/lgtm/grade/cpp/github/dosbox-staging/dosbox-staging)][3]
+
 ## Summary of differences compared to upstream
 
 ### For developers
