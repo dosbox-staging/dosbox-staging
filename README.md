@@ -104,10 +104,7 @@ Other differences:
 
 ## Build instructions
 
-Read [BUILD.md](BUILD.md) for the comprehensive compilation guide.
-You can also use helper script [`./scripts/build.sh`](scripts/build.sh),
-that performs builds for many useful scenarios (LTO, FDO, sanitizer builds,
-many others).
+Read [BUILD.md] for the comprehensive compilation guide.
 
 ### Linux, macOS
 
@@ -127,7 +124,8 @@ sudo apt install ccache build-essential meson libasound2-dev libpng-dev \
 
 ``` shell
 # Arch, Manjaro
-sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_net opusfile fluidsynth
+sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_net opusfile \
+               fluidsynth
 ```
 
 ``` shell
@@ -136,7 +134,7 @@ xcode-select --install
 brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth
 ```
 
-Instructions for creating a release build:
+Instructions for creating an optimised release build:
 
 ``` shell
 git clone https://github.com/dosbox-staging/dosbox-staging.git
@@ -146,14 +144,10 @@ ninja -C build
 ./build/dosbox
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md#build-dosbox-staging) for compilation
-flags more suited for development.
-
 ### Windows - Visual Studio (2019 or newer)
 
-First, you need to setup [vcpkg](https://github.com/microsoft/vcpkg) to
-install build dependencies. Once vcpkg is bootstrapped, open PowerShell,
-and run:
+First, you need to setup [vcpkg] to install build dependencies. Once vcpkg
+is bootstrapped, open PowerShell and run:
 
 ``` powershell
 PS:\> .\vcpkg integrate install
@@ -165,10 +159,18 @@ These two steps will ensure that MSVC finds and links all dependencies.
 Start Visual Studio and open file: `vs\dosbox.sln`. Make sure you have `x64`
 selected as the solution platform.  Use Ctrl+Shift+B to build all projects.
 
+[vcpkg]: https://github.com/microsoft/vcpkg
+
 ### Windows (MSYS2), macOS (MacPorts), Haiku, others
 
 Instructions for other build systems and operating systems are documented
-in [BUILD.md](BUILD.md).
+in [BUILD.md]. Links to OS-specific instructions: [MSYS2], [MacPorts],
+[Haiku].
+
+[BUILD.md]: BUILD.md
+[MSYS2]:    docs/build-windows.md
+[MacPorts]: docs/build-macos.md
+[Haiku]:    docs/build-haiku.md
 
 ## Imported branches and community patches
 
@@ -194,7 +196,7 @@ For some historical context of why this repo exists you can read
 [Vogons thread](https://www.vogons.org/viewtopic.php?p=790065#p790065),
 ([1](https://imgur.com/a/bnJEZcx), [2](https://imgur.com/a/HnG1Ls4))
 
-[`svn/*`]:https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F
-[`svn/trunk`]:https://github.com/dosbox-staging/dosbox-staging/tree/svn/trunk
-[`vogons/*`]:https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F
-[`munt/*`]:https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=munt%2F
+[`svn/*`]:     https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F
+[`svn/trunk`]: https://github.com/dosbox-staging/dosbox-staging/tree/svn/trunk
+[`vogons/*`]:  https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F
+[`munt/*`]:    https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=munt%2F
