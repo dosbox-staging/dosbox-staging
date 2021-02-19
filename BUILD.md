@@ -116,6 +116,12 @@ meson test -C build
 ninja -C build coverage-html
 ```
 
+Open the report with your browser:
+
+``` shell
+firefox build/meson-logs/coveragereport/index.html"
+```
+
 ### Static analysis report
 
 Prerequisites:
