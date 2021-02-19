@@ -1,4 +1,0 @@
-# Universal additions for gcc and clang, but specific to x86_64:
-
-MODIFIERS+=(native)
-cflags_native+=(-march=native)

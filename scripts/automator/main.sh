@@ -10,8 +10,8 @@
 # such as variables defined in earlier files are either added-to or
 # overridden in subsequent files.
 #
-# For a thorough example, see scripts/build.sh and its data files
-# in scripts/automator/build.
+# For a thorough example, see scripts/list-build-dependencies.sh and its data
+# files in scripts/automator/packages.
 #
 # TODO: This script manages variables using eval meta-programming.
 #       Although the syntax is quite readable under bash 4.x,

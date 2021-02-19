@@ -1,2 +1,0 @@
-# GCC flags specific to the OSMC Vero 4K SBC
-cflags_release+=(-mcpu=cortex-a7 -mfpu=neon-vfpv4)

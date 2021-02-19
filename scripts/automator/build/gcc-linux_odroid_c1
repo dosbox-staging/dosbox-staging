@@ -1,2 +1,0 @@
-# GCC flags specific to Hardkernel Co's ODROID-C1 SBC
-cflags_release+=(-mcpu=cortex-a5 -mfpu=neon-vfpv4 -mfloat-abi=hard)
