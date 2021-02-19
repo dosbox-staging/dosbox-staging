@@ -4,8 +4,3 @@ Debug
 Release
 *.vcxproj.filters
 *.vcxproj.user
-
-# svn:ignore
-.deps
-Makefile
-Makefile.in
