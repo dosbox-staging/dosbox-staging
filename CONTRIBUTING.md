@@ -45,8 +45,8 @@ There's plenty of tasks to work on all around, here are some ideas:
   of potential code improvements), and try to eliminate them.
 - Look through our static analysis reports, pick an issue, investigate if the
   problem is true-positive or false-positive and if the code can be improved.
-  See artifacts/reports in: [Clang][code-analysis], [Coverity][coverity],
-  [PVS][pvs]
+  See artifacts/reports in: [Clang][clanga], [Coverity][coverity],
+  [PVS][pvs], [LGTM].
 - Look at our groomed list of features we want implemented in the
   [Backlog](https://github.com/dosbox-staging/dosbox-staging/projects/3) - if
   the issue is not assigned to anyone, then it's for the pickings! Leave a
@@ -64,9 +64,10 @@ Or just send us a Pull Request with your improvement
 If you plan to work on a new, bigger feature - then it might be good idea to
 discuss it with us early, e.g. by creating a new bugtracker issue.
 
-[pvs]: https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
-[code-analysis]: https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
-[coverity]: https://scan.coverity.com/projects/dosbox-staging
+[coverity]: https://scan.coverity.com/projects/dosbox-staging/
+[lgtm]:     https://lgtm.com/projects/g/dosbox-staging/dosbox-staging/
+[clanga]:   https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
+[pvs]:      https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
 
 # Contributing code
 
