@@ -1,7 +1,7 @@
 name: Config heavy
 
-on:
-  schedule: [cron: '0 16 * * *']
+on: [push]
+  # schedule: [cron: '0 16 * * *']
 
 jobs:
   repo-check:
@@ -96,21 +96,31 @@ jobs:
         shell: python scripts\msys-bash.py {0}
         run: |
           export PATH="/mingw64/bin:$PATH"
-          meson setup --wrap-mode=nofallback -Duse_opengl=false \
-            ${{ matrix.conf.configure_flags }} build
+          meson setup \
+            --wrap-mode=nofallback \
+            -Duse_mt32emu=false \
+            -Duse_opengl=false \
+            ${{ matrix.conf.configure_flags }} \
+            build
           cat build/meson-logs/meson-log.txt
           ninja -C build
 
       - name:  Build ${{ matrix.conf.configure_flags }} (macOS)
         if:    matrix.system.name == 'macOS'
         run: |
-          meson setup --wrap-mode=nofallback \
-            ${{ matrix.conf.configure_flags }} build
+          meson setup \
+            --wrap-mode=nofallback \
+            -Duse_mt32emu=false \
+            ${{ matrix.conf.configure_flags }} \
+            build
           ninja -C build
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Linux)
         if:    matrix.system.name == 'Linux'
         run: |
-          meson setup --wrap-mode=nofallback \
-            ${{ matrix.conf.configure_flags }} build
+          meson setup \
+            --wrap-mode=nofallback \
+            -Duse_mt32emu=false \
+            ${{ matrix.conf.configure_flags }} \
+            build
           ninja -C build
