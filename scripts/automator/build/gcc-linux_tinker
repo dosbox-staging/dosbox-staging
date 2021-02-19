@@ -1,3 +1,0 @@
-# GCC flags specific to the ASUS Tinker Board SBC
-cflags_release+=(-marm -march=armv7-a -mtune=cortex-a17 -mfpu=neon-vfpv4 
-                 -mfloat-abi=hard)
