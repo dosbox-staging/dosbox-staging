@@ -2,21 +2,14 @@ project('dosbox-staging', 'c', 'cpp',
         version : '0.77.0',
         license : 'GPL-2.0-or-later',
         default_options : ['cpp_std=c++14', 'b_ndebug=if-release'],
-        meson_version : '>= 0.49.0')
+        meson_version : '>= 0.51.0')
 
 # After increasing the minimum-required meson version, make the following
 # improvements:
 #
-# - 0.51.0 - remove warning about assertions in buildtype=plain
 # - 0.55.0 - subproject wraps are automatically promoted to fallbacks,
 #            stop using: "fallback : ['foo', 'foo_dep']" for dependencies
 # - 0.56.0 - use meson.current_source_dir() in unit tests
-
-# https://mesonbuild.com/Release-notes-for-0-51-0.html#n_debugifrelease-and-buildtypeplain-means-no-asserts
-is_plain_build = (get_option('buildtype') == 'plain')
-if meson.version().version_compare('< 0.51.0') and is_plain_build
-  warning('C assertions might be enabled, use buildtype=release instead')
-endif
 
 
 # compiler flags
