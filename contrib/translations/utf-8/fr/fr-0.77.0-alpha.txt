@@ -208,11 +208,6 @@ Un pourcentage optionnel réglera le volume du SoundFont.
 Par exemple: 'soundfont.sf2 50' le diminuera de 50 pourcents.
 L'échelle de pourcentage peut aller de 1 à 500.
 .
-:CONFIG_SYNTH_THREADS
-Si paramétré à une valeur supérieure à 1, alors des processus additionnels
-de synthétiseurs seront créés pour profiter de multiples coeurs CPU.
-(min 1, max 256)
-.
 :CONFIG_MODEL
 Modèle de synthétiseur à utiliser. Par défaut, préfère CM-32L
 si les deux sets de ROMs sont fournis. Pour les premiers jeux Sierra et Dune 2,
