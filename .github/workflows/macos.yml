@@ -132,9 +132,8 @@ jobs:
             -Ddefault_library=static \
             -Db_asneeded=true \
             -Db_lto=true \
-            -Dtry_static_libs=png,sdl2,sdl2_net \
+            -Dtry_static_libs=opusfile,png,sdl2,sdl2_net \
             -Duse_fluidsynth=false \
-            -Duse_opusfile=false \
             build
 
       - name: Build

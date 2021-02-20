@@ -186,7 +186,8 @@ if get_option('use_mt32emu')
 endif
 
 if get_option('use_opusfile')
-  opus_dep = dependency('opusfile', not_found_message : msg.format('use_opusfile'))
+  opus_dep = dependency('opusfile', static : ('opusfile' in static_libs_list),
+                        not_found_message : msg.format('use_opusfile'))
 endif
 
 if get_option('use_png')
