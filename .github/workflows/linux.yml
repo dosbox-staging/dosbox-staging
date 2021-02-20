@@ -189,6 +189,7 @@ jobs:
             -Ddefault_library=static \
             -Db_asneeded=true \
             -Db_lto=true \
+            -Dtry_static_libs=png \
             -Duse_fluidsynth=false \
             build
 

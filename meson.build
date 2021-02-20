@@ -190,7 +190,8 @@ if get_option('use_opusfile')
 endif
 
 if get_option('use_png')
-  png_dep = dependency('libpng', not_found_message : msg.format('use_png'))
+  png_dep = dependency('libpng', static : ('png' in static_libs_list),
+                       not_found_message : msg.format('use_png'))
 endif
 
 if get_option('enable_debugger') != 'none'
