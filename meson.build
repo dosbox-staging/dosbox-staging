@@ -142,10 +142,13 @@ endif
 
 # external dependencies
 #
+static_libs_list = get_option('try_static_libs')
+msg = 'You can disable this dependency with: -D@0@=false'
+
 optional_dep  = dependency('', required : false)
 threads_dep   = dependency('threads')
 sdl2_dep      = dependency('sdl2', version : '>= 2.0.2',
-                           static : get_option('try_sdl2_static'))
+                           static : ('sdl2' in static_libs_list))
 sdl2_net_dep  = optional_dep
 opengl_dep    = optional_dep
 fluid_dep     = optional_dep
@@ -159,10 +162,10 @@ coremidi_dep  = optional_dep # macOS-only
 winsock2_dep  = optional_dep # Windows-only
 winmm_dep     = optional_dep # Windows-only
 
-msg = 'You can disable this dependency with: -D@0@=false'
 
 if get_option('use_sdl2_net')
   sdl2_net_dep = dependency('SDL2_net', version : '>= 2.0.1',
+                            static : ('sdl2_net' in static_libs_list),
                             not_found_message : msg.format('use_sdl2_net'))
 endif
 

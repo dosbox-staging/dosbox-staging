@@ -51,9 +51,17 @@ option('dynamic_core',
        value : 'auto',
        description : 'Select the dynamic core implementation.')
 
-# This is NOT guaranteed to work. Use it only as a last resort.
+# Use this option for selectively switching dependencies to look for static
+# libraries first. This behaves differently than passing
+# -Ddefault_library=static (which will turn on static linking for dependencies
+# built from wraps, but still attempt dynamic linking for system-installed
+# libraries).
 #
-option('try_sdl2_static',
-       type : 'boolean',
-       value : false,
-       description : 'Hint Meson to try linking SDL2 statically.')
+# This is NOT guaranteed to work - the end results will vary depending on your
+# OS, installed libraries, and dependencies of those libraries.
+#
+option('try_static_libs',
+       type : 'array',
+       choices : ['sdl2', 'sdl2_net'],
+       value : [],
+       description : 'Attempt to statically link selected libraries.')

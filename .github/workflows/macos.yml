@@ -132,8 +132,7 @@ jobs:
             -Ddefault_library=static \
             -Db_asneeded=true \
             -Db_lto=true \
-            -Dtry_sdl2_static=true \
-            -Duse_sdl2_net=false \
+            -Dtry_static_libs=sdl2,sdl2_net \
             -Duse_fluidsynth=false \
             -Duse_opusfile=false \
             -Duse_png=false \
