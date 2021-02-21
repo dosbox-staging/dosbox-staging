@@ -435,7 +435,7 @@ void MidiHandlerFluidsynth::Render()
 		                        render_buffer.data(), 0, 2, render_buffer.data(), 1, 2);
 		soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER,
 		                     playable_buffer);
-		ring.wait_enqueue(playable_buffer);
+		ring.wait_enqueue(std::move(playable_buffer));
 	}
 }
 }
