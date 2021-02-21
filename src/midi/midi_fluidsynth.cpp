@@ -426,13 +426,18 @@ uint16_t MidiHandlerFluidsynth::GetRemainingFrames()
 // released in the ring allowing FluidSynth to renderer the next buffer.
 void MidiHandlerFluidsynth::Render()
 {
-	std::vector<float> render_buffer(FRAMES_PER_BUFFER * 2); // L & R channels
+	constexpr auto SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
+	std::vector<float> render_buffer(SAMPLES_PER_BUFFER);
+	std::vector<int16_t> playable_buffer(SAMPLES_PER_BUFFER);
+
 	while (keep_rendering) {
 		fluid_synth_write_float(synth.get(), FRAMES_PER_BUFFER,
 		                        render_buffer.data(), 0, 2, render_buffer.data(), 1, 2);
-		auto out = soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER);
-		ring.wait_enqueue(out);
+		soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER,
+		                     playable_buffer);
+		ring.wait_enqueue(playable_buffer);
 	}
+}
 }
 
 static void fluid_destroy(MAYBE_UNUSED Section *sec)

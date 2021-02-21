@@ -42,7 +42,6 @@
 
 // Buffer sizes
 static constexpr int FRAMES_PER_BUFFER = 1024; // synth granularity
-static constexpr int SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
 
 // Analogue circuit modes: DIGITAL_ONLY, COARSE, ACCURATE, OVERSAMPLED
 constexpr auto ANALOG_MODE = MT32Emu::AnalogOutputMode_ACCURATE;
@@ -444,7 +443,6 @@ uint16_t MidiHandler_mt32::GetRemainingFrames()
 	total_buffers_played++;
 	last_played_frame = 0;
 
-	assert(play_buffer.size() == SAMPLES_PER_BUFFER);
 	return FRAMES_PER_BUFFER;
 }
 
@@ -452,11 +450,14 @@ uint16_t MidiHandler_mt32::GetRemainingFrames()
 // released in the ring allowing MT-32 to renderer the next "full buffer".
 void MidiHandler_mt32::Render()
 {
+	constexpr auto SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
 	std::vector<float> render_buffer(SAMPLES_PER_BUFFER);
+	std::vector<int16_t> playable_buffer(SAMPLES_PER_BUFFER);
+
 	while (keep_rendering) {
 		service->renderFloat(render_buffer.data(), FRAMES_PER_BUFFER);
-		auto out = soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER);
-		ring.wait_enqueue(out); // moved into the queue
+		soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER, playable_buffer);
+		ring.wait_enqueue(playable_buffer);
 	}
 }
 

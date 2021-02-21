@@ -106,8 +106,9 @@ public:
 
 	SoftLimiter(const std::string &name, const AudioFrame &scale, uint16_t max_frames);
 
-	std::vector<int16_t> Process(const std::vector<float> &in,
-	                             uint16_t req_frames) noexcept;
+	void Process(const std::vector<float> &in,
+	             uint16_t req_frames,
+	             std::vector<int16_t> &out) noexcept;
 	const AudioFrame &GetPeaks() const noexcept { return global_peaks; }
 	void PrintStats() const;
 	void Reset() noexcept;
