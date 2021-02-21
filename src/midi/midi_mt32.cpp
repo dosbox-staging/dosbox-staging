@@ -457,7 +457,7 @@ void MidiHandler_mt32::Render()
 	while (keep_rendering) {
 		service->renderFloat(render_buffer.data(), FRAMES_PER_BUFFER);
 		soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER, playable_buffer);
-		ring.wait_enqueue(playable_buffer);
+		ring.wait_enqueue(std::move(playable_buffer));
 	}
 }
 
