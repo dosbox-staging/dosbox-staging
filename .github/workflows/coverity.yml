@@ -30,7 +30,7 @@ jobs:
 
       - name: Install C++ compiler and dependencies
         run: |
-          sudo apt-get install curl zstd $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+          sudo apt-get install curl zstd $(cat .github/packages/ubuntu-20.04-apt.txt)
 
       - name: Prepare the Coverity package cache
         uses: actions/cache@v2
@@ -51,13 +51,11 @@ jobs:
       - name: Build and instrument the project
         run: |
           set -xeu
-          g++ --version
-          ./autogen.sh
           export CFLAGS="-g -Og"
           export CXXFLAGS="${CFLAGS}"
-          ./configure
+          meson setup build
           PATH="${BASE_DIR}/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
-          cov-build --dir cov-int make -j "$(nproc)"
+          cov-build --dir cov-int ninja -C build
           tar -cvaf package.tar.gz cov-int
 
       - name: Upload the package to Coverity
