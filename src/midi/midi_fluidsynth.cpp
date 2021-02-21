@@ -417,7 +417,7 @@ uint16_t MidiHandlerFluidsynth::GetRemainingFrames()
 	// Otherwise put the spent buffer in backstock and get the next buffer
 	backstock.wait_enqueue(std::move(play_buffer));
 	playable.wait_dequeue(play_buffer);
-	last_played_frame = 0; // reset the frame counter to the begining
+	last_played_frame = 0; // reset the frame counter to the beginning
 
 	return FRAMES_PER_BUFFER;
 }
