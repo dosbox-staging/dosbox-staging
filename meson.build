@@ -165,7 +165,7 @@ winmm_dep     = optional_dep # Windows-only
 
 
 if get_option('use_sdl2_net')
-  sdl2_net_dep = dependency('SDL2_net', version : '>= 2.0.1',
+  sdl2_net_dep = dependency('SDL2_net', version : '>= 2.0.0',
                             static : ('sdl2_net' in static_libs_list),
                             not_found_message : msg.format('use_sdl2_net'))
 endif
