@@ -1,7 +1,0 @@
-# Package repo: https://packages.msys2.org/base
-# MSYS2 only supports the current latest releases of Clang and GCC, so we disable version customization
-packages+=(autogen autoconf base-devel automake-wrapper binutils)
-pkg_type=$([[ "${bits}" == "64" ]] && echo "x86_64" || echo "i686")
-for pkg in ccache pkg-config libtool libpng zlib ncurses pdcurses SDL2 SDL2_net opusfile fluidsynth; do
-	packages+=("mingw-w64-${pkg_type}-${pkg}")
-done
