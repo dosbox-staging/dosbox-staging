@@ -295,7 +295,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	keep_rendering = true;
 	const auto render = std::bind(&MidiHandlerFluidsynth::Render, this);
 	renderer = std::thread(render);
-	ring.wait_dequeue(play_buffer); // populate the first play buffer
+	playable.wait_dequeue(play_buffer); // populate the first play buffer
 
 	// Start playback
 	channel->Enable(true);
@@ -317,10 +317,12 @@ void MidiHandlerFluidsynth::Close()
 	if (channel)
 		channel->Enable(false);
 
-	// Stop rendering and drain the ring
+	// Stop rendering and drain the rings
 	keep_rendering = false;
-	while (ring.size_approx())
-		ring.wait_dequeue(play_buffer);
+	if (!backstock.size_approx())
+		backstock.wait_enqueue(std::move(play_buffer));
+	while (playable.size_approx())
+		playable.wait_dequeue(play_buffer);
 
 	// Wait for the rendering thread to finish
 	if (renderer.joinable())
@@ -405,39 +407,47 @@ void MidiHandlerFluidsynth::MixerCallBack(uint16_t requested_frames)
 	}
 }
 
-// GetRemainingFrames() gives us the number of unplayed (ie: remaining) frames
-// left in the current play buffer. If it's run out, then we pop a new "full"
-// play buffer out of the ring. If the ring doesn't have any  to offer, then we
-// wait until it does.
+// Returns the number of frames left to play in the buffer.
 uint16_t MidiHandlerFluidsynth::GetRemainingFrames()
 {
-	// the current play buffer has some frames left, so return those
+	// If the current buffer has some frames left, then return those ...
 	if (last_played_frame < FRAMES_PER_BUFFER)
 		return FRAMES_PER_BUFFER - last_played_frame;
 
-	// Otherwise move the next buffer out of the ring into our play buffer
-	ring.wait_dequeue(play_buffer);
-	last_played_frame = 0;
+	// Otherwise put the spent buffer in backstock and get the next buffer
+	backstock.wait_enqueue(std::move(play_buffer));
+	playable.wait_dequeue(play_buffer);
+	last_played_frame = 0; // reset the frame counter to the begining
 
 	return FRAMES_PER_BUFFER;
 }
 
-// After GetRemainingFrames() pops out a buffer for playing, back-pressure is
-// released in the ring allowing FluidSynth to renderer the next buffer.
+// Populates the playable queue with freshly rendered buffers
 void MidiHandlerFluidsynth::Render()
 {
+	// Allocate our buffers once and reuse for the duration.
 	constexpr auto SAMPLES_PER_BUFFER = FRAMES_PER_BUFFER * 2; // L & R
 	std::vector<float> render_buffer(SAMPLES_PER_BUFFER);
 	std::vector<int16_t> playable_buffer(SAMPLES_PER_BUFFER);
 
+	// Populate the backstock using copies of the current buffer.
+	while (backstock.size_approx() < backstock.max_capacity() - 1)
+		backstock.wait_enqueue(playable_buffer);    // copy-in
+	backstock.wait_enqueue(std::move(playable_buffer)); // move the last one
+	assert(backstock.size_approx() == backstock.max_capacity());
+
 	while (keep_rendering) {
 		fluid_synth_write_float(synth.get(), FRAMES_PER_BUFFER,
-		                        render_buffer.data(), 0, 2, render_buffer.data(), 1, 2);
+		                        render_buffer.data(), 0, 2,
+		                        render_buffer.data(), 1, 2);
+
+		// Grab the next buffer from backstock and populate it ...
+		backstock.wait_dequeue(playable_buffer);
 		soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER,
 		                     playable_buffer);
-		ring.wait_enqueue(std::move(playable_buffer));
+		// and then move it into the playable queue
+		playable.wait_enqueue(std::move(playable_buffer));
 	}
-}
 }
 
 static void fluid_destroy(MAYBE_UNUSED Section *sec)
