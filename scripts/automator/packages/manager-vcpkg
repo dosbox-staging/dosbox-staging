@@ -1,2 +1,0 @@
-# Package repo: https://repology.org/projects/?inrepo=vcpkg
-packages+=(libpng pdcurses sdl2 sdl2-net opusfile fluidsynth)
