@@ -1410,7 +1410,7 @@ Utilisation :
   [32;1mver[0m
   [32;1mver[0m [37;1mset[0m [36;1mVERSION[0m
 
-Où :
+Avec :
   [36;1mVERSION[0m peut être un nombre entier, comme [36;1m5[0m, ou inclure une valeur décimale
           à deux chiffres, comme : [36;1m6.22[0m, [36;1m7.01[0m, ou [36;1m7.10[0m. Les décimales peuvent
           aussi être sépares par un espace, comme : [36;1m6 22[0m, [36;1m7 01[0m, ou [36;1m7 10[0m.
