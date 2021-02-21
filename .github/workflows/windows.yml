@@ -114,7 +114,7 @@ jobs:
           set -x
           git fetch --prune --unshallow
           export VERSION=$(git describe --abbrev=4)
-          sed -i "s|VERSION \"git\"|VERSION \"$VERSION\"|" src/platform/visualc/config.h
+          sed -i "s|DOSBOX_DETAILED_VERSION \"git\"|DOSBOX_DETAILED_VERSION \"$VERSION\"|" src/platform/visualc/config.h
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name:  Build

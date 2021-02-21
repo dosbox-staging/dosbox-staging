@@ -8,7 +8,7 @@ set -x
 
 cd "$(git rev-parse --show-toplevel)" || exit
 
-./src/dosbox \
+./build/dosbox \
 	-lang '' \
 	-c 'config -wl contrib/translations/en/en_US.lng' \
 	-c 'exit' \

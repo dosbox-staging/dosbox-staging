@@ -1,8 +1,0 @@
-ld="ld"
-
-# OS-and-processor customizations
-cflags_release+=(-march=nehalem)
-
-# Modifier additions
-MODIFIERS+=(lto)
-cflags_lto=(-flto=thin)

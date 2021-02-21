@@ -1,5 +1,0 @@
-# Flag additions
-ar="llvm-ar${postfix}"
-ld="llvm-link${postfix}"
-ranlib="llvm-ranlib${postfix}"
-ldflags+=(-static-libgcc)

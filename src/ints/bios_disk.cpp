@@ -22,7 +22,6 @@
 #include <cassert>
 #include <utility>
 
-#include "dosbox.h"
 #include "callback.h"
 #include "regs.h"
 #include "mem.h"

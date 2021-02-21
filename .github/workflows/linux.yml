@@ -17,57 +17,86 @@ jobs:
       max-parallel: 3
       matrix:
         conf:
+
           - name: Clang, Ubuntu 20.04
             os: ubuntu-20.04
-            flags: -c clang -v 10
+            packages: clang
+            build_flags: --native-file=.github/meson/native-clang.ini
             max_warnings: 0
+
           - name: GCC, Ubuntu 20.04
             os: ubuntu-20.04
-            flags: -c gcc
-            max_warnings: 0
+            max_warnings: 3
+
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
-            flags: -c gcc
-            config_flags: --disable-fluidsynth
+            build_flags: -Duse_fluidsynth=false
+            max_warnings: 3
+
+          - name: GCC 5, Ubuntu 18.04
+            os: ubuntu-18.04
+            packages: g++-5
+            build_flags: --native-file=.github/meson/native-gcc-5.ini --wrap-mode=nofallback -Duse_fluidsynth=false -Duse_mt32emu=false
             max_warnings: 0
-          - name: GCC, Ubuntu 16.04
-            os: ubuntu-16.04
-            flags: -c gcc
-            config_flags: --disable-fluidsynth
-            max_warnings: 0
+
           - name: GCC, +tests
             os: ubuntu-20.04
-            config_flags: --enable-tests
-            add_packages: libgtest-dev
-            flags: -c gcc
             run_tests: true
             max_warnings: -1
-          - name: GCC, +debug
+
+          - name: GCC, +debugger
             os: ubuntu-20.04
-            flags: -c gcc
-            config_flags: --enable-debug
+            build_flags: -Denable_debugger=normal
             max_warnings: 96
-          - name: GCC, +dynrec, -dyn_x86
+
+          - name: GCC, -dyn-x86
             os: ubuntu-20.04
-            flags: -c gcc
-            config_flags: --disable-dynamic-x86
-            max_warnings: 0
-          - name: GCC, +dynrec, +debug, -dyn_x86
+            build_flags: -Ddynamic_core=dynrec
+            max_warnings: 3
+
+          - name: GCC, -dyn-x86, +debugger
             os: ubuntu-20.04
-            flags: -c gcc
-            config_flags: --disable-dynamic-x86 --enable-debug
+            build_flags: -Ddynamic_core=dynrec -Denable_debugger=normal
             max_warnings: 132
+
           - name: GCC, -network
             os: ubuntu-20.04
-            flags: -c gcc
-            config_flags: --disable-network
-            max_warnings: 0
+            build_flags: -Duse_sdl2_net=false
+            max_warnings: 3
+
+          - name: GCC, warning_level=3
+            os: ubuntu-20.04
+            build_flags: -Dwarning_level=3
+            max_warnings: 91
+
+          - name: GCC, minimum build
+            os: ubuntu-20.04
+            build_flags: --wrap-mode=nofallback -Duse_fluidsynth=false -Duse_sdl2_net=false -Duse_opengl=false -Duse_fluidsynth=false -Duse_mt32emu=false -Duse_opusfile=false -Duse_png=false -Duse_alsa=false
+            min_dependencies: true
+            max_warnings: -1
 
     steps:
       - uses: actions/checkout@v2
       - run:  sudo apt-get update
-      - name: Install C++ compiler and libraries
-        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -m apt ${{ matrix.conf.flags }}) ${{ matrix.conf.add_packages }}
+
+      - name: Install dependencies (minimum set)
+        if:   matrix.conf.min_dependencies
+        run: |
+          sudo apt-get install -y build-essential ccache meson libsdl2-dev
+
+      - name: Install dependencies
+        if:   matrix.conf.min_dependencies != true
+        run: |
+          sudo apt-get install -y \
+            ${{ matrix.conf.packages }} \
+            $(cat ./.github/packages/${{ matrix.conf.os }}-apt.txt)
+
+      - name: Install Meson via pip3
+        if:   matrix.conf.os != 'ubuntu-20.04'
+        run: |
+          sudo apt-get install python3-setuptools
+          sudo pip3 install meson ninja
+
       - name:  Prepare compiler cache
         id:    prep-ccache
         shell: bash
@@ -76,6 +105,7 @@ jobs:
           echo "::set-output name=dir::$CCACHE_DIR"
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+
       - uses:  actions/cache@v2
         id:    cache-ccache
         with:
@@ -83,39 +113,48 @@ jobs:
           key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.today }}
           restore-keys: |
             ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.yesterday }}
+
       - name: Log environment
         run:  ./scripts/log-env.sh
+
+      - run:  meson setup ${{ matrix.conf.build_flags }} build
+
       - name: Build
-        run:  ./scripts/build.sh -t Debug ${{ matrix.conf.flags }} ${{ matrix.conf.config_flags }}
+        run: |
+          set -xo pipefail
+          ninja -C build |& tee build.log
+
       - name: Run tests
         if:   matrix.conf.run_tests
-        run:  ./tests/tests
+        run:  meson test -C build --print-errorlogs
+
       - name: Summarize warnings
         if:   matrix.conf.run_tests != true
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:  ./scripts/count-warnings.py -lf build.log
 
+
   build_linux_release_dynamic:
     name: Release build
     runs-on: ubuntu-18.04
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
-    env:
-      AR: gcc-ar
-      CC: ccache gcc
-      CXX: ccache g++
-      LD: gcc
-      RANLIB: gcc-ranlib
-      FLAGS: >-
-        -O3 -fstrict-aliasing -fno-signed-zeros -fno-trapping-math
-        -fassociative-math -mfpmath=sse -msse4.2 -flto -ffunction-sections
-        -fdata-sections -DNDEBUG -pipe
-      LINKFLAGS: -Wl,--as-needed
     steps:
       - uses: actions/checkout@v2
+
       - run:  sudo apt-get update
+
       - name: Install C++ compiler and libraries
-        run:  sudo apt-get install -y tree libpng-dev librsvg2-bin $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+        run: |
+          sudo apt-get install -y tree \
+            $(cat ./.github/packages/ubuntu-18.04-apt.txt)
+
+      - name: Install Meson via pip3
+        if:   matrix.conf.os != 'ubuntu-20.04'
+        run: |
+          sudo apt-get install python3-setuptools
+          sudo pip3 install meson ninja
+
       - name:  Prepare compiler cache
         id:    prep-ccache
         shell: bash
@@ -124,6 +163,7 @@ jobs:
           echo "::set-output name=dir::$CCACHE_DIR"
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+
       - uses:  actions/cache@v2
         id:    cache-ccache
         with:
@@ -131,64 +171,48 @@ jobs:
           key:  ccache-linux-release-${{ steps.prep-ccache.outputs.today }}
           restore-keys: |
             ccache-linux-release-${{ steps.prep-ccache.outputs.yesterday }}
+
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - name: Build FluidSynth libraries
-        run: |
-          set -x
-          sudo apt-get install -y python3-setuptools cmake 
-          sudo pip3 install meson ninja
-          pushd contrib/static-glib
-          make
-          popd
-          cd contrib/static-fluidsynth
-          GLIB_LIBS="$PWD/../static-glib/lib/libglib-2.0.a" \
-          GTHREAD_LIBS="$PWD/../static-glib/lib/libgthread-2.0.a" \
-          GLIB_CFLAGS="-I$PWD/../static-glib/include/glib-2.0" \
-          GTHREAD_CFLAGS="-I$PWD/../static-glib/include/glib-2.0" \
-          make
+
       - name: Inject version string
         run: |
           set -x
           git fetch --prune --unshallow
-          export VERSION=$(git describe --abbrev=4)
-          sed -i "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
+          export VERSION=$(git describe --abbrev=5)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-      - name: Build
+
+      - name: Setup release build
         run: |
-          set -x
-          ./autogen.sh
-          FLUIDSYNTH_CFLAGS="\
-              -I$PWD/contrib/static-fluidsynth/include \
-              -pthread -I$PWD/contrib/static-glib/include/glib-2.0" \
-          FLUIDSYNTH_LIBS="\
-              $PWD/contrib/static-fluidsynth/lib/libfluidsynth.a \
-              $PWD/contrib/static-glib/lib/libgthread-2.0.a -pthread \
-              $PWD/contrib/static-glib/lib/libglib-2.0.a -lm" \
-          ./configure \
-              --enable-png-static \
-              CFLAGS="$FLAGS" \
-              CXXFLAGS="$FLAGS" \
-              LDFLAGS="$FLAGS $LINKFLAGS -flto=$(nproc)"
-          make -j "$(nproc)"
-          strip src/dosbox
+          meson setup \
+            -Dbuildtype=release \
+            -Ddefault_library=static \
+            -Db_asneeded=true \
+            -Db_lto=true \
+            -Dtry_static_libs=png \
+            -Duse_fluidsynth=false \
+            build
+
+      - name: Build
+        run:  ninja -C build
+
       - name: Package
         run: |
           set -x
 
+          # Print shared object dependencies
+          ldd build/dosbox
+
           # Prepare content
-          install -DT        src/dosbox           dest/dosbox
+          install -DT        build/dosbox         dest/dosbox
           install -DT -m 644 docs/README.template dest/README
           install -DT -m 644 COPYING              dest/COPYING
           install -DT -m 644 README               dest/doc/manual.txt
-          install -DT -m 644 docs/README.video    dest/doc/video.txt
           install -DT -m 644 docs/dosbox.1        dest/man/dosbox.1
 
-          # Generate .desktop entry and icon files
+          # Install .desktop entry and icon files
           install -DT contrib/linux/dosbox-staging.desktop dest/desktop/dosbox-staging.desktop
-          make -C contrib/icons/ hicolor
-          mkdir -p dest/icons
-          mv contrib/icons/hicolor dest/icons
+          DESTDIR="$PWD" make -C contrib/icons/ install datadir=dest
 
           # Fill README template file
           sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README

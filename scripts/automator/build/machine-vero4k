@@ -1,3 +1,0 @@
-# Universal flags specific to the OSMC Vero 4K SBC
-cflags+=(-I/opt/vero3/include)
-ldflags+=(-L/opt/vero3/lib)

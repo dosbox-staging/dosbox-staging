@@ -18,9 +18,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-/* Uncomment next line if you want to actually build the example tests */
-//#define BUILD_EXAMPLE
-
 /* This sample shows how to write a simple unit test for dosbox-staging using
  * Google C++ testing framework.
  *
@@ -29,8 +26,6 @@
  *
  * https://github.com/google/googletest/blob/master/googletest/docs/primer.md#googletest-primer
  */
-
-#ifdef BUILD_EXAMPLE
 
 /* Include necessary header files; order of headers should be as follows:
  *
@@ -131,5 +126,3 @@ TEST(DriveIndexTest, DISABLED_ExampleFailingTest2)
  */
 
 } // namespace
-
-#endif

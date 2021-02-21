@@ -22,88 +22,40 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: ARMv6 (Debian Buster)
-            architecture: armv6
-            distribution: buster
-          - name: ARMv7 (Debian Buster)
-            architecture: armv7
-            distribution: buster
-          - name: ARMv8 AArch64 (Ubuntu 18.04)
-            architecture: aarch64
-            distribution: ubuntu18.04
-          - name: s390x (Ubuntu 18.04)
-            architecture: s390x
-            distribution: ubuntu18.04
-          #- name: ppc64le (Ubuntu 18.04)
-          #  architecture: ppc64le
-          #  distribution: ubuntu18.04
+          # - name: ARMv6 (Debian Buster)
+          #   arch: armv6
+          #   distro: buster
+          # - name: ARMv7 (Debian Buster)
+          #   arch: armv7
+          #   distro: buster
+          # - name: ARMv8 AArch64 (Ubuntu 18.04)
+          #   arch: aarch64
+          #   distro: ubuntu18.04
+          - name: s390x (Ubuntu 20.04)
+            arch: s390x
+            distro: ubuntu20.04
+          - name: ppc64le (Ubuntu 20.04)
+            arch: ppc64le
+            distro: ubuntu20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Inject version string
-        run: |
-          set -x
-          git fetch --prune --unshallow
-          export VERSION=$(git describe --abbrev=4)
-          sed -i "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       - name: Build
         uses: uraimo/run-on-arch-action@master
         with:
-          architecture: ${{ matrix.conf.architecture }}
-          distribution: ${{ matrix.conf.distribution }}
+          arch:   ${{ matrix.conf.arch }}
+          distro: ${{ matrix.conf.distro }}
           run: |
-            set -x
+            set -xo pipefail
             apt-get update
-            apt-get install -y libpng-dev $(./scripts/list-build-dependencies.sh -c gcc -m apt)
+            apt-get install -y $(cat ./.github/packages/ubuntu-20.04-apt.txt)
             ./scripts/log-env.sh
-            ./scripts/build.sh -c gcc -t release -m lto --disable-fluidsynth
+            meson build \
+              -Duse_fluidsynth=false \
+              -Duse_mt32emu=false \
+              --wrap-mode=nofallback
+            ninja -C build |& tee build.log
 
       - name: Summarize warnings
         run:  ./scripts/count-warnings.py --max-warnings -1 build.log
-
-      - name: Package
-        run: |
-          set -x
-
-          # Prepare content
-          install -DT        src/dosbox           dest/dosbox
-          install -DT -m 644 docs/README.template dest/README
-          install -DT -m 644 COPYING              dest/COPYING
-          install -DT -m 644 README               dest/doc/manual.txt
-          install -DT -m 644 docs/README.video    dest/doc/video.txt
-          install -DT -m 644 docs/dosbox.1        dest/man/dosbox.1
-          # skip icon generation for now because rsvg-convert isn't available
-
-          # Fill README template file
-          sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README
-          sed -i "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" dest/README
-          sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README
-
-          # Inventory the package
-          PACKAGE="dosbox-staging-linux-${{ matrix.conf.architecture }}-$VERSION"
-          mv dest "$PACKAGE"
-          ls -1lh "$PACKAGE"
-
-          # Create tarball
-          tar -cJf "$PACKAGE.tar.xz" "$PACKAGE"
-          echo "PACKAGE=$PACKAGE" >> $GITHUB_ENV
-
-      - name: Clam AV scan
-        run: |
-          set -x
-          sudo apt-get install clamav > /dev/null
-          sudo systemctl stop clamav-freshclam
-          sudo freshclam --quiet && sudo freshclam
-          clamscan --heuristic-scan-precedence=yes --recursive --infected .
-
-      - name: Upload tarball
-        uses: actions/upload-artifact@v2
-        # GitHub automatically zips the artifacts (there's no way to create
-        # a tarball), and it removes all executable flags while zipping.
-        # Letting it zip a tarball preserves flags in the compressed files.
-        with:
-          name: ${{ env.PACKAGE }}
-          path: ${{ env.PACKAGE }}.tar.xz

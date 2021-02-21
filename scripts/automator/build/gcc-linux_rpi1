@@ -1,2 +1,0 @@
-# GCC flags specific to the Raspberry Pi 1 series of SBC
-cflags_release+=(-mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard)

@@ -1,3 +1,0 @@
-# Package repo: https://www.macports.org/ports.php?by=name
-delim=""
-packages+=(ccache coreutils autogen autoconf automake pkgconfig libpng ncurses libsdl2 libsdl2_net opusfile fluidsynth)

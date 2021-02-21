@@ -1,8 +1,0 @@
-# Tool additions
-ar="ar"
-arflags="cr"
-ranlib="ranlib"
-
-# Modifier additions
-MODIFIERS+=(lto)
-cflags_lto+=(-O2 -flto=thin)

@@ -1,0 +1,7 @@
+ccache
+fluid-synth
+libpng
+meson
+opusfile
+sdl2
+sdl2_net

@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "programs.h"
 
 #include <vector>
 #include <sstream>
@@ -24,7 +25,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include "programs.h"
+
 #include "callback.h"
 #include "regs.h"
 #include "support.h"
@@ -390,7 +391,8 @@ void CONFIG::Run(void) {
 			Bitu size = control->configfiles.size();
 			std::string config_path;
 			Cross::GetPlatformConfigDir(config_path);
-			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"), VERSION,config_path.c_str());
+			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"), VERSION,
+			         config_path.c_str());
 			if (size==0) WriteOut(MSG_Get("PROGRAM_CONFIG_NOCONFIGFILE"));
 			else {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PRIMARY_CONF"),control->configfiles.front().c_str());
@@ -860,8 +862,9 @@ void PROGRAMS_Init(Section* /*sec*/) {
 	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE","No config file loaded!\n");
 	MSG_Add("PROGRAM_CONFIG_PRIMARY_CONF","Primary config file: \n%s\n");
 	MSG_Add("PROGRAM_CONFIG_ADDITIONAL_CONF","Additional config files:\n");
-	MSG_Add("PROGRAM_CONFIG_CONFDIR","DOSBox %s configuration directory: \n%s\n\n");
-	
+	MSG_Add("PROGRAM_CONFIG_CONFDIR",
+	        "DOSBox Staging %s configuration directory: \n%s\n\n");
+
 	// writeconf
 	MSG_Add("PROGRAM_CONFIG_FILE_ERROR","\nCan't open file %s\n");
 	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing config file %s\n");

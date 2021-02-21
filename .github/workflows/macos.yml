@@ -14,18 +14,40 @@ jobs:
     runs-on: macos-latest
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     strategy:
+      max-parallel: 3
       matrix:
         conf:
+
           - name: Clang
-            flags: -c clang
+            packages: meson
             max_warnings: 0
-          - name: GCC-9
-            flags: -c gcc -v 9
-            max_warnings: 0
+
+          - name: GCC
+            packages: gcc@9
+            build_flags: --native-file=.github/meson/native-gcc-9.ini
+            max_warnings: 3
+
+          - name: Clang, +tests
+            run_tests: true
+            max_warnings: -1
+
+          - name: Clang, +debugger
+            build_flags: -Denable_debugger=normal
+            max_warnings: 130
+
+          - name: Clang, warning_level=3
+            build_flags: -Dwarning_level=3
+            max_warnings: 145
+
     steps:
       - uses: actions/checkout@v2
+
       - name: Install C++ compiler and libraries
-        run:  brew install $(./scripts/list-build-dependencies.sh -m brew ${{ matrix.conf.flags}})
+        run: |
+          brew install \
+            ${{ matrix.conf.packages }} \
+            $(cat ./.github/packages/macos-latest-brew.txt)
+
       - name:  Prepare compiler cache
         id:    prep-ccache
         shell: bash
@@ -34,36 +56,48 @@ jobs:
           echo "::set-output name=dir::$CCACHE_DIR"
           echo "::set-output name=today::$(gdate -I)"
           echo "::set-output name=yesterday::$(gdate --date=yesterday -I)"
+
       - uses:  actions/cache@v2
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-macos-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.today }}
+          key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.today }}
           restore-keys: |
-            ccache-macos-${{ matrix.conf.name }}-${{ steps.prep-ccache.outputs.yesterday }}
+            ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.yesterday }}
+
       - name: Log environment
         run:  ./scripts/log-env.sh
+
+      - run:  meson setup ${{ matrix.conf.build_flags }} build
+
       - name: Build
-        run:  ./scripts/build.sh --build-type Debug ${{ matrix.conf.flags }}
+        run: |
+          set -xo pipefail
+          meson compile -C build 2>&1 | tee build.log
+
+      - name: Run tests
+        if:   matrix.conf.run_tests
+        run:  meson test -C build --print-errorlogs
+
       - name: Summarize warnings
+        if:   matrix.conf.run_tests != true
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:  python3 ./scripts/count-warnings.py -lf build.log
 
+
   build_macos_release:
     name: Release build
     runs-on: macos-latest
-    # Disabled pending meson static-SDL solution
-    if: false
-    # github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
-    env:
-      CC: ccache clang
-      CXX: ccache clang++
-      FLAGS: -DNDEBUG -O3 -fno-math-errno -fstrict-aliasing -march=nehalem -flto=thin -pipe
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     steps:
       - uses: actions/checkout@v2
+
       - name: Install C++ compiler and libraries
-        run:  brew install librsvg $(./scripts/list-build-dependencies.sh -m brew -c clang)
+        run: |
+          brew install librsvg tree \
+            $(cat ./.github/packages/macos-latest-brew.txt)
+
       - name:  Prepare compiler cache
         id:    prep-ccache
         shell: bash
@@ -72,6 +106,7 @@ jobs:
           echo "::set-output name=dir::$CCACHE_DIR"
           echo "::set-output name=today::$(gdate -I)"
           echo "::set-output name=yesterday::$(gdate --date=yesterday -I)"
+
       - uses:  actions/cache@v2
         id:    cache-ccache
         with:
@@ -79,65 +114,38 @@ jobs:
           key:  ccache-macos-release-${{ steps.prep-ccache.outputs.today }}
           restore-keys: |
             ccache-macos-release-${{ steps.prep-ccache.outputs.yesterday }}
+
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - name: Build static Glib libraries
-        run: |
-          set -x
-          brew install meson
-          cd contrib/static-glib
-          gmake
-      - name: Build static FluidSynth library
-        env:
-          GLIB_LIBS:        ${{ github.workspace }}/contrib/static-glib/lib/libglib-2.0.a
-          GTHREAD_LIBS:     ${{ github.workspace }}/contrib/static-glib/lib/libgthread-2.0.a
-          GLIB_CFLAGS:    -I${{ github.workspace }}/contrib/static-glib/include/glib-2.0
-          GTHREAD_CFLAGS: -I${{ github.workspace }}/contrib/static-glib/include/glib-2.0
-        run:  cd contrib/static-fluidsynth && gmake
-      - name: Build static Opus libraries
-        run: |
-          set -x
-          cd contrib/static-opus
-          export CFLAGS="$FLAGS"
-          export CXXFLAGS="$FLAGS"
-          gmake -j "$(sysctl -n hw.physicalcpu)"
+
       - name: Inject version string
         run: |
           set -x
           git fetch --prune --unshallow
           export VERSION=$(git describe --abbrev=5)
-          sed -i -e "s/AC_INIT(dosbox,git)/AC_INIT(dosbox,$VERSION)/" configure.ac
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-      - name: Build
-        env:
-          FLUIDSYNTH_CFLAGS: >-
-            -I${{ github.workspace }}/contrib/static-fluidsynth/include -pthread
-            -I${{ github.workspace }}/contrib/static-glib/include/glib-2.0
-          FLUIDSYNTH_LIBS: >-
-            ${{ github.workspace }}/contrib/static-fluidsynth/lib/libfluidsynth.a
-            ${{ github.workspace }}/contrib/static-glib/lib/libgthread-2.0.a -pthread
-            ${{ github.workspace }}/contrib/static-glib/lib/libglib-2.0.a
-            /usr/local/lib/libintl.a -lm
-          OPUSFILE_CFLAGS: >-
-            -I${{ github.workspace }}/contrib/static-opus/include
-            -I${{ github.workspace }}/contrib/static-opus/include/opus
-          OPUSFILE_LIBS: >-
-            ${{ github.workspace }}/contrib/static-opus/lib/libopusfile.a
-            ${{ github.workspace }}/contrib/static-opus/lib/libogg.a
-            ${{ github.workspace }}/contrib/static-opus/lib/libopus.a -lm
+
+      - name: Setup release build
         run: |
-          set -x
-          ./autogen.sh
-          ./configure \
-            --enable-png-static \
-            --enable-sdl-static \
-            CFLAGS="$FLAGS" CXXFLAGS="$FLAGS"
-          gmake -j "$(sysctl -n hw.physicalcpu)"
-          strip src/dosbox
-          otool -L src/dosbox
+          meson setup \
+            -Dbuildtype=release \
+            -Ddefault_library=static \
+            -Db_asneeded=true \
+            -Db_lto=true \
+            -Dtry_static_libs=opusfile,png,sdl2,sdl2_net \
+            -Duse_fluidsynth=false \
+            build
+
+      - name: Build
+        run:  ninja -C build
+
       - name: Package
         run: |
           set -x
+
+          # Print shared object dependencies
+          otool -L build/dosbox
+          python3 scripts/verify-macos-dylibs.py build/dosbox
 
           # Generate icon
           make -C contrib/icons/ dosbox-staging.icns
@@ -149,7 +157,7 @@ jobs:
           install -d "$dst/Resources/"
           install -d "$dst/SharedSupport/"
 
-          install        "src/dosbox"                        "$dst/MacOS/"
+          install        "build/dosbox"                      "$dst/MacOS/"
           install -m 644 "contrib/macos/Info.plist.template" "$dst/Info.plist"
           install -m 644 "contrib/macos/PkgInfo"             "$dst/PkgInfo"
           install -m 644 "contrib/icons/dosbox-staging.icns" "$dst/Resources/"

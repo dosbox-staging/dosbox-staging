@@ -1,0 +1,7 @@
+build-essential
+ccache
+libasound2-dev
+libopusfile-dev
+libpng-dev
+libsdl2-dev
+libsdl2-net-dev

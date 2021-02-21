@@ -3215,8 +3215,15 @@ void OverrideWMClass()
 #endif
 }
 
-//extern void UI_Init(void);
-int main(int argc, char* argv[]) {
+void GFX_GetSize(int &width, int &height, bool &fullscreen)
+{
+	width = sdl.draw.width;
+	height = sdl.draw.height;
+	fullscreen = sdl.desktop.fullscreen;
+}
+
+int sdl_main(int argc, char *argv[])
+{
 	int rcode = 0; // assume good until proven otherwise
 	try {
 		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
@@ -3270,7 +3277,7 @@ int main(int argc, char* argv[]) {
 		if (control->cmdline->FindExist("--version") ||
 		    control->cmdline->FindExist("-version") ||
 		    control->cmdline->FindExist("-v")) {
-			printf(version_msg, VERSION);
+			printf(version_msg, DOSBOX_GetDetailedVersion());
 			return 0;
 		}
 
@@ -3295,7 +3302,7 @@ int main(int argc, char* argv[]) {
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
 #endif
 
-	LOG_MSG("dosbox-staging version %s", VERSION);
+	LOG_MSG("dosbox-staging version %s", DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
 
 	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0)
@@ -3440,10 +3447,4 @@ int main(int argc, char* argv[]) {
 	QuitSDL();
 
 	return rcode;
-}
-
-void GFX_GetSize(int &width, int &height, bool &fullscreen) {
-	width = sdl.draw.width;
-	height = sdl.draw.height;
-	fullscreen = sdl.desktop.fullscreen;
 }

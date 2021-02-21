@@ -6,18 +6,17 @@ so here are links to the major sections:
 
 - [1. Feature requests and bug reports](#feature-requests-and-bug-reports)
 - [2. Find something to work on](#find-something-to-work-on)
-- [3. Build dosbox-staging](#build-dosbox-staging)
-- [4. Contributing code](#contributing-code)
-  - [4.1. Coding style](#coding-style)
-    - [4.1.1. Language](#language)
-    - [4.1.2. Code Formatting](#code-formatting)
-    - [4.1.3. Additional Style Rules](#additional-style-rules)
-  - [4.2. Submitting patches / Pull Requests](#submitting-patches--pull-requests)
-    - [4.2.1. Commit messages](#commit-messages)
-    - [4.2.2. Commit messages for patches authored by someone else](#commit-messages-for-patches-authored-by-someone-else)
-- [5. Tools](#tools)
-  - [5.1. Using clang-format](#using-clang-format)
-  - [5.2. Summarize warnings](#summarize-warnings)
+- [3. Contributing code](#contributing-code)
+  - [3.1. Coding style](#coding-style)
+    - [3.1.1. Language](#language)
+    - [3.1.2. Code Formatting](#code-formatting)
+    - [3.1.3. Additional Style Rules](#additional-style-rules)
+  - [3.2. Submitting patches / Pull Requests](#submitting-patches--pull-requests)
+    - [3.2.1. Commit messages](#commit-messages)
+    - [3.2.2. Commit messages for patches authored by someone else](#commit-messages-for-patches-authored-by-someone-else)
+- [4. Tools](#tools)
+  - [4.1. Using clang-format](#using-clang-format)
+  - [4.2. Summarize warnings](#summarize-warnings)
 
 # Feature requests and bug reports
 
@@ -46,8 +45,8 @@ There's plenty of tasks to work on all around, here are some ideas:
   of potential code improvements), and try to eliminate them.
 - Look through our static analysis reports, pick an issue, investigate if the
   problem is true-positive or false-positive and if the code can be improved.
-  See artifacts/reports in: [Clang][code-analysis], [Coverity][coverity],
-  [PVS][pvs]
+  See artifacts/reports in: [Clang][clanga], [Coverity][coverity],
+  [PVS][pvs], [LGTM].
 - Look at our groomed list of features we want implemented in the
   [Backlog](https://github.com/dosbox-staging/dosbox-staging/projects/3) - if
   the issue is not assigned to anyone, then it's for the pickings! Leave a
@@ -65,37 +64,10 @@ Or just send us a Pull Request with your improvement
 If you plan to work on a new, bigger feature - then it might be good idea to
 discuss it with us early, e.g. by creating a new bugtracker issue.
 
-[pvs]: https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
-[code-analysis]: https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
-[coverity]: https://scan.coverity.com/projects/dosbox-staging
-
-# Build dosbox-staging
-
-Install dependencies listed in [README.md][readme-b]; take a moment to read
-[INSTALL][install] file as well. You can also learn longer list of dependencies
-for other build systems by running script `./scripts/list-build-dependencies.sh`.
-
-Detailed build instructions are in [BUILD.md][build-doc] file.
-
-Example build instructions appropriate for development:
-
-``` shell
-./autogen.sh
-./configure CFLAGS="-g -fdiagnostics-color -O0 -Wall -Weffc++" \
-            CXXFLAGS="-g -fdiagnostics-color -O0 -Wall -Weffc++"
-make -j$(nproc) |& tee build.log
-./scripts/count-warnings.py build.log
-```
-
-You can also use `./scripts/build.sh` script, which includes configurations
-for various build types and operating systems.
-
-For development, it's recommended to use `ccache` - it can speed up your clean
-builds by up to 60x.
-
-[readme-b]: https://github.com/dosbox-staging/dosbox-staging#build-instructions
-[install]: https://github.com/dosbox-staging/dosbox-staging/blob/master/INSTALL
-[build-doc]: https://github.com/dosbox-staging/dosbox-staging/blob/master/BUILD.md
+[coverity]: https://scan.coverity.com/projects/dosbox-staging/
+[lgtm]:     https://lgtm.com/projects/g/dosbox-staging/dosbox-staging/
+[clanga]:   https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
+[pvs]:      https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
 
 # Contributing code
 
