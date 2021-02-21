@@ -31,7 +31,8 @@ TEST(SoftLimiter, InboundsProcessAllFrames)
 	SoftLimiter limiter("test-channel", prescale, frames);
 	const std::vector<float> in{-3, -2, -1, 0, 1, 2};
 
-	std::vector<int16_t> out = limiter.Process(in, frames);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(in, frames, out);
 	const std::vector<int16_t> expected{-3, -2, -1, 0, 1, 2};
 	EXPECT_EQ(out, expected);
 }
@@ -43,7 +44,8 @@ TEST(SoftLimiter, InboundsProcessPartialFrames)
 	SoftLimiter limiter("test-channel", prescale, frames);
 	const std::vector<float> in{-3, -2, -1, 0, 1, 2};
 
-	std::vector<int16_t> out = limiter.Process(in, 1);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(in, 1, out);
 	const std::vector<int16_t> expected{-3, -2};
 	EXPECT_EQ(out[0], expected[0]);
 	EXPECT_EQ(out[1], expected[1]);
@@ -55,7 +57,8 @@ TEST(SoftLimiter, InboundsProcessTooManyFrames)
 	const AudioFrame prescale{1, 1};
 	SoftLimiter limiter("test-channel", prescale, frames);
 	const std::vector<float> in{-3, -2, -1, 0, 1, 2};
-	EXPECT_DEBUG_DEATH({ limiter.Process(in, frames + 1); }, "");
+	std::vector<int16_t> out(frames * 2);
+	EXPECT_DEBUG_DEATH({ limiter.Process(in, frames + 1, out); }, "");
 }
 
 TEST(SoftLimiter, OutOfBoundsLeftChannel)
@@ -66,7 +69,8 @@ TEST(SoftLimiter, OutOfBoundsLeftChannel)
 	const std::vector<float> in{-8.1f,    32000.0f, 65535.0f,
 	                            32000.0f, 4.1f,     32000.0f};
 
-	std::vector<int16_t> out = limiter.Process(in, frames);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(in, frames, out);
 	const std::vector<int16_t> expected{-4, 32000, 32766, 32000, 2, 32000};
 	EXPECT_EQ(out, expected);
 }
@@ -79,7 +83,8 @@ TEST(SoftLimiter, OutOfBoundsRightChannel)
 	const std::vector<float> in{32000.0f, -3.1f,    32000.0f,
 	                            98304.1f, 32000.0f, 6.1f};
 
-	std::vector<int16_t> out = limiter.Process(in, frames);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(in, frames, out);
 	const std::vector<int16_t> expected{32000, -1, 32000, 32765, 32000, 2};
 	EXPECT_EQ(out, expected);
 }
@@ -92,7 +97,8 @@ TEST(SoftLimiter, OutboundsBothChannelsPositive)
 	const std::vector<float> in{-8.1f,    -3.1f, 65535.0f,
 	                            98304.1f, 4.1f,  6.1f};
 
-	std::vector<int16_t> out = limiter.Process(in, frames);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(in, frames, out);
 	const std::vector<int16_t> expected{-4, -1, 32766, 32765, 2, 2};
 	EXPECT_EQ(out, expected);
 }
@@ -105,7 +111,8 @@ TEST(SoftLimiter, OutboundsBothChannelsNegative)
 	const std::vector<float> in{-8.1f,     -3.1f, -65535.0f,
 	                            -98304.1f, 4.1f,  6.1f};
 
-	std::vector<int16_t> out = limiter.Process(in, frames);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(in, frames, out);
 	const std::vector<int16_t> expected{-4, -1, -32766, -32765, 2, 2};
 	EXPECT_EQ(out, expected);
 }
@@ -118,7 +125,8 @@ TEST(SoftLimiter, OutboundsBothChannelsMixed)
 	const std::vector<float> in{40000.0f,  -40000.0f, 65534.0f,
 	                            -98301.0f, 40000.0f,  -40000.0f};
 
-	std::vector<int16_t> out = limiter.Process(in, frames);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(in, frames, out);
 	const std::vector<int16_t> expected{19999,  -13332, 32766,
 	                                    -32766, 19999,  -13332};
 	EXPECT_EQ(out, expected);
@@ -130,11 +138,12 @@ TEST(SoftLimiter, OutboundsBigOneReleaseStep)
 	const AudioFrame prescale{1, 1};
 	SoftLimiter limiter("test-channel", prescale, frames);
 	std::vector<float> in{-60000.0f, 80000.0f};
-	std::vector<int16_t> out = limiter.Process(in, 1);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(in, 1, out);
 
 	in[0] = static_cast<float>(out[0]);
 	in[1] = static_cast<float>(out[1]);
-	out = limiter.Process(in, frames);
+	limiter.Process(in, frames, out);
 
 	const std::vector<int16_t> expected{-17920, 13434};
 	EXPECT_EQ(out, expected);
@@ -146,10 +155,10 @@ TEST(SoftLimiter, OutboundsBig600ReleaseSteps)
 	const AudioFrame prescale{1, 1};
 	SoftLimiter limiter("test-channel", prescale, frames);
 	std::vector<float> in{-60000.0f, 80000.0f};
-	std::vector<int16_t> out;
+	std::vector<int16_t> out(frames * 2);
 
 	for (int i = 0; i < 600; ++i) {
-		out = limiter.Process(in, frames);
+		limiter.Process(in, frames, out);
 		in[0] = -32767;
 		in[1] = 32768;
 	}
@@ -163,9 +172,9 @@ TEST(SoftLimiter, OutboundsSmallTwoReleaseSteps)
 	const AudioFrame prescale{1, 1};
 	SoftLimiter limiter("test-channel", prescale, frames);
 	std::vector<float> in{-32800.0f, 32800.0f};
-	std::vector<int16_t> out;
+	std::vector<int16_t> out(frames * 2);
 	for (int i = 0; i < 2; ++i) {
-		out = limiter.Process(in, frames);
+		limiter.Process(in, frames, out);
 		in[0] = -32767;
 		in[1] = 32767;
 	}
@@ -179,10 +188,10 @@ TEST(SoftLimiter, OutboundsSmallTenReleaseSteps)
 	const AudioFrame prescale{1, 1};
 	SoftLimiter limiter("test-channel", prescale, frames);
 	std::vector<float> in{-32800.0f, 32800.0f};
-	std::vector<int16_t> out{};
+	std::vector<int16_t> out(frames * 2);
 
 	for (int i = 0; i < 10; ++i) {
-		out = limiter.Process(in, frames);
+		limiter.Process(in, frames, out);
 		in[0] = -32767;
 		in[1] = 32768;
 	}
@@ -198,14 +207,15 @@ TEST(SoftLimiter, OutboundsPolyJoinPositive)
 
 	const std::vector<float> first_chunk{18000, 18000, 20000,
 	                                     20000, 22000, 22000};
-	std::vector<int16_t> out = limiter.Process(first_chunk, frames);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(first_chunk, frames, out);
 	const std::vector<int16_t> expected_first{18000, 18000, 20000,
 	                                          20000, 22000, 22000};
 	EXPECT_EQ(out, expected_first);
 
 	const std::vector<float> second_chunk{30000, 30000, 60000,
 	                                      60000, 30000, 30000};
-	out = limiter.Process(second_chunk, frames);
+	limiter.Process(second_chunk, frames, out);
 
 	const std::vector<int16_t> expected_second{24266, 24266, 32766,
 	                                           32766, 16383, 16383};
@@ -220,14 +230,15 @@ TEST(SoftLimiter, OutboundsPolyJoinNegative)
 
 	const std::vector<float> first_chunk{-18000, -18000, -20000,
 	                                     -20000, -22000, -22000};
-	std::vector<int16_t> out = limiter.Process(first_chunk, frames);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(first_chunk, frames, out);
 	const std::vector<int16_t> expected_first{-18000, -18000, -20000,
 	                                          -20000, -22000, -22000};
 	EXPECT_EQ(out, expected_first);
 
 	const std::vector<float> second_chunk{-30000, -30000, -60000,
 	                                      -60000, -30000, -30000};
-	out = limiter.Process(second_chunk, frames);
+	limiter.Process(second_chunk, frames, out);
 
 	const std::vector<int16_t> expected_second{-24266, -24266, -32766,
 	                                           -32766, -16383, -16383};
@@ -243,12 +254,13 @@ TEST(SoftLimiter, OutboundsJoinWithZeroCross)
 	const std::vector<float> first_chunk{-5000, 1000, -3000, 1000,
 	                                     -1000, 1000, 0,     1000,
 	                                     3000,  1000, 5000,  1000};
-	std::vector<int16_t> out = limiter.Process(first_chunk, frames);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(first_chunk, frames, out);
 
 	const std::vector<float> second_chunk{15000,  1000, 25000,  1000,
 	                                      32000,  1000, 0,      1000,
 	                                      -15000, 1000, -40000, 1000};
-	out = limiter.Process(second_chunk, frames);
+	limiter.Process(second_chunk, frames, out);
 
 	const std::vector<int16_t> expected_second{12287,  1000, 20478,  1000,
 	                                           26212,  1000, 0,      1000,
@@ -258,7 +270,7 @@ TEST(SoftLimiter, OutboundsJoinWithZeroCross)
 	const std::vector<float> third_chunk{-25000, 1000, -15000, 1000,
 	                                     -10000, 1000, -5000,  1000,
 	                                     0,      1000, 3000,   1000};
-	out = limiter.Process(third_chunk, frames);
+	limiter.Process(third_chunk, frames, out);
 
 	const std::vector<int16_t> expected_third{-20524, 1000, -12314, 1000,
 	                                          -8209,  1000, -4104,  1000,
@@ -272,7 +284,8 @@ TEST(SoftLimiter, PrescaleAttenuate)
 	AudioFrame prescale{1, 1};
 	SoftLimiter limiter("test-channel", prescale, frames);
 	const std::vector<float> in{-30000.1f, 30000.0f};
-	std::vector<int16_t> out = limiter.Process(in, frames);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(in, frames, out);
 	const std::vector<int16_t> expected_first{-30000, 30000};
 	EXPECT_EQ(out, expected_first);
 
@@ -280,7 +293,7 @@ TEST(SoftLimiter, PrescaleAttenuate)
 	// be adjusted on-the-fly via callback. We simulate this callback here.
 	prescale.left = 0.5f;
 	prescale.right = 0.1f;
-	out = limiter.Process(in, frames);
+	limiter.Process(in, frames, out);
 	const std::vector<int16_t> expected_scaled{-15000, 3000};
 	EXPECT_EQ(out, expected_scaled);
 }
@@ -291,7 +304,8 @@ TEST(SoftLimiter, PrescaleAmplify)
 	AudioFrame prescale{1, 1};
 	SoftLimiter limiter("test-channel", prescale, frames);
 	const std::vector<float> in{-10000.1f, 10000.0f};
-	std::vector<int16_t> out = limiter.Process(in, frames);
+	std::vector<int16_t> out(frames * 2);
+	limiter.Process(in, frames, out);
 	const std::vector<int16_t> expected_first{-10000, 10000};
 	EXPECT_EQ(out, expected_first);
 
@@ -299,7 +313,7 @@ TEST(SoftLimiter, PrescaleAmplify)
 	// be adjusted on-the-fly via callback. We simulate this callback here.
 	prescale.left = 1.5f;
 	prescale.right = 1.1f;
-	out = limiter.Process(in, frames);
+	limiter.Process(in, frames, out);
 	const std::vector<int16_t> expected_scaled{-15000, 11000};
 	EXPECT_EQ(out, expected_scaled);
 }

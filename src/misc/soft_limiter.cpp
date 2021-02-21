@@ -38,8 +38,9 @@ SoftLimiter::SoftLimiter(const std::string &name,
 {}
 
 //  Limit the input array and returned as integer array
-std::vector<int16_t> SoftLimiter::Process(const std::vector<float> &in,
-                                          const uint16_t frames) noexcept
+void SoftLimiter::Process(const std::vector<float> &in,
+                          const uint16_t frames,
+                          std::vector<int16_t> &out) noexcept
 {
 	// Make sure chunk sizes aren' too big or latent
 	assertm(frames > 0, "need some quantity of frames");
@@ -47,7 +48,9 @@ std::vector<int16_t> SoftLimiter::Process(const std::vector<float> &in,
 
 	// Make sure the incoming vector has at least the requested frames
 	const uint16_t samples = frames * 2; // left and right channels
+	assert(samples <= max_samples);
 	assert(in.size() >= samples);
+	assert(out.size() >= frames);
 
 	auto precross_peak_pos_left = in.end();
 	auto precross_peak_pos_right = in.end();
@@ -56,12 +59,6 @@ std::vector<int16_t> SoftLimiter::Process(const std::vector<float> &in,
 
 	FindPeaksAndZeroCrosses(in, precross_peak_pos_left, precross_peak_pos_right,
 	                        zero_cross_left, zero_cross_right, samples);
-
-	// Size our temporary output vector using max_samples, which is
-	// typically assigned from constexpr, allowing for compile-time
-	// allocation optimizations.
-	assert(samples <= max_samples);
-	std::vector<int16_t> out(max_samples);
 
 	// Given the local peaks found in each side channel, scale or copy the
 	// input array into the output array
@@ -76,7 +73,6 @@ std::vector<int16_t> SoftLimiter::Process(const std::vector<float> &in,
 
 	SaveTailFrame(frames, out);
 	Release();
-	return out;
 }
 
 // Helper function to evaluate the existing peaks and prior values.

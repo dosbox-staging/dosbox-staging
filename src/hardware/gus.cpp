@@ -259,6 +259,7 @@ private:
 	// Collections
 	vol_scalars_array_t vol_scalars = {{}};
 	std::vector<float> render_buffer = {};
+	std::vector<int16_t> play_buffer = {};
 	pan_scalars_array_t pan_scalars = {{}};
 	ram_array_t ram = {{0u}};
 	read_io_array_t read_handlers = {};   // std::functions
@@ -584,7 +585,8 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 }
 
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
-        : render_buffer(BUFFER_FRAMES * 2), // 2 samples/frame (left & right)
+        : render_buffer(BUFFER_FRAMES * 2), // 2 samples/frame, L & R channels
+          play_buffer(BUFFER_FRAMES * 2),   // 2 samples/frame, L & R channels
           soft_limiter("GUS", mixer_level, BUFFER_FRAMES),
           port_base(port - 0x200u),
           dma2(dma),
@@ -658,8 +660,8 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 				++voice;
 			}
 		}
-		const auto out = soft_limiter.Process(render_buffer, frames);
-		audio_channel->AddSamples_s16(frames, out.data());
+		soft_limiter.Process(render_buffer, frames, play_buffer);
+		audio_channel->AddSamples_s16(frames, play_buffer.data());
 		CheckVoiceIrq();
 		generated_frames += frames;
 	}
