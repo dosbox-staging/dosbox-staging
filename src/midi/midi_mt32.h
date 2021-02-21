@@ -67,8 +67,12 @@ private:
 
 	// Managed objects
 	channel_t channel{nullptr, MIXER_DelChannel};
+
 	std::vector<int16_t> play_buffer = {};
-	ring_t ring{4}; // Handle up to four buffers in the ring
+	static constexpr auto num_buffers = 4;
+	ring_t playable{num_buffers};
+	ring_t backstock{num_buffers};
+
 	service_t service{};
 	std::thread renderer{};
 	AudioFrame limiter_ratio = {1.0f, 1.0f};
