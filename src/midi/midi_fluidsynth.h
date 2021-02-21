@@ -63,8 +63,12 @@ private:
 	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
 	channel_t channel{nullptr, MIXER_DelChannel};
+
 	std::vector<int16_t> play_buffer = {};
-	ring_t ring{8}; // Handle up to eight buffers in the ring
+	static constexpr auto num_buffers = 8;
+	ring_t playable{num_buffers};
+	ring_t backstock{num_buffers};
+
 	std::thread renderer = {};
 	AudioFrame prescale_level = {1.0f, 1.0f};
 	SoftLimiter soft_limiter;

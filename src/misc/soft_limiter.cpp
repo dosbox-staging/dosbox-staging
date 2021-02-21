@@ -50,12 +50,7 @@ void SoftLimiter::Process(const std::vector<float> &in,
 	const uint16_t samples = frames * 2; // left and right channels
 	assert(samples <= max_samples);
 	assert(in.size() >= samples);
-
-	if (out.size() < frames) {
-		out.clear(); // re-initialize
-		out.resize(frames);
-		DEBUG_LOG_MSG("SOFT_LIMITER: reinitialized output buffer");
-	}
+	assert(out.size() >= frames);
 
 	auto precross_peak_pos_left = in.end();
 	auto precross_peak_pos_right = in.end();
