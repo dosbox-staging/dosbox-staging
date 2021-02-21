@@ -207,11 +207,6 @@ An optional percentage will scale the SoundFont's volume.
 For example: 'soundfont.sf2 50' will attenuate it by 50 percent.
 The scaling percentage can range from 1 to 500.
 .
-:CONFIG_SYNTH_THREADS
-If set to a value greater than 1, then additional synthesis
-threads will be created to take advantage of many CPU cores.
-(min 1, max 256)
-.
 :CONFIG_MODEL
 Model of synthesizer to use. The default (auto) prefers CM-32L
 if both sets of ROMs are provided. For early Sierra games and Dune 2

@@ -208,11 +208,6 @@ Un pourcentage optionnel r‚glera le volume du SoundFont.
 Par exemple: 'soundfont.sf2 50' le diminuera de 50 pourcents.
 L'‚chelle de pourcentage peut aller de 1 … 500.
 .
-:CONFIG_SYNTH_THREADS
-Si param‚tr‚ … une valeur sup‚rieure … 1, alors des processus additionnels
-de synth‚tiseurs seront cr‚‚s pour profiter de multiples coeurs CPU.
-(min 1, max 256)
-.
 :CONFIG_MODEL
 ModŠle de synth‚tiseur … utiliser. Par d‚faut, pr‚fŠre CM-32L
 si les deux sets de ROMs sont fournis. Pour les premiers jeux Sierra et Dune 2,
@@ -1411,9 +1406,22 @@ Voir ou r‚gler la version de DOS report‚e.
 
 .
 :SHELL_CMD_VER_HELP_LONG
-VER
-VER SET num‚ro_version
-VER SET version_majeure [version_mineure]
+Utilisation :
+  [32;1mver[0m
+  [32;1mver[0m [37;1mset[0m [36;1mVERSION[0m
+
+Avec :
+  [36;1mVERSION[0m peut ˆtre un nombre entier, comme [36;1m5[0m, ou inclure une valeur d‚cimale
+          … deux chiffres, comme : [36;1m6.22[0m, [36;1m7.01[0m, ou [36;1m7.10[0m. Les d‚cimales peuvent
+          aussi ˆtre s‚pares par un espace, comme : [36;1m6 22[0m, [36;1m7 01[0m, ou [36;1m7 10[0m.
+
+Notes :
+  La version de DOS peut aussi ˆtre r‚gl‚e dans le fichier de configuration
+  sous la section [dos] en utilisant le paramŠtre "ver = [36;1mVERSION[0m".
+
+Exemples :
+  [32;1mver[0m [37;1mset[0m [36;1m6.22[0m
+  [32;1mver[0m [37;1mset[0m [36;1m7 10[0m
 
 .
 :SHELL_CMD_VER_VER
