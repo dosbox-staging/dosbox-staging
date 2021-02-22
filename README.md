@@ -192,21 +192,20 @@ in [BUILD.md]. Links to OS-specific instructions: [MSYS2], [MacPorts],
 [MacPorts]: docs/build-macos.md
 [Haiku]:    docs/build-haiku.md
 
-## Imported branches and community patches
+## Imported branches, community patches, old forks
 
 Commits landing in SVN upstream are imported to this repo in a timely manner,
-to the branches matching [`svn/*`] pattern, e.g. [`svn/trunk`].
+see branch [`svn/trunk`].
 
-Other branch name patterns are also in use: [`vogons/*`] for various
-patches posted on the Vogons forum, [`munt/*`] for patches from the Munt
-project, etc.
+- [`svn/*`] - branches from SVN
+- [`forks/*`] - code for various abandoned DOSBox forks
+- [`vogons/*`] - community patches posted on the Vogons forum
 
 Git tags matching pattern `svn/*` are pointing to the commits referenced by SVN
 "tag" paths at the time of creation.
 
-Additionally, we attach some optional metadata to the commits imported from SVN
-in the form of [Git notes](https://git-scm.com/docs/git-notes). To fetch them,
-run:
+Additionally, we attach some optional metadata to the commits in the form of
+[Git notes][git-notes]. To fetch them, run:
 
 ``` shell
 git fetch origin "refs/notes/*:refs/notes/*"
@@ -219,4 +218,5 @@ For some historical context of why this repo exists you can read
 [`svn/*`]:     https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F
 [`svn/trunk`]: https://github.com/dosbox-staging/dosbox-staging/tree/svn/trunk
 [`vogons/*`]:  https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F
-[`munt/*`]:    https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=munt%2F
+[`forks/*`]:   https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=forks%2F
+[git-notes]:   https://git-scm.com/docs/git-notes
