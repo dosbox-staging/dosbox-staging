@@ -51,9 +51,7 @@ jobs:
       - name: Build and instrument the project
         run: |
           set -xeu
-          export CFLAGS="-g -Og"
-          export CXXFLAGS="${CFLAGS}"
-          meson setup build
+          meson setup -Duse_mt32emu=false build
           PATH="${BASE_DIR}/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
           cov-build --dir cov-int ninja -C build
           tar -cvaf package.tar.gz cov-int
