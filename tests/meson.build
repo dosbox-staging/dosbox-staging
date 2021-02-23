@@ -1,19 +1,24 @@
 # gtest dependency
 #
-# Meson will first try to find pre-installed gtest via pkg-config;
-# if this fails, it will download wrap dependency (subproject).
+# User opt-in/out, or disabled for release builds
 #
-# Users can further configure the download behaviour using:
-#
-#   meson setup --wrap-mode={nofallback,nodownload,forcefallback}
-#
-# If gtest is not available at all, unit tests will be disabled.
-#
-gtest_dep = dependency('gtest', main : true, required : false,
-                       fallback : ['gtest', 'gtest_main_dep'])
-if not gtest_dep.found()
-  message('optional gtest dependency not found, unit tests are disabled')
+if (get_option('unit_tests').disabled() or
+   (get_option('buildtype') == 'release' and get_option('unit_tests').auto()))
   gtest_dep = disabler()
+else
+  #
+  # Meson will first try to find pre-installed gtest via pkg-config;
+  # if this fails, it will download wrap dependency (subproject).
+  #
+  # Users can further configure the download behaviour using:
+  #
+  #   meson setup --wrap-mode={nofallback,nodownload,forcefallback}
+  #
+  # If gtest is not available at all, unit tests will be disabled.
+  #
+  gtest_dep = dependency('gtest', main : true,
+                         required : false,
+                         fallback : ['gtest', 'gtest_main_dep'])
 endif
 
 # unit tests with specific requirements
