@@ -43,7 +43,7 @@ files.
 
 ## Linux
 
-Base design icon follows size and colour recommendations of Gnome HIG, so you
+Base design icon follows size and colour recommendations of GNOME HIG, so you
 can use it directly, no pre-processing is needed.
 
 When packaging for Linux, copy and rename `dosbox-staging.svg` icon to distro

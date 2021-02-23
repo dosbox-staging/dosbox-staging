@@ -447,7 +447,7 @@ In Windows, you can also drag directories/files onto the DOSBox executable.
 Environment variables
 ---------------------
 
-Any configuration option can be overriden using an environment variable.
+Any configuration option can be overridden using an environment variable.
 Environment variables starting with prefix "DOSBOX" are processed and
 interpreted as follows: DOSBOX_SECTIONNAME_PROPERTYNAME=value
 
@@ -643,7 +643,7 @@ CONFIG -get "section property"
 
   -wcp filelocation
      Write the current configuration settings to the specified file in or
-     relative to the DOSBox program start directory. Realtive and absolute
+     relative to the DOSBox program start directory. Relative and absolute
      paths are possible. This is located on a drive on the host, not a mounted
      drive in DOSBox. It is useful if you keep DOSBox on a removable media.
      If file is omitted, the configuration will be written to dosbox.conf.
@@ -692,7 +692,7 @@ CONFIG -get "section property"
      Shows information about the specified property in the specified section:
      - purpose of the property
      - possible values, current value, default value
-     - wether it can definitely not be changed at runtime
+     - whether it can definitely not be changed at runtime
 
   -securemode
      Switches DOSBox to a more secure mode. In this mode the internal
@@ -1018,10 +1018,10 @@ KEYB [keyboardlayoutcode [codepage [codepagefile]]]
   Examples:
     1. To load the polish typist keys layout (automatically uses codepage 852):
          keyb pl214
-    2. To load one of russian keyboard layouts with codepage 866:
+    2. To load one of Russian keyboard layouts with codepage 866:
          keyb ru441 866
-       In order to type russian characters press ALT+RIGHT-SHIFT.
-    3. To load one of french keyboard layouts with codepage 850 (where the
+       In order to type Russian characters press ALT+RIGHT-SHIFT.
+    3. To load one of French keyboard layouts with codepage 850 (where the
        codepage is defined in EGACPI.DAT):
          keyb fr189 850 EGACPI.DAT
     4. To load codepage 858 (without a keyboard layout):

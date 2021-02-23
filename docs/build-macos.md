@@ -28,7 +28,7 @@ to be installed and the license agreed to:
 ### Install dependencies (MacPorts)
 
 1. Install MacPorts: <https://www.macports.org/install.php>
-2. Install depedencies:
+2. Install dependencies:
 
     ``` shell
     sudo port -q install meson ccache libpng libsdl2 libsdl2_net \

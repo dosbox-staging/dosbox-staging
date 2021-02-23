@@ -78,7 +78,7 @@ They do not apply to code in `src/libs/` directory (libraries in there
 have their own coding conventions).
 
 Rules outlined below apply to new code landing in master branch.
-Do not do mass reformating or renaming of existing code.
+Do not do mass reformatting or renaming of existing code.
 
 ### Language
 
@@ -150,7 +150,7 @@ Read [How to Write a Git Commit Message]. Then read it again, and follow
 "the seven rules" :)
 
 The only exception to these rules are commits landing from our upstream project,
-so occassionally you might find a commit originating from `svn/trunk` branch,
+so occasionally you might find a commit originating from `svn/trunk` branch,
 that does not follow them.  There are no other exceptions.
 
 [How to Write a Git Commit Message]:https://chris.beams.io/posts/git-commit/
