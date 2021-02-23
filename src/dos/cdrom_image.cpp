@@ -338,7 +338,7 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
 		static uint8_t dae_attempts = 0;
 		if (dae_attempts++ > 10) {
 			E_Exit("\n"
-			       "CDROM: Digital Audio Extration (DAE) was attempted with a %u kHz\n"
+			       "CDROM: Digital Audio Extraction (DAE) was attempted with a %u kHz\n"
 			       "       track, but DAE is only compatible with %u kHz tracks.",
 			       getRate(),
 			       REDBOOK_PCM_FRAMES_PER_SECOND);

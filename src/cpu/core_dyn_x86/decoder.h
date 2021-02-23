@@ -99,7 +99,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 		}
 	}
 	if (!cache.free_pages) {
-		LOG_MSG("DYNX86:cache.free_pages is not useable");
+		LOG_MSG("DYNX86:cache.free_pages is not usable");
 		return false;
 	}
 	CodePageHandler * cpagehandler=cache.free_pages;

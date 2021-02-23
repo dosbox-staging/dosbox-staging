@@ -426,7 +426,7 @@ Bit32u get_OF(void) {
 	case t_DIV:
 		return false; /* Unknown */
 	default:
-		LOG(LOG_CPU,LOG_ERROR)("get_OF Unkown %" sBitfs(d),lflags.type);
+		LOG(LOG_CPU,LOG_ERROR)("get_OF Unknown %" sBitfs(d),lflags.type);
 	}
 	return false;
 }
