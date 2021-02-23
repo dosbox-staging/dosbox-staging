@@ -93,12 +93,13 @@ Il n'y a gÇnÇralement pas de gain de vitesse en augmentant cette valeur.
 .
 :CONFIG_STARTUP_VERBOSITY
 Contrìle la verbositÇ avant l'affichage du programme :
-       | êcran de dÇmarrage | êcran de bienvenue | Sorties Çcran de dÇmarrage
-high   |        oui         |        oui         |            oui
-medium |        non         |        oui         |            oui
-low    |        non         |        non         |            oui
-quiet  |        non         |        non         |            non
-auto   | 'low' si exec ou dir sont utilisÇs, sinon 'high'
+            | êcran de dÇmarrage | êcran de bienvenue | Sorties Çcran de dÇmarrage
+high        |        oui         |        oui         |            oui
+medium      |        non         |        oui         |            oui
+low         |        non         |        non         |            oui
+quiet       |        non         |        non         |            non
+splash_only |        oui         |        non         |            non
+auto        | 'low' si exec ou dir sont utilisÇs, sinon 'high'
 .
 :CONFIG_FRAMESKIP
 Nombre d'images que DOSBox saute avant d'en afficher une autre.

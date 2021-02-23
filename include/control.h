@@ -31,11 +31,12 @@
 #include "setup.h"
 
 enum class Verbosity : int8_t {
-	//             Show Splash | Show Welcome | Show Early Stdout |
-	High = 3,   //     yes     |     yes      |       yes         |
-	Medium = 2, //     no      |     yes      |       yes         |
-	Low = 1,    //     no      |     no       |       yes         |
-	Quiet = 0   //     no      |     no       |       no          |
+	//                  Splash | Welcome | Early Stdout |
+	High = 4,       //   yes   |   yes   |    yes       |
+	Medium = 3,     //   no    |   yes   |    yes       |
+	Low = 2,        //   no    |   no    |    yes       |
+	SplashOnly = 1, //   yes   |   no    |    no        |
+	Quiet = 0       //   no    |   no    |    no        |
 };
 
 class Config {
