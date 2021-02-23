@@ -361,7 +361,7 @@ static void IPX_AES_EventHandler(Bitu param)
 		}
 		tmpECB = tmp2ECB;
 	}
-	LOG_MSG("!!!! Rouge AES !!!!" );
+	LOG_MSG("!!!! Rogue AES !!!!" );
 }
 
 static void sendPacket(ECBClass* sendecb);

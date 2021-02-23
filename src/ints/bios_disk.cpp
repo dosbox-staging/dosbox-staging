@@ -288,7 +288,7 @@ static Bit8u GetDosDriveNumber(Bit8u biosNum) {
 
 static bool driveInactive(Bit8u driveNum) {
 	if(driveNum>=(2 + MAX_HDD_IMAGES)) {
-		LOG(LOG_BIOS,LOG_ERROR)("Disk %d non-existant", driveNum);
+		LOG(LOG_BIOS,LOG_ERROR)("Disk %d non-existent", driveNum);
 		last_status = 0x01;
 		CALLBACK_SCF(true);
 		return true;
