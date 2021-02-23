@@ -93,12 +93,13 @@ There is generally no speed advantage when raising this value.
 .
 :CONFIG_STARTUP_VERBOSITY
 Controls verbosity prior to displaying the program:
-       | Show splash | Show welcome | Show early stdout
-high   |     yes     |     yes      |       yes
-medium |     no      |     yes      |       yes
-low    |     no      |     no       |       yes
-quiet  |     no      |     no       |       no
-auto   | 'low' if exec or dir is passed, otherwise 'high'
+            | Splash | Welcome | Early stdout
+high        |  yes   |   yes   |     yes
+medium      |  no    |   yes   |     yes
+low         |  no    |   no    |     yes
+quiet       |  no    |   no    |     no
+splash_only |  yes   |   no    |     no
+auto        | 'low' if exec or dir is passed, otherwise 'high'
 .
 :CONFIG_FRAMESKIP
 How many frames DOSBox skips before drawing one.

@@ -2306,7 +2306,8 @@ static void GUI_StartUp(Section *sec)
 
 	const bool tiny_fullresolution = splash_image.width > sdl.desktop.full.width ||
 	                                 splash_image.height > sdl.desktop.full.height;
-	if (control->GetStartupVerbosity() == Verbosity::High &&
+	if ((control->GetStartupVerbosity() == Verbosity::High ||
+	     control->GetStartupVerbosity() == Verbosity::SplashOnly) &&
 	    !(sdl.desktop.fullscreen && tiny_fullresolution)) {
 		GFX_Start();
 		DisplaySplash(1000);

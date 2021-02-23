@@ -1076,6 +1076,8 @@ Verbosity Config::GetStartupVerbosity() const
 		return Verbosity::Medium;
 	if (user_choice == "low")
 		return Verbosity::Low;
+	if (user_choice == "splash_only")
+		return Verbosity::SplashOnly;
 	if (user_choice == "quiet")
 		return Verbosity::Quiet;
 	// auto-mode
