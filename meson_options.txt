@@ -65,3 +65,8 @@ option('try_static_libs',
        choices : ['opusfile', 'png', 'sdl2', 'sdl2_net'],
        value : [],
        description : 'Attempt to statically link selected libraries.')
+
+option('unit_tests',
+       type : 'feature',
+       value : 'auto',
+       description : 'Build unit tests. Auto skips for release builds.')

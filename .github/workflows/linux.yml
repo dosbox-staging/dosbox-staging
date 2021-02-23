@@ -36,7 +36,7 @@ jobs:
           - name: GCC 5, Ubuntu 18.04
             os: ubuntu-18.04
             packages: g++-5
-            build_flags: --native-file=.github/meson/native-gcc-5.ini --wrap-mode=nofallback -Duse_fluidsynth=false -Duse_mt32emu=false
+            build_flags: --native-file=.github/meson/native-gcc-5.ini --wrap-mode=nofallback -Dunit_tests=disabled -Duse_fluidsynth=false -Duse_mt32emu=false
             max_warnings: 0
 
           - name: GCC, +tests
@@ -71,7 +71,7 @@ jobs:
 
           - name: GCC, minimum build
             os: ubuntu-20.04
-            build_flags: --wrap-mode=nofallback -Duse_fluidsynth=false -Duse_sdl2_net=false -Duse_opengl=false -Duse_fluidsynth=false -Duse_mt32emu=false -Duse_opusfile=false -Duse_png=false -Duse_alsa=false
+            build_flags: --wrap-mode=nofallback -Dunit_tests=disabled -Duse_fluidsynth=false -Duse_sdl2_net=false -Duse_opengl=false -Duse_fluidsynth=false -Duse_mt32emu=false -Duse_opusfile=false -Duse_png=false -Duse_alsa=false
             min_dependencies: true
             max_warnings: -1
 
