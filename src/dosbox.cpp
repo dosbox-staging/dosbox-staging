@@ -50,7 +50,7 @@
 #include "midi.h"
 #include "hardware.h"
 
-#ifdef C_NE2000
+#if C_NE2000
 //#include "ne2000.h"
 void NE2K_Init(Section* sec);
 #endif
@@ -898,7 +898,7 @@ void DOSBOX_Init(void) {
 	Pbool->Set_help("Enable ipx over UDP/IP emulation.");
 #endif
 
-#ifdef C_NE2000
+#if C_NE2000
 	secprop=control->AddSection_prop("ne2000",&NE2K_Init,true);
 	MSG_Add("NE2000_CONFIGFILE_HELP",
 		"macaddr -- The physical address the emulator will use on your network.\n"

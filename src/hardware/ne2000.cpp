@@ -1,7 +1,6 @@
 #include "config.h"
 
-#ifdef C_NE2000
-
+#if C_NE2000
 
 #include "dosbox.h"
 #include <string.h>

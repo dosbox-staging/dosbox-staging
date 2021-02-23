@@ -49,6 +49,7 @@ conf_data.set(os_family_name, 1)
 
 conf_data.set10('C_MODEM', get_option('use_sdl2_net'))
 conf_data.set10('C_IPX', get_option('use_sdl2_net'))
+conf_data.set10('C_NE2000', false)
 conf_data.set10('C_OPENGL', get_option('use_opengl'))
 conf_data.set10('C_FLUIDSYNTH', get_option('use_fluidsynth'))
 conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))

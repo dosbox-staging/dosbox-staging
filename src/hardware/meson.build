@@ -22,6 +22,7 @@ libhardware_sources = files([
   'memory.cpp',
   'mixer.cpp',
   'mpu401.cpp',
+  'ne2000.cpp',
   'pci_bus.cpp',
   'pcspeaker.cpp',
   'pic.cpp',

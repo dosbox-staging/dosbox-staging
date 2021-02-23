@@ -86,6 +86,9 @@
 // Define to 1 to enable IPX over Internet networking (using SDL2_net)
 #mesondefine C_IPX
 
+// Define to 1 to enable NE2000 ethernet passthrough
+#mesondefine C_NE2000
+
 // Enable serial port passthrough support
 #mesondefine C_DIRECTSERIAL
 
