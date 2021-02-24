@@ -194,6 +194,7 @@ public:
 	void Close() override
 	{
 		if (m_auGraph) {
+			HaltSequence();
 			AUGraphStop(m_auGraph);
 			DisposeAUGraph(m_auGraph);
 			m_auGraph = 0;

@@ -87,7 +87,10 @@ public:
 	void Close() override
 	{
 		if (!isOpen) return;
-		isOpen=false;
+
+		HaltSequence();
+
+		isOpen = false;
 		midiOutClose(m_out);
 		CloseHandle (m_event);
 	}

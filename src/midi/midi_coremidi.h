@@ -109,6 +109,9 @@ public:
 
 	void Close() override
 	{
+		if (m_port && m_client)
+			HaltSequence();
+
 		// Dispose the port
 		MIDIPortDispose(m_port);
 

@@ -152,8 +152,10 @@ public:
 
 	void Close() override
 	{
-		if (seq_handle)
+		if (seq_handle) {
+			HaltSequence();
 			snd_seq_close(seq_handle);
+		}
 	}
 
 	bool Open(const char *conf) override
