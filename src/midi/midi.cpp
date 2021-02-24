@@ -104,7 +104,7 @@ struct DB_Midi {
 	uint8_t cmd_buf[8];
 	uint8_t rt_buf[8];
 	struct {
-		uint8_t buf[SYSEX_SIZE];
+		uint8_t buf[MIDI_SYSEX_SIZE];
 		size_t used;
 		uint32_t delay; // ms
 		uint32_t start; // ms
@@ -146,7 +146,8 @@ void MIDI_RawOutByte(uint8_t data)
 	/* Test for a active sysex tranfer */
 	if (midi.status==0xf0) {
 		if (!(data&0x80)) {
-			if (midi.sysex.used<(SYSEX_SIZE-1)) midi.sysex.buf[midi.sysex.used++] = data;
+			if (midi.sysex.used < (MIDI_SYSEX_SIZE - 1))
+				midi.sysex.buf[midi.sysex.used++] = data;
 			return;
 		} else {
 			midi.sysex.buf[midi.sysex.used++] = 0xf7;

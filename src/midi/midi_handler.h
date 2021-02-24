@@ -26,8 +26,6 @@
 
 #include <cstdint>
 
-#define SYSEX_SIZE 8192
-
 class MidiHandler {
 public:
 	MidiHandler();
