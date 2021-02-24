@@ -28,6 +28,9 @@
 // to provide a windowed memory region for the chip and a MAC address.
 //
 
+#ifndef DOSBOX_NE2000_H
+#define DOSBOX_NE2000_H
+
 #include "dosbox.h"
 
 #define bx_bool int
@@ -241,3 +244,4 @@ public:
 
 };
 
+#endif

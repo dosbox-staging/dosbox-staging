@@ -22,26 +22,26 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "config.h"
+#include "ne2000.h"
 
 #if C_NE2000
 
-#include "dosbox.h"
-#include <string.h>
-#include <stdio.h>
-#include "support.h"
-#include "inout.h"
-#include "setup.h"
+#include <cstdio>
+#include <cstring>
+
 #include "callback.h"
-#include "timer.h"
-#include "pic.h"
 #include "cpu.h"
+#include "inout.h"
+#include "pic.h"
+#include "setup.h"
+#include "support.h"
+#include "timer.h"
 
 /* Couldn't find a real spec for the NE2000 out there, hence this is adapted heavily from Bochs */
 
-#include "ne2000.h"
 
-#include "pcap.h"
+//#include "pcap.h" // TODO get rid of pcap dependency
+
 // Handle to WinPCap device
 pcap_t *adhandle = 0;
 static void NE2000_TX_Event(Bitu val);
@@ -90,6 +90,7 @@ static inline void BX_INFO(const char *msg,...) {
 }
 
 static inline void BX_DEBUG(const char *msg,...) {
+
     if (false/*TOO MUCH DEBUG INFO*/) {
         va_list va;
 
@@ -97,7 +98,7 @@ static inline void BX_DEBUG(const char *msg,...) {
         vsnprintf(bxtmp,sizeof(bxtmp)-1,msg,va);
         va_end(va);
 
-        LOG(LOG_MISC,LOG_DEBUG)("BX_DEBUG: %s",bxtmp);
+        // LOG(LOG_MISC,LOG_DEBUG)("BX_DEBUG: %s",bxtmp);
     }
 }
 
@@ -1705,8 +1706,9 @@ void NE2K_ShutDown(Section* sec) {
 	test=0;
 }
 
-void NE2K_Init(Section* sec) {
-	LOG(LOG_MISC,LOG_DEBUG)("Initializing NE2000 network card emulation");
+void NE2K_Init(Section *sec)
+{
+	// LOG(LOG_MISC,LOG_DEBUG)("Initializing NE2000 network card emulation");
 
 	test = new NE2K(sec);
 	sec->AddDestroyFunction(&NE2K_ShutDown,true);
