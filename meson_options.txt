@@ -28,6 +28,11 @@ option('use_png',
        value : true,
        description : 'Enable saving screenshots in .png format')
 
+option('use_pcap',
+       type : 'boolean',
+       value : false,
+       description : 'Enable ethernet support (NE2000 emulator) using libpcap')
+
 option('use_slirp',
        type : 'boolean',
        value : false,

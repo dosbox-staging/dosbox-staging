@@ -29,6 +29,8 @@
 #include <cstdio>
 #include <cstring>
 
+#include <pcap.h>
+
 #include "callback.h"
 #include "cpu.h"
 #include "inout.h"
@@ -38,9 +40,6 @@
 #include "timer.h"
 
 /* Couldn't find a real spec for the NE2000 out there, hence this is adapted heavily from Bochs */
-
-
-//#include "pcap.h" // TODO get rid of pcap dependency
 
 // Handle to WinPCap device
 pcap_t *adhandle = 0;
