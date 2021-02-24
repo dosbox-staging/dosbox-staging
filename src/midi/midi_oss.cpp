@@ -60,6 +60,9 @@ void MidiHandler_oss::Close()
 {
 	if (!is_open)
 		return;
+
+	HaltSequence();
+
 	close(device);
 	is_open = false;
 }

@@ -45,6 +45,24 @@ public:
 
 	virtual void Close() {}
 
+	void HaltSequence()
+	{
+		uint8_t message[3] = {}; // see MIDI_evt_len for length lookup-table
+		constexpr uint8_t all_notes_off = 0x7b;
+		constexpr uint8_t all_controllers_off = 0x79;
+
+		// from the first to last channel
+		for (uint8_t channel = 0xb0; channel <= 0xbf; ++channel) {
+			message[0] = channel;
+
+			message[1] = all_notes_off;
+			PlayMsg(message);
+
+			message[1] = all_controllers_off;
+			PlayMsg(message);
+		}
+	}
+
 	virtual void PlayMsg(MAYBE_UNUSED const uint8_t *msg) {}
 
 	virtual void PlaySysex(MAYBE_UNUSED uint8_t *sysex, MAYBE_UNUSED size_t len) {}
