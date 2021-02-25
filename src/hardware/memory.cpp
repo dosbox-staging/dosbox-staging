@@ -184,8 +184,9 @@ void MEM_BlockRead(PhysPt pt,void * data,Bitu size) {
 	}
 }
 
-void MEM_BlockWrite(PhysPt pt,void const * const data,Bitu size) {
-	Bit8u const * read = reinterpret_cast<Bit8u const * const>(data);
+void MEM_BlockWrite(PhysPt pt, const void *data, size_t size)
+{
+	const uint8_t *read = static_cast<const uint8_t *>(data);
 	while (size--) {
 		mem_writeb_inline(pt++,*read++);
 	}
