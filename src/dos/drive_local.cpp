@@ -686,7 +686,7 @@ bool localFile::Close() {
 
 	if (newtime) {
 		// backport from DOS_PackDate() and DOS_PackTime()
-		tm tim = {0};
+		struct tm tim = {};
 		tim.tm_sec = (time & 0x1f) * 2;
 		tim.tm_min = (time >> 5) & 0x3f;
 		tim.tm_hour = (time >> 11) & 0x1f;
