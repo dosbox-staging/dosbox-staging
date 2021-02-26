@@ -27,13 +27,14 @@
 
 #if C_FLUIDSYNTH
 
+#include <atomic>
 #include <memory>
 #include <vector>
 #include <fluidsynth.h>
 #include <thread>
 
 #include "mixer.h"
-#include "../libs/rwqueue/readerwritercircularbuffer.h"
+#include "rwqueue.h"
 #include "soft_limiter.h"
 
 class MidiHandlerFluidsynth final : public MidiHandler {
@@ -57,8 +58,6 @@ private:
 	        std::unique_ptr<fluid_settings_t, decltype(&delete_fluid_settings)>;
 	using fsynth_ptr_t = std::unique_ptr<fluid_synth_t, decltype(&delete_fluid_synth)>;
 	using channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
-	using ring_t = moodycamel::BlockingReaderWriterCircularBuffer<std::vector<int16_t>>;
-	using conditional_t = moodycamel::weak_atomic<bool>;
 
 	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
@@ -66,15 +65,15 @@ private:
 
 	std::vector<int16_t> play_buffer = {};
 	static constexpr auto num_buffers = 8;
-	ring_t playable{num_buffers};
-	ring_t backstock{num_buffers};
+	RWQueue<std::vector<int16_t>> playable{num_buffers};
+	RWQueue<std::vector<int16_t>> backstock{num_buffers};
 
 	std::thread renderer = {};
 	AudioFrame prescale_level = {1.0f, 1.0f};
 	SoftLimiter soft_limiter;
 
 	uint16_t last_played_frame = 0; // relative frame-offset in the play buffer
-	conditional_t keep_rendering = false;
+	std::atomic_bool keep_rendering = {};
 	bool is_open = false;
 };
 
