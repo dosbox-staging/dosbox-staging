@@ -174,7 +174,8 @@ static std::string find_sf_file(const std::string &name)
 }
 
 MidiHandlerFluidsynth::MidiHandlerFluidsynth()
-        : soft_limiter("FSYNTH", prescale_level, FRAMES_PER_BUFFER)
+        : soft_limiter("FSYNTH", prescale_level, FRAMES_PER_BUFFER),
+          keep_rendering(false)
 {}
 
 bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
@@ -295,7 +296,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	keep_rendering = true;
 	const auto render = std::bind(&MidiHandlerFluidsynth::Render, this);
 	renderer = std::thread(render);
-	playable.wait_dequeue(play_buffer); // populate the first play buffer
+	play_buffer = playable.Dequeue(); // populate the first play buffer
 
 	// Start playback
 	channel->Enable(true);
@@ -319,10 +320,10 @@ void MidiHandlerFluidsynth::Close()
 
 	// Stop rendering and drain the rings
 	keep_rendering = false;
-	if (!backstock.size_approx())
-		backstock.wait_enqueue(std::move(play_buffer));
-	while (playable.size_approx())
-		playable.wait_dequeue(play_buffer);
+	if (!backstock.Size())
+		backstock.Enqueue(std::move(play_buffer));
+	while (playable.Size())
+		play_buffer = playable.Dequeue();
 
 	// Wait for the rendering thread to finish
 	if (renderer.joinable())
@@ -415,8 +416,8 @@ uint16_t MidiHandlerFluidsynth::GetRemainingFrames()
 		return FRAMES_PER_BUFFER - last_played_frame;
 
 	// Otherwise put the spent buffer in backstock and get the next buffer
-	backstock.wait_enqueue(std::move(play_buffer));
-	playable.wait_dequeue(play_buffer);
+	backstock.Enqueue(std::move(play_buffer));
+	play_buffer = playable.Dequeue();
 	last_played_frame = 0; // reset the frame counter to the beginning
 
 	return FRAMES_PER_BUFFER;
@@ -431,22 +432,22 @@ void MidiHandlerFluidsynth::Render()
 	std::vector<int16_t> playable_buffer(SAMPLES_PER_BUFFER);
 
 	// Populate the backstock using copies of the current buffer.
-	while (backstock.size_approx() < backstock.max_capacity() - 1)
-		backstock.wait_enqueue(playable_buffer);    // copy-in
-	backstock.wait_enqueue(std::move(playable_buffer)); // move the last one
-	assert(backstock.size_approx() == backstock.max_capacity());
+	while (backstock.Size() < backstock.MaxCapacity() - 1)
+		backstock.Enqueue(playable_buffer);
+	backstock.Enqueue(std::move(playable_buffer));
+	assert(backstock.Size() == backstock.MaxCapacity());
 
-	while (keep_rendering) {
+	while (keep_rendering.load()) {
 		fluid_synth_write_float(synth.get(), FRAMES_PER_BUFFER,
 		                        render_buffer.data(), 0, 2,
 		                        render_buffer.data(), 1, 2);
 
 		// Grab the next buffer from backstock and populate it ...
-		backstock.wait_dequeue(playable_buffer);
+		playable_buffer = backstock.Dequeue();
 		soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER,
 		                     playable_buffer);
 		// and then move it into the playable queue
-		playable.wait_enqueue(std::move(playable_buffer));
+		playable.Enqueue(std::move(playable_buffer));
 	}
 }
 
