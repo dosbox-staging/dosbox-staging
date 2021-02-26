@@ -215,10 +215,10 @@ it's recommended to use 'mt32', while newer games typically made
 use of the CM-32L's extra sound effects (use 'auto' or 'cm32l')
 .
 :CONFIG_ROMDIR
-The directory holding the required MT-32 and/or CM-32L ROMs
-named as follows:
-  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM files(s).
-  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file(s).
+The directory containing one or both pairs of MT-32 and/or CM-32L ROMs.
+The files must be named in capitals, as follows:
+  - MT-32 ROM pair: MT32_CONTROL.ROM and MT32_PCM.ROM
+  - CM-32L ROM pair: CM32L_CONTROL.ROM and CM32L_PCM.ROM
 The directory can be absolute or relative, or leave it blank to
 use the 'mt32-roms' directory in your DOSBox configuration
 directory, followed by checking other common system locations.
