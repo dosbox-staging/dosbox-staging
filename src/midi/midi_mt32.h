@@ -26,6 +26,7 @@
 
 #if C_MT32EMU
 
+#include <atomic>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -37,14 +38,12 @@
 #endif
 
 #include "mixer.h"
-#include "../libs/rwqueue/readerwritercircularbuffer.h"
+#include "rwqueue.h"
 #include "soft_limiter.h"
 
 class MidiHandler_mt32 final : public MidiHandler {
 private:
-	using ring_t = moodycamel::BlockingReaderWriterCircularBuffer<std::vector<int16_t>>;
 	using channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
-	using conditional_t = moodycamel::weak_atomic<bool>;
 
 public:
 	using service_t = std::unique_ptr<MT32Emu::Service>;
@@ -70,8 +69,8 @@ private:
 
 	std::vector<int16_t> play_buffer = {};
 	static constexpr auto num_buffers = 4;
-	ring_t playable{num_buffers};
-	ring_t backstock{num_buffers};
+	RWQueue<std::vector<int16_t>> playable{num_buffers};
+	RWQueue<std::vector<int16_t>> backstock{num_buffers};
 
 	service_t service{};
 	std::thread renderer{};
@@ -84,7 +83,7 @@ private:
 	uint32_t total_buffers_played = 0;
 	uint16_t last_played_frame = 0; // relative frame-offset in the play buffer
 
-	conditional_t keep_rendering = false;
+	std::atomic_bool keep_rendering = {};
 	bool is_open = false;
 };
 

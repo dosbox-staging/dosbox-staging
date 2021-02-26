@@ -239,7 +239,8 @@ static mt32emu_report_handler_i get_report_handler_interface()
 }
 
 MidiHandler_mt32::MidiHandler_mt32()
-        : soft_limiter("MT32", limiter_ratio, FRAMES_PER_BUFFER)
+        : soft_limiter("MT32", limiter_ratio, FRAMES_PER_BUFFER),
+          keep_rendering(false)
 {}
 
 bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
@@ -329,7 +330,7 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	keep_rendering = true;
 	const auto render = std::bind(&MidiHandler_mt32::Render, this);
 	renderer = std::thread(render);
-	playable.wait_dequeue(play_buffer); // populate the first play buffer
+	play_buffer = playable.Dequeue(); // populate the first play buffer
 
 	// Start playback
 	channel->Enable(true);
@@ -373,10 +374,10 @@ void MidiHandler_mt32::Close()
 
 	// Stop rendering and drain the rings
 	keep_rendering = false;
-	if (!backstock.size_approx())
-		backstock.wait_enqueue(std::move(play_buffer));
-	while (playable.size_approx())
-		playable.wait_dequeue(play_buffer);
+	if (!backstock.Size())
+		backstock.Enqueue(std::move(play_buffer));
+	while (playable.Size())
+		play_buffer = playable.Dequeue();
 
 	// Wait for the rendering thread to finish
 	if (renderer.joinable())
@@ -438,8 +439,8 @@ uint16_t MidiHandler_mt32::GetRemainingFrames()
 		return FRAMES_PER_BUFFER - last_played_frame;
 
 	// Otherwise put the spent buffer in backstock and get the next buffer
-	backstock.wait_enqueue(std::move(play_buffer));
-	playable.wait_dequeue(play_buffer);
+	backstock.Enqueue(std::move(play_buffer));
+	play_buffer = playable.Dequeue();
 	total_buffers_played++;
 	last_played_frame = 0; // reset the frame counter to the beginning
 
@@ -455,20 +456,20 @@ void MidiHandler_mt32::Render()
 	std::vector<int16_t> playable_buffer(SAMPLES_PER_BUFFER);
 
 	// Populate the backstock using copies of the current buffer.
-	while (backstock.size_approx() < backstock.max_capacity() - 1)
-		backstock.wait_enqueue(playable_buffer);    // copy-in
-	backstock.wait_enqueue(std::move(playable_buffer)); // move the last one
-	assert(backstock.size_approx() == backstock.max_capacity());
+	while (backstock.Size() < backstock.MaxCapacity() - 1)
+		backstock.Enqueue(playable_buffer);
+	backstock.Enqueue(std::move(playable_buffer));
+	assert(backstock.Size() == backstock.MaxCapacity());
 
-	while (keep_rendering) {
+	while (keep_rendering.load()) {
 		service->renderFloat(render_buffer.data(), FRAMES_PER_BUFFER);
 
 		// Grab the next buffer from backstock and populate it ...
-		backstock.wait_dequeue(playable_buffer);
+		playable_buffer = backstock.Dequeue();
 		soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER, playable_buffer);
 
 		// and then move it into the playable queue
-		playable.wait_enqueue(std::move(playable_buffer));
+		playable.Enqueue(std::move(playable_buffer));
 	}
 }
 
