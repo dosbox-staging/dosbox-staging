@@ -77,10 +77,10 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
 	str_prop->Set_help(
-	        "The directory holding the required MT-32 and/or CM-32L ROMs\n"
-	        "named as follows:\n"
-	        "  MT32_CONTROL.ROM or CM32L_CONTROL.ROM - control ROM files(s).\n"
-	        "  MT32_PCM.ROM or CM32L_PCM.ROM - PCM ROM file(s).\n"
+	        "The directory containing one or both pairs of MT-32 and/or CM-32L ROMs.\n"
+	        "The files must be named in capitals, as follows:\n"
+	        "  - MT-32 ROM pair: MT32_CONTROL.ROM and MT32_PCM.ROM\n"
+	        "  - CM-32L ROM pair: CM32L_CONTROL.ROM and CM32L_PCM.ROM\n"
 	        "The directory can be absolute or relative, or leave it blank to\n"
 	        "use the 'mt32-roms' directory in your DOSBox configuration\n"
 	        "directory, followed by checking other common system locations.");

@@ -844,15 +844,15 @@ static Handler * make_opl_handler(const std::string &oplemu, OPL_Mode mode)
 }
 
 Module::Module(Section *configuration)
-	: Module_base(configuration),
-	  mixerObject(),
-	  mode(MODE_OPL2), // TODO this is set in Init and there's no good default
-	  reg{0}, // union
-	  ctrl{false, 0, 0xff, 0xff, false},
-	  mixerChan(nullptr),
-	  lastUsed(0),
-	  handler(nullptr),
-	  capture(nullptr)
+        : Module_base(configuration),
+          mixerObject(),
+          mode(MODE_OPL2), // TODO this is set in Init and there's no good default
+          reg{0},          // union
+          ctrl{false, 0, 0xff, 0xff, false},
+          mixerChan(nullptr),
+          lastUsed(0),
+          handler(nullptr),
+          capture(nullptr)
 {
 	Section_prop * section=static_cast<Section_prop *>(configuration);
 	Bitu base = section->Get_hex("sbbase");
