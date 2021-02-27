@@ -93,12 +93,12 @@ There is generally no speed advantage when raising this value.
 .
 :CONFIG_STARTUP_VERBOSITY
 Controls verbosity prior to displaying the program:
-            | Splash | Welcome | Early stdout
-high        |  yes   |   yes   |     yes
-medium      |  no    |   yes   |     yes
-low         |  no    |   no    |     yes
-quiet       |  no    |   no    |     no
-splash_only |  yes   |   no    |     no
+Verbosity   | Splash | Welcome | Early stdout
+high        |  yes   |   yes   |    yes
+medium      |  no    |   yes   |    yes
+low         |  no    |   no    |    yes
+quiet       |  no    |   no    |    no
+splash_only |  yes   |   no    |    no
 auto        | 'low' if exec or dir is passed, otherwise 'high'
 .
 :CONFIG_FRAMESKIP
@@ -394,7 +394,7 @@ Additional config files:
 
 .
 :PROGRAM_CONFIG_CONFDIR
-DOSBox %s configuration directory: 
+DOSBox Staging %s configuration directory: 
 %s
 
 
@@ -416,7 +416,7 @@ Use -writelang or -wl filename to write the current language strings.
 -r [parameters]
  Restart DOSBox, either using the previous parameters or any that are appended.
 -wcp [filename]
- Write config file to the program directory, dosbox.conf or the specified 
+ Write config file to the program directory, dosbox.conf or the specified
  filename.
 -wcd
  Write to the default config file in the config directory.
@@ -839,7 +839,7 @@ mounts compact disc image(s) or floppy disk image(s) to a given drive letter.
 Mount a CD-ROM, floppy, or disk image to a drive letter.
 
 Usage:
-  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso 
+  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso
   [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mIMAGEFILE[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy
   [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -size GEOMETRY
   [32;1mimgmount[0m -u [37;1mDRIVE[0m  (unmounts the DRIVE's image)
@@ -1422,7 +1422,8 @@ Examples:
 
 .
 :SHELL_CMD_VER_VER
-DOSBox Staging version %s. Reported DOS version %d.%02d.
+DOSBox Staging version %s
+DOS version %d.%02d
 
 .
 :SHELL_CMD_VER_INVALID
