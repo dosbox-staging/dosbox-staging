@@ -1,411 +1,407 @@
 :CONFIG_FULLSCREEN
-Start DOSBox directly in fullscreen.
-Press Alt-Enter to switch back to window.
+Запустить DOSBox в полноэкранном режиме.
+Нажмите Alt-Enter, чтобы вернуться обратно в оконный режим.
 .
 :CONFIG_DISPLAY
-Number of display to use; values depend on OS and user settings.
+Кол-во используемых дисплеев; значения зависят от ОС и настроек пользователя.
 .
 :CONFIG_VSYNC
-Vertical sync setting not implemented (setting ignored)
+Настройка вертикальной синхронизации не реализована (настройка игнорируется)
 .
 :CONFIG_FULLRESOLUTION
-What resolution to use for fullscreen: 'original', 'desktop'
-or a fixed size (e.g. 1024x768).
+Какое разрешение использовать для полноэкранного режима: 'original', 'desktop'
+или фиксированный размер (например, '1024x768').
 .
 :CONFIG_WINDOWRESOLUTION
-Set window size to be used when running in windowed mode:
-  default:   Select the best option based on your
-             environment and other settings.
-  original:  Resize window to the resolution picked by
-             the emulated program.
-  resizable: Make the emulator window resizable.
-             This is an experimental option, works only with
-             output=opengl and glshader=sharp (or none)
-  <custom>:  Scale the window content to the indicated
-             dimensions, in WxH format. For example: 1024x768.
-             Scaling is not performed for output=surface.
+Установите размер окна, которое будет использоваться в оконном режиме:
+  default:   Выбор наилучшего варианта в зависимости от Вашего
+             окружения и других настроек.
+  original:  Изменить размер окна в соответствии с разрешением, выбранным
+             эмулированной программой.
+  resizable: Сделать окно эмулятора изменяемым.
+             Это экспериментальный вариант, работает только с
+             output=opengl и glshader=sharp (или 'none')
+  'ШxВ':     Масштабировать содержимое окна до указанного размера,
+             в формате ШxВ. Например: '1024x768'.
+             Масштабирование не выполняется для output=surface.
 .
 :CONFIG_OUTPUT
-What video system to use for output.
+Какую видеосистему использовать для вывода изображения.
 .
 :CONFIG_TEXTURE_RENDERER
-Choose a renderer driver when using a texture output mode.
-Use texture_renderer=auto for an automatic choice.
+Выберите драйвер рендера при использовании режима вывода текстур.
+Используйте texture_renderer=auto для автоматического выбора.
 .
 :CONFIG_CAPTURE_MOUSE
-Choose a mouse control method:
-   onclick:        The mouse will be captured after the first
-                   click inside the window.
-   onstart:        The mouse is captured immediately on start
-                   (similar to real DOS).
-   seamless:       The mouse can move seamlessly in and out of DOSBox
-                   window and cannot be captured.
-   nomouse:        The mouse is disabled and hidden without any
-                   input sent to the game.
-Choose how middle-clicks are handled (second parameter):
-   middlegame:     Middle-clicks are sent to the game
-                   (Ctrl-F10 uncaptures the mouse).
-   middlerelease:  Middle-clicks are used to uncapture the mouse
-                   (not sent to the game). However, middle-clicks
-                   will be sent to the game in fullscreen or when
-                   seamless control is set.
-                   Ctrl-F10 will also uncapture the mouse.
-Defaults (if not present or incorrect): seamless middlerelease
+Выберите метод управления мышью:
+   onclick:        Мышь будет захвачена после первого
+                   нажатия внутри окна.
+   onstart:        Мышь захватывается при старте
+                   (подобно настоящему DOS).
+   seamless:       Мышь может плавно перемещаться внутри и снаружи DOSBox
+                   окна и не может быть захвачена.
+   nomouse:        Мышь отключена и скрыта и не отправляет
+                   события ввода в игру.
+Выберите способ обработки нажатия средней кнопки мыши (второй параметр):
+   middlegame:     Нажатие средней кнопки отправляет события в игру
+                   (Ctrl-F10 освобождает мышь).
+   middlerelease:  Нажатие средней кнопки освобождает мышь не отправляя
+                   события в игру. Однако, нажатие средней кнопки
+                   будет отправлять события в игру в полноэкранном режиме
+                   или когда установлен метод управления 'seamless'.
+                   Ctrl-F10 также освобождает мышь.
+Значения по умолчанию (если нет или неправильные): 'seamless middlerelease'
 .
 :CONFIG_SENSITIVITY
-Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).
+Чувствительность мыши. Дополнительный второй параметр определяет вертикальную чувствительность (например, '100,-50').
 .
 :CONFIG_RAW_MOUSE_INPUT
-Enable this setting to bypass your operating system's mouse
-acceleration and sensitivity settings. This works in
-fullscreen or when the mouse is captured in window mode.
+Включение этой настройки, игнорирует настройки ускорения и
+чувствительности мыши в операционной системе. Это работает в
+полноэкранном режиме или при захвате мыши в оконном режиме.
 .
 :CONFIG_WAITONERROR
-Wait before closing the console if dosbox has an error.
+Ждать, перед закрытием консоли, если DOSBox имеет ошибку.
 .
 :CONFIG_PRIORITY
-Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized.
-pause is only valid for the second entry.
+Уровни приоритета для DOSBox. Второй параметр действует, когда окно DOSBox без фокуса или свёрнуто.
+'pause' доступен только в качестве второго параметра.
 .
 :CONFIG_MAPPERFILE
-File used to load/save the key/event mappings from.
-Resetmapper only works with the default value.
+Файл, используемый для загрузки/сохранения сопоставлений из ключей/событий.
+Сброс сопоставления работает только со значением по умолчанию.
 .
 :CONFIG_SCREENSAVER
-Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER
-environment variable (which usually blocks the OS screensaver
-while the emulator is running).
+Используйте 'allow' или 'block' для переопределения SDL_VIDEO_ALLOW_SCREENSAVER
+переменная окружения (которая обычно блокирует хранитель экрана ОС
+пока работает эмулятор).
 .
 :CONFIG_LANGUAGE
-Select another language file.
+Выберите другой языковой файл.
 .
 :CONFIG_MACHINE
-The type of machine DOSBox tries to emulate.
+Тип эмулируемого компьютера для DOSBox.
 .
 :CONFIG_CAPTURES
-Directory where things like wave, midi, screenshot get captured.
+Директория для захвата музыки и снимков экрана.
 .
 :CONFIG_MEMSIZE
-Amount of memory DOSBox has in megabytes.
-This value is best left at its default to avoid problems with some games,
-though few games might require a higher value.
-There is generally no speed advantage when raising this value.
+Объём доступной оперативной памяти DOSBox в мегабайтах.
+Это значение лучше оставить по умолчанию, чтобы избежать проблем с некоторыми играми,
+хотя несколько игр могут потребовать более высоких значений.
+Как правило, нет никакого преимущества в скорости при повышении этой величины.
 .
 :CONFIG_STARTUP_VERBOSITY
-Controls verbosity prior to displaying the program:
-            | Splash | Welcome | Early stdout
-high        |  yes   |   yes   |     yes
-medium      |  no    |   yes   |     yes
-low         |  no    |   no    |     yes
-quiet       |  no    |   no    |     no
-splash_only |  yes   |   no    |     no
-auto        | 'low' if exec or dir is passed, otherwise 'high'
+Управляет кол-вом информации перед отображением программы:
+            | Заставка | Приветствие | Ранний вывод
+high        |    да    |     да      |      да
+medium      |    нет   |     да      |      да
+low         |    нет   |     нет     |      да
+quiet       |    нет   |     нет     |      нет
+splash_only |    да    |     нет     |      нет
+auto        | 'low', если передан исполняемый файл или директория, иначе 'high'
 .
 :CONFIG_FRAMESKIP
-How many frames DOSBox skips before drawing one.
+Сколько кадров DOSBox пропускает перед отрисовкой одного кадра.
 .
 :CONFIG_ASPECT
-Scales the vertical resolution to produce a 4:3 display aspect
-ratio, matching that of the original standard-definition monitors
-for which the majority of DOS games were designed. This setting
-only affects video modes that use non-square pixels, such as
-320x200 or 640x400; where as square-pixel modes, such as 640x480
-and 800x600, will be displayed as-is.
+Масштабирует вертикальное разрешение для получения изображения с соотношением
+сторон 4:3. Соотношение, совпадающее с оригинальными мониторами,
+для которых было разработано большинство DOS-игр. Эта настройка влияет
+только на режимы видео, использующие неквадратные пиксели, такие как
+'320x200' или '640x400'; где в виде квадратных пикселей, например, '640x480'
+и '800x600', будут отображаться как есть.
 .
 :CONFIG_MONOCHROME_PALETTE
-Select default palette for monochrome display.
-Works only when emulating hercules or cga_mono.
-You can also cycle through available colours using F11.
+Выберите палитру по умолчанию для монохромного дисплея.
+Работает только при эмуляции 'hercules' или 'cga_mono'.
+Вы также можете перемещаться по доступным цветам, используя F11.
 .
 :CONFIG_SCALER
-Scaler used to enlarge/enhance low resolution modes.
-If 'forced' is appended, then the scaler will be used even if
-the result might not be desired.
-Note that some scalers may use black borders to fit the image
-within your configured display resolution. If this is
-undesirable, try either a different scaler or enabling
-fullresolution output.
+Масштабирующий алгоритм, используемый для увеличения/расширения
+режимов низкого разрешения. Если добавить 'forced', то масштабирующий
+алгоритм будет использоваться, даже если результат может быть нежелательным.
+Обратите внимание, что некоторые масштабирующие алгоритмы могут использовать
+чёрные поля для заполнения изображения в пределах настроенного разрешения
+дисплея. Если это нежелательно, попробуйте другой масштабирующий алгоритм
+или включите вывод изображения с полным разрешением.
 .
 :CONFIG_GLSHADER
-Either 'none' or a GLSL shader name. Works only with
-OpenGL output.  Can be either an absolute path, a file
-in the 'glshaders' subdirectory of the DOSBox
-configuration directory, or one of the built-in shaders:
-advinterp2x, advinterp3x, advmame2x, advmame3x,
-crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
-scan2x, scan3x, tv2x, tv3x, sharp (default).
+Укажите 'none', или GLSL-шейдер. Работает только
+с выводом изображения OpenGL. Может быть как абсолютный
+путь, так и файл в субдиректории 'glshaders' в директории
+конфигурации DOSBox, или один из встроенных GLSL-шейдеров:
+'advinterp2x', 'advinterp3x', 'advmame2x', 'advmame3x',
+'crt-easymode-flat', 'crt-fakelottes-flat', 'rgb2x', 'rgb3x',
+'scan2x', 'scan3x', 'tv2x', 'tv3x', 'sharp' ('default').
 .
 :CONFIG_CORE
-CPU Core used in emulation. auto will switch to dynamic if available and
-appropriate.
+Ядро процессора, используемое в эмуляции.
+'auto' переключит в динамический режим, если это доступно и целесообразно.
 .
 :CONFIG_CPUTYPE
-CPU Type used in emulation. auto is the fastest choice.
+Тип процессора, используемый в эмуляции. 'auto' - самый быстрый выбор.
 .
 :CONFIG_CYCLES
-Amount of instructions DOSBox tries to emulate each millisecond.
-Setting this value too high results in sound dropouts and lags.
-Cycles can be set in 3 ways:
-  'auto'          tries to guess what a game needs.
-                  It usually works, but can fail for certain games.
-  'fixed #number' will set a fixed amount of cycles. This is what you usually
-                  need if 'auto' fails (Example: fixed 4000).
-  'max'           will allocate as much cycles as your computer is able to
-                  handle.
+Кол-во инструкций DOSBox пытающихся эмулироваться в каждую миллисекунду.
+Установка слишком большого значения приводит к потере звука и запаздыванию.
+Циклы можно устанавливать тремя способами:
+  'auto':         Пытается угадать, что нужно игре.
+                  Обычно это работает, но для некоторых игр может не сработать.
+  'fixed число':  Устанавливает фиксированное кол-во циклов. Это, обычно, то,
+                  что нужно, если 'auto' не помог (Пример: 'fixed 4000').
+  'max':          Выделит столько циклов, сколько позволит выделить процессор.
 .
 :CONFIG_CYCLEUP
-Amount of cycles to decrease/increase with keycombos.(CTRL-F11/CTRL-F12)
+Кол-во циклов для уменьшения/увеличения с помощью "горячих" клавиш.(CTRL-F11/CTRL-F12)
 .
 :CONFIG_CYCLEDOWN
-Setting it lower than 100 will be a percentage.
+Значение ниже 100 будет в процентах.
 .
 :CONFIG_NOSOUND
-Enable silent mode, sound is still emulated though.
+Включает бесшумный режим, звук продолжает эмулироваться.
 .
 :CONFIG_RATE
-Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.
+Микшерная частота дискретизации. Значение частоты, не поддерживаемое звуковой картой, снизит качество звука.
 .
 :CONFIG_BLOCKSIZE
-Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.
+Размер блока микшера, большие блоки могут предотвратить заикание звука, но звук будет больше запаздывать.
 .
 :CONFIG_PREBUFFER
-How many milliseconds of data to keep on top of the blocksize.
+Сколько миллисекунд нужно удерживать данные на вершине блока.
 .
 :CONFIG_MIDIDEVICE
-Device that will receive the MIDI data (from the emulated MIDI
-interface - MPU-401). Choose one of the following:
-'fluidsynth', to use the built-in MIDI synthesizer. See the
-       [fluidsynth] section for detailed configuration.
-'mt32', to use the built-in Roland MT-32 synthesizer.
-       See the [mt32] section for detailed configuration.
-'auto', to use the first working external MIDI player. This
-       might be a software synthesizer or physical device.
+Устройство, которое будет принимать MIDI-данные (от эмулированного MIDI
+интерфейса - MPU-401). Выберите один из следующих вариантов:
+   'fluidsynth':  Использовать встроенный MIDI-синтезатор.
+                  Читайте раздел [fluidsynth] для подробной конфигурации.
+   'mt32':        Использовать встроенный Roland MT-32 синтезатор.
+                  Читайте раздел [mt32] для подробной конфигурации.
+   'auto':        Использовать первый работающий внешний MIDI-плеер.
+                  Может быть программным синтезатором или физическим устройством.
 .
 :CONFIG_MIDICONFIG
-Configuration options for the selected MIDI interface.
-This is usually the id or name of the MIDI synthesizer you want
-to use (find the id/name with DOS command 'mixer /listmidi').
-- This option has no effect when using the built-in synthesizers
-  (mididevice = fluidsynth or mt32).
-- When using ALSA, use Linux command 'aconnect -l' to list open
-  MIDI ports, and select one (for example 'midiconfig=14:0'
-  for sequencer client 14, port 0).
-- If you're using a physical Roland MT-32 with revision 0 PCB,
-  the hardware may require a delay in order to prevent its
-  buffer from overflowing. In that case, add 'delaysysex',
-  for example: 'midiconfig=2 delaysysex'.
-See the README/Manual for more details.
+Опции конфигурации для выбранного MIDI-интерфейса.
+Обычно это идентификатор или имя MIDI-синтезатора, который Вам нужен.
+для использования (найдите id/имя с помощью команды DOS 'mixer /listmidi').
+- Эта опция не имеет эффекта при использовании встроенных синтезаторов
+  (mididevice = fluidsynth или mididevice = mt32).
+- При использовании ALSA, используйте Linux команду 'aplaymidi -l' для показа
+  списка доступных MIDI-портов, и выберите один (например, 'midiconfig=128:0').
+  для клиента секвенсора 128, порт 0).
+- Если Вы используете физический Roland MT-32 с ревизией 0 PCB,
+  аппаратное обеспечение может потребовать задержки, чтобы предотвратить
+  переполнение его буфера. В этом случае добавьте 'delaysysex',
+  например: 'midiconfig=2 delaysysex'.
+Читайте README/Manual для получения более подробной информации.
 .
 :CONFIG_MPU401
-Type of MPU-401 to emulate.
+Тип MPU-401 для эмуляции.
 .
 :CONFIG_SOUNDFONT
-Path to a SoundFont file in .sf2 format. You can use an
-absolute or relative path, or the name of an .sf2 inside
-the 'soundfonts' directory within your DOSBox configuration
-directory.
-An optional percentage will scale the SoundFont's volume.
-For example: 'soundfont.sf2 50' will attenuate it by 50 percent.
-The scaling percentage can range from 1 to 500.
+Путь к файлу SoundFont в формате .sf2. Можно использовать
+абсолютный или относительный путь, или имя .sf2 внутри
+субдиректории 'soundfonts' в директории конфигурации DOSBox.
+Необязательный процент будет изменять громкость SoundFont-а.
+Например: 'FluidR3_GM.sf2 50' ослабит её на 50 процентов.
+Изменение в процентах может быть в пределах от 1 до 500.
 .
 :CONFIG_MODEL
-Model of synthesizer to use. The default (auto) prefers CM-32L
-if both sets of ROMs are provided. For early Sierra games and Dune 2
-it's recommended to use 'mt32', while newer games typically made
-use of the CM-32L's extra sound effects (use 'auto' or 'cm32l')
+Модель синтезатора для использования. По умолчанию 'auto' предпочитает CM-32L,
+если оба набора ПЗУ будут предоставлены. Для ранних игр Sierra и Dune 2
+рекомендуется использовать 'mt32', в то время как более новые игры, обычно,
+используют дополнительные звуковые эффекты CM-32L (используйте 'auto' или 'cm32l').
 .
 :CONFIG_ROMDIR
-The directory containing one or both pairs of MT-32 and/or CM-32L ROMs.
-The files must be named in capitals, as follows:
-  - MT-32 ROM pair: MT32_CONTROL.ROM and MT32_PCM.ROM
-  - CM-32L ROM pair: CM32L_CONTROL.ROM and CM32L_PCM.ROM
-The directory can be absolute or relative, or leave it blank to
-use the 'mt32-roms' directory in your DOSBox configuration
-directory, followed by checking other common system locations.
+Директория, содержащая требуемые MT-32 и/или CM-32L ПЗУ,
+которые должны именоваться только так и только заглавными буквами:
+  MT32_CONTROL.ROM или CM32L_CONTROL.ROM - управление файлами ПЗУ.
+  MT32_PCM.ROM или CM32L_PCM.ROM - файлы PCM ПЗУ.
+Директория может быть абсолютной или относительной, или быть пустой,
+для использования субдиректории 'mt32-roms' в директории конфигурации
+DOSBox, с последующей проверкой других мест в системе.
 .
 :CONFIG_SBTYPE
-Type of Sound Blaster to emulate. 'gb' is Game Blaster.
+Тип эмуляции для Sound Blaster. 'gb' - это Game Blaster.
 .
 :CONFIG_SBBASE
-The IO address of the Sound Blaster.
+Адрес ввода-вывода для Sound Blaster.
 .
 :CONFIG_IRQ
-The IRQ number of the Sound Blaster.
+Номер прерывания для Sound Blaster.
 .
 :CONFIG_DMA
-The DMA number of the Sound Blaster.
+Канал прямого доступа для Sound Blaster.
 .
 :CONFIG_HDMA
-The High DMA number of the Sound Blaster.
+Канал старшего прямого доступа для Sound Blaster.
 .
 :CONFIG_SBMIXER
-Allow the Sound Blaster mixer to modify the DOSBox mixer.
+Разрешить микшеру Sound Blaster изменять DOSBox микшер.
 .
 :CONFIG_OPLRATE
-oplrate is deprecated. The OPL waveform is now sampled
-        at the mixer's playback rate to avoid resampling.
+Опция 'oplrate' устарела. Форма волны ОПЛ теперь привязана к скорости
+        воспроизведения микшера, чтобы избежать передискретизации.
 .
 :CONFIG_OPLMODE
-Type of OPL emulation. On 'auto' the mode is determined by 'sbtype'.
-All OPL modes are AdLib-compatible, except for 'cms'.
+Тип эмуляции ОПЛ. На 'auto' режим определяется 'sbtype'.
+Все режимы OPL совместимы с AdLib, за исключением 'cms'.
 .
 :CONFIG_OPLEMU
-Provider for the OPL emulation. 'compat' provides better quality,
-'nuked' is the default and most accurate (but the most CPU-intensive).
+Источник эмуляции OPL. 'compat' обеспечивает лучшее качество,
+По умолчанию используется 'nuked', он наиболее точный, но самый ресурсоемкий.
 .
 :CONFIG_GUS
-Enable Gravis UltraSound emulation.
+Включить эмуляцию Gravis UltraSound.
 .
 :CONFIG_GUSBASE
-The IO base address of the Gravis UltraSound.
+Адрес ввода-вывода для Gravis UltraSound.
 .
 :CONFIG_GUSIRQ
-The IRQ number of the Gravis UltraSound.
+Номер прерывания для Gravis UltraSound.
 .
 :CONFIG_GUSDMA
-The DMA channel of the Gravis UltraSound.
+Канал прямого доступа для Gravis UltraSound.
 .
 :CONFIG_ULTRADIR
-Path to UltraSound directory. In this directory
-there should be a MIDI directory that contains
-the patch files for GUS playback. Patch sets used
-with Timidity should work fine.
+Путь к директории UltraSound. В этой директории
+должна быть MIDI-субдиректория, содержащая
+патч-файлы для воспроизведения GUS. Наборы патчей
+используемые с Timidity должны работать хорошо.
 .
 :CONFIG_PCSPEAKER
-Enable PC-Speaker emulation.
+Включить эмуляцию PC-Speaker.
 .
 :CONFIG_PCRATE
-Sample rate of the PC-Speaker sound generation.
+Частота дискретизации генерации звука для PC-Speaker.
 .
 :CONFIG_ZERO_OFFSET
-Neutralizes and prevents the PC speaker's DC-offset from harming other sources.
-'auto' enables this for non-Windows systems and disables it on Windows.
-If your OS performs its own DC-offset correction, then set this to 'false'.
+Нейтрализует и предотвращает DC-смещение PC-Speaker-а от воздействия других источников.
+Значение 'auto' включает его для систем, отличных от Windows, и отключает его в Windows.
+Если ваша ОС выполняет свое собственное DC-смещение, то установите это значение в 'false'.
 .
 :CONFIG_TANDY
-Enable Tandy Sound System emulation. For 'auto', emulation is present only if machine is set to 'tandy'.
+Включить эмуляцию Tandy Sound System. Для 'auto', эмуляция включается только тогда, когда 'machine = tandy'.
 .
 :CONFIG_TANDYRATE
-Sample rate of the Tandy 3-Voice generation.
+Частота дискретизации для Tandy 3-Voice поколения.
 .
 :CONFIG_DISNEY
-Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).
+Включение эмуляции Disney Sound Source. (Covox Voice Master и Speech Thing совместимых).
 .
 :CONFIG_JOYSTICKTYPE
-Type of joystick to emulate: auto (default),
-none (disables joystick emulation),
-2axis (supports two joysticks),
-4axis (supports one joystick, first joystick used),
-4axis_2 (supports one joystick, second joystick used),
-fcs (Thrustmaster), ch (CH Flightstick).
-auto chooses emulation depending on real joystick(s).
-(Remember to reset DOSBox's mapperfile if you saved it earlier)
+Тип джойстика для эмуляции: 'auto' (по умолчанию),
+'none' (отключает эмуляцию джойстика),
+'2axis' (поддерживает два джойстика),
+'4axis' (поддерживает один джойстик, используется первый джойстик),
+'4axis_2' (поддерживает один джойстик, используется второй джойстик),
+'fcs' (Thrustmaster), 'ch' (CH Flighttick).
+'auto' выбирает эмуляцию в зависимости от реальных джойстиков.
+(Не забудьте сбросить файл маппера DOSBox, если вы сохранили его ранее).
 .
 :CONFIG_TIMED
-enable timed intervals for axis. Experiment with this option, if your joystick drifts (away).
+Включить временные интервалы для оси. Экспериментируйте с этой опцией, если джойстик дрейфует (в сторону).
 .
 :CONFIG_AUTOFIRE
-continuously fires as long as you keep the button pressed.
+Непрерывно стреляет, пока вы держите кнопку нажатой (турбо).
 .
 :CONFIG_SWAP34
-swap the 3rd and the 4th axis. Can be useful for certain joysticks.
+Поменять местами 3-ю и 4-ю оси. Может быть полезено для некоторых джойстиков.
 .
 :CONFIG_BUTTONWRAP
-enable button wrapping at the number of emulated buttons.
+Включить ограничение кнопок по кол-ву эмулируемых кнопок.
 .
 :CONFIG_CIRCULARINPUT
 enable translation of circular input to square output.
-Try enabling this if your left analog stick can only move in a circle.
+Попробуйте включить эту опцию, если левый аналоговый рычажок может двигаться только по кругу.
 .
 :CONFIG_DEADZONE
-the percentage of motion to ignore. 100 turns the stick into a digital one.
+Процент движения, который нужно игнорировать. Значение '100' превращает рычажок в цифровой.
 .
 :CONFIG_SERIAL1
-set type of device connected to com port.
-Can be disabled, dummy, modem, nullmodem, directserial.
-Additional parameters must be in the same line in the form of
-parameter:value. Parameter for all types is irq (optional).
-for directserial: realport (required), rxdelay (optional).
-                 (realport:COM1 realport:ttyS0).
-for modem: listenport (optional).
-for nullmodem: server, rxdelay, txdelay, telnet, usedtr,
-               transparent, port, inhsocket (all optional).
-Example: serial1=modem listenport:5000
+Установите тип устройства, подключенного к com-порту.
+Может быть 'disabled', 'dummy', 'modem', 'nullmodem' и 'directserial'.
+Дополнительные параметры должны быть в той же строке в виде
+параметр:значение. Параметр для всех типов: 'irq' (опциональный).
+Для 'directctserial': 'realport' (обязательный), 'rxdelay' (опциональный).
+                 'realport:COM1 realport:ttyS0'.
+Для 'modem': 'listenport' (опциональный).
+Для 'nullmodem': 'server', 'rxdelay', 'txdelay', 'telnet', 'usetr',
+               'transparent', 'port', 'inhsocket' (все опциональные).
+Пример: 'serial1=modem listenport:5000'.
 .
 :CONFIG_SERIAL2
-see serial1
+Читайте serial1.
 .
 :CONFIG_SERIAL3
-see serial1
+Читайте serial1.
 .
 :CONFIG_SERIAL4
-see serial1
+Читайте serial1.
 .
 :CONFIG_PHONEBOOKFILE
-File used to map fake phone numbers to addresses.
+Файл, используемый для привязки фиктивных телефонных номеров к адресам.
 .
 :CONFIG_XMS
-Enable XMS support.
+Включить поддержку XMS.
 .
 :CONFIG_EMS
-Enable EMS support. The default (=true) provides the best
-compatibility but certain applications may run better with
-other choices, or require EMS support to be disabled (=false)
-to work at all.
+Включить поддержку EMS. По умолчанию ('true') обеспечивает лучшую
+совместимость, но некоторые приложения могут работать лучше с
+другими вариантами, или требовать отключения поддержки EMS ('false').
 .
 :CONFIG_UMB
-Enable UMB support.
+Включить поддержку UMB.
 .
 :CONFIG_VER
-Set DOS version (5.0 by default). Specify as major.minor format.
-A single number is treated as the major version.
-Common settings are 3.3, 5.0, 6.22, and 7.1.
+Установить версию DOS (по умолчанию 5.0). Укажите в качестве формата мажор.минор.
+Одиночный номер рассматривается как основная версия.
+Обычно используются: '3.3', '5.0', '6.22' и '7.1'.
 .
 :CONFIG_KEYBOARDLAYOUT
-Language code of the keyboard layout (or none).
+Языковой код раскладки клавиатуры (или 'none').
 .
 :CONFIG_IPX
-Enable ipx over UDP/IP emulation.
+Включить эмуляцию ipx через UDP/IP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
-Lines in this section will be run at startup.
-You can put your MOUNT lines here.
-
+Строки в этом разделе будут выполняться при запуске.
+Вы можете размещать свои строки 'mount' здесь.
 .
 :CONFIGFILE_INTRO
-# This is the configuration file for dosbox-staging (%s).
-# Lines starting with a '#' character are comments.
+# Это конфигурационный файл для dosbox-staging (%s).
+# Строки, начинающиеся со знака '#' - это комментарии.
 
 .
 :CONFIG_SUGGESTED_VALUES
-Possible values
+Возможные значения
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
-No config file loaded!
+Конфигурационный файл не загружен!
 
 .
 :PROGRAM_CONFIG_PRIMARY_CONF
-Primary config file: 
+Основной файл конфигурации:
 %s
 
 .
 :PROGRAM_CONFIG_ADDITIONAL_CONF
-Additional config files:
+Дополнительные файлы конфигурации:
 
 .
 :PROGRAM_CONFIG_CONFDIR
-DOSBox %s configuration directory: 
+Директория конфигурации DOSBox %s:
 %s
 
 
 .
 :PROGRAM_CONFIG_FILE_ERROR
 
-Can't open file %s
+Невозможно открыть файл %s
 
 .
 :PROGRAM_CONFIG_FILE_WHICH
-Writing config file %s
+Запись конфигурационного файла %s
 
 .
 :PROGRAM_CONFIG_USAGE
