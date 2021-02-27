@@ -1811,7 +1811,7 @@ void DOS_SetupPrograms(void) {
 	        "Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mCDROM-SET\033[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso \n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mCDROM-SET\033[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso\n"
 	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mIMAGEFILE\033[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy\n"
 	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mBOOTIMAGE\033[0m [-fs fat|none] -t hdd -size GEOMETRY\n"
 	        "  \033[32;1mimgmount\033[0m -u \033[37;1mDRIVE\033[0m  (unmounts the DRIVE's image)\n"

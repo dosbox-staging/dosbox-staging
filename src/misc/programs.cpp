@@ -870,24 +870,30 @@ void PROGRAMS_Init(Section* /*sec*/) {
 	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing config file %s\n");
 	
 	// help
-	MSG_Add("PROGRAM_CONFIG_USAGE", "Config tool:\n"
+	MSG_Add("PROGRAM_CONFIG_USAGE",
+	        "Config tool:\n"
 	        "-writeconf or -wc without parameter: write to primary loaded config file.\n"
 	        "-writeconf or -wc with filename: write file to config directory.\n"
 	        "Use -writelang or -wl filename to write the current language strings.\n"
-	        "-r [parameters]\n Restart DOSBox, either using the previous parameters or any that are appended.\n"
-	        "-wcp [filename]\n Write config file to the program directory, dosbox.conf or the specified \n filename.\n"
-	        "-wcd\n Write to the default config file in the config directory.\n"
+	        "-r [parameters]\n"
+	        " Restart DOSBox, either using the previous parameters or any that are appended.\n"
+	        "-wcp [filename]\n"
+	        " Write config file to the program directory, dosbox.conf or the specified\n"
+	        " filename.\n"
+	        "-wcd\n"
+	        " Write to the default config file in the config directory.\n"
 	        "-l lists configuration parameters.\n"
 	        "-h, -help, -? sections / sectionname / propertyname\n"
-	        " Without parameters, displays this help screen. Add \"sections\" for a list of\n sections."
+	        " Without parameters, displays this help screen. Add \"sections\" for a list of\n"
+	        " sections."
 	        " For info about a specific section or property add its name behind.\n"
 	        "-axclear clears the autoexec section.\n"
 	        "-axadd [line] adds a line to the autoexec section.\n"
 	        "-axtype prints the content of the autoexec section.\n"
 	        "-securemode switches to secure mode.\n"
-		"-avistart starts AVI recording.\n"
-		"-avistop stops AVI recording.\n"
-		"-startmapper starts the keymapper.\n"
+	        "-avistart starts AVI recording.\n"
+	        "-avistop stops AVI recording.\n"
+	        "-startmapper starts the keymapper.\n"
 	        "-get \"section property\" returns the value of the property.\n"
 	        "-set \"section property=value\" sets the value.\n");
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP","Purpose of property \"%s\" (contained in section \"%s\"):\n%s\n\nPossible Values: %s\nDefault value: %s\nCurrent value: %s\n");
