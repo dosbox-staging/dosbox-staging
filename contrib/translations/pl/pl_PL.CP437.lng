@@ -292,14 +292,14 @@ Sample rate of the Tandy 3-Voice generation.
 Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).
 .
 :CONFIG_JOYSTICKTYPE
-Type of joystick to emulate: auto (default), none,
+Type of joystick to emulate: auto (default),
+none (disables joystick emulation),
 2axis (supports two joysticks),
 4axis (supports one joystick, first joystick used),
 4axis_2 (supports one joystick, second joystick used),
 fcs (Thrustmaster), ch (CH Flightstick).
-none disables joystick emulation.
 auto chooses emulation depending on real joystick(s).
-(Remember to reset dosbox's mapperfile if you saved it earlier)
+(Remember to reset DOSBox's mapperfile if you saved it earlier)
 .
 :CONFIG_TIMED
 enable timed intervals for axis. Experiment with this option, if your joystick drifts (away).
@@ -394,7 +394,7 @@ Additional config files:
 
 .
 :PROGRAM_CONFIG_CONFDIR
-DOSBox %s configuration directory: 
+Katalog z konfiguracja DOSBox Staging %s: 
 %s
 
 
@@ -416,7 +416,7 @@ Use -writelang or -wl filename to write the current language strings.
 -r [parameters]
  Restart DOSBox, either using the previous parameters or any that are appended.
 -wcp [filename]
- Write config file to the program directory, dosbox.conf or the specified 
+ Write config file to the program directory, dosbox.conf or the specified
  filename.
 -wcd
  Write to the default config file in the config directory.
@@ -428,6 +428,9 @@ Use -writelang or -wl filename to write the current language strings.
 -axadd [line] adds a line to the autoexec section.
 -axtype prints the content of the autoexec section.
 -securemode switches to secure mode.
+-avistart starts AVI recording.
+-avistop stops AVI recording.
+-startmapper starts the keymapper.
 -get "section property" returns the value of the property.
 -set "section property=value" sets the value.
 
@@ -555,6 +558,10 @@ Dysk %c zostal pomyslnie odmontowany.
 Virtual Drives can not be unMOUNTed.
 
 .
+:PROGRAM_MOUNT_DRIVEID_ERROR
+'%c' nie jest prawidlowym identyfikatorem dysku.
+
+.
 :PROGRAM_MOUNT_WARNING_WIN
 [31;1mMounting c:\ is NOT recommended. Please mount a (sub)directory next time.[0m
 
@@ -588,6 +595,10 @@ Something went wrong.
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
 Overlay %s on drive %c mounted.
+
+.
+:PROGRAM_MOUNT_MOVE_Z_ERROR_1
+Nie mozna przeniesc dysku Z. Dysk %c jest juz zamontowany.
 
 .
 :PROGRAM_MEM_CONVEN
@@ -828,7 +839,7 @@ mounts compact disc image(s) or floppy disk image(s) to a given drive letter.
 Mount a CD-ROM, floppy, or disk image to a drive letter.
 
 Usage:
-  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso 
+  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso
   [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mIMAGEFILE[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy
   [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -size GEOMETRY
   [32;1mimgmount[0m -u [37;1mDRIVE[0m  (unmounts the DRIVE's image)
@@ -1392,13 +1403,27 @@ View or set the reported DOS version.
 
 .
 :SHELL_CMD_VER_HELP_LONG
-VER
-VER SET version_number
-VER SET major_version [minor_version]
+Usage:
+  [32;1mver[0m
+  [32;1mver[0m [37;1mset[0m [36;1mVERSION[0m
+
+Where:
+  [36;1mVERSION[0m can be a whole number, such as [36;1m5[0m, or include a two-digit decimal
+          value, such as: [36;1m6.22[0m, [36;1m7.01[0m, or [36;1m7.10[0m. The decimal can alternatively be
+          space-separated, such as: [36;1m6 22[0m, [36;1m7 01[0m, or [36;1m7 10[0m.
+
+Notes:
+  The DOS version can also be set in the configuration file under the [dos]
+  section using the "ver = [36;1mVERSION[0m" setting.
+
+Examples:
+  [32;1mver[0m [37;1mset[0m [36;1m6.22[0m
+  [32;1mver[0m [37;1mset[0m [36;1m7 10[0m
 
 .
 :SHELL_CMD_VER_VER
-DOSBox Staging version %s. Reported DOS version %d.%02d.
+DOSBox Staging wersja %s
+DOS wersja %d.%02d
 
 .
 :SHELL_CMD_VER_INVALID
