@@ -396,7 +396,7 @@ Fichiers de configuration additionnels:
 
 .
 :PROGRAM_CONFIG_CONFDIR
-Répertoire de configuration de DOSBox %s : 
+Répertoire de configuration de DOSBox Staging %s : 
 %s
 
 
