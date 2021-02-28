@@ -1274,11 +1274,11 @@ Display messages and enable/disable command echoing.
 
 .
 :SHELL_CMD_EXIT_HELP
-Exit from the shell.
+Wylacz konsole.
 
 .
 :SHELL_CMD_HELP_HELP
-Show help.
+Pokaz pomoc.
 
 .
 :SHELL_CMD_MKDIR_HELP
@@ -1286,8 +1286,8 @@ Stw¢rz katalog.
 
 .
 :SHELL_CMD_MKDIR_HELP_LONG
-MKDIR [drive:][path]
-MD [drive:][path]
+MKDIR [dysk:][sciezka]
+MD [dysk:][sciezka]
 
 .
 :SHELL_CMD_RMDIR_HELP
@@ -1295,8 +1295,8 @@ Usun katalog.
 
 .
 :SHELL_CMD_RMDIR_HELP_LONG
-RMDIR [drive:][path]
-RD [drive:][path]
+RMDIR [dysk:][sciezka]
+RD [dysk:][sciezka]
 
 .
 :SHELL_CMD_SET_HELP
@@ -1328,22 +1328,22 @@ Dodaj komentarz w skrypcie.
 
 .
 :SHELL_CMD_REM_HELP_LONG
-REM [comment]
+REM [komentarz]
 
 .
 :SHELL_CMD_NO_WILD
-This is a simple version of the command, no wildcards allowed!
+To prosta wersja komendy, symbole wieloznaczne nie sa dozwolone!
 
 .
 :SHELL_CMD_RENAME_HELP
-Renames one or more files.
+Zmien nazwe jednego lub wielu plik¢w.
 
 .
 :SHELL_CMD_RENAME_HELP_LONG
-RENAME [drive:][path]filename1 filename2.
-REN [drive:][path]filename1 filename2.
+RENAME [dysk:][sciezka]nazwapliku1 nazwapliku2.
+REN [dysk:][sciezka]nazwapliku1 nazwapliku2.
 
-Note that you can not specify a new drive or path for your destination file.
+Pamietaj, ze nie mozesz okreslic nowego dysku i sciezki dla pliku docelowego.
 
 .
 :SHELL_CMD_DELETE_HELP
@@ -1355,19 +1355,19 @@ Kopiuj plik.
 
 .
 :SHELL_CMD_CALL_HELP
-Start a batch file from within another batch file.
+Uruchom skrypt z innego skryptu.
 
 .
 :SHELL_CMD_SUBST_HELP
-Assign an internal directory to a drive.
+Przyporzadkuj wewnetrzny katalog do dysku.
 
 .
 :SHELL_CMD_LOADHIGH_HELP
-Loads a program into upper memory (requires xms=true,umb=true).
+Wczytaj program do pamieci g¢rnej (wymaga xms=true,umb=true).
 
 .
 :SHELL_CMD_LS_HELP
-List directory contents.
+Wypisz zawartosc katalogu.
 
 .
 :SHELL_CMD_LS_HELP_LONG
@@ -1375,48 +1375,48 @@ ls [/?] [PATTERN]
 
 .
 :SHELL_CMD_LS_PATH_ERR
-ls: cannot access '%s': No such file or directory
+ls: nie ma dostepu do '%s': Nie ma takiego pliku ani katalogu
 
 .
 :SHELL_CMD_CHOICE_HELP
-Waits for a keypress and sets ERRORLEVEL.
+Czeka na wcisniecie klawisza i ustawia ERRORLEVEL.
 
 .
 :SHELL_CMD_CHOICE_HELP_LONG
-CHOICE [/C:choices] [/N] [/S] text
-  /C[:]choices  -  Specifies allowable keys.  Default is: yn.
-  /N  -  Do not display the choices at end of prompt.
-  /S  -  Enables case-sensitive choices to be selected.
-  text  -  The text to display as a prompt.
+CHOICE [/C:mozliwosci] [/N] [/S] tekst
+  /C[:]mozliwosci  -  Okresla dostepne klawisze.  Domyslnie: yn.
+  /N  -  Nie wyswietlaj mozliwosci na koniec zgloszenia.
+  /S  -  Wlacza rozr¢znianie wielkosci liter mozliwosci.
+  tekst  -  Tekst wyswietlany w zgloszeniu.
 
 .
 :SHELL_CMD_ATTRIB_HELP
-Does nothing. Provided for compatibility.
+Nie powoduje zadnego efektu. Dostarczone dla zachowania kompatybilnosci.
 
 .
 :SHELL_CMD_PATH_HELP
-Provided for compatibility.
+Dostarczone dla zachowania kompatybilnosci.
 
 .
 :SHELL_CMD_VER_HELP
-View or set the reported DOS version.
+Pokaz lub ustaw raportowane wersje DOS.
 
 .
 :SHELL_CMD_VER_HELP_LONG
-Usage:
+Uzycie:
   [32;1mver[0m
-  [32;1mver[0m [37;1mset[0m [36;1mVERSION[0m
+  [32;1mver[0m [37;1mset[0m [36;1mWERSJA[0m
 
-Where:
-  [36;1mVERSION[0m can be a whole number, such as [36;1m5[0m, or include a two-digit decimal
-          value, such as: [36;1m6.22[0m, [36;1m7.01[0m, or [36;1m7.10[0m. The decimal can alternatively be
-          space-separated, such as: [36;1m6 22[0m, [36;1m7 01[0m, or [36;1m7 10[0m.
+Gdzie:
+  [36;1mWERSJA[0m moze zawierac numer gl¢wny, np. [36;1m5[0m lub takze dwucyfrowy numer
+         dodatkowy, jak np. [36;1m6.22[0m, [36;1m7.01[0m lub [36;1m7.10[0m.  Numer dodatkowy wersji
+         moze byc r¢wniez odseparowany spacja, np: [36;1m6 22[0m, [36;1m7 01[0m, lub [36;1m7 10[0m.
 
-Notes:
-  The DOS version can also be set in the configuration file under the [dos]
-  section using the "ver = [36;1mVERSION[0m" setting.
+Notatki:
+  Wersja DOS moze byc r¢wniez zmieniona w pliku konfiguracyjnym w sekcji [dos]
+  ustawiajac "ver = [36;1mWERSJA[0m".
 
-Examples:
+Przyklady:
   [32;1mver[0m [37;1mset[0m [36;1m6.22[0m
   [32;1mver[0m [37;1mset[0m [36;1m7 10[0m
 

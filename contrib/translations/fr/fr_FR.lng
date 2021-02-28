@@ -396,7 +396,7 @@ Fichiers de configuration additionnels:
 
 .
 :PROGRAM_CONFIG_CONFDIR
-R‚pertoire de configuration de DOSBox %s : 
+R‚pertoire de configuration de DOSBox Staging %s : 
 %s
 
 
@@ -1426,7 +1426,8 @@ Exemples :
 
 .
 :SHELL_CMD_VER_VER
-DOSBox Staging version %s. Version DOS report‚e %d.%02d.
+DOSBox Staging version %s
+DOS version %d.%02d
 
 .
 :SHELL_CMD_VER_INVALID
