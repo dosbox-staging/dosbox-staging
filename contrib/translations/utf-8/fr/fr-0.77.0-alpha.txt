@@ -1426,7 +1426,8 @@ Exemples :
 
 .
 :SHELL_CMD_VER_VER
-DOSBox Staging version %s. Version DOS reportée %d.%02d.
+DOSBox Staging version %s
+DOS version %d.%02d
 
 .
 :SHELL_CMD_VER_INVALID
