@@ -1087,7 +1087,8 @@ Bit8u DOS_FCBRead(Bit16u seg,Bit16u offset,Bit16u recno) {
 	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET,true)) return FCB_READ_NODATA; 
 	Bit16u toread=rec_size;
 	if (!DOS_ReadFile(fhandle,dos_copybuf,&toread,true)) return FCB_READ_NODATA;
-	if (toread==0) return FCB_READ_NODATA;
+	if (toread == 0)
+		return FCB_READ_NODATA;
 	if (toread < rec_size) { //Zero pad copybuffer to rec_size
 		Bitu i = toread;
 		while(i < rec_size) dos_copybuf[i++] = 0;
@@ -1096,7 +1097,6 @@ Bit8u DOS_FCBRead(Bit16u seg,Bit16u offset,Bit16u recno) {
 	if (++cur_rec>127) { cur_block++;cur_rec=0; }
 	fcb.SetRecord(cur_block,cur_rec);
 	if (toread==rec_size) return FCB_SUCCESS;
-	if (toread==0) return FCB_READ_NODATA;
 	return FCB_READ_PARTIAL;
 }
 
