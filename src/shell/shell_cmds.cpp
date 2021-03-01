@@ -1563,9 +1563,11 @@ void DOS_Shell::CMD_CHOICE(char * args){
 
 	Bit16u n=1;
 	do {
-		DOS_ReadFile (STDIN,&c,&n);
-	} while (!c || !(ptr = strchr(rem,(optS?c:toupper(c)))));
-	c = optS?c:(Bit8u)toupper(c);
+		DOS_ReadFile(STDIN, &c, &n);
+		if (exit_requested)
+			break;
+	} while (!c || !(ptr = strchr(rem, (optS ? c : toupper(c)))));
+	c = optS ? c : (Bit8u)toupper(c);
 	DOS_WriteFile(STDOUT, &c, &n);
 	WriteOut_NoParsing("\n");
 	dos.return_code = (Bit8u)(ptr-rem+1);
