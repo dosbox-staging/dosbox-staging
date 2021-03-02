@@ -24,6 +24,7 @@
 
 #include "dosbox.h"
 
+#include <atomic>
 #include <vector>
 #include <string>
 
@@ -150,7 +151,7 @@ private:
 
 	// Mutable members
 	std::string channel_name = {};
-	AudioFrame prescale;
+	std::atomic<AudioFrame> prescale = {};
 	AudioFrame global_peaks = {0, 0};
 	AudioFrame tail_frame = {0, 0};
 	float range_multiplier = 1.0f;
