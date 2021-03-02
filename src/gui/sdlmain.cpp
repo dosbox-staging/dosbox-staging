@@ -2585,7 +2585,7 @@ bool GFX_Events()
 				// DEBUG_LOG_MSG("SDL: Window has been exposed "
 				//               "and should be redrawn");
 
-				/* FIXME: below is not consistently true :(
+				/* TODO: below is not consistently true :(
 				 * seems incorrect on KDE and sometimes on MATE
 				 *
 				 * Note that on Windows/Linux-X11/Wayland/macOS,
