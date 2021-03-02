@@ -287,21 +287,22 @@ configure_file(input : 'src/config.h.in', output : 'config.h',
                configuration : conf_data)
 
 
+# dosbox executable
+#
+version_file = vcs_tag(input : 'src/version.cpp.in', output : 'version.cpp')
+dosbox_bin = executable('dosbox', ['src/main.cpp', 'src/dosbox.cpp', version_file],
+                        dependencies : [threads_dep, sdl2_dep] + internal_deps,
+                        include_directories : incdir,
+                        install : true)
+
+
 # tests
 #
 # Some tests use relative paths; in meson 0.56.0 this can be replaced
 # with meson.project_source_root().
+#
 project_source_root = meson.current_source_dir()
 subdir('tests')
-
-
-# dosbox executable
-#
-version_file = vcs_tag(input : 'src/version.cpp.in', output : 'version.cpp')
-executable('dosbox', ['src/main.cpp', 'src/dosbox.cpp', version_file],
-           dependencies : [threads_dep, sdl2_dep] + internal_deps,
-           include_directories : incdir,
-           install : true)
 
 
 # additional files for installation
