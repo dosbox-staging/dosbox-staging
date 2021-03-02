@@ -27,6 +27,8 @@
 
 #include "support.h"
 
+constexpr static auto relaxed = std::memory_order_relaxed;
+
 constexpr static float bounds = static_cast<float>(INT16_MAX - 1);
 
 SoftLimiter::SoftLimiter(const std::string &name, const uint16_t max_frames)
@@ -72,13 +74,14 @@ void SoftLimiter::Process(const std::vector<float> &in,
 	// Given the local peaks found in each side channel, scale or copy the
 	// input array into the output array
 	constexpr int8_t left = 0;
-	ScaleOrCopy<left>(in, samples, prescale.left, precross_peak_pos_left,
-	                  zero_cross_left, global_peaks.left, tail_frame.left, out);
+	ScaleOrCopy<left>(in, samples, prescale.load(relaxed).left,
+	                  precross_peak_pos_left, zero_cross_left,
+	                  global_peaks.left, tail_frame.left, out);
 
 	constexpr int8_t right = 1;
-	ScaleOrCopy<right>(in, samples, prescale.right, precross_peak_pos_right,
-	                   zero_cross_right, global_peaks.right,
-	                   tail_frame.right, out);
+	ScaleOrCopy<right>(in, samples, prescale.load(relaxed).right,
+	                   precross_peak_pos_right, zero_cross_right,
+	                   global_peaks.right, tail_frame.right, out);
 
 	SaveTailFrame(frames, out);
 	Release();
@@ -132,11 +135,13 @@ void SoftLimiter::FindPeaksAndZeroCrosses(const std::vector<float> &in,
 	AudioFrame local_peaks = global_peaks;
 
 	while (pos != pos_end) {
-		FindPeakAndCross(in.end(), pos++, prev_pos_left, prescale.left,
-		                 local_peaks.left, precross_peak_pos_left,
-		                 zero_cross_left, global_peaks.left);
+		FindPeakAndCross(in.end(), pos++, prev_pos_left,
+		                 prescale.load(relaxed).left, local_peaks.left,
+		                 precross_peak_pos_left, zero_cross_left,
+		                 global_peaks.left);
 
-		FindPeakAndCross(in.end(), pos++, prev_pos_right, prescale.right,
+		FindPeakAndCross(in.end(), pos++, prev_pos_right,
+		                 prescale.load(relaxed).right,
 		                 local_peaks.right, precross_peak_pos_right,
 		                 zero_cross_right, global_peaks.right);
 	}
@@ -271,7 +276,8 @@ void SoftLimiter::PrintStats() const
 	        channel_name.c_str(), 100 * static_cast<double>(peak_ratio));
 
 	// Inform when the stream fell short of using the full dynamic-range
-	const auto scale = std::max(prescale.left, prescale.right) / range_multiplier;
+	const auto scale = std::max(prescale.load().left, prescale.load().right) /
+	                   range_multiplier;
 	constexpr auto well_below_3db = 0.6f;
 	if (peak_ratio < well_below_3db) {
 		const auto suggested_mix_val = 100 * scale / peak_ratio;

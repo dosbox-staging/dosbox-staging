@@ -148,6 +148,7 @@ static_libs_list = get_option('try_static_libs')
 msg = 'You can disable this dependency with: -D@0@=false'
 
 optional_dep  = dependency('', required : false)
+atomic_dep    = cxx.find_library('atomic', required : false)
 opus_dep      = dependency('opusfile',
                            static : ('opusfile' in static_libs_list))
 threads_dep   = dependency('threads')
@@ -295,7 +296,7 @@ subdir('tests')
 #
 version_file = vcs_tag(input : 'src/version.cpp.in', output : 'version.cpp')
 executable('dosbox', ['src/main.cpp', 'src/dosbox.cpp', version_file],
-           dependencies : [threads_dep, sdl2_dep] + internal_deps,
+           dependencies : [atomic_dep, threads_dep, sdl2_dep] + internal_deps,
            include_directories : incdir,
            install : true)
 
