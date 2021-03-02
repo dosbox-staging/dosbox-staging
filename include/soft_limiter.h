@@ -51,7 +51,7 @@ Unique features:
    perform seamless scaling both on the front and back-end of the signal
 
  - Permits a pre-scaling factor be applied to the input samples
-   before peak detection and scaling
+   before peak detection and scaling (see UpdateLevels).
 
  - Informs the user if the source signal was significantly under the allowed
    bounds in which case it suggests a suitable scale-up factor, or if excessive
@@ -68,14 +68,11 @@ needed; typically ranging from 10's of milliseconds to low-hundreds for large >
 Use:
 
 Instantiate the Soft Limiter object with the name of the channel that's
-being operated on, a prescalar floating-point scalar (with left and right
-components), and the maximum number of frames you intend to pass into the
-limiter in an given pass.
+being operated on and the maximum number of frames you intend to pass into
+the limiter in any given pass.
 
 For example:
-
-  AudioFrame prescale = {1.0f, 1.0f};
-  SoftLimiter limiter("channel name", prescale, max_frames);
+  SoftLimiter limiter("channel name", max_frames);
 
 You can then repeatedly call:
   auto out = limiter.Process(in, num_frames);
@@ -104,7 +101,7 @@ public:
 	SoftLimiter(const SoftLimiter &) = delete;
 	SoftLimiter &operator=(const SoftLimiter &) = delete;
 
-	SoftLimiter(const std::string &name, const AudioFrame &scale, uint16_t max_frames);
+	SoftLimiter(const std::string &name, uint16_t max_frames);
 
 	void Process(const std::vector<float> &in,
 	             uint16_t req_frames,
@@ -112,6 +109,7 @@ public:
 	const AudioFrame &GetPeaks() const noexcept { return global_peaks; }
 	void PrintStats() const;
 	void Reset() noexcept;
+	void UpdateLevels(const AudioFrame &desired_levels, float desired_multiplier);
 
 private:
 	using out_iterator_t = typename std::vector<int16_t>::iterator;
@@ -152,9 +150,10 @@ private:
 
 	// Mutable members
 	std::string channel_name = {};
-	const AudioFrame &prescale; // values inside struct are mutable
+	AudioFrame prescale;
 	AudioFrame global_peaks = {0, 0};
 	AudioFrame tail_frame = {0, 0};
+	float range_multiplier = 1.0f;
 	int limited_tally = 0;
 	int non_limited_tally = 0;
 	const uint16_t max_samples = 0;

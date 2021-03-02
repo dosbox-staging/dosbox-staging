@@ -248,7 +248,7 @@ private:
 	size_t ReadFromPort(size_t port, size_t iolen);
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
-	void SetLevelCallback(const AudioFrame &level);
+	void SetLevelCallback(const AudioFrame &levels);
 	void StopPlayback();
 	void UpdateDmaAddress(uint8_t new_address);
 	void UpdateWaveMsw(int32_t &addr) const noexcept;
@@ -273,7 +273,6 @@ private:
 
 	// Struct and pointer members
 	VoiceIrq voice_irq = {};
-	AudioFrame mixer_level = {1, 1};
 	SoftLimiter soft_limiter;
 	Voice *target_voice = nullptr;
 	DmaChannel *dma_channel = nullptr;
@@ -587,7 +586,7 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
         : render_buffer(BUFFER_FRAMES * 2), // 2 samples/frame, L & R channels
           play_buffer(BUFFER_FRAMES * 2),   // 2 samples/frame, L & R channels
-          soft_limiter("GUS", mixer_level, BUFFER_FRAMES),
+          soft_limiter("GUS", BUFFER_FRAMES),
           port_base(port - 0x200u),
           dma2(dma),
           irq1(irq),
@@ -631,11 +630,9 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 	}
 }
 
-void Gus::SetLevelCallback(const AudioFrame &requested_level)
+void Gus::SetLevelCallback(const AudioFrame &levels)
 {
-	// Allow amplitudes to scale from silent up to 20-fold
-	mixer_level.left = clamp(requested_level.left, 0.0f, 20.0f);
-	mixer_level.right = clamp(requested_level.right, 0.0f, 20.0f);
+	soft_limiter.UpdateLevels(levels, 1);
 }
 
 void Gus::AudioCallback(const uint16_t requested_frames)

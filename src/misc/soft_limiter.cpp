@@ -29,13 +29,22 @@
 
 constexpr static float bounds = static_cast<float>(INT16_MAX - 1);
 
-SoftLimiter::SoftLimiter(const std::string &name,
-                         const AudioFrame &scale,
-                         const uint16_t max_frames)
+SoftLimiter::SoftLimiter(const std::string &name, const uint16_t max_frames)
         : channel_name(name),
-          prescale(scale),
           max_samples(max_frames * 2)
-{}
+{
+	UpdateLevels({1, 1}, 1); // default to unity (ie: no) scaling
+	limited_tally = 0;
+	non_limited_tally = 0;
+}
+
+void SoftLimiter::UpdateLevels(const AudioFrame &desired_levels,
+                               const float desired_multiplier)
+{
+	range_multiplier = desired_multiplier;
+	prescale = {desired_levels.left * desired_multiplier,
+	            desired_levels.right * desired_multiplier};
+}
 
 //  Limit the input array and returned as integer array
 void SoftLimiter::Process(const std::vector<float> &in,
@@ -262,7 +271,7 @@ void SoftLimiter::PrintStats() const
 	        channel_name.c_str(), 100 * static_cast<double>(peak_ratio));
 
 	// Inform when the stream fell short of using the full dynamic-range
-	const auto scale = std::max(prescale.left, prescale.right);
+	const auto scale = std::max(prescale.left, prescale.right) / range_multiplier;
 	constexpr auto well_below_3db = 0.6f;
 	if (peak_ratio < well_below_3db) {
 		const auto suggested_mix_val = 100 * scale / peak_ratio;
