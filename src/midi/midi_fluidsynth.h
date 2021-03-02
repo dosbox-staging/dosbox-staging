@@ -50,7 +50,7 @@ public:
 
 private:
 	void MixerCallBack(uint16_t requested_frames);
-	void SetMixerLevel(const AudioFrame &prescale_level) noexcept;
+	void SetMixerLevel(const AudioFrame &levels) noexcept;
 	uint16_t GetRemainingFrames();
 	void Render();
 
@@ -69,7 +69,6 @@ private:
 	RWQueue<std::vector<int16_t>> backstock{num_buffers};
 
 	std::thread renderer = {};
-	AudioFrame prescale_level = {1.0f, 1.0f};
 	SoftLimiter soft_limiter;
 
 	uint16_t last_played_frame = 0; // relative frame-offset in the play buffer

@@ -32,6 +32,7 @@
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
+#include "mixer.h"
 
 static constexpr int FRAMES_PER_BUFFER = 512; // synth granularity
 
@@ -58,10 +59,11 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 // which is a floating point multiplier that we apply internally as
 // FluidSynth's gain value. We then read-back the gain, and use that to
 // derive a pre-scale level.
-void MidiHandlerFluidsynth::SetMixerLevel(const AudioFrame &desired_level) noexcept
+void MidiHandlerFluidsynth::SetMixerLevel(const AudioFrame &levels) noexcept
 {
-	prescale_level.left = INT16_MAX * desired_level.left;
-	prescale_level.right = INT16_MAX * desired_level.right;
+	// FluidSynth generates floats between -1 and 1, so we ask the
+	// limiter to scale these up to the INT16 range
+	soft_limiter.UpdateLevels(levels, INT16_MAX);
 }
 
 // Takes in the user's soundfont = configuration value consisting
@@ -174,7 +176,7 @@ static std::string find_sf_file(const std::string &name)
 }
 
 MidiHandlerFluidsynth::MidiHandlerFluidsynth()
-        : soft_limiter("FSYNTH", prescale_level, FRAMES_PER_BUFFER),
+        : soft_limiter("FSYNTH", FRAMES_PER_BUFFER),
           keep_rendering(false)
 {}
 
@@ -329,10 +331,13 @@ void MidiHandlerFluidsynth::Close()
 	if (renderer.joinable())
 		renderer.join();
 
+	soft_limiter.PrintStats();
+
 	// Reset the members
 	channel.reset();
 	synth.reset();
 	settings.reset();
+	soft_limiter.Reset();
 	last_played_frame = 0;
 
 	is_open = false;
@@ -378,18 +383,6 @@ void MidiHandlerFluidsynth::PlaySysex(uint8_t *sysex, size_t len)
 	const char *data = reinterpret_cast<const char *>(sysex);
 	const auto n = static_cast<int>(len);
 	fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
-}
-
-void MidiHandlerFluidsynth::PrintStats()
-{
-	// Normally prescale is simply a float-multiplier such as 0.5, 1.0, etc.
-	// However in the case of FluidSynth, it produces 32-bit floats between
-	// -1.0 and +1.0, therefore we scale those up to the 16-bit integer range
-	// in addition to the mixer's FSYNTH levels. Before printing statistics,
-	// we need to back-out this integer multiplier.
-	prescale_level.left /= INT16_MAX;
-	prescale_level.right /= INT16_MAX;
-	soft_limiter.PrintStats();
 }
 
 void MidiHandlerFluidsynth::MixerCallBack(uint16_t requested_frames)
@@ -451,15 +444,8 @@ void MidiHandlerFluidsynth::Render()
 	}
 }
 
-static void fluid_destroy(MAYBE_UNUSED Section *sec)
-{
-	instance.PrintStats();
-}
-
-static void fluid_init(Section *sec)
-{
-	sec->AddDestroyFunction(&fluid_destroy, true);
-}
+static void fluid_init(MAYBE_UNUSED Section *sec)
+{}
 
 void FLUID_AddConfigSection(Config *conf)
 {

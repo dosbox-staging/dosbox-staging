@@ -74,7 +74,6 @@ private:
 
 	service_t service{};
 	std::thread renderer{};
-	AudioFrame limiter_ratio = {1.0f, 1.0f};
 	SoftLimiter soft_limiter;
 
 	// The following two members let us determine the total number of played

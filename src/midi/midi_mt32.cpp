@@ -35,6 +35,7 @@
 #include "cross.h"
 #include "fs_utils.h"
 #include "midi.h"
+#include "mixer.h"
 #include "string_utils.h"
 
 // mt32emu Settings
@@ -239,7 +240,7 @@ static mt32emu_report_handler_i get_report_handler_interface()
 }
 
 MidiHandler_mt32::MidiHandler_mt32()
-        : soft_limiter("MT32", limiter_ratio, FRAMES_PER_BUFFER),
+        : soft_limiter("MT32", FRAMES_PER_BUFFER),
           keep_rendering(false)
 {}
 
@@ -353,14 +354,16 @@ MidiHandler_mt32::~MidiHandler_mt32()
 // DOSBox's mixer accept left-and-right, so we apply gain using the larger of
 // the two and then use the limiter's left-right ratios to scale down by lesser
 // ratio.
-void MidiHandler_mt32::SetMixerLevel(const AudioFrame &desired) noexcept
+void MidiHandler_mt32::SetMixerLevel(const AudioFrame &levels) noexcept
 {
 	const float gain = std::max(desired.left, desired.right);
 	if (service)
 		service->setOutputGain(gain);
 
-	limiter_ratio.left = INT16_MAX * desired.left / gain;
-	limiter_ratio.right = INT16_MAX * desired.right / gain;
+	const AudioFrame desired = {levels.left / gain, levels.right / gain};
+	// mt32emu generates floats between -1 and 1, so we ask the
+	// soft limiter to scale these up to the INT16 range
+	soft_limiter.UpdateLevels(desired, INT16_MAX);
 }
 
 void MidiHandler_mt32::Close()
@@ -387,9 +390,12 @@ void MidiHandler_mt32::Close()
 	if (service)
 		service->closeSynth();
 
+	soft_limiter.PrintStats();
+
 	// Reset the members
 	channel.reset();
 	service.reset();
+	soft_limiter.Reset();
 	total_buffers_played = 0;
 	last_played_frame = 0;
 
@@ -473,27 +479,8 @@ void MidiHandler_mt32::Render()
 	}
 }
 
-void MidiHandler_mt32::PrintStats()
-{
-	// Normally prescale is simply a float-multiplier such as 0.5, 1.0, etc.
-	// However in the case of FluidSynth, it produces 32-bit floats between
-	// -1.0 and +1.0, therefore we scale those up to the 16-bit integer
-	// range in addition to the mixer's FSYNTH levels. Before printing
-	// statistics, we need to back-out this integer multiplier.
-	limiter_ratio.left /= INT16_MAX;
-	limiter_ratio.right /= INT16_MAX;
-	soft_limiter.PrintStats();
-}
-
-static void mt32_destroy(MAYBE_UNUSED Section *sec)
-{
-	mt32_instance.PrintStats();
-}
-
-static void mt32_init(Section *sec)
-{
-	sec->AddDestroyFunction(&mt32_destroy, true);
-}
+static void mt32_init(MAYBE_UNUSED Section *sec)
+{}
 
 void MT32_AddConfigSection(Config *conf)
 {
