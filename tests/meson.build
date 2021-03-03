@@ -43,12 +43,11 @@ test('gtest fs_utils', fs_utils,
 # other unit tests
 #
 unit_tests = [
-  {'name' : 'readerwritercircularbuffer', 'deps' : []},
-  {'name' : 'rwqueue',                    'deps' : [libmisc_dep]},
-  {'name' : 'soft_limiter',               'deps' : [sdl2_dep, libmisc_dep]},
-  {'name' : 'string_utils',               'deps' : []},
-  {'name' : 'setup',                      'deps' : [sdl2_dep, libmisc_dep]},
-  {'name' : 'support',                    'deps' : [sdl2_dep, libmisc_dep]},
+  {'name' : 'rwqueue',      'deps' : [libmisc_dep]},
+  {'name' : 'soft_limiter', 'deps' : [sdl2_dep, libmisc_dep]},
+  {'name' : 'string_utils', 'deps' : []},
+  {'name' : 'setup',        'deps' : [sdl2_dep, libmisc_dep]},
+  {'name' : 'support',      'deps' : [sdl2_dep, libmisc_dep]},
 ]
 
 foreach ut : unit_tests
