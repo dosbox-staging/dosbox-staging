@@ -356,9 +356,12 @@ MidiHandler_mt32::~MidiHandler_mt32()
 // ratio.
 void MidiHandler_mt32::SetMixerLevel(const AudioFrame &levels) noexcept
 {
-	const float gain = std::max(desired.left, desired.right);
-	if (service)
-		service->setOutputGain(gain);
+	const float gain = std::max(levels.left, levels.right);
+	{
+		const std::lock_guard<std::mutex> lock(service_mutex);
+		if (service)
+			service->setOutputGain(gain);
+	}
 
 	const AudioFrame desired = {levels.left / gain, levels.right / gain};
 	// mt32emu generates floats between -1 and 1, so we ask the
@@ -412,6 +415,7 @@ uint32_t MidiHandler_mt32::GetMidiEventTimestamp() const
 void MidiHandler_mt32::PlayMsg(const uint8_t *msg)
 {
 	const auto msg_words = reinterpret_cast<const uint32_t *>(msg);
+	const std::lock_guard<std::mutex> lock(service_mutex);
 	service->playMsgAt(SDL_SwapLE32(*msg_words), GetMidiEventTimestamp());
 }
 
@@ -419,6 +423,7 @@ void MidiHandler_mt32::PlaySysex(uint8_t *sysex, size_t len)
 {
 	assert(len <= UINT32_MAX);
 	const auto msg_len = static_cast<uint32_t>(len);
+	const std::lock_guard<std::mutex> lock(service_mutex);
 	service->playSysexAt(sysex, msg_len, GetMidiEventTimestamp());
 }
 
@@ -468,8 +473,10 @@ void MidiHandler_mt32::Render()
 	assert(backstock.Size() == backstock.MaxCapacity());
 
 	while (keep_rendering.load()) {
-		service->renderFloat(render_buffer.data(), FRAMES_PER_BUFFER);
-
+		{
+			const std::lock_guard<std::mutex> lock(service_mutex);
+			service->renderFloat(render_buffer.data(), FRAMES_PER_BUFFER);
+		}
 		// Grab the next buffer from backstock and populate it ...
 		playable_buffer = backstock.Dequeue();
 		soft_limiter.Process(render_buffer, FRAMES_PER_BUFFER, playable_buffer);
