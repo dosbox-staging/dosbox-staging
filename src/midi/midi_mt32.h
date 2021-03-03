@@ -28,6 +28,7 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -72,8 +73,9 @@ private:
 	RWQueue<std::vector<int16_t>> playable{num_buffers};
 	RWQueue<std::vector<int16_t>> backstock{num_buffers};
 
-	service_t service{};
-	std::thread renderer{};
+	std::mutex service_mutex = {};
+	service_t service = {};
+	std::thread renderer = {};
 	SoftLimiter soft_limiter;
 
 	// The following two members let us determine the total number of played
