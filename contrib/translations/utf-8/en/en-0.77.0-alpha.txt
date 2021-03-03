@@ -602,27 +602,27 @@ Can't move drive Z. Drive %c is mounted already.
 
 .
 :PROGRAM_MEM_CONVEN
-%10d Kb free conventional memory
+%10d kB free conventional memory
 
 .
 :PROGRAM_MEM_EXTEND
-%10d Kb free extended memory
+%10d kB free extended memory
 
 .
 :PROGRAM_MEM_EXPAND
-%10d Kb free expanded memory
+%10d kB free expanded memory
 
 .
 :PROGRAM_MEM_UPPER
-%10d Kb free upper memory in %d blocks (largest UMB %d Kb)
+%10d kB free upper memory in %d blocks (largest UMB %d kB)
 
 .
 :PROGRAM_LOADFIX_ALLOC
-%d kb allocated.
+%d kB allocated.
 
 .
 :PROGRAM_LOADFIX_DEALLOC
-%d kb freed.
+%d kB freed.
 
 .
 :PROGRAM_LOADFIX_DEALLOCALL
@@ -684,7 +684,7 @@ DOSBox creates a shell for you which looks like old plain DOS.
 For information about basic mount type [34;1mintro mount[0m
 For information about CD-ROM support type [34;1mintro cdrom[0m
 For information about special keys type [34;1mintro special[0m
-To access DOSBox Staging's wiki, visit:[34;1m
+For more imformation, visit DOSBox Staging wiki:[34;1m
 https://github.com/dosbox-staging/dosbox-staging/wiki[0m
 
 [31;1mDOSBox will stop/exit without a warning if an error occurred![0m
@@ -714,10 +714,10 @@ You have to mount the directory containing the files.
 
 .
 :PROGRAM_INTRO_MOUNT_END
-When the mount has successfully completed you can type [34;1mc:[0m to go to your freshly
+After successfully mounting the disk you can type [34;1mc:[0m to go to your freshly
 mounted C-drive. Typing [34;1mdir[0m there will show its contents. [34;1mcd[0m will allow you to
 enter a directory (recognised by the [33;1m[][0m in a directory listing).
-You can run programs/files which end with [31m.exe .bat[0m and [31m.com[0m.
+You can run programs/files with extensions [31m.exe .bat[0m and [31m.com[0m.
 
 .
 :PROGRAM_INTRO_CDROM
@@ -733,7 +733,7 @@ If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
 
 [34;1mmount D C:\example -t cdrom -label CDLABEL[0m
 
-Additionally, you can use IMGMOUNT to mount ISO images or CUE files:
+Additionally, you can use imgmount to mount iso or cue/bin images:
 
 [34;1mimgmount D C:\cd.iso -t cdrom[0m
 
@@ -802,10 +802,10 @@ Booting from drive %c...
 PCjr cartridge found, but machine is not PCjr
 .
 :PROGRAM_BOOT_CART_LIST_CMDS
-Available PCjr cartridge commandos:%s
+Available PCjr cartridge commands: %s
 .
 :PROGRAM_BOOT_CART_NO_CMDS
-No PCjr cartridge commandos found
+No PCjr cartridge commands found
 .
 :PROGRAM_LOADROM_SPECIFY_FILE
 Must specify ROM file to load.

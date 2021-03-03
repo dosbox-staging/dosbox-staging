@@ -1671,13 +1671,14 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS","Overlay %s on drive %c mounted.\n");
 	MSG_Add("PROGRAM_MOUNT_MOVE_Z_ERROR_1", "Can't move drive Z. Drive %c is mounted already.\n");
 
-	MSG_Add("PROGRAM_MEM_CONVEN","%10d Kb free conventional memory\n");
-	MSG_Add("PROGRAM_MEM_EXTEND","%10d Kb free extended memory\n");
-	MSG_Add("PROGRAM_MEM_EXPAND","%10d Kb free expanded memory\n");
-	MSG_Add("PROGRAM_MEM_UPPER","%10d Kb free upper memory in %d blocks (largest UMB %d Kb)\n");
+	MSG_Add("PROGRAM_MEM_CONVEN", "%10d kB free conventional memory\n");
+	MSG_Add("PROGRAM_MEM_EXTEND", "%10d kB free extended memory\n");
+	MSG_Add("PROGRAM_MEM_EXPAND", "%10d kB free expanded memory\n");
+	MSG_Add("PROGRAM_MEM_UPPER",
+	        "%10d kB free upper memory in %d blocks (largest UMB %d kB)\n");
 
-	MSG_Add("PROGRAM_LOADFIX_ALLOC","%d kb allocated.\n");
-	MSG_Add("PROGRAM_LOADFIX_DEALLOC","%d kb freed.\n");
+	MSG_Add("PROGRAM_LOADFIX_ALLOC", "%d kB allocated.\n");
+	MSG_Add("PROGRAM_LOADFIX_DEALLOC", "%d kB freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL","Used memory freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_ERROR","Memory allocation error.\n");
 
@@ -1701,7 +1702,7 @@ void DOS_SetupPrograms(void) {
 		"For information about basic mount type \033[34;1mintro mount\033[0m\n"
 		"For information about CD-ROM support type \033[34;1mintro cdrom\033[0m\n"
 		"For information about special keys type \033[34;1mintro special\033[0m\n"
-		"To access DOSBox Staging's wiki, visit:\033[34;1m\n"
+		"For more imformation, visit DOSBox Staging wiki:\033[34;1m\n"
 		"https://github.com/dosbox-staging/dosbox-staging/wiki\033[0m\n"
 		"\n"
 		"\033[31;1mDOSBox will stop/exit without a warning if an error occurred!\033[0m\n"
@@ -1735,11 +1736,11 @@ void DOS_SetupPrograms(void) {
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
 		);
 	MSG_Add("PROGRAM_INTRO_MOUNT_END",
-		"When the mount has successfully completed you can type \033[34;1mc:\033[0m to go to your freshly\n"
+		"After successfully mounting the disk you can type \033[34;1mc:\033[0m to go to your freshly\n"
 		"mounted C-drive. Typing \033[34;1mdir\033[0m there will show its contents."
 		" \033[34;1mcd\033[0m will allow you to\n"
 		"enter a directory (recognised by the \033[33;1m[]\033[0m in a directory listing).\n"
-		"You can run programs/files which end with \033[31m.exe .bat\033[0m and \033[31m.com\033[0m.\n"
+		"You can run programs/files with extensions \033[31m.exe .bat\033[0m and \033[31m.com\033[0m.\n"
 		);
 	MSG_Add("PROGRAM_INTRO_CDROM",
 		"\033[2J\033[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:\033[0m\n"
@@ -1754,7 +1755,7 @@ void DOS_SetupPrograms(void) {
 		"\n"
 		"\033[34;1mmount D C:\\example -t cdrom -label CDLABEL\033[0m\n"
 		"\n"
-		"Additionally, you can use IMGMOUNT to mount ISO images or CUE files:\n"
+		"Additionally, you can use imgmount to mount iso or cue/bin images:\n"
 		"\n"
 		"\033[34;1mimgmount D C:\\cd.iso -t cdrom\033[0m\n"
 		);
@@ -1794,8 +1795,8 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s");
 	MSG_Add("PROGRAM_BOOT_BOOT","Booting from drive %c...\n");
 	MSG_Add("PROGRAM_BOOT_CART_WO_PCJR","PCjr cartridge found, but machine is not PCjr");
-	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS","Available PCjr cartridge commandos:%s");
-	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS","No PCjr cartridge commandos found");
+	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS", "Available PCjr cartridge commands: %s");
+	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS", "No PCjr cartridge commands found");
 
 	MSG_Add("PROGRAM_LOADROM_SPECIFY_FILE","Must specify ROM file to load.\n");
 	MSG_Add("PROGRAM_LOADROM_CANT_OPEN","ROM file not accessible.\n");
