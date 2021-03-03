@@ -510,7 +510,7 @@ Missing parameter.
 
 .
 :PROGRAM_MOUNT_CDROMS_FOUND
-CDROMs found: %d
+Znalezione CD-ROMy: %d
 
 .
 :PROGRAM_MOUNT_STATUS_DRIVE
@@ -590,7 +590,7 @@ The overlay directory can not be the same as underlying drive.
 
 .
 :PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR
-Something went wrong.
+Coś poszło nie tak.
 
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
@@ -602,71 +602,71 @@ Nie można przenieść dysku Z. Dysk %c jest już zamontowany.
 
 .
 :PROGRAM_MEM_CONVEN
-%10d Kb free conventional memory
+%10d kB wolnej pamięci konwencjonalnej
 
 .
 :PROGRAM_MEM_EXTEND
-%10d Kb free extended memory
+%10d kB wolnej pamięci rozszerzonej
 
 .
 :PROGRAM_MEM_EXPAND
-%10d Kb free expanded memory
+%10d kB wolnej pamięci stronicowej
 
 .
 :PROGRAM_MEM_UPPER
-%10d Kb free upper memory in %d blocks (largest UMB %d Kb)
+%10d kB wolnej pamięci górnej w %d blokach (największy blok %d kB)
 
 .
 :PROGRAM_LOADFIX_ALLOC
-%d kb allocated.
+%d kB zaalokowanych.
 
 .
 :PROGRAM_LOADFIX_DEALLOC
-%d kb freed.
+%d kB zwolnionych.
 
 .
 :PROGRAM_LOADFIX_DEALLOCALL
-Used memory freed.
+Użyta pamięć zwolniona.
 
 .
 :PROGRAM_LOADFIX_ERROR
-Memory allocation error.
+Błąd alokacji pamięci.
 
 .
 :MSCDEX_SUCCESS
-MSCDEX installed.
+MSCDEX zainstalowany.
 
 .
 :MSCDEX_ERROR_MULTIPLE_CDROMS
-MSCDEX: Failure: Drive-letters of multiple CD-ROM drives have to be continuous.
+MSCDEX: Błąd: Litery dysków wielu napędów CD-ROM muszą następować po sobie.
 
 .
 :MSCDEX_ERROR_NOT_SUPPORTED
-MSCDEX: Failure: Not yet supported.
+MSCDEX: Błąd: jeszcze nie obsługiwane.
 
 .
 :MSCDEX_ERROR_PATH
-MSCDEX: Specified location is not a CD-ROM drive.
+MSCDEX: Podana ścieżka nie jest prowadzi do napędu CD-ROM.
 
 .
 :MSCDEX_ERROR_OPEN
-MSCDEX: Failure: Invalid file or unable to open.
+MSCDEX: Błąd: Nieprawidłowy plik lub brak dostępu.
 
 .
 :MSCDEX_TOO_MANY_DRIVES
-MSCDEX: Failure: Too many CD-ROM drives (max: 5). MSCDEX Installation failed.
+MSCDEX: Błąd: Za dużo napędów CD-ROM (maksymalnie: 5). Instalacja MSCDEX nieudana.
 
 .
 :MSCDEX_LIMITED_SUPPORT
-MSCDEX: Mounted subdirectory: limited support.
+MSCDEX: Zamontowano podkatalog: ograniczone wsparcie.
 
 .
 :MSCDEX_INVALID_FILEFORMAT
-MSCDEX: Failure: File is either no ISO/CUE image or contains errors.
+MSCDEX: Błąd: Plik nie jest obrazem ISO/CUE lub zawiera błędy.
 
 .
 :MSCDEX_UNKNOWN_ERROR
-MSCDEX: Failure: Unknown error.
+MSCDEX: Błąd: Nieznany błąd.
 
 .
 :MSCDEX_WARNING_NO_OPTION
@@ -674,7 +674,7 @@ MSCDEX: Warning: Ignoring unsupported option '%s'.
 
 .
 :PROGRAM_RESCAN_SUCCESS
-Drive cache cleared.
+Pamięć podręczna dysku wyczyszczona.
 
 .
 :PROGRAM_INTRO
@@ -832,32 +832,32 @@ BASIC ROM loaded.
 
 .
 :SHELL_CMD_IMGMOUNT_HELP
-mounts compact disc image(s) or floppy disk image(s) to a given drive letter.
+Zamontuj obraz dysku CD, dyskietki lub dysku twardego do wybranej litery dysku.
 
 .
 :SHELL_CMD_IMGMOUNT_HELP_LONG
-Mount a CD-ROM, floppy, or disk image to a drive letter.
+Zamontuj obraz dysku CD, dyskietki lub dysku twardego do wybranej litery dysku.
 
-Usage:
-  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso
-  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mIMAGEFILE[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy
-  [32;1mimgmount[0m [37;1mDRIVE[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -size GEOMETRY
-  [32;1mimgmount[0m -u [37;1mDRIVE[0m  (unmounts the DRIVE's image)
+Użycie:
+  [32;1mimgmount[0m [37;1mDYSK[0m [36;1mOBRAZ-CD[0m [OBRAZ-CD2 [..]] [-fs iso] -t cdrom|iso
+  [32;1mimgmount[0m [37;1mDYSK[0m [36;1mOBRAZ[0m [OBRAZ2 [..]] [-fs fat] -t hdd|floppy
+  [32;1mimgmount[0m [37;1mDYSK[0m [36;1mOBRAZ-STARTOWY[0m [-fs fat|none] -t hdd -size GEOMETRIA
+  [32;1mimgmount[0m -u [37;1mDYSK[0m  (odmontuj obraz DYSKu)
 
-Where:
-  [37;1mDRIVE[0m     is the drive letter where the image will be mounted: a, c, d, ...
-  [36;1mCDROM-SET[0m is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [36;1mIMAGEFILE[0m is a hard drive or floppy image in FAT16 or FAT12 format
-  [36;1mBOOTIMAGE[0m is a bootable disk image with specified -size GEOMETRY:
-            bytes-per-sector,sectors-per-head,heads,cylinders
-Notes:
-  - Ctrl+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.
+Gdzie:
+  [37;1mDYSK[0m           jest literą do której obraz będzie zamontowany: A, C, D, ...
+  [36;1mOBRAZ-CD[0m       to ISO, CUE+BIN, CUE+ISO lub CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
+  [36;1mOBRAZ[0m          jest obrazem dysku twardego lub dyskietki (FAT16 lub FAT12)
+  [36;1mOBRAZ-STARTOWY[0m jest startowym obrazem dysku ze specyficzną geometrią
+  GEOMETRIA      pliki-w-sektorze,sektory-w-głowicy,głowice,cylindry
 
-Examples:
-  [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/games/doom.iso[0m -t cdrom
+Notatki:
+  - Ctrl+F4 zamienia i montuje następny OBRAZ lub OBRAZ-CD.    
+Przykłady:
+  [32;1mimgmount[0m [37;1mD[0m [36;1m/home/UZYTKOWNIK/gry/doom.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
-  [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -t floppy
-  [32;1mimgmount[0m [37;1mC[0m [36;1m~/dos/c_drive.img[0m -t hdd
+  [32;1mimgmount[0m [37;1mA[0m [36;1mdyskietka1.img dyskietka2.img[0m -t floppy
+  [32;1mimgmount[0m [37;1mC[0m [36;1m~/dos/dysk_c.img[0m -t hdd
   [32;1mimgmount[0m [37;1mC[0m [36;1mbootable.img[0m -t hdd -fs none -size 512,63,32,1023
 
 .
@@ -956,11 +956,11 @@ Using multiple files is only supported for cue/iso images.
 
 .
 :PROGRAM_KEYB_INFO
-Codepage %i has been loaded
+Strona kodowa %i została załadowana
 
 .
 :PROGRAM_KEYB_INFO_LAYOUT
-Codepage %i has been loaded for layout %s
+Strona kodowa %i została załadowana dla układu klawiatury %s
 
 .
 :PROGRAM_KEYB_SHOWHELP
@@ -978,67 +978,63 @@ Układ klawiatury %s został wczytany dla strony kodowej %i
 
 .
 :PROGRAM_KEYB_FILENOTFOUND
-Keyboard file %s not found
+Nie znaleziono pliku klawiatury %s
 
 
 .
 :PROGRAM_KEYB_INVALIDFILE
-Keyboard file %s invalid
+Plik klawiatury %s jest nieprawidłowy
 
 .
 :PROGRAM_KEYB_LAYOUTNOTFOUND
-No layout in %s for codepage %i
+Brak układu klawiatury w %s dla strony kodowej %i
 
 .
 :PROGRAM_KEYB_INVCPFILE
-None or invalid codepage file for layout %s
+Brak lub nieprawidłowy plik strony kodowej dla układu klawiatury %s
 
 
 .
 :SHELL_ILLEGAL_PATH
-Illegal Path.
+Nieprawidłowa ścieżka
 
 .
 :SHELL_CMD_HELP
-If you want a list of all supported commands type [33;1mhelp /all[0m .
-A short list of the most often used commands:
+Jeśli chcesz zobaczyć listę wszystkich obsługiwanych komend, wpisz [33;1mhelp /all[0m .
+Krótka lista najczęściej używanych komend:
 
 .
 :SHELL_CMD_ECHO_ON
-ECHO is on.
+ECHO jest włączone.
 
 .
 :SHELL_CMD_ECHO_OFF
-ECHO is off.
-
-.
-:SHELL_ILLEGAL_CONTROL_CHARACTER
-Unexpected control character: Dec %03u and Hex %#04x.
+ECHO jest wyłączone.
 
 .
 :SHELL_ILLEGAL_SWITCH
-Illegal switch: %s.
+Nieprawidłowy przełącznik: %s.
 
 .
 :SHELL_MISSING_PARAMETER
-Required parameter missing.
+Brak wymaganego parametru.
 
 .
 :SHELL_CMD_CHDIR_ERROR
-Unable to change to: %s.
+Nie można przejść do: %s.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Hint: To change to different drive type [31m%c:[0m
+Aby przejść do innego dysku wpisz [31m%c:[0m
 
 .
 :SHELL_CMD_CHDIR_HINT_2
-directoryname is longer than 8 characters and/or contains spaces.
-Try [31mcd %s[0m
+Nazwa katalogu jest dłuższa niż 8 znaków i/lub zawiera spacje.
+Spróbuj [31mcd %s[0m
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-You are still on drive Z:, change to a mounted drive with [31mC:[0m.
+Ciągle jesteś na dysku Z:, Wpisz [31mC:[0m aby przejść na zamontowany dysk.
 
 .
 :SHELL_CMD_DATE_HELP
@@ -1165,7 +1161,7 @@ Nieprawidłowa komenda: %s.
 Naciśnij dowolny klawisz, aby kontynuować...
 .
 :SHELL_CMD_PAUSE_HELP
-Waits for 1 keystroke to continue.
+Czekaj na wciśnięcie klawisza aby kontynuować.
 
 .
 :SHELL_CMD_COPY_FAILURE
@@ -1270,7 +1266,7 @@ DIR [drive:][path][filename] [/[W|B]] [/P] [/[AD]|[A-D]] [/O[-][N|E|S|D]]
 
 .
 :SHELL_CMD_ECHO_HELP
-Display messages and enable/disable command echoing.
+Wyświetla wiadomości i włącza/wyłącza wypisywanie wykonywanych komend.
 
 .
 :SHELL_CMD_EXIT_HELP
@@ -1300,7 +1296,7 @@ RD [dysk:][ścieżka]
 
 .
 :SHELL_CMD_SET_HELP
-Change environment variables.
+Zmień wartości zmiennych środowiskowych.
 
 .
 :SHELL_CMD_IF_HELP
