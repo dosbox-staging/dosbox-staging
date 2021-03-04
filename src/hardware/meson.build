@@ -22,6 +22,7 @@ libhardware_sources = files([
   'memory.cpp',
   'mixer.cpp',
   'mpu401.cpp',
+  'ne2000.cpp',
   'pci_bus.cpp',
   'pcspeaker.cpp',
   'pic.cpp',
@@ -54,11 +55,13 @@ libhardware_sources = files([
 libhardware = static_library('hardware', libhardware_sources,
                              include_directories : incdir,
                              dependencies : [
+                               libnuked_dep,
+                               pcap_dep,
+                               png_dep,
                                sdl2_dep,
                                sdl2_net_dep,
+                               slirp_dep,
                                winsock2_dep,
-                               png_dep,
-                               libnuked_dep
                              ])
 
 libhardware_dep = declare_dependency(link_with : libhardware)
