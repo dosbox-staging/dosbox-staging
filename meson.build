@@ -200,7 +200,7 @@ if get_option('use_png')
 endif
 
 if get_option('use_pcap') # disabled by default
-  pcap_dep = dependency('libpcap')
+  pcap_dep = dependency('pcap')
 endif
 
 if get_option('use_slirp') # disabled by default
