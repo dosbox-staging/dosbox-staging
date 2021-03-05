@@ -30,14 +30,14 @@ endif
 example = executable('example', 'example.cpp',
                      dependencies : [gtest_dep, sdl2_dep, libmisc_dep],
                      include_directories : incdir)
-test('gtest example', example, 
-     should_fail : true)
+test('gtest example', example,
+     suite : 'ut', should_fail : true)
 
 fs_utils = executable('fs_utils', 'fs_utils.cpp',
                       dependencies : [gtest_dep, libmisc_dep],
                       include_directories : incdir)
 test('gtest fs_utils', fs_utils,
-     workdir : project_source_root, is_parallel : false)
+     suite : 'ut', workdir : project_source_root, is_parallel : false)
 
 
 # other unit tests
@@ -56,5 +56,22 @@ foreach ut : unit_tests
   exe = executable(name, [name + '.cpp', 'stubs.cpp'],
                    dependencies : [gtest_dep] + ut.get('deps'),
                    include_directories : incdir)
-  test('gtest ' + name, exe)
+  test('gtest ' + name, exe, suite : 'ut')
+endforeach
+
+
+# autoexec tests
+#
+autoexec_tests = [
+  {'name' : 't1000_cmd_echo'},
+  {'name' : 't1001_cmd_date'},
+]
+
+foreach at : autoexec_tests
+  name = at.get('name')
+  exe = find_program(name + '.py')
+  test(name, exe, args : [dosbox_bin.full_path()],
+       suite : 'at',
+       depends : dosbox_bin,
+       protocol : 'exitcode')
 endforeach
