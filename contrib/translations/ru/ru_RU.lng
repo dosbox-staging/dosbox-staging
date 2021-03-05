@@ -1,12 +1,12 @@
 :CONFIG_FULLSCREEN
 Запустить DOSBox в полноэкранном режиме.
-Нажмите Alt-Enter, чтобы вернуться обратно в оконный режим.
+Нажмите Alt+Enter, чтобы вернуться обратно в оконный режим.
 .
 :CONFIG_DISPLAY
-Количество используемых дисплеев; значения зависят от ОС и настроек пользователя.
+Количество используемых дисплеев. Значение зависит от ОС и настроек пользователя.
 .
 :CONFIG_VSYNC
-Настройка вертикальной синхронизации не реализована (настройка игнорируется)
+Настройка вертикальной синхронизации не реализована (настройка игнорируется).
 .
 :CONFIG_FULLRESOLUTION
 Какое разрешение использовать для полноэкранного режима: 'original', 'desktop'
@@ -14,7 +14,7 @@
 .
 :CONFIG_WINDOWRESOLUTION
 Установите размер окна, которое будет использоваться в оконном режиме:
-  default:   Выбор наилучшего варианта в зависимости от Вашего
+  default:   Выбор наилучшего варианта в зависимости от вашего
              окружения и других настроек.
   original:  Изменить размер окна в соответствии с разрешением, выбранным
              эмулированной программой.
@@ -44,12 +44,12 @@
                    события ввода в игру.
 Выберите способ обработки нажатия средней кнопки мыши (второй параметр):
    middlegame:     Нажатие средней кнопки отправляет события в игру
-                   (Ctrl-F10 освобождает мышь).
+                   (Ctrl+F10 освобождает мышь).
    middlerelease:  Нажатие средней кнопки освобождает мышь не отправляя
                    события в игру. Однако, нажатие средней кнопки
                    будет отправлять события в игру в полноэкранном режиме
                    или когда установлен метод управления 'seamless'.
-                   Ctrl-F10 также освобождает мышь.
+                   Ctrl+F10 также освобождает мышь.
 Значения по умолчанию (если нет или неправильные): 'seamless middlerelease'
 .
 :CONFIG_SENSITIVITY
@@ -61,7 +61,7 @@
 полноэкранном режиме или при захвате мыши в оконном режиме.
 .
 :CONFIG_WAITONERROR
-Ждать, перед закрытием консоли, если DOSBox имеет ошибку.
+Ждать, перед закрытием консоли DOSBox, если есть ошибки.
 .
 :CONFIG_PRIORITY
 Уровни приоритета для DOSBox. Второй параметр действует, когда окно DOSBox без фокуса или свёрнуто.
@@ -108,7 +108,7 @@ auto        | 'low', если передан исполняемый файл или директория, иначе 'high'
 Масштабирует вертикальное разрешение для получения изображения с соотношением
 сторон 4:3. Соотношение, совпадающее с оригинальными мониторами,
 для которых было разработано большинство DOS-игр. Эта настройка влияет
-только на режимы видео, использующие нестандартное разрешение, такие как
+только на режимы видео, использующие нестандартные разрешения, такие как
 '320x200' или '640x400'; где в виде квадратных пикселей, например, '640x480'
 и '800x600', будут отображаться как есть.
 .
@@ -153,7 +153,7 @@ auto        | 'low', если передан исполняемый файл или директория, иначе 'high'
   'max':          Выделит столько циклов, сколько позволит выделить процессор.
 .
 :CONFIG_CYCLEUP
-Количество циклов для уменьшения/увеличения с помощью "горячих" клавиш.(CTRL-F11/CTRL-F12)
+Количество циклов для уменьшения/увеличения с помощью "горячих" клавиш.(Ctrl+F11/Ctrl+F12)
 .
 :CONFIG_CYCLEDOWN
 Значение ниже 100 будет в процентах.
@@ -319,7 +319,7 @@ DOSBox, с последующей проверкой других мест в системе.
 Процент движения, который нужно игнорировать. Значение '100' превращает рычажок в цифровой.
 .
 :CONFIG_SERIAL1
-Установите тип устройства, подключенного к com-порту.
+Установите тип устройства, подключённого к com-порту.
 Может быть 'disabled', 'dummy', 'modem', 'nullmodem' и 'directserial'.
 Дополнительные параметры должны быть в той же строке в виде
 параметр:значение. Параметр для всех типов: 'irq' (опциональный).
@@ -724,7 +724,7 @@ DOSBox Staging обеспечивает эмуляцию CD-ROM на нескольких уровнях.
 
 Если это не сработает, Вам, возможно, придётся сообщить DOSBox Staging метку CD-ROM:
 
-[34;1mmount D C:\example -t cdrom -label МЕТКА[0m
+[34;1mmount D C:\example -t cdrom -label метка[0m
 
 Кроме того, Вы можете использовать imgmount для монтирования iso или cue/bin образов:
 
@@ -736,18 +736,19 @@ DOSBox Staging обеспечивает эмуляцию CD-ROM на нескольких уровнях.
 "Горячие" клавиши по умолчанию.
 Они могут быть изменены в [33mклавишном маппере[0m.
 
-[33;1mALT-ENTER[0m   : Переключение между полноэкранным и оконным режимами.
-[33;1mALT-PAUSE[0m   : Остановить/Возобновить эмуляцию.
-[33;1mCTRL-F1[0m     : Запустить [33mклавишный маппер[0m.
-[33;1mCTRL-F4[0m     : Заменить смонтированный образ диска, обновить кэш директорий для всех дисков.
-[33;1mCTRL-F5[0m     : Сохранить снимок экрана.
-[33;1mCTRL-F6[0m     : Начать/Остановить звукозапись.
-[33;1mCTRL-F7[0m     : Начать/Остановить видеозапись.
-[33;1mCTRL-F9[0m     : Завершить эмуляцию.
-[33;1mCTRL-F10[0m    : Захватить/Освободить мышь.
-[33;1mCTRL-F11[0m    : Понизить скорость эмуляции.
-[33;1mCTRL-F12[0m    : Повысить скорость эмуляции.
-[33;1mALT-F12[0m     : Не ограничивать скорость (турбо режим/перемотка вперёд).
+[33;1mAlt+Enter[0m   : Переключение между полноэкранным и оконным режимами.
+[33;1mAlt+Pause[0m   : Остановить/Возобновить эмуляцию.
+[33;1mCtrl+F1[0m     : Запустить [33mклавишный маппер[0m.
+[33;1mCtrl+F4[0m     : Заменить смонтированный образ диска, обновить кэш директорий для
+              всех дисков.
+[33;1mCtrl+F5[0m     : Сохранить снимок экрана.
+[33;1mCtrl+F6[0m     : Начать/Остановить звукозапись.
+[33;1mCtrl+F7[0m     : Начать/Остановить видеозапись.
+[33;1mCtrl+F9[0m     : Завершить эмуляцию.
+[33;1mCtrl+F10[0m    : Захватить/Освободить мышь.
+[33;1mCtrl+F11[0m    : Понизить скорость эмуляции.
+[33;1mCtrl+F12[0m    : Повысить скорость эмуляции.
+[33;1mAlt+F12[0m     : Не ограничивать скорость (турбо режим/перемотка вперёд).
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -766,14 +767,14 @@ DOSBox Staging обеспечивает эмуляцию CD-ROM на нескольких уровнях.
 Эта команда загружает DOSBox с дискеты или с образа жёсткого диска.
 
 Для этой команды можно указать последовательность сменных дискет при нажатии
-Ctrl-F4, и -l указывает смонтированный диск для загрузки. Если буква диска
+Ctrl+F4, и -l указывает смонтированный диск для загрузки. Если буква диска
 не указана, по умолчанию загрузка с диска A. Единственными буквами
-загрузочного диска являются A, C и D. При загрузке с жесткого диска (C или D),
+загрузочного диска являются A, C и D. При загрузке с жёсткого диска (C или D),
 образ должен быть уже смонтирован с помощью команды [34;1mimgmount[0m.
 
 Синтаксис этой команды:
 
-[34;1mboot [дискета1.img дискета2.img] [-l буква_диска][0m
+[34;1mboot [дискета_1.img дискета_2.img] [-l ДИСК][0m
 
 .
 :PROGRAM_BOOT_UNABLE
@@ -804,7 +805,7 @@ PCjr картридж найден, но машина не PCjr.
 
 .
 :PROGRAM_LOADROM_CANT_OPEN
-Файл ПЗУ недоступен.
+Файл ПЗУ недоступен для чтения.
 
 .
 :PROGRAM_LOADROM_TOO_LARGE
@@ -831,13 +832,13 @@ PCjr картридж найден, но машина не PCjr.
 Монтировать CD-ROM, дискету или образ диска на указанную букву диска.
 
 Использование:
-  [32;1mimgmount[0m [37;1mДиск[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso
-  [32;1mimgmount[0m [37;1mДиск[0m [36;1mIMAGEFILE[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy
-  [32;1mimgmount[0m [37;1mДиск[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -size Геометрия
-  [32;1mimgmount[0m -u [37;1mДиск[0m  (демонтировать образ диска)
+  [32;1mimgmount[0m [37;1mДИСК[0m [36;1mCDROM-SET[0m [CDROM-SET_2 [..]] [-fs iso] -t cdrom|iso
+  [32;1mimgmount[0m [37;1mДИСК[0m [36;1mIMAGEFILE[0m [IMAGEFILE_2 [..]] [-fs fat] -t hdd|floppy
+  [32;1mimgmount[0m [37;1mДИСК[0m [36;1mBOOTIMAGE[0m [-fs fat|none] -t hdd -size геометрия
+  [32;1mimgmount[0m -u [37;1mДИСК[0m  (демонтировать образ диска)
 
 Где:
-  [37;1mДиск[0m      это буква диска, на который будет смонтирован образ: A, C, D, ...
+  [37;1mДИСК[0m      это буква диска, на который будет смонтирован образ: A, C, D, ...
   [36;1mCDROM-SET[0m это iso, cue/bin, или cue/iso/flac/opus/ogg/mp3/wav образ.
   [36;1mIMAGEFILE[0m это образ жёсткого диска или дискеты в формате fat16 или fat12.
   [36;1mBOOTIMAGE[0m это образ загрузочного диска с заданной геометрией:
@@ -849,7 +850,7 @@ PCjr картридж найден, но машина не PCjr.
 Примеры:
   [32;1mimgmount[0m [37;1mD[0m [36;1m/home/имя_пользователя/Games/образ.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/образ.cue[0m -t cdrom
-  [32;1mimgmount[0m [37;1mA[0m [36;1mдискета1.img дискета2.img дискета3.img[0m -t floppy
+  [32;1mimgmount[0m [37;1mA[0m [36;1mдискета_1.img дискета_2.img дискета_3.img[0m -t floppy
   [32;1mimgmount[0m [37;1mC[0m [36;1m~/DOS/диск_C.img[0m -t hdd
   [32;1mimgmount[0m [37;1mC[0m [36;1mзагрузочный_образ.img[0m -t hdd -fs none -size 512,63,32,1023
 
@@ -868,13 +869,14 @@ PCjr картридж найден, но машина не PCjr.
 Где:
   [37;1mДиск[0m       это буква диска, куда будет смонтирована директория: A, C, D, ...
   [36;1mДиректория[0m это директория на ОС, которая будет смонтирована.
-  TYPE       это тип монтируемой директории: dir, floppy, cdrom, or overlay.
-  SIZE       это свободное место виртуального диска (кБ для дискет, МБ для
+  Тип        это тип монтируемой директории: dir, floppy, cdrom, or overlay.
+  Размер     это свободное место виртуального диска (кБ для дискет, МБ для
              остального).
-  LABEL      это метка диска, которая будет использоваться.
+  Метка      это метка диска, которая будет использоваться.
 
 Примечания:
-  - '-t overlay' перенаправить запись смонтированного диска в другую директорию.  - Дополнительные опции описаны в руководстве (файл README, глава 4).
+  - '-t overlay' перенаправить запись смонтированного диска в другую директорию.
+  - Дополнительные опции описаны в руководстве (файл README, глава 4).
 
 Примеры:
   [32;1mmount[0m [37;1mC[0m [36;1m~/DOS-игры[0m
@@ -883,332 +885,331 @@ PCjr картридж найден, но машина не PCjr.
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
-Must specify drive letter to mount image at.
+Должна быть указана буква диска для монтирования образа.
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY2
-Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).
+Должен быть указан номер диска (0 или 3) для монтирования образа на (0,1=fda,fdb;2,3=hda,hdb).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-For [33mCD-ROM[0m images:   [34;1mIMGMOUNT drive-letter location-of-image -t iso[0m
+Для образов [33mкомпакт-дисков[0m: [34;1mimgmount ДИСК путь_к_образу -t iso[0m
 
-For [33mhardrive[0m images: Must specify drive geometry for hard drives:
-bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
-[34;1mIMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[0m
+Для образов [33mжёстких_дисков[0m: Должна быть указана геометрия жёсткого диска:
+байтов_на_сектор, секторов_на_головку, головок_на_цилиндр,количество_цилиндров.
+[34;1mimgmount ДИСК путь_к_образу -size бнс,снг,гнц,кц[0m
 
 .
 :PROGRAM_IMGMOUNT_INVALID_IMAGE
-Could not load image file.
-Check that the path is correct and the image is accessible.
+Не удалось загрузить файл образа.
+Убедитесь, что путь правильный и образ доступен для чтения.
 
 .
 :PROGRAM_IMGMOUNT_INVALID_GEOMETRY
-Could not extract drive geometry from image.
-Use parameter -size bps,spc,hpc,cyl to specify the geometry.
+Не удалось извлечь геометрию диска из образа.
+Для задания геометрии используйте параметр -size бнс,снг,гнц,кц.
 
 .
 :PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
-Type '%s' is unsupported. Specify 'floppy', 'hdd', 'cdrom', or 'iso'.
+Тип '%s' не поддерживается. Укажите: 'floppy', 'hdd', 'cdrom' или 'iso'.
 
 .
 :PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
-Format "%s" is unsupported. Specify "fat" or "iso" or "none".
+Формат '%s' не поддерживается. Укажите: 'fat', 'iso' или 'none'.
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_FILE
-Must specify file-image to mount.
+Должен быть указан файл образа.
 
 .
 :PROGRAM_IMGMOUNT_FILE_NOT_FOUND
-Image file not found.
+Файл образа не найден.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-To mount directories, use the [34;1mMOUNT[0m command, not the [34;1mIMGMOUNT[0m command.
+Для монтирования директорий используйте команду [34;1mmount[0m, а не команду [34;1mimgmount[0m.
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
-Drive already mounted at that letter.
+Диск уже смонтирован на этой букве.
 
 .
 :PROGRAM_IMGMOUNT_CANT_CREATE
-Can't create drive from file.
+Невозможно создать диск из файла.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT_NUMBER
-Drive number %d mounted as %s
+Номер диска %d смонтирован как %s.
 
 .
 :PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
-The image must be on a host or local drive.
+Образ должен быть на хосте или локальном диске.
 
 .
 :PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
-Using multiple files is only supported for cue/iso images.
+Использование нескольких файлов возможно только для cue/iso образов.
 
 .
 :PROGRAM_KEYB_INFO
-Codepage %i has been loaded
+Кодовая страница %i загружена.
 
 .
 :PROGRAM_KEYB_INFO_LAYOUT
-Codepage %i has been loaded for layout %s
+Для раскладки клавиатуры %s загружена кодовая страница %i.
 
 .
 :PROGRAM_KEYB_SHOWHELP
-[32;1mKEYB[0m [keyboard layout ID[ codepage number[ codepage file]]]
+[32;1mkeyb[0m [ID_раскладки_клавиатуры[ №_кодовой_страницы[ файл_кодовой_страницы]]]
 
-Some examples:
-  [32;1mKEYB[0m: Display currently loaded codepage.
-  [32;1mKEYB[0m sp: Load the spanish (SP) layout, use an appropriate codepage.
-  [32;1mKEYB[0m sp 850: Load the spanish (SP) layout, use codepage 850.
-  [32;1mKEYB[0m sp 850 mycp.cpi: Same as above, but use file mycp.cpi.
-
+Примеры:
+  [32;1mkeyb[0m: Отобразить текущую кодовую страницу.
+  [32;1mkeyb[0m ru: Загрузить русскую раскладку (ru), с подходящей кодовой страницей.
+  [32;1mkeyb[0m ru 808: Загрузить русскую раскладку (ru), с кодовой страницей 808.
+  [32;1mkeyb[0m ru 808 russian.txt: То же самое, но использовать файл russian.txt.
 .
 :PROGRAM_KEYB_NOERROR
-Keyboard layout %s loaded for codepage %i
+Раскладка клавиатуры %s загружена для кодовой страницы %i.
 
 .
 :PROGRAM_KEYB_FILENOTFOUND
-Keyboard file %s not found
+Файл раскладки клавиатуры %s не найден.
 
 
 .
 :PROGRAM_KEYB_INVALIDFILE
-Keyboard file %s invalid
+Неверный файл раскладки клавиатуры %s.
 
 .
 :PROGRAM_KEYB_LAYOUTNOTFOUND
-No layout in %s for codepage %i
+Нет раскладки клавиатуры в %s для кодовой страницы %i.
 
 .
 :PROGRAM_KEYB_INVCPFILE
-None or invalid codepage file for layout %s
+Нет или неверный файл кодовой страницы для раскладки клавиатуры %s.
 
 
 .
 :SHELL_ILLEGAL_PATH
-Illegal Path.
+Запрещённый путь.
 
 .
 :SHELL_CMD_HELP
-If you want a list of all supported commands type [33;1mhelp /all[0m .
-A short list of the most often used commands:
+Для показа списка всех доступных команд, введите [33;1mhelp /all[0m.
+Краткий список часто используемых команд:
 
 .
 :SHELL_CMD_ECHO_ON
-ECHO is on.
+Включён режим вывода команд на экран.
 
 .
 :SHELL_CMD_ECHO_OFF
-ECHO is off.
+Выключен режим вывода команд на экран.
 
 .
 :SHELL_ILLEGAL_CONTROL_CHARACTER
-Unexpected control character: Dec %03u and Hex %#04x.
+Неожиданный управляющий символ: 10-ный %03u и 16-ный %#04x.
 
 .
 :SHELL_ILLEGAL_SWITCH
-Illegal switch: %s.
+Запрещённый переключатель: %s.
 
 .
 :SHELL_MISSING_PARAMETER
-Required parameter missing.
+Отсутствует обязательный параметр.
 
 .
 :SHELL_CMD_CHDIR_ERROR
-Unable to change to: %s.
+Невозможно изменить в: %s.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Hint: To change to different drive type [31m%c:[0m
+Подсказка: Для перехода на другой диск введите [31m%C:[0m
 
 .
 :SHELL_CMD_CHDIR_HINT_2
-directoryname is longer than 8 characters and/or contains spaces.
-Try [31mcd %s[0m
+Имя директории длиннее восьми символов и/или содержит пробелы.
+Попробуйте ввести [31mcd %s[0m.
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-You are still on drive Z:, change to a mounted drive with [31mC:[0m.
+Вы всё ещё находитесь на диске Z, для перехода на диск C, введите [31mC:[0m.
 
 .
 :SHELL_CMD_DATE_HELP
-Displays or changes the internal date.
+Отобразить или изменить внутреннюю дату.
 
 .
 :SHELL_CMD_DATE_ERROR
-The specified date is not correct.
+Указанная дата неправильная.
 
 .
 :SHELL_CMD_DATE_DAYS
-3SunMonTueWedThuFriSat
+2ВсПнВтСрЧтПтСб
 .
 :SHELL_CMD_DATE_NOW
-Current date:
+Сегодня:
 .
 :SHELL_CMD_DATE_SETHLP
-Type 'date MM-DD-YYYY' to change.
+Для изменения даты, введите 'date MM-DD-YYYY'.
 
 .
 :SHELL_CMD_DATE_FORMAT
-M/D/Y
+D.M.Y
 .
 :SHELL_CMD_DATE_HELP_LONG
-DATE [[/T] [/H] [/S] | MM-DD-YYYY]
-  MM-DD-YYYY: new date to set
-  /S:         Permanently use host time and date as DOS time
-  /F:         Switch back to DOSBox internal time (opposite of /S)
-  /T:         Only display date
-  /H:         Synchronize with host
+date [[/t] [/h] [/s] | MM-DD-YYYY]
+  MM-DD-YYYY: Установить новую дату.
+  /s:         Использовать время и дату операционной системы для времени DOS.
+  /f:         Вернуться к внутреннему времени DOSBox (противоположность /s).
+  /t:         Только показать дату.
+  /h:         Синхронизировать с операционной системой.
 
 .
 :SHELL_CMD_TIME_HELP
-Displays the internal time.
+Отобразить внутреннее время.
 
 .
 :SHELL_CMD_TIME_NOW
-Current time:
+Сейчас:
 .
 :SHELL_CMD_TIME_HELP_LONG
-TIME [/T] [/H]
-  /T:         Display simple time
-  /H:         Synchronize with host
+time [/t] [/h]
+  /t:         Только показать время.
+  /h:         Синхронизировать с операционной системой.
 
 .
 :SHELL_CMD_MKDIR_ERROR
-Unable to make: %s.
+Невозможно создать: %s.
 
 .
 :SHELL_CMD_RMDIR_ERROR
-Unable to remove: %s.
+Невозможно удалить: %s.
 
 .
 :SHELL_CMD_DEL_ERROR
-Unable to delete: %s.
+Невозможно удалить: %s.
 
 .
 :SHELL_SYNTAXERROR
-The syntax of the command is incorrect.
+Синтаксис команды неверный.
 
 .
 :SHELL_CMD_SET_NOT_SET
-Environment variable %s not defined.
+Переменная окружения %s не определена.
 
 .
 :SHELL_CMD_SET_OUT_OF_SPACE
-Not enough environment space left.
+Недостаточно свободного места для хранения переменных окружения операционной системы.
 
 .
 :SHELL_CMD_IF_EXIST_MISSING_FILENAME
-IF EXIST: Missing filename.
+IF EXIST: Отсутствует имя файла.
 
 .
 :SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
-IF ERRORLEVEL: Missing number.
+IF ERRORLEVEL: Отсутствует номер.
 
 .
 :SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
-IF ERRORLEVEL: Invalid number.
+IF ERRORLEVEL: Неверный номер.
 
 .
 :SHELL_CMD_GOTO_MISSING_LABEL
 No label supplied to GOTO command.
+Отсутствует метка для команды GOTO.
 
 .
 :SHELL_CMD_GOTO_LABEL_NOT_FOUND
-GOTO: Label %s not found.
+GOTO: Метка %s не найдена.
 
 .
 :SHELL_CMD_FILE_NOT_FOUND
-File %s not found.
+Файл %s не найден.
 
 .
 :SHELL_CMD_FILE_EXISTS
-File %s already exists.
+Файл %s уже существует.
 
 .
 :SHELL_CMD_DIR_VOLUME
- Volume in drive %c is %s
+Объем на диске %c - %s.
 
 .
 :SHELL_CMD_DIR_INTRO
- Directory of %s
+Директория %s.
 
 .
 :SHELL_CMD_DIR_BYTES_USED
-%17d file(s) %21s bytes
+%17d файлы %21s байт.
 
 .
 :SHELL_CMD_DIR_BYTES_FREE
-%17d dir(s)  %21s bytes free
+%17d директории %21s байт свободно.
 
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
-Drive %c does not exist!
-You must [31mmount[0m it first. Type [1;33mintro[0m or [1;33mintro mount[0m for more information.
-
+Диск %c не существует!
+Нужно использовать [31mmount[0m. Для большей информации введите [1;33mintro[0m или [1;33mintro mount[0m.
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
-Illegal command: %s.
+Запрещённая команда: %s.
 
 .
 :SHELL_CMD_PAUSE
-Press any key to continue...
+Для продолжения нажмите любую клавишу...
 .
 :SHELL_CMD_PAUSE_HELP
-Waits for 1 keystroke to continue.
+Ждёт одно нажатие клавиши, чтобы продолжить.
 
 .
 :SHELL_CMD_COPY_FAILURE
-Copy failure : %s.
+Ошибка копирования : %s.
 
 .
 :SHELL_CMD_COPY_SUCCESS
-   %d File(s) copied.
+   %d файлов скопировано.
 
 .
 :SHELL_CMD_SUBST_NO_REMOVE
-Unable to remove, drive not in use.
+Невозможно удалить, диск не используется.
 
 .
 :SHELL_CMD_SUBST_FAILURE
-SUBST failed. You either made an error in your commandline or the target drive is already used.
-It's only possible to use SUBST on Local drives
+Ошибка subst. Допущена ошибка в командной строке, или диск уже используется.
+Использовать subst можно только на локальных дисках.
 .
 :SHELL_STARTUP_BEGIN
 [44;1m╔════════════════════════════════════════════════════════════════════╗
-║ [32mWelcome to DOSBox Staging %-40s[37m ║
+║ [32mДобро пожаловать в DOSBox Staging %-32s[37m ║
 ║                                                                    ║
-║ Для быстрого ознакомления напечатайте: [33mINTRO[37m                       ║
-║ Для поддерживаемых оболочкой команд введите: [33mHELP[37m                  ║
+║ Для быстрого ознакомления введите: [33mintro[37m                           ║
+║ Для поддерживаемых оболочкой команд введите: [33mhelp[37m                  ║
 ║                                                                    ║
-║ Чтобы подстроть скорость, нажмите [31mctrl-F11[37m и [31mctrl-F12[37m.             ║
-║ Чтобы переназначить клавиши, нажмите [31mctrl-F1[37m.                      ║
+║ Чтобы подстроить скорость, нажмите [31mCtrl+F11[37m и [31mCtrl+F12[37m.            ║
+║ Чтобы переназначить клавиши, нажмите [31mCtrl+F1[37m.                      ║
 ║ Чтобы узнать больше, прочтите файл [36mREADME[37m в директории DOSBox.     ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA
-║ DOSBox supports Composite CGA mode.                                ║
-║ Use [31mF12[37m to set composite output ON, OFF, or AUTO (default).        ║
-║ [31m(Alt-)F11[37m changes hue; [31mctrl-alt-F11[37m selects early/late CGA model.  ║
+║ DOSBox поддерживает композитный CGA-режим.                         ║
+║ [31mF12[37m изменяет композитный вывод: вкл, выкл или авто (по умолчанию). ║
+║ [31m(Alt+)F11[37m меняет оттенок; [31mCtrl+Alt+F11[37m выбирает раннюю/позднюю модель CGA.║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Use [31mF11[37m to cycle through green, amber, white and paper-white mode, ║
-║ and [31mAlt-F11[37m to change contrast/brightness settings.                ║
+║ [31mF11[37m изменяет режим: зелёный, янтарный, белый или бумажно-белый,    ║
+║ и [31mAlt+F11[37m изменяет настройки яркости/контрастности.                ║
 
 .
 :SHELL_STARTUP_HERC
-║ Use [31mF11[37m to cycle through white, amber, and green monochrome color. ║
+║ [31mF11[37m изменяет монохромный цвет: белый, янтарный или зелёный.        ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_DEBUG
-║ Press [31malt-Pause[37m to enter the debugger or start the exe with [33mDEBUG[37m. ║
+║ [31mAlt+Pause[37m входит в отладчик или запускает приложение через [33mdebug[37m.  ║
 ║                                                                    ║
 
 .
@@ -1223,193 +1224,193 @@ It's only possible to use SUBST on Local drives
 
 .
 :SHELL_CMD_CHDIR_HELP
-Displays/changes the current directory.
+Показывает/изменяет текущую директорию.
 
 .
 :SHELL_CMD_CHDIR_HELP_LONG
-CHDIR [drive:][path]
-CHDIR [..]
-CD [drive:][path]
-CD [..]
+chdir [ДИСК:][путь]
+chdir [..]
+cd [ДИСК:][путь]
+cd [..]
 
-  ..   Specifies that you want to change to the parent directory.
+  ..   Указатель на родительскую директорию.
 
-Type CD drive: to display the current directory in the specified drive.
-Type CD without parameters to display the current drive and directory.
+cd ДИСК: отобразить текущую директорию на указанном диске.
+cd: отобразить текущий диск и директорию.
 
 .
 :SHELL_CMD_CLS_HELP
-Clear the screen.
+Очистить экран.
 
 .
 :SHELL_CMD_DIR_HELP
-Displays a list of files and subdirectories in a directory.
+Отобразить список файлов и субдиректорий в директории.
 
 .
 :SHELL_CMD_DIR_HELP_LONG
-DIR [drive:][path][filename] [/[W|B]] [/P] [/[AD]|[A-D]] [/O[-][N|E|S|D]]
+dir [ДИСК:][путь][имя_файла] [/[w|b]] [/p] [/[ad]|[a-d]] [/o[-][n|e|s|d]]
 
-  [drive:][path][filename]
-              Specifies drive, directory, and/or files to list.
-  /W          Uses wide list format.
-  /B          Uses bare format (no heading information or summary).
-  /P          Pauses after each screenful of information.
-  /AD         Displays all directories.
-  /A-D        Displays all files.
-  /O          List by files in sorted order.
-               -  Prefix to reverse order
-  sortorder    N  By name (alphabetic)       S  By size (smallest first)
-               E  By extension (alphabetic)  D  By date & time (oldest first)
+  [ДИСК:][путь][имя_файла]
+              Указать диск, директорию и/или список файлов.
+  /w          Использовать расширенный формат.
+  /b          Использовать краткий формат (без заголовков и прочей информации).
+  /p          Останавливаться после каждого экрана, заполненного информацией.
+  /ad         Отобразить все каталоги.
+  /a-d        Отобразить все файлы.
+  /o          Сортировать список файлов.
+               -  Префикс обратной сортировки
+  сортировка   n  По имени (алфавитная)      s  По размеру (от наименьшего)
+               e  По расширению (алфавитная) d  По дате и времени (от старейшего)
 
 .
 :SHELL_CMD_ECHO_HELP
-Display messages and enable/disable command echoing.
+Отображать сообщения и включить/выключить режим вывода команд на экран.
 
 .
 :SHELL_CMD_EXIT_HELP
-Exit from the shell.
+Выход из оболочки.
 
 .
 :SHELL_CMD_HELP_HELP
-Show help.
+Показать справочную информацию.
 
 .
 :SHELL_CMD_MKDIR_HELP
-Make Directory.
+Создать директорию.
 
 .
 :SHELL_CMD_MKDIR_HELP_LONG
-MKDIR [drive:][path]
-MD [drive:][path]
+mkdir [ДИСК:][путь]
+md [ДИСК:][путь]
 
 .
 :SHELL_CMD_RMDIR_HELP
-Remove Directory.
+Удалить директорию.
 
 .
 :SHELL_CMD_RMDIR_HELP_LONG
-RMDIR [drive:][path]
-RD [drive:][path]
+rmdir [ДИСК:][путь]
+rd [ДИСК:][путь]
 
 .
 :SHELL_CMD_SET_HELP
-Change environment variables.
+Изменить переменные окружения.
 
 .
 :SHELL_CMD_IF_HELP
-Performs conditional processing in batch programs.
+Выполнить условную обработку в пакетных программах.
 
 .
 :SHELL_CMD_GOTO_HELP
-Jump to a labeled line in a batch script.
+Перейти к помеченной строке в пакетном скрипте.
 
 .
 :SHELL_CMD_SHIFT_HELP
-Leftshift commandline parameters in a batch script.
+Параметры командной строки обратного сдвига в пакетном скрипте.
 
 .
 :SHELL_CMD_TYPE_HELP
-Display the contents of a text-file.
+Отобразить содержимое текстового файла.
 
 .
 :SHELL_CMD_TYPE_HELP_LONG
-TYPE [drive:][path][filename]
+type [ДИСК:][путь][имя_файла]
 
 .
 :SHELL_CMD_REM_HELP
-Add comments in a batch file.
+Добавить комментарий в пакетный файл.
 
 .
 :SHELL_CMD_REM_HELP_LONG
-REM [comment]
+rem [комментарий]
 
 .
 :SHELL_CMD_NO_WILD
-This is a simple version of the command, no wildcards allowed!
+Это простая версия команды, спецсимволы запрещены!
 
 .
 :SHELL_CMD_RENAME_HELP
-Renames one or more files.
+Переименовать один или несколько файлов.
 
 .
 :SHELL_CMD_RENAME_HELP_LONG
-RENAME [drive:][path]filename1 filename2.
-REN [drive:][path]filename1 filename2.
+rename [ДИСК:][путь]имя_файла_1 имя_файла_2.
+ren [ДИСК:][путь]имя_файла_1 имя_файла_2.
 
-Note that you can not specify a new drive or path for your destination file.
+Обратите внимание, что невозможно указать новый диск или путь к целевому файлу.
 
 .
 :SHELL_CMD_DELETE_HELP
-Removes one or more files.
+Удалить один или несколько файлов.
 
 .
 :SHELL_CMD_COPY_HELP
-Copy files.
+Копировать файлы.
 
 .
 :SHELL_CMD_CALL_HELP
-Start a batch file from within another batch file.
+Запустить пакетный файл из другого пакетного файла.
 
 .
 :SHELL_CMD_SUBST_HELP
-Assign an internal directory to a drive.
+Назначить диску внутреннюю директорию.
 
 .
 :SHELL_CMD_LOADHIGH_HELP
-Loads a program into upper memory (requires xms=true,umb=true).
+Загрузить программу в верхнюю память (требует xms=true,umb=true).
 
 .
 :SHELL_CMD_LS_HELP
-List directory contents.
+Список содержимого директории.
 
 .
 :SHELL_CMD_LS_HELP_LONG
-ls [/?] [PATTERN]
+ls [/?] [шаблон]
 
 .
 :SHELL_CMD_LS_PATH_ERR
-ls: cannot access '%s': No such file or directory
+ls: невозможно получить доступ к "%s": Нет такого файла или директории.
 
 .
 :SHELL_CMD_CHOICE_HELP
-Waits for a keypress and sets ERRORLEVEL.
+Ждать нажатия клавиши и установки ERRORLEVEL.
 
 .
 :SHELL_CMD_CHOICE_HELP_LONG
-CHOICE [/C:choices] [/N] [/S] text
-  /C[:]choices  -  Specifies allowable keys.  Default is: yn.
-  /N  -  Do not display the choices at end of prompt.
-  /S  -  Enables case-sensitive choices to be selected.
-  text  -  The text to display as a prompt.
+choice [/c:клавиши] [/n] [/s] текст
+  /c[:]клавиши - Определяет допустимые клавиши. По умолчанию: yn.
+  /n           - Не отображать варианты в конце запроса.
+  /s           - Определить регистрозависимый выбор.
+  текст        - Текст, отображаемый в качестве подсказки.
 
 .
 :SHELL_CMD_ATTRIB_HELP
-Does nothing. Provided for compatibility.
+Ничего не делает. Обеспечена совместимость.
 
 .
 :SHELL_CMD_PATH_HELP
-Provided for compatibility.
+Обеспечена совместимость.
 
 .
 :SHELL_CMD_VER_HELP
-View or set the reported DOS version.
+Показать или установить версию DOS.
 
 .
 :SHELL_CMD_VER_HELP_LONG
-Usage:
+Использование:
   [32;1mver[0m
-  [32;1mver[0m [37;1mset[0m [36;1mVERSION[0m
+  [32;1mver[0m [37;1mset[0m [36;1mверсия[0m
 
-Where:
-  [36;1mVERSION[0m can be a whole number, such as [36;1m5[0m, or include a two-digit decimal
-          value, such as: [36;1m6.22[0m, [36;1m7.01[0m, or [36;1m7.10[0m. The decimal can alternatively be
-          space-separated, such as: [36;1m6 22[0m, [36;1m7 01[0m, or [36;1m7 10[0m.
+Где:
+  [36;1mверсия[0m может быть целым числом, например [36;1m5[0m, или десятичной дробью,
+  например: [36;1m6.22[0m, [36;1m7.01[0m или [36;1m7.10[0m. Десятичная дробь может
+  разделяться пробелом, например: [36;1m6 22[0m или [36;1m7 01[0m, или [36;1m7 10[0m.
 
-Notes:
-  The DOS version can also be set in the configuration file under the [dos]
-  section using the "ver = [36;1mVERSION[0m" setting.
+Примечания:
+  Версию DOS можно, также, установить в файле конфигурации в разделе [dos]
+  с помощью настройки "ver = [36;1mверсия[0m".
 
-Examples:
+Примеры:
   [32;1mver[0m [37;1mset[0m [36;1m6.22[0m
   [32;1mver[0m [37;1mset[0m [36;1m7 10[0m
 
