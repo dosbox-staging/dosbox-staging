@@ -28,7 +28,7 @@ to be installed and the license agreed to:
 2. Install dependencies and related tools:
 
     ``` shell
-    brew install ccache cmake fluid-synth libpng meson \
+    brew install ccache cmake fluid-synth libpng meson libslirp \
                  opusfile pkg-config python3 sdl2 sdl2_net
     ```
 
@@ -46,7 +46,8 @@ to be installed and the license agreed to:
 
     ``` shell
     sudo port -q install ccache cmake fluidsynth libpng libsdl2 \
-              libsdl2_net meson opusfile pkg-config python3
+              libsdl2_net meson opusfile pkg-config python3 \
+              libslirp
     ```
 
 ## Build
