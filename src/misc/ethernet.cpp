@@ -35,6 +35,7 @@ EthernetConnection *OpenEthernetConnection(const std::string &backend)
 		settings = control->GetSection("ethernet, slirp");
 	}
 #endif
+	assert(settings);
 	if (!conn) {
 		LOG_MSG("ETHERNET: Unknown ethernet backend: %s", backend.c_str());
 		return nullptr;
