@@ -58,7 +58,7 @@ libhardware_sources = files([
 libhardware = static_library('hardware', libhardware_sources,
                              include_directories : incdir,
                              dependencies : [
-                               pcap_dep,
+                               libnuked_dep,
                                png_dep,
                                sdl2_dep,
                                sdl2_net_dep,

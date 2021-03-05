@@ -13,9 +13,6 @@ option('use_mt32emu', type : 'boolean', value : true,
 option('use_png', type : 'boolean', value : true,
        description : 'Enable saving screenshots in .png format')
 
-option('use_pcap', type : 'boolean', value : false,
-       description : 'Enable ethernet support (NE2000 emulator) using libpcap')
-
 option('use_slirp', type : 'boolean', value : false,
        description : 'Enable ethernet support (NE2000 emulator) using libslirp')
 
