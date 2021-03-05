@@ -55,9 +55,7 @@ typedef struct
 /* Supported decoder drivers... */
 extern const Sound_DecoderFunctions __Sound_DecoderFunctions_FLAC;
 extern const Sound_DecoderFunctions __Sound_DecoderFunctions_MP3;
-#ifdef USE_OPUS
 extern const Sound_DecoderFunctions __Sound_DecoderFunctions_OPUS;
-#endif
 extern const Sound_DecoderFunctions __Sound_DecoderFunctions_VORBIS;
 extern const Sound_DecoderFunctions __Sound_DecoderFunctions_WAV;
 
@@ -65,9 +63,7 @@ static decoder_element decoders[] =
 {
     { 0, &__Sound_DecoderFunctions_FLAC },
     { 0, &__Sound_DecoderFunctions_MP3 },
-#ifdef USE_OPUS
     { 0, &__Sound_DecoderFunctions_OPUS },
-#endif
     { 0, &__Sound_DecoderFunctions_VORBIS },
     { 0, &__Sound_DecoderFunctions_WAV },
     { 0, NULL }

@@ -148,13 +148,14 @@ static_libs_list = get_option('try_static_libs')
 msg = 'You can disable this dependency with: -D@0@=false'
 
 optional_dep  = dependency('', required : false)
+opus_dep      = dependency('opusfile',
+                           static : ('opusfile' in static_libs_list))
 threads_dep   = dependency('threads')
 sdl2_dep      = dependency('sdl2', version : '>= 2.0.2',
                            static : ('sdl2' in static_libs_list))
 sdl2_net_dep  = optional_dep
 opengl_dep    = optional_dep
 fluid_dep     = optional_dep
-opus_dep      = optional_dep
 mt32emu_dep   = optional_dep
 png_dep       = optional_dep
 pcap_dep      = optional_dep
@@ -187,11 +188,6 @@ if get_option('use_mt32emu')
   mt32emu_dep = dependency('mt32emu', version : '>= 2.4.2',
                            fallback : ['mt32emu', 'mt32emu_dep'],
                            not_found_message : msg.format('use_mt32emu'))
-endif
-
-if get_option('use_opusfile')
-  opus_dep = dependency('opusfile', static : ('opusfile' in static_libs_list),
-                        not_found_message : msg.format('use_opusfile'))
 endif
 
 if get_option('use_png')
