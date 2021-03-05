@@ -244,4 +244,6 @@ public:
 
 };
 
+void NE2K_Init(Section* sec);
+
 #endif

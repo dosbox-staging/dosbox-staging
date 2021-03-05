@@ -49,9 +49,7 @@
 #include "pci_bus.h"
 #include "midi.h"
 #include "hardware.h"
-
-//#include "ne2000.h"
-void NE2K_Init(Section* sec);
+#include "ne2000.h"
 
 Config * control;
 bool exit_requested = false;
