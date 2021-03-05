@@ -3,992 +3,992 @@
  Korean:  http://cafe.daum.net/dosbox
 ----------------------------------------------------------------
 
-DOSBox v0.74 ¼³¸í¼­ (www.dosbox.com¿¡¼­ ´Ã ÃÖ½Å ¹öÀüÀ» ÀÌ¿ëÇÏ½Ê½Ã¿À)
+DOSBox v0.74 ì„¤ëª…ì„œ (www.dosbox.comì—ì„œ ëŠ˜ ìµœì‹  ë²„ì „ì„ ì´ìš©í•˜ì‹­ì‹œì˜¤)
 
 =====
-¾Ë¸²
+ì•Œë¦¼
 =====
 
-DOSBox´Â ÀÌÁ¦²¯ °³ÀÎ ÄÄÇ»ÅÍ¿¡ ¸ÂÃç ¸¸µé¾îÁø ÇÁ·Î±×·¥µéÀ» ¾ðÁ¨°¡´Â ¸ðµÎ
-½ÇÇàÇÒ °ÍÀÔ´Ï´Ù. ±×°ÍÀÌ ¿ì¸®ÀÇ ¹Ù¶÷ÀÌÁö¸¸ ¾ÆÁ÷ ´Ù ÀÌ·çÁö´Â ¸øÇß½À´Ï´Ù.
-DOSBox´Â ÀÌÁ¦¼­¾ß ¸Å¿ì ºü¸¥ ÄÄÇ»ÅÍ¿¡¼­ ³·Àº »ç¾çÀÇ 486 PC¿¡ °¡±õ°Ô µ¹¾Æ°©´Ï´Ù.
-DOSBox´Â ¿¾³¯ÀÇ CGA/Tandy/PCjr °ÔÀÓºÎÅÍ Quake°¡ ³ª¿Â ÁîÀ½ÀÇ °ÔÀÓ±îÁö
-DOS °ÔÀÓÀ» Æø ³Ð°Ô ½ÇÇàÇÒ ¼ö ÀÖ°Ô µÇ¾ú½À´Ï´Ù.
+DOSBoxëŠ” ì´ì œê» ê°œì¸ ì»´í“¨í„°ì— ë§žì¶° ë§Œë“¤ì–´ì§„ í”„ë¡œê·¸ëž¨ë“¤ì„ ì–¸ì  ê°€ëŠ” ëª¨ë‘
+ì‹¤í–‰í•  ê²ƒìž…ë‹ˆë‹¤. ê·¸ê²ƒì´ ìš°ë¦¬ì˜ ë°”ëžŒì´ì§€ë§Œ ì•„ì§ ë‹¤ ì´ë£¨ì§€ëŠ” ëª»í–ˆìŠµë‹ˆë‹¤.
+DOSBoxëŠ” ì´ì œì„œì•¼ ë§¤ìš° ë¹ ë¥¸ ì»´í“¨í„°ì—ì„œ ë‚®ì€ ì‚¬ì–‘ì˜ 486 PCì— ê°€ê¹ê²Œ ëŒì•„ê°‘ë‹ˆë‹¤.
+DOSBoxëŠ” ì˜›ë‚ ì˜ CGA/Tandy/PCjr ê²Œìž„ë¶€í„° Quakeê°€ ë‚˜ì˜¨ ì¦ˆìŒì˜ ê²Œìž„ê¹Œì§€
+DOS ê²Œìž„ì„ í­ ë„“ê²Œ ì‹¤í–‰í•  ìˆ˜ ìžˆê²Œ ë˜ì—ˆìŠµë‹ˆë‹¤.
 
 
 
 ========
-Ã£¾Æº¸±â
+ì°¾ì•„ë³´ê¸°
 ========
-1. ºü¸¥ µµ¿ò¸»
-2. ½ÃÀÛ (ÀÚÁÖ Ã£´Â Áú¹®µé)
-3. ¸í·É ¸Å°³º¯¼ö
-4. ³»ºÎ ÇÁ·Î±×·¥
-5. ¹Ù·Î°¡´Â Å°
-6. Á¶ÀÌ½ºÆ½/°ÔÀÓÆÐµå
-7. ¸ÅÆÛ
-8. Å°º¸µå ·¹ÀÌ¾Æ¿ô
-9. ½Ã¸®¾ó ¸ÖÆ¼ÇÃ·¹ÀÌ¾î ±â´É
-10. DOSBoxÀÇ ¼Óµµ Á¶Àý
-11. ¹®Á¦ ÇØ°á
-12. DOSBox »óÅÂ Ã¢
-13. ¼³Á¤ ±¸¼º (¿É¼Ç) ÆÄÀÏ
-14. ¾ð¾î ÆÄÀÏ
-15. ³ª¸¸ÀÇ DOSBox ¸¸µé±â
-16. °í¸¶¿î ºÐµé
-17. ¿¬¶ôÃ³
+1. ë¹ ë¥¸ ë„ì›€ë§
+2. ì‹œìž‘ (ìžì£¼ ì°¾ëŠ” ì§ˆë¬¸ë“¤)
+3. ëª…ë ¹ ë§¤ê°œë³€ìˆ˜
+4. ë‚´ë¶€ í”„ë¡œê·¸ëž¨
+5. ë°”ë¡œê°€ëŠ” í‚¤
+6. ì¡°ì´ìŠ¤í‹±/ê²Œìž„íŒ¨ë“œ
+7. ë§¤í¼
+8. í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒ
+9. ì‹œë¦¬ì–¼ ë©€í‹°í”Œë ˆì´ì–´ ê¸°ëŠ¥
+10. DOSBoxì˜ ì†ë„ ì¡°ì ˆ
+11. ë¬¸ì œ í•´ê²°
+12. DOSBox ìƒíƒœ ì°½
+13. ì„¤ì • êµ¬ì„± (ì˜µì…˜) íŒŒì¼
+14. ì–¸ì–´ íŒŒì¼
+15. ë‚˜ë§Œì˜ DOSBox ë§Œë“¤ê¸°
+16. ê³ ë§ˆìš´ ë¶„ë“¤
+17. ì—°ë½ì²˜
 
 ==============
-1. ºü¸¥ µµ¿ò¸»
+1. ë¹ ë¥¸ ë„ì›€ë§
 ==============
 
-DOSBox ¸í·É ÁÙ¿¡¼­ INTRO¶ó°í ÀÔ·ÂÇÏ¿© ºü¸¥ µµ¿ò¸»À» º¸½Ç ¼ö ÀÖ½À´Ï´Ù.
-¸¶¿îÆ®¸¦ ÀÌÇØÇÏ´Â µ¥¿¡ ¸¹Àº µµ¿òÀ» ¹ÞÀ» ¼ö ÀÖ½À´Ï´Ù.
-DOSBox´Â ¿¡¹Ä·¹ÀÌ¼Ç¿¡ Á¢±ÙÇÒ µå¶óÀÌºê¸¦ ½º½º·Î ¸¸µé¾î ³»Áö ¾Ê½À´Ï´Ù.
+DOSBox ëª…ë ¹ ì¤„ì—ì„œ INTROë¼ê³  ìž…ë ¥í•˜ì—¬ ë¹ ë¥¸ ë„ì›€ë§ì„ ë³´ì‹¤ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+ë§ˆìš´íŠ¸ë¥¼ ì´í•´í•˜ëŠ” ë°ì— ë§Žì€ ë„ì›€ì„ ë°›ì„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+DOSBoxëŠ” ì—ë®¬ë ˆì´ì…˜ì— ì ‘ê·¼í•  ë“œë¼ì´ë¸Œë¥¼ ìŠ¤ìŠ¤ë¡œ ë§Œë“¤ì–´ ë‚´ì§€ ì•ŠìŠµë‹ˆë‹¤.
 
-4¹ø ±¸¹® "³»ºÎ ÇÁ·Î±×·¥"¿¡ ³ª¿Â MOUNT ¸í·ÉÀÇ ¼³¸í»Ó ¾Æ´Ï¶ó
-FAQ Ç×¸ñ "¾î¶»°Ô ½ÃÀÛÇÕ´Ï±î?"À» ÀÐ¾î º¸½Ê½Ã¿À.
-CD-ROM °ÔÀÓÀ» ÇÏ°í ½ÍÀ¸¸é ´ÙÀ½ ¾È³»¸¦ ÂüÁ¶ÇÏ½Ê½Ã¿À:
+4ë²ˆ êµ¬ë¬¸ "ë‚´ë¶€ í”„ë¡œê·¸ëž¨"ì— ë‚˜ì˜¨ MOUNT ëª…ë ¹ì˜ ì„¤ëª…ë¿ ì•„ë‹ˆë¼
+FAQ í•­ëª© "ì–´ë–»ê²Œ ì‹œìž‘í•©ë‹ˆê¹Œ?"ì„ ì½ì–´ ë³´ì‹­ì‹œì˜¤.
+CD-ROM ê²Œìž„ì„ í•˜ê³  ì‹¶ìœ¼ë©´ ë‹¤ìŒ ì•ˆë‚´ë¥¼ ì°¸ì¡°í•˜ì‹­ì‹œì˜¤:
 http://vogons.zetafleet.com/viewtopic.php?t=8933
 
 =================
-2. ÀÚÁÖ Ã£´Â Áú¹®µé
+2. ìžì£¼ ì°¾ëŠ” ì§ˆë¬¸ë“¤
 =================
 
-¸î °¡Áö ÀÚÁÖ Ã£´Â Áú¹®µé:
+ëª‡ ê°€ì§€ ìžì£¼ ì°¾ëŠ” ì§ˆë¬¸ë“¤:
 
-½ÃÀÛ:	¾î¶»°Ô ½ÃÀÛÇÕ´Ï±î?
-ÀÚµ¿ :	Á¦°¡ ´Ã ÀÌ "mount" ¸í·É¾î¸¦ ÀÔ·ÂÇÏ¿©¾ß ÇÕ´Ï±î?
-ÀüÃ¼ È­¸é:	ÀüÃ¼ È­¸éÀ¸·Î ¾î¶»°Ô ¹Ù²Ü ¼ö ÀÖ½À´Ï±î?
-CD-ROM:	Á¦ CD-ROMÀÌ µ¿ÀÛÇÏÁö ¾Ê½À´Ï´Ù.
-CD-ROM:	°ÔÀÓ, ÀÀ¿ë ÇÁ·Î±×·¥ÀÌ CD-ROMÀ» Ã£Áö ¸øÇÕ´Ï´Ù.
-¸¶¿ì½º:	¸¶¿ì½º°¡ µ¿ÀÛÇÏÁö ¾Ê½À´Ï´Ù.
-¼Ò¸®:	¼Ò¸®°¡ ³ªÁö ¾Ê½À´Ï´Ù.
-¼Ò¸®:	DOSBox°¡ ¾î¶°ÇÑ »ç¿îµå ÇÏµå¿þ¾î¸¦ °¡»óÀ¸·Î ±¸ÇöÇÕ´Ï±î?
-¼Ò¸®:	¼Ò¸®°¡ ²÷±â°Å³ª ´Ã¾îÁý´Ï´Ù.
-Å°º¸µå:	DOSBox¿¡¼­ ¡¬ ¶Ç´Â : °¡ ´­·¯ÁöÁö ¾Ê½À´Ï´Ù.
-Å°º¸µå:	¿À¸¥ÂÊ Shift¿Í ¡¬°¡ DOSBox¿¡¼­ µ¿ÀÛÇÏÁö ¾Ê½À´Ï´Ù. (Windows)
-Å°º¸µå:	Å°º¸µå°¡ ¹ÝÀÀÀÌ ´À¸³´Ï´Ù.
-Á¦¾î:	Ä³¸¯ÅÍ, Ä¿¼­, ¸¶¿ì½º Æ÷ÀÎÅÍ°¡ ´Ã ÇÑÂÊÀ¸·Î¸¸ ¿òÁ÷ÀÔ´Ï´Ù!
-¼Óµµ:	°ÔÀÓ, ÀÀ¿ë ÇÁ·Î±×·¥ÀÌ ³Ê¹« ´À¸®°Ô µ¹¾Æ°©´Ï´Ù!
-Ãæµ¹:	°ÔÀÓ, ÀÀ¿ë ÇÁ·Î±×·¥ÀÌ ¾Æ¿¹ µ¿ÀÛÇÏÁö ¾Ê°í Ãæµ¹À» ÀÏÀ¸Åµ´Ï´Ù!
-Ãæµ¹:	DOSBox¸¦ ½ÇÇàÇÏÀÚ¸¶ÀÚ Ãæµ¹ÇÕ´Ï´Ù.
-°ÔÀÓ:	Á¦ ºôµå °ÔÀÓ(Duke3D/Blood/Shadow Warrior)¿¡ ¹®Á¦°¡ ÀÖ½À´Ï´Ù.
-¾ÈÀü:	DOSBox°¡ Á¦ ÄÄÇ»ÅÍ¿¡ ÇØ¸¦ ³¢Ä¥ ¼ö ÀÖ½À´Ï±î?
-¿É¼Ç:	DOSBoxÀÇ ¿É¼ÇÀ» ¹Ù²Ù°í ½Í½À´Ï´Ù.
-µµ¿ò¸»:	¼³¸íÀÌ Àß ³ª¿Í ÀÖÀ¸³ª ±×·¡µµ Àß ¸ð¸£°Ú½À´Ï´Ù.
-
-
-½ÃÀÛ: ¾î¶»°Ô ½ÃÀÛÇÕ´Ï±î?
-
-  Ã³À½ ½ÃÀÛÇÒ ¶§ ¿©·¯ºÐÀº C:¡¬>°¡ ¾Æ´Ï¶ó Z:¡¬>¶ó°í ¶ß´Â °ÍÀ» º¼ °ÍÀÔ´Ï´Ù.
-  ¿©·¯ºÐÀÌ °¡Áö°í ÀÖ´Â ½ÇÁ¦ µð·ºÅÍ¸®¸¦ DOSBoxÀÇ °¡»ó µå¶óÀÌºê·Î ¸¸µé¾î¾ß ÇÕ´Ï´Ù.
-  "mount" ¸í·É¾î¸¦ ½á º¸½Ê½Ã¿À.
-
-    º¸±â
-    ¨ç Windows¿¡¼­
-        "mount C D:¡¬GAMES" ¶ó°í ÀÔ·ÂÇÏ¸é ½ÇÁ¦ D:¡¬GAMES´Â DOSBoxÀÇ C µå¶óÀÌºê°¡ µË´Ï´Ù.
-    ¨è Linux¿¡¼­
-        "mount c /home/username" ¶ó°í ÀÔ·ÂÇÏ¸é ½ÇÁ¦ /home/username ÀÇ À§Ä¡´Â
-        DOSBoxÀÇ C µå¶óÀÌºê°¡ µË´Ï´Ù.
-
-   À§¿¡¼­ ¸¶¿îÆ®µÈ µå¶óÀÌºê·Î ¹Ù²Ù·Á¸é "C:"¶ó°í ÀÔ·ÂÇÏ½Ê½Ã¿À.
-   ÀÌ·¸°Ô ÇØ¼­ "C:\>"¶ó°í ¶ß¸é ´Ù µÈ °ÍÀÔ´Ï´Ù.
+ì‹œìž‘:	ì–´ë–»ê²Œ ì‹œìž‘í•©ë‹ˆê¹Œ?
+ìžë™ :	ì œê°€ ëŠ˜ ì´ "mount" ëª…ë ¹ì–´ë¥¼ ìž…ë ¥í•˜ì—¬ì•¼ í•©ë‹ˆê¹Œ?
+ì „ì²´ í™”ë©´:	ì „ì²´ í™”ë©´ìœ¼ë¡œ ì–´ë–»ê²Œ ë°”ê¿€ ìˆ˜ ìžˆìŠµë‹ˆê¹Œ?
+CD-ROM:	ì œ CD-ROMì´ ë™ìž‘í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+CD-ROM:	ê²Œìž„, ì‘ìš© í”„ë¡œê·¸ëž¨ì´ CD-ROMì„ ì°¾ì§€ ëª»í•©ë‹ˆë‹¤.
+ë§ˆìš°ìŠ¤:	ë§ˆìš°ìŠ¤ê°€ ë™ìž‘í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+ì†Œë¦¬:	ì†Œë¦¬ê°€ ë‚˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+ì†Œë¦¬:	DOSBoxê°€ ì–´ë– í•œ ì‚¬ìš´ë“œ í•˜ë“œì›¨ì–´ë¥¼ ê°€ìƒìœ¼ë¡œ êµ¬í˜„í•©ë‹ˆê¹Œ?
+ì†Œë¦¬:	ì†Œë¦¬ê°€ ëŠê¸°ê±°ë‚˜ ëŠ˜ì–´ì§‘ë‹ˆë‹¤.
+í‚¤ë³´ë“œ:	DOSBoxì—ì„œ ï¼¼ ë˜ëŠ” : ê°€ ëˆŒëŸ¬ì§€ì§€ ì•ŠìŠµë‹ˆë‹¤.
+í‚¤ë³´ë“œ:	ì˜¤ë¥¸ìª½ Shiftì™€ ï¼¼ê°€ DOSBoxì—ì„œ ë™ìž‘í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤. (Windows)
+í‚¤ë³´ë“œ:	í‚¤ë³´ë“œê°€ ë°˜ì‘ì´ ëŠë¦½ë‹ˆë‹¤.
+ì œì–´:	ìºë¦­í„°, ì»¤ì„œ, ë§ˆìš°ìŠ¤ í¬ì¸í„°ê°€ ëŠ˜ í•œìª½ìœ¼ë¡œë§Œ ì›€ì§ìž…ë‹ˆë‹¤!
+ì†ë„:	ê²Œìž„, ì‘ìš© í”„ë¡œê·¸ëž¨ì´ ë„ˆë¬´ ëŠë¦¬ê²Œ ëŒì•„ê°‘ë‹ˆë‹¤!
+ì¶©ëŒ:	ê²Œìž„, ì‘ìš© í”„ë¡œê·¸ëž¨ì´ ì•„ì˜ˆ ë™ìž‘í•˜ì§€ ì•Šê³  ì¶©ëŒì„ ì¼ìœ¼í‚µë‹ˆë‹¤!
+ì¶©ëŒ:	DOSBoxë¥¼ ì‹¤í–‰í•˜ìžë§ˆìž ì¶©ëŒí•©ë‹ˆë‹¤.
+ê²Œìž„:	ì œ ë¹Œë“œ ê²Œìž„(Duke3D/Blood/Shadow Warrior)ì— ë¬¸ì œê°€ ìžˆìŠµë‹ˆë‹¤.
+ì•ˆì „:	DOSBoxê°€ ì œ ì»´í“¨í„°ì— í•´ë¥¼ ë¼ì¹  ìˆ˜ ìžˆìŠµë‹ˆê¹Œ?
+ì˜µì…˜:	DOSBoxì˜ ì˜µì…˜ì„ ë°”ê¾¸ê³  ì‹¶ìŠµë‹ˆë‹¤.
+ë„ì›€ë§:	ì„¤ëª…ì´ ìž˜ ë‚˜ì™€ ìžˆìœ¼ë‚˜ ê·¸ëž˜ë„ ìž˜ ëª¨ë¥´ê² ìŠµë‹ˆë‹¤.
 
 
-ÀÚµ¿: Á¦°¡ ´Ã ÀÌ "mount" ¸í·É¾î¸¦ ÀÔ·ÂÇÏ¿©¾ß ÇÕ´Ï±î?
+ì‹œìž‘: ì–´ë–»ê²Œ ì‹œìž‘í•©ë‹ˆê¹Œ?
 
-  DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏÀ» ¿­¸é [autoexec] ±¸¹®ÀÌ ÀÖ½À´Ï´Ù. ±× ¾Æ·¡¿¡ ¸í·É¾îµéÀ» Àû¾î µÎ½Ê½Ã¿À.
-  ±×·¯¸é DOSBox°¡ ½ÇÇàµÇÀÚ¸¶ÀÚ ÀÌ ¸í·É¾îµéÀÌ ½ÇÇàµË´Ï´Ù. ¸¶¿îÆ® µîÀ» À§ÇØ ÀÌ ±¸¹®À» »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.
-  ´Ü¶ô 13: ¼³Á¤ ±¸¼º (¿É¼Ç) ÆÄÀÏÀ» ÂüÁ¶ÇÏ½Ê½Ã¿À.
+  ì²˜ìŒ ì‹œìž‘í•  ë•Œ ì—¬ëŸ¬ë¶„ì€ C:ï¼¼>ê°€ ì•„ë‹ˆë¼ Z:ï¼¼>ë¼ê³  ëœ¨ëŠ” ê²ƒì„ ë³¼ ê²ƒìž…ë‹ˆë‹¤.
+  ì—¬ëŸ¬ë¶„ì´ ê°€ì§€ê³  ìžˆëŠ” ì‹¤ì œ ë””ë ‰í„°ë¦¬ë¥¼ DOSBoxì˜ ê°€ìƒ ë“œë¼ì´ë¸Œë¡œ ë§Œë“¤ì–´ì•¼ í•©ë‹ˆë‹¤.
+  "mount" ëª…ë ¹ì–´ë¥¼ ì¨ ë³´ì‹­ì‹œì˜¤.
+
+    ë³´ê¸°
+    â‘  Windowsì—ì„œ
+        "mount C D:ï¼¼GAMES" ë¼ê³  ìž…ë ¥í•˜ë©´ ì‹¤ì œ D:ï¼¼GAMESëŠ” DOSBoxì˜ C ë“œë¼ì´ë¸Œê°€ ë©ë‹ˆë‹¤.
+    â‘¡ Linuxì—ì„œ
+        "mount c /home/username" ë¼ê³  ìž…ë ¥í•˜ë©´ ì‹¤ì œ /home/username ì˜ ìœ„ì¹˜ëŠ”
+        DOSBoxì˜ C ë“œë¼ì´ë¸Œê°€ ë©ë‹ˆë‹¤.
+
+   ìœ„ì—ì„œ ë§ˆìš´íŠ¸ëœ ë“œë¼ì´ë¸Œë¡œ ë°”ê¾¸ë ¤ë©´ "C:"ë¼ê³  ìž…ë ¥í•˜ì‹­ì‹œì˜¤.
+   ì´ë ‡ê²Œ í•´ì„œ "C:\>"ë¼ê³  ëœ¨ë©´ ë‹¤ ëœ ê²ƒìž…ë‹ˆë‹¤.
 
 
-ÀüÃ¼ È­¸é:	ÀüÃ¼ È­¸éÀ¸·Î ¾î¶»°Ô ¹Ù²Ü ¼ö ÀÖ½À´Ï±î?
-  Alt-Enter¸¦ ´©¸£½Ê½Ã¿À. ¾Æ´Ï¸é DOSBoxÀÇ ¼³Á¤ ±¸¼º ÆÄÀÏÀ» ¿­°í fullscreen=false¸¦
-  fullscreen=true·Î ¹Ù²Ù½Ê½Ã¿À. È­¸éÀÌ Á¦´ë·Î ²Ë Â÷ º¸ÀÌÁö ¾ÊÀ¸¸é DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏÀÇ
-  fullresolution, output, aspectÀÇ °ªÀ» ¹Ù²ã¼­ °ÔÀÓÀ» ½ÇÇàÇØ º¸½Ê½Ã¿À. ÀüÃ¼ È­¸é ¸ðµå¿¡¼­
-  ¿ø·¡´ë·Î µÇµ¹¾Æ°¡·Á¸é ´Ù½Ã Alt-Enter¸¦ ´©¸£½Ã¸é µË´Ï´Ù.
+ìžë™: ì œê°€ ëŠ˜ ì´ "mount" ëª…ë ¹ì–´ë¥¼ ìž…ë ¥í•˜ì—¬ì•¼ í•©ë‹ˆê¹Œ?
+
+  DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì„ ì—´ë©´ [autoexec] êµ¬ë¬¸ì´ ìžˆìŠµë‹ˆë‹¤. ê·¸ ì•„ëž˜ì— ëª…ë ¹ì–´ë“¤ì„ ì ì–´ ë‘ì‹­ì‹œì˜¤.
+  ê·¸ëŸ¬ë©´ DOSBoxê°€ ì‹¤í–‰ë˜ìžë§ˆìž ì´ ëª…ë ¹ì–´ë“¤ì´ ì‹¤í–‰ë©ë‹ˆë‹¤. ë§ˆìš´íŠ¸ ë“±ì„ ìœ„í•´ ì´ êµ¬ë¬¸ì„ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+  ë‹¨ë½ 13: ì„¤ì • êµ¬ì„± (ì˜µì…˜) íŒŒì¼ì„ ì°¸ì¡°í•˜ì‹­ì‹œì˜¤.
 
 
-CD-ROM:	Á¦ CD-ROMÀÌ µ¿ÀÛÇÏÁö ¾Ê½À´Ï´Ù.
-  DOSBox¿¡¼­ CD-ROMÀ» ¶ç¿ì·Á¸é CD-ROMÀ» ¶ç¿ï ¶§ ¸î °¡Áö ¶Ç ´Ù¸¥ ¼±ÅÃ Ç×¸ñÀ»
-  ÁöÁ¤ÇÏ¼Å¾ß ÇÕ´Ï´Ù.
-   ¨ç MSCDEX¸¦ ºñ·ÔÇÑ CD-ROM Áö¿øÀ» »ç¿ëÇÏ·Á¸é: (Windows)
-       - mount d f:¡¬ -t cdrom
-       ¸®´ª½º¿¡¼­´Â ´ÙÀ½°ú °°ÀÌ ÇÕ´Ï´Ù.
+ì „ì²´ í™”ë©´:	ì „ì²´ í™”ë©´ìœ¼ë¡œ ì–´ë–»ê²Œ ë°”ê¿€ ìˆ˜ ìžˆìŠµë‹ˆê¹Œ?
+  Alt-Enterë¥¼ ëˆ„ë¥´ì‹­ì‹œì˜¤. ì•„ë‹ˆë©´ DOSBoxì˜ ì„¤ì • êµ¬ì„± íŒŒì¼ì„ ì—´ê³  fullscreen=falseë¥¼
+  fullscreen=trueë¡œ ë°”ê¾¸ì‹­ì‹œì˜¤. í™”ë©´ì´ ì œëŒ€ë¡œ ê½‰ ì°¨ ë³´ì´ì§€ ì•Šìœ¼ë©´ DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì˜
+  fullresolution, output, aspectì˜ ê°’ì„ ë°”ê¿”ì„œ ê²Œìž„ì„ ì‹¤í–‰í•´ ë³´ì‹­ì‹œì˜¤. ì „ì²´ í™”ë©´ ëª¨ë“œì—ì„œ
+  ì›ëž˜ëŒ€ë¡œ ë˜ëŒì•„ê°€ë ¤ë©´ ë‹¤ì‹œ Alt-Enterë¥¼ ëˆ„ë¥´ì‹œë©´ ë©ë‹ˆë‹¤.
+
+
+CD-ROM:	ì œ CD-ROMì´ ë™ìž‘í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+  DOSBoxì—ì„œ CD-ROMì„ ë„ìš°ë ¤ë©´ CD-ROMì„ ë„ìš¸ ë•Œ ëª‡ ê°€ì§€ ë˜ ë‹¤ë¥¸ ì„ íƒ í•­ëª©ì„
+  ì§€ì •í•˜ì…”ì•¼ í•©ë‹ˆë‹¤.
+   â‘  MSCDEXë¥¼ ë¹„ë¡¯í•œ CD-ROM ì§€ì›ì„ ì‚¬ìš©í•˜ë ¤ë©´: (Windows)
+       - mount d f:ï¼¼ -t cdrom
+       ë¦¬ëˆ…ìŠ¤ì—ì„œëŠ” ë‹¤ìŒê³¼ ê°™ì´ í•©ë‹ˆë‹¤.
        - mount d /media/cdrom -t cdrom
-      ÀÌµû±Ý¾¿Àº Æ¯¼öÇÑ CD-ROM ÀÎÅÍÆäÀÌ½º¸¦ »ç¿ëÇÏ¿©¾ß ÇÏ´Â °æ¿ìµµ ÀÖ½À´Ï´Ù.
-      ÀÌ¸¦Å×¸é CD ¿Àµð¿À°¡ µ¿ÀÛÇÏÁö ¾ÊÀ¸¸é:
-       SDL Áö¿ø ¹æ½ÄÀ» »ç¿ëÇÏ°Å³ª
-       - mount d f:¡¬ -t cdrom -usecd 0 -noioctl
-       CD ¿Àµð¿ÀÀÇ µðÁöÅÐ ¿Àµð¿À È®ÀåÀ» »ç¿ëÇÑ ioctl Á¢±ÙÀ» »ç¿ëÇÏ°Å³ª (Windows Àü¿ë, ºñ½ºÅ¸ ÀÌ»ó¿¡ ÀûÇÕ)
-       - mount d f:¡¬ -t cdrom -ioctl_dx
-       CD ¿Àµð¿ÀÀÇ MCI¸¦ ÀÌ¿ëÇÏ¿© ioctlÀ» »ç¿ëÇÏ°Å³ª (Windows Àü¿ë)
-       - mount d f:¡¬ -t cdrom -ioctl_mci
-       ioctl¸¸ »ç¿ëÇÒ ¼öµµ ÀÖ½À´Ï´Ù. (Windows Àü¿ë)
-      - mount d f:¡¬ -t cdrom -ioctl_dio
-   ¨è ³·Àº ¼öÁØÀÇ SDL Áö¿øÀ» »ç¿ëÇÏ·Á¸é:
-       - mount d f:¡¬ -t cdrom -aspi
-   ¨é ³·Àº ¼öÁØÀÇ ASPI Áö¿øÀ» »ç¿ëÇÏ·Á¸é (ASPI-Layer°¡ ¼³Ä¡µÈ Win98):
-       - mount d f:¡¬ -t cdrom -usecd 0 -apsi
+      ì´ë”°ê¸ˆì”©ì€ íŠ¹ìˆ˜í•œ CD-ROM ì¸í„°íŽ˜ì´ìŠ¤ë¥¼ ì‚¬ìš©í•˜ì—¬ì•¼ í•˜ëŠ” ê²½ìš°ë„ ìžˆìŠµë‹ˆë‹¤.
+      ì´ë¥¼í…Œë©´ CD ì˜¤ë””ì˜¤ê°€ ë™ìž‘í•˜ì§€ ì•Šìœ¼ë©´:
+       SDL ì§€ì› ë°©ì‹ì„ ì‚¬ìš©í•˜ê±°ë‚˜
+       - mount d f:ï¼¼ -t cdrom -usecd 0 -noioctl
+       CD ì˜¤ë””ì˜¤ì˜ ë””ì§€í„¸ ì˜¤ë””ì˜¤ í™•ìž¥ì„ ì‚¬ìš©í•œ ioctl ì ‘ê·¼ì„ ì‚¬ìš©í•˜ê±°ë‚˜ (Windows ì „ìš©, ë¹„ìŠ¤íƒ€ ì´ìƒì— ì í•©)
+       - mount d f:ï¼¼ -t cdrom -ioctl_dx
+       CD ì˜¤ë””ì˜¤ì˜ MCIë¥¼ ì´ìš©í•˜ì—¬ ioctlì„ ì‚¬ìš©í•˜ê±°ë‚˜ (Windows ì „ìš©)
+       - mount d f:ï¼¼ -t cdrom -ioctl_mci
+       ioctlë§Œ ì‚¬ìš©í•  ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤. (Windows ì „ìš©)
+      - mount d f:ï¼¼ -t cdrom -ioctl_dio
+   â‘¡ ë‚®ì€ ìˆ˜ì¤€ì˜ SDL ì§€ì›ì„ ì‚¬ìš©í•˜ë ¤ë©´:
+       - mount d f:ï¼¼ -t cdrom -aspi
+   â‘¢ ë‚®ì€ ìˆ˜ì¤€ì˜ ASPI ì§€ì›ì„ ì‚¬ìš©í•˜ë ¤ë©´ (ASPI-Layerê°€ ì„¤ì¹˜ëœ Win98):
+       - mount d f:ï¼¼ -t cdrom -usecd 0 -apsi
 
-   ÀÌ ¸í·É¾î¿¡¼­:
-    d      DOSBoxÀÇ °¡»ó µå¶óÀÌºê ¹®ÀÚ¿­ (d°¡ °¡Àå ÁÁÀº ¼±ÅÃÀÔ´Ï´Ù.)
-    f:¡¬   PCÀÇ CD-ROM ½ÇÁ¦ À§Ä¡ (´ëºÎºÐÀÇ °æ¿ì d:¡¬³ª e:¡¬ÀÔ´Ï´Ù)
-    0   CD-ROM µå¶óÀÌºêÀÇ ¼ýÀÚ, mount -cd ¸¦ ÅëÇØ ±¸ºÐ
-   ÀÌ CD-ROM µå¶óÀÌºê ¼ýÀÚ °ªÀº CD ¿Àµð¿À¸¦ Àç»ýÇÏ±â À§ÇÏ¿© SDLÀ» »ç¿ëÇÒ ¶§¿¡¸¸ »ç¿ëµÇ¸ç
-   ´Ù¸¥ °æ¿ì¿¡´Â ¹«½ÃµË´Ï´Ù.
-   ´ÙÀ½ÀÇ ¹°À½µµ ÀÐ¾î º¸½Ê½Ã¿À: °ÔÀÓ, ÀÀ¿ë ÇÁ·Î±×·¥ÀÌ CD-ROMÀ» Ã£Áö ¸øÇÕ´Ï´Ù.
-
-
-CD-ROM: °ÔÀÓ, ÀÀ¿ë ÇÁ·Î±×·¥ÀÌ CD-ROMÀ» Ã£Áö ¸øÇÕ´Ï´Ù.
-  CD-ROMÀ» ¶ç¿ì·Á¸é -t cdrom ½ºÀ§Ä¡¸¦ »ç¿ëÇØ¾ß ÇÕ´Ï´Ù.
-  °ÔÀÓÀÌ CD-ROM ·¹ÀÌºí(ÀÌ¸§)À» Ã£¾Æ³»·Á°í ÇÑ´Ù¸é ÀÌ¸§À» ¿Ã¹Ù¸£°Ô ÁöÁ¤ÇÏ¼Å¾ß ÇÕ´Ï´Ù (-label ·¹ÀÌºí ÀÌ¸§)
-  ³·Àº ¼öÁØÀÇ CD-ROM Áö¿øÀ» »ç¿ëÇÏ·Á¸é ´ÙÀ½ÀÇ ½ºÀ§Ä¡¸¦ ÁöÁ¤ÇØ¾ß ÇÕ´Ï´Ù : -usecd #
-  (#´Â mount -cd¸¦ ÅëÇØ ¾Ë·ÁÁÖ´Â CD-ROM µå¶óÀÌºêÀÇ ¼ýÀÚ)
-  Windows¿¡¼­´Â -ioctl, -aspi, ¶Ç´Â -noioctl¸¦ ÁöÁ¤ÇÏ½Ê½Ã¿À.
-  ÀÌ¿¡ ´ëÇÑ ´õ ÀÚ¼¼ÇÑ ³»¿ëÀº ÀÌ ¹®¼­ÀÇ 4¹ø Ç×¸ñ¿¡¼­ Ã£¾Æ º¸½Ç ¼ö ÀÖ½À´Ï´Ù.
-
-  ¾Æ´Ï¸é CD-ROM ÀÌ¹ÌÁö¸¦ ¸¸µé¾î º¸½Ê½Ã¿À. (CUE/BINÀ» ¼±È£) ±×¸®°í DOSBox ³»ºÎ ¸í·É¾î
-  IMGMOUNT µµ±¸¸¦ °¡Áö°í ÀÌ¹ÌÁö(CUE ½ÃÆ®)¸¦ ¸¶¿îÆ®ÇØ º¸½Ê½Ã¿À. ÀÌ°ÍÀº ¾î´À ¿î¿µÃ¼Á¦¿¡¼­µçÁö
-  ³·Àº ¼öÁØÀÇ CD-ROM Áö¿øÀ» ÀÌ¿ëÇÒ ¼ö ÀÖµµ·Ï µµ¿Í ÁÝ´Ï´Ù.
+   ì´ ëª…ë ¹ì–´ì—ì„œ:
+    d      DOSBoxì˜ ê°€ìƒ ë“œë¼ì´ë¸Œ ë¬¸ìžì—´ (dê°€ ê°€ìž¥ ì¢‹ì€ ì„ íƒìž…ë‹ˆë‹¤.)
+    f:ï¼¼   PCì˜ CD-ROM ì‹¤ì œ ìœ„ì¹˜ (ëŒ€ë¶€ë¶„ì˜ ê²½ìš° d:ï¼¼ë‚˜ e:ï¼¼ìž…ë‹ˆë‹¤)
+    0   CD-ROM ë“œë¼ì´ë¸Œì˜ ìˆ«ìž, mount -cd ë¥¼ í†µí•´ êµ¬ë¶„
+   ì´ CD-ROM ë“œë¼ì´ë¸Œ ìˆ«ìž ê°’ì€ CD ì˜¤ë””ì˜¤ë¥¼ ìž¬ìƒí•˜ê¸° ìœ„í•˜ì—¬ SDLì„ ì‚¬ìš©í•  ë•Œì—ë§Œ ì‚¬ìš©ë˜ë©°
+   ë‹¤ë¥¸ ê²½ìš°ì—ëŠ” ë¬´ì‹œë©ë‹ˆë‹¤.
+   ë‹¤ìŒì˜ ë¬¼ìŒë„ ì½ì–´ ë³´ì‹­ì‹œì˜¤: ê²Œìž„, ì‘ìš© í”„ë¡œê·¸ëž¨ì´ CD-ROMì„ ì°¾ì§€ ëª»í•©ë‹ˆë‹¤.
 
 
-¸¶¿ì½º: ¸¶¿ì½º°¡ µ¿ÀÛÇÏÁö ¾Ê½À´Ï´Ù.
-  º¸Åë DOSBox´Â °ÔÀÓÀÌ ¸¶¿ì½º¸¦ Á¦¾îÇÒ ¶§ ¸¶¿ì½º¸¦ Ã£¾Æ³À´Ï´Ù.
-  È­¸éÀ» ÇÑ ¹ø ´©¸£¸é Àá±Ý Ã³¸®µÇ¾î µ¹¾Æ°©´Ï´Ù. (DOSBox Ã¢ ¾È¿¡¼­)
-  ¾î¶°ÇÑ °ÔÀÓ¿¡¼­´Â DOSBox°¡ ¸¶¿ì½º¸¦ Ã£¾Æ³»Áö ¸øÇÒ ¼öµµ ÀÖ½À´Ï´Ù.
-  ÀÌ °æ¿ì Ctrl-F10 Å°¸¦ ´­·¯¼­ ¸¶¿ì½º¸¦ Àá±ÅµÑ ¼ö ÀÖ½À´Ï´Ù.
-  ¾î¶°ÇÑ °æ¿ì¿¡´Â ´Ù¸¥ »ç¿îµå ÀåÄ¡(ÀÌ¸¦Å×¸é sbtype=spro1 ÀÌ³ª GUS)¸¦ »ç¿ëÇÏ¿©
-  ÇØ°áÇÏ±âµµ ÇÕ´Ï´Ù.
+CD-ROM: ê²Œìž„, ì‘ìš© í”„ë¡œê·¸ëž¨ì´ CD-ROMì„ ì°¾ì§€ ëª»í•©ë‹ˆë‹¤.
+  CD-ROMì„ ë„ìš°ë ¤ë©´ -t cdrom ìŠ¤ìœ„ì¹˜ë¥¼ ì‚¬ìš©í•´ì•¼ í•©ë‹ˆë‹¤.
+  ê²Œìž„ì´ CD-ROM ë ˆì´ë¸”(ì´ë¦„)ì„ ì°¾ì•„ë‚´ë ¤ê³  í•œë‹¤ë©´ ì´ë¦„ì„ ì˜¬ë°”ë¥´ê²Œ ì§€ì •í•˜ì…”ì•¼ í•©ë‹ˆë‹¤ (-label ë ˆì´ë¸” ì´ë¦„)
+  ë‚®ì€ ìˆ˜ì¤€ì˜ CD-ROM ì§€ì›ì„ ì‚¬ìš©í•˜ë ¤ë©´ ë‹¤ìŒì˜ ìŠ¤ìœ„ì¹˜ë¥¼ ì§€ì •í•´ì•¼ í•©ë‹ˆë‹¤ : -usecd #
+  (#ëŠ” mount -cdë¥¼ í†µí•´ ì•Œë ¤ì£¼ëŠ” CD-ROM ë“œë¼ì´ë¸Œì˜ ìˆ«ìž)
+  Windowsì—ì„œëŠ” -ioctl, -aspi, ë˜ëŠ” -noioctlë¥¼ ì§€ì •í•˜ì‹­ì‹œì˜¤.
+  ì´ì— ëŒ€í•œ ë” ìžì„¸í•œ ë‚´ìš©ì€ ì´ ë¬¸ì„œì˜ 4ë²ˆ í•­ëª©ì—ì„œ ì°¾ì•„ ë³´ì‹¤ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-¼Ò¸®: ¼Ò¸®°¡ ³ªÁö ¾Ê½À´Ï´Ù.
-   °ÔÀÓ ¼³Á¤¿¡¼­ »ç¿îµå¸¦ ¿Ã¹Ù¸£°Ô ±¸¼ºÇß´ÂÁö »ìÆì º¸½Ê½Ã¿À.
-   ¼Ò¸® ¼³Á¤ À¯Æ¿¸®Æ¼´Â °ÔÀÓÀÌ ±ò¸± ¶§ °°ÀÌ ±ò¸®¸ç ¼³Ä¡ÇÏ´Â µ¿¾È¿¡µµ ¼Ò¸®¸¦ ¼³Á¤ÇÒÁö
-   ¹°¾îº¼ ¼ö ÀÖ½À´Ï´Ù.
-   ¸ÕÀú ÀÚµ¿ °¨Áö(Autodetection) ¿É¼ÇÀÌ ÀÖ´ÂÁö »ìÆì º¸½Ê½Ã¿À. ÀÌ Ç×¸ñÀÌ ¾ø´Ù¸é
-   SoundBlaster ¶Ç´Â SoundBlaster 16À» °ñ¶ó º¸½Ê½Ã¿À.
-   DOSBoxÀÇ ±âº» ¼³Á¤°ªÀº address=220 irq=7 dma=1 (°¡²ûÀº highdma=5ÀÏ ¶§µµ ÀÖÀ½)
-   ÀÔ´Ï´Ù. MIDIµµ °í¸£½Ç ¼ö ÀÖ´Âµ¥ ÀÌ¸¦Å×¸é Sound Canvas/SCC/MPU-401/
-   General MIDI/Wave BlasterÀÇ °æ¿ì ±âº»°ªÀº address=330¿¡ IRQ=2ÀÔ´Ï´Ù.
-   °¡»óÀ¸·Î ±¸ÇöµÇ´Â »ç¿îµå Ä«µåµéÀÇ ¸Å°³ º¯¼öµéÀº DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ ¾È¿¡¼­ ¹Ù²Ù½Ç
-   ¼ö ÀÖ½À´Ï´Ù.
-   ±×·¡µµ ¼Ò¸®¸¦ µéÀ¸½Ç ¼ö ¾ø´Ù¸é ÄÚ¾î¸¦ Normal·Î ¹Ù²Ù½Ã°í »çÀÌÅ¬ °ªÀ» cycles=2000°ú
-   °°ÀÌ Á» ´õ ³·Àº °ªÀ¸·Î ¸ÂÃç º¸½Ê½Ã¿À.
-   ¼Ò¸®¸¦ ³»º¸³»´Â »ç¿îµå Ä«µåÀÇ µå¶óÀÌ¹ö°¡ Á¦´ë·Î ¼³Ä¡µÇ¾î ÀÖ´ÂÁö,
-   ¼±ÀÌ Àß ²ÈÇô ÀÖ´ÂÁö, ¼Ò¸® Å©±â°¡ ¾Ë¸Â°Ô ¸ÂÃß¾îÁ® ÀÖ´ÂÁö »ìÆì º¸½Ê½Ã¿À.
-   ¾î¶°ÇÑ °æ¿ì¿¡´Â Sound Blaster Pro (DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡¼­ÀÇ sbtype=sbpro1) ¶Ç´Â
-   Gravis Ultrasound (gus=true)¿Í °°Àº °¢±â ´Ù¸¥ ¿¡¹Ä·¹ÀÌÆ®µÇ´Â »ç¿îµå ÀåÄ¡¸¦ »ç¿ëÇÏ´Â
-   °ÍÀÌ µµ¿òÀÌ µÉ ¼öµµ ÀÖ½À´Ï´Ù.
+  ì•„ë‹ˆë©´ CD-ROM ì´ë¯¸ì§€ë¥¼ ë§Œë“¤ì–´ ë³´ì‹­ì‹œì˜¤. (CUE/BINì„ ì„ í˜¸) ê·¸ë¦¬ê³  DOSBox ë‚´ë¶€ ëª…ë ¹ì–´
+  IMGMOUNT ë„êµ¬ë¥¼ ê°€ì§€ê³  ì´ë¯¸ì§€(CUE ì‹œíŠ¸)ë¥¼ ë§ˆìš´íŠ¸í•´ ë³´ì‹­ì‹œì˜¤. ì´ê²ƒì€ ì–´ëŠ ìš´ì˜ì²´ì œì—ì„œë“ ì§€
+  ë‚®ì€ ìˆ˜ì¤€ì˜ CD-ROM ì§€ì›ì„ ì´ìš©í•  ìˆ˜ ìžˆë„ë¡ ë„ì™€ ì¤ë‹ˆë‹¤.
 
 
-¼Ò¸®: DOSBox°¡ ¾î¶°ÇÑ »ç¿îµå ÇÏµå¿þ¾î¸¦ °¡»óÀ¸·Î ±¸ÇöÇÕ´Ï±î?
-  DOSBox´Â ¿À·¡µÈ »ç¿îµå ÀåÄ¡µé ¸î °¡Áö¸¦ °¡»óÀ¸·Î ±¸ÇöÇØ ³À´Ï´Ù:
-   - ³»ºÎ PC ½ºÇÇÄ¿ (ºñÇÁÀ½)
-     ³ô°í ³·Àº ¼Ò¸®¿Í ¿©·¯ Á¾·ùÀÇ µðÁöÅÐ ¼Ò¸®¸¦ ³»ºÎ ½ºÇÇÄ¿·Î ¸¸µé¾î ³À´Ï´Ù.
+ë§ˆìš°ìŠ¤: ë§ˆìš°ìŠ¤ê°€ ë™ìž‘í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+  ë³´í†µ DOSBoxëŠ” ê²Œìž„ì´ ë§ˆìš°ìŠ¤ë¥¼ ì œì–´í•  ë•Œ ë§ˆìš°ìŠ¤ë¥¼ ì°¾ì•„ëƒ…ë‹ˆë‹¤.
+  í™”ë©´ì„ í•œ ë²ˆ ëˆ„ë¥´ë©´ ìž ê¸ˆ ì²˜ë¦¬ë˜ì–´ ëŒì•„ê°‘ë‹ˆë‹¤. (DOSBox ì°½ ì•ˆì—ì„œ)
+  ì–´ë– í•œ ê²Œìž„ì—ì„œëŠ” DOSBoxê°€ ë§ˆìš°ìŠ¤ë¥¼ ì°¾ì•„ë‚´ì§€ ëª»í•  ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤.
+  ì´ ê²½ìš° Ctrl-F10 í‚¤ë¥¼ ëˆŒëŸ¬ì„œ ë§ˆìš°ìŠ¤ë¥¼ ìž ê¶ˆë‘˜ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+  ì–´ë– í•œ ê²½ìš°ì—ëŠ” ë‹¤ë¥¸ ì‚¬ìš´ë“œ ìž¥ì¹˜(ì´ë¥¼í…Œë©´ sbtype=spro1 ì´ë‚˜ GUS)ë¥¼ ì‚¬ìš©í•˜ì—¬
+  í•´ê²°í•˜ê¸°ë„ í•©ë‹ˆë‹¤.
+
+ì†Œë¦¬: ì†Œë¦¬ê°€ ë‚˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+   ê²Œìž„ ì„¤ì •ì—ì„œ ì‚¬ìš´ë“œë¥¼ ì˜¬ë°”ë¥´ê²Œ êµ¬ì„±í–ˆëŠ”ì§€ ì‚´íŽ´ ë³´ì‹­ì‹œì˜¤.
+   ì†Œë¦¬ ì„¤ì • ìœ í‹¸ë¦¬í‹°ëŠ” ê²Œìž„ì´ ê¹”ë¦´ ë•Œ ê°™ì´ ê¹”ë¦¬ë©° ì„¤ì¹˜í•˜ëŠ” ë™ì•ˆì—ë„ ì†Œë¦¬ë¥¼ ì„¤ì •í• ì§€
+   ë¬¼ì–´ë³¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+   ë¨¼ì € ìžë™ ê°ì§€(Autodetection) ì˜µì…˜ì´ ìžˆëŠ”ì§€ ì‚´íŽ´ ë³´ì‹­ì‹œì˜¤. ì´ í•­ëª©ì´ ì—†ë‹¤ë©´
+   SoundBlaster ë˜ëŠ” SoundBlaster 16ì„ ê³¨ë¼ ë³´ì‹­ì‹œì˜¤.
+   DOSBoxì˜ ê¸°ë³¸ ì„¤ì •ê°’ì€ address=220 irq=7 dma=1 (ê°€ë”ì€ highdma=5ì¼ ë•Œë„ ìžˆìŒ)
+   ìž…ë‹ˆë‹¤. MIDIë„ ê³ ë¥´ì‹¤ ìˆ˜ ìžˆëŠ”ë° ì´ë¥¼í…Œë©´ Sound Canvas/SCC/MPU-401/
+   General MIDI/Wave Blasterì˜ ê²½ìš° ê¸°ë³¸ê°’ì€ address=330ì— IRQ=2ìž…ë‹ˆë‹¤.
+   ê°€ìƒìœ¼ë¡œ êµ¬í˜„ë˜ëŠ” ì‚¬ìš´ë“œ ì¹´ë“œë“¤ì˜ ë§¤ê°œ ë³€ìˆ˜ë“¤ì€ DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ ì•ˆì—ì„œ ë°”ê¾¸ì‹¤
+   ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+   ê·¸ëž˜ë„ ì†Œë¦¬ë¥¼ ë“¤ìœ¼ì‹¤ ìˆ˜ ì—†ë‹¤ë©´ ì½”ì–´ë¥¼ Normalë¡œ ë°”ê¾¸ì‹œê³  ì‚¬ì´í´ ê°’ì„ cycles=2000ê³¼
+   ê°™ì´ ì¢€ ë” ë‚®ì€ ê°’ìœ¼ë¡œ ë§žì¶° ë³´ì‹­ì‹œì˜¤.
+   ì†Œë¦¬ë¥¼ ë‚´ë³´ë‚´ëŠ” ì‚¬ìš´ë“œ ì¹´ë“œì˜ ë“œë¼ì´ë²„ê°€ ì œëŒ€ë¡œ ì„¤ì¹˜ë˜ì–´ ìžˆëŠ”ì§€,
+   ì„ ì´ ìž˜ ê½‚í˜€ ìžˆëŠ”ì§€, ì†Œë¦¬ í¬ê¸°ê°€ ì•Œë§žê²Œ ë§žì¶”ì–´ì ¸ ìžˆëŠ”ì§€ ì‚´íŽ´ ë³´ì‹­ì‹œì˜¤.
+   ì–´ë– í•œ ê²½ìš°ì—ëŠ” Sound Blaster Pro (DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì—ì„œì˜ sbtype=sbpro1) ë˜ëŠ”
+   Gravis Ultrasound (gus=true)ì™€ ê°™ì€ ê°ê¸° ë‹¤ë¥¸ ì—ë®¬ë ˆì´íŠ¸ë˜ëŠ” ì‚¬ìš´ë“œ ìž¥ì¹˜ë¥¼ ì‚¬ìš©í•˜ëŠ”
+   ê²ƒì´ ë„ì›€ì´ ë  ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤.
+
+
+ì†Œë¦¬: DOSBoxê°€ ì–´ë– í•œ ì‚¬ìš´ë“œ í•˜ë“œì›¨ì–´ë¥¼ ê°€ìƒìœ¼ë¡œ êµ¬í˜„í•©ë‹ˆê¹Œ?
+  DOSBoxëŠ” ì˜¤ëž˜ëœ ì‚¬ìš´ë“œ ìž¥ì¹˜ë“¤ ëª‡ ê°€ì§€ë¥¼ ê°€ìƒìœ¼ë¡œ êµ¬í˜„í•´ ëƒ…ë‹ˆë‹¤:
+   - ë‚´ë¶€ PC ìŠ¤í”¼ì»¤ (ë¹„í”„ìŒ)
+     ë†’ê³  ë‚®ì€ ì†Œë¦¬ì™€ ì—¬ëŸ¬ ì¢…ë¥˜ì˜ ë””ì§€í„¸ ì†Œë¦¬ë¥¼ ë‚´ë¶€ ìŠ¤í”¼ì»¤ë¡œ ë§Œë“¤ì–´ ëƒ…ë‹ˆë‹¤.
    - Creative CMS/Gameblaster
-     Creative Labs(R) »ç¿¡¼­ ¸Ç Ã³À½ ¼±º¸ÀÎ »ç¿îµå Ä«µåÀÔ´Ï´Ù.  ±âº» Æ÷Æ® ±¸¼ºÀº 0x220À¸·Î µÇ¾î ÀÖ½À´Ï´Ù.
-     ±âº»°ªÀº disabledÀÔ´Ï´Ù.
+     Creative Labs(R) ì‚¬ì—ì„œ ë§¨ ì²˜ìŒ ì„ ë³´ì¸ ì‚¬ìš´ë“œ ì¹´ë“œìž…ë‹ˆë‹¤.  ê¸°ë³¸ í¬íŠ¸ êµ¬ì„±ì€ 0x220ìœ¼ë¡œ ë˜ì–´ ìžˆìŠµë‹ˆë‹¤.
+     ê¸°ë³¸ê°’ì€ disabledìž…ë‹ˆë‹¤.
    - Tandy 3 voice
-     ³ëÀÌÁî Ã¤³ÎÀ» Á¦¿ÜÇÏ°í ¿ÏÀüÈ÷ °¡»óÀ¸·Î ±¸ÇöÇØ ³À´Ï´Ù.
-     ³ëÀÌÁî Ã¤³ÎÀº ¾ÆÁÖ Àß ¹®¼­È­µÇ¾î ÀÖÁö ¾ÊÀ¸¹Ç·Î »ç¿îµå Á¤È®µµ¿¡ ÀÇ¹®ÀÌ »ý±æ ¼ö ÀÖ½À´Ï´Ù.
-     ±âº»°ªÀº disabled·Î µÇ¾î ÀÖ½À´Ï´Ù.
+     ë…¸ì´ì¦ˆ ì±„ë„ì„ ì œì™¸í•˜ê³  ì™„ì „ížˆ ê°€ìƒìœ¼ë¡œ êµ¬í˜„í•´ ëƒ…ë‹ˆë‹¤.
+     ë…¸ì´ì¦ˆ ì±„ë„ì€ ì•„ì£¼ ìž˜ ë¬¸ì„œí™”ë˜ì–´ ìžˆì§€ ì•Šìœ¼ë¯€ë¡œ ì‚¬ìš´ë“œ ì •í™•ë„ì— ì˜ë¬¸ì´ ìƒê¸¸ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+     ê¸°ë³¸ê°’ì€ disabledë¡œ ë˜ì–´ ìžˆìŠµë‹ˆë‹¤.
    - Tandy DAC
-     ÀÏºÎ °ÔÀÓÀº ´õ ³ªÀº Tandy DAC »ç¿îµå Áö¿øÀ» À§ÇØ SoundBlaster ¿¡¹Ä·¹ÀÌ¼ÇÀ» ²ø °ÍÀ»(sbtype=none)
-     ¿ä±¸ÇÒ ¼ö ÀÖ½À´Ï´Ù. Tandy »ç¿îµå¸¦ »ç¿ëÇÏÁö ¾Ê´Â´Ù¸é sbtype¸¦ sb16À¸·Î ´Ù½Ã ¼³Á¤ÇØ ³õ´Â °ÍÀ»
-     ÀØÁö ¸¶½Ê½Ã¿À.
+     ì¼ë¶€ ê²Œìž„ì€ ë” ë‚˜ì€ Tandy DAC ì‚¬ìš´ë“œ ì§€ì›ì„ ìœ„í•´ SoundBlaster ì—ë®¬ë ˆì´ì…˜ì„ ëŒ ê²ƒì„(sbtype=none)
+     ìš”êµ¬í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤. Tandy ì‚¬ìš´ë“œë¥¼ ì‚¬ìš©í•˜ì§€ ì•ŠëŠ”ë‹¤ë©´ sbtypeë¥¼ sb16ìœ¼ë¡œ ë‹¤ì‹œ ì„¤ì •í•´ ë†“ëŠ” ê²ƒì„
+     ìžŠì§€ ë§ˆì‹­ì‹œì˜¤.
    - Adlib
-     ÀÌ ¿¡¹Ä·¹ÀÌ¼ÇÀº °ÅÀÇ ¿Ïº®¿¡ °¡±õ°í µðÁöÅÐÈ­µÈ ¼Ò¸®¸¦ ÃæºÐÈ÷ Àç»ýÇÒ ¼ö ÀÖ½À´Ï´Ù.
+     ì´ ì—ë®¬ë ˆì´ì…˜ì€ ê±°ì˜ ì™„ë²½ì— ê°€ê¹ê³  ë””ì§€í„¸í™”ëœ ì†Œë¦¬ë¥¼ ì¶©ë¶„ížˆ ìž¬ìƒí•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
    - SoundBlaster 16/ SoundBlaster Pro I & II /SoundBlaster I & II
-     ±âº»ÀûÀ¸·Î DOSBox´Â SoundBlaster 16ÀÇ 16ºñÆ® ½ºÅ×·¹¿À »ç¿îµå¸¦ Á¦°øÇÕ´Ï´Ù.
-     DOSBox.Conf¿¡¼­ °¢±â ´Ù¸¥ SoundBlaster ¹öÀüÀ» °í¸¦ ¼ö ÀÖ½À´Ï´Ù. (³»ºÎ ¸í·É¾î¸¦ º¸·Á¸é : CONFIG)
-     AWE32 À½¾ÇÀº °¡»óÀ¸·Î ±¸ÇöÇÏÁö ¾ÊÀ¸¸ç MPU-401À» ´ë½Å »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù. (¾Æ·¡ Âü°í)
-   - Disney Soundsource ¹× Covox Speech
-     ÀÌ ¼Ò¸® ÀåÄ¡´Â ÇÁ¸°ÅÍ Æ÷Æ®¸¦ ¾²°í µðÁöÅÐ ¼Ò¸®¸¸À» ³»º¸³À´Ï´Ù. LPT1¿¡ À§Ä¡ÇÕ´Ï´Ù.
+     ê¸°ë³¸ì ìœ¼ë¡œ DOSBoxëŠ” SoundBlaster 16ì˜ 16ë¹„íŠ¸ ìŠ¤í…Œë ˆì˜¤ ì‚¬ìš´ë“œë¥¼ ì œê³µí•©ë‹ˆë‹¤.
+     DOSBox.Confì—ì„œ ê°ê¸° ë‹¤ë¥¸ SoundBlaster ë²„ì „ì„ ê³ ë¥¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. (ë‚´ë¶€ ëª…ë ¹ì–´ë¥¼ ë³´ë ¤ë©´ : CONFIG)
+     AWE32 ìŒì•…ì€ ê°€ìƒìœ¼ë¡œ êµ¬í˜„í•˜ì§€ ì•Šìœ¼ë©° MPU-401ì„ ëŒ€ì‹  ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤. (ì•„ëž˜ ì°¸ê³ )
+   - Disney Soundsource ë° Covox Speech
+     ì´ ì†Œë¦¬ ìž¥ì¹˜ëŠ” í”„ë¦°í„° í¬íŠ¸ë¥¼ ì“°ê³  ë””ì§€í„¸ ì†Œë¦¬ë§Œì„ ë‚´ë³´ëƒ…ë‹ˆë‹¤. LPT1ì— ìœ„ì¹˜í•©ë‹ˆë‹¤.
    - Gravis Ultrasound (GUS)
-     ÀÌ ÇÏµå¿þ¾î´Â °ÅÀÇ ¿ÏÀüÈ÷ °¡»óÀ¸·Î ±¸ÇöµË´Ï´Ù.
-     MPU-401ÀÌ ´Ù¸¥ ÄÚµå¿¡¼­ °¡»óÀ¸·Î ±¸ÇöµÈ µÚ MIDI¸¦ °ÅÄ¡¸é¼­ ¼º´ÉÀº Á¡Á¡ ¶³¾îÁý´Ï´Ù.
-     Gravis À½¾ÇÀÇ °æ¿ì Gravis µå¶óÀÌ¹ö¸¦ DOSBox ¾È¿¡¼­ ¼³Ä¡ÇØ¾ß ÇÒ ¼öµµ ÀÖ½À´Ï´Ù.
-     ±âº»°ªÀº disabledÀÔ´Ï´Ù.
+     ì´ í•˜ë“œì›¨ì–´ëŠ” ê±°ì˜ ì™„ì „ížˆ ê°€ìƒìœ¼ë¡œ êµ¬í˜„ë©ë‹ˆë‹¤.
+     MPU-401ì´ ë‹¤ë¥¸ ì½”ë“œì—ì„œ ê°€ìƒìœ¼ë¡œ êµ¬í˜„ëœ ë’¤ MIDIë¥¼ ê±°ì¹˜ë©´ì„œ ì„±ëŠ¥ì€ ì ì  ë–¨ì–´ì§‘ë‹ˆë‹¤.
+     Gravis ìŒì•…ì˜ ê²½ìš° Gravis ë“œë¼ì´ë²„ë¥¼ DOSBox ì•ˆì—ì„œ ì„¤ì¹˜í•´ì•¼ í•  ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤.
+     ê¸°ë³¸ê°’ì€ disabledìž…ë‹ˆë‹¤.
    - MPU-401
-     MIDI Passthrough ÀÎÅÍÆäÀÌ½º ¶ÇÇÑ °¡»óÀ¸·Î ±¸ÇöµË´Ï´Ù.
-     ÀÌ ¼Ò¸®ÀÇ Ãâ·Â ¹æ½ÄÀº ÀÏ¹Ý MIDI³ª MT-32 ÀåÄ¡¿Í ÇÔ²² »ç¿ëµÉ ¶§¿¡¸¸ µ¿ÀÛÇÕ´Ï´Ù.
-     Windows XP/Vista/7 ¹× Mac OS´Â È£È¯ÀÌ µÇ´Â ±âº» ¿¡¹Ä·¹ÀÌÅÍ¸¦ °®Ãß°í ÀÖ½À´Ï´Ù:
+     MIDI Passthrough ì¸í„°íŽ˜ì´ìŠ¤ ë˜í•œ ê°€ìƒìœ¼ë¡œ êµ¬í˜„ë©ë‹ˆë‹¤.
+     ì´ ì†Œë¦¬ì˜ ì¶œë ¥ ë°©ì‹ì€ ì¼ë°˜ MIDIë‚˜ MT-32 ìž¥ì¹˜ì™€ í•¨ê»˜ ì‚¬ìš©ë  ë•Œì—ë§Œ ë™ìž‘í•©ë‹ˆë‹¤.
+     Windows XP/Vista/7 ë° Mac OSëŠ” í˜¸í™˜ì´ ë˜ëŠ” ê¸°ë³¸ ì—ë®¬ë ˆì´í„°ë¥¼ ê°–ì¶”ê³  ìžˆìŠµë‹ˆë‹¤:
      Sound Canvas/SCC/General Standard/General MIDI/Wave Blaster
-     Roland LAPC/CM-32L/MT-32¸¦ ±¸ÇöÇÏ·Á¸é ´Ù¸¥ ÀåÄ¡³ª º°µµÀÇ ¿¡¹Ä·¹ÀÌÅÍ°¡ ÇÊ¿äÇÕ´Ï´Ù.
+     Roland LAPC/CM-32L/MT-32ë¥¼ êµ¬í˜„í•˜ë ¤ë©´ ë‹¤ë¥¸ ìž¥ì¹˜ë‚˜ ë³„ë„ì˜ ì—ë®¬ë ˆì´í„°ê°€ í•„ìš”í•©ë‹ˆë‹¤.
 
-¼Ò¸®: ¼Ò¸®°¡ ²÷±â°Å³ª ´Ã¾îÁý´Ï´Ù.
-   DOSBox°¡ ÇöÀçÀÇ ºü¸£±â¸¦ ¸ÂÃß±â À§ÇØ CPU Àü·ÂÀ» ³Ê¹« ¸¹ÀÌ ¾²°í ÀÖ½À´Ï´Ù.
-   CPU »çÀÌÅ¬(cycles) °ªÀ» ³·Ãß°Å³ª, ÇÁ·¹ÀÓ ¹«½Ã(frameskip) °ªÀ» ´Ã¸®°Å³ª, °¢ »ç¿îµå ÀåÄ¡ ¶Ç´Â ¹Í¼­ ÀåÄ¡ÀÇ
-   »ùÇÃ ¼Óµµ(samplerate)¸¦ ³·Ãß½Ê½Ã¿À. ¶Ç prebufferÀÇ °ªÀ» ´Ã·Á º¸½Ê½Ã¿À. ÀÌ°ÍµéÀº ¸ðµÎ DOSBox
-   ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡¼­ ¹Ù²Ù½Ç ¼ö ÀÖ½À´Ï´Ù. ±¸¹® 13 ¼³Á¤ ±¸¼º (¿É¼Ç) ÆÄÀÏÀ» ÂüÁ¶ÇÏ½Ê½Ã¿À.
-   cycles=max ¶Ç´Â cycles=auto¸¦ »ç¿ëÇÏ°í °è½Ã¸é, DOSBox ¹Û¿¡¼­ ¾²ÀÌ´Â ´Ù¸¥ ÇÁ·Î±×·¥µé,
-   Æ¯È÷ ÇÏµå µð½ºÅ©¿¡ Á¢±ÙÀ» ¸¹ÀÌ ÇÏ´Â ÇÁ·Î±×·¥µéÀÌ DOSBox¸¦ °£¼·ÇÒ ¼ö ÀÖ½À´Ï´Ù!
-   ¶Ç, ±¸¹® 10 "DOSBox ¼Óµµ Á¶Àý"À» Âü°íÇÏ½Ê½Ã¿À.
+ì†Œë¦¬: ì†Œë¦¬ê°€ ëŠê¸°ê±°ë‚˜ ëŠ˜ì–´ì§‘ë‹ˆë‹¤.
+   DOSBoxê°€ í˜„ìž¬ì˜ ë¹ ë¥´ê¸°ë¥¼ ë§žì¶”ê¸° ìœ„í•´ CPU ì „ë ¥ì„ ë„ˆë¬´ ë§Žì´ ì“°ê³  ìžˆìŠµë‹ˆë‹¤.
+   CPU ì‚¬ì´í´(cycles) ê°’ì„ ë‚®ì¶”ê±°ë‚˜, í”„ë ˆìž„ ë¬´ì‹œ(frameskip) ê°’ì„ ëŠ˜ë¦¬ê±°ë‚˜, ê° ì‚¬ìš´ë“œ ìž¥ì¹˜ ë˜ëŠ” ë¯¹ì„œ ìž¥ì¹˜ì˜
+   ìƒ˜í”Œ ì†ë„(samplerate)ë¥¼ ë‚®ì¶”ì‹­ì‹œì˜¤. ë˜ prebufferì˜ ê°’ì„ ëŠ˜ë ¤ ë³´ì‹­ì‹œì˜¤. ì´ê²ƒë“¤ì€ ëª¨ë‘ DOSBox
+   ì„¤ì • êµ¬ì„± íŒŒì¼ì—ì„œ ë°”ê¾¸ì‹¤ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. êµ¬ë¬¸ 13 ì„¤ì • êµ¬ì„± (ì˜µì…˜) íŒŒì¼ì„ ì°¸ì¡°í•˜ì‹­ì‹œì˜¤.
+   cycles=max ë˜ëŠ” cycles=autoë¥¼ ì‚¬ìš©í•˜ê³  ê³„ì‹œë©´, DOSBox ë°–ì—ì„œ ì“°ì´ëŠ” ë‹¤ë¥¸ í”„ë¡œê·¸ëž¨ë“¤,
+   íŠ¹ížˆ í•˜ë“œ ë””ìŠ¤í¬ì— ì ‘ê·¼ì„ ë§Žì´ í•˜ëŠ” í”„ë¡œê·¸ëž¨ë“¤ì´ DOSBoxë¥¼ ê°„ì„­í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤!
+   ë˜, êµ¬ë¬¸ 10 "DOSBox ì†ë„ ì¡°ì ˆ"ì„ ì°¸ê³ í•˜ì‹­ì‹œì˜¤.
 
-Å°º¸µå: DOSBox¿¡¼­ ¡¬ ¶Ç´Â : °¡ ´­·¯ÁöÁö ¾Ê½À´Ï´Ù.
-  ¡¬ ´Â \¿Í °°½À´Ï´Ù. ÇÑ±¹¾î ÀÚÆÇÀ» ¾µ ¶§¿¡´Â ÀÌ¿Í °°Àº ¹®Á¦°¡ ¾ø½À´Ï´Ù.
-  ÇØ´ç Å°°¡ ´­¸®Áö ¾Ê´Â µ¥¿¡´Â ´Ù¾çÇÑ ÀÌÀ¯°¡ Á¸ÀçÇÕ´Ï´Ù. È£½ºÆ® ¿î¿µ Ã¼Á¦ÀÇ ÀÚÆÇÀÌ µµ½º ·¹ÀÌ¾Æ¿ô°ú
-  ÀÏÄ¡ÇÏÁö ¾Ê°Å³ª ¿Ã¹Ù¸£°Ô °¨ÁöÇÏÁö ¸ø ÇßÀ» ¶§, ¾Æ´Ï¸é Å° ¸ÅÇÎÀÌ Àß¸øµÇ¾úÀ» ¶§¿¡µµ ±×·¯ÇÒ ¼ö ÀÖ½À´Ï´Ù.
+í‚¤ë³´ë“œ: DOSBoxì—ì„œ ï¼¼ ë˜ëŠ” : ê°€ ëˆŒëŸ¬ì§€ì§€ ì•ŠìŠµë‹ˆë‹¤.
+  ï¼¼ ëŠ” \ì™€ ê°™ìŠµë‹ˆë‹¤. í•œêµ­ì–´ ìžíŒì„ ì“¸ ë•Œì—ëŠ” ì´ì™€ ê°™ì€ ë¬¸ì œê°€ ì—†ìŠµë‹ˆë‹¤.
+  í•´ë‹¹ í‚¤ê°€ ëˆŒë¦¬ì§€ ì•ŠëŠ” ë°ì—ëŠ” ë‹¤ì–‘í•œ ì´ìœ ê°€ ì¡´ìž¬í•©ë‹ˆë‹¤. í˜¸ìŠ¤íŠ¸ ìš´ì˜ ì²´ì œì˜ ìžíŒì´ ë„ìŠ¤ ë ˆì´ì•„ì›ƒê³¼
+  ì¼ì¹˜í•˜ì§€ ì•Šê±°ë‚˜ ì˜¬ë°”ë¥´ê²Œ ê°ì§€í•˜ì§€ ëª» í–ˆì„ ë•Œ, ì•„ë‹ˆë©´ í‚¤ ë§¤í•‘ì´ ìž˜ëª»ë˜ì—ˆì„ ë•Œì—ë„ ê·¸ëŸ¬í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-  ¸î °¡Áö ÇØ°áÇÒ ¼ö ÀÖ´Â »çÇ×ÀÌ ÀÖ½À´Ï´Ù:
-     1. ¡¬ ´ë½Å¿¡ £¯ ¸¦ ¾´´Ù. :¿¡ ÇØ´çÇÏ´Â ALT-58ÀÌ³ª \¿¡ ÇØ´çÇÏ´Â ALT-92¸¦ »ç¿ëÇÑ´Ù.
-     2. µµ½º ÀÚÆÇ ¼³°è¸¦ º¯°æÇÑ´Ù. (±¸¹® 8À» È®ÀÎÇÒ °Í)
-     3. DOSBox.Conf¸¦ ¿­°í [autoexec] ¾Æ·¡¿¡ ¸í·É¾î¸¦ ¹Ì¸® ÀÔ·ÂÇØ ³õ´Â´Ù.
-     4. DOSBox.Conf¸¦ ¿­°í usescancodes °ªÀ» ¼öÁ¤ÇÑ´Ù.
-     5. ¿î¿µÃ¼Á¦ÀÇ ÀÚÆÇ ¼³°è¸¦ ¹Ù²Û´Ù.
+  ëª‡ ê°€ì§€ í•´ê²°í•  ìˆ˜ ìžˆëŠ” ì‚¬í•­ì´ ìžˆìŠµë‹ˆë‹¤:
+     1. ï¼¼ ëŒ€ì‹ ì— ï¼ ë¥¼ ì“´ë‹¤. :ì— í•´ë‹¹í•˜ëŠ” ALT-58ì´ë‚˜ \ì— í•´ë‹¹í•˜ëŠ” ALT-92ë¥¼ ì‚¬ìš©í•œë‹¤.
+     2. ë„ìŠ¤ ìžíŒ ì„¤ê³„ë¥¼ ë³€ê²½í•œë‹¤. (êµ¬ë¬¸ 8ì„ í™•ì¸í•  ê²ƒ)
+     3. DOSBox.Confë¥¼ ì—´ê³  [autoexec] ì•„ëž˜ì— ëª…ë ¹ì–´ë¥¼ ë¯¸ë¦¬ ìž…ë ¥í•´ ë†“ëŠ”ë‹¤.
+     4. DOSBox.Confë¥¼ ì—´ê³  usescancodes ê°’ì„ ìˆ˜ì •í•œë‹¤.
+     5. ìš´ì˜ì²´ì œì˜ ìžíŒ ì„¤ê³„ë¥¼ ë°”ê¾¼ë‹¤.
 
-  È£½ºÆ® ÄÄÇ»ÅÍÀÇ ·¹ÀÌ¾Æ¿ôÀÌ Áõ¸íµÇÁö ¾Ê¾ÒÀ» °æ¿ì, ¾Æ´Ï¸é Å°º¸µå ¼³°è°¡ DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡¼­
-  none (¾øÀ½)À¸·Î ÀâÇô ÀÖ´Â °æ¿ì Ç¥ÁØ ¹Ì±¹½Ä ·¹ÀÌ¾Æ¿ôÀÌ »ç¿ëµË´Ï´Ù.
-  ÀÌ ±¸¼ºÀ» »ç¿ëÇÒ °æ¿ì \ (¹é½½·¡½Ã)¸¦ ÀÔ·ÂÇÒ ¶§ Enter Å° ÁÖº¯ÀÇ Å°µéÀ» ÀÔ·ÂÇØ º¸½Ê½Ã¿À.
-  : (ÄÝ·Ð)ÀÇ °æ¿ì Shift Å°¸¦, ¶Ç Enter¿Í L »çÀÌÀÇ Å°µéÀ» ´­·¯ º¸½Ê½Ã¿À.
+  í˜¸ìŠ¤íŠ¸ ì»´í“¨í„°ì˜ ë ˆì´ì•„ì›ƒì´ ì¦ëª…ë˜ì§€ ì•Šì•˜ì„ ê²½ìš°, ì•„ë‹ˆë©´ í‚¤ë³´ë“œ ì„¤ê³„ê°€ DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì—ì„œ
+  none (ì—†ìŒ)ìœ¼ë¡œ ìž¡í˜€ ìžˆëŠ” ê²½ìš° í‘œì¤€ ë¯¸êµ­ì‹ ë ˆì´ì•„ì›ƒì´ ì‚¬ìš©ë©ë‹ˆë‹¤.
+  ì´ êµ¬ì„±ì„ ì‚¬ìš©í•  ê²½ìš° \ (ë°±ìŠ¬ëž˜ì‹œ)ë¥¼ ìž…ë ¥í•  ë•Œ Enter í‚¤ ì£¼ë³€ì˜ í‚¤ë“¤ì„ ìž…ë ¥í•´ ë³´ì‹­ì‹œì˜¤.
+  : (ì½œë¡ )ì˜ ê²½ìš° Shift í‚¤ë¥¼, ë˜ Enterì™€ L ì‚¬ì´ì˜ í‚¤ë“¤ì„ ëˆŒëŸ¬ ë³´ì‹­ì‹œì˜¤.
 
-Å°º¸µå: ¿À¸¥ÂÊ Shift¿Í ¡¬°¡ DOSBox¿¡¼­ µ¿ÀÛÇÏÁö ¾Ê½À´Ï´Ù. (Windows)
-  »ç¿ëÀÚÀÇ PC¿¡ ÇÑ ´ë ÀÌ»óÀÇ Å°º¸µå°¡ ÀåÂøµÇ¾î ÀÖÀ¸¸é Windows »ó¿¡¼­ ÀÌ·¯ÇÑ ÀÏÀÌ ¹ú¾îÁú ¼ö ÀÖ½À´Ï´Ù.
-  ÀÌ ¹®Á¦¸¦ È®ÀÎÇÏ·Á¸é cmd.exe¸¦ ½ÇÇàÇÑ µÚ DOSBox ÇÁ·Î±×·¥ Æú´õ¿¡ µé¾î°¡¼­ ´ÙÀ½°ú °°ÀÌ ÀÔ·ÂÇÏ½Ê½Ã¿À.
+í‚¤ë³´ë“œ: ì˜¤ë¥¸ìª½ Shiftì™€ ï¼¼ê°€ DOSBoxì—ì„œ ë™ìž‘í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤. (Windows)
+  ì‚¬ìš©ìžì˜ PCì— í•œ ëŒ€ ì´ìƒì˜ í‚¤ë³´ë“œê°€ ìž¥ì°©ë˜ì–´ ìžˆìœ¼ë©´ Windows ìƒì—ì„œ ì´ëŸ¬í•œ ì¼ì´ ë²Œì–´ì§ˆ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+  ì´ ë¬¸ì œë¥¼ í™•ì¸í•˜ë ¤ë©´ cmd.exeë¥¼ ì‹¤í–‰í•œ ë’¤ DOSBox í”„ë¡œê·¸ëž¨ í´ë”ì— ë“¤ì–´ê°€ì„œ ë‹¤ìŒê³¼ ê°™ì´ ìž…ë ¥í•˜ì‹­ì‹œì˜¤.
   set sdl_videodriver=windib
   dosbox.exe
-  Å°º¸µå°¡ Á¤»ó µ¿ÀÛÇÏ´ÂÁö È®ÀÎÇØ º¸½Ê½Ã¿À. windib´Â ¼Óµµ°¡ ´À¸³´Ï´Ù. ÀÌ°÷¿¡ Á¦°øµÈ µÎ °¡Áö ÇØ°áÃ¥ °¡¿îµ¥
-  ÇÏ³ª¸¦ ÀÌ¿ëÇÏ´Â °ÍÀÌ °¡Àå ÁÁ½À´Ï´Ù.
+  í‚¤ë³´ë“œê°€ ì •ìƒ ë™ìž‘í•˜ëŠ”ì§€ í™•ì¸í•´ ë³´ì‹­ì‹œì˜¤. windibëŠ” ì†ë„ê°€ ëŠë¦½ë‹ˆë‹¤. ì´ê³³ì— ì œê³µëœ ë‘ ê°€ì§€ í•´ê²°ì±… ê°€ìš´ë°
+  í•˜ë‚˜ë¥¼ ì´ìš©í•˜ëŠ” ê²ƒì´ ê°€ìž¥ ì¢‹ìŠµë‹ˆë‹¤.
   http://vogons.zetafleet.com/viewtopic.php?t=24072
 
-Å°º¸µå: Å°º¸µå°¡ ¹ÝÀÀÀÌ ´À¸³´Ï´Ù.
-  DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡¼­ priority=normal,normal°ú °°ÀÌ ¿ì¼± ¼øÀ§¸¦ ¹Ù²ã º¸½Ê½Ã¿À.
-  CPU »çÀÌÅ¬À» ³·Ãß´Â °Íµµ °í·ÁÇØ º¸½Ê½Ã¿À. (cycles=10000°ú °°ÀÌ »çÀÌÅ¬ °íÁ¤°ªÀ» ÀÔ·ÂÇØ º¸½Ê½Ã¿À)
+í‚¤ë³´ë“œ: í‚¤ë³´ë“œê°€ ë°˜ì‘ì´ ëŠë¦½ë‹ˆë‹¤.
+  DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì—ì„œ priority=normal,normalê³¼ ê°™ì´ ìš°ì„  ìˆœìœ„ë¥¼ ë°”ê¿” ë³´ì‹­ì‹œì˜¤.
+  CPU ì‚¬ì´í´ì„ ë‚®ì¶”ëŠ” ê²ƒë„ ê³ ë ¤í•´ ë³´ì‹­ì‹œì˜¤. (cycles=10000ê³¼ ê°™ì´ ì‚¬ì´í´ ê³ ì •ê°’ì„ ìž…ë ¥í•´ ë³´ì‹­ì‹œì˜¤)
 
-Á¦¾î: Ä³¸¯ÅÍ, Ä¿¼­, ¸¶¿ì½º Æ÷ÀÎÅÍ°¡ ´Ã ÇÑÂÊÀ¸·Î¸¸ ¿òÁ÷ÀÔ´Ï´Ù!
-       Á¶ÀÌ½ºÆ½ ¿¡¹Ä·¹ÀÌ¼ÇÀ» ²¨ º¸½Ê½Ã¿À. DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡¼­ joysticktype=noneÀ¸·Î µÎ½Ã¸é
-       µË´Ï´Ù. Á¶ÀÌ½ºÆ½ÀÌ³ª Å°ÆÐµå°¡ ²ÈÇô ÀÖ´Ù¸é »© ÁÖ½Ê½Ã¿À.
-       °ÔÀÓ¿¡¼­ Á¶ÀÌ½ºÆ½À» »ç¿ëÇÏ·Á¸é timed=false·Î ¼³Á¤ÇÏ½Ê½Ã¿À. ±×¸®°í ¿î¿µÃ¼Á¦ÀÇ Á¦¾îÆÇ ÂÊ°ú
-       °ÔÀÓ ¼³Á¤¿¡¼­ Á¶ÀÌ½ºÆ½ÀÇ ¼³Á¤À» ¿©·¯ºÐÀÇ Á¶ÀÌ½ºÆ½À» ¸¸Á® º¸¸é¼­ Àß ¸ÂÃç º¸½Ê½Ã¿À.
+ì œì–´: ìºë¦­í„°, ì»¤ì„œ, ë§ˆìš°ìŠ¤ í¬ì¸í„°ê°€ ëŠ˜ í•œìª½ìœ¼ë¡œë§Œ ì›€ì§ìž…ë‹ˆë‹¤!
+       ì¡°ì´ìŠ¤í‹± ì—ë®¬ë ˆì´ì…˜ì„ êº¼ ë³´ì‹­ì‹œì˜¤. DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì—ì„œ joysticktype=noneìœ¼ë¡œ ë‘ì‹œë©´
+       ë©ë‹ˆë‹¤. ì¡°ì´ìŠ¤í‹±ì´ë‚˜ í‚¤íŒ¨ë“œê°€ ê½‚í˜€ ìžˆë‹¤ë©´ ë¹¼ ì£¼ì‹­ì‹œì˜¤.
+       ê²Œìž„ì—ì„œ ì¡°ì´ìŠ¤í‹±ì„ ì‚¬ìš©í•˜ë ¤ë©´ timed=falseë¡œ ì„¤ì •í•˜ì‹­ì‹œì˜¤. ê·¸ë¦¬ê³  ìš´ì˜ì²´ì œì˜ ì œì–´íŒ ìª½ê³¼
+       ê²Œìž„ ì„¤ì •ì—ì„œ ì¡°ì´ìŠ¤í‹±ì˜ ì„¤ì •ì„ ì—¬ëŸ¬ë¶„ì˜ ì¡°ì´ìŠ¤í‹±ì„ ë§Œì ¸ ë³´ë©´ì„œ ìž˜ ë§žì¶° ë³´ì‹­ì‹œì˜¤.
 
 
-¼Óµµ: °ÔÀÓ, ÀÀ¿ë ÇÁ·Î±×·¥ÀÌ ³Ê¹« ´À¸®°Ô µ¹¾Æ°©´Ï´Ù!
-   ´õ ¸¹Àº Á¤º¸¸¦ º¸·Á¸é ±¸¹® 10 "DOSBox ¼Óµµ Á¶Àý"À» ÀÐ¾î º¸½Ê½Ã¿À.
+ì†ë„: ê²Œìž„, ì‘ìš© í”„ë¡œê·¸ëž¨ì´ ë„ˆë¬´ ëŠë¦¬ê²Œ ëŒì•„ê°‘ë‹ˆë‹¤!
+   ë” ë§Žì€ ì •ë³´ë¥¼ ë³´ë ¤ë©´ êµ¬ë¬¸ 10 "DOSBox ì†ë„ ì¡°ì ˆ"ì„ ì½ì–´ ë³´ì‹­ì‹œì˜¤.
 
-Ãæµ¹: °ÔÀÓ, ÀÀ¿ë ÇÁ·Î±×·¥ÀÌ ¾Æ¿¹ µ¿ÀÛÇÏÁö ¾Ê°í Ãæµ¹À» ÀÏÀ¸Åµ´Ï´Ù!
-  11¹øÂ° ±¸¹® "¹®Á¦ ÇØ°á"À» ÀÐ¾î º¸½Ê½Ã¿À.
+ì¶©ëŒ: ê²Œìž„, ì‘ìš© í”„ë¡œê·¸ëž¨ì´ ì•„ì˜ˆ ë™ìž‘í•˜ì§€ ì•Šê³  ì¶©ëŒì„ ì¼ìœ¼í‚µë‹ˆë‹¤!
+  11ë²ˆì§¸ êµ¬ë¬¸ "ë¬¸ì œ í•´ê²°"ì„ ì½ì–´ ë³´ì‹­ì‹œì˜¤.
 
-Ãæµ¹: DOSBox¸¦ ½ÇÇàÇÏÀÚ¸¶ÀÚ Ãæµ¹ÇÕ´Ï´Ù.
-  11¹øÂ° ±¸¹® "¹®Á¦ ÇØ°á"À» ÀÐ¾î º¸½Ê½Ã¿À.
+ì¶©ëŒ: DOSBoxë¥¼ ì‹¤í–‰í•˜ìžë§ˆìž ì¶©ëŒí•©ë‹ˆë‹¤.
+  11ë²ˆì§¸ êµ¬ë¬¸ "ë¬¸ì œ í•´ê²°"ì„ ì½ì–´ ë³´ì‹­ì‹œì˜¤.
 
-°ÔÀÓ: Á¦ ºôµå °ÔÀÓ(Duke3D/Blood/Shadow Warrior)¿¡ ¹®Á¦°¡ ÀÖ½À´Ï´Ù.
-  ¸ÕÀú °ÔÀÓ Æ÷Æ®¸¦ Ã£¾Æ º¸½Ê½Ã¿À. ³ôÀº ÇØ»óµµ¿¡¼­ DOSBoxÀÇ ±×·¡ÇÈ ¹®Á¦¸¦ ÇØ°áÇÏ·Á¸é
-  DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ (DOSBox.Conf)À» ¿­°í machine=svga_s3À» Ã£¾Æ º¸½Ê½Ã¿À.
-  ÀÌ svga_s3À» vesa_nolfb·Î ¹Ù²ã º¸½Ê½Ã¿À. memsize=16À» memsize=63À¸·Î ¹Ù²ã º¸½Ê½Ã¿À.
+ê²Œìž„: ì œ ë¹Œë“œ ê²Œìž„(Duke3D/Blood/Shadow Warrior)ì— ë¬¸ì œê°€ ìžˆìŠµë‹ˆë‹¤.
+  ë¨¼ì € ê²Œìž„ í¬íŠ¸ë¥¼ ì°¾ì•„ ë³´ì‹­ì‹œì˜¤. ë†’ì€ í•´ìƒë„ì—ì„œ DOSBoxì˜ ê·¸ëž˜í”½ ë¬¸ì œë¥¼ í•´ê²°í•˜ë ¤ë©´
+  DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ (DOSBox.Conf)ì„ ì—´ê³  machine=svga_s3ì„ ì°¾ì•„ ë³´ì‹­ì‹œì˜¤.
+  ì´ svga_s3ì„ vesa_nolfbë¡œ ë°”ê¿” ë³´ì‹­ì‹œì˜¤. memsize=16ì„ memsize=63ìœ¼ë¡œ ë°”ê¿” ë³´ì‹­ì‹œì˜¤.
 
-¾ÈÀü: DOSBox°¡ Á¦ ÄÄÇ»ÅÍ¿¡ ÇØ¸¦ ³¢Ä¥ ¼ö ÀÖ½À´Ï±î?
-    DOSBox´Â ¸®¼Ò½º¸¦ ¸¹ÀÌ ¾²´Â ´Ù¸¥ ÇÁ·Î±×·¥µé¿¡ °ßÁÖ¾î º¸´õ¶óµµ ÄÄÇ»ÅÍ¿¡ ÇØ¸¦ ÁÖÁö ¾Ê½À´Ï´Ù.
-    »çÀÌÅ¬ °ªÀ» ³ôÀÎ´Ù°í ÇØ¼­ ½ÇÁ¦ CPU Å¬·°À» ²ø¾î ¿Ã¸®´Â °ÍÀÌ ¾Æ´Õ´Ï´Ù.
-    »çÀÌÅ¬À» ³Ê¹« ³ô°Ô ÀâÀ¸¸é DOSBox ¾È¿¡¼­ ½ÇÇàµÇ°í ÀÖ´Â ¼ÒÇÁÆ®¿þ¾îÀÇ ¼º´ÉÀÌ ¶³¾îÁú ¼ö ÀÖ½À´Ï´Ù.
+ì•ˆì „: DOSBoxê°€ ì œ ì»´í“¨í„°ì— í•´ë¥¼ ë¼ì¹  ìˆ˜ ìžˆìŠµë‹ˆê¹Œ?
+    DOSBoxëŠ” ë¦¬ì†ŒìŠ¤ë¥¼ ë§Žì´ ì“°ëŠ” ë‹¤ë¥¸ í”„ë¡œê·¸ëž¨ë“¤ì— ê²¬ì£¼ì–´ ë³´ë”ë¼ë„ ì»´í“¨í„°ì— í•´ë¥¼ ì£¼ì§€ ì•ŠìŠµë‹ˆë‹¤.
+    ì‚¬ì´í´ ê°’ì„ ë†’ì¸ë‹¤ê³  í•´ì„œ ì‹¤ì œ CPU í´ëŸ­ì„ ëŒì–´ ì˜¬ë¦¬ëŠ” ê²ƒì´ ì•„ë‹™ë‹ˆë‹¤.
+    ì‚¬ì´í´ì„ ë„ˆë¬´ ë†’ê²Œ ìž¡ìœ¼ë©´ DOSBox ì•ˆì—ì„œ ì‹¤í–‰ë˜ê³  ìžˆëŠ” ì†Œí”„íŠ¸ì›¨ì–´ì˜ ì„±ëŠ¥ì´ ë–¨ì–´ì§ˆ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-¿É¼Ç: DOSBoxÀÇ ¿É¼ÇÀ» ¹Ù²Ù°í ½Í½À´Ï´Ù.
-   ±¸¹® 13 "¼³Á¤ ±¸¼º (¿É¼Ç) ÆÄÀÏ"À» ÀÐ¾î º¸½Ê½Ã¿À.
+ì˜µì…˜: DOSBoxì˜ ì˜µì…˜ì„ ë°”ê¾¸ê³  ì‹¶ìŠµë‹ˆë‹¤.
+   êµ¬ë¬¸ 13 "ì„¤ì • êµ¬ì„± (ì˜µì…˜) íŒŒì¼"ì„ ì½ì–´ ë³´ì‹­ì‹œì˜¤.
 
-µµ¿ò¸»: ¼³¸íÀÌ Àß ³ª¿Í ÀÖÀ¸³ª ±×·¡µµ Àß ¸ð¸£°Ú½À´Ï´Ù.
-      ´Ù¸¥ Áú¹®ÀÌ ÀÖ´Ù¸é ÀÌ ¼³¸í¼­ÀÇ ³ª¸ÓÁö ºÎºÐµµ Âü°íÇØ º¸½Ê½Ã¿À. ¶Ç ÀÌ°÷µµ ÂüÁ¶ÇØ º¸½Ê½Ã¿À.
-      "The Newbie's pictorial guide to DOSBox" (ÃÊº¸ÀÚ¸¦ À§ÇÑ DOSBox·ÎÀÇ ±×¸² ¾È³»)°¡
-      http://vogons.zetafleet.com/viewforum.php?f=39 ¿¡ ¿Ã·ÁÁ® ÀÖ½À´Ï´Ù.
-      DOSBoxÀÇ À§Å°µµ µé¾î°¡ º¸½Ê½Ã¿À :    http://www.dosbox.com/wiki/
-      DOSBox »çÀÌÆ® ¹× Æ÷·³ : http://www.dosbox.com
+ë„ì›€ë§: ì„¤ëª…ì´ ìž˜ ë‚˜ì™€ ìžˆìœ¼ë‚˜ ê·¸ëž˜ë„ ìž˜ ëª¨ë¥´ê² ìŠµë‹ˆë‹¤.
+      ë‹¤ë¥¸ ì§ˆë¬¸ì´ ìžˆë‹¤ë©´ ì´ ì„¤ëª…ì„œì˜ ë‚˜ë¨¸ì§€ ë¶€ë¶„ë„ ì°¸ê³ í•´ ë³´ì‹­ì‹œì˜¤. ë˜ ì´ê³³ë„ ì°¸ì¡°í•´ ë³´ì‹­ì‹œì˜¤.
+      "The Newbie's pictorial guide to DOSBox" (ì´ˆë³´ìžë¥¼ ìœ„í•œ DOSBoxë¡œì˜ ê·¸ë¦¼ ì•ˆë‚´)ê°€
+      http://vogons.zetafleet.com/viewforum.php?f=39 ì— ì˜¬ë ¤ì ¸ ìžˆìŠµë‹ˆë‹¤.
+      DOSBoxì˜ ìœ„í‚¤ë„ ë“¤ì–´ê°€ ë³´ì‹­ì‹œì˜¤ :    http://www.dosbox.com/wiki/
+      DOSBox ì‚¬ì´íŠ¸ ë° í¬ëŸ¼ : http://www.dosbox.com
 
 
 
 ================
-3. ¸í·É ¸Å°³º¯¼ö
+3. ëª…ë ¹ ë§¤ê°œë³€ìˆ˜
 ================
 
-DOSBox°¡ °¡Áú ¼ö ¸í·É ÁÙ ¿É¼ÇÀÌ ¾Æ·¡¿¡ Ãß·ÁÁ® ÀÖ½À´Ï´Ù.
-´ëºÎºÐÀÇ °æ¿ì DOSBoxÀÇ ¼³Á¤ ±¸¼º ÆÄÀÏ(DOSBox.Conf)À» ÀÌ¿ëÇÏ´Â °ÍÀÌ
-´õ ½¬¿ï ¼ö ÀÖ½À´Ï´Ù.
+DOSBoxê°€ ê°€ì§ˆ ìˆ˜ ëª…ë ¹ ì¤„ ì˜µì…˜ì´ ì•„ëž˜ì— ì¶”ë ¤ì ¸ ìžˆìŠµë‹ˆë‹¤.
+ëŒ€ë¶€ë¶„ì˜ ê²½ìš° DOSBoxì˜ ì„¤ì • êµ¬ì„± íŒŒì¼(DOSBox.Conf)ì„ ì´ìš©í•˜ëŠ” ê²ƒì´
+ë” ì‰¬ìš¸ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-Windows »ç¿ëÀÚ: cmd.exe ¶Ç´Â command.com¸¦ ¿­°Å³ª
-DOSBox.exe¿¡ ´ëÇÑ ¹Ù·Î°¡±â¸¦ ¼öÁ¤ÇÏ¿© ¾Æ·¡ÀÇ Ç×¸ñÀ» ÁöÁ¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.
+Windows ì‚¬ìš©ìž: cmd.exe ë˜ëŠ” command.comë¥¼ ì—´ê±°ë‚˜
+DOSBox.exeì— ëŒ€í•œ ë°”ë¡œê°€ê¸°ë¥¼ ìˆ˜ì •í•˜ì—¬ ì•„ëž˜ì˜ í•­ëª©ì„ ì§€ì •í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-Linux »ç¿ëÀÚ: ÄÜ¼ÖÀ» ÀÌ¿ëÇÏ½Ê½Ã¿À.
+Linux ì‚¬ìš©ìž: ì½˜ì†”ì„ ì´ìš©í•˜ì‹­ì‹œì˜¤.
 
-MAC OS X »ç¿ëÀÚ: terminal.appÀ» ½ÃÀÛÇÏ°í ÀÌ°÷À¸·Î µé¾î°¡½Ê½Ã¿À:
+MAC OS X ì‚¬ìš©ìž: terminal.appì„ ì‹œìž‘í•˜ê³  ì´ê³³ìœ¼ë¡œ ë“¤ì–´ê°€ì‹­ì‹œì˜¤:
    /applications/dosbox.app/contents/macos/dosbox
 
-ÀÌ ¿É¼ÇµéÀº Æ¯º°ÇÑ ¸»ÀÌ ¾ø´Â ÇÑ ¸ðµç ¿î¿µÃ¼Á¦¿¡¼­ µ¹¾Æ°©´Ï´Ù.
+ì´ ì˜µì…˜ë“¤ì€ íŠ¹ë³„í•œ ë§ì´ ì—†ëŠ” í•œ ëª¨ë“  ìš´ì˜ì²´ì œì—ì„œ ëŒì•„ê°‘ë‹ˆë‹¤.
 
-dosbox [ÀÌ¸§] [-exit] [-c ¸í·É¾î] [-fullscreen] -[-userconf]
-       [-conf ¼³Á¤±¸¼ºÆÄÀÏ] [-lang ¾ð¾îÆÄÀÏÀ§Ä¡]
-       [-machine ±â±â Á¾·ù] [-noconsole] [-startmapper] [-noautoexec]
-       [-securemode] [-scaler ½ºÄÉÀÏ·¯] [-forcescaler ½ºÄÉÀÏ·¯] [-version]
-       [-socket ¼ÒÄÏ]
+dosbox [ì´ë¦„] [-exit] [-c ëª…ë ¹ì–´] [-fullscreen] -[-userconf]
+       [-conf ì„¤ì •êµ¬ì„±íŒŒì¼] [-lang ì–¸ì–´íŒŒì¼ìœ„ì¹˜]
+       [-machine ê¸°ê¸° ì¢…ë¥˜] [-noconsole] [-startmapper] [-noautoexec]
+       [-securemode] [-scaler ìŠ¤ì¼€ì¼ëŸ¬] [-forcescaler ìŠ¤ì¼€ì¼ëŸ¬] [-version]
+       [-socket ì†Œì¼“]
 
 dosbox -version
-dosbox -editconf ÇÁ·Î±×·¥
-dosbox -opencaptures ÇÁ·Î±×·¥
+dosbox -editconf í”„ë¡œê·¸ëž¨
+dosbox -opencaptures í”„ë¡œê·¸ëž¨
 dosbox -printconf
 dosbox -eraseconf
 dosbox -resetmapper
  
 
-  ÀÌ¸§
-        "ÀÌ¸§"ÀÌ µð·ºÅÍ¸®¶ó¸é, C µå¶óÀÌºê·Î ¸¶¿îÆ®ÇÕ´Ï´Ù
-        "ÀÌ¸§"ÀÌ ½ÇÇà ÆÄÀÏÀÌ¶ó¸é, C µå¶óÀÌºêÀÇ "ÀÌ¸§"ÀÌ ÀÖ´Â µð·ºÅÍ¸®¸¦ ¸¶¿îÆ®ÇÕ´Ï´Ù
+  ì´ë¦„
+        "ì´ë¦„"ì´ ë””ë ‰í„°ë¦¬ë¼ë©´, C ë“œë¼ì´ë¸Œë¡œ ë§ˆìš´íŠ¸í•©ë‹ˆë‹¤
+        "ì´ë¦„"ì´ ì‹¤í–‰ íŒŒì¼ì´ë¼ë©´, C ë“œë¼ì´ë¸Œì˜ "ì´ë¦„"ì´ ìžˆëŠ” ë””ë ‰í„°ë¦¬ë¥¼ ë§ˆìš´íŠ¸í•©ë‹ˆë‹¤
 
   -exit
-        "ÀÌ¸§"ÀÇ ½ÇÇàÀÌ ³¡³ª¸é DOSBox´Â ¹Ù·Î ´ÝÈü´Ï´Ù.
+        "ì´ë¦„"ì˜ ì‹¤í–‰ì´ ëë‚˜ë©´ DOSBoxëŠ” ë°”ë¡œ ë‹«íž™ë‹ˆë‹¤.
 
-  -c ¸í·É¾î
-        "ÀÌ¸§"ÀÌ ½ÇÇàµÇ±â Àü¿¡ ÁöÁ¤µÈ ¸í·É¾î¸¦ ¸ÕÀú ½ÇÇàÇÕ´Ï´Ù. ¿©·¯ °³ÀÇ ¸í·É¾îµéÀ» ÇÑ²¨¹ø¿¡
-        ÁöÁ¤ÇÒ ¼öµµ ÀÖ½À´Ï´Ù. ±×·¯³ª ¸í·É¾î¸¶´Ù ¾Õ¿¡ -c¸¦ ºÙ¿©¾ß ÇÕ´Ï´Ù.
-        ³»ºÎ ÇÁ·Î±×·¥, DOS ¸í·É¾î, ¾Æ´Ï¸é ¸¶¿îÆ®µÈ µå¶óÀÌºêÀÇ ½ÇÇà ÆÄÀÏÀÌ ¸í·É¾î°¡ µÉ ¼ö ÀÖ½À´Ï´Ù.
+  -c ëª…ë ¹ì–´
+        "ì´ë¦„"ì´ ì‹¤í–‰ë˜ê¸° ì „ì— ì§€ì •ëœ ëª…ë ¹ì–´ë¥¼ ë¨¼ì € ì‹¤í–‰í•©ë‹ˆë‹¤. ì—¬ëŸ¬ ê°œì˜ ëª…ë ¹ì–´ë“¤ì„ í•œêº¼ë²ˆì—
+        ì§€ì •í•  ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤. ê·¸ëŸ¬ë‚˜ ëª…ë ¹ì–´ë§ˆë‹¤ ì•žì— -cë¥¼ ë¶™ì—¬ì•¼ í•©ë‹ˆë‹¤.
+        ë‚´ë¶€ í”„ë¡œê·¸ëž¨, DOS ëª…ë ¹ì–´, ì•„ë‹ˆë©´ ë§ˆìš´íŠ¸ëœ ë“œë¼ì´ë¸Œì˜ ì‹¤í–‰ íŒŒì¼ì´ ëª…ë ¹ì–´ê°€ ë  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
   -fullscreen
-        DOSBox¸¦ ÀüÃ¼ È­¸é ¸ðµå·Î ½ÇÇàÇÕ´Ï´Ù.
+        DOSBoxë¥¼ ì „ì²´ í™”ë©´ ëª¨ë“œë¡œ ì‹¤í–‰í•©ë‹ˆë‹¤.
 
   -userconf
-        »ç¿ëÀÚ°¡ ÁöÁ¤ÇÑ ¼³Á¤ ±¸¼º ÆÄÀÏ·Î DOSBox¸¦ ½ÃÀÛÇÕ´Ï´Ù. -conf º¯¼ö¿Í ÇÔ²² »ç¿ëÇÒ ¼ö ÀÖÁö¸¸
-        -userconf´Â ´Ã -conf º¯¼ö ¹Ù·Î ¾Õ¿¡ À§Ä¡ÇÏ¿©¾ß ÇÕ´Ï´Ù.
+        ì‚¬ìš©ìžê°€ ì§€ì •í•œ ì„¤ì • êµ¬ì„± íŒŒì¼ë¡œ DOSBoxë¥¼ ì‹œìž‘í•©ë‹ˆë‹¤. -conf ë³€ìˆ˜ì™€ í•¨ê»˜ ì‚¬ìš©í•  ìˆ˜ ìžˆì§€ë§Œ
+        -userconfëŠ” ëŠ˜ -conf ë³€ìˆ˜ ë°”ë¡œ ì•žì— ìœ„ì¹˜í•˜ì—¬ì•¼ í•©ë‹ˆë‹¤.
 
-  -conf ¼³Á¤±¸¼ºÆÄÀÏ
-        "¼³Á¤±¸¼ºÆÄÀÏ" ¾È¿¡ ÁöÁ¤µÈ ¼±ÅÃ ³»¿ë¿¡ µû¶ó DOSBox¸¦ ½ÇÇàÇÕ´Ï´Ù.
-        -conf ¿É¼ÇÀ» ¿©·¯ °³ ÁöÁ¤ÇØ¼­µµ »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù. ´õ ÀÚ¼¼ÇÑ Á¤º¸´Â 13¹øÂ° ±¸¹®¿¡ ÀÖ½À´Ï´Ù.
+  -conf ì„¤ì •êµ¬ì„±íŒŒì¼
+        "ì„¤ì •êµ¬ì„±íŒŒì¼" ì•ˆì— ì§€ì •ëœ ì„ íƒ ë‚´ìš©ì— ë”°ë¼ DOSBoxë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤.
+        -conf ì˜µì…˜ì„ ì—¬ëŸ¬ ê°œ ì§€ì •í•´ì„œë„ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤. ë” ìžì„¸í•œ ì •ë³´ëŠ” 13ë²ˆì§¸ êµ¬ë¬¸ì— ìžˆìŠµë‹ˆë‹¤.
 
-  -lang ¾ð¾îÆÄÀÏÀ§Ä¡
-        "¾ð¾îÆÄÀÏÀ§Ä¡" ¾È¿¡ ÁöÁ¤µÈ ¾ð¾î ¹®ÀÚ¿­À» »ç¿ëÇÏ¿© DOSBox¸¦ ½ÇÇàÇÕ´Ï´Ù.
-        ´õ ÀÚ¼¼ÇÑ Á¤º¸´Â 14¹øÂ° ±¸¹®¿¡ ÀÖ½À´Ï´Ù.
+  -lang ì–¸ì–´íŒŒì¼ìœ„ì¹˜
+        "ì–¸ì–´íŒŒì¼ìœ„ì¹˜" ì•ˆì— ì§€ì •ëœ ì–¸ì–´ ë¬¸ìžì—´ì„ ì‚¬ìš©í•˜ì—¬ DOSBoxë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤.
+        ë” ìžì„¸í•œ ì •ë³´ëŠ” 14ë²ˆì§¸ êµ¬ë¬¸ì— ìžˆìŠµë‹ˆë‹¤.
 
-  -machine ±â±â Á¾·ù
-        DOSBox°¡ ¿øÇÏ´Â Á¾·ùÀÇ ±â±â¸¦ °¡»óÀ¸·Î ±¸ÇöÇØ ³¾ ¼ö ÀÖ°Ô ÇÕ´Ï´Ù.
-        »ç¿ëÇÒ ¼ö ÀÖ´Â ±â±â Á¾·ù´Â : hercules, cga, ega, tandy, pcjr, vga (±âº»°ª) ÀÔ´Ï´Ù.
-        ¿©±â¿¡´Ù DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏÀÇ µµ¿ò¸»¿¡ ³ª¿­µÈ svga Ä¨¼Âµµ ¼±ÅÃÇÒ ¼ö ÀÖ½À´Ï´Ù.
-        svga_s3´Â VESA ¿¡¹Ä·¹ÀÌ¼Ç±îÁö ´ã´çÇÕ´Ï´Ù.
-        ÀÏºÎ VGA Æ¯¼ö È¿°úÀÇ °æ¿ì machinetype Áß vgaonly¸¦ »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù¸¸
-        ÀÌ°ÍÀº SVGA ±â´ÉÀ» »ç¿ëÇÒ ¼ö ¾ø°Ô ÇÏ°í ´õ ³ôÀº ¿¡¹Ä·¹ÀÌ¼ÇÀÇ Á¤È®¼º ¶§¹®¿¡
-        ¼Óµµ°¡ ´À·ÁÁú ¼ö ÀÖ½À´Ï´Ù.
-        ±â±â Á¾·ù´Â ±×·¡ÇÈ Ä«µå¿Í ÀÌ¿¡ µû¸¥ »ç¿îµå Ä«µå µÑ ´Ù ¿µÇâÀ» ¹ÌÄ¨´Ï´Ù.
+  -machine ê¸°ê¸° ì¢…ë¥˜
+        DOSBoxê°€ ì›í•˜ëŠ” ì¢…ë¥˜ì˜ ê¸°ê¸°ë¥¼ ê°€ìƒìœ¼ë¡œ êµ¬í˜„í•´ ë‚¼ ìˆ˜ ìžˆê²Œ í•©ë‹ˆë‹¤.
+        ì‚¬ìš©í•  ìˆ˜ ìžˆëŠ” ê¸°ê¸° ì¢…ë¥˜ëŠ” : hercules, cga, ega, tandy, pcjr, vga (ê¸°ë³¸ê°’) ìž…ë‹ˆë‹¤.
+        ì—¬ê¸°ì—ë‹¤ DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì˜ ë„ì›€ë§ì— ë‚˜ì—´ëœ svga ì¹©ì…‹ë„ ì„ íƒí•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+        svga_s3ëŠ” VESA ì—ë®¬ë ˆì´ì…˜ê¹Œì§€ ë‹´ë‹¹í•©ë‹ˆë‹¤.
+        ì¼ë¶€ VGA íŠ¹ìˆ˜ íš¨ê³¼ì˜ ê²½ìš° machinetype ì¤‘ vgaonlyë¥¼ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤ë§Œ
+        ì´ê²ƒì€ SVGA ê¸°ëŠ¥ì„ ì‚¬ìš©í•  ìˆ˜ ì—†ê²Œ í•˜ê³  ë” ë†’ì€ ì—ë®¬ë ˆì´ì…˜ì˜ ì •í™•ì„± ë•Œë¬¸ì—
+        ì†ë„ê°€ ëŠë ¤ì§ˆ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+        ê¸°ê¸° ì¢…ë¥˜ëŠ” ê·¸ëž˜í”½ ì¹´ë“œì™€ ì´ì— ë”°ë¥¸ ì‚¬ìš´ë“œ ì¹´ë“œ ë‘˜ ë‹¤ ì˜í–¥ì„ ë¯¸ì¹©ë‹ˆë‹¤.
 
-  -noconsole (Windows ¿î¿µÃ¼Á¦¸¸)
-        DOSBox »óÅÂ Ã¢(ÄÜ¼Ö Ã¢)À» º¸ÀÌÁö ¾Ê°í DOSBox¸¦ ½ÇÇàÇÕ´Ï´Ù.
-        stdout.txt ¿Í stderr.txt ·Î ´ë½Å Ãâ·ÂÇÕ´Ï´Ù.
+  -noconsole (Windows ìš´ì˜ì²´ì œë§Œ)
+        DOSBox ìƒíƒœ ì°½(ì½˜ì†” ì°½)ì„ ë³´ì´ì§€ ì•Šê³  DOSBoxë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤.
+        stdout.txt ì™€ stderr.txt ë¡œ ëŒ€ì‹  ì¶œë ¥í•©ë‹ˆë‹¤.
 
   -startmapper
-        ½ÇÇàÇÏÀÚ¸¶ÀÚ °ð¹Ù·Î Å°º¸µå/Á¶ÀÌ½ºÆ½ ¸ÅÇÎ ÇÁ·Î±×·¥À» ¶ç¿ó´Ï´Ù.
-        Å°º¸µå³ª Á¶ÀÌ½ºÆ½¿¡ ¹®Á¦°¡ ÀÖÀ» ¶§ ¾²½Ã±â ¹Ù¶ø´Ï´Ù.
+        ì‹¤í–‰í•˜ìžë§ˆìž ê³§ë°”ë¡œ í‚¤ë³´ë“œ/ì¡°ì´ìŠ¤í‹± ë§¤í•‘ í”„ë¡œê·¸ëž¨ì„ ë„ì›ë‹ˆë‹¤.
+        í‚¤ë³´ë“œë‚˜ ì¡°ì´ìŠ¤í‹±ì— ë¬¸ì œê°€ ìžˆì„ ë•Œ ì“°ì‹œê¸° ë°”ëžë‹ˆë‹¤.
 
   -noautoexec
-        ÀÚµ¿ ÀÏ°ý ½ÇÇà(AUTOEXEC - DOSBox.ConfÀÇ [autoexec] ±¸¹®)À» »ç¿ëÇÏÁö ¾Ê½À´Ï´Ù.
+        ìžë™ ì¼ê´„ ì‹¤í–‰(AUTOEXEC - DOSBox.Confì˜ [autoexec] êµ¬ë¬¸)ì„ ì‚¬ìš©í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
 
   -securemode
-        -noautoexec¿Í °°Áö¸¸ config.com -securemode¸¦ AUTOEXEC.BAT ¸Ç ¾Æ·¡¿¡ Áý¾î ³Ö½À´Ï´Ù. µµ½º¹Ú½º ¾È¿¡¼­
-        µå¶óÀÌºêÀÇ ¸¶¿îÆ® ¹æ½ÄÀ» ²¨ ³õ½À´Ï´Ù.
+        -noautoexecì™€ ê°™ì§€ë§Œ config.com -securemodeë¥¼ AUTOEXEC.BAT ë§¨ ì•„ëž˜ì— ì§‘ì–´ ë„£ìŠµë‹ˆë‹¤. ë„ìŠ¤ë°•ìŠ¤ ì•ˆì—ì„œ
+        ë“œë¼ì´ë¸Œì˜ ë§ˆìš´íŠ¸ ë°©ì‹ì„ êº¼ ë†“ìŠµë‹ˆë‹¤.
 
-  -scaler ½ºÄÉÀÏ·¯ ÀÌ¸§
-        "½ºÄÉÀÏ·¯ ÀÌ¸§"À¸·Î ÁöÁ¤µÈ ½ºÄÉÀÏ·¯¸¦ »ç¿ëÇÕ´Ï´Ù. ÀÌ ±â´ÉÀ» ¾²·Á¸é ¸ÕÀú DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏÀ»
-        ¿­¾î¼­ ¾î¶°ÇÑ ½ºÄÉÀÏ·¯µéÀ» »ç¿ëÇÒ ¼ö ÀÖ´ÂÁö »ìÆì º¸½Ê½Ã¿À.
+  -scaler ìŠ¤ì¼€ì¼ëŸ¬ ì´ë¦„
+        "ìŠ¤ì¼€ì¼ëŸ¬ ì´ë¦„"ìœ¼ë¡œ ì§€ì •ëœ ìŠ¤ì¼€ì¼ëŸ¬ë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤. ì´ ê¸°ëŠ¥ì„ ì“°ë ¤ë©´ ë¨¼ì € DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì„
+        ì—´ì–´ì„œ ì–´ë– í•œ ìŠ¤ì¼€ì¼ëŸ¬ë“¤ì„ ì‚¬ìš©í•  ìˆ˜ ìžˆëŠ”ì§€ ì‚´íŽ´ ë³´ì‹­ì‹œì˜¤.
 
-  -forcescaler ½ºÄÉÀÏ·¯ ÀÌ¸§
-        À§ÀÇ -scaler º¯¼ö¿Í ºñ½ÁÇÕ´Ï´Ù. ´Ù¸¸ ÁöÁ¤µÈ ½ºÄÉÀÏ·¯°¡ È­¸é Å©±â¿¡ ¾Ë¸Â°Ô µé¾î¸ÂÁö ¾Ê´Â µî ¾î¶°ÇÑ °æ¿ì°¡
-        ÀÖ´Ù ÇÏ´õ¶óµµ ¹«Á¶°Ç »ç¿ëÇÏµµ·Ï ÇÕ´Ï´Ù.
+  -forcescaler ìŠ¤ì¼€ì¼ëŸ¬ ì´ë¦„
+        ìœ„ì˜ -scaler ë³€ìˆ˜ì™€ ë¹„ìŠ·í•©ë‹ˆë‹¤. ë‹¤ë§Œ ì§€ì •ëœ ìŠ¤ì¼€ì¼ëŸ¬ê°€ í™”ë©´ í¬ê¸°ì— ì•Œë§žê²Œ ë“¤ì–´ë§žì§€ ì•ŠëŠ” ë“± ì–´ë– í•œ ê²½ìš°ê°€
+        ìžˆë‹¤ í•˜ë”ë¼ë„ ë¬´ì¡°ê±´ ì‚¬ìš©í•˜ë„ë¡ í•©ë‹ˆë‹¤.
 
   -version
-        ¹öÀü Á¤º¸¸¦ º¸¿©ÁÖ°í ³¡³À´Ï´Ù. ÇÁ·ÐÆ®¿£µå¸¦ ¾µ ¶§ À¯¿ëÇÕ´Ï´Ù.
+        ë²„ì „ ì •ë³´ë¥¼ ë³´ì—¬ì£¼ê³  ëëƒ…ë‹ˆë‹¤. í”„ë¡ íŠ¸ì—”ë“œë¥¼ ì“¸ ë•Œ ìœ ìš©í•©ë‹ˆë‹¤.
 
-  -editconf ÇÁ·Î±×·¥
-        Ã¹ º¯¼ö·Î ÁöÁ¤µÈ ÇÁ·Î±×·¥À» ±¸¼º ÆÄÀÏ·Î È£ÃâÇÕ´Ï´Ù.
-        ÀÌ ¸í·ÉÀ» ÇÑ ¹ø ÀÌ»ó ÁöÁ¤ÇÒ ¼ö ÀÖ½À´Ï´Ù. ÀÌ °æ¿ì Ã¹ ¹øÂ° ÇÁ·Î±×·¥ÀÌ ½ÃÀÛÀ» ½ÇÆÐÇÏ¸é µÎ ¹øÂ° ÇÁ·Î±×·¥ÀÌ ½ÇÇàµË´Ï´Ù.
+  -editconf í”„ë¡œê·¸ëž¨
+        ì²« ë³€ìˆ˜ë¡œ ì§€ì •ëœ í”„ë¡œê·¸ëž¨ì„ êµ¬ì„± íŒŒì¼ë¡œ í˜¸ì¶œí•©ë‹ˆë‹¤.
+        ì´ ëª…ë ¹ì„ í•œ ë²ˆ ì´ìƒ ì§€ì •í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤. ì´ ê²½ìš° ì²« ë²ˆì§¸ í”„ë¡œê·¸ëž¨ì´ ì‹œìž‘ì„ ì‹¤íŒ¨í•˜ë©´ ë‘ ë²ˆì§¸ í”„ë¡œê·¸ëž¨ì´ ì‹¤í–‰ë©ë‹ˆë‹¤.
 
-  -opencaptures ÇÁ·Î±×·¥
-        Ã¹ º¯¼ö·Î ÁöÁ¤µÈ ÇÁ·Î±×·¥À» Ä¸Ã³ Æú´õ º¯¼ö·Î È£ÃâÇÕ´Ï´Ù.
+  -opencaptures í”„ë¡œê·¸ëž¨
+        ì²« ë³€ìˆ˜ë¡œ ì§€ì •ëœ í”„ë¡œê·¸ëž¨ì„ ìº¡ì²˜ í´ë” ë³€ìˆ˜ë¡œ í˜¸ì¶œí•©ë‹ˆë‹¤.
 
   -printconf
-        ±âº» ±¸¼º ÆÄÀÏÀÇ À§Ä¡¸¦ Ãâ·ÂÇÕ´Ï´Ù.
+        ê¸°ë³¸ êµ¬ì„± íŒŒì¼ì˜ ìœ„ì¹˜ë¥¼ ì¶œë ¥í•©ë‹ˆë‹¤.
 
   -eraseconf
-        ±âº» ±¸¼º ÆÄÀÏÀ» Á¦°ÅÇÕ´Ï´Ù.
+        ê¸°ë³¸ êµ¬ì„± íŒŒì¼ì„ ì œê±°í•©ë‹ˆë‹¤.
 
   -resetmapper
-        ±ú²ýÇÑ ±âº» ±¸¼º ÆÄÀÏÀÌ »ç¿ëÇÏ´Â ¸ÅÆÛ ÆÄÀÏÀ» Á¦°ÅÇÕ´Ï´Ù.
+        ê¹¨ë—í•œ ê¸°ë³¸ êµ¬ì„± íŒŒì¼ì´ ì‚¬ìš©í•˜ëŠ” ë§¤í¼ íŒŒì¼ì„ ì œê±°í•©ë‹ˆë‹¤.
 
   -socket
-        ¼ÒÄÏ ¹øÈ£¸¦ nullmodem ¿¡¹Ä·¹ÀÌ¼ÇÀ¸·Î ³»º¸³À´Ï´Ù.
-        ±¸¹® 9 "½Ã¸®¾ó ¸ÖÆ¼ÇÃ·¹ÀÌ¾î ±â´É"À» Âü°íÇÏ½Ê½Ã¿À.
+        ì†Œì¼“ ë²ˆí˜¸ë¥¼ nullmodem ì—ë®¬ë ˆì´ì…˜ìœ¼ë¡œ ë‚´ë³´ëƒ…ë‹ˆë‹¤.
+        êµ¬ë¬¸ 9 "ì‹œë¦¬ì–¼ ë©€í‹°í”Œë ˆì´ì–´ ê¸°ëŠ¥"ì„ ì°¸ê³ í•˜ì‹­ì‹œì˜¤.
 
-¾Ë¸² : ÀÌ¸§/¸í·É/¼³Á¤±¸¼ºÆÄÀÏ/¾ð¾îÆÄÀÏÀ§Ä¡¿¡ ºó Ä­ÀÌ µé¾î ÀÖÀ¸¸é
-        ¸ðµç Ç×¸ñµé(ÀÌ¸§/¸í·É¾î/¼³Á¤±¸¼ºÆÄÀÏ/¾ð¾îÆÄÀÏ)¸¶´Ù Å« µû¿ÈÇ¥¸¦ ³ÖÀ¸½Ê½Ã¿À.
-        ("¸í·É ¶Ç´Â ÆÄÀÏ ÀÌ¸§").
-        µû¿ÈÇ¥ ¾È¿¡ µû¿ÈÇ¥¸¦ ³Ö°í ½ÍÀ¸½Ã¸é (ÈçÈ÷ -c¿Í ¸¶¿îÆ® ¹æ½ÄÀÌ µÞµû¸§)
-        Windows¿Í OS/2 »ç¿ëÀÚµéÀº Å« µû¿ÈÇ¥(") ¾È¿¡ ÀÛÀº µû¿ÈÇ¥(')¸¦ ³ÖÀ¸½Ê½Ã¿À.
-        ´Ù¸¥ ¿î¿µÃ¼Á¦¸¦ ¾²½Ã´Â ºÐµéÀº \¸¦ ´ë½Å ¾²¸é µË´Ï´Ù.
+ì•Œë¦¼ : ì´ë¦„/ëª…ë ¹/ì„¤ì •êµ¬ì„±íŒŒì¼/ì–¸ì–´íŒŒì¼ìœ„ì¹˜ì— ë¹ˆ ì¹¸ì´ ë“¤ì–´ ìžˆìœ¼ë©´
+        ëª¨ë“  í•­ëª©ë“¤(ì´ë¦„/ëª…ë ¹ì–´/ì„¤ì •êµ¬ì„±íŒŒì¼/ì–¸ì–´íŒŒì¼)ë§ˆë‹¤ í° ë”°ì˜´í‘œë¥¼ ë„£ìœ¼ì‹­ì‹œì˜¤.
+        ("ëª…ë ¹ ë˜ëŠ” íŒŒì¼ ì´ë¦„").
+        ë”°ì˜´í‘œ ì•ˆì— ë”°ì˜´í‘œë¥¼ ë„£ê³  ì‹¶ìœ¼ì‹œë©´ (í”ížˆ -cì™€ ë§ˆìš´íŠ¸ ë°©ì‹ì´ ë’·ë”°ë¦„)
+        Windowsì™€ OS/2 ì‚¬ìš©ìžë“¤ì€ í° ë”°ì˜´í‘œ(") ì•ˆì— ìž‘ì€ ë”°ì˜´í‘œ(')ë¥¼ ë„£ìœ¼ì‹­ì‹œì˜¤.
+        ë‹¤ë¥¸ ìš´ì˜ì²´ì œë¥¼ ì“°ì‹œëŠ” ë¶„ë“¤ì€ \ë¥¼ ëŒ€ì‹  ì“°ë©´ ë©ë‹ˆë‹¤.
         Windows: -c "mount c 'c:\My folder with DOS games\'"
-        Linux: -c "mount c \"/tmp/ºó Ä­ÀÌ µé¾î°£ ÀÌ¸§\""
+        Linux: -c "mount c \"/tmp/ë¹ˆ ì¹¸ì´ ë“¤ì–´ê°„ ì´ë¦„\""
 
-WindowsÀÇ °æ¿ì µå¹® ¿¹°¡ ÇÏ³ª ÀÖ½À´Ï´Ù:
+Windowsì˜ ê²½ìš° ë“œë¬¸ ì˜ˆê°€ í•˜ë‚˜ ìžˆìŠµë‹ˆë‹¤:
 
-dosbox D:¡¬folder¡¬file.exe -c "MOUNT Y H:¡¬MyFolder"
-  ÀÌ°ÍÀº D:¡¬folder¸¦ c:¡¬À¸·Î ¸¶¿îÆ®½ÃÅ°°í file.exe ÆÄÀÏÀ» ½ÇÇàÇÕ´Ï´Ù.
-  ÀÌ¿¡ ¾Õ¼­ ¸ÕÀú H:¡¬MyFolder ´Â Y µå¶óÀÌºê·Î ¸¶¿îÆ®ÇÕ´Ï´Ù.
+dosbox D:ï¼¼folderï¼¼file.exe -c "MOUNT Y H:ï¼¼MyFolder"
+  ì´ê²ƒì€ D:ï¼¼folderë¥¼ c:ï¼¼ìœ¼ë¡œ ë§ˆìš´íŠ¸ì‹œí‚¤ê³  file.exe íŒŒì¼ì„ ì‹¤í–‰í•©ë‹ˆë‹¤.
+  ì´ì— ì•žì„œ ë¨¼ì € H:ï¼¼MyFolder ëŠ” Y ë“œë¼ì´ë¸Œë¡œ ë§ˆìš´íŠ¸í•©ë‹ˆë‹¤.
 
-¶Ç, Windows¿¡¼­´Â µð·ºÅÍ¸®³ª ÆÄÀÏÀ» DOSBox ½ÇÇà ÆÄÀÏ·Î ²ø¾î ³õ¿Ã ¼ö ÀÖ½À´Ï´Ù.
+ë˜, Windowsì—ì„œëŠ” ë””ë ‰í„°ë¦¬ë‚˜ íŒŒì¼ì„ DOSBox ì‹¤í–‰ íŒŒì¼ë¡œ ëŒì–´ ë†“ì˜¬ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
 
 
 ================
-4. ³»ºÎ ÇÁ·Î±×·¥
+4. ë‚´ë¶€ í”„ë¡œê·¸ëž¨
 ================
 
-DOSBox´Â command.com¿¡¼­ Ã£À» ¼ö ÀÖ´Â DOS ¸í·É¾îµé °¡¿îµ¥ ¸¹Àº ¼ö¸¦ Áö¿øÇÕ´Ï´Ù.
-±× ¹Û¿¡ ´ÙÀ½ÀÇ ¸í·É¾îµéµµ »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù:
+DOSBoxëŠ” command.comì—ì„œ ì°¾ì„ ìˆ˜ ìžˆëŠ” DOS ëª…ë ¹ì–´ë“¤ ê°€ìš´ë° ë§Žì€ ìˆ˜ë¥¼ ì§€ì›í•©ë‹ˆë‹¤.
+ê·¸ ë°–ì— ë‹¤ìŒì˜ ëª…ë ¹ì–´ë“¤ë„ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤:
 
-MOUNT "°¡»óÀ¸·Î ¾²·Á´Â µå¶óÀÌºê ¹®ÀÚ" "½ÇÁ¦ µå¶óÀÌºê ¹®ÀÚ:\ ¶Ç´Â µð·ºÅÍ¸®"
-      [-t Á¾·ù] [-aspi] [-ioctl] [-noioctl] [-usecd ¼ýÀÚ] [-size µå¶óÀÌºê Å©±â] 
-      [-label µå¶óÀÌºê ÀÌ¸§] [-freesize Å©±â(MB)] [-freesize Å©±â(KB : ÇÃ·ÎÇÇ)]
+MOUNT "ê°€ìƒìœ¼ë¡œ ì“°ë ¤ëŠ” ë“œë¼ì´ë¸Œ ë¬¸ìž" "ì‹¤ì œ ë“œë¼ì´ë¸Œ ë¬¸ìž:\ ë˜ëŠ” ë””ë ‰í„°ë¦¬"
+      [-t ì¢…ë¥˜] [-aspi] [-ioctl] [-noioctl] [-usecd ìˆ«ìž] [-size ë“œë¼ì´ë¸Œ í¬ê¸°] 
+      [-label ë“œë¼ì´ë¸Œ ì´ë¦„] [-freesize í¬ê¸°(MB)] [-freesize í¬ê¸°(KB : í”Œë¡œí”¼)]
 
 MOUNT -cd
 
-MOUNT -u "°¡»ó µå¶óÀÌºê¸¦ ÇìÁ¦ÇÒ ¹®ÀÚ"
+MOUNT -u "ê°€ìƒ ë“œë¼ì´ë¸Œë¥¼ í—¤ì œí•  ë¬¸ìž"
 
-  ·ÎÄÃ µð·ºÅÍ¸®µéÀÌ DOSBox ¾È¿¡¼­ µå¶óÀÌºê·Î ÀÎ½ÄÇÕ´Ï´Ù.
+  ë¡œì»¬ ë””ë ‰í„°ë¦¬ë“¤ì´ DOSBox ì•ˆì—ì„œ ë“œë¼ì´ë¸Œë¡œ ì¸ì‹í•©ë‹ˆë‹¤.
 
-  "°¡»óÀ¸·Î ¾²·Á´Â µå¶óÀÌºê ¹®ÀÚ"
-  ¡æ DOSBox ¾ÈÀÇ µå¶óÀÌºê ¹®ÀÚ (º¸±â : mount c c:¡¬ÀÇ c)
+  "ê°€ìƒìœ¼ë¡œ ì“°ë ¤ëŠ” ë“œë¼ì´ë¸Œ ë¬¸ìž"
+  â†’ DOSBox ì•ˆì˜ ë“œë¼ì´ë¸Œ ë¬¸ìž (ë³´ê¸° : mount c c:ï¼¼ì˜ c)
 
-  "½ÇÁ¦ µå¶óÀÌºê ¹®ÀÚ:\ ¶Ç´Â µð·ºÅÍ¸®"
-  ¡æ DOSBox ¾È¿¡¼­ »ç¿ëÇÒ ·ÎÄÃ µð·ºÅÍ¸®
-      (Win32ÀÇ °æ¿ì "°¡»ó ±¸ÇöµÈ µå¶óÀÌºê ¹®ÀÚ"¿Í °°½À´Ï´Ù.
-        º¸±â : mount c c:¡¬ÀÇ c:¡¬)
+  "ì‹¤ì œ ë“œë¼ì´ë¸Œ ë¬¸ìž:\ ë˜ëŠ” ë””ë ‰í„°ë¦¬"
+  â†’ DOSBox ì•ˆì—ì„œ ì‚¬ìš©í•  ë¡œì»¬ ë””ë ‰í„°ë¦¬
+      (Win32ì˜ ê²½ìš° "ê°€ìƒ êµ¬í˜„ëœ ë“œë¼ì´ë¸Œ ë¬¸ìž"ì™€ ê°™ìŠµë‹ˆë‹¤.
+        ë³´ê¸° : mount c c:ï¼¼ì˜ c:ï¼¼)
 
-  -t Á¾·ù
-  ¡æ ¸¶¿îÆ®µÇ´Â µð·ºÅÍ¸®ÀÇ Á¾·ù - 'dir (±âº»°ª), floppy, cdrom' Áß ÇÏ³ª¸¦ °í¸¦ ¼ö ÀÖ½À´Ï´Ù
-      (º¸±â : mount d -t cdrom d:¡¬)
+  -t ì¢…ë¥˜
+  â†’ ë§ˆìš´íŠ¸ë˜ëŠ” ë””ë ‰í„°ë¦¬ì˜ ì¢…ë¥˜ - 'dir (ê¸°ë³¸ê°’), floppy, cdrom' ì¤‘ í•˜ë‚˜ë¥¼ ê³ ë¥¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤
+      (ë³´ê¸° : mount d -t cdrom d:ï¼¼)
 
-  -size µå¶óÀÌºê Å©±â
-  ¡æ (°í±Þ »ç¿ëÀÚ¸¸ ÀÌ¿ëÇÒ °Í) µå¶óÀÌºêÀÇ Å©±â¸¦ ÁöÁ¤ÇÕ´Ï´Ù. ¿©±â¼­ Çü½ÄÀº "bps, spc, tcl, fcl"ÀÌ ÀÖ½À´Ï´Ù.
-      bps: bytes per psector(¼½ÅÍ ´ç ¹ÙÀÌÆ®). CD-ROM µå¶óÀÌºê¿¡¼­´Â 2048ÀÌ¸ç, ±× ¹Û¿¡´Â 512°¡ ±âº»ÀÔ´Ï´Ù.
-      spc: sectors per cluster(Å¬·¯½ºÅÍ ´ç ¼½ÅÍ). º¸Åë 1¿¡¼­ 127±îÁö ¾µ ¼ö ÀÖ½À´Ï´Ù.
-      tcl: total clusters(¸ðµç Å¬·¯½ºÅÍ). 1¿¡¼­ 65534±îÁö ¾µ ¼ö ÀÖ½À´Ï´Ù.
-      fcl: total free clusters(³²¾Æ ÀÖ´Â Å¬·¯½ºÅÍ). 1¿¡¼­ tcl °ª±îÁö ¾µ ¼ö ÀÖ½À´Ï´Ù.
+  -size ë“œë¼ì´ë¸Œ í¬ê¸°
+  â†’ (ê³ ê¸‰ ì‚¬ìš©ìžë§Œ ì´ìš©í•  ê²ƒ) ë“œë¼ì´ë¸Œì˜ í¬ê¸°ë¥¼ ì§€ì •í•©ë‹ˆë‹¤. ì—¬ê¸°ì„œ í˜•ì‹ì€ "bps, spc, tcl, fcl"ì´ ìžˆìŠµë‹ˆë‹¤.
+      bps: bytes per psector(ì„¹í„° ë‹¹ ë°”ì´íŠ¸). CD-ROM ë“œë¼ì´ë¸Œì—ì„œëŠ” 2048ì´ë©°, ê·¸ ë°–ì—ëŠ” 512ê°€ ê¸°ë³¸ìž…ë‹ˆë‹¤.
+      spc: sectors per cluster(í´ëŸ¬ìŠ¤í„° ë‹¹ ì„¹í„°). ë³´í†µ 1ì—ì„œ 127ê¹Œì§€ ì“¸ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+      tcl: total clusters(ëª¨ë“  í´ëŸ¬ìŠ¤í„°). 1ì—ì„œ 65534ê¹Œì§€ ì“¸ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+      fcl: total free clusters(ë‚¨ì•„ ìžˆëŠ” í´ëŸ¬ìŠ¤í„°). 1ì—ì„œ tcl ê°’ê¹Œì§€ ì“¸ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-  -freesize Å©±â (´ÜÀ§ : MB | KB)
-  ¡æ µå¶óÀÌºê¿¡¼­ »ç¿ëÇÒ ¼ö ÀÖ´Â ¿©À¯ °ø°£ÀÇ Å©±â¸¦ ¼³Á¤ÇÕ´Ï´Ù. ´ÜÀ§´Â ÀÏ¹Ý µå¶óÀÌºê¿¡¼­ MB(¸Þ°¡¹ÙÀÌÆ®)ÀÌ¸ç
-      ÇÃ·ÎÇÇ µå¶óÀÌºê¿¡¼­´Â KB(Å³·Î¹ÙÀÌÆ®)ÀÔ´Ï´Ù.
-    -size º¸´Ù ´õ °£´ÜÇÏ°Ô »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.
+  -freesize í¬ê¸° (ë‹¨ìœ„ : MB | KB)
+  â†’ ë“œë¼ì´ë¸Œì—ì„œ ì‚¬ìš©í•  ìˆ˜ ìžˆëŠ” ì—¬ìœ  ê³µê°„ì˜ í¬ê¸°ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤. ë‹¨ìœ„ëŠ” ì¼ë°˜ ë“œë¼ì´ë¸Œì—ì„œ MB(ë©”ê°€ë°”ì´íŠ¸)ì´ë©°
+      í”Œë¡œí”¼ ë“œë¼ì´ë¸Œì—ì„œëŠ” KB(í‚¬ë¡œë°”ì´íŠ¸)ìž…ë‹ˆë‹¤.
+    -size ë³´ë‹¤ ë” ê°„ë‹¨í•˜ê²Œ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-  -label µå¶óÀÌºê ÀÌ¸§ (·¹ÀÌºí)
-  ¡æ µå¶óÀÌºêÀÇ ÀÌ¸§À» ÁöÁ¤ÇÕ´Ï´Ù. ÇÁ·Î±×·¥ÀÌ³ª °ÔÀÓÀÌ CD-ROMÀÇ ÀÌ¸§À» ÀÐ¾î³»Áö ¸øÇÒ ¶§ »ç¿ëÇÏ½Ê½Ã¿À.
-      ·¹ÀÌºíÀ» ÁöÁ¤ÇÏÁö ¾Ê°Å³ª ³·Àº ¼öÁØÀÇ Áö¿øÀ» »ç¿ëÇÏÁö ¾ÊÀ» ¶§ (-usecd # ¹× -ioctl/aspi¸¦ »ç¿ëÇÏÁö ¾Ê°Å³ª -noioctl¸¦ ÁöÁ¤ÇÒ ¶§)
-       * Win32¿¡¼­ : ±âº»ÀûÀ¸·Î "½ÇÁ¦ µå¶óÀÌºê"ÀÇ ·¹ÀÌºíÀ» °¡Á®¿É´Ï´Ù.
-       * Linux¿¡¼­ : ±âº»ÀûÀ¸·Î NO_LABEL (·¹ÀÌºí ¾øÀ½)À¸·Î ¼³Á¤ÇÕ´Ï´Ù.
+  -label ë“œë¼ì´ë¸Œ ì´ë¦„ (ë ˆì´ë¸”)
+  â†’ ë“œë¼ì´ë¸Œì˜ ì´ë¦„ì„ ì§€ì •í•©ë‹ˆë‹¤. í”„ë¡œê·¸ëž¨ì´ë‚˜ ê²Œìž„ì´ CD-ROMì˜ ì´ë¦„ì„ ì½ì–´ë‚´ì§€ ëª»í•  ë•Œ ì‚¬ìš©í•˜ì‹­ì‹œì˜¤.
+      ë ˆì´ë¸”ì„ ì§€ì •í•˜ì§€ ì•Šê±°ë‚˜ ë‚®ì€ ìˆ˜ì¤€ì˜ ì§€ì›ì„ ì‚¬ìš©í•˜ì§€ ì•Šì„ ë•Œ (-usecd # ë° -ioctl/aspië¥¼ ì‚¬ìš©í•˜ì§€ ì•Šê±°ë‚˜ -noioctlë¥¼ ì§€ì •í•  ë•Œ)
+       * Win32ì—ì„œ : ê¸°ë³¸ì ìœ¼ë¡œ "ì‹¤ì œ ë“œë¼ì´ë¸Œ"ì˜ ë ˆì´ë¸”ì„ ê°€ì ¸ì˜µë‹ˆë‹¤.
+       * Linuxì—ì„œ : ê¸°ë³¸ì ìœ¼ë¡œ NO_LABEL (ë ˆì´ë¸” ì—†ìŒ)ìœ¼ë¡œ ì„¤ì •í•©ë‹ˆë‹¤.
 
-    ¸¶¿îÆ®°¡ µÈ µÚ¿¡´Â ·¹ÀÌºí ÀÌ¸§À» µû·Î ¹Ù²Ü ¼ö ¾ø½À´Ï´Ù.
+    ë§ˆìš´íŠ¸ê°€ ëœ ë’¤ì—ëŠ” ë ˆì´ë¸” ì´ë¦„ì„ ë”°ë¡œ ë°”ê¿€ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.
 
   -aspi
-  ¡æ ASPI ·¹ÀÌ¾î¸¦ °­Á¦·Î »ç¿ëÇÕ´Ï´Ù. (ÇöÀç´Â ÀÌ¿ëÇÒ ¼ö ¾øÀ½)
-      ASPI ·¹ÀÌ¾î¸¦ »ç¿ëÇÏ´Â Windows ½Ã½ºÅÛ¿¡¼­¸¸ ÀÌ ¿É¼ÇÀ¸·Î ¸¶¿îÆ®ÇÏ½Ç ¼ö ÀÖ½À´Ï´Ù.
+  â†’ ASPI ë ˆì´ì–´ë¥¼ ê°•ì œë¡œ ì‚¬ìš©í•©ë‹ˆë‹¤. (í˜„ìž¬ëŠ” ì´ìš©í•  ìˆ˜ ì—†ìŒ)
+      ASPI ë ˆì´ì–´ë¥¼ ì‚¬ìš©í•˜ëŠ” Windows ì‹œìŠ¤í…œì—ì„œë§Œ ì´ ì˜µì…˜ìœ¼ë¡œ ë§ˆìš´íŠ¸í•˜ì‹¤ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-  -ioctl (CD ¿Àµð¿À ÀÎÅÍÆäÀÌ½º ÀÚµ¿ ¼±ÅÃ)
-  -ioctl_dx (CD ¿Àµð¿À¿¡ ¾²ÀÌ´Â µðÁöÅÐ ¿Àµð¿À È®Àå)
-  -ioctl_dio (CD ¿Àµð¿À Àç»ýÀ» À§ÇØ ioctl ¿äÃ»)
-  -ioctl_mci (CD ¿Àµð¿À Àç»ýÀ» À§ÇØ MCI »ç¿ë)
-  ¡æ ioctl ¸í·É¾î¸¦ °­Á¦·Î »ç¿ëÇÕ´Ï´Ù. Windows NT/2000/XP/2003/Vista/7 ÀÌ»ó¿¡¼­¸¸ »ç¿ëÇÏ½Ê½Ã¿À.
-     CD ¿Àµð¿À¸¦ À§ÇÑ ´Ù¾çÇÑ ¼±ÅÃ »çÇ×ÀÌ Á¸ÀçÇÏÁö¸¸ ºÎÇÏ°¡ ÀûÀº -ioctl_dio¸¦ »ç¿ëÇÏ´Â °ÍÀÌ ÁÁ½À´Ï´Ù. ±×·¯³ª ¸ðµç ½Ã½ºÅÛ¿¡¼­ µ¿ÀÛÇÏ´Â
-     °ÍÀº ¾Æ´Ï±â ¶§¹®¿¡ -ioctl_dx³ª -ioctl_mciµµ »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.
+  -ioctl (CD ì˜¤ë””ì˜¤ ì¸í„°íŽ˜ì´ìŠ¤ ìžë™ ì„ íƒ)
+  -ioctl_dx (CD ì˜¤ë””ì˜¤ì— ì“°ì´ëŠ” ë””ì§€í„¸ ì˜¤ë””ì˜¤ í™•ìž¥)
+  -ioctl_dio (CD ì˜¤ë””ì˜¤ ìž¬ìƒì„ ìœ„í•´ ioctl ìš”ì²­)
+  -ioctl_mci (CD ì˜¤ë””ì˜¤ ìž¬ìƒì„ ìœ„í•´ MCI ì‚¬ìš©)
+  â†’ ioctl ëª…ë ¹ì–´ë¥¼ ê°•ì œë¡œ ì‚¬ìš©í•©ë‹ˆë‹¤. Windows NT/2000/XP/2003/Vista/7 ì´ìƒì—ì„œë§Œ ì‚¬ìš©í•˜ì‹­ì‹œì˜¤.
+     CD ì˜¤ë””ì˜¤ë¥¼ ìœ„í•œ ë‹¤ì–‘í•œ ì„ íƒ ì‚¬í•­ì´ ì¡´ìž¬í•˜ì§€ë§Œ ë¶€í•˜ê°€ ì ì€ -ioctl_dioë¥¼ ì‚¬ìš©í•˜ëŠ” ê²ƒì´ ì¢‹ìŠµë‹ˆë‹¤. ê·¸ëŸ¬ë‚˜ ëª¨ë“  ì‹œìŠ¤í…œì—ì„œ ë™ìž‘í•˜ëŠ”
+     ê²ƒì€ ì•„ë‹ˆê¸° ë•Œë¬¸ì— -ioctl_dxë‚˜ -ioctl_mcië„ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
   -noioctl
-  ¡æ SDL CD-ROM ·¹ÀÌ¾î¸¦ °­Á¦·Î »ç¿ëÇÕ´Ï´Ù. ¸ðµç ½Ã½ºÅÛ¿¡¼­ ¾µ ¼ö ÀÖ½À´Ï´Ù.
+  â†’ SDL CD-ROM ë ˆì´ì–´ë¥¼ ê°•ì œë¡œ ì‚¬ìš©í•©ë‹ˆë‹¤. ëª¨ë“  ì‹œìŠ¤í…œì—ì„œ ì“¸ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-  -usecd ¼ýÀÚ
-  ¡æ ¸ðµç ¿î¿µ Ã¼Á¦¿¡¼­ »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù. ±×·¯³ª Windows¿¡¼­´Â -noioctl ½ºÀ§Ä¡¸¦ »ç¿ëÇÏ¿©¾ß -usecd ½ºÀ§Ä¡¸¦
-     »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù. SDL¿¡ »ç¿ëÇØ¾ß ÇÏ´Â µå¶óÀÌºê¸¦ »ç¿ëÇÒ ¼ö ÀÖ°Ô ÇÕ´Ï´Ù.
-     SDL CD-ROM ÀÎÅÍÆäÀÌ½º¸¦ »ç¿ëÇÏ´Â µ¿¾È CD-ROM µå¶óÀÌºê°¡ ¾ø´Ù°í ¶ß°Å³ª ¹®Á¦°¡ ÀÖÀ¸¸é »ç¿ëÇÏ½Ê½Ã¿À.
-     ÀÌ°ÍÀ» »ç¿ëÇÏ±â Àü¿¡ mount -cd ¶ó°í ÀÔ·ÂÇØ¼­ CD-ROM¿¡ ¸Â´Â ¼ýÀÚ¸¦ ¹Ì¸® »ìÆì º¸½Ç ¼ö ÀÖ½À´Ï´Ù.
+  -usecd ìˆ«ìž
+  â†’ ëª¨ë“  ìš´ì˜ ì²´ì œì—ì„œ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤. ê·¸ëŸ¬ë‚˜ Windowsì—ì„œëŠ” -noioctl ìŠ¤ìœ„ì¹˜ë¥¼ ì‚¬ìš©í•˜ì—¬ì•¼ -usecd ìŠ¤ìœ„ì¹˜ë¥¼
+     ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤. SDLì— ì‚¬ìš©í•´ì•¼ í•˜ëŠ” ë“œë¼ì´ë¸Œë¥¼ ì‚¬ìš©í•  ìˆ˜ ìžˆê²Œ í•©ë‹ˆë‹¤.
+     SDL CD-ROM ì¸í„°íŽ˜ì´ìŠ¤ë¥¼ ì‚¬ìš©í•˜ëŠ” ë™ì•ˆ CD-ROM ë“œë¼ì´ë¸Œê°€ ì—†ë‹¤ê³  ëœ¨ê±°ë‚˜ ë¬¸ì œê°€ ìžˆìœ¼ë©´ ì‚¬ìš©í•˜ì‹­ì‹œì˜¤.
+     ì´ê²ƒì„ ì‚¬ìš©í•˜ê¸° ì „ì— mount -cd ë¼ê³  ìž…ë ¥í•´ì„œ CD-ROMì— ë§žëŠ” ìˆ«ìžë¥¼ ë¯¸ë¦¬ ì‚´íŽ´ ë³´ì‹¤ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
   -cd
-  ¡æ CD-ROMÀÇ ½ÇÁ¦ ¹øÈ£¿Í µå¶óÀÌºê¸¦ º¸¿©ÁÝ´Ï´Ù. -usecd¸¦ »ç¿ëÇÒ ¶§ Âü°íÇÏ½Ê½Ã¿À.
+  â†’ CD-ROMì˜ ì‹¤ì œ ë²ˆí˜¸ì™€ ë“œë¼ì´ë¸Œë¥¼ ë³´ì—¬ì¤ë‹ˆë‹¤. -usecdë¥¼ ì‚¬ìš©í•  ë•Œ ì°¸ê³ í•˜ì‹­ì‹œì˜¤.
 
   -u
-  ¡æ ¸¶¿îÆ®Çß´ø µå¶óÀÌºêÀÇ ¸¶¿îÆ®¸¦ ÇØÁ¦ÇÕ´Ï´Ù.
-      Z:\¿¡¼­´Â µ¿ÀÛÇÏÁö ¾Ê½À´Ï´Ù.
+  â†’ ë§ˆìš´íŠ¸í–ˆë˜ ë“œë¼ì´ë¸Œì˜ ë§ˆìš´íŠ¸ë¥¼ í•´ì œí•©ë‹ˆë‹¤.
+      Z:\ì—ì„œëŠ” ë™ìž‘í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
 
-  ¾Ë¸² : ·ÎÄÃ µð·ºÅÍ¸®¸¦ CD-ROM µå¶óÀÌºê·Î ¸¶¿îÆ®ÇÒ ¼ö´Â ÀÖ½À´Ï´Ù. ±×·¯³ª
-           ÇÏµå¿þ¾î Áö¿øÀ» Á¦´ë·Î ¹ÞÁö ¸øÇÒ ¼öµµ ÀÖ½À´Ï´Ù.
+  ì•Œë¦¼ : ë¡œì»¬ ë””ë ‰í„°ë¦¬ë¥¼ CD-ROM ë“œë¼ì´ë¸Œë¡œ ë§ˆìš´íŠ¸í•  ìˆ˜ëŠ” ìžˆìŠµë‹ˆë‹¤. ê·¸ëŸ¬ë‚˜
+           í•˜ë“œì›¨ì–´ ì§€ì›ì„ ì œëŒ€ë¡œ ë°›ì§€ ëª»í•  ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤.
 
-  MOUNT´Â ±âº»ÀûÀ¸·Î ¿©·¯ºÐÀÌ °¡Áö°í ÀÖ´Â ½ÇÁ¦ ÇÏµå¿þ¾î¸¦ DOSBoxÀÇ °¡»ó ÄÄÇ»ÅÍ¿¡
-  ¿¬°áÇÒ ¼ö ÀÖµµ·Ï µµ¿Í ÁÝ´Ï´Ù. MOUNT C C:\GAMESÀº DOSBox°¡ ¿©·¯ºÐÀÇ ½ÇÁ¦ C µå¶óÀÌºê¸¦
-  DOSBoxÀÇ C:\GAMES·Î ¿¬°áÇÒ ¼ö ÀÖ°Ô ÇØ ÁÝ´Ï´Ù. ¶ÇÇÑ ¾î¶°ÇÑ ÇÁ·Î±×·¥¿¡ ¸ÂÃß¾î
-  µå¶óÀÌºêÀÇ ¹®ÀÚ¿­À» ¹Ù²Ü ¼öµµ ÀÖ½À´Ï´Ù.
+  MOUNTëŠ” ê¸°ë³¸ì ìœ¼ë¡œ ì—¬ëŸ¬ë¶„ì´ ê°€ì§€ê³  ìžˆëŠ” ì‹¤ì œ í•˜ë“œì›¨ì–´ë¥¼ DOSBoxì˜ ê°€ìƒ ì»´í“¨í„°ì—
+  ì—°ê²°í•  ìˆ˜ ìžˆë„ë¡ ë„ì™€ ì¤ë‹ˆë‹¤. MOUNT C C:\GAMESì€ DOSBoxê°€ ì—¬ëŸ¬ë¶„ì˜ ì‹¤ì œ C ë“œë¼ì´ë¸Œë¥¼
+  DOSBoxì˜ C:\GAMESë¡œ ì—°ê²°í•  ìˆ˜ ìžˆê²Œ í•´ ì¤ë‹ˆë‹¤. ë˜í•œ ì–´ë– í•œ í”„ë¡œê·¸ëž¨ì— ë§žì¶”ì–´
+  ë“œë¼ì´ë¸Œì˜ ë¬¸ìžì—´ì„ ë°”ê¿€ ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤.
 
-  'MOUNT C C:\'¿Í °°ÀÌ C µå¶óÀÌºê¸¦ ÅëÂ°·Î ¸¶¿îÆ®ÇÏÁö ¾Ê´Â °ÍÀÌ ÁÁ½À´Ï´Ù!
-  ÀÌ´Â ÀÐ±â Àü¿ëÀÌ Æ¯Â¡ÀÎ CD-ROMÀ» Á¦¿ÜÇÑ ´Ù¸¥ µå¶óÀÌºêÀÇ ·çÆ® µå¶óÀÌºê¸¦ ¸¶¿îÆ®ÇÏ´Â °Íµµ
-  ¸¶Âù°¡ÁöÀÔ´Ï´Ù.   »ç¿ëÀÚ³ª DOSBox´Â Àß¸øÇÏ¿© »ç¿ëÀÚ°¡ °¡Áö°í ÀÖ´ø ÆÄÀÏÀ» ¸ðµÎ ³¯·Á ¹ö¸± ¼öµµ
-  ÀÖ½À´Ï´Ù. ¶Ç, Windows Vista/7¿¡¼­ Windows Æú´õ³ª Program Files Æú´õ, ¶Ç ±× ÇÏÀ§ Æú´õ·Î
-  ¸¶¿îÆ®ÇÏÁö ¸¶½Ê½Ã¿À. DOSBox°¡ Á¤»ó µ¿ÀÛÇÏÁö ¾Ê°Å³ª µÚ¿¡ µ¿ÀÛÀ» ¸ØÃâ ¼öµµ ÀÖ½À´Ï´Ù.
-  ÀÀ¿ë ÇÁ·Î±×·¥ÀÌ³ª °ÔÀÓÀ» ´ã°í ÀÖ´Â ´Ü¼øÇÑ µð·ºÅÍ¸®¸¦ ¸¶¿îÆ®ÇÏ½Ç °ÍÀ» ±ÇÇÕ´Ï´Ù.
+  'MOUNT C C:\'ì™€ ê°™ì´ C ë“œë¼ì´ë¸Œë¥¼ í†µì§¸ë¡œ ë§ˆìš´íŠ¸í•˜ì§€ ì•ŠëŠ” ê²ƒì´ ì¢‹ìŠµë‹ˆë‹¤!
+  ì´ëŠ” ì½ê¸° ì „ìš©ì´ íŠ¹ì§•ì¸ CD-ROMì„ ì œì™¸í•œ ë‹¤ë¥¸ ë“œë¼ì´ë¸Œì˜ ë£¨íŠ¸ ë“œë¼ì´ë¸Œë¥¼ ë§ˆìš´íŠ¸í•˜ëŠ” ê²ƒë„
+  ë§ˆì°¬ê°€ì§€ìž…ë‹ˆë‹¤.   ì‚¬ìš©ìžë‚˜ DOSBoxëŠ” ìž˜ëª»í•˜ì—¬ ì‚¬ìš©ìžê°€ ê°€ì§€ê³  ìžˆë˜ íŒŒì¼ì„ ëª¨ë‘ ë‚ ë ¤ ë²„ë¦´ ìˆ˜ë„
+  ìžˆìŠµë‹ˆë‹¤. ë˜, Windows Vista/7ì—ì„œ Windows í´ë”ë‚˜ Program Files í´ë”, ë˜ ê·¸ í•˜ìœ„ í´ë”ë¡œ
+  ë§ˆìš´íŠ¸í•˜ì§€ ë§ˆì‹­ì‹œì˜¤. DOSBoxê°€ ì •ìƒ ë™ìž‘í•˜ì§€ ì•Šê±°ë‚˜ ë’¤ì— ë™ìž‘ì„ ë©ˆì¶œ ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤.
+  ì‘ìš© í”„ë¡œê·¸ëž¨ì´ë‚˜ ê²Œìž„ì„ ë‹´ê³  ìžˆëŠ” ë‹¨ìˆœí•œ ë””ë ‰í„°ë¦¬ë¥¼ ë§ˆìš´íŠ¸í•˜ì‹¤ ê²ƒì„ ê¶Œí•©ë‹ˆë‹¤.
 
-  DOSBox ¾È¿¡¼­ °ÔÀÓÀ» ¼³Ä¡ÇØ¾ß ÇÒ ¼öµµ ÀÖ½À´Ï´Ù. ±×·¯¹Ç·Î CD¿¡ °ÔÀÓÀÌ ÀÖ´Ù¸é (¼³Ä¡ ÀÌÈÄ¶óµµ)
-  CD-ROM°ú ÇÏµå µð½ºÅ© µå¶óÀÌºê¸¦ Æú´õ·Î µÑ ´Ù ¸¶¿îÆ®ÇÏ¿©¾ß ÇÕ´Ï´Ù.
-  ÀÌ¸¦Å×¸é ÇÏµå µð½ºÅ©´Â c·Î ¸¶¿îÆ®ÇÏ°í
-  CD-ROMÀº d·Î ¸¶¿îÆ®ÇÏ¸ç
-  ÇÃ·ÎÇÇ´Â a³ª b·Î ¸¶¿îÆ®ÇØ¾ß ÇÕ´Ï´Ù.
+  DOSBox ì•ˆì—ì„œ ê²Œìž„ì„ ì„¤ì¹˜í•´ì•¼ í•  ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤. ê·¸ëŸ¬ë¯€ë¡œ CDì— ê²Œìž„ì´ ìžˆë‹¤ë©´ (ì„¤ì¹˜ ì´í›„ë¼ë„)
+  CD-ROMê³¼ í•˜ë“œ ë””ìŠ¤í¬ ë“œë¼ì´ë¸Œë¥¼ í´ë”ë¡œ ë‘˜ ë‹¤ ë§ˆìš´íŠ¸í•˜ì—¬ì•¼ í•©ë‹ˆë‹¤.
+  ì´ë¥¼í…Œë©´ í•˜ë“œ ë””ìŠ¤í¬ëŠ” cë¡œ ë§ˆìš´íŠ¸í•˜ê³ 
+  CD-ROMì€ dë¡œ ë§ˆìš´íŠ¸í•˜ë©°
+  í”Œë¡œí”¼ëŠ” aë‚˜ bë¡œ ë§ˆìš´íŠ¸í•´ì•¼ í•©ë‹ˆë‹¤.
 
-  Windows¿¡¼­ MOUNT¸¦ ÇÏ´Â ÀÏ¹Ý º¸±âÀÔ´Ï´Ù:
-  1. Æú´õ¸¦ ÇÏµåµð½ºÅ©·Î ¸¶¿îÆ®:
+  Windowsì—ì„œ MOUNTë¥¼ í•˜ëŠ” ì¼ë°˜ ë³´ê¸°ìž…ë‹ˆë‹¤:
+  1. í´ë”ë¥¼ í•˜ë“œë””ìŠ¤í¬ë¡œ ë§ˆìš´íŠ¸:
        mount c d:\dosgames
-  2. µå¶óÀÌºê¸¦ ÇÃ·ÎÇÇ·Î ¸¶¿îÆ®:
+  2. ë“œë¼ì´ë¸Œë¥¼ í”Œë¡œí”¼ë¡œ ë§ˆìš´íŠ¸:
        mount a a:\ -t floppy
-  3. CD-ROM µå¶óÀÌºê E¸¦ µµ½º¹Ú½ºÀÇ CD-ROM µå¶óÀÌºê D·Î ¸¶¿îÆ®:
+  3. CD-ROM ë“œë¼ì´ë¸Œ Eë¥¼ ë„ìŠ¤ë°•ìŠ¤ì˜ CD-ROM ë“œë¼ì´ë¸Œ Dë¡œ ë§ˆìš´íŠ¸:
        mount d e:\ -t cdrom
 
-  Windows¿¡¼­ MOUNT¸¦ ÇÏ´Â °í±Þ º¸±âÀÔ´Ï´Ù:
+  Windowsì—ì„œ MOUNTë¥¼ í•˜ëŠ” ê³ ê¸‰ ë³´ê¸°ìž…ë‹ˆë‹¤:
 
-  4. ~870 mbÀÇ ³²Àº µð½ºÅ© °ø°£ÀÌ ÀÖ´Â ÇÏµå µð½ºÅ© µå¶óÀÌºê ¸¶¿îÆ® (´Ü¼ø ¹öÀü):
+  4. ~870 mbì˜ ë‚¨ì€ ë””ìŠ¤í¬ ê³µê°„ì´ ìžˆëŠ” í•˜ë“œ ë””ìŠ¤í¬ ë“œë¼ì´ë¸Œ ë§ˆìš´íŠ¸ (ë‹¨ìˆœ ë²„ì „):
       mount c d:\dosgames -freesize 870
 
-  5. ~870 mbÀÇ ³²Àº µð½ºÅ© °ø°£ÀÌ ÀÖ´Â µå¶óÀÌºê¸¦ ¸¶¿îÆ® (°í±Þ »ç¿ëÀÚ¿ë, ¿ÏÀüÇÑ Á¦¾î):
+  5. ~870 mbì˜ ë‚¨ì€ ë””ìŠ¤í¬ ê³µê°„ì´ ìžˆëŠ” ë“œë¼ì´ë¸Œë¥¼ ë§ˆìš´íŠ¸ (ê³ ê¸‰ ì‚¬ìš©ìžìš©, ì™„ì „í•œ ì œì–´):
       mount c d:\dosgames -size 512,127,166513,13500
 
-  ´Ù¸¥ MOUNT º¸±â:
-  6. /media/cdrom À§Ä¡ÀÇ ½Ã½ºÅÛ CD-ROM µå¶óÀÌºê¸¦ DOSBox¿¡¼­ D µå¶óÀÌºê·Î ¸¶¿îÆ® :
+  ë‹¤ë¥¸ MOUNT ë³´ê¸°:
+  6. /media/cdrom ìœ„ì¹˜ì˜ ì‹œìŠ¤í…œ CD-ROM ë“œë¼ì´ë¸Œë¥¼ DOSBoxì—ì„œ D ë“œë¼ì´ë¸Œë¡œ ë§ˆìš´íŠ¸ :
        mount d /media/cdrom -t cdrom -usecd 0
-  7. DOSBox¿¡¼­ /home/user/dirY ¸¦ µå¶óÀÌºê·Î ¸¶¿îÆ® :
+  7. DOSBoxì—ì„œ /home/user/dirY ë¥¼ ë“œë¼ì´ë¸Œë¡œ ë§ˆìš´íŠ¸ :
        mount c /home/user/dirY
-  8. DOSBox°¡ ¼³Ä¡µÈ µð·ºÅÍ¸®¸¦ DOSBox¿¡¼­ D·Î ¸¶¿îÆ® :
+  8. DOSBoxê°€ ì„¤ì¹˜ëœ ë””ë ‰í„°ë¦¬ë¥¼ DOSBoxì—ì„œ Dë¡œ ë§ˆìš´íŠ¸ :
        mount d .
-     (.Àº Windows Vista/7¿¡¼­ µµ½º¹Ú½º°¡ ½ÃÀÛÇÑ µð·ºÅÍ¸®¸¦ ¸»ÇÔ.
-      DOSBox°¡ Program Files¿¡ ¼³Ä¡µÇ¾î ÀÖ´Ù¸é ÀÌ°ÍÀ» »ç¿ëÇÏÁö ¸¶½Ê½Ã¿À)
+     (.ì€ Windows Vista/7ì—ì„œ ë„ìŠ¤ë°•ìŠ¤ê°€ ì‹œìž‘í•œ ë””ë ‰í„°ë¦¬ë¥¼ ë§í•¨.
+      DOSBoxê°€ Program Filesì— ì„¤ì¹˜ë˜ì–´ ìžˆë‹¤ë©´ ì´ê²ƒì„ ì‚¬ìš©í•˜ì§€ ë§ˆì‹­ì‹œì˜¤)
 
-  CD ÀÌ¹ÌÁö³ª ÇÃ·ÎÇÇ ÀÌ¹ÌÁö¸¦ ¸¶¿îÆ®ÇÏ·Á¸é IMGMOUNT¸¦ »ç¿ëÇÏ½Ê½Ã¿À.
-  MOUNT´Â ´ÙÀ½°ú °°Àº ¿ÜºÎ ÇÁ·Î±×·¥µéÀ» ÀÌ¿ëÇÒ °æ¿ì¿¡¸¸ ÀÌ¹ÌÁö¿Í µ¿ÀÛÇÕ´Ï´Ù.
-  - Daemon Tools Lite (CD ÀÌ¹ÌÁö)
-  - Virtual Floppy Drive (ÇÃ·ÎÇÇ ÀÌ¹ÌÁö)
-  ´Ù¸¸ IMGMOUNT°¡ ´õ ³ªÀº È£È¯¼ºÀ» Á¦°øÇÒ ¼ö ÀÖ½À´Ï´Ù.
+  CD ì´ë¯¸ì§€ë‚˜ í”Œë¡œí”¼ ì´ë¯¸ì§€ë¥¼ ë§ˆìš´íŠ¸í•˜ë ¤ë©´ IMGMOUNTë¥¼ ì‚¬ìš©í•˜ì‹­ì‹œì˜¤.
+  MOUNTëŠ” ë‹¤ìŒê³¼ ê°™ì€ ì™¸ë¶€ í”„ë¡œê·¸ëž¨ë“¤ì„ ì´ìš©í•  ê²½ìš°ì—ë§Œ ì´ë¯¸ì§€ì™€ ë™ìž‘í•©ë‹ˆë‹¤.
+  - Daemon Tools Lite (CD ì´ë¯¸ì§€)
+  - Virtual Floppy Drive (í”Œë¡œí”¼ ì´ë¯¸ì§€)
+  ë‹¤ë§Œ IMGMOUNTê°€ ë” ë‚˜ì€ í˜¸í™˜ì„±ì„ ì œê³µí•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
 MEM
-  ¸Þ¸ð¸®°¡ ¾ó¸¸Å­ ³²¾Æ ÀÖ´ÂÁö º¸¿©ÁÖ´Â ÇÁ·Î±×·¥ÀÔ´Ï´Ù.
+  ë©”ëª¨ë¦¬ê°€ ì–¼ë§Œí¼ ë‚¨ì•„ ìžˆëŠ”ì§€ ë³´ì—¬ì£¼ëŠ” í”„ë¡œê·¸ëž¨ìž…ë‹ˆë‹¤.
 
 VER
-  VER set ±âº» ¹öÀü [¼Ò¼öÁ¡ µÚÀÇ ¹öÀü]
-  µµ½º¹Ú½º ¹öÀüÀ» º¸¿© ÁÖ°í µµ½º ¹öÀüÀ» º¸°íÇÕ´Ï´Ù. VER set 6 22¶ó°í ÀÔ·ÂÇÏ¸é µµ½º¹Ú½º¿¡ 6.22À¸·Î ¹öÀü ¹øÈ£¸¦ ÀÔ·ÂÇÏ°Ô µË´Ï´Ù.
+  VER set ê¸°ë³¸ ë²„ì „ [ì†Œìˆ˜ì  ë’¤ì˜ ë²„ì „]
+  ë„ìŠ¤ë°•ìŠ¤ ë²„ì „ì„ ë³´ì—¬ ì£¼ê³  ë„ìŠ¤ ë²„ì „ì„ ë³´ê³ í•©ë‹ˆë‹¤. VER set 6 22ë¼ê³  ìž…ë ¥í•˜ë©´ ë„ìŠ¤ë°•ìŠ¤ì— 6.22ìœ¼ë¡œ ë²„ì „ ë²ˆí˜¸ë¥¼ ìž…ë ¥í•˜ê²Œ ë©ë‹ˆë‹¤.
 
-CONFIG -writeconf ÆÄÀÏ À§Ä¡
-CONFIG -writelang ÆÄÀÏ À§Ä¡
+CONFIG -writeconf íŒŒì¼ ìœ„ì¹˜
+CONFIG -writelang íŒŒì¼ ìœ„ì¹˜
 CONFIG -securemode
-CONFIG -set "¼½¼Ç ¼Ó¼º=°ª"
-CONFIG -get "¼½¼Ç ¼Ó¼º"
+CONFIG -set "ì„¹ì…˜ ì†ì„±=ê°’"
+CONFIG -get "ì„¹ì…˜ ì†ì„±"
 
-  CONFIG¸¦ ¾²¸é DOSBox¸¦ ½ÇÇàÇÏ´Â µ¿¾È °®°¡Áö ¼³Á¤ °ªÀ» ¹Ù²Ü ¼ö ÀÖ½À´Ï´Ù.
-  ÁöÁ¤ÇØ µÐ ¼³Á¤°ú ¾ð¾î ¹®ÀÚ¿­À» µð½ºÅ©¿¡ ÀúÀåÇÒ ¼ö ÀÖ½À´Ï´Ù.
-  »ç¿ëÇÒ ¼ö ÀÖ´Â ¸ðµç ±¸¹®°ú ¼Ó¼º¿¡ ´ëÇÑ Á¤º¸¸¦ º¸·Á¸é 13¹ø Ç×¸ñ (¼³Á¤ ±¸¼º ÆÄÀÏ)À» ÀÐ¾î º¸½Ê½Ã¿À.
+  CONFIGë¥¼ ì“°ë©´ DOSBoxë¥¼ ì‹¤í–‰í•˜ëŠ” ë™ì•ˆ ê°–ê°€ì§€ ì„¤ì • ê°’ì„ ë°”ê¿€ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+  ì§€ì •í•´ ë‘” ì„¤ì •ê³¼ ì–¸ì–´ ë¬¸ìžì—´ì„ ë””ìŠ¤í¬ì— ì €ìž¥í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+  ì‚¬ìš©í•  ìˆ˜ ìžˆëŠ” ëª¨ë“  êµ¬ë¬¸ê³¼ ì†ì„±ì— ëŒ€í•œ ì •ë³´ë¥¼ ë³´ë ¤ë©´ 13ë²ˆ í•­ëª© (ì„¤ì • êµ¬ì„± íŒŒì¼)ì„ ì½ì–´ ë³´ì‹­ì‹œì˜¤.
 
-  -writeconf ÆÄÀÏ À§Ä¡
-       ÇöÀçÀÇ ±¸¼ºÀ» ÆÄÀÏ¿¡ ±â·ÏÇÕ´Ï´Ù.
-       "ÆÄÀÏ À§Ä¡"´Â DOSBox°¡ ÀÖ´Â ½ÇÁ¦ µå¶óÀÌºê¿¡ ÀÖ½À´Ï´Ù. (DOSBox¿¡¼­ ¸¶¿îÆ®ÇÑ µå¶óÀÌºê¿¡ ÀÖÁö ¾Ê½À´Ï´Ù)
-       ¼³Á¤ ±¸¼º ÆÄÀÏÀº DOSBoxÀÇ ¿©·¯ ¼³Á¤À» Á¦¾îÇÕ´Ï´Ù :
-       °¡»óÀ¸·Î ±¸ÇöµÈ ¸Þ¸ð¸®ÀÇ Å©±â, °¡»óÀ¸·Î ±¸ÇöµÈ »ç¿îµå Ä«µå ¹ÛÀÇ ¼³Á¤µé.
-       AUTOEXEC.BAT¿¡µµ Á¢±ÙÇÒ ¼ö ÀÖ½À´Ï´Ù.
-       ´õ ÀÚ¼¼ÇÑ Á¤º¸¸¦ º¸·Á¸é 13¹ø Ç×¸ñ (¼³Á¤ ±¸¼º ÆÄÀÏ)¿¡¼­ Ã£À¸½Ç ¼ö ÀÖ½À´Ï´Ù.
+  -writeconf íŒŒì¼ ìœ„ì¹˜
+       í˜„ìž¬ì˜ êµ¬ì„±ì„ íŒŒì¼ì— ê¸°ë¡í•©ë‹ˆë‹¤.
+       "íŒŒì¼ ìœ„ì¹˜"ëŠ” DOSBoxê°€ ìžˆëŠ” ì‹¤ì œ ë“œë¼ì´ë¸Œì— ìžˆìŠµë‹ˆë‹¤. (DOSBoxì—ì„œ ë§ˆìš´íŠ¸í•œ ë“œë¼ì´ë¸Œì— ìžˆì§€ ì•ŠìŠµë‹ˆë‹¤)
+       ì„¤ì • êµ¬ì„± íŒŒì¼ì€ DOSBoxì˜ ì—¬ëŸ¬ ì„¤ì •ì„ ì œì–´í•©ë‹ˆë‹¤ :
+       ê°€ìƒìœ¼ë¡œ êµ¬í˜„ëœ ë©”ëª¨ë¦¬ì˜ í¬ê¸°, ê°€ìƒìœ¼ë¡œ êµ¬í˜„ëœ ì‚¬ìš´ë“œ ì¹´ë“œ ë°–ì˜ ì„¤ì •ë“¤.
+       AUTOEXEC.BATì—ë„ ì ‘ê·¼í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+       ë” ìžì„¸í•œ ì •ë³´ë¥¼ ë³´ë ¤ë©´ 13ë²ˆ í•­ëª© (ì„¤ì • êµ¬ì„± íŒŒì¼)ì—ì„œ ì°¾ìœ¼ì‹¤ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-  -writelang ÆÄÀÏ À§Ä¡
-       ÇöÀçÀÇ ¾ð¾î ¼³Á¤À» ÆÄÀÏ¿¡ ±â·ÏÇÕ´Ï´Ù.
-       "ÆÄÀÏ À§Ä¡"´Â DOSBox°¡ ÀÖ´Â ½ÇÁ¦ µå¶óÀÌºê¿¡ ÀÖ½À´Ï´Ù. (DOSBox¿¡¼­ ¸¶¿îÆ®ÇÑ µå¶óÀÌºê¿¡ ÀÖÁö ¾Ê½À´Ï´Ù)
-       ¾ð¾î ÆÄÀÏÀº ³»ºÎ ¸í·É¾î¿Í ³»ºÎ DOS¿¡¼­ ´«¿¡ º¸ÀÌ´Â ¸ðµç Ãâ·Â ¹®ÀÚ¿­À» Á¦¾îÇÕ´Ï´Ù.
-       ´õ ÀÚ¼¼ÇÑ Á¤º¸´Â 14¹ø ±¸¹® "¾ð¾î ÆÄÀÏ"À» ÀÐ¾î º¸½Ê½Ã¿À.
+  -writelang íŒŒì¼ ìœ„ì¹˜
+       í˜„ìž¬ì˜ ì–¸ì–´ ì„¤ì •ì„ íŒŒì¼ì— ê¸°ë¡í•©ë‹ˆë‹¤.
+       "íŒŒì¼ ìœ„ì¹˜"ëŠ” DOSBoxê°€ ìžˆëŠ” ì‹¤ì œ ë“œë¼ì´ë¸Œì— ìžˆìŠµë‹ˆë‹¤. (DOSBoxì—ì„œ ë§ˆìš´íŠ¸í•œ ë“œë¼ì´ë¸Œì— ìžˆì§€ ì•ŠìŠµë‹ˆë‹¤)
+       ì–¸ì–´ íŒŒì¼ì€ ë‚´ë¶€ ëª…ë ¹ì–´ì™€ ë‚´ë¶€ DOSì—ì„œ ëˆˆì— ë³´ì´ëŠ” ëª¨ë“  ì¶œë ¥ ë¬¸ìžì—´ì„ ì œì–´í•©ë‹ˆë‹¤.
+       ë” ìžì„¸í•œ ì •ë³´ëŠ” 14ë²ˆ êµ¬ë¬¸ "ì–¸ì–´ íŒŒì¼"ì„ ì½ì–´ ë³´ì‹­ì‹œì˜¤.
 
   -securemode
-       µµ½º¹Ú½º¸¦ ´õ ¾ÈÀüÇÑ ¸ðµå·Î ÀüÈ¯ÇÕ´Ï´Ù. ÀÌ ¸ðµå¿¡¼­ ³»ºÎ ¸í·É¾î MOUNT, IMGMOUNT, BOOT´Â µ¿ÀÛÇÏÁö ¾Ê½À´Ï´Ù.
-       »õ·Î¿î ¼³Á¤ ±¸¼º ÆÄÀÏÀÌ³ª ¾ð¾î ÆÄÀÏÀ» ¸¸µé ¼öµµ ¾ø½À´Ï´Ù. (µµ½º¹Ú½º¸¦ ´Ù½Ã ½ÃÀÛÇØ¾ß ¾Õ¼­ ¾ð±ÞÇÑ ±â´ÉµéÀ» »ç¿ëÇÒ ¼ö ÀÖÀ½)
+       ë„ìŠ¤ë°•ìŠ¤ë¥¼ ë” ì•ˆì „í•œ ëª¨ë“œë¡œ ì „í™˜í•©ë‹ˆë‹¤. ì´ ëª¨ë“œì—ì„œ ë‚´ë¶€ ëª…ë ¹ì–´ MOUNT, IMGMOUNT, BOOTëŠ” ë™ìž‘í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+       ìƒˆë¡œìš´ ì„¤ì • êµ¬ì„± íŒŒì¼ì´ë‚˜ ì–¸ì–´ íŒŒì¼ì„ ë§Œë“¤ ìˆ˜ë„ ì—†ìŠµë‹ˆë‹¤. (ë„ìŠ¤ë°•ìŠ¤ë¥¼ ë‹¤ì‹œ ì‹œìž‘í•´ì•¼ ì•žì„œ ì–¸ê¸‰í•œ ê¸°ëŠ¥ë“¤ì„ ì‚¬ìš©í•  ìˆ˜ ìžˆìŒ)
 
-  -set "±¸¹® ¼Ó¼º=°ª"
-       ¼Ó¼ºÀ» »õ·Î¿î °ªÀ¸·Î ¼³Á¤ÇÕ´Ï´Ù.
-       ÀÌ ¶§ CONFIG´Â ¸í·ÉÀÌ Á¦´ë·Î ¹Þ¾Æµé¿©Á³´ÂÁö ¾Ë·Á ÁÖÁö ¾Ê½À´Ï´Ù.
+  -set "êµ¬ë¬¸ ì†ì„±=ê°’"
+       ì†ì„±ì„ ìƒˆë¡œìš´ ê°’ìœ¼ë¡œ ì„¤ì •í•©ë‹ˆë‹¤.
+       ì´ ë•Œ CONFIGëŠ” ëª…ë ¹ì´ ì œëŒ€ë¡œ ë°›ì•„ë“¤ì—¬ì¡ŒëŠ”ì§€ ì•Œë ¤ ì£¼ì§€ ì•ŠìŠµë‹ˆë‹¤.
 
-  -get "±¸¹® ¼Ó¼º"
-       ¼Ó¼º¿¡ µé¾îÀÖ´Â °ªÀ» ¾Ë·Á ÁÖ¸ç %CONFIG% È¯°æ º¯¼ö¿¡ ÀúÀåµË´Ï´Ù.
-       ÀÏ°ý(¹èÄ¡) ÆÄÀÏÀ» »ç¿ëÇÏ¿© °ªÀ» ÀúÀåÇÒ ¶§ ¾²½Ã¸é µË´Ï´Ù.
+  -get "êµ¬ë¬¸ ì†ì„±"
+       ì†ì„±ì— ë“¤ì–´ìžˆëŠ” ê°’ì„ ì•Œë ¤ ì£¼ë©° %CONFIG% í™˜ê²½ ë³€ìˆ˜ì— ì €ìž¥ë©ë‹ˆë‹¤.
+       ì¼ê´„(ë°°ì¹˜) íŒŒì¼ì„ ì‚¬ìš©í•˜ì—¬ ê°’ì„ ì €ìž¥í•  ë•Œ ì“°ì‹œë©´ ë©ë‹ˆë‹¤.
 
-  "-set"¿Í "-get" µÑ ´Ù ÀÏ°ý(bat) ÆÄÀÏ¿¡ ³ÖÀ» ¼ö ÀÖÀ¸¸ç °ÔÀÓ¸¶´Ù ¼³Á¤À» ´Ù¸£°Ô ÇÏ¿© ¾µ ¼ö ÀÖ½À´Ï´Ù.
-  ±× ´ë½Å °¢ °ÔÀÓ¿¡ ¸ÂÃß¾î º°µµÀÇ DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏÀ» »ç¿ëÇÏ´Â °ÍÀÌ ´õ ½¬¿ï ¼öµµ ÀÖ½À´Ï´Ù.
+  "-set"ì™€ "-get" ë‘˜ ë‹¤ ì¼ê´„(bat) íŒŒì¼ì— ë„£ì„ ìˆ˜ ìžˆìœ¼ë©° ê²Œìž„ë§ˆë‹¤ ì„¤ì •ì„ ë‹¤ë¥´ê²Œ í•˜ì—¬ ì“¸ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+  ê·¸ ëŒ€ì‹  ê° ê²Œìž„ì— ë§žì¶”ì–´ ë³„ë„ì˜ DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì„ ì‚¬ìš©í•˜ëŠ” ê²ƒì´ ë” ì‰¬ìš¸ ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤.
 
-  º¸±â :
-  1. c:\dosgames µð·ºÅÍ¸®¿¡ ¼³Á¤ ±¸¼º ÆÄÀÏÀ» ¸¸µé±â:
+  ë³´ê¸° :
+  1. c:\dosgames ë””ë ‰í„°ë¦¬ì— ì„¤ì • êµ¬ì„± íŒŒì¼ì„ ë§Œë“¤ê¸°:
       config -writeconf c:\dosgames\dosbox.conf
-  2. CPU »çÀÌÅ¬ °ªÀ» 10000À¸·Î ³õ±â:
+  2. CPU ì‚¬ì´í´ ê°’ì„ 10000ìœ¼ë¡œ ë†“ê¸°:
       config -set "cpu cycles=1000"
-  3. EMS ¸Þ¸ð¸® °¡»ó ±¸ÇöÀ» ²ô±â:
+  3. EMS ë©”ëª¨ë¦¬ ê°€ìƒ êµ¬í˜„ì„ ë„ê¸°:
       config -set "dos ems=false"
-  4. ¾î¶² CPU ÄÚ¾î°¡ ¾²ÀÌ°í ÀÖ´ÂÁö ¾Ë¾Æ º¸±â:
+  4. ì–´ë–¤ CPU ì½”ì–´ê°€ ì“°ì´ê³  ìžˆëŠ”ì§€ ì•Œì•„ ë³´ê¸°:
       config -get "cpu core"
 
-LOADFIX [-Å©±â] [ÇÁ·Î±×·¥] [ÇÁ·Î±×·¥ ¸Å°³º¯¼ö]
+LOADFIX [-í¬ê¸°] [í”„ë¡œê·¸ëž¨] [í”„ë¡œê·¸ëž¨ ë§¤ê°œë³€ìˆ˜]
 LOADFIX -f
 
-  ¸Þ¸ð¸®¸¦ Àâ¾Æ¸Ô°Ô ÇÕ´Ï´Ù.
-  ¿À·¡µÈ ÇÁ·Î±×·¥µéÀÌ ³Ê¹« ¸¹Àº ¸Þ¸ð¸®¸¦ ¾Ë¾ÆÃ¤Áö ¸øÇÒ ¶§°¡ ÀÖ´Âµ¥ ÀÌ·² ¶§ ¾²¸é ÁÁ½À´Ï´Ù.
+  ë©”ëª¨ë¦¬ë¥¼ ìž¡ì•„ë¨¹ê²Œ í•©ë‹ˆë‹¤.
+  ì˜¤ëž˜ëœ í”„ë¡œê·¸ëž¨ë“¤ì´ ë„ˆë¬´ ë§Žì€ ë©”ëª¨ë¦¬ë¥¼ ì•Œì•„ì±„ì§€ ëª»í•  ë•Œê°€ ìžˆëŠ”ë° ì´ëŸ´ ë•Œ ì“°ë©´ ì¢‹ìŠµë‹ˆë‹¤.
 
-  -Å©±â
-        ¸Þ¸ð¸®¸¦ Â÷ÁöÇÒ KB ¼ö, ±âº»°ª = 64kb
+  -í¬ê¸°
+        ë©”ëª¨ë¦¬ë¥¼ ì°¨ì§€í•  KB ìˆ˜, ê¸°ë³¸ê°’ = 64kb
   -f
-        ÀÌÀü¿¡ ÇÒ´çÇß´ø ¸ðµç ¸Þ¸ð¸®¸¦ µÇµ¹¸³´Ï´Ù
+        ì´ì „ì— í• ë‹¹í–ˆë˜ ëª¨ë“  ë©”ëª¨ë¦¬ë¥¼ ë˜ëŒë¦½ë‹ˆë‹¤
 
 
-º¸±â:
-  1. 64KB ¸Þ¸ð¸®¸¦ ÇÒ´çÇÏ¿© MM2.EXE¸¦ ½ÇÇàÇÒ ¶§ :
+ë³´ê¸°:
+  1. 64KB ë©”ëª¨ë¦¬ë¥¼ í• ë‹¹í•˜ì—¬ MM2.EXEë¥¼ ì‹¤í–‰í•  ë•Œ :
      loadfix mm2
-  2. 32KB ¸Þ¸ð¸®¸¦ ÇÒ´çÇÏ¿© MM2.EXE¸¦ ½ÇÇàÇÒ ¶§ :
+  2. 32KB ë©”ëª¨ë¦¬ë¥¼ í• ë‹¹í•˜ì—¬ MM2.EXEë¥¼ ì‹¤í–‰í•  ë•Œ :
      loadfix -32 mm2
-  3. ÀÌÀü¿¡ ÇÒ´çÇÑ ¸ðµç ¸Þ¸ð¸® º¹±¸ :
+  3. ì´ì „ì— í• ë‹¹í•œ ëª¨ë“  ë©”ëª¨ë¦¬ ë³µêµ¬ :
      loadfix -f
 
 
 RESCAN
-DOSBox µå¶óÀÌºêÀÇ Ä³½Ã¸¦ ´Ù½Ã ºÒ·¯ µéÀÔ´Ï´Ù.
-½ÇÇàÇÏ°í ³ª¼­ Drive cache cleared¶ó°í ¶ß¸é Á¤»óÀÔ´Ï´Ù. Ctrl-F4 Å°¸¦ ´©¸£¼Åµµ ÀÌ ±â´ÉÀÌ µ¿ÀÛÇÕ´Ï´Ù.
+DOSBox ë“œë¼ì´ë¸Œì˜ ìºì‹œë¥¼ ë‹¤ì‹œ ë¶ˆëŸ¬ ë“¤ìž…ë‹ˆë‹¤.
+ì‹¤í–‰í•˜ê³  ë‚˜ì„œ Drive cache clearedë¼ê³  ëœ¨ë©´ ì •ìƒìž…ë‹ˆë‹¤. Ctrl-F4 í‚¤ë¥¼ ëˆ„ë¥´ì…”ë„ ì´ ê¸°ëŠ¥ì´ ë™ìž‘í•©ë‹ˆë‹¤.
 
-DOSBox¿¡¼­ ¸¶¿îÆ®¸¦ ÇÑ ´ÙÀ½ Windows¿¡¼­ Æú´õ³ª ÆÄÀÏÀ» ¼öÁ¤ÇÏ°Å³ª ÀÌ¸§À» ¹Ù²Ù¾ú´Ù¸é,
-DOSBox¿¡¼­´Â ÀÌ ¸í·É¾î¸¦ »ç¿ëÇÏ¿© ¹Ù²ï µð·ºÅÍ¸®ÀÇ ±¸Á¶¸¦ ´Ù½Ã ÀÐ¾î µéÀÔ´Ï´Ù.
+DOSBoxì—ì„œ ë§ˆìš´íŠ¸ë¥¼ í•œ ë‹¤ìŒ Windowsì—ì„œ í´ë”ë‚˜ íŒŒì¼ì„ ìˆ˜ì •í•˜ê±°ë‚˜ ì´ë¦„ì„ ë°”ê¾¸ì—ˆë‹¤ë©´,
+DOSBoxì—ì„œëŠ” ì´ ëª…ë ¹ì–´ë¥¼ ì‚¬ìš©í•˜ì—¬ ë°”ë€ ë””ë ‰í„°ë¦¬ì˜ êµ¬ì¡°ë¥¼ ë‹¤ì‹œ ì½ì–´ ë“¤ìž…ë‹ˆë‹¤.
 
 
 MIXER
-  DOSBox°¡ ÇöÀçÀÇ ¼Ò¸® Å©±â ¼³Á¤À» º¸¿© ÁÝ´Ï´Ù.
-  ÀÌ ¼³Á¤À» ¹Ù²Ù½Ç ¼ö ÀÖ´Â ¹æ¹ýÀº ´ÙÀ½°ú °°½À´Ï´Ù:
+  DOSBoxê°€ í˜„ìž¬ì˜ ì†Œë¦¬ í¬ê¸° ì„¤ì •ì„ ë³´ì—¬ ì¤ë‹ˆë‹¤.
+  ì´ ì„¤ì •ì„ ë°”ê¾¸ì‹¤ ìˆ˜ ìžˆëŠ” ë°©ë²•ì€ ë‹¤ìŒê³¼ ê°™ìŠµë‹ˆë‹¤:
 
-  mixer Ã¤³Î ¿ÞÂÊ:¿À¸¥ÂÊ [/NOSHOW] [/LISTMIDI]
+  mixer ì±„ë„ ì™¼ìª½:ì˜¤ë¥¸ìª½ [/NOSHOW] [/LISTMIDI]
 
-  Ã¤³Î
-      ´ÙÀ½ Áß ÇÏ³ª¸¦ °í¸¦ ¼ö ÀÖ½À´Ï´Ù: MASTER, DISNEY, SPKR, GUS, SB, FM, [, CDAUDIO]
-      CDAUDIO´Â º¼·ý Á¦¾î°¡ ÀÖ´Â CD-ROM ÀÎÅÍÆäÀÌ½º¸¦ ÀÌ¿ëÇÏ°í ÀÖÀ» ¶§(CD ÀÌ¹ÌÁö, ioctl_dx)
-      »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.
+  ì±„ë„
+      ë‹¤ìŒ ì¤‘ í•˜ë‚˜ë¥¼ ê³ ë¥¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤: MASTER, DISNEY, SPKR, GUS, SB, FM, [, CDAUDIO]
+      CDAUDIOëŠ” ë³¼ë¥¨ ì œì–´ê°€ ìžˆëŠ” CD-ROM ì¸í„°íŽ˜ì´ìŠ¤ë¥¼ ì´ìš©í•˜ê³  ìžˆì„ ë•Œ(CD ì´ë¯¸ì§€, ioctl_dx)
+      ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-  ¿ÞÂÊ:¿À¸¥ÂÊ
-      ¼Ò¸® Å©±â¸¦ % ·Î º¸¿© ÁÝ´Ï´Ù. ¾Õ¿¡ D ¸¦ ³õÀ¸¸é µ¥½Ãº§(deciBell)·Î º¸¿© ÁÝ´Ï´Ù
-      º¸±â) mixer gus d-10
+  ì™¼ìª½:ì˜¤ë¥¸ìª½
+      ì†Œë¦¬ í¬ê¸°ë¥¼ % ë¡œ ë³´ì—¬ ì¤ë‹ˆë‹¤. ì•žì— D ë¥¼ ë†“ìœ¼ë©´ ë°ì‹œë²¨(deciBell)ë¡œ ë³´ì—¬ ì¤ë‹ˆë‹¤
+      ë³´ê¸°) mixer gus d-10
 
   /NOSHOW
-      ¼Ò¸® Å©±â ¼öÁØ¿¡¼­ ÇÏ³ª¸¦ ¼³Á¤ÇÑ´Ù¸é DOSBox°¡ °á°ú¸¦ º¸¿© ÁÖÁö ¾Ê°Ô ÇÕ´Ï´Ù.
+      ì†Œë¦¬ í¬ê¸° ìˆ˜ì¤€ì—ì„œ í•˜ë‚˜ë¥¼ ì„¤ì •í•œë‹¤ë©´ DOSBoxê°€ ê²°ê³¼ë¥¼ ë³´ì—¬ ì£¼ì§€ ì•Šê²Œ í•©ë‹ˆë‹¤.
 
   /LISTMIDI
-      PC(Windows)¿¡¼­ »ç¿ëÇÒ ¼ö ÀÖ´Â ¹Ìµð ÀåÄ¡¸¦ ³ª¿­ÇÕ´Ï´Ù.
-      Windows ±âº» ¹Ìµð ¸ÅÆÛ »Ó¸¸ ¾Æ´Ï¶ó ´Ù¸¥ ÀåÄ¡µµ °í¸£·Á¸é
-      ¼³Á¤ ±¸¼º ÆÄÀÏ ¾È¿¡ 'midconfig=id' ÁÙÀ» Ãß°¡ÇÏ¿© [midi] ±¸¹®¿¡´Ù Ãß°¡ÇÏ½Ê½Ã¿À.
-      ¿©±â¼­ ³ª¿À´Â id´Â LISTMIDIÀÇ ¸ñ·Ï¿¡ ³ª¿Â ÀåÄ¡ÀÇ °³¼ö¸¦ ¶æÇÕ´Ï´Ù. (¿¹: midconfig=2)
+      PC(Windows)ì—ì„œ ì‚¬ìš©í•  ìˆ˜ ìžˆëŠ” ë¯¸ë”” ìž¥ì¹˜ë¥¼ ë‚˜ì—´í•©ë‹ˆë‹¤.
+      Windows ê¸°ë³¸ ë¯¸ë”” ë§¤í¼ ë¿ë§Œ ì•„ë‹ˆë¼ ë‹¤ë¥¸ ìž¥ì¹˜ë„ ê³ ë¥´ë ¤ë©´
+      ì„¤ì • êµ¬ì„± íŒŒì¼ ì•ˆì— 'midconfig=id' ì¤„ì„ ì¶”ê°€í•˜ì—¬ [midi] êµ¬ë¬¸ì—ë‹¤ ì¶”ê°€í•˜ì‹­ì‹œì˜¤.
+      ì—¬ê¸°ì„œ ë‚˜ì˜¤ëŠ” idëŠ” LISTMIDIì˜ ëª©ë¡ì— ë‚˜ì˜¨ ìž¥ì¹˜ì˜ ê°œìˆ˜ë¥¼ ëœ»í•©ë‹ˆë‹¤. (ì˜ˆ: midconfig=2)
 
-      ¸®´ª½ºÀÇ °æ¿ì ÀÌ ¿É¼ÇÀº µ¿ÀÛÇÏÁö ¾ÊÁö¸¸ ÄÜ¼Ö¿¡¼­ 'pmidi -l' ¸¦ ÀÌ¿ëÇÏ¸é ºñ½ÁÇÑ
-      °á°ú¸¦ ¾òÀ» ¼ö ÀÖ½À´Ï´Ù. ±× µÚ "midconfig=" ÁÙÀ» "midconfig=Æ÷Æ®"·Î ¹Ù²Ù¾î
-      ÁÖ½Ã¸é µË´Ï´Ù. ¿©±â¼­ Æ÷Æ®´Â pmidi -lÀ» ÅëÇØ ³ª¿­ÇÑ ÀåÄ¡ÀÇ Æ÷Æ®¸¦ °¡¸®Åµ´Ï´Ù.
-      (¿¹: midconfig=128:0)
+      ë¦¬ëˆ…ìŠ¤ì˜ ê²½ìš° ì´ ì˜µì…˜ì€ ë™ìž‘í•˜ì§€ ì•Šì§€ë§Œ ì½˜ì†”ì—ì„œ 'pmidi -l' ë¥¼ ì´ìš©í•˜ë©´ ë¹„ìŠ·í•œ
+      ê²°ê³¼ë¥¼ ì–»ì„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. ê·¸ ë’¤ "midconfig=" ì¤„ì„ "midconfig=í¬íŠ¸"ë¡œ ë°”ê¾¸ì–´
+      ì£¼ì‹œë©´ ë©ë‹ˆë‹¤. ì—¬ê¸°ì„œ í¬íŠ¸ëŠ” pmidi -lì„ í†µí•´ ë‚˜ì—´í•œ ìž¥ì¹˜ì˜ í¬íŠ¸ë¥¼ ê°€ë¦¬í‚µë‹ˆë‹¤.
+      (ì˜ˆ: midconfig=128:0)
 
 
 IMGMOUNT
-DOSBox¿¡¼­ µð½ºÅ© ÀÌ¹ÌÁö¿Í CD-ROM ÀÌ¹ÌÁö¸¦ ¸¶¿îÆ®ÇÒ ¶§ ¾²ÀÌ´Â À¯Æ¿¸®Æ¼ÀÔ´Ï´Ù.
+DOSBoxì—ì„œ ë””ìŠ¤í¬ ì´ë¯¸ì§€ì™€ CD-ROM ì´ë¯¸ì§€ë¥¼ ë§ˆìš´íŠ¸í•  ë•Œ ì“°ì´ëŠ” ìœ í‹¸ë¦¬í‹°ìž…ë‹ˆë‹¤.
 
-IMGMOUNT µå¶óÀÌºê [ÀÌ¹ÌÁö ÆÄÀÏ] -t [ÀÌ¹ÌÁö Á¾·ù] -fs [ÀÌ¹ÌÁö Çü½Ä]
-	-size [¼½ÅÍ ¹ÙÀÌÆ® Å©±â, Çìµå ´ç ¼½ÅÍ ¼ö, Çìµå ¼ö, ½Ç¸°´õ ¼ö]
-IMGMOUNT µå¶óÀÌºê [ÀÌ¹ÌÁö ÆÄÀÏ1, ÀÌ¹ÌÁö ÆÄÀÏ2, ... ÀÌ¹ÌÁöÆÄÀÏN] -t cdrom -fs iso
+IMGMOUNT ë“œë¼ì´ë¸Œ [ì´ë¯¸ì§€ íŒŒì¼] -t [ì´ë¯¸ì§€ ì¢…ë¥˜] -fs [ì´ë¯¸ì§€ í˜•ì‹]
+	-size [ì„¹í„° ë°”ì´íŠ¸ í¬ê¸°, í—¤ë“œ ë‹¹ ì„¹í„° ìˆ˜, í—¤ë“œ ìˆ˜, ì‹¤ë¦°ë” ìˆ˜]
+IMGMOUNT ë“œë¼ì´ë¸Œ [ì´ë¯¸ì§€ íŒŒì¼1, ì´ë¯¸ì§€ íŒŒì¼2, ... ì´ë¯¸ì§€íŒŒì¼N] -t cdrom -fs iso
 
-  ÀÌ¹ÌÁö ÆÄÀÏ
-      DOSBox¿¡¼­ ¸¶¿îÆ®ÇÏ·Á´Â ÀÌ¹ÌÁö ÆÄÀÏÀÇ À§Ä¡ÀÔ´Ï´Ù.
-      ÀÌ À§Ä¡´Â DOSBox ¾È¿¡¼­ ¸¶¿îÆ®µÈ µå¶óÀÌºê³ª ½ÇÁ¦ µð½ºÅ©·Î ¼³Á¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.
-      CD-ROM ÀÌ¹ÌÁö (ISO ¶Ç´Â CUE/BIN ¶Ç´Â CUE/IMG) ¶ÇÇÑ ¸¶¿îÆ®ÇÒ ¼ö ÀÖ½À´Ï´Ù. CD ¹Ù²Ù±â ±â´ÉÀ» »ç¿ëÇÏ°í ½ÍÀ¸½Ã¸é
-      ¹Ù·Î ¾Æ·¡¿¡ ÀÖ´Â ¿É¼ÇÀ» º¸½Ê½Ã¿À.
-      CUE/BIN ÆÄÀÏµéÀº ¼±È£µÇ´Â CD-ROM ÀÌ¹ÌÁö ÇüÅÂ·Î, µ¥ÀÌÅÍ¸¸ ÀÔ·ÂÇÒ ¼ö ÀÖ´Â ISO¿¡
-      ¼Ò¸®°¡ ÀúÀåµÇ¾î ÀÖ½À´Ï´Ù. CUE/BINÀÇ °æ¿ì ¸¶¿îÆ®ÇÒ ¶§ ¾ðÁ¦³ª CUE ½ÃÆ®¸¦ ÁöÁ¤ÇÕ´Ï´Ù.
+  ì´ë¯¸ì§€ íŒŒì¼
+      DOSBoxì—ì„œ ë§ˆìš´íŠ¸í•˜ë ¤ëŠ” ì´ë¯¸ì§€ íŒŒì¼ì˜ ìœ„ì¹˜ìž…ë‹ˆë‹¤.
+      ì´ ìœ„ì¹˜ëŠ” DOSBox ì•ˆì—ì„œ ë§ˆìš´íŠ¸ëœ ë“œë¼ì´ë¸Œë‚˜ ì‹¤ì œ ë””ìŠ¤í¬ë¡œ ì„¤ì •í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+      CD-ROM ì´ë¯¸ì§€ (ISO ë˜ëŠ” CUE/BIN ë˜ëŠ” CUE/IMG) ë˜í•œ ë§ˆìš´íŠ¸í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤. CD ë°”ê¾¸ê¸° ê¸°ëŠ¥ì„ ì‚¬ìš©í•˜ê³  ì‹¶ìœ¼ì‹œë©´
+      ë°”ë¡œ ì•„ëž˜ì— ìžˆëŠ” ì˜µì…˜ì„ ë³´ì‹­ì‹œì˜¤.
+      CUE/BIN íŒŒì¼ë“¤ì€ ì„ í˜¸ë˜ëŠ” CD-ROM ì´ë¯¸ì§€ í˜•íƒœë¡œ, ë°ì´í„°ë§Œ ìž…ë ¥í•  ìˆ˜ ìžˆëŠ” ISOì—
+      ì†Œë¦¬ê°€ ì €ìž¥ë˜ì–´ ìžˆìŠµë‹ˆë‹¤. CUE/BINì˜ ê²½ìš° ë§ˆìš´íŠ¸í•  ë•Œ ì–¸ì œë‚˜ CUE ì‹œíŠ¸ë¥¼ ì§€ì •í•©ë‹ˆë‹¤.
 
-  ÀÌ¹ÌÁö ÆÄÀÏ1, ÀÌ¹ÌÁö ÆÄÀÏ2, ... ÀÌ¹ÌÁöÆÄÀÏN
-      DOSBox¿¡¼­ ¸¶¿îÆ®ÇÏ·Á´Â ÀÌ¹ÌÁö ÆÄÀÏÀÇ À§Ä¡ÀÔ´Ï´Ù.
-      ÀÌ¹ÌÁö ÆÄÀÏÀÇ ¹øÈ£´Â CD-ROM ÀÌ¹ÌÁö¸¸ Çã¿ëÇÕ´Ï´Ù. CDµéÀº ¾î´À ¶§³ª CTRL-F4Å°¸¦
-      ´©¸£¸é ¹Ù²Ü ¼ö ÀÖ½À´Ï´Ù. ¿©·¯ °³ÀÇ CD-ROMÀÌ ÇÊ¿äÇÑ °ÔÀÓÀÌ³ª °ÔÀÓ µµÁß CD¸¦ ¹Ù²ã¾ß ÇÒ ¶§
-      »ç¿ëÇÏ½Ê½Ã¿À.
+  ì´ë¯¸ì§€ íŒŒì¼1, ì´ë¯¸ì§€ íŒŒì¼2, ... ì´ë¯¸ì§€íŒŒì¼N
+      DOSBoxì—ì„œ ë§ˆìš´íŠ¸í•˜ë ¤ëŠ” ì´ë¯¸ì§€ íŒŒì¼ì˜ ìœ„ì¹˜ìž…ë‹ˆë‹¤.
+      ì´ë¯¸ì§€ íŒŒì¼ì˜ ë²ˆí˜¸ëŠ” CD-ROM ì´ë¯¸ì§€ë§Œ í—ˆìš©í•©ë‹ˆë‹¤. CDë“¤ì€ ì–´ëŠ ë•Œë‚˜ CTRL-F4í‚¤ë¥¼
+      ëˆ„ë¥´ë©´ ë°”ê¿€ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. ì—¬ëŸ¬ ê°œì˜ CD-ROMì´ í•„ìš”í•œ ê²Œìž„ì´ë‚˜ ê²Œìž„ ë„ì¤‘ CDë¥¼ ë°”ê¿”ì•¼ í•  ë•Œ
+      ì‚¬ìš©í•˜ì‹­ì‹œì˜¤.
 
-  -t [ÀÌ¹ÌÁö Á¾·ù]
-      ´ÙÀ½ÀÇ 3°¡Áö ÀÌ¹ÌÁö Á¾·ù Áß ÇÏ³ª¸¦ °í¸¦ ¼ö ÀÖ½À´Ï´Ù:
+  -t [ì´ë¯¸ì§€ ì¢…ë¥˜]
+      ë‹¤ìŒì˜ 3ê°€ì§€ ì´ë¯¸ì§€ ì¢…ë¥˜ ì¤‘ í•˜ë‚˜ë¥¼ ê³ ë¥¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤:
         floppy
-                ÇÃ·ÎÇÇ ÀÌ¹ÌÁö, ÀÏ¹Ý ÀÌ¹ÌÁö¸¦ ÁöÁ¤ÇÕ´Ï´Ù.
-                DOSBox´Â ÀÚµ¿À¸·Î µð½ºÅ© ¿ë·®À» ¾Ë¾Æ³À´Ï´Ù (º¸±â : 360K 1.2MB, 720K, 1.44MB, µî)
+                í”Œë¡œí”¼ ì´ë¯¸ì§€, ì¼ë°˜ ì´ë¯¸ì§€ë¥¼ ì§€ì •í•©ë‹ˆë‹¤.
+                DOSBoxëŠ” ìžë™ìœ¼ë¡œ ë””ìŠ¤í¬ ìš©ëŸ‰ì„ ì•Œì•„ëƒ…ë‹ˆë‹¤ (ë³´ê¸° : 360K 1.2MB, 720K, 1.44MB, ë“±)
         cdrom
-                CD-ROMÀÇ ISO ÀÌ¹ÌÁö¸¦ ÁöÁ¤ÇÕ´Ï´Ù. ¿ë·®Àº ¾Ë¾Æ¼­ ÀÎ½ÄÇÏ¿© ÇØ´ç Å©±â·Î ¼³Á¤ÇÕ´Ï´Ù.
-                ISO, CUE/BIN, CUE/IMG¸¦ »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.
+                CD-ROMì˜ ISO ì´ë¯¸ì§€ë¥¼ ì§€ì •í•©ë‹ˆë‹¤. ìš©ëŸ‰ì€ ì•Œì•„ì„œ ì¸ì‹í•˜ì—¬ í•´ë‹¹ í¬ê¸°ë¡œ ì„¤ì •í•©ë‹ˆë‹¤.
+                ISO, CUE/BIN, CUE/IMGë¥¼ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
         hdd
-                ÇÏµå µå¶óÀÌºê ÀÌ¹ÌÁö¸¦ ÁöÁ¤ÇÕ´Ï´Ù. ¾Ë¸ÂÀº CHS ¿ë·®ÀÌ ¼³Á¤µÇ¾î¾ß ÀÌ ¿É¼ÇÀÌ µ¿ÀÛÇÕ´Ï´Ù.
+                í•˜ë“œ ë“œë¼ì´ë¸Œ ì´ë¯¸ì§€ë¥¼ ì§€ì •í•©ë‹ˆë‹¤. ì•Œë§žì€ CHS ìš©ëŸ‰ì´ ì„¤ì •ë˜ì–´ì•¼ ì´ ì˜µì…˜ì´ ë™ìž‘í•©ë‹ˆë‹¤.
 
-  -fs [ÀÌ¹ÌÁö Çü½Ä]
-      ´ÙÀ½ÀÇ ÆÄÀÏ ½Ã½ºÅÛ Çü½ÄÀ» »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù:
+  -fs [ì´ë¯¸ì§€ í˜•ì‹]
+      ë‹¤ìŒì˜ íŒŒì¼ ì‹œìŠ¤í…œ í˜•ì‹ì„ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤:
         iso
-                ISO 9660 CD-ROM Æ÷¸ËÀ» »ç¿ëÇÕ´Ï´Ù.
+                ISO 9660 CD-ROM í¬ë§·ì„ ì‚¬ìš©í•©ë‹ˆë‹¤.
         fat
-                ÀÌ¹ÌÁö¸¦ ÆÄÀÏ ÇÒ´ç Å×ÀÌºí(FAT) ÆÄÀÏ ½Ã½ºÅÛÀ¸·Î »ç¿ëÇÕ´Ï´Ù.
-                DOSBox´Â ÇØ´ç ÀÌ¹ÌÁö¸¦ DOSBoxÀÇ µå¶óÀÌºê·Î ÀÎ½ÄÇÏ¸ç DOSBox ¾È¿¡¼­ ÆÄÀÏµéÀ» »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.
+                ì´ë¯¸ì§€ë¥¼ íŒŒì¼ í• ë‹¹ í…Œì´ë¸”(FAT) íŒŒì¼ ì‹œìŠ¤í…œìœ¼ë¡œ ì‚¬ìš©í•©ë‹ˆë‹¤.
+                DOSBoxëŠ” í•´ë‹¹ ì´ë¯¸ì§€ë¥¼ DOSBoxì˜ ë“œë¼ì´ë¸Œë¡œ ì¸ì‹í•˜ë©° DOSBox ì•ˆì—ì„œ íŒŒì¼ë“¤ì„ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
         none
-                DOSBox°¡ µð½ºÅ©ÀÇ ÆÄÀÏ ½Ã½ºÅÛÀ» ÀÐ¾îµéÀÌÁö ¾Ê½À´Ï´Ù.
-                Æ÷¸ËÇØ¾ß ÇÏ°Å³ª, BOOT ¸í·É¾î¸¦ »ç¿ëÇÏ¿© µð½ºÅ©¸¦ ½Ãµ¿ÇØ¾ß ÇÒ ¶§ ¾µ¸ð ÀÖ½À´Ï´Ù.
-                "none" ÆÄÀÏ ½Ã½ºÅÛÀ» »ç¿ëÇÒ ¶§ µå¶óÀÌºê ¹®ÀÚ°¡ ¾Æ´Ñ µå¶óÀÌºê ¼ýÀÚ¸¦ ÁöÁ¤ÇØ¾ß ÇÕ´Ï´Ù
-                 (2 ¶Ç´Â 3) ¡æ 2´Â ¸¶½ºÅÍ, 3Àº ½½·¹ÀÌºê
-                ¿¹¸¦ µé¾î, 70MB ÀÌ¹ÌÁö¸¦ ½½·¹ÀÌºê µå¶óÀÌºê ÀåÄ¡·Î ¸¶¿îÆ®ÇÏ°íÀÚ ÇÑ´Ù¸é, ÀÌ·¸°Ô ÀÔ·ÂÇÏ½Ê½Ã¿À:
+                DOSBoxê°€ ë””ìŠ¤í¬ì˜ íŒŒì¼ ì‹œìŠ¤í…œì„ ì½ì–´ë“¤ì´ì§€ ì•ŠìŠµë‹ˆë‹¤.
+                í¬ë§·í•´ì•¼ í•˜ê±°ë‚˜, BOOT ëª…ë ¹ì–´ë¥¼ ì‚¬ìš©í•˜ì—¬ ë””ìŠ¤í¬ë¥¼ ì‹œë™í•´ì•¼ í•  ë•Œ ì“¸ëª¨ ìžˆìŠµë‹ˆë‹¤.
+                "none" íŒŒì¼ ì‹œìŠ¤í…œì„ ì‚¬ìš©í•  ë•Œ ë“œë¼ì´ë¸Œ ë¬¸ìžê°€ ì•„ë‹Œ ë“œë¼ì´ë¸Œ ìˆ«ìžë¥¼ ì§€ì •í•´ì•¼ í•©ë‹ˆë‹¤
+                 (2 ë˜ëŠ” 3) â†’ 2ëŠ” ë§ˆìŠ¤í„°, 3ì€ ìŠ¬ë ˆì´ë¸Œ
+                ì˜ˆë¥¼ ë“¤ì–´, 70MB ì´ë¯¸ì§€ë¥¼ ìŠ¬ë ˆì´ë¸Œ ë“œë¼ì´ë¸Œ ìž¥ì¹˜ë¡œ ë§ˆìš´íŠ¸í•˜ê³ ìž í•œë‹¤ë©´, ì´ë ‡ê²Œ ìž…ë ¥í•˜ì‹­ì‹œì˜¤:
                  "imgmount 3 d:\test.img -size 512,63,16,142 -fs none"
-                DOSBoxÀÇ µå¶óÀÌºê·Î ÀÐ¾îµéÀÌ·Á¸é:
+                DOSBoxì˜ ë“œë¼ì´ë¸Œë¡œ ì½ì–´ë“¤ì´ë ¤ë©´:
                  "imgmount e: d:\test.img -size 512,63,16,142"
 
-  -size [¼½ÅÍ¹ÙÀÌÆ® Å©±â, Çìµå ´ç ¼½ÅÍ ¼ö, Çìµå ¼ö, ½Ç¸°´õ ¼ö]
-     ½Ç¸°´õ, Çì´õ, ¼½ÅÍ¸¦ µå¶óÀÌºê¿¡ ¸Â°Ô ÁöÁ¤ÇÕ´Ï´Ù.
-     ÇÏµå µå¶óÀÌºê ÀÌ¹ÌÁö¸¦ ¸¶¿îÆ®ÇÒ ¶§ ÇÊ¿äÇÕ´Ï´Ù. 
+  -size [ì„¹í„°ë°”ì´íŠ¸ í¬ê¸°, í—¤ë“œ ë‹¹ ì„¹í„° ìˆ˜, í—¤ë“œ ìˆ˜, ì‹¤ë¦°ë” ìˆ˜]
+     ì‹¤ë¦°ë”, í—¤ë”, ì„¹í„°ë¥¼ ë“œë¼ì´ë¸Œì— ë§žê²Œ ì§€ì •í•©ë‹ˆë‹¤.
+     í•˜ë“œ ë“œë¼ì´ë¸Œ ì´ë¯¸ì§€ë¥¼ ë§ˆìš´íŠ¸í•  ë•Œ í•„ìš”í•©ë‹ˆë‹¤. 
      
-  CD-ROM ÀÌ¹ÌÁöÀÇ º»º¸±â (¸®´ª½º):
+  CD-ROM ì´ë¯¸ì§€ì˜ ë³¸ë³´ê¸° (ë¦¬ëˆ…ìŠ¤):
     1. imgmount d /tmp/cdimage1.cue /tmp/cdimage2.cue -t cdrom
-    ¶Ç´Â
-    2-°¡. mount c /tmp
-    2-³ª. imgmount d c:\cdimage1.cue c:\cdimage2.cue -t cdrom
-  CD-ROM ÀÌ¹ÌÁöÀÇ º»º¸±â (¸®´ª½º):
+    ë˜ëŠ”
+    2-ê°€. mount c /tmp
+    2-ë‚˜. imgmount d c:\cdimage1.cue c:\cdimage2.cue -t cdrom
+  CD-ROM ì´ë¯¸ì§€ì˜ ë³¸ë³´ê¸° (ë¦¬ëˆ…ìŠ¤):
     imgmount d f:\img\CD1.cue f:\img\CD2.cue f:\img\CD3.cue -t cdrom
     imgmount d "g:\img\7th Guest CD1.cue" "g:\img\7th Guest CD2.cue" -t cdrom
-  MOUNT·Î ÀÌ¹ÌÁö¸¦ ¸¶¿îÆ®ÇÒ ¼ö ÀÖÁö¸¸ ¿ÜºÎ ÇÁ·Î±×·¥À» ÀÌ¿ëÇØ¾ß ÇÑ´Ù´Â °ÍÀ» ÀØÁö ¸¶½Ê½Ã¿À.
-  (À§¿¡ ¾ð±Þ)
+  MOUNTë¡œ ì´ë¯¸ì§€ë¥¼ ë§ˆìš´íŠ¸í•  ìˆ˜ ìžˆì§€ë§Œ ì™¸ë¶€ í”„ë¡œê·¸ëž¨ì„ ì´ìš©í•´ì•¼ í•œë‹¤ëŠ” ê²ƒì„ ìžŠì§€ ë§ˆì‹­ì‹œì˜¤.
+  (ìœ„ì— ì–¸ê¸‰)
 
 
 BOOT
- BOOT´Â ÇÃ·ÎÇÇ ÀÌ¹ÌÁö³ª ÇÏµå µå¶óÀÌºê ÀÌ¹ÌÁö°¡ DOSBox¸¦ °ÅÃÄ ¿î¿µ Ã¼Á¦ ¿¡¹Ä·¹ÀÌ¼ÇÀ» µ¶¸³ÀûÀ¸·Î ¼öÇàÇÏ°Ô ÇÕ´Ï´Ù.
- ½Ãµ¿ ÇÃ·ÎÇÇ µð½ºÅ©·Î »ç¿ëÇÏ°Å³ª DOSBox ¾È¿¡¼­ ´Ù¸¥ ¿î¿µÃ¼Á¦·Î ½Ãµ¿ÇÒ ¼ö ÀÖ°Ô ÇÕ´Ï´Ù.
- °¡»óÀ¸·Î ±¸ÇöµÇ´Â ½Ã½ºÅÛÀÌ PCJrÀÌ¶ó¸é(machine=pcjr) BOOT ¸í·É¾î·Î PCJr Ä«Æ®¸®Áö(.jrc)¸¦ ºÒ·¯¿Ã ¼ö ÀÖ½À´Ï´Ù.
+ BOOTëŠ” í”Œë¡œí”¼ ì´ë¯¸ì§€ë‚˜ í•˜ë“œ ë“œë¼ì´ë¸Œ ì´ë¯¸ì§€ê°€ DOSBoxë¥¼ ê±°ì³ ìš´ì˜ ì²´ì œ ì—ë®¬ë ˆì´ì…˜ì„ ë…ë¦½ì ìœ¼ë¡œ ìˆ˜í–‰í•˜ê²Œ í•©ë‹ˆë‹¤.
+ ì‹œë™ í”Œë¡œí”¼ ë””ìŠ¤í¬ë¡œ ì‚¬ìš©í•˜ê±°ë‚˜ DOSBox ì•ˆì—ì„œ ë‹¤ë¥¸ ìš´ì˜ì²´ì œë¡œ ì‹œë™í•  ìˆ˜ ìžˆê²Œ í•©ë‹ˆë‹¤.
+ ê°€ìƒìœ¼ë¡œ êµ¬í˜„ë˜ëŠ” ì‹œìŠ¤í…œì´ PCJrì´ë¼ë©´(machine=pcjr) BOOT ëª…ë ¹ì–´ë¡œ PCJr ì¹´íŠ¸ë¦¬ì§€(.jrc)ë¥¼ ë¶ˆëŸ¬ì˜¬ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-  BOOT [µð½ºÅ©ÀÌ¹ÌÁö1.img µð½ºÅ©ÀÌ¹ÌÁö2.img ¡¦ µð½ºÅ©ÀÌ¹ÌÁöN.img] [-l µå¶óÀÌºê ¹®ÀÚ¿­]
-  BOOT [cart.jrc] (PCJr Àü¿ë) b
+  BOOT [ë””ìŠ¤í¬ì´ë¯¸ì§€1.img ë””ìŠ¤í¬ì´ë¯¸ì§€2.img â€¦ ë””ìŠ¤í¬ì´ë¯¸ì§€N.img] [-l ë“œë¼ì´ë¸Œ ë¬¸ìžì—´]
+  BOOT [cart.jrc] (PCJr ì „ìš©) b
 
- diskimg1.img diskimg2.img .. diskimgN.img (NÀº ¼ýÀÚ)
- ÁöÁ¤µÈ µå¶óÀÌºê ¹®ÀÚ¿­·Î DOSBox°¡ ½Ãµ¿ÇÑ µÚ¿¡ ¸¶¿îÆ®ÇÏ°íÀÚ ÇÏ´Â ÇÃ·ÎÇÇ µð½ºÅ©ÀÇ ÀÌ¹ÌÁöÀÇ ¼ö¸¦ ÁöÁ¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.
- ÀÌ¹ÌÁö¸¦ ³Ñ±â·Á¸é, CTRL-F4 Å°¸¦ ´­·¯ ÇöÀçÀÇ µð½ºÅ©¸¦ ºüÁ®³ª¿À°Ô ÇÏ°í ¸ñ·Ï¿¡¼­ ´ÙÀ½ µð½ºÅ©·Î ³Ñ°Ü ÁÖ½Ê½Ã¿À.
- ¸ñ·Ï¿¡¼­ ¸¶Áö¸· µð½ºÅ©°¡ ´Ù ³¡³ª¸é, ¸ñ·ÏÀº Ã³À½À¸·Î ´Ù½Ã µÇµ¹¾Æ°©´Ï´Ù.
+ diskimg1.img diskimg2.img .. diskimgN.img (Nì€ ìˆ«ìž)
+ ì§€ì •ëœ ë“œë¼ì´ë¸Œ ë¬¸ìžì—´ë¡œ DOSBoxê°€ ì‹œë™í•œ ë’¤ì— ë§ˆìš´íŠ¸í•˜ê³ ìž í•˜ëŠ” í”Œë¡œí”¼ ë””ìŠ¤í¬ì˜ ì´ë¯¸ì§€ì˜ ìˆ˜ë¥¼ ì§€ì •í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+ ì´ë¯¸ì§€ë¥¼ ë„˜ê¸°ë ¤ë©´, CTRL-F4 í‚¤ë¥¼ ëˆŒëŸ¬ í˜„ìž¬ì˜ ë””ìŠ¤í¬ë¥¼ ë¹ ì ¸ë‚˜ì˜¤ê²Œ í•˜ê³  ëª©ë¡ì—ì„œ ë‹¤ìŒ ë””ìŠ¤í¬ë¡œ ë„˜ê²¨ ì£¼ì‹­ì‹œì˜¤.
+ ëª©ë¡ì—ì„œ ë§ˆì§€ë§‰ ë””ìŠ¤í¬ê°€ ë‹¤ ëë‚˜ë©´, ëª©ë¡ì€ ì²˜ìŒìœ¼ë¡œ ë‹¤ì‹œ ë˜ëŒì•„ê°‘ë‹ˆë‹¤.
 
- - ¾Ë¸é ÁÁÀº Á¤º¸!
- ³»°¡ ÁÁ¾ÆÇÏ´Â °ÔÀÓ Á¤Ç°ÀÌ µð½ºÄÏÀÌ 3Àå ÀÖ´Ù°í Ä¨½Ã´Ù.
- °ÔÀÓÀ» ¼³Ä¡ÇÏ´Ù°¡ 'µÎ ¹øÂ° µð½ºÄÏÀ» ³ÖÀ¸¶ó', '¼¼ ¹øÂ° µð½ºÄÏÀ» ³ÖÀ¸¶ó'ÇÒ ¶§°¡ ÀÖÀ» °ÍÀÔ´Ï´Ù.
- ÀÌ ¶§ Ã¹ ¹øÂ° µð½ºÄÏÀÌ ³¡³ª¸é CTRL-F4 Å°¸¦ ´­·¯ µÎ ¹øÂ° µð½ºÄÏÀ¸·Î ³Ñ±â°Ô ÇÏ¸é µÇ°í,
- '¼¼ ¹øÂ° µð½ºÄÏÀ» ³ÖÀ¸¶ó'¶ó°í ¶ß¸é ¶Ç ´Ù½Ã CTRL-F4 Å°¸¦ ´­·¯ ¼¼ ¹øÂ° µð½ºÄÏÀ¸·Î ³Ñ±â¸é µË´Ï´Ù.
+ - ì•Œë©´ ì¢‹ì€ ì •ë³´!
+ ë‚´ê°€ ì¢‹ì•„í•˜ëŠ” ê²Œìž„ ì •í’ˆì´ ë””ìŠ¤ì¼“ì´ 3ìž¥ ìžˆë‹¤ê³  ì¹©ì‹œë‹¤.
+ ê²Œìž„ì„ ì„¤ì¹˜í•˜ë‹¤ê°€ 'ë‘ ë²ˆì§¸ ë””ìŠ¤ì¼“ì„ ë„£ìœ¼ë¼', 'ì„¸ ë²ˆì§¸ ë””ìŠ¤ì¼“ì„ ë„£ìœ¼ë¼'í•  ë•Œê°€ ìžˆì„ ê²ƒìž…ë‹ˆë‹¤.
+ ì´ ë•Œ ì²« ë²ˆì§¸ ë””ìŠ¤ì¼“ì´ ëë‚˜ë©´ CTRL-F4 í‚¤ë¥¼ ëˆŒëŸ¬ ë‘ ë²ˆì§¸ ë””ìŠ¤ì¼“ìœ¼ë¡œ ë„˜ê¸°ê²Œ í•˜ë©´ ë˜ê³ ,
+ 'ì„¸ ë²ˆì§¸ ë””ìŠ¤ì¼“ì„ ë„£ìœ¼ë¼'ë¼ê³  ëœ¨ë©´ ë˜ ë‹¤ì‹œ CTRL-F4 í‚¤ë¥¼ ëˆŒëŸ¬ ì„¸ ë²ˆì§¸ ë””ìŠ¤ì¼“ìœ¼ë¡œ ë„˜ê¸°ë©´ ë©ë‹ˆë‹¤.
 
- [-l µå¶óÀÌºê ¹®ÀÚ¿­]
- ½Ãµ¿ÇÒ µå¶óÀÌºê¸¦ ÁöÁ¤ÇÏ´Â ¸Å°³ º¯¼öÀÔ´Ï´Ù. ÇÃ·ÎÇÇ µå¶óÀÌºê´Â ±âº»°ªÀ¸·Î A µå¶óÀÌºêÀÔ´Ï´Ù.
- ÇÏµå µå¶óÀÌºê ÀÌ¹ÌÁö¸¦ ¸¶½ºÅÍ·Î ½Ãµ¿ÇÏ·Á¸é "-l C"¶ó°í ÁöÁ¤ÇÏ½Ê½Ã¿À.
- ¾Æ´Ï¸é "-l D"·Î ÁöÁ¤ÇÏ¿© ÇÏµå µå¶óÀÌºê ÀÌ¹ÌÁö¸¦ ½½·¹ÀÌºê·Î ÁöÁ¤ÇÒ ¼öµµ ÀÖ½À´Ï´Ù.
+ [-l ë“œë¼ì´ë¸Œ ë¬¸ìžì—´]
+ ì‹œë™í•  ë“œë¼ì´ë¸Œë¥¼ ì§€ì •í•˜ëŠ” ë§¤ê°œ ë³€ìˆ˜ìž…ë‹ˆë‹¤. í”Œë¡œí”¼ ë“œë¼ì´ë¸ŒëŠ” ê¸°ë³¸ê°’ìœ¼ë¡œ A ë“œë¼ì´ë¸Œìž…ë‹ˆë‹¤.
+ í•˜ë“œ ë“œë¼ì´ë¸Œ ì´ë¯¸ì§€ë¥¼ ë§ˆìŠ¤í„°ë¡œ ì‹œë™í•˜ë ¤ë©´ "-l C"ë¼ê³  ì§€ì •í•˜ì‹­ì‹œì˜¤.
+ ì•„ë‹ˆë©´ "-l D"ë¡œ ì§€ì •í•˜ì—¬ í•˜ë“œ ë“œë¼ì´ë¸Œ ì´ë¯¸ì§€ë¥¼ ìŠ¬ë ˆì´ë¸Œë¡œ ì§€ì •í•  ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤.
 
- cart.jrc (PCJr Àü¿ë)
- PCJrÀÇ °¡»ó ±¸ÇöÀÌ ÄÑÁ® ÀÖ´Ù¸é Ä«Æ®¸®Áö´Â BOOT ¸í·É¾î¸¦ ½á¼­ ºÒ·¯µéÀÏ ¼ö ÀÖ½À´Ï´Ù.
- ¿ÏÀüÇÏ°Ô Áö¿øÇÏÁö´Â ¾Ê½À´Ï´Ù.
+ cart.jrc (PCJr ì „ìš©)
+ PCJrì˜ ê°€ìƒ êµ¬í˜„ì´ ì¼œì ¸ ìžˆë‹¤ë©´ ì¹´íŠ¸ë¦¬ì§€ëŠ” BOOT ëª…ë ¹ì–´ë¥¼ ì¨ì„œ ë¶ˆëŸ¬ë“¤ì¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+ ì™„ì „í•˜ê²Œ ì§€ì›í•˜ì§€ëŠ” ì•ŠìŠµë‹ˆë‹¤.
 
 
 
 IPX
 
- DOSBoxÀÇ ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡¼­ IPX ³×Æ®¿öÅ©°¡ ÄÑÁ® ÀÖ¾î¾ß ÇÕ´Ï´Ù.
+ DOSBoxì˜ ì„¤ì • êµ¬ì„± íŒŒì¼ì—ì„œ IPX ë„¤íŠ¸ì›Œí¬ê°€ ì¼œì ¸ ìžˆì–´ì•¼ í•©ë‹ˆë‹¤.
 
- ³»ºÎ DOSBox ÇÁ·Î±×·¥ÀÎ IPXNETÀº ¸ðµç ¹æ½ÄÀÇ IPX ³×Æ®¿öÅ©¸¦ °ü¸®ÇÕ´Ï´Ù.
- IPXNET HELP¶ó°í ÀÔ·ÂÇÏ¸é ¸í·É¾îµé°ú °ü·Ã ¹®¼­¸¦ ³ª¿­ÇÏ¸é¼­
- DOSBox ³»ºÎ IPX ³×Æ®¿öÅ©ÀÇ µµ¿ò¸»À» º¸¿©ÁÝ´Ï´Ù.
+ ë‚´ë¶€ DOSBox í”„ë¡œê·¸ëž¨ì¸ IPXNETì€ ëª¨ë“  ë°©ì‹ì˜ IPX ë„¤íŠ¸ì›Œí¬ë¥¼ ê´€ë¦¬í•©ë‹ˆë‹¤.
+ IPXNET HELPë¼ê³  ìž…ë ¥í•˜ë©´ ëª…ë ¹ì–´ë“¤ê³¼ ê´€ë ¨ ë¬¸ì„œë¥¼ ë‚˜ì—´í•˜ë©´ì„œ
+ DOSBox ë‚´ë¶€ IPX ë„¤íŠ¸ì›Œí¬ì˜ ë„ì›€ë§ì„ ë³´ì—¬ì¤ë‹ˆë‹¤.
 
- ½ÇÁ¦·Î Åë½Å¸ÁÀ» ¼³Á¤ÇÏ·Á¸é, ÇÑÂÊÀÇ ½Ã½ºÅÛÀº ¼­¹ö°¡ µÇ¾î¾ß ÇÕ´Ï´Ù.
- ÀÌ°ÍÀ» ¼³Á¤ÇÏ·Á¸é, DOSBox ±¸¹®¿¡¼­  IPXNET STARTSERVER¸¦ ÀÔ·ÂÇÏ½Ê½Ã¿À.
- ¼­¹ö DOSBox ¼¼¼ÇÀº ¾Ë¾Æ¼­ ±× ÀÚÃ¼°¡ °¡»ó IPX ³×Æ®¿öÅ©¿¡ Ãß°¡µË´Ï´Ù.
- ´Ù½Ã ¸»ÇØ, °¡»ó IPX ³×Æ®¿öÅ©ÀÇ ÀÏºÎ°¡ µÇ¾î¾ß ÇÏ´Â ´Ù¸¥ ¸ðµç ÄÄÇ»ÅÍ¿¡ ¸Â°Ô,
- IPXNET CONNECT <ÄÄÇ»ÅÍ È£½ºÆ® ÀÌ¸§ ¶Ç´Â IP>¸¦ ÀÔ·ÂÇØ¾ß ÇÕ´Ï´Ù.
- ¿¹¸¦ µé¾î, ¼­¹ö°¡ bob.dosbox.com¿¡ ÀÖ´Ù¸é, ¼­¹ö°¡ ¾Æ´Ñ ½Ã½ºÅÛ ÂÊ¿¡¼­
- IPXNET CONNECT bob.dosbox.comÀÌ¶ó°í ÀÔ·ÂÇÏ½Ê½Ã¿À.
+ ì‹¤ì œë¡œ í†µì‹ ë§ì„ ì„¤ì •í•˜ë ¤ë©´, í•œìª½ì˜ ì‹œìŠ¤í…œì€ ì„œë²„ê°€ ë˜ì–´ì•¼ í•©ë‹ˆë‹¤.
+ ì´ê²ƒì„ ì„¤ì •í•˜ë ¤ë©´, DOSBox êµ¬ë¬¸ì—ì„œ  IPXNET STARTSERVERë¥¼ ìž…ë ¥í•˜ì‹­ì‹œì˜¤.
+ ì„œë²„ DOSBox ì„¸ì…˜ì€ ì•Œì•„ì„œ ê·¸ ìžì²´ê°€ ê°€ìƒ IPX ë„¤íŠ¸ì›Œí¬ì— ì¶”ê°€ë©ë‹ˆë‹¤.
+ ë‹¤ì‹œ ë§í•´, ê°€ìƒ IPX ë„¤íŠ¸ì›Œí¬ì˜ ì¼ë¶€ê°€ ë˜ì–´ì•¼ í•˜ëŠ” ë‹¤ë¥¸ ëª¨ë“  ì»´í“¨í„°ì— ë§žê²Œ,
+ IPXNET CONNECT <ì»´í“¨í„° í˜¸ìŠ¤íŠ¸ ì´ë¦„ ë˜ëŠ” IP>ë¥¼ ìž…ë ¥í•´ì•¼ í•©ë‹ˆë‹¤.
+ ì˜ˆë¥¼ ë“¤ì–´, ì„œë²„ê°€ bob.dosbox.comì— ìžˆë‹¤ë©´, ì„œë²„ê°€ ì•„ë‹Œ ì‹œìŠ¤í…œ ìª½ì—ì„œ
+ IPXNET CONNECT bob.dosbox.comì´ë¼ê³  ìž…ë ¥í•˜ì‹­ì‹œì˜¤.
 
- Netbios°¡ ÇÊ¿äÇÑ °ÔÀÓÀ» µ¹¸®·Á¸é ³ëº§(Novell)»çÀÇ NETBIOS.EXE°¡ ÇÊ¿äÇÕ´Ï´Ù.
- À§¿¡¼­ ¸»Çß´ø IPX¿¡ ¿¬°áÇÏ·Á¸é "netbios.exe"¸¦ ½ÇÇàÇÏ½Ê½Ã¿À.
+ Netbiosê°€ í•„ìš”í•œ ê²Œìž„ì„ ëŒë¦¬ë ¤ë©´ ë…¸ë²¨(Novell)ì‚¬ì˜ NETBIOS.EXEê°€ í•„ìš”í•©ë‹ˆë‹¤.
+ ìœ„ì—ì„œ ë§í–ˆë˜ IPXì— ì—°ê²°í•˜ë ¤ë©´ "netbios.exe"ë¥¼ ì‹¤í–‰í•˜ì‹­ì‹œì˜¤.
 
- ¾Æ·¡¿¡ IPXNET ¸í·É¾î ÂüÁ¶°¡ ³ª¿Í ÀÖ½À´Ï´Ù: 
+ ì•„ëž˜ì— IPXNET ëª…ë ¹ì–´ ì°¸ì¡°ê°€ ë‚˜ì™€ ìžˆìŠµë‹ˆë‹¤: 
 
- ¡æ IPXNET CONNECT 
- IPXNET CONNECT ´Ù¸¥ DOSBox ¼¼¼Ç¿¡¼­ ½ÇÇàµÇ°í ÀÖ´Â IPX Tunneling ¼­¹ö·Î ¿¬°áÇÕ´Ï´Ù.
+ â†’ IPXNET CONNECT 
+ IPXNET CONNECT ë‹¤ë¥¸ DOSBox ì„¸ì…˜ì—ì„œ ì‹¤í–‰ë˜ê³  ìžˆëŠ” IPX Tunneling ì„œë²„ë¡œ ì—°ê²°í•©ë‹ˆë‹¤.
 
- "ÁÖ¼Ò" ¸Å°³ º¯¼ö´Â IP ÁÖ¼Ò³ª ¼­¹ö ÄÄÇ»ÅÍÀÇ È£½ºÆ® ÀÌ¸§À» ÁöÁ¤ÇÕ´Ï´Ù. »ç¿ëÇÒ UDP Æ÷Æ®µµ ÁöÁ¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.
- ±âº»°ªÀ¸·Î IPXNET´Â 213 Æ÷Æ®, IPX Tunneling¿ëÀ¸·Î ÇÒ´çµÈ IANA Æ÷Æ®¸¦ ¿¬°áÇÒ ¶§ »ç¿ëÇÕ´Ï´Ù. 
+ "ì£¼ì†Œ" ë§¤ê°œ ë³€ìˆ˜ëŠ” IP ì£¼ì†Œë‚˜ ì„œë²„ ì»´í“¨í„°ì˜ í˜¸ìŠ¤íŠ¸ ì´ë¦„ì„ ì§€ì •í•©ë‹ˆë‹¤. ì‚¬ìš©í•  UDP í¬íŠ¸ë„ ì§€ì •í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+ ê¸°ë³¸ê°’ìœ¼ë¡œ IPXNETëŠ” 213 í¬íŠ¸, IPX Tunnelingìš©ìœ¼ë¡œ í• ë‹¹ëœ IANA í¬íŠ¸ë¥¼ ì—°ê²°í•  ë•Œ ì‚¬ìš©í•©ë‹ˆë‹¤. 
 
- ¡Ø IPX CONNET ±¸¹®Àº ¡å 
- IPXNET CONNECT ÁÖ¼Ò <Æ÷Æ®> 
+ â€» IPX CONNET êµ¬ë¬¸ì€ â–¼ 
+ IPXNET CONNECT ì£¼ì†Œ <í¬íŠ¸> 
 
- ¡æ IPXNET DISCONNECT 
- IPXNET DISCONNECT´Â IPX Tunneling ¼­¹ö¿ÍÀÇ ¿¬°áÀ» ²÷½À´Ï´Ù.
+ â†’ IPXNET DISCONNECT 
+ IPXNET DISCONNECTëŠ” IPX Tunneling ì„œë²„ì™€ì˜ ì—°ê²°ì„ ëŠìŠµë‹ˆë‹¤.
 
- ¡Ø IPXNET DISCONNECTÀÇ ±¸¹®Àº ¡å 
+ â€» IPXNET DISCONNECTì˜ êµ¬ë¬¸ì€ â–¼ 
  IPXNET DISCONNECT 
 
- ¡æ IPXNET STARTSERVER
- IPXNET STARTSERVER¸¦ ½ÃÀÛÇÏ¸é IPX Tunneling ¼­¹ö´Â DOSBox ¼¼¼Ç¿¡ ÀÖ°Ô µË´Ï´Ù.
- ±âº»À¸·Î ¼­¹ö°¡ ¹Ù²î¾îµµ ÀÌ ¼­¹ö´Â UDP Æ÷Æ® 213ÀÇ ¿¬°áÀ» ¹Þ¾ÆµéÀÔ´Ï´Ù.
- ¼­¹ö°¡ ½ÃÀÛµÇ¸é, DOSBox´Â ÀÚµ¿À¸·Î IPX Tunneling ¼­¹ö¿¡ Å¬¶óÀÌ¾ðÆ® ¿¬°áÀ» ½ÃÀÛÇÕ´Ï´Ù.
+ â†’ IPXNET STARTSERVER
+ IPXNET STARTSERVERë¥¼ ì‹œìž‘í•˜ë©´ IPX Tunneling ì„œë²„ëŠ” DOSBox ì„¸ì…˜ì— ìžˆê²Œ ë©ë‹ˆë‹¤.
+ ê¸°ë³¸ìœ¼ë¡œ ì„œë²„ê°€ ë°”ë€Œì–´ë„ ì´ ì„œë²„ëŠ” UDP í¬íŠ¸ 213ì˜ ì—°ê²°ì„ ë°›ì•„ë“¤ìž…ë‹ˆë‹¤.
+ ì„œë²„ê°€ ì‹œìž‘ë˜ë©´, DOSBoxëŠ” ìžë™ìœ¼ë¡œ IPX Tunneling ì„œë²„ì— í´ë¼ì´ì–¸íŠ¸ ì—°ê²°ì„ ì‹œìž‘í•©ë‹ˆë‹¤.
 
- ¡Ø IPXNET STARTSERVERÀÇ ±¸¹®Àº ¡å 
- IPXNET STARTSERVER <Æ÷Æ®> 
+ â€» IPXNET STARTSERVERì˜ êµ¬ë¬¸ì€ â–¼ 
+ IPXNET STARTSERVER <í¬íŠ¸> 
 
- ¼­¹ö°¡ ¶ó¿ìÅÍ µÚ¿¡ ÀÖ´Ù¸é, UDP Æ÷Æ® <Æ÷Æ®>´Â ±× ¼­¹ö ÄÄÇ»ÅÍ¿¡¼­ ¸ÕÀú Æ÷¿öµåµÇ¾î¾ß ÇÕ´Ï´Ù.
+ ì„œë²„ê°€ ë¼ìš°í„° ë’¤ì— ìžˆë‹¤ë©´, UDP í¬íŠ¸ <í¬íŠ¸>ëŠ” ê·¸ ì„œë²„ ì»´í“¨í„°ì—ì„œ ë¨¼ì € í¬ì›Œë“œë˜ì–´ì•¼ í•©ë‹ˆë‹¤.
 
- ¸®´ª½º/À¯´Ð½º ±â¹ÝÀÇ ½Ã½ºÅÛ¿¡¼­´Â 1023º¸´Ù ´õ ÀÛÀº °ªÀÇ Æ÷Æ® ¹øÈ£´Â ·çÆ® ±ÇÇÑÀ¸·Î¸¸ ¾²ÀÏ ¼ö ÀÖ½À´Ï´Ù.
- µû¶ó¼­ ÀÌ·¯ÇÑ ½Ã½ºÅÛÀ» ¾²½Å´Ù¸é 1023º¸´Ù ´õ Å« °ªÀ¸·Î Æ÷Æ® ¹øÈ£¸¦ ÁöÁ¤ÇÏ½Ê½Ã¿À.
+ ë¦¬ëˆ…ìŠ¤/ìœ ë‹‰ìŠ¤ ê¸°ë°˜ì˜ ì‹œìŠ¤í…œì—ì„œëŠ” 1023ë³´ë‹¤ ë” ìž‘ì€ ê°’ì˜ í¬íŠ¸ ë²ˆí˜¸ëŠ” ë£¨íŠ¸ ê¶Œí•œìœ¼ë¡œë§Œ ì“°ì¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+ ë”°ë¼ì„œ ì´ëŸ¬í•œ ì‹œìŠ¤í…œì„ ì“°ì‹ ë‹¤ë©´ 1023ë³´ë‹¤ ë” í° ê°’ìœ¼ë¡œ í¬íŠ¸ ë²ˆí˜¸ë¥¼ ì§€ì •í•˜ì‹­ì‹œì˜¤.
 
- ¡æ IPXNET STOPSERVER 
+ â†’ IPXNET STOPSERVER 
 
- IPXNET STOPSERVER ´Â IPX Tunneling ¼­¹ö¸¦ ÀÌ DOSBox ¼¼¼Ç¿¡¼­ ÁßÁöÇÕ´Ï´Ù.
- ´Ù¸¥ ¿¬°áµéÀÌ ¸ðµÎ Á¾·áµÇ¾ú´ÂÁö ¹Ì¸® »ìÆì º¸¾Æ¾ß ÇÕ´Ï´Ù.
- ¿Ö³ÄÇÏ¸é ¼­¹ö¸¦ ÁßÁöÇØµµ ´Ù¸¥ ÄÄÇ»ÅÍ°¡ IPX Tunneling ¼­¹ö¸¦ ¿©ÀüÈ÷ »ç¿ëÇÒ ¼ö ÀÖ±â ¶§¹®ÀÔ´Ï´Ù. 
+ IPXNET STOPSERVER ëŠ” IPX Tunneling ì„œë²„ë¥¼ ì´ DOSBox ì„¸ì…˜ì—ì„œ ì¤‘ì§€í•©ë‹ˆë‹¤.
+ ë‹¤ë¥¸ ì—°ê²°ë“¤ì´ ëª¨ë‘ ì¢…ë£Œë˜ì—ˆëŠ”ì§€ ë¯¸ë¦¬ ì‚´íŽ´ ë³´ì•„ì•¼ í•©ë‹ˆë‹¤.
+ ì™œëƒí•˜ë©´ ì„œë²„ë¥¼ ì¤‘ì§€í•´ë„ ë‹¤ë¥¸ ì»´í“¨í„°ê°€ IPX Tunneling ì„œë²„ë¥¼ ì—¬ì „ížˆ ì‚¬ìš©í•  ìˆ˜ ìžˆê¸° ë•Œë¬¸ìž…ë‹ˆë‹¤. 
 
- ¡Ø IPXNET STOPSERVERÀÇ ±¸¹®Àº ¡å 
+ â€» IPXNET STOPSERVERì˜ êµ¬ë¬¸ì€ â–¼ 
  IPXNET STOPSERVER 
 
- ¡æ IPXNET PING 
+ â†’ IPXNET PING 
 
- IPXNET PING Àº Ping ¿äÃ»À» IPX Tunneled Åë½Å¸ÁÀ» ÅëÇØ Àü¼ÛÇÕ´Ï´Ù.
- ÀÀ´äÇÒ ¶§¿¡´Â ¿¬°áµÈ ´Ù¸¥ ¸ðµç ÄÄÇ»ÅÍµéÀÌ Ping¿¡ ÀÀ´äÇÒ °ÍÀÌ°í Ping ¸Þ½ÃÁö¸¦ ÁÖ°í ¹Þ´Â µ¥
- ½Ã°£ÀÌ ¾ó¸¸Å­ °É·È´ÂÁö ¾Ë·Á ÁÝ´Ï´Ù.
+ IPXNET PING ì€ Ping ìš”ì²­ì„ IPX Tunneled í†µì‹ ë§ì„ í†µí•´ ì „ì†¡í•©ë‹ˆë‹¤.
+ ì‘ë‹µí•  ë•Œì—ëŠ” ì—°ê²°ëœ ë‹¤ë¥¸ ëª¨ë“  ì»´í“¨í„°ë“¤ì´ Pingì— ì‘ë‹µí•  ê²ƒì´ê³  Ping ë©”ì‹œì§€ë¥¼ ì£¼ê³  ë°›ëŠ” ë°
+ ì‹œê°„ì´ ì–¼ë§Œí¼ ê±¸ë ¸ëŠ”ì§€ ì•Œë ¤ ì¤ë‹ˆë‹¤.
 
- ¡Ø IPXNET PINGÀÇ ±¸¹®Àº ¡å 
+ â€» IPXNET PINGì˜ êµ¬ë¬¸ì€ â–¼ 
  IPXNET PING 
 
- ¡æ IPXNET STATUS 
+ â†’ IPXNET STATUS 
 
- IPXNET STATUS ´Â DOSBox ¼¼¼ÇÀÇ ÇöÀç »óÅÂ¸¦ IPX Tunneling ³×Æ®¿öÅ©¿¡ ¾Ë·Á ÁÝ´Ï´Ù.
- ³×Æ®¿öÅ©·Î ¿¬°áµÈ ÄÄÇ»ÅÍÀÇ ¸ñ·ÏÀ» º¸·Á¸é IPXNET PING ¸í·É¾î¸¦ »ç¿ëÇÏ½Ê½Ã¿À. 
+ IPXNET STATUS ëŠ” DOSBox ì„¸ì…˜ì˜ í˜„ìž¬ ìƒíƒœë¥¼ IPX Tunneling ë„¤íŠ¸ì›Œí¬ì— ì•Œë ¤ ì¤ë‹ˆë‹¤.
+ ë„¤íŠ¸ì›Œí¬ë¡œ ì—°ê²°ëœ ì»´í“¨í„°ì˜ ëª©ë¡ì„ ë³´ë ¤ë©´ IPXNET PING ëª…ë ¹ì–´ë¥¼ ì‚¬ìš©í•˜ì‹­ì‹œì˜¤. 
 
- ¡Ø IPXNET STATUSÀÇ ±¸¹®Àº ¡å 
+ â€» IPXNET STATUSì˜ êµ¬ë¬¸ì€ â–¼ 
  IPXNET STATUS 
 
 
 
-KEYB [Å°º¸µå ·¹ÀÌ¾Æ¿ô ÄÚµå [ÄÚµå ÆäÀÌÁö [ÄÚµå ÆäÀÌÁö ÆÄÀÏ]]]
- Å°º¸µå ·¹ÀÌ¾Æ¿ôÀ» ¹Ù²ß´Ï´Ù. Å°º¸µå ·¹ÀÌ¾Æ¿ô¿¡ ´ëÇÑ ´õ ÀÚ¼¼ÇÑ Á¤º¸¸¦ º¸·Á¸é
- ±¸¹® 8¹ø "Å°º¸µå ·¹ÀÌ¾Æ¿ô"À» ÀÐ¾î º¸½Ê½Ã¿À.
+KEYB [í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒ ì½”ë“œ [ì½”ë“œ íŽ˜ì´ì§€ [ì½”ë“œ íŽ˜ì´ì§€ íŒŒì¼]]]
+ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒì„ ë°”ê¿‰ë‹ˆë‹¤. í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒì— ëŒ€í•œ ë” ìžì„¸í•œ ì •ë³´ë¥¼ ë³´ë ¤ë©´
+ êµ¬ë¬¸ 8ë²ˆ "í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒ"ì„ ì½ì–´ ë³´ì‹­ì‹œì˜¤.
 
- [Å°º¸µå ·¹ÀÌ¾Æ¿ô ÄÚµå]
- 5°³ ÀÌÇÏÀÇ ¹®ÀÚ¿­µéÀ» ÀÌ·ç´Â ·¹ÀÌ¾Æ¿ô ÄÚµåÀÔ´Ï´Ù.
- ÀÌ¸¦Å×¸é PL214 (Æú¶õµå Å¸ÀÚ¼ö)³ª PL547 (Æú¶õµå ÇÁ·Î±×·¡¸Ó)°¡ ÀÖ½À´Ï´Ù.
- ÀÌ°ÍÀº Å°º¸µå ·¹ÀÌ¾Æ¿ôÀ» °áÁ¤ÇÕ´Ï´Ù.
- DOSBox¿¡ µµÀÔµÈ ·¹ÀÌ¾Æ¿ô ¸ñ·ÏÀ» ¸ðµÎ º¸·Á¸é ¿©±â·Î µé¾î°¡ º¸½Ê½Ã¿À:
+ [í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒ ì½”ë“œ]
+ 5ê°œ ì´í•˜ì˜ ë¬¸ìžì—´ë“¤ì„ ì´ë£¨ëŠ” ë ˆì´ì•„ì›ƒ ì½”ë“œìž…ë‹ˆë‹¤.
+ ì´ë¥¼í…Œë©´ PL214 (í´ëž€ë“œ íƒ€ìžìˆ˜)ë‚˜ PL547 (í´ëž€ë“œ í”„ë¡œê·¸ëž˜ë¨¸)ê°€ ìžˆìŠµë‹ˆë‹¤.
+ ì´ê²ƒì€ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒì„ ê²°ì •í•©ë‹ˆë‹¤.
+ DOSBoxì— ë„ìž…ëœ ë ˆì´ì•„ì›ƒ ëª©ë¡ì„ ëª¨ë‘ ë³´ë ¤ë©´ ì—¬ê¸°ë¡œ ë“¤ì–´ê°€ ë³´ì‹­ì‹œì˜¤:
  http://vogons.zetafleet.com/viewtopic.php?t=21824
 
- [ÄÚµå ÆäÀÌÁö]
- ÄÚµå ÆäÀÌÁöÀÇ ¼ýÀÚÀÔ´Ï´Ù.
- Å°º¸µå ·¹ÀÌ¾Æ¿ôÀº ÁöÁ¤µÈ ÄÚµå ÆäÀÌÁö¿¡ ´ëÇÑ Áö¿øÀ» Á¦°øÇØ¾ß ÇÕ´Ï´Ù.
- ¼ýÀÚ°¡ ¿Ã¹Ù¸£Áö ¾Ê´Ù¸é ·¹ÀÌ¾Æ¿ôÀ» ºÒ·¯¿Ã ¼ö ¾ø½À´Ï´Ù.
- ÄÚµå ÆäÀÌÁö°¡ ÁöÁ¤µÇÁö ¾ÊÀ¸¸é ¿äÃ»µÈ ·¹ÀÌ¾Æ¿ô¿¡ ´ëÇÑ ¿Ã¹Ù¸¥ ÄÚµå ÆäÀÌÁö°¡
- ¾Ë¾Æ¼­ ÁöÁ¤µË´Ï´Ù.
+ [ì½”ë“œ íŽ˜ì´ì§€]
+ ì½”ë“œ íŽ˜ì´ì§€ì˜ ìˆ«ìžìž…ë‹ˆë‹¤.
+ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒì€ ì§€ì •ëœ ì½”ë“œ íŽ˜ì´ì§€ì— ëŒ€í•œ ì§€ì›ì„ ì œê³µí•´ì•¼ í•©ë‹ˆë‹¤.
+ ìˆ«ìžê°€ ì˜¬ë°”ë¥´ì§€ ì•Šë‹¤ë©´ ë ˆì´ì•„ì›ƒì„ ë¶ˆëŸ¬ì˜¬ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.
+ ì½”ë“œ íŽ˜ì´ì§€ê°€ ì§€ì •ë˜ì§€ ì•Šìœ¼ë©´ ìš”ì²­ëœ ë ˆì´ì•„ì›ƒì— ëŒ€í•œ ì˜¬ë°”ë¥¸ ì½”ë“œ íŽ˜ì´ì§€ê°€
+ ì•Œì•„ì„œ ì§€ì •ë©ë‹ˆë‹¤.
 
- [ÄÚµå ÆäÀÌÁö ÆÄÀÏ]
- DOSBox ¾È¿¡ ±âº»ÀûÀ¸·Î µé¾îÀÖÁö ¾ÊÀº ÄÚµå ÆäÀÌÁö¸¦ ºÒ·¯¿Ã ¶§ ¾²ÀÔ´Ï´Ù.
- DOSBox°¡ ÄÚµå ÆäÀÌÁö¸¦ Ã£À» ¼ö ¾øÀ» ¶§¿¡¸¸ »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.
- ÄÚµå ÆäÀÌÁö ÆÄÀÏÀÌ ÁöÁ¤µÇÁö ¾ÊÀ¸¸é DOSBox ÇÁ·Î±×·¥ Æú´õ¿¡¼­
- ega.cpx ÆÄÀÏµé (FreeDOS¿¡¼­ °¡Á®¿Í¼­)À» ¸ðµÎ ³ÖÀ¸½Ê½Ã¿À.
- ¿äÃ»µÈ ·¹ÀÌ¾Æ¿ô/ÄÚµåÆäÀÌÁö¿¡ ´ëÇÑ ÀûÀýÇÑ ÄÚµå ÆäÀÌÁö ÆÄÀÏÀÌ ÀÚµ¿À¸·Î
- ¼±ÅÃµË´Ï´Ù.
+ [ì½”ë“œ íŽ˜ì´ì§€ íŒŒì¼]
+ DOSBox ì•ˆì— ê¸°ë³¸ì ìœ¼ë¡œ ë“¤ì–´ìžˆì§€ ì•Šì€ ì½”ë“œ íŽ˜ì´ì§€ë¥¼ ë¶ˆëŸ¬ì˜¬ ë•Œ ì“°ìž…ë‹ˆë‹¤.
+ DOSBoxê°€ ì½”ë“œ íŽ˜ì´ì§€ë¥¼ ì°¾ì„ ìˆ˜ ì—†ì„ ë•Œì—ë§Œ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+ ì½”ë“œ íŽ˜ì´ì§€ íŒŒì¼ì´ ì§€ì •ë˜ì§€ ì•Šìœ¼ë©´ DOSBox í”„ë¡œê·¸ëž¨ í´ë”ì—ì„œ
+ ega.cpx íŒŒì¼ë“¤ (FreeDOSì—ì„œ ê°€ì ¸ì™€ì„œ)ì„ ëª¨ë‘ ë„£ìœ¼ì‹­ì‹œì˜¤.
+ ìš”ì²­ëœ ë ˆì´ì•„ì›ƒ/ì½”ë“œíŽ˜ì´ì§€ì— ëŒ€í•œ ì ì ˆí•œ ì½”ë“œ íŽ˜ì´ì§€ íŒŒì¼ì´ ìžë™ìœ¼ë¡œ
+ ì„ íƒë©ë‹ˆë‹¤.
 
 
- º¸±â :
-  1) Æú¶õµå Å¸ÀÚ¼ö ·¹ÀÌ¾Æ¿ôÀ» ÀÐ¾î µéÀÌ·Á¸é (ÄÚµå ÆäÀÌÁö 852°¡ ¾Ë¾Æ¼­ ÁÖ¾îÁý´Ï´Ù):
+ ë³´ê¸° :
+  1) í´ëž€ë“œ íƒ€ìžìˆ˜ ë ˆì´ì•„ì›ƒì„ ì½ì–´ ë“¤ì´ë ¤ë©´ (ì½”ë“œ íŽ˜ì´ì§€ 852ê°€ ì•Œì•„ì„œ ì£¼ì–´ì§‘ë‹ˆë‹¤):
        keyb pl214
-  2) ÄÚµå ÆäÀÌÁö 866À» °¡Áø ·¯½Ã¾Æ¾î Å°º¸µå ·¹ÀÌ¾Æ¿ôÀ» ÀÐ¾î µéÀÌ·Á¸é:
+  2) ì½”ë“œ íŽ˜ì´ì§€ 866ì„ ê°€ì§„ ëŸ¬ì‹œì•„ì–´ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒì„ ì½ì–´ ë“¤ì´ë ¤ë©´:
        keyb ru441 866
-     ·¯½Ã¾Æ¾î ¹®ÀÚ¿­À» ÀÔ·ÂÇÏ·Á¸é ALT-RIGHT-SHIFT¸¦ ´©¸£½Ê½Ã¿À.
-  3) ÄÚµå ÆäÀÌÁö 850À» °¡Áø ÇÁ¶û½º¾î Å°º¸µå ·¹ÀÌ¾Æ¿ôÀ» ÀÐ¾î µéÀÌ·Á¸é
-      (ÄÚµå ÆäÀÌÁöÀÇ À§Ä¡´Â EGACPI.DAT ¾È¿¡ Á¤ÀÇµÇ¾î ÀÖ½À´Ï´Ù):
+     ëŸ¬ì‹œì•„ì–´ ë¬¸ìžì—´ì„ ìž…ë ¥í•˜ë ¤ë©´ ALT-RIGHT-SHIFTë¥¼ ëˆ„ë¥´ì‹­ì‹œì˜¤.
+  3) ì½”ë“œ íŽ˜ì´ì§€ 850ì„ ê°€ì§„ í”„ëž‘ìŠ¤ì–´ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒì„ ì½ì–´ ë“¤ì´ë ¤ë©´
+      (ì½”ë“œ íŽ˜ì´ì§€ì˜ ìœ„ì¹˜ëŠ” EGACPI.DAT ì•ˆì— ì •ì˜ë˜ì–´ ìžˆìŠµë‹ˆë‹¤):
        keyb fr189 850 EGACPI.DAT
-  4) ÄÚµå ÆäÀÌÁö 858À» ÀÐ¾î µéÀÌ·Á¸é (Å°º¸µå ·¹ÀÌ¾Æ¿ô ¾øÀÌ):
+  4) ì½”ë“œ íŽ˜ì´ì§€ 858ì„ ì½ì–´ ë“¤ì´ë ¤ë©´ (í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒ ì—†ì´):
        keyb none 858
-     freedos keyb2 À¯Æ¿¸®Æ¼¸¦ »ç¿ëÇØ¼­ ÄÚµå ÆäÀÌÁö¸¦ ¹Ù²Ü ¼öµµ ÀÖ½À´Ï´Ù.
+     freedos keyb2 ìœ í‹¸ë¦¬í‹°ë¥¼ ì‚¬ìš©í•´ì„œ ì½”ë“œ íŽ˜ì´ì§€ë¥¼ ë°”ê¿€ ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤.
 
 
 
-´õ ÀÚ¼¼ÇÑ Á¤º¸¸¦ º¸·Á¸é ÇÁ·Î±×·¥ÀÇ ¸Å°³ º¯¼ö¿¡ /? ¸í·É¾î¸¦ »ç¿ëÇÏ½Ê½Ã¿À.
+ë” ìžì„¸í•œ ì •ë³´ë¥¼ ë³´ë ¤ë©´ í”„ë¡œê·¸ëž¨ì˜ ë§¤ê°œ ë³€ìˆ˜ì— /? ëª…ë ¹ì–´ë¥¼ ì‚¬ìš©í•˜ì‹­ì‹œì˜¤.
 
 ================
-5. ¹Ù·Î°¡´Â Å°:
+5. ë°”ë¡œê°€ëŠ” í‚¤:
 ================
 
-ALT-ENTER     ÀüÃ¼ È­¸é¿¡¼­ Ã¢ / Ã¢¿¡¼­ ÀüÃ¼ È­¸é
-ALT-PAUSE     Àá±ñ ¸ØÃã (ALT-PAUSE¸¦ ´Ù½Ã ´©¸£¸é ´Ù½Ã ¿ø·¡´ë·Î µ¹¾Æ°©´Ï´Ù)
-CTRL-F4       ¸¶¿îÆ®µÈ ÇÃ·ÎÇÇ CD ÀÌ¹ÌÁöµéÀ» ¹Ù²ß´Ï´Ù. ¸ðµç µå¶óÀÌºê¿¡ ´ëÇÑ µå¶óÀÌºê Ä³½Ã¸¦ ´Ù½Ã ºÒ·¯¿É´Ï´Ù.
-CTRL-ALT-F5   È­¸éÀÇ µ¿¿µ»ó ³ìÈ­ ½ÇÇà / ÁßÁö (AVI)
-CTRL-F5      ½ºÅ©¸°¼¦ ÀúÀå (PNG)
-CTRL-F6       ¼Ò¸® Ãâ·ÂÀ» ¿þÀÌºê(WAV) ÆÄÀÏ·Î ±â·Ï / ÁßÁö
-CTRL-ALT-F7   OPL ³ìÀ½ ¸í·É ½ÇÇà / ÁßÁö
-CTRL-ALT-F8   MIDI ³ìÀ½ ¸í·É ½ÇÇà / ÁßÁö
-CTRL-F7       ÇÁ·¹ÀÓ ¹«½Ã ÁÙÀÓ
-CTRL-F8       ÇÁ·¹ÀÓ ¹«½Ã ³ôÀÓ
-CTRL-F9       DOSBox ³¡³»±â
-CTRL-F10      ¸¶¿ì½º Àá±Ý / Àá±Ý Ç®±â
-CTRL-F11      °¡»ó ±¸Çö ´À¸®°Ô (»çÀÌÅ¬ ÁÙÀÓ)
-CTRL-F12      °¡»ó ±¸Çö ºü¸£°Ô (»çÀÌÅ¬ ´Ã¸²)
-ALT-F12       ¼Óµµ Á¦ÇÑ ÇØÁ¦ (ÅÍº¸ ´ÜÃß / »¡¸®°¨±â)
-F11, ALT-F11 (machine=cga) NTSC Ãâ·Â ¸ðµåÀÇ tint º¯°æ***
-F11              (machine=hercules) amber, green, white »ö***
+ALT-ENTER     ì „ì²´ í™”ë©´ì—ì„œ ì°½ / ì°½ì—ì„œ ì „ì²´ í™”ë©´
+ALT-PAUSE     ìž ê¹ ë©ˆì¶¤ (ALT-PAUSEë¥¼ ë‹¤ì‹œ ëˆ„ë¥´ë©´ ë‹¤ì‹œ ì›ëž˜ëŒ€ë¡œ ëŒì•„ê°‘ë‹ˆë‹¤)
+CTRL-F4       ë§ˆìš´íŠ¸ëœ í”Œë¡œí”¼ CD ì´ë¯¸ì§€ë“¤ì„ ë°”ê¿‰ë‹ˆë‹¤. ëª¨ë“  ë“œë¼ì´ë¸Œì— ëŒ€í•œ ë“œë¼ì´ë¸Œ ìºì‹œë¥¼ ë‹¤ì‹œ ë¶ˆëŸ¬ì˜µë‹ˆë‹¤.
+CTRL-ALT-F5   í™”ë©´ì˜ ë™ì˜ìƒ ë…¹í™” ì‹¤í–‰ / ì¤‘ì§€ (AVI)
+CTRL-F5      ìŠ¤í¬ë¦°ìƒ· ì €ìž¥ (PNG)
+CTRL-F6       ì†Œë¦¬ ì¶œë ¥ì„ ì›¨ì´ë¸Œ(WAV) íŒŒì¼ë¡œ ê¸°ë¡ / ì¤‘ì§€
+CTRL-ALT-F7   OPL ë…¹ìŒ ëª…ë ¹ ì‹¤í–‰ / ì¤‘ì§€
+CTRL-ALT-F8   MIDI ë…¹ìŒ ëª…ë ¹ ì‹¤í–‰ / ì¤‘ì§€
+CTRL-F7       í”„ë ˆìž„ ë¬´ì‹œ ì¤„ìž„
+CTRL-F8       í”„ë ˆìž„ ë¬´ì‹œ ë†’ìž„
+CTRL-F9       DOSBox ëë‚´ê¸°
+CTRL-F10      ë§ˆìš°ìŠ¤ ìž ê¸ˆ / ìž ê¸ˆ í’€ê¸°
+CTRL-F11      ê°€ìƒ êµ¬í˜„ ëŠë¦¬ê²Œ (ì‚¬ì´í´ ì¤„ìž„)
+CTRL-F12      ê°€ìƒ êµ¬í˜„ ë¹ ë¥´ê²Œ (ì‚¬ì´í´ ëŠ˜ë¦¼)
+ALT-F12       ì†ë„ ì œí•œ í•´ì œ (í„°ë³´ ë‹¨ì¶” / ë¹¨ë¦¬ê°ê¸°)
+F11, ALT-F11 (machine=cga) NTSC ì¶œë ¥ ëª¨ë“œì˜ tint ë³€ê²½***
+F11              (machine=hercules) amber, green, white ìƒ‰***
 
-**¾Ë¸² : Ctrl-F12 Å°¸¦ ³Ê¹« ¸¹ÀÌ ´­·¯¼­, ¶Ç´Â DOSBox.ConfÀÇ [cpu]ÀÇ cycles °ªÀ» ³Ê¹« Å« °ªÀ¸·Î
-       ÁöÁ¤ÇÏ¿© ¿©·¯ºÐÀÌ °¡Áö°í ÀÖ´Â ÄÄÇ»ÅÍÀÇ ÃÖ´ë ¼º´ÉÀÇ ÇÑµµ¸¦ ³Ñ¾î°¡¹ö¸®¸é,
-       ¿ÀÈ÷·Á ¿¡¹Ä·¹ÀÌ¼ÇÀÇ ¼Óµµ¸¦ ¶³¾î¶ß¸± ¼ö ÀÖ½À´Ï´Ù.
-       ÀÌ CPU »çÀÌÅ¬ ¼ÓµµÀÇ ¾Ë¸ÂÀº °ªÀº ÄÄÇ»ÅÍ¸¶´Ù ´Ù¸£¸ç Ç¥ÁØÀ¸·Î ÀâÇôÀÖÁö ¾Ê½À´Ï´Ù.
-** ¾Ë¸²: ¿©À¯·Î¿î CPU ¸®¼Ò½º°¡ ÇÊ¿äÇÕ´Ï´Ù. ¸®¼Ò½º°¡ ¸¹À»¼ö·Ï ´õ ºü¸¨´Ï´Ù.
-        ±×·¯¹Ç·Î cycles=max¸¦ »ç¿ëÇÑ´ÙµçÁö ³Ê¹« ³ôÀº °íÀå°ªÀ» cycles¿¡ ÁØ´Ù°í ÇÏ¿©
-        ¼Óµµ ¹®Á¦°¡ ÇØ°áÀÌ µÇ´Â °ÍÀº ¾Æ´Õ´Ï´Ù. Å°¸¦ °è¼Ó ´­·¯ º¸¸é¼­ µ¿ÀÛÀ» »ìÆì º¸½Ã±â ¹Ù¶ø´Ï´Ù!
+**ì•Œë¦¼ : Ctrl-F12 í‚¤ë¥¼ ë„ˆë¬´ ë§Žì´ ëˆŒëŸ¬ì„œ, ë˜ëŠ” DOSBox.Confì˜ [cpu]ì˜ cycles ê°’ì„ ë„ˆë¬´ í° ê°’ìœ¼ë¡œ
+       ì§€ì •í•˜ì—¬ ì—¬ëŸ¬ë¶„ì´ ê°€ì§€ê³  ìžˆëŠ” ì»´í“¨í„°ì˜ ìµœëŒ€ ì„±ëŠ¥ì˜ í•œë„ë¥¼ ë„˜ì–´ê°€ë²„ë¦¬ë©´,
+       ì˜¤ížˆë ¤ ì—ë®¬ë ˆì´ì…˜ì˜ ì†ë„ë¥¼ ë–¨ì–´ëœ¨ë¦´ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+       ì´ CPU ì‚¬ì´í´ ì†ë„ì˜ ì•Œë§žì€ ê°’ì€ ì»´í“¨í„°ë§ˆë‹¤ ë‹¤ë¥´ë©° í‘œì¤€ìœ¼ë¡œ ìž¡í˜€ìžˆì§€ ì•ŠìŠµë‹ˆë‹¤.
+** ì•Œë¦¼: ì—¬ìœ ë¡œìš´ CPU ë¦¬ì†ŒìŠ¤ê°€ í•„ìš”í•©ë‹ˆë‹¤. ë¦¬ì†ŒìŠ¤ê°€ ë§Žì„ìˆ˜ë¡ ë” ë¹ ë¦…ë‹ˆë‹¤.
+        ê·¸ëŸ¬ë¯€ë¡œ cycles=maxë¥¼ ì‚¬ìš©í•œë‹¤ë“ ì§€ ë„ˆë¬´ ë†’ì€ ê³ ìž¥ê°’ì„ cyclesì— ì¤€ë‹¤ê³  í•˜ì—¬
+        ì†ë„ ë¬¸ì œê°€ í•´ê²°ì´ ë˜ëŠ” ê²ƒì€ ì•„ë‹™ë‹ˆë‹¤. í‚¤ë¥¼ ê³„ì† ëˆŒëŸ¬ ë³´ë©´ì„œ ë™ìž‘ì„ ì‚´íŽ´ ë³´ì‹œê¸° ë°”ëžë‹ˆë‹¤!
 
-*** ¾Ë¸²: ´Ù¸¥ ±â±â(machine) Á¾·ù¸¦ »ç¿ëÇÏ¸é¼­ ¸ÅÆÛ ÆÄÀÏÀ» ÀÏÂï ÀúÀåÇßÀ» °æ¿ì ÀÌ·¯ÇÑ Å°µéÀº µ¿ÀÛÇÏÁö ¾ÊÀ» °ÍÀÔ´Ï´Ù.
-         ÀÌ °æ¿ì Å°µéÀ» ´Ù½Ã ÇÒ´çÇÏ°Å³ª Å°º¸µå ¸ÅÆÛ¸¦ ´Ù½Ã ¼³Á¤ÇÏ½Ê½Ã¿À.
+*** ì•Œë¦¼: ë‹¤ë¥¸ ê¸°ê¸°(machine) ì¢…ë¥˜ë¥¼ ì‚¬ìš©í•˜ë©´ì„œ ë§¤í¼ íŒŒì¼ì„ ì¼ì° ì €ìž¥í–ˆì„ ê²½ìš° ì´ëŸ¬í•œ í‚¤ë“¤ì€ ë™ìž‘í•˜ì§€ ì•Šì„ ê²ƒìž…ë‹ˆë‹¤.
+         ì´ ê²½ìš° í‚¤ë“¤ì„ ë‹¤ì‹œ í• ë‹¹í•˜ê±°ë‚˜ í‚¤ë³´ë“œ ë§¤í¼ë¥¼ ë‹¤ì‹œ ì„¤ì •í•˜ì‹­ì‹œì˜¤.
 
-ÀÌ°ÍÀº ±âº»ÀûÀÎ Å°º¸µå Á¶ÇÕÀÔ´Ï´Ù. ¸ÅÇÎ ÇÁ·Î±×·¥(Ctrl-F1)¿¡¼­ ¹Ù²Ü ¼ö ÀÖ½À´Ï´Ù. (´Ü¶ô 7 ¸ÅÆÛ ÂüÁ¶)
+ì´ê²ƒì€ ê¸°ë³¸ì ì¸ í‚¤ë³´ë“œ ì¡°í•©ìž…ë‹ˆë‹¤. ë§¤í•‘ í”„ë¡œê·¸ëž¨(Ctrl-F1)ì—ì„œ ë°”ê¿€ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. (ë‹¨ë½ 7 ë§¤í¼ ì°¸ì¡°)
 
-MAC OS¿¡¼­ cmd-ctrl-F1¿Í °°Àº Å°°¡ µ¿ÀÛÇÏÁö ¾Ê´Â´Ù¸é cmd(¾ÖÇÃ Å°)¿Í CtrlÀ» ÇÔ²² »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù.
-±×·¯³ª ÀÏºÎ Å°µéÀº ¸ÅÆÛ¸¦ ÅëÇÏ¿© Å°¸¦ ´Ù½Ã ¼³Á¤ÇÏ¿©¾ß ÇÒ ¼öµµ ÀÖ½À´Ï´Ù. (¸®´ª½º¿¡¼­µµ)
+MAC OSì—ì„œ cmd-ctrl-F1ì™€ ê°™ì€ í‚¤ê°€ ë™ìž‘í•˜ì§€ ì•ŠëŠ”ë‹¤ë©´ cmd(ì• í”Œ í‚¤)ì™€ Ctrlì„ í•¨ê»˜ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+ê·¸ëŸ¬ë‚˜ ì¼ë¶€ í‚¤ë“¤ì€ ë§¤í¼ë¥¼ í†µí•˜ì—¬ í‚¤ë¥¼ ë‹¤ì‹œ ì„¤ì •í•˜ì—¬ì•¼ í•  ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤. (ë¦¬ëˆ…ìŠ¤ì—ì„œë„)
 
-ÀúÀåµÈ ÆÄÀÏµéÀº ´ÙÀ½ÀÇ À§Ä¡¿¡¼­ Ã£À» ¼ö ÀÖ½À´Ï´Ù.
-  (Windows)    "½ÃÀÛ/Windows ·Î°í ¸Þ´º"->"¸ðµç ÇÁ·Î±×·¥"->DOSBox-0.74->Extras
+ì €ìž¥ëœ íŒŒì¼ë“¤ì€ ë‹¤ìŒì˜ ìœ„ì¹˜ì—ì„œ ì°¾ì„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+  (Windows)    "ì‹œìž‘/Windows ë¡œê³  ë©”ë‰´"->"ëª¨ë“  í”„ë¡œê·¸ëž¨"->DOSBox-0.74->Extras
   (Linux)      ~/.dosbox/capture
   (MAC OS X)   "~/Library/Preferences/capture"
 
-DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡¼­ ÀÌ°ÍÀ» ¹Ù²Ü ¼ö ÀÖ½À´Ï´Ù.
+DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì—ì„œ ì´ê²ƒì„ ë°”ê¿€ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
 =============
-6. Á¶ÀÌ½ºÆ½/°ÔÀÓÆÐµå:
+6. ì¡°ì´ìŠ¤í‹±/ê²Œìž„íŒ¨ë“œ:
 =============
-DOSÀÇ Ç¥ÁØ Á¶ÀÌ½ºÆ½ Æ÷Æ®´Â ÃÖ´ë 4°³ÀÇ Ãà(axe)¿Í 4°³ÀÇ ´ÜÃß(button)¸¦ Áö¿øÇÕ´Ï´Ù.
-´õ ¸¹ÀÌ »ç¿ëÇÒ °æ¿ì ¼³Á¤ ±¸¼º ÆÄÀÏÀ» ¼öÁ¤ÇÏ¿©¾ß ÇÕ´Ï´Ù.
+DOSì˜ í‘œì¤€ ì¡°ì´ìŠ¤í‹± í¬íŠ¸ëŠ” ìµœëŒ€ 4ê°œì˜ ì¶•(axe)ì™€ 4ê°œì˜ ë‹¨ì¶”(button)ë¥¼ ì§€ì›í•©ë‹ˆë‹¤.
+ë” ë§Žì´ ì‚¬ìš©í•  ê²½ìš° ì„¤ì • êµ¬ì„± íŒŒì¼ì„ ìˆ˜ì •í•˜ì—¬ì•¼ í•©ë‹ˆë‹¤.
 
-DOSBox°¡ ´Ù¸¥ Á¾·ùÀÇ Á¶ÀÌ½ºÆ½/°ÔÀÓÆÐµå¸¦ °­Á¦·Î »ç¿ëÇÏ°Ô ÇÏ·Á¸é
-[joystick] ¾ÈÀÇ joysticktype¿¡ ´ÙÀ½ °ªÀ» ³ÖÀ¸¸é µË´Ï´Ù.
+DOSBoxê°€ ë‹¤ë¥¸ ì¢…ë¥˜ì˜ ì¡°ì´ìŠ¤í‹±/ê²Œìž„íŒ¨ë“œë¥¼ ê°•ì œë¡œ ì‚¬ìš©í•˜ê²Œ í•˜ë ¤ë©´
+[joystick] ì•ˆì˜ joysticktypeì— ë‹¤ìŒ ê°’ì„ ë„£ìœ¼ë©´ ë©ë‹ˆë‹¤.
 
-  none - ÄÁÆ®·Ñ·¯ Áö¿øÀ» »ç¿ëÇÏÁö ¾Ê½À´Ï´Ù.
+  none - ì»¨íŠ¸ë¡¤ëŸ¬ ì§€ì›ì„ ì‚¬ìš©í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
 
-  auto - (±âº»°ª) ÇÏ³ª ÀÌ»óÀÇ ÄÁÆ®·Ñ·¯°¡ ¿¬°áµÇ¾î ÀÖ´ÂÁö¸¦ ÀÚµ¿À¸·Î ¾Ë¾Æ³À´Ï´Ù:
-            ÇÑ °³: 4axis ¼³Á¤ÀÌ »ç¿ëµË´Ï´Ù.
-            µÎ °³: 2axis ¼³Á¤ÀÌ »ç¿ëµË´Ï´Ù.
+  auto - (ê¸°ë³¸ê°’) í•˜ë‚˜ ì´ìƒì˜ ì»¨íŠ¸ë¡¤ëŸ¬ê°€ ì—°ê²°ë˜ì–´ ìžˆëŠ”ì§€ë¥¼ ìžë™ìœ¼ë¡œ ì•Œì•„ëƒ…ë‹ˆë‹¤:
+            í•œ ê°œ: 4axis ì„¤ì •ì´ ì‚¬ìš©ë©ë‹ˆë‹¤.
+            ë‘ ê°œ: 2axis ì„¤ì •ì´ ì‚¬ìš©ë©ë‹ˆë‹¤.
 
-  2axis - µÎ °³ÀÇ ÄÁÆ®·Ñ·¯°¡ ¿¬°áµÇ¾î ÀÖÀ¸¸é 2°³ÀÇ Ãà°ú 2°³ÀÇ ´ÜÃß°¡ ÀÖ´Â Á¶ÀÌ½ºÆ½À»
-            °¡»óÀ¸·Î ±¸ÇöÇÕ´Ï´Ù. ÇÏ³ªÀÇ ÄÁÆ®·Ñ·¯¸¸ ¿¬°áµÇ¾î ÀÖ´Ù¸é 2°³ÀÇ Ãà°ú 2°³ÀÇ ´ÜÃß°¡
-            ÀÖ´Â Á¶ÀÌ½ºÆ½À» °¡»óÀ¸·Î ±¸ÇöÇÕ´Ï´Ù.
+  2axis - ë‘ ê°œì˜ ì»¨íŠ¸ë¡¤ëŸ¬ê°€ ì—°ê²°ë˜ì–´ ìžˆìœ¼ë©´ 2ê°œì˜ ì¶•ê³¼ 2ê°œì˜ ë‹¨ì¶”ê°€ ìžˆëŠ” ì¡°ì´ìŠ¤í‹±ì„
+            ê°€ìƒìœ¼ë¡œ êµ¬í˜„í•©ë‹ˆë‹¤. í•˜ë‚˜ì˜ ì»¨íŠ¸ë¡¤ëŸ¬ë§Œ ì—°ê²°ë˜ì–´ ìžˆë‹¤ë©´ 2ê°œì˜ ì¶•ê³¼ 2ê°œì˜ ë‹¨ì¶”ê°€
+            ìžˆëŠ” ì¡°ì´ìŠ¤í‹±ì„ ê°€ìƒìœ¼ë¡œ êµ¬í˜„í•©ë‹ˆë‹¤.
 
-  4axis - Ã¹ ¹øÂ° ÄÁÆ®·Ñ·¯¸¸ Áö¿øÇÏ¸ç 4°³ÀÇ Ãà¿¡ 4°³ÀÇ ´ÜÃß°¡ ÀÖ´Â Á¶ÀÌ½ºÆ½ÀÌ³ª
-            2°³ÀÇ Ãà¿¡ 6°³ÀÇ ´ÜÃß°¡ ÀÖ´Â °ÔÀÓÆÐµå¸¦ °¡»óÀ¸·Î ±¸ÇöÇÕ´Ï´Ù.
+  4axis - ì²« ë²ˆì§¸ ì»¨íŠ¸ë¡¤ëŸ¬ë§Œ ì§€ì›í•˜ë©° 4ê°œì˜ ì¶•ì— 4ê°œì˜ ë‹¨ì¶”ê°€ ìžˆëŠ” ì¡°ì´ìŠ¤í‹±ì´ë‚˜
+            2ê°œì˜ ì¶•ì— 6ê°œì˜ ë‹¨ì¶”ê°€ ìžˆëŠ” ê²Œìž„íŒ¨ë“œë¥¼ ê°€ìƒìœ¼ë¡œ êµ¬í˜„í•©ë‹ˆë‹¤.
 
-  4axis_2 - µÎ ¹øÂ° ÄÁÆ®·Ñ·¯¸¸ Áö¿øÇÕ´Ï´Ù.
+  4axis_2 - ë‘ ë²ˆì§¸ ì»¨íŠ¸ë¡¤ëŸ¬ë§Œ ì§€ì›í•©ë‹ˆë‹¤.
 
-  fcs - Ã¹ ¹øÂ° ÄÁÆ®·Ñ·¯¸¸ Áö¿øÇÏ¸ç 3°³ÀÇ Ãà°ú 4°³ÀÇ ´ÜÃß, ±×¸®°í ÇÏ³ªÀÇ ÇÞ(hat)ÀÌ ÀÖ´Â
-         ThrustMaster Flight Control SystemÀ» Áö¿øÇÕ´Ï´Ù.
+  fcs - ì²« ë²ˆì§¸ ì»¨íŠ¸ë¡¤ëŸ¬ë§Œ ì§€ì›í•˜ë©° 3ê°œì˜ ì¶•ê³¼ 4ê°œì˜ ë‹¨ì¶”, ê·¸ë¦¬ê³  í•˜ë‚˜ì˜ í–‡(hat)ì´ ìžˆëŠ”
+         ThrustMaster Flight Control Systemì„ ì§€ì›í•©ë‹ˆë‹¤.
 
-  ch - Ã¹ ¹øÂ° ÄÁÆ®·Ñ·¯¸¸ Áö¿øÇÏ¸ç 4°³ÀÇ Ãà°ú 6°³ÀÇ ´ÜÃß, ±×¸®°í ÇÏ³ªÀÇ ÇÞ(hat)ÀÌ ÀÖ´Â
-         CH ÇÃ¶óÀÌÆ®½ºÆ½À» °¡»óÀ¸·Î ±¸ÇöÇÕ´Ï´Ù. ±×·¯³ª µ¿½Ã¿¡ ´ÜÃß ÇÏ³ª¸¦ ÃÊ°úÇÏ¿©
-        µ¿½Ã¿¡ ´©¸¦ ¼ö´Â ¾ø½À´Ï´Ù.
+  ch - ì²« ë²ˆì§¸ ì»¨íŠ¸ë¡¤ëŸ¬ë§Œ ì§€ì›í•˜ë©° 4ê°œì˜ ì¶•ê³¼ 6ê°œì˜ ë‹¨ì¶”, ê·¸ë¦¬ê³  í•˜ë‚˜ì˜ í–‡(hat)ì´ ìžˆëŠ”
+         CH í”Œë¼ì´íŠ¸ìŠ¤í‹±ì„ ê°€ìƒìœ¼ë¡œ êµ¬í˜„í•©ë‹ˆë‹¤. ê·¸ëŸ¬ë‚˜ ë™ì‹œì— ë‹¨ì¶” í•˜ë‚˜ë¥¼ ì´ˆê³¼í•˜ì—¬
+        ë™ì‹œì— ëˆ„ë¥¼ ìˆ˜ëŠ” ì—†ìŠµë‹ˆë‹¤.
 
-  ¶Ç, °ÔÀÓ ¾È¿¡¼­ ÄÁÆ®·Ñ·¯¸¦ ¿Ã¹Ù¸£°Ô ¼³Á¤ÇÏ¿©¾ß ÇÕ´Ï´Ù.
+  ë˜, ê²Œìž„ ì•ˆì—ì„œ ì»¨íŠ¸ë¡¤ëŸ¬ë¥¼ ì˜¬ë°”ë¥´ê²Œ ì„¤ì •í•˜ì—¬ì•¼ í•©ë‹ˆë‹¤.
 
-  Á¶ÀÌ½ºÆ½ ¼³Á¤ÀÌ ¾ø´Â ¸ÅÆÛ ÆÄÀÏÀ» ÀúÀåÇÏ¿´°Å³ª ´Ù¸¥ Á¶ÀÌ½ºÆ½ ¼³Á¤À» °®Ãá ¸ÅÆÛ ÆÄÀÏÀ» »ç¿ëÇÏ¸é
-  DOSBox ¸ÅÆÛ ÆÄÀÏÀ» ´Ù½Ã ¼³Á¤ÇÏÁö ¾Ê´Â ÇÑ »õ·Î¿î ¼³Á¤Àº ¿Ã¹Ù¸£°Ô µ¿ÀÛÇÏÁö ¾Ê°Å³ª ¿ÏÀüÈ÷
-  µ¿ÀÛÇÏÁö ¾ÊÀ» °ÍÀÔ´Ï´Ù.
+  ì¡°ì´ìŠ¤í‹± ì„¤ì •ì´ ì—†ëŠ” ë§¤í¼ íŒŒì¼ì„ ì €ìž¥í•˜ì˜€ê±°ë‚˜ ë‹¤ë¥¸ ì¡°ì´ìŠ¤í‹± ì„¤ì •ì„ ê°–ì¶˜ ë§¤í¼ íŒŒì¼ì„ ì‚¬ìš©í•˜ë©´
+  DOSBox ë§¤í¼ íŒŒì¼ì„ ë‹¤ì‹œ ì„¤ì •í•˜ì§€ ì•ŠëŠ” í•œ ìƒˆë¡œìš´ ì„¤ì •ì€ ì˜¬ë°”ë¥´ê²Œ ë™ìž‘í•˜ì§€ ì•Šê±°ë‚˜ ì™„ì „ížˆ
+  ë™ìž‘í•˜ì§€ ì•Šì„ ê²ƒìž…ë‹ˆë‹¤.
 
-  ÄÁÆ®·Ñ·¯°¡ DOSBox ¹Û¿¡¼­ ¿Ã¹Ù¸£°Ô µ¿ÀÛÇÏÁö¸¸ DOSBox ¾È¿¡¼­ ¿Ã¹Ù¸£°Ô Ä¶¸®ºê·¹ÀÌ¼Ç(calibration)
-  °úÁ¤À» °ÅÄ¡Áö ¾Ê¾Ò´Ù¸é DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ(DOSBox.Conf)ÀÇ timed ¼³Á¤°ªÀ» ¹Ù²ã º¸½Ê½Ã¿À.
+  ì»¨íŠ¸ë¡¤ëŸ¬ê°€ DOSBox ë°–ì—ì„œ ì˜¬ë°”ë¥´ê²Œ ë™ìž‘í•˜ì§€ë§Œ DOSBox ì•ˆì—ì„œ ì˜¬ë°”ë¥´ê²Œ ìº˜ë¦¬ë¸Œë ˆì´ì…˜(calibration)
+  ê³¼ì •ì„ ê±°ì¹˜ì§€ ì•Šì•˜ë‹¤ë©´ DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼(DOSBox.Conf)ì˜ timed ì„¤ì •ê°’ì„ ë°”ê¿” ë³´ì‹­ì‹œì˜¤.
 
 
 =============
-7. ¸ÅÆÛ:
+7. ë§¤í¼:
 =============
 
-DOSBox ¸ÅÇÎ ÇÁ·Î±×·¥À» ½ÃÀÛÇÒ ¶§ Ctrl-F1 Å°(5¹ø ±¸¹® ¹Ù·Î°¡±â Å° Âü°í) ¶Ç´Â ¸í·É ÁÙ ¸Å°³º¯¼ö¿¡´Ù
--startmapper¸¦ Ãß°¡ÇÏ¿©(±¸¹® 3 ¸í·É ¸Å°³º¯¼ö Âü°í) °¡»ó Å°º¸µå¿Í °¡»ó Á¶ÀÌ½ºÆ½À» ÁöÁ¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.
-°¡»ó Å°º¸µå¿Í °¡»ó Á¶ÀÌ½ºÆ½ÀÌ È­¸é¿¡ ³ªÅ¸³³´Ï´Ù.
+DOSBox ë§¤í•‘ í”„ë¡œê·¸ëž¨ì„ ì‹œìž‘í•  ë•Œ Ctrl-F1 í‚¤(5ë²ˆ êµ¬ë¬¸ ë°”ë¡œê°€ê¸° í‚¤ ì°¸ê³ ) ë˜ëŠ” ëª…ë ¹ ì¤„ ë§¤ê°œë³€ìˆ˜ì—ë‹¤
+-startmapperë¥¼ ì¶”ê°€í•˜ì—¬(êµ¬ë¬¸ 3 ëª…ë ¹ ë§¤ê°œë³€ìˆ˜ ì°¸ê³ ) ê°€ìƒ í‚¤ë³´ë“œì™€ ê°€ìƒ ì¡°ì´ìŠ¤í‹±ì„ ì§€ì •í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+ê°€ìƒ í‚¤ë³´ë“œì™€ ê°€ìƒ ì¡°ì´ìŠ¤í‹±ì´ í™”ë©´ì— ë‚˜íƒ€ë‚©ë‹ˆë‹¤.
 
-ÀÌ·¯ÇÑ °¡»ó ÀåÄ¡µéÀº DOSBox¿¡¼­ ¾²ÀÌ´Â Å°¿Í ÀÏÄ¡ÇÏ¸ç DOS ÀÀ¿ë ÇÁ·Î±×·¥¿¡ º¸°íÇÕ´Ï´Ù.
-¸¶¿ì½º·Î Å°¸¦ ´©¸£¸é ¿ÞÂÊ ¾Æ·¡ ¸ð¼­¸®¿¡¼­ Å°º¸µåÀÇ ¾î¶°ÇÑ Å°°¡ ±× Å°¿Í
-ÀÏÄ¡ÇÏ´ÂÁö¸¦ º¼ ¼ö ÀÖ½À´Ï´Ù.
+ì´ëŸ¬í•œ ê°€ìƒ ìž¥ì¹˜ë“¤ì€ DOSBoxì—ì„œ ì“°ì´ëŠ” í‚¤ì™€ ì¼ì¹˜í•˜ë©° DOS ì‘ìš© í”„ë¡œê·¸ëž¨ì— ë³´ê³ í•©ë‹ˆë‹¤.
+ë§ˆìš°ìŠ¤ë¡œ í‚¤ë¥¼ ëˆ„ë¥´ë©´ ì™¼ìª½ ì•„ëž˜ ëª¨ì„œë¦¬ì—ì„œ í‚¤ë³´ë“œì˜ ì–´ë– í•œ í‚¤ê°€ ê·¸ í‚¤ì™€
+ì¼ì¹˜í•˜ëŠ”ì§€ë¥¼ ë³¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
 Event: EVENT
-BIND: BIND (¼Õ°¡¶ôÀ¸·Î ´©¸£´Â ½ÇÁ¦ Å° / ´ÜÃß / Ãà)
+BIND: BIND (ì†ê°€ë½ìœ¼ë¡œ ëˆ„ë¥´ëŠ” ì‹¤ì œ í‚¤ / ë‹¨ì¶” / ì¶•)
                         Add   Del
 mod1  hold                    Next
 mod2
@@ -996,380 +996,380 @@ mod3
 
 
 EVENT
-    DOSBox¿¡¼­ ½ÇÇàÇÏ°í ÀÖ´Â ÀÀ¿ë ÇÁ·Î±×·¥¿¡ º¸°íÇÒ ÇØ´ç Å°³ª Á¶ÀÌ½ºÆ½ÀÇ Ãà/´ÜÃß/ÇÞ
-    (°ÔÀÓÇÏ´Â µ¿¾È¿¡ ÀÏ¾î³ª´Â ÀÌº¥Æ® - ¿¹: ÃÑ ½î±â/Á¡ÇÁ/°È±â)
+    DOSBoxì—ì„œ ì‹¤í–‰í•˜ê³  ìžˆëŠ” ì‘ìš© í”„ë¡œê·¸ëž¨ì— ë³´ê³ í•  í•´ë‹¹ í‚¤ë‚˜ ì¡°ì´ìŠ¤í‹±ì˜ ì¶•/ë‹¨ì¶”/í–‡
+    (ê²Œìž„í•˜ëŠ” ë™ì•ˆì— ì¼ì–´ë‚˜ëŠ” ì´ë²¤íŠ¸ - ì˜ˆ: ì´ ì˜ê¸°/ì í”„/ê±·ê¸°)
 
 BIND
-    EVENT¿Í ¿¬°áµÈ »ç¿ëÀÚÀÇ ½ÇÁ¦ Å°º¸µåÀÇ Å° ¶Ç´Â ½ÇÁ¦ Á¶ÀÌ½ºÆ½ÀÇ Ãà/´ÜÃß/ÇÞ
-   (SDLÀÌ º¸°íÇÕ´Ï´Ù)
+    EVENTì™€ ì—°ê²°ëœ ì‚¬ìš©ìžì˜ ì‹¤ì œ í‚¤ë³´ë“œì˜ í‚¤ ë˜ëŠ” ì‹¤ì œ ì¡°ì´ìŠ¤í‹±ì˜ ì¶•/ë‹¨ì¶”/í–‡
+   (SDLì´ ë³´ê³ í•©ë‹ˆë‹¤)
 
 mod1,2,3
-    ¼öÁ¤ Å°µéÀÔ´Ï´Ù. BIND¸¦ ´©¸£´Â µ¿¾È ´­·¯¾ß ÇÏ´Â Å°µéÀÔ´Ï´Ù.
-    mod1 = CTRL ÀÌ°í mod2 = ALT ÀÔ´Ï´Ù.
-    ÀÏ¹ÝÀûÀ¸·Î ¿©·¯ºÐÀÌ DOSBoxÀÇ ´ÜÃàÅ°¸¦ ¹Ù²Ù°íÀÚ ÇÒ ¶§ »ç¿ëÇÏ½Ã¸é µË´Ï´Ù.
+    ìˆ˜ì • í‚¤ë“¤ìž…ë‹ˆë‹¤. BINDë¥¼ ëˆ„ë¥´ëŠ” ë™ì•ˆ ëˆŒëŸ¬ì•¼ í•˜ëŠ” í‚¤ë“¤ìž…ë‹ˆë‹¤.
+    mod1 = CTRL ì´ê³  mod2 = ALT ìž…ë‹ˆë‹¤.
+    ì¼ë°˜ì ìœ¼ë¡œ ì—¬ëŸ¬ë¶„ì´ DOSBoxì˜ ë‹¨ì¶•í‚¤ë¥¼ ë°”ê¾¸ê³ ìž í•  ë•Œ ì‚¬ìš©í•˜ì‹œë©´ ë©ë‹ˆë‹¤.
 Add
-    ÀÌ EVENT¿¡ »õ·Î¿î BIND¸¦ Ãß°¡ÇÕ´Ï´Ù.
-    ±âº»ÀûÀ¸·Î DOSBox¿¡¼­ EVENT Å°¸¦ ¸¸µé¾î³»´Â '»ç¿ëÀÚÀÇ Å°º¸µå' ¿¡¼­ Å°¸¦,
-    ¶Ç´Â 'Á¶ÀÌ½ºÆ½ÀÇ ´ÜÃß ´­¸², Ãà/ÇÞ ÀÌµ¿' ÀÌº¥Æ®¸¦ Ãß°¡ÇÕ´Ï´Ù.
+    ì´ EVENTì— ìƒˆë¡œìš´ BINDë¥¼ ì¶”ê°€í•©ë‹ˆë‹¤.
+    ê¸°ë³¸ì ìœ¼ë¡œ DOSBoxì—ì„œ EVENT í‚¤ë¥¼ ë§Œë“¤ì–´ë‚´ëŠ” 'ì‚¬ìš©ìžì˜ í‚¤ë³´ë“œ' ì—ì„œ í‚¤ë¥¼,
+    ë˜ëŠ” 'ì¡°ì´ìŠ¤í‹±ì˜ ë‹¨ì¶” ëˆŒë¦¼, ì¶•/í–‡ ì´ë™' ì´ë²¤íŠ¸ë¥¼ ì¶”ê°€í•©ë‹ˆë‹¤.
 Del 
-    BIND¸¦ ÀÌ EVENT·Î »èÁ¦ÇÕ´Ï´Ù.
-    EVENT°¡ BINDS¸¦ °¡Áö°í ÀÖÁö ¾ÊÀ¸¸é DOSBox¿¡¼­ ÀÌ ÀÌº¥Æ®¸¦ ÀÔ·ÂÇÒ ¼ö ¾ø½À´Ï´Ù.
-    ´Ù½Ã ¸»ÇØ, Å°¸¦ ÀÔ·ÂÇÏ°Å³ª Á¶ÀÌ½ºÆ½À» µ¿ÀÛ½ÃÅ³ ¼ö ¾ø½À´Ï´Ù.
+    BINDë¥¼ ì´ EVENTë¡œ ì‚­ì œí•©ë‹ˆë‹¤.
+    EVENTê°€ BINDSë¥¼ ê°€ì§€ê³  ìžˆì§€ ì•Šìœ¼ë©´ DOSBoxì—ì„œ ì´ ì´ë²¤íŠ¸ë¥¼ ìž…ë ¥í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.
+    ë‹¤ì‹œ ë§í•´, í‚¤ë¥¼ ìž…ë ¥í•˜ê±°ë‚˜ ì¡°ì´ìŠ¤í‹±ì„ ë™ìž‘ì‹œí‚¬ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.
 Next
-    ÀÌ EVENT·Î ¸ÅÇÎµÈ BINDSµéÀÇ ¸ñ·ÏÀ» ÅëÇØ °è¼Ó ¹Ýº¹µË´Ï´Ù.
+    ì´ EVENTë¡œ ë§¤í•‘ëœ BINDSë“¤ì˜ ëª©ë¡ì„ í†µí•´ ê³„ì† ë°˜ë³µë©ë‹ˆë‹¤.
 
 
 
-* º¸±â
-¹°À½1. DOSBox¿¡¼­ Z¸¦ ÀÔ·ÂÇÏ¸é X·Î ¶ß°Ô ÇÏ°í ½Í½À´Ï´Ù..
-Ç®ÀÌ. ¸¶¿ì½º·Î Å°º¸µå ¸ÅÆÛ¿¡ ÀÖ´Â Z¸¦ ´©¸£½Ê½Ã¿À. ±×¸®°í "Add"¸¦ ´©¸£½Ê½Ã¿À.
-        ±×·± ´ÙÀ½¿¡ Å°º¸µå¿¡¼­ X Å°¸¦ ´©¸£½Ê½Ã¿À.
+* ë³´ê¸°
+ë¬¼ìŒ1. DOSBoxì—ì„œ Zë¥¼ ìž…ë ¥í•˜ë©´ Xë¡œ ëœ¨ê²Œ í•˜ê³  ì‹¶ìŠµë‹ˆë‹¤..
+í’€ì´. ë§ˆìš°ìŠ¤ë¡œ í‚¤ë³´ë“œ ë§¤í¼ì— ìžˆëŠ” Zë¥¼ ëˆ„ë¥´ì‹­ì‹œì˜¤. ê·¸ë¦¬ê³  "Add"ë¥¼ ëˆ„ë¥´ì‹­ì‹œì˜¤.
+        ê·¸ëŸ° ë‹¤ìŒì— í‚¤ë³´ë“œì—ì„œ X í‚¤ë¥¼ ëˆ„ë¥´ì‹­ì‹œì˜¤.
 
-¹°À½2. "Next"¸¦ µÎ ¹ø ´©¸¥´Ù¸é ¿©·¯ºÐÀÌ Å°º¸µåÀÇ Z¸¦ ÀÔ·ÂÇÒ ¶§ DOSBox¿¡¼­ Z°¡ ÀÔ·ÂµÇ´Â °ÍÀ» ¾Ë ¼ö ÀÖ½À´Ï´Ù.
-Ç®ÀÌ. ±×·¯¹Ç·Î ´Ù½Ã Z¸¦ ´©¸£°í Å°º¸µå¿¡¼­ Z¸¦ »ç¿ëÇÒ ¼ö ÀÖÀ» ¶§±îÁö "Next"¸¦ ´©¸£½Ê½Ã¿À.
-          ÀÌÁ¦ "Del"À» ´©¸£½Ê½Ã¿À.
+ë¬¼ìŒ2. "Next"ë¥¼ ë‘ ë²ˆ ëˆ„ë¥¸ë‹¤ë©´ ì—¬ëŸ¬ë¶„ì´ í‚¤ë³´ë“œì˜ Zë¥¼ ìž…ë ¥í•  ë•Œ DOSBoxì—ì„œ Zê°€ ìž…ë ¥ë˜ëŠ” ê²ƒì„ ì•Œ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+í’€ì´. ê·¸ëŸ¬ë¯€ë¡œ ë‹¤ì‹œ Zë¥¼ ëˆ„ë¥´ê³  í‚¤ë³´ë“œì—ì„œ Zë¥¼ ì‚¬ìš©í•  ìˆ˜ ìžˆì„ ë•Œê¹Œì§€ "Next"ë¥¼ ëˆ„ë¥´ì‹­ì‹œì˜¤.
+          ì´ì œ "Del"ì„ ëˆ„ë¥´ì‹­ì‹œì˜¤.
 
-¹°À½3. DOSBox¿¡¼­ ÀÔ·ÂÇÏ°íÀÚ ÇÒ ¶§, ¿©·¯ºÐÀº X¸¦ ´©¸£¸é ZX·Î ¶ß´Â °ÍÀ» º¼ ¼ö ÀÖ½À´Ï´Ù.
-Ç®ÀÌ. Å°º¸µå »óÀÇ X´Â ¿©ÀüÈ÷ X·Î ¸ÅÇÎÀÌ µÇ¾î ÀÖ½À´Ï´Ù!
-        Å°º¸µå ¸ÅÆÛÀÇ X¸¦ ´©¸¥ µÚ, ¸ÅÇÎµÈ Å° X¸¦ Ã£À» ¶§±îÁö "Next"·Î °è¼Ó Ã£¾Æ º¸½Ê½Ã¿À.
-        ±×¸®°í "Del"Å°¸¦ ´©¸£½Ê½Ã¿À.
+ë¬¼ìŒ3. DOSBoxì—ì„œ ìž…ë ¥í•˜ê³ ìž í•  ë•Œ, ì—¬ëŸ¬ë¶„ì€ Xë¥¼ ëˆ„ë¥´ë©´ ZXë¡œ ëœ¨ëŠ” ê²ƒì„ ë³¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+í’€ì´. í‚¤ë³´ë“œ ìƒì˜ XëŠ” ì—¬ì „ížˆ Xë¡œ ë§¤í•‘ì´ ë˜ì–´ ìžˆìŠµë‹ˆë‹¤!
+        í‚¤ë³´ë“œ ë§¤í¼ì˜ Xë¥¼ ëˆ„ë¥¸ ë’¤, ë§¤í•‘ëœ í‚¤ Xë¥¼ ì°¾ì„ ë•Œê¹Œì§€ "Next"ë¡œ ê³„ì† ì°¾ì•„ ë³´ì‹­ì‹œì˜¤.
+        ê·¸ë¦¬ê³  "Del"í‚¤ë¥¼ ëˆ„ë¥´ì‹­ì‹œì˜¤.
 
-Á¶ÀÌ½ºÆ½ ¸ÅÇÎ º¸±â:
-  Á¶ÀÌ½ºÆ½ÀÌ ÀåÂøµÇ¾î ÀÖ°í DOSBox¿¡¼­ Á¦´ë·Î µ¿ÀÛÇÏ¸ç ¸î °¡Áö Å°º¸µå Àü¿ë °ÔÀÓÀ» Á¶ÀÌ½ºÆ½À¸·Î
-  Áñ±â°í ½Í´Ù°í Ä¨½Ã´Ù. (°ÔÀÓÀÌ Å°º¸µåÀÇ ¹æÇâÅ°·Î Á¦¾îµÈ´Ù°í °¡Á¤ÇÒ ¶§)
+ì¡°ì´ìŠ¤í‹± ë§¤í•‘ ë³´ê¸°:
+  ì¡°ì´ìŠ¤í‹±ì´ ìž¥ì°©ë˜ì–´ ìžˆê³  DOSBoxì—ì„œ ì œëŒ€ë¡œ ë™ìž‘í•˜ë©° ëª‡ ê°€ì§€ í‚¤ë³´ë“œ ì „ìš© ê²Œìž„ì„ ì¡°ì´ìŠ¤í‹±ìœ¼ë¡œ
+  ì¦ê¸°ê³  ì‹¶ë‹¤ê³  ì¹©ì‹œë‹¤. (ê²Œìž„ì´ í‚¤ë³´ë“œì˜ ë°©í–¥í‚¤ë¡œ ì œì–´ëœë‹¤ê³  ê°€ì •í•  ë•Œ)
 
-    1) ¸ÅÇÎ ÇÁ·Î±×·¥À» ¿­°í È­¸é ¿ÞÂÊÀÇ Å°º¸µå ¹æÇâÅ°µé °¡¿îµ¥ ÇÏ³ª¸¦ ´©¸£½Ê½Ã¿À.
-       EVENT´Â key_left°¡ µÇ¾î¾ß ÇÕ´Ï´Ù. ÀÌÁ¦ Add¸¦ ´©¸£°í °¢ ¹æÇâÀ¸·Î
-       Á¶ÀÌ½ºÆ½À» ¿òÁ÷ÀÌ½Ê½Ã¿À. ÀÌ°ÍÀº ÀÌº¥Æ®¸¦ BIND¿¡ Ãß°¡ÇÏ´Â ¹æ¹ýÀÔ´Ï´Ù.
-    2) ¸ÅÇÎÇÏÁö ¾Ê¾Ò´ø ³ª¸ÓÁö ¹æÇâ ´ÜÃß¸¦ ¶ÇÇÑ Ãß°¡ÇØ¾ß ÇÏ¹Ç·Î
-        À§ÀÇ ¹æ¹ýÀ» µÇÇ®ÀÌ ÇÏ½Ê½Ã¿À. Á¶ÀÌ½ºÆ½ÀÇ ´ÜÃß(Fire/Jump)µµ ¹°·Ð ¸ÅÇÎÇÒ ¼ö ÀÖ½À´Ï´Ù.
-    3) Save¸¦ ´©¸£°í ExitÀ» ´­·¯ °ÔÀÓÀ» ½ÇÇàÇÏ½Ê½Ã¿À.
+    1) ë§¤í•‘ í”„ë¡œê·¸ëž¨ì„ ì—´ê³  í™”ë©´ ì™¼ìª½ì˜ í‚¤ë³´ë“œ ë°©í–¥í‚¤ë“¤ ê°€ìš´ë° í•˜ë‚˜ë¥¼ ëˆ„ë¥´ì‹­ì‹œì˜¤.
+       EVENTëŠ” key_leftê°€ ë˜ì–´ì•¼ í•©ë‹ˆë‹¤. ì´ì œ Addë¥¼ ëˆ„ë¥´ê³  ê° ë°©í–¥ìœ¼ë¡œ
+       ì¡°ì´ìŠ¤í‹±ì„ ì›€ì§ì´ì‹­ì‹œì˜¤. ì´ê²ƒì€ ì´ë²¤íŠ¸ë¥¼ BINDì— ì¶”ê°€í•˜ëŠ” ë°©ë²•ìž…ë‹ˆë‹¤.
+    2) ë§¤í•‘í•˜ì§€ ì•Šì•˜ë˜ ë‚˜ë¨¸ì§€ ë°©í–¥ ë‹¨ì¶”ë¥¼ ë˜í•œ ì¶”ê°€í•´ì•¼ í•˜ë¯€ë¡œ
+        ìœ„ì˜ ë°©ë²•ì„ ë˜í’€ì´ í•˜ì‹­ì‹œì˜¤. ì¡°ì´ìŠ¤í‹±ì˜ ë‹¨ì¶”(Fire/Jump)ë„ ë¬¼ë¡  ë§¤í•‘í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+    3) Saveë¥¼ ëˆ„ë¥´ê³  Exitì„ ëˆŒëŸ¬ ê²Œìž„ì„ ì‹¤í–‰í•˜ì‹­ì‹œì˜¤.
 
-  ¸î¸î ºñÇà ½Ã¹Ä·¹ÀÌ¼Ç °ÔÀÓµéÀÌ Á¶ÀÌ½ºÆ½ÀÇ À§/¾Æ·¡ ÀÌµ¿ÀÌ ¿©·¯ºÐÀÌ ÁÁ¾ÆÇÏÁö ¾Ê´Â
-  ¹æ½ÄÀ» »ç¿ëÇÏ±â ¶§¹®¿¡, ¶Ç °ÔÀÓ ÀÚÃ¼¿¡¼­ ±¸¼ºÇÒ ¼ö ¾ø±â ¶§¹®¿¡
-  Á¶ÀÌ½ºÆ½ÀÇ yÃàÀ» ¹Ù²Ù°í ½Í´Ù°í Ä¨½Ã´Ù.
+  ëª‡ëª‡ ë¹„í–‰ ì‹œë®¬ë ˆì´ì…˜ ê²Œìž„ë“¤ì´ ì¡°ì´ìŠ¤í‹±ì˜ ìœ„/ì•„ëž˜ ì´ë™ì´ ì—¬ëŸ¬ë¶„ì´ ì¢‹ì•„í•˜ì§€ ì•ŠëŠ”
+  ë°©ì‹ì„ ì‚¬ìš©í•˜ê¸° ë•Œë¬¸ì—, ë˜ ê²Œìž„ ìžì²´ì—ì„œ êµ¬ì„±í•  ìˆ˜ ì—†ê¸° ë•Œë¬¸ì—
+  ì¡°ì´ìŠ¤í‹±ì˜ yì¶•ì„ ë°”ê¾¸ê³  ì‹¶ë‹¤ê³  ì¹©ì‹œë‹¤.
 
-    1) ¸ÅÇÎ ÇÁ·Î±×·¥À» ¿­°í Ã¹ ¹øÂ° Á¶ÀÌ½ºÆ½ ¿µ¿ª ¾È¿¡ ÀÖ´Â Y-À» ´©¸£½Ê½Ã¿À.
-       EVENT´Â  jaxis_0_1- ÀÌ µÇ¾î¾ß ÇÕ´Ï´Ù.
-    2) DelÀ» ´­·¯ ÇöÀçÀÇ Bind¸¦ Áö¿ó´Ï´Ù. ±×¸®°í Add¸¦ ´©¸£°í Á¶ÀÌ½ºÆ½À» ¾Æ·¡·Î ÀÌµ¿ÇÕ´Ï´Ù.
-        »õ·Î¿î Bind°¡ ¸¸µé¾îÁ³½À´Ï´Ù.
-    3) Y+¿¡ ¸ÂÃç¼­ ÀÌ ¹æ¹ýÀ» µÇÇ®ÀÌÇÏ½Ê½Ã¿À.
-        ±×¸®°í ·¹ÀÌ¾Æ¿ôÀ» ÀúÀåÇÏ°í °ÔÀÓÀ» ½ÇÇàÇÏ½Ê½Ã¿À.
+    1) ë§¤í•‘ í”„ë¡œê·¸ëž¨ì„ ì—´ê³  ì²« ë²ˆì§¸ ì¡°ì´ìŠ¤í‹± ì˜ì—­ ì•ˆì— ìžˆëŠ” Y-ì„ ëˆ„ë¥´ì‹­ì‹œì˜¤.
+       EVENTëŠ”  jaxis_0_1- ì´ ë˜ì–´ì•¼ í•©ë‹ˆë‹¤.
+    2) Delì„ ëˆŒëŸ¬ í˜„ìž¬ì˜ Bindë¥¼ ì§€ì›ë‹ˆë‹¤. ê·¸ë¦¬ê³  Addë¥¼ ëˆ„ë¥´ê³  ì¡°ì´ìŠ¤í‹±ì„ ì•„ëž˜ë¡œ ì´ë™í•©ë‹ˆë‹¤.
+        ìƒˆë¡œìš´ Bindê°€ ë§Œë“¤ì–´ì¡ŒìŠµë‹ˆë‹¤.
+    3) Y+ì— ë§žì¶°ì„œ ì´ ë°©ë²•ì„ ë˜í’€ì´í•˜ì‹­ì‹œì˜¤.
+        ê·¸ë¦¬ê³  ë ˆì´ì•„ì›ƒì„ ì €ìž¥í•˜ê³  ê²Œìž„ì„ ì‹¤í–‰í•˜ì‹­ì‹œì˜¤.
 
-d-pad/hatÀÇ ¾î¶°ÇÑ °ÍÀÌµç ´Ù½Ã ¸ÅÇÎÇÏ°í ½ÍÀ¸¸é ¼³Á¤ ±¸¼º ÆÄÀÏ(DOSBox.Conf)¿¡¼­
-joysticktype=auto¸¦ joysticktype=fcs·Î ¹Ù²Ù¾î¾ß ÇÕ´Ï´Ù. ÀÌ°ÍÀº ´ÙÀ½ DOSBox ¹öÀü¿¡¼­
-°³¼±µÉ °ÍÀÔ´Ï´Ù.
+d-pad/hatì˜ ì–´ë– í•œ ê²ƒì´ë“  ë‹¤ì‹œ ë§¤í•‘í•˜ê³  ì‹¶ìœ¼ë©´ ì„¤ì • êµ¬ì„± íŒŒì¼(DOSBox.Conf)ì—ì„œ
+joysticktype=autoë¥¼ joysticktype=fcsë¡œ ë°”ê¾¸ì–´ì•¼ í•©ë‹ˆë‹¤. ì´ê²ƒì€ ë‹¤ìŒ DOSBox ë²„ì „ì—ì„œ
+ê°œì„ ë  ê²ƒìž…ë‹ˆë‹¤.
 
-"Save"¸¦ ´­·¯¼­ ±âº» Å°º¸µå/Á¶ÀÌ½ºÆ½ ¸ÅÇÎ¿¡¼­ »ç¿ëÀÚ°¡ º¯°æÇÑ »çÇ×µéÀ» µû·Î ÀúÀåÇÒ ¼ö ÀÖ½À´Ï´Ù.
+"Save"ë¥¼ ëˆŒëŸ¬ì„œ ê¸°ë³¸ í‚¤ë³´ë“œ/ì¡°ì´ìŠ¤í‹± ë§¤í•‘ì—ì„œ ì‚¬ìš©ìžê°€ ë³€ê²½í•œ ì‚¬í•­ë“¤ì„ ë”°ë¡œ ì €ìž¥í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-DOSBox´Â º¸Åë DOSBox.Conf¿¡ ÁöÁ¤µÈ À§Ä¡¸¦ mapperfile=mapper.txt ·Î Àâ°í ÀÖ½À´Ï´Ù.
-(Áï, À§ÀÇ °ªÀ» »ç¿ëÀÚ°¡ ¼öÁ¤ÇÏ¸é ±× ¼öÁ¤Çß´ø ³»¿ëÀ» mapper.txt ÆÄÀÏ·Î ÀúÀåÇÑ´Ù´Â ¶æÀÔ´Ï´Ù)
-DOSBox¸¦ ½ÃÀÛÇÏ¸é DOSBox.Conf ¾È¿¡ ÀÖ´Â mapperfile= µÚ¿¡ ÁöÁ¤µÈ ÆÄÀÏÀÇ ³»¿ëÀ» ºÒ·¯¿É´Ï´Ù.
+DOSBoxëŠ” ë³´í†µ DOSBox.Confì— ì§€ì •ëœ ìœ„ì¹˜ë¥¼ mapperfile=mapper.txt ë¡œ ìž¡ê³  ìžˆìŠµë‹ˆë‹¤.
+(ì¦‰, ìœ„ì˜ ê°’ì„ ì‚¬ìš©ìžê°€ ìˆ˜ì •í•˜ë©´ ê·¸ ìˆ˜ì •í–ˆë˜ ë‚´ìš©ì„ mapper.txt íŒŒì¼ë¡œ ì €ìž¥í•œë‹¤ëŠ” ëœ»ìž…ë‹ˆë‹¤)
+DOSBoxë¥¼ ì‹œìž‘í•˜ë©´ DOSBox.Conf ì•ˆì— ìžˆëŠ” mapperfile= ë’¤ì— ì§€ì •ëœ íŒŒì¼ì˜ ë‚´ìš©ì„ ë¶ˆëŸ¬ì˜µë‹ˆë‹¤.
 
 
 ====================
-8. Å°º¸µå ·¹ÀÌ¾Æ¿ô
+8. í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒ
 ====================
 
-´Ù¸¥ Å°º¸µå ·¹ÀÌ¾Æ¿ôÀ¸·Î ¹Ù²Ù·Á¸é DOSBox.Conf ¾È¿¡ ÀÖ´Â [dos] ±¸¹®¿¡ ÀÖ´Â
-"keyboardlayout"ÀÇ °ªÀ» ¹Ù²Ù°Å³ª DOSBox ³»ºÎ ÇÁ·Î±×·¥ÀÎ keyb.comÀ» ÀÌ¿ëÇÏ½Ê½Ã¿À.
-µÎ ¹æ¹ý ¸ðµÎ DOS È£È¯ ¾ð¾î ÄÚµå¸¦ °¡Á® ¿É´Ï´Ù. (¾Æ·¡¿¡ ³ª¿Í ÀÖ½À´Ï´Ù)
-´Ù¸¸ ÄÚµå ÆäÀÌÁö´Â keyb.com·Î¸¸ ¹Ù²Ü ¼ö ÀÖ½À´Ï´Ù.  (±¸¹® 4 : ³»ºÎ ÇÁ·Î±×·¥)
+ë‹¤ë¥¸ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒìœ¼ë¡œ ë°”ê¾¸ë ¤ë©´ DOSBox.Conf ì•ˆì— ìžˆëŠ” [dos] êµ¬ë¬¸ì— ìžˆëŠ”
+"keyboardlayout"ì˜ ê°’ì„ ë°”ê¾¸ê±°ë‚˜ DOSBox ë‚´ë¶€ í”„ë¡œê·¸ëž¨ì¸ keyb.comì„ ì´ìš©í•˜ì‹­ì‹œì˜¤.
+ë‘ ë°©ë²• ëª¨ë‘ DOS í˜¸í™˜ ì–¸ì–´ ì½”ë“œë¥¼ ê°€ì ¸ ì˜µë‹ˆë‹¤. (ì•„ëž˜ì— ë‚˜ì™€ ìžˆìŠµë‹ˆë‹¤)
+ë‹¤ë§Œ ì½”ë“œ íŽ˜ì´ì§€ëŠ” keyb.comë¡œë§Œ ë°”ê¿€ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.  (êµ¬ë¬¸ 4 : ë‚´ë¶€ í”„ë¡œê·¸ëž¨)
 
-±âº» keyboardlayout=auto´Â ÇöÀç Windows¿¡¼­¸¸ µ¿ÀÛÇÕ´Ï´Ù.
-ÀÌ ¾ð¾î´Â ¿î¿µ Ã¼Á¦ÀÇ ¾ð¾î¿¡ µû¶ó ¼±ÅÃµÇÁö¸¸ Å°º¸µå ·¹ÀÌ¾Æ¿ôÀ» °¨ÁöµÇÁö ¾Ê½À´Ï´Ù.
+ê¸°ë³¸ keyboardlayout=autoëŠ” í˜„ìž¬ Windowsì—ì„œë§Œ ë™ìž‘í•©ë‹ˆë‹¤.
+ì´ ì–¸ì–´ëŠ” ìš´ì˜ ì²´ì œì˜ ì–¸ì–´ì— ë”°ë¼ ì„ íƒë˜ì§€ë§Œ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒì„ ê°ì§€ë˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
 
-·¹ÀÌ¾Æ¿ô ¹Ù²Ù±â
-  ¼ö ¸¹Àº Å°º¸µå ·¹ÀÌ¾Æ¿ô°ú ÄÚµå ÆäÀÌÁö¸¦ ±âº»À¸·Î Áö¿øÇÕ´Ï´Ù.
-  ÀÌ ¶§ DOSBox´Â ·¹ÀÌ¾Æ¿ô °Ë»öÀÚ°¡ ÁöÁ¤µÇ¾î¾ß ÇÕ´Ï´Ù.
-  (º¸±â : DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡¼­ keyboardlayout=PL214 ÁöÁ¤ÇÏ°Å³ª
-            DOSBox ¸í·É ÇÁ·ÒÇÁÆ®¿¡¼­ "keyb PL214"¶ó°í ÀÔ·Â) DOSBox¿¡¼­ »ç¿ëÇÒ
-            ¼ö ÀÖ´Â Å°º¸µå ·¹ÀÌ¾Æ¿ô ¸ñ·ÏÀº ¿©±â¿¡ ÀÖ½À´Ï´Ù:
+ë ˆì´ì•„ì›ƒ ë°”ê¾¸ê¸°
+  ìˆ˜ ë§Žì€ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒê³¼ ì½”ë“œ íŽ˜ì´ì§€ë¥¼ ê¸°ë³¸ìœ¼ë¡œ ì§€ì›í•©ë‹ˆë‹¤.
+  ì´ ë•Œ DOSBoxëŠ” ë ˆì´ì•„ì›ƒ ê²€ìƒ‰ìžê°€ ì§€ì •ë˜ì–´ì•¼ í•©ë‹ˆë‹¤.
+  (ë³´ê¸° : DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì—ì„œ keyboardlayout=PL214 ì§€ì •í•˜ê±°ë‚˜
+            DOSBox ëª…ë ¹ í”„ë¡¬í”„íŠ¸ì—ì„œ "keyb PL214"ë¼ê³  ìž…ë ¥) DOSBoxì—ì„œ ì‚¬ìš©í• 
+            ìˆ˜ ìžˆëŠ” í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒ ëª©ë¡ì€ ì—¬ê¸°ì— ìžˆìŠµë‹ˆë‹¤:
             http://vogons.zetafleet.com/viewtopic.php?t=21824
 
- ¸î¸î Å°º¸µå ·¹ÀÌ¾Æ¿ôµé(¿¹¸¦ µé¾î ·¹ÀÌ¾Æ¿ô GK319 ÄÚµå ÆäÀÌÁö 869¿Í ·¹ÀÌ¾Æ¿ô RU441
- ÄÚµå ÆäÀÌÁö 808)Àº ÀÌÁß ·¹ÀÌ¾Æ¿ôÀ» Áö¿øÇÕ´Ï´Ù. ÀÌ ±â´ÉÀº ¿ÞÂÊ ALT-¿À¸¥ÂÊ SHIFT¸¦
- ´­·¯¼­ ÇÏ³ªÀÇ ·¹ÀÌ¾Æ¿ôÀ» Á¢±ÙÇÏ°Å³ª ¿ÞÂÊ ALT-¿ÞÂÊ-SHIFT¸¦ ´­·¯ ´Ù¸¥ ·¹ÀÌ¾Æ¿ô¿¡ Á¢±ÙÇÒ
- ¼ö ÀÖ½À´Ï´Ù. LT456 ÄÚµåÆäÀÌÁö 771°ú °°Àº ÀÏºÎ Å°º¸µå ·¹ÀÌ¾Æ¿ôÀº ÀÌ·¯ÇÑ ·¹ÀÌ¾Æ¿ôÀ»
- Áö¿øÇÏ¸ç ¿ÞÂÊ ALT+¿ÞÂÊ CTRL·Î Á¢±ÙÇÒ ¼ö ÀÖ½À´Ï´Ù.
+ ëª‡ëª‡ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒë“¤(ì˜ˆë¥¼ ë“¤ì–´ ë ˆì´ì•„ì›ƒ GK319 ì½”ë“œ íŽ˜ì´ì§€ 869ì™€ ë ˆì´ì•„ì›ƒ RU441
+ ì½”ë“œ íŽ˜ì´ì§€ 808)ì€ ì´ì¤‘ ë ˆì´ì•„ì›ƒì„ ì§€ì›í•©ë‹ˆë‹¤. ì´ ê¸°ëŠ¥ì€ ì™¼ìª½ ALT-ì˜¤ë¥¸ìª½ SHIFTë¥¼
+ ëˆŒëŸ¬ì„œ í•˜ë‚˜ì˜ ë ˆì´ì•„ì›ƒì„ ì ‘ê·¼í•˜ê±°ë‚˜ ì™¼ìª½ ALT-ì™¼ìª½-SHIFTë¥¼ ëˆŒëŸ¬ ë‹¤ë¥¸ ë ˆì´ì•„ì›ƒì— ì ‘ê·¼í• 
+ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. LT456 ì½”ë“œíŽ˜ì´ì§€ 771ê³¼ ê°™ì€ ì¼ë¶€ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒì€ ì´ëŸ¬í•œ ë ˆì´ì•„ì›ƒì„
+ ì§€ì›í•˜ë©° ì™¼ìª½ ALT+ì™¼ìª½ CTRLë¡œ ì ‘ê·¼í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-Áö¿øÇÏ´Â ¿ÜºÎ ÆÄÀÏ
-  Freedos .kl ÆÄÀÏµé(freedos keyb2 Å°º¸µå ·¹ÀÌ¾Æ¿ô ÆÄÀÏ)À» ºñ·ÔÇÏ¿©
-  »ç¿ëÇÒ ¼ö ÀÖ´Â .kl ÆÄÀÏ·Î ±¸¼ºµÇ¾î ÀÖ´Â Freedos keyboard.sys/keybrd2.sys/keybrd3.sys
-  ¶óÀÌºê·¯¸®¸¦ Áö¿øÇÕ´Ï´Ù.
-  DOSBox¿¡ ³»ÀåµÈ ·¹ÀÌ¾Æ¿ôÀÌ ¾î¶°ÇÑ ±î´ßÀ¸·Î µ¿ÀÛÇÏÁö ¾ÊÀ¸¸é
-  http://www.freedos.org ¿¡¼­ ¹Ì¸® ÄÄÆÄÀÏµÈ Å°º¸µå ·¹ÀÌ¾Æ¿ôÀ» »ìÆì º¸½Ã±â ¹Ù¶ø´Ï´Ù.
+ì§€ì›í•˜ëŠ” ì™¸ë¶€ íŒŒì¼
+  Freedos .kl íŒŒì¼ë“¤(freedos keyb2 í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒ íŒŒì¼)ì„ ë¹„ë¡¯í•˜ì—¬
+  ì‚¬ìš©í•  ìˆ˜ ìžˆëŠ” .kl íŒŒì¼ë¡œ êµ¬ì„±ë˜ì–´ ìžˆëŠ” Freedos keyboard.sys/keybrd2.sys/keybrd3.sys
+  ë¼ì´ë¸ŒëŸ¬ë¦¬ë¥¼ ì§€ì›í•©ë‹ˆë‹¤.
+  DOSBoxì— ë‚´ìž¥ëœ ë ˆì´ì•„ì›ƒì´ ì–´ë– í•œ ê¹Œë‹­ìœ¼ë¡œ ë™ìž‘í•˜ì§€ ì•Šìœ¼ë©´
+  http://www.freedos.org ì—ì„œ ë¯¸ë¦¬ ì»´íŒŒì¼ëœ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒì„ ì‚´íŽ´ ë³´ì‹œê¸° ë°”ëžë‹ˆë‹¤.
 
-  .CPI (MSDOS È£È¯ ÄÚµå ÆäÀÌÁö ÆÄÀÏ)°ú .CPX (UPX·Î ¾ÐÃàµÈ Freedos ÄÚµå ÆäÀÌÁö ÆÄÀÏ)
-  µÑ ´Ù ¾µ ¼ö ÀÖ½À´Ï´Ù. ¸î¸îÀÇ ÄÚµå ÆäÀÌÁö´Â DOSBox¿¡ µé¾î ÀÖ±â ¶§¹®¿¡
-  ¿ÜºÎ ÄÚµå ÆäÀÌÁö ÆÄÀÏÀ» µû·Î °¡Á®´Ù ¾²Áö ¾ÊÀ¸¼Åµµ µË´Ï´Ù.
-  ¶Ç´Â ´Ù¸¥ »ç¿ëÀÚ°¡ ¸¸µç ÄÚµå ÆäÀÌÁö ÆÄÀÏÀ» ½á¾ß ÇÑ´Ù¸é DOSBox ±¸¼º ÆÄÀÏÀÌ ÀÖ´Â
-  µð·ºÅÍ¸®¿¡ º¹»çÇÏ¿© DOSBox°¡ Á¢±ÙÇÒ ¼ö ÀÖ°Ô ÇØ¾ß ÇÕ´Ï´Ù.
-  10°³ÀÇ ¸ðµç ega.cpx ÆÄÀÏµé (FreeDOS¿¡¼­ °¡Á®¿È)ÀÌ DOSBox Æú´õ¿¡ ÀÖÀ¸¸é
-  ¿äÃ»µÈ ·¹ÀÌ¾Æ¿ô/ÄÚµåÆäÀÌÁö¿¡ ´ëÇÑ ÀûÀýÇÑ ÄÚµå ÆäÀÌÁö ÆÄÀÏÀÌ ÀÚµ¿À¸·Î
-  ¼±ÅÃµË´Ï´Ù.
+  .CPI (MSDOS í˜¸í™˜ ì½”ë“œ íŽ˜ì´ì§€ íŒŒì¼)ê³¼ .CPX (UPXë¡œ ì••ì¶•ëœ Freedos ì½”ë“œ íŽ˜ì´ì§€ íŒŒì¼)
+  ë‘˜ ë‹¤ ì“¸ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. ëª‡ëª‡ì˜ ì½”ë“œ íŽ˜ì´ì§€ëŠ” DOSBoxì— ë“¤ì–´ ìžˆê¸° ë•Œë¬¸ì—
+  ì™¸ë¶€ ì½”ë“œ íŽ˜ì´ì§€ íŒŒì¼ì„ ë”°ë¡œ ê°€ì ¸ë‹¤ ì“°ì§€ ì•Šìœ¼ì…”ë„ ë©ë‹ˆë‹¤.
+  ë˜ëŠ” ë‹¤ë¥¸ ì‚¬ìš©ìžê°€ ë§Œë“  ì½”ë“œ íŽ˜ì´ì§€ íŒŒì¼ì„ ì¨ì•¼ í•œë‹¤ë©´ DOSBox êµ¬ì„± íŒŒì¼ì´ ìžˆëŠ”
+  ë””ë ‰í„°ë¦¬ì— ë³µì‚¬í•˜ì—¬ DOSBoxê°€ ì ‘ê·¼í•  ìˆ˜ ìžˆê²Œ í•´ì•¼ í•©ë‹ˆë‹¤.
+  10ê°œì˜ ëª¨ë“  ega.cpx íŒŒì¼ë“¤ (FreeDOSì—ì„œ ê°€ì ¸ì˜´)ì´ DOSBox í´ë”ì— ìžˆìœ¼ë©´
+  ìš”ì²­ëœ ë ˆì´ì•„ì›ƒ/ì½”ë“œíŽ˜ì´ì§€ì— ëŒ€í•œ ì ì ˆí•œ ì½”ë“œ íŽ˜ì´ì§€ íŒŒì¼ì´ ìžë™ìœ¼ë¡œ
+  ì„ íƒë©ë‹ˆë‹¤.
 
-  µû·Î Ãß°¡µÇ´Â ·¹ÀÌ¾Æ¿ôÀº ÀÏÄ¡ÇÏ´Â .kl ÆÄÀÏÀ» DOSBox.Conf°¡ ÀÖ´Â µð·ºÅÍ¸®·Î
-  º¹»çÇÏ°í ¾ð¾î ÄÚµå¸¦ ÆÄÀÏ ÀÌ¸§ÀÇ Ã¹ ¹øÂ° ºÎºÐÀ» »ç¿ëÇÏ¿© Ãß°¡µÉ ¼ö ÀÖ½À´Ï´Ù.
-  º¸±â: UZ.KL ÆÄÀÏÀÌ ÀÖ´Ù¸é UZ.KL (¿ìÁîº£Å°½ºÅºÀÇ Å°º¸µå ·¹ÀÌ¾Æ¿ô)
-           DOSBox.Conf¿¡¼­ "keyboardlayout=uz"¶ó°í ÁöÁ¤ÇÏ½Ê½Ã¿À.
-  ÀÌ·¯ÇÑ Å°º¸µå ·¹ÀÌ¾Æ¿ôµéÀÇ ÅëÇÕ(keybrd2.sys) Àº ÀÇµµµÈ ¹Ù¿Í ºñ½ÁÇÏ°Ô µ¿ÀÛÇÕ´Ï´Ù.
+  ë”°ë¡œ ì¶”ê°€ë˜ëŠ” ë ˆì´ì•„ì›ƒì€ ì¼ì¹˜í•˜ëŠ” .kl íŒŒì¼ì„ DOSBox.Confê°€ ìžˆëŠ” ë””ë ‰í„°ë¦¬ë¡œ
+  ë³µì‚¬í•˜ê³  ì–¸ì–´ ì½”ë“œë¥¼ íŒŒì¼ ì´ë¦„ì˜ ì²« ë²ˆì§¸ ë¶€ë¶„ì„ ì‚¬ìš©í•˜ì—¬ ì¶”ê°€ë  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+  ë³´ê¸°: UZ.KL íŒŒì¼ì´ ìžˆë‹¤ë©´ UZ.KL (ìš°ì¦ˆë² í‚¤ìŠ¤íƒ„ì˜ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒ)
+           DOSBox.Confì—ì„œ "keyboardlayout=uz"ë¼ê³  ì§€ì •í•˜ì‹­ì‹œì˜¤.
+  ì´ëŸ¬í•œ í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒë“¤ì˜ í†µí•©(keybrd2.sys) ì€ ì˜ë„ëœ ë°”ì™€ ë¹„ìŠ·í•˜ê²Œ ë™ìž‘í•©ë‹ˆë‹¤.
 
 
-Å°º¸µå ·¹ÀÌ¾Æ¿ôÀº ´Ù¸¥ ³ª¶óÀÇ ¹®ÀÚ¿­µéÀ» ¹Þ¾ÆµéÀÏ ¼ö ÀÖÁö¸¸ ÆÄÀÏ ÀÌ¸§ ¾È¿¡
-±× ¹®ÀÚ¿­µéÀ» ¾µ ¼ö ¾ø½À´Ï´Ù.
-DOSBox ¾È¿¡¼­ »Ó¸¸ ¾Æ´Ï¶ó DOSBox°¡ Á¢±ÙÇÒ ¼ö ÀÖ´Â È£½ºÆ® ¿î¿µ Ã¼Á¦¿¡
-ÀÖ´Â ÆÄÀÏµé ¾È¿¡¼­µµ ÀÌ ¹®ÀÚ¿­µéÀ» »ç¿ëÇÏ´Â °ÍÀº »ï°¡½Ã±â ¹Ù¶ø´Ï´Ù.
+í‚¤ë³´ë“œ ë ˆì´ì•„ì›ƒì€ ë‹¤ë¥¸ ë‚˜ë¼ì˜ ë¬¸ìžì—´ë“¤ì„ ë°›ì•„ë“¤ì¼ ìˆ˜ ìžˆì§€ë§Œ íŒŒì¼ ì´ë¦„ ì•ˆì—
+ê·¸ ë¬¸ìžì—´ë“¤ì„ ì“¸ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.
+DOSBox ì•ˆì—ì„œ ë¿ë§Œ ì•„ë‹ˆë¼ DOSBoxê°€ ì ‘ê·¼í•  ìˆ˜ ìžˆëŠ” í˜¸ìŠ¤íŠ¸ ìš´ì˜ ì²´ì œì—
+ìžˆëŠ” íŒŒì¼ë“¤ ì•ˆì—ì„œë„ ì´ ë¬¸ìžì—´ë“¤ì„ ì‚¬ìš©í•˜ëŠ” ê²ƒì€ ì‚¼ê°€ì‹œê¸° ë°”ëžë‹ˆë‹¤.
 
 
 ==============================
-9. ½Ã¸®¾ó ¸ÖÆ¼ÇÃ·¹ÀÌ¾î ±â´É
+9. ì‹œë¦¬ì–¼ ë©€í‹°í”Œë ˆì´ì–´ ê¸°ëŠ¥
 ==============================
 
-DOSBox´Â ½Ã¸®¾ó ³Î¸ðµ©(nullmodem) ÄÉÀÌºíÀ» ³×Æ®¿öÅ©¿Í ÀÎÅÍ³ÝÀ» °ÅÃÄ
-°¡»óÀ¸·Î ±¸ÇöÇÕ´Ï´Ù.
-DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡ ÀÖ´Â [serialports] ±¸¹®¿¡¼­ ±¸¼ºÇÏ½Ç ¼ö ÀÖ½À´Ï´Ù.
+DOSBoxëŠ” ì‹œë¦¬ì–¼ ë„ëª¨ëŽ€(nullmodem) ì¼€ì´ë¸”ì„ ë„¤íŠ¸ì›Œí¬ì™€ ì¸í„°ë„·ì„ ê±°ì³
+ê°€ìƒìœ¼ë¡œ êµ¬í˜„í•©ë‹ˆë‹¤.
+DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì— ìžˆëŠ” [serialports] êµ¬ë¬¸ì—ì„œ êµ¬ì„±í•˜ì‹¤ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-³Î¸ðµ©¿¡ ¿¬°áÇÏ¸é ÇÑÂÊÀº ¼­¹ö, ³ª¸ÓÁö ÇÑÂÊÀº Å¬¶óÀÌ¾ðÆ®°¡ µË´Ï´Ù.
+ë„ëª¨ëŽ€ì— ì—°ê²°í•˜ë©´ í•œìª½ì€ ì„œë²„, ë‚˜ë¨¸ì§€ í•œìª½ì€ í´ë¼ì´ì–¸íŠ¸ê°€ ë©ë‹ˆë‹¤.
 
-DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏÀ» ´ÙÀ½°ú °°ÀÌ ±¸¼ºÇØ¾ß ÇÕ´Ï´Ù:
-¼­¹ö:
+DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì„ ë‹¤ìŒê³¼ ê°™ì´ êµ¬ì„±í•´ì•¼ í•©ë‹ˆë‹¤:
+ì„œë²„:
    serial1=nullmodem
 
-Å¬¶óÀÌ¾ðÆ®:
-   serial1=nullmodem server:<IP ¶Ç´Â ¼­¹ö ÀÌ¸§>
+í´ë¼ì´ì–¸íŠ¸:
+   serial1=nullmodem server:<IP ë˜ëŠ” ì„œë²„ ì´ë¦„>
 
-ÀÌÁ¦ °ÔÀÓÀ» ½ÇÇàÇÏ¿©
-nullmodem (³Î ¸ðµ©) / serial cable (Á÷·Ä ÄÉÀÌºí) /
-already connected as multiplayer method on COM1 (COM1¿¡ ¸ÖÆ¼ÇÃ·¹ÀÌ¾î ¹æ½ÄÀ¸·Î ÀÌ¹Ì ¿¬°áµÊ)
-°¡¿îµ¥ ÇÏ³ª¸¦ °í¸£½Ê½Ã¿À. µÎ ÄÄÇ»ÅÍ¿¡´Ù °°Àº º¸(baud) ¼Óµµ¸¦ ÁöÁ¤ÇÏ½Ê½Ã¿À.
+ì´ì œ ê²Œìž„ì„ ì‹¤í–‰í•˜ì—¬
+nullmodem (ë„ ëª¨ëŽ€) / serial cable (ì§ë ¬ ì¼€ì´ë¸”) /
+already connected as multiplayer method on COM1 (COM1ì— ë©€í‹°í”Œë ˆì´ì–´ ë°©ì‹ìœ¼ë¡œ ì´ë¯¸ ì—°ê²°ë¨)
+ê°€ìš´ë° í•˜ë‚˜ë¥¼ ê³ ë¥´ì‹­ì‹œì˜¤. ë‘ ì»´í“¨í„°ì—ë‹¤ ê°™ì€ ë³´(baud) ì†ë„ë¥¼ ì§€ì •í•˜ì‹­ì‹œì˜¤.
 
-ÀÌ»Ó ¾Æ´Ï¶ó ´ÙÀ½ÀÇ º¯¼ö¸¦ ÁöÁ¤ÇÏ¿© nullmodem ¿¬°á ¹æ½ÄÀ» Á¦¾îÇÒ ¼ö ÀÖ½À´Ï´Ù.
-¿©±â¿¡ ¸Å°³ º¯¼ö°¡ ¸ðµÎ ¸ð¿© ÀÖ½À´Ï´Ù:
+ì´ë¿ ì•„ë‹ˆë¼ ë‹¤ìŒì˜ ë³€ìˆ˜ë¥¼ ì§€ì •í•˜ì—¬ nullmodem ì—°ê²° ë°©ì‹ì„ ì œì–´í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+ì—¬ê¸°ì— ë§¤ê°œ ë³€ìˆ˜ê°€ ëª¨ë‘ ëª¨ì—¬ ìžˆìŠµë‹ˆë‹¤:
 
- * port:         - TCP Æ÷Æ® ¹øÈ£. ±âº»°ª: 23
- * rxdelay:      - ÀÎÅÍÆäÀÌ½º°¡ ÁØºñµÇÁö ¾Ê¾Ò´Ù¸é, ¹ÞÀº µ¥ÀÌÅÍ¸¦ ¾ó¸¸Å­
-                        ¿À·§µ¿¾È Áö¿¬ÇÒÁö °áÁ¤ÇÕ´Ï´Ù (´ÜÀ§ : ¹Ð¸®ÃÊ)
-                        DOSBox »óÅÂ Ã¢¿¡¼­ Overrun(¿À¹ö·±) ¿À·ù°¡ ¶ß¸é ÀÌ °ªÀ» ³ôÀÌ½Ê½Ã¿À.
-                        ±âº»°ª: 100
- * txdelay:      - ÆÐÅ¶À» º¸³»±â Àü¿¡ ¾ó¸¸Å­ ¿À·§µ¿¾È µ¥ÀÌÅÍ¸¦ ¹ÞÀ»Áö °áÁ¤ÇÕ´Ï´Ù.
-                        ±âº»°ª : 12 (³×Æ®¿öÅ©ÀÇ ºÎÇÏ¸¦ ´ú¾î ÁÝ´Ï´Ù)
- * server:       - ÀÌ nullmodemÀº ÁöÁ¤µÈ ¼­¹ö¿¡ ¿¬°áµÇ´Â Å¬¶óÀÌ¾ðÆ®°¡ µË´Ï´Ù. (server¿¡ ÀÎ¼ö°¡ ¾øÀ¸¸é ¼­¹ö°¡ µË´Ï´Ù)
- * transparent:1 - ½Ã¸®¾ó µ¥ÀÌÅÍ¸¸ º¸³À´Ï´Ù. RTS/DTR »óÈ£ ±³È¯(handshake)Àº ¾ø½À´Ï´Ù.
-                        nullmodemÀÌ ¾Æ´Ñ ÀåÄ¡¿¡ ¿¬°áÇÒ ¶§ »ç¿ëÇÏ½Ê½Ã¿À.
- * telnet:1      - ¿ø°Ý »çÀÌÆ®°¡ º¸³½ ÅÚ³Ý µ¥ÀÌÅÍ¸¦ ÇØ¼®ÇÕ´Ï´Ù. ÀÚµ¿À¸·Î Åõ¸íÇÏ°Ô Ã³¸®µË´Ï´Ù.
- * usedtr:1      - DOS ÇÁ·Î±×·¥ÀÌ DTRÀ» ÄÓ ¶§±îÁö ¿¬°áµÇÁö ¾Ê°Ô ÇÕ´Ï´Ù.
-                         ¸ðµ© ÅÍ¹Ì³ÎÀ» ¾µ ¶§ À¯¿ëÇÕ´Ï´Ù. ÀÚµ¿À¸·Î Åõ¸íÇÏ°Ô Ã³¸®µË´Ï´Ù.
- * inhsocket:1   - ¸í·É ÁÙÀ» °ÅÃÄ DOSBox·Î º¸³»Áø ¼ÒÄÏÀ» »ç¿ëÇÕ´Ï´Ù. ÀÚµ¿À¸·Î Åõ¸íÇÏ°Ô
-                           Ã³¸®µË´Ï´Ù. (Socket Inheritance: »õ·Î¿î BBS ¼ÒÇÁÆ®¿þ¾î »ó¿¡¼­
-                           ¿À·¡µÈ DOS µµ¾î °ÔÀÓÀ» µ¹¸± ¶§ ¾²ÀÔ´Ï´Ù)
+ * port:         - TCP í¬íŠ¸ ë²ˆí˜¸. ê¸°ë³¸ê°’: 23
+ * rxdelay:      - ì¸í„°íŽ˜ì´ìŠ¤ê°€ ì¤€ë¹„ë˜ì§€ ì•Šì•˜ë‹¤ë©´, ë°›ì€ ë°ì´í„°ë¥¼ ì–¼ë§Œí¼
+                        ì˜¤ëž«ë™ì•ˆ ì§€ì—°í• ì§€ ê²°ì •í•©ë‹ˆë‹¤ (ë‹¨ìœ„ : ë°€ë¦¬ì´ˆ)
+                        DOSBox ìƒíƒœ ì°½ì—ì„œ Overrun(ì˜¤ë²„ëŸ°) ì˜¤ë¥˜ê°€ ëœ¨ë©´ ì´ ê°’ì„ ë†’ì´ì‹­ì‹œì˜¤.
+                        ê¸°ë³¸ê°’: 100
+ * txdelay:      - íŒ¨í‚·ì„ ë³´ë‚´ê¸° ì „ì— ì–¼ë§Œí¼ ì˜¤ëž«ë™ì•ˆ ë°ì´í„°ë¥¼ ë°›ì„ì§€ ê²°ì •í•©ë‹ˆë‹¤.
+                        ê¸°ë³¸ê°’ : 12 (ë„¤íŠ¸ì›Œí¬ì˜ ë¶€í•˜ë¥¼ ëœì–´ ì¤ë‹ˆë‹¤)
+ * server:       - ì´ nullmodemì€ ì§€ì •ëœ ì„œë²„ì— ì—°ê²°ë˜ëŠ” í´ë¼ì´ì–¸íŠ¸ê°€ ë©ë‹ˆë‹¤. (serverì— ì¸ìˆ˜ê°€ ì—†ìœ¼ë©´ ì„œë²„ê°€ ë©ë‹ˆë‹¤)
+ * transparent:1 - ì‹œë¦¬ì–¼ ë°ì´í„°ë§Œ ë³´ëƒ…ë‹ˆë‹¤. RTS/DTR ìƒí˜¸ êµí™˜(handshake)ì€ ì—†ìŠµë‹ˆë‹¤.
+                        nullmodemì´ ì•„ë‹Œ ìž¥ì¹˜ì— ì—°ê²°í•  ë•Œ ì‚¬ìš©í•˜ì‹­ì‹œì˜¤.
+ * telnet:1      - ì›ê²© ì‚¬ì´íŠ¸ê°€ ë³´ë‚¸ í…”ë„· ë°ì´í„°ë¥¼ í•´ì„í•©ë‹ˆë‹¤. ìžë™ìœ¼ë¡œ íˆ¬ëª…í•˜ê²Œ ì²˜ë¦¬ë©ë‹ˆë‹¤.
+ * usedtr:1      - DOS í”„ë¡œê·¸ëž¨ì´ DTRì„ ì¼¤ ë•Œê¹Œì§€ ì—°ê²°ë˜ì§€ ì•Šê²Œ í•©ë‹ˆë‹¤.
+                         ëª¨ëŽ€ í„°ë¯¸ë„ì„ ì“¸ ë•Œ ìœ ìš©í•©ë‹ˆë‹¤. ìžë™ìœ¼ë¡œ íˆ¬ëª…í•˜ê²Œ ì²˜ë¦¬ë©ë‹ˆë‹¤.
+ * inhsocket:1   - ëª…ë ¹ ì¤„ì„ ê±°ì³ DOSBoxë¡œ ë³´ë‚´ì§„ ì†Œì¼“ì„ ì‚¬ìš©í•©ë‹ˆë‹¤. ìžë™ìœ¼ë¡œ íˆ¬ëª…í•˜ê²Œ
+                           ì²˜ë¦¬ë©ë‹ˆë‹¤. (Socket Inheritance: ìƒˆë¡œìš´ BBS ì†Œí”„íŠ¸ì›¨ì–´ ìƒì—ì„œ
+                           ì˜¤ëž˜ëœ DOS ë„ì–´ ê²Œìž„ì„ ëŒë¦´ ë•Œ ì“°ìž…ë‹ˆë‹¤)
 
-º¸±â: TCP Æ÷Æ® 5000¿¡ ¼­¹ö ¸®½º´× Ã³¸®.
-   serial1=nullmodem server:<IP ¶Ç´Â ¼­¹ö ÀÌ¸§> port:5000 rxdelay:1000
+ë³´ê¸°: TCP í¬íŠ¸ 5000ì— ì„œë²„ ë¦¬ìŠ¤ë‹ ì²˜ë¦¬.
+   serial1=nullmodem server:<IP ë˜ëŠ” ì„œë²„ ì´ë¦„> port:5000 rxdelay:1000
 
 
 ===================================
-10. DOSBox ¼Óµµ Á¶Àý
+10. DOSBox ì†ë„ ì¡°ì ˆ
 ===================================
 
-DOSBox´Â CPU, »ç¿îµå Ä«µå, ±×·¡ÇÈ Ä«µå, ±×¸®°í ´Ù¸¥ ¿©·¯ ÁÖº¯ ±â±âµéÀ»
-ÇÑ²¨¹ø¿¡ °¡»óÀ¸·Î ±¸ÇöÇØ ³À´Ï´Ù.
-°¡»óÀ¸·Î ±¸ÇöµÇ´Â DOS ÀÀ¿ë ÇÁ·Î±×·¥ÀÇ ¼Óµµ´Â CPU »çÀÌÅ¬(¾ó¸¶³ª ¸¹Àº
-ÇÔ¼ö°¡ °¡»óÀ¸·Î ±¸ÇöµÇ´À³Ä)ÀÌ °áÁ¤ÇÕ´Ï´Ù.
+DOSBoxëŠ” CPU, ì‚¬ìš´ë“œ ì¹´ë“œ, ê·¸ëž˜í”½ ì¹´ë“œ, ê·¸ë¦¬ê³  ë‹¤ë¥¸ ì—¬ëŸ¬ ì£¼ë³€ ê¸°ê¸°ë“¤ì„
+í•œêº¼ë²ˆì— ê°€ìƒìœ¼ë¡œ êµ¬í˜„í•´ ëƒ…ë‹ˆë‹¤.
+ê°€ìƒìœ¼ë¡œ êµ¬í˜„ë˜ëŠ” DOS ì‘ìš© í”„ë¡œê·¸ëž¨ì˜ ì†ë„ëŠ” CPU ì‚¬ì´í´(ì–¼ë§ˆë‚˜ ë§Žì€
+í•¨ìˆ˜ê°€ ê°€ìƒìœ¼ë¡œ êµ¬í˜„ë˜ëŠëƒ)ì´ ê²°ì •í•©ë‹ˆë‹¤.
 
-CPU »çÀÌÅ¬ (¼Óµµ ³ôÀÌ°í ³·Ãß±â)
-  cycles=auto°¡ ±âº»À¸·Î ÀâÇô ÀÖ´Âµ¥ ÀÌ·Î½á DOSBox´Â
-  ½ÇÇàÇÏ·Á´Â °ÔÀÓÀÌ µÉ ¼ö ÀÖÀ¸¸é ¸¹Àº ÇÔ¼ö¸¦ ½á¾ß ÇÏ´Â °ÔÀÓÀÎÁö
-  ±×·¸Áö ¾ÊÀº °ÔÀÓÀÎÁö¸¦ ¾Ë¾Æ³À´Ï´Ù.
+CPU ì‚¬ì´í´ (ì†ë„ ë†’ì´ê³  ë‚®ì¶”ê¸°)
+  cycles=autoê°€ ê¸°ë³¸ìœ¼ë¡œ ìž¡í˜€ ìžˆëŠ”ë° ì´ë¡œì¨ DOSBoxëŠ”
+  ì‹¤í–‰í•˜ë ¤ëŠ” ê²Œìž„ì´ ë  ìˆ˜ ìžˆìœ¼ë©´ ë§Žì€ í•¨ìˆ˜ë¥¼ ì¨ì•¼ í•˜ëŠ” ê²Œìž„ì¸ì§€
+  ê·¸ë ‡ì§€ ì•Šì€ ê²Œìž„ì¸ì§€ë¥¼ ì•Œì•„ëƒ…ë‹ˆë‹¤.
 
-  °ÔÀÓÀÌ ¹Ù¶ó´ø ¹Ù¿Í °ü°è ¾øÀÌ µÉ ¼ö¸¸ ÀÖ´Ù¸é ¹«Á¶°Ç ÇÔ¼ö¸¦ ¸¹ÀÌ ¾²°Ô ÇÏ·Á¸é
-  DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡¼­ cycles=max·Î ³õÀ¸½Ê½Ã¿À. (cycles=max·Î µÎ¸é
-  °¡²ûÀº ¼Óµµ°¡ ³Ê¹« ºü¸£°Å³ª ¾ÈÁ¤ÀûÀÌÁö ¾ÊÀ» ¼öµµ ÀÖ½À´Ï´Ù)
-  cycles=3000°ú °°Àº °íÁ¤ °ªÀ» »ç¿ëÇÏ¸é ¼Óµµ°¡ ³Ê¹« ´À¸®°Å³ª ³Ê¹« ºü¸¦ ¼ö ÀÖ½À´Ï´Ù.
-  ±×·¯³ª DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏÀÇ ´Ù¸¥ ¼³Á¤À» ¼öµ¿À¸·Î °­Á¦ ¼³Á¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.
+  ê²Œìž„ì´ ë°”ë¼ë˜ ë°”ì™€ ê´€ê³„ ì—†ì´ ë  ìˆ˜ë§Œ ìžˆë‹¤ë©´ ë¬´ì¡°ê±´ í•¨ìˆ˜ë¥¼ ë§Žì´ ì“°ê²Œ í•˜ë ¤ë©´
+  DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì—ì„œ cycles=maxë¡œ ë†“ìœ¼ì‹­ì‹œì˜¤. (cycles=maxë¡œ ë‘ë©´
+  ê°€ë”ì€ ì†ë„ê°€ ë„ˆë¬´ ë¹ ë¥´ê±°ë‚˜ ì•ˆì •ì ì´ì§€ ì•Šì„ ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤)
+  cycles=3000ê³¼ ê°™ì€ ê³ ì • ê°’ì„ ì‚¬ìš©í•˜ë©´ ì†ë„ê°€ ë„ˆë¬´ ëŠë¦¬ê±°ë‚˜ ë„ˆë¬´ ë¹ ë¥¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+  ê·¸ëŸ¬ë‚˜ DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì˜ ë‹¤ë¥¸ ì„¤ì •ì„ ìˆ˜ë™ìœ¼ë¡œ ê°•ì œ ì„¤ì •í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-  DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ(DOSBox.Conf)ÀÇ cycles¿¡ °íÁ¤µÈ °ªÀ» ¼³Á¤ÇÏ¿© ¼Óµµ¸¦ °­Á¦·Î
-  ³·Ãß°Å³ª ³ôÀÏ ¼ö ÀÖ½À´Ï´Ù.  ÀÌ¸¦Å×¸é cycles=10000À¸·Î µÎ¸é DOSBox Ã¢ ¸Ç À§¿¡´Â
-  Cpu Speed: fixed 10000 cycles°¡ ³ªÅ¸³³´Ï´Ù.
-  ÀÌ »óÅÂ¿¡¼­ CTRL-F11À» ´­·¯ ¼Óµµ¸¦ ÁÙÀÌ°Å³ª CTRL-F12¸¦ ´­·¯ ¼Óµµ¸¦ ºü¸£°Ô ÇÒ ¼ö
-  ÀÖ½À´Ï´Ù¸¸ ÀÌ´Â ÄÄÇ»ÅÍ PCÀÇ ÇÑ °³ÀÇ ÄÚ¾îÀÇ Èû¿¡ Á¦ÇÑÀ» ¹Þ½À´Ï´Ù.
+  DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼(DOSBox.Conf)ì˜ cyclesì— ê³ ì •ëœ ê°’ì„ ì„¤ì •í•˜ì—¬ ì†ë„ë¥¼ ê°•ì œë¡œ
+  ë‚®ì¶”ê±°ë‚˜ ë†’ì¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.  ì´ë¥¼í…Œë©´ cycles=10000ìœ¼ë¡œ ë‘ë©´ DOSBox ì°½ ë§¨ ìœ„ì—ëŠ”
+  Cpu Speed: fixed 10000 cyclesê°€ ë‚˜íƒ€ë‚©ë‹ˆë‹¤.
+  ì´ ìƒíƒœì—ì„œ CTRL-F11ì„ ëˆŒëŸ¬ ì†ë„ë¥¼ ì¤„ì´ê±°ë‚˜ CTRL-F12ë¥¼ ëˆŒëŸ¬ ì†ë„ë¥¼ ë¹ ë¥´ê²Œ í•  ìˆ˜
+  ìžˆìŠµë‹ˆë‹¤ë§Œ ì´ëŠ” ì»´í“¨í„° PCì˜ í•œ ê°œì˜ ì½”ì–´ì˜ íž˜ì— ì œí•œì„ ë°›ìŠµë‹ˆë‹¤.
 
-  ¿©·¯ºÐÀÇ ½ÇÁ¦ CPU°¡ ¾ó¸¶³ª ¿©À¯°¡ ÀÖ´ÂÁö ¾Ë¾Æ º¸·Á¸é
-  ´ÙÀ½ÀÇ °úÁ¤À» µû¸£½Ê½Ã¿À.
-  Windows 2000/XP/2003/Vista/7 : ÀÛ¾÷ °ü¸®ÀÚ (Ctrl-Shift-Esc)
-  Windows 95/98/ME : ½Ã½ºÅÛ ¸ð´ÏÅÍ
+  ì—¬ëŸ¬ë¶„ì˜ ì‹¤ì œ CPUê°€ ì–¼ë§ˆë‚˜ ì—¬ìœ ê°€ ìžˆëŠ”ì§€ ì•Œì•„ ë³´ë ¤ë©´
+  ë‹¤ìŒì˜ ê³¼ì •ì„ ë”°ë¥´ì‹­ì‹œì˜¤.
+  Windows 2000/XP/2003/Vista/7 : ìž‘ì—… ê´€ë¦¬ìž (Ctrl-Shift-Esc)
+  Windows 95/98/ME : ì‹œìŠ¤í…œ ëª¨ë‹ˆí„°
 
-  ÄÄÇ»ÅÍÀÇ ½ÇÁ¦ CPU ÄÚ¾î ÇÏ³ª°¡ 100%¸¦ Â÷ÁöÇÏ°í ÀÖ´Ù¸é DOSBox¸¦ ´õ ºü¸£°Ô
-  ÇÒ ¹æ¹ýÀº ¾ø½À´Ï´Ù.  (DOSBoxÀÇ CPU°¡ ¾Æ´Ñ ÀåÄ¡µéÀÌ ÁÖ´Â ºÎÇÏ¸¦ ÁÙÀÌÁö ¾Ê´Â ÇÑ)
+  ì»´í“¨í„°ì˜ ì‹¤ì œ CPU ì½”ì–´ í•˜ë‚˜ê°€ 100%ë¥¼ ì°¨ì§€í•˜ê³  ìžˆë‹¤ë©´ DOSBoxë¥¼ ë” ë¹ ë¥´ê²Œ
+  í•  ë°©ë²•ì€ ì—†ìŠµë‹ˆë‹¤.  (DOSBoxì˜ CPUê°€ ì•„ë‹Œ ìž¥ì¹˜ë“¤ì´ ì£¼ëŠ” ë¶€í•˜ë¥¼ ì¤„ì´ì§€ ì•ŠëŠ” í•œ)
 
-  DOSBox´Â CPUÀÇ ÄÚ¾î ÇÏ³ª¸¸ »ç¿ëÇÒ ¼ö ÀÖÀ¸¹Ç·Î ÀÌ¸¦Å×¸é 4°³ÀÇ ÄÚ¾î¸¦ Áö´Ñ CPU¸¦ »ç¿ëÇÑ´Ù¸é
-  DOSBox´Â ´Ù¸¥ ÄÚ¾îÀÇ ÈûÀ» »ç¿ëÇÏÁö ¸øÇÕ´Ï´Ù.
+  DOSBoxëŠ” CPUì˜ ì½”ì–´ í•˜ë‚˜ë§Œ ì‚¬ìš©í•  ìˆ˜ ìžˆìœ¼ë¯€ë¡œ ì´ë¥¼í…Œë©´ 4ê°œì˜ ì½”ì–´ë¥¼ ì§€ë‹Œ CPUë¥¼ ì‚¬ìš©í•œë‹¤ë©´
+  DOSBoxëŠ” ë‹¤ë¥¸ ì½”ì–´ì˜ íž˜ì„ ì‚¬ìš©í•˜ì§€ ëª»í•©ë‹ˆë‹¤.
 
-  cycles=auto·Î ¼³Á¤ÇØ µÎ°í ³ª¼­ ÇÔ¼ö¸¦ ÃÖ´ëÇÑ ¸¹ÀÌ ¾²´Â °ÔÀÓÀ» ½ÇÇàÇÏ°Å³ª
-  cycles=max·Î ¼³Á¤ÇØ µÎ¾ú´Ù¸é DOSBox Ã¢ ¸Ç À§¿¡´Â "CPU Cycles : Max 100% cycles"¶ó°í ³ªÅ¸³³´Ï´Ù.
-  ÀÌ ¶§¿¡´Â CPU ÄÚ¾î°¡ ¾ó¸¶³ª ¸¹Àº ¸®¼Ò½º¸¦ Â÷ÁöÇÏ´ÂÁö »ç¿ëÀÚ°¡ °í·ÁÇÒ ÇÊ¿ä´Â ¾ø½À´Ï´Ù.
-  ÀÌ ¹æ½Ä¿¡¼­ % (ÆÛ¼¾Å×ÀÌÁö) ±â¹ÝÀ¸·Î »çÀÌÅ¬ÀÇ ¹üÀ§¸¦ ÁÙÀÌ°Å³ª (CTRL-F11)
-  ´Ù½Ã ³ôÀÏ ¼ö ÀÖ½À´Ï´Ù (CTRL-F12).
+  cycles=autoë¡œ ì„¤ì •í•´ ë‘ê³  ë‚˜ì„œ í•¨ìˆ˜ë¥¼ ìµœëŒ€í•œ ë§Žì´ ì“°ëŠ” ê²Œìž„ì„ ì‹¤í–‰í•˜ê±°ë‚˜
+  cycles=maxë¡œ ì„¤ì •í•´ ë‘ì—ˆë‹¤ë©´ DOSBox ì°½ ë§¨ ìœ„ì—ëŠ” "CPU Cycles : Max 100% cycles"ë¼ê³  ë‚˜íƒ€ë‚©ë‹ˆë‹¤.
+  ì´ ë•Œì—ëŠ” CPU ì½”ì–´ê°€ ì–¼ë§ˆë‚˜ ë§Žì€ ë¦¬ì†ŒìŠ¤ë¥¼ ì°¨ì§€í•˜ëŠ”ì§€ ì‚¬ìš©ìžê°€ ê³ ë ¤í•  í•„ìš”ëŠ” ì—†ìŠµë‹ˆë‹¤.
+  ì´ ë°©ì‹ì—ì„œ % (í¼ì„¼í…Œì´ì§€) ê¸°ë°˜ìœ¼ë¡œ ì‚¬ì´í´ì˜ ë²”ìœ„ë¥¼ ì¤„ì´ê±°ë‚˜ (CTRL-F11)
+  ë‹¤ì‹œ ë†’ì¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤ (CTRL-F12).
 
-CPU ÄÚ¾î (¼Óµµ Çâ»ó)
-  x86 ±â¹Ý¿¡¼­ À¯µ¿ÀûÀ¸·Î ´Ù½Ã ÄÄÆÄÀÏµÇ´Â ÄÚ¾î¸¦ »ç¿ëÇÒ ¼ö ÀÖ½À´Ï´Ù
-  (DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡¼­ core=dynamicÀ¸·Î ¼³Á¤)
-  ÀÚµ¿ °¨Áö(core=auto)°¡ Á¦´ë·Î µÇÁö ¾ÊÀ» ¶§ ´õ ³ªÀº °á°ú¸¦ °¡Á®´Ù
-  ÁÝ´Ï´Ù. ¿©±â¿¡´Ù cycles=max·Î µÎ¸é °¡Àå ³ªÀº ¼º´ÉÀ» º¸¿©ÁÝ´Ï´Ù.
-  ±×·¯³ª cycles=20000°ú °°ÀÌ ³ôÀº °íÁ¤°ªÀ» »ç¿ëÇØµµ µË´Ï´Ù.
-  Dynamic ÄÚ¾î ¶§¹®¿¡ ¿ÀÈ÷·Á ´À·ÁÁö°Å³ª ¾Æ¿¹ µ¿ÀÛÇÏÁö ¾Ê°Å³ª
-  Ãæµ¹ÇÏ´Â °ÔÀÓÀÌ ÀÖÀ» ¼ö ÀÖ½À´Ï´Ù!
+CPU ì½”ì–´ (ì†ë„ í–¥ìƒ)
+  x86 ê¸°ë°˜ì—ì„œ ìœ ë™ì ìœ¼ë¡œ ë‹¤ì‹œ ì»´íŒŒì¼ë˜ëŠ” ì½”ì–´ë¥¼ ì‚¬ìš©í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤
+  (DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì—ì„œ core=dynamicìœ¼ë¡œ ì„¤ì •)
+  ìžë™ ê°ì§€(core=auto)ê°€ ì œëŒ€ë¡œ ë˜ì§€ ì•Šì„ ë•Œ ë” ë‚˜ì€ ê²°ê³¼ë¥¼ ê°€ì ¸ë‹¤
+  ì¤ë‹ˆë‹¤. ì—¬ê¸°ì—ë‹¤ cycles=maxë¡œ ë‘ë©´ ê°€ìž¥ ë‚˜ì€ ì„±ëŠ¥ì„ ë³´ì—¬ì¤ë‹ˆë‹¤.
+  ê·¸ëŸ¬ë‚˜ cycles=20000ê³¼ ê°™ì´ ë†’ì€ ê³ ì •ê°’ì„ ì‚¬ìš©í•´ë„ ë©ë‹ˆë‹¤.
+  Dynamic ì½”ì–´ ë•Œë¬¸ì— ì˜¤ížˆë ¤ ëŠë ¤ì§€ê±°ë‚˜ ì•„ì˜ˆ ë™ìž‘í•˜ì§€ ì•Šê±°ë‚˜
+  ì¶©ëŒí•˜ëŠ” ê²Œìž„ì´ ìžˆì„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤!
 
-±×·¡ÇÈ °¡»ó ±¸Çö (¼Óµµ Çâ»ó)
-  VGA ¿¡¹Ä·¹ÀÌ¼ÇÀº DOSBox¿¡¼­ CPU »ç¿ë·üÀ» °¡Àå ¸¹ÀÌ Â÷ÁöÇÏ´Â ºÎºÐÀÔ´Ï´Ù.
-  Ctrl-F8 Å°¸¦ ´­·¯¼­ ÇÁ·¹ÀÓ ¹«½Ã °ªÀ» ³ô¿© º¸½Ê½Ã¿À.
-  °íÁ¤µÈ »çÀÌÅ¬ °ªÀ» »ç¿ëÇÏ¸é CPU »ç¿ë·üÀ» ÁÙÀÏ ¼ö ÀÖÀ¸¸ç CTRL-F12Å°¸¦ ´­·¯
-  »çÀÌÅ¬À» ³ôÀÏ ¼öµµ ÀÖ½À´Ï´Ù.
-  °ÔÀÓ ¼Óµµ°¡ »¡¶óÁú ¶§±îÁö ÇÁ·¹ÀÓ ¹«½Ã°ªÀ» ¿Ã¸®´Â °ÍÀ» ¿©·¯ ¹ø µÇÇ®ÀÌÇÏ½Ê½Ã¿À.
-  ±×·¯³ª ¾Ë¾ÆµÑ °ÍÀº : ÇÁ·¹ÀÓÀ» ³Ê¹« ¸¹ÀÌ ¹«½ÃÇØ ¹ö¸®¸é ¼Óµµ´Â ¾òÁö¸¸
-  °ÔÀÓÀÇ ºÎµå·¯¿òÀº ÀÒ°Ô µË´Ï´Ù
+ê·¸ëž˜í”½ ê°€ìƒ êµ¬í˜„ (ì†ë„ í–¥ìƒ)
+  VGA ì—ë®¬ë ˆì´ì…˜ì€ DOSBoxì—ì„œ CPU ì‚¬ìš©ë¥ ì„ ê°€ìž¥ ë§Žì´ ì°¨ì§€í•˜ëŠ” ë¶€ë¶„ìž…ë‹ˆë‹¤.
+  Ctrl-F8 í‚¤ë¥¼ ëˆŒëŸ¬ì„œ í”„ë ˆìž„ ë¬´ì‹œ ê°’ì„ ë†’ì—¬ ë³´ì‹­ì‹œì˜¤.
+  ê³ ì •ëœ ì‚¬ì´í´ ê°’ì„ ì‚¬ìš©í•˜ë©´ CPU ì‚¬ìš©ë¥ ì„ ì¤„ì¼ ìˆ˜ ìžˆìœ¼ë©° CTRL-F12í‚¤ë¥¼ ëˆŒëŸ¬
+  ì‚¬ì´í´ì„ ë†’ì¼ ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤.
+  ê²Œìž„ ì†ë„ê°€ ë¹¨ë¼ì§ˆ ë•Œê¹Œì§€ í”„ë ˆìž„ ë¬´ì‹œê°’ì„ ì˜¬ë¦¬ëŠ” ê²ƒì„ ì—¬ëŸ¬ ë²ˆ ë˜í’€ì´í•˜ì‹­ì‹œì˜¤.
+  ê·¸ëŸ¬ë‚˜ ì•Œì•„ë‘˜ ê²ƒì€ : í”„ë ˆìž„ì„ ë„ˆë¬´ ë§Žì´ ë¬´ì‹œí•´ ë²„ë¦¬ë©´ ì†ë„ëŠ” ì–»ì§€ë§Œ
+  ê²Œìž„ì˜ ë¶€ë“œëŸ¬ì›€ì€ ìžƒê²Œ ë©ë‹ˆë‹¤
 
-»ç¿îµå °¡»ó ±¸Çö (¼Óµµ Çâ»ó)
-  °ÔÀÓ ¼³Á¤ À¯Æ¿¸®Æ¼¿¡¼­ »ç¿îµå¸¦ ²¨ ³õ¾Æ¼­ CPU·Î °¡´Â ºÎÇÏ¸¦ ´ú ¼ö ÀÖ½À´Ï´Ù.
-  nosound=true·Î ³õ´Â °ÍÀº ¼Ò¸®¸¸ ³ª¿ÀÁö ¾Ê´Â °ÍÀÌÁö »ç¿îµå ÀåÄ¡¸¦ ²ô´Â °ÍÀÌ
-  ¾Æ´Õ´Ï´Ù.
-
-
-°Ô´Ù°¡ DOSBox°¡ µÇµµ·Ï ¸¹Àº ¸®¼Ò½º¸¦ ¾µ ¼ö ÀÖµµ·Ï DOSBox¸¦ Á¦¿ÜÇÑ ¸ðµç ÇÁ·Î±×·¥À» ´ÝÀ¸½Ê½Ã¿À.
+ì‚¬ìš´ë“œ ê°€ìƒ êµ¬í˜„ (ì†ë„ í–¥ìƒ)
+  ê²Œìž„ ì„¤ì • ìœ í‹¸ë¦¬í‹°ì—ì„œ ì‚¬ìš´ë“œë¥¼ êº¼ ë†“ì•„ì„œ CPUë¡œ ê°€ëŠ” ë¶€í•˜ë¥¼ ëœ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+  nosound=trueë¡œ ë†“ëŠ” ê²ƒì€ ì†Œë¦¬ë§Œ ë‚˜ì˜¤ì§€ ì•ŠëŠ” ê²ƒì´ì§€ ì‚¬ìš´ë“œ ìž¥ì¹˜ë¥¼ ë„ëŠ” ê²ƒì´
+  ì•„ë‹™ë‹ˆë‹¤.
 
 
+ê²Œë‹¤ê°€ DOSBoxê°€ ë˜ë„ë¡ ë§Žì€ ë¦¬ì†ŒìŠ¤ë¥¼ ì“¸ ìˆ˜ ìžˆë„ë¡ DOSBoxë¥¼ ì œì™¸í•œ ëª¨ë“  í”„ë¡œê·¸ëž¨ì„ ë‹«ìœ¼ì‹­ì‹œì˜¤.
 
-°í±Þ »çÀÌÅ¬ ¼³Á¤
-cycles=auto¿Í cycles=max ¼³Á¤Àº ½ÃÀÛ ±âº»°ªÀ» ´Ù¸£°Ô ÁöÁ¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.
 
-±¸¹®
-  cycles=auto ["¸®¾ó¸ðµå ±âº»°ª"] ["º¸È£ ¸ðµå ±âº»°ª"%]
-              [limit "»çÀÌÅ¬ ÃÖ´ë°ª"]
-  cycles=max ["º¸È£ ¸ðµå ±âº»°ª"%] [limit "»çÀÌÅ¬ ÃÖ´ë°ª"]
 
-º¸±â:
+ê³ ê¸‰ ì‚¬ì´í´ ì„¤ì •
+cycles=autoì™€ cycles=max ì„¤ì •ì€ ì‹œìž‘ ê¸°ë³¸ê°’ì„ ë‹¤ë¥´ê²Œ ì§€ì •í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+
+êµ¬ë¬¸
+  cycles=auto ["ë¦¬ì–¼ëª¨ë“œ ê¸°ë³¸ê°’"] ["ë³´í˜¸ ëª¨ë“œ ê¸°ë³¸ê°’"%]
+              [limit "ì‚¬ì´í´ ìµœëŒ€ê°’"]
+  cycles=max ["ë³´í˜¸ ëª¨ë“œ ê¸°ë³¸ê°’"%] [limit "ì‚¬ì´í´ ìµœëŒ€ê°’"]
+
+ë³´ê¸°:
   cycles=auto 5000 80% limit 20000
-  ÀÌ·¸°Ô ÁöÁ¤ÇÏ¸é ¸®¾ó ¸ðµå °ÔÀÓ¿¡¼­ cycles=2000À» »ç¿ëÇÕ´Ï´Ù.
-  ¶Ç º¸È£ ¸ðµå °ÔÀÓÀ» Áñ±æ ¶§ »çÀÌÅ¬ Á¦ÇÑÀ» 20000À¸·Î µÎ¸é¼­ CPU¸¦ 80% Á¡À¯ÇÕ´Ï´Ù.
+  ì´ë ‡ê²Œ ì§€ì •í•˜ë©´ ë¦¬ì–¼ ëª¨ë“œ ê²Œìž„ì—ì„œ cycles=2000ì„ ì‚¬ìš©í•©ë‹ˆë‹¤.
+  ë˜ ë³´í˜¸ ëª¨ë“œ ê²Œìž„ì„ ì¦ê¸¸ ë•Œ ì‚¬ì´í´ ì œí•œì„ 20000ìœ¼ë¡œ ë‘ë©´ì„œ CPUë¥¼ 80% ì ìœ í•©ë‹ˆë‹¤.
 
 
 ===================
-11. ¹®Á¦ ÇØ°á :
+11. ë¬¸ì œ í•´ê²° :
 ===================
-ÀÏ¹Ý ÆÁ:
-  DOSBox »óÅÂ Ã¢ÀÇ ¸Þ½ÃÁö¸¦ È®ÀÎÇØ º¸½Ê½Ã¿À. (±¸¹® 12 "DOSBox »óÅÂ Ã¢"À» ÂüÁ¶ÇÏ½Ê½Ã¿À)
+ì¼ë°˜ íŒ:
+  DOSBox ìƒíƒœ ì°½ì˜ ë©”ì‹œì§€ë¥¼ í™•ì¸í•´ ë³´ì‹­ì‹œì˜¤. (êµ¬ë¬¸ 12 "DOSBox ìƒíƒœ ì°½"ì„ ì°¸ì¡°í•˜ì‹­ì‹œì˜¤)
 
-DOSBox¸¦ ½ÇÇàÇÏÀÚ¸¶ÀÚ ¹Ù·Î Ãæµ¹ÇÕ´Ï´Ù:
-  - output= Ç×¸ñ¿¡ ´Ù¸¥ °ªÀ» ³Ö¾î º¸½Ê½Ã¿À. (DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡¼­)
-  - ±×·¡ÇÈ Ä«µå µå¶óÀÌ¹ö¿Í DirectX¸¦ ¾÷µ¥ÀÌÆ®ÇØ º¸½Ê½Ã¿À.
-  - (¸®´ª½º) È¯°æ º¯¼ö SDL_AUDIODRIVER¸¦ alsa³ª oss·Î ¼³Á¤ÇØ º¸½Ê½Ã¿À.
+DOSBoxë¥¼ ì‹¤í–‰í•˜ìžë§ˆìž ë°”ë¡œ ì¶©ëŒí•©ë‹ˆë‹¤:
+  - output= í•­ëª©ì— ë‹¤ë¥¸ ê°’ì„ ë„£ì–´ ë³´ì‹­ì‹œì˜¤. (DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì—ì„œ)
+  - ê·¸ëž˜í”½ ì¹´ë“œ ë“œë¼ì´ë²„ì™€ DirectXë¥¼ ì—…ë°ì´íŠ¸í•´ ë³´ì‹­ì‹œì˜¤.
+  - (ë¦¬ëˆ…ìŠ¤) í™˜ê²½ ë³€ìˆ˜ SDL_AUDIODRIVERë¥¼ alsaë‚˜ ossë¡œ ì„¤ì •í•´ ë³´ì‹­ì‹œì˜¤.
 
-¾î¶² °ÔÀÓÀ» ½ÇÇàÇÏ¸é DOSBox°¡ ´ÝÈ÷¸é¼­, ¾î¶² ¸Þ½ÃÁö°¡ ³ªÅ¸³ª°Å³ª ¸ØÃç ÀÖÀ¸¸é¼­ Ãæµ¹ÇÕ´Ï´Ù:
-  - DOSBox¸¦ ¼³Ä¡ÇÑ µÚ ¼³Á¤ ±¸¼º ÆÄÀÏ(DOSBox.Conf)À» °Çµå¸®Áö ¸¶½Ê½Ã¿À.
-  - »ç¿îµå¸¦ ²¨ º¸½Ê½Ã¿À (°ÔÀÓ°ú ÇÔ²² µû¶ó¿À´Â »ç¿îµå ±¸¼º ÇÁ·Î±×·¥À» »ç¿ëÇØ º¸°Å³ª,
-    DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏ¿¡¼­ sbtype=none°ú gus=false¸¦ »ç¿ëÇØ º¸½Ê½Ã¿À)
-  - DOSBox ¼³Á¤ ±¸¼º ÆÄÀÏÀÇ ÀÏºÎ Ç×¸ñÀ» ¹Ù²ã º¸½Ê½Ã¿À. ¿¹¸¦ µé¸é:
+ì–´ë–¤ ê²Œìž„ì„ ì‹¤í–‰í•˜ë©´ DOSBoxê°€ ë‹«ížˆë©´ì„œ, ì–´ë–¤ ë©”ì‹œì§€ê°€ ë‚˜íƒ€ë‚˜ê±°ë‚˜ ë©ˆì¶° ìžˆìœ¼ë©´ì„œ ì¶©ëŒí•©ë‹ˆë‹¤:
+  - DOSBoxë¥¼ ì„¤ì¹˜í•œ ë’¤ ì„¤ì • êµ¬ì„± íŒŒì¼(DOSBox.Conf)ì„ ê±´ë“œë¦¬ì§€ ë§ˆì‹­ì‹œì˜¤.
+  - ì‚¬ìš´ë“œë¥¼ êº¼ ë³´ì‹­ì‹œì˜¤ (ê²Œìž„ê³¼ í•¨ê»˜ ë”°ë¼ì˜¤ëŠ” ì‚¬ìš´ë“œ êµ¬ì„± í”„ë¡œê·¸ëž¨ì„ ì‚¬ìš©í•´ ë³´ê±°ë‚˜,
+    DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì—ì„œ sbtype=noneê³¼ gus=falseë¥¼ ì‚¬ìš©í•´ ë³´ì‹­ì‹œì˜¤)
+  - DOSBox ì„¤ì • êµ¬ì„± íŒŒì¼ì˜ ì¼ë¶€ í•­ëª©ì„ ë°”ê¿” ë³´ì‹­ì‹œì˜¤. ì˜ˆë¥¼ ë“¤ë©´:
       core=normal
-      °íÁ¤ »çÀÌÅ¬ (¿¹¸¦ µé¸é cycles=10000)
+      ê³ ì • ì‚¬ì´í´ (ì˜ˆë¥¼ ë“¤ë©´ cycles=10000)
       ems=false
       xms=false
-    ¶Ç´Â À§ÀÇ ¼³Á¤¿¡ ´ëÇÑ Á¶ÇÕ.
-    ÀÌ¿Í ºñ½ÁÇÏ°Ô machine¿¡¼­µµ Ä¨¼Â°ú ±â´ÉÀ» Á¦¾îÇÒ ¼ö ÀÖ½À´Ï´Ù.
+    ë˜ëŠ” ìœ„ì˜ ì„¤ì •ì— ëŒ€í•œ ì¡°í•©.
+    ì´ì™€ ë¹„ìŠ·í•˜ê²Œ machineì—ì„œë„ ì¹©ì…‹ê³¼ ê¸°ëŠ¥ì„ ì œì–´í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
     machine=vesa_nolfb
-     ¶Ç´Â
+     ë˜ëŠ”
     machine=vgaonly
-  - ¸í·É ÇÁ·ÒÇÁÆ®¿¡¼­ loadfix¸¦ ÀÔ·ÂÇÏ°í °ÔÀÓÀ» ½ÇÇàÇÏ½Ê½Ã¿À
+  - ëª…ë ¹ í”„ë¡¬í”„íŠ¸ì—ì„œ loadfixë¥¼ ìž…ë ¥í•˜ê³  ê²Œìž„ì„ ì‹¤í–‰í•˜ì‹­ì‹œì˜¤
 
-°ÔÀÓÀÌ ¾î¶°ÇÑ ¿À·ù ¸Þ½ÃÁö¸¦ º¸¿©ÁÖ¸ç DOSBox ÇÁ·ÒÇÁÆ®·Î ºüÁ® ³ª°©´Ï´Ù.
-  - ¿À·ù°¡ ÀûÈù ¸»À» ²Ä²ÄÈ÷ ÀÐÀ¸½Ã°í ¿À·ù°¡ ÀÏ¾î³­ ±î´ßÀ» »ìÆì º¸½Ê½Ã¿À.
-  - À§ÀÇ ±¸¹®µé¿¡ ÀÖ´Â µµ¿ò¸»µéÀ» µû¸£½Ê½Ã¿À.
-  - ¼³Ä¡ À§Ä¡¿¡ ²Ï ¹Î°¨ÇÑ °ÔÀÓµéÀÌ ÀÖÀ¸¹Ç·Î ÀÌ ¶§¿¡´Â ¸¶¿îÆ®¸¦ ´Ù¸£°Ô ÇØ º¸½Ê½Ã¿À.
-    ¿¹¸¦ µé¾î "mount d d:\oldgames\game"·Î ½ÇÇàÇØ ¿Ô´Ù¸é
-    ÇÑ ¹ø "mount c d:\oldgames\game"¿Í "mount c d:\oldgames"·Îµµ ÇØ º¸½Ê½Ã¿À.
-  - °ÔÀÓÀÌ CD-ROMÀ» ¿ä±¸ÇÏ¸é ¸¶¿îÆ®ÇÒ ¶§ "-t cdrom"À» »ç¿ëÇØ¾ß ÇÕ´Ï´Ù.
-    ¹°·Ð ´Ù¸¥ ¸Å°³ º¯¼öµé(ioctl, usecd, ±×¸®°í label ½ºÀ§Ä¡ µî : ÀûÀýÇÑ »ç¿ë¹ýÀ» ÀÐ¾îº¼ °Í)µµ ÁöÁ¤ÇØ º¸½Ê½Ã¿À.
-  - °ÔÀÓ ÆÄÀÏÀÇ Á¢±Ù ±ÇÇÑÀ» È®ÀÎÇØ º¸½Ê½Ã¿À (ÀÐ±â Àü¿ë Æ¯¼ºÀÌ ÀÖ´Ù¸é Á¦°ÅÇÏ½Ã°í ¾²±â Æ¯¼ºÀÌ ÀÖ´Ù¸é Ãß°¡ÇÏ½Ê½Ã¿À)
-  - DOSBox ¾È¿¡¼­ °ÔÀÓÀ» ´Ù½Ã ¼³Ä¡ÇØ º¸½Ê½Ã¿À.
-
-===================
-12. DOSBox »óÅÂ Ã¢:
-===================
-DOSBox »óÅÂ Ã¢Àº DOSBox°¡ µ¿ÀÛÇÏ´Â °¡¿îµ¥ ÇöÀçÀÇ ¼³Á¤¿¡ ´ëÇÑ À¯¿ëÇÑ Á¤º¸¸¦ ¸¹ÀÌ Á¦°øÇÕ´Ï´Ù.
-¿À·ù¿¡ ´ëÇÑ Á¤º¸µµ Á¦°øÇÕ´Ï´Ù. DOSBox¿¡ ¹®Á¦°¡ ÀÖÀ¸¸é ÀÌ ¸Þ½ÃÁö¸¦ Âü°íÇÏ½Ã¸é µË´Ï´Ù.
-
-DOSBox »óÅÂ Ã¢À» ½ÃÀÛÇÏ·Á¸é:
-(Windows) »óÅÂ Ã¢Àº DOSBox ±âº» Ã¢°ú ÇÔ²² ½ÃÀÛµË´Ï´Ù:
-(Linux) ÄÜ¼Ö¿¡¼­ DOSBox¸¦ ½ÃÀÛÇØ¾ß »óÅÂ Ã¢ÀÌ ³ªÅ¸³³´Ï´Ù.
-(MAC OS X) DOSBox.app¿¡ ¸¶¿ì½º ¿À¸¥ÂÊ ´ÜÃß¸¦ ´©¸£°í "ÆÐÅ°Áö ÄÜÅÙÃ÷ º¸±â"¡æ"ÄÜÅÙÃ÷"·Î µé¾î°£ µÚ¡æ
-                  "MacOS"¿¡ µé¾î°¡¼­¡æ"DOSBox"¸¦ ½ÇÇàÇÏ¸é µË´Ï´Ù.
-
+ê²Œìž„ì´ ì–´ë– í•œ ì˜¤ë¥˜ ë©”ì‹œì§€ë¥¼ ë³´ì—¬ì£¼ë©° DOSBox í”„ë¡¬í”„íŠ¸ë¡œ ë¹ ì ¸ ë‚˜ê°‘ë‹ˆë‹¤.
+  - ì˜¤ë¥˜ê°€ ì ížŒ ë§ì„ ê¼¼ê¼¼ížˆ ì½ìœ¼ì‹œê³  ì˜¤ë¥˜ê°€ ì¼ì–´ë‚œ ê¹Œë‹­ì„ ì‚´íŽ´ ë³´ì‹­ì‹œì˜¤.
+  - ìœ„ì˜ êµ¬ë¬¸ë“¤ì— ìžˆëŠ” ë„ì›€ë§ë“¤ì„ ë”°ë¥´ì‹­ì‹œì˜¤.
+  - ì„¤ì¹˜ ìœ„ì¹˜ì— ê½¤ ë¯¼ê°í•œ ê²Œìž„ë“¤ì´ ìžˆìœ¼ë¯€ë¡œ ì´ ë•Œì—ëŠ” ë§ˆìš´íŠ¸ë¥¼ ë‹¤ë¥´ê²Œ í•´ ë³´ì‹­ì‹œì˜¤.
+    ì˜ˆë¥¼ ë“¤ì–´ "mount d d:\oldgames\game"ë¡œ ì‹¤í–‰í•´ ì™”ë‹¤ë©´
+    í•œ ë²ˆ "mount c d:\oldgames\game"ì™€ "mount c d:\oldgames"ë¡œë„ í•´ ë³´ì‹­ì‹œì˜¤.
+  - ê²Œìž„ì´ CD-ROMì„ ìš”êµ¬í•˜ë©´ ë§ˆìš´íŠ¸í•  ë•Œ "-t cdrom"ì„ ì‚¬ìš©í•´ì•¼ í•©ë‹ˆë‹¤.
+    ë¬¼ë¡  ë‹¤ë¥¸ ë§¤ê°œ ë³€ìˆ˜ë“¤(ioctl, usecd, ê·¸ë¦¬ê³  label ìŠ¤ìœ„ì¹˜ ë“± : ì ì ˆí•œ ì‚¬ìš©ë²•ì„ ì½ì–´ë³¼ ê²ƒ)ë„ ì§€ì •í•´ ë³´ì‹­ì‹œì˜¤.
+  - ê²Œìž„ íŒŒì¼ì˜ ì ‘ê·¼ ê¶Œí•œì„ í™•ì¸í•´ ë³´ì‹­ì‹œì˜¤ (ì½ê¸° ì „ìš© íŠ¹ì„±ì´ ìžˆë‹¤ë©´ ì œê±°í•˜ì‹œê³  ì“°ê¸° íŠ¹ì„±ì´ ìžˆë‹¤ë©´ ì¶”ê°€í•˜ì‹­ì‹œì˜¤)
+  - DOSBox ì•ˆì—ì„œ ê²Œìž„ì„ ë‹¤ì‹œ ì„¤ì¹˜í•´ ë³´ì‹­ì‹œì˜¤.
 
 ===================
-13. ¼³Á¤ ±¸¼º (¿É¼Ç) ÆÄÀÏ :
+12. DOSBox ìƒíƒœ ì°½:
+===================
+DOSBox ìƒíƒœ ì°½ì€ DOSBoxê°€ ë™ìž‘í•˜ëŠ” ê°€ìš´ë° í˜„ìž¬ì˜ ì„¤ì •ì— ëŒ€í•œ ìœ ìš©í•œ ì •ë³´ë¥¼ ë§Žì´ ì œê³µí•©ë‹ˆë‹¤.
+ì˜¤ë¥˜ì— ëŒ€í•œ ì •ë³´ë„ ì œê³µí•©ë‹ˆë‹¤. DOSBoxì— ë¬¸ì œê°€ ìžˆìœ¼ë©´ ì´ ë©”ì‹œì§€ë¥¼ ì°¸ê³ í•˜ì‹œë©´ ë©ë‹ˆë‹¤.
+
+DOSBox ìƒíƒœ ì°½ì„ ì‹œìž‘í•˜ë ¤ë©´:
+(Windows) ìƒíƒœ ì°½ì€ DOSBox ê¸°ë³¸ ì°½ê³¼ í•¨ê»˜ ì‹œìž‘ë©ë‹ˆë‹¤:
+(Linux) ì½˜ì†”ì—ì„œ DOSBoxë¥¼ ì‹œìž‘í•´ì•¼ ìƒíƒœ ì°½ì´ ë‚˜íƒ€ë‚©ë‹ˆë‹¤.
+(MAC OS X) DOSBox.appì— ë§ˆìš°ìŠ¤ ì˜¤ë¥¸ìª½ ë‹¨ì¶”ë¥¼ ëˆ„ë¥´ê³  "íŒ¨í‚¤ì§€ ì½˜í…ì¸  ë³´ê¸°"â†’"ì½˜í…ì¸ "ë¡œ ë“¤ì–´ê°„ ë’¤â†’
+                  "MacOS"ì— ë“¤ì–´ê°€ì„œâ†’"DOSBox"ë¥¼ ì‹¤í–‰í•˜ë©´ ë©ë‹ˆë‹¤.
+
+
+===================
+13. ì„¤ì • êµ¬ì„± (ì˜µì…˜) íŒŒì¼ :
 ===================
 
-¼³Á¤ ±¸¼º ÆÄÀÏÀº DOSBox¸¦ Ã³À½ ½ÇÇàÇÏÀÚ¸¶ÀÚ ÀÚµ¿À¸·Î ¸¸µé¾îÁý´Ï´Ù.
+ì„¤ì • êµ¬ì„± íŒŒì¼ì€ DOSBoxë¥¼ ì²˜ìŒ ì‹¤í–‰í•˜ìžë§ˆìž ìžë™ìœ¼ë¡œ ë§Œë“¤ì–´ì§‘ë‹ˆë‹¤.
 
-ÀÌ ÆÄÀÏÀº ¿©±â¿¡ ÀÖ½À´Ï´Ù:
-* Windows:  "½ÃÀÛ / Windows ·Î°í ¸Þ´º"->"¸ðµç ÇÁ·Î±×·¥"->DOSBox-0.74->¿É¼Ç
+ì´ íŒŒì¼ì€ ì—¬ê¸°ì— ìžˆìŠµë‹ˆë‹¤:
+* Windows:  "ì‹œìž‘ / Windows ë¡œê³  ë©”ë‰´"->"ëª¨ë“  í”„ë¡œê·¸ëž¨"->DOSBox-0.74->ì˜µì…˜
 * Linux : ~/.dosbox/dosbox-0.74.conf
 * MacOSX : ~/Library/Preferences/DOSBox Preferences
 
-ÀÌ ÆÄÀÏÀº ¿©·¯ ±¸¹®À¸·Î ³ª´¹´Ï´Ù. (Ç×¸ñ [] »çÀÌ¿¡ ÀÖ´Â ÀÌ¸§µé·Î)
-ÀÌ ¼³Á¤Àº ¼Ó¼º=°ª ÁÙ·Î µÇ¾î ÀÖÀ¸¸ç ¿©±â¼­ °ªÀº DOSBox¿¡¼­ ¹Ù²Ü ¼ö ÀÖ´Â ¼³Á¤ °ªÀÔ´Ï´Ù.
+ì´ íŒŒì¼ì€ ì—¬ëŸ¬ êµ¬ë¬¸ìœ¼ë¡œ ë‚˜ë‰©ë‹ˆë‹¤. (í•­ëª© [] ì‚¬ì´ì— ìžˆëŠ” ì´ë¦„ë“¤ë¡œ)
+ì´ ì„¤ì •ì€ ì†ì„±=ê°’ ì¤„ë¡œ ë˜ì–´ ìžˆìœ¼ë©° ì—¬ê¸°ì„œ ê°’ì€ DOSBoxì—ì„œ ë°”ê¿€ ìˆ˜ ìžˆëŠ” ì„¤ì • ê°’ìž…ë‹ˆë‹¤.
 
-#¿Í %´Â »ç¿ë¹ýÀÌ³ª µµ¿ò¸»À» ¶æÇÕ´Ï´Ù.
+#ì™€ %ëŠ” ì‚¬ìš©ë²•ì´ë‚˜ ë„ì›€ë§ì„ ëœ»í•©ë‹ˆë‹¤.
 
-CONFIG.COM·Î Æ¯º°ÇÑ ±¸¼º ÆÄÀÏÀ» ¸¸µé ¼ö ÀÖ½À´Ï´Ù. ÀÌ ÆÄÀÏÀº ³»ºÎ DOSBox Z: µå¶óÀÌºê¿¡¼­
-Ã£À» ¼ö ÀÖ½À´Ï´Ù. CONFIG.COM¸¦ ¾î¶»°Ô ¾²´ÂÁö »ìÆì º¸·Á¸é ±¸¹® 4 "³»ºÎ ÇÁ·Î±×·¥"À» ÀÐ¾î º¸½Ê½Ã¿À.
-DOSBox¸¦ Á÷Á¢ ±¸¼ºÇÒ ¼ö ÀÖµµ·Ï ¸¸µé¾îÁø ±¸¼º ÆÄÀÏÀ» ¼öÁ¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.
+CONFIG.COMë¡œ íŠ¹ë³„í•œ êµ¬ì„± íŒŒì¼ì„ ë§Œë“¤ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. ì´ íŒŒì¼ì€ ë‚´ë¶€ DOSBox Z: ë“œë¼ì´ë¸Œì—ì„œ
+ì°¾ì„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. CONFIG.COMë¥¼ ì–´ë–»ê²Œ ì“°ëŠ”ì§€ ì‚´íŽ´ ë³´ë ¤ë©´ êµ¬ë¬¸ 4 "ë‚´ë¶€ í”„ë¡œê·¸ëž¨"ì„ ì½ì–´ ë³´ì‹­ì‹œì˜¤.
+DOSBoxë¥¼ ì§ì ‘ êµ¬ì„±í•  ìˆ˜ ìžˆë„ë¡ ë§Œë“¤ì–´ì§„ êµ¬ì„± íŒŒì¼ì„ ìˆ˜ì •í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
 
-¸¸µé¾îÁø ±¸¼º ÆÄÀÏÀº ÇöÀç ¾²°í ÀÖ´Â ¼³Á¤°ªÀ» ´ã°í ÀÖÀ¸¸ç ¼³Á¤À» ¹Ù²Û ´ÙÀ½¿¡ -conf ½ºÀ§Ä¡·Î
-ÀúÀåµÈ ÆÄÀÏÀÇ »õ·Î¿î °ªÀ» ºÒ·¯¿À½Ç ¼öµµ ÀÖ½À´Ï´Ù.
--conf ½ºÀ§Ä¡¿¡ ¼³Á¤ ±¸¼º ÆÄÀÏÀÌ ÁöÁ¤µÇ¾î ÀÖÁö ¾ÊÀ¸¸é, DOSBox´Â ÇöÀçÀÇ µð·ºÅÍ¸®¿¡¼­
-dosbox.conf¸¦ Ã£°íÀÚ ÇÕ´Ï´Ù. dosbox.conf°¡ ¾ø´Ù¸é DOSBox´Â »ç¿ëÀÚ ±¸¼º ÆÄÀÏÀ» ºÒ·¯¿Ã °ÍÀÔ´Ï´Ù.
-ÀÌ ÆÄÀÏÀº Á¸ÀçÇÏÁö ¾ÊÀ¸¸é »õ·Î ¸¸µì´Ï´Ù.
+ë§Œë“¤ì–´ì§„ êµ¬ì„± íŒŒì¼ì€ í˜„ìž¬ ì“°ê³  ìžˆëŠ” ì„¤ì •ê°’ì„ ë‹´ê³  ìžˆìœ¼ë©° ì„¤ì •ì„ ë°”ê¾¼ ë‹¤ìŒì— -conf ìŠ¤ìœ„ì¹˜ë¡œ
+ì €ìž¥ëœ íŒŒì¼ì˜ ìƒˆë¡œìš´ ê°’ì„ ë¶ˆëŸ¬ì˜¤ì‹¤ ìˆ˜ë„ ìžˆìŠµë‹ˆë‹¤.
+-conf ìŠ¤ìœ„ì¹˜ì— ì„¤ì • êµ¬ì„± íŒŒì¼ì´ ì§€ì •ë˜ì–´ ìžˆì§€ ì•Šìœ¼ë©´, DOSBoxëŠ” í˜„ìž¬ì˜ ë””ë ‰í„°ë¦¬ì—ì„œ
+dosbox.confë¥¼ ì°¾ê³ ìž í•©ë‹ˆë‹¤. dosbox.confê°€ ì—†ë‹¤ë©´ DOSBoxëŠ” ì‚¬ìš©ìž êµ¬ì„± íŒŒì¼ì„ ë¶ˆëŸ¬ì˜¬ ê²ƒìž…ë‹ˆë‹¤.
+ì´ íŒŒì¼ì€ ì¡´ìž¬í•˜ì§€ ì•Šìœ¼ë©´ ìƒˆë¡œ ë§Œë“­ë‹ˆë‹¤.
 
-Áß¿ä: Windows Vista/7¿¡¼­ ¼³Á¤ ±¸¼º ÆÄÀÏÀÌ Windows ¶Ç´Â Program Files Æú´õ, ¶Ç ±× ÇÏÀ§ Æú´õ, ¾Æ´Ï¸é
-        c:\¿¡ À§Ä¡ÇÏ¸é ¿Ã¹Ù¸£°Ô µ¿ÀÛÇÏÁö ¾Ê½À´Ï´Ù. °¡Àå ÁÁÀº À§Ä¡´Â ¿¹¸¦ µé¸é C:\oldgames¿Í °°Àº
-        °÷ÀÔ´Ï´Ù.
+ì¤‘ìš”: Windows Vista/7ì—ì„œ ì„¤ì • êµ¬ì„± íŒŒì¼ì´ Windows ë˜ëŠ” Program Files í´ë”, ë˜ ê·¸ í•˜ìœ„ í´ë”, ì•„ë‹ˆë©´
+        c:\ì— ìœ„ì¹˜í•˜ë©´ ì˜¬ë°”ë¥´ê²Œ ë™ìž‘í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤. ê°€ìž¥ ì¢‹ì€ ìœ„ì¹˜ëŠ” ì˜ˆë¥¼ ë“¤ë©´ C:\oldgamesì™€ ê°™ì€
+        ê³³ìž…ë‹ˆë‹¤.
 
 
 ======================
-14. ¾ð¾î ÆÄÀÏ :
+14. ì–¸ì–´ íŒŒì¼ :
 ======================
 
-³»ºÎ DSOBox Z:¿¡ À§Ä¡ÇÑ CONFIG.COM·Î ¾ð¾î ÆÄÀÏÀ» ¸¸µé ¼ö ÀÖ½À´Ï´Ù.
-±¸¹® 4: ³»ºÎ ÇÁ·Î±×·¥À» ÂüÁ¶ÇÏ½Ê½Ã¿À.
+ë‚´ë¶€ DSOBox Z:ì— ìœ„ì¹˜í•œ CONFIG.COMë¡œ ì–¸ì–´ íŒŒì¼ì„ ë§Œë“¤ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+êµ¬ë¬¸ 4: ë‚´ë¶€ í”„ë¡œê·¸ëž¨ì„ ì°¸ì¡°í•˜ì‹­ì‹œì˜¤.
 
-¾ð¾î ÆÄÀÏÀ» ¤·¸¯¾î º¸°í ÀÌÇØÇÒ ¼ö ÀÖ´Â Ç×¸ñÀ» ¿øÇÏ´Â´ë·Î ¹Ù²Ù¾î º¸½Ê½Ã¿À.
+ì–¸ì–´ íŒŒì¼ì„ ã…‡ë¦­ì–´ ë³´ê³  ì´í•´í•  ìˆ˜ ìžˆëŠ” í•­ëª©ì„ ì›í•˜ëŠ”ëŒ€ë¡œ ë°”ê¾¸ì–´ ë³´ì‹­ì‹œì˜¤.
 
-DOSBox¿¡´Ù -lang ½ºÀ§Ä¡¸¦ µ¡ºÙ¿©¼­ »õ·Î¿î ¾ð¾î ÆÄÀÏÀ» ¾µ ¼ö ÀÖ°í,
-¾Æ´Ï¸é [dosbox] ±¸¹®ÀÇ ±¸¼º ÆÄÀÏÀÇ ÀÌ¸§À» ³õÀ» ¼ö ÀÖ½À´Ï´Ù.
-´Ù½Ã ¸»ÇÏ¸é 'language = Ç×¸ñ'ÀÌ¸ç, ¿©±â¿¡ ÆÄÀÏ ÀÌ¸§À» ³ÖÀ¸½Ã¸é µË´Ï´Ù.
+DOSBoxì—ë‹¤ -lang ìŠ¤ìœ„ì¹˜ë¥¼ ë§ë¶™ì—¬ì„œ ìƒˆë¡œìš´ ì–¸ì–´ íŒŒì¼ì„ ì“¸ ìˆ˜ ìžˆê³ ,
+ì•„ë‹ˆë©´ [dosbox] êµ¬ë¬¸ì˜ êµ¬ì„± íŒŒì¼ì˜ ì´ë¦„ì„ ë†“ì„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
+ë‹¤ì‹œ ë§í•˜ë©´ 'language = í•­ëª©'ì´ë©°, ì—¬ê¸°ì— íŒŒì¼ ì´ë¦„ì„ ë„£ìœ¼ì‹œë©´ ë©ë‹ˆë‹¤.
 
 
 
 ========================================
-15. ³ª¸¸ÀÇ DOSBox ¸¸µé±â
+15. ë‚˜ë§Œì˜ DOSBox ë§Œë“¤ê¸°
 ========================================
 
-¼Ò½º¸¦ ³»·Á ¹ÞÀ¸½Å ´ÙÀ½ INSTALL ÆÄÀÏÀ» ÃµÃµÈ÷ ÀÐ¾î º¸½Ê½Ã¿À.
+ì†ŒìŠ¤ë¥¼ ë‚´ë ¤ ë°›ìœ¼ì‹  ë‹¤ìŒ INSTALL íŒŒì¼ì„ ì²œì²œížˆ ì½ì–´ ë³´ì‹­ì‹œì˜¤.
 
 
 
 ===================
-16. °í¸¶¿î ºÐµé :
+16. ê³ ë§ˆìš´ ë¶„ë“¤ :
 ===================
 
-THANKS ÆÄÀÏÀ» ÀÐ¾î º¸½Ê½Ã¿À
+THANKS íŒŒì¼ì„ ì½ì–´ ë³´ì‹­ì‹œì˜¤
 
 
 
 ============
-17. ¿¬¶ôÃ³ :
+17. ì—°ë½ì²˜ :
 ============
 
-ÀÌ »çÀÌÆ®¿¡ µé¾î°¡ º¸½Ê½Ã¿À : 
+ì´ ì‚¬ì´íŠ¸ì— ë“¤ì–´ê°€ ë³´ì‹­ì‹œì˜¤ : 
 http://www.dosbox.com
-ÀüÀÚ¿ìÆí ÁÖ¼Ò´Â Crew ÆäÀÌÁö¿¡ ³ª¿Í ÀÖ½À´Ï´Ù.
+ì „ìžìš°íŽ¸ ì£¼ì†ŒëŠ” Crew íŽ˜ì´ì§€ì— ë‚˜ì™€ ìžˆìŠµë‹ˆë‹¤.
