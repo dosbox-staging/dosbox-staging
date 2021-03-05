@@ -989,7 +989,7 @@ void DOSBOX_Init(void) {
 		"interface number (2 or something) or a part of your adapters\n"
 		"name, e.g. VIA here.");
 
-	Pstring = secprop->Add_string("backend", Property::Changeable::WhenIdle,"none");
+	Pstring = secprop->Add_string("backend", Property::Changeable::WhenIdle,"slirp");
 	Pstring->Set_help("The backend used for Ethernet emulation.");
 
 //	secprop->AddInitFunction(&CREDITS_Init);

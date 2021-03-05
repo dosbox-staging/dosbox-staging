@@ -23,10 +23,26 @@
 #include "dosbox.h"
 #include "control.h"
 #include "ethernet.h"
+#include "ethernet_slirp.h"
 
 EthernetConnection *OpenEthernetConnection(const std::string &backend)
 {
-	// We currently have no backends, so return nothing at the moment.
-	(void)backend;
-	return nullptr;
+	EthernetConnection *conn = nullptr;
+	Section *settings = nullptr;
+#if C_SLIRP
+	if (backend == "slirp") {
+		conn = ((EthernetConnection *)new SlirpEthernetConnection);
+		settings = control->GetSection("ethernet, slirp");
+	}
+#endif
+	if (!conn) {
+		LOG_MSG("ETHERNET: Unknown ethernet backend: %s", backend.c_str());
+		return nullptr;
+	}
+	if (conn->Initialize(settings)) {
+		return conn;
+	} else {
+		delete conn;
+		return nullptr;
+	}
 }

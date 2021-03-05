@@ -95,6 +95,9 @@
 // Define to 1 to enable FluidSynth integration (built-in MIDI synth)
 #mesondefine C_FLUIDSYNTH
 
+// Define to 1 to enable libslirp Ethernet emulation
+#mesondefine C_SLIRP
+
 // Define to 1 to enable screenshots in .png format
 #mesondefine C_SSHOT
 
