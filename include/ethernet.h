@@ -22,6 +22,7 @@
 #define DOSBOX_ETHERNET_H
 
 #include <functional>
+#include <string>
 
 #include "config.h"
 
