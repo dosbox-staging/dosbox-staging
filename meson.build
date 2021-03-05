@@ -198,6 +198,7 @@ if get_option('use_png')
 endif
 
 if get_option('use_slirp') # disabled by default
+  conf_data.set('C_SLIRP', 1)
   slirp_dep = dependency('slirp')
 endif
 

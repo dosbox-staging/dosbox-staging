@@ -31,7 +31,7 @@ option('use_png',
 option('use_slirp',
        type : 'boolean',
        value : false,
-       description : 'Enable ethernet support (NE2000 emulator) using libslirp')
+       description : 'Enable ethernet emulation using libslirp')
 
 # This option exists only for rare situations when Linux developer cannot
 # install ALSA library headers on their machine.
