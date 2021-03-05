@@ -1,5 +1,6 @@
 libmisc_sources = [
   'cross.cpp',
+  'ethernet.cpp',
   'fs_utils_posix.cpp',
   'fs_utils_win32.cpp',
   'messages.cpp',
