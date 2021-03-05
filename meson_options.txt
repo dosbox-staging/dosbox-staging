@@ -30,7 +30,7 @@ option('use_png',
 
 option('use_slirp',
        type : 'boolean',
-       value : false,
+       value : true,
        description : 'Enable ethernet emulation using libslirp')
 
 # This option exists only for rare situations when Linux developer cannot
