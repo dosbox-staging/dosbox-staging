@@ -1,32 +1,32 @@
-Dosbox tillader, fra DOSBOX version0.65, at man laver film/movie bygget på 
-skærm-output.
+Dosbox tillader, fra DOSBOX version0.65, at man laver film/movie bygget pÃ¥ 
+skÃ¦rm-output.
 
 For at optage film/movie, skal du taste CTRL-ALT-F5.
 For at stoppe/afslutte optagelsen,kal du taste CTRL-ALT-F5 igen.
 
 For at afspille den indspillede film/movie, skal du bruge en afspiller som kan 
-håndtere ZMBV Codec. Ms Windows-brugere kan finde dette codec under DOSBOX's 
-Startmenupunkt. Brugere af Linux og andre OS'er bør lede efter en afspiller der 
-bruger ffmpeg-biblioteket (det kan være nødvendigt at opgradere).
+hÃ¥ndtere ZMBV Codec. Ms Windows-brugere kan finde dette codec under DOSBOX's 
+Startmenupunkt. Brugere af Linux og andre OS'er bÃ¸r lede efter en afspiller der 
+bruger ffmpeg-biblioteket (det kan vÃ¦re nÃ¸dvendigt at opgradere).
 
 FAQ:
 Q: Lyden "lagger" under afspilning.
-A: Check dine skærmegenskaber for at se om din skærm-opdateringsrate er sat til 
-mindst 70hz. Prøv at afspille filmen/movien i Virtual Dub (http://virtualdub.sf.net).
+A: Check dine skÃ¦rmegenskaber for at se om din skÃ¦rm-opdateringsrate er sat til 
+mindst 70hz. PrÃ¸v at afspille filmen/movien i Virtual Dub (http://virtualdub.sf.net).
 
-Q: Hvorfor består filmen/movien af flere filer?
-A: Hvergang spillet skifter opløsning, laver DOSBOX en ny film/movie, fordi en
-film/movie kan kun indeholde opløsning.
+Q: Hvorfor bestÃ¥r filmen/movien af flere filer?
+A: Hvergang spillet skifter oplÃ¸sning, laver DOSBOX en ny film/movie, fordi en
+film/movie kan kun indeholde oplÃ¸sning.
 
-Q:Kan jeg sætte "cycles end min PC kan håndtere under indspilning?
-A: Ja,måské spillet virker langsomt og hakkende , under indspilning, men den 
-færdige film/movie skulle kunne afspilles med den beregnede hastighed og uden 
+Q:Kan jeg sÃ¦tte "cycles end min PC kan hÃ¥ndtere under indspilning?
+A: Ja,mÃ¥skÃ© spillet virker langsomt og hakkende , under indspilning, men den 
+fÃ¦rdige film/movie skulle kunne afspilles med den beregnede hastighed og uden 
 hakken.
 
 Q: CTRL-ALT-F5 skifter til konsollen under linux.
-A: 1. Start DOSBOX sådan : dosbox -startmapper
-   2. Klik på video, klik på Add
-   3. tryk den tast du ønsker (for eksempel scroll lock eller printscreen)
+A: 1. Start DOSBOX sÃ¥dan : dosbox -startmapper
+   2. Klik pÃ¥ video, klik pÃ¥ Add
+   3. tryk den tast du Ã¸nsker (for eksempel scroll lock eller printscreen)
    4. Klik exit
    5. Nu kan du optage  film/movies ved at taste scroll lock eller en anden tast 
       du valgte.
