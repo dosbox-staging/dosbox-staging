@@ -85,7 +85,7 @@ jobs:
 
       - name: Summarize report
         env:
-          MAX_BUGS: 188
+          MAX_BUGS: 186
         run: |
           # summary
           echo "Full report is included in build Artifacts"
