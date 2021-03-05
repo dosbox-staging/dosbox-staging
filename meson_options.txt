@@ -18,11 +18,6 @@ option('use_mt32emu',
        value : true,
        description : 'Enable built-in MT-32 emulation support')
 
-option('use_opusfile',
-       type : 'boolean',
-       value : true,
-       description : 'Enable Opus codec for CD-DA emulation')
-
 option('use_png',
        type : 'boolean',
        value : true,
