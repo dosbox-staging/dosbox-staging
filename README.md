@@ -137,13 +137,14 @@ Install build dependencies appropriate for your OS:
 # Fedora
 sudo dnf install ccache gcc-c++ meson alsa-lib-devel libpng-devel \
                  SDL2-devel SDL2_net-devel opusfile-devel fluidsynth-devel \
-                 mt32emu-devel
+                 mt32emu-devel libslirp-devel
 ```
 
 ``` shell
 # Debian, Ubuntu
 sudo apt install ccache build-essential libasound2-dev libpng-dev \
-                 libsdl2-dev libsdl2-net-dev libopusfile-dev libfluidsynth-dev
+                 libsdl2-dev libsdl2-net-dev libopusfile-dev \
+                 libfluidsynth-dev libslirp-dev
 
 # Install Meson on Debian-10 "Buster" or Ubuntu-20.04 and older
 sudo apt install python3-setuptools python3-pip
@@ -156,20 +157,20 @@ sudo apt install meson
 ``` shell
 # Arch, Manjaro
 sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_net opusfile \
-               fluidsynth
+               fluidsynth libslirp
 ```
 
 ``` shell
 # openSUSE
 sudo zypper install ccache gcc gcc-c++ meson alsa-devel libpng-devel \
                     libSDL2-devel libSDL2_net-devel opusfile-devel \
-                    fluidsynth-devel libmt32emu-devel
+                    fluidsynth-devel libmt32emu-devel libslirp-devel
 ```
 
 ``` shell
 # macOS
 xcode-select --install
-brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth
+brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth libslirp
 ```
 
 ### Build and stay up-to-date with the latest sources
