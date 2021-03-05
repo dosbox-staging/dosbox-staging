@@ -13,7 +13,7 @@ option('use_mt32emu', type : 'boolean', value : true,
 option('use_png', type : 'boolean', value : true,
        description : 'Enable saving screenshots in .png format')
 
-option('use_slirp', type : 'boolean', value : false,
+option('use_slirp', type : 'boolean', value : true,
        description : 'Enable ethernet emulation using libslirp')
 
 # This option exists only for rare situations when Linux developer cannot
@@ -43,7 +43,7 @@ option('dynamic_core', type : 'combo',
 # OS, installed libraries, and dependencies of those libraries.
 #
 option('try_static_libs', type : 'array',
-       choices : ['fluidsynth', 'mt32emu', 'opusfile', 'png', 'sdl2', 'sdl2_net'], value : [],
+       choices : ['fluidsynth', 'mt32emu', 'opusfile', 'png', 'sdl2', 'sdl2_net', 'slirp'], value : [],
        description : 'Attempt to statically link selected libraries.')
 
 option('unit_tests', type : 'feature', value : 'auto',

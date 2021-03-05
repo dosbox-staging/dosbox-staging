@@ -135,7 +135,7 @@ jobs:
           # UndefinedBehaviorSanitizer at the same time.
           # See Clang manual to learn more.
           - name: Clang undefined+address sanitizer
-            build_flags: -Db_sanitize=address,undefined --native-file=.github/meson/native-clang.ini -Duse_mt32emu=false
+            build_flags: -Db_sanitize=address,undefined --native-file=.github/meson/native-clang.ini -Duse_mt32emu=false -Duse_slirp=false
             logs: clang-uasan-logs
             max_issues: 4
     steps:

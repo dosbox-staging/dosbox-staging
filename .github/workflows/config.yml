@@ -36,6 +36,7 @@ jobs:
           - name: Linux
             os: ubuntu-20.04
         conf:
+          - configure_flags:  -Duse_slirp=false
           - configure_flags:  -Duse_sdl2_net=false
           - configure_flags:  -Duse_opengl=false         # TODO opengl is always disabled on msys2
           - configure_flags:  -Duse_fluidsynth=false
@@ -105,6 +106,7 @@ jobs:
           export PATH="/mingw64/bin:$PATH"
           meson setup \
             --wrap-mode=nofallback \
+            -Duse_slirp=false \
             -Duse_mt32emu=false \
             -Duse_opengl=false \
             ${{ matrix.conf.configure_flags }} \
@@ -117,6 +119,7 @@ jobs:
         run: |
           meson setup \
             --wrap-mode=nofallback \
+            -Duse_slirp=false \
             -Duse_mt32emu=false \
             ${{ matrix.conf.configure_flags }} \
             build
@@ -127,6 +130,7 @@ jobs:
         run: |
           meson setup \
             --wrap-mode=nofallback \
+            -Duse_slirp=false \
             -Duse_mt32emu=false \
             ${{ matrix.conf.configure_flags }} \
             build
