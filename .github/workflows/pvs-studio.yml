@@ -54,6 +54,7 @@ jobs:
           meson setup \
             -Dbuildtype=debug \
             -Dunit_tests=disabled \
+            -Duse_slirp=false \
             -Ddefault_library=static \
             -Dfluidsynth:enable-floats=true \
             -Dfluidsynth:try-static-deps=true \

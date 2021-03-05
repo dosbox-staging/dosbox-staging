@@ -39,7 +39,7 @@ jobs:
           - name: GCC 7, Ubuntu 18.04
             os: ubuntu-18.04
             packages: g++-7
-            build_flags: --native-file=.github/meson/native-gcc-7.ini --wrap-mode=nofallback -Dunit_tests=disabled -Duse_fluidsynth=false -Duse_mt32emu=false
+            build_flags: --native-file=.github/meson/native-gcc-7.ini --wrap-mode=nofallback -Dunit_tests=disabled -Duse_fluidsynth=false -Duse_mt32emu=false -Duse_slirp=false
             max_warnings: 0
 
           - name: GCC, +tests
@@ -64,12 +64,12 @@ jobs:
 
           - name: GCC, -network
             os: ubuntu-20.04
-            build_flags: -Dunit_tests=disabled -Duse_sdl2_net=false
+            build_flags: -Dunit_tests=disabled -Duse_sdl2_net=false -Duse_slirp=false
             max_warnings: 0
 
           - name: GCC, minimum build
             os: ubuntu-20.04
-            build_flags: --wrap-mode=nofallback -Dunit_tests=disabled -Duse_fluidsynth=false -Duse_sdl2_net=false -Duse_opengl=false -Duse_fluidsynth=false -Duse_mt32emu=false -Duse_png=false -Duse_alsa=false
+            build_flags: --wrap-mode=nofallback -Dunit_tests=disabled -Duse_fluidsynth=false -Duse_sdl2_net=false -Duse_opengl=false -Duse_fluidsynth=false -Duse_mt32emu=false -Duse_png=false -Duse_alsa=false -Duse_slirp=false
             min_dependencies: true
             max_warnings: 0
 
@@ -194,7 +194,7 @@ jobs:
             -Ddefault_library=static \
             -Db_asneeded=true \
             -Db_lto=true \
-            -Dtry_static_libs=fluidsynth,mt32emu,png \
+            -Dtry_static_libs=fluidsynth,mt32emu,png,slirp \
             -Dfluidsynth:enable-floats=true \
             -Dfluidsynth:try-static-deps=true \
             build
