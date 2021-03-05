@@ -849,8 +849,8 @@ Section_prop *Config::AddSection_prop(const char *section_name,
                                       SectionFunction func,
                                       bool changeable_at_runtime)
 {
-	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
-	        "Only letters and digits are allowed in section name");
+	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9, ]+"}),
+	        "Only letters, digits, spaces and commas are allowed in section name");
 	Section_prop *s = new Section_prop(section_name);
 	s->AddInitFunction(func, changeable_at_runtime);
 	sectionlist.push_back(s);
