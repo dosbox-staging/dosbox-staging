@@ -1,6 +1,7 @@
 libmisc_sources = [
   'cross.cpp',
   'ethernet.cpp',
+  'ethernet_slirp.cpp',
   'fs_utils_posix.cpp',
   'fs_utils_win32.cpp',
   'messages.cpp',
@@ -17,6 +18,7 @@ libmisc = static_library('misc', libmisc_sources,
                          dependencies : [
                            corefoundation_dep,
                            sdl2_dep,
+                           slirp_dep,
                            stdcppfs_dep,
                            libloguru_dep,
                            libwhereami_dep,
