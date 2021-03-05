@@ -22,7 +22,7 @@ to be installed and the license agreed to:
 2. Install dependencies:
 
     ``` shell
-    brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth
+    brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth libslirp
     ```
 
 ### Install dependencies (MacPorts)
@@ -32,7 +32,7 @@ to be installed and the license agreed to:
 
     ``` shell
     sudo port -q install meson ccache libpng libsdl2 libsdl2_net \
-                         opusfile fluidsynth
+                         opusfile fluidsynth libslirp
     ```
 
 ## Build

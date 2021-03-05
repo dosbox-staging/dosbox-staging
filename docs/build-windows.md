@@ -21,7 +21,7 @@ Windows builds can be created using:
               mingw-w64-x86_64-gcc mingw-w64-x86_64-libpng \
               mingw-w64-x86_64-opusfile mingw-w64-x86_64-pkg-config \
               mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_net \
-              mingw-w64-x86_64-zlib
+              mingw-w64-x86_64-zlib mingw-w64-x86_64-libslirp
     ```
 
 3. Clone and enter the repository's directory:
