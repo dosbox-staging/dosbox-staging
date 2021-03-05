@@ -50,10 +50,8 @@
 #include "midi.h"
 #include "hardware.h"
 
-#if C_NE2000
 //#include "ne2000.h"
 void NE2K_Init(Section* sec);
-#endif
 
 Config * control;
 bool exit_requested = false;
@@ -902,20 +900,7 @@ void DOSBOX_Init(void) {
 	Pbool->Set_help("Enable ipx over UDP/IP emulation.");
 #endif
 
-#if C_NE2000
 	secprop=control->AddSection_prop("ne2000",&NE2K_Init,true);
-	MSG_Add("NE2000_CONFIGFILE_HELP",
-		"macaddr -- The physical address the emulator will use on your network.\n"
-		"           If you have multiple DOSBoxes running on your network,\n"
-		"           this has to be changed. Modify the last three number blocks.\n"
-		"           I.e. AC:DE:48:88:99:AB.\n"
-		"realnic -- Specifies which of your network interfaces is used.\n"
-		"           Write \'list\' here to see the list of devices in the\n"
-		"           Status Window. Then make your choice and put either the\n"
-		"           interface number (2 or something) or a part of your adapters\n"
-		"           name, e.g. VIA here.\n"
-
-	);
 
 	Pbool = secprop->Add_bool("ne2000", Property::Changeable::WhenIdle, true);
 	Pbool->Set_help("Enable Ethernet passthrough. Requires [Win]Pcap.");
@@ -932,14 +917,10 @@ void DOSBOX_Init(void) {
 		"this has to be changed for each. AC:DE:48 is an address range reserved for\n"
 		"private use, so modify the last three number blocks.\n"
 		"I.e. AC:DE:48:88:99:AB.");
-	
-	Pstring = secprop->Add_string("realnic", Property::Changeable::WhenIdle,"list");
-	Pstring->Set_help("Specifies which of your network interfaces is used.\n"
-		"Write \'list\' here to see the list of devices in the\n"
-		"Status Window. Then make your choice and put either the\n"
-		"interface number (2 or something) or a part of your adapters\n"
-		"name, e.g. VIA here.");
-#endif // C_NE2000
+
+	Pstring = secprop->Add_string("backend", Property::Changeable::WhenIdle,"none");
+	Pstring->Set_help("The backend used for Ethernet emulation.");
+
 //	secprop->AddInitFunction(&CREDITS_Init);
 
 	//TODO ?

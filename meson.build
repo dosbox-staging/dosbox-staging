@@ -49,7 +49,6 @@ conf_data.set(os_family_name, 1)
 
 conf_data.set10('C_MODEM', get_option('use_sdl2_net'))
 conf_data.set10('C_IPX', get_option('use_sdl2_net'))
-conf_data.set10('C_NE2000', get_option('use_slirp') or get_option('use_pcap'))
 conf_data.set10('C_OPENGL', get_option('use_opengl'))
 conf_data.set10('C_FLUIDSYNTH', get_option('use_fluidsynth'))
 conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
@@ -157,7 +156,6 @@ fluid_dep     = optional_dep
 opus_dep      = optional_dep
 mt32emu_dep   = optional_dep
 png_dep       = optional_dep
-pcap_dep      = optional_dep
 slirp_dep     = optional_dep
 curses_dep    = optional_dep # necessary for debugger builds
 alsa_dep      = optional_dep # Linux-only
@@ -197,10 +195,6 @@ endif
 if get_option('use_png')
   png_dep = dependency('libpng', static : ('png' in static_libs_list),
                        not_found_message : msg.format('use_png'))
-endif
-
-if get_option('use_pcap') # disabled by default
-  pcap_dep = dependency('pcap')
 endif
 
 if get_option('use_slirp') # disabled by default
