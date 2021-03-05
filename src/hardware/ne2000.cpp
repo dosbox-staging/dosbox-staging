@@ -104,6 +104,7 @@ bx_ne2k_c* theNE2kDevice = NULL;
 
   
 bx_ne2k_c::bx_ne2k_c(void)
+	: s()
 {
   s.tx_timer_index = BX_NULL_TIMER_HANDLE;
 }
@@ -1454,12 +1455,9 @@ private:
 
 public:
 	bool load_success;
-	NE2K(Section* configuration):Module_base(configuration) {
+	NE2K(Section* configuration)
+	: Module_base(configuration), load_success(true) {
 		Section_prop * section=static_cast<Section_prop *>(configuration);
-
-		load_success = true;
-		// enabled?
-
 		if(!section->Get_bool("ne2000")) {
 			load_success = false;
 			return;
