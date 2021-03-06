@@ -197,9 +197,9 @@ if get_option('use_png')
                        not_found_message : msg.format('use_png'))
 endif
 
-if get_option('use_slirp') # disabled by default
+if get_option('use_slirp')
   conf_data.set('C_SLIRP', 1)
-  slirp_dep = dependency('slirp')
+  slirp_dep = dependency('slirp', static : ('slirp' in static_libs_list))
 endif
 
 if get_option('enable_debugger') != 'none'

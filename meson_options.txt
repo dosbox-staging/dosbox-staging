@@ -67,7 +67,7 @@ option('dynamic_core',
 #
 option('try_static_libs',
        type : 'array',
-       choices : ['opusfile', 'png', 'sdl2', 'sdl2_net'],
+       choices : ['opusfile', 'png', 'sdl2', 'sdl2_net', 'slirp'],
        value : [],
        description : 'Attempt to statically link selected libraries.')
 
