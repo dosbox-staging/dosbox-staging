@@ -115,6 +115,7 @@ void slirp_notify(void *opaque)
 
 SlirpEthernetConnection::SlirpEthernetConnection()
         : EthernetConnection(),
+          config(),
           timers(),
           get_packet_callback(),
           registered_fds(),
