@@ -139,7 +139,7 @@ MOUSE: The mouse doesn't work.
     Usually, DOSBox detects when a game uses mouse control. When you click on
     the screen it should get locked (confined to the DOSBox window) and work.
     With certain games, the DOSBox mouse detection doesn't work. In that case
-    you will have to lock the mouse manually by pressing CTRL-F10.
+    you will have to lock the mouse manually by pressing Ctrl+F10.
 
 
 SOUND: There is no sound.
@@ -218,7 +218,7 @@ KEYBOARD: I can't type \ or : in DOSBox.
     have a matching DOS layout representation (or it was not correctly
     detected), or the key mapping is wrong.
     Some possible fixes:
-      1. Use / instead, or ALT-58 for : and ALT-92 for \.
+      1. Use / instead, or Alt+58 for : and Alt+92 for \.
       2. Change the DOS keyboard layout (see Section 8: "Keyboard Layout").
       3. Add the commands you want to execute to the [autoexec] section
          of the DOSBox configuration file.
@@ -227,9 +227,9 @@ KEYBOARD: I can't type \ or : in DOSBox.
 
     Note that if the host layout can not be identified, or keyboardlayout is
     set to none in the DOSBox configuration file, the standard US layout is
-    used. In this configuration try the keys around "enter" for the key \
-    (backslash), and for the key : (colon) use shift and the keys between
-    "enter" and "L".
+    used. In this configuration try the keys around "Enter" for the key \
+    (backslash), and for the key : (colon) use Shift and the keys between
+    "Enter" and "L".
 
 
 KEYBOARD: The keyboard lags.
@@ -763,7 +763,7 @@ LOADFIX -f
 
 RESCAN [Drive:] [-All]
   Make DOSBox reread the directory structure. Useful if you changed something
-  on a mounted drive outside of DOSBox. (CTRL - F4 does this as well!)
+  on a mounted drive outside of DOSBox. (Ctrl+F4 does this as well!)
 
   Drive:
         Drive to refresh.
@@ -826,7 +826,7 @@ IMGMOUNT
   imagefile1 imagefile2 .. imagefileN
       Location of the image files to mount in DOSBox. Specifying a number
       of image files is only allowed for CD-ROM images.
-      The CD's can be swapped with CTRL-F4 at any time.
+      The CD's can be swapped with Ctrl+F4 at any time.
       This is required for games which use multiple CD-ROMs and require the CD
       to be switched during the gameplay at some point.
 
@@ -890,7 +890,7 @@ BOOT
   diskimg1.img diskimg2.img .. diskimgN.img
      This can be any number of floppy disk images one wants mounted after
      DOSBox boots the specified drive letter.
-     To swap between images, hit CTRL-F4 to change from the current disk
+     To swap between images, hit Ctrl+F4 to change from the current disk
      to the next disk in the list. The list will loop back from the last
      disk image to the beginning.
 
@@ -1020,7 +1020,7 @@ KEYB [keyboardlayoutcode [codepage [codepagefile]]]
          keyb pl214
     2. To load one of Russian keyboard layouts with codepage 866:
          keyb ru441 866
-       In order to type Russian characters press ALT+RIGHT-SHIFT.
+       In order to type Russian characters press Alt+Right+Shift.
     3. To load one of French keyboard layouts with codepage 850 (where the
        codepage is defined in EGACPI.DAT):
          keyb fr189 850 EGACPI.DAT
@@ -1068,21 +1068,21 @@ For more information use the /? command line switch with the programs.
 5. Special Keys:
 ================
 
-ALT-ENTER     Switch between fullscreen and window mode.
-ALT-PAUSE     Pause/Unpause emulator.
-CTRL-F1       Start the keymapper.
-CTRL-F4       Change between mounted floppy/CD images. Update directory cache
+Alt+Enter     Switch between fullscreen and window mode.
+Alt+Pause     Pause/Unpause emulator.
+Ctrl+F1       Start the keymapper.
+Ctrl+F4       Change between mounted floppy/CD images. Update directory cache
               for all drives.
-CTRL-F5       Save a screenshot. (PNG format)
-CTRL-F6       Start/Stop recording sound output to a wave file.
-CTRL-F7       Start/Stop recording video output to a zmbv file.
-CTRL-F9       Shutdown emulator.
-CTRL-F10      Capture/Release the mouse.
-CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
-CTRL-F12      Speed up emulation (Increase DOSBox Cycles)*.
-ALT-F12       Unlock speed (turbo button/fast forward)**.
-CTRL-ALT-HOME Restart DOSBox.
-F11, ALT-F11  (machine=cga) change tint in NTSC output modes***.
+Ctrl+F5       Save a screenshot. (PNG format)
+Ctrl+F6       Start/Stop recording sound output to a wave file.
+Ctrl+F7       Start/Stop recording video output to a zmbv file.
+Ctrl+F9       Shutdown emulator.
+Ctrl+F10      Capture/Release the mouse.
+Ctrl+F11      Slow down emulation (Decrease DOSBox Cycles).
+Ctrl+F12      Speed up emulation (Increase DOSBox Cycles)*.
+Alt+F12       Unlock speed (turbo button/fast forward)**.
+Ctrl+Alt+Home Restart DOSBox.
+F11, Alt+F11  (machine=cga) change tint in NTSC output modes***.
 F11           (machine=hercules) cycle through amber, green, white colouring***.
 
 *NOTE: Once you increase your DOSBox cycles beyond your computer CPU resources,
@@ -1099,9 +1099,9 @@ F11           (machine=hercules) cycle through amber, green, white colouring***.
 These are the default keybindings. They can be changed in the keymapper
 (see Section 7: "KeyMapper").
 
-In Mac OS X you can try using cmd(applekey) together with Ctrl (and/or ) Fn,
-if the key doesn't work i.e. fn-cmd-ctrl-F1, but some keys may still need
-remapping (in Linux too).
+In macOS you can try using Cmd together with Ctrl (and/or) Fn,
+if the key doesn't work i.e. Fn+Cmd+Ctrl+F1, but some keys may still need
+remapping.
 
 Saved/recorded files can be found in:
 
@@ -1153,7 +1153,7 @@ inside DOSBox, try a different 'timed' setting in DOSBox's configuration file.
 7. KeyMapper:
 =============
 
-Start the DOSBox mapper either with CTRL-F1 (see Section 5: "Special Keys") or
+Start the DOSBox mapper either with Ctrl+F1 (see Section 5: "Special Keys") or
 -startmapper (see Section 3: "Command Line Parameters").
 You are presented with a virtual keyboard and a virtual joystick.
 
@@ -1179,7 +1179,7 @@ BIND
     joystick(s) (as reported by SDL), which is connected to the EVENT.
 mod1,2,3
     Modifiers. These are keys you need to have to be pressed while pressing
-    BIND. mod1 = CTRL and mod2 = ALT. These are generally only used when you
+    BIND. mod1 = Ctrl and mod2 = Alt. These are generally only used when you
     want to change the special keys of DOSBox.
 Add
     Add a new BIND to this EVENT. Basically add a key from your keyboard or an
@@ -1268,9 +1268,9 @@ Layout switching
 
   Some keyboard layouts (for example layout GK319 codepage 869 and layout RU441
   codepage 808) have support for dual layouts that can be accessed by pressing
-  LeftALT+RrightSHIFT for one layout and LeftALT+LeftSHIFT for the other.
+  Left Alt+Right Shift for one layout and Left Alt+Left Shift for the other.
   Some keyboard layouts (for example layout LT456 codepage 771) have support
-  for three layouts, third can be accessed by pressing LeftALT+LeftCTRL
+  for three layouts, third can be accessed by pressing Left Alt+Left Ctrl
 
 Supported external files
   The FreeDOS .kl files are supported (FreeDOS keyb2 keyboard layoutfiles) as
@@ -1462,8 +1462,8 @@ CPU Cycles (speed up/slow down)
   You can force the slow or fast behavior by setting a fixed amount of cycles
   in the DOSBox's configuration file. If you set for example cycles=10000, the
   DOSBox window will display a line "CPU speed: fixed 10000 cycles" at the top.
-  In this mode you can reduce the amount of cycles even more by hitting CTRL-F11
-  (you can go as low as you want) or raise it by hitting CTRL-F12 as much as you
+  In this mode you can reduce the amount of cycles even more by hitting Ctrl+F11
+  (you can go as low as you want) or raise it by hitting Ctrl+F12 as much as you
   want, but you will be limited by the power of one core of your computer's CPU.
   You can see how much free time your real CPU's cores have by looking at
   the Task Manager in Windows 2000/XP/Vista/7 and the System Monitor
@@ -1479,7 +1479,7 @@ CPU Cycles (speed up/slow down)
   "CPU speed: max 100% cycles" at the top then. This time you won't have to care
   how much free time your real CPU cores have, because DOSBox will always use
   100% of your real CPU's one core. In this mode you can reduce the amount
-  of your real CPU's core usage by CTRL-F11 or raise it with CTRL-F12.
+  of your real CPU's core usage by Ctrl+F11 or raise it with Ctrl+F12.
 
 CPU Core (speed up)
   On x86 architectures you can try to force the usage of a dynamically
@@ -1495,7 +1495,7 @@ Graphics emulation (speed up)
   On systems with limited CPU performance, consider binding a hotkey to the
   "Increase frameskip" action ("Inc Fskip") using the keymapper. Skipping
   frames generally frees up your CPU, providing faster emulation when using
-  max cycles or affording a greater number of fixed cycles with CTRL+F12.
+  max cycles or affording a greater number of fixed cycles with Ctrl+F12.
 
   You can repeat this until the game runs fast enough for you.
   Please note that this is a trade-off: you lose in fluidity of video what

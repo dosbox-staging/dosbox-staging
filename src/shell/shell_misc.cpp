@@ -73,12 +73,12 @@ void DOS_Shell::InputCommand(char * line) {
 			continue;
 		}
 		switch (c) {
-		case 0x00:				/* Extended Keys */
+		case 0x00: /* Extended Keys */
 			{
 				DOS_ReadFile(input_handle,&c,&n);
 				switch (c) {
 
-				case 0x3d:		/* F3 */
+				case 0x3d: /* F3 */
 					if (!l_history.size()) break;
 					it_history = l_history.begin();
 					if (it_history != l_history.end() && it_history->length() > str_len) {
@@ -93,33 +93,33 @@ void DOS_Shell::InputCommand(char * line) {
 					}
 					break;
 
-				case 0x4B:	/* LEFT */
+				case 0x4B: /* Left */
 					if (str_index) {
 						outc(8);
 						str_index --;
 					}
 					break;
 
-				case 0x4D:	/* RIGHT */
+				case 0x4D: /* Right */
 					if (str_index < str_len) {
 						outc(line[str_index++]);
 					}
 					break;
 
-				case 0x47:	/* HOME */
+				case 0x47: /* Home */
 					while (str_index) {
 						outc(8);
 						str_index--;
 					}
 					break;
 
-				case 0x4F:	/* END */
+				case 0x4F: /* End */
 					while (str_index < str_len) {
 						outc(line[str_index++]);
 					}
 					break;
 
-				case 0x48:	/* UP */
+				case 0x48: /* Up */
 					if (l_history.empty() || it_history == l_history.end()) break;
 
 					// store current command in history if we are at beginning
@@ -140,7 +140,7 @@ void DOS_Shell::InputCommand(char * line) {
 					it_history ++;
 					break;
 
-				case 0x50:	/* DOWN */
+				case 0x50: /* Down */
 					if (l_history.empty() || it_history == l_history.begin()) break;
 
 					// not very nice but works ..
@@ -169,7 +169,7 @@ void DOS_Shell::InputCommand(char * line) {
 					it_history ++;
 
 					break;
-				case 0x53:/* DELETE */
+				case 0x53: /* Delete */
 					{
 						if(str_index>=str_len) break;
 						auto text_len = static_cast<uint16_t>(str_len - str_index - 1);
@@ -184,7 +184,7 @@ void DOS_Shell::InputCommand(char * line) {
 						size++;
 					}
 					break;
-				case 15:		/* Shift-Tab */
+				case 15: /* Shift+Tab */
 					if (l_completion.size()) {
 						if (it_completion == l_completion.begin()) it_completion = l_completion.end (); 
 						it_completion--;
@@ -207,7 +207,7 @@ void DOS_Shell::InputCommand(char * line) {
 				}
 			};
 			break;
-		case 0x08:				/* BackSpace */
+		case 0x08: /* Backspace */
 			if (str_index) {
 				outc(8);
 				size_t str_remain = str_len - str_index;
@@ -229,10 +229,10 @@ void DOS_Shell::InputCommand(char * line) {
 			}
 			if (l_completion.size()) l_completion.clear();
 			break;
-		case 0x0a:				/* New Line not handled */
+		case 0x0a: /* New Line not handled */
 			/* Don't care */
 			break;
-		case 0x0d:				/* Return */
+		case 0x0d: /* Return */
 			outc('\r');
 			outc('\n');
 			size=0;			//Kill the while loop
@@ -333,7 +333,7 @@ void DOS_Shell::InputCommand(char * line) {
 				}
 			}
 			break;
-		case 0x1b:   /* ESC */
+		case 0x1b: /* Esc */
 			//write a backslash and return to the next line
 			outc('\\');
 			outc('\r');
@@ -359,7 +359,7 @@ void DOS_Shell::InputCommand(char * line) {
 				line[++str_len]=0;//new end (as the internal buffer moved one place to the right
 				size--;
 			};
-		   
+
 			line[str_index]=c;
 			str_index ++;
 			if (str_index > str_len){ 
