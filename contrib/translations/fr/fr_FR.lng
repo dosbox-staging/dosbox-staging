@@ -1,6 +1,6 @@
 :CONFIG_FULLSCREEN
 D‚marrer DOSBox directement en mode plein ‚cran.
-Pressez Alt-Entr‚e pour revenir en mode fenˆtre.
+Pressez Alt+Entr‚e pour revenir en mode fenˆtre.
 .
 :CONFIG_DISPLAY
 Nombre d'‚crans … utiliser ; les valeurs d‚pendent de l'OS et des paramŠtres utilisateur.
@@ -44,12 +44,12 @@ M‚thode de contr“le de la souris :
                    signal envoy‚ au jeu.
 Gestion du clic-milieu (second paramŠtre) :
    middlegame :    Les clics-milieu sont envoy‚s au jeu
-                   (Ctrl-F10 libŠre la souris).
+                   (Ctrl+F10 libŠre la souris).
    middlerelease : Les clics-milieu libŠrent la souris
                    (non envoy‚s au jeu). De plus, les clics-milieu
                    seront envoy‚s au jeu en mode plein ‚cran ou en mode
                    seamless.
-                   Ctrl-F10 libŠrera aussi la souris.
+                   Ctrl+F10 libŠrera aussi la souris.
 Defaults (si non pr‚sent ou incorrect) : seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -155,7 +155,7 @@ Les cycles peuvent ˆtre d‚finis de 3 fa‡ons :
 
 .
 :CONFIG_CYCLEUP
-Nombre de cycles … ajouter/soustraire avec la combinaison de touches. (CTRL-F11/CTRL-F12)
+Nombre de cycles … ajouter/soustraire avec la combinaison de touches. (Ctrl+F11/Ctrl+F12)
 .
 :CONFIG_CYCLEDOWN
 Le param‚trer … moins de 100 donnera un pourcentage.
@@ -604,19 +604,19 @@ Impossible de d‚placer le lecteur Z. Lecteur %c d‚j… mont‚.
 
 .
 :PROGRAM_MEM_CONVEN
-%10d Kb de m‚moire conventionnelle libres
+%10d kB de m‚moire conventionnelle libres
 
 .
 :PROGRAM_MEM_EXTEND
-%10d Kb de m‚moire ‚tendue (XMS) libres
+%10d kB de m‚moire ‚tendue (XMS) libres
 
 .
 :PROGRAM_MEM_EXPAND
-%10d Kb de m‚moire pagin‚e (EMS) libres
+%10d kB de m‚moire pagin‚e (EMS) libres
 
 .
 :PROGRAM_MEM_UPPER
-%10d Kb de m‚moire sup‚rieure (UMB) libres dans %d bloc(s) (plus gros bloc UMB %d Kb)
+%10d kB de m‚moire sup‚rieure (UMB) libres dans %d bloc(s) (plus gros bloc UMB %d kB)
 
 .
 :PROGRAM_LOADFIX_ALLOC
@@ -745,18 +745,18 @@ Par ailleurs, vous pouvez utiliser IMGMOUNT pour monter des images ISO ou des fi
 Voici les combinaisons des touches par d‚faut.
 Elles peuvent ˆtre chang‚es dans le [33mkeymapper[0m.
 
-[33;1mALT-ENTRE[0m  : Bascule entre mode plein ‚cran et mode fenˆtr‚.
-[33;1mALT-PAUSE[0m   : Mettre en pause/relancer l'‚mulateur.
-[33;1mCTRL-F1[0m     : D‚marrer le [33mkeymapper[0m.
-[33;1mCTRL-F4[0m     : Bascule entre les images disque mont‚es, met … jour le cache des r‚pertoires pour tous les lecteurs.
-[33;1mCTRL-F5[0m     : Sauvegarde une capture d'‚cran.
-[33;1mCTRL-F6[0m     : D‚marrer/Arrˆter l'enregistrement de la sortie son dans un fichier WAVE.
-[33;1mCTRL-F7[0m     : D‚marrer/Arrˆter l'enregistrement de la sortie vid‚o dans un fichier ZMBV.
-[33;1mCTRL-F9[0m     : Terminer l'‚mulation.
-[33;1mCTRL-F10[0m    : Capturer/Lib‚rer la souris.
-[33;1mCTRL-F11[0m    : Ralentir l'‚mulation.
-[33;1mCTRL-F12[0m    : Acc‚l‚rer l'‚mulation.
-[33;1mALT-F12[0m     : D‚bloquer la vitesse (bouton turbo/avance rapide).
+[33;1mAlt+Entr‚e[0m  : Bascule entre mode plein ‚cran et mode fenˆtr‚.
+[33;1mAlt+Pause[0m   : Mettre en pause/relancer l'‚mulateur.
+[33;1mCtrl+F1[0m     : D‚marrer le [33mkeymapper[0m.
+[33;1mCtrl+F4[0m     : Bascule entre les images disque mont‚es, met … jour le cache des r‚pertoires pour tous les lecteurs.
+[33;1mCtrl+F5[0m     : Sauvegarde une capture d'‚cran.
+[33;1mCtrl+F6[0m     : D‚marrer/Arrˆter l'enregistrement de la sortie son dans un fichier WAVE.
+[33;1mCtrl+F7[0m     : D‚marrer/Arrˆter l'enregistrement de la sortie vid‚o dans un fichier ZMBV.
+[33;1mCtrl+F9[0m     : Terminer l'‚mulation.
+[33;1mCtrl+F10[0m    : Capturer/Lib‚rer la souris.
+[33;1mCtrl+F11[0m    : Ralentir l'‚mulation.
+[33;1mCtrl+F12[0m    : Acc‚l‚rer l'‚mulation.
+[33;1mAlt+F12[0m     : D‚bloquer la vitesse (bouton turbo/avance rapide).
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -775,7 +775,7 @@ Le fichier image est en lecture seule ! Cela peut cr‚er des problŠmes.
 Cette commande d‚marre DOSBox … partir d'une disquette ou d'une image de disque dur.
 
 Pour cette commande, on peut sp‚cifier une succession de disquettes et basculer
-entre elles avec Ctrl-F4, et -l sp‚cifie le lecteur mont‚ sur lequel d‚marrer.
+entre elles avec Ctrl+F4, et -l sp‚cifie le lecteur mont‚ sur lequel d‚marrer.
 Sans lettre de lecteur sp‚cifi‚e, le d‚marrage par d‚faut s'effectue sur A.
 Les seules lettres de lecteur d‚marrables sont A, C, et D. Pour d‚marrer … partir
 d'un disque dur (C ou D), l'image doit avoir au pr‚alable ‚t‚ mont‚e avec la commande
@@ -1194,8 +1194,8 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 º Pour une courte introduction pour les nouveaux utilisateurs, tapez: [33mINTRO[37m  º
 º Pour la liste des commandes support‚es par le shell, tapez : [1;33mHELP[37m          º
 º                                                                            º
-º Pour ajuster la vitesse du CPU ‚mul‚, essayez [31mCtrl-F11[37m et [31mCtrl-F12[37m.        º
-º Pour activer le keymapper [31mCtrl-F1[37m.                                         º
+º Pour ajuster la vitesse du CPU ‚mul‚, essayez [31mCtrl+F11[37m et [31mCtrl+F12[37m.        º
+º Pour activer le keymapper [31mCtrl+F1[37m.                                         º
 º Pour plus d'informations, lisez le fichier [36mREADME[37m dans le r‚pertoire de    º
 º DOSBox.                                                                    º
 º                                                                            º
@@ -1204,13 +1204,13 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 :SHELL_STARTUP_CGA
 º DOSBox supporte le mode composite CGA.                                º
 º Utilisez [31mF12[37m pour r‚gler la sortiecomposite sur ON, OFF, ou AUTO (d‚faut).        º
-º [31m(Alt-)F11[37m change la teinte; [31mctrl-alt-F11[37m s‚lectionne le premier/dernier modŠle CGA.  º
+º [31m(Alt+)F11[37m change la teinte; [31mCtrl+Alt+F11[37m s‚lectionne le premier/dernier modŠle CGA.  º
 º                                                                    º
 
 .
 :SHELL_STARTUP_CGA_MONO
 º Utilisez [31mF11[37m pour passer au vert, ambre, blanc et blanc-papier,   º
-º et [31mAlt-F11[37m pour changer le contraste/la luminosit‚.               º
+º et [31mAlt+F11[37m pour changer le contraste/la luminosit‚.               º
 
 .
 :SHELL_STARTUP_HERC
@@ -1219,7 +1219,7 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 
 .
 :SHELL_STARTUP_DEBUG
-º Pressez [31malt-Pause[37m pour d‚marrer le debugger ou lancez l'ex‚cutable avec [33mDEBUG[37m. º
+º Pressez [31mAlt+Pause[37m pour d‚marrer le debugger ou lancez l'ex‚cutable avec [33mDEBUG[37m. º
 º                                                                    º
 
 .

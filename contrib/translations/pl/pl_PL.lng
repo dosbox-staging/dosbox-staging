@@ -13,17 +13,17 @@ Jakiej rozdzielczo˜ci u¾y† w peˆnym ekranie: 'original', 'desktop',
 lub dokˆadna rozdzielczo˜† (np. 1024x768).
 .
 :CONFIG_WINDOWRESOLUTION
-Set window size to be used when running in windowed mode:
-  default:   Select the best option based on your
-             environment and other settings.
-  original:  Resize window to the resolution picked by
-             the emulated program.
-  resizable: Make the emulator window resizable.
-             This is an experimental option, works only with
-             output=opengl and glshader=sharp (or none)
-  <custom>:  Scale the window content to the indicated
-             dimensions, in WxH format. For example: 1024x768.
-             Scaling is not performed for output=surface.
+Ustaw wielko˜† okna w trybie okienkowym:
+  default:   Wybierz najlepsz¥ opcj© dla twojego
+             ˜rodowiska.
+  original:  Zmieä wielko˜† okna do rozdzielczo˜ci wybranej przez
+             emulowany program.
+  resizable: Ustaw okno o zmiennej wielko˜ci.
+             To jest eksperymentalna opcja, dziaˆa tylko z
+             output=opengl i glshader=sharp (lub none)
+  <custom>:  Skaluj zawarto˜† okna do wybranej wielko˜ci, u¾yj
+             wielko˜ci w formacie XxY, na przykˆad: 1024x768.
+             Skalowanie nie dziaˆa dla output=surface.
 .
 :CONFIG_OUTPUT
 What video system to use for output.
@@ -365,20 +365,19 @@ Common settings are 3.3, 5.0, 6.22, and 7.1.
 Language code of the keyboard layout (or none).
 .
 :CONFIG_IPX
-Enable ipx over UDP/IP emulation.
+Wˆ¥cz emulacj© IPX po UDP/IP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
-Lines in this section will be run at startup.
-You can put your MOUNT lines here.
+Linie w tej sekcji zostan¥ uruchomione przy starcie.
+Mo¾esz umie˜ci† tu np. komendy MOUNT.
 
 .
 :CONFIGFILE_INTRO
-# This is the configuration file for dosbox-staging (%s).
-# Lines starting with a '#' character are comments.
-
+# To jest plik konfiguracyjny dla dosbox-staging (%s).
+# Linie zaczynaj¥ce si© od # s¥ komentarzami.
 .
 :CONFIG_SUGGESTED_VALUES
-Possible values
+Mo¾liwe warto˜ci.
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
 No config file loaded!
@@ -401,7 +400,7 @@ Katalog z konfiguracj¥ DOSBox Staging %s:
 .
 :PROGRAM_CONFIG_FILE_ERROR
 
-Can't open file %s
+Nie mo¾na otworzy† pliku %s
 
 .
 :PROGRAM_CONFIG_FILE_WHICH
@@ -468,35 +467,35 @@ DOSBox configuration contains the following sections:
 
 .
 :PROGRAM_CONFIG_SECURE_ON
-Switched to secure mode.
+Przeˆ¥czono w tryb bezpieczny.
 
 .
 :PROGRAM_CONFIG_SECURE_DISALLOW
-This operation is not permitted in secure mode.
+Ta operacja nie jest mo¾liwa w trybie bezpiecznym.
 
 .
 :PROGRAM_CONFIG_SECTION_ERROR
-Section "%s" doesn't exist.
+Sekcja %s nie istnieje.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" is not a valid value for property %s.
+"%s" nie jest poprawn¥ warto˜ci¥ parametru %s.
 
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
-No such section or property.
+Brak takiej sekcji lub parametru.
 
 .
 :PROGRAM_CONFIG_NO_PROPERTY
-There is no property "%s" in section "%s".
+Brak parametru %s w sekcji %s.
 
 .
 :PROGRAM_CONFIG_SET_SYNTAX
-Correct syntax: config -set "section property".
+Poprawna skˆadnia: config -set "sekcja parametr".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
-Correct syntax: config -get "section property".
+Poprawna skˆadnia: config -get "sekcja parametr".
 
 .
 :PROGRAM_CONFIG_PRINT_STARTUP
@@ -506,7 +505,7 @@ DOSBox was started with the following command line parameters:
 
 .
 :PROGRAM_CONFIG_MISSINGPARAM
-Missing parameter.
+Zabrakˆo parametru.
 
 .
 :PROGRAM_MOUNT_CDROMS_FOUND
@@ -555,7 +554,7 @@ Dysk %c zostaˆ pomy˜lnie odmontowany.
 
 .
 :PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL
-Virtual Drives can not be unMOUNTed.
+Dyski wirtualne nie mog¥ zosta† odmontowane.
 
 .
 :PROGRAM_MOUNT_DRIVEID_ERROR
@@ -563,11 +562,11 @@ Virtual Drives can not be unMOUNTed.
 
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[31;1mMounting c:\ is NOT recommended. Please mount a (sub)directory next time.[0m
+[31;1mMontowanie dysku C:\ nie jest zalecane. Prosz© nast©pnym razem zamontowa† (pod)katalog.[0m
 
 .
 :PROGRAM_MOUNT_WARNING_OTHER
-[31;1mMounting / is NOT recommended. Please mount a (sub)directory next time.[0m
+[31;1mMontowanie katalogu / nie jest zalecane.Prosz© nast©pnym razem zamontowa† (pod)katalog.[0m
 
 .
 :PROGRAM_MOUNT_NO_OPTION
@@ -670,7 +669,7 @@ MSCDEX: Bˆ¥d: Nieznany bˆ¥d.
 
 .
 :MSCDEX_WARNING_NO_OPTION
-MSCDEX: Warning: Ignoring unsupported option '%s'.
+MSCDEX: Ostrze¾enie: Zignorowano niewspieran¥ opcj© '%s'.
 
 .
 :PROGRAM_RESCAN_SUCCESS
