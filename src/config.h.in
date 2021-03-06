@@ -27,8 +27,8 @@
 // Emulator version
 #define VERSION "@version@"
 
-// TODO make it a suffix, configurable via meson
-#define CONF_BRAND "staging-git"
+// Suffix appended to the default .conf file name
+#define CONF_BRAND "@conf_branding@"
 
 /* Operating System
  */
