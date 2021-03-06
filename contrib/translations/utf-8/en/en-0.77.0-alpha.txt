@@ -1,6 +1,6 @@
 :CONFIG_FULLSCREEN
 Start DOSBox directly in fullscreen.
-Press Alt-Enter to switch back to window.
+Press Alt+Enter to switch back to window.
 .
 :CONFIG_DISPLAY
 Number of display to use; values depend on OS and user settings.
@@ -44,12 +44,12 @@ Choose a mouse control method:
                    input sent to the game.
 Choose how middle-clicks are handled (second parameter):
    middlegame:     Middle-clicks are sent to the game
-                   (Ctrl-F10 uncaptures the mouse).
+                   (Ctrl+F10 uncaptures the mouse).
    middlerelease:  Middle-clicks are used to uncapture the mouse
                    (not sent to the game). However, middle-clicks
                    will be sent to the game in fullscreen or when
                    seamless control is set.
-                   Ctrl-F10 will also uncapture the mouse.
+                   Ctrl+F10 will also uncapture the mouse.
 Defaults (if not present or incorrect): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -154,7 +154,7 @@ Cycles can be set in 3 ways:
                   handle.
 .
 :CONFIG_CYCLEUP
-Amount of cycles to decrease/increase with keycombos.(CTRL-F11/CTRL-F12)
+Number of cycles to decrease/increase with keycombos. (Ctrl+F11/Ctrl+F12)
 .
 :CONFIG_CYCLEDOWN
 Setting it lower than 100 will be a percentage.
@@ -743,18 +743,18 @@ Additionally, you can use imgmount to mount iso or cue/bin images:
 These are the default keybindings.
 They can be changed in the [33mkeymapper[0m.
 
-[33;1mALT-ENTER[0m   : Switch between fullscreen and window mode.
-[33;1mALT-PAUSE[0m   : Pause/Unpause emulator.
-[33;1mCTRL-F1[0m     : Start the [33mkeymapper[0m.
-[33;1mCTRL-F4[0m     : Swap mounted disk image, update directory cache for all drives.
-[33;1mCTRL-F5[0m     : Save a screenshot.
-[33;1mCTRL-F6[0m     : Start/Stop recording sound output to a wave file.
-[33;1mCTRL-F7[0m     : Start/Stop recording video output to a zmbv file.
-[33;1mCTRL-F9[0m     : Shutdown emulator.
-[33;1mCTRL-F10[0m    : Capture/Release the mouse.
-[33;1mCTRL-F11[0m    : Slow down emulation.
-[33;1mCTRL-F12[0m    : Speed up emulation.
-[33;1mALT-F12[0m     : Unlock speed (turbo button/fast forward).
+[33;1mAlt+Enter[0m  Switch between fullscreen and window mode.
+[33;1mAlt+Pause[0m  Pause/Unpause emulator.
+[33;1mCtrl+F1[0m    Start the [33mkeymapper[0m.
+[33;1mCtrl+F4[0m    Swap mounted disk image, update directory cache for all drives.
+[33;1mCtrl+F5[0m    Save a screenshot.
+[33;1mCtrl+F6[0m    Start/Stop recording sound output to a wave file.
+[33;1mCtrl+F7[0m    Start/Stop recording video output to a zmbv file.
+[33;1mCtrl+F9[0m    Shutdown emulator.
+[33;1mCtrl+F10[0m   Capture/Release the mouse.
+[33;1mCtrl+F11[0m   Slow down emulation.
+[33;1mCtrl+F12[0m   Speed up emulation.
+[33;1mAlt+F12[0m    Unlock speed (turbo button/fast forward).
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -773,7 +773,7 @@ Image file is read-only! Might create problems.
 This command boots DOSBox from either a floppy or hard disk image.
 
 For this command, one can specify a succession of floppy disks swappable
-by pressing Ctrl-F4, and -l specifies the mounted drive to boot from.  If
+by pressing Ctrl+F4, and -l specifies the mounted drive to boot from.  If
 no drive letter is specified, this defaults to booting from the A drive.
 The only bootable drive letters are A, C, and D.  For booting from a hard
 drive (C or D), the image should have already been mounted using the
@@ -1191,8 +1191,8 @@ It's only possible to use SUBST on Local drives
 ║ For a short introduction for new users type: [33mINTRO[37m                 ║
 ║ For supported shell commands type: [33mHELP[37m                            ║
 ║                                                                    ║
-║ To adjust the emulated CPU speed, use [31mctrl-F11[37m and [31mctrl-F12[37m.       ║
-║ To activate the keymapper [31mctrl-F1[37m.                                 ║
+║ To adjust the emulated CPU speed, use [31mCtrl+F11[37m and [31mCtrl+F12[37m.       ║
+║ To activate the keymapper [31mCtrl+F1[37m.                                 ║
 ║ For more information read the [36mREADME[37m file in the DOSBox directory. ║
 ║                                                                    ║
 
@@ -1200,13 +1200,13 @@ It's only possible to use SUBST on Local drives
 :SHELL_STARTUP_CGA
 ║ DOSBox supports Composite CGA mode.                                ║
 ║ Use [31mF12[37m to set composite output ON, OFF, or AUTO (default).        ║
-║ [31m(Alt-)F11[37m changes hue; [31mctrl-alt-F11[37m selects early/late CGA model.  ║
+║ [31m(Alt+)F11[37m changes hue; [31mCtrl+Alt+F11[37m selects early/late CGA model.  ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA_MONO
 ║ Use [31mF11[37m to cycle through green, amber, white and paper-white mode, ║
-║ and [31mAlt-F11[37m to change contrast/brightness settings.                ║
+║ and [31mAlt+F11[37m to change contrast/brightness settings.                ║
 
 .
 :SHELL_STARTUP_HERC
@@ -1215,7 +1215,7 @@ It's only possible to use SUBST on Local drives
 
 .
 :SHELL_STARTUP_DEBUG
-║ Press [31malt-Pause[37m to enter the debugger or start the exe with [33mDEBUG[37m. ║
+║ Press [31mAlt+Pause[37m to enter the debugger or start the exe with [33mDEBUG[37m. ║
 ║                                                                    ║
 
 .
