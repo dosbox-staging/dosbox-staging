@@ -570,7 +570,7 @@ void DOSBOX_Init(void) {
 
 	Pint = secprop->Add_int("cycleup",Property::Changeable::Always,10);
 	Pint->SetMinMax(1,1000000);
-	Pint->Set_help("Amount of cycles to decrease/increase with keycombos.(CTRL-F11/CTRL-F12)");
+	Pint->Set_help("Number of cycles to decrease/increase with keycombos. (Ctrl+F11/Ctrl+F12)");
 
 	Pint = secprop->Add_int("cycledown",Property::Changeable::Always,20);
 	Pint->SetMinMax(1,1000000);

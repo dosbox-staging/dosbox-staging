@@ -369,7 +369,7 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 	for (Bit16u cplane=0; cplane<additional_planes; cplane++) {
 		Bit16u plane_flags;
 
-		// get required-flags (shift/alt/ctrl-states etc.)
+		// get required-flags (Shift/Alt/Ctrl states, etc.)
 		plane_flags=host_readw(&read_buf[read_buf_pos]);
 		read_buf_pos+=2;
 		current_layout_planes[cplane].required_flags=plane_flags;
@@ -1049,12 +1049,14 @@ const char* keyboard_layout::main_language_code() {
 
 static keyboard_layout* loaded_layout=NULL;
 
-// CTRL-ALT-F2 switches between foreign and US-layout using this function
-/* static void switch_keyboard_layout(bool pressed) {
+#if 0
+// Ctrl+Alt+F2 switches between foreign and US-layout using this function
+static void switch_keyboard_layout(bool pressed) {
 	if (!pressed)
 		return;
 	if (loaded_layout) loaded_layout->switch_foreign_layout();
-} */
+}
+#endif
 
 // called by int9-handler
 bool DOS_LayoutKey(Bitu key, Bit8u flags1, Bit8u flags2, Bit8u flags3) {

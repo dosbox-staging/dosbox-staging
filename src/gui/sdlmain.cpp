@@ -339,10 +339,10 @@ struct SDL_Block {
 	SDL_Point pp_scale = {1, 1};
 	SDL_Rect updateRects[1024];
 #if defined (WIN32)
-	// Time when sdl regains focus (alt-tab) in windowed mode
+	// Time when sdl regains focus (Alt+Tab) in windowed mode
 	Bit32u focus_ticks;
 #endif
-	// state of alt-keys for certain special handlings
+	// State of Alt keys for certain special handlings
 	SDL_EventType laltstate = SDL_KEYUP;
 	SDL_EventType raltstate = SDL_KEYUP;
 };
@@ -2692,7 +2692,7 @@ bool GFX_Events()
 				if ((event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) || (event.window.event == SDL_WINDOWEVENT_MINIMIZED)) {
 					/* Window has lost focus, pause the emulator.
 					 * This is similar to what PauseDOSBox() does, but the exit criteria is different.
-					 * Instead of waiting for the user to hit Alt-Break, we wait for the window to
+					 * Instead of waiting for the user to hit Alt+Break, we wait for the window to
 					 * regain window or input focus.
 					 */
 					bool paused = true;
@@ -2762,7 +2762,8 @@ bool GFX_Events()
 				break;
 			// This can happen as well.
 			if (((event.key.keysym.sym == SDLK_TAB )) && (event.key.keysym.mod & KMOD_ALT)) break;
-			// ignore tab events that arrive just after regaining focus. (likely the result of alt-tab)
+			// Ignore tab events that arrive just after regaining
+			// focus. Likely the result of Alt+Tab.
 			if ((event.key.keysym.sym == SDLK_TAB) && (GetTicks() - sdl.focus_ticks < 2)) break;
 #endif
 #if defined (MACOSX)
@@ -2847,7 +2848,7 @@ void Config_Add_SDL() {
 
 	Pbool = sdl_sec->Add_bool("fullscreen", always, false);
 	Pbool->Set_help("Start DOSBox directly in fullscreen.\n"
-	                "Press Alt-Enter to switch back to window.");
+	                "Press Alt+Enter to switch back to window.");
 
 	pint = sdl_sec->Add_int("display", on_start, 0);
 	pint->Set_help("Number of display to use; values depend on OS and user "
@@ -2942,12 +2943,12 @@ void Config_Add_SDL() {
 		"                   input sent to the game.\n"
 		"Choose how middle-clicks are handled (second parameter):\n"
 		"   middlegame:     Middle-clicks are sent to the game\n"
-		"                   (Ctrl-F10 uncaptures the mouse).\n"
+		"                   (Ctrl+F10 uncaptures the mouse).\n"
 		"   middlerelease:  Middle-clicks are used to uncapture the mouse\n"
 		"                   (not sent to the game). However, middle-clicks\n"
 		"                   will be sent to the game in fullscreen or when\n"
 		"                   seamless control is set.\n"
-		"                   Ctrl-F10 will also uncapture the mouse.\n"
+		"                   Ctrl+F10 will also uncapture the mouse.\n"
 		"Defaults (if not present or incorrect): ");
 	mouse_control_help += mouse_control_defaults;
 	Pmulti->Set_help(mouse_control_help);

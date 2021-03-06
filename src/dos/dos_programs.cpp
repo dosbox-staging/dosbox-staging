@@ -1759,30 +1759,31 @@ void DOS_SetupPrograms(void) {
 		"\n"
 		"\033[34;1mimgmount D C:\\cd.iso -t cdrom\033[0m\n"
 		);
+
 	MSG_Add("PROGRAM_INTRO_SPECIAL",
-		"\033[2J\033[32;1mSpecial keys:\033[0m\n"
-		"These are the default keybindings.\n"
-		"They can be changed in the \033[33mkeymapper\033[0m.\n"
-		"\n"
-		"\033[33;1mALT-ENTER\033[0m   : Switch between fullscreen and window mode.\n"
-		"\033[33;1mALT-PAUSE\033[0m   : Pause/Unpause emulator.\n"
-		"\033[33;1mCTRL-F1\033[0m     : Start the \033[33mkeymapper\033[0m.\n"
-		"\033[33;1mCTRL-F4\033[0m     : Swap mounted disk image, update directory cache for all drives.\n"
-		"\033[33;1mCTRL-F5\033[0m     : Save a screenshot.\n"
-		"\033[33;1mCTRL-F6\033[0m     : Start/Stop recording sound output to a wave file.\n"
-		"\033[33;1mCTRL-F7\033[0m     : Start/Stop recording video output to a zmbv file.\n"
-		"\033[33;1mCTRL-F9\033[0m     : Shutdown emulator.\n"
-		"\033[33;1mCTRL-F10\033[0m    : Capture/Release the mouse.\n"
-		"\033[33;1mCTRL-F11\033[0m    : Slow down emulation.\n"
-		"\033[33;1mCTRL-F12\033[0m    : Speed up emulation.\n"
-		"\033[33;1mALT-F12\033[0m     : Unlock speed (turbo button/fast forward).\n"
-		);
+	        "\033[2J\033[32;1mSpecial keys:\033[0m\n"
+	        "These are the default keybindings.\n"
+	        "They can be changed in the \033[33mkeymapper\033[0m.\n"
+	        "\n"
+	        "\033[33;1mAlt+Enter\033[0m  Switch between fullscreen and window mode.\n"
+	        "\033[33;1mAlt+Pause\033[0m  Pause/Unpause emulator.\n"
+	        "\033[33;1mCtrl+F1\033[0m    Start the \033[33mkeymapper\033[0m.\n"
+	        "\033[33;1mCtrl+F4\033[0m    Swap mounted disk image, update directory cache for all drives.\n"
+	        "\033[33;1mCtrl+F5\033[0m    Save a screenshot.\n"
+	        "\033[33;1mCtrl+F6\033[0m    Start/Stop recording sound output to a wave file.\n"
+	        "\033[33;1mCtrl+F7\033[0m    Start/Stop recording video output to a zmbv file.\n"
+	        "\033[33;1mCtrl+F9\033[0m    Shutdown emulator.\n"
+	        "\033[33;1mCtrl+F10\033[0m   Capture/Release the mouse.\n"
+	        "\033[33;1mCtrl+F11\033[0m   Slow down emulation.\n"
+	        "\033[33;1mCtrl+F12\033[0m   Speed up emulation.\n"
+	        "\033[33;1mAlt+F12\033[0m    Unlock speed (turbo button/fast forward).\n");
+
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_WRITE_PROTECTED","Image file is read-only! Might create problems.\n");
 	MSG_Add("PROGRAM_BOOT_PRINT_ERROR","This command boots DOSBox from either a floppy or hard disk image.\n\n"
 		"For this command, one can specify a succession of floppy disks swappable\n"
-		"by pressing Ctrl-F4, and -l specifies the mounted drive to boot from.  If\n"
+		"by pressing Ctrl+F4, and -l specifies the mounted drive to boot from.  If\n"
 		"no drive letter is specified, this defaults to booting from the A drive.\n"
 		"The only bootable drive letters are A, C, and D.  For booting from a hard\n"
 		"drive (C or D), the image should have already been mounted using the\n"

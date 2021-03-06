@@ -268,7 +268,7 @@ Frees all memory eaten up by loadfix.
 .B RESCAN [\-All] [Drive:]
 .LP
 .RB "Make " dosbox " reread the directory structure. Useful if you changed
-.RB "something on a mounted drive outside " dosbox ".(CTRL\-F4 does"
+.RB "something on a mounted drive outside " dosbox ". (Ctrl+F4 does"
 this as well!)
 .RS
 .TP
@@ -324,30 +324,30 @@ in the current directory
 new default config file if it does not exist yet.
 .SH "SPECIAL KEYS"
 .TP 12m
-.IP ALT\-ENTER
+.IP Alt+Enter
 Switch between fullscreen and window mode.
-.IP ALT\-PAUSE
+.IP Alt+Pause
 Pause/Unpause emulator.
-.IP CTRL\-F1
+.IP Ctrl+F1
 Start the keymapper.
-.IP CTRL\-F4
-Swap mounted disk\(hyimage (Only used with imgmount). Update directory cache
-for all drives!
-.IP CTRL\-F5
+.IP Ctrl+F4
+Swap mounted disk\(hyimage (only used with imgmount). Update directory cache
+for all drives.
+.IP Ctrl+F5
 Save a screenshot.(png)
-.IP CTRL\-F6
+.IP Ctrl+F6
 Start/Stop recording sound output to a wave file.
-.IP CTRL\-F7
+.IP Ctrl+F7
 Start/Stop recording video output to a zmbv file.
-.IP CTRL\-F9
+.IP Ctrl+F9
 Kill dosbox.
-.IP CTRL\-F10
+.IP Ctrl+F10
 Capture/Release the mouse.
-.IP CTRL\-F11
+.IP Ctrl+F11
 Slow down emulation (Increase dosbox Cycles).
-.IP CTRL\-F12
+.IP Ctrl+F12
 Speed up emulation (Decrease dosbox Cycles).
-.IP ALT\-F12
+.IP Alt+F12
 Unlock speed (turbo button).
 .PP
 These are the default keybindings. They can be changed in the keymapper.
@@ -368,7 +368,7 @@ them to run fast though!! Be sure to read the next section on how to speed
 it up somewhat.
 .SS "To run resource\-demanding games"
 .BR dosbox " emulates the CPU, the sound and graphic cards, and some other"
-.RB " stuff, all at the same time. You can overclock " dosbox " by using CTRL\-F12, but"
+.RB " stuff, all at the same time. You can overclock " dosbox " by using Ctrl+F12, but"
 you'll be limited by the power of your actual CPU. You can see how much free
 time your true CPU has by various utils (top).  Once 100% of your real CPU time is
 .RB "used there is no further way to speed up " dosbox " unless you reduce the load"
@@ -378,11 +378,11 @@ So:
 .PP
 .RB "Close every program but " dosbox .
 .PP
-.RB "Overclock  " dosbox " until 100% of your CPU is used.(CTRL\-F12)" 
+.RB "Overclock  " dosbox " until 100% of your CPU is used. (Ctrl+F12)"
 .PP
 .RB "Since VGA emulation is the most demanding part of " dosbox " in terms of actual"
 CPU usage, we'll start here. Increase the number of frames skipped (in
-increments of one) by pressing CTRL\-F8. Your CPU usage should decrease.
+increments of one) by pressing Ctrl+F8. Your CPU usage should decrease.
 Go back one step and repeat this until the game runs fast enough for you.
 Please note that this is a trade off: you lose in fluidity of video what you
 gain in speed.
