@@ -191,6 +191,7 @@ jobs:
             -Db_lto=true \
             -Dtry_static_libs=png \
             -Duse_fluidsynth=false \
+            -Duse_slirp=false \
             build
 
       - name: Build
