@@ -172,6 +172,9 @@
     <ClCompile Include="..\src\hardware\keyboard.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\ne2000.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\mame\fmopl.cpp">
       <Filter>src\hardware\mame</Filter>
     </ClCompile>
@@ -358,6 +361,12 @@
     <ClCompile Include="..\src\misc\cross.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\misc\ethernet.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\ethernet_slirp.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\misc\messages.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
@@ -447,6 +456,9 @@
     <ClInclude Include="..\include\drives.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\ethernet.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\envelope.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -484,6 +496,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\mouse.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ne2000.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\paging.h">
@@ -743,6 +758,12 @@
     </ClInclude>
     <ClInclude Include="..\src\midi\midi_win32.h">
       <Filter>src\midi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\misc\ethernet.h">
+      <Filter>src\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\misc\ethernet_slirp.h">
+      <Filter>src\misc</Filter>
     </ClInclude>
     <ClInclude Include="..\src\dos\program_autotype.h">
       <Filter>src\dos</Filter>
