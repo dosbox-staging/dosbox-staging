@@ -55,6 +55,7 @@ jobs:
           echo "::set-output name=brew_dir::$BREW_DIR"
           echo "::set-output name=ccache_dir::$CCACHE_DIR"
           echo "::set-output name=today::$(date +%F)"
+          echo "::set-output name=name_hash::$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)"
 
       - uses:  actions/cache@v2
         with:
@@ -71,8 +72,10 @@ jobs:
       - uses:  actions/cache@v2
         with:
           path: ${{ steps.prep-caches.outputs.ccache_dir }}
-          key:  ccache-macos-debug-${{ steps.prep-caches.outputs.today }}
-          restore-keys: ccache-macos-debug-
+          key:  ccache-macos-debug-${{ steps.prep-caches.outputs.name_hash }}-${{ steps.prep-caches.outputs.today }}
+          restore-keys: |
+            ccache-macos-debug-${{ steps.prep-caches.outputs.name_hash }}-
+            ccache-macos-debug-
 
       - name: Log environment
         run:  ./scripts/log-env.sh
