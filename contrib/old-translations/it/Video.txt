@@ -12,19 +12,19 @@ operativi dovrebbero procurarsi un player video che usi la libreria ffmpeg
 aggiornarsi).
 
 FAQ:
-D: Durante la riproduzione video il suono Ë in ritardo.
+D: Durante la riproduzione video il suono √® in ritardo.
 R: Controlla i tuoi settaggi video per assicurarti che la frequenza video sia
 impostata almeno sui 70 hz. Prova a riprodurre il video con virtualdub
 (http://virtualdub.sf.net)
 
-D: PerchË il filmato finale Ë suddiviso in tanti file?
+D: Perch√® il filmato finale √® suddiviso in tanti file?
 R: Ogni volta che il gioco cambia risoluzione, DOSBox crea un nuovo file video,
-poichË un file video puÚ contenere soltanto una risoluzione.
+poich√® un file video pu√≤ contenere soltanto una risoluzione.
 
-D: Posso impostare i cicli ad un valore pi˘ alto di quello che il mio PC puÚ
+D: Posso impostare i cicli ad un valore pi√π alto di quello che il mio PC pu√≤
 gestire durante la registrazione?
-R: SÏ. Durante la registrazione il gioco potrebbe risultare lento e scattoso, ma
-il filmato riprodotto avr‡ la velocit‡ giusta e nessuno scatto.
+R: S√¨. Durante la registrazione il gioco potrebbe risultare lento e scattoso, ma
+il filmato riprodotto avr√† la velocit√† giusta e nessuno scatto.
 
 D: CTRL-ALT-F5, sotto linux, passa alla console.
 R: 1. Avvia DOSBox in questo modo: dosbox -startmapper
