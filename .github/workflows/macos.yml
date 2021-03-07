@@ -42,28 +42,37 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name:  Prepare brew and compiler caches
+        id:    prep-caches
+        shell: bash
+        run: |
+          set -eu
+          BREW_DIR="$(brew --cache)"
+          DISCARD_DIR="${{ github.workspace }}/discard"
+          mkdir -p "$DISCARD_DIR"
+          mv -f "$BREW_DIR"/* "$DISCARD_DIR"
+          mkdir -p "$CCACHE_DIR"
+          echo "::set-output name=brew_dir::$BREW_DIR"
+          echo "::set-output name=ccache_dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date +%F)"
+
+      - uses:  actions/cache@v2
+        with:
+          path: ${{ steps.prep-caches.outputs.brew_dir }}
+          key:  brew-cache-${{ steps.prep-caches.outputs.today }}
+          restore-keys: brew-cache-
+
       - name: Install C++ compiler and libraries
         run: |
           brew install \
             ${{ matrix.conf.packages }} \
             $(cat ./.github/packages/macos-latest-brew.txt)
 
-      - name:  Prepare compiler cache
-        id:    prep-ccache
-        shell: bash
-        run: |
-          mkdir -p "${CCACHE_DIR}"
-          echo "::set-output name=dir::$CCACHE_DIR"
-          echo "::set-output name=today::$(gdate -I)"
-          echo "::set-output name=yesterday::$(gdate --date=yesterday -I)"
-
       - uses:  actions/cache@v2
-        id:    cache-ccache
         with:
-          path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.today }}
-          restore-keys: |
-            ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.yesterday }}
+          path: ${{ steps.prep-caches.outputs.ccache_dir }}
+          key:  ccache-macos-debug-${{ steps.prep-caches.outputs.today }}
+          restore-keys: ccache-macos-debug-
 
       - name: Log environment
         run:  ./scripts/log-env.sh
@@ -93,27 +102,36 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name:  Prepare brew and compiler caches
+        id:    prep-caches
+        shell: bash
+        run: |
+          set -eu
+          BREW_DIR="$(brew --cache)"
+          DISCARD_DIR="${{ github.workspace }}/discard"
+          mkdir -p "$DISCARD_DIR"
+          mv -f "$BREW_DIR"/* "$DISCARD_DIR"
+          mkdir -p "$CCACHE_DIR"
+          echo "::set-output name=brew_dir::$BREW_DIR"
+          echo "::set-output name=ccache_dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date +%F)"
+
+      - uses:  actions/cache@v2
+        with:
+          path: ${{ steps.prep-caches.outputs.brew_dir }}
+          key:  brew-cache-${{ steps.prep-caches.outputs.today }}
+          restore-keys: brew-cache-
+
       - name: Install C++ compiler and libraries
         run: |
           brew install librsvg tree \
             $(cat ./.github/packages/macos-latest-brew.txt)
 
-      - name:  Prepare compiler cache
-        id:    prep-ccache
-        shell: bash
-        run: |
-          mkdir -p "${CCACHE_DIR}"
-          echo "::set-output name=dir::$CCACHE_DIR"
-          echo "::set-output name=today::$(gdate -I)"
-          echo "::set-output name=yesterday::$(gdate --date=yesterday -I)"
-
       - uses:  actions/cache@v2
-        id:    cache-ccache
         with:
-          path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-macos-release-${{ steps.prep-ccache.outputs.today }}
-          restore-keys: |
-            ccache-macos-release-${{ steps.prep-ccache.outputs.yesterday }}
+          path: ${{ steps.prep-caches.outputs.ccache_dir }}
+          key:  ccache-macos-release-${{ steps.prep-caches.outputs.today }}
+          restore-keys: ccache-macos-release-
 
       - name: Log environment
         run:  ./scripts/log-env.sh
@@ -188,15 +206,14 @@ jobs:
           mv -f "$clamconf".sample "$clamconf"
           sed -ie 's/^Example/#Example/g' "$clamconf"
           sed -ie 's/30/20000/g' "$clamconf"
-          echo "::set-output name=today::$(gdate -I)"
-          echo "::set-output name=yesterday::$(gdate --date=yesterday -I)"
+          echo "::set-output name=today::$(date +%F)"
       - uses:  actions/cache@v2
         id:    cache-clamdb
         with:
           path: ${{ env.CLAMDB_DIR }}/**/*.cvd
-          key:  clamdb-macos-${{ steps.prep-clamdb.outputs.today }}-2
+          key:  clamdb-macos-${{ steps.prep-clamdb.outputs.today }}
           restore-keys: |
-            clamdb-macos-${{ steps.prep-clamdb.outputs.yesterday }}-2
+            clamdb-macos-
 
       - name: Clam AV scan
         run: |
