@@ -1,29 +1,29 @@
 
 ===================================
-DOSBox 0.74 em PortuguÍs/Brasileiro
+DOSBox 0.74 em Portugu√™s/Brasileiro
 ===================================
 
-A Vers„o em portuguÍs para a galera brazuka!!
+A Vers√£o em portugu√™s para a galera brazuka!!
 
-0. CrÈditos da traduÁ„o
-1. Notas do autor sobre traduÁ„o
-2. AlteraÁ„o do idioma
-3. Futuras versıes
+0. Cr√©ditos da tradu√ß√£o
+1. Notas do autor sobre tradu√ß√£o
+2. Altera√ß√£o do idioma
+3. Futuras vers√µes
 4. Agradecimentos
 5. Dicas (Windows) (INICIANTES, LEIAM ISTO)
-6. MÈtodo F·cil (Recomendado)
+6. M√©todo F√°cil (Recomendado)
 
-Qualquer d˙vida na instalaÁ„o da traduÁ„o contate-me (ableite@msn.com).
+Qualquer d√∫vida na instala√ß√£o da tradu√ß√£o contate-me (ableite@msn.com).
 
 ========================
-0. CrÈditos da traduÁ„o:
+0. Cr√©ditos da tradu√ß√£o:
 ========================
 
 DOSBox v0.74 - Lex Leite
 
 Leia-Me do DOSBox - Lex Leite e Sael Aran, com uma ajuda de Mosca-Ninja e David Tuka
 
-Revis„o - Lex Leite
+Revis√£o - Lex Leite
 
 
 Contatos: Lex Leite   / ableite@msn.com
@@ -33,50 +33,50 @@ Contatos: Lex Leite   / ableite@msn.com
 
 
 =================================
-1. Notas do autor sobre traduÁ„o:
+1. Notas do autor sobre tradu√ß√£o:
 =================================
 
-a. A traduÁ„o do arquivo de idioma do DOSBox est· completa.
-   A traduÁ„o do arquivo Leia-me/Manual (read-me) do DOSBox est· sendo atualizada para a nova vers„o.
-     Por enquanto a vers„o antiga do Leia-me est· contida no ZIP pois ela ainda serve para essa nova vers„o.
-   A traduÁ„o do arquivo Leia-me da captura de vÌdeo est· completa.
+a. A tradu√ß√£o do arquivo de idioma do DOSBox est√° completa.
+   A tradu√ß√£o do arquivo Leia-me/Manual (read-me) do DOSBox est√° sendo atualizada para a nova vers√£o.
+     Por enquanto a vers√£o antiga do Leia-me est√° contida no ZIP pois ela ainda serve para essa nova vers√£o.
+   A tradu√ß√£o do arquivo Leia-me da captura de v√≠deo est√° completa.
 
-b. A traduÁ„o foi feita com base no arquivo original em inglÍs e com o arquivo de
-   traduÁ„o em espanhol o que ajudou para deixar a traduÁ„o ainda melhor.
+b. A tradu√ß√£o foi feita com base no arquivo original em ingl√™s e com o arquivo de
+   tradu√ß√£o em espanhol o que ajudou para deixar a tradu√ß√£o ainda melhor.
 
-c. N„o pude testar certas telas do DOSBox. Telas como a inicial onde existe uma
-   grande caixa azul, podem estar malfeitas por conta da numeraÁ„o que pode ter
-   ficado errada, porÈm creio que esteja tudo correto.
+c. N√£o pude testar certas telas do DOSBox. Telas como a inicial onde existe uma
+   grande caixa azul, podem estar malfeitas por conta da numera√ß√£o que pode ter
+   ficado errada, por√©m creio que esteja tudo correto.
 
 
 ==================================================
-2. Para alterar o idioma do DOSBox para PortuguÍs:
+2. Para alterar o idioma do DOSBox para Portugu√™s:
 ==================================================
 
-   AtenÁ„o: A pasta onde se encontra o arquivo de configuraÁ„o do DOSBox foi
-   alterada na vers„o 0.74 do DOSBox. Agora a pasta esta localizada em:
-   "C:\Documents and Settings\Usuario\ConfiguraÁıes locais\Dados de aplicativos\DOSBox"
+   Aten√ß√£o: A pasta onde se encontra o arquivo de configura√ß√£o do DOSBox foi
+   alterada na vers√£o 0.74 do DOSBox. Agora a pasta esta localizada em:
+   "C:\Documents and Settings\Usuario\Configura√ß√µes locais\Dados de aplicativos\DOSBox"
    no windows XP.
    No vista/7 "C:\Users\Usuario\AppData\Local\DOSBox".
    Substitua "usuario" pelo seu nome do seu usuario no computador.
-   Sempre que eu me referir a pasta de configuraÁ„o do DOSBox, v· atÈ a pasta citada acima.
+   Sempre que eu me referir a pasta de configura√ß√£o do DOSBox, v√° at√© a pasta citada acima.
 
-   Para facilitar a instalaÁ„o da traduÁ„o simplesmente copie os 2 arquivos
-   "portuguese.lang" e "dosbox-0.74.conf" para a pasta de configuraÁ„o
-   do DOSBox. (MÈtodo f·cil)
+   Para facilitar a instala√ß√£o da tradu√ß√£o simplesmente copie os 2 arquivos
+   "portuguese.lang" e "dosbox-0.74.conf" para a pasta de configura√ß√£o
+   do DOSBox. (M√©todo f√°cil)
 
-   Se essa pasta n„o existir, abra o DOSBox e logo em seguida feche-o. Ela dever·
-   ter sido criada pelo prÛprio programa agora.
+   Se essa pasta n√£o existir, abra o DOSBox e logo em seguida feche-o. Ela dever√°
+   ter sido criada pelo pr√≥prio programa agora.
    
 
 ===================
-3. Futuras versıes:
+3. Futuras vers√µes:
 ===================
 
-   Fizemos o melhor nessa traduÁ„o e esperamos que n„o contenha erros. PorÈm È possÌvel
-   termos deixado passar alguma letrinha ou acento. Se vocÍ detectar algum erro, poder·
-   contatar pelo e-mail (ableite@msn.com) para que possamos consert·-lo e numa
-   futura vers„o o DOSBox fique corretamente traduzido.
+   Fizemos o melhor nessa tradu√ß√£o e esperamos que n√£o contenha erros. Por√©m √© poss√≠vel
+   termos deixado passar alguma letrinha ou acento. Se voc√™ detectar algum erro, poder√°
+   contatar pelo e-mail (ableite@msn.com) para que possamos consert√°-lo e numa
+   futura vers√£o o DOSBox fique corretamente traduzido.
 
 
 ==================
@@ -84,30 +84,30 @@ c. N„o pude testar certas telas do DOSBox. Telas como a inicial onde existe uma
 ==================
 
    Obrigado a equipe do DOSBox por ter feito esse programa maravilhoso, onde eu posso
-   jogar jogos da Època em que eu era um garotinho no Windows XP/Vista, que n„o da mais
+   jogar jogos da √©poca em que eu era um garotinho no Windows XP/Vista, que n√£o da mais
    suporte ao verdadeiro MS-DOS.
 
-   Obrigado a Gustavo Queipo de LLano ¡lvarez, pois usei seus arquivos de traduÁ„o em
-   espanhol. Arquivos que me ajudaram a criar uma traduÁ„o ainda melhor para o portuguÍs.
+   Obrigado a Gustavo Queipo de LLano √Ålvarez, pois usei seus arquivos de tradu√ß√£o em
+   espanhol. Arquivos que me ajudaram a criar uma tradu√ß√£o ainda melhor para o portugu√™s.
 
-   Obrigado a Sael Aran, Mosca-Ninja e David Tuka por ajudar na traduÁ„o do arquivo "Leia-Me"
+   Obrigado a Sael Aran, Mosca-Ninja e David Tuka por ajudar na tradu√ß√£o do arquivo "Leia-Me"
 
    Obrigado aos meus colegas que me incentivaram!
 
-   E um Obrigado reservado, para caso eu tenha esquecido de colocar aqui alguÈm que
+   E um Obrigado reservado, para caso eu tenha esquecido de colocar aqui algu√©m que
    me ajudou.
 
 =============================
 5. Dicas (Windows XP/Vista/7)
 =============================
 
-   Para quem est· comeÁando a usar o DOSBox agora e quiser comeÁar a jogar antes de
-   aprender a us·-lo completamente faÁa o seguinte:
+   Para quem est√° come√ßando a usar o DOSBox agora e quiser come√ßar a jogar antes de
+   aprender a us√°-lo completamente fa√ßa o seguinte:
 
-   Abra o arquivo de configuraÁıes do DOSBox.
-   Na ultima linha desse arquivo est· seÁ„o de auto execuÁ„o [autoexec] de comandos
-   que ser„o sempre executados quando o DOSBox for iniciado.
-   Logo abaixo da ˙ltima linha copie e cole o texto abaixo:
+   Abra o arquivo de configura√ß√µes do DOSBox.
+   Na ultima linha desse arquivo est√° se√ß√£o de auto execu√ß√£o [autoexec] de comandos
+   que ser√£o sempre executados quando o DOSBox for iniciado.
+   Logo abaixo da √∫ltima linha copie e cole o texto abaixo:
 
 ----corte aqui----
 
@@ -118,22 +118,22 @@ dir/p
 
 ----corte aqui----
 
-   Obviamente o "c c:\" È para o HD que estiver na unidade c: e o "d d:\" para onde
-   estiver a unidade de cd-rom. No windows geralmente essas letras s„o padr„o, logo,
-   basta copiar e colar. Se n„o, altere as letras para as unidades corretas.
+   Obviamente o "c c:\" √© para o HD que estiver na unidade c: e o "d d:\" para onde
+   estiver a unidade de cd-rom. No windows geralmente essas letras s√£o padr√£o, logo,
+   basta copiar e colar. Se n√£o, altere as letras para as unidades corretas.
 
 
 =============================
-6. MÈtodo F·cil (Recomendado)
+6. M√©todo F√°cil (Recomendado)
 =============================
 
-   PODE N√O FUNCIONAR EM ALGUNS COMPUTADORES!!!
+   PODE N√ÉO FUNCIONAR EM ALGUNS COMPUTADORES!!!
    Copie os arquivos "dosbox-0.74.conf" e "portuguese.lang" para a pasta de
-   configuraÁ„o do DOSBox.
-   Abra o execut·vel.
+   configura√ß√£o do DOSBox.
+   Abra o execut√°vel.
 
-   Se n„o funcionar, delete o arquivo "dosbox-0.74.conf" arquivo e copie o
-   "dosbox-0.74B.conf" para a pasta de configuraÁ„o do DOSBox. Agora renomeie
+   Se n√£o funcionar, delete o arquivo "dosbox-0.74.conf" arquivo e copie o
+   "dosbox-0.74B.conf" para a pasta de configura√ß√£o do DOSBox. Agora renomeie
    "dosbox-0.74B.conf" para "dosbox-0.74.conf".
 
 

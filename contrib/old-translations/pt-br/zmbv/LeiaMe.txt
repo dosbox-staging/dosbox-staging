@@ -1,36 +1,36 @@
-Desde a versão 0.65, DOSBox permite criar vídeos do que está passando na tela.
+Desde a versÃ£o 0.65, DOSBox permite criar vÃ­deos do que estÃ¡ passando na tela.
 
-Para gravar um vídeo, aperte CTRL-ALT-F5.
-Para parar/finalizar a gravação, volte a apertar CTRL-ALT-F5.
+Para gravar um vÃ­deo, aperte CTRL-ALT-F5.
+Para parar/finalizar a gravaÃ§Ã£o, volte a apertar CTRL-ALT-F5.
 
-Para reproduzir o vídeo gravado é necessário ter instalado um reprodutor que
-possa trabalhar com o codec ZMBV. Usuários do Windows podem encontrar esse codec
+Para reproduzir o vÃ­deo gravado Ã© necessÃ¡rio ter instalado um reprodutor que
+possa trabalhar com o codec ZMBV. UsuÃ¡rios do Windows podem encontrar esse codec
 no menu DOSBox em Inciar>Todos os Programas. Para outros sistemas operacionais,
 deve-se usar um reprodutor que use a biblioteca ffmpeg.
 
 
-Perguntas Freqüentes:
-P: Durante a reprodução o som sai com atraso.
-R: Verifique as propriedades de vídeo para ver se a frequência de atualização
-   da tela está por menos de 70hz. Tente reproduzir o vídeo no VirtualDub
+Perguntas FreqÃ¼entes:
+P: Durante a reproduÃ§Ã£o o som sai com atraso.
+R: Verifique as propriedades de vÃ­deo para ver se a frequÃªncia de atualizaÃ§Ã£o
+   da tela estÃ¡ por menos de 70hz. Tente reproduzir o vÃ­deo no VirtualDub
    (http://virtualdub.sf.net)
 
-P: Por que o vídeo resultante se consiste em vários arquivos?
-R: Cada vez que o jogo altera sua resolução, o DOSBox cria um novo arquivo de vídeo,
-   pois cada arquivo só pode ter uma resolução.
+P: Por que o vÃ­deo resultante se consiste em vÃ¡rios arquivos?
+R: Cada vez que o jogo altera sua resoluÃ§Ã£o, o DOSBox cria um novo arquivo de vÃ­deo,
+   pois cada arquivo sÃ³ pode ter uma resoluÃ§Ã£o.
 
-P: Durante uma gravação, posso configurar o DOSBox para um número de ciclos além
+P: Durante uma gravaÃ§Ã£o, posso configurar o DOSBox para um nÃºmero de ciclos alÃ©m
    do que meu PC pode suportar?
-R: Sim. Durante a gravação, a velocidade do jogo poderá ser reduzida. Porém isso
-   não afetará o vídeo resultante e ele se reproduzirá corretamente.
+R: Sim. Durante a gravaÃ§Ã£o, a velocidade do jogo poderÃ¡ ser reduzida. PorÃ©m isso
+   nÃ£o afetarÃ¡ o vÃ­deo resultante e ele se reproduzirÃ¡ corretamente.
 
 P: CTRL-ALT-F5 alterna para o console no Linux.
 R: 1. Inicie o DOSBox assim: dosbox -startmapper
    2. Clique em "Video", clique em "Add"
-   3. Aperte a tecla que você deseja (por exemplo, scroll lock ou printscreen)
+   3. Aperte a tecla que vocÃª deseja (por exemplo, scroll lock ou printscreen)
    4. Clique em "Exit".
-   5. Agora será possível gravar vídeos apertando qualquer que seja a tecla
+   5. Agora serÃ¡ possÃ­vel gravar vÃ­deos apertando qualquer que seja a tecla
       programada.
 
-Q: Estou usando o Windows 64bit e as cores estão erradas
+Q: Estou usando o Windows 64bit e as cores estÃ£o erradas
 A: Olhe aqui: http://vogons.zetafleet.com/viewtopic.php?t=12133  (em ingles)

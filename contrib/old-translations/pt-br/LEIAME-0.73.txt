@@ -5,11 +5,11 @@ DOSBox v0.73
 NOTA: 
 =====
 
-Enquanto nÛs estamos torcendo para que um dia o DOSBox rode todos os programas
-j· feitos para PC, ainda n„o estamos l·. Hoje o DOSBox, rodando
-numa m·quina potente, dificilmente ser· equivalente a um PC 486.
+Enquanto n√≥s estamos torcendo para que um dia o DOSBox rode todos os programas
+j√° feitos para PC, ainda n√£o estamos l√°. Hoje o DOSBox, rodando
+numa m√°quina potente, dificilmente ser√° equivalente a um PC 486.
 O DOSBox pode ser configurado para rodar um leque variado de jogos DOS,
-desde cl·ssicos CGA/Tandy/PCjr atÈ jogos da era Quake.
+desde cl√°ssicos CGA/Tandy/PCjr at√© jogos da era Quake.
 
 
 Arquivo LEIA-ME traduzido por: Lex Leite   / ableite@msn.com
@@ -21,36 +21,36 @@ Arquivo LEIA-ME traduzido por: Lex Leite   / ableite@msn.com
 
 
 =======
-ÕNDICE:
+√çNDICE:
 =======
-1. InÌcio R·pido
+1. In√≠cio R√°pido
 2. Perguntas & Respostas
 3. Uso
 4. Programas Internos
 5. Teclas Especiais
 6. Mapeador de Teclas
 7. Layout do teclado
-8. FunÁ„o Multi-Jogador via Serial
+8. Fun√ß√£o Multi-Jogador via Serial
 9. Como rodar jogos que necessitam mais recursos
-10. SoluÁ„o de Problemas
-11. O arquivo das configuraÁıes
+10. Solu√ß√£o de Problemas
+11. O arquivo das configura√ß√µes
 12. O arquivo do idioma
-13. Fazendo sua prÛpria vers„o do DOSBox
+13. Fazendo sua pr√≥pria vers√£o do DOSBox
 14. Agradecimentos especiais
 15. Contato
 
 
 =================
-1. InÌcio R·pido:
+1. In√≠cio R√°pido:
 =================
 
-Digite INTRO no DOSBox para um tour r·pido. 
-… essencial que vocÍ se familiarize com a ideia de montar
-diretÛrios. O DOSBox n„o faz com que qualquer unidade
-(ou parte dela) seja automaticamente acessÌvel para emulaÁ„o.
-Veja a parte de P&R "Eu tenho um diretÛrio Z ao invÈs de
-um C no prompt." assim como a explicaÁ„o do comando MOUNT
-(seÁ„o 4)
+Digite INTRO no DOSBox para um tour r√°pido. 
+√â essencial que voc√™ se familiarize com a ideia de montar
+diret√≥rios. O DOSBox n√£o faz com que qualquer unidade
+(ou parte dela) seja automaticamente acess√≠vel para emula√ß√£o.
+Veja a parte de P&R "Eu tenho um diret√≥rio Z ao inv√©s de
+um C no prompt." assim como a explica√ß√£o do comando MOUNT
+(se√ß√£o 4)
 
 
 
@@ -60,239 +60,239 @@ um C no prompt." assim como a explicaÁ„o do comando MOUNT
 
 Algumas perguntas feitas frequentemente:
 
-P: Aparece um diretÛrio Z ao invÈs de um C no prompt.
-P: Sempre deverei digitar esses comandos? N„o existe uma forma autom·tica?
+P: Aparece um diret√≥rio Z ao inv√©s de um C no prompt.
+P: Sempre deverei digitar esses comandos? N√£o existe uma forma autom√°tica?
 P: Como eu coloco tela cheia?
-P: Meu CD-ROM n„o funciona.
-P: O jogo/aplicativo n„o consegue achar seu CD-ROM.
-P: O mouse n„o funciona.
-P: O aplicativo n„o tem som.
+P: Meu CD-ROM n√£o funciona.
+P: O jogo/aplicativo n√£o consegue achar seu CD-ROM.
+P: O mouse n√£o funciona.
+P: O aplicativo n√£o tem som.
 P: O som sai cortado ou estranho/difuso.
-P: Eu n„o consigo digitar \ ou : no DOSBox.
+P: Eu n√£o consigo digitar \ ou : no DOSBox.
 P: Estou com atraso no teclado.
-P: O cursor est· se movendo em apenas uma direÁ„o!
+P: O cursor est√° se movendo em apenas uma dire√ß√£o!
 P: O jogo/aplicativo roda muito lento!
-P: O jogo/aplicativo n„o chega a rodar/trava!
+P: O jogo/aplicativo n√£o chega a rodar/trava!
 P: O DOSBox pode danificar meu computador?
-P: Eu queria trocar o tamanho da memÛria/Velocidade da CPU/ems/soundblaster IRQ.
+P: Eu queria trocar o tamanho da mem√≥ria/Velocidade da CPU/ems/soundblaster IRQ.
 P: Quais hardwares de som o DOSBox emula atualmente?
-P: DOSBox trava no inÌcio e eu estou rodando artes/cinem·tica.
+P: DOSBox trava no in√≠cio e eu estou rodando artes/cinem√°tica.
 P: Estou tendo problemas para rodar um jogo feito com a Build Engine (Duke3D/Blood/Shadow Warrior).
-P: Excelente LEIAME, mas eu ainda n„o entendi.
+P: Excelente LEIAME, mas eu ainda n√£o entendi.
 
 
 
 
-P: Aparece um diretÛrio Z ao invÈs de um C no prompt.
-R: VocÍ deve fazer seus diretÛrios ficarem disponÌveis no DOSBox usando 
+P: Aparece um diret√≥rio Z ao inv√©s de um C no prompt.
+R: Voc√™ deve fazer seus diret√≥rios ficarem dispon√≠veis no DOSBox usando 
    o comando "mount". Por exemplo, no Windows "mount C D:\JOGOS" vai criar
-   um drive C no DOSBox que leva ao seu diretÛrio D:\JOGOS.
-   No Linux, "mount c /home/username" criar· um drive C no DOSBox
+   um drive C no DOSBox que leva ao seu diret√≥rio D:\JOGOS.
+   No Linux, "mount c /home/username" criar√° um drive C no DOSBox
    que leva para o /home/username no Linux.
    Para mudar o drive montado, digite "C:". Se tudo ocorreu
-   bem, DOSBox ir· mostrar no prompt "C:\>".
+   bem, DOSBox ir√° mostrar no prompt "C:\>".
 
 
-P: Sempre deverei digitar esses comandos? N„o existe uma forma autom·tica?
-R: No arquivo de configuraÁıes do DOSBox, existe uma seÁ„o [autoexec]. Os comandos
-   ali escritos s„o executados quando o DOSBox iniciar, ent„o vocÍ pode usar esta seÁ„o 
+P: Sempre deverei digitar esses comandos? N√£o existe uma forma autom√°tica?
+R: No arquivo de configura√ß√µes do DOSBox, existe uma se√ß√£o [autoexec]. Os comandos
+   ali escritos s√£o executados quando o DOSBox iniciar, ent√£o voc√™ pode usar esta se√ß√£o 
    para a montagem.
 
 
 P: Como eu coloco tela cheia?
-R: Pressione alt-enter. Alternativamente: Edite o arquivo de configuraÁıes do DOSBox e
-   mude a opÁ„o fullscreen=false para fullscreen=true. Se na tela cheia lhe parece 
-   errada: Altere a opÁ„o fullresolution no arquivo de configuraÁıes do
+R: Pressione alt-enter. Alternativamente: Edite o arquivo de configura√ß√µes do DOSBox e
+   mude a op√ß√£o fullscreen=false para fullscreen=true. Se na tela cheia lhe parece 
+   errada: Altere a op√ß√£o fullresolution no arquivo de configura√ß√µes do
    DOSBox. Para sair do modo tela cheia: Pressione alt-enter novamente.
 
 
-P: Meu CD-ROM n„o funciona.
-R: Para montar seu CD-ROM no DOSBox, vocÍ deve especificar algumas opÁıes adicionais 
+P: Meu CD-ROM n√£o funciona.
+R: Para montar seu CD-ROM no DOSBox, voc√™ deve especificar algumas op√ß√µes adicionais 
    ao montar o CD-ROM. 
    Para ativar o suporte ao CD-ROM (incluindo MSCDEX):
      - mount d f:\ -t cdrom (windows)
      - mount d /media/cdrom -t cdrom (linux)
 
-   Em alguns casos vocÍ pode querer usar uma interface CD-ROM diferente,
-   por exemplo, caso o ·udio do CD n„o funcione:
-     Para ativar o suporte ao SDL (n„o inclui acesso do CD em baixo nÌvel!):
+   Em alguns casos voc√™ pode querer usar uma interface CD-ROM diferente,
+   por exemplo, caso o √°udio do CD n√£o funcione:
+     Para ativar o suporte ao SDL (n√£o inclui acesso do CD em baixo n√≠vel!):
        - mount d f:\ -t cdrom -usecd 0 -noioctl
-     Para ativar o acesso do ioctl usando extraÁ„o digital de ·udio para CDs de ·udio
-     (apenas no windows, ˙til para o Vista):
+     Para ativar o acesso do ioctl usando extra√ß√£o digital de √°udio para CDs de √°udio
+     (apenas no windows, √∫til para o Vista):
        - mount d f:\ -t cdrom -ioctl_dx
-     Para ativar o acesso do ioctl usando MCI para CDs de ·udio (apenas no windows):
+     Para ativar o acesso do ioctl usando MCI para CDs de √°udio (apenas no windows):
        - mount d f:\ -t cdrom -ioctl_mci
-     Para forÁar apenas o acesso pelo ioctl (apenas no windows):
+     Para for√ßar apenas o acesso pelo ioctl (apenas no windows):
        - mount d f:\ -t cdrom -ioctl_dio
-     Para ativar o suporte aspi em baixo nÌvel (win98 com aspi-layer instalado):
+     Para ativar o suporte aspi em baixo n√≠vel (win98 com aspi-layer instalado):
        - mount d f:\ -t cdrom -aspi
    
-   Nos comandos:    - d   letra da unidade que aparecer· no DOSBox
-                    - f:\ localizaÁ„o do CD-ROM no seu PC.
-                    - 0   O n˙mero da unidade de CD-ROM, reportado pelo comando "mount -cd"
-                          (note que este valor sÛ È necess·rio quando o SDL È utilizado
-                           para CDs de ·udio, de qualquer outra maneira È ignorado)
-   Veja tambÈm a prÛxima pergunta: O jogo/aplicativo n„o consegue achar seu CD-ROM.
+   Nos comandos:    - d   letra da unidade que aparecer√° no DOSBox
+                    - f:\ localiza√ß√£o do CD-ROM no seu PC.
+                    - 0   O n√∫mero da unidade de CD-ROM, reportado pelo comando "mount -cd"
+                          (note que este valor s√≥ √© necess√°rio quando o SDL √© utilizado
+                           para CDs de √°udio, de qualquer outra maneira √© ignorado)
+   Veja tamb√©m a pr√≥xima pergunta: O jogo/aplicativo n√£o consegue achar seu CD-ROM.
 
 
-P: O jogo/aplicativo n„o consegue achar seu CD-ROM.
-R: Tenha certeza de montar o CD-ROM com o switch -t cdrom, isso ativar· a
+P: O jogo/aplicativo n√£o consegue achar seu CD-ROM.
+R: Tenha certeza de montar o CD-ROM com o switch -t cdrom, isso ativar√° a
    interface MSCDEX requerida por jogos em DOS para se comunicar com os CD-ROMs.
-   Tente tambÈm adicionar o rÛtulo correto (-label R”TULO) no comando mount,
-   onde R”TULO È o rÛtulo do CD (ID do volume).
-   No Windows, vocÍ pode especificar -ioctl, -aspi ou -noioctl. Olhe a 
-   descriÁ„o do comando mount na SeÁ„o 4 para entender seus significados e 
-   opÁıes adicionais, relacionadas com CDs de ·udio, -ioctl_dx, ioctl_mci, ioctl_dio.
+   Tente tamb√©m adicionar o r√≥tulo correto (-label R√ìTULO) no comando mount,
+   onde R√ìTULO √© o r√≥tulo do CD (ID do volume).
+   No Windows, voc√™ pode especificar -ioctl, -aspi ou -noioctl. Olhe a 
+   descri√ß√£o do comando mount na Se√ß√£o 4 para entender seus significados e 
+   op√ß√µes adicionais, relacionadas com CDs de √°udio, -ioctl_dx, ioctl_mci, ioctl_dio.
    
    Tente criar uma imagem do CD-ROM (preferivelmente o par CUE/BIN) e usar a 
    ferramenta interna IMGMOUNT do DOSBox para montar a imagem (a lista CUE).
-   Isso ativa o suporte ao CD-ROM em baixo nÌvel para qualquer sistema operacional.
+   Isso ativa o suporte ao CD-ROM em baixo n√≠vel para qualquer sistema operacional.
 
 
-P: O mouse n„o funciona.
-R: Normalmente, o DOSBox detecta quando um jogo utiliza o mouse. Quando vocÍ clica na 
-   tela, o mouse dever· ser capturado pelo DOSBox e funcionar.
-   Em alguns jogos a detecÁ„o do mouse n„o funciona. Nesses casos 
-   vocÍ dever· capturar o mouse manualmente apertando CTRL-F10.
+P: O mouse n√£o funciona.
+R: Normalmente, o DOSBox detecta quando um jogo utiliza o mouse. Quando voc√™ clica na 
+   tela, o mouse dever√° ser capturado pelo DOSBox e funcionar.
+   Em alguns jogos a detec√ß√£o do mouse n√£o funciona. Nesses casos 
+   voc√™ dever√° capturar o mouse manualmente apertando CTRL-F10.
 
 
-P: O aplicativo n„o tem som.
-R: Tenha certeza que o som est· configurado corretamente no jogo. Isso pode ser
-   feito durante a instalaÁ„o ou no programa setup/setsound que acompanha 
-   o jogo. Primeiro, veja se existe uma opÁ„o para auto-detecÁ„o. Se n„o 
-   existe, tente selecionar soundblaster ou soundblaster16 com as configuraÁıes
-   padrıes, sendo "address=220 irq=7 dma=1". VocÍ talvez queira selecionar o
-   midi no address 330 como dispositivo de m˙sica.
-   Os par‚metros das placas de som emuladas podem ser alterados no arquivo de 
-   configuraÁıes do DOSBox.
-   Se continuar sem som, coloque o n˙cleo (core) em normal e use valores
-   menores e fixos para os ciclos (como cycles=2000). TambÈm assegure que 
-   o seu sistema operacional est· com som ativado.
-   Em alguns casos, pode ser ˙til usar um dispositivo emulador de som diferente
-   como soundblaster pro (sbtype=sbpro1 no arquivo de configuraÁıes do DOSBox) ou
+P: O aplicativo n√£o tem som.
+R: Tenha certeza que o som est√° configurado corretamente no jogo. Isso pode ser
+   feito durante a instala√ß√£o ou no programa setup/setsound que acompanha 
+   o jogo. Primeiro, veja se existe uma op√ß√£o para auto-detec√ß√£o. Se n√£o 
+   existe, tente selecionar soundblaster ou soundblaster16 com as configura√ß√µes
+   padr√µes, sendo "address=220 irq=7 dma=1". Voc√™ talvez queira selecionar o
+   midi no address 330 como dispositivo de m√∫sica.
+   Os par√¢metros das placas de som emuladas podem ser alterados no arquivo de 
+   configura√ß√µes do DOSBox.
+   Se continuar sem som, coloque o n√∫cleo (core) em normal e use valores
+   menores e fixos para os ciclos (como cycles=2000). Tamb√©m assegure que 
+   o seu sistema operacional est√° com som ativado.
+   Em alguns casos, pode ser √∫til usar um dispositivo emulador de som diferente
+   como soundblaster pro (sbtype=sbpro1 no arquivo de configura√ß√µes do DOSBox) ou
    o gravis ultrasound (gus=true).
 
 
 P: O som sai cortado ou estranho/difuso.
-R: VocÍ est· exigindo muito da sua CPU para manter o DOSBox rodando naquela velocidade.
-   VocÍ pode diminuir os ciclos, pular quadros, reduzir a taxa de amostragem do
-   dispositivo de som (veja o arquivo de configuraÁıes do DOSBox) ou
-   o dispositivo mixador. VocÍ pode tambÈm aumentar o prÈbuffer no arquivo de configuraÁıes do DOSBox.
-   Se vocÍ est· usando cycles=max ou =auto, ent„o tenha certeza que n„o existe
-   nenhum processo em segundo plano interferindo! (especialmente se estes acessam o disco rÌgido)
+R: Voc√™ est√° exigindo muito da sua CPU para manter o DOSBox rodando naquela velocidade.
+   Voc√™ pode diminuir os ciclos, pular quadros, reduzir a taxa de amostragem do
+   dispositivo de som (veja o arquivo de configura√ß√µes do DOSBox) ou
+   o dispositivo mixador. Voc√™ pode tamb√©m aumentar o pr√©buffer no arquivo de configura√ß√µes do DOSBox.
+   Se voc√™ est√° usando cycles=max ou =auto, ent√£o tenha certeza que n√£o existe
+   nenhum processo em segundo plano interferindo! (especialmente se estes acessam o disco r√≠gido)
 
 
-P: Eu n„o consigo digitar \ ou : no DOSBox.
-R: Isso pode acontecer em v·rias situaÁıes, caso o layout do seu teclado n„o possua uma
-   representaÁ„o adequada no DOS (ou n„o foi detectada corretamente),
-   ou o mapeamento das teclas est· errado.
-   Algumas possÌveis soluÁıes:
+P: Eu n√£o consigo digitar \ ou : no DOSBox.
+R: Isso pode acontecer em v√°rias situa√ß√µes, caso o layout do seu teclado n√£o possua uma
+   representa√ß√£o adequada no DOS (ou n√£o foi detectada corretamente),
+   ou o mapeamento das teclas est√° errado.
+   Algumas poss√≠veis solu√ß√µes:
      1. Use /, ou ALT-58 para : e ALT-92 para \.
-     2. Mude o layout do teclado do DOS (veja SeÁ„o 7: Layout do teclado).
-     3. Adicione os comandos que vocÍ quer na seÁ„o [autoexec]
-        do arquivo de configuraÁıes do DOSBox.
-     4. Abra o arquivo de configuraÁıes do DOSBox e mude o valor do usescancodes.
+     2. Mude o layout do teclado do DOS (veja Se√ß√£o 7: Layout do teclado).
+     3. Adicione os comandos que voc√™ quer na se√ß√£o [autoexec]
+        do arquivo de configura√ß√µes do DOSBox.
+     4. Abra o arquivo de configura√ß√µes do DOSBox e mude o valor do usescancodes.
      5. Mude o layout do teclado do seu sistema operacional.
    
-   Note que se o layout do seu teclado n„o puder ser identificado, ou o keyboardlayout est· ajustado
-   para none no arquivo de configuraÁıes do DOSBox, o layout padr„o dos EUA È usado.
-   Nessa configuraÁ„o tente as teclas ao redor do "enter" para a tecla \ (barra invertida),
+   Note que se o layout do seu teclado n√£o puder ser identificado, ou o keyboardlayout est√° ajustado
+   para none no arquivo de configura√ß√µes do DOSBox, o layout padr√£o dos EUA √© usado.
+   Nessa configura√ß√£o tente as teclas ao redor do "enter" para a tecla \ (barra invertida),
    e para a tecla : (dois pontos) use shift e as teclas entre "enter" e "l".
 
 
 P: Estou com atraso no teclado.
-R: Diminua a prioridade no arquivo de configuraÁıes do DOSBox, por exemplo
-   ajuste "priority=normal,normal". VocÍ tambÈm pode tentar diminuir os ciclos
-   (comeÁe com um ciclo fixo, como cycles=10000).
+R: Diminua a prioridade no arquivo de configura√ß√µes do DOSBox, por exemplo
+   ajuste "priority=normal,normal". Voc√™ tamb√©m pode tentar diminuir os ciclos
+   (come√ße com um ciclo fixo, como cycles=10000).
 
 
-P: O cursor est· se movendo em apenas uma direÁ„o!
-R: Veja se isso ainda acontece ao desabilitar a emulaÁ„o do joystick,
-   coloque joysticktype=none na seÁ„o [joystick] do arquivo de configuraÁıes
-   do DOSBox. Tente tambÈm desconectar qualquer joystick/gamepad.
-   Se vocÍ quiser usar o joystick no jogo, tente ajustar timed=false
+P: O cursor est√° se movendo em apenas uma dire√ß√£o!
+R: Veja se isso ainda acontece ao desabilitar a emula√ß√£o do joystick,
+   coloque joysticktype=none na se√ß√£o [joystick] do arquivo de configura√ß√µes
+   do DOSBox. Tente tamb√©m desconectar qualquer joystick/gamepad.
+   Se voc√™ quiser usar o joystick no jogo, tente ajustar timed=false
    e tenha certeza de calibrar o joystick (no seu sistema operacional e 
-   no jogo ou no programa de instalaÁ„o do jogo).
+   no jogo ou no programa de instala√ß√£o do jogo).
 
 
 P: O jogo/aplicativo roda muito lento!
-R: Olhe a seÁ„o "Como rodar jogos que necessitam mais recursos"
-   para maiores informaÁıes.   
+R: Olhe a se√ß√£o "Como rodar jogos que necessitam mais recursos"
+   para maiores informa√ß√µes.   
 
 
-P: O jogo/aplicativo n„o chega a rodar/trava!
-R: Olhe a SeÁ„o 10: SoluÁ„o de Problemas
+P: O jogo/aplicativo n√£o chega a rodar/trava!
+R: Olhe a Se√ß√£o 10: Solu√ß√£o de Problemas
 
 
 P: O DOSBox pode danificar meu computador?
-R: O DOSBox n„o pode danificar seu computador mais do que qualquer outro programa que
-   necessita muitos recursos. Aumentando os ciclos n„o faz um overclock no seu CPU.
-   Quando os ciclos est„o muito altos a performance do software executado no DOSBox cai.
+R: O DOSBox n√£o pode danificar seu computador mais do que qualquer outro programa que
+   necessita muitos recursos. Aumentando os ciclos n√£o faz um overclock no seu CPU.
+   Quando os ciclos est√£o muito altos a performance do software executado no DOSBox cai.
 
 
-P: Eu queria trocar o tamanho da memÛria/velocidade da CPU/ems/soundblaster IRQ.
-R: … possÌvel! Apenas crie um arquivo de configuraÁıes: config -writeconf arquivodeconfiguraÁıes.
-   Abra seu editor de texto favorito e modifique as configuraÁıes. Para iniciar o DOSBox
-   com suas novas configuraÁıes: dosbox -conf arquivodeconfiguraÁıes
-   Veja como funciona o comando config na SeÁ„o 4 para mais detalhes.
+P: Eu queria trocar o tamanho da mem√≥ria/velocidade da CPU/ems/soundblaster IRQ.
+R: √â poss√≠vel! Apenas crie um arquivo de configura√ß√µes: config -writeconf arquivodeconfigura√ß√µes.
+   Abra seu editor de texto favorito e modifique as configura√ß√µes. Para iniciar o DOSBox
+   com suas novas configura√ß√µes: dosbox -conf arquivodeconfigura√ß√µes
+   Veja como funciona o comando config na Se√ß√£o 4 para mais detalhes.
 
 
 P: Quais hardwares de som o DOSBox emula atualmente?
-R: DOSBox emula v·rios dispositivos de som:
+R: DOSBox emula v√°rios dispositivos de som:
    - Som interno do PC
-     Essa emulaÁ„o inclui o gerador de tons e v·rias formas de
-     saÌda de som digital atravÈs da caixa de som interna.
+     Essa emula√ß√£o inclui o gerador de tons e v√°rias formas de
+     sa√≠da de som digital atrav√©s da caixa de som interna.
    - Creative CMS/Gameblaster
-     … a primeira placa feita pela Creative Labs(R). A localizaÁ„o padr„o 
-     da configuraÁ„o est· na porta 0x220. Nota-se que ao habilitar essa
-     emulaÁ„o com a emulaÁ„o do Adlib poder· resultar em conflitos.
+     √â a primeira placa feita pela Creative Labs(R). A localiza√ß√£o padr√£o 
+     da configura√ß√£o est√° na porta 0x220. Nota-se que ao habilitar essa
+     emula√ß√£o com a emula√ß√£o do Adlib poder√° resultar em conflitos.
    - Tandy 3 voice
-     A emulaÁ„o deste hardware È completa, com a exceÁ„o do 
-     canal de ruÌdo. Esse canal n„o È muito bem documentado,
-     com isso, seja talvez a melhor opÁ„o quanto a precis„o do som.
+     A emula√ß√£o deste hardware √© completa, com a exce√ß√£o do 
+     canal de ru√≠do. Esse canal n√£o √© muito bem documentado,
+     com isso, seja talvez a melhor op√ß√£o quanto a precis√£o do som.
    - Tandy DAC
-     A emulaÁ„o do Tandy DAC utiliza o emulador Soundblaster, ent„o
-     esteja certo de que o soundblaster est· habilitado no arquivo de configuraÁıes
-     do DOSBox. O Tandy DAC È emulado apenas em nÌvel de BIOS.
+     A emula√ß√£o do Tandy DAC utiliza o emulador Soundblaster, ent√£o
+     esteja certo de que o soundblaster est√° habilitado no arquivo de configura√ß√µes
+     do DOSBox. O Tandy DAC √© emulado apenas em n√≠vel de BIOS.
    - Adlib
-     Esta emulaÁ„o È quase perfeita e inclui a habilidade do Adlib de 
+     Esta emula√ß√£o √© quase perfeita e inclui a habilidade do Adlib de 
      tocar quase todo som digitalizado.
    - SoundBlaster 16 / SoundBlaster Pro I & II / SoundBlaster I & II
-     Por padr„o, o DOSBox fornece Soundblaster 16 em 16-bit de som estÈreo. 
-     … possÌvel selecionar uma vers„o diferente do SoundBlaster no arquivo de
-     configuraÁıes do DOSBox (Ver Programas internos: CONFIG).
+     Por padr√£o, o DOSBox fornece Soundblaster 16 em 16-bit de som est√©reo. 
+     √â poss√≠vel selecionar uma vers√£o diferente do SoundBlaster no arquivo de
+     configura√ß√µes do DOSBox (Ver Programas internos: CONFIG).
    - Disney Soundsource
      Usando a porta da impressora, esse dispositivo apenas gera som digital.
    - Gravis Ultrasound
-     A emulaÁ„o deste hardware est· quase completa, apesar da capacidade
+     A emula√ß√£o deste hardware est√° quase completa, apesar da capacidade
      de tocar MIDI ter sido deixada de lado, pois o MPU-401
-     comeÁou a ser emulado em outro cÛdigo.
+     come√ßou a ser emulado em outro c√≥digo.
    - MPU-401
-     A interface MIDI È tambÈm emulada. Esse mÈtodo de saÌda som
-     somente funcionar· quando usado com um dispositivo de "General Midi" ou MT-32.
+     A interface MIDI √© tamb√©m emulada. Esse m√©todo de sa√≠da som
+     somente funcionar√° quando usado com um dispositivo de "General Midi" ou MT-32.
 
 
-P: DOSBox trava no inÌcio e eu estou rodando artes/cinem·tica.
-R: Esse n„o È realmente um problema no DOSBox, mas a soluÁ„o È colocar a
-   vari·vel do ambiente SDL_AUDIODRIVER para alsa ou oss.
+P: DOSBox trava no in√≠cio e eu estou rodando artes/cinem√°tica.
+R: Esse n√£o √© realmente um problema no DOSBox, mas a solu√ß√£o √© colocar a
+   vari√°vel do ambiente SDL_AUDIODRIVER para alsa ou oss.
 
 
 P: Estou tendo problemas para rodar um jogo feito com a Build Engine (Duke3D/Blood/Shadow Warrior).
-R: Primeiramente, tente encontrar alguma portabilidade do jogo. Essas fornecer„o uma 
-   melhor velocidade. Para consertar problemas gr·ficos que ocorrem no  
-   DOSBox em altas resoluÁıes: Abra o arquivo de configuraÁıes do DOSBox
+R: Primeiramente, tente encontrar alguma portabilidade do jogo. Essas fornecer√£o uma 
+   melhor velocidade. Para consertar problemas gr√°ficos que ocorrem no  
+   DOSBox em altas resolu√ß√µes: Abra o arquivo de configura√ß√µes do DOSBox
    e procure por machine=svga_s3. Mude de svga_s3 para vesa_nolfb
 
 
-P: Excelente LEIAME, mas eu ainda n„o entendi.
-R: O fÛrum "The Newbie's pictorial guide to DOSBox" localizado em 
-   http://vogons.zetafleet.com/viewforum.php?f=39 poder· te ajudar.
-   Tente tambÈm o wiki do DOSBox:
+P: Excelente LEIAME, mas eu ainda n√£o entendi.
+R: O f√≥rum "The Newbie's pictorial guide to DOSBox" localizado em 
+   http://vogons.zetafleet.com/viewforum.php?f=39 poder√° te ajudar.
+   Tente tamb√©m o wiki do DOSBox:
    http://www.dosbox.com/wiki/
 
 
 Para mais perguntas, leia o restante desse LEIAME e/ou verifique o
-site/fÛrum:
+site/f√≥rum:
 http://www.dosbox.com
 
 
@@ -301,14 +301,14 @@ http://www.dosbox.com
 3. Uso:
 =======
 
-Aqui vocÍ ter· uma vis„o ampla das opÁıes da linha de comando que vocÍ
-pode dar ao DOSBox. Usu·rios do Windows devem executar o cmd.exe,
+Aqui voc√™ ter√° uma vis√£o ampla das op√ß√µes da linha de comando que voc√™
+pode dar ao DOSBox. Usu√°rios do Windows devem executar o cmd.exe,
 command.com, ou editar um atalho para o DOSBox para isso.
-Essas opÁıes s„o v·lidas para qualquer sistema operacional,
-menos quando indicado na descriÁ„o da opÁ„o:
+Essas op√ß√µes s√£o v√°lidas para qualquer sistema operacional,
+menos quando indicado na descri√ß√£o da op√ß√£o:
 
 dosbox [nome] [-exit] [-c comando] [-fullscreen] [-conf arquivodeconfig] 
-       [-lang arquivodeidioma] [-machine tipodem·quina] [-noconsole]
+       [-lang arquivodeidioma] [-machine tipodem√°quina] [-noconsole]
        [-startmapper] [-noautoexec] [-securemode] 
        [-scaler escala | -forcescaler escala]
        [-version]
@@ -320,101 +320,101 @@ dosbox -printconf
 dosbox -eraseconf
 
   name   
-        Se "nome" for um diretÛrio, ele ser· montado como se fosse a unidade C:.
-        Se "nome" for um execut·vel, ser· montado o diretÛrio de "name" como
-        a unidade C: e ent„o "nome" ser· executado.
+        Se "nome" for um diret√≥rio, ele ser√° montado como se fosse a unidade C:.
+        Se "nome" for um execut√°vel, ser√° montado o diret√≥rio de "name" como
+        a unidade C: e ent√£o "nome" ser√° executado.
     
   -exit  
         O DOSBox vai fechar automaticamente assim que o aplicativo "nome" for
         encerrado.
 
   -c comando
-        Essa funÁ„o executa comandos antes de "nome" ser executado.
-        V·rios comandos podem ser especificados, embora cada um
+        Essa fun√ß√£o executa comandos antes de "nome" ser executado.
+        V√°rios comandos podem ser especificados, embora cada um
         deles deva ser iniciado com um "-c".
-        Um comando pode ser: um Programa Interno, um comando do prÛprio
-        DOS ou um execut·vel que esteja em uma unidade emulada.
+        Um comando pode ser: um Programa Interno, um comando do pr√≥prio
+        DOS ou um execut√°vel que esteja em uma unidade emulada.
 
   -fullscreen
-        Inicia o DOSBox j· no modo de tela cheia.
+        Inicia o DOSBox j√° no modo de tela cheia.
 
   -conf arquivodeconfig
-        Abre o DOSBox com as opÁıes que foram especificadas em "arquivodeconfig".
-        V·rias opÁıes -conf podem ser usadas.
-        Para mais informaÁıes, veja a SeÁ„o 11.
+        Abre o DOSBox com as op√ß√µes que foram especificadas em "arquivodeconfig".
+        V√°rias op√ß√µes -conf podem ser usadas.
+        Para mais informa√ß√µes, veja a Se√ß√£o 11.
 
   -lang arquivodeidioma
         Executa o DOSBox usando o idioma programado em "arquivodeidioma".
 
-  -machine tipodem·quina
-        Faz com que o DOSBox emule um determinado tipo de m·quina. Algumas
-        das opÁıes s„o: hercules, cga, pcjr, tandy, svga_s3 (padr„o) assim
-        como os chipsets svga adicionais, que est„o listadas no arquivo de
-        configuraÁıes do DOSBox.
-        O svga_s3 tambÈm permite uma emulaÁ„o vesa.
-        Para alguns efeitos especiais do vga, somente o tipo de m·quina vgaonly
-        poder· ser usado. Perceba que essa opÁ„o ir· desabilitar as capacidades
-        do svga, e poder· ficar (consideravelmente) mais lento devido ‡ melhor
-        precis„o na emulaÁ„o.
-        A funÁ„o machinetype afeta tanto as placas de vÌdeo como as placas de
-        som disponÌveis.
+  -machine tipodem√°quina
+        Faz com que o DOSBox emule um determinado tipo de m√°quina. Algumas
+        das op√ß√µes s√£o: hercules, cga, pcjr, tandy, svga_s3 (padr√£o) assim
+        como os chipsets svga adicionais, que est√£o listadas no arquivo de
+        configura√ß√µes do DOSBox.
+        O svga_s3 tamb√©m permite uma emula√ß√£o vesa.
+        Para alguns efeitos especiais do vga, somente o tipo de m√°quina vgaonly
+        poder√° ser usado. Perceba que essa op√ß√£o ir√° desabilitar as capacidades
+        do svga, e poder√° ficar (consideravelmente) mais lento devido √† melhor
+        precis√£o na emula√ß√£o.
+        A fun√ß√£o machinetype afeta tanto as placas de v√≠deo como as placas de
+        som dispon√≠veis.
 
   -noconsole (Apenas Windows)
-        Inicia o DOSBox sem mostrar a janela do console. O log de saÌda ser·
+        Inicia o DOSBox sem mostrar a janela do console. O log de sa√≠da ser√°
         redirecionado para stdout.txt e stderr.txt
 
 
   -startmapper
-        Inicia o mapeador de teclas logo no inicio. Essa funÁ„o È ˙til para pessoas
+        Inicia o mapeador de teclas logo no inicio. Essa fun√ß√£o √© √∫til para pessoas
         que possuam algum tipo de problema no seu teclado.
 
   -noautoexec
-        Esse comando "pula" a seÁ„o [autoexec] do arquivo de configuraÁıes
+        Esse comando "pula" a se√ß√£o [autoexec] do arquivo de configura√ß√µes
         que foi carregado.
 
   -securemode
-        Possui a mesma funÁ„o do -noautoexec, porÈm ele adiciona
+        Possui a mesma fun√ß√£o do -noautoexec, por√©m ele adiciona
         config.com -securemode no final do AUTOEXEC.BAT (o que, em troca,
-        ignora quaisquer mudanÁas que foram feitas em relaÁ„o ‡ como as
-        unidades s„o emuladas, dentro do DOSBox).
+        ignora quaisquer mudan√ßas que foram feitas em rela√ß√£o √† como as
+        unidades s√£o emuladas, dentro do DOSBox).
 
   -scaler escala
         Usa a escala que foi especificada em "escala". Abra o arquivo de
-        configuraÁıes do DOSBox para verificar quais as escalas disponÌveis.
+        configura√ß√µes do DOSBox para verificar quais as escalas dispon√≠veis.
 
   -forcescaler escala
-        FunÁ„o parecida com o par‚metro -scaler, mas esse forÁa o
-        uso da escala determinada, mesmo que ela n„o seja necessariamente
+        Fun√ß√£o parecida com o par√¢metro -scaler, mas esse for√ßa o
+        uso da escala determinada, mesmo que ela n√£o seja necessariamente
         adequada.
 
   -version
-        Mostra informaÁıes sobre a vers„o e fecha o DOSBox.
-        ⁄til para a criaÁ„o de frontends.
+        Mostra informa√ß√µes sobre a vers√£o e fecha o DOSBox.
+        √ötil para a cria√ß√£o de frontends.
 
   -editconf programa
-        Chama "programa" como o primeiro par‚metro do arquivo de configuraÁıes.
-        VocÍ pode especificar esse comando mais de uma vez. Nesse caso,
-        ele ir· se dirigir ao segundo programa, caso o primeiro falhe na
-        execuÁ„o.
+        Chama "programa" como o primeiro par√¢metro do arquivo de configura√ß√µes.
+        Voc√™ pode especificar esse comando mais de uma vez. Nesse caso,
+        ele ir√° se dirigir ao segundo programa, caso o primeiro falhe na
+        execu√ß√£o.
 
   -opencaptures programa
-        Chama "programa" como o primeiro par‚metro a localizaÁ„o
+        Chama "programa" como o primeiro par√¢metro a localiza√ß√£o
         da pasta de captura.
   
   -printconf
-        Imprime a localizaÁ„o do arquivo de configuraÁıes padr„o.
+        Imprime a localiza√ß√£o do arquivo de configura√ß√µes padr√£o.
 
   -eraseconf
-        Exclui o arquivo de configuraÁıes padr„o.
+        Exclui o arquivo de configura√ß√µes padr√£o.
 
-Nota: Se por acaso o nome/comando/arquivo de configuraÁıes/arquivo de
-      idioma possuir algum espaÁo, ponha todo o nome/comando/arquivo
-      de configuraÁıes/arquivo de idioma entre aspas:
-      ("comando ou nome do arquivo"). Se vocÍ quiser usar aspas dentro
-      das prÛprias aspas (provavelmente quando for usar -c e mount):
-      Usu·rios do Windows e OS/2 podem usar aspas simples dentro de aspas
+Nota: Se por acaso o nome/comando/arquivo de configura√ß√µes/arquivo de
+      idioma possuir algum espa√ßo, ponha todo o nome/comando/arquivo
+      de configura√ß√µes/arquivo de idioma entre aspas:
+      ("comando ou nome do arquivo"). Se voc√™ quiser usar aspas dentro
+      das pr√≥prias aspas (provavelmente quando for usar -c e mount):
+      Usu√°rios do Windows e OS/2 podem usar aspas simples dentro de aspas
       duplas.
-      Outros usu·rios poder„o usar aspas com uma barra (\") dentro das aspas duplas.
+      Outros usu√°rios poder√£o usar aspas com uma barra (\") dentro das aspas duplas.
       Windows: -c "mount c 'c:\program files\'" 
       Linux: -c "mount c \"/tmp/name with space\""
 
@@ -424,8 +424,8 @@ dosbox c:\atlantis\atlantis.exe -c "MOUNT D C:\SAVES"
   Isso vai montar c:\atlantis como c:\ e executar atlantis.exe.
   Antes dele fazer isso ele vai montar C:\SAVES como sendo a unidade D.
 
-No Windows, vocÍ tambÈm pode arrastar os diretÛrios/arquivos diretamente
-para o execut·vel do DOSBox.
+No Windows, voc√™ tamb√©m pode arrastar os diret√≥rios/arquivos diretamente
+para o execut√°vel do DOSBox.
 
 
 
@@ -436,299 +436,299 @@ para o execut·vel do DOSBox.
 O DOSBox suporta a maioria dos comandos do DOS encontrados no command.com.
 Para ver uma lista dos programas internos digite "HELP" no prompt de comando.
 
-AlÈm desses, os seguintes comandos podem ser usados: 
+Al√©m desses, os seguintes comandos podem ser usados: 
 
-MOUNT "Letra da Unidade emulada" "Unidade Real ou DiretÛrio" 
-      [-t tipo] [-aspi] [-ioctl] [-noioctl] [-usecd n˙mero] [-size tam_unidade] 
-      [-label rÛtulo] [-freesize tam_em_mb]
+MOUNT "Letra da Unidade emulada" "Unidade Real ou Diret√≥rio" 
+      [-t tipo] [-aspi] [-ioctl] [-noioctl] [-usecd n√∫mero] [-size tam_unidade] 
+      [-label r√≥tulo] [-freesize tam_em_mb]
       [-freesize tam_em_kb (disquetes)]
 MOUNT -cd
 MOUNT -u "Letra da Unidade emulada"
 
-  Programa para montar diretÛrios locais como unidades dentro do DOSBox.
+  Programa para montar diret√≥rios locais como unidades dentro do DOSBox.
 
   "Letra da Unidade emulada"
         A letra da unidade dentro do DOSBox (ex. C).
 
-  "Letra Real da Unidade (geralmente para CD-ROMs no Windows) ou DiretÛrio"
-        O diretÛrio local que vocÍ deseja acessar com o DOSBox.
+  "Letra Real da Unidade (geralmente para CD-ROMs no Windows) ou Diret√≥rio"
+        O diret√≥rio local que voc√™ deseja acessar com o DOSBox.
 
   -t tipo
-        Tipo da unidade a ser montada. Os suportados s„o: dir (padr„o),
+        Tipo da unidade a ser montada. Os suportados s√£o: dir (padr√£o),
         floppy (disquete), cdrom.
 
   -size tam_unidade
-        Ajusta o tamanho da unidade, onde tam_unidade È pode ser
+        Ajusta o tamanho da unidade, onde tam_unidade √© pode ser
         "bps,spc,tcl,fcl":
-           bps: bytes por setor. Por padr„o, 512 para unidades convencionais
+           bps: bytes por setor. Por padr√£o, 512 para unidades convencionais
                 e 2048 para unidades de CD-ROM
            spc: setores por cluster, geralmente entre 1 e 127
            tcl: total de clusters, entre 1 e 65534
            fcl: total de clusters livres, entre 1 e tcl
 
   -freesize tam_em_mb | tam_em_kb
-        Ajusta a quantidade de espaÁo disponÌvel na unidade em megabytes
+        Ajusta a quantidade de espa√ßo dispon√≠vel na unidade em megabytes
         (unidades convencionais) ou kilobytes (unidades de disquete).
-        Essa È uma vers„o mais simples de -size.	
+        Essa √© uma vers√£o mais simples de -size.	
 
-  -label rÛtulo
-        Ajusta o nome da unidade para "rÛtulo". … necess·rio em alguns
-        sistemas caso o rÛtulo do CD-ROM n„o seja lido corretamente (˙til quando
-        o programa n„o consegue encontrar seu CD-ROM). Se o rÛtulo n„o for especificado
-        ou o suporte de baixo nÌvel n„o for selecionado (isto È, omitir os par‚metros
+  -label r√≥tulo
+        Ajusta o nome da unidade para "r√≥tulo". √â necess√°rio em alguns
+        sistemas caso o r√≥tulo do CD-ROM n√£o seja lido corretamente (√∫til quando
+        o programa n√£o consegue encontrar seu CD-ROM). Se o r√≥tulo n√£o for especificado
+        ou o suporte de baixo n√≠vel n√£o for selecionado (isto √©, omitir os par√¢metros
         -usecd # e/ou -aspi, ou especificando -noioctl): 
-          No Windows: o rÛtulo ser· lido da "Unidade Real".
-          No Linux: o rÛtulo ser· NO_LABEL.
+          No Windows: o r√≥tulo ser√° lido da "Unidade Real".
+          No Linux: o r√≥tulo ser√° NO_LABEL.
 
-        Se vocÍ especificar um rÛtulo, esse rÛtulo ser· mantido enquanto a unidade
-        estiver montada. Ele n„o ser· atualizado em caso de mudanÁa de CD, etc !!
+        Se voc√™ especificar um r√≥tulo, esse r√≥tulo ser√° mantido enquanto a unidade
+        estiver montada. Ele n√£o ser√° atualizado em caso de mudan√ßa de CD, etc !!
 
   -aspi
-        ForÁa o uso da camada aspi. SÛ funciona montando a unidade de CD-ROM 
+        For√ßa o uso da camada aspi. S√≥ funciona montando a unidade de CD-ROM 
         em ambiente Windows que possuam a Camada ASPI.
 
-  -ioctl (seleÁ„o autom·tica da interface de CDs de ·udio)
-  -ioctl_dx (extraÁ„o de ·udio digital usado em CDs de ·udio)
-  -ioctl_dio (chamadas ioctl usadas em CDs de ·udio)
-  -ioctl_mci (MCI usado em CDs de ·udio)
-        ForÁa o uso de comandos ioctl. SÛ È v·lido se a unidade de CD-ROM for montada 
+  -ioctl (sele√ß√£o autom√°tica da interface de CDs de √°udio)
+  -ioctl_dx (extra√ß√£o de √°udio digital usado em CDs de √°udio)
+  -ioctl_dio (chamadas ioctl usadas em CDs de √°udio)
+  -ioctl_mci (MCI usado em CDs de √°udio)
+        For√ßa o uso de comandos ioctl. S√≥ √© v√°lido se a unidade de CD-ROM for montada 
         no Windows que suporte esses comandos (Win2000/XP/NT).
-        As diferentes opÁıes diferem apenas na maneira de como o CD de ·udio È manuseado.
-        Tenha preferÍncia por -ioctl_dio (requer menor processamento), mas ele pode n„o
-        funcionar em todos os sistemas, ent„o, -ioctl_dx (ou -ioctl_mci) devem ser usados.
+        As diferentes op√ß√µes diferem apenas na maneira de como o CD de √°udio √© manuseado.
+        Tenha prefer√™ncia por -ioctl_dio (requer menor processamento), mas ele pode n√£o
+        funcionar em todos os sistemas, ent√£o, -ioctl_dx (ou -ioctl_mci) devem ser usados.
 
   -noioctl
-        ForÁa o uso da camada SDL do CD-ROM. V·lido para qualquer sistema.
+        For√ßa o uso da camada SDL do CD-ROM. V√°lido para qualquer sistema.
 
-  -usecd n˙mero
-        V·lido para qualquer sistema, no Windows o par‚metro -noioctl deve
-        estar presente para se poder fazer o uso do par‚metro -usecd.
-        Ativa a seleÁ„o da unidade que dever· ser usada pelo SDL. Use isso se
-        a unidade de CD-ROM n„o existir ou n„o estiver montada enquanto usa
-        a interface de CD-ROM do SDL. "n˙mero" pode ser encontrado atravÈs de "MOUNT -cd".
+  -usecd n√∫mero
+        V√°lido para qualquer sistema, no Windows o par√¢metro -noioctl deve
+        estar presente para se poder fazer o uso do par√¢metro -usecd.
+        Ativa a sele√ß√£o da unidade que dever√° ser usada pelo SDL. Use isso se
+        a unidade de CD-ROM n√£o existir ou n√£o estiver montada enquanto usa
+        a interface de CD-ROM do SDL. "n√∫mero" pode ser encontrado atrav√©s de "MOUNT -cd".
 
   -cd
         Exibe todas as unidades de CD-ROM detectadas pelo SDL e seus respectivos
-        n˙meros. Veja mais informaÁıes na seÁ„o -usecd acima.
+        n√∫meros. Veja mais informa√ß√µes na se√ß√£o -usecd acima.
 
   -u
-        Desmonta a unidade. N„o funciona para a Z:\.
+        Desmonta a unidade. N√£o funciona para a Z:\.
 
-  ObservaÁ„o: … possÌvel montar um diretÛrio local como unidade de CD-ROM. 
-              Sendo assim, n„o existir· suporte de hardware.
+  Observa√ß√£o: √â poss√≠vel montar um diret√≥rio local como unidade de CD-ROM. 
+              Sendo assim, n√£o existir√° suporte de hardware.
 
-  Basicamente o MOUNT permite vocÍ conectar o hardware do seu computador
+  Basicamente o MOUNT permite voc√™ conectar o hardware do seu computador
   ao PC emulado pelo DOSBox.
-  Ent„o, "MOUNT C C:\JOGOS" diz ao DOSBox para usar a pasta C:\JOGOS como a unidade C:
-  dentro do DOSBox. Ele tambÈm permite que vocÍ mude a letra da unidade para
-  programas que necessitam unidades com letras especÌficas.
+  Ent√£o, "MOUNT C C:\JOGOS" diz ao DOSBox para usar a pasta C:\JOGOS como a unidade C:
+  dentro do DOSBox. Ele tamb√©m permite que voc√™ mude a letra da unidade para
+  programas que necessitam unidades com letras espec√≠ficas.
   
   Por exemplo: "Touche: Adventures of The Fifth Musketeer" deve ser executado
-  na unidade C:. Usando o DOSBox juntamente com seu comando mount, vocÍ pode
-  fazer com que o jogo pense que ele est· na unidade C, enquanto ele est· em
-  qualquer outro lugar que vocÍ queira colocar. Por exemplo, se o jogo estiver
-  em D:\JOGOSANTIGOS\TOUCHE, o comando "MOUNT C D:\JOGOSANTIGOS" permitir· vocÍ
+  na unidade C:. Usando o DOSBox juntamente com seu comando mount, voc√™ pode
+  fazer com que o jogo pense que ele est√° na unidade C, enquanto ele est√° em
+  qualquer outro lugar que voc√™ queira colocar. Por exemplo, se o jogo estiver
+  em D:\JOGOSANTIGOS\TOUCHE, o comando "MOUNT C D:\JOGOSANTIGOS" permitir√° voc√™
   executar o Touche a partir da unidade D.
 
-  Montar a sua unidade C inteira com "MOUNT C C:\" N√O È recomendado! O mesmo
-  È v·lido ao montar a raiz de qualquer outra unidade, exceto para CD-ROMs (devido
-  sua natureza de somente leitura). Se n„o, caso vocÍ ou o DOSBox faÁa algum erro,
-  vocÍ poder· perder todos os seus arquivos.
-  … recomendado colocar todos os seus aplicativos/jogos em um subdiretÛrio e mont·-lo.
+  Montar a sua unidade C inteira com "MOUNT C C:\" N√ÉO √© recomendado! O mesmo
+  √© v√°lido ao montar a raiz de qualquer outra unidade, exceto para CD-ROMs (devido
+  sua natureza de somente leitura). Se n√£o, caso voc√™ ou o DOSBox fa√ßa algum erro,
+  voc√™ poder√° perder todos os seus arquivos.
+  √â recomendado colocar todos os seus aplicativos/jogos em um subdiret√≥rio e mont√°-lo.
 
   Exemplos gerais de MOUNT:
     1. Para montar c:\DirX como um disquete : 
          mount a c:\DirX -t floppy
     2. Para montar a unidade de CD-ROM E: do sistema como unidade de CD-ROM D: no DOSBox:
          mount d e:\ -t cdrom
-    3. Para montar a unidade de CD-ROM do sistema como pontodemontagem /mÌdia/cdrom como
+    3. Para montar a unidade de CD-ROM do sistema como pontodemontagem /m√≠dia/cdrom como
        unidade de CD-ROM D: no DOSBox:
          mount d /media/cdrom -t cdrom -usecd 0
-    4. Para montar uma unidade com ~870 MB de espaÁo disponÌvel (vers„o simples):
+    4. Para montar uma unidade com ~870 MB de espa√ßo dispon√≠vel (vers√£o simples):
          mount c d:\ -freesize 870
-    5. Para montar uma unidade com ~870 MB de espaÁo disponÌvel (modo avanÁado, controle total):
+    5. Para montar uma unidade com ~870 MB de espa√ßo dispon√≠vel (modo avan√ßado, controle total):
          mount c d:\ -size 512,127,16513,13500
     6. Para montar /home/user/dirY como unidade C no DOSBox:
          mount c /home/user/dirY
-    7. Para montar o diretÛrio onde o DOSBox foi iniciado como D no DOSBox:
+    7. Para montar o diret√≥rio onde o DOSBox foi iniciado como D no DOSBox:
          mount d .
          (note o . que representa a pasta onde o DOSBox foi iniciado)
 
 
 MEM
-  Programa para mostrar a quantidade de memÛria disponÌvel.
+  Programa para mostrar a quantidade de mem√≥ria dispon√≠vel.
 
 
 VER
-VER set vers„o_maior [vers„o_menor]
-  Mostra a vers„o atual do DOSBox e a vers„o relatada do DOS
-  (uso sem par‚metros).
-  Altera a vers„o relatada do DOS com o par‚metro "set",
-  por exemplo: escreva "VER set 6 22" para que a vers„o relatada
+VER set vers√£o_maior [vers√£o_menor]
+  Mostra a vers√£o atual do DOSBox e a vers√£o relatada do DOS
+  (uso sem par√¢metros).
+  Altera a vers√£o relatada do DOS com o par√¢metro "set",
+  por exemplo: escreva "VER set 6 22" para que a vers√£o relatada
   do DOS pelo DOSBox seja a 6.22.
 
 
 CONFIG -writeconf localdoarquivo
 CONFIG -writelang localdoarquivo
 CONFIG -securemode
-CONFIG -set "seÁ„o propriedade=valor"
-CONFIG -get "seÁ„o propriedade"
+CONFIG -set "se√ß√£o propriedade=valor"
+CONFIG -get "se√ß√£o propriedade"
 
-  O CONFIG pode ser usado para alterar ou obter informaÁıes de v·rias configuraÁıes do DOSBox 
-  durante sua execuÁ„o. Ele pode salvar as configuraÁıes atuais e os textos do idioma para um
-  arquivo no disco rÌgido. InformaÁıes sobre todas as possÌveis seÁıes e propriedades podem ser
-  encontradas na SeÁ„o 11 (O Arquivo de ConfiguraÁıes).
+  O CONFIG pode ser usado para alterar ou obter informa√ß√µes de v√°rias configura√ß√µes do DOSBox 
+  durante sua execu√ß√£o. Ele pode salvar as configura√ß√µes atuais e os textos do idioma para um
+  arquivo no disco r√≠gido. Informa√ß√µes sobre todas as poss√≠veis se√ß√µes e propriedades podem ser
+  encontradas na Se√ß√£o 11 (O Arquivo de Configura√ß√µes).
 
   -writeconf localdoarquivo
-       Escreve as atuais configuraÁıes do DOSBox em um arquivo. "localdoarquivo" È
-       um local do seu disco rÌgido, n„o uma unidade montada no DOSBox. 
-       O arquivo de configuraÁıes contÈm v·rios ajustes do DOSBox: 
-       a quantidade de memÛria emulada, as placas de som emuladas dentre muitas outras
-       coisas. Ele tambÈm permite acesso ao AUTOEXEC.BAT.
-       Veja a SeÁ„o 11 (O Arquivo de ConfiguraÁıes) para maiores informaÁıes.
+       Escreve as atuais configura√ß√µes do DOSBox em um arquivo. "localdoarquivo" √©
+       um local do seu disco r√≠gido, n√£o uma unidade montada no DOSBox. 
+       O arquivo de configura√ß√µes cont√©m v√°rios ajustes do DOSBox: 
+       a quantidade de mem√≥ria emulada, as placas de som emuladas dentre muitas outras
+       coisas. Ele tamb√©m permite acesso ao AUTOEXEC.BAT.
+       Veja a Se√ß√£o 11 (O Arquivo de Configura√ß√µes) para maiores informa√ß√µes.
 
   -writelang localdoarquivo
-       Escreve os textos do idioma atual em um arquivo. "localdoarquivo" È
-       um local do seu disco rÌgido, n„o uma unidade montada no DOSBox.
-       O arquivo de idioma controla toda a saÌda visÌvel dos comandos internos
+       Escreve os textos do idioma atual em um arquivo. "localdoarquivo" √©
+       um local do seu disco r√≠gido, n√£o uma unidade montada no DOSBox.
+       O arquivo de idioma controla toda a sa√≠da vis√≠vel dos comandos internos
        do DOSBox e do DOS interno.
 
   -securemode
        Alterna o DOSBox para um modo mais seguro. Nesse modo, os comandos internos
-       MOUNT, IMGMOUNT e BOOT n„o funcionar„o. TambÈm n„o È possÌvel criar um novo
-       arquivo de configuraÁıes ou de idiomas enquanto estiver nesse modo.
-       (AtenÁ„o: a ˙nica maneira de sair desse modo È reiniciando o DOSBox.)
+       MOUNT, IMGMOUNT e BOOT n√£o funcionar√£o. Tamb√©m n√£o √© poss√≠vel criar um novo
+       arquivo de configura√ß√µes ou de idiomas enquanto estiver nesse modo.
+       (Aten√ß√£o: a √∫nica maneira de sair desse modo √© reiniciando o DOSBox.)
 
-  -set "seÁ„o propriedade=valor"
-       O CONFIG tentar· ajustar um novo valor para uma certa propriedade. Atualmente
-       o CONFIG n„o tem como informar se o comando foi concluÌdo com sucesso ou n„o.
+  -set "se√ß√£o propriedade=valor"
+       O CONFIG tentar√° ajustar um novo valor para uma certa propriedade. Atualmente
+       o CONFIG n√£o tem como informar se o comando foi conclu√≠do com sucesso ou n√£o.
 
-  -get "seÁ„o propriedade"
-       O valor atual de uma determinada propriedade È relatada e gravada na vari·vel
+  -get "se√ß√£o propriedade"
+       O valor atual de uma determinada propriedade √© relatada e gravada na vari√°vel
        ambiente %CONFIG%. Isso pode ser usado para gravar um determinado valor quando
        estiver usando arquivos batch.
 
   Ambos "-set" e "-get" funcionam a partir de arquivos batch e podem ser usados para
-  ajustar suas prÛprias configuraÁıes para cada jogo.
+  ajustar suas pr√≥prias configura√ß√µes para cada jogo.
   
   Exemplos:
-    1. Para criar um arquivo de configuraÁıes no diretÛrio atual:
+    1. Para criar um arquivo de configura√ß√µes no diret√≥rio atual:
         config -writeconf dosbox.conf
     2. Para ajustar os ciclos da CPU em 10000:
         config -set "cpu cycles=10000"
-    3. Para desligar a emulaÁ„o da memÛria ems:
+    3. Para desligar a emula√ß√£o da mem√≥ria ems:
         config -set "dos ems=off"
-    4. Para verificar qual n˙cleo da CPU est· sendo usada.
+    4. Para verificar qual n√∫cleo da CPU est√° sendo usada.
         config -get "cpu core"
 
 
-LOADFIX [-tamanho] [programa] [par‚metros-do-programa]
+LOADFIX [-tamanho] [programa] [par√¢metros-do-programa]
 LOADFIX -f
-  Programa usado para reduzir a quantidade de memÛria convencional disponÌvel.
-  ⁄til para programas antigos que n„o esperam que muita memÛria esteja disponÌvel. 
+  Programa usado para reduzir a quantidade de mem√≥ria convencional dispon√≠vel.
+  √ötil para programas antigos que n√£o esperam que muita mem√≥ria esteja dispon√≠vel. 
 
   -tamanho	        
-        n˙mero de kilobytes para "comer" (reduzir), padr„o = 64kb
+        n√∫mero de kilobytes para "comer" (reduzir), padr√£o = 64kb
   
   -f
-        libera todas as memÛrias alocadas anteriormente
+        libera todas as mem√≥rias alocadas anteriormente
   
   Exemplos:
-    1. Para iniciar mm2.exe e alocar uma memÛria de 64kb 
-       (mm2 ter· menos 64 kb de memÛria disponÌvel) :
+    1. Para iniciar mm2.exe e alocar uma mem√≥ria de 64kb 
+       (mm2 ter√° menos 64 kb de mem√≥ria dispon√≠vel) :
        loadfix mm2
-    2. Para iniciar mm2.exe e alocar uma memÛria de 32kb :
+    2. Para iniciar mm2.exe e alocar uma mem√≥ria de 32kb :
        loadfix -32 mm2
-    3. Para liberar as memÛrias anteriormente alocadas :
+    3. Para liberar as mem√≥rias anteriormente alocadas :
        loadfix -f
 
 
 RESCAN
-  Faz o DOSBox reanalizar a estrutura do diretÛrio. ⁄til caso vocÍ tenha
-  alterado algo, em uma das unidades montadas, fora do DOSBox. (CTRL - F4 È um atalho!)
+  Faz o DOSBox reanalizar a estrutura do diret√≥rio. √ötil caso voc√™ tenha
+  alterado algo, em uma das unidades montadas, fora do DOSBox. (CTRL - F4 √© um atalho!)
   
 
 MIXER
-  Faz o DOSBox exibir suas configuraÁıes atuais do volume. 
-  Logo abaixo est· como alter·-las:
+  Faz o DOSBox exibir suas configura√ß√µes atuais do volume. 
+  Logo abaixo est√° como alter√°-las:
   
   mixer canal esquerdo:direito [/NOSHOW] [/LISTMIDI]
   
   canal
-      S„o opÁıes possÌveis: MASTER, DISNEY, SPKR, GUS, SB, FM [, CDAUDIO].
-      CDAUDIO est· disponÌvel apenas se a interface do CD-ROM com controle
+      S√£o op√ß√µes poss√≠veis: MASTER, DISNEY, SPKR, GUS, SB, FM [, CDAUDIO].
+      CDAUDIO est√° dispon√≠vel apenas se a interface do CD-ROM com controle
       de volume estiver ativada (imagem do CD, ioctl_dx).
   
   esquerdo:direito
-      Os nÌveis de volume em porcentagens. Se vocÍ colocar um D na frente o
-      valor ser· em decibÈis (Exemplo: mixer gus d-10).
+      Os n√≠veis de volume em porcentagens. Se voc√™ colocar um D na frente o
+      valor ser√° em decib√©is (Exemplo: mixer gus d-10).
   
   /NOSHOW
-      Previne o DOSBox de mostrar o resultado caso vocÍ tenha ajustado algum
-      dos nÌveis de volume.
+      Previne o DOSBox de mostrar o resultado caso voc√™ tenha ajustado algum
+      dos n√≠veis de volume.
 
   /LISTMIDI
-      Lista os dispositivos MIDI disponÌveis no seu PC (Windows). Para escolher
-      um dispositivo que n„o seja o mapeador de midi padr„o do Windows, adicione
-      uma linha 'midiconfig=id' na seÁ„o [midi] no arquivo de configuraÁıes,
-      onde 'id' È o n˙mero do dispositivo listado pelo LISTMIDI.
+      Lista os dispositivos MIDI dispon√≠veis no seu PC (Windows). Para escolher
+      um dispositivo que n√£o seja o mapeador de midi padr√£o do Windows, adicione
+      uma linha 'midiconfig=id' na se√ß√£o [midi] no arquivo de configura√ß√µes,
+      onde 'id' √© o n√∫mero do dispositivo listado pelo LISTMIDI.
 
 
 IMGMOUNT
-  … um utilit·rio para montar imagens de disco ou de CD-ROM dentro do DOSBox.
+  √â um utilit√°rio para montar imagens de disco ou de CD-ROM dentro do DOSBox.
   
   IMGMOUNT UNIDADE [arquivo_imagem] -t [tipo_imagem] -fs [formato_imagem] 
-            -size [setoresporbyte, setoresporcabeÁa, cabeÁas, cilindros]
+            -size [setoresporbyte, setoresporcabe√ßa, cabe√ßas, cilindros]
   IMGMOUNT UNIDADE [arquivodeimagem1, .. ,arquivodeimagemN] -t iso -fs iso 
 
   arquivo_imagem
       Local do arquivo de imagem para montar no DOSBox. O local pode
-      ser uma unidade montada dentro do DOSBox, ou o seu disco rÌgido real.
-      TambÈm È possÌvel montar imagens de CD-ROM (ISOs ou CUE/BIN), caso
-      vocÍ necessite trocar o CD em um determinado momento especifique
-      todas as imagens em sucess„o (veja prÛximo tÛpico).
-      Os pares CUE/BIN s„o melhores opÁıes para imagens de CD-ROM pois elas
-      guardam informaÁıes sobre faixas de ·udio em comparaÁ„o com ISOs
+      ser uma unidade montada dentro do DOSBox, ou o seu disco r√≠gido real.
+      Tamb√©m √© poss√≠vel montar imagens de CD-ROM (ISOs ou CUE/BIN), caso
+      voc√™ necessite trocar o CD em um determinado momento especifique
+      todas as imagens em sucess√£o (veja pr√≥ximo t√≥pico).
+      Os pares CUE/BIN s√£o melhores op√ß√µes para imagens de CD-ROM pois elas
+      guardam informa√ß√µes sobre faixas de √°udio em compara√ß√£o com ISOs
       (que armazenam apenas dados). Para montar um par CUE/BIN sempre
       especifique a lista CUE.
       
   arquivodeimagem1, .. ,arquivodeimagemN
-      Local dos arquivos de imagem para montar no DOSBox. SÛ È permitido
-      especificar um n˙mero de imagens para imagens de CD-ROM. Os CDs
-      podem ser trocados, a qualquer momento, com CTRL-F4. Isso È necess·rio
-      para jogos que usam v·rios CD-ROMs e que precisem, em um determinado
+      Local dos arquivos de imagem para montar no DOSBox. S√≥ √© permitido
+      especificar um n√∫mero de imagens para imagens de CD-ROM. Os CDs
+      podem ser trocados, a qualquer momento, com CTRL-F4. Isso √© necess√°rio
+      para jogos que usam v√°rios CD-ROMs e que precisem, em um determinado
       ponto do jogo, que os CDs sejam trocados.
    
   -t 
-      A seguir est„o os tipos de imagens v·lidas:
+      A seguir est√£o os tipos de imagens v√°lidas:
         floppy: Especifica uma imagem de disquete. O DOSBox automaticamente
-                identificar· a geometria do disco (360K, 1.2MB, 720K, 1.44MB, etc).
-        iso:    Especifica uma imagem de CD-ROM. A geometria È autom·tica e
-                È ajustada para seu tamanho. Pode ser uma iso ou um par cue/bin.
-        hdd:    Especifica uma imagem de disco rÌgido. A geometria CHS apropriada
+                identificar√° a geometria do disco (360K, 1.2MB, 720K, 1.44MB, etc).
+        iso:    Especifica uma imagem de CD-ROM. A geometria √© autom√°tica e
+                √© ajustada para seu tamanho. Pode ser uma iso ou um par cue/bin.
+        hdd:    Especifica uma imagem de disco r√≠gido. A geometria CHS apropriada
                 deve ser colocada para que isso funcione.
 
   -fs 
-      A seguir est„o os sistemas de arquivos v·lidos:
+      A seguir est√£o os sistemas de arquivos v√°lidos:
         iso:  Especifica o formato CD-ROM ISO 9660.
-        fat:  Especifica que a imagem usa o sistema de arquivos FAT. O DOSBox tentar·
+        fat:  Especifica que a imagem usa o sistema de arquivos FAT. O DOSBox tentar√°
               montar essa imagem como uma unidade no DOSBox e fazer com que seus arquivos
-              estejam disponÌveis dentro do DOSBox.
-        none: O DOSBox n„o ler· o sistema de arquivos do disco.
-              … ˙til caso vocÍ precise formatar ou caso vocÍ queira iniciar
-              o disco atravÈs do comando BOOT. Quando o sistema de arquivo "none" 
-              È usado, vocÍ deve especificar o n˙mero da unidade (2 ou 3, 
-              onde 2 = master, 3 = slave) ao invÈs da letra da unidade. 
+              estejam dispon√≠veis dentro do DOSBox.
+        none: O DOSBox n√£o ler√° o sistema de arquivos do disco.
+              √â √∫til caso voc√™ precise formatar ou caso voc√™ queira iniciar
+              o disco atrav√©s do comando BOOT. Quando o sistema de arquivo "none" 
+              √© usado, voc√™ deve especificar o n√∫mero da unidade (2 ou 3, 
+              onde 2 = master, 3 = slave) ao inv√©s da letra da unidade. 
               Por exemplo, para montar uma imagem de 70MB como uma unidade slave, 
-              vocÍ dever· escrever (sem as aspas):
+              voc√™ dever√° escrever (sem as aspas):
                 "imgmount 3 d:\teste.img -size 512,63,16,142 -fs none" 
-                Compare isso com o mount para ser possÌvel acessar a unidade
+                Compare isso com o mount para ser poss√≠vel acessar a unidade
                 pelo DOSBox, que deveria ser: 
                 "imgmount e: d:\teste.img -size 512,63,16,142"
 
   -size 
-     Os Cilindros, CabeÁas e Setores (CHS) da unidade.
-     Necess·rio para montar imagens de disco rÌgido.
+     Os Cilindros, Cabe√ßas e Setores (CHS) da unidade.
+     Necess√°rio para montar imagens de disco r√≠gido.
      
   Um exemplo de como montar imagens de CD-ROM:
     1a. mount c /tmp
@@ -738,9 +738,9 @@ IMGMOUNT
 
 
 BOOT
-  O BOOT inicia imagens de disquete ou de disco rÌgido independente da
-  emulaÁ„o do sistema operacional oferecido pelo DOSBox. Isso permite
-  jogar boot·veis de disquetes ou iniciar outros sistemas operacionais
+  O BOOT inicia imagens de disquete ou de disco r√≠gido independente da
+  emula√ß√£o do sistema operacional oferecido pelo DOSBox. Isso permite
+  jogar boot√°veis de disquetes ou iniciar outros sistemas operacionais
   dentro do DOSBox. Se o sistema emulado for PCjr (machine=pcjr) o
   comando de boot pode ser usado para carregar cartuchos PCjr (.jrc). 
 
@@ -748,150 +748,150 @@ BOOT
   BOOT [cart.jrc]  (apenas PCjr)
 
   diskimgN.img 
-     Isso È n˙mero de imagens de disquete que vocÍ deseja que sejam montadas
+     Isso √© n√∫mero de imagens de disquete que voc√™ deseja que sejam montadas
      depois do DOSBox iniciar a letra da unidade especificada.
      Para alternar entre as imagens, aperte CTRL-F4 para mudar do disco atual
-     para o disco seguinte da lista. Quando chegar ao ˙ltimo disco da lista
-     o prÛximo ser· o primeiro.
+     para o disco seguinte da lista. Quando chegar ao √∫ltimo disco da lista
+     o pr√≥ximo ser√° o primeiro.
 
   [-l letradaunidade]
-     Esse par‚metro permite que vocÍ especifique de qual unidade ser· inicializado.
-     A unidade padr„o È A:, a unidade de disquete. VocÍ tambÈm pode iniciar uma
-     imagem de disco rÌgido montada como "master" ao especificar "-l C" 
+     Esse par√¢metro permite que voc√™ especifique de qual unidade ser√° inicializado.
+     A unidade padr√£o √© A:, a unidade de disquete. Voc√™ tamb√©m pode iniciar uma
+     imagem de disco r√≠gido montada como "master" ao especificar "-l C" 
      (sem as aspas) ou como "slave" ao especificar "-l D"
      
    cart.jrc (apenas PCjr)
-     Quando a emulaÁ„o do PCjr est· ativada, cartuchos podem ser carregados com
-     o comando BOOT. O suporte ainda È limitado.
+     Quando a emula√ß√£o do PCjr est√° ativada, cartuchos podem ser carregados com
+     o comando BOOT. O suporte ainda √© limitado.
 
 
 IPX
 
-  … preciso ativar a rede IPX no arquivo de configuraÁıes do DOSBox.
+  √â preciso ativar a rede IPX no arquivo de configura√ß√µes do DOSBox.
 
-  Toda a rede IPX È gerenciada pelo programa interno do DOSBox,
+  Toda a rede IPX √© gerenciada pelo programa interno do DOSBox,
   IPXNET. Para obter ajuda sobre a rede IPX dentro do DOSBox, digite
-  "IPXNET HELP" (sem aspas) e o programa listar· os comandos com uma
-  documentaÁ„o relevante.
+  "IPXNET HELP" (sem aspas) e o programa listar√° os comandos com uma
+  documenta√ß√£o relevante.
 
-  Em relaÁ„o a como ajustar uma rede, um sistema precisa ser o servidor.
-  Para fazÍ-lo, digite "IPXNET STARTSERVER" (sem as aspas) numa sess„o do
-  DOSBox. A sess„o onde o DOSBox est· sendo servidor automaticamente
-  se adicionar· para a rede virtual IPX. Para cada computador adicional
-  que dever· fazer parte da rede virtual IPX, vocÍ dever· digitar
+  Em rela√ß√£o a como ajustar uma rede, um sistema precisa ser o servidor.
+  Para faz√™-lo, digite "IPXNET STARTSERVER" (sem as aspas) numa sess√£o do
+  DOSBox. A sess√£o onde o DOSBox est√° sendo servidor automaticamente
+  se adicionar√° para a rede virtual IPX. Para cada computador adicional
+  que dever√° fazer parte da rede virtual IPX, voc√™ dever√° digitar
   "IPXNET CONNECT <nome do computador host ou IP>". 
-  Por exemplo, se o servidor estiver no joao.dosbox.com, vocÍ dever· digitar
-  "IPXNET CONNECT joao.dosbox.com" em cada sistema que n„o seja o servidor. 
+  Por exemplo, se o servidor estiver no joao.dosbox.com, voc√™ dever√° digitar
+  "IPXNET CONNECT joao.dosbox.com" em cada sistema que n√£o seja o servidor. 
   
   Para jogar os jogos que precisam do Netbios, o arquivo NETBIOS.EXE da Novell
-  È necess·rio. EstabeleÁa a conex„o IPX como explicado acima, e ent„o
+  √© necess√°rio. Estabele√ßa a conex√£o IPX como explicado acima, e ent√£o
   execute o "netbios.exe". 
 
-  A seguir est„o as referÍncias do comando IPXNET: 
+  A seguir est√£o as refer√™ncias do comando IPXNET: 
 
   IPXNET CONNECT 
 
-     IPXNET CONNECT abre uma conex„o e cria um t˙nel com o servidor IPX
-     rodando em outra sess„o do DOSBox. O par‚metro "endereÁo" especifica
-     o endereÁo de IP ou nome do host do computador servidor. VocÍ tambÈm
-     pode especificar qual a porta UDP que ser· usada. Por padr„o, o IPXNET
-     usa a porta 213 - que È a porta IANA associada para t˙neis IPX - para
-     sua conex„o. 
+     IPXNET CONNECT abre uma conex√£o e cria um t√∫nel com o servidor IPX
+     rodando em outra sess√£o do DOSBox. O par√¢metro "endere√ßo" especifica
+     o endere√ßo de IP ou nome do host do computador servidor. Voc√™ tamb√©m
+     pode especificar qual a porta UDP que ser√° usada. Por padr√£o, o IPXNET
+     usa a porta 213 - que √© a porta IANA associada para t√∫neis IPX - para
+     sua conex√£o. 
 
-     A sintaxe para o IPXNET CONNECT È: 
-     IPXNET CONNECT endereÁo <porta> 
+     A sintaxe para o IPXNET CONNECT √©: 
+     IPXNET CONNECT endere√ßo <porta> 
 
   IPXNET DISCONNECT 
 
-     IPXNET DISCONNECT fecha o t˙nel da conex„o com o servidor IPX. 
+     IPXNET DISCONNECT fecha o t√∫nel da conex√£o com o servidor IPX. 
 
-     A sintaxe para o IPXNET DISCONNECT È: 
+     A sintaxe para o IPXNET DISCONNECT √©: 
      IPXNET DISCONNECT 
 
   IPXNET STARTSERVER 
 
-     IPXNET STARTSERVER inicia um servidor IPX nessa sess„o do DOSBox.
-     Por padr„o, o servidor aceitar· conexıes na porta 213 UDP,
+     IPXNET STARTSERVER inicia um servidor IPX nessa sess√£o do DOSBox.
+     Por padr√£o, o servidor aceitar√° conex√µes na porta 213 UDP,
      mas isso pode ser alterado. Uma vez que o servidor for iniciado, o
-     DOSBox automaticamente iniciar· uma conex„o com o cliente atravÈs do
-     t˙nel do servidor IPX.
+     DOSBox automaticamente iniciar√° uma conex√£o com o cliente atrav√©s do
+     t√∫nel do servidor IPX.
 
-     A sintaxe para o IPXNET STARTSERVER È:
+     A sintaxe para o IPXNET STARTSERVER √©:
      IPXNET STARTSERVER <porta>
 
-     Se o servidor estiver por tr·s de um router, a porta UDP <porta> dever· ser
-     encaminhada ‡quele computador (fazer um port-fowarding).
+     Se o servidor estiver por tr√°s de um router, a porta UDP <porta> dever√° ser
+     encaminhada √†quele computador (fazer um port-fowarding).
 
-     Nos sistemas Linux/Unix-based: N˙meros menores que 1023 para as portas sÛ
-     podem ser usadas com privilÈgios de root. Use portas maiores que 1023
+     Nos sistemas Linux/Unix-based: N√∫meros menores que 1023 para as portas s√≥
+     podem ser usadas com privil√©gios de root. Use portas maiores que 1023
      nesses sistemas.
 
   IPXNET STOPSERVER
 
-     IPXNET STOPSERVER fecha o t˙nel do servidor IPX rodando nessa sess„o do
+     IPXNET STOPSERVER fecha o t√∫nel do servidor IPX rodando nessa sess√£o do
      DOSBox. Um certo cuidado deve ser tomado; assegure-se que todas as outras
-     conexıes tenham sido terminadas antes, pois deixar de ser um servidor poder·
-     travar as outras m·quinas que ainda est„o usando o t˙nel de conex„o com o
+     conex√µes tenham sido terminadas antes, pois deixar de ser um servidor poder√°
+     travar as outras m√°quinas que ainda est√£o usando o t√∫nel de conex√£o com o
      servidor.
 
-     A sintaxe para o IPXNET STOPSERVER È: 
+     A sintaxe para o IPXNET STOPSERVER √©: 
      IPXNET STOPSERVER 
 
   IPXNET PING
 
-     IPXNET PING emite um pedido de ping atravÈs do t˙nel da rede IPX. 
-     Em resposta, todos os outros computadores conectados responder„o ao ping
-     e reportar„o o tempo que levou para receber e enviar a mensagem de ping. 
+     IPXNET PING emite um pedido de ping atrav√©s do t√∫nel da rede IPX. 
+     Em resposta, todos os outros computadores conectados responder√£o ao ping
+     e reportar√£o o tempo que levou para receber e enviar a mensagem de ping. 
 
-     A sintaxe para o IPXNET PING È: 
+     A sintaxe para o IPXNET PING √©: 
      IPXNET PING
 
   IPXNET STATUS
 
-     IPXNET STATUS mostra o estado atual do t˙nel da rede IPX da sess„o
+     IPXNET STATUS mostra o estado atual do t√∫nel da rede IPX da sess√£o
      atual do DOSBox. Para ver a lista de todos os computadores conectados
      na rede use o comando IPXNET PING.
 
-     A sintaxe para o IPXNET STATUS È: 
+     A sintaxe para o IPXNET STATUS √©: 
      IPXNET STATUS 
 
 
-KEYB [cÛdigodeidioma [codepage [arquivodecodepage]]]
-  Altera o layout do teclado. Para informaÁıes detalhadas sobre os layouts
-  do teclado veja a SeÁ„o 7.
+KEYB [c√≥digodeidioma [codepage [arquivodecodepage]]]
+  Altera o layout do teclado. Para informa√ß√µes detalhadas sobre os layouts
+  do teclado veja a Se√ß√£o 7.
 
-  [cÛdigodeidioma] s„o os caracteres que especificam o layout do teclado
-     que ser· usado. Geralmente s„o 2 caracteres mas, em casos especiais, mais.
-     Exemplos s„o GK (GrÈcia) ou IT (It·lia).
+  [c√≥digodeidioma] s√£o os caracteres que especificam o layout do teclado
+     que ser√° usado. Geralmente s√£o 2 caracteres mas, em casos especiais, mais.
+     Exemplos s√£o GK (Gr√©cia) ou IT (It√°lia).
 
-  [codepage] È o n˙mero da codepage a ser usada. O layout do teclado deve
-     apresentar suporte para a codepage especificada, caso contr·rio o
-     carregamento layout falhar·.
+  [codepage] √© o n√∫mero da codepage a ser usada. O layout do teclado deve
+     apresentar suporte para a codepage especificada, caso contr√°rio o
+     carregamento layout falhar√°.
      Se nenhuma codepage for especificada, uma codepage apropriada para o
-     layout escolhido È automaticamente selecionado.
+     layout escolhido √© automaticamente selecionado.
 
-  [arquivodecodepage] pode ser usado para carregar codepages que ainda n„o est„o
-     compiladas no DOSBox. SÛ È necess·rio quando o DOSBox n„o encontra a codepage.
+  [arquivodecodepage] pode ser usado para carregar codepages que ainda n√£o est√£o
+     compiladas no DOSBox. S√≥ √© necess√°rio quando o DOSBox n√£o encontra a codepage.
 
 
   Exemplos:
-    1. Para carregar o layout do teclado alem„o (automaticamente usa a codepage 858):
+    1. Para carregar o layout do teclado alem√£o (automaticamente usa a codepage 858):
          keyb gr
     2. Para carregar o layout do teclado russo com codepage 866:
          keyb ru 866
        Para escrever os caracteres russos aperte ALT+SHIFT DIREITO.
-    3. Para carregar o layout do teclado francÍs com codepage 850 (onde a
-       codepage est· no arquivo EGACPI.DAT):
+    3. Para carregar o layout do teclado franc√™s com codepage 850 (onde a
+       codepage est√° no arquivo EGACPI.DAT):
          keyb fr 850 EGACPI.DAT
     4. Para carregar a codepage 858 (sem o layout do teclado):
          keyb none 858
-       Isso pode ser usado para mudar a codepage do utilit·rio FreeDOS keyb2.
+       Isso pode ser usado para mudar a codepage do utilit√°rio FreeDOS keyb2.
     5. Para exibir a codepage atual e, se carregado, o layout do teclado:
          keyb
 
 
 
-Para maiores informaÁıes, use o switch /? na linha de comando com os programas.
+Para maiores informa√ß√µes, use o switch /? na linha de comando com os programas.
 
 
 
@@ -904,31 +904,31 @@ ALT-ENTER   : Alterna entre o modo janela e tela-cheia.
 ALT-PAUSE   : Pausa o DOSBox. (aperte ALT-PAUSE novamente para continuar)
 CTRL-F1     : Executa o mapeador de teclas.
 CTRL-F4     : Alterna entre as imagens dos discos montadas.
-              Atualiza a cache dos diretÛrios de todas as unidades.            
-CTRL-ALT-F5 : Inicia/Para a gravaÁ„o de vÌdeo ‡ um arquivo. (formato AVI)
+              Atualiza a cache dos diret√≥rios de todas as unidades.            
+CTRL-ALT-F5 : Inicia/Para a grava√ß√£o de v√≠deo √† um arquivo. (formato AVI)
 CTRL-F5     : Captura e salva a imagem da tela. (formato PNG)
-CTRL-F6     : Inicia/Para a gravaÁ„o do ·udio ‡ um arquivo wave.
-CTRL-ALT-F7 : Inicia/Para a gravaÁ„o de comandos OPL. (formato DRO)
-CTRL-ALT-F8 : Inicia/Para a gravaÁ„o de comandos MIDI sem processar.
+CTRL-F6     : Inicia/Para a grava√ß√£o do √°udio √† um arquivo wave.
+CTRL-ALT-F7 : Inicia/Para a grava√ß√£o de comandos OPL. (formato DRO)
+CTRL-ALT-F8 : Inicia/Para a grava√ß√£o de comandos MIDI sem processar.
 CTRL-F7     : Diminui o frameskip.
 CTRL-F8     : Aumenta o frameskip.
 CTRL-F9     : Encerra o DOSBox.
 CTRL-F10    : Captura/Libera o mouse.
-CTRL-F11    : Desacelera a emulaÁ„o (Diminui os ciclos do DOSBox).
-CTRL-F12    : Acelera a emulaÁ„o (Aumenta os ciclos do DOSBox).
-ALT-F12     : Desativa o limitador de velocidade (Bot„o turbo).
+CTRL-F11    : Desacelera a emula√ß√£o (Diminui os ciclos do DOSBox).
+CTRL-F12    : Acelera a emula√ß√£o (Aumenta os ciclos do DOSBox).
+ALT-F12     : Desativa o limitador de velocidade (Bot√£o turbo).
 
 
-(NOTA: Uma vez que vocÍ ultrapassar o m·ximo de ciclos que o computador
-suporta, a velocidade comeÁar· a diminuir. Esse m·ximo varia para cada
+(NOTA: Uma vez que voc√™ ultrapassar o m√°ximo de ciclos que o computador
+suporta, a velocidade come√ßar√° a diminuir. Esse m√°ximo varia para cada
 computador.)
 
-Essas s„o atribuiÁıes de teclas padr„o. Elas podem ser alteradas atravÈs
-do mapeador de teclas. (Veja seÁ„o 6: Mapeador de teclas)
+Essas s√£o atribui√ß√µes de teclas padr√£o. Elas podem ser alteradas atrav√©s
+do mapeador de teclas. (Veja se√ß√£o 6: Mapeador de teclas)
 
-Arquivos salvos/gravados podem ser encontrados em diretÛrio_atual/capture 
-(isso pode ser alterado no arquivo de configuraÁıes do DOSBox). 
-Essa pasta dever· existir antes do DOSBox ser iniciado, se n„o nada ser·
+Arquivos salvos/gravados podem ser encontrados em diret√≥rio_atual/capture 
+(isso pode ser alterado no arquivo de configura√ß√µes do DOSBox). 
+Essa pasta dever√° existir antes do DOSBox ser iniciado, se n√£o nada ser√°
 salvo/gravado ! 
 
 
@@ -937,15 +937,15 @@ salvo/gravado !
 6. Mapeador de Teclas:
 ======================
 
-Quando o mapeador de teclas do DOSBox È iniciado (Pressionando CTRL+F1 ou
-escrevendo o par‚metro -startmapper na linha de comando do execut·vel)
-na tela ser· exibido um teclado virtual e um joystick virtual.
+Quando o mapeador de teclas do DOSBox √© iniciado (Pressionando CTRL+F1 ou
+escrevendo o par√¢metro -startmapper na linha de comando do execut√°vel)
+na tela ser√° exibido um teclado virtual e um joystick virtual.
 
-Esses dispositivos virtuais corresponder„o ‡s teclas e eventos que o
-DOSBox ir· relatar para as aplicaÁıes DOS (que est· sendo emulado).
-Quando vocÍ clicar em um bot„o com o mouse, no canto inferior esquerdo
-aparecer· o evento a que est· associado (EVENT) e com que tecla est·
-atualmente atribuÌda.
+Esses dispositivos virtuais corresponder√£o √†s teclas e eventos que o
+DOSBox ir√° relatar para as aplica√ß√µes DOS (que est√° sendo emulado).
+Quando voc√™ clicar em um bot√£o com o mouse, no canto inferior esquerdo
+aparecer√° o evento a que est√° associado (EVENT) e com que tecla est√°
+atualmente atribu√≠da.
 
 Event: EVENT
 BIND: BIND
@@ -956,78 +956,78 @@ mod3
 
 
 EVENT
-    A tecla ou direÁ„o/bot„o do joystick que ser· relatada pelo DOSBox
-    ‡s aplicaÁıes DOS.
+    A tecla ou dire√ß√£o/bot√£o do joystick que ser√° relatada pelo DOSBox
+    √†s aplica√ß√µes DOS.
 BIND
-    Que tecla do seu teclado ou bot„o/direÁ„o do seu joystick (os de verdade)
-    (o mostrado pelo SDL) que est„o associadas ao EVENT.
+    Que tecla do seu teclado ou bot√£o/dire√ß√£o do seu joystick (os de verdade)
+    (o mostrado pelo SDL) que est√£o associadas ao EVENT.
 
 mod1,2,3 
-    Modificadores. Essas s„o as teclas que tambÈm dever„o ser pressionadas
-    enquanto vocÍ aperta a tecla associada (BIND). mod1 = CTRL e mod2 = ALT.
-    Elas normalmente sÛ s„o usadas quando vocÍ quer mudar as teclas especiais
+    Modificadores. Essas s√£o as teclas que tamb√©m dever√£o ser pressionadas
+    enquanto voc√™ aperta a tecla associada (BIND). mod1 = CTRL e mod2 = ALT.
+    Elas normalmente s√≥ s√£o usadas quando voc√™ quer mudar as teclas especiais
     do DOSBox.
 Add 
     Adiciona uma nova BIND ao EVENT. Basicamente adiciona uma tecla do seu
-    teclado ou um bot„o/direÁ„o do seu joystick que ir· resultar num EVENT
+    teclado ou um bot√£o/dire√ß√£o do seu joystick que ir√° resultar num EVENT
     no DOSBox.
 Del 
-    Apaga o BIND associado a esse EVENT. Se o EVENT n„o possui nenhum BIND,
-    ent„o n„o È possÌvel ativ·-lo no DOSBox (ou seja, n„o h· como usar
-    a tecla ou usar a respectiva aÁ„o no joystick).
+    Apaga o BIND associado a esse EVENT. Se o EVENT n√£o possui nenhum BIND,
+    ent√£o n√£o √© poss√≠vel ativ√°-lo no DOSBox (ou seja, n√£o h√° como usar
+    a tecla ou usar a respectiva a√ß√£o no joystick).
 Next
-    Mostra quais as BINDS (teclas) est„o atribuÌdas ao determinado EVENT.
+    Mostra quais as BINDS (teclas) est√£o atribu√≠das ao determinado EVENT.
 
 
 Exemplo:
-P1. VocÍ quer que o X do seu teclado digite um Z no DOSBox.
+P1. Voc√™ quer que o X do seu teclado digite um Z no DOSBox.
     R. Clique no Z do mapeador de teclas. Clique em "Add". Agora
        pressione o X do seu teclado.
 
-P2. Se vocÍ clicar em "Next" algumas vezes, ver· que o Z do seu teclado
-    tambÈm faz aparecer um Z no DOSBox.
-    R. Sendo assim, selecione o Z novamente e clique em "Next" atÈ que o BIND
+P2. Se voc√™ clicar em "Next" algumas vezes, ver√° que o Z do seu teclado
+    tamb√©m faz aparecer um Z no DOSBox.
+    R. Sendo assim, selecione o Z novamente e clique em "Next" at√© que o BIND
        seja o Z do seu teclado. Agora clique em "Del".
 
-P3. Se vocÍ apertar X no DOSBox perceber· o aparecimento de XZ.
-    R. O X do seu teclado tambÈm est· mapeado como X!! Clique no X do mapeador
-    de teclas e procure com o "Next" atÈ que vocÍ ache o X mapeado. ApÛs isso,
+P3. Se voc√™ apertar X no DOSBox perceber√° o aparecimento de XZ.
+    R. O X do seu teclado tamb√©m est√° mapeado como X!! Clique no X do mapeador
+    de teclas e procure com o "Next" at√© que voc√™ ache o X mapeado. Ap√≥s isso,
     clique em "Del".
 
 
 Exemplos sobre o remapeamento do joystick:
-  VocÍ tem um joystick conectado, que funciona muito bem com o DOSBox, mas vocÍ
-  quer jogar um jogo, que sÛ aceita o teclado, com o joystick (assume-se que o
+  Voc√™ tem um joystick conectado, que funciona muito bem com o DOSBox, mas voc√™
+  quer jogar um jogo, que s√≥ aceita o teclado, com o joystick (assume-se que o
   jogo seja controlado pelas setinhas do teclado):
     1. Inicie o mapeador, clique em uma das setas localizadas no
-       centro-esquerdo da tela (logo acima dos botıes Mod1/Mod2).
+       centro-esquerdo da tela (logo acima dos bot√µes Mod1/Mod2).
        O EVENT deve ser key_left. Agora clique em Add e mova o seu joystick na
-       respectiva direÁ„o. Com isso, vocÍ deve ter adicionado uma BIND ao evento.
-    2. Repita os passos anteriores para a adiÁ„o das trÍs direÁıes restantes.
-       … claro que os botıes do joystick tambÈm podem ser remapeados (atirar,
+       respectiva dire√ß√£o. Com isso, voc√™ deve ter adicionado uma BIND ao evento.
+    2. Repita os passos anteriores para a adi√ß√£o das tr√™s dire√ß√µes restantes.
+       √â claro que os bot√µes do joystick tamb√©m podem ser remapeados (atirar,
        pular, etc.)
-    3. Clique em Save, depois em Exit e teste sua nova configuraÁ„o com algum jogo.
+    3. Clique em Save, depois em Exit e teste sua nova configura√ß√£o com algum jogo.
 
-  VocÍ quer inverter o eixo y do joystick porque alguns simuladores de vÙo usam
-  esses movimentos de uma maneira que vocÍ n„o gosta e n„o È configur·vel no jogo:
+  Voc√™ quer inverter o eixo y do joystick porque alguns simuladores de v√¥o usam
+  esses movimentos de uma maneira que voc√™ n√£o gosta e n√£o √© configur√°vel no jogo:
     1. Inicie o mapeador e clique no Y- no campo superior direito
-       (essa opÁ„o È para o primeiro joystick, caso vocÍ tenha dois deles
-       conectados), ou no campo logo abaixo do anterior (essa opÁ„o È para
-       o segundo joystick ou, caso vocÍ sÛ tenha um encaixado, o segundo
+       (essa op√ß√£o √© para o primeiro joystick, caso voc√™ tenha dois deles
+       conectados), ou no campo logo abaixo do anterior (essa op√ß√£o √© para
+       o segundo joystick ou, caso voc√™ s√≥ tenha um encaixado, o segundo
        eixo se inverte).
-       O EVENT dever· ser jaxis_0_1- (ou jaxis_1_1-).
+       O EVENT dever√° ser jaxis_0_1- (ou jaxis_1_1-).
     2. Clique em Del para remover a BIND atual, e depois clique em Add e mova o
-       seu joystick para baixo. Feito isso, uma nova bind dever· criada.
-    3. Repita essa operaÁ„o para configurar o Y+, salve sua configuraÁ„o e
+       seu joystick para baixo. Feito isso, uma nova bind dever√° criada.
+    3. Repita essa opera√ß√£o para configurar o Y+, salve sua configura√ß√£o e
        teste-a em algum jogo.
 
 
 
-Se vocÍ modificar o mapeamento padr„o, poder· salvar suas alteraÁıes clicando
+Se voc√™ modificar o mapeamento padr√£o, poder√° salvar suas altera√ß√µes clicando
 em "Save". O DOSBox vai salvar esse mapeamento no local especificado no arquivo
-de configuraÁıes (opÁ„o mapperfile=). Na inicializaÁ„o, o DOSBox vai
+de configura√ß√µes (op√ß√£o mapperfile=). Na inicializa√ß√£o, o DOSBox vai
 carregar o seu arquivo de mapeamento, se o mesmo estiver preenchido
-no arquivo de configuraÁıes.
+no arquivo de configura√ß√µes.
 
 
 
@@ -1035,104 +1035,104 @@ no arquivo de configuraÁıes.
 7. Layout do teclado:
 =====================
 
-Para mudar o layout do teclado basta preencher a configuraÁ„o "keyboardlayout"
-na seÁ„o [dos] do arquivo de configuraÁıes do DOSBox ou utilizar o programa
-interno keyb.com do DOSBox. Ambos aceitam cÛdigos de idioma (veja abaixo), mas
-somente È possÌvel especificar uma codepage customizada atravÈs do programa
+Para mudar o layout do teclado basta preencher a configura√ß√£o "keyboardlayout"
+na se√ß√£o [dos] do arquivo de configura√ß√µes do DOSBox ou utilizar o programa
+interno keyb.com do DOSBox. Ambos aceitam c√≥digos de idioma (veja abaixo), mas
+somente √© poss√≠vel especificar uma codepage customizada atrav√©s do programa
 keyb.com.
 
-A opÁ„o "keyboardlayout=auto" atualmente sÛ funciona em ambiente Windows.
-O layout È escolhido baseado no qual o sistema operacional est· usando.
+A op√ß√£o "keyboardlayout=auto" atualmente s√≥ funciona em ambiente Windows.
+O layout √© escolhido baseado no qual o sistema operacional est√° usando.
 
 Mudando o Layout
-  Por padr„o, o DOSBox j· suporta um certo n˙mero de layouts de teclado
+  Por padr√£o, o DOSBox j√° suporta um certo n√∫mero de layouts de teclado
   e codepages. Nesse caso, apenas o identificador do layout precisa ser
-  especificado (ex: keyboardlayout=br no arquivo de configuraÁ„o do
+  especificado (ex: keyboardlayout=br no arquivo de configura√ß√£o do
   DOSBox, ou escrevendo "keyb br" no prompt de comando do DOSBox).
   
   Alguns layouts de teclado (por exemplo, o layout GK codepage 869 e o layout RU
-  codepage 808) tÍm suporte para layout duplo que pode ser ativado pressionando
+  codepage 808) t√™m suporte para layout duplo que pode ser ativado pressionando
   ALT ESQUERDO+SHIFT DIREITO e desativado usando ALT ESQUERDO+SHIFT ESQUERDO.
 
 Arquivos externos suportados
-  Os arquivos .kl do FreeDOS s„o suportados (arquivos de layout do FreeDOS keyb2)
+  Os arquivos .kl do FreeDOS s√£o suportados (arquivos de layout do FreeDOS keyb2)
   assim como suas bibliotecas, (keyboard.sys/keybrd.sys/keybrd3.sys) que consistem
-  na uni„o dos arquivos .kl existentes.
-  Caso os layouts integrados do DOSBox n„o funcionem, acesse o site
+  na uni√£o dos arquivos .kl existentes.
+  Caso os layouts integrados do DOSBox n√£o funcionem, acesse o site
   http://projects.freedos.net/keyb/ para obter layouts de teclado precompilados
-  com suas devidas atualizaÁıes, caso estejam disponÌveis.
+  com suas devidas atualiza√ß√µes, caso estejam dispon√≠veis.
 
-  Os arquivos .CPI (Arquivos MS-DOS e de codepages compatÌveis) e .CPX (Arquivos de
-  codepage UPX-condesadas do FreeDOS) podem ser usados. Algumas codepages j· foram
-  prÈ-compiladas no DOSBox. N„o h· necessidade de se preocupar com arquivo de
-  codepage externo. Se vocÍ necessitar de um arquivo de codepage diferente
-  (ou customizado), copie ele para o diretÛrio do arquivo de configuraÁ„o do DOSBox
-  para que o DOSBox possa acess·-lo.
+  Os arquivos .CPI (Arquivos MS-DOS e de codepages compat√≠veis) e .CPX (Arquivos de
+  codepage UPX-condesadas do FreeDOS) podem ser usados. Algumas codepages j√° foram
+  pr√©-compiladas no DOSBox. N√£o h√° necessidade de se preocupar com arquivo de
+  codepage externo. Se voc√™ necessitar de um arquivo de codepage diferente
+  (ou customizado), copie ele para o diret√≥rio do arquivo de configura√ß√£o do DOSBox
+  para que o DOSBox possa acess√°-lo.
 
   Layouts adicionais podem ser aplicados copiando o arquivo .kl para o
-  diretÛrio do arquivo de configuraÁıes do DOSBox e usando a primeira parte do
-  nome do arquivo como o cÛdigo do idioma.
-  Exemplo: Para o arquivo UZ.KL (layout de teclado para o Uzbequist„o), especifique
-           "keyboardlayout=uz" no arquivo de configuraÁıes do DOSBox.
-  A integraÁ„o das bibliotecas de layouts de teclado (ex: keybrd2.sys) funciona da
+  diret√≥rio do arquivo de configura√ß√µes do DOSBox e usando a primeira parte do
+  nome do arquivo como o c√≥digo do idioma.
+  Exemplo: Para o arquivo UZ.KL (layout de teclado para o Uzbequist√£o), especifique
+           "keyboardlayout=uz" no arquivo de configura√ß√µes do DOSBox.
+  A integra√ß√£o das bibliotecas de layouts de teclado (ex: keybrd2.sys) funciona da
   mesma maneira.
 
 
-Observe que o layout do teclado faz com que os caracteres estrangeiros apareÁam, mas
-atualmente N√O h· suporte para eles nos nomes dos arquivos. Evite-os tanto no DOSBox
-quanto nos arquivos do seu computador que est„o sendo acessados pelo DOSBox.
+Observe que o layout do teclado faz com que os caracteres estrangeiros apare√ßam, mas
+atualmente N√ÉO h√° suporte para eles nos nomes dos arquivos. Evite-os tanto no DOSBox
+quanto nos arquivos do seu computador que est√£o sendo acessados pelo DOSBox.
 
 
 
 ===================================
-8. FunÁ„o Multi-Jogador via Serial:
+8. Fun√ß√£o Multi-Jogador via Serial:
 ===================================
 
-O DOSBox pode emular cabos seriais e nullmodem atravÈs da rede local e da internet.
-Essa opÁ„o pode ser configurada atravÈs da seÁ„o "Porta Serial" no arquivo de
-configuraÁ„o do DOSBox.
+O DOSBox pode emular cabos seriais e nullmodem atrav√©s da rede local e da internet.
+Essa op√ß√£o pode ser configurada atrav√©s da se√ß√£o "Porta Serial" no arquivo de
+configura√ß√£o do DOSBox.
 
-Para estabelecer uma conex„o Null Modem, uma pessoa dever· ser o servidor
-e o outra dever· ser o cliente.
+Para estabelecer uma conex√£o Null Modem, uma pessoa dever√° ser o servidor
+e o outra dever√° ser o cliente.
 
-Quem decidir ser o servidor ter· que ajustar o arquivo de configuraÁ„o
+Quem decidir ser o servidor ter√° que ajustar o arquivo de configura√ß√£o
 do DOSBox, da seguinte maneira:
    serial1=nullmodem
 
-E o arquivo de configuraÁ„o do DOSBox no cliente dever· ficar assim:
+E o arquivo de configura√ß√£o do DOSBox no cliente dever√° ficar assim:
    serial1=nullmodem server:<IP ou o nome do servidor>
 
-Agora inicie o jogo e escolha, na COM1, uma dentre essas opÁıes de multiplayer:
-Nullmodem / Cabo Serial / J· conectado. Lembre-se de deixar as baudrates iguais
+Agora inicie o jogo e escolha, na COM1, uma dentre essas op√ß√µes de multiplayer:
+Nullmodem / Cabo Serial / J√° conectado. Lembre-se de deixar as baudrates iguais
 nos dois computadores.
 
-AlÈm disso, outros par‚metros podem ser ajustados para melhorar a conex„o
-do Null Modem. Estes s„o os par‚metros disponÌveis:
+Al√©m disso, outros par√¢metros podem ser ajustados para melhorar a conex√£o
+do Null Modem. Estes s√£o os par√¢metros dispon√≠veis:
 
- * port:         - N˙mero da porta TCP. Padr„o: 23
- * rxdelay:      - Em quanto tempo (milissegundos) os dados recebidos ser„o atrasados,
-                   caso a interface ainda n„o esteja pronta. Aumente esse valor
-                   se vocÍ encontrar erros na Janela de Status do DOSBox. Padr„o: 100
- * txdelay:      - Quanto tempo levar para que as informaÁıes sejam
+ * port:         - N√∫mero da porta TCP. Padr√£o: 23
+ * rxdelay:      - Em quanto tempo (milissegundos) os dados recebidos ser√£o atrasados,
+                   caso a interface ainda n√£o esteja pronta. Aumente esse valor
+                   se voc√™ encontrar erros na Janela de Status do DOSBox. Padr√£o: 100
+ * txdelay:      - Quanto tempo levar para que as informa√ß√µes sejam
                    acumuladas, antes de serem enviadas de uma vez em um pacote.
-                   Padr„o:12
+                   Padr√£o:12
                    (Isso diminui a sobrecarga do servidor)
- * server:       - Esse Null Modem ser· um cliente se conectando ‡ um servidor
+ * server:       - Esse Null Modem ser√° um cliente se conectando √† um servidor
                    previamente especificado.
-                   (Se n„o houver servidor: Seja um.)
- * transparent:1 - Apenas enviar as informaÁıes do serial, sem nenhum handshake
-                   de RTS/DTR. Use essa opÁ„o quando estiver se conectando via
-                   algo que n„o seja um Null Modem.
- * telnet:1      - Interpreta informaÁıes de Telnet provenientes do site remoto.
-                   Automaticamente ativa a transparÍncia.
- * usedtr:1      - A conex„o n„o ser· estabelecida atÈ que o DTR seja ligado pelo
-                   programa DOS. ⁄til para terminais de modem.
- * inhsocket:1   - Usar um socket que ser· enviado ao DOSBox atravÈs de uma linha
-                   de comando. Automaticamente ativa a transparÍncia.
-                   (Compatibilidade do Socket: … usado para rodar jogos do DOS
+                   (Se n√£o houver servidor: Seja um.)
+ * transparent:1 - Apenas enviar as informa√ß√µes do serial, sem nenhum handshake
+                   de RTS/DTR. Use essa op√ß√£o quando estiver se conectando via
+                   algo que n√£o seja um Null Modem.
+ * telnet:1      - Interpreta informa√ß√µes de Telnet provenientes do site remoto.
+                   Automaticamente ativa a transpar√™ncia.
+ * usedtr:1      - A conex√£o n√£o ser√° estabelecida at√© que o DTR seja ligado pelo
+                   programa DOS. √ötil para terminais de modem.
+ * inhsocket:1   - Usar um socket que ser√° enviado ao DOSBox atrav√©s de uma linha
+                   de comando. Automaticamente ativa a transpar√™ncia.
+                   (Compatibilidade do Socket: √â usado para rodar jogos do DOS
                    antigos em softwares da BBS novos.)
 
-Exemplo: Para ser um servidor conectado ‡ Porta TCP 5000
+Exemplo: Para ser um servidor conectado √† Porta TCP 5000
    serial1=nullmodem server:<IP ou nome do servidor> port:5000 rxdelay:1000
 
 
@@ -1141,133 +1141,133 @@ Exemplo: Para ser um servidor conectado ‡ Porta TCP 5000
 9. Como rodar jogos que requerem mais recursos do computador 
 ============================================================
 
-O DOSBox emula a CPU, as placas de som e de vÌdeos, e outros perifÈricos
-de um computador, tudo de uma sÛ vez. A velocidade do aplicativo emulado
-no DOS depende de quantas instruÁıes podem ser emuladas.
-Esse valor È ajust·vel (n˙mero de ciclos).
+O DOSBox emula a CPU, as placas de som e de v√≠deos, e outros perif√©ricos
+de um computador, tudo de uma s√≥ vez. A velocidade do aplicativo emulado
+no DOS depende de quantas instru√ß√µes podem ser emuladas.
+Esse valor √© ajust√°vel (n√∫mero de ciclos).
 
 Ciclos da CPU
-  Por padr„o (cycles=auto). O DOSBox tentar· descobrir quanto um jogo
-  necessita para executar as tantas instruÁıes emuladas por intervalo de
-  tempo possÌvel. … possÌvel forÁar esse comportamento ajustando os ciclos
-  para cycles=max no arquivo de configuraÁıes do DOSBox.
-  A janela do DOSBox mostrar· uma linha "Cpu Cycles: max" na barra de tÌtulo.
-  Nesse modo È possÌvel reduzir a quantidade de ciclos por percentual
+  Por padr√£o (cycles=auto). O DOSBox tentar√° descobrir quanto um jogo
+  necessita para executar as tantas instru√ß√µes emuladas por intervalo de
+  tempo poss√≠vel. √â poss√≠vel for√ßar esse comportamento ajustando os ciclos
+  para cycles=max no arquivo de configura√ß√µes do DOSBox.
+  A janela do DOSBox mostrar√° uma linha "Cpu Cycles: max" na barra de t√≠tulo.
+  Nesse modo √© poss√≠vel reduzir a quantidade de ciclos por percentual
   (CTRL-F11) ou aumentar novamente (CTRL-F12).
   
-  As vezes obtem-se melhores resultados ajustando manualmente o n˙mero de ciclos.
-  Ajuste, por exemplo, no arquivo de configuraÁıes do DOSBox cycles=30000.
-  … possÌvel aumentar ainda mais o n˙mero de ciclos, enquanto vocÍ roda algum
-  programa do DOS, apertando CTRL-F12 mas esse valor ser· limitado pela potÍncia
-  da sua CPU. VocÍ pode ver o quanto de carga est· sendo processado pela sua CPU
+  As vezes obtem-se melhores resultados ajustando manualmente o n√∫mero de ciclos.
+  Ajuste, por exemplo, no arquivo de configura√ß√µes do DOSBox cycles=30000.
+  √â poss√≠vel aumentar ainda mais o n√∫mero de ciclos, enquanto voc√™ roda algum
+  programa do DOS, apertando CTRL-F12 mas esse valor ser√° limitado pela pot√™ncia
+  da sua CPU. Voc√™ pode ver o quanto de carga est√° sendo processado pela sua CPU
   pelo Gerenciador de Tarefas no Windows 2000/XP/Vista e pelo Monitor de Sistema
-  no Windows 95/98/ME. Uma vez que 100% do seu processador real esteja em uso n„o
-  ser· mais possÌvel aumentar a velocidade do DOSBox, a menos que vocÍ reduza a
-  carga de processamento de outros aplicativos que n„o sejam o do DOSBox.
+  no Windows 95/98/ME. Uma vez que 100% do seu processador real esteja em uso n√£o
+  ser√° mais poss√≠vel aumentar a velocidade do DOSBox, a menos que voc√™ reduza a
+  carga de processamento de outros aplicativos que n√£o sejam o do DOSBox.
 
-N˙cleos da CPU
-  Em arquiteturas x86 (32 bits) vocÍ pode tentar forÁar o uso de um n˙cleo
-  recompilador din‚mico (coloque core=dynamic no arquivo de configuraÁıes).
-  Isso geralmente tr·s melhores resultados se a auto detecÁ„o (core=auto) falhar.
-  A melhor opÁ„o È colocar cycles=max. Mas note que poder„o existir jogos
-  que funcionem pior do que com o n˙cleo din‚mico, ou que atÈ nem funcionem.
+N√∫cleos da CPU
+  Em arquiteturas x86 (32 bits) voc√™ pode tentar for√ßar o uso de um n√∫cleo
+  recompilador din√¢mico (coloque core=dynamic no arquivo de configura√ß√µes).
+  Isso geralmente tr√°s melhores resultados se a auto detec√ß√£o (core=auto) falhar.
+  A melhor op√ß√£o √© colocar cycles=max. Mas note que poder√£o existir jogos
+  que funcionem pior do que com o n√∫cleo din√¢mico, ou que at√© nem funcionem.
 
-EmulaÁ„o de gr·ficos
-  A emulaÁ„o do VGA È uma parte bastante delicada do DOSBox em termos de
-  uso da CPU. Aumentar o n˙mero de quadros que n„o ser„o emulados (frameskip)
-  apertando CTRL-F8 (incrementos de um) poder„o ajudar no aumento da velocidade.
-  A carga sobre a CPU dever· diminuir quando o n˙mero de ciclos est· fixo.
-  Repita esse procedimento atÈ que o jogo tenha uma velocidade agrad·vel para
-  vocÍ. Note que isso È uma troca: o que vocÍ perde em fluidez do vÌdeo vocÍ ganha
+Emula√ß√£o de gr√°ficos
+  A emula√ß√£o do VGA √© uma parte bastante delicada do DOSBox em termos de
+  uso da CPU. Aumentar o n√∫mero de quadros que n√£o ser√£o emulados (frameskip)
+  apertando CTRL-F8 (incrementos de um) poder√£o ajudar no aumento da velocidade.
+  A carga sobre a CPU dever√° diminuir quando o n√∫mero de ciclos est√° fixo.
+  Repita esse procedimento at√© que o jogo tenha uma velocidade agrad√°vel para
+  voc√™. Note que isso √© uma troca: o que voc√™ perde em fluidez do v√≠deo voc√™ ganha
   em velocidade.
 
-EmulaÁ„o de som
-  VocÍ pode tentar desativar o som atravÈs do instalador do jogo para reduzir
-  a quantidade de informaÁıes que dever„o ser processadas. Colocar nosound=true
-  N√O desativa a emulaÁ„o dos dispositivos de som, apenas a saÌda de som ser·
+Emula√ß√£o de som
+  Voc√™ pode tentar desativar o som atrav√©s do instalador do jogo para reduzir
+  a quantidade de informa√ß√µes que dever√£o ser processadas. Colocar nosound=true
+  N√ÉO desativa a emula√ß√£o dos dispositivos de som, apenas a sa√≠da de som ser√°
   desativada.
 
-Tente fechar todos os programas em execuÁ„o, exceto o DOSBox, para aumentar ainda
+Tente fechar todos os programas em execu√ß√£o, exceto o DOSBox, para aumentar ainda
 mais os recursos para o DOSBox.
 
 
-ConfiguraÁıes avanÁadas dos ciclos:
-As opÁıes cycles=auto e cycles=max podem ser parametrizadas para possuÌrem
-diferentes padrıes de inicializaÁ„o. A sintaxe È
-  cycles=auto ["padr„o modoreal"] ["padr„o modo protegido"%] 
+Configura√ß√µes avan√ßadas dos ciclos:
+As op√ß√µes cycles=auto e cycles=max podem ser parametrizadas para possu√≠rem
+diferentes padr√µes de inicializa√ß√£o. A sintaxe √©
+  cycles=auto ["padr√£o modoreal"] ["padr√£o modo protegido"%] 
               [limite do "limite do ciclo"]
-  cycles=max ["padr„o modo protegido"%] [limite do "limite do ciclo"]
+  cycles=max ["padr√£o modo protegido"%] [limite do "limite do ciclo"]
 Exemplo:
   cycles=auto 1000 80% limit 20000
-  utilizar· cycles=1000 para jogos em modo real, 80% da aceleraÁ„o da CPU
-  para jogos no modo protegido juntamente com um limite rÌgido de 20000 ciclos
+  utilizar√° cycles=1000 para jogos em modo real, 80% da acelera√ß√£o da CPU
+  para jogos no modo protegido juntamente com um limite r√≠gido de 20000 ciclos
 
 
 
 =========================
-10. SoluÁ„o de Problemas:
+10. Solu√ß√£o de Problemas:
 =========================
 
-O DOSBox n„o inicia:
-  - use valores diferentes para a opÁ„o output= no arquivo de configuraÁ„o do DOSBox
-  - atualize os drivers da sua placa de vÌdeo e o DirectX
+O DOSBox n√£o inicia:
+  - use valores diferentes para a op√ß√£o output= no arquivo de configura√ß√£o do DOSBox
+  - atualize os drivers da sua placa de v√≠deo e o DirectX
 
 Executar certos tipos de jogos faz o DOSBox fechar, mostrar mensagens de erro ou parar
 de responder:
-  - verifique se o jogo funciona com a instalaÁ„o padr„o do DOSBox
-    (com arquivo de configuraÁ„o n„o modificado)
-  - tente jogar com o som desativado (altere as configuraÁıes do som
-    no instalador do jogo. Tente tambÈm usar sbtype=none e gus=false no arquivo
-    de configuraÁıes do DOSBox)
-  - tente alterar algumas opÁıes no arquivo de configuraÁıes, especialmente:
+  - verifique se o jogo funciona com a instala√ß√£o padr√£o do DOSBox
+    (com arquivo de configura√ß√£o n√£o modificado)
+  - tente jogar com o som desativado (altere as configura√ß√µes do som
+    no instalador do jogo. Tente tamb√©m usar sbtype=none e gus=false no arquivo
+    de configura√ß√µes do DOSBox)
+  - tente alterar algumas op√ß√µes no arquivo de configura√ß√µes, especialmente:
       core=normal
       ciclos fixos (por exemplo cycles=10000)
       ems=false
       xms=false
-    ou combinaÁıes para as opÁıes acima,
-    use configuraÁıes similares a da m·quina que controla
+    ou combina√ß√µes para as op√ß√µes acima,
+    use configura√ß√µes similares a da m√°quina que controla
     o chipset emulado e funcionalidade:
       machine=vesa_nolfb
     ou
       machine=vgaonly
   - use o loadfix antes de executar o jogo
 
-O jogo È finalizado e retorna ao prompt do DOSBox com uma mensagem de erro:
-  - leia a mensagem com atenÁ„o e tente localizar o erro
-  - utilize as dicas nas seÁıes acima descritas
-  - monte em outros diretÛrios pois alguns jogos s„o chatos quanto a localizaÁ„o,
-    por exemplo, se vocÍ utilizou "mount d d:\jogosantigos\jogox" tente
+O jogo √© finalizado e retorna ao prompt do DOSBox com uma mensagem de erro:
+  - leia a mensagem com aten√ß√£o e tente localizar o erro
+  - utilize as dicas nas se√ß√µes acima descritas
+  - monte em outros diret√≥rios pois alguns jogos s√£o chatos quanto a localiza√ß√£o,
+    por exemplo, se voc√™ utilizou "mount d d:\jogosantigos\jogox" tente
     "mount c d:\jogosantigos\jogo" ou "mount c d:\jogosantigos"
-  - se o jogo necessitar de uma unidade de CD-ROM verifique se vocÍ digitou "-t cdrom"
-    ao montar a unidade e tente usar outros par‚metros adicionais (Os par‚metros
-    ioctl, usecd e label. Veja na seÁ„o apropriada)
-  - verifique as permissıes dos arquivos do jogo (desmarque os atributos
-    de somente-leitura e adicione permiÁıes para gravaÁıes etc.)
+  - se o jogo necessitar de uma unidade de CD-ROM verifique se voc√™ digitou "-t cdrom"
+    ao montar a unidade e tente usar outros par√¢metros adicionais (Os par√¢metros
+    ioctl, usecd e label. Veja na se√ß√£o apropriada)
+  - verifique as permiss√µes dos arquivos do jogo (desmarque os atributos
+    de somente-leitura e adicione permi√ß√µes para grava√ß√µes etc.)
   - tente reinstalar o jogo pelo dosbox
 
 ===============================
-11. O Arquivo de ConfiguraÁıes:
+11. O Arquivo de Configura√ß√µes:
 ===============================
 
-O arquivo com as configuraÁıes pode gerado pelo CONFIG.COM, que est· localizado
-na unidade interna (Z:) do dosbox. Leia a seÁ„o "Programas Internos" para
+O arquivo com as configura√ß√µes pode gerado pelo CONFIG.COM, que est√° localizado
+na unidade interna (Z:) do dosbox. Leia a se√ß√£o "Programas Internos" para
 entender o funcionamento do CONFIG.COM.
-… possÌvel modificar o arquivo de configuraÁıes gerado para personalizar o DOSBox.
+√â poss√≠vel modificar o arquivo de configura√ß√µes gerado para personalizar o DOSBox.
 
-O arquivo È dividido em diversas seÁıes (elas est„o destacadas por [] ). 
-Algumas seÁıes possuem opÁıes que podem ser configuradas.
-Linhas de coment·rio s„o indicadas por # e %. 
-O arquivo de configuraÁıes gerado contÈm as configuraÁıes atuais. VocÍ pode alter·-las
-e ent„o iniciar o DOSBox com o par‚metro -conf para carregar o arquivo e consequentemente
-as novas configuraÁıes.
+O arquivo √© dividido em diversas se√ß√µes (elas est√£o destacadas por [] ). 
+Algumas se√ß√µes possuem op√ß√µes que podem ser configuradas.
+Linhas de coment√°rio s√£o indicadas por # e %. 
+O arquivo de configura√ß√µes gerado cont√©m as configura√ß√µes atuais. Voc√™ pode alter√°-las
+e ent√£o iniciar o DOSBox com o par√¢metro -conf para carregar o arquivo e consequentemente
+as novas configura√ß√µes.
 
-O DOSBox buscar· o arquivo de configuraÁ„o especificado pelo par‚metro -conf.
-Se nenhum arquivo for especificado com o par‚metro, o DOSBox ir· procurar pelo
-arquivo "dosbox.conf" no diretÛrio atual.
-Se n„o existir nenhum, o DOSBox carregar· o arquivo de configuraÁıes do usu·rio.
-Esse arquivo ser· criado se ele n„o existir.
+O DOSBox buscar√° o arquivo de configura√ß√£o especificado pelo par√¢metro -conf.
+Se nenhum arquivo for especificado com o par√¢metro, o DOSBox ir√° procurar pelo
+arquivo "dosbox.conf" no diret√≥rio atual.
+Se n√£o existir nenhum, o DOSBox carregar√° o arquivo de configura√ß√µes do usu√°rio.
+Esse arquivo ser√° criado se ele n√£o existir.
 O arquivo pode ser encontrado em ~/.dosbox (no Linux) ou "~/Library/Preferences" (no MAC OS X).
-No Windows os atalhos do menu iniciar dever„o ser usados para encontr·-lo.
+No Windows os atalhos do menu iniciar dever√£o ser usados para encontr√°-lo.
 
 
 
@@ -1276,19 +1276,19 @@ No Windows os atalhos do menu iniciar dever„o ser usados para encontr·-lo.
 ========================
 
 Um arquivo de idioma pode ser gerado pelo CONFIG.COM (CONFIG -writelang nomedoarquivo).
-Leia-o, e esperamos que vocÍ entenda como mud·-lo. 
-Inicie o DOSBox com o par‚metro -lang para usar seu novo arquivo de idioma.
-Alternativamente, vocÍ pode colocar o nome do arquivo na seÁ„o [dosbox] do arquivo de configuraÁıes.
-L· existe uma entrada language= onde dever· ser adicionado o nome do arquivo.
+Leia-o, e esperamos que voc√™ entenda como mud√°-lo. 
+Inicie o DOSBox com o par√¢metro -lang para usar seu novo arquivo de idioma.
+Alternativamente, voc√™ pode colocar o nome do arquivo na se√ß√£o [dosbox] do arquivo de configura√ß√µes.
+L√° existe uma entrada language= onde dever√° ser adicionado o nome do arquivo.
 
 
 
 =========================================
-13. Criando sua prÛpria vers„o do DOSBox:
+13. Criando sua pr√≥pria vers√£o do DOSBox:
 =========================================
 
-FaÁa o download da fonte.
-Verifique o INSTALADOR na distribuiÁ„o da fonte.
+Fa√ßa o download da fonte.
+Verifique o INSTALADOR na distribui√ß√£o da fonte.
 
 
 
@@ -1305,5 +1305,5 @@ Ver o arquivo THANKS.
 
 Acesse o site:
 http://www.dosbox.com
-para ver o email (Na p·gina "Crew").
+para ver o email (Na p√°gina "Crew").
 
