@@ -762,13 +762,15 @@ bool DOS_CreateTempFile(char * const name,Bit16u * entry) {
 	}
 	dos.errorcode=0;
 	/* add random crap to the end of the name and try to open */
+	srand(time(0));
 	do {
 		Bit32u i;
 		for (i=0;i<8;i++) {
 			tempname[i]=(rand()%26)+'A';
 		}
 		tempname[8]=0;
-	} while ((!DOS_CreateFile(name,0,entry)) && (dos.errorcode==DOSERR_FILE_ALREADY_EXISTS));
+	} while (DOS_FileExists(name));
+	DOS_CreateFile(name,0,entry);
 	if (dos.errorcode) return false;
 	return true;
 }
