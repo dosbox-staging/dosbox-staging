@@ -784,7 +784,8 @@ bool DOS_CreateTempFile(char * const name,Bit16u * entry) {
 	}
 	dos.errorcode=0;
 	/* add random crap to the end of the name and try to open */
-	srand(time(0));
+	const auto seed = static_cast<unsigned int>(time(nullptr));
+	srand(seed);
 	do {
 		Bit32u i;
 		for (i=0;i<8;i++) {
