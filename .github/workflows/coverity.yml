@@ -51,7 +51,7 @@ jobs:
       - name: Build and instrument the project
         run: |
           set -xeu
-          meson setup -Duse_mt32emu=false build
+          meson setup -Duse_mt32emu=false -Dunit_tests=disabled build
           PATH="${BASE_DIR}/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
           cov-build --dir cov-int ninja -C build
           tar -cvaf package.tar.gz cov-int
