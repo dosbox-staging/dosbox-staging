@@ -77,6 +77,12 @@ jobs:
             ccache-macos-debug-${{ steps.prep-caches.outputs.name_hash }}-
             ccache-macos-debug-
 
+      - name:  Cache subprojects
+        uses:  actions/cache@v2
+        with:
+          path: subprojects/packagecache
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+
       - name: Log environment
         run:  ./scripts/log-env.sh
 
@@ -135,6 +141,12 @@ jobs:
           path: ${{ steps.prep-caches.outputs.ccache_dir }}
           key:  ccache-macos-release-${{ steps.prep-caches.outputs.today }}
           restore-keys: ccache-macos-release-
+
+      - name:  Cache subprojects
+        uses:  actions/cache@v2
+        with:
+          path: subprojects/packagecache
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
 
       - name: Log environment
         run:  ./scripts/log-env.sh

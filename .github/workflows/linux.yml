@@ -114,6 +114,12 @@ jobs:
           restore-keys: |
             ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.yesterday }}
 
+      - name:  Cache subprojects
+        uses:  actions/cache@v2
+        with:
+          path: subprojects/packagecache
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+
       - name: Log environment
         run:  ./scripts/log-env.sh
 
@@ -171,6 +177,12 @@ jobs:
           key:  ccache-linux-release-${{ steps.prep-ccache.outputs.today }}
           restore-keys: |
             ccache-linux-release-${{ steps.prep-ccache.outputs.yesterday }}
+
+      - name:  Cache subprojects
+        uses:  actions/cache@v2
+        with:
+          path: subprojects/packagecache
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
 
       - name: Log environment
         run:  ./scripts/log-env.sh

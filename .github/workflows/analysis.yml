@@ -66,6 +66,12 @@ jobs:
           restore-keys: |
             ccache-static-clang-${{ steps.prep-ccache.outputs.yesterday }}
 
+      - name:  Cache subprojects
+        uses:  actions/cache@v2
+        with:
+          path: subprojects/packagecache
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+
       - name: Log environment
         run:  ./scripts/log-env.sh
 
@@ -150,6 +156,12 @@ jobs:
           path: ${{ steps.prep-ccache.outputs.dir }}
           key:          ccache-sanitizers-${{ steps.prep-ccache.outputs.today }}
           restore-keys: ccache-sanitizers-${{ steps.prep-ccache.outputs.yesterday }}
+
+      - name:  Cache subprojects
+        uses:  actions/cache@v2
+        with:
+          path: subprojects/packagecache
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
 
       - name: Log environment
         run:  ./scripts/log-env.sh
