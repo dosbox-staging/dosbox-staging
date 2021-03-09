@@ -222,7 +222,7 @@ jobs:
         run: |
           set -x
           freshclam --foreground
-          clamscan --heuristic-scan-precedence=yes --recursive --infected .
+          clamscan --heuristic-scan-precedence=yes --recursive --infected dist
 
       - name: Upload disk image
         uses: actions/upload-artifact@v2
