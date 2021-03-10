@@ -46,7 +46,7 @@
 
 static std::string GetConfigName()
 {
-	return "dosbox-" CONF_BRAND ".conf";
+	return "dosbox" CONF_SUFFIX ".conf";
 }
 
 #ifndef WIN32

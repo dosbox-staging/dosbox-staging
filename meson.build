@@ -36,9 +36,9 @@ conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
 
 if get_option('buildtype').startswith('debug')
-  conf_data.set('conf_branding', 'staging-git')
+  conf_data.set('conf_suffix', '-staging-git')
 else
-  conf_data.set('conf_branding', 'staging')
+  conf_data.set('conf_suffix', '-staging')
 endif
 
 os_family_name = {
