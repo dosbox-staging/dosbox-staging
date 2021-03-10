@@ -28,7 +28,7 @@
 #define VERSION "@version@"
 
 // Suffix appended to the default .conf file name
-#define CONF_BRAND "@conf_branding@"
+#define CONF_SUFFIX "@conf_suffix@"
 
 /* Operating System
  */
