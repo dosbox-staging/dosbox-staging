@@ -202,7 +202,8 @@ jobs:
             -Db_asneeded=true \
             -Db_lto=true \
             -Dtry_static_libs=png \
-            -Duse_fluidsynth=false \
+            -Dfluidsynth:enable-floats=true \
+            -Dfluidsynth:try-static-deps=true \
             build
 
       - name: Build
