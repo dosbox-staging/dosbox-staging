@@ -161,12 +161,14 @@ jobs:
       - name: Setup release build
         run: |
           meson setup \
+            --wrap-mode=forcefallback \
             -Dbuildtype=release \
             -Ddefault_library=static \
             -Db_asneeded=true \
             -Db_lto=true \
             -Dtry_static_libs=opusfile,png,sdl2,sdl2_net \
-            -Duse_fluidsynth=false \
+            -Dfluidsynth:enable-floats=true \
+            -Dfluidsynth:try-static-deps=true \
             build
 
       - name: Build
