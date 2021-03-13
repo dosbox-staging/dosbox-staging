@@ -97,6 +97,10 @@ MidiHandler_oss Midi_oss;
 
 #include "midi_alsa.h"
 
+#if C_ALSA
+MidiHandler_alsa Midi_alsa;
+#endif
+
 struct DB_Midi {
 	uint8_t status;
 	size_t cmd_len;
