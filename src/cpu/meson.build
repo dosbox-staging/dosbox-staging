@@ -38,13 +38,18 @@ foreach line : core_selection
 endforeach
 
 if conf_data.has('C_DYNAMIC_X86')
-  message('Building dynamic core optimized for x86/x86_64 (dyn-x86) ' +
-          'for ' + conf_data.get('C_TARGETCPU'))
+  message('Building x86/x86_64-optimized dynamic core (dyn-x86) for ' +
+          conf_data.get('C_TARGETCPU'))
+  summary('Dynamic core', 'dyn-x86 (optimized for x86/x86_64)',
+          section : 'Emulator Features')
 elif conf_data.has('C_DYNREC')
-  message('Building dynamic core (dynrec) ' +
-          'for ' + conf_data.get('C_TARGETCPU'))
+  message('Building generic dynamic core (dynrec) for ' +
+          conf_data.get('C_TARGETCPU'))
+  summary('Dynamic core', 'dynrec (generic for ' + host_machine.cpu_family() + ')',
+          section : 'Emulator Features')
 else
   warning('Building without dynamic core support')
+  summary('Dynamic core', 'disabled', section : 'Emulator Features')
 endif
 
 message('Building for @0@-endian architecture'.format(host_machine.endian()))

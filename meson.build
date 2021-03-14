@@ -2,12 +2,14 @@ project('dosbox-staging', 'c', 'cpp',
         version : '0.77.0',
         license : 'GPL-2.0-or-later',
         default_options : ['cpp_std=c++14', 'b_ndebug=if-release'],
-        meson_version : '>= 0.51.0')
+        meson_version : '>= 0.53.0')
+
+summary('Build type',     get_option('buildtype'), section : 'Build Summary')
+summary('Install prefix', get_option('prefix'),    section : 'Build Summary')
 
 # After increasing the minimum-required meson version, make the following
 # improvements:
 #
-# - 0.53.0 - use summary() to communicate setup result
 # - 0.55.0 - subproject wraps are automatically promoted to fallbacks,
 #            stop using: "fallback : ['foo', 'foo_dep']" for dependencies
 # - 0.56.0 - use meson.current_source_dir() in unit tests
