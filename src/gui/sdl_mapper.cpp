@@ -649,17 +649,26 @@ public:
 
 	CBind * CreateEventBind(SDL_Event * event) {
 		if (event->type==SDL_JOYAXISMOTION) {
-			if (event->jaxis.which!=stick) return 0;
-#if defined (REDUCE_JOYSTICK_POLLING)
-			if (event->jaxis.axis >= axes)
+			const int axis_id = event->jaxis.axis;
+			const auto axis_position = event->jaxis.value;
+
+			if (event->jaxis.which != stick)
+				return 0;
+#if defined(REDUCE_JOYSTICK_POLLING)
+			if (axis_id >= axes)
 				return nullptr;
 #endif
-			if (abs(event->jaxis.value) < 25000)
+			if (abs(axis_position) < 25000)
 				return 0;
-			return CreateAxisBind(event->jaxis.axis,
-			                      event->jaxis.value > 0);
-		} else if (event->type==SDL_JOYBUTTONDOWN) {
-			if (event->jbutton.which!=stick) return 0;
+
+			// Axis IDs 2 and 5 are triggers on six-axis controllers
+			const bool is_trigger = (axis_id == 2 || axis_id == 5) && axes == 6;
+			const bool toggled = axis_position > 0 || is_trigger;
+			return CreateAxisBind(axis_id, toggled);
+
+		} else if (event->type == SDL_JOYBUTTONDOWN) {
+			if (event->jbutton.which != stick)
+				return 0;
 #if defined (REDUCE_JOYSTICK_POLLING)
 			return CreateButtonBind(event->jbutton.button%button_wrap);
 #else
