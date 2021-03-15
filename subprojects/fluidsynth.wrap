@@ -1,11 +1,11 @@
 [wrap-file]
-directory = fluidsynth-2.1.7
-source_url = https://github.com/FluidSynth/fluidsynth/archive/v2.1.7.tar.gz
-source_filename = fluidsynth-2.1.7.tar.gz
-source_hash = 365a1c0982efcaff724a7b05d26ce1db76bc7435aa4c239df61cbc87f04b6c90
-patch_url = https://wrapdb.mesonbuild.com/v1/projects/fluidsynth/2.1.7/1/get_zip
-patch_filename = fluidsynth-2.1.7-1-wrap.zip
-patch_hash = aaaf2f70dfc0a4803cdd9ebc56b36dd66eb3ab990ef9f433052bb52c1e71ee6e
+directory = fluidsynth-2.1.8
+source_url = https://github.com/FluidSynth/fluidsynth/archive/v2.1.8.tar.gz
+source_filename = fluidsynth-2.1.8.tar.gz
+source_hash = a254efceff5d99f8d658d12d25318317f37307e6df852ec9baeb7da173496967
+patch_url = https://wrapdb.mesonbuild.com/v1/projects/fluidsynth/2.1.8/1/get_zip
+patch_filename = fluidsynth-2.1.8-1-wrap.zip
+patch_hash = 78564c496c079c598204c8a0fe3693f83abcddbd648259a0761a3c126e50e6db
 
 [provide]
 fluidsynth = fluidsynth_dep
