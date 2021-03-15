@@ -221,7 +221,10 @@ void saa1099_device::device_start()
 //  sound_stream_update - handle a stream update
 //-------------------------------------------------
 
-void saa1099_device::sound_stream_update(sound_stream &stream, stream_sample_t **inputs, stream_sample_t **outputs, int samples)
+void saa1099_device::sound_stream_update(MAYBE_UNUSED sound_stream &stream,
+                                         MAYBE_UNUSED stream_sample_t **inputs,
+                                         stream_sample_t **outputs,
+                                         int samples)
 {
 	int j, ch;
 	/* if the channels are disabled we're done */
@@ -317,7 +320,6 @@ void saa1099_device::sound_stream_update(sound_stream &stream, stream_sample_t *
 		outputs[RIGHT][j] = output_r / 6;
 	}
 }
-
 
 void saa1099_device::envelope_w(int ch)
 {
