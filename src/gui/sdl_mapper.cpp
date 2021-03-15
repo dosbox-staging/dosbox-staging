@@ -1260,7 +1260,9 @@ class Typer {
 					for (auto &event : *m_events) {
 						if (bind_name == event->GetName()) {
 							found = true;
-							MAPPER_TriggerEvent(event, true);
+							event->Active(true);
+							std::this_thread::sleep_for(std::chrono::milliseconds(50));
+							event->Active(false);
 							break;
 						}
 					}
