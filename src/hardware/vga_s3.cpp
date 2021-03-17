@@ -550,16 +550,4 @@ void SVGA_Setup_S3Trio(void) {
 		vga.vmemsize = 4096*1024;
 		vga.s3.reg_36 = 0x1a;		// 4mb fast page mode
 	}
-
-	// S3 ROM signature
-	PhysPt rom_base=PhysMake(0xc000,0);
-	phys_writeb(rom_base+0x003f,'S');
-	phys_writeb(rom_base+0x0040,'3');
-	phys_writeb(rom_base+0x0041,' ');
-	phys_writeb(rom_base+0x0042,'8');
-	phys_writeb(rom_base+0x0043,'6');
-	phys_writeb(rom_base+0x0044,'C');
-	phys_writeb(rom_base+0x0045,'7');
-	phys_writeb(rom_base+0x0046,'6');
-	phys_writeb(rom_base+0x0047,'4');
 }
