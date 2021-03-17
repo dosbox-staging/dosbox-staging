@@ -137,6 +137,48 @@ void INT10_SetupRomMemory(void) {
 		phys_writeb(rom_base+0x1f,0x42);
 		phys_writeb(rom_base+0x20,0x4d);
 		phys_writeb(rom_base+0x21,0x20);
+
+		if (IS_VGA_ARCH) {
+			// SVGA card-specific ROM signatures
+			switch(svgaCard) {
+			case SVGA_S3Trio:
+				phys_writeb(rom_base+0x003f,'S');
+				phys_writeb(rom_base+0x0040,'3');
+				phys_writeb(rom_base+0x0041,' ');
+				phys_writeb(rom_base+0x0042,'8');
+				phys_writeb(rom_base+0x0043,'6');
+				phys_writeb(rom_base+0x0044,'C');
+				phys_writeb(rom_base+0x0045,'7');
+				phys_writeb(rom_base+0x0046,'6');
+				phys_writeb(rom_base+0x0047,'4');
+				break;
+			case SVGA_TsengET4K:
+			case SVGA_TsengET3K:
+				phys_writeb(rom_base+0x0075,' ');
+				phys_writeb(rom_base+0x0076,'T');
+				phys_writeb(rom_base+0x0077,'s');
+				phys_writeb(rom_base+0x0078,'e');
+				phys_writeb(rom_base+0x0079,'n');
+				phys_writeb(rom_base+0x007a,'g');
+				phys_writeb(rom_base+0x007b,' ');
+				break;
+			case SVGA_ParadisePVGA1A:
+				phys_writeb(rom_base+0x0048,' ');
+				phys_writeb(rom_base+0x0049,'W');
+				phys_writeb(rom_base+0x004a,'E');
+				phys_writeb(rom_base+0x004b,'S');
+				phys_writeb(rom_base+0x004c,'T');
+				phys_writeb(rom_base+0x004d,'E');
+				phys_writeb(rom_base+0x004e,'R');
+				phys_writeb(rom_base+0x004f,'N');
+				phys_writeb(rom_base+0x0050,' ');
+				phys_writeb(rom_base+0x007d,'V');
+				phys_writeb(rom_base+0x007e,'G');
+				phys_writeb(rom_base+0x007f,'A');
+				phys_writeb(rom_base+0x0080,'=');
+				break;
+			}
+		}
 		int10.rom.used=0x100;
 	}
 
