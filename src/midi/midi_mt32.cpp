@@ -77,6 +77,13 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "it's recommended to use 'mt32', while newer games typically made\n"
 	        "use of the CM-32L's extra sound effects (use 'auto' or 'cm32l')");
 
+	auto *bool_prop = sec_prop.Add_bool("alt_channels", when_idle, false);
+	assert(bool_prop);
+	bool_prop->Set_help(
+	        "Start synthesizer using alternative channel layout, needed for some games\n"
+	        "e.g. Doom, to hear full MIDI output. On real MT-32 hardware this was\n"
+	        "achieved by holding <Master Volume> and pressing <PART button 1>.");
+
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
 	str_prop->Set_help(
 	        "The directory containing one or both pairs of MT-32 and/or CM-32L ROMs.\n"
@@ -325,15 +332,21 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	mt32_service->setNicePanningEnabled(USE_NICE_PANNING);
 	mt32_service->setNicePartialMixingEnabled(USE_NICE_PARTIAL_MIXING); 
 
-// Alternate channel assignment
-// The default is: {1, 2, 3, 4, 5, 6, 7, 8, 9}
-// An alternative configuration can be selected by holding "Master Volume"
-// and pressing "PART button 1" on the real MT-32's frontpanel.
-// The channel assignment is then {0, 1, 2, 3, 4, 5, 6, 7, 9}
-static const Bit8u sysexChannel1EngagedAssignment[] = {
-	0x10, 0x00, 0x0d, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09};
-	mt32_service->writeSysex(16, sysexChannel1EngagedAssignment,
-	                         sizeof(sysexChannel1EngagedAssignment));
+	// Alternate channel assignment
+	// The default is: {1, 2, 3, 4, 5, 6, 7, 8, 9}
+	// An alternative configuration can be selected by holding "Master Volume"
+	// and pressing "PART button 1" on the real MT-32's frontpanel.
+	// The channel assignment is then {0, 1, 2, 3, 4, 5, 6, 7, 9}
+	const bool alt_channels = section->Get_bool("alt_channels");
+	if (roms_loaded && alt_channels) {
+		static const Bit8u sysexChannel1EngagedAssignment[] = {
+		      0x10, 0x00, 0x0d, 0x00, 0x01, 0x02,
+		      0x03, 0x04, 0x05, 0x06, 0x07, 0x09
+		};
+		mt32_service->writeSysex(16, sysexChannel1EngagedAssignment,
+		                         sizeof(sysexChannel1EngagedAssignment));
+		LOG_MSG("MT32: Using alternative MIDI channels");
+	}
 
 	service = std::move(mt32_service);
 	channel = std::move(mixer_channel);
