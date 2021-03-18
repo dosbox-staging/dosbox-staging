@@ -123,14 +123,15 @@ public:
 		}
 	}
 
-	void ListAll(Program *base) override
+	MIDI_RC ListAll(Program *caller) override
 	{
 		unsigned int total = midiOutGetNumDevs();
 		for(unsigned int i = 0;i < total;i++) {
 			MIDIOUTCAPS mididev;
 			midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
-			base->WriteOut("%2d\t \"%s\"\n",i,mididev.szPname);
+			caller->WriteOut("  %2d - \"%s\"\n", i, mididev.szPname);
 		}
+		return MIDI_RC::OK;
 	}
 };
 

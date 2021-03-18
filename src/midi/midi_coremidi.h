@@ -154,7 +154,7 @@ public:
 		MIDISend(m_port,m_endpoint,packetList);
 	}
 
-	void ListAll(Program *base) override
+	MIDI_RC ListAll(Program *caller) override
 	{
 		Bitu numDests = MIDIGetNumberOfDestinations();
 		for(Bitu i = 0; i < numDests; i++){
@@ -163,11 +163,14 @@ public:
 			CFStringRef midiname = 0;
 			if(MIDIObjectGetStringProperty(dest, kMIDIPropertyDisplayName, &midiname) == noErr) {
 				const char * s = CFStringGetCStringPtr(midiname, kCFStringEncodingMacRoman);
-				if (s) base->WriteOut("%02d\t%s\n",i,s);
+				if (s) {
+					caller->WriteOut("  %02d - %s\n", i, s);
+				}
 			}
 			//This is for EndPoints created by us.
 			//MIDIEndpointDispose(dest);
 		}
+		return MIDI_RC::OK;
 	}
 };
 
