@@ -26,9 +26,6 @@
 
 #if C_ALSA
 
-// TODO Old ALSA API is unsafe; switch to new API.
-#define ALSA_PCM_OLD_HW_PARAMS_API
-#define ALSA_PCM_OLD_SW_PARAMS_API
 #include <alsa/asoundlib.h>
 
 class MidiHandler_alsa : public MidiHandler {

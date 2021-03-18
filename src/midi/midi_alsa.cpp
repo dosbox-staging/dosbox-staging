@@ -34,15 +34,6 @@
 
 #define ADDR_DELIM ".:"
 
-#if (SND_LIB_MAJOR >= 1) || ((SND_LIB_MAJOR == 0) && (SND_LIB_MINOR >= 6))
-#define snd_seq_flush_output(x)           snd_seq_drain_output(x)
-#define snd_seq_set_client_group(x, name) /* nop */
-#define my_snd_seq_open(seqp)             snd_seq_open(seqp, "hw", SND_SEQ_OPEN_OUTPUT, 0)
-#else
-/* SND_SEQ_OPEN_OUT causes oops on early version of ALSA */
-#define my_snd_seq_open(seqp) snd_seq_open(seqp, SND_SEQ_OPEN)
-#endif
-
 using port_action_t = std::function<void(snd_seq_client_info_t *client_info,
                                          snd_seq_port_info_t *port_info)>;
 
@@ -87,7 +78,7 @@ void MidiHandler_alsa::send_event(int do_flush)
 
 	snd_seq_event_output(seq_handle, &ev);
 	if (do_flush)
-		snd_seq_flush_output(seq_handle);
+		snd_seq_drain_output(seq_handle);
 }
 
 bool MidiHandler_alsa::parse_addr(const char *arg, int *client, int *port)
@@ -204,14 +195,13 @@ bool MidiHandler_alsa::Open(const char *conf)
 		return false;
 	}
 
-	if (my_snd_seq_open(&seq_handle)) {
+	if (snd_seq_open(&seq_handle, "hw", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
 		LOG_MSG("ALSA: Can't open sequencer");
 		return false;
 	}
 
 	my_client = snd_seq_client_id(seq_handle);
 	snd_seq_set_client_name(seq_handle, "DOSBOX");
-	snd_seq_set_client_group(seq_handle, "input");
 
 	caps = SND_SEQ_PORT_CAP_READ;
 	if (seq_client == SND_SEQ_ADDRESS_SUBSCRIBERS)
