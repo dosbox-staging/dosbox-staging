@@ -77,12 +77,10 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "it's recommended to use 'mt32', while newer games typically made\n"
 	        "use of the CM-32L's extra sound effects (use 'auto' or 'cm32l')");
 
-	auto *bool_prop = sec_prop.Add_bool("alt_channels", when_idle, false);
+	auto *bool_prop = sec_prop.Add_bool("alt_channels", when_idle, true);
 	assert(bool_prop);
 	bool_prop->Set_help(
-	        "Start synthesizer using alternative channel layout, needed for some games\n"
-	        "e.g. Doom, to hear full MIDI output. On real MT-32 hardware this was\n"
-	        "achieved by holding <Master Volume> and pressing <PART button 1>.");
+	        "Start synthesizer using alternative channel assignment.");
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
 	str_prop->Set_help(
