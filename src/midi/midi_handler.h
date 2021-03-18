@@ -26,6 +26,12 @@
 
 #include <cstdint>
 
+enum class MIDI_RC : int {
+	OK = 0,
+	ERR_DEVICE_NOT_CONFIGURED = -1,
+	ERR_DEVICE_LIST_NOT_SUPPORTED = -2,
+};
+
 class MidiHandler {
 public:
 	MidiHandler();
@@ -67,7 +73,10 @@ public:
 
 	virtual void PlaySysex(MAYBE_UNUSED uint8_t *sysex, MAYBE_UNUSED size_t len) {}
 
-	virtual void ListAll(MAYBE_UNUSED Program *base) {}
+	virtual MIDI_RC ListAll(Program *)
+	{
+		return MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED;
+	}
 
 	MidiHandler *next;
 };
