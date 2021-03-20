@@ -42,7 +42,7 @@ void for_each_alsa_seq_port(port_action_t action)
 	// We can't reuse the sequencer from midi handler, as the function might
 	// be called before that sequencer is created.
 	snd_seq_t *seq = nullptr;
-	if (snd_seq_open(&seq, "hw", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
+	if (snd_seq_open(&seq, "default", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
 		LOG_MSG("ALSA: Error: Can't open MIDI sequencer");
 		return;
 	}
@@ -195,7 +195,7 @@ bool MidiHandler_alsa::Open(const char *conf)
 		return false;
 	}
 
-	if (snd_seq_open(&seq_handle, "hw", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
+	if (snd_seq_open(&seq_handle, "default", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
 		LOG_MSG("ALSA: Can't open sequencer");
 		return false;
 	}
