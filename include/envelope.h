@@ -95,7 +95,7 @@ private:
 	using process_f = std::function<void(Envelope &, bool, bool, intptr_t[], intptr_t[])>;
 	process_f process = &Envelope::Apply;
 
-	const char* channel_name = nullptr;
+	const char *channel_name = nullptr;
 	uint32_t expire_after_frames = 0u; // Stop enveloping when this many
 	                                   // frames have been processed.
 	uint32_t frames_done = 0u; // A tally of processed frames.
