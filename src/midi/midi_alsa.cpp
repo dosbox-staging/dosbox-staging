@@ -178,21 +178,14 @@ bool MidiHandler_alsa::Open(const char *conf)
 {
 	char var[10];
 	unsigned int caps;
-	bool defaultport = true; // try 17:0. Seems to be default nowadays
 
 	// try to use port specified in config file
-	if (conf && conf[0]) {
+	if (!is_empty(conf)) {
 		safe_strcpy(var, conf);
 		if (!parse_addr(var, &seq_client, &seq_port)) {
 			LOG_MSG("ALSA: Invalid alsa port %s", var);
 			return false;
 		}
-		defaultport = false;
-	}
-	// default port if none specified
-	else if (!parse_addr("65:0", &seq_client, &seq_port)) {
-		LOG_MSG("ALSA: Invalid alsa port 65:0");
-		return false;
 	}
 
 	if (snd_seq_open(&seq_handle, "default", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
@@ -216,31 +209,15 @@ bool MidiHandler_alsa::Open(const char *conf)
 	}
 
 	if (seq_client != SND_SEQ_ADDRESS_SUBSCRIBERS) {
-		/* subscribe to MIDI port */
 		if (snd_seq_connect_to(seq_handle, my_port, seq_client, seq_port) < 0) {
-			if (defaultport) {
-				// if port "65:0" (default) try "17:0" as well
-				seq_client = 17;
-				seq_port = 0; // Update reported values
-				if (snd_seq_connect_to(seq_handle, my_port, seq_client, seq_port) < 0) {
-					// Try 128:0 Timidity port as well
-					// seq_client = 128; seq_port = 0; //Update reported values
-					// if(snd_seq_connect_to(seq_handle,my_port,seq_client,seq_port) < 0) {
-					snd_seq_close(seq_handle);
-					LOG_MSG("ALSA: Can't subscribe to MIDI port (65:0) nor (17:0)");
-					return false;
-					// }
-				}
-			} else {
-				snd_seq_close(seq_handle);
-				LOG_MSG("ALSA: Can't subscribe to MIDI port (%d:%d)",
-				        seq_client, seq_port);
-				return false;
-			}
+			snd_seq_close(seq_handle);
+			LOG_MSG("ALSA: Can't connect to MIDI port %d:%d",
+			        seq_client, seq_port);
+			return false;
 		}
 	}
 
-	LOG_MSG("ALSA: Client initialised [%d:%d]", seq_client, seq_port);
+	LOG_MSG("ALSA: Connected to port %d:%d", seq_client, seq_port);
 	return true;
 }
 
