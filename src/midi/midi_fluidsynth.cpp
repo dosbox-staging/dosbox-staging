@@ -177,7 +177,7 @@ static std::string find_sf_file(const std::string &name)
 }
 
 MidiHandlerFluidsynth::MidiHandlerFluidsynth()
-        : soft_limiter("FSYNTH", FRAMES_PER_BUFFER),
+        : soft_limiter("FSYNTH"),
           keep_rendering(false)
 {}
 

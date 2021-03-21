@@ -31,9 +31,8 @@ constexpr static auto relaxed = std::memory_order_relaxed;
 
 constexpr static float bounds = static_cast<float>(INT16_MAX - 1);
 
-SoftLimiter::SoftLimiter(const std::string &name, const uint16_t max_frames)
-        : channel_name(name),
-          max_samples(max_frames * 2)
+SoftLimiter::SoftLimiter(const std::string &name)
+        : channel_name(name)
 {
 	UpdateLevels({1, 1}, 1); // default to unity (ie: no) scaling
 	limited_tally = 0;
@@ -53,15 +52,14 @@ void SoftLimiter::Process(const std::vector<float> &in,
                           const uint16_t frames,
                           std::vector<int16_t> &out) noexcept
 {
-	// Make sure chunk sizes aren' too big or latent
+	// Make sure chunk sizes aren't too big or latent
 	assertm(frames > 0, "need some quantity of frames");
 	assertm(frames <= 16384, "consider using smaller sequence chunks");
 
 	// Make sure the incoming vector has at least the requested frames
 	const uint16_t samples = frames * 2; // left and right channels
-	assert(samples <= max_samples);
 	assert(in.size() >= samples);
-	assert(out.size() >= frames);
+	assert(out.size() >= samples);
 
 	auto precross_peak_pos_left = in.end();
 	auto precross_peak_pos_right = in.end();

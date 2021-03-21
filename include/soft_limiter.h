@@ -69,14 +69,11 @@ needed; typically ranging from 10's of milliseconds to low-hundreds for large >
 Use:
 
 Instantiate the Soft Limiter object with the name of the channel that's
-being operated on and the maximum number of frames you intend to pass into
-the limiter in any given pass.
-
-For example:
-  SoftLimiter limiter("channel name", max_frames);
+being operated on, for example:
+  SoftLimiter limiter("channel name");
 
 You can then repeatedly call:
-  auto out = limiter.Process(in, num_frames);
+  limiter.Process(in, num_frames, out);
 
 Where:
  - 'in' is a std::vector<float>
@@ -102,7 +99,7 @@ public:
 	SoftLimiter(const SoftLimiter &) = delete;
 	SoftLimiter &operator=(const SoftLimiter &) = delete;
 
-	SoftLimiter(const std::string &name, uint16_t max_frames);
+	SoftLimiter(const std::string &name);
 
 	void Process(const std::vector<float> &in,
 	             uint16_t req_frames,
@@ -157,7 +154,6 @@ private:
 	float range_multiplier = 1.0f;
 	int limited_tally = 0;
 	int non_limited_tally = 0;
-	const uint16_t max_samples = 0;
 };
 
 #endif

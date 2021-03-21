@@ -241,7 +241,7 @@ static mt32emu_report_handler_i get_report_handler_interface()
 }
 
 MidiHandler_mt32::MidiHandler_mt32()
-        : soft_limiter("MT32", FRAMES_PER_BUFFER),
+        : soft_limiter("MT32"),
           keep_rendering(false)
 {}
 

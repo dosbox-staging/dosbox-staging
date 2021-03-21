@@ -45,10 +45,6 @@
 // AdLib emulation state constant
 constexpr uint8_t ADLIB_CMD_DEFAULT = 85u;
 
-// Amplitude level constants
-constexpr float AUDIO_SAMPLE_MAX = static_cast<float>(MAX_AUDIO);
-constexpr float AUDIO_SAMPLE_MIN = static_cast<float>(MIN_AUDIO);
-
 // Buffer and memory constants
 constexpr int BUFFER_FRAMES = 48;
 constexpr uint32_t RAM_SIZE = 1024 * 1024;        // 1 MiB
@@ -423,7 +419,8 @@ float Voice::GetSample(const ram_array_t &ram) noexcept
 		sample += (next_sample - sample) *
 		          static_cast<float>(fraction) * WAVE_WIDTH_INV;
 	}
-	assert(sample >= AUDIO_SAMPLE_MIN && sample <= AUDIO_SAMPLE_MAX);
+	assert(sample >= static_cast<float>(MIN_AUDIO) &&
+	       sample <= static_cast<float>(MAX_AUDIO));
 	return sample;
 }
 
@@ -586,7 +583,7 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
         : render_buffer(BUFFER_FRAMES * 2), // 2 samples/frame, L & R channels
           play_buffer(BUFFER_FRAMES * 2),   // 2 samples/frame, L & R channels
-          soft_limiter("GUS", BUFFER_FRAMES),
+          soft_limiter("GUS"),
           port_base(port - 0x200u),
           dma2(dma),
           irq1(irq),

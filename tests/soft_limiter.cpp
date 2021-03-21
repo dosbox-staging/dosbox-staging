@@ -27,7 +27,7 @@ namespace {
 TEST(SoftLimiter, InboundsProcessAllFrames)
 {
 	constexpr int frames = 3;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	const std::vector<float> in{-3, -2, -1, 0, 1, 2};
 
 	std::vector<int16_t> out(frames * 2);
@@ -39,7 +39,7 @@ TEST(SoftLimiter, InboundsProcessAllFrames)
 TEST(SoftLimiter, InboundsProcessPartialFrames)
 {
 	const auto frames = 3;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	const std::vector<float> in{-3, -2, -1, 0, 1, 2};
 
 	std::vector<int16_t> out(frames * 2);
@@ -52,7 +52,7 @@ TEST(SoftLimiter, InboundsProcessPartialFrames)
 TEST(SoftLimiter, InboundsProcessTooManyFrames)
 {
 	const auto frames = 3;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	const std::vector<float> in{-3, -2, -1, 0, 1, 2};
 	std::vector<int16_t> out(frames * 2);
 	EXPECT_DEBUG_DEATH({ limiter.Process(in, frames + 1, out); }, "");
@@ -61,7 +61,7 @@ TEST(SoftLimiter, InboundsProcessTooManyFrames)
 TEST(SoftLimiter, OutOfBoundsLeftChannel)
 {
 	const auto frames = 3;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	const std::vector<float> in{-8.1f,    32000.0f, 65535.0f,
 	                            32000.0f, 4.1f,     32000.0f};
 
@@ -74,7 +74,7 @@ TEST(SoftLimiter, OutOfBoundsLeftChannel)
 TEST(SoftLimiter, OutOfBoundsRightChannel)
 {
 	const auto frames = 3;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	const std::vector<float> in{32000.0f, -3.1f,    32000.0f,
 	                            98304.1f, 32000.0f, 6.1f};
 
@@ -87,7 +87,7 @@ TEST(SoftLimiter, OutOfBoundsRightChannel)
 TEST(SoftLimiter, OutboundsBothChannelsPositive)
 {
 	const auto frames = 3;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	const std::vector<float> in{-8.1f,    -3.1f, 65535.0f,
 	                            98304.1f, 4.1f,  6.1f};
 
@@ -100,7 +100,7 @@ TEST(SoftLimiter, OutboundsBothChannelsPositive)
 TEST(SoftLimiter, OutboundsBothChannelsNegative)
 {
 	const auto frames = 3;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	const std::vector<float> in{-8.1f,     -3.1f, -65535.0f,
 	                            -98304.1f, 4.1f,  6.1f};
 
@@ -113,7 +113,7 @@ TEST(SoftLimiter, OutboundsBothChannelsNegative)
 TEST(SoftLimiter, OutboundsBothChannelsMixed)
 {
 	const auto frames = 3;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	const std::vector<float> in{40000.0f,  -40000.0f, 65534.0f,
 	                            -98301.0f, 40000.0f,  -40000.0f};
 
@@ -127,7 +127,7 @@ TEST(SoftLimiter, OutboundsBothChannelsMixed)
 TEST(SoftLimiter, OutboundsBigOneReleaseStep)
 {
 	const auto frames = 1;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	std::vector<float> in{-60000.0f, 80000.0f};
 	std::vector<int16_t> out(frames * 2);
 	limiter.Process(in, 1, out);
@@ -143,7 +143,7 @@ TEST(SoftLimiter, OutboundsBigOneReleaseStep)
 TEST(SoftLimiter, OutboundsBig600ReleaseSteps)
 {
 	const auto frames = 1;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	std::vector<float> in{-60000.0f, 80000.0f};
 	std::vector<int16_t> out(frames * 2);
 
@@ -159,7 +159,7 @@ TEST(SoftLimiter, OutboundsBig600ReleaseSteps)
 TEST(SoftLimiter, OutboundsSmallTwoReleaseSteps)
 {
 	const auto frames = 1;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	std::vector<float> in{-32800.0f, 32800.0f};
 	std::vector<int16_t> out(frames * 2);
 	for (int i = 0; i < 2; ++i) {
@@ -174,7 +174,7 @@ TEST(SoftLimiter, OutboundsSmallTwoReleaseSteps)
 TEST(SoftLimiter, OutboundsSmallTenReleaseSteps)
 {
 	const auto frames = 1;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	std::vector<float> in{-32800.0f, 32800.0f};
 	std::vector<int16_t> out(frames * 2);
 
@@ -190,7 +190,7 @@ TEST(SoftLimiter, OutboundsSmallTenReleaseSteps)
 TEST(SoftLimiter, OutboundsPolyJoinPositive)
 {
 	const auto frames = 3;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 
 	const std::vector<float> first_chunk{18000, 18000, 20000,
 	                                     20000, 22000, 22000};
@@ -212,7 +212,7 @@ TEST(SoftLimiter, OutboundsPolyJoinPositive)
 TEST(SoftLimiter, OutboundsPolyJoinNegative)
 {
 	const auto frames = 3;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 
 	const std::vector<float> first_chunk{-18000, -18000, -20000,
 	                                     -20000, -22000, -22000};
@@ -234,7 +234,7 @@ TEST(SoftLimiter, OutboundsPolyJoinNegative)
 TEST(SoftLimiter, OutboundsJoinWithZeroCross)
 {
 	const auto frames = 6;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 
 	const std::vector<float> first_chunk{-5000, 1000, -3000, 1000,
 	                                     -1000, 1000, 0,     1000,
@@ -266,7 +266,7 @@ TEST(SoftLimiter, OutboundsJoinWithZeroCross)
 TEST(SoftLimiter, ScaleAttenuate)
 {
 	const auto frames = 1;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	const std::vector<float> in{-30000.1f, 30000.0f};
 	std::vector<int16_t> out(frames * 2);
 	limiter.Process(in, frames, out);
@@ -286,7 +286,7 @@ TEST(SoftLimiter, ScaleAttenuate)
 TEST(SoftLimiter, ScaleAmplify)
 {
 	const auto frames = 1;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 	const std::vector<float> in{-10000.1f, 10000.0f};
 	std::vector<int16_t> out(frames * 2);
 	limiter.Process(in, frames, out);
@@ -306,7 +306,7 @@ TEST(SoftLimiter, ScaleAmplify)
 TEST(SoftLimiter, RangeMultiply)
 {
 	const auto frames = 1;
-	SoftLimiter limiter("test-channel", frames);
+	SoftLimiter limiter("test-channel");
 
 	AudioFrame levels = {1, 1};
 	const float range_multiplier = 2;
