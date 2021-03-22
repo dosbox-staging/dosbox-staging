@@ -465,13 +465,9 @@ std::string format_sf2_line(const std::string &path, const std::string &name)
 
 	// The description was too long and got trimmed; place three dots in
 	// the end to make it clear to the user.
-	assert(line.size() > 4);
-	auto it = line.end();
-	assert(*it == '\0');
-	*(--it) = '\n';
-	*(--it) = '.';
-	*(--it) = '.';
-	*(--it) = '.';
+	const std::string cutoff = "...\n";
+	assert(line.size() > cutoff.size());
+	line.replace(line.end() - cutoff.size(), line.end(), cutoff);
 	return line;
 }
 
