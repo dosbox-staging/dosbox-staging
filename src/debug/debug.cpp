@@ -2134,12 +2134,13 @@ static void LogInstruction(uint16_t segValue, uint32_t eipValue, ofstream &out)
 
 class DEBUG : public Program {
 public:
-	DEBUG()		{ pDebugcom	= this;	active = false; };
-	~DEBUG()	{ pDebugcom	= 0; };
+	DEBUG() : active(false) { pDebugcom = this; }
 
-	bool IsActive() { return active; };
+	~DEBUG() { pDebugcom = nullptr; }
 
-	void Run(void)
+	bool IsActive() const { return active; }
+
+	void Run()
 	{
 		if(cmd->FindExist("/NOMOUSE",false)) {
 	        	real_writed(0,0x33<<2,0);
@@ -2178,7 +2179,7 @@ public:
 		reg_esp = oldesp;
 		SegSet16(cs,oldcs);
 		reg_eip = oldeip;
-	};
+	}
 
 private:
 	bool	active;
