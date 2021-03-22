@@ -302,16 +302,23 @@ bool MidiHandler_alsa::Open(const char *conf)
 
 MIDI_RC MidiHandler_alsa::ListAll(Program *caller)
 {
-	auto print_port = [caller](auto *client_info, auto *port_info) {
+	auto print_port = [caller, this](auto *client_info, auto *port_info) {
 		const auto *addr = snd_seq_port_info_get_addr(port_info);
 		const unsigned int type = snd_seq_port_info_get_type(port_info);
 		const unsigned int caps = snd_seq_port_info_get_capability(port_info);
 
 		if ((type & SND_SEQ_PORT_TYPE_SYNTHESIZER) || port_is_writable(caps)) {
-			caller->WriteOut("  %3d:%d - %s - %s\n", addr->client,
-			                 addr->port,
+			const bool selected = (addr->client == this->seq_client &&
+			                       addr->port == this->seq_port);
+			const char esc_color[] = "\033[32;1m";
+			const char esc_nocolor[] = "\033[0m";
+			caller->WriteOut("%c %s%3d:%d - %s - %s%s\n",
+			                 (selected ? '*' : ' '),
+			                 (selected ? esc_color : ""),
+			                 addr->client, addr->port,
 			                 snd_seq_client_info_get_name(client_info),
-			                 snd_seq_port_info_get_name(port_info));
+			                 snd_seq_port_info_get_name(port_info),
+			                 (selected ? esc_nocolor : ""));
 		}
 	};
 	for_each_alsa_seq_port(print_port);
