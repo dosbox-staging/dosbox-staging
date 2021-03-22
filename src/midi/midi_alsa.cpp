@@ -177,7 +177,6 @@ void MidiHandler_alsa::Close()
 bool MidiHandler_alsa::Open(const char *conf)
 {
 	char var[10];
-	unsigned int caps;
 
 	// try to use port specified in config file
 	if (!is_empty(conf)) {
@@ -194,13 +193,14 @@ bool MidiHandler_alsa::Open(const char *conf)
 	}
 
 	my_client = snd_seq_client_id(seq_handle);
-	snd_seq_set_client_name(seq_handle, "DOSBOX");
+	snd_seq_set_client_name(seq_handle, "DOSBox Staging");
 
-	caps = SND_SEQ_PORT_CAP_READ;
+	unsigned int caps = SND_SEQ_PORT_CAP_READ;
 	if (seq_client == SND_SEQ_ADDRESS_SUBSCRIBERS)
 		caps = ~SND_SEQ_PORT_CAP_SUBS_READ;
 
-	my_port = snd_seq_create_simple_port(seq_handle, "DOSBOX", caps,
+	my_port = snd_seq_create_simple_port(seq_handle,
+	                                     "Virtual MPU-401 output", caps,
 	                                     SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
 	if (my_port < 0) {
 		snd_seq_close(seq_handle);
