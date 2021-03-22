@@ -209,16 +209,16 @@ bool MidiHandler_alsa::Open(const char *conf)
 	}
 
 	if (seq_client != SND_SEQ_ADDRESS_SUBSCRIBERS) {
-		if (snd_seq_connect_to(seq_handle, my_port, seq_client, seq_port) < 0) {
-			snd_seq_close(seq_handle);
-			LOG_MSG("ALSA: Can't connect to MIDI port %d:%d",
-			        seq_client, seq_port);
-			return false;
+		if (snd_seq_connect_to(seq_handle, my_port, seq_client,
+		                       seq_port) == 0) {
+			LOG_MSG("ALSA: Connected to port %d:%d", seq_client, seq_port);
+			return true;
 		}
 	}
 
-	LOG_MSG("ALSA: Connected to port %d:%d", seq_client, seq_port);
-	return true;
+	snd_seq_close(seq_handle);
+	LOG_MSG("ALSA: Can't connect to MIDI port %d:%d", seq_client, seq_port);
+	return false;
 }
 
 MIDI_RC MidiHandler_alsa::ListAll(Program *caller)
