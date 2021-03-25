@@ -180,6 +180,8 @@ void MidiHandler_alsa::PlayMsg(const uint8_t *msg)
 
 void MidiHandler_alsa::Close()
 {
+	seq_client = 0;
+	seq_port = 0;
 	if (seq_handle) {
 		HaltSequence();
 		snd_seq_close(seq_handle);
