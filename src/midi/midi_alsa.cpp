@@ -290,7 +290,13 @@ bool MidiHandler_alsa::Open(const char *conf)
 	if (seq_client != SND_SEQ_ADDRESS_SUBSCRIBERS) {
 		if (snd_seq_connect_to(seq_handle, my_port, seq_client,
 		                       seq_port) == 0) {
-			LOG_MSG("ALSA: Connected to MIDI port %d:%d", seq_client, seq_port);
+			snd_seq_client_info_t *info = nullptr;
+			snd_seq_client_info_malloc(&info);
+			assert(info);
+			snd_seq_get_any_client_info(seq_handle, seq_client, info);
+			LOG_MSG("ALSA: Connected to MIDI port %d:%d - %s", seq_client,
+			        seq_port, snd_seq_client_info_get_name(info));
+			snd_seq_client_info_free(info);
 			return true;
 		}
 	}
