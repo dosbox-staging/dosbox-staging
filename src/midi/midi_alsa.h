@@ -28,14 +28,17 @@
 
 #include <alsa/asoundlib.h>
 
+struct alsa_address {
+	int client;
+	int port;
+};
+
 class MidiHandler_alsa : public MidiHandler {
 private:
 	snd_seq_event_t ev = {};
 	snd_seq_t *seq_handle = nullptr;
-	int seq_client = 0;
-	int seq_port = 0;
-	int my_client = 0;
-	int my_port = 0;
+	alsa_address seq = {-1, -1}; // address of input port we're connected to
+	int output_port = 0;
 
 	void send_event(int do_flush);
 	bool parse_addr(const char *arg, int *client, int *port);

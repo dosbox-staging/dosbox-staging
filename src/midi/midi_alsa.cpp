@@ -34,11 +34,6 @@
 
 #define ADDR_DELIM ".:"
 
-struct alsa_address {
-	int client;
-	int port;
-};
-
 using port_action_t = std::function<void(snd_seq_client_info_t *client_info,
                                          snd_seq_port_info_t *port_info)>;
 
@@ -57,7 +52,7 @@ static void for_each_alsa_seq_port(port_action_t action)
 	snd_seq_client_info_malloc(&client_info);
 	assert(client_info);
 
-	snd_seq_port_info_t *port_info = nullptr;;
+	snd_seq_port_info_t *port_info = nullptr;
 	snd_seq_port_info_malloc(&port_info);
 	assert(port_info);
 
@@ -85,8 +80,8 @@ static bool port_is_writable(const unsigned int port_caps)
 void MidiHandler_alsa::send_event(int do_flush)
 {
 	snd_seq_ev_set_direct(&ev);
-	snd_seq_ev_set_source(&ev, my_port);
-	snd_seq_ev_set_dest(&ev, seq_client, seq_port);
+	snd_seq_ev_set_source(&ev, output_port);
+	snd_seq_ev_set_dest(&ev, seq.client, seq.port);
 
 	snd_seq_event_output(seq_handle, &ev);
 	if (do_flush)
@@ -180,8 +175,7 @@ void MidiHandler_alsa::PlayMsg(const uint8_t *msg)
 
 void MidiHandler_alsa::Close()
 {
-	seq_client = 0;
-	seq_port = 0;
+	seq = {-1, -1};
 	if (seq_handle) {
 		HaltSequence();
 		snd_seq_close(seq_handle);
@@ -240,8 +234,7 @@ static alsa_address find_seq_input_port()
 
 bool MidiHandler_alsa::Open(const char *conf)
 {
-	seq_client = -1;
-	seq_port = -1;
+	seq = {-1, -1};
 
 	char var[10];
 
@@ -252,19 +245,18 @@ bool MidiHandler_alsa::Open(const char *conf)
 	//
 	if (!is_empty(conf)) {
 		safe_strcpy(var, conf);
-		if (!parse_addr(var, &seq_client, &seq_port)) {
+		if (!parse_addr(var, &seq.client, &seq.port)) {
 			LOG_MSG("ALSA: Invalid alsa port %s", var);
 			return false;
 		}
 	} else {
 		const auto found_addr = find_seq_input_port();
 		if (found_addr.client > 0) {
-			seq_client = found_addr.client;
-			seq_port = found_addr.port;
+			seq = found_addr;
 		}
 	}
 
-	if (seq_client == -1) {
+	if (seq.client == -1) {
 		LOG_MSG("ALSA: No available MIDI devices found");
 		return false;
 	}
@@ -274,38 +266,38 @@ bool MidiHandler_alsa::Open(const char *conf)
 		return false;
 	}
 
-	my_client = snd_seq_client_id(seq_handle);
 	snd_seq_set_client_name(seq_handle, "DOSBox Staging");
 
 	unsigned int caps = SND_SEQ_PORT_CAP_READ;
-	if (seq_client == SND_SEQ_ADDRESS_SUBSCRIBERS)
+	if (seq.client == SND_SEQ_ADDRESS_SUBSCRIBERS)
 		caps = ~SND_SEQ_PORT_CAP_SUBS_READ;
 
-	my_port = snd_seq_create_simple_port(seq_handle,
-	                                     "Virtual MPU-401 output", caps,
-	                                     SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
-	if (my_port < 0) {
+	output_port = snd_seq_create_simple_port(
+	        seq_handle, "Virtual MPU-401 output", caps,
+	        SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
+
+	if (output_port < 0) {
 		snd_seq_close(seq_handle);
 		LOG_MSG("ALSA: Can't create ALSA port");
 		return false;
 	}
 
-	if (seq_client != SND_SEQ_ADDRESS_SUBSCRIBERS) {
-		if (snd_seq_connect_to(seq_handle, my_port, seq_client,
-		                       seq_port) == 0) {
+	if (seq.client != SND_SEQ_ADDRESS_SUBSCRIBERS) {
+		if (snd_seq_connect_to(seq_handle, output_port, seq.client,
+		                       seq.port) == 0) {
 			snd_seq_client_info_t *info = nullptr;
 			snd_seq_client_info_malloc(&info);
 			assert(info);
-			snd_seq_get_any_client_info(seq_handle, seq_client, info);
-			LOG_MSG("ALSA: Connected to MIDI port %d:%d - %s", seq_client,
-			        seq_port, snd_seq_client_info_get_name(info));
+			snd_seq_get_any_client_info(seq_handle, seq.client, info);
+			LOG_MSG("ALSA: Connected to MIDI port %d:%d - %s", seq.client,
+			        seq.port, snd_seq_client_info_get_name(info));
 			snd_seq_client_info_free(info);
 			return true;
 		}
 	}
 
 	snd_seq_close(seq_handle);
-	LOG_MSG("ALSA: Can't connect to MIDI port %d:%d", seq_client, seq_port);
+	LOG_MSG("ALSA: Can't connect to MIDI port %d:%d", seq.client, seq.port);
 	return false;
 }
 
@@ -317,8 +309,8 @@ MIDI_RC MidiHandler_alsa::ListAll(Program *caller)
 		const unsigned int caps = snd_seq_port_info_get_capability(port_info);
 
 		if ((type & SND_SEQ_PORT_TYPE_SYNTHESIZER) || port_is_writable(caps)) {
-			const bool selected = (addr->client == this->seq_client &&
-			                       addr->port == this->seq_port);
+			const bool selected = (addr->client == this->seq.client &&
+			                       addr->port == this->seq.port);
 			const char esc_color[] = "\033[32;1m";
 			const char esc_nocolor[] = "\033[0m";
 			caller->WriteOut("%c %s%3d:%d - %s - %s%s\n",
