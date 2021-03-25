@@ -302,9 +302,15 @@ MIDI_RC MidiHandler_alsa::ListAll(Program *caller)
 {
 	auto print_port = [caller](auto *client_info, auto *port_info) {
 		const auto *addr = snd_seq_port_info_get_addr(port_info);
-		caller->WriteOut("  %3d:%d - %s - %s\n", addr->client, addr->port,
-		                 snd_seq_client_info_get_name(client_info),
-		                 snd_seq_port_info_get_name(port_info));
+		const unsigned int type = snd_seq_port_info_get_type(port_info);
+		const unsigned int caps = snd_seq_port_info_get_capability(port_info);
+
+		if ((type & SND_SEQ_PORT_TYPE_SYNTHESIZER) || port_is_writable(caps)) {
+			caller->WriteOut("  %3d:%d - %s - %s\n", addr->client,
+			                 addr->port,
+			                 snd_seq_client_info_get_name(client_info),
+			                 snd_seq_port_info_get_name(port_info));
+		}
 	};
 	for_each_alsa_seq_port(print_port);
 	return MIDI_RC::OK;
