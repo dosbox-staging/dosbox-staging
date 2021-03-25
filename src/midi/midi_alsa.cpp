@@ -188,51 +188,54 @@ void MidiHandler_alsa::Close()
 	}
 }
 
-static alsa_address find_input_port()
+static alsa_address find_seq_input_port()
 {
-	int client = -1;
-	int port = -1;
+	alsa_address seq_addr = {-1, -1};
 
-	auto test_input_port = [&client, &port](auto *client_info, auto *port_info) {
+	// Modern sequencers like FluidSynth indicate that they
+	// are capable of generating sound.
+	//
+	auto find_synth_port = [&seq_addr](MAYBE_UNUSED auto *client_info,
+	                                   auto *port_info) {
 		const auto *addr = snd_seq_port_info_get_addr(port_info);
-		const auto client_type = snd_seq_client_info_get_type(client_info);
-		const unsigned int type = snd_seq_port_info_get_type(port_info);
-		const unsigned int caps = snd_seq_port_info_get_capability(port_info);
-
-		// DEBUG_LOG_MSG(":: %3d:%d %d %#8x %#8x", addr->client, addr->port,
-		//               client_type == SND_SEQ_USER_CLIENT, type, caps);
-
-		// Modern sequencers like FluidSynth indicate that they are
-		// capable of generating sound.
-		if (type & SND_SEQ_PORT_TYPE_SYNTHESIZER) {
-			client = addr->client;
-			port = addr->port;
-			return;
-		}
-
-		// Older sequencers like TiMidity++ only indicate that
-		// subscribers can write to them, but so does MIDI-Through port
-		// (which is a kernel client sequencer, not a user client one).
-		//
-		// When a sequencer does not set port type properly, we can't be
-		// sure which one is intended for input.  Therefore we consider
-		// only the first port for such sequencers.
-		//
-		// Prevents the problem with TiMidity++, which creates 4 ports
-		// but only first two ones generate sound (even though all 4
-		// ones are marked as writable).
-		//
-		const bool is_user_client = (client_type == SND_SEQ_USER_CLIENT);
-		const bool is_new_client = (addr->client != client);
-		if (is_new_client && is_user_client && port_is_writable(caps)) {
-			client = addr->client;
-			port = addr->port;
-			return;
+		const auto port_type = snd_seq_port_info_get_type(port_info);
+		if (port_type & SND_SEQ_PORT_TYPE_SYNTHESIZER) {
+			seq_addr.client = addr->client;
+			seq_addr.port = addr->port;
 		}
 	};
 
-	for_each_alsa_seq_port(test_input_port);
-	return {client, port};
+	for_each_alsa_seq_port(find_synth_port);
+	if (seq_addr.client != -1)
+		return seq_addr;
+
+	// Older sequencers like TiMidity++ only indicate that
+	// subscribers can write to them, but so does MIDI-Through port
+	// (which is a kernel client sequencer, not a user client one).
+	//
+	// When a sequencer does not set port type properly, we can't be
+	// sure which one is intended for input.  Therefore we consider
+	// only the first port for such sequencers.
+	//
+	// Prevents the problem with TiMidity++, which creates 4 ports
+	// but only first two ones generate sound (even though all 4
+	// ones are marked as writable).
+	//
+	auto find_input_port = [&seq_addr](auto *client_info, auto *port_info) {
+		const auto *addr = snd_seq_port_info_get_addr(port_info);
+		const auto caps = snd_seq_port_info_get_capability(port_info);
+		const auto client_type = snd_seq_client_info_get_type(client_info);
+
+		const bool is_user_client = (client_type == SND_SEQ_USER_CLIENT);
+		const bool is_new_client = (addr->client != seq_addr.client);
+		if (is_new_client && is_user_client && port_is_writable(caps)) {
+			seq_addr.client = addr->client;
+			seq_addr.port = addr->port;
+		}
+	};
+
+	for_each_alsa_seq_port(find_input_port);
+	return seq_addr;
 }
 
 bool MidiHandler_alsa::Open(const char *conf)
@@ -254,7 +257,7 @@ bool MidiHandler_alsa::Open(const char *conf)
 			return false;
 		}
 	} else {
-		const auto found_addr = find_input_port();
+		const auto found_addr = find_seq_input_port();
 		if (found_addr.client > 0) {
 			seq_client = found_addr.client;
 			seq_port = found_addr.port;
