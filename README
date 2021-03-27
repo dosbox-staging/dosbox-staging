@@ -795,15 +795,15 @@ MIXER
      of the volume levels.
 
   /LISTMIDI
-     In Windows lists the available midi devices on your PC. To select a device
-     other than the Windows default midi-mapper, change the line 'midiconfig='
-     in the [midi] section of the configuration file to 'midiconfig=id', where
-     'id' is the number for the device as listed by LISTMIDI. eg. midiconfig=2
+     Lists your PC's MIDI devices. To use one, set the 'midiconfig' attribute 
+     in your configuration file to the device's numerical ID or any part of
+     its textual name. For example:
 
-     In Linux this option doesn't work, but you get similar results by using
-     'pmidi -l' in console. Then change the line 'midiconfig=' to
-     'midiconfig=port', where 'port' is the port for the device as listed by
-     'pmidi -l'. eg. midiconfig=128:0
+     Examples:
+
+     (any OS)  midiconfig = name   # matches any part of name, case-insensitive
+     (Linux)   midiconfig = 128:0  # connects to specific port
+     (Windows) midiconfig = 2      # connects to specific port
 
 
 IMGMOUNT
