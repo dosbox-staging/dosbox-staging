@@ -63,6 +63,7 @@ private:
 	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
 	channel_t channel{nullptr, MIXER_DelChannel};
+	std::string selected_font = "";
 
 	std::vector<int16_t> play_buffer = {};
 	static constexpr auto num_buffers = 8;
