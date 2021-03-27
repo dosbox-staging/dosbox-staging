@@ -297,6 +297,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	settings = std::move(fluid_settings);
 	synth = std::move(fluid_synth);
 	channel = std::move(mixer_channel);
+	selected_font = soundfont;
 
 	// Start rendering audio
 	keep_rendering = true;
@@ -344,6 +345,7 @@ void MidiHandlerFluidsynth::Close()
 	settings.reset();
 	soft_limiter.Reset();
 	last_played_frame = 0;
+	selected_font = "";
 
 	is_open = false;
 }
@@ -449,23 +451,21 @@ void MidiHandlerFluidsynth::Render()
 	}
 }
 
-std::string format_sf2_line(const std::string &path, const std::string &name)
+std::string format_sf2_line(size_t width, const std::string &name, const std::string &path)
 {
-	const size_t term_width = INT10_GetTextColumns();
-	assert(term_width > 0);
-	std::vector<char> line_buf(term_width);
-	snprintf(line_buf.data(), term_width, "  %-16s - %s%s\n", name.c_str(),
-	         path.c_str(), name.c_str());
+	assert(width > 0);
+	std::vector<char> line_buf(width);
+	snprintf(line_buf.data(), width, "%-16s - %s", name.c_str(), path.c_str());
 	std::string line = line_buf.data();
 
-	// If line ends with a newline, then the whole description fits into a
-	// single line - no further formatting is necessary.
-	if (line.back() == '\n') 
+	// Formatted line did not fill the whole buffer - no further formatting
+	// is necessary.
+	if (line.size() + 1 < width)
 		return line;
 
 	// The description was too long and got trimmed; place three dots in
 	// the end to make it clear to the user.
-	const std::string cutoff = "...\n";
+	const std::string cutoff = "...";
 	assert(line.size() > cutoff.size());
 	line.replace(line.end() - cutoff.size(), line.end(), cutoff);
 	return line;
@@ -476,12 +476,23 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program *caller)
 	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
 	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"), 100);
 	const auto sf_name = std::get<std::string>(sf_spec);
+	const size_t term_width = INT10_GetTextColumns();
+
+	auto write_line = [caller](bool highlight, const std::string &line) {
+		const char color[] = "\033[32;1m";
+		const char nocolor[] = "\033[0m";
+		if (highlight)
+			caller->WriteOut("* %s%s%s\n", color, line.c_str(), nocolor);
+		else
+			caller->WriteOut("  %s\n", line.c_str());
+	};
 
 	// If selected soundfont exists in the current working directory,
 	// then print it.
 	const std::string sf_path = CROSS_ResolveHome(sf_name);
-	if (path_exists(sf_path))
-		caller->WriteOut("  %s\n", sf_path.c_str());
+	if (path_exists(sf_path)) {
+		write_line((sf_path == selected_font), sf_name);
+	}
 
 	// Go through all soundfont directories and list all .sf2 files.
 	char dir_entry_name[CROSS_LEN];
@@ -504,8 +515,14 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program *caller)
 			if (!is_sf2)
 				continue;
 
-			const auto line = format_sf2_line(dir_path, dir_entry_name);
-			caller->WriteOut(line.c_str());
+			const std::string font_path = dir_path + dir_entry_name;
+
+			const auto line = format_sf2_line(term_width - 2,
+			                                  dir_entry_name, font_path);
+			const bool highlight = is_open &&
+			                       (selected_font == font_path);
+
+			write_line(highlight, line);
 
 		} while (read_directory_next(dir, dir_entry_name, is_directory));
 	}
