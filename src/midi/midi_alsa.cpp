@@ -24,9 +24,11 @@
 #if C_ALSA
 
 #include <cassert>
-#include <string>
-#include <sstream>
+#include <cstring>
 #include <functional>
+#include <regex>
+#include <sstream>
+#include <string>
 
 #include "logging.h"
 #include "programs.h"
@@ -182,18 +184,33 @@ void MidiHandler_alsa::Close()
 	}
 }
 
-static alsa_address find_seq_input_port()
+static bool port_name_matches(const std::string &pattern,
+                              snd_seq_client_info_t *client_info,
+                              snd_seq_port_info_t *port_info)
+{
+	if (pattern.empty())
+		return true;
+
+	char port_name[40];
+	safe_sprintf(port_name, "%s - %s", snd_seq_client_info_get_name(client_info),
+	             snd_seq_port_info_get_name(port_info));
+
+	return (strcasestr(port_name, pattern.c_str()) != nullptr);
+}
+
+static alsa_address find_seq_input_port(const std::string &pattern)
 {
 	alsa_address seq_addr = {-1, -1};
 
 	// Modern sequencers like FluidSynth indicate that they
 	// are capable of generating sound.
 	//
-	auto find_synth_port = [&seq_addr](MAYBE_UNUSED auto *client_info,
-	                                   auto *port_info) {
+	auto find_synth_port = [&pattern, &seq_addr](auto *client_info,
+	                                             auto *port_info) {
 		const auto *addr = snd_seq_port_info_get_addr(port_info);
 		const auto port_type = snd_seq_port_info_get_type(port_info);
-		if (port_type & SND_SEQ_PORT_TYPE_SYNTHESIZER) {
+		const bool match = port_name_matches(pattern, client_info, port_info);
+		if (match && (port_type & SND_SEQ_PORT_TYPE_SYNTHESIZER)) {
 			seq_addr.client = addr->client;
 			seq_addr.port = addr->port;
 		}
@@ -215,14 +232,21 @@ static alsa_address find_seq_input_port()
 	// but only first two ones generate sound (even though all 4
 	// ones are marked as writable).
 	//
-	auto find_input_port = [&seq_addr](auto *client_info, auto *port_info) {
+	auto find_input_port = [&pattern, &seq_addr](auto *client_info,
+	                                             auto *port_info) {
 		const auto *addr = snd_seq_port_info_get_addr(port_info);
 		const auto caps = snd_seq_port_info_get_capability(port_info);
-		const auto client_type = snd_seq_client_info_get_type(client_info);
-
-		const bool is_user_client = (client_type == SND_SEQ_USER_CLIENT);
 		const bool is_new_client = (addr->client != seq_addr.client);
-		if (is_new_client && is_user_client && port_is_writable(caps)) {
+
+		bool is_candidate = false;
+		if (pattern.empty())
+			is_candidate = (snd_seq_client_info_get_type(client_info) ==
+			                SND_SEQ_USER_CLIENT);
+		else
+			is_candidate = port_name_matches(pattern, client_info,
+			                                 port_info);
+
+		if (is_new_client && is_candidate && port_is_writable(caps)) {
 			seq_addr.client = addr->client;
 			seq_addr.port = addr->port;
 		}
@@ -236,21 +260,18 @@ bool MidiHandler_alsa::Open(const char *conf)
 {
 	seq = {-1, -1};
 
-	char var[10];
+	char var[40];
 
 	DEBUG_LOG_MSG("ALSA: Attempting connection to: '%s'", conf);
 
 	// Try to use port specified in config; if port is not configured,
 	// then attempt to connect to the newest capable port.
 	//
-	if (!is_empty(conf)) {
-		safe_strcpy(var, conf);
-		if (!parse_addr(var, &seq.client, &seq.port)) {
-			LOG_MSG("ALSA: Invalid alsa port %s", var);
-			return false;
-		}
-	} else {
-		const auto found_addr = find_seq_input_port();
+	safe_strcpy(var, conf);
+	const bool use_specific_addr = parse_addr(var, &seq.client, &seq.port);
+
+	if (!use_specific_addr) {
+		const auto found_addr = find_seq_input_port(var);
 		if (found_addr.client > 0) {
 			seq = found_addr;
 		}
