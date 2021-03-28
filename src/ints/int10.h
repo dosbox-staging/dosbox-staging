@@ -94,7 +94,8 @@
 #define VGAMEM_MTEXT 0xB000
 
 #define BIOS_NCOLS Bit16u ncols=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
-#define BIOS_NROWS Bit16u nrows=(Bit16u)real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS)+1;
+#define BIOS_NROWS Bit16u nrows=IS_EGAVGA_ARCH?((Bit16u)real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS)+1):25;
+#define BIOS_CHEIGHT Bit8u cheight=IS_EGAVGA_ARCH?real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT):8;
 
 extern Bit8u int10_font_08[256 * 8];
 extern Bit8u int10_font_14[256 * 14];

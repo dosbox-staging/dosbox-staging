@@ -276,7 +276,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 				LOG(LOG_IOCTL,LOG_WARN)("ANSI SEQUENCES USED");
 			}
 			ncols = real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
-			nrows = real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) + 1;
+			nrows = IS_EGAVGA_ARCH ? (real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) + 1) : 25;
 			/* Turn them into positions that are on the screen */
 			if(ansi.data[0] == 0) ansi.data[0] = 1;
 			if(ansi.data[1] == 0) ansi.data[1] = 1;
@@ -298,7 +298,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 		case 'B': /*cursor Down */
 			col=CURSOR_POS_COL(page) ;
 			row=CURSOR_POS_ROW(page) ;
-			nrows = real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) + 1;
+			nrows = IS_EGAVGA_ARCH ? (real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) + 1) : 25;
 			tempdata = (ansi.data[0]? ansi.data[0] : 1);
 			if(tempdata + static_cast<Bitu>(row) >= nrows)
 				{ row = nrows - 1;}
@@ -361,7 +361,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 		case 'M': /* delete line (NANSI) */
 			row = CURSOR_POS_ROW(page);
 			ncols = real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
-			nrows = real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) + 1;
+			nrows = IS_EGAVGA_ARCH ? (real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) + 1) : 25;
 			INT10_ScrollWindow(row,0,nrows-1,ncols-1,ansi.data[0]? -ansi.data[0] : -1,ansi.attr,0xFF);
 			ClearAnsi();
 			break;

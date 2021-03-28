@@ -108,7 +108,7 @@
 #define BIOS_DEFAULT_IRQ0_LOCATION		(RealMake(0xf000,0xfea5))
 #define BIOS_DEFAULT_IRQ1_LOCATION		(RealMake(0xf000,0xe987))
 #define BIOS_DEFAULT_IRQ2_LOCATION		(RealMake(0xf000,0xff55))
-#define BIOS_DEFAULT_RESET_LOCATION		(RealMake(0xf000,0xe05b))
+#define BIOS_DEFAULT_RESET_LOCATION		(RealMake(0xf000,(machine==MCH_PCJR)?0x0043:0xe05b))
 
 /* maximum of scancodes handled by keyboard bios routines */
 #define MAX_SCAN_CODE 0x58

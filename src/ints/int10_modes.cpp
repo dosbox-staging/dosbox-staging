@@ -484,32 +484,38 @@ static void FinishSetMode(bool clearmem) {
 	real_writew(BIOSMEM_SEG,BIOSMEM_NB_COLS,(Bit16u)CurMode->twidth);
 	real_writew(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE,(Bit16u)CurMode->plength);
 	real_writew(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS,((CurMode->mode==7 )|| (CurMode->mode==0x0f)) ? 0x3b4 : 0x3d4);
-	real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,(Bit8u)(CurMode->theight-1));
-	real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,(Bit16u)CurMode->cheight);
-	real_writeb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,(0x60|(clearmem?0:0x80)));
-	real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0x09);
 
-	// this is an index into the dcc table:
-	if (IS_VGA_ARCH) real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,0x0b);
+	if (IS_EGAVGA_ARCH) {
+		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,(Bit8u)(CurMode->theight-1));
+		real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,(Bit16u)CurMode->cheight);
+		real_writeb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,(0x60|(clearmem?0:0x80)));
+		real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0x09);
+		// this is an index into the dcc table:
+		if (IS_VGA_ARCH) real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,0x0b);
+
+		/* Set font pointer */
+		if (CurMode->mode<=3 || CurMode->mode==7)
+			RealSetVec(0x43,int10.rom.font_8_first);
+		else {
+			switch (CurMode->cheight) {
+			case 8:RealSetVec(0x43,int10.rom.font_8_first);break;
+			case 14:RealSetVec(0x43,int10.rom.font_14);break;
+			case 16:RealSetVec(0x43,int10.rom.font_16);break;
+			}
+		}
+	}
 
 	// Set cursor shape
 	if (CurMode->type==M_TEXT) {
-		INT10_SetCursorShape(0x06,07);
+		if (machine==MCH_HERC)
+			INT10_SetCursorShape(0x0c,0x0d);
+		else
+			INT10_SetCursorShape(0x06,0x07);
 	}
 	// Set cursor pos for page 0..7
 	for (Bit8u ct=0;ct<8;ct++) INT10_SetCursorPos(0,0,ct);
 	// Set active page 0
 	INT10_SetActivePage(0);
-	/* Set some interrupt vectors */
-	if (CurMode->mode<=3 || CurMode->mode==7)
-		RealSetVec(0x43,int10.rom.font_8_first);
-	else {
-		switch (CurMode->cheight) {
-		case 8:RealSetVec(0x43,int10.rom.font_8_first);break;
-		case 14:RealSetVec(0x43,int10.rom.font_14);break;
-		case 16:RealSetVec(0x43,int10.rom.font_16);break;
-		}
-	}
 }
 
 bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
