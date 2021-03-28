@@ -451,7 +451,7 @@ void MidiHandlerFluidsynth::Render()
 
 std::string format_sf2_line(const std::string &path, const std::string &name)
 {
-	const size_t term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+	const size_t term_width = INT10_GetTextColumns();
 	assert(term_width > 0);
 	std::vector<char> line_buf(term_width);
 	snprintf(line_buf.data(), term_width, "  %-16s - %s%s\n", name.c_str(),

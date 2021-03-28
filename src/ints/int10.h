@@ -102,6 +102,9 @@
 #define BIOS_NROWS Bit16u nrows=IS_EGAVGA_ARCH?((Bit16u)real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS)+1):25;
 #define BIOS_CHEIGHT Bit8u cheight=IS_EGAVGA_ARCH?real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT):8;
 
+uint16_t INT10_GetTextColumns();
+uint16_t INT10_GetTextRows();
+
 extern Bit8u int10_font_08[256 * 8];
 extern Bit8u int10_font_14[256 * 14];
 extern Bit8u int10_font_16[256 * 16];

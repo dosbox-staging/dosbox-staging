@@ -189,6 +189,18 @@ static void TEXT_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u at
 	}
 }
 
+uint16_t INT10_GetTextColumns()
+{
+	return real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+}
+
+uint16_t INT10_GetTextRows()
+{
+	if (IS_EGAVGA_ARCH)
+		return real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS) + 1;
+	else
+		return 25;
+}
 
 void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit8u attr,Bit8u page) {
 /* Do some range checking */

@@ -189,8 +189,9 @@ void DOS_Shell::DoCommand(char * line) {
 void DOS_Shell::CMD_CLS(char *args)
 {
 	HELP("CLS");
-	const auto rows = real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS);
-	const auto cols = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+	const auto rows = INT10_GetTextRows() - 1;
+	const auto cols = INT10_GetTextColumns();
+
 	INT10_ScrollWindow(0, 0, rows, static_cast<uint8_t>(cols), -rows, 0x7, 0xff);
 	INT10_SetCursorPos(0, 0, 0);
 }
@@ -521,7 +522,7 @@ static std::vector<int> calc_column_widths(const std::vector<int> &word_widths,
 
 	// Actual terminal width (number of text columns) using current text
 	// mode; in practice it's either 40, 80, or 132.
-	const int term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+	const int term_width = INT10_GetTextColumns();
 
 	// Use term_width-1 because we never want to print line up to the actual
 	// limit; this would cause unnecessary line wrapping
@@ -648,13 +649,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	// Call it whenever a newline gets printed to potentially display
 	// this one-line message.
 	//
-	// For some strange reason number of columns stored in BIOS segment
-	// is exact, while number of rows is 0-based (so 80x25 mode is
-	// represented as 80x24).  It's convenient for us, as it means we can
-	// get away with (p_count % term_rows) instead of
-	// (p_count % (term_rows - 1)).
-	//
-	const int term_rows = real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS);
+	const int term_rows = INT10_GetTextRows() - 1;
 	auto show_press_any_key = [&]() {
 		p_count += 1;
 		if (optP && (p_count % term_rows) == 0)
