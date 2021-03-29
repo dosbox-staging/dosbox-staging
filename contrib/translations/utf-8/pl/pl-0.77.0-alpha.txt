@@ -63,8 +63,8 @@ fullscreen or when the mouse is captured in window mode.
 Zatrzymuje przed zamknięciem konsoli, jeśli dosbox zgłosił błąd.
 .
 :CONFIG_PRIORITY
-Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized.
-pause is only valid for the second entry.
+Priorytety dla DOSBoxa. Druga wartość po przecinku dotyczy okna DOSBoxa, które jest
+nieaktywne/zminimalizowane. Wartości 'pause' można używać tylko na drugiej pozycji.
 .
 :CONFIG_MAPPERFILE
 Plik używany do wczytywania/zapisywania skrótów klawiszowych.
@@ -84,10 +84,10 @@ Typ maszyny, który DOSBox próbuje naśladować.
 Katalog, w którym są przechowywane przechwycone pliki wave, midi oraz zrzuty ekranu.
 .
 :CONFIG_MEMSIZE
-Amount of memory DOSBox has in megabytes.
-This value is best left at its default to avoid problems with some games,
-though few games might require a higher value.
-There is generally no speed advantage when raising this value.
+Rozmiar pamięci DOSBoxa w megabajtach.
+Tej wartości lepiej nie zmieniać aby uniknąć problemów z niektórymi grami,
+choć czasem gry mogą wymagać większej wartości.
+Generalnie podniesienie tej wartości nie powoduje przyśpieszenia.
 .
 :CONFIG_STARTUP_VERBOSITY
 Controls verbosity prior to displaying the program:
@@ -100,7 +100,7 @@ splash_only |  yes   |   no    |     no
 auto        | 'low' if exec or dir is passed, otherwise 'high'
 .
 :CONFIG_FRAMESKIP
-How many frames DOSBox skips before drawing one.
+Jak wiele klatek DOSBox pomija zanim jakąś narysuje.
 .
 :CONFIG_ASPECT
 Scales the vertical resolution to produce a 4:3 display aspect
@@ -195,7 +195,7 @@ to use (find the id/name with DOS command 'mixer /listmidi').
 See the README/Manual for more details.
 .
 :CONFIG_MPU401
-Type of MPU-401 to emulate.
+Typ emulowanego MPU-401.
 .
 :CONFIG_SOUNDFONT
 Path to a SoundFont file in .sf2 format. You can use an
@@ -270,7 +270,7 @@ patche dla emulacji MIDI przez GUS. Zestawy patchy
 używane z Timidity powinny działać dobrze.
 .
 :CONFIG_PCSPEAKER
-Enable PC-Speaker emulation.
+Włącz emulację PC-Speakera.
 .
 :CONFIG_PCRATE
 Sample rate of the PC-Speaker sound generation.
@@ -643,7 +643,7 @@ MSCDEX: Błąd: jeszcze nie obsługiwane.
 
 .
 :MSCDEX_ERROR_PATH
-MSCDEX: Podana ścieżka nie jest prowadzi do napędu CD-ROM.
+MSCDEX: Błąd: Podana ścieżka nie prowadzi do napędu CD-ROM.
 
 .
 :MSCDEX_ERROR_OPEN
