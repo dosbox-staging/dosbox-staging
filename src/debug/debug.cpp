@@ -461,17 +461,16 @@ void CBreakpoint::ActivateBreakpointsExceptAt(PhysPt adr)
 	};
 };
 
-bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
 // Checks if breakpoint is valid and should stop execution
+bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
 {
 	// Quick exit if there are no breakpoints
 	if (BPoints.empty()) return false;
 
 	// Search matching breakpoint
-	std::list<CBreakpoint*>::iterator i;
-	CBreakpoint* bp;
-	for(i=BPoints.begin(); i != BPoints.end(); ++i) {
-		bp = (*i);
+	for (auto i = BPoints.begin(); i != BPoints.end(); ++i) {
+		CBreakpoint *bp = (*i);
+
 		if ((bp->GetType() == BKPNT_PHYSICAL) && bp->IsActive() &&
 		    (bp->GetLocation() == GetAddress(seg, off))) {
 			// Found
@@ -515,13 +514,13 @@ bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
 					DEBUG_ShowMsg("DEBUG: Memory breakpoint %s: %04X:%04X - %02X -> %02X\n",(bp->GetType()==BKPNT_MEMORY_PROT)?"(Prot)":"",bp->GetSegment(),bp->GetOffset(),bp->GetValue(),value);
 					bp->SetValue(value);
 					return true;
-				};
+				}
 			}
-		};
+		}
 #endif
-	};
+	}
 	return false;
-};
+}
 
 bool CBreakpoint::CheckIntBreakpoint(PhysPt adr, Bit8u intNr, Bit16u ahValue, Bit16u alValue)
 // Checks if interrupt breakpoint is valid and should stop execution
