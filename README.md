@@ -1,7 +1,7 @@
 # DOSBox Staging
 
-![GPL-2.0-or-later](https://img.shields.io/badge/license-GPL--2.0--or--later-blue)
-[![Chat](https://img.shields.io/discord/514567252864008206?color=%237289da&logo=discord&logoColor=white&label=discord)](https://discord.gg/WwAg3Xf)
+![GPL-2.0-or-later][gpl-badge]
+[![Chat][discord-badge]][discord]
 
 This repository attempts to modernize the DOSBox codebase by using current
 development practices and tools, fixing issues, and adding features that better
@@ -9,15 +9,15 @@ support today's systems.
 
 ### Build status
 
-[![Linux x86\_64 build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Linux%20builds?label=Linux%20(x86_64))](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22)
-[![Linux other build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Platform%20builds?label=Linux%20(ARM,%20S390x))](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Platform+builds%22)
-[![Windows build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Windows%20builds?label=Windows%20(x86,%20x86_64))](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22)
-[![macOS build status](https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/macOS%20builds?label=macOS%20(x86_64))](https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22)
+[![Linux x86\_64 build status][build-lin1-badge]][build-linux]
+[![Linux other build status][build-lin2-badge]][build-linux-2]
+[![Windows build status][build-win-badge]][build-win]
+[![macOS build status][build-mac-badge]][build-mac]
 
 ### Code quality status
 
-[![Coverity status](https://img.shields.io/coverity/scan/dosbox-staging)][4]
-[![LGTM grade](https://img.shields.io/lgtm/grade/cpp/github/dosbox-staging/dosbox-staging)][3]
+[![Coverity status][coverity-badge]][4]
+[![LGTM grade][lgtm-badge]][3]
 
 ## Summary of differences compared to upstream
 
@@ -220,3 +220,17 @@ For some historical context of why this repo exists you can read
 [`vogons/*`]:  https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F
 [`forks/*`]:   https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=forks%2F
 [git-notes]:   https://git-scm.com/docs/git-notes
+
+[gpl-badge]:        https://img.shields.io/badge/license-GPL--2.0--or--later-blue
+[discord-badge]:    https://img.shields.io/discord/514567252864008206?color=%237289da&logo=discord&logoColor=white&label=discord
+[discord]:          https://discord.gg/WwAg3Xf
+[build-lin1-badge]: https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Linux%20builds?label=Linux%20(x86_64)
+[build-linux]:      https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Linux+builds%22
+[build-lin2-badge]: https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Platform%20builds?label=Linux%20(ARM,%20S390x)
+[build-linux-2]:    https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Platform+builds%22
+[build-win-badge]:  https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Windows%20builds?label=Windows%20(x86,%20x86_64)
+[build-win]:        https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22
+[build-mac-badge]:  https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/macOS%20builds?label=macOS%20(x86_64)
+[build-mac]:        https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22
+[coverity-badge]:   https://img.shields.io/coverity/scan/dosbox-staging
+[lgtm-badge]:       https://img.shields.io/lgtm/grade/cpp/github/dosbox-staging/dosbox-staging
