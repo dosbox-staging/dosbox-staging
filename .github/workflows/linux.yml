@@ -26,12 +26,12 @@ jobs:
 
           - name: GCC, Ubuntu 20.04
             os: ubuntu-20.04
-            max_warnings: 3
+            max_warnings: 0
 
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
             build_flags: -Duse_fluidsynth=false
-            max_warnings: 3
+            max_warnings: 0
 
           - name: GCC 5, Ubuntu 18.04
             os: ubuntu-18.04
@@ -47,27 +47,27 @@ jobs:
           - name: GCC, +debugger
             os: ubuntu-20.04
             build_flags: -Denable_debugger=normal
-            max_warnings: 83
+            max_warnings: 80
 
           - name: GCC, -dyn-x86
             os: ubuntu-20.04
             build_flags: -Ddynamic_core=dynrec
-            max_warnings: 3
+            max_warnings: 0
 
           - name: GCC, -dyn-x86, +debugger
             os: ubuntu-20.04
             build_flags: -Ddynamic_core=dynrec -Denable_debugger=normal
-            max_warnings: 119
+            max_warnings: 116
 
           - name: GCC, -network
             os: ubuntu-20.04
             build_flags: -Duse_sdl2_net=false
-            max_warnings: 3
+            max_warnings: 0
 
           - name: GCC, warning_level=3
             os: ubuntu-20.04
             build_flags: -Dwarning_level=3
-            max_warnings: 73
+            max_warnings: 70
 
           - name: GCC, minimum build
             os: ubuntu-20.04
