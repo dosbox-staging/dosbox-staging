@@ -63,23 +63,72 @@ constexpr bool USE_NICE_RAMP = true;
 constexpr bool USE_NICE_PANNING = true;
 constexpr bool USE_NICE_PARTIAL_MIXING = true;
 
-// ROMs
+constexpr auto versioned = Model::ROM_TYPE::VERSIONED;
 constexpr auto unversioned = Model::ROM_TYPE::UNVERSIONED;
-const Model::Rom mt32_pcm_any_f = {"pcm_mt32", "MT32_PCM.ROM", unversioned};
-const Model::Rom mt32_ctrl_any_f = {"ctrl_mt32", "MT32_CONTROL.ROM", unversioned};
-const Model::Rom cm32l_pcm_any_f = {"pcm_cm32l", "CM32L_PCM.ROM", unversioned};
-const Model::Rom cm32l_ctrl_any_f = {"ctrl_cm32l", "CM32L_CONTROL.ROM", unversioned};
 
-// Models (composed of ROMs)
+// Traditional ROMs
+const Model::Rom mt32_pcm_any_f =    {"pcm_mt32",          "MT32_PCM.ROM",          unversioned};
+const Model::Rom mt32_ctrl_any_f =   {"ctrl_mt32",         "MT32_CONTROL.ROM",      unversioned};
+const Model::Rom cm32l_pcm_any_f =   {"pcm_cm32l",         "CM32L_PCM.ROM",         unversioned};
+const Model::Rom cm32l_ctrl_any_f =  {"ctrl_cm32l",        "CM32L_CONTROL.ROM",     unversioned};
+// MAME ROMs (versioned)
+const Model::Rom mt32_pcm_1_00_f =   {"pcm_mt32",          "r15449121.ic37.bin",    versioned};
+const Model::Rom mt32_pcm_1_00_l =   {"pcm_mt32_l",        "r15179844.ic21.bin",    versioned};
+const Model::Rom mt32_pcm_1_00_h =   {"pcm_mt32_h",        "r15179845.ic22.bin",    versioned};
+const Model::Rom mt32_ctrl_1_04_a =  {"ctrl_mt32_1_04_a",  "mt32_1.0.4.ic27.bin",   versioned};
+const Model::Rom mt32_ctrl_1_04_b =  {"ctrl_mt32_1_04_b",  "mt32_1.0.4.ic26.bin",   versioned};
+const Model::Rom mt32_ctrl_1_05_a =  {"ctrl_mt32_1_05_a",  "mt32_1.0.5.ic27.bin",   versioned};
+const Model::Rom mt32_ctrl_1_05_b =  {"ctrl_mt32_1_05_b",  "mt32_1.0.5.ic26.bin",   versioned};
+const Model::Rom mt32_ctrl_1_06_a =  {"ctrl_mt32_1_06_a",  "mt32_1.0.6.ic27.bin",   versioned};
+const Model::Rom mt32_ctrl_1_06_b =  {"ctrl_mt32_1_06_b",  "mt32_1.0.6.ic26.bin",   versioned};
+const Model::Rom mt32_ctrl_1_07_a =  {"ctrl_mt32_1_07_a",  "mt32_1.0.7.ic27.bin",   versioned};
+const Model::Rom mt32_ctrl_1_07_b =  {"ctrl_mt32_1_07_b",  "mt32_1.0.7.ic26.bin",   versioned};
+const Model::Rom mt32_ctrl_bluer_a = {"ctrl_mt32_bluer_a", "blue_ridge__mt32a.bin", versioned};
+const Model::Rom mt32_ctrl_bluer_b = {"ctrl_mt32_bluer_b", "blue_ridge__mt32b.bin", versioned};
+const Model::Rom mt32_ctrl_2_04_f =  {"ctrl_mt32_2_04",    "mt32_2.0.4.ic28.bin",   versioned};
+const Model::Rom cm32l_ctrl_1_00_f = {"ctrl_cm32l_1_00",   "lapc-i.v1.0.0.ic3.bin", versioned};
+const Model::Rom cm32l_ctrl_1_02_f = {"ctrl_cm32l_1_02",   "cm32l_control.rom",     versioned};
+const Model::Rom cm32l_pcm_1_00_h =  {"pcm_cm32l_h",       "r15179945.ic8.bin",     versioned};
+const Model::Rom &cm32l_pcm_1_00_l = mt32_pcm_1_00_f; // CM-32L re-uses the MT-32 samples
+
+// Roland LA Models (composed of ROMs)
 Model mt32_any_model = {"mt32",                              // model
                         &mt32_pcm_any_f,  nullptr, nullptr,  // PCM ROM(s)
                         &mt32_ctrl_any_f, nullptr, nullptr}; // Control ROM(s)
+Model mt32_1_04_model = {"mt32_1_04",
+                         &mt32_pcm_1_00_f, &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
+                         nullptr, &mt32_ctrl_1_04_a, &mt32_ctrl_1_04_b};
+Model mt32_1_05_model = {"mt32_1_05",
+                         &mt32_pcm_1_00_f, &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
+                         nullptr, &mt32_ctrl_1_05_a, &mt32_ctrl_1_05_b};
+Model mt32_1_06_model = {"mt32_1_06",
+                         &mt32_pcm_1_00_f, &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
+                         nullptr, &mt32_ctrl_1_06_a, &mt32_ctrl_1_06_b};
+Model mt32_1_07_model = {"mt32_1_07",
+                         &mt32_pcm_1_00_f, &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
+                         nullptr, &mt32_ctrl_1_07_a, &mt32_ctrl_1_07_b};
+Model mt32_bluer_model = {"mt32_bluer",
+                          &mt32_pcm_1_00_f, &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
+                          nullptr, &mt32_ctrl_bluer_a, &mt32_ctrl_bluer_b};
+Model mt32_2_04_model = {"mt32_2_04",
+                         &mt32_pcm_1_00_f, &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
+                         &mt32_ctrl_2_04_f, nullptr, nullptr};
 Model cm32l_any_model = {"cm32l",
                          &cm32l_pcm_any_f,  nullptr, nullptr,
                          &cm32l_ctrl_any_f, nullptr, nullptr};
+Model cm32l_1_00_model = {"cm32l_1_00",
+                          nullptr, &cm32l_pcm_1_00_l, &cm32l_pcm_1_00_h,
+                          &cm32l_ctrl_1_00_f, nullptr, nullptr};
+Model cm32l_1_02_model = {"cm32l_1_02",
+                          nullptr, &cm32l_pcm_1_00_l, &cm32l_pcm_1_00_h,
+                          &cm32l_ctrl_1_02_f, nullptr, nullptr};
 
 // In order that "model = auto" will load
-const std::deque<Model *> all_models = {&cm32l_any_model, &mt32_any_model};
+const std::deque<Model *> all_models = {&cm32l_any_model,  &cm32l_1_02_model,
+                                        &cm32l_1_00_model, &mt32_any_model,
+                                        &mt32_2_04_model,  &mt32_bluer_model,
+                                        &mt32_1_07_model,  &mt32_1_06_model,
+                                        &mt32_1_05_model,  &mt32_1_04_model};
 
 MidiHandler_mt32 mt32_instance;
 
@@ -89,25 +138,32 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 
 	const char *models[] = {"auto",
 	                        cm32l_any_model.Name().c_str(),
+	                        cm32l_1_02_model.Name().c_str(),
+	                        cm32l_1_00_model.Name().c_str(),
 	                        mt32_any_model.Name().c_str(),
+	                        mt32_2_04_model.Name().c_str(),
+	                        mt32_bluer_model.Name().c_str(),
+	                        mt32_1_07_model.Name().c_str(),
+	                        mt32_1_06_model.Name().c_str(),
+	                        mt32_1_05_model.Name().c_str(),
+	                        mt32_1_04_model.Name().c_str(),
 	                        0};
 	auto *str_prop = sec_prop.Add_string("model", when_idle, "auto");
 	str_prop->Set_values(models);
 	str_prop->Set_help(
-	        "Model of synthesizer to use. The default (auto) prefers CM-32L\n"
-	        "if both sets of ROMs are provided. For early Sierra games and Dune 2\n"
-	        "it's recommended to use 'mt32', while newer games typically made\n"
-	        "use of the CM-32L's extra sound effects (use 'auto' or 'cm32l')");
+	        "Model of synthesizer to use.\n"
+	        "'auto' picks the first model with available ROMs, in order as listed.");
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
 	str_prop->Set_help(
-	        "The directory containing one or both pairs of MT-32 and/or CM-32L ROMs.\n"
-	        "The files must be named in capitals, as follows:\n"
-	        "  - MT-32 ROM pair: MT32_CONTROL.ROM and MT32_PCM.ROM\n"
-	        "  - CM-32L ROM pair: CM32L_CONTROL.ROM and CM32L_PCM.ROM\n"
+	        "The directory containing ROMs for one or more models.\n"
 	        "The directory can be absolute or relative, or leave it blank to\n"
 	        "use the 'mt32-roms' directory in your DOSBox configuration\n"
-	        "directory, followed by checking other common system locations.");
+	        "directory, followed by checking other common system locations.\n"
+	        "ROM files inside the directory must be named as follows:\n"
+	        "  - MT32_CONTROL.ROM and MT32_PCM.ROM, for model 'mt32'\n"
+	        "  - CM32L_CONTROL.ROM and CM32L_PCM.ROM for model 'cm32l'\n"
+	        "  - Unzipped MAME MT-32 and CM-32L ROMs for the versioned models.\n");
 }
 
 #if defined(WIN32)
