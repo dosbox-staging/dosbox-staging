@@ -35,6 +35,7 @@
 #include "cross.h"
 #include "fs_utils.h"
 #include "midi.h"
+#include "midi_mt32_model.h"
 #include "mixer.h"
 #include "string_utils.h"
 #include "support.h"
@@ -62,13 +63,34 @@ constexpr bool USE_NICE_RAMP = true;
 constexpr bool USE_NICE_PANNING = true;
 constexpr bool USE_NICE_PARTIAL_MIXING = true;
 
+// ROMs
+constexpr auto unversioned = Model::ROM_TYPE::UNVERSIONED;
+const Model::Rom mt32_pcm_any_f = {"pcm_mt32", "MT32_PCM.ROM", unversioned};
+const Model::Rom mt32_ctrl_any_f = {"ctrl_mt32", "MT32_CONTROL.ROM", unversioned};
+const Model::Rom cm32l_pcm_any_f = {"pcm_cm32l", "CM32L_PCM.ROM", unversioned};
+const Model::Rom cm32l_ctrl_any_f = {"ctrl_cm32l", "CM32L_CONTROL.ROM", unversioned};
+
+// Models (composed of ROMs)
+Model mt32_any_model = {"mt32",                              // model
+                        &mt32_pcm_any_f,  nullptr, nullptr,  // PCM ROM(s)
+                        &mt32_ctrl_any_f, nullptr, nullptr}; // Control ROM(s)
+Model cm32l_any_model = {"cm32l",
+                         &cm32l_pcm_any_f,  nullptr, nullptr,
+                         &cm32l_ctrl_any_f, nullptr, nullptr};
+
+// In order that "model = auto" will load
+const std::deque<Model *> all_models = {&cm32l_any_model, &mt32_any_model};
+
 MidiHandler_mt32 mt32_instance;
 
 static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	const char *models[] = {"auto", "cm32l", "mt32", 0};
+	const char *models[] = {"auto",
+	                        cm32l_any_model.Name().c_str(),
+	                        mt32_any_model.Name().c_str(),
+	                        0};
 	auto *str_prop = sec_prop.Add_string("model", when_idle, "auto");
 	str_prop->Set_values(models);
 	str_prop->Set_help(
@@ -146,41 +168,17 @@ static std::deque<std::string> get_rom_dirs()
 
 #endif
 
-static bool load_rom_set(const std::string &ctr_path,
-                         const std::string &pcm_path,
-                         MidiHandler_mt32::service_t &service)
+static std::string load_model(const MidiHandler_mt32::service_t &service,
+                              const std::string &selected_model,
+                              const std::deque<std::string> &rom_dirs)
 {
-	const bool paths_exist = path_exists(ctr_path) && path_exists(pcm_path);
-	if (!paths_exist)
-		return false;
-
-	const bool roms_loaded = (service->addROMFile(ctr_path.c_str()) ==
-	                          MT32EMU_RC_ADDED_CONTROL_ROM) &&
-	                         (service->addROMFile(pcm_path.c_str()) ==
-	                          MT32EMU_RC_ADDED_PCM_ROM);
-	return roms_loaded;
-}
-
-static bool find_and_load(const std::string &model,
-                          const std::deque<std::string> &rom_dirs,
-                          MidiHandler_mt32::service_t &service)
-{
-	const std::string ctr_rom = model + "_CONTROL.ROM";
-	const std::string pcm_rom = model + "_PCM.ROM";
-	for (const auto &dir : rom_dirs) {
-		if (load_rom_set(dir + ctr_rom, dir + pcm_rom, service)) {
-			LOG_MSG("MT32: Found ROM pair in %s", dir.c_str());
-
-			mt32emu_rom_info rom_info;
-			service->getROMInfo(&rom_info);
-			LOG_MSG("MT32: Initialized %s with %s",
-			        rom_info.control_rom_description,
-			        rom_info.pcm_rom_description);
-
-			return true;
-		}
-	}
-	return false;
+	const bool is_auto = (selected_model == "auto");
+	for (auto &model : all_models)
+		if (is_auto || selected_model == model->Name())
+			for (const auto &dir : rom_dirs)
+				if (model->Load(service, dir))
+					return dir;
+	return "";
 }
 
 static mt32emu_report_handler_i get_report_handler_interface()
@@ -266,7 +264,7 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	assert(section);
 
 	// Which Roland model does the user want?
-	const std::string model = section->Get_string("model");
+	const std::string selected_model = section->Get_string("model");
 
 	// Get potential ROM directories from the environment and/or system
 	auto rom_dirs = get_rom_dirs();
@@ -281,21 +279,21 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	// Make sure we search the user's configured directory first
 	rom_dirs.emplace_front(CROSS_ResolveHome((preferred_dir)));
 
-	// Try the CM-32L ROMs if the user's model is "auto" or "cm32l"
-	bool roms_loaded = false;
-	if (model != "mt32")
-		roms_loaded = find_and_load("CM32L", rom_dirs, mt32_service);
-	// If we need to fallback or if mt32 was selected
-	if (!roms_loaded && model != "cm32l")
-		roms_loaded = find_and_load("MT32", rom_dirs, mt32_service);
-
-	if (!roms_loaded) {
+	// Load the selected model and print info about it
+	const auto found_in = load_model(mt32_service, selected_model, rom_dirs);
+	if (found_in.empty()) {
+		LOG_MSG("MT32: Failed to find ROMs for model %s in:",
+		        selected_model.c_str());
 		for (const auto &dir : rom_dirs) {
-			LOG_MSG("MT32: Failed to load Control and PCM ROMs from '%s'",
-			        dir.c_str());
+			const char div = (dir != rom_dirs.back() ? '|' : '`');
+			LOG_MSG("MT32:  %c- %s", div, dir.c_str());
 		}
 		return false;
 	}
+	mt32emu_rom_info rom_info;
+	mt32_service->getROMInfo(&rom_info);
+	LOG_MSG("MT32: Initialized %s from %s",
+	        rom_info.control_rom_description, found_in.c_str());
 
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
 	                                      this, std::placeholders::_1);
