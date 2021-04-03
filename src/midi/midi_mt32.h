@@ -34,13 +34,14 @@
 
 #define MT32EMU_API_TYPE 3
 #include <mt32emu/mt32emu.h>
-#if MT32EMU_VERSION_MAJOR != 2 || MT32EMU_VERSION_MINOR < 1
-#error Incompatible mt32emu library version
-#endif
 
 #include "mixer.h"
 #include "rwqueue.h"
 #include "soft_limiter.h"
+
+static_assert(MT32EMU_VERSION_MAJOR > 2 ||
+                      (MT32EMU_VERSION_MAJOR == 2 && MT32EMU_VERSION_MINOR >= 5),
+              "libmt32emu >= 2.5.0 required (using " MT32EMU_VERSION ")");
 
 class MidiHandler_mt32 final : public MidiHandler {
 private:
