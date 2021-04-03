@@ -35,6 +35,10 @@ tconv_l CP437 "utf-8/en/en-0.77.0-alpha.txt" en/en_US
 # keyb fr 858
 tconv_l CP858 "utf-8/fr/fr-0.77.0-alpha.txt" fr/fr_FR
 
+# keyb it
+# keyb it 858
+tconv_l CP858 "utf-8/it/it-0.77.0-alpha.txt" it/it_IT
+
 # keyb pl
 # keyb pl 852
 tconv_l CP852 "utf-8/pl/pl-0.77.0-alpha.txt" pl/pl_PL
