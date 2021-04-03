@@ -699,19 +699,19 @@ Devi montare la directory che contiene i file.
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mmount c c:\dosgames\[37m crea un'unit… C con i contenuti di c:\dosprog.บ
-บ                                                                         บ
-บ [32mc:\dosgames\[37m  un esempio. Sostituiscilo con la tua cartella dei giochi.  [37m บ
-ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c c:\dosgames\[37m crea un'unit… C con i contenuti di c:\dosprog.      บ
+บ                                                                          บ
+บ [32mc:\dosgames\[37m  un esempio. Sostituiscilo con la tua cartella dei giochi.[37m บ
+ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mmount c ~/dosgames[37m crea un'unit… C con i contenuti di ~/dosprog.บ
-บ                                                                      บ
-บ [32m~/dosgames[37m  un esempio. Sostituiscilo con la tua cartella dei giochi.[37m  บ
-ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c ~/dosgames[37m crea un'unit… C con i contenuti di ~/dosprog.       บ
+บ                                                                        บ
+บ [32m~/dosgames[37m  un esempio. Sostituiscilo con la tua cartella dei giochi.[37m บ
+ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 .
 :PROGRAM_INTRO_MOUNT_END
@@ -744,10 +744,12 @@ Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
 Questi sono i tasti predefiniti.
 Possono essere modificati nel [33mkeymapper[0m.
 
-[33;1mAlt+Enter[0m  Passa dalla modalit… a schermo intero a quella a finestra e viceversa.
+[33;1mAlt+Enter[0m  Passa dalla modalit… a schermo intero a quella a finestra
+           e viceversa.
 [33;1mAlt+Pause[0m  Mette in pausa/riavvia l'emulatore.
 [33;1mCtrl+F1[0m    Avvia il [33mkeymapper[0m.
-[33;1mCtrl+F4[0m    Passa tra le immagini disco montate, aggiorna la cache della cartella per tutte le unit….
+[33;1mCtrl+F4[0m    Passa tra le immagini disco montate, aggiorna la cache della
+           cartella per tutte le unit….
 [33;1mCtrl+F5[0m    Scatta un'istantanea dello schermo (screenshot).
 [33;1mCtrl+F6[0m    Avvia/ferma la registrazione dell'output audio su un file wave.
 [33;1mCtrl+F7[0m    Avvia/ferma la registrazione dell'output video su un file zmbv.
@@ -1186,43 +1188,44 @@ SUBST fallito. Hai commesso un errore nella riga di comando o l'unit… di destina
 ิ possibile utilizzare SUBST solo su unit… locali
 .
 :SHELL_STARTUP_BEGIN
-[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
 บ [32mBenvenuto in DOSBox Staging %-40s[37m บ
-บ                                                                    บ
-บ Per una breve introduzione per i nuovi utenti, digita: [33mINTRO[37m                 บ
-บ Per la lista dei comandi della shell supportati, digita: [33mHELP[37m                            บ
-บ                                                                    บ
-บ Per regolare la velocit… della CPU emulata, usa [31mCtrl+F11[37m e [31mCtrl+F12[37m.       บ
-บ Per attivare il keymapper [31mCtrl+F1[37m.                                 บ
-บ Ulteriori informazioni nel file [36mREADME[37m nella cartella di DOSBox. บ
-บ                                                                    บ
+บ                                                                      บ
+บ Per una breve introduzione per i nuovi utenti, digita: [33mINTRO[37m         บ
+บ Per la lista dei comandi della shell supportati, digita: [33mHELP[37m        บ
+บ                                                                      บ
+บ Per regolare la velocit… della CPU emulata, usa [31mCtrl+F11[37m e [31mCtrl+F12[37m. บ
+บ Per attivare il keymapper [31mCtrl+F1[37m.                                   บ
+บ Ulteriori informazioni nel file [36mREADME[37m nella cartella di DOSBox.     บ
+บ                                                                      บ
 
 .
 :SHELL_STARTUP_CGA
-บ DOSBox supporta la modalit… CGA Composita.                                บ
-บ Usa [31mF12[37m per impostare l'uscita composita su ON, OFF o AUTO (impostazione predefinita).        บ
-บ [31m(Alt+)F11[37m cambia tonalit…; [31mCtrl+Alt+F11[37m seleziona il modello CGA.  บ
-บ                                                                    บ
+บ DOSBox supporta la modalit… CGA Composita.                           บ
+บ Usa [31mF12[37m per impostare l'uscita composita su ON, OFF o AUTO           บ
+บ (impostazione predefinita).                                          บ
+บ [31m(Alt+)F11[37m cambia tonalit…; [31mCtrl+Alt+F11[37m seleziona il modello CGA.    บ
+บ                                                                      บ
 
 .
 :SHELL_STARTUP_CGA_MONO
-บ Usa [31mF11[37m per scorrere le modalit… verde, ambra, bianco e bianco-carta, บ
-บ e [31mAlt+F11[37m per modificare le impostazioni di contrasto/luminosit….                บ
+บ Usa [31mF11[37m per scorrere le modalit… verde, ambra, bianco e bianco-carta,บ
+บ e [31mAlt+F11[37m per modificare le impostazioni di contrasto/luminosit….    บ
 
 .
 :SHELL_STARTUP_HERC
-บ Usa [31mF11[37m per scorrere i colori monocromatici bianco, ambra e verde. บ
-บ                                                                    บ
+บ Usa [31mF11[37m per scorrere i colori monocromatici bianco, ambra e verde.   บ
+บ                                                                      บ
 
 .
 :SHELL_STARTUP_DEBUG
-บ Premi [31mAlt+Pause[37m per avviare il debugger o avvia l'exe con [33mDEBUG[37m. บ
-บ                                                                    บ
+บ Premi [31mAlt+Pause[37m per avviare il debugger o avvia l'exe con [33mDEBUG[37m.   บ
+บ                                                                      บ
 
 .
 :SHELL_STARTUP_END
-บ [33mhttps://dosbox-staging.github.io[37m                                   บ
-ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+บ [33mhttps://dosbox-staging.github.io[37m                                     บ
+ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 
 .
@@ -1409,10 +1412,10 @@ Utilizzo:
   [32;1mver[0m [37;1mset[0m [36;1mVERSIONE[0m
 
 Dove:
-  [36;1mVERSIONE[0m pu• essere un numero intero, ad esempio [36;1m5[0m, o includere un valore decimale
-          a due cifre, ad esempio: [36;1m6.22[0m, [36;1m7.01[0m, o [36;1m7.10[0m. In alternativa, il valore
-          decimale pu• essere separato da spazi, ad esempio: [36;1m6 22[0m, [36;1m7 01[0m, o [36;1m7 10[0m.
-
+  [36;1mVERSIONE[0m pu• essere un numero intero, ad esempio [36;1m5[0m, o includere un valore
+           decimale a due cifre, ad esempio: [36;1m6.22[0m, [36;1m7.01[0m, o [36;1m7.10[0m.
+           In alternativa, il valore decimale pu• essere separato da spazi,
+           ad esempio: [36;1m6 22[0m, [36;1m7 01[0m, o [36;1m7 10[0m.
 Note:
   La versione DOS pu• anche essere impostata nel file di configurazione nella 
   sezione [dos] usando l'impostazione "ver = [36;1mVERSIONE[0m".
