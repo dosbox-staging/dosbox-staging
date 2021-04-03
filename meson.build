@@ -197,8 +197,7 @@ if get_option('use_fluidsynth')
 endif
 
 if get_option('use_mt32emu')
-  # TODO version 2.5.0 will install mt32emu.pc file; upgrade when released
-  mt32emu_dep = dependency('mt32emu', version : '>= 2.4.2',
+  mt32emu_dep = dependency('mt32emu', version : '>= 2.5.0',
                            fallback : ['mt32emu', 'mt32emu_dep'],
                            not_found_message : msg.format('use_mt32emu'))
 endif
