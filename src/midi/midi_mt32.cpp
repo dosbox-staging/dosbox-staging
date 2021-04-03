@@ -182,6 +182,7 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 static std::deque<std::string> get_rom_dirs()
 {
 	return {
+	        "..\\mt32-roms\\",
 	        CROSS_GetPlatformConfigDir() + "mt32-roms\\",
 	        "C:\\mt32-rom-data\\",
 	};
@@ -192,6 +193,7 @@ static std::deque<std::string> get_rom_dirs()
 static std::deque<std::string> get_rom_dirs()
 {
 	return {
+	        "../mt32-roms/",
 	        CROSS_GetPlatformConfigDir() + "mt32-roms/",
 	        CROSS_ResolveHome("~/Library/Audio/Sounds/MT32-Roms/"),
 	        "/usr/local/share/mt32-rom-data/",
@@ -209,6 +211,7 @@ static std::deque<std::string> get_rom_dirs()
 	        xdg_data_home_env ? xdg_data_home_env : "~/.local/share");
 
 	std::deque<std::string> dirs = {
+	        "../mt32-roms/",
 	        xdg_data_home + "/dosbox/mt32-roms/",
 	        xdg_data_home + "/mt32-rom-data/",
 	};
