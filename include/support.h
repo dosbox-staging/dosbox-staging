@@ -54,6 +54,16 @@ uint8_t drive_index(char drive);
 // Convert index (0..26) to a drive letter (uppercase).
 char drive_letter(uint8_t index);
 
+// Returns the largest size() found in the iterable items 
+template <class T>
+size_t max_size(const T &iterable)
+{
+	size_t largest = 0;
+	for (const auto &item : iterable)
+		largest = std::max(largest, item.size());
+	return largest;
+}
+
 /*
  *  Converts a string to a finite number (such as float or double).
  *  Returns the number or quiet_NaN, if it could not be parsed.
