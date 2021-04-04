@@ -97,31 +97,31 @@ const Model::Rom &cm32l_pcm_1_00_l = mt32_pcm_1_00_f; // CM-32L re-uses the MT-3
 Model mt32_any_model = {"mt32",                              // model
                         &mt32_pcm_any_f,  nullptr, nullptr,  // PCM ROM(s)
                         &mt32_ctrl_any_f, nullptr, nullptr}; // Control ROM(s)
-Model mt32_1_04_model = {"mt32_1_04",
+Model mt32_104_model = {"mt32_104",
                          &mt32_pcm_1_00_f, &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
                          nullptr, &mt32_ctrl_1_04_a, &mt32_ctrl_1_04_b};
-Model mt32_1_05_model = {"mt32_1_05",
+Model mt32_105_model = {"mt32_105",
                          &mt32_pcm_1_00_f, &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
                          nullptr, &mt32_ctrl_1_05_a, &mt32_ctrl_1_05_b};
-Model mt32_1_06_model = {"mt32_1_06",
+Model mt32_106_model = {"mt32_106",
                          &mt32_pcm_1_00_f, &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
                          nullptr, &mt32_ctrl_1_06_a, &mt32_ctrl_1_06_b};
-Model mt32_1_07_model = {"mt32_1_07",
+Model mt32_107_model = {"mt32_107",
                          &mt32_pcm_1_00_f, &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
                          nullptr, &mt32_ctrl_1_07_a, &mt32_ctrl_1_07_b};
 Model mt32_bluer_model = {"mt32_bluer",
                           &mt32_pcm_1_00_f, &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
                           nullptr, &mt32_ctrl_bluer_a, &mt32_ctrl_bluer_b};
-Model mt32_2_04_model = {"mt32_2_04",
+Model mt32_204_model = {"mt32_204",
                          &mt32_pcm_1_00_f, &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
                          &mt32_ctrl_2_04_f, nullptr, nullptr};
 Model cm32l_any_model = {"cm32l",
                          &cm32l_pcm_any_f,  nullptr, nullptr,
                          &cm32l_ctrl_any_f, nullptr, nullptr};
-Model cm32l_1_00_model = {"cm32l_1_00",
+Model cm32l_100_model = {"cm32l_100",
                           nullptr, &cm32l_pcm_1_00_l, &cm32l_pcm_1_00_h,
                           &cm32l_ctrl_1_00_f, nullptr, nullptr};
-Model cm32l_1_02_model = {"cm32l_1_02",
+Model cm32l_102_model = {"cm32l_102",
                           nullptr, &cm32l_pcm_1_00_l, &cm32l_pcm_1_00_h,
                           &cm32l_ctrl_1_02_f, nullptr, nullptr};
 // Aliased models
@@ -133,12 +133,12 @@ Model mt32_old_model = {"mt32_old", // old is 1.07
                         nullptr,          &mt32_ctrl_1_07_a, &mt32_ctrl_1_07_b};
 
 // In order that "model = auto" will load
-const std::deque<Model *> all_models = {&cm32l_any_model,  &cm32l_1_02_model,
-                                        &cm32l_1_00_model, &mt32_any_model,
-                                        &mt32_new_model,   &mt32_2_04_model,
-                                        &mt32_old_model,   &mt32_1_07_model,
-                                        &mt32_bluer_model, &mt32_1_06_model,
-                                        &mt32_1_05_model,  &mt32_1_04_model};
+const std::deque<Model *> all_models = {&cm32l_any_model,  &cm32l_102_model,
+                                        &cm32l_100_model,  &mt32_any_model,
+                                        &mt32_new_model,   &mt32_204_model,
+                                        &mt32_old_model,   &mt32_107_model,
+                                        &mt32_bluer_model, &mt32_106_model,
+                                        &mt32_105_model,   &mt32_104_model};
 
 MidiHandler_mt32 mt32_instance;
 
@@ -148,17 +148,17 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 
 	const char *models[] = {"auto",
 	                        cm32l_any_model.Name().c_str(),
-	                        cm32l_1_02_model.Name().c_str(),
-	                        cm32l_1_00_model.Name().c_str(),
+	                        cm32l_102_model.Name().c_str(),
+	                        cm32l_100_model.Name().c_str(),
 	                        mt32_any_model.Name().c_str(),
 	                        mt32_new_model.Name().c_str(),
-	                        mt32_2_04_model.Name().c_str(),
+	                        mt32_204_model.Name().c_str(),
 	                        mt32_old_model.Name().c_str(),
-	                        mt32_1_07_model.Name().c_str(),
+	                        mt32_107_model.Name().c_str(),
 	                        mt32_bluer_model.Name().c_str(),
-	                        mt32_1_06_model.Name().c_str(),
-	                        mt32_1_05_model.Name().c_str(),
-	                        mt32_1_04_model.Name().c_str(),
+	                        mt32_106_model.Name().c_str(),
+	                        mt32_105_model.Name().c_str(),
+	                        mt32_104_model.Name().c_str(),
 	                        0};
 	auto *str_prop = sec_prop.Add_string("model", when_idle, "auto");
 	str_prop->Set_values(models);
