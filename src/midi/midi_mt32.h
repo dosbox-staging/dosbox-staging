@@ -54,6 +54,7 @@ public:
 	~MidiHandler_mt32() override;
 	void Close() override;
 	const char *GetName() const override { return "mt32"; }
+	MIDI_RC ListAll(Program *caller) override;
 	bool Open(const char *conf) override;
 	void PlayMsg(const uint8_t *msg) override;
 	void PlaySysex(uint8_t *sysex, size_t len) override;
