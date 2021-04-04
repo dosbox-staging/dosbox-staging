@@ -61,6 +61,7 @@ public:
 
 private:
 	uint32_t GetMidiEventTimestamp() const;
+	service_t GetService();
 	void MixerCallBack(uint16_t len);
 	void SetMixerLevel(const AudioFrame &desired) noexcept;
 	uint16_t GetRemainingFrames();
