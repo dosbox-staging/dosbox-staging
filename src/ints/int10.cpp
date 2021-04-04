@@ -52,7 +52,7 @@ static Bitu INT10_Handler(void) {
 
 	switch (reg_ah) {
 	case 0x00:								/* Set VideoMode */
-		Mouse_BeforeNewVideoMode(true);
+		Mouse_BeforeNewVideoMode();
 		INT10_SetVideoMode(reg_al);
 		Mouse_AfterNewVideoMode(true);
 		break;
@@ -206,7 +206,8 @@ static Bitu INT10_Handler(void) {
 	case 0x11:								/* Character generator functions */
 		if (!IS_EGAVGA_ARCH) 
 			break;
-		if ((reg_al&0xf0)==0x10) Mouse_BeforeNewVideoMode(false);
+		if ((reg_al & 0xf0) == 0x10)
+			Mouse_BeforeNewVideoMode();
 		switch (reg_al) {
 /* Textmode calls */
 		case 0x00:			/* Load user font */
@@ -541,7 +542,7 @@ graphics_chars:
 			reg_ah=VESA_GetSVGAModeInformation(reg_cx,SegValue(es),reg_di);
 			break;
 		case 0x02:							/* Set videomode */
-			Mouse_BeforeNewVideoMode(true);
+			Mouse_BeforeNewVideoMode();
 			reg_al=0x4f;
 			reg_ah=VESA_SetSVGAMode(reg_bx);
 			Mouse_AfterNewVideoMode(true);

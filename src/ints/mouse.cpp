@@ -610,7 +610,8 @@ static void Mouse_ResetHardware(void){
 	PIC_SetIRQMask(MOUSE_IRQ,false);
 }
 
-void Mouse_BeforeNewVideoMode(bool setmode) {
+void Mouse_BeforeNewVideoMode()
+{
 	if (CurMode->type!=M_TEXT) RestoreCursorBackground();
 	else RestoreCursorBackgroundText();
 	mouse.hidden = 1;
@@ -693,8 +694,9 @@ void Mouse_AfterNewVideoMode(bool setmode) {
 }
 
 //Much too empty, Mouse_NewVideoMode contains stuff that should be in here
-static void Mouse_Reset(void) {
-	Mouse_BeforeNewVideoMode(false);
+static void Mouse_Reset()
+{
+	Mouse_BeforeNewVideoMode();
 	Mouse_AfterNewVideoMode(false);
 	Mouse_SetMickeyPixelRate(8,16);
 
