@@ -46,7 +46,7 @@ option('dynamic_core', type : 'combo',
 # OS, installed libraries, and dependencies of those libraries.
 #
 option('try_static_libs', type : 'array',
-       choices : ['opusfile', 'png', 'sdl2', 'sdl2_net'], value : [],
+       choices : ['fluidsynth', 'opusfile', 'png', 'sdl2', 'sdl2_net'], value : [],
        description : 'Attempt to statically link selected libraries.')
 
 option('unit_tests', type : 'feature', value : 'auto',

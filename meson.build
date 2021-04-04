@@ -192,6 +192,7 @@ endif
 
 if get_option('use_fluidsynth')
   fluid_dep = dependency('fluidsynth', version : '>= 2.0.0',
+                         static : ('fluidsynth' in static_libs_list),
                          fallback : ['fluidsynth', 'fluidsynth_dep'],
                          not_found_message : msg.format('use_fluidsynth'))
 endif
