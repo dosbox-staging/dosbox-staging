@@ -122,12 +122,20 @@ Model cm32l_1_00_model = {"cm32l_1_00",
 Model cm32l_1_02_model = {"cm32l_1_02",
                           nullptr, &cm32l_pcm_1_00_l, &cm32l_pcm_1_00_h,
                           &cm32l_ctrl_1_02_f, nullptr, nullptr};
+// Aliased models
+Model mt32_new_model = {"mt32_new", // new is 2.04
+                        &mt32_pcm_1_00_f,  &mt32_pcm_1_00_l, &mt32_pcm_1_00_h,
+                        &mt32_ctrl_2_04_f, nullptr,          nullptr};
+Model mt32_old_model = {"mt32_old", // old is 1.07
+                        &mt32_pcm_1_00_f, &mt32_pcm_1_00_l,  &mt32_pcm_1_00_h,
+                        nullptr,          &mt32_ctrl_1_07_a, &mt32_ctrl_1_07_b};
 
 // In order that "model = auto" will load
 const std::deque<Model *> all_models = {&cm32l_any_model,  &cm32l_1_02_model,
                                         &cm32l_1_00_model, &mt32_any_model,
-                                        &mt32_2_04_model,  &mt32_bluer_model,
-                                        &mt32_1_07_model,  &mt32_1_06_model,
+                                        &mt32_new_model,   &mt32_2_04_model,
+                                        &mt32_old_model,   &mt32_1_07_model,
+                                        &mt32_bluer_model, &mt32_1_06_model,
                                         &mt32_1_05_model,  &mt32_1_04_model};
 
 MidiHandler_mt32 mt32_instance;
@@ -141,9 +149,11 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	                        cm32l_1_02_model.Name().c_str(),
 	                        cm32l_1_00_model.Name().c_str(),
 	                        mt32_any_model.Name().c_str(),
+	                        mt32_new_model.Name().c_str(),
 	                        mt32_2_04_model.Name().c_str(),
-	                        mt32_bluer_model.Name().c_str(),
+	                        mt32_old_model.Name().c_str(),
 	                        mt32_1_07_model.Name().c_str(),
+	                        mt32_bluer_model.Name().c_str(),
 	                        mt32_1_06_model.Name().c_str(),
 	                        mt32_1_05_model.Name().c_str(),
 	                        mt32_1_04_model.Name().c_str(),
@@ -152,7 +162,8 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	str_prop->Set_values(models);
 	str_prop->Set_help(
 	        "Model of synthesizer to use.\n"
-	        "'auto' picks the first model with available ROMs, in order as listed.");
+	        "'auto' picks the first model with available ROMs, in order as listed.\n"
+	        "'mt32_old' and 'mt32_new' are aliases for 1.07 and 2.04, respectively.");
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
 	str_prop->Set_help(
@@ -160,10 +171,10 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "The directory can be absolute or relative, or leave it blank to\n"
 	        "use the 'mt32-roms' directory in your DOSBox configuration\n"
 	        "directory, followed by checking other common system locations.\n"
-	        "ROM files inside the directory must be named as follows:\n"
+	        "ROM files inside this directory must be named as follows:\n"
 	        "  - MT32_CONTROL.ROM and MT32_PCM.ROM, for model 'mt32'\n"
 	        "  - CM32L_CONTROL.ROM and CM32L_PCM.ROM for model 'cm32l'\n"
-	        "  - Unzipped MAME MT-32 and CM-32L ROMs for the versioned models.\n");
+	        "  - Unzipped MAME MT-32 and CM-32L ROMs, to use the versioned models.\n");
 }
 
 #if defined(WIN32)
