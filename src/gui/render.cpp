@@ -102,8 +102,8 @@ void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue) {
 	if (render.pal.last<entry) render.pal.last=entry;
 }
 
-static void RENDER_EmptyLineHandler(const void * src) {
-}
+static void RENDER_EmptyLineHandler(const void *)
+{}
 
 static void RENDER_StartLineHandler(const void * s) {
 	if (s) {
