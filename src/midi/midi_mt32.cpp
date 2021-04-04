@@ -246,6 +246,38 @@ static std::deque<std::string> get_rom_dirs()
 
 #endif
 
+static std::deque<std::string> get_selected_dirs()
+{
+	Section_prop *section = static_cast<Section_prop *>(
+	        control->GetSection("mt32"));
+	assert(section);
+
+	// Get potential ROM directories from the environment
+	// and/or system
+	auto rom_dirs = get_rom_dirs();
+
+	// Get the user's configured ROM directory; otherwise
+	// use 'mt32-roms'
+	std::string selected_romdir = section->Get_string("romdir");
+	if (selected_romdir.empty()) // already trimmed
+		selected_romdir = "mt32-roms";
+	if (selected_romdir.back() != '/' && selected_romdir.back() != '\\')
+		selected_romdir += CROSS_FILESPLIT;
+
+	// Make sure we search the user's configured directory
+	// first
+	rom_dirs.emplace_front(CROSS_ResolveHome((selected_romdir)));
+	return rom_dirs;
+}
+
+static const char *get_selected_model()
+{
+	Section_prop *section = static_cast<Section_prop *>(
+	        control->GetSection("mt32"));
+	assert(section);
+	return section->Get_string("model");
+}
+
 static std::string load_model(const MidiHandler_mt32::service_t &service,
                               const std::string &selected_model,
                               const std::deque<std::string> &rom_dirs)
@@ -321,41 +353,22 @@ MidiHandler_mt32::MidiHandler_mt32()
           keep_rendering(false)
 {}
 
+MidiHandler_mt32::service_t MidiHandler_mt32::GetService()
+{
+	service_t mt32_service = std::make_unique<MT32Emu::Service>();
+	// Has libmt32emu already created a context?
+	if (!mt32_service->getContext())
+		mt32_service->createContext(get_report_handler_interface(), this);
+	return mt32_service;
+}
+
 bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 {
 	Close();
 
-	service_t mt32_service = std::make_unique<MT32Emu::Service>();
-
-	// Check version
-	uint32_t version = mt32_service->getLibraryVersionInt();
-	if (version < 0x020100) {
-		LOG_MSG("MT32: libmt32emu version is too old: %s",
-		        mt32_service->getLibraryVersionString());
-		return false;
-	}
-
-	mt32_service->createContext(get_report_handler_interface(), this);
-
-	Section_prop *section = static_cast<Section_prop *>(
-	        control->GetSection("mt32"));
-	assert(section);
-
-	// Which Roland model does the user want?
-	const std::string selected_model = section->Get_string("model");
-
-	// Get potential ROM directories from the environment and/or system
-	auto rom_dirs = get_rom_dirs();
-
-	// Get the user's configured ROM directory; otherwise use 'mt32-roms'
-	std::string preferred_dir = section->Get_string("romdir");
-	if (preferred_dir.empty()) // already trimmed
-		preferred_dir = "mt32-roms";
-	if (preferred_dir.back() != '/' && preferred_dir.back() != '\\')
-		preferred_dir += CROSS_FILESPLIT;
-
-	// Make sure we search the user's configured directory first
-	rom_dirs.emplace_front(CROSS_ResolveHome((preferred_dir)));
+	service_t mt32_service = GetService();
+	const std::string selected_model = get_selected_model();
+	const auto rom_dirs = get_selected_dirs();
 
 	// Load the selected model and print info about it
 	const auto found_in = load_model(mt32_service, selected_model, rom_dirs);
@@ -468,8 +481,10 @@ void MidiHandler_mt32::Close()
 		renderer.join();
 
 	// Stop the synthesizer
-	if (service)
+	if (service) {
 		service->closeSynth();
+		service->freeContext();
+	}
 
 	soft_limiter.PrintStats();
 
