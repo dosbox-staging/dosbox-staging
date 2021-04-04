@@ -72,7 +72,8 @@ struct XGAStatus {
 
 } xga;
 
-void XGA_Write_Multifunc(Bitu val, Bitu len) {
+static void XGA_Write_Multifunc(Bitu val)
+{
 	Bitu regselect = val >> 12;
 	Bitu dataval = val & 0xfff;
 	switch(regselect) {
@@ -888,7 +889,8 @@ void XGA_DrawPattern(Bitu val) {
 	}
 }
 
-void XGA_DrawCmd(Bitu val, Bitu len) {
+static void XGA_DrawCmd(Bitu val)
+{
 	Bit16u cmd;
 	cmd = val >> 13;
 #if XGA_SHOW_COMMAND_TRACE == 1
@@ -1102,7 +1104,7 @@ void XGA_Write(Bitu port, Bitu val, Bitu len) {
 			break;
 		case 0x9ae8:
 		case 0x8118: // Trio64V+ packed MMIO
-			XGA_DrawCmd(val, len);
+			XGA_DrawCmd(val);
 			break;
 		case 0xa2e8:
 			XGA_SetDualReg(xga.backcolor, val);
@@ -1138,7 +1140,7 @@ void XGA_Write(Bitu port, Bitu val, Bitu len) {
 			xga.foremix = val;
 			break;
 		case 0xbee8:
-			XGA_Write_Multifunc(val, len);
+			XGA_Write_Multifunc(val);
 			break;
 		case 0xe2e8:
 			xga.waitcmd.newline = false;
