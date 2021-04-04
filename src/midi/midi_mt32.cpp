@@ -27,6 +27,7 @@
 #include <cassert>
 #include <deque>
 #include <functional>
+#include <set>
 #include <string>
 
 #include <SDL_endian.h>
@@ -39,6 +40,7 @@
 #include "mixer.h"
 #include "string_utils.h"
 #include "support.h"
+#include "../ints/int10.h"
 
 // mt32emu Settings
 // ----------------
@@ -270,6 +272,16 @@ static const char *get_selected_model()
 	return section->Get_string("model");
 }
 
+static std::set<Model *> has_models(const MidiHandler_mt32::service_t &service,
+                                    const std::string &dir)
+{
+	std::set<Model *> models = {};
+	for (const auto m : all_models)
+		if (m->InDir(service, dir))
+			models.insert(m);
+	return models;
+}
+
 static std::string load_model(const MidiHandler_mt32::service_t &service,
                               const std::string &selected_model,
                               const std::deque<std::string> &rom_dirs)
@@ -352,6 +364,109 @@ MidiHandler_mt32::service_t MidiHandler_mt32::GetService()
 	if (!mt32_service->getContext())
 		mt32_service->createContext(get_report_handler_interface(), this);
 	return mt32_service;
+}
+
+MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
+{
+	service_t mt32_service = GetService();
+
+	// Get the set of models supported across the directories
+	std::set<std::string> dirs;
+	std::set<Model *> models_present;
+	for (const std::string &dir : get_selected_dirs()) {
+		for (const auto m : has_models(mt32_service, dir)) {
+			dirs.insert(dir);
+			models_present.insert(m);
+		}
+	}
+	if (models_present.empty()) {
+		caller->WriteOut("  No supported models present.");
+		return MIDI_RC::OK;
+	}
+
+	// Determine widths for the header and directories
+	const std::string pre_space = "  ";
+	size_t header_width = pre_space.size();
+	for (const auto m : all_models)
+		header_width += m->Version().size() + 1;
+
+	const size_t term_width = INT10_GetTextColumns() - 1;
+	assert(term_width > header_width);
+
+	const auto remainder_for_dirs = term_width - header_width;
+	const auto dirs_width = std::min(remainder_for_dirs, max_size(dirs));
+
+	const char gray[] = "\033[30;1m";
+	const char green[] = "\033[32;1m";
+	const char nocolor[] = "\033[0m";
+
+	// Print the header row of all models, graying those that aren't available
+	const std::string column_pad = " ";
+	const std::string dirs_padding(dirs_width, ' ');
+	const std::string selected_model = get_selected_model();
+	caller->WriteOut("%s%s", pre_space.c_str(), dirs_padding.c_str());
+	for (const auto m : all_models) {
+		if (models_present.find(m) != models_present.end()) {
+			// Print the model is green if it's selected
+			if (m->Name() == selected_model) {
+				caller->WriteOut("%s%s%s%s", green,
+				                 m->Version().c_str(), nocolor,
+				                 column_pad.c_str());
+			} else {
+				caller->WriteOut("%s%s", m->Version().c_str(),
+				                 column_pad.c_str());
+			}
+		}
+		// Print the model is gray if not in any directory
+		else {
+			caller->WriteOut("%s%s%s%s", gray, m->Version().c_str(),
+			                 nocolor, column_pad.c_str());
+		}
+	}
+	caller->WriteOut("\n");
+
+	// Print the directories and truncate as needed
+	bool printed_first_match = false;
+	for (const std::string &dir : dirs) {
+		const auto dir_models = has_models(mt32_service, dir);
+		std::string d_sized = dir;
+		if (dir.size() > dirs_width) {
+			const std::string cutoff = "..";
+			d_sized = dir.substr(0, dirs_width - cutoff.size()) + cutoff;
+		} else {
+			d_sized += std::string(dirs_width - dir.size(), ' ');
+		}
+		caller->WriteOut("%s%s", pre_space.c_str(), d_sized.c_str());
+
+		// Prints the model check-boxes, if available in the directory
+		for (const auto m : all_models) {
+			std::string item_check(m->Version().size() + column_pad.size(), ' ');
+			assert(item_check.size() > 2);
+
+			if (dir_models.find(m) != dir_models.end()) {
+				item_check[1] = 'y';
+
+				// Print the check-box in green for the first
+				// directory to have the selected model
+				if (m->Name() == selected_model &&
+				    !printed_first_match) {
+					caller->WriteOut("%s%s%s", green,
+					                 item_check.c_str(),
+					                 nocolor);
+					printed_first_match = true;
+					continue;
+				} else {
+					caller->WriteOut("%s", item_check.c_str());
+				}
+			} else {
+				item_check[1] = '-';
+				caller->WriteOut("%s%s%s", gray,
+				                 item_check.c_str(), nocolor);
+			}
+		}
+		caller->WriteOut("\n");
+	}
+	return MIDI_RC::OK;
 }
 
 bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
