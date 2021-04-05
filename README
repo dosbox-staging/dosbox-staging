@@ -795,13 +795,13 @@ MIXER
      of the volume levels.
 
   /LISTMIDI
-     List all available MIDI devices on your PC.  To select the specific device,
-     change the line 'midiconfig=' in the [midi] section of the configuration
-     file to 'midiconfig=<id>' or 'midiconfig=<substring of device name>'.
+     Lists your PC's MIDI devices. To use one, set the 'midiconfig' attribute 
+     in your configuration file to the device's numerical ID or any part of
+     its textual name. For example:
 
      Examples:
 
-     (any OS)  midiconfig = str    # matches case-insensitive substring of name
+     (any OS)  midiconfig = name   # matches any part of name, case-insensitive
      (Linux)   midiconfig = 128:0  # connects to specific port
      (Windows) midiconfig = 2      # connects to specific port
 
