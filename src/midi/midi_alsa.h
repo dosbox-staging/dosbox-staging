@@ -41,7 +41,6 @@ private:
 	int output_port = 0;
 
 	void send_event(int do_flush);
-	bool parse_addr(const char *arg, int *client, int *port);
 
 public:
 	MidiHandler_alsa() : MidiHandler() {}

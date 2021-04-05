@@ -90,9 +90,8 @@ void MidiHandler_alsa::send_event(int do_flush)
 		snd_seq_drain_output(seq_handle);
 }
 
-bool MidiHandler_alsa::parse_addr(const char *arg, int *client, int *port)
+static bool parse_addr(const std::string &in, int *client, int *port)
 {
-	std::string in(arg);
 	if (in.empty())
 		return false;
 
@@ -191,7 +190,7 @@ static bool port_name_matches(const std::string &pattern,
 	if (pattern.empty())
 		return true;
 
-	char port_name[40];
+	char port_name[80];
 	safe_sprintf(port_name, "%s - %s", snd_seq_client_info_get_name(client_info),
 	             snd_seq_port_info_get_name(port_info));
 
@@ -258,20 +257,19 @@ static alsa_address find_seq_input_port(const std::string &pattern)
 
 bool MidiHandler_alsa::Open(const char *conf)
 {
+	assert(conf != nullptr);
 	seq = {-1, -1};
-
-	char var[40];
 
 	DEBUG_LOG_MSG("ALSA: Attempting connection to: '%s'", conf);
 
 	// Try to use port specified in config; if port is not configured,
 	// then attempt to connect to the newest capable port.
 	//
-	safe_strcpy(var, conf);
-	const bool use_specific_addr = parse_addr(var, &seq.client, &seq.port);
+	const std::string conf_str = conf;
+	const bool use_specific_addr = parse_addr(conf_str, &seq.client, &seq.port);
 
 	if (!use_specific_addr) {
-		const auto found_addr = find_seq_input_port(var);
+		const auto found_addr = find_seq_input_port(conf_str);
 		if (found_addr.client > 0) {
 			seq = found_addr;
 		}
