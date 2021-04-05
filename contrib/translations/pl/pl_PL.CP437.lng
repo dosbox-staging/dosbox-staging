@@ -161,7 +161,7 @@ Wartosc mniejsza niz 100 jest traktowana jako ustawienie zmiany procentowej.
 Wlacz tryb cichy (dzwiek nadal jest emulowany).
 .
 :CONFIG_RATE
-Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.
+Czestotliwosc prขbkowania miksera, ustawienie czestotliwosci urzadzenia ponad te wartosc prawdopodobnie obnizy jakosc dzwieku.
 .
 :CONFIG_BLOCKSIZE
 Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.
@@ -222,19 +222,19 @@ use the 'mt32-roms' directory in your DOSBox configuration
 directory, followed by checking other common system locations.
 .
 :CONFIG_SBTYPE
-Type of Sound Blaster to emulate. 'gb' is Game Blaster.
+Typ emulowanego Sound Blastera 'gb' to Game Blaster.
 .
 :CONFIG_SBBASE
-The IO address of the Sound Blaster.
+Adres We/Wy (I/O) Sound Blastera.
 .
 :CONFIG_IRQ
-The IRQ number of the Sound Blaster.
+Numer IRQ Sound Blastera.
 .
 :CONFIG_DMA
-The DMA number of the Sound Blaster.
+Numer DMA Sound Blastera.
 .
 :CONFIG_HDMA
-The High DMA number of the Sound Blaster.
+Numer HDMA Sound Blastera.
 .
 :CONFIG_SBMIXER
 Allow the Sound Blaster mixer to modify the DOSBox mixer.
@@ -273,7 +273,7 @@ uzywane z Timidity powinny dzialac dobrze.
 Wlacz emulacje PC-Speakera.
 .
 :CONFIG_PCRATE
-Sample rate of the PC-Speaker sound generation.
+Czestotliwosc prขbkowania dzwieku generowanego przez PC-Speakera.
 .
 :CONFIG_ZERO_OFFSET
 Neutralizes and prevents the PC speaker's DC-offset from harming other sources.
@@ -281,10 +281,10 @@ Neutralizes and prevents the PC speaker's DC-offset from harming other sources.
 If your OS performs its own DC-offset correction, then set this to 'false'.
 .
 :CONFIG_TANDY
-Enable Tandy Sound System emulation. For 'auto', emulation is present only if machine is set to 'tandy'.
+Wlacz emulacje Tandy Sound System. Przy 'auto' emulacja odbywa sie tylko jesli maszyna jest ustawiona na 'tandy'..
 .
 :CONFIG_TANDYRATE
-Sample rate of the Tandy 3-Voice generation.
+Czestotliwosc prขbkowania Tandy 3-Voice.
 .
 :CONFIG_DISNEY
 Wlacza emulacje Disney Sound Source. (kompatybilne z Covox Voice Master oraz Covox Speech Thing).
@@ -695,19 +695,19 @@ You have to mount the directory containing the files.
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mmount c c:\dosgames\[37m will create a C drive with c:\dosgames as contents.บ
-บ                                                                         บ
-บ [32mc:\dosgames\[37m is an example. Replace it with your own games directory.  [37m บ
-ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c c:\dosprog\[37m utworzy dysk C z c:\dosprog jako zawartoscia.      บ
+บ                                                                        บ
+บ [32mc:\dosprog\[37m to przyklad. Zamien go na Twขj wlasny katalog z grami.  [37m           บ
+ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mmount c ~/dosgames[37m will create a C drive with ~/dosgames as contents.บ
-บ                                                                      บ
-บ [32m~/dosgames[37m is an example. Replace it with your own games directory.[37m  บ
-ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+[44;1mษอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c ~/dosprog[37m utworzy dysk C z ~/dosprog jako zawartoscia. บ
+บ                                                                     บ
+บ [32m~/dosprog[37m to przyklad. Zamien go na Twขj wlasny katalog z grami.  [37m บ
+ศอออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 .
 :PROGRAM_INTRO_MOUNT_END
@@ -796,13 +796,13 @@ Bootowanie z dysku %c...
 
 .
 :PROGRAM_BOOT_CART_WO_PCJR
-PCjr cartridge found, but machine is not PCjr
+Znaleziono kartridz PCjr, ale maszyna nie jest typu PCjr
 .
 :PROGRAM_BOOT_CART_LIST_CMDS
-Available PCjr cartridge commandos:%s
+Dostepne komendy kartridzy PCjr: %s
 .
 :PROGRAM_BOOT_CART_NO_CMDS
-No PCjr cartridge commandos found
+Nie znaleziono komend kartidzy PCjr
 .
 :PROGRAM_LOADROM_SPECIFY_FILE
 Must specify ROM file to load.
