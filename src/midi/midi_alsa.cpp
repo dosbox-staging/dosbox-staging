@@ -235,12 +235,16 @@ static alsa_address find_seq_input_port(const std::string &pattern)
 	                                             auto *port_info) {
 		const auto *addr = snd_seq_port_info_get_addr(port_info);
 		const auto caps = snd_seq_port_info_get_capability(port_info);
-		const auto client_type = snd_seq_client_info_get_type(client_info);
-
-		const bool is_user_client = (client_type == SND_SEQ_USER_CLIENT);
 		const bool is_new_client = (addr->client != seq_addr.client);
-		const bool match = port_name_matches(pattern, client_info, port_info);
-		const bool is_candidate = (pattern.empty() ? is_user_client : match);
+
+		bool is_candidate = false;
+		if (pattern.empty())
+			is_candidate = (snd_seq_client_info_get_type(client_info) ==
+			                SND_SEQ_USER_CLIENT);
+		else
+			is_candidate = port_name_matches(pattern, client_info,
+			                                 port_info);
+
 		if (is_new_client && is_candidate && port_is_writable(caps)) {
 			seq_addr.client = addr->client;
 			seq_addr.port = addr->port;
