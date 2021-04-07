@@ -145,12 +145,11 @@ const LASynthModel mt32_old_model = {"mt32_old", // old is 1.07
                                      &mt32_ctrl_107_a, &mt32_ctrl_107_b};
 
 // In order that "model = auto" will load
-const LASynthModel *all_models[] = {&cm32l_any_model,  &cm32l_102_model,
-                                    &cm32l_100_model,  &mt32_any_model,
-                                    &mt32_new_model,   &mt32_204_model,
-                                    &mt32_old_model,   &mt32_107_model,
-                                    &mt32_bluer_model, &mt32_106_model,
-                                    &mt32_105_model,   &mt32_104_model};
+const LASynthModel *all_models[] = {
+        &cm32l_any_model, &cm32l_102_model,  &cm32l_100_model, &mt32_any_model,
+        &mt32_old_model,  &mt32_107_model,   &mt32_106_model,  &mt32_105_model,
+        &mt32_104_model,  &mt32_bluer_model, &mt32_new_model,  &mt32_204_model,
+};
 
 MidiHandler_mt32 mt32_instance;
 
@@ -163,14 +162,14 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	                        cm32l_102_model.GetName(),
 	                        cm32l_100_model.GetName(),
 	                        mt32_any_model.GetName(),
-	                        mt32_new_model.GetName(),
-	                        mt32_204_model.GetName(),
 	                        mt32_old_model.GetName(),
 	                        mt32_107_model.GetName(),
-	                        mt32_bluer_model.GetName(),
 	                        mt32_106_model.GetName(),
 	                        mt32_105_model.GetName(),
 	                        mt32_104_model.GetName(),
+	                        mt32_bluer_model.GetName(),
+	                        mt32_new_model.GetName(),
+	                        mt32_204_model.GetName(),
 	                        0};
 	auto *str_prop = sec_prop.Add_string("model", when_idle, "auto");
 	str_prop->Set_values(models);
@@ -420,10 +419,10 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 	const auto delim_width = strlen(column_delim);
 
 	const LASynthModel *models_without_aliases[] = {
-	        &cm32l_any_model,  &cm32l_102_model, &cm32l_100_model,
-	        &mt32_any_model,   &mt32_204_model,  &mt32_107_model,
-	        &mt32_bluer_model, &mt32_106_model,  &mt32_105_model,
-	        &mt32_104_model};
+	        &cm32l_any_model, &cm32l_102_model, &cm32l_100_model,
+	        &mt32_any_model,  &mt32_107_model,  &mt32_106_model,
+	        &mt32_105_model,  &mt32_104_model,  &mt32_bluer_model,
+	        &mt32_204_model};
 
 	const size_t max_dir_width = get_max_dir_width(models_without_aliases,
 	                                               indent, column_delim);
