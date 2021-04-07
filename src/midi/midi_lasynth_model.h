@@ -64,6 +64,9 @@ public:
 	// The name "mt32" doesn't have a version, so "mt32" is returned.
 	const char *GetVersion() const;
 
+	// Returns true if the model has a matches that provided "mt32" or "cm32l".
+	bool Matches(const std::string &model_name) const;
+
 	using service_t = std::unique_ptr<MT32Emu::Service>;
 	bool InDir(const service_t &service, const std::string &dir) const;
 	bool Load(const service_t &service, const std::string &dir) const;

@@ -123,6 +123,12 @@ const char *LASynthModel::GetVersion() const
 	return name.data() + version_pos;
 }
 
+bool LASynthModel::Matches(const std::string &model_name) const
+{
+	assert(!model_name.empty());
+	return (name.rfind(model_name, 0) == 0);
+}
+
 size_t LASynthModel::SetVersion()
 {
 	// Given the versioned name "mt32_106", version_pos would be 5
