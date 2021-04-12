@@ -181,7 +181,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 		ticksScheduled = 0;
 		return;
 	}
-	
+
 	static Bit32s lastsleepDone = -1;
 	static Bitu sleep1count = 0;
 
@@ -215,11 +215,11 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 			ticksDone = 0;
 		return; //0
 
-		// If we do work this tick and sleep till the next tick, then ticksDone is decreased, 
+		// If we do work this tick and sleep till the next tick, then ticksDone is decreased,
 		// despite the fact that work was done as well in this tick. Maybe make it depend on an extra parameter.
 		// What do we know: ticksRemain = 0 (condition to enter this function)
 		// ticksNew = time before sleeping
-		
+
 		// maybe keep track of sleeped time in this frame, and use sleeped and done as indicators. (and take care of the fact there
 		// are frames that have both.
 	}
@@ -236,7 +236,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 
 	// Is the system in auto cycle mode guessing ? If not just exit. (It can be temporary disabled)
 	if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust) return;
-	
+
 	if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
 		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
 		/* ratio we are aiming for is around 90% usage*/
@@ -409,7 +409,7 @@ void DOSBOX_Init(void) {
 	Prop_multival *pmulti;
 	Prop_multival_remain* Pmulti_remain;
 
-	// Specifies if and when a setting can be changed 
+	// Specifies if and when a setting can be changed
 	constexpr auto always = Property::Changeable::Always;
 	constexpr auto deprecated = Property::Changeable::Deprecated;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
@@ -932,7 +932,7 @@ void DOSBOX_Init(void) {
 		"this has to be changed for each. AC:DE:48 is an address range reserved for\n"
 		"private use, so modify the last three number blocks.\n"
 		"I.e. AC:DE:48:88:99:AB.");
-	
+
 	Pstring = secprop->Add_string("realnic", Property::Changeable::WhenIdle,"list");
 	Pstring->Set_help("Specifies which of your network interfaces is used.\n"
 		"Write \'list\' here to see the list of devices in the\n"
