@@ -24,6 +24,7 @@
 #include <array>
 #include <cassert>
 #include <cerrno>
+#include <chrono>
 #include <cstdlib>
 #include <string.h>
 #include <stdio.h>
@@ -592,14 +593,30 @@ check_surface:
 	return flags;
 }
 
+// The frame-period holds the current duration for which a single host
+// video-frame is displayed. This is kept up-to-date when the video mode is set.
+// A sane starting value is used, which is based on a 60-Hz monitor.
+auto frame_period = std::chrono::nanoseconds(1000000000 / 60);
+static void UpdateFramePeriod()
+{
+	assert(sdl.window);
+	SDL_DisplayMode display_mode;
+	SDL_GetWindowDisplayMode(sdl.window, &display_mode);
+	const int refresh_rate = display_mode.refresh_rate > 0
+	                                 ? display_mode.refresh_rate
+	                                 : 60;
+	frame_period = std::chrono::nanoseconds(1000000000 / refresh_rate);
+}
 
 void GFX_ResetScreen(void) {
 	GFX_Stop();
 	if (sdl.draw.callback)
 		(sdl.draw.callback)( GFX_CallBackReset );
 	GFX_Start();
+	UpdateFramePeriod();
 	CPU_Reset_AutoAdjust();
 }
+
 
 void GFX_ForceFullscreenExit()
 {
@@ -2553,7 +2570,7 @@ static void FinalizeWindowState()
 	GFX_ResetScreen();
 }
 
-bool GFX_Events()
+static bool ProcessEvents()
 {
 #if defined(MACOSX)
 	// Don't poll too often. This can be heavy on the OS, especially Macs.
@@ -2799,8 +2816,42 @@ bool GFX_Events()
 	return !exit_requested;
 }
 
-#if defined (WIN32)
-static BOOL WINAPI ConsoleEventHandler(DWORD event) {
+// This function processes events just prior to the next frame period. The host
+// processing lag is measured and accounted for in the next pass.
+
+// Some modern (and very fast) systems experience unknown lag; in many cases
+// this is caused by host-event polling. Comment-in the REPORT_EVENT_LAG define
+// to have this function report excessive host lag. Typically process should be
+// well under 1 millisecond, however some hosts report lag in the tens to
+// hundereds of milliseconds.
+
+// #define REPORT_EVENT_LAG
+bool GFX_MaybeProcessEvents()
+{
+	static auto next_render_at = std::chrono::steady_clock::now() + frame_period;
+	const auto checked_at = std::chrono::steady_clock::now();
+	if (checked_at < next_render_at)
+		return true;
+
+	const bool process_result = ProcessEvents();
+	const auto rendered_at = std::chrono::steady_clock::now();
+	const auto host_lag = rendered_at - checked_at;
+	next_render_at = rendered_at + frame_period - host_lag;
+
+#if defined(REPORT_EVENT_LAG)
+	if (host_lag > std::chrono::milliseconds(3)) {
+		const auto host_lag_us =
+		        std::chrono::duration_cast<std::chrono::microseconds>(host_lag)
+		                .count();
+		LOG_MSG("SDL: Host polling took %.2f ms", host_lag_us / 1000.0);
+	}
+#endif
+	return process_result;
+}
+
+#if defined(WIN32)
+static BOOL WINAPI ConsoleEventHandler(DWORD event)
+{
 	switch (event) {
 	case CTRL_SHUTDOWN_EVENT:
 	case CTRL_LOGOFF_EVENT:
@@ -2814,7 +2865,6 @@ static BOOL WINAPI ConsoleEventHandler(DWORD event) {
 	}
 }
 #endif
-
 
 /* static variable to show wether there is not a valid stdout.
  * Fixes some bugs when -noconsole is used in a read only directory */

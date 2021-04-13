@@ -140,10 +140,10 @@ Bit32s ticksDone;
 Bit32u ticksScheduled;
 bool ticksLocked;
 void increaseticks();
-
 bool mono_cga=false;
 
-static Bitu Normal_Loop(void) {
+static Bitu Normal_Loop()
+{
 	Bits ret;
 	while (1) {
 		if (PIC_RunQueue()) {
@@ -158,12 +158,16 @@ static Bitu Normal_Loop(void) {
 			if (DEBUG_ExitLoop()) return 0;
 #endif
 		} else {
-			if (!GFX_Events())
+			if (!GFX_MaybeProcessEvents()) {
 				return 0;
+			}
 			if (ticksRemain > 0) {
 				TIMER_AddTick();
 				ticksRemain--;
-			} else {increaseticks();return 0;}
+			} else {
+				increaseticks();
+				return 0;
+			}
 		}
 	}
 }
