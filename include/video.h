@@ -54,7 +54,7 @@ typedef void (*GFX_CallBack_t)( GFX_CallBackFunctions_t function );
 // return code of:
 // - true means event loop can keep running.
 // - false means event loop wants to quit.
-bool GFX_Events();
+bool GFX_MaybeProcessEvents();
 
 Bitu GFX_GetBestMode(Bitu flags);
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
