@@ -1179,7 +1179,11 @@ public:
 		/* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */
 		if (DOS_PSP(dos.psp()).GetParent() != DOS_PSP(DOS_PSP(dos.psp()).GetParent()).GetParent()) return;
 		if (cmd->FindExist("cdrom",false)) {
-			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));
+#ifdef WIN32
+			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_WINDOWS"));
+#else
+			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_OTHER"));
+#endif
 			return;
 		}
 		if (cmd->FindExist("mount",false)) {
@@ -1197,8 +1201,12 @@ public:
 		DOS_ReadFile (STDIN,&c,&n);
 		DisplayMount();
 		DOS_ReadFile (STDIN,&c,&n);
-		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));
-		DOS_ReadFile (STDIN,&c,&n);
+#ifdef WIN32
+		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_WINDOWS"));
+#else
+		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_OTHER"));
+#endif
+		DOS_ReadFile(STDIN, &c, &n);
 		WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"));
 	}
 };
@@ -1742,24 +1750,42 @@ void DOS_SetupPrograms(void) {
 		"enter a directory (recognised by the \033[33;1m[]\033[0m in a directory listing).\n"
 		"You can run programs/files with extensions \033[31m.exe .bat\033[0m and \033[31m.com\033[0m.\n"
 		);
-	MSG_Add("PROGRAM_INTRO_CDROM",
-		"\033[2J\033[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:\033[0m\n"
-		"DOSBox provides CD-ROM emulation on several levels.\n"
-		"\n"
-		"This works on all normal directories, installs MSCDEX and marks the files\n"
-		"read-only. Usually this is enough for most games:\n"
-		"\n"
-		"\033[34;1mmount D C:\\example -t cdrom\033[0m\n"
-		"\n"
-		"If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
-		"\n"
-		"\033[34;1mmount D C:\\example -t cdrom -label CDLABEL\033[0m\n"
-		"\n"
-		"Additionally, you can use imgmount to mount iso or cue/bin images:\n"
-		"\n"
-		"\033[34;1mimgmount D C:\\cd.iso -t cdrom\033[0m\n"
-		);
-
+	MSG_Add("PROGRAM_INTRO_CDROM_WINDOWS",
+	        "\033[2J\033[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:\033[0m\n"
+	        "DOSBox provides CD-ROM emulation on several levels.\n"
+	        "\n"
+	        "This works on all normal directories, installs MSCDEX and marks the files\n"
+	        "read-only. Usually this is enough for most games:\n"
+	        "\n"
+	        "\033[34;1mmount D C:\\example -t cdrom\033[0m\n"
+	        "\n"
+	        "If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
+	        "\n"
+	        "\033[34;1mmount D C:\\example -t cdrom -label CDLABEL\033[0m\n"
+	        "\n"
+	        "Additionally, you can use imgmount to mount iso or cue/bin images:\n"
+	        "\n"
+	        "\033[34;1mimgmount D C:\\cd.iso -t cdrom\033[0m\n"
+	        "\n"
+	        "\033[34;1mimgmount D C:\\cd.cue -t cdrom\033[0m\n");
+	MSG_Add("PROGRAM_INTRO_CDROM_OTHER",
+	        "\033[2J\033[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:\033[0m\n"
+	        "DOSBox provides CD-ROM emulation on several levels.\n"
+	        "\n"
+	        "This works on all normal directories, installs MSCDEX and marks the files\n"
+	        "read-only. Usually this is enough for most games:\n"
+	        "\n"
+	        "\033[34;1mmount D ~/example -t cdrom\033[0m\n"
+	        "\n"
+	        "If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
+	        "\n"
+	        "\033[34;1mmount D ~/example -t cdrom -label CDLABEL\033[0m\n"
+	        "\n"
+	        "Additionally, you can use imgmount to mount iso or cue/bin images:\n"
+	        "\n"
+	        "\033[34;1mimgmount D ~/cd.iso -t cdrom\033[0m\n"
+	        "\n"
+	        "\033[34;1mimgmount D ~/cd.cue -t cdrom\033[0m\n");
 	MSG_Add("PROGRAM_INTRO_SPECIAL",
 	        "\033[2J\033[32;1mSpecial keys:\033[0m\n"
 	        "These are the default keybindings.\n"
