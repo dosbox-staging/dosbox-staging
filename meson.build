@@ -299,10 +299,12 @@ incdir = include_directories('include', '.')
 subdir('src/libs/decoders')
 subdir('src/libs/nuked')
 subdir('src/libs/ppscale')
+subdir('src/libs/residfp')
 
 libdecoders_dep = declare_dependency(link_with : libdecoders)
 libnuked_dep    = declare_dependency(link_with : libnuked)
 libppscale_dep  = declare_dependency(link_with : libppscale)
+libresidfp_dep  = declare_dependency(link_with : libresidfp)
 
 
 # internal libs
