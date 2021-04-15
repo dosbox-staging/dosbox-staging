@@ -58,4 +58,7 @@ class Config;
 // Gravis UltraSound configuration and initialization
 void GUS_AddConfigSection(Config *conf);
 
+// Innovation SSI-2001 configuration and initialization
+void INNOVATION_AddConfigSection(Config *conf);
+
 #endif
