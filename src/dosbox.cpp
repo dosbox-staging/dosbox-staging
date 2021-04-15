@@ -100,6 +100,7 @@ void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void DISNEY_Init(Section*);
 void PS1AUDIO_Init(Section *);
+void INNOVA_Init(Section*);
 void SERIAL_Init(Section*);
 
 
@@ -746,6 +747,21 @@ void DOSBOX_Init(void) {
 
 	// Configure Gravis UltraSound emulation
 	GUS_AddConfigSection(control);
+
+    secprop = control->AddSection_prop("innova",&INNOVA_Init,true);//done
+    Pbool = secprop->Add_bool("innova",Property::Changeable::WhenIdle,false);
+    Pbool->Set_help("Enable the Innovation SSI-2001 emulation.");
+    Pint = secprop->Add_int("samplerate",Property::Changeable::WhenIdle,22050);
+    Pint->Set_values(rates);
+    Pint->Set_help("Sample rate of Innovation SSI-2001 emulation");
+    Phex = secprop->Add_hex("sidbase",Property::Changeable::WhenIdle,0x280);
+	const char *sidbaseno[] = { "240", "220", "260", "280", "2a0", "2c0", "2e0", "300", 0 };
+    Phex->Set_values(sidbaseno);
+    Phex->Set_help("SID base port (typically 280h).");
+    Pint = secprop->Add_int("quality",Property::Changeable::WhenIdle,0);
+    const char *qualityno[] = { "0", "1", "2", "3", 0 };
+	Pint->Set_values(qualityno);
+    Pint->Set_help("Set SID emulation quality level (0 to 3).");
 
 	secprop = control->AddSection_prop("speaker",&PCSPEAKER_Init,true);//done
 	Pbool = secprop->Add_bool("pcspeaker",Property::Changeable::WhenIdle,true);
