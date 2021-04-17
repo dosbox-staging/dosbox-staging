@@ -857,10 +857,8 @@ void XGA_DrawPattern(Bitu val) {
 
 			if(mixselect == 0x3) {
 				// TODO lots of guessing here but best results this way
-				/*if(srcdata == xga.forecolor)*/ mixmode = xga.foremix;
-				// else 
-				if(srcdata == xga.backcolor || srcdata == 0) 
-					mixmode = xga.backmix;
+				if(srcdata) mixmode = xga.foremix;
+				else mixmode = xga.backmix;
 			}
 
 			switch((mixmode >> 5) & 0x03) {
