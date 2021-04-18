@@ -28,8 +28,6 @@
 #include "Dac.h"
 #include "Spline.h"
 
-#include "sidcxx11.h"
-
 namespace reSIDfp
 {
 
@@ -46,11 +44,7 @@ private:
 private:
     static std::unique_ptr<FilterModelConfig6581> instance;
     // This allows access to the private constructor
-#ifdef HAVE_CXX11
     friend std::unique_ptr<FilterModelConfig6581>::deleter_type;
-#else
-    friend class std::auto_ptr<FilterModelConfig6581>;
-#endif
 
     const double voice_voltage_range;
     const double voice_DC_voltage;
