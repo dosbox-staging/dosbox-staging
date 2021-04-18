@@ -26,7 +26,7 @@
 #include <iomanip>
 #include <cmath>
 
-#include "siddefs-fp.h"
+#include "../siddefs-fp.h"
 
 #include "Resampler.h"
 #include "TwoPassSincResampler.h"
