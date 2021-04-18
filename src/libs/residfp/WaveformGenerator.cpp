@@ -58,7 +58,7 @@ namespace reSIDfp
 const unsigned int FLOATING_OUTPUT_TTL_6581R3  =   54000;
 const unsigned int FLOATING_OUTPUT_FADE_6581R3 =    1400;
 // ~1s
-const unsigned int FLOATING_OUTPUT_TTL_6581R4  = 1000000;
+// const unsigned int FLOATING_OUTPUT_TTL_6581R4  = 1000000; // unused
 // ~1s
 const unsigned int FLOATING_OUTPUT_TTL_8580R5  =  800000;
 const unsigned int FLOATING_OUTPUT_FADE_8580R5 =   50000;
@@ -76,7 +76,7 @@ const unsigned int FLOATING_OUTPUT_FADE_8580R5 =   50000;
 const unsigned int SHIFT_REGISTER_RESET_6581R3 =   50000;
 const unsigned int SHIFT_REGISTER_FADE_6581R3  =   15000;
 // ~2.15s
-const unsigned int SHIFT_REGISTER_RESET_6581R4 = 2150000;
+// const unsigned int SHIFT_REGISTER_RESET_6581R4 = 2150000; // unused
 // ~2.8s
 const unsigned int SHIFT_REGISTER_RESET_8580R5 =  986000;
 const unsigned int SHIFT_REGISTER_FADE_8580R5  =  314300;
