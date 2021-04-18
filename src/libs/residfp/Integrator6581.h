@@ -195,7 +195,7 @@ public:
 #else
         n(1),
 #endif
-        N16(N16),
+        // N16(N16),
         Vddt(Vddt),
         nVt(nVt),
         nVmin(nVmin),
