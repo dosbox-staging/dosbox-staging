@@ -159,31 +159,31 @@ namespace reSIDfp
 class Integrator6581
 {
 private:
-    const unsigned short* vcr_Vg;
-    const unsigned short* vcr_n_Ids_term;
-    const unsigned short* opamp_rev;
+    const unsigned short* vcr_Vg = nullptr;
+    const unsigned short* vcr_n_Ids_term = nullptr;
+    const unsigned short* opamp_rev = nullptr;
 
-    unsigned int Vddt_Vw_2;
-    mutable int vx;
-    mutable int vc;
+    unsigned int Vddt_Vw_2 = 0;
+    mutable int vx = 0;
+    mutable int vc = 0;
 #ifdef SLOPE_FACTOR
     // Slope factor n = 1/k
     // where k is the gate coupling coefficient
     // k = Cox/(Cox+Cdep) ~ 0.7
-    mutable double n;
+    mutable double n = 0.0;
 #else
-    const int n;
+    const int n = 0;
 #endif
-    const double N16;
-    const unsigned short Vddt;
-    const unsigned short nVt;
-    const unsigned short nVmin;
-    const unsigned short n_snake;
+    // const double N16; // unused
+    const unsigned short Vddt = 0;
+    const unsigned short nVt = 0;
+    const unsigned short nVmin = 0;
+    const unsigned short n_snake = 0;
 
 public:
     Integrator6581(const unsigned short* vcr_Vg, const unsigned short* vcr_n_Ids_term,
                const unsigned short* opamp_rev, unsigned short Vddt, unsigned short nVt,
-               unsigned short nVmin, unsigned short n_snake, double N16) :
+               unsigned short nVmin, unsigned short n_snake, double /* N16 */) :
         vcr_Vg(vcr_Vg),
         vcr_n_Ids_term(vcr_n_Ids_term),
         opamp_rev(opamp_rev),

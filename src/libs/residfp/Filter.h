@@ -119,6 +119,10 @@ public:
 
     virtual ~Filter() {}
 
+    Filter(const Filter&) = delete; // prevent copy
+
+    Filter &operator=(const Filter&) = delete; // prevent assignment
+
     /**
      * SID clocking - 1 cycle
      *

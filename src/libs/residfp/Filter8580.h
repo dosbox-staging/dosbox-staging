@@ -279,21 +279,21 @@ class Integrator8580;
 class Filter8580 final : public Filter
 {
 private:
-    unsigned short** mixer;
-    unsigned short** summer;
-    unsigned short** gain_res;
-    unsigned short** gain_vol;
+    unsigned short** mixer = {};
+    unsigned short** summer = {};
+    unsigned short** gain_res = {};
+    unsigned short** gain_vol = {};
 
-    const int voiceScaleS11;
-    const int voiceDC;
+    const int voiceScaleS11 = 0;
+    const int voiceDC = 0;
 
-    double cp;
+    double cp = 0.0;
 
     /// VCR + associated capacitor connected to highpass output.
-    std::unique_ptr<Integrator8580> const hpIntegrator;
+    std::unique_ptr<Integrator8580> const hpIntegrator = {};
 
     /// VCR + associated capacitor connected to bandpass output.
-    std::unique_ptr<Integrator8580> const bpIntegrator;
+    std::unique_ptr<Integrator8580> const bpIntegrator = {};
 
 protected:
     /**
@@ -327,6 +327,8 @@ public:
     }
 
     ~Filter8580();
+    Filter8580(const Filter8580&) = delete; // prevent copy
+    Filter8580 &operator=(const Filter8580&) = delete; // prevent assignment
 
     unsigned short clock(int voice1, int voice2, int voice3) override;
 

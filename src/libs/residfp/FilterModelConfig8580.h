@@ -78,6 +78,8 @@ private:
 private:
     FilterModelConfig8580();
     ~FilterModelConfig8580();
+    FilterModelConfig8580(const FilterModelConfig8580&) = delete; // prevent copy
+    FilterModelConfig8580 &operator=(const FilterModelConfig8580&) = delete; // prevent assignment
 
 public:
     static FilterModelConfig8580* getInstance();

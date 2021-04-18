@@ -46,41 +46,41 @@ private:
     // This allows access to the private constructor
     friend std::unique_ptr<FilterModelConfig6581>::deleter_type;
 
-    const double voice_voltage_range;
-    const double voice_DC_voltage;
+    const double voice_voltage_range = 0;
+    const double voice_DC_voltage = 0;
 
     /// Capacitor value.
-    const double C;
+    const double C = 0;
 
     /// Transistor parameters.
     //@{
-    const double Vdd;
-    const double Vth;           ///< Threshold voltage
-    const double Ut;            ///< Thermal voltage: Ut = kT/q = 8.61734315e-5*T ~ 26mV
-    const double uCox;          ///< Transconductance coefficient: u*Cox
-    const double WL_vcr;        ///< W/L for VCR
-    const double WL_snake;      ///< W/L for "snake"
-    const double Vddt;          ///< Vdd - Vth
+    const double Vdd = 0;
+    const double Vth = 0;           ///< Threshold voltage
+    const double Ut = 0;            ///< Thermal voltage: Ut = kT/q = 8.61734315e-5*T ~ 26mV
+    const double uCox = 0;          ///< Transconductance coefficient: u*Cox
+    const double WL_vcr = 0;        ///< W/L for VCR
+    const double WL_snake = 0;      ///< W/L for "snake"
+    const double Vddt = 0;          ///< Vdd - Vth
     //@}
 
     /// DAC parameters.
     //@{
-    const double dac_zero;
-    const double dac_scale;
+    const double dac_zero = 0;
+    const double dac_scale = 0;
     //@}
 
     // Derived stuff
-    const double vmin, vmax;
-    const double denorm, norm;
+    const double vmin = 0, vmax = 0;
+    const double denorm = 0, norm = 0;
 
     /// Fixed point scaling for 16 bit op-amp output.
-    const double N16;
+    const double N16 = 0;
 
     /// Lookup tables for gain and summer op-amps in output stage / filter.
     //@{
-    unsigned short* mixer[8];
-    unsigned short* summer[5];
-    unsigned short* gain[16];
+    unsigned short* mixer[8] = {};
+    unsigned short* summer[5] = {};
+    unsigned short* gain[16] = {};
     //@}
 
     /// DAC lookup table
@@ -88,18 +88,20 @@ private:
 
     /// VCR - 6581 only.
     //@{
-    unsigned short vcr_Vg[1 << 16];
-    unsigned short vcr_n_Ids_term[1 << 16];
+    unsigned short vcr_Vg[1 << 16] = {};
+    unsigned short vcr_n_Ids_term[1 << 16] = {};
     //@}
 
     /// Reverse op-amp transfer function.
-    unsigned short opamp_rev[1 << 16];
+    unsigned short opamp_rev[1 << 16] = {};
 
 private:
     double getDacZero(double adjustment) const { return dac_zero + (1. - adjustment); }
 
     FilterModelConfig6581();
     ~FilterModelConfig6581();
+    FilterModelConfig6581(const FilterModelConfig6581&) = delete; // prevent copy
+    FilterModelConfig6581 &operator=(const FilterModelConfig6581&) = delete; // prevent assignment
 
 public:
     static FilterModelConfig6581* getInstance();

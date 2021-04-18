@@ -320,20 +320,20 @@ class Integrator6581;
 class Filter6581 final : public Filter
 {
 private:
-    const unsigned short* f0_dac;
+    const unsigned short* f0_dac = nullptr;
 
-    unsigned short** mixer;
-    unsigned short** summer;
-    unsigned short** gain;
+    unsigned short** mixer = {};
+    unsigned short** summer = {};
+    unsigned short** gain = {};
 
-    const int voiceScaleS11;
-    const int voiceDC;
+    const int voiceScaleS11 = 0;
+    const int voiceDC = 0;
 
     /// VCR + associated capacitor connected to highpass output.
-    std::unique_ptr<Integrator6581> const hpIntegrator;
+    std::unique_ptr<Integrator6581> const hpIntegrator = {};
 
     /// VCR + associated capacitor connected to bandpass output.
-    std::unique_ptr<Integrator6581> const bpIntegrator;
+    std::unique_ptr<Integrator6581> const bpIntegrator = {};
 
 protected:
     /**
@@ -365,6 +365,9 @@ public:
     }
 
     ~Filter6581();
+    Filter6581(const Filter6581&) = delete; // prevent copy
+    Filter6581 &operator=(const Filter6581&) = delete; // prevent assignment
+
 
     unsigned short clock(int voice1, int voice2, int voice3) override;
 

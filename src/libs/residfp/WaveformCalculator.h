@@ -95,7 +95,7 @@ private:
     typedef std::map<const CombinedWaveformConfig*, matrix_t> cw_cache_t;
 
 private:
-    cw_cache_t CACHE;
+    cw_cache_t CACHE = {};
 
     WaveformCalculator() {}
 

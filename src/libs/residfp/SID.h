@@ -59,7 +59,7 @@ class SID
 {
 private:
     /// Currently active filter
-    Filter* filter;
+    Filter* filter = nullptr;
 
     /// Filter used, if model is set to 6581
     std::unique_ptr<Filter6581> const filter6581;
@@ -71,10 +71,10 @@ private:
      * External filter that provides high-pass and low-pass filtering
      * to adjust sound tone slightly.
      */
-    std::unique_ptr<ExternalFilter> const externalFilter;
+    std::unique_ptr<ExternalFilter> const externalFilter = {};
 
     /// Resampler used by audio generation code.
-    std::unique_ptr<Resampler> resampler;
+    std::unique_ptr<Resampler> resampler = {};
 
     /// Paddle X register support
     std::unique_ptr<Potentiometer> const potX;
@@ -83,25 +83,25 @@ private:
     std::unique_ptr<Potentiometer> const potY;
 
     /// SID voices
-    std::unique_ptr<Voice> voice[3];
+    std::unique_ptr<Voice> voice[3] = {};
 
     /// Time to live for the last written value
-    int busValueTtl;
+    int busValueTtl = 0;
 
     /// Current chip model's bus value TTL
-    int modelTTL;
+    int modelTTL = 0;
 
     /// Time until #voiceSync must be run.
-    unsigned int nextVoiceSync;
+    unsigned int nextVoiceSync = 0;
 
     /// Currently active chip model.
-    ChipModel model;
+    ChipModel model = MOS6581;
 
     /// Last written value
-    unsigned char busValue;
+    unsigned char busValue = 0;
 
     /// Flags for muted channels
-    bool muted[3];
+    bool muted[3] = {};
 
 private:
     /**
@@ -129,6 +129,8 @@ private:
 public:
     SID();
     ~SID();
+    SID(const SID&) = delete; // prevent copy
+    SID &operator=(const SID&) = delete; // prevent assignment
 
     /**
      * Set chip model.

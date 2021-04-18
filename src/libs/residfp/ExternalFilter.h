@@ -63,14 +63,14 @@ class ExternalFilter
 {
 private:
     /// Lowpass filter voltage
-    int Vlp;
+    int Vlp = 0;
 
     /// Highpass filter voltage
-    int Vhp;
+    int Vhp = 0;
 
-    int w0lp_1_s7;
+    int w0lp_1_s7 = 0;
 
-    int w0hp_1_s17;
+    int w0hp_1_s17 = 0;
 
 public:
     /**
