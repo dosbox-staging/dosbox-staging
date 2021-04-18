@@ -52,18 +52,18 @@ namespace reSIDfp
 class Integrator8580
 {
 private:
-    const unsigned short* opamp_rev;
+    const unsigned short* opamp_rev = nullptr;
 
-    mutable int vx;
-    mutable int vc;
+    mutable int vx = 0;
+    mutable int vc = 0;
 
-    unsigned short nVgt;
-    unsigned short n_dac;
+    unsigned short nVgt = 0;
+    unsigned short n_dac = 0;
 
-    const double Vth;
-    const double nKp;
-    const double vmin;
-    const double N16;
+    const double Vth = 0.0;
+    const double nKp = 0.0;
+    const double vmin = 0.0;
+    const double N16 = 0.0;
 
 public:
     Integrator8580(const unsigned short* opamp_rev, double Vth, double nKp, double vmin, double N16) :
@@ -77,6 +77,10 @@ public:
     {
         setV(1.5);
     }
+
+    Integrator8580(const Integrator8580&) = delete; // prevent copy
+
+    Integrator8580 &operator=(const Integrator8580&) = delete; // prevent assignment
 
     void setFc(double wl)
     {

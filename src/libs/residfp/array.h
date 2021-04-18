@@ -61,6 +61,8 @@ public:
 
     ~matrix() { if (count->decrease() == 0) { delete count; delete [] data; } }
 
+    matrix &operator=(const matrix&) = delete; // prevent assignment
+
     unsigned int length() const { return x * y; }
 
     T* operator[](unsigned int a) { return &data[a * y]; }

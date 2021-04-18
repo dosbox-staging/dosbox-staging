@@ -76,10 +76,10 @@ class Dac
 {
 private:
     /// analog values
-    double * const dac;
+    double * const dac = nullptr;
 
     /// the dac array length
-    const unsigned int dacLength;
+    const unsigned int dacLength = 0;
 
 public:
     /**
@@ -89,6 +89,8 @@ public:
      */
     Dac(unsigned int bits);
     ~Dac();
+    Dac(const Dac&) = delete; // prevent copy
+    Dac &operator=(const Dac&) = delete; // prevent assignment
 
     /**
      * Build DAC model for specific chip.

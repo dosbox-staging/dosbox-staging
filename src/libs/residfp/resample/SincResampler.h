@@ -56,23 +56,23 @@ private:
 
 private:
     /// Table of the fir filter coefficients
-    matrix_t* firTable;
+    matrix_t* firTable = nullptr;
 
-    int sampleIndex;
+    int sampleIndex = 0;
 
     /// Filter resolution
-    int firRES;
+    int firRES = 0;
 
     /// Filter length
-    int firN;
+    int firN = 0;
 
-    const int cyclesPerSample;
+    const int cyclesPerSample = 0;
 
-    int sampleOffset;
+    int sampleOffset = 0;
 
-    int outputValue;
+    int outputValue = 0;
 
-    short sample[RINGSIZE * 2];
+    short sample[RINGSIZE * 2] = {};
 
 private:
     int fir(int subcycle);
@@ -99,6 +99,10 @@ public:
      * @param highestAccurateFrequency
      */
     SincResampler(double clockFrequency, double samplingFrequency, double highestAccurateFrequency);
+  
+    SincResampler(const SincResampler&) = delete; // prevent copy
+  
+    SincResampler &operator=(const SincResampler&) = delete; // prevent assignment
 
     bool input(int input) override;
 

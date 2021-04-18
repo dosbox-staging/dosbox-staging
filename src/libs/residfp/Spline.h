@@ -67,6 +67,10 @@ private:
 public:
     Spline(const Point input[], size_t inputLength);
 
+    Spline(const Spline&) = delete; // prevent copy
+
+    Spline &operator=(const Spline&) = delete; // prevent assignment
+
     /**
      * Evaluate y and its derivative at given point x.
      */

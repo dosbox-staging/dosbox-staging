@@ -84,57 +84,57 @@ namespace reSIDfp
 class WaveformGenerator
 {
 private:
-    matrix_t* model_wave;
+    matrix_t* model_wave = nullptr;
 
-    short* wave;
+    short* wave = nullptr;
 
     // PWout = (PWn/40.95)%
-    unsigned int pw;
+    unsigned int pw = 0;
 
-    unsigned int shift_register;
+    unsigned int shift_register = 0;
 
     /// Emulation of pipeline causing bit 19 to clock the shift register.
-    int shift_pipeline;
+    int shift_pipeline = 0;
 
-    unsigned int ring_msb_mask;
-    unsigned int no_noise;
-    unsigned int noise_output;
-    unsigned int no_noise_or_noise_output;
-    unsigned int no_pulse;
-    unsigned int pulse_output;
+    unsigned int ring_msb_mask = 0;
+    unsigned int no_noise = 0;
+    unsigned int noise_output = 0;
+    unsigned int no_noise_or_noise_output = 0;
+    unsigned int no_pulse = 0;
+    unsigned int pulse_output = 0;
 
     /// The control register right-shifted 4 bits; used for output function table lookup.
-    unsigned int waveform;
+    unsigned int waveform = 0;
 
-    unsigned int waveform_output;
+    unsigned int waveform_output = 0;
 
     /// Current and previous accumulator value.
-    unsigned int accumulator;
+    unsigned int accumulator = 0;
 
     // Fout  = (Fn*Fclk/16777216)Hz
-    unsigned int freq;
+    unsigned int freq = 0;
 
     // 8580 tri/saw pipeline
-    unsigned int tri_saw_pipeline;
-    unsigned int osc3;
+    unsigned int tri_saw_pipeline = 0;
+    unsigned int osc3 = 0;
 
     /// Remaining time to fully reset shift register.
-    unsigned int shift_register_reset;
+    unsigned int shift_register_reset = 0;
 
-    unsigned int floating_output_ttl;
+    unsigned int floating_output_ttl = 0;
 
     /// The control register bits. Gate is handled by EnvelopeGenerator.
     //@{
-    bool test;
-    bool sync;
+    bool test = false;
+    bool sync = false;
     //@}
 
     /// Tell whether the accumulator MSB was set high on this cycle.
-    bool msb_rising;
+    bool msb_rising = false;
 
-    bool is6581;
+    bool is6581 = false;
 
-    float dac[4096];
+    float dac[4096] = {};
 
 private:
     void clock_shift_register(unsigned int bit0);
