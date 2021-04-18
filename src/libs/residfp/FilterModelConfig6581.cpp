@@ -31,7 +31,6 @@
 namespace reSIDfp
 {
 
-#ifndef HAVE_CXX11
 /**
  * Compute log(1+x) without losing precision for small values of x
  *
@@ -42,7 +41,6 @@ inline double log1p(double x)
 {
     return log(1. + x) - (((1. + x) - 1.) - x) / (1. + x);
 }
-#endif
 
 const unsigned int OPAMP_SIZE = 33;
 

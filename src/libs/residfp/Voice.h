@@ -29,8 +29,6 @@
 #include "WaveformGenerator.h"
 #include "EnvelopeGenerator.h"
 
-#include "sidcxx11.h"
-
 namespace reSIDfp
 {
 
