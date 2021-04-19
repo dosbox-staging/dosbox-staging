@@ -58,7 +58,7 @@ static struct MemoryBlock {
 
 HostPt MemBase;
 
-class IllegalPageHandler : public PageHandler {
+class IllegalPageHandler final : public PageHandler {
 public:
 	IllegalPageHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
@@ -101,7 +101,7 @@ public:
 	}
 };
 
-class ROMPageHandler : public RAMPageHandler {
+class ROMPageHandler final : public RAMPageHandler {
 public:
 	ROMPageHandler() {
 		flags=PFLAG_READABLE|PFLAG_HASROM;
@@ -544,7 +544,7 @@ void MEM_PreparePCJRCartRom()
 
 HostPt GetMemBase(void) { return MemBase; }
 
-class MEMORY : public Module_base {
+class MEMORY final : public Module_base {
 private:
 	IO_ReadHandleObject ReadHandler{};
 	IO_WriteHandleObject WriteHandler{};

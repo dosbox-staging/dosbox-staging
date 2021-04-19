@@ -463,7 +463,7 @@ const char *const serial_comname[] = {"COM1", "COM2", "COM3", "COM4"};
 
 // the COM devices
 
-class device_COM : public DOS_Device {
+class device_COM final : public DOS_Device {
 public:
 	device_COM(const device_COM &) = delete;            // prevent copying
 	device_COM &operator=(const device_COM &) = delete; // prevent assignment

@@ -1060,7 +1060,7 @@ void BIOS_ZeroExtendedSize(bool in) {
 void BIOS_SetupKeyboard(void);
 void BIOS_SetupDisks(void);
 
-class BIOS:public Module_base{
+class BIOS final : public Module_base{
 private:
 	CALLBACK_HandlerObject callback[11];
 public:

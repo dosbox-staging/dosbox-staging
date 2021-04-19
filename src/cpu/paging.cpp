@@ -241,7 +241,7 @@ static INLINE bool InitPage_CheckUseraccess(Bitu u1,Bitu u2) {
 }
 
 
-class InitPageHandler : public PageHandler {
+class InitPageHandler final : public PageHandler {
 public:
 	InitPageHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
@@ -470,7 +470,7 @@ public:
 	}
 };
 
-class InitPageUserROHandler : public PageHandler {
+class InitPageUserROHandler final : public PageHandler {
 public:
 	InitPageUserROHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
@@ -870,7 +870,7 @@ bool PAGING_Enabled(void) {
 	return paging.enabled;
 }
 
-class PAGING:public Module_base{
+class PAGING final : public Module_base{
 public:
 	PAGING(Section* configuration):Module_base(configuration){
 		/* Setup default Page Directory, force it to update */

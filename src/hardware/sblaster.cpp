@@ -1645,7 +1645,7 @@ static void SBLASTER_CallBack(Bitu len) {
 	}
 }
 
-class SBLASTER: public Module_base {
+class SBLASTER final : public Module_base {
 private:
 	/* Data */
 	IO_ReadHandleObject ReadHandler[0x10];

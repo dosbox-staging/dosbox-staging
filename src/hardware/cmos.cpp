@@ -285,7 +285,7 @@ void CMOS_SetRegister(Bitu regNr, Bit8u val) {
 }
 
 
-class CMOS:public Module_base{
+class CMOS final : public Module_base{
 private:
 	IO_ReadHandleObject ReadHandler[2];
 	IO_WriteHandleObject WriteHandler[2];

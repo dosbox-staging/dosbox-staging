@@ -24,7 +24,7 @@
 
 #define NUMBER_ANSI_DATA 10
 
-class device_CON : public DOS_Device {
+class device_CON final : public DOS_Device {
 public:
 	device_CON() { SetName("CON"); }
 

@@ -311,7 +311,7 @@ void JOYSTICK_ParseConfiguredType()
 	assert(joytype != JOY_UNSET);
 }
 
-class JOYSTICK : public Module_base {
+class JOYSTICK final : public Module_base {
 private:
 	IO_ReadHandleObject ReadHandler = {};
 	IO_WriteHandleObject WriteHandler = {};

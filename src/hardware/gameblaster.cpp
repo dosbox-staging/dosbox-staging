@@ -118,7 +118,7 @@ static Bitu read_cms_detect(Bitu port, Bitu /* iolen */) {
 	return retval;
 }
 
-class CMS : public Module_base {
+class CMS final : public Module_base {
 private:
 	IO_WriteHandleObject WriteHandler = {};
 	IO_WriteHandleObject DetWriteHandler = {};

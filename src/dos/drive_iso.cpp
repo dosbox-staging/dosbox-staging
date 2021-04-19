@@ -30,7 +30,7 @@
 #define FLAGS1	((iso) ? de.fileFlags : de.timeZone)
 #define FLAGS2	((iso) ? de->fileFlags : de->timeZone)
 
-class isoFile : public DOS_File {
+class isoFile final : public DOS_File {
 public:
 	isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, uint32_t offset);
 	isoFile(const isoFile &) = delete;            // prevent copying

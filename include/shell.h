@@ -59,7 +59,7 @@ public:
 };
 
 class AutoexecEditor;
-class DOS_Shell : public Program {
+class DOS_Shell final : public Program {
 private:
 	friend class AutoexecEditor;
 	std::list<std::string> l_history{};

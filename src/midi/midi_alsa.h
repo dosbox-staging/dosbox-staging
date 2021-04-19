@@ -33,7 +33,7 @@ struct alsa_address {
 	int port;
 };
 
-class MidiHandler_alsa : public MidiHandler {
+class MidiHandler_alsa final : public MidiHandler {
 private:
 	snd_seq_event_t ev = {};
 	snd_seq_t *seq_handle = nullptr;

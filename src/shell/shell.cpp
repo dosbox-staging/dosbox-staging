@@ -393,7 +393,7 @@ void DOS_Shell::SyntaxError()
 	WriteOut(MSG_Get("SHELL_SYNTAXERROR"));
 }
 
-class AUTOEXEC:public Module_base {
+class AUTOEXEC final : public Module_base {
 private:
 	AutoexecObject autoexec[17];
 	AutoexecObject autoexec_echo;

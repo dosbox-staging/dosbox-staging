@@ -114,7 +114,7 @@ public:
 	virtual void InitNewMedia       (void) {}
 };
 
-class CDROM_Interface_Fake : public CDROM_Interface
+class CDROM_Interface_Fake final : public CDROM_Interface
 {
 public:
 	bool SetDevice          (char *) { return true; }
@@ -134,7 +134,7 @@ public:
 	bool LoadUnloadMedia    (bool /*unload*/) { return true; }
 };
 
-class CDROM_Interface_Image : public CDROM_Interface
+class CDROM_Interface_Image final : public CDROM_Interface
 {
 private:
 	// Nested Class Definitions
@@ -162,7 +162,7 @@ private:
 		const Bit16u chunkSize = 0;
 	};
 
-	class BinaryFile : public TrackFile {
+	class BinaryFile final : public TrackFile {
 	public:
 		BinaryFile      (const char *filename, bool &error);
 		~BinaryFile     ();
@@ -186,7 +186,7 @@ private:
 		std::ifstream   *file;
 	};
 
-	class AudioFile : public TrackFile {
+	class AudioFile final : public TrackFile {
 	public:
 		AudioFile       (const char *filename, bool &error);
 		~AudioFile      ();

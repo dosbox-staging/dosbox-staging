@@ -797,7 +797,7 @@ static void SDLCALL MIXER_CallBack(MAYBE_UNUSED void *userdata, Uint8 *stream, i
 static void MIXER_Stop(MAYBE_UNUSED Section *sec)
 {}
 
-class MIXER : public Program {
+class MIXER final : public Program {
 public:
 	void MakeVolume(char * scan,float & vol0,float & vol1) {
 		Bitu w=0;

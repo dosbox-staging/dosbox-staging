@@ -55,7 +55,7 @@ public:
 	virtual bool WriteToControlChannel(PhysPt /*bufptr*/,Bit16u /*size*/,Bit16u * /*retcode*/){return false;}
 };
 
-class device_LPT1 : public device_NUL {
+class device_LPT1 final : public device_NUL {
 public:
    	device_LPT1() { SetName("LPT1");}
 	Bit16u GetInformation(void) { return 0x80A0; }

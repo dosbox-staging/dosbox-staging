@@ -176,7 +176,7 @@ public:
 	}
 };
 
-class VGA_ChainedEGA_Handler : public PageHandler {
+class VGA_ChainedEGA_Handler final : public PageHandler {
 public:
 	Bitu readHandler(PhysPt addr) {
 		return vga.mem.linear[addr];
@@ -323,7 +323,7 @@ public:
 };
 
 //Slighly unusual version, will directly write 8,16,32 bits values
-class VGA_ChainedVGA_Handler : public PageHandler {
+class VGA_ChainedVGA_Handler final : public PageHandler {
 public:
 	VGA_ChainedVGA_Handler()  {
 		flags=PFLAG_NOCODE;
@@ -415,7 +415,7 @@ public:
 	}
 };
 
-class VGA_UnchainedVGA_Handler : public VGA_UnchainedRead_Handler {
+class VGA_UnchainedVGA_Handler final : public VGA_UnchainedRead_Handler {
 public:
 	void writeHandler( PhysPt addr, Bit8u val ) {
 		Bit32u data=ModeOperation(val);
@@ -458,7 +458,7 @@ public:
 	}
 };
 
-class VGA_TEXT_PageHandler : public PageHandler {
+class VGA_TEXT_PageHandler final : public PageHandler {
 public:
 	VGA_TEXT_PageHandler() {
 		flags=PFLAG_NOCODE;
@@ -492,7 +492,7 @@ public:
 	}
 };
 
-class VGA_Map_Handler : public PageHandler {
+class VGA_Map_Handler final : public PageHandler {
 public:
 	VGA_Map_Handler() {
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE|PFLAG_NOCODE;
@@ -507,7 +507,7 @@ public:
 	}
 };
 
-class VGA_Changes_Handler : public PageHandler {
+class VGA_Changes_Handler final : public PageHandler {
 public:
 	VGA_Changes_Handler() {
 		flags=PFLAG_NOCODE;
@@ -553,7 +553,7 @@ public:
 	}
 };
 
-class VGA_LIN4_Handler : public VGA_UnchainedEGA_Handler {
+class VGA_LIN4_Handler final : public VGA_UnchainedEGA_Handler {
 public:
 	VGA_LIN4_Handler() {
 		flags=PFLAG_NOCODE;
@@ -604,7 +604,7 @@ public:
 };
 
 
-class VGA_LFBChanges_Handler : public PageHandler {
+class VGA_LFBChanges_Handler final : public PageHandler {
 public:
 	VGA_LFBChanges_Handler() {
 		flags=PFLAG_NOCODE;
@@ -644,7 +644,7 @@ public:
 	}
 };
 
-class VGA_LFB_Handler : public PageHandler {
+class VGA_LFB_Handler final : public PageHandler {
 public:
 	VGA_LFB_Handler() {
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE|PFLAG_NOCODE;
@@ -661,7 +661,7 @@ public:
 extern void XGA_Write(Bitu port, Bitu val, Bitu len);
 extern Bitu XGA_Read(Bitu port, Bitu len);
 
-class VGA_MMIO_Handler : public PageHandler {
+class VGA_MMIO_Handler final : public PageHandler {
 public:
 	VGA_MMIO_Handler() {
 		flags=PFLAG_NOCODE;
@@ -693,7 +693,7 @@ public:
 	}
 };
 
-class VGA_TANDY_PageHandler : public PageHandler {
+class VGA_TANDY_PageHandler final : public PageHandler {
 public:
 	VGA_TANDY_PageHandler() {
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
@@ -713,7 +713,7 @@ public:
 };
 
 
-class VGA_PCJR_Handler : public PageHandler {
+class VGA_PCJR_Handler final : public PageHandler {
 public:
 	VGA_PCJR_Handler() {
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
@@ -730,7 +730,7 @@ public:
 	}
 };
 
-class VGA_HERC_Handler : public PageHandler {
+class VGA_HERC_Handler final : public PageHandler {
 public:
 	VGA_HERC_Handler() {
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
@@ -744,7 +744,7 @@ public:
 	}
 };
 
-class VGA_Empty_Handler : public PageHandler {
+class VGA_Empty_Handler final : public PageHandler {
 public:
 	VGA_Empty_Handler() {
 		flags=PFLAG_NOCODE;

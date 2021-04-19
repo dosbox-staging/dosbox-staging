@@ -25,7 +25,7 @@
 
 #include <string>
 
-class LS : public Program {
+class LS final : public Program {
 public:
 	void Run();
 };

@@ -38,7 +38,7 @@
 #define FAT16		   1
 #define FAT32		   2
 
-class fatFile : public DOS_File {
+class fatFile final : public DOS_File {
 public:
 	fatFile(const char* name, Bit32u startCluster, Bit32u fileLen, fatDrive *useDrive);
 	fatFile(const fatFile&) = delete; // prevent copy

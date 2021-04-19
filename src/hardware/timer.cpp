@@ -412,7 +412,7 @@ bool TIMER_GetOutput2(void) {
 	return counter_output(2);
 }
 
-class TIMER:public Module_base{
+class TIMER final : public Module_base{
 private:
 	IO_ReadHandleObject ReadHandler[4];
 	IO_WriteHandleObject WriteHandler[4];

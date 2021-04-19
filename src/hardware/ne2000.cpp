@@ -1474,7 +1474,7 @@ static void NE2000_Poller(void) {
 #include <windows.h>
 #endif
 
-class NE2K: public Module_base {
+class NE2K final : public Module_base {
 private:
 	// Data
 	IO_ReadHandleObject ReadHandler8[0x20];
