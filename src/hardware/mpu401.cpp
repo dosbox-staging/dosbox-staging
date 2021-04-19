@@ -631,7 +631,7 @@ static void MPU401_Reset(void) {
 	for (Bitu i=0;i<8;i++) {mpu.playbuf[i].type=T_OVERFLOW;mpu.playbuf[i].counter=0;}
 }
 
-class MPU401:public Module_base{
+class MPU401 final : public Module_base{
 private:
 	IO_ReadHandleObject ReadHandler[2];
 	IO_WriteHandleObject WriteHandler[2];

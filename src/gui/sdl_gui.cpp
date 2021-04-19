@@ -205,7 +205,7 @@ static void UI_Shutdown(GUI::ScreenSDL *screen) {
 }
 
 /* helper class for command execution */
-class VirtualBatch : public BatchFile {
+class VirtualBatch final : public BatchFile {
 protected:
 	std::istringstream lines;
 public:
@@ -234,7 +234,7 @@ static void UI_RunCommands(GUI::ScreenSDL *s, const std::string &cmds) {
 
 
 /* stringification and conversion from the c++ FAQ */
-class BadConversion : public std::runtime_error {
+class BadConversion final : public std::runtime_error {
 public: BadConversion(const std::string& s) : std::runtime_error(s) { }
 };
 
@@ -275,7 +275,7 @@ public:
 	}
 };
 
-class PropertyEditorBool : public PropertyEditor {
+class PropertyEditorBool final : public PropertyEditor {
 	GUI::Checkbox *input;
 public:
 	PropertyEditorBool(Window *parent, int x, int y, Section_prop *section, Property *prop) :
@@ -291,7 +291,7 @@ public:
 	}
 };
 
-class PropertyEditorString : public PropertyEditor {
+class PropertyEditorString final : public PropertyEditor {
 protected:
 	GUI::Input *input;
 public:
@@ -311,7 +311,7 @@ public:
 	}
 };
 
-class PropertyEditorFloat : public PropertyEditor {
+class PropertyEditorFloat final : public PropertyEditor {
 protected:
 	GUI::Input *input;
 public:
@@ -331,7 +331,7 @@ public:
 	}
 };
 
-class PropertyEditorHex : public PropertyEditor {
+class PropertyEditorHex final : public PropertyEditor {
 protected:
 	GUI::Input *input;
 public:
@@ -352,7 +352,7 @@ public:
 	}
 };
 
-class PropertyEditorInt : public PropertyEditor {
+class PropertyEditorInt final : public PropertyEditor {
 protected:
 	GUI::Input *input;
 public:
@@ -373,7 +373,7 @@ public:
 	}
 };
 
-class HelpWindow : public GUI::MessageBox {
+class HelpWindow final : public GUI::MessageBox {
 public:
 	HelpWindow(GUI::Screen *parent, int x, int y, Section *section) :
 		MessageBox(parent, x, y, 580, "", "") {
@@ -387,7 +387,7 @@ public:
 	}
 };
 
-class SectionEditor : public GUI::ToplevelWindow {
+class SectionEditor final : public GUI::ToplevelWindow {
 	Section_prop * section;
 public:
 	SectionEditor(GUI::Screen *parent, int x, int y, Section_prop *section) :
@@ -431,7 +431,7 @@ public:
 	}
 };
 
-class AutoexecEditor : public GUI::ToplevelWindow {
+class AutoexecEditor final : public GUI::ToplevelWindow {
 	Section_line * section;
 	GUI::Input *content;
 public:
@@ -467,7 +467,7 @@ public:
 	}
 };
 
-class SaveDialog : public GUI::ToplevelWindow {
+class SaveDialog final : public GUI::ToplevelWindow {
 protected:
 	GUI::Input *name;
 public:
@@ -486,7 +486,7 @@ public:
 	}
 };
 
-class SaveLangDialog : public GUI::ToplevelWindow {
+class SaveLangDialog final : public GUI::ToplevelWindow {
 protected:
 	GUI::Input *name;
 public:
@@ -505,7 +505,7 @@ public:
 	}
 };
 
-class ConfigurationWindow : public GUI::ToplevelWindow {
+class ConfigurationWindow final : public GUI::ToplevelWindow {
 public:
 	ConfigurationWindow(GUI::Screen *parent, GUI::Size x, GUI::Size y, GUI::String title) :
 		GUI::ToplevelWindow(parent, x, y, 470, 290, title) {

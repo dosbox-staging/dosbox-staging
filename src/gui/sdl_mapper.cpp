@@ -339,7 +339,7 @@ protected:
 class CKeyBind;
 class CKeyBindGroup;
 
-class CKeyBind : public CBind {
+class CKeyBind final : public CBind {
 public:
 	CKeyBind(CBindList *_list, SDL_Scancode _key)
 		: CBind(_list),
@@ -363,7 +363,7 @@ public:
 	SDL_Scancode key;
 };
 
-class CKeyBindGroup : public  CBindGroup {
+class CKeyBindGroup final : public  CBindGroup {
 public:
 	CKeyBindGroup(Bitu _keys)
 		: CBindGroup(),
@@ -438,7 +438,7 @@ class CJAxisBind;
 class CJButtonBind;
 class CJHatBind;
 
-class CJAxisBind : public CBind {
+class CJAxisBind final : public CBind {
 public:
 	CJAxisBind(CBindList *_list, CBindGroup *_group, int _axis, bool _positive)
 		: CBind(_list),
@@ -472,7 +472,7 @@ protected:
 	bool positive;
 };
 
-class CJButtonBind : public CBind {
+class CJButtonBind final : public CBind {
 public:
 	CJButtonBind(CBindList *_list, CBindGroup *_group, int _button)
 		: CBind(_list),
@@ -500,7 +500,7 @@ protected:
 	int button;
 };
 
-class CJHatBind : public CBind {
+class CJHatBind final : public CBind {
 public:
 	CJHatBind(CBindList *_list, CBindGroup *_group, uint8_t _hat, uint8_t _dir)
 		: CBind(_list),
@@ -890,7 +890,7 @@ protected:
 
 std::list<CStickBindGroup *> stickbindgroups;
 
-class C4AxisBindGroup : public  CStickBindGroup {
+class C4AxisBindGroup final : public  CStickBindGroup {
 public:
 	C4AxisBindGroup(Bitu _stick,Bitu _emustick) : CStickBindGroup (_stick,_emustick){
 		emulated_axes=4;
@@ -952,7 +952,7 @@ public:
 	}
 };
 
-class CFCSBindGroup : public  CStickBindGroup {
+class CFCSBindGroup final : public  CStickBindGroup {
 public:
 	CFCSBindGroup(Bitu _stick, Bitu _emustick)
 		: CStickBindGroup(_stick, _emustick)
@@ -1083,7 +1083,7 @@ private:
 	}
 };
 
-class CCHBindGroup : public CStickBindGroup {
+class CCHBindGroup final : public CStickBindGroup {
 public:
 	CCHBindGroup(Bitu _stick, Bitu _emustick)
 		: CStickBindGroup(_stick, _emustick)
@@ -1448,7 +1448,7 @@ public:
 class CEventButton;
 static CEventButton * last_clicked = NULL;
 
-class CEventButton : public CClickableTextButton {
+class CEventButton final : public CClickableTextButton {
 public:
 	CEventButton(Bitu x, Bitu y, Bitu dx, Bitu dy, const char *text, CEvent *ev)
 		: CClickableTextButton(x, y, dx, dy, text),
@@ -1471,7 +1471,7 @@ protected:
 	CEvent * event = nullptr;
 };
 
-class CCaptionButton : public CButton {
+class CCaptionButton final : public CButton {
 public:
 	CCaptionButton(Bitu _x,Bitu _y,Bitu _dx,Bitu _dy) : CButton(_x,_y,_dx,_dy){
 		caption[0]=0;
@@ -1498,7 +1498,7 @@ static void change_action_text(const char* text,Bit8u col);
 
 static void MAPPER_SaveBinds();
 
-class CBindButton : public CClickableTextButton {
+class CBindButton final : public CClickableTextButton {
 public:
 	CBindButton(Bitu _x, Bitu _y, Bitu _dx, Bitu _dy, const char * _text, BB_Types _type)
 		: CClickableTextButton(_x, _y, _dx, _dy, _text),
@@ -1543,7 +1543,7 @@ protected:
 	BB_Types type;
 };
 
-class CCheckButton : public CClickableTextButton {
+class CCheckButton final : public CClickableTextButton {
 public:
 	CCheckButton(Bitu x, Bitu y, Bitu dx, Bitu dy, const char *text, BC_Types t)
 		: CClickableTextButton(x, y, dx, dy, text),
@@ -1597,7 +1597,7 @@ protected:
 	BC_Types type;
 };
 
-class CKeyEvent : public CTriggeredEvent {
+class CKeyEvent final : public CTriggeredEvent {
 public:
 	CKeyEvent(char const * const entry, KBD_KEYS k)
 		: CTriggeredEvent(entry),
@@ -1611,7 +1611,7 @@ public:
 	KBD_KEYS key;
 };
 
-class CJAxisEvent : public CContinuousEvent {
+class CJAxisEvent final : public CContinuousEvent {
 public:
 	CJAxisEvent(char const * const entry, Bitu s, Bitu a, bool p, CJAxisEvent *op_axis)
 		: CContinuousEvent(entry),
@@ -1646,7 +1646,7 @@ protected:
 	CJAxisEvent * opposite_axis;
 };
 
-class CJButtonEvent : public CTriggeredEvent {
+class CJButtonEvent final : public CTriggeredEvent {
 public:
 	CJButtonEvent(char const * const entry, Bitu s, Bitu btn)
 		: CTriggeredEvent(entry),
@@ -1663,7 +1663,7 @@ protected:
 	Bitu stick,button;
 };
 
-class CJHatEvent : public CTriggeredEvent {
+class CJHatEvent final : public CTriggeredEvent {
 public:
 	CJHatEvent(char const * const entry, Bitu s, Bitu h, Bitu d)
 		: CTriggeredEvent(entry),
@@ -1681,7 +1681,7 @@ protected:
 	Bitu stick,hat,dir;
 };
 
-class CModEvent : public CTriggeredEvent {
+class CModEvent final : public CTriggeredEvent {
 public:
 	CModEvent(char const * const _entry, int _wmod)
 		: CTriggeredEvent(_entry),
@@ -1700,7 +1700,7 @@ protected:
 	int wmod;
 };
 
-class CHandlerEvent : public CTriggeredEvent {
+class CHandlerEvent final : public CTriggeredEvent {
 public:
 	CHandlerEvent(const char *entry,
 	              MAPPER_Handler *handle,

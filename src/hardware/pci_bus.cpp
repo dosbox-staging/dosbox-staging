@@ -251,7 +251,7 @@ static PCI_Device* rqueued_devices[max_rqueued_devices];
 
 #include "pci_devices.h"
 
-class PCI:public Module_base{
+class PCI final : public Module_base{
 private:
 	bool initialized;
 

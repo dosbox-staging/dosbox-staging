@@ -27,7 +27,7 @@
 
 // ======================> saa1099_device
 
-class saa1099_device : public device_t, public device_sound_interface {
+class saa1099_device final : public device_t, public device_sound_interface {
 public:
 	saa1099_device(const machine_config &mconfig,
 	               const char *tag,

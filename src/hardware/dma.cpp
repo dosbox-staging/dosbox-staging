@@ -353,7 +353,7 @@ again:
 	return done;
 }
 
-class DMA : public Module_base {
+class DMA final : public Module_base {
 public:
 	DMA(Section *configuration) : Module_base(configuration)
 	{

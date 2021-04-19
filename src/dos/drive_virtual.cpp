@@ -65,7 +65,7 @@ void VFILE_Remove(const char *name) {
 	}
 }
 
-class Virtual_File : public DOS_File {
+class Virtual_File final : public DOS_File {
 public:
 	Virtual_File(uint8_t *in_data, uint32_t in_size);
 

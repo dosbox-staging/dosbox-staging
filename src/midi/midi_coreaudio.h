@@ -62,7 +62,7 @@ do {                                                                \
 #   endif
 #endif
 
-class MidiHandler_coreaudio : public MidiHandler {
+class MidiHandler_coreaudio final : public MidiHandler {
 private:
 	AUGraph m_auGraph;
 	AudioUnit m_synth;

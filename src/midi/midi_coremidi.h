@@ -32,7 +32,7 @@
 
 #include "programs.h"
 
-class MidiHandler_coremidi : public MidiHandler {
+class MidiHandler_coremidi final : public MidiHandler {
 private:
 	MIDIPortRef m_port;
 	MIDIClientRef m_client;

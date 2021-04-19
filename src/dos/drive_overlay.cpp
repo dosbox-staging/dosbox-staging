@@ -192,7 +192,7 @@ bool Overlay_Drive::TestDir(char * dir) {
 	return localDrive::TestDir(dir);
 }
 
-class OverlayFile : public localFile {
+class OverlayFile final : public localFile {
 public:
 	OverlayFile(const char *name, FILE *handle, const char *basedir)
 	        : localFile(name, handle, basedir),

@@ -850,7 +850,7 @@ void IPX_NetworkInit() {
 	return;
 }
 
-class IPXNET : public Program {
+class IPXNET final : public Program {
 public:
 	void HelpCommand(const char *helpStr) {
 		// Help on connect command
@@ -1086,7 +1086,7 @@ Bitu IPX_ESRHandler(void) {
 
 void VFILE_Remove(const char *name);
 
-class IPX : public Module_base {
+class IPX final : public Module_base {
 private:
 	CALLBACK_HandlerObject callback_ipx = {};
 	CALLBACK_HandlerObject callback_esr = {};

@@ -459,7 +459,7 @@ static void PCSPEAKER_CallBack(Bitu len)
 	else
 		spkr.chan->AddSamples_m16(len, buffer);
 }
-class PCSPEAKER:public Module_base {
+class PCSPEAKER final : public Module_base {
 private:
 	MixerObject MixerChan = {};
 public:

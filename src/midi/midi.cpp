@@ -208,7 +208,7 @@ bool MIDI_Available()
 	return midi.available;
 }
 
-class MIDI : public Module_base {
+class MIDI final : public Module_base {
 public:
 	MIDI(Section *configuration) : Module_base(configuration)
 	{

@@ -153,7 +153,7 @@ struct partTable {
 #endif
 //Forward
 class imageDisk;
-class fatDrive : public DOS_Drive {
+class fatDrive final : public DOS_Drive {
 public:
 	fatDrive(const char * sysFilename, Bit32u bytesector, Bit32u cylsector, Bit32u headscyl, Bit32u cylinders, Bit32u startSector);
 	fatDrive(const fatDrive&) = delete; // prevent copying
@@ -216,7 +216,7 @@ private:
 	Bit32u curFatSect;
 };
 
-class cdromDrive : public localDrive
+class cdromDrive final : public localDrive
 {
 public:
 	cdromDrive(const char _driveLetter, const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid, int& error);
@@ -314,7 +314,7 @@ struct isoDirEntry {
 #define IS_HIDDEN(fileFlags)	(fileFlags & ISO_HIDDEN)
 #define ISO_MAX_HASH_TABLE_SIZE 	100
 
-class isoDrive : public DOS_Drive {
+class isoDrive final : public DOS_Drive {
 public:
 	isoDrive(char driveLetter, const char* device_name, Bit8u mediaid, int &error);
 	~isoDrive();
@@ -378,7 +378,7 @@ private:
 
 struct VFILE_Block;
 
-class Virtual_Drive: public DOS_Drive {
+class Virtual_Drive final : public DOS_Drive {
 public:
 	Virtual_Drive();
 	bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
@@ -406,7 +406,7 @@ private:
 	VFILE_Block * search_file;
 };
 
-class Overlay_Drive : public localDrive {
+class Overlay_Drive final : public localDrive {
 public:
 	Overlay_Drive(const char *startdir,
 	              const char *overlay,

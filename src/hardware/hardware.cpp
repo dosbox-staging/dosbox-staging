@@ -778,7 +778,7 @@ static void CAPTURE_MidiEvent(bool pressed) {
 	}
 }
 
-class HARDWARE:public Module_base{
+class HARDWARE final : public Module_base{
 public:
 	HARDWARE(Section* configuration):Module_base(configuration){
 		Section_prop * section = static_cast<Section_prop *>(configuration);

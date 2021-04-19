@@ -1282,7 +1282,7 @@ bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeo
 	return true;
 }
 
-class SERIALPORTS:public Module_base {
+class SERIALPORTS final : public Module_base {
 public:
 	SERIALPORTS (Section * configuration):Module_base (configuration) {
 		uint16_t biosParameter[SERIAL_MAX_PORTS] = {0};

@@ -24,7 +24,7 @@
 
 #include "midi_handler.h"
 
-class MidiHandler_oss : public MidiHandler {
+class MidiHandler_oss final : public MidiHandler {
 private:
 	int device = 0;
 	uint8_t device_num = 0;

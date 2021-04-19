@@ -566,7 +566,7 @@ void TIMER_AddTick(void) {
 }
 
 /* Use full name to avoid name clash with compile option for position-independent code */
-class PIC_8259A: public Module_base {
+class PIC_8259A final : public Module_base {
 private:
 	IO_ReadHandleObject ReadHandler[4];
 	IO_WriteHandleObject WriteHandler[4];

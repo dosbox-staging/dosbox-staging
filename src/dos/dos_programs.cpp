@@ -97,7 +97,7 @@ static const char *UnmountHelper(char umount)
 	return MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS");
 }
 
-class MOUNT : public Program {
+class MOUNT final : public Program {
 public:
 	void Move_Z(char new_z)
 	{
@@ -463,7 +463,7 @@ static void MOUNT_ProgramStart(Program * * make) {
 	*make=new MOUNT;
 }
 
-class MEM : public Program {
+class MEM final : public Program {
 public:
 	void Run(void) {
 		/* Show conventional Memory */
@@ -533,7 +533,7 @@ static void MEM_ProgramStart(Program * * make) {
 extern Bit32u floppytype;
 
 
-class BOOT : public Program {
+class BOOT final : public Program {
 private:
 
 	FILE *getFSFile_mounted(char const* filename, Bit32u *ksize, Bit32u *bsize, Bit8u *error) {
@@ -919,7 +919,7 @@ static void BOOT_ProgramStart(Program * * make) {
 }
 
 
-class LOADROM : public Program {
+class LOADROM final : public Program {
 public:
 	void Run(void) {
 		if (!(cmd->FindCommand(1, temp_line))) {
@@ -996,7 +996,7 @@ static void LOADROM_ProgramStart(Program * * make) {
 }
 
 #if C_DEBUG
-class BIOSTEST : public Program {
+class BIOSTEST final : public Program {
 public:
 	void Run(void) {
 		if (!(cmd->FindCommand(1, temp_line))) {
@@ -1056,7 +1056,7 @@ static void BIOSTEST_ProgramStart(Program * * make) {
 
 // LOADFIX
 
-class LOADFIX : public Program {
+class LOADFIX final : public Program {
 public:
 	void Run(void);
 };
@@ -1121,7 +1121,7 @@ static void LOADFIX_ProgramStart(Program * * make) {
 
 // RESCAN
 
-class RESCAN : public Program {
+class RESCAN final : public Program {
 public:
 	void Run(void);
 };
@@ -1161,7 +1161,7 @@ static void RESCAN_ProgramStart(Program * * make) {
 	*make=new RESCAN;
 }
 
-class INTRO : public Program {
+class INTRO final : public Program {
 public:
 	void DisplayMount(void) {
 		/* Basic mounting has a version for each operating system.
@@ -1215,7 +1215,7 @@ static void INTRO_ProgramStart(Program * * make) {
 	*make=new INTRO;
 }
 
-class IMGMOUNT : public Program {
+class IMGMOUNT final : public Program {
 public:
 	void Run(void) {
 		//Hack To allow long commandlines
@@ -1583,7 +1583,7 @@ Bitu DOS_SwitchKeyboardLayout(const char* new_layout, Bit32s& tried_cp);
 Bitu DOS_LoadKeyboardLayout(const char * layoutname, Bit32s codepage, const char * codepagefile);
 const char* DOS_GetLoadedLayout(void);
 
-class KEYB : public Program {
+class KEYB final : public Program {
 public:
 	void Run(void);
 };

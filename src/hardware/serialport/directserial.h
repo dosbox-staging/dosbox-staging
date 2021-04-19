@@ -28,7 +28,7 @@
 
 #include "libserial.h"
 
-class CDirectSerial : public CSerial {
+class CDirectSerial final : public CSerial {
 public:
 	CDirectSerial(const CDirectSerial &) = delete; // prevent copying
 	CDirectSerial &operator=(const CDirectSerial &) = delete; // prevent

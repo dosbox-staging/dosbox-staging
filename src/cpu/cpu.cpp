@@ -2174,7 +2174,7 @@ void CPU_Reset_AutoAdjust(void) {
 	ticksScheduled = 0;
 }
 
-class CPU: public Module_base {
+class CPU final : public Module_base {
 private:
 	static bool inited;
 public:

@@ -112,7 +112,7 @@ static CacheBlock link_blocks[2]; // default linking (specially marked)
 
 // the CodePageHandler class provides access to the contained
 // cache blocks and intercepts writes to the code for special treatment
-class CodePageHandler : public PageHandler {
+class CodePageHandler final : public PageHandler {
 public:
 	CodePageHandler() = default;
 

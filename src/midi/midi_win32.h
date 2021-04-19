@@ -34,7 +34,7 @@
 
 #include "programs.h"
 
-class MidiHandler_win32: public MidiHandler {
+class MidiHandler_win32 final : public MidiHandler {
 private:
 	HMIDIOUT m_out;
 	MIDIHDR m_hdr;

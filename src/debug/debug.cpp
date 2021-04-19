@@ -78,7 +78,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector);
 Bit32u GetHexValue(char* str, char*& hex);
 
 #if 0
-class DebugPageHandler : public PageHandler {
+class DebugPageHandler final : public PageHandler {
 public:
 	Bitu readb(PhysPt /*addr*/) {
 	}
@@ -2132,7 +2132,7 @@ static void LogInstruction(uint16_t segValue, uint32_t eipValue, ofstream &out)
 
 // DEBUG.COM stuff
 
-class DEBUG : public Program {
+class DEBUG final : public Program {
 public:
 	DEBUG() : active(false) { pDebugcom = this; }
 

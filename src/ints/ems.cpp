@@ -102,7 +102,7 @@ static EMM_Mapping emm_segmentmappings[0x40];
 
 static Bit16u GEMMIS_seg;
 
-class device_EMM : public DOS_Device {
+class device_EMM final : public DOS_Device {
 public:
 	device_EMM(bool is_emm386_avail) : is_emm386(is_emm386_avail)
 	{
@@ -1363,7 +1363,7 @@ Bitu GetEMSType(Section_prop * section) {
 	return rtype;
 }
 
-class EMS : public Module_base {
+class EMS final : public Module_base {
 private:
 	uint16_t ems_baseseg = 0;
 	DOS_Device *emm_device = nullptr;

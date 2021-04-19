@@ -390,7 +390,7 @@ protected:
 	Bitu table_limit;
 };
 
-class GDTDescriptorTable : public DescriptorTable {
+class GDTDescriptorTable final : public DescriptorTable {
 public:
 	bool GetDescriptor(Bitu selector, Descriptor& desc) {
 		Bitu address=selector & ~7;
@@ -441,7 +441,7 @@ private:
 	Bitu ldt_value;
 };
 
-class TSS_Descriptor : public Descriptor {
+class TSS_Descriptor final : public Descriptor {
 public:
 	Bitu IsBusy(void) {
 		return saved.seg.type & 2;

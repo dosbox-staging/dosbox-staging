@@ -303,7 +303,7 @@ protected:
 
 /* Program Segment Prefix */
 
-class DOS_PSP : public MemStruct {
+class DOS_PSP final : public MemStruct {
 public:
 	DOS_PSP(uint16_t segment) : seg(segment) { SetPt(seg); }
 
@@ -386,7 +386,7 @@ public:
 	static	Bit16u rootpsp;
 };
 
-class DOS_ParamBlock : public MemStruct {
+class DOS_ParamBlock final : public MemStruct {
 public:
 	DOS_ParamBlock(PhysPt addr)
 		: exec{0, 0, 0, 0, 0, 0},
@@ -421,7 +421,7 @@ public:
 	sOverlay overlay;
 };
 
-class DOS_InfoBlock : public MemStruct {
+class DOS_InfoBlock final : public MemStruct {
 public:
 	DOS_InfoBlock() : seg(0) {}
 
@@ -512,7 +512,7 @@ public:
  * Some documents refer to it also as Data Transfer Address or Disk Transfer Area.
  */
 
-class DOS_DTA : public MemStruct {
+class DOS_DTA final : public MemStruct {
 public:
 	DOS_DTA(RealPt addr) : MemStruct(addr) {}
 
@@ -562,7 +562,7 @@ private:
 
 /* File Control Block */
 
-class DOS_FCB : public MemStruct {
+class DOS_FCB final : public MemStruct {
 public:
 	DOS_FCB(uint16_t seg, uint16_t off, bool allow_extended = true);
 
@@ -633,7 +633,7 @@ private:
 
 /* Memory Control Block */
 
-class DOS_MCB : public MemStruct {
+class DOS_MCB final : public MemStruct {
 public:
 	DOS_MCB(uint16_t seg) : MemStruct(seg, 0) {}
 
@@ -665,7 +665,7 @@ private:
 	#endif
 };
 
-class DOS_SDA : public MemStruct {
+class DOS_SDA final : public MemStruct {
 public:
 	DOS_SDA(uint16_t seg, uint16_t off) : MemStruct(seg, off) {}
 
