@@ -99,6 +99,7 @@ void MPU401_Init(Section*);
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void DISNEY_Init(Section*);
+void PS1SOUND_Init(Section*);
 void SERIAL_Init(Section*);
 
 
@@ -787,6 +788,16 @@ void DOSBOX_Init(void) {
 
 	Pbool = secprop->Add_bool("disney",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).");
+
+    Pstring = secprop->Add_string("ps1audio",Property::Changeable::WhenIdle,"off");
+    const char* ps1opt[] = { "on", "off", 0};
+    Pstring->Set_values(ps1opt);
+    Pstring->Set_help("Enable PS1 audio emulation.");
+    Pstring->SetBasic(true);
+    Pint = secprop->Add_int("ps1audiorate",Property::Changeable::OnlyAtStart,22050);
+    Pint->Set_values(rates);
+    Pint->Set_help("Sample rate of the PS1 audio emulation.");
+    Pint->SetBasic(true);
 
 	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
 	secprop->AddInitFunction(&INT10_Init);

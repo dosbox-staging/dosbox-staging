@@ -260,7 +260,10 @@ static Bitu cmos_readreg(Bitu /*port*/,Bitu /*iolen*/) {
 		return 0;
 	case 0x3a:
 		return 0;
-
+    case 0x2F:
+        extern bool PS1AudioCard;
+        if( PS1AudioCard )
+            return 0xFF;
 
 	case 0x0b:		/* Status register B */
 	case 0x0d:		/* Status register D */
