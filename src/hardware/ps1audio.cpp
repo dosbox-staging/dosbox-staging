@@ -62,9 +62,12 @@
 using mixer_channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
 struct PS1AUDIO {
-	// Native stuff.
+	// DOSBox interface objects
 	mixer_channel_t chanDAC{nullptr, MIXER_DelChannel};
 	mixer_channel_t chanSN{nullptr, MIXER_DelChannel};
+	IO_ReadHandleObject ReadHandler[3] = {};
+	IO_WriteHandleObject WriteHandler[2] = {};
+
 	bool enabledDAC;
 	bool enabledSN;
 	Bitu last_writeDAC;
@@ -351,81 +354,87 @@ static uint8_t ps1_audio_present(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED uint16
 	return 0xff;
 }
 
-class PS1SOUND: public Module_base {
-private:
-	IO_ReadHandleObject ReadHandler[3];
-	IO_WriteHandleObject WriteHandler[2];
-	MixerObject MixerChanDAC, MixerChanSN;
-public:
-	PS1SOUND(Section* configuration):Module_base(configuration){
-		Section_prop * section=static_cast<Section_prop *>(configuration);
+static void reset_states()
+{
+	// Initialize the PS/1 states
+	ps1.enabledDAC = false;
+	ps1.enabledSN = false;
+	ps1.last_writeDAC = 0;
+	ps1.last_writeSN = 0;
+	PS1DAC_Reset(true);
 
-		if (!section->Get_bool("ps1audio"))
-			return;
-
-		// Setup the mixer callbacks
-		ps1.chanDAC = mixer_channel_t(MIXER_AddChannel(PS1SOUNDUpdate,
-		                                               0, "PS1DAC"),
-		                              MIXER_DelChannel);
-		assert(ps1.chanDAC);
-
-		ps1.chanSN = mixer_channel_t(MIXER_AddChannel(PS1SN76496Update,
-		                                              0, "PS1"),
-		                             MIXER_DelChannel);
-		assert(ps1.chanSN);
-
-		LOG_MSG("PS/1 sound emulation enabled");
-
-		// Ports 0x0200-0x0205 (let normal code handle the joystick at 0x0201).
-		ReadHandler[0].Install(0x200,&PS1SOUNDRead,IO_MB);
-		ReadHandler[1].Install(0x202,&PS1SOUNDRead,IO_MB,6); //5); //3);
-		ReadHandler[2].Install(0x02F, &ps1_audio_present, IO_MB);
-
-		WriteHandler[0].Install(0x200,PS1SOUNDWrite,IO_MB);
-		WriteHandler[1].Install(0x202,PS1SOUNDWrite,IO_MB,4);
-
-		ps1.SampleRate = ps1.chanDAC->GetSampleRate();
-		ps1.enabledDAC = false;
-		ps1.enabledSN=false;
-		ps1.last_writeDAC = 0;
-		ps1.last_writeSN = 0;
-		PS1DAC_Reset(true);
-
-// > Jmk wrote:
-// > Judging by what I've read in that technical document, it looks like the sound chip is fed by a 4 Mhz clock instead of a ~3.5 Mhz clock.
-// > 
-// > So, there's a line in ps1_sound.cpp that looks like this:
-// > SN76496Reset( &ps1.sn, 3579545, sample_rate );
-// > 
-// > Instead, it should look like this:
-// > SN76496Reset( &ps1.sn, 4000000, sample_rate );
-// > 
-// > That should fix it! Mind you, that was with the old code (it was 0.72 I worked with) which may have been updated since, but the same principle applies.
-//
-// NTS: I do not have anything to test this change! --J.C.
-//		SN76496Reset( &ps1.sn, 3579545, sample_rate );
+	// > Jmk wrote:
+	// > Judging by what I've read in that technical document, it looks like
+	// the sound chip is fed by a 4 Mhz clock instead of a ~3.5 Mhz clock.
+	// >
+	// > So, there's a line in ps1_sound.cpp that looks like this:
+	// > SN76496Reset( &ps1.sn, 3579545, sample_rate );
+	// >
+	// > Instead, it should look like this:
+	// > SN76496Reset( &ps1.sn, 4000000, sample_rate );
+	// >
+	// > That should fix it! Mind you, that was with the old code (it was
+	// 0.72 I worked with) which may have been updated since, but the same
+	// principle applies.
+	//
+	// NTS: I do not have anything to test this change! --J.C.
+	//		SN76496Reset( &ps1.sn, 3579545, sample_rate );
 #if 0
-        SN76496Reset( &ps1.sn, 4000000, sample_rate );
+	SN76496Reset( &ps1.sn, 4000000, sample_rate );
 #endif
+}
+
+static void PS1SOUND_ShutDown(MAYBE_UNUSED Section *sec)
+{
+	DEBUG_LOG_MSG("PS/1: Shutting down IBM PS/1 Audio card");
+
+	// Stop the game from accessing the IO ports
+	for (auto &handler : ps1.ReadHandler)
+		handler.Uninstall();
+	for (auto &handler : ps1.WriteHandler)
+		handler.Uninstall();
+
+	// Stop and remove the mixer callbacks
+	if (ps1.chanDAC) {
+		ps1.chanDAC->Enable(false);
+		ps1.chanDAC.reset();
 	}
-	~PS1SOUND(){ }
-};
-
-static PS1SOUND* test = NULL;
-
-void PS1SOUND_ShutDown(Section* sec) {
-    (void)sec;//UNUSED
-    if (test) {
-        delete test;
-        test = NULL;
-    }
+	if (ps1.chanSN) {
+		ps1.chanSN->Enable(false);
+		ps1.chanSN.reset();
+	}
+	reset_states();
 }
 
 void PS1SOUND_Init(Section *sec)
 {
-	if (test == NULL) {
-		DEBUG_LOG_MSG("Allocating PS/1 sound emulation");
-		test = new PS1SOUND(sec);
-	}
+	Section_prop *section = static_cast<Section_prop *>(sec);
+	assert(section);
+	if (!section->Get_bool("ps1audio"))
+		return;
+
+	// Setup the mixer callbacks
+	ps1.chanDAC = mixer_channel_t(MIXER_AddChannel(PS1SOUNDUpdate, 0, "PS1DAC"),
+	                              MIXER_DelChannel);
+	ps1.chanSN = mixer_channel_t(MIXER_AddChannel(PS1SN76496Update, 0, "PS1"),
+	                             MIXER_DelChannel);
+	assert(ps1.chanDAC);
+	assert(ps1.chanSN);
+
+	// Operate at native sampling rates
+	ps1.SampleRate = ps1.chanDAC->GetSampleRate();
+
+	// Register port handlers for 8-bit IO
+	ps1.ReadHandler[0].Install(0x200, &PS1SOUNDRead, IO_MB);
+	ps1.ReadHandler[1].Install(0x202, &PS1SOUNDRead, IO_MB, 6); // 5); //3);
+	ps1.ReadHandler[2].Install(0x02F, &ps1_audio_present, IO_MB);
+
+	ps1.WriteHandler[0].Install(0x200, PS1SOUNDWrite, IO_MB);
+	ps1.WriteHandler[1].Install(0x202, PS1SOUNDWrite, IO_MB, 4);
+
+	reset_states();
+
 	sec->AddDestroyFunction(&PS1SOUND_ShutDown, true);
+
+	LOG_MSG("PS/1: Initialized IBM PS/1 Audio card");
 }
