@@ -35,29 +35,31 @@
 
 // FIXME: MAME updates broke this code!
 
-#define DAC_CLOCK 1000000
-// 950272?
-#define MAX_OUTPUT 0x7fff
-#define STEP 0x10000
+constexpr auto DAC_CLOCK = 1000000; // 950272?
+constexpr auto MAX_OUTPUT = 0x7fff;
+constexpr auto STEP = 0x10000;
 
-// Powers of 2 please!
-#define FIFOSIZE		2048
-#define FIFOSIZE_MASK	( FIFOSIZE - 1 )
+constexpr auto FIFOSIZE = 2048; // powers of two
+constexpr auto FIFOSIZE_MASK = FIFOSIZE - 1;
 
-#define FIFO_NEARLY_EMPTY_VAL	128
-#define FIFO_NEARLY_FULL_VAL	( FIFOSIZE - 128 )
+constexpr auto FIFO_NEARLY_EMPTY_VAL = 128;
+constexpr auto FIFO_NEARLY_FULL_VAL = FIFOSIZE - 128;
 
-#define FRAC_SHIFT		12		// Fixed precision.
+constexpr auto FRAC_SHIFT = 12; // Fixed precision
 
 // Nearly full and half full flags (somewhere) on the SN74V2x5/IDT72V2x5 datasheet (just guessing on the hardware).
-#define FIFO_HALF_FULL		0x00
-#define FIFO_NEARLY_FULL	0x00
+constexpr auto FIFO_HALF_FULL = 0x00;
+constexpr auto FIFO_NEARLY_FULL = 0x00;
 
-#define FIFO_READ_AVAILABLE	0x10	// High when the interrupt can't do anything but wait (cleared by reading 0200?).
-#define FIFO_FULL			0x08	// High when we can't write any more.
-#define FIFO_EMPTY			0x04	// High when we can write direct values???
-#define FIFO_NEARLY_EMPTY	0x02	// High when we can write more to the FIFO (or, at least, there are 0x700 bytes free).
-#define FIFO_IRQ			0x01	// High when IRQ was triggered by the DAC?
+// High when the interrupt can't do anything but wait (cleared by reading 0200?).
+constexpr auto FIFO_READ_AVAILABLE = 0x10;
+constexpr auto FIFO_FULL = 0x08;  // High when we can't write any more.
+constexpr auto FIFO_EMPTY = 0x04; // High when we can write direct values???
+
+// High when we can write more to the FIFO (or, at least, there are 0x700 bytes
+// free).
+constexpr auto FIFO_NEARLY_EMPTY = 0x02;
+constexpr auto FIFO_IRQ = 0x01; // High when IRQ was triggered by the DAC?
 
 using mixer_channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
