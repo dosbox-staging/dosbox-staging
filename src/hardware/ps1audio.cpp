@@ -65,8 +65,8 @@ using mixer_channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel
 
 struct PS1AUDIO {
 	// DOSBox interface objects
-	mixer_channel_t chanDAC{nullptr, MIXER_DelChannel};
-	mixer_channel_t chanSN{nullptr, MIXER_DelChannel};
+	mixer_channel_t dac_channel{nullptr, MIXER_DelChannel};
+	mixer_channel_t synth_channel{nullptr, MIXER_DelChannel};
 	IO_ReadHandleObject ReadHandler[3] = {};
 	IO_WriteHandleObject WriteHandler[2] = {};
 
@@ -148,7 +148,7 @@ static void PS1SOUNDWrite(Bitu port,Bitu data,Bitu iolen) {
 	if( port != 0x0205 ) {
 		ps1.last_writeDAC=PIC_Ticks;
 		if (!ps1.enabledDAC) {
-			ps1.chanDAC->Enable(true);
+			ps1.dac_channel->Enable(true);
 			ps1.enabledDAC=true;
 		}
 	}
@@ -156,7 +156,7 @@ static void PS1SOUNDWrite(Bitu port,Bitu data,Bitu iolen) {
 	{
 		ps1.last_writeSN=PIC_Ticks;
 		if (!ps1.enabledSN) {
-			ps1.chanSN->Enable(true);
+			ps1.synth_channel->Enable(true);
 			ps1.enabledSN=true;
 		}
 	}
@@ -237,7 +237,7 @@ static Bitu PS1SOUNDRead(Bitu port,Bitu iolen) {
     (void)iolen;//UNUSED
 	ps1.last_writeDAC=PIC_Ticks;
 	if (!ps1.enabledDAC) {
-		ps1.chanDAC->Enable(true);
+		ps1.dac_channel->Enable(true);
 		ps1.enabledDAC=true;
 	}
 #if C_DEBUG != 0
@@ -275,7 +275,7 @@ static void PS1SOUNDUpdate(Bitu length)
 {
 	if ((ps1.last_writeDAC+5000)<PIC_Ticks) {
 		ps1.enabledDAC=false;
-		ps1.chanDAC->Enable(false);
+		ps1.dac_channel->Enable(false);
 		// Excessive?
 		PS1DAC_Reset(false);
 	}
@@ -330,21 +330,21 @@ static void PS1SOUNDUpdate(Bitu length)
 	if( pending < 0 ) pending = 0;
 	ps1.Pending = (Bitu)pending;
 
-	ps1.chanDAC->AddSamples_m8(length,MixTemp);
+	ps1.dac_channel->AddSamples_m8(length,MixTemp);
 }
 
 static void PS1SN76496Update(Bitu length)
 {
 	if ((ps1.last_writeSN+5000)<PIC_Ticks) {
 		ps1.enabledSN=false;
-		ps1.chanSN->Enable(false);
+		ps1.synth_channel->Enable(false);
 	}
 
 	//int16_t * buffer=(int16_t *)MixTemp;
 #if 0
 	SN76496Update(&ps1.sn,buffer,length);
 #endif
-	ps1.chanSN->AddSamples_m16(length,(int16_t *)MixTemp);
+	ps1.synth_channel->AddSamples_m16(length,(int16_t *)MixTemp);
 }
 
 #include "regs.h"
@@ -397,13 +397,13 @@ static void PS1SOUND_ShutDown(MAYBE_UNUSED Section *sec)
 		handler.Uninstall();
 
 	// Stop and remove the mixer callbacks
-	if (ps1.chanDAC) {
-		ps1.chanDAC->Enable(false);
-		ps1.chanDAC.reset();
+	if (ps1.dac_channel) {
+		ps1.dac_channel->Enable(false);
+		ps1.dac_channel.reset();
 	}
-	if (ps1.chanSN) {
-		ps1.chanSN->Enable(false);
-		ps1.chanSN.reset();
+	if (ps1.synth_channel) {
+		ps1.synth_channel->Enable(false);
+		ps1.synth_channel.reset();
 	}
 	reset_states();
 }
@@ -416,15 +416,15 @@ void PS1SOUND_Init(Section *sec)
 		return;
 
 	// Setup the mixer callbacks
-	ps1.chanDAC = mixer_channel_t(MIXER_AddChannel(PS1SOUNDUpdate, 0, "PS1DAC"),
+	ps1.dac_channel = mixer_channel_t(MIXER_AddChannel(PS1SOUNDUpdate, 0, "PS1DAC"),
 	                              MIXER_DelChannel);
-	ps1.chanSN = mixer_channel_t(MIXER_AddChannel(PS1SN76496Update, 0, "PS1"),
+	ps1.synth_channel = mixer_channel_t(MIXER_AddChannel(PS1SN76496Update, 0, "PS1"),
 	                             MIXER_DelChannel);
-	assert(ps1.chanDAC);
-	assert(ps1.chanSN);
+	assert(ps1.dac_channel);
+	assert(ps1.synth_channel);
 
 	// Operate at native sampling rates
-	ps1.SampleRate = ps1.chanDAC->GetSampleRate();
+	ps1.SampleRate = ps1.dac_channel->GetSampleRate();
 
 	// Register port handlers for 8-bit IO
 	ps1.ReadHandler[0].Install(0x200, &PS1SOUNDRead, IO_MB);
