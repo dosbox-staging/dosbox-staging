@@ -18,6 +18,8 @@
 
 #include "dosbox.h"
 
+#include <cassert>
+#include <memory>
 #include <string.h>
 
 #include "control.h"
@@ -57,11 +59,12 @@
 #define FIFO_NEARLY_EMPTY	0x02	// High when we can write more to the FIFO (or, at least, there are 0x700 bytes free).
 #define FIFO_IRQ			0x01	// High when IRQ was triggered by the DAC?
 
-struct PS1AUDIO
-{
+using mixer_channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
+
+struct PS1AUDIO {
 	// Native stuff.
-	MixerChannel * chanDAC;
-	MixerChannel * chanSN;
+	mixer_channel_t chanDAC{nullptr, MIXER_DelChannel};
+	mixer_channel_t chanSN{nullptr, MIXER_DelChannel};
 	bool enabledDAC;
 	bool enabledSN;
 	Bitu last_writeDAC;
@@ -357,9 +360,19 @@ public:
 	PS1SOUND(Section* configuration):Module_base(configuration){
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 
-		if ((strcmp(section->Get_string("ps1audio"),"true")!=0) &&
-			(strcmp(section->Get_string("ps1audio"),"on")!=0) &&
-			(strcmp(section->Get_string("ps1audio"),"auto")!=0)) return;
+		if (!section->Get_bool("ps1audio"))
+			return;
+
+		// Setup the mixer callbacks
+		ps1.chanDAC = mixer_channel_t(MIXER_AddChannel(PS1SOUNDUpdate,
+		                                               0, "PS1DAC"),
+		                              MIXER_DelChannel);
+		assert(ps1.chanDAC);
+
+		ps1.chanSN = mixer_channel_t(MIXER_AddChannel(PS1SN76496Update,
+		                                              0, "PS1"),
+		                             MIXER_DelChannel);
+		assert(ps1.chanSN);
 
 		LOG_MSG("PS/1 sound emulation enabled");
 
@@ -371,12 +384,8 @@ public:
 		WriteHandler[0].Install(0x200,PS1SOUNDWrite,IO_MB);
 		WriteHandler[1].Install(0x202,PS1SOUNDWrite,IO_MB,4);
 
-		uint32_t sample_rate = (uint32_t)section->Get_int("ps1audiorate");
-		ps1.chanDAC=MixerChanDAC.Install(&PS1SOUNDUpdate,sample_rate,"PS1 DAC");
-		ps1.chanSN=MixerChanSN.Install(&PS1SN76496Update,sample_rate,"PS1 SN76496");
-
-		ps1.SampleRate=(int)sample_rate;
-		ps1.enabledDAC=false;
+		ps1.SampleRate = ps1.chanDAC->GetSampleRate();
+		ps1.enabledDAC = false;
 		ps1.enabledSN=false;
 		ps1.last_writeDAC = 0;
 		ps1.last_writeSN = 0;

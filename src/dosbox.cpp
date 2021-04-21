@@ -789,15 +789,10 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("disney",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).");
 
-	// PS/1 audio emulation
+	// IBM PS/1 Audio emulation
 	secprop->AddInitFunction(&PS1SOUND_Init, true);
-	Pstring = secprop->Add_string("ps1audio",when_idle,"off");
-    const char* ps1opt[] = { "on", "off", 0};
-    Pstring->Set_values(ps1opt);
-    Pstring->Set_help("Enable PS1 audio emulation.");
-    Pint = secprop->Add_int("ps1audiorate",Property::Changeable::OnlyAtStart,22050);
-    Pint->Set_values(rates);
-    Pint->Set_help("Sample rate of the PS1 audio emulation.");
+	Pbool = secprop->Add_bool("ps1audio", when_idle, false);
+	Pbool->Set_help("Enable IBM PS/1 Audio emulation.");
 
 	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
 	secprop->AddInitFunction(&INT10_Init);
