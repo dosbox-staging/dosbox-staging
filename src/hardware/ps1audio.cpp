@@ -56,7 +56,7 @@ constexpr auto FIFO_READ_AVAILABLE = 0x10;
 constexpr auto FIFO_FULL = 0x08;  // High when we can't write any more.
 constexpr auto FIFO_EMPTY = 0x04; // High when we can write direct values???
 
-// High when we can write more to the FIFO (or, at least, there are 0x700 bytes
+// High when we can write more to the dac_fifo (or, at least, there are 0x700 bytes
 // free).
 constexpr auto FIFO_NEARLY_EMPTY = 0x02;
 constexpr auto FIFO_IRQ = 0x01; // High when IRQ was triggered by the DAC?
@@ -65,80 +65,79 @@ using mixer_channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel
 
 struct PS1AUDIO {
 	// DOSBox interface objects
-	mixer_channel_t dac_channel{nullptr, MIXER_DelChannel};
-	mixer_channel_t synth_channel{nullptr, MIXER_DelChannel};
-	IO_ReadHandleObject ReadHandler[3] = {};
-	IO_WriteHandleObject WriteHandler[2] = {};
+	IO_ReadHandleObject read_handlers[3] = {};
+	IO_WriteHandleObject write_handlers[2] = {};
+	uint32_t sample_rate = 0;
 
-	bool enabledDAC;
-	bool enabledSN;
-	Bitu last_writeDAC;
-	Bitu last_writeSN;
-	int SampleRate;
-
+	// Three-voice synthesizer
 #if 0
-	// SN76496.
 	struct SN76496 sn;
 #endif
+	bool is_synth_enabled = false;
+	size_t synth_last_write = 0;
+	mixer_channel_t synth_channel{nullptr, MIXER_DelChannel};
 
-	// "DAC".
-	uint8_t FIFO[FIFOSIZE];
-	uint16_t FIFO_RDIndex;
-	uint16_t FIFO_WRIndex;
-	bool Playing;
-	bool CanTriggerIRQ;
-	uint32_t Rate;
-	Bitu RDIndexHi;			// FIFO_RDIndex << FRAC_SHIFT
-	Bitu Adder;				// Step << FRAC_SHIFT
-	Bitu Pending;			// Bytes to go << FRAC_SHIFT
+	// DAC
+	mixer_channel_t dac_channel{nullptr, MIXER_DelChannel};
+	bool is_dac_enabled = false;
+	size_t dac_last_write = 0;
+	uint8_t dac_fifo[FIFOSIZE] = {};
+	uint16_t dac_read_index = 0;
+	uint16_t dac_write_index = 0;
+	bool is_dac_playing = false;
+	bool can_trigger_irq = false;
+	uint32_t dac_rate = 0;
+	size_t dac_read_index_high = 0;	// dac_read_index << FRAC_SHIFT
+	size_t dac_adder = 0; // Step << FRAC_SHIFT
+	size_t dac_pending = 0; // Bytes to go << FRAC_SHIFT
 
-	// Regs.
-	uint8_t Status;		// 0202 RD
-	uint8_t Command;		// 0202 WR / 0200 RD
-	uint8_t Data;			// 0200 WR
-	uint8_t Divisor;		// 0203 WR
-	uint8_t Unknown;		// 0204 WR (Reset?)
+	// Registers
+	uint8_t reg_status = 0; // 0202 RD
+	uint8_t reg_command = 0; // 0202 WR / 0200 RD
+	uint8_t reg_data = 0; // 0200 WR
+	uint8_t reg_divisor = 0; // 0203 WR
+	uint8_t reg_unknown = 0; // 0204 WR (Reset?)
 };
 
 static struct PS1AUDIO ps1;
 
 static uint8_t PS1SOUND_CalcStatus(void)
 {
-	uint8_t Status = ps1.Status & FIFO_IRQ;
-	if( !ps1.Pending ) {
-		Status |= FIFO_EMPTY;
+	uint8_t reg_status = ps1.reg_status & FIFO_IRQ;
+	if( !ps1.dac_pending ) {
+		reg_status |= FIFO_EMPTY;
 	}
-	if( ( ps1.Pending < ( FIFO_NEARLY_EMPTY_VAL << FRAC_SHIFT ) ) && ( ( ps1.Command & 3 ) == 3 ) ) {
-		Status |= FIFO_NEARLY_EMPTY;
+	if( ( ps1.dac_pending < ( FIFO_NEARLY_EMPTY_VAL << FRAC_SHIFT ) ) && ( ( ps1.reg_command & 3 ) == 3 ) ) {
+		reg_status |= FIFO_NEARLY_EMPTY;
 	}
-	if( ps1.Pending > ( ( FIFOSIZE - 1 ) << FRAC_SHIFT ) ) {
-//	if( ps1.Pending >= ( ( FIFOSIZE - 1 ) << FRAC_SHIFT ) ) { // OK
+	if( ps1.dac_pending > ( ( FIFOSIZE - 1 ) << FRAC_SHIFT ) ) {
+//	if( ps1.dac_pending >= ( ( FIFOSIZE - 1 ) << FRAC_SHIFT ) ) { // OK
 		// Should never be bigger than FIFOSIZE << FRAC_SHIFT...?
-		Status |= FIFO_FULL;
+		reg_status |= FIFO_FULL;
 	}
-	if( ps1.Pending > ( FIFO_NEARLY_FULL_VAL << FRAC_SHIFT ) ) {
-		Status |= FIFO_NEARLY_FULL;
+	if( ps1.dac_pending > ( FIFO_NEARLY_FULL_VAL << FRAC_SHIFT ) ) {
+		reg_status |= FIFO_NEARLY_FULL;
 	}
-	if( ps1.Pending >= ( ( FIFOSIZE >> 1 ) << FRAC_SHIFT ) ) {
-		Status |= FIFO_HALF_FULL;
+	if( ps1.dac_pending >= ( ( FIFOSIZE >> 1 ) << FRAC_SHIFT ) ) {
+		reg_status |= FIFO_HALF_FULL;
 	}
-	return Status;
+	return reg_status;
 }
 
 static void PS1DAC_Reset(bool bTotal)
 {
 	PIC_DeActivateIRQ( 7 );
-	ps1.Data = 0x80;
-	memset( ps1.FIFO, 0x80, FIFOSIZE );
-	ps1.FIFO_RDIndex = 0;
-	ps1.FIFO_WRIndex = 0;
-	if( bTotal ) ps1.Rate = 0xFFFFFFFF;
-	ps1.RDIndexHi = 0;
-	if( bTotal ) ps1.Adder = 0;	// Be careful with this, 5 second timeout and Space Quest 4!
-	ps1.Pending = 0;
-	ps1.Status = PS1SOUND_CalcStatus();
-	ps1.Playing = true;
-	ps1.CanTriggerIRQ = false;
+	ps1.reg_data = 0x80;
+	memset( ps1.dac_fifo, 0x80, FIFOSIZE );
+	ps1.dac_read_index = 0;
+	ps1.dac_write_index = 0;
+	if( bTotal ) ps1.dac_rate = 0xFFFFFFFF;
+	ps1.dac_read_index_high = 0;
+	if( bTotal ) ps1.dac_adder = 0;	// Be careful with this, 5 second timeout and Space Quest 4!
+	ps1.dac_pending = 0;
+	ps1.reg_status = PS1SOUND_CalcStatus();
+	ps1.is_dac_playing = true;
+	ps1.can_trigger_irq = false;
 }
 
 
@@ -146,18 +145,18 @@ static void PS1DAC_Reset(bool bTotal)
 static void PS1SOUNDWrite(Bitu port,Bitu data,Bitu iolen) {
     (void)iolen;//UNUSED
 	if( port != 0x0205 ) {
-		ps1.last_writeDAC=PIC_Ticks;
-		if (!ps1.enabledDAC) {
+		ps1.dac_last_write=PIC_Ticks;
+		if (!ps1.is_dac_enabled) {
 			ps1.dac_channel->Enable(true);
-			ps1.enabledDAC=true;
+			ps1.is_dac_enabled=true;
 		}
 	}
 	else
 	{
-		ps1.last_writeSN=PIC_Ticks;
-		if (!ps1.enabledSN) {
+		ps1.synth_last_write=PIC_Ticks;
+		if (!ps1.is_synth_enabled) {
 			ps1.synth_channel->Enable(true);
-			ps1.enabledSN=true;
+			ps1.is_synth_enabled=true;
 		}
 	}
 
@@ -168,59 +167,59 @@ static void PS1SOUNDWrite(Bitu port,Bitu data,Bitu iolen) {
 	switch(port)
 	{
 		case 0x0200:
-			// Data - insert into FIFO.
-			ps1.Data = (uint8_t)data;
-			ps1.Status = PS1SOUND_CalcStatus();
-			if( !( ps1.Status & FIFO_FULL ) )
+			// reg_data - insert into dac_fifo.
+			ps1.reg_data = (uint8_t)data;
+			ps1.reg_status = PS1SOUND_CalcStatus();
+			if( !( ps1.reg_status & FIFO_FULL ) )
 			{
-				ps1.FIFO[ ps1.FIFO_WRIndex++ ]=(uint8_t)data;
-				ps1.FIFO_WRIndex &= FIFOSIZE_MASK;
-				ps1.Pending += ( 1 << FRAC_SHIFT );
-				if( ps1.Pending > ( FIFOSIZE << FRAC_SHIFT ) ) {
-					ps1.Pending = FIFOSIZE << FRAC_SHIFT;
+				ps1.dac_fifo[ ps1.dac_write_index++ ]=(uint8_t)data;
+				ps1.dac_write_index &= FIFOSIZE_MASK;
+				ps1.dac_pending += ( 1 << FRAC_SHIFT );
+				if( ps1.dac_pending > ( FIFOSIZE << FRAC_SHIFT ) ) {
+					ps1.dac_pending = FIFOSIZE << FRAC_SHIFT;
 				}
 			}
 			break;
 		case 0x0202:
-			// Command.
-			ps1.Command = (uint8_t)data;
-			if( data & 3 ) ps1.CanTriggerIRQ = true;
+			// reg_command.
+			ps1.reg_command = (uint8_t)data;
+			if( data & 3 ) ps1.can_trigger_irq = true;
 //			switch( data & 3 )
 //			{
 //				case 0: // Stop?
-//					ps1.Adder = 0;
+//					ps1.dac_adder = 0;
 //					break;
 //			}
 			break;
 		case 0x0203:
 			{
 				// Clock divisor (maybe trigger first IRQ here).
-				ps1.Divisor = (uint8_t)data;
-				ps1.Rate = (uint32_t)( DAC_CLOCK / ( data + 1 ) );
+				ps1.reg_divisor = (uint8_t)data;
+				ps1.dac_rate = (uint32_t)( DAC_CLOCK / ( data + 1 ) );
 				// 22050 << FRAC_SHIFT / 22050 = 1 << FRAC_SHIFT
-				ps1.Adder = ( ps1.Rate << FRAC_SHIFT ) / (unsigned int)ps1.SampleRate;
-				if( ps1.Rate > 22050 )
+				ps1.dac_adder = ( ps1.dac_rate << FRAC_SHIFT ) / (unsigned int)ps1.sample_rate;
+				if( ps1.dac_rate > 22050 )
 				{
-//					if( ( ps1.Command & 3 ) == 3 ) {
-//						LOG_MSG("Attempt to set DAC rate too high (%dhz).",ps1.Rate);
+//					if( ( ps1.reg_command & 3 ) == 3 ) {
+//						LOG_MSG("Attempt to set DAC rate too high (%dhz).",ps1.dac_rate);
 //					}
-					//ps1.Divisor = 0x2C;
-					//ps1.Rate = 22050;
-					//ps1.Adder = 0;	// Not valid.
+					//ps1.reg_divisor = 0x2C;
+					//ps1.dac_rate = 22050;
+					//ps1.dac_adder = 0;	// Not valid.
 				}
-				ps1.Status = PS1SOUND_CalcStatus();
-				if( ( ps1.Status & FIFO_NEARLY_EMPTY ) && ( ps1.CanTriggerIRQ ) )
+				ps1.reg_status = PS1SOUND_CalcStatus();
+				if( ( ps1.reg_status & FIFO_NEARLY_EMPTY ) && ( ps1.can_trigger_irq ) )
 				{
 					// Generate request for stuff.
-					ps1.Status |= FIFO_IRQ;
-					ps1.CanTriggerIRQ = false;
+					ps1.reg_status |= FIFO_IRQ;
+					ps1.can_trigger_irq = false;
 					PIC_ActivateIRQ( 7 );
 				}
 			}
 			break;
 		case 0x0204:
 			// Reset? (PS1MIC01 sets it to 08 for playback...)
-			ps1.Unknown = (uint8_t)data;
+			ps1.reg_unknown = (uint8_t)data;
 			if( !data )
 				PS1DAC_Reset(true);
 			break;
@@ -235,10 +234,10 @@ static void PS1SOUNDWrite(Bitu port,Bitu data,Bitu iolen) {
 
 static Bitu PS1SOUNDRead(Bitu port,Bitu iolen) {
     (void)iolen;//UNUSED
-	ps1.last_writeDAC=PIC_Ticks;
-	if (!ps1.enabledDAC) {
+	ps1.dac_last_write=PIC_Ticks;
+	if (!ps1.is_dac_enabled) {
 		ps1.dac_channel->Enable(true);
-		ps1.enabledDAC=true;
+		ps1.is_dac_enabled=true;
 	}
 #if C_DEBUG != 0
 	LOG_MSG("PS1 RD %04X (%04X:%08X)",(int)port,(int)SegValue(cs),(int)reg_eip);
@@ -247,21 +246,21 @@ static Bitu PS1SOUNDRead(Bitu port,Bitu iolen) {
 	{
 		case 0x0200:
 			// Read last command.
-			ps1.Status &= ~FIFO_READ_AVAILABLE;
-			return ps1.Command;
+			ps1.reg_status &= ~FIFO_READ_AVAILABLE;
+			return ps1.reg_command;
 		case 0x0202:
 			{
 //				LOG_MSG("PS1 RD %04X (%04X:%08X)",port,SegValue(cs),reg_eip);
 
 				// Read status / clear IRQ?.
-				uint8_t Status = ps1.Status = PS1SOUND_CalcStatus();
+				uint8_t reg_status = ps1.reg_status = PS1SOUND_CalcStatus();
 // Don't do this until we have some better way of detecting the triggering and ending of an IRQ.
-//				ps1.Status &= ~FIFO_IRQ;
-				return Status;
+//				ps1.reg_status &= ~FIFO_IRQ;
+				return reg_status;
 			}
 		case 0x0203:
 			// Stunt Island / Roger Rabbit 2 setup.
-			return ps1.Divisor;
+			return ps1.reg_divisor;
 		case 0x0205:
 		case 0x0206:
 			// Bush Buck detection.
@@ -273,8 +272,8 @@ static Bitu PS1SOUNDRead(Bitu port,Bitu iolen) {
 
 static void PS1SOUNDUpdate(Bitu length)
 {
-	if ((ps1.last_writeDAC+5000)<PIC_Ticks) {
-		ps1.enabledDAC=false;
+	if ((ps1.dac_last_write+5000)<PIC_Ticks) {
+		ps1.is_dac_enabled=false;
 		ps1.dac_channel->Enable(false);
 		// Excessive?
 		PS1DAC_Reset(false);
@@ -283,21 +282,21 @@ static void PS1SOUNDUpdate(Bitu length)
 
 	Bits pending = 0;
 	Bitu add = 0;
-	Bitu pos=ps1.RDIndexHi;
+	Bitu pos=ps1.dac_read_index_high;
 	Bitu count=length;
 
-	if( ps1.Playing )
+	if( ps1.is_dac_playing )
 	{
-		ps1.Status = PS1SOUND_CalcStatus();
-		pending = (Bits)ps1.Pending;
-		add = ps1.Adder;
-		if( ( ps1.Status & FIFO_NEARLY_EMPTY ) && ( ps1.CanTriggerIRQ ) )
+		ps1.reg_status = PS1SOUND_CalcStatus();
+		pending = (Bits)ps1.dac_pending;
+		add = ps1.dac_adder;
+		if( ( ps1.reg_status & FIFO_NEARLY_EMPTY ) && ( ps1.can_trigger_irq ) )
 		{
 			// More bytes needed.
 
 			//PIC_AddEvent( ??, ??, ?? );
-			ps1.Status |= FIFO_IRQ;
-			ps1.CanTriggerIRQ = false;
+			ps1.reg_status |= FIFO_IRQ;
+			ps1.can_trigger_irq = false;
 			PIC_ActivateIRQ( 7 );
 		}
 	}
@@ -310,11 +309,11 @@ static void PS1SOUNDUpdate(Bitu length)
 			pending = 0;
 			while( count-- ) *(buffer++) = 0x80;	// Silence.
 			break;
-			//pos = ( ( ps1.FIFO_RDIndex - 1 ) & FIFOSIZE_MASK ) << FRAC_SHIFT;	// Stay on last byte.
+			//pos = ( ( ps1.dac_read_index - 1 ) & FIFOSIZE_MASK ) << FRAC_SHIFT;	// Stay on last byte.
 		}
 		else
 		{
-			out = ps1.FIFO[ pos >> FRAC_SHIFT ];
+			out = ps1.dac_fifo[ pos >> FRAC_SHIFT ];
 			pos += add;
 			pos &= ( ( FIFOSIZE << FRAC_SHIFT ) - 1 );
 			pending -= (Bits)add;
@@ -324,19 +323,19 @@ static void PS1SOUNDUpdate(Bitu length)
 		count--;
 	}
 	// Update positions and see if we can clear the FIFO_FULL flag.
-	ps1.RDIndexHi = pos;
-//	if( ps1.FIFO_RDIndex != ( pos >> FRAC_SHIFT ) ) ps1.Status &= ~FIFO_FULL;
-	ps1.FIFO_RDIndex = (uint16_t)(pos >> FRAC_SHIFT);
+	ps1.dac_read_index_high = pos;
+//	if( ps1.dac_read_index != ( pos >> FRAC_SHIFT ) ) ps1.reg_status &= ~FIFO_FULL;
+	ps1.dac_read_index = (uint16_t)(pos >> FRAC_SHIFT);
 	if( pending < 0 ) pending = 0;
-	ps1.Pending = (Bitu)pending;
+	ps1.dac_pending = (Bitu)pending;
 
 	ps1.dac_channel->AddSamples_m8(length,MixTemp);
 }
 
 static void PS1SN76496Update(Bitu length)
 {
-	if ((ps1.last_writeSN+5000)<PIC_Ticks) {
-		ps1.enabledSN=false;
+	if ((ps1.synth_last_write+5000)<PIC_Ticks) {
+		ps1.is_synth_enabled=false;
 		ps1.synth_channel->Enable(false);
 	}
 
@@ -359,10 +358,10 @@ static uint8_t ps1_audio_present(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED uint16
 static void reset_states()
 {
 	// Initialize the PS/1 states
-	ps1.enabledDAC = false;
-	ps1.enabledSN = false;
-	ps1.last_writeDAC = 0;
-	ps1.last_writeSN = 0;
+	ps1.is_dac_enabled = false;
+	ps1.is_synth_enabled = false;
+	ps1.dac_last_write = 0;
+	ps1.synth_last_write = 0;
 	PS1DAC_Reset(true);
 
 	// > Jmk wrote:
@@ -391,9 +390,9 @@ static void PS1SOUND_ShutDown(MAYBE_UNUSED Section *sec)
 	DEBUG_LOG_MSG("PS/1: Shutting down IBM PS/1 Audio card");
 
 	// Stop the game from accessing the IO ports
-	for (auto &handler : ps1.ReadHandler)
+	for (auto &handler : ps1.read_handlers)
 		handler.Uninstall();
-	for (auto &handler : ps1.WriteHandler)
+	for (auto &handler : ps1.write_handlers)
 		handler.Uninstall();
 
 	// Stop and remove the mixer callbacks
@@ -424,15 +423,15 @@ void PS1SOUND_Init(Section *sec)
 	assert(ps1.synth_channel);
 
 	// Operate at native sampling rates
-	ps1.SampleRate = ps1.dac_channel->GetSampleRate();
+	ps1.sample_rate = ps1.dac_channel->GetSampleRate();
 
 	// Register port handlers for 8-bit IO
-	ps1.ReadHandler[0].Install(0x200, &PS1SOUNDRead, IO_MB);
-	ps1.ReadHandler[1].Install(0x202, &PS1SOUNDRead, IO_MB, 6); // 5); //3);
-	ps1.ReadHandler[2].Install(0x02F, &ps1_audio_present, IO_MB);
+	ps1.read_handlers[0].Install(0x200, &PS1SOUNDRead, IO_MB);
+	ps1.read_handlers[1].Install(0x202, &PS1SOUNDRead, IO_MB, 6); // 5); //3);
+	ps1.read_handlers[2].Install(0x02F, &ps1_audio_present, IO_MB);
 
-	ps1.WriteHandler[0].Install(0x200, PS1SOUNDWrite, IO_MB);
-	ps1.WriteHandler[1].Install(0x202, PS1SOUNDWrite, IO_MB, 4);
+	ps1.write_handlers[0].Install(0x200, PS1SOUNDWrite, IO_MB);
+	ps1.write_handlers[1].Install(0x202, PS1SOUNDWrite, IO_MB, 4);
 
 	reset_states();
 
