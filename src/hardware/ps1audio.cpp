@@ -33,7 +33,6 @@
 
 // FIXME: MAME updates broke this code!
 
-extern bool PS1AudioCard;
 #define DAC_CLOCK 1000000
 // 950272?
 #define MAX_OUTPUT 0x7fff
@@ -345,16 +344,18 @@ static void PS1SN76496Update(Bitu length)
 //	LOG_MSG("Write PS1 dac %X val %X (%04X:%08X)",port,data,SegValue(cs),reg_eip);
 //}
 
+static uint8_t ps1_audio_present(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED uint16_t iolen) {
+	return 0xff;
+}
+
 class PS1SOUND: public Module_base {
 private:
-	IO_ReadHandleObject ReadHandler[2];
+	IO_ReadHandleObject ReadHandler[3];
 	IO_WriteHandleObject WriteHandler[2];
 	MixerObject MixerChanDAC, MixerChanSN;
 public:
 	PS1SOUND(Section* configuration):Module_base(configuration){
 		Section_prop * section=static_cast<Section_prop *>(configuration);
-
-		PS1AudioCard=false;
 
 		if ((strcmp(section->Get_string("ps1audio"),"true")!=0) &&
 			(strcmp(section->Get_string("ps1audio"),"on")!=0) &&
@@ -365,6 +366,7 @@ public:
 		// Ports 0x0200-0x0205 (let normal code handle the joystick at 0x0201).
 		ReadHandler[0].Install(0x200,&PS1SOUNDRead,IO_MB);
 		ReadHandler[1].Install(0x202,&PS1SOUNDRead,IO_MB,6); //5); //3);
+		ReadHandler[2].Install(0x02F, &ps1_audio_present, IO_MB);
 
 		WriteHandler[0].Install(0x200,PS1SOUNDWrite,IO_MB);
 		WriteHandler[1].Install(0x202,PS1SOUNDWrite,IO_MB,4);
