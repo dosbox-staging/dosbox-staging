@@ -16,18 +16,20 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <math.h>
-#include <string.h>
 #include "dosbox.h"
-#include "inout.h"
-#include "mixer.h"
-#include "mem.h"
-#include "setup.h"
-#include "pic.h"
+
+#include <string.h>
+
+#include "control.h"
 #include "dma.h"
+#include "inout.h"
+#include "mem.h"
+#include "mixer.h"
+#include "pic.h"
+#include "setup.h"
+
 #include "mame/emu.h"
 #include "mame/sn76496.h"
-#include "control.h"
 
 // FIXME: MAME updates broke this code!
 
