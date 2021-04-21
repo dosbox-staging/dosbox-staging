@@ -360,8 +360,7 @@ public:
 			(strcmp(section->Get_string("ps1audio"),"on")!=0) &&
 			(strcmp(section->Get_string("ps1audio"),"auto")!=0)) return;
 
-		PS1AudioCard=true;
-		LOG(LOG_MISC,LOG_DEBUG)("PS/1 sound emulation enabled");
+		LOG_MSG("PS/1 sound emulation enabled");
 
 		// Ports 0x0200-0x0205 (let normal code handle the joystick at 0x0201).
 		ReadHandler[0].Install(0x200,&PS1SOUNDRead,IO_MB);
@@ -411,18 +410,11 @@ void PS1SOUND_ShutDown(Section* sec) {
     }
 }
 
-void PS1SOUND_OnReset(Section* sec) {
-    (void)sec;//UNUSED
-	if (test == NULL && !IS_PC98_ARCH) {
-		LOG(LOG_MISC,LOG_DEBUG)("Allocating PS/1 sound emulation");
-		test = new PS1SOUND(control->GetSection("speaker"));
+void PS1SOUND_Init(Section *sec)
+{
+	if (test == NULL) {
+		DEBUG_LOG_MSG("Allocating PS/1 sound emulation");
+		test = new PS1SOUND(sec);
 	}
+	sec->AddDestroyFunction(&PS1SOUND_ShutDown, true);
 }
-
-void PS1SOUND_Init() {
-	LOG(LOG_MISC,LOG_DEBUG)("Initializing PS/1 sound emulation");
-
-	AddExitFunction(AddExitFunctionFuncPair(PS1SOUND_ShutDown),true);
-	AddVMEventFunction(VM_EVENT_RESET,AddVMEventFunctionFuncPair(PS1SOUND_OnReset));
-}
-
