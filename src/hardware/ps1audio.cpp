@@ -33,6 +33,9 @@
 #include "mame/emu.h"
 #include "mame/sn76496.h"
 
+using namespace std::placeholders;
+using mixer_channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
+
 struct Ps1Registers {
 	uint8_t status = 0;  // 0202 RD
 	uint8_t command = 0; // 0202 WR / 0200 RD
@@ -40,10 +43,6 @@ struct Ps1Registers {
 	uint8_t divisor = 0; // 0203 WR
 	uint8_t unknown = 0; // 0204 WR (Reset?)
 };
-
-using mixer_channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
-using namespace std::placeholders;
-
 class Ps1Dac {
 public:
 	void Open();
@@ -92,28 +91,32 @@ private:
 	bool is_open = false;
 };
 
-class Ps1Synth {
-public:
-	void Open();
-	void Close();
+void Ps1Dac::Open()
+{
+	Close();
 
-private:
-	void Update(size_t length);
-	void WriteTo0205(size_t port, size_t data, MAYBE_UNUSED size_t iolen);
+	const auto callback = std::bind(&Ps1Dac::Update, this, _1);
+	channel = mixer_channel_t(MIXER_AddChannel(callback, 0, "PS1DAC"),
+	                          MIXER_DelChannel);
+	assert(channel);
 
-	mixer_channel_t channel{nullptr, MIXER_DelChannel};
-	IO_WriteHandleObject write_handler = {};
+	// Register port handlers for 8-bit IO
+	const auto read_from = std::bind(&Ps1Dac::ReadFromPort, this, _1, _2);
+	read_handlers[0].Install(0x02F, read_from, IO_MB);
+	read_handlers[1].Install(0x200, read_from, IO_MB);
+	read_handlers[2].Install(0x202, read_from, IO_MB, 4);
 
-	static constexpr auto synth_clock = 4000000;
+	const auto write_to = std::bind(&Ps1Dac::WriteTo0200_0204, this, _1, _2, _3);
+	write_handlers[0].Install(0x200, write_to, IO_MB);
+	write_handlers[1].Install(0x202, write_to, IO_MB, 3);
 
-#if 0
-	struct SN76496 service;
-#endif
-	size_t last_write = 0;
-	bool is_enabled = false;
-	bool is_open = false;
-};
-
+	// Operate at native sampling rates
+	sample_rate = channel->GetSampleRate();
+	is_enabled = false;
+	last_write = 0;
+	Reset(true);
+	is_open = true;
+}
 uint8_t Ps1Dac::CalcStatus() const
 {
 	uint8_t status = regs.status & fifo_irq_flag;
@@ -141,24 +144,12 @@ void Ps1Dac::Reset(bool bTotal)
 		rate = 0xFFFFFFFF;
 	read_index_high = 0;
 	if (bTotal)
-		adder = 0; // Be careful with this, 5 second timeout and
-		           // Space Quest 4!
+		adder = 0; // Be careful with this, 5 second timeout and Space
+		           // Quest 4!
 	bytes_pending = 0;
 	regs.status = CalcStatus();
 	is_playing = true;
 	can_trigger_irq = false;
-}
-
-void Ps1Synth::WriteTo0205(size_t port, size_t data, MAYBE_UNUSED size_t iolen)
-{
-	last_write = PIC_Ticks;
-	if (!is_enabled) {
-		channel->Enable(true);
-		is_enabled = true;
-	}
-#if 0
-	SN76496Write(&synth.service,port,data);
-#endif
 }
 
 void Ps1Dac::WriteTo0200_0204(size_t port, size_t data, MAYBE_UNUSED size_t iolen)
@@ -173,8 +164,7 @@ void Ps1Dac::WriteTo0200_0204(size_t port, size_t data, MAYBE_UNUSED size_t iole
 	if( ( port != 0x0205 ) && ( port != 0x0200 ) )
 		LOG_MSG("PS1 WR %04X,%02X (%04X:%08X)",(int)port,(int)data,(int)SegValue(cs),(int)reg_eip);
 #endif
-	switch(port)
-	{
+	switch (port) {
 	case 0x0200:
 		// regs.data - insert into fifo.
 		regs.data = (uint8_t)data;
@@ -310,45 +300,6 @@ void Ps1Dac::Update(size_t length)
 	channel->AddSamples_m8(length, MixTemp);
 }
 
-void Ps1Synth::Update(size_t length)
-{
-	if ((last_write + 5000) < PIC_Ticks) {
-		is_enabled = false;
-		channel->Enable(false);
-	}
-#if 0
-	SN76496Update(&service,buffer,length);
-#endif
-	channel->AddSamples_m16(length, (int16_t *)MixTemp);
-}
-
-void Ps1Dac::Open()
-{
-	Close();
-
-	const auto callback = std::bind(&Ps1Dac::Update, this, _1);
-	channel = mixer_channel_t(MIXER_AddChannel(callback, 0, "PS1DAC"),
-	                          MIXER_DelChannel);
-	assert(channel);
-
-	// Register port handlers for 8-bit IO
-	const auto read_from = std::bind(&Ps1Dac::ReadFromPort, this, _1, _2);
-	read_handlers[0].Install(0x02F, read_from, IO_MB);
-	read_handlers[1].Install(0x200, read_from, IO_MB);
-	read_handlers[2].Install(0x202, read_from, IO_MB, 4);
-
-	const auto write_to = std::bind(&Ps1Dac::WriteTo0200_0204, this, _1, _2, _3);
-	write_handlers[0].Install(0x200, write_to, IO_MB);
-	write_handlers[1].Install(0x202, write_to, IO_MB, 3);
-
-	// Operate at native sampling rates
-	sample_rate = channel->GetSampleRate();
-	is_enabled = false;
-	last_write = 0;
-	Reset(true);
-	is_open = true;
-}
-
 void Ps1Dac::Close()
 {
 	if (!is_open)
@@ -367,6 +318,27 @@ void Ps1Dac::Close()
 	is_open = false;
 }
 
+class Ps1Synth {
+public:
+	Ps1Synth() : device(machine_config(), 0, 0, clock_rate) {}
+	void Open();
+	void Close();
+
+private:
+	void Update(size_t length);
+	void WriteTo0205(size_t port, size_t data, MAYBE_UNUSED size_t iolen);
+
+	mixer_channel_t channel{nullptr, MIXER_DelChannel};
+	IO_WriteHandleObject write_handler = {};
+	static constexpr auto clock_rate = 4000000;
+	sn76496_device device;
+	static constexpr auto max_samples_expected = 64;
+	int16_t buffer[max_samples_expected];
+	size_t last_write = 0;
+	bool is_enabled = false;
+	bool is_open = false;
+};
+
 void Ps1Synth::Open()
 {
 	Close();
@@ -377,13 +349,36 @@ void Ps1Synth::Open()
 
 	const auto write_to = std::bind(&Ps1Synth::WriteTo0205, this, _1, _2, _3);
 	write_handler.Install(0x205, write_to, IO_MB);
+	static_cast<device_t &>(device).device_start();
+	device.convert_samplerate(channel->GetSampleRate());
 
 	is_enabled = false;
 	last_write = 0;
-#if 0
-	SN76496Reset( &service, synth_clock, channel->GetSampleRate());
-#endif
 	is_open = true;
+}
+
+void Ps1Synth::WriteTo0205(size_t port, size_t data, MAYBE_UNUSED size_t iolen)
+{
+	last_write = PIC_Ticks;
+	if (!is_enabled) {
+		channel->Enable(true);
+		is_enabled = true;
+	}
+	device.write(data);
+}
+
+void Ps1Synth::Update(size_t length)
+{
+	assert(samples <= max_samples_expected);
+	if ((last_write + 5000) < PIC_Ticks) {
+		is_enabled = false;
+		channel->Enable(false);
+		return;
+	}
+	int16_t *pbuf = buffer;
+	device_sound_interface::sound_stream ss;
+	static_cast<device_sound_interface &>(device).sound_stream_update(ss, 0, &pbuf, samples);
+	channel->AddSamples_m16(samples, buffer);
 }
 
 void Ps1Synth::Close()
