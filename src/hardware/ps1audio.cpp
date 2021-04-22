@@ -87,11 +87,24 @@ private:
 	uint16_t write_index = 0;
 
 	// States
-	bool is_enabled = false;
 	bool is_playing = false;
 	bool can_trigger_irq = false;
 	bool is_open = false;
 };
+
+static void keep_alive_channel(size_t &last_used_tick, mixer_channel_t &channel)
+{
+	last_used_tick = PIC_Ticks;
+	if (!channel->is_enabled)
+		channel->Enable(true);
+}
+
+static void maybe_suspend_channel(const size_t last_used_tick, mixer_channel_t &channel)
+{
+	const bool last_used_five_seconds_ago = PIC_Ticks > last_write + 5000;
+	if (last_used_five_seconds_ago)
+		channel->Enable(false);
+}
 
 void Ps1Dac::Open()
 {
@@ -114,7 +127,6 @@ void Ps1Dac::Open()
 
 	// Operate at native sampling rates
 	sample_rate = channel->GetSampleRate();
-	is_enabled = false;
 	last_write = 0;
 	Reset(true);
 	is_open = true;
@@ -157,11 +169,8 @@ void Ps1Dac::Reset(bool should_clear_adder)
 
 void Ps1Dac::WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
 {
-	last_write = PIC_Ticks;
-	if (!is_enabled) {
-		channel->Enable(true);
-		is_enabled = true;
-	}
+	keep_alive_channel(last_write, channel);
+
 	switch (port) {
 	case 0x0200:
 		// regs.data - insert into fifo.
@@ -207,11 +216,8 @@ void Ps1Dac::WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t i
 
 uint8_t Ps1Dac::ReadFromPort(uint16_t port, MAYBE_UNUSED size_t iolen)
 {
-	last_write = PIC_Ticks;
-	if (!is_enabled) {
-		channel->Enable(true);
-		is_enabled = true;
-	}
+	keep_alive_channel(last_write, channel);
+
 	switch (port) {
 	case 0x02F: // CMOS Card is present check
 		return 0xff;
@@ -241,12 +247,6 @@ uint8_t Ps1Dac::ReadFromPort(uint16_t port, MAYBE_UNUSED size_t iolen)
 
 void Ps1Dac::Update(uint16_t samples)
 {
-	if ((last_write + 5000) < PIC_Ticks) {
-		is_enabled = false;
-		channel->Enable(false);
-		// Excessive?
-		Reset(false);
-	}
 	uint8_t *buffer = MixTemp;
 
 	int32_t pending = 0;
@@ -293,6 +293,7 @@ void Ps1Dac::Update(uint16_t samples)
 	bytes_pending = static_cast<uint32_t>(pending);
 
 	channel->AddSamples_m8(samples, MixTemp);
+	maybe_suspend_channel(last_write, channel);
 }
 
 void Ps1Dac::Close()
@@ -331,7 +332,6 @@ private:
 	static constexpr auto max_samples_expected = 64;
 	int16_t buffer[max_samples_expected];
 	size_t last_write = 0;
-	bool is_enabled = false;
 	bool is_open = false;
 };
 
@@ -347,8 +347,6 @@ void Ps1Synth::Open()
 	write_handler.Install(0x205, write_to, IO_MB);
 	static_cast<device_t &>(device).device_start();
 	device.convert_samplerate(channel->GetSampleRate());
-
-	is_enabled = false;
 	last_write = 0;
 	is_open = true;
 }
@@ -357,26 +355,18 @@ void Ps1Synth::WriteTo0205(MAYBE_UNUSED uint16_t port,
                            uint8_t data,
                            MAYBE_UNUSED size_t iolen)
 {
-	last_write = PIC_Ticks;
-	if (!is_enabled) {
-		channel->Enable(true);
-		is_enabled = true;
-	}
+	keep_alive_channel(last_write, channel);
 	device.write(data);
 }
 
 void Ps1Synth::Update(uint16_t samples)
 {
 	assert(samples <= max_samples_expected);
-	if ((last_write + 5000) < PIC_Ticks) {
-		is_enabled = false;
-		channel->Enable(false);
-		return;
-	}
 	int16_t *pbuf = buffer;
 	device_sound_interface::sound_stream ss;
 	static_cast<device_sound_interface &>(device).sound_stream_update(ss, 0, &pbuf, samples);
 	channel->AddSamples_m16(samples, buffer);
+	maybe_suspend_channel(last_write, channel);
 }
 
 void Ps1Synth::Close()
