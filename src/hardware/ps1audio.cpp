@@ -58,29 +58,22 @@ private:
 
 	// Constants
 	static constexpr auto clock_rate = 1000000; // 950272?
-	static constexpr auto FIFOSIZE = 2048;      // powers of two
-	static constexpr auto FIFOSIZE_MASK = FIFOSIZE - 1;
-	static constexpr auto FIFO_NEARLY_EMPTY_VAL = 128;
-	static constexpr auto FRAC_SHIFT = 12; // Fixed precision
-	// High when the interrupt can't do anything but wait (cleared by
-	// reading 0200?).
-	static constexpr auto FIFO_READ_AVAILABLE = 0x10;
-	// High when we can't write any more.
-	static constexpr auto FIFO_FULL = 0x08;
-	// High when we can write direct values???
-	static constexpr auto FIFO_EMPTY = 0x04;
-	// High when we can write more to the fifo (or, at least, there are
-	// 0x700 bytes free).
-	static constexpr auto FIFO_NEARLY_EMPTY = 0x02;
-	// High when IRQ was triggered by the DAC?
-	static constexpr auto FIFO_IRQ = 0x01;
+	static constexpr auto fifo_size = 2048;
+	static constexpr auto fifo_size_mask = fifo_size - 1;
+	static constexpr auto fifo_nearly_empty_val = 128;
+	static constexpr auto frac_shift = 12;            // Fixed precision
+	static constexpr auto fifo_status_ready_flag = 0x10;
+	static constexpr auto fifo_full_flag = 0x08;
+	static constexpr auto fifo_empty_flag = 0x04;
+	static constexpr auto fifo_nearly_empty_flag = 0x02; // >= 1792 bytes free
+	static constexpr auto fifo_irq_flag = 0x01; // IRQ triggered by DAC
 
 	// Managed objects
 	mixer_channel_t channel{nullptr, MIXER_DelChannel};
 	IO_ReadHandleObject read_handlers[3] = {};
 	IO_WriteHandleObject write_handlers[2] = {};
 	Ps1Registers regs = {};
-	uint8_t fifo[FIFOSIZE] = {};
+	uint8_t fifo[fifo_size] = {};
 
 	// Counters
 	size_t adder = 0;
@@ -123,25 +116,25 @@ private:
 
 uint8_t Ps1Dac::CalcStatus() const
 {
-	uint8_t status = regs.status & FIFO_IRQ;
+	uint8_t status = regs.status & fifo_irq_flag;
 	if (!bytes_pending)
-		status |= FIFO_EMPTY;
+		status |= fifo_empty_flag;
 
-	if (bytes_pending < (FIFO_NEARLY_EMPTY_VAL << FRAC_SHIFT) &&
+	if (bytes_pending < (fifo_nearly_empty_val << frac_shift) &&
 	    (regs.command & 3) == 3)
-		status |= FIFO_NEARLY_EMPTY;
+		status |= fifo_nearly_empty_flag;
 
-	if (bytes_pending > ((FIFOSIZE - 1) << FRAC_SHIFT))
-		status |= FIFO_FULL;
+	if (bytes_pending > ((fifo_size - 1) << frac_shift))
+		status |= fifo_full_flag;
 
 	return status;
 }
 
 void Ps1Dac::Reset(bool bTotal)
 {
-	PIC_DeActivateIRQ( 7 );
+	PIC_DeActivateIRQ(7);
 	regs.data = 0x80;
-	memset(fifo, 0x80, FIFOSIZE);
+	memset(fifo, 0x80, fifo_size);
 	read_index = 0;
 	write_index = 0;
 	if (bTotal)
@@ -186,12 +179,12 @@ void Ps1Dac::WriteTo0200_0204(size_t port, size_t data, MAYBE_UNUSED size_t iole
 		// regs.data - insert into fifo.
 		regs.data = (uint8_t)data;
 		regs.status = CalcStatus();
-		if (!(regs.status & FIFO_FULL)) {
+		if (!(regs.status & fifo_full_flag)) {
 			fifo[write_index++] = (uint8_t)data;
-			write_index &= FIFOSIZE_MASK;
-			bytes_pending += (1 << FRAC_SHIFT);
-			if (bytes_pending > (FIFOSIZE << FRAC_SHIFT)) {
-				bytes_pending = FIFOSIZE << FRAC_SHIFT;
+			write_index &= fifo_size_mask;
+			bytes_pending += (1 << frac_shift);
+			if (bytes_pending > (fifo_size << frac_shift)) {
+				bytes_pending = fifo_size << frac_shift;
 			}
 		}
 		break;
@@ -205,11 +198,11 @@ void Ps1Dac::WriteTo0200_0204(size_t port, size_t data, MAYBE_UNUSED size_t iole
 		// Clock divisor (maybe trigger first IRQ here).
 		regs.divisor = (uint8_t)data;
 		rate = (uint32_t)(clock_rate / (data + 1));
-		adder = (rate << FRAC_SHIFT) / (unsigned int)sample_rate;
+		adder = (rate << frac_shift) / (unsigned int)sample_rate;
 		regs.status = CalcStatus();
-		if ((regs.status & FIFO_NEARLY_EMPTY) && (can_trigger_irq)) {
+		if ((regs.status & fifo_nearly_empty_flag) && (can_trigger_irq)) {
 			// Generate request for stuff.
-			regs.status |= FIFO_IRQ;
+			regs.status |= fifo_irq_flag;
 			can_trigger_irq = false;
 			PIC_ActivateIRQ(7);
 		}
@@ -240,14 +233,14 @@ uint8_t Ps1Dac::ReadFromPort(size_t port, MAYBE_UNUSED size_t iolen)
 		return 0xff;
 	case 0x0200:
 		// Read last command.
-		regs.status &= ~FIFO_READ_AVAILABLE;
+		regs.status &= ~fifo_status_ready_flag;
 		return regs.command;
 	case 0x0202: {
 		// Read status / clear IRQ?.
 		uint8_t status = regs.status = CalcStatus();
 		// Don't do this until we have some better way of
 		// detecting the triggering and ending of an IRQ.
-		// ---> regs.status &= ~FIFO_IRQ;
+		// ---> regs.status &= ~fifo_irq_flag;
 		return status;
 	}
 	case 0x0203:
@@ -281,9 +274,9 @@ void Ps1Dac::Update(size_t length)
 		regs.status = CalcStatus();
 		pending = (Bits)bytes_pending;
 		add = adder;
-		if ((regs.status & FIFO_NEARLY_EMPTY) && (can_trigger_irq)) {
+		if ((regs.status & fifo_nearly_empty_flag) && (can_trigger_irq)) {
 			// More bytes needed.
-			regs.status |= FIFO_IRQ;
+			regs.status |= fifo_irq_flag;
 			can_trigger_irq = false;
 			PIC_ActivateIRQ(7);
 		}
@@ -298,18 +291,18 @@ void Ps1Dac::Update(size_t length)
 			while( count-- ) *(buffer++) = 0x80;	// Silence.
 			break;
 		} else {
-			out = fifo[pos >> FRAC_SHIFT];
+			out = fifo[pos >> frac_shift];
 			pos += add;
-			pos &= ( ( FIFOSIZE << FRAC_SHIFT ) - 1 );
+			pos &= ((fifo_size << frac_shift) - 1);
 			pending -= (Bits)add;
 		}
 
 		*(buffer++) = out;
 		count--;
 	}
-	// Update positions and see if we can clear the FIFO_FULL flag.
+	// Update positions and see if we can clear the fifo_full_flag
 	read_index_high = pos;
-	read_index = (uint16_t)(pos >> FRAC_SHIFT);
+	read_index = (uint16_t)(pos >> frac_shift);
 	if (pending < 0)
 		pending = 0;
 	bytes_pending = (Bitu)pending;
