@@ -30,13 +30,13 @@
 
 
 diskGeo DiskGeometryList[] = {
-	{ 160,  8, 1, 40, 0},	// SS/SD 5.25"
-	{ 180,  9, 1, 40, 0},	// SS/SD 5.25"
-	{ 200, 10, 1, 40, 0},	// SS/SD 5.25" (booters)
-	{ 320,  8, 2, 40, 1},	// DS/SD 5.25"
-	{ 360,  9, 2, 40, 1},	// DS/SD 5.25"
-	{ 400, 10, 2, 40, 1},	// DS/SD 5.25" (booters)
-	{ 720,  9, 2, 80, 3},	// DS/SD 3.5"
+	{ 160,  8, 1, 40, 0},	// SS/DD 5.25"
+	{ 180,  9, 1, 40, 0},	// SS/DD 5.25"
+	{ 200, 10, 1, 40, 0},	// SS/DD 5.25" (booters)
+	{ 320,  8, 2, 40, 1},	// DS/DD 5.25"
+	{ 360,  9, 2, 40, 1},	// DS/DD 5.25"
+	{ 400, 10, 2, 40, 1},	// DS/DD 5.25" (booters)
+	{ 720,  9, 2, 80, 3},	// DS/DD 3.5"
 	{1200, 15, 2, 80, 2},	// DS/HD 5.25"
 	{1440, 18, 2, 80, 4},	// DS/HD 3.5"
 	{1680, 21, 2, 80, 4},	// DS/HD 3.5"  (DMF)
@@ -54,7 +54,7 @@ DOS_DTA *imgDTA;
 bool killRead;
 static bool swapping_requested;
 
-void CMOS_SetRegister(Bitu regNr, Bit8u val); //For setting equipment word
+void BIOS_SetEquipment(Bit16u equipment);
 
 /* 2 floppys and 2 harddrives, max */
 imageDisk *imageDiskList[MAX_DISK_IMAGES];
@@ -96,9 +96,7 @@ void incrementFDD(void) {
 		equipment&=~0x00C0;
 		equipment|=(numofdisks<<6);
 	} else equipment|=1;
-	mem_writew(BIOS_CONFIGURATION,equipment);
-	if (IS_EGAVGA_ARCH) equipment &= ~0x30; //EGA/VGA startup display mode differs in CMOS
-	CMOS_SetRegister(0x14, (Bit8u)(equipment&0xff));
+	BIOS_SetEquipment(equipment);
 }
 
 void swapInDisks(void) {
