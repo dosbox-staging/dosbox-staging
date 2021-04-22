@@ -35,8 +35,6 @@
 
 // FIXME: MAME updates broke this code!
 constexpr auto DAC_CLOCK = 1000000; // 950272?
-constexpr auto MAX_OUTPUT = 0x7fff;
-constexpr auto STEP = 0x10000;
 
 constexpr auto FIFOSIZE = 2048; // powers of two
 constexpr auto FIFOSIZE_MASK = FIFOSIZE - 1;
@@ -65,10 +63,10 @@ using mixer_channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel
 struct Ps1Dac {
 	mixer_channel_t channel{nullptr, MIXER_DelChannel};
 	uint8_t fifo[FIFOSIZE] = {};
-	size_t adder = 0;         // Step << FRAC_SHIFT
-	size_t bytes_pending = 0; // Bytes to go << FRAC_SHIFT
+	size_t adder = 0;
+	size_t bytes_pending = 0;
 	size_t last_write = 0;
-	size_t read_index_high = 0; // dac.read_index << FRAC_SHIFT
+	size_t read_index_high = 0;
 	uint32_t rate = 0;
 	uint16_t read_index = 0;
 	uint16_t write_index = 0;
@@ -196,31 +194,13 @@ void Ps1Audio::WriteToPort(size_t port, size_t data, MAYBE_UNUSED size_t iolen)
 		        regs.command = (uint8_t)data;
 		        if (data & 3)
 			        dac.can_trigger_irq = true;
-		        //			switch( data & 3 )
-		        //			{
-		        //				case 0: // Stop?
-		        //					dac.adder =
-		        // 0; 					break;
-		        //			}
 		        break;
 	        case 0x0203: {
 		        // Clock divisor (maybe trigger first IRQ here).
 		        regs.divisor = (uint8_t)data;
 		        dac.rate = (uint32_t)(DAC_CLOCK / (data + 1));
-		        // 22050 << FRAC_SHIFT / 22050 = 1 << FRAC_SHIFT
 		        dac.adder = (dac.rate << FRAC_SHIFT) /
 		                    (unsigned int)sample_rate;
-		        if (dac.rate > 22050) {
-			        //					if( (
-			        // regs.command & 3 ) == 3 ) {
-			        //						LOG_MSG("Attempt
-			        // to set DAC rate too high
-			        //(%dhz).",dac.rate);
-			        //					}
-			        // regs.divisor = 0x2C;
-			        // dac.rate = 22050;
-			        // dac.adder = 0;	// Not valid.
-		        }
 		        regs.status = CalcStatus();
 		        if ((regs.status & FIFO_NEARLY_EMPTY) &&
 		            (dac.can_trigger_irq)) {
@@ -264,9 +244,6 @@ uint8_t Ps1Audio::ReadFromPort(size_t port, MAYBE_UNUSED size_t iolen)
 		regs.status &= ~FIFO_READ_AVAILABLE;
 		return regs.command;
 	case 0x0202: {
-		//				LOG_MSG("PS1 RD %04X
-		//(%04X:%08X)",port,SegValue(cs),reg_eip);
-
 		// Read status / clear IRQ?.
 		uint8_t status = regs.status = CalcStatus();
 		// Don't do this until we have some better way of
@@ -307,8 +284,6 @@ void Ps1Audio::UpdateDac(size_t length)
 		add = dac.adder;
 		if ((regs.status & FIFO_NEARLY_EMPTY) && (dac.can_trigger_irq)) {
 			// More bytes needed.
-
-			//PIC_AddEvent( ??, ??, ?? );
 			regs.status |= FIFO_IRQ;
 			dac.can_trigger_irq = false;
 			PIC_ActivateIRQ(7);
@@ -323,8 +298,6 @@ void Ps1Audio::UpdateDac(size_t length)
 			pending = 0;
 			while( count-- ) *(buffer++) = 0x80;	// Silence.
 			break;
-			// pos = ( ( dac.read_index - 1 ) & FIFOSIZE_MASK )
-			// << FRAC_SHIFT;	// Stay on last byte.
 		} else {
 			out = dac.fifo[pos >> FRAC_SHIFT];
 			pos += add;
@@ -337,8 +310,6 @@ void Ps1Audio::UpdateDac(size_t length)
 	}
 	// Update positions and see if we can clear the FIFO_FULL flag.
 	dac.read_index_high = pos;
-	//	if( dac.read_index != ( pos >> FRAC_SHIFT ) ) regs.status
-	//&= ~FIFO_FULL;
 	dac.read_index = (uint16_t)(pos >> FRAC_SHIFT);
 	if (pending < 0)
 		pending = 0;
@@ -353,8 +324,6 @@ void Ps1Audio::UpdateSynth(size_t length)
 		synth.is_enabled = false;
 		synth.channel->Enable(false);
 	}
-
-	//int16_t * buffer=(int16_t *)MixTemp;
 #if 0
 	SN76496Update(&synth.service,buffer,length);
 #endif
@@ -440,7 +409,7 @@ void Ps1Audio::Open()
 	const auto read_from = std::bind(&Ps1Audio::ReadFromPort, this, _1, _2);
 	read_handlers[0].Install(0x02F, read_from, IO_MB);
 	read_handlers[1].Install(0x200, read_from, IO_MB);
-	read_handlers[2].Install(0x202, read_from, IO_MB, 6); // 5); //3);
+	read_handlers[2].Install(0x202, read_from, IO_MB, 6);
 
 	const auto write_to = std::bind(&Ps1Audio::WriteToPort, this, _1, _2, _3);
 	write_handlers[0].Install(0x200, write_to, IO_MB);
