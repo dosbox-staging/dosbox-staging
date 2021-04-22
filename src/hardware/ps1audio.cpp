@@ -47,8 +47,8 @@ struct Ps1Registers {
 
 class Ps1Dac {
 public:
-	void Open();
-	void Close();
+	Ps1Dac();
+	~Ps1Dac();
 
 private:
 	uint8_t CalcStatus() const;
@@ -89,27 +89,24 @@ private:
 	// States
 	bool is_playing = false;
 	bool can_trigger_irq = false;
-	bool is_open = false;
 };
 
-static void keep_alive_channel(size_t &last_used_tick, mixer_channel_t &channel)
+static void keep_alive_channel(size_t &last_used_on, mixer_channel_t &channel)
 {
-	last_used_tick = PIC_Ticks;
+	last_used_on = PIC_Ticks;
 	if (!channel->is_enabled)
 		channel->Enable(true);
 }
 
-static void maybe_suspend_channel(const size_t last_used_tick, mixer_channel_t &channel)
+static void maybe_suspend_channel(const size_t last_used_on, mixer_channel_t &channel)
 {
-	const bool last_used_five_seconds_ago = PIC_Ticks > last_write + 5000;
+	const bool last_used_five_seconds_ago = PIC_Ticks > last_used_on + 5000;
 	if (last_used_five_seconds_ago)
 		channel->Enable(false);
 }
 
-void Ps1Dac::Open()
+Ps1Dac::Ps1Dac()
 {
-	Close();
-
 	const auto callback = std::bind(&Ps1Dac::Update, this, _1);
 	channel = mixer_channel_t(MIXER_AddChannel(callback, 0, "PS1DAC"),
 	                          MIXER_DelChannel);
@@ -129,7 +126,6 @@ void Ps1Dac::Open()
 	sample_rate = channel->GetSampleRate();
 	last_write = 0;
 	Reset(true);
-	is_open = true;
 }
 
 uint8_t Ps1Dac::CalcStatus() const
@@ -296,11 +292,8 @@ void Ps1Dac::Update(uint16_t samples)
 	maybe_suspend_channel(last_write, channel);
 }
 
-void Ps1Dac::Close()
+Ps1Dac::~Ps1Dac()
 {
-	if (!is_open)
-		return;
-
 	// Stop the game from accessing the IO ports
 	for (auto &handler : read_handlers)
 		handler.Uninstall();
@@ -312,14 +305,12 @@ void Ps1Dac::Close()
 		channel->Enable(false);
 		channel.reset();
 	}
-	is_open = false;
 }
 
 class Ps1Synth {
 public:
-	Ps1Synth() : device(machine_config(), 0, 0, clock_rate) {}
-	void Open();
-	void Close();
+	Ps1Synth();
+	~Ps1Synth();
 
 private:
 	void Update(uint16_t samples);
@@ -332,12 +323,10 @@ private:
 	static constexpr auto max_samples_expected = 64;
 	int16_t buffer[max_samples_expected];
 	size_t last_write = 0;
-	bool is_open = false;
 };
 
-void Ps1Synth::Open()
+Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate)
 {
-	Close();
 	const auto callback = std::bind(&Ps1Synth::Update, this, _1);
 	channel = mixer_channel_t(MIXER_AddChannel(callback, 0, "PS1"),
 	                          MIXER_DelChannel);
@@ -348,7 +337,6 @@ void Ps1Synth::Open()
 	static_cast<device_t &>(device).device_start();
 	device.convert_samplerate(channel->GetSampleRate());
 	last_write = 0;
-	is_open = true;
 }
 
 void Ps1Synth::WriteTo0205(MAYBE_UNUSED uint16_t port,
@@ -369,11 +357,8 @@ void Ps1Synth::Update(uint16_t samples)
 	maybe_suspend_channel(last_write, channel);
 }
 
-void Ps1Synth::Close()
+Ps1Synth::~Ps1Synth()
 {
-	if (!is_open)
-		return;
-
 	// Stop the game from accessing the IO ports
 	write_handler.Uninstall();
 
@@ -381,17 +366,16 @@ void Ps1Synth::Close()
 		channel->Enable(false);
 		channel.reset();
 	}
-	is_open = false;
 }
 
-static Ps1Dac ps1_dac;
-static Ps1Synth ps1_synth;
+static std::unique_ptr<Ps1Dac> ps1_dac = {};
+static std::unique_ptr<Ps1Synth> ps1_synth = {};
 
 static void PS1AUDIO_ShutDown(MAYBE_UNUSED Section *sec)
 {
 	LOG_MSG("PS/1: Shutting down IBM PS/1 Audio card");
-	ps1_dac.Close();
-	ps1_synth.Close();
+	ps1_dac.reset();
+	ps1_synth.reset();
 }
 
 void PS1AUDIO_Init(Section *sec)
@@ -401,8 +385,8 @@ void PS1AUDIO_Init(Section *sec)
 	if (!section->Get_bool("ps1audio"))
 		return;
 
-	ps1_dac.Open();
-	ps1_synth.Open();
+	ps1_dac = std::make_unique<Ps1Dac>();
+	ps1_synth = std::make_unique<Ps1Synth>();
 
 	LOG_MSG("PS/1: Initialized IBM PS/1 Audio card");
 	sec->AddDestroyFunction(&PS1AUDIO_ShutDown, true);
