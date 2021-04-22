@@ -40,15 +40,9 @@ constexpr auto STEP = 0x10000;
 
 constexpr auto FIFOSIZE = 2048; // powers of two
 constexpr auto FIFOSIZE_MASK = FIFOSIZE - 1;
-
 constexpr auto FIFO_NEARLY_EMPTY_VAL = 128;
-constexpr auto FIFO_NEARLY_FULL_VAL = FIFOSIZE - 128;
 
 constexpr auto FRAC_SHIFT = 12; // Fixed precision
-
-// Nearly full and half full flags (somewhere) on the SN74V2x5/IDT72V2x5 datasheet (just guessing on the hardware).
-constexpr auto FIFO_HALF_FULL = 0x00;
-constexpr auto FIFO_NEARLY_FULL = 0x00;
 
 // High when the interrupt can't do anything but wait (cleared by reading 0200?).
 constexpr auto FIFO_READ_AVAILABLE = 0x10;
@@ -106,7 +100,7 @@ public:
 	void Close();
 
 private:
-	uint8_t CalcStatus();
+	uint8_t CalcStatus() const;
 	uint8_t ReadFromPort(size_t port, MAYBE_UNUSED size_t iolen);
 	void WriteToPort(size_t port, size_t data, MAYBE_UNUSED size_t iolen);
 
@@ -127,28 +121,19 @@ private:
 	bool is_open = false;
 };
 
-uint8_t Ps1Audio::CalcStatus()
+uint8_t Ps1Audio::CalcStatus() const
 {
 	uint8_t status = regs.status & FIFO_IRQ;
-	if (!dac.bytes_pending) {
+	if (!dac.bytes_pending)
 		status |= FIFO_EMPTY;
-	}
-	if ((dac.bytes_pending < (FIFO_NEARLY_EMPTY_VAL << FRAC_SHIFT)) &&
-	    ((regs.command & 3) == 3)) {
+
+	if (dac.bytes_pending < (FIFO_NEARLY_EMPTY_VAL << FRAC_SHIFT) &&
+	    (regs.command & 3) == 3)
 		status |= FIFO_NEARLY_EMPTY;
-	}
-	if (dac.bytes_pending > ((FIFOSIZE - 1) << FRAC_SHIFT)) {
-		//	if( dac.bytes_pending >= ( ( FIFOSIZE - 1 ) <<
-		// FRAC_SHIFT ) ) { // OK
-		// Should never be bigger than FIFOSIZE << FRAC_SHIFT...?
+
+	if (dac.bytes_pending > ((FIFOSIZE - 1) << FRAC_SHIFT))
 		status |= FIFO_FULL;
-	}
-	if (dac.bytes_pending > (FIFO_NEARLY_FULL_VAL << FRAC_SHIFT)) {
-		status |= FIFO_NEARLY_FULL;
-	}
-	if (dac.bytes_pending >= ((FIFOSIZE >> 1) << FRAC_SHIFT)) {
-		status |= FIFO_HALF_FULL;
-	}
+
 	return status;
 }
 
