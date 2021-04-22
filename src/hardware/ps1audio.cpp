@@ -52,7 +52,7 @@ public:
 
 private:
 	uint8_t CalcStatus() const;
-	void Reset(bool bTotal);
+	void Reset(bool should_clear_adder);
 	void Update(uint16_t samples);
 	uint8_t ReadFromPort(uint16_t port, MAYBE_UNUSED size_t iolen);
 	void WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen);
@@ -82,7 +82,6 @@ private:
 	uint32_t adder = 0;
 	uint32_t bytes_pending = 0;
 	uint32_t read_index_high = 0;
-	uint32_t rate = 0;
 	uint32_t sample_rate = 0;
 	uint16_t read_index = 0;
 	uint16_t write_index = 0;
@@ -137,19 +136,19 @@ uint8_t Ps1Dac::CalcStatus() const
 	return status;
 }
 
-void Ps1Dac::Reset(bool bTotal)
+void Ps1Dac::Reset(bool should_clear_adder)
 {
 	PIC_DeActivateIRQ(irq_number);
 	regs.data = 0x80;
 	memset(fifo, 0x80, fifo_size);
 	read_index = 0;
 	write_index = 0;
-	if (bTotal)
-		rate = 0xFFFFFFFF;
 	read_index_high = 0;
-	if (bTotal)
-		adder = 0; // Be careful with this, 5 second timeout and Space
-		           // Quest 4!
+
+	 // Be careful with this, 5 second timeout and Space Quest 4
+	if (should_clear_adder)
+		adder = 0;
+
 	bytes_pending = 0;
 	regs.status = CalcStatus();
 	is_playing = true;
@@ -186,8 +185,8 @@ void Ps1Dac::WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t i
 	case 0x0203: {
 		// Clock divisor (maybe trigger first IRQ here).
 		regs.divisor = (uint8_t)data;
-		rate = (uint32_t)(clock_rate / (data + 1));
-		adder = (rate << frac_shift) / (unsigned int)sample_rate;
+		const auto rate = static_cast<uint32_t>(clock_rate / (data + 1));
+		adder = (rate << frac_shift) / sample_rate;
 		regs.status = CalcStatus();
 		if ((regs.status & fifo_nearly_empty_flag) && (can_trigger_irq)) {
 			// Generate request for stuff.
