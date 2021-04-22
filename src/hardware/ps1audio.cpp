@@ -159,11 +159,6 @@ void Ps1Dac::WriteTo0200_0204(size_t port, size_t data, MAYBE_UNUSED size_t iole
 		channel->Enable(true);
 		is_enabled = true;
 	}
-
-#if C_DEBUG != 0
-	if( ( port != 0x0205 ) && ( port != 0x0200 ) )
-		LOG_MSG("PS1 WR %04X,%02X (%04X:%08X)",(int)port,(int)data,(int)SegValue(cs),(int)reg_eip);
-#endif
 	switch (port) {
 	case 0x0200:
 		// regs.data - insert into fifo.
@@ -214,9 +209,6 @@ uint8_t Ps1Dac::ReadFromPort(size_t port, MAYBE_UNUSED size_t iolen)
 		channel->Enable(true);
 		is_enabled = true;
 	}
-#if C_DEBUG != 0
-	LOG_MSG("PS1 RD %04X (%04X:%08X)",(int)port,(int)SegValue(cs),(int)reg_eip);
-#endif
 	switch(port)
 	{
 	case 0x02F: // CMOS Card is present check
