@@ -77,10 +77,10 @@ private:
 	uint8_t fifo[fifo_size] = {};
 
 	// Counters
-	size_t adder = 0;
-	size_t bytes_pending = 0;
 	size_t last_write = 0;
-	size_t read_index_high = 0;
+	uint32_t adder = 0;
+	uint32_t bytes_pending = 0;
+	uint32_t read_index_high = 0;
 	uint32_t rate = 0;
 	uint32_t sample_rate = 0;
 	uint16_t read_index = 0;
@@ -249,10 +249,10 @@ void Ps1Dac::Update(uint16_t samples)
 	}
 	uint8_t *buffer = (uint8_t *)MixTemp;
 
-	Bits pending = 0;
-	Bitu add = 0;
-	Bitu pos = read_index_high;
-	Bitu count = samples;
+	int32_t pending = 0;
+	uint32_t add = 0;
+	uint32_t pos = read_index_high;
+	uint16_t count = samples;
 
 	if (is_playing) {
 		regs.status = CalcStatus();
