@@ -68,6 +68,7 @@ private:
 	static constexpr auto fifo_empty_flag = 0x04;
 	static constexpr auto fifo_nearly_empty_flag = 0x02; // >= 1792 bytes free
 	static constexpr auto fifo_irq_flag = 0x01; // IRQ triggered by DAC
+	static constexpr auto irq_number = 7;
 
 	// Managed objects
 	mixer_channel_t channel{nullptr, MIXER_DelChannel};
@@ -138,7 +139,7 @@ uint8_t Ps1Dac::CalcStatus() const
 
 void Ps1Dac::Reset(bool bTotal)
 {
-	PIC_DeActivateIRQ(7);
+	PIC_DeActivateIRQ(irq_number);
 	regs.data = 0x80;
 	memset(fifo, 0x80, fifo_size);
 	read_index = 0;
@@ -192,7 +193,7 @@ void Ps1Dac::WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t i
 			// Generate request for stuff.
 			regs.status |= fifo_irq_flag;
 			can_trigger_irq = false;
-			PIC_ActivateIRQ(7);
+			PIC_ActivateIRQ(irq_number);
 		}
 	} break;
 	case 0x0204:
@@ -262,7 +263,7 @@ void Ps1Dac::Update(uint16_t samples)
 			// More bytes needed.
 			regs.status |= fifo_irq_flag;
 			can_trigger_irq = false;
-			PIC_ActivateIRQ(7);
+			PIC_ActivateIRQ(irq_number);
 		}
 	}
 
