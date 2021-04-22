@@ -35,6 +35,7 @@
 
 // FIXME: MAME updates broke this code!
 constexpr auto DAC_CLOCK = 1000000; // 950272?
+constexpr auto SYNTH_CLOCK = 4000000;
 
 constexpr auto FIFOSIZE = 2048; // powers of two
 constexpr auto FIFOSIZE_MASK = FIFOSIZE - 1;
@@ -340,24 +341,8 @@ void Ps1Audio::ResetStates()
 	synth.last_write = 0;
 	ResetDac(true);
 
-	// > Jmk wrote:
-	// > Judging by what I've read in that technical document, it looks like
-	// the sound chip is fed by a 4 Mhz clock instead of a ~3.5 Mhz clock.
-	// >
-	// > So, there's a line in ps1_sound.cpp that looks like this:
-	// > SN76496Reset( &synth.service, 3579545, sample_rate );
-	// >
-	// > Instead, it should look like this:
-	// > SN76496Reset( &synth.service, 4000000, sample_rate );
-	// >
-	// > That should fix it! Mind you, that was with the old code (it was
-	// 0.72 I worked with) which may have been updated since, but the same
-	// principle applies.
-	//
-	// NTS: I do not have anything to test this change! --J.C.
-	//		SN76496Reset( &synth.service, 3579545, sample_rate );
 #if 0
-	SN76496Reset( &synth.service, 4000000, sample_rate );
+	SN76496Reset( &synth.service, SYNTH_CLOCK, sample_rate );
 #endif
 }
 
