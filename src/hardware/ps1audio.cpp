@@ -43,6 +43,7 @@ struct Ps1Registers {
 	uint8_t divisor = 0; // 0203 WR
 	uint8_t unknown = 0; // 0204 WR (Reset?)
 };
+
 class Ps1Dac {
 public:
 	void Open();
@@ -117,6 +118,7 @@ void Ps1Dac::Open()
 	Reset(true);
 	is_open = true;
 }
+
 uint8_t Ps1Dac::CalcStatus() const
 {
 	uint8_t status = regs.status & fifo_irq_flag;
@@ -209,8 +211,7 @@ uint8_t Ps1Dac::ReadFromPort(uint16_t port, MAYBE_UNUSED size_t iolen)
 		channel->Enable(true);
 		is_enabled = true;
 	}
-	switch(port)
-	{
+	switch (port) {
 	case 0x02F: // CMOS Card is present check
 		return 0xff;
 	case 0x0200:
@@ -245,12 +246,12 @@ void Ps1Dac::Update(uint16_t samples)
 		// Excessive?
 		Reset(false);
 	}
-	uint8_t * buffer=(uint8_t *)MixTemp;
+	uint8_t *buffer = (uint8_t *)MixTemp;
 
 	Bits pending = 0;
 	Bitu add = 0;
 	Bitu pos = read_index_high;
-	Bitu count=samples;
+	Bitu count = samples;
 
 	if (is_playing) {
 		regs.status = CalcStatus();
@@ -264,13 +265,14 @@ void Ps1Dac::Update(uint16_t samples)
 		}
 	}
 
-	while (count)
-	{
+	while (count) {
 		unsigned int out;
 
-		if( pending <= 0 ) {
+		if (pending <= 0) {
 			pending = 0;
-			while( count-- ) *(buffer++) = 0x80;	// Silence.
+			while (count--) {
+				*(buffer++) = 0x80; // Silence
+			}
 			break;
 		} else {
 			out = fifo[pos >> frac_shift];
@@ -296,13 +298,14 @@ void Ps1Dac::Close()
 {
 	if (!is_open)
 		return;
+
 	// Stop the game from accessing the IO ports
 	for (auto &handler : read_handlers)
 		handler.Uninstall();
 	for (auto &handler : write_handlers)
 		handler.Uninstall();
 
-	// Stop and remove the mixer callbacks
+	// Stop and remove the mixer callback
 	if (channel) {
 		channel->Enable(false);
 		channel.reset();
@@ -349,7 +352,9 @@ void Ps1Synth::Open()
 	is_open = true;
 }
 
-void Ps1Synth::WriteTo0205(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
+void Ps1Synth::WriteTo0205(MAYBE_UNUSED uint16_t port,
+                           uint8_t data,
+                           MAYBE_UNUSED size_t iolen)
 {
 	last_write = PIC_Ticks;
 	if (!is_enabled) {
