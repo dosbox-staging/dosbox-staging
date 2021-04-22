@@ -99,7 +99,7 @@ void MPU401_Init(Section*);
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void DISNEY_Init(Section*);
-void PS1SOUND_Init(Section*);
+void PS1AUDIO_Init(Section *);
 void SERIAL_Init(Section*);
 
 
@@ -790,7 +790,7 @@ void DOSBOX_Init(void) {
 	Pbool->Set_help("Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).");
 
 	// IBM PS/1 Audio emulation
-	secprop->AddInitFunction(&PS1SOUND_Init, true);
+	secprop->AddInitFunction(&PS1AUDIO_Init, true);
 	Pbool = secprop->Add_bool("ps1audio", when_idle, false);
 	Pbool->Set_help("Enable IBM PS/1 Audio emulation.");
 
