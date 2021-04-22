@@ -51,9 +51,9 @@ public:
 private:
 	uint8_t CalcStatus() const;
 	void Reset(bool bTotal);
-	void Update(size_t length);
-	uint8_t ReadFromPort(size_t port, MAYBE_UNUSED size_t iolen);
-	void WriteTo0200_0204(size_t port, size_t data, MAYBE_UNUSED size_t iolen);
+	void Update(uint16_t samples);
+	uint8_t ReadFromPort(uint16_t port, MAYBE_UNUSED size_t iolen);
+	void WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen);
 
 	// Constants
 	static constexpr auto clock_rate = 1000000; // 950272?
@@ -152,7 +152,7 @@ void Ps1Dac::Reset(bool bTotal)
 	can_trigger_irq = false;
 }
 
-void Ps1Dac::WriteTo0200_0204(size_t port, size_t data, MAYBE_UNUSED size_t iolen)
+void Ps1Dac::WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
 {
 	last_write = PIC_Ticks;
 	if (!is_enabled) {
@@ -202,7 +202,7 @@ void Ps1Dac::WriteTo0200_0204(size_t port, size_t data, MAYBE_UNUSED size_t iole
 	}
 }
 
-uint8_t Ps1Dac::ReadFromPort(size_t port, MAYBE_UNUSED size_t iolen)
+uint8_t Ps1Dac::ReadFromPort(uint16_t port, MAYBE_UNUSED size_t iolen)
 {
 	last_write = PIC_Ticks;
 	if (!is_enabled) {
@@ -237,7 +237,7 @@ uint8_t Ps1Dac::ReadFromPort(size_t port, MAYBE_UNUSED size_t iolen)
 	return 0xFF;
 }
 
-void Ps1Dac::Update(size_t length)
+void Ps1Dac::Update(uint16_t samples)
 {
 	if ((last_write + 5000) < PIC_Ticks) {
 		is_enabled = false;
@@ -250,7 +250,7 @@ void Ps1Dac::Update(size_t length)
 	Bits pending = 0;
 	Bitu add = 0;
 	Bitu pos = read_index_high;
-	Bitu count=length;
+	Bitu count=samples;
 
 	if (is_playing) {
 		regs.status = CalcStatus();
@@ -289,7 +289,7 @@ void Ps1Dac::Update(size_t length)
 		pending = 0;
 	bytes_pending = (Bitu)pending;
 
-	channel->AddSamples_m8(length, MixTemp);
+	channel->AddSamples_m8(samples, MixTemp);
 }
 
 void Ps1Dac::Close()
@@ -317,8 +317,8 @@ public:
 	void Close();
 
 private:
-	void Update(size_t length);
-	void WriteTo0205(size_t port, size_t data, MAYBE_UNUSED size_t iolen);
+	void Update(uint16_t samples);
+	void WriteTo0205(uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen);
 
 	mixer_channel_t channel{nullptr, MIXER_DelChannel};
 	IO_WriteHandleObject write_handler = {};
@@ -349,7 +349,7 @@ void Ps1Synth::Open()
 	is_open = true;
 }
 
-void Ps1Synth::WriteTo0205(size_t port, size_t data, MAYBE_UNUSED size_t iolen)
+void Ps1Synth::WriteTo0205(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
 {
 	last_write = PIC_Ticks;
 	if (!is_enabled) {
@@ -359,7 +359,7 @@ void Ps1Synth::WriteTo0205(size_t port, size_t data, MAYBE_UNUSED size_t iolen)
 	device.write(data);
 }
 
-void Ps1Synth::Update(size_t length)
+void Ps1Synth::Update(uint16_t samples)
 {
 	assert(samples <= max_samples_expected);
 	if ((last_write + 5000) < PIC_Ticks) {
@@ -393,7 +393,7 @@ static Ps1Synth ps1_synth;
 
 static void PS1AUDIO_ShutDown(MAYBE_UNUSED Section *sec)
 {
-	DEBUG_LOG_MSG("PS/1: Shutting down IBM PS/1 Audio card");
+	LOG_MSG("PS/1: Shutting down IBM PS/1 Audio card");
 	ps1_dac.Close();
 	ps1_synth.Close();
 }
