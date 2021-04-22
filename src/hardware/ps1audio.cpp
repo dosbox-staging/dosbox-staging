@@ -178,13 +178,13 @@ void Ps1Dac::WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t i
 		break;
 	case 0x0202:
 		// regs.command.
-		regs.command = (uint8_t)data;
+		regs.command = data;
 		if (data & 3)
 			can_trigger_irq = true;
 		break;
 	case 0x0203: {
 		// Clock divisor (maybe trigger first IRQ here).
-		regs.divisor = (uint8_t)data;
+		regs.divisor = data;
 		const auto rate = static_cast<uint32_t>(clock_rate / (data + 1));
 		adder = (rate << frac_shift) / sample_rate;
 		regs.status = CalcStatus();
@@ -197,7 +197,7 @@ void Ps1Dac::WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t i
 	} break;
 	case 0x0204:
 		// Reset? (PS1MIC01 sets it to 08 for playback...)
-		regs.unknown = (uint8_t)data;
+		regs.unknown = data;
 		if (!data)
 			Reset(true);
 		break;
@@ -247,7 +247,7 @@ void Ps1Dac::Update(uint16_t samples)
 		// Excessive?
 		Reset(false);
 	}
-	uint8_t *buffer = (uint8_t *)MixTemp;
+	uint8_t *buffer = MixTemp;
 
 	int32_t pending = 0;
 	uint32_t add = 0;
@@ -256,7 +256,7 @@ void Ps1Dac::Update(uint16_t samples)
 
 	if (is_playing) {
 		regs.status = CalcStatus();
-		pending = (Bits)bytes_pending;
+		pending = static_cast<int32_t>(bytes_pending);
 		add = adder;
 		if ((regs.status & fifo_nearly_empty_flag) && (can_trigger_irq)) {
 			// More bytes needed.
@@ -278,8 +278,8 @@ void Ps1Dac::Update(uint16_t samples)
 		} else {
 			out = fifo[pos >> frac_shift];
 			pos += add;
-			pos &= ((fifo_size << frac_shift) - 1);
-			pending -= (Bits)add;
+			pos &= (fifo_size << frac_shift) - 1;
+			pending -= static_cast<int32_t>(add);
 		}
 
 		*(buffer++) = out;
@@ -287,10 +287,10 @@ void Ps1Dac::Update(uint16_t samples)
 	}
 	// Update positions and see if we can clear the fifo_full_flag
 	read_index_high = pos;
-	read_index = (uint16_t)(pos >> frac_shift);
+	read_index = static_cast<uint16_t>(pos >> frac_shift);
 	if (pending < 0)
 		pending = 0;
-	bytes_pending = (Bitu)pending;
+	bytes_pending = static_cast<uint32_t>(pending);
 
 	channel->AddSamples_m8(samples, MixTemp);
 }
