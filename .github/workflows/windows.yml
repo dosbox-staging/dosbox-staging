@@ -83,19 +83,26 @@ jobs:
           - name: Release build (64-bit)
             arch: x64
             vs-release-dirname: x64
+
     steps:
+
       - name:  Prepare vcpkg for cache restore
-        id:    prep-vcpkg
         shell: pwsh
         run: |
           mv c:\vcpkg c:\vcpkg-bak
           md c:\vcpkg -ea 0
 
+      - name: Generate vcpkg cache key
+        id:    prep-vcpkg
+        shell: bash
+        run: |
+          echo "::set-output name=year_and_week::$(date '+%Y%W')"
+
       - name: Restore the most recent cache of vcpkg
         uses: actions/cache@v2
         with:
           path: c:\vcpkg
-          key: vcpkg-${{ matrix.conf.arch }}-
+          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}
 
       - name:  Integrate packages
         shell: pwsh
