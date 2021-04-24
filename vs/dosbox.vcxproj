@@ -342,6 +342,7 @@
     <ClCompile Include="..\src\hardware\gameblaster.cpp" />
     <ClCompile Include="..\src\hardware\gus.cpp" />
     <ClCompile Include="..\src\hardware\hardware.cpp" />
+    <ClCompile Include="..\src\hardware\ide.cpp" />
     <ClCompile Include="..\src\hardware\innovation.cpp" />
     <ClCompile Include="..\src\hardware\iohandler.cpp" />
     <ClCompile Include="..\src\hardware\iohandler_containers.cpp" />
