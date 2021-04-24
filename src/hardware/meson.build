@@ -9,6 +9,7 @@ libhardware_sources = files([
   'gameblaster.cpp',
   'gus.cpp',
   'hardware.cpp',
+  'ide.cpp',
   'innovation.cpp',
   'iohandler.cpp',
   'ipx.cpp',

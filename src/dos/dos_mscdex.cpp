@@ -203,11 +203,11 @@ private:
 	} TDriveInfo;
 
 	Bit16u            defaultBufSeg;
-	TDriveInfo        dinfo[MSCDEX_MAX_DRIVES];
-	CDROM_Interface * cdrom[MSCDEX_MAX_DRIVES];
 	
 public:
 	Bit16u rootDriverHeaderSeg;
+	TDriveInfo        dinfo[MSCDEX_MAX_DRIVES];
+	CDROM_Interface * cdrom[MSCDEX_MAX_DRIVES];
 
 	bool ChannelControl(Bit8u subUnit, TCtrl ctrl);
 	bool GetChannelControl(Bit8u subUnit, TCtrl &ctrl);
