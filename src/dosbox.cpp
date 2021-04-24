@@ -92,6 +92,14 @@ void HARDWARE_Init(Section*);
 void PCI_Init(Section*);
 #endif
 
+void				IDE_Primary_Init(Section*);
+void				IDE_Secondary_Init(Section*);
+void				IDE_Tertiary_Init(Section*);
+void				IDE_Quaternary_Init(Section*);
+void				IDE_Quinternary_Init(Section*);
+void				IDE_Sexternary_Init(Section*);
+void				IDE_Septernary_Init(Section*);
+void				IDE_Octernary_Init(Section*);
 
 void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
 void JOYSTICK_Init(Section*);
@@ -957,6 +965,38 @@ void DOSBOX_Init(void) {
 		"name, e.g. VIA here.");
 #endif // C_NE2000
 //	secprop->AddInitFunction(&CREDITS_Init);
+
+	/* IDE emulation options and setup */
+	const char *ide_names[8] = {
+		"ide, primary",
+		"ide, secondary",
+		"ide, tertiary",
+		"ide, quaternary",
+		"ide, quinternary",
+		"ide, sexternary",
+		"ide, septernary",
+		"ide, octernary"
+	};
+	void (*ide_inits[8])(Section *) = {
+		&IDE_Primary_Init,
+		&IDE_Secondary_Init,
+		&IDE_Tertiary_Init,
+		&IDE_Quaternary_Init,
+		&IDE_Quinternary_Init,
+		&IDE_Sexternary_Init,
+		&IDE_Septernary_Init,
+		&IDE_Octernary_Init
+	};
+    /* IDE emulation options and setup */
+    for (size_t i=0;i < 8;i++) {
+        secprop=control->AddSection_prop(ide_names[i],ide_inits[i],false);
+
+        /* Primary and Secondary are on by default, Teritary and Quaternary are off by default.
+         * Throughout the life of the IDE interface it was far more common for a PC to have just
+         * a Primary and Secondary interface */
+        Pbool = secprop->Add_bool("enable",Property::Changeable::OnlyAtStart,(i < 2) ? true : false);
+        if (i == 0) Pbool->Set_help("Enable IDE interface");
+    }
 
 	//TODO ?
 	control->AddSection_line("autoexec", &AUTOEXEC_Init);

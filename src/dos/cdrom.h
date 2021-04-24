@@ -110,6 +110,7 @@ public:
 	virtual bool StopAudio          (void) = 0;
 	virtual void ChannelControl     (TCtrl ctrl) = 0;
 	virtual bool ReadSectors        (PhysPt buffer, const bool raw, const uint32_t sector, const uint16_t num) = 0;
+	virtual bool ReadSectorsHost    (void* buffer, bool raw, unsigned long sector, unsigned long num) = 0;
 	virtual bool LoadUnloadMedia    (bool unload) = 0;
 	virtual void InitNewMedia       (void) {}
 };
@@ -131,6 +132,7 @@ public:
 	void ChannelControl(MAYBE_UNUSED TCtrl ctrl) {}
 
 	bool ReadSectors        (PhysPt /*buffer*/, const bool /*raw*/, const uint32_t /*sector*/, const uint16_t /*num*/) { return true; }
+	bool ReadSectorsHost    (void* buffer, bool raw, unsigned long sector, unsigned long num) { return true; }
 	bool LoadUnloadMedia    (bool /*unload*/) { return true; }
 };
 
@@ -240,6 +242,7 @@ public:
 	bool	StopAudio               (void);
 	void	ChannelControl          (TCtrl ctrl);
 	bool	ReadSectors             (PhysPt buffer, const bool raw, const uint32_t sector, const uint16_t num);
+	bool	ReadSectorsHost			(void* buffer, bool raw, unsigned long sector, unsigned long num);
 	bool	LoadUnloadMedia         (bool unload);
 	bool	ReadSector              (uint8_t *buffer, const bool raw, const uint32_t sector);
 	bool	HasDataTrack            (void);

@@ -37,6 +37,7 @@
 #include "fs_utils.h"
 #include "inout.h"
 #include "mapper.h"
+#include "ide.h"
 #include "mem.h"
 #include "program_autotype.h"
 #include "program_choice.h"
@@ -1269,10 +1270,25 @@ public:
 		Bit16u sizes[4] = {0};
 		bool imgsizedetect = false;
 
+        signed char ide_index = -1;
+        bool ide_slave = false;
+        std::string ideattach="auto";
 		std::string str_size = "";
 		Bit8u mediaid = 0xF8;
 
-		if (type == "floppy") {
+        /* DOSBox-X: we allow "-ide" to allow controlling which IDE controller and slot to attach the hard disk/CD-ROM to */
+        cmd->FindString("-ide",ideattach,true);
+
+        if (ideattach == "auto") {
+            if (type != "floppy") IDE_Auto(ide_index,ide_slave);
+        }
+        else if (ideattach != "none" && isdigit(ideattach[0]) && ideattach[0] > '0') { /* takes the form [controller]<m/s> such as: 1m for primary master */
+            ide_index = ideattach[0] - '1';
+            if (ideattach.length() >= 1) ide_slave = (ideattach[1] == 's');
+            LOG_MSG("IDE: index %d slave=%d",ide_index,ide_slave?1:0);
+        }
+
+        if (type == "floppy") {
 			mediaid = 0xF0;
 		} else if (type == "iso") {
 			//str_size="2048,1,65535,0";	// ignored, see drive_iso.cpp (AllocationInfo)
@@ -1538,6 +1554,9 @@ public:
 			mem_writeb(Real2Phys(dos.tables.mediaid) +
 			                   drive_index(drive) * 9,
 			           mediaid);
+
+            // If instructed, attach to IDE controller as ATAPI CD-ROM device
+            if (ide_index >= 0) IDE_CDROM_Attach(ide_index, ide_slave, drive - 'A');
 
 			// Print status message (success)
 			WriteOut(MSG_Get("MSCDEX_SUCCESS"));
