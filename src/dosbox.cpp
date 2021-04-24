@@ -968,14 +968,14 @@ void DOSBOX_Init(void) {
 
 	/* IDE emulation options and setup */
 	const char *ide_names[8] = {
-		"ide, primary",
-		"ide, secondary",
-		"ide, tertiary",
-		"ide, quaternary",
-		"ide, quinternary",
-		"ide, sexternary",
-		"ide, septernary",
-		"ide, octernary"
+		"ide1",
+		"ide2",
+		"ide3",
+		"ide4",
+		"ide5",
+		"ide6",
+		"ide7",
+		"ide8"
 	};
 	void (*ide_inits[8])(Section *) = {
 		&IDE_Primary_Init,
