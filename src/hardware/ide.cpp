@@ -3969,14 +3969,14 @@ void IDE_Octernary_Init(Section *sec) {
 }
 
 const char *ide_names[MAX_IDE_CONTROLLERS] = {
-    "ide, primary",
-    "ide, secondary",
-    "ide, tertiary",
-    "ide, quaternary",
-    "ide, quinternary",
-    "ide, sexternary",
-    "ide, septernary",
-    "ide, octernary"
+    "ide1",
+    "ide2",
+    "ide3",
+    "ide4",
+    "ide5",
+    "ide6",
+    "ide7",
+    "ide8"
 };
 void (*ide_inits[MAX_IDE_CONTROLLERS])(Section *) = {
     &IDE_Primary_Init,
