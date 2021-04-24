@@ -127,6 +127,9 @@
     <ClCompile Include="..\src\gui\sdl_mapper.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\ide.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\adlib.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
