@@ -40,7 +40,6 @@ using mixer_channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel
 struct Ps1Registers {
 	uint8_t status = 0;  // 0202 RD
 	uint8_t command = 0; // 0202 WR / 0200 RD
-	uint8_t data = 0;    // 0200 WR
 	uint8_t divisor = 0; // 0203 WR
 	uint8_t unknown = 0; // 0204 WR (Reset?)
 };
@@ -68,6 +67,7 @@ private:
 	static constexpr auto fifo_empty_flag = 0x04;
 	static constexpr auto fifo_nearly_empty_flag = 0x02; // >= 1792 bytes free
 	static constexpr auto fifo_irq_flag = 0x01; // IRQ triggered by DAC
+	static constexpr auto fifo_midline = ceil_udivide(static_cast<uint8_t>(UINT8_MAX), 2u);
 	static constexpr auto irq_number = 7;
 
 	// Managed objects
@@ -85,8 +85,10 @@ private:
 	uint32_t sample_rate = 0;
 	uint16_t read_index = 0;
 	uint16_t write_index = 0;
+	int8_t signal_bias = 0;
 
 	// States
+	bool is_new_transfer = true;
 	bool is_playing = false;
 	bool can_trigger_irq = false;
 };
@@ -147,8 +149,7 @@ uint8_t Ps1Dac::CalcStatus() const
 void Ps1Dac::Reset(bool should_clear_adder)
 {
 	PIC_DeActivateIRQ(irq_number);
-	regs.data = 0x80;
-	memset(fifo, 0x80, fifo_size);
+	memset(fifo, fifo_midline, fifo_size);
 	read_index = 0;
 	write_index = 0;
 	read_index_high = 0;
@@ -159,8 +160,9 @@ void Ps1Dac::Reset(bool should_clear_adder)
 
 	bytes_pending = 0;
 	regs.status = CalcStatus();
-	is_playing = true;
 	can_trigger_irq = false;
+	is_playing = true;
+	is_new_transfer = true;
 }
 
 void Ps1Dac::WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
@@ -169,11 +171,15 @@ void Ps1Dac::WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t i
 
 	switch (port) {
 	case 0x0200:
-		// regs.data - insert into fifo.
-		regs.data = (uint8_t)data;
+		if (is_new_transfer) {
+			is_new_transfer = false;
+			if (data)
+				signal_bias = static_cast<int8_t>(data - fifo_midline);
+		}
 		regs.status = CalcStatus();
 		if (!(regs.status & fifo_full_flag)) {
-			fifo[write_index++] = (uint8_t)data;
+			const auto corrected_data =  data - signal_bias;
+			fifo[write_index++] = static_cast<uint8_t>(corrected_data);
 			write_index &= fifo_size_mask;
 			bytes_pending += (1 << frac_shift);
 			if (bytes_pending > (fifo_size << frac_shift)) {
@@ -190,8 +196,10 @@ void Ps1Dac::WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t i
 	case 0x0203: {
 		// Clock divisor (maybe trigger first IRQ here).
 		regs.divisor = data;
-		const auto rate = static_cast<uint32_t>(clock_rate / (data + 1));
-		adder = (rate << frac_shift) / sample_rate;
+		if (data < 45) // common in Infocom games
+			data = 125; // fallback to a default 8 KHz data rate
+		const auto data_rate_hz = static_cast<uint32_t>(clock_rate_hz / data);
+		adder = (data_rate_hz << frac_shift) / sample_rate;
 		regs.status = CalcStatus();
 		if ((regs.status & fifo_nearly_empty_flag) && (can_trigger_irq)) {
 			// Generate request for stuff.
@@ -268,7 +276,7 @@ void Ps1Dac::Update(uint16_t samples)
 		if (pending <= 0) {
 			pending = 0;
 			while (count--) {
-				*(buffer++) = 0x80; // Silence
+				*(buffer++) = fifo_midline;
 			}
 			break;
 		} else {
