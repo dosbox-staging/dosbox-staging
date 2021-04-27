@@ -114,15 +114,19 @@ static inline bool drivehead_is_chs(uint8_t val) {
 
 class IDEDevice {
 public:
-    IDEController *controller;
-    uint16_t feature,count,lba[3];  /* feature = BASE+1  count = BASE+2   lba[3] = BASE+3,+4,+5 */
-    uint8_t command,drivehead,status; /* command/status = BASE+7  drivehead = BASE+6 */
-    enum IDEDeviceType type;
-    bool faked_command; /* if set, DOSBox is sending commands to itself */
-    bool allow_writing;
-    bool motor_on;
-    bool asleep;
-    IDEDeviceState state;
+    IDEController *controller = nullptr;
+    uint16_t feature = 0;
+    uint16_t count = 0;
+    uint16_t lba[3] = {};  /* feature = BASE+1  count = BASE+2   lba[3] = BASE+3,+4,+5 */
+    uint8_t command = 0;
+    uint8_t drivehead = 0;
+    uint8_t status = 0x00; /* command/status = BASE+7  drivehead = BASE+6 */
+    enum IDEDeviceType type = IDE_TYPE_NONE;
+    bool faked_command = false; /* if set, DOSBox is sending commands to itself */
+    bool allow_writing = true;
+    bool motor_on = true;
+    bool asleep = false;
+    IDEDeviceState state = IDE_DEV_READY;
     /* feature: 0x1F1 (Word 00h in ATA specs)
          count: 0x1F2 (Word 01h in ATA specs)
         lba[3]: 0x1F3 (Word 02h) 0x1F4 (Word 03h) and 0x1F5 (Word 04h)
@@ -144,12 +148,12 @@ public:
     can support LBA48 commands */
 public:
     /* tweakable parameters */
-    double ide_select_delay;    /* time between writing 0x1F6 and drive readiness */
-    double ide_spinup_delay;    /* time it takes to spin the hard disk motor up to speed */
-    double ide_spindown_delay;  /* time it takes for hard disk motor to spin down */
-    double ide_identify_command_delay;
+    double ide_select_delay = 0.5; /* 500us. time between writing 0x1F6 and drive readiness */
+    double ide_spinup_delay = 3000; /* 3 seconds. time it takes to spin the hard disk motor up to speed */
+    double ide_spindown_delay = 1000;  /* 1 second. time it takes for hard disk motor to spin down */
+    double ide_identify_command_delay = 0.01; /* 10us */
 public:
-    IDEDevice(IDEController *c);
+    IDEDevice(IDEController *c) : controller(c) {}
     IDEDevice(const IDEDevice& other) = delete; // prevent copying
     IDEDevice & operator=(const IDEDevice& other) = delete; // prevent assignment
     virtual ~IDEDevice();
@@ -3235,23 +3239,6 @@ Bitu IDEDevice::data_read(Bitu iolen) {
 void IDEDevice::data_write(Bitu v,Bitu iolen) {
     (void)iolen;//UNUSED
     (void)v;//UNUSED
-}
-
-IDEDevice::IDEDevice(IDEController *c) {
-    type = IDE_TYPE_NONE;
-    status = 0x00;
-    controller = c;
-    asleep = false;
-    motor_on = true;
-    allow_writing = true;
-    state = IDE_DEV_READY;
-    feature = count = lba[0] = lba[1] = lba[2] = command = drivehead = 0;
-
-    faked_command = false;
-    ide_select_delay = 0.5; /* 500us */
-    ide_spinup_delay = 3000; /* 3 seconds */
-    ide_spindown_delay = 1000; /* 1 second */
-    ide_identify_command_delay = 0.01; /* 10us */
 }
 
 /* IDE controller -> upon writing bit 2 of alt (0x3F6) */
