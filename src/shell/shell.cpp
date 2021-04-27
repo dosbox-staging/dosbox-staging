@@ -227,7 +227,8 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, bool *append)
 			if ((*ifn != lr) && (lr[-1] == ':'))
 				lr[-1] = 0;
 
-			temp_len = static_cast<size_t>(lr - *ofn + 1u);
+			assert(lr >= *ifn);
+			temp_len = static_cast<size_t>(lr - *ifn + 1u);
 			temp = new char[temp_len];
 			safe_strncpy(temp, *ifn, temp_len);
 			*ifn = temp;
