@@ -150,7 +150,10 @@ public:
     double ide_identify_command_delay;
 public:
     IDEDevice(IDEController *c);
+    IDEDevice(const IDEDevice& other) = delete; // prevent copying
+    IDEDevice & operator=(const IDEDevice& other) = delete; // prevent assignment
     virtual ~IDEDevice();
+
     virtual void host_reset_begin();    /* IDE controller -> upon setting bit 2 of alt (0x3F6) */
     virtual void host_reset_complete(); /* IDE controller -> upon setting bit 2 of alt (0x3F6) */
     virtual void select(uint8_t ndh,bool switched_to);
@@ -168,7 +171,10 @@ public:
 class IDEATADevice:public IDEDevice {
 public:
     IDEATADevice(IDEController *c,unsigned char disk_index);
+    IDEATADevice(const IDEATADevice& other) = delete; // prevent copying
+    IDEATADevice & operator=(const IDEATADevice& other) = delete; // prevent assignment
     virtual ~IDEATADevice();
+
     virtual void writecommand(uint8_t cmd);
 public:
     std::string id_serial;
@@ -205,7 +211,10 @@ enum {
 class IDEATAPICDROMDevice:public IDEDevice {
 public:
     IDEATAPICDROMDevice(IDEController *c,unsigned char drive_index);
+    IDEATAPICDROMDevice(const IDEATAPICDROMDevice& other) = delete; // prevent copying
+    IDEATAPICDROMDevice & operator=(const IDEATAPICDROMDevice& other) = delete; // prevent assignment
     virtual ~IDEATAPICDROMDevice();
+
     virtual void writecommand(uint8_t cmd);
 public:
     std::string id_serial;
@@ -279,10 +288,13 @@ public:
     double cd_insertion_time;
 public:
     IDEController(Section* configuration,unsigned char index);
+    IDEController(const IDEController& other) = delete; // prevent copying
+    IDEController & operator=(const IDEController& other) = delete; // prevent assignment
+    ~IDEController();
+
     void install_io_port();
     void raise_irq();
     void lower_irq();
-    ~IDEController();
 };
 
 #define MAX_IDE_CONTROLLERS 8
