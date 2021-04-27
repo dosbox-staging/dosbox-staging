@@ -212,23 +212,28 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn, bool *append)
 			safe_strncpy(temp, *ofn, temp_len);
 			*ofn = temp;
 			continue;
+
 		case '<':
 			if (*ifn) {
 				delete[] * ifn;
 				*ifn = nullptr;
 			}
 			lr = ltrim(lr);
-			*ifn=lr;
-			while (*lr && *lr!=' ' && *lr!='>' && *lr != '|') lr++;
-			if((*ifn != lr) && (lr[-1] == ':')) lr[-1] = 0;
+			*ifn = lr;
+
+			while (*lr && *lr != ' ' && *lr != '>' && *lr != '|')
+				lr++;
+
+			if ((*ifn != lr) && (lr[-1] == ':'))
+				lr[-1] = 0;
+
 			temp_len = static_cast<size_t>(lr - *ofn + 1u);
 			temp = new char[temp_len];
 			safe_strncpy(temp, *ifn, temp_len);
 			*ifn = temp;
 			continue;
-		case '|':
-			ch=0;
-			num++;
+
+		case '|': ch = 0; num++;
 		}
 		*lw++=ch;
 	}
