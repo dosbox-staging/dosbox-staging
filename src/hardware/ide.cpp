@@ -675,7 +675,8 @@ void IDEATAPICDROMDevice::pause_resume() {
 }
 
 void IDEATAPICDROMDevice::play_audio_msf() {
-    uint32_t start_lba,end_lba;
+    uint32_t start_lba = 0;
+    uint32_t end_lba = 0;
 
     CDROM_Interface *cdrom = getMSCDEXDrive();
     if (cdrom == NULL) {
@@ -2356,7 +2357,6 @@ std::string GetIDEInfo() {
         IDEController *c = GetIDEController(index);
         if (c)
         for (int slave = 0; slave < 2; slave++) {
-            IDEATADevice *dev = dynamic_cast<IDEATADevice*>(c->device[slave]);
             info+="IDE position "+std::to_string(index+1)+(slave?'s':'m')+": ";
             if (dynamic_cast<IDEATADevice*>(c->device[slave])) info+="disk image";
             else if (dynamic_cast<IDEATAPICDROMDevice*>(c->device[slave])) info+="CD image";
@@ -2383,11 +2383,11 @@ static bool IDE_CPU_Is_Vm86() {
 
 static void ide_baseio_w(Bitu port,Bitu val,Bitu iolen);
 
-static Bitu IDE_SelfIO_In(IDEController *ide,Bitu port,Bitu len) {
+static Bitu IDE_SelfIO_In(IDEController * /* ide */,Bitu port,Bitu len) {
     return ide_baseio_r(port,len);
 }
 
-static void IDE_SelfIO_Out(IDEController *ide,Bitu port,Bitu val,Bitu len) {
+static void IDE_SelfIO_Out(IDEController * /* ide */,Bitu port,Bitu val,Bitu len) {
     ide_baseio_w(port,val,len);
 }
 
@@ -2778,8 +2778,9 @@ static void IDE_DelayedCommand(Bitu idx/*which IDE controller*/) {
                     return;
                 }
 
-                sectcount = ata->count & 0xFF;
-                if (sectcount == 0) sectcount = 256;
+                // Sector count is unused, but retained as a comment
+                // sectcount = ata->count & 0xFF;
+                // if (sectcount == 0) sectcount = 256;
                 if (drivehead_is_lba(ata->drivehead)) {
                     /* LBA */
                     sectorn = ((ata->drivehead & 0xFu) << 24u) | (unsigned int)ata->lba[0] |
@@ -2859,9 +2860,9 @@ static void IDE_DelayedCommand(Bitu idx/*which IDE controller*/) {
                     dev->controller->raise_irq();
                     return;
                 }
-
-                sectcount = ata->count & 0xFF;
-                if (sectcount == 0) sectcount = 256;
+                // Sector count is unused, but retained as a comment
+                // sectcount = ata->count & 0xFF;
+                // if (sectcount == 0) sectcount = 256;
                 if (drivehead_is_lba(ata->drivehead)) {
                     /* LBA */
                     sectorn = (((unsigned int)ata->drivehead & 0xFu) << 24u) | (unsigned int)ata->lba[0] |
@@ -2923,9 +2924,9 @@ static void IDE_DelayedCommand(Bitu idx/*which IDE controller*/) {
                     dev->controller->raise_irq();
                     return;
                 }
-
-                sectcount = ata->count & 0xFF;
-                if (sectcount == 0) sectcount = 256;
+                // Sector count is unused, but retained as a comment
+                // sectcount = ata->count & 0xFF;
+                // if (sectcount == 0) sectcount = 256;
                 if (drivehead_is_lba(ata->drivehead)) {
                     /* LBA */
                     sectorn = (((unsigned int)ata->drivehead & 0xFu) << 24u) | (unsigned int)ata->lba[0] |
@@ -3424,8 +3425,8 @@ void IDEATADevice::writecommand(uint8_t cmd) {
 
     if (!faked_command) {
         if (drivehead_is_lba(drivehead)) {
-            uint64_t n;
-            n = ((unsigned int)(drivehead&0xF)<<24)+((unsigned int)lba[2]<<16)+((unsigned int)lba[1]<<8)+(unsigned int)lba[0];
+            // unused
+            // uint64_t n = ((unsigned int)(drivehead&0xF)<<24)+((unsigned int)lba[2]<<16)+((unsigned int)lba[1]<<8)+(unsigned int)lba[0];
         }
 
         LOG(LOG_SB,LOG_NORMAL)("IDE ATA command %02x",cmd);
@@ -3916,8 +3917,9 @@ static void IDE_Init(Section* sec,unsigned char ide_interface) {
 
     assert(ide_interface < MAX_IDE_CONTROLLERS);
 
-    if (!section->Get_bool("enable"))
+    if (!section->Get_bool("enable")) {
         return;
+    }
 
 	if (!init_ide) {
 		sec->AddDestroyFunction(&IDE_Destroy);
