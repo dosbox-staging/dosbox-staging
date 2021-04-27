@@ -216,8 +216,8 @@ public:
 CMscdex::CMscdex()
 	: numDrives(0),
 	  defaultBufSeg(0),
-	  cdrom{nullptr},
-	  rootDriverHeaderSeg(0)
+	  rootDriverHeaderSeg(0),
+	  cdrom{nullptr}
 {
 	memset(dinfo, 0, sizeof(dinfo));
 }

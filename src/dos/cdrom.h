@@ -132,7 +132,7 @@ public:
 	void ChannelControl(MAYBE_UNUSED TCtrl ctrl) {}
 
 	bool ReadSectors        (PhysPt /*buffer*/, const bool /*raw*/, const uint32_t /*sector*/, const uint16_t /*num*/) { return true; }
-	bool ReadSectorsHost    (void* buffer, bool raw, unsigned long sector, unsigned long num) { return true; }
+	bool ReadSectorsHost    (MAYBE_UNUSED void* buffer, MAYBE_UNUSED bool raw, MAYBE_UNUSED unsigned long sector, MAYBE_UNUSED unsigned long num) { return true; }
 	bool LoadUnloadMedia    (bool /*unload*/) { return true; }
 };
 
