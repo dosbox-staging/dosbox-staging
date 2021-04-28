@@ -28,6 +28,8 @@
 #include "mem.h"
 #endif
 
+#include <cassert>
+
 #define CPU_AUTODETERMINE_NONE		0x00
 #define CPU_AUTODETERMINE_CORE		0x01
 #define CPU_AUTODETERMINE_CYCLES	0x02
@@ -382,7 +384,8 @@ public:
 	bool GetDescriptor	(Bitu selector, Descriptor& desc) {
 		selector&=~7;
 		if (selector>=table_limit) return false;
-		desc.Load(table_base+(selector));
+		assert(selector <= UINT32_MAX);
+		desc.Load(table_base + static_cast<PhysPt>(selector));
 		return true;
 	}
 protected:
@@ -396,11 +399,13 @@ public:
 		Bitu address=selector & ~7;
 		if (selector & 4) {
 			if (address>=ldt_limit) return false;
-			desc.Load(ldt_base+address);
+			assert(address <= UINT32_MAX);
+			desc.Load(ldt_base + static_cast<PhysPt>(address));
 			return true;
 		} else {
 			if (address>=table_limit) return false;
-			desc.Load(table_base+address);
+			assert(address <= UINT32_MAX);
+			desc.Load(table_base + static_cast<PhysPt>(address));
 			return true;
 		}
 	}
@@ -408,11 +413,13 @@ public:
 		Bitu address=selector & ~7;
 		if (selector & 4) {
 			if (address>=ldt_limit) return false;
-			desc.Save(ldt_base+address);
+			assert(address <= UINT32_MAX);
+			desc.Save(ldt_base + static_cast<PhysPt>(address));
 			return true;
 		} else {
 			if (address>=table_limit) return false;
-			desc.Save(table_base+address);
+			assert(address <= UINT32_MAX);
+			desc.Load(table_base + static_cast<PhysPt>(address));
 			return true;
 		}
 	} 
