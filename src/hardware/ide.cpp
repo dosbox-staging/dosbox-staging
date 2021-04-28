@@ -7,20 +7,24 @@
 
 /* $Id: ide.cpp,v 1.49 2009-04-10 09:53:04 c2woody Exp $ */
 
-#include <math.h>
-#include <assert.h>
 #include "dosbox.h"
-#include "inout.h"
-#include "pic.h"
-#include "mem.h"
+
+#include <cmath>
+#include <cassert>
+
+#include "bios_disk.h"
+#include "callback.h"
+#include "control.h"
 #include "cpu.h"
 #include "ide.h"
+#include "inout.h"
+#include "mem.h"
 #include "mixer.h"
-#include "timer.h"
+#include "pic.h"
 #include "setup.h"
-#include "control.h"
-#include "callback.h"
-#include "bios_disk.h"
+#include "string_utils.h"
+#include "timer.h"
+
 #include "../src/dos/cdrom.h"
 
 #if defined(_MSC_VER)
@@ -2342,7 +2346,7 @@ char * GetIDEPosition(unsigned char bios_disk_index) {
         for (int slave = 0; slave < 2; slave++) {
             IDEATADevice *dev = dynamic_cast<IDEATADevice*>(c->device[slave]);
             if (dev && dev->bios_disk_index == bios_disk_index) {
-                sprintf(idepos, "%d%c", index+1, slave?'s':'m');
+                safe_sprintf(idepos, "%d%c", index + 1, slave ? 's' : 'm');
                 return idepos;
             }
         }
