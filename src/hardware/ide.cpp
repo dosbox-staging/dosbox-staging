@@ -693,7 +693,7 @@ void IDEATAPICDROMDevice::play_audio_msf() {
             atapi_cmd[5];
 
         if (start_lba >= 150u) start_lba -= 150u; /* LBA sector 0 == M:S:F sector 0:2:0 */
-        else end_lba = 0;
+        else start_lba = 0;
     }
 
     if (atapi_cmd[6] == 0xFF && atapi_cmd[7] == 0xFF && atapi_cmd[8] == 0xFF)
