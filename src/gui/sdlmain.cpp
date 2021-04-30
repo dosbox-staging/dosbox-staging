@@ -1390,6 +1390,24 @@ static void ToggleMouseCapture(bool pressed) {
 	GFX_ToggleMouseCapture();
 }
 
+static void FocusInput()
+{
+	// Ensure we have input focus when in fullscreen
+	if (!sdl.desktop.fullscreen)
+		return;
+
+	// Ensure auto-cycles are enabled
+	CPU_Disable_SkipAutoAdjust();
+
+	// Do we already have focus?
+	if (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_INPUT_FOCUS)
+		return;
+
+	// If not, raise-and-focus to prevent stranding the window
+	SDL_RaiseWindow(sdl.window);
+	SDL_SetWindowInputFocus(sdl.window);
+}
+
 /*
  *  Assesses the following:
  *   - current window size (full or not),
@@ -1479,6 +1497,7 @@ void GFX_SwitchFullScreen()
 #endif
 	sdl.desktop.fullscreen = !sdl.desktop.fullscreen;
 	GFX_ResetScreen();
+	FocusInput();
 	sdl.desktop.switching_fullscreen = false;
 }
 
@@ -2582,6 +2601,7 @@ bool GFX_Events()
 				                  event.window.data2);
 				continue;
 
+			case SDL_WINDOWEVENT_FOCUS_GAINED:
 			case SDL_WINDOWEVENT_EXPOSED:
 				// DEBUG_LOG_MSG("SDL: Window has been exposed "
 				//               "and should be redrawn");
@@ -2597,16 +2617,12 @@ bool GFX_Events()
 				 * FOCUS_GAINED event to catch window startup
 				 * and size toggles.
 				 */
+				DEBUG_LOG_MSG("SDL: Window has gained keyboard focus");
+				SetPriority(sdl.priority.focus);
 				if (sdl.draw.callback)
 					sdl.draw.callback(GFX_CallBackRedraw);
 				GFX_UpdateMouseState();
-				continue;
-
-			case SDL_WINDOWEVENT_FOCUS_GAINED:
-				DEBUG_LOG_MSG("SDL: Window has gained keyboard focus");
-				SetPriority(sdl.priority.focus);
-				CPU_Disable_SkipAutoAdjust();
-				GFX_UpdateMouseState();
+				FocusInput();
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_LOST:
