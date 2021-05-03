@@ -2348,8 +2348,8 @@ static void GUI_StartUp(Section *sec)
 
 	// Only setup the Ctrl+F10 handler if the mouse is capturable
 	if (sdl.mouse.control_choice & (CaptureOnStart | CaptureOnClick)) {
-		MAPPER_AddHandler(ToggleMouseCapture, SDL_SCANCODE_F10, MMOD1,
-		                  "capmouse", "Cap Mouse");
+		MAPPER_AddHandler(ToggleMouseCapture, SDL_SCANCODE_F10,
+		                  PRIMARY_MOD, "capmouse", "Cap Mouse");
 	}
 
 	// Apply the user's mouse sensitivity settings
@@ -2363,7 +2363,8 @@ static void GUI_StartUp(Section *sec)
 	                        SDL_HINT_OVERRIDE);
 
 	/* Get some Event handlers */
-	MAPPER_AddHandler(RequestExit, SDL_SCANCODE_F9, MMOD1, "shutdown", "Shutdown");
+	MAPPER_AddHandler(RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown",
+	                  "Shutdown");
 	MAPPER_AddHandler(SwitchFullScreen, SDL_SCANCODE_RETURN, MMOD2,
 	                  "fullscr", "Fullscreen");
 	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2,
@@ -2848,7 +2849,7 @@ void Config_Add_SDL() {
 
 	Pbool = sdl_sec->Add_bool("fullscreen", always, false);
 	Pbool->Set_help("Start DOSBox directly in fullscreen.\n"
-	                "Press Alt+Enter to switch back to window.");
+	                "Press " MMOD2_NAME "+Enter to switch back to window.");
 
 	pint = sdl_sec->Add_int("display", on_start, 0);
 	pint->Set_help("Number of display to use; values depend on OS and user "
@@ -2932,24 +2933,24 @@ void Config_Add_SDL() {
 
 	// Construct and set the help block using defaults set above
 	std::string mouse_control_help(
-		"Choose a mouse control method:\n"
-		"   onclick:        The mouse will be captured after the first\n"
-		"                   click inside the window.\n"
-		"   onstart:        The mouse is captured immediately on start\n"
-		"                   (similar to real DOS).\n"
-		"   seamless:       The mouse can move seamlessly in and out of DOSBox\n"
-		"                   window and cannot be captured.\n"
-		"   nomouse:        The mouse is disabled and hidden without any\n"
-		"                   input sent to the game.\n"
-		"Choose how middle-clicks are handled (second parameter):\n"
-		"   middlegame:     Middle-clicks are sent to the game\n"
-		"                   (Ctrl+F10 uncaptures the mouse).\n"
-		"   middlerelease:  Middle-clicks are used to uncapture the mouse\n"
-		"                   (not sent to the game). However, middle-clicks\n"
-		"                   will be sent to the game in fullscreen or when\n"
-		"                   seamless control is set.\n"
-		"                   Ctrl+F10 will also uncapture the mouse.\n"
-		"Defaults (if not present or incorrect): ");
+	        "Choose a mouse control method:\n"
+	        "   onclick:        The mouse will be captured after the first\n"
+	        "                   click inside the window.\n"
+	        "   onstart:        The mouse is captured immediately on start\n"
+	        "                   (similar to real DOS).\n"
+	        "   seamless:       The mouse can move seamlessly in and out of DOSBox\n"
+	        "                   window and cannot be captured.\n"
+	        "   nomouse:        The mouse is disabled and hidden without any\n"
+	        "                   input sent to the game.\n"
+	        "Choose how middle-clicks are handled (second parameter):\n"
+	        "   middlegame:     Middle-clicks are sent to the game\n"
+	        "                   (" PRIMARY_MOD_NAME "+F10 uncaptures the mouse).\n"
+	        "   middlerelease:  Middle-clicks are used to uncapture the mouse\n"
+	        "                   (not sent to the game). However, middle-clicks\n"
+	        "                   will be sent to the game in fullscreen or when\n"
+	        "                   seamless control is set.\n"
+	        "                   " PRIMARY_MOD_NAME "+F10 will also uncapture the mouse.\n"
+	        "Defaults (if not present or incorrect): ");
 	mouse_control_help += mouse_control_defaults;
 	Pmulti->Set_help(mouse_control_help);
 

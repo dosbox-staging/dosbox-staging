@@ -341,9 +341,7 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_pagedown:extend=true;ret=81;break;
 	case KBD_insert:extend=true;ret=82;break;
 	case KBD_delete:extend=true;ret=83;break;
-	case KBD_leftgui:
-		ret = 89;
-		break;
+	case KBD_leftgui: ret = 89; break;
 	case KBD_rightgui:
 		extend = true;
 		ret = 89;

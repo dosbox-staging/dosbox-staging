@@ -603,8 +603,8 @@ void BIOS_SetupDisks(void) {
 /* Setup the Bios Area */
 	mem_writeb(BIOS_HARDDISK_COUNT,2);
 
-	MAPPER_AddHandler(swapInNextDisk, SDL_SCANCODE_F4, MMOD1, "swapimg",
-	                  "Swap Image");
+	MAPPER_AddHandler(swapInNextDisk, SDL_SCANCODE_F4, PRIMARY_MOD,
+	                  "swapimg", "Swap Image");
 	killRead = false;
 	swapping_requested = false;
 }

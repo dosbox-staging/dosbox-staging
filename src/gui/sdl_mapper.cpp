@@ -2052,25 +2052,25 @@ static void CreateLayout() {
 	AddKeyButtonEvent(PX(13),PY(4),BW*3,BH,"SHIFT","rshift",KBD_rightshift);
 
 	/* Bottom Row */
-	AddKeyButtonEvent(PX(0) ,PY(5),BW*2,BH,"CTRL","lctrl",KBD_leftctrl);
+	AddKeyButtonEvent(PX(0), PY(5), BW * 2, BH, MMOD1_NAME, "lctrl", KBD_leftctrl);
 
-#if defined(MACOSX)
-	AddKeyButtonEvent(PX(2), PY(5), BW * 2, BH, "OPTN", "lalt", KBD_leftalt);
-	AddKeyButtonEvent(PX(4), PY(5), BW * 2, BH, "CMD", "lgui", KBD_leftgui);
+#if !defined(MACOSX)
+	AddKeyButtonEvent(PX(2), PY(5), BW * 2, BH, MMOD3_NAME, "lgui", KBD_leftgui);
+	AddKeyButtonEvent(PX(4), PY(5), BW * 2, BH, MMOD2_NAME, "lalt", KBD_leftalt);
 #else
-	AddKeyButtonEvent(PX(2), PY(5), BW * 2, BH, "GUI", "lgui", KBD_leftgui);
-	AddKeyButtonEvent(PX(4), PY(5), BW * 2, BH, "ALT", "lalt", KBD_leftalt);
+	AddKeyButtonEvent(PX(2), PY(5), BW * 2, BH, MMOD2_NAME, "lalt", KBD_leftalt);
+	AddKeyButtonEvent(PX(4), PY(5), BW * 2, BH, MMOD3_NAME, "lgui", KBD_leftgui);
 #endif
 
 	AddKeyButtonEvent(PX(6), PY(5), BW * 4, BH, "SPACE", "space", KBD_space);
 
-#if defined(MACOSX)
-	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, "CMD", "rgui", KBD_rightgui);
-	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, "OPTN", "ralt", KBD_rightalt);
+#if !defined(MACOSX)
+	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, MMOD2_NAME, "ralt", KBD_rightalt);
+	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, MMOD3_NAME, "rgui", KBD_rightgui);
+	AddKeyButtonEvent(PX(14), PY(5), BW * 2, BH, MMOD1_NAME, "rctrl", KBD_rightctrl);
 #else
-	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, "ALT", "ralt", KBD_rightalt);
-	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, "GUI", "rgui", KBD_rightgui);
-	AddKeyButtonEvent(PX(14), PY(5), BW * 2, BH, "CTRL", "rctrl", KBD_rightctrl);
+	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, MMOD3_NAME, "rgui", KBD_rightgui);
+	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, MMOD2_NAME, "ralt", KBD_rightalt);
 #endif
 
 	/* Arrow Keys */
@@ -2959,5 +2959,6 @@ void MAPPER_StartUp(Section * sec) {
 
 	// runs one-time on shutdown
 	section->AddDestroyFunction(&MAPPER_Destroy, false);
-	MAPPER_AddHandler(&MAPPER_Run, SDL_SCANCODE_F1, MMOD1, "mapper", "Mapper");
+	MAPPER_AddHandler(&MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper",
+	                  "Mapper");
 }
