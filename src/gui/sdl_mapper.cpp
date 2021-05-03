@@ -2051,12 +2051,27 @@ static void CreateLayout() {
 	for (i=0;i<11;i++) AddKeyButtonEvent(PX(2+i),PY(4),BW,BH,combo_4[i].title,combo_4[i].entry,combo_4[i].key);
 	AddKeyButtonEvent(PX(13),PY(4),BW*3,BH,"SHIFT","rshift",KBD_rightshift);
 
-	/* Last Row */
+	/* Bottom Row */
 	AddKeyButtonEvent(PX(0) ,PY(5),BW*2,BH,"CTRL","lctrl",KBD_leftctrl);
-	AddKeyButtonEvent(PX(3) ,PY(5),BW*2,BH,"ALT","lalt",KBD_leftalt);
-	AddKeyButtonEvent(PX(5) ,PY(5),BW*6,BH,"SPACE","space",KBD_space);
-	AddKeyButtonEvent(PX(11),PY(5),BW*2,BH,"ALT","ralt",KBD_rightalt);
-	AddKeyButtonEvent(PX(14),PY(5),BW*2,BH,"CTRL","rctrl",KBD_rightctrl);
+
+#if defined(MACOSX)
+	AddKeyButtonEvent(PX(2), PY(5), BW * 2, BH, "OPTN", "lalt", KBD_leftalt);
+	AddKeyButtonEvent(PX(4), PY(5), BW * 2, BH, "CMD", "lgui", KBD_leftgui);
+#else
+	AddKeyButtonEvent(PX(2), PY(5), BW * 2, BH, "GUI", "lgui", KBD_leftgui);
+	AddKeyButtonEvent(PX(4), PY(5), BW * 2, BH, "ALT", "lalt", KBD_leftalt);
+#endif
+
+	AddKeyButtonEvent(PX(6), PY(5), BW * 4, BH, "SPACE", "space", KBD_space);
+
+#if defined(MACOSX)
+	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, "CMD", "rgui", KBD_rightgui);
+	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, "OPTN", "ralt", KBD_rightalt);
+#else
+	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, "ALT", "ralt", KBD_rightalt);
+	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, "GUI", "rgui", KBD_rightgui);
+	AddKeyButtonEvent(PX(14), PY(5), BW * 2, BH, "CTRL", "rctrl", KBD_rightctrl);
+#endif
 
 	/* Arrow Keys */
 #define XO 17
@@ -2284,83 +2299,120 @@ foundevent:
 static struct {
 	const char *eventend;
 	SDL_Scancode key;
-} DefaultKeys[] = {
-	{"f1",  SDL_SCANCODE_F1},  {"f2", SDL_SCANCODE_F2},  {"f3",  SDL_SCANCODE_F3},
-	{"f4",  SDL_SCANCODE_F4},  {"f5", SDL_SCANCODE_F5},  {"f6",  SDL_SCANCODE_F6},
-	{"f7",  SDL_SCANCODE_F7},  {"f8", SDL_SCANCODE_F8},  {"f9",  SDL_SCANCODE_F9},
-	{"f10", SDL_SCANCODE_F10}, {"f11",SDL_SCANCODE_F11}, {"f12", SDL_SCANCODE_F12},
+} DefaultKeys[] = {{"f1", SDL_SCANCODE_F1},
+                   {"f2", SDL_SCANCODE_F2},
+                   {"f3", SDL_SCANCODE_F3},
+                   {"f4", SDL_SCANCODE_F4},
+                   {"f5", SDL_SCANCODE_F5},
+                   {"f6", SDL_SCANCODE_F6},
+                   {"f7", SDL_SCANCODE_F7},
+                   {"f8", SDL_SCANCODE_F8},
+                   {"f9", SDL_SCANCODE_F9},
+                   {"f10", SDL_SCANCODE_F10},
+                   {"f11", SDL_SCANCODE_F11},
+                   {"f12", SDL_SCANCODE_F12},
 
-	{"1", SDL_SCANCODE_1}, {"2", SDL_SCANCODE_2}, {"3", SDL_SCANCODE_3},
-	{"4", SDL_SCANCODE_4}, {"5", SDL_SCANCODE_5}, {"6", SDL_SCANCODE_6},
-	{"7", SDL_SCANCODE_7}, {"8", SDL_SCANCODE_8}, {"9", SDL_SCANCODE_9},
-	{"0", SDL_SCANCODE_0},
+                   {"1", SDL_SCANCODE_1},
+                   {"2", SDL_SCANCODE_2},
+                   {"3", SDL_SCANCODE_3},
+                   {"4", SDL_SCANCODE_4},
+                   {"5", SDL_SCANCODE_5},
+                   {"6", SDL_SCANCODE_6},
+                   {"7", SDL_SCANCODE_7},
+                   {"8", SDL_SCANCODE_8},
+                   {"9", SDL_SCANCODE_9},
+                   {"0", SDL_SCANCODE_0},
 
-	{"a", SDL_SCANCODE_A}, {"b", SDL_SCANCODE_B}, {"c", SDL_SCANCODE_C},
-	{"d", SDL_SCANCODE_D}, {"e", SDL_SCANCODE_E}, {"f", SDL_SCANCODE_F},
-	{"g", SDL_SCANCODE_G}, {"h", SDL_SCANCODE_H}, {"i", SDL_SCANCODE_I},
-	{"j", SDL_SCANCODE_J}, {"k", SDL_SCANCODE_K}, {"l", SDL_SCANCODE_L},
-	{"m", SDL_SCANCODE_M}, {"n", SDL_SCANCODE_N}, {"o", SDL_SCANCODE_O},
-	{"p", SDL_SCANCODE_P}, {"q", SDL_SCANCODE_Q}, {"r", SDL_SCANCODE_R},
-	{"s", SDL_SCANCODE_S}, {"t", SDL_SCANCODE_T}, {"u", SDL_SCANCODE_U},
-	{"v", SDL_SCANCODE_V}, {"w", SDL_SCANCODE_W}, {"x", SDL_SCANCODE_X},
-	{"y", SDL_SCANCODE_Y}, {"z", SDL_SCANCODE_Z},
+                   {"a", SDL_SCANCODE_A},
+                   {"b", SDL_SCANCODE_B},
+                   {"c", SDL_SCANCODE_C},
+                   {"d", SDL_SCANCODE_D},
+                   {"e", SDL_SCANCODE_E},
+                   {"f", SDL_SCANCODE_F},
+                   {"g", SDL_SCANCODE_G},
+                   {"h", SDL_SCANCODE_H},
+                   {"i", SDL_SCANCODE_I},
+                   {"j", SDL_SCANCODE_J},
+                   {"k", SDL_SCANCODE_K},
+                   {"l", SDL_SCANCODE_L},
+                   {"m", SDL_SCANCODE_M},
+                   {"n", SDL_SCANCODE_N},
+                   {"o", SDL_SCANCODE_O},
+                   {"p", SDL_SCANCODE_P},
+                   {"q", SDL_SCANCODE_Q},
+                   {"r", SDL_SCANCODE_R},
+                   {"s", SDL_SCANCODE_S},
+                   {"t", SDL_SCANCODE_T},
+                   {"u", SDL_SCANCODE_U},
+                   {"v", SDL_SCANCODE_V},
+                   {"w", SDL_SCANCODE_W},
+                   {"x", SDL_SCANCODE_X},
+                   {"y", SDL_SCANCODE_Y},
+                   {"z", SDL_SCANCODE_Z},
 
-	{"space",       SDL_SCANCODE_SPACE},
-	{"esc",         SDL_SCANCODE_ESCAPE},
-	{"equals",      SDL_SCANCODE_EQUALS},
-	{"grave",       SDL_SCANCODE_GRAVE},
-	{"tab",         SDL_SCANCODE_TAB},
-	{"enter",       SDL_SCANCODE_RETURN},
-	{"bspace",      SDL_SCANCODE_BACKSPACE},
-	{"lbracket",    SDL_SCANCODE_LEFTBRACKET},
-	{"rbracket",    SDL_SCANCODE_RIGHTBRACKET},
-	{"minus",       SDL_SCANCODE_MINUS},
-	{"capslock",    SDL_SCANCODE_CAPSLOCK},
-	{"semicolon",   SDL_SCANCODE_SEMICOLON},
-	{"quote",       SDL_SCANCODE_APOSTROPHE},
-	{"backslash",   SDL_SCANCODE_BACKSLASH},
-	{"lshift",      SDL_SCANCODE_LSHIFT},
-	{"rshift",      SDL_SCANCODE_RSHIFT},
-	{"lalt",        SDL_SCANCODE_LALT},
-	{"ralt",        SDL_SCANCODE_RALT},
-	{"lctrl",       SDL_SCANCODE_LCTRL},
-	{"rctrl",       SDL_SCANCODE_RCTRL},
-	{"comma",       SDL_SCANCODE_COMMA},
-	{"period",      SDL_SCANCODE_PERIOD},
-	{"slash",       SDL_SCANCODE_SLASH},
-	{"printscreen", SDL_SCANCODE_PRINTSCREEN},
-	{"scrolllock",  SDL_SCANCODE_SCROLLLOCK},
-	{"pause",       SDL_SCANCODE_PAUSE},
-	{"pagedown",    SDL_SCANCODE_PAGEDOWN},
-	{"pageup",      SDL_SCANCODE_PAGEUP},
-	{"insert",      SDL_SCANCODE_INSERT},
-	{"home",        SDL_SCANCODE_HOME},
-	{"delete",      SDL_SCANCODE_DELETE},
-	{"end",         SDL_SCANCODE_END},
-	{"up",          SDL_SCANCODE_UP},
-	{"left",        SDL_SCANCODE_LEFT},
-	{"down",        SDL_SCANCODE_DOWN},
-	{"right",       SDL_SCANCODE_RIGHT},
+                   {"space", SDL_SCANCODE_SPACE},
+                   {"esc", SDL_SCANCODE_ESCAPE},
+                   {"equals", SDL_SCANCODE_EQUALS},
+                   {"grave", SDL_SCANCODE_GRAVE},
+                   {"tab", SDL_SCANCODE_TAB},
+                   {"enter", SDL_SCANCODE_RETURN},
+                   {"bspace", SDL_SCANCODE_BACKSPACE},
+                   {"lbracket", SDL_SCANCODE_LEFTBRACKET},
+                   {"rbracket", SDL_SCANCODE_RIGHTBRACKET},
+                   {"minus", SDL_SCANCODE_MINUS},
+                   {"capslock", SDL_SCANCODE_CAPSLOCK},
+                   {"semicolon", SDL_SCANCODE_SEMICOLON},
+                   {"quote", SDL_SCANCODE_APOSTROPHE},
+                   {"backslash", SDL_SCANCODE_BACKSLASH},
+                   {"lshift", SDL_SCANCODE_LSHIFT},
+                   {"rshift", SDL_SCANCODE_RSHIFT},
+                   {"lalt", SDL_SCANCODE_LALT},
+                   {"ralt", SDL_SCANCODE_RALT},
+                   {"lctrl", SDL_SCANCODE_LCTRL},
+                   {"rctrl", SDL_SCANCODE_RCTRL},
+                   {"lgui", SDL_SCANCODE_LGUI},
+                   {"rgui", SDL_SCANCODE_RGUI},
+                   {"comma", SDL_SCANCODE_COMMA},
+                   {"period", SDL_SCANCODE_PERIOD},
+                   {"slash", SDL_SCANCODE_SLASH},
+                   {"printscreen", SDL_SCANCODE_PRINTSCREEN},
+                   {"scrolllock", SDL_SCANCODE_SCROLLLOCK},
+                   {"pause", SDL_SCANCODE_PAUSE},
+                   {"pagedown", SDL_SCANCODE_PAGEDOWN},
+                   {"pageup", SDL_SCANCODE_PAGEUP},
+                   {"insert", SDL_SCANCODE_INSERT},
+                   {"home", SDL_SCANCODE_HOME},
+                   {"delete", SDL_SCANCODE_DELETE},
+                   {"end", SDL_SCANCODE_END},
+                   {"up", SDL_SCANCODE_UP},
+                   {"left", SDL_SCANCODE_LEFT},
+                   {"down", SDL_SCANCODE_DOWN},
+                   {"right", SDL_SCANCODE_RIGHT},
 
-	{"kp_1", SDL_SCANCODE_KP_1}, {"kp_2", SDL_SCANCODE_KP_2}, {"kp_3", SDL_SCANCODE_KP_3},
-	{"kp_4", SDL_SCANCODE_KP_4}, {"kp_5", SDL_SCANCODE_KP_5}, {"kp_6", SDL_SCANCODE_KP_6},
-	{"kp_7", SDL_SCANCODE_KP_7}, {"kp_8", SDL_SCANCODE_KP_8}, {"kp_9", SDL_SCANCODE_KP_9},
-	{"kp_0", SDL_SCANCODE_KP_0},
+                   {"kp_1", SDL_SCANCODE_KP_1},
+                   {"kp_2", SDL_SCANCODE_KP_2},
+                   {"kp_3", SDL_SCANCODE_KP_3},
+                   {"kp_4", SDL_SCANCODE_KP_4},
+                   {"kp_5", SDL_SCANCODE_KP_5},
+                   {"kp_6", SDL_SCANCODE_KP_6},
+                   {"kp_7", SDL_SCANCODE_KP_7},
+                   {"kp_8", SDL_SCANCODE_KP_8},
+                   {"kp_9", SDL_SCANCODE_KP_9},
+                   {"kp_0", SDL_SCANCODE_KP_0},
 
-	{"numlock",     SDL_SCANCODE_NUMLOCKCLEAR},
-	{"kp_divide",   SDL_SCANCODE_KP_DIVIDE},
-	{"kp_multiply", SDL_SCANCODE_KP_MULTIPLY},
-	{"kp_minus",    SDL_SCANCODE_KP_MINUS},
-	{"kp_plus",     SDL_SCANCODE_KP_PLUS},
-	{"kp_period",   SDL_SCANCODE_KP_PERIOD},
-	{"kp_enter",    SDL_SCANCODE_KP_ENTER},
+                   {"numlock", SDL_SCANCODE_NUMLOCKCLEAR},
+                   {"kp_divide", SDL_SCANCODE_KP_DIVIDE},
+                   {"kp_multiply", SDL_SCANCODE_KP_MULTIPLY},
+                   {"kp_minus", SDL_SCANCODE_KP_MINUS},
+                   {"kp_plus", SDL_SCANCODE_KP_PLUS},
+                   {"kp_period", SDL_SCANCODE_KP_PERIOD},
+                   {"kp_enter", SDL_SCANCODE_KP_ENTER},
 
-	/* Is that the extra backslash key ("less than" key) */
-	/* on some keyboards with the 102-keys layout??      */
-	{"lessthan",SDL_SCANCODE_NONUSBACKSLASH},
+                   /* Is that the extra backslash key ("less than" key) */
+                   /* on some keyboards with the 102-keys layout??      */
+                   {"lessthan", SDL_SCANCODE_NONUSBACKSLASH},
 
-	{0, SDL_SCANCODE_UNKNOWN}
-};
+                   {0, SDL_SCANCODE_UNKNOWN}};
 
 static void ClearAllBinds() {
 	// wait for the auto-typer to complete because it might be accessing events
@@ -2389,6 +2441,10 @@ static void CreateDefaultBinds() {
 	sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_RALT);
 	CreateStringBind(buffer);
 	sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_LALT);
+	CreateStringBind(buffer);
+	sprintf(buffer, "mod_3 \"key %d\"", SDL_SCANCODE_RGUI);
+	CreateStringBind(buffer);
+	sprintf(buffer, "mod_3 \"key %d\"", SDL_SCANCODE_LGUI);
 	CreateStringBind(buffer);
 	for (const auto &handler_event : handlergroup) {
 		handler_event->MakeDefaultBind(buffer);
