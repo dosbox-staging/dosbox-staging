@@ -30,6 +30,11 @@ echo "In directory $trans_dir:"
 # keyb us 858
 tconv_l CP437 "utf-8/en/en-0.77.0-alpha.txt" en/en_US
 
+# keyb es
+# keyb es 437
+# keyb es 858
+tconv_l CP858 "utf-8/es/es-0.77.0-alpha.txt" es/es_ES
+
 # keyb fr
 # keyb fr 437
 # keyb fr 858
