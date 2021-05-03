@@ -30,10 +30,27 @@
 #include <SDL.h>
 
 constexpr uint32_t MMOD1 = 0x1;
+#define MMOD1_NAME "Ctrl"
 constexpr uint32_t MMOD2 = 0x2;
 constexpr uint32_t MMOD3 = 0x4;
 
-typedef void (MAPPER_Handler)(bool pressed);
+// Linux, Windows, BSD, etc.
+#if !defined(MACOSX)
+#define MMOD2_NAME       "Alt"
+#define MMOD3_NAME       "GUI"
+#define PRIMARY_MOD      MMOD1
+#define PRIMARY_MOD_PAD  ""
+#define PRIMARY_MOD_NAME MMOD1_NAME
+// macOS
+#else
+#define MMOD2_NAME       "Opt"
+#define MMOD3_NAME       "Cmd"
+#define PRIMARY_MOD      MMOD3
+#define PRIMARY_MOD_PAD  " "
+#define PRIMARY_MOD_NAME MMOD3_NAME
+#endif
+
+typedef void(MAPPER_Handler)(bool pressed);
 
 /* Associate function handler with a key combination
  *
