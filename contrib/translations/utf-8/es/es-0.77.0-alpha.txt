@@ -841,17 +841,18 @@ Monta un CD-ROM, disquete, o imagen de disco a una letra de unidad.
 Uso:
   [32;1mimgmount[0m [37;1mUNIDAD[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso
   [32;1mimgmount[0m [37;1mUNIDAD[0m [36;1mARCHIVOIMAGEN[0m [ARCHIVOIMAGEN2 [..]] [-fs fat] -t hdd|floppy
-  [32;1mimgmount[0m [37;1mUNIDAD[0m [36;1mIMAGENBOOT[0m [-fs fat|none] -t hdd -size GEOMETRIA
+  [32;1mimgmount[0m [37;1mUNIDAD[0m [36;1mIMAGENBOOT[0m [-fs fat|none] -t hdd -size GEOM
   [32;1mimgmount[0m -u [37;1mUNIDAD[0m  (desmonta la imagen de la unidad)
 
 Dónde:
   [37;1mUNIDAD[0m    es la letra de la unidad donde la imagen será montada: a, c, d, ...
   [36;1mCDROM-SET[0m es un ISO, CUE+BIN, CUE+ISO, o CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [36;1mARCHIVOIMAGEN[0m es un disco duro o una imagen de disquete en formato FAT16 o FAT12
-  [36;1mIMAGENBOOT[0m es una imagen de disco de arranque con especificado -size GEOMETRIA:
-            bytes-por-sector,sectores-por-cabeza,cabezas,cilindros
+  [36;1mARCHIVOIMAGEN[0m un disco duro o una imagen de disquete en formato FAT16/FAT12
+  [36;1mIMAGENBOOT[0m es una imagen de disco de arranque con especificado -size GEOM:
+             bytes-por-sector,sectores-por-cabeza,cabezas,cilindros
 Notas:
-  - Ctrl+F4 intercambia & monta el siguiente CDROM-SET o ARCHIVOIMAGEN, si se proporciona.
+  - Ctrl+F4 intercambia & monta el siguiente CDROM-SET o ARCHIVOIMAGEN, si se
+    proporciona.
 
 Ejemplos:
   [32;1mimgmount[0m [37;1mD[0m [36;1m/Usuarios/NombredeUsuario/juegos/doom.iso[0m -t cdrom
@@ -1185,43 +1186,43 @@ SUBST falló. Has cometido un error en la línea de comandos o la unidad de dest
 Sólo es posible utilizar SUBST en unidades locales
 .
 :SHELL_STARTUP_BEGIN
-[44;1m╔════════════════════════════════════════════════════════════════════╗
-║ [32mBienvenido a DOSBox Staging %-40s[37m ║
-║                                                                    ║
-║ Para una breve introducción para nuevos usuarios escriba: [33mINTRO[37m                 ║
-║ Para comandos de interfaz soportados escriba: [33mHELP[37m                            ║
-║                                                                    ║
-║ Para ajustar la velocidad de la CPU emulada, use [31mCtrl+F11[37m y [31mCtrl+F12[37m.       ║
-║ Para activar el mapeador de teclas use [31mCtrl+F1[37m.                                 ║
-║ Para más información lea el archivo [36mREADME[37m en el directorio de DOSBox. ║
-║                                                                    ║
+[44;1m╔═══════════════════════════════════════════════════════════════════════════╗
+║ [32mBienvenido a DOSBox Staging %-40s[37m      ║
+║                                                                           ║
+║ Para una breve introducción para nuevos usuarios escriba: [33mINTRO[37m           ║
+║ Para comandos de interfaz soportados escriba: [33mHELP[37m                        ║
+║                                                                           ║
+║ Para ajustar la velocidad de la CPU emulada, use [31mCtrl+F11[37m y [31mCtrl+F12[37m.     ║
+║ Para activar el mapeador de teclas use [31mCtrl+F1[37m.                           ║
+║ Para más información lea el archivo [36mREADME[37m en el directorio de DOSBox.    ║
+║                                                                           ║
 
 .
 :SHELL_STARTUP_CGA
-║ DOSBox soporta el modo CGA compuesto.                                ║
-║ Use [31mF12[37m para establecer salida compuesta ON, OFF, o AUTO (por defecto).        ║
+║ DOSBox soporta el modo CGA compuesto.                                     ║
+║ Use [31mF12[37m para establecer salida compuesta ON, OFF, o AUTO (por defecto).   ║
 ║ [31m(Alt+)F11[37m cambia tono; [31mCtrl+Alt+F11[37m selecciona modelo CGA inicial/final.  ║
-║                                                                    ║
+║                                                                           ║
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Use [31mF11[37m para rotar entre los modos verde, ámbar, blanco y blanco papel, ║
-║ y [31mAlt+F11[37m para cambiar los ajustes de contraste/brillo.                ║
+║ Use [31mF11[37m para rotar entre los modos verde, ámbar, blanco y blanco papel,   ║
+║ y [31mAlt+F11[37m para cambiar los ajustes de contraste/brillo.                   ║
 
 .
 :SHELL_STARTUP_HERC
-║ Use [31mF11[37m para rotar entre los colores blanco, ámbar, y verde monocromático. ║
-║                                                                    ║
+║ Use [31mF11[37m para rotar entre los colores blanco, ámbar, y verde monocromático.║
+║                                                                           ║
 
 .
 :SHELL_STARTUP_DEBUG
-║ Pulsa [31mAlt+Pausa[37m para entrar en el depurador o iniciar el exe con [33mDEPURADO[37m. ║
-║                                                                    ║
+║ Pulsa [31mAlt+Pausa[37m para entrar en el depurador o iniciar el exe con [33mDEPURADO[37m.║
+║                                                                           ║
 
 .
 :SHELL_STARTUP_END
-║ [33mhttps://dosbox-staging.github.io[37m                                   ║
-╚════════════════════════════════════════════════════════════════════╝[0m
+║ [33mhttps://dosbox-staging.github.io[37m                                          ║
+╚═══════════════════════════════════════════════════════════════════════════╝[0m
 
 
 .
@@ -1408,13 +1409,13 @@ Uso:
   [32;1mver[0m [37;1mset[0m [36;1mVERSIÓN[0m
 
 Dónde:
-  [36;1mVERSIÓN[0m puede ser un número entero como [36;1m5[0m, o incluir un valor decimal de dos dígitos
-          como: [36;1m6.22[0m, [36;1m7.01[0m, o [36;1m7.10[0m. El decimal puede alternativamente ser
-          separado por espacio como: [36;1m6 22[0m, [36;1m7 01[0m, o [36;1m7 10[0m.
+  [36;1mVERSIÓN[0m puede ser un número entero como [36;1m5[0m, o incluir un valor decimal de dos
+          dígitos como: [36;1m6.22[0m, [36;1m7.01[0m, o [36;1m7.10[0m. El decimal puede alternativamente
+          ser separado por espacio como: [36;1m6 22[0m, [36;1m7 01[0m, o [36;1m7 10[0m.
 
 Notas:
-  La versión DOS también puede ser establecida en el archivo de configuración bajo la
-  sección [dos] usando el ajuste "ver = [36;1mVERSIÓN[0m" .
+  La versión DOS también puede ser establecida en el archivo de configuración
+  bajo la sección [dos] usando el ajuste "ver = [36;1mVERSIÓN[0m" .
 
 Ejemplos:
   [32;1mver[0m [37;1mset[0m [36;1m6.22[0m
