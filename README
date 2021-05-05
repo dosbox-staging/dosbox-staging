@@ -49,6 +49,7 @@ MOUSE:      The mouse doesn't work.
 SOUND:      There is no sound.
 SOUND:      What sound hardware does DOSBox presently emulate?
 SOUND:      The sound stutters or sounds stretched/weird.
+KEYBOARD:   My keyboard's F1-F12 keys don't work.
 KEYBOARD:   I can't type \ or : in DOSBox.
 KEYBOARD:   Right Shift and "\" doesn't work in DOSBox. (Windows only)
 KEYBOARD:   The keyboard lags.
@@ -212,6 +213,17 @@ SOUND: The sound stutters or sounds stretched/weird.
     Also look at Section 10: "How to speed up/slow down DOSBox" as well as
     Section 11: "Troubleshooting".
 
+
+KEYBOARD: My keyboard's F1-F12 keys don't work.
+    This can happen on macOS, mini-keyboards, and some laptops.
+
+    Find and hold the 'Function' or 'Fn' key while pressing an F-key.
+    The 'Fn' key is often located in the lower-left corner of the keyboard.
+
+    On macOS, you can change the top row of keys to work as standard F-keys
+    without holding the 'Fn' key. In your system's keyboard preferences:
+    select "Use F1, F2, etc. keys as standard function keys". Learn more
+    here: https://support.apple.com/en-us/HT204436
 
 KEYBOARD: I can't type \ or : in DOSBox.
     This can happen in various cases, like your host keyboard layout does not
