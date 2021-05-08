@@ -27,6 +27,7 @@
 #include "control.h"
 #include "dosbox.h"
 #include "fs_utils.h"
+#include "mapper.h"
 #include "regs.h"
 #include "string_utils.h"
 
@@ -639,23 +640,23 @@ void SHELL_Init() {
 	        "\xBA For a short introduction for new users type: \033[33mINTRO\033[37m                 \xBA\n"
 	        "\xBA For supported shell commands type: \033[33mHELP\033[37m                            \xBA\n"
 	        "\xBA                                                                    \xBA\n"
-	        "\xBA To adjust the emulated CPU speed, use \033[31mCtrl+F11\033[37m and \033[31mCtrl+F12\033[37m.       \xBA\n"
-	        "\xBA To activate the keymapper \033[31mCtrl+F1\033[37m.                                 \xBA\n"
+	        "\xBA To adjust the emulated CPU speed, use \033[31m" PRIMARY_MOD_NAME "+F11\033[37m and \033[31m" PRIMARY_MOD_NAME "+F12\033[37m." PRIMARY_MOD_PAD PRIMARY_MOD_PAD "       \xBA\n"
+	        "\xBA To activate the keymapper \033[31m" PRIMARY_MOD_NAME "+F1\033[37m." PRIMARY_MOD_PAD "                                 \xBA\n"
 	        "\xBA For more information read the \033[36mREADME\033[37m file in the DOSBox directory. \xBA\n"
 	        "\xBA                                                                    \xBA\n");
 	MSG_Add("SHELL_STARTUP_CGA",
 	        "\xBA DOSBox supports Composite CGA mode.                                \xBA\n"
 	        "\xBA Use \033[31mF12\033[37m to set composite output ON, OFF, or AUTO (default).        \xBA\n"
-	        "\xBA \033[31m(Alt+)F11\033[37m changes hue; \033[31mCtrl+Alt+F11\033[37m selects early/late CGA model.  \xBA\n"
+	        "\xBA \033[31m(" MMOD2_NAME ")F11\033[37m changes hue; \033[31m" MMOD1_NAME "+" MMOD2_NAME "+F11\033[37m selects early/late CGA model.  \xBA\n"
 	        "\xBA                                                                    \xBA\n");
 	MSG_Add("SHELL_STARTUP_CGA_MONO",
 	        "\xBA Use \033[31mF11\033[37m to cycle through green, amber, white and paper-white mode, \xBA\n"
-	        "\xBA and \033[31mAlt+F11\033[37m to change contrast/brightness settings.                \xBA\n");
+	        "\xBA and \033[31m" MMOD2_NAME "+F11\033[37m to change contrast/brightness settings.                \xBA\n");
 	MSG_Add("SHELL_STARTUP_HERC",
 	        "\xBA Use \033[31mF11\033[37m to cycle through white, amber, and green monochrome color. \xBA\n"
 	        "\xBA                                                                    \xBA\n");
 	MSG_Add("SHELL_STARTUP_DEBUG",
-	        "\xBA Press \033[31mAlt+Pause\033[37m to enter the debugger or start the exe with \033[33mDEBUG\033[37m. \xBA\n"
+	        "\xBA Press \033[31m" MMOD2_NAME "+Pause\033[37m to enter the debugger or start the exe with \033[33mDEBUG\033[37m. \xBA\n"
 	        "\xBA                                                                    \xBA\n");
 	MSG_Add("SHELL_STARTUP_END",
 	        "\xBA \033[33mhttps://dosbox-staging.github.io\033[37m                                   \xBA\n"

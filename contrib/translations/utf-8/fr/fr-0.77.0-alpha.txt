@@ -1,6 +1,6 @@
 :CONFIG_FULLSCREEN
 Démarrer DOSBox directement en mode plein écran.
-Pressez Alt+Entrée pour revenir en mode fenêtre.
+Pressez " MMOD2_NAME "Entrée pour revenir en mode fenêtre.
 .
 :CONFIG_DISPLAY
 Nombre d'écrans à utiliser ; les valeurs dépendent de l'OS et des paramètres utilisateur.
@@ -44,12 +44,12 @@ Méthode de contrôle de la souris :
                    signal envoyé au jeu.
 Gestion du clic-milieu (second paramètre) :
    middlegame :    Les clics-milieu sont envoyés au jeu
-                   (Ctrl+F10 libère la souris).
+                   (" PRIMARY_MOD_NAME "+F10 libère la souris).
    middlerelease : Les clics-milieu libèrent la souris
                    (non envoyés au jeu). De plus, les clics-milieu
                    seront envoyés au jeu en mode plein écran ou en mode
                    seamless.
-                   Ctrl+F10 libèrera aussi la souris.
+                   " PRIMARY_MOD_NAME "+F10 libèrera aussi la souris.
 Defaults (si non présent ou incorrect) : seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -155,7 +155,7 @@ Les cycles peuvent être définis de 3 façons :
 
 .
 :CONFIG_CYCLEUP
-Nombre de cycles à ajouter/soustraire avec la combinaison de touches. (Ctrl+F11/Ctrl+F12)
+Nombre de cycles à ajouter/soustraire avec la combinaison de touches. (" PRIMARY_MOD_NAME "+F11/" PRIMARY_MOD_NAME "+F12)
 .
 :CONFIG_CYCLEDOWN
 Le paramétrer à moins de 100 donnera un pourcentage.
@@ -745,18 +745,18 @@ Par ailleurs, vous pouvez utiliser IMGMOUNT pour monter des images ISO ou des fi
 Voici les combinaisons des touches par défaut.
 Elles peuvent être changées dans le [33mkeymapper[0m.
 
-[33;1mAlt+Entrée[0m  : Bascule entre mode plein écran et mode fenêtré.
-[33;1mAlt+Pause[0m   : Mettre en pause/relancer l'émulateur.
-[33;1mCtrl+F1[0m     : Démarrer le [33mkeymapper[0m.
-[33;1mCtrl+F4[0m     : Bascule entre les images disque montées, met à jour le cache des répertoires pour tous les lecteurs.
-[33;1mCtrl+F5[0m     : Sauvegarde une capture d'écran.
-[33;1mCtrl+F6[0m     : Démarrer/Arrêter l'enregistrement de la sortie son dans un fichier WAVE.
-[33;1mCtrl+F7[0m     : Démarrer/Arrêter l'enregistrement de la sortie vidéo dans un fichier ZMBV.
-[33;1mCtrl+F9[0m     : Terminer l'émulation.
-[33;1mCtrl+F10[0m    : Capturer/Libérer la souris.
-[33;1mCtrl+F11[0m    : Ralentir l'émulation.
-[33;1mCtrl+F12[0m    : Accélérer l'émulation.
-[33;1mAlt+F12[0m     : Débloquer la vitesse (bouton turbo/avance rapide).
+[33;1m" MMOD2_NAME "Entrée[0m  : Bascule entre mode plein écran et mode fenêtré.
+[33;1m" MMOD2_NAME "Pause[0m   : Mettre en pause/relancer l'émulateur.
+[33;1m" PRIMARY_MOD_NAME "+F1[0m    " PRIMARY_MOD_PAD " : Démarrer le [33mkeymapper[0m.
+[33;1m" PRIMARY_MOD_NAME "+F4[0m    " PRIMARY_MOD_PAD " : Bascule entre les images disque montées, met à jour le cache des répertoires pour tous les lecteurs.
+[33;1m" PRIMARY_MOD_NAME "+F5[0m    " PRIMARY_MOD_PAD " : Sauvegarde une capture d'écran.
+[33;1m" PRIMARY_MOD_NAME "+F6[0m    " PRIMARY_MOD_PAD " : Démarrer/Arrêter l'enregistrement de la sortie son dans un fichier WAVE.
+[33;1m" PRIMARY_MOD_NAME "+F7[0m    " PRIMARY_MOD_PAD " : Démarrer/Arrêter l'enregistrement de la sortie vidéo dans un fichier ZMBV.
+[33;1m" PRIMARY_MOD_NAME "+F9[0m    " PRIMARY_MOD_PAD " : Terminer l'émulation.
+[33;1m" PRIMARY_MOD_NAME "+F10[0m   " PRIMARY_MOD_PAD " : Capturer/Libérer la souris.
+[33;1m" PRIMARY_MOD_NAME "+F11[0m   " PRIMARY_MOD_PAD " : Ralentir l'émulation.
+[33;1m" PRIMARY_MOD_NAME "+F12[0m   " PRIMARY_MOD_PAD " : Accélérer l'émulation.
+[33;1m" MMOD2_NAME "F12[0m     : Débloquer la vitesse (bouton turbo/avance rapide).
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -775,7 +775,7 @@ Le fichier image est en lecture seule ! Cela peut créer des problèmes.
 Cette commande démarre DOSBox à partir d'une disquette ou d'une image de disque dur.
 
 Pour cette commande, on peut spécifier une succession de disquettes et basculer
-entre elles avec Ctrl+F4, et -l spécifie le lecteur monté sur lequel démarrer.
+entre elles avec " PRIMARY_MOD_NAME "+F4, et -l spécifie le lecteur monté sur lequel démarrer.
 Sans lettre de lecteur spécifiée, le démarrage par défaut s'effectue sur A.
 Les seules lettres de lecteur démarrables sont A, C, et D. Pour démarrer à partir
 d'un disque dur (C ou D), l'image doit avoir au préalable été montée avec la commande
@@ -853,7 +853,7 @@ Avec :
   [36;1mIMAGEDÉMARRAGE[0m est une image de démarrage de disque dur avec une taille
         -size GEOMETRIE : bytes-par-secteur,secteurs-par-tête,têtes,cylindres
 Notes :
-  - Ctrl+F4 échange & monte le CDROM-SET ou le FICHIERIMAGE suivant si spécifié.
+  - " PRIMARY_MOD_NAME "+F4 échange & monte le CDROM-SET ou le FICHIERIMAGE suivant si spécifié.
 Exemples :
   [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/jeux/doom.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
@@ -1194,8 +1194,8 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 ║ Pour une courte introduction pour les nouveaux utilisateurs, tapez: [33mINTRO[37m  ║
 ║ Pour la liste des commandes supportées par le shell, tapez : [1;33mHELP[37m          ║
 ║                                                                            ║
-║ Pour ajuster la vitesse du CPU émulé, essayez [31mCtrl+F11[37m et [31mCtrl+F12[37m.        ║
-║ Pour activer le keymapper [31mCtrl+F1[37m.                                         ║
+║ Pour ajuster la vitesse du CPU émulé, essayez [31m" PRIMARY_MOD_NAME "+F11[37m et [31m" PRIMARY_MOD_NAME "+F12[37m." PRIMARY_MOD_PAD PRIMARY_MOD_PAD "        ║
+║ Pour activer le keymapper [31m" PRIMARY_MOD_NAME "+F1[37m." PRIMARY_MOD_PAD "                                         ║
 ║ Pour plus d'informations, lisez le fichier [36mREADME[37m dans le répertoire de    ║
 ║ DOSBox.                                                                    ║
 ║                                                                            ║
@@ -1204,13 +1204,13 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 :SHELL_STARTUP_CGA
 ║ DOSBox supporte le mode composite CGA.                                ║
 ║ Utilisez [31mF12[37m pour régler la sortiecomposite sur ON, OFF, ou AUTO (défaut).        ║
-║ [31m(Alt+)F11[37m change la teinte; [31mCtrl+Alt+F11[37m sélectionne le premier/dernier modèle CGA.  ║
+║ [31m(" MMOD2_NAME ")F11[37m change la teinte; [31m" MMOD1_NAME "" MMOD2_NAME "F11[37m sélectionne le premier/dernier modèle CGA.  ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA_MONO
 ║ Utilisez [31mF11[37m pour passer au vert, ambre, blanc et blanc-papier,   ║
-║ et [31mAlt+F11[37m pour changer le contraste/la luminosité.               ║
+║ et [31m" MMOD2_NAME "F11[37m pour changer le contraste/la luminosité.               ║
 
 .
 :SHELL_STARTUP_HERC
@@ -1219,7 +1219,7 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 
 .
 :SHELL_STARTUP_DEBUG
-║ Pressez [31mAlt+Pause[37m pour démarrer le debugger ou lancez l'exécutable avec [33mDEBUG[37m. ║
+║ Pressez [31m" MMOD2_NAME "Pause[37m pour démarrer le debugger ou lancez l'exécutable avec [33mDEBUG[37m. ║
 ║                                                                    ║
 
 .
