@@ -2346,7 +2346,7 @@ static void GUI_StartUp(Section *sec)
 	}
 	LOG_MSG("SDL: Mouse %s%s.", mouse_control_msg.c_str(), middle_control_msg.c_str());
 
-	// Only setup the Ctrl+F10 handler if the mouse is capturable
+	// Only setup the Ctrl/Cmd+F10 handler if the mouse is capturable
 	if (sdl.mouse.control_choice & (CaptureOnStart | CaptureOnClick)) {
 		MAPPER_AddHandler(ToggleMouseCapture, SDL_SCANCODE_F10,
 		                  PRIMARY_MOD, "capmouse", "Cap Mouse");

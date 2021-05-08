@@ -1,6 +1,6 @@
 :CONFIG_FULLSCREEN
 Inicia DOSBox directamente en pantalla completa.
-Presione Alt+Enter para volver a la ventana.
+Presione " MMOD2_NAME "+Enter para volver a la ventana.
 .
 :CONFIG_DISPLAY
 Número de pantalla a usar; valores dependen del SO y configuración del usuario.
@@ -44,12 +44,12 @@ Elija un método de control del mouse:
                    envíe ninguna entrada al juego.
 Elija cómo se manejan los clics centrales (segundo parámetro):
    middlegame:     Los clics centrales son enviados al juego
-                   (Ctrl+F10 descaptura el mouse).
+                   (" PRIMARY_MOD_NAME "+F10 descaptura el mouse).
    middlerelease:  Los clics centrales son usados para descapturar el mouse
                    (no se envía al juego). Sin embargo, los clics centrales
                    se enviarán al juego en pantalla completa o cuando
                    se establece el control seamless.
-                   Ctrl+F10 podrá también descapturar el mouse.
+                   " PRIMARY_MOD_NAME "+F10 podrá también descapturar el mouse.
 Defaults (si no está presente o erróneo): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -154,7 +154,7 @@ Los ciclos se pueden establecer de 3 formas:
                   manejar.
 .
 :CONFIG_CYCLEUP
-Número de ciclos para disminuir/incrementar con combinaciones de teclas. (Ctrl+F11/Ctrl+F12)
+Número de ciclos para disminuir/incrementar con combinaciones de teclas. (" PRIMARY_MOD_NAME "+F11/" PRIMARY_MOD_NAME "+F12)
 .
 :CONFIG_CYCLEDOWN
 Establecerlo por debajo de 100 será un porcentaje.
@@ -743,18 +743,18 @@ Además, puedes usar imgmount para montar imágenes iso o cue/bin:
 Estas son las combinaciones de teclas por defecto.
 Se pueden cambiar en el [33mmapeador de teclas[0m.
 
-[33;1mAlt+Enter[0m  Cambia entre pantalla completa y modo ventana.
-[33;1mAlt+Pausa[0m  Pausa/Despausa el emulador.
-[33;1mCtrl+F1[0m    Inicia el [33mmapeador de teclas[0m.
-[33;1mCtrl+F4[0m    Cambia imagen de disco montada, actualiza la caché de directorio para todas las unidades.
-[33;1mCtrl+F5[0m    Guarda una captura de pantalla.
-[33;1mCtrl+F6[0m    Inicia/Detiene grabación de salida de sonido a un archivo wav.
-[33;1mCtrl+F7[0m    Inicia/Detiene grabación de salida de video a un archivo zmbv.
-[33;1mCtrl+F9[0m    Apaga el emulador.
-[33;1mCtrl+F10[0m   Captura/Suelta el mouse.
-[33;1mCtrl+F11[0m   Ralentiza emulación.
-[33;1mCtrl+F12[0m   Acelera emulación.
-[33;1mAlt+F12[0m    Desbloquea velocidad (botón turbo/avance rápido).
+[33;1m" MMOD2_NAME "+Enter[0m  Cambia entre pantalla completa y modo ventana.
+[33;1m" MMOD2_NAME "+Pausa[0m  Pausa/Despausa el emulador.
+[33;1m" PRIMARY_MOD_NAME "+F1[0m   " PRIMARY_MOD_PAD " Inicia el [33mmapeador de teclas[0m.
+[33;1m" PRIMARY_MOD_NAME "+F4[0m   " PRIMARY_MOD_PAD " Cambia imagen de disco montada, actualiza la caché de directorio para todas las unidades.
+[33;1m" PRIMARY_MOD_NAME "+F5[0m   " PRIMARY_MOD_PAD " Guarda una captura de pantalla.
+[33;1m" PRIMARY_MOD_NAME "+F6[0m   " PRIMARY_MOD_PAD " Inicia/Detiene grabación de salida de sonido a un archivo wav.
+[33;1m" PRIMARY_MOD_NAME "+F7[0m   " PRIMARY_MOD_PAD " Inicia/Detiene grabación de salida de video a un archivo zmbv.
+[33;1m" PRIMARY_MOD_NAME "+F9[0m   " PRIMARY_MOD_PAD " Apaga el emulador.
+[33;1m" PRIMARY_MOD_NAME "+F10[0m  " PRIMARY_MOD_PAD " Captura/Suelta el mouse.
+[33;1m" PRIMARY_MOD_NAME "+F11[0m  " PRIMARY_MOD_PAD " Ralentiza emulación.
+[33;1m" PRIMARY_MOD_NAME "+F12[0m  " PRIMARY_MOD_PAD " Acelera emulación.
+[33;1m" MMOD2_NAME "+F12[0m    Desbloquea velocidad (botón turbo/avance rápido).
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -773,7 +773,7 @@ El archivo de imagen es de sólo lectura! Podría crear problemas.
 Este comando arranca DOSBox desde una imagen de disquete o de disco duro.
 
 Para este comando, se puede especificar una sucesión de disquetes intercambiables
-presionando Ctrl+F4, y -l especifica la unidad montada desde la que arrancar.  Si
+presionando " PRIMARY_MOD_NAME "+F4, y -l especifica la unidad montada desde la que arrancar.  Si
 ninguna letra de unidad es especificada, se arranca por defecto desde la unidad A.
 Las únicas letras de unidad arrancables son A, C, y D.  Para arrancar desde un
 disco duro (C o D), la imagen ya debería haber sido montada utilizando el comando
@@ -851,7 +851,7 @@ Dónde:
   [36;1mIMAGENBOOT[0m es una imagen de disco de arranque con especificado -size GEOM:
              bytes-por-sector,sectores-por-cabeza,cabezas,cilindros
 Notas:
-  - Ctrl+F4 intercambia & monta el siguiente CDROM-SET o ARCHIVOIMAGEN, si se
+  - " PRIMARY_MOD_NAME "+F4 intercambia & monta el siguiente CDROM-SET o ARCHIVOIMAGEN, si se
     proporciona.
 
 Ejemplos:
@@ -1192,8 +1192,8 @@ Sólo es posible utilizar SUBST en unidades locales
 ║ Para una breve introducción para nuevos usuarios escriba: [33mINTRO[37m           ║
 ║ Para comandos de interfaz soportados escriba: [33mHELP[37m                        ║
 ║                                                                           ║
-║ Para ajustar la velocidad de la CPU emulada, use [31mCtrl+F11[37m y [31mCtrl+F12[37m.     ║
-║ Para activar el mapeador de teclas use [31mCtrl+F1[37m.                           ║
+║ Para ajustar la velocidad de la CPU emulada, use [31m" PRIMARY_MOD_NAME "+F11[37m y [31m" PRIMARY_MOD_NAME "+F12[37m." PRIMARY_MOD_PAD PRIMARY_MOD_PAD "     ║
+║ Para activar el mapeador de teclas use [31m" PRIMARY_MOD_NAME "+F1[37m." PRIMARY_MOD_PAD "                           ║
 ║ Para más información lea el archivo [36mREADME[37m en el directorio de DOSBox.    ║
 ║                                                                           ║
 
@@ -1201,13 +1201,13 @@ Sólo es posible utilizar SUBST en unidades locales
 :SHELL_STARTUP_CGA
 ║ DOSBox soporta el modo CGA compuesto.                                     ║
 ║ Use [31mF12[37m para establecer salida compuesta ON, OFF, o AUTO (por defecto).   ║
-║ [31m(Alt+)F11[37m cambia tono; [31mCtrl+Alt+F11[37m selecciona modelo CGA inicial/final.  ║
+║ [31m(" MMOD2_NAME "+)F11[37m cambia tono; [31m" MMOD1_NAME "" MMOD2_NAME "+F11[37m selecciona modelo CGA inicial/final.  ║
 ║                                                                           ║
 
 .
 :SHELL_STARTUP_CGA_MONO
 ║ Use [31mF11[37m para rotar entre los modos verde, ámbar, blanco y blanco papel,   ║
-║ y [31mAlt+F11[37m para cambiar los ajustes de contraste/brillo.                   ║
+║ y [31m" MMOD2_NAME "+F11[37m para cambiar los ajustes de contraste/brillo.                   ║
 
 .
 :SHELL_STARTUP_HERC
@@ -1216,7 +1216,7 @@ Sólo es posible utilizar SUBST en unidades locales
 
 .
 :SHELL_STARTUP_DEBUG
-║ Pulsa [31mAlt+Pausa[37m para entrar en el depurador o iniciar el exe con [33mDEPURADO[37m.║
+║ Pulsa [31m" MMOD2_NAME "+Pausa[37m para entrar en el depurador o iniciar el exe con [33mDEPURADO[37m.║
 ║                                                                           ║
 
 .

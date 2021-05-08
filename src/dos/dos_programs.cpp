@@ -36,6 +36,7 @@
 #include "drives.h"
 #include "fs_utils.h"
 #include "inout.h"
+#include "mapper.h"
 #include "mem.h"
 #include "program_autotype.h"
 #include "program_ls.h"
@@ -1791,32 +1792,32 @@ void DOS_SetupPrograms(void) {
 	        "These are the default keybindings.\n"
 	        "They can be changed in the \033[33mkeymapper\033[0m.\n"
 	        "\n"
-	        "\033[33;1mAlt+Enter\033[0m  Switch between fullscreen and window mode.\n"
-	        "\033[33;1mAlt+Pause\033[0m  Pause/Unpause emulator.\n"
-	        "\033[33;1mCtrl+F1\033[0m    Start the \033[33mkeymapper\033[0m.\n"
-	        "\033[33;1mCtrl+F4\033[0m    Swap mounted disk image, update directory cache for all drives.\n"
-	        "\033[33;1mCtrl+F5\033[0m    Save a screenshot.\n"
-	        "\033[33;1mCtrl+F6\033[0m    Start/Stop recording sound output to a wave file.\n"
-	        "\033[33;1mCtrl+F7\033[0m    Start/Stop recording video output to a zmbv file.\n"
-	        "\033[33;1mCtrl+F9\033[0m    Shutdown emulator.\n"
-	        "\033[33;1mCtrl+F10\033[0m   Capture/Release the mouse.\n"
-	        "\033[33;1mCtrl+F11\033[0m   Slow down emulation.\n"
-	        "\033[33;1mCtrl+F12\033[0m   Speed up emulation.\n"
-	        "\033[33;1mAlt+F12\033[0m    Unlock speed (turbo button/fast forward).\n");
+	        "\033[33;1m" MMOD2_NAME "+Enter\033[0m  Switch between fullscreen and window mode.\n"
+	        "\033[33;1m" MMOD2_NAME "+Pause\033[0m  Pause/Unpause emulator.\n"
+	        "\033[33;1m" PRIMARY_MOD_NAME "+F1\033[0m   " PRIMARY_MOD_PAD " Start the \033[33mkeymapper\033[0m.\n"
+	        "\033[33;1m" PRIMARY_MOD_NAME "+F4\033[0m   " PRIMARY_MOD_PAD " Swap mounted disk image, update directory cache for all drives.\n"
+	        "\033[33;1m" PRIMARY_MOD_NAME "+F5\033[0m   " PRIMARY_MOD_PAD " Save a screenshot.\n"
+	        "\033[33;1m" PRIMARY_MOD_NAME "+F6\033[0m   " PRIMARY_MOD_PAD " Start/Stop recording sound output to a wave file.\n"
+	        "\033[33;1m" PRIMARY_MOD_NAME "+F7\033[0m   " PRIMARY_MOD_PAD " Start/Stop recording video output to a zmbv file.\n"
+	        "\033[33;1m" PRIMARY_MOD_NAME "+F9\033[0m   " PRIMARY_MOD_PAD " Shutdown emulator.\n"
+	        "\033[33;1m" PRIMARY_MOD_NAME "+F10\033[0m  " PRIMARY_MOD_PAD " Capture/Release the mouse.\n"
+	        "\033[33;1m" PRIMARY_MOD_NAME "+F11\033[0m  " PRIMARY_MOD_PAD " Slow down emulation.\n"
+	        "\033[33;1m" PRIMARY_MOD_NAME "+F12\033[0m  " PRIMARY_MOD_PAD " Speed up emulation.\n"
+	        "\033[33;1m" MMOD2_NAME "+F12\033[0m    Unlock speed (turbo button/fast forward).\n");
 
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_WRITE_PROTECTED","Image file is read-only! Might create problems.\n");
-	MSG_Add("PROGRAM_BOOT_PRINT_ERROR","This command boots DOSBox from either a floppy or hard disk image.\n\n"
-		"For this command, one can specify a succession of floppy disks swappable\n"
-		"by pressing Ctrl+F4, and -l specifies the mounted drive to boot from.  If\n"
-		"no drive letter is specified, this defaults to booting from the A drive.\n"
-		"The only bootable drive letters are A, C, and D.  For booting from a hard\n"
-		"drive (C or D), the image should have already been mounted using the\n"
-		"\033[34;1mIMGMOUNT\033[0m command.\n\n"
-		"The syntax of this command is:\n\n"
-		"\033[34;1mBOOT [diskimg1.img diskimg2.img] [-l driveletter]\033[0m\n"
-		);
+	MSG_Add("PROGRAM_BOOT_PRINT_ERROR",
+	        "This command boots DOSBox from either a floppy or hard disk image.\n\n"
+	        "For this command, one can specify a succession of floppy disks swappable\n"
+	        "by pressing " PRIMARY_MOD_NAME "+F4, and -l specifies the mounted drive to boot from.  If\n"
+	        "no drive letter is specified, this defaults to booting from the A drive.\n"
+	        "The only bootable drive letters are A, C, and D.  For booting from a hard\n"
+	        "drive (C or D), the image should have already been mounted using the\n"
+	        "\033[34;1mIMGMOUNT\033[0m command.\n\n"
+	        "The syntax of this command is:\n\n"
+	        "\033[34;1mBOOT [diskimg1.img diskimg2.img] [-l driveletter]\033[0m\n");
 	MSG_Add("PROGRAM_BOOT_UNABLE","Unable to boot off of drive %c");
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s");
@@ -1843,7 +1844,7 @@ void DOS_SetupPrograms(void) {
 	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mIMAGEFILE\033[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy\n"
 	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mBOOTIMAGE\033[0m [-fs fat|none] -t hdd -size GEOMETRY\n"
 	        "  \033[32;1mimgmount\033[0m -u \033[37;1mDRIVE\033[0m  (unmounts the DRIVE's image)\n"
-		"\n"
+	        "\n"
 	        "Where:\n"
 	        "  \033[37;1mDRIVE\033[0m     is the drive letter where the image will be mounted: a, c, d, ...\n"
 	        "  \033[36;1mCDROM-SET\033[0m is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
@@ -1851,8 +1852,8 @@ void DOS_SetupPrograms(void) {
 	        "  \033[36;1mBOOTIMAGE\033[0m is a bootable disk image with specified -size GEOMETRY:\n"
 	        "            bytes-per-sector,sectors-per-head,heads,cylinders\n"
 	        "Notes:\n"
-	        "  - Ctrl+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.\n"
-		"\n"
+	        "  - " PRIMARY_MOD_NAME "+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.\n"
+	        "\n"
 	        "Examples:\n"
 #if defined(WIN32)
 	        "  \033[32;1mimgmount\033[0m \033[37;1mD\033[0m \033[36;1mC:\\games\\doom.iso\033[0m -t cdrom\n"
