@@ -720,6 +720,32 @@ static Bitu INT14_Handler(void) {
 static Bitu INT15_Handler(void) {
 	static Bit16u biosConfigSeg=0;
 	switch (reg_ah) {
+	case 0x24:		//A20 stuff
+		switch (reg_al) {
+		case 0:	//Disable a20
+			MEM_A20_Enable(false);
+			reg_ah = 0;                   //call successful
+			CALLBACK_SCF(false);             //clear on success
+			break;
+		case 1:	//Enable a20
+			MEM_A20_Enable( true );
+			reg_ah = 0;                   //call successful
+			CALLBACK_SCF(false);             //clear on success
+			break;
+		case 2:	//Query a20
+			reg_al = MEM_A20_Enabled() ? 0x1 : 0x0;
+			reg_ah = 0;                   //call successful
+			CALLBACK_SCF(false);
+			break;
+		case 3:	//Get a20 support
+			reg_bx = 0x3;		//Bitmask, keyboard and 0x92
+			reg_ah = 0;         //call successful
+			CALLBACK_SCF(false);
+			break;
+		default:
+			goto unhandled;
+		}
+		break;
 	case 0xC0:	/* Get Configuration*/
 		{
 			if (biosConfigSeg==0) biosConfigSeg = DOS_GetMemory(1); //We have 16 bytes
@@ -965,6 +991,7 @@ static Bitu INT15_Handler(void) {
 		CALLBACK_SCF(true);
 		break;
 	default:
+	unhandled:
 		LOG(LOG_BIOS,LOG_ERROR)("INT15:Unknown call %4X",reg_ax);
 		reg_ah=0x86;
 		CALLBACK_SCF(true);
