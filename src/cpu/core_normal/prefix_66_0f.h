@@ -191,6 +191,7 @@
 				SETFLAGBIT(CF,(*eard & mask));
 			} else {
 				GetEAa;eaa+=(((Bit32s)*rmrd)>>5)*4;
+				if (!TEST_PREFIX_ADDR) FixEA16;
 				Bit32u old=LoadMd(eaa);
 				SETFLAGBIT(CF,(old & mask));
 			}
@@ -217,6 +218,7 @@
 				*eard|=mask;
 			} else {
 				GetEAa;eaa+=(((Bit32s)*rmrd)>>5)*4;
+				if (!TEST_PREFIX_ADDR) FixEA16;
 				Bit32u old=LoadMd(eaa);
 				SETFLAGBIT(CF,(old & mask));
 				SaveMd(eaa,old | mask);
@@ -282,6 +284,7 @@
 				*eard&= ~mask;
 			} else {
 				GetEAa;eaa+=(((Bit32s)*rmrd)>>5)*4;
+				if (!TEST_PREFIX_ADDR) FixEA16;
 				Bit32u old=LoadMd(eaa);
 				SETFLAGBIT(CF,(old & mask));
 				SaveMd(eaa,old & ~mask);
@@ -377,6 +380,7 @@
 				*eard^=mask;
 			} else {
 				GetEAa;eaa+=(((Bit32s)*rmrd)>>5)*4;
+				if (!TEST_PREFIX_ADDR) FixEA16;
 				Bit32u old=LoadMd(eaa);
 				SETFLAGBIT(CF,(old & mask));
 				SaveMd(eaa,old ^ mask);
