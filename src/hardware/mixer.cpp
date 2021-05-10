@@ -351,7 +351,21 @@ void MixerChannel::AddSilence()
 	offset[0] = offset[1] = 0;
 }
 
-//4 seems to work . Disabled for now
+// Scale -128 to 127 values to signed 16-bit range
+constexpr int16_t s8_to_s16(const int8_t val)
+{
+	const int16_t extra = val > 0 ? 2 * val + 1 : 0;
+	return val * 256 + extra;
+}
+
+// Transform 0 to 255 values to signed 16-bit range
+constexpr int16_t u8_to_s16(const uint8_t val)
+{
+	const auto sval = static_cast<int8_t>(val - 128);
+	return s8_to_s16(sval);
+}
+
+// 4 seems to work . Disabled for now
 #define MIXER_UPRAMP_STEPS 0
 #define MIXER_UPRAMP_SAVE 512
 
@@ -389,19 +403,22 @@ inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 			}
 
 			if ( sizeof( Type) == 1) {
+				// unsigned 8-bit
 				if (!signeddata) {
 					if (stereo) {
-						next_sample[0]=(((Bit8s)(data[pos*2+0] ^ 0x80)) << 8);
-						next_sample[1]=(((Bit8s)(data[pos*2+1] ^ 0x80)) << 8);
+						next_sample[0] = u8_to_s16(static_cast<uint8_t>(data[pos * 2 + 0]));
+						next_sample[1] = u8_to_s16(static_cast<uint8_t>(data[pos * 2 + 1]));
 					} else {
-						next_sample[0]=(((Bit8s)(data[pos] ^ 0x80)) << 8);
+						next_sample[0] = u8_to_s16(static_cast<uint8_t>(data[pos]));
 					}
-				} else {
+				}
+				// signed 8-bit
+				else {
 					if (stereo) {
-						next_sample[0]=(data[pos*2+0] << 8);
-						next_sample[1]=(data[pos*2+1] << 8);
+						next_sample[0] = s8_to_s16(static_cast<int8_t>(data[pos * 2 + 0]));
+						next_sample[1] = s8_to_s16(static_cast<int8_t>(data[pos * 2 + 1]));
 					} else {
-						next_sample[0]=(data[pos] << 8);
+						next_sample[0] = s8_to_s16(static_cast<int8_t>(data[pos]));
 					}
 				}
 			//16bit and 32bit both contain 16bit data internally
