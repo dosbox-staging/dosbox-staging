@@ -50,6 +50,7 @@ SOUND:      There is no sound.
 SOUND:      What sound hardware does DOSBox presently emulate?
 SOUND:      The sound stutters or sounds stretched/weird.
 KEYBOARD:   My keyboard's F1-F12 keys don't work.
+KEYBOARD:   Common key-presses conflict with system actions on macOS.
 KEYBOARD:   I can't type \ or : in DOSBox.
 KEYBOARD:   Right Shift and "\" doesn't work in DOSBox. (Windows only)
 KEYBOARD:   The keyboard lags.
@@ -225,6 +226,28 @@ KEYBOARD: My keyboard's F1-F12 keys don't work.
     without holding the 'Fn' key. In your system's keyboard preferences:
     select "Use F1, F2, etc. keys as standard function keys". Learn more
     here: https://support.apple.com/en-us/HT204436
+
+    Note: some custom keyboards might still intercept one or more F-keys, even
+    after the above steps have been performed. Please refer to your keyboard's
+    documentation for more information.
+
+KEYBOARD: Common key-presses conflict with system actions on macOS
+
+    Conflict: Command+F5
+    Where: Settings > Keyboard > Shortcuts > Accessibility
+    What: Disable the "Turn VoiceOver on or off" shortcut
+
+    Conflict: F11
+    Where: Settings > Keyboard > Shortcuts > Mission Control
+    What: Disable the "Show Desktop" shortcut
+
+    Conflict: Control+arrow keys
+    Where: Settings > Keyboard > Shortcuts > Mission Control
+    What: Disable the following shortcuts:
+     - "Mission Control" to deconflict Control+Up
+     - "Application windows" to deconflict Control+Down
+     - "Move left a space" to deconflict Control+Left
+     - "Move right a space" to deconflict Control+Right
 
 KEYBOARD: I can't type \ or : in DOSBox.
     This can happen in various cases, like your host keyboard layout does not
