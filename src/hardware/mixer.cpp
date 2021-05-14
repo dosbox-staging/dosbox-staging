@@ -23,6 +23,7 @@
 
 #include "mixer.h"
 
+#include <cstdint>
 #include <string.h>
 #include <sys/types.h>
 #include <math.h>
@@ -351,18 +352,27 @@ void MixerChannel::AddSilence()
 	offset[0] = offset[1] = 0;
 }
 
-// Scale -128 to 127 values to signed 16-bit range
-constexpr int16_t s8_to_s16(const int8_t val)
+// Floating-point conversion from unsigned 8-bit to signed 16-bit.
+// This is only used to populate a lookup table that's 20-fold faster.
+constexpr int16_t u8to16(const int u_val)
 {
-	const int16_t extra = val > 0 ? 2 * val + 1 : 0;
-	return val * 256 + extra;
+	assert(u_val >= 0 && u_val <= UINT8_MAX);
+	const auto s_val = u_val - 128;
+	if (s_val > 0) {
+		constexpr auto scalar = INT16_MAX / 127.0;
+		return static_cast<int16_t>(round(s_val * scalar));
+	}
+	return static_cast<int16_t>(s_val * 256);
 }
 
-// Transform 0 to 255 values to signed 16-bit range
-constexpr int16_t u8_to_s16(const uint8_t val)
+// 8-bit to 16-bit lookup tables
+static int16_t lut_u8to16[UINT8_MAX + 1] = {};
+constexpr int16_t *lut_s8to16 = lut_u8to16 + 128;
+
+constexpr void fill_8to16_lut()
 {
-	const auto sval = static_cast<int8_t>(val - 128);
-	return s8_to_s16(sval);
+	for (int i = 0; i <= UINT8_MAX; ++i)
+		lut_u8to16[i] = u8to16(i);
 }
 
 // 4 seems to work . Disabled for now
@@ -406,19 +416,19 @@ inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 				// unsigned 8-bit
 				if (!signeddata) {
 					if (stereo) {
-						next_sample[0] = u8_to_s16(static_cast<uint8_t>(data[pos * 2 + 0]));
-						next_sample[1] = u8_to_s16(static_cast<uint8_t>(data[pos * 2 + 1]));
+						next_sample[0] = lut_u8to16[data[pos * 2 + 0]];
+						next_sample[1] = lut_u8to16[data[pos * 2 + 1]];
 					} else {
-						next_sample[0] = u8_to_s16(static_cast<uint8_t>(data[pos]));
+						next_sample[0] = lut_u8to16[data[pos]];
 					}
 				}
 				// signed 8-bit
 				else {
 					if (stereo) {
-						next_sample[0] = s8_to_s16(static_cast<int8_t>(data[pos * 2 + 0]));
-						next_sample[1] = s8_to_s16(static_cast<int8_t>(data[pos * 2 + 1]));
+						next_sample[0] = lut_s8to16[data[pos * 2 + 0]];
+						next_sample[1] = lut_s8to16[data[pos * 2 + 1]];
 					} else {
-						next_sample[0] = s8_to_s16(static_cast<int8_t>(data[pos]));
+						next_sample[0] = lut_s8to16[data[pos]];
 					}
 				}
 			//16bit and 32bit both contain 16bit data internally
@@ -972,6 +982,7 @@ void MIXER_Init(Section* sec) {
 		LOG_MSG("MIXER: Negotiated %u-channel %u-Hz audio in %u-frame blocks",
 		        obtained.channels, mixer.freq, mixer.blocksize);
 	}
+
 	//1000 = 8 *125
 	mixer.tick_counter = (mixer.freq%125)?TICK_NEXT:0;
 	const auto requested_prebuffer = section->Get_int("prebuffer");
@@ -979,6 +990,10 @@ void MIXER_Init(Section* sec) {
 	mixer.min_needed = (mixer.freq * mixer.min_needed) / 1000;
 	mixer.max_needed = mixer.blocksize * 2 + 2 * mixer.min_needed;
 	mixer.needed = mixer.min_needed + 1;
+
+	// Initialize the 8-bit to 16-bit lookup table
+	fill_8to16_lut();
+
 	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
 }
 
