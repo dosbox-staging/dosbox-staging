@@ -1094,7 +1094,11 @@ bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) {
 }
 
 char* removeTrailingSpaces(char* str, const size_t max_len) {
-	char* end = str + strnlen(str, max_len);
+	const auto str_len = strnlen(str, max_len);
+	if (str_len == 0)
+		return str;
+
+	char* end = str + str_len;
 	while((*--end == ' ') && (end > str)) {
 		/* do nothing; break on while criteria */
 	}
