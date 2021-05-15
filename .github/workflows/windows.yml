@@ -153,7 +153,7 @@ jobs:
           cp docs/vc_redist.txt                   dest/doc/vc_redist.txt
           cp README                               dest/doc/manual.txt
           cp vs/$RELEASE_DIR/libfluidsynth-2.dll  dest/
-          cp vs/$RELEASE_DIR/glib-2.0.dll         dest/ # fluidsynth dependency
+          cp vs/$RELEASE_DIR/glib-2.0-0.dll       dest/ # fluidsynth dependency
           cp vs/$RELEASE_DIR/intl-8.dll           dest/ # glib dependency
           cp vs/$RELEASE_DIR/pcre.dll             dest/ # glib dependency
           cp vs/$RELEASE_DIR/iconv-2.dll          dest/ # glib dependency
