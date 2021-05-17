@@ -146,7 +146,7 @@ static Bit16u decode_fetchw(void) {
 		val|=decode_fetchb() << 8;
 		return val;
 	}
-	*(Bit16u *)&decode.page.wmap[decode.page.index]+=0x0101;
+	add_to_unaligned_uint16(&decode.page.wmap[decode.page.index], 0x0101);
 	decode.code+=2;decode.page.index+=2;
 	return mem_readw(decode.code-2);
 }
@@ -159,7 +159,7 @@ static Bit32u decode_fetchd(void) {
 		return val;
         /* Advance to the next page */
 	}
-	*(Bit32u *)&decode.page.wmap[decode.page.index]+=0x01010101;
+	add_to_unaligned_uint32(&decode.page.wmap[decode.page.index], 0x01010101);
 	decode.code+=4;decode.page.index+=4;
 	return mem_readd(decode.code-4);
 }
@@ -194,8 +194,8 @@ static INLINE void decode_increase_wmapmask(Bitu size) {
 	}
 	switch (size) {
 		case 1 : activecb->cache.wmapmask[mapidx]+=0x01; break;
-		case 2 : (*(Bit16u*)&activecb->cache.wmapmask[mapidx])+=0x0101; break;
-		case 4 : (*(Bit32u*)&activecb->cache.wmapmask[mapidx])+=0x01010101; break;
+		case 2 : add_to_unaligned_uint16(&activecb->cache.wmapmask[mapidx], 0x0101); break;
+		case 4 : add_to_unaligned_uint32(&activecb->cache.wmapmask[mapidx], 0x01010101); break;
 	}
 }
 
