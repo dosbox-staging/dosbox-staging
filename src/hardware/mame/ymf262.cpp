@@ -59,6 +59,7 @@ differences between OPL2 and OPL3 shown in datasheets:
 #include "emu.h"
 #include "ymf262.h"
 
+#include <cassert>
 
 /* output final shift */
 #if (OPL3_SAMPLE_BITS==16)
@@ -1331,15 +1332,6 @@ static int init_tables(void)
 	return 1;
 }
 
-static void OPLCloseTable(void)
-{
-#ifdef SAVE_SAMPLE
-	fclose(sample[0]);
-#endif
-}
-
-
-
 static void OPL3_initalize(OPL3 *chip)
 {
 	int i;
@@ -2283,33 +2275,6 @@ static void OPL3WriteReg(OPL3 *chip, int r, int v)
 	}
 }
 
-/* lock/unlock for common table */
-static int OPL3_LockTable(device_t *device)
-{
-	num_lock++;
-	if (num_lock > 1) {
-		return 0;
-	}
-
-	/* first time */
-
-	if (init_tables()) {
-		num_lock--;
-		return -1;
-	}
-
-	return 0;
-}
-
-static void OPL3_UnLockTable(void)
-{
-	if (num_lock) num_lock--;
-	if (num_lock) return;
-
-	/* last time */
-	OPLCloseTable();
-}
-
 static void OPL3ResetChip(OPL3 *chip)
 {
 	int c,s;
@@ -2357,18 +2322,16 @@ static void OPL3ResetChip(OPL3 *chip)
 /* 'rate'  is sampling rate  */
 static OPL3 *OPL3Create(device_t *device, int clock, int rate, int type)
 {
-	// Guard
-	if (device == nullptr) {
-		return nullptr;
-	}
-	OPL3 *chip;
+	// The MAME device type has been stubbed out, therefore we
+	// expect and assume it's a nullptr (and confirm it here)
+	assert(device == nullptr);
 
-	if (OPL3_LockTable(device) == -1) {
-		return nullptr;
-	}
+	OPL3 *chip = nullptr;
+
+	init_tables();
 
 	/* allocate memory block */
-	chip = auto_alloc_clear(device->machine(), OPL3);
+	chip = auto_alloc_clear(device, OPL3);
 	if (chip == nullptr) {
 		device->logerror("Could not allocate memory for OPL3 chip");
 		return nullptr;
@@ -2390,8 +2353,8 @@ static OPL3 *OPL3Create(device_t *device, int clock, int rate, int type)
 /* Destroy one of virtual YMF262 */
 static void OPL3Destroy(OPL3 *chip)
 {
-	OPL3_UnLockTable();
-	auto_free(chip->device->machine(), chip);
+	if (chip)
+		auto_free(chip->device->machine(), chip);
 }
 
 
