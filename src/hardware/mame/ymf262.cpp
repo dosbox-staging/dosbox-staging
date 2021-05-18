@@ -55,11 +55,10 @@ differences between OPL2 and OPL3 shown in datasheets:
 
 
 */
+#include "support.h"
 
 #include "emu.h"
 #include "ymf262.h"
-
-#include <cassert>
 
 /* output final shift */
 #if (OPL3_SAMPLE_BITS==16)
@@ -884,7 +883,10 @@ static inline signed int op_calc(uint32_t phase, unsigned int env, signed int pm
 {
 	uint32_t p;
 
-	p = (env<<4) + sin_tab[wave_tab + ((((signed int)((phase & ~FREQ_MASK) + (pm<<16))) >> FREQ_SH) & SIN_MASK) ];
+	const auto pm_shifted = left_shift_signed(pm, 16);
+	p = (env << 4) +
+	    sin_tab[wave_tab + ((((signed int)((phase & ~FREQ_MASK) + pm_shifted)) >> FREQ_SH) &
+	                        SIN_MASK)];
 
 	if (p >= TL_TAB_LEN)
 		return 0;
@@ -926,7 +928,9 @@ static inline void chan_calc(OPL3 *chip, OPL3_CH *CH)
 	{
 		if (!SLOT->FB)
 			out = 0;
-		SLOT->op1_out[1] = op_calc1(SLOT->Cnt, env, (out<<SLOT->FB), SLOT->wavetable);
+		const auto out_shifted = left_shift_signed(out, SLOT->FB);
+		SLOT->op1_out[1] = op_calc1(SLOT->Cnt, env, out_shifted,
+		                            SLOT->wavetable);
 	}
 	if (SLOT->connect) {
 		*SLOT->connect += SLOT->op1_out[1];
@@ -1035,7 +1039,9 @@ static inline void chan_calc_rhythm(OPL3 *chip, OPL3_CH *CH, unsigned int noise)
 	{
 		if (!SLOT->FB)
 			out = 0;
-		SLOT->op1_out[1] = op_calc1(SLOT->Cnt, env, (out<<SLOT->FB), SLOT->wavetable);
+		const auto out_shifted = left_shift_signed(out, SLOT->FB);
+		SLOT->op1_out[1] = op_calc1(SLOT->Cnt, env, out_shifted,
+		                            SLOT->wavetable);
 	}
 
 	/* SLOT 2 */
