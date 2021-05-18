@@ -1601,7 +1601,8 @@ void FM_OPL::WriteReg(int r, int v)
 			break;
 #endif
 		default:
-			device->logerror("FMOPL.C: write to unknown register: %02x\n",r);
+			if (device)
+				device->logerror("FMOPL.C: write to unknown register: %02x\n", r);
 			break;
 		}
 		break;

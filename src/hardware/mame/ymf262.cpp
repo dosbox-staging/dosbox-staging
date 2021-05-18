@@ -1777,7 +1777,8 @@ static void OPL3WriteReg(OPL3 *chip, int r, int v)
 		break;
 
 		default:
-			chip->device->logerror("YMF262: write to unknown register: %02x value=%02x\n",r,v);
+			if (chip->device)
+				chip->device->logerror("YMF262: write to unknown register: %02x value=%02x\n",r,v);
 		break;
 		}
 		break;
