@@ -618,9 +618,6 @@ static const int8_t lfo_pm_table[8*8*2] = {
 };
 
 
-/* lock level of common table */
-static int num_lock = 0;
-
 /* work table */
 #define SLOT7_1 (&chip->P_CH[7].SLOT[SLOT1])
 #define SLOT7_2 (&chip->P_CH[7].SLOT[SLOT2])
@@ -2354,8 +2351,11 @@ static OPL3 *OPL3Create(device_t *device, int clock, int rate, int type)
 /* Destroy one of virtual YMF262 */
 static void OPL3Destroy(OPL3 *chip)
 {
-	if (chip)
-		auto_free(chip->device->machine(), chip);
+	if (!chip)
+		return;
+
+	free(chip);
+	chip = nullptr;
 }
 
 

@@ -1993,7 +1993,11 @@ static FM_OPL *OPLCreate(device_t *device, uint32_t clock, uint32_t rate, int ty
 static void OPLDestroy(FM_OPL *OPL)
 {
 	FM_OPL::UnLockTable();
-	auto_free(OPL->device->machine(), OPL);
+	if (!OPL)
+		return;
+
+	free(OPL);
+	OPL = nullptr;
 }
 
 /* Optional handlers */
