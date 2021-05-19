@@ -856,7 +856,7 @@ INLINE void Channel::GeneratePercussion( Chip* chip, Bit32s* output ) {
 		Bit32u tcIndex = (1 + phaseBit) << 8;
 		sample += Op(5)->GetWave( tcIndex, tcVol );
 	}
-	sample <<= 1;
+	sample *= 2; // don't bit-shift signed values
 	if ( opl3Mode ) {
 		output[0] += sample;
 		output[1] += sample;
