@@ -27,13 +27,16 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <sys/types.h>
 #include <thread>
+#include <type_traits>
 #include <vector>
 
 #ifdef _MSC_VER
@@ -103,6 +106,60 @@ inline int iround(double x) {
 	assert(x >= (std::numeric_limits<int>::min)());
 	assert(x <= (std::numeric_limits<int>::max)());
 	return static_cast<int>(round(x));
+}
+
+// Select the next larger signed integer type
+template <typename T>
+using next_int_t = typename std::conditional<
+        sizeof(T) == sizeof(int8_t),
+        int16_t,
+        typename std::conditional<sizeof(T) == sizeof(int16_t), int32_t, int64_t>::type>::type;
+
+// Select the next large unsigned integer type
+template <typename T>
+using next_uint_t = typename std::conditional<
+        sizeof(T) == sizeof(uint8_t),
+        uint16_t,
+        typename std::conditional<sizeof(T) == sizeof(uint16_t), uint32_t, uint64_t>::type>::type;
+
+// Left-shifts a signed value by a given amount, with overflow detection
+template <typename T1, typename T2>
+constexpr T1 left_shift_signed(T1 value, T2 amount)
+{
+	// Ensure we're using a signed type
+	static_assert(std::is_signed<T1>::value, "T1 must be signed");
+
+	// Ensure the two types are integers
+	static_assert(std::numeric_limits<T1>::is_integer, "T1 must be an integer type");
+	static_assert(std::numeric_limits<T2>::is_integer, "T2 must be an integer type");
+
+	// Ensure the amount we're shifting isn't negative
+	assert(amount >= 0);
+
+	// Ensure the amount we're shifting doesn't exceed the value's bit-size
+	assert(amount <= std::numeric_limits<T1>::digits);
+
+#if defined(NDEBUG)
+	// For release builds, simply cast the value to the unsigned-equivalent
+	// to ensure performance isn't impacted. Debug and UBSAN builds catch issues.
+	typedef typename std::make_unsigned<T1>::type unsigned_T1;
+	const auto shifted = static_cast<unsigned_T1>(value) << amount;
+
+#else
+	// Ensure we can accommodate the value being shifted
+	static_assert(sizeof(T1) <= sizeof(next_uint_t<T1>),
+	              "T1 cannot be a larger than its next larger type");
+
+	// cast the value to the next larger unsigned-type before shifting
+	const auto shifted = static_cast<next_uint_t<T1>>(value) << amount;
+
+	// Ensure the value is in-bounds of its signed limits
+	assert(static_cast<next_int_t<T1>>(shifted) >= (std::numeric_limits<T1>::min)());
+	assert(static_cast<next_int_t<T1>>(shifted) <= (std::numeric_limits<T1>::max)());
+#endif
+
+	// Cast it back to its original type
+	return static_cast<T1>(shifted);
 }
 
 // Include a message in assert, similar to static_assert:
