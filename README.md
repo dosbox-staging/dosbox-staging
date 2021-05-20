@@ -72,7 +72,7 @@ Codecs supported for CD-DA emulation:
 [6]:https://www.dosbox.com/wiki/MOUNT#Mounting_a_CUE.2FBIN-Pair_as_volume
 [7]:https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/trunk/src/dos/cdrom_image.cpp#l536
 
-Other differences:
+Feature differences between release binaries (or unpatched sources):
 
 |                          | DOSBox Staging                               | DOSBox SVN
 |-                         |-                                             |-
