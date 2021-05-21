@@ -32,6 +32,7 @@ pvs-*
 !pvs-studio.yml
 strace_out
 suppress_base.json
+.PVS-Studio
 
 # macOS directory prefs
 .DS_Store

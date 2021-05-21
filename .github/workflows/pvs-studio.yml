@@ -2,45 +2,60 @@ name: PVS-Studio analysis
 
 on: push
 
-env:
-  CCACHE_DIR:      "/dev/shm/.ccache"
-  CCACHE_MAXSIZE:  "64M"
-  CCACHE_COMPRESS: "true"
-
 jobs:
   pvs_studio_analyzer:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-20.04
     env:
-      debfile: pvs-studio-7.11.44138.98-amd64.deb
+      debfile: pvs-studio-7.12.46137.116-amd64.deb
     steps:
       - uses: actions/checkout@v2
+
       - run:  sudo apt-get update
+
       - name: Log and setup environment
         run: |
           ./scripts/log-env.sh
           mkdir -p pvs-package
+
       - uses: actions/cache@v2
         id: cache-pvs
         with:
           path: pvs-package
           key: ${{ env.debfile }}
+
       - name:  Fetch PVS-Studio package
         if:    steps.cache-pvs.outputs.cache-hit != 'true'
         run:   wget "https://files.viva64.com/${debfile}" -O "pvs-package/pvs.deb"
+
       - name: Install packages
         run: |
           set -xeu
-          sudo apt-get install strace $(./scripts/list-build-dependencies.sh -m apt -c gcc)
+          sudo apt-get install -y strace $(cat .github/packages/ubuntu-20.04-apt.txt)
           sudo dpkg -i "pvs-package/pvs.deb"
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
+
+      - name:  Cache subprojects
+        uses:  actions/cache@v2
+        with:
+          path: subprojects/packagecache
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+
       - name: Build
         run: |
           set -xeu
-          ./autogen.sh
-          export FLAGS="-Og"
-          ./configure CFLAGS="${FLAGS}" CXXFLAGS="${FLAGS}"
-          pvs-studio-analyzer trace -- make
+
+          CC=clang CXX=clang++ \
+          meson setup \
+            -Dbuildtype=debug \
+            -Dunit_tests=disabled \
+            -Ddefault_library=static \
+            -Dfluidsynth:enable-floats=true \
+            -Dfluidsynth:try-static-deps=true \
+            build
+
+          pvs-studio-analyzer trace -- ninja -C build
+
       - name: Analyze
         run: |
           set -xeu
@@ -48,14 +63,17 @@ jobs:
           general_criteria="GA:1,2;64:1;OP:1,2,3;CS:1"
           stamp="$(date +'%Y-%m-%d_T%H%M')-${GITHUB_SHA:0:8}"
           reportdir="pvs-report/pvs-report-${stamp}"
-          disable_warnings="V1042,V826"
+          disable_warnings="V002,V1042,V826,V802,V2008"
+
           mkdir -p "${reportdir}"
+
           pvs-studio-analyzer analyze \
-            --disableLicenseExpirationCheck \
             -a 63 \
+            -e subprojects \
             -s .pvs-suppress \
             -j "$(nproc)" \
             -o "${log}"
+
           plog-converter \
             -p dosbox-staging \
             -v "${GITHUB_SHA:0:8}" \
@@ -64,26 +82,32 @@ jobs:
             -t fullhtml \
             -o "${reportdir}" \
             "${log}"
+
           mv "${reportdir}/fullhtml" "${reportdir}/general"
+
           plog-converter \
             -a "${general_criteria}" \
             -d "${disable_warnings}" \
             -t csv \
             -o pvs-report.csv \
             "${log}"
+
           cp -l pvs-report.csv "${reportdir}/general/"
+
           pvs-studio-analyzer suppress \
             -a "${general_criteria}" \
             -o "${reportdir}/general/supressible-list.json" \
             "${log}"
+
       - name: Upload report
         uses: actions/upload-artifact@v2
         with:
           name: pvs-analysis-report
           path: pvs-report
+
       - name: Summarize report
         env:
-          MAX_BUGS: 458
+          MAX_BUGS: 342
         run: |
           echo "Full report is included in build Artifacts"
           echo
