@@ -132,7 +132,7 @@ void SoftLimiter::FindPeaksAndZeroCrosses(const std::vector<float> &in,
 	auto prev_pos_right = in.end();
 	AudioFrame local_peaks = global_peaks;
 
-	while (pos != pos_end) {
+	while (pos < pos_end) {
 		FindPeakAndCross(in.end(), pos++, prev_pos_left,
 		                 prescale.load(relaxed).left, local_peaks.left,
 		                 precross_peak_pos_left, zero_cross_left,
@@ -158,7 +158,7 @@ void SoftLimiter::ScaleOrCopy(const std::vector<float> &in,
 {
 	assert(samples >= 2); // need at least one frame
 	auto in_start = in.begin() + channel;
-	const auto in_end = in.begin() + channel + samples;
+	const auto in_end = in.begin() + samples;
 	auto out_start = out.begin() + channel;
 
 	// We have a new peak, so ...
@@ -215,7 +215,7 @@ void SoftLimiter::PolyFit(in_iterator_t in_pos,
                           const float poly_a,
                           const float poly_b) const noexcept
 {
-	while (in_pos != in_end) {
+	while (in_pos < in_end) {
 		const auto fitted = poly_a * (*in_pos * prescalar - poly_b) + poly_b;
 		assert(fabsf(fitted) < INT16_MAX);
 		*out_pos = static_cast<int16_t>(fitted);
@@ -230,7 +230,7 @@ void SoftLimiter::LinearScale(in_iterator_t in_pos,
                               out_iterator_t out_pos,
                               const float scalar) const noexcept
 {
-	while (in_pos != in_end) {
+	while (in_pos < in_end) {
 		const auto scaled = (*in_pos) * scalar;
 		assert(fabsf(scaled) < INT16_MAX);
 		*out_pos = static_cast<int16_t>(scaled);
