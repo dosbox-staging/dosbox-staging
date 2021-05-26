@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Quelldateien">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Headerdateien">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Ressourcendateien">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="dosbox_src">
+      <UniqueIdentifier>{3560079a-d647-4de5-acc1-76ef66ab9dd2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\fs_utils_tests.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rwqueue_tests.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\setup_tests.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\soft_limiter_tests.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string_utils_tests.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\stubs.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\misc\support.cpp">
+      <Filter>dosbox_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\misc\soft_limiter.cpp">
+      <Filter>dosbox_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\misc\setup.cpp">
+      <Filter>dosbox_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\misc\rwqueue.cpp">
+      <Filter>dosbox_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\misc\fs_utils_win32.cpp">
+      <Filter>dosbox_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\misc\cross.cpp">
+      <Filter>dosbox_src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\example_tests.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\meson.build" />
+  </ItemGroup>
+</Project>
