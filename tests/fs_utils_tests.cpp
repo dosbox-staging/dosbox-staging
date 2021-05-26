@@ -34,7 +34,7 @@ TEST(PathExists, DirExists)
 
 TEST(PathExists, FileExists)
 {
-	EXPECT_TRUE(path_exists("tests/fs_utils.cpp"));
+	EXPECT_TRUE(path_exists("tests/fs_utils_tests.cpp"));
 }
 
 TEST(PathExists, MissingPath)
@@ -44,7 +44,7 @@ TEST(PathExists, MissingPath)
 
 TEST(PathExists, ExistingPathAsString)
 {
-	const std::string path = "tests/fs_utils.cpp";
+	const std::string path = "tests/fs_utils_tests.cpp";
 	EXPECT_TRUE(path_exists(path));
 }
 

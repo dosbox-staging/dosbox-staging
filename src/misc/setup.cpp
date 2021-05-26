@@ -28,6 +28,8 @@
 
 #include "control.h"
 #include "string_utils.h"
+#include "support.h"
+#include "cross.h"
 
 #ifdef _MSC_VER
 _CRTIMP extern char **_environ;

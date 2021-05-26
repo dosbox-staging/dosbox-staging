@@ -42,7 +42,7 @@ jobs:
         run: |
           rm -R c:\vcpkg
           mv c:\vcpkg-bak c:\vcpkg
-          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth
+          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth gtest
           if (-not $?) { throw "vcpkg failed to install library dependencies" }
 
       - name:  Integrate packages
@@ -62,7 +62,7 @@ jobs:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
-          MSBuild -m dosbox.sln -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }} | Tee-Object build.log
+          MSBuild -m dosbox.sln -target:dosbox -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }} | Tee-Object build.log
       - name:  Summarize warnings
         shell: pwsh
         env:
