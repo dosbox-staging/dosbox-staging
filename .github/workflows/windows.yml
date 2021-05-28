@@ -62,7 +62,8 @@ jobs:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
-          MSBuild -m dosbox.sln -target:dosbox -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }} | Tee-Object build.log
+          MSBuild -m dosbox.sln -target:tests -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }}
+          MSBuild -m dosbox.sln -target:dosbox,zmbv -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }} | Tee-Object build.log
       - name:  Summarize warnings
         shell: pwsh
         env:
@@ -133,7 +134,7 @@ jobs:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
-          MSBuild -m dosbox.sln -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
+          MSBuild -m dosbox.sln -target:dosbox,zmbv -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
 
       - name:  Package
         shell: bash
