@@ -56,14 +56,23 @@ jobs:
         shell: pwsh
         run:   .\scripts\log-env.ps1
 
+      - name:  Run tests
+        shell: pwsh
+        env:
+          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+        run: |
+          cd vs
+          # TODO: get unit tests working in Debug-mode; for now use release flags (better than nothing)
+          MSBuild -m dosbox.sln -target:tests -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
+
       - name:  Build
         shell: pwsh
         env:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
-          MSBuild -m dosbox.sln -target:tests -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }}
           MSBuild -m dosbox.sln -target:dosbox,zmbv -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }} | Tee-Object build.log
+
       - name:  Summarize warnings
         shell: pwsh
         env:
