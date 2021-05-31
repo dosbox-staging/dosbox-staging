@@ -74,12 +74,14 @@
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
     <LinkIncremental>false</LinkIncremental>
+    <ExternalIncludePath>..\..\include;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>..\..\src\platform\visualc;..\..\include;$(IncludePath)</IncludePath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
+    <ExternalIncludePath>..\..\include;$(ExternalIncludePath)</ExternalIncludePath>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -88,11 +90,13 @@
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
     <LinkIncremental>false</LinkIncremental>
+    <ExternalIncludePath>..\..\include;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>..\..\src\platform\visualc;..\..\include;$(IncludePath)</IncludePath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
+    <ExternalIncludePath>..\..\include;$(ExternalIncludePath)</ExternalIncludePath>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
