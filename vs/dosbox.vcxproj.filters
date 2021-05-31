@@ -412,6 +412,12 @@
     <ClCompile Include="..\src\misc\fs_utils_win32.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\visualc\version.cpp">
+      <Filter>src\platform\visualc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\bios.h">
@@ -778,6 +784,12 @@
       <Filter>src\dos</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\gui_msgs.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_crt_glsl.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_glsl.h">
       <Filter>src\gui</Filter>
     </ClInclude>
   </ItemGroup>
