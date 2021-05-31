@@ -69,31 +69,31 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
     <IncludePath>..\..\src\platform\visualc;..\..\include;$(IncludePath)</IncludePath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
     <IncludePath>..\..\src\platform\visualc;..\..\include;$(IncludePath)</IncludePath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
     <IncludePath>..\..\src\platform\visualc;..\..\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
     <IncludePath>..\..\src\platform\visualc;..\..\include;$(IncludePath)</IncludePath>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -112,7 +112,10 @@
       <AdditionalDependencies>gmock_maind.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>cd $(SolutionDir).. &amp;&amp; $(TargetPath)</Command>
+      <Command>cd $(SolutionDir)
+cd ..
+$(TargetPath)
+</Command>
       <Message>Run tests</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -141,7 +144,10 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>cd $(SolutionDir).. &amp;&amp; $(TargetPath)</Command>
+      <Command>cd $(SolutionDir)
+cd ..
+$(TargetPath)
+</Command>
       <Message>Run tests</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -163,7 +169,10 @@
       <AdditionalDependencies>gmock_maind.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>cd $(SolutionDir).. &amp;&amp; $(TargetPath)</Command>
+      <Command>cd $(SolutionDir)
+cd ..
+$(TargetPath)
+</Command>
       <Message>Run tests</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -192,7 +201,10 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>cd $(SolutionDir).. &amp;&amp; $(TargetPath)</Command>
+      <Command>cd $(SolutionDir)
+cd ..
+$(TargetPath)
+</Command>
       <Message>Run tests</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -209,6 +221,7 @@
     <ClCompile Include="..\soft_limiter_tests.cpp" />
     <ClCompile Include="..\string_utils_tests.cpp" />
     <ClCompile Include="..\stubs.cpp" />
+    <ClCompile Include="..\support_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\meson.build" />

@@ -3,6 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.29324.140
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dosbox", "dosbox.vcxproj", "{7FCFFB9B-8629-4D51-849C-8490CECF8AB7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{619CF3F9-C373-4BD5-93DA-025F5E16F8FA} = {619CF3F9-C373-4BD5-93DA-025F5E16F8FA}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zmbv", "..\src\libs\zmbv\zmbv.vcxproj", "{619CF3F9-C373-4BD5-93DA-025F5E16F8FA}"
 EndProject
