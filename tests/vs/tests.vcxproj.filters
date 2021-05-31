@@ -36,6 +36,9 @@
     <ClCompile Include="..\stubs.cpp">
       <Filter>tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\support_tests.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\misc\support.cpp">
       <Filter>dosbox_sources</Filter>
     </ClCompile>
