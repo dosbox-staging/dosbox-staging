@@ -51,4 +51,3 @@ suppress_base.json
 .clangd
 .cache
 compile_commands.json
-/tests/vs/tests.vcxproj.user
