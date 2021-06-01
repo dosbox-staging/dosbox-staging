@@ -136,8 +136,23 @@
 // Defined if function clock_gettime is available
 #mesondefine HAVE_CLOCK_GETTIME
 
+// Defined if function __builtin_available is available
+#mesondefine HAVE_BUILTIN_AVAILABLE
+
 // Defined if function mprotect is available
 #mesondefine HAVE_MPROTECT
+
+// Defined if function mmap is available
+#mesondefine HAVE_MMAP
+
+// Defined if mmap flag MAPJIT is available
+#mesondefine HAVE_MAP_JIT
+
+// Defined if function pthread_jit_write_protect_np is available
+#mesondefine HAVE_PTHREAD_WRITE_PROTECT_NP
+
+// Defined if function sys_icache_invalidate is available
+#mesondefine HAVE_SYS_ICACHE_INVALIDATE
 
 // Defined if function pthread_setname_np is available
 #mesondefine HAVE_PTHREAD_SETNAME_NP

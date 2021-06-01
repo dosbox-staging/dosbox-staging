@@ -19,12 +19,21 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <cerrno>
 #include <cassert>
 #include <new>
 
 #include "mem_unaligned.h"
 #include "paging.h"
 #include "types.h"
+
+#if defined(HAVE_PTHREAD_WRITE_PROTECT_NP)
+#include <pthread.h>
+#endif
+
+#if defined(HAVE_SYS_ICACHE_INVALIDATE)
+#include <libkern/OSCacheControl.h>
+#endif
 
 class CodePageHandler;
 
@@ -710,11 +719,50 @@ static void cache_block_closing(const uint8_t *block_start, Bitu block_size);
 #endif
 
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
-#if defined(HAVE_MPROTECT)
+#if defined(HAVE_MPROTECT) || defined(HAVE_MMAP)
 #define PAGESIZE_TEMP PAGESIZE
 #else
 #define PAGESIZE_TEMP 4096
 #endif
+
+static constexpr size_t cache_code_size = CACHE_TOTAL + CACHE_MAXSIZE + PAGESIZE_TEMP - 1 + PAGESIZE_TEMP;
+static constexpr size_t cache_blocks_total_bytes = CACHE_BLOCKS * sizeof(CacheBlock);
+
+static inline void dyn_mem_execute()
+{
+#if defined(HAVE_PTHREAD_WRITE_PROTECT_NP)
+#if defined(HAVE_BUILTIN_AVAILABLE)
+	if (__builtin_available(macOS 11.0, *))
+#endif
+		pthread_jit_write_protect_np(true);
+#elif defined(HAVE_MPROTECT)
+	if (mprotect(cache_code_start_ptr, cache_code_size, PROT_EXEC | PROT_READ) == -1)
+		E_Exit("mprotect failed in dyn_mem_execute");		
+#endif
+}
+
+static inline void dyn_mem_write()
+{
+#if defined(HAVE_PTHREAD_WRITE_PROTECT_NP)
+#if defined(HAVE_BUILTIN_AVAILABLE)
+	if (__builtin_available(macOS 11.0, *))
+#endif
+		pthread_jit_write_protect_np(false);
+#elif defined(HAVE_MPROTECT)
+	if (mprotect(cache_code_start_ptr, cache_code_size, PROT_WRITE | PROT_READ) == -1)
+		E_Exit("mprotect failed in dyn_mem_write");			
+#endif
+}
+
+static inline void dyn_cache_invalidate(MAYBE_UNUSED void *ptr, MAYBE_UNUSED size_t size)
+{
+#if defined(HAVE_SYS_ICACHE_INVALIDATE)
+#if defined(HAVE_BUILTIN_AVAILABLE)
+	if (__builtin_available(macOS 11.0, *))
+#endif	
+		sys_icache_invalidate(ptr, size);
+#endif
+}
 
 static bool cache_initialized = false;
 
@@ -724,12 +772,12 @@ static void cache_init(bool enable) {
 		// see if cache is already initialized
 		if (cache_initialized) return;
 		cache_initialized = true;
-		if (cache_blocks == NULL) {
+		if (cache_blocks == nullptr) {
 			// allocate the cache blocks memory
-			cache_blocks = (CacheBlock *)malloc(CACHE_BLOCKS * sizeof(CacheBlock));
+			cache_blocks = static_cast<CacheBlock *>(malloc(cache_blocks_total_bytes));
 			if (!cache_blocks)
 				E_Exit("Allocating cache_blocks has failed");
-			memset(cache_blocks, 0, sizeof(CacheBlock) * CACHE_BLOCKS);
+			memset(cache_blocks, 0, cache_blocks_total_bytes);
 			cache.block.free=&cache_blocks[0];
 			// initialize the cache blocks
 			for (i=0;i<CACHE_BLOCKS-1;i++) {
@@ -738,34 +786,39 @@ static void cache_init(bool enable) {
 				cache_blocks[i].cache.next = &cache_blocks[i + 1];
 			}
 		}
-		if (cache_code_start_ptr==NULL) {
+		if (cache_code_start_ptr == nullptr) {
 			// allocate the code cache memory
 #if defined (WIN32)
-			cache_code_start_ptr=(Bit8u*)VirtualAlloc(0,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1+PAGESIZE_TEMP,
-				MEM_COMMIT,PAGE_EXECUTE_READWRITE);
-			if (!cache_code_start_ptr)
-				cache_code_start_ptr=(Bit8u*)malloc(CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1+PAGESIZE_TEMP);
+			cache_code_start_ptr=static_cast<uint8_t *>(VirtualAlloc(0,cache_code_size,
+				MEM_COMMIT,PAGE_EXECUTE_READWRITE));
+			if (!cache_code_start_ptr) {
+				cache_code_start_ptr=static_cast<uint8_t *>(malloc(cache_code_size));
+			}
 #else
-			cache_code_start_ptr=(Bit8u*)malloc(CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1+PAGESIZE_TEMP);
+			int map_flags = MAP_PRIVATE | MAP_ANON;
+			int prot_flags = PROT_READ | PROT_WRITE | PROT_EXEC;
+#if defined(HAVE_MAP_JIT)
+			map_flags |= MAP_JIT;
 #endif
-			if (!cache_code_start_ptr)
+#if defined(HAVE_MMAP)
+			cache_code_start_ptr=static_cast<uint8_t *>(mmap(nullptr, cache_code_size, prot_flags, map_flags, -1, 0));
+			if (cache_code_start_ptr == MAP_FAILED) {
+				E_Exit("Allocating dynamic core cache memory failed with errno %d", errno);
+			}
+#else
+			cache_code_start_ptr=static_cast<uint8_t *>(malloc(cache_code_size));
+			if (!cache_code_start_ptr) {
 				E_Exit("Allocating dynamic core cache memory failed");
-
+			}
+#endif
+#endif
 			// align the cache at a page boundary
-			cache_code = (Bit8u *)(((Bitu)cache_code_start_ptr +
-			                        PAGESIZE_TEMP - 1) &
-			                       ~(PAGESIZE_TEMP - 1)); // Bitu is
-			                                              // same size
-			                                              // as a
-			                                              // pointer.
+			cache_code = reinterpret_cast<uint8_t *>(
+			    (reinterpret_cast<uintptr_t>(cache_code_start_ptr) +
+			    PAGESIZE_TEMP - 1) & ~(PAGESIZE_TEMP - 1));
 
 			cache_code_link_blocks=cache_code;
 			cache_code=cache_code+PAGESIZE_TEMP;
-
-#if defined(HAVE_MPROTECT)
-			if(mprotect(cache_code_link_blocks,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP,PROT_WRITE|PROT_READ|PROT_EXEC))
-				LOG_MSG("Setting execute permission on the code cache has failed");
-#endif
 			CacheBlock *block = cache_getblock();
 			cache.block.first=block;
 			cache.block.active=block;
@@ -776,6 +829,7 @@ static void cache_init(bool enable) {
 		// setup the default blocks for block linkage returns
 		cache.pos=&cache_code_link_blocks[0];
 		link_blocks[0].cache.start=cache.pos;
+		dyn_mem_write();
 		// link code that returns with a special return code
 		dyn_return(BR_Link1,false);
 		cache.pos=&cache_code_link_blocks[32];
@@ -789,6 +843,8 @@ static void cache_init(bool enable) {
 //		link_blocks[1].cache.start=cache.pos;
 		dyn_run_code();
 #endif
+		dyn_mem_execute();
+		dyn_cache_invalidate(static_cast<void *>(cache_code_start_ptr), cache_code_size);
 
 		cache.free_pages=0;
 		cache.last_page=0;

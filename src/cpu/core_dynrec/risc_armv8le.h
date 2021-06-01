@@ -637,7 +637,7 @@ static void gen_add_imm(HostReg reg,Bit32u imm) {
 
 // and a 32bit constant value with a full register
 static void gen_and_imm(HostReg reg,Bit32u imm) {
-	Bit32u imm2, scale;
+	Bit32u imm2;
 
 	imm2 = ~imm;
 	if(!imm2) return;
