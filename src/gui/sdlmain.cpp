@@ -1074,36 +1074,31 @@ dosurface:
 			LOG_MSG("SDL:Can't create renderer, falling back to surface");
 			goto dosurface;
 		}
-		/* SDL_PIXELFORMAT_ARGB8888 is possible with most
-		rendering drivers, "opengles" being a notable exception */
-		sdl.texture.texture = SDL_CreateTexture(sdl.renderer, SDL_PIXELFORMAT_ARGB8888,
+		/* Use renderer's default format */
+		SDL_RendererInfo rinfo;
+		SDL_GetRendererInfo(sdl.renderer, &rinfo);
+		const auto texture_format = rinfo.texture_formats[0];
+		sdl.texture.texture = SDL_CreateTexture(sdl.renderer, texture_format,
 		                                        SDL_TEXTUREACCESS_STREAMING, width, height);
 
-		/* SDL_PIXELFORMAT_ABGR8888 (not RGB) is the
-		only supported format for the "opengles" driver */
-		if (!sdl.texture.texture) {
-			if (flags & GFX_RGBONLY) goto dosurface;
-			sdl.texture.texture = SDL_CreateTexture(sdl.renderer, SDL_PIXELFORMAT_ABGR8888,
-			                                        SDL_TEXTUREACCESS_STREAMING, width, height);
-		}
 		if (!sdl.texture.texture) {
 			SDL_DestroyRenderer(sdl.renderer);
-			sdl.renderer = NULL;
+			sdl.renderer = nullptr;
 			LOG_MSG("SDL:Can't create texture, falling back to surface");
 			goto dosurface;
 		}
 
-		sdl.texture.input_surface = SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0);
+		sdl.texture.input_surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, texture_format);
 		if (!sdl.texture.input_surface) {
 			LOG_MSG("SDL: Error while preparing texture input");
 			goto dosurface;
 		}
 
 		SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-		Uint32 pixelFormat;
-		SDL_QueryTexture(sdl.texture.texture, &pixelFormat, NULL, NULL, NULL);
-		sdl.texture.pixelFormat = SDL_AllocFormat(pixelFormat);
-		switch (SDL_BITSPERPIXEL(pixelFormat)) {
+		uint32_t pixel_format;
+		SDL_QueryTexture(sdl.texture.texture, &pixel_format, NULL, NULL, NULL);
+		sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
+		switch (SDL_BITSPERPIXEL(pixel_format)) {
 			case 8:  retFlags = GFX_CAN_8;  break;
 			case 15: retFlags = GFX_CAN_15; break;
 			case 16: retFlags = GFX_CAN_16; break;
@@ -1111,8 +1106,6 @@ dosurface:
 			case 32: retFlags = GFX_CAN_32; break;
 		}
 		retFlags |= GFX_SCALING;
-		SDL_RendererInfo rinfo;
-		SDL_GetRendererInfo(sdl.renderer, &rinfo);
 		LOG_MSG("SDL: Using driver \"%s\" for texture renderer", rinfo.name);
 		if (rinfo.flags & SDL_RENDERER_ACCELERATED)
 			retFlags |= GFX_HARDWARE;
