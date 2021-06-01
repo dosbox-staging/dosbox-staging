@@ -81,8 +81,28 @@ if cc.has_function('clock_gettime', prefix : '#include <time.h>')
   conf_data.set10('HAVE_CLOCK_GETTIME', true)
 endif
 
+if cc.has_function('__builtin_available')
+  conf_data.set10('HAVE_BUILTIN_AVAILABLE', true)
+endif
+
 if cc.has_function('mprotect', prefix : '#include <sys/mman.h>')
   conf_data.set10('HAVE_MPROTECT', true)
+endif
+
+if cc.has_function('mmap', prefix : '#include <sys/mman.h>')
+  conf_data.set10('HAVE_MMAP', true)
+endif
+
+if cc.has_header_symbol('sys/mman.h', 'MAP_JIT')
+  conf_data.set10('HAVE_MAP_JIT', true)
+endif
+
+if cc.has_function('pthread_jit_write_protect_np', prefix : '#include <pthread.h>')
+  conf_data.set10('HAVE_PTHREAD_WRITE_PROTECT_NP', true)
+endif
+
+if cc.has_function('sys_icache_invalidate', prefix : '#include <libkern/OSCacheControl.h>')
+  conf_data.set10('HAVE_SYS_ICACHE_INVALIDATE', true)
 endif
 
 if cxx.has_function('pthread_setname_np', prefix : '#include <pthread.h>',
@@ -239,6 +259,17 @@ if host_machine.system() == 'darwin'
     conf_data.set('C_COREMIDI', 1)
   else
     warning('''Core MIDI support disabled: compiler can't detect/use Apple Frameworks''')
+  endif
+
+  # Apple Silicon has 16k pages
+  pagesize_cmd = run_command('pagesize')
+  if pagesize_cmd.returncode() != 0
+    error('''error executing pagesize''')
+  else 
+    pagesize = pagesize_cmd.stdout().strip().to_int()
+    if pagesize != 4096
+      conf_data.set('PAGESIZE', pagesize)
+    endif
   endif
 endif
 

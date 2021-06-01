@@ -21,19 +21,19 @@
 
 #if (C_DYNAMIC_X86)
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <stddef.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
+#include <cstddef>
+#include <cstdlib>
 
 #if defined (WIN32)
 #include <windows.h>
 #include <winbase.h>
 #endif
 
-#if defined(HAVE_MPROTECT)
+#if defined(HAVE_MPROTECT) || defined(HAVE_MMAP)
 #include <sys/mman.h>
 
 #include <limits.h>
@@ -288,7 +288,9 @@ restart_core:
 	CacheBlock * block=chandler->FindCacheBlock(ip_point&4095);
 	if (!block) {
 		if (!chandler->invalidation_map || (chandler->invalidation_map[ip_point&4095]<4)) {
+			dyn_mem_write();
 			block=CreateCacheBlock(chandler,ip_point,32);
+			dyn_mem_execute();
 		} else {
 			Bit32s old_cycles=CPU_Cycles;
 			CPU_Cycles=1;
