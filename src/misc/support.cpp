@@ -315,13 +315,13 @@ void E_Exit(const char *format, ...)
 
 /* Overloaded function to handle different return types of POSIX and GNU
  * strerror_r variants */
-static const char *strerror_result(int retval, const char *buf)
+MAYBE_UNUSED static const char *strerror_result(int retval, const char *err_str)
 {
-	return retval == 0 ? buf : nullptr;
+	return retval == 0 ? err_str : nullptr;
 }
-static const char *strerror_result(const char *retval, const char *buf)
+MAYBE_UNUSED static const char *strerror_result(const char *err_str, MAYBE_UNUSED const char *buf)
 {
-	return retval;
+	return err_str;
 }
 
 std::string safe_strerror(int err) noexcept
