@@ -131,8 +131,15 @@ list_changed_files () {
 
 run_clang_format () {
 	while read -r src_file ; do
-		prepare_clang_params "$src_file" \
-			| xargs --no-run-if-empty --verbose clang-format -i
+		local ranges=()
+		while IFS=$'\n' read -r range ; do
+			ranges+=("$range")
+		done < <(git_diff_to_clang_line_range "$src_file")
+
+		if (( "${#ranges[@]}" )); then
+			echo "clang-format -i ${ranges[*]} \"$src_file\""
+			clang-format -i "${ranges[@]}" "$src_file"
+		fi
 	done
 }
 
@@ -142,16 +149,6 @@ git_diff_to_clang_line_range () {
 		| grep -E "^@@" \
 		| filter_line_range \
 		| to_clang_line_range
-}
-
-prepare_clang_params () {
-	local -r file=$1
-	local -r range=$(git_diff_to_clang_line_range "$file")
-	# print file name only when there are any lines detected, otherwise
-	# clang-format would process the whole file
-	if [ -n "$range" ]; then
-		echo "$range \"$file\""
-	fi
 }
 
 # expects line in diff format: "@@ -<line range> +<line range> @@ <context>"
