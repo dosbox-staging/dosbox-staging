@@ -53,8 +53,16 @@ private:
 	uint8_t CalcStatus() const;
 	void Reset(bool should_clear_adder);
 	void Update(uint16_t samples);
-	uint8_t ReadFromPort(uint16_t port, MAYBE_UNUSED size_t iolen);
-	void WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen);
+	uint8_t ReadPresencePort02F(uint16_t port, size_t iolen);
+	uint8_t ReadCmdResultPort200(uint16_t port, size_t iolen);
+	uint8_t ReadStatusPort202(uint16_t port, size_t iolen);
+	uint8_t ReadTimingPort203(uint16_t port, size_t iolen);
+	uint8_t ReadJoystickPorts204To207(uint16_t port, size_t iolen);
+
+	void WriteDataPort200(uint16_t port, uint8_t data, size_t iolen);
+	void WriteControlPort202(uint16_t port, uint8_t data, size_t iolen);
+	void WriteTimingPort203(uint16_t port, uint8_t data, size_t iolen);
+	void WriteFifoLevelPort204(uint16_t port, uint8_t data, size_t iolen);
 
 	// Constants
 	static constexpr auto clock_rate_hz = 1000000;
@@ -69,11 +77,12 @@ private:
 	static constexpr auto fifo_irq_flag = 0x01; // IRQ triggered by DAC
 	static constexpr auto fifo_midline = ceil_udivide(static_cast<uint8_t>(UINT8_MAX), 2u);
 	static constexpr auto irq_number = 7;
+	static constexpr auto bytes_pending_limit =  fifo_size << frac_shift;
 
 	// Managed objects
 	mixer_channel_t channel{nullptr, MIXER_DelChannel};
-	IO_ReadHandleObject read_handlers[3] = {};
-	IO_WriteHandleObject write_handlers[2] = {};
+	IO_ReadHandleObject read_handlers[5] = {};
+	IO_WriteHandleObject write_handlers[4] = {};
 	Ps1Registers regs = {};
 	uint8_t fifo[fifo_size] = {};
 
@@ -114,15 +123,36 @@ Ps1Dac::Ps1Dac()
 	                          MIXER_DelChannel);
 	assert(channel);
 
-	// Register port handlers for 8-bit IO
-	const auto read_from = std::bind(&Ps1Dac::ReadFromPort, this, _1, _2);
-	read_handlers[0].Install(0x02F, read_from, IO_MB);
-	read_handlers[1].Install(0x200, read_from, IO_MB);
-	read_handlers[2].Install(0x202, read_from, IO_MB, 4);
+	// Register DAC per-port read handlers
+	read_handlers[0].Install(0x02F,
+	                         std::bind(&Ps1Dac::ReadPresencePort02F, this, _1, _2),
+	                         IO_MB);
+	read_handlers[1].Install(0x200,
+	                         std::bind(&Ps1Dac::ReadCmdResultPort200, this, _1, _2),
+	                         IO_MB);
+	read_handlers[2].Install(0x202,
+	                         std::bind(&Ps1Dac::ReadStatusPort202, this, _1, _2),
+	                         IO_MB);
+	read_handlers[3].Install(0x203,
+	                         std::bind(&Ps1Dac::ReadTimingPort203, this, _1, _2),
+	                         IO_MB);
+	read_handlers[4].Install(0x204, // to 0x207
+	                         std::bind(&Ps1Dac::ReadJoystickPorts204To207, this, _1, _2),
+	                         IO_MB, 3);
 
-	const auto write_to = std::bind(&Ps1Dac::WriteTo0200_0204, this, _1, _2, _3);
-	write_handlers[0].Install(0x200, write_to, IO_MB);
-	write_handlers[1].Install(0x202, write_to, IO_MB, 3);
+	// Register DAC per-port write handlers
+	write_handlers[0].Install(0x200,
+	                          std::bind(&Ps1Dac::WriteDataPort200, this, _1, _2, _3),
+	                          IO_MB);
+	write_handlers[1].Install(0x202,
+	                          std::bind(&Ps1Dac::WriteControlPort202, this, _1, _2, _3),
+	                          IO_MB);
+	write_handlers[2].Install(0x203,
+	                          std::bind(&Ps1Dac::WriteTimingPort203, this, _1, _2, _3),
+	                          IO_MB);
+	write_handlers[3].Install(0x204,
+	                          std::bind(&Ps1Dac::WriteFifoLevelPort204, this, _1, _2, _3),
+	                          IO_MB);
 
 	// Operate at native sampling rates
 	sample_rate = channel->GetSampleRate();
@@ -165,88 +195,96 @@ void Ps1Dac::Reset(bool should_clear_adder)
 	is_new_transfer = true;
 }
 
-void Ps1Dac::WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
+void Ps1Dac::WriteDataPort200(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
 {
 	keep_alive_channel(last_write, channel);
+	if (is_new_transfer) {
+		is_new_transfer = false;
+		if (data)
+			signal_bias = static_cast<int8_t>(data - fifo_midline);
+	}
+	regs.status = CalcStatus();
+	if (!(regs.status & fifo_full_flag)) {
+		const auto corrected_data = data - signal_bias;
+		fifo[write_index++] = static_cast<uint8_t>(corrected_data);
+		write_index &= fifo_size_mask;
+		bytes_pending += (1 << frac_shift);
 
-	switch (port) {
-	case 0x0200:
-		if (is_new_transfer) {
-			is_new_transfer = false;
-			if (data)
-				signal_bias = static_cast<int8_t>(data - fifo_midline);
+		if (bytes_pending > bytes_pending_limit) {
+			bytes_pending = bytes_pending_limit;
 		}
-		regs.status = CalcStatus();
-		if (!(regs.status & fifo_full_flag)) {
-			const auto corrected_data =  data - signal_bias;
-			fifo[write_index++] = static_cast<uint8_t>(corrected_data);
-			write_index &= fifo_size_mask;
-			bytes_pending += (1 << frac_shift);
-			if (bytes_pending > (fifo_size << frac_shift)) {
-				bytes_pending = fifo_size << frac_shift;
-			}
-		}
-		break;
-	case 0x0202:
-		// regs.command.
-		regs.command = data;
-		if (data & 3)
-			can_trigger_irq = true;
-		break;
-	case 0x0203: {
-		// Clock divisor (maybe trigger first IRQ here).
-		regs.divisor = data;
-		if (data < 45) // common in Infocom games
-			data = 125; // fallback to a default 8 KHz data rate
-		const auto data_rate_hz = static_cast<uint32_t>(clock_rate_hz / data);
-		adder = (data_rate_hz << frac_shift) / sample_rate;
-		regs.status = CalcStatus();
-		if ((regs.status & fifo_nearly_empty_flag) && (can_trigger_irq)) {
-			// Generate request for stuff.
-			regs.status |= fifo_irq_flag;
-			can_trigger_irq = false;
-			PIC_ActivateIRQ(irq_number);
-		}
-	} break;
-	case 0x0204:
-		// Reset? (PS1MIC01 sets it to 08 for playback...)
-		regs.unknown = data;
-		if (!data)
-			Reset(true);
-		break;
-	default: break;
 	}
 }
 
-uint8_t Ps1Dac::ReadFromPort(uint16_t port, MAYBE_UNUSED size_t iolen)
+void Ps1Dac::WriteControlPort202(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
 {
 	keep_alive_channel(last_write, channel);
+	regs.command = data;
+	if (data & 3)
+		can_trigger_irq = true;
+}
 
-	switch (port) {
-	case 0x02F: // CMOS Card is present check
-		return 0xff;
-	case 0x0200:
-		// Read last command.
-		regs.status &= ~fifo_status_ready_flag;
-		return regs.command;
-	case 0x0202: {
-		// Read status / clear IRQ?.
-		uint8_t status = regs.status = CalcStatus();
-		// Don't do this until we have some better way of
-		// detecting the triggering and ending of an IRQ.
-		// ---> regs.status &= ~fifo_irq_flag;
-		return status;
+void Ps1Dac::WriteTimingPort203(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
+{
+	keep_alive_channel(last_write, channel);
+	// Clock divisor (maybe trigger first IRQ here).
+	regs.divisor = data;
+	if (data < 45) // common in Infocom games
+		data = 125; // fallback to a default 8 KHz data rate
+	const auto data_rate_hz = static_cast<uint32_t>(clock_rate_hz / data);
+	adder = (data_rate_hz << frac_shift) / sample_rate;
+	regs.status = CalcStatus();
+	if ((regs.status & fifo_nearly_empty_flag) && (can_trigger_irq)) {
+		// Generate request for stuff.
+		regs.status |= fifo_irq_flag;
+		can_trigger_irq = false;
+		PIC_ActivateIRQ(irq_number);
 	}
-	case 0x0203:
-		// Stunt Island / Roger Rabbit 2 setup.
-		return regs.divisor;
-	case 0x0205:
-	case 0x0206:
-		// Bush Buck detection.
-		return 0;
-	default: break;
-	}
-	return 0xFF;
+}
+
+void Ps1Dac::WriteFifoLevelPort204(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
+{
+	keep_alive_channel(last_write, channel);
+	regs.fifo_level = data;
+	if (!data)
+		Reset(true);
+	// When the Microphone is used (PS1MIC01), it writes 0x08 to this during
+	// playback presumably beacuse the card is constantly filling the
+	// analog-to-digital buffer.
+}
+
+uint8_t Ps1Dac::ReadPresencePort02F(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED size_t iolen)
+{
+	keep_alive_channel(last_write, channel);
+	return 0xff;
+}
+
+uint8_t Ps1Dac::ReadCmdResultPort200(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED size_t iolen)
+{
+	keep_alive_channel(last_write, channel);
+	regs.status &= ~fifo_status_ready_flag;
+	return regs.command;
+}
+
+uint8_t Ps1Dac::ReadStatusPort202(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED size_t iolen)
+{
+	keep_alive_channel(last_write, channel);
+	uint8_t status = regs.status = CalcStatus();
+	return status;
+}
+
+// Used by Stunt Island and Roger Rabbit 2 during setup.
+uint8_t Ps1Dac::ReadTimingPort203(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED size_t iolen)
+{
+	keep_alive_channel(last_write, channel);
+	return regs.divisor;
+}
+
+// Used by Bush Buck as an alternate detection method.
+uint8_t Ps1Dac::ReadJoystickPorts204To207(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED size_t iolen)
+{
+	keep_alive_channel(last_write, channel);
+	return 0;
 }
 
 void Ps1Dac::Update(uint16_t samples)
@@ -322,7 +360,7 @@ public:
 
 private:
 	void Update(uint16_t samples);
-	void WriteTo0205(uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen);
+	void WriteSoundGeneratorPort205(uint16_t port, uint8_t data, size_t iolen);
 
 	mixer_channel_t channel{nullptr, MIXER_DelChannel};
 	IO_WriteHandleObject write_handler = {};
@@ -340,16 +378,14 @@ Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate_hz)
 	                          MIXER_DelChannel);
 	assert(channel);
 
-	const auto write_to = std::bind(&Ps1Synth::WriteTo0205, this, _1, _2, _3);
-	write_handler.Install(0x205, write_to, IO_MB);
+	const auto generate_sound = std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
+	write_handler.Install(0x205, generate_sound, IO_MB);
 	static_cast<device_t &>(device).device_start();
 	device.convert_samplerate(channel->GetSampleRate());
 	last_write = 0;
 }
 
-void Ps1Synth::WriteTo0205(MAYBE_UNUSED uint16_t port,
-                           uint8_t data,
-                           MAYBE_UNUSED size_t iolen)
+void Ps1Synth::WriteSoundGeneratorPort205(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
 {
 	keep_alive_channel(last_write, channel);
 	device.write(data);
