@@ -50,8 +50,8 @@ main () {
 }
 
 handle_dependencies () {
-	assert_min_version git 1007010 "Use git in version 1.7.10 or newer."
-	assert_min_version clang-format 9000000 "Use clang-format in version 9.0.0 or newer."
+	assert_min_version git 1007010 "Use git version 1.7.10 or newer."
+	assert_min_version clang-format 9000000 "Use clang-format version 9.0.0 or newer."
 }
 
 assert_min_version () {
