@@ -19,6 +19,7 @@
 
 #include "dosbox.h"
 
+#include <algorithm>
 #include <cassert>
 #include <memory>
 #include <string.h>
@@ -200,8 +201,9 @@ void Ps1Dac::WriteDataPort200(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UN
 	keep_alive_channel(last_write, channel);
 	if (is_new_transfer) {
 		is_new_transfer = false;
-		if (data)
+		if (data) {
 			signal_bias = static_cast<int8_t>(data - fifo_midline);
+		}
 	}
 	regs.status = CalcStatus();
 	if (!(regs.status & fifo_full_flag)) {
@@ -229,10 +231,12 @@ void Ps1Dac::WriteTimingPort203(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_
 	keep_alive_channel(last_write, channel);
 	// Clock divisor (maybe trigger first IRQ here).
 	regs.divisor = data;
+
 	if (data < 45) // common in Infocom games
 		data = 125; // fallback to a default 8 KHz data rate
 	const auto data_rate_hz = static_cast<uint32_t>(clock_rate_hz / data);
 	adder = (data_rate_hz << frac_shift) / sample_rate;
+
 	regs.status = CalcStatus();
 	if ((regs.status & fifo_nearly_empty_flag) && (can_trigger_irq)) {
 		// Generate request for stuff.
@@ -269,8 +273,8 @@ uint8_t Ps1Dac::ReadCmdResultPort200(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED si
 uint8_t Ps1Dac::ReadStatusPort202(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED size_t iolen)
 {
 	keep_alive_channel(last_write, channel);
-	uint8_t status = regs.status = CalcStatus();
-	return status;
+	regs.status = CalcStatus();
+	return regs.status;
 }
 
 // Used by Stunt Island and Roger Rabbit 2 during setup.
@@ -309,8 +313,7 @@ void Ps1Dac::Update(uint16_t samples)
 	}
 
 	while (count) {
-		unsigned int out;
-
+		uint8_t out = 0;
 		if (pending <= 0) {
 			pending = 0;
 			while (count--) {
@@ -323,7 +326,6 @@ void Ps1Dac::Update(uint16_t samples)
 			pos &= (fifo_size << frac_shift) - 1;
 			pending -= static_cast<int32_t>(add);
 		}
-
 		*(buffer++) = out;
 		count--;
 	}
@@ -381,7 +383,9 @@ Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate_hz)
 	const auto generate_sound = std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
 	write_handler.Install(0x205, generate_sound, IO_MB);
 	static_cast<device_t &>(device).device_start();
-	device.convert_samplerate(channel->GetSampleRate());
+
+	auto sample_rate = static_cast<int32_t>(channel->GetSampleRate());
+	device.convert_samplerate(sample_rate);
 	last_write = 0;
 }
 
