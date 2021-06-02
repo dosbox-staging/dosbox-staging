@@ -84,7 +84,7 @@ format () {
 }
 
 assert_empty_diff () {
-	if [ -n "$(git_diff HEAD)" ] ; then
+	if [[ -n "$(git_diff HEAD)" ]] ; then
 		git_diff HEAD
 		echo
 		echo "clang-format formatted some code for you."
@@ -95,7 +95,7 @@ assert_empty_diff () {
 }
 
 show_tip () {
-	if [ -n "$(git_diff HEAD)" ] ; then
+	if [[ -n "$(git_diff HEAD)" ]] ; then
 		echo
 		echo "clang-format formatted some code for you."
 		echo
