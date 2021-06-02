@@ -38,10 +38,10 @@ using namespace std::placeholders;
 using mixer_channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
 struct Ps1Registers {
-	uint8_t status = 0;  // 0202 RD
-	uint8_t command = 0; // 0202 WR / 0200 RD
-	uint8_t divisor = 0; // 0203 WR
-	uint8_t unknown = 0; // 0204 WR (Reset?)
+	uint8_t status = 0;     // Read via port 0x202 control status
+	uint8_t command = 0;    // Written via port 0x202 for control, read via 0x200 for DAC
+	uint8_t divisor = 0;    // Read via port 0x203 for FIFO timing
+	uint8_t fifo_level = 0; // Written via port 0x204 when FIFO is almost empty
 };
 
 class Ps1Dac {
@@ -57,7 +57,7 @@ private:
 	void WriteTo0200_0204(uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen);
 
 	// Constants
-	static constexpr auto clock_rate = 1000000; // 950272?
+	static constexpr auto clock_rate_hz = 1000000;
 	static constexpr auto fifo_size = 2048;
 	static constexpr auto fifo_size_mask = fifo_size - 1;
 	static constexpr auto fifo_nearly_empty_val = 128;
@@ -326,14 +326,14 @@ private:
 
 	mixer_channel_t channel{nullptr, MIXER_DelChannel};
 	IO_WriteHandleObject write_handler = {};
-	static constexpr auto clock_rate = 4000000;
+	static constexpr auto clock_rate_hz = 4000000;
 	sn76496_device device;
 	static constexpr auto max_samples_expected = 64;
 	int16_t buffer[max_samples_expected];
 	size_t last_write = 0;
 };
 
-Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate)
+Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate_hz)
 {
 	const auto callback = std::bind(&Ps1Synth::Update, this, _1);
 	channel = mixer_channel_t(MIXER_AddChannel(callback, 0, "PS1"),
