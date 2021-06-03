@@ -369,7 +369,7 @@ private:
 	static constexpr auto clock_rate_hz = 4000000;
 	sn76496_device device;
 	static constexpr auto max_samples_expected = 64;
-	int16_t buffer[max_samples_expected];
+	int16_t buffer[1][max_samples_expected];
 	size_t last_write = 0;
 };
 
@@ -398,10 +398,11 @@ void Ps1Synth::WriteSoundGeneratorPort205(MAYBE_UNUSED uint16_t port, uint8_t da
 void Ps1Synth::Update(uint16_t samples)
 {
 	assert(samples <= max_samples_expected);
-	int16_t *pbuf = buffer;
+	int16_t *buffer_head[1] = {buffer[0]};
 	device_sound_interface::sound_stream ss;
-	static_cast<device_sound_interface &>(device).sound_stream_update(ss, 0, &pbuf, samples);
-	channel->AddSamples_m16(samples, buffer);
+	static_cast<device_sound_interface &>(device).sound_stream_update(
+	        ss, nullptr, buffer_head, samples);
+	channel->AddSamples_m16(samples, buffer[0]);
 	maybe_suspend_channel(last_write, channel);
 }
 
