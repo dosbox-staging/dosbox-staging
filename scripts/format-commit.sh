@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -eu
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
@@ -40,7 +42,7 @@ print_usage () {
 }
 
 main () {
-	case $1 in
+	case ${1:-} in
 		-h|-help|--help) print_usage ;;
 		-d|--diff)       handle_dependencies ; shift ; format "$@" ; assert_empty_diff ;;
 		-V|--verify)     handle_dependencies ; shift ; format "$@" ; assert_empty_diff ;;
@@ -50,8 +52,29 @@ main () {
 }
 
 handle_dependencies () {
+	assign_gnu_sed
 	assert_min_version git 1007010 "Use git version 1.7.10 or newer."
 	assert_min_version clang-format 9000000 "Use clang-format version 9.0.0 or newer."
+}
+
+SED=""
+assign_gnu_sed () {
+	# Is sed GNU? (BSD seds don't support --version)
+	if sed --version &>/dev/null; then
+		SED="sed"
+	# No, but do we have gsed?
+	elif command -v gsed &> /dev/null; then
+		SED="gsed"
+	# No, so help the user install it and then quit.
+	else
+		echo "'sed' is not GNU and 'gsed' is not available."
+		if [[ "${OSTYPE:-}" == "darwin"* ]]; then
+			echo "Install GNU sed with: brew install gnu-sed"
+		else
+			echo "Install GNU sed with your $OSTYPE package manager."
+		fi
+		exit 1
+	fi
 }
 
 assert_min_version () {
@@ -64,7 +87,7 @@ assert_min_version () {
 check_min_version () {
 	$1 --version
 	$1 --version \
-		| sed -e "s|.* \([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*|\1 \2 \3|" \
+		| "$SED" -e "s|.* \([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*|\1 \2 \3|" \
 		| test_version "$2"
 	return "${PIPESTATUS[2]}"
 }
@@ -155,7 +178,7 @@ git_diff_to_clang_line_range () {
 # where <line range> is either <line_number> or <line_number>,<offset>
 #
 filter_line_range () {
-	sed -e 's|@@ .* +\([0-9]\+\),\?\([0-9]\+\)\? @@.*|\1 \2|'
+	"$SED" -e 's|@@ .* +\([0-9]\+\),\?\([0-9]\+\)\? @@.*|\1 \2|'
 }
 
 to_clang_line_range () {
