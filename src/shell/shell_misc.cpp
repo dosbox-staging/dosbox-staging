@@ -392,6 +392,13 @@ void DOS_Shell::InputCommand(char * line) {
 /* WARNING: Substitution is carried out in-place!
  * Buffer pointed to by "line" must be at least CMD_MAXLINE+1 bytes long! */
 void DOS_Shell::ProcessCmdLineEnvVarStitution(char *line) {
+
+	// TODO: Replace this with a regular expression
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// In the provided 'line' string, replace all instances of %variable_name%s
+	// with equally named environment "variable_name"s'values, as fetched from
+	// the GetEnvStr(variable_name, variable_string_value) function.
+
 	char temp[CMD_MAXLINE]; /* <- NTS: Currently 4096 which is very generous indeed! */
 	char* w = temp;
 	const char* wf = temp + sizeof(temp) - 1;
