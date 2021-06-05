@@ -232,6 +232,7 @@ enum SCREEN_TYPES	{
 enum class SCALING_MODE { NONE, NEAREST, PERFECT };
 
 enum PRIORITY_LEVELS {
+	PRIORITY_LEVEL_AUTO,
 	PRIORITY_LEVEL_PAUSE,
 	PRIORITY_LEVEL_LOWEST,
 	PRIORITY_LEVEL_LOWER,
@@ -1763,10 +1764,15 @@ static void GUI_ShutDown(Section *)
 
 static void SetPriority(PRIORITY_LEVELS level)
 {
-	// TODO replace platform-specific API with SDL_SetThreadPriority
+	// Just let the OS scheduler manage priority
+	if (level == PRIORITY_LEVEL_AUTO)
+		return;
+
+		// TODO replace platform-specific API with SDL_SetThreadPriority
 #if defined(HAVE_SETPRIORITY)
-// Do nothing if priorties are not the same and not root, else the highest
-// priority can not be set as users can only lower priority (not restore it)
+	// If the priorities are different, do nothing unless the user is root,
+	// since priority can always be lowered but requires elevated rights
+	// to increase
 
 	if((sdl.priority.focus != sdl.priority.nofocus ) &&
 		(getuid()!=0) ) return;
@@ -2145,22 +2151,38 @@ static void GUI_StartUp(Section *sec)
 	std::string focus = p->GetSection()->Get_string("active");
 	std::string notfocus = p->GetSection()->Get_string("inactive");
 
-	if      (focus == "lowest")  { sdl.priority.focus = PRIORITY_LEVEL_LOWEST;  }
-	else if (focus == "lower")   { sdl.priority.focus = PRIORITY_LEVEL_LOWER;   }
-	else if (focus == "normal")  { sdl.priority.focus = PRIORITY_LEVEL_NORMAL;  }
-	else if (focus == "higher")  { sdl.priority.focus = PRIORITY_LEVEL_HIGHER;  }
-	else if (focus == "highest") { sdl.priority.focus = PRIORITY_LEVEL_HIGHEST; }
+	if (focus == "auto" || notfocus == "auto") {
+		sdl.priority.focus = PRIORITY_LEVEL_AUTO;
+		sdl.priority.nofocus = PRIORITY_LEVEL_AUTO;
+		if (focus != "auto" || notfocus != "auto")
+			LOG_MSG("MAIN: \"priority\" can't be \"auto\" for just one value, overriding");
+	} else {
+		if (focus == "lowest")
+			sdl.priority.focus = PRIORITY_LEVEL_LOWEST;
+		else if (focus == "lower")
+			sdl.priority.focus = PRIORITY_LEVEL_LOWER;
+		else if (focus == "normal")
+			sdl.priority.focus = PRIORITY_LEVEL_NORMAL;
+		else if (focus == "higher")
+			sdl.priority.focus = PRIORITY_LEVEL_HIGHER;
+		else if (focus == "highest")
+			sdl.priority.focus = PRIORITY_LEVEL_HIGHEST;
 
-	if      (notfocus == "lowest")  { sdl.priority.nofocus=PRIORITY_LEVEL_LOWEST;  }
-	else if (notfocus == "lower")   { sdl.priority.nofocus=PRIORITY_LEVEL_LOWER;   }
-	else if (notfocus == "normal")  { sdl.priority.nofocus=PRIORITY_LEVEL_NORMAL;  }
-	else if (notfocus == "higher")  { sdl.priority.nofocus=PRIORITY_LEVEL_HIGHER;  }
-	else if (notfocus == "highest") { sdl.priority.nofocus=PRIORITY_LEVEL_HIGHEST; }
-	else if (notfocus == "pause")   {
-		/* we only check for pause here, because it makes no sense
-		 * for DOSBox to be paused while it has focus
-		 */
-		sdl.priority.nofocus=PRIORITY_LEVEL_PAUSE;
+		if (notfocus == "lowest")
+			sdl.priority.nofocus = PRIORITY_LEVEL_LOWEST;
+		else if (notfocus == "lower")
+			sdl.priority.nofocus = PRIORITY_LEVEL_LOWER;
+		else if (notfocus == "normal")
+			sdl.priority.nofocus = PRIORITY_LEVEL_NORMAL;
+		else if (notfocus == "higher")
+			sdl.priority.nofocus = PRIORITY_LEVEL_HIGHER;
+		else if (notfocus == "highest")
+			sdl.priority.nofocus = PRIORITY_LEVEL_HIGHEST;
+		else if (notfocus == "pause")
+			/* we only check for pause here, because it makes no
+			 * sense for DOSBox to be paused while it has focus
+			 */
+			sdl.priority.nofocus = PRIORITY_LEVEL_PAUSE;
 	}
 
 	SetPriority(sdl.priority.focus); //Assume focus on startup
@@ -3004,16 +3026,27 @@ void Config_Add_SDL() {
 	Pbool->Set_help("Wait before closing the console if dosbox has an error.");
 
 	Pmulti = sdl_sec->Add_multi("priority", Property::Changeable::Always, ",");
-	Pmulti->SetValue("higher,normal");
-	Pmulti->Set_help("Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized.\n"
-	                 "pause is only valid for the second entry.");
+#if defined(WIN32)
+	Pmulti->SetValue("higher, normal");
+#else
+	Pmulti->SetValue("auto, auto");
+#endif
+	Pmulti->Set_help(
+	        "Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized.\n"
+	        "pause is only valid for the second entry. auto disables priority levels and uses OS defaults");
 
-	const char* actt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};
-	Pstring = Pmulti->GetSection()->Add_string("active",Property::Changeable::Always,"higher");
+	const char *actt[] = {"auto",   "lowest",  "lower", "normal",
+	                      "higher", "highest", "pause", 0};
+	Pstring = Pmulti->GetSection()->Add_string("active",
+	                                           Property::Changeable::Always,
+	                                           "higher");
 	Pstring->Set_values(actt);
 
-	const char* inactt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};
-	Pstring = Pmulti->GetSection()->Add_string("inactive",Property::Changeable::Always,"normal");
+	const char *inactt[] = {"auto",   "lowest",  "lower", "normal",
+	                        "higher", "highest", "pause", 0};
+	Pstring = Pmulti->GetSection()->Add_string("inactive",
+	                                           Property::Changeable::Always,
+	                                           "normal");
 	Pstring->Set_values(inactt);
 
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
