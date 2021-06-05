@@ -27,6 +27,10 @@
 #include "paging.h"
 #include "types.h"
 
+#if defined(HAVE_MMAP)
+#include <sys/mman.h>
+#endif
+
 #if defined(HAVE_PTHREAD_WRITE_PROTECT_NP)
 #include <pthread.h>
 #endif
@@ -794,13 +798,12 @@ static void cache_init(bool enable) {
 			if (!cache_code_start_ptr) {
 				cache_code_start_ptr=static_cast<uint8_t *>(malloc(cache_code_size));
 			}
-#else
+#elif defined(HAVE_MMAP)
 			int map_flags = MAP_PRIVATE | MAP_ANON;
 			int prot_flags = PROT_READ | PROT_WRITE | PROT_EXEC;
 #if defined(HAVE_MAP_JIT)
 			map_flags |= MAP_JIT;
 #endif
-#if defined(HAVE_MMAP)
 			cache_code_start_ptr=static_cast<uint8_t *>(mmap(nullptr, cache_code_size, prot_flags, map_flags, -1, 0));
 			if (cache_code_start_ptr == MAP_FAILED) {
 				E_Exit("Allocating dynamic core cache memory failed with errno %d", errno);
@@ -810,7 +813,6 @@ static void cache_init(bool enable) {
 			if (!cache_code_start_ptr) {
 				E_Exit("Allocating dynamic core cache memory failed");
 			}
-#endif
 #endif
 			// align the cache at a page boundary
 			cache_code = reinterpret_cast<uint8_t *>(
