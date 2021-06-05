@@ -14,10 +14,8 @@ jobs:
     runs-on: ${{ matrix.conf.os }}
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     strategy:
-      max-parallel: 3
       matrix:
         conf:
-
           - name: Clang, Ubuntu 20.04
             os: ubuntu-20.04
             packages: clang
@@ -130,6 +128,7 @@ jobs:
         run: |
           set -xo pipefail
           ninja -C build |& tee build.log
+          ccache -s
 
       - name: Run tests
         if:   matrix.conf.run_tests
