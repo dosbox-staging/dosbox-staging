@@ -398,7 +398,13 @@ void Ps1Synth::WriteSoundGeneratorPort205(MAYBE_UNUSED uint16_t port, uint8_t da
 void Ps1Synth::Update(uint16_t samples)
 {
 	assert(samples <= max_samples_expected);
-	int16_t *buffer_head[1] = {buffer[0]};
+
+	// sound_stream_update's API requires an array of two pointers that
+	// point to either the mono array head or left and right heads. In this
+	// case, we're using a mono array but we still want to comply with the
+	// API, so we give it a valid two-element pointer array.
+	int16_t *buffer_head[] = {buffer[0], buffer[0]}; 
+
 	device_sound_interface::sound_stream ss;
 	static_cast<device_sound_interface &>(device).sound_stream_update(
 	        ss, nullptr, buffer_head, samples);
