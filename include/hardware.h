@@ -40,6 +40,7 @@ void CMS_Init(Section* sec);
 void OPL_ShutDown(Section* sec);
 void CMS_ShutDown(Section* sec);
 
+bool PS1AUDIO_IsEnabled();
 bool SB_Get_Address(Bitu& sbaddr, Bitu& sbirq, Bitu& sbdma);
 bool TS_Get_Address(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
 

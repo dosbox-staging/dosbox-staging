@@ -427,11 +427,17 @@ static void PS1AUDIO_ShutDown(MAYBE_UNUSED Section *sec)
 	ps1_synth.reset();
 }
 
-void PS1AUDIO_Init(Section *sec)
+bool PS1AUDIO_IsEnabled()
 {
-	assert(sec);
-	Section_prop *section = static_cast<Section_prop *>(sec);
-	if (!section->Get_bool("ps1audio"))
+	const auto section = control->GetSection("speaker");
+	assert(section);
+	const auto properties = static_cast<Section_prop *>(section);
+	return properties->Get_bool("ps1audio");
+}
+
+void PS1AUDIO_Init(MAYBE_UNUSED Section *sec)
+{
+	if (!PS1AUDIO_IsEnabled())
 		return;
 
 	ps1_dac = std::make_unique<Ps1Dac>();
