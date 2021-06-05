@@ -748,39 +748,53 @@ static Bitu INT15_Handler(void) {
 			goto unhandled;
 		}
 		break;
-	case 0xC0:	/* Get Configuration*/
-		{
-			if (biosConfigSeg==0) biosConfigSeg = DOS_GetMemory(1); //We have 16 bytes
-			PhysPt data	= PhysMake(biosConfigSeg,0);
-			mem_writew(data,8);						// 8 Bytes following
-			if (IS_TANDY_ARCH) {
-				if (machine==MCH_TANDY) {
-					// Model ID (Tandy)
-					mem_writeb(data+2,0xFF);
-				} else {
-					// Model ID (PCJR)
-					mem_writeb(data+2,0xFD);
-				}
-				mem_writeb(data+3,0x0A);					// Submodel ID
-				mem_writeb(data+4,0x10);					// Bios Revision
-				/* Tandy doesn't have a 2nd PIC, left as is for now */
-				mem_writeb(data+5,(1<<6)|(1<<5)|(1<<4));	// Feature Byte 1
+	case 0xC0: /* Get Configuration*/ {
+		if (biosConfigSeg == 0)
+			biosConfigSeg = DOS_GetMemory(1); // We have 16 bytes
+
+		PhysPt data = PhysMake(biosConfigSeg, 0);
+		mem_writew(data, 8); // 8 Bytes following
+
+		// Tandy and IBM PCjr
+		if (IS_TANDY_ARCH) {
+			if (machine == MCH_TANDY) {
+				mem_writeb(data + 2, 0xFF); // Model ID (Tandy)
 			} else {
-				mem_writeb(data+2,0xFC);					// Model ID (PC)
-				mem_writeb(data+3,0x00);					// Submodel ID
-				mem_writeb(data+4,0x01);					// Bios Revision
-				mem_writeb(data+5,(1<<6)|(1<<5)|(1<<4));	// Feature Byte 1
+				mem_writeb(data + 2, 0xFD); // Model ID (PCjr)
 			}
-			mem_writeb(data+6,(1<<6));				// Feature Byte 2
-			mem_writeb(data+7,0);					// Feature Byte 3
-			mem_writeb(data+8,0);					// Feature Byte 4
-			mem_writeb(data+9,0);					// Feature Byte 5
-			CPU_SetSegGeneral(es,biosConfigSeg);
-			reg_bx = 0;
-			reg_ah = 0;
-			CALLBACK_SCF(false);
-		}; break;
-	case 0x4f:	/* BIOS - Keyboard intercept */
+			mem_writeb(data + 3, 0x0A); // Submodel ID
+			mem_writeb(data + 4, 0x10); // Bios Revision
+			                            // Feature Bytes 1 and 2
+			// Tandy doesn't have a 2nd PIC, left as-is
+			mem_writeb(data + 5, (1 << 6) | (1 << 5) | (1 << 4));
+			mem_writeb(data + 6, (1 << 6));
+		}
+		// IBM PS/1 2011
+		else if (PS1AUDIO_IsEnabled()) {
+			mem_writeb(data + 2, 0xFC); // Model ID
+			mem_writeb(data + 3, 0x0B); // Submodel ID
+			mem_writeb(data + 4, 0x00); // Bios Revision
+			mem_writeb(data + 5, 0b1111'0100); // Feature Byte 1 (0xF4)
+			mem_writeb(data + 6, 0b0100'0000); // Feature Byte 2 (0x40)
+		}
+		// General PCs
+		else {
+			mem_writeb(data + 2, 0xFC); // Model ID
+			mem_writeb(data + 3, 0x00); // Submodel ID
+			mem_writeb(data + 4, 0x01); // Bios Revision
+			                            // Feature Bytes 1 and 2
+			mem_writeb(data + 5, (1 << 6) | (1 << 5) | (1 << 4));
+			mem_writeb(data + 6, (1 << 6));
+		}
+		mem_writeb(data + 7, 0); // Feature Byte 3
+		mem_writeb(data + 8, 0); // Feature Byte 4
+		mem_writeb(data + 9, 0); // Feature Byte 5
+		CPU_SetSegGeneral(es, biosConfigSeg);
+		reg_bx = 0;
+		reg_ah = 0;
+		CALLBACK_SCF(false);
+	}; break;
+	case 0x4f: /* BIOS - Keyboard intercept */
 		/* Carry should be set but let's just set it just in case */
 		CALLBACK_SCF(true);
 		break;
