@@ -105,14 +105,15 @@ jobs:
           echo "::set-output name=dir::$CCACHE_DIR"
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+          echo "::set-output name=name_hash::$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)"
 
       - uses:  actions/cache@v2
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.today }}
+          key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.today }}
           restore-keys: |
-            ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.yesterday }}
+            ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}
 
       - name:  Cache subprojects
         uses:  actions/cache@v2
