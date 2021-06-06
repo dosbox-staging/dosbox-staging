@@ -1229,7 +1229,7 @@ destinazione è già in uso. È possibile utilizzare SUBST solo su unità locali
 ║ DOSBox supporta la modalità CGA Composita.                           ║
 ║ Usa [31mF12[37m per impostare l'uscita composita su ON, OFF o AUTO           ║
 ║ (impostazione predefinita).                                          ║
-║ [31m" MMOD2_NAME "F11[37m cambia tonalità; [31m" MMOD1_NAME "" MMOD2_NAME "F11[37m seleziona il modello CGA.      ║
+║ [31m" MMOD2_NAME "+F11[37m cambia tonalità; [31m" MMOD1_NAME "+" MMOD2_NAME "+F11[37m seleziona il modello CGA." PRIMARY_MOD_PAD "   ║
 ║                                                                      ║
 
 .

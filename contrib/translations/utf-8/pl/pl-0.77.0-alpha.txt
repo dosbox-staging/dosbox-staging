@@ -1192,7 +1192,7 @@ Polecenia SUBST można użyć jedynie na lokalnych dyskach
 :SHELL_STARTUP_CGA
 ║ DOSBox wspiera tryb Composite CGA.                                 ║
 ║ Wciśnij [31mF12[37m aby włączyć lub wyłączyć tryb composite.               ║
-║ [31m(" MMOD2_NAME ")F11[37m zmienia barwę; [31m" MMOD1_NAME "" MMOD2_NAME "F11[37m zmienia model CGA.           ║
+║ [31m(" MMOD2_NAME "+)F11[37m zmienia barwę; [31m" MMOD1_NAME "+" MMOD2_NAME "+F11[37m zmienia model CGA." PRIMARY_MOD_PAD "         ║
 ║                                                                    ║
 
 .
