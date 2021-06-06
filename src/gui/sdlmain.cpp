@@ -3026,11 +3026,7 @@ void Config_Add_SDL() {
 	Pbool->Set_help("Wait before closing the console if dosbox has an error.");
 
 	Pmulti = sdl_sec->Add_multi("priority", Property::Changeable::Always, ",");
-#if defined(WIN32)
-	Pmulti->SetValue("higher,normal");
-#else
 	Pmulti->SetValue("auto,auto");
-#endif
 	Pmulti->Set_help(
 	        "Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized.\n"
 	        "pause is only valid for the second entry. auto disables priority levels and uses OS defaults");

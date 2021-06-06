@@ -39,6 +39,10 @@
 #include <libkern/OSCacheControl.h>
 #endif
 
+#if defined(WIN32)
+#include <memoryapi.h>
+#endif
+
 class CodePageHandler;
 
 // basic cache block representation
@@ -740,8 +744,16 @@ static inline void dyn_mem_execute()
 #endif
 		pthread_jit_write_protect_np(true);
 #elif defined(HAVE_MPROTECT)
-	if (mprotect(cache_code_start_ptr, cache_code_size, PROT_EXEC | PROT_READ) == -1)
-		E_Exit("mprotect failed in dyn_mem_execute");		
+	MAYBE_UNUSED const int mp_res = mprotect(cache_code_start_ptr, cache_code_size,
+	                                         PROT_EXEC | PROT_READ);
+	assert(mp_res == 0);
+#elif defined(WIN32)
+	DWORD old_protect = 0;
+	MAYBE_UNUSED const BOOL vp_res = VirtualProtect(cache_code_start_ptr,
+	                                                cache_code_size,
+	                                                PAGE_EXECUTE_READ,
+	                                                &old_protect);
+	assert(vp_res != 0);
 #endif
 }
 
@@ -753,8 +765,16 @@ static inline void dyn_mem_write()
 #endif
 		pthread_jit_write_protect_np(false);
 #elif defined(HAVE_MPROTECT)
-	if (mprotect(cache_code_start_ptr, cache_code_size, PROT_WRITE | PROT_READ) == -1)
-		E_Exit("mprotect failed in dyn_mem_write");			
+	MAYBE_UNUSED const int mp_res = mprotect(cache_code_start_ptr, cache_code_size,
+	                                         PROT_WRITE | PROT_READ);
+	assert(mp_res == 0);
+#elif defined(WIN32)
+	DWORD old_protect = 0;
+	MAYBE_UNUSED const BOOL vp_res = VirtualProtect(cache_code_start_ptr,
+	                                                cache_code_size,
+	                                                PAGE_READWRITE,
+	                                                &old_protect);
+	assert(vp_res != 0);
 #endif
 }
 
@@ -793,9 +813,12 @@ static void cache_init(bool enable) {
 		if (cache_code_start_ptr == nullptr) {
 			// allocate the code cache memory
 #if defined (WIN32)
-			cache_code_start_ptr=static_cast<uint8_t *>(VirtualAlloc(0,cache_code_size,
-				MEM_COMMIT,PAGE_EXECUTE_READWRITE));
+			cache_code_start_ptr = static_cast<uint8_t *>(
+			        VirtualAlloc(nullptr, cache_code_size,
+			                     MEM_COMMIT | MEM_RESERVE,
+			                     PAGE_READWRITE));
 			if (!cache_code_start_ptr) {
+				LOG_MSG("VirtualAlloc error, using malloc");
 				cache_code_start_ptr=static_cast<uint8_t *>(malloc(cache_code_size));
 			}
 #elif defined(HAVE_MMAP)
