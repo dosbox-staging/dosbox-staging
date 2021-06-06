@@ -1204,7 +1204,7 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 :SHELL_STARTUP_CGA
 ║ DOSBox supporte le mode composite CGA.                                ║
 ║ Utilisez [31mF12[37m pour régler la sortiecomposite sur ON, OFF, ou AUTO (défaut).        ║
-║ [31m(" MMOD2_NAME ")F11[37m change la teinte; [31m" MMOD1_NAME "" MMOD2_NAME "F11[37m sélectionne le premier/dernier modèle CGA.  ║
+║ [31m(" MMOD2_NAME "+)F11[37m change la teinte; [31m" MMOD1_NAME "+" MMOD2_NAME "+F11[37m sélectionne le premier/dernier modèle CGA." PRIMARY_MOD_PAD "║
 ║                                                                    ║
 
 .

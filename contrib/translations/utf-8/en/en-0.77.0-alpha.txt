@@ -1200,7 +1200,7 @@ It's only possible to use SUBST on Local drives
 :SHELL_STARTUP_CGA
 ║ DOSBox supports Composite CGA mode.                                ║
 ║ Use [31mF12[37m to set composite output ON, OFF, or AUTO (default).        ║
-║ [31m(" MMOD2_NAME "+)F11[37m changes hue; [31m" MMOD1_NAME "" MMOD2_NAME "+F11[37m selects early/late CGA model.  ║
+║ [31m(" MMOD2_NAME "+)F11[37m changes hue; [31m" MMOD1_NAME "+" MMOD2_NAME "+F11[37m selects early/late CGA model." PRIMARY_MOD_PAD " ║
 ║                                                                    ║
 
 .
