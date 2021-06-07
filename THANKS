@@ -1,16 +1,19 @@
 We would like to thank:
 
-Whole SDL2 team for quality cross-platform software.
+The SDL2 team for their quality cross-platform software.
 David Reid for his MP3, FLAC, and WAV decoder libraries.
 Sean Barrett for his Vorbis decoder library.
-Alexey Khokholov for perfect OPL3 emulator.
+Alexey Khokholov for his perfect OPL3 emulator.
 Anton Shepelev for implementing pixel-perfect support.
-Yann Collet for xxHash algorithm.
+Yann Collet for the xxHash algorithm.
 jmarsh for his numerous contributions to CPU dynrec core and other areas.
-nemo93 for taking great care of dosbox-staging Wiki.
+nemo93 for taking great care of the dosbox-staging Wiki.
+Jason Kim for his IBM PS/1 Audio card implementation.
+Dag Lem, Antti S. Lankila, Ken Händel, and Leandro Nini for the reSID library.
+Johnathan Campbell and Wengier Wu for their unabated progress on the DOSBox-X project.
 
-Vlad R. of the vdmsound project for excellent sound blaster info.
-Tatsuyuki Satoh of the Mame Team for making an excellent FM emulator.
+Vlad R. of the vdmsound project for excellent Sound Blaster info.
+Tatsuyuki Satoh of the MAME Team for making an excellent FM emulator.
 Jarek Burczynski for his work on an OPL3 emulator.
 Ken Silverman for his work on an OPL2 emulator.
 The Bochs and DOSemu projects which I used for information.
@@ -18,10 +21,10 @@ FreeDOS for ideas in making my shell.
 Pierre-Yves Gérardy for hosting the old Beta Board.
 Colin Snover for hosting our forum.
 Mirek Luza, for his moderation of the forums.
-eL_Pusher, DosFreak and MiniMax for their moderation of Vogons forum.
-crazyc, gulikoza, M-HT for their work on the dynrec core.
+eL_Pusher, DosFreak, and MiniMax for their moderation of Vogons forum.
+crazyc, gulikoza, and M-HT for their work on the dynrec core.
 Jantien for the version management.
-Shawn, Johannes and Marcus for creating the MacOS X version.
+Shawn, Johannes, and Marcus for creating the MacOS X version.
 Jochen for creating the OS/2 version.
 Ido Beeri for the original DOSBox icon.
 ripsaw8080 for his hard debugging work.
