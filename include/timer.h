@@ -19,12 +19,14 @@
 #ifndef DOSBOX_TIMER_H
 #define DOSBOX_TIMER_H
 
+#include <chrono>
+#include <thread>
+#include <cassert>
+#include <climits>
+
 /* underlying clock rate in HZ */
-#include <SDL.h>
 
 #define PIT_TICK_RATE 1193182
-
-#define GetTicks() SDL_GetTicks()
 
 typedef void (*TIMER_TickHandler)(void);
 
@@ -34,5 +36,30 @@ void TIMER_DelTickHandler(TIMER_TickHandler handler);
 
 /* This will add 1 milliscond to all timers */
 void TIMER_AddTick(void);
+
+static inline int64_t GetTicks(void)
+{
+	return std::chrono::duration_cast<std::chrono::milliseconds>(
+	               std::chrono::steady_clock::now().time_since_epoch())
+	        .count();
+}
+
+static inline int GetTicksDiff(int64_t new_ticks, int64_t old_ticks)
+{
+	assert(new_ticks >= old_ticks);
+	assert((new_ticks - old_ticks) <= INT_MAX);
+	return static_cast<int>(new_ticks - old_ticks);
+}
+
+static inline int GetTicksSince(int64_t old_ticks)
+{
+	const auto now = GetTicks();
+	return GetTicksDiff(now, old_ticks);
+}
+
+static inline void Delay(int milliseconds)
+{
+	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+}
 
 #endif

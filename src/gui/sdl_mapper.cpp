@@ -46,6 +46,7 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
+#include "timer.h"
 #include "video.h"
 
 /* Mouse related */
@@ -2826,7 +2827,7 @@ void MAPPER_DisplayUI() {
 			SDL_UpdateWindowSurface(mapper.window);
 		}
 		BIND_MappingEvents();
-		SDL_Delay(1);
+		Delay(1);
 	}
 	/* ONE SHOULD NOT FORGET TO DO THIS!
 	Unless a memory leak is desired... */

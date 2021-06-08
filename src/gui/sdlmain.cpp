@@ -507,7 +507,7 @@ MAYBE_UNUSED static void PauseDOSBox(bool pressed)
 
 	GFX_SetTitle(-1,-1,true);
 	bool paused = true;
-	SDL_Delay(500);
+	Delay(500);
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		// flush event queue.
@@ -1876,7 +1876,7 @@ static SDL_Window *SetDefaultWindowMode()
  * Please leave the Splash screen stuff in working order.
  * We spend a lot of time making DOSBox.
  */
-static void DisplaySplash(uint32_t time_ms)
+static void DisplaySplash(int time_ms)
 {
 	assert(sdl.window);
 
@@ -1924,7 +1924,7 @@ static void DisplaySplash(uint32_t time_ms)
 
 	const uint16_t lines[2] = {0, src_h}; // output=surface won't work otherwise
 	GFX_EndUpdate(lines);
-	SDL_Delay(time_ms);
+	Delay(time_ms);
 }
 
 /* For some preference values, we can safely remove comment after # character
@@ -2722,7 +2722,7 @@ static bool ProcessEvents()
 
 					GFX_SetTitle(-1,-1,true);
 					KEYBOARD_ClrBuffer();
-//					SDL_Delay(500);
+//					Delay(500);
 //					while (SDL_PollEvent(&ev)) {
 						// flush event queue.
 //					}
@@ -2786,7 +2786,9 @@ static bool ProcessEvents()
 			if (((event.key.keysym.sym == SDLK_TAB )) && (event.key.keysym.mod & KMOD_ALT)) break;
 			// Ignore tab events that arrive just after regaining
 			// focus. Likely the result of Alt+Tab.
-			if ((event.key.keysym.sym == SDLK_TAB) && (GetTicks() - sdl.focus_ticks < 2)) break;
+			if ((event.key.keysym.sym == SDLK_TAB) &&
+			    (GetTicksSince(sdl.focus_ticks) < 2))
+				break;
 #endif
 #if defined (MACOSX)
 		case SDL_KEYDOWN:
@@ -3096,7 +3098,7 @@ static void show_warning(char const * const message) {
 
 	SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
 	SDL_UpdateWindowSurface(sdl.window);
-	SDL_Delay(12000);
+	Delay(12000);
 #endif // WIN32
 }
 
@@ -3158,7 +3160,7 @@ void restart_program(std::vector<std::string> & parameters) {
 	for(Bitu i = 0; i < parameters.size(); i++) newargs[i] = (char*)parameters[i].c_str();
 	newargs[parameters.size()] = NULL;
 	MIXER_CloseAudioDevice();
-	SDL_Delay(50);
+	Delay(50);
 	QuitSDL();
 #if C_DEBUG
 	// shutdown curses

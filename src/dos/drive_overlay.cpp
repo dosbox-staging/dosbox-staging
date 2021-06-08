@@ -209,11 +209,11 @@ public:
 			if (*data == 0) {
 				if (logoverlay) LOG_MSG("OPTIMISE: truncate on switch!!!!");
 			}
-			Bit32u a = GetTicks();
+			const auto a = logoverlay ? GetTicks() : 0;
 			bool r = create_copy();
-			if (GetTicks() - a > 2) {
-				if (logoverlay) LOG_MSG("OPTIMISE: switching took %d",GetTicks() - a);
-			}
+			const auto b = logoverlay ? GetTicksSince(a) : 0;
+			if (b > 2)
+				LOG_MSG("OPTIMISE: switching took %d", b);
 			if (!r) return false;
 			overlay_active = true;
 			
@@ -555,7 +555,7 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 	return true;
 }
 void Overlay_Drive::update_cache(bool read_directory_contents) {
-	Bit32u a = GetTicks();
+	const auto a = logoverlay ? GetTicks() : 0;
 	std::vector<std::string> specials;
 	std::vector<std::string> dirnames;
 	std::vector<std::string> filenames;
@@ -733,7 +733,8 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 
 		}
 	}
-	if (logoverlay) LOG_MSG("OPTIMISE: update cache took %d",GetTicks()-a);
+	if (logoverlay)
+		LOG_MSG("OPTIMISE: update cache took %d", GetTicksSince(a));
 }
 
 bool Overlay_Drive::FindNext(DOS_DTA & dta) {
@@ -832,14 +833,14 @@ again:
 
 
 bool Overlay_Drive::FileUnlink(char * name) {
-//TODO check the basedir for file existence in order if we need to add the file to deleted file list.
-	Bit32u a = GetTicks();
-	if (logoverlay) LOG_MSG("calling unlink on %s",name);
+	// TODO check the basedir for file existence in order if we need to add the file to deleted file list.
+	const auto a = logoverlay ? GetTicks() : 0;
+	if (logoverlay)
+		LOG_MSG("calling unlink on %s", name);
 	char basename[CROSS_LEN];
 	safe_strcpy(basename, basedir);
 	safe_strcat(basename, name);
 	CROSS_FILENAME(basename);
-
 
 	char overlayname[CROSS_LEN];
 	safe_strcpy(overlayname, overlaydir);
@@ -919,7 +920,8 @@ bool Overlay_Drive::FileUnlink(char * name) {
 		dirCache.DeleteEntry(basename);
 
 		update_cache(false);
-		if (logoverlay) LOG_MSG("OPTIMISE: unlink took %d",GetTicks()-a);
+		if (logoverlay)
+			LOG_MSG("OPTIMISE: unlink took %d", GetTicksSince(a));
 		return true;
 	}
 }
@@ -1116,7 +1118,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		E_Exit("renaming directory %s to %s . Not yet supported in Overlay",oldname,newname); //TODO
 	}
 
-	Bit32u a = GetTicks();
+	const auto a = logoverlay ? GetTicks() : 0;
 	//First generate overlay names.
 	char overlaynameold[CROSS_LEN];
 	safe_strcpy(overlaynameold, overlaydir);
@@ -1139,7 +1141,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		//TODO CHECK if base has a file with same oldname!!!!! if it does mark it as deleted!!
 		if (localDrive::FileExists(oldname)) add_deleted_file(oldname,true);
 	} else {
-		Bit32u aa = GetTicks();
+		const auto aa = logoverlay ? GetTicks() : 0;
 		//File exists in the basedrive. Make a copy and mark old one as deleted.
 		char newold[CROSS_LEN];
 		safe_strcpy(newold, basedir);
@@ -1159,8 +1161,9 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		//Mark old file as deleted
 		add_deleted_file(oldname,true);
 		temp =0; //success
-		if (logoverlay) LOG_MSG("OPTIMISE: update rename with copy took %d",GetTicks()-aa);
-
+		if (logoverlay)
+			LOG_MSG("OPTIMISE: update rename with copy took %d",
+			        GetTicksSince(aa));
 	}
 	if (temp ==0) {
 		//handle the drive_cache (a bit better)
@@ -1168,8 +1171,8 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		if (is_deleted_file(newname)) remove_deleted_file(newname,true);
 		dirCache.EmptyCache();
 		update_cache(true);
-		if (logoverlay) LOG_MSG("OPTIMISE: rename took %d",GetTicks()-a);
-
+		if (logoverlay)
+			LOG_MSG("OPTIMISE: rename took %d", GetTicksSince(a));
 	}
 	return (temp==0);
 
