@@ -57,9 +57,14 @@ static inline int GetTicksSince(int64_t old_ticks)
 	return GetTicksDiff(now, old_ticks);
 }
 
+
+
+std::chrono::nanoseconds measure_sleep_overhead();
+
 static inline void Delay(int milliseconds)
 {
-	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+	static const auto sleep_overhead = measure_sleep_overhead();
+	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds) - sleep_overhead);
 }
 
 #endif

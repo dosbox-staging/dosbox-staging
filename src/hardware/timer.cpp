@@ -26,6 +26,23 @@
 #include "timer.h"
 #include "setup.h"
 
+std::chrono::nanoseconds measure_sleep_overhead() {
+	using stc = std::chrono::steady_clock;
+	auto overhead_tally = std::chrono::nanoseconds(0);
+	int passes = 0;
+	while (passes < 1000) {
+		const auto start = stc::now();
+		std::this_thread::sleep_for( std::chrono::nanoseconds(1) );
+		const auto end = stc::now();
+		assert(end >= start);
+		overhead_tally += end - start;
+		++passes;
+	}
+	const auto average_overhead = (overhead_tally / passes) - std::chrono::nanoseconds(1);
+	DEBUG_LOG_MSG("TIMER: Overhead of sleep is %0.3f ms", average_overhead.count() / 1000000.0);
+	return average_overhead;
+}
+
 static INLINE void BIN2BCD(Bit16u& val) {
 	Bit16u temp=val%10 + (((val/10)%10)<<4)+ (((val/100)%10)<<8) + (((val/1000)%10)<<12);
 	val=temp;
