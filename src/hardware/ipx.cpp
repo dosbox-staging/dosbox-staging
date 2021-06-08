@@ -797,11 +797,11 @@ bool ConnectToServer(char const *strAddr) {
 			} else {
 				// Wait for return packet from server.
 				// This will contain our IPX address and port num
-				Bit32u ticks, elapsed;
-				ticks = GetTicks();
+				Bit32u elapsed;
+				const auto ticks = GetTicks();
 
 				while(true) {
-					elapsed = GetTicks() - ticks;
+					elapsed = GetTicksSince(ticks);
 					if(elapsed > 5000) {
 						LOG_MSG("Timeout connecting to server at %s", strAddr);
 						SDLNet_UDP_Close(ipxClientSocket);
@@ -1034,7 +1034,6 @@ public:
 			}
 
 			if(strcasecmp("ping", temp_line.c_str()) == 0) {
-				Bit32u ticks;
 				IPXHeader pingHead;
 
 				if(!incomingPacket.connected) {
@@ -1044,11 +1043,15 @@ public:
 				TIMER_DelTickHandler(&IPX_ClientLoop);
 				WriteOut("Sending broadcast ping:\n\n");
 				pingSend();
-				ticks = GetTicks();
-				while((GetTicks() - ticks) < 1500) {
+				const auto ticks = GetTicks();
+				while ((GetTicksSince(ticks)) < 1500) {
 					CALLBACK_Idle();
 					if(pingCheck(&pingHead)) {
-						WriteOut("Response from %d.%d.%d.%d, port %d time=%dms\n", CONVIP(pingHead.src.addr.byIP.host), SDLNet_Read16(&pingHead.src.addr.byIP.port), GetTicks() - ticks);
+						WriteOut(
+						        "Response from %d.%d.%d.%d, port %d time=%dms\n",
+						        CONVIP(pingHead.src.addr.byIP.host),
+						        SDLNet_Read16(&pingHead.src.addr.byIP.port),
+						        GetTicksSince(ticks));
 					}
 				}
 				TIMER_AddTickHandler(&IPX_ClientLoop);

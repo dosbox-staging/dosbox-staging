@@ -2165,8 +2165,8 @@ void CPU_Disable_SkipAutoAdjust(void) {
 }
 
 
-extern Bit32s ticksDone;
-extern Bit32u ticksScheduled;
+extern int ticksDone;
+extern int ticksScheduled;
 
 void CPU_Reset_AutoAdjust(void) {
 	CPU_IODelayRemoved = 0;

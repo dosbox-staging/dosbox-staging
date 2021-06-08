@@ -135,11 +135,11 @@ static LoopHandler * loop;
 
 bool SDLNetInited;
 
-static Bit32u ticksRemain;
-static Bit32u ticksLast;
-static Bit32u ticksAdded;
-Bit32s ticksDone;
-Bit32u ticksScheduled;
+static int ticksRemain;
+static int64_t ticksLast;
+static int ticksAdded;
+int ticksDone;
+int ticksScheduled;
 bool ticksLocked;
 void increaseticks();
 bool mono_cga=false;
@@ -174,9 +174,6 @@ static Bitu Normal_Loop()
 	}
 }
 
-//For trying other delays
-#define wrap_delay(a) SDL_Delay(a)
-
 void increaseticks() { //Make it return ticksRemain and set it in the function above to remove the global variable.
 	if (GCC_UNLIKELY(ticksLocked)) { // For Fast Forward Mode
 		ticksRemain=5;
@@ -191,14 +188,13 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	static Bit32s lastsleepDone = -1;
 	static Bitu sleep1count = 0;
 
-	Bit32u ticksNew;
-	ticksNew = GetTicks();
+	const auto ticksNew = GetTicks();
 	ticksScheduled += ticksAdded;
 	if (ticksNew <= ticksLast) { //lower should not be possible, only equal.
 		ticksAdded = 0;
 
 		if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust || sleep1count < 3) {
-			wrap_delay(1);
+			Delay(1);
 		} else {
 			/* Certain configurations always give an exact sleepingtime of 1, this causes problems due to the fact that
 			   dosbox keeps track of full blocks.
@@ -207,10 +203,10 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 			static const Bit32u sleeppattern[] = { 2, 2, 3, 2, 2, 4, 2};
 			static Bit32u sleepindex = 0;
 			if (ticksDone != lastsleepDone) sleepindex = 0;
-			wrap_delay(sleeppattern[sleepindex++]);
+			Delay(sleeppattern[sleepindex++]);
 			sleepindex %= sizeof(sleeppattern) / sizeof(sleeppattern[0]);
 		}
-		Bit32s timeslept = GetTicks() - ticksNew;
+		auto timeslept = GetTicksSince(ticksNew);
 		// Count how many times in the current block (of 250 ms) the time slept was 1 ms
 		if (CPU_CycleAutoAdjust && !CPU_SkipCycleAutoAdjust && timeslept == 1) sleep1count++;
 		lastsleepDone = ticksDone;
@@ -231,7 +227,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	}
 
 	//TicksNew > ticksLast
-	ticksRemain = ticksNew-ticksLast;
+	ticksRemain = GetTicksDiff(ticksNew, ticksLast);
 	ticksLast = ticksNew;
 	ticksDone += ticksRemain;
 	if ( ticksRemain > 20 ) {
