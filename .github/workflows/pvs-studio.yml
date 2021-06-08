@@ -63,7 +63,7 @@ jobs:
           general_criteria="GA:1,2;64:1;OP:1,2,3;CS:1"
           stamp="$(date +'%Y-%m-%d_T%H%M')-${GITHUB_SHA:0:8}"
           reportdir="pvs-report/pvs-report-${stamp}"
-          disable_warnings="V002,V1042,V826,V802,V2008"
+          disable_warnings="V002,V1042,V826,V802,V2008,V1071"
 
           mkdir -p "${reportdir}"
 
