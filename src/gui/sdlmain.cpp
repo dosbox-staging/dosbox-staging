@@ -1403,12 +1403,12 @@ static void ToggleMouseCapture(bool pressed) {
 
 static void FocusInput()
 {
+	// Ensure auto-cycles are enabled
+	CPU_Disable_SkipAutoAdjust();
+
 	// Ensure we have input focus when in fullscreen
 	if (!sdl.desktop.fullscreen)
 		return;
-
-	// Ensure auto-cycles are enabled
-	CPU_Disable_SkipAutoAdjust();
 
 	// Do we already have focus?
 	if (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_INPUT_FOCUS)
