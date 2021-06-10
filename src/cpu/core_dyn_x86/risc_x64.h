@@ -286,7 +286,10 @@ static BlockReturn gen_runcodeInit(const Bit8u *code) {
 	cache.pos = &cache_code_link_blocks[128];
 	gen_runcode = (BlockReturn(*)(const Bit8u*))cache.pos;
 
-	dyn_mem_write();
+	auto cache_addr = static_cast<void *>(const_cast<uint8_t *>(cache.pos));
+	constexpr size_t cache_bytes = CACHE_MAXSIZE;
+
+	dyn_mem_write(cache_addr, cache_bytes);
 	
 	opcode(5).Emit8Reg(0x50);  // push rbp
 	opcode(15).Emit8Reg(0x50); // push r15
@@ -338,7 +341,8 @@ static BlockReturn gen_runcodeInit(const Bit8u *code) {
 	opcode(5).Emit8Reg(0x58);  // pop rbp
 	cache_addb(0xc3);          // ret
 	
-	dyn_mem_execute();
+	dyn_mem_execute(cache_addr, cache_bytes);
+	dyn_cache_invalidate(cache_addr, cache_bytes);
 
 	cache.pos = oldpos;
 	return gen_runcode(code);
@@ -1279,7 +1283,10 @@ static void gen_dh_fpu_saveInit(void) {
 
 	Bitu addr = (Bitu)&dyn_dh_fpu;
 	
-	dyn_mem_write();
+	auto cache_addr = static_cast<void *>(const_cast<uint8_t *>(cache.pos));
+	constexpr size_t cache_bytes = CACHE_MAXSIZE;
+
+	dyn_mem_write(cache_addr, cache_bytes);
 
 	// mov RAX, &dyn_dh_fpu
 	if ((Bit32u)addr == addr) opcode(0).setimm(addr,4).Emit8Reg(0xB8);
@@ -1295,7 +1302,8 @@ static void gen_dh_fpu_saveInit(void) {
 	opcode(1).setimm(0x3F,1).setea(0,-1,0,offsetof(struct dyn_dh_fpu,state.cw)).Emit8(0x80);
 	cache_addb(0xC3); // RET
 	
-	dyn_mem_execute();
+	dyn_mem_execute(cache_addr, cache_bytes);
+	dyn_cache_invalidate(cache_addr, cache_bytes);
 
 	cache.pos = oldpos;
 	gen_dh_fpu_save();

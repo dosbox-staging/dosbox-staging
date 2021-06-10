@@ -2183,7 +2183,11 @@ static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bit
 	decode.block->page.start=decode.page.index;
 	codepage->AddCacheBlock(decode.block);
 
-	for (i=0;i<G_MAX;i++) {
+	auto cache_addr = static_cast<void *>(const_cast<uint8_t *>(decode.block->cache.start));
+	constexpr size_t cache_bytes = CACHE_MAXSIZE;
+
+	dyn_mem_write(cache_addr, cache_bytes);
+	for (i = 0; i < G_MAX; i++) {
 		DynRegs[i].flags&=~(DYNFLG_ACTIVE|DYNFLG_CHANGED);
 		DynRegs[i].genreg=0;
 	}
@@ -2888,6 +2892,7 @@ illegalopcode:
 	dyn_save_critical_regs();
 	gen_return(BR_Opcode);
 	dyn_closeblock();
+
 	goto finish_block;
 #if (C_DEBUG)
 	dyn_set_eip_last();
@@ -2900,6 +2905,9 @@ illegalopcode:
 finish_block:
 	/* Setup the correct end-address */
 	decode.active_block->page.end=--decode.page.index;
-//	LOG_MSG("Created block size %d start %d end %d",decode.block->cache.size,decode.block->page.start,decode.block->page.end);
+	dyn_mem_execute(cache_addr, cache_bytes);
+	dyn_cache_invalidate(cache_addr, cache_bytes);
+	//	LOG_MSG("Created block size %d start %d end
+	//%d",decode.block->cache.size,decode.block->page.start,decode.block->page.end);
 	return decode.block;
 }

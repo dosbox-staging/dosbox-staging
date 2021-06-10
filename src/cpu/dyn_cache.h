@@ -41,6 +41,7 @@
 
 #if defined(WIN32)
 #include <memoryapi.h>
+#include <processthreadsapi.h>
 #endif
 
 class CodePageHandler;
@@ -736,7 +737,7 @@ static void cache_block_closing(const uint8_t *block_start, Bitu block_size);
 static constexpr size_t cache_code_size = CACHE_TOTAL + CACHE_MAXSIZE + PAGESIZE_TEMP - 1 + PAGESIZE_TEMP;
 static constexpr size_t cache_blocks_total_bytes = CACHE_BLOCKS * sizeof(CacheBlock);
 
-static inline void dyn_mem_execute()
+static inline void dyn_mem_execute(MAYBE_UNUSED void* ptr, MAYBE_UNUSED size_t size)
 {
 #if defined(HAVE_PTHREAD_WRITE_PROTECT_NP)
 #if defined(HAVE_BUILTIN_AVAILABLE)
@@ -744,20 +745,21 @@ static inline void dyn_mem_execute()
 #endif
 		pthread_jit_write_protect_np(true);
 #elif defined(HAVE_MPROTECT)
-	MAYBE_UNUSED const int mp_res = mprotect(cache_code_start_ptr, cache_code_size,
-	                                         PROT_EXEC | PROT_READ);
+	ptr = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(ptr) % PAGESIZE);
+	MAYBE_UNUSED const int mp_res = mprotect(ptr, size,
+	                                         PROT_READ | PROT_EXEC);
 	assert(mp_res == 0);
 #elif defined(WIN32)
 	DWORD old_protect = 0;
-	MAYBE_UNUSED const BOOL vp_res = VirtualProtect(cache_code_start_ptr,
-	                                                cache_code_size,
+	MAYBE_UNUSED const BOOL vp_res = VirtualProtect(ptr,
+	                                                size,
 	                                                PAGE_EXECUTE_READ,
 	                                                &old_protect);
 	assert(vp_res != 0);
 #endif
 }
 
-static inline void dyn_mem_write()
+static inline void dyn_mem_write(MAYBE_UNUSED void *ptr, MAYBE_UNUSED size_t size)
 {
 #if defined(HAVE_PTHREAD_WRITE_PROTECT_NP)
 #if defined(HAVE_BUILTIN_AVAILABLE)
@@ -765,13 +767,14 @@ static inline void dyn_mem_write()
 #endif
 		pthread_jit_write_protect_np(false);
 #elif defined(HAVE_MPROTECT)
-	MAYBE_UNUSED const int mp_res = mprotect(cache_code_start_ptr, cache_code_size,
-	                                         PROT_WRITE | PROT_READ);
+	ptr = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(ptr) % PAGESIZE);
+	MAYBE_UNUSED const int mp_res = mprotect(ptr, size,
+	                                         PROT_READ | PROT_WRITE);
 	assert(mp_res == 0);
 #elif defined(WIN32)
 	DWORD old_protect = 0;
-	MAYBE_UNUSED const BOOL vp_res = VirtualProtect(cache_code_start_ptr,
-	                                                cache_code_size,
+	MAYBE_UNUSED const BOOL vp_res = VirtualProtect(ptr,
+	                                                size,
 	                                                PAGE_READWRITE,
 	                                                &old_protect);
 	assert(vp_res != 0);
@@ -785,6 +788,10 @@ static inline void dyn_cache_invalidate(MAYBE_UNUSED void *ptr, MAYBE_UNUSED siz
 	if (__builtin_available(macOS 11.0, *))
 #endif	
 		sys_icache_invalidate(ptr, size);
+#elif defined(__GNUC__)
+	__builtin___clear_cache(static_cast<char *>(ptr), reinterpret_cast<char *>(reinterpret_cast<uintptr_t>(ptr) + size));		
+#elif defined(WIN32)
+	FlushInstructionCache(GetCurrentProcess(), ptr, size);
 #endif
 }
 
@@ -815,7 +822,7 @@ static void cache_init(bool enable) {
 #if defined (WIN32)
 			cache_code_start_ptr = static_cast<uint8_t *>(
 			        VirtualAlloc(nullptr, cache_code_size,
-			                     MEM_COMMIT | MEM_RESERVE,
+			                     MEM_COMMIT,
 			                     PAGE_READWRITE));
 			if (!cache_code_start_ptr) {
 				LOG_MSG("VirtualAlloc error, using malloc");
@@ -854,7 +861,11 @@ static void cache_init(bool enable) {
 		// setup the default blocks for block linkage returns
 		cache.pos=&cache_code_link_blocks[0];
 		link_blocks[0].cache.start=cache.pos;
-		dyn_mem_write();
+
+		auto cache_addr = static_cast<void *>(cache_code);
+		constexpr size_t cache_bytes = CACHE_MAXSIZE;
+
+		dyn_mem_write(cache_addr, cache_bytes);
 		// link code that returns with a special return code
 		dyn_return(BR_Link1,false);
 		cache.pos=&cache_code_link_blocks[32];
@@ -868,8 +879,8 @@ static void cache_init(bool enable) {
 //		link_blocks[1].cache.start=cache.pos;
 		dyn_run_code();
 #endif
-		dyn_mem_execute();
-		dyn_cache_invalidate(static_cast<void *>(cache_code_start_ptr), cache_code_size);
+		dyn_mem_execute(cache_addr, cache_bytes);
+		dyn_cache_invalidate(cache_addr, cache_bytes);
 
 		cache.free_pages=0;
 		cache.last_page=0;

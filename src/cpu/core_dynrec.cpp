@@ -238,10 +238,7 @@ Bits CPU_Core_Dynrec_Run(void) {
 			// unless the instruction is known to be modified
 			if (!chandler->invalidation_map || (chandler->invalidation_map[ip_point&4095]<4)) {
 				// translate up to 32 instructions
-				dyn_mem_write();
 				block=CreateCacheBlock(chandler,ip_point,32);
-				dyn_mem_execute();
-				dyn_cache_invalidate(static_cast<void*>(const_cast<uint8_t*>(block->cache.start)), block->cache.size);
 			} else {
 				// let the normal core handle this instruction to avoid zero-sized blocks
 				Bitu old_cycles=CPU_Cycles;
