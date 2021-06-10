@@ -127,12 +127,14 @@ static bool MakeCodePage(Bitu lin_addr, CodePageHandler *&cph)
 	if (handler->flags & PFLAG_HASCODE) {
 		// this is a codepage handler, make sure it matches current code size
 		cph = (CodePageHandler *)handler;
-		if (handler->flags & cflag) return false;
+		if (CPU_AllowSpeedMods || (handler->flags & cflag)) {
+			return false;
+		}
 		// wrong code size/stale dynamic code, drop it
 		cph->ClearRelease();
-		cph=0;
+		cph = nullptr;
 		// handler was changed, refresh
-		handler=get_tlb_readhandler(lin_addr);
+		handler = get_tlb_readhandler(lin_addr);
 	}
 	if (handler->flags & PFLAG_NOCODE) {
 		if (PAGING_ForcePageInit(lin_addr)) {
@@ -141,13 +143,13 @@ static bool MakeCodePage(Bitu lin_addr, CodePageHandler *&cph)
 				cph = (CodePageHandler *)handler;
 				if (handler->flags & cflag) return false;
 				cph->ClearRelease();
-				cph=0;
+				cph = nullptr;
 				handler=get_tlb_readhandler(static_cast<PhysPt>(lin_addr));
 			}
 		}
 		if (handler->flags & PFLAG_NOCODE) {
 			LOG_MSG("DYNREC:Can't run code in this page");
-			cph=0;
+			cph = nullptr;
 			return false;
 		}
 	} 
@@ -156,7 +158,7 @@ static bool MakeCodePage(Bitu lin_addr, CodePageHandler *&cph)
 	// find the physical page that the linear page is mapped to
 	if (!PAGING_MakePhysPage(phys_page)) {
 		LOG_MSG("DYNREC:Can't find physpage");
-		cph=0;
+		cph = nullptr;
 		return false;
 	}
 	// find a free CodePage

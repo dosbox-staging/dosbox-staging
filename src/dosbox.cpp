@@ -400,6 +400,10 @@ static void DOSBOX_RealInit(Section * sec) {
 		int10.vesa_mode_preference = VESA_MODE_PREF::ALL;
 	else
 		int10.vesa_mode_preference = VESA_MODE_PREF::COMPATIBLE;
+
+	CPU_AllowSpeedMods = section->Get_bool("speed_mods");
+	LOG_MSG("SYSTEM: Speed modifications are %s",
+	        CPU_AllowSpeedMods ? "enabled" : "disabled");
 }
 
 void DOSBOX_Init() {
@@ -484,6 +488,12 @@ void DOSBOX_Init() {
 	        "  all          Offers all modes for a given video memory size, however\n"
 	        "               some games may not use them properly (flickering) or may need\n"
 	        "               more system memory (mem = ) to use them.");
+
+	Pbool = secprop->Add_bool("speed_mods", only_at_start, true);
+	Pbool->Set_help(
+	        "Permit changes known to improve performance. Currently no games are known\n"
+	        "to be affected by this. Please file a bug with the project if you find a\n"
+	        "game that fails when this is set to true so we will list them here.");
 
 	secprop->AddInitFunction(&CALLBACK_Init);
 	secprop->AddInitFunction(&PIC_Init);//done

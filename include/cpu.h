@@ -57,6 +57,7 @@ extern Bit32s CPU_CycleLimit;
 extern Bit64s CPU_IODelayRemoved;
 extern bool CPU_CycleAutoAdjust;
 extern bool CPU_SkipCycleAutoAdjust;
+extern bool CPU_AllowSpeedMods;
 extern Bitu CPU_AutoDetermineMode;
 
 extern Bitu CPU_ArchitectureType;

@@ -62,9 +62,11 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 	PageHandler *handler = get_tlb_readhandler(lin_addr_as_physpt);
 	if (handler->flags & PFLAG_HASCODE) {
 		cph=( CodePageHandler *)handler;
-		if (handler->flags & cflag) return false;
+		if (CPU_AllowSpeedMods || (handler->flags & cflag)) {
+			return false;
+		}
 		cph->ClearRelease();
-		cph=0;
+		cph = nullptr;
 		handler = get_tlb_readhandler(lin_addr_as_physpt);
 	}
 	if (handler->flags & PFLAG_NOCODE) {
@@ -74,20 +76,22 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 				cph=( CodePageHandler *)handler;
 				if (handler->flags & cflag) return false;
 				cph->ClearRelease();
-				cph=0;
+				cph = nullptr;
 				handler = get_tlb_readhandler(lin_addr_as_physpt);
 			}
 		}
 		if (handler->flags & PFLAG_NOCODE) {
 			LOG_MSG("DYNX86:Can't run code in this page!");
-			cph=0;		return false;
+			cph = nullptr;
+			return false;
 		}
 	} 
 	Bitu lin_page=lin_addr >> 12;
 	Bitu phys_page=lin_page;
 	if (!PAGING_MakePhysPage(phys_page)) {
 		LOG_MSG("DYNX86:Can't find physpage");
-		cph=0;		return false;
+		cph = nullptr;
+		return false;
 	}
 	/* Find a free CodePage */
 	if (!cache.free_pages && cache.used_pages) {
