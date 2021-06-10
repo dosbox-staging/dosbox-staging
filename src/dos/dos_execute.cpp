@@ -347,6 +347,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 				DOS_CloseFile(fhandle);
 				DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
 				DOS_FreeMemory(envseg);
+				delete[] loadbuf;
 				return false;
 			}
 		}
