@@ -46,8 +46,11 @@
 // mt32emu Settings
 // ----------------
 
-// Buffer sizes
-static constexpr int FRAMES_PER_BUFFER = 1024; // synth granularity
+// Synth granularity in frames. We keep four buffers in-flight at any given
+// time: when playback exhausts the "head" buffer, we ask MT-32 to render the
+// next buffer, asynchronously, which is then placed at the back of the queue.
+// These four buffers mean we typically have 2048 frames or ~48 ms in backlog.
+static constexpr int FRAMES_PER_BUFFER = 512;
 
 // Analogue circuit modes: DIGITAL_ONLY, COARSE, ACCURATE, OVERSAMPLED
 constexpr auto ANALOG_MODE = MT32Emu::AnalogOutputMode_ACCURATE;
@@ -55,16 +58,20 @@ constexpr auto ANALOG_MODE = MT32Emu::AnalogOutputMode_ACCURATE;
 // DAC Emulation modes: NICE, PURE, GENERATION1, and GENERATION2
 constexpr auto DAC_MODE = MT32Emu::DACInputMode_NICE;
 
-// Analog rendering types: BITS16S, FLOAT
+// Analog rendering types: BIT16S, FLOAT
 constexpr auto RENDERING_TYPE = MT32Emu::RendererType_FLOAT;
 
 // Sample rate conversion quality: FASTEST, FAST, GOOD, BEST
 constexpr auto RATE_CONVERSION_QUALITY = MT32Emu::SamplerateConversionQuality_BEST;
 
-// Use improved behavior for volume adjustments, panning, and mixing
+// Prefer higher ramp resolution over the coarser volume steps used by the hardware
 constexpr bool USE_NICE_RAMP = true;
+
+// Prefer higher panning resolution over the coarser positions used by the hardware
 constexpr bool USE_NICE_PANNING = true;
-constexpr bool USE_NICE_PARTIAL_MIXING = true;
+
+// Prefer the rich sound offered by the hardware's existing partial mixer
+constexpr bool USE_NICE_PARTIAL_MIXING = false;
 
 using Rom = LASynthModel::Rom;
 constexpr auto versioned = LASynthModel::ROM_TYPE::VERSIONED;
@@ -539,18 +546,16 @@ bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
 	mt32_service->selectRendererType(RENDERING_TYPE);
 	mt32_service->setStereoOutputSampleRate(sample_rate);
 	mt32_service->setSamplerateConversionQuality(RATE_CONVERSION_QUALITY);
+	mt32_service->setDACInputMode(DAC_MODE);
+	mt32_service->setNiceAmpRampEnabled(USE_NICE_RAMP);
+	mt32_service->setNicePanningEnabled(USE_NICE_PANNING);
+	mt32_service->setNicePartialMixingEnabled(USE_NICE_PARTIAL_MIXING);
 
 	const auto rc = mt32_service->openSynth();
 	if (rc != MT32EMU_RC_OK) {
 		LOG_MSG("MT32: Error initialising emulation: %i", rc);
 		return false;
 	}
-
-	mt32_service->setDACInputMode(DAC_MODE);
-	mt32_service->setNiceAmpRampEnabled(USE_NICE_RAMP);
-	mt32_service->setNicePanningEnabled(USE_NICE_PANNING);
-	mt32_service->setNicePartialMixingEnabled(USE_NICE_PARTIAL_MIXING); 
-
 	service = std::move(mt32_service);
 	channel = std::move(mixer_channel);
 
