@@ -23,26 +23,27 @@ support today's systems.
 
 ### For developers
 
-|                                | DOSBox Staging              | DOSBox
-|-                               |-                            |-
-| **Version control**            | Git                         | [SVN]
-| **Language**                   | C++14                       | C++03<sup>[1]</sup>
-| **SDL**                        | >= 2.0.2                    | 1.2<sup>＊</sup>
-| **Buildsystem**                | Meson or Visual Studio 2019 | Autotools or Visual Studio 2003
-| **CI**                         | Yes                         | No
-| **Static analysis**            | Yes<sup>[2],[3],[4]</sup>   | No
-| **Dynamic analysis**           | Yes                         | No
-| **clang-format**               | Yes                         | No
-| **[Development builds]**       | Yes                         | No
-| **Unit tests**                 | Yes<sup>[5]</sup>           | No
-| **Automated regression tests** | WIP                         | No
+|                                | DOSBox Staging                | DOSBox
+|-                               |-                              |-
+| **Version control**            | Git                           | [SVN]
+| **Language**                   | C++14                         | C++03<sup>[1]</sup>
+| **SDL**                        | >= 2.0.2                      | 1.2<sup>＊</sup>
+| **Buildsystem**                | Meson or Visual Studio 2019   | Autotools or Visual Studio 2003
+| **CI**                         | Yes                           | No
+| **Static analysis**            | Yes<sup>[2],[3],[4],[5]</sup> | No
+| **Dynamic analysis**           | Yes                           | No
+| **clang-format**               | Yes                           | No
+| **[Development builds]**       | Yes                           | No
+| **Unit tests**                 | Yes<sup>[6]</sup>             | No
+| **Automated regression tests** | WIP                           | No
 
 [SVN]:https://sourceforge.net/projects/dosbox/
 [1]:https://sourceforge.net/p/dosbox/patches/283/
 [2]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
 [3]:https://lgtm.com/projects/g/dosbox-staging/dosbox-staging/
 [4]:https://scan.coverity.com/projects/dosbox-staging
-[5]:tests/README.md
+[5]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
+[6]:tests/README.md
 [Development builds]:https://dosbox-staging.github.io/downloads/devel/
 
 ### Feature differences
