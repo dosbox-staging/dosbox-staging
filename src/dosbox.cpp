@@ -166,9 +166,9 @@ void increaseticks();
 void increaseticks_fixed();
 
 static constexpr auto frame_pace_us = usT(static_cast<int>(1000000.0 / FRAME_RATE));
-static constexpr auto frame_pace_ms = static_cast<uint32_t>(frame_pace_us.count()) /
+static constexpr auto frame_pace_ms = static_cast<int>(frame_pace_us.count()) /
                                       1000;
-static constexpr auto max_latency_ms = static_cast<uint32_t>(frame_pace_us.count()) *
+static constexpr auto max_latency_ms = static_cast<int>(frame_pace_us.count()) *
                                        MAX_FRAME_QUEUE / 1000;
 
 static std::atomic<int> pic_balance = {};
@@ -199,7 +199,7 @@ bool cycles_below_max()
 	return cycle_selector < cycle_range.end();
 }
 
-void increase_cycles(const uint32_t current_latency_ms)
+void increase_cycles(const int current_latency_ms)
 {
 	if (cycles_below_max() && !cycle_adjust_tempo) {
 		const auto original_cycles = CPU_CycleMax;
@@ -208,7 +208,7 @@ void increase_cycles(const uint32_t current_latency_ms)
 		                       ? cycle_range.back()
 		                       : *cycle_selector;
 		if (CPU_CycleMax != original_cycles)
-			LOG_MSG("SCHED: %u ms queue, increased cycles to %u",
+			LOG_MSG("SCHED: %d ms queue, increased cycles to %u",
 			        current_latency_ms, CPU_CycleMax);
 	}
 }
@@ -218,7 +218,7 @@ bool cycles_above_min()
 	return cycle_selector > cycle_range.begin();
 }
 
-void decrease_cycles(uint32_t current_latency_ms)
+void decrease_cycles(const int current_latency_ms)
 {
 	const auto original_cycles = CPU_CycleMax;
 	const auto frames_delayed = 1 + (current_latency_ms - max_latency_ms) /
@@ -232,7 +232,7 @@ void decrease_cycles(uint32_t current_latency_ms)
 		}
 	}
 	if (CPU_CycleMax != original_cycles)
-		LOG_MSG("SCHED: %u ms queue, decreasing cycles to %u",
+		LOG_MSG("SCHED: %d ms queue, decreasing cycles to %u",
 		        current_latency_ms, CPU_CycleMax);
 }
 
@@ -279,9 +279,9 @@ void increaseticks_fixed()
 	// Only adjust cycles up once every second
 	cycle_adjust_tempo = (cycle_adjust_tempo + 1) % 1000;
 
-	const uint32_t ticksNew = GetTicks();
+	const auto ticksNew = GetTicks();
 	if (ticksNew > ticksLast) {
-		ticksRemain = ticksNew - ticksLast;
+		ticksRemain = static_cast<int>(ticksNew - ticksLast);
 		ticksLast = ticksNew;
 		if (ticksRemain > max_latency_ms) {
 			decrease_cycles(ticksRemain);
@@ -325,7 +325,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 			   dosbox keeps track of full blocks.
 			   This code introduces some randomness to the time slept, which improves stability on those configurations
 			 */
-			static const Bit32u sleeppattern[] = { 2, 2, 3, 2, 2, 4, 2 };
+			constexpr int sleeppattern[] = { 2, 2, 3, 2, 2, 4, 2};
 			static Bit32u sleepindex = 0;
 			if (ticksDone != lastsleepDone) sleepindex = 0;
 			delay_fn(sleeppattern[sleepindex++]);
