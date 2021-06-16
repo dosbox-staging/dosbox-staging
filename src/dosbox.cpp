@@ -194,7 +194,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	if (ticksNew <= ticksLast) { //lower should not be possible, only equal.
 		ticksAdded = 0;
 
-		if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust || !use_delay_precise || sleep1count < 3) {
+		if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust || sleep1count < 3) {
 			use_delay_precise ? DelayPrecise(1) : Delay(1);
 		} else {
 			/* Certain configurations always give an exact sleepingtime of 1, this causes problems due to the fact that
