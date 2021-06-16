@@ -84,6 +84,11 @@ static inline void Delay(int milliseconds)
 	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
 
+static inline void DelayUs(int microseconds)
+{
+	std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
+}
+
 static inline void DelayPrecise(int milliseconds)
 {
     static double estimate = precise_delay_default_estimate;
@@ -95,7 +100,7 @@ static inline void DelayPrecise(int milliseconds)
 
     while (seconds > estimate) {
         const auto start = GetTicksUs();
-        std::this_thread::sleep_for(std::chrono::microseconds(precise_delay_interval_us));
+        DelayUs(precise_delay_interval_us);
         const double observed = GetTicksUsSince(start) / 1e6;
         seconds -= observed;
 
@@ -111,11 +116,6 @@ static inline void DelayPrecise(int milliseconds)
     const auto spin_start = GetTicksUs();
 	const int spin_remain = static_cast<int>(seconds * 1e6);
     while (GetTicksUsSince(spin_start) <= spin_remain);
-}
-
-static inline void DelayUs(int microseconds)
-{
-	std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
 }
 
 static inline bool CanDelayPrecise(void)
