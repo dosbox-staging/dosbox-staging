@@ -20,6 +20,7 @@
 #define DOSBOX_TIMER_H
 
 #include <cassert>
+#include <cmath>
 #include <cstdlib>
 
 #include <chrono>
@@ -108,7 +109,7 @@ static inline void DelayPrecise(int milliseconds)
         const double delta = observed - mean;
         mean += delta / count;
         m2   += delta * (observed - mean);
-        const double stddev = sqrt(m2 / (count - 1));
+        const double stddev = std::sqrt(m2 / (count - 1));
         estimate = mean + stddev;
     }
 
