@@ -135,6 +135,7 @@ static LoopHandler * loop;
 
 bool SDLNetInited;
 
+static bool can_delay_precise = false;
 static int ticksRemain;
 static int64_t ticksLast;
 static int ticksAdded;
@@ -193,17 +194,17 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	if (ticksNew <= ticksLast) { //lower should not be possible, only equal.
 		ticksAdded = 0;
 
-		if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust || sleep1count < 3) {
-			Delay(1);
+		if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust || !can_delay_precise || sleep1count < 3) {
+			can_delay_precise ? DelayPrecise(1) : Delay(1);
 		} else {
 			/* Certain configurations always give an exact sleepingtime of 1, this causes problems due to the fact that
 			   dosbox keeps track of full blocks.
 			   This code introduces some randomness to the time slept, which improves stability on those configurations
 			 */
-			static const Bit32u sleeppattern[] = { 2, 2, 3, 2, 2, 4, 2};
+			static const Bit32u sleeppattern[] = { 2, 2, 3, 2, 2, 4, 2 };
 			static Bit32u sleepindex = 0;
 			if (ticksDone != lastsleepDone) sleepindex = 0;
-			Delay(sleeppattern[sleepindex++]);
+			can_delay_precise ? DelayPrecise(sleeppattern[sleepindex++]) : Delay(sleeppattern[sleepindex++]);
 			sleepindex %= sizeof(sleeppattern) / sizeof(sleeppattern[0]);
 		}
 		auto timeslept = GetTicksSince(ticksNew);
@@ -360,6 +361,8 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Initialize some dosbox internals */
+
+	can_delay_precise = CanDelayPrecise();
 
 	ticksRemain=0;
 	ticksLast=GetTicks();

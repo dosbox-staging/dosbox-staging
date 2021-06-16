@@ -20,10 +20,11 @@
 #define DOSBOX_TIMER_H
 
 #include <cassert>
+#include <cstdlib>
 
 #include <chrono>
-#include <thread>
 #include <limits>
+#include <thread>
 
 /* underlying clock rate in HZ */
 
@@ -73,13 +74,61 @@ static inline int GetTicksUsSince(int64_t old_ticks)
 	return GetTicksDiff(now, old_ticks);
 }
 
+static constexpr int precise_delay_interval_us = 100;
+static constexpr int precise_delay_tolerance_us = precise_delay_interval_us / 2;
+static constexpr double precise_delay_default_estimate = 5e-4;
+static constexpr double precise_delay_default_mean = 5e-4;
+
 static inline void Delay(int milliseconds)
 {
 	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
 
+static inline void DelayPrecise(int milliseconds)
+{
+    static double estimate = precise_delay_default_estimate;
+    static double mean = precise_delay_default_mean;
+    static double m2 = 0;
+    static int64_t count = 1;
+
+	double seconds = milliseconds / 1e3;
+
+    while (seconds > estimate) {
+        const auto start = GetTicksUs();
+        std::this_thread::sleep_for(std::chrono::microseconds(precise_delay_interval_us));
+        const double observed = GetTicksUsSince(start) / 1e6;
+        seconds -= observed;
+
+        ++count;
+        const double delta = observed - mean;
+        mean += delta / count;
+        m2   += delta * (observed - mean);
+        const double stddev = sqrt(m2 / (count - 1));
+        estimate = mean + stddev;
+    }
+
+    // spin lock
+    const auto spin_start = GetTicksUs();
+	const int spin_remain = static_cast<int>(seconds * 1e6);
+    while (GetTicksUsSince(spin_start) <= spin_remain);
+}
+
 static inline void DelayUs(int microseconds)
 {
 	std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
+}
+
+static inline bool CanDelayPrecise(void)
+{
+	bool is_precise = true;
+
+	for (int i=0;i<10;i++) {
+		const auto start = GetTicksUs();
+		DelayUs(precise_delay_interval_us);
+		const auto elapsed = GetTicksUsSince(start);
+		if (std::abs(elapsed - precise_delay_interval_us) > precise_delay_tolerance_us) is_precise = false;
+	}
+
+	return is_precise;
 }
 #endif
