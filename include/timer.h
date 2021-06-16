@@ -76,8 +76,8 @@ static inline int GetTicksUsSince(int64_t old_ticks)
 
 static constexpr int precise_delay_interval_us = 100;
 static constexpr int precise_delay_tolerance_us = precise_delay_interval_us; 
-static constexpr double precise_delay_default_estimate = 5e-4;
-static constexpr double precise_delay_default_mean = 5e-4;
+static constexpr double precise_delay_default_estimate = 5e-5;
+static constexpr double precise_delay_default_mean = 5e-5;
 
 static inline void Delay(int milliseconds)
 {
