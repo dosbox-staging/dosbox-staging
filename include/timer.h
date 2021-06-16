@@ -19,10 +19,11 @@
 #ifndef DOSBOX_TIMER_H
 #define DOSBOX_TIMER_H
 
+#include <cassert>
+
 #include <chrono>
 #include <thread>
-#include <cassert>
-#include <climits>
+#include <limits>
 
 /* underlying clock rate in HZ */
 
@@ -44,16 +45,31 @@ static inline int64_t GetTicks(void)
 	        .count();
 }
 
+static inline int64_t GetTicksUs(void)
+{
+	return std::chrono::duration_cast<std::chrono::microseconds>(
+	               std::chrono::steady_clock::now().time_since_epoch())
+	        .count();
+}
+
 static inline int GetTicksDiff(int64_t new_ticks, int64_t old_ticks)
 {
 	assert(new_ticks >= old_ticks);
-	assert((new_ticks - old_ticks) <= INT_MAX);
+	assert((new_ticks - old_ticks) <= std::numeric_limits<int>::max());
 	return static_cast<int>(new_ticks - old_ticks);
 }
 
 static inline int GetTicksSince(int64_t old_ticks)
 {
 	const auto now = GetTicks();
+	assert((now - old_ticks) <= std::numeric_limits<int>::max());
+	return GetTicksDiff(now, old_ticks);
+}
+
+static inline int GetTicksUsSince(int64_t old_ticks)
+{
+	const auto now = GetTicksUs();
+	assert((now - old_ticks) <= std::numeric_limits<int>::max());
 	return GetTicksDiff(now, old_ticks);
 }
 
@@ -62,4 +78,8 @@ static inline void Delay(int milliseconds)
 	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
 
+static inline void DelayUs(int microseconds)
+{
+	std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
+}
 #endif
