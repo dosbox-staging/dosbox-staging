@@ -204,7 +204,7 @@ Run `./scripts/format-commit.sh --help` to learn about available options.
 
 Download `clang-format.py` file somewhere, and make it executable:
 
-    $ curl "https://raw.githubusercontent.com/llvm/llvm-project/master/clang/tools/clang-format/clang-format.py" > ~/.vim/clang-format.py
+    $ curl "https://raw.githubusercontent.com/llvm/llvm-project/main/clang/tools/clang-format/clang-format.py" > ~/.vim/clang-format.py
     $ chmod +x ~/.vim/clang-format.py
 
 Then add following lines to your `.vimrc` file:
