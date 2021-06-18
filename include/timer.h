@@ -75,11 +75,6 @@ static inline int GetTicksUsSince(int64_t old_ticks)
 	return GetTicksDiff(now, old_ticks);
 }
 
-static constexpr int precise_delay_interval_us = 100;
-static constexpr int precise_delay_tolerance_us = precise_delay_interval_us; 
-static constexpr double precise_delay_default_estimate = 5e-5;
-static constexpr double precise_delay_default_mean = 5e-5;
-
 static inline void Delay(int milliseconds)
 {
 	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
@@ -90,6 +85,15 @@ static inline void DelayUs(int microseconds)
 	std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
 }
 
+// The duration to use for precise sleep
+static constexpr int precise_delay_duration_us = 100;
+// The tolerance to allow for sleep variation
+static constexpr int precise_delay_tolerance_us = precise_delay_duration_us; 
+// The estimate of how long the sleep should take (microseconds)
+static constexpr double precise_delay_default_estimate = 5e-5;
+// Use the estimate value as the defaul mean time taken
+static constexpr double precise_delay_default_mean = 5e-5;
+
 static inline void DelayPrecise(int milliseconds)
 {
     static double estimate = precise_delay_default_estimate;
@@ -99,9 +103,10 @@ static inline void DelayPrecise(int milliseconds)
 
 	double seconds = milliseconds / 1e3;
 
+	// sleep as long as we can, then spinlock the rest
     while (seconds > estimate) {
         const auto start = GetTicksUs();
-        DelayUs(precise_delay_interval_us);
+        DelayUs(precise_delay_duration_us);
         const double observed = GetTicksUsSince(start) / 1e6;
         seconds -= observed;
 
@@ -125,9 +130,9 @@ static inline bool CanDelayPrecise(void)
 
 	for (int i=0;i<10;i++) {
 		const auto start = GetTicksUs();
-		DelayUs(precise_delay_interval_us);
+		DelayUs(precise_delay_duration_us);
 		const auto elapsed = GetTicksUsSince(start);
-		if (std::abs(elapsed - precise_delay_interval_us) > precise_delay_tolerance_us) is_precise = false;
+		if (std::abs(elapsed - precise_delay_duration_us) > precise_delay_tolerance_us) is_precise = false;
 	}
 
 	return is_precise;
