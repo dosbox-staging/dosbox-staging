@@ -40,83 +40,83 @@ void TIMER_DelTickHandler(TIMER_TickHandler handler);
 /* This will add 1 milliscond to all timers */
 void TIMER_AddTick(void);
 
-static inline int64_t GetTicks(void)
+static inline int64_t GetTicks()
 {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(
 	               std::chrono::steady_clock::now().time_since_epoch())
 	        .count();
 }
 
-static inline int64_t GetTicksUs(void)
+static inline int64_t GetTicksUs()
 {
 	return std::chrono::duration_cast<std::chrono::microseconds>(
 	               std::chrono::steady_clock::now().time_since_epoch())
 	        .count();
 }
 
-static inline int GetTicksDiff(int64_t new_ticks, int64_t old_ticks)
+static inline int GetTicksDiff(const int64_t new_ticks, const int64_t old_ticks)
 {
 	assert(new_ticks >= old_ticks);
 	assert((new_ticks - old_ticks) <= std::numeric_limits<int>::max());
 	return static_cast<int>(new_ticks - old_ticks);
 }
 
-static inline int GetTicksSince(int64_t old_ticks)
+static inline int GetTicksSince(const int64_t old_ticks)
 {
 	const auto now = GetTicks();
 	assert((now - old_ticks) <= std::numeric_limits<int>::max());
 	return GetTicksDiff(now, old_ticks);
 }
 
-static inline int GetTicksUsSince(int64_t old_ticks)
+static inline int GetTicksUsSince(const int64_t old_ticks)
 {
 	const auto now = GetTicksUs();
 	assert((now - old_ticks) <= std::numeric_limits<int>::max());
 	return GetTicksDiff(now, old_ticks);
 }
 
-static inline void Delay(int milliseconds)
+static inline void Delay(const int milliseconds)
 {
 	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
 
-static inline void DelayUs(int microseconds)
+static inline void DelayUs(const int microseconds)
 {
 	std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
 }
 
 // The duration to use for precise sleep
 static constexpr int precise_delay_duration_us = 100;
-// The tolerance to allow for sleep variation
-static constexpr int precise_delay_tolerance_us = precise_delay_duration_us; 
-// The estimate of how long the sleep should take (microseconds)
-static constexpr double precise_delay_default_estimate = 5e-5;
-// Use the estimate value as the defaul mean time taken
-static constexpr double precise_delay_default_mean = 5e-5;
 
-static inline void DelayPrecise(int milliseconds)
+// based on work from:
+// https://blat-blatnik.github.io/computerBear/making-accurate-sleep-function/
+static inline void DelayPrecise(const int milliseconds)
 {
-    static double estimate = precise_delay_default_estimate;
-    static double mean = precise_delay_default_mean;
-    static double m2 = 0;
-    static int64_t count = 1;
+	// The estimate of how long the sleep should take (microseconds)
+	static double estimate = 5e-5;
+	// Use the estimate value as the default mean time taken
+	static double mean = 5e-5;
+	static double m2 = 0;
+	static int64_t count = 1;
 
+	// Original code operated on seconds, convert
 	double seconds = milliseconds / 1e3;
 
 	// sleep as long as we can, then spinlock the rest
-    while (seconds > estimate) {
-        const auto start = GetTicksUs();
-        DelayUs(precise_delay_duration_us);
-        const double observed = GetTicksUsSince(start) / 1e6;
-        seconds -= observed;
+	while (seconds > estimate) {
+		const auto start = GetTicksUs();
+		DelayUs(precise_delay_duration_us);
+		// Original code operated on seconds, convert
+		const double observed = GetTicksUsSince(start) / 1e6;
+		seconds -= observed;
 
-        ++count;
-        const double delta = observed - mean;
-        mean += delta / count;
-        m2   += delta * (observed - mean);
-        const double stddev = std::sqrt(m2 / (count - 1));
-        estimate = mean + stddev;
-    }
+		++count;
+		const double delta = observed - mean;
+		mean += delta / count;
+		m2 += delta * (observed - mean);
+		const double stddev = std::sqrt(m2 / (count - 1));
+		estimate = mean + stddev;
+	}
 
     // spin lock
     const auto spin_start = GetTicksUs();
@@ -124,15 +124,20 @@ static inline void DelayPrecise(int milliseconds)
     while (GetTicksUsSince(spin_start) <= spin_remain);
 }
 
-static inline bool CanDelayPrecise(void)
+static inline bool CanDelayPrecise()
 {
+	// The tolerance to allow for sleep variation
+	constexpr int precise_delay_tolerance_us = precise_delay_duration_us;
+
 	bool is_precise = true;
 
 	for (int i=0;i<10;i++) {
 		const auto start = GetTicksUs();
 		DelayUs(precise_delay_duration_us);
 		const auto elapsed = GetTicksUsSince(start);
-		if (std::abs(elapsed - precise_delay_duration_us) > precise_delay_tolerance_us) is_precise = false;
+		if (std::abs(elapsed - precise_delay_duration_us) >
+		    precise_delay_tolerance_us)
+			is_precise = false;
 	}
 
 	return is_precise;

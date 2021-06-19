@@ -21,11 +21,13 @@
 
 #include "dosbox.h"
 
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
+
+#include <functional>
 
 #include "debug.h"
 #include "cpu.h"
@@ -135,7 +137,7 @@ static LoopHandler * loop;
 
 bool SDLNetInited;
 
-static bool use_delay_precise = false;
+static std::function<void(int)> delay_fn = Delay;
 static int ticksRemain;
 static int64_t ticksLast;
 static int ticksAdded;
@@ -195,7 +197,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 		ticksAdded = 0;
 
 		if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust || sleep1count < 3) {
-			use_delay_precise ? DelayPrecise(1) : Delay(1);
+			delay_fn(1);
 		} else {
 			/* Certain configurations always give an exact sleepingtime of 1, this causes problems due to the fact that
 			   dosbox keeps track of full blocks.
@@ -204,7 +206,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 			static const Bit32u sleeppattern[] = { 2, 2, 3, 2, 2, 4, 2 };
 			static Bit32u sleepindex = 0;
 			if (ticksDone != lastsleepDone) sleepindex = 0;
-			use_delay_precise ? DelayPrecise(sleeppattern[sleepindex++]) : Delay(sleeppattern[sleepindex++]);
+			delay_fn(sleeppattern[sleepindex++]);
 			sleepindex %= sizeof(sleeppattern) / sizeof(sleeppattern[0]);
 		}
 		auto timeslept = GetTicksSince(ticksNew);
@@ -362,7 +364,7 @@ static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Initialize some dosbox internals */
 
-	use_delay_precise = CanDelayPrecise();
+	delay_fn = CanDelayPrecise() ? DelayPrecise : Delay;
 
 	ticksRemain=0;
 	ticksLast=GetTicks();
