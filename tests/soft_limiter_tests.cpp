@@ -55,7 +55,11 @@ TEST(SoftLimiter, InboundsProcessTooManyFrames)
 	SoftLimiter limiter("test-channel");
 	const std::vector<float> in{-3, -2, -1, 0, 1, 2};
 	std::vector<int16_t> out(frames * 2);
+#ifdef _GLIBCXX_ASSERTIONS
+	EXPECT_DEATH({ limiter.Process(in, frames + 1, out); }, "");
+#else
 	EXPECT_DEBUG_DEATH({ limiter.Process(in, frames + 1, out); }, "");
+#endif
 }
 
 TEST(SoftLimiter, OutOfBoundsLeftChannel)
