@@ -33,7 +33,7 @@ jobs:
 
           - name: Clang, +debugger
             build_flags: -Denable_debugger=normal
-            max_warnings: 110
+            max_warnings: 108
 
           - name: Clang, warning_level=3
             build_flags: -Dwarning_level=3
