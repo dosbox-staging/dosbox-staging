@@ -367,7 +367,9 @@ void WaveformGenerator::reset()
     shift_register_reset = 0;
     shift_register = 0x7fffff;
     // when reset is released the shift register is clocked once
-    clock_shift_register((~shift_register << 17) & (1 << 22));
+    // so the lower bit is zeroed out
+    // bit0 = (bit22 | test) ^ bit17 = 1 ^ 1 = 0
+    clock_shift_register(0);
 
     shift_pipeline = 0;
 

@@ -332,15 +332,17 @@ SincResampler::SincResampler(double clockFrequency, double samplingFrequency, do
         // Calculate the sinc tables.
         const double scale = 32768.0 * wc / cyclesPerSampleD / M_PI;
 
+        const double firN_2 = static_cast<double>(firN / 2);
+
         for (int i = 0; i < firRES; i++)
         {
-            const double jPhase = (double) i / firRES + firN / 2;
+            const double jPhase = (double) i / firRES + firN_2;
 
             for (int j = 0; j < firN; j++)
             {
                 const double x = j - jPhase;
 
-                const double xt = x / (firN / 2);
+                const double xt = x / firN_2;
                 const double kaiserXt = fabs(xt) < 1. ? I0(beta * sqrt(1. - xt * xt)) / I0beta : 0.;
 
                 const double wt = wc * x / cyclesPerSampleD;
