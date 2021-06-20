@@ -38,25 +38,26 @@ void Innovation::Open(const std::string &model_choice,
 	if (model_choice == "none")
 		return;
 
-	// Assign model
-	auto sid_service = std::make_unique<reSIDfp::SID>();
-	const auto chip_model = model_choice == "6581" ? reSIDfp::MOS6581
-	                                               : reSIDfp::MOS8580;
-	sid_service->setChipModel(chip_model);
-
-	// Assign filtering
+	std::string model_name;
 	int filter_strength = 0;
-	if (chip_model == reSIDfp::MOS6581) {
-		if (filter_strength_6581 > 0) {
+	auto sid_service = std::make_unique<reSIDfp::SID>();
+
+	// Setup the model and filter
+	if (model_choice == "8580") {
+		model_name = "8580";
+		sid_service->setChipModel(reSIDfp::MOS8580);
+		filter_strength = filter_strength_8580;
+		if (filter_strength > 0) {
 			sid_service->enableFilter(true);
-			filter_strength = filter_strength_6581;
-			sid_service->setFilter6581Curve(filter_strength_6581 / 100.0);
+			sid_service->setFilter8580Curve(filter_strength / 100.0);
 		}
 	} else {
-		if (filter_strength_8580 > 0) {
+		model_name = "6581";
+		sid_service->setChipModel(reSIDfp::MOS6581);
+		filter_strength = filter_strength_6581;
+		if (filter_strength > 0) {
 			sid_service->enableFilter(true);
-			filter_strength = filter_strength_6581;
-			sid_service->setFilter6581Curve(filter_strength_6581 / 100.0);
+			sid_service->setFilter6581Curve(filter_strength / 100.0);
 		}
 	}
 
@@ -108,10 +109,10 @@ void Innovation::Open(const std::string &model_choice,
 
 	if (filter_strength == 0)
 		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz",
-		        base_port, model_choice.c_str(), chip_clock / 1000000.0);
+		        base_port, model_name.c_str(), chip_clock / 1000000.0);
 	else
 		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz filtering at %d%%",
-		        base_port, model_choice.c_str(), chip_clock / 1000000.0,
+		        base_port, model_name.c_str(), chip_clock / 1000000.0,
 		        filter_strength);
 
 	is_open = true;
@@ -195,7 +196,7 @@ void Innovation::Render()
 		while (n < SAMPLES_PER_BUFFER) {
 			const auto buffer_pos = buffer.data() + n;
 			const auto n_remaining = SAMPLES_PER_BUFFER - n;
-			const auto cycles = cycles_per_sample * n_remaining;
+			const auto cycles = static_cast<unsigned int>(cycles_per_sample * n_remaining);
 			n += service->clock(cycles, buffer_pos);
 		}
 		assert(n == SAMPLES_PER_BUFFER);
@@ -266,25 +267,27 @@ static void init_innovation_dosbox_settings(Section_prop &sec_prop)
 
 	// Chip type
 	auto *str_prop = sec_prop.Add_string("sidmodel", when_idle, "none");
-	const char *sid_models[] = {"none", "6581", "8580", 0};
+	const char *sid_models[] = {"auto", "6581", "8580", "none", 0};
 	str_prop->Set_values(sid_models);
 	str_prop->Set_help(
-	        "Model of chip to use in the Innovation SSI-2001 card:\n"
-	        " - none: disables the card, which is the default.\n"
-	        " - 6581: the original chip, known for its bassy and rich character.\n"
-	        " - 8580: a later revision that more closely matched the SID specification.\n"
-	        "         It fixed the 6581's DC bias and is less prone to distortion.");
+	        "Model of chip to emulate in the Innovation SSI-2001 card:\n"
+	        " - auto:  Selects the 6581 chip.\n"
+	        " - 6581:  The original chip, known for its bassy and rich character.\n"
+	        " - 8580:  A later revision that more closely matched the SID specification.\n"
+	        "          It fixed the 6581's DC bias and is less prone to distortion.\n"
+	        "          The 8580 is an option on reproduction cards, like the DuoSID.\n"
+	        " - none:  Disables the card.");
 
 	// Chip clock frequency
 	str_prop = sec_prop.Add_string("sidclock", when_idle, "default");
 	const char *sid_clocks[] = {"default", "c64ntsc", "c64pal", "hardsid", 0};
 	str_prop->Set_values(sid_clocks);
 	str_prop->Set_help(
-	        "The chip's clock frequency, which is jumperable on modern reproduction cards.\n"
-	        " - default uses 0.895 MHz per all SSI-2001 cards.\n"
-	        " - c64ntsc uses 1.023 MHz per NTSC Commodore PCs.\n"
-	        " - c64pal  uses 0.985 MHz per PAL Commodore PCs.\n"
-	        " - hardsid uses 1.000 MHz available on the DuoSID reproduction card.");
+	        "The SID chip's clock frequency, which is jumperable on reproduction cards.\n"
+	        " - default: uses 0.895 MHz, per the original SSI-2001 card.\n"
+	        " - c64ntsc: uses 1.023 MHz, per NTSC Commodore PCs and the DuoSID.\n"
+	        " - c64pal:  uses 0.985 MHz, per PAL Commodore PCs and the DuoSID.\n"
+	        " - hardsid: uses 1.000 MHz, available on the DuoSID.");
 
 	// IO Address
 	auto *hex_prop = sec_prop.Add_hex("sidport", when_idle, 0x280);
