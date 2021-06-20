@@ -114,14 +114,15 @@ void SID::voiceSync(bool sync)
 
     for (int i = 0; i < 3; i++)
     {
-        const unsigned int freq = voice[i]->wave()->readFreq();
+        WaveformGenerator* const wave = voice[i]->wave();
+        const unsigned int freq = wave->readFreq();
 
-        if (voice[i]->wave()->readTest() || freq == 0 || !voice[(i + 1) % 3]->wave()->readSync())
+        if (wave->readTest() || freq == 0 || !voice[(i + 1) % 3]->wave()->readSync())
         {
             continue;
         }
 
-        const unsigned int accumulator = voice[i]->wave()->readAccumulator();
+        const unsigned int accumulator = wave->readAccumulator();
         const unsigned int thisVoiceSync = ((0x7fffff - accumulator) & 0xffffff) / freq + 1;
 
         if (thisVoiceSync < nextVoiceSync)

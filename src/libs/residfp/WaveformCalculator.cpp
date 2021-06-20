@@ -66,7 +66,7 @@ const CombinedWaveformConfig config[2][4] =
  * @param waveform the waveform to emulate, 1 .. 7
  * @param accumulator the high bits of the accumulator value
  */
-short calculateCombinedWaveform(CombinedWaveformConfig config, int waveform, int accumulator)
+short calculateCombinedWaveform(const CombinedWaveformConfig& config, int waveform, int accumulator)
 {
     float o[12];
 
