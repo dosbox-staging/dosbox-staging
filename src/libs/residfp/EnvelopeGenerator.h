@@ -404,6 +404,7 @@ void EnvelopeGenerator::set_exponential_counter()
     switch (envelope_counter)
     {
     case 0xff:
+    case 0x00:
         new_exponential_counter_period = 1;
         break;
 
@@ -425,10 +426,6 @@ void EnvelopeGenerator::set_exponential_counter()
 
     case 0x06:
         new_exponential_counter_period = 30;
-        break;
-
-    case 0x00:
-        new_exponential_counter_period = 1;
         break;
     }
 }
