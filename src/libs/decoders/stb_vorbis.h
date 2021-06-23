@@ -2639,6 +2639,23 @@ static __forceinline void iter_54(float *z)
    z[-7] = k11 + k22;    // z1 - z5 - z2 + z6
 }
 
+// On x86 targets, Clang's O2 and O3 optimizer fails to properly compile the while
+// loop inside imdct_step3_inner_s_loop_ld654. Therefore, this function acts as a
+// small speedbump that sufficiently disrupts the optimizer such that it produces a
+// working result at all optimization levels.
+//
+// To test if this is fixed in the future, simply comment-out __attribute__((noinline))
+// and build with O2 or O3 optimizations. When Clang properly handles it, the z[-15]
+// assignment can be placed back into the while loop instead of this function call.
+//
+#if defined(__clang__) && (C_TARGETCPU == X86 || C_TARGETCPU == X86_64)
+__attribute__((noinline))
+#endif
+static void imdct_step3_inner_s_loop_ld654_z15(float *z, const float k00, const float k11, const float A2)
+{
+      z[-15] = (k00-k11) * A2;
+}
+
 static void imdct_step3_inner_s_loop_ld654(int n, float *e, int i_off, float *A, int base_n)
 {
    int a_off = base_n >> 3;
@@ -2675,7 +2692,7 @@ static void imdct_step3_inner_s_loop_ld654(int n, float *e, int i_off, float *A,
       z[ -6] = z[ -6] + z[-14];
       z[ -7] = z[ -7] + z[-15];
       z[-14] = (k00+k11) * A2;
-      z[-15] = (k00-k11) * A2;
+      imdct_step3_inner_s_loop_ld654_z15(z, k00, k11, A2);
 
       iter_54(z);
       iter_54(z-8);
