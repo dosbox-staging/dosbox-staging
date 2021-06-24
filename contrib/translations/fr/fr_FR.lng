@@ -1015,10 +1015,6 @@ ECHO est activ‚.
 ECHO est d‚sactiv‚.
 
 .
-:SHELL_ILLEGAL_CONTROL_CHARACTER
-CaractŠre de contr“le inattendu : D‚c %03u et H‚x %#04x.
-
-.
 :SHELL_ILLEGAL_SWITCH
 ParamŠtre incorrect : %s.
 
