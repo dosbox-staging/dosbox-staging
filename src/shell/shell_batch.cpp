@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "logging.h"
 #include "support.h"
 
 // Permitted ASCII control characters in batch files
@@ -105,8 +106,8 @@ emptyline:
 					*cmd_write++ = val;
 				}
 			} else if (val != LINE_FEED && val != CARRIAGE_RETURN) {
-				shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"),
-				                val, val);
+				DEBUG_LOG_MSG("Encountered non-standard character: Dec %03u and Hex %#04x",
+				              val, val);
 			}
 		}
 	} while (val != LINE_FEED && bytes_read);
@@ -242,8 +243,8 @@ again:
 				}
 			} else if (val != BACKSPACE && val != CARRIAGE_RETURN &&
 			           val != ESC && val != LINE_FEED && val != TAB) {
-				shell->WriteOut(MSG_Get("SHELL_ILLEGAL_CONTROL_CHARACTER"),
-				                val, val);
+				DEBUG_LOG_MSG("Encountered non-standard character: Dec %03u and Hex %#04x",
+				              val, val);
 			}
 		}
 	} while (val != LINE_FEED && bytes_read);
