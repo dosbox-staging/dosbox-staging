@@ -270,7 +270,6 @@ struct SDL_Block {
 		struct {
 			uint16_t width = 0; // TODO convert to int
 			uint16_t height = 0; // TODO convert to int
-			bool use_original_size = true;
 			bool resizable = false;
 		} window = {};
 		Bit8u bpp = 0;
@@ -735,10 +734,8 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		// window size is updated AND content is correctly clipped when
 		// emulated program changes resolution with various
 		// windowresolution settings (!).
-		if (sdl.desktop.window.use_original_size &&
-		    !sdl.desktop.window.resizable && !sdl.desktop.switching_fullscreen)
+		if (!sdl.desktop.window.resizable && !sdl.desktop.switching_fullscreen)
 			SDL_SetWindowSize(sdl.window, width, height);
-
 		SDL_SetWindowFullscreen(sdl.window, 0);
 	}
 	// Maybe some requested fullscreen resolution is unsupported?
@@ -1858,14 +1855,6 @@ static SDL_Window *SetDefaultWindowMode()
 		                     sdl.desktop.full.height, sdl.desktop.fullscreen,
 		                     sdl.desktop.want_resizable_window);
 	}
-
-	if (sdl.desktop.window.use_original_size) {
-		sdl.desktop.lazy_init_window_size = false;
-		return SetWindowMode(sdl.desktop.want_type, sdl.draw.width,
-		                     sdl.draw.height, sdl.desktop.fullscreen,
-		                     sdl.desktop.want_resizable_window);
-	}
-
 	sdl.desktop.lazy_init_window_size = false;
 	return SetWindowMode(sdl.desktop.want_type, sdl.desktop.window.width,
 	                     sdl.desktop.window.height, sdl.desktop.fullscreen,
@@ -2026,59 +2015,39 @@ static void SetupWindowResolution(const char *val)
 	assert(sdl.display_number >= 0);
 	std::string pref = NormalizeConfValue(val);
 
-	if (pref == "default" || pref.empty()) {
-#if defined(LINUX)
-		sdl.desktop.want_resizable_window = detect_resizable_window();
-#else
-		sdl.desktop.want_resizable_window = false;
-#endif
-		sdl.desktop.window.use_original_size = true;
-
-		if (!sdl.desktop.want_resizable_window &&
-		    detect_shader_fixed_size()) {
-			const auto ws = detect_window_size();
-			sdl.desktop.window.use_original_size = false;
-			sdl.desktop.window.width = ws.x;
-			sdl.desktop.window.height = ws.y;
-		}
-		return;
-	}
-
-	if (pref == "resizable") {
-		sdl.desktop.want_resizable_window = detect_resizable_window();
-		sdl.desktop.window.use_original_size = true;
-		return;
-	}
-
-	if (pref == "original") {
-		sdl.desktop.want_resizable_window = false;
-		sdl.desktop.window.use_original_size = true;
-		return;
-	}
-
 	int w = 0;
 	int h = 0;
 	// sscanf won't parse suffix after second integer
 	if (sscanf(pref.c_str(), "%dx%d", &w, &h) == 2) {
 		SDL_Rect bounds;
 		SDL_GetDisplayBounds(sdl.display_number, &bounds);
-		if (w > 0 && h > 0 && w <= bounds.w && h <= bounds.h) {
+		if (w > 0 && h > 0 && w <= bounds.w && h <= bounds.h &&
+		    w <= INT16_MAX && h <= INT16_MAX) {
 			sdl.desktop.want_resizable_window = false;
-			sdl.desktop.window.use_original_size = false;
-			sdl.desktop.window.width = w;
-			sdl.desktop.window.height = h;
+			sdl.desktop.window.width = static_cast<uint16_t>(w);
+			sdl.desktop.window.height = static_cast<uint16_t>(h);
 			return;
 		} else {
 			LOG_MSG("MAIN: dimensions %dx%d are out of display "
 			        "bounds (%dx%d)",
 			        w, h, bounds.w, bounds.h);
 		}
+		LOG_MSG("MAIN: 'windowresolution = %s' is not valid; using 'default' instead",
+		        pref.c_str());
 	}
 
-	LOG_MSG("MAIN: 'windowresolution = %s' is not a valid setting, using "
-	        "'original' instead", pref.c_str());
-	sdl.desktop.want_resizable_window = false;
-	sdl.desktop.window.use_original_size = true;
+#if defined(LINUX)
+	sdl.desktop.want_resizable_window = detect_resizable_window();
+#else
+	sdl.desktop.want_resizable_window = (pref == "resizable" &&
+	                                     detect_resizable_window());
+#endif
+	const auto ws = detect_window_size();
+	sdl.desktop.window.width = static_cast<uint16_t>(ws.x);
+	sdl.desktop.window.height = static_cast<uint16_t>(ws.y);
+
+	LOG_MSG("MAIN: selected window resolution is '%ux%u' (or %d%%)",
+	        sdl.desktop.window.width, sdl.desktop.window.height, window_percent);
 }
 
 static SDL_Rect calc_viewport_fit(int win_width, int win_height)
@@ -2552,7 +2521,7 @@ static void FinalizeWindowState()
 	sdl.desktop.lazy_init_window_size = false;
 
 	int w, h;
-	if (sdl.desktop.window.use_original_size || sdl.desktop.window.resizable) {
+	if (sdl.desktop.window.resizable) {
 		w = sdl.draw.width * sdl.draw.scalex;
 		h = sdl.draw.height * sdl.draw.scaley;
 	} else {
@@ -2923,8 +2892,6 @@ void Config_Add_SDL() {
 	        "Set window size to be used when running in windowed mode:\n"
 	        "  default:   Select the best option based on your\n"
 	        "             environment and other settings.\n"
-	        "  original:  Resize window to the resolution picked by\n"
-	        "             the emulated program.\n"
 #if SDL_VERSION_ATLEAST(2, 0, 5)
 	        "  resizable: Make the emulator window resizable.\n"
 	        "             This is an experimental option, works only with\n"
