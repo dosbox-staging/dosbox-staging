@@ -285,6 +285,7 @@ struct SDL_Block {
 		bool lazy_init_window_size = false;
 		bool vsync = false;
 		bool want_resizable_window = false;
+		SDL_WindowEventID last_size_event = {};
 		SCREEN_TYPES type;
 		SCREEN_TYPES want_type;
 	} desktop = {};
@@ -734,8 +735,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		// window size is updated AND content is correctly clipped when
 		// emulated program changes resolution with various
 		// windowresolution settings (!).
-		if (!sdl.desktop.window.resizable && !sdl.desktop.switching_fullscreen)
-			SDL_SetWindowSize(sdl.window, width, height);
+		SDL_SetWindowSize(sdl.window, width, height);
 		SDL_SetWindowFullscreen(sdl.window, 0);
 	}
 	// Maybe some requested fullscreen resolution is unsupported?
@@ -1254,12 +1254,8 @@ dosurface:
 		    (sdl.clip.w != windowWidth || sdl.clip.h != windowHeight)) {
 			// LOG_MSG("attempting to fix the centering to %d %d %d %d",(windowWidth-sdl.clip.w)/2,(windowHeight-sdl.clip.h)/2,sdl.clip.w,sdl.clip.h);
 			glViewport((windowWidth - sdl.clip.w) / 2,
-			           (windowHeight - sdl.clip.h) / 2,
-			           sdl.clip.w,
+			           (windowHeight - sdl.clip.h) / 2, sdl.clip.w,
 			           sdl.clip.h);
-		} else if (sdl.desktop.window.resizable) {
-			sdl.clip = calc_viewport(windowWidth, windowHeight);
-			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		} else {
 			/* We don't just pass sdl.clip.y as-is, so we cover the case of non-vertical
 			 * centering on Android (in order to leave room for the on-screen keyboard)
@@ -1967,18 +1963,7 @@ static bool detect_resizable_window()
 #endif // C_OPENGL
 }
 
-static bool detect_shader_fixed_size()
-{
-#if C_OPENGL
-	if (sdl.desktop.want_type != SCREEN_OPENGL)
-		return false;
 
-	const std::string sname = get_glshader_value();
-	return (sname == "crt-fakelottes-flat" || sname == "crt-easymode-flat");
-#else
-	return false;
-#endif // C_OPENGL
-}
 
 static SDL_Point detect_window_size()
 {
@@ -2036,12 +2021,8 @@ static void SetupWindowResolution(const char *val)
 		        pref.c_str());
 	}
 
-#if defined(LINUX)
 	sdl.desktop.want_resizable_window = detect_resizable_window();
-#else
-	sdl.desktop.want_resizable_window = (pref == "resizable" &&
-	                                     detect_resizable_window());
-#endif
+
 	const auto ws = detect_window_size();
 	sdl.desktop.window.width = static_cast<uint16_t>(ws.x);
 	sdl.desktop.window.height = static_cast<uint16_t>(ws.y);
@@ -2520,15 +2501,8 @@ static void FinalizeWindowState()
 	// on future expose events.
 	sdl.desktop.lazy_init_window_size = false;
 
-	int w, h;
-	if (sdl.desktop.window.resizable) {
-		w = sdl.draw.width * sdl.draw.scalex;
-		h = sdl.draw.height * sdl.draw.scaley;
-	} else {
-		w = sdl.desktop.window.width;
-		h = sdl.desktop.window.height;
-	}
-	SDL_SetWindowSize(sdl.window, w, h);
+	SDL_SetWindowSize(sdl.window, sdl.desktop.window.width,
+	                  sdl.desktop.window.height);
 
 	// Force window position when dosbox is configured to start in
 	// fullscreen.  Otherwise SDL will reset window position to 0,0 when
@@ -2573,6 +2547,7 @@ static bool ProcessEvents()
 				//               event.window.data2);
 				HandleVideoResize(event.window.data1,
 				                  event.window.data2);
+				sdl.desktop.last_size_event = SDL_WINDOWEVENT_RESIZED;
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
@@ -2597,6 +2572,20 @@ static bool ProcessEvents()
 					sdl.draw.callback(GFX_CallBackRedraw);
 				GFX_UpdateMouseState();
 				FocusInput();
+
+				// When we're fullscreen, the DOS program might
+				// change underlying draw resolutions, which can
+				// pose a problem when switching back to
+				// window-mode (beacuse the prior window-size
+				// may not longer accomodate the new draw-size).
+				// So in this case, we want to reset the screen
+				// size - but only if we're not in the middle of
+				// resizing the window (which also fires EXPOSED
+				// events).
+				if (!sdl.desktop.fullscreen &&
+					sdl.desktop.last_size_event != SDL_WINDOWEVENT_RESIZED)
+					GFX_ResetScreen();
+
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -2639,6 +2628,9 @@ static bool ProcessEvents()
 
 			case SDL_WINDOWEVENT_SIZE_CHANGED:
 				// DEBUG_LOG_MSG("SDL: The window size has changed");
+
+				// differentiate this size change versus resizing.
+				sdl.desktop.last_size_event = SDL_WINDOWEVENT_SIZE_CHANGED;
 
 				// The window size has changed either as a
 				// result of an API call or through the system
