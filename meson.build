@@ -219,6 +219,7 @@ endif
 
 if get_option('use_mt32emu')
   mt32emu_dep = dependency('mt32emu', version : '>= 2.5.0',
+                           static : ('mt32emu' in static_libs_list),
                            fallback : ['mt32emu', 'mt32emu_dep'],
                            not_found_message : msg.format('use_mt32emu'))
 endif
