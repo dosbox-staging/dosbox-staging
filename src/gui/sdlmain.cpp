@@ -231,6 +231,16 @@ enum SCREEN_TYPES	{
 
 enum class SCALING_MODE { NONE, NEAREST, PERFECT };
 
+// Size and ratio constants
+// ------------------------
+constexpr int SMALL_WINDOW_PERCENT = 50;
+constexpr int MEDIUM_WINDOW_PERCENT = 70;
+constexpr int LARGE_WINDOW_PERCENT = 90;
+constexpr int DEFAULT_WINDOW_PERCENT = MEDIUM_WINDOW_PERCENT;
+constexpr SDL_Point FALLBACK_WINDOW_DIMENSIONS = {640, 480};
+constexpr SDL_Point RATIOS_FOR_STRETCHED_PIXELS = {4, 3};
+constexpr SDL_Point RATIOS_FOR_SQUARE_PIXELS = {8, 5};
+
 enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_AUTO,
 	PRIORITY_LEVEL_PAUSE,
@@ -272,6 +282,11 @@ struct SDL_Block {
 			uint16_t height = 0; // TODO convert to int
 			bool resizable = false;
 		} window = {};
+		struct {
+			int width = 0;
+			int height = 0;
+		} requested_window_bounds = {};
+
 		Bit8u bpp = 0;
 		bool fullscreen = false;
 		// This flag indicates, that we are in the process of switching
@@ -777,18 +792,23 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	int w = 0;
 	int h = 0;
 
-	SDL_GetWindowSize(sdl.window, &w, &h);
+	if (sdl.desktop.fullscreen) {
+		SDL_GetWindowSize(sdl.window, &w, &h);
+	} else {
+		w = sdl.desktop.requested_window_bounds.width;
+		h = sdl.desktop.requested_window_bounds.height;
+	}
+	assert(w > 0 && h > 0);
 
 	sdl.pp_scale = calc_pp_scale(w, h);
+	const int imgw = sdl.pp_scale.x * sdl.draw.width;
+	const int imgh = sdl.pp_scale.y * sdl.draw.height;
 
 	LOG_MSG("MAIN: Pixel-perfect scaling (%dx%d): %dx%d (PAR %#.3g) -> %dx%d (PAR %#.3g)",
 	        sdl.pp_scale.x, sdl.pp_scale.y, sdl.draw.width, sdl.draw.height,
-	        sdl.draw.pixel_aspect, sdl.pp_scale.x * sdl.draw.width,
-	        sdl.pp_scale.y * sdl.draw.height,
+	        sdl.draw.pixel_aspect, imgw, imgh,
 	        static_cast<double>(sdl.pp_scale.y) / sdl.pp_scale.x);
 
-	const int imgw = sdl.pp_scale.x * sdl.draw.width;
-	const int imgh = sdl.pp_scale.y * sdl.draw.height;
 	const int wndw = (sdl.desktop.fullscreen ? w : imgw);
 	const int wndh = (sdl.desktop.fullscreen ? h : imgh);
 
@@ -1943,17 +1963,14 @@ static bool detect_resizable_window()
 {
 #if C_OPENGL
 	if (sdl.desktop.want_type != SCREEN_OPENGL) {
-		LOG_MSG("MAIN: Disabling resizable window, because it's not "
-		        "compatible with selected sdl.output");
+		LOG_MSG("MAIN: Disabled resizable window, only compatible with OpenGL output");
 		return false;
 	}
 
 	const std::string sname = get_glshader_value();
 
 	if (sname != "sharp" && sname != "none" && sname != "default") {
-		LOG_MSG("MAIN: Disabling resizable window, because it's not "
-		        "compatible with selected render.glshader\n"
-		        "MAIN: Use 'sharp' or 'none' to keep resizable window.");
+		LOG_MSG("MAIN: Disabled resizable window, only compatible with 'sharp' and 'none' glshaders");
 		return false;
 	}
 
@@ -1963,72 +1980,200 @@ static bool detect_resizable_window()
 #endif // C_OPENGL
 }
 
-
-
-static SDL_Point detect_window_size()
+static SDL_Point remove_stretched_aspect(const SDL_Point &size)
 {
-	SDL_Rect bounds;
-	SDL_GetDisplayBounds(sdl.display_number, &bounds);
-	constexpr SDL_Point resolutions[] = {
-	        // TODO: these resolutions are disabled for now due to
-	        // compatibility with users using pixel-doubling on high-density
-	        // displays. For example: if we pick 1600x1200 window resolution
-	        // and OS scales it 2x it might end up being larger than really
-	        // available screen area. To fix this we need to avoid currently
-	        // used hacks for OS-level window scaling.
-	        //
-	        // {2560, 1920},
-	        // {2400, 1800},
-	        // {2048, 1536},
-	        // {1920, 1440},
-	        // {1600, 1200},
-	        {1280, 960},
-	        {1024, 768},
-	        {800, 600},
-	};
-	// Pick the biggest window size, that neatly fits in user's available
-	// screen area.
-	for (const auto &size : resolutions) {
-		if (bounds.w > size.x && bounds.h > size.y)
-			return size;
-	}
-	return {640, 480};
+	return {size.x, ceil_sdivide(size.y * 5, 6)};
 }
 
-static void SetupWindowResolution(const char *val)
+static SDL_Point refine_window_size_with_mode(const SDL_Point &size,
+                                              const SCALING_MODE scaling_mode,
+                                              const bool wants_stretched_pixels)
 {
-	assert(sdl.display_number >= 0);
-	std::string pref = NormalizeConfValue(val);
+	switch (scaling_mode) {
+	case (SCALING_MODE::NONE): {
+		const auto game_ratios = wants_stretched_pixels
+		                                 ? RATIOS_FOR_STRETCHED_PIXELS
+		                                 : RATIOS_FOR_SQUARE_PIXELS;
 
+		const auto window_aspect = static_cast<double>(size.x) / size.y;
+		const auto game_aspect = static_cast<double>(game_ratios.x) / game_ratios.y;
+
+		// screen is wider than the game, so constrain horizonal
+		if (window_aspect > game_aspect) {
+			const int x = ceil_sdivide(size.y * game_ratios.x, game_ratios.y);
+			return {x, size.y};
+		}
+		// screen is narrower than the game, so constrain vertical
+		const int y = ceil_sdivide(size.x * game_ratios.y, game_ratios.x);
+		return {size.x, y};
+	}
+	case (SCALING_MODE::NEAREST): {
+		constexpr SDL_Point resolutions[] = {
+		        {7680, 5760}, // 8K  at 4:3 aspect
+		        {7360, 5520}, //
+		        {7040, 5280}, //
+		        {6720, 5040}, //
+		        {6400, 4800}, // HUXGA
+		        {6080, 4560}, //
+		        {5760, 4320}, // 8K "Full Format" at 4:3 aspect
+		        {5440, 4080}, //
+		        {5120, 3840}, // HSXGA at 4:3 aspect
+		        {4800, 3600}, //
+		        {4480, 3360}, //
+		        {4160, 3120}, //
+		        {3840, 2880}, // 4K UHD at 4:3 aspect
+		        {3520, 2640}, //
+		        {3200, 2400}, // QUXGA
+		        {2880, 2160}, // 3K UHD at 4:3 aspect
+		        {2560, 1920}, // 4.92M3 (Max CRT, Viewsonic P225f)
+		        {2400, 1800}, //
+		        {1920, 1440}, // 1080p in 4:3
+		        {1600, 1200}, // UXGA
+		        {1280, 960},  // 720p in 4:3
+		        {1024, 768},  // XGA
+		        {800, 600},   // SVGA
+		};
+		// Pick the biggest window size that fits inside the bounds.
+		for (const auto &candidate : resolutions)
+			if (candidate.x <= size.x && candidate.y <= size.y)
+				return (wants_stretched_pixels
+				                ? candidate
+				                : remove_stretched_aspect(candidate));
+		break;
+	}
+	case (SCALING_MODE::PERFECT): {
+		constexpr double aspect_weight = 1.14;
+		constexpr SDL_Point pre_draw_size = {320, 200};
+		const double pixel_aspect_ratio = wants_stretched_pixels ? 1.2 : 1;
+
+		int scale_x = 0;
+		int scale_y = 0;
+		const int err = pp_getscale(pre_draw_size.x, pre_draw_size.y,
+		                            pixel_aspect_ratio, size.x, size.y,
+		                            aspect_weight, &scale_x, &scale_y);
+		if (err == 0)
+			return {pre_draw_size.x * scale_x, pre_draw_size.y * scale_y};
+		// else use the fallback below
+		break;
+	}
+	}; // end-switch
+
+	// Fallback
+	return (wants_stretched_pixels
+	                ? FALLBACK_WINDOW_DIMENSIONS
+	                : remove_stretched_aspect(FALLBACK_WINDOW_DIMENSIONS));
+}
+
+static SDL_Point window_bounds_from_resolution(const std::string &pref,
+                                               const SDL_Rect &desktop)
+{
 	int w = 0;
 	int h = 0;
-	// sscanf won't parse suffix after second integer
-	if (sscanf(pref.c_str(), "%dx%d", &w, &h) == 2) {
-		SDL_Rect bounds;
-		SDL_GetDisplayBounds(sdl.display_number, &bounds);
-		if (w > 0 && h > 0 && w <= bounds.w && h <= bounds.h &&
-		    w <= INT16_MAX && h <= INT16_MAX) {
-			sdl.desktop.want_resizable_window = false;
-			sdl.desktop.window.width = static_cast<uint16_t>(w);
-			sdl.desktop.window.height = static_cast<uint16_t>(h);
-			return;
-		} else {
-			LOG_MSG("MAIN: dimensions %dx%d are out of display "
-			        "bounds (%dx%d)",
-			        w, h, bounds.w, bounds.h);
-		}
-		LOG_MSG("MAIN: 'windowresolution = %s' is not valid; using 'default' instead",
+	const bool was_parsed = sscanf(pref.c_str(), "%dx%d", &w, &h) == 2;
+	const bool is_valid = (w > 0 && w <= desktop.w && h > 0 && h <= desktop.h);
+	if (was_parsed && is_valid)
+		return {w, h};
+
+	LOG_MSG("MAIN: windowresolution '%s' outside of desktop '%dx%d', using %dx%d instead",
+	        pref.c_str(), desktop.w, desktop.h,
+	        FALLBACK_WINDOW_DIMENSIONS.x, FALLBACK_WINDOW_DIMENSIONS.y);
+
+	return FALLBACK_WINDOW_DIMENSIONS;
+}
+
+static SDL_Point window_bounds_from_label(const std::string &pref,
+                                          const SDL_Rect &desktop)
+{
+	int percent = DEFAULT_WINDOW_PERCENT;
+	if (starts_with("s", pref))
+		percent = SMALL_WINDOW_PERCENT;
+	else if (starts_with("m", pref) || pref == "default" || pref.empty())
+		percent = MEDIUM_WINDOW_PERCENT;
+	else if (starts_with("l", pref))
+		percent = LARGE_WINDOW_PERCENT;
+	else if (pref == "desktop")
+		percent = 100;
+	else
+		LOG_MSG("MAIN: The windowresolution '%s' is invalid, using 'default' instead",
 		        pref.c_str());
-	}
+
+	const int w = ceil_sdivide(desktop.w * percent, 100);
+	const int h = ceil_sdivide(desktop.h * percent, 100);
+	return {w, h};
+}
+
+// Takes in:
+//  - The user's windowresolution = value (default, WxH, small, medium, large,
+//  desktop (or junk!)
+//  - The previously configured scaling mode (NONE, NEAREST, PERFECT)
+//  - If aspect correction (stretched pixels) is requested
+
+// Except for SURFACE rendering, this function sets:
+//  - 'sdl.desktop.requested_window_bounds' with coarse bounds
+//  - 'sdl.desktop.window' with the refined size
+
+// The coarse bounds do not take into account scaling or aspect correction,
+// while the refined size does (and because of this, is always a smaller
+// resolution than the coarse bounds).
+
+// We use the coarse bounds when re-calculating new sizes (such as
+// pixel-perfect) whenever there's a DOS-side resolution change.  This ensures
+// that the window will always be as big as possible, but still within bounds.
+
+static void setup_window_sizes_from_conf(const char *windowresolution_val,
+                                         const SCALING_MODE scaling_mode,
+                                         const bool wants_stretched_pixels)
+{
+	assert(sdl.display_number >= 0);
+
+	// TODO: Deprecate SURFACE output and remove this.
+	// For now, let the DOS-side determine the window's resolution.
+	if (sdl.desktop.want_type == SCREEN_SURFACE)
+		return;
 
 	sdl.desktop.want_resizable_window = detect_resizable_window();
 
-	const auto ws = detect_window_size();
-	sdl.desktop.window.width = static_cast<uint16_t>(ws.x);
-	sdl.desktop.window.height = static_cast<uint16_t>(ws.y);
+	// Get the total usable desktop resolution
+	SDL_Rect desktop;
+	SDL_GetDisplayUsableBounds(sdl.display_number, &desktop);
+	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
+	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
 
-	LOG_MSG("MAIN: selected window resolution is '%ux%u' (or %d%%)",
-	        sdl.desktop.window.width, sdl.desktop.window.height, window_percent);
+	// Bound the desktop resolution by the user's window-size setting
+	const std::string pref = NormalizeConfValue(windowresolution_val);
+	SDL_Point coarse_size;
+	if (pref.find('x') != std::string::npos)
+		coarse_size = window_bounds_from_resolution(pref, desktop);
+	else
+		coarse_size = window_bounds_from_label(pref, desktop);
+
+	// Save the coarse bounds in the SDL struct for future sizing events
+	sdl.desktop.requested_window_bounds = {coarse_size.x, coarse_size.y};
+
+	// Refine the coarse size and save it in the SDL struct
+	const auto refined_size = refine_window_size_with_mode(coarse_size,
+	                                                       scaling_mode,
+	                                                       wants_stretched_pixels);
+
+	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
+	sdl.desktop.window.width = static_cast<uint16_t>(refined_size.x);
+	sdl.desktop.window.height = static_cast<uint16_t>(refined_size.y);
+
+	// Let the user know the resulting window properties
+	if (scaling_mode == SCALING_MODE::NONE)
+		LOG_MSG("MAIN: Sized window to %dx%d with %s pixels",
+		        refined_size.x, refined_size.y,
+		        wants_stretched_pixels ? "stretched" : "square");
+
+	else if (scaling_mode == SCALING_MODE::NEAREST)
+		LOG_MSG("MAIN: Sized window to %dx%d with nearest-neighbour scaling and %s pixels",
+		        refined_size.x, refined_size.y,
+		        wants_stretched_pixels ? "stretched" : "square");
+
+	else if (scaling_mode == SCALING_MODE::PERFECT)
+		LOG_MSG("MAIN: Sized window %dx%d with pixel-perfect scaling and %s pixels",
+		        refined_size.x, refined_size.y,
+		        wants_stretched_pixels ? "stretched" : "square");
 }
 
 static SDL_Rect calc_viewport_fit(int win_width, int win_height)
@@ -2221,7 +2366,13 @@ static void GUI_StartUp(Section *sec)
 	sdl.render_driver = section->Get_string("texture_renderer");
 	lowcase(sdl.render_driver);
 
-	SetupWindowResolution(section->Get_string("windowresolution"));
+	const auto render_section = static_cast<Section_prop *>(
+	        control->GetSection("render"));
+	assert(render_section);
+
+	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
+	                             sdl.scaling_mode,
+	                             render_section->Get_bool("aspect"));
 
 #if C_OPENGL
 	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
@@ -2881,16 +3032,13 @@ void Config_Add_SDL() {
 
 	pstring = sdl_sec->Add_string("windowresolution", on_start, "default");
 	pstring->Set_help(
-	        "Set window size to be used when running in windowed mode:\n"
+	        "Set window size when running in windowed mode:\n"
 	        "  default:   Select the best option based on your\n"
 	        "             environment and other settings.\n"
-#if SDL_VERSION_ATLEAST(2, 0, 5)
-	        "  resizable: Make the emulator window resizable.\n"
-	        "             This is an experimental option, works only with\n"
-	        "             output=opengl and glshader=sharp (or none)\n"
-#endif
-	        "  <custom>:  Scale the window content to the indicated\n"
-	        "             dimensions, in WxH format. For example: 1024x768.\n"
+	        "  small, medium, or large (or s, m, l):\n"
+	        "             Size the window relative to the desktop.\n"
+	        "  <custom>:  Scale the window to the given dimensions in\n"
+	        "             WxH format. For example: 1024x768.\n"
 	        "             Scaling is not performed for output=surface.");
 
 	const char *outputs[] = {
