@@ -441,7 +441,7 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 	const auto available_models = populate_available_models(GetService(),
 	                                                        dirs_with_models);
 	if (available_models.empty()) {
-		caller->WriteOut("  No supported models present.");
+		caller->WriteOut("  No supported models present.\n");
 		return MIDI_RC::OK;
 	}
 
