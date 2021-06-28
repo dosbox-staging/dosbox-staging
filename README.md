@@ -165,6 +165,14 @@ ninja -C build
 ./build/dosbox
 ```
 
+To build and link the MT-32 and FluidSynth subprojects statically,
+add the `-Ddefault_library=static` option during setup.
+
+To see all of Meson's setup options, run:
+``` shell
+meson configure
+```
+
 ### Windows - Visual Studio (2019 or newer)
 
 First, you need to setup [vcpkg] to install build dependencies. Once vcpkg
