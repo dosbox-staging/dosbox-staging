@@ -800,14 +800,19 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	}
 	assert(w > 0 && h > 0);
 
+	const int previous_imgw = sdl.pp_scale.x * sdl.draw.width;
+	const int previous_imgh = sdl.pp_scale.y * sdl.draw.height;
+
 	sdl.pp_scale = calc_pp_scale(w, h);
+
 	const int imgw = sdl.pp_scale.x * sdl.draw.width;
 	const int imgh = sdl.pp_scale.y * sdl.draw.height;
 
-	LOG_MSG("MAIN: Pixel-perfect scaling (%dx%d): %dx%d (PAR %#.3g) -> %dx%d (PAR %#.3g)",
-	        sdl.pp_scale.x, sdl.pp_scale.y, sdl.draw.width, sdl.draw.height,
-	        sdl.draw.pixel_aspect, imgw, imgh,
-	        static_cast<double>(sdl.pp_scale.y) / sdl.pp_scale.x);
+	if (previous_imgw != imgw || previous_imgh != imgh)
+		LOG_MSG("MAIN: Pixel-perfect scaling (%dx%d): %dx%d (PAR %#.3g) -> %dx%d (PAR %#.3g)",
+		        sdl.pp_scale.x, sdl.pp_scale.y, sdl.draw.width,
+		        sdl.draw.height, sdl.draw.pixel_aspect, imgw, imgh,
+		        static_cast<double>(sdl.pp_scale.y) / sdl.pp_scale.x);
 
 	const int wndw = (sdl.desktop.fullscreen ? w : imgw);
 	const int wndh = (sdl.desktop.fullscreen ? h : imgh);
@@ -983,6 +988,13 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
+	const bool is_changed = (sdl.draw.width != static_cast<int>(width) ||
+	                         sdl.draw.height != static_cast<int>(height) ||
+	                         sdl.draw.scalex != scalex ||
+	                         sdl.draw.scaley != scaley ||
+	                         sdl.draw.pixel_aspect != pixel_aspect ||
+	                         sdl.draw.callback != callback);
+
 	sdl.draw.width = static_cast<int>(width);
 	sdl.draw.height = static_cast<int>(height);
 	sdl.draw.scalex = scalex;
@@ -993,11 +1005,11 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 	const bool double_h = (flags & GFX_DBL_H) > 0;
 	const bool double_w = (flags & GFX_DBL_W) > 0;
 
-	LOG_MSG("MAIN: Draw resolution: %dx%d,%s%s pixel aspect ratio: %#.2f",
-	        sdl.draw.width, sdl.draw.height,
-	        (double_w ? " double-width," : ""),
-	        (double_h ? " double-height," : ""),
-	        pixel_aspect);
+	if (is_changed)
+		LOG_MSG("MAIN: Draw resolution: %dx%d,%s%s pixel aspect ratio: %#.2f",
+		        sdl.draw.width, sdl.draw.height,
+		        (double_w ? " double-width," : ""),
+		        (double_h ? " double-height," : ""), pixel_aspect);
 
 	switch (sdl.desktop.want_type) {
 dosurface:
@@ -2717,7 +2729,7 @@ static bool ProcessEvents()
 				 * FOCUS_GAINED event to catch window startup
 				 * and size toggles.
 				 */
-				DEBUG_LOG_MSG("SDL: Window has gained keyboard focus");
+				// DEBUG_LOG_MSG("SDL: Window has gained keyboard focus");
 				SetPriority(sdl.priority.focus);
 				if (sdl.draw.callback)
 					sdl.draw.callback(GFX_CallBackRedraw);
