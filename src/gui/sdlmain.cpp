@@ -441,7 +441,6 @@ void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
 	SDL_SetWindowTitle(sdl.window, title);
 }
 
-#if SDL_VERSION_ATLEAST(2, 0, 5)
 /* This function is SDL_EventFilter which is being called when event is
  * pushed into the SDL event queue.
  *
@@ -473,7 +472,6 @@ static int watch_sdl_events(void *userdata, SDL_Event *e)
 	}
 	return 0;
 }
-#endif
 
 /* On macOS, as we use a nicer external icon packaged in App bundle.
  *
@@ -718,13 +716,12 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 			return nullptr;
 		}
 
-#if SDL_VERSION_ATLEAST(2, 0, 5)
 		if (resizable) {
 			SDL_AddEventWatch(watch_sdl_events, sdl.window);
 			SDL_SetWindowResizable(sdl.window, SDL_TRUE);
 		}
 		sdl.desktop.window.resizable = resizable;
-#endif
+
 		GFX_SetTitle(-1, -1, false); // refresh title.
 
 		if (!fullscreen) {
@@ -2816,7 +2813,6 @@ static bool ProcessEvents()
 				RequestExit(true);
 				break;
 
-#if SDL_VERSION_ATLEAST(2, 0, 5)
 			case SDL_WINDOWEVENT_TAKE_FOCUS:
 				// DEBUG_LOG_MSG("SDL: Window is being offered a focus");
 				// should SetWindowInputFocus() on itself or a
@@ -2827,7 +2823,7 @@ static bool ProcessEvents()
 				DEBUG_LOG_MSG("SDL: Window had a hit test that "
 				              "wasn't SDL_HITTEST_NORMAL");
 				continue;
-#endif
+
 			default: break;
 			}
 

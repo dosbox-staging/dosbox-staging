@@ -183,7 +183,7 @@ atomic_dep    = cxx.find_library('atomic', required : false)
 opus_dep      = dependency('opusfile',
                            static : ('opusfile' in static_libs_list))
 threads_dep   = dependency('threads')
-sdl2_dep      = dependency('sdl2', version : '>= 2.0.2',
+sdl2_dep      = dependency('sdl2', version : '>= 2.0.5',
                            static : ('sdl2' in static_libs_list))
 sdl2_net_dep  = optional_dep
 opengl_dep    = optional_dep
