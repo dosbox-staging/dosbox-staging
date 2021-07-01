@@ -6,6 +6,7 @@
 /* ----------------------- Pixel-perfect scaling unit ----------------------- */
 /* This unit uses the Horstmann indentation style.                            */
 
+#include <float.h>
 #include <math.h>
 #include <string.h>
 
@@ -23,18 +24,19 @@ int pp_getscale /* calculate integer scales for pixel-perfect magnification */
 	double parweight,      /* weight of PAR in scale estimation */
 	int    *sx,  int *sy   /* horisontal and vertical scales    */
 ) /* returns -1 on error and 0 on success */
-{	int    sxc, syc, sxm, sym;   /* current and maximum x and y scales     */
-	int    exactpar;             /* whether to enforce exact aspect ratio  */
-	double parrat;               /* ratio of current PAR and target PAR    */
-	double errpar, errsize, err; /* PAR error, size error, and total error */
-	double errmin;               /* minimal error so far                   */ 
-	double parnorm;              /* target PAR "normalised" to exceed 1.0  */
-	double srat;                 /* ratio of maximum size to current       */
+{	int    sxc = 0, syc = 0, sxm = 0, sym = 0;   /* current and maximum x and y scales     */
+	int    exactpar = 0;             /* whether to enforce exact aspect ratio  */
+	double parrat = 0;               /* ratio of current PAR and target PAR    */
+	double errpar = 0, errsize = 0, err = 0; /* PAR error, size error, and total error */
+	double errmin = 0;               /* minimal error so far                   */ 
+	double parnorm = 0;              /* target PAR "normalised" to exceed 1.0  */
+	double srat = 0;                 /* ratio of maximum size to current       */
 
 	if /* sanity checks: */
 	(	win <= 0    || hin <= 0    ||
 		win >  wout || hin >  hout ||
-		par <= 0.0
+		par <= 0.0  || parweight <= 0 ||
+		sx == NULL || sy == NULL
 	)
 	return -1;
 
@@ -49,13 +51,27 @@ int pp_getscale /* calculate integer scales for pixel-perfect magnification */
 
 	errmin = -1; /* this value marks the first iteration */
 	while( 1 )
-	{	parrat    = (double)syc / sxc / par;
+	{
+		// Handle unstable calculation: parrat = (double)syc / sxc / par
+		if (syc == 0) // numerator is zero, so result will be zero
+			parrat = 0;
+		else if (sxc == 0) // numerator is not zero but denominator is zero, so will result in 'inf'
+			parrat = (double)INFINITY;
+		else // otherwise attempt the calculation
+			parrat = (double)syc / sxc / par;
 
 		/* calculate aspect-ratio error: */
-		if( parrat > 1.0 ) errpar =       parrat;
-		else               errpar = 1.0 / parrat;
+		if( parrat > 1.0 )
+			errpar = parrat;
+		else if (fabs(parrat) > DBL_EPSILON) // denominator is valid, so allow the division
+			errpar = 1.0 / parrat;
+		else // otherwise parrat is near zero so will result in 'inf'
+			errpar = (double)INFINITY;
 
-		srat = min( (double)sym/syc, (double)sxm/sxc );
+		if(sym && sxm && syc == 0 && sxc == 0) // denominators are both zero so will result in 'inf'
+			srat = (double)INFINITY;
+		else // otherwise one will be valid, so attempt the comparison
+			srat = min( (double)sym/syc, (double)sxm/sxc );
 
 		/* calculate size error: */
 		/* if PAR is exact, exclude size error from the fitness function: */
@@ -64,9 +80,10 @@ int pp_getscale /* calculate integer scales for pixel-perfect magnification */
 
 		err = errpar * errsize; /* total error */
 
-		/* check for a new optimum: */
-		if( err < errmin || errmin == -1 )
-		{	*sx    = sxc;
+		/* check for a new optimum or if errmin is -1: */
+		if(err < errmin || fabs(errmin + 1) < DBL_EPSILON)
+		{
+			*sx    = sxc;
 			*sy    = syc;
 			errmin = err;
 		}
@@ -133,7 +150,7 @@ int pp_scale /* magnify an image in a pixel-perfect manner */
 		while( 1 )
 		{	drow = drow + dpitch;          /* next destination row           */
 			if( iy == sy ) break;          /* terminate if source row scaled */
-			memcpy( drow, drow0, drowsz ); /* duplicate base row below       */
+			memcpy( drow, drow0, (size_t)drowsz ); /* duplicate base row below       */
 			iy += 1;
 		}
 
