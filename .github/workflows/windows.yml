@@ -130,7 +130,7 @@ jobs:
         run: |
           set -x
           git fetch --prune --unshallow
-          export VERSION=$(git describe --abbrev=4)
+          export VERSION=$(git describe --abbrev=0)
           # inject version based on vcs
           sed -i "s|DOSBOX_DETAILED_VERSION \"git\"|DOSBOX_DETAILED_VERSION \"$VERSION\"|" src/platform/visualc/config.h
           echo "VERSION=$VERSION" >> $GITHUB_ENV
