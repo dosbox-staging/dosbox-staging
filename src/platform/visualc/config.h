@@ -2,7 +2,7 @@
 #define CONF_SUFFIX "-staging-git"
 
 /* Version number of package */
-#define VERSION "0.77.0"
+#define VERSION "0.78.0"
 
 /* This macro is going to be overriden via CI */
 #define DOSBOX_DETAILED_VERSION "git"
