@@ -75,21 +75,21 @@ Codecs supported for CD-DA emulation:
 
 Feature differences between release binaries (or unpatched sources):
 
-|                          | DOSBox Staging                               | DOSBox SVN
-|-                         |-                                             |-
-| **Pixel-perfect mode**   | Yes (`output=openglpp` or `output=texturepp`)| N/A
-| **Resizable window**     | Experimental (`windowresolution=resizable`)  | N/A
-| **Relative window size** | N/A                                          | `windowresolution=X%`
-| **[OPL] emulators**      | compat, fast, mame, nuked<sup>[8]</sup>      | compat, fast, mame
-| **[CGA]/mono support**   | Yes (`machine=cga_mono`)<sup>[9]</sup>       | Only CGA with colour
-| **[Wayland] support**    | Experimental (use `SDL_VIDEODRIVER=wayland`) | N/A
-| **Modem phonebook file** | Yes (`phonebookfile=<name>`)                 | N/A
-| **Autotype command**     | Yes<sup>[10]</sup>                           | N/A
-| **Startup verbosity**    | Yes<sup>[11]</sup>                           | N/A
-| **[GUS] enhancements**   | Yes<sup>[12]</sup>                           | N/A
-| **Raw mouse input**      | Yes (`raw_mouse_input=true`)                 | N/A
-| **[FluidSynth][FS] MIDI**| Yes<sup>[13]</sup> (FluidSynth 2.x)          | Only external synths
-| **[MT-32] emulator**     | Yes<sup>＊</sup> (libmt32emu 2.4.2)          | N/A
+| *Feature*                | *DOSBox Staging*                                     | *DOSBox SVN*
+|-                         |-                                                     |-
+| **Pixel-perfect mode**   | Yes (`output=openglpp` or `output=texturepp`)        | N/A
+| **Resizable window**     | Yes (for all `output=opengl` modes)                  | N/A
+| **Relative window size** | Yes (`windowresolution=small`, `medium`, or `large`) | `windowresolution=X%`
+| **[OPL] emulators**      | compat, fast, mame, nuked<sup>[8]</sup>              | compat, fast, mame
+| **[CGA]/mono support**   | Yes (`machine=cga_mono`)<sup>[9]</sup>               | Only CGA with colour
+| **[Wayland] support**    | Experimental (use `SDL_VIDEODRIVER=wayland`)         | N/A
+| **Modem phonebook file** | Yes (`phonebookfile=<name>`)                         | N/A
+| **Autotype command**     | Yes<sup>[10]</sup>                                   | N/A
+| **Startup verbosity**    | Yes<sup>[11]</sup>                                   | N/A
+| **[GUS] enhancements**   | Yes<sup>[12]</sup>                                   | N/A
+| **Raw mouse input**      | Yes (`raw_mouse_input=true`)                         | N/A
+| **[FluidSynth][FS] MIDI**| Yes<sup>[13]</sup> (FluidSynth 2.x)                  | Only external synths
+| **[MT-32] emulator**     | Yes<sup>＊</sup> (libmt32emu 2.4.2)                  | N/A
 
 <sup>＊- Requires original ROM files</sup>
 
