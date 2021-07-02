@@ -1,5 +1,5 @@
 Name:    dosbox-staging
-Version: 0.76.0
+Version: 0.77.0
 Release: 2%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+
@@ -11,7 +11,7 @@ Provides:  dosbox = %{version}-%{release}
 Obsoletes: dosbox < 0.74.4
 
 BuildRequires: alsa-lib-devel
-BuildRequires: automake
+BuildRequires: meson
 BuildRequires: desktop-file-utils
 BuildRequires: fluidsynth-devel >= 2.0
 BuildRequires: gcc
@@ -45,23 +45,17 @@ any old DOS game using modern hardware.
 
 
 %prep
-%autosetup
+%autosetup -c
 
+%build 
+%meson -Dbuildtype=release -Ddefault_library=static -Db_asneeded=true -Db_lto=true -Dtry_static_libs=png -Dfluidsynth:enable-floats=true -Dfluidsynth:try-static-deps=true
+%meson_build
 
-%build
-./autogen.sh
-%{configure} \
-        CPPFLAGS="-DNDEBUG" \
-        CFLAGS="${CFLAGS/-O2/-O3}" \
-        CXXFLAGS="${CXXFLAGS/-O2/-O3}"
-# binary
-%{make_build}
 # icons
 %{__make} -C contrib/icons hicolor
 
-
 %install
-%{make_install}
+%meson_install
 
 pushd contrib/icons/hicolor
 install -p -m 0644 -Dt %{buildroot}%{_datadir}/icons/hicolor/16x16/apps    16x16/apps/%{name}.png
@@ -80,7 +74,6 @@ install -p -m 0644 -Dt %{buildroot}%{_metainfodir} \
 
 appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
-
 %files
 %license COPYING
 %doc AUTHORS README THANKS
@@ -92,6 +85,12 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
 
 %changelog
+* Fri Jun 2 2021 kcgen <kcgen@users.noreply.github.com>
+- 0.77.0-1
+- Replace autotools with Meson
+- Add W^X security policy handling on supported platforms
+- Add PS/1 Audio and Innovation SSI-2001 device support
+
 * Tue Jan 26 2021 Patryk Obara (pbo) <dreamer.tan@gmail.com>
 - 0.76.0-2
 - Tighten dependencies checks
