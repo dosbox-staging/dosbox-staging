@@ -30,7 +30,7 @@ BuildRequires: libpng-devel
 BuildRequires: make
 BuildRequires: meson 
 BuildRequires: opusfile-devel
-BuildRequires: SDL2-devel >= 2.0.2
+BuildRequires: SDL2-devel >= 2.0.5
 BuildRequires: SDL2_net-devel
 
 # mt32emu dependencies:
