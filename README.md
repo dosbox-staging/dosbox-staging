@@ -27,7 +27,7 @@ support today's systems.
 |-                               |-                              |-
 | **Version control**            | Git                           | [SVN]
 | **Language**                   | C++14                         | C++03<sup>[1]</sup>
-| **SDL**                        | >= 2.0.2                      | 1.2<sup>＊</sup>
+| **SDL**                        | >= 2.0.5                      | 1.2<sup>＊</sup>
 | **Buildsystem**                | Meson or Visual Studio 2019   | Autotools or Visual Studio 2003
 | **CI**                         | Yes                           | No
 | **Static analysis**            | Yes<sup>[2],[3],[4],[5]</sup> | No
