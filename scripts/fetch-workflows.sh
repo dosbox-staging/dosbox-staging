@@ -5,13 +5,13 @@
 # Copyright (C) 2020-2021  Kevin R. Croft <krcroft@gmail.com>
 
 ##
-#  This script craws the current repo's GitHub workflow content.
+#  This script crawls the current repo's GitHub workflow content.
 #  It fetches CI records for the provided branches, or by default
-#  the latest CI runs for the master and currently-set branches.
+#  the latest CI runs for the main branch and currently-set branch.
 #
 #  The goal of this script is two fold:
 #    - Provide a mechanized an automated way to fetch CI records.
-#    - Provide a rapid way to diff bad CI runs against master.
+#    - Provide a rapid way to diff bad CI runs against the main branch.
 #
 #  This script requires a GitHub account in order to generate an
 #  auth-token. Simply run the script, it will provide instructions.
@@ -51,7 +51,7 @@ function parse_args() {
 		echo ""
 		echo " - If only BRANCH_A is provided, then just download its records"
 		echo " - If both BRANCH_A and B are provided, then fetch and diff them"
-		echo " - If neither are provided, then fetch and diff good-master vs current branch"
+		echo " - If neither are provided, then fetch and diff the main branch vs current branch"
 		echo " - 'current' can be used in-place of the repo's currently set branch name"
 		echo " - Note: BRANCH_A and B can be the same; the tool will try to diff"
 		echo "         the last *good* run versus latest run (which might differ)"
@@ -63,7 +63,7 @@ function parse_args() {
 		branches+=( "$(get_branch "$1")" )
 		branches+=( "$(get_branch "$2")" )
 	else
-		branches+=( "master" )
+		branches+=( "main" )
 		branches+=( "$(get_branch current)" )
 	fi
 }
@@ -620,7 +620,7 @@ function main() {
 					fetch_job_log "$job_id" "$log_file"
 
 					# In the event we've found a failed job, try to diff it against a prior
-					# successful master job of the equivalent workflow and job-type.
+					# successful main job of the equivalent workflow and job-type.
 					if [[ "$conclusion" == "failure"
 					&& -f "$log_file"
 					&& -f "$successful_prior_log" ]]; then
