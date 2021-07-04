@@ -1,7 +1,7 @@
 project('dosbox-staging', 'c', 'cpp',
         version : '0.78.0',
         license : 'GPL-2.0-or-later',
-        default_options : ['cpp_std=c++14', 'b_ndebug=if-release', 'b_staticpic=false'],
+        default_options : ['cpp_std=c++17', 'b_ndebug=if-release', 'b_staticpic=false'],
         meson_version : '>= 0.54.2')
 
 # After increasing the minimum-required meson version, make the following
