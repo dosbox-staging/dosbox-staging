@@ -77,7 +77,7 @@ These rules apply to code in `src/` and `include/` directories.
 They do not apply to code in `src/libs/` directory (libraries in there
 have their own coding conventions).
 
-Rules outlined below apply to new code landing in master branch.
+Rules outlined below apply to new code landing in the main branch.
 Do not do mass reformatting or renaming of existing code.
 
 ### Language
