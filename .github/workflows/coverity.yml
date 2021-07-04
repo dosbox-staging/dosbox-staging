@@ -3,7 +3,7 @@ name: Coverity Scan analysis
 on:
   push:
     branches:
-      - master
+      - main
 
 env:
   COVERITY_EMAIL: ${{ secrets.CoverityEmail }}
