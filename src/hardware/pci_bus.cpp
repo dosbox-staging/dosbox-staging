@@ -81,12 +81,15 @@ static void write_pci(Bitu port,Bitu val,Bitu iolen) {
 		LOG(LOG_PCI,LOG_NORMAL)("  Write to device %x register %x (function %x) (:=%x)",devnum,regnum,fctnum,val);
 
 		if (devnum>=pci_devices_installed) return;
-		PCI_Device* masterdev=pci_devices[devnum];
-		if (masterdev==NULL) return;
-		if (fctnum>masterdev->NumSubdevices()) return;
+		PCI_Device *selected_device = pci_devices[devnum];
+		if (selected_device == nullptr)
+			return;
+		if (fctnum > selected_device->NumSubdevices())
+			return;
 
-		PCI_Device* dev=masterdev->GetSubdevice(fctnum);
-		if (dev==NULL) return;
+		PCI_Device *dev = selected_device->GetSubdevice(fctnum);
+		if (dev == nullptr)
+			return;
 
 		// write data to PCI device/configuration
 		switch (iolen) {
@@ -151,13 +154,15 @@ static Bitu read_pci(Bitu port,Bitu iolen) {
 		LOG(LOG_PCI,LOG_NORMAL)("  Read from device %x register %x (function %x); addr %x",
 			devnum,regnum,fctnum,pci_caddress);
 
-		PCI_Device* masterdev=pci_devices[devnum];
-		if (masterdev==NULL) return 0xffffffff;
-		if (fctnum>masterdev->NumSubdevices()) return 0xffffffff;
+		PCI_Device *selected_device = pci_devices[devnum];
+		if (selected_device == nullptr)
+			return 0xffffffff;
+		if (fctnum > selected_device->NumSubdevices())
+			return 0xffffffff;
 
-		PCI_Device* dev=masterdev->GetSubdevice(fctnum);
+		PCI_Device *dev = selected_device->GetSubdevice(fctnum);
 
-		if (dev!=NULL) {
+		if (dev != nullptr) {
 			switch (iolen) {
 				case 1:
 					{
