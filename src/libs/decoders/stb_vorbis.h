@@ -1,4 +1,4 @@
-// Ogg Vorbis audio decoder - v1.20 - public domain
+// Ogg Vorbis audio decoder - v1.22 - public domain
 // http://nothings.org/stb_vorbis/
 //
 // Original version written by Sean Barrett in 2007.
@@ -33,8 +33,11 @@
 //    Timur Gagiev       Maxwell Koo         Peter Waller
 //    github:audinowho   Dougall Johnson     David Reid
 //    github:Clownacy    Pedro J. Estebanez  Remi Verschelde
+//    AnthoFoxo          github:morlat       Gabriel Ravier
 //
 // Partial history:
+//    1.22    -            - various small fixes
+//    1.21    - 2021-07-02 - fix bug for files with no comments
 //    1.20    - 2020-07-11 - several small fixes
 //    1.19    - 2020-02-05 - warnings
 //    1.18    - 2020-02-02 - fix seek bugs; parse header comments; misc warnings etc.
@@ -584,7 +587,7 @@ enum STBVorbisError
    #if defined(_MSC_VER) || defined(__MINGW32__)
       #include <malloc.h>
    #endif
-   #if defined(__linux__) || defined(__linux) || defined(__EMSCRIPTEN__) || defined(__NEWLIB__)
+   #if defined(__linux__) || defined(__linux) || defined(__sun__) || defined(__EMSCRIPTEN__) || defined(__NEWLIB__)
       #include <alloca.h>
    #endif
 #else // STB_VORBIS_NO_CRT
