@@ -1002,9 +1002,9 @@ static Bitu INT67_Handler(void) {
 				}
 				break;
 			case 0x0a:		/* VCPI Get PIC Vector Mappings */
-				reg_bx=vcpi.pic1_remapping;		// master PIC
-				reg_cx=vcpi.pic2_remapping;		// slave PIC
-				reg_ah=EMM_NO_ERROR;
+				reg_bx = vcpi.pic1_remapping; // primary PIC
+				reg_cx = vcpi.pic2_remapping; // secondary PIC
+				reg_ah = EMM_NO_ERROR;
 				break;
 			case 0x0b:		/* VCPI Set PIC Vector Mappings */
 				reg_flags&=(~FLAG_IF);
@@ -1276,8 +1276,8 @@ static void SetupVCPI() {
 
 	vcpi.enabled=true;
 
-	vcpi.pic1_remapping=0x08;	// master PIC base
-	vcpi.pic2_remapping=0x70;	// slave PIC base
+	vcpi.pic1_remapping = 0x08; // primary PIC base
+	vcpi.pic2_remapping = 0x70; // secondary PIC base
 
 	vcpi.private_area=emm_handles[vcpi.ems_handle].mem<<12;
 
