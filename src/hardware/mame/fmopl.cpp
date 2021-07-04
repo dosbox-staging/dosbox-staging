@@ -388,7 +388,7 @@ struct FM_OPL
 	uint8_t statusmask;               /* status mask                  */
 	uint8_t mode;                     /* Reg.08 : CSM,notesel,etc.    */
 
-	uint32_t clock;                   /* master clock  (Hz)           */
+	uint32_t clock;                   /* OPL chip clock speed (Hz)    */
 	uint32_t rate;                    /* sampling rate (Hz)           */
 	double freqbase;                /* frequency base               */
 	//attotime TimerBase;         /* Timer base time (==sampling time)*/
