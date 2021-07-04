@@ -1021,23 +1021,28 @@ static Bitu INT15_Handler(void) {
 
 static Bitu Default_IRQ_Handler(void) {
 	IO_WriteB(0x20,0x0b);
-	Bit8u master_isr=IO_ReadB(0x20);
-	if (master_isr) {
-		IO_WriteB(0xa0,0x0b);
-		Bit8u slave_isr=IO_ReadB(0xa0);
-		if (slave_isr) {
-			IO_WriteB(0xa1,IO_ReadB(0xa1)|slave_isr);
-			IO_WriteB(0xa0,0x20);
-		} else IO_WriteB(0x21,IO_ReadB(0x21)|(master_isr&~4));
-		IO_WriteB(0x20,0x20);
+	uint8_t primary_isr = IO_ReadB(0x20);
+	if (primary_isr) {
+		IO_WriteB(0xa0, 0x0b);
+		uint8_t secondary_isr = IO_ReadB(0xa0);
+		if (secondary_isr) {
+			IO_WriteB(0xa1, IO_ReadB(0xa1) | secondary_isr);
+			IO_WriteB(0xa0, 0x20);
+		} else {
+			IO_WriteB(0x21, IO_ReadB(0x21) | (primary_isr & ~4));
+		}
+		IO_WriteB(0x20, 0x20);
 #if C_DEBUG
-		Bit16u irq=0,isr=master_isr;
-		if (slave_isr) isr=slave_isr<<8;
-		while (isr>>=1) irq++;
-		LOG(LOG_BIOS,LOG_WARN)("Unexpected IRQ %u",irq);
+		uint16_t irq = 0;
+		uint16_t isr = secondary_isr ? secondary_isr << 8 : primary_isr;
+		while (isr >>= 1)
+			irq++;
+		LOG(LOG_BIOS, LOG_WARN)("Unexpected IRQ %u", irq);
 #endif
-	} else master_isr=0xff;
-	mem_writeb(BIOS_LAST_UNEXPECTED_IRQ,master_isr);
+	} else {
+		primary_isr = 0xff;
+	}
+	mem_writeb(BIOS_LAST_UNEXPECTED_IRQ, primary_isr);
 	return CBRET_NONE;
 }
 
