@@ -502,7 +502,7 @@ Bitu SVGA_S3_GetClock(void) {
 		clock = 28322000;
 	else
 		clock=1000*S3_CLOCK(vga.s3.clk[clock].m,vga.s3.clk[clock].n,vga.s3.clk[clock].r);
-	/* Check for dual transfer, master clock/2 */
+	/* Check for dual transfer, clock/2 */
 	if (vga.s3.pll.cmd & 0x10) clock/=2;
 	return clock;
 }

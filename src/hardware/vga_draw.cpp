@@ -1150,9 +1150,9 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 			}
 		}
 
-		/* Check for 8 for 9 character clock mode */
+		/* Check for 8 for 9 character clock modes */
 		if (vga.seq.clocking_mode & 1 ) clock/=8; else clock/=9;
-		/* Check for pixel doubling, master clock/2 */
+		/* Check for pixel doubling, clock/2 */
 		if (vga.seq.clocking_mode & 0x8) {
 			htotal*=2;
 		}
