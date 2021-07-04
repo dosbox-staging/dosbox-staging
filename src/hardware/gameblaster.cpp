@@ -30,7 +30,9 @@
 #include "mame/emu.h"
 #include "mame/saa1099.h"
 
-#define MASTER_CLOCK 7159090
+// GameBlaster runs at half of ISA's clock speed (14318180 / 2)
+constexpr uint32_t GAMEBLASTER_CLOCK_HZ = 7159090;
+
 
 //My mixer channel
 static MixerChannel * cms_chan;
@@ -146,11 +148,9 @@ public:
 
 		lastWriteTicks = PIC_Ticks;
 
-		const uint32_t clock = 7159090; // 14318180 isa clock / 2
-
 		machine_config config;
-		device[0] = new saa1099_device(config, "", 0, clock);
-		device[1] = new saa1099_device(config, "", 0, clock);
+		device[0] = new saa1099_device(config, "", 0, GAMEBLASTER_CLOCK_HZ);
+		device[1] = new saa1099_device(config, "", 0, GAMEBLASTER_CLOCK_HZ);
 
 		device[0]->device_start();
 		device[1]->device_start();
