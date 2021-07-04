@@ -82,13 +82,13 @@ Do not do mass reformatting or renaming of existing code.
 
 ### Language
 
-We use C-like C++14. To clarify:
+We use C-like C++17. To clarify:
 
 - Avoid designing your code in complex object-oriented style.
   This does not mean "don't use classes", it means "don't use stuff like
   multiple inheritance, overblown class hierarchies, operator overloading,
   iostreams for stdout/stderr, etc, etc".
-- C++14 has rich STL library, use it (responsibly - sometimes using
+- C++17 has rich STL library, use it (responsibly - sometimes using
   C standard library makes more sense).
 - Use modern C++ features like `constexpr`, `static_assert`, managed pointers,
   lambda expressions, for-each loops, etc.
