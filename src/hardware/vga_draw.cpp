@@ -1150,13 +1150,15 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 			}
 		}
 
-		/* Check for 8 for 9 character clock mode */
-		if (vga.seq.clocking_mode & 1 ) clock/=8; else clock/=9;
-		/* Check for pixel doubling, master clock/2 */
+		// Adjust the VGA clock frequency based on the Clocking Mode Register's
+		// 9/8 Dot Mode. See Timing Model: https://wiki.osdev.org/VGA_Hardware
+		clock /= (vga.seq.clocking_mode & 1) ? 8 : 9;
+
+		// Adjust the horizontal frequency if in pixel-doubling mode (clock/2)
 		if (vga.seq.clocking_mode & 0x8) {
-			htotal*=2;
+			htotal *= 2;
 		}
-		vga.draw.address_line_total=(vga.crtc.maximum_scan_line&0x1f)+1;
+		vga.draw.address_line_total = (vga.crtc.maximum_scan_line & 0x1f) + 1;
 		if (IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA)) {
 			// vgaonly; can't use with CGA because these use address_line for their
 			// own purposes.
