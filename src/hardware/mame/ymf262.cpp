@@ -276,8 +276,8 @@ struct OPL3
 	OPL3_UPDATEHANDLER UpdateHandler;
 	device_t *UpdateParam;
 
-	uint8_t type;                     /* chip type                    */
-	int clock;                      /* master clock  (Hz)           */
+	uint8_t type;                   /* chip type                    */
+	int clock;                      /* YMF chip clock speed (Hz)    */
 	int rate;                       /* sampling rate (Hz)           */
 	double freqbase;                /* frequency base               */
 	//attotime TimerBase;         /* Timer base time (==sampling time)*/

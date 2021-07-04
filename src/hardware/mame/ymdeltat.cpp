@@ -132,10 +132,12 @@ uint8_t YM_DELTAT::ADPCM_Read()
 			if (status_reset_handler && status_change_BRDY_bit)
 				(status_reset_handler)(status_change_which_chip, status_change_BRDY_bit);
 
-			/* setup a timer that will callback us in 10 master clock cycles for Y8950
-			* in the callback set the BRDY flag to 1 , which means we have another data ready.
-			* For now, we don't really do this; we simply reset and set the flag in zero time, so that the IRQ will work.
-			*/
+			/* setup a timer that will callback us in 10 YMF chip
+			 * clock cycles for Y8950 in the callback set the BRDY
+			 * flag to 1 , which means we have another data ready.
+			 * For now, we don't really do this; we simply reset and
+			 * set the flag in zero time, so that the IRQ will work.
+			 */
 			/* set BRDY bit in status register */
 			if (status_set_handler && status_change_BRDY_bit)
 				(status_set_handler)(status_change_which_chip, status_change_BRDY_bit);
@@ -348,10 +350,13 @@ value:   START, REC, MEMDAT, REPEAT, SPOFF, x,x,RESET   meaning:
 				if (status_reset_handler && status_change_BRDY_bit)
 					(status_reset_handler)(status_change_which_chip, status_change_BRDY_bit);
 
-				/* setup a timer that will callback us in 10 master clock cycles for Y8950
-				* in the callback set the BRDY flag to 1 , which means we have written the data.
-				* For now, we don't really do this; we simply reset and set the flag in zero time, so that the IRQ will work.
-				*/
+				/* setup a timer that will callback us in 10 YMF
+				 * chip clock cycles for Y8950 in the callback
+				 * set the BRDY flag to 1 , which means we have
+				 * written the data. For now, we don't really do
+				 * this; we simply reset and set the flag in
+				 * zero time, so that the IRQ will work.
+				 */
 				/* set BRDY bit in status register */
 				if (status_set_handler && status_change_BRDY_bit)
 					(status_set_handler)(status_change_which_chip, status_change_BRDY_bit);
