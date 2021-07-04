@@ -112,7 +112,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FloatingPointExceptions>true</FloatingPointExceptions>
-      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -150,7 +150,7 @@
       <OmitFramePointers>false</OmitFramePointers>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <MinimalRebuild>false</MinimalRebuild>
-      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
@@ -191,7 +191,7 @@
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
       <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
@@ -239,7 +239,7 @@
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
-      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
       <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
