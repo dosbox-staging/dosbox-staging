@@ -5088,6 +5088,7 @@ unsigned int stb_vorbis_stream_length_in_samples(stb_vorbis *f)
             // set. whoops!
             break;
          }
+         //previous_safe = last_page_loc+1; // NOTE: not used after this point, but note for debugging
          last_page_loc = stb_vorbis_get_file_offset(f);
       }
 
