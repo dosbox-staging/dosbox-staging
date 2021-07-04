@@ -1,6 +1,6 @@
 Name:    dosbox-staging
 Version: 0.77.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+
 URL:     https://dosbox-staging.github.io/
@@ -16,6 +16,8 @@ Patch1: 0001-Add-0.77.0-release-to-metainfo.xml.patch
 # This package is a drop-in replacement for dosbox
 Provides:  dosbox = %{version}-%{release}
 Obsoletes: dosbox < 0.74.4
+
+Provides: bundled(mt32emu) = 2.5.0
 
 BuildRequires: alsa-lib-devel
 BuildRequires: desktop-file-utils
@@ -89,6 +91,11 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
 
 %changelog
+* Sun Jul 04 2021 Patryk Obara (pbo) <dreamer.tan@gmail.com>
+- 0.77.0-2
+- Indicate bundled mt32emu library via "Provides" tag
+- Raise minimum SDL version to 2.0.5
+
 * Sat Jul 03 2021 Patryk Obara (pbo) <dreamer.tan@gmail.com>
 - 0.77.0-1
 - Update to 0.77.0
