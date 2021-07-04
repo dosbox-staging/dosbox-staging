@@ -26,7 +26,7 @@ support today's systems.
 |                                | DOSBox Staging                | DOSBox
 |-                               |-                              |-
 | **Version control**            | Git                           | [SVN]
-| **Language**                   | C++14                         | C++03<sup>[1]</sup>
+| **Language**                   | C++17                         | C++03<sup>[1]</sup>
 | **SDL**                        | >= 2.0.5                      | 1.2<sup>＊</sup>
 | **Buildsystem**                | Meson or Visual Studio 2019   | Autotools or Visual Studio 2003
 | **CI**                         | Yes                           | No
