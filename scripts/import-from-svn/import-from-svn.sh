@@ -125,7 +125,7 @@ import_svn_tagpaths_as_git_tags () {
 #
 cleanup () {
 	git -C "$1" checkout svn/trunk
-	git -C "$1" branch -D master
+	git -C "$1" branch -D main
 }
 
 # Perform import of the whole SVN history
