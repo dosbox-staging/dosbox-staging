@@ -888,9 +888,9 @@ IMGMOUNT
         none: DOSBox will make no attempt to read the file system on the disk.
               This is useful if you need to format it or if you want to boot
               the disk using the BOOT command. When using the "none"
-              filesystem, you must specify the drive number (2 or 3,
-              where 2 = master, 3 = slave) rather than a drive letter.
-              For example, to mount a 70MB image as the slave drive device,
+              filesystem, you must specify the drive number: 2 or 3, where
+              two is primary and three is secondary, rather than a drive letter.
+              For example, to mount a 70MB image as the secondary drive device,
               you would type (without the quotes):
                 "imgmount 3 d:\test.img -size 512,63,16,142 -fs none"
                 Compare this with a mount to be able to access the drive
@@ -936,8 +936,8 @@ BOOT
   [-l driveletter]
      This parameter allows you to specify the drive to boot from.
      The default is the A drive, the floppy drive. You can also boot
-     a hard drive image mounted as master by specifying "-l C"
-     without the quotes, or the drive as slave by specifying "-l D"
+     a hard drive image mounted as primary by specifying "-l C"
+     without the quotes, or the drive as secondary by specifying "-l D"
 
    cart.jrc (PCjr only)
      When emulation of a PCjr is enabled, cartridges can be loaded with
