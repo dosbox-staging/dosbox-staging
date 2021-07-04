@@ -203,7 +203,7 @@ void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu /*len*/) {
 	case 0xc:		/* Clear Flip/Flip */
 		flipflop=false;
 		break;
-	case 0xd:		/* Master Clear/Reset */
+	case 0xd: /* Clear/Reset all channels */
 		for (Bit8u ct=0;ct<4;ct++) {
 			chan=GetChannel(ct);
 			chan->SetMask(true);
