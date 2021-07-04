@@ -95,7 +95,7 @@ static struct {
 	// For every millisecond tick how many samples need to be generated
 	uint32_t tick_add = 0;
 	uint32_t tick_counter = 0;
-	float mastervol[2] = {1.0f, 1.0f};
+	float baseline_volume[2] = {1.0f, 1.0f};
 	MixerChannel *channels = nullptr;
 	bool nosound = false;
 	uint32_t freq = 0;
@@ -181,8 +181,10 @@ void MixerChannel::UpdateVolume()
 	// Don't scale by volmain[] if the level is being managed by the source
 	const float level_l = apply_level ? 1 : volmain[0];
 	const float level_r = apply_level ? 1 : volmain[1];
-	volmul[0] = (Bits)((1 << MIXER_VOLSHIFT) * scale[0] * level_l * mixer.mastervol[0]);
-	volmul[1] = (Bits)((1 << MIXER_VOLSHIFT) * scale[1] * level_r * mixer.mastervol[1]);
+	volmul[0] = (Bits)((1 << MIXER_VOLSHIFT) * scale[0] * level_l *
+	                   mixer.baseline_volume[0]);
+	volmul[1] = (Bits)((1 << MIXER_VOLSHIFT) * scale[1] * level_r *
+	                   mixer.baseline_volume[1]);
 }
 
 void MixerChannel::SetVolume(float _left,float _right) {
@@ -858,8 +860,10 @@ public:
 			ListMidi();
 			return;
 		}
-		if (cmd->FindString("MASTER",temp_line,false)) {
-			MakeVolume((char *)temp_line.c_str(),mixer.mastervol[0],mixer.mastervol[1]);
+		if (cmd->FindString("BASELINE", temp_line, false)) {
+			MakeVolume((char *)temp_line.c_str(),
+			           mixer.baseline_volume[0],
+			           mixer.baseline_volume[1]);
 		}
 		MixerChannel * chan = mixer.channels;
 		while (chan) {
@@ -874,8 +878,9 @@ public:
 		}
 		if (cmd->FindExist("/NOSHOW")) return;
 		WriteOut("Channel  Main    Main(dB)\n");
-		ShowVolume("MASTER",mixer.mastervol[0],mixer.mastervol[1]);
-		for (chan = mixer.channels;chan;chan = chan->next)
+		ShowVolume("BASELINE", mixer.baseline_volume[0],
+		           mixer.baseline_volume[1]);
+		for (chan = mixer.channels; chan; chan = chan->next)
 			ShowVolume(chan->name,chan->volmain[0],chan->volmain[1]);
 	}
 
@@ -928,8 +933,8 @@ void MIXER_Init(Section* sec) {
 	mixer.pos=0;
 	mixer.done=0;
 	memset(mixer.work,0,sizeof(mixer.work));
-	mixer.mastervol[0]=1.0f;
-	mixer.mastervol[1]=1.0f;
+	mixer.baseline_volume[0] = 1.0f;
+	mixer.baseline_volume[1] = 1.0f;
 
 	/* Start the Mixer using SDL Sound at 22 khz */
 	SDL_AudioSpec spec;

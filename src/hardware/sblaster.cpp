@@ -143,7 +143,7 @@ struct SB_INFO {
 	} dac;
 	struct {
 		Bit8u index;
-		Bit8u dac[2],fm[2],cda[2],master[2],lin[2];
+		Bit8u dac[2], fm[2], cda[2], baseline[2], lin[2];
 		Bit8u mic;
 		bool stereo;
 		bool enabled;
@@ -1247,8 +1247,8 @@ static float calc_vol(Bit8u amount) {
 static void CTMIXER_UpdateVolumes(void) {
 	if (!sb.mixer.enabled) return;
 	MixerChannel * chan;
-	float m0 = calc_vol(sb.mixer.master[0]);
-	float m1 = calc_vol(sb.mixer.master[1]);
+	float m0 = calc_vol(sb.mixer.baseline[0]);
+	float m1 = calc_vol(sb.mixer.baseline[1]);
 	chan = MIXER_FindChannel("SB");
 	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.dac[0]), m1 * calc_vol(sb.mixer.dac[1]));
 	chan = MIXER_FindChannel("FM");
@@ -1264,8 +1264,7 @@ static void CTMIXER_Reset(void) {
 	sb.mixer.cda[1]=
 	sb.mixer.dac[0]=
 	sb.mixer.dac[1]=31;
-	sb.mixer.master[0]=
-	sb.mixer.master[1]=31;
+	sb.mixer.baseline[0] = sb.mixer.baseline[1] = 31;
 	CTMIXER_UpdateVolumes();
 }
 
@@ -1298,8 +1297,8 @@ static void CTMIXER_Write(Bit8u val) {
 		CTMIXER_Reset();
 		LOG(LOG_SB,LOG_WARN)("Mixer reset value %x",val);
 		break;
-	case 0x02:		/* Master Volume (SB2 Only) */
-		SETPROVOL(sb.mixer.master,(val&0xf)|(val<<4));
+	case 0x02: /* Baseline Volume (SB2 Only) */
+		SETPROVOL(sb.mixer.baseline, (val & 0xf) | (val << 4));
 		CTMIXER_UpdateVolumes();
 		break;
 	case 0x04:		/* DAC Volume (SBPRO) */
@@ -1331,8 +1330,8 @@ static void CTMIXER_Write(Bit8u val) {
 		DSP_ChangeStereo(sb.mixer.stereo);
 		LOG(LOG_SB,LOG_WARN)("Mixer set to %s",sb.dma.stereo ? "STEREO" : "MONO");
 		break;
-	case 0x22:		/* Master Volume (SBPRO) */
-		SETPROVOL(sb.mixer.master,val);
+	case 0x22: /* Baseline Volume (SBPRO) */
+		SETPROVOL(sb.mixer.baseline, val);
 		CTMIXER_UpdateVolumes();
 		break;
 	case 0x26:		/* FM Volume (SBPRO) */
@@ -1346,17 +1345,17 @@ static void CTMIXER_Write(Bit8u val) {
 	case 0x2e:		/* Line-in Volume (SBPRO) */
 		SETPROVOL(sb.mixer.lin,val);
 		break;
-	//case 0x20:		/* Master Volume Left (SBPRO) ? */
-	case 0x30:		/* Master Volume Left (SB16) */
-		if (sb.type==SBT_16) {
-			sb.mixer.master[0]=val>>3;
+	// case 0x20:		/* Baseline Volume Left (SBPRO) ? */
+	case 0x30: /* Baseline Volume Left (SB16) */
+		if (sb.type == SBT_16) {
+			sb.mixer.baseline[0] = val >> 3;
 			CTMIXER_UpdateVolumes();
 		}
 		break;
-	//case 0x21:		/* Master Volume Right (SBPRO) ? */
-	case 0x31:		/* Master Volume Right (SB16) */
-		if (sb.type==SBT_16) {
-			sb.mixer.master[1]=val>>3;
+	// case 0x21:		/* Baseline Volume Right (SBPRO) ? */
+	case 0x31: /* Baseline Volume Right (SB16) */
+		if (sb.type == SBT_16) {
+			sb.mixer.baseline[1] = val >> 3;
 			CTMIXER_UpdateVolumes();
 		}
 		break;
@@ -1438,12 +1437,11 @@ static Bit8u CTMIXER_Read(void) {
 	switch (sb.mixer.index) {
 	case 0x00:		/* RESET */
 		return 0x00;
-	case 0x02:		/* Master Volume (SB2 Only) */
-		return ((sb.mixer.master[1]>>1) & 0xe);
-	case 0x22:		/* Master Volume (SBPRO) */
-		return	MAKEPROVOL(sb.mixer.master);
-	case 0x04:		/* DAC Volume (SBPRO) */
-		return MAKEPROVOL(sb.mixer.dac);
+	case 0x02: /* Baseline Volume (SB2 Only) */
+		return ((sb.mixer.baseline[1] >> 1) & 0xe);
+	case 0x22: /* Baseline Volume (SBPRO) */
+		return MAKEPROVOL(sb.mixer.baseline);
+	case 0x04: /* DAC Volume (SBPRO) */ return MAKEPROVOL(sb.mixer.dac);
 	case 0x06:		/* FM Volume (SB2 Only) + FM output selection */
 		return ((sb.mixer.fm[1]>>1) & 0xe);
 	case 0x08:		/* CD Volume (SB2 Only) */
@@ -1459,13 +1457,15 @@ static Bit8u CTMIXER_Read(void) {
 		return MAKEPROVOL(sb.mixer.cda);
 	case 0x2e:		/* Line-IN Volume (SBPRO) */
 		return MAKEPROVOL(sb.mixer.lin);
-	case 0x30:		/* Master Volume Left (SB16) */
-		if (sb.type==SBT_16) return sb.mixer.master[0]<<3;
-		ret=0xa;
+	case 0x30: /* Baseline Volume Left (SB16) */
+		if (sb.type == SBT_16)
+			return sb.mixer.baseline[0] << 3;
+		ret = 0xa;
 		break;
-	case 0x31:		/* Master Volume Right (S16) */
-		if (sb.type==SBT_16) return sb.mixer.master[1]<<3;
-		ret=0xa;
+	case 0x31: /* Baseline Volume Right (S16) */
+		if (sb.type == SBT_16)
+			return sb.mixer.baseline[1] << 3;
+		ret = 0xa;
 		break;
 	case 0x32:		/* DAC Volume Left (SB16) */
 		if (sb.type==SBT_16) return sb.mixer.dac[0]<<3;

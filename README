@@ -821,7 +821,7 @@ MIXER
   mixer channel left:right [/NOSHOW] [/LISTMIDI]
 
   channel
-     Can be one of the following: MASTER, DISNEY, SPKR, GUS, SB, FM [, CDAUDIO].
+     Can be one of the following: BASELINE, DISNEY, SPKR, GUS, SB, FM [, CDAUDIO].
      CDAUDIO is only available if a CD-ROM interface with volume control is
      enabled (CD image).
 
