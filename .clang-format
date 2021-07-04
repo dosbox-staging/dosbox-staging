@@ -26,7 +26,8 @@ ColumnLimit: 80
 #
 Language: Cpp
 # in clang-format 9.x "Cpp11" covers formatting for C++11 and C++14
-# in clang-format 10.x: switch to "c++14"
+# in clang-format 10.x: switch to "c++17"
+# Ref: https://releases.llvm.org/10.0.0/tools/clang/docs/ClangFormatStyleOptions.html
 Standard: Cpp11
 
 # The extra indent or outdent of class access modifiers, e.g. public:
