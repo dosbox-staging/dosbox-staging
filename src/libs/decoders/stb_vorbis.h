@@ -5230,7 +5230,10 @@ stb_vorbis * stb_vorbis_open_rwops(SDL_RWops *rwops, int close_on_free, int *err
 stb_vorbis * stb_vorbis_open_memory(const unsigned char *data, int len, int *error, const stb_vorbis_alloc *alloc)
 {
    stb_vorbis *f, p;
-   if (data == NULL) return NULL;
+   if (!data) {
+      if (error) *error = VORBIS_unexpected_eof;
+      return NULL;
+   }
    vorbis_init(&p, alloc);
    p.stream = (uint8 *) data;
    p.stream_end = (uint8 *) data + len;
