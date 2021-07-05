@@ -990,10 +990,11 @@ void VGA_SetupOther(void) {
 		write_pcjr( 0x3df, 0x7 | (0x7 << 3), 0 );
 		IO_RegisterWriteHandler(0x3da,write_pcjr,IO_MB);
 		IO_RegisterWriteHandler(0x3df,write_pcjr,IO_MB);
-		MAPPER_AddHandler(IncreaseHue,MK_f11,MMOD2,"inchue","Inc Hue");
-		MAPPER_AddHandler(DecreaseHue,MK_f11,0,"dechue","Dec Hue");
-		MAPPER_AddHandler(Composite,MK_f12,0,"cgacomp","CGA Comp");	}
-	if (machine==MCH_HERC) {
+		MAPPER_AddHandler(IncreaseHue, SDL_SCANCODE_F11, MMOD2, "inchue", "Inc Hue");
+		MAPPER_AddHandler(DecreaseHue, SDL_SCANCODE_F11, 0, "dechue", "Dec Hue");
+		MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0, "cgacomp", "CGA Comp");
+	}
+	if (machine == MCH_HERC) {
 		Bitu base=0x3b0;
 		for (Bitu i = 0; i < 4; i++) {
 			// The registers are repeated as the address is not decoded properly;
