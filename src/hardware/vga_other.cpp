@@ -103,7 +103,7 @@ static void write_crtc_data_other(Bitu /*port*/, Bitu data, Bitu /*iolen*/)
 		break;
 	case 0x0E:	/*Cursor Location High Register */
 		vga.config.cursor_start &= 0x00ff;
-		vga.config.cursor_start |= val << 8;
+		vga.config.cursor_start |= static_cast<uint16_t>(val << 8);
 		break;
 	case 0x0F: /* Cursor Location Low Register */
 		vga.config.cursor_start &= 0xff00;
