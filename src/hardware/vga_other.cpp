@@ -974,10 +974,9 @@ Bitu read_herc_status(Bitu /*port*/,Bitu /*iolen*/) {
 	return retval;
 }
 
-
-void VGA_SetupOther(void) {
-	Bitu i;
-	memset( &vga.tandy, 0, sizeof( vga.tandy ));
+void VGA_SetupOther(void)
+{
+	memset(&vga.tandy, 0, sizeof(vga.tandy));
 	vga.attr.disabled = 0;
 	vga.config.bytes_skip=0;
 
@@ -990,8 +989,10 @@ void VGA_SetupOther(void) {
 
 	if (machine==MCH_CGA || IS_TANDY_ARCH) {
 		extern Bit8u int10_font_08[256 * 8];
-		for (i=0;i<256;i++)	memcpy(&vga.draw.font[i*32],&int10_font_08[i*8],8);
-		vga.draw.font_tables[0]=vga.draw.font_tables[1]=vga.draw.font;
+		for (int i = 0; i < 256; ++i) {
+			memcpy(&vga.draw.font[i * 32], &int10_font_08[i * 8], 8);
+		}
+		vga.draw.font_tables[0] = vga.draw.font_tables[1] = vga.draw.font;
 	}
 	if (machine==MCH_CGA || IS_TANDY_ARCH || machine==MCH_HERC) {
 		IO_RegisterWriteHandler(0x3db,write_lightpen,IO_MB);
@@ -999,8 +1000,10 @@ void VGA_SetupOther(void) {
 	}
 	if (machine==MCH_HERC) {
 		extern Bit8u int10_font_14[256 * 14];
-		for (i=0;i<256;i++)	memcpy(&vga.draw.font[i*32],&int10_font_14[i*14],14);
-		vga.draw.font_tables[0]=vga.draw.font_tables[1]=vga.draw.font;
+		for (int i = 0; i < 256; ++i) {
+			memcpy(&vga.draw.font[i * 32], &int10_font_14[i * 14], 14);
+		}
+		vga.draw.font_tables[0] = vga.draw.font_tables[1] = vga.draw.font;
 		MAPPER_AddHandler(CycleHercPal, SDL_SCANCODE_F11, 0,
 		                  "hercpal", "Herc Pal");
 	}
@@ -1042,7 +1045,7 @@ void VGA_SetupOther(void) {
 	}
 	if (machine == MCH_HERC) {
 		Bitu base=0x3b0;
-		for (Bitu i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; ++i) {
 			// The registers are repeated as the address is not decoded properly;
 			// The official ports are 3b4, 3b5
 			IO_RegisterWriteHandler(base+i*2,write_crtc_index_other,IO_MB);
