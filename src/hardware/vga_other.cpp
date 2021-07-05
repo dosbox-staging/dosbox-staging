@@ -236,19 +236,19 @@ static void update_cga16_color(void) {
 	double tv_brightness = 0.0; // hardcoded for simpler implementation
 	double tv_saturation = (new_cga ? 0.7 : 0.6);
 
-	bool bw;
-	bool color_sel;
-	bool background_i;
-	bool bpp1;
-	uint8_t overscan;
+	bool bw = false;
+	bool color_sel = false;
+	bool background_i = false;
+	bool bpp1 = false;
+	uint8_t overscan = 0;
 
 	if (machine == MCH_PCJR) {
 		tv_saturation = 1.0;
 		bw = (vga.tandy.mode_control & 4) != 0;
-		color_sel = 1;
+		color_sel = true;
 		// Really foreground intensity, but this is what the CGA
 		// schematic calls it.
-		background_i = 1;
+		background_i = true;
 		bpp1 = (vga.tandy.gfx_control & 0x08) != 0;
 		overscan = 15;
 	} else {
