@@ -32,7 +32,7 @@ int pp_getscale /* calculate integer scales for pixel-perfect magnification */
 	double parnorm = 0;              /* target PAR "normalised" to exceed 1.0  */
 	double srat = 0;                 /* ratio of maximum size to current       */
 
-	if /* sanity checks: */
+	if /* check for invalid inputs: */
 	(	win <= 0    || hin <= 0    ||
 		win >  wout || hin >  hout ||
 		par <= 0.0  || parweight <= 0 ||
@@ -69,9 +69,13 @@ int pp_getscale /* calculate integer scales for pixel-perfect magnification */
 			errpar = (double)INFINITY;
 
 		/* Handle unstable calculation: srat = min( (double)sym/syc, (double)sxm/sxc ) */
-		if (sym && sxm && syc == 0 && sxc == 0) /* denominators are both zero so will result in 'inf' */
-			srat = (double)INFINITY;
-		else // otherwise one will be valid, so attempt the comparison
+		if (syc == 0 && sxc == 0) /* denominators are both zero so will result in 'inf' */
+			srat = (double)INFINITY; /* numerator always positive, so negative 'inf' is not possible */
+		else if (syc == 0) /* left-hand-size 'inf', so use right-hand-side */
+			srat = (double)sxm / sxc;
+		else if (sxc == 0) /* right-hand-size 'inf', so use left-hand-side */
+			srat = (double)sym / syc;
+		else /* if none of the above, attempt the calculation */
 			srat = min( (double)sym/syc, (double)sxm/sxc );
 
 		/* calculate size error: */
