@@ -184,7 +184,7 @@ static void write_lightpen(Bitu port,Bitu /*val*/,Bitu) {
 
 			vga.other.lightpen = (Bit16u)((vga.draw.address_add/2) * (current_scanline/2));
 			vga.other.lightpen += (Bit16u)((timeInLine / vga.draw.delay.hdend) *
-				((float)(vga.draw.address_add/2)));
+				((double)(vga.draw.address_add/2)));
 		}
 		break;
 	}
