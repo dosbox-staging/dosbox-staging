@@ -52,23 +52,24 @@ int pp_getscale /* calculate integer scales for pixel-perfect magnification */
 	errmin = -1; /* this value marks the first iteration */
 	while( 1 )
 	{
-		// Handle unstable calculation: parrat = (double)syc / sxc / par
-		if (syc == 0) // numerator is zero, so result will be zero
+		/* Handle unstable calculation: parrat = (double)syc / sxc / par  */
+		if (syc == 0) /* numerator is zero, so result will be zero */
 			parrat = 0;
-		else if (sxc == 0) // numerator is not zero but denominator is zero, so will result in 'inf'
+		else if (sxc == 0) /* numerator is not zero but denominator is zero, so will result in 'inf' */
 			parrat = (double)INFINITY;
-		else // otherwise attempt the calculation
+		else /* otherwise attempt the calculation */
 			parrat = (double)syc / sxc / par;
 
 		/* calculate aspect-ratio error: */
 		if( parrat > 1.0 )
 			errpar = parrat;
-		else if (fabs(parrat) > DBL_EPSILON) // denominator is valid, so allow the division
+		else if (fabs(parrat) > DBL_EPSILON) /* denominator is valid, so allow the division */
 			errpar = 1.0 / parrat;
-		else // otherwise parrat is near zero so will result in 'inf'
+		else /* otherwise parrat is near zero so will result in 'inf' */
 			errpar = (double)INFINITY;
 
-		if(sym && sxm && syc == 0 && sxc == 0) // denominators are both zero so will result in 'inf'
+		/* Handle unstable calculation: srat = min( (double)sym/syc, (double)sxm/sxc ) */
+		if (sym && sxm && syc == 0 && sxc == 0) /* denominators are both zero so will result in 'inf' */
 			srat = (double)INFINITY;
 		else // otherwise one will be valid, so attempt the comparison
 			srat = min( (double)sym/syc, (double)sxm/sxc );
