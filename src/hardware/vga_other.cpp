@@ -18,6 +18,7 @@
 
 #include "dosbox.h"
 
+#include <array>
 #include <cmath>
 #include <cstring>
 
@@ -346,21 +347,33 @@ static void update_cga16_color(void) {
 			chroma_signals[j+1][i] = a + b*sin(x*tau) + c*cos(x*tau) + d*sin(x*2*tau);
 		}
 	}
-	Bitu CGApal[4] = {
-		overscan,
-		static_cast<Bitu>(2 + (color_sel||bw ? 1 : 0) + (background_i ? 8 : 0)),
-		static_cast<Bitu>(4 + (color_sel&&!bw? 1 : 0) + (background_i ? 8 : 0)),
-		static_cast<Bitu>(6 + (color_sel||bw ? 1 : 0) + (background_i ? 8 : 0))
+	// PC CGA palette table
+	const auto cga_base_comp = (color_sel || bw) | (background_i << 3);
+	const auto cga_color_comp = (color_sel && !bw) | (background_i << 3);
+	const std::array<int, 4> CGApal = {
+	        overscan,
+	        2 | cga_base_comp,
+	        4 | cga_color_comp,
+	        6 | cga_base_comp,
 	};
-	Bitu PCJRpal[4] = {vga.attr.palette[0], vga.attr.palette[1],
-	                   vga.attr.palette[2], vga.attr.palette[3]};
+
+	// PCjr CGA palette table
+	const std::array<int, 4> PCJRpal = {
+	        vga.attr.palette[0],
+	        vga.attr.palette[1],
+	        vga.attr.palette[2],
+	        vga.attr.palette[3],
+	};
+
+	const auto machine_palette = (machine == MCH_PCJR) ? PCJRpal : CGApal;
+
 	for (Bit8u x = 0; x < 4; x++) { // Position of pixel in question
 		bool even = (x & 1) == 0;
 		for (Bit8u bits=0; bits<(even ? 0x10 : 0x40); ++bits) {
 			double Y=0, I=0, Q=0;
 			for (Bit8u p=0; p<4; p++) {  // Position within color carrier cycle
 				// generate pixel pattern.
-				Bit8u rgbi;
+				auto rgbi = 0;
 				if (bpp1) {
 					rgbi = ((bits >> (3 - p)) & (even ? 1 : 2)) != 0
 					               ? overscan
