@@ -492,12 +492,13 @@ static void write_cga_color_select(uint8_t val) {
 	}
 }
 
-static void write_cga(Bitu port,Bitu data,Bitu /*iolen*/) {
+static void write_cga(Bitu port, Bitu data, Bitu /*iolen*/)
+{
 	// The only data written is 8-bit per write_cga's IO port registration
 	const auto val = static_cast<uint8_t>(data);
 	switch (port) {
 	case 0x3d8:
-		vga.tandy.mode_control= val;
+		vga.tandy.mode_control = val;
 		vga.attr.disabled = (val&0x8)? 0: 1;
 		if (vga.tandy.mode_control & 0x2) {		// graphics mode
 			if (vga.tandy.mode_control & 0x10) {// highres mode
@@ -714,12 +715,15 @@ static void write_tandy_reg(Bit8u val) {
 	}
 }
 
-static void write_tandy(Bitu port,Bitu val,Bitu /*iolen*/) {
+static void write_tandy(Bitu port, Bitu data, Bitu /*iolen*/)
+{
+	// only is passed 8-bit data given its IO port registration
+	auto val = static_cast<uint8_t>(data);
 	switch (port) {
 	case 0x3d8:
 		val &= 0x3f; // only bits 0-6 are used
 		if (vga.tandy.mode_control ^ val) {
-			vga.tandy.mode_control=(Bit8u)val;
+			vga.tandy.mode_control = val;
 			if (val&0x8) vga.attr.disabled &= ~1;
 			else vga.attr.disabled |= 1;
 			TandyCheckLineMask();
@@ -733,15 +737,13 @@ static void write_tandy(Bitu port,Bitu val,Bitu /*iolen*/) {
 		tandy_update_palette();
 		break;
 	case 0x3da:
-		vga.tandy.reg_index=(Bit8u)val;
+		vga.tandy.reg_index = val;
 		//if (val&0x10) vga.attr.disabled |= 2;
 		//else vga.attr.disabled &= ~2;
 		break;
 //	case 0x3dd:	//Extended ram page address register:
 //		break;
-	case 0x3de:
-		write_tandy_reg((Bit8u)val);
-		break;
+	case 0x3de: write_tandy_reg(val); break;
 	case 0x3df:
 		// CRT/processor page register
 		// See the comments on the PCJr version of this register.
@@ -752,7 +754,7 @@ static void write_tandy(Bitu port,Bitu val,Bitu /*iolen*/) {
 		// backwards compatibility?), resulting in odd pages being mapped
 		// as 2x16kB. Implemeted in vga_memory.cpp Tandy handler.
 
-		vga.tandy.line_mask = (Bit8u)(val >> 6);
+		vga.tandy.line_mask = val >> 6;
 		vga.tandy.draw_bank = val & ((vga.tandy.line_mask&2) ? 0x6 : 0x7);
 		vga.tandy.mem_bank = (val >> 3) & 7;
 		TandyCheckLineMask();
