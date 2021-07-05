@@ -96,7 +96,8 @@ static void write_crtc_data_other(Bitu /*port*/, Bitu data, Bitu /*iolen*/)
 	case 0x0C:	/* Start Address High Register */
 		// Bit 12 (depending on video mode) and 13 are actually masked too,
 		// but so far no need to implement it.
-		vga.config.display_start=(vga.config.display_start & 0x00FF) | ((val&0x3F) << 8);
+		vga.config.display_start = (vga.config.display_start & 0x00FF) |
+		                           static_cast<uint16_t>((val & 0x3F) << 8);
 		break;
 	case 0x0D:	/* Start Address Low Register */
 		vga.config.display_start=(vga.config.display_start & 0xFF00) | val;
