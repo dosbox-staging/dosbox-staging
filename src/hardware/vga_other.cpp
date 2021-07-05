@@ -122,7 +122,8 @@ static void write_crtc_data_other(Bitu /*port*/, Bitu data, Bitu /*iolen*/)
 		LOG(LOG_VGAMISC, LOG_NORMAL)("MC6845:Write %u to illegal index %x", val, vga.other.index);
 	}
 }
-static Bitu read_crtc_data_other(Bitu /*port*/,Bitu /*iolen*/) {
+static uint8_t read_crtc_data_other(Bitu /*port*/, Bitu /*iolen*/)
+{
 	switch (vga.other.index) {
 	case 0x00:		//Horizontal total
 		return vga.other.htotal;
@@ -132,8 +133,10 @@ static Bitu read_crtc_data_other(Bitu /*port*/,Bitu /*iolen*/) {
 		return vga.other.hsyncp;
 	case 0x03:		//Horizontal and vertical sync width
 		if (machine==MCH_TANDY)
-			return vga.other.hsyncw | (vga.other.vsyncw << 4);
-		else return vga.other.hsyncw;
+			return static_cast<uint8_t>(vga.other.hsyncw |
+			                            (vga.other.vsyncw << 4));
+		else
+			return vga.other.hsyncw;
 	case 0x04:		//Vertical total
 		return vga.other.vtotal;
 	case 0x05:		//Vertical display adjust
@@ -149,21 +152,21 @@ static Bitu read_crtc_data_other(Bitu /*port*/,Bitu /*iolen*/) {
 	case 0x0B:	/* Cursor End Register */
 		return vga.other.cursor_end;
 	case 0x0C:	/* Start Address High Register */
-		return (Bit8u)(vga.config.display_start >> 8);
+		return static_cast<uint8_t>(vga.config.display_start >> 8);
 	case 0x0D:	/* Start Address Low Register */
-		return (Bit8u)(vga.config.display_start & 0xff);
+		return static_cast<uint8_t>(vga.config.display_start & 0xff);
 	case 0x0E:	/*Cursor Location High Register */
-		return (Bit8u)(vga.config.cursor_start >> 8);
+		return static_cast<uint8_t>(vga.config.cursor_start >> 8);
 	case 0x0F:	/* Cursor Location Low Register */
-		return (Bit8u)(vga.config.cursor_start & 0xff);
+		return static_cast<uint8_t>(vga.config.cursor_start & 0xff);
 	case 0x10:	/* Light Pen High */
-		return (Bit8u)(vga.other.lightpen >> 8);
+		return static_cast<uint8_t>(vga.other.lightpen >> 8);
 	case 0x11:	/* Light Pen Low */
-		return (Bit8u)(vga.other.lightpen & 0xff);
+		return static_cast<uint8_t>(vga.other.lightpen & 0xff);
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("MC6845:Read from illegal index %x",vga.other.index);
 	}
-	return (Bitu)(~0);
+	return static_cast<uint8_t>(~0);
 }
 
 static void write_lightpen(Bitu port,Bitu /*val*/,Bitu) {
