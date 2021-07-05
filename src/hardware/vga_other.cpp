@@ -236,6 +236,7 @@ static void update_cga16_color(void) {
 	double tv_brightness = 0.0; // hardcoded for simpler implementation
 	double tv_saturation = (new_cga ? 0.7 : 0.6);
 
+	// CGA properties that change based on PCjr or PC
 	bool bw = false;
 	bool color_sel = false;
 	bool background_i = false;
@@ -299,14 +300,15 @@ static void update_cga16_color(void) {
 		double d = rgbi_coefficients[o];
 		pixel_clock_delay = (chroma_pixel_delays[o & 7]*chroma_coefficient + rgbi_pixel_delay*d)/(chroma_coefficient + d);
 	}
+
+	// Adjust pixel clock based on color burst timing (machine specific)
 	if (machine == MCH_PCJR) {
-		pixel_clock_delay += 60 * ns; // correct for delay of color burst
+		pixel_clock_delay += 60 * ns; // baseline burst delay
 		if (!bpp1) {
-			pixel_clock_delay += 25 * ns; // correct for delay of
-			                              // color burst
+			pixel_clock_delay += 25 * ns; // additional delay for color
 		}
-	} else {
-		pixel_clock_delay -= 21.5 * ns; // correct for delay of color burst
+	} else { // PC has a short color burst
+		pixel_clock_delay -= 21.5 * ns;
 	}
 
 	double hue_adjust = (-(90-33)-hue_offset+pixel_clock_delay)*tau/360.0;
