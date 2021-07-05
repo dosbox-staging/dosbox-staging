@@ -623,18 +623,11 @@ static void PCJr_FindMode()
 			}
 		} else {
 			/* otherwise some 4-colour graphics mode */
+			const auto new_mode = (cga_comp == 1) ? M_CGA16 : M_TANDY4;
 			if (vga.mode == M_TANDY16) {
-				if (cga_comp == 1) {
-					VGA_SetModeNow(M_CGA16);
-				} else {
-					VGA_SetModeNow(M_TANDY4);
-				}
+				VGA_SetModeNow(new_mode);
 			} else {
-				if (cga_comp == 1) {
-					VGA_SetMode(M_CGA16);
-				} else {
-					VGA_SetMode(M_TANDY4);
-				}
+				VGA_SetMode(new_mode);
 			}
 		}
 		tandy_update_palette();
