@@ -816,7 +816,7 @@ static void write_pcjr(Bitu port,Bitu val,Bitu /*iolen*/) {
 	}
 }
 
-static int palette_num(const char *colour)
+static uint8_t palette_num(const char *colour)
 {
 	if (strcasecmp(colour, "green") == 0)
 		return 0;
