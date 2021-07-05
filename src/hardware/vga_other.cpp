@@ -368,7 +368,7 @@ static void update_cga16_color(void) {
 	const auto machine_palette = (machine == MCH_PCJR) ? PCJRpal : CGApal;
 
 	for (Bit8u x = 0; x < 4; x++) { // Position of pixel in question
-		bool even = (x & 1) == 0;
+		const bool even = !(x & 1);
 		for (Bit8u bits=0; bits<(even ? 0x10 : 0x40); ++bits) {
 			double Y=0, I=0, Q=0;
 			for (Bit8u p=0; p<4; p++) {  // Position within color carrier cycle
@@ -379,21 +379,11 @@ static void update_cga16_color(void) {
 					               ? overscan
 					               : 0;
 				} else {
-					if (machine == MCH_PCJR) {
-						if (even) {
-							rgbi = PCJRpal[(bits >> (2 - (p & 2))) & 3];
-						} else {
-							rgbi = PCJRpal[(bits >>
-							                (4 - ((p + 1) & 6))) &
-							               3];
-						}
-					} else {
-						if (even) {
-							rgbi = CGApal[(bits >> (2 - (p & 2))) & 3];
-						} else {
-							rgbi = CGApal[(bits >> (4 - ((p + 1) & 6))) & 3];
-						}
-					}
+					const size_t i =
+					        even ? (bits >> (2 - (p & 2))) & 3
+					             : (bits >> (4 - ((p + 1) & 6))) & 3;
+					assert(i < machine_palette.size());
+					rgbi = machine_palette[i];
 				}
 				Bit8u c = rgbi & 7;
 				if (bw && c != 0)
