@@ -15,7 +15,7 @@ jobs:
             max_warnings: 272
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 1965
+            max_warnings: 1960
     steps:
       - name:  Backup existing vcpkg installation
         shell: pwsh
