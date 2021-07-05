@@ -460,7 +460,7 @@ static void DecreaseHue(bool pressed) {
 	LOG_MSG("Hue at %f",hue_offset); 
 }
 
-static void write_cga_color_select(Bitu val) {
+static void write_cga_color_select(uint8_t val) {
 	vga.tandy.color_select=val;
 	switch(vga.mode) {
 	case  M_TANDY4: {
