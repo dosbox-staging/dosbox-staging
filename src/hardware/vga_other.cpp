@@ -183,8 +183,9 @@ static void write_lightpen(Bitu port,Bitu /*val*/,Bitu) {
 			Bitu current_scanline = (Bitu)(timeInFrame / vga.draw.delay.htotal);
 
 			vga.other.lightpen = (Bit16u)((vga.draw.address_add/2) * (current_scanline/2));
-			vga.other.lightpen += (Bit16u)((timeInLine / vga.draw.delay.hdend) *
-				((double)(vga.draw.address_add/2)));
+			vga.other.lightpen +=
+			        (Bit16u)((timeInLine / vga.draw.delay.hdend) *
+			                 ((double)(vga.draw.address_add / 2)));
 		}
 		break;
 	}
@@ -427,11 +428,17 @@ static void update_cga16_color(void) {
 			G = pow(G, gamma);
 			B = pow(B, gamma);
 
-			int r = static_cast<int>(255*pow( 1.5073*R -0.3725*G -0.0832*B, 1/gamma)); if (r<0) r=0; if (r>255) r=255;
-			int g = static_cast<int>(255*pow(-0.0275*R +0.9350*G +0.0670*B, 1/gamma)); if (g<0) g=0; if (g>255) g=255;
-			int b = static_cast<int>(255*pow(-0.0272*R -0.0401*G +1.1677*B, 1/gamma)); if (b<0) b=0; if (b>255) b=255;
+			const auto r = static_cast<uint8_t>(
+			        clamp(255 * pow(1.5073 * R - 0.3725 * G - 0.0832 * B, 1 / gamma),
+			              0.0, 255.0));
+			const auto g = static_cast<uint8_t>(
+			        clamp(255 * pow(-0.0275 * R + 0.9350 * G + 0.0670 * B, 1 / gamma),
+			              0.0, 255.0));
+			const auto b = static_cast<uint8_t>(
+			        clamp(255 * pow(-0.0272 * R - 0.0401 * G + 1.1677 * B, 1 / gamma),
+			              0.0, 255.0));
 
-			Bit8u index = bits | ((x & 1) == 0 ? 0x30 : 0x80) | ((x & 2) == 0 ? 0x40 : 0);
+			const uint8_t index = bits | ((x & 1) == 0 ? 0x30 : 0x80) | ((x & 2) == 0 ? 0x40 : 0);
 			RENDER_SetPal(index,r,g,b);
 		}
 	}
