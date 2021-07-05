@@ -1045,13 +1045,16 @@ void VGA_SetupOther(void)
 	}
 	if (machine == MCH_HERC) {
 		Bitu base=0x3b0;
-		for (int i = 0; i < 4; ++i) {
+		for (uint8_t i = 0; i < 4; ++i) {
 			// The registers are repeated as the address is not decoded properly;
 			// The official ports are 3b4, 3b5
-			IO_RegisterWriteHandler(base+i*2,write_crtc_index_other,IO_MB);
-			IO_RegisterWriteHandler(base+i*2+1,write_crtc_data_other,IO_MB);
-			IO_RegisterReadHandler(base+i*2,read_crtc_index_other,IO_MB);
-			IO_RegisterReadHandler(base+i*2+1,read_crtc_data_other,IO_MB);
+			const auto index_port = base + i * 2;
+			IO_RegisterWriteHandler(index_port, write_crtc_index_other, IO_MB);
+			IO_RegisterReadHandler(index_port, read_crtc_index_other, IO_MB);
+
+			const auto data_port = index_port + 1;
+			IO_RegisterWriteHandler(data_port, write_crtc_data_other, IO_MB);
+			IO_RegisterReadHandler(data_port, read_crtc_data_other, IO_MB);
 		}
 		vga.herc.enable_bits=0;
 		vga.herc.mode_control=0xa; // first mode written will be text mode
