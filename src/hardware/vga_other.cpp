@@ -20,6 +20,7 @@
 
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 
 #include "inout.h"
@@ -38,52 +39,59 @@ static Bitu read_crtc_index_other(Bitu /*port*/,Bitu /*iolen*/) {
 	return vga.other.index;
 }
 
-static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
+static void write_crtc_data_other(Bitu /*port*/, Bitu data, Bitu /*iolen*/)
+{
+	// write_crtc_data_other() only accepts 8-bit data per its IO port registration
+	auto val = static_cast<uint8_t>(data);
+
 	switch (vga.other.index) {
 	case 0x00:		//Horizontal total
 		if (vga.other.htotal ^ val) VGA_StartResize();
-		vga.other.htotal=(Bit8u)val;
+		vga.other.htotal = val;
 		break;
 	case 0x01:		//Horizontal displayed chars
 		if (vga.other.hdend ^ val) VGA_StartResize();
-		vga.other.hdend=(Bit8u)val;
+		vga.other.hdend = val;
 		break;
 	case 0x02:		//Horizontal sync position
-		vga.other.hsyncp=(Bit8u)val;
+		vga.other.hsyncp = val;
 		break;
-	case 0x03:		//Horizontal sync width
-		if (machine==MCH_TANDY) vga.other.vsyncw=(Bit8u)(val >> 4);
-		else vga.other.vsyncw = 16; // The MC6845 has a fixed v-sync width of 16 lines
-		vga.other.hsyncw=(Bit8u)(val & 0xf);
+	case 0x03: // Horizontal sync width
+		if (machine == MCH_TANDY)
+			vga.other.vsyncw = val >> 4;
+		else
+			// The MC6845 has a fixed v-sync width of 16 lines
+			vga.other.vsyncw = 16;
+		vga.other.hsyncw = val & 0xf;
 		break;
-	case 0x04:		//Vertical total
+	case 0x04: // Vertical total
 		if (vga.other.vtotal ^ val) VGA_StartResize();
-		vga.other.vtotal=(Bit8u)val;
+		vga.other.vtotal = val;
 		break;
 	case 0x05:		//Vertical display adjust
 		if (vga.other.vadjust ^ val) VGA_StartResize();
-		vga.other.vadjust=(Bit8u)val;
+		vga.other.vadjust = val;
 		break;
 	case 0x06:		//Vertical rows
 		if (vga.other.vdend ^ val) VGA_StartResize();
-		vga.other.vdend=(Bit8u)val;
+		vga.other.vdend = val;
 		break;
 	case 0x07:		//Vertical sync position
-		vga.other.vsyncp=(Bit8u)val;
+		vga.other.vsyncp = val;
 		break;
 	case 0x09:		//Max scanline
 		val &= 0x1f; // VGADOC says bit 0-3 but the MC6845 datasheet says bit 0-4
  		if (vga.other.max_scanline ^ val) VGA_StartResize();
-		vga.other.max_scanline=(Bit8u)val;
+		vga.other.max_scanline = val;
 		break;
 	case 0x0A:	/* Cursor Start Register */
-		vga.other.cursor_start = (Bit8u)(val & 0x3f);
-		vga.draw.cursor.sline = (Bit8u)(val&0x1f);
+		vga.other.cursor_start = val & 0x3f;
+		vga.draw.cursor.sline = val & 0x1f;
 		vga.draw.cursor.enabled = ((val & 0x60) != 0x20);
 		break;
 	case 0x0B:	/* Cursor End Register */
-		vga.other.cursor_end = (Bit8u)(val&0x1f);
-		vga.draw.cursor.eline = (Bit8u)(val&0x1f);
+		vga.other.cursor_end = val & 0x1f;
+		vga.draw.cursor.eline = val & 0x1f;
 		break;
 	case 0x0C:	/* Start Address High Register */
 		// Bit 12 (depending on video mode) and 13 are actually masked too,
@@ -94,12 +102,12 @@ static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		vga.config.display_start=(vga.config.display_start & 0xFF00) | val;
 		break;
 	case 0x0E:	/*Cursor Location High Register */
-		vga.config.cursor_start&=0x00ff;
-		vga.config.cursor_start|=((Bit8u)val) << 8;
+		vga.config.cursor_start &= 0x00ff;
+		vga.config.cursor_start |= val << 8;
 		break;
-	case 0x0F:	/* Cursor Location Low Register */
-		vga.config.cursor_start&=0xff00;
-		vga.config.cursor_start|=(Bit8u)val;
+	case 0x0F: /* Cursor Location Low Register */
+		vga.config.cursor_start &= 0xff00;
+		vga.config.cursor_start |= val;
 		break;
 	case 0x10:	/* Light Pen High */
 		vga.other.lightpen &= 0xff;
@@ -107,10 +115,10 @@ static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		break;
 	case 0x11:	/* Light Pen Low */
 		vga.other.lightpen &= 0xff00;
-		vga.other.lightpen |= (Bit8u)val;
+		vga.other.lightpen |= val;
 		break;
 	default:
-		LOG(LOG_VGAMISC,LOG_NORMAL)("MC6845:Write %" sBitfs(X) " to illegal index %x",val,vga.other.index);
+		LOG(LOG_VGAMISC, LOG_NORMAL)("MC6845:Write %u to illegal index %x", val, vga.other.index);
 	}
 }
 static Bitu read_crtc_data_other(Bitu /*port*/,Bitu /*iolen*/) {
