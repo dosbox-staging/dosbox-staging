@@ -492,10 +492,12 @@ static void write_cga_color_select(uint8_t val) {
 	}
 }
 
-static void write_cga(Bitu port,Bitu val,Bitu /*iolen*/) {
+static void write_cga(Bitu port,Bitu data,Bitu /*iolen*/) {
+	// The only data written is 8-bit per write_cga's IO port registration
+	const auto val = static_cast<uint8_t>(data);
 	switch (port) {
 	case 0x3d8:
-		vga.tandy.mode_control=(Bit8u)val;
+		vga.tandy.mode_control= val;
 		vga.attr.disabled = (val&0x8)? 0: 1;
 		if (vga.tandy.mode_control & 0x2) {		// graphics mode
 			if (vga.tandy.mode_control & 0x10) {// highres mode
