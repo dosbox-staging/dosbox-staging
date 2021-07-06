@@ -6,6 +6,7 @@
 /* ----------------------- Pixel-perfect scaling unit ----------------------- */
 /* This unit uses the Horstmann indentation style.                            */
 
+#include <assert.h>
 #include <float.h>
 #include <math.h>
 #include <string.h>
@@ -24,30 +25,33 @@ int pp_getscale /* calculate integer scales for pixel-perfect magnification */
 	double parweight,      /* weight of PAR in scale estimation */
 	int    *sx,  int *sy   /* horisontal and vertical scales    */
 ) /* returns -1 on error and 0 on success */
-{	int    sxc = 0, syc = 0, sxm = 0, sym = 0;   /* current and maximum x and y scales     */
-	int    exactpar = 0;             /* whether to enforce exact aspect ratio  */
+{
+	/* check for invalid inputs: */
+	if( win <= 0    || hin <= 0    ||
+	    win >  wout || hin >  hout ||
+	    par <= 0.0  || parweight <= 0 ||
+	    sx == NULL  || sy == NULL )
+		return -1;
+
+	/* enforce aspect ratio priority for 1:n and 1:n pixel proportions: */
+	const double parnorm = ( par > 1.0 ) ? par : 1.0 / par; /* Ensure PAR is normalized to exceed 1.0  */
+
+	/* if our PAR is an integer ratio, then this will enforce exact aspect ratio */
+	const int exactpar = parnorm - floor( parnorm ) < 0.01;
+	
+	/* maximum x and y scales */
+	const int sxm = (int)floor( ( double )wout / win );
+	const int sym = (int)floor( ( double )hout / hin );
+	assert(sxm && sym);
+
+	/* current x and y scales; incrementally adjusted */
+	int sxc = sxm;
+	int syc = sym;
+
 	double parrat = 0;               /* ratio of current PAR and target PAR    */
 	double errpar = 0, errsize = 0, err = 0; /* PAR error, size error, and total error */
 	double errmin = 0;               /* minimal error so far                   */ 
-	double parnorm = 0;              /* target PAR "normalised" to exceed 1.0  */
 	double srat = 0;                 /* ratio of maximum size to current       */
-
-	if /* check for invalid inputs: */
-	(	win <= 0    || hin <= 0    ||
-		win >  wout || hin >  hout ||
-		par <= 0.0  || parweight <= 0 ||
-		sx == NULL || sy == NULL
-	)
-	return -1;
-
-	/* enforce aspect ratio priority for 1:n and 1:n pixel proportions: */
-	if( par > 1.0 ) parnorm =       par;
-	else            parnorm = 1.0 / par;
-	/* whether our PAR is an integer ratio: */
-	exactpar = parnorm - floor( parnorm ) < 0.01;
-
-	sxm = sxc = (int)floor( ( double )wout / win );
-	sym = syc = (int)floor( ( double )hout / hin );
 
 	errmin = -1; /* this value marks the first iteration */
 	while( 1 )
