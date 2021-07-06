@@ -28,6 +28,7 @@
 #if C_FLUIDSYNTH
 
 #include <atomic>
+#include <deque>
 #include <memory>
 #include <vector>
 #include <fluidsynth.h>
@@ -53,6 +54,7 @@ private:
 	void MixerCallBack(uint16_t requested_frames);
 	void SetMixerLevel(const AudioFrame &levels) noexcept;
 	uint16_t GetRemainingFrames();
+	bool IsSelected(const std::string &needle);
 	void Render();
 
 	using fluid_settings_ptr_t =
@@ -63,7 +65,7 @@ private:
 	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
 	channel_t channel{nullptr, MIXER_DelChannel};
-	std::string selected_font = "";
+	std::deque<std::string> selected_fonts = {};
 
 	std::vector<int16_t> play_buffer = {};
 	static constexpr auto num_buffers = 8;
