@@ -25,7 +25,7 @@
 #if C_FLUIDSYNTH
 
 #include <cassert>
-#include <deque>
+#include <iterator>
 #include <string>
 #include <tuple>
 
@@ -54,6 +54,8 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	        "absolute or relative path, or the name of an .sf2 inside\n"
 	        "the 'soundfonts' directory within your DOSBox configuration\n"
 	        "directory.\n"
+	        "Multiple soundfonts can be loaded if comma-separated.\n"
+	        "For example: piano.sf2, brass.sf2, drums.sf2\n"
 	        "An optional percentage will scale the SoundFont's volume.\n"
 	        "For example: 'soundfont.sf2 50' will attenuate it by 50 percent.\n"
 	        "The scaling percentage can range from 1 to 500.");
@@ -164,8 +166,11 @@ static std::deque<std::string> get_data_dirs()
 
 #endif
 
-static std::string find_sf_file(const std::string &name)
+// Return the file path to the given soundfont name.
+// If the soundfont isn't found, then an empty string is returned.
+static std::string find_sf_file(std::string name)
 {
+	trim(name);
 	const std::string sf_path = CROSS_ResolveHome(name);
 	if (path_exists(sf_path))
 		return sf_path;
@@ -176,13 +181,49 @@ static std::string find_sf_file(const std::string &name)
 				return sf;
 		}
 	}
+	LOG_MSG("MIDI: Failed to find '%s' soundfont, will skip it.", name.c_str());
 	return "";
+}
+
+// Return a deque of existing soundfont paths from the comma-separated list of names
+static std::deque<std::string> find_sf_files(const std::string &names)
+{
+	const auto separator = ',';
+	size_t start = 0;
+	auto end = names.find(separator);
+
+	std::deque<std::string> sf_files;
+	while (end != std::string::npos) {
+		const auto name = find_sf_file(names.substr(start, end - start));
+		if (!name.empty())
+			sf_files.emplace_back(name);
+
+		start = end + 1;
+		end = names.find(separator, start);
+	}
+	const auto name = find_sf_file(names.substr(start, end));
+	if (!name.empty())
+		sf_files.emplace_back(name);
+	return sf_files;
 }
 
 MidiHandlerFluidsynth::MidiHandlerFluidsynth()
         : soft_limiter("FSYNTH"),
           keep_rendering(false)
 {}
+
+// Constructs a comma-separated string from the deque of soundfont paths
+static std::string soundfonts_to_csv(const std::deque<std::string> &soundfonts)
+{
+	std::string csv;
+	for (auto it = soundfonts.begin(); it != soundfonts.end(); ++it) {
+		csv += *it;
+		if (std::next(it) != soundfonts.end()) {
+			csv += ", ";
+		}
+	}
+	return csv;
+}
 
 bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 {
@@ -224,18 +265,28 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	// Load the requested SoundFont or quit if none provided
 	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
 	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"), 100);
-	const auto soundfont = find_sf_file(std::get<std::string>(sf_spec));
-	auto scale_by_percent = std::get<int>(sf_spec);
 
-	if (!soundfont.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
+	// Round up the set of soundfonts that actually exist
+	const auto soundfonts_pref = std::get<std::string>(sf_spec);
+	const auto soundfonts = find_sf_files(soundfonts_pref);
+
+	// Confirm fluidsynth is empty before starting
+	int num_loaded = fluid_synth_sfcount(fluid_synth.get());
+	assert(num_loaded == 0); // fluidsynth should always be empty at this point
+
+	// Try loading the soundfonts
+	for (const auto &soundfont : soundfonts)
 		fluid_synth_sfload(fluid_synth.get(), soundfont.data(), true);
-	}
-	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		LOG_MSG("MIDI: FluidSynth failed to load '%s', check the path.",
-		        soundfont.c_str());
+
+	// Did we load the soundfonts?
+	num_loaded = fluid_synth_sfcount(fluid_synth.get());
+	const auto loaded_names = soundfonts_to_csv(soundfonts);
+	if (!num_loaded || num_loaded != static_cast<int>(soundfonts.size())) {
+		LOG_MSG("MIDI: FluidSynth failed to load '%s' soundfont(s), check the path(s).",
+		        loaded_names.c_str());
 		return false;
 	}
-
+	auto scale_by_percent = std::get<int>(sf_spec);
 	if (scale_by_percent < 1 || scale_by_percent > 500) {
 		LOG_MSG("MIDI: FluidSynth invalid scaling of %d%% provided; resetting to 100%%",
 		        scale_by_percent);
@@ -246,10 +297,11 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 
 	// Let the user know that the SoundFont was loaded
 	if (scale_by_percent == 100)
-		LOG_MSG("MIDI: Using SoundFont '%s'", soundfont.c_str());
+		LOG_MSG("MIDI: Loaded %d soundfont(s): %s", num_loaded,
+		        loaded_names.c_str());
 	else
-		LOG_MSG("MIDI: Using SoundFont '%s' with voices scaled by %d%%",
-		        soundfont.c_str(), scale_by_percent);
+		LOG_MSG("MIDI: Loaded %d Soundfont(s): %s with voices scaled by %d%%",
+		        num_loaded, loaded_names.c_str(), scale_by_percent);
 
 	constexpr int fx_group = -1; // applies setting to all groups
 
@@ -297,7 +349,7 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	settings = std::move(fluid_settings);
 	synth = std::move(fluid_synth);
 	channel = std::move(mixer_channel);
-	selected_font = soundfont;
+	selected_fonts = soundfonts;
 
 	// Start rendering audio
 	keep_rendering = true;
@@ -345,7 +397,7 @@ void MidiHandlerFluidsynth::Close()
 	settings.reset();
 	soft_limiter.Reset();
 	last_played_frame = 0;
-	selected_font = "";
+	selected_fonts = {};
 
 	is_open = false;
 }
@@ -471,11 +523,19 @@ std::string format_sf2_line(size_t width, const std::string &name, const std::st
 	return line;
 }
 
+bool MidiHandlerFluidsynth::IsSelected(const std::string &needle)
+{
+	return (std::find(selected_fonts.begin(), selected_fonts.end(), needle) !=
+	        selected_fonts.end());
+}
+
 MIDI_RC MidiHandlerFluidsynth::ListAll(Program *caller)
 {
 	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
 	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"), 100);
-	const auto sf_name = std::get<std::string>(sf_spec);
+	const auto sf_names = std::get<std::string>(sf_spec);
+	const auto soundfonts = find_sf_files(sf_names);
+
 	const size_t term_width = INT10_GetTextColumns();
 
 	auto write_line = [caller](bool highlight, const std::string &line) {
@@ -487,11 +547,13 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program *caller)
 			caller->WriteOut("  %s\n", line.c_str());
 	};
 
-	// If selected soundfont exists in the current working directory,
-	// then print it.
-	const std::string sf_path = CROSS_ResolveHome(sf_name);
-	if (path_exists(sf_path)) {
-		write_line((sf_path == selected_font), sf_name);
+	// Print the selected soundfont(s) if they exist in the current working
+	// directory
+	for (const auto &sf_name : soundfonts) {
+		const std::string sf_path = CROSS_ResolveHome(sf_name);
+		if (path_exists(sf_path)) {
+			write_line(IsSelected(sf_path), sf_name);
+		}
 	}
 
 	// Go through all soundfont directories and list all .sf2 files.
@@ -519,8 +581,7 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program *caller)
 
 			const auto line = format_sf2_line(term_width - 2,
 			                                  dir_entry_name, font_path);
-			const bool highlight = is_open &&
-			                       (selected_font == font_path);
+			const bool highlight = is_open && IsSelected(font_path);
 
 			write_line(highlight, line);
 
