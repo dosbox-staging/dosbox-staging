@@ -9,6 +9,7 @@
 # filters repo and removes temporary git refs.
 
 readonly svn_url=https://svn.code.sf.net/p/dosbox/code-0/dosbox
+readonly git_default_branch="main"
 
 echo_err () {
 	echo "$@" 1>&2
@@ -35,8 +36,10 @@ svn_get_copied_from () {
 #
 git_svn_clone_dosbox () {
 	local -r repo_name=$1
+	local -r default_branch=$2
 
-	git svn init \
+	git -c "init.defaultBranch=$default_branch" \
+		svn init \
 		--stdlayout \
 		"$svn_url" \
 		"$repo_name"
@@ -109,8 +112,10 @@ import_svn_tagpaths_as_git_tags () {
 # Remove any unnecessary refs left behind in imported repo
 #
 cleanup () {
+	local -r default_branch=$1
+
 	git -C "$1" checkout svn/trunk
-	git -C "$1" branch -D main
+	git -C "$1" branch -D "$default_branch"
 }
 
 # Set up remote repo to prepare for push
@@ -128,11 +133,11 @@ main () {
 		echo_err "Repository '$repo' exists already."
 		exit 1
 	fi
-	git_svn_clone_dosbox "$repo"
+	git_svn_clone_dosbox "$repo" "$git_default_branch"
 	git_rewrite_import_links "$repo"
 	name_active_branches "$repo"
 	import_svn_tagpaths_as_git_tags "$repo"
-	cleanup "$repo"
+	cleanup "$repo" "$git_default_branch"
 	setup_remote "$repo"
 }
 
