@@ -26,6 +26,7 @@
 
 #if C_NE2000
 
+#include <cstdarg>
 #include <cstdio>
 #include <cstring>
 
