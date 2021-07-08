@@ -71,6 +71,9 @@
 #include "emu.h"
 #include "saa1099.h"
 
+#include <cfloat>
+#include <cmath>
+
 #define LEFT    0x00
 #define RIGHT   0x01
 
@@ -261,24 +264,27 @@ void saa1099_device::sound_stream_update(MAYBE_UNUSED sound_stream &stream,
 		/* for each channel */
 		for (ch = 0; ch < 6; ch++)
 		{
-			if (m_channels[ch].freq == 0.0)
-				m_channels[ch].freq =
-				        (double)((2 * m_chip_clock / 512)
-				                 << m_channels[ch].octave) /
-				        (511.0 - (double)m_channels[ch].frequency);
+			auto channel = m_channels[ch];
+
+			auto calc_channel_freq = [this, channel]() {
+				return static_cast<double>((2 * m_chip_clock / 512)
+				                           << channel.octave) /
+				       (511.0 - channel.frequency);
+			};
+
+			if (abs(channel.freq) <= DBL_EPSILON) {
+				channel.freq = calc_channel_freq();
+			}
 
 			/* check the actual position in the square wave */
-			m_channels[ch].counter -= m_channels[ch].freq;
-			while (m_channels[ch].counter < 0)
-			{
-				/* calculate new frequency now after the half wave is updated */
-				m_channels[ch].freq =
-				        (double)((2 * m_chip_clock / 512)
-				                 << m_channels[ch].octave) /
-				        (511.0 - (double)m_channels[ch].frequency);
+			channel.counter -= channel.freq;
+			while (channel.counter < 0) {
+				/* calculate new frequency now after the half
+				 * wave is updated */
+				channel.freq = calc_channel_freq();
 
-				m_channels[ch].counter += m_sample_rate;
-				m_channels[ch].level ^= 1;
+				channel.counter += m_sample_rate;
+				channel.level ^= 1;
 
 				/* eventually clock the envelope counters */
 				if (ch == 1 && m_env_clock[0] == 0)
@@ -288,24 +294,21 @@ void saa1099_device::sound_stream_update(MAYBE_UNUSED sound_stream &stream,
 			}
 
 			// if the noise is enabled
-			if (m_channels[ch].noise_enable)
-			{
+			if (channel.noise_enable) {
 				// if the noise level is high (noise 0: chan 0-2, noise 1: chan 3-5)
 				if (m_noise[ch/3].level & 1)
 				{
 					// subtract to avoid overflows, also use only half amplitude
-					output_l -= m_channels[ch].amplitude[ LEFT] * m_channels[ch].envelope[ LEFT] / 16 / 2;
-					output_r -= m_channels[ch].amplitude[RIGHT] * m_channels[ch].envelope[RIGHT] / 16 / 2;
+					output_l -= channel.amplitude[LEFT] * channel.envelope[LEFT] / 16 / 2;
+					output_r -= channel.amplitude[RIGHT] * channel.envelope[RIGHT] / 16 / 2;
 				}
 			}
 			// if the square wave is enabled
-			if (m_channels[ch].freq_enable)
-			{
+			if (channel.freq_enable) {
 				// if the channel level is high
-				if (m_channels[ch].level & 1)
-				{
-					output_l += m_channels[ch].amplitude[ LEFT] * m_channels[ch].envelope[ LEFT] / 16;
-					output_r += m_channels[ch].amplitude[RIGHT] * m_channels[ch].envelope[RIGHT] / 16;
+				if (channel.level & 1) {
+					output_l += channel.amplitude[LEFT] * channel.envelope[LEFT] / 16;
+					output_r += channel.amplitude[RIGHT] * channel.envelope[RIGHT] / 16;
 				}
 			}
 		}
