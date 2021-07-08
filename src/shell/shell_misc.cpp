@@ -19,6 +19,7 @@
 #include "shell.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -398,11 +399,15 @@ void DOS_Shell::ProcessCmdLineEnvVarStitution(char* line) {
 	std::smatch match;
 	/* Iterate over potential %var1%, %var2%, etc matches found in the text string */
 	while (std::regex_search(text, match, re)) {
-		std::string variable_name;
-		variable_name = match[1].str();
-		if (!variable_name.size()) {
+		// Get the first matching %'s position and length
+		const auto percent_pos = static_cast<size_t>(match.position(0));
+		const auto percent_len = static_cast<size_t>(match.length(0));
+
+		std::string variable_name = match[1].str();
+		if (variable_name.empty()) {
 			/* Replace %% with the character "surrogate_percent", then (eventually) % */
-			text.replace(match[0].first, match[0].second, std::string(1, surrogate_percent));
+			text.replace(percent_pos, percent_len,
+			             std::string(1, surrogate_percent));
 			continue;
 		}
 		/* Trim preceding spaces from the variable name */
@@ -413,10 +418,10 @@ void DOS_Shell::ProcessCmdLineEnvVarStitution(char* line) {
 			/* Replace the original %var% with its corresponding value from the environment */
 			const std::string replacement = equal_pos != std::string::npos
 			                ? variable_value.substr(equal_pos + 1) : "";
-			text.replace(match[0].first, match[0].second, replacement);
+			text.replace(percent_pos, percent_len, replacement);
 		}
 		else {
-			text.replace(match[0].first, match[0].second, "");
+			text.replace(percent_pos, percent_len, "");
 		}
 	}
 	std::replace(text.begin(), text.end(), surrogate_percent, '%');
