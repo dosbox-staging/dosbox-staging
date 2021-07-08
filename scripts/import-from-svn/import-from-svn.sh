@@ -233,9 +233,9 @@ main () {
 		exit 1
 	fi
 
-	# full_import "$repo" "$git_default_branch"
+	full_import "$repo" "$git_default_branch"
 
-	fast_import "$repo" "$git_destination_repo" "$git_default_branch"
+	# fast_import "$repo" "$git_destination_repo" "$git_default_branch"
 }
 
 main "$@"
