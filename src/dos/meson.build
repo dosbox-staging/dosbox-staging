@@ -21,6 +21,7 @@ libdos_sources = files([
   'drives.cpp',
   'drive_virtual.cpp',
   'program_autotype.cpp',
+  'program_choice.cpp',
   'program_help.cpp',
   'program_ls.cpp',
 ])
