@@ -59,7 +59,6 @@ static SHELL_Cmd cmd_list[] = {
 	{ "ERASE",    1, &DOS_Shell::CMD_DELETE,   "SHELL_CMD_DELETE_HELP" },
 	{ "EXIT",     0, &DOS_Shell::CMD_EXIT,     "SHELL_CMD_EXIT_HELP" },
 	{ "GOTO",     1, &DOS_Shell::CMD_GOTO,     "SHELL_CMD_GOTO_HELP" },
-	{ "HELP",     1, &DOS_Shell::CMD_HELP,     "SHELL_CMD_HELP_HELP" },
 	{ "IF",       1, &DOS_Shell::CMD_IF,       "SHELL_CMD_IF_HELP" },
 	{ "LH",       1, &DOS_Shell::CMD_LOADHIGH, "SHELL_CMD_LOADHIGH_HELP" },
 	{ "LOADHIGH", 1, &DOS_Shell::CMD_LOADHIGH, "SHELL_CMD_LOADHIGH_HELP" },
@@ -240,16 +239,36 @@ void DOS_Shell::CMD_HELP(char * args){
 	HELP("HELP");
 	bool optall=ScanCMDBool(args,"ALL");
 	/* Print the help */
-	if (!optall) WriteOut(MSG_Get("SHELL_CMD_HELP"));
+	if (!optall && !*args) WriteOut(MSG_Get("SHELL_CMD_HELP"));
+	upcase(args);
 	Bit32u cmd_index=0,write_count=0;
+	bool show = false;
 	while (cmd_list[cmd_index].name) {
-		if (optall || !cmd_list[cmd_index].flags) {
-			WriteOut("<\033[34;1m%-8s\033[0m> %s",cmd_list[cmd_index].name,MSG_Get(cmd_list[cmd_index].help));
-			if (!(++write_count % 24))
-				CMD_PAUSE(empty_string);
+		if (optall || (*args && !strcmp(args, cmd_list[cmd_index].name)) || (!*args && !cmd_list[cmd_index].flags)) {
+			if (*args && !strcmp(args, cmd_list[cmd_index].name) && !optall) {
+				std::string cmd = args;
+				if (cmd == "CD") cmd = "CHDIR";
+				else if (cmd == "DEL" || cmd == "ERASE") cmd = "DELETE";
+				else if (cmd == "LH") cmd = "LOADHIGH";
+				else if (cmd == "MD") cmd = "MKDIR";
+				else if (cmd == "RD") cmd = "RMDIR";
+				else if (cmd == "REN") cmd = "RENAME";
+				WriteOut("%s\n",MSG_Get(cmd_list[cmd_index].help));
+				const char* long_m = MSG_Get(("SHELL_CMD_" + cmd + "_HELP_LONG").c_str());
+				if (strcmp("Message not Found!\n",long_m)) WriteOut(long_m);
+				else WriteOut("%s\n", cmd.c_str());
+				show = true;
+				break;
+			} else {
+				WriteOut("<\033[34;1m%-8s\033[0m> %s",cmd_list[cmd_index].name,MSG_Get(cmd_list[cmd_index].help));
+				if (!(++write_count % 24))
+					CMD_PAUSE(empty_string);
+			}
 		}
 		cmd_index++;
 	}
+	char p[2] = {0};
+	if (!optall && *args && !show) CMD_HELP(p);
 }
 
 void DOS_Shell::CMD_RENAME(char * args){
