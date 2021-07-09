@@ -694,6 +694,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_ECHO_HELP","Display messages and enable/disable command echoing.\n");
 	MSG_Add("SHELL_CMD_EXIT_HELP","Exit from the shell.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP","Show help.\n");
+	MSG_Add("SHELL_CMD_HELP_HELP_LONG","HELP [command]\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP","Make Directory.\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP_LONG","MKDIR [drive:][path]\n"
 	        "MD [drive:][path]\n");
