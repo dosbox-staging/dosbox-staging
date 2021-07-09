@@ -39,6 +39,7 @@
 #include "mapper.h"
 #include "mem.h"
 #include "program_autotype.h"
+#include "program_help.h"
 #include "program_ls.h"
 #include "regs.h"
 #include "setup.h"
@@ -1959,6 +1960,7 @@ void DOS_SetupPrograms(void) {
 	PROGRAMS_MakeFile("BIOSTEST.COM", BIOSTEST_ProgramStart);
 #endif
 	PROGRAMS_MakeFile("BOOT.COM", BOOT_ProgramStart);
+	PROGRAMS_MakeFile("HELP.COM", HELP_ProgramStart);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
 	PROGRAMS_MakeFile("INTRO.COM", INTRO_ProgramStart);
 	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);
