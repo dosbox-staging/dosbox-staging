@@ -48,7 +48,6 @@ static SHELL_Cmd cmd_list[] = {
 	{ "CALL",     1, &DOS_Shell::CMD_CALL,     "SHELL_CMD_CALL_HELP" },
 	{ "CD",       0, &DOS_Shell::CMD_CHDIR,    "SHELL_CMD_CHDIR_HELP" },
 	{ "CHDIR",    1, &DOS_Shell::CMD_CHDIR,    "SHELL_CMD_CHDIR_HELP" },
-	{ "CHOICE",   1, &DOS_Shell::CMD_CHOICE,   "SHELL_CMD_CHOICE_HELP" },
 	{ "CLS",      0, &DOS_Shell::CMD_CLS,      "SHELL_CMD_CLS_HELP" },
 	{ "COPY",     0, &DOS_Shell::CMD_COPY,     "SHELL_CMD_COPY_HELP" },
 	{ "DATE",     0, &DOS_Shell::CMD_DATE,     "SHELL_CMD_DATE_HELP" },

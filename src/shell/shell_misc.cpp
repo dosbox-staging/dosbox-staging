@@ -30,6 +30,8 @@
 #include "callback.h"
 #include "string_utils.h"
 
+unsigned int result_errorcode = 0;
+
 DOS_Shell::~DOS_Shell() {
 	delete bf;
 	bf = nullptr;
@@ -577,6 +579,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		SegSet16(cs,RealSeg(newcsip));
 		reg_ip=RealOff(newcsip);
 #endif
+		result_errorcode = 0;
 		/* Start up a dos execute interrupt */
 		reg_ax=0x4b00;
 		//Filename pointer
@@ -589,6 +592,8 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		CALLBACK_RunRealInt(0x21);
 		/* Restore CS:IP and the stack */
 		reg_sp+=0x200;
+		if (result_errorcode)
+			dos.return_code = result_errorcode;
 #if 0
 		reg_eip=oldeip;
 		SegSet16(cs,oldcs);
