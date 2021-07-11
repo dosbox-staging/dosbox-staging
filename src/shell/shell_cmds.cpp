@@ -29,6 +29,7 @@
 #include <ctime>
 #include <limits>
 #include <string>
+#include <map>
 #include <vector>
 
 #include "bios.h"
@@ -43,41 +44,40 @@
 #include "../ints/int10.h"
 
 // clang-format off
-static SHELL_Cmd cmd_list[] = {
-	{ "ATTRIB",   1, &DOS_Shell::CMD_ATTRIB,   "SHELL_CMD_ATTRIB_HELP" },
-	{ "CALL",     1, &DOS_Shell::CMD_CALL,     "SHELL_CMD_CALL_HELP" },
-	{ "CD",       0, &DOS_Shell::CMD_CHDIR,    "SHELL_CMD_CHDIR_HELP" },
-	{ "CHDIR",    1, &DOS_Shell::CMD_CHDIR,    "SHELL_CMD_CHDIR_HELP" },
-	{ "CLS",      0, &DOS_Shell::CMD_CLS,      "SHELL_CMD_CLS_HELP" },
-	{ "COPY",     0, &DOS_Shell::CMD_COPY,     "SHELL_CMD_COPY_HELP" },
-	{ "DATE",     0, &DOS_Shell::CMD_DATE,     "SHELL_CMD_DATE_HELP" },
-	{ "DEL",      0, &DOS_Shell::CMD_DELETE,   "SHELL_CMD_DELETE_HELP" },
-	{ "DELETE",   1, &DOS_Shell::CMD_DELETE,   "SHELL_CMD_DELETE_HELP" },
-	{ "DIR",      0, &DOS_Shell::CMD_DIR,      "SHELL_CMD_DIR_HELP" },
-	{ "ECHO",     1, &DOS_Shell::CMD_ECHO,     "SHELL_CMD_ECHO_HELP" },
-	{ "ERASE",    1, &DOS_Shell::CMD_DELETE,   "SHELL_CMD_DELETE_HELP" },
-	{ "EXIT",     0, &DOS_Shell::CMD_EXIT,     "SHELL_CMD_EXIT_HELP" },
-	{ "GOTO",     1, &DOS_Shell::CMD_GOTO,     "SHELL_CMD_GOTO_HELP" },
-	{ "IF",       1, &DOS_Shell::CMD_IF,       "SHELL_CMD_IF_HELP" },
-	{ "LH",       1, &DOS_Shell::CMD_LOADHIGH, "SHELL_CMD_LOADHIGH_HELP" },
-	{ "LOADHIGH", 1, &DOS_Shell::CMD_LOADHIGH, "SHELL_CMD_LOADHIGH_HELP" },
-	{ "MD",       0, &DOS_Shell::CMD_MKDIR,    "SHELL_CMD_MKDIR_HELP" },
-	{ "MKDIR",    1, &DOS_Shell::CMD_MKDIR,    "SHELL_CMD_MKDIR_HELP" },
-	{ "PATH",     1, &DOS_Shell::CMD_PATH,     "SHELL_CMD_PATH_HELP" },
-	{ "PAUSE",    1, &DOS_Shell::CMD_PAUSE,    "SHELL_CMD_PAUSE_HELP" },
-	{ "RD",       0, &DOS_Shell::CMD_RMDIR,    "SHELL_CMD_RMDIR_HELP" },
-	{ "REM",      1, &DOS_Shell::CMD_REM,      "SHELL_CMD_REM_HELP" },
-	{ "REN",      0, &DOS_Shell::CMD_RENAME,   "SHELL_CMD_RENAME_HELP" },
-	{ "RENAME",   1, &DOS_Shell::CMD_RENAME,   "SHELL_CMD_RENAME_HELP" },
-	{ "RMDIR",    1, &DOS_Shell::CMD_RMDIR,    "SHELL_CMD_RMDIR_HELP" },
-	{ "SET",      1, &DOS_Shell::CMD_SET,      "SHELL_CMD_SET_HELP" },
-	{ "SHIFT",    1, &DOS_Shell::CMD_SHIFT,    "SHELL_CMD_SHIFT_HELP" },
-	{ "SUBST",    1, &DOS_Shell::CMD_SUBST,    "SHELL_CMD_SUBST_HELP" },
-	{ "TIME",     0, &DOS_Shell::CMD_TIME,     "SHELL_CMD_TIME_HELP" },
-	{ "TYPE",     0, &DOS_Shell::CMD_TYPE,     "SHELL_CMD_TYPE_HELP" },
-	{ "VER",      0, &DOS_Shell::CMD_VER,      "SHELL_CMD_VER_HELP" },
-	{ 0, 0, 0, 0 }
-};
+static const std::map<std::string, SHELL_Cmd> shell_cmds = {
+	{ "ATTRIB",   {1, &DOS_Shell::CMD_ATTRIB,   "SHELL_CMD_ATTRIB_HELP",   nullptr } },
+	{ "CALL",     {1, &DOS_Shell::CMD_CALL,     "SHELL_CMD_CALL_HELP",     nullptr } },
+	{ "CD",       {0, &DOS_Shell::CMD_CHDIR,    "SHELL_CMD_CHDIR_HELP",    "SHELL_CMD_CHDIR_HELP_LONG" } },
+	{ "CHDIR",    {1, &DOS_Shell::CMD_CHDIR,    "SHELL_CMD_CHDIR_HELP",    "SHELL_CMD_CHDIR_HELP_LONG" } },
+	{ "CLS",      {0, &DOS_Shell::CMD_CLS,      "SHELL_CMD_CLS_HELP",      nullptr } },
+	{ "COPY",     {0, &DOS_Shell::CMD_COPY,     "SHELL_CMD_COPY_HELP",     nullptr } },
+	{ "DATE",     {0, &DOS_Shell::CMD_DATE,     "SHELL_CMD_DATE_HELP",     "SHELL_CMD_DATE_HELP_LONG" } },
+	{ "DEL",      {0, &DOS_Shell::CMD_DELETE,   "SHELL_CMD_DELETE_HELP",   nullptr } },
+	{ "DELETE",   {1, &DOS_Shell::CMD_DELETE,   "SHELL_CMD_DELETE_HELP",   nullptr } },
+	{ "DIR",      {0, &DOS_Shell::CMD_DIR,      "SHELL_CMD_DIR_HELP",      "SHELL_CMD_DIR_HELP_LONG" } },
+	{ "ECHO",     {1, &DOS_Shell::CMD_ECHO,     "SHELL_CMD_ECHO_HELP",     nullptr } },
+	{ "ERASE",    {1, &DOS_Shell::CMD_DELETE,   "SHELL_CMD_DELETE_HELP",   nullptr } },
+	{ "EXIT",     {0, &DOS_Shell::CMD_EXIT,     "SHELL_CMD_EXIT_HELP",     nullptr } },
+	{ "GOTO",     {1, &DOS_Shell::CMD_GOTO,     "SHELL_CMD_GOTO_HELP",     nullptr } },
+	{ "IF",       {1, &DOS_Shell::CMD_IF,       "SHELL_CMD_IF_HELP",       nullptr } },
+	{ "LH",       {1, &DOS_Shell::CMD_LOADHIGH, "SHELL_CMD_LOADHIGH_HELP", nullptr } },
+	{ "LOADHIGH", {1, &DOS_Shell::CMD_LOADHIGH, "SHELL_CMD_LOADHIGH_HELP", nullptr } },
+	{ "MD",       {0, &DOS_Shell::CMD_MKDIR,    "SHELL_CMD_MKDIR_HELP",    "SHELL_CMD_MKDIR_HELP_LONG" } },
+	{ "MKDIR",    {1, &DOS_Shell::CMD_MKDIR,    "SHELL_CMD_MKDIR_HELP",    "SHELL_CMD_MKDIR_HELP_LONG" } },
+	{ "PATH",     {1, &DOS_Shell::CMD_PATH,     "SHELL_CMD_PATH_HELP",     nullptr } },
+	{ "PAUSE",    {1, &DOS_Shell::CMD_PAUSE,    "SHELL_CMD_PAUSE_HELP",    nullptr } },
+	{ "RD",       {0, &DOS_Shell::CMD_RMDIR,    "SHELL_CMD_RMDIR_HELP",    "SHELL_CMD_RMDIR_HELP_LONG" } },
+	{ "REM",      {1, &DOS_Shell::CMD_REM,      "SHELL_CMD_REM_HELP",      "SHELL_CMD_REM_HELP_LONG" } },
+	{ "REN",      {0, &DOS_Shell::CMD_RENAME,   "SHELL_CMD_RENAME_HELP",   "SHELL_CMD_RENAME_HELP_LONG" } },
+	{ "RENAME",   {1, &DOS_Shell::CMD_RENAME,   "SHELL_CMD_RENAME_HELP",   "SHELL_CMD_RENAME_HELP_LONG" } },
+	{ "RMDIR",    {1, &DOS_Shell::CMD_RMDIR,    "SHELL_CMD_RMDIR_HELP",    "SHELL_CMD_RMDIR_HELP_LONG" } },
+	{ "SET",      {1, &DOS_Shell::CMD_SET,      "SHELL_CMD_SET_HELP",      nullptr } },
+	{ "SHIFT",    {1, &DOS_Shell::CMD_SHIFT,    "SHELL_CMD_SHIFT_HELP",    nullptr } },
+	{ "SUBST",    {1, &DOS_Shell::CMD_SUBST,    "SHELL_CMD_SUBST_HELP",    nullptr } },
+	{ "TIME",     {0, &DOS_Shell::CMD_TIME,     "SHELL_CMD_TIME_HELP",     "SHELL_CMD_TIME_HELP_LONG" } },
+	{ "TYPE",     {0, &DOS_Shell::CMD_TYPE,     "SHELL_CMD_TYPE_HELP",     "SHELL_CMD_TYPE_HELP_LONG" } },
+	{ "VER",      {0, &DOS_Shell::CMD_VER,      "SHELL_CMD_VER_HELP",      "SHELL_CMD_VER_HELP_LONG" } },
+	};
 // clang-format on
 
 /* support functions */
@@ -112,6 +112,19 @@ static char *ExpandDot(const char *args, char *buffer, size_t bufsize)
 	return buffer;
 }
 
+bool lookup_shell_cmd(std::string name, SHELL_Cmd &shell_cmd)
+{
+	for (auto &c : name)
+		c = toupper(c);
+
+	const auto result = shell_cmds.find(name);
+	if (result == shell_cmds.end())
+		return false; // name isn't a shell command!
+
+	shell_cmd = result->second;
+	return true;
+}
+
 bool DOS_Shell::CheckConfig(char *cmd_in, char *line) {
 	Section* test = control->GetSectionFromProperty(cmd_in);
 	if (!test)
@@ -137,6 +150,15 @@ void DOS_Shell::DoCommand(char * line) {
 	line=trim(line);
 	char cmd_buffer[CMD_MAXLINE];
 	char * cmd_write=cmd_buffer;
+
+	auto execute_shell_cmd = [this](char *name, char *arguments) {
+		SHELL_Cmd shell_cmd = {};
+		if (!lookup_shell_cmd(name, shell_cmd))
+			return false; // name isn't a shell command!
+		(this->*(shell_cmd.handler))(arguments);
+		return true;
+	};
+
 	while (*line) {
 		if (*line == 32) break;
 		if (*line == '/') break;
@@ -145,13 +167,8 @@ void DOS_Shell::DoCommand(char * line) {
 //		if (*line == ':') break; //This breaks drive switching as that is handled at a later stage.
 		if ((*line == '.') ||(*line == '\\')) {  //allow stuff like cd.. and dir.exe cd\kees
 			*cmd_write=0;
-			Bit32u cmd_index=0;
-			while (cmd_list[cmd_index].name) {
-				if (strcasecmp(cmd_list[cmd_index].name,cmd_buffer) == 0) {
-					(this->*(cmd_list[cmd_index].handler))(line);
-			 		return;
-				}
-				cmd_index++;
+			if (execute_shell_cmd(cmd_buffer, line)) {
+				return;
 			}
 		}
 		*cmd_write++=*line++;
@@ -160,14 +177,8 @@ void DOS_Shell::DoCommand(char * line) {
 	if (is_empty(cmd_buffer))
 		return;
 	/* Check the internal list */
-	Bit32u cmd_index=0;
-	while (cmd_list[cmd_index].name) {
-		if (strcasecmp(cmd_list[cmd_index].name,cmd_buffer) == 0) {
-			(this->*(cmd_list[cmd_index].handler))(line);
-			return;
-		}
-		cmd_index++;
-	}
+	if (execute_shell_cmd(cmd_buffer, line))
+		return;
 /* This isn't an internal command execute it */
 	if (Execute(cmd_buffer,line)) return;
 	if (CheckConfig(cmd_buffer,line)) return;
@@ -234,59 +245,43 @@ void DOS_Shell::CMD_DELETE(char * args) {
 	dos.dta(save_dta);
 }
 
+void DOS_Shell::PrintHelpForCommands(const HELP_LIST requested_list)
+{
+	BIOS_NROWS; // macro creates 'nrows' queried from BIOS
+	int rows_printed = 0;
+	for (const auto &s : shell_cmds) {
+		if (requested_list == HELP_LIST::COMMON && !s.second.flags)
+			continue;
+
+		WriteOut("<\033[34;1m%-8s\033[0m> %s", s.first.c_str(),
+		         MSG_Get(s.second.help));
+
+		// Do we need a page-break?
+		if (++rows_printed == nrows) {
+			CMD_PAUSE(empty_string);
+			rows_printed = 0;
+		}
+	}
+}
+
 void DOS_Shell::CMD_HELP(char * args){
 	HELP("HELP");
-	const bool optall = ScanCMDBool(args, "ALL");
-	/* Print the help */
-	if (!optall && !*args)
-		WriteOut(MSG_Get("SHELL_CMD_HELP"));
+
 	upcase(args);
-	uint32_t cmd_index = 0, write_count = 0;
-	bool show = false;
-	while (cmd_list[cmd_index].name) {
-		/* If there is an argument specified, check if it is a shell command */
-		bool match_cmd = *args && !strcmp(args, cmd_list[cmd_index].name);
-		/* If no argument specified, check if it is a basic command */
-		bool basic_cmd = !*args && !cmd_list[cmd_index].flags;
-		/* If to list all commands, or the argument matches the command, or no argument and a basic command, then list it */
-		if (optall || match_cmd || basic_cmd) {
-			if (match_cmd && !optall) {
-				std::string cmd = args;
-				if (cmd == "CD")
-					cmd = "CHDIR";
-				else if (cmd == "DEL" || cmd == "ERASE")
-					cmd = "DELETE";
-				else if (cmd == "LH")
-					cmd = "LOADHIGH";
-				else if (cmd == "MD")
-					cmd = "MKDIR";
-				else if (cmd == "RD")
-					cmd = "RMDIR";
-				else if (cmd == "REN")
-					cmd = "RENAME";
-				WriteOut("%s\n", MSG_Get(cmd_list[cmd_index].help));
-				const char *long_m = MSG_Get(
-				        ("SHELL_CMD_" + cmd + "_HELP_LONG").c_str());
-				if (strcmp("Message not Found!\n", long_m))
-					WriteOut(long_m);
-				else
-					WriteOut("%s\n", cmd.c_str());
-				show = true;
-				break;
-			} else {
-				WriteOut("<\033[34;1m%-8s\033[0m> %s",
-				         cmd_list[cmd_index].name,
-				         MSG_Get(cmd_list[cmd_index].help));
-				if (!(++write_count % 24))
-					CMD_PAUSE(empty_string);
-			}
-		}
-		cmd_index++;
+	SHELL_Cmd shell_cmd = {};
+	if (lookup_shell_cmd(args, shell_cmd)) {
+		// Print the help for the provided command
+		WriteOut("%s\n", MSG_Get(shell_cmd.help));
+		WriteOut("%s\n", shell_cmd.long_help ? MSG_Get(shell_cmd.long_help)
+		                                     : args);
+	} else if (ScanCMDBool(args, "ALL")) {
+		// Print help for all the commands
+		PrintHelpForCommands(HELP_LIST::ALL);
+	} else {
+		// Print help for just the common commands
+		WriteOut(MSG_Get("SHELL_CMD_HELP"));
+		PrintHelpForCommands(HELP_LIST::COMMON);
 	}
-	/* If an argument is provided and does not match any shell command, then re-run HELP and ignore the argument */
-	char p[2] = {0};
-	if (!optall && *args && !show)
-		CMD_HELP(p);
 }
 
 void DOS_Shell::CMD_RENAME(char * args){
