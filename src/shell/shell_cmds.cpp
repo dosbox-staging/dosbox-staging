@@ -236,38 +236,57 @@ void DOS_Shell::CMD_DELETE(char * args) {
 
 void DOS_Shell::CMD_HELP(char * args){
 	HELP("HELP");
-	bool optall=ScanCMDBool(args,"ALL");
+	const bool optall = ScanCMDBool(args, "ALL");
 	/* Print the help */
-	if (!optall && !*args) WriteOut(MSG_Get("SHELL_CMD_HELP"));
+	if (!optall && !*args)
+		WriteOut(MSG_Get("SHELL_CMD_HELP"));
 	upcase(args);
-	Bit32u cmd_index=0,write_count=0;
+	uint32_t cmd_index = 0, write_count = 0;
 	bool show = false;
 	while (cmd_list[cmd_index].name) {
-		if (optall || (*args && !strcmp(args, cmd_list[cmd_index].name)) || (!*args && !cmd_list[cmd_index].flags)) {
-			if (*args && !strcmp(args, cmd_list[cmd_index].name) && !optall) {
+		/* If there is an argument specified, check if it is a shell command */
+		bool match_cmd = *args && !strcmp(args, cmd_list[cmd_index].name);
+		/* If no argument specified, check if it is a basic command */
+		bool basic_cmd = !*args && !cmd_list[cmd_index].flags;
+		/* If to list all commands, or the argument matches the command, or no argument and a basic command, then list it */
+		if (optall || match_cmd || basic_cmd) {
+			if (match_cmd && !optall) {
 				std::string cmd = args;
-				if (cmd == "CD") cmd = "CHDIR";
-				else if (cmd == "DEL" || cmd == "ERASE") cmd = "DELETE";
-				else if (cmd == "LH") cmd = "LOADHIGH";
-				else if (cmd == "MD") cmd = "MKDIR";
-				else if (cmd == "RD") cmd = "RMDIR";
-				else if (cmd == "REN") cmd = "RENAME";
-				WriteOut("%s\n",MSG_Get(cmd_list[cmd_index].help));
-				const char* long_m = MSG_Get(("SHELL_CMD_" + cmd + "_HELP_LONG").c_str());
-				if (strcmp("Message not Found!\n",long_m)) WriteOut(long_m);
-				else WriteOut("%s\n", cmd.c_str());
+				if (cmd == "CD")
+					cmd = "CHDIR";
+				else if (cmd == "DEL" || cmd == "ERASE")
+					cmd = "DELETE";
+				else if (cmd == "LH")
+					cmd = "LOADHIGH";
+				else if (cmd == "MD")
+					cmd = "MKDIR";
+				else if (cmd == "RD")
+					cmd = "RMDIR";
+				else if (cmd == "REN")
+					cmd = "RENAME";
+				WriteOut("%s\n", MSG_Get(cmd_list[cmd_index].help));
+				const char *long_m = MSG_Get(
+				        ("SHELL_CMD_" + cmd + "_HELP_LONG").c_str());
+				if (strcmp("Message not Found!\n", long_m))
+					WriteOut(long_m);
+				else
+					WriteOut("%s\n", cmd.c_str());
 				show = true;
 				break;
 			} else {
-				WriteOut("<\033[34;1m%-8s\033[0m> %s",cmd_list[cmd_index].name,MSG_Get(cmd_list[cmd_index].help));
+				WriteOut("<\033[34;1m%-8s\033[0m> %s",
+				         cmd_list[cmd_index].name,
+				         MSG_Get(cmd_list[cmd_index].help));
 				if (!(++write_count % 24))
 					CMD_PAUSE(empty_string);
 			}
 		}
 		cmd_index++;
 	}
+	/* If an argument is provided and does not match any shell command, then re-run HELP and ignore the argument */
 	char p[2] = {0};
-	if (!optall && *args && !show) CMD_HELP(p);
+	if (!optall && *args && !show)
+		CMD_HELP(p);
 }
 
 void DOS_Shell::CMD_RENAME(char * args){
