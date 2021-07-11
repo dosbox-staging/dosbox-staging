@@ -61,6 +61,9 @@ public:
 class AutoexecEditor;
 class DOS_Shell final : public Program {
 private:
+	enum class HELP_LIST { ALL, COMMON };
+	void PrintHelpForCommands(HELP_LIST requested_list);
+
 	friend class AutoexecEditor;
 	std::list<std::string> l_history{};
 	std::list<std::string> l_completion{};
@@ -128,10 +131,10 @@ public:
 };
 
 struct SHELL_Cmd {
-	const char *name = nullptr;             /* Command name*/
-	uint32_t flags = 0;                     /* Flags about the command */
-	void (DOS_Shell::*handler)(char *args); /* Handler for this command */
-	const char *help = nullptr;             /* String with command help */
+	uint32_t flags = 0;                               // Flags about the command
+	void (DOS_Shell::*handler)(char *args) = nullptr; // Handler for this command
+	const char *help = nullptr;                       // String with command help
+	const char *long_help = nullptr;                  // String with long help (optional)
 };
 
 /* Object to manage lines in the autoexec.bat The lines get removed from
