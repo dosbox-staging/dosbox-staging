@@ -57,9 +57,9 @@ int pp_getscale /* calculate integer scales for pixel-perfect magnification */
 	while( 1 )
 	{
 		/* Handle unstable calculation: parrat = (double)syc / sxc / par  */
-		if (syc == 0) /* numerator is zero, so result will be zero */
+		if( syc == 0 ) /* numerator is zero, so result will be zero */
 			parrat = 0;
-		else if (sxc == 0) /* numerator is not zero but denominator is zero, so will result in 'inf' */
+		else if( sxc == 0 ) /* numerator is not zero but denominator is zero, so will result in 'inf' */
 			parrat = (double)INFINITY;
 		else /* otherwise attempt the calculation */
 			parrat = (double)syc / sxc / par;
@@ -67,17 +67,17 @@ int pp_getscale /* calculate integer scales for pixel-perfect magnification */
 		/* calculate aspect-ratio error: */
 		if( parrat > 1.0 )
 			errpar = parrat;
-		else if (fabs(parrat) > DBL_EPSILON) /* denominator is valid, so allow the division */
+		else if( fabs(parrat) > DBL_EPSILON ) /* denominator is valid, so allow the division */
 			errpar = 1.0 / parrat;
 		else /* otherwise parrat is near zero so will result in 'inf' */
 			errpar = (double)INFINITY;
 
 		/* Handle unstable calculation: srat = min( (double)sym/syc, (double)sxm/sxc ) */
-		if (syc == 0 && sxc == 0) /* denominators are both zero so will result in 'inf' */
+		if( syc == 0 && sxc == 0 ) /* denominators are both zero so will result in 'inf' */
 			srat = (double)INFINITY; /* numerator always positive, so negative 'inf' is not possible */
-		else if (syc == 0) /* left-hand-size 'inf', so use right-hand-side */
+		else if( syc == 0 ) /* left-hand-size 'inf', so use right-hand-side */
 			srat = (double)sxm / sxc;
-		else if (sxc == 0) /* right-hand-size 'inf', so use left-hand-side */
+		else if( sxc == 0 ) /* right-hand-size 'inf', so use left-hand-side */
 			srat = (double)sym / syc;
 		else /* if none of the above, attempt the calculation */
 			srat = min( (double)sym/syc, (double)sxm/sxc );
@@ -90,7 +90,7 @@ int pp_getscale /* calculate integer scales for pixel-perfect magnification */
 		err = errpar * errsize; /* total error */
 
 		/* check for a new optimum or if errmin is -1: */
-		if(err < errmin || fabs(errmin + 1) < DBL_EPSILON)
+		if( err < errmin || fabs(errmin + 1) < DBL_EPSILON )
 		{
 			*sx    = sxc;
 			*sy    = syc;
