@@ -2143,8 +2143,6 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
                                          const SCALING_MODE scaling_mode,
                                          const bool wants_stretched_pixels)
 {
-	assert(sdl.display_number >= 0);
-
 	// TODO: Deprecate SURFACE output and remove this.
 	// For now, let the DOS-side determine the window's resolution.
 	if (sdl.desktop.want_type == SCREEN_SURFACE)
@@ -2152,9 +2150,10 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	sdl.desktop.want_resizable_window = detect_resizable_window();
 
-	// Get the total usable desktop resolution
+	// Get the total desktop resolution
 	SDL_Rect desktop;
-	SDL_GetDisplayUsableBounds(sdl.display_number, &desktop);
+	assert(sdl.display_number >= 0);
+	SDL_GetDisplayBounds(sdl.display_number, &desktop);
 	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
 	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
 
