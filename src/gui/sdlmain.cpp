@@ -806,9 +806,9 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	const int imgh = sdl.pp_scale.y * sdl.draw.height;
 
 	if (previous_imgw != imgw || previous_imgh != imgh)
-		LOG_MSG("MAIN: Pixel-perfect scaling (%dx%d): %dx%d (PAR %#.3g) -> %dx%d (PAR %#.3g)",
-		        sdl.pp_scale.x, sdl.pp_scale.y, sdl.draw.width,
-		        sdl.draw.height, sdl.draw.pixel_aspect, imgw, imgh,
+		LOG_MSG("MAIN: Scaling source %dx%d (PAR %#.3g) by %dx%d -> %dx%d (PAR %#.3g)",
+		        sdl.draw.width, sdl.draw.height, sdl.draw.pixel_aspect,
+		        sdl.pp_scale.x, sdl.pp_scale.y, imgw, imgh,
 		        static_cast<double>(sdl.pp_scale.y) / sdl.pp_scale.x);
 
 	const int wndw = (sdl.desktop.fullscreen ? w : imgw);
@@ -989,8 +989,7 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 	                         sdl.draw.height != static_cast<int>(height) ||
 	                         sdl.draw.scalex != scalex ||
 	                         sdl.draw.scaley != scaley ||
-	                         sdl.draw.pixel_aspect != pixel_aspect ||
-	                         sdl.draw.callback != callback);
+	                         sdl.draw.pixel_aspect != pixel_aspect);
 
 	sdl.draw.width = static_cast<int>(width);
 	sdl.draw.height = static_cast<int>(height);
@@ -1003,7 +1002,7 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 	const bool double_w = (flags & GFX_DBL_W) > 0;
 
 	if (is_changed)
-		LOG_MSG("MAIN: Draw resolution: %dx%d,%s%s pixel aspect ratio: %#.2f",
+		LOG_MSG("DISPLAY: Source resolution changed to %dx%d,%s%s (PAR %#.2f)",
 		        sdl.draw.width, sdl.draw.height,
 		        (double_w ? " double-width," : ""),
 		        (double_h ? " double-height," : ""), pixel_aspect);
@@ -2148,6 +2147,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	if (sdl.desktop.want_type == SCREEN_SURFACE)
 		return;
 
+	// Can the window be resized?
 	sdl.desktop.want_resizable_window = detect_resizable_window();
 
 	// Get the total desktop resolution
@@ -2190,18 +2190,18 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	// Let the user know the resulting window properties
 	if (scaling_mode == SCALING_MODE::NONE)
-		LOG_MSG("MAIN: Sized window to %dx%d with %s pixels",
-		        refined_size.x, refined_size.y,
+		LOG_MSG("MAIN: Sized window on display-%d to %dx%d with %s pixels",
+		        sdl.display_number, refined_size.x, refined_size.y,
 		        wants_stretched_pixels ? "stretched" : "square");
 
 	else if (scaling_mode == SCALING_MODE::NEAREST)
-		LOG_MSG("MAIN: Sized window to %dx%d with nearest-neighbour scaling and %s pixels",
-		        refined_size.x, refined_size.y,
+		LOG_MSG("MAIN: Sized window on display-%d to %dx%d with nearest-neighbour scaling and %s pixels",
+		        sdl.display_number, refined_size.x, refined_size.y,
 		        wants_stretched_pixels ? "stretched" : "square");
 
 	else if (scaling_mode == SCALING_MODE::PERFECT)
-		LOG_MSG("MAIN: Sized window %dx%d with pixel-perfect scaling and %s pixels",
-		        refined_size.x, refined_size.y,
+		LOG_MSG("MAIN: Sized window on display-%d to %dx%d with pixel-perfect scaling and %s pixels",
+		        sdl.display_number, refined_size.x, refined_size.y,
 		        wants_stretched_pixels ? "stretched" : "square");
 }
 
