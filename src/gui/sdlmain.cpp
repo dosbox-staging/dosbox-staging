@@ -1994,7 +1994,7 @@ static SDL_Point remove_stretched_aspect(const SDL_Point &size)
 	return {size.x, ceil_sdivide(size.y * 5, 6)};
 }
 
-static SDL_Point refine_window_size_with_mode(const SDL_Point &size,
+static SDL_Point refine_window_size(const SDL_Point &size,
                                               const SCALING_MODE scaling_mode,
                                               const bool wants_stretched_pixels)
 {
@@ -2112,22 +2112,27 @@ static SDL_Point window_bounds_from_label(const std::string &pref,
 }
 
 // Takes in:
-//  - The user's windowresolution = value (default, WxH, small, medium, large,
-//  desktop (or junk!)
-//  - The previously configured scaling mode (NONE, NEAREST, PERFECT)
-//  - If aspect correction (stretched pixels) is requested
+//  - The user's windowresolution: default, WxH, small, medium, large,
+//    desktop, or an invalid setting.
+//  - The previously configured scaling mode: NONE, NEAREST, or PERFECT.
+//  - If aspect correction (stretched pixels) is requested.
 
-// Except for SURFACE rendering, this function sets:
-//  - 'sdl.desktop.requested_window_bounds' with coarse bounds
-//  - 'sdl.desktop.window' with the refined size
+// Except for SURFACE rendering, this function returns a refined size and
+// additionally populates the following struct members:
+//  - 'sdl.desktop.requested_window_bounds', with the coarse bounds, which do
+//     not take into account scaling or aspect correction.
+//  - 'sdl.desktop.window', with the refined size.
+//  - 'sdl.desktop.want_resizable_window', if the window can be resized.
 
-// The coarse bounds do not take into account scaling or aspect correction,
-// while the refined size does (and because of this, is always a smaller
-// resolution than the coarse bounds).
+// Refined sizes:
+//  - If the user requested an exact resolution or 'desktop' size, then the
+//    requested resolution is only trimed for aspect (4:3 or 8:5), unless
+//    pixel-perfect is requested, in which case the resolution is adjusted down
+//    toward to nearest exact integer multiple.
 
-// We use the coarse bounds when re-calculating new sizes (such as
-// pixel-perfect) whenever there's a DOS-side resolution change.  This ensures
-// that the window will always be as big as possible, but still within bounds.
+//  - If the user requested a relative size: small, medium, or large, then either
+//    the closest fixed resolution is picked from a list or a pixel-perfect
+//    resolution is calculated. In both cases, aspect correction is factored in.
 
 static void setup_window_sizes_from_conf(const char *windowresolution_val,
                                          const SCALING_MODE scaling_mode,
@@ -2148,14 +2153,27 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
 	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
 
-	// Bound the desktop resolution by the user's window-size setting
-	const std::string pref = NormalizeConfValue(windowresolution_val);
-	SDL_Point coarse_size;
-	if (pref.find('x') != std::string::npos)
-		coarse_size = window_bounds_from_resolution(pref, desktop);
-	else
-		coarse_size = window_bounds_from_label(pref, desktop);
+	// The refined scaling mode tell the refiner how it should adjust
+	// the coarse-resolution.
+	SCALING_MODE refined_scaling_mode = scaling_mode;
+	auto drop_nearest = [scaling_mode]() {
+		return (scaling_mode == SCALING_MODE::NEAREST) ? SCALING_MODE::NONE
+		                                               : scaling_mode;
+	};
 
+	// Get the coarse resolution from the users setting, and adjust
+	// refined scaling mode if an exact resolution is desired.
+	const std::string pref = NormalizeConfValue(windowresolution_val);
+	SDL_Point coarse_size = FALLBACK_WINDOW_DIMENSIONS;
+	if (pref.find('x') != std::string::npos) {
+		coarse_size = window_bounds_from_resolution(pref, desktop);
+		refined_scaling_mode = drop_nearest();
+	} else {
+		coarse_size = window_bounds_from_label(pref, desktop);
+		if (pref == "desktop") {
+			refined_scaling_mode = drop_nearest();
+		}
+	}
 	// Save the coarse bounds in the SDL struct for future sizing events
 	sdl.desktop.requested_window_bounds = {coarse_size.x, coarse_size.y};
 
