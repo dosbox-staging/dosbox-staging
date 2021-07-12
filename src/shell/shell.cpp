@@ -714,6 +714,24 @@ void SHELL_Init() {
 	        "REN [drive:][path]filename1 filename2.\n\n"
 	        "Note that you can not specify a new drive or path for your destination file.\n");
 	MSG_Add("SHELL_CMD_DELETE_HELP","Removes one or more files.\n");
+	MSG_Add("SHELL_CMD_DELETE_HELP_LONG", "Usage:\n"
+	        "  \033[32;1mdel\033[0m \033[36;1mPATTERN\033[0m\n"
+	        "  \033[32;1merase\033[0m \033[36;1mPATTERN\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mPATTERN\033[0m can be either an exact filename (such as \033[36;1mfile.txt\033[0m) or an inexact\n"
+	        "          filename using one or more wildcards, which are the asterisk (*)\n"
+	        "          representing any sequence of one or more characters, and the question\n"
+	        "          mark (?) representing any single character, such as \033[36;1m*.bat\033[0m and \033[36;1mc?.txt\033[0m.\n"
+	        "\n"
+	        "Warning:\n"
+	        "  Be careful when using a pattern with wildcards, especially \033[36;1m*.*\033[0m, as all files\n"
+	        "  matching the pattern will be deleted.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mdel\033[0m \033[36;1mtest.bat\033[0m\n"
+	        "  \033[32;1mdel\033[0m \033[36;1mc*.*\033[0m\n"
+	        "  \033[32;1mdel\033[0m \033[36;1ma?b.c*\033[0m\n");
 	MSG_Add("SHELL_CMD_COPY_HELP","Copy files.\n");
 	MSG_Add("SHELL_CMD_CALL_HELP","Start a batch file from within another batch file.\n");
 	MSG_Add("SHELL_CMD_SUBST_HELP","Assign an internal directory to a drive.\n");
