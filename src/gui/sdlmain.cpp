@@ -1995,8 +1995,8 @@ static SDL_Point remove_stretched_aspect(const SDL_Point &size)
 }
 
 static SDL_Point refine_window_size(const SDL_Point &size,
-                                              const SCALING_MODE scaling_mode,
-                                              const bool wants_stretched_pixels)
+                                    const SCALING_MODE scaling_mode,
+                                    const bool wants_stretched_pixels)
 {
 	switch (scaling_mode) {
 	case (SCALING_MODE::NONE): {
@@ -2079,13 +2079,18 @@ static SDL_Point window_bounds_from_resolution(const std::string &pref,
 	int w = 0;
 	int h = 0;
 	const bool was_parsed = sscanf(pref.c_str(), "%dx%d", &w, &h) == 2;
-	const bool is_valid = (w > 0 && w <= desktop.w && h > 0 && h <= desktop.h);
+
+	const bool is_out_of_bounds = (w > desktop.w || h > desktop.h);
+	if (was_parsed && is_out_of_bounds)
+		LOG_MSG("MAIN: Requested windowresolution '%dx%d' is larger than the desktop '%dx%d'",
+		        w, h, desktop.w, desktop.h);
+
+	const bool is_valid = (w > 0 && h > 0);
 	if (was_parsed && is_valid)
 		return {w, h};
 
-	LOG_MSG("MAIN: windowresolution '%s' outside of desktop '%dx%d', using %dx%d instead",
-	        pref.c_str(), desktop.w, desktop.h,
-	        FALLBACK_WINDOW_DIMENSIONS.x, FALLBACK_WINDOW_DIMENSIONS.y);
+	LOG_MSG("MAIN: Requested windowresolution '%s' is not valid, falling back to '%dx%d' instead",
+	        pref.c_str(), FALLBACK_WINDOW_DIMENSIONS.x, FALLBACK_WINDOW_DIMENSIONS.y);
 
 	return FALLBACK_WINDOW_DIMENSIONS;
 }
@@ -2103,7 +2108,7 @@ static SDL_Point window_bounds_from_label(const std::string &pref,
 	else if (pref == "desktop")
 		percent = 100;
 	else
-		LOG_MSG("MAIN: The windowresolution '%s' is invalid, using 'default' instead",
+		LOG_MSG("MAIN: Requested windowresolution '%s' is invalid, using 'default' instead",
 		        pref.c_str());
 
 	const int w = ceil_sdivide(desktop.w * percent, 100);
@@ -2177,11 +2182,9 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	// Save the coarse bounds in the SDL struct for future sizing events
 	sdl.desktop.requested_window_bounds = {coarse_size.x, coarse_size.y};
 
-	// Refine the coarse size and save it in the SDL struct
-	const auto refined_size = refine_window_size_with_mode(coarse_size,
-	                                                       scaling_mode,
-	                                                       wants_stretched_pixels);
-
+	// Refine the coarse resolution and save it in the SDL struct
+	const auto refined_size = refine_window_size(coarse_size, refined_scaling_mode,
+	                                             wants_stretched_pixels);
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
 	sdl.desktop.window.width = static_cast<uint16_t>(refined_size.x);
 	sdl.desktop.window.height = static_cast<uint16_t>(refined_size.y);
