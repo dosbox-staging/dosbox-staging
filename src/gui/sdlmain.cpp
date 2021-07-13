@@ -267,6 +267,7 @@ struct SDL_Block {
 		int height = 0;
 		double scalex = 1.0;
 		double scaley = 1.0;
+		bool has_changed = false;
 		double pixel_aspect = 1.0;
 		GFX_CallBack_t callback = nullptr;
 	} draw = {};
@@ -985,11 +986,11 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
-	const bool is_changed = (sdl.draw.width != static_cast<int>(width) ||
-	                         sdl.draw.height != static_cast<int>(height) ||
-	                         sdl.draw.scalex != scalex ||
-	                         sdl.draw.scaley != scaley ||
-	                         sdl.draw.pixel_aspect != pixel_aspect);
+	sdl.draw.has_changed = (sdl.draw.width != static_cast<int>(width) ||
+	                        sdl.draw.height != static_cast<int>(height) ||
+	                        sdl.draw.scalex != scalex ||
+	                        sdl.draw.scaley != scaley ||
+	                        sdl.draw.pixel_aspect != pixel_aspect);
 
 	sdl.draw.width = static_cast<int>(width);
 	sdl.draw.height = static_cast<int>(height);
@@ -1001,7 +1002,7 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 	const bool double_h = (flags & GFX_DBL_H) > 0;
 	const bool double_w = (flags & GFX_DBL_W) > 0;
 
-	if (is_changed)
+	if (sdl.draw.has_changed)
 		LOG_MSG("DISPLAY: Source resolution changed to %dx%d,%s%s (PAR %#.2f)",
 		        sdl.draw.width, sdl.draw.height,
 		        (double_w ? " double-width," : ""),
