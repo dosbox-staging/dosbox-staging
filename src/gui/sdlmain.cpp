@@ -1176,7 +1176,14 @@ dosurface:
 			case 32: retFlags = GFX_CAN_32; break;
 		}
 		retFlags |= GFX_SCALING;
-		LOG_MSG("SDL: Using driver \"%s\" for texture renderer", rinfo.name);
+
+		// Log changes to the rendering driver
+		static std::string render_driver = {};
+		if (render_driver != rinfo.name) {
+			LOG_MSG("SDL: Using driver \"%s\" for texture renderer", rinfo.name);
+			render_driver = rinfo.name;
+		}
+		
 		if (rinfo.flags & SDL_RENDERER_ACCELERATED)
 			retFlags |= GFX_HARDWARE;
 
