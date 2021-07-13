@@ -728,7 +728,7 @@ static void log_display_properties(const int in_x,
 		return "Unknown mode!";
 	};
 
-	LOG_MSG("MAIN: %s scaling source %dx%d (PAR %#.3g) by %.1fx%.1f -> %dx%d (PAR %#.3g)",
+	LOG_MSG("DISPLAY: %s scaling source %dx%d (PAR %#.3g) by %.1fx%.1f -> %dx%d (PAR %#.3g)",
 	        describe_scaling_mode(), in_x, in_y, in_par, scale_x, scale_y,
 	        out_x, out_y, out_par);
 }
@@ -1130,7 +1130,7 @@ dosurface:
 
 	case SCREEN_TEXTURE: {
 		if (!SetupWindowScaled(SCREEN_TEXTURE, false)) {
-			LOG_MSG("MAIN: Can't initialise 'texture' window");
+			LOG_MSG("DISPLAY: Can't initialise 'texture' window");
 			E_Exit("Creating window failed");
 		}
 
@@ -2015,14 +2015,14 @@ static bool detect_resizable_window()
 {
 #if C_OPENGL
 	if (sdl.desktop.want_type != SCREEN_OPENGL) {
-		LOG_MSG("MAIN: Disabled resizable window, only compatible with OpenGL output");
+		LOG_MSG("DISPLAY: Disabled resizable window, only compatible with OpenGL output");
 		return false;
 	}
 
 	const std::string sname = get_glshader_value();
 
 	if (sname != "sharp" && sname != "none" && sname != "default") {
-		LOG_MSG("MAIN: Disabled resizable window, only compatible with 'sharp' and 'none' glshaders");
+		LOG_MSG("DISPLAY: Disabled resizable window, only compatible with 'sharp' and 'none' glshaders");
 		return false;
 	}
 
@@ -2125,15 +2125,16 @@ static SDL_Point window_bounds_from_resolution(const std::string &pref,
 
 	const bool is_out_of_bounds = (w > desktop.w || h > desktop.h);
 	if (was_parsed && is_out_of_bounds)
-		LOG_MSG("MAIN: Requested windowresolution '%dx%d' is larger than the desktop '%dx%d'",
+		LOG_MSG("DISPLAY: Requested windowresolution '%dx%d' is larger than the desktop '%dx%d'",
 		        w, h, desktop.w, desktop.h);
 
 	const bool is_valid = (w > 0 && h > 0);
 	if (was_parsed && is_valid)
 		return {w, h};
 
-	LOG_MSG("MAIN: Requested windowresolution '%s' is not valid, falling back to '%dx%d' instead",
-	        pref.c_str(), FALLBACK_WINDOW_DIMENSIONS.x, FALLBACK_WINDOW_DIMENSIONS.y);
+	LOG_MSG("DISPLAY: Requested windowresolution '%s' is not valid, falling back to '%dx%d' instead",
+	        pref.c_str(), FALLBACK_WINDOW_DIMENSIONS.x,
+	        FALLBACK_WINDOW_DIMENSIONS.y);
 
 	return FALLBACK_WINDOW_DIMENSIONS;
 }
@@ -2151,7 +2152,7 @@ static SDL_Point window_bounds_from_label(const std::string &pref,
 	else if (pref == "desktop")
 		percent = 100;
 	else
-		LOG_MSG("MAIN: Requested windowresolution '%s' is invalid, using 'default' instead",
+		LOG_MSG("DISPLAY: Requested windowresolution '%s' is invalid, using 'default' instead",
 		        pref.c_str());
 
 	const int w = ceil_sdivide(desktop.w * percent, 100);
@@ -2233,7 +2234,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	sdl.desktop.window.height = static_cast<uint16_t>(refined_size.y);
 
 	// Let the user know the resulting window properties
-	LOG_MSG("MAIN: Initialized %dx%d window-mode on %dx%d display-%d",
+	LOG_MSG("DISPLAY: Initialized %dx%d window-mode on %dx%d display-%d",
 	        refined_size.x, refined_size.y, desktop.w, desktop.h,
 	        sdl.display_number);
 }
