@@ -816,6 +816,11 @@ finish:
 		SDL_SetWindowMinimumSize(sdl.window, w, h);
 	}
 
+	if (sdl.draw.has_changed)
+		log_display_properties(sdl.draw.width, sdl.draw.height,
+		                       sdl.draw.pixel_aspect, sdl.scaling_mode,
+		                       sdl.pp_scale, fullscreen, width, height);
+
 	sdl.update_display_contents = true;
 	return sdl.window;
 }
@@ -854,19 +859,10 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	}
 	assert(w > 0 && h > 0);
 
-	const int previous_imgw = sdl.pp_scale.x * sdl.draw.width;
-	const int previous_imgh = sdl.pp_scale.y * sdl.draw.height;
-
 	sdl.pp_scale = calc_pp_scale(w, h);
 
 	const int imgw = sdl.pp_scale.x * sdl.draw.width;
 	const int imgh = sdl.pp_scale.y * sdl.draw.height;
-
-	if (previous_imgw != imgw || previous_imgh != imgh)
-		LOG_MSG("MAIN: Scaling source %dx%d (PAR %#.3g) by %dx%d -> %dx%d (PAR %#.3g)",
-		        sdl.draw.width, sdl.draw.height, sdl.draw.pixel_aspect,
-		        sdl.pp_scale.x, sdl.pp_scale.y, imgw, imgh,
-		        static_cast<double>(sdl.pp_scale.y) / sdl.pp_scale.x);
 
 	const int wndw = (sdl.desktop.fullscreen ? w : imgw);
 	const int wndh = (sdl.desktop.fullscreen ? h : imgh);
@@ -1054,15 +1050,6 @@ Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
 	sdl.draw.scaley = scaley;
 	sdl.draw.pixel_aspect = pixel_aspect;
 	sdl.draw.callback = callback;
-
-	const bool double_h = (flags & GFX_DBL_H) > 0;
-	const bool double_w = (flags & GFX_DBL_W) > 0;
-
-	if (sdl.draw.has_changed)
-		LOG_MSG("DISPLAY: Source resolution changed to %dx%d,%s%s (PAR %#.2f)",
-		        sdl.draw.width, sdl.draw.height,
-		        (double_w ? " double-width," : ""),
-		        (double_h ? " double-height," : ""), pixel_aspect);
 
 	switch (sdl.desktop.want_type) {
 dosurface:
