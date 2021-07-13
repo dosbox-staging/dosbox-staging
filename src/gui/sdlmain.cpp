@@ -677,6 +677,62 @@ static uint32_t opengl_driver_crash_workaround(SCREEN_TYPES type)
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
+static SDL_Point refine_window_size(const SDL_Point &size,
+                                    const SCALING_MODE scaling_mode,
+                                    const bool wants_stretched_pixels);
+
+// Logs the source and target resolution including describing scaling method
+// and pixel-aspect ratios. Note that this function deliberately doesn't use
+// any global structs to disentangle it from the existing sdl-main design.
+static void log_display_properties(const int in_x,
+                                   const int in_y,
+                                   const double in_par,
+                                   const SCALING_MODE scaling_mode,
+                                   const SDL_Point pp_scale,
+                                   const bool is_fullscreen,
+                                   int out_x,
+                                   int out_y)
+{
+	// Sanity check expectations
+	assert(in_x > 0 && in_y > 0 && in_par > 0);
+	assert(out_x > 0 && out_y > 0);
+
+	if (scaling_mode == SCALING_MODE::PERFECT) {
+		// If we're using pixel perfect, then the incoming'out_x' and
+		// 'height' arguments only represent the total drawing area as
+		// opposed to the internal clipped area, so use this approach to
+		// get the actual scaled dimentions.
+		out_x = pp_scale.x * in_x;
+		out_y = pp_scale.y * in_y;
+	} else if (is_fullscreen) {
+		// If we're fullscreen and using a non-pixel-perfect scaling
+		// mode, then the incoming'out_x' and 'out_y' arguments only
+		// represent the total display resolution as opposed to the 4:3
+		// or 8:5 area, so use this approach to get the actual scaled
+		// dimentions.
+		const auto fs = refine_window_size({out_x, out_y},
+		                                   SCALING_MODE::NONE, in_par > 1);
+		out_x = fs.x;
+		out_y = fs.y;
+	}
+	const auto scale_x = static_cast<double>(out_x) / in_x;
+	const auto scale_y = static_cast<double>(out_y) / in_y;
+	const auto out_par = scale_y / scale_x;
+
+	auto describe_scaling_mode = [scaling_mode]() {
+		switch (scaling_mode) {
+		case SCALING_MODE::NONE: return "Bilinear";
+		case SCALING_MODE::NEAREST: return "Nearest-neighbour";
+		case SCALING_MODE::PERFECT: return "Pixel-perfect";
+		}
+		return "Unknown mode!";
+	};
+
+	LOG_MSG("MAIN: %s scaling source %dx%d (PAR %#.3g) by %.1fx%.1f -> %dx%d (PAR %#.3g)",
+	        describe_scaling_mode(), in_x, in_y, in_par, scale_x, scale_y,
+	        out_x, out_y, out_par);
+}
+
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
                                  int height,
