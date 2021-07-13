@@ -2233,20 +2233,9 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	sdl.desktop.window.height = static_cast<uint16_t>(refined_size.y);
 
 	// Let the user know the resulting window properties
-	if (scaling_mode == SCALING_MODE::NONE)
-		LOG_MSG("MAIN: Sized window on display-%d to %dx%d with %s pixels",
-		        sdl.display_number, refined_size.x, refined_size.y,
-		        wants_stretched_pixels ? "stretched" : "square");
-
-	else if (scaling_mode == SCALING_MODE::NEAREST)
-		LOG_MSG("MAIN: Sized window on display-%d to %dx%d with nearest-neighbour scaling and %s pixels",
-		        sdl.display_number, refined_size.x, refined_size.y,
-		        wants_stretched_pixels ? "stretched" : "square");
-
-	else if (scaling_mode == SCALING_MODE::PERFECT)
-		LOG_MSG("MAIN: Sized window on display-%d to %dx%d with pixel-perfect scaling and %s pixels",
-		        sdl.display_number, refined_size.x, refined_size.y,
-		        wants_stretched_pixels ? "stretched" : "square");
+	LOG_MSG("MAIN: Initialized %dx%d window-mode on %dx%d display-%d",
+	        refined_size.x, refined_size.y, desktop.w, desktop.h,
+	        sdl.display_number);
 }
 
 static SDL_Rect calc_viewport_fit(int win_width, int win_height)
