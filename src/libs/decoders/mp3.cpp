@@ -89,6 +89,8 @@ static void MP3_close(Sound_Sample* const sample)
     Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal*>(sample->opaque);
     mp3_t* p_mp3 = static_cast<mp3_t*>(internal->decoder_private);
     if (p_mp3) {
+        assert(p_mp3->p_dr);
+        drmp3_uninit(p_mp3->p_dr);
         delete p_mp3->p_dr;
         p_mp3->p_dr = nullptr;
         delete p_mp3;
