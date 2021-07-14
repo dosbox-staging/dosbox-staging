@@ -132,14 +132,11 @@ static uint8_t read_crtc_data_other(Bitu /*port*/, Bitu /*iolen*/)
 	case 0x02:		//Horizontal sync position
 		return vga.other.hsyncp;
 	case 0x03:		//Horizontal and vertical sync width
-
 		// hsyncw and vsyncw should only be populated with their lower 4-bits
 		assert(vga.other.hsyncw >> 4 == 0);
 		assert(vga.other.vsyncw >> 4 == 0);
-
 		if (machine == MCH_TANDY)
-			return static_cast<uint8_t>(vga.other.hsyncw |
-			                            (vga.other.vsyncw << 4));
+			return static_cast<uint8_t>(vga.other.hsyncw | (vga.other.vsyncw << 4));
 		else
 			return vga.other.hsyncw;
 	case 0x04:		//Vertical total
