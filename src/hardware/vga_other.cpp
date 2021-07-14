@@ -56,7 +56,7 @@ static void write_crtc_data_other(Bitu /*port*/, Bitu data, Bitu /*iolen*/)
 	case 0x02:		//Horizontal sync position
 		vga.other.hsyncp = val;
 		break;
-	case 0x03: // Horizontal sync width
+	case 0x03:		//Horizontal sync width
 		if (machine == MCH_TANDY)
 			vga.other.vsyncw = val >> 4;
 		else
@@ -64,7 +64,7 @@ static void write_crtc_data_other(Bitu /*port*/, Bitu data, Bitu /*iolen*/)
 			vga.other.vsyncw = 16;
 		vga.other.hsyncw = val & 0xf;
 		break;
-	case 0x04: // Vertical total
+	case 0x04:		//Vertical total
 		if (vga.other.vtotal ^ val) VGA_StartResize();
 		vga.other.vtotal = val;
 		break;
