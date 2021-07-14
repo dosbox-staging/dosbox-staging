@@ -75,10 +75,12 @@
 #include "mp3_seek_table.h"
 
 // System headers
-#include <sys/stat.h>
+#include <algorithm>
+#include <climits>
 #include <fstream>
-#include <string>
 #include <map>
+#include <string>
+#include <sys/stat.h>
 
 // Local headers
 #include "support.h"
@@ -93,6 +95,10 @@ using std::string;
 using std::ios_base;
 using std::ifstream;
 using std::ofstream;
+
+// container types
+using seek_points_table_t = typename std::map<uint64_t, std::vector<drmp3_seek_point_serial> >;
+using frame_count_table_t = typename std::map<uint64_t, uint64_t>;
 
 // Identifies a valid versioned seek-table
 #define SEEK_TABLE_IDENTIFIER "st-v6"
@@ -174,11 +180,11 @@ uint64_t calculate_stream_hash(struct SDL_RWops* const context) {
 // This function generates a new seek-table for a given mp3 stream and writes
 // the data to the fast-seek file.
 //
-Uint64 generate_new_seek_points(const char* filename,
-                                const Uint64& stream_hash,
+uint64_t generate_new_seek_points(const char* filename,
+                                const uint64_t& stream_hash,
                                 drmp3* const p_dr,
-                                map<Uint64, vector<drmp3_seek_point_serial> >& seek_points_table,
-                                map<Uint64, drmp3_uint64>& pcm_frame_count_table,
+                                seek_points_table_t& seek_points_table,
+                                frame_count_table_t& pcm_frame_count_table,
                                 vector<drmp3_seek_point_serial>& seek_points_vector) {
 
     // Initialize our frame counters with zeros.
@@ -245,10 +251,10 @@ Uint64 generate_new_seek_points(const char* filename,
 // This function attempts to fetch a seek-table for a given mp3 stream from the fast-seek file.
 // If anything is amiss then this function fails.
 //
-Uint64 load_existing_seek_points(const char* filename,
-                                 const Uint64& stream_hash,
-                                 map<Uint64, vector<drmp3_seek_point_serial> >& seek_points_table,
-                                 map<Uint64, drmp3_uint64>& pcm_frame_count_table,
+uint64_t load_existing_seek_points(const char* filename,
+                                 const uint64_t& stream_hash,
+                                 seek_points_table_t& seek_points_table,
+                                 frame_count_table_t& pcm_frame_count_table,
                                  vector<drmp3_seek_point_serial>& seek_points) {
 
     // The below sentinals sanity check and read the incoming
@@ -310,20 +316,20 @@ uint64_t populate_seek_points(struct SDL_RWops* const context,
     result = false;
 
     // Calculate the stream's xxHash value.
-    Uint64 stream_hash = calculate_stream_hash(context);
+    const auto stream_hash = calculate_stream_hash(context);
     if (stream_hash == 0) {
         // LOG_MSG("MP3: could not compute the hash of the stream");
         return 0;
     }
 
     // Attempt to fetch the seek points and pcm count from an existing look up table file.
-    map<Uint64, vector<drmp3_seek_point_serial> > seek_points_table;
-    map<Uint64, drmp3_uint64> pcm_frame_count_table;
-    drmp3_uint64 pcm_frame_count = load_existing_seek_points(seektable_filename,
-                                                             stream_hash,
-                                                             seek_points_table,
-                                                             pcm_frame_count_table,
-                                                             p_mp3->seek_points_vector);
+    seek_points_table_t seek_points_table;
+    frame_count_table_t pcm_frame_count_table;
+    auto pcm_frame_count = load_existing_seek_points(seektable_filename,
+                                                     stream_hash,
+                                                     seek_points_table,
+                                                     pcm_frame_count_table,
+                                                     p_mp3->seek_points_vector);
 
     // Otherwise calculate new seek points and save them to the fast-seek file.
     if (pcm_frame_count == 0) {
