@@ -2649,24 +2649,37 @@ void BIND_MappingEvents() {
 	}
 }
 
-/**
- *  Queries SDL's joysticks and sets joytype accordingly.
- *  If no joysticks are valid then joytype is left at JOY_NONE.
- *  Also resets mapper.sticks.num_groups to 0, mapper.sticks.num
- *  to the number of found SDL joysticks, and enables the boolean
- *  joysticks_active if joystick support is enabled and are present.
- */
-static void QueryJoysticks() {
+//  Initializes SDL's joystick subsystem an setups up initial joystick settings.
+
+// If the user wants auto-configuration, then this sets joytype based on queried
+// results. If no joysticks are valid then joytype is left at JOY_NONE. This
+// also resets mapper.sticks.num_groups to 0 and mapper.sticks.num to the number
+// of found SDL joysticks.
+static void QueryJoysticks()
+{
+	// Reset our joystick status
+	mapper.sticks.num_groups = 0;
+	mapper.sticks.num = 0;
+
+	// To allow mapping, we always initialize SDL's joystick subsystem even
+	// if the user doesn't want to use a joystick
+	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
+		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+
 	JOYSTICK_ParseConfiguredType();
 	if (joytype == JOY_NONE)
 		return;
 
-	// Initialize SDL's Joystick and Event subsystems, if needed
-	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
-		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-
 	// Record how many joysticks are present and set our desired minimum axis
-	const int num_joysticks = SDL_NumJoysticks();
+	const auto num_joysticks = SDL_NumJoysticks();
+	assert(num_joysticks >= 0);
+	mapper.sticks.num = static_cast<unsigned int>(num_joysticks);
+
+	// Use the type provided by the user
+	if (joytype != JOY_AUTO)
+		return;
+
+	// Otherwise try auto-detecting the joystick(s)
 	const int req_min_axis = num_joysticks > 1 ? 2 : 1;
 
 	// Check which, if any, of the first two joysticks are useable
@@ -2674,7 +2687,7 @@ static void QueryJoysticks() {
 	for (int i = 0; i < std::min(num_joysticks, 2); ++i) {
 		SDL_Joystick *stick = SDL_JoystickOpen(i);
 		useable[i] = (SDL_JoystickNumAxes(stick) >= req_min_axis) ||
-		             (SDL_JoystickNumButtons(stick) > 0) ? true : false;
+		             (SDL_JoystickNumButtons(stick) > 0);
 		SDL_JoystickClose(stick);
 	}
 
@@ -2694,10 +2707,6 @@ static void QueryJoysticks() {
 		joytype = JOY_NONE;
 		LOG_MSG("MAPPER: Found no joysticks");
 	}
-
-	// If we made it here, then update the other two external variables
-	mapper.sticks.num_groups = 0;
-	mapper.sticks.num = num_joysticks;
 }
 
 static void CreateBindGroups() {
