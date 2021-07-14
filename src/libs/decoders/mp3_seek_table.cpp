@@ -139,14 +139,13 @@ uint64_t calculate_stream_hash(struct SDL_RWops* const context) {
         return 0;
     }
 
-    // Seek to the middle of the file while taking into account version small files.
-    const Sint64 tail_size = (stream_size > 32768) ? 32768 : stream_size;
-    const Sint64 mid_pos = static_cast<Sint64>(stream_size/2.0) - tail_size;
-    SDL_RWseek(context, mid_pos >= 0 ? mid_pos : 0, RW_SEEK_SET);
+    // Seek prior to the last 32 KiB (or less) in the file
+    const auto bytes_to_hash = std::min(stream_size, static_cast<Sint64>(32768));
+    SDL_RWseek(context, stream_size - bytes_to_hash, RW_SEEK_SET);
 
     // Prepare our read buffer and counter:
     vector<char> buffer(1024, 0);
-    size_t total_bytes_read = 0;
+    int total_bytes_read = 0;
 
     // Initialize xxHash's state using the stream_size as our seed.  Seeding with the
     // stream_size provides a second level of uniqueness in the unlikely scenario that
@@ -156,7 +155,7 @@ uint64_t calculate_stream_hash(struct SDL_RWops* const context) {
     assert(state);
     XXH64_reset(state, static_cast<XXH64_hash_t>(stream_size));
 
-    while (total_bytes_read < static_cast<size_t>(tail_size)) {
+    while (total_bytes_read < bytes_to_hash) {
         // Read a chunk of data.
         const auto bytes_read = SDL_RWread(context, buffer.data(), 1, buffer.size());
 
