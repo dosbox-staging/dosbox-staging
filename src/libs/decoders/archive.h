@@ -28,6 +28,7 @@ For more information, please refer to <https://unlicense.org>
 #ifndef ARCHIVE_H__
 #define ARCHIVE_H__
 
+#include <climits>
 #include <stdint.h>
 #include <string>
 #include <cassert>
@@ -353,8 +354,9 @@ class Archive
             size_t toRead = len;
             while(toRead != 0)
             {
-                uint32_t l = std::min(toRead, (uint32_t)sizeof(buffer));
-                m_stream.read(buffer, l);
+                const size_t l = std::min(toRead, sizeof(buffer));
+                assert(l <= (size_t)INT_MAX);
+                m_stream.read(buffer, (int)l);
                 if(!m_stream)
                     throw std::runtime_error("malformed data");
                 v += std::string(buffer, l);
