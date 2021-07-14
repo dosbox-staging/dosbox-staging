@@ -897,9 +897,8 @@ void Herc_Palette()
 	}
 }
 
-static void write_hercules(Bitu port, uint8_t data, Bitu /*iolen*/)
+static void write_hercules(Bitu port, uint8_t val, Bitu /*iolen*/)
 {
-	const auto val = static_cast<uint8_t>(data);
 	switch (port) {
 	case 0x3b8: {
 		// the protected bits can always be cleared but only be set if the
@@ -930,7 +929,7 @@ static void write_hercules(Bitu port, uint8_t data, Bitu /*iolen*/)
 		}
 		vga.draw.blinking = (val&0x20)!=0;
 		vga.herc.mode_control &= 0x82;
-		vga.herc.mode_control |= static_cast<uint8_t>(val & ~0x82);
+		vga.herc.mode_control |= val & ~0x82;
 		break;
 		}
 	case 0x3bf:
