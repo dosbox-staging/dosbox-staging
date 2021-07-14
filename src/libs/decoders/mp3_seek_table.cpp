@@ -95,7 +95,7 @@ using std::ifstream;
 using std::ofstream;
 
 // Identifies a valid versioned seek-table
-#define SEEK_TABLE_IDENTIFIER "st-v5"
+#define SEEK_TABLE_IDENTIFIER "st-v6"
 
 // How many compressed MP3 frames should we skip between each recorded
 // time point.  The trade-off is as follows:
@@ -106,7 +106,7 @@ constexpr uint32_t FRAMES_PER_SEEK_POINT = 7;
 // Returns the size of a file in bytes (if valid), otherwise -1
 off_t get_file_size(const char* filename) {
     struct stat stat_buf;
-    int rc = stat(filename, &stat_buf);
+    const auto rc = stat(filename, &stat_buf);
     return (rc >= 0) ? stat_buf.st_size : -1;
 }
 
@@ -121,14 +121,13 @@ off_t get_file_size(const char* filename) {
 // 1. ID3 tag filler content, which might be boiler plate or all empty
 // 2. Trailing silence or similar zero-PCM content
 //
-Uint64 calculate_stream_hash(struct SDL_RWops* const context) {
+uint64_t calculate_stream_hash(struct SDL_RWops* const context) {
     // Save the current stream position, so we can restore it at the end of the function.
-    const Sint64 original_pos = SDL_RWtell(context);
+    const auto original_pos = SDL_RWtell(context);
 
     // Seek to the end of the file so we can calculate the stream size.
     SDL_RWseek(context, 0, RW_SEEK_END);
-
-    const Sint64 stream_size = SDL_RWtell(context);
+    const auto stream_size = SDL_RWtell(context);
     if (stream_size <= 0) {
         // LOG_MSG("MP3: get_stream_size returned %d, but should be positive", stream_size);
         return 0;
@@ -143,22 +142,17 @@ Uint64 calculate_stream_hash(struct SDL_RWops* const context) {
     vector<char> buffer(1024, 0);
     size_t total_bytes_read = 0;
 
-    // Initialize xxHash's state using the stream_size as our seed.
-    // Seeding with the stream_size provide a second level of uniqueness
-    // in the unlikely scenario that two files of different length happen to
-    // have the same trailing 32KB of content.  The different seeds will produce
-    // unique hashes.
+    // Initialize xxHash's state using the stream_size as our seed.  Seeding with the
+    // stream_size provides a second level of uniqueness in the unlikely scenario that
+    // two files of different length happen to have the same trailing data. The different
+    // seeds will produce unique hashes.
     XXH64_state_t* const state = XXH64_createState();
-    if(!state) {
-        return 0;
-    }
-
-    const uint64_t seed = static_cast<uint64_t>(stream_size);
-    XXH64_reset(state, seed);
+    assert(state);
+    XXH64_reset(state, static_cast<XXH64_hash_t>(stream_size));
 
     while (total_bytes_read < static_cast<size_t>(tail_size)) {
         // Read a chunk of data.
-        const size_t bytes_read = SDL_RWread(context, buffer.data(), 1, buffer.size());
+        const auto bytes_read = SDL_RWread(context, buffer.data(), 1, buffer.size());
 
         if (bytes_read != 0) {
             // Update our hash if we read data.
@@ -172,7 +166,7 @@ Uint64 calculate_stream_hash(struct SDL_RWops* const context) {
     // restore the stream position
     SDL_RWseek(context, original_pos, RW_SEEK_SET);
 
-    const Uint64 hash = XXH64_digest(state);
+    const auto hash = XXH64_digest(state);
     XXH64_freeState(state);
     return hash;
 }
@@ -208,7 +202,7 @@ Uint64 generate_new_seek_points(const char* filename,
     // the decoded PCM times.
     // We also take into account the desired number of "FRAMES_PER_SEEK_POINT",
     // which is defined above.
-    drmp3_uint32 num_seek_points = static_cast<drmp3_uint32>
+    auto num_seek_points = static_cast<drmp3_uint32>
         (ceil_udivide(mp3_frame_count, FRAMES_PER_SEEK_POINT));
 
     seek_points_vector.resize(num_seek_points);
