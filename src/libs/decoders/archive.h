@@ -89,7 +89,7 @@ namespace EndianSwapper
                 static T Swap(T v)
                 {
                     if(ShouldSwap())
-                        return ((uint16_t)v >> 8) | ((uint16_t)v << 8);
+                        return (T)(((uint16_t)v >> 8) | ((uint16_t)v << 8));
                     return v;
                 }
         };
@@ -102,7 +102,7 @@ namespace EndianSwapper
                 {
                     if(ShouldSwap())
                     {
-                        return (SwapByte<uint16_t, 2>::Swap((uint32_t)v & 0xffff) << 16) | (SwapByte<uint16_t, 2>::Swap(((uint32_t)v & 0xffff0000) >> 16));
+                        return (T)((SwapByte<uint16_t, 2>::Swap((uint32_t)v & 0xffff) << 16) | (SwapByte<uint16_t, 2>::Swap(((uint32_t)v & 0xffff0000) >> 16)));
                     }
                     return v;
                 }
