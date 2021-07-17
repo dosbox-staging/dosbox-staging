@@ -20,6 +20,11 @@ builddir
 .vs
 .vscode
 
+# GNU Global tags, used by some VSCode/Codium plugins
+GPATH
+GRTAGS
+GTAGS
+
 # Common editor temp/backup files
 *~
 *.swp
