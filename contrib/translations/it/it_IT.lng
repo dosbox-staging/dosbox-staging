@@ -1,6 +1,5 @@
 :CONFIG_FULLSCREEN
 Avvia DOSBox direttamente a schermo intero.
-Premi Alt+Enter per tornare in modalit… finestra.
 .
 :CONFIG_DISPLAY
 Numero dello schermo da utilizzare; Il valore dipende dall'OS e dalle
@@ -47,12 +46,10 @@ Metodo di controllo del mouse:
                    segnale inviato al gioco.
 Gestione del clic centrale (secondo parametro):
    middlegame:     I clic centrali vengono inviati al gioco
-                   (Ctrl+F10 rilascia il mouse).
    middlerelease:  I clic centrali rilasciano il mouse
                    (non inviati al gioco). Tuttavia, i clic centrali
                    verranno inviati al gioco in modalit… schermo intero
                    o quando Š impostato il controllo continuo.
-                   Ctrl+F10 rilascer… anche il mouse.
 Defaults (se non Š presente o incorretto): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -159,10 +156,10 @@ I cicli possono essere impostati in 3 modi:
                   gestire.
 .
 :CONFIG_CYCLEUP
-Quantit… di cicli di cui aumentare usando gli appositi tasti. (Ctrl+F12)
+Quantit… di cicli di cui aumentare usando gli appositi tasti.
 .
 :CONFIG_CYCLEDOWN
-Quantit… di cicli di cui diminuire usando gli appositi tasti. (Ctrl+F11)
+Quantit… di cicli di cui diminuire usando gli appositi tasti.
 Un valore pi— basso di 100 indica una percentuale.
 .
 :CONFIG_NOSOUND
@@ -766,20 +763,20 @@ Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
 Questi sono i tasti predefiniti.
 Possono essere modificati nel [33mkeymapper[0m.
 
-[33;1mAlt+Enter[0m  Passa dalla modalit… a schermo intero a quella a finestra
+[33;1m%s+Enter[0m  Passa dalla modalit… a schermo intero a quella a finestra
            e viceversa.
-[33;1mAlt+Pause[0m  Mette in pausa/riavvia l'emulatore.
-[33;1mCtrl+F1[0m    Avvia il [33mkeymapper[0m.
-[33;1mCtrl+F4[0m    Passa tra le immagini disco montate, aggiorna la cache della
+[33;1m%s+Pause[0m  Mette in pausa/riavvia l'emulatore.
+[33;1m%s+F1[0m   %s Avvia il [33mkeymapper[0m.
+[33;1m%s+F4[0m   %s Passa tra le immagini disco montate, aggiorna la cache della
            cartella per tutte le unit….
-[33;1mCtrl+F5[0m    Scatta un'istantanea dello schermo (screenshot).
-[33;1mCtrl+F6[0m    Avvia/ferma la registrazione dell'output audio su un file wave.
-[33;1mCtrl+F7[0m    Avvia/ferma la registrazione dell'output video su un file zmbv.
-[33;1mCtrl+F9[0m    Chiudi emulatore.
-[33;1mCtrl+F10[0m   Cattura/Rilascia il mouse.
-[33;1mCtrl+F11[0m   Rallenta l'emulazione (Decrementa i Cicli DOSBox).
-[33;1mCtrl+F12[0m   Accelera l'emulazione (Incrementa i Cicli DOSBox).
-[33;1mAlt+F12[0m    Sblocca la velocit… (pulsante turbo/avanzamento rapido).
+[33;1m%s+F5[0m   %s Scatta un'istantanea dello schermo (screenshot).
+[33;1m%s+F6[0m   %s Avvia/ferma la registrazione dell'output audio su un file wave.
+[33;1m%s+F7[0m   %s Avvia/ferma la registrazione dell'output video su un file zmbv.
+[33;1m%s+F9[0m   %s Chiudi emulatore.
+[33;1m%s+F10[0m  %s Cattura/Rilascia il mouse.
+[33;1m%s+F11[0m  %s Rallenta l'emulazione (Decrementa i Cicli DOSBox).
+[33;1m%s+F12[0m  %s Accelera l'emulazione (Incrementa i Cicli DOSBox).
+[33;1m%sF12[0m     Sblocca la velocit… (pulsante turbo/avanzamento rapido).
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -798,7 +795,7 @@ Il file immagine Š di sola lettura! Potrebbe creare dei problemi.
 Questo comando avvia DOSBox da un'immagine floppy o disco rigido.
 
 Per questo comando, si pu• specificare una successione di floppy disk
-selezionabili premendo Ctrl+F4, e -l specifica l'unit… montata da cui eseguire
+selezionabili premendo %s+F4, e -l specifica l'unit… montata da cui eseguire
 l'avvio. Se non viene specificata alcuna lettera di unit…, l'impostazione
 predefinita prevede l'avvio dall'unit… A. 
 Le uniche lettere di unit… avviabili sono A, C, e D. Per l'avvio da un disco
@@ -877,7 +874,7 @@ Dove:
   [36;1mAVVIABILE[0m    Š un'immagine disco avviabile con GEOMETRIA -size specificata:
             bytes-per-sector,sectors-per-head,heads,cylinders
 Note:
-  - Ctrl+F4 scambia e monta il CDROM-SET o FILEIMMAGINE successivo se fornito.
+  - %s+F4 scambia e monta il CDROM-SET o FILEIMMAGINE successivo se fornito.
 
 Esempi:
   [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/giochi/doom.iso[0m -t cdrom
@@ -1215,8 +1212,8 @@ destinazione Š gi… in uso. Ô possibile utilizzare SUBST solo su unit… locali.
 º Per una breve introduzione per i nuovi utenti, digita: [33mINTRO[37m         º
 º Per la lista dei comandi della shell supportati, digita: [33mHELP[37m        º
 º                                                                      º
-º Per regolare la velocit… della CPU emulata, usa [31mCtrl+F11[37m e [31mCtrl+F12[37m. º
-º Per attivare il keymapper, usa [31mCtrl+F1[37m.                              º
+º Per regolare la velocit… della CPU emulata, usa [31m%s+F11[37m e [31m%s+F12[37m.%s%s º
+º Per attivare il keymapper, usa [31m%s+F1[37m.%s                              º
 º Ulteriori informazioni nel file [36mREADME[37m nella cartella di DOSBox.     º
 º                                                                      º
 
@@ -1225,13 +1222,13 @@ destinazione Š gi… in uso. Ô possibile utilizzare SUBST solo su unit… locali.
 º DOSBox supporta la modalit… CGA Composita.                           º
 º Usa [31mF12[37m per impostare l'uscita composita su ON, OFF o AUTO           º
 º (impostazione predefinita).                                          º
-º [31mAlt+F11[37m cambia tonalit…; [31mCtrl+Alt+F11[37m seleziona il modello CGA.      º
+º [31m%s+F11[37m cambia tonalit…; [31m%s+%s+F11[37m seleziona il modello CGA.%s   º
 º                                                                      º
 
 .
 :SHELL_STARTUP_CGA_MONO
 º Usa [31mF11[37m per scorrere le modalit… verde, ambra, bianco e bianco-carta,º
-º e [31mAlt+F11[37m per modificare le impostazioni di contrasto/luminosit….    º
+º e [31m%s+F11[37m per modificare le impostazioni di contrasto/luminosit….    º
 
 .
 :SHELL_STARTUP_HERC
@@ -1240,7 +1237,7 @@ destinazione Š gi… in uso. Ô possibile utilizzare SUBST solo su unit… locali.
 
 .
 :SHELL_STARTUP_DEBUG
-º Premi [31mAlt+Pause[37m per avviare il debugger o avvia l'exe con [33mDEBUG[37m.     º
+º Premi [31m%s+Pause[37m per avviare il debugger o avvia l'exe con [33mDEBUG[37m.     º
 º                                                                      º
 
 .
