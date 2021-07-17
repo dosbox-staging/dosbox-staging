@@ -1,6 +1,6 @@
 :CONFIG_FULLSCREEN
-Start DOSBox directly in fullscreen.
-Press Alt+Enter to switch back to window.
+Start directly in fullscreen.
+Run INTRO and see Special Keys for window control hotkeys.
 .
 :CONFIG_DISPLAY
 Number of display to use; values depend on OS and user settings.
@@ -34,22 +34,13 @@ Use texture_renderer=auto for an automatic choice.
 .
 :CONFIG_CAPTURE_MOUSE
 Choose a mouse control method:
-   onclick:        The mouse will be captured after the first
-                   click inside the window.
-   onstart:        The mouse is captured immediately on start
-                   (similar to real DOS).
-   seamless:       The mouse can move seamlessly in and out of DOSBox
-                   window and cannot be captured.
-   nomouse:        The mouse is disabled and hidden without any
-                   input sent to the game.
+   onclick:        Capture the mouse when clicking inside the window.
+   onstart:        Capture the mouse immediately on start.
+   seamless:       Never cature the mouse; let it move seamlessly.
+   nomouse:        Hide the mouse and don't send input to the game.
 Choose how middle-clicks are handled (second parameter):
-   middlegame:     Middle-clicks are sent to the game
-                   (Ctrl+F10 uncaptures the mouse).
-   middlerelease:  Middle-clicks are used to uncapture the mouse
-                   (not sent to the game). However, middle-clicks
-                   will be sent to the game in fullscreen or when
-                   seamless control is set.
-                   Ctrl+F10 will also uncapture the mouse.
+   middlegame:     Middle-clicks are sent to the game.
+   middlerelease:  Middle-click will release the captured mouse.
 Defaults (if not present or incorrect): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -154,7 +145,8 @@ Cycles can be set in 3 ways:
                   handle.
 .
 :CONFIG_CYCLEUP
-Number of cycles to decrease/increase with keycombos. (Ctrl+F11/Ctrl+F12)
+Number of cycles added or subtracted with speed control hotkeys.
+Run INTRO and see Special Keys for list of hotkeys.
 .
 :CONFIG_CYCLEDOWN
 Setting it lower than 100 will be a percentage.
