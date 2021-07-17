@@ -616,7 +616,7 @@ private:
 	}
 
 	void printError(void) {
-		WriteOut(MSG_Get("PROGRAM_BOOT_PRINT_ERROR"));
+		WriteOut(MSG_Get("PROGRAM_BOOT_PRINT_ERROR"), PRIMARY_MOD_NAME);
 	}
 
 	void disable_umb_ems_xms(void) {
@@ -1165,6 +1165,19 @@ static void RESCAN_ProgramStart(Program * * make) {
 }
 
 class INTRO final : public Program {
+private:
+	void WriteOutProgramIntroSpecial()
+	{
+		WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"), MMOD2_NAME,
+		         MMOD2_NAME, PRIMARY_MOD_NAME, PRIMARY_MOD_PAD,
+		         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_NAME,
+		         PRIMARY_MOD_PAD, PRIMARY_MOD_NAME, PRIMARY_MOD_PAD,
+		         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_NAME,
+		         PRIMARY_MOD_PAD, PRIMARY_MOD_NAME, PRIMARY_MOD_PAD,
+		         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_NAME,
+		         PRIMARY_MOD_PAD, MMOD2_NAME);
+	}
+
 public:
 	void DisplayMount(void) {
 		/* Basic mounting has a version for each operating system.
@@ -1195,7 +1208,7 @@ public:
 			return;
 		}
 		if (cmd->FindExist("special",false)) {
-			WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"));
+			WriteOutProgramIntroSpecial();
 			return;
 		}
 		/* Default action is to show all pages */
@@ -1210,7 +1223,7 @@ public:
 		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_OTHER"));
 #endif
 		DOS_ReadFile(STDIN, &c, &n);
-		WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"));
+		WriteOutProgramIntroSpecial();
 	}
 };
 
@@ -1794,18 +1807,18 @@ void DOS_SetupPrograms(void) {
 	        "These are the default keybindings.\n"
 	        "They can be changed in the \033[33mkeymapper\033[0m.\n"
 	        "\n"
-	        "\033[33;1m" MMOD2_NAME "+Enter\033[0m  Switch between fullscreen and window mode.\n"
-	        "\033[33;1m" MMOD2_NAME "+Pause\033[0m  Pause/Unpause emulator.\n"
-	        "\033[33;1m" PRIMARY_MOD_NAME "+F1\033[0m   " PRIMARY_MOD_PAD " Start the \033[33mkeymapper\033[0m.\n"
-	        "\033[33;1m" PRIMARY_MOD_NAME "+F4\033[0m   " PRIMARY_MOD_PAD " Swap mounted disk image, update directory cache for all drives.\n"
-	        "\033[33;1m" PRIMARY_MOD_NAME "+F5\033[0m   " PRIMARY_MOD_PAD " Save a screenshot.\n"
-	        "\033[33;1m" PRIMARY_MOD_NAME "+F6\033[0m   " PRIMARY_MOD_PAD " Start/Stop recording sound output to a wave file.\n"
-	        "\033[33;1m" PRIMARY_MOD_NAME "+F7\033[0m   " PRIMARY_MOD_PAD " Start/Stop recording video output to a zmbv file.\n"
-	        "\033[33;1m" PRIMARY_MOD_NAME "+F9\033[0m   " PRIMARY_MOD_PAD " Shutdown emulator.\n"
-	        "\033[33;1m" PRIMARY_MOD_NAME "+F10\033[0m  " PRIMARY_MOD_PAD " Capture/Release the mouse.\n"
-	        "\033[33;1m" PRIMARY_MOD_NAME "+F11\033[0m  " PRIMARY_MOD_PAD " Slow down emulation.\n"
-	        "\033[33;1m" PRIMARY_MOD_NAME "+F12\033[0m  " PRIMARY_MOD_PAD " Speed up emulation.\n"
-	        "\033[33;1m" MMOD2_NAME "+F12\033[0m    Unlock speed (turbo button/fast forward).\n");
+	        "\033[33;1m%s+Enter\033[0m  Switch between fullscreen and window mode.\n"
+	        "\033[33;1m%s+Pause\033[0m  Pause/Unpause emulator.\n"
+	        "\033[33;1m%s+F1\033[0m   %s Start the \033[33mkeymapper\033[0m.\n"
+	        "\033[33;1m%s+F4\033[0m   %s Swap mounted disk image, update directory cache for all drives.\n"
+	        "\033[33;1m%s+F5\033[0m   %s Save a screenshot.\n"
+	        "\033[33;1m%s+F6\033[0m   %s Start/Stop recording sound output to a wave file.\n"
+	        "\033[33;1m%s+F7\033[0m   %s Start/Stop recording video output to a zmbv file.\n"
+	        "\033[33;1m%s+F9\033[0m   %s Shutdown emulator.\n"
+	        "\033[33;1m%s+F10\033[0m  %s Capture/Release the mouse.\n"
+	        "\033[33;1m%s+F11\033[0m  %s Slow down emulation.\n"
+	        "\033[33;1m%s+F12\033[0m  %s Speed up emulation.\n"
+	        "\033[33;1m%s+F12\033[0m    Unlock speed (turbo button/fast forward).\n");
 
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
@@ -1813,7 +1826,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_BOOT_PRINT_ERROR",
 	        "This command boots DOSBox from either a floppy or hard disk image.\n\n"
 	        "For this command, one can specify a succession of floppy disks swappable\n"
-	        "by pressing " PRIMARY_MOD_NAME "+F4, and -l specifies the mounted drive to boot from.  If\n"
+	        "by pressing %s+F4, and -l specifies the mounted drive to boot from.  If\n"
 	        "no drive letter is specified, this defaults to booting from the A drive.\n"
 	        "The only bootable drive letters are A, C, and D.  For booting from a hard\n"
 	        "drive (C or D), the image should have already been mounted using the\n"
@@ -1854,7 +1867,7 @@ void DOS_SetupPrograms(void) {
 	        "  \033[36;1mBOOTIMAGE\033[0m is a bootable disk image with specified -size GEOMETRY:\n"
 	        "            bytes-per-sector,sectors-per-head,heads,cylinders\n"
 	        "Notes:\n"
-	        "  - " PRIMARY_MOD_NAME "+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.\n"
+	        "  - %s+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.\n"
 	        "\n"
 	        "Examples:\n"
 #if defined(WIN32)
