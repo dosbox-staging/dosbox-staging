@@ -1,6 +1,5 @@
 :CONFIG_FULLSCREEN
 Wˆ¥cz DOSBoxa na peˆnym ekranie.
-Wci˜nij Alt+Enter aby przeˆ¥czy† si© do okna.
 .
 :CONFIG_DISPLAY
 Numer ekranu do u¾ycia; warto˜† zale¾y od ustawieä u¾ytkownika.
@@ -43,12 +42,10 @@ Wybierz tryb zachowanie myszy:
    nomouse:        Emulacja myszy jest wyˆ¥czona.
 Wybierz jak¥ rol© peˆni ˜rodkowy przycisk myszy (drugi parametr):
    middlegame:     Klikni©cie ˜rodkowym przyciskiem jest wysˆane do gry
-                   (Ctrl+F10 puszcza mysz).
    middlerelease:  Klikni©cie ˜rodkowym przyciskiem puszcza mysz
                    (zdarzenie nie b©dzie wysˆane do gry).
                    W peˆnym ekranie lub w trybie 'seamless' klikni©cie
                    zostanie wysˆane do gry.
-                   Ctrl+F10 r¢wnie¾ puszcza mysz.
 Domy˜lne ustawienie to: seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -152,7 +149,7 @@ Cycles can be set in 3 ways:
                   handle.
 .
 :CONFIG_CYCLEUP
-Liczba cykli o kt¢r¥ warto˜† zwi©ksza/zmniejsza kombinacja klawiszy. (Ctrl+F11/Ctrl+F12)
+Liczba cykli o kt¢r¥ warto˜† zwi©ksza/zmniejsza kombinacja klawiszy.
 .
 :CONFIG_CYCLEDOWN
 Warto˜† mniejsza ni¾ 100 jest traktowana jako ustawienie zmiany procentowej.
@@ -695,18 +692,18 @@ You have to mount the directory containing the files.
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [32mmount c c:\dosprog\[37m utworzy dysk C z c:\dosprog jako zawarto˜ci¥.      º
-º                                                                        º
-º [32mc:\dosprog\[37m to przykˆad. Zamieä go na Tw¢j wˆasny katalog z grami.  [37m           º
-ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mmount c c:\dosprog\[37m utworzy dysk C z c:\dosprog jako zawarto˜ci¥.       º
+º                                                                         º
+º [32mc:\dosprog\[37m to przykˆad. Zamieä go na Tw¢j wˆasny katalog z grami. [37m     º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
 [44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [32mmount c ~/dosprog[37m utworzy dysk C z ~/dosprog jako zawarto˜ci¥. º
+º [32mmount c ~/dosprog[37m utworzy dysk C z ~/dosprog jako zawarto˜ci¥.      º
 º                                                                     º
-º [32m~/dosprog[37m to przykˆad. Zamieä go na Tw¢j wˆasny katalog z grami.  [37m º
+º [32m~/dosprog[37m to przykˆad. Zamieä go na Tw¢j wˆasny katalog z grami.  [37m  º
 ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
 
 .
@@ -740,18 +737,18 @@ Additionally, you can use IMGMOUNT to mount ISO images or CUE files:
 Domy˜lne skr¢ty klawiaturowe.
 Mog¥ zosta† zmienione narz©dziem [33mkeymapper[0m.
 
-[33;1mAlt+Enter[0m   Przejd« do trybu peˆnoekranowego i z powrotem.
-[33;1mAlt+Pauza[0m   Zapauzuj emulator.
-[33;1mCtrl+F1[0m     Uruchom [33mkeymappera[0m.
-[33;1mCtrl+F4[0m     Zamieä zamontowany obraz dysku. Aktualizuj pami©† podr©czn¥ zamontowanego katalogu.
-[33;1mCtrl+F5[0m     Zr¢b zrzut ekranu.
-[33;1mCtrl+F6[0m     Rozpocznij/zatrzymaj nagrywanie audio do pliku wave.
-[33;1mCtrl+F7[0m     Rozpocznij/zatrzymaj nagrywanie wideo do pliku zmbv.
-[33;1mCtrl+F9[0m     Wyˆ¥cz emulator.
-[33;1mCtrl+F10[0m    Przechwy†/zwolnij myszk©.
-[33;1mCtrl+F11[0m    Spowolnij emulacj©.
-[33;1mCtrl+F12[0m    Przyspiesz emulacj©.
-[33;1mAlt+F12[0m     Uwolnij pr©dko˜† (przycisk "turbo" / przyspiesz).
+[33;1m%s+Enter[0m   Przejd« do trybu peˆnoekranowego i z powrotem.
+[33;1m%s+Pauza[0m   Zapauzuj emulator.
+[33;1m%s+F1[0m    %s Uruchom [33mkeymappera[0m.
+[33;1m%s+F4[0m    %s Zamieä zamontowany obraz dysku. Aktualizuj pami©† podr©czn¥ zamontowanego katalogu.
+[33;1m%s+F5[0m    %s Zr¢b zrzut ekranu.
+[33;1m%s+F6[0m    %s Rozpocznij/zatrzymaj nagrywanie audio do pliku wave.
+[33;1m%s+F7[0m    %s Rozpocznij/zatrzymaj nagrywanie wideo do pliku zmbv.
+[33;1m%s+F9[0m    %s Wyˆ¥cz emulator.
+[33;1m%s+F10[0m   %s Przechwy†/zwolnij myszk©.
+[33;1m%s+F11[0m   %s Spowolnij emulacj©.
+[33;1m%s+F12[0m   %s Przyspiesz emulacj©.
+[33;1m%s+F12[0m     Uwolnij pr©dko˜† (przycisk "turbo" / przyspiesz).
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -770,7 +767,7 @@ Plik obrazu jest tylko do odczytu! Mo¾e to spowodowa† problemy.
 Ta komenda bootuje DOSBoxa z dyskietki lub obrazu dysku twardego.
 
 Do tej komendy mo¾na wˆ¥czy† wyb¢r kolejno˜ci dysk¢w
-kombinacj¥ klawiszy Ctrl+F4, wtedy opcja -l okre˜la zamontowany dysk do zbootowania.
+kombinacj¥ klawiszy %s+F4, wtedy opcja -l okre˜la zamontowany dysk do zbootowania.
 Je˜li nie podano litery dysku, domy˜lnie bootowany jest dysk A.
 Jedynymi literami bootowalnych dysk¢w s¥ litery A, C i D. Aby zbootowa† z dysku
 twardego (C lub D), obraz powinien by† zamontowany komend¥
@@ -849,7 +846,7 @@ Gdzie:
   GEOMETRIA      pliki-w-sektorze,sektory-w-gˆowicy,gˆowice,cylindry
 
 Notatki:
-  - Ctrl+F4 zamienia i montuje nast©pny OBRAZ lub OBRAZ-CD.    
+  - %s+F4 zamienia i montuje nast©pny OBRAZ lub OBRAZ-CD.
 Przykˆady:
   [32;1mimgmount[0m [37;1mD[0m [36;1m/home/UZYTKOWNIK/gry/doom.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
@@ -1183,8 +1180,8 @@ Polecenia SUBST mo¾na u¾y† jedynie na lokalnych dyskach
 º Kr¢tki wst©p dla nowych u¾ytkownik¢w, wpisz: [33mINTRO[37m                 º
 º Aby zobaczy† list© wspieranych komend, wpisz: [33mHELP[37m                 º
 º                                                                    º
-º Aby dostosowa† pr©dko˜† emulatora, u¾yj [31mCtrl+F11[37m i [31mCtrl+F12[37m.       º
-º Aby zmieni† skr¢ty klawiaturowe [31mCtrl+F1[37m.                           º
+º Aby dostosowa† pr©dko˜† emulatora, u¾yj [31m%s+F11[37m i [31m%s+F12[37m.%s%s       º
+º Aby zmieni† skr¢ty klawiaturowe [31m%s+F1[37m.%s                           º
 º Wi©cej informacji w pliku [36mREADME[37m w katalogu DOSBoxa.               º
 º                                                                    º
 
@@ -1192,13 +1189,13 @@ Polecenia SUBST mo¾na u¾y† jedynie na lokalnych dyskach
 :SHELL_STARTUP_CGA
 º DOSBox wspiera tryb Composite CGA.                                 º
 º Wci˜nij [31mF12[37m aby wˆ¥czy† lub wyˆ¥czy† tryb composite.               º
-º [31m(Alt+)F11[37m zmienia barw©; [31mCtrl+Alt+F11[37m zmienia model CGA.           º
+º [31m(%s+)F11[37m zmienia barw©; [31m%s+%s+F11[37m zmienia model CGA.%s         º
 º                                                                    º
 
 .
 :SHELL_STARTUP_CGA_MONO
 º Wci˜nij [31mF11[37m aby zmieni† kolor ekaranu: jasny biaˆy, biaˆy, pomaraäczowy, zielony. º
-º i [31mAlt+F11[37m aby zmieni† kontrast/jasno˜†.    º
+º i [31m%sF11[37m aby zmieni† kontrast/jasno˜†.    º
 
 .
 :SHELL_STARTUP_HERC
@@ -1207,7 +1204,7 @@ Polecenia SUBST mo¾na u¾y† jedynie na lokalnych dyskach
 
 .
 :SHELL_STARTUP_DEBUG
-º Wci˜nij [31mAlt+Pauza[37m aby wˆ¥czy† debuggera albo wˆ¥cz plik exe komend¥ [33mDEBUG[37m. º
+º Wci˜nij [31m%sPauza[37m aby wˆ¥czy† debuggera albo wˆ¥cz plik exe komend¥ [33mDEBUG[37m. º
 º                                                                    º
 
 .

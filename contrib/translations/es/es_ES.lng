@@ -1,6 +1,5 @@
 :CONFIG_FULLSCREEN
 Inicia DOSBox directamente en pantalla completa.
-Presione Alt+Enter para volver a la ventana.
 .
 :CONFIG_DISPLAY
 Nฃmero de pantalla a usar; valores dependen del SO y configuraciขn del usuario.
@@ -44,12 +43,10 @@ Elija un mtodo de control del mouse:
                    envกe ninguna entrada al juego.
 Elija cขmo se manejan los clics centrales (segundo par metro):
    middlegame:     Los clics centrales son enviados al juego
-                   (Ctrl+F10 descaptura el mouse).
    middlerelease:  Los clics centrales son usados para descapturar el mouse
                    (no se envกa al juego). Sin embargo, los clics centrales
                    se enviar n al juego en pantalla completa o cuando
                    se establece el control seamless.
-                   Ctrl+F10 podr  tambin descapturar el mouse.
 Defaults (si no est  presente o errขneo): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -154,7 +151,7 @@ Los ciclos se pueden establecer de 3 formas:
                   manejar.
 .
 :CONFIG_CYCLEUP
-Nฃmero de ciclos para disminuir/incrementar con combinaciones de teclas. (Ctrl+F11/Ctrl+F12)
+Nฃmero de ciclos para disminuir/incrementar con combinaciones de teclas.
 .
 :CONFIG_CYCLEDOWN
 Establecerlo por debajo de 100 ser  un porcentaje.
@@ -706,11 +703,11 @@ tienes que montar el directorio que contiene los archivos.
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
-บ [32mmount c ~/dosgames[37m crear  una unidad C con ~/dosgames como contenido.บ
-บ                                                                      บ
-บ [32m~/dosgames[37m es un ejemplo. Reempl zalo con tu propio directorio de juegos. [37m บ
-ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
+[44;1mษออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออป
+บ [32mmount c ~/dosgames[37m crear  una unidad C con ~/dosgames como contenido.    บ
+บ                                                                          บ
+บ [32m~/dosgames[37m es un ejemplo. Reempl zalo con tu propio directorio de juegos.[37mบ
+ศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ[0m
 
 .
 :PROGRAM_INTRO_MOUNT_END
@@ -743,18 +740,18 @@ Adem s, puedes usar imgmount para montar im genes iso o cue/bin:
 Estas son las combinaciones de teclas por defecto.
 Se pueden cambiar en el [33mmapeador de teclas[0m.
 
-[33;1mAlt+Enter[0m  Cambia entre pantalla completa y modo ventana.
-[33;1mAlt+Pausa[0m  Pausa/Despausa el emulador.
-[33;1mCtrl+F1[0m    Inicia el [33mmapeador de teclas[0m.
-[33;1mCtrl+F4[0m    Cambia imagen de disco montada, actualiza la cach de directorio para todas las unidades.
-[33;1mCtrl+F5[0m    Guarda una captura de pantalla.
-[33;1mCtrl+F6[0m    Inicia/Detiene grabaciขn de salida de sonido a un archivo wav.
-[33;1mCtrl+F7[0m    Inicia/Detiene grabaciขn de salida de video a un archivo zmbv.
-[33;1mCtrl+F9[0m    Apaga el emulador.
-[33;1mCtrl+F10[0m   Captura/Suelta el mouse.
-[33;1mCtrl+F11[0m   Ralentiza emulaciขn.
-[33;1mCtrl+F12[0m   Acelera emulaciขn.
-[33;1mAlt+F12[0m    Desbloquea velocidad (botขn turbo/avance r pido).
+[33;1m%s+Enter[0m  Cambia entre pantalla completa y modo ventana.
+[33;1m%s+Pausa[0m  Pausa/Despausa el emulador.
+[33;1m%s+F1[0m   %s Inicia el [33mmapeador de teclas[0m.
+[33;1m%s+F4[0m   %s Cambia imagen de disco montada, actualiza la cach de directorio para todas las unidades.
+[33;1m%s+F5[0m   %s Guarda una captura de pantalla.
+[33;1m%s+F6[0m   %s Inicia/Detiene grabaciขn de salida de sonido a un archivo wav.
+[33;1m%s+F7[0m   %s Inicia/Detiene grabaciขn de salida de video a un archivo zmbv.
+[33;1m%s+F9[0m   %s Apaga el emulador.
+[33;1m%s+F10[0m  %s Captura/Suelta el mouse.
+[33;1m%s+F11[0m  %s Ralentiza emulaciขn.
+[33;1m%s+F12[0m  %s Acelera emulaciขn.
+[33;1m%s+F12[0m    Desbloquea velocidad (botขn turbo/avance r pido).
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -773,7 +770,7 @@ El archivo de imagen es de sขlo lectura! Podrกa crear problemas.
 Este comando arranca DOSBox desde una imagen de disquete o de disco duro.
 
 Para este comando, se puede especificar una sucesiขn de disquetes intercambiables
-presionando Ctrl+F4, y -l especifica la unidad montada desde la que arrancar.  Si
+presionando %s+F4, y -l especifica la unidad montada desde la que arrancar.  Si
 ninguna letra de unidad es especificada, se arranca por defecto desde la unidad A.
 Las ฃnicas letras de unidad arrancables son A, C, y D.  Para arrancar desde un
 disco duro (C o D), la imagen ya deberกa haber sido montada utilizando el comando
@@ -851,7 +848,7 @@ Dขnde:
   [36;1mIMAGENBOOT[0m es una imagen de disco de arranque con especificado -size GEOM:
              bytes-por-sector,sectores-por-cabeza,cabezas,cilindros
 Notas:
-  - Ctrl+F4 intercambia & monta el siguiente CDROM-SET o ARCHIVOIMAGEN, si se
+  - %s+F4 intercambia & monta el siguiente CDROM-SET o ARCHIVOIMAGEN, si se
     proporciona.
 
 Ejemplos:
@@ -1188,8 +1185,8 @@ Sขlo es posible utilizar SUBST en unidades locales
 บ Para una breve introducciขn para nuevos usuarios escriba: [33mINTRO[37m           บ
 บ Para comandos de interfaz soportados escriba: [33mHELP[37m                        บ
 บ                                                                           บ
-บ Para ajustar la velocidad de la CPU emulada, use [31mCtrl+F11[37m y [31mCtrl+F12[37m.     บ
-บ Para activar el mapeador de teclas use [31mCtrl+F1[37m.                           บ
+บ Para ajustar la velocidad de la CPU emulada, use [31m%s+F11[37m y [31m%s+F12[37m.%s%s     บ
+บ Para activar el mapeador de teclas use [31m%s+F1[37m.%s                           บ
 บ Para m s informaciขn lea el archivo [36mREADME[37m en el directorio de DOSBox.    บ
 บ                                                                           บ
 
@@ -1197,13 +1194,13 @@ Sขlo es posible utilizar SUBST en unidades locales
 :SHELL_STARTUP_CGA
 บ DOSBox soporta el modo CGA compuesto.                                     บ
 บ Use [31mF12[37m para establecer salida compuesta ON, OFF, o AUTO (por defecto).   บ
-บ [31m(Alt+)F11[37m cambia tono; [31mCtrl+Alt+F11[37m selecciona modelo CGA inicial/final.  บ
+บ [31m(%s+)F11[37m cambia tono; [31m%s+%s+F11[37m selecciona modelo CGA inicial/final.%s บ
 บ                                                                           บ
 
 .
 :SHELL_STARTUP_CGA_MONO
 บ Use [31mF11[37m para rotar entre los modos verde,  mbar, blanco y blanco papel,   บ
-บ y [31mAlt+F11[37m para cambiar los ajustes de contraste/brillo.                   บ
+บ y [31m%s+F11[37m para cambiar los ajustes de contraste/brillo.                   บ
 
 .
 :SHELL_STARTUP_HERC
@@ -1212,7 +1209,7 @@ Sขlo es posible utilizar SUBST en unidades locales
 
 .
 :SHELL_STARTUP_DEBUG
-บ Pulsa [31mAlt+Pausa[37m para entrar en el depurador o iniciar el exe con [33mDEPURADO[37m.บ
+บ Pulsa [31m%s+Pausa[37m para entrar en el depurador o iniciar el exe con [33mDEPURADO[37m.บ
 บ                                                                           บ
 
 .
