@@ -1,6 +1,5 @@
 :CONFIG_FULLSCREEN
 Avvia DOSBox direttamente a schermo intero.
-Premi %s+Enter per tornare in modalità finestra.
 .
 :CONFIG_DISPLAY
 Numero dello schermo da utilizzare; Il valore dipende dall'OS e dalle
@@ -47,12 +46,10 @@ Metodo di controllo del mouse:
                    segnale inviato al gioco.
 Gestione del clic centrale (secondo parametro):
    middlegame:     I clic centrali vengono inviati al gioco
-                   (%s+F10 rilascia il mouse).
    middlerelease:  I clic centrali rilasciano il mouse
                    (non inviati al gioco). Tuttavia, i clic centrali
                    verranno inviati al gioco in modalità schermo intero
                    o quando è impostato il controllo continuo.
-                   %s+F10 rilascerà anche il mouse.
 Defaults (se non è presente o incorretto): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -159,10 +156,10 @@ I cicli possono essere impostati in 3 modi:
                   gestire.
 .
 :CONFIG_CYCLEUP
-Quantità di cicli di cui aumentare usando gli appositi tasti. (%s+F12)
+Quantità di cicli di cui aumentare usando gli appositi tasti.
 .
 :CONFIG_CYCLEDOWN
-Quantità di cicli di cui diminuire usando gli appositi tasti. (%s+F11)
+Quantità di cicli di cui diminuire usando gli appositi tasti.
 Un valore più basso di 100 indica una percentuale.
 .
 :CONFIG_NOSOUND

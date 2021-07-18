@@ -1,6 +1,5 @@
 :CONFIG_FULLSCREEN
 Włącz DOSBoxa na pełnym ekranie.
-Wciśnij %s+Enter aby przełączyć się do okna.
 .
 :CONFIG_DISPLAY
 Numer ekranu do użycia; wartość zależy od ustawień użytkownika.
@@ -43,12 +42,10 @@ Wybierz tryb zachowanie myszy:
    nomouse:        Emulacja myszy jest wyłączona.
 Wybierz jaką rolę pełni środkowy przycisk myszy (drugi parametr):
    middlegame:     Kliknięcie środkowym przyciskiem jest wysłane do gry
-                   (%s+F10 puszcza mysz).
    middlerelease:  Kliknięcie środkowym przyciskiem puszcza mysz
                    (zdarzenie nie będzie wysłane do gry).
                    W pełnym ekranie lub w trybie 'seamless' kliknięcie
                    zostanie wysłane do gry.
-                   %s+F10 również puszcza mysz.
 Domyślne ustawienie to: seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -152,7 +149,7 @@ Cycles can be set in 3 ways:
                   handle.
 .
 :CONFIG_CYCLEUP
-Liczba cykli o którą wartość zwiększa/zmniejsza kombinacja klawiszy. (%s+F11/%s+F12)
+Liczba cykli o którą wartość zwiększa/zmniejsza kombinacja klawiszy.
 .
 :CONFIG_CYCLEDOWN
 Wartość mniejsza niż 100 jest traktowana jako ustawienie zmiany procentowej.
