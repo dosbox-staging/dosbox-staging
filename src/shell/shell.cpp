@@ -380,6 +380,8 @@ void DOS_Shell::Run()
 					}
 				}
 				ParseLine(input_line);
+			} else {
+				bf.reset();
 			}
 		} else {
 			if (echo) ShowPrompt();
