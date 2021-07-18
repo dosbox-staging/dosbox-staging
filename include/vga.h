@@ -36,6 +36,7 @@ enum VGAModes {
 	M_TEXT,
 	M_HERC_GFX, M_HERC_TEXT,
 	M_CGA16, M_TANDY2, M_TANDY4, M_TANDY16, M_TANDY_TEXT,
+	M_CGA2_COMPOSITE, M_CGA4_COMPOSITE, M_CGA_TEXT_COMPOSITE,
 	M_ERROR
 };
 
@@ -404,6 +405,8 @@ typedef struct {
 	VGA_Changes changes;
 #endif
 	VGA_LFB lfb;
+	int ri, rq, gi, gq, bi, bq;
+	int sharpness;
 } VGA_Type;
 
 
@@ -523,7 +526,7 @@ extern Bit32u FillTable[16];
 extern Bit32u CGA_2_Table[16];
 extern Bit32u CGA_4_Table[256];
 extern Bit32u CGA_4_HiRes_Table[256];
-extern Bit32u CGA_16_Table[256];
+extern int CGA_Composite_Table[1024];
 extern Bit32u TXT_Font_Table[16];
 extern Bit32u TXT_FG_Table[16];
 extern Bit32u TXT_BG_Table[16];
