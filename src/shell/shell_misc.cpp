@@ -33,8 +33,7 @@
 unsigned int result_errorcode = 0;
 
 DOS_Shell::~DOS_Shell() {
-	delete bf;
-	bf = nullptr;
+	bf.reset();
 }
 
 void DOS_Shell::ShowPrompt(void) {
@@ -495,9 +494,10 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	{	/* Run the .bat file */
 		/* delete old batch file if call is not active*/
 		bool temp_echo=echo; /*keep the current echostate (as delete bf might change it )*/
-		if(bf && !call) delete bf;
-		bf=new BatchFile(this,fullname,name,line);
-		echo=temp_echo; //restore it.
+		if (bf && !call)
+			bf.reset();
+		bf = std::make_shared<BatchFile>(this, fullname, name, line);
+		echo = temp_echo; // restore it.
 	} 
 	else 
 	{	/* only .bat .exe .com extensions maybe be executed by the shell */
