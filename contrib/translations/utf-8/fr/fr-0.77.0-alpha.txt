@@ -1,6 +1,5 @@
 :CONFIG_FULLSCREEN
 Démarrer DOSBox directement en mode plein écran.
-Pressez %s+Entrée pour revenir en mode fenêtre.
 .
 :CONFIG_DISPLAY
 Nombre d'écrans à utiliser ; les valeurs dépendent de l'OS et des paramètres utilisateur.
@@ -44,12 +43,10 @@ Méthode de contrôle de la souris :
                    signal envoyé au jeu.
 Gestion du clic-milieu (second paramètre) :
    middlegame :    Les clics-milieu sont envoyés au jeu
-                   (%s+F10 libère la souris).
    middlerelease : Les clics-milieu libèrent la souris
                    (non envoyés au jeu). De plus, les clics-milieu
                    seront envoyés au jeu en mode plein écran ou en mode
                    seamless.
-                   %s+F10 libèrera aussi la souris.
 Defaults (si non présent ou incorrect) : seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -155,7 +152,7 @@ Les cycles peuvent être définis de 3 façons :
 
 .
 :CONFIG_CYCLEUP
-Nombre de cycles à ajouter/soustraire avec la combinaison de touches. (%s+F11/%s+F12)
+Nombre de cycles à ajouter/soustraire avec la combinaison de touches.
 .
 :CONFIG_CYCLEDOWN
 Le paramétrer à moins de 100 donnera un pourcentage.
