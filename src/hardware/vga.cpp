@@ -31,7 +31,7 @@ SVGA_Driver svga;
 Bit32u CGA_2_Table[16];
 Bit32u CGA_4_Table[256];
 Bit32u CGA_4_HiRes_Table[256];
-Bit32u CGA_16_Table[256];
+int CGA_Composite_Table[1024];
 Bit32u TXT_Font_Table[16];
 Bit32u TXT_FG_Table[16];
 Bit32u TXT_BG_Table[16];
