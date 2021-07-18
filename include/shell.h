@@ -23,6 +23,7 @@
 
 #include <cctype>
 #include <list>
+#include <memory>
 #include <string>
 
 #ifndef DOSBOX_PROGRAMS_H
@@ -53,7 +54,7 @@ public:
 	uint32_t location = 0;
 	bool echo = false;
 	DOS_Shell *shell = nullptr;
-	BatchFile *prev = nullptr;
+	std::shared_ptr<BatchFile> prev = {}; // shared with Shell.bf
 	CommandLine *cmd = nullptr;
 	std::string filename{};
 };
@@ -125,7 +126,7 @@ public:
 	void CMD_LS(char *args);
 	/* The shell's variables */
 	uint16_t input_handle = 0;
-	BatchFile *bf = nullptr;
+	std::shared_ptr<BatchFile> bf = {}; // shared with BatchFile.prev
 	bool echo = false;
 	bool call = false;
 };
