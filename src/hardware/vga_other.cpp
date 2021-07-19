@@ -1110,9 +1110,14 @@ void VGA_SetupOther(void)
 		write_pcjr( 0x3df, 0x7 | (0x7 << 3), 0 );
 		IO_RegisterWriteHandler(0x3da,write_pcjr,IO_MB);
 		IO_RegisterWriteHandler(0x3df,write_pcjr,IO_MB);
-		MAPPER_AddHandler(IncreaseHue, SDL_SCANCODE_F11, MMOD2, "inchue", "Inc Hue");
-		MAPPER_AddHandler(DecreaseHue, SDL_SCANCODE_F11, 0, "dechue", "Dec Hue");
-		MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0, "cgacomp", "CGA Comp");
+		MAPPER_AddHandler(CycleWhichControl, SDL_SCANCODE_F10, 0,
+		                  "select", "Sel Ctl");
+		MAPPER_AddHandler(DecreaseControlValue, SDL_SCANCODE_F11, MMOD2,
+		                  "decval", "Dec Val");
+		MAPPER_AddHandler(IncreaseControlValue, SDL_SCANCODE_F11, 0,
+		                  "incval", "Inc Val");
+		MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0, "cgacomp",
+		                  "CGA Comp");
 	}
 	if (machine == MCH_HERC) {
 		Bitu base=0x3b0;
