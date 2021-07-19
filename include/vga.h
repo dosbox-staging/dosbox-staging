@@ -28,18 +28,28 @@
 
 class PageHandler;
 
-
 enum VGAModes {
-	M_CGA2, M_CGA4,
-	M_EGA, M_VGA,
-	M_LIN4, M_LIN8, M_LIN15, M_LIN16, M_LIN32,
+	M_CGA2,
+	M_CGA4,
+	M_EGA,
+	M_VGA,
+	M_LIN4,
+	M_LIN8,
+	M_LIN15,
+	M_LIN16,
+	M_LIN32,
 	M_TEXT,
-	M_HERC_GFX, M_HERC_TEXT,
-	M_CGA16, M_TANDY2, M_TANDY4, M_TANDY16, M_TANDY_TEXT,
-	M_CGA2_COMPOSITE, M_CGA4_COMPOSITE, M_CGA_TEXT_COMPOSITE,
+	M_HERC_GFX,
+	M_HERC_TEXT,
+	M_TANDY2,
+	M_TANDY4,
+	M_TANDY16,
+	M_TANDY_TEXT,
+	M_CGA2_COMPOSITE,
+	M_CGA4_COMPOSITE,
+	M_CGA_TEXT_COMPOSITE,
 	M_ERROR
 };
-
 
 #define CLK_25 25175
 #define CLK_28 28322
@@ -408,7 +418,6 @@ typedef struct {
 	int ri, rq, gi, gq, bi, bq;
 	int sharpness;
 } VGA_Type;
-
 
 /* Hercules Palette function */
 void Herc_Palette(void);
