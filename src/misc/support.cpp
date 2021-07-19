@@ -36,6 +36,7 @@
 
 #include "cross.h"
 #include "debug.h"
+#include "fs_utils.h"
 #include "video.h"
 
 char int_to_char(int val)
@@ -343,4 +344,10 @@ void set_thread_name(MAYBE_UNUSED std::thread& thread, MAYBE_UNUSED const char *
 	pthread_t handle = thread.native_handle();
 	pthread_setname_np(handle, name);
 #endif
+}
+
+bool ends_with(const std::string &str, const std::string &suffix) noexcept
+{
+	return (str.size() >= suffix.size() &&
+	        str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0);
 }
