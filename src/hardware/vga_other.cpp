@@ -713,13 +713,14 @@ static void PCJr_FindMode()
 			/* bit3 of mode control 2 signals 2 colour graphics mode */
 			if (cga_comp == 1 ||
 			    (cga_comp == 0 && !(vga.tandy.mode_control & 0x4))) {
-				VGA_SetMode(M_CGA16);
+				VGA_SetMode(M_CGA2_COMPOSITE);
 			} else {
 				VGA_SetMode(M_TANDY2);
 			}
 		} else {
 			/* otherwise some 4-colour graphics mode */
-			const auto new_mode = (cga_comp == 1) ? M_CGA16 : M_TANDY4;
+			const auto new_mode = (cga_comp == 1) ? M_CGA4_COMPOSITE
+			                                      : M_TANDY4;
 			if (vga.mode == M_TANDY16) {
 				VGA_SetModeNow(new_mode);
 			} else {
