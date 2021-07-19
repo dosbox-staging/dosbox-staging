@@ -100,29 +100,15 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 		w *= 2;
 	}
 
-#define COMPOSITE_CONVERT(I, Q) do { \
-	i[1] = (i[1]<<3) - ap[1]; \
-	a = ap[0]; \
-	b = bp[0]; \
-	c = i[0]+i[0]; \
-	d = i[-1]+i[1]; \
-	y = ((c+d)<<8) + vga.sharpness*(c-d); \
-	rr = y + vga.ri*(I) + vga.rq*(Q); \
-	gg = y + vga.gi*(I) + vga.gq*(Q); \
-	bb = y + vga.bi*(I) + vga.bq*(Q); \
-	++i; \
-	++ap; \
-	++bp; \
-	*srgb = (byte_clamp(rr)<<16) | (byte_clamp(gg)<<8) | byte_clamp(bb); \
-	++srgb; \
-} while (0)
-
-#define OUT(v) do { *o = (v); ++o; } while (0)
-
 	// Simulate CGA composite output
-	int* o = temp;
-	Bit8u* rgbi = TempLine;
-	int* b = &CGA_Composite_Table[border*68];
+	int *o = temp;
+	auto OUT = [&](const int v) {
+		*o = (v);
+		++o;
+	};
+
+	Bit8u *rgbi = TempLine;
+	int *b = &CGA_Composite_Table[border * 68];
 	for (int x = 0; x < 4; ++x)
 		OUT(b[(x + 3) & 3]);
 	OUT(CGA_Composite_Table[(border << 6) | ((*rgbi) << 2) | 3]);
@@ -159,19 +145,33 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 
 		// Decode
 		i = temp + 5;
-		i[-1] = (i[-1]<<3) - ap[-1];
-		i[0] = (i[0]<<3) - ap[0];
-		Bit32u* srgb = (Bit32u *)TempLine;
+		i[-1] = (i[-1] << 3) - ap[-1];
+		i[0] = (i[0] << 3) - ap[0];
+		Bit32u *srgb = (Bit32u *)TempLine;
+
+		auto COMPOSITE_CONVERT = [&](const int I, const int Q) {
+			i[1] = (i[1] << 3) - ap[1];
+			const int c = i[0] + i[0];
+			const int d = i[-1] + i[1];
+			const int y = ((c + d) << 8) + vga.sharpness * (c - d);
+			const int rr = y + vga.ri * (I) + vga.rq * (Q);
+			const int gg = y + vga.gi * (I) + vga.gq * (Q);
+			const int bb = y + vga.bi * (I) + vga.bq * (Q);
+			++i;
+			++ap;
+			++bp;
+			*srgb = (byte_clamp(rr) << 16) | (byte_clamp(gg) << 8) |
+			        byte_clamp(bb);
+			++srgb;
+		};
+
 		for (Bit32u x = 0; x < blocks; ++x) {
-			int y,a,b,c,d,rr,gg,bb;
-			COMPOSITE_CONVERT(a, b);
-			COMPOSITE_CONVERT(-b, a);
-			COMPOSITE_CONVERT(-a, -b);
-			COMPOSITE_CONVERT(b, -a);
+			COMPOSITE_CONVERT(ap[0], bp[0]);
+			COMPOSITE_CONVERT(-bp[0], ap[0]);
+			COMPOSITE_CONVERT(-ap[0], -bp[0]);
+			COMPOSITE_CONVERT(bp[0], -ap[0]);
 		}
 	}
-#undef COMPOSITE_CONVERT
-#undef OUT
 	return TempLine;
 }
 
