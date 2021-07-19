@@ -16,20 +16,22 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "dosbox.h"
-#include "cross.h"
-#include "string_utils.h"
-#include "setup.h"
-#include "control.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <list>
 #include <string>
+
+#include "control.h"
+#include "cross.h"
+#include "fs_utils.h"
+#include "string_utils.h"
+#include "setup.h"
+#include "support.h"
+
 using namespace std;
-
-
 
 #define LINE_IN_MAXLEN 2048
 
@@ -67,14 +69,21 @@ void MSG_Replace(const char * _name, const char* _val) {
 	Lang.push_back(MessageBlock(_name,_val));
 }
 
-static void LoadMessageFile(const char * fname) {
-	if (!fname) return;
-	if(*fname=='\0') return;//empty string=no languagefile
-	FILE * mfile=fopen(fname,"rt");
-	/* This should never happen and since other modules depend on this use a normal printf */
-	if (!mfile) {
-		E_Exit("MSG:Can't load messages: %s",fname);
+static bool LoadMessageFile(const std::string & fname) {
+	const auto lang_file = to_native_path(fname);
+	if (lang_file.empty()) {
+		if (fname.size()) {
+			LOG_MSG("LANG: Language file %s not found, skipping", fname.c_str());
+		}
+		return false;
 	}
+
+	FILE * mfile=fopen(lang_file.c_str(),"rt");
+	if (!mfile) {
+		LOG_MSG("LANG: Failed opening language file: %s, skipping", lang_file.c_str());
+		return false;
+	}
+
 	char linein[LINE_IN_MAXLEN];
 	char name[LINE_IN_MAXLEN];
 	char string[LINE_IN_MAXLEN*10];
@@ -110,6 +119,8 @@ static void LoadMessageFile(const char * fname) {
 		}
 	}
 	fclose(mfile);
+	LOG_MSG("LANG: Loaded language file: %s", lang_file.c_str());
+	return true;
 }
 
 const char * MSG_Get(char const * msg) {
@@ -134,11 +145,41 @@ bool MSG_Write(const char * location) {
 }
 
 void MSG_Init(Section_prop * section) {
-	std::string file_name;
-	if (control->cmdline->FindString("-lang",file_name,true)) {
-		LoadMessageFile(file_name.c_str());
-	} else {
-		Prop_path* pathprop = section->Get_path("language");
-		if(pathprop) LoadMessageFile(pathprop->realpath.c_str());
+	std::string lang = {};
+	std::deque<std::string> langs = {};
+
+	// Did the user provide a language on the command line?
+	if (control->cmdline->FindString("-lang", lang, true))
+		langs.emplace_back(lang);
+
+	// Is a language provided in the conf file?
+	const auto pathprop = section->Get_path("language");
+	if (pathprop) {
+		lang = pathprop->realpath;
+		if (lang.size()) {
+			langs.emplace_back(pathprop->realpath);
+		}
+	}
+
+	// No languages provided, so nothing more to do!
+	if (langs.empty())
+		return;
+
+	// Try load the user's language file(s)
+	for (const auto &l : langs) {
+		lang = l + (ends_with(l, ".lng") ? "" : ".lng");
+		if (path_exists(lang) && LoadMessageFile(lang)) {
+			return;
+		}
+		const auto path_elements = split(lang, CROSS_FILESPLIT);
+		if (path_elements.empty())
+			continue;
+
+		lang = path_elements.back();
+		LOG_MSG("LANG: Searching config path for: %s", lang.c_str());
+		lang = CROSS_GetPlatformConfigDir() + "translations" + CROSS_FILESPLIT + lang;
+		if (LoadMessageFile(lang)) {
+			return;
+		}
 	}
 }
