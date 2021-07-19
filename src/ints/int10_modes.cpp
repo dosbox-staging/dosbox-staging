@@ -478,7 +478,9 @@ static void FinishSetMode(bool clearmem) {
 		case M_TANDY2:
 		case M_TANDY4:
 		case M_HERC_GFX:
-		case M_CGA16:
+		case M_CGA2_COMPOSITE:
+		case M_CGA4_COMPOSITE:
+		case M_CGA_TEXT_COMPOSITE:
 			/* Hack we just access the memory directly */
 			memset(vga.mem.linear,0,vga.vmemsize);
 			memset(vga.fastmem, 0, vga.vmemsize<<1);
@@ -861,8 +863,10 @@ bool INT10_SetVideoMode(Bit16u mode)
 		seq_data[2]|=0xf;				//Enable all planes for writing
 		seq_data[4]|=0xc;				//Graphics - odd/even - Chained
 		break;
-	case M_CGA16:      // only in MCH_CGA
-	case M_TANDY2:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
+	case M_CGA2_COMPOSITE:     // only in MCH_CGA
+	case M_CGA4_COMPOSITE:     // only in MCH_CGA
+	case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
+	case M_TANDY2:             // only in MCH_CGA, MCH_TANDY, MCH_PCJR
 	case M_TANDY4:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
 	case M_TANDY16:    // only in MCH_TANDY, MCH_PCJR
 	case M_TANDY_TEXT: // only in MCH_CGA, MCH_TANDY
@@ -1102,8 +1106,10 @@ bool INT10_SetVideoMode(Bit16u mode)
 		if (CurMode->special & _VGA_PIXEL_DOUBLE)
 			mode_control |= 0x08;
 		break;
-	case M_CGA16:      // only in MCH_CGA
-	case M_TANDY2:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
+	case M_CGA2_COMPOSITE:     // only in MCH_CGA
+	case M_CGA4_COMPOSITE:     // only in MCH_CGA
+	case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
+	case M_TANDY2:             // only in MCH_CGA, MCH_TANDY, MCH_PCJR
 	case M_TANDY4:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
 	case M_TANDY16:    // only in MCH_TANDY, MCH_PCJR
 	case M_TANDY_TEXT: // only in MCH_CGA, MCH_TANDY
@@ -1190,8 +1196,10 @@ bool INT10_SetVideoMode(Bit16u mode)
 			gfx_data[0x6]|=0x0f;		//graphics mode at at 0xb800=0xbfff
 		}
 		break;
-	case M_CGA16:      // only in MCH_CGA
-	case M_TANDY2:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
+	case M_CGA2_COMPOSITE:     // only in MCH_CGA
+	case M_CGA4_COMPOSITE:     // only in MCH_CGA
+	case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
+	case M_TANDY2:             // only in MCH_CGA, MCH_TANDY, MCH_PCJR
 	case M_TANDY4:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
 	case M_TANDY16:    // only in MCH_TANDY, MCH_PCJR
 	case M_TANDY_TEXT: // only in MCH_CGA, MCH_TANDY
@@ -1303,8 +1311,10 @@ att_text16:
 		for (Bit8u ct=0;ct<16;ct++) att_data[ct]=ct;
 		att_data[0x10]=0x41;		//Color Graphics 8-bit
 		break;
-	case M_CGA16:      // only in MCH_CGA
-	case M_TANDY2:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
+	case M_CGA2_COMPOSITE:     // only in MCH_CGA
+	case M_CGA4_COMPOSITE:     // only in MCH_CGA
+	case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
+	case M_TANDY2:             // only in MCH_CGA, MCH_TANDY, MCH_PCJR
 	case M_TANDY4:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
 	// case M_TANDY16:    // only in MCH_TANDY, MCH_PCJR
 	case M_TANDY_TEXT: // only in MCH_CGA, MCH_TANDY
@@ -1397,7 +1407,9 @@ dac_text16:
 				IO_Write(0x3c9,vga_palette[i][2]);
 			}
 			break;
-		case M_CGA16:      // only in MCH_CGA
+		case M_CGA2_COMPOSITE:     // only in MCH_CGA
+		case M_CGA4_COMPOSITE:     // only in MCH_CGA
+		case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
 		case M_TANDY2:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
 		case M_TANDY4:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
 		// case M_TANDY16:    // only in MCH_TANDY, MCH_PCJR
