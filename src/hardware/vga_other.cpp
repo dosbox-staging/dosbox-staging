@@ -240,11 +240,6 @@ static Bit8u mono_cga_palettes[8][16][3] =
 	},
 };
 
-static Bit8u byte_clamp(int v)
-{
-	return v < 0 ? 0 : (v > 255 ? 255 : v);
-}
-
 static void update_cga16_color(void) {
 	// New algorithm by reenigne
 	// Works in all CGA modes/color settings and can simulate older and
