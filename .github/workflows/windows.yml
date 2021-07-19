@@ -177,6 +177,23 @@ jobs:
           cp src/libs/zmbv/$RELEASE_DIR/zlib1.dll dest/ # libpng dependency
           cp src/libs/zmbv/$RELEASE_DIR/zmbv.dll  dest/
 
+          # Prepare translation files
+          #
+          # Note:
+          #   We conciously drop the dialect postfix because no dialects are available.
+          #   (US was the default DOS dialect and therefore is the default for 'en').
+          #   There users get the generic translation and benefit from simpler filenames.
+          #   Dialect translations will be added if/when they're available.
+          #
+          mkdir -p dest/translations
+          cp contrib/translations/en/en_US.lng       dest/translations/en.lng
+          cp contrib/translations/es/es_ES.lng       dest/translations/es.lng
+          cp contrib/translations/fr/fr_FR.lng       dest/translations/fr.lng
+          cp contrib/translations/it/it_IT.lng       dest/translations/it.lng
+          cp contrib/translations/pl/pl_PL.CP437.lng dest/translations/pl.cp437.lng
+          cp contrib/translations/pl/pl_PL.lng       dest/translations/pl.lng
+          cp contrib/translations/ru/ru_RU.lng       dest/translations/ru.lng
+
           # List version of available Visual C++ Redistributable files
           ls -l "$VC_REDIST_PATH"
 
