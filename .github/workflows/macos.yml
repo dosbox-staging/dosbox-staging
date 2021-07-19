@@ -207,6 +207,24 @@ jobs:
           sed -i -e "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" "$dst/SharedSupport/README"
           sed -i -e "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       "$dst/SharedSupport/README"
 
+          # Prepare translation files
+          #
+          # Note:
+          #   We conciously drop the dialect postfix because no dialects are available.
+          #   (US was the default DOS dialect and therefore is the default for 'en').
+          #   There users get the generic translation and benefit from simpler filenames.
+          #   Dialect translations will be added if/when they're available.
+          #
+          dst_lng="$dst/Resources/translations/"
+          install -d "$dst_lng"
+          install -m 644 contrib/translations/en/en_US.lng       "$dst_lng/en.lng"
+          install -m 644 contrib/translations/es/es_ES.lng       "$dst_lng/es.lng"
+          install -m 644 contrib/translations/fr/fr_FR.lng       "$dst_lng/fr.lng"
+          install -m 644 contrib/translations/it/it_IT.lng       "$dst_lng/it.lng"
+          install -m 644 contrib/translations/pl/pl_PL.CP437.lng "$dst_lng/pl.cp437.lng"
+          install -m 644 contrib/translations/pl/pl_PL.lng       "$dst_lng/pl.lng"
+          install -m 644 contrib/translations/ru/ru_RU.lng       "$dst_lng/ru.lng"
+
           ln -s /Applications dist/
 
           hdiutil create \
