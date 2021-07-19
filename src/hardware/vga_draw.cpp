@@ -73,22 +73,23 @@ static Bit8u * VGA_Draw_2BPPHiRes_Line(Bitu vidstart, Bitu line) {
 	return TempLine;
 }
 
-static Bit8u byte_clamp(int v) {
+static Bit8u byte_clamp(int v)
+{
 	v >>= 13;
 	return v < 0 ? 0 : (v > 255 ? 255 : v);
 }
 
-static int temp[SCALER_MAXWIDTH + 10]={0};
-static int atemp[SCALER_MAXWIDTH + 2]={0};
-static int btemp[SCALER_MAXWIDTH + 2]={0};
+static int temp[SCALER_MAXWIDTH + 10] = {0};
+static int atemp[SCALER_MAXWIDTH + 2] = {0};
+static int btemp[SCALER_MAXWIDTH + 2] = {0};
 
-static Bit8u * Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
+static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 {
-	int w = blocks*4;
+	int w = blocks * 4;
 
 	if (doublewidth) {
-		Bit8u * source = TempLine + w - 1;
-		Bit8u * dest = TempLine + w*2 - 2;
+		Bit8u *source = TempLine + w - 1;
+		Bit8u *dest = TempLine + w * 2 - 2;
 		for (int x = 0; x < w; ++x) {
 			*dest = *source;
 			*(dest + 1) = *source;
@@ -123,37 +124,36 @@ static Bit8u * Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 	Bit8u* rgbi = TempLine;
 	int* b = &CGA_Composite_Table[border*68];
 	for (int x = 0; x < 4; ++x)
-		OUT(b[(x+3)&3]);
-	OUT(CGA_Composite_Table[(border<<6) | ((*rgbi)<<2) | 3]);
-	for (int x = 0; x < w-1; ++x) {
-		OUT(CGA_Composite_Table[(rgbi[0]<<6) | (rgbi[1]<<2) | (x&3)]);
+		OUT(b[(x + 3) & 3]);
+	OUT(CGA_Composite_Table[(border << 6) | ((*rgbi) << 2) | 3]);
+	for (int x = 0; x < w - 1; ++x) {
+		OUT(CGA_Composite_Table[(rgbi[0] << 6) | (rgbi[1] << 2) | (x & 3)]);
 		++rgbi;
 	}
-	OUT(CGA_Composite_Table[((*rgbi)<<6) | (border<<2) | 3]);
+	OUT(CGA_Composite_Table[((*rgbi) << 6) | (border << 2) | 3]);
 	for (int x = 0; x < 5; ++x)
-		OUT(b[x&3]);
+		OUT(b[x & 3]);
 
 	if ((vga.tandy.mode_control & 4) != 0) {
 		// Decode
-		int* i = temp + 5;
-		Bit32u* srgb = (Bit32u *)TempLine;
-		for (Bit32u x = 0; x < blocks*4; ++x) {
-			int c = (i[0]+i[0])<<3;
-			int d = (i[-1]+i[1])<<3;
-			int y = ((c+d)<<8) + vga.sharpness*(c-d);
+		int *i = temp + 5;
+		Bit32u *srgb = (Bit32u *)TempLine;
+		for (Bit32u x = 0; x < blocks * 4; ++x) {
+			int c = (i[0] + i[0]) << 3;
+			int d = (i[-1] + i[1]) << 3;
+			int y = ((c + d) << 8) + vga.sharpness * (c - d);
 			++i;
-			*srgb = byte_clamp(y)*0x10101;
+			*srgb = byte_clamp(y) * 0x10101;
 			++srgb;
 		}
-	}
-	else {
+	} else {
 		// Store chroma
-		int* i = temp + 4;
-		int* ap = atemp + 1;
-		int* bp = btemp + 1;
+		int *i = temp + 4;
+		int *ap = atemp + 1;
+		int *bp = btemp + 1;
 		for (int x = -1; x < w + 1; ++x) {
-			ap[x] = i[-4]-((i[-2]-i[0]+i[2])<<1)+i[4];
-			bp[x] = (i[-3]-i[-1]+i[1]-i[3])<<1;
+			ap[x] = i[-4] - ((i[-2] - i[0] + i[2]) << 1) + i[4];
+			bp[x] = (i[-3] - i[-1] + i[1] - i[3]) << 1;
 			++i;
 		}
 
@@ -175,19 +175,23 @@ static Bit8u * Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 	return TempLine;
 }
 
-static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line);
+static Bit8u *VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line);
 
-static Bit8u * VGA_CGA_TEXT_Composite_Draw_Line(Bitu vidstart, Bitu line) {
+static Bit8u *VGA_CGA_TEXT_Composite_Draw_Line(Bitu vidstart, Bitu line)
+{
 	VGA_TEXT_Draw_Line(vidstart, line);
-	return Composite_Process(vga.tandy.color_select & 0x0f, vga.draw.blocks*2, (vga.tandy.mode_control & 0x1)==0);
+	return Composite_Process(vga.tandy.color_select & 0x0f, vga.draw.blocks * 2,
+	                         (vga.tandy.mode_control & 0x1) == 0);
 }
 
-static Bit8u * VGA_Draw_CGA2_Composite_Line(Bitu vidstart, Bitu line) {
+static Bit8u *VGA_Draw_CGA2_Composite_Line(Bitu vidstart, Bitu line)
+{
 	VGA_Draw_1BPP_Line(vidstart, line);
-	return Composite_Process(0, vga.draw.blocks*2, false);
+	return Composite_Process(0, vga.draw.blocks * 2, false);
 }
 
-static Bit8u * VGA_Draw_CGA4_Composite_Line(Bitu vidstart, Bitu line) {
+static Bit8u *VGA_Draw_CGA4_Composite_Line(Bitu vidstart, Bitu line)
+{
 	VGA_Draw_2BPP_Line(vidstart, line);
 	return Composite_Process(vga.tandy.color_select & 0x0f, vga.draw.blocks, true);
 }
@@ -1008,13 +1012,13 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 			|| !vga.draw.blinking) ? true:false;
 		break;
 	case M_HERC_GFX:
-	case M_CGA4:case M_CGA2:
-		vga.draw.address=(vga.draw.address*2)&0x1fff;
-		break;
-	case M_CGA2_COMPOSITE:case M_CGA4_COMPOSITE:
-	case M_TANDY2:case M_TANDY4:case M_TANDY16:
-		vga.draw.address *= 2;
-		break;
+	case M_CGA2:
+	case M_CGA4: vga.draw.address = (vga.draw.address * 2) & 0x1fff; break;
+	case M_CGA2_COMPOSITE:
+	case M_CGA4_COMPOSITE:
+	case M_TANDY2:
+	case M_TANDY4:
+	case M_TANDY16: vga.draw.address *= 2; break;
 	default:
 		break;
 	}
@@ -1076,17 +1080,11 @@ void VGA_CheckScanLength(void) {
 		vga.draw.address_add=vga.config.scan_len*4;
 		break;
 	case M_CGA2:
-	case M_CGA4:
-		vga.draw.address_add=80;
-		return;
+	case M_CGA4: vga.draw.address_add = 80; break;
 	case M_TANDY2:
-	case M_CGA2_COMPOSITE:
-		vga.draw.address_add=vga.draw.blocks;
-		break;
+	case M_CGA2_COMPOSITE: vga.draw.address_add = vga.draw.blocks; break;
 	case M_TANDY4:
-	case M_CGA4_COMPOSITE:
-		vga.draw.address_add=vga.draw.blocks;
-		break;
+	case M_CGA4_COMPOSITE: vga.draw.address_add = vga.draw.blocks; break;
 	case M_TANDY16:
 		vga.draw.address_add=vga.draw.blocks;
 		break;
@@ -1443,9 +1441,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	case M_LIN32:
 	case M_CGA2_COMPOSITE:
 	case M_CGA4_COMPOSITE:
-	case M_CGA_TEXT_COMPOSITE:
-		bpp = 32;
-		break;
+	case M_CGA_TEXT_COMPOSITE: bpp = 32; break;
 	default:
 		bpp = 8;
 		break;
@@ -1520,14 +1516,14 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		doubleheight=true;
 		vga.draw.blocks=width*2;
 		width<<=4;
-		VGA_DrawLine=VGA_Draw_CGA2_Composite_Line;
+		VGA_DrawLine = VGA_Draw_CGA2_Composite_Line;
 		break;
 	case M_CGA4_COMPOSITE:
-		aspect_ratio=1.2;
-		doubleheight=true;
-		vga.draw.blocks=width*2;
-		width<<=4;
-		VGA_DrawLine=VGA_Draw_CGA4_Composite_Line;
+		aspect_ratio = 1.2;
+		doubleheight = true;
+		vga.draw.blocks = width * 2;
+		width <<= 4;
+		VGA_DrawLine = VGA_Draw_CGA4_Composite_Line;
 		break;
 	case M_CGA4:
 		doublewidth=true;
@@ -1574,9 +1570,9 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		doubleheight=true;
 		if (machine==MCH_PCJR) doublewidth=(vga.tandy.gfx_control & 0x8)==0x00;
 		else doublewidth=(vga.tandy.mode_control & 0x10)==0;
-		vga.draw.blocks=width * (doublewidth ? 1:2);
-		width=vga.draw.blocks*8;
-		VGA_DrawLine=VGA_Draw_1BPP_Line;
+		vga.draw.blocks = width * (doublewidth ? 1 : 2);
+		width = vga.draw.blocks * 8;
+		VGA_DrawLine = VGA_Draw_1BPP_Line;
 		break;
 	case M_TANDY4:
 		aspect_ratio=1.2;
@@ -1619,11 +1615,11 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		VGA_DrawLine=VGA_TEXT_Draw_Line;
 		break;
 	case M_CGA_TEXT_COMPOSITE:
-		aspect_ratio=1.2;
-		doubleheight=true;
-		vga.draw.blocks=width;
-		width<<=(((vga.tandy.mode_control & 0x1)!=0) ? 3 : 4);
-		VGA_DrawLine=VGA_CGA_TEXT_Composite_Draw_Line;
+		aspect_ratio = 1.2;
+		doubleheight = true;
+		vga.draw.blocks = width;
+		width <<= (((vga.tandy.mode_control & 0x1) != 0) ? 3 : 4);
+		VGA_DrawLine = VGA_CGA_TEXT_Composite_Draw_Line;
 		break;
 	case M_HERC_TEXT:
 		aspect_ratio=((double)480)/((double)350);
