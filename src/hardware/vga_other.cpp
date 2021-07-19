@@ -491,26 +491,22 @@ static void CycleWhichControl(bool pressed)
 		return;
 	which_control = (which_control + 1) % 6;
 	LogControlValue();
- }
- 
+}
 
+/*
 static void DecreaseWhichControl(bool pressed) {
- 	if (!pressed)
- 		return;
+        if (!pressed)
+                return;
+        which_control = (which_control + 5)%6;
+        LogControlValue();
+ } */
 
-
-
-	which_control = (which_control + 5)%6;
-	LogControlValue();
- }
- 
-
-static void write_cga_color_select(uint8_t val) {
+static void write_cga_color_select(uint8_t val)
+{
 	vga.tandy.color_select=val;
 	switch(vga.mode) {
-
-	case  M_TANDY4:
-	case  M_CGA4_COMPOSITE: {
+	case M_TANDY4:
+	case M_CGA4_COMPOSITE: {
 		Bit8u base = (val & 0x10) ? 0x08 : 0;
 		Bit8u bg = val & 0xf;
 		if (vga.tandy.mode_control & 0x4)	// cyan red white
@@ -549,15 +545,16 @@ static void write_cga(Bitu port, Bitu data, Bitu /*iolen*/)
 			if (vga.tandy.mode_control & 0x10) {// highres mode
 				if (cga_comp==1 || ((cga_comp==0 && !(val&0x4)) && !mono_cga)) {	// composite display
 
-					VGA_SetMode(M_CGA2_COMPOSITE); // composite ntsc 640x200 16 color mode
+					// composite ntsc 640x200 16 color mode
+					VGA_SetMode(M_CGA2_COMPOSITE);
 					update_cga16_color();
 				} else {
 					VGA_SetMode(M_TANDY2);
 				}
 			} else {							// lowres mode
 				if (cga_comp==1) {				// composite display
-
-					VGA_SetMode(M_CGA4_COMPOSITE); // composite ntsc 640x200 16 color mode
+					// composite ntsc 640x200 16 color mode
+					VGA_SetMode(M_CGA4_COMPOSITE);
 					update_cga16_color();
 				} else {
 					VGA_SetMode(M_TANDY4);
@@ -566,11 +563,11 @@ static void write_cga(Bitu port, Bitu data, Bitu /*iolen*/)
 
 			write_cga_color_select(vga.tandy.color_select);
 		} else {
-			if (cga_comp==1) {				// composite display
+			if (cga_comp == 1) { // composite display
 				VGA_SetMode(M_CGA_TEXT_COMPOSITE);
 				update_cga16_color();
 			} else {
-			VGA_SetMode(M_TANDY_TEXT);
+				VGA_SetMode(M_TANDY_TEXT);
 			}
 		}
 		VGA_SetBlinking(val & 0x20);
@@ -1055,9 +1052,12 @@ void VGA_SetupOther(void)
 		IO_RegisterWriteHandler(0x3d8,write_cga,IO_MB);
 		IO_RegisterWriteHandler(0x3d9,write_cga,IO_MB);
 		if (!mono_cga) {
-		MAPPER_AddHandler(IncreaseWhichControl,SDL_SCANCODE_F10,0, "select","Sel Ctl");
-		MAPPER_AddHandler(DecreaseControlValue,SDL_SCANCODE_F11,MMOD2,"decval","Dec Val");
-		MAPPER_AddHandler(IncreaseControlValue,SDL_SCANCODE_F11,0,"incval","Inc Val");
+			MAPPER_AddHandler(CycleWhichControl, SDL_SCANCODE_F10,
+			                  0, "select", "Sel Ctl");
+			MAPPER_AddHandler(DecreaseControlValue, SDL_SCANCODE_F11,
+			                  MMOD2, "decval", "Dec Val");
+			MAPPER_AddHandler(IncreaseControlValue, SDL_SCANCODE_F11,
+			                  0, "incval", "Inc Val");
 			MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0,
 			                  "cgacomp", "CGA Comp");
 		} else {
