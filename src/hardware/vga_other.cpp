@@ -618,13 +618,10 @@ static void Composite(bool pressed) {
 	if (++cga_comp>2) cga_comp=0;
 	LOG_MSG("Composite output: %s",(cga_comp==0)?"auto":((cga_comp==1)?"on":"off"));
 	// switch RGB and Composite if in graphics mode
-	if (vga.tandy.mode_control & 0x2) {
-		if (machine == MCH_PCJR) {
-			PCJr_FindMode();
-		} else {
-			write_cga(0x3d8, vga.tandy.mode_control, 1);
-		}
-	}
+	if (vga.tandy.mode_control & 0x2 && machine == MCH_PCJR)
+		PCJr_FindMode();
+	else
+		write_cga(0x3d8, vga.tandy.mode_control, 1);
 }
 
 static void tandy_update_palette() {
