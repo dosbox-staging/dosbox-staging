@@ -18,7 +18,8 @@
 
 #include "programs.h"
 
-#include <vector>
+#include <algorithm>
+#include <array>
 #include <sstream>
 #include <cctype>
 #include <cstdlib>
@@ -26,7 +27,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <memory>
+#include <vector>
 
 #include "callback.h"
 #include "regs.h"
@@ -41,7 +42,7 @@ Bitu call_program;
 
 /* This registers a file on the virtual drive and creates the correct structure for it*/
 
-constexpr uint8_t exe_block[] = {
+constexpr std::array<uint8_t, 19> exe_block = {
         0xbc, 0x00, 0x04,       // MOV SP,0x400  Decrease stack size
         0xbb, 0x40, 0x00,       // MOV BX,0x040  For memory resize
         0xb4, 0x4a,             // MOV AH,0x4A   Resize memory block
@@ -53,33 +54,27 @@ constexpr uint8_t exe_block[] = {
 
 // COM data constants
 constexpr int callback_pos = 12;
-constexpr int com_data_size = 32;
 
 // Persistent program containers
-using com_data_t = std::unique_ptr<uint8_t[]>;
-static std::vector<com_data_t> internal_progs_comdata;
+using comdata_t = std::vector<uint8_t>;
+static std::vector<comdata_t> internal_progs_comdata;
 static std::vector<PROGRAMS_Main *> internal_progs;
 
 void PROGRAMS_MakeFile(const char *name, PROGRAMS_Main *main)
 {
-	com_data_t comdata = std::make_unique<uint8_t[]>(com_data_size);
-	assert(comdata);
-
-	memcpy(comdata.get(), &exe_block, sizeof(exe_block));
-	comdata[callback_pos] = static_cast<uint8_t>(call_program & 0xff);
-	comdata[callback_pos + 1] = static_cast<uint8_t>((call_program >> 8) & 0xff);
+	comdata_t comdata(exe_block.begin(), exe_block.end());
+	comdata.at(callback_pos) = static_cast<uint8_t>(call_program & 0xff);
+	comdata.at(callback_pos + 1) = static_cast<uint8_t>((call_program >> 8) & 0xff);
 
 	// Save the current program's vector index in its COM data
-	assert(internal_progs.size() <= UINT8_MAX);
-	const auto index = static_cast<uint8_t>(internal_progs.size());
-	comdata[sizeof(exe_block)] = index;
+	const auto index = internal_progs.size();
+	assert(index <= UINT8_MAX); // saving the index into an 8-bit space
+	comdata.push_back(static_cast<uint8_t>(index));
 
 	// Register the COM program with the Z:\ virtual filesystem
-	const auto file_size = static_cast<uint32_t>(sizeof(exe_block) +
-	                                             sizeof(index));
-	VFILE_Register(name, comdata.get(), file_size);
+	VFILE_Register(name, comdata.data(), static_cast<uint32_t>(comdata.size()));
 
-	// Register the COM data's unique_ptr to prevent it from going out of scope
+	// Register the COM data to prevent it from going out of scope
 	internal_progs_comdata.push_back(std::move(comdata));
 
 	// Register the program's main pointer
@@ -91,8 +86,14 @@ static Bitu PROGRAMS_Handler(void) {
 	/* This sets up everything for a program start up call */
 	Bitu size=sizeof(Bit8u);
 	Bit8u index;
+
+	// Sanity check the exec_block size before down-casting
+	constexpr auto exec_block_size = exe_block.size();
+	static_assert(exec_block_size < UINT16_MAX, "Should only be 19 bytes");
+
 	/* Read the index from program code in memory */
-	PhysPt reader=PhysMake(dos.psp(),256+sizeof(exe_block));
+	PhysPt reader = PhysMake(dos.psp(),
+	                         256 + static_cast<uint16_t>(exec_block_size));
 	HostPt writer=(HostPt)&index;
 	for (;size>0;size--) *writer++=mem_readb(reader++);
 	Program * new_program;
