@@ -240,11 +240,15 @@ static Bit8u mono_cga_palettes[8][16][3] =
 	},
 };
 
-static Bit8u byte_clamp(int v) { return v < 0 ? 0 : (v > 255 ? 255 : v); }
+static Bit8u byte_clamp(int v)
+{
+	return v < 0 ? 0 : (v > 255 ? 255 : v);
+}
 
 static void update_cga16_color(void) {
-// New algorithm by reenigne
-// Works in all CGA modes/color settings and can simulate older and newer CGA revisions
+	// New algorithm by reenigne
+	// Works in all CGA modes/color settings and can simulate older and
+	// newer CGA revisions
 	static const double tau = 6.28318531; // == 2*pi
 	static unsigned char chroma_multiplexer[256] = {
 		  2,  2,  2,  2, 114,174,  4,  3,   2,  1,133,135,   2,113,150,  4,
@@ -266,7 +270,9 @@ static void update_cga16_color(void) {
 	static double intensity[4] = {
 		77.175381, 88.654656, 166.564623, 174.228438};
 
-#define NEW_CGA(c,i,r,g,b) (((c)/0.72)*0.29 + ((i)/0.28)*0.32 + ((r)/0.28)*0.1 + ((g)/0.28)*0.22 + ((b)/0.28)*0.07)
+#define NEW_CGA(c, i, r, g, b) \
+	(((c) / 0.72) * 0.29 + ((i) / 0.28) * 0.32 + ((r) / 0.28) * 0.1 + \
+	 ((g) / 0.28) * 0.22 + ((b) / 0.28) * 0.07)
 
 	double mode_brightness;
 	double mode_contrast;
@@ -276,23 +282,22 @@ static void update_cga16_color(void) {
 	if (!new_cga) {
 		min_v = chroma_multiplexer[0] + intensity[0];
 		max_v = chroma_multiplexer[255] + intensity[3];
-	}
-	else {
+	} else {
 		double i0 = intensity[0];
 		double i3 = intensity[3];
 		min_v = NEW_CGA(chroma_multiplexer[0], i0, i0, i0, i0);
 		max_v = NEW_CGA(chroma_multiplexer[255], i3, i3, i3, i3);
 	}
-	mode_contrast = 256/(max_v - min_v);
-	mode_brightness = -min_v*mode_contrast;
+	mode_contrast = 256 / (max_v - min_v);
+	mode_brightness = -min_v * mode_contrast;
 	if (vga.mode == M_CGA_TEXT_COMPOSITE && (vga.tandy.mode_control & 1) != 0)
 		mode_hue = 14;
 	else
 		mode_hue = 4;
 
-	mode_contrast *= contrast/100;
-	mode_brightness += brightness*5;
-	double mode_saturation = (new_cga ? 5.8 : 2.9)*saturation/100;
+	mode_contrast *= contrast / 100;
+	mode_brightness += brightness * 5;
+	double mode_saturation = (new_cga ? 5.8 : 2.9) * saturation / 100;
 
 	for (int x = 0; x < 1024; ++x) {
 		int phase = x & 3;
@@ -304,34 +309,34 @@ static void update_cga16_color(void) {
 			rc = (right & 8) | ((right & 7) != 0 ? 7 : 0);
 			lc = (left & 8) | ((left & 7) != 0 ? 7 : 0);
 		}
-		double c =
-			chroma_multiplexer[((lc & 7) << 5) | ((rc & 7) << 2) | phase];
+		double c = chroma_multiplexer[((lc & 7) << 5) | ((rc & 7) << 2) | phase];
 		double i = intensity[(left >> 3) | ((right >> 2) & 2)];
 		double v;
 		if (!new_cga)
 			v = c + i;
-	else {
+		else {
 			double r = intensity[((left >> 2) & 1) | ((right >> 1) & 2)];
 			double g = intensity[((left >> 1) & 1) | (right & 2)];
 			double b = intensity[(left & 1) | ((right << 1) & 2)];
 			v = NEW_CGA(c, i, r, g, b);
 		}
-		CGA_Composite_Table[x] = static_cast<int>(v*mode_contrast + mode_brightness);
+		CGA_Composite_Table[x] = static_cast<int>(v * mode_contrast +
+		                                          mode_brightness);
 	}
 #undef NEW_CGA
 
-	double i = CGA_Composite_Table[6*68] - CGA_Composite_Table[6*68 + 2];
-	double q = CGA_Composite_Table[6*68 + 1] - CGA_Composite_Table[6*68 + 3];
+	double i = CGA_Composite_Table[6 * 68] - CGA_Composite_Table[6 * 68 + 2];
+	double q = CGA_Composite_Table[6 * 68 + 1] - CGA_Composite_Table[6 * 68 + 3];
 
-	double a = tau*(33 + 90 + hue_offset + mode_hue)/360.0;
+	double a = tau * (33 + 90 + hue_offset + mode_hue) / 360.0;
 	double c = cos(a);
 	double s = sin(a);
-	double r = 256*mode_saturation/sqrt(i*i+q*q);
+	double r = 256 * mode_saturation / sqrt(i * i + q * q);
 	if ((vga.tandy.mode_control & 4) != 0)
 		r = 0;
 
-	double iq_adjust_i = -(i*c + q*s)*r;
-	double iq_adjust_q = (q*c - i*s)*r;
+	double iq_adjust_i = -(i * c + q * s) * r;
+	double iq_adjust_q = (q * c - i * s) * r;
 
 	static const double ri = 0.9563;
 	static const double rq = 0.6210;
@@ -340,40 +345,30 @@ static void update_cga16_color(void) {
 	static const double bi = -1.1069;
 	static const double bq = 1.7046;
 
-	vga.ri = static_cast<int>(ri*iq_adjust_i + rq*iq_adjust_q);
-	vga.rq = static_cast<int>(-ri*iq_adjust_q + rq*iq_adjust_i);
-	vga.gi = static_cast<int>(gi*iq_adjust_i + gq*iq_adjust_q);
-	vga.gq = static_cast<int>(-gi*iq_adjust_q + gq*iq_adjust_i);
-	vga.bi = static_cast<int>(bi*iq_adjust_i + bq*iq_adjust_q);
-	vga.bq = static_cast<int>(-bi*iq_adjust_q + bq*iq_adjust_i);
-	vga.sharpness = static_cast<int>(sharpness*256/100);
+	vga.ri = static_cast<int>(ri * iq_adjust_i + rq * iq_adjust_q);
+	vga.rq = static_cast<int>(-ri * iq_adjust_q + rq * iq_adjust_i);
+	vga.gi = static_cast<int>(gi * iq_adjust_i + gq * iq_adjust_q);
+	vga.gq = static_cast<int>(-gi * iq_adjust_q + gq * iq_adjust_i);
+	vga.bi = static_cast<int>(bi * iq_adjust_i + bq * iq_adjust_q);
+	vga.bq = static_cast<int>(-bi * iq_adjust_q + bq * iq_adjust_i);
+	vga.sharpness = static_cast<int>(sharpness * 256 / 100);
 }
 
 static int which_control = 0;
 
-static void LogControlValue() {
+static void LogControlValue()
+{
 	update_cga16_color();
 	switch (which_control) {
 	case 0:
 		LOG_MSG("%s model CGA selected", new_cga ? "Late" : "Early");
 		break;
-	case 1:
-		LOG_MSG("Hue: %f",hue_offset);
-		break;
-	case 2:
-		LOG_MSG("Saturation at %f",saturation);
-		break;
-	case 3:
-		LOG_MSG("Contrast at %f",contrast);
-		break;
-	case 4:
-		LOG_MSG("Brightness at %f",brightness);
-		break;
-	case 5:
-		LOG_MSG("Sharpness at %f",sharpness);
-		break;
- 	}
-
+	case 1: LOG_MSG("Hue: %f", hue_offset); break;
+	case 2: LOG_MSG("Saturation at %f", saturation); break;
+	case 3: LOG_MSG("Contrast at %f", contrast); break;
+	case 4: LOG_MSG("Brightness at %f", brightness); break;
+	case 5: LOG_MSG("Sharpness at %f", sharpness); break;
+	}
 }
 
 static void IncreaseHue(bool pressed) {
@@ -383,9 +378,6 @@ static void IncreaseHue(bool pressed) {
 	LogControlValue();
 }
  
-
-
-
 static void DecreaseHue(bool pressed) {
 	if (!pressed)
 		return;
@@ -393,133 +385,111 @@ static void DecreaseHue(bool pressed) {
 	LogControlValue();
 }
 
-static void IncreaseSaturation(bool pressed) {
+static void IncreaseSaturation(bool pressed)
+{
 	if (!pressed)
 		return;
 	saturation += 5;
 	LogControlValue();
 }
- 
 
-static void DecreaseSaturation(bool pressed) {
+static void DecreaseSaturation(bool pressed)
+{
 	if (!pressed)
 		return;
 	saturation -= 5;
 	LogControlValue();
 }
 
-static void IncreaseContrast(bool pressed) {
+static void IncreaseContrast(bool pressed)
+{
 	if (!pressed)
 		return;
 	contrast += 5;
 	LogControlValue();
 }
 
-static void DecreaseContrast(bool pressed) {
+static void DecreaseContrast(bool pressed)
+{
 	if (!pressed)
 		return;
 	contrast -= 5;
 	LogControlValue();
 }
 
-static void IncreaseBrightness(bool pressed) {
+static void IncreaseBrightness(bool pressed)
+{
 	if (!pressed)
 		return;
 	brightness += 5;
 	LogControlValue();
 }
 
-static void DecreaseBrightness(bool pressed) {
+static void DecreaseBrightness(bool pressed)
+{
 	if (!pressed)
 		return;
 	brightness -= 5;
 	LogControlValue();
 }
- 
 
-static void IncreaseSharpness(bool pressed) {
+static void IncreaseSharpness(bool pressed)
+{
 	if (!pressed)
 		return;
 	sharpness += 5;
 	LogControlValue();
 }
 
-static void DecreaseSharpness(bool pressed) {
+static void DecreaseSharpness(bool pressed)
+{
 	if (!pressed)
 		return;
 	sharpness -= 5;
 	LogControlValue();
 }
- 
 
-
-
-static void CGAModel(bool pressed) {
-	if (!pressed) return;
+static void CGAModel(bool pressed)
+{
+	if (!pressed)
+		return;
 	new_cga = !new_cga;
 	LogControlValue();
 }
- 
 
-
-static void IncreaseControlValue(bool pressed) {
+static void IncreaseControlValue(bool pressed)
+{
 	if (!pressed)
 		return;
 	switch (which_control) {
-	case 0:
-		CGAModel(true);
-		break;
-	case 1:
-		IncreaseHue(true);
-		break;
-	case 2:
-		IncreaseSaturation(true);
-		break;
-	case 3:
-		IncreaseContrast(true);
-		break;
-	case 4:
-		IncreaseBrightness(true);
-		break;
-	case 5:
-		IncreaseSharpness(true);
-		break;
- 		}
+	case 0: CGAModel(true); break;
+	case 1: IncreaseHue(true); break;
+	case 2: IncreaseSaturation(true); break;
+	case 3: IncreaseContrast(true); break;
+	case 4: IncreaseBrightness(true); break;
+	case 5: IncreaseSharpness(true); break;
+	}
 }
 
-static void DecreaseControlValue(bool pressed) {
+static void DecreaseControlValue(bool pressed)
+{
 	if (!pressed)
 		return;
 	switch (which_control) {
-	case 0:
-		CGAModel(true);
-		break;
-	case 1:
-		DecreaseHue(true);
-		break;
-	case 2:
-		DecreaseSaturation(true);
-		break;
-	case 3:
-		DecreaseContrast(true);
-		break;
-	case 4:
-		DecreaseBrightness(true);
-		break;
-	case 5:
-		DecreaseSharpness(true);
-		break;
- 	}
- }
+	case 0: CGAModel(true); break;
+	case 1: DecreaseHue(true); break;
+	case 2: DecreaseSaturation(true); break;
+	case 3: DecreaseContrast(true); break;
+	case 4: DecreaseBrightness(true); break;
+	case 5: DecreaseSharpness(true); break;
+	}
+}
 
-
-static void IncreaseWhichControl(bool pressed) {
- 	if (!pressed)
- 		return;
-
-
-
-	which_control = (which_control + 1)%6;
+static void CycleWhichControl(bool pressed)
+{
+	if (!pressed)
+		return;
+	which_control = (which_control + 1) % 6;
 	LogControlValue();
  }
  
