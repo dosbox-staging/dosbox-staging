@@ -278,6 +278,7 @@ jobs:
           #
           dst_lng="$dst/Resources/translations/"
           install -d "$dst_lng"
+
           install -m 644 contrib/translations/de/de_DE.lng       "$dst_lng/de.lng"
           install -m 644 contrib/translations/en/en_US.lng       "$dst_lng/en.lng"
           install -m 644 contrib/translations/es/es_ES.lng       "$dst_lng/es.lng"
@@ -286,6 +287,7 @@ jobs:
           install -m 644 contrib/translations/pl/pl_PL.CP437.lng "$dst_lng/pl.cp437.lng"
           install -m 644 contrib/translations/pl/pl_PL.lng       "$dst_lng/pl.lng"
           install -m 644 contrib/translations/ru/ru_RU.lng       "$dst_lng/ru.lng"
+
           ln -s /Applications dist/
 
           codesign -s "-" dist/dosbox-staging.app --force --deep -v
