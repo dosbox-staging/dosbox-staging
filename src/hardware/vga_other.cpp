@@ -623,9 +623,11 @@ static void tandy_update_palette() {
 		// PCJr
 		switch (vga.mode) {
 		case M_TANDY2:
+		case M_CGA2_COMPOSITE:
 			VGA_SetCGA2Table(vga.attr.palette[0],vga.attr.palette[1]);
 			break;
 		case M_TANDY4:
+		case M_CGA4_COMPOSITE:
 			VGA_SetCGA4Table(
 				vga.attr.palette[0], vga.attr.palette[1],
 				vga.attr.palette[2], vga.attr.palette[3]);
@@ -1071,6 +1073,9 @@ void VGA_SetupOther(void)
 		IO_RegisterWriteHandler(0x3df,write_tandy,IO_MB);
 	}
 	if (machine==MCH_PCJR) {
+		// Start the PCjr composite huge almost 1/3rd into the CGA hue
+		hue_offset = 100;
+
 		//write_pcjr will setup base address
 		write_pcjr( 0x3df, 0x7 | (0x7 << 3), 0 );
 		IO_RegisterWriteHandler(0x3da,write_pcjr,IO_MB);
