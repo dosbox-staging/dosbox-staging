@@ -16,15 +16,17 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <string.h>
-#include <math.h>
 #include "dosbox.h"
-#include "video.h"
+
+#include <cstring>
+#include <cmath>
+
+#include "pic.h"
 #include "render.h"
 #include "../gui/render_scalers.h"
+#include "support.h"
 #include "vga.h"
-#include "pic.h"
+#include "video.h"
 
 //#undef C_DEBUG
 //#define C_DEBUG 1
@@ -138,8 +140,8 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 		int *ap = atemp + 1;
 		int *bp = btemp + 1;
 		for (int x = -1; x < w + 1; ++x) {
-			ap[x] = i[-4] - ((i[-2] - i[0] + i[2]) << 1) + i[4];
-			bp[x] = (i[-3] - i[-1] + i[1] - i[3]) << 1;
+			ap[x] = i[-4] - left_shift_signed(i[-2] - i[0] + i[2], 1) + i[4];
+			bp[x] = left_shift_signed(i[-3] - i[-1] + i[1] - i[3], 1);
 			++i;
 		}
 
@@ -153,7 +155,7 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 			i[1] = (i[1] << 3) - ap[1];
 			const int c = i[0] + i[0];
 			const int d = i[-1] + i[1];
-			const int y = ((c + d) << 8) + vga.sharpness * (c - d);
+			const int y = left_shift_signed(c + d, 8) + vga.sharpness * (c - d);
 			const int rr = y + vga.ri * (I) + vga.rq * (Q);
 			const int gg = y + vga.gi * (I) + vga.gq * (Q);
 			const int bb = y + vga.bi * (I) + vga.bq * (Q);
