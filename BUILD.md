@@ -1,6 +1,6 @@
 ## Minimum build requirements
 
-- C/C++ compiler with support for C++14
+- C/C++ compiler with support for C++17
 - SDL >= 2.0.5
 - Opusfile
 - Meson >= 0.49.0 or Visual Studio Community Edition
