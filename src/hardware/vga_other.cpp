@@ -676,6 +676,7 @@ static void PCJr_FindMode()
 			if (cga_comp == 1 ||
 			    (cga_comp == 0 && !(vga.tandy.mode_control & 0x4))) {
 				VGA_SetMode(M_CGA2_COMPOSITE);
+				update_cga16_color();
 			} else {
 				VGA_SetMode(M_TANDY2);
 			}
@@ -687,6 +688,9 @@ static void PCJr_FindMode()
 				VGA_SetModeNow(new_mode);
 			} else {
 				VGA_SetMode(new_mode);
+			}
+			if (new_mode == M_CGA4_COMPOSITE) {
+				update_cga16_color();
 			}
 		}
 		tandy_update_palette();
