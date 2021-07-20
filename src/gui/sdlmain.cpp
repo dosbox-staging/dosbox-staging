@@ -1658,17 +1658,33 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		return;
 	bool actually_updating = sdl.updating;
 	sdl.updating=false;
+	static int64_t last_called = GetTicksUs() - 100000; // ensure first
+	                                                    // frame renders
+	static bool render_current_frame = true;
+	const auto timestamp = GetTicksUs();
+	const auto time_since_last_render = GetTicksDiff(timestamp, last_called);
+	const auto render_skip_threshold = (time_since_last_render / 2);
+	last_called = timestamp;
 	switch (sdl.desktop.type) {
-	case SCREEN_TEXTURE:
+	case SCREEN_TEXTURE: {
 		assert(sdl.texture.input_surface);
-		SDL_UpdateTexture(sdl.texture.texture,
-		                  nullptr, // update entire texture
-		                  sdl.texture.input_surface->pixels,
-		                  sdl.texture.input_surface->pitch);
-		SDL_RenderClear(sdl.renderer);
-		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, NULL, &sdl.clip);
-		SDL_RenderPresent(sdl.renderer);
-		break;
+		if (render_current_frame) {
+			SDL_UpdateTexture(sdl.texture.texture,
+			                  nullptr, // update entire texture
+			                  sdl.texture.input_surface->pixels,
+			                  sdl.texture.input_surface->pitch);
+			SDL_RenderClear(sdl.renderer);
+			SDL_RenderCopy(sdl.renderer, sdl.texture.texture,
+			               nullptr, &sdl.clip);
+			const auto start = GetTicksUs();
+			SDL_RenderPresent(sdl.renderer);
+			const auto elapsed = GetTicksUsSince(start);
+			render_current_frame = elapsed < render_skip_threshold;
+			// LOG_MSG("SDL_RenderPresent took %dus", elapsed);
+		} else {
+			render_current_frame = true;
+		}
+	} break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
 		// Clear drawing area. Some drivers (on Linux) have more than 2 buffers and the screen might
@@ -1712,13 +1728,23 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			return;
 		}
 
-		if (sdl.opengl.program_object) {
-			glUniform1i(sdl.opengl.ruby.frame_count, sdl.opengl.actual_frame_count++);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
+		if (render_current_frame) {
+			if (sdl.opengl.program_object) {
+				glUniform1i(sdl.opengl.ruby.frame_count,
+				            sdl.opengl.actual_frame_count++);
+				glDrawArrays(GL_TRIANGLES, 0, 3);
+			} else {
+				glCallList(sdl.opengl.displaylist);
+			}
+
+			const auto start = GetTicksUs();
+			SDL_GL_SwapWindow(sdl.window);
+			const auto elapsed = GetTicksUsSince(start);
+			render_current_frame = elapsed < render_skip_threshold;
+			// LOG_MSG("SDL_GL_SwapWindow took %dus", elapsed);
 		} else {
-			glCallList(sdl.opengl.displaylist);
+			render_current_frame = true;
 		}
-		SDL_GL_SwapWindow(sdl.window);
 		break;
 #endif
 	case SCREEN_SURFACE:
@@ -1739,10 +1765,21 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				}
 				index++;
 			}
-			if (rect_count)
-				SDL_UpdateWindowSurfaceRects(sdl.window,
-				                             sdl.updateRects,
-				                             rect_count);
+			if (rect_count) {
+				if (render_current_frame) {
+					const auto start = GetTicksUs();
+					SDL_UpdateWindowSurfaceRects(sdl.window,
+					                             sdl.updateRects,
+					                             rect_count);
+					const auto elapsed = GetTicksUsSince(start);
+					render_current_frame = elapsed <
+					                       render_skip_threshold;
+					// LOG_MSG("SDL_UpdateWindowSurfaceRects
+					// took %dus", elapsed);
+				} else {
+					render_current_frame = true;
+				}
+			}
 		}
 		break;
 	}
@@ -2374,7 +2411,7 @@ static void GUI_StartUp(Section *sec)
 
 	// TODO vsync option is disabled for the time being, as it does not work
 	//      correctly and is causing serious bugs.
-	// sdl.desktop.vsync = section->Get_bool("vsync");
+	sdl.desktop.vsync = section->Get_bool("vsync");
 
 	const int display = section->Get_int("display");
 	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {
@@ -3092,7 +3129,7 @@ void Config_Add_SDL() {
 	Section_prop* psection;
 
 	constexpr auto always = Property::Changeable::Always;
-	constexpr auto deprecated = Property::Changeable::Deprecated;
+	// constexpr auto deprecated = Property::Changeable::Deprecated;
 	constexpr auto on_start = Property::Changeable::OnlyAtStart;
 
 	Pbool = sdl_sec->Add_bool("fullscreen", always, false);
@@ -3103,8 +3140,10 @@ void Config_Add_SDL() {
 	pint->Set_help("Number of display to use; values depend on OS and user "
 	               "settings.");
 
-	Pbool = sdl_sec->Add_bool("vsync", deprecated, false);
-	Pbool->Set_help("Vertical sync setting not implemented (setting ignored)");
+	Pbool = sdl_sec->Add_bool("vsync", always, false);
+	Pbool->Set_help(
+	        "Sync to Vblank IF supported by the output device and renderer.\n"
+	        "It can reduce screen flickering, but it can also result in a slow DOSBox.");
 
 	Pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
 	Pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop'\n"
