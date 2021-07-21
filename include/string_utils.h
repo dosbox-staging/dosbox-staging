@@ -93,4 +93,6 @@ bool starts_with(const char (&pfx)[N], const std::string &str) noexcept
 	return (strncmp(pfx, str.c_str(), N - 1) == 0);
 }
 
+bool ends_with(const std::string &str, const std::string &suffix) noexcept;
+
 #endif

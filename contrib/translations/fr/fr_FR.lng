@@ -1,6 +1,5 @@
 :CONFIG_FULLSCREEN
 D‚marrer DOSBox directement en mode plein ‚cran.
-Pressez Alt+Entr‚e pour revenir en mode fenˆtre.
 .
 :CONFIG_DISPLAY
 Nombre d'‚crans … utiliser ; les valeurs d‚pendent de l'OS et des paramŠtres utilisateur.
@@ -44,12 +43,10 @@ M‚thode de contr“le de la souris :
                    signal envoy‚ au jeu.
 Gestion du clic-milieu (second paramŠtre) :
    middlegame :    Les clics-milieu sont envoy‚s au jeu
-                   (Ctrl+F10 libŠre la souris).
    middlerelease : Les clics-milieu libŠrent la souris
                    (non envoy‚s au jeu). De plus, les clics-milieu
                    seront envoy‚s au jeu en mode plein ‚cran ou en mode
                    seamless.
-                   Ctrl+F10 libŠrera aussi la souris.
 Defaults (si non pr‚sent ou incorrect) : seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -155,7 +152,7 @@ Les cycles peuvent ˆtre d‚finis de 3 fa‡ons :
 
 .
 :CONFIG_CYCLEUP
-Nombre de cycles … ajouter/soustraire avec la combinaison de touches. (Ctrl+F11/Ctrl+F12)
+Nombre de cycles … ajouter/soustraire avec la combinaison de touches.
 .
 :CONFIG_CYCLEDOWN
 Le param‚trer … moins de 100 donnera un pourcentage.
@@ -700,19 +697,19 @@ vous devez monter les r‚pertoires contenant les fichiers.
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [32mmount c c:\dosgames\[37m cr‚era un lecteur C avec c:\dosgames pour contenu. º
-º                                                                         º
-º [32mc:\dosgames\[37m est un exemple. Remplacez-le par votre propre r‚pertoire de jeux.  [37m 
-ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mmount c c:\dosgames\[37m cr‚era un lecteur C avec c:\dosgames pour contenu.       º
+º                                                                               º
+º [32mc:\dosgames\[37m est un exemple. Remplacez-le par votre propre r‚pertoire de jeux.[37mº
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [32mmount c ~/jeuxdos[37m cr‚era un lecteur C avec ~/jeuxdos pour contenu. º
-º                                                                      º
-º [32m~/dosgames[37m est un exemple. Remplacez-le par votre propre r‚pertoire de jeux.[37m  º
-ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mmount c ~/jeuxdos[37m cr‚era un lecteur C avec ~/jeuxdos pour contenu.          º
+º                                                                             º
+º [32m~/dosgames[37m est un exemple. Remplacez-le par votre propre r‚pertoire de jeux.[37mº
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
 
 .
 :PROGRAM_INTRO_MOUNT_END
@@ -745,18 +742,18 @@ Par ailleurs, vous pouvez utiliser IMGMOUNT pour monter des images ISO ou des fi
 Voici les combinaisons des touches par d‚faut.
 Elles peuvent ˆtre chang‚es dans le [33mkeymapper[0m.
 
-[33;1mAlt+Entr‚e[0m  : Bascule entre mode plein ‚cran et mode fenˆtr‚.
-[33;1mAlt+Pause[0m   : Mettre en pause/relancer l'‚mulateur.
-[33;1mCtrl+F1[0m     : D‚marrer le [33mkeymapper[0m.
-[33;1mCtrl+F4[0m     : Bascule entre les images disque mont‚es, met … jour le cache des r‚pertoires pour tous les lecteurs.
-[33;1mCtrl+F5[0m     : Sauvegarde une capture d'‚cran.
-[33;1mCtrl+F6[0m     : D‚marrer/Arrˆter l'enregistrement de la sortie son dans un fichier WAVE.
-[33;1mCtrl+F7[0m     : D‚marrer/Arrˆter l'enregistrement de la sortie vid‚o dans un fichier ZMBV.
-[33;1mCtrl+F9[0m     : Terminer l'‚mulation.
-[33;1mCtrl+F10[0m    : Capturer/Lib‚rer la souris.
-[33;1mCtrl+F11[0m    : Ralentir l'‚mulation.
-[33;1mCtrl+F12[0m    : Acc‚l‚rer l'‚mulation.
-[33;1mAlt+F12[0m     : D‚bloquer la vitesse (bouton turbo/avance rapide).
+[33;1m%s+Entr‚e[0m  : Bascule entre mode plein ‚cran et mode fenˆtr‚.
+[33;1m%s+Pause[0m   : Mettre en pause/relancer l'‚mulateur.
+[33;1m%s+F1[0m    %s : D‚marrer le [33mkeymapper[0m.
+[33;1m%s+F4[0m    %s : Bascule entre les images disque mont‚es, met … jour le cache des r‚pertoires pour tous les lecteurs.
+[33;1m%s+F5[0m    %s : Sauvegarde une capture d'‚cran.
+[33;1m%s+F6[0m    %s : D‚marrer/Arrˆter l'enregistrement de la sortie son dans un fichier WAVE.
+[33;1m%s+F7[0m    %s : D‚marrer/Arrˆter l'enregistrement de la sortie vid‚o dans un fichier ZMBV.
+[33;1m%s+F9[0m    %s : Terminer l'‚mulation.
+[33;1m%s+F10[0m   %s : Capturer/Lib‚rer la souris.
+[33;1m%s+F11[0m   %s : Ralentir l'‚mulation.
+[33;1m%s+F12[0m   %s : Acc‚l‚rer l'‚mulation.
+[33;1m%sF12[0m      : D‚bloquer la vitesse (bouton turbo/avance rapide).
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -775,7 +772,7 @@ Le fichier image est en lecture seule ! Cela peut cr‚er des problŠmes.
 Cette commande d‚marre DOSBox … partir d'une disquette ou d'une image de disque dur.
 
 Pour cette commande, on peut sp‚cifier une succession de disquettes et basculer
-entre elles avec Ctrl+F4, et -l sp‚cifie le lecteur mont‚ sur lequel d‚marrer.
+entre elles avec %s+F4, et -l sp‚cifie le lecteur mont‚ sur lequel d‚marrer.
 Sans lettre de lecteur sp‚cifi‚e, le d‚marrage par d‚faut s'effectue sur A.
 Les seules lettres de lecteur d‚marrables sont A, C, et D. Pour d‚marrer … partir
 d'un disque dur (C ou D), l'image doit avoir au pr‚alable ‚t‚ mont‚e avec la commande
@@ -853,7 +850,7 @@ Avec :
   [36;1mIMAGEDMARRAGE[0m est une image de d‚marrage de disque dur avec une taille
         -size GEOMETRIE : bytes-par-secteur,secteurs-par-tˆte,tˆtes,cylindres
 Notes :
-  - Ctrl+F4 ‚change & monte le CDROM-SET ou le FICHIERIMAGE suivant si sp‚cifi‚.
+  - %s+F4 ‚change & monte le CDROM-SET ou le FICHIERIMAGE suivant si sp‚cifi‚.
 Exemples :
   [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/jeux/doom.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
@@ -1190,8 +1187,8 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 º Pour une courte introduction pour les nouveaux utilisateurs, tapez: [33mINTRO[37m  º
 º Pour la liste des commandes support‚es par le shell, tapez : [1;33mHELP[37m          º
 º                                                                            º
-º Pour ajuster la vitesse du CPU ‚mul‚, essayez [31mCtrl+F11[37m et [31mCtrl+F12[37m.        º
-º Pour activer le keymapper [31mCtrl+F1[37m.                                         º
+º Pour ajuster la vitesse du CPU ‚mul‚, essayez [31m%s+F11[37m et [31m%s+F12[37m.%s%s        º
+º Pour activer le keymapper [31m%s+F1[37m.%s                                         º
 º Pour plus d'informations, lisez le fichier [36mREADME[37m dans le r‚pertoire de    º
 º DOSBox.                                                                    º
 º                                                                            º
@@ -1200,13 +1197,13 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 :SHELL_STARTUP_CGA
 º DOSBox supporte le mode composite CGA.                                º
 º Utilisez [31mF12[37m pour r‚gler la sortiecomposite sur ON, OFF, ou AUTO (d‚faut).        º
-º [31m(Alt+)F11[37m change la teinte; [31mCtrl+Alt+F11[37m s‚lectionne le premier/dernier modŠle CGA.  º
+º [31m(%s+)F11[37m change la teinte; [31m%s+%s+F11[37m s‚lectionne le premier/dernier modŠle CGA.%sº
 º                                                                    º
 
 .
 :SHELL_STARTUP_CGA_MONO
 º Utilisez [31mF11[37m pour passer au vert, ambre, blanc et blanc-papier,   º
-º et [31mAlt+F11[37m pour changer le contraste/la luminosit‚.               º
+º et [31m%sF11[37m pour changer le contraste/la luminosit‚.               º
 
 .
 :SHELL_STARTUP_HERC
@@ -1215,7 +1212,7 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 
 .
 :SHELL_STARTUP_DEBUG
-º Pressez [31mAlt+Pause[37m pour d‚marrer le debugger ou lancez l'ex‚cutable avec [33mDEBUG[37m. º
+º Pressez [31m%sPause[37m pour d‚marrer le debugger ou lancez l'ex‚cutable avec [33mDEBUG[37m. º
 º                                                                    º
 
 .

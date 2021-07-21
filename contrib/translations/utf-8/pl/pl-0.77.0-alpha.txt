@@ -1,6 +1,5 @@
 :CONFIG_FULLSCREEN
 Włącz DOSBoxa na pełnym ekranie.
-Wciśnij " MMOD2_NAME "Enter aby przełączyć się do okna.
 .
 :CONFIG_DISPLAY
 Numer ekranu do użycia; wartość zależy od ustawień użytkownika.
@@ -43,12 +42,10 @@ Wybierz tryb zachowanie myszy:
    nomouse:        Emulacja myszy jest wyłączona.
 Wybierz jaką rolę pełni środkowy przycisk myszy (drugi parametr):
    middlegame:     Kliknięcie środkowym przyciskiem jest wysłane do gry
-                   (" PRIMARY_MOD_NAME "+F10 puszcza mysz).
    middlerelease:  Kliknięcie środkowym przyciskiem puszcza mysz
                    (zdarzenie nie będzie wysłane do gry).
                    W pełnym ekranie lub w trybie 'seamless' kliknięcie
                    zostanie wysłane do gry.
-                   " PRIMARY_MOD_NAME "+F10 również puszcza mysz.
 Domyślne ustawienie to: seamless middlerelease
 .
 :CONFIG_SENSITIVITY
@@ -152,7 +149,7 @@ Cycles can be set in 3 ways:
                   handle.
 .
 :CONFIG_CYCLEUP
-Liczba cykli o którą wartość zwiększa/zmniejsza kombinacja klawiszy. (" PRIMARY_MOD_NAME "+F11/" PRIMARY_MOD_NAME "+F12)
+Liczba cykli o którą wartość zwiększa/zmniejsza kombinacja klawiszy.
 .
 :CONFIG_CYCLEDOWN
 Wartość mniejsza niż 100 jest traktowana jako ustawienie zmiany procentowej.
@@ -695,18 +692,18 @@ You have to mount the directory containing the files.
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1m╔════════════════════════════════════════════════════════════════════════╗
-║ [32mmount c c:\dosprog\[37m utworzy dysk C z c:\dosprog jako zawartością.      ║
-║                                                                        ║
-║ [32mc:\dosprog\[37m to przykład. Zamień go na Twój własny katalog z grami.  [37m           ║
-╚════════════════════════════════════════════════════════════════════════╝[0m
+[44;1m╔═════════════════════════════════════════════════════════════════════════╗
+║ [32mmount c c:\dosprog\[37m utworzy dysk C z c:\dosprog jako zawartością.       ║
+║                                                                         ║
+║ [32mc:\dosprog\[37m to przykład. Zamień go na Twój własny katalog z grami. [37m     ║
+╚═════════════════════════════════════════════════════════════════════════╝[0m
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
 [44;1m╔═════════════════════════════════════════════════════════════════════╗
-║ [32mmount c ~/dosprog[37m utworzy dysk C z ~/dosprog jako zawartością. ║
+║ [32mmount c ~/dosprog[37m utworzy dysk C z ~/dosprog jako zawartością.      ║
 ║                                                                     ║
-║ [32m~/dosprog[37m to przykład. Zamień go na Twój własny katalog z grami.  [37m ║
+║ [32m~/dosprog[37m to przykład. Zamień go na Twój własny katalog z grami.  [37m  ║
 ╚═════════════════════════════════════════════════════════════════════╝[0m
 
 .
@@ -740,18 +737,18 @@ Additionally, you can use IMGMOUNT to mount ISO images or CUE files:
 Domyślne skróty klawiaturowe.
 Mogą zostać zmienione narzędziem [33mkeymapper[0m.
 
-[33;1m" MMOD2_NAME "Enter[0m   Przejdź do trybu pełnoekranowego i z powrotem.
-[33;1m" MMOD2_NAME "Pauza[0m   Zapauzuj emulator.
-[33;1m" PRIMARY_MOD_NAME "+F1[0m    " PRIMARY_MOD_PAD " Uruchom [33mkeymappera[0m.
-[33;1m" PRIMARY_MOD_NAME "+F4[0m    " PRIMARY_MOD_PAD " Zamień zamontowany obraz dysku. Aktualizuj pamięć podręczną zamontowanego katalogu.
-[33;1m" PRIMARY_MOD_NAME "+F5[0m    " PRIMARY_MOD_PAD " Zrób zrzut ekranu.
-[33;1m" PRIMARY_MOD_NAME "+F6[0m    " PRIMARY_MOD_PAD " Rozpocznij/zatrzymaj nagrywanie audio do pliku wave.
-[33;1m" PRIMARY_MOD_NAME "+F7[0m    " PRIMARY_MOD_PAD " Rozpocznij/zatrzymaj nagrywanie wideo do pliku zmbv.
-[33;1m" PRIMARY_MOD_NAME "+F9[0m    " PRIMARY_MOD_PAD " Wyłącz emulator.
-[33;1m" PRIMARY_MOD_NAME "+F10[0m   " PRIMARY_MOD_PAD " Przechwyć/zwolnij myszkę.
-[33;1m" PRIMARY_MOD_NAME "+F11[0m   " PRIMARY_MOD_PAD " Spowolnij emulację.
-[33;1m" PRIMARY_MOD_NAME "+F12[0m   " PRIMARY_MOD_PAD " Przyspiesz emulację.
-[33;1m" MMOD2_NAME "F12[0m     Uwolnij prędkość (przycisk "turbo" / przyspiesz).
+[33;1m%s+Enter[0m   Przejdź do trybu pełnoekranowego i z powrotem.
+[33;1m%s+Pauza[0m   Zapauzuj emulator.
+[33;1m%s+F1[0m    %s Uruchom [33mkeymappera[0m.
+[33;1m%s+F4[0m    %s Zamień zamontowany obraz dysku. Aktualizuj pamięć podręczną zamontowanego katalogu.
+[33;1m%s+F5[0m    %s Zrób zrzut ekranu.
+[33;1m%s+F6[0m    %s Rozpocznij/zatrzymaj nagrywanie audio do pliku wave.
+[33;1m%s+F7[0m    %s Rozpocznij/zatrzymaj nagrywanie wideo do pliku zmbv.
+[33;1m%s+F9[0m    %s Wyłącz emulator.
+[33;1m%s+F10[0m   %s Przechwyć/zwolnij myszkę.
+[33;1m%s+F11[0m   %s Spowolnij emulację.
+[33;1m%s+F12[0m   %s Przyspiesz emulację.
+[33;1m%s+F12[0m     Uwolnij prędkość (przycisk "turbo" / przyspiesz).
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -770,7 +767,7 @@ Plik obrazu jest tylko do odczytu! Może to spowodować problemy.
 Ta komenda bootuje DOSBoxa z dyskietki lub obrazu dysku twardego.
 
 Do tej komendy można włączyć wybór kolejności dysków
-kombinacją klawiszy " PRIMARY_MOD_NAME "+F4, wtedy opcja -l określa zamontowany dysk do zbootowania.
+kombinacją klawiszy %s+F4, wtedy opcja -l określa zamontowany dysk do zbootowania.
 Jeśli nie podano litery dysku, domyślnie bootowany jest dysk A.
 Jedynymi literami bootowalnych dysków są litery A, C i D. Aby zbootować z dysku
 twardego (C lub D), obraz powinien być zamontowany komendą
@@ -849,7 +846,7 @@ Gdzie:
   GEOMETRIA      pliki-w-sektorze,sektory-w-głowicy,głowice,cylindry
 
 Notatki:
-  - " PRIMARY_MOD_NAME "+F4 zamienia i montuje następny OBRAZ lub OBRAZ-CD.
+  - %s+F4 zamienia i montuje następny OBRAZ lub OBRAZ-CD.
 Przykłady:
   [32;1mimgmount[0m [37;1mD[0m [36;1m/home/UZYTKOWNIK/gry/doom.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
@@ -1183,8 +1180,8 @@ Polecenia SUBST można użyć jedynie na lokalnych dyskach
 ║ Krótki wstęp dla nowych użytkowników, wpisz: [33mINTRO[37m                 ║
 ║ Aby zobaczyć listę wspieranych komend, wpisz: [33mHELP[37m                 ║
 ║                                                                    ║
-║ Aby dostosować prędkość emulatora, użyj [31m" PRIMARY_MOD_NAME "+F11[37m i [31m" PRIMARY_MOD_NAME "+F12[37m." PRIMARY_MOD_PAD PRIMARY_MOD_PAD "       ║
-║ Aby zmienić skróty klawiaturowe [31m" PRIMARY_MOD_NAME "+F1[37m." PRIMARY_MOD_PAD "                           ║
+║ Aby dostosować prędkość emulatora, użyj [31m%s+F11[37m i [31m%s+F12[37m.%s%s       ║
+║ Aby zmienić skróty klawiaturowe [31m%s+F1[37m.%s                           ║
 ║ Więcej informacji w pliku [36mREADME[37m w katalogu DOSBoxa.               ║
 ║                                                                    ║
 
@@ -1192,13 +1189,13 @@ Polecenia SUBST można użyć jedynie na lokalnych dyskach
 :SHELL_STARTUP_CGA
 ║ DOSBox wspiera tryb Composite CGA.                                 ║
 ║ Wciśnij [31mF12[37m aby włączyć lub wyłączyć tryb composite.               ║
-║ [31m(" MMOD2_NAME "+)F11[37m zmienia barwę; [31m" MMOD1_NAME "+" MMOD2_NAME "+F11[37m zmienia model CGA." PRIMARY_MOD_PAD "         ║
+║ [31m(%s+)F11[37m zmienia barwę; [31m%s+%s+F11[37m zmienia model CGA.%s         ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA_MONO
 ║ Wciśnij [31mF11[37m aby zmienić kolor ekaranu: jasny biały, biały, pomarańczowy, zielony. ║
-║ i [31m" MMOD2_NAME "F11[37m aby zmienić kontrast/jasność.    ║
+║ i [31m%sF11[37m aby zmienić kontrast/jasność.    ║
 
 .
 :SHELL_STARTUP_HERC
@@ -1207,7 +1204,7 @@ Polecenia SUBST można użyć jedynie na lokalnych dyskach
 
 .
 :SHELL_STARTUP_DEBUG
-║ Wciśnij [31m" MMOD2_NAME "Pauza[37m aby włączyć debuggera albo włącz plik exe komendą [33mDEBUG[37m. ║
+║ Wciśnij [31m%sPauza[37m aby włączyć debuggera albo włącz plik exe komendą [33mDEBUG[37m. ║
 ║                                                                    ║
 
 .
