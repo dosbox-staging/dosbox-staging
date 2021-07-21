@@ -575,12 +575,12 @@ static void INLINE gen_mov_byte_to_reg_low_imm_canuseword(HostReg dest_reg,Bit8u
 }
 
 // move the lowest 8bit of a register into memory
-static void gen_mov_byte_from_reg_low(HostReg src_reg,void* dest) {
-	if (!gen_mov_memval_from_reg(src_reg, dest, 1)) {
-		gen_mov_qword_to_reg_imm(temp1, (Bit64u)dest);
-		cache_addd( STRB_IMM(src_reg, temp1, 0) );      // strb src_reg, [temp1]
-	}
-}
+// static void gen_mov_byte_from_reg_low(HostReg src_reg,void* dest) {
+// 	if (!gen_mov_memval_from_reg(src_reg, dest, 1)) {
+// 		gen_mov_qword_to_reg_imm(temp1, (Bit64u)dest);
+// 		cache_addd( STRB_IMM(src_reg, temp1, 0) );      // strb src_reg, [temp1]
+// 	}
+// }
 
 
 
@@ -688,9 +688,9 @@ static void gen_add_direct_word(void* dest,Bit32u imm,bool dword) {
 }
 
 // add an 8bit constant value to a dword memory value
-static void gen_add_direct_byte(void* dest,Bit8s imm) {
-	gen_add_direct_word(dest, (Bit32s)imm, 1);
-}
+// static void gen_add_direct_byte(void* dest,Bit8s imm) {
+// 	gen_add_direct_word(dest, (Bit32s)imm, 1);
+// }
 
 // subtract a 32bit (dword==true) or 16bit (dword==false) constant value from a memory value
 static void gen_sub_direct_word(void* dest,Bit32u imm,bool dword) {
@@ -728,9 +728,9 @@ static void gen_sub_direct_word(void* dest,Bit32u imm,bool dword) {
 }
 
 // subtract an 8bit constant value from a dword memory value
-static void gen_sub_direct_byte(void* dest,Bit8s imm) {
-	gen_sub_direct_word(dest, (Bit32s)imm, 1);
-}
+// static void gen_sub_direct_byte(void* dest,Bit8s imm) {
+// 	gen_sub_direct_word(dest, (Bit32s)imm, 1);
+// }
 
 // effective address calculation, destination is dest_reg
 // scale_reg is scaled by scale (scale_reg*(2^scale)) and
