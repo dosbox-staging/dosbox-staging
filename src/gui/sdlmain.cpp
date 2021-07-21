@@ -804,7 +804,8 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		// window size is updated AND content is correctly clipped when
 		// emulated program changes resolution with various
 		// windowresolution settings (!).
-		SDL_SetWindowSize(sdl.window, width, height);
+		if (!sdl.desktop.window.resizable && !sdl.desktop.switching_fullscreen)
+			SDL_SetWindowSize(sdl.window, width, height);
 		SDL_SetWindowFullscreen(sdl.window, 0);
 	}
 	// Maybe some requested fullscreen resolution is unsupported?
@@ -1335,6 +1336,9 @@ dosurface:
 			glViewport((windowWidth - sdl.clip.w) / 2,
 			           (windowHeight - sdl.clip.h) / 2, sdl.clip.w,
 			           sdl.clip.h);
+		} else if (sdl.desktop.window.resizable) {
+			sdl.clip = calc_viewport(windowWidth, windowHeight);
+			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		} else {
 			/* We don't just pass sdl.clip.y as-is, so we cover the case of non-vertical
 			 * centering on Android (in order to leave room for the on-screen keyboard)
