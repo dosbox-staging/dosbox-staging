@@ -1646,7 +1646,70 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 	return false;
 }
 
-void GFX_EndUpdate( const Bit16u *changedLines ) {
+// Pacer Class
+// ~~~~~~~~~~~
+// Pacer allows a task to run provided it completes within a fraction of the
+// overall pace-time.  If the task takes longer than the permitted time, then it
+// skips its next turn to run.
+
+// Usage:
+//  1. Construct using the task name and fraction of the pace-time the task
+//     should run within. For example: Pacer render_pacer("Render", 2);
+//  2. Measure the program pace using SetPace().
+//  3. Check if the task can be run using CanRun(), which returns a bool.
+//  4. Immediately after the task ran (or didn't), Checkpoint() the results to
+//     prepare for the next pass.
+//
+class Pacer {
+public:
+	Pacer(const std::string &name, int fraction)
+	        : task_name(name),
+	          pace_start(GetTicksUs()),
+	          pace_fraction(fraction)
+	{
+		assert(task_name.size());
+		assert(pace_fraction > 0);
+	}
+	Pacer() = delete;
+
+	void SetPace()
+	{
+		pace = GetTicksUsSince(pace_start) / pace_fraction;
+		pace_start = GetTicksUs();
+	}
+	bool CanRun()
+	{
+		if (on_pace)
+			task_start = GetTicksUs();
+		return on_pace;
+	}
+	void Checkpoint()
+	{
+		if (on_pace) {
+			const auto task_took = GetTicksUsSince(task_start);
+			on_pace = task_took < pace;
+
+			LOG_MSG("%s took %5dus and is %3s pace %6" PRId64 "us",
+			        task_name.c_str(), task_took,
+			        on_pace ? "on" : "off", pace);
+		} else {
+			on_pace = true;
+		}
+	}
+
+private:
+	const std::string task_name;
+	int64_t pace = 0;
+	int64_t pace_start = 0;
+	int64_t task_start = 0;
+	int pace_fraction = 0;
+	bool on_pace = true;
+};
+
+static Pacer render_pacer("Render", 2);
+
+void GFX_EndUpdate(const Bit16u *changedLines)
+{
 	if (!sdl.update_display_contents)
 		return;
 #if C_OPENGL
@@ -1658,17 +1721,11 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		return;
 	bool actually_updating = sdl.updating;
 	sdl.updating=false;
-	static int64_t last_called = GetTicksUs() - 100000; // ensure first
-	                                                    // frame renders
-	static bool render_current_frame = true;
-	const auto timestamp = GetTicksUs();
-	const auto time_since_last_render = GetTicksDiff(timestamp, last_called);
-	const auto render_skip_threshold = (time_since_last_render / 2);
-	last_called = timestamp;
+	render_pacer.SetPace();
 	switch (sdl.desktop.type) {
 	case SCREEN_TEXTURE: {
 		assert(sdl.texture.input_surface);
-		if (render_current_frame) {
+		if (render_pacer.CanRun()) {
 			SDL_UpdateTexture(sdl.texture.texture,
 			                  nullptr, // update entire texture
 			                  sdl.texture.input_surface->pixels,
@@ -1676,14 +1733,9 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			SDL_RenderClear(sdl.renderer);
 			SDL_RenderCopy(sdl.renderer, sdl.texture.texture,
 			               nullptr, &sdl.clip);
-			const auto start = GetTicksUs();
 			SDL_RenderPresent(sdl.renderer);
-			const auto elapsed = GetTicksUsSince(start);
-			render_current_frame = elapsed < render_skip_threshold;
-			// LOG_MSG("SDL_RenderPresent took %dus", elapsed);
-		} else {
-			render_current_frame = true;
 		}
+		render_pacer.Checkpoint();
 	} break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
@@ -1728,7 +1780,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			return;
 		}
 
-		if (render_current_frame) {
+		if (render_pacer.CanRun()) {
 			if (sdl.opengl.program_object) {
 				glUniform1i(sdl.opengl.ruby.frame_count,
 				            sdl.opengl.actual_frame_count++);
@@ -1736,15 +1788,9 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			} else {
 				glCallList(sdl.opengl.displaylist);
 			}
-
-			const auto start = GetTicksUs();
 			SDL_GL_SwapWindow(sdl.window);
-			const auto elapsed = GetTicksUsSince(start);
-			render_current_frame = elapsed < render_skip_threshold;
-			// LOG_MSG("SDL_GL_SwapWindow took %dus", elapsed);
-		} else {
-			render_current_frame = true;
 		}
+		render_pacer.Checkpoint();
 		break;
 #endif
 	case SCREEN_SURFACE:
@@ -1766,19 +1812,12 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				index++;
 			}
 			if (rect_count) {
-				if (render_current_frame) {
-					const auto start = GetTicksUs();
+				if (render_pacer.CanRun()) {
 					SDL_UpdateWindowSurfaceRects(sdl.window,
 					                             sdl.updateRects,
 					                             rect_count);
-					const auto elapsed = GetTicksUsSince(start);
-					render_current_frame = elapsed <
-					                       render_skip_threshold;
-					// LOG_MSG("SDL_UpdateWindowSurfaceRects
-					// took %dus", elapsed);
-				} else {
-					render_current_frame = true;
 				}
+				render_pacer.Checkpoint();
 			}
 		}
 		break;
