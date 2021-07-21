@@ -12,7 +12,7 @@ Windows versions.  These files are optional - if you have them pre-installed
 as part of your Operating System, you can safely remove them from this
 software package, or build your own version of DOSBox Staging, that does
 not use these files.  You can find instructions for doing so here:
-https://github.com/dosbox-staging/dosbox-staging/blob/master/BUILD.md#windows-procedures
+https://github.com/dosbox-staging/dosbox-staging/blob/main/BUILD.md#windows-procedures
 
 These files are covered by "MICROSOFT VISUAL STUDIO 2015 EXTENSIONS,
 VISUAL STUDIO SHELLS and C++ REDISTRIBUTABLE" license:
