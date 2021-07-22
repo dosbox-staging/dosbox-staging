@@ -556,11 +556,11 @@ Virtuelle Laufwerke k”nnen nicht ungeMOUNTed werden.
 
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[31;1mMounten von c:\ wird NICHT empfohlen. Bitte beim n„chsten Mal ein (Unter-)Verzeichnis mounten.[0m
+[31;1mMounten von c:\ wird NICHT empfohlen. Bitte beim n„chsten Mal ein (Unter-)Verzeichnis mounten.[0m
 
 .
 :PROGRAM_MOUNT_WARNING_OTHER
-[31;1mMounten von / wird NICHT empfohlen. Bitte das n„chste Mal ein (Unter-)Verzeichnis mounten.[0m
+[31;1mMounten von / wird NICHT empfohlen. Bitte das n„chste Mal ein (Unter-)Verzeichnis mounten.[0m
 
 .
 :PROGRAM_MOUNT_NO_OPTION
@@ -671,20 +671,20 @@ Laufwerks-Cache geleert.
 
 .
 :PROGRAM_INTRO
-[2J[32;1mWillkommen zu DOSBox Staging[0m, einem x86-Emulator mit Sound und Grafik.
+[2J[32;1mWillkommen zu DOSBox Staging[0m, einem x86-Emulator mit Sound und Grafik.
 DOSBox erstellt eine Shell fr dich, die wie das altbekannte klassische DOS aussieht.
 
-Fr Informationen ber das grunds„tzliche Mounten tippe [34;1mintro mount[0m
-Fr Informationen ber die CD-ROM Untersttzung tippe [34;1mintro cdrom[0m
-Fr Informationen ber die Sondertasten tippe [34;1mintro special[0m
-Fr weitere Informationen, besuche das DOSBox Staging wiki:[34;1m
-https://github.com/dosbox-staging/dosbox-staging/wiki[0m
+Fr Informationen ber das grunds„tzliche Mounten tippe [34;1mintro mount[0m
+Fr Informationen ber die CD-ROM Untersttzung tippe [34;1mintro cdrom[0m
+Fr Informationen ber die Sondertasten tippe [34;1mintro special[0m
+Fr weitere Informationen, besuche das DOSBox Staging wiki:[34;1m
+https://github.com/dosbox-staging/dosbox-staging/wiki[0m
 
-[31;1mDOSBox stoppt/beendet sich ohne eine Warnung, wenn ein Fehler auftritt![0m
+[31;1mDOSBox stoppt/beendet sich ohne eine Warnung, wenn ein Fehler auftritt![0m
 
 .
 :PROGRAM_INTRO_MOUNT_START
-[2J[32;1mHier sind einige Befehle, die dir den Einstieg erleichtern:[0m
+[2J[32;1mHier sind einige Befehle, die dir den Einstieg erleichtern:[0m
 Bevor du die Dateien, die auf deinem eigenen Dateisystem liegen, benutzen kannst,
 musst du das Verzeichnis, das die Dateien enth„lt, mounten.
 
@@ -707,38 +707,38 @@ musst du das Verzeichnis, das die Dateien enth„lt, mounten.
 
 .
 :PROGRAM_INTRO_MOUNT_END
-Nach erfolgreichem Mounten der Festplatte kannst du [34;1mc:[0m eingeben, um zu deinem frisch
-gemounteten C-Laufwerk zu wechseln. Wenn du dort [34;1mdir[0m] eingibst, wird der Inhalt angezeigt. [34;1mcd[0m erlaubt es dir
-in ein Verzeichnis zu wechseln (erkennbar am [33;1m[][0m in einer Verzeichnisliste).
-Du kannst Programme/Dateien mit den Erweiterungen [31m.exe .bat[0m und [31m.com[0m ausfhren.
+Nach erfolgreichem Mounten der Festplatte kannst du [34;1mc:[0m eingeben, um zu deinem frisch
+gemounteten C-Laufwerk zu wechseln. Wenn du dort [34;1mdir[0m] eingibst, wird der Inhalt angezeigt. [34;1mcd[0m erlaubt es dir
+in ein Verzeichnis zu wechseln (erkennbar am [33;1m[][0m in einer Verzeichnisliste).
+Du kannst Programme/Dateien mit den Erweiterungen [31m.exe .bat[0m und [31m.com[0m ausfhren.
 
 .
 :PROGRAM_INTRO_CDROM
-[2J[32;1mWie man ein virtuelles CD-ROM-Laufwerk in DOSBox einbindet:[0m
+[2J[32;1mWie man ein virtuelles CD-ROM-Laufwerk in DOSBox einbindet:[0m
 DOSBox bietet CD-ROM-Emulation auf mehreren Ebenen.
 
 Dies funktioniert mit allen normalen Verzeichnissen, installiert MSCDEX und markiert die Dateien
 schreibgeschtzt. Normalerweise reicht das fr die meisten Programme aus:
 
-[34;1mmount D C:\example -t cdrom[0m
+[34;1mmount D C:\example -t cdrom[0m
 
 Wenn das nicht funktioniert, musst du DOSBox eventuell das Label der CD-ROM mitteilen:
 
-[34;1mmount D C:\example -t cdrom -label CDLABEL[0m
+[34;1mmount D C:\example -t cdrom -label CDLABEL[0m
 
 Zus„tzlich kannst du imgmount benutzen, um iso oder cue/bin Images zu mounten:
 
-[34;1mimgmount D C:\cd.iso -t cdrom[0m
+[34;1mimgmount D C:\cd.iso -t cdrom[0m
 
 .
 :PROGRAM_INTRO_SPECIAL
-[2J[32;1mSondertasten:[0m
+[2J[32;1mSondertasten:[0m
 Dies sind die voreingestellten Tastenbelegungen.
-Sie k”nnen im [33mkeymapper[0m ge„ndert werden.
+Sie k”nnen im [33mkeymapper[0m ge„ndert werden.
 
 [33;1m%s+Enter[0m  Umschalten zwischen Vollbild- und Fenstermodus.
 [33;1m%s+Pause[0m  Pause/Unpause Emulator.
-[33;1m%s+F1[0m   %s Starte den [33mkeymapper[0m.
+[33;1m%s+F1[0m   %s Starte den [33mkeymapper[0m.
 [33;1m%s+F4[0m   %s Wechsle das gemountete Disk Image, aktualisiere den Verzeichnis-Cache fr alle Laufwerke.
 [33;1m%s+F5[0m   %s Einen Screenshot speichern.
 [33;1m%s+F6[0m   %s Aufnahme der Soundausgabe in einer Wave-Datei starten/stoppen.
@@ -769,11 +769,11 @@ Fr diesen Befehl kann man eine Reihe von Disketten angeben, die man durch Drck
 kein Laufwerksbuchstabe angegeben wird, wird standardm„áig vom Laufwerk A gebootet.
 Die einzigen bootbaren Laufwerksbuchstaben sind A, C und D. Um von einer 
 Festplatte (C oder D) zu booten, sollte das Image bereits mit dem
-[34;1mIMGMOUNT[0m Befehl gemountet werden.
+[34;1mIMGMOUNT[0m Befehl gemountet werden.
 
 Die Syntax dieses Befehls ist:
 
-[34;1mBOOT [diskimg1.img diskimg2.img] [-l driveletter][0m
+[34;1mBOOT [diskimg1.img diskimg2.img] [-l driveletter][0m
 
 .
 :PROGRAM_BOOT_UNABLE
@@ -865,7 +865,7 @@ Verwendung:
   [32;1mmount[0m -u [37;1mLAUFWERK[0m  (Image des LAUFWERKS auswerfen)
 
 Wobei:
-  [37;1mLAUFWERK[0m     ist der Laufwerksbuchstabe, auf dem das Verzeichnis gemountet wird: A, C, D, ...
+  [37;1mLAUFWERK[0m     ist der Laufwerksbuchstabe, auf dem das Verzeichnis gemountet wird: A, C, D, ...
   [36;1mVERZEICHNIS[0m ist das Verzeichnis auf dem Host-Betriebssystem, das gemountet werden soll
   TYPE      Typ des zu mountenden Verzeichnisses: dir, floppy, cdrom, oder overlay
   SIZE      freier Platz fr das virtuelle Laufwerk (KiB fr Floppies, MiB in anderen F„llen).
@@ -890,11 +890,11 @@ Die Laufwerksnummer (0 oder 3) muss angeben werden, unter der das Image gemounte
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-Fr [33mCD-ROM[0m Images:   [34;1mIMGMOUNT laufwerksbuchstabe ort-des-images -t iso[0m
+Fr [33mCD-ROM[0m Images:   [34;1mIMGMOUNT laufwerksbuchstabe ort-des-images -t iso[0m
 
-Fr [33mFestplattenlaufwerk[0m images: Muss die Laufwerksgeometrie fr Festplatten angeben:
+Fr [33mFestplattenlaufwerk[0m images: Muss die Laufwerksgeometrie fr Festplatten angeben:
 bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
-[34;1mIMGMOUNT Laufwerk-Buchstabe Ort-des-Images -size bps,spc,hpc,cyl[0m
+[34;1mIMGMOUNT Laufwerk-Buchstabe Ort-des-Images -size bps,spc,hpc,cyl[0m
 
 .
 :PROGRAM_IMGMOUNT_INVALID_IMAGE
@@ -924,7 +924,7 @@ Image-Datei nicht gefunden.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Um Verzeichnisse zu mounten, benutze den [34;1mMOUNT[0m Befehl, nicht den [34;1mIMGMOUNT[0m Befehl.
+Um Verzeichnisse zu mounten, benutze den [34;1mMOUNT[0m Befehl, nicht den [34;1mIMGMOUNT[0m Befehl.
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -956,13 +956,13 @@ Zeichentabelle %i wurde fr Layout %s geladen
 
 .
 :PROGRAM_KEYB_SHOWHELP
-[32;1mKEYB[0m [Tastaturlayout ID[ Zeichentabellen-Nummer[ Zeichentabellendatei]]]
+[32;1mKEYB[0m [Tastaturlayout ID[ Zeichentabellen-Nummer[ Zeichentabellendatei]]]
 
 Einige Beispiele:
-  [32;1mKEYB[0m: Aktuell geladene Zeichentabelle anzeigen.
-  [32;1mKEYB[0m sp: Lade das spanische (SP) Layout, verwende eine entsprechende Zeichentabelle.
-  [32;1mKEYB[0m sp 850: Lade das spanische (SP) Layout, verwende die Zeichentabelle 850.
-  [32;1mKEYB[0m sp 850 mycp.cpi: Dasselbe wie oben, aber benutze die Datei mycp.cpi.
+  [32;1mKEYB[0m: Aktuell geladene Zeichentabelle anzeigen.
+  [32;1mKEYB[0m sp: Lade das spanische (SP) Layout, verwende eine entsprechende Zeichentabelle.
+  [32;1mKEYB[0m sp 850: Lade das spanische (SP) Layout, verwende die Zeichentabelle 850.
+  [32;1mKEYB[0m sp 850 mycp.cpi: Dasselbe wie oben, aber benutze die Datei mycp.cpi.
 
 .
 :PROGRAM_KEYB_NOERROR
@@ -991,7 +991,7 @@ Unerlaubter Pfad.
 
 .
 :SHELL_CMD_HELP
-Wenn du eine Liste aller untersttzten Befehle haben willst, tippe [33;1mhelp /all[0m .
+Wenn du eine Liste aller untersttzten Befehle haben willst, tippe [33;1mhelp /all[0m .
 Eine kurze Liste der am h„ufigsten verwendeten Befehle:
 
 .
@@ -1016,16 +1016,16 @@ Unable to change to: %s.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Hinweis: Um zu einem anderen Laufwerkstyp zu wechseln [31m%c:[0m
+Hinweis: Um zu einem anderen Laufwerkstyp zu wechseln [31m%c:[0m
 
 .
 :SHELL_CMD_CHDIR_HINT_2
 Verzeichnisname ist l„nger als 8 Zeichen und/oder enth„lt Leerzeichen.
-Versuche [31mcd %s[0m
+Versuche [31mcd %s[0m
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-Du bist immer noch auf Laufwerk Z:, wechsle zu einem gemounteten Laufwerk mit [31mC:[0m.
+Du bist immer noch auf Laufwerk Z:, wechsle zu einem gemounteten Laufwerk mit [31mC:[0m.
 
 .
 :SHELL_CMD_DATE_HELP
@@ -1050,7 +1050,7 @@ Tippe 'date MM-TT-JJJJ' um es zu „ndern.
 M/T/J
 .
 :SHELL_CMD_DATE_HELP_LONG
-DATE [[/T] [/H] [/S] | MM-TT-JJJJ]
+DATE [/T] [/H] [/S] | MM-TT-JJJJ]
   MM-TT-JJJJ: neues zu setzendes Datum
   /S: Host-Zeit und -Datum permanent als DOS-Zeit verwenden
   /F: Zurckschalten auf DOSBox-interne Zeit (Gegenteil von /S)
@@ -1141,7 +1141,7 @@ Die Datei %s existiert bereits.
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Laufwerk %c existiert nicht!
-Du musst es zuerst [31mmount[0m]en. Tippe [1;33mintro[0m oder [1;33mintro mount[0m fr weitere Informationen.
+Du musst es zuerst [31mmount[0m]en. Tippe [1;33mintro[0m oder [1;33mintro mount[0m fr weitere Informationen.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
@@ -1173,47 +1173,47 @@ Es ist nur m”glich SUBST auf lokalen Laufwerken zu verwenden
 
 .
 :SHELL_STARTUP_BEGIN
-[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [32mWillkommen zu DOSBox Staging %-40s[37mº
+[44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
+º [32mWillkommen zu DOSBox Staging %-39s[37mº
 º                                                                     º
-º Fr eine kurze Einfhrung fr neue Benutzer tippe: [33mINTRO[37m            º
-º Fr untersttzte Shell-Befehle gib ein: [33mHELP[37m                        º
+º Fr eine kurze Einfhrung fr neue Benutzer tippe: [33mINTRO[37m            º
+º Fr untersttzte Shell-Befehle gib ein: [33mHELP[37m                        º
 º                                                                     º
-º Emulierte CPU-Geschwindigkeit anzupassen mit [31m%s+F11[37m und [31m%s+F12[37m.%s%s º
-º Aktiviere den Keymapper mit [31m%s+F1[37m.%s                                º
-º Weitere Informationen in der [36mREADME[37m Datei im DOSBox Verzeichnis.    º
+º Emulierte CPU-Geschwindigkeit anzupassen mit [31m%s+F11[37m und [31m%s+F12[37m.%s%s º
+º Aktiviere den Keymapper mit [31m%s+F1[37m.%s                                º
+º Weitere Informationen in der [36mREADME[37m Datei im DOSBox Verzeichnis.    º
 º                                                                     º
 
 .
 :SHELL_STARTUP_CGA
 º DOSBox untersttzt den Composite CGA Modus.                         º
-º Verwende [31mF12[37m, um Composite-Ausgabe auf ON, OFF oder AUTO zu setzen. º
-º [31m(%s+)F11[37m „ndert Farbe; [31m%s+%s+F11[37m w„hlt altes/neues CGA-Modell.%s º
+º Verwende [31mF12[37m, um Composite-Ausgabe auf ON, OFF oder AUTO zu setzen. º
+º [31m(%s+)F11[37m „ndert Farbe; [31m%s+%s+F11[37m w„hlt altes/neues CGA-Modell.%s  º
 º                                                                     º
 
 .
 :SHELL_STARTUP_CGA_MONO
-º Benutze [31mF11[37m, zum Umschalten der Farben des CGA-Modus,               º
-º und [31m%s+F11[37m, um die Kontrast-/Helligkeitseinstellungen zu „ndern.   º
+º Benutze [31mF11[37m, zum Umschalten der Farben des CGA-Modus,               º
+º und [31m%s+F11[37m, um die Kontrast-/Helligkeitseinstellungen zu „ndern.   º
 
 .
 :SHELL_STARTUP_HERC
-º Benutze [31mF11[37m, zum Umschalten von weiá, orange und Grn monochrom.    º
+º Benutze [31mF11[37m, zum Umschalten von weiá, orange und Grn monochrom.    º
 º                                                                     º
 
 .
 :SHELL_STARTUP_DEBUG
-º Drcke [31m%s+Pause[37m um Debugger zu starten oder starte ihn mit [33mDEBUG[37m.  º
+º Drcke [31m%s+Pause[37m um Debugger zu starten oder starte ihn mit [33mDEBUG[37m.  º
 º                                                                     º
 
 .
 :SHELL_STARTUP_END
-º [33mhttps://dosbox-staging.github.io[37m                                    º
-ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
+º [33mhttps://dosbox-staging.github.io[37m                                    º
+ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
 
 .
 :SHELL_STARTUP_SUB
-[32;1mdosbox-staging %s[0m
+[32;1mdosbox-staging %s[0m
 
 .
 :SHELL_CMD_CHDIR_HELP
@@ -1391,21 +1391,21 @@ Zeigt oder setzt die gemeldete DOS-Version.
 .
 :SHELL_CMD_VER_HELP_LONG
 Verwendung:
-  [32;1mver[0m
-  [32;1mver[0m [37;1mset[0m [36;1mVERSION[0m
+  [32;1mver[0m
+  [32;1mver[0m [37;1mset[0m [36;1mVERSION[0m
 
 Wobei:
-  [36;1mVERSION[0m kann eine ganze Zahl sein, wie z.B. [36;1m5[0m, oder eine zweistellige Dezimalzahl sein,
-          wie z.B.: [36;1m6.22[0m, [36;1m7.01[0m, oder [36;1m7.10[0m. Die Dezimalstelle kann alternativ
-          durch Leerzeichen getrennt werden, wie z.B.: [36;1m6 22[0m, [36;1m7 01[0m, oder [36;1m7 10[0m.
+  [36;1mVERSION[0m kann eine ganze Zahl sein, wie z.B. [36;1m5[0m, oder eine zweistellige Dezimalzahl sein,
+          wie z.B.: [36;1m6.22[0m, [36;1m7.01[0m, oder [36;1m7.10[0m. Die Dezimalstelle kann alternativ
+          durch Leerzeichen getrennt werden, wie z.B.: [36;1m6 22[0m, [36;1m7 01[0m, oder [36;1m7 10[0m.
 
 Anmerkungen:
   Die DOS-Version kann auch in der Konfigurationsdatei unter dem [dos]
-  Abschnitt mit der Einstellung "ver = [36;1mVERSION[0m" gesetzt werden.
+  Abschnitt mit der Einstellung "ver = [36;1mVERSION[0m" gesetzt werden.
 
 Beispiele:
-  [32;1mver[0m [37;1mset[0m [36;1m6.22[0m
-  [32;1mver[0m [37;1mset[0m [36;1m7 10[0m
+  [32;1mver[0m [37;1mset[0m [36;1m6.22[0m
+  [32;1mver[0m [37;1mset[0m [36;1m7 10[0m
 
 .
 :SHELL_CMD_VER_VER
