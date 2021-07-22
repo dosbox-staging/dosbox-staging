@@ -186,6 +186,7 @@ jobs:
           #   Dialect translations will be added if/when they're available.
           #
           mkdir -p dest/translations
+          cp contrib/translations/de/de_DE.lng       dest/translations/de.lng
           cp contrib/translations/en/en_US.lng       dest/translations/en.lng
           cp contrib/translations/es/es_ES.lng       dest/translations/es.lng
           cp contrib/translations/fr/fr_FR.lng       dest/translations/fr.lng

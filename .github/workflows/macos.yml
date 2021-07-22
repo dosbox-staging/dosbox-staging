@@ -217,6 +217,7 @@ jobs:
           #
           dst_lng="$dst/Resources/translations/"
           install -d "$dst_lng"
+          install -m 644 contrib/translations/de/de_DE.lng       "$dst_lng/de.lng"
           install -m 644 contrib/translations/en/en_US.lng       "$dst_lng/en.lng"
           install -m 644 contrib/translations/es/es_ES.lng       "$dst_lng/es.lng"
           install -m 644 contrib/translations/fr/fr_FR.lng       "$dst_lng/fr.lng"
