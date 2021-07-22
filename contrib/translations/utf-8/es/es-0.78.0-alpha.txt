@@ -1194,7 +1194,7 @@ Sólo es posible utilizar SUBST en unidades locales
 :SHELL_STARTUP_CGA
 ║ DOSBox soporta el modo CGA compuesto.                                     ║
 ║ Use [31mF12[37m para establecer salida compuesta ON, OFF, o AUTO (por defecto).   ║
-║ [31m(%s+)F11[37m cambia tono; [31m%s+%s+F11[37m selecciona modelo CGA inicial/final.%s ║
+║ [31m(%s+)F11[37m cambia tono; [31m%s+%s+F11[37m selecciona modelo CGA inicial/final.%s  ║
 ║                                                                           ║
 
 .
