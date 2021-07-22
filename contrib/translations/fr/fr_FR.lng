@@ -1195,20 +1195,20 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 
 .
 :SHELL_STARTUP_CGA
-º DOSBox supporte le mode composite CGA.                                º
-º Utilisez [31mF12[37m pour r‚gler la sortiecomposite sur ON, OFF, ou AUTO (d‚faut).        º
-º [31m(%s+)F11[37m change la teinte; [31m%s+%s+F11[37m s‚lectionne le premier/dernier modŠle CGA.%sº
-º                                                                    º
+º DOSBox supporte le mode composite CGA.                                     º
+º Utilisez [31mF12[37m pour r‚gler la sortiecomposite sur ON, OFF, ou AUTO (d‚faut). º
+º [31m(%s+)F11[37m change la teinte; [31m%s+%s+F11[37m s‚lectionne type de modŠle CGA.%s   º
+º                                                                            º
 
 .
 :SHELL_STARTUP_CGA_MONO
-º Utilisez [31mF11[37m pour passer au vert, ambre, blanc et blanc-papier,   º
-º et [31m%sF11[37m pour changer le contraste/la luminosit‚.               º
+º Utilisez [31mF11[37m pour passer au vert, ambre, blanc et blanc-papier,            º
+º et [31m%s+F11[37m pour changer le contraste/la luminosit‚.                        º
 
 .
 :SHELL_STARTUP_HERC
-º Utilisez [31mF11[37m pour passer au blanc, ambre, et vert monochrome. º
-º                                                                    º
+º Utilisez [31mF11[37m pour passer au blanc, ambre, et vert monochrome.              º
+º                                                                            º
 
 .
 :SHELL_STARTUP_DEBUG
