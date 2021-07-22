@@ -1189,13 +1189,13 @@ Polecenia SUBST można użyć jedynie na lokalnych dyskach
 :SHELL_STARTUP_CGA
 ║ DOSBox wspiera tryb Composite CGA.                                 ║
 ║ Wciśnij [31mF12[37m aby włączyć lub wyłączyć tryb composite.               ║
-║ [31m(%s+)F11[37m zmienia barwę; [31m%s+%s+F11[37m zmienia model CGA.%s         ║
+║ [31m(%s+)F11[37m zmienia barwę; [31m%s+%s+F11[37m zmienia model CGA.%s           ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Wciśnij [31mF11[37m aby zmienić kolor ekaranu: jasny biały, biały, pomarańczowy, zielony. ║
-║ i [31m%sF11[37m aby zmienić kontrast/jasność.    ║
+║ Wciśnij [31mF11[37m kolor mono: jasny biały, biały, pomarańczowy, zielony. ║
+║ i [31m%s+F11[37m aby zmienić kontrast/jasność.                            ║
 
 .
 :SHELL_STARTUP_HERC
