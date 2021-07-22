@@ -240,6 +240,7 @@ jobs:
           #   There users get the generic translation and benefit from simpler filenames.
           #   Dialect translations will be added if/when they're available.
           #
+          install -DT -m 644 contrib/translations/de/de_DE.lng       dest/translations/de.lng
           install -DT -m 644 contrib/translations/en/en_US.lng       dest/translations/en.lng
           install -DT -m 644 contrib/translations/es/es_ES.lng       dest/translations/es.lng
           install -DT -m 644 contrib/translations/fr/fr_FR.lng       dest/translations/fr.lng
