@@ -15,7 +15,7 @@ cd "$(git rev-parse --show-toplevel)" || exit
 	> /dev/null
 
 iconv -f CP437 -t UTF-8 'contrib/translations/en/en_US.lng' \
-	> 'contrib/translations/utf-8/en/en-0.77.0-alpha.txt'
+	> 'contrib/translations/utf-8/en/en-0.78.0-alpha.txt'
 
 set +x
 
