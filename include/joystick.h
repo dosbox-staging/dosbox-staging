@@ -41,7 +41,8 @@ void JOYSTICK_ParseConfiguredType();
 
 enum JoystickType {
 	JOY_UNSET,
-	JOY_NONE,
+	JOY_DISABLED, // joystick subsystem is fully disabled (won't even query)
+	JOY_NONE,     // joystick subsystem will be available for mapping only
 	JOY_AUTO,
 	JOY_2AXIS,
 	JOY_4AXIS,

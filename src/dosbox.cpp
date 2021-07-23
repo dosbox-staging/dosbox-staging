@@ -803,18 +803,22 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&INT10_Init);
 	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
 	secprop->AddInitFunction(&JOYSTICK_Init,true);
-	const char* joytypes[] = { "auto", "2axis", "4axis", "4axis_2", "fcs", "ch", "none",0};
-	Pstring = secprop->Add_string("joysticktype",Property::Changeable::WhenIdle,"auto");
+	const char *joytypes[] = {"auto", "2axis", "4axis",    "4axis_2", "fcs",
+	                          "ch",   "none",  "disabled", 0};
+	Pstring = secprop->Add_string("joysticktype",
+	                              Property::Changeable::WhenIdle, "auto");
 	Pstring->Set_values(joytypes);
 	Pstring->Set_help(
-		"Type of joystick to emulate: auto (default),\n"
-		"none (disables joystick emulation),\n"
-		"2axis (supports two joysticks),\n"
-		"4axis (supports one joystick, first joystick used),\n"
-		"4axis_2 (supports one joystick, second joystick used),\n"
-		"fcs (Thrustmaster), ch (CH Flightstick).\n"
-		"auto chooses emulation depending on real joystick(s).\n"
-		"(Remember to reset DOSBox's mapperfile if you saved it earlier)");
+	        "Type of joystick to emulate: auto (default),\n"
+	        "auto    : Detect and use any joystick(s), if possible.,\n"
+	        "2axis   : Support up to two joysticks.\n"
+	        "4axis   : Support the first joystick only.\n"
+	        "4axis_2 : support the second joystick only.\n"
+	        "fcs     : support a Thrustmaster-type joystick.\n"
+	        "ch      : support a CH Flightstick-type joystick.\n"
+	        "none    : Prevent DOS from seeing the joystick(s), but enable them for mapping.\n"
+	        "disabled: Fully disable joysticks: won't be polled, mapped, or visible in DOS.\n"
+	        "(Remember to reset DOSBox's mapperfile if you saved it earlier)");
 
 	Pbool = secprop->Add_bool("timed",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("enable timed intervals for axis. Experiment with this option, if your joystick drifts (away).");

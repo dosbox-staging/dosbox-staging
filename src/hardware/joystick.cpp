@@ -289,9 +289,9 @@ void JOYSTICK_ParseConfiguredType()
 	const auto section = static_cast<Section_prop *>(conf);
 	const char *type = section->Get_string("joysticktype");
 
-	if (!strcasecmp(type, "none"))
-		joytype = JOY_NONE;
-	else if (!strcasecmp(type, "false"))
+	if (!strcasecmp(type, "disabled"))
+		joytype = JOY_DISABLED;
+	else if (!strcasecmp(type, "none"))
 		joytype = JOY_NONE;
 	else if (!strcasecmp(type, "auto"))
 		joytype = JOY_AUTO;
@@ -321,28 +321,49 @@ public:
 	{
 		JOYSTICK_ParseConfiguredType();
 
+		// Does the user want joysticks to be entirely disabled, both in SDL and DOS?
+		if (joytype == JOY_DISABLED)
+			return;
+
+		// Get the [joystock] conf section
 		const auto section = static_cast<Section_prop *>(configuration);
-		bool timed = section->Get_bool("timed");
-		if (timed) {
-			ReadHandler.Install(0x201,read_p201_timed,IO_MB);
-			WriteHandler.Install(0x201,write_p201_timed,IO_MB);
-		} else {
-			ReadHandler.Install(0x201,read_p201,IO_MB);
-			WriteHandler.Install(0x201,write_p201,IO_MB);
-		}
+		assert(section);
+
+		// Get and apply configuration settings
 		autofire = section->Get_bool("autofire");
-		swap34 = section->Get_bool("swap34");
 		button_wrapping_enabled = section->Get_bool("buttonwrap");
-		stick[0].xtick = stick[0].ytick = stick[1].xtick =
-		                 stick[1].ytick = PIC_FullIndex();
-		stick[0].xpos = stick[0].ypos = stick[1].xpos = stick[1].ypos = 0.0f;
+		stick[0].deadzone = section->Get_int("deadzone");
+		swap34 = section->Get_bool("swap34");
+		stick[0].mapstate = section->Get_bool("circularinput")
+		                            ? JoyStick::JOYMAP_CIRCLE
+		                            : JoyStick::JOYMAP_SQUARE;
+
+		// Set initial time and position states
+		const auto ticks = PIC_FullIndex();
+		stick[0].xtick = ticks;
+		stick[0].ytick = ticks;
+		stick[1].xtick = ticks;
+		stick[1].ytick = ticks;
+		stick[0].xpos = 0.0f;
+		stick[0].ypos = 0.0f;
+		stick[1].xpos = 0.0f;
+		stick[1].ypos = 0.0f;
 		stick[0].transformed = false;
 
+		// Does the user want joysticks to be available for mapping, but hidden in DOS?
+		if (joytype == JOY_NONE)
+			return;
 
-		stick[0].mapstate = JoyStick::JOYMAP_SQUARE;
-		bool circ = section->Get_bool("circularinput");
-		if (circ) stick[0].mapstate = JoyStick::JOYMAP_CIRCLE;
-		stick[0].deadzone = section->Get_int("deadzone");
+		// Setup the joystick IO port handlers, which lets DOS games
+		// detect and use them
+		const bool wants_timed = section->Get_bool("timed");
+		ReadHandler.Install(0x201, wants_timed ? read_p201_timed : read_p201, IO_MB);
+		WriteHandler.Install(0x201, wants_timed ? write_p201_timed : write_p201, IO_MB);
+	}
+	~JOYSTICK() {
+		// No-op if IO handlers were not installed
+		WriteHandler.Uninstall();
+		ReadHandler.Uninstall();
 	}
 };
 

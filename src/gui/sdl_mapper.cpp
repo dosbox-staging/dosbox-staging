@@ -2207,7 +2207,7 @@ static void CreateLayout() {
 		new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Axis 1/2");
 		new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Axis 3");
 		new CTextButton(PX(XO+8),PY(YO-1),3*BW,20,"Hat/D-pad");
-	} else if(joytype == JOY_NONE) {
+	} else if (joytype == JOY_DISABLED) {
 		btn=new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Disabled");
 		btn->SetColor(CLR_GREY);
 		btn=new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Disabled");
@@ -2661,21 +2661,29 @@ static void QueryJoysticks()
 	mapper.sticks.num_groups = 0;
 	mapper.sticks.num = 0;
 
-	// To allow mapping, we always initialize SDL's joystick subsystem even
-	// if the user doesn't want to use a joystick
+	JOYSTICK_ParseConfiguredType();
+
+	// The user doesn't want to use joysticks at all (not even for mapping)
+	if (joytype == JOY_DISABLED) {
+		DEBUG_LOG_MSG("MAPPER: joystick subsystem disabled");
+		return;
+	}
+
 	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
 		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-
-	JOYSTICK_ParseConfiguredType();
-	if (joytype == JOY_NONE)
-		return;
 
 	// Record how many joysticks are present and set our desired minimum axis
 	const auto num_joysticks = SDL_NumJoysticks();
 	assert(num_joysticks >= 0);
 	mapper.sticks.num = static_cast<unsigned int>(num_joysticks);
 
-	// Use the type provided by the user
+	std::string setup_postfix;
+	if (joytype == JOY_NONE) {
+		setup_postfix = " for mapping purposes only";
+		joytype = JOY_AUTO; // ensure we still setup and detect the joysticks
+	}
+
+	// If a specific joystick was requested, then use it as-is.
 	if (joytype != JOY_AUTO)
 		return;
 
@@ -2691,18 +2699,18 @@ static void QueryJoysticks()
 		SDL_JoystickClose(stick);
 	}
 
-	// Set the type of joystick based which are useable
+	// Set the type of joystick based on which are useable
 	const bool first_usable = useable[0];
 	const bool second_usable = useable[1];
 	if (first_usable && second_usable) {
 		joytype = JOY_2AXIS;
-		LOG_MSG("MAPPER: Found two or more joysticks");
+		LOG_MSG("MAPPER: Found two or more joysticks%s", setup_postfix.c_str());
 	} else if (first_usable) {
 		joytype = JOY_4AXIS;
-		LOG_MSG("MAPPER: Found one joystick");
+		LOG_MSG("MAPPER: Found one joystick%s", setup_postfix.c_str());
 	} else if (second_usable) {
 		joytype = JOY_4AXIS_2;
-		LOG_MSG("MAPPER: Found second joystick is usable");
+		LOG_MSG("MAPPER: Found second joystick is usable%s", setup_postfix.c_str());
 	} else {
 		joytype = JOY_NONE;
 		LOG_MSG("MAPPER: Found no joysticks");
@@ -2715,47 +2723,60 @@ static void CreateBindGroups() {
 	keybindgroups.push_back(key_bind_group);
 
 	assert(joytype != JOY_UNSET);
-	if (joytype != JOY_NONE) {
-		// direct access to the SDL joystick, thus removed from the event handling
-		if (mapper.sticks.num) SDL_JoystickEventState(SDL_DISABLE);
+	if (joytype == JOY_DISABLED)
+		return;
 
-		// Free up our previously assigned joystick slot before assinging below
-		if (mapper.sticks.stick[mapper.sticks.num_groups]) {
+	// direct access to the SDL joystick, thus removed from the event handling
+	if (mapper.sticks.num)
+		SDL_JoystickEventState(SDL_DISABLE);
+
+	// Free up our previously assigned joystick slot before assinging below
+	if (mapper.sticks.stick[mapper.sticks.num_groups]) {
+		delete mapper.sticks.stick[mapper.sticks.num_groups];
+		mapper.sticks.stick[mapper.sticks.num_groups] = nullptr;
+	}
+
+	Bit8u joyno = 0;
+	switch (joytype) {
+	case JOY_DISABLED:
+	case JOY_NONE: break;
+	case JOY_4AXIS:
+		mapper.sticks.stick[mapper.sticks.num_groups++] =
+		        new C4AxisBindGroup(joyno, joyno);
+		stickbindgroups.push_back(
+		        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
+		break;
+	case JOY_4AXIS_2:
+		mapper.sticks.stick[mapper.sticks.num_groups++] =
+		        new C4AxisBindGroup(joyno + 1U, joyno);
+		stickbindgroups.push_back(
+		        new CStickBindGroup(joyno, joyno + 1U, true));
+		break;
+	case JOY_FCS:
+		mapper.sticks.stick[mapper.sticks.num_groups++] =
+		        new CFCSBindGroup(joyno, joyno);
+		stickbindgroups.push_back(
+		        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
+		break;
+	case JOY_CH:
+		mapper.sticks.stick[mapper.sticks.num_groups++] =
+		        new CCHBindGroup(joyno, joyno);
+		stickbindgroups.push_back(
+		        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
+		break;
+	case JOY_2AXIS:
+	default:
+		mapper.sticks.stick[mapper.sticks.num_groups++] =
+		        new CStickBindGroup(joyno, joyno);
+		if ((joyno + 1U) < mapper.sticks.num) {
 			delete mapper.sticks.stick[mapper.sticks.num_groups];
-			mapper.sticks.stick[mapper.sticks.num_groups] = nullptr;
+			mapper.sticks.stick[mapper.sticks.num_groups++] =
+			        new CStickBindGroup(joyno + 1U, joyno + 1U);
+		} else {
+			stickbindgroups.push_back(
+			        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
 		}
-
-		Bit8u joyno=0;
-		switch (joytype) {
-		case JOY_NONE:
-			break;
-		case JOY_4AXIS:
-			mapper.sticks.stick[mapper.sticks.num_groups++]=new C4AxisBindGroup(joyno,joyno);
-			stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
-			break;
-		case JOY_4AXIS_2:
-			mapper.sticks.stick[mapper.sticks.num_groups++]=new C4AxisBindGroup(joyno+1U,joyno);
-			stickbindgroups.push_back(new CStickBindGroup(joyno,joyno+1U,true));
-			break;
-		case JOY_FCS:
-			mapper.sticks.stick[mapper.sticks.num_groups++]=new CFCSBindGroup(joyno,joyno);
-			stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
-			break;
-		case JOY_CH:
-			mapper.sticks.stick[mapper.sticks.num_groups++]=new CCHBindGroup(joyno,joyno);
-			stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
-			break;
-		case JOY_2AXIS:
-		default:
-			mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno,joyno);
-			if((joyno+1U) < mapper.sticks.num) {
-				delete mapper.sticks.stick[mapper.sticks.num_groups];
-				mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno+1U,joyno+1U);
-			} else {
-				stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
-			}
-			break;
-		}
+		break;
 	}
 }
 

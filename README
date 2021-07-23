@@ -277,12 +277,14 @@ KEYBOARD: The keyboard lags.
 
 
 CONTROL: The character/cursor/mouse pointer always moves into one direction!
-    See if it still happens if you disable the joystick emulation,
-    set joysticktype=none in the [joystick] section of your DOSBox
-    configuration file. Maybe also try unplugging any joystick/gamepad.
-    If you want to use the joystick in the game, try setting timed=false
-    and be sure to calibrate the joystick (both in your OS as well as
-    in the game or the game's setup program).
+    See if it still happens if you disable the joystick emulation:
+    First try setting joysticktype=none or joysticktype=disabled in
+    the [joystick] section of your DOSBox configuration file.
+    Also try unplugging any joysticks or gamepads.
+
+    If you want to use the joystick in the game, try setting
+    timed=false and be sure to calibrate the joystick (both in your OS
+    as well as in the game or the game's setup program).
 
 
 SPEED: The game/application runs much too slow/too fast!
