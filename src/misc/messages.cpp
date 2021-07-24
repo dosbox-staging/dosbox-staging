@@ -22,7 +22,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <deque>
-#include <list>
+#include <map>
 #include <string>
 
 #include "control.h"
@@ -34,40 +34,18 @@
 
 #define LINE_IN_MAXLEN 2048
 
-struct MessageBlock {
-	std::string name;
-	std::string val;
-	MessageBlock(const char *_name, const char *_val)
-	        : name(_name),
-	          val(_val)
-	{}
-};
+static std::map<std::string, std::string> messages;
 
-static std::list<MessageBlock> Lang;
-typedef std::list<MessageBlock>::iterator itmb;
-
-void MSG_Add(const char * _name, const char* _val) {
-	/* Find the message */
-	for(itmb tel=Lang.begin();tel!=Lang.end();tel++) {
-		if((*tel).name==_name) { 
-//			LOG_MSG("double entry for %s",_name); //Message file might be loaded before default text messages
-			return;
-		}
-	}
-	/* if the message doesn't exist add it */
-	Lang.push_back(MessageBlock(_name,_val));
+void MSG_Add(const char *name, const char *msg)
+{
+	// Only add the message if it doesn't exist yet
+	if (messages.find(name) == messages.end())
+		messages[name] = msg;
 }
 
-void MSG_Replace(const char * _name, const char* _val) {
-	/* Find the message */
-	for(itmb tel=Lang.begin();tel!=Lang.end();tel++) {
-		if((*tel).name==_name) { 
-			Lang.erase(tel);
-			break;
-		}
-	}
-	/* Even if the message doesn't exist add it */
-	Lang.push_back(MessageBlock(_name,_val));
+void MSG_Replace(const char *name, const char *msg)
+{
+	messages[name] = msg;
 }
 
 static bool LoadMessageFile(std::string filename)
@@ -134,22 +112,19 @@ static bool LoadMessageFile(std::string filename)
 	return true;
 }
 
-const char * MSG_Get(char const * msg) {
-	for(itmb tel=Lang.begin();tel!=Lang.end();tel++){	
-		if((*tel).name==msg)
-		{
-			return  (*tel).val.c_str();
-		}
-	}
+const char *MSG_Get(char const *requested_name)
+{
+	const auto it = messages.find(requested_name);
+	if (it != messages.end())
+		return it->second.c_str();
 	return "Message not Found!\n";
 }
-
 
 bool MSG_Write(const char * location) {
 	FILE* out=fopen(location,"w+t");
 	if(out==NULL) return false;//maybe an error?
-	for(itmb tel=Lang.begin();tel!=Lang.end();tel++){
-		fprintf(out,":%s\n%s\n.\n",(*tel).name.c_str(),(*tel).val.c_str());
+	for (const auto &m : messages) {
+		fprintf(out, ":%s\n%s\n.\n", m.first.c_str(), m.second.c_str());
 	}
 	fclose(out);
 	return true;
