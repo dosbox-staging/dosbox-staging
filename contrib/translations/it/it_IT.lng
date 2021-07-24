@@ -707,6 +707,27 @@ https://github.com/dosbox-staging/dosbox-staging/wiki[0m
 [31;1mIn caso di errori, DOSBox si interromper… e terminer… senza preavvisi![0m
 
 .
+:PROGRAM_INTRO_CDROM_WINDOWS
+[2J[32;1mCome montare un'unit… CD-ROM virtuale in DOSBox:[0m
+DOSBox fornisce un'emulazione CD-ROM a vari livelli.
+
+Funziona su tutte le cartelle normali, viene installato MSCDEX e impostati
+tutti i file in sola lettura. Di solito questo va bene per la maggior parte
+dei giochi:
+
+[34;1mmount D C:\esempio -t cdrom[0m
+
+Se non funziona, potresti dover specificare l'etichetta del CD-ROM:
+
+[34;1mmount D C:\esempio -t cdrom -label ETICHETTA[0m
+
+Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
+
+[34;1mimgmount D C:\cd.iso -t cdrom[0m
+
+[34;1mimgmount D C:\cd.cue -t cdrom[0m
+
+.
 :PROGRAM_INTRO_MOUNT_START
 [2J[32;1mEcco alcuni comandi utili per iniziare:[0m
 Prima di poter usare i file nel tuo filesystem,
@@ -772,7 +793,7 @@ Possono essere modificati nel [33mkeymapper[0m.
 [33;1m%s+F5[0m   %s Scatta un'istantanea dello schermo (screenshot).
 [33;1m%s+F6[0m   %s Avvia/ferma la registrazione dell'output audio su un file wave.
 [33;1m%s+F7[0m   %s Avvia/ferma la registrazione dell'output video su un file zmbv.
-[33;1m%s+F9[0m   %s Chiudi emulatore.
+[33;1m%s+F9[0m   %s Chiudi l'emulatore.
 [33;1m%s+F10[0m  %s Cattura/Rilascia il mouse.
 [33;1m%s+F11[0m  %s Rallenta l'emulazione (Decrementa i Cicli DOSBox).
 [33;1m%s+F12[0m  %s Accelera l'emulazione (Incrementa i Cicli DOSBox).
@@ -799,7 +820,7 @@ selezionabili premendo %s+F4, e -l specifica l'unit… montata da cui eseguire
 l'avvio. Se non viene specificata alcuna lettera di unit…, l'impostazione
 predefinita prevede l'avvio dall'unit… A. 
 Le uniche lettere di unit… avviabili sono A, C, e D. Per l'avvio da un disco
-rigido (C or D), l'immagine dovrebbe essere gi… stata montata utilizzando il
+rigido (C o D), l'immagine dovrebbe essere gi… stata montata utilizzando il
 comando [34;1mIMGMOUNT[0m.
 
 La sintassi di questo comando Š:
@@ -1086,7 +1107,7 @@ M/G/A
 :SHELL_CMD_DATE_HELP_LONG
 DATE [[/T] [/H] [/S] | MM-GG-AAAA]
   MM-GG-AAAA: nuova data da impostare
-  /S:         Usa permanentemente l'ora e la data dell'host come ora del DOS
+  /S:         Usa l'ora e la data dell'host
   /F:         Torna all'ora interna di DOSBox (contrario di /S)
   /T:         Visualizza solo la data
   /H:         Sincronizza con l'host
@@ -1299,8 +1320,8 @@ Visualizza messaggi e attiva/disattiva la ripetizione dei comandi.
 Esci dalla shell.
 
 .
-:SHELL_CMD_HELP_HELP
-Visualizza la guida.
+:SHELL_CMD_HELP_HELP_LONG
+HELP [comando]
 
 .
 :SHELL_CMD_MKDIR_HELP
@@ -1370,6 +1391,28 @@ Non puoi specificare una nuova unit… o percorso per il file di destinazione.
 .
 :SHELL_CMD_DELETE_HELP
 Elimina uno o pi— file.
+
+.
+:SHELL_CMD_DELETE_HELP_LONG
+Utilizzo:
+  [32;1mdel[0m [36;1mNOMEFILE[0m
+  [32;1merase[0m [36;1mNOMEFILE[0m
+
+Dove:
+  [36;1mNOMEFILE[0m pu• essere un nome di uno file specifico (come [36;1mfile.txt[0m) oppure
+           un nome file contenente uno o pi— caratteri jolly, cioŠ:
+           asterisco (*), che rappresenta una qualsiasi sequenza di uno o pi—
+           caratteri, o punto di domanda (?) che rappresenta un singolo
+           carattere, ad esempio [36;1m*.bat[0m e [36;1mc?.txt[0m.
+
+Avvertimento:
+  Fai attenzione quando usi un nome file con caratteri jolly, in particolare
+  [36;1m*.*[0m, in quanto tutti i file corrispondenti verranno eliminati.
+
+Esempi:
+  [32;1mdel[0m [36;1mtest.bat[0m
+  [32;1mdel[0m [36;1mc*.*[0m
+  [32;1mdel[0m [36;1ma?b.c*[0m
 
 .
 :SHELL_CMD_COPY_HELP
