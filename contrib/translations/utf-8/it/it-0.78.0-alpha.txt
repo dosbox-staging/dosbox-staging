@@ -10,6 +10,9 @@ e dalle impostazioni dell'utente.
 :CONFIG_VSYNC
 Impostazione Sincronizzazione Verticale non implementata (parametro ignorato).
 .
+:CONFIG_VSYNC_SKIP
+Number of microseconds to allow rendering to block before skipping the next frame.
+.
 :CONFIG_FULLRESOLUTION
 Risoluzione da usare a schermo intero: 'original', 'desktop' o
 dimensione fissa (es. 1024x768).
