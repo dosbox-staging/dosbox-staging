@@ -6,7 +6,11 @@ Run INTRO and see Special Keys for window control hotkeys.
 Number of display to use; values depend on OS and user settings.
 .
 :CONFIG_VSYNC
-Vertical sync setting not implemented (setting ignored)
+Synchronize with display refresh rate if supported. This can
+reduce flickering and tearing, but may also impact performance.
+.
+:CONFIG_VSYNC_SKIP
+Number of microseconds to allow rendering to block before skipping the next frame.
 .
 :CONFIG_FULLRESOLUTION
 What resolution to use for fullscreen: 'original', 'desktop'
