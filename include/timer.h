@@ -144,4 +144,5 @@ static inline bool CanDelayPrecise()
 
 	return is_precise;
 }
+
 #endif

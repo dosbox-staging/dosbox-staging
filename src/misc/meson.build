@@ -3,6 +3,7 @@ libmisc_sources = [
   'fs_utils_posix.cpp',
   'fs_utils_win32.cpp',
   'messages.cpp',
+  'pacer.cpp',
   'programs.cpp',
   'rwqueue.cpp',
   'setup.cpp',
