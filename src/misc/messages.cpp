@@ -32,19 +32,19 @@
 #include "setup.h"
 #include "support.h"
 
-using namespace std;
-
 #define LINE_IN_MAXLEN 2048
 
 struct MessageBlock {
-	string name;
-	string val;
-	MessageBlock(const char* _name, const char* _val):
-	name(_name),val(_val){}
+	std::string name;
+	std::string val;
+	MessageBlock(const char *_name, const char *_val)
+	        : name(_name),
+	          val(_val)
+	{}
 };
 
-static list<MessageBlock> Lang;
-typedef list<MessageBlock>::iterator itmb;
+static std::list<MessageBlock> Lang;
+typedef std::list<MessageBlock>::iterator itmb;
 
 void MSG_Add(const char * _name, const char* _val) {
 	/* Find the message */
@@ -94,10 +94,11 @@ static bool LoadMessageFile(std::string filename)
 
 	char linein[LINE_IN_MAXLEN];
 	char name[LINE_IN_MAXLEN];
-	char string[LINE_IN_MAXLEN*10];
+	char message[LINE_IN_MAXLEN * 10];
 	/* Start out with empty strings */
-	name[0]=0;string[0]=0;
-	while(fgets(linein, LINE_IN_MAXLEN, mfile)!=0) {
+	name[0] = 0;
+	message[0] = 0;
+	while (fgets(linein, LINE_IN_MAXLEN, mfile) != 0) {
 		/* Parse the read line */
 		/* First remove characters 10 and 13 from the line */
 		char * parser=linein;
@@ -109,21 +110,23 @@ static bool LoadMessageFile(std::string filename)
 			parser++;
 		}
 		*writer=0;
-		/* New string name */
+		/* New message name */
 		if (linein[0]==':') {
-			string[0]=0;
+			message[0] = 0;
 			safe_strcpy(name, linein + 1);
-			/* End of string marker */
+			/* End of message marker */
 		} else if (linein[0]=='.') {
-			/* Replace/Add the string to the internal languagefile */
+			/* Replace/Add the message to the internal languagefile */
 			/* Remove last newline (marker is \n.\n) */
-			size_t ll = strlen(string);
-			if(ll && string[ll - 1] == '\n') string[ll - 1] = 0; //Second if should not be needed, but better be safe.
-			MSG_Replace(name,string);
+			size_t ll = strlen(message);
+			// This second if should not be needed, but better be safe.
+			if (ll && message[ll - 1] == '\n')
+				message[ll - 1] = 0;
+			MSG_Replace(name, message);
 		} else {
-		/* Normal string to be added */
-			strcat(string,linein);
-			strcat(string,"\n");
+			/* Normal message to be added */
+			strcat(message, linein);
+			strcat(message, "\n");
 		}
 	}
 	fclose(mfile);
