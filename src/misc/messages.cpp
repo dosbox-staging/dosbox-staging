@@ -22,7 +22,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <deque>
-#include <map>
+#include <unordered_map>
 #include <string>
 
 #include "control.h"
@@ -34,18 +34,27 @@
 
 #define LINE_IN_MAXLEN 2048
 
-static std::map<std::string, std::string> messages;
+static std::unordered_map<std::string, std::string> messages;
+static std::deque<std::string> messages_order;
 
+// Add but don't replace existing
 void MSG_Add(const char *name, const char *msg)
 {
 	// Only add the message if it doesn't exist yet
-	if (messages.find(name) == messages.end())
+	if (messages.find(name) == messages.end()) {
 		messages[name] = msg;
+		messages_order.emplace_back(name);
+	}
 }
 
+// Replace existing or add if it doesn't exist
 void MSG_Replace(const char *name, const char *msg)
 {
-	messages[name] = msg;
+	auto it = messages.find(name);
+	if (it == messages.end())
+		MSG_Add(name, msg);
+	else // replace the prior message
+		it->second = msg;
 }
 
 static bool LoadMessageFile(std::string filename)
@@ -120,12 +129,16 @@ const char *MSG_Get(char const *requested_name)
 	return "Message not Found!\n";
 }
 
+// Write the names and messages (in the order they were added) to the given location
 bool MSG_Write(const char * location) {
-	FILE* out=fopen(location,"w+t");
-	if(out==NULL) return false;//maybe an error?
-	for (const auto &m : messages) {
-		fprintf(out, ":%s\n%s\n.\n", m.first.c_str(), m.second.c_str());
-	}
+	FILE *out = fopen(location, "w+t");
+	if (!out)
+		return false;
+
+	for (const auto &name : messages_order)
+		fprintf(out, ":%s\n%s\n.\n", name.c_str(),
+		        messages.at(name).c_str());
+
 	fclose(out);
 	return true;
 }
