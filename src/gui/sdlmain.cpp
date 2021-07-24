@@ -53,6 +53,7 @@
 #include "keyboard.h"
 #include "mapper.h"
 #include "mouse.h"
+#include "pacer.h"
 #include "pic.h"
 #include "render.h"
 #include "setup.h"
@@ -300,6 +301,7 @@ struct SDL_Block {
 		// See FinalizeWindowState function for details.
 		bool lazy_init_window_size = false;
 		bool vsync = false;
+		int vsync_skip = 0;
 		bool want_resizable_window = false;
 		SDL_WindowEventID last_size_event = {};
 		SCREEN_TYPES type;
@@ -1650,7 +1652,10 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 	return false;
 }
 
-void GFX_EndUpdate( const Bit16u *changedLines ) {
+static Pacer render_pacer("Render", 7000);
+
+void GFX_EndUpdate(const Bit16u *changedLines)
+{
 	if (!sdl.update_display_contents)
 		return;
 #if C_OPENGL
@@ -1661,18 +1666,22 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 	if ((!using_opengl || !RENDER_GetForceUpdate()) && !sdl.updating)
 		return;
 	bool actually_updating = sdl.updating;
-	sdl.updating=false;
+	sdl.updating = false;
 	switch (sdl.desktop.type) {
-	case SCREEN_TEXTURE:
+	case SCREEN_TEXTURE: {
 		assert(sdl.texture.input_surface);
-		SDL_UpdateTexture(sdl.texture.texture,
-		                  nullptr, // update entire texture
-		                  sdl.texture.input_surface->pixels,
-		                  sdl.texture.input_surface->pitch);
-		SDL_RenderClear(sdl.renderer);
-		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, NULL, &sdl.clip);
-		SDL_RenderPresent(sdl.renderer);
-		break;
+		if (render_pacer.CanRun()) {
+			SDL_UpdateTexture(sdl.texture.texture,
+			                  nullptr, // update entire texture
+			                  sdl.texture.input_surface->pixels,
+			                  sdl.texture.input_surface->pitch);
+			SDL_RenderClear(sdl.renderer);
+			SDL_RenderCopy(sdl.renderer, sdl.texture.texture,
+			               nullptr, &sdl.clip);
+			SDL_RenderPresent(sdl.renderer);
+		}
+		render_pacer.Checkpoint();
+	} break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
 		// Clear drawing area. Some drivers (on Linux) have more than 2 buffers and the screen might
@@ -1716,13 +1725,17 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			return;
 		}
 
-		if (sdl.opengl.program_object) {
-			glUniform1i(sdl.opengl.ruby.frame_count, sdl.opengl.actual_frame_count++);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-		} else {
-			glCallList(sdl.opengl.displaylist);
+		if (render_pacer.CanRun()) {
+			if (sdl.opengl.program_object) {
+				glUniform1i(sdl.opengl.ruby.frame_count,
+				            sdl.opengl.actual_frame_count++);
+				glDrawArrays(GL_TRIANGLES, 0, 3);
+			} else {
+				glCallList(sdl.opengl.displaylist);
+			}
+			SDL_GL_SwapWindow(sdl.window);
 		}
-		SDL_GL_SwapWindow(sdl.window);
+		render_pacer.Checkpoint();
 		break;
 #endif
 	case SCREEN_SURFACE:
@@ -1743,10 +1756,14 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				}
 				index++;
 			}
-			if (rect_count)
-				SDL_UpdateWindowSurfaceRects(sdl.window,
-				                             sdl.updateRects,
-				                             rect_count);
+			if (rect_count) {
+				if (render_pacer.CanRun()) {
+					SDL_UpdateWindowSurfaceRects(sdl.window,
+					                             sdl.updateRects,
+					                             rect_count);
+				}
+				render_pacer.Checkpoint();
+			}
 		}
 		break;
 	}
@@ -2378,7 +2395,8 @@ static void GUI_StartUp(Section *sec)
 
 	// TODO vsync option is disabled for the time being, as it does not work
 	//      correctly and is causing serious bugs.
-	// sdl.desktop.vsync = section->Get_bool("vsync");
+	sdl.desktop.vsync = section->Get_bool("vsync");
+	sdl.desktop.vsync_skip = section->Get_int("vsync_skip");
 
 	const int display = section->Get_int("display");
 	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {
@@ -3096,7 +3114,7 @@ void Config_Add_SDL() {
 	Section_prop* psection;
 
 	constexpr auto always = Property::Changeable::Always;
-	constexpr auto deprecated = Property::Changeable::Deprecated;
+	// constexpr auto deprecated = Property::Changeable::Deprecated;
 	constexpr auto on_start = Property::Changeable::OnlyAtStart;
 
 	Pbool = sdl_sec->Add_bool("fullscreen", always, false);
@@ -3107,8 +3125,14 @@ void Config_Add_SDL() {
 	pint->Set_help("Number of display to use; values depend on OS and user "
 	               "settings.");
 
-	Pbool = sdl_sec->Add_bool("vsync", deprecated, false);
-	Pbool->Set_help("Vertical sync setting not implemented (setting ignored)");
+	Pbool = sdl_sec->Add_bool("vsync", on_start, false);
+	Pbool->Set_help("Synchronize with display refresh rate if supported. This can\n"
+	                "reduce flickering and tearing, but may also impact performance.");
+
+	pint = sdl_sec->Add_int("vsync_skip", on_start, 7000);
+	pint->Set_help("Number of microseconds to allow rendering to block before skipping "
+	               "the next frame.");
+	pint->SetMinMax(1, 14000);
 
 	Pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
 	Pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop'\n"
@@ -3650,7 +3674,10 @@ int sdl_main(int argc, char *argv[])
 		/* Some extra SDL Functions */
 		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
 
-		if (control->cmdline->FindExist("-fullscreen") || sdl_sec->Get_bool("fullscreen")) {
+		render_pacer.SetTimeout(sdl.desktop.vsync_skip);
+
+		if (control->cmdline->FindExist("-fullscreen") ||
+		    sdl_sec->Get_bool("fullscreen")) {
 			if(!sdl.desktop.fullscreen) { //only switch if not already in fullscreen
 				GFX_SwitchFullScreen();
 			}
