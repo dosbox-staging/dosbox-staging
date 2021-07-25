@@ -11,7 +11,8 @@ e dalle impostazioni dell'utente.
 Impostazione Sincronizzazione Verticale non implementata (parametro ignorato).
 .
 :CONFIG_VSYNC_SKIP
-Number of microseconds to allow rendering to block before skipping the next frame.
+Numero di microsecondi per consentire il blocco del rendering prima di saltare
+il fotogramma successivo.
 .
 :CONFIG_FULLRESOLUTION
 Risoluzione da usare a schermo intero: 'original', 'desktop' o
@@ -211,7 +212,7 @@ Tipo di MPU-401 da emulare.
 Percorso del file SoundFont in formato .sf2. Puoi utilizzare un percorso
 assoluto o relativo, o il nome di un file .sf2 all'interno della cartella
 'soundfonts' situata nella cartella di configurazione di DOSBox.
-Una percentuale opzionale ridimensionerà il volume del SoundFont.
+Una percentuale opzionale regolerà il volume del SoundFont.
 Ad esempio: 'soundfont.sf2 50' lo attenuerà del 50 percento.
 La percentuale del volume può variare da 1 a 500.
 .
@@ -260,7 +261,7 @@ Tutte le modalità OPL sono compatibili con AdLib, eccetto per 'cms'.
 .
 :CONFIG_OPLEMU
 Provider per l'emulazione OPL. 'compat' fornisce una migliore qualità, 'nuked'
-è l'impostazione predefinita e più accurata (ma la più intensa per la CPU).
+è l'impostazione predefinita e più accurata (ma la più impegnativa per la CPU).
 .
 :CONFIG_GUS
 Abilita l'emulazione della scheda audio Gravis UltraSound.
@@ -770,7 +771,7 @@ nella tua nuova unità C.
 Una volta qui, digita [34;1mdir[0m per visualizzarne il contenuto.
 [34;1mcd[0m ti permette di spostarti all'interno di in una cartella 
 (riconoscibile dalle [33;1m[][0m nell'elenco delle cartelle).
-Puoi eseguire programmi/file con estensione [31m.exe, .bat[0m e [31m.com[0m.
+Puoi eseguire programmi/file con estensione [31m.exe[0m, [31m.bat[0m e [31m.com[0m.
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
