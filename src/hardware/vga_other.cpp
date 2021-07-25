@@ -31,18 +31,21 @@
 #include "support.h"
 #include "vga.h"
 
-static void write_crtc_index_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
-	vga.other.index=(Bit8u)val;
+static void write_crtc_index_other(Bitu /*port*/, uint8_t val, Bitu /*iolen*/)
+{
+	// only receives 8-bit data per its IO port registration
+	vga.other.index = val;
 }
 
-static Bitu read_crtc_index_other(Bitu /*port*/,Bitu /*iolen*/) {
+static uint8_t read_crtc_index_other(Bitu /*port*/, uint8_t /*iolen*/)
+{
+	// only returns 8-bit data per its IO port registration
 	return vga.other.index;
 }
 
-static void write_crtc_data_other(Bitu /*port*/, Bitu data, Bitu /*iolen*/)
+static void write_crtc_data_other(Bitu /*port*/, uint8_t val, Bitu /*iolen*/)
 {
-	// write_crtc_data_other() only accepts 8-bit data per its IO port registration
-	auto val = static_cast<uint8_t>(data);
+	// only receives 8-bit data per its IO port registration
 
 	switch (vga.other.index) {
 	case 0x00:		//Horizontal total
@@ -122,8 +125,9 @@ static void write_crtc_data_other(Bitu /*port*/, Bitu data, Bitu /*iolen*/)
 		LOG(LOG_VGAMISC, LOG_NORMAL)("MC6845:Write %u to illegal index %x", val, vga.other.index);
 	}
 }
-static uint8_t read_crtc_data_other(Bitu /*port*/, Bitu /*iolen*/)
+static uint8_t read_crtc_data_other(Bitu /*port*/, uint8_t /*iolen*/)
 {
+	// only returns 8-bit data per its IO port registration
 	switch (vga.other.index) {
 	case 0x00:		//Horizontal total
 		return vga.other.htotal;
@@ -171,7 +175,9 @@ static uint8_t read_crtc_data_other(Bitu /*port*/, Bitu /*iolen*/)
 	return static_cast<uint8_t>(~0);
 }
 
-static void write_lightpen(Bitu port,Bitu /*val*/,Bitu) {
+static void write_lightpen(Bitu port, uint8_t /*val*/, Bitu)
+{
+	// only receives 8-bit data per its IO port registration
 	switch (port) {
 	case 0x3db:	// Clear lightpen latch
 		vga.other.lightpen_triggered = false;
@@ -498,6 +504,7 @@ static void DecreaseWhichControl(bool pressed) {
 
 static void write_cga_color_select(uint8_t val)
 {
+	// only receives 8-bit data per its IO port registration
 	vga.tandy.color_select=val;
 	switch(vga.mode) {
 	case M_TANDY4:
@@ -528,10 +535,9 @@ static void write_cga_color_select(uint8_t val)
 	}
 }
 
-static void write_cga(Bitu port, Bitu data, Bitu /*iolen*/)
+static void write_cga(Bitu port, uint8_t val, Bitu /*iolen*/)
 {
-	// The only data written is 8-bit per write_cga's IO port registration
-	const auto val = static_cast<uint8_t>(data);
+	// only receives 8-bit data per its IO port registration
 	switch (port) {
 	case 0x3d8:
 		vga.tandy.mode_control = val;
@@ -712,7 +718,9 @@ static void TandyCheckLineMask(void ) {
 	}
 }
 
-static void write_tandy_reg(Bit8u val) {
+static void write_tandy_reg(uint8_t val)
+{
+	// only receives 8-bit data per its IO port registration
 	switch (vga.tandy.reg_index) {
 	case 0x0:
 		if (machine==MCH_PCJR) {
@@ -754,10 +762,9 @@ static void write_tandy_reg(Bit8u val) {
 	}
 }
 
-static void write_tandy(Bitu port, Bitu data, Bitu /*iolen*/)
+static void write_tandy(Bitu port, uint8_t val, Bitu /*iolen*/)
 {
-	// only is passed 8-bit data given its IO port registration
-	auto val = static_cast<uint8_t>(data);
+	// only receives 8-bit data per its IO port registration
 	switch (port) {
 	case 0x3d8:
 		val &= 0x3f; // only bits 0-6 are used
@@ -802,12 +809,15 @@ static void write_tandy(Bitu port, Bitu data, Bitu /*iolen*/)
 	}
 }
 
-static void write_pcjr(Bitu port,Bitu val,Bitu /*iolen*/) {
+static void write_pcjr(Bitu port, uint8_t val, Bitu /*iolen*/)
+{
+	// only receives 8-bit data per its IO port registration
 	switch (port) {
 	case 0x3da:
-		if (vga.tandy.pcjr_flipflop) write_tandy_reg((Bit8u)val);
+		if (vga.tandy.pcjr_flipflop)
+			write_tandy_reg(val);
 		else {
-			vga.tandy.reg_index=(Bit8u)val;
+			vga.tandy.reg_index = val;
 			if (vga.tandy.reg_index & 0x10)
 				vga.attr.disabled |= 2;
 			else vga.attr.disabled &= ~2;
@@ -844,7 +854,7 @@ static void write_pcjr(Bitu port,Bitu val,Bitu /*iolen*/) {
 		//    CRTC RA1. This results in the 4-bank mode.
 		//    PG1-2 in effect. 32k range.
 
-		vga.tandy.line_mask = (Bit8u)(val >> 6);
+		vga.tandy.line_mask = val >> 6;
 		vga.tandy.draw_bank = val & ((vga.tandy.line_mask&2) ? 0x6 : 0x7);
 		vga.tandy.mem_bank = (val >> 3) & 7;
 		vga.tandy.draw_base = &MemBase[vga.tandy.draw_bank * 16 * 1024];
@@ -980,12 +990,10 @@ static void write_hercules(Bitu port, uint8_t val, Bitu /*iolen*/)
 	}
 }
 
-/* static Bitu read_hercules(Bitu port,Bitu iolen) {
-	LOG_MSG("read from Herc port %x",port);
-	return 0;
-} */
+uint8_t read_herc_status(Bitu /*port*/, uint8_t /*iolen*/)
+{
+	// only returns 8-bit data per its IO port registration
 
-Bitu read_herc_status(Bitu /*port*/,Bitu /*iolen*/) {
 	// 3BAh (R):  Status Register
 	// bit   0  Horizontal sync
 	//       1  Light pen status (only some cards)
@@ -1090,15 +1098,15 @@ void VGA_SetupOther(void)
 		                  "CGA Comp");
 	}
 	if (machine == MCH_HERC) {
-		Bitu base=0x3b0;
+		constexpr uint16_t base = 0x3b0;
 		for (uint8_t i = 0; i < 4; ++i) {
 			// The registers are repeated as the address is not decoded properly;
 			// The official ports are 3b4, 3b5
-			const auto index_port = base + i * 2;
+			const auto index_port = base + i * 2u;
 			IO_RegisterWriteHandler(index_port, write_crtc_index_other, IO_MB);
 			IO_RegisterReadHandler(index_port, read_crtc_index_other, IO_MB);
 
-			const auto data_port = index_port + 1;
+			const auto data_port = index_port + 1u;
 			IO_RegisterWriteHandler(data_port, write_crtc_data_other, IO_MB);
 			IO_RegisterReadHandler(data_port, read_crtc_data_other, IO_MB);
 		}
@@ -1109,12 +1117,12 @@ void VGA_SetupOther(void)
 		IO_RegisterWriteHandler(0x3bf,write_hercules,IO_MB);
 		IO_RegisterReadHandler(0x3ba,read_herc_status,IO_MB);
 	} else if (!IS_EGAVGA_ARCH) {
-		Bitu base=0x3d0;
-		for (Bitu port_ct=0; port_ct<4; port_ct++) {
-			IO_RegisterWriteHandler(base+port_ct*2,write_crtc_index_other,IO_MB);
-			IO_RegisterWriteHandler(base+port_ct*2+1,write_crtc_data_other,IO_MB);
-			IO_RegisterReadHandler(base+port_ct*2,read_crtc_index_other,IO_MB);
-			IO_RegisterReadHandler(base+port_ct*2+1,read_crtc_data_other,IO_MB);
+		constexpr uint16_t base = 0x3d0;
+		for (uint8_t port_ct = 0; port_ct < 4; port_ct++) {
+			IO_RegisterWriteHandler(base + port_ct * 2, write_crtc_index_other, IO_MB);
+			IO_RegisterWriteHandler(base + port_ct * 2 + 1, write_crtc_data_other, IO_MB);
+			IO_RegisterReadHandler(base + port_ct * 2, read_crtc_index_other, IO_MB);
+			IO_RegisterReadHandler(base + port_ct * 2 + 1, read_crtc_data_other, IO_MB);
 		}
 	}
 }
