@@ -587,14 +587,14 @@ static void write_cga_color_select(uint8_t val)
 	switch(vga.mode) {
 	case M_TANDY4:
 	case M_CGA4_COMPOSITE: {
-		Bit8u base = (val & 0x10) ? 0x08 : 0;
-		Bit8u bg = val & 0xf;
-		if (vga.tandy.mode_control & 0x4)	// cyan red white
-			VGA_SetCGA4Table(bg, 3+base, 4+base, 7+base);
-		else if (val & 0x20)				// cyan magenta white
-			VGA_SetCGA4Table(bg, 3+base, 5+base, 7+base);
-		else								// green red brown
-			VGA_SetCGA4Table(bg, 2+base, 4+base, 6+base);
+		uint8_t base = (val & 0x10) ? 0x08 : 0;
+		uint8_t bg = val & 0xf;
+		if (vga.tandy.mode_control & 0x4) // cyan red white
+			VGA_SetCGA4Table(bg, 3 + base, 4 + base, 7 + base);
+		else if (val & 0x20) // cyan magenta white
+			VGA_SetCGA4Table(bg, 3 + base, 5 + base, 7 + base);
+		else // green red brown
+			VGA_SetCGA4Table(bg, 2 + base, 4 + base, 6 + base);
 		vga.tandy.border_color = bg;
 		vga.attr.overscan_color = bg;
 		break;
@@ -685,11 +685,13 @@ static void tandy_update_palette() {
 					vga.attr.palette[0], vga.attr.palette[1],
 					vga.attr.palette[2], vga.attr.palette[3]);
 			} else {
-				Bit8u color_set = 0;
-				Bit8u r_mask = 0xf;
-				if (vga.tandy.color_select & 0x10) color_set |= 8; // intensity
-				if (vga.tandy.color_select & 0x20) color_set |= 1; // Cyan Mag. White
-				if (vga.tandy.mode_control & 0x04) {			// Cyan Red White
+				uint8_t color_set = 0;
+				uint8_t r_mask = 0xf;
+				if (vga.tandy.color_select & 0x10)
+					color_set |= 8; // intensity
+				if (vga.tandy.color_select & 0x20)
+					color_set |= 1; // Cyan Mag. White
+				if (vga.tandy.mode_control & 0x04) { // Cyan Red White
 					color_set |= 1;
 					r_mask &= ~1;
 				}
@@ -754,11 +756,13 @@ static void PCJr_FindMode()
 	is_composite_new_era = true;
 	if (vga.tandy.mode_control & 0x2) {
 		if (vga.tandy.mode_control & 0x10) {
-			/* bit4 of mode control 1 signals 16 colour graphics mode */
-			if (vga.mode==M_TANDY4) VGA_SetModeNow(M_TANDY16); // TODO lowres mode only
-			else VGA_SetMode(M_TANDY16);
+			// bit4 of mode control 1 signals 16 colour graphics mode
+			if (vga.mode == M_TANDY4)
+				VGA_SetModeNow(M_TANDY16); // TODO lowres mode only
+			else
+				VGA_SetMode(M_TANDY16);
 		} else if (vga.tandy.gfx_control & 0x08) {
-			/* bit3 of mode control 2 signals 2 colour graphics mode */
+			// bit3 of mode control 2 signals 2 colour graphics mode
 			if (cga_comp == 1 ||
 			    (cga_comp == 0 && !(vga.tandy.mode_control & 0x4))) {
 				VGA_SetMode(M_CGA2_COMPOSITE);
@@ -766,7 +770,7 @@ static void PCJr_FindMode()
 				VGA_SetMode(M_TANDY2);
 			}
 		} else {
-			/* otherwise some 4-colour graphics mode */
+			// otherwise some 4-colour graphics mode
 			const auto new_mode = (cga_comp == 1) ? M_CGA4_COMPOSITE
 			                                      : M_TANDY4;
 			if (vga.mode == M_TANDY16) {
@@ -982,14 +986,15 @@ static void CycleMonoCGABright(bool pressed) {
 	Mono_CGA_Palette();
 }
 
-void Mono_CGA_Palette(void) {
-	for (Bit8u ct=0;ct<16;ct++) {
-		VGA_DAC_SetEntry(ct,
-						 mono_cga_palettes[2*mono_cga_pal+mono_cga_bright][ct][0],
-						 mono_cga_palettes[2*mono_cga_pal+mono_cga_bright][ct][1],
-						 mono_cga_palettes[2*mono_cga_pal+mono_cga_bright][ct][2]
-		);
-		VGA_DAC_CombineColor(ct,ct);
+void Mono_CGA_Palette()
+{
+	for (uint8_t ct = 0; ct < 16; ++ct) {
+		VGA_DAC_SetEntry(
+		        ct,
+		        mono_cga_palettes[2 * mono_cga_pal + mono_cga_bright][ct][0],
+		        mono_cga_palettes[2 * mono_cga_pal + mono_cga_bright][ct][1],
+		        mono_cga_palettes[2 * mono_cga_pal + mono_cga_bright][ct][2]);
+		VGA_DAC_CombineColor(ct, ct);
 	}
 }
 
@@ -1083,10 +1088,11 @@ uint8_t read_herc_status(Bitu /*port*/, uint8_t /*iolen*/)
 	//       7  Vertical sync inverted
 
 	double timeInFrame = PIC_FullIndex()-vga.draw.delay.framestart;
-	Bit8u retval=0x72; // Hercules ident; from a working card (Winbond W86855AF)
-					// Another known working card has 0x76 ("KeysoGood", full-length)
-	if (timeInFrame < vga.draw.delay.vrstart ||
-		timeInFrame > vga.draw.delay.vrend) retval |= 0x80;
+	uint8_t retval = 0x72; // Hercules ident; from a working card (Winbond
+	                       // W86855AF) Another known working card has 0x76
+	                       // ("KeysoGood", full-length)
+	if (timeInFrame < vga.draw.delay.vrstart || timeInFrame > vga.draw.delay.vrend)
+		retval |= 0x80;
 
 	double timeInLine=fmod(timeInFrame,vga.draw.delay.htotal);
 	if (timeInLine >= vga.draw.delay.hrstart &&
@@ -1098,7 +1104,7 @@ uint8_t read_herc_status(Bitu /*port*/, uint8_t /*iolen*/)
 	return retval;
 }
 
-void VGA_SetupOther(void)
+void VGA_SetupOther()
 {
 	memset(&vga.tandy, 0, sizeof(vga.tandy));
 	vga.attr.disabled = 0;
@@ -1112,7 +1118,7 @@ void VGA_SetupOther(void)
 	vga.tandy.line_shift = 13;
 
 	if (machine==MCH_CGA || IS_TANDY_ARCH) {
-		extern Bit8u int10_font_08[256 * 8];
+		extern uint8_t int10_font_08[256 * 8];
 		for (int i = 0; i < 256; ++i) {
 			memcpy(&vga.draw.font[i * 32], &int10_font_08[i * 8], 8);
 		}
@@ -1123,7 +1129,7 @@ void VGA_SetupOther(void)
 		IO_RegisterWriteHandler(0x3dc,write_lightpen,IO_MB);
 	}
 	if (machine==MCH_HERC) {
-		extern Bit8u int10_font_14[256 * 14];
+		extern uint8_t int10_font_14[256 * 14];
 		for (int i = 0; i < 256; ++i) {
 			memcpy(&vga.draw.font[i * 32], &int10_font_14[i * 14], 14);
 		}
@@ -1196,7 +1202,7 @@ void VGA_SetupOther(void)
 		IO_RegisterReadHandler(0x3ba,read_herc_status,IO_MB);
 	} else if (!IS_EGAVGA_ARCH) {
 		constexpr uint16_t base = 0x3d0;
-		for (uint8_t port_ct = 0; port_ct < 4; port_ct++) {
+		for (uint8_t port_ct = 0; port_ct < 4; ++port_ct) {
 			IO_RegisterWriteHandler(base + port_ct * 2, write_crtc_index_other, IO_MB);
 			IO_RegisterWriteHandler(base + port_ct * 2 + 1, write_crtc_data_other, IO_MB);
 			IO_RegisterReadHandler(base + port_ct * 2, read_crtc_index_other, IO_MB);
