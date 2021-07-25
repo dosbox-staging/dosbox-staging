@@ -205,146 +205,294 @@ static int16_t saturation = 100;
 static int16_t sharpness = 0;
 static int16_t hue_offset = 0;
 static uint8_t cga_comp = 0;
-static bool new_cga = 0;
+static bool is_composite_new_era = false;
 
-static Bit8u herc_pal = 0;
-static Bit8u mono_cga_pal = 0;
-static Bit8u mono_cga_bright = 0;
-static Bit8u mono_cga_palettes[8][16][3] =
+static uint8_t herc_pal = 0;
+static uint8_t mono_cga_pal = 0;
+static uint8_t mono_cga_bright = 0;
+
+constexpr uint8_t mono_cga_palettes[8][16][3] = {
+        {
+                // 0 - green, 4-color-optimized contrast
+                {0x00, 0x00, 0x00},
+                {0x00, 0x0d, 0x03},
+                {0x01, 0x17, 0x05},
+                {0x01, 0x1a, 0x06},
+                {0x02, 0x28, 0x09},
+                {0x02, 0x2c, 0x0a},
+                {0x03, 0x39, 0x0d},
+                {0x03, 0x3c, 0x0e},
+                {0x00, 0x07, 0x01},
+                {0x01, 0x13, 0x04},
+                {0x01, 0x1f, 0x07},
+                {0x01, 0x23, 0x08},
+                {0x02, 0x31, 0x0b},
+                {0x02, 0x35, 0x0c},
+                {0x05, 0x3f, 0x11},
+                {0x0d, 0x3f, 0x17},
+        },
+        {
+                // 1 - green, 16-color-optimized contrast
+                {0x00, 0x00, 0x00},
+                {0x00, 0x0d, 0x03},
+                {0x01, 0x15, 0x05},
+                {0x01, 0x17, 0x05},
+                {0x01, 0x21, 0x08},
+                {0x01, 0x24, 0x08},
+                {0x02, 0x2e, 0x0b},
+                {0x02, 0x31, 0x0b},
+                {0x01, 0x22, 0x08},
+                {0x02, 0x28, 0x09},
+                {0x02, 0x30, 0x0b},
+                {0x02, 0x32, 0x0c},
+                {0x03, 0x39, 0x0d},
+                {0x03, 0x3b, 0x0e},
+                {0x09, 0x3f, 0x14},
+                {0x0d, 0x3f, 0x17},
+        },
+        {
+                // 2 - amber, 4-color-optimized contrast
+                {0x00, 0x00, 0x00},
+                {0x15, 0x05, 0x00},
+                {0x20, 0x0b, 0x00},
+                {0x24, 0x0d, 0x00},
+                {0x33, 0x18, 0x00},
+                {0x37, 0x1b, 0x00},
+                {0x3f, 0x26, 0x01},
+                {0x3f, 0x2b, 0x06},
+                {0x0b, 0x02, 0x00},
+                {0x1b, 0x08, 0x00},
+                {0x29, 0x11, 0x00},
+                {0x2e, 0x14, 0x00},
+                {0x3b, 0x1e, 0x00},
+                {0x3e, 0x21, 0x00},
+                {0x3f, 0x32, 0x0a},
+                {0x3f, 0x38, 0x0d},
+        },
+        {
+                // 3 - amber, 16-color-optimized contrast
+                {0x00, 0x00, 0x00},
+                {0x15, 0x05, 0x00},
+                {0x1e, 0x09, 0x00},
+                {0x21, 0x0b, 0x00},
+                {0x2b, 0x12, 0x00},
+                {0x2f, 0x15, 0x00},
+                {0x38, 0x1c, 0x00},
+                {0x3b, 0x1e, 0x00},
+                {0x2c, 0x13, 0x00},
+                {0x32, 0x17, 0x00},
+                {0x3a, 0x1e, 0x00},
+                {0x3c, 0x1f, 0x00},
+                {0x3f, 0x27, 0x01},
+                {0x3f, 0x2a, 0x04},
+                {0x3f, 0x36, 0x0c},
+                {0x3f, 0x38, 0x0d},
+        },
+        {
+                // 4 - grey, 4-color-optimized contrast
+                {0x00, 0x00, 0x00},
+                {0x0d, 0x0d, 0x0d},
+                {0x15, 0x15, 0x15},
+                {0x18, 0x18, 0x18},
+                {0x24, 0x24, 0x24},
+                {0x27, 0x27, 0x27},
+                {0x33, 0x33, 0x33},
+                {0x37, 0x37, 0x37},
+                {0x08, 0x08, 0x08},
+                {0x10, 0x10, 0x10},
+                {0x1c, 0x1c, 0x1c},
+                {0x20, 0x20, 0x20},
+                {0x2c, 0x2c, 0x2c},
+                {0x2f, 0x2f, 0x2f},
+                {0x3b, 0x3b, 0x3b},
+                {0x3f, 0x3f, 0x3f},
+        },
+        {
+                // 5 - grey, 16-color-optimized contrast
+                {0x00, 0x00, 0x00},
+                {0x0d, 0x0d, 0x0d},
+                {0x12, 0x12, 0x12},
+                {0x15, 0x15, 0x15},
+                {0x1e, 0x1e, 0x1e},
+                {0x20, 0x20, 0x20},
+                {0x29, 0x29, 0x29},
+                {0x2c, 0x2c, 0x2c},
+                {0x1f, 0x1f, 0x1f},
+                {0x23, 0x23, 0x23},
+                {0x2b, 0x2b, 0x2b},
+                {0x2d, 0x2d, 0x2d},
+                {0x34, 0x34, 0x34},
+                {0x36, 0x36, 0x36},
+                {0x3d, 0x3d, 0x3d},
+                {0x3f, 0x3f, 0x3f},
+        },
+        {
+                // 6 - paper-white, 4-color-optimized contrast
+                {0x00, 0x00, 0x00},
+                {0x0e, 0x0f, 0x10},
+                {0x15, 0x17, 0x18},
+                {0x18, 0x1a, 0x1b},
+                {0x24, 0x25, 0x25},
+                {0x27, 0x28, 0x28},
+                {0x33, 0x34, 0x32},
+                {0x37, 0x38, 0x35},
+                {0x09, 0x0a, 0x0b},
+                {0x11, 0x12, 0x13},
+                {0x1c, 0x1e, 0x1e},
+                {0x20, 0x22, 0x22},
+                {0x2c, 0x2d, 0x2c},
+                {0x2f, 0x30, 0x2f},
+                {0x3c, 0x3c, 0x38},
+                {0x3f, 0x3f, 0x3b},
+        },
+        {
+                // 7 - paper-white, 16-color-optimized contrast
+                {0x00, 0x00, 0x00},
+                {0x0e, 0x0f, 0x10},
+                {0x13, 0x14, 0x15},
+                {0x15, 0x17, 0x18},
+                {0x1e, 0x20, 0x20},
+                {0x20, 0x22, 0x22},
+                {0x29, 0x2a, 0x2a},
+                {0x2c, 0x2d, 0x2c},
+                {0x1f, 0x21, 0x21},
+                {0x23, 0x25, 0x25},
+                {0x2b, 0x2c, 0x2b},
+                {0x2d, 0x2e, 0x2d},
+                {0x34, 0x35, 0x33},
+                {0x37, 0x37, 0x34},
+                {0x3e, 0x3e, 0x3a},
+                {0x3f, 0x3f, 0x3b},
+        }};
+
+template <typename chroma_t>
+constexpr float new_cga_v(const chroma_t c,
+                          const float i,
+                          const float r,
+                          const float g,
+                          const float b)
 {
-	{ // 0 - green, 4-color-optimized contrast
-		{0x00,0x00,0x00},{0x00,0x0d,0x03},{0x01,0x17,0x05},{0x01,0x1a,0x06},{0x02,0x28,0x09},{0x02,0x2c,0x0a},{0x03,0x39,0x0d},{0x03,0x3c,0x0e},
-		{0x00,0x07,0x01},{0x01,0x13,0x04},{0x01,0x1f,0x07},{0x01,0x23,0x08},{0x02,0x31,0x0b},{0x02,0x35,0x0c},{0x05,0x3f,0x11},{0x0d,0x3f,0x17},
-	},
-	{ // 1 - green, 16-color-optimized contrast
-		{0x00,0x00,0x00},{0x00,0x0d,0x03},{0x01,0x15,0x05},{0x01,0x17,0x05},{0x01,0x21,0x08},{0x01,0x24,0x08},{0x02,0x2e,0x0b},{0x02,0x31,0x0b},
-		{0x01,0x22,0x08},{0x02,0x28,0x09},{0x02,0x30,0x0b},{0x02,0x32,0x0c},{0x03,0x39,0x0d},{0x03,0x3b,0x0e},{0x09,0x3f,0x14},{0x0d,0x3f,0x17},
-	},
-	{ // 2 - amber, 4-color-optimized contrast
-		{0x00,0x00,0x00},{0x15,0x05,0x00},{0x20,0x0b,0x00},{0x24,0x0d,0x00},{0x33,0x18,0x00},{0x37,0x1b,0x00},{0x3f,0x26,0x01},{0x3f,0x2b,0x06},
-		{0x0b,0x02,0x00},{0x1b,0x08,0x00},{0x29,0x11,0x00},{0x2e,0x14,0x00},{0x3b,0x1e,0x00},{0x3e,0x21,0x00},{0x3f,0x32,0x0a},{0x3f,0x38,0x0d},
-	},
-	{ // 3 - amber, 16-color-optimized contrast
-		{0x00,0x00,0x00},{0x15,0x05,0x00},{0x1e,0x09,0x00},{0x21,0x0b,0x00},{0x2b,0x12,0x00},{0x2f,0x15,0x00},{0x38,0x1c,0x00},{0x3b,0x1e,0x00},
-		{0x2c,0x13,0x00},{0x32,0x17,0x00},{0x3a,0x1e,0x00},{0x3c,0x1f,0x00},{0x3f,0x27,0x01},{0x3f,0x2a,0x04},{0x3f,0x36,0x0c},{0x3f,0x38,0x0d},
-	},
-	{ // 4 - grey, 4-color-optimized contrast
-		{0x00,0x00,0x00},{0x0d,0x0d,0x0d},{0x15,0x15,0x15},{0x18,0x18,0x18},{0x24,0x24,0x24},{0x27,0x27,0x27},{0x33,0x33,0x33},{0x37,0x37,0x37},
-		{0x08,0x08,0x08},{0x10,0x10,0x10},{0x1c,0x1c,0x1c},{0x20,0x20,0x20},{0x2c,0x2c,0x2c},{0x2f,0x2f,0x2f},{0x3b,0x3b,0x3b},{0x3f,0x3f,0x3f},
-	},
-	{ // 5 - grey, 16-color-optimized contrast
-		{0x00,0x00,0x00},{0x0d,0x0d,0x0d},{0x12,0x12,0x12},{0x15,0x15,0x15},{0x1e,0x1e,0x1e},{0x20,0x20,0x20},{0x29,0x29,0x29},{0x2c,0x2c,0x2c},
-		{0x1f,0x1f,0x1f},{0x23,0x23,0x23},{0x2b,0x2b,0x2b},{0x2d,0x2d,0x2d},{0x34,0x34,0x34},{0x36,0x36,0x36},{0x3d,0x3d,0x3d},{0x3f,0x3f,0x3f},
-	},
-	{ // 6 - paper-white, 4-color-optimized contrast
-		{0x00,0x00,0x00},{0x0e,0x0f,0x10},{0x15,0x17,0x18},{0x18,0x1a,0x1b},{0x24,0x25,0x25},{0x27,0x28,0x28},{0x33,0x34,0x32},{0x37,0x38,0x35},
-		{0x09,0x0a,0x0b},{0x11,0x12,0x13},{0x1c,0x1e,0x1e},{0x20,0x22,0x22},{0x2c,0x2d,0x2c},{0x2f,0x30,0x2f},{0x3c,0x3c,0x38},{0x3f,0x3f,0x3b},
-	},
-	{ // 7 - paper-white, 16-color-optimized contrast
-		{0x00,0x00,0x00},{0x0e,0x0f,0x10},{0x13,0x14,0x15},{0x15,0x17,0x18},{0x1e,0x20,0x20},{0x20,0x22,0x22},{0x29,0x2a,0x2a},{0x2c,0x2d,0x2c},
-		{0x1f,0x21,0x21},{0x23,0x25,0x25},{0x2b,0x2c,0x2b},{0x2d,0x2e,0x2d},{0x34,0x35,0x33},{0x37,0x37,0x34},{0x3e,0x3e,0x3a},{0x3f,0x3f,0x3b},
-	},
-};
+	const auto c_weighted = 0.29f * c / 0.72f;
+	const auto i_weighted = 0.32f * i / 0.28f;
+	const auto r_weighted = 0.10f * r / 0.28f;
+	const auto g_weighted = 0.22f * g / 0.28f;
+	const auto b_weighted = 0.07f * b / 0.28f;
+	return c_weighted + i_weighted + r_weighted + g_weighted + b_weighted;
+}
 
-static void update_cga16_color(void) {
+static void update_cga16_color()
+{
 	// New algorithm by reenigne
 	// Works in all CGA modes/color settings and can simulate older and
 	// newer CGA revisions
-	static const double tau = 6.28318531; // == 2*pi
-	static unsigned char chroma_multiplexer[256] = {
-		  2,  2,  2,  2, 114,174,  4,  3,   2,  1,133,135,   2,113,150,  4,
-		133,  2,  1, 99, 151,152,  2,  1,   3,  2, 96,136, 151,152,151,152,
-		  2, 56, 62,  4, 111,250,118,  4,   0, 51,207,137,   1,171,209,  5,
-		140, 50, 54,100, 133,202, 57,  4,   2, 50,153,149, 128,198,198,135,
-		 32,  1, 36, 81, 147,158,  1, 42,  33,  1,210,254,  34,109,169, 77,
-		177,  2,  0,165, 189,154,  3, 44,  33,  0, 91,197, 178,142,144,192,
-		  4,  2, 61, 67, 117,151,112, 83,   4,  0,249,255,   3,107,249,117,
-		147,  1, 50,162, 143,141, 52, 54,   3,  0,145,206, 124,123,192,193,
-		 72, 78,  2,  0, 159,208,  4,  0,  53, 58,164,159,  37,159,171,  1,
-		248,117,  4, 98, 212,218,  5,  2,  54, 59, 93,121, 176,181,134,130,
-		  1, 61, 31,  0, 160,255, 34,  1,   1, 58,197,166,   0,177,194,  2,
-		162,111, 34, 96, 205,253, 32,  1,   1, 57,123,125, 119,188,150,112,
-		 78,  4,  0, 75, 166,180, 20, 38,  78,  1,143,246,  42,113,156, 37,
-		252,  4,  1,188, 175,129,  1, 37, 118,  4, 88,249, 202,150,145,200,
-		 61, 59, 60, 60, 228,252,117, 77,  60, 58,248,251,  81,212,254,107,
-		198, 59, 58,169, 250,251, 81, 80, 100, 58,154,250, 251,252,252,252};
-	static double intensity[4] = {
-		77.175381, 88.654656, 166.564623, 174.228438};
+	constexpr auto tau = static_cast<float>(2 * M_PI);
 
-#define NEW_CGA(c, i, r, g, b) \
-	(((c) / 0.72) * 0.29 + ((i) / 0.28) * 0.32 + ((r) / 0.28) * 0.1 + \
-	 ((g) / 0.28) * 0.22 + ((b) / 0.28) * 0.07)
+	constexpr uint8_t chroma_multiplexer[256] = {
+	        2,   2,   2,   2,   114, 174, 4,   3,   2,   1,   133, 135, 2,
+	        113, 150, 4,   133, 2,   1,   99,  151, 152, 2,   1,   3,   2,
+	        96,  136, 151, 152, 151, 152, 2,   56,  62,  4,   111, 250, 118,
+	        4,   0,   51,  207, 137, 1,   171, 209, 5,   140, 50,  54,  100,
+	        133, 202, 57,  4,   2,   50,  153, 149, 128, 198, 198, 135, 32,
+	        1,   36,  81,  147, 158, 1,   42,  33,  1,   210, 254, 34,  109,
+	        169, 77,  177, 2,   0,   165, 189, 154, 3,   44,  33,  0,   91,
+	        197, 178, 142, 144, 192, 4,   2,   61,  67,  117, 151, 112, 83,
+	        4,   0,   249, 255, 3,   107, 249, 117, 147, 1,   50,  162, 143,
+	        141, 52,  54,  3,   0,   145, 206, 124, 123, 192, 193, 72,  78,
+	        2,   0,   159, 208, 4,   0,   53,  58,  164, 159, 37,  159, 171,
+	        1,   248, 117, 4,   98,  212, 218, 5,   2,   54,  59,  93,  121,
+	        176, 181, 134, 130, 1,   61,  31,  0,   160, 255, 34,  1,   1,
+	        58,  197, 166, 0,   177, 194, 2,   162, 111, 34,  96,  205, 253,
+	        32,  1,   1,   57,  123, 125, 119, 188, 150, 112, 78,  4,   0,
+	        75,  166, 180, 20,  38,  78,  1,   143, 246, 42,  113, 156, 37,
+	        252, 4,   1,   188, 175, 129, 1,   37,  118, 4,   88,  249, 202,
+	        150, 145, 200, 61,  59,  60,  60,  228, 252, 117, 77,  60,  58,
+	        248, 251, 81,  212, 254, 107, 198, 59,  58,  169, 250, 251, 81,
+	        80,  100, 58,  154, 250, 251, 252, 252, 252,
+	};
 
-	double mode_brightness;
-	double mode_contrast;
-	double mode_hue;
-	double min_v;
-	double max_v;
-	if (!new_cga) {
-		min_v = chroma_multiplexer[0] + intensity[0];
-		max_v = chroma_multiplexer[255] + intensity[3];
-	} else {
-		double i0 = intensity[0];
-		double i3 = intensity[3];
-		min_v = NEW_CGA(chroma_multiplexer[0], i0, i0, i0, i0);
-		max_v = NEW_CGA(chroma_multiplexer[255], i3, i3, i3, i3);
-	}
-	mode_contrast = 256 / (max_v - min_v);
-	mode_brightness = -min_v * mode_contrast;
-	if (vga.mode == M_CGA_TEXT_COMPOSITE && (vga.tandy.mode_control & 1) != 0)
-		mode_hue = 14;
-	else
-		mode_hue = 4;
+	constexpr float intensity[4] = {
+	        77.175381f,
+	        88.654656f,
+	        166.564623f,
+	        174.228438f,
+	};
 
-	mode_contrast *= contrast / 100;
-	mode_brightness += brightness * 5;
-	double mode_saturation = (new_cga ? 5.8 : 2.9) * saturation / 100;
+	constexpr auto i0 = intensity[0];
+	constexpr auto i3 = intensity[3];
 
-	for (int x = 0; x < 1024; ++x) {
-		int phase = x & 3;
-		int right = (x >> 2) & 15;
-		int left = (x >> 6) & 15;
-		int rc = right;
-		int lc = left;
-		if ((vga.tandy.mode_control & 4) != 0) {
-			rc = (right & 8) | ((right & 7) != 0 ? 7 : 0);
-			lc = (left & 8) | ((left & 7) != 0 ? 7 : 0);
+	const auto min_v = is_composite_new_era
+	                           ? new_cga_v(chroma_multiplexer[0], i0, i0, i0, i0)
+	                           : chroma_multiplexer[0] + i0;
+
+	const auto max_v = is_composite_new_era
+	                           ? new_cga_v(chroma_multiplexer[255], i3, i3, i3, i3)
+	                           : chroma_multiplexer[255] + i3;
+
+	const auto mode_contrast = 2.56f * contrast / (max_v - min_v);
+
+	const auto mode_brightness = brightness * 5 - 256 * min_v / (max_v - min_v);
+
+	const bool in_tandy_text_mode = (vga.mode == M_CGA_TEXT_COMPOSITE) &&
+	                                (vga.tandy.mode_control & 1);
+	const auto mode_hue = in_tandy_text_mode ? 14.0f : 4.0f;
+
+	const auto mode_saturation = saturation * (is_composite_new_era ? 5.8f : 2.9f) / 100;
+
+	// Update the Composite CGA palette
+	const bool in_tandy_mode_4 = vga.tandy.mode_control & 4;
+	for (uint16_t x = 0; x < 1024; ++x) {
+		const uint16_t right = (x >> 2) & 15;
+		const uint16_t rc = in_tandy_mode_4
+		                            ? (right & 8) |
+		                                      ((right & 7) != 0 ? 7 : 0)
+		                            : right;
+
+		const uint16_t left = (x >> 6) & 15;
+		const uint16_t lc = in_tandy_mode_4
+		                            ? (left & 8) | ((left & 7) != 0 ? 7 : 0)
+		                            : left;
+
+		const uint16_t phase = x & 3;
+		const float c = chroma_multiplexer[((lc & 7) << 5) | ((rc & 7) << 2) | phase];
+
+		const float i = intensity[(left >> 3) | ((right >> 2) & 2)];
+
+		if (is_composite_new_era) {
+			const float r = intensity[((left >> 2) & 1) | ((right >> 1) & 2)];
+			const float g = intensity[((left >> 1) & 1) | (right & 2)];
+			const float b = intensity[(left & 1) | ((right << 1) & 2)];
+			const auto v = new_cga_v(c, i, r, g, b);
+			CGA_Composite_Table[x] = static_cast<int>(
+			        v * mode_contrast + mode_brightness);
+		} else {
+			const auto v = c + i;
+			CGA_Composite_Table[x] = static_cast<int>(
+			        v * mode_contrast + mode_brightness);
 		}
-		double c = chroma_multiplexer[((lc & 7) << 5) | ((rc & 7) << 2) | phase];
-		double i = intensity[(left >> 3) | ((right >> 2) & 2)];
-		double v;
-		if (!new_cga)
-			v = c + i;
-		else {
-			double r = intensity[((left >> 2) & 1) | ((right >> 1) & 2)];
-			double g = intensity[((left >> 1) & 1) | (right & 2)];
-			double b = intensity[(left & 1) | ((right << 1) & 2)];
-			v = NEW_CGA(c, i, r, g, b);
-		}
-		CGA_Composite_Table[x] = static_cast<int>(v * mode_contrast +
-		                                          mode_brightness);
 	}
-#undef NEW_CGA
 
-	double i = CGA_Composite_Table[6 * 68] - CGA_Composite_Table[6 * 68 + 2];
-	double q = CGA_Composite_Table[6 * 68 + 1] - CGA_Composite_Table[6 * 68 + 3];
+	const auto i = static_cast<float>(CGA_Composite_Table[6 * 68] -
+	                                  CGA_Composite_Table[6 * 68 + 2]);
+	const auto q = static_cast<float>(CGA_Composite_Table[6 * 68 + 1] -
+	                                  CGA_Composite_Table[6 * 68 + 3]);
 
-	double a = tau * (33 + 90 + hue_offset + mode_hue) / 360.0;
-	double c = cos(a);
-	double s = sin(a);
-	double r = 256 * mode_saturation / sqrt(i * i + q * q);
-	if ((vga.tandy.mode_control & 4) != 0)
-		r = 0;
+	const auto a = tau * (33 + 90 + hue_offset + mode_hue) / 360.0f;
+	const auto c = cosf(a);
+	const auto s = sinf(a);
 
-	double iq_adjust_i = -(i * c + q * s) * r;
-	double iq_adjust_q = (q * c - i * s) * r;
+	const auto r = in_tandy_mode_4
+	                       ? 0.0f
+	                       : 256 * mode_saturation / sqrt(i * i + q * q);
 
-	static const double ri = 0.9563;
-	static const double rq = 0.6210;
-	static const double gi = -0.2721;
-	static const double gq = -0.6474;
-	static const double bi = -1.1069;
-	static const double bq = 1.7046;
+	const auto iq_adjust_i = -(i * c + q * s) * r;
+	const auto iq_adjust_q = (q * c - i * s) * r;
+
+	constexpr auto ri = 0.9563f;
+	constexpr auto rq = 0.6210f;
+	constexpr auto gi = -0.2721f;
+	constexpr auto gq = -0.6474f;
+	constexpr auto bi = -1.1069f;
+	constexpr auto bq = 1.7046f;
 
 	vga.ri = static_cast<int>(ri * iq_adjust_i + rq * iq_adjust_q);
 	vga.rq = static_cast<int>(-ri * iq_adjust_q + rq * iq_adjust_i);
@@ -352,7 +500,7 @@ static void update_cga16_color(void) {
 	vga.gq = static_cast<int>(-gi * iq_adjust_q + gq * iq_adjust_i);
 	vga.bi = static_cast<int>(bi * iq_adjust_i + bq * iq_adjust_q);
 	vga.bq = static_cast<int>(-bi * iq_adjust_q + bq * iq_adjust_i);
-	vga.sharpness = static_cast<int>(sharpness * 256 / 100);
+	vga.sharpness = sharpness * 256 / 100;
 }
 
 static int which_control = 0;
