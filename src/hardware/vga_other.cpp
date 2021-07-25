@@ -503,152 +503,82 @@ static void update_cga16_color()
 	vga.sharpness = sharpness * 256 / 100;
 }
 
-static int which_control = 0;
+enum CRT_KNOB : uint8_t {
+	ERA = 0,
+	HUE,
+	SATURATION,
+	CONTRAST,
+	BRIGHTNESS,
+	SHARPNESS,
+	ENUM_END
+};
+static auto crt_knob = CRT_KNOB::ERA;
 
-static void LogControlValue()
+static void log_crt_knob_value()
 {
-	update_cga16_color();
-	switch (which_control) {
-	case 0:
-		LOG_MSG("%s model CGA selected", new_cga ? "Late" : "Early");
+	switch (crt_knob) {
+	case CRT_KNOB::ERA:
+		LOG_MSG("COMPOSITE: %s-era CGA selected",
+		        is_composite_new_era ? "New" : "Old");
 		break;
-	case 1: LOG_MSG("Hue: %f", hue_offset); break;
-	case 2: LOG_MSG("Saturation at %f", saturation); break;
-	case 3: LOG_MSG("Contrast at %f", contrast); break;
-	case 4: LOG_MSG("Brightness at %f", brightness); break;
-	case 5: LOG_MSG("Sharpness at %f", sharpness); break;
+	case CRT_KNOB::HUE:
+		LOG_MSG("COMPOSITE: Hue is %d", hue_offset);
+		break;
+	case CRT_KNOB::SATURATION:
+		LOG_MSG("COMPOSITE: Saturation at %d", saturation);
+		break;
+	case CRT_KNOB::CONTRAST:
+		LOG_MSG("COMPOSITE: Contrast at %d", contrast);
+		break;
+	case CRT_KNOB::BRIGHTNESS:
+		LOG_MSG("COMPOSITE: Brightness at %d", brightness);
+		break;
+	case CRT_KNOB::SHARPNESS:
+		LOG_MSG("COMPOSITE: Sharpness at %d", sharpness);
+		break;
+	case CRT_KNOB::ENUM_END:
+		assertm(false, "Should not reach CRT knob end marker");
+		break;
 	}
 }
 
-static void IncreaseHue(bool pressed) {
-	if (!pressed)
-		return;
-	hue_offset += 5.0;
-	LogControlValue();
-}
- 
-static void DecreaseHue(bool pressed) {
-	if (!pressed)
-		return;
-	hue_offset -= 5.0;
-	LogControlValue();
-}
-
-static void IncreaseSaturation(bool pressed)
+static void turn_crt_knob(bool pressed, const int amount)
 {
 	if (!pressed)
 		return;
-	saturation += 5;
-	LogControlValue();
-}
-
-static void DecreaseSaturation(bool pressed)
-{
-	if (!pressed)
-		return;
-	saturation -= 5;
-	LogControlValue();
-}
-
-static void IncreaseContrast(bool pressed)
-{
-	if (!pressed)
-		return;
-	contrast += 5;
-	LogControlValue();
-}
-
-static void DecreaseContrast(bool pressed)
-{
-	if (!pressed)
-		return;
-	contrast -= 5;
-	LogControlValue();
-}
-
-static void IncreaseBrightness(bool pressed)
-{
-	if (!pressed)
-		return;
-	brightness += 5;
-	LogControlValue();
-}
-
-static void DecreaseBrightness(bool pressed)
-{
-	if (!pressed)
-		return;
-	brightness -= 5;
-	LogControlValue();
-}
-
-static void IncreaseSharpness(bool pressed)
-{
-	if (!pressed)
-		return;
-	sharpness += 5;
-	LogControlValue();
-}
-
-static void DecreaseSharpness(bool pressed)
-{
-	if (!pressed)
-		return;
-	sharpness -= 5;
-	LogControlValue();
-}
-
-static void CGAModel(bool pressed)
-{
-	if (!pressed)
-		return;
-	new_cga = !new_cga;
-	LogControlValue();
-}
-
-static void IncreaseControlValue(bool pressed)
-{
-	if (!pressed)
-		return;
-	switch (which_control) {
-	case 0: CGAModel(true); break;
-	case 1: IncreaseHue(true); break;
-	case 2: IncreaseSaturation(true); break;
-	case 3: IncreaseContrast(true); break;
-	case 4: IncreaseBrightness(true); break;
-	case 5: IncreaseSharpness(true); break;
+	switch (crt_knob) {
+	case CRT_KNOB::ERA: is_composite_new_era = !is_composite_new_era; break;
+	case CRT_KNOB::HUE: hue_offset = (hue_offset + amount) % 360; break;
+	case CRT_KNOB::SATURATION: saturation += amount; break;
+	case CRT_KNOB::CONTRAST: contrast += amount; break;
+	case CRT_KNOB::BRIGHTNESS: brightness += amount; break;
+	case CRT_KNOB::SHARPNESS: sharpness += amount; break;
+	case CRT_KNOB::ENUM_END:
+		assertm(false, "Should not reach CRT knob end marker");
+		break;
 	}
+	update_cga16_color();
+	log_crt_knob_value();
 }
 
-static void DecreaseControlValue(bool pressed)
+static void turn_crt_knob_positive(bool pressed)
+{
+	turn_crt_knob(pressed, 5);
+}
+
+static void turn_crt_knob_negative(bool pressed)
+{
+	turn_crt_knob(pressed, -5);
+}
+
+static void select_next_crt_knob(bool pressed)
 {
 	if (!pressed)
 		return;
-	switch (which_control) {
-	case 0: CGAModel(true); break;
-	case 1: DecreaseHue(true); break;
-	case 2: DecreaseSaturation(true); break;
-	case 3: DecreaseContrast(true); break;
-	case 4: DecreaseBrightness(true); break;
-	case 5: DecreaseSharpness(true); break;
-	}
+	const auto next_knob = static_cast<uint8_t>(crt_knob) + 1;
+	crt_knob = static_cast<CRT_KNOB>(next_knob % CRT_KNOB::ENUM_END);
+	log_crt_knob_value();
 }
-
-static void CycleWhichControl(bool pressed)
-{
-	if (!pressed)
-		return;
-	which_control = (which_control + 1) % 6;
-	LogControlValue();
-}
-
-/*
-static void DecreaseWhichControl(bool pressed) {
-        if (!pressed)
-                return;
-        which_control = (which_control + 5)%6;
-        LogControlValue();
- } */
 
 static void write_cga_color_select(uint8_t val)
 {
@@ -821,7 +751,7 @@ static void TANDY_FindMode()
 
 static void PCJr_FindMode()
 {
-	new_cga = 1;
+	is_composite_new_era = true;
 	if (vga.tandy.mode_control & 0x2) {
 		if (vga.tandy.mode_control & 0x10) {
 			/* bit4 of mode control 1 signals 16 colour graphics mode */
@@ -1205,12 +1135,12 @@ void VGA_SetupOther(void)
 		IO_RegisterWriteHandler(0x3d8,write_cga,IO_MB);
 		IO_RegisterWriteHandler(0x3d9,write_cga,IO_MB);
 		if (!mono_cga) {
-			MAPPER_AddHandler(CycleWhichControl, SDL_SCANCODE_F10,
-			                  0, "select", "Sel Ctl");
-			MAPPER_AddHandler(DecreaseControlValue, SDL_SCANCODE_F11,
-			                  MMOD2, "decval", "Dec Val");
-			MAPPER_AddHandler(IncreaseControlValue, SDL_SCANCODE_F11,
-			                  0, "incval", "Inc Val");
+			MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10,
+			                  0, "select", "Sel Knob");
+			MAPPER_AddHandler(turn_crt_knob_positive, SDL_SCANCODE_F11,
+			                  0, "incval", "Inc Knob");
+			MAPPER_AddHandler(turn_crt_knob_negative, SDL_SCANCODE_F11,
+			                  MMOD2, "decval", "Dec Knob");
 			MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0,
 			                  "cgacomp", "CGA Comp");
 		} else {
@@ -1236,12 +1166,12 @@ void VGA_SetupOther(void)
 		write_pcjr( 0x3df, 0x7 | (0x7 << 3), 0 );
 		IO_RegisterWriteHandler(0x3da,write_pcjr,IO_MB);
 		IO_RegisterWriteHandler(0x3df,write_pcjr,IO_MB);
-		MAPPER_AddHandler(CycleWhichControl, SDL_SCANCODE_F10, 0,
-		                  "select", "Sel Ctl");
-		MAPPER_AddHandler(DecreaseControlValue, SDL_SCANCODE_F11, MMOD2,
-		                  "decval", "Dec Val");
-		MAPPER_AddHandler(IncreaseControlValue, SDL_SCANCODE_F11, 0,
-		                  "incval", "Inc Val");
+		MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10, 0,
+		                  "select", "Sel Knob");
+		MAPPER_AddHandler(turn_crt_knob_positive, SDL_SCANCODE_F11, 0,
+		                  "incval", "Inc Knob");
+		MAPPER_AddHandler(turn_crt_knob_negative, SDL_SCANCODE_F11,
+		                  MMOD2, "decval", "Dec Knob");
 		MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0, "cgacomp",
 		                  "CGA Comp");
 	}
