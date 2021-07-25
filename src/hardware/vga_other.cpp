@@ -199,12 +199,12 @@ static void write_lightpen(Bitu port, uint8_t /*val*/, Bitu)
 	}
 }
 
-static double brightness = 0;
-static double contrast = 100;
-static double saturation = 100;
-static double sharpness = 0;
-static double hue_offset = 0;
-static Bit8u cga_comp = 0;
+static int16_t brightness = 0;
+static int16_t contrast = 100;
+static int16_t saturation = 100;
+static int16_t sharpness = 0;
+static int16_t hue_offset = 0;
+static uint8_t cga_comp = 0;
 static bool new_cga = 0;
 
 static Bit8u herc_pal = 0;
