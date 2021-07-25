@@ -65,7 +65,7 @@ jobs:
           - name: GCC, warning_level=3
             os: ubuntu-20.04
             build_flags: -Dwarning_level=3
-            max_warnings: 64
+            max_warnings: 62
 
           - name: GCC, minimum build
             os: ubuntu-20.04
