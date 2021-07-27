@@ -8,7 +8,7 @@ Nummer der zu verwendenden Anzeige; die Werte hängen vom Betriebssystem und den
 Vertikale Synchronisations-Einstellung nicht implementiert (Einstellung wird ignoriert)
 .
 :CONFIG_VSYNC_SKIP
-Number of microseconds to allow rendering to block before skipping the next frame.
+Anzahl der Mikrosekunden, die das Rendering verzögert sein darf, bevor der nächste Frame übersprungen wird.
 .
 :CONFIG_FULLRESOLUTION
 Welche Auflösung für den Vollbildmodus verwendet werden soll: 'Original', 'Desktop'
@@ -269,30 +269,30 @@ Patch-Sets, die mit Timidity verwendet werden,
 sollten gut funktionieren.
 .
 :CONFIG_SIDMODEL
-Model of chip to emulate in the Innovation SSI-2001 card:
- - auto:  Selects the 6581 chip.
- - 6581:  The original chip, known for its bassy and rich character.
- - 8580:  A later revision that more closely matched the SID specification.
-          It fixed the 6581's DC bias and is less prone to distortion.
-          The 8580 is an option on reproduction cards, like the DuoSID.
- - none:  Disables the card.
+Modell des Chips, der auf der Innovation SSI-2001 Karte emuliert werden soll:
+ - auto:  Wählt den 6581 Chip aus.
+ - 6581:  Der Original-Chip, bekannt für seinen basslastigen und satten Charakter.
+ - 8580:  Eine spätere Revision, die der SID-Spezifikation besser entsprach.
+          Er korrigiert die DC-Vorspannung des 6581 und ist weniger anfällig für Verzerrungen.
+          Der 8580 ist eine Option auf Reproduktionskarten, wie dem DuoSID.
+ - none:  Deaktiviert die Karte.
 .
 :CONFIG_SIDCLOCK
-The SID chip's clock frequency, which is jumperable on reproduction cards.
- - default: uses 0.895 MHz, per the original SSI-2001 card.
- - c64ntsc: uses 1.023 MHz, per NTSC Commodore PCs and the DuoSID.
- - c64pal:  uses 0.985 MHz, per PAL Commodore PCs and the DuoSID.
- - hardsid: uses 1.000 MHz, available on the DuoSID.
+Die Taktfrequenz des SID-Chips, die auf Nachbaukarten jumperbar ist.
+ - default: verwendet 0,895 MHz, wie auf der originalen SSI-2001 Karte.
+ - c64ntsc: verwendet 1,023 MHz, für NTSC Commodore PCs und das DuoSID.
+ - c64pal: verwendet 0,985 MHz, für PAL Commodore PCs und das DuoSID.
+ - hardsid: verwendet 1.000 MHz, verfügbar auf dem DuoSID.
 .
 :CONFIG_SIDPORT
-The IO port address of the Innovation SSI-2001.
+Die IO Port Adresse des Innovation SSI-2001.
 .
 :CONFIG_6581FILTER
-The SID's analog filtering meant that each chip was physically unique.
-Adjusts the 6581's filtering strength as a percent from 0 to 100.
+Die analoge Filterung des SID bedeutete, dass jeder Chip physikalisch einzigartig war.
+Stellt die Filterstärke des 6581 als Prozentwert von 0 bis 100 ein.
 .
 :CONFIG_8580FILTER
-Adjusts the 8580's filtering strength as a percent from 0 to 100.
+Passt die Filterstärke des 8580 als Prozentwert von 0 bis 100 an.
 .
 :CONFIG_PCSPEAKER
 Aktiviere die PC-Lautsprecher-Emulation.
@@ -315,7 +315,7 @@ Sample-Rate des Tandy 3-Voice Generators.
 Aktiviere die Disney Sound Source Emulation. (Covox Voice Master und Speech Thing kompatibel).
 .
 :CONFIG_PS1AUDIO
-Enable IBM PS/1 Audio emulation.
+Aktiviere die IBM PS/1 Audio Emulation.
 .
 :CONFIG_JOYSTICKTYPE
 Typ des zu emulierenden Joysticks: auto (Standard),
@@ -704,7 +704,7 @@ Laufwerks-Cache geleert.
 .
 :PROGRAM_INTRO
 [2J[32;1mWillkommen zu DOSBox Staging[0m, einem x86-Emulator mit Sound und Grafik.
-DOSBox erstellt eine Shell für dich, die wie das altbekannte klassische DOS aussieht.
+DOSBox erstellt eine Shell, die wie das altbekannte klassische DOS aussieht.
 
 Für Informationen über das grundsätzliche Mounten tippe [34;1mintro mount[0m
 Für Informationen über die CD-ROM Unterstützung tippe [34;1mintro cdrom[0m
@@ -717,8 +717,8 @@ https://github.com/dosbox-staging/dosbox-staging/wiki[0m
 .
 :PROGRAM_INTRO_MOUNT_START
 [2J[32;1mHier sind einige Befehle, die dir den Einstieg erleichtern:[0m
-Bevor du die Dateien, die auf deinem eigenen Dateisystem liegen, benutzen kannst,
-musst du das Verzeichnis, das die Dateien enthält, mounten.
+Bevor du die Dateien, die auf deinem eigenen Dateisystem liegen,
+benutzen kannst, musst du das Verzeichnis, das die Dateien enthält, mounten.
 
 
 .
@@ -739,28 +739,11 @@ musst du das Verzeichnis, das die Dateien enthält, mounten.
 
 .
 :PROGRAM_INTRO_MOUNT_END
-Nach erfolgreichem Mounten der Festplatte kannst du [34;1mc:[0m eingeben, um zu deinem frisch
-gemounteten C-Laufwerk zu wechseln. Wenn du dort [34;1mdir[0m] eingibst, wird der Inhalt angezeigt. [34;1mcd[0m erlaubt es dir
-in ein Verzeichnis zu wechseln (erkennbar am [33;1m[][0m in einer Verzeichnisliste).
+Nach erfolgreichem Mounten der Festplatte kannst du [34;1mc:[0m eingeben,
+um zu deinem frisch gemounteten C-Laufwerk zu wechseln.
+Wenn du dort [34;1mdir[0m] eingibst, wird der Inhalt angezeigt. [34;1mcd[0m erlaubt es dir
+in ein Verzeichnis zu wechseln (erkennbar am [33;1m[][0m in einer Verzeichnisliste).
 Du kannst Programme/Dateien mit den Erweiterungen [31m.exe .bat[0m und [31m.com[0m ausführen.
-
-.
-:PROGRAM_INTRO_CDROM
-[2J[32;1mWie man ein virtuelles CD-ROM-Laufwerk in DOSBox einbindet:[0m
-DOSBox bietet CD-ROM-Emulation auf mehreren Ebenen.
-
-Dies funktioniert mit allen normalen Verzeichnissen, installiert MSCDEX und markiert die Dateien
-schreibgeschützt. Normalerweise reicht das für die meisten Programme aus:
-
-[34;1mmount D C:\example -t cdrom[0m
-
-Wenn das nicht funktioniert, musst du DOSBox eventuell das Label der CD-ROM mitteilen:
-
-[34;1mmount D C:\example -t cdrom -label CDLABEL[0m
-
-Zusätzlich kannst du imgmount benutzen, um iso oder cue/bin Images zu mounten:
-
-[34;1mimgmount D C:\cd.iso -t cdrom[0m
 
 .
 :PROGRAM_INTRO_SPECIAL
@@ -771,7 +754,7 @@ Sie können im [33mkeymapper[0m geändert werden.
 [33;1m%s+Enter[0m  Umschalten zwischen Vollbild- und Fenstermodus.
 [33;1m%s+Pause[0m  Pause/Unpause Emulator.
 [33;1m%s+F1[0m   %s Starte den [33mkeymapper[0m.
-[33;1m%s+F4[0m   %s Wechsle das gemountete Disk Image, aktualisiere den Verzeichnis-Cache für alle Laufwerke.
+[33;1m%s+F4[0m   %s Wechsle das gemountete Disk Image, aktualisiere Verzeichnis-Cache.
 [33;1m%s+F5[0m   %s Einen Screenshot speichern.
 [33;1m%s+F6[0m   %s Aufnahme der Soundausgabe in einer Wave-Datei starten/stoppen.
 [33;1m%s+F7[0m   %s Aufnahme der Videoausgabe in einer zmbv-Datei starten/stoppen.
@@ -1209,9 +1192,9 @@ Es ist nur möglich SUBST auf lokalen Laufwerken zu verwenden
 ║ [32mWillkommen zu DOSBox Staging %-39s[37m║
 ║                                                                     ║
 ║ Für eine kurze Einführung für neue Benutzer tippe: [33mINTRO[37m            ║
-║ Für unterstützte Shell-Befehle gib ein: [33mHELP[37m                        ║
+║ Für unterstützte Shell-Befehle gib [33mHELP[37m ein.                        ║
 ║                                                                     ║
-║ Emulierte CPU-Geschwindigkeit anzupassen mit [31m%s+F11[37m und [31m%s+F12[37m.%s%s ║
+║ Emulierte CPU-Geschwindigkeit anpassen mit [31m%s+F11[37m und [31m%s+F12[37m.%s%s   ║
 ║ Aktiviere den Keymapper mit [31m%s+F1[37m.%s                                ║
 ║ Weitere Informationen in der [36mREADME[37m Datei im DOSBox Verzeichnis.    ║
 ║                                                                     ║
@@ -1289,7 +1272,7 @@ DIR [Laufwerk:][Pfad][Dateiname] [/[W|B]] [/P] [/[AD]|[A-D]] [/O[-][N|E|S|D]]
 
 .
 :SHELL_CMD_ECHO_HELP
-Zeigt Meldungen an und aktiviert/deaktiviert das Ausgeben von Befehlen.
+Zeigt Meldungen und aktiviert/deaktiviert die Ausgabe von Befehlen.
 
 .
 :SHELL_CMD_EXIT_HELP
@@ -1331,7 +1314,7 @@ Springt zu einer beschrifteten Zeile in einem Batch-Programm.
 
 .
 :SHELL_CMD_SHIFT_HELP
-Kommandozeilenparameter in einem Batch-Programm nach links verschieben.
+Kommandozeilenparameter eines Batch-Programms nach links verschieben.
 
 .
 :SHELL_CMD_TYPE_HELP
@@ -1382,7 +1365,7 @@ Einem Laufwerk ein internes Verzeichnis zuweisen.
 
 .
 :SHELL_CMD_LOADHIGH_HELP
-Lädt ein Programm in den oberen Speicher (erfordert xms=true,umb=true).
+Lädt Programme in den oberen Speicher (erfordert xms=true,umb=true).
 
 .
 :SHELL_CMD_LS_HELP
@@ -1450,19 +1433,19 @@ Die angegebene DOS-Version ist nicht korrekt.
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[2J[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:[0m
-DOSBox provides CD-ROM emulation on several levels.
+[2J[32;1mWie man ein virtuelles CD-ROM-Laufwerk in DOSBox einbindet:[0m
+DOSBox bietet CD-ROM-Emulation auf mehreren Ebenen.
 
-This works on all normal directories, installs MSCDEX and marks the files
-read-only. Usually this is enough for most games:
+Dies funktioniert mit allen normalen Verzeichnissen, installiert MSCDEX und markiert die Dateien
+schreibgeschützt. Normalerweise reicht das für die meisten Programme aus:
 
-[34;1mmount D C:\example -t cdrom[0m
+[34;1mmount D C:\beispiel -t cdrom[0m
 
-If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
+Wenn das nicht funktioniert, musst du DOSBox eventuell das Label der CD-ROM mitteilen:
 
-[34;1mmount D C:\example -t cdrom -label CDLABEL[0m
+[34;1mmount D C:\beispiel -t cdrom -label CDLABEL[0m
 
-Additionally, you can use imgmount to mount iso or cue/bin images:
+Zusätzlich kannst du imgmount benutzen, um iso oder cue/bin Images zu mounten:
 
 [34;1mimgmount D C:\cd.iso -t cdrom[0m
 
@@ -1470,19 +1453,19 @@ Additionally, you can use imgmount to mount iso or cue/bin images:
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:[0m
-DOSBox provides CD-ROM emulation on several levels.
+[2J[32;1mWie man ein virtuelles CD-ROM-Laufwerk in DOSBox einbindet:[0m
+DOSBox bietet CD-ROM-Emulation auf mehreren Ebenen.
 
-This works on all normal directories, installs MSCDEX and marks the files
-read-only. Usually this is enough for most games:
+Dies funktioniert mit allen normalen Verzeichnissen, installiert MSCDEX und markiert die Dateien
+schreibgeschützt. Normalerweise reicht das für die meisten Programme aus:
 
-[34;1mmount D ~/example -t cdrom[0m
+[34;1mmount D ~/beispiel -t cdrom[0m
 
-If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
+Wenn das nicht funktioniert, musst du DOSBox eventuell das Label der CD-ROM mitteilen:
 
-[34;1mmount D ~/example -t cdrom -label CDLABEL[0m
+[34;1mmount D ~/beispiel -t cdrom -label CDLABEL[0m
 
-Additionally, you can use imgmount to mount iso or cue/bin images:
+Zusätzlich kannst du imgmount benutzen, um iso oder cue/bin Images zu mounten:
 
 [34;1mimgmount D ~/cd.iso -t cdrom[0m
 
@@ -1490,25 +1473,25 @@ Additionally, you can use imgmount to mount iso or cue/bin images:
 
 .
 :SHELL_CMD_HELP_HELP_LONG
-HELP [command]
+HELP [Befehl]
 
 .
 :SHELL_CMD_DELETE_HELP_LONG
-Usage:
-  [32;1mdel[0m [36;1mPATTERN[0m
-  [32;1merase[0m [36;1mPATTERN[0m
+Verwendung:
+  [32;1mdel[0m [36;1mZEICHENFOLGE[0m
+  [32;1merase[0m [36;1mZEICHENFOLGE[0m
 
-Where:
-  [36;1mPATTERN[0m can be either an exact filename (such as [36;1mfile.txt[0m) or an inexact
-          filename using one or more wildcards, which are the asterisk (*)
-          representing any sequence of one or more characters, and the question
-          mark (?) representing any single character, such as [36;1m*.bat[0m and [36;1mc?.txt[0m.
+Wobei:
+  [36;1mZEICHENFOLGE[0m kann entweder ein exakter Dateiname sein (wie [36;1mfile.txt[0m) oder ein ungenauer
+          Dateiname sein, der einen oder mehrere Platzhalter verwendet, nämlich das Sternchen (*)
+          das für eine beliebige Folge von einem oder mehreren Zeichen steht, und das Fragezeichen
+          (?), das für ein einzelnes Zeichen steht, wie z.B. [36;1m*.bat[0m und [36;1mc?.txt[0m.
 
-Warning:
-  Be careful when using a pattern with wildcards, especially [36;1m*.*[0m, as all files
-  matching the pattern will be deleted.
+Warnung:
+  Sei vorsichtig, wenn du ein Muster mit Platzhaltern verwendest, insbesondere [36;1m*.*[0m, da alle Dateien
+  die mit dem Muster übereinstimmen, gelöscht werden.
 
-Examples:
+Beispiele:
   [32;1mdel[0m [36;1mtest.bat[0m
   [32;1mdel[0m [36;1mc*.*[0m
   [32;1mdel[0m [36;1ma?b.c*[0m
