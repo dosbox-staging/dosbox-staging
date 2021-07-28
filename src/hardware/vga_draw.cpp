@@ -131,14 +131,14 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 	if ((vga.tandy.mode_control & 4) != 0) {
 		// Decode
 		int *i = temp + 5;
-		Bit32u *srgb = (Bit32u *)TempLine;
+		uint16_t idx = 0;
 		for (Bit32u x = 0; x < blocks * 4; ++x) {
 			int c = (i[0] + i[0]) << 3;
 			int d = (i[-1] + i[1]) << 3;
 			int y = ((c + d) << 8) + vga.sharpness * (c - d);
 			++i;
-			*srgb = byte_clamp(y) * 0x10101;
-			++srgb;
+			write_unaligned_uint32_at(TempLine, idx++,
+			                          byte_clamp(y) * 0x10101);
 		}
 	} else {
 		// Store chroma
@@ -155,8 +155,8 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 		i = temp + 5;
 		i[-1] = (i[-1] << 3) - ap[-1];
 		i[0] = (i[0] << 3) - ap[0];
-		Bit32u *srgb = (Bit32u *)TempLine;
 
+		uint16_t idx = 0;
 		auto COMPOSITE_CONVERT = [&](const int I, const int Q) {
 			i[1] = (i[1] << 3) - ap[1];
 			const int c = i[0] + i[0];
@@ -168,9 +168,9 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 			++i;
 			++ap;
 			++bp;
-			*srgb = (byte_clamp(rr) << 16) | (byte_clamp(gg) << 8) |
-			        byte_clamp(bb);
-			++srgb;
+			const auto srgb = (byte_clamp(rr) << 16) |
+			                  (byte_clamp(gg) << 8) | byte_clamp(bb);
+			write_unaligned_uint32_at(TempLine, idx++, srgb);
 		};
 
 		for (Bit32u x = 0; x < blocks; ++x) {
