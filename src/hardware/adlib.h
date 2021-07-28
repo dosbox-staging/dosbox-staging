@@ -33,13 +33,13 @@ namespace Adlib {
 
 class Timer {
 	//Rounded down start time
-	double start;
+	float start;
 	//Time when you overflow
-	double trigger;
+	float trigger;
 	//Clock interval
-	double clockInterval;
+	float clockInterval;
 	//cycle interval
-	double counterInterval;
+	float counterInterval;
 	uint8_t counter;
 	bool enabled;
 	bool overflow;
@@ -47,10 +47,10 @@ class Timer {
 
 public:
 	Timer(int16_t micros)
-	        : start(0.0),
-	          trigger(0.0),
-	          clockInterval(micros * 0.001), // interval in milliseconds
-	          counterInterval(0),
+	        : start(0.0f),
+	          trigger(0.0f),
+	          clockInterval(micros * 0.001f), // interval in milliseconds
+	          counterInterval(0.0f),
 	          counter(0),
 	          enabled(false),
 	          overflow(false),
@@ -61,12 +61,13 @@ public:
 
 	//Update returns with true if overflow
 	//Properly syncs up the start/end to current time and changing intervals
-	bool Update( double time ) {
-		if (enabled && (time >= trigger) ) {
-			//How far into the next cycle
-			const double deltaTime = time - trigger;
-			//Sync start to last cycle
-			const double counterMod = fmod(deltaTime, counterInterval);
+	bool Update(const float time)
+	{
+		if (enabled && (time >= trigger)) {
+			// How far into the next cycle
+			const float deltaTime = time - trigger;
+			// Sync start to last cycle
+			const auto counterMod = fmodf(deltaTime, counterInterval);
 			start = time - counterMod;
 			trigger = start + counterInterval;
 			//Only set the overflow flag when not masked
@@ -98,13 +99,14 @@ public:
 		enabled = false;
 	}
 
-	void Start( const double time ) {
-		//Only properly start when not running before
+	void Start(const float time)
+	{
+		// Only properly start when not running before
 		if (!enabled) {
 			enabled = true;
 			overflow = false;
 			//Sync start to the last clock interval
-			const double clockMod = fmod(time, clockInterval);
+			const auto clockMod = fmodf(time, clockInterval);
 			start = time - clockMod;
 			//Overflow trigger
 			trigger = start + counterInterval;
@@ -134,13 +136,13 @@ typedef enum {
 class Handler {
 public:
 	//Write an address to a chip, returns the address the chip sets
-	virtual Bit32u WriteAddr( Bit32u port, Bit8u val ) = 0;
+	virtual Bit32u WriteAddr(uint16_t port, Bit8u val) = 0;
 	//Write to a specific register in the chip
 	virtual void WriteReg( Bit32u addr, Bit8u val ) = 0;
 	//Generate a certain amount of samples
-	virtual void Generate( MixerChannel* chan, Bitu samples ) = 0;
+	virtual void Generate(MixerChannel *chan, uint16_t samples) = 0;
 	//Initialize at a specific sample rate and mode
-	virtual void Init( Bitu rate ) = 0;
+	virtual void Init(uint32_t rate) = 0;
 	virtual ~Handler() = default;
 };
 
@@ -172,7 +174,8 @@ class Module: public Module_base {
 	void CacheWrite( Bit32u reg, Bit8u val );
 	void DualWrite( Bit8u index, Bit8u reg, Bit8u val );
 	void CtrlWrite( Bit8u val );
-	Bitu CtrlRead( void );
+	uint8_t CtrlRead(void);
+
 public:
 	static OPL_Mode oplmode;
 	MixerChannel* mixerChan;
@@ -184,9 +187,9 @@ public:
 	Chip	chip[2];
 
 	//Handle port writes
-	void PortWrite( Bitu port, Bitu val, Bitu iolen );
-	Bitu PortRead( Bitu port, Bitu iolen );
-	void Init( Mode m );
+	void PortWrite(uint16_t port, uint8_t val, Bitu iolen);
+	uint8_t PortRead(uint16_t port, Bitu iolen);
+	void Init(Mode m);
 
 	Module(Section *configuration);
 	~Module() override;
