@@ -1115,8 +1115,6 @@ void VGA_CheckScanLength(void) {
 		break;
 	case M_TANDY_TEXT:
 	case M_CGA_TEXT_COMPOSITE:
-		vga.draw.address_add=vga.draw.blocks*2;
-		break;
 	case M_HERC_TEXT:
 		vga.draw.address_add=vga.draw.blocks*2;
 		break;
