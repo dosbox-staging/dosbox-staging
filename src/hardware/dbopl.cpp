@@ -865,9 +865,10 @@ INLINE void Channel::GeneratePercussion( Chip* chip, Bit32s* output ) {
 	}
 }
 
-template<SynthMode mode>
-Channel* Channel::BlockTemplate( Chip* chip, Bit32u samples, Bit32s* output ) {
-	switch( mode ) {
+template <SynthMode mode>
+Channel *Channel::BlockTemplate(Chip *chip, const uint16_t samples, Bit32s *output)
+{
+	switch (mode) {
 	case sm2AM:
 	case sm3AM:
 		if ( Op(0)->Silent() && Op(1)->Silent() ) {
@@ -921,7 +922,7 @@ Channel* Channel::BlockTemplate( Chip* chip, Bit32u samples, Bit32s* output ) {
 		Op( 4 )->Prepare( chip );
 		Op( 5 )->Prepare( chip );
 	}
-	for ( Bitu i = 0; i < samples; i++ ) {
+	for (uint16_t i = 0; i < samples; i++) {
 		//Early out for percussion handlers
 		if ( mode == sm2Percussion ) {
 			GeneratePercussion<false>( chip, output + i );
@@ -1009,11 +1010,12 @@ INLINE Bit32u Chip::ForwardNoise() {
 	return noiseValue;
 }
 
-INLINE Bit32u Chip::ForwardLFO( Bit32u samples ) {
-	//Current vibrato value, runs 4x slower than tremolo
-	vibratoSign = ( VibratoTable[ vibratoIndex >> 2] ) >> 7;
-	vibratoShift = ( VibratoTable[ vibratoIndex >> 2] & 7) + vibratoStrength; 
-	tremoloValue = TremoloTable[ tremoloIndex ] >> tremoloStrength;
+INLINE Bit32u Chip::ForwardLFO(const uint16_t samples)
+{
+	// Current vibrato value, runs 4x slower than tremolo
+	vibratoSign = (VibratoTable[vibratoIndex >> 2]) >> 7;
+	vibratoShift = (VibratoTable[vibratoIndex >> 2] & 7) + vibratoStrength;
+	tremoloValue = TremoloTable[tremoloIndex] >> tremoloStrength;
 
 	//Check hom many samples there can be done before the value changes
 	Bit32u todo = LFO_MAX - lfoCounter;
@@ -1034,7 +1036,6 @@ INLINE Bit32u Chip::ForwardLFO( Bit32u samples ) {
 	}
 	return count;
 }
-
 
 void Chip::WriteBD( Bit8u val ) {
 	Bit8u change = regBD ^ val;
@@ -1185,11 +1186,10 @@ void Chip::WriteReg( Bit32u reg, Bit8u val ) {
 	}
 }
 
-
-Bit32u Chip::WriteAddr( Bit32u port, Bit8u val ) {
-	switch ( port & 3 ) {
-	case 0:
-		return val;
+Bit32u Chip::WriteAddr(uint16_t port, Bit8u val)
+{
+	switch (port & 3) {
+	case 0: return val;
 	case 2:
 		if ( opl3Active || (val == 0x05) )
 			return 0x100 | val;
@@ -1199,11 +1199,12 @@ Bit32u Chip::WriteAddr( Bit32u port, Bit8u val ) {
 	return 0;
 }
 
-void Chip::GenerateBlock2( Bitu total, Bit32s* output ) {
-	while ( total > 0 ) {
-		Bit32u samples = ForwardLFO( total );
+void Chip::GenerateBlock2(uint16_t total, Bit32s *output)
+{
+	while (total > 0) {
+		const auto samples = ForwardLFO(total);
 		memset(output, 0, sizeof(Bit32s) * samples);
-//		int count = 0;
+		//		int count = 0;
 		for( Channel* ch = chan; ch < chan + 9; ) {
 //			count++;
 			ch = (ch->*(ch->synthHandler))( this, samples, output );
@@ -1213,13 +1214,14 @@ void Chip::GenerateBlock2( Bitu total, Bit32s* output ) {
 	}
 }
 
-void Chip::GenerateBlock3( Bitu total, Bit32s* output  ) {
-	while ( total > 0 ) {
-		Bit32u samples = ForwardLFO( total );
-		memset(output, 0, sizeof(Bit32s) * samples *2);
-//		int count = 0;
-		for( Channel* ch = chan; ch < chan + 18; ) {
-//			count++;
+void Chip::GenerateBlock3(uint16_t total, Bit32s *output)
+{
+	while (total > 0) {
+		const auto samples = ForwardLFO(total);
+		memset(output, 0, sizeof(Bit32s) * samples * 2);
+		//		int count = 0;
+		for (Channel *ch = chan; ch < chan + 18;) {
+			//			count++;
 			ch = (ch->*(ch->synthHandler))( this, samples, output );
 		}
 		total -= samples;
@@ -1445,15 +1447,15 @@ void InitTables( void ) {
 		}
 	}
 	//Create the Tremolo table, just increase and decrease a triangle wave
-	for ( Bit8u i = 0; i < TREMOLO_TABLE / 2; i++ ) {
+	for (uint8_t i = 0; i < TREMOLO_TABLE / 2; i++) {
 		Bit8u val = i << ENV_EXTRA;
 		TremoloTable[i] = val;
 		TremoloTable[TREMOLO_TABLE - 1 - i] = val;
 	}
 	//Create a table with offsets of the channels from the start of the chip
-	for ( Bitu i = 0; i < 32; i++ ) {
-		Bitu index = i & 0xf;
-		if ( index >= 9 ) {
+	for (uint8_t i = 0; i < 32; i++) {
+		auto index = i & 0xf;
+		if (index >= 9) {
 			ChanOffsetTable[i] = 0;
 			continue;
 		}
@@ -1474,16 +1476,16 @@ void InitTables( void ) {
 		ChanOffsetTable[i] = 1+(Bit16u)(index*sizeof(DBOPL::Channel));
 	}
 	//Same for operators
-	for ( Bitu i = 0; i < 64; i++ ) {
+	for (uint8_t i = 0; i < 64; i++) {
 		if ( i % 8 >= 6 || ( (i / 8) % 4 == 3 ) ) {
 			OpOffsetTable[i] = 0;
 			continue;
 		}
-		Bitu chNum = (i / 8) * 3 + (i % 8) % 3;
+		auto chNum = (i / 8) * 3 + (i % 8) % 3;
 		//Make sure we use 16 and up for the 2nd range to match the chanoffset gap
 		if ( chNum >= 12 )
 			chNum += 16 - 12;
-		Bitu opNum = ( i % 8 ) / 3;
+		const auto opNum = (i % 8) / 3;
 
 		static_assert(std::is_standard_layout<Channel>::value,
 		              "struct Channel is not a standard layout type");
@@ -1495,9 +1497,9 @@ void InitTables( void ) {
 #if 0
 	DBOPL::Chip* chip = 0;
 	//Stupid checks if table's are correct
-	for ( Bitu i = 0; i < 18; i++ ) {
+	for ( uint8_t i = 0; i < 18; i++ ) {
 		Bit32u find = (Bit16u)( &(chip->chan[ i ]) );
-		for ( Bitu c = 0; c < 32; c++ ) {
+		for ( uint8_t c = 0; c < 32; c++ ) {
 			if ( ChanOffsetTable[c] == find+1 ) {
 				find = 0;
 				break;
@@ -1507,9 +1509,9 @@ void InitTables( void ) {
 			find = find;
 		}
 	}
-	for ( Bitu i = 0; i < 36; i++ ) {
+	for ( uint8_t i = 0; i < 36; i++ ) {
 		Bit32u find = (Bit16u)( &(chip->chan[ i / 2 ].op[i % 2]) );
-		for ( Bitu c = 0; c < 64; c++ ) {
+		for ( uint8_t c = 0; c < 64; c++ ) {
 			if ( OpOffsetTable[c] == find+1 ) {
 				find = 0;
 				break;
@@ -1522,17 +1524,18 @@ void InitTables( void ) {
 #endif
 }
 
-Bit32u Handler::WriteAddr( Bit32u port, Bit8u val ) {
-	return chip.WriteAddr( port, val );
-
+Bit32u Handler::WriteAddr(uint16_t port, Bit8u val)
+{
+	return chip.WriteAddr(port, val);
 }
 void Handler::WriteReg( Bit32u addr, Bit8u val ) {
 	chip.WriteReg( addr, val );
 }
 
-void Handler::Generate( MixerChannel* chan, Bitu samples ) {
-	Bit32s buffer[ 512 * 2 ];
-	if ( GCC_UNLIKELY(samples > 512) )
+void Handler::Generate(MixerChannel *chan, uint16_t samples)
+{
+	Bit32s buffer[512 * 2];
+	if (GCC_UNLIKELY(samples > 512))
 		samples = 512;
 	if ( !chip.opl3Active ) {
 		chip.GenerateBlock2( samples, buffer );
@@ -1543,7 +1546,8 @@ void Handler::Generate( MixerChannel* chan, Bitu samples ) {
 	}
 }
 
-void Handler::Init( Bitu rate ) {
+void Handler::Init(uint32_t rate)
+{
 	InitTables();
 	chip.Setup( rate );
 }

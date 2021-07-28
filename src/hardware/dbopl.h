@@ -40,7 +40,9 @@ typedef Bits (*WaveHandler)(Bitu i, Bitu volume);
 #endif
 
 typedef Bits ( DBOPL::Operator::*VolumeHandler) ( );
-typedef Channel* ( DBOPL::Channel::*SynthHandler) ( Chip* chip, Bit32u samples, Bit32s* output );
+typedef Channel *(DBOPL::Channel::*SynthHandler)(Chip *chip,
+                                                 uint16_t samples,
+                                                 Bit32s *output);
 
 //Different synth modes that can generate blocks of data
 typedef enum {
@@ -186,8 +188,8 @@ struct Channel {
 	void GeneratePercussion( Chip* chip, Bit32s* output );
 
 	//Generate blocks of data in specific modes
-	template<SynthMode mode>
-	Channel* BlockTemplate( Chip* chip, Bit32u samples, Bit32s* output );
+	template <SynthMode mode>
+	Channel *BlockTemplate(Chip *chip, uint16_t samples, Bit32s *output);
 	Channel();
 };
 
@@ -226,20 +228,20 @@ struct Chip {
 	int8_t opl3Active = 0; // 0 or -1 when enabled
 
 	//Return the maximum amount of samples before and LFO change
-	Bit32u ForwardLFO( Bit32u samples );
+	Bit32u ForwardLFO(uint16_t samples);
 	Bit32u ForwardNoise();
 
 	void WriteBD( Bit8u val );
 	void WriteReg(Bit32u reg, Bit8u val );
 
-	Bit32u WriteAddr( Bit32u port, Bit8u val );
+	Bit32u WriteAddr(uint16_t port, Bit8u val);
 
-	void GenerateBlock2( Bitu samples, Bit32s* output );
-	void GenerateBlock3( Bitu samples, Bit32s* output );
+	void GenerateBlock2(uint16_t samples, Bit32s *output);
+	void GenerateBlock3(uint16_t samples, Bit32s *output);
 
 	//Update the synth handlers in all channels
 	void UpdateSynths();
-	void Generate( Bit32u samples );
+	void Generate(uint16_t samples);
 	void Setup( Bit32u r );
 
 	Chip() = default; // can't be placed on top because of offset math
@@ -247,10 +249,10 @@ struct Chip {
 
 struct Handler : public Adlib::Handler {
 	DBOPL::Chip chip = {};
-	virtual Bit32u WriteAddr( Bit32u port, Bit8u val );
+	virtual Bit32u WriteAddr(uint16_t port, Bit8u val);
 	virtual void WriteReg( Bit32u addr, Bit8u val );
-	virtual void Generate( MixerChannel* chan, Bitu samples );
-	virtual void Init( Bitu rate );
+	virtual void Generate(MixerChannel *chan, uint16_t samples);
+	virtual void Init(uint32_t rate);
 };
 
 } // namespace DBOPL
