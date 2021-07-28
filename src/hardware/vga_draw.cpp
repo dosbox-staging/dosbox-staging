@@ -402,7 +402,8 @@ static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 		Bitu cursorStartBit = sourceStartBit & 0x7;
 		if (cursorMemStart & 0x2) cursorMemStart--;
 		Bitu cursorMemEnd = cursorMemStart + ((64-vga.s3.hgc.posx) >> 2);
-		Bit16u* xat = &((Bit16u*)TempLine)[vga.s3.hgc.originx];
+
+		uint16_t i = vga.s3.hgc.originx;
 		for (Bitu m = cursorMemStart; m < cursorMemEnd; (m&1)?(m+=3):m++) {
 			// for each byte of cursor data
 			Bit8u bitsA = vga.mem.linear[m];
@@ -412,16 +413,21 @@ static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 				cursorStartBit=0;
 				if (bitsA&bit) {
 					// byte order doesn't matter here as all bits get flipped
-					if (bitsB&bit) *xat ^= ~0U;
-					//else Transparent
-				} else if (bitsB&bit) {
+					if (bitsB & bit) {
+						const auto xat = read_unaligned_uint16_at(TempLine, i);
+						write_unaligned_uint16_at(TempLine, i, xat ^ 0xffff);
+					}
+					// else Transparent
+				} else if (bitsB & bit) {
 					// Source as well as destination are Bit8u arrays, 
 					// so this should work out endian-wise?
-					*xat = *(Bit16u*)vga.s3.hgc.forestack;
+					const auto fore = read_unaligned_uint16(vga.s3.hgc.forestack);
+					write_unaligned_uint16_at(TempLine, i, fore);
 				} else {
-					*xat = *(Bit16u*)vga.s3.hgc.backstack;
+					const auto back = read_unaligned_uint16(vga.s3.hgc.backstack);
+					write_unaligned_uint16_at(TempLine, i, back);
 				}
-				xat++;
+				++i;
 			}
 		}
 		return TempLine;
