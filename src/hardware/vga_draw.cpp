@@ -500,7 +500,7 @@ static bool SkipCursor(Bitu vidstart, Bitu line)
 static Bit32u FontMask[2]={0xffffffff,0x0};
 static uint8_t *VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line)
 {
-	Bit32u * draw=(Bit32u *)TempLine;
+	uint16_t i = 0;
 	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart);
 	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
 		Bitu chr=vidmem[cx*2];
@@ -510,14 +510,14 @@ static uint8_t *VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line)
 		Bit32u mask2=TXT_Font_Table[font&0xf] & FontMask[col >> 7];
 		Bit32u fg=TXT_FG_Table[col&0xf];
 		Bit32u bg=TXT_BG_Table[col>>4];
-		*draw++=(fg&mask1) | (bg&~mask1);
-		*draw++=(fg&mask2) | (bg&~mask2);
+		write_unaligned_uint32_at(TempLine, i++, (fg & mask1) | (bg & ~mask1));
+		write_unaligned_uint32_at(TempLine, i++, (fg & mask2) | (bg & ~mask2));
 	}
 	if (SkipCursor(vidstart, line))
 		return TempLine;
 	const Bitu font_addr = (vga.draw.cursor.address - vidstart) >> 1;
 	if (font_addr < vga.draw.blocks) {
-		draw=(Bit32u *)&TempLine[font_addr*8];
+		Bit32u *draw = (Bit32u *)&TempLine[font_addr * 8];
 		Bit32u att=TXT_FG_Table[vga.tandy.draw_base[vga.draw.cursor.address+1]&0xf];
 		*draw++=att;*draw++=att;
 	}
