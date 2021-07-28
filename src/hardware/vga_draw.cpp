@@ -1655,7 +1655,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	VGA_CheckScanLength();
 	if (vga.draw.double_scan) {
 		if (IS_VGA_ARCH) { 
-			vga.draw.vblank_skip /= 2;
+			vblank_skip /= 2;
 			height/=2;
 		}
 		doubleheight=true;
