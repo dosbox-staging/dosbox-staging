@@ -66,14 +66,17 @@ static Bit8u * VGA_Draw_2BPP_Line(Bitu vidstart, Bitu line) {
 
 static Bit8u * VGA_Draw_2BPPHiRes_Line(Bitu vidstart, Bitu line) {
 	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
-	Bit32u * draw=(Bit32u *)TempLine;
-	for (Bitu x=0;x<vga.draw.blocks;x++) {
+
+	uint16_t i = 0;
+	for (Bitu x = 0; x < vga.draw.blocks; x++) {
 		Bitu val1 = base[vidstart & vga.tandy.addr_mask];
 		++vidstart;
 		Bitu val2 = base[vidstart & vga.tandy.addr_mask];
 		++vidstart;
-		*draw++=CGA_4_HiRes_Table[(val1>>4)|(val2&0xf0)];
-		*draw++=CGA_4_HiRes_Table[(val1&0x0f)|((val2&0x0f)<<4)];
+		write_unaligned_uint32_at(TempLine, i++,
+		                          CGA_4_HiRes_Table[(val1 >> 4) | (val2 & 0xf0)]);
+		write_unaligned_uint32_at( TempLine, i++,
+		                          CGA_4_HiRes_Table[(val1 & 0x0f) | ((val2 & 0x0f) << 4)]);
 	}
 	return TempLine;
 }
