@@ -526,7 +526,7 @@ static uint8_t *VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line)
 
 static uint8_t *VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 {
-	Bit32u * draw=(Bit32u *)TempLine;
+	uint16_t i = 0;
 	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart);
 
 	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
@@ -534,8 +534,8 @@ static uint8_t *VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 		Bitu attrib=vidmem[cx*2+1];
 		if (!(attrib&0x77)) {
 			// 00h, 80h, 08h, 88h produce black space
-			*draw++=0;
-			*draw++=0;
+			write_unaligned_uint32_at(TempLine, i++, 0);
+			write_unaligned_uint32_at(TempLine, i++, 0);
 		} else {
 			Bit32u bg, fg;
 			bool underline=false;
@@ -556,15 +556,15 @@ static uint8_t *VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 				mask1=TXT_Font_Table[font>>4] & FontMask[attrib >> 7]; // blinking
 				mask2=TXT_Font_Table[font&0xf] & FontMask[attrib >> 7];
 			}
-			*draw++=(fg&mask1) | (bg&~mask1);
-			*draw++=(fg&mask2) | (bg&~mask2);
+			write_unaligned_uint32_at(TempLine, i++, (fg & mask1) | (bg & ~mask1));
+			write_unaligned_uint32_at(TempLine, i++, (fg & mask2) | (bg & ~mask2));
 		}
 	}
 	if (SkipCursor(vidstart, line))
 		return TempLine;
 	const Bitu font_addr = (vga.draw.cursor.address - vidstart) >> 1;
 	if (font_addr < vga.draw.blocks) {
-		draw=(Bit32u *)&TempLine[font_addr*8];
+		Bit32u *draw = (Bit32u *)&TempLine[font_addr * 8];
 		Bit8u attr = vga.tandy.draw_base[vga.draw.cursor.address+1];
 		Bit32u cg;
 		if (attr&0x8) {
