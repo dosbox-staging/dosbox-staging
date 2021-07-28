@@ -54,11 +54,12 @@ static Bit8u * VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line) {
 
 static Bit8u * VGA_Draw_2BPP_Line(Bitu vidstart, Bitu line) {
 	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
-	Bit32u * draw=(Bit32u *)TempLine;
-	for (Bitu x=0;x<vga.draw.blocks;x++) {
+
+	uint16_t i = 0;
+	for (Bitu x = 0; x < vga.draw.blocks; x++) {
 		Bitu val = base[vidstart & vga.tandy.addr_mask];
 		vidstart++;
-		*draw++=CGA_4_Table[val];
+		write_unaligned_uint32_at(TempLine, i++, CGA_4_Table[val]);
 	}
 	return TempLine;
 }
