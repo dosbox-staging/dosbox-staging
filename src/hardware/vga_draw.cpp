@@ -643,7 +643,7 @@ static Bit8u* VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line) {
 static uint8_t *VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line)
 {
 	// keep it aligned:
-	Bit16u* draw = ((Bit16u*)TempLine) + 16 - vga.draw.panning;
+	uint16_t idx = 16 - vga.draw.panning;
 	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart); // pointer to chars+attribs
 	Bitu blocks = vga.draw.blocks;
 	if (vga.draw.panning) blocks++; // if the text is panned part of an 
@@ -670,12 +670,16 @@ static uint8_t *VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line)
 			if ((font&0x2) && (vga.attr.mode_control&0x04) &&
 				(chr>=0xc0) && (chr<=0xdf)) font |= 1;
 			for (Bitu n = 0; n < 9; n++) {
-				*draw++ = vga.dac.xlat16[(font&0x100)? foreground:background];
+				write_unaligned_uint16_at(
+				        TempLine, idx++,
+				        vga.dac.xlat16[(font & 0x100) ? foreground : background]);
 				font <<= 1;
 			}
 		} else {
 			for (Bitu n = 0; n < 8; n++) {
-				*draw++ = vga.dac.xlat16[(font&0x80)? foreground:background];
+				write_unaligned_uint16_at(
+				        TempLine, idx++,
+				        vga.dac.xlat16[(font & 0x80) ? foreground : background]);
 				font <<= 1;
 			}
 		}
@@ -686,15 +690,16 @@ static uint8_t *VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line)
 		const Bitu attr_addr = (vga.draw.cursor.address - vidstart) >> 1;
 		if (attr_addr < vga.draw.blocks) {
 			Bitu index = attr_addr * (vga.draw.char9dot? 18:16);
-			draw = (Bit16u*)(&TempLine[index]) + 16 - vga.draw.panning;
-			
+			Bit16u *draw = (Bit16u *)(&TempLine[index]) + 16 -
+			               vga.draw.panning;
+
 			Bitu foreground = vga.tandy.draw_base[vga.draw.cursor.address+1] & 0xf;
 			for (Bitu i = 0; i < 8; i++) {
 				*draw++ = vga.dac.xlat16[foreground];
 			}
 		}
 	}
-	return TempLine+32;
+	return TempLine + 32;
 }
 
 #ifdef VGA_KEEP_CHANGES
