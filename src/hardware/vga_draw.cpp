@@ -297,7 +297,6 @@ static Bit8u * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 static Bit8u * VGA_Draw_Xlat16_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 	Bitu offset = vidstart & vga.draw.linear_mask;
 	Bit8u *ret = &vga.draw.linear_base[offset];
-	Bit16u* temps = (Bit16u*) TempLine;
 
 	// see VGA_Draw_Linear_Line
 	if (GCC_UNLIKELY((vga.draw.line_length + offset)& ~vga.draw.linear_mask)) {
@@ -309,15 +308,18 @@ static Bit8u * VGA_Draw_Xlat16_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 		
 		// unwrapped chunk: to top of memory block
 		for(Bitu i = 0; i < unwrapped_len; i++)
-			temps[i]=vga.dac.xlat16[ret[i]];
-		
+			write_unaligned_uint16_at(TempLine, i,
+			                          vga.dac.xlat16[ret[i]]);
+
 		// wrapped chunk: from base of memory block
 		for(Bitu i = 0; i < wrapped_len; i++)
-			temps[i + unwrapped_len]=vga.dac.xlat16[vga.draw.linear_base[i]];
+			write_unaligned_uint16_at(TempLine, i + unwrapped_len,
+			                          vga.dac.xlat16[vga.draw.linear_base[i]]);
 
 	} else {
 		for(Bitu i = 0; i < vga.draw.line_length; i++) {
-			temps[i]=vga.dac.xlat16[ret[i]];
+			write_unaligned_uint16_at(TempLine, i,
+			                          vga.dac.xlat16[ret[i]]);
 		}
 	}
 	return TempLine;
