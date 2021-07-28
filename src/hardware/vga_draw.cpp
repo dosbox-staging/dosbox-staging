@@ -450,7 +450,7 @@ static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 		Bitu cursorStartBit = sourceStartBit & 0x7;
 		if (cursorMemStart & 0x2) cursorMemStart--;
 		Bitu cursorMemEnd = cursorMemStart + ((64-vga.s3.hgc.posx) >> 2);
-		Bit32u* xat = &((Bit32u*)TempLine)[vga.s3.hgc.originx];
+		uint16_t i = vga.s3.hgc.originx;
 		for (Bitu m = cursorMemStart; m < cursorMemEnd; (m&1)?(m+=3):m++) {
 			// for each byte of cursor data
 			Bit8u bitsA = vga.mem.linear[m];
@@ -458,14 +458,19 @@ static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 			for (Bit8u bit=(0x80 >> cursorStartBit); bit != 0; bit >>= 1) { // for each bit
 				cursorStartBit=0;
 				if (bitsA&bit) {
-					if (bitsB&bit) *xat ^= ~0U;
-					//else Transparent
-				} else if (bitsB&bit) {
-					*xat = *(Bit32u*)vga.s3.hgc.forestack;
+					if (bitsB & bit) {
+						const auto xat = read_unaligned_uint32_at(TempLine, i);
+						write_unaligned_uint32_at(TempLine, i, xat ^ 0xffff);
+					}
+					// else Transparent
+				} else if (bitsB & bit) {
+					const auto fore = read_unaligned_uint32(vga.s3.hgc.forestack);
+					write_unaligned_uint32_at(TempLine, i, fore);
 				} else {
-					*xat = *(Bit32u*)vga.s3.hgc.backstack;
+					const auto back = read_unaligned_uint32(vga.s3.hgc.backstack);
+					write_unaligned_uint32_at(TempLine, i, back);
 				}
-				xat++;
+				++i;
 			}
 		}
 		return TempLine;
