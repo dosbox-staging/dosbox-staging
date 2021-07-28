@@ -1317,9 +1317,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	LOG(LOG_VGA,LOG_NORMAL)("v total %d end %d blank (%d/%d) retrace (%d/%d)",
 		vtotal, vdend, vbstart, vbend, vrstart, vrend );
 #endif
-	if (!htotal) return;
-	if (!vtotal) return;
-	
+
 	// The screen refresh frequency
 	fps=(double)clock/(vtotal*htotal);
 	// Horizontal total (that's how long a line takes with whistles and bells)
