@@ -208,7 +208,7 @@ static void RENDER_Halt( void ) {
 	render.active=false;
 }
 
-extern Bitu PIC_Ticks;
+extern uint32_t PIC_Ticks;
 void RENDER_EndUpdate( bool abort ) {
 	if (GCC_UNLIKELY(!render.updating))
 		return;

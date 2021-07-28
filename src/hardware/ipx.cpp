@@ -346,7 +346,7 @@ static bool IPX_Multiplex(void) {
 	return true;
 }
 
-static void IPX_AES_EventHandler(Bitu param)
+static void IPX_AES_EventHandler(uint32_t param)
 {
 	ECBClass* tmpECB = ECBList;
 	ECBClass* tmp2ECB;
@@ -442,12 +442,13 @@ static void handleIpxRequest(void) {
 				tmp2ECB=tmpECB->nextECB;
 				if(tmpECB->ECBAddr == ecbaddress) {
 					if(tmpECB->getInUseFlag()==USEFLAG_AESCOUNT)
-						PIC_RemoveSpecificEvents(IPX_AES_EventHandler,(Bitu)ecbaddress);
-					tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
-					tmpECB->setCompletionFlag(COMP_CANCELLED);
-					delete tmpECB;
-					reg_al=0;	// Success
-					LOG_IPX("IPX: ECB canceled.");
+					        PIC_RemoveSpecificEvents(IPX_AES_EventHandler,
+					                                 ecbaddress);
+				        tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
+				        tmpECB->setCompletionFlag(COMP_CANCELLED);
+				        delete tmpECB;
+				        reg_al = 0; // Success
+				        LOG_IPX("IPX: ECB canceled.");
 					return;
 				}
 				tmpECB=tmp2ECB;

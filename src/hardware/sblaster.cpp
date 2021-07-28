@@ -260,11 +260,11 @@ static const char *DmaModeName()
 static void DSP_ChangeMode(DSP_MODES mode);
 
 static void FlushRemainingDMATransfer();
-static void SuppressInitialDMATransfer(Bitu size);
-static void SuppressDMATransfer(Bitu size);
-static void PlayDMATransfer(Bitu size);
+static void SuppressInitialDMATransfer(uint32_t size);
+static void SuppressDMATransfer(uint32_t size);
+static void PlayDMATransfer(uint32_t size);
 
-typedef void (*process_dma_f)(Bitu);
+typedef void (*process_dma_f)(uint32_t);
 static process_dma_f ProcessDMATransfer;
 
 static void DSP_SetSpeaker(bool requested_state) {
@@ -324,7 +324,7 @@ static INLINE void DSP_FlushData(void) {
 	sb.dsp.out.pos=0;
 }
 
-static double last_dma_callback = 0.0f;
+static float last_dma_callback = 0.0f;
 
 static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	if (chan!=sb.dma.chan || event==DMA_REACHED_TC) return;
@@ -332,7 +332,7 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 		if (sb.mode==MODE_DMA) {
 			//Catch up to current time, but don't generate an IRQ!
 			//Fixes problems with later sci games.
-			double t = PIC_FullIndex() - last_dma_callback;
+			const auto t = PIC_FullIndex() - last_dma_callback;
 			Bitu s = static_cast<Bitu>(sb.dma.rate * t / 1000.0f);
 			if (s > sb.dma.min) {
 				LOG(LOG_SB,LOG_NORMAL)("limiting amount masked to sb.dma.min");
@@ -468,7 +468,7 @@ INLINE Bit8u decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 	return reference;
 }
 
-static void PlayDMATransfer(Bitu size)
+static void PlayDMATransfer(uint32_t size)
 {
 	Bitu read=0;Bitu done=0;Bitu i=0;
 	last_dma_callback = PIC_FullIndex();
@@ -624,13 +624,13 @@ static void PlayDMATransfer(Bitu size)
  *   - Suppress DWORD-sized transfers (or less) in non-16-bit DMA modes
  *   - Suppress BYTE-sized transfers in 16-bit DMA modes
  */
-static void SuppressInitialDMATransfer(Bitu size)
+static void SuppressInitialDMATransfer(uint32_t size)
 {
 	const size_t size_limit = sb.dma.mode < DSP_DMA_16 ? sizeof(uint32_t)
 	                                                   : sizeof(uint8_t);
 	if (size <= size_limit) {
 		SuppressDMATransfer(size);
-		LOG_MSG("%s: Suppressed initial %" PRIuPTR "-byte %s transfer",
+		LOG_MSG("%s: Suppressed initial %u-byte %s transfer",
 		        CardType(), size, DmaModeName());
 	} else {
 		PlayDMATransfer(size);
@@ -641,7 +641,7 @@ static void SuppressInitialDMATransfer(Bitu size)
 	ProcessDMATransfer = &PlayDMATransfer;
 }
 
-static void SuppressDMATransfer(Bitu size)
+static void SuppressDMATransfer(uint32_t size)
 {
 	if (sb.dma.left < size)
 		size = sb.dma.left;
@@ -688,7 +688,8 @@ static void DSP_ChangeMode(DSP_MODES mode) {
 	sb.mode=mode;
 }
 
-static void DSP_RaiseIRQEvent(Bitu /*val*/) {
+static void DSP_RaiseIRQEvent(uint32_t /*val*/)
+{
 	SB_RaiseIRQ(SB_IRQ_8);
 }
 
@@ -801,8 +802,8 @@ static void DSP_AddData(Bit8u val) {
 	}
 }
 
-
-static void DSP_FinishReset(Bitu /*val*/) {
+static void DSP_FinishReset(uint32_t /*val*/)
+{
 	DSP_FlushData();
 	DSP_AddData(0xaa);
 	sb.dsp.state=DSP_S_NORMAL;

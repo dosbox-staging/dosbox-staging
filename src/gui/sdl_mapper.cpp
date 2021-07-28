@@ -2798,8 +2798,9 @@ void MAPPER_LosingFocus() {
 	}
 }
 
-void MAPPER_RunEvent(Bitu /*val*/) {
-	KEYBOARD_ClrBuffer();	//Clear buffer
+void MAPPER_RunEvent(uint32_t /*val*/)
+{
+	KEYBOARD_ClrBuffer();           // Clear buffer
 	GFX_LosingFocus();		//Release any keys pressed (buffer gets filled again).
 	MAPPER_DisplayUI();
 }

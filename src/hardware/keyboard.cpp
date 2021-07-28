@@ -59,7 +59,8 @@ static void KEYBOARD_SetPort60(Bit8u val) {
 	else PIC_ActivateIRQ(1);
 }
 
-static void KEYBOARD_TransferBuffer(Bitu /*val*/) {
+static void KEYBOARD_TransferBuffer(uint32_t /*val*/)
+{
 	keyb.scheduled = false;
 	if (!keyb.used) {
 		LOG(LOG_KEYBOARD,LOG_NORMAL)("Transfer started with empty buffer");
@@ -69,7 +70,6 @@ static void KEYBOARD_TransferBuffer(Bitu /*val*/) {
 	if (++keyb.pos >= KEYBUFSIZE) keyb.pos -= KEYBUFSIZE;
 	keyb.used--;
 }
-
 
 void KEYBOARD_ClrBuffer(void) {
 	keyb.used=0;

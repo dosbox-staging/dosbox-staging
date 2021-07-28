@@ -745,7 +745,8 @@ static void VGA_ProcessSplit() {
 }
 
 static Bit8u bg_color_index = 0; // screen-off black index
-static void VGA_DrawSingleLine(Bitu /*blah*/) {
+static void VGA_DrawSingleLine(uint32_t /*blah*/)
+{
 	if (GCC_UNLIKELY(vga.attr.disabled)) {
 		switch(machine) {
 		case MCH_PCJR:
@@ -815,7 +816,8 @@ static void VGA_DrawSingleLine(Bitu /*blah*/) {
 	} else RENDER_EndUpdate(false);
 }
 
-static void VGA_DrawEGASingleLine(Bitu /*blah*/) {
+static void VGA_DrawEGASingleLine(uint32_t /*blah*/)
+{
 	if (GCC_UNLIKELY(vga.attr.disabled)) {
 		memset(TempLine, 0, sizeof(TempLine));
 		RENDER_DrawLine(TempLine);
@@ -838,7 +840,8 @@ static void VGA_DrawEGASingleLine(Bitu /*blah*/) {
 	} else RENDER_EndUpdate(false);
 }
 
-static void VGA_DrawPart(Bitu lines) {
+static void VGA_DrawPart(uint32_t lines)
+{
 	while (lines--) {
 		Bit8u * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );
 		RENDER_DrawLine(data);
@@ -909,28 +912,35 @@ static void INLINE VGA_ChangesStart( void ) {
 }
 #endif
 
-static void VGA_VertInterrupt(Bitu /*val*/) {
-	if ((!vga.draw.vret_triggered) && ((vga.crtc.vertical_retrace_end&0x30)==0x10)) {
+static void VGA_VertInterrupt(uint32_t /*val*/)
+{
+	if ((!vga.draw.vret_triggered) &&
+	    ((vga.crtc.vertical_retrace_end & 0x30) == 0x10)) {
 		vga.draw.vret_triggered=true;
 		if (GCC_UNLIKELY(machine==MCH_EGA)) PIC_ActivateIRQ(9);
 	}
 }
 
-static void VGA_Other_VertInterrupt(Bitu val) {
-	if (val) PIC_ActivateIRQ(5);
+static void VGA_Other_VertInterrupt(uint32_t val)
+{
+	if (val)
+		PIC_ActivateIRQ(5);
 	else PIC_DeActivateIRQ(5);
 }
 
-static void VGA_DisplayStartLatch(Bitu /*val*/) {
-	vga.config.real_start=vga.config.display_start & (vga.vmemwrap-1);
+static void VGA_DisplayStartLatch(uint32_t /*val*/)
+{
+	vga.config.real_start = vga.config.display_start & (vga.vmemwrap - 1);
 	vga.draw.bytes_skip = vga.config.bytes_skip;
 }
- 
-static void VGA_PanningLatch(Bitu /*val*/) {
+
+static void VGA_PanningLatch(uint32_t /*val*/)
+{
 	vga.draw.panning = vga.config.pel_panning;
 }
 
-static void VGA_VerticalTimer(Bitu /*val*/) {
+static void VGA_VerticalTimer(uint32_t /*val*/)
+{
 	vga.draw.delay.framestart = PIC_FullIndex();
 	PIC_AddEvent( VGA_VerticalTimer, (float)vga.draw.delay.vtotal );
 	
@@ -1160,8 +1170,9 @@ void VGA_ActivateHardwareCursor(void) {
 	}
 }
 
-void VGA_SetupDrawing(Bitu /*val*/) {
-	if (vga.mode==M_ERROR) {
+void VGA_SetupDrawing(uint32_t /*val*/)
+{
+	if (vga.mode == M_ERROR) {
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_PanningLatch);
 		PIC_RemoveEvents(VGA_DisplayStartLatch);

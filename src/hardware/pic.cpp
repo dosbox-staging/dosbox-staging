@@ -134,9 +134,8 @@ struct PIC_Controller {
 static PIC_Controller pics[2];
 static PIC_Controller &primary_controller = pics[0];
 static PIC_Controller &secondary_controller = pics[1];
-Bitu PIC_Ticks = 0;
-Bitu PIC_IRQCheck = 0; //Maybe make it a bool and/or ensure 32bit size (x86 dynamic core seems to assume 32 bit variable size)
-
+uint32_t PIC_Ticks = 0;
+uint32_t PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
 
 void PIC_Controller::set_imr(Bit8u val) {
 	if (GCC_UNLIKELY(machine == MCH_PCJR)) {
@@ -320,9 +319,11 @@ static Bitu read_data(Bitu port,Bitu /*iolen*/) {
 	return pic->imr;
 }
 
-void PIC_ActivateIRQ(Bitu irq) {
-	Bitu t = irq>7 ? (irq - 8): irq;
-	PIC_Controller * pic=&pics[irq>7 ? 1 : 0];
+// DOS managed up to 15 IRQs
+void PIC_ActivateIRQ(const uint8_t irq)
+{
+	const uint8_t t = irq > 7 ? (irq - 8) : irq;
+	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
 
 	Bit32s OldCycles = CPU_Cycles;
 	pic->raise_irq(t); //Will set the CPU_Cycles to zero if this IRQ will be handled directly
@@ -344,9 +345,11 @@ void PIC_ActivateIRQ(Bitu irq) {
 	}
 }
 
-void PIC_DeActivateIRQ(Bitu irq) {
-	Bitu t = irq>7 ? (irq - 8): irq;
-	PIC_Controller * pic=&pics[irq>7 ? 1 : 0];
+// DOS managed up to 15 IRQs
+void PIC_DeActivateIRQ(const uint8_t irq)
+{
+	const uint8_t t = irq > 7 ? (irq - 8) : irq;
+	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
 	pic->lower_irq(t);
 }
 
@@ -403,11 +406,12 @@ void PIC_runIRQs(void) {
 	PIC_IRQCheck = 0;
 }
 
-void PIC_SetIRQMask(Bitu irq, bool masked) {
-	Bitu t = irq>7 ? (irq - 8): irq;
-	PIC_Controller * pic=&pics[irq>7 ? 1 : 0];
-	//clear bit
-	Bit8u bit = 1 <<(t);
+void PIC_SetIRQMask(uint32_t irq, bool masked)
+{
+	uint32_t t = irq > 7 ? (irq - 8) : irq;
+	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
+	// clear bit
+	Bit8u bit = 1 << (t);
 	Bit8u newmask = pic->imr;
 	newmask &= ~bit;
 	if (masked) newmask |= bit;
@@ -447,7 +451,8 @@ static void AddEntry(PICEntry * entry) {
 static bool InEventService = false;
 static float srv_lag = 0;
 
-void PIC_AddEvent(PIC_EventHandler handler,float delay,Bitu val) {
+void PIC_AddEvent(PIC_EventHandler handler, float delay, uint32_t val)
+{
 	if (GCC_UNLIKELY(!pic_queue.free_entry)) {
 		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
 		return;
@@ -462,9 +467,10 @@ void PIC_AddEvent(PIC_EventHandler handler,float delay,Bitu val) {
 	AddEntry(entry);
 }
 
-void PIC_RemoveSpecificEvents(PIC_EventHandler handler, Bitu val) {
-	PICEntry * entry=pic_queue.next_entry;
-	PICEntry * prev_entry;
+void PIC_RemoveSpecificEvents(PIC_EventHandler handler, uint32_t val)
+{
+	PICEntry *entry = pic_queue.next_entry;
+	PICEntry *prev_entry;
 	prev_entry = 0;
 	while (entry) {
 		if (GCC_UNLIKELY((entry->pic_event == handler)) && (entry->value == val)) {
@@ -609,8 +615,8 @@ private:
 public:
 	PIC_8259A(Section* configuration):Module_base(configuration){
 		/* Setup pic0 and pic1 with initial values like DOS has normally */
-		PIC_IRQCheck=0;
-		PIC_Ticks=0;
+		PIC_IRQCheck = 0;
+		PIC_Ticks = 0;
 		Bitu i;
 		for (i=0;i<2;i++) {
 			pics[i].auto_eoi=false;

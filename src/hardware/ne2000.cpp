@@ -44,7 +44,7 @@
 
 // Handle to WinPCap device
 pcap_t *adhandle = 0;
-static void NE2000_TX_Event(Bitu val);
+static void NE2000_TX_Event(uint32_t val);
 
 #ifdef WIN32
 // DLL loading
@@ -1451,8 +1451,8 @@ void bx_ne2k_c::init()
   reset(BX_RESET_HARDWARE);
 }
 
-static void NE2000_TX_Event(Bitu val) {
-    (void)val;//UNUSED
+static void NE2000_TX_Event(MAYBE_UNUSED uint32_t val)
+{
 	theNE2kDevice->tx_timer();
 }
 

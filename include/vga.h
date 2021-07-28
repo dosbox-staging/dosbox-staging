@@ -432,7 +432,7 @@ void VGA_SetMode(VGAModes mode);
 void VGA_DetermineMode(void);
 void VGA_SetupHandlers(void);
 void VGA_StartResize(Bitu delay=50);
-void VGA_SetupDrawing(Bitu val);
+void VGA_SetupDrawing(uint32_t val);
 void VGA_CheckScanLength(void);
 void VGA_ChangedBank(void);
 

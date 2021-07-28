@@ -18,6 +18,7 @@
 
 #include "joystick.h"
 
+#include <cfloat>
 #include <string.h>
 #include <math.h>
 
@@ -35,14 +36,16 @@
 #define TIMEOUT 10
 
 #define OHMS 120000/2
-#define JOY_S_CONSTANT 0.0000242
-#define S_PER_OHM 0.000000011
+#define JOY_S_CONSTANT 0.0000242f
+#define S_PER_OHM      0.000000011f
 
 struct JoyStick {
 	enum {JOYMAP_SQUARE,JOYMAP_CIRCLE,JOYMAP_INBETWEEN} mapstate;
 	bool enabled;
-	float xpos, ypos; //position as set by SDL.
-	double xtick, ytick;
+	float xpos;
+	float ypos; // position as set by SDL.
+	float xtick;
+	float ytick;
 	Bitu xcount, ycount;
 	bool button[2];
 	int deadzone; //Deadzone (value between 0 and 100) interpreted as percentage.
@@ -50,10 +53,14 @@ struct JoyStick {
 	float xfinal, yfinal; //position returned to the game for stick 0. 
 
 	void clip() {
-		if (xfinal > 1.0) xfinal = 1.0;
-		else if (xfinal < -1.0) xfinal = -1.0;
-		if (yfinal > 1.0) yfinal = 1.0;
-		else if (yfinal < -1.0) yfinal = -1.0;
+		if (xfinal > 1.0f)
+			xfinal = 1.0f;
+		else if (xfinal < -1.0f)
+			xfinal = -1.0f;
+		if (yfinal > 1.0f)
+			yfinal = 1.0f;
+		else if (yfinal < -1.0f)
+			yfinal = -1.0f;
 	}
 
 	void fake_digital() {
@@ -66,9 +73,13 @@ struct JoyStick {
 	}
 
 	void transform_circular(){
-		float r = sqrtf(xpos * xpos + ypos * ypos);
-		if (r == 0.0) {xfinal = xpos; yfinal = ypos; return;}
-		float deadzone_f = deadzone / 100.0f;
+		const float r = sqrtf(xpos * xpos + ypos * ypos);
+		if (fabs(r) < FLT_EPSILON) {
+			xfinal = xpos;
+			yfinal = ypos;
+			return;
+		}
+		float deadzone_f = static_cast<float>(deadzone) / 100.0f;
 		float s = 1.0f - deadzone_f;
 		if (r < deadzone_f) {
 			xfinal = yfinal = 0.0f;
@@ -84,7 +95,7 @@ struct JoyStick {
 	}
 
 	void transform_square() {
-		float deadzone_f = deadzone / 100.0f;
+		float deadzone_f = static_cast<float>(deadzone) / 100.0f;
 		float s = 1.0f - deadzone_f;
 
 		if (xpos > deadzone_f) {
@@ -143,7 +154,8 @@ bool button_wrapping_enabled = true;
 
 extern bool autofire; //sdl_mapper.cpp
 
-static Bitu read_p201(Bitu port,Bitu iolen) {
+static uint8_t read_p201(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED uint8_t iolen)
+{
 	/* Reset Joystick to 0 after TIMEOUT ms */
 	if(write_active && ((PIC_Ticks - last_write) > TIMEOUT)) {
 		write_active = false;
@@ -179,9 +191,10 @@ static Bitu read_p201(Bitu port,Bitu iolen) {
 	return ret;
 }
 
-static Bitu read_p201_timed(Bitu port,Bitu iolen) {
-	Bit8u ret=0xff;
-	double currentTick = PIC_FullIndex();
+static uint8_t read_p201_timed(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED uint8_t iolen)
+{
+	Bit8u ret = 0xff;
+	const auto currentTick = PIC_FullIndex();
 	if( stick[0].enabled ){
 		if( stick[0].xtick < currentTick ) ret &=~1;
 		if( stick[0].ytick < currentTick ) ret &=~2;
@@ -202,7 +215,10 @@ static Bitu read_p201_timed(Bitu port,Bitu iolen) {
 	return ret;
 }
 
-static void write_p201(Bitu port,Bitu val,Bitu iolen) {
+static void write_p201(MAYBE_UNUSED uint16_t port,
+                       MAYBE_UNUSED uint8_t val,
+                       MAYBE_UNUSED uint8_t iolen)
+{
 	/* Store writetime index */
 	write_active = true;
 	last_write = PIC_Ticks;
@@ -215,25 +231,41 @@ static void write_p201(Bitu port,Bitu val,Bitu iolen) {
 		stick[1].xcount=(Bitu)(((swap34? stick[1].ypos : stick[1].xpos)*RANGE)+RANGE);
 		stick[1].ycount=(Bitu)(((swap34? stick[1].xpos : stick[1].ypos)*RANGE)+RANGE);
 	}
-
 }
-static void write_p201_timed(Bitu port,Bitu val,Bitu iolen) {
-	// Axes take time = 24.2 microseconds + ( 0.011 microsecons/ohm * resistance )
-	// to reset to 0
-	// Pre-calculate the time at which each axis hits 0 here
-	double currentTick = PIC_FullIndex();
+static void write_p201_timed(MAYBE_UNUSED uint16_t port,
+                             MAYBE_UNUSED uint8_t val,
+                             MAYBE_UNUSED uint8_t iolen)
+{
+	// Axes take time = 24.2 microseconds + ( 0.011 microsecons/ohm *
+	// resistance ) to reset to 0 Pre-calculate the time at which each axis
+	// hits 0 here
+	const auto currentTick = PIC_FullIndex();
 	if (stick[0].enabled) {
 		stick[0].transform_input();
-		stick[0].xtick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
-		                 (double)(((stick[0].xfinal+1.0)* OHMS)) );
-		stick[0].ytick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
-		                 (double)(((stick[0].yfinal+1.0)* OHMS)) );
+		stick[0].xtick = currentTick +
+		                 1000.0f * (JOY_S_CONSTANT +
+		                            S_PER_OHM * (stick[0].xfinal + 1.0f) *
+		                                    OHMS);
+		stick[0].ytick = currentTick +
+		                 1000.0f * (JOY_S_CONSTANT +
+		                            S_PER_OHM * (stick[0].yfinal + 1.0f) *
+		                                    OHMS);
 	}
 	if (stick[1].enabled) {
-		stick[1].xtick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
-		                 (double)((swap34? stick[1].ypos : stick[1].xpos)+1.0) * OHMS);
-		stick[1].ytick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
-		                 (double)((swap34? stick[1].xpos : stick[1].ypos)+1.0) * OHMS);
+		stick[1].xtick = currentTick +
+		                 1000.0f * (JOY_S_CONSTANT +
+		                            S_PER_OHM *
+		                                    ((swap34 ? stick[1].ypos
+		                                             : stick[1].xpos) +
+		                                     1.0f) *
+		                                    OHMS);
+		stick[1].ytick = currentTick +
+		                 1000.0f * (JOY_S_CONSTANT +
+		                            S_PER_OHM *
+		                                    ((swap34 ? stick[1].xpos
+		                                             : stick[1].ypos) +
+		                                     1.0f) *
+		                                    OHMS);
 	}
 }
 

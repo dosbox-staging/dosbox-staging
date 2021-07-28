@@ -217,7 +217,8 @@ void CSerial::changeLineProperties() {
 	updatePortConfig (baud_divider, LCR);
 }
 
-static void Serial_EventHandler(Bitu val) {
+static void Serial_EventHandler(uint32_t val)
+{
 	const uint32_t serclassid = val & 0x3;
 	if (serialports[serclassid] != 0) {
 		const auto event_type = static_cast<uint16_t>(val >> 2);
@@ -1209,7 +1210,7 @@ CSerial::~CSerial() {
 	}
 }
 
-static bool idle(const double start, const uint32_t timeout)
+static bool idle(const float start, const uint32_t timeout)
 {
 	CALLBACK_Idle();
 	return PIC_FullIndex() - start > timeout;
@@ -1217,7 +1218,7 @@ static bool idle(const double start, const uint32_t timeout)
 
 bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeout)
 {
-	const double starttime = PIC_FullIndex();
+	const auto starttime = PIC_FullIndex();
 	bool timed_out = false;
 
 	// Wait until we're ready to receive (or we've timed out)
@@ -1255,7 +1256,7 @@ receiver:
 */
 bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeout)
 {
-	const double start_time = PIC_FullIndex();
+	const auto start_time = PIC_FullIndex();
 	bool timed_out = false;
 
 	// Wait until our transfer queue is empty (or we've timed out)
