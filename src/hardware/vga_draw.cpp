@@ -783,11 +783,10 @@ static void VGA_DrawSingleLine(Bitu /*blah*/) {
 		}
 		if (vga.draw.bpp==8) {
 			memset(TempLine, bg_color_index, sizeof(TempLine));
-		} else if (vga.draw.bpp==16) {
-			Bit16u* wptr = (Bit16u*) TempLine;
+		} else if (vga.draw.bpp == 16) {
 			Bit16u value = vga.dac.xlat16[bg_color_index];
 			for (Bitu i = 0; i < sizeof(TempLine)/2; i++) {
-				wptr[i] = value;
+				write_unaligned_uint16_at(TempLine, i, value);
 			}
 		}
 		RENDER_DrawLine(TempLine);
