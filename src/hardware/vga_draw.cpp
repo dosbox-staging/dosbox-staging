@@ -21,6 +21,7 @@
 #include <cstring>
 #include <cmath>
 
+#include "mem_unaligned.h"
 #include "pic.h"
 #include "render.h"
 #include "../gui/render_scalers.h"
@@ -37,15 +38,16 @@
 typedef Bit8u * (* VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
 static VGA_Line_Handler VGA_DrawLine;
-static Bit8u TempLine[SCALER_MAXWIDTH * 4];
+static uint8_t TempLine[SCALER_MAXWIDTH * 4];
 
 static Bit8u * VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line) {
 	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
-	Bit32u *draw = (Bit32u *)TempLine;
+
+	uint16_t i = 0;
 	for (Bitu x=vga.draw.blocks;x>0;x--, vidstart++) {
 		Bitu val = base[(vidstart & (8 * 1024 -1))];
-		*draw++=CGA_2_Table[val >> 4];
-		*draw++=CGA_2_Table[val & 0xf];
+		write_unaligned_uint32_at(TempLine, i++, CGA_2_Table[val >> 4]);
+		write_unaligned_uint32_at(TempLine, i++, CGA_2_Table[val & 0xf]);
 	}
 	return TempLine;
 }
