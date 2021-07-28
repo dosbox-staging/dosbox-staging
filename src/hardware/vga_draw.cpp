@@ -1517,7 +1517,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		width<<=3;
 		VGA_DrawLine=VGA_Draw_Linear_Line;
 		vga.draw.linear_base = vga.fastmem;
-		vga.draw.linear_mask = (vga.vmemwrap<<1) - 1;
+		vga.draw.linear_mask = (static_cast<uint64_t>(vga.vmemwrap) << 1) - 1;
 		break;
 	case M_EGA:
 		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
@@ -1530,7 +1530,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		} else VGA_DrawLine=VGA_Draw_Linear_Line;
 
 		vga.draw.linear_base = vga.fastmem;
-		vga.draw.linear_mask = (vga.vmemwrap<<1) - 1;
+		vga.draw.linear_mask = (static_cast<uint64_t>(vga.vmemwrap) << 1) - 1;
 		break;
 	case M_CGA2_COMPOSITE:
 		aspect_ratio=1.2;
