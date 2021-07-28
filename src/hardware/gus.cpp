@@ -184,8 +184,8 @@ private:
 	uint8_t pan_position = PAN_DEFAULT_POSITION;
 };
 
-static void GUS_TimerEvent(Bitu t);
-static void GUS_DMA_Event(Bitu val);
+static void GUS_TimerEvent(uint32_t t);
+static void GUS_DMA_Event(uint32_t val);
 
 using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
 
@@ -797,7 +797,7 @@ bool Gus::IsDmaXfer16Bit() noexcept
 	return (dma_ctrl & 0x4) && (dma1 >= 4);
 }
 
-static void GUS_DMA_Event(Bitu)
+static void GUS_DMA_Event(uint32_t)
 {
 	if (gus->PerformDmaTransfer())
 		PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
@@ -1160,7 +1160,7 @@ void Gus::StopPlayback()
 	is_running = false;
 }
 
-static void GUS_TimerEvent(Bitu t)
+static void GUS_TimerEvent(uint32_t t)
 {
 	if (gus->CheckTimer(t)) {
 		const auto &timer = t == 0 ? gus->timer_one : gus->timer_two;

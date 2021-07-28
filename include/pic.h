@@ -21,43 +21,53 @@
 
 
 /* CPU Cycle Timing */
-extern Bit32s CPU_Cycles;
-extern Bit32s CPU_CycleLeft;
-extern Bit32s CPU_CycleMax;
+extern int32_t CPU_Cycles;
+extern int32_t CPU_CycleLeft;
+extern int32_t CPU_CycleMax;
 
-typedef void (PIC_EOIHandler) (void);
-typedef void (* PIC_EventHandler)(Bitu val);
+typedef void(PIC_EOIHandler)();
+typedef void (*PIC_EventHandler)(uint32_t val);
 
+extern uint32_t PIC_IRQCheck;
 
-extern Bitu PIC_IRQCheck;
-extern Bitu PIC_Ticks;
+// Elapsed milliseconds since starting DOSBox
+// Holds ~4.2 B milliseconds or ~48 days before rolling over
+extern uint32_t PIC_Ticks;
 
-static INLINE float PIC_TickIndex(void) {
-	return (CPU_CycleMax-CPU_CycleLeft-CPU_Cycles)/(float)CPU_CycleMax;
+// The number of cycles not done yet (ND)
+static INLINE int32_t PIC_TickIndexND()
+{
+	return CPU_CycleMax - CPU_CycleLeft - CPU_Cycles;
 }
 
-static INLINE Bits PIC_TickIndexND(void) {
-	return CPU_CycleMax-CPU_CycleLeft-CPU_Cycles;
+// Returns the percent cycles completed within the current "millisecond tick" of
+// the CPU
+static INLINE float PIC_TickIndex()
+{
+	return static_cast<float>(PIC_TickIndexND()) /
+	       static_cast<float>(CPU_CycleMax);
 }
 
-static INLINE Bits PIC_MakeCycles(double amount) {
-	return (Bits)(CPU_CycleMax*amount);
+static INLINE int32_t PIC_MakeCycles(float amount)
+{
+	return static_cast<int32_t>(static_cast<float>(CPU_CycleMax) * amount);
 }
 
-static INLINE double PIC_FullIndex(void) {
-	return PIC_Ticks+(double)PIC_TickIndex();
+static INLINE float PIC_FullIndex()
+{
+	return static_cast<float>(PIC_Ticks) + PIC_TickIndex();
 }
 
-void PIC_ActivateIRQ(Bitu irq);
-void PIC_DeActivateIRQ(Bitu irq);
+void PIC_ActivateIRQ(uint8_t irq);
+void PIC_DeActivateIRQ(uint8_t irq);
 
-void PIC_runIRQs(void);
-bool PIC_RunQueue(void);
+void PIC_runIRQs();
+bool PIC_RunQueue();
 
 //Delay in milliseconds
-void PIC_AddEvent(PIC_EventHandler handler,float delay,Bitu val=0);
+void PIC_AddEvent(PIC_EventHandler handler, float delay, uint32_t val = 0);
 void PIC_RemoveEvents(PIC_EventHandler handler);
-void PIC_RemoveSpecificEvents(PIC_EventHandler handler, Bitu val);
+void PIC_RemoveSpecificEvents(PIC_EventHandler handler, uint32_t val);
 
-void PIC_SetIRQMask(Bitu irq, bool masked);
+void PIC_SetIRQMask(uint32_t irq, bool masked);
 #endif

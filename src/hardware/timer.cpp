@@ -65,7 +65,8 @@ static Bit8u latched_timerstatus;
 // reprogrammed.
 static bool latched_timerstatus_locked;
 
-static void PIT0_Event(Bitu /*val*/) {
+static void PIT0_Event(uint32_t /*val*/)
+{
 	PIC_ActivateIRQ(0);
 	if (pit[0].mode != 0) {
 		pit[0].start += pit[0].delay;

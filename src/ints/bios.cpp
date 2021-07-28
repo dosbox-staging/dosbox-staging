@@ -133,7 +133,7 @@ static bool Tandy_TransferInProgress(void) {
 }
 
 static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
-	Bitu length=real_readw(0x40,0xd0);
+	const auto length=real_readw(0x40,0xd0);
 	if (length==0) return;	/* nothing to do... */
 
 	if ((tandy_sb.port==0) && (tandy_dac.port==0)) return;
@@ -598,8 +598,8 @@ static Bitu INT17_Handler(void) {
 }
 
 static bool INT14_Wait(Bit16u port, Bit8u mask, Bit8u timeout, Bit8u* retval) {
-	double starttime = PIC_FullIndex();
-	double timeout_f = timeout * 1000.0;
+	const auto starttime = PIC_FullIndex();
+	const auto timeout_f = timeout * 1000.0f;
 	while (((*retval = IO_ReadB(port)) & mask) != mask) {
 		if (starttime < (PIC_FullIndex() - timeout_f)) {
 			return false;
@@ -866,14 +866,18 @@ static Bitu INT15_Handler(void) {
 				break;
 			}
 			Bit32u count=(reg_cx<<16)|reg_dx;
-			double timeout=PIC_FullIndex()+((double)count/1000.0)+1.0;
-			mem_writed(BIOS_WAIT_FLAG_POINTER,RealMake(0,BIOS_WAIT_FLAG_TEMP));
-			mem_writed(BIOS_WAIT_FLAG_COUNT,count);
-			mem_writeb(BIOS_WAIT_FLAG_ACTIVE,1);
-			/* Unmask IRQ 8 if masked */
-			Bit8u mask=IO_Read(0xa1);
-			if (mask&1) IO_Write(0xa1,mask&~1);
-			/* Reprogram RTC to start */
+		        const auto timeout = PIC_FullIndex() +
+		                             static_cast<float>(count) / 1000.0f +
+		                             1.0f;
+		        mem_writed(BIOS_WAIT_FLAG_POINTER,
+		                   RealMake(0, BIOS_WAIT_FLAG_TEMP));
+		        mem_writed(BIOS_WAIT_FLAG_COUNT, count);
+		        mem_writeb(BIOS_WAIT_FLAG_ACTIVE, 1);
+		        /* Unmask IRQ 8 if masked */
+		        Bit8u mask = IO_Read(0xa1);
+		        if (mask & 1)
+			        IO_Write(0xa1, mask & ~1);
+		        /* Reprogram RTC to start */
 			IO_Write(0x70,0xb);
 			IO_Write(0x71,IO_Read(0x71)|0x40);
 			while (mem_readd(BIOS_WAIT_FLAG_COUNT)) {
@@ -1065,8 +1069,9 @@ static Bitu Reboot_Handler(void) {
 		CALLBACK_RunRealInt(0x10);
 	}
 	LOG_MSG(text);
-	double start = PIC_FullIndex();
-	while((PIC_FullIndex()-start)<3000) CALLBACK_Idle();
+	const auto start = PIC_FullIndex();
+	while ((PIC_FullIndex() - start) < 3000.0f)
+		CALLBACK_Idle();
 	throw 1;
 	return CBRET_NONE;
 }

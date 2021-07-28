@@ -37,8 +37,8 @@ enum DISNEY_STATE { IDLE, RUNNING, FINISHED, ANALYZING };
 struct dac_channel {
 	uint8_t buffer[BUFFER_SAMPLES] = {};
 	uint8_t used = 0; // current data buffer level
-	double speedcheck_sum = 0;
-	double speedcheck_last = 0;
+	float speedcheck_sum = 0;
+	float speedcheck_last = 0;
 	bool speedcheck_failed = false;
 	bool speedcheck_init = false;
 };
@@ -74,7 +74,8 @@ struct Disney {
 
 static Disney disney;
 
-static void DISNEY_disable(Bitu) {
+static void DISNEY_disable(uint32_t)
+{
 	if (disney.chan) {
 		disney.chan->AddSilence();
 		disney.chan->Enable(false);
@@ -153,18 +154,18 @@ static void DISNEY_analyze(Bitu channel){
 		}
 		case DISNEY_STATE::ANALYZING:
 		{
-			const double current = PIC_FullIndex();
-			dac_channel* cch = &disney.da[channel];
+		        const auto current = PIC_FullIndex();
+		        dac_channel *cch = &disney.da[channel];
 
-			if (!cch->speedcheck_init) {
-				cch->speedcheck_init = true;
-				cch->speedcheck_last = current;
-				break;
-			}
-			cch->speedcheck_sum += current - cch->speedcheck_last;
-			//LOG_MSG("t=%f",current - cch->speedcheck_last);
+		        if (!cch->speedcheck_init) {
+			        cch->speedcheck_init = true;
+			        cch->speedcheck_last = current;
+			        break;
+		        }
+		        cch->speedcheck_sum += current - cch->speedcheck_last;
+		        // LOG_MSG("t=%f",current - cch->speedcheck_last);
 
-			// sanity checks (printer...)
+		        // sanity checks (printer...)
 			if ((current - cch-> speedcheck_last) < 0.01 ||
 				(current - cch-> speedcheck_last) > 2)
 				cch->speedcheck_failed = true;
@@ -214,7 +215,7 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 		break;
 	}
 	case 1:		/* Status Port */
-		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Status write %" sBitfs(X),val);
+		LOG(LOG_MISC, LOG_NORMAL)("DISNEY:Status write %u", val);
 		break;
 	case 2:		/* Control Port */
 		if ((disney.control & 0x2) && !(val & 0x2)) {

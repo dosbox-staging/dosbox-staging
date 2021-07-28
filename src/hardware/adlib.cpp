@@ -407,7 +407,7 @@ public:
 			if ( (*cache)[ regFull ] == val )
 				return true;
 			/* Check how much time has passed */
-			Bitu passed = PIC_Ticks - lastTicks;
+			uint32_t passed = PIC_Ticks - lastTicks;
 			lastTicks = PIC_Ticks;
 			header.milliseconds += passed;
 

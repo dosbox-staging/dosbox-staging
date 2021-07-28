@@ -41,14 +41,15 @@ static struct {
 		bool acknowledged;
 	} timer;
 	struct {
-		double timer;
-		double ended;
-		double alarm;
+		float timer;
+		float ended;
+		float alarm;
 	} last;
 	bool update_ended;
 } cmos;
 
-static void cmos_timerevent(Bitu /*val*/) {
+static void cmos_timerevent(uint32_t /*val*/)
+{
 	if (cmos.timer.acknowledged) {
 		cmos.timer.acknowledged = false;
 		PIC_ActivateIRQ(8);
@@ -67,9 +68,10 @@ static void cmos_checktimer(void) {
 	LOG(LOG_PIT,LOG_NORMAL)("RTC Timer at %.2f hz",1000.0/cmos.timer.delay);
 //	PIC_AddEvent(cmos_timerevent,cmos.timer.delay);
 	/* A rtc is always running */
-	double remd=fmod(PIC_FullIndex(),(double)cmos.timer.delay);
-	PIC_AddEvent(cmos_timerevent,(float)((double)cmos.timer.delay-remd)); //Should be more like a real pc. Check
-//	status reg A reading with this (and with other delays actually)
+	const auto remd = fmodf(PIC_FullIndex(), cmos.timer.delay);
+	// Should be more like a real pc. Check
+	PIC_AddEvent(cmos_timerevent, cmos.timer.delay - remd);
+	// Status reg A reading with this (and with other delays actually)
 }
 
 void cmos_selreg(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
@@ -172,7 +174,7 @@ static Bitu cmos_readreg(Bitu /*port*/,Bitu /*iolen*/) {
 		} else {
 			/* Give correct values at certain times */
 			Bit8u val=0;
-			double index=PIC_FullIndex();
+			const auto index = PIC_FullIndex();
 			if (index>=(cmos.last.timer+cmos.timer.delay)) {
 				cmos.last.timer=index;
 				val|=0x40;

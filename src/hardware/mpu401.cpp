@@ -27,10 +27,10 @@
 #include "support.h"
 #include "midi.h"
 
-static void MPU401_Event(Bitu);
+static void MPU401_Event(uint32_t);
 static void MPU401_Reset(void);
-static void MPU401_ResetDone(Bitu);
-static void MPU401_EOIHandler(Bitu val=0);
+static void MPU401_ResetDone(uint32_t);
+static void MPU401_EOIHandler(uint32_t val = 0);
 static void MPU401_EOIHandlerDispatch(void);
 
 #define MPU401_VERSION	0x15
@@ -532,9 +532,10 @@ static void UpdateConductor(void) {
 	mpu.state.req_mask|=(1<<9);
 }
 
-static void MPU401_Event(Bitu /*val*/) {
-
-	if (mpu.mode == M_UART) return;
+static void MPU401_Event(uint32_t /*val*/)
+{
+	if (mpu.mode == M_UART)
+		return;
 
 	if (mpu.state.irq_pending) goto next_event;
 	if (mpu.state.playing) {
@@ -561,7 +562,6 @@ next_event:
 	PIC_AddEvent(MPU401_Event,MPU401_TIMECONSTANT/(mpu.clock.tempo*mpu.clock.timebase));
 }
 
-
 static void MPU401_EOIHandlerDispatch(void) {
 	if (mpu.state.send_now) {
 		mpu.state.eoi_scheduled=true;
@@ -571,8 +571,9 @@ static void MPU401_EOIHandlerDispatch(void) {
 }
 
 //Updates counters and requests new data on "End of Input"
-static void MPU401_EOIHandler(Bitu /*val*/) {
-	mpu.state.eoi_scheduled=false;
+static void MPU401_EOIHandler(uint32_t /*val*/)
+{
+	mpu.state.eoi_scheduled = false;
 	if (mpu.state.send_now) {
 		mpu.state.send_now=false;
 		if (mpu.state.cond_req) UpdateConductor();
@@ -590,8 +591,9 @@ static void MPU401_EOIHandler(Bitu /*val*/) {
 	} while ((i++)<16);
 }
 
-static void MPU401_ResetDone(Bitu) {
-	mpu.state.reset=false;
+static void MPU401_ResetDone(uint32_t)
+{
+	mpu.state.reset = false;
 	if (mpu.state.cmd_pending) {
 		MPU401_WriteCommand(0x331,mpu.state.cmd_pending-1,1);
 		mpu.state.cmd_pending=0;
