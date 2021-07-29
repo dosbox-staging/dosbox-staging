@@ -93,34 +93,34 @@ static constexpr int precise_delay_duration_us = 100;
 static inline void DelayPrecise(const int milliseconds)
 {
 	// The estimate of how long the sleep should take (microseconds)
-	static double estimate = 5e-5;
+	static auto estimate = 5e-5f;
 	// Use the estimate value as the default mean time taken
-	static double mean = 5e-5;
-	static double m2 = 0;
+	static auto mean = 5e-5f;
+	static auto m2 = 0.0f;
 	static int64_t count = 1;
 
 	// Original code operated on seconds, convert
-	double seconds = milliseconds / 1e3;
+	auto seconds = static_cast<float>(milliseconds) / 1e3f;
 
 	// sleep as long as we can, then spinlock the rest
 	while (seconds > estimate) {
 		const auto start = GetTicksUs();
 		DelayUs(precise_delay_duration_us);
 		// Original code operated on seconds, convert
-		const double observed = GetTicksUsSince(start) / 1e6;
+		const auto observed = static_cast<float>(GetTicksUsSince(start)) / 1e6f;
 		seconds -= observed;
 
 		++count;
-		const double delta = observed - mean;
-		mean += delta / count;
+		const auto delta = observed - mean;
+		mean += delta / static_cast<float>(count);
 		m2 += delta * (observed - mean);
-		const double stddev = std::sqrt(m2 / (count - 1));
+		const auto stddev = std::sqrt(m2 / static_cast<float>(count - 1));
 		estimate = mean + stddev;
 	}
 
-    // spin lock
-    const auto spin_start = GetTicksUs();
-	const int spin_remain = static_cast<int>(seconds * 1e6);
+	// spin lock
+	const auto spin_start = GetTicksUs();
+	const int spin_remain = static_cast<int>(seconds * 1e6f);
 	do {
 		std::this_thread::yield();
 	} while (GetTicksUsSince(spin_start) <= spin_remain);

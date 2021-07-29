@@ -27,8 +27,13 @@
 #include "setup.h"
 
 static INLINE void BIN2BCD(Bit16u& val) {
-	Bit16u temp=val%10 + (((val/10)%10)<<4)+ (((val/100)%10)<<8) + (((val/1000)%10)<<12);
-	val=temp;
+	const auto b = ((val / 10) % 10) << 4;
+	const auto c = ((val / 100) % 10) << 8;
+	const auto d = ((val / 1000) % 10) << 12;
+	assert(b + c + d <= UINT16_MAX);
+
+	const uint16_t temp = (val % 10) + static_cast<uint16_t>(b + c + d);
+	val = temp;
 }
 
 static INLINE void BCD2BIN(Bit16u& val) {
@@ -37,9 +42,9 @@ static INLINE void BCD2BIN(Bit16u& val) {
 }
 
 struct PIT_Block {
-	Bitu cntr;
+	uint32_t cntr;
 	float delay;
-	double start;
+	float start;
 
 	Bit16u read_latch;
 	Bit16u write_latch;
@@ -79,9 +84,10 @@ static void PIT0_Event(uint32_t /*val*/)
 	}
 }
 
-static bool counter_output(Bitu counter) {
-	PIT_Block * p=&pit[counter];
-	double index=PIC_FullIndex()-p->start;
+static bool counter_output(const uint32_t counter)
+{
+	PIT_Block *p = &pit[counter];
+	auto index = PIC_FullIndex() - p->start;
 	switch (p->mode) {
 	case 0:
 		if (p->new_mode) return false;
@@ -90,11 +96,11 @@ static bool counter_output(Bitu counter) {
 		break;
 	case 2:
 		if (p->new_mode) return true;
-		index=fmod(index,(double)p->delay);
+		index = fmodf(index, p->delay);
 		return index>0;
 	case 3:
 		if (p->new_mode) return true;
-		index=fmod(index,(double)p->delay);
+		index = fmodf(index, p->delay);
 		return index*2<p->delay;
 	case 4:
 		//Only low on terminal count
@@ -106,33 +112,41 @@ static bool counter_output(Bitu counter) {
 		return true;
 	}
 }
-static void status_latch(Bitu counter) {
-	// the timer status can not be overwritten until it is read or the timer was 
-	// reprogrammed.
-	if(!latched_timerstatus_locked)	{
-		PIT_Block * p=&pit[counter];
-		latched_timerstatus=0;
+static void status_latch(const uint32_t counter)
+{
+	// the timer status can not be overwritten until it is read or the timer
+	// was reprogrammed.
+	if (!latched_timerstatus_locked) {
+		PIT_Block *p = &pit[counter];
+		latched_timerstatus = 0;
 		// Timer Status Word
-		// 0: BCD 
+		// 0: BCD
 		// 1-3: Timer mode
 		// 4-5: read/load mode
-		// 6: "NULL" - this is 0 if "the counter value is in the counter" ;)
-		// should rarely be 1 (i.e. on exotic modes)
-		// 7: OUT - the logic level on the Timer output pin
-		if(p->bcd)latched_timerstatus|=0x1;
-		latched_timerstatus|=((p->mode&7)<<1);
-		if((p->read_state==0)||(p->read_state==3)) latched_timerstatus|=0x30;
-		else if(p->read_state==1) latched_timerstatus|=0x10;
-		else if(p->read_state==2) latched_timerstatus|=0x20;
-		if(counter_output(counter)) latched_timerstatus|=0x80;
-		if(p->new_mode) latched_timerstatus|=0x40;
-		// The first thing that is being read from this counter now is the
-		// counter status.
-		p->counterstatus_set=true;
-		latched_timerstatus_locked=true;
+		// 6: "NULL" - this is 0 if "the counter value is in the
+		// counter" ;) should rarely be 1 (i.e. on exotic modes) 7: OUT
+		// - the logic level on the Timer output pin
+		if (p->bcd)
+			latched_timerstatus |= 0x1;
+		latched_timerstatus |= ((p->mode & 7) << 1);
+		if ((p->read_state == 0) || (p->read_state == 3))
+			latched_timerstatus |= 0x30;
+		else if (p->read_state == 1)
+			latched_timerstatus |= 0x10;
+		else if (p->read_state == 2)
+			latched_timerstatus |= 0x20;
+		if (counter_output(counter))
+			latched_timerstatus |= 0x80;
+		if (p->new_mode)
+			latched_timerstatus |= 0x40;
+		// The first thing that is being read from this counter now is
+		// the counter status.
+		p->counterstatus_set = true;
+		latched_timerstatus_locked = true;
 	}
 }
-static void counter_latch(Bitu counter) {
+static void counter_latch(uint32_t counter)
+{
 	/* Fill the read_latch of the selected counter with current count */
 	PIT_Block * p=&pit[counter];
 	p->go_read_latch=false;
@@ -140,28 +154,31 @@ static void counter_latch(Bitu counter) {
 	//If gate2 is disabled don't update the read_latch
 	if (counter == 2 && !gate2 && p->mode !=1) return;
 	if (GCC_UNLIKELY(p->new_mode)) {
-		double passed_time = PIC_FullIndex() - p->start;
-		Bitu ticks_since_then = (Bitu)(passed_time / (1000.0/PIT_TICK_RATE));
-		//if (p->mode==3) ticks_since_then /= 2; // TODO figure this out on real hardware
+		const auto passed_time = PIC_FullIndex() - p->start;
+		const auto ticks_since_then = static_cast<uint32_t>(
+		        passed_time / (1000.0f / PIT_TICK_RATE));
+		// if (p->mode==3) ticks_since_then /= 2; // TODO figure this
+		// out on real hardware
 		p->read_latch -= ticks_since_then;
 		return;
 	}
-	double index=PIC_FullIndex()-p->start;
+	auto index = PIC_FullIndex() - p->start;
+	const auto cntr = static_cast<float>(p->cntr);
 	switch (p->mode) {
-	case 4:		/* Software Triggered Strobe */
+	case 4:         /* Software Triggered Strobe */
 	case 0:		/* Interrupt on Terminal Count */
 		/* Counter keeps on counting after passing terminal count */
 		if (index>p->delay) {
 			index-=p->delay;
 			if(p->bcd) {
-				index = fmod(index,(1000.0/PIT_TICK_RATE)*10000.0);
-				p->read_latch = (Bit16u)(9999-index*(PIT_TICK_RATE/1000.0));
+				index = fmodf(index, (1000.0f / PIT_TICK_RATE) * 10000.0f);
+				p->read_latch = (Bit16u)(9999 - index * (PIT_TICK_RATE / 1000.0f));
 			} else {
-				index = fmod(index,(1000.0/PIT_TICK_RATE)*(double)0x10000);
-				p->read_latch = (Bit16u)(0xffff-index*(PIT_TICK_RATE/1000.0));
+				index = fmodf(index, (1000.0f / PIT_TICK_RATE) * 0x10000);
+				p->read_latch = (Bit16u)(0xffff - index * (PIT_TICK_RATE / 1000.0f));
 			}
 		} else {
-			p->read_latch=(Bit16u)(p->cntr-index*(PIT_TICK_RATE/1000.0));
+			p->read_latch = (Bit16u)(static_cast<float>(cntr) - index * (PIT_TICK_RATE / 1000.0f));
 		}
 		break;
 	case 1: // countdown
@@ -169,19 +186,19 @@ static void counter_latch(Bitu counter) {
 			if (index>p->delay) { // has timed out
 				p->read_latch = 0xffff; //unconfirmed
 			} else {
-				p->read_latch=(Bit16u)(p->cntr-index*(PIT_TICK_RATE/1000.0));
+				p->read_latch = (Bit16u)(cntr - index * (PIT_TICK_RATE / 1000.0f));
 			}
 		}
 		break;
 	case 2:		/* Rate Generator */
-		index=fmod(index,(double)p->delay);
-		p->read_latch=(Bit16u)(p->cntr - (index/p->delay)*p->cntr);
+		index = fmodf(index, p->delay);
+		p->read_latch = (Bit16u)(cntr - (index / p->delay) * cntr);
 		break;
 	case 3:		/* Square Wave Rate Generator */
-		index=fmod(index,(double)p->delay);
+		index = fmodf(index, p->delay);
 		index*=2;
 		if (index>p->delay) index-=p->delay;
-		p->read_latch=(Bit16u)(p->cntr - (index/p->delay)*p->cntr);
+		p->read_latch = (Bit16u)(cntr - (index / p->delay) * cntr);
 		// In mode 3 it never returns odd numbers LSB (if odd number is written 1 will be
 		// subtracted on first clock and then always 2)
 		// fixes "Corncob 3D"
@@ -194,76 +211,94 @@ static void counter_latch(Bitu counter) {
 	}
 }
 
+static void write_latch(uint16_t port, uint8_t val, Bitu /*iolen*/)
+{
+	// LOG(LOG_PIT,LOG_ERROR)("port %X write:%X
+	// state:%X",port,val,pit[port-0x40].write_state);
+	const uint16_t counter = port - 0x40;
+	PIT_Block *p = &pit[counter];
+	if (p->bcd == true)
+		BIN2BCD(p->write_latch);
 
-static void write_latch(Bitu port,Bitu val,Bitu /*iolen*/) {
-//LOG(LOG_PIT,LOG_ERROR)("port %X write:%X state:%X",port,val,pit[port-0x40].write_state);
-	Bitu counter=port-0x40;
-	PIT_Block * p=&pit[counter];
-	if(p->bcd == true) BIN2BCD(p->write_latch);
-   
 	switch (p->write_state) {
-		case 0:
-			p->write_latch = p->write_latch | ((val & 0xff) << 8);
-			p->write_state = 3;
-			break;
-		case 3:
-			p->write_latch = val & 0xff;
-			p->write_state = 0;
-			break;
-		case 1:
-			p->write_latch = val & 0xff;
-			break;
-		case 2:
-			p->write_latch = (val & 0xff) << 8;
+	case 0:
+		// write_latch is 16-bits
+		p->write_latch = static_cast<uint16_t>(p->write_latch |
+		                                       ((val & 0xff) << 8));
+		p->write_state = 3;
+		break;
+	case 3:
+		p->write_latch = val & 0xff;
+		p->write_state = 0;
+		break;
+	case 1: p->write_latch = val & 0xff; break;
+	case 2:
+		p->write_latch = static_cast<uint16_t>((val & 0xff) << 8);
 		break;
 	}
-	if (p->bcd==true) BCD2BIN(p->write_latch);
-   	if (p->write_state != 0) {
+
+	if (p->bcd == true)
+		BCD2BIN(p->write_latch);
+
+	if (p->write_state != 0) {
 		if (p->write_latch == 0) {
-			if (p->bcd == false) p->cntr = 0x10000;
-			else p->cntr=9999;
+			if (p->bcd == false)
+				p->cntr = 0x10000;
+			else
+				p->cntr = 9999;
 		}
 		// square wave, count by 2
 		else if (p->write_latch == 1 && p->mode == 3)
-			// counter==1 and mode==3 makes a low frequency buzz (Paratrooper)
+			// counter==1 and mode==3 makes a low frequency
+			// buzz (Paratrooper)
 			p->cntr = p->bcd ? 10000 : 0x10001;
 		else
 			p->cntr = p->write_latch;
 
 		if ((!p->new_mode) && (p->mode == 2) && (counter == 0)) {
-			// In mode 2 writing another value has no direct effect on the count
-			// until the old one has run out. This might apply to other modes too.
+			// In mode 2 writing another value has no direct
+			// effect on the count until the old one has run
+			// out. This might apply to other modes too.
 			// This is not fixed for PIT2 yet!!
-			p->update_count=true;
+			p->update_count = true;
 			return;
 		}
-		p->start=PIC_FullIndex();
-		p->delay=(1000.0f/((float)PIT_TICK_RATE/(float)p->cntr));
+		p->start = PIC_FullIndex();
+		p->delay = (1000.0f / ((float)PIT_TICK_RATE / (float)p->cntr));
 
 		switch (counter) {
-		case 0x00:			/* Timer hooked to IRQ 0 */
-			if (p->new_mode || p->mode == 0 ) {
-				if(p->mode==0) PIC_RemoveEvents(PIT0_Event); // DoWhackaDo demo
-				PIC_AddEvent(PIT0_Event,p->delay);
-			} else LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer set without new control word");
-			LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer at %.4f Hz mode %d",1000.0/p->delay,p->mode);
+		case 0x00: /* Timer hooked to IRQ 0 */
+			if (p->new_mode || p->mode == 0) {
+				if (p->mode == 0) { // DoWhackaDo demo
+					PIC_RemoveEvents(PIT0_Event);
+				}
+				PIC_AddEvent(PIT0_Event, p->delay);
+			} else
+				LOG(LOG_PIT, LOG_NORMAL)
+			("PIT 0 Timer set without new control word");
+			LOG(LOG_PIT, LOG_NORMAL)
+			("PIT 0 Timer at %.4f Hz mode %d",
+			 static_cast<double>(1000.0f / p->delay), p->mode);
 			break;
-		case 0x02:			/* Timer hooked to PC-Speaker */
-//			LOG(LOG_PIT,"PIT 2 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
-			PCSPEAKER_SetCounter(p->cntr,p->mode);
+		case 0x02: // Timer hooked to PC-Speaker
+			// LOG(LOG_PIT,"PIT 2 Timer at %.3g Hz mode %d",
+			//     PIT_TICK_RATE/(double)p->cntr,p->mode);
+			PCSPEAKER_SetCounter(p->cntr, p->mode);
 			break;
 		default:
-			LOG(LOG_PIT,LOG_ERROR)("PIT:Illegal timer selected for writing");
+			LOG(LOG_PIT, LOG_ERROR)
+			("PIT:Illegal timer selected for writing");
 		}
-		p->new_mode=false;
-    }
+		p->new_mode = false;
+	}
 }
 
-static Bitu read_latch(Bitu port,Bitu /*iolen*/) {
-//LOG(LOG_PIT,LOG_ERROR)("port read %X",port);
-	Bit32u counter=port-0x40;
-	Bit8u ret=0;
-	if(GCC_UNLIKELY(pit[counter].counterstatus_set)){
+static uint8_t read_latch(uint16_t port, Bitu /*iolen*/)
+{
+	// LOG(LOG_PIT,LOG_ERROR)("port read %X",port);
+	const uint16_t counter = port - 0x40;
+	Bit8u ret = 0;
+	if (GCC_UNLIKELY(pit[counter].counterstatus_set)) {
 		pit[counter].counterstatus_set = false;
 		latched_timerstatus_locked = false;
 		ret = latched_timerstatus;
@@ -300,9 +335,10 @@ static Bitu read_latch(Bitu port,Bitu /*iolen*/) {
 	return ret;
 }
 
-static void write_p43(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
-//LOG(LOG_PIT,LOG_ERROR)("port 43 %X",val);
-	Bitu latch=(val >> 6) & 0x03;
+static void write_p43(uint16_t /*port*/, uint8_t val, Bitu /*iolen*/)
+{
+	// LOG(LOG_PIT,LOG_ERROR)("port 43 %X",val);
+	const uint8_t latch = (val >> 6) & 0x03;
 	switch (latch) {
 	case 0:
 	case 1:
@@ -313,63 +349,73 @@ static void write_p43(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		} else {
 			// save output status to be used with timer 0 irq
 			bool old_output = counter_output(0);
-			// save the current count value to be re-used in undocumented newmode
+			// save the current count value to be re-used in
+			// undocumented newmode
 			counter_latch(latch);
-			pit[latch].bcd = (val&1)>0;   
+			pit[latch].bcd = (val & 1) > 0;
 			if (val & 1) {
-				if(pit[latch].cntr>=9999) pit[latch].cntr=9999;
+				if (pit[latch].cntr >= 9999)
+					pit[latch].cntr = 9999;
 			}
 
 			// Timer is being reprogrammed, unlock the status
-			if(pit[latch].counterstatus_set) {
-				pit[latch].counterstatus_set=false;
-				latched_timerstatus_locked=false;
+			if (pit[latch].counterstatus_set) {
+				pit[latch].counterstatus_set = false;
+				latched_timerstatus_locked = false;
 			}
-			pit[latch].start = PIC_FullIndex(); // for undocumented newmode
+			pit[latch].start = PIC_FullIndex(); // for undocumented
+			                                    // newmode
 			pit[latch].go_read_latch = true;
 			pit[latch].update_count = false;
 			pit[latch].counting = false;
-			pit[latch].read_state  = (val >> 4) & 0x03;
+			pit[latch].read_state = (val >> 4) & 0x03;
 			pit[latch].write_state = (val >> 4) & 0x03;
-			Bit8u mode             = (val >> 1) & 0x07;
+			Bit8u mode = (val >> 1) & 0x07;
 			if (mode > 5)
-				mode -= 4; //6,7 become 2 and 3
+				mode -= 4; // 6,7 become 2 and 3
 
 			pit[latch].mode = mode;
 
-			/* If the line goes from low to up => generate irq. 
-			 *      ( BUT needs to stay up until acknowlegded by the cpu!!! therefore: )
-			 * If the line goes to low => disable irq.
-			 * Mode 0 starts with a low line. (so always disable irq)
-			 * Mode 2,3 start with a high line.
-			 * counter_output tells if the current counter is high or low 
-			 * So actually a mode 3 timer enables and disables irq al the time. (not handled) */
+			/* If the line goes from low to up => generate irq.
+			 * ( BUT needs to stay up until acknowlegded by the
+			 * cpu!!! therefore: ) If the line goes to low =>
+			 * disable irq. Mode 0 starts with a low line. (so
+			 * always disable irq) Mode 2,3 start with a high line.
+			 * counter_output tells if the current counter is high
+			 * or low So actually a mode 3 timer enables and
+			 * disables irq al the time. (not handled) */
 
 			if (latch == 0) {
 				PIC_RemoveEvents(PIT0_Event);
-				if((mode != 0)&& !old_output) {
+				if ((mode != 0) && !old_output) {
 					PIC_ActivateIRQ(0);
 				} else {
 					PIC_DeActivateIRQ(0);
 				}
 			} else if (latch == 2) {
-				PCSPEAKER_SetCounter(0,3);
+				PCSPEAKER_SetCounter(0, 3);
 			}
 			pit[latch].new_mode = true;
 		}
 		break;
-    case 3:
-		if ((val & 0x20)==0) {	/* Latch multiple pit counters */
-			if (val & 0x02) counter_latch(0);
-			if (val & 0x04) counter_latch(1);
-			if (val & 0x08) counter_latch(2);
+	case 3:
+		if ((val & 0x20) == 0) { /* Latch multiple pit counters */
+			if (val & 0x02)
+				counter_latch(0);
+			if (val & 0x04)
+				counter_latch(1);
+			if (val & 0x08)
+				counter_latch(2);
 		}
 		// status and values can be latched simultaneously
-		if ((val & 0x10)==0) {	/* Latch status words */
+		if ((val & 0x10) == 0) { /* Latch status words */
 			// but only 1 status can be latched simultaneously
-			if (val & 0x02) status_latch(0);
-			else if (val & 0x04) status_latch(1);
-			else if (val & 0x08) status_latch(2);
+			if (val & 0x02)
+				status_latch(0);
+			else if (val & 0x04)
+				status_latch(1);
+			else if (val & 0x08)
+				status_latch(2);
 		}
 		break;
 	}
@@ -379,7 +425,7 @@ void TIMER_SetGate2(bool in) {
 	//No changes if gate doesn't change
 	if(gate2 == in) return;
 	Bit8u & mode=pit[2].mode;
-	switch(mode) {
+	switch (mode) {
 	case 0:
 		if(in) pit[2].start = PIC_FullIndex();
 		else {
