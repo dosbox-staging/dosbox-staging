@@ -1,4 +1,4 @@
-:CONFIG_FULLSCREEN
+ :CONFIG_FULLSCREEN
 Startet DOSBox direkt im Vollbildmodus.
 .
 :CONFIG_DISPLAY
@@ -739,10 +739,10 @@ benutzen kannst, musst du das Verzeichnis, das die Dateien enthÑlt, mounten.
 
 .
 :PROGRAM_INTRO_MOUNT_END
-Nach erfolgreichem Mounten der Festplatte kannst du [34;1mc:[0m eingeben,
+Nach erfolgreichem Mounten der Festplatte kannst du [34;1mc:[0m eingeben,
 um zu deinem frisch gemounteten C-Laufwerk zu wechseln.
-Wenn du dort [34;1mdir[0m] eingibst, wird der Inhalt angezeigt. [34;1mcd[0m erlaubt es dir
-in ein Verzeichnis zu wechseln (erkennbar am [33;1m[][0m in einer Verzeichnisliste).
+Wenn du dort [34;1mdir[0m eingibst, wird der Inhalt angezeigt. [34;1mcd[0m erlaubt es dir
+in ein Verzeichnis zu wechseln (erkennbar am [33;1m[][0m in einer Verzeichnisliste).
 Du kannst Programme/Dateien mit den Erweiterungen [31m.exe .bat[0m und [31m.com[0m ausfÅhren.
 
 .
@@ -1482,13 +1482,13 @@ Verwendung:
   [32;1merase[0m [36;1mZEICHENFOLGE[0m
 
 Wobei:
-  [36;1mZEICHENFOLGE[0m kann entweder ein exakter Dateiname sein (wie [36;1mfile.txt[0m) oder ein ungenauer
+  [36;1mZEICHENFOLGE[0m kann entweder ein exakter Dateiname sein (wie [36;1mfile.txt[0m) oder ein ungenauer
           Dateiname sein, der einen oder mehrere Platzhalter verwendet, nÑmlich das Sternchen (*)
           das fÅr eine beliebige Folge von einem oder mehreren Zeichen steht, und das Fragezeichen
-          (?), das fÅr ein einzelnes Zeichen steht, wie z.B. [36;1m*.bat[0m und [36;1mc?.txt[0m.
+          (?), das fÅr ein einzelnes Zeichen steht, wie z.B. [36;1m*.bat[0m und [36;1mc?.txt[0m.
 
 Warnung:
-  Sei vorsichtig, wenn du ein Muster mit Platzhaltern verwendest, insbesondere [36;1m*.*[0m, da alle Dateien
+  Sei vorsichtig, wenn du ein Muster mit Platzhaltern verwendest, insbesondere [36;1m*.*[0m, da alle Dateien
   die mit dem Muster Åbereinstimmen, gelîscht werden.
 
 Beispiele:
