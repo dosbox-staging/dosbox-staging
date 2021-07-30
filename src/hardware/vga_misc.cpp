@@ -31,7 +31,7 @@ Bitu vga_read_p3d5(Bitu port,Bitu iolen);
 
 Bitu vga_read_p3da(Bitu /*port*/,Bitu /*iolen*/) {
 	Bit8u retval=4;	// bit 2 set, needed by Blues Brothers
-	double timeInFrame = PIC_FullIndex()-vga.draw.delay.framestart;
+	const auto timeInFrame = PIC_FullIndex() - vga.draw.delay.framestart;
 
 	vga.internal.attrindex=false;
 	vga.tandy.pcjr_flipflop=false;
@@ -46,7 +46,7 @@ Bitu vga_read_p3da(Bitu /*port*/,Bitu /*iolen*/) {
 	if (timeInFrame >= vga.draw.delay.vdend) {
 		retval |= 1;
 	} else {
-		double timeInLine=fmod(timeInFrame,vga.draw.delay.htotal);
+		const auto timeInLine = fmodf(timeInFrame, vga.draw.delay.htotal);
 		if (timeInLine >= vga.draw.delay.hblkstart && 
 			timeInLine <= vga.draw.delay.hblkend) {
 			retval |= 1;

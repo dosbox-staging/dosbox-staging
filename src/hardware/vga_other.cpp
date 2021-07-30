@@ -186,14 +186,14 @@ static void write_lightpen(Bitu port, uint8_t /*val*/, Bitu)
 		if (!vga.other.lightpen_triggered) {
 			vga.other.lightpen_triggered = true; // TODO: this shows at port 3ba/3da bit 1
 
-			double timeInFrame = PIC_FullIndex()-vga.draw.delay.framestart;
-			double timeInLine = fmod(timeInFrame,vga.draw.delay.htotal);
+			const auto timeInFrame = PIC_FullIndex() - vga.draw.delay.framestart;
+			const auto timeInLine = fmodf(timeInFrame, vga.draw.delay.htotal);
 			Bitu current_scanline = (Bitu)(timeInFrame / vga.draw.delay.htotal);
 
 			vga.other.lightpen = (Bit16u)((vga.draw.address_add/2) * (current_scanline/2));
 			vga.other.lightpen +=
-			        (Bit16u)((timeInLine / vga.draw.delay.hdend) *
-			                 ((double)(vga.draw.address_add / 2)));
+			        static_cast<uint16_t>((timeInLine / vga.draw.delay.hdend) *
+			                 (static_cast<float>(vga.draw.address_add / 2)));
 		}
 		break;
 	}
@@ -1087,14 +1087,14 @@ uint8_t read_herc_status(Bitu /*port*/, uint8_t /*iolen*/)
 	//			111: Unknown clone
 	//       7  Vertical sync inverted
 
-	double timeInFrame = PIC_FullIndex()-vga.draw.delay.framestart;
+	const auto timeInFrame = PIC_FullIndex() - vga.draw.delay.framestart;
 	uint8_t retval = 0x72; // Hercules ident; from a working card (Winbond
 	                       // W86855AF) Another known working card has 0x76
 	                       // ("KeysoGood", full-length)
 	if (timeInFrame < vga.draw.delay.vrstart || timeInFrame > vga.draw.delay.vrend)
 		retval |= 0x80;
 
-	double timeInLine=fmod(timeInFrame,vga.draw.delay.htotal);
+	const auto timeInLine = fmodf(timeInFrame, vga.draw.delay.htotal);
 	if (timeInLine >= vga.draw.delay.hrstart &&
 		timeInLine <= vga.draw.delay.hrend) retval |= 0x1;
 
