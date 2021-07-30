@@ -174,10 +174,10 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 	IO_Write(tandy_dma*2,(Bit8u)(bufpt&0xff));
 	IO_Write(tandy_dma*2,(Bit8u)((bufpt>>8)&0xff));
 	switch (tandy_dma) {
-		case 0: IO_Write(0x87,bufpage); break;
-		case 1: IO_Write(0x83,bufpage); break;
-		case 2: IO_Write(0x81,bufpage); break;
-		case 3: IO_Write(0x82,bufpage); break;
+	case 0: IO_Write(0x87, bufpage); break;
+	case 1: IO_Write(0x83, bufpage); break;
+	case 2: IO_Write(0x81, bufpage); break;
+	case 3: IO_Write(0x82, bufpage); break;
 	}
 	real_writeb(0x40,0xd4,bufpage);
 
@@ -270,7 +270,7 @@ static Bitu IRQ_TandyDAC(void) {
 static void TandyDAC_Handler(Bit8u tfunction) {
 	if ((!tandy_sb.port) && (!tandy_dac.port)) return;
 	switch (tfunction) {
-	case 0x81:	/* Tandy sound system check */
+	case 0x81: /* Tandy sound system check */
 		if (tandy_dac.port) {
 			reg_ax=tandy_dac.port;
 		} else {
@@ -315,15 +315,15 @@ static void TandyDAC_Handler(Bit8u tfunction) {
 
 static Bitu INT1A_Handler(void) {
 	switch (reg_ah) {
-	case 0x00:	/* Get System time */
-		{
-			Bit32u ticks=mem_readd(BIOS_TIMER);
-			reg_al=mem_readb(BIOS_24_HOURS_FLAG);
-			mem_writeb(BIOS_24_HOURS_FLAG,0); // reset the "flag"
-			reg_cx=(Bit16u)(ticks >> 16);
-			reg_dx=(Bit16u)(ticks & 0xffff);
-			break;
-		}
+	case 0x00: /* Get System time */
+	{
+		Bit32u ticks = mem_readd(BIOS_TIMER);
+		reg_al = mem_readb(BIOS_24_HOURS_FLAG);
+		mem_writeb(BIOS_24_HOURS_FLAG, 0); // reset the "flag"
+		reg_cx = (Bit16u)(ticks >> 16);
+		reg_dx = (Bit16u)(ticks & 0xffff);
+		break;
+	}
 	case 0x01:	/* Set System time */
 		mem_writed(BIOS_TIMER,(reg_cx<<16)|reg_dx);
 		break;
@@ -362,45 +362,49 @@ static Bitu INT1A_Handler(void) {
 		LOG(LOG_BIOS,LOG_WARN)("INT1A:PCI bios call %2X",reg_al);
 #if defined(PCI_FUNCTIONALITY_ENABLED)
 		switch (reg_al) {
-			case 0x01:	// installation check
-				if (PCI_IsInitialized()) {
-					reg_ah=0x00;
-					reg_al=0x01;	// cfg space mechanism 1 supported
-					reg_bx=0x0210;	// ver 2.10
-					reg_cx=0x0000;	// only one PCI bus
-					reg_edx=0x20494350;
-					reg_edi=PCI_GetPModeInterface();
-					CALLBACK_SCF(false);
-				} else {
-					CALLBACK_SCF(true);
-				}
-				break;
-			case 0x02: {	// find device
-				Bitu devnr=0;
-				Bitu count=0x100;
-				Bit32u devicetag=(reg_cx<<16)|reg_dx;
-				Bits found=-1;
-				for (Bitu i=0; i<=count; i++) {
-					IO_WriteD(0xcf8,0x80000000|(i<<8));	// query unique device/subdevice entries
-					if (IO_ReadD(0xcfc)==devicetag) {
-						if (devnr==reg_si) {
-							found=i;
-							break;
-						} else {
-							// device found, but not the SIth device
-							devnr++;
-						}
+		case 0x01: // installation check
+			if (PCI_IsInitialized()) {
+				reg_ah = 0x00;
+				reg_al = 0x01; // cfg space mechanism 1 supported
+				reg_bx = 0x0210; // ver 2.10
+				reg_cx = 0x0000; // only one PCI bus
+				reg_edx = 0x20494350;
+				reg_edi = PCI_GetPModeInterface();
+				CALLBACK_SCF(false);
+			} else {
+				CALLBACK_SCF(true);
+			}
+			break;
+		case 0x02: { // find device
+			Bitu devnr = 0;
+			Bitu count = 0x100;
+			Bit32u devicetag = (reg_cx << 16) | reg_dx;
+			Bits found = -1;
+			for (Bitu i = 0; i <= count; i++) {
+				IO_WriteD(0xcf8, 0x80000000 | (i << 8)); // query
+				                                         // unique
+				                                         // device/subdevice
+				                                         // entries
+				if (IO_ReadD(0xcfc) == devicetag) {
+					if (devnr == reg_si) {
+						found = i;
+						break;
+					} else {
+						// device found, but not the
+						// SIth device
+						devnr++;
 					}
 				}
-				if (found>=0) {
-					reg_ah=0x00;
-					reg_bh=0x00;	// bus 0
-					reg_bl=(Bit8u)(found&0xff);
-					CALLBACK_SCF(false);
-				} else {
-					reg_ah=0x86;	// device not found
-					CALLBACK_SCF(true);
-				}
+			}
+			if (found >= 0) {
+				reg_ah = 0x00;
+				reg_bh = 0x00; // bus 0
+				reg_bl = (Bit8u)(found & 0xff);
+				CALLBACK_SCF(false);
+			} else {
+				reg_ah = 0x86; // device not found
+				CALLBACK_SCF(true);
+			}
 				}
 				break;
 			case 0x03: {	// find device by class code
@@ -469,7 +473,7 @@ static Bitu INT1A_Handler(void) {
 					reg_ax,reg_bx,reg_cx,reg_dx);
 				CALLBACK_SCF(true);
 				break;
-		}
+		        }
 #else
 		CALLBACK_SCF(true);
 #endif
@@ -584,8 +588,8 @@ static Bitu INT12_Handler(void) {
 
 static Bitu INT17_Handler(void) {
 	LOG(LOG_BIOS,LOG_NORMAL)("INT17:Function %X",reg_ah);
-	switch(reg_ah) {
-	case 0x00:		/* PRINTER: Write Character */
+	switch (reg_ah) {
+	case 0x00:              /* PRINTER: Write Character */
 		reg_ah=1;	/* Report a timeout */
 		break;
 	case 0x01:		/* PRINTER: Initialize port */
@@ -622,8 +626,8 @@ static Bitu INT14_Handler(void) {
 		LOG(LOG_BIOS,LOG_NORMAL)("BIOS INT14: port %d does not exist.",reg_dx);
 		return CBRET_NONE;
 	}
-	switch (reg_ah)	{
-	case 0x00:	{
+	switch (reg_ah) {
+	case 0x00: {
 		// Initialize port
 		// Parameters:				Return:
 		// AL: port parameters		AL: modem status
@@ -714,7 +718,6 @@ static Bitu INT14_Handler(void) {
 		reg_al=(Bit8u)(IO_ReadB(port+6)&0xff);
 		CALLBACK_SCF(false);
 		break;
-
 	}
 	return CBRET_NONE;
 }
@@ -722,7 +725,7 @@ static Bitu INT14_Handler(void) {
 static Bitu INT15_Handler(void) {
 	static Bit16u biosConfigSeg=0;
 	switch (reg_ah) {
-	case 0x24:		//A20 stuff
+	case 0x24: // A20 stuff
 		switch (reg_al) {
 		case 0:	//Disable a20
 			MEM_A20_Enable(false);
@@ -940,7 +943,7 @@ static Bitu INT15_Handler(void) {
 		break;
 	case 0xc2:	/* BIOS PS2 Pointing Device Support */
 		switch (reg_al) {
-		case 0x00:		// enable/disable
+		case 0x00:                      // enable/disable
 			if (reg_bh==0) {	// disable
 				Mouse_SetPS2State(false);
 				reg_ah=0;
