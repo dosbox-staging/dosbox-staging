@@ -370,131 +370,131 @@ static void handleIpxRequest(void) {
 	ECBClass *tmpECB;
 
 	switch (reg_bx) {
-		case 0x0000:	// Open socket
-			OpenSocket();
-			LOG_IPX("IPX: Open socket %4x", swapByte(reg_dx));
-			break;
-		case 0x0001:	// Close socket
-			LOG_IPX("IPX: Close socket %4x", swapByte(reg_dx));
-			CloseSocket();
-			break;
-		case 0x0002:	// get local target
-						// es:si
-						// Currently no support for multiple networks
+	case 0x0000: // Open socket
+		OpenSocket();
+		LOG_IPX("IPX: Open socket %4x", swapByte(reg_dx));
+		break;
+	case 0x0001: // Close socket
+		LOG_IPX("IPX: Close socket %4x", swapByte(reg_dx));
+		CloseSocket();
+		break;
+	case 0x0002: // get local target
+	             // es:si
+	             // Currently no support for multiple networks
 
-			for(Bitu i = 0; i < 6; i++) 
-				real_writeb(SegValue(es),reg_di+i,real_readb(SegValue(es),reg_si+i+4));
+		for (Bitu i = 0; i < 6; i++)
+			real_writeb(SegValue(es), reg_di + i,
+			            real_readb(SegValue(es), reg_si + i + 4));
 
-			reg_cx=1;		// time ticks expected
-			reg_al=0x00;	//success
-			break;
+		reg_cx = 1;    // time ticks expected
+		reg_al = 0x00; // success
+		break;
 
-		case 0x0003:		// Send packet
-			tmpECB = new ECBClass(SegValue(es),reg_si);
-			if(!incomingPacket.connected) {
+	case 0x0003: // Send packet
+		tmpECB = new ECBClass(SegValue(es), reg_si);
+		if (!incomingPacket.connected) {
+			tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
+			tmpECB->setCompletionFlag(COMP_UNDELIVERABLE);
+			delete tmpECB; // not notify?
+			reg_al = 0xff; // Failure
+		} else {
+			tmpECB->setInUseFlag(USEFLAG_SENDING);
+			// LOG_IPX("IPX: Sending packet on %4x",
+			// tmpECB->getSocket());
+			reg_al = 0x00; // Success
+			sendPacket(tmpECB);
+		}
+
+		break;
+	case 0x0004: // Listen for packet
+		tmpECB = new ECBClass(SegValue(es), reg_si);
+		// LOG_IPX("ECB: SN%7d RECEIVE.", tmpECB->SerialNumber);
+		if (!sockInUse(tmpECB->getSocket())) { // Socket is not open
+			reg_al = 0xff;
+			tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
+			tmpECB->setCompletionFlag(COMP_HARDWAREERROR);
+			delete tmpECB;
+		} else {
+			reg_al = 0x00; // Success
+			tmpECB->setInUseFlag(USEFLAG_LISTENING);
+			/*LOG_IPX("IPX: Listen for packet on 0x%4x - ESR address
+			   %4x:%4x", tmpECB->getSocket(),
+			        RealSeg(tmpECB->getESRAddr()),
+			        RealOff(tmpECB->getESRAddr()));*/
+		}
+		break;
+
+	case 0x0005: // SCHEDULE IPX EVENT
+	case 0x0007: // SCHEDULE SPECIAL IPX EVENT
+	{
+		tmpECB = new ECBClass(SegValue(es), reg_si);
+		// LOG_IPX("ECB: SN%7d AES. T=%fms.", tmpECB->SerialNumber,
+		//	(1000.0f/(1193182.0f/65536.0f))*(float)reg_ax);
+		PIC_AddEvent(IPX_AES_EventHandler,
+		             (1000.0f / (1193182.0f / 65536.0f)) * (float)reg_ax,
+		             (Bitu)tmpECB->ECBAddr);
+		tmpECB->setInUseFlag(USEFLAG_AESCOUNT);
+	} break;
+	case 0x0006: // cancel operation
+	{
+		RealPt ecbaddress = RealMake(SegValue(es), reg_si);
+		ECBClass *tmpECB = ECBList;
+		ECBClass *tmp2ECB;
+		while (tmpECB) {
+			tmp2ECB = tmpECB->nextECB;
+			if (tmpECB->ECBAddr == ecbaddress) {
+				if (tmpECB->getInUseFlag() == USEFLAG_AESCOUNT)
+					PIC_RemoveSpecificEvents(IPX_AES_EventHandler,
+					                         ecbaddress);
 				tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
-				tmpECB->setCompletionFlag(COMP_UNDELIVERABLE);
-				delete tmpECB;	// not notify?
-				reg_al = 0xff; // Failure
-			} else {
-				tmpECB->setInUseFlag(USEFLAG_SENDING);
-				//LOG_IPX("IPX: Sending packet on %4x", tmpECB->getSocket());
-				reg_al = 0x00; // Success
-				sendPacket(tmpECB);
-			}
-
-			break;
-		case 0x0004:  // Listen for packet
-			tmpECB = new ECBClass(SegValue(es),reg_si);
-			// LOG_IPX("ECB: SN%7d RECEIVE.", tmpECB->SerialNumber);
-			if(!sockInUse(tmpECB->getSocket())) {  // Socket is not open
-				reg_al = 0xff;
-				tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
-				tmpECB->setCompletionFlag(COMP_HARDWAREERROR);
+				tmpECB->setCompletionFlag(COMP_CANCELLED);
 				delete tmpECB;
-			} else {
-				reg_al = 0x00;  // Success
-				tmpECB->setInUseFlag(USEFLAG_LISTENING);
-				/*LOG_IPX("IPX: Listen for packet on 0x%4x - ESR address %4x:%4x",
-					tmpECB->getSocket(),
-					RealSeg(tmpECB->getESRAddr()),
-					RealOff(tmpECB->getESRAddr()));*/
+				reg_al = 0; // Success
+				LOG_IPX("IPX: ECB canceled.");
+				return;
 			}
-			break;
-
-		case 0x0005:	// SCHEDULE IPX EVENT
-		case 0x0007:	// SCHEDULE SPECIAL IPX EVENT
-		{
-			tmpECB = new ECBClass(SegValue(es),reg_si);
-			// LOG_IPX("ECB: SN%7d AES. T=%fms.", tmpECB->SerialNumber,
-			//	(1000.0f/(1193182.0f/65536.0f))*(float)reg_ax);
-			PIC_AddEvent(IPX_AES_EventHandler,
-				(1000.0f/(1193182.0f/65536.0f))*(float)reg_ax,(Bitu)tmpECB->ECBAddr);
-			tmpECB->setInUseFlag(USEFLAG_AESCOUNT);
-			break;
+			tmpECB = tmp2ECB;
 		}
-		case 0x0006:	// cancel operation
-		{
-			RealPt ecbaddress = RealMake(SegValue(es),reg_si);
-			ECBClass* tmpECB= ECBList;
-			ECBClass* tmp2ECB;
-			while(tmpECB) {
-				tmp2ECB=tmpECB->nextECB;
-				if(tmpECB->ECBAddr == ecbaddress) {
-					if(tmpECB->getInUseFlag()==USEFLAG_AESCOUNT)
-					        PIC_RemoveSpecificEvents(IPX_AES_EventHandler,
-					                                 ecbaddress);
-				        tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
-				        tmpECB->setCompletionFlag(COMP_CANCELLED);
-				        delete tmpECB;
-				        reg_al = 0; // Success
-				        LOG_IPX("IPX: ECB canceled.");
-					return;
-				}
-				tmpECB=tmp2ECB;
-			}
-			reg_al=0xff;	// Fail
-			break;
-		}
-		case 0x0008:		// Get interval marker
-			reg_ax = mem_readw(0x46c); // BIOS_TIMER
-			break;
-		case 0x0009:		// Get internetwork address
-		{
-			LOG_IPX("IPX: Get internetwork address %2x:%2x:%2x:%2x:%2x:%2x",
-				localIpxAddr.netnode[5], localIpxAddr.netnode[4],
-				localIpxAddr.netnode[3], localIpxAddr.netnode[2],
-				localIpxAddr.netnode[1], localIpxAddr.netnode[0]);
+		reg_al = 0xff; // Fail
+	} break;
 
-			Bit8u * addrptr = (Bit8u *)&localIpxAddr;
-			for(Bit16u i=0;i<10;i++)
-				real_writeb(SegValue(es),reg_si+i,addrptr[i]);
-			break;
-		}
-		case 0x000a:		// Relinquish control
-			break;			// Idle thingy
-		
-		case 0x000b:		// Disconnect from Target
-			break;			// We don't even connect
-		
-		case 0x000d:		// get packet size
-			reg_cx=0;		// retry count
-			reg_ax=1024;	// real implementation returns 1024
-			break;
-		
-		case 0x0010:		// SPX install check
-			reg_al=0;		// SPX not installed
-			break;
+	case 0x0008: // Get interval marker
+		reg_ax = mem_readw(0x46c); // BIOS_TIMER
+		break;
+	case 0x0009: // Get internetwork address
+	{
+		LOG_IPX("IPX: Get internetwork address %2x:%2x:%2x:%2x:%2x:%2x",
+		        localIpxAddr.netnode[5], localIpxAddr.netnode[4],
+		        localIpxAddr.netnode[3], localIpxAddr.netnode[2],
+		        localIpxAddr.netnode[1], localIpxAddr.netnode[0]);
 
-		case 0x001a:		// get driver maximum packet size
-			reg_cx=0;		// retry count
-			reg_ax=IPXBUFFERSIZE;	// max packet size: something near the 
-									// ethernet packet size
-			break;
-		
-		default:
-			LOG_MSG("Unhandled IPX function: %4x", reg_bx);
-			break;
+		Bit8u *addrptr = (Bit8u *)&localIpxAddr;
+		for (Bit16u i = 0; i < 10; i++)
+			real_writeb(SegValue(es), reg_si + i, addrptr[i]);
+	} break;
+
+	case 0x000a: // Relinquish control
+		break;   // Idle thingy
+
+	case 0x000b: // Disconnect from Target
+		break;   // We don't even connect
+
+	case 0x000d: // get packet size
+		reg_cx = 0;    // retry count
+		reg_ax = 1024; // real implementation returns 1024
+		break;
+
+	case 0x0010:    // SPX install check
+		reg_al = 0; // SPX not installed
+		break;
+
+	case 0x001a: // get driver maximum packet size
+		reg_cx = 0;             // retry count
+		reg_ax = IPXBUFFERSIZE; // max packet size: something near the
+		                        // ethernet packet size
+		break;
+
+	default: LOG_MSG("Unhandled IPX function: %4x", reg_bx); break;
 	}
 }
 
