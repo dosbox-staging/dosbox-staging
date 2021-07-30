@@ -148,17 +148,17 @@ typedef struct {
 	Bitu parts_left;
 	Bitu byte_panning_shift;
 	struct {
-		double framestart;
-		double vrstart, vrend;		// V-retrace
-		double hrstart, hrend;		// H-retrace
-		double hblkstart, hblkend;	// H-blanking
-		double vblkstart, vblkend;	// V-Blanking
-		double vdend, vtotal;
-		double hdend, htotal;
-		double parts;
+		float framestart;
+		float vrstart, vrend;     // V-retrace
+		float hrstart, hrend;     // H-retrace
+		float hblkstart, hblkend; // H-blanking
+		float vblkstart, vblkend; // V-Blanking
+		float vdend, vtotal;
+		float hdend, htotal;
+		float parts;
 	} delay;
 	Bitu bpp;
-	double aspect_ratio;
+	float aspect_ratio;
 	bool double_scan;
 	bool doublewidth,doubleheight;
 	Bit8u font[64*1024];
