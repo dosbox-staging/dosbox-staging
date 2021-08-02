@@ -44,7 +44,7 @@ namespace OPL2 {
 
 struct Handler : public Adlib::Handler {
 	virtual void WriteReg(Bit32u reg, Bit8u val) { adlib_write(reg, val); }
-	virtual Bit32u WriteAddr(uint16_t /*port*/, Bit8u val) { return val; }
+	virtual Bit32u WriteAddr(io_port_t, Bit8u val) { return val; }
 
 	virtual void Generate(MixerChannel *chan, const uint16_t samples)
 	{
@@ -69,7 +69,7 @@ namespace OPL3 {
 
 struct Handler : public Adlib::Handler {
 	virtual void WriteReg(Bit32u reg, Bit8u val) { adlib_write(reg, val); }
-	virtual Bit32u WriteAddr(uint16_t port, Bit8u val)
+	virtual Bit32u WriteAddr(io_port_t port, Bit8u val)
 	{
 		adlib_write_index(port, val);
 		return opl_index;
@@ -100,7 +100,7 @@ struct Handler : public Adlib::Handler {
 		ym3812_write(chip, 0, reg);
 		ym3812_write(chip, 1, val);
 	}
-	virtual Bit32u WriteAddr(uint16_t /*port*/, Bit8u val) { return val; }
+	virtual Bit32u WriteAddr(io_port_t, Bit8u val) { return val; }
 	virtual void Generate(MixerChannel *chan, const uint16_t samples)
 	{
 		Bit16s buf[1024 * 2];
@@ -133,7 +133,7 @@ struct Handler : public Adlib::Handler {
 		ymf262_write(chip, 0, reg);
 		ymf262_write(chip, 1, val);
 	}
-	virtual Bit32u WriteAddr(uint16_t /*port*/, Bit8u val) { return val; }
+	virtual Bit32u WriteAddr(io_port_t, Bit8u val) { return val; }
 	virtual void Generate(MixerChannel *chan, const uint16_t samples)
 	{
 		// We generate data for 4 channels, but only the first 2 are
@@ -179,7 +179,7 @@ struct Handler : public Adlib::Handler {
 			newm = reg & 0x01;
 	}
 
-	Bit32u WriteAddr(uint16_t port, Bit8u val) override
+	Bit32u WriteAddr(io_port_t port, Bit8u val) override
 	{
 		Bit16u addr;
 		addr = val;
@@ -535,36 +535,38 @@ Bit8u Chip::Read( ) {
 	return ret;
 }
 
-void Module::CacheWrite( Bit32u reg, Bit8u val ) {
-	//capturing?
-	if ( capture ) {
-		capture->DoWrite( reg, val );
+void Module::CacheWrite(Bit32u port, Bit8u val)
+{
+	// capturing?
+	if (capture) {
+		capture->DoWrite(port, val);
 	}
 	//Store it into the cache
-	cache[ reg ] = val;
+	cache[port] = val;
 }
 
-void Module::DualWrite( Bit8u index, Bit8u reg, Bit8u val ) {
-	//Make sure you don't use opl3 features
-	//Don't allow write to disable opl3		
-	if ( reg == 5 ) {
+void Module::DualWrite(Bit8u index, Bit8u port, Bit8u val)
+{
+	// Make sure you don't use opl3 features
+	// Don't allow write to disable opl3
+	if (port == 5) {
 		return;
 	}
 	//Only allow 4 waveforms
-	if ( reg >= 0xE0 ) {
+	if (port >= 0xE0) {
 		val &= 3;
-	} 
+	}
 	//Write to the timer?
-	if ( chip[index].Write( reg, val ) ) 
+	if (chip[index].Write(port, val))
 		return;
 	//Enabling panning
-	if ( reg >= 0xc0 && reg <=0xc8 ) {
+	if (port >= 0xc0 && port <= 0xc8) {
 		val &= 0x0f;
 		val |= index ? 0xA0 : 0x50;
 	}
-	Bit32u fullReg = reg + (index ? 0x100 : 0);
-	handler->WriteReg( fullReg, val );
-	CacheWrite( fullReg, val );
+	const uint32_t full_port = port + (index ? 0x100 : 0);
+	handler->WriteReg(full_port, val);
+	CacheWrite(full_port, val);
 }
 
 void Module::CtrlWrite( Bit8u val ) {
@@ -596,7 +598,7 @@ uint8_t Module::CtrlRead(void)
 	return 0xff;
 }
 
-void Module::PortWrite(uint16_t port, uint8_t val, Bitu /*iolen*/)
+void Module::PortWrite(io_port_t port, uint8_t val, io_width_t)
 {
 	// Keep track of last write time
 	lastUsed = PIC_Ticks;
@@ -671,7 +673,7 @@ void Module::PortWrite(uint16_t port, uint8_t val, Bitu /*iolen*/)
 	}
 }
 
-uint8_t Module::PortRead(uint16_t port, Bitu /*iolen*/)
+uint8_t Module::PortRead(io_port_t port, io_width_t)
 {
 	// roughly half a micro (as we already do 1 micro on each port read and
 	// some tests revealed it taking 1.5 micros to read an adlib port)
@@ -748,16 +750,6 @@ static void OPL_CallBack(uint16_t len)
 		if (i==0xb9) module->mixerChan->Enable(false);
 		else module->lastUsed = PIC_Ticks;
 	}
-}
-
-static uint8_t OPL_Read(uint16_t port, Bitu iolen)
-{
-	return module->PortRead(port, iolen);
-}
-
-void OPL_Write(uint16_t port, uint8_t val, Bitu iolen)
-{
-	module->PortWrite(port, val, iolen);
 }
 
 /*
@@ -856,7 +848,7 @@ Module::Module(Section *configuration)
 	  capture(nullptr)
 {
 	Section_prop * section=static_cast<Section_prop *>(configuration);
-	const auto base = section->Get_hex("sbbase");
+	const auto base = static_cast<uint16_t>(section->Get_hex("sbbase"));
 
 	ctrl.mixer = section->Get_bool("sbmixer");
 
@@ -886,17 +878,22 @@ Module::Module(Section *configuration)
 	case OPL_none:
 		break;
 	}
-	//0x388 range
-	WriteHandler[0].Install(0x388,OPL_Write,IO_MB, 4 );
-	ReadHandler[0].Install(0x388,OPL_Read,IO_MB, 4 );
-	//0x220 range
-	if ( !single ) {
-		WriteHandler[1].Install(base,OPL_Write,IO_MB, 4 );
-		ReadHandler[1].Install(base,OPL_Read,IO_MB, 4 );
+	using namespace std::placeholders;
+
+	const auto read_from = std::bind(&Module::PortRead, this, _1, _2);
+	const auto write_to = std::bind(&Module::PortWrite, this, _1, _2, _3);
+
+	// 0x388 range
+	WriteHandler[0].Install(0x388, write_to, io_width_t::byte, 4);
+	ReadHandler[0].Install(0x388, read_from, io_width_t::byte, 4);
+	// 0x220 range
+	if (!single) {
+		WriteHandler[1].Install(base, write_to, io_width_t::byte, 4);
+		ReadHandler[1].Install(base, read_from, io_width_t::byte, 4);
 	}
 	//0x228 range
-	WriteHandler[2].Install(base+8,OPL_Write,IO_MB, 2);
-	ReadHandler[2].Install(base+8,OPL_Read,IO_MB, 1);
+	WriteHandler[2].Install(base + 8u, write_to, io_width_t::byte, 2);
+	ReadHandler[2].Install(base + 8u, read_from, io_width_t::byte, 1);
 
 	MAPPER_AddHandler(OPL_SaveRawEvent, SDL_SCANCODE_UNKNOWN, 0,
 	                  "caprawopl", "Rec. OPL");
