@@ -90,8 +90,8 @@ void Innovation::Open(const std::string &model_choice,
 	const auto read_from = std::bind(&Innovation::ReadFromPort, this, _1, _2);
 	const auto write_to = std::bind(&Innovation::WriteToPort, this, _1, _2, _3);
 	base_port = static_cast<uint16_t>(port_choice);
-	read_handler.Install(base_port, read_from, IO_MB, 0x20);
-	write_handler.Install(base_port, write_to, IO_MB, 0x20);
+	read_handler.Install(base_port, read_from, io_width_t::byte, 0x20);
+	write_handler.Install(base_port, write_to, io_width_t::byte, 0x20);
 
 	// Move the locals into members
 	service = std::move(sid_service);
@@ -150,17 +150,15 @@ void Innovation::Close()
 	is_open = false;
 }
 
-size_t Innovation::ReadFromPort(size_t port, MAYBE_UNUSED size_t iolen)
+uint8_t Innovation::ReadFromPort(io_port_t port, io_width_t)
 {
 	const auto sid_port = static_cast<uint16_t>(port - base_port);
 	const std::lock_guard<std::mutex> lock(service_mutex);
 	return service->read(sid_port);
 }
 
-void Innovation::WriteToPort(size_t port, size_t val, MAYBE_UNUSED size_t iolen)
+void Innovation::WriteToPort(io_port_t port, uint8_t data, io_width_t)
 {
-	assert(val <= UINT8_MAX);
-	const auto data = static_cast<uint8_t>(val); // 8-bit IO
 	const auto sid_port = static_cast<uint16_t>(port - base_port);
 	{ // service-lock
 		const std::lock_guard<std::mutex> lock(service_mutex);
