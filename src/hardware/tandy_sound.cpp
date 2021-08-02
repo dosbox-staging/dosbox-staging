@@ -124,8 +124,9 @@ static ncr8496_device device_ncr8496(machine_config(), 0, 0, SOUND_CLOCK);
 static sn76496_base_device* activeDevice = &device_ncr8496;
 #define device (*activeDevice)
 
-static void SN76496Write(Bitu /*port*/,Bitu data,Bitu /*iolen*/) {
-	tandy.last_write=PIC_Ticks;
+static void SN76496Write(io_port_t, uint8_t data, io_width_t)
+{
+	tandy.last_write = PIC_Ticks;
 	if (!tandy.enabled && tandy.chan) {
 		tandy.chan->Enable(true);
 		tandy.enabled=true;
@@ -136,7 +137,8 @@ static void SN76496Write(Bitu /*port*/,Bitu data,Bitu /*iolen*/) {
 	//%7.3f",data,PIC_FullIndex());
 }
 
-static void SN76496Update(Bitu length) {
+static void SN76496Update(uint16_t length)
+{
 	if (!tandy.chan)
 		return;
 
@@ -225,11 +227,12 @@ static void TandyDACDMAEnabled()
 static void TandyDACDMADisabled()
 {}
 
-static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
+static void TandyDACWrite(io_port_t port, uint8_t data, io_width_t)
+{
 	switch (port) {
 	case 0xc4: {
 		Bitu oldmode = tandy.dac.mode;
-		tandy.dac.mode = (Bit8u)(data&0xff);
+		tandy.dac.mode = data;
 		if ((data&3)!=(oldmode&3)) {
 			TandyDACModeChanged();
 		}
@@ -245,9 +248,7 @@ static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
 		case 0:
 			// joystick mode
 			break;
-		case 1:
-			tandy.dac.control = (Bit8u)(data&0xff);
-			break;
+		case 1: tandy.dac.control = data; break;
 		case 2:
 			break;
 		case 3:
@@ -256,7 +257,7 @@ static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
 		}
 		break;
 	case 0xc6:
-		tandy.dac.frequency = (tandy.dac.frequency & 0xf00) | (Bit8u)(data & 0xff);
+		tandy.dac.frequency = (tandy.dac.frequency & 0xf00) | data;
 		switch (tandy.dac.mode&3) {
 		case 0:
 			// joystick mode
@@ -269,9 +270,9 @@ static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
 		}
 		break;
 	case 0xc7:
-		tandy.dac.frequency = (tandy.dac.frequency & 0x00ff) | (((Bit8u)(data & 0xf)) << 8);
-		tandy.dac.amplitude = (Bit8u)(data>>5);
-		switch (tandy.dac.mode&3) {
+		tandy.dac.frequency = static_cast<uint16_t>((tandy.dac.frequency & 0x00ff) | ((data & 0xf) << 8));
+		tandy.dac.amplitude = data >> 5;
+		switch (tandy.dac.mode & 3) {
 		case 0:
 			// joystick mode
 			break;
@@ -285,16 +286,16 @@ static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
 	}
 }
 
-static Bitu TandyDACRead(Bitu port,Bitu /*iolen*/) {
+static uint8_t TandyDACRead(io_port_t port, io_width_t)
+{
 	switch (port) {
 	case 0xc4:
 		return (tandy.dac.mode&0x77) | (tandy.dac.irq_activated ? 0x08 : 0x00);
-	case 0xc6:
-		return (Bit8u)(tandy.dac.frequency&0xff);
+	case 0xc6: return static_cast<uint8_t>(tandy.dac.frequency & 0xff);
 	case 0xc7:
-		return (Bit8u)(((tandy.dac.frequency>>8)&0xf) | (tandy.dac.amplitude<<5));
+		return static_cast<uint8_t>(((tandy.dac.frequency >> 8) & 0xf) | (tandy.dac.amplitude << 5));
 	}
-	LOG_MSG("Tandy DAC: Read from unknown %#" PRIxPTR, port);
+	LOG_MSG("Tandy DAC: Read from unknown %x", port);
 	return 0xff;
 }
 
@@ -366,22 +367,21 @@ public:
 			CloseSecondDMAController();
 
 			if (enable_hw_tandy_dac) {
-				WriteHandler[2].Install(0x1e0,SN76496Write,IO_MB,2);
-				WriteHandler[3].Install(0x1e4,TandyDACWrite,IO_MB,4);
-//				ReadHandler[3].Install(0x1e4,TandyDACRead,IO_MB,4);
+				WriteHandler[2].Install(0x1e0, SN76496Write, io_width_t::byte, 2);
+				WriteHandler[3].Install(0x1e4, TandyDACWrite, io_width_t::byte, 4);
+				//				ReadHandler[3].Install(0x1e4,TandyDACRead,io_width_t::byte,4);
 			}
 		}
 
-
-		Bit32u sample_rate = section->Get_int("tandyrate");
+		const auto sample_rate = static_cast<uint32_t>(section->Get_int("tandyrate"));
 		tandy.chan=MixerChan.Install(&SN76496Update,sample_rate,"TANDY");
 
-		WriteHandler[0].Install(0xc0,SN76496Write,IO_MB,2);
+		WriteHandler[0].Install(0xc0, SN76496Write, io_width_t::byte, 2);
 
 		if (enable_hw_tandy_dac) {
 			// enable low-level Tandy DAC emulation
-			WriteHandler[1].Install(0xc4,TandyDACWrite,IO_MB,4);
-			ReadHandler[1].Install(0xc4,TandyDACRead,IO_MB,4);
+			WriteHandler[1].Install(0xc4, TandyDACWrite, io_width_t::byte, 4);
+			ReadHandler[1].Install(0xc4, TandyDACRead, io_width_t::byte, 4);
 
 			tandy.dac.enabled=true;
 			tandy.dac.chan=MixerChanDAC.Install(&TandyDACUpdate,sample_rate,"TANDYDAC");
@@ -406,7 +406,7 @@ public:
 		real_writeb(0x40,0xd4,0xff);	/* BIOS Tandy DAC initialization value */
 
 		((device_t&)device).device_start();
-		device.convert_samplerate(sample_rate);
+		device.convert_samplerate(static_cast<int>(sample_rate));
 	}
 	~TANDYSOUND(){ }
 };
