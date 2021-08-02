@@ -510,8 +510,8 @@ struct VGA_ModeExtraData {
 	Bit8u hor_overflow = 0;
 	Bitu offset = 0;
 	Bitu modeNo = 0;
-	Bitu htotal = 0;
-	Bitu vtotal = 0;
+	uint32_t htotal = 0;
+	uint32_t vtotal = 0;
 };
 
 // Vector function prototypes
