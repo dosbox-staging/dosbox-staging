@@ -44,9 +44,10 @@ static PCI_Device* pci_devices[PCI_MAX_PCIDEVICES];		// registered PCI devices
 // 10- 8 - subfunction number	(0x00000700)
 //  7- 2 - config register #	(0x000000fc)
 
-static void write_pci_addr(Bitu port,Bitu val,Bitu iolen) {
-	LOG(LOG_PCI,LOG_NORMAL)("Write PCI address :=%x",val);
-	pci_caddress=val;
+static void write_pci_addr(io_port_t port, uint32_t val, io_width_t)
+{
+	LOG(LOG_PCI, LOG_NORMAL)("Write PCI address :=%x", val);
+	pci_caddress = val;
 }
 
 static void write_pci_register(PCI_Device* dev,Bit8u regnum,Bit8u value) {
@@ -70,8 +71,13 @@ static void write_pci_register(PCI_Device* dev,Bit8u regnum,Bit8u value) {
 		pci_cfg_data[dev->PCIId()][dev->PCISubfunction()][regnum]=(Bit8u)(parsed_register&0xff);
 }
 
-static void write_pci(Bitu port,Bitu val,Bitu iolen) {
-	LOG(LOG_PCI,LOG_NORMAL)("Write PCI data :=%x (len %d)",port,val,iolen);
+static void write_pci(io_port_t port, uint8_t val, io_width_t width)
+{
+	// write_pci is only ever registered as an 8-bit handler, despite appearing to handle up to 32-bit
+	// requests. Let's check that.
+	assert(width == io_width_t::byte);
+
+	LOG(LOG_PCI, LOG_NORMAL)("Write PCI data :=%x (io_width=%d)", port, val, static_cast<int>(width));
 
 	// check for enabled/bus 0
 	if ((pci_caddress & 0x80ff0000) == 0x80000000) {
@@ -92,21 +98,27 @@ static void write_pci(Bitu port,Bitu val,Bitu iolen) {
 			return;
 
 		// write data to PCI device/configuration
-		switch (iolen) {
-			case 1: write_pci_register(dev,regnum+0,(Bit8u)(val&0xff)); break;
-			case 2: write_pci_register(dev,regnum+0,(Bit8u)(val&0xff));
-					write_pci_register(dev,regnum+1,(Bit8u)((val>>8)&0xff)); break;
-			case 4: write_pci_register(dev,regnum+0,(Bit8u)(val&0xff));
-					write_pci_register(dev,regnum+1,(Bit8u)((val>>8)&0xff));
-					write_pci_register(dev,regnum+2,(Bit8u)((val>>16)&0xff));
-					write_pci_register(dev,regnum+3,(Bit8u)((val>>24)&0xff)); break;
+		switch (width) {
+		case io_width_t::byte: write_pci_register(dev, regnum + 0, (Bit8u)(val & 0xff)); break;
+
+		// WORD and DWORD are never used
+		case io_width_t::word:
+			write_pci_register(dev, regnum + 0, (Bit8u)(val & 0xff));
+			write_pci_register(dev, regnum + 1, (Bit8u)((val >> 8) & 0xff));
+			break;
+		case io_width_t::dword:
+			write_pci_register(dev, regnum + 0, (Bit8u)(val & 0xff));
+			write_pci_register(dev, regnum + 1, (Bit8u)((val >> 8) & 0xff));
+			write_pci_register(dev, regnum + 2, (Bit8u)((val >> 16) & 0xff));
+			write_pci_register(dev, regnum + 3, (Bit8u)((val >> 24) & 0xff));
+			break;
 		}
 	}
 }
 
-
-static Bitu read_pci_addr(Bitu port,Bitu iolen) {
-	LOG(LOG_PCI,LOG_NORMAL)("Read PCI address -> %x",pci_caddress);
+static uint32_t read_pci_addr(io_port_t port, io_width_t))
+{
+	LOG(LOG_PCI, LOG_NORMAL)("Read PCI address -> %x", pci_caddress);
 	return pci_caddress;
 }
 
@@ -143,8 +155,13 @@ static Bit8u read_pci_register(PCI_Device* dev,Bit8u regnum) {
 	return 0xff;
 }
 
-static Bitu read_pci(Bitu port,Bitu iolen) {
-	LOG(LOG_PCI,LOG_NORMAL)("Read PCI data -> %x",pci_caddress);
+static uint8_t read_pci(io_port_t port, io_width_t width)
+{
+	// read_pci is only ever registered as an 8-bit handler, despite appearing to handle up to 32-bit
+	// requests. Let's check that.
+	assert(width == io_width_t::byte);
+
+	LOG(LOG_PCI, LOG_NORMAL)("Read PCI data -> %x", pci_caddress);
 
 	if ((pci_caddress & 0x80ff0000) == 0x80000000) {
 		Bit8u devnum = (Bit8u)((pci_caddress >> 11) & 0x1f);
@@ -163,34 +180,30 @@ static Bitu read_pci(Bitu port,Bitu iolen) {
 		PCI_Device *dev = selected_device->GetSubdevice(fctnum);
 
 		if (dev != nullptr) {
-			switch (iolen) {
-				case 1:
-					{
-						Bit8u val8=read_pci_register(dev,regnum);
-						return val8;
-					}
-				case 2:
-					{
-						Bit16u val16=read_pci_register(dev,regnum);
-						val16|=(read_pci_register(dev,regnum+1)<<8);
-						return val16;
-					}
-				case 4:
-					{
-						Bit32u val32=read_pci_register(dev,regnum);
-						val32|=(read_pci_register(dev,regnum+1)<<8);
-						val32|=(read_pci_register(dev,regnum+2)<<16);
-						val32|=(read_pci_register(dev,regnum+3)<<24);
-						return val32;
-					}
-				default:
-					break;
+			switch (width) {
+			case io_width_t::byte: {
+				Bit8u val8 = read_pci_register(dev, regnum);
+				return val8;
+			}
+				// WORD and DWORD are never used
+			case io_width_t::word: {
+				Bit16u val16 = read_pci_register(dev, regnum);
+				val16 |= (read_pci_register(dev, regnum + 1) << 8);
+				return val16;
+			}
+			case io_width_t::dword: {
+				Bit32u val32 = read_pci_register(dev, regnum);
+				val32 |= (read_pci_register(dev, regnum + 1) << 8);
+				val32 |= (read_pci_register(dev, regnum + 2) << 16);
+				val32 |= (read_pci_register(dev, regnum + 3) << 24);
+				return val32;
+			}
+			default: break;
 			}
 		}
 	}
 	return 0xffffffff;
 }
-
 
 static Bitu PCI_PM_Handler() {
 	LOG_MSG("PCI PMode handler, function %x",reg_ax);
@@ -279,12 +292,12 @@ public:
 	// set up port handlers and configuration data
 	void InitializePCI(void) {
 		// install PCI-addressing ports
-		PCI_WriteHandler[0].Install(0xcf8,write_pci_addr,IO_MD);
-		PCI_ReadHandler[0].Install(0xcf8,read_pci_addr,IO_MD);
+		PCI_WriteHandler[0].Install(0xcf8, write_pci_addr, io_width_t::dword);
+		PCI_ReadHandler[0].Install(0xcf8, read_pci_addr, io_width_t::dword);
 		// install PCI-register read/write handlers
-		for (Bitu ct=0;ct<4;ct++) {
-			PCI_WriteHandler[1+ct].Install(0xcfc+ct,write_pci,IO_MB);
-			PCI_ReadHandler[1+ct].Install(0xcfc+ct,read_pci,IO_MB);
+		for (uint8_t ct = 0; ct < 4; ++ct) {
+			PCI_WriteHandler[1 + ct].Install(0xcfc + ct, write_pci, io_width_t::byte);
+			PCI_ReadHandler[1 + ct].Install(0xcfc + ct, read_pci, io_width_t::byte);
 		}
 
 		for (Bitu dev=0; dev<PCI_MAX_PCIDEVICES; dev++)
