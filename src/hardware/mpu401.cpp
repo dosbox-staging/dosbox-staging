@@ -42,7 +42,7 @@ static void MPU401_EOIHandlerDispatch(void);
 enum MpuMode { M_UART,M_INTELLIGENT };
 enum MpuDataType {T_OVERFLOW,T_MARK,T_MIDI_SYS,T_MIDI_NORM,T_COMMAND};
 
-static void MPU401_WriteData(Bitu port, uint8_t val, Bitu iolen);
+static void MPU401_WriteData(io_port_t port, uint8_t val, io_width_t);
 
 /* Messages sent to MPU-401 from host */
 #define MSG_EOX	                        0xf7
@@ -112,7 +112,7 @@ static void ClrQueue(void) {
 	mpu.queue_pos=0;
 }
 
-static uint8_t MPU401_ReadStatus(Bitu /*port*/, Bitu /*iolen*/)
+static uint8_t MPU401_ReadStatus(io_port_t, io_width_t)
 {
 	Bit8u ret = 0x3f; /* Bits 6 and 7 clear */
 	if (mpu.state.cmd_pending) ret |= 0x40;
@@ -120,7 +120,7 @@ static uint8_t MPU401_ReadStatus(Bitu /*port*/, Bitu /*iolen*/)
 	return ret;
 }
 
-static void MPU401_WriteCommand(Bitu /*port*/, const uint8_t val, Bitu /*iolen*/)
+static void MPU401_WriteCommand(io_port_t, const uint8_t val, io_width_t)
 {
 	if (mpu.mode == M_UART && val != 0xff)
 		return;
@@ -298,7 +298,7 @@ static void MPU401_WriteCommand(Bitu /*port*/, const uint8_t val, Bitu /*iolen*/
 	QueueByte(MSG_MPU_ACK);
 }
 
-static uint8_t MPU401_ReadData(Bitu /*port*/, Bitu /*iolen*/)
+static uint8_t MPU401_ReadData(io_port_t, io_width_t)
 {
 	Bit8u ret = MSG_MPU_ACK;
 	if (mpu.queue_used) {
@@ -320,8 +320,9 @@ static uint8_t MPU401_ReadData(Bitu /*port*/, Bitu /*iolen*/)
 		mpu.state.cond_req=true;
 		if (mpu.condbuf.type!=T_OVERFLOW) {
 			mpu.state.block_ack=true;
-			MPU401_WriteCommand(0x331,mpu.condbuf.value[0],1);
-			if (mpu.state.command_byte) MPU401_WriteData(0x330,mpu.condbuf.value[1],1);
+			MPU401_WriteCommand(0x331, mpu.condbuf.value[0], io_width_t::byte);
+			if (mpu.state.command_byte)
+				MPU401_WriteData(0x330, mpu.condbuf.value[1], io_width_t::byte);
 		}
 	mpu.condbuf.type=T_OVERFLOW;
 	}
@@ -332,7 +333,7 @@ static uint8_t MPU401_ReadData(Bitu /*port*/, Bitu /*iolen*/)
 	return ret;
 }
 
-static void MPU401_WriteData(Bitu /*port*/, uint8_t val, Bitu /*iolen*/)
+static void MPU401_WriteData(io_port_t, uint8_t val, io_width_t)
 {
 	if (mpu.mode == M_UART) {
 		MIDI_RawOutByte(val);
@@ -653,7 +654,7 @@ static void MPU401_ResetDone(uint32_t)
 {
 	mpu.state.reset = false;
 	if (mpu.state.cmd_pending) {
-		MPU401_WriteCommand(0x331, mpu.state.cmd_pending - 1, 1);
+		MPU401_WriteCommand(0x331, mpu.state.cmd_pending - 1, io_width_t::byte);
 		mpu.state.cmd_pending = 0;
 	}
 }
@@ -714,10 +715,10 @@ public:
 		/*Enabled and there is a Midi */
 		installed = true;
 
-		WriteHandler[0].Install(0x330,&MPU401_WriteData,IO_MB);
-		WriteHandler[1].Install(0x331,&MPU401_WriteCommand,IO_MB);
-		ReadHandler[0].Install(0x330,&MPU401_ReadData,IO_MB);
-		ReadHandler[1].Install(0x331,&MPU401_ReadStatus,IO_MB);
+		WriteHandler[0].Install(0x330, &MPU401_WriteData, io_width_t::byte);
+		WriteHandler[1].Install(0x331, &MPU401_WriteCommand, io_width_t::byte);
+		ReadHandler[0].Install(0x330, &MPU401_ReadData, io_width_t::byte);
+		ReadHandler[1].Install(0x331, &MPU401_ReadStatus, io_width_t::byte);
 
 		mpu.queue_used=0;
 		mpu.queue_pos=0;
