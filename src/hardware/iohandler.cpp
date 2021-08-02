@@ -24,200 +24,35 @@
 #include <cassert>
 #include <limits>
 #include <cstring>
+#include <unordered_map>
 
 #include "setup.h"
 #include "cpu.h"
 #include "../src/cpu/lazyflags.h"
 #include "callback.h"
 
+// To-be-removed when Bitu-based IO handler API is deprecated:
+extern std::unordered_map<io_port_t, IO_WriteHandler> io_writehandlers[IO_SIZES];
+extern std::unordered_map<io_port_t, IO_ReadHandler> io_readhandlers[IO_SIZES];
+void port_within_proposed(io_port_t port);
+void val_within_proposed(io_val_t val);
+io_val_t ReadPort(uint8_t req_bytes, io_port_t port);
+void WritePort(uint8_t put_bytes, io_port_t port, io_val_t val);
+
+// type-sized IO handler containers
+extern std::unordered_map<io_port_t_proposed, io_read_f> io_read_handlers[io_widths];
+extern std::unordered_map<io_port_t_proposed, io_write_f> io_write_handlers[io_widths];
+
+// type-sized IO handler API
+uint8_t read_byte_from_port(const io_port_t_proposed port);
+uint16_t read_word_from_port(const io_port_t_proposed port);
+uint32_t read_dword_from_port(const io_port_t_proposed port);
+void write_byte_to_port(const io_port_t_proposed port, const uint8_t val);
+void write_word_to_port(const io_port_t_proposed port, const uint16_t val);
+void write_dword_to_port(const io_port_t_proposed port, const uint32_t val);
+
+
 //#define ENABLE_PORTLOG
-
-std::unordered_map<io_port_t, IO_WriteHandler> io_writehandlers[IO_SIZES] = {};
-std::unordered_map<io_port_t, IO_ReadHandler> io_readhandlers[IO_SIZES] = {};
-
-void port_within_proposed(io_port_t port) {
-	assert(port < std::numeric_limits<io_port_t_proposed>::max());
-}
-
-void val_within_proposed(io_val_t val) {
-	assert(val <= std::numeric_limits<io_val_t_proposed>::max());
-}
-
-static io_val_t ReadBlocked(io_port_t /*port*/, Bitu /*iolen*/)
-{
-	return static_cast<io_val_t>(~0);
-}
-
-static void WriteBlocked(io_port_t /*port*/, io_val_t /*val*/, Bitu /*iolen*/)
-{}
-
-static io_val_t ReadDefault(io_port_t port, Bitu iolen);
-static void WriteDefault(io_port_t port, io_val_t val, Bitu iolen);
-
-// The ReadPort and WritePort functions lookup and call the handler
-// at the desired port. If the port hasn't been assigned (and the
-// lookup is empty), then the default handler is assigned and called.
-static io_val_t ReadPort(uint8_t req_bytes, io_port_t port)
-{
-	// Convert bytes to handler map index MB.0x1->0, MW.0x2->1, and MD.0x4->2
-	const uint8_t idx = req_bytes >> 1;
-	return io_readhandlers[idx].emplace(port, ReadDefault).first->second(port, req_bytes);
-}
-
-static void WritePort(uint8_t put_bytes, io_port_t port, io_val_t val)
-{
-	// Convert bytes to handler map index MB.0x1->0, MW.0x2->1, and MD.0x4->2
-	const uint8_t idx = put_bytes >> 1;
-
-	 // Convert bytes into a cut-off mask: 1->0xff, 2->0xffff, 4->0xffffff
-	const auto mask = (1ul << (put_bytes * 8)) - 1;
-	io_writehandlers[idx]
-	        .emplace(port, WriteDefault)
-	        .first->second(port, val & mask, put_bytes);
-}
-
-static io_val_t ReadDefault(io_port_t port, Bitu iolen)
-{
-	port_within_proposed(port);
-
-	switch (iolen) {
-	case 1:
-		LOG(LOG_IO, LOG_WARN)("IOBUS: Unexpected read from %04xh; blocking",
-		                      static_cast<uint32_t>(port));
-		io_readhandlers[0][port] = ReadBlocked;
-		return 0xff;
-	case 2: return ReadPort(IO_MB, port) | (ReadPort(IO_MB, port + 1) << 8);
-	case 4: return ReadPort(IO_MW, port) | (ReadPort(IO_MW, port + 2) << 16);
-	}
-	return 0;
-}
-
-static void WriteDefault(io_port_t port, io_val_t val, Bitu iolen)
-{
-	port_within_proposed(port);
-	val_within_proposed(val);
-
-	switch (iolen) {
-	case 1:
-		LOG(LOG_IO, LOG_WARN)("IOBUS: Unexpected write of %u to %04xh; blocking",
-		                      static_cast<uint32_t>(val),
-		                      static_cast<uint32_t>(port));
-		io_writehandlers[0][port] = WriteBlocked;
-		break;
-	case 2:
-		WritePort(IO_MB, port, val);
-		WritePort(IO_MB, port + 1, val >> 8);
-		break;
-	case 4:
-		WritePort(IO_MW, port, val);
-		WritePort(IO_MW, port + 2, val >> 16);
-		break;
-	}
-}
-
-void IO_RegisterReadHandler(io_port_t port, IO_ReadHandler handler, Bitu mask, Bitu range)
-{
-	port_within_proposed(port);
-
-	while (range--) {
-		if (mask&IO_MB) io_readhandlers[0][port]=handler;
-		if (mask&IO_MW) io_readhandlers[1][port]=handler;
-		if (mask&IO_MD) io_readhandlers[2][port]=handler;
-		port++;
-	}
-}
-
-void IO_RegisterWriteHandler(io_port_t port, IO_WriteHandler handler, Bitu mask, Bitu range)
-{
-	port_within_proposed(port);
-
-	while (range--) {
-		if (mask&IO_MB) io_writehandlers[0][port]=handler;
-		if (mask&IO_MW) io_writehandlers[1][port]=handler;
-		if (mask&IO_MD) io_writehandlers[2][port]=handler;
-		port++;
-	}
-}
-
-void IO_FreeReadHandler(io_port_t port, Bitu mask, Bitu range)
-{
-	port_within_proposed(port);
-
-	while (range--) {
-		if (mask & IO_MB)
-			io_readhandlers[0].erase(port);
-		if (mask & IO_MW)
-			io_readhandlers[1].erase(port);
-		if (mask & IO_MD)
-			io_readhandlers[2].erase(port);
-		port++;
-	}
-}
-
-void IO_FreeWriteHandler(io_port_t port, Bitu mask, Bitu range)
-{
-	port_within_proposed(port);
-
-	while (range--) {
-		if (mask & IO_MB)
-			io_writehandlers[0].erase(port);
-		if (mask & IO_MW)
-			io_writehandlers[1].erase(port);
-		if (mask & IO_MD)
-			io_writehandlers[2].erase(port);
-		port++;
-	}
-}
-
-void IO_ReadHandleObject::Install(io_port_t port, IO_ReadHandler handler, Bitu mask, Bitu range)
-{
-	port_within_proposed(port);
-
-	if(!installed) {
-		installed=true;
-		m_port=port;
-		m_mask=mask;
-		m_range=range;
-		IO_RegisterReadHandler(port,handler,mask,range);
-	} else
-		E_Exit("IO_readHandler already installed port %#" PRIxPTR, port);
-}
-
-void IO_ReadHandleObject::Uninstall(){
-	if(!installed) return;
-	IO_FreeReadHandler(m_port,m_mask,m_range);
-	installed=false;
-}
-
-IO_ReadHandleObject::~IO_ReadHandleObject(){
-	Uninstall();
-}
-
-void IO_WriteHandleObject::Install(io_port_t port, IO_WriteHandler handler, Bitu mask, Bitu range)
-{
-	port_within_proposed(port);
-
-	if(!installed) {
-		installed=true;
-		m_port=port;
-		m_mask=mask;
-		m_range=range;
-		IO_RegisterWriteHandler(port,handler,mask,range);
-	} else
-		E_Exit("IO_writeHandler already installed port %#" PRIxPTR, port);
-}
-
-void IO_WriteHandleObject::Uninstall() {
-	if(!installed) return;
-	IO_FreeWriteHandler(m_port,m_mask,m_range);
-	installed=false;
-}
-
-IO_WriteHandleObject::~IO_WriteHandleObject(){
-	Uninstall();
-	// LOG_MSG("IOBUS: FreeWritehandler called with port %04x",
-	// static_cast<uint32_t>(m_port));
-}
 
 struct IOF_Entry {
 	Bitu cs;
@@ -381,7 +216,15 @@ void IO_WriteB(io_port_t port, io_val_t val)
 	}
 	else {
 		IO_USEC_write_delay();
+
+		// To-be-removed when Bitu-based IO handler API is deprecated:
 		WritePort(IO_MB, port, val);
+
+		// Assert and cast will be removed after deprecating Bitu API
+		assert(val <= UINT8_MAX);
+		assert(port <= UINT16_MAX);
+		write_byte_to_port(static_cast<uint16_t>(port),
+		                   static_cast<uint8_t>(val));
 	}
 }
 
@@ -421,7 +264,15 @@ void IO_WriteW(io_port_t port, io_val_t val)
 	}
 	else {
 		IO_USEC_write_delay();
+
+		// To-be-removed when Bitu-based IO handler API is deprecated:
 		WritePort(IO_MW, port, val);
+
+		// Assert and cast will be removed after deprecating Bitu API
+		assert(val <= UINT16_MAX);
+		assert(port <= UINT16_MAX);
+		write_word_to_port(static_cast<uint16_t>(port),
+		                   static_cast<uint16_t>(val));
 	}
 }
 
@@ -459,7 +310,14 @@ void IO_WriteD(io_port_t port, io_val_t val)
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
 	} else {
+		// To-be-removed when Bitu-based IO handler API is deprecated:
 		WritePort(IO_MD, port, val);
+
+		// Assert and cast will be removed after deprecating Bitu API
+		assert(val <= UINT32_MAX);
+		assert(port <= UINT16_MAX);
+		write_dword_to_port(static_cast<uint16_t>(port),
+		                    static_cast<uint32_t>(val));
 	}
 }
 
@@ -499,7 +357,14 @@ io_val_t IO_ReadB(io_port_t port)
 	}
 	else {
 		IO_USEC_read_delay();
-		retval = ReadPort(IO_MB, port);
+
+		// To-be-removed when Bitu-based IO handler API is deprecated:
+		if (io_readhandlers[0].find(port) != io_readhandlers[0].end()) {
+			retval = ReadPort(IO_MB, port);
+		} else {
+			assert(port <= UINT16_MAX);
+			retval = read_byte_from_port(static_cast<uint16_t>(port));
+		}
 	}
 	log_io(0, false, port, retval);
 	return retval;
@@ -540,7 +405,14 @@ io_val_t IO_ReadW(io_port_t port)
 	}
 	else {
 		IO_USEC_read_delay();
-		retval = ReadPort(IO_MW, port);
+		
+		// To-be-removed when Bitu-based IO handler API is deprecated:
+		if (io_readhandlers[1].find(port) != io_readhandlers[1].end()) {
+			retval = ReadPort(IO_MW, port);
+		} else {
+			assert(port <= UINT16_MAX);
+			retval = read_word_from_port(static_cast<uint16_t>(port));
+		}
 	}
 	log_io(1, false, port, retval);
 	return retval;
@@ -579,12 +451,20 @@ io_val_t IO_ReadD(io_port_t port)
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
 	} else {
-		retval = ReadPort(IO_MD, port);
+
+		// To-be-removed when Bitu-based IO handler API is deprecated:
+		if (io_readhandlers[2].find(port) != io_readhandlers[2].end()) {
+			retval = ReadPort(IO_MD, port);
+		} else {
+			assert(port <= UINT16_MAX);
+			retval = read_dword_from_port(static_cast<uint16_t>(port));
+		}
 	}
 
 	log_io(2, false, port, retval);
 	return retval;
 }
+
 
 class IO final : public Module_base {
 public:
@@ -597,7 +477,7 @@ public:
 		for (uint8_t i = 0; i < IO_SIZES; ++i) {
 			const size_t readers = io_readhandlers[i].size();
 			const size_t writers = io_writehandlers[i].size();
-			DEBUG_LOG_MSG("IOBUS: Releasing %lu read and %lu write %d-bit port handlers",
+			DEBUG_LOG_MSG("IOBUS-OLD: Releasing %zu read and %zu write %d-bit port handlers",
 			              readers, writers, 8 << i);
 			total_bytes += readers * sizeof(IO_ReadHandler) +
 			               sizeof(io_readhandlers[i]);
@@ -606,7 +486,21 @@ public:
 			io_readhandlers[i].clear();
 			io_writehandlers[i].clear();
 		}
-		DEBUG_LOG_MSG("IOBUS: Handlers consumed %lu total bytes", total_bytes);
+		DEBUG_LOG_MSG("IOBUS-OLD: Handlers consumed %zu total bytes", total_bytes);
+
+		size_t new_total_bytes = 0u;
+		for (uint8_t i = 0; i < io_widths; ++i) {
+			const size_t readers = io_read_handlers[i].size();
+			const size_t writers = io_write_handlers[i].size();
+			DEBUG_LOG_MSG("IOBUS-NEW: Releasing %zu read and %zu write %d-bit port handlers",
+			              readers, writers, 8 << i);
+			new_total_bytes += readers * sizeof(io_read_f) + sizeof(io_read_handlers[i]);
+			new_total_bytes += writers * sizeof(io_write_f) + sizeof(io_write_handlers[i]);
+			io_read_handlers[i].clear();
+			io_write_handlers[i].clear();
+		}
+		DEBUG_LOG_MSG("IOBUS-NEW: Handlers consumed %zu total bytes",
+		              new_total_bytes);
 	}
 };
 
