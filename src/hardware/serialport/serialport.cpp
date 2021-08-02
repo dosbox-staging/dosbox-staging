@@ -19,6 +19,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <cstdarg>
 #include <ctype.h>
 #include <string.h>
 #include <tuple>
@@ -98,10 +99,10 @@ device_COM::~device_COM() {
 // COM1 - COM4 objects
 CSerial *serialports[SERIAL_MAX_PORTS] = {nullptr};
 
-static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
-	(void)iolen; // unused, but required for API compliance
+static uint8_t SERIAL_Read(io_port_t port, io_width_t)
+{
 	uint32_t i = 0;
-	uint32_t retval = 0;
+	uint8_t retval = 0;
 	uint8_t offset_type = static_cast<uint8_t>(port) & 0x7;
 	switch(port&0xff8) {
 		case 0x3f8: i=0; break;
@@ -136,9 +137,9 @@ static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
 		                        dbgtext[offset_type]);
 	}
 #endif
-	return static_cast<Bitu>(retval);
+	return retval;
 }
-static void SERIAL_Write(Bitu port, uint8_t val, Bitu)
+static void SERIAL_Write(io_port_t port, uint8_t val, io_width_t)
 {
 	uint32_t i;
 	const uint8_t offset_type = static_cast<uint8_t>(port) & 0x7;
@@ -185,7 +186,7 @@ void CSerial::log_ser(bool active, char const* format,...) {
 		// copied from DEBUG_SHOWMSG
 		char buf[512];
 		buf[0]=0;
-		sprintf(buf, "%12.3f [% 7lld] ", PIC_FullIndex(), GetTicks());
+		sprintf(buf, "%12.3f [% 7d] ", PIC_FullIndex(), static_cast<int>(GetTicks()));
 		va_list msg;
 		va_start(msg,format);
 		vsprintf(buf+strlen(buf),format,msg);
@@ -407,17 +408,17 @@ void CSerial::receiveByteEx(uint8_t data, uint8_t error)
 			// error and FIFO inactive
 			rise (ERROR_PRIORITY);
 			LSR |= error;
-		};
+		}
         if(error&LSR_PARITY_ERROR_MASK) {
 			parityErrors++;
-		};
+		}
 		if(error&LSR_OVERRUN_ERROR_MASK) {
 			overrunErrors++;
 			if(!GETFLAG(IF)) overrunIF0++;
 #if SERIAL_DEBUG
 			log_ser(dbg_serialtraffic,"rx overrun (IF=%d)", GETFLAG(IF)>0);
 #endif
-		};
+		}
 		if(error&LSR_FRAMING_ERROR_MASK) {
 			framingErrors++;
 		}
@@ -1175,9 +1176,9 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 	overrunIF0=0;
 	breakErrors=0;
 
-	for (uint32_t i = 0; i < SERIAL_IO_HANDLERS; ++i) {
-		WriteHandler[i].Install (i + base, SERIAL_Write, IO_MB);
-		ReadHandler[i].Install(i + base, SERIAL_Read, IO_MB);
+	for (uint8_t i = 0; i < SERIAL_IO_HANDLERS; ++i) {
+		WriteHandler[i].Install(i + base, SERIAL_Write, io_width_t::byte);
+		ReadHandler[i].Install(i + base, SERIAL_Read, io_width_t::byte);
 	}
 }
 
