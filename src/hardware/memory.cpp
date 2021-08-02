@@ -74,8 +74,9 @@ public:
 		}
 #endif
 		return 0xff;
-	} 
-	void writeb(PhysPt addr,Bitu val) {
+	}
+	void writeb(PhysPt addr, MAYBE_UNUSED Bitu val)
+	{
 #if C_DEBUG
 		LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 #else
@@ -456,20 +457,35 @@ void mem_unalignedwrited(PhysPt address,Bit32u val) {
 
 
 bool mem_unalignedreadw_checked(PhysPt address, Bit16u * val) {
-	Bit8u rval1,rval2;
-	if (mem_readb_checked(address+0, &rval1)) return true;
-	if (mem_readb_checked(address+1, &rval2)) return true;
-	*val=(Bit16u)(((Bit8u)rval1) | (((Bit8u)rval2) << 8));
+	uint8_t rval1;
+	if (mem_readb_checked(address + 0, &rval1))
+		return true;
+
+	uint8_t rval2;
+	if (mem_readb_checked(address + 1, &rval2))
+		return true;
+
+	*val = static_cast<uint16_t>(rval1 | (rval2 << 8));
 	return false;
 }
 
 bool mem_unalignedreadd_checked(PhysPt address, Bit32u * val) {
-	Bit8u rval1,rval2,rval3,rval4;
+	uint8_t rval1;
 	if (mem_readb_checked(address+0, &rval1)) return true;
-	if (mem_readb_checked(address+1, &rval2)) return true;
-	if (mem_readb_checked(address+2, &rval3)) return true;
-	if (mem_readb_checked(address+3, &rval4)) return true;
-	*val=(Bit32u)(((Bit8u)rval1) | (((Bit8u)rval2) << 8) | (((Bit8u)rval3) << 16) | (((Bit8u)rval4) << 24));
+
+	uint8_t rval2;
+	if (mem_readb_checked(address + 1, &rval2))
+		return true;
+
+	uint8_t rval3;
+	if (mem_readb_checked(address + 2, &rval3))
+		return true;
+
+	uint8_t rval4;
+	if (mem_readb_checked(address + 3, &rval4))
+		return true;
+
+	*val = static_cast<uint32_t>(rval1 | (rval2 << 8) | (rval3 << 16) | (rval4 << 24));
 	return false;
 }
 
@@ -515,14 +531,16 @@ void mem_writed(PhysPt address,Bit32u val) {
 	mem_writed_inline(address,val);
 }
 
-static void write_p92(Bitu port,Bitu val,Bitu iolen) {	
+static void write_p92(io_port_t, uint8_t val, io_width_t)
+{
 	// Bit 0 = system reset (switch back to real mode)
 	if (val&1) E_Exit("XMS: CPU reset via port 0x92 not supported.");
 	memory.a20.controlport = val & ~2;
 	MEM_A20_Enable((val & 2)>0);
 }
 
-static Bitu read_p92(Bitu port,Bitu iolen) {
+static uint8_t read_p92(io_port_t, io_width_t)
+{
 	return memory.a20.controlport | (memory.a20.enabled ? 0x02 : 0);
 }
 
@@ -556,8 +574,8 @@ public:
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 	
 		/* Setup the Physical Page Links */
-		uint16_t memsize = section->Get_int("memsize");
-	
+		auto memsize = static_cast<uint16_t>(section->Get_int("memsize"));
+
 		if (memsize < 1) memsize = 1;
 		/* max 63 to solve problems with certain xms handlers */
 		if (memsize > MAX_MEMORY - 1) {
@@ -612,8 +630,8 @@ public:
 		/* Reset some links */
 		memory.links.used = 0;
 		// A20 Line - PS/2 system control port A
-		WriteHandler.Install(0x92,write_p92,IO_MB);
-		ReadHandler.Install(0x92,read_p92,IO_MB);
+		WriteHandler.Install(0x92, write_p92, io_width_t::byte);
+		ReadHandler.Install(0x92, read_p92, io_width_t::byte);
 		MEM_A20_Enable(false);
 	}
 
@@ -625,9 +643,10 @@ public:
 	}
 };
 
-static MEMORY* test;	
-	
-static void MEM_ShutDown(Section * sec) {
+static MEMORY* test;
+
+static void MEM_ShutDown(MAYBE_UNUSED Section *sec)
+{
 	delete test;
 }
 
