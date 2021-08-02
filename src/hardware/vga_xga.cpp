@@ -83,7 +83,7 @@ struct XGAStatus {
 static void XGA_Write_Multifunc(Bitu val)
 {
 	Bitu regselect = val >> 12;
-	Bitu dataval = val & 0xfff;
+	const auto dataval = static_cast<uint16_t>(val & 0xfff);
 	switch(regselect) {
 		case 0: // minor axis pixel count
 			xga.MIPcount = dataval;
@@ -457,7 +457,6 @@ void XGA_DrawLineBresenham(Bitu val) {
 	}
 	//	}
 	//}
-	
 }
 
 void XGA_DrawRectangle(Bitu val) {
@@ -575,7 +574,7 @@ static void DrawWaitSub(uint32_t mixmode, Bitu srcval)
 	XGA_CheckX();
 }
 
-void XGA_DrawWait(Bitu val, Bitu len)
+void XGA_DrawWait(uint32_t val, io_width_t width)
 {
 	if (!xga.waitcmd.wait)
 		return;
@@ -583,155 +582,164 @@ void XGA_DrawWait(Bitu val, Bitu len)
 	Bitu srcval;
 	Bitu chunksize = 0;
 	Bitu chunks = 0;
-	switch(xga.waitcmd.cmd) {
-		case 2: /* Rectangle */
-			switch (mixmode) {
-				case 0x00: /* FOREMIX always used */
-					mixmode = xga.foremix;
 
-/*					switch ((mixmode >> 5) & 0x03)
-						case 0x00: // Src is background color
-							srcval = xga.backcolor;
-							break;
-						case 0x01: // Src is foreground color
-							srcval = xga.forecolor;
-							break;
-						case 0x02: // Src is pixel data from PIX_TRANS register
+	const uint8_t len = (width == io_width_t::dword  ? 4
+	                     : width == io_width_t::word ? 2
+	                                                 : 1);
+
+	switch (xga.waitcmd.cmd) {
+	case 2: /* Rectangle */
+		switch (mixmode) {
+		case 0x00: /* FOREMIX always used */
+			mixmode = xga.foremix;
+
+/*
+			switch ((mixmode >> 5) & 0x03)
+				case 0x00: // Src is background color
+					srcval = xga.backcolor;
+					break;
+				case 0x01: // Src is foreground color
+					srcval = xga.forecolor;
+					break;
+				case 0x02: // Src is pixel data from PIX_TRANS register
 */
-					if (((mixmode >> 5) & 0x03) != 0x2) {
-						// those cases don't seem to occur
-						LOG_MSG("XGA: unsupported drawwait operation");
+			if (((mixmode >> 5) & 0x03) != 0x2) {
+				// those cases don't seem to occur
+				LOG_MSG("XGA: unsupported drawwait operation");
+				break;
+			}
+			switch (xga.waitcmd.buswidth) {
+			case XGA_8_BIT: // 8 bit
+				DrawWaitSub(mixmode, val);
+				break;
+			case 0x20 | XGA_8_BIT: // 16 bit
+				for (uint8_t i = 0; i < len; ++i) {
+					DrawWaitSub(mixmode, (val >> (8 * i)) & 0xff);
+					if (xga.waitcmd.newline)
+						break;
+				}
+				break;
+			case 0x40 | XGA_8_BIT: // 32 bit
+				for (int i = 0; i < 4; ++i)
+					DrawWaitSub(mixmode, (val >> (8 * i)) & 0xff);
+				break;
+			case (0x20 | XGA_32_BIT):
+				if (len != 4) { // Win 3.11 864
+					        // 'hack?'
+					if (xga.waitcmd.datasize == 0) {
+						// set it up to
+						// wait for the
+						// next word
+						xga.waitcmd.data = val;
+						xga.waitcmd.datasize = 2;
+						return;
+					} else {
+						srcval = (val << 16) |
+						         xga.waitcmd.data;
+						xga.waitcmd.data = 0;
+						xga.waitcmd.datasize = 0;
+						DrawWaitSub(mixmode, srcval);
+					}
+					break;
+				}               // fall-through
+			case 0x40 | XGA_32_BIT: // 32 bit
+				DrawWaitSub(mixmode, val);
+				break;
+			case 0x20 | XGA_15_BIT: // 16 bit
+			case 0x20 | XGA_16_BIT: // 16 bit
+				DrawWaitSub(mixmode, val);
+				break;
+			case 0x40 | XGA_15_BIT: // 32 bit
+			case 0x40 | XGA_16_BIT: // 32 bit
+				DrawWaitSub(mixmode, val & 0xffff);
+				if (!xga.waitcmd.newline)
+					DrawWaitSub(mixmode, val >> 16);
+				break;
+			default:
+				// Let's hope they never show up ;)
+				LOG_MSG("XGA: "
+				        "unsupported "
+				        "bpp / "
+				        "datawidth "
+				        "combination "
+				        "%#" PRIxPTR,
+				        xga.waitcmd.buswidth);
+				break;
+			};
+			break;
+
+		case 0x02: // Data from PIX_TRANS selects the mix
+			switch (xga.waitcmd.buswidth & 0x60) {
+			case 0x0:
+				chunksize = 8;
+				chunks = 1;
+				break;
+			case 0x20: // 16 bit
+				chunksize = 16;
+				if (len == 4)
+					chunks = 2;
+				else
+					chunks = 1;
+				break;
+			case 0x40: // 32 bit
+				chunksize = 16;
+				if (len == 4)
+					chunks = 2;
+				else
+					chunks = 1;
+				break;
+			case 0x60: // undocumented guess (but
+			           // works)
+				chunksize = 8;
+				chunks = 4;
+				break;
+			}
+
+			for (Bitu k = 0; k < chunks; k++) { // chunks counter
+				xga.waitcmd.newline = false;
+				for (Bitu n = 0; n < chunksize; ++n) { // pixels
+					// This formula can rule the world ;)
+					Bitu mask = 1 << ((((n&0xF8)+(8-(n&0x7)))-1)+chunksize*k);
+
+					const uint32_t mixmode = (val & mask)
+					                                 ? xga.foremix
+					                                 : xga.backmix;
+					switch ((mixmode >> 5) & 0x03) {
+					case 0x00: // Src is background color
+						srcval = xga.backcolor;
+						break;
+					case 0x01: // Src is foreground color
+						srcval = xga.forecolor;
+						break;
+					default:
+						LOG_MSG("XGA: DrawBlitWait: Unsupported src %x",
+						        (mixmode >> 5) & 0x03);
+						srcval = 0;
 						break;
 					}
-					switch(xga.waitcmd.buswidth) {
-						case XGA_8_BIT: // 8 bit
-							DrawWaitSub(mixmode, val);
-							break;
-						case 0x20 | XGA_8_BIT: // 16 bit
-							for (Bitu i = 0; i < len; ++i) {
-								DrawWaitSub(mixmode, (val >> (8 * i)) & 0xff);
-								if (xga.waitcmd.newline)
-									break;
-							}
-							break;
-						case 0x40 | XGA_8_BIT: // 32 bit
-							for (int i = 0; i < 4; ++i)
-								DrawWaitSub(mixmode, (val >> (8 * i)) & 0xff);
-							break;
-						case (0x20 | XGA_32_BIT):
-							if (len != 4) { // Win 3.11 864
-										// 'hack?'
-								if (xga.waitcmd.datasize == 0) {
-									// set it up to
-									// wait for the
-									// next word
-									xga.waitcmd.data = val;
-									xga.waitcmd.datasize = 2;
-									return;
-								} else {
-									srcval = (val << 16) | xga.waitcmd.data;
-									xga.waitcmd.data = 0;
-									xga.waitcmd.datasize = 0;
-									DrawWaitSub(mixmode, srcval);
-								}
-								break;
-							}               // fall-through
-						case 0x40 | XGA_32_BIT: // 32 bit
-							DrawWaitSub(mixmode, val);
-							break;
-						case 0x20 | XGA_15_BIT: // 16 bit
-						case 0x20 | XGA_16_BIT: // 16 bit
-							DrawWaitSub(mixmode, val);
-							break;
-						case 0x40 | XGA_15_BIT: // 32 bit
-						case 0x40 | XGA_16_BIT: // 32 bit
-							DrawWaitSub(mixmode, val & 0xffff);
-							if (!xga.waitcmd.newline)
-								DrawWaitSub(mixmode, val >> 16);
-							break;
-						default:
-							// Let's hope they never show up ;)
-							LOG_MSG("XGA: "
-									"unsupported "
-									"bpp / "
-									"datawidth "
-									"combination "
-									"%#" PRIxPTR,
-									xga.waitcmd.buswidth);
-							break;
-						};
+					DrawWaitSub(mixmode, srcval);
+
+					if ((xga.waitcmd.cury < 2048) &&
+					    (xga.waitcmd.cury >= xga.waitcmd.y2)) {
+						xga.waitcmd.wait = false;
+						k = 1000; // no more chunks
 						break;
-
-		                case 0x02: // Data from PIX_TRANS selects the mix
-			                switch (xga.waitcmd.buswidth & 0x60) {
-			                case 0x0:
-				                chunksize = 8;
-				                chunks = 1;
-				                break;
-			                case 0x20: // 16 bit
-				                chunksize = 16;
-				                if (len == 4)
-					                chunks = 2;
-				                else
-					                chunks = 1;
-				                break;
-			                case 0x40: // 32 bit
-				                chunksize = 16;
-				                if (len == 4)
-					                chunks = 2;
-				                else
-					                chunks = 1;
-				                break;
-			                case 0x60: // undocumented guess (but
-			                           // works)
-				                chunksize = 8;
-				                chunks = 4;
-				                break;
-			                }
-
-			                for(Bitu k = 0; k < chunks; k++) { // chunks counter
-						xga.waitcmd.newline = false;
-						for (Bitu n = 0; n < chunksize; ++n) { // pixels
-							// This formula can rule the world ;)
-							Bitu mask = 1 << ((((n&0xF8)+(8-(n&0x7)))-1)+chunksize*k);
-
-							const uint32_t mixmode = (val & mask) ? xga.foremix:
-							                                        xga.backmix;
-							switch ((mixmode >> 5) & 0x03) {
-								case 0x00: // Src is background color
-									srcval = xga.backcolor;
-									break;
-								case 0x01: // Src is foreground color
-									srcval = xga.forecolor;
-									break;
-								default:
-									LOG_MSG("XGA: DrawBlitWait: Unsupported src %x",
-										(mixmode >> 5) & 0x03);
-									srcval=0;
-									break;
-							}
-							DrawWaitSub(mixmode, srcval);
-
-							if((xga.waitcmd.cury<2048) &&
-							  (xga.waitcmd.cury >= xga.waitcmd.y2)) {
-								xga.waitcmd.wait = false;
-								k=1000; // no more chunks
-								break;
-							}
-							// next chunk goes to next line
-							if(xga.waitcmd.newline) break; 
-						} // pixels loop
-					} // chunks loop
-					break;
-
-				default:
-					LOG_MSG("XGA: DrawBlitWait: Unhandled mixmode: %d", mixmode);
-					break;
-			} // mixmode switch
+					}
+					// next chunk goes to next line
+					if (xga.waitcmd.newline)
+						break;
+				} // pixels loop
+			}         // chunks loop
 			break;
+
 		default:
-			LOG_MSG("XGA: Unhandled draw command %x", xga.waitcmd.cmd);
+			LOG_MSG("XGA: DrawBlitWait: Unhandled mixmode: %d", mixmode);
 			break;
+		} // mixmode switch
+		break;
+	default:
+		LOG_MSG("XGA: Unhandled draw command %x", xga.waitcmd.cmd);
+		break;
 	}
 }
 
@@ -989,10 +997,10 @@ static void XGA_DrawCmd(Bitu val)
 	}
 }
 
-void XGA_SetDualReg(Bit32u& reg, Bitu val) {
-	switch(XGA_COLOR_MODE) {
-	case M_LIN8:
-		reg = (Bit8u)(val&0xff); break;
+void XGA_SetDualReg(Bit32u &reg, uint32_t val)
+{
+	switch (XGA_COLOR_MODE) {
+	case M_LIN8: reg = (Bit8u)(val & 0xff); break;
 	case M_LIN15:
 	case M_LIN16:
 		reg = (Bit16u)(val&0xffff); break;
@@ -1027,219 +1035,187 @@ Bitu XGA_GetDualReg(Bit32u reg) {
 	return 0;
 }
 
-extern Bitu vga_read_p3da(Bitu port,Bitu iolen);
+extern uint8_t vga_read_p3da(io_port_t port, io_width_t width);
 
-extern void vga_write_p3d4(Bitu port,Bitu val,Bitu iolen);
-extern Bitu vga_read_p3d4(Bitu port,Bitu iolen);
+extern void vga_write_p3d4(io_port_t port, uint8_t val, io_width_t width);
+extern uint8_t vga_read_p3d4(io_port_t port, io_width_t width);
 
-extern void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen);
-extern Bitu vga_read_p3d5(Bitu port,Bitu iolen);
+extern void vga_write_p3d5(io_port_t port, uint8_t val, io_width_t width);
+extern uint8_t vga_read_p3d5(io_port_t port, io_width_t width);
 
-void XGA_Write(Bitu port, Bitu val, Bitu len) {
-//	LOG_MSG("XGA: Write to port %x, val %8x, len %x", port,val, len);
+void XGA_Write(io_port_t port, uint32_t val, io_width_t width)
+{
+	//	LOG_MSG("XGA: Write to port %x, val %8x, len %x", port,val, len);
 
-	switch(port) {
-		case 0x8100:// drawing control: row (low word), column (high word)
-					// "CUR_X" and "CUR_Y" (see PORT 82E8h,PORT 86E8h)
-			xga.cury = val & 0x0fff;
-			if(len==4) xga.curx = (val>>16)&0x0fff;
-			break;
-		case 0x8102:
-			xga.curx = val& 0x0fff;
-			break;
+	switch (port) {
+	case 0x8100: // drawing control: row (low word), column (high word)
+		// "CUR_X" and "CUR_Y" (see PORT 82E8h,PORT 86E8h)
+		xga.cury = val & 0x0fff;
+		if (width == io_width_t::dword)
+			xga.curx = (val >> 16) & 0x0fff;
+		break;
+	case 0x8102: xga.curx = val & 0x0fff; break;
 
-		case 0x8108:// DWORD drawing control: destination Y and axial step
-					// constant (low word), destination X and axial step
-					// constant (high word) (see PORT 8AE8h,PORT 8EE8h)
-			xga.desty = val&0x3FFF;
-			if(len==4) xga.destx = (val>>16)&0x3fff;
-			break;
-		case 0x810a:
-			xga.destx = val&0x3fff;
-			break;
-		case 0x8110: // WORD error term (see PORT 92E8h)
-			xga.ErrTerm = val&0x3FFF;
-			break;
+	case 0x8108: // DWORD drawing control: destination Y and axial step
+		// constant (low word), destination X and axial step
+		// constant (high word) (see PORT 8AE8h,PORT 8EE8h)
+		xga.desty = val & 0x3FFF;
+		if (width == io_width_t::dword)
+			xga.destx = (val >> 16) & 0x3fff;
+		break;
+	case 0x810a: xga.destx = val & 0x3fff; break;
+	case 0x8110: // WORD error term (see PORT 92E8h)
+		xga.ErrTerm = val & 0x3FFF;
+		break;
 
-		case 0x8120: // packed MMIO: DWORD background color (see PORT A2E8h)
-			xga.backcolor = val;
-			break;
-		case 0x8124: // packed MMIO: DWORD foreground color (see PORT A6E8h)
-			xga.forecolor = val;
-			break;
-		case 0x8128: // DWORD	write mask (see PORT AAE8h)
-			xga.writemask = val;
-			break;
-		case 0x812C: // DWORD	read mask (see PORT AEE8h)
-			xga.readmask = val;
-			break;
-		case 0x8134: // packed MMIO: DWORD	background mix (low word) and
-					 // foreground mix (high word)	(see PORT B6E8h,PORT BAE8h)
-			xga.backmix = val&0xFFFF;
-			if(len==4) xga.foremix = (val>>16);
-			break;
-		case 0x8136:
-			xga.foremix = val;
-			break;
-		case 0x8138:// DWORD top scissors (low word) and left scissors (high
-					// word) (see PORT BEE8h,#P1047)
-			xga.scissors.y1=val&0x0fff;
-			if(len==4) xga.scissors.x1 = (val>>16)&0x0fff;
-			break;
-		case 0x813a:
-			xga.scissors.x1 = val&0x0fff;
-			break;
-		case 0x813C:// DWORD bottom scissors (low word) and right scissors
-					// (high word) (see PORT BEE8h,#P1047)
-			xga.scissors.y2=val&0x0fff;
-			if(len==4) xga.scissors.x2 = (val>>16)&0x0fff;
-			break;
-		case 0x813e:
-			xga.scissors.x2 = val&0x0fff;
-			break;
+	case 0x8120: // packed MMIO: DWORD background color (see PORT A2E8h)
+		xga.backcolor = val;
+		break;
+	case 0x8124: // packed MMIO: DWORD foreground color (see PORT A6E8h)
+		xga.forecolor = val;
+		break;
+	case 0x8128: // DWORD	write mask (see PORT AAE8h)
+		xga.writemask = val;
+		break;
+	case 0x812C: // DWORD	read mask (see PORT AEE8h)
+		xga.readmask = val;
+		break;
+	case 0x8134: // packed MMIO: DWORD	background mix (low word) and
+		// foreground mix (high word)	(see PORT B6E8h,PORT BAE8h)
+		xga.backmix = val & 0xFFFF;
+		if (width == io_width_t::dword)
+			xga.foremix = (val >> 16);
+		break;
+	case 0x8136: xga.foremix = val; break;
+	case 0x8138: // DWORD top scissors (low word) and left scissors (high
+		// word) (see PORT BEE8h,#P1047)
+		xga.scissors.y1 = val & 0x0fff;
+		if (width == io_width_t::dword)
+			xga.scissors.x1 = (val >> 16) & 0x0fff;
+		break;
+	case 0x813a: xga.scissors.x1 = val & 0x0fff; break;
+	case 0x813C: // DWORD bottom scissors (low word) and right scissors
+		// (high word) (see PORT BEE8h,#P1047)
+		xga.scissors.y2 = val & 0x0fff;
+		if (width == io_width_t::dword)
+			xga.scissors.x2 = (val >> 16) & 0x0fff;
+		break;
+	case 0x813e: xga.scissors.x2 = val & 0x0fff; break;
 
-		case 0x8140:// DWORD data manipulation control (low word) and
-					// miscellaneous 2 (high word) (see PORT BEE8h,#P1047)
-			xga.pix_cntl=val&0xFFFF;
-			if(len==4) xga.control2=(val>>16)&0x0fff;
-			break;
-		case 0x8144:// DWORD miscellaneous (low word) and read register select
-					// (high word)(see PORT BEE8h,#P1047)
-			xga.control1=val&0xffff;
-			if(len==4)xga.read_sel=(val>>16)&0x7;
-			break; 
-		case 0x8148:// DWORD minor axis pixel count (low word) and major axis
-					// pixel count (high word) (see PORT BEE8h,#P1047,PORT 96E8h)
-			xga.MIPcount = val&0x0fff;
-			if(len==4) xga.MAPcount = (val>>16)&0x0fff;
-			break;
-		case 0x814a:
-			xga.MAPcount = val&0x0fff;
-			break;
-		case 0x92e8:
-			xga.ErrTerm = val&0x3FFF;
-			break;
-		case 0x96e8:
-			xga.MAPcount = val&0x0fff;
-			break;
-		case 0x9ae8:
-		case 0x8118: // Trio64V+ packed MMIO
-			XGA_DrawCmd(val);
-			break;
-		case 0xa2e8:
-			XGA_SetDualReg(xga.backcolor, val);
-			break;
-		case 0xa6e8:
-			XGA_SetDualReg(xga.forecolor, val);
-			break;
-		case 0xaae8:
-			XGA_SetDualReg(xga.writemask, val);
-			break;
-		case 0xaee8:
-			XGA_SetDualReg(xga.readmask, val);
-			break;
-		case 0x82e8:
-			xga.cury = val&0x0fff;
-			break;
-		case 0x86e8:
-			xga.curx = val&0x0fff;
-			break;
-		case 0x8ae8:
-			xga.desty = val&0x3fff;
-			break;
-		case 0x8ee8:
-			xga.destx = val&0x3fff;
-			break;
-		case 0xb2e8:
-			LOG_MSG("COLOR_CMP not implemented");
-			break;
-		case 0xb6e8:
-			xga.backmix = val;
-			break;
-		case 0xbae8:
-			xga.foremix = val;
-			break;
-		case 0xbee8:
-			XGA_Write_Multifunc(val);
-			break;
-		case 0xe2e8:
+	case 0x8140: // DWORD data manipulation control (low word) and
+		// miscellaneous 2 (high word) (see PORT BEE8h,#P1047)
+		xga.pix_cntl = val & 0xFFFF;
+		if (width == io_width_t::dword)
+			xga.control2 = (val >> 16) & 0x0fff;
+		break;
+	case 0x8144: // DWORD miscellaneous (low word) and read register select
+		// (high word)(see PORT BEE8h,#P1047)
+		xga.control1 = val & 0xffff;
+		if (width == io_width_t::dword)
+			xga.read_sel = (val >> 16) & 0x7;
+		break;
+	case 0x8148: // DWORD minor axis pixel count (low word) and major axis
+		// pixel count (high word) (see PORT BEE8h,#P1047,PORT 96E8h)
+		xga.MIPcount = val & 0x0fff;
+		if (width == io_width_t::dword)
+			xga.MAPcount = (val >> 16) & 0x0fff;
+		break;
+	case 0x814a: xga.MAPcount = val & 0x0fff; break;
+	case 0x92e8: xga.ErrTerm = val & 0x3FFF; break;
+	case 0x96e8: xga.MAPcount = val & 0x0fff; break;
+	case 0x9ae8:
+	case 0x8118: // Trio64V+ packed MMIO
+		XGA_DrawCmd(val);
+		break;
+	case 0xa2e8: XGA_SetDualReg(xga.backcolor, val); break;
+	case 0xa6e8: XGA_SetDualReg(xga.forecolor, val); break;
+	case 0xaae8: XGA_SetDualReg(xga.writemask, val); break;
+	case 0xaee8: XGA_SetDualReg(xga.readmask, val); break;
+	case 0x82e8: xga.cury = val & 0x0fff; break;
+	case 0x86e8: xga.curx = val & 0x0fff; break;
+	case 0x8ae8: xga.desty = val & 0x3fff; break;
+	case 0x8ee8: xga.destx = val & 0x3fff; break;
+	case 0xb2e8: LOG_MSG("COLOR_CMP not implemented"); break;
+	case 0xb6e8: xga.backmix = val; break;
+	case 0xbae8: xga.foremix = val; break;
+	case 0xbee8: XGA_Write_Multifunc(val); break;
+	case 0xe2e8:
+		xga.waitcmd.newline = false;
+		XGA_DrawWait(val, width);
+		break;
+	case 0x83d4:
+		if (width == io_width_t::byte)
+			vga_write_p3d4(0, val, io_width_t::byte);
+		else if (width == io_width_t::word) {
+			vga_write_p3d4(0, val & 0xff, io_width_t::byte);
+			vga_write_p3d5(0, val >> 8, io_width_t::byte);
+		} else
+			E_Exit("unimplemented XGA MMIO");
+		break;
+	case 0x83d5:
+		if (width == io_width_t::byte)
+			vga_write_p3d5(0, val, io_width_t::byte);
+		else
+			E_Exit("unimplemented XGA MMIO");
+		break;
+	default:
+		if (port <= 0x4000) {
+			// LOG_MSG("XGA: Wrote to port %4x with %08x, len %x", port, val, len);
 			xga.waitcmd.newline = false;
-			XGA_DrawWait(val, len);
-			break;
-		case 0x83d4:
-			if(len==1) vga_write_p3d4(0,val,1);
-			else if(len==2) {
-				vga_write_p3d4(0,val&0xff,1);
-				vga_write_p3d5(0,val>>8,1);
-			}
-			else E_Exit("unimplemented XGA MMIO");
-			break;
-		case 0x83d5:
-			if(len==1) vga_write_p3d5(0,val,1);
-			else E_Exit("unimplemented XGA MMIO");
-			break;
-		default:
-			if(port <= 0x4000) {
-				//LOG_MSG("XGA: Wrote to port %4x with %08x, len %x", port, val, len);
-				xga.waitcmd.newline = false;
-				XGA_DrawWait(val, len);
+			XGA_DrawWait(val, width);
 
-		        } else
-			        LOG_MSG("XGA: Wrote to port %#" PRIxPTR
-			                " with %#" PRIxPTR ", len %#" PRIxPTR,
-			                port, val, len);
-		        break;
-	        }
+		} else
+			LOG_MSG("XGA: Wrote to port %x with %x, IO width=%d", port, val,
+			        static_cast<int>(width));
+		break;
+	}
 }
 
-Bitu XGA_Read(Bitu port, Bitu len) {
-	switch(port) {
-		case 0x8118:
-		case 0x9ae8:
-			return 0x400; // nothing busy
-			break;
-		case 0x81ec: // S3 video data processor
-			return 0x00007000; 
-			break;
-		case 0x83da:
-			{
-				Bits delaycyc = CPU_CycleMax/5000;
-				if(GCC_UNLIKELY(CPU_Cycles < 3*delaycyc)) delaycyc = 0;
-				CPU_Cycles -= delaycyc;
-				CPU_IODelayRemoved += delaycyc;
-				return vga_read_p3da(0,0);
-				break;
-			}
-		case 0x83d4:
-			if(len==1) return vga_read_p3d4(0,0);
-			else E_Exit("unimplemented XGA MMIO");
-			break;
-		case 0x83d5:
-			if(len==1) return vga_read_p3d5(0,0);
-			else E_Exit("unimplemented XGA MMIO");
-			break;
-		case 0x9ae9:
-			if(xga.waitcmd.wait) return 0x4;
-			else return 0x0;
-		case 0xbee8:
-			return XGA_Read_Multifunc();
-		case 0xa2e8:
-			return XGA_GetDualReg(xga.backcolor);
-			break;
-		case 0xa6e8:
-			return XGA_GetDualReg(xga.forecolor);
-			break;
-		case 0xaae8:
-			return XGA_GetDualReg(xga.writemask);
-			break;
-		case 0xaee8:
-			return XGA_GetDualReg(xga.readmask);
-			break;
-		default:
-			//LOG_MSG("XGA: Read from port %x, len %x", port, len);
-			break;
+uint32_t XGA_Read(io_port_t port, io_width_t width)
+{
+	switch (port) {
+	case 0x8118:
+	case 0x9ae8:
+		return 0x400; // nothing busy
+		break;
+	case 0x81ec: // S3 video data processor
+		return 0x00007000;
+		break;
+	case 0x83da: {
+		Bits delaycyc = CPU_CycleMax / 5000;
+		if (GCC_UNLIKELY(CPU_Cycles < 3 * delaycyc))
+			delaycyc = 0;
+		CPU_Cycles -= delaycyc;
+		CPU_IODelayRemoved += delaycyc;
+		return vga_read_p3da(0, io_width_t::byte);
+	} break;
+	case 0x83d4:
+		if (width == io_width_t::byte)
+			return vga_read_p3d4(0, io_width_t::byte);
+		else
+			E_Exit("unimplemented XGA MMIO");
+		break;
+	case 0x83d5:
+		if (width == io_width_t::byte)
+			return vga_read_p3d5(0, io_width_t::byte);
+		else
+			E_Exit("unimplemented XGA MMIO");
+		break;
+	case 0x9ae9:
+		if (xga.waitcmd.wait)
+			return 0x4;
+		else
+			return 0x0;
+	case 0xbee8: return XGA_Read_Multifunc();
+	case 0xa2e8: return XGA_GetDualReg(xga.backcolor); break;
+	case 0xa6e8: return XGA_GetDualReg(xga.forecolor); break;
+	case 0xaae8: return XGA_GetDualReg(xga.writemask); break;
+	case 0xaee8: return XGA_GetDualReg(xga.readmask); break;
+	default:
+		// LOG_MSG("XGA: Read from port %x, len %x", port, static_cast<int>(width));
+		break;
 	}
-	return 0xffffffff; 
+	return 0xffffffff;
 }
 
 void VGA_SetupXGA(void) {
@@ -1251,93 +1227,93 @@ void VGA_SetupXGA(void) {
 	xga.scissors.x1 = 0;
 	xga.scissors.y2 = 0xFFF;
 	xga.scissors.x2 = 0xFFF;
-	
-	IO_RegisterWriteHandler(0x42e8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x42e8,&XGA_Read,IO_MB | IO_MW | IO_MD);
 
-	IO_RegisterWriteHandler(0x46e8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0x4ae8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	
-	IO_RegisterWriteHandler(0x82e8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x82e8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0x82e9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x82e9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0x42e8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x42e8, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0x86e8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x86e8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0x86e9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x86e9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0x46e8, &XGA_Write, io_width_t::dword);
+	IO_RegisterWriteHandler(0x4ae8, &XGA_Write, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0x8ae8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x8ae8,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0x82e8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x82e8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0x82e9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x82e9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0x8ee8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x8ee8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0x8ee9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x8ee9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0x86e8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x86e8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0x86e9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x86e9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0x92e8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x92e8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0x92e9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x92e9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0x8ae8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x8ae8, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0x96e8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x96e8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0x96e9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x96e9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0x8ee8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x8ee8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0x8ee9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x8ee9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0x9ae8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x9ae8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0x9ae9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x9ae9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0x92e8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x92e8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0x92e9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x92e9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0x9ee8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x9ee8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0x9ee9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0x9ee9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0x96e8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x96e8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0x96e9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x96e9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0xa2e8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xa2e8,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0x9ae8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x9ae8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0x9ae9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x9ae9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0xa6e8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xa6e8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0xa6e9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xa6e9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0x9ee8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x9ee8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0x9ee9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0x9ee9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0xaae8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xaae8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0xaae9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xaae9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0xa2e8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xa2e8, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0xaee8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xaee8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0xaee9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xaee9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0xa6e8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xa6e8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0xa6e9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xa6e9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0xb2e8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xb2e8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0xb2e9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xb2e9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0xaae8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xaae8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0xaae9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xaae9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0xb6e8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xb6e8,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0xaee8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xaee8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0xaee9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xaee9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0xbee8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xbee8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0xbee9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xbee9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0xb2e8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xb2e8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0xb2e9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xb2e9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0xbae8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xbae8,&XGA_Read,IO_MB | IO_MW | IO_MD);
-	IO_RegisterWriteHandler(0xbae9,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xbae9,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0xb6e8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xb6e8, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0xe2e8,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xe2e8,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0xbee8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xbee8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0xbee9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xbee9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0xe2e0,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xe2e0,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0xbae8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xbae8, &XGA_Read, io_width_t::dword);
+	IO_RegisterWriteHandler(0xbae9, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xbae9, &XGA_Read, io_width_t::dword);
 
-	IO_RegisterWriteHandler(0xe2ea,&XGA_Write,IO_MB | IO_MW | IO_MD);
-	IO_RegisterReadHandler(0xe2ea,&XGA_Read,IO_MB | IO_MW | IO_MD);
+	IO_RegisterWriteHandler(0xe2e8, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xe2e8, &XGA_Read, io_width_t::dword);
+
+	IO_RegisterWriteHandler(0xe2e0, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xe2e0, &XGA_Read, io_width_t::dword);
+
+	IO_RegisterWriteHandler(0xe2ea, &XGA_Write, io_width_t::dword);
+	IO_RegisterReadHandler(0xe2ea, &XGA_Read, io_width_t::dword);
 }

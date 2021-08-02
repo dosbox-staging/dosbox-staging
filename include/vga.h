@@ -21,7 +21,9 @@
 
 #include "dosbox.h"
 
-//Don't enable keeping changes and mapping lfb probably...
+#include "inout.h"
+
+// Don't enable keeping changes and mapping lfb probably...
 #define VGA_LFB_MAPPED
 //#define VGA_KEEP_CHANGES
 #define VGA_CHANGE_SHIFT	9
@@ -513,9 +515,9 @@ struct VGA_ModeExtraData {
 };
 
 // Vector function prototypes
-typedef void (*tWritePort)(Bitu reg,Bitu val,Bitu iolen);
-typedef Bitu (*tReadPort)(Bitu reg,Bitu iolen);
-typedef void (*tFinishSetMode)(Bitu crtc_base, VGA_ModeExtraData* modeData);
+typedef void (*tWritePort)(io_port_t reg, uint8_t val, io_width_t width);
+typedef uint8_t (*tReadPort)(io_port_t reg, io_width_t width);
+typedef void (*tFinishSetMode)(io_port_t crtc_base, VGA_ModeExtraData *modeData);
 typedef void (*tDetermineMode)();
 typedef void (*tSetClock)(Bitu which, uint32_t target);
 typedef uint32_t (*tGetClock)();

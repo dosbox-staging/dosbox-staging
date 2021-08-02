@@ -23,14 +23,14 @@
 #include "vga.h"
 #include <math.h>
 
+void vga_write_p3d4(io_port_t port, uint8_t val, io_width_t);
+uint8_t vga_read_p3d4(io_port_t port, io_width_t);
+void vga_write_p3d5(io_port_t port, uint8_t val, io_width_t);
+uint8_t vga_read_p3d5(io_port_t port, io_width_t);
 
-void vga_write_p3d4(Bitu port,Bitu val,Bitu iolen);
-Bitu vga_read_p3d4(Bitu port,Bitu iolen);
-void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen);
-Bitu vga_read_p3d5(Bitu port,Bitu iolen);
-
-Bitu vga_read_p3da(Bitu /*port*/,Bitu /*iolen*/) {
-	Bit8u retval=4;	// bit 2 set, needed by Blues Brothers
+uint8_t vga_read_p3da(io_port_t, io_width_t)
+{
+	Bit8u retval = 4; // bit 2 set, needed by Blues Brothers
 	const auto timeInFrame = PIC_FullIndex() - vga.draw.delay.framestart;
 
 	vga.internal.attrindex=false;
@@ -55,27 +55,28 @@ Bitu vga_read_p3da(Bitu /*port*/,Bitu /*iolen*/) {
 	return retval;
 }
 
-static void write_p3c2(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
-	vga.misc_output=val;
+static void write_p3c2(io_port_t, uint8_t val, io_width_t)
+{
+	vga.misc_output = val;
 
-	Bitu base=(val & 0x1) ? 0x3d0 : 0x3b0;
-	Bitu free=(val & 0x1) ? 0x3b0 : 0x3d0;
-	Bitu first=2, last=2;
-	if (machine==MCH_EGA) {first=0; last=3;}
+	const io_port_t base = (val & 0x1) ? 0x3d0 : 0x3b0;
+	const io_port_t free = (val & 0x1) ? 0x3b0 : 0x3d0;
+	const uint8_t first = machine == MCH_EGA ? 0 : 2;
+	const uint8_t last = machine == MCH_EGA ? 3 : 2;
 
-	for (Bitu i=first; i<=last; i++) {
-		IO_RegisterWriteHandler(base+i*2,vga_write_p3d4,IO_MB);
-		IO_RegisterReadHandler(base+i*2,vga_read_p3d4,IO_MB);
-		IO_RegisterWriteHandler(base+i*2+1,vga_write_p3d5,IO_MB);
-		IO_RegisterReadHandler(base+i*2+1,vga_read_p3d5,IO_MB);
-		IO_FreeWriteHandler(free+i*2,IO_MB);
-		IO_FreeReadHandler(free+i*2,IO_MB);
-		IO_FreeWriteHandler(free+i*2+1,IO_MB);
-		IO_FreeReadHandler(free+i*2+1,IO_MB);
+	for (uint8_t i = first; i <= last; ++i) {
+		IO_RegisterWriteHandler(base + i * 2, vga_write_p3d4, io_width_t::byte);
+		IO_RegisterReadHandler(base + i * 2, vga_read_p3d4, io_width_t::byte);
+		IO_RegisterWriteHandler(base + i * 2 + 1, vga_write_p3d5, io_width_t::byte);
+		IO_RegisterReadHandler(base + i * 2 + 1, vga_read_p3d5, io_width_t::byte);
+		IO_FreeWriteHandler(free + i * 2, io_width_t::byte);
+		IO_FreeReadHandler(free + i * 2, io_width_t::byte);
+		IO_FreeWriteHandler(free + i * 2 + 1, io_width_t::byte);
+		IO_FreeReadHandler(free + i * 2 + 1, io_width_t::byte);
 	}
 
-	IO_RegisterReadHandler(base+0xa,vga_read_p3da,IO_MB);
-	IO_FreeReadHandler(free+0xa,IO_MB);
+	IO_RegisterReadHandler(base + 0xa, vga_read_p3da, io_width_t::byte);
+	IO_FreeReadHandler(free + 0xa, io_width_t::byte);
 
 	/*
 		0	If set Color Emulation. Base Address=3Dxh else Mono Emulation. Base Address=3Bxh.
@@ -90,22 +91,25 @@ static void write_p3c2(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	*/
 }
 
-
-static Bitu read_p3cc(Bitu /*port*/,Bitu /*iolen*/) {
+static uint8_t read_p3cc(io_port_t, io_width_t)
+{
 	return vga.misc_output;
 }
 
 // VGA feature control register
-static Bitu read_p3ca(Bitu /*port*/,Bitu /*iolen*/) {
+static uint8_t read_p3ca(io_port_t, io_width_t)
+{
 	return 0;
 }
 
-static Bitu read_p3c8(Bitu /*port*/,Bitu /*iolen*/) {
+static uint8_t read_p3c8(io_port_t, io_width_t)
+{
 	return 0x10;
 }
 
-static Bitu read_p3c2(Bitu /*port*/,Bitu /*iolen*/) {
-	Bit8u retval=0;
+static uint8_t read_p3c2(io_port_t, io_width_t)
+{
+	Bit8u retval = 0;
 
 	if (machine==MCH_EGA) retval = 0x0F;
 	else if (IS_VGA_ARCH) retval = 0x60;
@@ -132,15 +136,15 @@ static Bitu read_p3c2(Bitu /*port*/,Bitu /*iolen*/) {
 void VGA_SetupMisc(void) {
 	if (IS_EGAVGA_ARCH) {
 		vga.draw.vret_triggered=false;
-		IO_RegisterReadHandler(0x3c2,read_p3c2,IO_MB);
-		IO_RegisterWriteHandler(0x3c2,write_p3c2,IO_MB);
+		IO_RegisterReadHandler(0x3c2, read_p3c2, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3c2, write_p3c2, io_width_t::byte);
 		if (IS_VGA_ARCH) {
-			IO_RegisterReadHandler(0x3ca,read_p3ca,IO_MB);
-			IO_RegisterReadHandler(0x3cc,read_p3cc,IO_MB);
+			IO_RegisterReadHandler(0x3ca, read_p3ca, io_width_t::byte);
+			IO_RegisterReadHandler(0x3cc, read_p3cc, io_width_t::byte);
 		} else {
-			IO_RegisterReadHandler(0x3c8,read_p3c8,IO_MB);
+			IO_RegisterReadHandler(0x3c8, read_p3c8, io_width_t::byte);
 		}
 	} else if (machine==MCH_CGA || IS_TANDY_ARCH) {
-		IO_RegisterReadHandler(0x3da,vga_read_p3da,IO_MB);
+		IO_RegisterReadHandler(0x3da, vga_read_p3da, io_width_t::byte);
 	}
 }
