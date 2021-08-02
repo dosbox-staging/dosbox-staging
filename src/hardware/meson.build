@@ -11,6 +11,7 @@ libhardware_sources = files([
   'hardware.cpp',
   'innovation.cpp',
   'iohandler.cpp',
+  'iohandler_containers.cpp',
   'ipx.cpp',
   'ipxserver.cpp',
   'joystick.cpp',

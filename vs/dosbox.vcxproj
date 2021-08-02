@@ -338,6 +338,7 @@
     <ClCompile Include="..\src\hardware\hardware.cpp" />
     <ClCompile Include="..\src\hardware\innovation.cpp" />
     <ClCompile Include="..\src\hardware\iohandler.cpp" />
+    <ClCompile Include="..\src\hardware\iohandler_containers.cpp" />
     <ClCompile Include="..\src\hardware\ipx.cpp" />
     <ClCompile Include="..\src\hardware\ipxserver.cpp" />
     <ClCompile Include="..\src\hardware\joystick.cpp" />
