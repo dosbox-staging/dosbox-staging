@@ -36,6 +36,7 @@
 #include "setup.h"
 #include "shell.h"
 #include "soft_limiter.h"
+#include "string_utils.h"
 
 #define LOG_GUS 0 // set to 1 for detailed logging
 
@@ -241,7 +242,8 @@ private:
 	void PopulatePanScalars() noexcept;
 	void PopulateVolScalars() noexcept;
 	void PrepareForPlayback() noexcept;
-	size_t ReadFromPort(size_t port, size_t iolen);
+	uint16_t ReadFromPort(io_port_t port, io_width_t width);
+
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
 	void SetLevelCallback(const AudioFrame &levels);
@@ -249,7 +251,8 @@ private:
 	void UpdateDmaAddress(uint8_t new_address);
 	void UpdateWaveMsw(int32_t &addr) const noexcept;
 	void UpdateWaveLsw(int32_t &addr) const noexcept;
-	void WriteToPort(size_t port, size_t val, size_t iolen);
+	void WriteToPort(io_port_t port, uint16_t val, io_width_t width);
+
 	void WriteToRegister();
 
 	// Collections
@@ -276,7 +279,7 @@ private:
 	uint8_t &adlib_command_reg = adlib_commandreg;
 
 	// Port address
-	size_t port_base = 0u;
+	uint16_t port_base = 0u;
 
 	// Voice states
 	uint32_t active_voice_mask = 0u;
@@ -825,7 +828,7 @@ void Gus::PopulateAutoExec(uint16_t port, const std::string &ultradir)
 
 	// ULTRASND variable
 	char set_ultrasnd[] = "@SET ULTRASND=HHH,D,D,I,I";
-	snprintf(set_ultrasnd, sizeof(set_ultrasnd),
+	safe_sprintf(set_ultrasnd, 
 	         "@SET ULTRASND=%x,%u,%u,%u,%u", port, dma1, dma2, irq1, irq2);
 	LOG_MSG("GUS: %s", set_ultrasnd);
 	autoexec_lines.at(0).Install(set_ultrasnd);
@@ -974,7 +977,7 @@ void Gus::PrintStats()
 	soft_limiter.PrintStats();
 }
 
-Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
+uint16_t Gus::ReadFromPort(const io_port_t port, io_width_t width)
 {
 	//	LOG_MSG("GUS: Read from port %x", port);
 	switch (port - port_base) {
@@ -997,7 +1000,7 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 	case 0x302: return static_cast<uint8_t>(voice_index);
 	case 0x303: return selected_register;
 	case 0x304:
-		if (iolen == 2)
+		if (width == io_width_t::word)
 			return ReadFromRegister() & 0xffff;
 		else
 			return ReadFromRegister() & 0xff;
@@ -1006,7 +1009,7 @@ Bitu Gus::ReadFromPort(const Bitu port, const Bitu iolen)
 		return dram_addr < ram.size() ? ram.at(dram_addr) : 0;
 	default:
 #if LOG_GUS
-		LOG_MSG("GUS: Read at port %#x", static_cast<uint16_t>(port));
+		LOG_MSG("GUS: Read at port %#x", port);
 #endif
 		break;
 	}
@@ -1101,34 +1104,34 @@ uint16_t Gus::ReadFromRegister()
 void Gus::RegisterIoHandlers()
 {
 	// Register the IO read addresses
-	assert(7 < read_handlers.size());
+	assert(read_handlers.size() > 7);
 	const auto read_from = std::bind(&Gus::ReadFromPort, this, _1, _2);
-	read_handlers.at(0).Install(0x302 + port_base, read_from, IO_MB);
-	read_handlers.at(1).Install(0x303 + port_base, read_from, IO_MB);
-	read_handlers.at(2).Install(0x304 + port_base, read_from, IO_MB | IO_MW);
-	read_handlers.at(3).Install(0x305 + port_base, read_from, IO_MB);
-	read_handlers.at(4).Install(0x206 + port_base, read_from, IO_MB);
-	read_handlers.at(5).Install(0x208 + port_base, read_from, IO_MB);
-	read_handlers.at(6).Install(0x307 + port_base, read_from, IO_MB);
+	read_handlers.at(0).Install(0x302 + port_base, read_from, io_width_t::byte);
+	read_handlers.at(1).Install(0x303 + port_base, read_from, io_width_t::byte);
+	read_handlers.at(2).Install(0x304 + port_base, read_from, io_width_t::word);
+	read_handlers.at(3).Install(0x305 + port_base, read_from, io_width_t::byte);
+	read_handlers.at(4).Install(0x206 + port_base, read_from, io_width_t::byte);
+	read_handlers.at(5).Install(0x208 + port_base, read_from, io_width_t::byte);
+	read_handlers.at(6).Install(0x307 + port_base, read_from, io_width_t::byte);
 	// Board Only
-	read_handlers.at(7).Install(0x20a + port_base, read_from, IO_MB);
+	read_handlers.at(7).Install(0x20a + port_base, read_from, io_width_t::byte);
 
 	// Register the IO write addresses
 	// We'll leave the MIDI interface to the MPU-401
 	// Ditto for the Joystick
 	// GF1 Synthesizer
-	assert(8 < write_handlers.size());
+	assert(write_handlers.size() > 8);
 	const auto write_to = std::bind(&Gus::WriteToPort, this, _1, _2, _3);
-	write_handlers.at(0).Install(0x302 + port_base, write_to, IO_MB);
-	write_handlers.at(1).Install(0x303 + port_base, write_to, IO_MB);
-	write_handlers.at(2).Install(0x304 + port_base, write_to, IO_MB | IO_MW);
-	write_handlers.at(3).Install(0x305 + port_base, write_to, IO_MB);
-	write_handlers.at(4).Install(0x208 + port_base, write_to, IO_MB);
-	write_handlers.at(5).Install(0x209 + port_base, write_to, IO_MB);
-	write_handlers.at(6).Install(0x307 + port_base, write_to, IO_MB);
+	write_handlers.at(0).Install(0x302 + port_base, write_to, io_width_t::byte);
+	write_handlers.at(1).Install(0x303 + port_base, write_to, io_width_t::byte);
+	write_handlers.at(2).Install(0x304 + port_base, write_to, io_width_t::word);
+	write_handlers.at(3).Install(0x305 + port_base, write_to, io_width_t::byte);
+	write_handlers.at(4).Install(0x208 + port_base, write_to, io_width_t::byte);
+	write_handlers.at(5).Install(0x209 + port_base, write_to, io_width_t::byte);
+	write_handlers.at(6).Install(0x307 + port_base, write_to, io_width_t::byte);
 	// Board Only
-	write_handlers.at(7).Install(0x200 + port_base, write_to, IO_MB);
-	write_handlers.at(8).Install(0x20b + port_base, write_to, IO_MB);
+	write_handlers.at(7).Install(0x200 + port_base, write_to, io_width_t::byte);
+	write_handlers.at(8).Install(0x20b + port_base, write_to, io_width_t::byte);
 }
 
 void Gus::StopPlayback()
@@ -1188,7 +1191,7 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 #endif
 }
 
-void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
+void Gus::WriteToPort(io_port_t port, uint16_t val, io_width_t width)
 {
 	//	LOG_MSG("GUS: Write to port %x val %x", port, val);
 	switch (port - port_base) {
@@ -1230,7 +1233,7 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		should_change_irq_dma = false;
 		if (mix_ctrl & 0x40) {
 			// IRQ configuration, only use low bits for irq 1
-			const auto i = val & 0x7;
+			const auto i = val & 7u;
 			const auto &address = irq_addresses.at(i);
 			if (address)
 				irq1 = address;
@@ -1254,11 +1257,11 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		register_data = 0;
 		break;
 	case 0x304:
-		if (iolen == 2) {
-			register_data = static_cast<uint16_t>(val);
+		if (width == io_width_t::word) {
+			register_data = val;
 			WriteToRegister();
 		} else
-			register_data = static_cast<uint16_t>(val);
+			register_data = val;
 		break;
 	case 0x305:
 		register_data = static_cast<uint16_t>((0x00ff & register_data) |
@@ -1271,8 +1274,7 @@ void Gus::WriteToPort(Bitu port, Bitu val, Bitu iolen)
 		break;
 	default:
 #if LOG_GUS
-		LOG_MSG("GUS: Write to port %#x with value %x",
-		        static_cast<uint16_t>(port), static_cast<uint32_t>(val));
+		LOG_MSG("GUS: Write to port %#x with value %x", port, val);
 #endif
 		break;
 	}
