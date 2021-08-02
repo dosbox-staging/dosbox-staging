@@ -31,19 +31,19 @@
 #include "support.h"
 #include "vga.h"
 
-static void write_crtc_index_other(Bitu /*port*/, uint8_t val, Bitu /*iolen*/)
+static void write_crtc_index_other(io_port_t, uint8_t val, io_width_t)
 {
 	// only receives 8-bit data per its IO port registration
 	vga.other.index = val;
 }
 
-static uint8_t read_crtc_index_other(Bitu /*port*/, uint8_t /*iolen*/)
+static uint8_t read_crtc_index_other(io_port_t, io_width_t)
 {
 	// only returns 8-bit data per its IO port registration
 	return vga.other.index;
 }
 
-static void write_crtc_data_other(Bitu /*port*/, uint8_t val, Bitu /*iolen*/)
+static void write_crtc_data_other(io_port_t, uint8_t val, io_width_t)
 {
 	// only receives 8-bit data per its IO port registration
 
@@ -125,7 +125,7 @@ static void write_crtc_data_other(Bitu /*port*/, uint8_t val, Bitu /*iolen*/)
 		LOG(LOG_VGAMISC, LOG_NORMAL)("MC6845:Write %u to illegal index %x", val, vga.other.index);
 	}
 }
-static uint8_t read_crtc_data_other(Bitu /*port*/, uint8_t /*iolen*/)
+static uint8_t read_crtc_data_other(io_port_t, io_width_t)
 {
 	// only returns 8-bit data per its IO port registration
 	switch (vga.other.index) {
@@ -175,7 +175,7 @@ static uint8_t read_crtc_data_other(Bitu /*port*/, uint8_t /*iolen*/)
 	return static_cast<uint8_t>(~0);
 }
 
-static void write_lightpen(Bitu port, uint8_t /*val*/, Bitu)
+static void write_lightpen(io_port_t port, uint8_t /*val*/, io_width_t)
 {
 	// only receives 8-bit data per its IO port registration
 	switch (port) {
@@ -613,7 +613,7 @@ static void write_cga_color_select(uint8_t val)
 	}
 }
 
-static void write_cga(Bitu port, uint8_t val, Bitu /*iolen*/)
+static void write_cga(io_port_t port, uint8_t val, io_width_t)
 {
 	// only receives 8-bit data per its IO port registration
 	switch (port) {
@@ -667,7 +667,7 @@ static void Composite(bool pressed) {
 	if (vga.tandy.mode_control & 0x2 && machine == MCH_PCJR)
 		PCJr_FindMode();
 	else
-		write_cga(0x3d8, vga.tandy.mode_control, 1);
+		write_cga(0x3d8, vga.tandy.mode_control, io_width_t::byte);
 }
 
 static void tandy_update_palette() {
@@ -844,7 +844,7 @@ static void write_tandy_reg(uint8_t val)
 	}
 }
 
-static void write_tandy(Bitu port, uint8_t val, Bitu /*iolen*/)
+static void write_tandy(io_port_t port, uint8_t val, io_width_t)
 {
 	// only receives 8-bit data per its IO port registration
 	switch (port) {
@@ -891,7 +891,7 @@ static void write_tandy(Bitu port, uint8_t val, Bitu /*iolen*/)
 	}
 }
 
-static void write_pcjr(Bitu port, uint8_t val, Bitu /*iolen*/)
+static void write_pcjr(io_port_t port, uint8_t val, io_width_t)
 {
 	// only receives 8-bit data per its IO port registration
 	switch (port) {
@@ -1027,7 +1027,7 @@ void Herc_Palette()
 	}
 }
 
-static void write_hercules(Bitu port, uint8_t val, Bitu /*iolen*/)
+static void write_hercules(Bitu port, uint8_t val, io_width_t)
 {
 	switch (port) {
 	case 0x3b8: {
@@ -1073,7 +1073,7 @@ static void write_hercules(Bitu port, uint8_t val, Bitu /*iolen*/)
 	}
 }
 
-uint8_t read_herc_status(Bitu /*port*/, uint8_t /*iolen*/)
+uint8_t read_herc_status(io_port_t, io_width_t)
 {
 	// only returns 8-bit data per its IO port registration
 
@@ -1125,8 +1125,8 @@ void VGA_SetupOther()
 		vga.draw.font_tables[0] = vga.draw.font_tables[1] = vga.draw.font;
 	}
 	if (machine==MCH_CGA || IS_TANDY_ARCH || machine==MCH_HERC) {
-		IO_RegisterWriteHandler(0x3db,write_lightpen,IO_MB);
-		IO_RegisterWriteHandler(0x3dc,write_lightpen,IO_MB);
+		IO_RegisterWriteHandler(0x3db, write_lightpen, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3dc, write_lightpen, io_width_t::byte);
 	}
 	if (machine==MCH_HERC) {
 		extern uint8_t int10_font_14[256 * 14];
@@ -1138,8 +1138,8 @@ void VGA_SetupOther()
 		                  "hercpal", "Herc Pal");
 	}
 	if (machine==MCH_CGA) {
-		IO_RegisterWriteHandler(0x3d8,write_cga,IO_MB);
-		IO_RegisterWriteHandler(0x3d9,write_cga,IO_MB);
+		IO_RegisterWriteHandler(0x3d8, write_cga, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3d9, write_cga, io_width_t::byte);
 		if (!mono_cga) {
 			MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10,
 			                  0, "select", "Sel Knob");
@@ -1157,56 +1157,52 @@ void VGA_SetupOther()
 		}
 	}
 	if (machine==MCH_TANDY) {
-		write_tandy( 0x3df, 0x0, 0 );
-		IO_RegisterWriteHandler(0x3d8,write_tandy,IO_MB);
-		IO_RegisterWriteHandler(0x3d9,write_tandy,IO_MB);
-		IO_RegisterWriteHandler(0x3da,write_tandy,IO_MB);
-		IO_RegisterWriteHandler(0x3de,write_tandy,IO_MB);
-		IO_RegisterWriteHandler(0x3df,write_tandy,IO_MB);
+		write_tandy(0x3df, 0x0, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3d8, write_tandy, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3d9, write_tandy, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3da, write_tandy, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3de, write_tandy, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3df, write_tandy, io_width_t::byte);
 	}
 	if (machine==MCH_PCJR) {
 		// Start the PCjr composite huge almost 1/3rd into the CGA hue
 		hue_offset = 100;
 
 		//write_pcjr will setup base address
-		write_pcjr( 0x3df, 0x7 | (0x7 << 3), 0 );
-		IO_RegisterWriteHandler(0x3da,write_pcjr,IO_MB);
-		IO_RegisterWriteHandler(0x3df,write_pcjr,IO_MB);
-		MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10, 0,
-		                  "select", "Sel Knob");
-		MAPPER_AddHandler(turn_crt_knob_positive, SDL_SCANCODE_F11, 0,
-		                  "incval", "Inc Knob");
-		MAPPER_AddHandler(turn_crt_knob_negative, SDL_SCANCODE_F11,
-		                  MMOD2, "decval", "Dec Knob");
-		MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0, "cgacomp",
-		                  "CGA Comp");
+		write_pcjr(0x3df, 0x7 | (0x7 << 3), io_width_t::byte);
+		IO_RegisterWriteHandler(0x3da, write_pcjr, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3df, write_pcjr, io_width_t::byte);
+		MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10, 0, "select", "Sel Knob");
+		MAPPER_AddHandler(turn_crt_knob_positive, SDL_SCANCODE_F11, 0, "incval", "Inc Knob");
+		MAPPER_AddHandler(turn_crt_knob_negative, SDL_SCANCODE_F11, MMOD2, "decval", "Dec Knob");
+		MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0, "cgacomp", "CGA Comp");
 	}
 	if (machine == MCH_HERC) {
 		constexpr uint16_t base = 0x3b0;
 		for (uint8_t i = 0; i < 4; ++i) {
 			// The registers are repeated as the address is not decoded properly;
 			// The official ports are 3b4, 3b5
-			const auto index_port = base + i * 2u;
-			IO_RegisterWriteHandler(index_port, write_crtc_index_other, IO_MB);
-			IO_RegisterReadHandler(index_port, read_crtc_index_other, IO_MB);
+			const uint16_t index_port = base + i * 2u;
+			IO_RegisterWriteHandler(index_port, write_crtc_index_other, io_width_t::byte);
+			IO_RegisterReadHandler(index_port, read_crtc_index_other, io_width_t::byte);
 
-			const auto data_port = index_port + 1u;
-			IO_RegisterWriteHandler(data_port, write_crtc_data_other, IO_MB);
-			IO_RegisterReadHandler(data_port, read_crtc_data_other, IO_MB);
+			const uint16_t data_port = index_port + 1u;
+			IO_RegisterWriteHandler(data_port, write_crtc_data_other, io_width_t::byte);
+			IO_RegisterReadHandler(data_port, read_crtc_data_other, io_width_t::byte);
 		}
 		vga.herc.enable_bits=0;
 		vga.herc.mode_control=0xa; // first mode written will be text mode
 		vga.crtc.underline_location = 13;
-		IO_RegisterWriteHandler(0x3b8,write_hercules,IO_MB);
-		IO_RegisterWriteHandler(0x3bf,write_hercules,IO_MB);
-		IO_RegisterReadHandler(0x3ba,read_herc_status,IO_MB);
+		IO_RegisterWriteHandler(0x3b8, write_hercules, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3bf, write_hercules, io_width_t::byte);
+		IO_RegisterReadHandler(0x3ba, read_herc_status, io_width_t::byte);
 	} else if (!IS_EGAVGA_ARCH) {
 		constexpr uint16_t base = 0x3d0;
 		for (uint8_t port_ct = 0; port_ct < 4; ++port_ct) {
-			IO_RegisterWriteHandler(base + port_ct * 2, write_crtc_index_other, IO_MB);
-			IO_RegisterWriteHandler(base + port_ct * 2 + 1, write_crtc_data_other, IO_MB);
-			IO_RegisterReadHandler(base + port_ct * 2, read_crtc_index_other, IO_MB);
-			IO_RegisterReadHandler(base + port_ct * 2 + 1, read_crtc_data_other, IO_MB);
+			IO_RegisterWriteHandler(base + port_ct * 2, write_crtc_index_other, io_width_t::byte);
+			IO_RegisterWriteHandler(base + port_ct * 2 + 1, write_crtc_data_other, io_width_t::byte);
+			IO_RegisterReadHandler(base + port_ct * 2, read_crtc_index_other, io_width_t::byte);
+			IO_RegisterReadHandler(base + port_ct * 2 + 1, read_crtc_data_other, io_width_t::byte);
 		}
 	}
 }
