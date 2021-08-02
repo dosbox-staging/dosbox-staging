@@ -1387,16 +1387,20 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 
 //uint8_t macaddr[6] = { 0xAC, 0xDE, 0x48, 0x8E, 0x89, 0x19 };
 
-Bitu dosbox_read(Bitu port, Bitu len) {
-	Bitu retval = theNE2kDevice->read((uint32_t)port,(unsigned int)len);
-	//LOG_MSG("ne2k rd port %x val %4x len %d page %d, CS:IP %8x:%8x",
+uint16_t dosbox_read(io_port_t port, , io_width_t width)
+{
+	const uint8_t bytes_to_read = width == io_width_t::byte ? 1 : 2;
+	Bitu retval = theNE2kDevice->read(port, bytes_to_read);
+	// LOG_MSG("ne2k rd port %x val %4x len %d page %d, CS:IP %8x:%8x",
 	//	port, retval, len, theNE2kDevice->s.CR.pgsel,SegValue(cs),reg_eip);
 	return retval;
 }
-void dosbox_write(Bitu port, Bitu val, Bitu len) {
-	//LOG_MSG("ne2k wr port %x val %4x len %d page %d, CS:IP %8x:%8x",
+void dosbox_write(io_port_t port, uint16_t val, io_width_t width)
+{
+	// LOG_MSG("ne2k wr port %x val %4x len %d page %d, CS:IP %8x:%8x",
 	//	port, val, len,theNE2kDevice->s.CR.pgsel,SegValue(cs),reg_eip);
-	theNE2kDevice->write((uint32_t)port, (uint32_t)val, (unsigned int)len);
+	const uint8_t bytes_to_write = width == io_width_t::byte ? 1 : 2;
+	theNE2kDevice->write(port, val, bytes_to_write);
 }
 
 void bx_ne2k_c::init()
@@ -1681,10 +1685,8 @@ public:
 
 		// install I/O-handlers and timer
 		for(Bitu i = 0; i < 0x20; i++) {
-			ReadHandler8[i].Install((i+theNE2kDevice->s.base_address),
-				dosbox_read,IO_MB|IO_MW);
-			WriteHandler8[i].Install((i+theNE2kDevice->s.base_address),
-				dosbox_write,IO_MB|IO_MW);
+			ReadHandler8[i].Install((i + theNE2kDevice->s.base_address), dosbox_read, io_width_t::word);
+			WriteHandler8[i].Install((i + theNE2kDevice->s.base_address), dosbox_write, io_width_t::word);
 		}
 		TIMER_AddTickHandler(NE2000_Poller);
 	}	
