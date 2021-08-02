@@ -71,7 +71,8 @@ void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m) {
 		VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
 }
 
-void VGA_ATTR_SetPalette(Bit8u index, Bit8u val) {
+void VGA_ATTR_SetPalette(uint8_t index, uint8_t val)
+{
 	// the attribute table stores only 6 bits
 	val &= 63; 
 	vga.attr.palette[index] = val;
@@ -81,7 +82,7 @@ void VGA_ATTR_SetPalette(Bit8u index, Bit8u val) {
 
 	// replace bits 4-5 if configured
 	if (vga.attr.mode_control & 0x80)
-		val = (val&0xf) | (vga.attr.color_select << 4);
+		val = static_cast<uint8_t>((val & 0xf) | (vga.attr.color_select << 4));
 
 	// set bits 6 and 7 (not relevant for EGA)
 	val |= (vga.attr.color_select & 0xc) << 4;
@@ -90,14 +91,16 @@ void VGA_ATTR_SetPalette(Bit8u index, Bit8u val) {
 	VGA_DAC_CombineColor(index,val);
 }
 
-Bitu read_p3c0(Bitu /*port*/,Bitu /*iolen*/) {
+uint8_t read_p3c0(io_port_t, io_width_t)
+{
 	// Wcharts, Win 3.11 & 95 SVGA
-	Bitu retval = attr(index) & 0x1f;
+	uint8_t retval = attr(index) & 0x1f;
 	if (!(attr(disabled) & 0x1)) retval |= 0x20;
 	return retval;
 }
- 
-void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
+
+void write_p3c0(io_port_t, uint8_t val, io_width_t)
+{
 	if (!vga.internal.attrindex) {
 		attr(index)=val & 0x1F;
 		vga.internal.attrindex=true;
@@ -117,16 +120,17 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 		case 0x04:		case 0x05:		case 0x06:		case 0x07:
 		case 0x08:		case 0x09:		case 0x0a:		case 0x0b:
 		case 0x0c:		case 0x0d:		case 0x0e:		case 0x0f:
-			if (attr(disabled) & 0x1) VGA_ATTR_SetPalette(attr(index),(Bit8u)val);
+			if (attr(disabled) & 0x1)
+				VGA_ATTR_SetPalette(attr(index), val);
 			/*
-				0-5	Index into the 256 color DAC table. May be modified by 3C0h index
-				10h and 14h.
+			        0-5	Index into the 256 color DAC table. May be modified by 3C0h index
+			        10h and 14h.
 			*/
 			break;
 		case 0x10: { /* Mode Control Register */
 			if (!IS_VGA_ARCH) val&=0x1f;	// not really correct, but should do it
 			Bitu difference = attr(mode_control)^val;
-			attr(mode_control)=(Bit8u)val;
+			attr(mode_control) = val;
 
 			if (difference & 0x80) {
 				for (Bit8u i=0;i<0x10;i++)
@@ -141,13 +145,13 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 			if (difference & 0x04) {
 				// recompute the panning value
 				if(vga.mode==M_TEXT) {
-					Bit8u pan_reg = attr(horizontal_pel_panning);
+					const uint8_t pan_reg = attr(horizontal_pel_panning);
 					if (pan_reg > 7)
 						vga.config.pel_panning=0;
 					else if (val&0x4) // 9-dot wide characters
-						vga.config.pel_panning=(Bit8u)(pan_reg+1);
+						vga.config.pel_panning = pan_reg + 1u;
 					else // 8-dot characters
-						vga.config.pel_panning=(Bit8u)pan_reg;
+						vga.config.pel_panning = pan_reg;
 				}
 			}
 			/*
@@ -169,7 +173,7 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 			break;
 		}
 		case 0x11:	/* Overscan Color Register */
-			attr(overscan_color)=(Bit8u)val;
+			attr(overscan_color) = val;
 			/* 0-5  Color of screen border. Color is defined as in the palette registers. */
 			break;
 		case 0x12:	/* Color Plane Enable Register */
@@ -177,11 +181,11 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 			/* To support weird modes. */
 			if ((attr(color_plane_enable)^val) & 0xf) {
 				// in case the plane enable bits change...
-				attr(color_plane_enable)=(Bit8u)val;
+				attr(color_plane_enable) = val;
 				for (Bit8u i=0;i<0x10;i++)
 					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
 			} else
-				attr(color_plane_enable)=(Bit8u)val;
+				attr(color_plane_enable) = val;
 			/* 
 				0	Bit plane 0 is enabled if set.
 				1	Bit plane 1 is enabled if set.
@@ -199,9 +203,9 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 				if (val > 7)
 					vga.config.pel_panning=0;
 				else if (vga.attr.mode_control&0x4) // 9-dot wide characters
-					vga.config.pel_panning=(Bit8u)(val+1);
+					vga.config.pel_panning = val + 1u;
 				else // 8-dot characters
-					vga.config.pel_panning=(Bit8u)val;
+					vga.config.pel_panning = val;
 				break;
 			case M_VGA:
 			case M_LIN8:
@@ -234,7 +238,7 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 				break;
 			}
 			if (attr(color_select) ^ val) {
-				attr(color_select)=(Bit8u)val;
+				attr(color_select) = val;
 				for (Bit8u i=0;i<0x10;i++)
 					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
 			}
@@ -248,7 +252,7 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 			break;
 		default:
 			if (svga.write_p3c0) {
-				svga.write_p3c0(attr(index), val, iolen);
+				svga.write_p3c0(attr(index), val, io_width_t::byte);
 				break;
 			}
 			LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:ATTR:Write to unknown Index %2X",attr(index));
@@ -257,10 +261,11 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 	}
 }
 
-Bitu read_p3c1(Bitu /*port*/,Bitu iolen) {
-//	vga.internal.attrindex=false;
+uint8_t read_p3c1(io_port_t, io_width_t)
+{
+	//	vga.internal.attrindex=false;
 	switch (attr(index)) {
-			/* Palette */
+		/* Palette */
 	case 0x00:		case 0x01:		case 0x02:		case 0x03:
 	case 0x04:		case 0x05:		case 0x06:		case 0x07:
 	case 0x08:		case 0x09:		case 0x0a:		case 0x0b:
@@ -278,21 +283,21 @@ Bitu read_p3c1(Bitu /*port*/,Bitu iolen) {
 		return attr(color_select);
 	default:
 		if (svga.read_p3c1)
-			return svga.read_p3c1(attr(index), iolen);
+			return svga.read_p3c1(attr(index), io_width_t::byte);
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:ATTR:Read from unknown Index %2X",attr(index));
 	}
 	return 0;
 }
 
-
 void VGA_SetupAttr(void) {
 	if (IS_EGAVGA_ARCH) {
-		IO_RegisterWriteHandler(0x3c0,write_p3c0,IO_MB);
+		IO_RegisterWriteHandler(0x3c0, write_p3c0, io_width_t::byte);
 		if (machine==MCH_EGA)
-			IO_RegisterWriteHandler(0x3c1,write_p3c0,IO_MB); // alias on EGA
+			IO_RegisterWriteHandler(0x3c1, write_p3c0,
+			                        io_width_t::byte); // alias on EGA
 		if (IS_VGA_ARCH) {
-			IO_RegisterReadHandler(0x3c0,read_p3c0,IO_MB);
-			IO_RegisterReadHandler(0x3c1,read_p3c1,IO_MB);
+			IO_RegisterReadHandler(0x3c0, read_p3c0, io_width_t::byte);
+			IO_RegisterReadHandler(0x3c1, read_p3c1, io_width_t::byte);
 		}
 	}
 }
