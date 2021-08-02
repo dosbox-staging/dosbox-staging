@@ -163,8 +163,7 @@ static void DISNEY_analyze(Bitu channel){
 		// LOG_MSG("t=%f",current - cch->speedcheck_last);
 
 		// sanity checks (printer...)
-		if ((current - cch->speedcheck_last) < 0.01 ||
-		    (current - cch->speedcheck_last) > 2)
+		if ((current - cch->speedcheck_last) < 0.01f || (current - cch->speedcheck_last) > 2)
 			cch->speedcheck_failed = true;
 
 		// if both are failed we are back at start
@@ -182,13 +181,8 @@ static void DISNEY_analyze(Bitu channel){
 	}
 }
 
-static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
+static void disney_write(io_port_t port, uint8_t val, io_width_t)
 {
-	// Convert the IO data into a single byte-value, as Disney only
-	// operates on 8-bit values (IO ports also registered as IO_MB)
-	assert(data < UINT8_MAX);
-	const auto val = static_cast<uint8_t>(data);
-
 	// LOG_MSG("write disney time %f addr%x val %x",PIC_FullIndex(),port,val);
 	disney.last_used = PIC_Ticks;
 	switch (port - DISNEY_BASE) {
@@ -266,7 +260,7 @@ static void disney_write(Bitu port, Bitu data, MAYBE_UNUSED Bitu iolen)
 	}
 }
 
-static Bitu disney_read(Bitu port, MAYBE_UNUSED Bitu iolen)
+static uint8_t disney_read(io_port_t port, io_width_t)
 {
 	uint8_t retval;
 	switch (port - DISNEY_BASE) {
@@ -406,8 +400,8 @@ void DISNEY_Init(Section* sec) {
 	assert(disney.chan);
 
 	// Register port handlers for 8-bit IO
-	disney.write_handler.Install(DISNEY_BASE, disney_write, IO_MB, 3);
-	disney.read_handler.Install(DISNEY_BASE, disney_read, IO_MB, 3);
+	disney.write_handler.Install(DISNEY_BASE, disney_write, io_width_t::byte, 3);
+	disney.read_handler.Install(DISNEY_BASE, disney_read, io_width_t::byte, 3);
 
 	// Initialize the Disney states
 	disney.status = DISNEY_INIT_STATUS;
