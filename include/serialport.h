@@ -149,7 +149,7 @@ public:
 	CSerial &operator=(const CSerial &) = delete; // prevent assignment
 
 #if SERIAL_DEBUG
-	FILE * debugfp;
+	FILE * debugfp = nullptr;
 	bool dbg_modemcontrol = false; // RTS,CTS,DTR,DSR,RI,CD
 	bool dbg_serialtraffic = false;
 	bool dbg_register = false;
