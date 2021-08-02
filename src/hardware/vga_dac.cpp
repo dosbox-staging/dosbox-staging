@@ -17,6 +17,9 @@
  */
 
 #include "dosbox.h"
+
+#include <cassert>
+
 #include "inout.h"
 #include "render.h"
 #include "vga.h"
@@ -51,61 +54,76 @@ Note:  Each read or write of this register will cycle through first the
 
 enum {DAC_READ,DAC_WRITE};
 
-static void VGA_DAC_SendColor( Bitu index, Bitu src ) {
+static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
+{
 	const Bit8u red = vga.dac.rgb[src].red;
 	const Bit8u green = vga.dac.rgb[src].green;
 	const Bit8u blue = vga.dac.rgb[src].blue;
 	//Set entry in (little endian) 16bit output lookup table
-	var_write(&vga.dac.xlat16[index], ((blue>>1)&0x1f) | (((green)&0x3f)<<5) | (((red>>1)&0x1f) << 11));
-	
-	RENDER_SetPal( index, (red << 2) | ( red >> 4 ), (green << 2) | ( green >> 4 ), (blue << 2) | ( blue >> 4 ) );
+	const auto pixel = static_cast<uint16_t>(((blue >> 1) & 0x1f) | (((green)&0x3f) << 5) |
+	                                         (((red >> 1) & 0x1f) << 11));
+	var_write(&vga.dac.xlat16[index], pixel);
+
+	RENDER_SetPal(index, static_cast<uint8_t>((red << 2) | (red >> 4)),
+	              static_cast<uint8_t>((green << 2) | (green >> 4)),
+	              static_cast<uint8_t>((blue << 2) | (blue >> 4)));
 }
 
-static void VGA_DAC_UpdateColor( Bitu index ) {
-	Bitu maskIndex = index & vga.dac.pel_mask;
-	VGA_DAC_SendColor( index, maskIndex );
+static void VGA_DAC_UpdateColor(uint16_t index)
+{
+	const auto maskIndex = index & vga.dac.pel_mask;
+	assert(maskIndex <= UINT8_MAX); // lookup into 256-byte table
+	assert(index <= UINT8_MAX);     // lookup into 256-byte table
+	VGA_DAC_SendColor(static_cast<uint8_t>(index), static_cast<uint8_t>(maskIndex));
 }
 
-static void write_p3c6(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
-	if ( vga.dac.pel_mask != val ) {
-		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:DCA:Pel Mask set to %X", val);
+static void write_p3c6(io_port_t, uint8_t val, io_width_t)
+{
+	if (vga.dac.pel_mask != val) {
+		LOG(LOG_VGAMISC, LOG_NORMAL)("VGA:DCA:Pel Mask set to %X", val);
 		vga.dac.pel_mask = val;
-		for ( Bitu i = 0;i<256;i++) 
+		for (uint16_t i = 0; i < 256; i++)
 			VGA_DAC_UpdateColor( i );
 	}
 }
 
-
-static Bitu read_p3c6(Bitu /*port*/,Bitu /*iolen*/) {
+static uint8_t read_p3c6(io_port_t, io_width_t)
+{
 	return vga.dac.pel_mask;
 }
 
-
-static void write_p3c7(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
-	vga.dac.read_index=val;
-	vga.dac.pel_index=0;
-	vga.dac.state=DAC_READ;
-	vga.dac.write_index= val + 1;
+static void write_p3c7(io_port_t, uint8_t val, io_width_t)
+{
+	vga.dac.read_index = val;
+	vga.dac.pel_index = 0;
+	vga.dac.state = DAC_READ;
+	vga.dac.write_index = val + 1;
 }
 
-static Bitu read_p3c7(Bitu /*port*/,Bitu /*iolen*/) {
-	if (vga.dac.state==DAC_READ) return 0x3;
-	else return 0x0;
+static uint8_t read_p3c7(io_port_t, io_width_t)
+{
+	if (vga.dac.state == DAC_READ)
+		return 0x3;
+	else
+		return 0x0;
 }
 
-static void write_p3c8(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
-	vga.dac.write_index=val;
-	vga.dac.pel_index=0;
-	vga.dac.state=DAC_WRITE;
-	vga.dac.read_index= val - 1;
+static void write_p3c8(io_port_t, uint8_t val, io_width_t)
+{
+	vga.dac.write_index = val;
+	vga.dac.pel_index = 0;
+	vga.dac.state = DAC_WRITE;
+	vga.dac.read_index = val - 1;
 }
 
-static Bitu read_p3c8(Bitu /*port*/, Bitu /*iolen*/){
+static uint8_t read_p3c8(Bitu, io_width_t)
+{
 	return vga.dac.write_index;
 }
 
-static void write_p3c9(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
-	val&=0x3f;
+static void write_p3c9(io_port_t, uint8_t val, io_width_t)
+{
+	val &= 0x3f;
 	switch (vga.dac.pel_index) {
 	case 0:
 		vga.dac.rgb[vga.dac.write_index].red=val;
@@ -122,17 +140,17 @@ static void write_p3c9(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		case M_LIN8:
 			VGA_DAC_UpdateColor( vga.dac.write_index );
 			if ( GCC_UNLIKELY( vga.dac.pel_mask != 0xff)) {
-				Bitu index = vga.dac.write_index;
+				const auto index = vga.dac.write_index;
 				if ( (index & vga.dac.pel_mask) == index ) {
-					for ( Bitu i = index+1;i<256;i++) 
+					for (uint16_t i = index + 1u; i < 256; i++)
 						if ( (i & vga.dac.pel_mask) == index )
-							VGA_DAC_UpdateColor( i );
+							VGA_DAC_UpdateColor(static_cast<uint8_t>(i));
 				}
 			} 
 			break;
 		default:
 			/* Check for attributes and DAC entry link */
-			for (Bitu i=0;i<16;i++) {
+			for (uint8_t i = 0; i < 16; i++) {
 				if (vga.dac.combine[i]==vga.dac.write_index) {
 					VGA_DAC_SendColor( i, vga.dac.write_index );
 				}
@@ -148,7 +166,8 @@ static void write_p3c9(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	};
 }
 
-static Bitu read_p3c9(Bitu /*port*/,Bitu /*iolen*/) {
+static uint8_t read_p3c9(io_port_t, io_width_t)
+{
 	Bit8u ret;
 	switch (vga.dac.pel_index) {
 	case 0:
@@ -194,7 +213,7 @@ void VGA_DAC_SetEntry(Bitu entry,Bit8u red,Bit8u green,Bit8u blue) {
 	vga.dac.rgb[entry].red=red;
 	vga.dac.rgb[entry].green=green;
 	vga.dac.rgb[entry].blue=blue;
-	for (Bitu i=0;i<16;i++) 
+	for (uint8_t i = 0; i < 16; i++)
 		if (vga.dac.combine[i]==entry)
 			VGA_DAC_SendColor( i, i );
 }
@@ -209,13 +228,13 @@ void VGA_SetupDAC(void) {
 	vga.dac.write_index=0;
 	if (IS_VGA_ARCH) {
 		/* Setup the DAC IO port Handlers */
-		IO_RegisterWriteHandler(0x3c6,write_p3c6,IO_MB);
-		IO_RegisterReadHandler(0x3c6,read_p3c6,IO_MB);
-		IO_RegisterWriteHandler(0x3c7,write_p3c7,IO_MB);
-		IO_RegisterReadHandler(0x3c7,read_p3c7,IO_MB);
-		IO_RegisterWriteHandler(0x3c8,write_p3c8,IO_MB);
-		IO_RegisterReadHandler(0x3c8,read_p3c8,IO_MB);
-		IO_RegisterWriteHandler(0x3c9,write_p3c9,IO_MB);
-		IO_RegisterReadHandler(0x3c9,read_p3c9,IO_MB);
+		IO_RegisterWriteHandler(0x3c6, write_p3c6, io_width_t::byte);
+		IO_RegisterReadHandler(0x3c6, read_p3c6, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3c7, write_p3c7, io_width_t::byte);
+		IO_RegisterReadHandler(0x3c7, read_p3c7, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3c8, write_p3c8, io_width_t::byte);
+		IO_RegisterReadHandler(0x3c8, read_p3c8, io_width_t::byte);
+		IO_RegisterWriteHandler(0x3c9, write_p3c9, io_width_t::byte);
+		IO_RegisterReadHandler(0x3c9, read_p3c9, io_width_t::byte);
 	}
 }
