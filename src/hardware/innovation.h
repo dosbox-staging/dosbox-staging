@@ -53,8 +53,8 @@ private:
 	void Render();
 	uint16_t GetRemainingSamples();
 	void MixerCallBack(uint16_t requested_samples);
-	size_t ReadFromPort(size_t port, MAYBE_UNUSED size_t iolen);
-	void WriteToPort(size_t port, size_t val, MAYBE_UNUSED size_t iolen);
+	uint8_t ReadFromPort(io_port_t port, io_width_t width);
+	void WriteToPort(io_port_t port, uint8_t data, io_width_t width);
 
 	// Managed objects
 	channel_t channel{nullptr, MIXER_DelChannel};
