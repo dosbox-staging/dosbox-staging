@@ -136,7 +136,7 @@ typedef enum {
 class Handler {
 public:
 	//Write an address to a chip, returns the address the chip sets
-	virtual Bit32u WriteAddr(uint16_t port, Bit8u val) = 0;
+	virtual Bit32u WriteAddr(io_port_t port, Bit8u val) = 0;
 	//Write to a specific register in the chip
 	virtual void WriteReg( Bit32u addr, Bit8u val ) = 0;
 	//Generate a certain amount of samples
@@ -187,8 +187,8 @@ public:
 	Chip	chip[2];
 
 	//Handle port writes
-	void PortWrite(uint16_t port, uint8_t val, Bitu iolen);
-	uint8_t PortRead(uint16_t port, Bitu iolen);
+	void PortWrite(io_port_t port, uint8_t val, io_width_t width);
+	uint8_t PortRead(io_port_t port, io_width_t width);
 	void Init(Mode m);
 
 	Module(Section *configuration);

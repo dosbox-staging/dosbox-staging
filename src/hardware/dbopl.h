@@ -249,7 +249,7 @@ struct Chip {
 
 struct Handler : public Adlib::Handler {
 	DBOPL::Chip chip = {};
-	virtual Bit32u WriteAddr(uint16_t port, Bit8u val);
+	virtual Bit32u WriteAddr(io_port_t port, Bit8u val);
 	virtual void WriteReg( Bit32u addr, Bit8u val );
 	virtual void Generate(MixerChannel *chan, uint16_t samples);
 	virtual void Init(uint32_t rate);

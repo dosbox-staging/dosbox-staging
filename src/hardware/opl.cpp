@@ -602,7 +602,7 @@ void adlib_init(Bit32u samplerate) {
 
 
 
-void adlib_write(Bitu idx, Bit8u val) {
+void adlib_write(io_port_t idx, Bit8u val) {
 	Bit32u second_set = idx&0x100;
 	adlibreg[idx] = val;
 
@@ -898,7 +898,7 @@ void adlib_write(Bitu idx, Bit8u val) {
 }
 
 
-Bitu adlib_reg_read(Bitu port) {
+uint8_t adlib_reg_read(io_port_t port) {
 #if defined(OPLTYPE_IS_OPL3)
 	// opl3-detection routines require ret&6 to be zero
 	if ((port&1)==0) {
@@ -914,7 +914,7 @@ Bitu adlib_reg_read(Bitu port) {
 #endif
 }
 
-void adlib_write_index(Bitu port, Bit8u val) {
+void adlib_write_index(io_port_t port, uint8_t val) {
 	opl_index = val;
 #if defined(OPLTYPE_IS_OPL3)
 	if ((port&3)!=0) {
