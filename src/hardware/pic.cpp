@@ -101,7 +101,7 @@ struct PIC_Controller {
 	void deactivate();
 
 	void raise_irq(Bit8u val) {
-		Bit8u bit = 1 << (val);
+		const auto bit = static_cast<uint8_t>(1 << val);
 		if ((irr & bit) == 0) { //value changed (as it is currently not active)
 			irr |= bit;
 			if ((bit&imrr)&isrr) { //not masked and not in service
@@ -111,7 +111,7 @@ struct PIC_Controller {
 	}
 
 	void lower_irq(Bit8u val) {
-		Bit8u bit = 1 << ( val);
+		const auto bit = static_cast<uint8_t>(1 << val);
 		if (irr & bit) { //value will change (as it is currently active)
 			irr &= ~bit;
 			if ((bit&imrr)&isrr) { //not masked and not in service
@@ -203,8 +203,9 @@ static struct {
 	PICEntry * next_entry;
 } pic_queue;
 
-static void write_command(Bitu port,Bitu val,Bitu /*iolen*/) {
-	PIC_Controller * pic = &pics[port==0x20 ? 0 : 1];
+static void write_command(io_port_t port, uint8_t val, io_width_t)
+{
+	PIC_Controller *pic = &pics[port == 0x20 ? 0 : 1];
 
 	if (GCC_UNLIKELY(val&0x10)) {		// ICW1 issued
 		if (val&0x04) E_Exit("PIC: 4 byte interval not handled");
@@ -225,8 +226,7 @@ static void write_command(Bitu port,Bitu val,Bitu /*iolen*/) {
 			else pic->special = false;
 			//Check if there are irqs ready to run, as the priority system has possibly been changed.
 			pic->check_for_irq();
-			LOG(LOG_PIC, LOG_NORMAL)("port %#" PRIxPTR " : special mask %s",
-			                         port, (pic->special) ? "ON" : "OFF");
+			LOG(LOG_PIC, LOG_NORMAL)("port %#x : special mask %s", port,(pic->special) ? "ON" : "OFF");
 		}
 	} else {	// OCW2 issued
 		if (val&0x20) {		// EOI commands
@@ -256,15 +256,13 @@ static void write_command(Bitu port,Bitu val,Bitu /*iolen*/) {
 	}	// end OCW2
 }
 
-static void write_data(Bitu port,Bitu val,Bitu /*iolen*/) {
-	PIC_Controller * pic = &pics[port==0x21 ? 0 : 1];
-	switch(pic->icw_index) {
-	case 0:                        /* mask register */
-		pic->set_imr(val);
-		break;
-	case 1:                        /* icw2          */
-		LOG(LOG_PIC, LOG_NORMAL)("%d:Base vector %#" PRIxPTR,
-		                         port == 0x21 ? 0 : 1, val);
+static void write_data(io_port_t port, uint8_t val, io_width_t)
+{
+	PIC_Controller *pic = &pics[port == 0x21 ? 0 : 1];
+	switch (pic->icw_index) {
+	case 0: /* mask register */ pic->set_imr(val); break;
+	case 1: /* icw2          */
+		LOG(LOG_PIC, LOG_NORMAL)("%d:Base vector %u", port == 0x21 ? 0 : 1, val);
 		pic->vector_base = val & 0xf8;
 		if (pic->icw_index++ >= pic->icw_words)
 			pic->icw_index = 0;
@@ -272,8 +270,7 @@ static void write_data(Bitu port,Bitu val,Bitu /*iolen*/) {
 			pic->icw_index = 3; /* skip ICW3 in single mode */
 		break;
 	case 2:							/* icw 3 */
-		LOG(LOG_PIC, LOG_NORMAL)("%d:ICW 3 %#" PRIxPTR,
-		                         port == 0x21 ? 0 : 1, val);
+		LOG(LOG_PIC, LOG_NORMAL)("%d:ICW 3 %u", port == 0x21 ? 0 : 1, val);
 		if (pic->icw_index++ >= pic->icw_words)
 			pic->icw_index = 0;
 		break;
@@ -288,24 +285,22 @@ static void write_data(Bitu port,Bitu val,Bitu /*iolen*/) {
 		*/
 		pic->auto_eoi=(val & 0x2)>0;
 
-		LOG(LOG_PIC, LOG_NORMAL)("%d:ICW 4 %#" PRIxPTR,
-		                         port == 0x21 ? 0 : 1, val);
+		LOG(LOG_PIC, LOG_NORMAL)("%d:ICW 4 %u", port == 0x21 ? 0 : 1, val);
 
 		if ((val & 0x01) == 0)
-			E_Exit("PIC:ICW4: %#" PRIxPTR ", 8085 mode not handled", val);
+			E_Exit("PIC:ICW4: %x, 8085 mode not handled", val);
 		if ((val & 0x10) != 0)
-			LOG_MSG("PIC:ICW4: %#" PRIxPTR ", special fully-nested mode not handled",
-			        val);
+			LOG_MSG("PIC:ICW4: %x, special fully-nested mode not handled", val);
 
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
-	default: LOG(LOG_PIC, LOG_NORMAL)("ICW HUH? %#" PRIxPTR, val); break;
+	default: LOG(LOG_PIC, LOG_NORMAL)("ICW HUH? %x", val); break;
 	}
 }
 
-
-static Bitu read_command(Bitu port,Bitu /*iolen*/) {
-	PIC_Controller * pic = &pics[port==0x20 ? 0 : 1];
+static uint8_t read_command(io_port_t port, io_width_t)
+{
+	PIC_Controller *pic = &pics[port == 0x20 ? 0 : 1];
 	if (pic->request_issr) {
 		return pic->isr;
 	} else {
@@ -313,9 +308,9 @@ static Bitu read_command(Bitu port,Bitu /*iolen*/) {
 	}
 }
 
-
-static Bitu read_data(Bitu port,Bitu /*iolen*/) {
-	PIC_Controller * pic = &pics[port==0x21 ? 0 : 1];
+static uint8_t read_data(io_port_t port, io_width_t)
+{
+	PIC_Controller *pic = &pics[port == 0x21 ? 0 : 1];
 	return pic->imr;
 }
 
@@ -376,7 +371,7 @@ static void secondary_startIRQ()
 	CPU_HW_Interrupt(secondary_controller.vector_base + pic1_irq);
 }
 
-static void inline primary_startIRQ(Bitu i)
+static void inline primary_startIRQ(uint8_t i)
 {
 	primary_controller.start_irq(i);
 	CPU_HW_Interrupt(primary_controller.vector_base + i);
@@ -411,7 +406,7 @@ void PIC_SetIRQMask(uint32_t irq, bool masked)
 	uint32_t t = irq > 7 ? (irq - 8) : irq;
 	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
 	// clear bit
-	Bit8u bit = 1 << (t);
+	const auto bit = static_cast<uint8_t>(1 << t);
 	Bit8u newmask = pic->imr;
 	newmask &= ~bit;
 	if (masked) newmask |= bit;
@@ -601,7 +596,7 @@ void TIMER_AddTick(void) {
 	/* Go through the list of scheduled events and lower their index with 1000 */
 	PICEntry * entry=pic_queue.next_entry;
 	while (entry) {
-		entry->index -= 1.0;
+		entry->index -= 1.0f;
 		entry=entry->next;
 	}
 	/* Call our list of ticker handlers */
@@ -648,14 +643,14 @@ public:
 			/* Enable IRQ6 (replacement for the NMI for PCJr) */
 			PIC_SetIRQMask(6,false);
 		}
-		ReadHandler[0].Install(0x20,read_command,IO_MB);
-		ReadHandler[1].Install(0x21,read_data,IO_MB);
-		WriteHandler[0].Install(0x20,write_command,IO_MB);
-		WriteHandler[1].Install(0x21,write_data,IO_MB);
-		ReadHandler[2].Install(0xa0,read_command,IO_MB);
-		ReadHandler[3].Install(0xa1,read_data,IO_MB);
-		WriteHandler[2].Install(0xa0,write_command,IO_MB);
-		WriteHandler[3].Install(0xa1,write_data,IO_MB);
+		ReadHandler[0].Install(0x20, read_command, io_width_t::byte);
+		ReadHandler[1].Install(0x21, read_data, io_width_t::byte);
+		WriteHandler[0].Install(0x20, write_command, io_width_t::byte);
+		WriteHandler[1].Install(0x21, write_data, io_width_t::byte);
+		ReadHandler[2].Install(0xa0, read_command, io_width_t::byte);
+		ReadHandler[3].Install(0xa1, read_data, io_width_t::byte);
+		WriteHandler[2].Install(0xa0, write_command, io_width_t::byte);
+		WriteHandler[3].Install(0xa1, write_data, io_width_t::byte);
 		/* Initialize the pic queue */
 		for (i=0;i<PIC_QUEUESIZE-1;i++) {
 			pic_queue.entries[i].next=&pic_queue.entries[i+1];
