@@ -82,10 +82,10 @@ static Bit8u * VGA_Draw_2BPPHiRes_Line(Bitu vidstart, Bitu line) {
 	return TempLine;
 }
 
-static Bit8u byte_clamp(int v)
+static uint8_t byte_clamp(int v)
 {
 	v >>= 13;
-	return v < 0 ? 0 : (v > 255 ? 255 : v);
+	return v < 0 ? 0u : (v > 255 ? 255u : static_cast<uint8_t>(v));
 }
 
 static int temp[SCALER_MAXWIDTH + 10] = {0};
@@ -1760,14 +1760,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	}
 
 #if C_DEBUG
-	LOG(LOG_VGA, LOG_NORMAL)
-	("h total %2.5f (%3.2fkHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
-	 vga.draw.delay.htotal, (1.0 / vga.draw.delay.htotal), vga.draw.delay.hblkstart,
-	 vga.draw.delay.hblkend, vga.draw.delay.hrstart, vga.draw.delay.hrend);
-	LOG(LOG_VGA, LOG_NORMAL)
-	("v total %2.5f (%3.2fHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
-	 vga.draw.delay.vtotal, (1000.0 / vga.draw.delay.vtotal), vga.draw.delay.vblkstart,
-	 vga.draw.delay.vblkend, vga.draw.delay.vrstart, vga.draw.delay.vrend);
+	LOG(LOG_VGA, LOG_NORMAL)("h total %2.5f (%3.2fkHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
+	                         vga.draw.delay.htotal, (1.0 / vga.draw.delay.htotal), vga.draw.delay.hblkstart,
+	                         vga.draw.delay.hblkend, vga.draw.delay.hrstart, vga.draw.delay.hrend);
+	LOG(LOG_VGA, LOG_NORMAL)("v total %2.5f (%3.2fHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
+	                         vga.draw.delay.vtotal, (1000.0 / vga.draw.delay.vtotal), vga.draw.delay.vblkstart,
+	                         vga.draw.delay.vblkend, vga.draw.delay.vrstart, vga.draw.delay.vrend);
 #endif
 
 	// need to resize the output window?
@@ -1787,10 +1785,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		else vga.draw.lines_scaled=1;
 
 #if C_DEBUG
-		LOG_INFO("VGA: Width %u, Height %u, fps %.3f", width, height, fps);
-		LOG_INFO("VGA: %s width, %s height aspect %.3f",
-		         doublewidth ? "double" : "normal",
-		         doubleheight ? "double" : "normal", aspect_ratio);
+		LOG(LOG_VGA, LOG_NORMAL)("VGA: Width %u, Height %u, fps %.3f", width, height, fps);
+		LOG(LOG_VGA, LOG_NORMAL)("VGA: %s width, %s height aspect %.3f",
+		                         doublewidth ? "double" : "normal",
+		                         doubleheight ? "double" : "normal", aspect_ratio);
 #endif
 		if (!vga.draw.vga_override)
 			RENDER_SetSize(width, height, bpp, fps, aspect_ratio,
