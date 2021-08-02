@@ -123,8 +123,8 @@ public:
 			return nullptr;
 	}
 
-	void WriteControllerReg(Bitu reg,Bitu val,Bitu len);
-	Bitu ReadControllerReg(Bitu reg,Bitu len);
+	void WriteControllerReg(io_port_t reg, uint16_t val, io_width_t width);
+	uint16_t ReadControllerReg(io_port_t reg, io_width_t width);
 };
 
 DmaChannel * GetDMAChannel(Bit8u chan);
