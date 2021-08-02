@@ -221,7 +221,7 @@ static void counter_latch(uint32_t counter)
 	}
 }
 
-static void write_latch(uint16_t port, uint8_t val, Bitu /*iolen*/)
+static void write_latch(io_port_t port, uint8_t val, io_width_t)
 {
 	// LOG(LOG_PIT,LOG_ERROR)("port %X write:%X
 	// state:%X",port,val,pit[port-0x40].write_state);
@@ -303,7 +303,7 @@ static void write_latch(uint16_t port, uint8_t val, Bitu /*iolen*/)
 	}
 }
 
-static uint8_t read_latch(uint16_t port, Bitu /*iolen*/)
+static uint8_t read_latch(io_port_t port, io_width_t)
 {
 	// LOG(LOG_PIT,LOG_ERROR)("port read %X",port);
 	const uint16_t counter = port - 0x40;
@@ -345,7 +345,7 @@ static uint8_t read_latch(uint16_t port, Bitu /*iolen*/)
 	return ret;
 }
 
-static void write_p43(uint16_t /*port*/, uint8_t val, Bitu /*iolen*/)
+static void write_p43(io_port_t, uint8_t val, io_width_t)
 {
 	// LOG(LOG_PIT,LOG_ERROR)("port 43 %X",val);
 	const uint8_t latch = (val >> 6) & 0x03;
@@ -475,13 +475,13 @@ private:
 	IO_WriteHandleObject WriteHandler[4];
 public:
 	TIMER(Section* configuration):Module_base(configuration){
-		WriteHandler[0].Install(0x40,write_latch,IO_MB);
-	//	WriteHandler[1].Install(0x41,write_latch,IO_MB);
-		WriteHandler[2].Install(0x42,write_latch,IO_MB);
-		WriteHandler[3].Install(0x43,write_p43,IO_MB);
-		ReadHandler[0].Install(0x40,read_latch,IO_MB);
-		ReadHandler[1].Install(0x41,read_latch,IO_MB);
-		ReadHandler[2].Install(0x42,read_latch,IO_MB);
+		WriteHandler[0].Install(0x40, write_latch, io_width_t::byte);
+		//	WriteHandler[1].Install(0x41,write_latch,io_width_t::byte);
+		WriteHandler[2].Install(0x42, write_latch, io_width_t::byte);
+		WriteHandler[3].Install(0x43, write_p43, io_width_t::byte);
+		ReadHandler[0].Install(0x40, read_latch, io_width_t::byte);
+		ReadHandler[1].Install(0x41, read_latch, io_width_t::byte);
+		ReadHandler[2].Install(0x42, read_latch, io_width_t::byte);
 		/* Setup Timer 0 */
 		pit[0].cntr=0x10000;
 		pit[0].write_state = 3;
