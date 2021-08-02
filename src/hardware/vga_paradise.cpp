@@ -103,7 +103,7 @@ void write_p3cf_pvga1a(io_port_t reg, uint8_t val, io_width_t)
 		pvga1a.PR5 = val;
 		break;
 	default:
-		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:GFX:PVGA1A:Write to illegal index %2" sBitfs(X), reg);
+		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:GFX:PVGA1A:Write to illegal index %2x", reg);
 		break;
 	}
 }
@@ -129,7 +129,7 @@ uint8_t read_p3cf_pvga1a(io_port_t reg, io_width_t)
 	case 0x0f:
 		return pvga1a.PR5;
 	default:
-		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:GFX:PVGA1A:Read from illegal index %2" sBitfs(X), reg);
+		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:GFX:PVGA1A:Read from illegal index %2x", reg);
 		break;
 	}
 
