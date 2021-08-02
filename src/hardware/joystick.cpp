@@ -150,7 +150,7 @@ bool button_wrapping_enabled = true;
 
 extern bool autofire; //sdl_mapper.cpp
 
-static uint8_t read_p201(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED uint8_t iolen)
+static uint8_t read_p201(io_port_t, io_width_t)
 {
 	/* Reset Joystick to 0 after TIMEOUT ms */
 	if(write_active && ((PIC_Ticks - last_write) > TIMEOUT)) {
@@ -171,7 +171,7 @@ static uint8_t read_p201(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED uint8_t iolen)
 	**  Joystick A, Button 2 -----------+   |   |   +----------- Joystick B, X Axis
 	**  Joystick A, Button 1 ---------------+   +--------------- Joystick B, Y Axis
 	**/
-	Bit8u ret=0xff;
+	uint8_t ret = 0xff;
 	if (stick[0].enabled) {
 		if (stick[0].xcount) stick[0].xcount--; else ret&=~1;
 		if (stick[0].ycount) stick[0].ycount--; else ret&=~2;
@@ -187,9 +187,9 @@ static uint8_t read_p201(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED uint8_t iolen)
 	return ret;
 }
 
-static uint8_t read_p201_timed(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED uint8_t iolen)
+static uint8_t read_p201_timed(io_port_t, io_width_t)
 {
-	Bit8u ret = 0xff;
+	uint8_t ret = 0xff;
 	const auto currentTick = PIC_FullIndex();
 	if( stick[0].enabled ){
 		if( stick[0].xtick < currentTick ) ret &=~1;
@@ -211,9 +211,7 @@ static uint8_t read_p201_timed(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED uint8_t 
 	return ret;
 }
 
-static void write_p201(MAYBE_UNUSED uint16_t port,
-                       MAYBE_UNUSED uint8_t val,
-                       MAYBE_UNUSED uint8_t iolen)
+static void write_p201(io_port_t, io_val_t, io_width_t)
 {
 	/* Store writetime index */
 	write_active = true;
@@ -228,9 +226,7 @@ static void write_p201(MAYBE_UNUSED uint16_t port,
 		stick[1].ycount=(Bitu)(((swap34? stick[1].xpos : stick[1].ypos)*RANGE)+RANGE);
 	}
 }
-static void write_p201_timed(MAYBE_UNUSED uint16_t port,
-                             MAYBE_UNUSED uint8_t val,
-                             MAYBE_UNUSED uint8_t iolen)
+static void write_p201_timed(io_port_t, io_val_t, io_width_t)
 {
 	const auto current_tick = PIC_FullIndex();
 
@@ -380,8 +376,8 @@ public:
 		// Setup the joystick IO port handlers, which lets DOS games
 		// detect and use them
 		const bool wants_timed = section->Get_bool("timed");
-		ReadHandler.Install(0x201, wants_timed ? read_p201_timed : read_p201, IO_MB);
-		WriteHandler.Install(0x201, wants_timed ? write_p201_timed : write_p201, IO_MB);
+		ReadHandler.Install(0x201, wants_timed ? read_p201_timed : read_p201, io_width_t::byte);
+		WriteHandler.Install(0x201, wants_timed ? write_p201_timed : write_p201, io_width_t::byte);
 	}
 	~JOYSTICK() {
 		// No-op if IO handlers were not installed
@@ -392,7 +388,8 @@ public:
 
 static JOYSTICK* test;
 
-void JOYSTICK_Destroy(Section* sec) {
+void JOYSTICK_Destroy(MAYBE_UNUSED Section *sec)
+{
 	delete test;
 }
 
