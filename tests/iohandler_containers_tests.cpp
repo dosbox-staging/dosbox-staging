@@ -36,11 +36,11 @@ constexpr uint16_t dword_port_start = word_port_start * 2;
 // Byte IO handler functions (Bitu and sized)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 static uint8_t byte_val_new = 0;
-static uint8_t read_byte_new(io_port_t_proposed, io_width_t)
+static uint8_t read_byte_new(io_port_t, io_width_t)
 {
 	return byte_val_new;
 }
-static void write_byte_new(io_port_t_proposed, uint8_t val, io_width_t)
+static void write_byte_new(io_port_t, uint8_t val, io_width_t)
 {
 	byte_val_new = val;
 }
@@ -59,11 +59,11 @@ static void write_byte_baseline(Bitu /*port*/, Bitu val, Bitu /*iolen*/)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 static uint16_t word_val_new = 0;
-static uint16_t read_word_new(io_port_t_proposed, io_width_t)
+static uint16_t read_word_new(io_port_t, io_width_t)
 {
 	return word_val_new;
 }
-static void write_word_new(io_port_t_proposed, uint16_t val, io_width_t)
+static void write_word_new(io_port_t, uint16_t val, io_width_t)
 {
 	word_val_new = val;
 }
@@ -81,11 +81,11 @@ static void write_word_baseline(Bitu /*port*/, Bitu val, Bitu /*iolen*/)
 // Dword IO handler functions (Bitu and sized)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 static uint32_t dword_val_new = 0;
-static uint32_t read_dword_new(io_port_t_proposed, io_width_t)
+static uint32_t read_dword_new(io_port_t, io_width_t)
 {
 	return dword_val_new;
 }
-static void write_dword_new(io_port_t_proposed, uint32_t val, io_width_t)
+static void write_dword_new(io_port_t, uint32_t val, io_width_t)
 {
 	dword_val_new = val;
 }
@@ -107,17 +107,11 @@ TEST(iohandler_containers, valid_bytes)
 	for (uint32_t p = byte_port_start; p <= UINT16_MAX; p += port_step_size) {
 		const auto port = static_cast<uint16_t>(p);
 
-		IO_RegisterWriteHandler(port, write_byte_baseline, IO_MB);
-		IO_RegisterReadHandler(port, read_byte_baseline, IO_MB);
-
 		IO_RegisterWriteHandler(port, write_byte_new, io_width_t::byte);
 		IO_RegisterReadHandler(port, read_byte_new, io_width_t::byte);
 
 		for (uint16_t v = 0; v <= UINT8_MAX; v += value_step_size) {
 			const auto value = static_cast<uint8_t>(v);
-
-			WritePort(IO_MB, port, value);
-			EXPECT_EQ(v, ReadPort(IO_MB, p));
 
 			write_byte_to_port(port, value);
 			EXPECT_EQ(v, read_byte_from_port(port));
@@ -130,17 +124,11 @@ TEST(iohandler_containers, valid_words)
 	for (uint32_t p = word_port_start; p <= UINT16_MAX; p += port_step_size) {
 		const auto port = static_cast<uint16_t>(p);
 
-		IO_RegisterWriteHandler(port, write_word_baseline, IO_MW);
-		IO_RegisterReadHandler(port, read_word_baseline, IO_MW);
-
 		IO_RegisterWriteHandler(port, write_word_new, io_width_t::word);
 		IO_RegisterReadHandler(port, read_word_new, io_width_t::word);
 
 		for (uint32_t v = 0; v <= UINT16_MAX; v += (value_step_size << 8)) {
 			const auto value = static_cast<uint16_t>(v);
-
-			WritePort(IO_MW, port, value);
-			EXPECT_EQ(v, ReadPort(IO_MW, p));
 
 			write_word_to_port(port, value);
 			EXPECT_EQ(v, read_word_from_port(port));
@@ -153,17 +141,11 @@ TEST(iohandler_containers, valid_dwords)
 	for (uint32_t p = dword_port_start; p <= UINT16_MAX; p += port_step_size) {
 		const auto port = static_cast<uint16_t>(p);
 
-		IO_RegisterWriteHandler(port, write_dword_baseline, IO_MD);
-		IO_RegisterReadHandler(port, read_dword_baseline, IO_MD);
-
 		IO_RegisterWriteHandler(port, write_dword_new, io_width_t::dword);
 		IO_RegisterReadHandler(port, read_dword_new, io_width_t::dword);
 
 		for (uint64_t v = 0; v <= UINT32_MAX; v += (value_step_size << 20)) {
 			const auto value = static_cast<uint32_t>(v);
-
-			WritePort(IO_MD, port, value);
-			EXPECT_EQ(v, ReadPort(IO_MD, p));
 
 			write_dword_to_port(port, value);
 			EXPECT_EQ(v, read_dword_from_port(port));
@@ -174,23 +156,16 @@ TEST(iohandler_containers, valid_dwords)
 TEST(iohandler_containers, empty_reads)
 {
 	constexpr uint16_t unregistered = 0;
-	EXPECT_EQ(ReadPort(IO_MB, unregistered), read_byte_from_port(unregistered));
-
-	const auto baseline_word = ReadPort(IO_MW, unregistered);
-	EXPECT_EQ(baseline_word, static_cast<Bitu>(-1));
-	EXPECT_EQ(static_cast<uint16_t>(baseline_word),
+	EXPECT_EQ(static_cast<uint16_t>(-1),
 	          read_word_from_port(unregistered));
 
-	const auto baseline_dword = ReadPort(IO_MD, unregistered);
-	EXPECT_EQ(baseline_dword, static_cast<Bitu>(-1));
-	EXPECT_EQ(static_cast<uint32_t>(baseline_word),
+	EXPECT_EQ(static_cast<uint32_t>(-1),
 	          read_dword_from_port(unregistered));
 }
 
 TEST(iohandler_containers, empty_writes)
 {
 	constexpr uint16_t unregistered = 0;
-	WritePort(IO_MB, unregistered, 0);
 	write_byte_to_port(unregistered, 0);
 }
 

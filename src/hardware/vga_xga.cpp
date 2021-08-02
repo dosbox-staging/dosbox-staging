@@ -1018,7 +1018,7 @@ void XGA_SetDualReg(Bit32u &reg, uint32_t val)
 	}
 }
 
-Bitu XGA_GetDualReg(Bit32u reg) {
+uint32_t XGA_GetDualReg(Bit32u reg) {
 	switch(XGA_COLOR_MODE) {
 	case M_LIN8:
 		return (Bit8u)(reg&0xff);
