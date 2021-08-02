@@ -94,8 +94,8 @@ static void KEYBOARD_AddBuffer(Bit8u data) {
 	}
 }
 
-
-static Bitu read_p60(Bitu /*port*/,Bitu /*iolen*/) {
+static uint8_t read_p60(io_port_t, io_width_t)
+{
 	keyb.p60changed = false;
 	if (!keyb.scheduled && keyb.used) {
 		keyb.scheduled = true;
@@ -104,7 +104,8 @@ static Bitu read_p60(Bitu /*port*/,Bitu /*iolen*/) {
 	return keyb.p60data;
 }
 
-static void write_p60(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
+static void write_p60(io_port_t, uint8_t val, io_width_t)
+{
 	switch (keyb.command) {
 	case CMD_NONE:	/* None */
 		/* No active command this would normally get sent to the keyboard then */
@@ -142,7 +143,7 @@ static void write_p60(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 			break;
 		default:
 			/* Just always acknowledge strange commands */
-			LOG(LOG_KEYBOARD,LOG_ERROR)("60:Unhandled command %" sBitfs(X),val);
+			LOG(LOG_KEYBOARD, LOG_ERROR)("60:Unhandled command %x", val);
 			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
 		}
 		return;
@@ -172,15 +173,19 @@ static void write_p60(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 
 extern bool TIMER_GetOutput2(void);
 static Bit8u port_61_data = 0;
-static Bitu read_p61(Bitu /*port*/,Bitu /*iolen*/) {
-	if (TIMER_GetOutput2()) port_61_data |= 0x20;
-	else                    port_61_data &=~0x20;
+static uint8_t read_p61(io_port_t, io_width_t)
+{
+	if (TIMER_GetOutput2())
+		port_61_data |= 0x20;
+	else
+		port_61_data &= ~0x20;
 	port_61_data ^= 0x10;
 	return port_61_data;
 }
 
 extern void TIMER_SetGate2(bool);
-static void write_p61(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
+static void write_p61(io_port_t, uint8_t val, io_width_t)
+{
 	if ((port_61_data ^ val) & 3) {
 		if ((port_61_data ^ val) & 1) TIMER_SetGate2(val&0x1);
 		PCSPEAKER_SetType(val & 3);
@@ -188,13 +193,15 @@ static void write_p61(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	port_61_data = val;
 }
 
-static Bitu read_p62(Bitu /*port*/,Bitu /*iolen*/) {
+static uint8_t read_p62(io_port_t, io_width_t)
+{
 	Bit8u ret = ~0x20;
 	if (TIMER_GetOutput2()) ret |= 0x20;
 	return ret;
 }
 
-static void write_p64(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
+static void write_p64(io_port_t, uint8_t val, io_width_t)
+{
 	switch (val) {
 	case 0xae:		/* Activate keyboard */
 		keyb.active=true;
@@ -215,12 +222,13 @@ static void write_p64(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		keyb.command=CMD_SETOUTPORT;
 		break;
 	default:
-		LOG(LOG_KEYBOARD,LOG_ERROR)("Port 64 write with val %" sBitfs(X) ,val);
+		LOG(LOG_KEYBOARD, LOG_ERROR)("Port 64 write with val %x", val);
 		break;
 	}
 }
 
-static Bitu read_p64(Bitu /*port*/,Bitu /*iolen*/) {
+static uint8_t read_p64(io_port_t, io_width_t)
+{
 	Bit8u status = 0x1c | (keyb.p60changed ? 0x1 : 0x0);
 	return status;
 }
@@ -386,15 +394,16 @@ static void KEYBOARD_TickHandler(void) {
 }
 
 void KEYBOARD_Init(Section* /*sec*/) {
-	IO_RegisterWriteHandler(0x60,write_p60,IO_MB);
-	IO_RegisterReadHandler(0x60,read_p60,IO_MB);
-	IO_RegisterWriteHandler(0x61,write_p61,IO_MB);
-	IO_RegisterReadHandler(0x61,read_p61,IO_MB);
-	if (machine == MCH_CGA || machine == MCH_HERC) IO_RegisterReadHandler(0x62,read_p62,IO_MB);
-	IO_RegisterWriteHandler(0x64,write_p64,IO_MB);
-	IO_RegisterReadHandler(0x64,read_p64,IO_MB);
+	IO_RegisterWriteHandler(0x60, write_p60, io_width_t::byte);
+	IO_RegisterReadHandler(0x60, read_p60, io_width_t::byte);
+	IO_RegisterWriteHandler(0x61, write_p61, io_width_t::byte);
+	IO_RegisterReadHandler(0x61, read_p61, io_width_t::byte);
+	if (machine == MCH_CGA || machine == MCH_HERC)
+		IO_RegisterReadHandler(0x62, read_p62, io_width_t::byte);
+	IO_RegisterWriteHandler(0x64, write_p64, io_width_t::byte);
+	IO_RegisterReadHandler(0x64, read_p64, io_width_t::byte);
 	TIMER_AddTickHandler(&KEYBOARD_TickHandler);
-	write_p61(0,0,0);
+	write_p61(0, 0, io_width_t::byte);
 	/* Init the keyb struct */
 	keyb.active = true;
 	keyb.scanning = true;
