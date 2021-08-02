@@ -54,16 +54,16 @@ private:
 	uint8_t CalcStatus() const;
 	void Reset(bool should_clear_adder);
 	void Update(uint16_t samples);
-	uint8_t ReadPresencePort02F(uint16_t port, size_t iolen);
-	uint8_t ReadCmdResultPort200(uint16_t port, size_t iolen);
-	uint8_t ReadStatusPort202(uint16_t port, size_t iolen);
-	uint8_t ReadTimingPort203(uint16_t port, size_t iolen);
-	uint8_t ReadJoystickPorts204To207(uint16_t port, size_t iolen);
+	uint8_t ReadPresencePort02F(io_port_t port, io_width_t);
+	uint8_t ReadCmdResultPort200(io_port_t port, io_width_t);
+	uint8_t ReadStatusPort202(io_port_t port, io_width_t);
+	uint8_t ReadTimingPort203(io_port_t port, io_width_t);
+	uint8_t ReadJoystickPorts204To207(io_port_t port, io_width_t);
 
-	void WriteDataPort200(uint16_t port, uint8_t data, size_t iolen);
-	void WriteControlPort202(uint16_t port, uint8_t data, size_t iolen);
-	void WriteTimingPort203(uint16_t port, uint8_t data, size_t iolen);
-	void WriteFifoLevelPort204(uint16_t port, uint8_t data, size_t iolen);
+	void WriteDataPort200(io_port_t port, uint8_t data, io_width_t);
+	void WriteControlPort202(io_port_t port, uint8_t data, io_width_t);
+	void WriteTimingPort203(io_port_t port, uint8_t data, io_width_t);
+	void WriteFifoLevelPort204(io_port_t port, uint8_t data, io_width_t);
 
 	// Constants
 	static constexpr auto clock_rate_hz = 1000000;
@@ -125,35 +125,19 @@ Ps1Dac::Ps1Dac()
 	assert(channel);
 
 	// Register DAC per-port read handlers
-	read_handlers[0].Install(0x02F,
-	                         std::bind(&Ps1Dac::ReadPresencePort02F, this, _1, _2),
-	                         IO_MB);
-	read_handlers[1].Install(0x200,
-	                         std::bind(&Ps1Dac::ReadCmdResultPort200, this, _1, _2),
-	                         IO_MB);
-	read_handlers[2].Install(0x202,
-	                         std::bind(&Ps1Dac::ReadStatusPort202, this, _1, _2),
-	                         IO_MB);
-	read_handlers[3].Install(0x203,
-	                         std::bind(&Ps1Dac::ReadTimingPort203, this, _1, _2),
-	                         IO_MB);
+	read_handlers[0].Install(0x02F, std::bind(&Ps1Dac::ReadPresencePort02F, this, _1, _2), io_width_t::byte);
+	read_handlers[1].Install(0x200, std::bind(&Ps1Dac::ReadCmdResultPort200, this, _1, _2), io_width_t::byte);
+	read_handlers[2].Install(0x202, std::bind(&Ps1Dac::ReadStatusPort202, this, _1, _2), io_width_t::byte);
+	read_handlers[3].Install(0x203, std::bind(&Ps1Dac::ReadTimingPort203, this, _1, _2), io_width_t::byte);
 	read_handlers[4].Install(0x204, // to 0x207
-	                         std::bind(&Ps1Dac::ReadJoystickPorts204To207, this, _1, _2),
-	                         IO_MB, 3);
+	                         std::bind(&Ps1Dac::ReadJoystickPorts204To207, this, _1, _2), io_width_t::byte, 3);
 
 	// Register DAC per-port write handlers
-	write_handlers[0].Install(0x200,
-	                          std::bind(&Ps1Dac::WriteDataPort200, this, _1, _2, _3),
-	                          IO_MB);
-	write_handlers[1].Install(0x202,
-	                          std::bind(&Ps1Dac::WriteControlPort202, this, _1, _2, _3),
-	                          IO_MB);
-	write_handlers[2].Install(0x203,
-	                          std::bind(&Ps1Dac::WriteTimingPort203, this, _1, _2, _3),
-	                          IO_MB);
-	write_handlers[3].Install(0x204,
-	                          std::bind(&Ps1Dac::WriteFifoLevelPort204, this, _1, _2, _3),
-	                          IO_MB);
+	write_handlers[0].Install(0x200, std::bind(&Ps1Dac::WriteDataPort200, this, _1, _2, _3), io_width_t::byte);
+	write_handlers[1].Install(0x202, std::bind(&Ps1Dac::WriteControlPort202, this, _1, _2, _3), io_width_t::byte);
+	write_handlers[2].Install(0x203, std::bind(&Ps1Dac::WriteTimingPort203, this, _1, _2, _3), io_width_t::byte);
+	write_handlers[3].Install(0x204, std::bind(&Ps1Dac::WriteFifoLevelPort204, this, _1, _2, _3),
+	                          io_width_t::byte);
 
 	// Operate at native sampling rates
 	sample_rate = channel->GetSampleRate();
@@ -196,7 +180,7 @@ void Ps1Dac::Reset(bool should_clear_adder)
 	is_new_transfer = true;
 }
 
-void Ps1Dac::WriteDataPort200(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
+void Ps1Dac::WriteDataPort200(io_port_t, uint8_t data, io_width_t)
 {
 	keep_alive_channel(last_write, channel);
 	if (is_new_transfer) {
@@ -218,7 +202,7 @@ void Ps1Dac::WriteDataPort200(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UN
 	}
 }
 
-void Ps1Dac::WriteControlPort202(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
+void Ps1Dac::WriteControlPort202(io_port_t, uint8_t data, io_width_t)
 {
 	keep_alive_channel(last_write, channel);
 	regs.command = data;
@@ -226,7 +210,7 @@ void Ps1Dac::WriteControlPort202(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE
 		can_trigger_irq = true;
 }
 
-void Ps1Dac::WriteTimingPort203(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
+void Ps1Dac::WriteTimingPort203(io_port_t, uint8_t data, io_width_t)
 {
 	keep_alive_channel(last_write, channel);
 	// Clock divisor (maybe trigger first IRQ here).
@@ -246,7 +230,7 @@ void Ps1Dac::WriteTimingPort203(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_
 	}
 }
 
-void Ps1Dac::WriteFifoLevelPort204(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
+void Ps1Dac::WriteFifoLevelPort204(io_port_t, uint8_t data, io_width_t)
 {
 	keep_alive_channel(last_write, channel);
 	regs.fifo_level = data;
@@ -257,20 +241,20 @@ void Ps1Dac::WriteFifoLevelPort204(MAYBE_UNUSED uint16_t port, uint8_t data, MAY
 	// analog-to-digital buffer.
 }
 
-uint8_t Ps1Dac::ReadPresencePort02F(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED size_t iolen)
+uint8_t Ps1Dac::ReadPresencePort02F(io_port_t, io_width_t)
 {
 	keep_alive_channel(last_write, channel);
 	return 0xff;
 }
 
-uint8_t Ps1Dac::ReadCmdResultPort200(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED size_t iolen)
+uint8_t Ps1Dac::ReadCmdResultPort200(io_port_t, io_width_t)
 {
 	keep_alive_channel(last_write, channel);
 	regs.status &= ~fifo_status_ready_flag;
 	return regs.command;
 }
 
-uint8_t Ps1Dac::ReadStatusPort202(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED size_t iolen)
+uint8_t Ps1Dac::ReadStatusPort202(io_port_t, io_width_t)
 {
 	keep_alive_channel(last_write, channel);
 	regs.status = CalcStatus();
@@ -278,14 +262,14 @@ uint8_t Ps1Dac::ReadStatusPort202(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED size_
 }
 
 // Used by Stunt Island and Roger Rabbit 2 during setup.
-uint8_t Ps1Dac::ReadTimingPort203(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED size_t iolen)
+uint8_t Ps1Dac::ReadTimingPort203(io_port_t, io_width_t)
 {
 	keep_alive_channel(last_write, channel);
 	return regs.divisor;
 }
 
 // Used by Bush Buck as an alternate detection method.
-uint8_t Ps1Dac::ReadJoystickPorts204To207(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED size_t iolen)
+uint8_t Ps1Dac::ReadJoystickPorts204To207(io_port_t, io_width_t)
 {
 	keep_alive_channel(last_write, channel);
 	return 0;
@@ -362,7 +346,7 @@ public:
 
 private:
 	void Update(uint16_t samples);
-	void WriteSoundGeneratorPort205(uint16_t port, uint8_t data, size_t iolen);
+	void WriteSoundGeneratorPort205(io_port_t port, uint8_t data, io_width_t);
 
 	mixer_channel_t channel{nullptr, MIXER_DelChannel};
 	IO_WriteHandleObject write_handler = {};
@@ -381,7 +365,7 @@ Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate_hz)
 	assert(channel);
 
 	const auto generate_sound = std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
-	write_handler.Install(0x205, generate_sound, IO_MB);
+	write_handler.Install(0x205, generate_sound, io_width_t::byte);
 	static_cast<device_t &>(device).device_start();
 
 	auto sample_rate = static_cast<int32_t>(channel->GetSampleRate());
@@ -389,7 +373,7 @@ Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate_hz)
 	last_write = 0;
 }
 
-void Ps1Synth::WriteSoundGeneratorPort205(MAYBE_UNUSED uint16_t port, uint8_t data, MAYBE_UNUSED size_t iolen)
+void Ps1Synth::WriteSoundGeneratorPort205(io_port_t, uint8_t data, io_width_t)
 {
 	keep_alive_channel(last_write, channel);
 	device.write(data);
