@@ -55,6 +55,12 @@ void IO_RegisterWriteHandler(io_port_t port,
                              Bitu mask,
                              Bitu range = 1);
 
+// To be removed after deprecating the Bitu IO sized handlers and API
+void IO_FreeReadHandler(io_port_t port, Bitu mask, Bitu range = 1);
+
+// To be removed after deprecating the Bitu IO sized handlers and API
+void IO_FreeWriteHandler(io_port_t port, Bitu mask, Bitu range = 1);
+
 void IO_WriteB(io_port_t port, io_val_t val);
 void IO_WriteW(io_port_t port, io_val_t val);
 void IO_WriteD(io_port_t port, io_val_t val);
@@ -63,13 +69,12 @@ io_val_t IO_ReadB(io_port_t port);
 io_val_t IO_ReadW(io_port_t port);
 io_val_t IO_ReadD(io_port_t port);
 
-// IO-width sized API
+// type-sized IO handler API
 enum class io_width_t : uint8_t {
 	byte = sizeof(uint8_t),
 	word = sizeof(uint16_t),
 	dword = sizeof(uint32_t),
 };
-
 constexpr int io_widths = 3; // byte, word, and dword
 
 using io_read_f = std::function<uint32_t(io_port_t_proposed port, io_width_t width)>;
@@ -105,7 +110,6 @@ protected:
 	io_width_t m_width = io_width_t::byte;
 	io_port_t m_range = 0u;
 };
-	//uint8_t m_range = 0;
 
 class IO_ReadHandleObject: private IO_Base{
 public:
