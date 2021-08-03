@@ -136,7 +136,7 @@ Bitu DEBUG_EnableDebugger(void);
 
 bool first=false;
 
-void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu faultcode) {
+void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,uint32_t faultcode) {
 	/* Save the state of the cpu cores */
 	LazyFlags old_lflags;
 	memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
