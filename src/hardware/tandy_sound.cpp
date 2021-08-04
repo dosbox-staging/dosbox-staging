@@ -343,7 +343,9 @@ public:
 		Section_prop *section = static_cast<Section_prop *>(configuration);
 
 		bool enable_hw_tandy_dac=true;
-		Bitu sbport, sbirq, sbdma;
+		uint16_t sbport;
+		uint8_t sbirq;
+		uint8_t sbdma;
 		if (SB_Get_Address(sbport, sbirq, sbdma)) {
 			enable_hw_tandy_dac=false;
 		}
