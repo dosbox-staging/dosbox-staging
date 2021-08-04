@@ -645,7 +645,8 @@ void Gus::AudioCallback(const uint16_t requested_frames)
 		// Zero our buffer. The audio sequence for each active voice
 		// will be accumulated one at a time by the buffer's elements.
 		assert(frames <= render_buffer.size());
-		std::fill(render_buffer.begin(), render_buffer.end(), 0);
+		const auto num_samples = frames * 2;
+		std::fill_n(render_buffer.begin(), num_samples, 0.0f);
 
 		if (dac_enabled) {
 			auto voice = voices.begin();
