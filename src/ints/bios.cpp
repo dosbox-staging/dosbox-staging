@@ -84,11 +84,13 @@ static struct {
 
 static bool Tandy_InitializeSB() {
 	/* see if soundblaster module available and at what port/IRQ/DMA */
-	Bitu sbport, sbirq, sbdma;
+	uint16_t sbport;
+	uint8_t sbirq;
+	uint8_t sbdma;
 	if (SB_Get_Address(sbport, sbirq, sbdma)) {
-		tandy_sb.port=(Bit16u)(sbport&0xffff);
-		tandy_sb.irq =(Bit8u)(sbirq&0xff);
-		tandy_sb.dma =(Bit8u)(sbdma&0xff);
+		tandy_sb.port = sbport;
+		tandy_sb.irq = sbirq;
+		tandy_sb.dma = sbdma;
 		return true;
 	} else {
 		/* no soundblaster accessible, disable Tandy DAC */
