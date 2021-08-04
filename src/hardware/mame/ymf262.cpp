@@ -1383,15 +1383,15 @@ static void OPL3_initalize(OPL3 *chip)
 
 	/* Amplitude modulation: 27 output levels (triangle waveform); 1 level takes one of: 192, 256 or 448 samples */
 	/* One entry from LFO_AM_TABLE lasts for 64 samples */
-	chip->lfo_am_inc = (1.0 / 64.0) * (1<<LFO_SH) * chip->freqbase;
+	chip->lfo_am_inc = static_cast<uint32_t>((1.0 / 64.0) * (1<<LFO_SH) * chip->freqbase);
 
 	/* Vibrato: 8 output levels (triangle waveform); 1 level takes 1024 samples */
-	chip->lfo_pm_inc = (1.0 / 1024.0) * (1<<LFO_SH) * chip->freqbase;
+	chip->lfo_pm_inc = static_cast<uint32_t>((1.0 / 1024.0) * (1<<LFO_SH) * chip->freqbase);
 
 	/*logerror ("chip->lfo_am_inc = %8x ; chip->lfo_pm_inc = %8x\n", chip->lfo_am_inc, chip->lfo_pm_inc);*/
 
 	/* Noise generator: a step takes 1 sample */
-	chip->noise_f = (1.0 / 1.0) * (1<<FREQ_SH) * chip->freqbase;
+	chip->noise_f = static_cast<uint32_t>((1.0 / 1.0) * (1<<FREQ_SH) * chip->freqbase);
 
 	chip->eg_timer_add  = (1<<EG_SH)  * chip->freqbase;
 	chip->eg_timer_overflow = (1) * (1<<EG_SH);
