@@ -1606,8 +1606,9 @@ static void adlib_gusforward(io_port_t, uint8_t val, io_width_t)
 	adlib_commandreg = (Bit8u)(val & 0xff);
 }
 
-bool SB_Get_Address(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma) {
-	sbaddr=0;
+bool SB_Get_Address(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma)
+{
+	sbaddr = 0;
 	sbirq =0;
 	sbdma =0;
 	if (sb.type == SBT_NONE) return false;
@@ -1619,7 +1620,8 @@ bool SB_Get_Address(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma) {
 	}
 }
 
-static void SBLASTER_CallBack(Bitu len) {
+static void SBLASTER_CallBack(uint32_t len)
+{
 	switch (sb.mode) {
 	case MODE_NONE:
 	case MODE_DMA_PAUSE:
@@ -1713,13 +1715,10 @@ public:
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 
 		sb.hw.base=section->Get_hex("sbbase");
-		sb.hw.irq=section->Get_int("irq");
-		Bitu dma8bit=section->Get_int("dma");
-		if (dma8bit>0xff) dma8bit=0xff;
-		sb.hw.dma8=(Bit8u)(dma8bit&0xff);
-		Bitu dma16bit=section->Get_int("hdma");
-		if (dma16bit>0xff) dma16bit=0xff;
-		sb.hw.dma16=(Bit8u)(dma16bit&0xff);
+
+		sb.hw.irq = static_cast<uint8_t>(section->Get_int("irq"));
+		sb.hw.dma8 = static_cast<uint8_t>(section->Get_int("dma"));
+		sb.hw.dma16 = static_cast<uint8_t>(section->Get_int("hdma"));
 
 		sb.mixer.enabled=section->Get_bool("sbmixer");
 		sb.mixer.stereo=false;
@@ -1765,15 +1764,27 @@ public:
 		DSP_Reset();
 		CTMIXER_Reset();
 
-		// Create set blaster line
-		std::ostringstream temp;
-		temp << "@SET BLASTER=A" << std::setw(3) << std::hex << sb.hw.base << std::dec
-		     << " I" << (Bitu)sb.hw.irq
-		     << " D" << (Bitu)sb.hw.dma8;
-		if (sb.type == SBT_16)
-			temp << " H" << (Bitu)sb.hw.dma16;
-		temp << " T" << static_cast<unsigned int>(sb.type) << std::ends;
-		autoexecline.Install(temp.str());
+		// Ensure our port and addresses will fit in our format widths.
+		// The config selection controls their actual values, so this is
+		// a maximum-limit.
+		assert(sb.hw.base < 0xfff);
+		assert(sb.hw.irq <= 12);
+		assert(sb.hw.dma8 < 10);
+
+		char set_blaster[] = "@SET BLASTER=AHHH II DD HH TT";
+		if (sb.type == SBT_16) {
+			assert(sb.hw.dma16 < 10);
+			safe_sprintf(set_blaster, "@SET BLASTER=A%x I%u D%u H%u T%d",
+			             sb.hw.base, sb.hw.irq, sb.hw.dma8, sb.hw.dma16,
+			             static_cast<int>(sb.type));
+		} else {
+			safe_sprintf(set_blaster, "@SET BLASTER=A%x I%u D%u T%d",
+			             sb.hw.base, sb.hw.irq, sb.hw.dma8,
+			             static_cast<int>(sb.type));
+		}
+
+		LOG_MSG("%s: %s", CardType(), set_blaster);
+		autoexecline.Install(set_blaster);
 
 		/* Soundblaster midi interface */
 		if (!MIDI_Available()) sb.midi = false;
