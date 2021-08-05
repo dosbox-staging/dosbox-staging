@@ -613,7 +613,7 @@ check_surface:
 // The frame-period holds the current duration for which a single host
 // video-frame is displayed. This is kept up-to-date when the video mode is set.
 // A sane starting value is used, which is based on a 60-Hz monitor.
-auto frame_period = std::chrono::nanoseconds(1'000'000'000 / 60);
+auto frame_period = std::chrono::nanoseconds(1000000000 / 60);
 static void UpdateFramePeriod()
 {
 	assert(sdl.window);
@@ -622,7 +622,7 @@ static void UpdateFramePeriod()
 	const int refresh_rate = display_mode.refresh_rate > 0
 	                                 ? display_mode.refresh_rate
 	                                 : 60;
-	frame_period = std::chrono::nanoseconds(1'000'000'000 / refresh_rate);
+	frame_period = std::chrono::nanoseconds(1000000000 / refresh_rate);
 }
 
 void GFX_ResetScreen(void) {
@@ -2771,7 +2771,6 @@ static bool ProcessEvents()
 		SDL_JoystickUpdate();
 		MAPPER_UpdateJoysticks();
 	}
-
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
 		case SDL_WINDOWEVENT:
@@ -2967,7 +2966,9 @@ static bool ProcessEvents()
 			}
 			break; // end of SDL_WINDOWEVENT
 
-		case SDL_MOUSEMOTION: HandleMouseMotion(&event.motion); break;
+		case SDL_MOUSEMOTION:
+			HandleMouseMotion(&event.motion);
+			break;
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 			if (sdl.mouse.control_choice != NoMouse)
@@ -3008,48 +3009,36 @@ static bool ProcessEvents()
 	return !exit_requested;
 }
 
-// Some modern systems experience excessive lag caused by host-event polling, so
-// we want to avoid excessively querying SDL's event queue every tick through
-// the emulator.
+// This function processes events just prior to the next frame period. The host
+// processing lag is measured and accounted for in the next pass.
 
-// This function ensure SDL's event queue is processed at least at 200 Hz, which
-// is the maximum PS/2 mouse polling rate on original PC hardware.
-
-// To debug host lag, comment-in the following REPORT_EVENT_LAG define.
-// Normally polling should be well under 1 millisecond, however some hosts
-// can report very high lag (leading to stuttering, dropped frames, etc).
+// Some modern (and very fast) systems experience unknown lag; in many cases
+// this is caused by host-event polling. Comment-in the REPORT_EVENT_LAG define
+// to have this function report excessive host lag. Typically process should be
+// well under 1 millisecond, however some hosts report lag in the tens to
+// hundereds of milliseconds.
 
 // #define REPORT_EVENT_LAG
-
 bool GFX_MaybeProcessEvents()
 {
-	// Process SDL's event queue at 200 Hz
-	constexpr auto ps2_poll_period = std::chrono::nanoseconds(1'000'000'000 / 200);
-
-	// SDL maintainers recommend processing the SDL's event queue before
-	// each frame. For now, simply ensure that the PS/2 polling period is
-	// quicker than the video frame period. If a time comes when common
-	// displays update faster than 200 Hz, then update this code to pick the
-	// quicker of the two.
-	assert(ps2_poll_period <= frame_period);
-
-	static auto next_process_at = std::chrono::steady_clock::now() + ps2_poll_period;
+	static auto next_render_at = std::chrono::steady_clock::now() + frame_period;
 	const auto checked_at = std::chrono::steady_clock::now();
-	if (checked_at < next_process_at)
+	if (checked_at < next_render_at)
 		return true;
 
 	const bool process_result = ProcessEvents();
+	const auto rendered_at = std::chrono::steady_clock::now();
+	const auto host_lag = rendered_at - checked_at;
+	next_render_at = rendered_at + frame_period - host_lag;
 
 #if defined(REPORT_EVENT_LAG)
-	const auto host_lag = std::chrono::steady_clock::now() - checked_at;
 	if (host_lag > std::chrono::milliseconds(3)) {
-		const std::chrono::duration<double, std::milli> lag_ms = host_lag;
-		LOG_MSG("SDL: Processing SDL's event queue took %5.2f ms",
-		        lag_ms.count());
+		const auto host_lag_us =
+		        std::chrono::duration_cast<std::chrono::microseconds>(host_lag)
+		                .count();
+		LOG_MSG("SDL: Host polling took %.2f ms", host_lag_us / 1000.0);
 	}
 #endif
-
-	next_process_at = checked_at + ps2_poll_period;
 	return process_result;
 }
 
