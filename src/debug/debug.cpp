@@ -1864,7 +1864,7 @@ Bit32u DEBUG_CheckKeys(void) {
 
 Bitu DEBUG_Loop(void) {
 //TODO Disable sound
-	GFX_MaybeProcessEvents();
+	GFX_Events();
 	// Interrupt started ? - then skip it
 	Bit16u oldCS	= SegValue(cs);
 	Bit32u oldEIP	= reg_eip;
