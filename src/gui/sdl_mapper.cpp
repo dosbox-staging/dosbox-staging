@@ -655,8 +655,10 @@ public:
 
 			if (event->jaxis.which != stick)
 				return 0;
+#if defined(REDUCE_JOYSTICK_POLLING)
 			if (axis_id >= axes)
 				return nullptr;
+#endif
 			if (abs(axis_position) < 25000)
 				return 0;
 
@@ -668,8 +670,11 @@ public:
 		} else if (event->type == SDL_JOYBUTTONDOWN) {
 			if (event->jbutton.which != stick)
 				return 0;
+#if defined (REDUCE_JOYSTICK_POLLING)
 			return CreateButtonBind(event->jbutton.button%button_wrap);
-
+#else
+			return CreateButtonBind(event->jbutton.button);
+#endif
 		} else if (event->type==SDL_JOYHATMOTION) {
 			if (event->jhat.which!=stick) return 0;
 			if (event->jhat.value==0) return 0;
@@ -2723,60 +2728,71 @@ static void CreateBindGroups() {
 	keybindgroups.push_back(key_bind_group);
 
 	assert(joytype != JOY_UNSET);
+
 	if (joytype == JOY_DISABLED)
 		return;
 
-	// direct access to the SDL joystick, thus removed from the event handling
-	if (mapper.sticks.num)
-		SDL_JoystickEventState(SDL_DISABLE);
-
-	// Free up our previously assigned joystick slot before assinging below
-	if (mapper.sticks.stick[mapper.sticks.num_groups]) {
-		delete mapper.sticks.stick[mapper.sticks.num_groups];
-		mapper.sticks.stick[mapper.sticks.num_groups] = nullptr;
-	}
-
-	Bit8u joyno = 0;
-	switch (joytype) {
-	case JOY_DISABLED:
-	case JOY_NONE: break;
-	case JOY_4AXIS:
-		mapper.sticks.stick[mapper.sticks.num_groups++] =
-		        new C4AxisBindGroup(joyno, joyno);
-		stickbindgroups.push_back(
-		        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
-		break;
-	case JOY_4AXIS_2:
-		mapper.sticks.stick[mapper.sticks.num_groups++] =
-		        new C4AxisBindGroup(joyno + 1U, joyno);
-		stickbindgroups.push_back(
-		        new CStickBindGroup(joyno, joyno + 1U, true));
-		break;
-	case JOY_FCS:
-		mapper.sticks.stick[mapper.sticks.num_groups++] =
-		        new CFCSBindGroup(joyno, joyno);
-		stickbindgroups.push_back(
-		        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
-		break;
-	case JOY_CH:
-		mapper.sticks.stick[mapper.sticks.num_groups++] =
-		        new CCHBindGroup(joyno, joyno);
-		stickbindgroups.push_back(
-		        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
-		break;
-	case JOY_2AXIS:
-	default:
-		mapper.sticks.stick[mapper.sticks.num_groups++] =
-		        new CStickBindGroup(joyno, joyno);
-		if ((joyno + 1U) < mapper.sticks.num) {
+	if (joytype != JOY_NONE) {
+#if defined (REDUCE_JOYSTICK_POLLING)
+		// direct access to the SDL joystick, thus removed from the event handling
+		if (mapper.sticks.num)
+			SDL_JoystickEventState(SDL_DISABLE);
+#else
+		// enable joystick event handling
+		if (mapper.sticks.num)
+			SDL_JoystickEventState(SDL_ENABLE);
+		else
+			return;
+#endif
+		// Free up our previously assigned joystick slot before assinging below
+		if (mapper.sticks.stick[mapper.sticks.num_groups]) {
 			delete mapper.sticks.stick[mapper.sticks.num_groups];
+			mapper.sticks.stick[mapper.sticks.num_groups] = nullptr;
+		}
+
+		Bit8u joyno = 0;
+		switch (joytype) {
+		case JOY_DISABLED:
+		case JOY_NONE:
+			break;
+		case JOY_4AXIS:
 			mapper.sticks.stick[mapper.sticks.num_groups++] =
-			        new CStickBindGroup(joyno + 1U, joyno + 1U);
-		} else {
+			        new C4AxisBindGroup(joyno, joyno);
 			stickbindgroups.push_back(
 			        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
+			break;
+		case JOY_4AXIS_2:
+			mapper.sticks.stick[mapper.sticks.num_groups++] =
+			        new C4AxisBindGroup(joyno + 1U, joyno);
+			stickbindgroups.push_back(
+			        new CStickBindGroup(joyno, joyno + 1U, true));
+			break;
+		case JOY_FCS:
+			mapper.sticks.stick[mapper.sticks.num_groups++] =
+			        new CFCSBindGroup(joyno, joyno);
+			stickbindgroups.push_back(
+			        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
+			break;
+		case JOY_CH:
+			mapper.sticks.stick[mapper.sticks.num_groups++] =
+			        new CCHBindGroup(joyno, joyno);
+			stickbindgroups.push_back(
+			        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
+			break;
+		case JOY_2AXIS:
+		default:
+			mapper.sticks.stick[mapper.sticks.num_groups++] =
+			        new CStickBindGroup(joyno, joyno);
+			if ((joyno + 1U) < mapper.sticks.num) {
+				delete mapper.sticks.stick[mapper.sticks.num_groups];
+				mapper.sticks.stick[mapper.sticks.num_groups++] =
+				        new CStickBindGroup(joyno + 1U, joyno + 1U);
+			} else {
+				stickbindgroups.push_back(
+				        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
+			}
+			break;
 		}
-		break;
 	}
 }
 
@@ -2784,12 +2800,14 @@ bool MAPPER_IsUsingJoysticks() {
 	return (mapper.sticks.num > 0);
 }
 
+#if defined (REDUCE_JOYSTICK_POLLING)
 void MAPPER_UpdateJoysticks() {
 	for (Bitu i=0; i<mapper.sticks.num_groups; i++) {
 		assert(mapper.sticks.stick[i]);
 		mapper.sticks.stick[i]->UpdateJoystick();
 	}
 }
+#endif
 
 void MAPPER_LosingFocus() {
 	for (CEventVector_it evit = events.begin(); evit != events.end(); ++evit) {
@@ -2848,8 +2866,9 @@ void MAPPER_DisplayUI() {
 	mapper.exit = false;
 	mapper.redraw=true;
 	SetActiveEvent(0);
+#if defined (REDUCE_JOYSTICK_POLLING)
 	SDL_JoystickEventState(SDL_ENABLE);
-
+#endif
 	while (!mapper.exit) {
 		if (mapper.redraw) {
 			mapper.redraw = false;
@@ -2865,8 +2884,9 @@ void MAPPER_DisplayUI() {
 	SDL_FreeSurface(mapper.draw_surface);
 	SDL_FreeSurface(mapper.draw_surface_nonpaletted);
 	SDL_FreePalette(sdl2_map_pal_ptr);
+#if defined (REDUCE_JOYSTICK_POLLING)
 	SDL_JoystickEventState(SDL_DISABLE);
-
+#endif
 	if (mousetoggle)
 		GFX_ToggleMouseCapture();
 	SDL_ShowCursor(cursor);
