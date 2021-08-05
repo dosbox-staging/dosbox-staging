@@ -450,16 +450,6 @@ void SVGA_Setup_TsengET4K(void) {
 		vga.vmemsize = 512*1024;
 	else
 		vga.vmemsize = 1024*1024;
-
-	// Tseng ROM signature
-	PhysPt rom_base=PhysMake(0xc000,0);
-	phys_writeb(rom_base+0x0075,' ');
-	phys_writeb(rom_base+0x0076,'T');
-	phys_writeb(rom_base+0x0077,'s');
-	phys_writeb(rom_base+0x0078,'e');
-	phys_writeb(rom_base+0x0079,'n');
-	phys_writeb(rom_base+0x007a,'g');
-	phys_writeb(rom_base+0x007b,' ');
 }
 
 
@@ -702,7 +692,7 @@ void FinishSetMode_ET3K(Bitu crtc_base, VGA_ModeExtraData* modeData) {
 	IO_Write(crtc_base,0x25);IO_Write(crtc_base+1,et4k_ver_overflow);
 
 	// Clear remaining ext CRTC registers
-	for (Bitu i=0x16; i<=0x21; i++) {
+	for (Bitu i=0x1b; i<=0x21; i++) {
 		IO_Write(crtc_base,i);
 		IO_Write(crtc_base+1,0);
 	}
