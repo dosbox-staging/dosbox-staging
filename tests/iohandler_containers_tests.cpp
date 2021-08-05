@@ -45,16 +45,6 @@ static void write_byte_new(io_port_t, uint8_t val, io_width_t)
 	byte_val_new = val;
 }
 
-static Bitu byte_val_baseline = 0;
-static Bitu read_byte_baseline(Bitu /*port*/, Bitu /*iolen*/)
-{
-	return byte_val_baseline;
-}
-static void write_byte_baseline(Bitu /*port*/, Bitu val, Bitu /*iolen*/)
-{
-	byte_val_baseline = val;
-}
-
 // Word IO handler functions (Bitu and sized)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -68,16 +58,6 @@ static void write_word_new(io_port_t, uint16_t val, io_width_t)
 	word_val_new = val;
 }
 
-static Bitu word_val_baseline = 0;
-static Bitu read_word_baseline(Bitu /*port*/, Bitu /*iolen*/)
-{
-	return word_val_baseline;
-}
-static void write_word_baseline(Bitu /*port*/, Bitu val, Bitu /*iolen*/)
-{
-	word_val_baseline = val;
-}
-
 // Dword IO handler functions (Bitu and sized)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 static uint32_t dword_val_new = 0;
@@ -88,16 +68,6 @@ static uint32_t read_dword_new(io_port_t, io_width_t)
 static void write_dword_new(io_port_t, uint32_t val, io_width_t)
 {
 	dword_val_new = val;
-}
-
-static Bitu dword_val_baseline = 0;
-static Bitu read_dword_baseline(Bitu /*port*/, Bitu /*iolen*/)
-{
-	return dword_val_baseline;
-}
-static void write_dword_baseline(Bitu /*port*/, Bitu val, Bitu /*iolen*/)
-{
-	dword_val_baseline = val;
 }
 
 namespace {
