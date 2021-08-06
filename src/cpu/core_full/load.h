@@ -517,8 +517,10 @@ l_M_Ed:
 	case D_RDTSC: {
 		if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW)
 			goto illegalopcode;
-		Bit64s tsc = (Bit64s)(PIC_FullIndex() * static_cast<float>(CPU_CycleAutoAdjust ? 70000 : CPU_CycleMax));
-		reg_edx = (Bit32u)(tsc >> 32);
+	        Bit64s tsc = (Bit64s)(PIC_FullIndex() *
+	                              static_cast<double>(
+	                                      CPU_CycleAutoAdjust ? 70000 : CPU_CycleMax));
+	        reg_edx = (Bit32u)(tsc >> 32);
 		reg_eax = (Bit32u)(tsc & 0xffffffff);
 		break;
 	}

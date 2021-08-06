@@ -230,8 +230,11 @@
 			if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW)
 				goto illegal_opcode;
 			/* Use a fixed number when in auto cycles mode as else the reported value changes constantly */
-			Bit64s tsc = (Bit64s)(PIC_FullIndex() * static_cast<float>(CPU_CycleAutoAdjust ? 70000 : CPU_CycleMax));
-			reg_edx = (Bit32u)(tsc >> 32);
+	                Bit64s tsc = (Bit64s)(PIC_FullIndex() *
+	                                      static_cast<double>(CPU_CycleAutoAdjust
+	                                                                  ? 70000
+	                                                                  : CPU_CycleMax));
+	                reg_edx = (Bit32u)(tsc >> 32);
 			reg_eax = (Bit32u)(tsc & 0xffffffff);
 		}
 		break;
