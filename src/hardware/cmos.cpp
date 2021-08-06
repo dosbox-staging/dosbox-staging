@@ -37,13 +37,13 @@ static struct {
 	struct {
 		bool enabled;
 		Bit8u div;
-		float delay;
+		double delay;
 		bool acknowledged;
 	} timer;
 	struct {
-		float timer;
-		float ended;
-		float alarm;
+		double timer;
+		double ended;
+		double alarm;
 	} last;
 	bool update_ended;
 } cmos;
@@ -63,12 +63,12 @@ static void cmos_timerevent(uint32_t /*val*/)
 static void cmos_checktimer(void) {
 	PIC_RemoveEvents(cmos_timerevent);
 	if (cmos.timer.div<=2) cmos.timer.div+=7;
-	cmos.timer.delay=(1000.0f/(32768.0f / (1 << (cmos.timer.div - 1))));
+	cmos.timer.delay = (1000.0 / (32768.0 / (1 << (cmos.timer.div - 1))));
 	if (!cmos.timer.div || !cmos.timer.enabled) return;
 	LOG(LOG_PIT,LOG_NORMAL)("RTC Timer at %.2f hz",1000.0/cmos.timer.delay);
 //	PIC_AddEvent(cmos_timerevent,cmos.timer.delay);
 	/* A rtc is always running */
-	const auto remd = fmodf(PIC_FullIndex(), cmos.timer.delay);
+	const auto remd = fmod(PIC_FullIndex(), cmos.timer.delay);
 	// Should be more like a real pc. Check
 	PIC_AddEvent(cmos_timerevent, cmos.timer.delay - remd);
 	// Status reg A reading with this (and with other delays actually)
