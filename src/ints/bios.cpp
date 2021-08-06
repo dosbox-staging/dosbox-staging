@@ -553,7 +553,9 @@ static Bitu INT8_Handler(void) {
 			check = false;
 			time_t curtime;struct tm *loctime;
 			curtime = time (NULL);loctime = localtime (&curtime);
-			Bit32u ticksnu = (Bit32u)((loctime->tm_hour*3600+loctime->tm_min*60+loctime->tm_sec)*(float)PIT_TICK_RATE/65536.0);
+			Bit32u ticksnu = (Bit32u)((loctime->tm_hour * 3600 +
+			                           loctime->tm_min * 60 + loctime->tm_sec) *
+			                          (double)PIT_TICK_RATE / 65536.0);
 			Bit32s bios = value;Bit32s tn = ticksnu;
 			Bit32s diff = tn - bios;
 			if(diff>0) {
@@ -603,7 +605,7 @@ static Bitu INT17_Handler(void) {
 
 static bool INT14_Wait(Bit16u port, Bit8u mask, Bit8u timeout, Bit8u* retval) {
 	const auto starttime = PIC_FullIndex();
-	const auto timeout_f = timeout * 1000.0f;
+	const auto timeout_f = timeout * 1000.0;
 	while (((*retval = IO_ReadB(port)) & mask) != mask) {
 		if (starttime < (PIC_FullIndex() - timeout_f)) {
 			return false;
@@ -870,10 +872,8 @@ static Bitu INT15_Handler(void) {
 			}
 			Bit32u count=(reg_cx<<16)|reg_dx;
 		        const auto timeout = PIC_FullIndex() +
-		                             static_cast<float>(count) / 1000.0f +
-		                             1.0f;
-		        mem_writed(BIOS_WAIT_FLAG_POINTER,
-		                   RealMake(0, BIOS_WAIT_FLAG_TEMP));
+		                             static_cast<double>(count) / 1000.0 + 1.0;
+		        mem_writed(BIOS_WAIT_FLAG_POINTER, RealMake(0, BIOS_WAIT_FLAG_TEMP));
 		        mem_writed(BIOS_WAIT_FLAG_COUNT, count);
 		        mem_writeb(BIOS_WAIT_FLAG_ACTIVE, 1);
 		        /* Unmask IRQ 8 if masked */
@@ -1073,7 +1073,7 @@ static Bitu Reboot_Handler(void) {
 	}
 	LOG_MSG(text);
 	const auto start = PIC_FullIndex();
-	while ((PIC_FullIndex() - start) < 3000.0f)
+	while ((PIC_FullIndex() - start) < 3000.0)
 		CALLBACK_Idle();
 	throw 1;
 	return CBRET_NONE;

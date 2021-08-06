@@ -26,7 +26,7 @@
 #include "timer.h"
 
 #define KEYBUFSIZE 32
-#define KEYDELAY 0.300f			//Considering 20-30 khz serial clock and 11 bits/char
+#define KEYDELAY   0.300 // Considering 20-30 khz serial clock and 11 bits/char
 
 enum KeyCommands {
 	CMD_NONE,
