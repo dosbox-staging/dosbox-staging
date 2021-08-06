@@ -228,7 +228,7 @@ static void Serial_EventHandler(uint32_t val)
 
 void CSerial::setEvent(uint16_t type, float duration)
 {
-	PIC_AddEvent(Serial_EventHandler, duration,
+	PIC_AddEvent(Serial_EventHandler, static_cast<double>(duration),
 	             static_cast<Bitu>((type << 2) | port_index));
 }
 
@@ -1210,7 +1210,7 @@ CSerial::~CSerial() {
 	}
 }
 
-static bool idle(const float start, const uint32_t timeout)
+static bool idle(const double start, const uint32_t timeout)
 {
 	CALLBACK_Idle();
 	return PIC_FullIndex() - start > timeout;
@@ -1358,7 +1358,7 @@ public:
 	}
 };
 
-static SERIALPORTS *testSerialPortsBaseclass;
+static SERIALPORTS *testSerialPortsBaseclass = nullptr;
 
 void SERIAL_Destroy(Section *sec)
 {
@@ -1368,8 +1368,7 @@ void SERIAL_Destroy(Section *sec)
 }
 
 void SERIAL_Init (Section * sec) {
-	// should never happen
-	if (testSerialPortsBaseclass) delete testSerialPortsBaseclass;
+	delete testSerialPortsBaseclass;
 	testSerialPortsBaseclass = new SERIALPORTS (sec);
 	sec->AddDestroyFunction (&SERIAL_Destroy, true);
 }

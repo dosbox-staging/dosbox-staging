@@ -257,8 +257,8 @@ protected:
 
 	struct {
 		bool active = false;
-		double f1 = 0.0f;
-		double f2 = 0.0f;
+		double f1 = 0.0;
+		double f2 = 0.0;
 		uint32_t len = 0;
 		uint32_t pos = 0;
 		char str[256] = {0};
