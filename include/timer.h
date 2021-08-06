@@ -29,7 +29,7 @@
 
 /* underlying clock rate in HZ */
 
-#define PIT_TICK_RATE 1193182
+constexpr int PIT_TICK_RATE = 1193182;
 
 typedef void (*TIMER_TickHandler)(void);
 
@@ -93,34 +93,34 @@ static constexpr int precise_delay_duration_us = 100;
 static inline void DelayPrecise(const int milliseconds)
 {
 	// The estimate of how long the sleep should take (microseconds)
-	static auto estimate = 5e-5f;
+	static auto estimate = 5e-5;
 	// Use the estimate value as the default mean time taken
-	static auto mean = 5e-5f;
-	static auto m2 = 0.0f;
+	static auto mean = 5e-5;
+	static auto m2 = 0.0;
 	static int64_t count = 1;
 
 	// Original code operated on seconds, convert
-	auto seconds = static_cast<float>(milliseconds) / 1e3f;
+	auto seconds = static_cast<double>(milliseconds) / 1e3;
 
 	// sleep as long as we can, then spinlock the rest
 	while (seconds > estimate) {
 		const auto start = GetTicksUs();
 		DelayUs(precise_delay_duration_us);
 		// Original code operated on seconds, convert
-		const auto observed = static_cast<float>(GetTicksUsSince(start)) / 1e6f;
+		const auto observed = static_cast<double>(GetTicksUsSince(start)) / 1e6;
 		seconds -= observed;
 
 		++count;
 		const auto delta = observed - mean;
-		mean += delta / static_cast<float>(count);
+		mean += delta / static_cast<double>(count);
 		m2 += delta * (observed - mean);
-		const auto stddev = std::sqrt(m2 / static_cast<float>(count - 1));
+		const auto stddev = std::sqrt(m2 / static_cast<double>(count - 1));
 		estimate = mean + stddev;
 	}
 
 	// spin lock
 	const auto spin_start = GetTicksUs();
-	const int spin_remain = static_cast<int>(seconds * 1e6f);
+	const auto spin_remain = lround(seconds * 1e6);
 	do {
 		std::this_thread::yield();
 	} while (GetTicksUsSince(spin_start) <= spin_remain);

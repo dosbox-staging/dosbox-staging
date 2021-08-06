@@ -43,8 +43,8 @@ static INLINE void BCD2BIN(Bit16u& val) {
 
 struct PIT_Block {
 	uint32_t cntr;
-	float delay;
-	float start;
+	double delay;
+	double start;
 
 	Bit16u read_latch;
 	Bit16u write_latch;
@@ -77,8 +77,9 @@ static void PIT0_Event(uint32_t /*val*/)
 		pit[0].start += pit[0].delay;
 
 		if (GCC_UNLIKELY(pit[0].update_count)) {
-			pit[0].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[0].cntr));
-			pit[0].update_count=false;
+			pit[0].delay = (1000.0 / (static_cast<double>(PIT_TICK_RATE) /
+			                          (double)pit[0].cntr));
+			pit[0].update_count = false;
 		}
 		PIC_AddEvent(PIT0_Event,pit[0].delay);
 	}
@@ -96,11 +97,11 @@ static bool counter_output(const uint32_t counter)
 		break;
 	case 2:
 		if (p->new_mode) return true;
-		index = fmodf(index, p->delay);
+		index = fmod(index, p->delay);
 		return index>0;
 	case 3:
 		if (p->new_mode) return true;
-		index = fmodf(index, p->delay);
+		index = fmod(index, p->delay);
 		return index*2<p->delay;
 	case 4:
 		//Only low on terminal count
@@ -151,19 +152,23 @@ static void counter_latch(uint32_t counter)
 	PIT_Block * p=&pit[counter];
 	p->go_read_latch=false;
 
+	// Short-hand kilo-tick rates
+	constexpr auto pic_tick_rate_khz = PIT_TICK_RATE / 1000.0;
+	constexpr auto seconds_per_kilo_tick = 1000.0 / PIT_TICK_RATE;
+
 	//If gate2 is disabled don't update the read_latch
 	if (counter == 2 && !gate2 && p->mode !=1) return;
 	if (GCC_UNLIKELY(p->new_mode)) {
 		const auto passed_time = PIC_FullIndex() - p->start;
 		const auto ticks_since_then = static_cast<uint32_t>(
-		        passed_time / (1000.0f / PIT_TICK_RATE));
+		        passed_time / seconds_per_kilo_tick);
 		// if (p->mode==3) ticks_since_then /= 2; // TODO figure this
 		// out on real hardware
 		p->read_latch -= ticks_since_then;
 		return;
 	}
 	auto index = PIC_FullIndex() - p->start;
-	const auto cntr = static_cast<float>(p->cntr);
+	const auto cntr = static_cast<double>(p->cntr);
 	switch (p->mode) {
 	case 4:         /* Software Triggered Strobe */
 	case 0:		/* Interrupt on Terminal Count */
@@ -171,14 +176,16 @@ static void counter_latch(uint32_t counter)
 		if (index>p->delay) {
 			index-=p->delay;
 			if(p->bcd) {
-				index = fmodf(index, (1000.0f / PIT_TICK_RATE) * 10000.0f);
-				p->read_latch = (Bit16u)(9999 - index * (PIT_TICK_RATE / 1000.0f));
+				index = fmod(index, seconds_per_kilo_tick * 10000.0);
+				p->read_latch = (Bit16u)(9999 - index * pic_tick_rate_khz);
 			} else {
-				index = fmodf(index, (1000.0f / PIT_TICK_RATE) * 0x10000);
-				p->read_latch = (Bit16u)(0xffff - index * (PIT_TICK_RATE / 1000.0f));
+				index = fmod(index, seconds_per_kilo_tick * 0x10000);
+				p->read_latch = (Bit16u)(0xffff -
+				                         index * pic_tick_rate_khz);
 			}
 		} else {
-			p->read_latch = (Bit16u)(static_cast<float>(cntr) - index * (PIT_TICK_RATE / 1000.0f));
+			p->read_latch = (Bit16u)(static_cast<double>(cntr) -
+			                         index * pic_tick_rate_khz);
 		}
 		break;
 	case 1: // countdown
@@ -186,16 +193,16 @@ static void counter_latch(uint32_t counter)
 			if (index>p->delay) { // has timed out
 				p->read_latch = 0xffff; //unconfirmed
 			} else {
-				p->read_latch = (Bit16u)(cntr - index * (PIT_TICK_RATE / 1000.0f));
+				p->read_latch = (Bit16u)(cntr - index * pic_tick_rate_khz);
 			}
 		}
 		break;
 	case 2:		/* Rate Generator */
-		index = fmodf(index, p->delay);
+		index = fmod(index, p->delay);
 		p->read_latch = (Bit16u)(cntr - (index / p->delay) * cntr);
 		break;
 	case 3:		/* Square Wave Rate Generator */
-		index = fmodf(index, p->delay);
+		index = fmod(index, p->delay);
 		index*=2;
 		if (index>p->delay) index-=p->delay;
 		p->read_latch = (Bit16u)(cntr - (index / p->delay) * cntr);
@@ -264,7 +271,7 @@ static void write_latch(uint16_t port, uint8_t val, Bitu /*iolen*/)
 			return;
 		}
 		p->start = PIC_FullIndex();
-		p->delay = (1000.0f / ((float)PIT_TICK_RATE / (float)p->cntr));
+		p->delay = (1000.0 / ((double)PIT_TICK_RATE / (double)p->cntr));
 
 		switch (counter) {
 		case 0x00: /* Timer hooked to IRQ 0 */
@@ -277,8 +284,8 @@ static void write_latch(uint16_t port, uint8_t val, Bitu /*iolen*/)
 				LOG(LOG_PIT, LOG_NORMAL)
 			("PIT 0 Timer set without new control word");
 			LOG(LOG_PIT, LOG_NORMAL)
-			("PIT 0 Timer at %.4f Hz mode %d",
-			 static_cast<double>(1000.0f / p->delay), p->mode);
+			("PIT 0 Timer at %.4f Hz mode %d", 1000.0 / p->delay,
+			 p->mode);
 			break;
 		case 0x02: // Timer hooked to PC-Speaker
 			// LOG(LOG_PIT,"PIT 2 Timer at %.3g Hz mode %d",
@@ -483,9 +490,8 @@ public:
 		pit[0].go_read_latch = true;
 		pit[0].counterstatus_set = false;
 		pit[0].update_count = false;
-	
+
 		pit[1].bcd = false;
-		pit[1].write_state = 1;
 		pit[1].read_state = 1;
 		pit[1].go_read_latch = true;
 		pit[1].cntr = 18;
@@ -502,10 +508,10 @@ public:
 		pit[2].go_read_latch=true;
 		pit[2].counterstatus_set = false;
 		pit[2].counting = false;
-	
-		pit[0].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[0].cntr));
-		pit[1].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[1].cntr));
-		pit[2].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[2].cntr));
+
+		pit[0].delay = (1000.0 / ((double)PIT_TICK_RATE / (double)pit[0].cntr));
+		pit[1].delay = (1000.0 / ((double)PIT_TICK_RATE / (double)pit[1].cntr));
+		pit[2].delay = (1000.0 / ((double)PIT_TICK_RATE / (double)pit[2].cntr));
 
 		latched_timerstatus_locked=false;
 		gate2 = false;
