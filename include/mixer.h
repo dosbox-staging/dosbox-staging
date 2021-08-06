@@ -156,16 +156,16 @@ void MIXER_DelChannel(MixerChannel* delchan);
  * and removes itself when destroyed. */
 class MixerObject{
 private:
-	bool installed;
-	char m_name[32];
+	bool installed = false;
+	char m_name[32] = "";
+
 public:
-	MixerObject() : installed(false) {}
 	MixerChannel* Install(MIXER_Handler handler,Bitu freq,const char * name);
 	~MixerObject();
 };
 
 /* PC Speakers functions, tightly related to the timer functions */
-void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode);
-void PCSPEAKER_SetType(Bitu mode);
+void PCSPEAKER_SetCounter(uint32_t cntr, uint32_t mode);
+void PCSPEAKER_SetType(uint32_t mode);
 
 #endif

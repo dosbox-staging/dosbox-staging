@@ -623,9 +623,9 @@ void MixerChannel::FillUp()
 {
 	if (!is_enabled || done < mixer.done)
 		return;
-	float index = PIC_TickIndex();
+	const auto index = PIC_TickIndex();
 	MIXER_LockAudioDevice();
-	Mix((Bitu)(index * mixer.needed));
+	Mix((Bitu)(index * static_cast<double>(mixer.needed)));
 	MIXER_UnlockAudioDevice();
 }
 

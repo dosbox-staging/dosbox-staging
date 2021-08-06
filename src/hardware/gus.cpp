@@ -53,7 +53,7 @@ constexpr uint32_t RAM_SIZE = 1024 * 1024;        // 1 MiB
 constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024;         // 8 KiB per transfer
 constexpr uint32_t ISA_BUS_THROUGHPUT = 32 * 1024 * 1024; // 32 MiB/s
 constexpr uint16_t DMA_TRANSFERS_PER_S = ISA_BUS_THROUGHPUT / BYTES_PER_DMA_XFER;
-constexpr float MS_PER_DMA_XFER = 1000.0f / DMA_TRANSFERS_PER_S;
+constexpr double MS_PER_DMA_XFER = 1000.0 / DMA_TRANSFERS_PER_S;
 
 // Voice-channel and state related constants
 constexpr uint8_t MAX_VOICES = 32u;
@@ -73,8 +73,8 @@ constexpr uint8_t PAN_DEFAULT_POSITION = 7u;
 constexpr uint8_t PAN_POSITIONS = 16u;  // 0: -45-deg, 7: centre, 15: +45-deg
 
 // Timer delay constants
-constexpr float TIMER_1_DEFAULT_DELAY = 0.080f;
-constexpr float TIMER_2_DEFAULT_DELAY = 0.320f;
+constexpr double TIMER_1_DEFAULT_DELAY = 0.080;
+constexpr double TIMER_2_DEFAULT_DELAY = 0.320;
 
 // Volume scaling and dampening constants
 constexpr auto DELTA_DB = 0.002709201;     // 0.0235 dB increments
@@ -209,7 +209,7 @@ public:
 	void PrintStats();
 
 	struct Timer {
-		float delay = 0.0f;
+		double delay = 0.0;
 		uint8_t value = 0xff;
 		bool has_expired = true;
 		bool is_counting_down = false;
@@ -415,7 +415,7 @@ float Voice::GetSample(const ram_array_t &ram) noexcept
 		const auto next_addr = addr + 1;
 		const float next_sample = Is8Bit() ? Read8BitSample(ram, next_addr)
 		                                   : Read16BitSample(ram, next_addr);
-		constexpr float WAVE_WIDTH_INV = 1.0f / WAVE_WIDTH;
+		constexpr float WAVE_WIDTH_INV = 1.0 / WAVE_WIDTH;
 		sample += (next_sample - sample) *
 		          static_cast<float>(fraction) * WAVE_WIDTH_INV;
 	}
@@ -848,7 +848,7 @@ void Gus::PopulateVolScalars() noexcept
 		*(--volume) = static_cast<float>(scalar);
 		scalar /= VOLUME_LEVEL_DIVISOR;
 	}
-	vol_scalars.front() = 0.0f;
+	vol_scalars.front() = 0.0;
 }
 
 /*

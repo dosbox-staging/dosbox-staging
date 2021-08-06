@@ -33,13 +33,13 @@ namespace Adlib {
 
 class Timer {
 	//Rounded down start time
-	float start;
+	double start;
 	//Time when you overflow
-	float trigger;
+	double trigger;
 	//Clock interval
-	float clockInterval;
+	double clockInterval;
 	//cycle interval
-	float counterInterval;
+	double counterInterval;
 	uint8_t counter;
 	bool enabled;
 	bool overflow;
@@ -47,10 +47,10 @@ class Timer {
 
 public:
 	Timer(int16_t micros)
-	        : start(0.0f),
-	          trigger(0.0f),
-	          clockInterval(micros * 0.001f), // interval in milliseconds
-	          counterInterval(0.0f),
+	        : start(0.0),
+	          trigger(0.0),
+	          clockInterval(micros * 0.001), // interval in milliseconds
+	          counterInterval(0.0),
 	          counter(0),
 	          enabled(false),
 	          overflow(false),
@@ -61,13 +61,13 @@ public:
 
 	//Update returns with true if overflow
 	//Properly syncs up the start/end to current time and changing intervals
-	bool Update(const float time)
+	bool Update(const double time)
 	{
 		if (enabled && (time >= trigger)) {
 			// How far into the next cycle
-			const float deltaTime = time - trigger;
+			const double deltaTime = time - trigger;
 			// Sync start to last cycle
-			const auto counterMod = fmodf(deltaTime, counterInterval);
+			const auto counterMod = fmod(deltaTime, counterInterval);
 			start = time - counterMod;
 			trigger = start + counterInterval;
 			//Only set the overflow flag when not masked
@@ -99,14 +99,14 @@ public:
 		enabled = false;
 	}
 
-	void Start(const float time)
+	void Start(const double time)
 	{
 		// Only properly start when not running before
 		if (!enabled) {
 			enabled = true;
 			overflow = false;
 			//Sync start to the last clock interval
-			const auto clockMod = fmodf(time, clockInterval);
+			const auto clockMod = fmod(time, clockInterval);
 			start = time - clockMod;
 			//Overflow trigger
 			trigger = start + counterInterval;
