@@ -40,11 +40,16 @@ jobs:
         if:    steps.cache-vcpkg.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          rm -R c:\vcpkg
-          mv c:\vcpkg-bak c:\vcpkg
+          c:
+          cd \
+          rm -R vcpkg
+          git clone https://github.com/Microsoft/vcpkg.git
+          cd vcpkg
+          git checkout 4b317d797e0fb3ca0cfa1b47f2c6741284fe5f5c
+          .\bootstrap-vcpkg.bat
           vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth gtest
           if (-not $?) { throw "vcpkg failed to install library dependencies" }
-          rm -R c:\vcpkg\buildtrees\fluidsynth\src\*.clean\sf2
+          rm -R buildtrees\fluidsynth\src\*.clean\sf2
 
       - name:  Integrate packages
         shell: pwsh
