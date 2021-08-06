@@ -191,7 +191,7 @@ void PIC_Controller::start_irq(Bit8u val) {
 
 
 struct PICEntry {
-	float index;
+	double index;
 	Bitu value;
 	PIC_EventHandler pic_event;
 	PICEntry * next;
@@ -449,9 +449,9 @@ static void AddEntry(PICEntry * entry) {
 	}
 }
 static bool InEventService = false;
-static float srv_lag = 0;
+static double srv_lag = 0.0;
 
-void PIC_AddEvent(PIC_EventHandler handler, float delay, uint32_t val)
+void PIC_AddEvent(PIC_EventHandler handler, double delay, uint32_t val)
 {
 	if (GCC_UNLIKELY(!pic_queue.free_entry)) {
 		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
@@ -526,12 +526,15 @@ bool PIC_RunQueue(void) {
 	if (CPU_CycleLeft<=0) {
 		return false;
 	}
+
+	const auto index_nd_f = static_cast<double>(PIC_TickIndexND());
+
 	/* Check the queue for an entry */
-	Bits index_nd=PIC_TickIndexND();
 	InEventService = true;
-	while (pic_queue.next_entry && (pic_queue.next_entry->index*CPU_CycleMax<=index_nd)) {
-		PICEntry * entry=pic_queue.next_entry;
-		pic_queue.next_entry=entry->next;
+	while (pic_queue.next_entry &&
+	       (pic_queue.next_entry->index * static_cast<double>(CPU_CycleMax) <= index_nd_f)) {
+		PICEntry *entry = pic_queue.next_entry;
+		pic_queue.next_entry = entry->next;
 
 		srv_lag = entry->index;
 		(entry->pic_event)(entry->value); // call the event handler
@@ -544,10 +547,13 @@ bool PIC_RunQueue(void) {
 
 	/* Check when to set the new cycle end */
 	if (pic_queue.next_entry) {
-		Bits cycles=(Bits)(pic_queue.next_entry->index*CPU_CycleMax-index_nd);
-		if (GCC_UNLIKELY(!cycles)) cycles=1;
-		if (cycles<CPU_CycleLeft) {
-			CPU_Cycles=cycles;
+		auto cycles = static_cast<int32_t>(
+		        pic_queue.next_entry->index * static_cast<double>(CPU_CycleMax) -
+		        index_nd_f);
+		if (GCC_UNLIKELY(!cycles))
+			cycles = 1;
+		if (cycles < CPU_CycleLeft) {
+			CPU_Cycles = cycles;
 		} else {
 			CPU_Cycles=CPU_CycleLeft;
 		}
