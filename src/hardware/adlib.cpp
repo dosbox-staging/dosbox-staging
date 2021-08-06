@@ -903,12 +903,10 @@ Module::Module(Section *configuration)
 }
 
 Module::~Module() {
-	if ( capture ) {
-		delete capture;
-	}
-	if ( handler ) {
-		delete handler;
-	}
+	delete capture;
+	capture = nullptr;
+	delete handler;
+	handler = nullptr;
 }
 
 //Initialize static members

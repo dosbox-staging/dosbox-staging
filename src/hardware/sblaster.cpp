@@ -171,8 +171,6 @@ struct SB_INFO {
 
 static SB_INFO sb;
 
-static char const * const copyright_string="COPYRIGHT (C) CREATIVE TECHNOLOGY LTD, 1992.";
-
 // number of bytes in input for commands (sb/sbpro)
 static Bit8u DSP_cmd_len_sb[256] = {
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x00
@@ -324,7 +322,7 @@ static INLINE void DSP_FlushData(void) {
 	sb.dsp.out.pos=0;
 }
 
-static float last_dma_callback = 0.0f;
+static double last_dma_callback = 0.0;
 
 static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	if (chan!=sb.dma.chan || event==DMA_REACHED_TC) return;
@@ -333,7 +331,7 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 			//Catch up to current time, but don't generate an IRQ!
 			//Fixes problems with later sci games.
 			const auto t = PIC_FullIndex() - last_dma_callback;
-			Bitu s = static_cast<Bitu>(sb.dma.rate * t / 1000.0f);
+			Bitu s = static_cast<Bitu>(sb.dma.rate * t / 1000.0);
 			if (s > sb.dma.min) {
 				LOG(LOG_SB,LOG_NORMAL)("limiting amount masked to sb.dma.min");
 				s = sb.dma.min;
@@ -660,7 +658,7 @@ static void SuppressDMATransfer(uint32_t size)
 	}
 	if (sb.dma.left) {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
-		float delay=(bigger*1000.0f)/sb.dma.rate;
+		double delay = (bigger * 1000.0) / sb.dma.rate;
 		PIC_AddEvent(SuppressDMATransfer, delay, bigger);
 	}
 }
@@ -670,12 +668,12 @@ static void FlushRemainingDMATransfer()
 	if (!sb.dma.left) return;
 	if (!sb.speaker && sb.type!=SBT_16) {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
-		float delay=(bigger*1000.0f)/sb.dma.rate;
+		double delay = (bigger * 1000.0) / sb.dma.rate;
 		PIC_AddEvent(SuppressDMATransfer, delay, bigger);
 		LOG(LOG_SB,LOG_NORMAL)("%s: Silent DMA Transfer scheduling IRQ in %.3f milliseconds",
 		                       CardType(), delay);
 	} else if (sb.dma.left<sb.dma.min) {
-		float delay=(sb.dma.left*1000.0f)/sb.dma.rate;
+		double delay = (sb.dma.left * 1000.0) / sb.dma.rate;
 		LOG(LOG_SB,LOG_NORMAL)("%s: Short transfer scheduling IRQ in %.3f milliseconds",
 		                       CardType(), delay);
 		PIC_AddEvent(ProcessDMATransfer, delay, sb.dma.left);
@@ -856,7 +854,7 @@ static void DSP_DoReset(Bit8u val) {
 	} else if (((val&1)==0) && (sb.dsp.state==DSP_S_RESET)) {	// reset off
 		sb.dsp.state=DSP_S_RESET_WAIT;
 		PIC_RemoveEvents(DSP_FinishReset);
-		PIC_AddEvent(DSP_FinishReset,20.0f/1000.0f,0);	// 20 microseconds
+		PIC_AddEvent(DSP_FinishReset, 20.0 / 1000.0, 0); // 20 microseconds
 		LOG_MSG("%s: DSP was reset", CardType());
 	}
 }
@@ -1016,7 +1014,8 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0x80:	/* Silence DAC */
 		PIC_AddEvent(&DSP_RaiseIRQEvent,
-			(1000.0f*(1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8))/sb.freq));
+		             (1000.0 * (1 + sb.dsp.in.data[0] + (sb.dsp.in.data[1] << 8)) /
+		              sb.freq));
 		break;
 	case 0xb0:	case 0xb1:	case 0xb2:	case 0xb3:  case 0xb4:	case 0xb5:	case 0xb6:	case 0xb7:
 	case 0xb8:	case 0xb9:	case 0xba:	case 0xbb:  case 0xbc:	case 0xbd:	case 0xbe:	case 0xbf:
@@ -1105,13 +1104,10 @@ static void DSP_DoCommand(void) {
 			 GetDMAChannel(sb.hw.dma8)->Register_Callback(DSP_E2_DMA_CallBack);
 		}
 		break;
-	case 0xe3:	/* DSP Copyright */
-		{
-			DSP_FlushData();
-			for (size_t i=0;i<=strlen(copyright_string);i++) {
-				DSP_AddData(copyright_string[i]);
-			}
-		}
+	case 0xe3: /* DSP Copyright */
+		DSP_FlushData();
+		for (const auto c : "COPYRIGHT (C) CREATIVE TECHNOLOGY LTD, 1992.")
+			DSP_AddData(static_cast<uint8_t>(c));
 		break;
 	case 0xe4:	/* Write Test Register */
 		sb.dsp.test_register=sb.dsp.in.data[0];
@@ -1122,7 +1118,7 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0xf2:	/* Trigger 8bit IRQ */
 		//Small delay in order to emulate the slowness of the DSP, fixes Llamatron 2012 and Lemmings 3D
-		PIC_AddEvent(&DSP_RaiseIRQEvent,0.01f);
+		PIC_AddEvent(&DSP_RaiseIRQEvent, 0.01);
 		LOG(LOG_SB, LOG_NORMAL)("Trigger 8bit IRQ command");
 		break;
 	case 0xf3:   /* Trigger 16bit IRQ */

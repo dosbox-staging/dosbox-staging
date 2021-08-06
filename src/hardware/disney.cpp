@@ -37,8 +37,8 @@ enum DISNEY_STATE { IDLE, RUNNING, FINISHED, ANALYZING };
 struct dac_channel {
 	uint8_t buffer[BUFFER_SAMPLES] = {};
 	uint8_t used = 0; // current data buffer level
-	float speedcheck_sum = 0;
-	float speedcheck_last = 0;
+	double speedcheck_sum = 0.0;
+	double speedcheck_last = 0.0;
 	bool speedcheck_failed = false;
 	bool speedcheck_init = false;
 };
@@ -368,8 +368,8 @@ static void DISNEY_CallBack(uint16_t len) {
 	}
 	if (disney.last_used+100<PIC_Ticks) {
 		// disable sound output
-		PIC_AddEvent(DISNEY_disable,0.0001f);	// I think we shouldn't delete the 
-												// mixer while we are inside it
+		PIC_AddEvent(DISNEY_disable, 0.0001); // I think we shouldn't delete the
+		                                      // mixer while we are inside it
 	}
 }
 
