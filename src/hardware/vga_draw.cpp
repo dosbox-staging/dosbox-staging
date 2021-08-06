@@ -812,7 +812,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 	++vga.draw.lines_done;
 	if (vga.draw.split_line==vga.draw.lines_done) VGA_ProcessSplit();
 	if (vga.draw.lines_done < vga.draw.lines_total) {
-		PIC_AddEvent(VGA_DrawSingleLine,(float)vga.draw.delay.htotal);
+		PIC_AddEvent(VGA_DrawSingleLine, vga.draw.delay.htotal);
 	} else RENDER_EndUpdate(false);
 }
 
@@ -836,7 +836,7 @@ static void VGA_DrawEGASingleLine(uint32_t /*blah*/)
 	++vga.draw.lines_done;
 	if (vga.draw.split_line==vga.draw.lines_done) VGA_ProcessSplit();
 	if (vga.draw.lines_done < vga.draw.lines_total) {
-		PIC_AddEvent(VGA_DrawEGASingleLine,(float)vga.draw.delay.htotal);
+		PIC_AddEvent(VGA_DrawEGASingleLine, vga.draw.delay.htotal);
 	} else RENDER_EndUpdate(false);
 }
 
@@ -862,8 +862,10 @@ static void VGA_DrawPart(uint32_t lines)
 		}
 	}
 	if (--vga.draw.parts_left) {
-		PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts,
-			 (vga.draw.parts_left!=1) ? vga.draw.parts_lines  : (vga.draw.lines_total - vga.draw.lines_done));
+		PIC_AddEvent(VGA_DrawPart, vga.draw.delay.parts,
+		             (vga.draw.parts_left != 1)
+		                     ? vga.draw.parts_lines
+		                     : (vga.draw.lines_total - vga.draw.lines_done));
 	} else {
 #ifdef VGA_KEEP_CHANGES
 		VGA_ChangesEnd();
@@ -965,11 +967,11 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		// VGA: checked with scope; however disabled by default by
 		// jumper on VGA boards add a little amount of time to make sure
 		// the last drawpart has already fired
-		PIC_AddEvent(VGA_VertInterrupt, vga.draw.delay.vdend + 0.005f);
+		PIC_AddEvent(VGA_VertInterrupt, vga.draw.delay.vdend + 0.005);
 		break;
 	case MCH_EGA:
 		PIC_AddEvent(VGA_DisplayStartLatch, vga.draw.delay.vrend);
-		PIC_AddEvent(VGA_VertInterrupt, vga.draw.delay.vdend + 0.005f);
+		PIC_AddEvent(VGA_VertInterrupt, vga.draw.delay.vdend + 0.005);
 		break;
 	default:
 		E_Exit("This new machine needs implementation in VGA_VerticalTimer too.");
@@ -1075,9 +1077,9 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 #endif
 
 	// check if some lines at the top off the screen are blanked
-	float draw_skip = 0.0f;
+	double draw_skip = 0.0;
 	if (GCC_UNLIKELY(vga.draw.vblank_skip)) {
-		draw_skip = vga.draw.delay.htotal * static_cast<float>(vga.draw.vblank_skip);
+		draw_skip = vga.draw.delay.htotal * static_cast<double>(vga.draw.vblank_skip);
 		vga.draw.address += vga.draw.address_add * vga.draw.vblank_skip / vga.draw.address_line_total;
 	}
 
@@ -1105,9 +1107,11 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		}
 		vga.draw.lines_done = 0;
 		if (vga.draw.mode==EGALINE)
-			PIC_AddEvent(VGA_DrawEGASingleLine, vga.draw.delay.htotal / 4.0f + draw_skip);
+			PIC_AddEvent(VGA_DrawEGASingleLine,
+			             vga.draw.delay.htotal / 4.0 + draw_skip);
 		else
-			PIC_AddEvent(VGA_DrawSingleLine, vga.draw.delay.htotal / 4.0f + draw_skip);
+			PIC_AddEvent(VGA_DrawSingleLine,
+			             vga.draw.delay.htotal / 4.0 + draw_skip);
 		break;
 	}
 }
@@ -1204,7 +1208,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	}
 	
 	/* Calculate the FPS for this screen */
-	float fps;
+	double fps;
 	uint32_t clock;
 	Bitu htotal, hdend, hbstart, hbend, hrstart, hrend;
 	Bitu vtotal, vdend, vbstart, vbend, vrstart, vrend;
@@ -1336,7 +1340,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			break;
 		}
 		// in milliseconds
-		vga.draw.delay.hdend = static_cast<float>(hdend) * 1000.0f / static_cast<float>(clock);
+		vga.draw.delay.hdend = static_cast<double>(hdend) * 1000.0 /
+		                       static_cast<double>(clock);
 	}
 #if C_DEBUG
 	LOG(LOG_VGA,LOG_NORMAL)("h total %d end %d blank (%d/%d) retrace (%d/%d)",
@@ -1346,23 +1351,25 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 #endif
 
 	// The screen refresh frequency
-	fps = static_cast<float>(clock) / static_cast<float>(vtotal * htotal);
+	fps = static_cast<double>(clock) / static_cast<double>(vtotal * htotal);
 
-	const auto f_clock = static_cast<float>(clock);
+	const auto f_clock = static_cast<double>(clock);
 	// Horizontal total (that's how long a line takes with whistles and bells)
-	vga.draw.delay.htotal = static_cast<float>(htotal) * 1000.0f / f_clock; // in milliseconds
+	vga.draw.delay.htotal = static_cast<double>(htotal) * 1000.0 / f_clock; // in
+	                                                                        // milliseconds
 	// Start and End of horizontal blanking
-	vga.draw.delay.hblkstart = static_cast<float>(hbstart) * 1000.0f / f_clock; // in milliseconds
-	vga.draw.delay.hblkend = static_cast<float>(hbend) * 1000.0f / f_clock;
+	vga.draw.delay.hblkstart = static_cast<double>(hbstart) * 1000.0 / f_clock; // in
+	                                                                            // milliseconds
+	vga.draw.delay.hblkend = static_cast<double>(hbend) * 1000.0 / f_clock;
 	// Start and End of horizontal retrace
-	vga.draw.delay.hrstart = static_cast<float>(hrstart) * 1000.0f / f_clock;
-	vga.draw.delay.hrend = static_cast<float>(hrend) * 1000.0f / f_clock;
+	vga.draw.delay.hrstart = static_cast<double>(hrstart) * 1000.0 / f_clock;
+	vga.draw.delay.hrend = static_cast<double>(hrend) * 1000.0 / f_clock;
 	// Start and End of vertical blanking
-	vga.draw.delay.vblkstart = static_cast<float>(vbstart) * vga.draw.delay.htotal;
-	vga.draw.delay.vblkend = static_cast<float>(vbend) * vga.draw.delay.htotal;
+	vga.draw.delay.vblkstart = static_cast<double>(vbstart) * vga.draw.delay.htotal;
+	vga.draw.delay.vblkend = static_cast<double>(vbend) * vga.draw.delay.htotal;
 	// Start and End of vertical retrace pulse
-	vga.draw.delay.vrstart = static_cast<float>(vrstart) * vga.draw.delay.htotal;
-	vga.draw.delay.vrend = static_cast<float>(vrend) * vga.draw.delay.htotal;
+	vga.draw.delay.vrstart = static_cast<double>(vrstart) * vga.draw.delay.htotal;
+	vga.draw.delay.vrend = static_cast<double>(vrend) * vga.draw.delay.htotal;
 
 	// Vertical blanking tricks
 	vblank_skip = 0;
@@ -1398,13 +1405,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 	}
 	// Display end
-	vga.draw.delay.vdend = static_cast<float>(vdend) * vga.draw.delay.htotal;
+	vga.draw.delay.vdend = static_cast<double>(vdend) * vga.draw.delay.htotal;
 
 	// EGA frequency dependent monitor palette
 	if (machine == MCH_EGA) {
 		if (vga.misc_output & 1) {
 			// EGA card is in color mode
-			if ((1.0f/vga.draw.delay.htotal) > 19.0f) {
+			if ((1.0 / vga.draw.delay.htotal) > 19.0) {
 				// 64 color EGA mode
 				VGA_ATTR_SetEGAMonitorPalette(EGA);
 			} else {
@@ -1435,40 +1442,40 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	//Base pixel width around 100 clocks horizontal
 	//For 9 pixel text modes this should be changed, but we don't support that anyway :)
 	//Seems regular vga only listens to the 9 char pixel mode with character mode enabled
-	const auto pwidth = (machine == MCH_EGA ? 114.0f : 100.0f) / static_cast<float>(htotal);
+	const auto pwidth = (machine == MCH_EGA ? 114.0 : 100.0) / static_cast<double>(htotal);
 	// Base pixel height around vertical totals of modes that have 100
 	// clocks horizontal Different sync values gives different scaling of
 	// the whole vertical range VGA monitor just seems to thighten or widen
 	// the whole vertical range
-	float pheight;
-	float target_total = (machine == MCH_EGA) ? 262.0f : 449.0f;
+	double pheight;
+	double target_total = (machine == MCH_EGA) ? 262.0 : 449.0;
 	Bitu sync = vga.misc_output >> 6;
-	const auto f_vtotal = static_cast<float>(vtotal);
+	const auto f_vtotal = static_cast<double>(vtotal);
 	switch ( sync ) {
 	case 0:		// This is not defined in vga specs,
 				// Kiet, seems to be slightly less than 350 on my monitor
 		//340 line mode, filled with 449 total
-		pheight = (480.0f / 340.0f) * (target_total / f_vtotal);
+		pheight = (480.0 / 340.0) * (target_total / f_vtotal);
 		break;
 	case 1:		//400 line mode, filled with 449 total
-		pheight = (480.0f / 400.0f) * (target_total / f_vtotal);
+		pheight = (480.0 / 400.0) * (target_total / f_vtotal);
 		break;
 	case 2:		//350 line mode, filled with 449 total
 		//This mode seems to get regular 640x400 timing and goes for a loong retrace
 		//Depends on the monitor to stretch the screen
-		pheight = (480.0f / 350.0f) * (target_total / f_vtotal);
+		pheight = (480.0 / 350.0) * (target_total / f_vtotal);
 		break;
 	case 3:		//480 line mode, filled with 525 total
 	default:
 		//Allow 527 total ModeX to have exact 1:1 aspect
-		target_total = (vga.mode == M_VGA && f_vtotal == 527) ? 527.0f : 525.0f;
-		pheight = (480.0f / 480.0f) * (target_total / f_vtotal);
+		target_total = (vga.mode == M_VGA && f_vtotal == 527) ? 527.0 : 525.0;
+		pheight = (480.0 / 480.0) * (target_total / f_vtotal);
 		break;
 	}
 
-	float aspect_ratio = pheight / pwidth;
+	double aspect_ratio = pheight / pwidth;
 
-	vga.draw.delay.parts = vga.draw.delay.vdend / static_cast<float>(vga.draw.parts_total);
+	vga.draw.delay.parts = vga.draw.delay.vdend / static_cast<double>(vga.draw.parts_total);
 	vga.draw.resizing = false;
 	vga.draw.vret_triggered=false;
 
@@ -1523,7 +1530,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
  			doublewidth = true;
 			if (vga.mode == M_LIN32) {
 				// vesa modes 10f/190/191/192
-				aspect_ratio *= 2.0f;
+				aspect_ratio *= 2.0;
 			}
 		}
 		/* Use HW mouse cursor drawer if enabled */
@@ -1537,7 +1544,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			doublewidth = true;
 		else {
 			// vesa modes 165/175
-			aspect_ratio /= 2.0f;
+			aspect_ratio /= 2.0;
 		}
 		/* Use HW mouse cursor drawer if enabled */
 		VGA_ActivateHardwareCursor();
@@ -1564,14 +1571,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.linear_mask = (static_cast<uint64_t>(vga.vmemwrap) << 1) - 1;
 		break;
 	case M_CGA2_COMPOSITE:
-		aspect_ratio = 1.2f;
+		aspect_ratio = 1.2;
 		doubleheight=true;
 		vga.draw.blocks=width*2;
 		width<<=4;
 		VGA_DrawLine = VGA_Draw_CGA2_Composite_Line;
 		break;
 	case M_CGA4_COMPOSITE:
-		aspect_ratio = 1.2f;
+		aspect_ratio = 1.2;
 		doubleheight = true;
 		vga.draw.blocks = width * 2;
 		width <<= 4;
@@ -1600,7 +1607,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			} else {
 				vga.draw.char9dot = true;
 				width*=9;
-				aspect_ratio *= 1.125f;
+				aspect_ratio *= 1.125;
 			}
 			VGA_DrawLine=VGA_TEXT_Xlat16_Draw_Line;
 			bpp = 16;
@@ -1614,11 +1621,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_HERC_GFX:
 		vga.draw.blocks=width*2;
 		width*=16;
-		aspect_ratio = (static_cast<float>(width) / static_cast<float>(height)) * (3.0f / 4.0f);
+		aspect_ratio = (static_cast<double>(width) / static_cast<double>(height)) *
+		               (3.0 / 4.0);
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
 		break;
 	case M_TANDY2:
-		aspect_ratio = 1.2f;
+		aspect_ratio = 1.2;
 		doubleheight=true;
 		if (machine==MCH_PCJR) doublewidth=(vga.tandy.gfx_control & 0x8)==0x00;
 		else doublewidth=(vga.tandy.mode_control & 0x10)==0;
@@ -1627,7 +1635,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
 		break;
 	case M_TANDY4:
-		aspect_ratio = 1.2f;
+		aspect_ratio = 1.2;
 		doubleheight=true;
 		if (machine==MCH_TANDY) doublewidth=(vga.tandy.mode_control & 0x10)==0;
 		else doublewidth=(vga.tandy.mode_control & 0x01)==0x00;
@@ -1639,7 +1647,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		else VGA_DrawLine=VGA_Draw_2BPP_Line;
 		break;
 	case M_TANDY16:
-		aspect_ratio = 1.2f;
+		aspect_ratio = 1.2;
 		doubleheight=true;
 		vga.draw.blocks=width*2;
 		if (vga.tandy.mode_control & 0x1) {
@@ -1660,21 +1668,21 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		break;
 	case M_TANDY_TEXT:
 		doublewidth=(vga.tandy.mode_control & 0x1)==0;
-		aspect_ratio = 1.2f;
+		aspect_ratio = 1.2;
 		doubleheight=true;
 		vga.draw.blocks=width;
 		width<<=3;
 		VGA_DrawLine=VGA_TEXT_Draw_Line;
 		break;
 	case M_CGA_TEXT_COMPOSITE:
-		aspect_ratio = 1.2f;
+		aspect_ratio = 1.2;
 		doubleheight = true;
 		vga.draw.blocks = width;
 		width <<= (((vga.tandy.mode_control & 0x1) != 0) ? 3 : 4);
 		VGA_DrawLine = VGA_CGA_TEXT_Composite_Draw_Line;
 		break;
 	case M_HERC_TEXT:
-		aspect_ratio = 480.0f / 350.0f;
+		aspect_ratio = 480.0 / 350.0;
 		vga.draw.blocks=width;
 		width<<=3;
 		VGA_DrawLine=VGA_TEXT_Herc_Draw_Line;
@@ -1714,15 +1722,15 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	   Cheap hack to just make all > 640x480 modes have square pixels
 	*/
 	if ( width >= 640 && height >= 480 ) {
-		aspect_ratio = 1.0f;
+		aspect_ratio = 1.0;
 	}
 //	LOG_MSG("ht %d vt %d ratio %f", htotal, vtotal, aspect_ratio );
 
 	bool fps_changed = false;
 	// need to change the vertical timing?
-	if (fabsf(vga.draw.delay.vtotal - 1000.0f / fps) > 0.0001f) {
+	if (fabs(vga.draw.delay.vtotal - 1000.0 / fps) > 0.0001) {
 		fps_changed = true;
-		vga.draw.delay.vtotal = 1000.0f / fps;
+		vga.draw.delay.vtotal = 1000.0 / fps;
 		VGA_KillDrawing();
 		PIC_RemoveEvents(VGA_Other_VertInterrupt);
 		PIC_RemoveEvents(VGA_VerticalTimer);
@@ -1734,21 +1742,18 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 #if C_DEBUG
 	LOG(LOG_VGA, LOG_NORMAL)
 	("h total %2.5f (%3.2fkHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
-	 vga.draw.delay.htotal, (1.0f / vga.draw.delay.htotal),
-	 vga.draw.delay.hblkstart, vga.draw.delay.hblkend,
-	 vga.draw.delay.hrstart, vga.draw.delay.hrend);
+	 vga.draw.delay.htotal, (1.0 / vga.draw.delay.htotal), vga.draw.delay.hblkstart,
+	 vga.draw.delay.hblkend, vga.draw.delay.hrstart, vga.draw.delay.hrend);
 	LOG(LOG_VGA, LOG_NORMAL)
 	("v total %2.5f (%3.2fHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
-	 vga.draw.delay.vtotal, (1000.0f / vga.draw.delay.vtotal),
-	 vga.draw.delay.vblkstart, vga.draw.delay.vblkend,
-	 vga.draw.delay.vrstart, vga.draw.delay.vrend);
+	 vga.draw.delay.vtotal, (1000.0 / vga.draw.delay.vtotal), vga.draw.delay.vblkstart,
+	 vga.draw.delay.vblkend, vga.draw.delay.vrstart, vga.draw.delay.vrend);
 #endif
 
 	// need to resize the output window?
 	if ((width != vga.draw.width) || (height != vga.draw.height) ||
-	    (vga.draw.doublewidth != doublewidth) ||
-	    (vga.draw.doubleheight != doubleheight) ||
-	    (fabsf(aspect_ratio - vga.draw.aspect_ratio) > 0.0001f) ||
+	    (vga.draw.doublewidth != doublewidth) || (vga.draw.doubleheight != doubleheight) ||
+	    (fabs(aspect_ratio - vga.draw.aspect_ratio) > 0.0001) ||
 	    (vga.draw.bpp != bpp) || fps_changed) {
 		VGA_KillDrawing();
 

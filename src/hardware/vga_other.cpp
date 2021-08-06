@@ -187,13 +187,13 @@ static void write_lightpen(Bitu port, uint8_t /*val*/, Bitu)
 			vga.other.lightpen_triggered = true; // TODO: this shows at port 3ba/3da bit 1
 
 			const auto timeInFrame = PIC_FullIndex() - vga.draw.delay.framestart;
-			const auto timeInLine = fmodf(timeInFrame, vga.draw.delay.htotal);
+			const auto timeInLine = fmod(timeInFrame, vga.draw.delay.htotal);
 			Bitu current_scanline = (Bitu)(timeInFrame / vga.draw.delay.htotal);
 
 			vga.other.lightpen = (Bit16u)((vga.draw.address_add/2) * (current_scanline/2));
-			vga.other.lightpen +=
-			        static_cast<uint16_t>((timeInLine / vga.draw.delay.hdend) *
-			                 (static_cast<float>(vga.draw.address_add / 2)));
+			vga.other.lightpen += static_cast<uint16_t>(
+			        (timeInLine / vga.draw.delay.hdend) *
+			        (static_cast<double>(vga.draw.address_add / 2)));
 		}
 		break;
 	}
@@ -1094,7 +1094,7 @@ uint8_t read_herc_status(Bitu /*port*/, uint8_t /*iolen*/)
 	if (timeInFrame < vga.draw.delay.vrstart || timeInFrame > vga.draw.delay.vrend)
 		retval |= 0x80;
 
-	const auto timeInLine = fmodf(timeInFrame, vga.draw.delay.htotal);
+	const auto timeInLine = fmod(timeInFrame, vga.draw.delay.htotal);
 	if (timeInLine >= vga.draw.delay.hrstart &&
 		timeInLine <= vga.draw.delay.hrend) retval |= 0x1;
 

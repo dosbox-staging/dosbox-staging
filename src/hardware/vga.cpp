@@ -93,7 +93,8 @@ void VGA_StartResize(Bitu delay /*=50*/) {
 		if (vga.mode==M_ERROR) delay = 5;
 		/* Start a resize after delay (default 50 ms) */
 		if (delay==0) VGA_SetupDrawing(0);
-		else PIC_AddEvent(VGA_SetupDrawing,(float)delay);
+		else
+			PIC_AddEvent(VGA_SetupDrawing, (double)delay);
 	}
 }
 

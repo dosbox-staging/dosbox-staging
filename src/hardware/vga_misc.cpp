@@ -46,7 +46,7 @@ Bitu vga_read_p3da(Bitu /*port*/,Bitu /*iolen*/) {
 	if (timeInFrame >= vga.draw.delay.vdend) {
 		retval |= 1;
 	} else {
-		const auto timeInLine = fmodf(timeInFrame, vga.draw.delay.htotal);
+		const auto timeInLine = fmod(timeInFrame, vga.draw.delay.htotal);
 		if (timeInLine >= vga.draw.delay.hblkstart && 
 			timeInLine <= vga.draw.delay.hblkend) {
 			retval |= 1;
