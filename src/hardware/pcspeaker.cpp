@@ -79,7 +79,7 @@ static struct {
 	uint32_t min_tr = 0u;
 	uint32_t used = 0u;
 	double pit_last = 0.0;
-	double pit_max = (1000.0 / PIT_TICK_RATE) * 1320.0;
+	double pit_max = PERIOD_OF_1K_PIT_TICKS * 1320.0;
 	double pit_half = pit_max / 2.0;
 	double pit_new_max = pit_max;
 	double pit_new_half = pit_half;
@@ -286,8 +286,8 @@ void PCSPEAKER_SetCounter(uint32_t cntr, uint32_t mode)
 		spkr.pit_index=0;
 		spkr.pit_last = AMPLITUDE_NEGATIVE;
 		AddDelayEntry(newindex, spkr.pit_last);
-		spkr.pit_half = (1000.0 / PIT_TICK_RATE) * 1;
-		spkr.pit_max = (1000.0 / PIT_TICK_RATE) * cntr;
+		spkr.pit_half = PERIOD_OF_1K_PIT_TICKS * 1;
+		spkr.pit_max = PERIOD_OF_1K_PIT_TICKS * cntr;
 		break;
 	case 3:		/* Square wave generator */
 		if (cntr==0 || cntr<spkr.min_tr) {
@@ -296,14 +296,14 @@ void PCSPEAKER_SetCounter(uint32_t cntr, uint32_t mode)
 			spkr.pit_mode=0;
 			return;
 		}
-		spkr.pit_new_max = (1000.0 / PIT_TICK_RATE) * cntr;
+		spkr.pit_new_max = PERIOD_OF_1K_PIT_TICKS * cntr;
 		spkr.pit_new_half=spkr.pit_new_max/2;
 		break;
 	case 4:		/* Software triggered strobe */
 		spkr.pit_last = AMPLITUDE_POSITIVE;
 		AddDelayEntry(newindex,spkr.pit_last);
 		spkr.pit_index=0;
-		spkr.pit_max = (1000.0 / PIT_TICK_RATE) * cntr;
+		spkr.pit_max = PERIOD_OF_1K_PIT_TICKS * cntr;
 		break;
 	default:
 #if C_DEBUG

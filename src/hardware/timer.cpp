@@ -152,68 +152,69 @@ static void counter_latch(uint32_t counter)
 	PIT_Block * p=&pit[counter];
 	p->go_read_latch=false;
 
-	// Short-hand kilo-tick rates
-	constexpr auto pic_tick_rate_khz = PIT_TICK_RATE / 1000.0;
-	constexpr auto seconds_per_kilo_tick = 1000.0 / PIT_TICK_RATE;
-
 	//If gate2 is disabled don't update the read_latch
 	if (counter == 2 && !gate2 && p->mode !=1) return;
+
+	auto elapsed_ms = PIC_FullIndex() - p->start;
+	auto save_read_latch = [p](auto latch_time) {
+		// Latch is a 16-bit counter, so confirm our next latch time is in-bounds
+		assert(latch_time >= 0 && latch_time <= UINT16_MAX);
+		p->read_latch = static_cast<uint16_t>(latch_time);
+	};
+
 	if (GCC_UNLIKELY(p->new_mode)) {
-		const auto passed_time = PIC_FullIndex() - p->start;
-		const auto ticks_since_then = static_cast<uint32_t>(
-		        passed_time / seconds_per_kilo_tick);
+		const auto total_ticks = static_cast<uint32_t>(elapsed_ms /
+		                                               PERIOD_OF_1K_PIT_TICKS);
 		// if (p->mode==3) ticks_since_then /= 2; // TODO figure this
 		// out on real hardware
-		p->read_latch -= ticks_since_then;
+		save_read_latch(p->read_latch - total_ticks);
 		return;
 	}
-	auto index = PIC_FullIndex() - p->start;
 	const auto cntr = static_cast<double>(p->cntr);
 	switch (p->mode) {
 	case 4:         /* Software Triggered Strobe */
 	case 0:		/* Interrupt on Terminal Count */
 		/* Counter keeps on counting after passing terminal count */
-		if (index>p->delay) {
-			index-=p->delay;
-			if(p->bcd) {
-				index = fmod(index, seconds_per_kilo_tick * 10000.0);
-				p->read_latch = (Bit16u)(9999 - index * pic_tick_rate_khz);
+		if (elapsed_ms > p->delay) {
+			elapsed_ms -= p->delay;
+			if (p->bcd) {
+				elapsed_ms = fmod(elapsed_ms, PERIOD_OF_1K_PIT_TICKS * 10000.0);
+				save_read_latch(9999 - elapsed_ms * PIT_TICK_RATE_KHZ);
 			} else {
-				index = fmod(index, seconds_per_kilo_tick * 0x10000);
-				p->read_latch = (Bit16u)(0xffff -
-				                         index * pic_tick_rate_khz);
+				elapsed_ms = fmod(elapsed_ms, PERIOD_OF_1K_PIT_TICKS * 0x10000);
+				save_read_latch(0xffff - elapsed_ms * PIT_TICK_RATE_KHZ);
 			}
 		} else {
-			p->read_latch = (Bit16u)(static_cast<double>(cntr) -
-			                         index * pic_tick_rate_khz);
+			save_read_latch(cntr - elapsed_ms * PIT_TICK_RATE_KHZ);
 		}
 		break;
 	case 1: // countdown
 		if(p->counting) {
-			if (index>p->delay) { // has timed out
-				p->read_latch = 0xffff; //unconfirmed
+			if (elapsed_ms > p->delay) {     // has timed out
+				save_read_latch(0xffff); // unconfirmed
 			} else {
-				p->read_latch = (Bit16u)(cntr - index * pic_tick_rate_khz);
+				save_read_latch(cntr - elapsed_ms * PIT_TICK_RATE_KHZ);
 			}
 		}
 		break;
 	case 2:		/* Rate Generator */
-		index = fmod(index, p->delay);
-		p->read_latch = (Bit16u)(cntr - (index / p->delay) * cntr);
+		elapsed_ms = fmod(elapsed_ms, p->delay);
+		save_read_latch(cntr - (elapsed_ms / p->delay) * cntr);
 		break;
 	case 3:		/* Square Wave Rate Generator */
-		index = fmod(index, p->delay);
-		index*=2;
-		if (index>p->delay) index-=p->delay;
-		p->read_latch = (Bit16u)(cntr - (index / p->delay) * cntr);
-		// In mode 3 it never returns odd numbers LSB (if odd number is written 1 will be
-		// subtracted on first clock and then always 2)
-		// fixes "Corncob 3D"
-		p->read_latch&=0xfffe;
+		elapsed_ms = fmod(elapsed_ms, p->delay);
+		elapsed_ms *= 2;
+		if (elapsed_ms > p->delay)
+			elapsed_ms -= p->delay;
+		save_read_latch(cntr - (elapsed_ms / p->delay) * cntr);
+		// In mode 3 it never returns odd numbers LSB (if odd number is
+		// written 1 will be subtracted on first clock and then always
+		// 2) fixes "Corncob 3D"
+		save_read_latch(p->read_latch & 0xfffe);
 		break;
 	default:
 		LOG(LOG_PIT,LOG_ERROR)("Illegal Mode %d for reading counter %d",p->mode,counter);
-		p->read_latch=0xffff;
+		save_read_latch(0xffff);
 		break;
 	}
 }
