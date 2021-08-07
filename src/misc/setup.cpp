@@ -1323,10 +1323,16 @@ CommandLine::CommandLine(int argc, char const *const argv[])
 
 Bit16u CommandLine::Get_arglength() {
 	if (cmds.empty()) return 0;
-	Bit16u i=1;
-	for(cmd_it it = cmds.begin();it != cmds.end(); ++it)
-		i+=(*it).size() + 1;
-	return --i;
+
+	size_t total_length = 0;
+	for (const auto &cmd : cmds)
+		total_length += cmd.size() + 1;
+
+	if (total_length > UINT16_MAX) {
+		LOG_MSG("SETUP: Command line length too long, truncating");
+		total_length = UINT16_MAX;
+	}
+	return static_cast<uint16_t>(total_length);
 }
 
 CommandLine::CommandLine(const char *name, const char *cmdline)
