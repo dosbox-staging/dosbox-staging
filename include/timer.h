@@ -31,6 +31,14 @@
 
 constexpr int PIT_TICK_RATE = 1193182;
 
+// Short-hand unit conversions
+constexpr auto PIT_TICK_RATE_KHZ = static_cast<double>(PIT_TICK_RATE) / 1000.0;
+// The rate at which a repeating event occurs is the frequency, measured in Hertz.
+
+// The inverse of frequency is the time between events, called 'period'.
+// In this case, we want the period of every 1000 PIT tick events.
+constexpr auto PERIOD_OF_1K_PIT_TICKS = 1000.0 / static_cast<double>(PIT_TICK_RATE);
+
 typedef void (*TIMER_TickHandler)(void);
 
 /* Register a function that gets called every time if 1 or more ticks pass */
