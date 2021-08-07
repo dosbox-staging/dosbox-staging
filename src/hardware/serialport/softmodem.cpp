@@ -827,11 +827,11 @@ void CSerialModem::Timer2() {
 	// Check for eventual break command
 	if (!commandmode) {
 		cmdpause++;
-		if (cmdpause > (20 * reg[MREG_GUARD_TIME])) {
+		const auto guard_threashold = static_cast<uint32_t>(20 * reg[MREG_GUARD_TIME]);
+		if (cmdpause > guard_threashold) {
 			if (plusinc == 0) {
 				plusinc = 1;
-			}
-			else if (plusinc == 4) {
+			} else if (plusinc == 4) {
 				LOG_MSG("SERIAL: Port %" PRIu8 " modem entering "
 				        "command mode (escape sequence).",
 				        GetPortNumber());
