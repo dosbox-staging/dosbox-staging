@@ -35,17 +35,13 @@
 #define RANGE 64
 #define TIMEOUT 10
 
-#define OHMS 120000/2
-#define JOY_S_CONSTANT 0.0000242f
-#define S_PER_OHM      0.000000011f
-
 struct JoyStick {
 	enum {JOYMAP_SQUARE,JOYMAP_CIRCLE,JOYMAP_INBETWEEN} mapstate;
 	bool enabled;
 	float xpos;
 	float ypos; // position as set by SDL.
-	float xtick;
-	float ytick;
+	double xtick;
+	double ytick;
 	Bitu xcount, ycount;
 	bool button[2];
 	int deadzone; //Deadzone (value between 0 and 100) interpreted as percentage.
@@ -236,36 +232,31 @@ static void write_p201_timed(MAYBE_UNUSED uint16_t port,
                              MAYBE_UNUSED uint8_t val,
                              MAYBE_UNUSED uint8_t iolen)
 {
-	// Axes take time = 24.2 microseconds + ( 0.011 microsecons/ohm *
-	// resistance ) to reset to 0 Pre-calculate the time at which each axis
-	// hits 0 here
-	const auto currentTick = PIC_FullIndex();
+	const auto current_tick = PIC_FullIndex();
+
+	// Convert the the joystick's instantaneous position to activation duration in ticks
+	auto position_to_ticks = [current_tick](auto position) {
+		constexpr auto joystick_s_constant = 0.0000242;
+		constexpr auto ohms = 120000.0 / 2.0;
+		constexpr auto s_per_ohm = 0.000000011;
+		const auto resistance = static_cast<double>(position) + 1.0;
+
+		// Axes take time = 24.2 microseconds + ( 0.011 microsecons/ohm * resistance) to reset to 0
+		const auto axis_time_us = joystick_s_constant + s_per_ohm * resistance * ohms;
+		const auto axis_time_ms = 1000.0 * axis_time_us;
+
+		// finally, return the current tick plus the axis_time in milliseconds
+		return current_tick + axis_time_ms;
+	};
+
 	if (stick[0].enabled) {
 		stick[0].transform_input();
-		stick[0].xtick = currentTick +
-		                 1000.0f * (JOY_S_CONSTANT +
-		                            S_PER_OHM * (stick[0].xfinal + 1.0f) *
-		                                    OHMS);
-		stick[0].ytick = currentTick +
-		                 1000.0f * (JOY_S_CONSTANT +
-		                            S_PER_OHM * (stick[0].yfinal + 1.0f) *
-		                                    OHMS);
+		stick[0].xtick = position_to_ticks(stick[0].xfinal);
+		stick[0].ytick = position_to_ticks(stick[0].yfinal);
 	}
 	if (stick[1].enabled) {
-		stick[1].xtick = currentTick +
-		                 1000.0f * (JOY_S_CONSTANT +
-		                            S_PER_OHM *
-		                                    ((swap34 ? stick[1].ypos
-		                                             : stick[1].xpos) +
-		                                     1.0f) *
-		                                    OHMS);
-		stick[1].ytick = currentTick +
-		                 1000.0f * (JOY_S_CONSTANT +
-		                            S_PER_OHM *
-		                                    ((swap34 ? stick[1].xpos
-		                                             : stick[1].ypos) +
-		                                     1.0f) *
-		                                    OHMS);
+		stick[1].xtick = position_to_ticks(swap34 ? stick[1].ypos : stick[1].xpos);
+		stick[1].ytick = position_to_ticks(swap34 ? stick[1].xpos : stick[1].ypos);
 	}
 }
 
