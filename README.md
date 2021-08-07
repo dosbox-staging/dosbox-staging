@@ -128,7 +128,8 @@ Install build dependencies appropriate for your OS:
 ``` shell
 # Fedora
 sudo dnf install ccache gcc-c++ meson alsa-lib-devel libpng-devel \
-                 SDL2-devel SDL2_net-devel opusfile-devel fluidsynth-devel
+                 SDL2-devel SDL2_net-devel opusfile-devel fluidsynth-devel \
+                 mt32emu-devel
 ```
 
 ``` shell
