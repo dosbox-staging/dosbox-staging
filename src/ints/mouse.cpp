@@ -844,7 +844,7 @@ static Bitu INT33_Handler(void) {
 	case 0x27:	/* Get Screen/Cursor Masks and Mickey Counts */
 		reg_ax=mouse.textAndMask;
 		reg_bx=mouse.textXorMask;
-		/* FALLTHROUGH */
+		FALLTHROUGH;
 	case 0x0b:	/* Read Motion Data */
 		reg_cx=static_cast<Bit16s>(mouse.mickey_x);
 		reg_dx=static_cast<Bit16s>(mouse.mickey_y);
