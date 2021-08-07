@@ -1062,13 +1062,14 @@ static Bitu Default_IRQ_Handler()
 
 static Bitu Reboot_Handler(void) {
 	// switch to text mode, notify user (let's hope INT10 still works)
-	const char* const text = "\n\n   Reboot requested, quitting now.";
 	reg_ax = 0;
 	CALLBACK_RunRealInt(0x10);
 	reg_ah = 0xe;
 	reg_bx = 0;
-	for(Bitu i = 0; i < strlen(text);i++) {
-		reg_al = text[i];
+
+	constexpr char text[] = "\n\n   Reboot requested, quitting now.";
+	for (const auto c : text) {
+		reg_al = static_cast<uint8_t>(c);
 		CALLBACK_RunRealInt(0x10);
 	}
 	LOG_MSG(text);
@@ -1227,19 +1228,21 @@ public:
 		else phys_writeb(0xffffe,0xfc);	/* PC */
 
 		// System BIOS identification
-		const char* const b_type =
-			"IBM COMPATIBLE 486 BIOS COPYRIGHT The DOSBox Team.";
-		for(Bitu i = 0; i < strlen(b_type); i++) phys_writeb(0xfe00e + i,b_type[i]);
-		
+		uint16_t i = 0;
+		for (const auto c : "IBM COMPATIBLE 486 BIOS COPYRIGHT The DOSBox Team.")
+			phys_writeb(0xfe00e + i++, static_cast<uint8_t>(c));
+
 		// System BIOS version
-		const char* const b_vers =
-			"DOSBox FakeBIOS v1.0";
-		for(Bitu i = 0; i < strlen(b_vers); i++) phys_writeb(0xfe061+i,b_vers[i]);
+		i = 0;
+		for (const auto c : "DOSBox FakeBIOS v1.0")
+			phys_writeb(0xfe061 + i++, static_cast<uint8_t>(c));
 
 		// write system BIOS date
-		const char* const b_date = "01/01/92";
-		for(Bitu i = 0; i < strlen(b_date); i++) phys_writeb(0xffff5+i,b_date[i]);
-		phys_writeb(0xfffff,0x55); // signature
+		i = 0;
+		for (const auto c : "01/01/92")
+			phys_writeb(0xffff5 + i++, static_cast<uint8_t>(c));
+
+		phys_writeb(0xfffff, 0x55); // signature
 
 		tandy_sb.port=0;
 		tandy_dac.port=0;
@@ -1280,7 +1283,9 @@ public:
 
 				RealPt current_irq=RealGetVec(tandy_irq_vector);
 				real_writed(0x40,0xd6,current_irq);
-				for (Bit16u i=0; i<0x10; i++) phys_writeb(PhysMake(0xf000,0xa084+i),0x80);
+				for (i = 0; i < 0x10; i++)
+					phys_writeb(PhysMake(0xf000, 0xa084 + i),
+					            0x80);
 			} else real_writeb(0x40,0xd4,0x00);
 		}
 	
