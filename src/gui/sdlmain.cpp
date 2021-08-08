@@ -359,7 +359,7 @@ struct SDL_Block {
 	SDL_Rect updateRects[1024];
 #if defined (WIN32)
 	// Time when sdl regains focus (Alt+Tab) in windowed mode
-	Bit32u focus_ticks;
+	int64_t focus_ticks = 0;
 #endif
 	// State of Alt keys for certain special handlings
 	SDL_EventType laltstate = SDL_KEYUP;
@@ -1467,10 +1467,14 @@ static void FocusInput()
 	// Ensure auto-cycles are enabled
 	CPU_Disable_SkipAutoAdjust();
 
+#if defined(WIN32)
+	sdl.focus_ticks = GetTicks();
+#endif
+
 	// Ensure we have input focus when in fullscreen
 	if (!sdl.desktop.fullscreen)
 		return;
-
+	
 	// Do we already have focus?
 	if (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_INPUT_FOCUS)
 		return;
