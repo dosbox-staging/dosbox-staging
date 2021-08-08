@@ -28,6 +28,7 @@ if __name__ == '__main__':
         '/System/Library/Frameworks/CoreAudio.framework/',
         '/System/Library/Frameworks/CoreFoundation.framework/',
         '/System/Library/Frameworks/CoreGraphics.framework/',
+        '/System/Library/Frameworks/CoreHaptics.framework/',
         '/System/Library/Frameworks/CoreMIDI.framework/',
         '/System/Library/Frameworks/CoreServices.framework/',
         '/System/Library/Frameworks/CoreVideo.framework/',
