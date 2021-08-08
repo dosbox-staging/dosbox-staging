@@ -21,6 +21,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 
 #include "mem.h"
 #include "regs.h"
@@ -882,10 +883,11 @@ public:
 		}
 		pf_queue.used=0;
 	}
-	~PAGING(){}
 };
 
-static PAGING* test;
-void PAGING_Init(Section * sec) {
-	test = new PAGING(sec);
+static std::unique_ptr<PAGING> paging_instance = nullptr;
+
+void PAGING_Init(Section *sec)
+{
+	paging_instance = std::make_unique<PAGING>(sec);
 }
