@@ -27,13 +27,13 @@ endif
 # - example  - has a failing testcase (on purpose)
 # - fs_utils - depends on files in: tests/files/
 #
-example = executable('example', 'example_tests.cpp',
+example = executable('example', ['example_tests.cpp', 'stubs.cpp'],
                      dependencies : [gtest_dep, sdl2_dep, libmisc_dep],
                      include_directories : incdir)
 test('gtest example', example, 
      should_fail : true)
 
-fs_utils = executable('fs_utils', 'fs_utils_tests.cpp',
+fs_utils = executable('fs_utils', ['fs_utils_tests.cpp', 'stubs.cpp'],
                       dependencies : [gtest_dep, libmisc_dep],
                       include_directories : incdir)
 test('gtest fs_utils', fs_utils,
