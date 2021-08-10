@@ -162,9 +162,9 @@ jobs:
           meson setup \
             --wrap-mode=forcefallback \
             -Dbuildtype=release \
+            -Doptimization=s \
             -Ddefault_library=static \
             -Db_asneeded=true \
-            -Db_lto=true \
             -Dtry_static_libs=opusfile,png,sdl2,sdl2_net \
             -Dfluidsynth:enable-floats=true \
             -Dfluidsynth:try-static-deps=true \
