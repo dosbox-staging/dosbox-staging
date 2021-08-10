@@ -115,10 +115,7 @@ jobs:
         shell: bash
         run: |
           set -eu
-          BREW_DIR="$(brew --cache)"
-          DISCARD_DIR="${{ github.workspace }}/discard"
-          mkdir -p "$DISCARD_DIR"
-          mv -f "$BREW_DIR"/* "$DISCARD_DIR"
+          brew cleanup
           mkdir -p "$CCACHE_DIR"
           echo "::set-output name=brew_dir::$BREW_DIR"
           echo "::set-output name=ccache_dir::$CCACHE_DIR"
