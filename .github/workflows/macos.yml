@@ -115,6 +115,7 @@ jobs:
         shell: bash
         run: |
           set -eu
+          BREW_DIR="$(brew --cache)"
           brew cleanup
           mkdir -p "$CCACHE_DIR"
           echo "::set-output name=brew_dir::$BREW_DIR"
