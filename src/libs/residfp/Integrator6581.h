@@ -176,7 +176,7 @@ private:
     // Slope factor n = 1/k
     // where k is the gate coupling coefficient
     // k = Cox/(Cox+Cdep) ~ 0.7(depends on gate voltage)
-    mutable double n;
+    mutable double n = 0.0;
 #else
     const int n = 0;
 #endif
