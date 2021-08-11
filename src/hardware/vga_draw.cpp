@@ -1628,33 +1628,71 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		               (3.0 / 4.0);
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
 		break;
+
+		/*
+		Mode Control Registers 1 and 2 bit values for Tandy and PCJr (if different)
+		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		| Colors | Res     | double | MC1: 4 | 3   | 2+bw | 1+gfx | 0+Hi | MC2: 4 | 3     | 2   | 1   | 0 |
+		|--------|---------|--------|--------|-----|------|-------|------|--------|-------|-----|-----|---|
+		| 2      | 640x200 | yes    | 1 (0)  | -   | 0    | 1     | 0    | 0 (-)  | 0 (1) | -   | -   | - |
+		| 4-gray | 320x200 | no     | 0      | -   | 1    | 1     | 0    | 0 (-)  | 0     | -   | -   | - |
+		| 4      | 320x200 | no     | 0      | -   | 0    | 1     | 0    | 0 (-)  | 0     | -   | -   | - |
+		| 4      | 640x200 | yes    | 1 (0)  | -   | 0    | 1     | 1    | 0 (-)  | 1 (0) | -   | -   | - |
+		| 16     | 120x200 | no     | 0 (1)  | -   | 0    | 1     | 0    | 1 (-)  | 0     | -   | -   | - |
+		| 16     | 320x200 | no     | 0 (1)  | -   | 0    | 1     | 1    | 1 (-)  | 0     | -   | -   | - |
+
+		MC1 stands for the Mode control 1 register, bits four through
+		zero. MC2 stands for the Mode control 2 register, bits four
+		through zero.
+
+		Dosbox uses vga.tandy.mode_control and vga.tandy.gfx_control to
+		represent the state of these registers. They are used
+		interchangably for Tandy and PCJr modes.
+
+		References:
+		-
+		http://www.thealmightyguru.com/Wiki/images/3/3b/Tandy_1000_-_Manual_-_Technical_Reference.pdf:
+		pg 58.
+		-
+		http://bitsavers.trailing-edge.com/pdf/ibm/pc/pc_jr/PCjr_Technical_Reference_Nov83.pdf:
+		pg 2-59 to 2-69.
+		*/
+
 	case M_TANDY2:
 		aspect_ratio = 1.2;
 		doubleheight=true;
-		if (machine==MCH_PCJR) doublewidth=(vga.tandy.gfx_control & 0x8)==0x00;
-		else doublewidth=(vga.tandy.mode_control & 0x10)==0;
+		if (machine == MCH_PCJR)
+			doublewidth = (vga.tandy.gfx_control & 0b1000) == 0b0000;
+		else
+			doublewidth = (vga.tandy.mode_control & 0b10000) == 0b00000;
+
 		vga.draw.blocks = width * (doublewidth ? 1 : 2);
 		width = vga.draw.blocks * 8;
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
 		break;
 	case M_TANDY4:
 		aspect_ratio = 1.2;
-		doubleheight=true;
-		if (machine==MCH_TANDY) doublewidth=(vga.tandy.mode_control & 0x10)==0;
-		else doublewidth=(vga.tandy.mode_control & 0x01)==0x00;
-		vga.draw.blocks=width * 2;
-		width=vga.draw.blocks*4;
-		if ((machine==MCH_TANDY && (vga.tandy.gfx_control & 0x8)) ||
-			(machine==MCH_PCJR && (vga.tandy.mode_control==0x0b)))
-			VGA_DrawLine=VGA_Draw_2BPPHiRes_Line;
-		else VGA_DrawLine=VGA_Draw_2BPP_Line;
+		doubleheight = true;
+		if (machine == MCH_TANDY)
+			doublewidth = (vga.tandy.mode_control & 0b10000) == 0b00000;
+		else
+			doublewidth = (vga.tandy.mode_control & 0b00001) == 0b00000;
+
+		vga.draw.blocks = width * 2;
+		width = vga.draw.blocks * 4;
+		if ((machine == MCH_TANDY && (vga.tandy.gfx_control & 0b01000)) ||
+		    (machine == MCH_PCJR && (vga.tandy.mode_control == 0b01011)))
+			VGA_DrawLine = VGA_Draw_2BPPHiRes_Line;
+		else
+			VGA_DrawLine = VGA_Draw_2BPP_Line;
 		break;
 	case M_TANDY16:
 		aspect_ratio = 1.2;
 		doubleheight=true;
 		vga.draw.blocks=width*2;
 		if (vga.tandy.mode_control & 0x1) {
-			if (( machine==MCH_TANDY ) && ( vga.tandy.mode_control & 0x10 )) {
+			if ((machine == MCH_TANDY) &&
+			    (vga.tandy.mode_control & 0b10000)) {
 				doublewidth = false;
 				vga.draw.blocks*=2;
 				width=vga.draw.blocks*2;
