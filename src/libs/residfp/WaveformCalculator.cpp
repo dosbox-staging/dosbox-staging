@@ -41,7 +41,7 @@ WaveformCalculator* WaveformCalculator::getInstance()
  * In parentheses the number of mispredicted bits
  * on a total of 32768.
  *
- * [1] http://svn.code.sf.net/p/sidplay-residfp/code/trunk/combined-waveforms/
+ * [1] https://github.com/libsidplayfp/combined-waveforms
  */
 const CombinedWaveformConfig config[2][4] =
 {
@@ -194,8 +194,11 @@ matrix_t* WaveformCalculator::buildTable(ChipModel model)
         wftable[6][idx] = calculateCombinedWaveform(cfgArray[2], 6, idx);
         wftable[7][idx] = calculateCombinedWaveform(cfgArray[3], 7, idx);
     }
-
+#ifdef HAVE_CXX11
+    return &(CACHE.emplace_hint(lb, cw_cache_t::value_type(cfgArray, wftable))->second);
+#else
     return &(CACHE.insert(lb, cw_cache_t::value_type(cfgArray, wftable))->second);
+#endif
 }
 
 } // namespace reSIDfp

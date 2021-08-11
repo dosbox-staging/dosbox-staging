@@ -60,7 +60,7 @@ private:
     unsigned int rate;
 
     /**
-     * During release mode, the SID arpproximates envelope decay via piecewise
+     * During release mode, the SID approximates envelope decay via piecewise
      * linear decay rate.
      */
     unsigned int exponential_counter;
@@ -110,12 +110,8 @@ private:
     /// The ENV3 value, sampled at the first phase of the clock
     unsigned char env3;
 
-    /**
-     * Emulated nonlinearity of the envelope DAC.
-     *
-     * @See Dac
-     */
-    float dac[256];
+    /// The DAC LUT for analog output
+    float* dac; //-V730_NOINIT this is initialized in the SID constructor
 
 private:
     static const unsigned int adsrtable[16];
@@ -127,13 +123,13 @@ private:
 
 public:
     /**
-     * Set chip model.
-     * This determines the type of the analog DAC emulation:
+     * Set the analog DAC emulation:
      * 8580 is perfectly linear while 6581 is nonlinear.
+     * Must be called before any operation.
      *
-     * @param chipModel
+     * @param dac
      */
-    void setChipModel(ChipModel chipModel);
+    void setDAC(float* dac) { this->dac = dac; }
 
     /**
      * SID clocking.
@@ -181,7 +177,7 @@ public:
      * Write control register.
      *
      * @param control
-     *            control register
+     *            control register value
      */
     void writeCONTROL_REG(unsigned char control);
 
@@ -204,7 +200,7 @@ public:
     /**
      * Return the envelope current value.
      *
-     * @return envelope counter
+     * @return envelope counter value
      */
     unsigned char readENV() const { return env3; }
 };

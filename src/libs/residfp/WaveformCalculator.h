@@ -24,8 +24,9 @@
 
 #include <map>
 
-#include "siddefs-fp.h"
 #include "array.h"
+#include "sidcxx11.h"
+#include "siddefs-fp.h"
 
 
 namespace reSIDfp
@@ -72,7 +73,7 @@ typedef struct
  *
  * - Noise outputs the shift register bits to DAC inputs as described above.
  *   Each output is also used as input to the next bit when the shift register
- *   is shifted.
+ *   is shifted. Lower four bits are grounded.
  * - Pulse connects a single line to all DAC inputs. The line is connected to
  *   either 5V (pulse on) or 0V (pulse off) at bit 11, and ends at bit 0.
  * - Triangle connects the upper 11 bits of the (MSB EOR'ed) accumulator to the
@@ -88,6 +89,14 @@ typedef struct
  *   pulse line.
  * - The combination of triangle and sawtooth interconnects neighboring bits
  *   of the sawtooth waveform.
+ *
+ * Also in the 6581 the MSB of the oscillator, used as input for the
+ * triangle xor logic and the pulse adder's last bit, is connected directly
+ * to the waveform selector, while in the 8580 it is latched at sid_clk2
+ * before being forwarded to the selector. Thus in the 6581 if the sawtooth MSB
+ * is pulled down it might affect the oscillator's adder
+ * driving the top bit low.
+ *
  */
 class WaveformCalculator
 {
@@ -97,7 +106,7 @@ private:
 private:
     cw_cache_t CACHE = {};
 
-    WaveformCalculator() {}
+    WaveformCalculator() DEFAULT;
 
 public:
     /**

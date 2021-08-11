@@ -46,8 +46,8 @@ public:
     /**
      * Amplitude modulated waveform output.
      *
-     * The waveform DAC generates a voltage between 5 and 12 V corresponding
-     * to oscillator state 0 .. 4095.
+     * The waveform DAC generates a voltage between 5 and 12 V
+     * (4,76 - 9 V for the 8580) corresponding to oscillator state 0 .. 4095.
      *
      * The envelope DAC generates a voltage between waveform gen output and
      * the 5V level, corresponding to envelope state 0 .. 255.

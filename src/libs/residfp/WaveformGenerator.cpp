@@ -24,8 +24,6 @@
 
 #include "WaveformGenerator.h"
 
-#include "Dac.h"
-
 /*
  * This fixes tests
  *  SID/wb_testsuite/noise_writeback_check_8_to_C_old
@@ -81,8 +79,6 @@ const unsigned int SHIFT_REGISTER_FADE_6581R3  =   15000;
 const unsigned int SHIFT_REGISTER_RESET_8580R5 =  986000;
 const unsigned int SHIFT_REGISTER_FADE_8580R5  =  314300;
 
-const int DAC_BITS = 12;
-
 /*
  * This is what happens when the lfsr is clocked:
  *
@@ -135,11 +131,11 @@ void WaveformGenerator::write_shift_register()
     {
         // Write changes to the shift register output caused by combined waveforms
         // back into the shift register. This happens only when the register is clocked
-        // (see $D1+$81_wave_test [1]) or when the test bit is set.
+        // (see $D1+$81_wave_test [1]) or when the test bit is falling.
         // A bit once set to zero cannot be changed, hence the and'ing.
         //
         // [1] ftp://ftp.untergrund.net/users/nata/sid_test/$D1+$81_wave_test.7z
-        //
+        //chipModel
         // FIXME: Write test program to check the effect of 1 bits and whether
         // neighboring bits are affected.
 
@@ -172,22 +168,6 @@ void WaveformGenerator::set_noise_output()
 void WaveformGenerator::setWaveformModels(matrix_t* models)
 {
     model_wave = models;
-}
-
-void WaveformGenerator::setChipModel(ChipModel chipModel)
-{
-    is6581 = chipModel == MOS6581;
-
-    Dac dacBuilder(DAC_BITS);
-    dacBuilder.kinkedDac(chipModel);
-
-    const double offset = dacBuilder.getOutput(is6581 ? 0x380 : 0x9c0);
-
-    for (unsigned int i = 0; i < (1 << DAC_BITS); i++)
-    {
-        const double dacValue = dacBuilder.getOutput(i);
-        dac[i] = static_cast<float>(dacValue - offset);
-    }
 }
 
 void WaveformGenerator::synchronize(WaveformGenerator* syncDest, const WaveformGenerator* syncSource) const
