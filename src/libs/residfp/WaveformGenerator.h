@@ -109,22 +109,22 @@ private:
     unsigned int waveform_output = 0;
 
     /// Current accumulator value.
-    unsigned int accumulator;
+    unsigned int accumulator = 0;
 
     // Fout = (Fn*Fclk/16777216)Hz
-    unsigned int freq;
+    unsigned int freq = 0;
 
     /// 8580 tri/saw pipeline
-    unsigned int tri_saw_pipeline;
+    unsigned int tri_saw_pipeline = 0;
 
     /// The OSC3 value
-    unsigned int osc3;
+    unsigned int osc3 = 0;
 
     /// Remaining time to fully reset shift register.
     unsigned int shift_register_reset = 0;
 
     // The wave signal TTL when no waveform is selected
-    unsigned int floating_output_ttl;
+    unsigned int floating_output_ttl = 0;
 
     /// The control register bits. Gate is handled by EnvelopeGenerator.
     //@{
@@ -135,10 +135,10 @@ private:
     /// Tell whether the accumulator MSB was set high on this cycle.
     bool msb_rising = false;
 
-    bool is6581; //-V730_NOINIT this is initialized in the SID constructor
+    bool is6581 = false;
 
     /// The DAC LUT for analog output
-    float* dac; //-V730_NOINIT this is initialized in the SID constructor
+    float* dac = nullptr;
 
 private:
     void clock_shift_register(unsigned int bit0);

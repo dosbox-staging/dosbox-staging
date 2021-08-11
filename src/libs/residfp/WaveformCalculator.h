@@ -25,7 +25,6 @@
 #include <map>
 
 #include "array.h"
-#include "sidcxx11.h"
 #include "siddefs-fp.h"
 
 
@@ -106,7 +105,7 @@ private:
 private:
     cw_cache_t CACHE = {};
 
-    WaveformCalculator() DEFAULT;
+    WaveformCalculator() = default;
 
 public:
     /**

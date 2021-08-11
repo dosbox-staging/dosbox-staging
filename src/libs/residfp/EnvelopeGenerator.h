@@ -111,7 +111,7 @@ private:
     unsigned char env3;
 
     /// The DAC LUT for analog output
-    float* dac; //-V730_NOINIT this is initialized in the SID constructor
+    float* dac = nullptr;
 
 private:
     static const unsigned int adsrtable[16];
