@@ -597,19 +597,23 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("nosound",Property::Changeable::OnlyAtStart,false);
 	Pbool->Set_help("Enable silent mode, sound is still emulated though.");
 
-	Pint = secprop->Add_int("rate",Property::Changeable::OnlyAtStart,44100);
+	Pint = secprop->Add_int("rate", only_at_start, 48000);
 	Pint->Set_values(rates);
 	Pint->Set_help("Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.");
 
-	const char *blocksizes[] = {
-		 "1024", "2048", "4096", "8192", "512", "256", 0};
-	Pint = secprop->Add_int("blocksize",Property::Changeable::OnlyAtStart,1024);
-	Pint->Set_values(blocksizes);
-	Pint->Set_help("Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.");
+	Pint = secprop->Add_int("blocksize", deprecated, 1024);
+	Pint->Set_help("This property is deprecated, use latency instead.");
 
-	Pint = secprop->Add_int("prebuffer",Property::Changeable::OnlyAtStart,25);
-	Pint->SetMinMax(0,100);
-	Pint->Set_help("How many milliseconds of data to keep on top of the blocksize.");
+	Pint = secprop->Add_int("prebuffer", deprecated, 25);
+	Pint->Set_help("This property is deprecated, use latency instead.");
+
+	Pint = secprop->Add_int("latency", only_at_start, 15);
+	Pint->SetMinMax(1, 100);
+	Pint->Set_help("Desired audio latency in milliseconds. Range is 1-100.");
+
+	Pbool = secprop->Add_bool("negotiate", only_at_start, true);
+	Pbool->Set_help("Allow system audio driver to negotiate optimal rate and latency\n"
+	                "as close to the specified values as possible.");
 
 	secprop = control->AddSection_prop("midi", &MIDI_Init, true);
 	secprop->AddInitFunction(&MPU401_Init, true);
@@ -781,7 +785,7 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(tandys);
 	Pstring->Set_help("Enable Tandy Sound System emulation. For 'auto', emulation is present only if machine is set to 'tandy'.");
 
-	Pint = secprop->Add_int("tandyrate",Property::Changeable::WhenIdle,44100);
+	Pint = secprop->Add_int("tandyrate", Property::Changeable::WhenIdle, 44100);
 	Pint->Set_values(rates);
 	Pint->Set_help("Sample rate of the Tandy 3-Voice generation.");
 

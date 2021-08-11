@@ -52,6 +52,13 @@ struct AudioFrame {
 	float right = 0;
 };
 
+typedef int16_t mixer_sample_t;
+
+struct MixerFrame {
+	mixer_sample_t left = 0;
+	mixer_sample_t right = 0;
+};
+
 #define MIXER_BUFSIZE (16 * 1024)
 #define MIXER_BUFMASK (MIXER_BUFSIZE - 1)
 extern Bit8u MixTemp[MIXER_BUFSIZE];
