@@ -25,6 +25,7 @@
 #include "mixer.h"
 #include "timer.h"
 #include "setup.h"
+#include "support.h"
 
 static INLINE void BIN2BCD(Bit16u& val) {
 	const auto b = ((val / 10) % 10) << 4;
@@ -156,10 +157,11 @@ static void counter_latch(uint32_t counter)
 	if (counter == 2 && !gate2 && p->mode !=1) return;
 
 	auto elapsed_ms = PIC_FullIndex() - p->start;
-	auto save_read_latch = [p](auto latch_time) {
-		// Latch is a 16-bit counter, so confirm our next latch time is in-bounds
-		assert(latch_time >= 0 && latch_time <= UINT16_MAX);
-		p->read_latch = static_cast<uint16_t>(latch_time);
+	auto save_read_latch = [p](double latch_time) {
+		// Latch is a 16-bit counter, so ensure it doesn't overflow
+		const auto bound_latch = clamp(static_cast<int>(latch_time), 0,
+		                               static_cast<int>(UINT16_MAX));
+		p->read_latch = static_cast<uint16_t>(bound_latch);
 	};
 
 	if (GCC_UNLIKELY(p->new_mode)) {
