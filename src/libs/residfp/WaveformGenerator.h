@@ -69,8 +69,8 @@ namespace reSIDfp
  *
  * Operation: Calculate EOR result, shift register, set bit 0 = result.
  *
- *                    reset   +-------------------------------------------+
- *                      |     |                                           |
+ *                    reset  +--------------------------------------------+
+ *                      |    |                                            |
  *               test--OR-->EOR<--+                                       |
  *                      |         |                                       |
  *                      2 2 2 1 1 1 1 1 1 1 1 1 1                         |
@@ -108,20 +108,23 @@ private:
 
     unsigned int waveform_output = 0;
 
-    /// Current and previous accumulator value.
-    unsigned int accumulator = 0;
+    /// Current accumulator value.
+    unsigned int accumulator;
 
-    // Fout  = (Fn*Fclk/16777216)Hz
-    unsigned int freq = 0;
+    // Fout = (Fn*Fclk/16777216)Hz
+    unsigned int freq;
 
-    // 8580 tri/saw pipeline
-    unsigned int tri_saw_pipeline = 0;
-    unsigned int osc3 = 0;
+    /// 8580 tri/saw pipeline
+    unsigned int tri_saw_pipeline;
+
+    /// The OSC3 value
+    unsigned int osc3;
 
     /// Remaining time to fully reset shift register.
     unsigned int shift_register_reset = 0;
 
-    unsigned int floating_output_ttl = 0;
+    // The wave signal TTL when no waveform is selected
+    unsigned int floating_output_ttl;
 
     /// The control register bits. Gate is handled by EnvelopeGenerator.
     //@{
@@ -132,9 +135,10 @@ private:
     /// Tell whether the accumulator MSB was set high on this cycle.
     bool msb_rising = false;
 
-    bool is6581 = false;
+    bool is6581; //-V730_NOINIT this is initialized in the SID constructor
 
-    float dac[4096] = {};
+    /// The DAC LUT for analog output
+    float* dac; //-V730_NOINIT this is initialized in the SID constructor
 
 private:
     void clock_shift_register(unsigned int bit0);
@@ -155,16 +159,24 @@ public:
     void setWaveformModels(matrix_t* models);
 
     /**
-     * Set the chip model.
-     * This determines the type of the analog DAC emulation:
+     * Set the analog DAC emulation:
      * 8580 is perfectly linear while 6581 is nonlinear.
+     * Must be called before any operation.
      *
-     * @param chipModel
+     * @param dac
      */
-    void setChipModel(ChipModel chipModel);
+    void setDAC(float* dac) { this->dac = dac; }
 
     /**
-     * SID clocking - 1 cycle.
+     * Set the chip model.
+     * Must be called before any operation.
+     *
+     * @param is6581 true if MOS6581, false if CSG8580
+     */
+    void setModel(bool is6581) { this->is6581 = is6581; }
+
+    /**
+     * SID clocking.
      */
     void clock();
 
@@ -173,8 +185,8 @@ public:
      * This must be done after all the oscillators have been clock()'ed,
      * so that they are in the same state.
      *
-     * @param syncDest The oscillator I am syncing
-     * @param syncSource The oscillator syncing me.
+     * @param syncDest The oscillator that will be synced
+     * @param syncSource The sync source oscillator
      */
     void synchronize(WaveformGenerator* syncDest, const WaveformGenerator* syncSource) const;
 
@@ -203,8 +215,7 @@ public:
         floating_output_ttl(0),
         test(false),
         sync(false),
-        msb_rising(false),
-        is6581(true) {}
+        msb_rising(false) {}
 
     /**
      * Write FREQ LO register.

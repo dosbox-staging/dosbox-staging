@@ -30,10 +30,12 @@ namespace reSIDfp
 
 /**
  * The audio output stage in a Commodore 64 consists of two STC networks, a
- * low-pass filter with 3 dB frequency 16kHz followed by a DC-blocker which
+ * low-pass RC filter with 3 dB frequency 16kHz followed by a DC-blocker which
  * acts as a high-pass filter with a cutoff dependent on the attached audio
  * equipment impedance. Here we suppose an impedance of 10kOhm resulting
  * in a 3 dB attenuation at 1.6Hz.
+ * To operate properly the 6581 audio output needs a pull-down resistor
+ *(1KOhm recommended, not needed on 8580)
  *
  * ~~~
  *                                 9/12V
@@ -45,7 +47,7 @@ namespace reSIDfp
  *          |        |  pF    +-C----o-----C-----+ 10k
  *                             470   |           |
  *         GND      GND         pF   R 1K        | amp
- *                              *    |           +-----
+ *          *                   *    |           +-----
  *
  *                                  GND
  * ~~~
@@ -88,7 +90,7 @@ public:
     /**
      * Setup of the external filter sampling parameters.
      *
-     * @param frequency
+     * @param frequency the main system clock frequency
      */
     void setClockFrequency(double frequency);
 

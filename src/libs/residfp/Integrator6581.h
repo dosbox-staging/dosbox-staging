@@ -25,6 +25,12 @@
 
 #include <stdint.h>
 #include <cassert>
+
+// uncomment to enable use of the slope factor
+// in the EKV model
+// actually produces worst results, needs investigation
+//#define SLOPE_FACTOR
+
 #ifdef SLOPE_FACTOR
 #  include <cmath>
 #endif
@@ -169,8 +175,8 @@ private:
 #ifdef SLOPE_FACTOR
     // Slope factor n = 1/k
     // where k is the gate coupling coefficient
-    // k = Cox/(Cox+Cdep) ~ 0.7
-    mutable double n = 0.0;
+    // k = Cox/(Cox+Cdep) ~ 0.7(depends on gate voltage)
+    mutable double n;
 #else
     const int n = 0;
 #endif

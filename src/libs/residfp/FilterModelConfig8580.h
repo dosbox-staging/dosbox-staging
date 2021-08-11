@@ -27,6 +27,8 @@
 
 #include "Spline.h"
 
+#include "sidcxx14.h"
+
 namespace reSIDfp
 {
 

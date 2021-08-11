@@ -25,12 +25,8 @@
 
 #include "EnvelopeGenerator.h"
 
-#include "Dac.h"
-
 namespace reSIDfp
 {
-
-const unsigned int DAC_BITS = 8;
 
 /**
  * Lookup table to convert from attack, decay, or release value to rate
@@ -62,17 +58,6 @@ const unsigned int EnvelopeGenerator::adsrtable[16] =
     0x5237,
     0x64a8
 };
-
-void EnvelopeGenerator::setChipModel(ChipModel chipModel)
-{
-    Dac dacBuilder(DAC_BITS);
-    dacBuilder.kinkedDac(chipModel);
-
-    for (unsigned int i = 0; i < (1 << DAC_BITS); i++)
-    {
-        dac[i] = static_cast<float>(dacBuilder.getOutput(i));
-    }
-}
 
 void EnvelopeGenerator::reset()
 {

@@ -103,6 +103,20 @@ private:
     /// Flags for muted channels
     bool muted[3] = {};
 
+    /**
+     * Emulated nonlinearity of the envelope DAC.
+     *
+     * @See Dac
+     */
+    float envDAC[256];
+
+    /**
+     * Emulated nonlinearity of the oscillator DAC.
+     *
+     * @See Dac
+     */
+    float oscDAC[4096];
+
 private:
     /**
      * Age the bus value and zero it if it's TTL has expired.

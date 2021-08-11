@@ -211,7 +211,7 @@ FilterModelConfig8580::FilterModelConfig8580() :
     // 4 bit "resistor" ladders in the audio output gain
     // necessitate 16 gain tables.
     // From die photographs of the volume "resistor" ladders
-    // it follows that gain ~ vol/8 (assuming ideal op-amps
+    // it follows that gain ~ vol/16 (assuming ideal op-amps
     for (int n8 = 0; n8 < 16; n8++)
     {
         const int size = 1 << 16;
@@ -271,7 +271,7 @@ FilterModelConfig8580::~FilterModelConfig8580()
 std::unique_ptr<Integrator8580> FilterModelConfig8580::buildIntegrator()
 {
     const double nKp = denorm* (uCox / 2. * 1.0e-6 / C);
-    return std::unique_ptr<Integrator8580>(new Integrator8580(opamp_rev, Vth, nKp, vmin, N16));
+    return MAKE_UNIQUE(Integrator8580, opamp_rev, Vth, nKp, vmin, N16);
 }
 
 } // namespace reSIDfp
