@@ -422,6 +422,8 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		csip=RealMake(loadseg+head.initCS,head.initIP);
 		sssp=RealMake(loadseg+head.initSS,head.initSP);
 		if (head.initSP<4) LOG(LOG_EXEC,LOG_ERROR)("stack underflow/wrap at EXEC");
+		if ((pspseg+memsize)<(loadseg+head.initSS+(head.initSP>>4)))
+			LOG(LOG_EXEC,LOG_ERROR)("stack outside memory block at EXEC");
 	}
 
 	if ((flags==LOAD) || (flags==LOADNGO)) {
