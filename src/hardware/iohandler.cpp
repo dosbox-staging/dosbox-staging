@@ -259,15 +259,17 @@ constexpr int32_t IODELAY_WRITE_MICROSk = static_cast<int32_t>(
         1024 / IODELAY_WRITE_MICROS);
 
 inline void IO_USEC_read_delay() {
-	Bits delaycyc = CPU_CycleMax/IODELAY_READ_MICROSk;
-	if(GCC_UNLIKELY(delaycyc > CPU_Cycles)) delaycyc = CPU_Cycles;
+	auto delaycyc = CPU_CycleMax / IODELAY_READ_MICROSk;
+	if (GCC_UNLIKELY(delaycyc > CPU_Cycles))
+		delaycyc = CPU_Cycles;
 	CPU_Cycles -= delaycyc;
 	CPU_IODelayRemoved += delaycyc;
 }
 
 inline void IO_USEC_write_delay() {
-	Bits delaycyc = CPU_CycleMax/IODELAY_WRITE_MICROSk;
-	if(GCC_UNLIKELY(delaycyc > CPU_Cycles)) delaycyc = CPU_Cycles;
+	auto delaycyc = CPU_CycleMax / IODELAY_WRITE_MICROSk;
+	if (GCC_UNLIKELY(delaycyc > CPU_Cycles))
+		delaycyc = CPU_Cycles;
 	CPU_Cycles -= delaycyc;
 	CPU_IODelayRemoved += delaycyc;
 }
