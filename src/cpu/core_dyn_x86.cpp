@@ -114,9 +114,6 @@ enum BlockReturn {
 	BR_Cycles,
 	BR_Link1,BR_Link2,
 	BR_Opcode,
-#if (C_DEBUG)
-	BR_OpcodeFull,
-#endif
 	BR_Iret,
 	BR_CallBack,
 	BR_SMCBlock
@@ -350,12 +347,6 @@ run_block:
 		CPU_CycleLeft+=CPU_Cycles;
 		CPU_Cycles=1;
 		return CPU_Core_Normal_Run();
-#if (C_DEBUG)
-	case BR_OpcodeFull:
-		CPU_CycleLeft+=CPU_Cycles;
-		CPU_Cycles=1;
-		return CPU_Core_Full_Run();
-#endif
 	case BR_Link1:
 	case BR_Link2:
 		{
