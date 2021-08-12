@@ -527,9 +527,9 @@ static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high,bool release=fals
 
 	cache_addw(0xe8c1);		// shr eax,0x0c
 	cache_addb(0x0c);
-	cache_addw(0x048b);		// mov eax,paging.tlb.read[eax*TYPE Bit32u]
+	cache_addw(0x048b); // mov eax,paging->tlb.read[eax*TYPE Bit32u]
 	cache_addb(0x85);
-	cache_addd((Bit32u)(&paging.tlb.read[0]));
+	cache_addd((Bit32u)(&paging->tlb.read[0]));
 	cache_addw(0xc085);		// test eax,eax
 	const Bit8u* je_loc=gen_create_branch(BR_Z);
 
@@ -604,9 +604,9 @@ static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword,bool release=fal
 	const Bit8u* jb_loc1=gen_create_branch(BR_NB);
 	cache_addb(0x25);       // and eax, 0x000FFFFF
 	cache_addd(0x000fffff);
-	cache_addw(0x048b);		// mov eax,paging.tlb.read[eax*TYPE Bit32u]
+	cache_addw(0x048b); // mov eax,paging->tlb.read[eax*TYPE Bit32u]
 	cache_addb(0x85);
-	cache_addd((Bit32u)(&paging.tlb.read[0]));
+	cache_addd((Bit32u)(&paging->tlb.read[0]));
 	cache_addw(0xc085);		// test eax,eax
 	const Bit8u* je_loc=gen_create_branch(BR_Z);
 
@@ -675,9 +675,9 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 	GenReg * genreg=FindDynReg(val);
 	cache_addw(0xe9c1);		// shr ecx,0x0c
 	cache_addb(0x0c);
-	cache_addw(0x0c8b);		// mov ecx,paging.tlb.write[ecx*TYPE Bit32u]
+	cache_addw(0x0c8b); // mov ecx,paging->tlb.write[ecx*TYPE Bit32u]
 	cache_addb(0x8d);
-	cache_addd((Bit32u)(&paging.tlb.write[0]));
+	cache_addd((Bit32u)(&paging->tlb.write[0]));
 	cache_addw(0xc985);		// test ecx,ecx
 	const Bit8u* je_loc=gen_create_branch(BR_Z);
 
@@ -719,9 +719,9 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=fa
 	const Bit8u* jb_loc1=gen_create_branch(BR_NB);
 	cache_addw(0xe181);     // and ecx, 0x000FFFFF
 	cache_addd(0x000fffff);
-	cache_addw(0x0c8b);		// mov ecx,paging.tlb.write[ecx*TYPE Bit32u]
+	cache_addw(0x0c8b); // mov ecx,paging->tlb.write[ecx*TYPE Bit32u]
 	cache_addb(0x8d);
-	cache_addd((Bit32u)(&paging.tlb.write[0]));
+	cache_addd((Bit32u)(&paging->tlb.write[0]));
 	cache_addw(0xc985);		// test ecx,ecx
 	const Bit8u* je_loc=gen_create_branch(BR_Z);
 
@@ -803,8 +803,11 @@ static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword,bool release=fal
 	}
 
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
-	// mov tmp, [8*tmp+paging.tlb.read(rbp)]
-	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.read-(Bits)&cpu_regs).Emit8(0x8B);
+	// mov tmp, [8*tmp+paging->tlb.read(rbp)]
+	opcode(tmp)
+	        .set64()
+	        .setea(5, tmp, 3, (Bits)paging->tlb.read - (Bits)&cpu_regs)
+	        .Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	const Bit8u *nomap=gen_create_branch(BR_Z);
 	//mov dst, [tmp+src]
@@ -849,8 +852,11 @@ static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high,bool release=fals
 
 	opcode(tmp).setrm(gensrc->index).Emit8(0x8B); // mov tmp, src
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmp,12
-	// mov tmp, [8*tmp+paging.tlb.read(rbp)]
-	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.read-(Bits)&cpu_regs).Emit8(0x8B);
+	// mov tmp, [8*tmp+paging->tlb.read(rbp)]
+	opcode(tmp)
+	        .set64()
+	        .setea(5, tmp, 3, (Bits)paging->tlb.read - (Bits)&cpu_regs)
+	        .Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	const Bit8u *nomap=gen_create_branch(BR_Z);
 
@@ -906,8 +912,11 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=fa
 	}
 
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
-	// mov tmp, [8*tmp+paging.tlb.write(rbp)]
-	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.write-(Bits)&cpu_regs).Emit8(0x8B);
+	// mov tmp, [8*tmp+paging->tlb.write(rbp)]
+	opcode(tmp)
+	        .set64()
+	        .setea(5, tmp, 3, (Bits)paging->tlb.write - (Bits)&cpu_regs)
+	        .Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	const Bit8u *nomap=gen_create_branch(BR_Z);
 	//mov [tmp+src], dst
@@ -947,8 +956,11 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 
 	opcode(tmp).setrm(gendst->index).Emit8(0x8B); // mov tmpd, dst
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
-	// mov tmp, [8*tmp+paging.tlb.write(rbp)]
-	opcode(tmp).set64().setea(5,tmp,3,(Bits)paging.tlb.write-(Bits)&cpu_regs).Emit8(0x8B);
+	// mov tmp, [8*tmp+paging->tlb.write(rbp)]
+	opcode(tmp)
+	        .set64()
+	        .setea(5, tmp, 3, (Bits)paging->tlb.write - (Bits)&cpu_regs)
+	        .Emit8(0x8B);
 	opcode(tmp).set64().setrm(tmp).Emit8(0x85); // test tmp,tmp
 	const Bit8u *nomap=gen_create_branch(BR_Z);
 

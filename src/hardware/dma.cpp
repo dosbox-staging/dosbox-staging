@@ -37,7 +37,8 @@ static void UpdateEMSMapping(void) {
 	/* if EMS is not present, this will result in a 1:1 mapping */
 	Bitu i;
 	for (i=0;i<0x10;i++) {
-		ems_board_mapping[EMM_PAGEFRAME4K+i]=paging.firstmb[EMM_PAGEFRAME4K+i];
+		ems_board_mapping[EMM_PAGEFRAME4K + i] =
+		        paging->firstmb[EMM_PAGEFRAME4K + i];
 	}
 }
 
@@ -55,9 +56,11 @@ static void DMA_BlockRead(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8u
 		offset &= dma_wrap;
 		Bitu page = highpart_addr_page+(offset >> 12);
 		/* care for EMS pageframe etc. */
-		if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
+		if (page < EMM_PAGEFRAME4K)
+			page = paging->firstmb[page];
 		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
-		else if (page < LINK_START) page = paging.firstmb[page];
+		else if (page < LINK_START)
+			page = paging->firstmb[page];
 		*write++=phys_readb(page*4096 + (offset & 4095));
 	}
 }
@@ -76,9 +79,11 @@ static void DMA_BlockWrite(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8
 		offset &= dma_wrap;
 		Bitu page = highpart_addr_page+(offset >> 12);
 		/* care for EMS pageframe etc. */
-		if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
+		if (page < EMM_PAGEFRAME4K)
+			page = paging->firstmb[page];
 		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
-		else if (page < LINK_START) page = paging.firstmb[page];
+		else if (page < LINK_START)
+			page = paging->firstmb[page];
 		phys_writeb(page*4096 + (offset & 4095), *read++);
 	}
 }

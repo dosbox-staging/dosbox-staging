@@ -21,8 +21,7 @@
 
 #include "dosbox.h"
 
-#include <array>
-#include <vector>
+#include <memory>
 
 #include "mem.h"
 
@@ -179,7 +178,7 @@ struct PagingBlock {
 	bool		enabled;
 };
 
-extern PagingBlock paging; 
+extern std::unique_ptr<PagingBlock> paging;
 
 /* Some support functions */
 
@@ -200,25 +199,25 @@ bool mem_unalignedwrited_checked(PhysPt address,Bit32u val);
 #if defined(USE_FULL_TLB)
 
 static INLINE HostPt get_tlb_read(PhysPt address) {
-	return paging.tlb.read[address>>12];
+	return paging->tlb.read[address >> 12];
 }
 static INLINE HostPt get_tlb_write(PhysPt address) {
-	return paging.tlb.write[address>>12];
+	return paging->tlb.write[address >> 12];
 }
 static INLINE PageHandler* get_tlb_readhandler(PhysPt address) {
-	return paging.tlb.readhandler[address>>12];
+	return paging->tlb.readhandler[address >> 12];
 }
 static INLINE PageHandler* get_tlb_writehandler(PhysPt address) {
-	return paging.tlb.writehandler[address>>12];
+	return paging->tlb.writehandler[address >> 12];
 }
 
 /* Use these helper functions to access linear addresses in readX/writeX functions */
 static INLINE PhysPt PAGING_GetPhysicalPage(PhysPt linePage) {
-	return (paging.tlb.phys_page[linePage>>12]<<12);
+	return (paging->tlb.phys_page[linePage >> 12] << 12);
 }
 
 static INLINE PhysPt PAGING_GetPhysicalAddress(PhysPt linAddr) {
-	return (paging.tlb.phys_page[linAddr>>12]<<12)|(linAddr&0xfff);
+	return (paging->tlb.phys_page[linAddr >> 12] << 12) | (linAddr & 0xfff);
 }
 
 #else
@@ -229,11 +228,11 @@ static INLINE tlb_entry *get_tlb_entry(PhysPt address) {
 	Bitu index=(address>>12);
 	if (TLB_BANKS && (index >= TLB_SIZE)) {
 		Bitu bank=(address>>BANK_SHIFT) - 1;
-		if (!paging.tlbh_banks[bank])
-			PAGING_InitTLBBank(&paging.tlbh_banks[bank]);
-		return &paging.tlbh_banks[bank][index & BANK_MASK];
+		if (!paging->tlbh_banks[bank])
+			PAGING_InitTLBBank(&paging->tlbh_banks[bank]);
+		return &paging->tlbh_banks[bank][index & BANK_MASK];
 	}
-	return &paging.tlbh[index];
+	return &paging->tlbh[index];
 }
 
 static INLINE HostPt get_tlb_read(PhysPt address) {

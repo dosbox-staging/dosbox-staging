@@ -1602,15 +1602,12 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 			}
 			break;
 		}
-	case 2:
-		paging.cr2=value;
-		break;
-	case 3:
-		PAGING_SetDirBase(value);
-		break;
-	default:
-		LOG(LOG_CPU,LOG_ERROR)("Unhandled MOV CR%d,%X",cr,value);
-		break;
+	        case 2: paging->cr2 = value; break;
+	        case 3: PAGING_SetDirBase(value); break;
+	        default:
+		        LOG(LOG_CPU, LOG_ERROR)
+		        ("Unhandled MOV CR%d,%X", cr, value);
+		        break;
 	}
 }
 
@@ -1631,8 +1628,7 @@ Bitu CPU_GET_CRX(Bitu cr) {
 		if (CPU_ArchitectureType>=CPU_ARCHTYPE_PENTIUMSLOW) return cpu.cr0;
 		else if (CPU_ArchitectureType>=CPU_ARCHTYPE_486OLDSLOW) return (cpu.cr0 & 0xe005003f);
 		else return (cpu.cr0 | 0x7ffffff0);
-	case 2:
-		return paging.cr2;
+	case 2: return paging->cr2;
 	case 3:
 		return PAGING_GetDirBase() & 0xfffff000;
 	default:
