@@ -2427,6 +2427,7 @@ restart_prefix:
 		/* LEA Gv */
 		case 0x8d:
 			dyn_get_modrm();
+			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
 			if (decode.big_op) {
 				dyn_fill_ea(false,&DynRegs[decode.modrm.reg]);
 			} else {
@@ -2891,14 +2892,6 @@ illegalopcode:
 	dyn_closeblock();
 
 	goto finish_block;
-#if (C_DEBUG)
-	dyn_set_eip_last();
-	dyn_reduce_cycles();
-	dyn_save_critical_regs();
-	gen_return(BR_OpcodeFull);
-	dyn_closeblock();
-	goto finish_block;
-#endif
 finish_block:
 	/* Setup the correct end-address */
 	decode.active_block->page.end=--decode.page.index;
