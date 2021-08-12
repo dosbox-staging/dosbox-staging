@@ -21,6 +21,7 @@
 
 #include "dosbox.h"
 
+#include <array>
 #include <memory>
 
 #include "mem.h"
@@ -160,11 +161,11 @@ struct PagingBlock {
 	} base;
 #if defined(USE_FULL_TLB)
 	struct {
-		std::vector<HostPt> read;
-		std::vector<HostPt> write;
-		std::vector<PageHandler *> readhandler;
-		std::vector<PageHandler *> writehandler;
-		std::vector<Bit32u> phys_page;
+		std::array<HostPt, TLB_SIZE> read;
+		std::array<HostPt, TLB_SIZE> write;
+		std::array<PageHandler *, TLB_SIZE> readhandler;
+		std::array<PageHandler *, TLB_SIZE> writehandler;
+		std::array<Bit32u, TLB_SIZE> phys_page;
 	} tlb;
 #else
 	tlb_entry tlbh[TLB_SIZE];
