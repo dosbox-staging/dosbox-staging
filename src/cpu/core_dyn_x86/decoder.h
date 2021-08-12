@@ -2425,6 +2425,7 @@ restart_prefix:
 		/* LEA Gv */
 		case 0x8d:
 			dyn_get_modrm();
+			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
 			if (decode.big_op) {
 				dyn_fill_ea(false,&DynRegs[decode.modrm.reg]);
 			} else {
