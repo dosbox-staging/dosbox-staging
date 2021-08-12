@@ -21,6 +21,9 @@
 
 #include "dosbox.h"
 
+#include <array>
+#include <vector>
+
 #include "mem.h"
 
 // disable this to reduce the size of the TLB
@@ -158,11 +161,11 @@ struct PagingBlock {
 	} base;
 #if defined(USE_FULL_TLB)
 	struct {
-		HostPt read[TLB_SIZE];
-		HostPt write[TLB_SIZE];
-		PageHandler * readhandler[TLB_SIZE];
-		PageHandler * writehandler[TLB_SIZE];
-		Bit32u	phys_page[TLB_SIZE];
+		std::vector<HostPt> read;
+		std::vector<HostPt> write;
+		std::vector<PageHandler *> readhandler;
+		std::vector<PageHandler *> writehandler;
+		std::vector<Bit32u> phys_page;
 	} tlb;
 #else
 	tlb_entry tlbh[TLB_SIZE];
@@ -170,9 +173,9 @@ struct PagingBlock {
 #endif
 	struct {
 		Bitu used;
-		Bit32u entries[PAGING_LINKS];
+		std::array<Bit32u, PAGING_LINKS> entries;
 	} links;
-	Bit32u		firstmb[LINK_START];
+	std::array<Bit32u, LINK_START> firstmb;
 	bool		enabled;
 };
 

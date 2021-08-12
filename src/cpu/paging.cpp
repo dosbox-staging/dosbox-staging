@@ -646,10 +646,11 @@ bool PAGING_ForcePageInit(Bitu lin_addr) {
 #if defined(USE_FULL_TLB)
 void PAGING_InitTLB(void) {
 	for (Bitu i=0;i<TLB_SIZE;i++) {
-		paging.tlb.read[i]=0;
-		paging.tlb.write[i]=0;
-		paging.tlb.readhandler[i]=&init_page_handler;
-		paging.tlb.writehandler[i]=&init_page_handler;
+		paging.tlb.read.push_back(0);
+		paging.tlb.write.push_back(0);
+		paging.tlb.readhandler.push_back(&init_page_handler);
+		paging.tlb.writehandler.push_back(&init_page_handler);
+		paging.tlb.phys_page.push_back(0);
 	}
 	paging.links.used=0;
 }
