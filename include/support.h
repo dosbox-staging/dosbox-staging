@@ -24,9 +24,11 @@
 
 #include "dosbox.h"
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include <algorithm>
 #include <cassert>
-#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
