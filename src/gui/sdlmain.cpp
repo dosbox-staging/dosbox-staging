@@ -2560,56 +2560,60 @@ static void GUI_StartUp(Section *sec)
 		mouse_control_msg = "will move seamlessly without being captured";
 	} else if (control_choice == "nomouse") {
 		sdl.mouse.control_choice = NoMouse;
-		mouse_control_msg = "will not be active";
+		mouse_control_msg = "is disabled";
 	} else {
 		assert(sdl.mouse.control_choice == CaptureOnClick);
 	}
-	const std::string mclick_choice = s->Get_string("capture_mouse_second_value");
+
 	std::string middle_control_msg;
-	if (mclick_choice == "middlerelease") {
-		sdl.mouse.middle_will_release = true;
+
+	if (sdl.mouse.control_choice != NoMouse) {
+		const std::string mclick_choice = s->Get_string("capture_mouse_second_value");
+
+		// release the mouse is the default; this logic handles an empty 2nd value
+		sdl.mouse.middle_will_release = (mclick_choice != "middlegame");
+
+
+		middle_control_msg = sdl.mouse.middle_will_release
+		                             ? " and middle-click will uncapture the mouse"
+		                             : " and middle-clicks will be sent to the game";
+
+		// Only setup the Ctrl/Cmd+F10 handler if the mouse is capturable
 		if (sdl.mouse.control_choice & (CaptureOnClick | CaptureOnStart))
-			middle_control_msg = " and middle-click will uncapture the mouse";
-	} else {
-		sdl.mouse.middle_will_release = false;
-		if (sdl.mouse.control_choice & (CaptureOnClick | CaptureOnStart))
-			middle_control_msg = " and middle-clicks will be sent to the game";
+			MAPPER_AddHandler(ToggleMouseCapture, SDL_SCANCODE_F10,
+			                  PRIMARY_MOD, "capmouse", "Cap Mouse");
+
+		// Apply the user's mouse sensitivity settings
+		Prop_multival *p3 = section->Get_multival("sensitivity");
+		sdl.mouse.xsensitivity = p3->GetSection()->Get_int("xsens");
+		sdl.mouse.ysensitivity = p3->GetSection()->Get_int("ysens");
+
+		// Apply raw mouse input setting
+		SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
+		                        section->Get_bool("raw_mouse_input") ? "0" : "1",
+		                        SDL_HINT_OVERRIDE);
 	}
 	LOG_MSG("SDL: Mouse %s%s.", mouse_control_msg.c_str(), middle_control_msg.c_str());
-
-	// Only setup the Ctrl/Cmd+F10 handler if the mouse is capturable
-	if (sdl.mouse.control_choice & (CaptureOnStart | CaptureOnClick)) {
-		MAPPER_AddHandler(ToggleMouseCapture, SDL_SCANCODE_F10,
-		                  PRIMARY_MOD, "capmouse", "Cap Mouse");
-	}
-
-	// Apply the user's mouse sensitivity settings
-	Prop_multival* p3 = section->Get_multival("sensitivity");
-	sdl.mouse.xsensitivity = p3->GetSection()->Get_int("xsens");
-	sdl.mouse.ysensitivity = p3->GetSection()->Get_int("ysens");
-
-	// Apply raw mouse input setting
-	SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
-	                        section->Get_bool("raw_mouse_input") ? "0" : "1",
-	                        SDL_HINT_OVERRIDE);
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown",
 	                  "Shutdown");
 	MAPPER_AddHandler(SwitchFullScreen, SDL_SCANCODE_RETURN, MMOD2,
 	                  "fullscr", "Fullscreen");
-	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2,
-	                  "restart", "Restart");
+	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2, "restart",
+	                  "Restart");
 #if C_DEBUG
-	/* Pause binds with activate-debugger */
+/* Pause binds with activate-debugger */
 #else
 	MAPPER_AddHandler(&PauseDOSBox, SDL_SCANCODE_PAUSE, MMOD2,
 	                  "pause", "Pause Emu.");
 #endif
 	/* Get Keyboard state of numlock and capslock */
 	SDL_Keymod keystate = SDL_GetModState();
-	if(keystate&KMOD_NUM) startup_state_numlock = true;
-	if(keystate&KMOD_CAPS) startup_state_capslock = true;
+	if (keystate & KMOD_NUM)
+		startup_state_numlock = true;
+	if (keystate & KMOD_CAPS)
+		startup_state_capslock = true;
 }
 
 static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
@@ -3148,16 +3152,14 @@ void Config_Add_SDL() {
 	// Define mouse control settings
 	Pmulti = sdl_sec->Add_multi("capture_mouse", always, " ");
 	const char *mouse_controls[] = {
-		"seamless", // default
-		"onclick",
-		"onstart",
-		"nomouse",
-		0
+	        "seamless", // default
+	        "onclick",  "onstart", "nomouse", 0,
 	};
 	const char *middle_controls[] = {
-		"middlerelease", // default
-		"middlegame",
-		0
+	        "middlerelease", // default
+	        "middlegame",
+	        "", // allow empty second value for 'nomouse'
+	        0,
 	};
 	// Generate and set the mouse control defaults from above arrays
 	std::string mouse_control_defaults(mouse_controls[0]);
