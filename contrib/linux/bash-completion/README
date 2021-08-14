@@ -1,0 +1,9 @@
+To use the bash-completion script for the `dosbox` command, 
+it needs be be sourced:
+
+    . /path/to/bash-completion/dosbox
+
+Alternatively, to make the bash_completion script available
+as a system wide default, install the script in:
+
+    /usr/share/bash-completion/completions/
