@@ -38,3 +38,10 @@ const char *MSG_Get(char const *)
 	return nullptr;
 }
 
+#if C_DEBUG
+void LOG::operator()(char const *buf, ...)
+{
+	(void)d_type;     // Deliberately unused.
+	(void)d_severity; // Deliberately unused.
+}
+#endif
