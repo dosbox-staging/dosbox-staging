@@ -227,16 +227,21 @@
 		break;
 	CASE_0F_B(0x31)												/* RDTSC */
 		{
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW) goto illegal_opcode;
+			if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW)
+				goto illegal_opcode;
 			/* Use a fixed number when in auto cycles mode as else the reported value changes constantly */
-			Bit64s tsc=(Bit64s)(PIC_FullIndex()*(double) (CPU_CycleAutoAdjust?70000:CPU_CycleMax));
-			reg_edx=(Bit32u)(tsc>>32);
-			reg_eax=(Bit32u)(tsc&0xffffffff);
+	                Bit64s tsc = (Bit64s)(PIC_FullIndex() *
+	                                      static_cast<double>(CPU_CycleAutoAdjust
+	                                                                  ? 70000
+	                                                                  : CPU_CycleMax));
+	                reg_edx = (Bit32u)(tsc >> 32);
+			reg_eax = (Bit32u)(tsc & 0xffffffff);
 		}
 		break;
-	CASE_0F_W(0x80)												/* JO */
-		JumpCond16_w(TFLG_O);break;
-	CASE_0F_W(0x81)												/* JNO */
+	CASE_0F_W(0x80) /* JO */
+		JumpCond16_w(TFLG_O);
+		break;
+	CASE_0F_W(0x81) /* JNO */
 		JumpCond16_w(TFLG_NO);break;
 	CASE_0F_W(0x82)												/* JB */
 		JumpCond16_w(TFLG_B);break;
@@ -316,6 +321,7 @@
 				SETFLAGBIT(CF,(*earw & mask));
 			} else {
 				GetEAa;eaa+=(((Bit16s)*rmrw)>>4)*2;
+				if (!TEST_PREFIX_ADDR) FixEA16;
 				Bit16u old=LoadMw(eaa);
 				SETFLAGBIT(CF,(old & mask));
 			}
@@ -342,6 +348,7 @@
 				*earw|=mask;
 			} else {
 				GetEAa;eaa+=(((Bit16s)*rmrw)>>4)*2;
+				if (!TEST_PREFIX_ADDR) FixEA16;
 				Bit16u old=LoadMw(eaa);
 				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old | mask);
@@ -433,6 +440,7 @@
 				*earw&= ~mask;
 			} else {
 				GetEAa;eaa+=(((Bit16s)*rmrw)>>4)*2;
+				if (!TEST_PREFIX_ADDR) FixEA16;
 				Bit16u old=LoadMw(eaa);
 				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old & ~mask);
@@ -526,6 +534,7 @@
 				*earw^=mask;
 			} else {
 				GetEAa;eaa+=(((Bit16s)*rmrw)>>4)*2;
+				if (!TEST_PREFIX_ADDR) FixEA16;
 				Bit16u old=LoadMw(eaa);
 				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old ^ mask);

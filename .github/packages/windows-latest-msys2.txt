@@ -1,0 +1,11 @@
+meson
+mingw-w64-x86_64-ccache
+mingw-w64-x86_64-fluidsynth
+mingw-w64-x86_64-gcc
+mingw-w64-x86_64-libpng
+mingw-w64-x86_64-ncurses
+mingw-w64-x86_64-opusfile
+mingw-w64-x86_64-pkg-config
+mingw-w64-x86_64-SDL2
+mingw-w64-x86_64-SDL2_net
+mingw-w64-x86_64-zlib

@@ -24,6 +24,8 @@
 
 #include "midi_handler.h"
 
+#if C_COREAUDIO
+
 #include <AudioToolbox/AUGraph.h>
 #include <CoreServices/CoreServices.h>
 
@@ -60,7 +62,7 @@ do {                                                                \
 #   endif
 #endif
 
-class MidiHandler_coreaudio : public MidiHandler {
+class MidiHandler_coreaudio final : public MidiHandler {
 private:
 	AUGraph m_auGraph;
 	AudioUnit m_synth;
@@ -192,6 +194,7 @@ public:
 	void Close() override
 	{
 		if (m_auGraph) {
+			HaltSequence();
 			AUGraphStop(m_auGraph);
 			DisposeAUGraph(m_auGraph);
 			m_auGraph = 0;
@@ -212,5 +215,7 @@ public:
 #undef RequireNoErr
 
 MidiHandler_coreaudio Midi_coreaudio;
+
+#endif // C_COREAUDIO
 
 #endif

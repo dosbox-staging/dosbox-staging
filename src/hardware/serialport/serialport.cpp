@@ -185,7 +185,7 @@ void CSerial::log_ser(bool active, char const* format,...) {
 		// copied from DEBUG_SHOWMSG
 		char buf[512];
 		buf[0]=0;
-		sprintf(buf,"%12.3f [% 7u] ",PIC_FullIndex(), SDL_GetTicks());
+		sprintf(buf, "%12.3f [% 7lld] ", PIC_FullIndex(), GetTicks());
 		va_list msg;
 		va_start(msg,format);
 		vsprintf(buf+strlen(buf),format,msg);
@@ -217,7 +217,8 @@ void CSerial::changeLineProperties() {
 	updatePortConfig (baud_divider, LCR);
 }
 
-static void Serial_EventHandler(Bitu val) {
+static void Serial_EventHandler(uint32_t val)
+{
 	const uint32_t serclassid = val & 0x3;
 	if (serialports[serclassid] != 0) {
 		const auto event_type = static_cast<uint16_t>(val >> 2);
@@ -227,7 +228,7 @@ static void Serial_EventHandler(Bitu val) {
 
 void CSerial::setEvent(uint16_t type, float duration)
 {
-	PIC_AddEvent(Serial_EventHandler, duration,
+	PIC_AddEvent(Serial_EventHandler, static_cast<double>(duration),
 	             static_cast<Bitu>((type << 2) | port_index));
 }
 
@@ -1217,7 +1218,7 @@ static bool idle(const double start, const uint32_t timeout)
 
 bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeout)
 {
-	const double starttime = PIC_FullIndex();
+	const auto starttime = PIC_FullIndex();
 	bool timed_out = false;
 
 	// Wait until we're ready to receive (or we've timed out)
@@ -1255,7 +1256,7 @@ receiver:
 */
 bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeout)
 {
-	const double start_time = PIC_FullIndex();
+	const auto start_time = PIC_FullIndex();
 	bool timed_out = false;
 
 	// Wait until our transfer queue is empty (or we've timed out)
@@ -1282,7 +1283,7 @@ bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeo
 	return true;
 }
 
-class SERIALPORTS:public Module_base {
+class SERIALPORTS final : public Module_base {
 public:
 	SERIALPORTS (Section * configuration):Module_base (configuration) {
 		uint16_t biosParameter[SERIAL_MAX_PORTS] = {0};
@@ -1357,7 +1358,7 @@ public:
 	}
 };
 
-static SERIALPORTS *testSerialPortsBaseclass;
+static SERIALPORTS *testSerialPortsBaseclass = nullptr;
 
 void SERIAL_Destroy(Section *sec)
 {
@@ -1367,8 +1368,7 @@ void SERIAL_Destroy(Section *sec)
 }
 
 void SERIAL_Init (Section * sec) {
-	// should never happen
-	if (testSerialPortsBaseclass) delete testSerialPortsBaseclass;
+	delete testSerialPortsBaseclass;
 	testSerialPortsBaseclass = new SERIALPORTS (sec);
 	sec->AddDestroyFunction (&SERIAL_Destroy, true);
 }

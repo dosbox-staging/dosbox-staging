@@ -46,6 +46,7 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
+#include "timer.h"
 #include "video.h"
 
 /* Mouse related */
@@ -339,7 +340,7 @@ protected:
 class CKeyBind;
 class CKeyBindGroup;
 
-class CKeyBind : public CBind {
+class CKeyBind final : public CBind {
 public:
 	CKeyBind(CBindList *_list, SDL_Scancode _key)
 		: CBind(_list),
@@ -363,7 +364,7 @@ public:
 	SDL_Scancode key;
 };
 
-class CKeyBindGroup : public  CBindGroup {
+class CKeyBindGroup final : public  CBindGroup {
 public:
 	CKeyBindGroup(Bitu _keys)
 		: CBindGroup(),
@@ -438,7 +439,7 @@ class CJAxisBind;
 class CJButtonBind;
 class CJHatBind;
 
-class CJAxisBind : public CBind {
+class CJAxisBind final : public CBind {
 public:
 	CJAxisBind(CBindList *_list, CBindGroup *_group, int _axis, bool _positive)
 		: CBind(_list),
@@ -472,7 +473,7 @@ protected:
 	bool positive;
 };
 
-class CJButtonBind : public CBind {
+class CJButtonBind final : public CBind {
 public:
 	CJButtonBind(CBindList *_list, CBindGroup *_group, int _button)
 		: CBind(_list),
@@ -500,7 +501,7 @@ protected:
 	int button;
 };
 
-class CJHatBind : public CBind {
+class CJHatBind final : public CBind {
 public:
 	CJHatBind(CBindList *_list, CBindGroup *_group, uint8_t _hat, uint8_t _dir)
 		: CBind(_list),
@@ -649,17 +650,26 @@ public:
 
 	CBind * CreateEventBind(SDL_Event * event) {
 		if (event->type==SDL_JOYAXISMOTION) {
-			if (event->jaxis.which!=stick) return 0;
-#if defined (REDUCE_JOYSTICK_POLLING)
-			if (event->jaxis.axis >= axes)
+			const int axis_id = event->jaxis.axis;
+			const auto axis_position = event->jaxis.value;
+
+			if (event->jaxis.which != stick)
+				return 0;
+#if defined(REDUCE_JOYSTICK_POLLING)
+			if (axis_id >= axes)
 				return nullptr;
 #endif
-			if (abs(event->jaxis.value) < 25000)
+			if (abs(axis_position) < 25000)
 				return 0;
-			return CreateAxisBind(event->jaxis.axis,
-			                      event->jaxis.value > 0);
-		} else if (event->type==SDL_JOYBUTTONDOWN) {
-			if (event->jbutton.which!=stick) return 0;
+
+			// Axis IDs 2 and 5 are triggers on six-axis controllers
+			const bool is_trigger = (axis_id == 2 || axis_id == 5) && axes == 6;
+			const bool toggled = axis_position > 0 || is_trigger;
+			return CreateAxisBind(axis_id, toggled);
+
+		} else if (event->type == SDL_JOYBUTTONDOWN) {
+			if (event->jbutton.which != stick)
+				return 0;
 #if defined (REDUCE_JOYSTICK_POLLING)
 			return CreateButtonBind(event->jbutton.button%button_wrap);
 #else
@@ -881,7 +891,7 @@ protected:
 
 std::list<CStickBindGroup *> stickbindgroups;
 
-class C4AxisBindGroup : public  CStickBindGroup {
+class C4AxisBindGroup final : public  CStickBindGroup {
 public:
 	C4AxisBindGroup(Bitu _stick,Bitu _emustick) : CStickBindGroup (_stick,_emustick){
 		emulated_axes=4;
@@ -943,7 +953,7 @@ public:
 	}
 };
 
-class CFCSBindGroup : public  CStickBindGroup {
+class CFCSBindGroup final : public  CStickBindGroup {
 public:
 	CFCSBindGroup(Bitu _stick, Bitu _emustick)
 		: CStickBindGroup(_stick, _emustick)
@@ -1074,7 +1084,7 @@ private:
 	}
 };
 
-class CCHBindGroup : public CStickBindGroup {
+class CCHBindGroup final : public CStickBindGroup {
 public:
 	CCHBindGroup(Bitu _stick, Bitu _emustick)
 		: CStickBindGroup(_stick, _emustick)
@@ -1228,6 +1238,7 @@ class Typer {
 			m_pace_ms = pace_ms;
 			m_stop_requested = false;
 			m_instance = std::thread(&Typer::Callback, this);
+			set_thread_name(m_instance, "dosbox:autotype");
 		}
 		void Wait() {
 			if (m_instance.joinable())
@@ -1237,6 +1248,7 @@ class Typer {
 			m_stop_requested = true;
 			Wait();
 		}
+
 	private:
 		void Callback() {
 		        // quit before our initial wait time
@@ -1258,7 +1270,9 @@ class Typer {
 					for (auto &event : *m_events) {
 						if (bind_name == event->GetName()) {
 							found = true;
-							MAPPER_TriggerEvent(event, true);
+							event->Active(true);
+							std::this_thread::sleep_for(std::chrono::milliseconds(50));
+							event->Active(false);
 							break;
 						}
 					}
@@ -1435,7 +1449,7 @@ public:
 class CEventButton;
 static CEventButton * last_clicked = NULL;
 
-class CEventButton : public CClickableTextButton {
+class CEventButton final : public CClickableTextButton {
 public:
 	CEventButton(Bitu x, Bitu y, Bitu dx, Bitu dy, const char *text, CEvent *ev)
 		: CClickableTextButton(x, y, dx, dy, text),
@@ -1458,7 +1472,7 @@ protected:
 	CEvent * event = nullptr;
 };
 
-class CCaptionButton : public CButton {
+class CCaptionButton final : public CButton {
 public:
 	CCaptionButton(Bitu _x,Bitu _y,Bitu _dx,Bitu _dy) : CButton(_x,_y,_dx,_dy){
 		caption[0]=0;
@@ -1485,7 +1499,7 @@ static void change_action_text(const char* text,Bit8u col);
 
 static void MAPPER_SaveBinds();
 
-class CBindButton : public CClickableTextButton {
+class CBindButton final : public CClickableTextButton {
 public:
 	CBindButton(Bitu _x, Bitu _y, Bitu _dx, Bitu _dy, const char * _text, BB_Types _type)
 		: CClickableTextButton(_x, _y, _dx, _dy, _text),
@@ -1530,7 +1544,7 @@ protected:
 	BB_Types type;
 };
 
-class CCheckButton : public CClickableTextButton {
+class CCheckButton final : public CClickableTextButton {
 public:
 	CCheckButton(Bitu x, Bitu y, Bitu dx, Bitu dy, const char *text, BC_Types t)
 		: CClickableTextButton(x, y, dx, dy, text),
@@ -1584,7 +1598,7 @@ protected:
 	BC_Types type;
 };
 
-class CKeyEvent : public CTriggeredEvent {
+class CKeyEvent final : public CTriggeredEvent {
 public:
 	CKeyEvent(char const * const entry, KBD_KEYS k)
 		: CTriggeredEvent(entry),
@@ -1598,7 +1612,7 @@ public:
 	KBD_KEYS key;
 };
 
-class CJAxisEvent : public CContinuousEvent {
+class CJAxisEvent final : public CContinuousEvent {
 public:
 	CJAxisEvent(char const * const entry, Bitu s, Bitu a, bool p, CJAxisEvent *op_axis)
 		: CContinuousEvent(entry),
@@ -1633,7 +1647,7 @@ protected:
 	CJAxisEvent * opposite_axis;
 };
 
-class CJButtonEvent : public CTriggeredEvent {
+class CJButtonEvent final : public CTriggeredEvent {
 public:
 	CJButtonEvent(char const * const entry, Bitu s, Bitu btn)
 		: CTriggeredEvent(entry),
@@ -1650,7 +1664,7 @@ protected:
 	Bitu stick,button;
 };
 
-class CJHatEvent : public CTriggeredEvent {
+class CJHatEvent final : public CTriggeredEvent {
 public:
 	CJHatEvent(char const * const entry, Bitu s, Bitu h, Bitu d)
 		: CTriggeredEvent(entry),
@@ -1668,7 +1682,7 @@ protected:
 	Bitu stick,hat,dir;
 };
 
-class CModEvent : public CTriggeredEvent {
+class CModEvent final : public CTriggeredEvent {
 public:
 	CModEvent(char const * const _entry, int _wmod)
 		: CTriggeredEvent(_entry),
@@ -1687,7 +1701,7 @@ protected:
 	int wmod;
 };
 
-class CHandlerEvent : public CTriggeredEvent {
+class CHandlerEvent final : public CTriggeredEvent {
 public:
 	CHandlerEvent(const char *entry,
 	              MAPPER_Handler *handle,
@@ -2038,12 +2052,27 @@ static void CreateLayout() {
 	for (i=0;i<11;i++) AddKeyButtonEvent(PX(2+i),PY(4),BW,BH,combo_4[i].title,combo_4[i].entry,combo_4[i].key);
 	AddKeyButtonEvent(PX(13),PY(4),BW*3,BH,"SHIFT","rshift",KBD_rightshift);
 
-	/* Last Row */
-	AddKeyButtonEvent(PX(0) ,PY(5),BW*2,BH,"CTRL","lctrl",KBD_leftctrl);
-	AddKeyButtonEvent(PX(3) ,PY(5),BW*2,BH,"ALT","lalt",KBD_leftalt);
-	AddKeyButtonEvent(PX(5) ,PY(5),BW*6,BH,"SPACE","space",KBD_space);
-	AddKeyButtonEvent(PX(11),PY(5),BW*2,BH,"ALT","ralt",KBD_rightalt);
-	AddKeyButtonEvent(PX(14),PY(5),BW*2,BH,"CTRL","rctrl",KBD_rightctrl);
+	/* Bottom Row */
+	AddKeyButtonEvent(PX(0), PY(5), BW * 2, BH, MMOD1_NAME, "lctrl", KBD_leftctrl);
+
+#if !defined(MACOSX)
+	AddKeyButtonEvent(PX(2), PY(5), BW * 2, BH, MMOD3_NAME, "lgui", KBD_leftgui);
+	AddKeyButtonEvent(PX(4), PY(5), BW * 2, BH, MMOD2_NAME, "lalt", KBD_leftalt);
+#else
+	AddKeyButtonEvent(PX(2), PY(5), BW * 2, BH, MMOD2_NAME, "lalt", KBD_leftalt);
+	AddKeyButtonEvent(PX(4), PY(5), BW * 2, BH, MMOD3_NAME, "lgui", KBD_leftgui);
+#endif
+
+	AddKeyButtonEvent(PX(6), PY(5), BW * 4, BH, "SPACE", "space", KBD_space);
+
+#if !defined(MACOSX)
+	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, MMOD2_NAME, "ralt", KBD_rightalt);
+	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, MMOD3_NAME, "rgui", KBD_rightgui);
+	AddKeyButtonEvent(PX(14), PY(5), BW * 2, BH, MMOD1_NAME, "rctrl", KBD_rightctrl);
+#else
+	AddKeyButtonEvent(PX(10), PY(5), BW * 2, BH, MMOD3_NAME, "rgui", KBD_rightgui);
+	AddKeyButtonEvent(PX(12), PY(5), BW * 2, BH, MMOD2_NAME, "ralt", KBD_rightalt);
+#endif
 
 	/* Arrow Keys */
 #define XO 17
@@ -2099,7 +2128,9 @@ static void CreateLayout() {
 	AddJAxisButton  (PX(XO+2),PY(YO+1),BW,BH,"X+",0,0,true,cjaxis);
 
 	CJAxisEvent * tmp_ptr;
-	if (joytype==JOY_2AXIS) {
+
+	assert(joytype != JOY_UNSET);
+	if (joytype == JOY_2AXIS) {
 		/* Buttons 1+2 of 2nd Joystick */
 		AddJButtonButton(PX(XO+4),PY(YO),BW,BH,"1" ,1,0);
 		AddJButtonButton(PX(XO+4+2),PY(YO),BW,BH,"2" ,1,1);
@@ -2181,7 +2212,7 @@ static void CreateLayout() {
 		new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Axis 1/2");
 		new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Axis 3");
 		new CTextButton(PX(XO+8),PY(YO-1),3*BW,20,"Hat/D-pad");
-	} else if(joytype == JOY_NONE) {
+	} else if (joytype == JOY_DISABLED) {
 		btn=new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Disabled");
 		btn->SetColor(CLR_GREY);
 		btn=new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Disabled");
@@ -2269,83 +2300,120 @@ foundevent:
 static struct {
 	const char *eventend;
 	SDL_Scancode key;
-} DefaultKeys[] = {
-	{"f1",  SDL_SCANCODE_F1},  {"f2", SDL_SCANCODE_F2},  {"f3",  SDL_SCANCODE_F3},
-	{"f4",  SDL_SCANCODE_F4},  {"f5", SDL_SCANCODE_F5},  {"f6",  SDL_SCANCODE_F6},
-	{"f7",  SDL_SCANCODE_F7},  {"f8", SDL_SCANCODE_F8},  {"f9",  SDL_SCANCODE_F9},
-	{"f10", SDL_SCANCODE_F10}, {"f11",SDL_SCANCODE_F11}, {"f12", SDL_SCANCODE_F12},
+} DefaultKeys[] = {{"f1", SDL_SCANCODE_F1},
+                   {"f2", SDL_SCANCODE_F2},
+                   {"f3", SDL_SCANCODE_F3},
+                   {"f4", SDL_SCANCODE_F4},
+                   {"f5", SDL_SCANCODE_F5},
+                   {"f6", SDL_SCANCODE_F6},
+                   {"f7", SDL_SCANCODE_F7},
+                   {"f8", SDL_SCANCODE_F8},
+                   {"f9", SDL_SCANCODE_F9},
+                   {"f10", SDL_SCANCODE_F10},
+                   {"f11", SDL_SCANCODE_F11},
+                   {"f12", SDL_SCANCODE_F12},
 
-	{"1", SDL_SCANCODE_1}, {"2", SDL_SCANCODE_2}, {"3", SDL_SCANCODE_3},
-	{"4", SDL_SCANCODE_4}, {"5", SDL_SCANCODE_5}, {"6", SDL_SCANCODE_6},
-	{"7", SDL_SCANCODE_7}, {"8", SDL_SCANCODE_8}, {"9", SDL_SCANCODE_9},
-	{"0", SDL_SCANCODE_0},
+                   {"1", SDL_SCANCODE_1},
+                   {"2", SDL_SCANCODE_2},
+                   {"3", SDL_SCANCODE_3},
+                   {"4", SDL_SCANCODE_4},
+                   {"5", SDL_SCANCODE_5},
+                   {"6", SDL_SCANCODE_6},
+                   {"7", SDL_SCANCODE_7},
+                   {"8", SDL_SCANCODE_8},
+                   {"9", SDL_SCANCODE_9},
+                   {"0", SDL_SCANCODE_0},
 
-	{"a", SDL_SCANCODE_A}, {"b", SDL_SCANCODE_B}, {"c", SDL_SCANCODE_C},
-	{"d", SDL_SCANCODE_D}, {"e", SDL_SCANCODE_E}, {"f", SDL_SCANCODE_F},
-	{"g", SDL_SCANCODE_G}, {"h", SDL_SCANCODE_H}, {"i", SDL_SCANCODE_I},
-	{"j", SDL_SCANCODE_J}, {"k", SDL_SCANCODE_K}, {"l", SDL_SCANCODE_L},
-	{"m", SDL_SCANCODE_M}, {"n", SDL_SCANCODE_N}, {"o", SDL_SCANCODE_O},
-	{"p", SDL_SCANCODE_P}, {"q", SDL_SCANCODE_Q}, {"r", SDL_SCANCODE_R},
-	{"s", SDL_SCANCODE_S}, {"t", SDL_SCANCODE_T}, {"u", SDL_SCANCODE_U},
-	{"v", SDL_SCANCODE_V}, {"w", SDL_SCANCODE_W}, {"x", SDL_SCANCODE_X},
-	{"y", SDL_SCANCODE_Y}, {"z", SDL_SCANCODE_Z},
+                   {"a", SDL_SCANCODE_A},
+                   {"b", SDL_SCANCODE_B},
+                   {"c", SDL_SCANCODE_C},
+                   {"d", SDL_SCANCODE_D},
+                   {"e", SDL_SCANCODE_E},
+                   {"f", SDL_SCANCODE_F},
+                   {"g", SDL_SCANCODE_G},
+                   {"h", SDL_SCANCODE_H},
+                   {"i", SDL_SCANCODE_I},
+                   {"j", SDL_SCANCODE_J},
+                   {"k", SDL_SCANCODE_K},
+                   {"l", SDL_SCANCODE_L},
+                   {"m", SDL_SCANCODE_M},
+                   {"n", SDL_SCANCODE_N},
+                   {"o", SDL_SCANCODE_O},
+                   {"p", SDL_SCANCODE_P},
+                   {"q", SDL_SCANCODE_Q},
+                   {"r", SDL_SCANCODE_R},
+                   {"s", SDL_SCANCODE_S},
+                   {"t", SDL_SCANCODE_T},
+                   {"u", SDL_SCANCODE_U},
+                   {"v", SDL_SCANCODE_V},
+                   {"w", SDL_SCANCODE_W},
+                   {"x", SDL_SCANCODE_X},
+                   {"y", SDL_SCANCODE_Y},
+                   {"z", SDL_SCANCODE_Z},
 
-	{"space",       SDL_SCANCODE_SPACE},
-	{"esc",         SDL_SCANCODE_ESCAPE},
-	{"equals",      SDL_SCANCODE_EQUALS},
-	{"grave",       SDL_SCANCODE_GRAVE},
-	{"tab",         SDL_SCANCODE_TAB},
-	{"enter",       SDL_SCANCODE_RETURN},
-	{"bspace",      SDL_SCANCODE_BACKSPACE},
-	{"lbracket",    SDL_SCANCODE_LEFTBRACKET},
-	{"rbracket",    SDL_SCANCODE_RIGHTBRACKET},
-	{"minus",       SDL_SCANCODE_MINUS},
-	{"capslock",    SDL_SCANCODE_CAPSLOCK},
-	{"semicolon",   SDL_SCANCODE_SEMICOLON},
-	{"quote",       SDL_SCANCODE_APOSTROPHE},
-	{"backslash",   SDL_SCANCODE_BACKSLASH},
-	{"lshift",      SDL_SCANCODE_LSHIFT},
-	{"rshift",      SDL_SCANCODE_RSHIFT},
-	{"lalt",        SDL_SCANCODE_LALT},
-	{"ralt",        SDL_SCANCODE_RALT},
-	{"lctrl",       SDL_SCANCODE_LCTRL},
-	{"rctrl",       SDL_SCANCODE_RCTRL},
-	{"comma",       SDL_SCANCODE_COMMA},
-	{"period",      SDL_SCANCODE_PERIOD},
-	{"slash",       SDL_SCANCODE_SLASH},
-	{"printscreen", SDL_SCANCODE_PRINTSCREEN},
-	{"scrolllock",  SDL_SCANCODE_SCROLLLOCK},
-	{"pause",       SDL_SCANCODE_PAUSE},
-	{"pagedown",    SDL_SCANCODE_PAGEDOWN},
-	{"pageup",      SDL_SCANCODE_PAGEUP},
-	{"insert",      SDL_SCANCODE_INSERT},
-	{"home",        SDL_SCANCODE_HOME},
-	{"delete",      SDL_SCANCODE_DELETE},
-	{"end",         SDL_SCANCODE_END},
-	{"up",          SDL_SCANCODE_UP},
-	{"left",        SDL_SCANCODE_LEFT},
-	{"down",        SDL_SCANCODE_DOWN},
-	{"right",       SDL_SCANCODE_RIGHT},
+                   {"space", SDL_SCANCODE_SPACE},
+                   {"esc", SDL_SCANCODE_ESCAPE},
+                   {"equals", SDL_SCANCODE_EQUALS},
+                   {"grave", SDL_SCANCODE_GRAVE},
+                   {"tab", SDL_SCANCODE_TAB},
+                   {"enter", SDL_SCANCODE_RETURN},
+                   {"bspace", SDL_SCANCODE_BACKSPACE},
+                   {"lbracket", SDL_SCANCODE_LEFTBRACKET},
+                   {"rbracket", SDL_SCANCODE_RIGHTBRACKET},
+                   {"minus", SDL_SCANCODE_MINUS},
+                   {"capslock", SDL_SCANCODE_CAPSLOCK},
+                   {"semicolon", SDL_SCANCODE_SEMICOLON},
+                   {"quote", SDL_SCANCODE_APOSTROPHE},
+                   {"backslash", SDL_SCANCODE_BACKSLASH},
+                   {"lshift", SDL_SCANCODE_LSHIFT},
+                   {"rshift", SDL_SCANCODE_RSHIFT},
+                   {"lalt", SDL_SCANCODE_LALT},
+                   {"ralt", SDL_SCANCODE_RALT},
+                   {"lctrl", SDL_SCANCODE_LCTRL},
+                   {"rctrl", SDL_SCANCODE_RCTRL},
+                   {"lgui", SDL_SCANCODE_LGUI},
+                   {"rgui", SDL_SCANCODE_RGUI},
+                   {"comma", SDL_SCANCODE_COMMA},
+                   {"period", SDL_SCANCODE_PERIOD},
+                   {"slash", SDL_SCANCODE_SLASH},
+                   {"printscreen", SDL_SCANCODE_PRINTSCREEN},
+                   {"scrolllock", SDL_SCANCODE_SCROLLLOCK},
+                   {"pause", SDL_SCANCODE_PAUSE},
+                   {"pagedown", SDL_SCANCODE_PAGEDOWN},
+                   {"pageup", SDL_SCANCODE_PAGEUP},
+                   {"insert", SDL_SCANCODE_INSERT},
+                   {"home", SDL_SCANCODE_HOME},
+                   {"delete", SDL_SCANCODE_DELETE},
+                   {"end", SDL_SCANCODE_END},
+                   {"up", SDL_SCANCODE_UP},
+                   {"left", SDL_SCANCODE_LEFT},
+                   {"down", SDL_SCANCODE_DOWN},
+                   {"right", SDL_SCANCODE_RIGHT},
 
-	{"kp_1", SDL_SCANCODE_KP_1}, {"kp_2", SDL_SCANCODE_KP_2}, {"kp_3", SDL_SCANCODE_KP_3},
-	{"kp_4", SDL_SCANCODE_KP_4}, {"kp_5", SDL_SCANCODE_KP_5}, {"kp_6", SDL_SCANCODE_KP_6},
-	{"kp_7", SDL_SCANCODE_KP_7}, {"kp_8", SDL_SCANCODE_KP_8}, {"kp_9", SDL_SCANCODE_KP_9},
-	{"kp_0", SDL_SCANCODE_KP_0},
+                   {"kp_1", SDL_SCANCODE_KP_1},
+                   {"kp_2", SDL_SCANCODE_KP_2},
+                   {"kp_3", SDL_SCANCODE_KP_3},
+                   {"kp_4", SDL_SCANCODE_KP_4},
+                   {"kp_5", SDL_SCANCODE_KP_5},
+                   {"kp_6", SDL_SCANCODE_KP_6},
+                   {"kp_7", SDL_SCANCODE_KP_7},
+                   {"kp_8", SDL_SCANCODE_KP_8},
+                   {"kp_9", SDL_SCANCODE_KP_9},
+                   {"kp_0", SDL_SCANCODE_KP_0},
 
-	{"numlock",     SDL_SCANCODE_NUMLOCKCLEAR},
-	{"kp_divide",   SDL_SCANCODE_KP_DIVIDE},
-	{"kp_multiply", SDL_SCANCODE_KP_MULTIPLY},
-	{"kp_minus",    SDL_SCANCODE_KP_MINUS},
-	{"kp_plus",     SDL_SCANCODE_KP_PLUS},
-	{"kp_period",   SDL_SCANCODE_KP_PERIOD},
-	{"kp_enter",    SDL_SCANCODE_KP_ENTER},
+                   {"numlock", SDL_SCANCODE_NUMLOCKCLEAR},
+                   {"kp_divide", SDL_SCANCODE_KP_DIVIDE},
+                   {"kp_multiply", SDL_SCANCODE_KP_MULTIPLY},
+                   {"kp_minus", SDL_SCANCODE_KP_MINUS},
+                   {"kp_plus", SDL_SCANCODE_KP_PLUS},
+                   {"kp_period", SDL_SCANCODE_KP_PERIOD},
+                   {"kp_enter", SDL_SCANCODE_KP_ENTER},
 
-	/* Is that the extra backslash key ("less than" key) */
-	/* on some keyboards with the 102-keys layout??      */
-	{"lessthan",SDL_SCANCODE_NONUSBACKSLASH},
+                   /* Is that the extra backslash key ("less than" key) */
+                   /* on some keyboards with the 102-keys layout??      */
+                   {"lessthan", SDL_SCANCODE_NONUSBACKSLASH},
 
-	{0, SDL_SCANCODE_UNKNOWN}
-};
+                   {0, SDL_SCANCODE_UNKNOWN}};
 
 static void ClearAllBinds() {
 	// wait for the auto-typer to complete because it might be accessing events
@@ -2374,6 +2442,10 @@ static void CreateDefaultBinds() {
 	sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_RALT);
 	CreateStringBind(buffer);
 	sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_LALT);
+	CreateStringBind(buffer);
+	sprintf(buffer, "mod_3 \"key %d\"", SDL_SCANCODE_RGUI);
+	CreateStringBind(buffer);
+	sprintf(buffer, "mod_3 \"key %d\"", SDL_SCANCODE_LGUI);
 	CreateStringBind(buffer);
 	for (const auto &handler_event : handlergroup) {
 		handler_event->MakeDefaultBind(buffer);
@@ -2582,20 +2654,45 @@ void BIND_MappingEvents() {
 	}
 }
 
-/**
- *  Queries SDL's joysticks and sets joytype accordingly.
- *  If no joysticks are valid then joytype is left at JOY_NONE.
- *  Also resets mapper.sticks.num_groups to 0, mapper.sticks.num
- *  to the number of found SDL joysticks, and enables the boolean
- *  joysticks_active if joystick support is enabled and are present.
- */
-static void QueryJoysticks() {
-	// Initialize SDL's Joystick and Event subsystems, if needed
+//  Initializes SDL's joystick subsystem an setups up initial joystick settings.
+
+// If the user wants auto-configuration, then this sets joytype based on queried
+// results. If no joysticks are valid then joytype is left at JOY_NONE. This
+// also resets mapper.sticks.num_groups to 0 and mapper.sticks.num to the number
+// of found SDL joysticks.
+static void QueryJoysticks()
+{
+	// Reset our joystick status
+	mapper.sticks.num_groups = 0;
+	mapper.sticks.num = 0;
+
+	JOYSTICK_ParseConfiguredType();
+
+	// The user doesn't want to use joysticks at all (not even for mapping)
+	if (joytype == JOY_DISABLED) {
+		DEBUG_LOG_MSG("MAPPER: joystick subsystem disabled");
+		return;
+	}
+
 	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
 		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 
 	// Record how many joysticks are present and set our desired minimum axis
-	const int num_joysticks = SDL_NumJoysticks();
+	const auto num_joysticks = SDL_NumJoysticks();
+	assert(num_joysticks >= 0);
+	mapper.sticks.num = static_cast<unsigned int>(num_joysticks);
+
+	std::string setup_postfix;
+	if (joytype == JOY_NONE) {
+		setup_postfix = " for mapping purposes only";
+		joytype = JOY_AUTO; // ensure we still setup and detect the joysticks
+	}
+
+	// If a specific joystick was requested, then use it as-is.
+	if (joytype != JOY_AUTO)
+		return;
+
+	// Otherwise try auto-detecting the joystick(s)
 	const int req_min_axis = num_joysticks > 1 ? 2 : 1;
 
 	// Check which, if any, of the first two joysticks are useable
@@ -2603,30 +2700,26 @@ static void QueryJoysticks() {
 	for (int i = 0; i < std::min(num_joysticks, 2); ++i) {
 		SDL_Joystick *stick = SDL_JoystickOpen(i);
 		useable[i] = (SDL_JoystickNumAxes(stick) >= req_min_axis) ||
-		             (SDL_JoystickNumButtons(stick) > 0) ? true : false;
+		             (SDL_JoystickNumButtons(stick) > 0);
 		SDL_JoystickClose(stick);
 	}
 
-	// Set the type of joystick based which are useable
+	// Set the type of joystick based on which are useable
 	const bool first_usable = useable[0];
 	const bool second_usable = useable[1];
 	if (first_usable && second_usable) {
 		joytype = JOY_2AXIS;
-		LOG_MSG("MAPPER: Found two or more joysticks");
+		LOG_MSG("MAPPER: Found two or more joysticks%s", setup_postfix.c_str());
 	} else if (first_usable) {
 		joytype = JOY_4AXIS;
-		LOG_MSG("MAPPER: Found one joystick");
+		LOG_MSG("MAPPER: Found one joystick%s", setup_postfix.c_str());
 	} else if (second_usable) {
 		joytype = JOY_4AXIS_2;
-		LOG_MSG("MAPPER: Found second joystick is usable");
+		LOG_MSG("MAPPER: Found second joystick is usable%s", setup_postfix.c_str());
 	} else {
 		joytype = JOY_NONE;
 		LOG_MSG("MAPPER: Found no joysticks");
 	}
-
-	// If we made it here, then update the other two external variables
-	mapper.sticks.num_groups = 0;
-	mapper.sticks.num = num_joysticks;
 }
 
 static void CreateBindGroups() {
@@ -2634,14 +2727,22 @@ static void CreateBindGroups() {
 	CKeyBindGroup* key_bind_group = new CKeyBindGroup(SDL_NUM_SCANCODES);
 	keybindgroups.push_back(key_bind_group);
 
+	assert(joytype != JOY_UNSET);
+
+	if (joytype == JOY_DISABLED)
+		return;
+
 	if (joytype != JOY_NONE) {
 #if defined (REDUCE_JOYSTICK_POLLING)
 		// direct access to the SDL joystick, thus removed from the event handling
-		if (mapper.sticks.num) SDL_JoystickEventState(SDL_DISABLE);
+		if (mapper.sticks.num)
+			SDL_JoystickEventState(SDL_DISABLE);
 #else
 		// enable joystick event handling
-		if (mapper.sticks.num) SDL_JoystickEventState(SDL_ENABLE);
-		else return;
+		if (mapper.sticks.num)
+			SDL_JoystickEventState(SDL_ENABLE);
+		else
+			return;
 #endif
 		// Free up our previously assigned joystick slot before assinging below
 		if (mapper.sticks.stick[mapper.sticks.num_groups]) {
@@ -2649,34 +2750,46 @@ static void CreateBindGroups() {
 			mapper.sticks.stick[mapper.sticks.num_groups] = nullptr;
 		}
 
-		Bit8u joyno=0;
+		Bit8u joyno = 0;
 		switch (joytype) {
+		case JOY_DISABLED:
 		case JOY_NONE:
 			break;
 		case JOY_4AXIS:
-			mapper.sticks.stick[mapper.sticks.num_groups++]=new C4AxisBindGroup(joyno,joyno);
-			stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
+			mapper.sticks.stick[mapper.sticks.num_groups++] =
+			        new C4AxisBindGroup(joyno, joyno);
+			stickbindgroups.push_back(
+			        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
 			break;
 		case JOY_4AXIS_2:
-			mapper.sticks.stick[mapper.sticks.num_groups++]=new C4AxisBindGroup(joyno+1U,joyno);
-			stickbindgroups.push_back(new CStickBindGroup(joyno,joyno+1U,true));
+			mapper.sticks.stick[mapper.sticks.num_groups++] =
+			        new C4AxisBindGroup(joyno + 1U, joyno);
+			stickbindgroups.push_back(
+			        new CStickBindGroup(joyno, joyno + 1U, true));
 			break;
 		case JOY_FCS:
-			mapper.sticks.stick[mapper.sticks.num_groups++]=new CFCSBindGroup(joyno,joyno);
-			stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
+			mapper.sticks.stick[mapper.sticks.num_groups++] =
+			        new CFCSBindGroup(joyno, joyno);
+			stickbindgroups.push_back(
+			        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
 			break;
 		case JOY_CH:
-			mapper.sticks.stick[mapper.sticks.num_groups++]=new CCHBindGroup(joyno,joyno);
-			stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
+			mapper.sticks.stick[mapper.sticks.num_groups++] =
+			        new CCHBindGroup(joyno, joyno);
+			stickbindgroups.push_back(
+			        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
 			break;
 		case JOY_2AXIS:
 		default:
-			mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno,joyno);
-			if((joyno+1U) < mapper.sticks.num) {
+			mapper.sticks.stick[mapper.sticks.num_groups++] =
+			        new CStickBindGroup(joyno, joyno);
+			if ((joyno + 1U) < mapper.sticks.num) {
 				delete mapper.sticks.stick[mapper.sticks.num_groups];
-				mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno+1U,joyno+1U);
+				mapper.sticks.stick[mapper.sticks.num_groups++] =
+				        new CStickBindGroup(joyno + 1U, joyno + 1U);
 			} else {
-				stickbindgroups.push_back(new CStickBindGroup(joyno+1U,joyno+1U,true));
+				stickbindgroups.push_back(
+				        new CStickBindGroup(joyno + 1U, joyno + 1U, true));
 			}
 			break;
 		}
@@ -2703,8 +2816,9 @@ void MAPPER_LosingFocus() {
 	}
 }
 
-void MAPPER_RunEvent(Bitu /*val*/) {
-	KEYBOARD_ClrBuffer();	//Clear buffer
+void MAPPER_RunEvent(uint32_t /*val*/)
+{
+	KEYBOARD_ClrBuffer();           // Clear buffer
 	GFX_LosingFocus();		//Release any keys pressed (buffer gets filled again).
 	MAPPER_DisplayUI();
 }
@@ -2763,7 +2877,7 @@ void MAPPER_DisplayUI() {
 			SDL_UpdateWindowSurface(mapper.window);
 		}
 		BIND_MappingEvents();
-		SDL_Delay(1);
+		Delay(1);
 	}
 	/* ONE SHOULD NOT FORGET TO DO THIS!
 	Unless a memory leak is desired... */
@@ -2821,15 +2935,18 @@ static void MAPPER_Destroy(Section *sec) {
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 }
 
-void MAPPER_BindKeys() {
-	//Release any keys pressed, or else they'll get stuck
+void MAPPER_BindKeys(Section *sec)
+{
+	// Release any keys pressed, or else they'll get stuck
 	GFX_LosingFocus();
 
-	const Section *section = control->GetSection("joystick");
-	assert(section);
-	const std::string joystick_type = section->GetPropValue("joysticktype");
-	if (!joystick_type.empty() && joystick_type != "none")
-		QueryJoysticks();
+	// Get the mapper file set by the user
+	const auto section = static_cast<const Section_prop *>(sec);
+	const auto property = section->Get_path("mapperfile");
+	assert(property && !property->realpath.empty());
+	mapper.filename = property->realpath;
+
+	QueryJoysticks();
 
 	// Create the graphical layout for all registered key-binds
 	if (buttons.empty())
@@ -2872,34 +2989,14 @@ void MAPPER_AutoType(std::vector<std::string> &sequence,
 	mapper.typist.Start(&events, sequence, wait_ms, pace_ms);
 }
 
-// Activate user-specified or default binds
-static void MAPPER_ConfigureBindings(Section *sec) {
-	(void) sec; // unused but present for API compliance
-	Section_prop const *const section=static_cast<Section_prop *>(sec);
-	Prop_path const *const pp = section->Get_path("mapperfile");
-	mapper.filename = pp->realpath;
-
-	/*  Because the mapper is initialized before several other of DOSBox's
-	 *  submodules have a chance to register their key bindings, we defer
-	 *  the mapper's setup and instead manully BindKeys() in SDL main only
-	 *  after -all- subsystems have been initialized, which ensures that all
-	 *  binding a present, and thus are also layed out in the mapper's GUI.
-	 */
-	static bool init_phase = true;
-	if (init_phase) {
-		init_phase = false;
-		return;
-	}
-	MAPPER_BindKeys();
-}
-
 void MAPPER_StartUp(Section * sec) {
 	Section_prop * section = static_cast<Section_prop *>(sec);
 
 	 //runs after this function ends and for subsequent config -set "sdl mapperfile=file.map" commands
-	section->AddInitFunction(&MAPPER_ConfigureBindings, true);
+	section->AddInitFunction(&MAPPER_BindKeys, true);
 
 	// runs one-time on shutdown
 	section->AddDestroyFunction(&MAPPER_Destroy, false);
-	MAPPER_AddHandler(&MAPPER_Run, SDL_SCANCODE_F1, MMOD1, "mapper", "Mapper");
+	MAPPER_AddHandler(&MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper",
+	                  "Mapper");
 }

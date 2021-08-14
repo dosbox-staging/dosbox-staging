@@ -20,6 +20,7 @@
  */
 
 #include "dc_silencer.h"
+
 #include "support.h"
 
 void DCSilencer::Configure(const uint32_t sequence_hz,

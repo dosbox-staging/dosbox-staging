@@ -1,0 +1,9 @@
+# Visual Studio
+.vs
+Debug
+Release
+*.vcxproj.user
+*.ncb
+*.suo
+Win32
+x64

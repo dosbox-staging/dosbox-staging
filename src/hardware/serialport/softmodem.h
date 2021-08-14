@@ -170,7 +170,7 @@ private:
 #define MREG_DTR_DELAY 25
 
 
-class CSerialModem : public CSerial {
+class CSerialModem final : public CSerial {
 public:
 	CSerialModem(const uint8_t port_idx, CommandLine *cmd);
 	~CSerialModem();
@@ -257,8 +257,8 @@ protected:
 
 	struct {
 		bool active = false;
-		double f1 = 0.0f;
-		double f2 = 0.0f;
+		double f1 = 0.0;
+		double f2 = 0.0;
 		uint32_t len = 0;
 		uint32_t pos = 0;
 		char str[256] = {0};

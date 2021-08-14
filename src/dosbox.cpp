@@ -21,11 +21,13 @@
 
 #include "dosbox.h"
 
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
+
+#include <functional>
 
 #include "debug.h"
 #include "cpu.h"
@@ -49,6 +51,11 @@
 #include "pci_bus.h"
 #include "midi.h"
 #include "hardware.h"
+
+#if C_NE2000
+//#include "ne2000.h"
+void NE2K_Init(Section* sec);
+#endif
 
 Config * control;
 bool exit_requested = false;
@@ -94,6 +101,8 @@ void MPU401_Init(Section*);
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void DISNEY_Init(Section*);
+void PS1AUDIO_Init(Section *);
+void INNOVA_Init(Section*);
 void SERIAL_Init(Section*);
 
 
@@ -128,11 +137,12 @@ static LoopHandler * loop;
 
 bool SDLNetInited;
 
-static Bit32u ticksRemain;
-static Bit32u ticksLast;
-static Bit32u ticksAdded;
-Bit32s ticksDone;
-Bit32u ticksScheduled;
+static std::function<void(int)> delay_fn = Delay;
+static int ticksRemain;
+static int64_t ticksLast;
+static int ticksAdded;
+int ticksDone;
+int ticksScheduled;
 bool ticksLocked;
 void increaseticks();
 
@@ -163,9 +173,6 @@ static Bitu Normal_Loop(void) {
 	}
 }
 
-//For trying other delays
-#define wrap_delay(a) SDL_Delay(a)
-
 void increaseticks() { //Make it return ticksRemain and set it in the function above to remove the global variable.
 	if (GCC_UNLIKELY(ticksLocked)) { // For Fast Forward Mode
 		ticksRemain=5;
@@ -176,30 +183,29 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 		ticksScheduled = 0;
 		return;
 	}
-	
+
 	static Bit32s lastsleepDone = -1;
 	static Bitu sleep1count = 0;
 
-	Bit32u ticksNew;
-	ticksNew = GetTicks();
+	const auto ticksNew = GetTicks();
 	ticksScheduled += ticksAdded;
 	if (ticksNew <= ticksLast) { //lower should not be possible, only equal.
 		ticksAdded = 0;
 
 		if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust || sleep1count < 3) {
-			wrap_delay(1);
+			delay_fn(1);
 		} else {
 			/* Certain configurations always give an exact sleepingtime of 1, this causes problems due to the fact that
 			   dosbox keeps track of full blocks.
 			   This code introduces some randomness to the time slept, which improves stability on those configurations
 			 */
-			static const Bit32u sleeppattern[] = { 2, 2, 3, 2, 2, 4, 2};
+			static const Bit32u sleeppattern[] = { 2, 2, 3, 2, 2, 4, 2 };
 			static Bit32u sleepindex = 0;
 			if (ticksDone != lastsleepDone) sleepindex = 0;
-			wrap_delay(sleeppattern[sleepindex++]);
+			delay_fn(sleeppattern[sleepindex++]);
 			sleepindex %= sizeof(sleeppattern) / sizeof(sleeppattern[0]);
 		}
-		Bit32s timeslept = GetTicks() - ticksNew;
+		auto timeslept = GetTicksSince(ticksNew);
 		// Count how many times in the current block (of 250 ms) the time slept was 1 ms
 		if (CPU_CycleAutoAdjust && !CPU_SkipCycleAutoAdjust && timeslept == 1) sleep1count++;
 		lastsleepDone = ticksDone;
@@ -210,17 +216,17 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 			ticksDone = 0;
 		return; //0
 
-		// If we do work this tick and sleep till the next tick, then ticksDone is decreased, 
+		// If we do work this tick and sleep till the next tick, then ticksDone is decreased,
 		// despite the fact that work was done as well in this tick. Maybe make it depend on an extra parameter.
 		// What do we know: ticksRemain = 0 (condition to enter this function)
 		// ticksNew = time before sleeping
-		
+
 		// maybe keep track of sleeped time in this frame, and use sleeped and done as indicators. (and take care of the fact there
 		// are frames that have both.
 	}
 
 	//TicksNew > ticksLast
-	ticksRemain = ticksNew-ticksLast;
+	ticksRemain = GetTicksDiff(ticksNew, ticksLast);
 	ticksLast = ticksNew;
 	ticksDone += ticksRemain;
 	if ( ticksRemain > 20 ) {
@@ -231,7 +237,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 
 	// Is the system in auto cycle mode guessing ? If not just exit. (It can be temporary disabled)
 	if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust) return;
-	
+
 	if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
 		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
 		/* ratio we are aiming for is around 90% usage*/
@@ -354,6 +360,8 @@ static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Initialize some dosbox internals */
 
+	delay_fn = CanDelayPrecise() ? DelayPrecise : Delay;
+
 	ticksRemain=0;
 	ticksLast=GetTicks();
 	ticksLocked = false;
@@ -404,7 +412,7 @@ void DOSBOX_Init(void) {
 	Prop_multival *pmulti;
 	Prop_multival_remain* Pmulti_remain;
 
-	// Specifies if and when a setting can be changed 
+	// Specifies if and when a setting can be changed
 	constexpr auto always = Property::Changeable::Always;
 	constexpr auto deprecated = Property::Changeable::Deprecated;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
@@ -453,17 +461,21 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&TIMER_Init);//done
 	secprop->AddInitFunction(&CMOS_Init);//done
 
-	const char *verbosity_choices[] = {"high",   "medium", "low",
-	                                   "quiet", "auto",   0};
+	const char *verbosity_choices[] = {"high",  "medium",
+	                                   "low",   "splash_only",
+	                                   "quiet", "auto",
+	                                   0};
 	Pstring = secprop->Add_string("startup_verbosity", only_at_start, "high");
 	Pstring->Set_values(verbosity_choices);
-	Pstring->Set_help("Controls verbosity prior to displaying the program:\n"
-	"       | Show splash | Show welcome | Show early stdout\n"
-	"high   |     yes     |     yes      |       yes\n"
-	"medium |     no      |     yes      |       yes\n"
-	"low    |     no      |     no       |       yes\n"
-	"quiet  |     no      |     no       |       no\n"
-	"auto   | 'low' if exec or dir is passed, otherwise 'high'");
+	Pstring->Set_help(
+	        "Controls verbosity prior to displaying the program:\n"
+	        "Verbosity   | Splash | Welcome | Early stdout\n"
+	        "high        |  yes   |   yes   |    yes\n"
+	        "medium      |  no    |   yes   |    yes\n"
+	        "low         |  no    |   no    |    yes\n"
+	        "quiet       |  no    |   no    |    no\n"
+	        "splash_only |  yes   |   no    |    no\n"
+	        "auto        | 'low' if exec or dir is passed, otherwise 'high'");
 
 	secprop=control->AddSection_prop("render",&RENDER_Init,true);
 	Pint = secprop->Add_int("frameskip",Property::Changeable::Always,0);
@@ -542,12 +554,12 @@ void DOSBOX_Init(void) {
 
 	Pmulti_remain = secprop->Add_multiremain("cycles",Property::Changeable::Always," ");
 	Pmulti_remain->Set_help(
-		"Amount of instructions DOSBox tries to emulate each millisecond.\n"
+		"Number of instructions DOSBox tries to emulate each millisecond.\n"
 		"Setting this value too high results in sound dropouts and lags.\n"
 		"Cycles can be set in 3 ways:\n"
 		"  'auto'          tries to guess what a game needs.\n"
 		"                  It usually works, but can fail for certain games.\n"
-		"  'fixed #number' will set a fixed amount of cycles. This is what you usually\n"
+		"  'fixed #number' will set a fixed number of cycles. This is what you usually\n"
 		"                  need if 'auto' fails (Example: fixed 4000).\n"
 		"  'max'           will allocate as much cycles as your computer is able to\n"
 		"                  handle.");
@@ -561,7 +573,8 @@ void DOSBOX_Init(void) {
 
 	Pint = secprop->Add_int("cycleup",Property::Changeable::Always,10);
 	Pint->SetMinMax(1,1000000);
-	Pint->Set_help("Amount of cycles to decrease/increase with keycombos.(CTRL-F11/CTRL-F12)");
+	Pint->Set_help("Number of cycles added or subtracted with speed control hotkeys.\n"
+	               "Run INTRO and see Special Keys for list of hotkeys.");
 
 	Pint = secprop->Add_int("cycledown",Property::Changeable::Always,20);
 	Pint->SetMinMax(1,1000000);
@@ -584,19 +597,23 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("nosound",Property::Changeable::OnlyAtStart,false);
 	Pbool->Set_help("Enable silent mode, sound is still emulated though.");
 
-	Pint = secprop->Add_int("rate",Property::Changeable::OnlyAtStart,44100);
+	Pint = secprop->Add_int("rate", only_at_start, 48000);
 	Pint->Set_values(rates);
 	Pint->Set_help("Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.");
 
-	const char *blocksizes[] = {
-		 "1024", "2048", "4096", "8192", "512", "256", 0};
-	Pint = secprop->Add_int("blocksize",Property::Changeable::OnlyAtStart,1024);
-	Pint->Set_values(blocksizes);
-	Pint->Set_help("Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.");
+	Pint = secprop->Add_int("blocksize", deprecated, 1024);
+	Pint->Set_help("This property is deprecated, use latency instead.");
 
-	Pint = secprop->Add_int("prebuffer",Property::Changeable::OnlyAtStart,25);
-	Pint->SetMinMax(0,100);
-	Pint->Set_help("How many milliseconds of data to keep on top of the blocksize.");
+	Pint = secprop->Add_int("prebuffer", deprecated, 25);
+	Pint->Set_help("This property is deprecated, use latency instead.");
+
+	Pint = secprop->Add_int("latency", only_at_start, 15);
+	Pint->SetMinMax(1, 100);
+	Pint->Set_help("Desired audio latency in milliseconds. Range is 1-100.");
+
+	Pbool = secprop->Add_bool("negotiate", only_at_start, true);
+	Pbool->Set_help("Allow system audio driver to negotiate optimal rate and latency\n"
+	                "as close to the specified values as possible.");
 
 	secprop = control->AddSection_prop("midi", &MIDI_Init, true);
 	secprop->AddInitFunction(&MPU401_Init, true);
@@ -605,10 +622,10 @@ void DOSBOX_Init(void) {
 	const char *midi_devices[] = {
 		"auto",
 #if defined(MACOSX)
-#ifdef C_SUPPORTS_COREMIDI
+#if C_COREMIDI
 		"coremidi",
 #endif
-#ifdef C_SUPPORTS_COREAUDIO
+#if C_COREAUDIO
 		"coreaudio",
 #endif
 #elif defined(WIN32)
@@ -616,7 +633,7 @@ void DOSBOX_Init(void) {
 #else
 		"oss",
 #endif
-#if defined(HAVE_ALSA)
+#if C_ALSA
 		"alsa",
 #endif
 #if C_FLUIDSYNTH
@@ -652,10 +669,10 @@ void DOSBOX_Init(void) {
 	        "- This option has no effect when using the built-in synthesizers\n"
 	        "  (mididevice = fluidsynth or mt32).\n"
 #endif
-#ifdef C_SUPPORTS_COREAUDIO
+#if C_COREAUDIO
 	        "- When using CoreAudio, you can specify a soundfont here.\n"
 #endif
-#if defined(HAVE_ALSA)
+#if C_ALSA
 	        "- When using ALSA, use Linux command 'aconnect -l' to list open\n"
 	        "  MIDI ports, and select one (for example 'midiconfig=14:0'\n"
 	        "  for sequencer client 14, port 0).\n"
@@ -732,6 +749,9 @@ void DOSBOX_Init(void) {
 	// Configure Gravis UltraSound emulation
 	GUS_AddConfigSection(control);
 
+	// Configure Innovation SSI-2001 emulation
+	INNOVATION_AddConfigSection(control);
+
 	secprop = control->AddSection_prop("speaker",&PCSPEAKER_Init,true);//done
 	Pbool = secprop->Add_bool("pcspeaker",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("Enable PC-Speaker emulation.");
@@ -765,7 +785,7 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(tandys);
 	Pstring->Set_help("Enable Tandy Sound System emulation. For 'auto', emulation is present only if machine is set to 'tandy'.");
 
-	Pint = secprop->Add_int("tandyrate",Property::Changeable::WhenIdle,44100);
+	Pint = secprop->Add_int("tandyrate", Property::Changeable::WhenIdle, 44100);
 	Pint->Set_values(rates);
 	Pint->Set_help("Sample rate of the Tandy 3-Voice generation.");
 
@@ -774,22 +794,31 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("disney",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).");
 
+	// IBM PS/1 Audio emulation
+	secprop->AddInitFunction(&PS1AUDIO_Init, true);
+	Pbool = secprop->Add_bool("ps1audio", when_idle, false);
+	Pbool->Set_help("Enable IBM PS/1 Audio emulation.");
+
 	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
 	secprop->AddInitFunction(&INT10_Init);
 	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
 	secprop->AddInitFunction(&JOYSTICK_Init,true);
-	const char* joytypes[] = { "auto", "2axis", "4axis", "4axis_2", "fcs", "ch", "none",0};
-	Pstring = secprop->Add_string("joysticktype",Property::Changeable::WhenIdle,"auto");
+	const char *joytypes[] = {"auto", "2axis", "4axis",    "4axis_2", "fcs",
+	                          "ch",   "none",  "disabled", 0};
+	Pstring = secprop->Add_string("joysticktype",
+	                              Property::Changeable::WhenIdle, "auto");
 	Pstring->Set_values(joytypes);
 	Pstring->Set_help(
-		"Type of joystick to emulate: auto (default),\n"
-		"none (disables joystick emulation),\n"
-		"2axis (supports two joysticks),\n"
-		"4axis (supports one joystick, first joystick used),\n"
-		"4axis_2 (supports one joystick, second joystick used),\n"
-		"fcs (Thrustmaster), ch (CH Flightstick).\n"
-		"auto chooses emulation depending on real joystick(s).\n"
-		"(Remember to reset DOSBox's mapperfile if you saved it earlier)");
+	        "Type of joystick to emulate: auto (default),\n"
+	        "auto    : Detect and use any joystick(s), if possible.,\n"
+	        "2axis   : Support up to two joysticks.\n"
+	        "4axis   : Support the first joystick only.\n"
+	        "4axis_2 : support the second joystick only.\n"
+	        "fcs     : support a Thrustmaster-type joystick.\n"
+	        "ch      : support a CH Flightstick-type joystick.\n"
+	        "none    : Prevent DOS from seeing the joystick(s), but enable them for mapping.\n"
+	        "disabled: Fully disable joysticks: won't be polled, mapped, or visible in DOS.\n"
+	        "(Remember to reset DOSBox's mapperfile if you saved it earlier)");
 
 	Pbool = secprop->Add_bool("timed",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("enable timed intervals for axis. Experiment with this option, if your joystick drifts (away).");
@@ -892,6 +921,45 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("ipx",Property::Changeable::WhenIdle, false);
 	Pbool->Set_help("Enable ipx over UDP/IP emulation.");
 #endif
+
+#if C_NE2000
+	secprop=control->AddSection_prop("ne2000",&NE2K_Init,true);
+	MSG_Add("NE2000_CONFIGFILE_HELP",
+		"macaddr -- The physical address the emulator will use on your network.\n"
+		"           If you have multiple DOSBoxes running on your network,\n"
+		"           this has to be changed. Modify the last three number blocks.\n"
+		"           I.e. AC:DE:48:88:99:AB.\n"
+		"realnic -- Specifies which of your network interfaces is used.\n"
+		"           Write \'list\' here to see the list of devices in the\n"
+		"           Status Window. Then make your choice and put either the\n"
+		"           interface number (2 or something) or a part of your adapters\n"
+		"           name, e.g. VIA here.\n"
+
+	);
+
+	Pbool = secprop->Add_bool("ne2000", Property::Changeable::WhenIdle, true);
+	Pbool->Set_help("Enable Ethernet passthrough. Requires [Win]Pcap.");
+
+	Phex = secprop->Add_hex("nicbase", Property::Changeable::WhenIdle, 0x300);
+	Phex->Set_help("The base address of the NE2000 board.");
+
+	Pint = secprop->Add_int("nicirq", Property::Changeable::WhenIdle, 3);
+	Pint->Set_help("The interrupt it uses. Note serial2 uses IRQ3 as default.");
+
+	Pstring = secprop->Add_string("macaddr", Property::Changeable::WhenIdle,"AC:DE:48:88:99:AA");
+	Pstring->Set_help("The physical address the emulator will use on your network.\n"
+		"If you have multiple DOSBoxes running on your network,\n"
+		"this has to be changed for each. AC:DE:48 is an address range reserved for\n"
+		"private use, so modify the last three number blocks.\n"
+		"I.e. AC:DE:48:88:99:AB.");
+
+	Pstring = secprop->Add_string("realnic", Property::Changeable::WhenIdle,"list");
+	Pstring->Set_help("Specifies which of your network interfaces is used.\n"
+		"Write \'list\' here to see the list of devices in the\n"
+		"Status Window. Then make your choice and put either the\n"
+		"interface number (2 or something) or a part of your adapters\n"
+		"name, e.g. VIA here.");
+#endif // C_NE2000
 //	secprop->AddInitFunction(&CREDITS_Init);
 
 	//TODO ?

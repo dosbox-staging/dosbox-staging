@@ -25,7 +25,7 @@
 
 #include <string>
 
-class AUTOTYPE : public Program {
+class AUTOTYPE final : public Program {
 public:
 	void Run();
 

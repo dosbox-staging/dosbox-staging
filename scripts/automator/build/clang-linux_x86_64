@@ -1,8 +1,0 @@
-# Tool additions
-ar="llvm-ar${postfix}"
-ld="llvm-link${postfix}"
-ranlib="llvm-ranlib${postfix}"
-
-# Modifier additions
-MODIFIERS+=(lto)
-cflags_lto+=(-O2 -flto=thin)

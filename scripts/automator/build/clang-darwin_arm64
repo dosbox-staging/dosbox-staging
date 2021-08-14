@@ -1,8 +1,0 @@
-ld="ld"
-
-# OS-and-processor customizations
-cflags_release+=(-arch arm64)
-
-# Modifier additions
-MODIFIERS+=(lto)
-cflags_lto=(-flto=thin)

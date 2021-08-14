@@ -19,18 +19,21 @@
 #include "shell.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iterator>
+#include <regex>
 
 #include "regs.h"
 #include "callback.h"
 #include "string_utils.h"
 
+unsigned int result_errorcode = 0;
+
 DOS_Shell::~DOS_Shell() {
-	delete bf;
-	bf = nullptr;
+	bf.reset();
 }
 
 void DOS_Shell::ShowPrompt(void) {
@@ -73,12 +76,12 @@ void DOS_Shell::InputCommand(char * line) {
 			continue;
 		}
 		switch (c) {
-		case 0x00:				/* Extended Keys */
+		case 0x00: /* Extended Keys */
 			{
 				DOS_ReadFile(input_handle,&c,&n);
 				switch (c) {
 
-				case 0x3d:		/* F3 */
+				case 0x3d: /* F3 */
 					if (!l_history.size()) break;
 					it_history = l_history.begin();
 					if (it_history != l_history.end() && it_history->length() > str_len) {
@@ -93,33 +96,33 @@ void DOS_Shell::InputCommand(char * line) {
 					}
 					break;
 
-				case 0x4B:	/* LEFT */
+				case 0x4B: /* Left */
 					if (str_index) {
 						outc(8);
 						str_index --;
 					}
 					break;
 
-				case 0x4D:	/* RIGHT */
+				case 0x4D: /* Right */
 					if (str_index < str_len) {
 						outc(line[str_index++]);
 					}
 					break;
 
-				case 0x47:	/* HOME */
+				case 0x47: /* Home */
 					while (str_index) {
 						outc(8);
 						str_index--;
 					}
 					break;
 
-				case 0x4F:	/* END */
+				case 0x4F: /* End */
 					while (str_index < str_len) {
 						outc(line[str_index++]);
 					}
 					break;
 
-				case 0x48:	/* UP */
+				case 0x48: /* Up */
 					if (l_history.empty() || it_history == l_history.end()) break;
 
 					// store current command in history if we are at beginning
@@ -140,7 +143,7 @@ void DOS_Shell::InputCommand(char * line) {
 					it_history ++;
 					break;
 
-				case 0x50:	/* DOWN */
+				case 0x50: /* Down */
 					if (l_history.empty() || it_history == l_history.begin()) break;
 
 					// not very nice but works ..
@@ -169,7 +172,7 @@ void DOS_Shell::InputCommand(char * line) {
 					it_history ++;
 
 					break;
-				case 0x53:/* DELETE */
+				case 0x53: /* Delete */
 					{
 						if(str_index>=str_len) break;
 						auto text_len = static_cast<uint16_t>(str_len - str_index - 1);
@@ -184,7 +187,7 @@ void DOS_Shell::InputCommand(char * line) {
 						size++;
 					}
 					break;
-				case 15:		/* Shift-Tab */
+				case 15: /* Shift+Tab */
 					if (l_completion.size()) {
 						if (it_completion == l_completion.begin()) it_completion = l_completion.end (); 
 						it_completion--;
@@ -207,7 +210,7 @@ void DOS_Shell::InputCommand(char * line) {
 				}
 			};
 			break;
-		case 0x08:				/* BackSpace */
+		case 0x08: /* Backspace */
 			if (str_index) {
 				outc(8);
 				size_t str_remain = str_len - str_index;
@@ -229,10 +232,10 @@ void DOS_Shell::InputCommand(char * line) {
 			}
 			if (l_completion.size()) l_completion.clear();
 			break;
-		case 0x0a:				/* New Line not handled */
+		case 0x0a: /* New Line not handled */
 			/* Don't care */
 			break;
-		case 0x0d:				/* Return */
+		case 0x0d: /* Return */
 			outc('\r');
 			outc('\n');
 			size=0;			//Kill the while loop
@@ -333,7 +336,7 @@ void DOS_Shell::InputCommand(char * line) {
 				}
 			}
 			break;
-		case 0x1b:   /* ESC */
+		case 0x1b: /* Esc */
 			//write a backslash and return to the next line
 			outc('\\');
 			outc('\r');
@@ -359,7 +362,7 @@ void DOS_Shell::InputCommand(char * line) {
 				line[++str_len]=0;//new end (as the internal buffer moved one place to the right
 				size--;
 			};
-		   
+
 			line[str_index]=c;
 			str_index ++;
 			if (str_index > str_len){ 
@@ -384,6 +387,47 @@ void DOS_Shell::InputCommand(char * line) {
 	// add command line to history
 	l_history.push_front(line); it_history = l_history.begin();
 	if (l_completion.size()) l_completion.clear();
+
+	/* DOS %variable% substitution */
+	ProcessCmdLineEnvVarStitution(line);
+}
+
+/* Note: Buffer pointed to by "line" must be at least CMD_MAXLINE+1 bytes long! */
+void DOS_Shell::ProcessCmdLineEnvVarStitution(char* line) {
+	constexpr char surrogate_percent = 8;
+	const static std::regex re("\\%([^%0-9][^%]*)?%");
+	std::string text = line;
+	std::smatch match;
+	/* Iterate over potential %var1%, %var2%, etc matches found in the text string */
+	while (std::regex_search(text, match, re)) {
+		// Get the first matching %'s position and length
+		const auto percent_pos = static_cast<size_t>(match.position(0));
+		const auto percent_len = static_cast<size_t>(match.length(0));
+
+		std::string variable_name = match[1].str();
+		if (variable_name.empty()) {
+			/* Replace %% with the character "surrogate_percent", then (eventually) % */
+			text.replace(percent_pos, percent_len,
+			             std::string(1, surrogate_percent));
+			continue;
+		}
+		/* Trim preceding spaces from the variable name */
+		variable_name.erase(0, variable_name.find_first_not_of(' '));
+		std::string variable_value;
+		if (variable_name.size() && GetEnvStr(variable_name.c_str(), variable_value)) {
+			const size_t equal_pos = variable_value.find_first_of('=');
+			/* Replace the original %var% with its corresponding value from the environment */
+			const std::string replacement = equal_pos != std::string::npos
+			                ? variable_value.substr(equal_pos + 1) : "";
+			text.replace(percent_pos, percent_len, replacement);
+		}
+		else {
+			text.replace(percent_pos, percent_len, "");
+		}
+	}
+	std::replace(text.begin(), text.end(), surrogate_percent, '%');
+	assert(text.size() <= CMD_MAXLINE);
+	safe_strncpy(line, text.c_str(), CMD_MAXLINE);
 }
 
 std::string full_arguments = "";
@@ -450,9 +494,10 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	{	/* Run the .bat file */
 		/* delete old batch file if call is not active*/
 		bool temp_echo=echo; /*keep the current echostate (as delete bf might change it )*/
-		if(bf && !call) delete bf;
-		bf=new BatchFile(this,fullname,name,line);
-		echo=temp_echo; //restore it.
+		if (bf && !call)
+			bf.reset();
+		bf = std::make_shared<BatchFile>(this, fullname, name, line);
+		echo = temp_echo; // restore it.
 	} 
 	else 
 	{	/* only .bat .exe .com extensions maybe be executed by the shell */
@@ -534,6 +579,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		SegSet16(cs,RealSeg(newcsip));
 		reg_ip=RealOff(newcsip);
 #endif
+		result_errorcode = 0;
 		/* Start up a dos execute interrupt */
 		reg_ax=0x4b00;
 		//Filename pointer
@@ -546,6 +592,8 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		CALLBACK_RunRealInt(0x21);
 		/* Restore CS:IP and the stack */
 		reg_sp+=0x200;
+		if (result_errorcode)
+			dos.return_code = result_errorcode;
 #if 0
 		reg_eip=oldeip;
 		SegSet16(cs,oldcs);

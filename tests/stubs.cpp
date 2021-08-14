@@ -30,3 +30,11 @@ Config *control = nullptr;
 // negatively affect test harness.
 void GFX_ShowMsg(const char *, ...) {}
 void DEBUG_ShowMsg(const char *, ...) {}
+
+void DEBUG_HeavyWriteLogInstruction(){}
+void MSG_Add(const char *, const char *){}
+const char *MSG_Get(char const *)
+{
+	return nullptr;
+}
+

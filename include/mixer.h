@@ -52,6 +52,13 @@ struct AudioFrame {
 	float right = 0;
 };
 
+typedef int16_t mixer_sample_t;
+
+struct MixerFrame {
+	mixer_sample_t left = 0;
+	mixer_sample_t right = 0;
+};
+
 #define MIXER_BUFSIZE (16 * 1024)
 #define MIXER_BUFMASK (MIXER_BUFSIZE - 1)
 extern Bit8u MixTemp[MIXER_BUFSIZE];
@@ -156,16 +163,16 @@ void MIXER_DelChannel(MixerChannel* delchan);
  * and removes itself when destroyed. */
 class MixerObject{
 private:
-	bool installed;
-	char m_name[32];
+	bool installed = false;
+	char m_name[32] = "";
+
 public:
-	MixerObject() : installed(false) {}
 	MixerChannel* Install(MIXER_Handler handler,Bitu freq,const char * name);
 	~MixerObject();
 };
 
 /* PC Speakers functions, tightly related to the timer functions */
-void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode);
-void PCSPEAKER_SetType(Bitu mode);
+void PCSPEAKER_SetCounter(uint32_t cntr, uint32_t mode);
+void PCSPEAKER_SetType(uint32_t mode);
 
 #endif

@@ -43,11 +43,16 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 	decode.block->page.start=(Bit16u)decode.page.index;
 	codepage->AddCacheBlock(decode.block);
 
+	auto cache_addr = static_cast<void *>(const_cast<uint8_t *>(decode.block->cache.start));
+	constexpr size_t cache_bytes = CACHE_MAXSIZE;
+
+	dyn_mem_write(cache_addr, cache_bytes);
+
 	InitFlagsOptimization();
 
 	// every codeblock that is run sets cache.block.running to itself
 	// so the block linking knows the last executed block
-	gen_mov_direct_ptr(&cache.block.running,(DRC_PTR_SIZE_IM)decode.block);
+	gen_mov_direct_ptr(&cache.block.running,(Bitu)decode.block);
 
 	// start with the cycles check
 	gen_mov_word_to_reg(FC_RETOP,&CPU_Cycles,true);
@@ -326,7 +331,11 @@ restart_prefix:
 		case 0x8c:dyn_mov_ev_seg();break;
 
 		// load effective address
-		case 0x8d:dyn_lea();break;
+		case 0x8d:
+			dyn_get_modrm();
+			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			dyn_lea();
+			break;
 
 		// move a value from memory or a 16bit register into a segment register
 		case 0x8e:dyn_mov_seg_ev();break;
@@ -610,6 +619,9 @@ finish_block:
 	// setup the correct end-address
 	decode.page.index--;
 	decode.active_block->page.end=(Bit16u)decode.page.index;
+	dyn_mem_execute(cache_addr, cache_bytes);
+	dyn_cache_invalidate(cache_addr, cache_bytes);
+
 //	LOG_MSG("Created block size %d start %d end %d",decode.block->cache.size,decode.block->page.start,decode.block->page.end);
 
 	return decode.block;

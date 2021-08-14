@@ -19,12 +19,30 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <cerrno>
 #include <cassert>
 #include <new>
 
 #include "mem_unaligned.h"
 #include "paging.h"
 #include "types.h"
+
+#if defined(HAVE_MMAP)
+#include <sys/mman.h>
+#endif
+
+#if defined(HAVE_PTHREAD_WRITE_PROTECT_NP)
+#include <pthread.h>
+#endif
+
+#if defined(HAVE_SYS_ICACHE_INVALIDATE)
+#include <libkern/OSCacheControl.h>
+#endif
+
+#if defined(WIN32)
+#include <memoryapi.h>
+#include <processthreadsapi.h>
+#endif
 
 class CodePageHandler;
 
@@ -49,7 +67,14 @@ public:
 	} page;
 
 	struct {
-		uint8_t *start; // where in the cache are we
+		// TODO field start used to be a normal pointer, but upstream
+		// changed it to const pointer in r4424 (perhaps by mistake or
+		// as WIP change). Once transition to W^X will be done, decide
+		// if this should be const pointer or not and remove this comment.
+		//
+		// uint8_t *start; // where in the cache are we
+		const uint8_t *start;  // where in the cache are we
+
 		Bitu size;
 		CacheBlock *next;
 		// writemap masking maskpointer/start/length to allow holes in
@@ -82,7 +107,14 @@ static struct {
 		CacheBlock *running; // the last block that was entered for
 		                     // execution
 	} block;
-	uint8_t *pos;                // position in the cache block
+
+	// TODO field pos used to be a normal pointer, but upstream
+	// changed it to const pointer in r4424 (perhaps by mistake or as WIP
+	// change). Once transition to W^X will be done, decide if this
+	// should be const pointer or not and remove this comment.
+	//
+  	//uint8_t *pos;              // position in the cache block
+	const uint8_t *pos;          // position in the cache block
 	CodePageHandler *free_pages; // pointer to the free list
 	CodePageHandler *used_pages; // pointer to the list of used pages
 	CodePageHandler *last_page;  // the last used page
@@ -98,7 +130,7 @@ static CacheBlock link_blocks[2]; // default linking (specially marked)
 
 // the CodePageHandler class provides access to the contained
 // cache blocks and intercepts writes to the code for special treatment
-class CodePageHandler : public PageHandler {
+class CodePageHandler final : public PageHandler {
 public:
 	CodePageHandler() = default;
 
@@ -624,11 +656,21 @@ static void cache_closeblock()
 	}
 }
 
+// TODO functions cache_addb, cache_addw, cache_addd, cache_addq definitely
+// should NOT use const pointer pos (because they treat this point as writable
+// destination), but upstream made it a const pointer in r4424 (perhaps by
+// mistake or as WIP change) and relies on silently C-casting the constness
+// away.
+//
+// Replaced silent C-casting with explicit const-casting; when upstream will
+// revert this change bring back the previous version and remove this comment.
+//
+
 // place an 8bit value into the cache
 
-static INLINE void cache_addb(uint8_t val, uint8_t *pos)
+static INLINE void cache_addb(uint8_t val, const uint8_t *pos)
 {
-	*pos = val;
+	*const_cast<uint8_t *>(pos) = val;
 }
 
 static inline void cache_addb(uint8_t val)
@@ -639,9 +681,9 @@ static inline void cache_addb(uint8_t val)
 
 // place a 16bit value into the cache
 
-static INLINE void cache_addw(uint16_t val, uint8_t *pos)
+static INLINE void cache_addw(uint16_t val, const uint8_t *pos)
 {
-	write_unaligned_uint16(pos, val);
+	write_unaligned_uint16(const_cast<uint8_t *>(pos), val);
 }
 
 static inline void cache_addw(uint16_t val)
@@ -652,9 +694,9 @@ static inline void cache_addw(uint16_t val)
 
 // place a 32bit value into the cache
 
-static INLINE void cache_addd(uint32_t val, uint8_t *pos)
+static INLINE void cache_addd(uint32_t val, const uint8_t *pos)
 {
-	write_unaligned_uint32(pos, val);
+	write_unaligned_uint32(const_cast<uint8_t *>(pos), val);
 }
 
 static inline void cache_addd(uint32_t val)
@@ -665,9 +707,9 @@ static inline void cache_addd(uint32_t val)
 
 // place a 64bit value into the cache
 
-static INLINE void cache_addq(uint64_t val, uint8_t *pos)
+static INLINE void cache_addq(uint64_t val, const uint8_t *pos)
 {
-	write_unaligned_uint64(pos, val);
+	write_unaligned_uint64(const_cast<uint8_t *>(pos), val);
 }
 
 static inline void cache_addq(uint64_t val)
@@ -682,15 +724,76 @@ static void gen_return(BlockReturn retcode);
 static void dyn_return(BlockReturn retcode, bool ret_exception);
 static void dyn_run_code();
 static void cache_block_before_close();
-static void cache_block_closing(uint8_t *block_start, Bitu block_size);
+static void cache_block_closing(const uint8_t *block_start, Bitu block_size);
 #endif
 
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
-#if defined(HAVE_MPROTECT)
+#if defined(HAVE_MPROTECT) || defined(HAVE_MMAP)
 #define PAGESIZE_TEMP PAGESIZE
 #else
 #define PAGESIZE_TEMP 4096
 #endif
+
+static constexpr size_t cache_code_size = CACHE_TOTAL + CACHE_MAXSIZE + PAGESIZE_TEMP - 1 + PAGESIZE_TEMP;
+static constexpr size_t cache_blocks_total_bytes = CACHE_BLOCKS * sizeof(CacheBlock);
+
+static inline void dyn_mem_execute(MAYBE_UNUSED void* ptr, MAYBE_UNUSED size_t size)
+{
+#if defined(HAVE_PTHREAD_WRITE_PROTECT_NP)
+#if defined(HAVE_BUILTIN_AVAILABLE)
+	if (__builtin_available(macOS 11.0, *))
+#endif
+		pthread_jit_write_protect_np(true);
+#elif defined(HAVE_MPROTECT)
+	ptr = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(ptr) % PAGESIZE);
+	MAYBE_UNUSED const int mp_res = mprotect(ptr, size,
+	                                         PROT_READ | PROT_EXEC);
+	assert(mp_res == 0);
+#elif defined(WIN32)
+	DWORD old_protect = 0;
+	MAYBE_UNUSED const BOOL vp_res = VirtualProtect(ptr,
+	                                                size,
+	                                                PAGE_EXECUTE_READ,
+	                                                &old_protect);
+	assert(vp_res != 0);
+#endif
+}
+
+static inline void dyn_mem_write(MAYBE_UNUSED void *ptr, MAYBE_UNUSED size_t size)
+{
+#if defined(HAVE_PTHREAD_WRITE_PROTECT_NP)
+#if defined(HAVE_BUILTIN_AVAILABLE)
+	if (__builtin_available(macOS 11.0, *))
+#endif
+		pthread_jit_write_protect_np(false);
+#elif defined(HAVE_MPROTECT)
+	ptr = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(ptr) % PAGESIZE);
+	MAYBE_UNUSED const int mp_res = mprotect(ptr, size,
+	                                         PROT_READ | PROT_WRITE);
+	assert(mp_res == 0);
+#elif defined(WIN32)
+	DWORD old_protect = 0;
+	MAYBE_UNUSED const BOOL vp_res = VirtualProtect(ptr,
+	                                                size,
+	                                                PAGE_READWRITE,
+	                                                &old_protect);
+	assert(vp_res != 0);
+#endif
+}
+
+static inline void dyn_cache_invalidate(MAYBE_UNUSED void *ptr, MAYBE_UNUSED size_t size)
+{
+#if defined(HAVE_SYS_ICACHE_INVALIDATE)
+#if defined(HAVE_BUILTIN_AVAILABLE)
+	if (__builtin_available(macOS 11.0, *))
+#endif	
+		sys_icache_invalidate(ptr, size);
+#elif defined(__GNUC__)
+	__builtin___clear_cache(static_cast<char *>(ptr), reinterpret_cast<char *>(reinterpret_cast<uintptr_t>(ptr) + size));		
+#elif defined(WIN32)
+	FlushInstructionCache(GetCurrentProcess(), ptr, size);
+#endif
+}
 
 static bool cache_initialized = false;
 
@@ -700,12 +803,12 @@ static void cache_init(bool enable) {
 		// see if cache is already initialized
 		if (cache_initialized) return;
 		cache_initialized = true;
-		if (cache_blocks == NULL) {
+		if (cache_blocks == nullptr) {
 			// allocate the cache blocks memory
-			cache_blocks = (CacheBlock *)malloc(CACHE_BLOCKS * sizeof(CacheBlock));
+			cache_blocks = static_cast<CacheBlock *>(malloc(cache_blocks_total_bytes));
 			if (!cache_blocks)
 				E_Exit("Allocating cache_blocks has failed");
-			memset(cache_blocks, 0, sizeof(CacheBlock) * CACHE_BLOCKS);
+			memset(cache_blocks, 0, cache_blocks_total_bytes);
 			cache.block.free=&cache_blocks[0];
 			// initialize the cache blocks
 			for (i=0;i<CACHE_BLOCKS-1;i++) {
@@ -714,34 +817,40 @@ static void cache_init(bool enable) {
 				cache_blocks[i].cache.next = &cache_blocks[i + 1];
 			}
 		}
-		if (cache_code_start_ptr==NULL) {
+		if (cache_code_start_ptr == nullptr) {
 			// allocate the code cache memory
 #if defined (WIN32)
-			cache_code_start_ptr=(Bit8u*)VirtualAlloc(0,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1+PAGESIZE_TEMP,
-				MEM_COMMIT,PAGE_EXECUTE_READWRITE);
-			if (!cache_code_start_ptr)
-				cache_code_start_ptr=(Bit8u*)malloc(CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1+PAGESIZE_TEMP);
-#else
-			cache_code_start_ptr=(Bit8u*)malloc(CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1+PAGESIZE_TEMP);
+			cache_code_start_ptr = static_cast<uint8_t *>(
+			        VirtualAlloc(nullptr, cache_code_size,
+			                     MEM_COMMIT,
+			                     PAGE_EXECUTE_READWRITE));
+			if (!cache_code_start_ptr) {
+				LOG_MSG("VirtualAlloc error, using malloc");
+				cache_code_start_ptr=static_cast<uint8_t *>(malloc(cache_code_size));
+			}
+#elif defined(HAVE_MMAP)
+			int map_flags = MAP_PRIVATE | MAP_ANON;
+			int prot_flags = PROT_READ | PROT_WRITE | PROT_EXEC;
+#if defined(HAVE_MAP_JIT)
+			map_flags |= MAP_JIT;
 #endif
-			if (!cache_code_start_ptr)
+			cache_code_start_ptr=static_cast<uint8_t *>(mmap(nullptr, cache_code_size, prot_flags, map_flags, -1, 0));
+			if (cache_code_start_ptr == MAP_FAILED) {
+				E_Exit("Allocating dynamic core cache memory failed with errno %d", errno);
+			}
+#else
+			cache_code_start_ptr=static_cast<uint8_t *>(malloc(cache_code_size));
+			if (!cache_code_start_ptr) {
 				E_Exit("Allocating dynamic core cache memory failed");
-
+			}
+#endif
 			// align the cache at a page boundary
-			cache_code = (Bit8u *)(((Bitu)cache_code_start_ptr +
-			                        PAGESIZE_TEMP - 1) &
-			                       ~(PAGESIZE_TEMP - 1)); // Bitu is
-			                                              // same size
-			                                              // as a
-			                                              // pointer.
+			cache_code = reinterpret_cast<uint8_t *>(
+			    (reinterpret_cast<uintptr_t>(cache_code_start_ptr) +
+			    PAGESIZE_TEMP - 1) & ~(PAGESIZE_TEMP - 1));
 
 			cache_code_link_blocks=cache_code;
 			cache_code=cache_code+PAGESIZE_TEMP;
-
-#if defined(HAVE_MPROTECT)
-			if(mprotect(cache_code_link_blocks,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP,PROT_WRITE|PROT_READ|PROT_EXEC))
-				LOG_MSG("Setting execute permission on the code cache has failed");
-#endif
 			CacheBlock *block = cache_getblock();
 			cache.block.first=block;
 			cache.block.active=block;
@@ -752,6 +861,11 @@ static void cache_init(bool enable) {
 		// setup the default blocks for block linkage returns
 		cache.pos=&cache_code_link_blocks[0];
 		link_blocks[0].cache.start=cache.pos;
+
+		auto cache_addr = static_cast<void *>(cache_code);
+		constexpr size_t cache_bytes = CACHE_MAXSIZE;
+
+		dyn_mem_write(cache_addr, cache_bytes);
 		// link code that returns with a special return code
 		dyn_return(BR_Link1,false);
 		cache.pos=&cache_code_link_blocks[32];
@@ -761,10 +875,12 @@ static void cache_init(bool enable) {
 
 #if (C_DYNREC)
 		cache.pos=&cache_code_link_blocks[64];
-		core_dynrec.runcode=(BlockReturn (*)(Bit8u*))cache.pos;
+		core_dynrec.runcode=(BlockReturn (*)(const Bit8u*))cache.pos;
 //		link_blocks[1].cache.start=cache.pos;
 		dyn_run_code();
 #endif
+		dyn_mem_execute(cache_addr, cache_bytes);
+		dyn_cache_invalidate(cache_addr, cache_bytes);
 
 		cache.free_pages=0;
 		cache.last_page=0;

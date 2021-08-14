@@ -16,6 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "dos_inc.h"
+
 #include <climits>
 #include <ctype.h>
 #include <stdlib.h>
@@ -26,7 +28,6 @@
 #include "bios.h"
 #include "mem.h"
 #include "regs.h"
-#include "dos_inc.h"
 #include "drives.h"
 #include "cross.h"
 #include "string_utils.h"
@@ -783,13 +784,16 @@ bool DOS_CreateTempFile(char * const name,Bit16u * entry) {
 	}
 	dos.errorcode=0;
 	/* add random crap to the end of the name and try to open */
+	const auto seed = static_cast<unsigned int>(time(nullptr));
+	srand(seed);
 	do {
 		Bit32u i;
 		for (i=0;i<8;i++) {
 			tempname[i]=(rand()%26)+'A';
 		}
 		tempname[8]=0;
-	} while ((!DOS_CreateFile(name,0,entry)) && (dos.errorcode==DOSERR_FILE_ALREADY_EXISTS));
+	} while (DOS_FileExists(name));
+	DOS_CreateFile(name,0,entry);
 	if (dos.errorcode) return false;
 	return true;
 }
@@ -1086,7 +1090,8 @@ Bit8u DOS_FCBRead(Bit16u seg,Bit16u offset,Bit16u recno) {
 	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET,true)) return FCB_READ_NODATA; 
 	Bit16u toread=rec_size;
 	if (!DOS_ReadFile(fhandle,dos_copybuf,&toread,true)) return FCB_READ_NODATA;
-	if (toread==0) return FCB_READ_NODATA;
+	if (toread == 0)
+		return FCB_READ_NODATA;
 	if (toread < rec_size) { //Zero pad copybuffer to rec_size
 		Bitu i = toread;
 		while(i < rec_size) dos_copybuf[i++] = 0;
@@ -1095,7 +1100,6 @@ Bit8u DOS_FCBRead(Bit16u seg,Bit16u offset,Bit16u recno) {
 	if (++cur_rec>127) { cur_block++;cur_rec=0; }
 	fcb.SetRecord(cur_block,cur_rec);
 	if (toread==rec_size) return FCB_SUCCESS;
-	if (toread==0) return FCB_READ_NODATA;
 	return FCB_READ_PARTIAL;
 }
 

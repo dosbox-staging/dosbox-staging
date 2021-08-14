@@ -1,8 +1,11 @@
 /* String appended to the .conf file. */
-#define CONF_BRAND "staging-git"
+#define CONF_SUFFIX "-staging-git"
 
 /* Version number of package */
-#define VERSION "git"
+#define VERSION "0.78.0"
+
+/* This macro is going to be overriden via CI */
+#define DOSBOX_DETAILED_VERSION "git"
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0
@@ -15,6 +18,9 @@
 
 /* Define to 1 to enable internal modem support, requires SDL_net */
 #define C_MODEM 1
+
+/* Define to 1 to enable NE2000 ethernet passthrough, requires libpcap */
+#define C_NE2000 0
 
 /* Define to 1 to enable IPX networking support, requires SDL_net */
 #define C_IPX 1
@@ -41,6 +47,9 @@
 
 /* Define to 1 to enable FluidSynth MIDI synthesizer */
 #define C_FLUIDSYNTH 1
+
+// Define to 1 to enable MT-32 emulator
+#define C_MT32EMU 1
 
 /* Enable the FPU module, still only for beta testing */
 #define C_FPU 1

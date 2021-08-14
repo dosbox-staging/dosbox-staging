@@ -157,6 +157,9 @@
     <ClCompile Include="..\src\hardware\hardware.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\innovation.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\iohandler.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
@@ -203,6 +206,9 @@
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\pic.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\ps1audio.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\sblaster.cpp">
@@ -364,7 +370,13 @@
     <ClCompile Include="..\src\misc\programs.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\misc\rwqueue.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\misc\setup.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\soft_limiter.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
     <ClCompile Include="..\src\misc\support.cpp">
@@ -394,10 +406,79 @@
     <ClCompile Include="..\src\midi\midi_fluidsynth.cpp">
       <Filter>src\midi</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\midi\midi_lasynth_model.cpp">
+      <Filter>src\midi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\midi\midi_mt32.cpp">
+      <Filter>src\midi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dos\program_choice.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dos\program_help.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\dos\program_ls.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
     <ClCompile Include="..\src\misc\fs_utils_win32.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\platform\visualc\version.cpp">
+      <Filter>src\platform\visualc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\Dac.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\EnvelopeGenerator.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\ExternalFilter.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\Filter.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\Filter6581.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\Filter8580.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\FilterModelConfig6581.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\FilterModelConfig8580.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\Integrator6581.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\Integrator8580.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\OpAmp.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\SID.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\resample/SincResampler.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\Spline.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\WaveformCalculator.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\residfp\WaveformGenerator.cpp">
+      <Filter>src\libs\residfp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\pacer.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
   </ItemGroup>
@@ -498,6 +579,9 @@
     <ClInclude Include="..\include\render.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\rwqueue.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\serialport.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -505,6 +589,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\shell.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\soft_limiter.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\support.h">
@@ -738,6 +825,12 @@
     <ClInclude Include="..\src\midi\midi_fluidsynth.h">
       <Filter>src\midi</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\midi\midi_lasynth_model.h">
+      <Filter>src\midi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\midi\midi_mt32.h">
+      <Filter>src\midi</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\midi\midi_handler.h">
       <Filter>src\midi</Filter>
     </ClInclude>
@@ -755,6 +848,69 @@
     </ClInclude>
     <ClInclude Include="..\src\gui\gui_msgs.h">
       <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_crt_glsl.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_glsl.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\array.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\Dac.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\EnvelopeGenerator.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\ExternalFilter.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\Filter.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\Filter6581.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\Filter8580.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\FilterModelConfig6581.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\FilterModelConfig8580.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\Integrator6581.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\Integrator8580.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\OpAmp.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\Potentiometer.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\SID.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\siddefs-fp.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\Spline.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\Voice.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\WaveformCalculator.h">
+      <Filter>src\libs\residfp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\residfp\WaveformGenerator.h">
+      <Filter>src\libs\residfp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -845,6 +1001,9 @@
     </Filter>
     <Filter Include="src\midi">
       <UniqueIdentifier>{5920d562-013f-417e-8095-198288c97b52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\residfp">
+      <UniqueIdentifier>{e8ef008d-ceb9-4224-9b9e-b5b62933ca0d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

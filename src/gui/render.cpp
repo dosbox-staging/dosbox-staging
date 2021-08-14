@@ -102,8 +102,8 @@ void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue) {
 	if (render.pal.last<entry) render.pal.last=entry;
 }
 
-static void RENDER_EmptyLineHandler(const void * src) {
-}
+static void RENDER_EmptyLineHandler(const void *)
+{}
 
 static void RENDER_StartLineHandler(const void * s) {
 	if (s) {
@@ -208,7 +208,7 @@ static void RENDER_Halt( void ) {
 	render.active=false;
 }
 
-extern Bitu PIC_Ticks;
+extern uint32_t PIC_Ticks;
 void RENDER_EndUpdate( bool abort ) {
 	if (GCC_UNLIKELY(!render.updating))
 		return;
@@ -220,12 +220,15 @@ void RENDER_EndUpdate( bool abort ) {
 			if (render.src.dblw) flags|=CAPTURE_FLAG_DBLW;
 			if (render.src.dblh) flags|=CAPTURE_FLAG_DBLH;
 		}
-		float fps = render.src.fps;
+		auto fps = render.src.fps;
 		pitch = render.scale.cachePitch;
-		if (render.frameskip.max)
-			fps /= 1+render.frameskip.max;
-		CAPTURE_AddImage( render.src.width, render.src.height, render.src.bpp, pitch,
-			flags, fps, (Bit8u *)&scalerSourceCache, (Bit8u*)&render.pal.rgb );
+		if (render.frameskip.max) {
+			const double fps_skip = 1 + render.frameskip.max;
+			fps /= fps_skip;
+		}
+		CAPTURE_AddImage(render.src.width, render.src.height, render.src.bpp,
+		                 pitch, flags, fps, (Bit8u *)&scalerSourceCache,
+		                 (Bit8u *)&render.pal.rgb);
 	}
 	if ( render.scale.outWrite ) {
 		GFX_EndUpdate( abort? NULL : Scaler_ChangedLines );
@@ -558,8 +561,13 @@ static void RENDER_CallBack( GFX_CallBackFunctions_t function ) {
 	}
 }
 
-void RENDER_SetSize(Bitu width, Bitu height, unsigned bpp, float fps,
-                    double ratio, bool dblw, bool dblh)
+void RENDER_SetSize(Bitu width,
+                    Bitu height,
+                    unsigned bpp,
+                    double fps,
+                    double ratio,
+                    bool dblw,
+                    bool dblh)
 {
 	RENDER_Halt( );
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {

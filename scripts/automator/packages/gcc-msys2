@@ -1,3 +1,0 @@
-# Under MSYS2 only the 'default' version of gcc is available, so we don't postfix it with the version
-compiler="mingw-w64-${pkg_type}-${selected_type}"
-

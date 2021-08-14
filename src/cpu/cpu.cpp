@@ -538,6 +538,11 @@ doexception:
 	return CPU_PrepareException(EXCEPTION_GP,0);
 }
 
+void CPU_DebugException(Bit32u triggers,Bitu oldeip) {
+	cpu.drx[6] = (cpu.drx[6] & 0xFFFF1FF0) | triggers;
+	CPU_Interrupt(EXCEPTION_DB,CPU_INT_EXCEPTION,oldeip);
+}
+
 void CPU_Exception(Bitu which,Bitu error ) {
 //	LOG_MSG("Exception %d error %x",which,error);
 	cpu.exception.error=error;
@@ -546,6 +551,10 @@ void CPU_Exception(Bitu which,Bitu error ) {
 
 Bit8u lastint;
 void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
+	if (num == EXCEPTION_DB && (type&CPU_INT_EXCEPTION) == 0) {
+		CPU_DebugException(0,oldeip); // DR6 bits need updating
+		return;
+	}
 	lastint=num;
 	FillFlags();
 #if C_DEBUG
@@ -2156,8 +2165,8 @@ void CPU_Disable_SkipAutoAdjust(void) {
 }
 
 
-extern Bit32s ticksDone;
-extern Bit32u ticksScheduled;
+extern int ticksDone;
+extern int ticksScheduled;
 
 void CPU_Reset_AutoAdjust(void) {
 	CPU_IODelayRemoved = 0;
@@ -2165,7 +2174,7 @@ void CPU_Reset_AutoAdjust(void) {
 	ticksScheduled = 0;
 }
 
-class CPU: public Module_base {
+class CPU final : public Module_base {
 private:
 	static bool inited;
 public:
@@ -2223,11 +2232,11 @@ public:
 #elif (C_DYNREC)
 		CPU_Core_Dynrec_Init();
 #endif
-		MAPPER_AddHandler(CPU_CycleDecrease, SDL_SCANCODE_F11, MMOD1,
-		                  "cycledown", "Dec Cycles");
-		MAPPER_AddHandler(CPU_CycleIncrease, SDL_SCANCODE_F12, MMOD1,
-		                  "cycleup", "Inc Cycles");
-		Change_Config(configuration);	
+		MAPPER_AddHandler(CPU_CycleDecrease, SDL_SCANCODE_F11,
+		                  PRIMARY_MOD, "cycledown", "Dec Cycles");
+		MAPPER_AddHandler(CPU_CycleIncrease, SDL_SCANCODE_F12,
+		                  PRIMARY_MOD, "cycleup", "Inc Cycles");
+		Change_Config(configuration);
 		CPU_JMP(false,0,0,0);					//Setup the first cpu core
 	}
 

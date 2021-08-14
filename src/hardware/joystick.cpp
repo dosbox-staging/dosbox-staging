@@ -16,16 +16,16 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "joystick.h"
 
+#include <cfloat>
 #include <string.h>
 #include <math.h>
-#include "dosbox.h"
+
+#include "control.h"
 #include "inout.h"
-#include "setup.h"
-#include "joystick.h"
 #include "pic.h"
 #include "support.h"
-
 
 //TODO: higher axis can't be mapped. Find out why again
 
@@ -35,15 +35,13 @@
 #define RANGE 64
 #define TIMEOUT 10
 
-#define OHMS 120000/2
-#define JOY_S_CONSTANT 0.0000242
-#define S_PER_OHM 0.000000011
-
 struct JoyStick {
 	enum {JOYMAP_SQUARE,JOYMAP_CIRCLE,JOYMAP_INBETWEEN} mapstate;
 	bool enabled;
-	float xpos, ypos; //position as set by SDL.
-	double xtick, ytick;
+	float xpos;
+	float ypos; // position as set by SDL.
+	double xtick;
+	double ytick;
 	Bitu xcount, ycount;
 	bool button[2];
 	int deadzone; //Deadzone (value between 0 and 100) interpreted as percentage.
@@ -51,10 +49,14 @@ struct JoyStick {
 	float xfinal, yfinal; //position returned to the game for stick 0. 
 
 	void clip() {
-		if (xfinal > 1.0) xfinal = 1.0;
-		else if (xfinal < -1.0) xfinal = -1.0;
-		if (yfinal > 1.0) yfinal = 1.0;
-		else if (yfinal < -1.0) yfinal = -1.0;
+		if (xfinal > 1.0f)
+			xfinal = 1.0f;
+		else if (xfinal < -1.0f)
+			xfinal = -1.0f;
+		if (yfinal > 1.0f)
+			yfinal = 1.0f;
+		else if (yfinal < -1.0f)
+			yfinal = -1.0f;
 	}
 
 	void fake_digital() {
@@ -67,9 +69,13 @@ struct JoyStick {
 	}
 
 	void transform_circular(){
-		float r = sqrtf(xpos * xpos + ypos * ypos);
-		if (r == 0.0) {xfinal = xpos; yfinal = ypos; return;}
-		float deadzone_f = deadzone / 100.0f;
+		const float r = sqrtf(xpos * xpos + ypos * ypos);
+		if (fabs(r) < FLT_EPSILON) {
+			xfinal = xpos;
+			yfinal = ypos;
+			return;
+		}
+		float deadzone_f = static_cast<float>(deadzone) / 100.0f;
 		float s = 1.0f - deadzone_f;
 		if (r < deadzone_f) {
 			xfinal = yfinal = 0.0f;
@@ -85,7 +91,7 @@ struct JoyStick {
 	}
 
 	void transform_square() {
-		float deadzone_f = deadzone / 100.0f;
+		float deadzone_f = static_cast<float>(deadzone) / 100.0f;
 		float s = 1.0f - deadzone_f;
 
 		if (xpos > deadzone_f) {
@@ -134,7 +140,7 @@ struct JoyStick {
 
 };
 
-JoystickType joytype;
+JoystickType joytype = JOY_UNSET;
 static JoyStick stick[2];
 
 static Bitu last_write = 0;
@@ -144,7 +150,8 @@ bool button_wrapping_enabled = true;
 
 extern bool autofire; //sdl_mapper.cpp
 
-static Bitu read_p201(Bitu port,Bitu iolen) {
+static uint8_t read_p201(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED uint8_t iolen)
+{
 	/* Reset Joystick to 0 after TIMEOUT ms */
 	if(write_active && ((PIC_Ticks - last_write) > TIMEOUT)) {
 		write_active = false;
@@ -180,9 +187,10 @@ static Bitu read_p201(Bitu port,Bitu iolen) {
 	return ret;
 }
 
-static Bitu read_p201_timed(Bitu port,Bitu iolen) {
-	Bit8u ret=0xff;
-	double currentTick = PIC_FullIndex();
+static uint8_t read_p201_timed(MAYBE_UNUSED uint16_t port, MAYBE_UNUSED uint8_t iolen)
+{
+	Bit8u ret = 0xff;
+	const auto currentTick = PIC_FullIndex();
 	if( stick[0].enabled ){
 		if( stick[0].xtick < currentTick ) ret &=~1;
 		if( stick[0].ytick < currentTick ) ret &=~2;
@@ -203,7 +211,10 @@ static Bitu read_p201_timed(Bitu port,Bitu iolen) {
 	return ret;
 }
 
-static void write_p201(Bitu port,Bitu val,Bitu iolen) {
+static void write_p201(MAYBE_UNUSED uint16_t port,
+                       MAYBE_UNUSED uint8_t val,
+                       MAYBE_UNUSED uint8_t iolen)
+{
 	/* Store writetime index */
 	write_active = true;
 	last_write = PIC_Ticks;
@@ -216,25 +227,36 @@ static void write_p201(Bitu port,Bitu val,Bitu iolen) {
 		stick[1].xcount=(Bitu)(((swap34? stick[1].ypos : stick[1].xpos)*RANGE)+RANGE);
 		stick[1].ycount=(Bitu)(((swap34? stick[1].xpos : stick[1].ypos)*RANGE)+RANGE);
 	}
-
 }
-static void write_p201_timed(Bitu port,Bitu val,Bitu iolen) {
-	// Axes take time = 24.2 microseconds + ( 0.011 microsecons/ohm * resistance )
-	// to reset to 0
-	// Pre-calculate the time at which each axis hits 0 here
-	double currentTick = PIC_FullIndex();
+static void write_p201_timed(MAYBE_UNUSED uint16_t port,
+                             MAYBE_UNUSED uint8_t val,
+                             MAYBE_UNUSED uint8_t iolen)
+{
+	const auto current_tick = PIC_FullIndex();
+
+	// Convert the the joystick's instantaneous position to activation duration in ticks
+	auto position_to_ticks = [current_tick](auto position) {
+		constexpr auto joystick_s_constant = 0.0000242;
+		constexpr auto ohms = 120000.0 / 2.0;
+		constexpr auto s_per_ohm = 0.000000011;
+		const auto resistance = static_cast<double>(position) + 1.0;
+
+		// Axes take time = 24.2 microseconds + ( 0.011 microsecons/ohm * resistance) to reset to 0
+		const auto axis_time_us = joystick_s_constant + s_per_ohm * resistance * ohms;
+		const auto axis_time_ms = 1000.0 * axis_time_us;
+
+		// finally, return the current tick plus the axis_time in milliseconds
+		return current_tick + axis_time_ms;
+	};
+
 	if (stick[0].enabled) {
 		stick[0].transform_input();
-		stick[0].xtick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
-		                 (double)(((stick[0].xfinal+1.0)* OHMS)) );
-		stick[0].ytick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
-		                 (double)(((stick[0].yfinal+1.0)* OHMS)) );
+		stick[0].xtick = position_to_ticks(stick[0].xfinal);
+		stick[0].ytick = position_to_ticks(stick[0].yfinal);
 	}
 	if (stick[1].enabled) {
-		stick[1].xtick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
-		                 (double)((swap34? stick[1].ypos : stick[1].xpos)+1.0) * OHMS);
-		stick[1].ytick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
-		                 (double)((swap34? stick[1].xpos : stick[1].ypos)+1.0) * OHMS);
+		stick[1].xtick = position_to_ticks(swap34 ? stick[1].ypos : stick[1].xpos);
+		stick[1].ytick = position_to_ticks(swap34 ? stick[1].xpos : stick[1].ypos);
 	}
 }
 
@@ -284,7 +306,35 @@ float JOYSTICK_GetMove_Y(Bitu which) {
 	return stick[1].ypos;
 }
 
-class JOYSTICK : public Module_base {
+void JOYSTICK_ParseConfiguredType()
+{
+	const auto conf = control->GetSection("joystick");
+	const auto section = static_cast<Section_prop *>(conf);
+	const char *type = section->Get_string("joysticktype");
+
+	if (!strcasecmp(type, "disabled"))
+		joytype = JOY_DISABLED;
+	else if (!strcasecmp(type, "none"))
+		joytype = JOY_NONE;
+	else if (!strcasecmp(type, "auto"))
+		joytype = JOY_AUTO;
+	else if (!strcasecmp(type, "2axis"))
+		joytype = JOY_2AXIS;
+	else if (!strcasecmp(type, "4axis"))
+		joytype = JOY_4AXIS;
+	else if (!strcasecmp(type, "4axis_2"))
+		joytype = JOY_4AXIS_2;
+	else if (!strcasecmp(type, "fcs"))
+		joytype = JOY_FCS;
+	else if (!strcasecmp(type, "ch"))
+		joytype = JOY_CH;
+	else
+		joytype = JOY_AUTO;
+
+	assert(joytype != JOY_UNSET);
+}
+
+class JOYSTICK final : public Module_base {
 private:
 	IO_ReadHandleObject ReadHandler = {};
 	IO_WriteHandleObject WriteHandler = {};
@@ -292,39 +342,51 @@ private:
 public:
 	JOYSTICK(Section *configuration) : Module_base(configuration)
 	{
-		Section_prop * section = static_cast<Section_prop *>(configuration);
-		const char * type = section->Get_string("joysticktype");
-		if (!strcasecmp(type,"none"))         joytype = JOY_NONE;
-		else if (!strcasecmp(type,"false"))   joytype = JOY_NONE;
-		else if (!strcasecmp(type,"auto"))    joytype = JOY_AUTO;
-		else if (!strcasecmp(type,"2axis"))   joytype = JOY_2AXIS;
-		else if (!strcasecmp(type,"4axis"))   joytype = JOY_4AXIS;
-		else if (!strcasecmp(type,"4axis_2")) joytype = JOY_4AXIS_2;
-		else if (!strcasecmp(type,"fcs"))     joytype = JOY_FCS;
-		else if (!strcasecmp(type,"ch"))      joytype = JOY_CH;
-		else joytype = JOY_AUTO;
+		JOYSTICK_ParseConfiguredType();
 
-		bool timed = section->Get_bool("timed");
-		if (timed) {
-			ReadHandler.Install(0x201,read_p201_timed,IO_MB);
-			WriteHandler.Install(0x201,write_p201_timed,IO_MB);
-		} else {
-			ReadHandler.Install(0x201,read_p201,IO_MB);
-			WriteHandler.Install(0x201,write_p201,IO_MB);
-		}
+		// Does the user want joysticks to be entirely disabled, both in SDL and DOS?
+		if (joytype == JOY_DISABLED)
+			return;
+
+		// Get the [joystock] conf section
+		const auto section = static_cast<Section_prop *>(configuration);
+		assert(section);
+
+		// Get and apply configuration settings
 		autofire = section->Get_bool("autofire");
-		swap34 = section->Get_bool("swap34");
 		button_wrapping_enabled = section->Get_bool("buttonwrap");
-		stick[0].xtick = stick[0].ytick = stick[1].xtick =
-		                 stick[1].ytick = PIC_FullIndex();
-		stick[0].xpos = stick[0].ypos = stick[1].xpos = stick[1].ypos = 0.0f;
+		stick[0].deadzone = section->Get_int("deadzone");
+		swap34 = section->Get_bool("swap34");
+		stick[0].mapstate = section->Get_bool("circularinput")
+		                            ? JoyStick::JOYMAP_CIRCLE
+		                            : JoyStick::JOYMAP_SQUARE;
+
+		// Set initial time and position states
+		const auto ticks = PIC_FullIndex();
+		stick[0].xtick = ticks;
+		stick[0].ytick = ticks;
+		stick[1].xtick = ticks;
+		stick[1].ytick = ticks;
+		stick[0].xpos = 0.0f;
+		stick[0].ypos = 0.0f;
+		stick[1].xpos = 0.0f;
+		stick[1].ypos = 0.0f;
 		stick[0].transformed = false;
 
+		// Does the user want joysticks to be available for mapping, but hidden in DOS?
+		if (joytype == JOY_NONE)
+			return;
 
-		stick[0].mapstate = JoyStick::JOYMAP_SQUARE;
-		bool circ = section->Get_bool("circularinput");
-		if (circ) stick[0].mapstate = JoyStick::JOYMAP_CIRCLE;
-		stick[0].deadzone = section->Get_int("deadzone");
+		// Setup the joystick IO port handlers, which lets DOS games
+		// detect and use them
+		const bool wants_timed = section->Get_bool("timed");
+		ReadHandler.Install(0x201, wants_timed ? read_p201_timed : read_p201, IO_MB);
+		WriteHandler.Install(0x201, wants_timed ? write_p201_timed : write_p201, IO_MB);
+	}
+	~JOYSTICK() {
+		// No-op if IO handlers were not installed
+		WriteHandler.Uninstall();
+		ReadHandler.Uninstall();
 	}
 };
 

@@ -1,0 +1,39 @@
+DOSBox 0.74
+===========
+Pacchetto Traduzione italiana di comandi e messaggi
+e il file di configurazione che viene usato sotto dosbox 0.74.
+Questo pacchetto non è compatibile con le precedenti versioni di DOSBox,
+scarica la versione appropriata!
+
+
+by Gas
+
+
+============================
+Come applicare la traduzione
+============================
+
+NOTA: La traduzione va usata UNICAMENTE con la versione 0.74 di DOSBox!
+
+- Estrarre i file dosbox074ita.lng e dosbox-0.74.conf nella directory dove risiede
+  il file di configurazione di DOSBox. Questa directory, solitamente, è:
+    
+    C:\Documents and Settings\[nome utente]\Impostazioni locali\Dati applicazioni\DOSBox
+    (su Windows XP)
+
+    C:\Users\[nome utente]\AppData\Local\DOSBox
+    (su Windows Vista)
+
+    Sugli altri sistemi operativi... non ne ho idea. Ma se usate un sistema operativo
+    diverso dai due sopra citati, non penso proprio che avrete problemi a trovarla :P
+
+- A questo punto la traduzione dovrebbe già essere applicata, perché ho incluso
+  un file di configurazione tradotto, che richiama già il file di traduzione.
+
+- Avviare DOSBox e controllare che le scritte siano in italiano.
+
+-----------------------------------------------------------------------------------
+
+Il file di configurazione è già modificato per tener conto del file di traduzione.
+Aprire con un editor di testo o notepad il file "dosbox-074.conf" o fare clic
+sul collegamento "DOSBox 0,74 opzioni" nel gruppo "Opzioni" programma "DOSBox-0,74"

@@ -1,0 +1,35 @@
+Sürüm 0.65'ten beri, DOSBox ekran çıkışında film oluşturmanızı sağlar.
+
+Bir film kaydı için, CTRL-ALT-F5'e basın.
+Kayıdı durdurmak/sonlandırmak için, yeniden CTRL-ALT-F5'e basın.
+
+Kaydedilmiş filmi oynatmak için, ZMBV çözücüsü kullanabilir film oynatıcısına
+gereksinim duyarsınız. MS Windows kullanıcıları DOSBox'un başlat menüsünde
+bulabilir.  Linux ile diğer işletim sistemleri kullanıcıları için ffmpeg
+kütüphanesini kullanan film oynatıcısı araştırmalısınız.(siz güncellemeye ya da
+dağıtımınıza yükseltmesini istemeye gereksinim duyabilirsiniz).
+
+Sık Sorulan Sorular:
+Soru: Filmin görüntülenme sırasında ses gecikiyor.
+Yanıt: Görüntü özellikleri, yenileme hızıen az 70 hz olup olmadığını denetleyin.
+Filmi virtualdub (http://virtualdub.sf.net) ile oynatmayı deneyin.
+
+Soru: Neden elde edilen film birçok dosyadan oluşur?
+Yanıt: Oyun, çözünürlüğü her zaman değiştirdiğinde, DOSBox bir yeni film dosyası
+oluşturur, çünkü bir film dosyası yalnızca bir çözünürlükte olabilir.
+
+Soru: Kayıt sırasında devri bilgisayarımın işleyebileceğinden daha yükseğe
+ayarlayabilir miyim?
+Yanıt: Evet. Kayıt sırasında, oyun yavaş ve takılmalarla yürütülür, ama
+elde edilen film istenilen hızda yürütülmeli ve hiç takılma olmamalı.
+
+Soru: Linux altında CTRL-ALT-F5 konsola geçer.
+Yanıt: 1. DOSBOX'u böyle başlatın: dosbox -startmapper
+       2. Video'ya tıklayın, Add'a tıklayın
+       3. İstediğiniz tuşa basın (örnek için scroll lock ya da printscreen)
+       4. Exit'e tıklayın.
+       5. Scroll lock'a ya da seçtiğiniz herhangi tuşa basarak filimler
+          yapabilirsiniz.
+
+Soru: Renkler yanlış ve 64 bit Windows kullanıyorum.
+Yanıt: Buraya bakın: http://vogons.zetafleet.com/viewtopic.php?t=12133

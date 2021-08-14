@@ -16,15 +16,19 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <vector>
-#include <sstream>
-#include <ctype.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
 #include "programs.h"
+
+#include <algorithm>
+#include <array>
+#include <sstream>
+#include <cctype>
+#include <cstdlib>
+#include <cstdarg>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <vector>
+
 #include "callback.h"
 #include "regs.h"
 #include "support.h"
@@ -38,50 +42,58 @@ Bitu call_program;
 
 /* This registers a file on the virtual drive and creates the correct structure for it*/
 
-static Bit8u exe_block[]={
-	0xbc,0x00,0x04,					//MOV SP,0x400 decrease stack size
-	0xbb,0x40,0x00,					//MOV BX,0x040 for memory resize
-	0xb4,0x4a,						//MOV AH,0x4A	Resize memory block
-	0xcd,0x21,						//INT 0x21
-//pos 12 is callback number
-	0xFE,0x38,0x00,0x00,			//CALLBack number
-	0xb8,0x00,0x4c,					//Mov ax,4c00
-	0xcd,0x21,						//INT 0x21
+constexpr std::array<uint8_t, 19> exe_block = {
+        0xbc, 0x00, 0x04,       // MOV SP,0x400  Decrease stack size
+        0xbb, 0x40, 0x00,       // MOV BX,0x040  For memory resize
+        0xb4, 0x4a,             // MOV AH,0x4A   Resize memory block
+        0xcd, 0x21,             // INT 0x21
+        0xFE, 0x38, 0x00, 0x00, // 12th position is the CALLBack number
+        0xb8, 0x00, 0x4c,       // Mov ax,4c00
+        0xcd, 0x21,             // INT 0x21
 };
 
-#define CB_POS 12
+// COM data constants
+constexpr int callback_pos = 12;
 
-static std::vector<PROGRAMS_Main*> internal_progs;
+// Persistent program containers
+using comdata_t = std::vector<uint8_t>;
+static std::vector<comdata_t> internal_progs_comdata;
+static std::vector<PROGRAMS_Main *> internal_progs;
 
-void PROGRAMS_MakeFile(char const * const name,PROGRAMS_Main * main) {
-	Bit8u * comdata=(Bit8u *)malloc(32); //MEM LEAK
+void PROGRAMS_MakeFile(const char *name, PROGRAMS_Main *main)
+{
+	comdata_t comdata(exe_block.begin(), exe_block.end());
+	comdata.at(callback_pos) = static_cast<uint8_t>(call_program & 0xff);
+	comdata.at(callback_pos + 1) = static_cast<uint8_t>((call_program >> 8) & 0xff);
 
-	if (comdata == nullptr) {
-		E_Exit("Could not allocate memory for com-file data.");
-	}
+	// Save the current program's vector index in its COM data
+	const auto index = internal_progs.size();
+	assert(index <= UINT8_MAX); // saving the index into an 8-bit space
+	comdata.push_back(static_cast<uint8_t>(index));
 
-	memcpy(comdata,&exe_block,sizeof(exe_block));
-	comdata[CB_POS]=(Bit8u)(call_program&0xff);
-	comdata[CB_POS+1]=(Bit8u)((call_program>>8)&0xff);
+	// Register the COM program with the Z:\ virtual filesystem
+	VFILE_Register(name, comdata.data(), static_cast<uint32_t>(comdata.size()));
 
-	/* Copy save the pointer in the vector and save it's index */
-	if (internal_progs.size() > 255) E_Exit("PROGRAMS_MakeFile program size too large (%d)",static_cast<int>(internal_progs.size()));
-	Bit8u index = (Bit8u)internal_progs.size();
+	// Register the COM data to prevent it from going out of scope
+	internal_progs_comdata.push_back(std::move(comdata));
+
+	// Register the program's main pointer
+	// NOTE: This step must come after the index is saved in the COM data
 	internal_progs.push_back(main);
-
-	memcpy(&comdata[sizeof(exe_block)],&index,sizeof(index));
-	Bit32u size=sizeof(exe_block)+sizeof(index);	
-	VFILE_Register(name,comdata,size);	
 }
-
-
 
 static Bitu PROGRAMS_Handler(void) {
 	/* This sets up everything for a program start up call */
 	Bitu size=sizeof(Bit8u);
 	Bit8u index;
+
+	// Sanity check the exec_block size before down-casting
+	constexpr auto exec_block_size = exe_block.size();
+	static_assert(exec_block_size < UINT16_MAX, "Should only be 19 bytes");
+
 	/* Read the index from program code in memory */
-	PhysPt reader=PhysMake(dos.psp(),256+sizeof(exe_block));
+	PhysPt reader = PhysMake(dos.psp(),
+	                         256 + static_cast<uint16_t>(exec_block_size));
 	HostPt writer=(HostPt)&index;
 	for (;size>0;size--) *writer++=mem_readb(reader++);
 	Program * new_program;
@@ -141,7 +153,7 @@ bool Program::SuppressWriteOut(const char *format)
 	static bool encountered_executable = false;
 	if (encountered_executable)
 		return false;
-	if (control->GetStartupVerbosity() > Verbosity::Quiet)
+	if (control->GetStartupVerbosity() <= Verbosity::SplashOnly)
 		return false;
 	if (!control->cmdline->HasExecutableName())
 		return false;
@@ -313,7 +325,7 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 bool MSG_Write(const char *);
 void restart_program(std::vector<std::string> & parameters);
 
-class CONFIG : public Program {
+class CONFIG final : public Program {
 public:
 	void Run(void);
 private:
@@ -390,7 +402,8 @@ void CONFIG::Run(void) {
 			Bitu size = control->configfiles.size();
 			std::string config_path;
 			Cross::GetPlatformConfigDir(config_path);
-			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"), VERSION,config_path.c_str());
+			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"), VERSION,
+			         config_path.c_str());
 			if (size==0) WriteOut(MSG_Get("PROGRAM_CONFIG_NOCONFIGFILE"));
 			else {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PRIMARY_CONF"),control->configfiles.front().c_str());
@@ -860,31 +873,38 @@ void PROGRAMS_Init(Section* /*sec*/) {
 	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE","No config file loaded!\n");
 	MSG_Add("PROGRAM_CONFIG_PRIMARY_CONF","Primary config file: \n%s\n");
 	MSG_Add("PROGRAM_CONFIG_ADDITIONAL_CONF","Additional config files:\n");
-	MSG_Add("PROGRAM_CONFIG_CONFDIR","DOSBox %s configuration directory: \n%s\n\n");
-	
+	MSG_Add("PROGRAM_CONFIG_CONFDIR",
+	        "DOSBox Staging %s configuration directory: \n%s\n\n");
+
 	// writeconf
 	MSG_Add("PROGRAM_CONFIG_FILE_ERROR","\nCan't open file %s\n");
 	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing config file %s\n");
 	
 	// help
-	MSG_Add("PROGRAM_CONFIG_USAGE", "Config tool:\n"
+	MSG_Add("PROGRAM_CONFIG_USAGE",
+	        "Config tool:\n"
 	        "-writeconf or -wc without parameter: write to primary loaded config file.\n"
 	        "-writeconf or -wc with filename: write file to config directory.\n"
 	        "Use -writelang or -wl filename to write the current language strings.\n"
-	        "-r [parameters]\n Restart DOSBox, either using the previous parameters or any that are appended.\n"
-	        "-wcp [filename]\n Write config file to the program directory, dosbox.conf or the specified \n filename.\n"
-	        "-wcd\n Write to the default config file in the config directory.\n"
+	        "-r [parameters]\n"
+	        " Restart DOSBox, either using the previous parameters or any that are appended.\n"
+	        "-wcp [filename]\n"
+	        " Write config file to the program directory, dosbox.conf or the specified\n"
+	        " filename.\n"
+	        "-wcd\n"
+	        " Write to the default config file in the config directory.\n"
 	        "-l lists configuration parameters.\n"
 	        "-h, -help, -? sections / sectionname / propertyname\n"
-	        " Without parameters, displays this help screen. Add \"sections\" for a list of\n sections."
+	        " Without parameters, displays this help screen. Add \"sections\" for a list of\n"
+	        " sections."
 	        " For info about a specific section or property add its name behind.\n"
 	        "-axclear clears the autoexec section.\n"
 	        "-axadd [line] adds a line to the autoexec section.\n"
 	        "-axtype prints the content of the autoexec section.\n"
 	        "-securemode switches to secure mode.\n"
-		"-avistart starts AVI recording.\n"
-		"-avistop stops AVI recording.\n"
-		"-startmapper starts the keymapper.\n"
+	        "-avistart starts AVI recording.\n"
+	        "-avistop stops AVI recording.\n"
+	        "-startmapper starts the keymapper.\n"
 	        "-get \"section property\" returns the value of the property.\n"
 	        "-set \"section property=value\" sets the value.\n");
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP","Purpose of property \"%s\" (contained in section \"%s\"):\n%s\n\nPossible Values: %s\nDefault value: %s\nCurrent value: %s\n");

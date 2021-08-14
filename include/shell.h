@@ -23,6 +23,7 @@
 
 #include <cctype>
 #include <list>
+#include <memory>
 #include <string>
 
 #ifndef DOSBOX_PROGRAMS_H
@@ -53,14 +54,17 @@ public:
 	uint32_t location = 0;
 	bool echo = false;
 	DOS_Shell *shell = nullptr;
-	BatchFile *prev = nullptr;
+	std::shared_ptr<BatchFile> prev = {}; // shared with Shell.bf
 	CommandLine *cmd = nullptr;
 	std::string filename{};
 };
 
 class AutoexecEditor;
-class DOS_Shell : public Program {
+class DOS_Shell final : public Program {
 private:
+	enum class HELP_LIST { ALL, COMMON };
+	void PrintHelpForCommands(HELP_LIST requested_list);
+
 	friend class AutoexecEditor;
 	std::list<std::string> l_history{};
 	std::list<std::string> l_completion{};
@@ -80,6 +84,7 @@ public:
 	void ParseLine(char * line);
 	Bitu GetRedirection(char *s, char **ifn, char **ofn,bool * append);
 	void InputCommand(char * line);
+	void ProcessCmdLineEnvVarStitution(char *line);
 	void ShowPrompt();
 	void DoCommand(char * cmd);
 	bool Execute(char * name,char * args);
@@ -121,16 +126,16 @@ public:
 	void CMD_LS(char *args);
 	/* The shell's variables */
 	uint16_t input_handle = 0;
-	BatchFile *bf = nullptr;
+	std::shared_ptr<BatchFile> bf = {}; // shared with BatchFile.prev
 	bool echo = false;
 	bool call = false;
 };
 
 struct SHELL_Cmd {
-	const char *name = nullptr;             /* Command name*/
-	uint32_t flags = 0;                     /* Flags about the command */
-	void (DOS_Shell::*handler)(char *args); /* Handler for this command */
-	const char *help = nullptr;             /* String with command help */
+	uint32_t flags = 0;                               // Flags about the command
+	void (DOS_Shell::*handler)(char *args) = nullptr; // Handler for this command
+	const char *help = nullptr;                       // String with command help
+	const char *long_help = nullptr;                  // String with long help (optional)
 };
 
 /* Object to manage lines in the autoexec.bat The lines get removed from

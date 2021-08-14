@@ -16,11 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "dosbox.h"
+
 #include <algorithm>
 #include <cstring>
 #include <cstdlib>
 
-#include "dosbox.h"
 #include "callback.h"
 #include "mem.h"
 #include "paging.h"
@@ -101,7 +102,7 @@ static EMM_Mapping emm_segmentmappings[0x40];
 
 static Bit16u GEMMIS_seg;
 
-class device_EMM : public DOS_Device {
+class device_EMM final : public DOS_Device {
 public:
 	device_EMM(bool is_emm386_avail) : is_emm386(is_emm386_avail)
 	{
@@ -1001,9 +1002,9 @@ static Bitu INT67_Handler(void) {
 				}
 				break;
 			case 0x0a:		/* VCPI Get PIC Vector Mappings */
-				reg_bx=vcpi.pic1_remapping;		// master PIC
-				reg_cx=vcpi.pic2_remapping;		// slave PIC
-				reg_ah=EMM_NO_ERROR;
+				reg_bx = vcpi.pic1_remapping; // primary PIC
+				reg_cx = vcpi.pic2_remapping; // secondary PIC
+				reg_ah = EMM_NO_ERROR;
 				break;
 			case 0x0b:		/* VCPI Set PIC Vector Mappings */
 				reg_flags&=(~FLAG_IF);
@@ -1275,8 +1276,8 @@ static void SetupVCPI() {
 
 	vcpi.enabled=true;
 
-	vcpi.pic1_remapping=0x08;	// master PIC base
-	vcpi.pic2_remapping=0x70;	// slave PIC base
+	vcpi.pic1_remapping = 0x08; // primary PIC base
+	vcpi.pic2_remapping = 0x70; // secondary PIC base
 
 	vcpi.private_area=emm_handles[vcpi.ems_handle].mem<<12;
 
@@ -1362,7 +1363,7 @@ Bitu GetEMSType(Section_prop * section) {
 	return rtype;
 }
 
-class EMS : public Module_base {
+class EMS final : public Module_base {
 private:
 	uint16_t ems_baseseg = 0;
 	DOS_Device *emm_device = nullptr;

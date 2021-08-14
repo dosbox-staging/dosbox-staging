@@ -339,8 +339,9 @@
 			}	
 	CASE_D(0x8d)												/* LEA Gd */
 		{
-			//Little hack to always use segprefixed version
 			GetRMrd;
+			if (rm >= 0xc0) goto illegal_opcode;
+			//Little hack to always use segprefixed version
 			BaseDS=BaseSS=0;
 			if (TEST_PREFIX_ADDR) {
 				*rmrd=(Bit32u)(*EATable[256+rm])();

@@ -1,2 +1,0 @@
-# GCC flags for generically identified ARMv6 SBCs
-cflags_release+=(-marm -mfpu=vfpv2 -mfloat-abi=hard)

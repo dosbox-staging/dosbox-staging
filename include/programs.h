@@ -21,19 +21,10 @@
 
 #include "dosbox.h"
 
-#ifndef DOSBOX_DOS_INC_H
-#include "dos_inc.h"
-#endif
-
-#ifndef CH_LIST
-#define CH_LIST
 #include <list>
-#endif
-
-#ifndef CH_STRING
-#define CH_STRING
 #include <string>
-#endif
+
+#include "dos_inc.h"
 
 class CommandLine {
 public:

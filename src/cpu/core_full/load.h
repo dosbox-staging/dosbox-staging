@@ -182,6 +182,7 @@ l_M_Ed:
 			inst_op2_d=LoadMw(inst.rm_eaa+4);
 			break;
 		case M_EA:
+			if (inst.rm>=0xc0) goto illegalopcode;
 			inst_op1_d=inst.rm_off;
 			break;
 		case M_POPw:
@@ -515,14 +516,17 @@ l_M_Ed:
 		CPU_SW_Interrupt_NoIOPLCheck(1,GetIP());
 		continue;
 	case D_RDTSC: {
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW) goto illegalopcode;
-		Bit64s tsc=(Bit64s)(PIC_FullIndex()*(double)(CPU_CycleAutoAdjust?70000:CPU_CycleMax));
-		reg_edx=(Bit32u)(tsc>>32);
-		reg_eax=(Bit32u)(tsc&0xffffffff);
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW)
+			goto illegalopcode;
+	        Bit64s tsc = (Bit64s)(PIC_FullIndex() *
+	                              static_cast<double>(
+	                                      CPU_CycleAutoAdjust ? 70000 : CPU_CycleMax));
+	        reg_edx = (Bit32u)(tsc >> 32);
+		reg_eax = (Bit32u)(tsc & 0xffffffff);
 		break;
-		}
+	}
 	default:
-		LOG(LOG_CPU,LOG_ERROR)("LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);
+		LOG(LOG_CPU, LOG_ERROR)("LOAD:Unhandled code %d opcode %X", inst.code.load, inst.entry);
 		goto illegalopcode;
 }
 

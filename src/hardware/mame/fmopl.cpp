@@ -70,12 +70,11 @@ Revision History:
         verify volume of the FM part on the Y8950
 */
 
+#include "support.h"
+
 #include "emu.h"
 #include "ymdeltat.h"
 #include "fmopl.h"
-
-
-
 /* output final shift */
 #if (OPL_SAMPLE_BITS==16)
 	#define FINAL_SH    (0)
@@ -389,7 +388,7 @@ struct FM_OPL
 	uint8_t statusmask;               /* status mask                  */
 	uint8_t mode;                     /* Reg.08 : CSM,notesel,etc.    */
 
-	uint32_t clock;                   /* master clock  (Hz)           */
+	uint32_t clock;                   /* OPL chip clock speed (Hz)    */
 	uint32_t rate;                    /* sampling rate (Hz)           */
 	double freqbase;                /* frequency base               */
 	//attotime TimerBase;         /* Timer base time (==sampling time)*/
@@ -637,7 +636,9 @@ struct FM_OPL
 		{
 			if (!SLOT->FB)
 				out = 0;
-			SLOT->op1_out[1] = op_calc1(SLOT->Cnt, env, (out<<SLOT->FB), SLOT->wavetable);
+			const auto out_shifted = left_shift_signed(out, SLOT->FB);
+			SLOT->op1_out[1] = op_calc1(SLOT->Cnt, env, out_shifted,
+			                            SLOT->wavetable);
 		}
 
 		/* SLOT 2 */
@@ -717,7 +718,9 @@ struct FM_OPL
 		{
 			if (!SLOT->FB)
 				out = 0;
-			SLOT->op1_out[1] = op_calc1(SLOT->Cnt, env, (out<<SLOT->FB), SLOT->wavetable);
+			const auto out_shifted = left_shift_signed(out, SLOT->FB);
+			SLOT->op1_out[1] = op_calc1(SLOT->Cnt, env, out_shifted,
+			                            SLOT->wavetable);
 		}
 
 		/* SLOT 2 */
@@ -961,7 +964,8 @@ private:
 
 	static inline signed int op_calc(uint32_t phase, unsigned int env, signed int pm, unsigned int wave_tab)
 	{
-		uint32_t const p = (env<<4) + sin_tab[wave_tab + ((((signed int)((phase & ~FREQ_MASK) + (pm<<16))) >> FREQ_SH) & SIN_MASK) ];
+		const auto pm_shifted = left_shift_signed(pm, 16);
+		uint32_t const p = (env<<4) + sin_tab[wave_tab + ((((signed int)((phase & ~FREQ_MASK) + pm_shifted)) >> FREQ_SH) & SIN_MASK) ];
 
 		return (p >= TL_TAB_LEN) ? 0 : tl_tab[p];
 	}
@@ -1601,7 +1605,8 @@ void FM_OPL::WriteReg(int r, int v)
 			break;
 #endif
 		default:
-			device->logerror("FMOPL.C: write to unknown register: %02x\n",r);
+			if (device)
+				device->logerror("FMOPL.C: write to unknown register: %02x\n", r);
 			break;
 		}
 		break;
@@ -1992,7 +1997,11 @@ static FM_OPL *OPLCreate(device_t *device, uint32_t clock, uint32_t rate, int ty
 static void OPLDestroy(FM_OPL *OPL)
 {
 	FM_OPL::UnLockTable();
-	auto_free(OPL->device->machine(), OPL);
+	if (!OPL)
+		return;
+
+	free(OPL);
+	OPL = nullptr;
 }
 
 /* Optional handlers */

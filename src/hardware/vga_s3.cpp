@@ -502,7 +502,7 @@ Bitu SVGA_S3_GetClock(void) {
 		clock = 28322000;
 	else
 		clock=1000*S3_CLOCK(vga.s3.clk[clock].m,vga.s3.clk[clock].n,vga.s3.clk[clock].r);
-	/* Check for dual transfer, master clock/2 */
+	/* Check for dual transfer, clock/2 */
 	if (vga.s3.pll.cmd & 0x10) clock/=2;
 	return clock;
 }
@@ -550,16 +550,4 @@ void SVGA_Setup_S3Trio(void) {
 		vga.vmemsize = 4096*1024;
 		vga.s3.reg_36 = 0x1a;		// 4mb fast page mode
 	}
-
-	// S3 ROM signature
-	PhysPt rom_base=PhysMake(0xc000,0);
-	phys_writeb(rom_base+0x003f,'S');
-	phys_writeb(rom_base+0x0040,'3');
-	phys_writeb(rom_base+0x0041,' ');
-	phys_writeb(rom_base+0x0042,'8');
-	phys_writeb(rom_base+0x0043,'6');
-	phys_writeb(rom_base+0x0044,'C');
-	phys_writeb(rom_base+0x0045,'7');
-	phys_writeb(rom_base+0x0046,'6');
-	phys_writeb(rom_base+0x0047,'4');
 }

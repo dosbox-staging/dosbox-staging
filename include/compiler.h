@@ -21,6 +21,8 @@
 #ifndef DOSBOX_COMPILER_H
 #define DOSBOX_COMPILER_H
 
+#include "config.h"
+
 // This header wraps compiler-specific features, so they won't need to
 // be hacked into the buildsystem.
 
@@ -37,8 +39,11 @@
 // alongside __has_cpp_attribute, and with the same logic.
 // See: https://clang.llvm.org/docs/LanguageExtensions.html#has-attribute
 
-#ifndef __has_attribute // for compatibility with non-supporting compilers
-#define __has_attribute(x) 0
+#ifdef __has_attribute
+#define C_HAS_ATTRIBUTE 1
+#else
+#define C_HAS_ATTRIBUTE 0
+#define __has_attribute(x) 0 // for compatibility with non-supporting compilers
 #endif
 
 // When passing the -Wunused flag to GCC or Clang, entities that are unused by

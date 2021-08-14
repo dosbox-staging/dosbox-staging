@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -eu
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
@@ -40,7 +42,7 @@ print_usage () {
 }
 
 main () {
-	case $1 in
+	case ${1:-} in
 		-h|-help|--help) print_usage ;;
 		-d|--diff)       handle_dependencies ; shift ; format "$@" ; assert_empty_diff ;;
 		-V|--verify)     handle_dependencies ; shift ; format "$@" ; assert_empty_diff ;;
@@ -50,8 +52,29 @@ main () {
 }
 
 handle_dependencies () {
-	assert_min_version git 1007010 "Use git in version 1.7.10 or newer."
-	assert_min_version clang-format 9000000 "Use clang-format in version 9.0.0 or newer."
+	assign_gnu_sed
+	assert_min_version git 1007010 "Use git version 1.7.10 or newer."
+	assert_min_version clang-format 9000000 "Use clang-format version 9.0.0 or newer."
+}
+
+SED=""
+assign_gnu_sed () {
+	# Is sed GNU? (BSD seds don't support --version)
+	if sed --version &>/dev/null; then
+		SED="sed"
+	# No, but do we have gsed?
+	elif command -v gsed &> /dev/null; then
+		SED="gsed"
+	# No, so help the user install it and then quit.
+	else
+		echo "'sed' is not GNU and 'gsed' is not available."
+		if [[ "${OSTYPE:-}" == "darwin"* ]]; then
+			echo "Install GNU sed with: brew install gnu-sed"
+		else
+			echo "Install GNU sed with your $OSTYPE package manager."
+		fi
+		exit 1
+	fi
 }
 
 assert_min_version () {
@@ -64,7 +87,7 @@ assert_min_version () {
 check_min_version () {
 	$1 --version
 	$1 --version \
-		| sed -e "s|.* \([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*|\1 \2 \3|" \
+		| "$SED" -e "s|.* \([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*|\1 \2 \3|" \
 		| test_version "$2"
 	return "${PIPESTATUS[2]}"
 }
@@ -84,7 +107,7 @@ format () {
 }
 
 assert_empty_diff () {
-	if [ -n "$(git_diff HEAD)" ] ; then
+	if [[ -n "$(git_diff HEAD)" ]] ; then
 		git_diff HEAD
 		echo
 		echo "clang-format formatted some code for you."
@@ -95,7 +118,7 @@ assert_empty_diff () {
 }
 
 show_tip () {
-	if [ -n "$(git_diff HEAD)" ] ; then
+	if [[ -n "$(git_diff HEAD)" ]] ; then
 		echo
 		echo "clang-format formatted some code for you."
 		echo
@@ -131,8 +154,15 @@ list_changed_files () {
 
 run_clang_format () {
 	while read -r src_file ; do
-		prepare_clang_params "$src_file" \
-			| xargs --no-run-if-empty --verbose clang-format -i
+		local ranges=()
+		while IFS=$'\n' read -r range ; do
+			ranges+=("$range")
+		done < <(git_diff_to_clang_line_range "$src_file")
+
+		if (( "${#ranges[@]}" )); then
+			echo "clang-format -i ${ranges[*]} \"$src_file\""
+			clang-format -i "${ranges[@]}" "$src_file"
+		fi
 	done
 }
 
@@ -144,21 +174,11 @@ git_diff_to_clang_line_range () {
 		| to_clang_line_range
 }
 
-prepare_clang_params () {
-	local -r file=$1
-	local -r range=$(git_diff_to_clang_line_range "$file")
-	# print file name only when there are any lines detected, otherwise
-	# clang-format would process the whole file
-	if [ -n "$range" ]; then
-		echo "$range \"$file\""
-	fi
-}
-
 # expects line in diff format: "@@ -<line range> +<line range> @@ <context>"
 # where <line range> is either <line_number> or <line_number>,<offset>
 #
 filter_line_range () {
-	sed -e 's|@@ .* +\([0-9]\+\),\?\([0-9]\+\)\? @@.*|\1 \2|'
+	"$SED" -e 's|@@ .* +\([0-9]\+\),\?\([0-9]\+\)\? @@.*|\1 \2|'
 }
 
 to_clang_line_range () {

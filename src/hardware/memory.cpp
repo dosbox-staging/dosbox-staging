@@ -58,7 +58,7 @@ static struct MemoryBlock {
 
 HostPt MemBase;
 
-class IllegalPageHandler : public PageHandler {
+class IllegalPageHandler final : public PageHandler {
 public:
 	IllegalPageHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
@@ -101,7 +101,7 @@ public:
 	}
 };
 
-class ROMPageHandler : public RAMPageHandler {
+class ROMPageHandler final : public RAMPageHandler {
 public:
 	ROMPageHandler() {
 		flags=PFLAG_READABLE|PFLAG_HASROM;
@@ -184,8 +184,9 @@ void MEM_BlockRead(PhysPt pt,void * data,Bitu size) {
 	}
 }
 
-void MEM_BlockWrite(PhysPt pt,void const * const data,Bitu size) {
-	Bit8u const * read = reinterpret_cast<Bit8u const * const>(data);
+void MEM_BlockWrite(PhysPt pt, const void *data, size_t size)
+{
+	const uint8_t *read = static_cast<const uint8_t *>(data);
 	while (size--) {
 		mem_writeb_inline(pt++,*read++);
 	}
@@ -543,7 +544,7 @@ void MEM_PreparePCJRCartRom()
 
 HostPt GetMemBase(void) { return MemBase; }
 
-class MEMORY : public Module_base {
+class MEMORY final : public Module_base {
 private:
 	IO_ReadHandleObject ReadHandler{};
 	IO_WriteHandleObject WriteHandler{};
@@ -573,7 +574,7 @@ public:
 		}
 		memset((void*)MemBase, 0, memsize * 1024 * 1024);
 		memory.pages = (memsize * 1024 * 1024) / 4096;
-		LOG_MSG("MEMORY: Base address: %p", MemBase);
+		LOG_MSG("MEMORY: Base address: %p", static_cast<void *>(MemBase));
 		LOG_MSG("MEMORY: Using %d DOS memory pages (%u MiB)",
 		        static_cast<int>(memory.pages), memsize);
 

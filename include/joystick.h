@@ -18,6 +18,9 @@
 
 #ifndef DOSBOX_JOYSTICK_H
 #define DOSBOX_JOYSTICK_H
+
+#include "dosbox.h"
+
 void JOYSTICK_Enable(Bitu which,bool enabled);
 
 void JOYSTICK_Button(Bitu which,Bitu num,bool pressed);
@@ -34,8 +37,12 @@ float JOYSTICK_GetMove_X(Bitu which);
 
 float JOYSTICK_GetMove_Y(Bitu which);
 
+void JOYSTICK_ParseConfiguredType();
+
 enum JoystickType {
-	JOY_NONE,
+	JOY_UNSET,
+	JOY_DISABLED, // joystick subsystem is fully disabled (won't even query)
+	JOY_NONE,     // joystick subsystem will be available for mapping only
 	JOY_AUTO,
 	JOY_2AXIS,
 	JOY_4AXIS,
@@ -46,4 +53,5 @@ enum JoystickType {
 
 extern JoystickType joytype;
 extern bool button_wrapping_enabled;
+
 #endif

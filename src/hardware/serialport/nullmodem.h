@@ -33,7 +33,7 @@
 #define SERIAL_NULLMODEM_DTR_EVENT	SERIAL_BASE_EVENT_COUNT+3
 #define SERIAL_NULLMODEM_EVENT_COUNT	SERIAL_BASE_EVENT_COUNT+3
 
-class CNullModem : public CSerial {
+class CNullModem final : public CSerial {
 public:
 	CNullModem(const CNullModem &) = delete;            // prevent copying
 	CNullModem &operator=(const CNullModem &) = delete; // prevent assignment

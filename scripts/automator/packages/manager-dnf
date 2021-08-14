@@ -1,3 +1,0 @@
-# Package repo: https://apps.fedoraproject.org/packages/
-packages+=(ccache make automake alsa-lib-devel libpng-devel SDL2-devel
-           SDL2_net-devel opusfile-devel fluidsynth-devel)

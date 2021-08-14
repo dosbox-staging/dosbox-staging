@@ -64,8 +64,10 @@ Use
 
 */
 
-#include <cstdint>
-#include "support.h"
+#include "config.h"
+
+#include <cinttypes>
+#include <cstdlib>
 
 class DCSilencer {
 public:

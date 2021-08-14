@@ -21,6 +21,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 
 #include "mem.h"
 #include "regs.h"
@@ -241,7 +242,7 @@ static INLINE bool InitPage_CheckUseraccess(Bitu u1,Bitu u2) {
 }
 
 
-class InitPageHandler : public PageHandler {
+class InitPageHandler final : public PageHandler {
 public:
 	InitPageHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
@@ -470,7 +471,7 @@ public:
 	}
 };
 
-class InitPageUserROHandler : public PageHandler {
+class InitPageUserROHandler final : public PageHandler {
 public:
 	InitPageUserROHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
@@ -870,7 +871,7 @@ bool PAGING_Enabled(void) {
 	return paging.enabled;
 }
 
-class PAGING:public Module_base{
+class PAGING final : public Module_base{
 public:
 	PAGING(Section* configuration):Module_base(configuration){
 		/* Setup default Page Directory, force it to update */
@@ -882,10 +883,11 @@ public:
 		}
 		pf_queue.used=0;
 	}
-	~PAGING(){}
 };
 
-static PAGING* test;
-void PAGING_Init(Section * sec) {
-	test = new PAGING(sec);
+static std::unique_ptr<PAGING> paging_instance = nullptr;
+
+void PAGING_Init(Section *sec)
+{
+	paging_instance = std::make_unique<PAGING>(sec);
 }

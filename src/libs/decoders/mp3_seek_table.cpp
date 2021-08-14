@@ -75,10 +75,12 @@
 #include "mp3_seek_table.h"
 
 // System headers
-#include <sys/stat.h>
+#include <algorithm>
+#include <climits>
 #include <fstream>
-#include <string>
 #include <map>
+#include <string>
+#include <sys/stat.h>
 
 // Local headers
 #include "support.h"
@@ -94,8 +96,12 @@ using std::ios_base;
 using std::ifstream;
 using std::ofstream;
 
+// container types
+using seek_points_table_t = typename std::map<uint64_t, std::vector<drmp3_seek_point_serial> >;
+using frame_count_table_t = typename std::map<uint64_t, uint64_t>;
+
 // Identifies a valid versioned seek-table
-#define SEEK_TABLE_IDENTIFIER "st-v5"
+#define SEEK_TABLE_IDENTIFIER "st-v6"
 
 // How many compressed MP3 frames should we skip between each recorded
 // time point.  The trade-off is as follows:
@@ -106,7 +112,7 @@ constexpr uint32_t FRAMES_PER_SEEK_POINT = 7;
 // Returns the size of a file in bytes (if valid), otherwise -1
 off_t get_file_size(const char* filename) {
     struct stat stat_buf;
-    int rc = stat(filename, &stat_buf);
+    const auto rc = stat(filename, &stat_buf);
     return (rc >= 0) ? stat_buf.st_size : -1;
 }
 
@@ -121,44 +127,37 @@ off_t get_file_size(const char* filename) {
 // 1. ID3 tag filler content, which might be boiler plate or all empty
 // 2. Trailing silence or similar zero-PCM content
 //
-Uint64 calculate_stream_hash(struct SDL_RWops* const context) {
+uint64_t calculate_stream_hash(struct SDL_RWops* const context) {
     // Save the current stream position, so we can restore it at the end of the function.
-    const Sint64 original_pos = SDL_RWtell(context);
+    const auto original_pos = SDL_RWtell(context);
 
     // Seek to the end of the file so we can calculate the stream size.
     SDL_RWseek(context, 0, RW_SEEK_END);
-
-    const Sint64 stream_size = SDL_RWtell(context);
+    const auto stream_size = SDL_RWtell(context);
     if (stream_size <= 0) {
         // LOG_MSG("MP3: get_stream_size returned %d, but should be positive", stream_size);
         return 0;
     }
 
-    // Seek to the middle of the file while taking into account version small files.
-    const Sint64 tail_size = (stream_size > 32768) ? 32768 : stream_size;
-    const Sint64 mid_pos = static_cast<Sint64>(stream_size/2.0) - tail_size;
-    SDL_RWseek(context, mid_pos >= 0 ? mid_pos : 0, RW_SEEK_SET);
+    // Seek prior to the last 32 KiB (or less) in the file
+    const auto bytes_to_hash = std::min(stream_size, static_cast<Sint64>(32768));
+    SDL_RWseek(context, stream_size - bytes_to_hash, RW_SEEK_SET);
 
     // Prepare our read buffer and counter:
     vector<char> buffer(1024, 0);
-    size_t total_bytes_read = 0;
+    int total_bytes_read = 0;
 
-    // Initialize xxHash's state using the stream_size as our seed.
-    // Seeding with the stream_size provide a second level of uniqueness
-    // in the unlikely scenario that two files of different length happen to
-    // have the same trailing 32KB of content.  The different seeds will produce
-    // unique hashes.
+    // Initialize xxHash's state using the stream_size as our seed.  Seeding with the
+    // stream_size provides a second level of uniqueness in the unlikely scenario that
+    // two files of different length happen to have the same trailing data. The different
+    // seeds will produce unique hashes.
     XXH64_state_t* const state = XXH64_createState();
-    if(!state) {
-        return 0;
-    }
+    assert(state);
+    XXH64_reset(state, static_cast<XXH64_hash_t>(stream_size));
 
-    const uint64_t seed = static_cast<uint64_t>(stream_size);
-    XXH64_reset(state, seed);
-
-    while (total_bytes_read < static_cast<size_t>(tail_size)) {
+    while (total_bytes_read < bytes_to_hash) {
         // Read a chunk of data.
-        const size_t bytes_read = SDL_RWread(context, buffer.data(), 1, buffer.size());
+        const auto bytes_read = SDL_RWread(context, buffer.data(), 1, buffer.size());
 
         if (bytes_read != 0) {
             // Update our hash if we read data.
@@ -172,7 +171,7 @@ Uint64 calculate_stream_hash(struct SDL_RWops* const context) {
     // restore the stream position
     SDL_RWseek(context, original_pos, RW_SEEK_SET);
 
-    const Uint64 hash = XXH64_digest(state);
+    const auto hash = XXH64_digest(state);
     XXH64_freeState(state);
     return hash;
 }
@@ -180,11 +179,11 @@ Uint64 calculate_stream_hash(struct SDL_RWops* const context) {
 // This function generates a new seek-table for a given mp3 stream and writes
 // the data to the fast-seek file.
 //
-Uint64 generate_new_seek_points(const char* filename,
-                                const Uint64& stream_hash,
+uint64_t generate_new_seek_points(const char* filename,
+                                const uint64_t& stream_hash,
                                 drmp3* const p_dr,
-                                map<Uint64, vector<drmp3_seek_point_serial> >& seek_points_table,
-                                map<Uint64, drmp3_uint64>& pcm_frame_count_table,
+                                seek_points_table_t& seek_points_table,
+                                frame_count_table_t& pcm_frame_count_table,
                                 vector<drmp3_seek_point_serial>& seek_points_vector) {
 
     // Initialize our frame counters with zeros.
@@ -208,7 +207,7 @@ Uint64 generate_new_seek_points(const char* filename,
     // the decoded PCM times.
     // We also take into account the desired number of "FRAMES_PER_SEEK_POINT",
     // which is defined above.
-    drmp3_uint32 num_seek_points = static_cast<drmp3_uint32>
+    auto num_seek_points = static_cast<drmp3_uint32>
         (ceil_udivide(mp3_frame_count, FRAMES_PER_SEEK_POINT));
 
     seek_points_vector.resize(num_seek_points);
@@ -251,10 +250,10 @@ Uint64 generate_new_seek_points(const char* filename,
 // This function attempts to fetch a seek-table for a given mp3 stream from the fast-seek file.
 // If anything is amiss then this function fails.
 //
-Uint64 load_existing_seek_points(const char* filename,
-                                 const Uint64& stream_hash,
-                                 map<Uint64, vector<drmp3_seek_point_serial> >& seek_points_table,
-                                 map<Uint64, drmp3_uint64>& pcm_frame_count_table,
+uint64_t load_existing_seek_points(const char* filename,
+                                 const uint64_t& stream_hash,
+                                 seek_points_table_t& seek_points_table,
+                                 frame_count_table_t& pcm_frame_count_table,
                                  vector<drmp3_seek_point_serial>& seek_points) {
 
     // The below sentinals sanity check and read the incoming
@@ -316,20 +315,20 @@ uint64_t populate_seek_points(struct SDL_RWops* const context,
     result = false;
 
     // Calculate the stream's xxHash value.
-    Uint64 stream_hash = calculate_stream_hash(context);
+    const auto stream_hash = calculate_stream_hash(context);
     if (stream_hash == 0) {
         // LOG_MSG("MP3: could not compute the hash of the stream");
         return 0;
     }
 
     // Attempt to fetch the seek points and pcm count from an existing look up table file.
-    map<Uint64, vector<drmp3_seek_point_serial> > seek_points_table;
-    map<Uint64, drmp3_uint64> pcm_frame_count_table;
-    drmp3_uint64 pcm_frame_count = load_existing_seek_points(seektable_filename,
-                                                             stream_hash,
-                                                             seek_points_table,
-                                                             pcm_frame_count_table,
-                                                             p_mp3->seek_points_vector);
+    seek_points_table_t seek_points_table;
+    frame_count_table_t pcm_frame_count_table;
+    auto pcm_frame_count = load_existing_seek_points(seektable_filename,
+                                                     stream_hash,
+                                                     seek_points_table,
+                                                     pcm_frame_count_table,
+                                                     p_mp3->seek_points_vector);
 
     // Otherwise calculate new seek points and save them to the fast-seek file.
     if (pcm_frame_count == 0) {

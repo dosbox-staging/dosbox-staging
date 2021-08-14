@@ -414,7 +414,7 @@ Bitu XMS_Handler(void) {
 
 Bitu GetEMSType(Section_prop * section);
 
-class XMS: public Module_base {
+class XMS final : public Module_base {
 private:
 	CALLBACK_HandlerObject callbackhandler;
 

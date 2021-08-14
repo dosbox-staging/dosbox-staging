@@ -16,12 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "bios.h"
+
 #include <SDL.h>
 
-#include "dosbox.h"
 #include "callback.h"
 #include "mem.h"
-#include "bios.h"
 #include "keyboard.h"
 #include "regs.h"
 #include "inout.h"
@@ -304,9 +304,9 @@ static Bitu IRQ1_Handler(void) {
 			flags3 &=~0x01;
 			mem_writeb(BIOS_KEYBOARD_FLAGS3,flags3);
 			if (flags2&1) {
-				/* ctrl-pause (break), special handling needed:
+				/* Ctrl+Pause (Break), special handling needed:
 				   add zero to the keyboard buffer, call int 0x1b which
-				   sets ctrl-c flag which calls int 0x23 in certain dos
+				   sets Ctrl+C flag which calls int 0x23 in certain dos
 				   input/output functions;    not handled */
 			} else if ((flags2&8)==0) {
 				/* normal pause key, enter loop */

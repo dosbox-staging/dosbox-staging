@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "compiler.h"
 #include "regs.h"
 #include "callback.h"
 #include "dos_system.h"
@@ -60,7 +61,7 @@ static Bitu MSCDEX_Strategy_Handler(void);
 static Bitu MSCDEX_Interrupt_Handler(void);
 static MountType MSCDEX_GetMountType(const char *path);
 
-class DOS_DeviceHeader : public MemStruct {
+class DOS_DeviceHeader final : public MemStruct {
 public:
 	DOS_DeviceHeader(PhysPt ptr) { pt = ptr; }
 
@@ -1275,7 +1276,7 @@ static bool MSCDEX_Handler(void) {
 	return true;
 }
 
-class device_MSCDEX : public DOS_Device {
+class device_MSCDEX final : public DOS_Device {
 public:
 	device_MSCDEX() { SetName("MSCD001"); }
 	bool Read (Bit8u * /*data*/,Bit16u * /*size*/) { return false;}

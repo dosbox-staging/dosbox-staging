@@ -1,0 +1,139 @@
+
+===================================
+DOSBox 0.74 em Português/Brasileiro
+===================================
+
+A Versão em português para a galera brazuka!!
+
+0. Créditos da tradução
+1. Notas do autor sobre tradução
+2. Alteração do idioma
+3. Futuras versões
+4. Agradecimentos
+5. Dicas (Windows) (INICIANTES, LEIAM ISTO)
+6. Método Fácil (Recomendado)
+
+Qualquer dúvida na instalação da tradução contate-me (ableite@msn.com).
+
+========================
+0. Créditos da tradução:
+========================
+
+DOSBox v0.74 - Lex Leite
+
+Leia-Me do DOSBox - Lex Leite e Sael Aran, com uma ajuda de Mosca-Ninja e David Tuka
+
+Revisão - Lex Leite
+
+
+Contatos: Lex Leite   / ableite@msn.com
+          Sael Aran   / lord.sael@hokkaido-fansubber.com 
+          Mosca-Ninja / --
+          David Tuka  / david_tuka@hotmail.com
+
+
+=================================
+1. Notas do autor sobre tradução:
+=================================
+
+a. A tradução do arquivo de idioma do DOSBox está completa.
+   A tradução do arquivo Leia-me/Manual (read-me) do DOSBox está sendo atualizada para a nova versão.
+     Por enquanto a versão antiga do Leia-me está contida no ZIP pois ela ainda serve para essa nova versão.
+   A tradução do arquivo Leia-me da captura de vídeo está completa.
+
+b. A tradução foi feita com base no arquivo original em inglês e com o arquivo de
+   tradução em espanhol o que ajudou para deixar a tradução ainda melhor.
+
+c. Não pude testar certas telas do DOSBox. Telas como a inicial onde existe uma
+   grande caixa azul, podem estar malfeitas por conta da numeração que pode ter
+   ficado errada, porém creio que esteja tudo correto.
+
+
+==================================================
+2. Para alterar o idioma do DOSBox para Português:
+==================================================
+
+   Atenção: A pasta onde se encontra o arquivo de configuração do DOSBox foi
+   alterada na versão 0.74 do DOSBox. Agora a pasta esta localizada em:
+   "C:\Documents and Settings\Usuario\Configurações locais\Dados de aplicativos\DOSBox"
+   no windows XP.
+   No vista/7 "C:\Users\Usuario\AppData\Local\DOSBox".
+   Substitua "usuario" pelo seu nome do seu usuario no computador.
+   Sempre que eu me referir a pasta de configuração do DOSBox, vá até a pasta citada acima.
+
+   Para facilitar a instalação da tradução simplesmente copie os 2 arquivos
+   "portuguese.lang" e "dosbox-0.74.conf" para a pasta de configuração
+   do DOSBox. (Método fácil)
+
+   Se essa pasta não existir, abra o DOSBox e logo em seguida feche-o. Ela deverá
+   ter sido criada pelo próprio programa agora.
+   
+
+===================
+3. Futuras versões:
+===================
+
+   Fizemos o melhor nessa tradução e esperamos que não contenha erros. Porém é possível
+   termos deixado passar alguma letrinha ou acento. Se você detectar algum erro, poderá
+   contatar pelo e-mail (ableite@msn.com) para que possamos consertá-lo e numa
+   futura versão o DOSBox fique corretamente traduzido.
+
+
+==================
+4. Agradecimentos:
+==================
+
+   Obrigado a equipe do DOSBox por ter feito esse programa maravilhoso, onde eu posso
+   jogar jogos da época em que eu era um garotinho no Windows XP/Vista, que não da mais
+   suporte ao verdadeiro MS-DOS.
+
+   Obrigado a Gustavo Queipo de LLano Álvarez, pois usei seus arquivos de tradução em
+   espanhol. Arquivos que me ajudaram a criar uma tradução ainda melhor para o português.
+
+   Obrigado a Sael Aran, Mosca-Ninja e David Tuka por ajudar na tradução do arquivo "Leia-Me"
+
+   Obrigado aos meus colegas que me incentivaram!
+
+   E um Obrigado reservado, para caso eu tenha esquecido de colocar aqui alguém que
+   me ajudou.
+
+=============================
+5. Dicas (Windows XP/Vista/7)
+=============================
+
+   Para quem está começando a usar o DOSBox agora e quiser começar a jogar antes de
+   aprender a usá-lo completamente faça o seguinte:
+
+   Abra o arquivo de configurações do DOSBox.
+   Na ultima linha desse arquivo está seção de auto execução [autoexec] de comandos
+   que serão sempre executados quando o DOSBox for iniciado.
+   Logo abaixo da última linha copie e cole o texto abaixo:
+
+----corte aqui----
+
+mount c c:\
+mount d d:\ -t cdrom
+c:
+dir/p
+
+----corte aqui----
+
+   Obviamente o "c c:\" é para o HD que estiver na unidade c: e o "d d:\" para onde
+   estiver a unidade de cd-rom. No windows geralmente essas letras são padrão, logo,
+   basta copiar e colar. Se não, altere as letras para as unidades corretas.
+
+
+=============================
+6. Método Fácil (Recomendado)
+=============================
+
+   PODE NÃO FUNCIONAR EM ALGUNS COMPUTADORES!!!
+   Copie os arquivos "dosbox-0.74.conf" e "portuguese.lang" para a pasta de
+   configuração do DOSBox.
+   Abra o executável.
+
+   Se não funcionar, delete o arquivo "dosbox-0.74.conf" arquivo e copie o
+   "dosbox-0.74B.conf" para a pasta de configuração do DOSBox. Agora renomeie
+   "dosbox-0.74B.conf" para "dosbox-0.74.conf".
+
+

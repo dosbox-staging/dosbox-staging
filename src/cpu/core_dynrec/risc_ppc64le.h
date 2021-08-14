@@ -667,7 +667,7 @@ static void gen_fill_branch_long(Bit64u data)
 	return gen_fill_branch((DRC_PTR_SIZE_IM)data);
 }
 
-static void cache_block_closing(Bit8u* block_start,Bitu block_size)
+static void cache_block_closing(const uint8_t *block_start, Bitu block_size)
 {
 	// in the Linux kernel i-cache and d-cache are flushed separately
 	// there's probably a good reason for this ...

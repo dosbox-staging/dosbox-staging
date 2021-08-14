@@ -24,7 +24,7 @@
 
 //#define CHECKIT_TESTPLUG
 
-class CSerialDummy : public CSerial {
+class CSerialDummy final : public CSerial {
 public:
 	CSerialDummy(const uint8_t port_idx, CommandLine *cmd);
 	~CSerialDummy();

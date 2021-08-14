@@ -36,8 +36,11 @@
 #include "drives.h"
 #include "fs_utils.h"
 #include "inout.h"
+#include "mapper.h"
 #include "mem.h"
 #include "program_autotype.h"
+#include "program_choice.h"
+#include "program_help.h"
 #include "program_ls.h"
 #include "regs.h"
 #include "setup.h"
@@ -58,15 +61,18 @@ Bitu DEBUG_EnableDebugger(void);
 
 static Bitu ZDRIVE_NUM = 25;
 
-static const char* UnmountHelper(char umount) {
-	int i_drive;
-	if (umount < '0' || umount > 3+'0')
-		i_drive = drive_index(umount);
-	else
-		i_drive = umount - '0';
+static const char *UnmountHelper(char umount)
+{
+	const char drive_id = toupper(umount);
+	const bool using_drive_number = (drive_id >= '0' && drive_id <= '3');
+	const bool using_drive_letter = (drive_id >= 'A' && drive_id <= 'Z');
 
-	if (i_drive >= DOS_DRIVES || i_drive < 0)
-		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
+	if (!using_drive_number && !using_drive_letter)
+		return MSG_Get("PROGRAM_MOUNT_DRIVEID_ERROR");
+
+	const uint8_t i_drive = using_drive_number ? (drive_id - '0')
+	                                           : drive_index(drive_id);
+	assert(i_drive < DOS_DRIVES);
 
 	if (i_drive < MAX_DISK_IMAGES && Drives[i_drive] == NULL && !imageDiskList[i_drive])
 		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
@@ -94,21 +100,33 @@ static const char* UnmountHelper(char umount) {
 	return MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS");
 }
 
-class MOUNT : public Program {
+class MOUNT final : public Program {
 public:
-	void Move_Z(char new_z) {
-		char newz_drive = (char) toupper(new_z);
-		int i_newz = drive_index(newz_drive);
-		if (i_newz >= 0 && i_newz < DOS_DRIVES-1 && !Drives[i_newz]) {
-			ZDRIVE_NUM = i_newz;
+	void Move_Z(char new_z)
+	{
+		const char new_drive_z = toupper(new_z);
+
+		if (new_drive_z < 'A' || new_drive_z > 'Z') {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_DRIVEID_ERROR"), new_drive_z);
+			return;
+		}
+
+		const uint8_t new_idx = drive_index(new_drive_z);
+
+		if (Drives[new_idx]) {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_MOVE_Z_ERROR_1"), new_drive_z);
+			return;
+		}
+
+		if (new_idx < DOS_DRIVES - 1) {
+			ZDRIVE_NUM = new_idx;
 			/* remap drives */
-			Drives[i_newz] = Drives[25];
+			Drives[new_idx] = Drives[25];
 			Drives[25] = 0;
 			if (!first_shell) return; //Should not be possible
 			/* Update environment */
 			std::string line = "";
-			char ppp[2] = {newz_drive,0};
-			std::string tempenv = ppp; tempenv += ":\\";
+			std::string tempenv = {new_drive_z, ':', '\\'};
 			if (first_shell->GetEnvStr("PATH",line)) {
 				std::string::size_type idx = line.find('=');
 				std::string value = line.substr(idx +1 , std::string::npos);
@@ -125,10 +143,12 @@ public:
 			/* Update batch file if running from Z: (very likely: autoexec) */
 			if (first_shell->bf) {
 				std::string &name = first_shell->bf->filename;
-				if (name.length() > 2 &&  name[0] == 'Z' && name[1] == ':') name[0] = newz_drive;
+				if (starts_with("Z:", name))
+					name[0] = new_drive_z;
 			}
 			/* Change the active drive */
-			if (DOS_GetDefaultDrive() == 25) DOS_SetDrive(i_newz);
+			if (DOS_GetDefaultDrive() == 25)
+				DOS_SetDrive(new_idx);
 		}
 	}
 
@@ -446,7 +466,7 @@ static void MOUNT_ProgramStart(Program * * make) {
 	*make=new MOUNT;
 }
 
-class MEM : public Program {
+class MEM final : public Program {
 public:
 	void Run(void) {
 		/* Show conventional Memory */
@@ -516,7 +536,7 @@ static void MEM_ProgramStart(Program * * make) {
 extern Bit32u floppytype;
 
 
-class BOOT : public Program {
+class BOOT final : public Program {
 private:
 
 	FILE *getFSFile_mounted(char const* filename, Bit32u *ksize, Bit32u *bsize, Bit8u *error) {
@@ -596,7 +616,7 @@ private:
 	}
 
 	void printError(void) {
-		WriteOut(MSG_Get("PROGRAM_BOOT_PRINT_ERROR"));
+		WriteOut(MSG_Get("PROGRAM_BOOT_PRINT_ERROR"), PRIMARY_MOD_NAME);
 	}
 
 	void disable_umb_ems_xms(void) {
@@ -902,7 +922,7 @@ static void BOOT_ProgramStart(Program * * make) {
 }
 
 
-class LOADROM : public Program {
+class LOADROM final : public Program {
 public:
 	void Run(void) {
 		if (!(cmd->FindCommand(1, temp_line))) {
@@ -979,7 +999,7 @@ static void LOADROM_ProgramStart(Program * * make) {
 }
 
 #if C_DEBUG
-class BIOSTEST : public Program {
+class BIOSTEST final : public Program {
 public:
 	void Run(void) {
 		if (!(cmd->FindCommand(1, temp_line))) {
@@ -1039,7 +1059,7 @@ static void BIOSTEST_ProgramStart(Program * * make) {
 
 // LOADFIX
 
-class LOADFIX : public Program {
+class LOADFIX final : public Program {
 public:
 	void Run(void);
 };
@@ -1104,7 +1124,7 @@ static void LOADFIX_ProgramStart(Program * * make) {
 
 // RESCAN
 
-class RESCAN : public Program {
+class RESCAN final : public Program {
 public:
 	void Run(void);
 };
@@ -1117,14 +1137,11 @@ void RESCAN::Run(void)
 
 	if (cmd->FindCommand(1,temp_line)) {
 		//-A -All /A /All
-		if (temp_line.size() >= 2
-			&& (temp_line[0] == '-' ||
-			    temp_line[0] == '/')
-			&& (temp_line[1] == 'a' ||
-			    temp_line[1] == 'A') ) {
-	 		all = true;
-		}
-		else if (temp_line.size() == 2 && temp_line[1] == ':') {
+		if (temp_line.size() >= 2 &&
+		    (temp_line[0] == '-' || temp_line[0] == '/') &&
+		    (temp_line[1] == 'a' || temp_line[1] == 'A')) {
+			all = true;
+		} else if (temp_line.size() == 2 && temp_line[1] == ':') {
 			lowcase(temp_line);
 			drive  = temp_line[0] - 'a';
 		}
@@ -1147,7 +1164,20 @@ static void RESCAN_ProgramStart(Program * * make) {
 	*make=new RESCAN;
 }
 
-class INTRO : public Program {
+class INTRO final : public Program {
+private:
+	void WriteOutProgramIntroSpecial()
+	{
+		WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"), MMOD2_NAME,
+		         MMOD2_NAME, PRIMARY_MOD_NAME, PRIMARY_MOD_PAD,
+		         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_NAME,
+		         PRIMARY_MOD_PAD, PRIMARY_MOD_NAME, PRIMARY_MOD_PAD,
+		         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_NAME,
+		         PRIMARY_MOD_PAD, PRIMARY_MOD_NAME, PRIMARY_MOD_PAD,
+		         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_NAME,
+		         PRIMARY_MOD_PAD, MMOD2_NAME);
+	}
+
 public:
 	void DisplayMount(void) {
 		/* Basic mounting has a version for each operating system.
@@ -1165,7 +1195,11 @@ public:
 		/* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */
 		if (DOS_PSP(dos.psp()).GetParent() != DOS_PSP(DOS_PSP(dos.psp()).GetParent()).GetParent()) return;
 		if (cmd->FindExist("cdrom",false)) {
-			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));
+#ifdef WIN32
+			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_WINDOWS"));
+#else
+			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_OTHER"));
+#endif
 			return;
 		}
 		if (cmd->FindExist("mount",false)) {
@@ -1174,7 +1208,7 @@ public:
 			return;
 		}
 		if (cmd->FindExist("special",false)) {
-			WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"));
+			WriteOutProgramIntroSpecial();
 			return;
 		}
 		/* Default action is to show all pages */
@@ -1183,9 +1217,13 @@ public:
 		DOS_ReadFile (STDIN,&c,&n);
 		DisplayMount();
 		DOS_ReadFile (STDIN,&c,&n);
-		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));
-		DOS_ReadFile (STDIN,&c,&n);
-		WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"));
+#ifdef WIN32
+		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_WINDOWS"));
+#else
+		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_OTHER"));
+#endif
+		DOS_ReadFile(STDIN, &c, &n);
+		WriteOutProgramIntroSpecial();
 	}
 };
 
@@ -1193,7 +1231,7 @@ static void INTRO_ProgramStart(Program * * make) {
 	*make=new INTRO;
 }
 
-class IMGMOUNT : public Program {
+class IMGMOUNT final : public Program {
 public:
 	void Run(void) {
 		//Hack To allow long commandlines
@@ -1202,7 +1240,7 @@ public:
 		// Usage
 		if (!cmd->GetCount() || cmd->FindExist("/?", false) ||
 		    cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {
-			WriteOut(MSG_Get("SHELL_CMD_IMGMOUNT_HELP_LONG"));
+			WriteOut(MSG_Get("SHELL_CMD_IMGMOUNT_HELP_LONG"), PRIMARY_MOD_NAME);
 			return;
 		}
 
@@ -1561,7 +1599,7 @@ Bitu DOS_SwitchKeyboardLayout(const char* new_layout, Bit32s& tried_cp);
 Bitu DOS_LoadKeyboardLayout(const char * layoutname, Bit32s codepage, const char * codepagefile);
 const char* DOS_GetLoadedLayout(void);
 
-class KEYB : public Program {
+class KEYB final : public Program {
 public:
 	void Run(void);
 };
@@ -1645,6 +1683,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED","Drive %c isn't mounted.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCESS","Drive %c has successfully been removed.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL","Virtual Drives can not be unMOUNTed.\n");
+	MSG_Add("PROGRAM_MOUNT_DRIVEID_ERROR", "'%c' is not a valid drive identifier.\n");
 	MSG_Add("PROGRAM_MOUNT_WARNING_WIN","\033[31;1mMounting c:\\ is NOT recommended. Please mount a (sub)directory next time.\033[0m\n");
 	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER","\033[31;1mMounting / is NOT recommended. Please mount a (sub)directory next time.\033[0m\n");
 	MSG_Add("PROGRAM_MOUNT_NO_OPTION", "Warning: Ignoring unsupported option '%s'.\n");
@@ -1654,14 +1693,16 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE","The overlay directory can not be the same as underlying drive.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR","Something went wrong.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS","Overlay %s on drive %c mounted.\n");
+	MSG_Add("PROGRAM_MOUNT_MOVE_Z_ERROR_1", "Can't move drive Z. Drive %c is mounted already.\n");
 
-	MSG_Add("PROGRAM_MEM_CONVEN","%10d Kb free conventional memory\n");
-	MSG_Add("PROGRAM_MEM_EXTEND","%10d Kb free extended memory\n");
-	MSG_Add("PROGRAM_MEM_EXPAND","%10d Kb free expanded memory\n");
-	MSG_Add("PROGRAM_MEM_UPPER","%10d Kb free upper memory in %d blocks (largest UMB %d Kb)\n");
+	MSG_Add("PROGRAM_MEM_CONVEN", "%10d kB free conventional memory\n");
+	MSG_Add("PROGRAM_MEM_EXTEND", "%10d kB free extended memory\n");
+	MSG_Add("PROGRAM_MEM_EXPAND", "%10d kB free expanded memory\n");
+	MSG_Add("PROGRAM_MEM_UPPER",
+	        "%10d kB free upper memory in %d blocks (largest UMB %d kB)\n");
 
-	MSG_Add("PROGRAM_LOADFIX_ALLOC","%d kb allocated.\n");
-	MSG_Add("PROGRAM_LOADFIX_DEALLOC","%d kb freed.\n");
+	MSG_Add("PROGRAM_LOADFIX_ALLOC", "%d kB allocated.\n");
+	MSG_Add("PROGRAM_LOADFIX_DEALLOC", "%d kB freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL","Used memory freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_ERROR","Memory allocation error.\n");
 
@@ -1685,7 +1726,7 @@ void DOS_SetupPrograms(void) {
 		"For information about basic mount type \033[34;1mintro mount\033[0m\n"
 		"For information about CD-ROM support type \033[34;1mintro cdrom\033[0m\n"
 		"For information about special keys type \033[34;1mintro special\033[0m\n"
-		"To access DOSBox Staging's wiki, visit:\033[34;1m\n"
+		"For more imformation, visit DOSBox Staging wiki:\033[34;1m\n"
 		"https://github.com/dosbox-staging/dosbox-staging/wiki\033[0m\n"
 		"\n"
 		"\033[31;1mDOSBox will stop/exit without a warning if an error occurred!\033[0m\n"
@@ -1719,67 +1760,86 @@ void DOS_SetupPrograms(void) {
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
 		);
 	MSG_Add("PROGRAM_INTRO_MOUNT_END",
-		"When the mount has successfully completed you can type \033[34;1mc:\033[0m to go to your freshly\n"
+		"After successfully mounting the disk you can type \033[34;1mc:\033[0m to go to your freshly\n"
 		"mounted C-drive. Typing \033[34;1mdir\033[0m there will show its contents."
 		" \033[34;1mcd\033[0m will allow you to\n"
 		"enter a directory (recognised by the \033[33;1m[]\033[0m in a directory listing).\n"
-		"You can run programs/files which end with \033[31m.exe .bat\033[0m and \033[31m.com\033[0m.\n"
+		"You can run programs/files with extensions \033[31m.exe .bat\033[0m and \033[31m.com\033[0m.\n"
 		);
-	MSG_Add("PROGRAM_INTRO_CDROM",
-		"\033[2J\033[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:\033[0m\n"
-		"DOSBox provides CD-ROM emulation on several levels.\n"
-		"\n"
-		"This works on all normal directories, installs MSCDEX and marks the files\n"
-		"read-only. Usually this is enough for most games:\n"
-		"\n"
-		"\033[34;1mmount D C:\\example -t cdrom\033[0m\n"
-		"\n"
-		"If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
-		"\n"
-		"\033[34;1mmount D C:\\example -t cdrom -label CDLABEL\033[0m\n"
-		"\n"
-		"Additionally, you can use IMGMOUNT to mount ISO images or CUE files:\n"
-		"\n"
-		"\033[34;1mimgmount D C:\\cd.iso -t cdrom\033[0m\n"
-		);
+	MSG_Add("PROGRAM_INTRO_CDROM_WINDOWS",
+	        "\033[2J\033[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:\033[0m\n"
+	        "DOSBox provides CD-ROM emulation on several levels.\n"
+	        "\n"
+	        "This works on all normal directories, installs MSCDEX and marks the files\n"
+	        "read-only. Usually this is enough for most games:\n"
+	        "\n"
+	        "\033[34;1mmount D C:\\example -t cdrom\033[0m\n"
+	        "\n"
+	        "If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
+	        "\n"
+	        "\033[34;1mmount D C:\\example -t cdrom -label CDLABEL\033[0m\n"
+	        "\n"
+	        "Additionally, you can use imgmount to mount iso or cue/bin images:\n"
+	        "\n"
+	        "\033[34;1mimgmount D C:\\cd.iso -t cdrom\033[0m\n"
+	        "\n"
+	        "\033[34;1mimgmount D C:\\cd.cue -t cdrom\033[0m\n");
+	MSG_Add("PROGRAM_INTRO_CDROM_OTHER",
+	        "\033[2J\033[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:\033[0m\n"
+	        "DOSBox provides CD-ROM emulation on several levels.\n"
+	        "\n"
+	        "This works on all normal directories, installs MSCDEX and marks the files\n"
+	        "read-only. Usually this is enough for most games:\n"
+	        "\n"
+	        "\033[34;1mmount D ~/example -t cdrom\033[0m\n"
+	        "\n"
+	        "If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
+	        "\n"
+	        "\033[34;1mmount D ~/example -t cdrom -label CDLABEL\033[0m\n"
+	        "\n"
+	        "Additionally, you can use imgmount to mount iso or cue/bin images:\n"
+	        "\n"
+	        "\033[34;1mimgmount D ~/cd.iso -t cdrom\033[0m\n"
+	        "\n"
+	        "\033[34;1mimgmount D ~/cd.cue -t cdrom\033[0m\n");
 	MSG_Add("PROGRAM_INTRO_SPECIAL",
-		"\033[2J\033[32;1mSpecial keys:\033[0m\n"
-		"These are the default keybindings.\n"
-		"They can be changed in the \033[33mkeymapper\033[0m.\n"
-		"\n"
-		"\033[33;1mALT-ENTER\033[0m   : Switch between fullscreen and window mode.\n"
-		"\033[33;1mALT-PAUSE\033[0m   : Pause/Unpause emulator.\n"
-		"\033[33;1mCTRL-F1\033[0m     : Start the \033[33mkeymapper\033[0m.\n"
-		"\033[33;1mCTRL-F4\033[0m     : Swap mounted disk image, update directory cache for all drives.\n"
-		"\033[33;1mCTRL-F5\033[0m     : Save a screenshot.\n"
-		"\033[33;1mCTRL-F6\033[0m     : Start/Stop recording sound output to a wave file.\n"
-		"\033[33;1mCTRL-F7\033[0m     : Start/Stop recording video output to a zmbv file.\n"
-		"\033[33;1mCTRL-F9\033[0m     : Shutdown emulator.\n"
-		"\033[33;1mCTRL-F10\033[0m    : Capture/Release the mouse.\n"
-		"\033[33;1mCTRL-F11\033[0m    : Slow down emulation.\n"
-		"\033[33;1mCTRL-F12\033[0m    : Speed up emulation.\n"
-		"\033[33;1mALT-F12\033[0m     : Unlock speed (turbo button/fast forward).\n"
-		);
+	        "\033[2J\033[32;1mSpecial keys:\033[0m\n"
+	        "These are the default keybindings.\n"
+	        "They can be changed in the \033[33mkeymapper\033[0m.\n"
+	        "\n"
+	        "\033[33;1m%s+Enter\033[0m  Switch between fullscreen and window mode.\n"
+	        "\033[33;1m%s+Pause\033[0m  Pause/Unpause emulator.\n"
+	        "\033[33;1m%s+F1\033[0m   %s Start the \033[33mkeymapper\033[0m.\n"
+	        "\033[33;1m%s+F4\033[0m   %s Swap mounted disk image, update directory cache for all drives.\n"
+	        "\033[33;1m%s+F5\033[0m   %s Save a screenshot.\n"
+	        "\033[33;1m%s+F6\033[0m   %s Start/Stop recording sound output to a wave file.\n"
+	        "\033[33;1m%s+F7\033[0m   %s Start/Stop recording video output to a zmbv file.\n"
+	        "\033[33;1m%s+F9\033[0m   %s Shutdown emulator.\n"
+	        "\033[33;1m%s+F10\033[0m  %s Capture/Release the mouse.\n"
+	        "\033[33;1m%s+F11\033[0m  %s Slow down emulation.\n"
+	        "\033[33;1m%s+F12\033[0m  %s Speed up emulation.\n"
+	        "\033[33;1m%s+F12\033[0m    Unlock speed (turbo button/fast forward).\n");
+
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_WRITE_PROTECTED","Image file is read-only! Might create problems.\n");
-	MSG_Add("PROGRAM_BOOT_PRINT_ERROR","This command boots DOSBox from either a floppy or hard disk image.\n\n"
-		"For this command, one can specify a succession of floppy disks swappable\n"
-		"by pressing Ctrl-F4, and -l specifies the mounted drive to boot from.  If\n"
-		"no drive letter is specified, this defaults to booting from the A drive.\n"
-		"The only bootable drive letters are A, C, and D.  For booting from a hard\n"
-		"drive (C or D), the image should have already been mounted using the\n"
-		"\033[34;1mIMGMOUNT\033[0m command.\n\n"
-		"The syntax of this command is:\n\n"
-		"\033[34;1mBOOT [diskimg1.img diskimg2.img] [-l driveletter]\033[0m\n"
-		);
+	MSG_Add("PROGRAM_BOOT_PRINT_ERROR",
+	        "This command boots DOSBox from either a floppy or hard disk image.\n\n"
+	        "For this command, one can specify a succession of floppy disks swappable\n"
+	        "by pressing %s+F4, and -l specifies the mounted drive to boot from.  If\n"
+	        "no drive letter is specified, this defaults to booting from the A drive.\n"
+	        "The only bootable drive letters are A, C, and D.  For booting from a hard\n"
+	        "drive (C or D), the image should have already been mounted using the\n"
+	        "\033[34;1mIMGMOUNT\033[0m command.\n\n"
+	        "The syntax of this command is:\n\n"
+	        "\033[34;1mBOOT [diskimg1.img diskimg2.img] [-l driveletter]\033[0m\n");
 	MSG_Add("PROGRAM_BOOT_UNABLE","Unable to boot off of drive %c");
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s");
 	MSG_Add("PROGRAM_BOOT_BOOT","Booting from drive %c...\n");
 	MSG_Add("PROGRAM_BOOT_CART_WO_PCJR","PCjr cartridge found, but machine is not PCjr");
-	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS","Available PCjr cartridge commandos:%s");
-	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS","No PCjr cartridge commandos found");
+	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS", "Available PCjr cartridge commands: %s");
+	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS", "No PCjr cartridge commands found");
 
 	MSG_Add("PROGRAM_LOADROM_SPECIFY_FILE","Must specify ROM file to load.\n");
 	MSG_Add("PROGRAM_LOADROM_CANT_OPEN","ROM file not accessible.\n");
@@ -1795,11 +1855,11 @@ void DOS_SetupPrograms(void) {
 	        "Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mCDROM-SET\033[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso \n"
+	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mCDROM-SET\033[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso\n"
 	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mIMAGEFILE\033[0m [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy\n"
 	        "  \033[32;1mimgmount\033[0m \033[37;1mDRIVE\033[0m \033[36;1mBOOTIMAGE\033[0m [-fs fat|none] -t hdd -size GEOMETRY\n"
 	        "  \033[32;1mimgmount\033[0m -u \033[37;1mDRIVE\033[0m  (unmounts the DRIVE's image)\n"
-		"\n"
+	        "\n"
 	        "Where:\n"
 	        "  \033[37;1mDRIVE\033[0m     is the drive letter where the image will be mounted: a, c, d, ...\n"
 	        "  \033[36;1mCDROM-SET\033[0m is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
@@ -1807,8 +1867,8 @@ void DOS_SetupPrograms(void) {
 	        "  \033[36;1mBOOTIMAGE\033[0m is a bootable disk image with specified -size GEOMETRY:\n"
 	        "            bytes-per-sector,sectors-per-head,heads,cylinders\n"
 	        "Notes:\n"
-	        "  - Ctrl+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.\n"
-		"\n"
+	        "  - %s+F4 swaps & mounts the next CDROM-SET or IMAGEFILE, if provided.\n"
+	        "\n"
 	        "Examples:\n"
 #if defined(WIN32)
 	        "  \033[32;1mimgmount\033[0m \033[37;1mD\033[0m \033[36;1mC:\\games\\doom.iso\033[0m -t cdrom\n"
@@ -1914,6 +1974,8 @@ void DOS_SetupPrograms(void) {
 	PROGRAMS_MakeFile("BIOSTEST.COM", BIOSTEST_ProgramStart);
 #endif
 	PROGRAMS_MakeFile("BOOT.COM", BOOT_ProgramStart);
+	PROGRAMS_MakeFile("CHOICE.COM", CHOICE_ProgramStart);
+	PROGRAMS_MakeFile("HELP.COM", HELP_ProgramStart);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
 	PROGRAMS_MakeFile("INTRO.COM", INTRO_ProgramStart);
 	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);

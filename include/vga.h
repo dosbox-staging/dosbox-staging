@@ -28,17 +28,28 @@
 
 class PageHandler;
 
-
 enum VGAModes {
-	M_CGA2, M_CGA4,
-	M_EGA, M_VGA,
-	M_LIN4, M_LIN8, M_LIN15, M_LIN16, M_LIN32,
+	M_CGA2,
+	M_CGA4,
+	M_EGA,
+	M_VGA,
+	M_LIN4,
+	M_LIN8,
+	M_LIN15,
+	M_LIN16,
+	M_LIN32,
 	M_TEXT,
-	M_HERC_GFX, M_HERC_TEXT,
-	M_CGA16, M_TANDY2, M_TANDY4, M_TANDY16, M_TANDY_TEXT,
+	M_HERC_GFX,
+	M_HERC_TEXT,
+	M_TANDY2,
+	M_TANDY4,
+	M_TANDY16,
+	M_TANDY_TEXT,
+	M_CGA2_COMPOSITE,
+	M_CGA4_COMPOSITE,
+	M_CGA_TEXT_COMPOSITE,
 	M_ERROR
 };
-
 
 #define CLK_25 25175
 #define CLK_28 28322
@@ -138,10 +149,10 @@ typedef struct {
 	Bitu byte_panning_shift;
 	struct {
 		double framestart;
-		double vrstart, vrend;		// V-retrace
-		double hrstart, hrend;		// H-retrace
-		double hblkstart, hblkend;	// H-blanking
-		double vblkstart, vblkend;	// V-Blanking
+		double vrstart, vrend;     // V-retrace
+		double hrstart, hrend;     // H-retrace
+		double hblkstart, hblkend; // H-blanking
+		double vblkstart, vblkend; // V-Blanking
 		double vdend, vtotal;
 		double hdend, htotal;
 		double parts;
@@ -404,8 +415,9 @@ typedef struct {
 	VGA_Changes changes;
 #endif
 	VGA_LFB lfb;
+	int ri, rq, gi, gq, bi, bq;
+	int sharpness;
 } VGA_Type;
-
 
 /* Hercules Palette function */
 void Herc_Palette(void);
@@ -420,7 +432,7 @@ void VGA_SetMode(VGAModes mode);
 void VGA_DetermineMode(void);
 void VGA_SetupHandlers(void);
 void VGA_StartResize(Bitu delay=50);
-void VGA_SetupDrawing(Bitu val);
+void VGA_SetupDrawing(uint32_t val);
 void VGA_CheckScanLength(void);
 void VGA_ChangedBank(void);
 
@@ -523,7 +535,7 @@ extern Bit32u FillTable[16];
 extern Bit32u CGA_2_Table[16];
 extern Bit32u CGA_4_Table[256];
 extern Bit32u CGA_4_HiRes_Table[256];
-extern Bit32u CGA_16_Table[256];
+extern int CGA_Composite_Table[1024];
 extern Bit32u TXT_Font_Table[16];
 extern Bit32u TXT_FG_Table[16];
 extern Bit32u TXT_BG_Table[16];

@@ -1,2 +1,0 @@
-# DNF provides a 'default' version of gcc is available, so we avoid post-fixing the version
-compiler=(gcc g++)

@@ -12,10 +12,10 @@ jobs:
         conf:
           - name: MSVC 32-bit
             arch: x86
-            max_warnings: 269
+            max_warnings: 272
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 1975
+            max_warnings: 1896
     steps:
       - name:  Backup existing vcpkg installation
         shell: pwsh
@@ -40,10 +40,16 @@ jobs:
         if:    steps.cache-vcpkg.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          rm -R c:\vcpkg
-          mv c:\vcpkg-bak c:\vcpkg
-          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net opusfile fluidsynth
+          c:
+          cd \
+          rm -R vcpkg
+          git clone https://github.com/Microsoft/vcpkg.git
+          cd vcpkg
+          git checkout 4b317d797e0fb3ca0cfa1b47f2c6741284fe5f5c
+          .\bootstrap-vcpkg.bat
+          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth gtest
           if (-not $?) { throw "vcpkg failed to install library dependencies" }
+          rm -R buildtrees\fluidsynth\src\*.clean\sf2
 
       - name:  Integrate packages
         shell: pwsh
@@ -56,13 +62,23 @@ jobs:
         shell: pwsh
         run:   .\scripts\log-env.ps1
 
+      - name:  Run tests
+        shell: pwsh
+        env:
+          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+        run: |
+          cd vs
+          # TODO: get unit tests working in Debug-mode; for now use release flags (better than nothing)
+          MSBuild -m dosbox.sln -t:tests:Rebuild -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
+
       - name:  Build
         shell: pwsh
         env:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
-          MSBuild -m dosbox.sln -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }} | Tee-Object build.log
+          MSBuild -m dosbox.sln -t:dosbox:Rebuild -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }} | Tee-Object build.log
+
       - name:  Summarize warnings
         shell: pwsh
         env:
@@ -83,19 +99,26 @@ jobs:
           - name: Release build (64-bit)
             arch: x64
             vs-release-dirname: x64
+
     steps:
+
       - name:  Prepare vcpkg for cache restore
-        id:    prep-vcpkg
         shell: pwsh
         run: |
           mv c:\vcpkg c:\vcpkg-bak
           md c:\vcpkg -ea 0
 
+      - name: Generate vcpkg cache key
+        id:    prep-vcpkg
+        shell: bash
+        run: |
+          echo "::set-output name=year_and_week::$(date '+%Y%W')"
+
       - name: Restore the most recent cache of vcpkg
         uses: actions/cache@v2
         with:
           path: c:\vcpkg
-          key: vcpkg-${{ matrix.conf.arch }}-
+          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-1
 
       - name:  Integrate packages
         shell: pwsh
@@ -108,14 +131,17 @@ jobs:
         shell: pwsh
         run:   .\scripts\log-env.ps1
 
-      - name:  Inject version string
+      - name:  Adjust config.h
         shell: bash
         run: |
           set -x
           git fetch --prune --unshallow
           export VERSION=$(git describe --abbrev=4)
-          sed -i "s|VERSION \"git\"|VERSION \"$VERSION\"|" src/platform/visualc/config.h
+          # inject version based on vcs
+          sed -i "s|DOSBOX_DETAILED_VERSION \"git\"|DOSBOX_DETAILED_VERSION \"$VERSION\"|" src/platform/visualc/config.h
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          # overwrite .conf file branding for release build
+          sed -i "s|CONF_SUFFIX \"-staging-git\"|CONF_SUFFIX \"-staging\"|" src/platform/visualc/config.h
 
       - name:  Build
         shell: pwsh
@@ -123,7 +149,7 @@ jobs:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
-          MSBuild -m dosbox.sln -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
+          MSBuild -m dosbox.sln -t:dosbox:Rebuild -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
 
       - name:  Package
         shell: bash
@@ -142,11 +168,12 @@ jobs:
           cp docs/README.video                    dest/doc/video.txt
           cp docs/vc_redist.txt                   dest/doc/vc_redist.txt
           cp README                               dest/doc/manual.txt
-          cp vs/$RELEASE_DIR/libfluidsynth-2.dll  dest/
-          cp vs/$RELEASE_DIR/glib-2.dll           dest/ # fluidsynth dependency
+          cp vs/$RELEASE_DIR/libfluidsynth-3.dll  dest/
+          cp vs/$RELEASE_DIR/glib-2.0-0.dll       dest/ # fluidsynth dependency
           cp vs/$RELEASE_DIR/intl-8.dll           dest/ # glib dependency
           cp vs/$RELEASE_DIR/pcre.dll             dest/ # glib dependency
           cp vs/$RELEASE_DIR/iconv-2.dll          dest/ # glib dependency
+          cp vs/$RELEASE_DIR/mt32emu-2.dll        dest/
           cp vs/$RELEASE_DIR/ogg.dll              dest/
           cp vs/$RELEASE_DIR/opus.dll             dest/
           cp vs/$RELEASE_DIR/SDL2.dll             dest/
@@ -155,11 +182,29 @@ jobs:
           cp src/libs/zmbv/$RELEASE_DIR/zlib1.dll dest/ # libpng dependency
           cp src/libs/zmbv/$RELEASE_DIR/zmbv.dll  dest/
 
+          # Prepare translation files
+          #
+          # Note:
+          #   We conciously drop the dialect postfix because no dialects are available.
+          #   (US was the default DOS dialect and therefore is the default for 'en').
+          #   There users get the generic translation and benefit from simpler filenames.
+          #   Dialect translations will be added if/when they're available.
+          #
+          mkdir -p dest/translations
+          cp contrib/translations/de/de_DE.lng       dest/translations/de.lng
+          cp contrib/translations/en/en_US.lng       dest/translations/en.lng
+          cp contrib/translations/es/es_ES.lng       dest/translations/es.lng
+          cp contrib/translations/fr/fr_FR.lng       dest/translations/fr.lng
+          cp contrib/translations/it/it_IT.lng       dest/translations/it.lng
+          cp contrib/translations/pl/pl_PL.CP437.lng dest/translations/pl.cp437.lng
+          cp contrib/translations/pl/pl_PL.lng       dest/translations/pl.lng
+          cp contrib/translations/ru/ru_RU.lng       dest/translations/ru.lng
+
           # List version of available Visual C++ Redistributable files
           ls -l "$VC_REDIST_PATH"
 
           # Include the necessary dlls from one of available versions
-          readonly VC_REDIST_VERSION="14.28.29325"
+          readonly VC_REDIST_VERSION="14.29.30036"
           readonly VC_REDIST_DIR="$VC_REDIST_PATH/$VC_REDIST_VERSION/${{ matrix.conf.arch }}/Microsoft.VC142.CRT"
           cp "$VC_REDIST_DIR/msvcp140.dll"       dest/
           cp "$VC_REDIST_DIR/vcruntime140.dll"   dest/
@@ -191,11 +236,15 @@ jobs:
           path: dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}
 
 
+  # This job exists only to publish an artifact with version info when building
+  # from master branch, so snapshot build version will be visible on:
+  # https://dosbox-staging.github.io/downloads/devel/
+  #
   publish_additional_artifacts:
     name: Publish additional artifacts
     needs: build_windows_vs_release
     runs-on: windows-latest
-    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
       - name: Generate changelog

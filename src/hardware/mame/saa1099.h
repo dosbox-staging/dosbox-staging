@@ -27,7 +27,7 @@
 
 // ======================> saa1099_device
 
-class saa1099_device : public device_t, public device_sound_interface {
+class saa1099_device final : public device_t, public device_sound_interface {
 public:
 	saa1099_device(const machine_config &mconfig,
 	               const char *tag,
@@ -91,7 +91,7 @@ private:
 	saa1099_channel m_channels[6];    /* channels */
 	saa1099_noise m_noise[2];         /* noise generators */
 	double m_sample_rate;
-	int m_master_clock;
+	int m_chip_clock;
 };
 
 DECLARE_DEVICE_TYPE(SAA1099, saa1099_device)

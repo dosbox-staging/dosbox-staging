@@ -1,3 +1,0 @@
-# GCC flags specific to NXP's series of i.MX 6 SBCs
-cflags_release+=(-march=armv7-a -mfpu=neon -mtune=cortex-a9 
-                 -mfloat-abi=hard)

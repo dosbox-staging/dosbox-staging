@@ -1,0 +1,53 @@
+option('use_sdl2_net', type : 'boolean', value : true,
+       description : 'Enable networking features via SDL2_net (modem, ipx)')
+
+option('use_opengl', type : 'boolean', value : true,
+       description : 'Enable OpenGL support')
+
+option('use_fluidsynth', type : 'boolean', value : true,
+       description : 'Enable built-in MIDI support via FluidSynth')
+
+option('use_mt32emu', type : 'boolean', value : true,
+       description : 'Enable built-in MT-32 emulation support')
+
+option('use_png', type : 'boolean', value : true,
+       description : 'Enable saving screenshots in .png format')
+
+option('use_pcap', type : 'boolean', value : false,
+       description : 'Enable ethernet support (NE2000 emulator) using libpcap')
+
+option('use_slirp', type : 'boolean', value : false,
+       description : 'Enable ethernet support (NE2000 emulator) using libslirp')
+
+# This option exists only for rare situations when Linux developer cannot
+# install ALSA library headers on their machine.
+#
+# 'auto' translates to 'true' on Linux systems and 'false' everywhere else.
+#
+option('use_alsa', type : 'combo',
+       choices : ['auto', 'true', 'false'], value : 'auto',
+       description : 'Enable ALSA MIDI support')
+
+option('enable_debugger', type : 'combo',
+       choices : ['normal', 'heavy', 'none'], value : 'none',
+       description : 'Build emulator with internal debugger feature.')
+
+option('dynamic_core', type : 'combo',
+       choices : ['auto', 'dyn-x86', 'dynrec', 'none'], value : 'auto',
+       description : 'Select the dynamic core implementation.')
+
+# Use this option for selectively switching dependencies to look for static
+# libraries first. This behaves differently than passing
+# -Ddefault_library=static (which will turn on static linking for dependencies
+# built from wraps, but still attempt dynamic linking for system-installed
+# libraries).
+#
+# This is NOT guaranteed to work - the end results will vary depending on your
+# OS, installed libraries, and dependencies of those libraries.
+#
+option('try_static_libs', type : 'array',
+       choices : ['fluidsynth', 'opusfile', 'png', 'sdl2', 'sdl2_net'], value : [],
+       description : 'Attempt to statically link selected libraries.')
+
+option('unit_tests', type : 'feature', value : 'auto',
+       description : 'Build unit tests. Auto skips for release builds.')

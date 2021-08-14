@@ -16,11 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "adlib.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <sys/types.h>
-#include "adlib.h"
 
 #include "cpu.h"
 #include "setup.h"
@@ -41,59 +42,54 @@
 namespace OPL2 {
 	#include "opl.cpp"
 
-	struct Handler : public Adlib::Handler {
-		virtual void WriteReg( Bit32u reg, Bit8u val ) {
-			adlib_write(reg,val);
-		}
-		virtual Bit32u WriteAddr( Bit32u /*port*/, Bit8u val ) {
-			return val;
-		}
+struct Handler : public Adlib::Handler {
+	virtual void WriteReg(Bit32u reg, Bit8u val) { adlib_write(reg, val); }
+	virtual Bit32u WriteAddr(uint16_t /*port*/, Bit8u val) { return val; }
 
-		virtual void Generate( MixerChannel* chan, Bitu samples ) {
-			Bit16s buf[1024];
-			while( samples > 0 ) {
-				Bitu todo = samples > 1024 ? 1024 : samples;
-				samples -= todo;
-				adlib_getsample(buf, todo);
-				chan->AddSamples_m16( todo, buf );
-			}
+	virtual void Generate(MixerChannel *chan, const uint16_t samples)
+	{
+		Bit16s buf[1024];
+		int remaining = samples;
+		while (remaining > 0) {
+			const auto todo = std::min(remaining, 1024);
+			adlib_getsample(buf, todo);
+			chan->AddSamples_m16(todo, buf);
+			remaining -= todo;
 		}
-		virtual void Init( Bitu rate ) {
-			adlib_init(rate);
-		}
-		~Handler() {
-		}
-	};
-}
+	}
+	virtual void Init(uint32_t rate) { adlib_init(rate); }
+	~Handler() {}
+};
+
+} // namespace OPL2
 
 namespace OPL3 {
 	#define OPLTYPE_IS_OPL3
 	#include "opl.cpp"
 
-	struct Handler : public Adlib::Handler {
-		virtual void WriteReg( Bit32u reg, Bit8u val ) {
-			adlib_write(reg,val);
+struct Handler : public Adlib::Handler {
+	virtual void WriteReg(Bit32u reg, Bit8u val) { adlib_write(reg, val); }
+	virtual Bit32u WriteAddr(uint16_t port, Bit8u val)
+	{
+		adlib_write_index(port, val);
+		return opl_index;
+	}
+	virtual void Generate(MixerChannel *chan, const uint16_t samples)
+	{
+		Bit16s buf[1024 * 2];
+		int remaining = samples;
+		while (remaining > 0) {
+			const auto todo = std::min(remaining, 1024);
+			adlib_getsample(buf, todo);
+			chan->AddSamples_s16(todo, buf);
+			remaining -= todo;
 		}
-		virtual Bit32u WriteAddr( Bit32u port, Bit8u val ) {
-			adlib_write_index(port, val);
-			return opl_index;
-		}
-		virtual void Generate( MixerChannel* chan, Bitu samples ) {
-			Bit16s buf[1024*2];
-			while( samples > 0 ) {
-				Bitu todo = samples > 1024 ? 1024 : samples;
-				samples -= todo;
-				adlib_getsample(buf, todo);
-				chan->AddSamples_s16( todo, buf );
-			}
-		}
-		virtual void Init( Bitu rate ) {
-			adlib_init(rate);
-		}
-		~Handler() {
-		}
-	};
-}
+	}
+	virtual void Init(uint32_t rate) { adlib_init(rate); }
+	~Handler() {}
+};
+
+} // namespace OPL3
 
 namespace MAMEOPL2 {
 
@@ -104,19 +100,20 @@ struct Handler : public Adlib::Handler {
 		ym3812_write(chip, 0, reg);
 		ym3812_write(chip, 1, val);
 	}
-	virtual Bit32u WriteAddr(Bit32u /*port*/, Bit8u val) {
-		return val;
-	}
-	virtual void Generate(MixerChannel* chan, Bitu samples) {
+	virtual Bit32u WriteAddr(uint16_t /*port*/, Bit8u val) { return val; }
+	virtual void Generate(MixerChannel *chan, const uint16_t samples)
+	{
 		Bit16s buf[1024 * 2];
-		while (samples > 0) {
-			Bitu todo = samples > 1024 ? 1024 : samples;
-			samples -= todo;
+		int remaining = samples;
+		while (remaining > 0) {
+			const auto todo = std::min(remaining, 1024);
 			ym3812_update_one(chip, buf, todo);
 			chan->AddSamples_m16(todo, buf);
+			remaining -= todo;
 		}
 	}
-	virtual void Init(Bitu rate) {
+	virtual void Init(uint32_t rate)
+	{
 		chip = ym3812_init(0, OPL2_INTERNAL_FREQ, rate);
 	}
 	~Handler() {
@@ -136,28 +133,30 @@ struct Handler : public Adlib::Handler {
 		ymf262_write(chip, 0, reg);
 		ymf262_write(chip, 1, val);
 	}
-	virtual Bit32u WriteAddr(Bit32u /*port*/, Bit8u val) {
-		return val;
-	}
-	virtual void Generate(MixerChannel* chan, Bitu samples) {
-		//We generate data for 4 channels, but only the first 2 are connected on a pc
+	virtual Bit32u WriteAddr(uint16_t /*port*/, Bit8u val) { return val; }
+	virtual void Generate(MixerChannel *chan, const uint16_t samples)
+	{
+		// We generate data for 4 channels, but only the first 2 are
+		// connected on a pc
 		Bit16s buf[4][1024];
 		Bit16s result[1024][2];
 		Bit16s* buffers[4] = { buf[0], buf[1], buf[2], buf[3] };
 
-		while (samples > 0) {
-			Bitu todo = samples > 1024 ? 1024 : samples;
-			samples -= todo;
+		int remaining = samples;
+		while (remaining > 0) {
+			const auto todo = std::min(remaining, 1024);
 			ymf262_update_one(chip, buffers, todo);
 			//Interleave the samples before mixing
-			for (Bitu i = 0; i < todo; i++) {
+			for (int i = 0; i < todo; i++) {
 				result[i][0] = buf[0][i];
 				result[i][1] = buf[1][i];
 			}
 			chan->AddSamples_s16(todo, result[0]);
+			remaining -= todo;
 		}
 	}
-	virtual void Init(Bitu rate) {
+	virtual void Init(uint32_t rate)
+	{
 		chip = ymf262_init(0, OPL3_INTERNAL_FREQ, rate);
 	}
 	~Handler() {
@@ -180,7 +179,7 @@ struct Handler : public Adlib::Handler {
 			newm = reg & 0x01;
 	}
 
-	Bit32u WriteAddr(Bit32u port, Bit8u val) override
+	Bit32u WriteAddr(uint16_t port, Bit8u val) override
 	{
 		Bit16u addr;
 		addr = val;
@@ -190,7 +189,7 @@ struct Handler : public Adlib::Handler {
 		return addr;
 	}
 
-	void Generate(MixerChannel *chan, Bitu samples) override
+	void Generate(MixerChannel *chan, uint16_t samples) override
 	{
 		int16_t buf[1024 * 2];
 		while (samples > 0) {
@@ -201,7 +200,7 @@ struct Handler : public Adlib::Handler {
 		}
 	}
 
-	void Init(Bitu rate) override
+	void Init(uint32_t rate) override
 	{
 		newm = 0;
 		OPL3_Reset(&chip, rate);
@@ -339,12 +338,12 @@ class Capture {
 			raw |= 128;
 		AddBuf( raw, val );
 	}
-	void WriteCache( void  ) {
-		Bitu i, val;
+	void WriteCache(void)
+	{
 		/* Check the registers to add */
-		for (i = 0;i < 256;i++) {
-			val = (*cache)[ i ];
-			//Silence the note on entries
+		for (uint16_t i = 0; i < 256; i++) {
+			auto val = (*cache)[i];
+			// Silence the note on entries
 			if (i >= 0xb0 && i <= 0xb8) {
 				val &= ~0x20;
 			}
@@ -406,7 +405,7 @@ public:
 			if ( (*cache)[ regFull ] == val )
 				return true;
 			/* Check how much time has passed */
-			Bitu passed = PIC_Ticks - lastTicks;
+			uint32_t passed = PIC_Ticks - lastTicks;
 			lastTicks = PIC_Ticks;
 			header.milliseconds += passed;
 
@@ -422,7 +421,7 @@ public:
 					AddBuf( delay256, passed - 1 );
 					passed = 0;
 				} else {
-					Bitu shift = (passed >> 8);
+					const auto shift = (passed >> 8);
 					passed -= shift << 8;
 					AddBuf( delayShift8, shift - 1 );
 				}
@@ -499,7 +498,7 @@ bool Chip::Write( Bit32u reg, Bit8u val ) {
 			timer0.Reset();
 			timer1.Reset();
 		} else {
-			const double time = PIC_FullIndex();
+			const auto time = PIC_FullIndex();
 			if (val & 0x1) {
 				timer0.Start(time);
 			}
@@ -522,7 +521,7 @@ bool Chip::Write( Bit32u reg, Bit8u val ) {
 
 
 Bit8u Chip::Read( ) {
-	const double time( PIC_FullIndex() );
+	const auto time(PIC_FullIndex());
 	Bit8u ret = 0;
 	//Overflow won't be set if a channel is masked
 	if (timer0.Update(time)) {
@@ -584,12 +583,11 @@ setvol:
 	}
 }
 
-Bitu Module::CtrlRead( void ) {
-	switch ( ctrl.index ) {
-	case 0x00: /* Board Options */
-		return 0x70; //No options installed
-	case 0x09: /* Left FM Volume */
-		return ctrl.lvol;
+uint8_t Module::CtrlRead(void)
+{
+	switch (ctrl.index) {
+	case 0x00: /* Board Options */ return 0x70; // No options installed
+	case 0x09: /* Left FM Volume */ return ctrl.lvol;
 	case 0x0a: /* Right FM Volume */
 		return ctrl.rvol;
 	case 0x15: /* Audio Relocation */
@@ -598,9 +596,9 @@ Bitu Module::CtrlRead( void ) {
 	return 0xff;
 }
 
-
-void Module::PortWrite( Bitu port, Bitu val, Bitu /*iolen*/ ) {
-	//Keep track of last write time
+void Module::PortWrite(uint16_t port, uint8_t val, Bitu /*iolen*/)
+{
+	// Keep track of last write time
 	lastUsed = PIC_Ticks;
 	//Maybe only enable with a keyon?
 	if (!mixerChan->is_enabled) {
@@ -673,11 +671,13 @@ void Module::PortWrite( Bitu port, Bitu val, Bitu /*iolen*/ ) {
 	}
 }
 
-
-Bitu Module::PortRead( Bitu port, Bitu /*iolen*/ ) {
-	//roughly half a micro (as we already do 1 micro on each port read and some tests revealed it taking 1.5 micros to read an adlib port)
-	Bits delaycyc = (CPU_CycleMax/2048); 
-	if(GCC_UNLIKELY(delaycyc > CPU_Cycles)) delaycyc = CPU_Cycles;
+uint8_t Module::PortRead(uint16_t port, Bitu /*iolen*/)
+{
+	// roughly half a micro (as we already do 1 micro on each port read and
+	// some tests revealed it taking 1.5 micros to read an adlib port)
+	auto delaycyc = (CPU_CycleMax / 2048);
+	if (GCC_UNLIKELY(delaycyc > CPU_Cycles))
+		delaycyc = CPU_Cycles;
 	CPU_Cycles -= delaycyc;
 	CPU_IODelayRemoved += delaycyc;
 
@@ -717,7 +717,6 @@ Bitu Module::PortRead( Bitu port, Bitu /*iolen*/ ) {
 	return 0;
 }
 
-
 void Module::Init( Mode m ) {
 	mode = m;
 	memset(cache, 0, ARRAY_LEN(cache));
@@ -739,23 +738,26 @@ void Module::Init( Mode m ) {
 
 static Adlib::Module* module = 0;
 
-static void OPL_CallBack(Bitu len) {
-	module->handler->Generate( module->mixerChan, len );
-	//Disable the sound generation after 30 seconds of silence
+static void OPL_CallBack(uint16_t len)
+{
+	module->handler->Generate(module->mixerChan, len);
+	// Disable the sound generation after 30 seconds of silence
 	if ((PIC_Ticks - module->lastUsed) > 30000) {
-		Bitu i;
+		uint8_t i;
 		for (i=0xb0;i<0xb9;i++) if (module->cache[i]&0x20||module->cache[i+0x100]&0x20) break;
 		if (i==0xb9) module->mixerChan->Enable(false);
 		else module->lastUsed = PIC_Ticks;
 	}
 }
 
-static Bitu OPL_Read(Bitu port,Bitu iolen) {
-	return module->PortRead( port, iolen );
+static uint8_t OPL_Read(uint16_t port, Bitu iolen)
+{
+	return module->PortRead(port, iolen);
 }
 
-void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
-	module->PortWrite( port, val, iolen );
+void OPL_Write(uint16_t port, uint8_t val, Bitu iolen)
+{
+	module->PortWrite(port, val, iolen);
 }
 
 /*
@@ -776,7 +778,7 @@ static void SaveRad() {
 	//Write 18 instuments for all operators in the cache
 	for ( int i = 0; i < 18; i++ ) {
 		Bit8u* set = module->cache + ( i / 9 ) * 256;
-		Bitu offset = ((i % 9) / 3) * 8 + (i % 3);
+		const auto offset = ((i % 9) / 3) * 8 + (i % 3);
 		Bit8u* base = set + offset;
 		b[w++] = 1 + i;		//instrument number
 		b[w++] = base[0x23];
@@ -847,14 +849,14 @@ Module::Module(Section *configuration)
 	  mixerObject(),
 	  mode(MODE_OPL2), // TODO this is set in Init and there's no good default
 	  reg{0}, // union
-	  ctrl{false, 0, 0xff, 0xff},
+	  ctrl{false, 0, 0xff, 0xff, false},
 	  mixerChan(nullptr),
 	  lastUsed(0),
 	  handler(nullptr),
 	  capture(nullptr)
 {
 	Section_prop * section=static_cast<Section_prop *>(configuration);
-	Bitu base = section->Get_hex("sbbase");
+	const auto base = section->Get_hex("sbbase");
 
 	ctrl.mixer = section->Get_bool("sbmixer");
 
@@ -901,12 +903,10 @@ Module::Module(Section *configuration)
 }
 
 Module::~Module() {
-	if ( capture ) {
-		delete capture;
-	}
-	if ( handler ) {
-		delete handler;
-	}
+	delete capture;
+	capture = nullptr;
+	delete handler;
+	handler = nullptr;
 }
 
 //Initialize static members

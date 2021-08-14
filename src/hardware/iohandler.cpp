@@ -584,7 +584,7 @@ io_val_t IO_ReadD(io_port_t port)
 	return retval;
 }
 
-class IO :public Module_base {
+class IO final : public Module_base {
 public:
 	IO(Section* configuration):Module_base(configuration){
 		iof_queue.used = 0;

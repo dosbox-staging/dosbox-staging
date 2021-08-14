@@ -28,6 +28,8 @@
 
 #include "control.h"
 #include "string_utils.h"
+#include "support.h"
+#include "cross.h"
 
 #ifdef _MSC_VER
 _CRTIMP extern char **_environ;
@@ -907,12 +909,11 @@ void Section::ExecuteEarlyInit(bool init_all)
 			fn.function(this);
 }
 
-void Section::ExecuteInit(bool initall) {
-	typedef std::deque<Function_wrapper>::iterator func_it;
-	for (func_it tel = initfunctions.begin(); tel != initfunctions.end(); ++tel) {
-		if (initall || (*tel).changeable_at_runtime)
-			(*tel).function(this);
-	}
+void Section::ExecuteInit(bool initall)
+{
+	for (const auto &fn : initfunctions)
+		if (initall || fn.changeable_at_runtime)
+			fn.function(this);
 }
 
 void Section::ExecuteDestroy(bool destroyall) {
@@ -1077,6 +1078,8 @@ Verbosity Config::GetStartupVerbosity() const
 		return Verbosity::Medium;
 	if (user_choice == "low")
 		return Verbosity::Low;
+	if (user_choice == "splash_only")
+		return Verbosity::SplashOnly;
 	if (user_choice == "quiet")
 		return Verbosity::Quiet;
 	// auto-mode
@@ -1320,10 +1323,16 @@ CommandLine::CommandLine(int argc, char const *const argv[])
 
 Bit16u CommandLine::Get_arglength() {
 	if (cmds.empty()) return 0;
-	Bit16u i=1;
-	for(cmd_it it = cmds.begin();it != cmds.end(); ++it)
-		i+=(*it).size() + 1;
-	return --i;
+
+	size_t total_length = 0;
+	for (const auto &cmd : cmds)
+		total_length += cmd.size() + 1;
+
+	if (total_length > UINT16_MAX) {
+		LOG_MSG("SETUP: Command line length too long, truncating");
+		total_length = UINT16_MAX;
+	}
+	return static_cast<uint16_t>(total_length);
 }
 
 CommandLine::CommandLine(const char *name, const char *cmdline)

@@ -60,6 +60,9 @@ void MidiHandler_oss::Close()
 {
 	if (!is_open)
 		return;
+
+	HaltSequence();
+
 	close(device);
 	is_open = false;
 }
@@ -82,8 +85,8 @@ void MidiHandler_oss::PlayMsg(const uint8_t *msg)
 
 void MidiHandler_oss::PlaySysex(uint8_t *sysex, size_t len)
 {
-	uint8_t buf[SYSEX_SIZE * 4];
-	assert(len <= SYSEX_SIZE);
+	uint8_t buf[MIDI_SYSEX_SIZE * 4];
+	assert(len <= MIDI_SYSEX_SIZE);
 	size_t pos = 0;
 	for (size_t i = 0; i < len; i++) {
 		buf[pos++] = SEQ_MIDIPUTC;

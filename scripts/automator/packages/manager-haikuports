@@ -1,6 +1,0 @@
-# Package repo: https://depot.haiku-os.org
-delim=""
-packages+=(ccache coreutils autoconf automake autoconf_archive
-           pkgconfig libpng ncurses6_devel libsdl2_devel
-           sdl2_net_devel libogg_devel opus_devel opusfile_devel
-           gcc_syslibs_devel opus_tools fluidsynth2_devel)

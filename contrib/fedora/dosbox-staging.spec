@@ -1,27 +1,45 @@
 Name:    dosbox-staging
-Version: 0.75.2
-Release: 1%{?dist}
+Version: 0.77.0
+Release: 2%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+
 URL:     https://dosbox-staging.github.io/
-Source:  https://github.com/dosbox-staging/dosbox-staging/archive/v%{version}/%{name}-%{version}.tar.gz
+
+Source0: https://github.com/dosbox-staging/dosbox-staging/archive/v%{version}/%{name}-%{version}.tar.gz
+Source1: https://github.com/munt/munt/archive/libmt32emu_2_5_0.tar.gz
+# Downloaded from: https://wrapdb.mesonbuild.com/v1/projects/mt32emu/2.5.0/1/get_zip
+Source2: mt32emu-2.5.0-1-wrap.zip
+
+# https://github.com/dosbox-staging/dosbox-staging/commit/5d25187760e595f7e6efa6b639c3945fb4804db1
+Patch1: 0001-Add-0.77.0-release-to-metainfo.xml.patch
 
 # This package is a drop-in replacement for dosbox
-Provides: dosbox
+Provides:  dosbox = %{version}-%{release}
+Obsoletes: dosbox < 0.74.4
 
-BuildRequires: gcc-c++
-BuildRequires: gcc
-BuildRequires: automake
+Provides: bundled(mt32emu) = 2.5.0
+
 BuildRequires: alsa-lib-devel
-BuildRequires: libpng-devel
-BuildRequires: SDL2-devel
-BuildRequires: SDL2_net-devel
-BuildRequires: opusfile-devel
-BuildRequires: librsvg2-tools
 BuildRequires: desktop-file-utils
+BuildRequires: fluidsynth-devel >= 2.0
+BuildRequires: gcc
+BuildRequires: gcc-c++
+BuildRequires: git
+BuildRequires: gtest-devel
 BuildRequires: libappstream-glib
+BuildRequires: libatomic
+BuildRequires: libpng-devel
+BuildRequires: make
+BuildRequires: meson 
+BuildRequires: opusfile-devel
+BuildRequires: SDL2-devel >= 2.0.5
+BuildRequires: SDL2_net-devel
+
+# mt32emu dependencies:
+BuildRequires: cmake
 
 Requires: hicolor-icon-theme
+Requires: fluid-soundfont-gm
 
 
 %description
@@ -41,39 +59,24 @@ any old DOS game using modern hardware.
 
 
 %prep
-%autosetup -n %{name}-%{version}
+%autosetup -p1
+# mt32emu is not packaged yet; provide sources for Meson wrap dependency:
+mkdir -p %{_vpath_srcdir}/subprojects/packagecache/
+cp %{SOURCE1} %{_vpath_srcdir}/subprojects/packagecache/
+cp %{SOURCE2} %{_vpath_srcdir}/subprojects/packagecache/
 
 
 %build
-./autogen.sh
-%configure \
-        CPPFLAGS="-DNDEBUG" \
-        CFLAGS="${CFLAGS/-O2/-O3}" \
-        CXXFLAGS="${CXXFLAGS/-O2/-O3}"
-# binary
-%{__make} %{_smp_mflags}
-# icons
-%{__make} -C contrib/icons hicolor
+%meson -Ddefault_library=static
+%meson_build
 
 
 %install
-make install DESTDIR=%{buildroot}
+%meson_install
 
-pushd contrib/icons/hicolor
-install -p -m 0644 -Dt %{buildroot}%{_datadir}/icons/hicolor/16x16/apps    16x16/apps/%{name}.png
-install -p -m 0644 -Dt %{buildroot}%{_datadir}/icons/hicolor/22x22/apps    22x22/apps/%{name}.png
-install -p -m 0644 -Dt %{buildroot}%{_datadir}/icons/hicolor/24x24/apps    24x24/apps/%{name}.png
-install -p -m 0644 -Dt %{buildroot}%{_datadir}/icons/hicolor/32x32/apps    32x32/apps/%{name}.png
-install -p -m 0644 -Dt %{buildroot}%{_datadir}/icons/hicolor/scalable/apps scalable/apps/%{name}.svg
-popd
 
-desktop-file-install \
-        --dir=%{buildroot}%{_datadir}/applications \
-        contrib/linux/%{name}.desktop
-
-install -p -m 0644 -Dt %{buildroot}%{_metainfodir} \
-        contrib/linux/%{name}.metainfo.xml 
-
+%check
+%meson_test
 appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
 
@@ -88,6 +91,29 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
 
 %changelog
+* Sun Jul 04 2021 Patryk Obara (pbo) <dreamer.tan@gmail.com>
+- 0.77.0-2
+- Indicate bundled mt32emu library via "Provides" tag
+- Raise minimum SDL version to 2.0.5
+
+* Sat Jul 03 2021 Patryk Obara (pbo) <dreamer.tan@gmail.com>
+- 0.77.0-1
+- Update to 0.77.0
+- Replace Autotools with Meson
+
+* Mon Jun 21 2021 Gwyn Ciesla <gwync@protonmail.com> - 0.76.0-3
+- Fluidsynth rebuild.
+
+* Tue Jan 26 2021 Patryk Obara (pbo) <dreamer.tan@gmail.com>
+- 0.76.0-2
+- Tighten dependencies checks
+
+* Mon Jan 25 2021 Patryk Obara (pbo) <dreamer.tan@gmail.com>
+- 0.76.0-1
+- Update to 0.76.0
+- Add fluidsynth-devel build dependency (new feature)
+- Add fluid-soundfont-gm runtime dependency (default soundfont)
+
 * Tue Oct 27 2020 Patryk Obara (pbo) <dreamer.tan@gmail.com>
 - 0.75.2-1
 - Update to 0.75.2

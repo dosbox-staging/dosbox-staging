@@ -100,35 +100,35 @@ private:
 };
 
 // SN76496: Whitenoise verified, phase verified, periodic verified (by Michael Zapf)
-class sn76496_device : public sn76496_base_device
+class sn76496_device final : public sn76496_base_device
 {
 public:
 	sn76496_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 };
 
 // U8106 not verified yet. todo: verify; (a custom marked sn76489? only used on mr. do and maybe other universal games)
-class u8106_device : public sn76496_base_device
+class u8106_device final : public sn76496_base_device
 {
 public:
 	u8106_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 };
 
 // Y2404 not verified yet. todo: verify; (don't be fooled by the Y, it's a TI chip, not Yamaha)
-class y2404_device : public sn76496_base_device
+class y2404_device final : public sn76496_base_device
 {
 public:
 	y2404_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 };
 
 // NCR8496 whitenoise verified, phase verified; verified by ValleyBell & NewRisingSun
-class sn76489_device : public sn76496_base_device
+class sn76489_device final : public sn76496_base_device
 {
 public:
 	sn76489_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 };
 
 // PSSJ-3 whitenoise verified, phase verified; verified by ValleyBell & NewRisingSun
-class pssj3_device : public sn76496_base_device
+class pssj3_device final : public sn76496_base_device
 {
 public:
 	pssj3_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
@@ -136,42 +136,42 @@ public:
 
 
 // SN76489A: whitenoise verified, phase verified, periodic verified (by plgdavid)
-class sn76489a_device : public sn76496_base_device
+class sn76489a_device final : public sn76496_base_device
 {
 public:
 	sn76489a_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 };
 
 // SN76494 not verified, (according to datasheet: same as sn76489a but without the /8 divider)
-class sn76494_device : public sn76496_base_device
+class sn76494_device final : public sn76496_base_device
 {
 public:
 	sn76494_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 };
 
 // SN94624 whitenoise verified, phase verified, period verified; verified by PlgDavid
-class sn94624_device : public sn76496_base_device
+class sn94624_device final : public sn76496_base_device
 {
 public:
 	sn94624_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 };
 
 // NCR8496 not verified; info from smspower wiki and vgmpf wiki
-class ncr8496_device : public sn76496_base_device
+class ncr8496_device final : public sn76496_base_device
 {
 public:
 	ncr8496_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 };
 
 // Verified by Justin Kerk
-class gamegear_device : public sn76496_base_device
+class gamegear_device final : public sn76496_base_device
 {
 public:
 	gamegear_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 };
 
 // todo: verify; from smspower wiki, assumed to have same invert as gamegear
-class segapsg_device : public sn76496_base_device
+class segapsg_device final : public sn76496_base_device
 {
 public:
 	segapsg_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);

@@ -67,14 +67,14 @@ static void DoString(STRING_OP type) {
 		}
 		break;
 	case R_OUTSW:
-		add_index<<=1;
+		add_index *= 2;
 		for (;count>0;count--) {
 			IO_WriteW(reg_dx,LoadMw(si_base+si_index));
 			si_index=(si_index+add_index) & add_mask;
 		}
 		break;
 	case R_OUTSD:
-		add_index<<=2;
+		add_index *= 4;
 		for (;count>0;count--) {
 			IO_WriteD(reg_dx,LoadMd(si_base+si_index));
 			si_index=(si_index+add_index) & add_mask;
@@ -87,14 +87,14 @@ static void DoString(STRING_OP type) {
 		}
 		break;
 	case R_INSW:
-		add_index<<=1;
+		add_index *= 2;
 		for (;count>0;count--) {
 			SaveMw(di_base+di_index,IO_ReadW(reg_dx));
 			di_index=(di_index+add_index) & add_mask;
 		}
 		break;
 	case R_INSD:
-		add_index<<=2;
+		add_index *= 4;
 		for (;count>0;count--) {
 			SaveMd(di_base+di_index,IO_ReadD(reg_dx));
 			di_index=(di_index+add_index) & add_mask;
@@ -107,14 +107,14 @@ static void DoString(STRING_OP type) {
 		}
 		break;
 	case R_STOSW:
-		add_index<<=1;
+		add_index *= 2;
 		for (;count>0;count--) {
 			SaveMw(di_base+di_index,reg_ax);
 			di_index=(di_index+add_index) & add_mask;
 		}
 		break;
 	case R_STOSD:
-		add_index<<=2;
+		add_index *= 4;
 		for (;count>0;count--) {
 			SaveMd(di_base+di_index,reg_eax);
 			di_index=(di_index+add_index) & add_mask;
@@ -128,7 +128,7 @@ static void DoString(STRING_OP type) {
 		}
 		break;
 	case R_MOVSW:
-		add_index<<=1;
+		add_index *= 2;
 		for (;count>0;count--) {
 			SaveMw(di_base+di_index,LoadMw(si_base+si_index));
 			di_index=(di_index+add_index) & add_mask;
@@ -136,7 +136,7 @@ static void DoString(STRING_OP type) {
 		}
 		break;
 	case R_MOVSD:
-		add_index<<=2;
+		add_index *= 4;
 		for (;count>0;count--) {
 			SaveMd(di_base+di_index,LoadMd(si_base+si_index));
 			di_index=(di_index+add_index) & add_mask;
@@ -150,14 +150,14 @@ static void DoString(STRING_OP type) {
 		}
 		break;
 	case R_LODSW:
-		add_index<<=1;
+		add_index *= 2;
 		for (;count>0;count--) {
 			reg_ax=LoadMw(si_base+si_index);
 			si_index=(si_index+add_index) & add_mask;
 		}
 		break;
 	case R_LODSD:
-		add_index<<=2;
+		add_index *= 4;
 		for (;count>0;count--) {
 			reg_eax=LoadMd(si_base+si_index);
 			si_index=(si_index+add_index) & add_mask;
@@ -177,7 +177,8 @@ static void DoString(STRING_OP type) {
 		break;
 	case R_SCASW:
 		{
-			add_index<<=1;Bit16u val2;
+			add_index *= 2;
+			Bit16u val2;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val2=LoadMw(di_base+di_index);
@@ -189,7 +190,8 @@ static void DoString(STRING_OP type) {
 		break;
 	case R_SCASD:
 		{
-			add_index<<=2;Bit32u val2;
+			add_index *= 4;
+			Bit32u val2;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val2=LoadMd(di_base+di_index);
@@ -215,7 +217,8 @@ static void DoString(STRING_OP type) {
 		break;
 	case R_CMPSW:
 		{
-			add_index<<=1;Bit16u val1,val2;
+			add_index *= 2;
+			Bit16u val1,val2;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val1=LoadMw(si_base+si_index);
@@ -229,7 +232,8 @@ static void DoString(STRING_OP type) {
 		break;
 	case R_CMPSD:
 		{
-			add_index<<=2;Bit32u val1,val2;
+			add_index *= 4;
+			Bit32u val1,val2;
 			for (;count>0;) {
 				count--;CPU_Cycles--;
 				val1=LoadMd(si_base+si_index);

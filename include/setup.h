@@ -185,7 +185,7 @@ protected:
 	const Changeable::Value change;
 };
 
-class Prop_int : public Property {
+class Prop_int final : public Property {
 public:
 	Prop_int(const std::string &name, Changeable::Value when, int val)
 	        : Property(name, when),
@@ -221,7 +221,7 @@ private:
 	Value max_value;
 };
 
-class Prop_double:public Property {
+class Prop_double final : public Property {
 public:
 	Prop_double(std::string const & _propname, Changeable::Value when, double _value)
 		:Property(_propname,when){
@@ -231,7 +231,7 @@ public:
 	~Prop_double(){ }
 };
 
-class Prop_bool:public Property {
+class Prop_bool final : public Property {
 public:
 	Prop_bool(std::string const& _propname, Changeable::Value when, bool _value)
 		:Property(_propname,when) {
@@ -257,7 +257,7 @@ public:
 	bool CheckValue(const Value &in, bool warn) override;
 };
 
-class Prop_path : public Prop_string {
+class Prop_path final : public Prop_string {
 public:
 	Prop_path(const std::string &name, Changeable::Value when, const char *val)
 	        : Prop_string(name, when, val),
@@ -271,7 +271,7 @@ public:
 	std::string realpath;
 };
 
-class Prop_hex:public Property {
+class Prop_hex final : public Property {
 public:
 	Prop_hex(std::string const& _propname, Changeable::Value when, Hex _value)
 		:Property(_propname,when) {
@@ -328,7 +328,7 @@ public:
 class Prop_multival;
 class Prop_multival_remain;
 
-class Section_prop : public Section {
+class Section_prop final : public Section {
 private:
 	std::deque<Property *> properties = {};
 	typedef std::deque<Property*>::iterator it;
@@ -390,14 +390,14 @@ public:
 	const std::vector<Value> &GetValues() const override;
 };
 
-class Prop_multival_remain:public Prop_multival{
+class Prop_multival_remain final : public Prop_multival{
 public:
 	Prop_multival_remain(std::string const& _propname, Changeable::Value when,std::string const& sep):Prop_multival(_propname,when,sep){ }
 
 	virtual bool SetValue(std::string const& input);
 };
 
-class Section_line : public Section {
+class Section_line final : public Section {
 public:
 	Section_line(std::string const &name) : Section(name), data() {}
 

@@ -19,6 +19,8 @@
 #ifndef DOSBOX_MOUSE_H
 #define DOSBOX_MOUSE_H
 
+#include "dosbox.h"
+
 void Mouse_ShowCursor(void);
 void Mouse_HideCursor(void);
 
@@ -33,7 +35,7 @@ void Mouse_ButtonPressed(Bit8u button);
 void Mouse_ButtonReleased(Bit8u button);
 
 void Mouse_AutoLock(bool enable);
-void Mouse_BeforeNewVideoMode(bool setmode);
+void Mouse_BeforeNewVideoMode();
 void Mouse_AfterNewVideoMode(bool setmode);
 
 #endif

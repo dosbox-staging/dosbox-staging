@@ -1,0 +1,63 @@
+Rights and Howto:
+
+Russian
+
+   -   Обновление перевода для версии 0.74 выполнено Alexander Katz (skatz1971@gmail.com)
+   -   Перевод интерфейса 0.72 выполнен Arik (http://gh.gameslife.ru/)
+       Перевод интерфейса 0.70 выполнен Zoomer (zoomer@kaliningrad.ru)
+       Перевод интерфейса 0.65 выполнен Arik 
+   -   Файл README_RUS.TXT для версии DosBox 0.72 переведен Arik.
+   -   Файл dosbox.conf для версии DosBox 0.70 переведен Zoomer. 
+       Обновление до версии 0.72 Arik.
+   -   Файл ..\zmbv\Readme.txt для версии Dosbox 0.65 переведен Arik. 
+       (В текущей английской версии DosBox 0.74 этот файл оставлен без изменений).
+
+ПОДКЛЮЧЕНИЕ РУССКОГО ЯЗЫКА:
+На всякий случай сделайте резервную копию dosbox.conf (переименуйте его в dosbox.confbak).
+Скопируйте все файлы из архива в директорию DosBox с заменой. Откройте dosbox.conf. 
+Найдите секцию [dosbox]. В этой секции есть параметр
+
+language=
+
+После знака "=" допишите путь к файлу russian.txt. Если вы скопировали его в директорию
+DosBox со всеми остальными файлами из архива, то измененный параметр будет выглядеть так
+
+language="C:\Program Files\DOSBox-0.74\russian.txt",
+
+Где C: - буква диска, на котором установлен DosBox, 
+а \Program Files\DosBox-0.74\russian.txt - путь к файлу russian.txt в директории DosBox.
+Обратите внимание на то, что если путь содержит пробелы (как в случае с Program Files),
+то он должен быть заключен в кавычки
+
+      Пользуйтесь на здоровье! :)
+
+English
+
+   -   Translation updated for DosBox v0.74 by Alexander Katz (skatz1971@gmail.com)
+   -   Interface translation of DosBox v0.72 made by Arik (http://gh.gameslife.ru/).
+       Interface translation of DosBox v0.70 made by Zoomer (zoomer@kaliningrad.ru). 
+       Interface translation of DosBox v0.65 made by Arik.
+   -   File README_RUS.TXT for DosBox v0.72 translated by Arik.
+   -   Comments of file dosbox.conf for DosBox v0.70 translated by Zoomer. 
+       Updated to 0.72 by Arik.
+   -   File ..\zmbv\Readme.txt for dosbox v0.65 translated by Arik. 
+       (In current release 0.74 that file was leaved w/o changes).
+
+INSTALLATION OF RUSSIAN LANGUAGE
+
+Create a backup copy of dosbox.conf (rename it to dosbox.confbak). Extract all files 
+from this arhive into DosBox directory with replacing of files. Then open dosbox.conf. 
+Find section [dosbox]. That section have an option:
+
+language=
+
+Add a path to file Russian.txt from this arhive after "=". If you copied russian.txt 
+to dosbox directory then you should set:
+
+language="C:\Program Files\DOSBox-0.74\russian.txt", where
+
+C: is a drive letter, where DosBox is installed. 
+\Program Files\DOSBox-0.74\russian.txt - path to dosbox directory with file russian.txt.
+Notice that if path include spaces (e.g. Program Files) then it must be quoted with " ".
+
+      Enjoy! :) And excuse me for my bad english. gg.

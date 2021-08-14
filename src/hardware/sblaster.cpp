@@ -16,17 +16,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "hardware.h"
+
 #include <array>
 #include <iomanip>
 #include <sstream>
 #include <string.h>
-#include <math.h>
-#include "dosbox.h"
+#include <math.h> 
+
 #include "inout.h"
 #include "mixer.h"
 #include "dma.h"
 #include "pic.h"
-#include "hardware.h"
 #include "setup.h"
 #include "support.h"
 #include "shell.h"
@@ -170,8 +171,6 @@ struct SB_INFO {
 
 static SB_INFO sb;
 
-static char const * const copyright_string="COPYRIGHT (C) CREATIVE TECHNOLOGY LTD, 1992.";
-
 // number of bytes in input for commands (sb/sbpro)
 static Bit8u DSP_cmd_len_sb[256] = {
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x00
@@ -259,11 +258,11 @@ static const char *DmaModeName()
 static void DSP_ChangeMode(DSP_MODES mode);
 
 static void FlushRemainingDMATransfer();
-static void SuppressInitialDMATransfer(Bitu size);
-static void SuppressDMATransfer(Bitu size);
-static void PlayDMATransfer(Bitu size);
+static void SuppressInitialDMATransfer(uint32_t size);
+static void SuppressDMATransfer(uint32_t size);
+static void PlayDMATransfer(uint32_t size);
 
-typedef void (*process_dma_f)(Bitu);
+typedef void (*process_dma_f)(uint32_t);
 static process_dma_f ProcessDMATransfer;
 
 static void DSP_SetSpeaker(bool requested_state) {
@@ -323,7 +322,7 @@ static INLINE void DSP_FlushData(void) {
 	sb.dsp.out.pos=0;
 }
 
-static double last_dma_callback = 0.0f;
+static double last_dma_callback = 0.0;
 
 static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	if (chan!=sb.dma.chan || event==DMA_REACHED_TC) return;
@@ -331,8 +330,8 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 		if (sb.mode==MODE_DMA) {
 			//Catch up to current time, but don't generate an IRQ!
 			//Fixes problems with later sci games.
-			double t = PIC_FullIndex() - last_dma_callback;
-			Bitu s = static_cast<Bitu>(sb.dma.rate * t / 1000.0f);
+			const auto t = PIC_FullIndex() - last_dma_callback;
+			Bitu s = static_cast<Bitu>(sb.dma.rate * t / 1000.0);
 			if (s > sb.dma.min) {
 				LOG(LOG_SB,LOG_NORMAL)("limiting amount masked to sb.dma.min");
 				s = sb.dma.min;
@@ -467,7 +466,7 @@ INLINE Bit8u decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 	return reference;
 }
 
-static void PlayDMATransfer(Bitu size)
+static void PlayDMATransfer(uint32_t size)
 {
 	Bitu read=0;Bitu done=0;Bitu i=0;
 	last_dma_callback = PIC_FullIndex();
@@ -623,13 +622,13 @@ static void PlayDMATransfer(Bitu size)
  *   - Suppress DWORD-sized transfers (or less) in non-16-bit DMA modes
  *   - Suppress BYTE-sized transfers in 16-bit DMA modes
  */
-static void SuppressInitialDMATransfer(Bitu size)
+static void SuppressInitialDMATransfer(uint32_t size)
 {
 	const size_t size_limit = sb.dma.mode < DSP_DMA_16 ? sizeof(uint32_t)
 	                                                   : sizeof(uint8_t);
 	if (size <= size_limit) {
 		SuppressDMATransfer(size);
-		LOG_MSG("%s: Suppressed initial %" PRIuPTR "-byte %s transfer",
+		LOG_MSG("%s: Suppressed initial %u-byte %s transfer",
 		        CardType(), size, DmaModeName());
 	} else {
 		PlayDMATransfer(size);
@@ -640,7 +639,7 @@ static void SuppressInitialDMATransfer(Bitu size)
 	ProcessDMATransfer = &PlayDMATransfer;
 }
 
-static void SuppressDMATransfer(Bitu size)
+static void SuppressDMATransfer(uint32_t size)
 {
 	if (sb.dma.left < size)
 		size = sb.dma.left;
@@ -659,7 +658,7 @@ static void SuppressDMATransfer(Bitu size)
 	}
 	if (sb.dma.left) {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
-		float delay=(bigger*1000.0f)/sb.dma.rate;
+		double delay = (bigger * 1000.0) / sb.dma.rate;
 		PIC_AddEvent(SuppressDMATransfer, delay, bigger);
 	}
 }
@@ -669,12 +668,12 @@ static void FlushRemainingDMATransfer()
 	if (!sb.dma.left) return;
 	if (!sb.speaker && sb.type!=SBT_16) {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
-		float delay=(bigger*1000.0f)/sb.dma.rate;
+		double delay = (bigger * 1000.0) / sb.dma.rate;
 		PIC_AddEvent(SuppressDMATransfer, delay, bigger);
 		LOG(LOG_SB,LOG_NORMAL)("%s: Silent DMA Transfer scheduling IRQ in %.3f milliseconds",
 		                       CardType(), delay);
 	} else if (sb.dma.left<sb.dma.min) {
-		float delay=(sb.dma.left*1000.0f)/sb.dma.rate;
+		double delay = (sb.dma.left * 1000.0) / sb.dma.rate;
 		LOG(LOG_SB,LOG_NORMAL)("%s: Short transfer scheduling IRQ in %.3f milliseconds",
 		                       CardType(), delay);
 		PIC_AddEvent(ProcessDMATransfer, delay, sb.dma.left);
@@ -687,7 +686,8 @@ static void DSP_ChangeMode(DSP_MODES mode) {
 	sb.mode=mode;
 }
 
-static void DSP_RaiseIRQEvent(Bitu /*val*/) {
+static void DSP_RaiseIRQEvent(uint32_t /*val*/)
+{
 	SB_RaiseIRQ(SB_IRQ_8);
 }
 
@@ -800,8 +800,8 @@ static void DSP_AddData(Bit8u val) {
 	}
 }
 
-
-static void DSP_FinishReset(Bitu /*val*/) {
+static void DSP_FinishReset(uint32_t /*val*/)
+{
 	DSP_FlushData();
 	DSP_AddData(0xaa);
 	sb.dsp.state=DSP_S_NORMAL;
@@ -854,7 +854,7 @@ static void DSP_DoReset(Bit8u val) {
 	} else if (((val&1)==0) && (sb.dsp.state==DSP_S_RESET)) {	// reset off
 		sb.dsp.state=DSP_S_RESET_WAIT;
 		PIC_RemoveEvents(DSP_FinishReset);
-		PIC_AddEvent(DSP_FinishReset,20.0f/1000.0f,0);	// 20 microseconds
+		PIC_AddEvent(DSP_FinishReset, 20.0 / 1000.0, 0); // 20 microseconds
 		LOG_MSG("%s: DSP was reset", CardType());
 	}
 }
@@ -1014,7 +1014,8 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0x80:	/* Silence DAC */
 		PIC_AddEvent(&DSP_RaiseIRQEvent,
-			(1000.0f*(1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8))/sb.freq));
+		             (1000.0 * (1 + sb.dsp.in.data[0] + (sb.dsp.in.data[1] << 8)) /
+		              sb.freq));
 		break;
 	case 0xb0:	case 0xb1:	case 0xb2:	case 0xb3:  case 0xb4:	case 0xb5:	case 0xb6:	case 0xb7:
 	case 0xb8:	case 0xb9:	case 0xba:	case 0xbb:  case 0xbc:	case 0xbd:	case 0xbe:	case 0xbf:
@@ -1103,13 +1104,10 @@ static void DSP_DoCommand(void) {
 			 GetDMAChannel(sb.hw.dma8)->Register_Callback(DSP_E2_DMA_CallBack);
 		}
 		break;
-	case 0xe3:	/* DSP Copyright */
-		{
-			DSP_FlushData();
-			for (size_t i=0;i<=strlen(copyright_string);i++) {
-				DSP_AddData(copyright_string[i]);
-			}
-		}
+	case 0xe3: /* DSP Copyright */
+		DSP_FlushData();
+		for (const auto c : "COPYRIGHT (C) CREATIVE TECHNOLOGY LTD, 1992.")
+			DSP_AddData(static_cast<uint8_t>(c));
 		break;
 	case 0xe4:	/* Write Test Register */
 		sb.dsp.test_register=sb.dsp.in.data[0];
@@ -1120,7 +1118,7 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0xf2:	/* Trigger 8bit IRQ */
 		//Small delay in order to emulate the slowness of the DSP, fixes Llamatron 2012 and Lemmings 3D
-		PIC_AddEvent(&DSP_RaiseIRQEvent,0.01f);
+		PIC_AddEvent(&DSP_RaiseIRQEvent, 0.01);
 		LOG(LOG_SB, LOG_NORMAL)("Trigger 8bit IRQ command");
 		break;
 	case 0xf3:   /* Trigger 16bit IRQ */
@@ -1644,7 +1642,7 @@ static void SBLASTER_CallBack(Bitu len) {
 	}
 }
 
-class SBLASTER: public Module_base {
+class SBLASTER final : public Module_base {
 private:
 	/* Data */
 	IO_ReadHandleObject ReadHandler[0x10];

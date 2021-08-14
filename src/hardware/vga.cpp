@@ -22,6 +22,7 @@
 #include <cstring>
 
 #include "pic.h"
+#include "support.h"
 #include "video.h"
 
 VGA_Type vga;
@@ -30,7 +31,7 @@ SVGA_Driver svga;
 Bit32u CGA_2_Table[16];
 Bit32u CGA_4_Table[256];
 Bit32u CGA_4_HiRes_Table[256];
-Bit32u CGA_16_Table[256];
+int CGA_Composite_Table[1024];
 Bit32u TXT_Font_Table[16];
 Bit32u TXT_FG_Table[16];
 Bit32u TXT_BG_Table[16];
@@ -92,7 +93,8 @@ void VGA_StartResize(Bitu delay /*=50*/) {
 		if (vga.mode==M_ERROR) delay = 5;
 		/* Start a resize after delay (default 50 ms) */
 		if (delay==0) VGA_SetupDrawing(0);
-		else PIC_AddEvent(VGA_SetupDrawing,(float)delay);
+		else
+			PIC_AddEvent(VGA_SetupDrawing, (double)delay);
 	}
 }
 
@@ -129,8 +131,7 @@ void VGA_SetClock(Bitu which,Bitu target) {
 		}
 	}
 	/* Program the s3 clock chip */
-	constexpr size_t vga_s3_clk_len = sizeof(vga.s3.clk) / sizeof(*vga.s3.clk);
-	assert(which < vga_s3_clk_len);
+	assert(which < ARRAY_LEN(vga.s3.clk));
 	vga.s3.clk[which].m = best.m;
 	vga.s3.clk[which].r = r;
 	vga.s3.clk[which].n = best.n;

@@ -26,7 +26,7 @@
 #include "timer.h"
 
 #define KEYBUFSIZE 32
-#define KEYDELAY 0.300f			//Considering 20-30 khz serial clock and 11 bits/char
+#define KEYDELAY   0.300 // Considering 20-30 khz serial clock and 11 bits/char
 
 enum KeyCommands {
 	CMD_NONE,
@@ -59,7 +59,8 @@ static void KEYBOARD_SetPort60(Bit8u val) {
 	else PIC_ActivateIRQ(1);
 }
 
-static void KEYBOARD_TransferBuffer(Bitu /*val*/) {
+static void KEYBOARD_TransferBuffer(uint32_t /*val*/)
+{
 	keyb.scheduled = false;
 	if (!keyb.used) {
 		LOG(LOG_KEYBOARD,LOG_NORMAL)("Transfer started with empty buffer");
@@ -69,7 +70,6 @@ static void KEYBOARD_TransferBuffer(Bitu /*val*/) {
 	if (++keyb.pos >= KEYBUFSIZE) keyb.pos -= KEYBUFSIZE;
 	keyb.used--;
 }
-
 
 void KEYBOARD_ClrBuffer(void) {
 	keyb.used=0;
@@ -341,6 +341,11 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_pagedown:extend=true;ret=81;break;
 	case KBD_insert:extend=true;ret=82;break;
 	case KBD_delete:extend=true;ret=83;break;
+	case KBD_leftgui: ret = 89; break;
+	case KBD_rightgui:
+		extend = true;
+		ret = 89;
+		break;
 	case KBD_pause:
 		KEYBOARD_AddBuffer(0xe1);
 		KEYBOARD_AddBuffer(29|(pressed?0:0x80));

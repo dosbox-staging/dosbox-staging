@@ -24,6 +24,20 @@
 #include "timer.h"
 #include "setup.h"
 
+// PIC Controllers
+// ~~~~~~~~~~~~~~~
+// The sources here identify the two Programmable Interrupt Controllers
+// (PICs) as primary and secondary: the prior services IRQs 0 to 7
+// while the latter services IRQs 8 to 15.
+
+// In addition to describing the IRQ range for each PIC, the primary and
+// secondary terminology also refers to the fact that the CPU is notified by the
+// primary PIC, while the secondary PIC signals the primary via IRQ 2.
+
+// It should be noted that some historical documents described the two PICs in a
+// "master-slave" relationship, which is misleading given that fact that the
+// primary has no control over the secondary.
+
 #define PIC_QUEUESIZE 512
 
 struct PIC_Controller {
@@ -68,19 +82,22 @@ struct PIC_Controller {
 			const Bit8u a_irq = special?8:active_irq;
 			for(Bit8u i = 0, s = 1; i < a_irq;i++, s<<=1){
 				if ( possible_irq & s ) {
-					//There is an irq ready to be served => signal master and/or cpu
+					// There is an IRQ ready to be served,
+					// so signal the primary controller
+					// and/or CPU.
 					activate();
 					return;
 				}
 			}
 		}
-		deactivate(); //No irq, remove signal to master and/or cpu
+		deactivate(); // No IRQ, so remove the signal to primary
+		              // controller and/or CPU.
 	}
 
-	//Signals master/cpu that there is an irq ready.
+	// Signals to the primary controller and/or CPU that there is an IRQ ready.
 	void activate();
 
-	//Removes signal to master/cpu that there is an irq ready.
+	// Removes the IRQ-ready signal from the primary controller and/or CPU.
 	void deactivate();
 
 	void raise_irq(Bit8u val) {
@@ -98,9 +115,14 @@ struct PIC_Controller {
 		if (irr & bit) { //value will change (as it is currently active)
 			irr &= ~bit;
 			if ((bit&imrr)&isrr) { //not masked and not in service
-				//This irq might have toggled PIC_IRQCheck/caused irq 2 on master, when it was raised.
-				//If it is active, then recheck it, we can't just deactivate as there might be more IRQS raised.
-				if (special || val < active_irq) check_for_irq();
+				// This IRQ might have toggled
+				// PIC_IRQCheck/caused IRQ 2 on the primary
+				// controller, when it was raised. If it is
+				// active, then recheck it, we can't just
+				// deactivate as there might be more IRQs
+				// raised.
+				if (special || val < active_irq)
+					check_for_irq();
 			}
 		}
 	}
@@ -110,16 +132,16 @@ struct PIC_Controller {
 };
 
 static PIC_Controller pics[2];
-static PIC_Controller& master = pics[0];
-static PIC_Controller& slave  = pics[1];
-Bitu PIC_Ticks = 0;
-Bitu PIC_IRQCheck = 0; //Maybe make it a bool and/or ensure 32bit size (x86 dynamic core seems to assume 32 bit variable size)
-
+static PIC_Controller &primary_controller = pics[0];
+static PIC_Controller &secondary_controller = pics[1];
+uint32_t PIC_Ticks = 0;
+uint32_t PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
 
 void PIC_Controller::set_imr(Bit8u val) {
 	if (GCC_UNLIKELY(machine == MCH_PCJR)) {
 		//irq 6 is a NMI on the PCJR
-		if (this == &master) val &= ~(1 <<(6));
+		if (this == &primary_controller)
+			val &= ~(1 << (6));
 	}
 	Bit8u change = (imr) ^ (val); //Bits that have changed become 1.
 	imr  =  val;
@@ -131,24 +153,28 @@ void PIC_Controller::set_imr(Bit8u val) {
 }
 
 void PIC_Controller::activate() {
-	//Stops CPU if master, signals master if slave
-	if (this == &master) {
+	// Stop the CPU if this controller is the primary
+	if (this == &primary_controller) {
 		PIC_IRQCheck = 1;
 		//cycles 0, take care of the port IO stuff added in raise_irq base caller.
 		CPU_CycleLeft += CPU_Cycles;
 		CPU_Cycles = 0;
 		//maybe when coming from a EOI, give a tiny delay. (for the cpu to pick it up) (see PIC_Activate_IRQ)
-	} else {
-		master.raise_irq(2);
+	}
+	// Otherwise this controller is the secondary, so signal the primary
+	else {
+		primary_controller.raise_irq(2);
 	}
 }
 
 void PIC_Controller::deactivate() {
-	//removes irq check value  if master, signals master if slave
-	if (this == &master) {
+	// Remove the IRQ check if this controller is the primary
+	if (this == &primary_controller) {
 		PIC_IRQCheck = 0;
-	} else {
-		master.lower_irq(2);
+	}
+	// Otherwise this controller is the secondary, so signal the primary
+	else {
+		primary_controller.lower_irq(2);
 	}
 }
 
@@ -165,7 +191,7 @@ void PIC_Controller::start_irq(Bit8u val) {
 
 
 struct PICEntry {
-	float index;
+	double index;
 	Bitu value;
 	PIC_EventHandler pic_event;
 	PICEntry * next;
@@ -253,12 +279,12 @@ static void write_data(Bitu port,Bitu val,Bitu /*iolen*/) {
 		break;
 	case 3:							/* icw 4 */
 		/*
-			0	    1 8086/8080  0 mcs-8085 mode
-			1	    1 Auto EOI   0 Normal EOI
-			2-3	   0x Non buffer Mode
-				   10 Buffer Mode Slave
-				   11 Buffer mode Master
-			4	      Special/Not Special nested mode
+		        0	    1 8086/8080  0 mcs-8085 mode
+		        1	    1 Auto EOI   0 Normal EOI
+		        2-3	   0x Non buffer Mode
+		                   10 Buffer Mode Secondary controller
+		                   11 Buffer mode Primary controller
+		        4	      Special/Not Special nested mode
 		*/
 		pic->auto_eoi=(val & 0x2)>0;
 
@@ -293,9 +319,11 @@ static Bitu read_data(Bitu port,Bitu /*iolen*/) {
 	return pic->imr;
 }
 
-void PIC_ActivateIRQ(Bitu irq) {
-	Bitu t = irq>7 ? (irq - 8): irq;
-	PIC_Controller * pic=&pics[irq>7 ? 1 : 0];
+// DOS managed up to 15 IRQs
+void PIC_ActivateIRQ(const uint8_t irq)
+{
+	const uint8_t t = irq > 7 ? (irq - 8) : irq;
+	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
 
 	Bit32s OldCycles = CPU_Cycles;
 	pic->raise_irq(t); //Will set the CPU_Cycles to zero if this IRQ will be handled directly
@@ -317,33 +345,41 @@ void PIC_ActivateIRQ(Bitu irq) {
 	}
 }
 
-void PIC_DeActivateIRQ(Bitu irq) {
-	Bitu t = irq>7 ? (irq - 8): irq;
-	PIC_Controller * pic=&pics[irq>7 ? 1 : 0];
+// DOS managed up to 15 IRQs
+void PIC_DeActivateIRQ(const uint8_t irq)
+{
+	const uint8_t t = irq > 7 ? (irq - 8) : irq;
+	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
 	pic->lower_irq(t);
 }
 
-static void slave_startIRQ() {
-	Bit8u pic1_irq = 8;
-	const Bit8u p = (slave.irr & slave.imrr)&slave.isrr;
-	const Bit8u max = slave.special?8:slave.active_irq;
-	for(Bit8u i = 0,s = 1;i < max;i++, s<<=1){
-		if (p&s){
+static void secondary_startIRQ()
+{
+	uint8_t pic1_irq = 8;
+	const uint8_t p = (secondary_controller.irr & secondary_controller.imrr) &
+	                  secondary_controller.isrr;
+	const uint8_t max = secondary_controller.special
+	                            ? 8
+	                            : secondary_controller.active_irq;
+	for (uint8_t i = 0, s = 1; i < max; i++, s <<= 1) {
+		if (p & s) {
 			pic1_irq = i;
 			break;
 		}
 	}
 	// Maybe change the E_Exit to a return
-	if (GCC_UNLIKELY(pic1_irq == 8)) E_Exit("irq 2 is active, but no irq active on the slave PIC.");
+	if (GCC_UNLIKELY(pic1_irq == 8))
+		E_Exit("PIC: IRQ 2 is active, but IRQ is not active on the secondary controller.");
 
-	slave.start_irq(pic1_irq);
-	master.start_irq(2);
-	CPU_HW_Interrupt(slave.vector_base + pic1_irq);
+	secondary_controller.start_irq(pic1_irq);
+	primary_controller.start_irq(2);
+	CPU_HW_Interrupt(secondary_controller.vector_base + pic1_irq);
 }
 
-static void inline master_startIRQ(Bitu i) {
-	master.start_irq(i);
-	CPU_HW_Interrupt(master.vector_base + i);
+static void inline primary_startIRQ(Bitu i)
+{
+	primary_controller.start_irq(i);
+	CPU_HW_Interrupt(primary_controller.vector_base + i);
 }
 
 void PIC_runIRQs(void) {
@@ -351,14 +387,17 @@ void PIC_runIRQs(void) {
 	if (GCC_UNLIKELY(!PIC_IRQCheck)) return;
 	if (GCC_UNLIKELY(cpudecoder==CPU_Core_Normal_Trap_Run)) return;
 
-	const Bit8u p = (master.irr & master.imrr)&master.isrr;
-	const Bit8u max = master.special?8:master.active_irq;
-	for(Bit8u i = 0,s = 1;i < max;i++, s<<=1){
-		if (p&s){
-			if (i==2) { //second pic
-				slave_startIRQ();
+	const uint8_t p = (primary_controller.irr & primary_controller.imrr) &
+	                  primary_controller.isrr;
+	const uint8_t max = primary_controller.special
+	                            ? 8
+	                            : primary_controller.active_irq;
+	for (uint8_t i = 0, s = 1; i < max; i++, s <<= 1) {
+		if (p & s) {
+			if (i == 2) { // second pic
+				secondary_startIRQ();
 			} else {
-				master_startIRQ(i);
+				primary_startIRQ(i);
 			}
 			break;
 		}
@@ -367,11 +406,12 @@ void PIC_runIRQs(void) {
 	PIC_IRQCheck = 0;
 }
 
-void PIC_SetIRQMask(Bitu irq, bool masked) {
-	Bitu t = irq>7 ? (irq - 8): irq;
-	PIC_Controller * pic=&pics[irq>7 ? 1 : 0];
-	//clear bit
-	Bit8u bit = 1 <<(t);
+void PIC_SetIRQMask(uint32_t irq, bool masked)
+{
+	uint32_t t = irq > 7 ? (irq - 8) : irq;
+	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
+	// clear bit
+	Bit8u bit = 1 << (t);
 	Bit8u newmask = pic->imr;
 	newmask &= ~bit;
 	if (masked) newmask |= bit;
@@ -409,9 +449,10 @@ static void AddEntry(PICEntry * entry) {
 	}
 }
 static bool InEventService = false;
-static float srv_lag = 0;
+static double srv_lag = 0.0;
 
-void PIC_AddEvent(PIC_EventHandler handler,float delay,Bitu val) {
+void PIC_AddEvent(PIC_EventHandler handler, double delay, uint32_t val)
+{
 	if (GCC_UNLIKELY(!pic_queue.free_entry)) {
 		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
 		return;
@@ -426,9 +467,10 @@ void PIC_AddEvent(PIC_EventHandler handler,float delay,Bitu val) {
 	AddEntry(entry);
 }
 
-void PIC_RemoveSpecificEvents(PIC_EventHandler handler, Bitu val) {
-	PICEntry * entry=pic_queue.next_entry;
-	PICEntry * prev_entry;
+void PIC_RemoveSpecificEvents(PIC_EventHandler handler, uint32_t val)
+{
+	PICEntry *entry = pic_queue.next_entry;
+	PICEntry *prev_entry;
 	prev_entry = 0;
 	while (entry) {
 		if (GCC_UNLIKELY((entry->pic_event == handler)) && (entry->value == val)) {
@@ -484,12 +526,15 @@ bool PIC_RunQueue(void) {
 	if (CPU_CycleLeft<=0) {
 		return false;
 	}
+
+	const auto index_nd_f = static_cast<double>(PIC_TickIndexND());
+
 	/* Check the queue for an entry */
-	Bits index_nd=PIC_TickIndexND();
 	InEventService = true;
-	while (pic_queue.next_entry && (pic_queue.next_entry->index*CPU_CycleMax<=index_nd)) {
-		PICEntry * entry=pic_queue.next_entry;
-		pic_queue.next_entry=entry->next;
+	while (pic_queue.next_entry &&
+	       (pic_queue.next_entry->index * static_cast<double>(CPU_CycleMax) <= index_nd_f)) {
+		PICEntry *entry = pic_queue.next_entry;
+		pic_queue.next_entry = entry->next;
 
 		srv_lag = entry->index;
 		(entry->pic_event)(entry->value); // call the event handler
@@ -502,10 +547,13 @@ bool PIC_RunQueue(void) {
 
 	/* Check when to set the new cycle end */
 	if (pic_queue.next_entry) {
-		Bits cycles=(Bits)(pic_queue.next_entry->index*CPU_CycleMax-index_nd);
-		if (GCC_UNLIKELY(!cycles)) cycles=1;
-		if (cycles<CPU_CycleLeft) {
-			CPU_Cycles=cycles;
+		auto cycles = static_cast<int32_t>(
+		        pic_queue.next_entry->index * static_cast<double>(CPU_CycleMax) -
+		        index_nd_f);
+		if (GCC_UNLIKELY(!cycles))
+			cycles = 1;
+		if (cycles < CPU_CycleLeft) {
+			CPU_Cycles = cycles;
 		} else {
 			CPU_Cycles=CPU_CycleLeft;
 		}
@@ -566,15 +614,15 @@ void TIMER_AddTick(void) {
 }
 
 /* Use full name to avoid name clash with compile option for position-independent code */
-class PIC_8259A: public Module_base {
+class PIC_8259A final : public Module_base {
 private:
 	IO_ReadHandleObject ReadHandler[4];
 	IO_WriteHandleObject WriteHandler[4];
 public:
 	PIC_8259A(Section* configuration):Module_base(configuration){
 		/* Setup pic0 and pic1 with initial values like DOS has normally */
-		PIC_IRQCheck=0;
-		PIC_Ticks=0;
+		PIC_IRQCheck = 0;
+		PIC_Ticks = 0;
 		Bitu i;
 		for (i=0;i<2;i++) {
 			pics[i].auto_eoi=false;
@@ -588,8 +636,8 @@ public:
 			pics[i].isrr = pics[i].imr = 0xff;
 			pics[i].active_irq = 8;
 		}
-		master.vector_base = 0x08;
-		slave.vector_base = 0x70;
+		primary_controller.vector_base = 0x08;
+		secondary_controller.vector_base = 0x70;
 
 		PIC_SetIRQMask(0,false);					/* Enable system timer */
 		PIC_SetIRQMask(1,false);					/* Enable system timer */

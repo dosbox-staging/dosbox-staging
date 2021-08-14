@@ -1,3 +1,0 @@
-# GCC flags specific to Hardkernel Co's ODROID-C2 SBC
-cflags_release+=(-march=armv8-a+crc -mtune=cortex-a53 
-                 -mfpu=neon-fp-armv8)

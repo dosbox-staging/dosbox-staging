@@ -34,6 +34,7 @@
 #include "mapper.h"
 #include "midi_handler.h"
 #include "pic.h"
+#include "programs.h"
 #include "setup.h"
 #include "support.h"
 #include "timer.h"
@@ -80,15 +81,10 @@ MidiHandler Midi_none;
 
 #if defined(MACOSX)
 
-#if defined(C_SUPPORTS_COREMIDI)
 #include "midi_coremidi.h"
-#endif
-
-#if defined(C_SUPPORTS_COREAUDIO)
 #include "midi_coreaudio.h"
-#endif
 
-#elif defined (WIN32)
+#elif defined(WIN32)
 
 #include "midi_win32.h"
 
@@ -100,10 +96,10 @@ MidiHandler_oss Midi_oss;
 
 #endif
 
-#if defined (HAVE_ALSA)
-
 #include "midi_alsa.h"
 
+#if C_ALSA
+MidiHandler_alsa Midi_alsa;
 #endif
 
 struct DB_Midi {
@@ -113,10 +109,10 @@ struct DB_Midi {
 	uint8_t cmd_buf[8];
 	uint8_t rt_buf[8];
 	struct {
-		uint8_t buf[SYSEX_SIZE];
+		uint8_t buf[MIDI_SYSEX_SIZE];
 		size_t used;
-		uint32_t delay; // ms
-		uint32_t start; // ms
+		int delay; // ms
+		int64_t start;  // ms
 	} sysex;
 	bool available;
 	MidiHandler * handler;
@@ -131,19 +127,19 @@ DB_Midi midi;
  * Explanation for this formula can be found in discussion under patch
  * that introduced it: https://sourceforge.net/p/dosbox/patches/241/
  */
-uint32_t delay_in_ms(size_t sysex_bytes_num)
+int delay_in_ms(size_t sysex_bytes_num)
 {
 	constexpr double midi_baud_rate = 3.125; // bytes per ms
 	const auto delay = (sysex_bytes_num * 1.25) / midi_baud_rate;
-	return static_cast<uint32_t>(delay) + 2;
+	return static_cast<int>(delay) + 2;
 }
 
 void MIDI_RawOutByte(uint8_t data)
 {
 	if (midi.sysex.start) {
-		const uint32_t passed_ticks = GetTicks() - midi.sysex.start;
+		const auto passed_ticks = GetTicksSince(midi.sysex.start);
 		if (passed_ticks < midi.sysex.delay)
-			SDL_Delay(midi.sysex.delay - passed_ticks);
+			Delay(midi.sysex.delay - passed_ticks);
 	}
 
 	/* Test for a realtime MIDI message */
@@ -155,7 +151,8 @@ void MIDI_RawOutByte(uint8_t data)
 	/* Test for a active sysex tranfer */
 	if (midi.status==0xf0) {
 		if (!(data&0x80)) {
-			if (midi.sysex.used<(SYSEX_SIZE-1)) midi.sysex.buf[midi.sysex.used++] = data;
+			if (midi.sysex.used < (MIDI_SYSEX_SIZE - 1))
+				midi.sysex.buf[midi.sysex.used++] = data;
 			return;
 		} else {
 			midi.sysex.buf[midi.sysex.used++] = 0xf7;
@@ -211,7 +208,7 @@ bool MIDI_Available()
 	return midi.available;
 }
 
-class MIDI : public Module_base {
+class MIDI final : public Module_base {
 public:
 	MIDI(Section *configuration) : Module_base(configuration)
 	{
@@ -289,10 +286,23 @@ getdefault:
 	}
 };
 
-void MIDI_ListAll(Program *output_handler)
+void MIDI_ListAll(Program *caller)
 {
-	if (midi.handler)
-		midi.handler->ListAll(output_handler);
+	for (auto *handler = handler_list; handler; handler = handler->next) {
+		const std::string name = handler->GetName();
+		if (name == "none")
+			continue;
+
+		caller->WriteOut("%s:\n", name.c_str());
+
+		const auto err = handler->ListAll(caller);
+		if (err == MIDI_RC::ERR_DEVICE_NOT_CONFIGURED)
+			caller->WriteOut("  device not configured\n");
+		if (err == MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED)
+			caller->WriteOut("  listing not supported\n");
+
+		caller->WriteOut("\n"); // additional newline to separate devices
+	}
 }
 
 static MIDI* test;

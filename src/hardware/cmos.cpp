@@ -37,7 +37,7 @@ static struct {
 	struct {
 		bool enabled;
 		Bit8u div;
-		float delay;
+		double delay;
 		bool acknowledged;
 	} timer;
 	struct {
@@ -48,7 +48,8 @@ static struct {
 	bool update_ended;
 } cmos;
 
-static void cmos_timerevent(Bitu /*val*/) {
+static void cmos_timerevent(uint32_t /*val*/)
+{
 	if (cmos.timer.acknowledged) {
 		cmos.timer.acknowledged = false;
 		PIC_ActivateIRQ(8);
@@ -62,14 +63,15 @@ static void cmos_timerevent(Bitu /*val*/) {
 static void cmos_checktimer(void) {
 	PIC_RemoveEvents(cmos_timerevent);
 	if (cmos.timer.div<=2) cmos.timer.div+=7;
-	cmos.timer.delay=(1000.0f/(32768.0f / (1 << (cmos.timer.div - 1))));
+	cmos.timer.delay = (1000.0 / (32768.0 / (1 << (cmos.timer.div - 1))));
 	if (!cmos.timer.div || !cmos.timer.enabled) return;
 	LOG(LOG_PIT,LOG_NORMAL)("RTC Timer at %.2f hz",1000.0/cmos.timer.delay);
 //	PIC_AddEvent(cmos_timerevent,cmos.timer.delay);
 	/* A rtc is always running */
-	double remd=fmod(PIC_FullIndex(),(double)cmos.timer.delay);
-	PIC_AddEvent(cmos_timerevent,(float)((double)cmos.timer.delay-remd)); //Should be more like a real pc. Check
-//	status reg A reading with this (and with other delays actually)
+	const auto remd = fmod(PIC_FullIndex(), cmos.timer.delay);
+	// Should be more like a real pc. Check
+	PIC_AddEvent(cmos_timerevent, cmos.timer.delay - remd);
+	// Status reg A reading with this (and with other delays actually)
 }
 
 void cmos_selreg(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
@@ -172,7 +174,7 @@ static Bitu cmos_readreg(Bitu /*port*/,Bitu /*iolen*/) {
 		} else {
 			/* Give correct values at certain times */
 			Bit8u val=0;
-			double index=PIC_FullIndex();
+			const auto index = PIC_FullIndex();
 			if (index>=(cmos.last.timer+cmos.timer.delay)) {
 				cmos.last.timer=index;
 				val|=0x40;
@@ -261,7 +263,6 @@ static Bitu cmos_readreg(Bitu /*port*/,Bitu /*iolen*/) {
 	case 0x3a:
 		return 0;
 
-
 	case 0x0b:		/* Status register B */
 	case 0x0d:		/* Status register D */
 	case 0x0f:		/* Shutdown status byte */
@@ -285,7 +286,7 @@ void CMOS_SetRegister(Bitu regNr, Bit8u val) {
 }
 
 
-class CMOS:public Module_base{
+class CMOS final : public Module_base{
 private:
 	IO_ReadHandleObject ReadHandler[2];
 	IO_WriteHandleObject WriteHandler[2];

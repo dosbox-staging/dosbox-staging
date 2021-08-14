@@ -21,19 +21,19 @@
 
 #if (C_DYNAMIC_X86)
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <stddef.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
+#include <cstddef>
+#include <cstdlib>
 
 #if defined (WIN32)
 #include <windows.h>
 #include <winbase.h>
 #endif
 
-#if defined(HAVE_MPROTECT)
+#if defined(HAVE_MPROTECT) || defined(HAVE_MMAP)
 #include <sys/mman.h>
 
 #include <limits.h>
@@ -116,9 +116,6 @@ enum BlockReturn {
 	BR_Cycles,
 	BR_Link1,BR_Link2,
 	BR_Opcode,
-#if (C_DEBUG)
-	BR_OpcodeFull,
-#endif
 	BR_Iret,
 	BR_CallBack,
 	BR_SMCBlock
@@ -353,17 +350,11 @@ run_block:
 		CPU_CycleLeft+=CPU_Cycles;
 		CPU_Cycles=1;
 		return CPU_Core_Normal_Run();
-#if (C_DEBUG)
-	case BR_OpcodeFull:
-		CPU_CycleLeft+=CPU_Cycles;
-		CPU_Cycles=1;
-		return CPU_Core_Full_Run();
-#endif
 	case BR_Link1:
 	case BR_Link2:
 		{
 			Bit32u temp_ip=SegPhys(cs)+reg_eip;
-			CodePageHandler * temp_handler=(CodePageHandler *)get_tlb_readhandler(temp_ip);
+			CodePageHandler* temp_handler = reinterpret_cast<CodePageHandler *>(get_tlb_readhandler(temp_ip));
 			if (temp_handler->flags & (cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16)) {
 				block=temp_handler->FindCacheBlock(temp_ip & 4095);
 				if (!block || !cache.block.running) goto restart_core;
@@ -382,7 +373,7 @@ Bits CPU_Core_Dyn_X86_Trap_Run(void) {
 	cpu.trap_skip = false;
 
 	Bits ret=CPU_Core_Normal_Run();
-	if (!cpu.trap_skip) CPU_HW_Interrupt(1);
+	if (!cpu.trap_skip) CPU_DebugException(DBINT_STEP,reg_eip);
 	CPU_Cycles = oldCycles-1;
 	cpudecoder = &CPU_Core_Dyn_X86_Run;
 

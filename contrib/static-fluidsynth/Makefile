@@ -66,7 +66,9 @@ $(FLUIDSYNTH_ARCHIVE):
 fluidsynth/build: $(FLUIDSYNTH_ARCHIVE)
 	@test -f $@ \
 	|| (mkdir -p fluidsynth/build \
-	&& $(EXTRACT) $(FLUIDSYNTH_ARCHIVE) -C fluidsynth)
+	&& $(EXTRACT) $(FLUIDSYNTH_ARCHIVE) -C fluidsynth) \
+	&& sed -i -E 's|^(Libs.+)|\1 $(GLIB_LIBS)|;s|^(Cflags.+)|\1 $(GLIB_CFLAGS)|' \
+		fluidsynth/fluidsynth.pc.in
 
 fluidsynth/build/Makefile: fluidsynth/build
 	cd fluidsynth \
@@ -75,6 +77,7 @@ fluidsynth/build/Makefile: fluidsynth/build
 	-DBUILD_SHARED_LIBS=0 \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_INSTALL_PREFIX="$(DIR)" \
+	-DOpenMP_gomp_LIBRARY="" \
 	-DLIB_SUFFIX="" \
 	-Denable-alsa=0 \
 	-Denable-aufile=0 \
@@ -85,6 +88,9 @@ fluidsynth/build/Makefile: fluidsynth/build
 	-Denable-floats=1 \
 	-Denable-ipv6=0 \
 	-Denable-jack=0 \
+	-Denable-ladspa=0 \
+	-Denable-lash=0 \
+	-Denable-libinstpatch=0 \
 	-Denable-libsndfile=0 \
 	-Denable-midishare=0 \
 	-Denable-network=0 \
@@ -93,6 +99,8 @@ fluidsynth/build/Makefile: fluidsynth/build
 	-Denable-pulseaudio=0 \
 	-Denable-readline=0 \
 	-Denable-sdl2=0 \
+	-Denable-systemd=0 \
+	-Denable-wasapi=0 \
 	-Denable-waveout=0 \
 	-Denable-winmidi=0 \
 	..
@@ -115,6 +123,10 @@ Export the following to configure dosbox-staging without pkg-config
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 export FLUIDSYNTH_CFLAGS="-I$(CURDIR)/include $(GLIB_CFLAGS)"
 export FLUIDSYNTH_LIBS="$(CURDIR)/lib/libfluidsynth.a $(GLIB_LIBS) -lm"
+
+Export the following to configure dosbox-staging with pkg-config
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+export PKG_CONFIG_PATH="$(CURDIR)/fluidsynth/build"
 endef
 
 GLIB_LIBS = $(shell pkg-config --libs gthread-2.0 glib-2.0)

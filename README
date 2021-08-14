@@ -1,4 +1,4 @@
-DOSBox (dosbox-staging) 0.77.0 Manual
+DOSBox (dosbox-staging) 0.78.0 Manual
 
 ======
 INDEX:
@@ -49,6 +49,8 @@ MOUSE:      The mouse doesn't work.
 SOUND:      There is no sound.
 SOUND:      What sound hardware does DOSBox presently emulate?
 SOUND:      The sound stutters or sounds stretched/weird.
+KEYBOARD:   My keyboard's F1-F12 keys don't work.
+KEYBOARD:   Common key-presses conflict with system actions on macOS.
 KEYBOARD:   I can't type \ or : in DOSBox.
 KEYBOARD:   Right Shift and "\" doesn't work in DOSBox. (Windows only)
 KEYBOARD:   The keyboard lags.
@@ -102,8 +104,9 @@ FULLSCREEN: My fullscreen is too large.
     - Apply the changes by clicking on "OK".
 
     Unfortunately, this compatibility option causes some side effects in
-    windowed mode, and in this case you will need to change the resolution
-    in the config/Options file for windowresolution (e.g. 1024x768).
+    windowed mode, and in this case you will need to change the windowresolution
+    setting in your config file to either a fixed size (e.g. 1024x768) or
+    a relative size: (e.g. small, medium, or large).
 
     Alternatively, you can disable the display scaling and or use a lower
     fullresolution value.
@@ -139,7 +142,8 @@ MOUSE: The mouse doesn't work.
     Usually, DOSBox detects when a game uses mouse control. When you click on
     the screen it should get locked (confined to the DOSBox window) and work.
     With certain games, the DOSBox mouse detection doesn't work. In that case
-    you will have to lock the mouse manually by pressing CTRL-F10.
+    you will have to lock the mouse manually by pressing Ctrl+F10 (or Cmd+F10
+    on macOS).
 
 
 SOUND: There is no sound.
@@ -213,12 +217,46 @@ SOUND: The sound stutters or sounds stretched/weird.
     Section 11: "Troubleshooting".
 
 
+KEYBOARD: My keyboard's F1-F12 keys don't work.
+    This can happen on macOS, mini-keyboards, and some laptops.
+
+    Find and hold the 'Function' or 'Fn' key while pressing an F-key.
+    The 'Fn' key is often located in the lower-left corner of the keyboard.
+
+    On macOS, you can change the top row of keys to work as standard F-keys
+    without holding the 'Fn' key. In your system's keyboard preferences:
+    select "Use F1, F2, etc. keys as standard function keys". Learn more
+    here: https://support.apple.com/en-us/HT204436
+
+    Note: some custom keyboards might still intercept one or more F-keys, even
+    after the above steps have been performed. Please refer to your keyboard's
+    documentation for more information.
+
+KEYBOARD: Common key-presses conflict with system actions on macOS
+
+    Conflict: Command+F5
+    Where: Settings > Keyboard > Shortcuts > Accessibility
+    What: Disable the "Turn VoiceOver on or off" shortcut
+
+    Conflict: F11
+    Where: Settings > Keyboard > Shortcuts > Mission Control
+    What: Disable the "Show Desktop" shortcut
+
+    Conflict: Control+arrow keys
+    Where: Settings > Keyboard > Shortcuts > Mission Control
+    What: Disable the following shortcuts:
+     - "Mission Control" to deconflict Control+Up
+     - "Application windows" to deconflict Control+Down
+     - "Move left a space" to deconflict Control+Left
+     - "Move right a space" to deconflict Control+Right
+
 KEYBOARD: I can't type \ or : in DOSBox.
     This can happen in various cases, like your host keyboard layout does not
     have a matching DOS layout representation (or it was not correctly
     detected), or the key mapping is wrong.
     Some possible fixes:
-      1. Use / instead, or ALT-58 for : and ALT-92 for \.
+      1. Use / instead, or Alt+58 for : and Alt+92 for \.
+         On macOS, use the Option key, for example: Opt+58 and Opt+92.
       2. Change the DOS keyboard layout (see Section 8: "Keyboard Layout").
       3. Add the commands you want to execute to the [autoexec] section
          of the DOSBox configuration file.
@@ -227,9 +265,9 @@ KEYBOARD: I can't type \ or : in DOSBox.
 
     Note that if the host layout can not be identified, or keyboardlayout is
     set to none in the DOSBox configuration file, the standard US layout is
-    used. In this configuration try the keys around "enter" for the key \
-    (backslash), and for the key : (colon) use shift and the keys between
-    "enter" and "L".
+    used. In this configuration try the keys around "Enter" for the key \
+    (backslash), and for the key : (colon) use Shift and the keys between
+    "Enter" and "L".
 
 
 KEYBOARD: The keyboard lags.
@@ -239,12 +277,14 @@ KEYBOARD: The keyboard lags.
 
 
 CONTROL: The character/cursor/mouse pointer always moves into one direction!
-    See if it still happens if you disable the joystick emulation,
-    set joysticktype=none in the [joystick] section of your DOSBox
-    configuration file. Maybe also try unplugging any joystick/gamepad.
-    If you want to use the joystick in the game, try setting timed=false
-    and be sure to calibrate the joystick (both in your OS as well as
-    in the game or the game's setup program).
+    See if it still happens if you disable the joystick emulation:
+    First try setting joysticktype=none or joysticktype=disabled in
+    the [joystick] section of your DOSBox configuration file.
+    Also try unplugging any joysticks or gamepads.
+
+    If you want to use the joystick in the game, try setting
+    timed=false and be sure to calibrate the joystick (both in your OS
+    as well as in the game or the game's setup program).
 
 
 SPEED: The game/application runs much too slow/too fast!
@@ -355,12 +395,26 @@ dosbox -opencaptures program
 
   -machine machinetype
         Setup DOSBox to emulate a specific type of machine. Valid choices are:
-        hercules, cga, ega, pcjr, tandy, svga_s3 (default) as well as
-        the additional SVGA chipsets listed in the DOSBox configuration file.
-        svga_s3 enables VESA emulation as well.
+        - hercules      - Hercules Graphics Card (monochrome)
+        - cga           - IBM Color Graphics Adapter
+        - cga_mono      - IBM CGA attached to monochrome display (monochrome)
+        - pcjr          - IBM PCjr
+        - tandy         - Tandy Graphics Adapter (Tandy 1000)
+        - ega           - IBM Enhanced Graphics Adapter
+        - vgaonly       - IBM Video Graphics Array (see below)
+        - vesa_oldvbe   - VESA SVGA - VESA BIOS Extensions (VBE) 1.2
+        - vesa_nolfb    - VESA SVGA - VBE 2.0 with Linear Frame Buffer disabled
+        - svga_paradise - VESA SVGA - Paradise Systems PVGA1A - VBE 2.0
+        - svga_et3000   - VESA SVGA - Tseng ET3000 - VBE 2.0
+        - svga_et4000   - VESA SVGA - Tseng ET4000 - VBE 2.0
+        - svga_s3       - VESA SVGA - S3 Trio - VBE 2.0
+
+        The default is svga_s3.
+
         For some special VGA effects the machinetype vgaonly can be used,
         note that this disables SVGA capabilities and might be slower due to the
         higher emulation precision.
+
         The machinetype affects the video card and the available sound cards.
 
   -noconsole (Windows Only)
@@ -433,7 +487,7 @@ In Windows, you can also drag directories/files onto the DOSBox executable.
 Environment variables
 ---------------------
 
-Any configuration option can be overriden using an environment variable.
+Any configuration option can be overridden using an environment variable.
 Environment variables starting with prefix "DOSBOX" are processed and
 interpreted as follows: DOSBOX_SECTIONNAME_PROPERTYNAME=value
 
@@ -629,7 +683,7 @@ CONFIG -get "section property"
 
   -wcp filelocation
      Write the current configuration settings to the specified file in or
-     relative to the DOSBox program start directory. Realtive and absolute
+     relative to the DOSBox program start directory. Relative and absolute
      paths are possible. This is located on a drive on the host, not a mounted
      drive in DOSBox. It is useful if you keep DOSBox on a removable media.
      If file is omitted, the configuration will be written to dosbox.conf.
@@ -678,7 +732,7 @@ CONFIG -get "section property"
      Shows information about the specified property in the specified section:
      - purpose of the property
      - possible values, current value, default value
-     - wether it can definitely not be changed at runtime
+     - whether it can definitely not be changed at runtime
 
   -securemode
      Switches DOSBox to a more secure mode. In this mode the internal
@@ -749,7 +803,8 @@ LOADFIX -f
 
 RESCAN [Drive:] [-All]
   Make DOSBox reread the directory structure. Useful if you changed something
-  on a mounted drive outside of DOSBox. (CTRL - F4 does this as well!)
+  on a mounted drive outside of DOSBox. Ctrl+F4 (or Cmd+F4 on macOS) does
+  this as well!
 
   Drive:
         Drive to refresh.
@@ -781,15 +836,15 @@ MIXER
      of the volume levels.
 
   /LISTMIDI
-     In Windows lists the available midi devices on your PC. To select a device
-     other than the Windows default midi-mapper, change the line 'midiconfig='
-     in the [midi] section of the configuration file to 'midiconfig=id', where
-     'id' is the number for the device as listed by LISTMIDI. eg. midiconfig=2
+     Lists your PC's MIDI devices. To use one, set the 'midiconfig' attribute 
+     in your configuration file to the device's numerical ID or any part of
+     its textual name. For example:
 
-     In Linux this option doesn't work, but you get similar results by using
-     'pmidi -l' in console. Then change the line 'midiconfig=' to
-     'midiconfig=port', where 'port' is the port for the device as listed by
-     'pmidi -l'. eg. midiconfig=128:0
+     Examples:
+
+     (any OS)  midiconfig = name   # matches any part of name, case-insensitive
+     (Linux)   midiconfig = 128:0  # connects to specific port
+     (Windows) midiconfig = 2      # connects to specific port
 
 
 IMGMOUNT
@@ -812,7 +867,7 @@ IMGMOUNT
   imagefile1 imagefile2 .. imagefileN
       Location of the image files to mount in DOSBox. Specifying a number
       of image files is only allowed for CD-ROM images.
-      The CD's can be swapped with CTRL-F4 at any time.
+      The CD's can be swapped with Ctrl+F4 (or Cmd+F4 on macOS) at any time.
       This is required for games which use multiple CD-ROMs and require the CD
       to be switched during the gameplay at some point.
 
@@ -834,15 +889,24 @@ IMGMOUNT
               the files available from inside DOSBox.
         none: DOSBox will make no attempt to read the file system on the disk.
               This is useful if you need to format it or if you want to boot
-              the disk using the BOOT command. When using the "none"
-              filesystem, you must specify the drive number (2 or 3,
-              where 2 = master, 3 = slave) rather than a drive letter.
-              For example, to mount a 70MB image as the slave drive device,
-              you would type (without the quotes):
-                "imgmount 3 d:\test.img -size 512,63,16,142 -fs none"
-                Compare this with a mount to be able to access the drive
-                within DOSBox, which would read as:
-                "imgmount e: d:\test.img -size 512,63,16,142"
+              the disk using the BOOT command.
+
+              When using the "none" filesystem, you must specify a drive number:
+
+              Drive number  Will be mounted as ...
+              ------------  ----------------------
+              0             A: in DOS
+              1             B: in DOS, if A: is already mounted
+              2             C: in DOS
+              3             D: in DOS, if C: is already mounted
+
+              For example, if C: has already been mounted and you want
+              to mount a 70MB image as D:, you would use:
+                imgmount 3 d:\test.img -size 512,63,16,142 -fs none
+
+              Note how this differs versus imgmount'ing an image with
+              read-only access, which is:
+                imgmount e: d:\test.img -size 512,63,16,142
 
   -size
      The Cylinders, Heads and Sectors of the drive.
@@ -876,15 +940,15 @@ BOOT
   diskimg1.img diskimg2.img .. diskimgN.img
      This can be any number of floppy disk images one wants mounted after
      DOSBox boots the specified drive letter.
-     To swap between images, hit CTRL-F4 to change from the current disk
-     to the next disk in the list. The list will loop back from the last
-     disk image to the beginning.
+     To swap between images, hit Ctrl+F4 (or Cmd+F4 on macOS) to change from
+     the current disk to the next disk in the list. The list will loop back
+     from the last disk image to the beginning.
 
   [-l driveletter]
      This parameter allows you to specify the drive to boot from.
      The default is the A drive, the floppy drive. You can also boot
-     a hard drive image mounted as master by specifying "-l C"
-     without the quotes, or the drive as slave by specifying "-l D"
+     a hard drive image mounted as primary by specifying "-l C"
+     without the quotes, or the drive as secondary by specifying "-l D"
 
    cart.jrc (PCjr only)
      When emulation of a PCjr is enabled, cartridges can be loaded with
@@ -1004,10 +1068,11 @@ KEYB [keyboardlayoutcode [codepage [codepagefile]]]
   Examples:
     1. To load the polish typist keys layout (automatically uses codepage 852):
          keyb pl214
-    2. To load one of russian keyboard layouts with codepage 866:
+    2. To load one of Russian keyboard layouts with codepage 866:
          keyb ru441 866
-       In order to type russian characters press ALT+RIGHT-SHIFT.
-    3. To load one of french keyboard layouts with codepage 850 (where the
+       In order to type Russian characters press Alt+Right+Shift.
+       On macOS, use the Option key intead of Alt: Opt+Right+Shift.
+    3. To load one of French keyboard layouts with codepage 850 (where the
        codepage is defined in EGACPI.DAT):
          keyb fr189 850 EGACPI.DAT
     4. To load codepage 858 (without a keyboard layout):
@@ -1054,40 +1119,40 @@ For more information use the /? command line switch with the programs.
 5. Special Keys:
 ================
 
-ALT-ENTER     Switch between fullscreen and window mode.
-ALT-PAUSE     Pause/Unpause emulator.
-CTRL-F1       Start the keymapper.
-CTRL-F4       Change between mounted floppy/CD images. Update directory cache
-              for all drives.
-CTRL-F5       Save a screenshot. (PNG format)
-CTRL-F6       Start/Stop recording sound output to a wave file.
-CTRL-F7       Start/Stop recording video output to a zmbv file.
-CTRL-F9       Shutdown emulator.
-CTRL-F10      Capture/Release the mouse.
-CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
-CTRL-F12      Speed up emulation (Increase DOSBox Cycles)*.
-ALT-F12       Unlock speed (turbo button/fast forward)**.
-CTRL-ALT-HOME Restart DOSBox.
-F11, ALT-F11  (machine=cga) change tint in NTSC output modes***.
-F11           (machine=hercules) cycle through amber, green, white colouring***.
+Alt+Enter     Switch between fullscreen and window mode.*
+Alt+Pause     Pause/Unpause emulator.*
+Ctrl+F1       Start the keymapper*.
+Ctrl+F4       Change between mounted floppy/CD images. Update directory cache
+              for all drives*.
+Ctrl+F5       Save a screenshot*. (PNG format)
+Ctrl+F6       Start/Stop recording sound output to a wave file*.
+Ctrl+F7       Start/Stop recording video output to a zmbv file*.
+Ctrl+F9       Shutdown emulator*.
+Ctrl+F10      Capture/Release the mouse*.
+Ctrl+F11      Slow down emulation (Decrease DOSBox Cycles)*.
+Ctrl+F12      Speed up emulation (Increase DOSBox Cycles)* and **.
+Alt+F12       Unlock speed (turbo button/fast forward)***.
+Ctrl+Alt+Home Restart DOSBox.*
+F11, Alt+F11  (machine=cga) change tint in NTSC output modes* and ****.
+F11           (machine=hercules) cycle through amber, green, white colouring****.
 
-*NOTE: Once you increase your DOSBox cycles beyond your computer CPU resources,
-       it will produce the same effect as slowing down the emulation.
-       This maximum will vary from computer to computer.
+*NOTE: On macOS, use Command+F<key> instead of Ctrl+F<key>, and the Option key
+       instead of the Alt key. For help enabling or pressing your top-row F-keys,
+       see the FAQ at the top.
 
-**NOTE: You need free CPU resources for this (the more you have, the faster
-        it goes), so it won't work at all with cycles=max or a too high amount
-        of fixed cycles. You have to keep the keys pressed for it to work!
+**NOTE: Once you increase your DOSBox cycles beyond your computer CPU resources,
+        it will produce the same effect as slowing down the emulation.
+        This maximum will vary from computer to computer.
 
-***NOTE: These keys won't work if you saved a mapper file earlier with
-         a different machine type. So either reassign them or reset the mapper.
+***NOTE: You need free CPU resources for this (the more you have, the faster
+         it goes), so it won't work at all with cycles=max or a too high amount
+         of fixed cycles. You have to keep the keys pressed for it to work!
+
+****NOTE: These keys won't work if you saved a mapper file earlier with
+          a different machine type. So either reassign them or reset the mapper.
 
 These are the default keybindings. They can be changed in the keymapper
 (see Section 7: "KeyMapper").
-
-In Mac OS X you can try using cmd(applekey) together with Ctrl (and/or ) Fn,
-if the key doesn't work i.e. fn-cmd-ctrl-F1, but some keys may still need
-remapping (in Linux too).
 
 Saved/recorded files can be found in:
 
@@ -1139,8 +1204,9 @@ inside DOSBox, try a different 'timed' setting in DOSBox's configuration file.
 7. KeyMapper:
 =============
 
-Start the DOSBox mapper either with CTRL-F1 (see Section 5: "Special Keys") or
--startmapper (see Section 3: "Command Line Parameters").
+Start the DOSBox mapper either with Ctrl+F1 (Cmd+F1 on macOS) also see
+Section 5: "Special Keys") or pass the -startmapper argument to the DOSBox
+executable (see Section 3: "Command Line Parameters").
 You are presented with a virtual keyboard and a virtual joystick.
 
 These virtual devices correspond to the keys and events DOSBox will
@@ -1165,7 +1231,7 @@ BIND
     joystick(s) (as reported by SDL), which is connected to the EVENT.
 mod1,2,3
     Modifiers. These are keys you need to have to be pressed while pressing
-    BIND. mod1 = CTRL and mod2 = ALT. These are generally only used when you
+    BIND. mod1 = Ctrl and mod2 = Alt. These are generally only used when you
     want to change the special keys of DOSBox.
 Add
     Add a new BIND to this EVENT. Basically add a key from your keyboard or an
@@ -1254,9 +1320,11 @@ Layout switching
 
   Some keyboard layouts (for example layout GK319 codepage 869 and layout RU441
   codepage 808) have support for dual layouts that can be accessed by pressing
-  LeftALT+RrightSHIFT for one layout and LeftALT+LeftSHIFT for the other.
+  Left Alt+Right Shift for one layout and Left Alt+Left Shift for the other.
+  (on macOS, use Option+Right Shift and Option+Left Shift).
   Some keyboard layouts (for example layout LT456 codepage 771) have support
-  for three layouts, third can be accessed by pressing LeftALT+LeftCTRL
+  for three layouts, third can be accessed by pressing Left Alt+Left Ctrl
+  (on macOS: Left Option+Left Ctrl).
 
 Supported external files
   The FreeDOS .kl files are supported (FreeDOS keyb2 keyboard layoutfiles) as
@@ -1448,9 +1516,9 @@ CPU Cycles (speed up/slow down)
   You can force the slow or fast behavior by setting a fixed amount of cycles
   in the DOSBox's configuration file. If you set for example cycles=10000, the
   DOSBox window will display a line "CPU speed: fixed 10000 cycles" at the top.
-  In this mode you can reduce the amount of cycles even more by hitting CTRL-F11
-  (you can go as low as you want) or raise it by hitting CTRL-F12 as much as you
-  want, but you will be limited by the power of one core of your computer's CPU.
+  In this mode you can reduce the amount of cycles even more by hitting Ctrl+F11
+  (Cmd+F11 on macOS), as low as needed, or raise it with Ctrl+F12 (Cmd+F12 on
+  macOS) but you will be limited by you PC's single-threaded performance. 
   You can see how much free time your real CPU's cores have by looking at
   the Task Manager in Windows 2000/XP/Vista/7 and the System Monitor
   in Windows 95/98/ME. Once 100% of the power of your computer's real CPU's one
@@ -1465,7 +1533,8 @@ CPU Cycles (speed up/slow down)
   "CPU speed: max 100% cycles" at the top then. This time you won't have to care
   how much free time your real CPU cores have, because DOSBox will always use
   100% of your real CPU's one core. In this mode you can reduce the amount
-  of your real CPU's core usage by CTRL-F11 or raise it with CTRL-F12.
+  of your real CPU's core usage by Ctrl+F11 or raise it with Ctrl+F12 (or
+  Cmd+F11 and Cmd+F12 on macOS).
 
 CPU Core (speed up)
   On x86 architectures you can try to force the usage of a dynamically
@@ -1481,7 +1550,8 @@ Graphics emulation (speed up)
   On systems with limited CPU performance, consider binding a hotkey to the
   "Increase frameskip" action ("Inc Fskip") using the keymapper. Skipping
   frames generally frees up your CPU, providing faster emulation when using
-  max cycles or affording a greater number of fixed cycles with CTRL+F12.
+  max cycles or affording a greater number of fixed cycles with Ctrl+F12
+  (or Cmd+F12 on macOS).
 
   You can repeat this until the game runs fast enough for you.
   Please note that this is a trade-off: you lose in fluidity of video what
@@ -1629,6 +1699,24 @@ Alternatively, you can setup the filename in the configuration file
 in the [dosbox] section. There's a language= entry that can be changed with
 the filelocation.
 
+The DOSBox Staging release package includes a "translations" directory
+containing translated language files. Place the "translations" directory
+inside your config path to allow short-hand notation, as follows:
+
+On launch:
+  dosbox -lang es
+  dosbox -lang fr
+  dosbox -lang it
+  dosbox -lang pl
+  dosbox -lang ru
+
+Via conf setting:
+  [dosbox]
+  language = es
+  # fr, it, pl, ru
+
+Note: macOS users can find the "translations" directory inside the
+      "./Resources/" directory, after expanding the .dmg package.
 
 
 ========================================
@@ -1636,7 +1724,7 @@ the filelocation.
 ========================================
 
 Download the source.
-Check the INSTALL in the source distribution.
+Check the README.md and BUILD.md files in the source distribution.
 
 
 

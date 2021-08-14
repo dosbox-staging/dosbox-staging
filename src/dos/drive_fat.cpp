@@ -38,7 +38,7 @@
 #define FAT16		   1
 #define FAT32		   2
 
-class fatFile : public DOS_File {
+class fatFile final : public DOS_File {
 public:
 	fatFile(const char* name, Bit32u startCluster, Bit32u fileLen, fatDrive *useDrive);
 	fatFile(const fatFile&) = delete; // prevent copy
@@ -1014,8 +1014,10 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, Bit16u attributes) {
 bool fatDrive::FileExists(const char *name) {
 	direntry fileEntry;
 	Bit32u dummy1, dummy2;
-	if(!getFileDirEntry(name, &fileEntry, &dummy1, &dummy2)) return false;
-	return true;
+	Bit16u save_errorcode = dos.errorcode;
+	bool found = getFileDirEntry(name, &fileEntry, &dummy1, &dummy2);
+	dos.errorcode = save_errorcode;
+	return found;
 }
 
 bool fatDrive::FileOpen(DOS_File **file, char *name, Bit32u flags) {
@@ -1092,7 +1094,11 @@ bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) {
 }
 
 char* removeTrailingSpaces(char* str, const size_t max_len) {
-	char* end = str + strnlen(str, max_len);
+	const auto str_len = strnlen(str, max_len);
+	if (str_len == 0)
+		return str;
+
+	char* end = str + str_len;
 	while((*--end == ' ') && (end > str)) {
 		/* do nothing; break on while criteria */
 	}

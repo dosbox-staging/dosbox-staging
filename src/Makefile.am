@@ -11,7 +11,7 @@ endif
 .rc.o:
 	$(WINDRES) -o $@ $<
 
-dosbox_SOURCES = dosbox.cpp $(ico_stuff)
+dosbox_SOURCES = dosbox.cpp $(ico_stuff) main.cpp
 dosbox_LDADD = cpu/libcpu.a \
                debug/libdebug.a \
                dos/libdos.a \

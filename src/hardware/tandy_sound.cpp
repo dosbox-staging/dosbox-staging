@@ -317,7 +317,7 @@ static void TandyDACUpdate(size_t requested)
 	tandy.dac.chan->AddSamples_m8(requested, buf);
 }
 
-class TANDYSOUND: public Module_base {
+class TANDYSOUND final : public Module_base {
 private:
 	IO_WriteHandleObject WriteHandler[4];
 	IO_ReadHandleObject ReadHandler[4];

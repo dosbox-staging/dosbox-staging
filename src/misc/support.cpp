@@ -36,6 +36,7 @@
 
 #include "cross.h"
 #include "debug.h"
+#include "fs_utils.h"
 #include "video.h"
 
 char int_to_char(int val)
@@ -153,7 +154,7 @@ std::vector<std::string> split(const std::string &seq, const char delim)
 }
 
 std::vector<std::string> split(const std::string &seq)
-{	
+{
 	std::vector<std::string> words;
 	if (seq.empty())
 		return words;
@@ -193,7 +194,7 @@ void strip_punctuation(std::string &str) {
 		str.end());
 }
 
-/* 
+/*
 	Ripped some source from freedos for this one.
 
 */
@@ -210,7 +211,7 @@ void strreplace(char * str,char o,char n) {
 		str++;
 	}
 }
-char *ltrim(char *str) { 
+char *ltrim(char *str) {
 	while (*str && isspace(*reinterpret_cast<unsigned char*>(str))) str++;
 	return str;
 }
@@ -263,7 +264,7 @@ char * ScanCMDRemain(char * cmd) {
 		while ( *scan && !isspace(*reinterpret_cast<unsigned char*>(scan)) ) scan++;
 		*scan=0;
 		return found;
-	} else return 0; 
+	} else return 0;
 }
 
 char * StripWord(char *&line) {
@@ -313,6 +314,17 @@ void E_Exit(const char *format, ...)
 	throw(e_exit_buf);
 }
 
+/* Overloaded function to handle different return types of POSIX and GNU
+ * strerror_r variants */
+MAYBE_UNUSED static const char *strerror_result(int retval, const char *err_str)
+{
+	return retval == 0 ? err_str : nullptr;
+}
+MAYBE_UNUSED static const char *strerror_result(const char *err_str, MAYBE_UNUSED const char *buf)
+{
+	return err_str;
+}
+
 std::string safe_strerror(int err) noexcept
 {
 	char buf[128];
@@ -320,14 +332,22 @@ std::string safe_strerror(int err) noexcept
 	// C11 version; unavailable in C++14 in general.
 	strerror_s(buf, ARRAY_LEN(buf), err);
 	return buf;
-#elif defined(_GNU_SOURCE)
-	// GNU has POSIX-incompatible version, which fills the buffer
-	// only when unknown error is passed, otherwise it returns
-	// the internal glibc buffer.
-	return strerror_r(err, buf, ARRAY_LEN(buf));
 #else
-	// POSIX version
-	strerror_r(err, buf, ARRAY_LEN(buf));
-	return buf;
+	return strerror_result(strerror_r(err, buf, ARRAY_LEN(buf)), buf);
 #endif
+}
+
+void set_thread_name(MAYBE_UNUSED std::thread& thread, MAYBE_UNUSED const char *name)
+{
+#if defined(HAVE_PTHREAD_SETNAME_NP) && defined(_GNU_SOURCE)
+	assert(strlen(name) < 16);
+	pthread_t handle = thread.native_handle();
+	pthread_setname_np(handle, name);
+#endif
+}
+
+bool ends_with(const std::string &str, const std::string &suffix) noexcept
+{
+	return (str.size() >= suffix.size() &&
+	        str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0);
 }
