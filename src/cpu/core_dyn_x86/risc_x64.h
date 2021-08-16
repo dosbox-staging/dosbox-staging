@@ -342,7 +342,8 @@ static BlockReturn gen_runcodeInit(const Bit8u *code) {
 	cache_addb(0xc3);          // ret
 	
 	dyn_mem_execute(cache_addr, cache_bytes);
-	dyn_cache_invalidate(cache_addr, cache_bytes);
+	const size_t cache_flush_bytes = static_cast<size_t>(cache.pos - oldpos);
+	dyn_cache_invalidate(cache_addr, cache_flush_bytes);
 
 	cache.pos = oldpos;
 	return gen_runcode(code);
@@ -1303,7 +1304,8 @@ static void gen_dh_fpu_saveInit(void) {
 	cache_addb(0xC3); // RET
 	
 	dyn_mem_execute(cache_addr, cache_bytes);
-	dyn_cache_invalidate(cache_addr, cache_bytes);
+	const size_t cache_flush_bytes = static_cast<size_t>(cache.pos - oldpos);
+	dyn_cache_invalidate(cache_addr, cache_flush_bytes);
 
 	cache.pos = oldpos;
 	gen_dh_fpu_save();
