@@ -822,8 +822,8 @@ static void cache_init(bool enable) {
 #if defined (WIN32)
 			cache_code_start_ptr = static_cast<uint8_t *>(
 			        VirtualAlloc(nullptr, cache_code_size,
-			                     MEM_COMMIT,
-			                     PAGE_EXECUTE_READWRITE));
+			                     MEM_RESERVE | MEM_COMMIT,
+			                     PAGE_READWRITE));
 			if (!cache_code_start_ptr) {
 				LOG_MSG("VirtualAlloc error, using malloc");
 				cache_code_start_ptr=static_cast<uint8_t *>(malloc(cache_code_size));
