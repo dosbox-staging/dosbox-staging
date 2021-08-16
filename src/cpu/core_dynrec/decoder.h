@@ -613,18 +613,17 @@ illegalopcode:
 	dyn_reduce_cycles();
 	dyn_return(BR_Opcode);	// tell the core what happened
 	dyn_closeblock();
+
 	goto finish_block;
 finish_block:
-
 	// setup the correct end-address
 	decode.page.index--;
 	decode.active_block->page.end=(Bit16u)decode.page.index;
 	dyn_mem_execute(cache_addr, cache_bytes);
-	dyn_cache_invalidate(cache_addr, cache_bytes);
-
+	const size_t cache_flush_bytes = static_cast<size_t>(decode.block->cache.size);
+	dyn_cache_invalidate(cache_addr, cache_flush_bytes);
 	assert(decode.block->cache.size <= cache_bytes);
-	
-//	LOG_MSG("Created block size %d start %d end %d",decode.block->cache.size,decode.block->page.start,decode.block->page.end);
-
+	//	LOG_MSG("Created block size %d start %d end
+	//%d",decode.block->cache.size,decode.block->page.start,decode.block->page.end);
 	return decode.block;
 }

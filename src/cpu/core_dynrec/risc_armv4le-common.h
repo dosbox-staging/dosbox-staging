@@ -80,28 +80,4 @@ typedef Bit8u HostReg;
 #define HOST_lr HOST_r14
 #define HOST_pc HOST_r15
 
-
-static void cache_block_closing(const Bit8u* block_start,Bitu block_size) {
-#if (__ARM_EABI__)
-	//flush cache - eabi
-	register unsigned long _beg __asm ("a1") = (unsigned long)(block_start);				// block start
-	register unsigned long _end __asm ("a2") = (unsigned long)(block_start+block_size);		// block end
-	register unsigned long _flg __asm ("a3") = 0;
-	register unsigned long _par __asm ("r7") = 0xf0002;										// sys_cacheflush
-	__asm __volatile ("swi 0x0"
-		: // no outputs
-		: "r" (_beg), "r" (_end), "r" (_flg), "r" (_par)
-		);
-#else
-// GP2X BEGIN
-	//flush cache - old abi
-	register unsigned long _beg __asm ("a1") = (unsigned long)(block_start);				// block start
-	register unsigned long _end __asm ("a2") = (unsigned long)(block_start+block_size);		// block end
-	register unsigned long _flg __asm ("a3") = 0;
-	__asm __volatile ("swi 0x9f0002		@ sys_cacheflush"
-		: // no outputs
-		: "r" (_beg), "r" (_end), "r" (_flg)
-		);
-// GP2X END
-#endif
-}
+static void cache_block_closing(const Bit8u *block_start, Bitu block_size) { }
