@@ -1133,10 +1133,8 @@ static void gen_fill_function_ptr(const Bit8u * pos,void* fct_ptr,Bitu flags_typ
 }
 #endif
 
-static void cache_block_closing(const Bit8u* block_start,Bitu block_size) {
-	//flush cache - GCC/LLVM builtin
-	__builtin___clear_cache((char *)block_start, (char *)(block_start+block_size));
-}
+static void cache_block_closing(MAYBE_UNUSED const Bit8u *block_start,
+                                MAYBE_UNUSED Bitu block_size) { }
 
 static void cache_block_before_close(void) { }
 
