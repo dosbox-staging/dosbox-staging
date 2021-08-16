@@ -783,15 +783,17 @@ static inline void dyn_mem_write(MAYBE_UNUSED void *ptr, MAYBE_UNUSED size_t siz
 
 static inline void dyn_cache_invalidate(MAYBE_UNUSED void *ptr, MAYBE_UNUSED size_t size)
 {
-#if defined(HAVE_SYS_ICACHE_INVALIDATE)
+#if defined(HAVE_BUILTIN_CLEAR_CACHE)
+	__builtin___clear_cache(static_cast<char *>(ptr), reinterpret_cast<char *>(reinterpret_cast<uintptr_t>(ptr) + size));		
+#elif defined(HAVE_SYS_ICACHE_INVALIDATE)
 #if defined(HAVE_BUILTIN_AVAILABLE)
 	if (__builtin_available(macOS 11.0, *))
 #endif	
 		sys_icache_invalidate(ptr, size);
-#elif defined(__GNUC__)
-	__builtin___clear_cache(static_cast<char *>(ptr), reinterpret_cast<char *>(reinterpret_cast<uintptr_t>(ptr) + size));		
 #elif defined(WIN32)
 	FlushInstructionCache(GetCurrentProcess(), ptr, size);
+#else
+	#error "Don't know how to clear the cache on this platform"
 #endif
 }
 
