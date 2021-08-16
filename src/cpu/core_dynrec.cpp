@@ -54,7 +54,7 @@
 #include "lazyflags.h"
 #include "pic.h"
 
-#define CACHE_MAXSIZE	(4096*2)
+#define CACHE_MAXSIZE	(4096*3)
 #define CACHE_TOTAL		(1024*1024*8)
 #define CACHE_PAGES		(512)
 #define CACHE_BLOCKS	(128*1024)
