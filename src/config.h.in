@@ -139,6 +139,9 @@
 // Defined if function __builtin_available is available
 #mesondefine HAVE_BUILTIN_AVAILABLE
 
+// Defined if function __builtin___clear_cache is available
+#mesondefine HAVE_BUILTIN_CLEAR_CACHE
+
 // Defined if function mprotect is available
 #mesondefine HAVE_MPROTECT
 
