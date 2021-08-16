@@ -2896,7 +2896,8 @@ finish_block:
 	/* Setup the correct end-address */
 	decode.active_block->page.end=--decode.page.index;
 	dyn_mem_execute(cache_addr, cache_bytes);
-	dyn_cache_invalidate(cache_addr, cache_bytes);
+	const size_t cache_flush_bytes = static_cast<size_t>(decode.block->cache.size);
+	dyn_cache_invalidate(cache_addr, cache_flush_bytes);
 	assert(decode.block->cache.size <= cache_bytes);
 	//	LOG_MSG("Created block size %d start %d end
 	//%d",decode.block->cache.size,decode.block->page.start,decode.block->page.end);
