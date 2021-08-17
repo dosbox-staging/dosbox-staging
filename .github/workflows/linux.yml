@@ -80,7 +80,7 @@ jobs:
       - name: Install dependencies (minimum set)
         if:   matrix.conf.min_dependencies
         run: |
-          sudo apt-get install -y build-essential ccache meson libsdl2-dev libopusfile-dev
+          sudo apt-get install -y build-essential ccache libsdl2-dev libopusfile-dev
 
       - name: Install dependencies
         if:   matrix.conf.min_dependencies != true
@@ -90,10 +90,10 @@ jobs:
             $(cat ./.github/packages/${{ matrix.conf.os }}-apt.txt)
 
       - name: Install Meson via pip3
-        if:   matrix.conf.os != 'ubuntu-20.04'
+#        if:   matrix.conf.os != 'ubuntu-20.04'
         run: |
           sudo apt-get install python3-setuptools
-          sudo pip3 install meson ninja
+          sudo pip3 install --upgrade meson ninja
 
       - name:  Prepare compiler cache
         id:    prep-ccache
