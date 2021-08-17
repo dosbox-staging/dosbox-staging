@@ -1,22 +1,27 @@
 extraction:
+  python:
+    python_setup:
+      version: 3
+
   cpp:
     prepare:
       packages:
-      - "libasound2-dev"
-      - "libopusfile-dev"
-      - "libpng-dev"
-      - "libsdl2-dev"
-      - "libsdl2-net-dev"
-      - "meson"
+      - libasound2-dev
+      - libopusfile-dev
+      - libpng-dev
+      - libsdl2-dev
+      - libsdl2-net-dev
+      - python3-pip
+    after_prepare:
+    - python3 -m pip install --user --upgrade meson
+    - export PATH="$HOME/.local/bin:$PATH"
+    - meson --version
     configure:
       command:
       - meson setup -Duse_fluidsynth=false -Duse_mt32emu=false build
     index:
       build_command:
-        - ninja -C build
-  python:
-    python_setup:
-      version: 3
+      - ninja -C build
 
 queries:
-  - exclude: cpp/short-global-name
+- exclude: cpp/short-global-name
