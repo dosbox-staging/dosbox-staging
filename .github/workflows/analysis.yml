@@ -46,8 +46,9 @@ jobs:
       - run:  sudo apt-get update
 
       - name: Install dependencies
-        run:  sudo apt-get install clang-tools python3-bs4
-                                   $(cat .github/packages/ubuntu-20.04-apt.txt)
+        run: |
+          sudo apt-get install clang-tools python3-bs4 $(cat .github/packages/ubuntu-20.04-apt.txt)
+          sudo pip3 install --upgrade meson ninja
 
       - name:  Prepare compiler cache
         id:    prep-ccache
@@ -138,8 +139,10 @@ jobs:
 
       - run:  sudo apt-get update
 
-      - name: Install C++ compiler and libraries
-        run:  sudo apt-get install $(cat .github/packages/ubuntu-20.04-apt.txt)
+      - name: Install dependencies
+        run: |
+          sudo apt-get install $(cat .github/packages/ubuntu-20.04-apt.txt)
+          sudo pip3 install --upgrade meson ninja
 
       - name:  Prepare compiler cache
         id:    prep-ccache
