@@ -44,7 +44,7 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 	codepage->AddCacheBlock(decode.block);
 
 	auto cache_addr = static_cast<void *>(
-	        const_cast<uint8_t *>(decode.block->cache.start - 1));
+	        const_cast<uint8_t *>(decode.block->cache.start));
 	constexpr size_t cache_bytes = CACHE_MAXSIZE;
 
 	dyn_mem_write(cache_addr, cache_bytes);

@@ -737,56 +737,60 @@ static void cache_block_closing(const uint8_t *block_start, Bitu block_size);
 static constexpr size_t cache_code_size = CACHE_TOTAL + CACHE_MAXSIZE + PAGESIZE_TEMP - 1 + PAGESIZE_TEMP;
 static constexpr size_t cache_blocks_total_bytes = CACHE_BLOCKS * sizeof(CacheBlock);
 
-static inline void dyn_mem_execute(MAYBE_UNUSED void* ptr, MAYBE_UNUSED size_t size)
+static inline void dyn_mem_adjust(void *&ptr, size_t &size)
 {
+	// Align to page boundary and adjust size. The -1/+1 voodoo
+	// is required to avoid segfaults on 32-bit builds.
+	const auto p = reinterpret_cast<uintptr_t>(ptr) - 1;
+	const auto align_adjust = p % PAGESIZE_TEMP;
+	const auto p_aligned = p - align_adjust;
+	size += align_adjust + 1;
+	ptr = reinterpret_cast<void *>(p_aligned);
+}
+
+static inline void dyn_mem_set_access(void *ptr, size_t size, const bool execute)
+{
+	dyn_mem_adjust(ptr, size);
 #if defined(HAVE_PTHREAD_WRITE_PROTECT_NP)
 #if defined(HAVE_BUILTIN_AVAILABLE)
 	if (__builtin_available(macOS 11.0, *))
 #endif
-		pthread_jit_write_protect_np(true);
+		pthread_jit_write_protect_np(execute);
 #elif defined(HAVE_MPROTECT)
-	ptr = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(ptr) % PAGESIZE);
-	MAYBE_UNUSED const int mp_res = mprotect(ptr, size,
-	                                         PROT_READ | PROT_EXEC);
+	const int flags = (execute ? PROT_EXEC : PROT_WRITE) | PROT_READ;
+	MAYBE_UNUSED const int mp_res = mprotect(ptr, size, flags);
 	assert(mp_res == 0);
 #elif defined(WIN32)
 	DWORD old_protect = 0;
-	MAYBE_UNUSED const BOOL vp_res = VirtualProtect(ptr,
-	                                                size,
-	                                                PAGE_EXECUTE_READ,
+	const DWORD flags = (execute ? PAGE_EXECUTE_READ : PAGE_READWRITE);
+	MAYBE_UNUSED const BOOL vp_res = VirtualProtect(ptr, size, flags,
 	                                                &old_protect);
 	assert(vp_res != 0);
+#else
+	LOG_MSG("No method to set memory access %p, %zu, %d on this platform",
+	        ptr, size, execute);
 #endif
 }
 
-static inline void dyn_mem_write(MAYBE_UNUSED void *ptr, MAYBE_UNUSED size_t size)
+static inline void dyn_mem_execute(void *ptr, size_t size)
 {
-#if defined(HAVE_PTHREAD_WRITE_PROTECT_NP)
-#if defined(HAVE_BUILTIN_AVAILABLE)
-	if (__builtin_available(macOS 11.0, *))
-#endif
-		pthread_jit_write_protect_np(false);
-#elif defined(HAVE_MPROTECT)
-	ptr = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(ptr) - reinterpret_cast<uintptr_t>(ptr) % PAGESIZE);
-	MAYBE_UNUSED const int mp_res = mprotect(ptr, size,
-	                                         PROT_READ | PROT_WRITE);
-	assert(mp_res == 0);
-#elif defined(WIN32)
-	DWORD old_protect = 0;
-	MAYBE_UNUSED const BOOL vp_res = VirtualProtect(ptr,
-	                                                size,
-	                                                PAGE_READWRITE,
-	                                                &old_protect);
-	assert(vp_res != 0);
-#endif
+	dyn_mem_set_access(ptr, size, true);
 }
 
-static inline void dyn_cache_invalidate(MAYBE_UNUSED void *ptr, MAYBE_UNUSED size_t size)
+static inline void dyn_mem_write(void *ptr, size_t size)
+{
+	dyn_mem_set_access(ptr, size, false);
+}
+
+static inline void dyn_cache_invalidate(MAYBE_UNUSED void *ptr,
+                                        MAYBE_UNUSED size_t size)
 {
 #if defined(HAVE_BUILTIN_CLEAR_CACHE)
-	__builtin___clear_cache(static_cast<char *>(ptr),
-	                        reinterpret_cast<char *>(
-	                                reinterpret_cast<uintptr_t>(ptr) + size));
+	const auto start = static_cast<char *>(ptr);
+	const auto start_val = reinterpret_cast<uintptr_t>(start);
+	const auto end_val = start_val + size;
+	const auto end = reinterpret_cast<char *>(end_val);
+	__builtin___clear_cache(start, end);
 #elif defined(HAVE_SYS_ICACHE_INVALIDATE)
 #if defined(HAVE_BUILTIN_AVAILABLE)
 	if (__builtin_available(macOS 11.0, *))
