@@ -2,18 +2,23 @@ extraction:
   cpp:
     prepare:
       packages:
-      - "libasound2-dev"
-      - "libopusfile-dev"
-      - "libpng-dev"
-      - "libsdl2-dev"
-      - "libsdl2-net-dev"
-      - "meson"
+        - "libasound2-dev"
+        - "libopusfile-dev"
+        - "libpng-dev"
+        - "libsdl2-dev"
+        - "libsdl2-net-dev"
+    after_prepare:
+      - sudo pip3 install --upgrade meson || true
+      - sudo python -m pip install --upgrade meson || true
+      - pip3 install --user --upgrade meson || true
+      - meson --version
     configure:
       command:
-      - meson setup -Duse_fluidsynth=false -Duse_mt32emu=false build
+        - meson setup -Duse_fluidsynth=false -Duse_mt32emu=false build
     index:
       build_command:
         - ninja -C build
+
   python:
     python_setup:
       version: 3
