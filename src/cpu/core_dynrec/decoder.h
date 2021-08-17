@@ -43,7 +43,8 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 	decode.block->page.start=(Bit16u)decode.page.index;
 	codepage->AddCacheBlock(decode.block);
 
-	auto cache_addr = static_cast<void *>(const_cast<uint8_t *>(decode.block->cache.start-1));
+	auto cache_addr = static_cast<void *>(
+	        const_cast<uint8_t *>(decode.block->cache.start - 1));
 	constexpr size_t cache_bytes = CACHE_MAXSIZE;
 
 	dyn_mem_write(cache_addr, cache_bytes);
@@ -620,7 +621,7 @@ finish_block:
 	decode.page.index--;
 	decode.active_block->page.end=(Bit16u)decode.page.index;
 	dyn_mem_execute(cache_addr, cache_bytes);
-	const size_t cache_flush_bytes = static_cast<size_t>(decode.block->cache.size);
+	const auto cache_flush_bytes = static_cast<size_t>(decode.block->cache.size);
 	dyn_cache_invalidate(cache_addr, cache_flush_bytes);
 	assert(decode.block->cache.size <= cache_bytes);
 	//	LOG_MSG("Created block size %d start %d end
