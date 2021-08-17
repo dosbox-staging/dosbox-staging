@@ -35,6 +35,11 @@ jobs:
           sudo dpkg -i "pvs-package/pvs.deb"
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
 
+      - name: Install Meson via pip3
+        run: |
+          sudo apt-get install python3-setuptools
+          sudo pip3 install --upgrade meson ninja
+
       - name:  Cache subprojects
         uses:  actions/cache@v2
         with:
