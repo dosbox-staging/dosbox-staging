@@ -50,6 +50,7 @@ jobs:
             set -xo pipefail
             apt-get update
             apt-get install -y $(cat ./.github/packages/ubuntu-20.04-apt.txt)
+            pip3 install --upgrade meson ninja
             ./scripts/log-env.sh
             meson build \
               -Duse_fluidsynth=false \

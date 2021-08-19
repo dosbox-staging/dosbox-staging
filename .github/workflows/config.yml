@@ -85,6 +85,7 @@ jobs:
         run: |
           sudo apt-get -y update
           sudo apt-get install $(cat .github/packages/ubuntu-20.04-apt.txt)
+          sudo pip3 install --upgrade meson ninja
 
       - name:  Install dependencies (macOS)
         if:    matrix.system.name == 'macOS'
