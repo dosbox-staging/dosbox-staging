@@ -134,8 +134,19 @@ sudo dnf install ccache gcc-c++ meson alsa-lib-devel libpng-devel \
 
 ``` shell
 # Debian, Ubuntu
-sudo apt install ccache build-essential meson libasound2-dev libpng-dev \
+sudo apt install ccache build-essential libasound2-dev libpng-dev \
                  libsdl2-dev libsdl2-net-dev libopusfile-dev libfluidsynth-dev
+```
+
+## Install Meson on Debian-10 "Buster" or Ubuntu-20.04 and older
+``` shell
+sudo apt install python3-setuptools
+sudo pip3 install --upgrade meson ninja
+```
+
+## Install Meson on Debian-11 "Bullseye" or Ubuntu-21.04 and newer
+``` shell
+sudo apt install meson
 ```
 
 ``` shell
