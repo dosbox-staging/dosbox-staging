@@ -22,15 +22,12 @@ jobs:
     strategy:
       matrix:
         conf:
-          # - name: ARMv6 (Debian Buster)
-          #   arch: armv6
-          #   distro: buster
-          # - name: ARMv7 (Debian Buster)
-          #   arch: armv7
-          #   distro: buster
-          # - name: ARMv8 AArch64 (Ubuntu 18.04)
-          #   arch: aarch64
-          #   distro: ubuntu18.04
+          - name: ARMv7 (Ubuntu 20.04)
+            arch: armv7
+            distro: ubuntu20.04
+          - name: ARM64 (Ubuntu 20.04)
+            arch: aarch64
+            distro: ubuntu20.04
           - name: s390x (Ubuntu 20.04)
             arch: s390x
             distro: ubuntu20.04
