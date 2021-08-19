@@ -7,3 +7,4 @@ libopusfile-dev
 libpng-dev
 libsdl2-dev
 libsdl2-net-dev
+python3-setuptools

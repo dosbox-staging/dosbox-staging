@@ -28,17 +28,13 @@ jobs:
         if:    steps.cache-pvs.outputs.cache-hit != 'true'
         run:   wget "https://files.viva64.com/${debfile}" -O "pvs-package/pvs.deb"
 
-      - name: Install packages
+      - name: Install dependencies
         run: |
           set -xeu
           sudo apt-get install -y strace $(cat .github/packages/ubuntu-20.04-apt.txt)
+          sudo pip3 install --upgrade meson ninja
           sudo dpkg -i "pvs-package/pvs.deb"
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
-
-      - name: Install Meson via pip3
-        run: |
-          sudo apt-get install python3-setuptools
-          sudo pip3 install --upgrade meson ninja
 
       - name:  Cache subprojects
         uses:  actions/cache@v2
