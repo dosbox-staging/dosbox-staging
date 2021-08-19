@@ -22,9 +22,9 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: ARMv7 (Ubuntu 20.04)
-            arch: armv7
-            distro: ubuntu20.04
+          #- name: ARMv7 (Ubuntu 20.04)
+          #  arch: armv7
+          #  distro: ubuntu20.04
           - name: ARM64 (Ubuntu 20.04)
             arch: aarch64
             distro: ubuntu20.04
@@ -46,14 +46,17 @@ jobs:
           run: |
             set -xo pipefail
             apt-get update
-            apt-get install -y $(cat ./.github/packages/ubuntu-20.04-apt.txt)
-            pip3 install --upgrade meson ninja
+            apt-get install -y curl python3-dev cmake make g++ $(cat ./.github/packages/ubuntu-20.04-apt.txt)
+            curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+            python3 get-pip.py
+            export PATH="$HOME/.local/bin:$PATH"
+            pip3 install --user --upgrade meson ninja
             ./scripts/log-env.sh
             meson build \
               -Duse_fluidsynth=false \
               -Duse_mt32emu=false \
               --wrap-mode=nofallback
-            ninja -C build |& tee build.log
+            meson compile -C build |& tee build.log
 
       - name: Summarize warnings
         run:  ./scripts/count-warnings.py --max-warnings -1 build.log
