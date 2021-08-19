@@ -252,7 +252,7 @@ For some historical context of why this repo exists you can read
 [build-linux-2]:    https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Platform+builds%22
 [build-win-badge]:  https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/Windows%20builds?label=Windows%20(x86,%20x86_64)
 [build-win]:        https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Windows+builds%22
-[build-mac-badge]:  https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/macOS%20builds?label=macOS%20(x86_64)
+[build-mac-badge]:  https://img.shields.io/github/workflow/status/dosbox-staging/dosbox-staging/macOS%20builds?label=macOS%20(arm64,%20x86_64)
 [build-mac]:        https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22macOS+builds%22
 [coverity-badge]:   https://img.shields.io/coverity/scan/dosbox-staging
 [lgtm-badge]:       https://img.shields.io/lgtm/grade/cpp/github/dosbox-staging/dosbox-staging
