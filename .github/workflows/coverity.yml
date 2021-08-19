@@ -12,9 +12,10 @@ env:
   PACKAGE: "/dev/shm/coverity-package/coverity.tar.zst"
   PACKAGE_DIR: "/dev/shm/coverity-package"
   # Latest package: https://scan.coverity.com/download
-  PACKAGE_VERSION: "2019.03"
-  TARBALL_URL: "https://github.com/dosbox-staging/dosbox-staging.github.io/releases/download/artifacts/coverity.tar.zst"
-  TARBALL_SHA256: "e387a444aad037dc011313f10a663d2397749cce3feb8fa512acd37ff8941046"
+  PACKAGE_VERSION: "2020.09"
+  # One-time download, then lives in GitHub cache
+  TARBALL_URL: "https://kcgen.duckdns.org/coverity.tar.zst"
+  TARBALL_SHA256: "f7f529088c140a45176e99e1bbcb7581fa751619318e30f20c3697269dc32411"
 
 jobs:
   coverity_scan:
@@ -30,7 +31,8 @@ jobs:
 
       - name: Install C++ compiler and dependencies
         run: |
-          sudo apt-get install curl zstd $(cat .github/packages/ubuntu-20.04-apt.txt)
+          sudo apt-get install curl zstd clang $(cat .github/packages/ubuntu-20.04-apt.txt)
+          sudo pip3 install --upgrade meson ninja
 
       - name: Prepare the Coverity package cache
         uses: actions/cache@v2
@@ -51,7 +53,7 @@ jobs:
       - name: Build and instrument the project
         run: |
           set -xeu
-          meson setup -Duse_mt32emu=false -Dunit_tests=disabled build
+          CC="clang" CXX="clang++" meson setup -Dbuild-type=debug -Duse_mt32emu=false -Dunit_tests=disabled build
           PATH="${BASE_DIR}/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
           cov-build --dir cov-int ninja -C build
           tar -cvaf package.tar.gz cov-int
