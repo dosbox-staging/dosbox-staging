@@ -31,7 +31,7 @@ def parse_issues(filename):
     """
     cwd = os.getcwd()
     issues = collections.defaultdict(int)
-    with open(filename) as csvfile:
+    with open(filename, encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             sourcefile = os.path.realpath(row['FilePath'])
