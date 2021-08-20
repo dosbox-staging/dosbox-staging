@@ -42,7 +42,7 @@ def summary_values(summary_table):
 
 
 def read_soup(index_html):
-    with open(index_html) as index:
+    with open(index_html, encoding='utf-8') as index:
         soup = BeautifulSoup(index, 'html5lib')
         tables = soup.find_all('table')
         summary = tables[1]
