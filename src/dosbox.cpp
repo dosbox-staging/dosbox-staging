@@ -584,6 +584,10 @@ void DOSBOX_Init(void) {
 	                  "scan2x, scan3x, tv2x, tv3x, sharp (default).");
 #endif
 
+	// Add the [composite] conf block after [render]
+	assert(control);
+	VGA_AddCompositeSettings(*control);
+
 	secprop=control->AddSection_prop("cpu",&CPU_Init,true);//done
 	const char* cores[] = { "auto",
 #if (C_DYNAMIC_X86) || (C_DYNREC)
