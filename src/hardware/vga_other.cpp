@@ -428,15 +428,16 @@ static void update_cga16_color()
 	                           ? new_cga_v(chroma_multiplexer[255], i3, i3, i3, i3)
 	                           : chroma_multiplexer[255] + i3;
 
-	const auto mode_contrast = 2.56f * contrast / (max_v - min_v);
+	const auto mode_contrast = 2.56f * static_cast<float>(contrast) / (max_v - min_v);
 
-	const auto mode_brightness = brightness * 5 - 256 * min_v / (max_v - min_v);
+	const auto mode_brightness = static_cast<float>(brightness) * 5 - 256 * min_v / (max_v - min_v);
 
 	const bool in_tandy_text_mode = (vga.mode == M_CGA_TEXT_COMPOSITE) &&
 	                                (vga.tandy.mode_control & 1);
 	const auto mode_hue = in_tandy_text_mode ? 14.0f : 4.0f;
 
-	const auto mode_saturation = saturation * (is_composite_new_era ? 5.8f : 2.9f) / 100;
+	const auto mode_saturation = static_cast<float>(saturation) *
+	                             (is_composite_new_era ? 5.8f : 2.9f) / 100;
 
 	// Update the Composite CGA palette
 	const bool in_tandy_mode_4 = vga.tandy.mode_control & 4;
@@ -476,7 +477,7 @@ static void update_cga16_color()
 	const auto q = static_cast<float>(CGA_Composite_Table[6 * 68 + 1] -
 	                                  CGA_Composite_Table[6 * 68 + 3]);
 
-	const auto a = tau * (33 + 90 + hue_offset + mode_hue) / 360.0f;
+	const auto a = tau * (33 + 90 + static_cast<float>(hue) + mode_hue) / 360.0f;
 	const auto c = cosf(a);
 	const auto s = sinf(a);
 
