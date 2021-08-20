@@ -912,6 +912,9 @@
     <ClInclude Include="..\src\libs\residfp\WaveformGenerator.h">
       <Filter>src\libs\residfp</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dyn_x86\risc_x64.h">
+      <Filter>src\cpu\core_dyn_x86</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">
