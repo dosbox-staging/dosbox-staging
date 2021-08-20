@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <cstring>
 
+#include "control.h"
 #include "inout.h"
 #include "mapper.h"
 #include "mem.h"
@@ -199,11 +200,32 @@ static void write_lightpen(io_port_t port, uint8_t /*val*/, io_width_t)
 	}
 }
 
-static int16_t brightness = 0;
-static int16_t contrast = 100;
-static int16_t saturation = 100;
-static int16_t sharpness = 0;
-static int16_t hue_offset = 0;
+constexpr int16_t hue_min = 0;
+constexpr int16_t hue_mid = 0;
+constexpr int16_t hue_max = 360;
+constexpr int16_t hue_pcjr_rotation = 100;
+static int hue = hue_mid;
+
+constexpr int16_t saturation_min = 0;
+constexpr int16_t saturation_mid = 100;
+constexpr int16_t saturation_max = 400;
+static int saturation = saturation_mid;
+
+constexpr int16_t contrast_min = 0;
+constexpr int16_t contrast_mid = 100;
+constexpr int16_t contrast_max = 256;
+static int contrast = contrast_mid;
+
+constexpr int16_t brightness_min = -50;
+constexpr int16_t brightness_mid = 0;
+constexpr int16_t brightness_max = 50;
+static int brightness = brightness_mid;
+
+constexpr int16_t convergence_min = -256;
+constexpr int16_t convergence_mid = 0;
+constexpr int16_t convergence_max = 256;
+static int convergence = convergence_mid;
+
 static uint8_t cga_comp = 0;
 static bool is_composite_new_era = false;
 
@@ -672,7 +694,152 @@ static void update_cga16_color()
 	vga.gq = static_cast<int>(-gi * iq_adjust_q + gq * iq_adjust_i);
 	vga.bi = static_cast<int>(bi * iq_adjust_i + bq * iq_adjust_q);
 	vga.bq = static_cast<int>(-bi * iq_adjust_q + bq * iq_adjust_i);
-	vga.sharpness = sharpness * 256 / 100;
+	vga.sharpness = convergence * 256 / 100;
+}
+
+constexpr int16_t percent_min = 0;
+constexpr int16_t percent_mid = 50;
+constexpr int16_t percent_max = 100;
+
+// Takes in a percent from 0 to 100% and maps that to 360 degree hue space.
+// The default percent is 50% "mid-point", which maps to 0 degrees.
+// PCjr is always rotated ahead by 100 degrees.
+static void set_hue_from_percent(int percent)
+{
+	assert(percent >= percent_min && percent <= percent_max);
+
+	percent -= percent_mid;                // switch to zero-based
+	hue = percent * hue_max / percent_max; // to 360 degrees
+	hue += (machine == MCH_PCJR ? hue_pcjr_rotation : 0);
+	hue = wrap(hue, hue_min, hue_max); // stay in-bounds
+
+	assert(hue >= hue_min && hue <= hue_max);
+}
+
+// Returns the percent from hue, based on the above relationship.
+static int get_percent_from_hue()
+{
+	assert(hue >= hue_min && hue <= hue_max);
+
+	const auto adjustment = (machine == MCH_PCJR ? hue_pcjr_rotation : 0);
+	auto percent = (hue - adjustment) * percent_max / hue_max;
+	percent = wrap(percent + percent_mid, percent_min, percent_max);
+	assert(percent >= percent_min && percent <= percent_max);
+	return percent;
+}
+
+// Takes in a percent from 0 to 100% and maps that to saturation from 0 to 400.
+// The default percent is 50% "mid-point", which maps to a saturation of 100.
+static void set_saturation_from_percent(int percent)
+{
+	assert(percent >= percent_min && percent <= percent_max);
+
+	// percentages 50% and above map to maginitudes from 100 to 400:
+	if (percent >= percent_mid)
+		saturation = saturation_mid + (percent - percent_mid) *
+		                                      (saturation_max - saturation_mid) / percent_mid;
+	// Below 50% maps to maginitudes from 0 to 99:
+	else
+		saturation = percent * saturation_mid / percent_mid;
+
+	assert(saturation >= saturation_min && saturation <= saturation_max);
+}
+
+// Returns the percent from saturation, based on the above relationship.
+static int get_percent_from_saturation()
+{
+	assert(saturation >= saturation_min && saturation <= saturation_max);
+
+	// saturations 100 and above map to percentages from 50 to 100:
+	auto percent = 0;
+	if (saturation >= saturation_mid)
+		percent = percent_mid + (saturation - saturation_mid) * percent_mid /
+		                                (saturation_max - saturation_mid);
+	// Below 100 saturation maps to percentages from 0 to 49:
+	else
+		percent = saturation * percent_mid / saturation_mid;
+
+	assert(percent >= percent_min && percent <= percent_max);
+	return percent;
+}
+
+// Takes in a percent from 0 to 100% and maps that to contrast from 15 to 500.
+// The default percent is 50% "mid-point", which maps to a contrast of 100.
+static void set_contrast_from_percent(int percent)
+{
+	assert(percent >= percent_min && percent <= percent_max);
+
+	// percentages 50% and above map to maginitudes from 100 to 500:
+	if (percent >= percent_mid)
+		contrast = contrast_mid +
+		           (percent - percent_mid) * (contrast_max - contrast_mid) / percent_mid;
+	// Below 50% maps to maginitudes from 15 to 99:
+	else
+		contrast = contrast_min + percent * (contrast_mid - contrast_min) / percent_mid;
+
+	assert(contrast >= contrast_min && contrast <= contrast_max);
+}
+
+// Returns the percent from contrast, based on the above relationship.
+static int get_percent_from_contrast()
+{
+	assert(contrast >= contrast_min && contrast <= contrast_max);
+
+	// contrasts 100 to 500 map to percentages from 50 to 100:
+	auto percent = 0;
+	if (contrast >= contrast_mid)
+		percent = percent_mid +
+		          (contrast - contrast_mid) * percent_mid / (contrast_max - contrast_mid);
+	// Below 100 contrast maps to percentages from 0 to 49:
+	else
+		percent = (contrast - contrast_min) * percent_mid / (contrast_mid - contrast_min);
+
+	assert(percent >= percent_min && percent <= percent_max);
+	return percent;
+}
+
+// Takes in a percent from 0 to 100% and maps that to brightness from -50 to +50
+// The default percent is 50% "mid-point", which maps to a brightness of 0.
+static void set_brightness_from_percent(int percent)
+{
+	assert(percent >= percent_min && percent <= percent_max);
+
+	brightness = percent - percent_mid;
+
+	assert(brightness >= brightness_min && brightness <= brightness_max);
+}
+
+// Returns the percent from brightness, based on the above relationship.
+static int get_percent_from_brightness()
+{
+	assert(brightness >= brightness_min && brightness <= brightness_max);
+
+	const auto percent = brightness + percent_mid;
+
+	assert(percent >= percent_min && percent <= percent_max);
+	return percent;
+}
+
+// Takes in a percent from 0 to 100% and maps that to convergence from -256 to 256
+// The default percent is 50% "mid-point", which maps to a convergence of 0.
+static void set_convergence_from_percent(int percent)
+{
+	assert(percent >= percent_min && percent <= percent_max);
+
+	percent -= percent_mid; // convert from 50% mid-point to zero-based
+	convergence = percent * convergence_max / percent_mid; // to degrees
+	assert(convergence >= convergence_min && convergence <= convergence_max);
+}
+
+// Returns the percent from convergence, based on the above relationship.
+static int get_percent_from_convergence()
+{
+	assert(convergence >= convergence_min && convergence <= convergence_max);
+
+	const auto percent = percent_mid + convergence * percent_mid / convergence_max;
+
+	assert(percent >= percent_min && percent <= percent_max);
+	return percent;
 }
 
 enum CRT_KNOB : uint8_t {
@@ -681,7 +848,7 @@ enum CRT_KNOB : uint8_t {
 	SATURATION,
 	CONTRAST,
 	BRIGHTNESS,
-	SHARPNESS,
+	CONVERGENCE,
 	ENUM_END
 };
 static auto crt_knob = CRT_KNOB::ERA;
@@ -694,19 +861,23 @@ static void log_crt_knob_value()
 		        is_composite_new_era ? "New" : "Old");
 		break;
 	case CRT_KNOB::HUE:
-		LOG_MSG("COMPOSITE: Hue is %d", hue_offset);
+		LOG_MSG("COMPOSITE: Hue is %d%%", get_percent_from_hue());
 		break;
 	case CRT_KNOB::SATURATION:
-		LOG_MSG("COMPOSITE: Saturation at %d", saturation);
+		LOG_MSG("COMPOSITE: Saturation is %d%%",
+		        get_percent_from_saturation());
 		break;
 	case CRT_KNOB::CONTRAST:
-		LOG_MSG("COMPOSITE: Contrast at %d", contrast);
+		LOG_MSG("COMPOSITE: Contrast is %d%%",
+		        get_percent_from_contrast());
 		break;
 	case CRT_KNOB::BRIGHTNESS:
-		LOG_MSG("COMPOSITE: Brightness at %d", brightness);
+		LOG_MSG("COMPOSITE: Brightness is %d%%",
+		        get_percent_from_brightness());
 		break;
-	case CRT_KNOB::SHARPNESS:
-		LOG_MSG("COMPOSITE: Sharpness at %d", sharpness);
+	case CRT_KNOB::CONVERGENCE:
+		LOG_MSG("COMPOSITE: Convergence is %d%%",
+		        get_percent_from_convergence());
 		break;
 	case CRT_KNOB::ENUM_END:
 		assertm(false, "Should not reach CRT knob end marker");
@@ -720,14 +891,20 @@ static void turn_crt_knob(bool pressed, const int amount)
 		return;
 	switch (crt_knob) {
 	case CRT_KNOB::ERA: is_composite_new_era = !is_composite_new_era; break;
-	case CRT_KNOB::HUE: hue_offset = (hue_offset + amount) % 360; break;
-	case CRT_KNOB::SATURATION: saturation += amount; break;
-	case CRT_KNOB::CONTRAST: contrast += amount; break;
-	case CRT_KNOB::BRIGHTNESS: brightness += amount; break;
-	case CRT_KNOB::SHARPNESS: sharpness += amount; break;
-	case CRT_KNOB::ENUM_END:
-		assertm(false, "Should not reach CRT knob end marker");
+	case CRT_KNOB::HUE: hue = wrap(hue + amount, hue_min, hue_max); break;
+	case CRT_KNOB::SATURATION:
+		saturation = wrap(saturation + amount, saturation_min, saturation_max);
 		break;
+	case CRT_KNOB::CONTRAST:
+		contrast = wrap(contrast + amount, contrast_min, contrast_max);
+		break;
+	case CRT_KNOB::BRIGHTNESS:
+		brightness = wrap(brightness + amount, brightness_min, brightness_max);
+		break;
+	case CRT_KNOB::CONVERGENCE:
+		convergence = wrap(convergence + amount, convergence_min, convergence_max);
+		break;
+	case CRT_KNOB::ENUM_END: assertm(false, "Should not reach CRT knob end marker"); break;
 	}
 	if (machine == MCH_PCJR)
 		update_cga16_color_pcjr();
@@ -1393,4 +1570,78 @@ void VGA_SetupOther()
 			IO_RegisterReadHandler(base + port_ct * 2 + 1, read_crtc_data_other, io_width_t::byte);
 		}
 	}
+}
+static void composite_init(Section *sec)
+{
+	assert(sec);
+	const auto conf = static_cast<Section_prop *>(sec);
+	assert(conf);
+	const std::string state = conf->Get_string("composite");
+	cga_comp = (state == "auto" ? 0 : state == "on" ? 1 : 2);
+
+	const auto era_choice = std::string(conf->Get_string("era"));
+	is_composite_new_era = era_choice == "new" ||
+	                       (machine == MCH_PCJR && era_choice == "auto");
+
+	set_hue_from_percent(conf->Get_int("hue"));
+	set_saturation_from_percent(conf->Get_int("saturation"));
+	set_contrast_from_percent(conf->Get_int("contrast"));
+	set_brightness_from_percent(conf->Get_int("brightness"));
+	set_convergence_from_percent(conf->Get_int("convergence"));
+
+	if (cga_comp == COMPOSITE_STATE::ON) {
+		LOG_MSG("COMPOSITE: %s-era enabled with hue %d%%, saturation %d%%,"
+		        " contrast %d%%, brightness %d%%, and convergence %d%%",
+		        is_composite_new_era ? "New" : "Old",
+		        get_percent_from_hue(), get_percent_from_saturation(),
+		        get_percent_from_contrast(), get_percent_from_brightness(),
+		        get_percent_from_convergence());
+	}
+}
+
+static void composite_settings(Section_prop &secprop)
+{
+	constexpr auto when_idle = Property::Changeable::WhenIdle;
+
+	const char *states[] = {"auto", "on", "off", 0};
+	auto str_prop = secprop.Add_string("composite", when_idle, "auto");
+	str_prop->Set_values(states);
+	str_prop->Set_help("Enable composite mode on start. 'auto' lets the program decide.");
+
+	const char *eras[] = {"auto", "old", "new", 0};
+	str_prop = secprop.Add_string("era", when_idle, "auto");
+	str_prop->Set_values(eras);
+	str_prop->Set_help(
+	        "Era of composite technology. When 'auto', PCjr is 'new' and others are 'old'.");
+
+	auto int_prop = secprop.Add_int("hue", when_idle, 50);
+	int_prop->SetMinMax(percent_min, percent_max);
+	int_prop->Set_help(
+	        "Appearance of RGB palette. For example, adjust until sky is blue. 0-100%, default is 50%.");
+
+	int_prop = secprop.Add_int("saturation", when_idle, 50);
+	int_prop->SetMinMax(percent_min, percent_max);
+	int_prop->Set_help(
+	        "Intensity of colors, from vivid to washed out. 0-100%, default is 50%.");
+
+	int_prop = secprop.Add_int("contrast", when_idle, 50);
+	int_prop->SetMinMax(percent_min, percent_max);
+	int_prop->Set_help("Ratio between the light and dark. 0-100%, default is 50%.");
+
+	int_prop = secprop.Add_int("brightness", when_idle, 50);
+	int_prop->SetMinMax(percent_min, percent_max);
+	int_prop->Set_help(
+	        "Luminosity of the image, from overall light to dark. 0-100%, default is 50%.");
+
+	int_prop = secprop.Add_int("convergence", when_idle, 50);
+	int_prop->SetMinMax(percent_min, percent_max);
+	int_prop->Set_help(
+	        "Convergence of subpixel elements, from focused to deconverged. 0-100%, default is 50%.");
+}
+
+void VGA_AddCompositeSettings(Config &conf)
+{
+	auto sec = conf.AddSection_prop("composite", &composite_init, true);
+	assert(sec);
+	composite_settings(*sec);
 }
