@@ -112,7 +112,7 @@ def get_input_lines(name):
     if not os.path.isfile(name):
         print('{}: no such file.'.format(name))
         sys.exit(2)
-    with open(name, 'r') as logs:
+    with open(name, 'r', encoding='utf-8') as logs:
         return logs.readlines()
 
 
