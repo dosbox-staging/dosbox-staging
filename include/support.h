@@ -274,6 +274,22 @@ constexpr size_t static_if_array_then_zero()
 //
 std::string safe_strerror(int err) noexcept;
 
-#endif
-
 void set_thread_name(std::thread &thread, const char *name);
+
+/*
+  Returns a number wrapped between the lower and upper bounds.
+   - wrap(-1, 0, 4); // Returns 4
+   - wrap(5, 0, 4); // Returns 0
+
+  All credit to Charles Bailey, https://stackoverflow.com/a/707426
+*/
+constexpr int wrap(int val, int const lower_bound, int const upper_bound)
+{
+	const auto range_size = upper_bound - lower_bound + 1;
+	if (val < lower_bound)
+		val += range_size * ((lower_bound - val) / range_size + 1);
+
+	return lower_bound + (val - lower_bound) % range_size;
+}
+
+#endif
