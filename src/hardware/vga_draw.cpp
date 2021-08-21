@@ -154,23 +154,23 @@ static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 
 	// Simulate CGA composite output
 	int *o = temp;
-	auto OUT = [&](const int v) {
-		*o = (v);
+	auto push_pixel = [&o](const int v) {
+		*o = v;
 		++o;
 	};
 
 	Bit8u *rgbi = TempLine;
 	int *b = &CGA_Composite_Table[border * 68];
 	for (int x = 0; x < 4; ++x)
-		OUT(b[(x + 3) & 3]);
-	OUT(CGA_Composite_Table[(border << 6) | ((*rgbi) << 2) | 3]);
+		push_pixel(b[(x + 3) & 3]);
+	push_pixel(CGA_Composite_Table[(border << 6) | ((*rgbi) << 2) | 3]);
 	for (int x = 0; x < w - 1; ++x) {
-		OUT(CGA_Composite_Table[(rgbi[0] << 6) | (rgbi[1] << 2) | (x & 3)]);
+		push_pixel(CGA_Composite_Table[(rgbi[0] << 6) | (rgbi[1] << 2) | (x & 3)]);
 		++rgbi;
 	}
-	OUT(CGA_Composite_Table[((*rgbi) << 6) | (border << 2) | 3]);
+	push_pixel(CGA_Composite_Table[((*rgbi) << 6) | (border << 2) | 3]);
 	for (int x = 0; x < 5; ++x)
-		OUT(b[x & 3]);
+		push_pixel(b[x & 3]);
 
 	if ((vga.tandy.mode_control & 4) != 0) {
 		// Decode
