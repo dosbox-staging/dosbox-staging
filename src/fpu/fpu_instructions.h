@@ -142,7 +142,8 @@ static Real64 FPU_FLD80(PhysPt addr) {
 	FPU_Reg result;
 	result.ll = (sign <<63)|(exp64final << 52)| mant64;
 
-	if(test.eind.l.lower == 0 && test.eind.l.upper == 0x80000000 && (test.begin&0x7fff) == 0x7fff) {
+	if (test.eind.l.lower == 0 && test.eind.l.upper == INT32_MIN &&
+	    (test.begin & INT16_MAX) == INT16_MAX) {
 		//Detect INF and -INF (score 3.11 when drawing a slur.)
 		result.d = sign?-HUGE_VAL:HUGE_VAL;
 	}

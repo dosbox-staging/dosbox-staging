@@ -62,8 +62,7 @@ typedef PhysPt EAPoint;
 	}
 
 Bits CPU_Core_Full_Run(void) {
-	FullData inst;	
-	inst.rm_eaa = 0;
+	FullData inst{};
 	while (CPU_Cycles-->0) {
 #if C_DEBUG
 		cycle_count++;
