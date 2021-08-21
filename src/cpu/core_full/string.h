@@ -20,7 +20,7 @@
 	EAPoint si_base,di_base;
 	Bitu	si_index,di_index;
 	Bitu	add_mask;
-	Bitu	count,count_left;
+	Bitu count, count_left = 0;
 	Bits	add_index;
 	
 	if (inst.prefix & PREFIX_SEG) si_base=inst.seg.base;
