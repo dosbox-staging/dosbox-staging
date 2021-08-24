@@ -105,15 +105,15 @@ static bool LoadMessageFile(std::string filename)
 		} else if (linein[0]=='.') {
 			/* Replace/Add the message to the internal languagefile */
 			/* Remove last newline (marker is \n.\n) */
-			size_t ll = strlen(message);
+			size_t ll = safe_strlen(message);
 			// This second if should not be needed, but better be safe.
 			if (ll && message[ll - 1] == '\n')
 				message[ll - 1] = 0;
 			MSG_Replace(name, message);
 		} else {
 			/* Normal message to be added */
-			strcat(message, linein);
-			strcat(message, "\n");
+			safe_strcat(message, linein);
+			safe_strcat(message, "\n");
 		}
 	}
 	fclose(mfile);
