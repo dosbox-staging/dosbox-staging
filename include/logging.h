@@ -23,6 +23,8 @@
 
 #include "compiler.h"
 
+#include "loguru.hpp"
+
 enum LOG_TYPES {
 	LOG_ALL,
 	LOG_VGA, LOG_VGAGFX,LOG_VGAMISC,LOG_INT10,
@@ -88,35 +90,22 @@ struct LOG
 }; //add missing operators to here
 	//try to avoid anything smaller than bit32...
 void GFX_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
-#define LOG_MSG GFX_ShowMsg
+
+// Keep for compatibility
+#define LOG_MSG(...)	LOG_F(INFO, __VA_ARGS__)
 
 #endif //C_DEBUG
+
+#define LOG_INFO(...)		LOG_F(INFO, __VA_ARGS__)
+#define LOG_WARNING(...)	LOG_F(WARNING, __VA_ARGS__)
+#define LOG_ERR(...)		LOG_F(ERROR, __VA_ARGS__)
 
 #ifdef NDEBUG
 // DEBUG_LOG_MSG exists only for messages useful during development, and not to
 // be redirected into internal DOSBox debugger for DOS programs (C_DEBUG feature).
 #define DEBUG_LOG_MSG(...)
 #else
-// There's no portable way to expand variadic macro using C99/C++14 (or older)
-// alone. This language limitation got removed only with C++20 (through addition
-// of __VA_OPT__ macro).
-#ifdef _MSC_VER
-#define DEBUG_LOG_MSG(fmt, ...) fprintf(stderr, fmt "\n", __VA_ARGS__)
-//                                                      ~
-// MSVC silently eliminates trailing comma if needed:   ^
-#else
-#define DEBUG_LOG_MSG(fmt, ...) fprintf(stderr, fmt "\n", ##__VA_ARGS__)
-//                                                        ~~~~~~~~~~~~~
-//                                                        ^
-// GCC and Clang provide '##' token as a language extension to explicitly remove
-// trailing comma when there's no trailing parameters.
-#endif
-// If it'll ever be necessary to support another compiler, which does not
-// support C++20 nor GNU extension nor MSVC extension, then behaviour can be
-// simulated by implementing C++ variadic template wrapped inside a macro
-// (at the cost of slowing down compilation).
-//
-// Another option it to use vsnprintf (at the cost of slowing down runtime).
+#define DEBUG_LOG_MSG(...) DLOG_F(INFO, __VA_ARGS__)
 #endif // NDEBUG
 
 #endif

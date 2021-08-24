@@ -57,6 +57,9 @@
     <ClCompile Include="..\..\src\misc\cross.cpp">
       <Filter>dosbox_sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\submodules\loguru\loguru.cpp">
+      <Filter>dosbox_sources</Filter>
+    </ClCompile>
     <ClCompile Include="..\support_tests.cpp">
       <Filter>tests</Filter>
     </ClCompile>

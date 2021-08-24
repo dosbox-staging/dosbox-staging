@@ -183,6 +183,7 @@ static_libs_list = get_option('try_static_libs')
 msg = 'You can disable this dependency with: -D@0@=false'
 
 optional_dep  = dependency('', required : false)
+dl_dep        = cc.find_library('dl', required : false)
 atomic_dep    = cxx.find_library('atomic', required : false)
 opus_dep      = dependency('opusfile',
                            static : ('opusfile' in static_libs_list))
@@ -296,12 +297,19 @@ endif
 
 # include directories
 #
-incdir = include_directories('include', '.')
+incdir = include_directories(
+           'include',
+           '.',
+           'submodules/loguru',
+         )
 
 
-# bundled dependencies
+# bundled dependencies, in dependency-order
 #
-subdir('src/libs/decoders')
+subdir('src/libs/loguru')
+libloguru_dep = declare_dependency(link_with : libloguru)
+
+subdir('src/libs/decoders') # depends on libloguru_dep
 subdir('src/libs/nuked')
 subdir('src/libs/ppscale')
 subdir('src/libs/residfp')
@@ -310,7 +318,6 @@ libdecoders_dep = declare_dependency(link_with : libdecoders)
 libnuked_dep    = declare_dependency(link_with : libnuked)
 libppscale_dep  = declare_dependency(link_with : libppscale)
 libresidfp_dep  = declare_dependency(link_with : libresidfp)
-
 
 # internal libs
 #

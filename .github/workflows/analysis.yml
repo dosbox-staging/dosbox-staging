@@ -43,6 +43,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Fetch submodules
+        run:  git submodule update --init --recursive
+
       - run:  sudo apt-get update
 
       - name: Install dependencies
@@ -136,6 +139,9 @@ jobs:
             max_issues: 4
     steps:
       - uses: actions/checkout@v2
+
+      - name: Fetch submodules
+        run:  git submodule update --init --recursive
 
       - run:  sudo apt-get update
 

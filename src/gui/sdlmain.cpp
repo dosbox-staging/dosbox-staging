@@ -3469,6 +3469,18 @@ void GFX_GetSize(int &width, int &height, bool &fullscreen)
 int sdl_main(int argc, char *argv[])
 {
 	int rcode = 0; // assume good until proven otherwise
+	
+	// Setup logging right away
+	loguru::g_preamble_date    = true; // The date field
+	loguru::g_preamble_time    = true; // The time of the current day
+	loguru::g_preamble_uptime  = false; // The time since init call
+	loguru::g_preamble_thread  = false; // The logging thread
+	loguru::g_preamble_file    = false; // The file from which the log originates from
+	loguru::g_preamble_verbose = false; // The verbosity field
+	loguru::g_preamble_pipe    = true; // The pipe symbol right before the message	
+
+	loguru::init(argc, argv);
+
 	try {
 		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
 		OverrideWMClass(); // Before SDL2 video subsystem is initialized

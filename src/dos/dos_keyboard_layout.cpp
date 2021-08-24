@@ -1280,7 +1280,7 @@ public:
 		} */
 		if (loaded_layout->read_keyboard_file(layoutname, dos.loaded_codepage)) {
 			if (strncmp(layoutname,"auto",4)) {
-				LOG_MSG("Error loading keyboard layout %s",layoutname);
+				LOG_ERR("Error loading keyboard layout %s",layoutname);
 			}
 		} else {
 			const char* lcode = loaded_layout->main_language_code();

@@ -8,7 +8,12 @@ libgui_sources = files([
 
 libgui = static_library('gui', libgui_sources,
                         include_directories : incdir,
-                        dependencies : [ sdl2_dep, opengl_dep, libppscale_dep ])
+                        dependencies : [
+                          sdl2_dep,
+                          opengl_dep,
+                          libloguru_dep,
+                          libppscale_dep,
+                        ])
 
 libgui_dep = declare_dependency(link_with : libgui)
 

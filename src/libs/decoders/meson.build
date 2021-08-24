@@ -10,4 +10,8 @@ libdecoders_sources = files([
 
 libdecoders = static_library('decoders', libdecoders_sources,
                              include_directories : incdir,
-                             dependencies : [sdl2_dep, opus_dep])
+                             dependencies : [
+                               sdl2_dep,
+                               opus_dep,
+                               libloguru_dep,
+                             ])

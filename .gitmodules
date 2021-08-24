@@ -1,0 +1,3 @@
+[submodule "submodules/loguru"]
+	path = submodules/loguru
+	url = https://github.com/dosbox-staging/loguru
