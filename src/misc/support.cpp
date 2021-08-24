@@ -311,7 +311,7 @@ void E_Exit(const char *format, ...)
 	va_start(msg, format);
 	vsnprintf(e_exit_buf, ARRAY_LEN(e_exit_buf), format, msg);
 	va_end(msg);
-	throw(e_exit_buf);
+	ABORT_F("%s", e_exit_buf);
 }
 
 /* Overloaded function to handle different return types of POSIX and GNU

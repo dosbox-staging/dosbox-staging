@@ -84,6 +84,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Fetch submodules
+        run:  git submodule update --init --recursive
+
       - name:  Prepare brew and compiler caches
         if:    matrix.conf.needs_deps
         id:    prep-caches
@@ -167,6 +170,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: Fetch submodules
+        run:  git submodule update --init --recursive
 
       - name:  Prepare brew and compiler caches
         if:    matrix.runner.needs_deps

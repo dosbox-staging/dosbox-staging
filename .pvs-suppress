@@ -2,6 +2,30 @@
     "version": 1,
     "warnings": [
         {
+            "CodeCurrent": 88293181,
+            "CodeNext": 6447,
+            "CodePrev": 2507819856,
+            "ErrorCode": "V522",
+            "FileName": "loguru.cpp",
+            "Message": "There might be dereferencing of a potential null pointer 'with_newline'. Check lines: _, _."
+        },
+        {
+            "CodeCurrent": 647877999,
+            "CodeNext": 3897,
+            "CodePrev": 1189980955,
+            "ErrorCode": "V769",
+            "FileName": "loguru.cpp",
+            "Message": "The 'file_path' pointer in the 'file_path + _' expression could be nullptr. In such case, resulting value will be senseless and it should not be used. Check lines: _, _."
+        },
+        {
+            "CodeCurrent": 381112897,
+            "CodeNext": 1022144702,
+            "CodePrev": 0,
+            "ErrorCode": "V1051",
+            "FileName": "loguru.cpp",
+            "Message": "Consider checking for misprints. It's possible that the 'thread_id' should be checked here."
+        },
+        {
             "CodeCurrent": 0,
             "CodeNext": 0,
             "CodePrev": 0,

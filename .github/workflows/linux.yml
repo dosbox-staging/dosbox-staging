@@ -75,6 +75,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: Fetch submodules
+        run:  git submodule update --init --recursive
+
       - run:  sudo apt-get update
 
       - name: Install dependencies (minimum set)
@@ -143,6 +147,9 @@ jobs:
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     steps:
       - uses: actions/checkout@v2
+
+      - name: Fetch submodules
+        run:  git submodule update --init --recursive
 
       - run:  sudo apt-get update
 

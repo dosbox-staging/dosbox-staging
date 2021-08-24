@@ -28,7 +28,11 @@ libdos_sources = files([
 
 libdos = static_library('dos', libdos_sources,
                         include_directories : incdir,
-                        dependencies : [sdl2_dep, libdecoders_dep])
+                        dependencies : [
+                          sdl2_dep,
+                          libdecoders_dep,
+                          libloguru_dep,
+                        ])
 
 libdos_dep = declare_dependency(link_with : libdos)
 

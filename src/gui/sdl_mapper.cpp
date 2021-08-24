@@ -2281,7 +2281,7 @@ static void CreateStringBind(char * line) {
 			goto foundevent;
 		}
 	}
-	LOG_MSG("MAPPER: Can't find key binding for %s event", eventname);
+	LOG_WARNING("MAPPER: Can't find key binding for %s event", eventname);
 	return ;
 foundevent:
 	CBind * bind = nullptr;

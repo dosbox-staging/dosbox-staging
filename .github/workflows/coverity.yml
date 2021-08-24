@@ -23,6 +23,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: Fetch submodules
+        run:  git submodule update --init --recursive
       - run:  sudo apt-get update
       - name: Log and setup environment
         run: |

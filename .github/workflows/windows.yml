@@ -53,6 +53,9 @@ jobs:
           if (-not $?) { throw "vcpkg failed to integrate packages" }
 
       - uses:  actions/checkout@v2
+      - name: Fetch submodules
+        run:  git submodule update --init --recursive
+
       - name:  Log environment
         shell: pwsh
         run:   .\scripts\log-env.ps1
@@ -122,6 +125,9 @@ jobs:
           if (-not $?) { throw "vcpkg failed to integrate packages" }
 
       - uses:  actions/checkout@v2
+      - name: Fetch submodules
+        run:  git submodule update --init --recursive
+
       - name:  Log environment
         shell: pwsh
         run:   .\scripts\log-env.ps1
