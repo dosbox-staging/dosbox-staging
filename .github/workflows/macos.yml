@@ -22,7 +22,7 @@ jobs:
             arch: x86_64
             needs_deps: true
             packages: meson
-            max_warnings: 0
+            max_warnings: 20
 
           - name: GCC 11
             host: macos-latest
@@ -30,7 +30,7 @@ jobs:
             needs_deps: true
             packages: gcc@11
             build_flags: --native-file=.github/meson/native-gcc-11.ini
-            max_warnings: 0
+            max_warnings: 70
 
           - name: Clang, +tests
             host: macos-latest
@@ -58,7 +58,7 @@ jobs:
             arch: arm64
             needs_deps: false
             packages: meson
-            max_warnings: 0
+            max_warnings: 20
 
           - name: Clang, +tests
             host: [self-hosted, macOS, arm64, debug-builds]

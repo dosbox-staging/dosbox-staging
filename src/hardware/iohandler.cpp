@@ -31,7 +31,7 @@
 #include "../src/cpu/lazyflags.h"
 #include "callback.h"
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+// [[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 extern std::unordered_map<io_port_t, IO_WriteHandler> io_writehandlers[IO_SIZES];
 extern std::unordered_map<io_port_t, IO_ReadHandler> io_readhandlers[IO_SIZES];
 void port_within_proposed(io_port_t port);
@@ -217,7 +217,7 @@ void IO_WriteB(io_port_t port, io_val_t val)
 	else {
 		IO_USEC_write_delay();
 
-		// To-be-removed when Bitu-based IO handler API is deprecated:
+		// [[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 		WritePort(IO_MB, port, val);
 
 		// Assert and cast will be removed after deprecating Bitu API
@@ -265,7 +265,7 @@ void IO_WriteW(io_port_t port, io_val_t val)
 	else {
 		IO_USEC_write_delay();
 
-		// To-be-removed when Bitu-based IO handler API is deprecated:
+		// [[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 		WritePort(IO_MW, port, val);
 
 		// Assert and cast will be removed after deprecating Bitu API
@@ -310,7 +310,7 @@ void IO_WriteD(io_port_t port, io_val_t val)
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
 	} else {
-		// To-be-removed when Bitu-based IO handler API is deprecated:
+		// [[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 		WritePort(IO_MD, port, val);
 
 		// Assert and cast will be removed after deprecating Bitu API
@@ -358,10 +358,11 @@ io_val_t IO_ReadB(io_port_t port)
 	else {
 		IO_USEC_read_delay();
 
-		// To-be-removed when Bitu-based IO handler API is deprecated:
+		// [deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 		if (io_readhandlers[0].find(port) != io_readhandlers[0].end()) {
 			retval = ReadPort(IO_MB, port);
 		} else {
+			// Assert and cast will be removed after deprecating Bitu API
 			assert(port <= UINT16_MAX);
 			retval = read_byte_from_port(static_cast<uint16_t>(port));
 		}
@@ -406,10 +407,11 @@ io_val_t IO_ReadW(io_port_t port)
 	else {
 		IO_USEC_read_delay();
 		
-		// To-be-removed when Bitu-based IO handler API is deprecated:
+		// [[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 		if (io_readhandlers[1].find(port) != io_readhandlers[1].end()) {
 			retval = ReadPort(IO_MW, port);
 		} else {
+			// Assert and cast will be removed after deprecating Bitu API
 			assert(port <= UINT16_MAX);
 			retval = read_word_from_port(static_cast<uint16_t>(port));
 		}
@@ -452,10 +454,11 @@ io_val_t IO_ReadD(io_port_t port)
 		cpudecoder=old_cpudecoder;
 	} else {
 
-		// To-be-removed when Bitu-based IO handler API is deprecated:
+		// [[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 		if (io_readhandlers[2].find(port) != io_readhandlers[2].end()) {
 			retval = ReadPort(IO_MD, port);
 		} else {
+			// Assert and cast will be removed after deprecating Bitu API
 			assert(port <= UINT16_MAX);
 			retval = read_dword_from_port(static_cast<uint16_t>(port));
 		}
