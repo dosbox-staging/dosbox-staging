@@ -29,40 +29,40 @@
 
 #include "inout.h"
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+// [[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 std::unordered_map<io_port_t, IO_WriteHandler> io_writehandlers[IO_SIZES] = {};
 std::unordered_map<io_port_t, IO_ReadHandler> io_readhandlers[IO_SIZES] = {};
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 void port_within_proposed(io_port_t port) {
 	assert(port < std::numeric_limits<io_port_t_proposed>::max());
 }
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 void val_within_proposed(io_val_t val) {
 	assert(val <= std::numeric_limits<io_val_t_proposed>::max());
 }
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 static io_val_t ReadBlocked(io_port_t /*port*/, Bitu /*iolen*/)
 {
 	return static_cast<io_val_t>(~0);
 }
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 static void WriteBlocked(io_port_t /*port*/, io_val_t /*val*/, Bitu /*iolen*/)
 {}
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 static io_val_t ReadDefault(io_port_t port, Bitu iolen);
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 static void WriteDefault(io_port_t port, io_val_t val, Bitu iolen);
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
 // The ReadPort and WritePort functions lookup and call the handler
 // at the desired port. If the port hasn't been assigned (and the
 // lookup is empty), then the default handler is assigned and called.
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 io_val_t ReadPort(uint8_t req_bytes, io_port_t port)
 {
 	// Convert bytes to handler map index MB.0x1->0, MW.0x2->1, and MD.0x4->2
@@ -70,7 +70,7 @@ io_val_t ReadPort(uint8_t req_bytes, io_port_t port)
 	return io_readhandlers[idx].emplace(port, ReadDefault).first->second(port, req_bytes);
 }
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 void WritePort(uint8_t put_bytes, io_port_t port, io_val_t val)
 {
 	// Convert bytes to handler map index MB.0x1->0, MW.0x2->1, and MD.0x4->2
@@ -83,7 +83,7 @@ void WritePort(uint8_t put_bytes, io_port_t port, io_val_t val)
 	        .first->second(port, val & mask, put_bytes);
 }
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 static io_val_t ReadDefault(io_port_t port, Bitu iolen)
 {
 	port_within_proposed(port);
@@ -100,7 +100,7 @@ static io_val_t ReadDefault(io_port_t port, Bitu iolen)
 	return 0;
 }
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 static void WriteDefault(io_port_t port, io_val_t val, Bitu iolen)
 {
 	port_within_proposed(port);
@@ -124,7 +124,7 @@ static void WriteDefault(io_port_t port, io_val_t val, Bitu iolen)
 	}
 }
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 void IO_RegisterReadHandler(io_port_t port, IO_ReadHandler handler, Bitu mask, Bitu range)
 {
 	port_within_proposed(port);
@@ -137,7 +137,7 @@ void IO_RegisterReadHandler(io_port_t port, IO_ReadHandler handler, Bitu mask, B
 	}
 }
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 void IO_RegisterWriteHandler(io_port_t port, IO_WriteHandler handler, Bitu mask, Bitu range)
 {
 	port_within_proposed(port);
@@ -150,7 +150,7 @@ void IO_RegisterWriteHandler(io_port_t port, IO_WriteHandler handler, Bitu mask,
 	}
 }
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 void IO_FreeReadHandler(io_port_t port, Bitu mask, Bitu range)
 {
 	port_within_proposed(port);
@@ -166,7 +166,7 @@ void IO_FreeReadHandler(io_port_t port, Bitu mask, Bitu range)
 	}
 }
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 void IO_FreeWriteHandler(io_port_t port, Bitu mask, Bitu range)
 {
 	port_within_proposed(port);
@@ -182,7 +182,7 @@ void IO_FreeWriteHandler(io_port_t port, Bitu mask, Bitu range)
 	}
 }
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 void IO_ReadHandleObject::Install(io_port_t port, IO_ReadHandler handler, Bitu mask, Bitu range)
 {
 	port_within_proposed(port);
@@ -199,7 +199,10 @@ void IO_ReadHandleObject::Install(io_port_t port, IO_ReadHandler handler, Bitu m
 
 void IO_ReadHandleObject::Uninstall(){
 	if(!installed) return;
-	IO_FreeReadHandler(m_port,m_mask,m_range); // to be removed
+
+	// [[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
+	IO_FreeReadHandler(m_port,m_mask,m_range);
+
 	// casts will be removed after deprecating Bitu handlers
 	IO_FreeReadHandler(static_cast<io_port_t_proposed>(m_port), m_width,
 	                   static_cast<io_port_t_proposed>(m_range));
@@ -210,7 +213,7 @@ IO_ReadHandleObject::~IO_ReadHandleObject(){
 	Uninstall();
 }
 
-// To-be-removed when Bitu-based IO handler API is deprecated:
+[[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
 void IO_WriteHandleObject::Install(io_port_t port, IO_WriteHandler handler, Bitu mask, Bitu range)
 {
 	port_within_proposed(port);
@@ -227,7 +230,9 @@ void IO_WriteHandleObject::Install(io_port_t port, IO_WriteHandler handler, Bitu
 
 void IO_WriteHandleObject::Uninstall() {
 	if(!installed) return;
-	IO_FreeWriteHandler(m_port,m_mask,m_range); // to be removed
+	// [[deprecated ("Bitu-based IO-handler: to be replace with type-sized IO-handler")]]
+	IO_FreeWriteHandler(m_port,m_mask,m_range);
+
 	// casts will be removed after deprecating Bitu handlers
 	IO_FreeWriteHandler(static_cast<io_port_t_proposed>(m_port), m_width,
 	                    static_cast<io_port_t_proposed>(m_range));
