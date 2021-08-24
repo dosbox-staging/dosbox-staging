@@ -68,6 +68,13 @@ char *safe_strcat(char (&dst)[N], const char *src) noexcept
 }
 
 template <size_t N>
+size_t safe_strlen(char (&str)[N]) noexcept
+{
+	static_assert(N != 0, "zero-length arrays are not supported");
+	return strnlen(str, N - 1);
+}
+
+template <size_t N>
 int safe_sprintf(char (&dst)[N], const char *fmt, ...)
         GCC_ATTRIBUTE(format(printf, 2, 3));
 
