@@ -136,6 +136,19 @@
 #define SRCTYPE Bit16u
 #endif
 
+#if SBPP == 24
+#define SC scalerSourceCache.b32
+#if DBPP == 15
+#define PMAKE(_VAL) (PTYPE)(((_VAL&(31<<19))>>9)|((_VAL&(31<<11))>>6)|((_VAL&(31<<3))>>3))
+#elif DBPP == 16
+#define PMAKE(_VAL) (PTYPE)(((_VAL&(31<<19))>>8)|((_VAL&(63<<10))>>4)|((_VAL&(31<<3))>>3))
+#elif DBPP == 32
+#define PMAKE(_VAL) (_VAL)
+#endif
+#include "rgb24.h"
+#define SRCTYPE rgb24
+#endif
+
 #if SBPP == 32
 #define SC scalerSourceCache.b32
 #ifdef WORDS_BIGENDIAN

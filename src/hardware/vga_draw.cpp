@@ -1029,6 +1029,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		FALLTHROUGH;
 	case M_LIN8:
 	case M_LIN15:
+	case M_LIN24:
 	case M_LIN16:
 	case M_LIN32:
 		vga.draw.byte_panning_shift = 4;
@@ -1126,6 +1127,7 @@ void VGA_CheckScanLength(void) {
 	case M_LIN8:
 	case M_LIN15:
 	case M_LIN16:
+	case M_LIN24:
 	case M_LIN32:
 		vga.draw.address_add=vga.config.scan_len*8;
 		break;
@@ -1497,6 +1499,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_LIN16:
 		bpp = 16;
 		break;
+	case M_LIN24:
+		bpp = 24;
+		break;
 	case M_LIN32:
 	case M_CGA2_COMPOSITE:
 	case M_CGA4_COMPOSITE:
@@ -1524,6 +1529,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			width >>=1;
 		}
 		// fall-through
+	case M_LIN24:
 	case M_LIN32:
 		width<<=3;
 		if (vga.crtc.mode_control & 0x8) {
@@ -1597,25 +1603,24 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		VGA_DrawLine=VGA_Draw_1BPP_Line;
 		break;
 	case M_TEXT:
+		aspect_ratio=1.0;
 		vga.draw.blocks=width;
 		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
-		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) {
-			// vgaonly: allow 9-pixel wide fonts
-			if (vga.seq.clocking_mode&0x01) {
-				vga.draw.char9dot = false;
-				width*=8;
-			} else {
-				vga.draw.char9dot = true;
-				width*=9;
-				aspect_ratio *= 1.125;
-			}
-			VGA_DrawLine=VGA_TEXT_Xlat16_Draw_Line;
-			bpp = 16;
+		if ((IS_VGA_ARCH) && !(vga.seq.clocking_mode&0x01)) {
+			vga.draw.char9dot = true;
+			width*=9;
+			aspect_ratio *= 1.125;
+			if (svgaCard==SVGA_None) {
+				VGA_DrawLine=VGA_TEXT_Xlat16_Draw_Line;
+				bpp=16;
+			} else VGA_DrawLine=VGA_TEXT_Draw_Line;
 		} else {
-			// not vgaonly: force 8-pixel wide fonts
-			width*=8; // 8 bit wide text font
 			vga.draw.char9dot = false;
-			VGA_DrawLine=VGA_TEXT_Draw_Line;
+			width*=8;  /* 8 bit wide text font */
+			if (svgaCard==SVGA_None) {
+				VGA_DrawLine=VGA_TEXT_Xlat16_Draw_Line;
+				bpp=16;
+			} else VGA_DrawLine=VGA_TEXT_Draw_Line;
 		}
 		break;
 	case M_HERC_GFX:

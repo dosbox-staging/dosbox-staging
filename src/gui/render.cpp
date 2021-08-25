@@ -414,11 +414,16 @@ forcenormal:
 			gfx_flags |= GFX_LOVE_16;
 			gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
 			break;
+	case 24:
+		render.src.start = (render.src.width * 3) / sizeof(Bitu);
+		gfx_flags |= GFX_LOVE_32;
+		gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
+		break;
 	case 32:
-			render.src.start = ( render.src.width * 4) / sizeof(Bitu);
-			gfx_flags |= GFX_LOVE_32;
-			gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
-			break;
+		render.src.start = (render.src.width * 4) / sizeof(Bitu);
+		gfx_flags |= GFX_LOVE_32;
+		gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
+		break;
 	}
 	gfx_flags=GFX_GetBestMode(gfx_flags);
 	if (gfx_flags & GFX_UNITY_SCALE &&
@@ -505,7 +510,7 @@ forcenormal:
 	switch (render.src.bpp) {
 	case 8:
 		render.scale.lineHandler = (*lineBlock)[0][render.scale.outMode];
-		render.scale.linePalHandler = (*lineBlock)[4][render.scale.outMode];
+		render.scale.linePalHandler = (*lineBlock)[5][render.scale.outMode];
 		render.scale.inMode = scalerMode8;
 		render.scale.cachePitch = render.src.width * 1;
 		break;
@@ -521,8 +526,14 @@ forcenormal:
 		render.scale.inMode = scalerMode16;
 		render.scale.cachePitch = render.src.width * 2;
 		break;
-	case 32:
+	case 24:
 		render.scale.lineHandler = (*lineBlock)[3][render.scale.outMode];
+		render.scale.linePalHandler = 0;
+		render.scale.inMode = scalerMode32;
+		render.scale.cachePitch = render.src.width * 3;
+		break;
+	case 32:
+		render.scale.lineHandler = (*lineBlock)[4][render.scale.outMode];
 		render.scale.linePalHandler = 0;
 		render.scale.inMode = scalerMode32;
 		render.scale.cachePitch = render.src.width * 4;

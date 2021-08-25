@@ -154,6 +154,7 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu /*iolen*/) {
 			case S3_XGA_1152: vga.s3.xga_screen_width = 1152; break;
 			case S3_XGA_640:  vga.s3.xga_screen_width = 640; break;
 			case S3_XGA_800:  vga.s3.xga_screen_width = 800; break;
+			case S3_XGA_1600: vga.s3.xga_screen_width = 1600; break;
 			case S3_XGA_1280: vga.s3.xga_screen_width = 1280; break;
 			default:  vga.s3.xga_screen_width = 1024; break;
 		}
@@ -531,7 +532,7 @@ void SVGA_Setup_S3Trio(void) {
 	svga.accepts_mode = &SVGA_S3_AcceptsMode;
 
 	if (vga.vmemsize == 0)
-		vga.vmemsize = 2*1024*1024; // the most common S3 configuration
+		vga.vmemsize = 4*1024*1024;
 
 	// Set CRTC 36 to specify amount of VRAM and PCI
 	if (vga.vmemsize < 1024*1024) {
@@ -540,14 +541,14 @@ void SVGA_Setup_S3Trio(void) {
 	} else if (vga.vmemsize < 2048*1024)	{
 		vga.vmemsize = 1024*1024;
 		vga.s3.reg_36 = 0xda;		// 1mb fast page mode
-	} else if (vga.vmemsize < 3072*1024)	{
+	} else if (vga.vmemsize < 4096*1024)	{
 		vga.vmemsize = 2048*1024;
 		vga.s3.reg_36 = 0x9a;		// 2mb fast page mode
-	} else if (vga.vmemsize < 4096*1024)	{
-		vga.vmemsize = 3072*1024;
-		vga.s3.reg_36 = 0x5a;		// 3mb fast page mode
-	} else {	// Trio64 supported only up to 4M
+	} else if (vga.vmemsize < 8192*1024)	{
 		vga.vmemsize = 4096*1024;
 		vga.s3.reg_36 = 0x1a;		// 4mb fast page mode
+	} else {
+		vga.vmemsize = 8192*1024;
+		vga.s3.reg_36 = 0x7a;		// 8mb fast page mode
 	}
 }

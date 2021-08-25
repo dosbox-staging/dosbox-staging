@@ -152,7 +152,9 @@ typedef struct {
 		Bit16u used;
 	} rom;
 	Bit16u vesa_setmode;
+	Bit8u vesa_refresh[14];
 	bool vesa_nolfb;
+	bool vesa_no24bpp;
 	bool vesa_oldvbe;
 } Int10Data;
 
