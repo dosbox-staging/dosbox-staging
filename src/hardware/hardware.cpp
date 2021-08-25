@@ -30,6 +30,7 @@
 #include "mem.h"
 #include "pic.h"
 #include "render.h"
+#include "rgb24.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
@@ -464,6 +465,14 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 				}
 				rowPointer = doubleRow;
 				break;
+			case 24:
+				if (flags & CAPTURE_FLAG_DBLW) {
+					for (Bitu x=0;x<countWidth;x++) {
+						((rgb24 *)doubleRow)[x*2+0] = ((rgb24 *)doubleRow)[x*2+1] = ((rgb24 *)srcLine)[x];
+						rowPointer = doubleRow;
+					}	// There is no else statement here because rowPointer is already
+				}		// defined as srcLine above which is already 24-bit single row
+				break;
 			case 32:
 				if (flags & CAPTURE_FLAG_DBLW) {
 					for (Bitu x=0;x<countWidth;x++) {
@@ -507,6 +516,7 @@ skip_shot:
 		case 8:format = ZMBV_FORMAT_8BPP;break;
 		case 15:format = ZMBV_FORMAT_15BPP;break;
 		case 16:format = ZMBV_FORMAT_16BPP;break;
+		case 24:format = ZMBV_FORMAT_32BPP;break;	// 24-bit will be converted to 32-bit for compatibility
 		case 32:format = ZMBV_FORMAT_32BPP;break;
 		default:
 			goto skip_video;
@@ -550,14 +560,14 @@ skip_shot:
 
 		for (i=0;i<height;i++) {
 			void * rowPointer;
+			void * srcLine;
+			if (flags & CAPTURE_FLAG_DBLH)
+				srcLine=(data+(i >> 1)*pitch);
+			else
+				srcLine=(data+(i >> 0)*pitch);
 			if (flags & CAPTURE_FLAG_DBLW) {
-				void *srcLine;
 				Bitu x;
 				Bitu countWidth = width >> 1;
-				if (flags & CAPTURE_FLAG_DBLH)
-					srcLine=(data+(i >> 1)*pitch);
-				else
-					srcLine=(data+(i >> 0)*pitch);
 				switch ( bpp) {
 				case 8:
 					for (x=0;x<countWidth;x++)
@@ -570,6 +580,11 @@ skip_shot:
 						((Bit16u *)doubleRow)[x*2+0] =
 						((Bit16u *)doubleRow)[x*2+1] = ((Bit16u *)srcLine)[x];
 					break;
+				case 24:
+					for (x=0;x<countWidth;x++)
+						((Bit32u *)doubleRow)[x*2+0] =
+						((Bit32u *)doubleRow)[x*2+1] = ((rgb24 *)srcLine)[x];
+					break;
 				case 32:
 					for (x=0;x<countWidth;x++)
 						((Bit32u *)doubleRow)[x*2+0] =
@@ -578,10 +593,15 @@ skip_shot:
 				}
                 rowPointer=doubleRow;
 			} else {
-				if (flags & CAPTURE_FLAG_DBLH)
-					rowPointer=(data+(i >> 1)*pitch);
-				else
-					rowPointer=(data+(i >> 0)*pitch);
+				if (bpp == 24) {
+					Bitu x;
+					Bitu countWidth = width;
+					for (x=0;x<countWidth;x++)
+						((Bit32u *)doubleRow)[x] = ((rgb24 *)srcLine)[x];
+					rowPointer=doubleRow;	// Using doubleRow for this conversion when it is not actually double row!
+				} else {
+					rowPointer=srcLine;
+				}
 			}
 			capture.video.codec->CompressLines( 1, &rowPointer );
 		}

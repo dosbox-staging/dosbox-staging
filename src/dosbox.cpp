@@ -73,6 +73,7 @@ void PROGRAMS_Init(Section*);
 //void CREDITS_Init(Section*);
 void RENDER_Init(Section*);
 void VGA_Init(Section*);
+void vesa_refresh_Init(Section*);
 
 void DOS_Init(Section*);
 
@@ -380,6 +381,7 @@ static void DOSBOX_RealInit(Section * sec) {
 	machine = MCH_VGA;
 	int10.vesa_nolfb = false;
 	int10.vesa_oldvbe = false;
+	int10.vesa_no24bpp = false;
 	if      (mtype == "cga")      { machine = MCH_CGA; mono_cga = false; }
 	else if (mtype == "cga_mono") { machine = MCH_CGA; mono_cga = true; }
 	else if (mtype == "tandy")    { machine = MCH_TANDY; }
@@ -388,7 +390,9 @@ static void DOSBOX_RealInit(Section * sec) {
 	else if (mtype == "ega")      { machine = MCH_EGA; }
 //	else if (mtype == "vga")          { svgaCard = SVGA_S3Trio; }
 	else if (mtype == "svga_s3")       { svgaCard = SVGA_S3Trio; }
+	else if (mtype == "vesa_no24bpp") { svgaCard = SVGA_S3Trio; int10.vesa_no24bpp = true;}
 	else if (mtype == "vesa_nolfb")   { svgaCard = SVGA_S3Trio; int10.vesa_nolfb = true;}
+	else if (mtype == "vesa_nolfb_no24bpp") { svgaCard = SVGA_S3Trio; int10.vesa_nolfb = true; int10.vesa_no24bpp = true;}
 	else if (mtype == "vesa_oldvbe")   { svgaCard = SVGA_S3Trio; int10.vesa_oldvbe = true;}
 	else if (mtype == "svga_et4000")   { svgaCard = SVGA_TsengET4K; }
 	else if (mtype == "svga_et3000")   { svgaCard = SVGA_TsengET3K; }
@@ -396,6 +400,8 @@ static void DOSBOX_RealInit(Section * sec) {
 	else if (mtype == "svga_paradise") { svgaCard = SVGA_ParadisePVGA1A; }
 	else if (mtype == "vgaonly")      { svgaCard = SVGA_None; }
 	else E_Exit("DOSBOX:Unknown machine type %s",mtype.c_str());
+
+	vga.vmemsize=section->Get_int("vmemsize")*1024;
 }
 
 
@@ -424,7 +430,8 @@ void DOSBOX_Init(void) {
 	const char* machines[] = {
 		"hercules", "cga", "cga_mono", "tandy", "pcjr", "ega",
 		"vgaonly", "svga_s3", "svga_et3000", "svga_et4000",
-		"svga_paradise", "vesa_nolfb", "vesa_oldvbe", 0 };
+		"svga_paradise", "vesa_no24bpp", "vesa_nolfb", "vesa_nolfb_no24bpp", "vesa_oldvbe", 0 };
+
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
 	Pstring = secprop->Add_path("language",Property::Changeable::Always,"");
 	Pstring->Set_help("Select another language file.");
@@ -432,6 +439,10 @@ void DOSBOX_Init(void) {
 	Pstring = secprop->Add_string("machine",Property::Changeable::OnlyAtStart,"svga_s3");
 	Pstring->Set_values(machines);
 	Pstring->Set_help("The type of machine DOSBox tries to emulate.");
+
+	Pint = secprop->Add_int("vmemsize",Property::Changeable::OnlyAtStart,4096);
+	Pint->SetMinMax(1,8192);
+	Pint->Set_help("Video memory in kilobytes.");
 
 	Pstring = secprop->Add_path("captures",Property::Changeable::Always,"capture");
 	Pstring->Set_help("Directory where things like wave, midi, screenshot get captured.");
@@ -472,6 +483,36 @@ void DOSBOX_Init(void) {
 	        "quiet       |  no    |   no    |    no\n"
 	        "splash_only |  yes   |   no    |    no\n"
 	        "auto        | 'low' if exec or dir is passed, otherwise 'high'");
+
+	secprop=control->AddSection_prop("vesarefresh",&vesa_refresh_Init,true);
+	Pint = secprop->Add_int("refresh512x384",Property::Changeable::Always,70);
+	Pint->Set_help("Refresh rate for VESA graphics mode 512x384.");
+	Pint = secprop->Add_int("refresh640x350",Property::Changeable::Always,70);
+	Pint->Set_help("Refresh rate for VESA graphics mode 640x350.");
+	Pint = secprop->Add_int("refresh640x400",Property::Changeable::Always,70);
+	Pint->Set_help("Refresh rate for VESA graphics modes 640x400, 320x200 and 320x400.");
+	Pint = secprop->Add_int("refresh640x480",Property::Changeable::Always,60);
+	Pint->Set_help("Refresh rate for VESA graphics modes 640x480, 320x240 and 320x480.");
+	Pint = secprop->Add_int("refresh720x480",Property::Changeable::Always,60);
+	Pint->Set_help("Refresh rate for VESA text mode 80x60 (9x8 character cell).");
+	Pint = secprop->Add_int("refresh800x600",Property::Changeable::Always,60);
+	Pint->Set_help("Refresh rate for VESA graphics modes 800x600 and 400x300.");
+	Pint = secprop->Add_int("refresh1024x768",Property::Changeable::Always,60);
+	Pint->Set_help("Refresh rate for VESA graphics mode 1024x768.");
+	Pint = secprop->Add_int("refresh1188x344",Property::Changeable::Always,70);
+	Pint->Set_help("Refresh rate for VESA text mode 132x43 (9x8 character cell).");
+	Pint = secprop->Add_int("refresh1188x400",Property::Changeable::Always,70);
+	Pint->Set_help("Refresh rate for VESA text modes 132x25 and 132x50 (9x16 and 9x8 character cells).");
+	Pint = secprop->Add_int("refresh1188x480",Property::Changeable::Always,60);
+	Pint->Set_help("Refresh rate for VESA text mode 132x60 (9x8 character cell).");
+	Pint = secprop->Add_int("refresh1152x864",Property::Changeable::Always,60);
+	Pint->Set_help("Refresh rate for VESA graphics mode 1152x864.");
+	Pint = secprop->Add_int("refresh1280x960",Property::Changeable::Always,60);
+	Pint->Set_help("Refresh rate for VESA graphics mode 1280x960.");
+	Pint = secprop->Add_int("refresh1280x1024",Property::Changeable::Always,60);
+	Pint->Set_help("Refresh rate for VESA graphics mode 1280x1024.");
+	Pint = secprop->Add_int("refresh1600x1200",Property::Changeable::Always,60);
+	Pint->Set_help("Refresh rate for VESA graphics mode 1600x1200.");
 
 	secprop=control->AddSection_prop("render",&RENDER_Init,true);
 	Pint = secprop->Add_int("frameskip",Property::Changeable::Always,0);

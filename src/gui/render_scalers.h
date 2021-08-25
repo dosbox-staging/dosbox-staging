@@ -26,8 +26,8 @@
 #define SCALER_MAX_MUL_HEIGHT 3
 
 #if RENDER_USE_ADVANCED_SCALERS>0
-#define SCALER_MAXWIDTH 	1280 
-#define SCALER_MAXHEIGHT	1024
+#define SCALER_MAXWIDTH		1600
+#define SCALER_MAXHEIGHT	1200
 #define SCALER_MAXX     	4096
 #else
 // reduced to save some memory
@@ -97,7 +97,7 @@ extern scalerSourceCache_t scalerSourceCache;
 #if RENDER_USE_ADVANCED_SCALERS>1
 extern scalerChangeCache_t scalerChangeCache;
 #endif
-typedef ScalerLineHandler_t ScalerLineBlock_t[5][4];
+typedef ScalerLineHandler_t ScalerLineBlock_t[6][4];
 
 typedef struct {
 	const char *name;
