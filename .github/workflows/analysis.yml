@@ -13,7 +13,11 @@ jobs:
     runs-on: ubuntu-20.04
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
       - run:  sudo apt-get update
       - name: Run shellcheck
         run:  ./scripts/verify-bash.sh
@@ -41,10 +45,10 @@ jobs:
     runs-on: ubuntu-20.04
     needs: run_linters
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Fetch submodules
-        run:  git submodule update --init --recursive
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - run:  sudo apt-get update
 
@@ -138,10 +142,10 @@ jobs:
             logs: clang-uasan-logs
             max_issues: 4
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Fetch submodules
-        run:  git submodule update --init --recursive
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - run:  sudo apt-get update
 

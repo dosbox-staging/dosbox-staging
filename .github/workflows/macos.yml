@@ -82,10 +82,10 @@ jobs:
             max_warnings: 190
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Fetch submodules
-        run:  git submodule update --init --recursive
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name:  Prepare brew and compiler caches
         if:    matrix.conf.needs_deps
@@ -169,10 +169,10 @@ jobs:
             needs_deps: false
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Fetch submodules
-        run:  git submodule update --init --recursive
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name:  Prepare brew and compiler caches
         if:    matrix.runner.needs_deps

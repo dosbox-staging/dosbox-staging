@@ -22,10 +22,13 @@ jobs:
     name: Coverity static analyzer
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - name: Fetch submodules
-        run:  git submodule update --init --recursive
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
       - run:  sudo apt-get update
+
       - name: Log and setup environment
         run: |
           ./scripts/log-env.sh

@@ -74,10 +74,10 @@ jobs:
             max_warnings: -1
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Fetch submodules
-        run:  git submodule update --init --recursive
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - run:  sudo apt-get update
 
@@ -146,10 +146,10 @@ jobs:
     runs-on: ubuntu-18.04
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Fetch submodules
-        run:  git submodule update --init --recursive
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - run:  sudo apt-get update
 
