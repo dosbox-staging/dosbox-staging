@@ -13,7 +13,7 @@ pkgman install -y meson ccache libpng libsdl2_devel sdl2_net_devel \
 Clone and enter the repository's directory:
 
 ``` shell
-git clone https://github.com/dosbox-staging/dosbox-staging.git
+git clone --recurse-submodules https://github.com/dosbox-staging/dosbox-staging.git
 cd dosbox-staging
 ```
 

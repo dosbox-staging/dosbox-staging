@@ -46,7 +46,7 @@ you build a binary optimized for gaming.
 3. Clone and enter the repository's directory:
 
     ``` shell
-    git clone https://github.com/dosbox-staging/dosbox-staging.git
+    git clone --recurse-submodules https://github.com/dosbox-staging/dosbox-staging.git
     cd dosbox-staging
     ```
 

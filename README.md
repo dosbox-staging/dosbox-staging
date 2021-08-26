@@ -82,7 +82,7 @@ Feature differences between release binaries (or unpatched sources):
 | **Relative window size**    | Yes (`windowresolution=small`, `medium`, or `large`) | `windowresolution=X%`
 | **[OPL] emulators**         | compat, fast, mame, nuked<sup>[8]</sup>              | compat, fast, mame
 | **[CGA]/mono support**      | Yes (`machine=cga_mono`)<sup>[9]</sup>               | Only CGA with colour
-| **PCjr CGA composite mode** | Yes (`machine=pcjr` with composite hotkeys)          | N/A
+| **CGA composite modes**     | Yes (`machine=pcjr/tandy/cga` with hotkeys)          | N/A
 | **[Wayland] support**       | Experimental (use `SDL_VIDEODRIVER=wayland`)         | N/A
 | **Modem phonebook file**    | Yes (`phonebookfile=<name>`)                         | N/A
 | **Autotype command**        | Yes<sup>[10]</sup>                                   | N/A
@@ -116,6 +116,21 @@ Feature differences between release binaries (or unpatched sources):
 ## Test builds / development snapshots
 
 [Links to the newest builds](https://dosbox-staging.github.io/downloads/devel/)
+
+## Get the source
+
+New users can clone the repository and submodules with:
+
+``` shell
+git clone --recurse-submodules \
+          https://github.com/dosbox-staging/dosbox-staging.git
+```
+
+If you have an existing source repository, update it with:
+
+``` shell
+git pull --recurse-submodules
+```
 
 ## Build instructions
 
@@ -167,7 +182,7 @@ brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth
 Instructions for creating an optimised release build:
 
 ``` shell
-git clone https://github.com/dosbox-staging/dosbox-staging.git
+git clone --recurse-submodules https://github.com/dosbox-staging/dosbox-staging.git
 cd dosbox-staging
 meson setup -Dbuildtype=release build
 ninja -C build
