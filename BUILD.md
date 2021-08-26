@@ -19,6 +19,41 @@ on any modern system. Documentation for programmers using other systems:
 [macOS]: docs/build-macos.md
 [Haiku]: docs/build-haiku.md
 
+## Make a build with the built-in debugger
+
+On Linux, BSD, macOS, or MSYS2: install the `ncurses` development library
+with headers included (as opposed to the bare library), and then:
+
+``` shell
+# setup the default debugger
+meson setup -Dbuildtype=release -Denable_debugger=normal build/debugger
+# -or- setup the heavy debugger
+meson setup -Dbuildtype=release -Denable_debugger=heavy build/debugger
+# build
+ninja -C build/debugger
+```
+
+If using Visual Studio, install `libcurses` using vcpkg and change
+the `C_DEBUG` and optionally the `C_HEAVY_DEBUG` lines inside
+`src/platform/visualc/config.h`.
+
+Default debugger:
+
+``` c++
+#define C_DEBUG 1
+#define C_HEAVY_DEBUG 0
+```
+
+Heavy debugger:
+
+``` c++
+#define C_DEBUG 1
+#define C_HEAVY_DEBUG 1
+```
+
+Then perform a release build.
+
+
 ## Meson build snippets
 
 ### Make a debug build
