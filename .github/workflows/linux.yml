@@ -188,9 +188,7 @@ jobs:
         run:  ./scripts/log-env.sh
 
       - name: Inject version string
-        run: |
-          scripts/version.sh >> $GITHUB_ENV
-          git fetch --prune --unshallow
+        run:  scripts/version.sh >> $GITHUB_ENV
 
       - name: Setup release build
         run: |
