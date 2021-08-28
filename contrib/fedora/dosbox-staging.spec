@@ -1,5 +1,5 @@
 Name:    dosbox-staging
-Version: 0.77.0
+Version: 0.77.1
 Release: 2%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+
@@ -85,6 +85,10 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/*.xml
 
 
 %changelog
+* Sat Aug 28 2021 kcgen <kcgen@users.noreply.github.com>
+- 0.77.1-1
+- Update to 0.77.1
+
 * Fri Jun 2 2021 kcgen <kcgen@users.noreply.github.com>
 - 0.77.0-1
 - Replace autotools with Meson
