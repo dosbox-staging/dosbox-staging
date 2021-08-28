@@ -131,10 +131,10 @@ jobs:
         run: |
           set -x
           git fetch --prune --unshallow
-          export VERSION=$(git describe --abbrev=0)
+          eval $(scripts/version.sh)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
           # inject version based on vcs
           sed -i "s|DOSBOX_DETAILED_VERSION \"git\"|DOSBOX_DETAILED_VERSION \"$VERSION\"|" src/platform/visualc/config.h
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
           # overwrite .conf file branding for release build
           sed -i "s|CONF_SUFFIX \"-staging-git\"|CONF_SUFFIX \"-staging\"|" src/platform/visualc/config.h
 
@@ -247,13 +247,12 @@ jobs:
         run: |
           set +x
           git fetch --unshallow
-          VERSION=$(git describe --abbrev=0)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
-          git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
+          git log "$NEWEST_TAG..HEAD" > changelog.txt
+          scripts/version.sh >> $GITHUB_ENV
       - uses: actions/upload-artifact@v2
         with:
           # Keep exactly this artifact name; it's being used to propagate
           # version info via GitHub REST API
           name: changelog-${{ env.VERSION }}.txt
-          path: changelog-${{ env.VERSION }}.txt
+          path: changelog.txt
