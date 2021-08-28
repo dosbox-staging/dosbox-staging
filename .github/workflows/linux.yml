@@ -189,10 +189,8 @@ jobs:
 
       - name: Inject version string
         run: |
-          set -x
+          scripts/version.sh >> $GITHUB_ENV
           git fetch --prune --unshallow
-          export VERSION=$(git describe --abbrev=0)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Setup release build
         run: |
@@ -306,13 +304,12 @@ jobs:
         run: |
           set +x
           git fetch --unshallow
-          VERSION=$(git describe --abbrev=0)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
-          git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
+          git log "$NEWEST_TAG..HEAD" > changelog.txt
+          scripts/version.sh >> $GITHUB_ENV
       - uses: actions/upload-artifact@v2
         with:
           # Keep exactly this artifact name; it's being used to propagate
           # version info via GitHub REST API
           name: changelog-${{ env.VERSION }}.txt
-          path: changelog-${{ env.VERSION }}.txt
+          path: changelog.txt
