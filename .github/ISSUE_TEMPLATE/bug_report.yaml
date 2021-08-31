@@ -8,7 +8,10 @@ body:
   - type: markdown
     attributes:
       value: |
-        Please fill out forms as cleanly as possible.
+        ### Please fill out forms as cleanly as possible.
+        ### Make sure that you have
+        - properly edited & filled in the title of this bug report
+        
   - type: dropdown
     id: version
     attributes:
