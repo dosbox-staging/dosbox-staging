@@ -42,9 +42,9 @@ body:
   - type: input
     id: other
     attributes:
-      label: Other please describe
+      label: Other OS please describe
       description: Other OS
-      placeholder: "Windows, *nix, Mac OSXversion"
+      placeholder: "Windows, *nix, Mac OSX version.  Debian, Ubuntu, Arch, etc."
     validations:
       required: false
   - type: input
