@@ -77,7 +77,7 @@ body:
     id: description
     attributes:
       label: A clear and concise description of what the bug is.
-      description: Describe what happens, what software were you running?
+      description: Describe what happens, what software were you running? _Include screenshot if possible_
       placeholder: "How & When does this occur?"
     validations:
       required: true
@@ -98,7 +98,7 @@ body:
     id: config_file
     attributes:
       label: Share the config file(s) you've been using to run the program.
-      description: (dosbox-staging.conf) Please avoid pasting the full config, use attachments or links
+      description: (dosbox-staging.conf) Please avoid pasting the full config, _use attachments or links_
       placeholder: "example: texture_renderer = opengl"
     validations:
       required: false
@@ -106,7 +106,7 @@ body:
     id: log
     attributes:
       label: Provide a Log
-      description: Please avoid pasting the full log, use attachments or links
+      description: Please avoid pasting the full log, _use attachments or links_
       placeholder: "Copy & paste error log section or provide link"
     validations:
       required: false
