@@ -1,7 +1,8 @@
 name: Bug report
+description: File a Bug report
 title: '[BUG] <title>'
 labels: bug
-assignees: ''
+assignees: 'anonymous@temp'
 
 body:
   - type: markdown
