@@ -9,7 +9,7 @@ body:
     attributes:
       value: |
         Please fill out forms as cleanly as possible.
-   - type: dropdown
+  - type: dropdown
     id: version
     attributes:
       label: Dosbox-Staging Version
