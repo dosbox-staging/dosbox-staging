@@ -14,8 +14,8 @@ body:
     attributes:
       label: Dosbox-Staging Version
       description: What version are you using?
-      description: Run `dosbox --version`
-      description: Type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
+      placeholder: "Run `dosbox --version` or type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command."
+      multiple: false
       options:
         - 0.78.0-alpha
         - 0.77.1
@@ -30,7 +30,7 @@ body:
     id: OS
     attributes:
       label: What Operating System are you using?
-      multiple: true
+      multiple: false
       options:
         - Windows 10
         - Windows 7
@@ -40,7 +40,13 @@ body:
         - Linux x86_64
         - Linux Raspberry Pi ARM
         - Other
+  - type: input
+    id: other
       label: Other, please describe
+      description: Other OS
+      placeholder: "Windows, *nix, Mac OSXversion"
+    validations:
+      required: false
   - type: input
     id: hardware
     attributes:
@@ -85,8 +91,8 @@ body:
   - type: checkboxes
     id: terms
     attributes:
-      label: terms
-      description: Do you agree to the community guidelines?
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
       options:
-        - label: I agree
+        - label: I agree to follow this project's Code of Conduct
           required: true
