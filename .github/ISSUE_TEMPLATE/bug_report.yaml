@@ -1,6 +1,6 @@
-name: Bug report
+name: Bug Report
 description: File a Bug report
-title: '[BUG] <title>'
+title: '[BUG] '
 labels: bug
 #assignees: 'anonymous@temp'
 
