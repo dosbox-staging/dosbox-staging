@@ -13,8 +13,7 @@ body:
     id: version
     attributes:
       label: Dosbox-Staging Version
-      description: What version are you using?
-      placeholder: "Run `dosbox --version` or type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command."
+      description: What version are you using? Run `dosbox --version` or type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
       multiple: false
       options:
         - 0.78.0-alpha
