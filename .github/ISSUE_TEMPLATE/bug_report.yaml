@@ -49,6 +49,8 @@ body:
         - Linux x86_64
         - Linux ARM (Raspberry Pi)
         - Other
+    validations:
+      required: false
   - type: input
     id: other
     attributes:
@@ -73,7 +75,7 @@ body:
       options:
         - label: I have searched and not found similar issues.
       validations:
-          required: true
+        required: true
   - type: textarea
     id: description
     attributes:
