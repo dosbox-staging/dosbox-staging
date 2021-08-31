@@ -39,7 +39,7 @@ body:
         - Linux x86_64
         - Linux Raspberry Pi ARM
         - Other
-  - type: input
+  - type: textarea
     id: question
     attributes:
       label: Whats your question and how can we help?
