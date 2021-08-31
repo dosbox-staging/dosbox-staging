@@ -13,9 +13,9 @@ body:
     id: version
     attributes:
       label: Dosbox-Staging Version
-      description: |
-      What version are you using?
-      Run `dosbox --version`
+      value: |
+      What version are you using? |
+      Run `dosbox --version` |
       Type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
       multiple: false
       options:
