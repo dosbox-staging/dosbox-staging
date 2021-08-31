@@ -1,0 +1,89 @@
+name: Bug report
+about: Create a report to help us improve
+title: '[BUG] <title>'
+labels: bug
+assignees: ''
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please fill out forms as cleanly as possible.
+   - type: dropdown
+    id: version
+    attributes:
+      label: Dosbox-Staging Version
+      description: What version are you using?
+      description: Run `dosbox --version`
+      description: Type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
+      options:
+        - 0.77.1
+        - 0.77.0
+    validations:
+      required: true
+  - type: dropdown
+    id: OS
+    attributes:
+      label: What Operating System are you using?
+      multiple: true
+      options:
+        - Windows 10
+        - Windows 7
+        - Windows Other
+        - Mac OS
+        - Linux x86
+        - Linux x86_64
+        - Linux Raspberry Pi ARM
+        - Other
+      label: Other, please describe
+      input:
+      value: "Other OS"
+  - type: input
+    id: hardware
+    attributes:
+      label: Relevant hardware info
+      description: Hardware
+      placeholder: "[CPU, GPU, device brand/model: e.g. Raspberry Pi3B+, etc]"
+    validations:
+      required: true
+  - type: input
+    id: description
+    attributes:
+      label: A clear and concise description of what the bug is.
+      description: Describe
+      placeholder: "How & When does this occur?"
+    validations:
+      required: true
+  - type: input
+    id: steps
+    attributes:
+      label: Steps to reproduce the behaviour.
+      description: Steps
+      placeholder: "Explain how to reproduce"
+    validations:
+      required: false
+  - type: input
+    id: config_file
+    attributes:
+      label: Share the config file(s) you've been using to run the program.
+      description: dosbox-staging.conf
+      placeholder: "texture_renderer = opengl"
+    validations:
+      required: false
+  - type: textarea
+    id: log
+    attributes:
+      label: Provide a Log
+      description: 
+      placeholder: steps to aquire log
+      value: "Copy & paste log or provide link"
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: terms
+      description: Do you agree to the community guidelines?
+      options:
+        - label: I agree
+          required: true
