@@ -1,5 +1,4 @@
 name: Bug report
-about: Create a report to help us improve
 title: '[BUG] <title>'
 labels: bug
 assignees: ''
@@ -36,8 +35,9 @@ body:
         - Linux Raspberry Pi ARM
         - Other
       label: Other, please describe
-      input:
-      value: "Other OS"
+      -type: input
+       value: Other OS
+       placeholder: "Other OS"
   - type: input
     id: hardware
     attributes:
