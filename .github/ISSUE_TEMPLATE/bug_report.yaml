@@ -104,6 +104,7 @@ body:
         Share the config file(s) you've been using to run the program. (`dosbox-staging.conf`) 
         Please avoid pasting the full config, _use attachments or links_
       placeholder: "example: texture_renderer = opengl"
+      render: ini # syntax highlighting
     validations:
       required: false
   - type: textarea
