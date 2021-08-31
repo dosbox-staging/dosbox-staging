@@ -99,7 +99,7 @@ body:
       label: Your configuration
       description: |
         Share the config file(s) you've been using to run the program. (`dosbox-staging.conf`) 
-        Please avoid pasting the full config, _use attachments or links_
+        Please avoid pasting the full config, _use attachments or links_ in a [Gist](https://gist.github.com/)
       placeholder: "example: texture_renderer = opengl"
       render: ini # syntax highlighting
     validations:
