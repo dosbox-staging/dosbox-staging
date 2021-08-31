@@ -1,0 +1,97 @@
+name: Bug report
+description: File a Bug report
+title: '[BUG] <title>'
+labels: bug
+#assignees: 'anonymous@temp'
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please fill out forms as cleanly as possible.
+  - type: dropdown
+    id: version
+    attributes:
+      label: Dosbox-Staging Version
+      description: What version are you using? Run `dosbox --version` or type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
+      multiple: false
+      options:
+        - 0.78.0-alpha
+        - 0.77.1
+        - 0.77.0
+        - 0.76.0
+        - 0.75.2
+        - 0.75.1
+        - 0.75.0
+    validations:
+      required: true
+  - type: dropdown
+    id: OS
+    attributes:
+      label: What Operating System are you using?
+      multiple: false
+      options:
+        - Windows 10
+        - Windows 7
+        - Windows Other
+        - Mac OS
+        - Linux x86
+        - Linux x86_64
+        - Linux Raspberry Pi ARM
+        - Other
+  - type: input
+    id: other
+    attributes:
+      label: Other please describe
+      description: Other OS
+      placeholder: "Windows, *nix, Mac OSXversion"
+    validations:
+      required: false
+  - type: input
+    id: hardware
+    attributes:
+      label: Relevant hardware info
+      description: Hardware
+      placeholder: "[CPU, GPU, device brand/model: e.g. Raspberry Pi3B+, Nvidia, etc]"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: A clear and concise description of what the bug is.
+      description: Describe what happens, what software were you running?
+      placeholder: "How & When does this occur?"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce the behaviour.
+      description: How can we reproduce this?
+      placeholder: "Explain how to reproduce"
+    validations:
+      required: false
+  - type: textarea
+    id: config_file
+    attributes:
+      label: Share the config file(s) you've been using to run the program.
+      description: (dosbox-staging.conf) Please avoid pasting the full config, use attachments or links
+      placeholder: "example: texture_renderer = opengl"
+    validations:
+      required: false
+  - type: textarea
+    id: log
+    attributes:
+      label: Provide a Log
+      description: Please avoid pasting the full log, use attachments or links
+      placeholder: "Copy & paste error log section or provide link"
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
