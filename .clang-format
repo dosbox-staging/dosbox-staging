@@ -27,7 +27,7 @@ ColumnLimit: 80
 Language: Cpp
 # in clang-format 9.x "Cpp11" covers formatting for C++11 and C++14
 # in clang-format 10.x: switch to "c++14"
-Standard: Cpp11
+Standard: c++14
 
 # The extra indent or outdent of class access modifiers, e.g. public:
 #
@@ -117,6 +117,37 @@ AlwaysBreakTemplateDeclarations: Yes
 # 	}
 # }
 #
+
+# Coming in Clang-format-14
+# AlignArrayOfStructures: Left
+#
+# if not None, when using initialization for an array of structs aligns the fields into columns.
+#
+# Possible values:
+
+# AIAS_Left (in configuration: Left) Align array column and left justify the columns e.g.:
+#
+#        struct test demo[] =
+#        {
+#            {56, 23,    "hello"},
+#            {-1, 93463, "world"},
+#            {7,  5,     "!!"   }
+#        };
+#
+# AIAS_Right (in configuration: Right) Align array column and right justify the columns e.g.:
+#
+#        struct test demo[] =
+#        {
+#            {56,    23, "hello"},
+#            {-1, 93463, "world"},
+#            { 7,     5,    "!!"}
+#        };
+#
+# AIAS_None (in configuration: None) Don’t align array initializer columns.
+
+
+
+
 # Our custom rules are the same as "BreakBeforeBraces: Linux", except
 # additional customization for C++ constructs.
 #
