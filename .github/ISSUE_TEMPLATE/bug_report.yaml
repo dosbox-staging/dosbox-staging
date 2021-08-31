@@ -8,10 +8,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        ### Please fill out forms as cleanly as possible.
-        ### Make sure that you have
-        - properly edited & filled in the title of this bug report
-        
+        "## Please fill out forms as cleanly as possible."
+        "#### Make sure that you have"
+        "* properly edited & filled in the title of this bug report"
   - type: dropdown
     id: version
     attributes:
@@ -20,6 +19,7 @@ body:
         What version are you using?
         Run `dosbox --version`
         Type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
+        Provide 'git' version or 'other' in description
       multiple: false
       options:
         - 0.78.0-alpha
@@ -49,6 +49,8 @@ body:
         - Linux x86_64
         - Linux ARM (Raspberry Pi)
         - Other
+    validations:
+      required: false
   - type: input
     id: other
     attributes:
@@ -72,6 +74,7 @@ body:
       description: Searched issues before creating report?
       options:
         - label: I have searched and not found similar issues.
+      validations:
           required: true
   - type: textarea
     id: description
@@ -97,8 +100,10 @@ body:
   - type: textarea
     id: config_file
     attributes:
-      label: Share the config file(s) you've been using to run the program.
-      description: (dosbox-staging.conf) Please avoid pasting the full config, _use attachments or links_
+      label: Your configuration
+      description: |
+        Share the config file(s) you've been using to run the program. (`dosbox-staging.conf`) 
+        Please avoid pasting the full config, _use attachments or links_
       placeholder: "example: texture_renderer = opengl"
     validations:
       required: false
