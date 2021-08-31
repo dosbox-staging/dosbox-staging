@@ -1,0 +1,57 @@
+name: Question
+description: Ask for support or start a discussion.
+title: '[Question] '
+labels: question
+#assignees: 'anonymous@temp'
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please fill out forms as cleanly as possible.
+  - type: dropdown
+    id: version
+    attributes:
+      label: Dosbox-Staging Version
+      description: What version are you using? Run `dosbox --version` or type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
+      multiple: false
+      options:
+        - 0.78.0-alpha
+        - 0.77.1
+        - 0.77.0
+        - 0.76.0
+        - 0.75.2
+        - 0.75.1
+        - 0.75.0
+    validations:
+      required: false
+  - type: dropdown
+    id: OS
+    attributes:
+      label: What Operating System are you using?
+      multiple: false
+      options:
+        - Windows 10
+        - Windows 7
+        - Windows Other
+        - Mac OS
+        - Linux x86
+        - Linux x86_64
+        - Linux Raspberry Pi ARM
+        - Other
+  - type: input
+    id: question
+    attributes:
+      label: Whats your question and how can we help?
+      description: Ask us a question
+      placeholder: "How do I ..."
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
