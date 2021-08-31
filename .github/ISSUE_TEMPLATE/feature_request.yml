@@ -1,0 +1,98 @@
+name: Feature Request
+description: Suggest an idea (a new feature or other improvement) for this project
+title: '[Feature] '
+labels: enhancement
+#assignees: 'anonymous@temp'
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Please fill out forms as cleanly as possible.
+        #### Make sure that you have
+        * properly edited & filled in the title of this bug report
+  - type: checkboxes
+    id: version
+    attributes:
+      label: Are you using the latest Dosbox-Staging Version?
+      description: |
+        What version are you using? Check the [latest release](https://github.com/dosbox-staging/dosbox-staging/releases)
+        Run `dosbox --version`
+        Type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
+        Provide 'git' version or 'other' in description
+      options:
+        - label: I have checked releases and am using the latest release.
+          required: true
+  - type: input
+    id: verinfo
+    attributes:
+      label: Different version than latest?
+      description: Alpha, Git, or Branch?
+      placeholder: "Ex. 0.78.0-alpha, git verion, branch testing."
+    validations:
+      required: false
+  - type: dropdown
+    id: OS
+    attributes:
+      label: What Operating System are you using?
+      multiple: false
+      options:
+        - Windows 11
+        - Windows 10
+        - Windows 8
+        - Windows 7
+        - Windows Other
+        - Mac OS
+        - Linux x86
+        - Linux x86_64
+        - Linux ARM (Raspberry Pi)
+        - Other
+    validations:
+      required: false
+  - type: input
+    id: other
+    attributes:
+      label: If Other OS, please describe
+      description: Other details
+      placeholder: "Windows, Mac OSX version, Debian, Ubuntu, Arch, etc."
+    validations:
+      required: false
+  - type: textarea
+    id: related
+    attributes:
+      label: Is your feature request related to a problem? Please describe.
+      description: Related
+      placeholder: "Ex. I'm always frustrated when"
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the solution you'd like
+      placeholder: "Ex. How can we make it better?"
+    validations:
+      required: false
+  - type: textarea
+    id: alternative
+    attributes:
+      label: Describe alternatives you've considered
+      description: A clear and concise description of any alternative solutions or features you've considered.
+      placeholder: "Similar idea or software"
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Add any other context or screenshots about the feature request here.
+      description: Screenshots or Links?
+      placeholder: "Ex. Screenshot or Link"
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct & Contributing Guidelines
+      description: By submitting this issue, you agree to follow our [contributing guidelines](https://github.com/dosbox-staging/dosbox-staging/blob/master/CONTRIBUTING.md) and [code of conduct](https://github.com/dosbox-staging/dosbox-staging/blob/master/CODE_OF_CONDUCT.md).
+      options:
+        - label: Yes, I agree.
+          required: true
