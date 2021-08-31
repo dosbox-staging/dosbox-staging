@@ -2,7 +2,7 @@ name: Bug report
 description: File a Bug report
 title: '[BUG] <title>'
 labels: bug
-assignees: 'anonymous@temp'
+#assignees: 'anonymous@temp'
 
 body:
   - type: markdown
@@ -17,8 +17,13 @@ body:
       description: Run `dosbox --version`
       description: Type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
       options:
+        - 0.78.0-alpha
         - 0.77.1
         - 0.77.0
+        - 0.76.0
+        - 0.75.2
+        - 0.75.1
+        - 0.75.0
     validations:
       required: true
   - type: dropdown
@@ -36,7 +41,7 @@ body:
         - Linux Raspberry Pi ARM
         - Other
       label: Other, please describe
-      -type: input
+      - type: input
   - type: input
     id: hardware
     attributes:
