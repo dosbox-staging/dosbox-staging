@@ -1,7 +1,7 @@
-name: Bug Report
-description: File a Bug report
-title: '[BUG] '
-labels: bug
+name: Feature Request
+description: Suggest an idea (a new feature or other improvement) for this project
+title: '[Feature] '
+labels: enhancement
 #assignees: 'anonymous@temp'
 
 body:
@@ -47,44 +47,35 @@ body:
       placeholder: "Windows, *nix, Mac OSX version.  Debian, Ubuntu, Arch, etc."
     validations:
       required: false
-  - type: input
-    id: hardware
+  - type: textarea
+    id: related
     attributes:
-      label: Relevant hardware info
-      description: Hardware
-      placeholder: "[CPU, GPU, device brand/model: e.g. Raspberry Pi3B+, Nvidia, etc]"
+      label: Is your feature request related to a problem? Please describe.
+      description: Related
+      placeholder: "Ex. I'm always frustrated when"
     validations:
       required: true
   - type: textarea
-    id: description
+    id: solution
     attributes:
-      label: A clear and concise description of what the bug is.
-      description: Describe what happens, what software were you running?
-      placeholder: "How & When does this occur?"
-    validations:
-      required: true
-  - type: textarea
-    id: steps
-    attributes:
-      label: Steps to reproduce the behaviour.
-      description: How can we reproduce this?
-      placeholder: "Explain how to reproduce"
+      label: Describe the solution you'd like
+      placeholder: "Ex. How can we make it better?"
     validations:
       required: false
   - type: textarea
-    id: config_file
+    id: alternative
     attributes:
-      label: Share the config file(s) you've been using to run the program.
-      description: (dosbox-staging.conf) Please avoid pasting the full config, use attachments or links
-      placeholder: "example: texture_renderer = opengl"
+      label: Describe alternatives you've considered
+      description: A clear and concise description of any alternative solutions or features you've considered.
+      placeholder: "Similar idea or software"
     validations:
       required: false
   - type: textarea
-    id: log
+    id: additional
     attributes:
-      label: Provide a Log
-      description: Please avoid pasting the full log, use attachments or links
-      placeholder: "Copy & paste error log section or provide link"
+      label: Add any other context or screenshots about the feature request here.
+      description: Screenshots or Links?
+      placeholder: "Ex. Screenshot or Link"
     validations:
       required: false
   - type: checkboxes
