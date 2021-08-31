@@ -41,7 +41,6 @@ body:
         - Linux Raspberry Pi ARM
         - Other
       label: Other, please describe
-      - type: input
   - type: input
     id: hardware
     attributes:
