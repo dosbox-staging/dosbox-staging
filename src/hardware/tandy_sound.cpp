@@ -73,22 +73,24 @@ centerline.
 */
 
 #include "dosbox.h"
-#include "inout.h"
-#include "mixer.h"
-#include "mem.h"
-#include "setup.h"
-#include "pic.h"
-#include "dma.h"
-#include "hardware.h"
+
+#include <algorithm>
 #include <cstring>
 #include <math.h>
+
+#include "dma.h"
+#include "hardware.h"
+#include "inout.h"
+#include "mem.h"
+#include "mixer.h"
+#include "pic.h"
+#include "setup.h"
+
 #include "mame/emu.h"
 #include "mame/sn76496.h"
 
-
-#define SOUND_CLOCK (14318180 / 4)
-
-#define TDAC_DMA_BUFSIZE 1024
+constexpr int SOUND_CLOCK = 14318180 / 4;
+constexpr uint16_t TDAC_DMA_BUFSIZE = 1024;
 
 static struct {
 	MixerChannel *chan = nullptr;
@@ -296,7 +298,7 @@ static Bitu TandyDACRead(Bitu port,Bitu /*iolen*/) {
 	return 0xff;
 }
 
-static void TandyDACUpdate(size_t requested)
+static void TandyDACUpdate(uint16_t requested)
 {
 	if (!tandy.dac.chan || !tandy.dac.dma.chan) {
 		DEBUG_LOG_MSG(
@@ -304,17 +306,25 @@ static void TandyDACUpdate(size_t requested)
 		return;
 	}
 
-	uint8_t *buf = tandy.dac.dma.buf;
 	const bool should_read = tandy.dac.enabled &&
 	                         (tandy.dac.mode & 0x0c) == 0x0c &&
 	                         !tandy.dac.dma.transfer_done;
-	size_t actual = should_read ? tandy.dac.dma.chan->Read(requested, buf) : 0u;
-	// If we came up short, move back one to terminate the tail in silence
-	if (actual && actual < requested)
-		actual--;
-	// Always write the requested quantity regardless of read status
-	memset(buf + actual, 128u, requested - actual);
-	tandy.dac.chan->AddSamples_m8(requested, buf);
+
+	auto buf = tandy.dac.dma.buf;
+	while (requested) {
+		const auto bytes_to_read = std::min(requested, TDAC_DMA_BUFSIZE);
+
+		auto actual = should_read ? tandy.dac.dma.chan->Read(bytes_to_read, buf) : 0u;
+
+		// If we came up short, move back one to terminate the tail in silence
+		if (actual && actual < bytes_to_read)
+			actual--;
+		memset(buf + actual, 128u, bytes_to_read - actual);
+
+		// Always write the requested quantity regardless of read status
+		tandy.dac.chan->AddSamples_m8(bytes_to_read, buf);
+		requested -= bytes_to_read;
+	}
 }
 
 class TANDYSOUND final : public Module_base {
