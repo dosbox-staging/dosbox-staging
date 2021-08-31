@@ -42,7 +42,8 @@ body:
         - Other
   - type: input
     id: other
-      label: Other please describe
+    attributes:
+      label: Other, please describe
       description: Other OS
       placeholder: "Windows, *nix, Mac OSXversion"
     validations:
