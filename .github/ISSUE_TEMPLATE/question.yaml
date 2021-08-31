@@ -23,6 +23,8 @@ body:
         - 0.75.2
         - 0.75.1
         - 0.75.0
+        - Git
+        - Other
     validations:
       required: false
   - type: dropdown
@@ -31,13 +33,15 @@ body:
       label: What Operating System are you using?
       multiple: false
       options:
+        - Windows 11
         - Windows 10
+        - Windows 8
         - Windows 7
         - Windows Other
         - Mac OS
         - Linux x86
         - Linux x86_64
-        - Linux Raspberry Pi ARM
+        - Linux ARM (Raspberry Pi)
         - Other
   - type: textarea
     id: question
@@ -51,7 +55,7 @@ body:
     id: terms
     attributes:
       label: Code of Conduct
-      description: By submitting this issue, you agree to follow our Code of Conduct
+      description: By submitting this issue, you agree to follow our [contributing guidelines](https://github.com/dosbox-staging/dosbox-staging/blob/master/CONTRIBUTING.md) and [code of conduct](https://github.com/dosbox-staging/dosbox-staging/blob/master/CODE_OF_CONDUCT.md).
       options:
-        - label: I agree to follow this project's Code of Conduct
+        - label: Yes, I agree.
           required: true
