@@ -31,7 +31,6 @@ body:
         - 0.75.0
         - Git
         - Other
-    validations:
       required: true
   - type: dropdown
     id: OS
