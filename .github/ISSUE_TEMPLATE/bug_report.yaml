@@ -48,7 +48,7 @@ body:
     attributes:
       label: If Other OS, please describe
       description: Other details
-      placeholder: "Windows,  Mac OSX version, Debian, Ubuntu, Arch, etc."
+      placeholder: "Windows, Mac OSX version, Debian, Ubuntu, Arch, etc."
     validations:
       required: false
   - type: input
