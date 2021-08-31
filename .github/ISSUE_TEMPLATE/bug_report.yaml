@@ -65,7 +65,6 @@ body:
       label: Relevant hardware info
       description: Hardware
       placeholder: "CPU, GPU, device brand/model: e.g. Raspberry Pi3B+, Nvidia, etc"
-      render: ini # syntax highlighting
     validations:
       required: false
   - type: checkboxes
