@@ -11,28 +11,26 @@ body:
         ## Please fill out forms as cleanly as possible.
         #### Make sure that you have
         * properly edited & filled in the title of this bug report
-  - type: dropdown
+  - type: checkboxes
     id: version
     attributes:
-      label: Dosbox-Staging Version
+      label: Are you using the latest Dosbox-Staging Version?
       description: |
-        What version are you using?
+        What version are you using? Check the [latest release](https://github.com/dosbox-staging/dosbox-staging/releases)
         Run `dosbox --version`
         Type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
         Provide 'git' version or 'other' in description
-      multiple: false
       options:
-        - 0.78.0-alpha
-        - 0.77.1
-        - 0.77.0
-        - 0.76.0
-        - 0.75.2
-        - 0.75.1
-        - 0.75.0
-        - Git
-        - Other
+        - label: I have checked releases and am using the latest release.
+          required: true
+  - type: input
+    id: verinfo
+    attributes:
+      label: Different version than latest?
+      description: Alpha, Git, or Branch?
+      placeholder: "Ex. 0.78.0-alpha, git verion, branch testing."
     validations:
-      required: true
+      required: false
   - type: dropdown
     id: OS
     attributes:
@@ -88,7 +86,6 @@ body:
     attributes:
       label: Steps to reproduce the behaviour.
       description: How can we reproduce this?
-      placeholder: "Explain how to reproduce"
       value: |
         Explain how to reproduce
         1. 
@@ -102,7 +99,7 @@ body:
       label: Your configuration
       description: |
         Share the config file(s) you've been using to run the program. (`dosbox-staging.conf`) 
-        Please avoid pasting the full config, _use attachments or links_
+        Please avoid pasting the full config, _use attachments or links_ in a [Gist](https://gist.github.com/)
       placeholder: "example: texture_renderer = opengl"
       render: ini # syntax highlighting
     validations:
@@ -111,8 +108,9 @@ body:
     id: log
     attributes:
       label: Provide a Log
-      description: Please avoid pasting the full log, _use attachments or links_
-      placeholder: "Copy & paste error log section or provide link"
+      description: Please avoid pasting the full log, _use attachments or links_ in a [Gist](https://gist.github.com/)
+      placeholder: "Copy & paste error log section"
+      render: text
     validations:
       required: false
   - type: checkboxes
