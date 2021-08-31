@@ -64,7 +64,7 @@ body:
       description: Hardware
       placeholder: "CPU, GPU, device brand/model: e.g. Raspberry Pi3B+, Nvidia, etc"
     validations:
-      required: true
+      required: false
   - type: checkboxes
     id: checked
     attributes:
