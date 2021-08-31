@@ -36,8 +36,6 @@ body:
         - Other
       label: Other, please describe
       -type: input
-       label: Other OS
-       description: OtherOS
        placeholder: "Other OS"
   - type: input
     id: hardware
