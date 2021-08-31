@@ -8,12 +8,18 @@ body:
   - type: markdown
     attributes:
       value: |
-        Please fill out forms as cleanly as possible.
+        ## Please fill out forms as cleanly as possible.
+        #### Make sure that you have
+        * properly edited & filled in the title of this bug report
   - type: dropdown
     id: version
     attributes:
       label: Dosbox-Staging Version
-      description: What version are you using? Run `dosbox --version` or type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
+      description: |
+        What version are you using?
+        Run `dosbox --version`
+        Type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
+        Provide 'git' version or 'other' in description
       multiple: false
       options:
         - 0.78.0-alpha
@@ -43,6 +49,8 @@ body:
         - Linux x86_64
         - Linux ARM (Raspberry Pi)
         - Other
+    validations:
+      required: false
   - type: textarea
     id: question
     attributes:
@@ -54,7 +62,7 @@ body:
   - type: checkboxes
     id: terms
     attributes:
-      label: Code of Conduct
+      label: Code of Conduct & Contributing Guidelines
       description: By submitting this issue, you agree to follow our [contributing guidelines](https://github.com/dosbox-staging/dosbox-staging/blob/master/CONTRIBUTING.md) and [code of conduct](https://github.com/dosbox-staging/dosbox-staging/blob/master/CODE_OF_CONDUCT.md).
       options:
         - label: Yes, I agree.

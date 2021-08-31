@@ -8,12 +8,18 @@ body:
   - type: markdown
     attributes:
       value: |
-        Please fill out forms as cleanly as possible.
+        ## Please fill out forms as cleanly as possible.
+        #### Make sure that you have
+        * properly edited & filled in the title of this bug report
   - type: dropdown
     id: version
     attributes:
       label: Dosbox-Staging Version
-      description: What version are you using? Run `dosbox --version` or type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
+      description: |
+        What version are you using?
+        Run `dosbox --version`
+        Type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
+        Provide 'git' version or 'other' in description
       multiple: false
       options:
         - 0.78.0-alpha
@@ -43,6 +49,8 @@ body:
         - Linux x86_64
         - Linux ARM (Raspberry Pi)
         - Other
+    validations:
+      required: false
   - type: input
     id: other
     attributes:
@@ -58,7 +66,7 @@ body:
       description: Hardware
       placeholder: "CPU, GPU, device brand/model: e.g. Raspberry Pi3B+, Nvidia, etc"
     validations:
-      required: true
+      required: false
   - type: checkboxes
     id: checked
     attributes:
@@ -71,7 +79,7 @@ body:
     id: description
     attributes:
       label: A clear and concise description of what the bug is.
-      description: Describe what happens, what software were you running?
+      description: Describe what happens, what software were you running? _Include screenshot if possible_
       placeholder: "How & When does this occur?"
     validations:
       required: true
@@ -81,13 +89,20 @@ body:
       label: Steps to reproduce the behaviour.
       description: How can we reproduce this?
       placeholder: "Explain how to reproduce"
+      value: |
+        Explain how to reproduce
+        1. 
+        2.
+        3.
     validations:
       required: false
   - type: textarea
     id: config_file
     attributes:
-      label: Share the config file(s) you've been using to run the program.
-      description: (dosbox-staging.conf) Please avoid pasting the full config, use attachments or links
+      label: Your configuration
+      description: |
+        Share the config file(s) you've been using to run the program. (`dosbox-staging.conf`) 
+        Please avoid pasting the full config, _use attachments or links_
       placeholder: "example: texture_renderer = opengl"
     validations:
       required: false
@@ -95,14 +110,14 @@ body:
     id: log
     attributes:
       label: Provide a Log
-      description: Please avoid pasting the full log, use attachments or links
+      description: Please avoid pasting the full log, _use attachments or links_
       placeholder: "Copy & paste error log section or provide link"
     validations:
       required: false
   - type: checkboxes
     id: terms
     attributes:
-      label: Code of Conduct
+      label: Code of Conduct & Contributing Guidelines
       description: By submitting this issue, you agree to follow our [contributing guidelines](https://github.com/dosbox-staging/dosbox-staging/blob/master/CONTRIBUTING.md) and [code of conduct](https://github.com/dosbox-staging/dosbox-staging/blob/master/CODE_OF_CONDUCT.md).
       options:
         - label: Yes, I agree.
