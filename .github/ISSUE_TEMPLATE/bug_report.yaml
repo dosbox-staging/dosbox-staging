@@ -13,7 +13,9 @@ body:
     id: version
     attributes:
       label: Dosbox-Staging Version
-      description: What version are you using? Run `dosbox --version` or type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
+      description: What version are you using? |
+      Run `dosbox --version` |
+      Type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
       multiple: false
       options:
         - 0.78.0-alpha
@@ -52,14 +54,14 @@ body:
     attributes:
       label: Relevant hardware info
       description: Hardware
-      placeholder: "[CPU, GPU, device brand/model: e.g. Raspberry Pi3B+, etc]"
+      placeholder: "[CPU, GPU, device brand/model: e.g. Raspberry Pi3B+, Nvidia, etc]"
     validations:
       required: true
   - type: textarea
     id: description
     attributes:
       label: A clear and concise description of what the bug is.
-      description: Describe
+      description: Describe what happens, what software were you running?
       placeholder: "How & When does this occur?"
     validations:
       required: true
@@ -67,7 +69,7 @@ body:
     id: steps
     attributes:
       label: Steps to reproduce the behaviour.
-      description: Steps
+      description: How can we reproduce this?
       placeholder: "Explain how to reproduce"
     validations:
       required: false
@@ -75,17 +77,16 @@ body:
     id: config_file
     attributes:
       label: Share the config file(s) you've been using to run the program.
-      description: dosbox-staging.conf
-      placeholder: "texture_renderer = opengl"
+      description: (dosbox-staging.conf) Please avoid pasting the full config, use attachments or links
+      placeholder: "example: texture_renderer = opengl"
     validations:
       required: false
   - type: textarea
     id: log
     attributes:
       label: Provide a Log
-      description: 
-      placeholder: steps to aquire log
-      value: "Copy & paste log or provide link"
+      description: Please avoid pasting the full log, use attachments or links
+      placeholder: "Copy & paste error log section or provide link"
     validations:
       required: false
   - type: checkboxes
