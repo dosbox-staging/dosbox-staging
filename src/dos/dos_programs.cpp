@@ -48,6 +48,7 @@
 #include "program_ls.h"
 #include "program_mem.h"
 #include "program_mount.h"
+#include "program_rescan.h"
 #include "regs.h"
 #include "setup.h"
 #include "shell.h"
@@ -119,48 +120,6 @@ static void BIOSTEST_ProgramStart(Program * * make) {
 }
 
 #endif
-
-// RESCAN
-
-class RESCAN final : public Program {
-public:
-	void Run(void);
-};
-
-void RESCAN::Run(void)
-{
-	bool all = false;
-
-	Bit8u drive = DOS_GetDefaultDrive();
-
-	if (cmd->FindCommand(1,temp_line)) {
-		//-A -All /A /All
-		if (temp_line.size() >= 2 &&
-		    (temp_line[0] == '-' || temp_line[0] == '/') &&
-		    (temp_line[1] == 'a' || temp_line[1] == 'A')) {
-			all = true;
-		} else if (temp_line.size() == 2 && temp_line[1] == ':') {
-			lowcase(temp_line);
-			drive  = temp_line[0] - 'a';
-		}
-	}
-	// Get current drive
-	if (all) {
-		for (Bitu i =0; i<DOS_DRIVES; i++) {
-			if (Drives[i]) Drives[i]->EmptyCache();
-		}
-		WriteOut(MSG_Get("PROGRAM_RESCAN_SUCCESS"));
-	} else {
-		if (drive < DOS_DRIVES && Drives[drive]) {
-			Drives[drive]->EmptyCache();
-			WriteOut(MSG_Get("PROGRAM_RESCAN_SUCCESS"));
-		}
-	}
-}
-
-static void RESCAN_ProgramStart(Program * * make) {
-	*make=new RESCAN;
-}
 
 class INTRO final : public Program {
 private:
