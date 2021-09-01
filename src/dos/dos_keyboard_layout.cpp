@@ -31,6 +31,7 @@
 #include "dos_inc.h"
 
 #include "dos_codepages.h"
+#include "dos_keyboard_layout.h"
 #include "dos_keyboard_layout_data.h"
 
 #if defined (WIN32)
