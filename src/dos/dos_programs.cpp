@@ -43,6 +43,7 @@
 #include "program_choice.h"
 #include "program_help.h"
 #include "program_imgmount.h"
+#include "program_intro.h"
 #include "program_loadfix.h"
 #include "program_loadrom.h"
 #include "program_ls.h"
@@ -120,73 +121,6 @@ static void BIOSTEST_ProgramStart(Program * * make) {
 }
 
 #endif
-
-class INTRO final : public Program {
-private:
-	void WriteOutProgramIntroSpecial()
-	{
-		WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"), MMOD2_NAME,
-		         MMOD2_NAME, PRIMARY_MOD_NAME, PRIMARY_MOD_PAD,
-		         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_NAME,
-		         PRIMARY_MOD_PAD, PRIMARY_MOD_NAME, PRIMARY_MOD_PAD,
-		         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_NAME,
-		         PRIMARY_MOD_PAD, PRIMARY_MOD_NAME, PRIMARY_MOD_PAD,
-		         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_NAME,
-		         PRIMARY_MOD_PAD, MMOD2_NAME);
-	}
-
-public:
-	void DisplayMount(void) {
-		/* Basic mounting has a version for each operating system.
-		 * This is done this way so both messages appear in the language file*/
-		WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_START"));
-#if (WIN32)
-		WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_WINDOWS"));
-#else
-		WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_OTHER"));
-#endif
-		WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_END"));
-	}
-
-	void Run(void) {
-		/* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */
-		if (DOS_PSP(dos.psp()).GetParent() != DOS_PSP(DOS_PSP(dos.psp()).GetParent()).GetParent()) return;
-		if (cmd->FindExist("cdrom",false)) {
-#ifdef WIN32
-			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_WINDOWS"));
-#else
-			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_OTHER"));
-#endif
-			return;
-		}
-		if (cmd->FindExist("mount",false)) {
-			WriteOut("\033[2J");//Clear screen before printing
-			DisplayMount();
-			return;
-		}
-		if (cmd->FindExist("special",false)) {
-			WriteOutProgramIntroSpecial();
-			return;
-		}
-		/* Default action is to show all pages */
-		WriteOut(MSG_Get("PROGRAM_INTRO"));
-		Bit8u c;Bit16u n=1;
-		DOS_ReadFile (STDIN,&c,&n);
-		DisplayMount();
-		DOS_ReadFile (STDIN,&c,&n);
-#ifdef WIN32
-		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_WINDOWS"));
-#else
-		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_OTHER"));
-#endif
-		DOS_ReadFile(STDIN, &c, &n);
-		WriteOutProgramIntroSpecial();
-	}
-};
-
-static void INTRO_ProgramStart(Program * * make) {
-	*make=new INTRO;
-}
 
 Bitu DOS_SwitchKeyboardLayout(const char* new_layout, Bit32s& tried_cp);
 Bitu DOS_LoadKeyboardLayout(const char * layoutname, Bit32s codepage, const char * codepagefile);
