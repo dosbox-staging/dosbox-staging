@@ -36,7 +36,6 @@
 #include "drives.h"
 #include "fs_utils.h"
 #include "inout.h"
-#include "dos_keyboard_layout.h"
 #include "mapper.h"
 #include "mem.h"
 #include "program_autotype.h"
@@ -45,6 +44,7 @@
 #include "program_help.h"
 #include "program_imgmount.h"
 #include "program_intro.h"
+#include "program_keyb.h"
 #include "program_loadfix.h"
 #include "program_loadrom.h"
 #include "program_ls.h"
@@ -122,75 +122,6 @@ static void BIOSTEST_ProgramStart(Program * * make) {
 }
 
 #endif
-
-class KEYB final : public Program {
-public:
-	void Run(void);
-};
-
-void KEYB::Run(void) {
-	if (cmd->FindCommand(1,temp_line)) {
-		if (cmd->FindString("?",temp_line,false)) {
-			WriteOut(MSG_Get("PROGRAM_KEYB_SHOWHELP"));
-		} else {
-			/* first parameter is layout ID */
-			Bitu keyb_error=0;
-			std::string cp_string;
-			Bit32s tried_cp = -1;
-			if (cmd->FindCommand(2,cp_string)) {
-				/* second parameter is codepage number */
-				tried_cp=atoi(cp_string.c_str());
-				char cp_file_name[256];
-				if (cmd->FindCommand(3,cp_string)) {
-					/* third parameter is codepage file */
-					safe_strcpy(cp_file_name, cp_string.c_str());
-				} else {
-					/* no codepage file specified, use automatic selection */
-					safe_strcpy(cp_file_name, "auto");
-				}
-
-				keyb_error=DOS_LoadKeyboardLayout(temp_line.c_str(), tried_cp, cp_file_name);
-			} else {
-				keyb_error=DOS_SwitchKeyboardLayout(temp_line.c_str(), tried_cp);
-			}
-			switch (keyb_error) {
-				case KEYB_NOERROR:
-					WriteOut(MSG_Get("PROGRAM_KEYB_NOERROR"),temp_line.c_str(),dos.loaded_codepage);
-					break;
-				case KEYB_FILENOTFOUND:
-					WriteOut(MSG_Get("PROGRAM_KEYB_FILENOTFOUND"),temp_line.c_str());
-					WriteOut(MSG_Get("PROGRAM_KEYB_SHOWHELP"));
-					break;
-				case KEYB_INVALIDFILE:
-					WriteOut(MSG_Get("PROGRAM_KEYB_INVALIDFILE"),temp_line.c_str());
-					break;
-				case KEYB_LAYOUTNOTFOUND:
-					WriteOut(MSG_Get("PROGRAM_KEYB_LAYOUTNOTFOUND"),temp_line.c_str(),tried_cp);
-					break;
-				case KEYB_INVALIDCPFILE:
-					WriteOut(MSG_Get("PROGRAM_KEYB_INVCPFILE"),temp_line.c_str());
-					WriteOut(MSG_Get("PROGRAM_KEYB_SHOWHELP"));
-					break;
-				default:
-				        LOG(LOG_DOSMISC, LOG_ERROR)("KEYB:Invalid returncode %x",
-				         static_cast<uint32_t>(keyb_error));
-				        break;
-			}
-		}
-	} else {
-		/* no parameter in the command line, just output codepage info and possibly loaded layout ID */
-		const char* layout_name = DOS_GetLoadedLayout();
-		if (layout_name==NULL) {
-			WriteOut(MSG_Get("PROGRAM_KEYB_INFO"),dos.loaded_codepage);
-		} else {
-			WriteOut(MSG_Get("PROGRAM_KEYB_INFO_LAYOUT"),dos.loaded_codepage,layout_name);
-		}
-	}
-}
-
-static void KEYB_ProgramStart(Program * * make) {
-	*make=new KEYB;
-}
 
 void DOS_SetupPrograms(void) {
 	/*Add Messages */
