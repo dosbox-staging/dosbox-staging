@@ -18,26 +18,6 @@
 
 #include "programs.h"
 
-#include <cctype>
-#include <cstdlib>
-#include <cstring>
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "bios_disk.h"
-#include "bios.h"
-#include "callback.h"
-#include "cdrom.h"
-#include "control.h"
-#include "cross.h"
-#include "dma.h"
-#include "dos_system.h"
-#include "drives.h"
-#include "fs_utils.h"
-#include "inout.h"
-#include "mapper.h"
-#include "mem.h"
 #include "program_autotype.h"
 #include "program_boot.h"
 #include "program_choice.h"
@@ -51,12 +31,6 @@
 #include "program_mem.h"
 #include "program_mount.h"
 #include "program_rescan.h"
-#include "regs.h"
-#include "setup.h"
-#include "shell.h"
-#include "support.h"
-#include "string_utils.h"
-#include "../ints/int10.h"
 
 #if C_DEBUG
 	#include "program_biostest.h"
