@@ -36,6 +36,7 @@
 #include "drives.h"
 #include "fs_utils.h"
 #include "inout.h"
+#include "dos_keyboard_layout.h"
 #include "mapper.h"
 #include "mem.h"
 #include "program_autotype.h"
@@ -121,10 +122,6 @@ static void BIOSTEST_ProgramStart(Program * * make) {
 }
 
 #endif
-
-Bitu DOS_SwitchKeyboardLayout(const char* new_layout, Bit32s& tried_cp);
-Bitu DOS_LoadKeyboardLayout(const char * layoutname, Bit32s codepage, const char * codepagefile);
-const char* DOS_GetLoadedLayout(void);
 
 class KEYB final : public Program {
 public:
