@@ -25,6 +25,7 @@ libdos_sources = files([
   'program_help.cpp',
   'program_imgmount.cpp',
   'program_ls.cpp',
+  'program_mem.cpp',
   'program_mount_common.cpp',
   'program_mount.cpp',
 ])
