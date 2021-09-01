@@ -23,7 +23,10 @@ libdos_sources = files([
   'program_autotype.cpp',
   'program_choice.cpp',
   'program_help.cpp',
+  'program_imgmount.cpp',
   'program_ls.cpp',
+  'program_mount_common.cpp',
+  'program_mount.cpp',
 ])
 
 libdos = static_library('dos', libdos_sources,
