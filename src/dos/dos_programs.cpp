@@ -43,6 +43,7 @@
 #include "program_choice.h"
 #include "program_help.h"
 #include "program_imgmount.h"
+#include "program_loadfix.h"
 #include "program_loadrom.h"
 #include "program_ls.h"
 #include "program_mem.h"
@@ -118,71 +119,6 @@ static void BIOSTEST_ProgramStart(Program * * make) {
 }
 
 #endif
-
-// LOADFIX
-
-class LOADFIX final : public Program {
-public:
-	void Run(void);
-};
-
-void LOADFIX::Run(void)
-{
-	Bit16u commandNr = 1;
-	Bit16u kb = 64;
-	if (cmd->FindCommand(commandNr, temp_line)) {
-		if (temp_line[0] == '-') {
-			const auto ch = std::toupper(temp_line[1]);
-			if ((ch == 'D') || (ch == 'F')) {
-				// Deallocate all
-				DOS_FreeProcessMemory(0x40);
-				WriteOut(MSG_Get("PROGRAM_LOADFIX_DEALLOCALL"),kb);
-				return;
-			} else {
-				// Set mem amount to allocate
-				kb = atoi(temp_line.c_str()+1);
-				if (kb==0) kb=64;
-				commandNr++;
-			}
-		}
-	}
-	// Allocate Memory
-	Bit16u segment;
-	Bit16u blocks = kb*1024/16;
-	if (DOS_AllocateMemory(&segment,&blocks)) {
-		DOS_MCB mcb((Bit16u)(segment-1));
-		mcb.SetPSPSeg(0x40);			// use fake segment
-		WriteOut(MSG_Get("PROGRAM_LOADFIX_ALLOC"),kb);
-		// Prepare commandline...
-		if (cmd->FindCommand(commandNr++,temp_line)) {
-			// get Filename
-			char filename[128];
-			safe_strcpy(filename, temp_line.c_str());
-			// Setup commandline
-			char args[256+1];
-			args[0] = 0;
-			bool found = cmd->FindCommand(commandNr++,temp_line);
-			while (found) {
-				if (strlen(args)+temp_line.length()+1>256) break;
-				safe_strcat(args, temp_line.c_str());
-				found = cmd->FindCommand(commandNr++,temp_line);
-				if (found)
-					safe_strcat(args, " ");
-			}
-			// Use shell to start program
-			DOS_Shell shell;
-			shell.Execute(filename,args);
-			DOS_FreeMemory(segment);
-			WriteOut(MSG_Get("PROGRAM_LOADFIX_DEALLOC"),kb);
-		}
-	} else {
-		WriteOut(MSG_Get("PROGRAM_LOADFIX_ERROR"),kb);
-	}
-}
-
-static void LOADFIX_ProgramStart(Program * * make) {
-	*make=new LOADFIX;
-}
 
 // RESCAN
 
