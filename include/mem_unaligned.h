@@ -77,6 +77,14 @@ static inline uint64_t read_unaligned_uint64(const uint8_t *arr) noexcept
 	return val;
 }
 
+// Read a size_t from unaligned 8-bit byte-ordered memory.
+static inline size_t read_unaligned_size_t(const uint8_t *arr) noexcept
+{
+	size_t val;
+	memcpy(&val, arr, sizeof(size_t));
+	return val;
+}
+
 /* Use read_unaligned_*_at functions instead constructs like:
  *
  *   ((uint16_t*)pointer_to_uint8)[idx]
@@ -101,6 +109,13 @@ static inline uint64_t read_unaligned_uint64_at(const uint8_t *arr,
                                                 const uintptr_t idx) noexcept
 {
 	return read_unaligned_uint64(arr + idx * sizeof(uint64_t));
+}
+
+// Read an array-indexed size_t from unaligned 8-bit byte-ordered memory.
+static inline size_t read_unaligned_size_t_at(const uint8_t *arr,
+                                              const uintptr_t idx) noexcept
+{
+	return read_unaligned_size_t(arr + idx * sizeof(size_t));
 }
 
 /* Use write_unaligned_* functions instead constructs like:

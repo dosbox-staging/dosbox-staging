@@ -467,11 +467,17 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 				break;
 			case 24:
 				if (flags & CAPTURE_FLAG_DBLW) {
-					for (Bitu x=0;x<countWidth;x++) {
-						((rgb24 *)doubleRow)[x*2+0] = ((rgb24 *)doubleRow)[x*2+1] = ((rgb24 *)srcLine)[x];
+					for (uint32_t x = 0; x < countWidth; ++x) {
+						const auto pixel = host_to_le(static_cast<rgb24 *>(srcLine)[x]);
+						reinterpret_cast<rgb24 *>(doubleRow)[x * 2 + 0] = pixel;
+						reinterpret_cast<rgb24 *>(doubleRow)[x * 2 + 1] = pixel;
 						rowPointer = doubleRow;
-					}	// There is no else statement here because rowPointer is already
-				}		// defined as srcLine above which is already 24-bit single row
+					}
+				}
+				// There is no else statement here because
+				// rowPointer is already defined as srcLine
+				// above which is already 24-bit single row
+
 				break;
 			case 32:
 				if (flags & CAPTURE_FLAG_DBLW) {

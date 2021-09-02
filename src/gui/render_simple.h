@@ -16,7 +16,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#if SCALER_MAX_MUL_HEIGHT < SCALERHEIGHT 
+#include "mem_unaligned.h"
+
+#if SCALER_MAX_MUL_HEIGHT < SCALERHEIGHT
 #error "Scaler goes too high"
 #endif
 
@@ -58,13 +60,21 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 			src+=4;
 			cache+=4;
 			line0+=4*SCALERWIDTH;
-#else 
-	for (Bits x=render.src.width;x>0;) {
-		if (*(Bitu const*)src == *(Bitu*)cache) {
-			x-=(sizeof(Bitu)/sizeof(SRCTYPE));
-			src+=(sizeof(Bitu)/sizeof(SRCTYPE));
-			cache+=(sizeof(Bitu)/sizeof(SRCTYPE));
-			line0+=(sizeof(Bitu)/sizeof(SRCTYPE))*SCALERWIDTH;
+#else
+	constexpr uint8_t address_step = sizeof(Bitu) / sizeof(SRCTYPE);
+
+	for (Bits x = render.src.width; x > 0;) {
+		const auto src_ptr = reinterpret_cast<const uint8_t *>(src);
+		const auto src_val = read_unaligned_size_t(src_ptr);
+
+		const auto cache_ptr = reinterpret_cast<uint8_t *>(cache);
+		const auto cache_val = read_unaligned_size_t(cache_ptr);
+
+		if (src_val == cache_val) {
+			x -= address_step;
+			src += address_step;
+			cache += address_step;
+			line0 += address_step * SCALERWIDTH;
 #endif
 		} else {
 #if defined(SCALERLINEAR)
