@@ -450,6 +450,8 @@ void SVGA_Setup_TsengET4K(void) {
 		vga.vmemsize = 512*1024;
 	else
 		vga.vmemsize = 1024 * 1024;
+
+	VGA_LogInitialization("Tseng Labs ET4000", "DRAM");
 }
 
 
@@ -784,5 +786,8 @@ void SVGA_Setup_TsengET3K(void) {
 	IO_RegisterReadHandler(0x3cd,read_p3cd_et3k,IO_MB);
 	IO_RegisterWriteHandler(0x3cd,write_p3cd_et3k,IO_MB);
 
-	vga.vmemsize = 512*1024; // Cannot figure how this was supposed to work on the real card
+	// The ET3000AX/BX had a fixed 512 KiB of DRAM
+	vga.vmemsize = 512*1024;
+
+	VGA_LogInitialization("Tseng Labs ET3000", "DRAM");
 }

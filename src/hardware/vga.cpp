@@ -21,6 +21,8 @@
 #include <cassert>
 #include <cstring>
 
+#include "logging.h"
+#include "../ints/int10.h"
 #include "pic.h"
 #include "support.h"
 #include "video.h"
@@ -39,6 +41,15 @@ Bit32u ExpandTable[256];
 Bit32u Expand16Table[4][16];
 Bit32u FillTable[16];
 Bit32u ColorTable[16];
+
+void VGA_LogInitialization(const char* adapter_name, const char* ram_type) {
+	const auto mem_in_kib = vga.vmemsize / 1024;
+	LOG_INFO("VIDEO: Initialized %s with %d %s of %s",
+	         adapter_name,
+	         mem_in_kib < 1024 ? mem_in_kib : mem_in_kib / 1024,
+	         mem_in_kib < 1024 ? "KiB" : "MiB",
+			ram_type);
+}
 
 void VGA_SetModeNow(VGAModes mode) {
 	if (vga.mode == mode) return;
@@ -83,7 +94,7 @@ void VGA_DetermineMode(void) {
 	case 1:VGA_SetMode(M_LIN8);break;
 	case 3:VGA_SetMode(M_LIN15);break;
 	case 5:VGA_SetMode(M_LIN16);break;
-	case 7:VGA_SetMode(M_LIN24);break;
+	case 7: VGA_SetMode(M_LIN24); break;
 	case 13:VGA_SetMode(M_LIN32);break;
 	}
 }

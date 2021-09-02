@@ -470,6 +470,7 @@ void VGA_ActivateHardwareCursor(void);
 void VGA_KillDrawing(void);
 
 void VGA_SetOverride(bool vga_override);
+void VGA_LogInitialization(const char* adapter_name, const char* ram_type);
 
 extern VGA_Type vga;
 

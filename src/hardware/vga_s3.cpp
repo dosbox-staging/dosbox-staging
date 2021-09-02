@@ -18,9 +18,13 @@
 
 
 #include "dosbox.h"
+
+#include <string>
+
+#include "../ints/int10.h"
 #include "inout.h"
-#include "vga.h"
 #include "mem.h"
+#include "vga.h"
 
 void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu /*iolen*/) {
 	switch (reg) {
@@ -551,4 +555,11 @@ void SVGA_Setup_S3Trio(void) {
 		vga.vmemsize = 8192 * 1024;
 		vga.s3.reg_36 = 0x7a; // 8mb fast page mode
 	}
+
+	std::string description = "S3 Trio 64 ";
+	description += int10.vesa_oldvbe ? "(VESA 1.2)" : "(VESA 2.0)";
+	if (int10.vesa_nolfb)
+		description += " without linear framebuffer modes";
+
+	VGA_LogInitialization(description.c_str(), "EDO DRAM");
 }
