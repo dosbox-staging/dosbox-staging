@@ -20,6 +20,8 @@
 
 #include "program_biostest.h"
 
+#if C_DEBUG
+
 #include <stdio.h>
 #include <string.h>
 
@@ -80,3 +82,5 @@ void BIOSTEST::Run(void) {
 void BIOSTEST_ProgramStart(Program **make) {
 	*make = new BIOSTEST;
 }
+
+#endif // C_DEBUG
