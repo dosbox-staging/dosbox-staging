@@ -572,8 +572,8 @@ skip_shot:
 			else
 				srcLine=(data+(i >> 0)*pitch);
 			if (flags & CAPTURE_FLAG_DBLW) {
-				Bitu x;
-				Bitu countWidth = width >> 1;
+				uint32_t x = 0;
+				const uint32_t countWidth = width >> 1;
 				switch ( bpp) {
 				case 8:
 					for (x=0;x<countWidth;x++)
@@ -587,9 +587,11 @@ skip_shot:
 						((Bit16u *)doubleRow)[x*2+1] = ((Bit16u *)srcLine)[x];
 					break;
 				case 24:
-					for (x=0;x<countWidth;x++)
-						((Bit32u *)doubleRow)[x*2+0] =
-						((Bit32u *)doubleRow)[x*2+1] = ((rgb24 *)srcLine)[x];
+					for (x = 0; x < countWidth; ++x) {
+						const auto pixel = static_cast<rgb24 *>(srcLine)[x];
+						reinterpret_cast<uint32_t *>(doubleRow)[x * 2 + 0] = pixel;
+						reinterpret_cast<uint32_t *>(doubleRow)[x * 2 + 1] = pixel;
+					}
 					break;
 				case 32:
 					for (x=0;x<countWidth;x++)
@@ -600,13 +602,15 @@ skip_shot:
                 rowPointer=doubleRow;
 			} else {
 				if (bpp == 24) {
-					Bitu x;
-					Bitu countWidth = width;
-					for (x=0;x<countWidth;x++)
-						((Bit32u *)doubleRow)[x] = ((rgb24 *)srcLine)[x];
-					rowPointer=doubleRow;	// Using doubleRow for this conversion when it is not actually double row!
+					const auto countWidth = width;
+					for (uint32_t x = 0; x < countWidth; ++x) {
+						const auto pixel = static_cast<rgb24 *>(srcLine)[x];
+						reinterpret_cast<uint32_t *>(doubleRow)[x] = pixel;
+					}
+					// Using doubleRow for this conversion when it is not actually double row!
+					rowPointer = doubleRow;
 				} else {
-					rowPointer=srcLine;
+					rowPointer = srcLine;
 				}
 			}
 			capture.video.codec->CompressLines( 1, &rowPointer );
