@@ -110,8 +110,10 @@ static void RENDER_StartLineHandler(const void * s) {
 		const Bitu *src = (Bitu*)s;
 		Bitu *cache = (Bitu*)(render.scale.cacheRead);
 		for (Bits x=render.src.start;x>0;) {
-			if (GCC_UNLIKELY(src[0] != cache[0])) {
-				if (!GFX_StartUpdate( render.scale.outWrite, render.scale.outPitch )) {
+			const auto src_ptr = reinterpret_cast<const uint8_t *>(src);
+			const auto src_val = read_unaligned_size_t(src_ptr);
+			if (GCC_UNLIKELY(src_val != cache[0])) {
+				if (!GFX_StartUpdate(render.scale.outWrite, render.scale.outPitch)) {
 					RENDER_DrawLine = RENDER_EmptyLineHandler;
 					return;
 				}

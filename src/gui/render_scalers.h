@@ -26,9 +26,9 @@
 #define SCALER_MAX_MUL_HEIGHT 3
 
 #if RENDER_USE_ADVANCED_SCALERS>0
-#define SCALER_MAXWIDTH		1600
-#define SCALER_MAXHEIGHT	1200
-#define SCALER_MAXX     	4096
+#define SCALER_MAXWIDTH  1600
+#define SCALER_MAXHEIGHT 1200
+#define SCALER_MAXX      8192
 #else
 // reduced to save some memory
 #define SCALER_MAXWIDTH 	800 
