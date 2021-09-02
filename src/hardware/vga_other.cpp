@@ -1136,14 +1136,31 @@ static void TANDY_FindMode()
 			} else VGA_SetMode(M_TANDY16);
 		}
 		else if (vga.tandy.gfx_control & 0x08) {
-			VGA_SetMode(M_TANDY4);
-		}
-		else if (vga.tandy.mode_control & 0x10)
-			VGA_SetMode(M_TANDY2);
-		else {
-			if (vga.mode==M_TANDY16) {
-				VGA_SetModeNow(M_TANDY4);
-			} else VGA_SetMode(M_TANDY4);
+			if (cga_comp == COMPOSITE_STATE::ON) {
+				// composite ntsc 640x200 16 color mode
+				VGA_SetMode(M_CGA4_COMPOSITE);
+				update_cga16_color();
+			} else {
+				VGA_SetMode(M_TANDY4);
+			}
+		} else if (vga.tandy.mode_control & 0x10) {
+			if (cga_comp == COMPOSITE_STATE::ON) {
+				// composite ntsc 640x200 16 color mode
+				VGA_SetMode(M_CGA2_COMPOSITE);
+				update_cga16_color();
+			} else {
+				VGA_SetMode(M_TANDY2);
+			}
+		} else {
+			// otherwise some 4-colour graphics mode
+			const auto new_mode = (cga_comp == COMPOSITE_STATE::ON)
+			                              ? M_CGA4_COMPOSITE
+			                              : M_TANDY4;
+			if (vga.mode == M_TANDY16) {
+				VGA_SetModeNow(new_mode);
+			} else {
+				VGA_SetMode(new_mode);
+			}
 		}
 		tandy_update_palette();
 	} else {
