@@ -1264,6 +1264,9 @@ static void write_tandy(io_port_t port, uint8_t val, io_width_t)
 	case 0x3d9:
 		vga.tandy.color_select=val;
 		tandy_update_palette();
+		// Re-apply the composite mode after updating the palette
+		if (cga_comp == COMPOSITE_STATE::ON)
+			apply_composite_state();
 		break;
 	case 0x3da:
 		vga.tandy.reg_index = val;
