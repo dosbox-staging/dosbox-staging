@@ -32,12 +32,6 @@
 #define GFX_REGS 0x09
 #define ATT_REGS 0x15
 
-enum VESAResolutions {
-	_512x384, _640x350, _640x400, _640x480, _720x480,
-	_800x600, _1024x768, _1188x344, _1188x400, _1188x480,
-	_1152x864, _1280x960, _1280x1024, _1600x1200
-};
-
 VideoModeBlock ModeList_VGA[]={
 /* mode  ,type     ,sw  ,sh  ,tw ,th ,cw,ch ,pt,pstart  ,plength,htot,vtot,hde,vde special flags */
 { 0x000  ,M_TEXT   ,360 ,400 ,40 ,25 ,9 ,16 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	},
@@ -411,8 +405,7 @@ static bool SetCurMode(VideoModeBlock modeblock[],Bit16u mode) {
 	while (modeblock[i].mode!=0xffff) {
 		if (modeblock[i].mode!=mode) i++;
 		else {
-			if (((!int10.vesa_oldvbe) || (ModeList_VGA[i].mode<=0x11b)) &&
-				((!int10.vesa_no24bpp) || (ModeList_VGA[i].type!=M_LIN24))) {
+			if (!int10.vesa_oldvbe || ModeList_VGA[i].mode < 0x120) {
 				CurMode=&modeblock[i];
 				return true;
 			}
@@ -1187,94 +1180,10 @@ bool INT10_SetVideoMode(Bit16u mode)
 		if (CurMode->mode>=0x100) {
 			if (CurMode->vdispend>480)
 				misc_output|=0xc0;	//480-line sync
-			misc_output|=0x0c;		//Select clock 3 
-			Bitu clock;
-			Bit8u refresh=60;
-			switch (CurMode->swidth) {
-			case 512:
-				switch (CurMode->sheight) {
-				case 384:
-					refresh=int10.vesa_refresh[_512x384];
-					break;
-				}
-				break;
-			case 320:
-			case 640:
-				switch (CurMode->sheight) {
-				case 350:
-					refresh=int10.vesa_refresh[_640x350];
-					break;
-				case 200:
-				case 400:
-					refresh=int10.vesa_refresh[_640x400];
-					break;
-				case 240:
-				case 480:
-					refresh=int10.vesa_refresh[_640x480];
-					break;
-				}
-			case 720:
-				switch (CurMode->sheight) {
-				case 480:
-					refresh=int10.vesa_refresh[_720x480];
-					break;
-				}
-				break;
-			case 400:
-			case 800:
-				switch (CurMode->sheight) {
-				case 300:
-				case 600:
-					refresh=int10.vesa_refresh[_800x600];
-					break;
-				}
-				break;
-			case 1024:
-				switch (CurMode->sheight) {
-				case 768:
-					refresh=int10.vesa_refresh[_1024x768];
-					break;
-				}
-				break;
-			case 1152:
-				switch (CurMode->sheight) {
-				case 864:
-					refresh=int10.vesa_refresh[_1152x864];
-					break;
-				}
-				break;
-			case 1188:
-				switch (CurMode->sheight) {
-				case 344:
-					refresh=int10.vesa_refresh[_1188x344];
-					break;
-				case 400:
-					refresh=int10.vesa_refresh[_1188x400];
-					break;
-				case 480:
-					refresh=int10.vesa_refresh[_1188x480];
-					break;
-				}
-			case 1280:
-				switch (CurMode->sheight) {
-				case 960:
-					refresh=int10.vesa_refresh[_1280x960];
-					break;
-				case 1024:
-					refresh=int10.vesa_refresh[_1280x1024];
-					break;
-				}
-			case 1600:
-				switch (CurMode->sheight) {
-				case 1200:
-					refresh=int10.vesa_refresh[_1600x1200];
-					break;
-				}
-				break;
-			}
-			clock=CurMode->vtotal*CurMode->cwidth*CurMode->htotal*refresh;
- 			VGA_SetClock(3,clock/1000);
- 		}
+			misc_output|=0x0c;		//Select clock 3
+			const auto clock = CurMode->vtotal * CurMode->cwidth * CurMode->htotal * int10.vesa_refresh;
+			VGA_SetClock(3, clock / 1000);
+		}
 		Bit8u misc_control_2;
 		/* Setup Pixel format */
 		switch (CurMode->type) {
@@ -1767,22 +1676,4 @@ Bitu VideoModeMemSize(Bitu mode) {
 		// Return 0 for all other types, those always fit in memory
 		return 0;
 	}
-}
-
-void vesa_refresh_Init(Section* sec){
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	int10.vesa_refresh[_512x384] = section->Get_int("refresh512x384");
-	int10.vesa_refresh[_640x350] = section->Get_int("refresh640x350");
-	int10.vesa_refresh[_640x400] = section->Get_int("refresh640x400");
-	int10.vesa_refresh[_640x480] = section->Get_int("refresh640x480");
-	int10.vesa_refresh[_720x480] = section->Get_int("refresh720x480");
-	int10.vesa_refresh[_800x600] = section->Get_int("refresh800x600");
-	int10.vesa_refresh[_1024x768] = section->Get_int("refresh1024x768");
-	int10.vesa_refresh[_1188x344] = section->Get_int("refresh1188x344");
-	int10.vesa_refresh[_1188x400] = section->Get_int("refresh1188x400");
-	int10.vesa_refresh[_1188x480] = section->Get_int("refresh1188x480");
-	int10.vesa_refresh[_1152x864] = section->Get_int("refresh1152x864");
-	int10.vesa_refresh[_1280x960] = section->Get_int("refresh1280x960");
-	int10.vesa_refresh[_1280x1024] = section->Get_int("refresh1280x1024");
-	int10.vesa_refresh[_1600x1200] = section->Get_int("refresh1600x1200");
 }
