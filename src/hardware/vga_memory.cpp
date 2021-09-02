@@ -937,7 +937,7 @@ void VGA_StartUpdateLFB(void) {
 #else
 	vga.lfb.handler = &vgaph.lfbchanges;
 #endif
-	MEM_SetLFB(vga.s3.la_window << 4 ,vga.vmemsize/4096, vga.lfb.handler, &vgaph.mmio);
+	MEM_SetLFB(vga.lfb.page, vga.vmemsize / 4096, vga.lfb.handler, &vgaph.mmio);
 }
 
 static void VGA_Memory_ShutDown(Section * /*sec*/) {

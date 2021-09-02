@@ -532,23 +532,23 @@ void SVGA_Setup_S3Trio(void) {
 	svga.accepts_mode = &SVGA_S3_AcceptsMode;
 
 	if (vga.vmemsize == 0)
-		vga.vmemsize = 4*1024*1024;
+		vga.vmemsize = 4 * 1024 * 1024;
 
 	// Set CRTC 36 to specify amount of VRAM and PCI
-	if (vga.vmemsize < 1024*1024) {
-		vga.vmemsize = 512*1024;
-		vga.s3.reg_36 = 0xfa;		// less than 1mb fast page mode
-	} else if (vga.vmemsize < 2048*1024)	{
-		vga.vmemsize = 1024*1024;
-		vga.s3.reg_36 = 0xda;		// 1mb fast page mode
-	} else if (vga.vmemsize < 4096*1024)	{
-		vga.vmemsize = 2048*1024;
-		vga.s3.reg_36 = 0x9a;		// 2mb fast page mode
-	} else if (vga.vmemsize < 8192*1024)	{
-		vga.vmemsize = 4096*1024;
-		vga.s3.reg_36 = 0x1a;		// 4mb fast page mode
+	if (vga.vmemsize < 1024 * 1024) {
+		vga.vmemsize = 512 * 1024;
+		vga.s3.reg_36 = 0xfa; // less than 1mb fast page mode
+	} else if (vga.vmemsize < 2048 * 1024) {
+		vga.vmemsize = 1024 * 1024;
+		vga.s3.reg_36 = 0xda; // 1mb fast page mode
+	} else if (vga.vmemsize < 4096 * 1024) {
+		vga.vmemsize = 2048 * 1024;
+		vga.s3.reg_36 = 0x9a; // 2mb fast page mode
+	} else if (vga.vmemsize < 8192 * 1024) {
+		vga.vmemsize = 4096 * 1024;
+		vga.s3.reg_36 = 0x1a; // 4mb fast page mode
 	} else {
-		vga.vmemsize = 8192*1024;
-		vga.s3.reg_36 = 0x7a;		// 8mb fast page mode
+		vga.vmemsize = 8192 * 1024;
+		vga.s3.reg_36 = 0x7a; // 8mb fast page mode
 	}
 }
