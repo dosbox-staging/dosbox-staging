@@ -84,7 +84,7 @@ typedef struct {
 	Bitu mh_mask;
 
 /* Video drawing */
-	Bitu display_start;
+	uint32_t display_start;
 	Bitu real_start;
 	bool retrace;					/* A retrace is active */
 	Bitu scan_len;

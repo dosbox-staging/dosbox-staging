@@ -112,18 +112,20 @@ extern Bit8u int10_font_14_alternate[20 * 15 + 1];
 extern Bit8u int10_font_16_alternate[19 * 17 + 1];
 
 struct VideoModeBlock {
-	Bit16u	mode;
-	VGAModes	type;
-	Bitu	swidth, sheight;
-	Bitu	twidth, theight;
-	Bitu	cwidth, cheight;
-	Bitu	ptotal,pstart,plength;
+	uint16_t mode;
+	VGAModes type;
+	uint16_t swidth, sheight;
+	uint8_t twidth, theight;
+	uint8_t cwidth, cheight;
+	uint8_t ptotal;
+	uint32_t pstart;
+	uint32_t plength;
 
-	Bitu	htotal,vtotal;
-	Bitu	hdispend,vdispend;
-	Bitu	special;
-	
+	uint16_t htotal, vtotal;
+	uint16_t hdispend, vdispend;
+	uint16_t special;
 };
+
 extern VideoModeBlock ModeList_VGA[];
 extern VideoModeBlock * CurMode;
 
