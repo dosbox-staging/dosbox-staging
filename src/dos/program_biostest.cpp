@@ -18,6 +18,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <stdio.h>
+#include <string.h>
+
+#include <string>
+
 #include "drives.h"
 #include "program_biostest.h"
 #include "regs.h"

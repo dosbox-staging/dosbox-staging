@@ -18,9 +18,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <stdio.h>
+
 #include "bios_disk.h"
 #include "callback.h"
 #include "control.h"
+#include "cross.h"
 #include "dma.h"
 #include "drives.h"
 #include "mapper.h"

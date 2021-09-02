@@ -19,6 +19,9 @@
  */
 
 #include "dosbox.h"
+
+#include <stdio.h>
+
 #include "drives.h"
 #include "callback.h"
 #include "program_loadrom.h"
