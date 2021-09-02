@@ -1528,16 +1528,7 @@ void VGA_SetupOther()
 	if (machine==MCH_CGA) {
 		IO_RegisterWriteHandler(0x3d8, write_cga, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3d9, write_cga, io_width_t::byte);
-		if (!mono_cga) {
-			MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10,
-			                  0, "select", "Sel Knob");
-			MAPPER_AddHandler(turn_crt_knob_positive, SDL_SCANCODE_F11,
-			                  0, "incval", "Inc Knob");
-			MAPPER_AddHandler(turn_crt_knob_negative, SDL_SCANCODE_F11,
-			                  MMOD2, "decval", "Dec Knob");
-			MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0,
-			                  "cgacomp", "CGA Comp");
-		} else {
+		if (mono_cga) {
 			MAPPER_AddHandler(CycleMonoCGAPal, SDL_SCANCODE_F11, 0,
 			                  "monocgapal", "Mono CGA Pal");
 			MAPPER_AddHandler(CycleMonoCGABright, SDL_SCANCODE_F11, MMOD2,
@@ -1557,10 +1548,18 @@ void VGA_SetupOther()
 		write_pcjr(0x3df, 0x7 | (0x7 << 3), io_width_t::byte);
 		IO_RegisterWriteHandler(0x3da, write_pcjr, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3df, write_pcjr, io_width_t::byte);
-		MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10, 0, "select", "Sel Knob");
-		MAPPER_AddHandler(turn_crt_knob_positive, SDL_SCANCODE_F11, 0, "incval", "Inc Knob");
-		MAPPER_AddHandler(turn_crt_knob_negative, SDL_SCANCODE_F11, MMOD2, "decval", "Dec Knob");
-		MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0, "cgacomp", "CGA Comp");
+	}
+	// Add composite hotkeys for CGA, Tandy, and PCjr
+	if ((machine == MCH_CGA && !mono_cga) || machine == MCH_TANDY ||
+	    machine == MCH_PCJR) {
+		MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10, 0,
+		                  "select", "Sel Knob");
+		MAPPER_AddHandler(turn_crt_knob_positive, SDL_SCANCODE_F11, 0,
+		                  "incval", "Inc Knob");
+		MAPPER_AddHandler(turn_crt_knob_negative, SDL_SCANCODE_F11,
+		                  MMOD2, "decval", "Dec Knob");
+		MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0, "cgacomp",
+		                  "CGA Comp");
 	}
 	if (machine == MCH_HERC) {
 		constexpr uint16_t base = 0x3b0;
