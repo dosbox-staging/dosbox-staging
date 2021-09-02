@@ -986,7 +986,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 
 	vga.draw.address_line = vga.config.hlines_skip;
 	if (IS_EGAVGA_ARCH) {
-		vga.draw.split_line = (Bitu)((vga.config.line_compare+1)/vga.draw.lines_scaled);
+		vga.draw.split_line = (vga.config.line_compare + 1) / vga.draw.lines_scaled;
 		if ((svgaCard==SVGA_S3Trio) && (vga.config.line_compare==0)) vga.draw.split_line=0;
 		vga.draw.split_line -= vga.draw.vblank_skip;
 	} else {
@@ -1811,15 +1811,15 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.bpp = bpp;
 		if (doubleheight) vga.draw.lines_scaled=2;
 		else vga.draw.lines_scaled=1;
+
 #if C_DEBUG
-		LOG(LOG_VGA, LOG_NORMAL)("Width %d, Height %d, fps %f", width, height, static_cast<double>(fps));
-		LOG(LOG_VGA, LOG_NORMAL)("%s width, %s height aspect %f", 
-		                         doublewidth ? "double" : "normal", doubleheight ? "double" : "normal",
-		                         static_cast<double>(aspect_ratio));
+		LOG_INFO("VGA: Width %d, Height %d, fps %f", width, height, fps);
+		LOG_INFO("VGA: %s width, %s height aspect %f", doublewidth ? "double" : "normal",
+		         doubleheight ? "double" : "normal", aspect_ratio);
 #endif
 		if (!vga.draw.vga_override)
 			RENDER_SetSize(width, height, bpp, fps,
-			               static_cast<double>(aspect_ratio),
+			               aspect_ratio,
 			               doublewidth, doubleheight);
 	}
 }

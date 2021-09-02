@@ -62,13 +62,14 @@ enum VGAModes {
 #define S3_CLOCK(_M,_N,_R)	((S3_CLOCK_REF * ((_M) + 2)) / (((_N) + 2) * (1 << (_R))))
 #define S3_MAX_CLOCK	150000	/* KHz */
 
-#define S3_XGA_1024		0x00
-#define S3_XGA_1152		0x01
-#define S3_XGA_640		0x40
-#define S3_XGA_800		0x80
-#define S3_XGA_1280		0xc0
-#define S3_XGA_1600		0x81
-#define S3_XGA_WMASK	(S3_XGA_640|S3_XGA_800|S3_XGA_1024|S3_XGA_1152|S3_XGA_1280|S3_XGA_1600)
+#define S3_XGA_1024 0x00
+#define S3_XGA_1152 0x01
+#define S3_XGA_640  0x40
+#define S3_XGA_800  0x80
+#define S3_XGA_1280 0xc0
+#define S3_XGA_1600 0x81
+#define S3_XGA_WMASK \
+	(S3_XGA_640 | S3_XGA_800 | S3_XGA_1024 | S3_XGA_1152 | S3_XGA_1280 | S3_XGA_1600)
 
 #define S3_XGA_8BPP  0x00
 #define S3_XGA_16BPP 0x10
