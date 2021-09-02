@@ -200,25 +200,27 @@ foundit:
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN24:
-		if (mode==0x212)
-		{ // Mode 0x212 has 128 extra bytes per scan line for compatibility with Windows 640x480 24-bit S3 Trio drivers
-			pageSize = mblock->sheight * (mblock->swidth*3+128);
-			var_write(&minfo.BytesPerScanLine,mblock->swidth*3+128);
+		// Mode 0x212 has 128 extra bytes per scan line for
+		// compatibility with Windows 640x480 24-bit S3 Trio drivers
+		if (mode == 0x212) {
+			pageSize = mblock->sheight * (mblock->swidth * 3 + 128);
+			minfo.BytesPerScanLine = host_to_le16(mblock->swidth * 3 + 128);
 		} else {
-			pageSize = mblock->sheight * (mblock->swidth*3);
-			var_write(&minfo.BytesPerScanLine,mblock->swidth*3);
+			pageSize = mblock->sheight * (mblock->swidth * 3);
+			minfo.BytesPerScanLine = host_to_le16(mblock->swidth * 3);
 		}
-		var_write(&minfo.NumberOfPlanes,0x1);
-		var_write(&minfo.BitsPerPixel,24);
-		var_write(&minfo.MemoryModel,6);	//HiColour
-		var_write(&minfo.RedMaskSize,8);
-		var_write(&minfo.RedMaskPos,0x10);
-		var_write(&minfo.GreenMaskSize,0x8);
-		var_write(&minfo.GreenMaskPos,0x8);
-		var_write(&minfo.BlueMaskSize,0x8);
-		var_write(&minfo.BlueMaskPos,0x0);
-		modeAttributes = 0x1b;	// Color, graphics
-		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
+		minfo.NumberOfPlanes = 0x1u;
+		minfo.BitsPerPixel = 24u;
+		minfo.MemoryModel = 6u; // HiColour
+		minfo.RedMaskSize = 8u;
+		minfo.RedMaskPos = 0x10;
+		minfo.GreenMaskSize = 0x8;
+		minfo.GreenMaskPos = 0x8;
+		minfo.BlueMaskSize = 0x8;
+		minfo.BlueMaskPos = 0x0;
+		modeAttributes = 0x1b; // Color, graphics
+		if (!int10.vesa_nolfb)
+			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN32:
 		pageSize = mblock->sheight * mblock->swidth*4;
@@ -239,33 +241,41 @@ foundit:
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_TEXT:
-		pageSize = mblock->sheight/8 * mblock->swidth*2/mblock->cwidth;
-		var_write(&minfo.BytesPerScanLine,mblock->swidth*2/mblock->cwidth);
- 		var_write(&minfo.NumberOfPlanes,0x4);
- 		var_write(&minfo.BitsPerPixel,4);
- 		var_write(&minfo.MemoryModel,0);	//Text
- 		modeAttributes = 0x0f;	//Color, text, bios output
+		pageSize = 0;
+		minfo.BytesPerScanLine = host_to_le16(mblock->twidth * 2);
+		minfo.NumberOfPlanes = 0x4;
+		minfo.BitsPerPixel = 4u;
+		minfo.MemoryModel = 0u; // text
+		modeAttributes = 0x0f; // Color, text, bios output
 		break;
- 	default:
- 		return 0x1;
- 	}
+	default:
+		return VESA_FAIL;
+	}
 	if (pageSize & 0xFFFF) {
 		// It is documented that many applications assume 64k-aligned page sizes
 		// VBETEST is one of them
 		pageSize += 0x10000;
 		pageSize &= ~0xFFFF;
- 	}
-	var_write(&minfo.WinAAttributes,0x7);	// Exists/readable/writable
-	var_write(&minfo.ModeAttributes, modeAttributes);
-	Bitu pages = (vga.vmemsize / pageSize)-1;
-	var_write(&minfo.NumberOfImagePages,pages);
- 	if (mblock->type==M_TEXT) {
- 		var_write(&minfo.WinGranularity,32);
- 		var_write(&minfo.WinSize,32);
- 		var_write(&minfo.WinASegment,0xb800);
-		var_write(&minfo.XResolution,mblock->swidth/mblock->cwidth);
-		var_write(&minfo.YResolution,mblock->sheight/mblock->cheight);
- 	} else {
+	}
+	int pages = 0;
+	if (pageSize > vga.vmemsize) {
+		// mode not supported by current hardware configuration
+		modeAttributes &= ~0x1;
+	} else if (pageSize) {
+		pages = (vga.vmemsize / pageSize)-1;
+	}	
+	assert(pages <= UINT8_MAX);
+	minfo.NumberOfImagePages = static_cast<uint8_t>(pages);
+	minfo.ModeAttributes = host_to_le16(modeAttributes);
+	minfo.WinAAttributes = 0x7; // Exists/readable/writable
+
+	if (mblock->type==M_TEXT) {
+		minfo.WinGranularity = host_to_le16(32u);
+		minfo.WinSize = host_to_le16(32u);
+		minfo.WinASegment = host_to_le16(0xb800);
+		minfo.XResolution = host_to_le16(mblock->twidth);
+		minfo.YResolution = host_to_le16(mblock->theight);
+	} else {
 		minfo.WinGranularity = host_to_le16(64u);
 		minfo.WinSize = host_to_le16(64u);
 		minfo.WinASegment = host_to_le16(0xa000);
