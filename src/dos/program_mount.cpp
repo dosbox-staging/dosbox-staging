@@ -18,11 +18,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <string>
+#include "dosbox.h"
 
 #include "bios_disk.h"
 #include "control.h"
-#include "dosbox.h"
 #include "drives.h"
 #include "fs_utils.h"
 #include "program_mount_common.h"
