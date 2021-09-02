@@ -231,4 +231,5 @@ void SVGA_Setup_ParadisePVGA1A(void) {
 	}
 
 	IO_Write(0x3cf, 0x05); // Enable!
+	VGA_LogInitialization("Paradise VGA 1A", "DRAM");
 }
