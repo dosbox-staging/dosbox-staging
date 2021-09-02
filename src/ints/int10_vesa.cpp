@@ -143,9 +143,9 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 	}
 	return VESA_FAIL;
 foundit:
-	if (((int10.vesa_oldvbe) && (ModeList_VGA[i].mode>0x11b)) ||
-		((int10.vesa_no24bpp) && (ModeList_VGA[i].type==M_LIN24))) return 0x01;
-	VideoModeBlock * mblock=&ModeList_VGA[i];
+	if (int10.vesa_oldvbe && ModeList_VGA[i].mode >= 0x120)
+		return VESA_FAIL;
+	VideoModeBlock *mblock = &ModeList_VGA[i];
 	switch (mblock->type) {
 	case M_LIN4:
 		pageSize = mblock->sheight * mblock->swidth/8;
@@ -594,10 +594,9 @@ void INT10_SetupVESA(void) {
 			if (svga.accepts_mode(ModeList_VGA[i].mode)) canuse_mode=true;
 		}
 		if (ModeList_VGA[i].mode>=0x100 && canuse_mode) {
-			if (((!int10.vesa_oldvbe) || (ModeList_VGA[i].mode<=0x11b)) &&
-				((!int10.vesa_no24bpp) || (ModeList_VGA[i].type!=M_LIN24))) {
-				phys_writew(PhysMake(0xc000,int10.rom.used),ModeList_VGA[i].mode);
-				int10.rom.used+=2;
+			if (!int10.vesa_oldvbe || ModeList_VGA[i].mode < 0x120) {
+				phys_writew(PhysMake(0xc000, int10.rom.used), ModeList_VGA[i].mode);
+				int10.rom.used += 2;
 			}
 		}
 		i++;

@@ -127,8 +127,8 @@ struct VideoModeBlock {
 extern VideoModeBlock ModeList_VGA[];
 extern VideoModeBlock * CurMode;
 
-typedef struct {
-	struct {
+struct Int10Data {
+	struct Int10DataRom{
 		RealPt font_8_first;
 		RealPt font_8_second;
 		RealPt font_14;
@@ -152,11 +152,10 @@ typedef struct {
 		Bit16u used;
 	} rom;
 	Bit16u vesa_setmode;
-	Bit8u vesa_refresh[14];
-	bool vesa_nolfb;
-	bool vesa_no24bpp;
-	bool vesa_oldvbe;
-} Int10Data;
+	double vesa_refresh = 70.0;
+	bool vesa_nolfb = false;
+	bool vesa_oldvbe = false;
+};
 
 extern Int10Data int10;
 
