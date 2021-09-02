@@ -1202,7 +1202,10 @@ bool INT10_SetVideoMode(Bit16u mode)
 				misc_output|=0xc0;	//480-line sync
 			misc_output|=0x0c;		//Select clock 3
 			const auto clock = CurMode->vtotal * CurMode->cwidth * CurMode->htotal * int10.vesa_refresh;
-			VGA_SetClock(3, clock / 1000);
+			const auto clock_khz = clock / 1000.0;
+			assert(clock_khz > 0);
+			assert(clock_khz < UINT32_MAX);
+			VGA_SetClock(3, static_cast<uint32_t>(clock_khz));
 		}
 		Bit8u misc_control_2;
 		/* Setup Pixel format */
