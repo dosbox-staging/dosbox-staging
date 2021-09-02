@@ -1029,7 +1029,27 @@ static void write_cga(io_port_t port, uint8_t val, io_width_t)
 
 static void PCJr_FindMode();
 
-static void Composite(bool pressed) {
+static void apply_composite_state()
+{
+	// switch RGB and Composite if in graphics mode
+	if (vga.tandy.mode_control & 0x2 && machine == MCH_PCJR)
+		PCJr_FindMode();
+	else
+		write_cga(0x3d8, vga.tandy.mode_control, io_width_t::byte);
+
+/* 	if (vga.tandy.mode_control & 0x2) {
+		if (machine == MCH_PCJR) {
+			PCJr_FindMode();
+		} else {
+			write_cga(0x3d8, vga.tandy.mode_control, io_width_t::byte);
+		}
+	}
+ */
+
+}
+
+static void Composite(bool pressed)
+{
 	if (!pressed)
 		return;
 
@@ -1044,14 +1064,7 @@ static void Composite(bool pressed) {
 	LOG_MSG("COMPOSITE: State is %s", cga_comp == COMPOSITE_STATE::AUTO ? "auto"
 	                                  : cga_comp == COMPOSITE_STATE::ON ? "on"
 	                                                                    : "off");
-	// switch RGB and Composite if in graphics mode
-	if (vga.tandy.mode_control & 0x2) {
-		if (machine == MCH_PCJR) {
-			PCJr_FindMode();
-		} else {
-			write_cga(0x3d8, vga.tandy.mode_control, io_width_t::byte);
-		}
-	}
+	apply_composite_state();
 }
 
 static void tandy_update_palette() {
