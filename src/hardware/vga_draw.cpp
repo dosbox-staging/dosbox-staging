@@ -21,6 +21,7 @@
 #include <cstring>
 #include <cmath>
 
+#include "../ints/int10.h"
 #include "mem_unaligned.h"
 #include "pic.h"
 #include "render.h"
@@ -1118,6 +1119,26 @@ void VGA_ActivateHardwareCursor(void) {
 	}
 }
 
+static void maybe_aspect_correct_tall_modes(double &current_ratio)
+{
+	// If we're in a mode that's wider than it is tall, then do nothing
+	if (CurMode->swidth >= CurMode->sheight || current_ratio > 0.9)
+		return;
+
+	// We're in a tall mode
+
+	if (!render.aspect) {
+		LOG_INFO("VGA: Tall resolution (%ux%u) may appear stretched wide, per 'aspect = false'",
+	         CurMode->swidth, CurMode->sheight);
+		// by default, the current ratio is already stretched out
+		return;
+	}
+
+	LOG_INFO("VGA: Tall resolution (%ux%u) will not be wide-stretched, per 'aspect = true'",
+	         CurMode->swidth, CurMode->sheight);
+	current_ratio *= 2;
+}
+
 void VGA_SetupDrawing(uint32_t /*val*/)
 {
 	if (vga.mode == M_ERROR) {
@@ -1461,9 +1482,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		} else VGA_DrawLine = VGA_Draw_Linear_Line;
 		break;
 	case M_LIN8:
-		if (vga.crtc.mode_control & 0x8)
+		if (vga.crtc.mode_control & 0x8) {
 			width >>=1;
-		else if (svgaCard == SVGA_S3Trio && !(vga.s3.reg_3a&0x10)) {
+		} else if (svgaCard == SVGA_S3Trio && !(vga.s3.reg_3a & 0x10)) {
 			doublewidth=true;
 			width >>=1;
 		}
@@ -1473,9 +1494,15 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		width<<=3;
 		if (vga.crtc.mode_control & 0x8) {
  			doublewidth = true;
+			maybe_aspect_correct_tall_modes(aspect_ratio);
 			if (vga.mode == M_LIN32) {
-				// vesa modes 10f/190/191/192
-				aspect_ratio *= 2.0;
+				// Modes 10f/190/191/192
+				switch (CurMode->mode) {
+				case 0x10f: aspect_ratio *= 2.0; break;
+				case 0x190: aspect_ratio *= 2.0; break;
+				case 0x191: aspect_ratio *= 2.0; break;
+				case 0x192: aspect_ratio *= 2.0; break;
+				};
 			}
 		}
 		/* Use HW mouse cursor drawer if enabled */
@@ -1485,7 +1512,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
  	case M_LIN16:
 		// 15/16 bpp modes double the horizontal values
 		width<<=2;
-		if ((vga.crtc.mode_control & 0x8) || (svgaCard == SVGA_S3Trio && (vga.s3.pll.cmd & 0x10)))
+		// tall VESA modes
+		maybe_aspect_correct_tall_modes(aspect_ratio);
+		if ((vga.crtc.mode_control & 0x8) ||
+		    (svgaCard == SVGA_S3Trio && (vga.s3.pll.cmd & 0x10)))
 			doublewidth = true;
 		else {
 			// vesa modes 165/175
