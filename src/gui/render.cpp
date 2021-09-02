@@ -229,7 +229,7 @@ void RENDER_EndUpdate( bool abort ) {
 			fps /= fps_skip;
 		}
 		CAPTURE_AddImage(render.src.width, render.src.height, render.src.bpp,
-		                 pitch, flags, fps, (Bit8u *)&scalerSourceCache,
+		                 pitch, flags, static_cast<float>(fps), (Bit8u *)&scalerSourceCache,
 		                 (Bit8u *)&render.pal.rgb);
 	}
 	if ( render.scale.outWrite ) {
