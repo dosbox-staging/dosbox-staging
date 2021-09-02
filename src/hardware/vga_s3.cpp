@@ -154,20 +154,20 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu /*iolen*/) {
 			case S3_XGA_8BPP: vga.s3.xga_color_mode = M_LIN8; break;
 		}
 		switch (val & S3_XGA_WMASK) {
-			case S3_XGA_1024: vga.s3.xga_screen_width = 1024; break;
-			case S3_XGA_1152: vga.s3.xga_screen_width = 1152; break;
-			case S3_XGA_640:  vga.s3.xga_screen_width = 640; break;
-			case S3_XGA_800:  vga.s3.xga_screen_width = 800; break;
-			case S3_XGA_1600: vga.s3.xga_screen_width = 1600; break;
-			case S3_XGA_1280: vga.s3.xga_screen_width = 1280; break;
-			default:  vga.s3.xga_screen_width = 1024; break;
+		case S3_XGA_640: vga.s3.xga_screen_width = 640; break;
+		case S3_XGA_800: vga.s3.xga_screen_width = 800; break;
+		case S3_XGA_1024: vga.s3.xga_screen_width = 1024; break;
+		case S3_XGA_1152: vga.s3.xga_screen_width = 1152; break;
+		case S3_XGA_1280: vga.s3.xga_screen_width = 1280; break;
+		case S3_XGA_1600: vga.s3.xga_screen_width = 1600; break;
+		default: vga.s3.xga_screen_width = 1024; break;
 		}
 		break;
-	case 0x51:	/* Extended System Control 2 */
-		vga.s3.reg_51=val & 0xc0;		//Only store bits 6,7
-		vga.config.display_start&=0xF3FFFF;
-		vga.config.display_start|=(val & 3) << 18;
-		if ((vga.svga.bank_read&0x30) ^ ((val&0xc)<<2)) {
+	case 0x51:                          /* Extended System Control 2 */
+		vga.s3.reg_51 = val & 0xc0; // Only store bits 6,7
+		vga.config.display_start &= 0xF3FFFF;
+		vga.config.display_start |= (val & 3) << 18;
+		if ((vga.svga.bank_read & 0x30) ^ ((val & 0xc) << 2)) {
 			vga.svga.bank_read&=0xcf;
 			vga.svga.bank_read|=(val&0xc)<<2;
 			vga.svga.bank_write = vga.svga.bank_read;

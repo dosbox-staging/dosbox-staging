@@ -285,8 +285,8 @@ foundit:
 	minfo.WinFuncPtr = host_to_le32(int10.rom.set_window);
 	minfo.NumberOfBanks = 0x1;
 	minfo.Reserved_page = 0x1;
-	minfo.XCharSize = static_cast<uint8_t>(mblock->cwidth);
-	minfo.YCharSize = static_cast<uint8_t>(mblock->cheight);
+	minfo.XCharSize = mblock->cwidth;
+	minfo.YCharSize = mblock->cheight;
 	if (!int10.vesa_nolfb)
 		minfo.PhysBasePtr = host_to_le32(S3_LFB_BASE);
 
@@ -312,7 +312,7 @@ Bit8u VESA_SetCPUWindow(Bit8u window,Bit8u address) {
 	if (window) return VESA_FAIL;
 	if (((Bit32u)(address)*64*1024<vga.vmemsize)) {
 		IO_Write(0x3d4,0x6a);
-		IO_Write(0x3d5,(Bit8u)address);
+		IO_Write(0x3d5, address);
 		return VESA_SUCCESS;
 	} else return VESA_FAIL;
 }
@@ -450,7 +450,8 @@ uint8_t VESA_ScanLineLength(uint8_t subcall,
 		// the smaller of either the hardware maximum scanline length or
 		// the limit to get full y resolution of this mode
 		new_offset = max_offset;
-		if ((new_offset * bytes_per_offset * screen_height) > usable_vmem_bytes)
+		if ((new_offset * bytes_per_offset * screen_height) >
+		    static_cast<int>(usable_vmem_bytes))
 			new_offset = usable_vmem_bytes / (bytes_per_offset * screen_height);
 		break;
 
@@ -624,7 +625,7 @@ void INT10_SetupVESA(void) {
 	phys_writew(PhysMake(0xc000,int10.rom.used),0xffff);
 	int10.rom.used+=2;
 	int10.rom.oemstring=RealMake(0xc000,int10.rom.used);
-	Bitu len=(Bitu)(strlen(string_oem)+1);
+	const auto len = strlen(string_oem) + 1;
 	for (i=0;i<len;i++) {
 		phys_writeb(0xc0000+int10.rom.used++,string_oem[i]);
 	}

@@ -152,8 +152,8 @@ struct Int10Data {
 		Bit16u pmode_interface_window;
 		Bit16u pmode_interface_palette;
 		Bit16u used;
-	} rom;
-	Bit16u vesa_setmode;
+	} rom = {};
+	Bit16u vesa_setmode = 0;
 	double vesa_refresh = 70.0;
 	bool vesa_nolfb = false;
 	bool vesa_oldvbe = false;
