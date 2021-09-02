@@ -129,38 +129,60 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 	case M_LIN4:
 		if ((machine!=MCH_VGA) || (svgaCard!=SVGA_TsengET4K) ||
 				(CurMode->swidth>800)) {
-			// the ET4000 BIOS supports text output in 800x600 SVGA (Gateway 2)
-			// putpixel warining?
+			// the ET4000 BIOS supports text output in 800x600 SVGA
+			// (Gateway 2)
+			putpixelwarned = true;
+			LOG(LOG_INT10, LOG_ERROR)("PutPixel unhandled mode type %d", CurMode->type);
 			break;
 		}
-	case M_EGA:
-		{
-			/* Set the correct bitmask for the pixel position */
-			IO_Write(0x3ce,0x8);Bit8u mask=128>>(x&7);IO_Write(0x3cf,mask);
-			/* Set the color to set/reset register */
-			IO_Write(0x3ce,0x0);IO_Write(0x3cf,color);
-			/* Enable all the set/resets */
-			IO_Write(0x3ce,0x1);IO_Write(0x3cf,0xf);
-			/* test for xorring */
-			if (color & 0x80) { IO_Write(0x3ce,0x3);IO_Write(0x3cf,0x18); }
-			//Perhaps also set mode 1 
-			/* Calculate where the pixel is in video memory */
-			if (CurMode->plength!=(Bitu)real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE))
-				LOG(LOG_INT10,LOG_ERROR)("PutPixel_EGA_p: %" sBitfs(x) "!=%x",CurMode->plength,real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE));
-			if (CurMode->swidth!=(Bitu)real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
-				LOG(LOG_INT10,LOG_ERROR)("PutPixel_EGA_w: %" sBitfs(x) "!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
-			PhysPt off=0xa0000+real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE)*page+
-				((y*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8+x)>>3);
-			/* Bitmask and set/reset should do the rest */
-			mem_readb(off);
-			mem_writeb(off,0xff);
-			/* Restore bitmask */	
-			IO_Write(0x3ce,0x8);IO_Write(0x3cf,0xff);
-			IO_Write(0x3ce,0x1);IO_Write(0x3cf,0);
-			/* Restore write operating if changed */
-			if (color & 0x80) { IO_Write(0x3ce,0x3);IO_Write(0x3cf,0x0); }
-			break;
+		FALLTHROUGH;
+	case M_EGA: {
+		/* Set the correct bitmask for the pixel position */
+		IO_Write(0x3ce, 0x8);
+		Bit8u mask = 128 >> (x & 7);
+		IO_Write(0x3cf, mask);
+		/* Set the color to set/reset register */
+		IO_Write(0x3ce, 0x0);
+		IO_Write(0x3cf, color);
+		/* Enable all the set/resets */
+		IO_Write(0x3ce, 0x1);
+		IO_Write(0x3cf, 0xf);
+		/* test for xorring */
+		if (color & 0x80) {
+			IO_Write(0x3ce, 0x3);
+			IO_Write(0x3cf, 0x18);
 		}
+		// Perhaps also set mode 1
+		/* Calculate where the pixel is in video memory */
+		if (CurMode->plength !=
+		    (Bitu)real_readw(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE))
+			LOG(LOG_INT10, LOG_ERROR)
+			("PutPixel_EGA_p: %" sBitfs(x) "!=%x", CurMode->plength,
+			 real_readw(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE));
+		if (CurMode->swidth !=
+		    (Bitu)real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS) * 8)
+			LOG(LOG_INT10, LOG_ERROR)
+			("PutPixel_EGA_w: %" sBitfs(x) "!=%x", CurMode->swidth,
+			 real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS) * 8);
+		PhysPt off = 0xa0000 +
+		             real_readw(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE) * page +
+		             ((y * real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS) * 8 + x) >>
+		              3);
+		/* Bitmask and set/reset should do the rest */
+		mem_readb(off);
+		mem_writeb(off, 0xff);
+		/* Restore bitmask */
+		IO_Write(0x3ce, 0x8);
+		IO_Write(0x3cf, 0xff);
+		IO_Write(0x3ce, 0x1);
+		IO_Write(0x3cf, 0);
+		/* Restore write operating if changed */
+		if (color & 0x80) {
+			IO_Write(0x3ce, 0x3);
+			IO_Write(0x3cf, 0x0);
+		}
+		break;
+	}
 
 	case M_VGA:
 		mem_writeb(PhysMake(0xa000,y*320+x),color);
