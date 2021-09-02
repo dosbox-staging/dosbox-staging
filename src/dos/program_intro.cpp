@@ -18,8 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "mapper.h"
 #include "program_intro.h"
+
+#include "mapper.h"
 
 void INTRO::WriteOutProgramIntroSpecial()
 {

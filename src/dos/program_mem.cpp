@@ -18,8 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "callback.h"
 #include "program_mem.h"
+
+#include "callback.h"
 #include "regs.h"
 
 void MEM::Run(void) {

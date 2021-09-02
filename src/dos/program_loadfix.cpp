@@ -18,8 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "dosbox.h"
 #include "program_loadfix.h"
+
+#include "dosbox.h"
 #include "shell.h"
 #include "string_utils.h"
 
