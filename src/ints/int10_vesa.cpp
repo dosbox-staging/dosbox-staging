@@ -484,57 +484,43 @@ uint8_t VESA_ScanLineLength(uint8_t subcall,
 }
 
 Bit8u VESA_SetDisplayStart(Bit16u x,Bit16u y,bool wait) {
-	Bitu start;
-	Bitu pixels_per_offset;
-	Bitu panning_factor = 1;
-
+	uint8_t panning_factor = 1;
+	uint8_t bits_per_pixel = 0;
+	bool align_to_nearest_4th_pixel = false;
 	switch (CurMode->type) {
 	case M_TEXT:
-	case M_LIN4:
-		pixels_per_offset = 16;
-		break;
+	case M_LIN4: bits_per_pixel = 4; break;
 	case M_LIN8:
+		bits_per_pixel = 8;
 		panning_factor = 2; // the panning register ignores bit0 in this mode
-		pixels_per_offset = 8;
 		break;
 	case M_LIN15:
 	case M_LIN16:
+		bits_per_pixel = 16;
 		panning_factor = 2; // this may be DOSBox specific
-		pixels_per_offset = 4;
 		break;
 	case M_LIN24:
-		pixels_per_offset = 3;
- 
-		start=(vga.config.scan_len*8)*y+x*3;
-		start-=(x*3)%12;	// Align x to every 4 pixels to prevent color flickering when scrolling in VBETEST
-		vga.config.display_start=start/4;
-		return VESA_SUCCESS;
+		align_to_nearest_4th_pixel = true;
+		bits_per_pixel = 24;
 		break;
-	case M_LIN32:
-		pixels_per_offset = 2;
-		break;
-	default:
-		return VESA_MODE_UNSUPPORTED;
+	case M_LIN32: bits_per_pixel = 32; break;
+	default: return VESA_MODE_UNSUPPORTED;
 	}
-	// We would have to divide y by the character height for text modes and
-	// write the remainder to the CRTC preset row scan register,
-	// but VBE2 BIOSes that actually get that far also don't.
-	// Only a VBE3 BIOS got it right.
-	Bitu virtual_screen_width = vga.config.scan_len * pixels_per_offset;
-	Bitu new_start_pixel = virtual_screen_width * y + x;
-	Bitu new_crtc_start = new_start_pixel / (pixels_per_offset/2);
-	Bitu new_panning = new_start_pixel % (pixels_per_offset/2);
-	new_panning *= panning_factor;
+	constexpr uint8_t lcf = 32; // least common factor
+	uint32_t start = (vga.config.scan_len * lcf * 2 * y + x * bits_per_pixel) / lcf;
+	if (align_to_nearest_4th_pixel)
+		start -= (start % 3);
+	vga.config.display_start = start;
 
-	vga.config.display_start = new_crtc_start;
-	
 	// Setting the panning register is nice as it allows for super smooth
 	// scrolling, but if we hit the retrace pulse there may be flicker as
 	// panning and display start are latched at different times. 
 
 	IO_Read(0x3da);              // reset attribute flipflop
 	IO_Write(0x3c0,0x13 | 0x20); // panning register, screen on
-	IO_Write(0x3c0,new_panning);
+
+	const auto new_panning = x % (lcf / bits_per_pixel);
+	IO_Write(0x3c0, static_cast<uint8_t>(new_panning * panning_factor));
 
 	// Wait for retrace if requested
 	if (wait) CALLBACK_RunRealFar(RealSeg(int10.rom.wait_retrace),RealOff(int10.rom.wait_retrace));
