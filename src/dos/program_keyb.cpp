@@ -18,8 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "dos_keyboard_layout.h"
 #include "program_keyb.h"
+
+#include "dos_keyboard_layout.h"
 #include "string_utils.h"
 
 void KEYB::Run(void) {

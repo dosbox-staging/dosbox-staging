@@ -18,13 +18,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "program_loadrom.h"
+
 #include "dosbox.h"
 
 #include <stdio.h>
 
 #include "drives.h"
 #include "callback.h"
-#include "program_loadrom.h"
 #include "regs.h"
 
 void LOADROM::Run(void) {

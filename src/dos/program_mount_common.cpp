@@ -18,9 +18,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "program_mount_common.h"
+
 #include "bios_disk.h"
 #include "drives.h"
-#include "program_mount_common.h"
 #include "support.h"
 
 Bitu ZDRIVE_NUM = 25;

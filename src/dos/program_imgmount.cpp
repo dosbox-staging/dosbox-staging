@@ -18,6 +18,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "program_imgmount.h"
+
 #include "dosbox.h"
 
 #include <vector>
@@ -29,7 +31,6 @@
 #include "fs_utils.h"
 #include "mapper.h"
 #include "program_mount_common.h"
-#include "program_imgmount.h"
 #include "shell.h"
 #include "string_utils.h"
 #include "../ints/int10.h"
