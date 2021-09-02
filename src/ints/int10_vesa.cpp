@@ -367,53 +367,70 @@ Bit8u VESA_GetPalette(PhysPt data,Bitu index,Bitu count) {
 	return VESA_SUCCESS;
 }
 
-// maximum offset for the S3 Trio64 is 10 bits
-#define S3_MAX_OFFSET 0x3ff
-
-Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u val, Bit16u & bytes,Bit16u & pixels,Bit16u & lines) {
+uint8_t VESA_ScanLineLength(uint8_t subcall,
+                            uint16_t val,
+                            uint16_t &bytes,
+                            uint16_t &pixels,
+                            uint16_t &lines)
+{
 	// offset register: virtual scanline length
-	Bitu pixels_per_offset;
-	Bitu bytes_per_offset = 8;
-	Bitu vmemsize = vga.vmemsize;
-	Bitu new_offset = vga.config.scan_len;
-	Bitu screen_height = CurMode->sheight;
+	auto new_offset = static_cast<int>(vga.config.scan_len);
+	auto screen_height = CurMode->sheight;
+	auto usable_vmem_bytes = vga.vmemsize;
+	uint8_t bits_per_pixel = 8;
+	uint8_t bytes_per_offset = 8;
+	bool align_to_nearest_4th_pixel = false;
+
+	// LOG_MSG("VESA_ScanLineLength: s-%lux%lu, t-%lux%lu, c-%lux%lu,
+	//         p-tot=%lu p-start=%lu p-len=%lu, h-tol=%lu h-len=%lu",
+	//         CurMode->swidth, CurMode->sheight, CurMode->twidth,
+	//         CurMode->theight, CurMode->cwidth, CurMode->cheight,
+	//         CurMode->ptotal,CurMode->pstart,CurMode->plength,
+	//         CurMode->htotal,CurMode->vtotal);
 
 	switch (CurMode->type) {
 	case M_TEXT:
-		vmemsize = 0x8000;      // we have only the 32kB window here
+		// In text mode we only have a 32 KiB window to operate on
+		usable_vmem_bytes = 32 * 1024;
 		screen_height = CurMode->theight;
-		pixels_per_offset = 16; // two characters each 8 pixels wide
 		bytes_per_offset = 4;   // 2 characters + 2 attributes
+		bits_per_pixel = 4;
 		break;
 	case M_LIN4:
-		pixels_per_offset = 16;
 		bytes_per_offset = 2;
-		vmemsize /= 4; // planar mode
+		bits_per_pixel = 4;
+		usable_vmem_bytes /= 4; // planar mode
 		break;
-	case M_LIN8:
-		pixels_per_offset = 8;
-		break;
+	case M_LIN8: bits_per_pixel = 8; break;
 	case M_LIN15:
-	case M_LIN16:
-		pixels_per_offset = 4;
-		break;
+	case M_LIN16: bits_per_pixel = 16; break;
 	case M_LIN24:
-		pixels_per_offset = 3;
+		align_to_nearest_4th_pixel = true;
+		bits_per_pixel = 24;
 		break;
-	case M_LIN32:
-		pixels_per_offset = 2;
-		break;
+	case M_LIN32: bits_per_pixel = 32; break;
 	default:
 		return VESA_MODE_UNSUPPORTED;
 	}
+	constexpr int gcd = 8 * 8; // greatest common dividsor
+
+	// The 'bytes' and 'pixels' return values
+	// (reference-assigns) are multiplied up from the offset length, so here
+	// we reverse those calculations using UINT16_MAX as of the offset
+	// length to determine its maximum possible value that won't cause the
+	// bytes or pixels calculations to overflow.
+	const auto max_offset = std::min(UINT16_MAX / bytes_per_offset,
+	                                 UINT16_MAX * bits_per_pixel / gcd);
+
 	switch (subcall) {
 	case 0x00: // set scan length in pixels
-		new_offset = val / pixels_per_offset;
-		if (val % pixels_per_offset) new_offset++;
-		
-		if (new_offset > S3_MAX_OFFSET)
+		new_offset = val * bits_per_pixel / gcd;
+		if (align_to_nearest_4th_pixel)
+			new_offset -= (new_offset % 3);
+
+		if (new_offset > max_offset)
 			return VESA_HW_UNSUPPORTED; // scanline too long
-		vga.config.scan_len = new_offset;
+		vga.config.scan_len = check_cast<uint16_t>(new_offset);
 		VGA_CheckScanLength();
 		break;
 
@@ -422,21 +439,19 @@ Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u val, Bit16u & bytes,Bit16u & pixe
 		break;
 
 	case 0x02: // set scan length in bytes
-		new_offset = val / bytes_per_offset;
-		if (val % bytes_per_offset) new_offset++;
-		
-		if (new_offset > S3_MAX_OFFSET)
+		new_offset = ceil_udivide(val, bytes_per_offset);
+		if (new_offset > max_offset)
 			return VESA_HW_UNSUPPORTED; // scanline too long
-		vga.config.scan_len = new_offset;
+		vga.config.scan_len = check_cast<uint16_t>(new_offset);
 		VGA_CheckScanLength();
 		break;
 
 	case 0x03: // get maximum scan line length
 		// the smaller of either the hardware maximum scanline length or
 		// the limit to get full y resolution of this mode
-		new_offset = S3_MAX_OFFSET;
-		if ((new_offset * bytes_per_offset * screen_height) > vmemsize)
-			new_offset = vmemsize / (bytes_per_offset * screen_height);
+		new_offset = max_offset;
+		if ((new_offset * bytes_per_offset * screen_height) > usable_vmem_bytes)
+			new_offset = usable_vmem_bytes / (bytes_per_offset * screen_height);
 		break;
 
 	default:
@@ -444,17 +459,26 @@ Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u val, Bit16u & bytes,Bit16u & pixe
 	}
 
 	// set up the return values
-	bytes = (Bit16u)(new_offset * bytes_per_offset);
-	pixels = (Bit16u)(new_offset * pixels_per_offset);
-	if (!bytes)
+	bytes = check_cast<uint16_t>(new_offset * bytes_per_offset);
+	pixels = check_cast<uint16_t>(new_offset * gcd / bits_per_pixel);
+	if (!bytes) {
 		// return failure on division by zero
 		// some real VESA BIOS implementations may crash here
 		return VESA_FAIL;
+	}
+	const auto supported_lines = usable_vmem_bytes / bytes;
+	const auto gap = supported_lines % screen_height;
+	constexpr uint8_t max_gap = 8;
+	lines = gap < max_gap ? screen_height
+	                      : check_cast<uint16_t>(supported_lines);
 
-	lines = (Bit16u)(vmemsize / bytes);
-	
 	if (CurMode->type==M_TEXT)
 		lines *= CurMode->cheight;
+
+	// LOG_MSG("VESA_ScanLineLength subcall=%u, val=%u, vga.config.scan_len = %lu,"
+	//         "pixels = %u, bytes = %u, lines = %u, supported_lines = %d ",
+	//         subcall, val, vga.config.scan_len, pixels,
+	//         bytes, lines, supported_lines);
 
 	return VESA_SUCCESS;
 }
