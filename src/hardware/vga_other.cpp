@@ -912,11 +912,9 @@ static void tandy_update_palette() {
 		// PCJr
 		switch (vga.mode) {
 		case M_TANDY2:
-		case M_CGA2_COMPOSITE:
 			VGA_SetCGA2Table(vga.attr.palette[0],vga.attr.palette[1]);
 			break;
 		case M_TANDY4:
-		case M_CGA4_COMPOSITE:
 			VGA_SetCGA4Table(
 				vga.attr.palette[0], vga.attr.palette[1],
 				vga.attr.palette[2], vga.attr.palette[3]);
@@ -986,6 +984,8 @@ static void PCJr_FindMode()
 			    (cga_comp == COMPOSITE_STATE::AUTO &&
 			     !(vga.tandy.mode_control & 0x4))) {
 				VGA_SetMode(M_CGA2_COMPOSITE);
+				update_cga16_color();
+
 			} else {
 				VGA_SetMode(M_TANDY2);
 			}
@@ -998,6 +998,9 @@ static void PCJr_FindMode()
 				VGA_SetModeNow(new_mode);
 			} else {
 				VGA_SetMode(new_mode);
+			}
+			if (cga_comp == COMPOSITE_STATE::ON) {
+				update_cga16_color();
 			}
 		}
 		tandy_update_palette();
