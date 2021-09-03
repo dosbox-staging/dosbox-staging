@@ -109,7 +109,8 @@ body:
     attributes:
       label: Provide a Log
       description: Please avoid pasting the full log, _use attachments or links_ in a [Gist](https://gist.github.com/)
-      placeholder: "Copy & paste error log section or provide link"
+      placeholder: "Copy & paste error log section"
+      render: text
     validations:
       required: false
   - type: checkboxes
