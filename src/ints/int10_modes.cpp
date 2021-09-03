@@ -20,6 +20,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <vector>
 
 #include "inout.h"
 #include "setup.h"
@@ -32,7 +33,7 @@
 #define GFX_REGS 0x09
 #define ATT_REGS 0x15
 
-VideoModeBlock ModeList_VGA[]={
+std::vector<VideoModeBlock> ModeList_VGA = {
 /* mode  ,type     ,sw  ,sh  ,tw ,th ,cw,ch ,pt,pstart  ,plength,htot,vtot,hde,vde special flags */
 { 0x000  ,M_TEXT   ,360 ,400 ,40 ,25 ,9 ,16 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	},
 { 0x001  ,M_TEXT   ,360 ,400 ,40 ,25 ,9 ,16 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	},
@@ -485,7 +486,7 @@ void INT10_SetCurMode(void) {
 				if (bios_mode>=0x68 && CurMode->mode==(bios_mode+0x98)) break;
 				// fall-through
 			default:
-				mode_changed=SetCurMode(ModeList_VGA,bios_mode);
+				mode_changed=SetCurMode(ModeList_VGA.data(),bios_mode);
 				break;
 			}
 			if (mode_changed && CurMode->type==M_TEXT) SetTextLines();
@@ -834,7 +835,7 @@ bool INT10_SetVideoMode(Bit16u mode)
 			}
 			break;
 		default:
-			if (!SetCurMode(ModeList_VGA,mode)){
+			if (!SetCurMode(ModeList_VGA.data(),mode)){
 				LOG(LOG_INT10,LOG_ERROR)("VGA:Trying to set illegal mode %X",mode);
 				return false;
 			}
@@ -1665,7 +1666,7 @@ Bitu VideoModeMemSize(Bitu mode) {
 		modelist = ModeList_VGA_Paradise;
 		break;
 	default:
-		modelist = ModeList_VGA;
+		modelist = ModeList_VGA.data();
 		break;
 	}
 

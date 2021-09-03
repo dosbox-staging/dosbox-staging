@@ -129,35 +129,45 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 	MODE_INFO minfo;
 	memset(&minfo,0,sizeof(minfo));
 	PhysPt buf=PhysMake(seg,off);
-	Bitu pageSize;
+	int pageSize = 0;
 	Bit8u modeAttributes;
-	Bitu i=0;
 
 	mode&=0x3fff;	// vbe2 compatible, ignore lfb and keep screen content bits
 	if (mode<0x100) return 0x01;
 	if (svga.accepts_mode) {
 		if (!svga.accepts_mode(mode)) return 0x01;
 	}
-	while (ModeList_VGA[i].mode!=0xffff) {
-		if (mode==ModeList_VGA[i].mode) goto foundit; else i++;
+
+	// Find the requested mode in our table of VGA modes
+	bool found_mode = false;
+	assert(ModeList_VGA.size());
+	auto mblock = ModeList_VGA.back();
+	for (auto &v : ModeList_VGA) {
+		if (v.mode == mode) {
+			mblock = v;
+			found_mode = true;
+			break;
+		}
 	}
-	return VESA_FAIL;
-foundit:
-	if (int10.vesa_oldvbe && ModeList_VGA[i].mode >= 0x120)
+	if (!found_mode)
 		return VESA_FAIL;
-	VideoModeBlock *mblock = &ModeList_VGA[i];
-	switch (mblock->type) {
+
+	// Was the found mode VESA 2.0 but the user requested VESA 1.2?
+	if (mblock.mode >= 0x120 && int10.vesa_oldvbe)
+		return VESA_FAIL;
+
+	switch (mblock.type) {
 	case M_LIN4:
-		pageSize = mblock->sheight * mblock->swidth/8;
-		minfo.BytesPerScanLine = host_to_le16(mblock->swidth / 8);
+		pageSize = mblock.sheight * mblock.swidth/8;
+		minfo.BytesPerScanLine = host_to_le16(mblock.swidth / 8);
 		minfo.NumberOfPlanes = 0x4;
 		minfo.BitsPerPixel = 4u;
 		minfo.MemoryModel = 3u; // ega planar mode
 		modeAttributes = 0x1b; // Color, graphics, no linear buffer
 		break;
 	case M_LIN8:
-		pageSize = mblock->sheight * mblock->swidth;
-		minfo.BytesPerScanLine = host_to_le16(mblock->swidth);
+		pageSize = mblock.sheight * mblock.swidth;
+		minfo.BytesPerScanLine = host_to_le16(mblock.swidth);
 		minfo.NumberOfPlanes = 0x1;
 		minfo.BitsPerPixel = 8u;
 		minfo.MemoryModel = 4u; // packed pixel
@@ -166,8 +176,8 @@ foundit:
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN15:
-		pageSize = mblock->sheight * mblock->swidth*2;
-		minfo.BytesPerScanLine = host_to_le16(mblock->swidth * 2);
+		pageSize = mblock.sheight * mblock.swidth*2;
+		minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 2);
 		minfo.NumberOfPlanes = 0x1;
 		minfo.BitsPerPixel = 15u;
 		minfo.MemoryModel = 6u; // HiColour
@@ -184,8 +194,8 @@ foundit:
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN16:
-		pageSize = mblock->sheight * mblock->swidth*2;
-		minfo.BytesPerScanLine = host_to_le16(mblock->swidth * 2);
+		pageSize = mblock.sheight * mblock.swidth*2;
+		minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 2);
 		minfo.NumberOfPlanes = 0x1;
 		minfo.BitsPerPixel = 16u;
 		minfo.MemoryModel = 6u; // HiColour
@@ -203,11 +213,11 @@ foundit:
 		// Mode 0x212 has 128 extra bytes per scan line for
 		// compatibility with Windows 640x480 24-bit S3 Trio drivers
 		if (mode == 0x212) {
-			pageSize = mblock->sheight * (mblock->swidth * 3 + 128);
-			minfo.BytesPerScanLine = host_to_le16(mblock->swidth * 3 + 128);
+			pageSize = mblock.sheight * (mblock.swidth * 3 + 128);
+			minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 3 + 128);
 		} else {
-			pageSize = mblock->sheight * (mblock->swidth * 3);
-			minfo.BytesPerScanLine = host_to_le16(mblock->swidth * 3);
+			pageSize = mblock.sheight * (mblock.swidth * 3);
+			minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 3);
 		}
 		minfo.NumberOfPlanes = 0x1u;
 		minfo.BitsPerPixel = 24u;
@@ -223,8 +233,8 @@ foundit:
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN32:
-		pageSize = mblock->sheight * mblock->swidth*4;
-		minfo.BytesPerScanLine = host_to_le16(mblock->swidth * 4);
+		pageSize = mblock.sheight * mblock.swidth*4;
+		minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 4);
 		minfo.NumberOfPlanes = 0x1u;
 		minfo.BitsPerPixel = 32u;
 		minfo.MemoryModel = 6u; // HiColour
@@ -242,7 +252,7 @@ foundit:
 		break;
 	case M_TEXT:
 		pageSize = 0;
-		minfo.BytesPerScanLine = host_to_le16(mblock->twidth * 2);
+		minfo.BytesPerScanLine = host_to_le16(mblock.twidth * 2);
 		minfo.NumberOfPlanes = 0x4;
 		minfo.BitsPerPixel = 4u;
 		minfo.MemoryModel = 0u; // text
@@ -258,7 +268,7 @@ foundit:
 		pageSize &= ~0xFFFF;
 	}
 	int pages = 0;
-	if (pageSize > vga.vmemsize) {
+	if (pageSize > static_cast<int>(vga.vmemsize)) {
 		// mode not supported by current hardware configuration
 		modeAttributes &= ~0x1;
 	} else if (pageSize) {
@@ -269,24 +279,24 @@ foundit:
 	minfo.ModeAttributes = host_to_le16(modeAttributes);
 	minfo.WinAAttributes = 0x7; // Exists/readable/writable
 
-	if (mblock->type==M_TEXT) {
+	if (mblock.type==M_TEXT) {
 		minfo.WinGranularity = host_to_le16(32u);
 		minfo.WinSize = host_to_le16(32u);
 		minfo.WinASegment = host_to_le16(0xb800);
-		minfo.XResolution = host_to_le16(mblock->twidth);
-		minfo.YResolution = host_to_le16(mblock->theight);
+		minfo.XResolution = host_to_le16(mblock.twidth);
+		minfo.YResolution = host_to_le16(mblock.theight);
 	} else {
 		minfo.WinGranularity = host_to_le16(64u);
 		minfo.WinSize = host_to_le16(64u);
 		minfo.WinASegment = host_to_le16(0xa000);
-		minfo.XResolution = host_to_le16(mblock->swidth);
-		minfo.YResolution = host_to_le16(mblock->sheight);
+		minfo.XResolution = host_to_le16(mblock.swidth);
+		minfo.YResolution = host_to_le16(mblock.sheight);
 	}
 	minfo.WinFuncPtr = host_to_le32(int10.rom.set_window);
 	minfo.NumberOfBanks = 0x1;
 	minfo.Reserved_page = 0x1;
-	minfo.XCharSize = mblock->cwidth;
-	minfo.YCharSize = mblock->cheight;
+	minfo.XCharSize = mblock.cwidth;
+	minfo.YCharSize = mblock.cheight;
 	if (!int10.vesa_nolfb)
 		minfo.PhysBasePtr = host_to_le32(S3_LFB_BASE);
 

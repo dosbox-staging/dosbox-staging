@@ -21,6 +21,8 @@
 
 #include "dosbox.h"
 
+#include <vector>
+
 #include "mem.h"
 #include "vga.h"
 
@@ -126,7 +128,7 @@ struct VideoModeBlock {
 	uint16_t special;
 };
 
-extern VideoModeBlock ModeList_VGA[];
+extern std::vector<VideoModeBlock> ModeList_VGA;
 extern VideoModeBlock * CurMode;
 
 struct Int10Data {
