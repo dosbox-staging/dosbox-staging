@@ -778,9 +778,13 @@ static bool INT10_SetVideoMode_OTHER(Bit16u mode, bool clearmem)
 		if (mode < 2) crtc_block_index = 0;
 		else if (mode < 4) crtc_block_index = 1;
 		else if (mode < 7) crtc_block_index = 2;
-		else if (mode == 7) crtc_block_index = 3; // MDA mono mode; invalid for others
-		else if (mode < 9) crtc_block_index = 2;
-		else crtc_block_index = 3; // Tandy/PCjr modes
+		else // if (mode == 7) - which is the maximum per the above IF
+		     // criteria
+			crtc_block_index = 3; // MDA mono mode; invalid for others
+
+		// Modes 8 and 9 do not exist (leaving out for now)
+		// else if (mode < 9) crtc_block_index = 2;
+		// else crtc_block_index = 3; // Tandy/PCjr modes
 
 		// init CRTC registers
 		for (Bit16u i = 0; i < 16; i++)
