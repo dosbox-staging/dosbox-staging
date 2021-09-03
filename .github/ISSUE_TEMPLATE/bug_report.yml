@@ -121,7 +121,3 @@ body:
       options:
         - label: Yes, I agree.
           required: true
-<<<<<<< HEAD
-
-=======
->>>>>>> ceaa8c10feda4ce0c6c3b4216042934d8b869378
