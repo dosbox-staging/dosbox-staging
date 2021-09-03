@@ -450,21 +450,24 @@ void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 		fontdata=Real2Phys(RealGetVec(0x43));
 		break;
 	}
+	const auto x = col * 8;
+	assert(x >= 0 && x <= UINT16_MAX);
 
-	Bitu x=col*8,y=row*cheight*(cols/CurMode->twidth);
+	const auto y = row * cheight * (cols / CurMode->twidth);
+	assert(y >= 0 && y <= UINT16_MAX);
 
 	for (Bit16u chr=0;chr<256;chr++) {
 
 		if (chr==128 && split_chr) fontdata=Real2Phys(RealGetVec(0x1f));
 
 		bool error=false;
-		Bit16u ty=(Bit16u)y;
+		auto ty = static_cast<uint16_t>(y);
 		for (Bit8u h=0;h<cheight;h++) {
 			Bit8u bitsel=128;
 			Bit8u bitline=mem_readb(fontdata++);
 			Bit8u res=0;
 			Bit8u vidline=0;
-			Bit16u tx=(Bit16u)x;
+			auto tx = static_cast<uint16_t>(x);
 			while (bitsel) {
 				//Construct bitline in memory
 				INT10_GetPixel(tx,ty,page,&res);
@@ -583,14 +586,18 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 		break;
 	}
 
-	Bitu x=col*8,y=row*cheight*(cols/CurMode->twidth);
+	const auto x = col * 8;
+	assert(x >= 0 && x <= UINT16_MAX);
 
-	Bit16u ty=(Bit16u)y;
-	for (Bit8u h=0;h<cheight;h++) {
+	const auto y = row * cheight * (cols / CurMode->twidth);
+	assert(y >= 0 && y <= UINT16_MAX);
+
+	auto ty = static_cast<uint16_t>(y);
+	for (Bit8u h = 0; h < cheight; h++) {
 		Bit8u bitsel=128;
 		Bit8u bitline=mem_readb(Real2Phys(fontdata));
 		fontdata=RealMake(RealSeg(fontdata),RealOff(fontdata)+1);
-		Bit16u tx=(Bit16u)x;
+		auto tx = static_cast<uint16_t>(x);
 		while (bitsel) {
 			INT10_PutPixel(tx,ty,page,(bitline&bitsel)?attr:back);
 			tx++;

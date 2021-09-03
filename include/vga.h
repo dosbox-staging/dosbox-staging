@@ -532,7 +532,7 @@ void SVGA_Setup_ParadisePVGA1A(void);
 void SVGA_Setup_Driver(void);
 
 // Amount of video memory required for a mode, implemented in int10_modes.cpp
-Bitu VideoModeMemSize(Bitu mode);
+uint32_t VideoModeMemSize(uint16_t mode);
 
 extern Bit32u ExpandTable[256];
 extern Bit32u FillTable[16];

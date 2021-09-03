@@ -1651,7 +1651,7 @@ dac_text16:
 	return true;
 }
 
-Bitu VideoModeMemSize(Bitu mode) {
+uint32_t VideoModeMemSize(uint16_t mode) {
 	if (!IS_VGA_ARCH)
 		return 0;
 
@@ -1682,22 +1682,31 @@ Bitu VideoModeMemSize(Bitu mode) {
 	if (!vmodeBlock)
 		return 0;
 
+	int mem_bytes;
 	switch(vmodeBlock->type) {
 	case M_LIN4:
-		return vmodeBlock->swidth*vmodeBlock->sheight/2;
+		mem_bytes = vmodeBlock->swidth * vmodeBlock->sheight / 2;
+		break;
 	case M_LIN8:
-		return vmodeBlock->swidth*vmodeBlock->sheight;
+		mem_bytes = vmodeBlock->swidth * vmodeBlock->sheight;
+		break;
 	case M_LIN15:
 	case M_LIN16:
-		return vmodeBlock->swidth*vmodeBlock->sheight*2;
+		mem_bytes = vmodeBlock->swidth * vmodeBlock->sheight * 2;
+		break;
 	case M_LIN24:
-		return vmodeBlock->swidth*vmodeBlock->sheight*3;
+		mem_bytes = vmodeBlock->swidth * vmodeBlock->sheight * 3;
+		break;
 	case M_LIN32:
-		return vmodeBlock->swidth*vmodeBlock->sheight*4;
+		mem_bytes = vmodeBlock->swidth * vmodeBlock->sheight * 4;
+		break;
 	case M_TEXT:
-		return vmodeBlock->twidth*vmodeBlock->theight*2;
+		mem_bytes = vmodeBlock->twidth * vmodeBlock->theight * 2;
+		break;
 	default:
 		// Return 0 for all other types, those always fit in memory
-		return 0;
+		mem_bytes = 0;
 	}
+	assert(mem_bytes >= 0 && mem_bytes <= INT32_MAX);
+	return static_cast<uint32_t>(mem_bytes);
 }

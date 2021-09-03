@@ -26,6 +26,7 @@
 #include "mem.h"
 #include "inout.h"
 #include "dos_inc.h"
+#include "string_utils.h"
 
 #define VESA_SUCCESS          0x00
 #define VESA_FAIL             0x01
@@ -635,7 +636,7 @@ void INT10_SetupVESA(void) {
 	phys_writew(PhysMake(0xc000,int10.rom.used),0xffff);
 	int10.rom.used+=2;
 	int10.rom.oemstring=RealMake(0xc000,int10.rom.used);
-	const auto len = strlen(string_oem) + 1;
+	const auto len = safe_strlen(string_oem) + 1;
 	for (i=0;i<len;i++) {
 		phys_writeb(0xc0000+int10.rom.used++,string_oem[i]);
 	}
