@@ -546,8 +546,6 @@ Bit8u VESA_GetDisplayStart(Bit16u & x,Bit16u & y) {
 
 	switch (CurMode->type) {
 	case M_TEXT:
-		pixels_per_offset = 16;
-		break;
 	case M_LIN4:
 		pixels_per_offset = 16;
 		break;
