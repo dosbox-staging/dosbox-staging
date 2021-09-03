@@ -31,8 +31,6 @@
 #include <direct.h>
 #include <io.h>
 #define LONGTYPE(a) a##i64
-#define snprintf _snprintf
-#define vsnprintf _vsnprintf
 #else										/* LINUX / GCC */
 #include <dirent.h>
 #include <unistd.h>
