@@ -499,8 +499,9 @@ Bitu SVGA_S3_ReadSEQ(Bitu reg,Bitu /*iolen*/) {
 	}
 }
 
-Bitu SVGA_S3_GetClock(void) {
-	Bitu clock = (vga.misc_output >> 2) & 3;
+uint32_t SVGA_S3_GetClock(void)
+{
+	uint32_t clock = (vga.misc_output >> 2) & 3;
 	if (clock == 0)
 		clock = 25175000;
 	else if (clock == 1)

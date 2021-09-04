@@ -46,7 +46,7 @@ typedef struct {
 	Bitu store_3c4_06;
 	Bitu store_3c4_07;
 
-	Bitu clockFreq[16];
+	uint32_t clockFreq[16];
 	Bitu biosMode;
 } SVGA_ET4K_DATA;
 
@@ -391,12 +391,14 @@ void DetermineMode_ET4K() {
 	}
 }
 
-void SetClock_ET4K(Bitu which,Bitu target) {
+void SetClock_ET4K(Bitu which, const uint32_t target)
+{
 	et4k.clockFreq[which]=1000*target;
 	VGA_StartResize();
 }
 
-Bitu GetClock_ET4K() {
+uint32_t GetClock_ET4K()
+{
 	return et4k.clockFreq[get_clock_index_et4k()];
 }
 
@@ -476,7 +478,7 @@ typedef struct {
 	Bitu store_3c4_06;
 	Bitu store_3c4_07;
 
-	Bitu clockFreq[8];
+	uint32_t clockFreq[8];
 	Bitu biosMode;
 } SVGA_ET3K_DATA;
 
@@ -747,12 +749,14 @@ void DetermineMode_ET3K() {
 	}
 }
 
-void SetClock_ET3K(Bitu which,Bitu target) {
+void SetClock_ET3K(Bitu which, const uint32_t target)
+{
 	et3k.clockFreq[which]=1000*target;
 	VGA_StartResize();
 }
 
-Bitu GetClock_ET3K() {
+uint32_t GetClock_ET3K()
+{
 	return et3k.clockFreq[get_clock_index_et3k()];
 }
 

@@ -34,7 +34,7 @@ struct SVGA_PVGA1A_DATA {
 
 	inline bool locked() { return (PR5&7)!=5; }
 
-	Bitu clockFreq[4];
+	uint32_t clockFreq[4];
 	Bitu biosMode;
 };
 
@@ -186,14 +186,16 @@ void DetermineMode_PVGA1A() {
 	}
 }
 
-void SetClock_PVGA1A(Bitu which,Bitu target) {
+void SetClock_PVGA1A(Bitu which, const uint32_t target)
+{
 	if (which < 4) {
 		pvga1a.clockFreq[which]=1000*target;
 		VGA_StartResize();
 	}
 }
 
-Bitu GetClock_PVGA1A() {
+uint32_t GetClock_PVGA1A()
+{
 	return pvga1a.clockFreq[(vga.misc_output >> 2) & 3];
 }
 
