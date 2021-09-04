@@ -822,18 +822,18 @@ static void VGA_DrawPart(uint32_t lines)
 
 void VGA_SetBlinking(const uint8_t enabled)
 {
-	Bitu b;
 	LOG(LOG_VGA, LOG_NORMAL)("Blinking %u", enabled);
 	if (enabled) {
-		b=0;vga.draw.blinking=1; //used to -1 but blinking is unsigned
+		vga.draw.blinking = 1; // used to -1 but blinking is unsigned
 		vga.attr.mode_control|=0x08;
 		vga.tandy.mode_control|=0x20;
 	} else {
-		b=8;vga.draw.blinking=0;
+		vga.draw.blinking = 0;
 		vga.attr.mode_control&=~0x08;
 		vga.tandy.mode_control&=~0x20;
 	}
-	for (int i = 0; i < 8; ++i)
+	const uint8_t b = (enabled ? 0 : 8);
+	for (uint8_t i = 0; i < 8; ++i)
 		TXT_BG_Table[i + 8] = (b + i) | ((b + i) << 8) |
 		                      ((b + i) << 16) | ((b + i) << 24);
 }
