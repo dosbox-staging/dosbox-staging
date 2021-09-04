@@ -814,9 +814,10 @@ static void VGA_DrawPart(uint32_t lines)
 	}
 }
 
-void VGA_SetBlinking(Bitu enabled) {
+void VGA_SetBlinking(const uint8_t enabled)
+{
 	Bitu b;
-	LOG(LOG_VGA,LOG_NORMAL)("Blinking %d",enabled);
+	LOG(LOG_VGA, LOG_NORMAL)("Blinking %u", enabled);
 	if (enabled) {
 		b=0;vga.draw.blinking=1; //used to -1 but blinking is unsigned
 		vga.attr.mode_control|=0x08;
