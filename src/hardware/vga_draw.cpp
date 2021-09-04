@@ -717,9 +717,15 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			// so use black for this case too...
 			//if (vga.attr.disabled& 2) {
 			if (vga.dac.xlat16[bg_color_index] != 0) {
-				for (Bitu i = 0; i < 256; ++i)
+
+				// check some assumptions about the translation table
+				constexpr auto xlat16_len = ARRAY_LEN(vga.dac.xlat16);
+				static_assert(xlat16_len == 256,
+				              "The code below assumes the table is 256 elements long");
+
+				for (uint16_t i = 0; i < xlat16_len; ++i)
 					if (vga.dac.xlat16[i] == 0) {
-						bg_color_index = i;
+						bg_color_index = static_cast<uint8_t>(i);
 						break;
 					}
 			}
@@ -1029,13 +1035,13 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	switch (vga.draw.mode) {
 	case PART:
 		if (GCC_UNLIKELY(vga.draw.parts_left)) {
-			LOG(LOG_VGAMISC, LOG_NORMAL)("Parts left: %u", static_cast<uint32_t>(vga.draw.parts_left));
+			LOG(LOG_VGAMISC, LOG_NORMAL)("Parts left: %u", vga.draw.parts_left);
 			PIC_RemoveEvents(VGA_DrawPart);
 			RENDER_EndUpdate(true);
 		}
 		vga.draw.lines_done = 0;
 		vga.draw.parts_left = vga.draw.parts_total;
-		PIC_AddEvent(VGA_DrawPart, vga.draw.delay.parts + draw_skip, static_cast<uint32_t>(vga.draw.parts_lines));
+		PIC_AddEvent(VGA_DrawPart, vga.draw.delay.parts + draw_skip, vga.draw.parts_lines);
 		break;
 	case DRAWLINE:
 	case EGALINE:
