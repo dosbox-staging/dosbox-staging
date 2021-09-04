@@ -1029,7 +1029,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	switch (vga.draw.mode) {
 	case PART:
 		if (GCC_UNLIKELY(vga.draw.parts_left)) {
-			LOG(LOG_VGAMISC, LOG_NORMAL)("Parts left: %d", static_cast<double>(vga.draw.parts_left));
+			LOG(LOG_VGAMISC, LOG_NORMAL)("Parts left: %u", static_cast<uint32_t>(vga.draw.parts_left));
 			PIC_RemoveEvents(VGA_DrawPart);
 			RENDER_EndUpdate(true);
 		}
@@ -1040,7 +1040,8 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	case DRAWLINE:
 	case EGALINE:
 		if (GCC_UNLIKELY(vga.draw.lines_done < vga.draw.lines_total)) {
-			LOG(LOG_VGAMISC, LOG_NORMAL)("Lines left: %d", static_cast<double>(vga.draw.lines_total - vga.draw.lines_done));
+			LOG(LOG_VGAMISC, LOG_NORMAL)("Lines left: %d",
+			                             static_cast<int>(vga.draw.lines_total - vga.draw.lines_done));
 			if (vga.draw.mode == EGALINE)
 				PIC_RemoveEvents(VGA_DrawEGASingleLine);
 			else
@@ -1173,9 +1174,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	/* Calculate the FPS for this screen */
 	double fps;
 	uint32_t clock;
-	Bitu htotal, hdend, hbstart, hbend, hrstart, hrend;
-	Bitu vtotal, vdend, vbstart, vbend, vrstart, vrend;
-	Bitu vblank_skip;
+	uint32_t htotal, hdend, hbstart, hbend, hrstart, hrend;
+	uint32_t vtotal, vdend, vbstart, vbend, vrstart, vrend;
+	uint32_t vblank_skip;
 	if (IS_EGAVGA_ARCH) {
 		htotal = vga.crtc.horizontal_total;
 		hdend = vga.crtc.horizontal_display_end;
@@ -1307,10 +1308,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		                       static_cast<double>(clock);
 	}
 #if C_DEBUG
-	LOG(LOG_VGA,LOG_NORMAL)("h total %d end %d blank (%d/%d) retrace (%d/%d)",
-		htotal, hdend, hbstart, hbend, hrstart, hrend );
-	LOG(LOG_VGA,LOG_NORMAL)("v total %d end %d blank (%d/%d) retrace (%d/%d)",
-		vtotal, vdend, vbstart, vbend, vrstart, vrend );
+	LOG(LOG_VGA, LOG_NORMAL)("h total %u end %u blank (%u/%u) retrace (%u/%u)",
+	                         htotal, hdend, hbstart, hbend, hrstart, hrend);
+	LOG(LOG_VGA, LOG_NORMAL)("v total %u end %u blank (%u/%u) retrace (%u/%u)",
+	                         vtotal, vdend, vbstart, vbend, vrstart, vrend);
 #endif
 
 	// The screen refresh frequency
@@ -1350,15 +1351,15 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 				if (vbstart < vdend) {
 					vdend = vbstart;
 				}
-				LOG(LOG_VGA, LOG_WARN)("Blanking wrap to line %d", static_cast<double>(vblank_skip));
+				LOG(LOG_VGA, LOG_WARN)("Blanking wrap to line %u", vblank_skip);
 			} else if (vbstart <= 1) {
 				// blanking is used to cut lines at the start of the screen
 				vblank_skip = vbend;
-				LOG(LOG_VGA, LOG_WARN)("Upper %d lines of the screen blanked", static_cast<double>(vblank_skip));
+				LOG(LOG_VGA, LOG_WARN)("Upper %u lines of the screen blanked", vblank_skip);
 			} else if (vbstart < vdend) {
 				if (vbend < vdend) {
 					// the game wants a black bar somewhere on the screen
-					LOG(LOG_VGA, LOG_WARN)("Unsupported blanking: line %d-%d", static_cast<double>(vbstart), static_cast<double>(vbend));
+					LOG(LOG_VGA, LOG_WARN)("Unsupported blanking: line %u-%u", vbstart, vbend);
 				} else {
 					// blanking is used to cut off some lines from the bottom
 					vdend = vbstart;
@@ -1446,11 +1447,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	if (hbstart<hdend) hdend=hbstart;
 	if ((!IS_VGA_ARCH) && (vbstart<vdend)) vdend=vbstart;
 
-
-	Bitu width=hdend;
-	Bitu height=vdend;
-	bool doubleheight=false;
-	bool doublewidth=false;
+	auto width = hdend;
+	auto height = vdend;
+	bool doubleheight = false;
+	bool doublewidth = false;
 
 	unsigned bpp;
 	switch (vga.mode) {
@@ -1784,13 +1784,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		else vga.draw.lines_scaled=1;
 
 #if C_DEBUG
-		LOG_INFO("VGA: Width %d, Height %d, fps %f", width, height, fps);
-		LOG_INFO("VGA: %s width, %s height aspect %f", doublewidth ? "double" : "normal",
+		LOG_INFO("VGA: Width %u, Height %u, fps %.3f", width, height, fps);
+		LOG_INFO("VGA: %s width, %s height aspect %.3f",
+		         doublewidth ? "double" : "normal",
 		         doubleheight ? "double" : "normal", aspect_ratio);
 #endif
 		if (!vga.draw.vga_override)
-			RENDER_SetSize(width, height, bpp, fps,
-			               aspect_ratio,
+			RENDER_SetSize(width, height, bpp, fps, aspect_ratio,
 			               doublewidth, doubleheight);
 	}
 }
