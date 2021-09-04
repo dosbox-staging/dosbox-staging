@@ -44,14 +44,14 @@ jobs:
             arch: x86_64
             needs_deps: true
             build_flags: -Denable_debugger=normal
-            max_warnings: 105
+            max_warnings: 84
 
           - name: Clang, warning_level=3
             host: macos-latest
             arch: x86_64
             needs_deps: true
             build_flags: -Dwarning_level=3
-            max_warnings: 174
+            max_warnings: 173
 
           - name: Clang
             host: [self-hosted, macOS, arm64, debug-builds]
@@ -72,14 +72,14 @@ jobs:
             arch: arm64
             needs_deps: false
             build_flags: -Denable_debugger=normal
-            max_warnings: 139
+            max_warnings: 121
 
           - name: Clang, warning_level=3
             host: [self-hosted, macOS, arm64, debug-builds]
             arch: arm64
             needs_deps: false
             build_flags: -Dwarning_level=3
-            max_warnings: 190
+            max_warnings: 189
 
     steps:
       - name: Checkout repository and submodules
