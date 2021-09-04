@@ -110,7 +110,7 @@ void VGA_StartResize(Bitu delay /*=50*/) {
 	}
 }
 
-void VGA_SetClock(Bitu which,Bitu target) {
+void VGA_SetClock(Bitu which, const uint32_t target) {
 	if (svga.set_clock) {
 		svga.set_clock(which, target);
 		return;

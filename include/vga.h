@@ -460,7 +460,7 @@ void VGA_SetupOther(void);
 void VGA_SetupXGA(void);
 
 /* Some Support Functions */
-void VGA_SetClock(Bitu which,Bitu target);
+void VGA_SetClock(Bitu which, uint32_t target);
 void VGA_DACSetEntirePalette(void);
 void VGA_StartRetrace(void);
 void VGA_StartUpdateLFB(void);
@@ -500,8 +500,8 @@ typedef void (*tWritePort)(Bitu reg,Bitu val,Bitu iolen);
 typedef Bitu (*tReadPort)(Bitu reg,Bitu iolen);
 typedef void (*tFinishSetMode)(Bitu crtc_base, VGA_ModeExtraData* modeData);
 typedef void (*tDetermineMode)();
-typedef void (*tSetClock)(Bitu which,Bitu target);
-typedef Bitu (*tGetClock)();
+typedef void (*tSetClock)(Bitu which, uint32_t target);
+typedef uint32_t (*tGetClock)();
 typedef bool (*tHWCursorActive)();
 typedef bool (*tAcceptsMode)(Bitu modeNo);
 
