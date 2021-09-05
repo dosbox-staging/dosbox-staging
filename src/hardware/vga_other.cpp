@@ -1106,7 +1106,7 @@ uint8_t read_herc_status(Bitu /*port*/, uint8_t /*iolen*/)
 
 void VGA_SetupOther()
 {
-	memset(&vga.tandy, 0, sizeof(vga.tandy));
+	vga.tandy = VGA_TANDY(); // reset our Tandy struct
 	vga.attr.disabled = 0;
 	vga.config.bytes_skip=0;
 
