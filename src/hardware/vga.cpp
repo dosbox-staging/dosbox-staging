@@ -110,43 +110,51 @@ void VGA_StartResize(Bitu delay /*=50*/) {
 	}
 }
 
-void VGA_SetClock(Bitu which, const uint32_t target) {
+void VGA_SetClock(const Bitu which, const uint32_t target)
+{
 	if (svga.set_clock) {
 		svga.set_clock(which, target);
 		return;
 	}
-	struct{
-		Bitu n,m;
-		Bits err;
-	} best;
-	best.err=target;
-	best.m=1;
-	best.n=1;
-	Bitu n,r;
-	Bits m;
 
-	for (r = 0; r <= 3; r++) {
-		Bitu f_vco = target * (1 << r);
-		if (MIN_VCO <= f_vco && f_vco < MAX_VCO) break;
-    }
-	for (n=1;n<=31;n++) {
-		m=(target * (n + 2) * (1 << r) + (S3_CLOCK_REF/2)) / S3_CLOCK_REF - 2;
-		if (0 <= m && m <= 127)	{
-			Bitu temp_target = S3_CLOCK(m,n,r);
-			Bits err = target - temp_target;
-			if (err < 0) err = -err;
-			if (err < best.err) {
-				best.err = err;
-				best.m = m;
-				best.n = n;
-			}
+	const auto max_target = clamp(static_cast<int>(target), S3_CLOCK_REF, S3_MAX_CLOCK);
+	auto best_error = max_target;
+
+	// To-be-populated with the parameters (r, n, m) that produce a clock
+	// closest to the target.
+	VGA_S3::clk_t best_clk;
+
+	for (uint8_t n = 1; n <= 31; ++n) {
+		for (uint8_t r = 0; r <= 3; ++r) {
+			// Is r out of bounds?
+			const auto f_vco = max_target * (1 << r);
+			if (f_vco < MIN_VCO || f_vco > MAX_VCO)
+				continue;
+
+			// Is m out of bounds?
+			const auto m = (max_target * (n + 2) * (1 << r) +
+			                (S3_CLOCK_REF / 2)) / S3_CLOCK_REF - 2;
+			if (m > 127)
+				continue;
+
+			// Do the parameters produce a clock further away than
+			// the best combination?
+			const auto candidate_clock = S3_CLOCK(m, n, r);
+			const auto error = abs(candidate_clock - max_target);
+			if (error >= best_error)
+				continue;
+
+			// Save the improved clock paramaters
+			best_error = error;
+			best_clk.r = r;
+			best_clk.m = static_cast<uint8_t>(m);
+			best_clk.n = n;
 		}
 	}
-	/* Program the s3 clock chip */
+
+	// Save the best clock and then program the S3 chip.
 	assert(which < ARRAY_LEN(vga.s3.clk));
-	vga.s3.clk[which].m = best.m;
-	vga.s3.clk[which].r = r;
-	vga.s3.clk[which].n = best.n;
+	vga.s3.clk[which] = best_clk;
 	VGA_StartResize();
 }
 
