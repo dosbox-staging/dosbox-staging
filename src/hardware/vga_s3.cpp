@@ -539,22 +539,26 @@ void SVGA_Setup_S3Trio(void) {
 	if (vga.vmemsize == 0)
 		vga.vmemsize = 4 * 1024 * 1024;
 
+
 	// Set CRTC 36 to specify amount of VRAM and PCI
+	std::string ram_type = "EDO DRAM";
 	if (vga.vmemsize < 1024 * 1024) {
 		vga.vmemsize = 512 * 1024;
-		vga.s3.reg_36 = 0xfa; // less than 1mb fast page mode
+		vga.s3.reg_36 = 0b1111'1010; // less than 1mb EDO RAM
 	} else if (vga.vmemsize < 2048 * 1024) {
 		vga.vmemsize = 1024 * 1024;
-		vga.s3.reg_36 = 0xda; // 1mb fast page mode
+		vga.s3.reg_36 = 0b1101'1010; // 1mb EDO RAM
 	} else if (vga.vmemsize < 4096 * 1024) {
 		vga.vmemsize = 2048 * 1024;
-		vga.s3.reg_36 = 0x9a; // 2mb fast page mode
+		vga.s3.reg_36 = 0b1001'1010; // 2mb EDO RAM
 	} else if (vga.vmemsize < 8192 * 1024) {
 		vga.vmemsize = 4096 * 1024;
-		vga.s3.reg_36 = 0x1a; // 4mb fast page mode
+		vga.s3.reg_36 = 0b0001'1110; // 4mb fast page mode RAM
+		ram_type = "FP DRAM";
 	} else {
 		vga.vmemsize = 8192 * 1024;
-		vga.s3.reg_36 = 0x7a; // 8mb fast page mode
+		vga.s3.reg_36 = 0b0111'1110; // 8mb fast page mode RAM
+		ram_type = "FP DRAM";
 	}
 
 	std::string description = "S3 Trio 64 ";
@@ -562,5 +566,5 @@ void SVGA_Setup_S3Trio(void) {
 	if (int10.vesa_nolfb)
 		description += " without linear framebuffer modes";
 
-	VGA_LogInitialization(description.c_str(), "EDO DRAM");
+	VGA_LogInitialization(description.c_str(), ram_type.c_str());
 }
