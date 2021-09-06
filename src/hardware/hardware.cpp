@@ -522,10 +522,15 @@ skip_shot:
 		case 8:format = ZMBV_FORMAT_8BPP;break;
 		case 15:format = ZMBV_FORMAT_15BPP;break;
 		case 16:format = ZMBV_FORMAT_16BPP;break;
-		case 24:format = ZMBV_FORMAT_32BPP;break;	// 24-bit will be converted to 32-bit for compatibility
-		case 32:format = ZMBV_FORMAT_32BPP;break;
-		default:
-			goto skip_video;
+
+		// ZMBV is "the DOSBox capture format" supported by external
+		// tools such as VLC, MPV, and ffmpeg. Because DOSBox originally
+		// didn't have 24-bit color, the format itself doesn't support
+		// it. I this case we tell ZMBV the data is 32-bit and let the
+		// rgb24's int() cast operator up-convert.
+		case 24: format = ZMBV_FORMAT_32BPP; break;
+		case 32: format = ZMBV_FORMAT_32BPP; break;
+		default: goto skip_video;
 		}
 		if (!capture.video.handle) {
 			capture.video.handle = OpenCaptureFile("Video",".avi");
