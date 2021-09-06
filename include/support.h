@@ -163,6 +163,24 @@ constexpr T1 left_shift_signed(T1 value, T2 amount)
 	return static_cast<T1>(shifted);
 }
 
+template <typename cast_t, typename check_t>
+constexpr cast_t check_cast(const check_t in)
+{
+	// Ensure the two types are integers, can't handle floats/doubles
+	static_assert(std::numeric_limits<cast_t>::is_integer,
+	              "The casting type must be an integer type");
+	static_assert(std::numeric_limits<check_t>::is_integer,
+	              "The argument must be an integer type");
+
+	// ensure the inbound value is within the limits of the casting type
+	assert(static_cast<next_int_t<check_t>>(in) >=
+	       static_cast<next_int_t<cast_t>>(std::numeric_limits<cast_t>::min()));
+	assert(static_cast<next_int_t<check_t>>(in) <=
+	       static_cast<next_int_t<cast_t>>(std::numeric_limits<cast_t>::max()));
+
+	return static_cast<cast_t>(in);
+}
+
 // Include a message in assert, similar to static_assert:
 #define assertm(exp, msg) assert(((void)msg, exp))
 // Use (void) to silent unused warnings.
