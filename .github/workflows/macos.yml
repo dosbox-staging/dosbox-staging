@@ -376,7 +376,7 @@ jobs:
   publish_additional_artifacts:
     name: Publish additional artifacts
     needs: build_macos_release
-    runs-on: [macos-latest, self-hosted]
+    runs-on: macos-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
