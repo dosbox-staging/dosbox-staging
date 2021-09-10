@@ -355,41 +355,6 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 	}
 }
 
-static void assign_vesa_refresh(const std::string &conf_value)
-{
-	constexpr double refresh_default = 70.0;
-
-	// Are we using the default?
-	if (conf_value == "70") {
-		int10.vesa_refresh = refresh_default;
-		return;
-	}
-
-	// Was the provided value not a number?
-	const auto user_refresh = to_finite<double>(conf_value);
-	if (!std::isfinite(user_refresh)) {
-		int10.vesa_refresh = refresh_default;
-		LOG_WARNING("VESA refresh '%s' is not a finite number: using %.1f Hz",
-		            conf_value.c_str(), int10.vesa_refresh);
-		return;
-	}
-
-	// Was the provided value outside the range?
-	constexpr double refresh_min = 1;
-	constexpr double refresh_max = 200;
-	const auto clamped = clamp(user_refresh, refresh_min, refresh_max);
-	if (fabs(clamped - user_refresh) > std::numeric_limits<double>::epsilon()) {
-		int10.vesa_refresh = refresh_default;
-		LOG_WARNING("VESA refresh '%.3f' Hz is outside the range of %.1f to %.1f Hz: using %.1f Hz",
-		            user_refresh, refresh_min, refresh_max, int10.vesa_refresh);
-		return;
-	}
-
-	// If we made it here the provided refresh rate is good!
-	int10.vesa_refresh = user_refresh;
-	LOG_MSG("VIDEO: Setting VESA refresh rate to %.1f Hz", int10.vesa_refresh);
-}
-
 static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Initialize some dosbox internals */
@@ -444,11 +409,20 @@ static void DOSBOX_RealInit(Section * sec) {
 		E_Exit("DOSBOX:Unknown machine type %s", mtype.c_str());
 
 	// Convert the users video memory in either MB or KiB to bytes
-	auto vmem_setting = section->Get_int("vmemsize");
-	vmem_setting *= (vmem_setting <= 8) ? 1024 * 1024 : 1024;
-	vga.vmemsize = check_cast<uint32_t>(vmem_setting);
+	const auto vmemsize_string = std::string(section->Get_string("vmemsize"));
 
-	assign_vesa_refresh(section->Get_string("vesa_refresh"));
+	// If auto, then default to 0 and let the adapter's setup rountine set
+	// the size
+	auto vmemsize = vmemsize_string == "auto" ? 0 : std::stoi(vmemsize_string);
+
+	// Scale up from MB-to-bytes or from KB-to-bytes
+	vmemsize *= (vmemsize <= 8) ? 1024 * 1024 : 1024;
+	vga.vmemsize = check_cast<uint32_t>(vmemsize);
+
+	if (std::string(section->Get_string("vesa_modes")) == "all")
+		int10.vesa_mode_preference = VESA_MODE_PREF::ALL;
+	else
+		int10.vesa_mode_preference = VESA_MODE_PREF::COMPATIBLE;
 }
 
 void DOSBOX_Init(void) {
@@ -509,12 +483,27 @@ void DOSBOX_Init(void) {
 	        "This value is best left at its default to avoid problems with some games,\n"
 	        "though few games might require a higher value.\n"
 	        "There is generally no speed advantage when raising this value.");
-	pint = secprop->Add_int("vmemsize", Property::Changeable::OnlyAtStart, 0);
-	pint->SetMinMax(0, 8192);
-	pint->Set_help("Video memory in MiB (1-8) or KiB (256 to 8192). Default is per the video adapter.");
-	pstring = secprop->Add_string("vesa_refresh",
-	                              Property::Changeable::Always, "70");
-	pstring->Set_help("VESA mode refresh rate in Hzm from 1 to 200. Default is 70.0.");
+
+	const char *vmemsize_choices[] = {
+	        "auto",
+	        "1",    "2",    "4",    "8", // MiB
+	        "256", "512",  "1024", "2048", "4096", "8192", 0, // KiB
+	};
+	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
+	pstring->Set_values(vmemsize_choices);
+	pstring->Set_help(
+	        "Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per video adapter.");
+
+	const char *vesa_modes_choices[] = {"compatible", "all", 0};
+	Pstring = secprop->Add_string("vesa_modes", only_at_start, "compatible");
+	Pstring->Set_values(vesa_modes_choices);
+	Pstring->Set_help(
+	        "Controls the selection of VESA 1.2 and 2.0 modes offered:\n"
+	        "  compatible   A tailored selection that maximizes game compatibility.\n"
+	        "               This is recommended along with 4 or 8 MB of video memory.\n"
+	        "  all          Offers all modes for a given video memory size, however\n"
+	        "               some games may not use them properly (flickering) or may need\n"
+	        "               more system memory (mem = ) to use them.");
 
 	secprop->AddInitFunction(&CALLBACK_Init);
 	secprop->AddInitFunction(&PIC_Init);//done
