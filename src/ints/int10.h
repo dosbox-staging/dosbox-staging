@@ -131,6 +131,11 @@ struct VideoModeBlock {
 extern std::vector<VideoModeBlock> ModeList_VGA;
 extern VideoModeBlock * CurMode;
 
+enum class VESA_MODE_PREF {
+	COMPATIBLE, // optimizes out-of-the-box compatibility with games
+	ALL, // use all VESA modes (compromise being some games might not handle them properly)
+};
+
 struct Int10Data {
 	struct Int10DataRom{
 		RealPt font_8_first;
@@ -156,7 +161,8 @@ struct Int10Data {
 		Bit16u used;
 	} rom = {};
 	Bit16u vesa_setmode = 0;
-	double vesa_refresh = 70.0;
+
+	VESA_MODE_PREF vesa_mode_preference = VESA_MODE_PREF::COMPATIBLE;
 	bool vesa_nolfb = false;
 	bool vesa_oldvbe = false;
 };

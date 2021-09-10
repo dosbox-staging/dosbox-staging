@@ -1208,11 +1208,23 @@ bool INT10_SetVideoMode(Bit16u mode)
 			if (CurMode->vdispend>480)
 				misc_output|=0xc0;	//480-line sync
 			misc_output|=0x0c;		//Select clock 3
-			const auto clock = CurMode->vtotal * CurMode->cwidth * CurMode->htotal * int10.vesa_refresh;
-			const auto clock_khz = clock / 1000.0;
-			assert(clock_khz > 0);
-			assert(clock_khz < UINT32_MAX);
-			VGA_SetClock(3, static_cast<uint32_t>(clock_khz));
+
+			// Use 70 Hz as the lower-bound
+			constexpr int vesa_min_refresh = 70;
+
+			// But allow a higher rate from the host and inform the user if so.
+			const auto refresh = std::max(vesa_min_refresh, GFX_GetDisplayRefreshRate());
+			if (refresh > vesa_min_refresh)
+				LOG_INFO("VESA: Refresh rate upgraded to %d Hz per current display rate",
+				         refresh);
+
+			const auto s3_clock = CurMode->vtotal * CurMode->cwidth * CurMode->htotal * refresh;
+
+			const auto s3_clock_khz = s3_clock / 1000.0;
+			assert(s3_clock_khz > 0);
+			assert(s3_clock_khz < UINT32_MAX);
+
+			VGA_SetClock(3, static_cast<uint32_t>(s3_clock_khz));
 		}
 		Bit8u misc_control_2;
 		/* Setup Pixel format */

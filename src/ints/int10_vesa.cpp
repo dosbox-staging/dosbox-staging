@@ -126,6 +126,14 @@ Bit8u VESA_GetSVGAInformation(Bit16u seg,Bit16u off) {
 	return VESA_SUCCESS;
 }
 
+bool can_triple_buffer_8bit(const VideoModeBlock &m)
+{
+	assert(m.type == M_LIN8);
+	const auto padding = m.htotal;
+	const uint32_t needed_bytes = (m.swidth + padding) * (m.vtotal + padding) * 3;
+	return vga.vmemsize >= needed_bytes;
+}
+
 Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 	MODE_INFO minfo;
 	memset(&minfo,0,sizeof(minfo));
@@ -157,6 +165,7 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 	if (mblock.mode >= 0x120 && int10.vesa_oldvbe)
 		return VESA_FAIL;
 
+	bool ok_per_mode_pref;
 	switch (mblock.type) {
 	case M_LIN4:
 		pageSize = mblock.sheight * mblock.swidth/8;
@@ -173,7 +182,12 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 		minfo.BitsPerPixel = 8u;
 		minfo.MemoryModel = 4u; // packed pixel
 		modeAttributes = 0x1b; // Color, graphics
-		if (!int10.vesa_nolfb)
+
+		ok_per_mode_pref = (int10.vesa_mode_preference == VESA_MODE_PREF::ALL ||
+		                     (int10.vesa_mode_preference == VESA_MODE_PREF::COMPATIBLE &&
+		                      can_triple_buffer_8bit(mblock)));
+
+		if (!int10.vesa_nolfb && ok_per_mode_pref)
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
 	case M_LIN15:

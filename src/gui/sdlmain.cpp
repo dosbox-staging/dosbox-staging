@@ -48,6 +48,7 @@
 #include "debug.h"
 #include "fs_utils.h"
 #include "gui_msgs.h"
+#include "../ints/int10.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
@@ -443,6 +444,29 @@ void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
 	SDL_SetWindowTitle(sdl.window, title);
 }
 
+int GFX_GetDisplayRefreshRate()
+{
+	constexpr auto invalid_refresh = -1;
+	assert(sdl.window);
+	const int display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
+	if (display_in_use < 0) {
+		LOG_ERR("SDL: Could not get the current window index: %s", SDL_GetError());
+		return invalid_refresh;
+	}
+
+	SDL_DisplayMode mode;
+	if (SDL_GetCurrentDisplayMode(display_in_use, &mode) != 0) {
+		LOG_ERR("SDL: Could not get the current display mode: %s", SDL_GetError());
+		return invalid_refresh;
+	}
+	if (mode.refresh_rate < 23 || mode.refresh_rate > 500) {
+		LOG_ERR("SDL: Got an unexpected refresh rate of %d Hz; not using it", mode.refresh_rate);
+		return invalid_refresh;
+	}
+
+	return mode.refresh_rate;
+}
+
 /* This function is SDL_EventFilter which is being called when event is
  * pushed into the SDL event queue.
  *
@@ -780,9 +804,14 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		SDL_GetWindowDisplayMode(sdl.window, &displayMode);
 		displayMode.w = width;
 		displayMode.h = height;
-		SDL_SetWindowDisplayMode(sdl.window, &displayMode);
+
+		if (SDL_SetWindowDisplayMode(sdl.window, &displayMode) != 0) {
+			LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %d Hz", displayMode.w, displayMode.h, displayMode.refresh_rate);
+		}
 		SDL_SetWindowFullscreen(sdl.window,
-		                        sdl.desktop.full.display_res ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN);
+		                        sdl.desktop.full.display_res
+		                                ? SDL_WINDOW_FULLSCREEN_DESKTOP
+		                                : SDL_WINDOW_FULLSCREEN);
 	} else {
 		// If you feel inclined to remove this SDL_SetWindowSize call
 		// (or further modify when it is being invoked), then make sure
@@ -3099,15 +3128,6 @@ void Config_Add_SDL() {
 	pint->Set_help("Number of display to use; values depend on OS and user "
 	               "settings.");
 
-	Pbool = sdl_sec->Add_bool("vsync", on_start, false);
-	Pbool->Set_help("Synchronize with display refresh rate if supported. This can\n"
-	                "reduce flickering and tearing, but may also impact performance.");
-
-	pint = sdl_sec->Add_int("vsync_skip", on_start, 7000);
-	pint->Set_help("Number of microseconds to allow rendering to block before skipping "
-	               "the next frame.");
-	pint->SetMinMax(1, 14000);
-
 	Pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
 	Pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop'\n"
 	                  "or a fixed size (e.g. 1024x768).");
@@ -3123,18 +3143,27 @@ void Config_Add_SDL() {
 	        "             WxH format. For example: 1024x768.\n"
 	        "             Scaling is not performed for output=surface.");
 
-	const char *outputs[] = {
-		"surface",
-		"texture",
-		"texturenb",
-		"texturepp",
+	Pbool = sdl_sec->Add_bool("vsync", on_start, false);
+	Pbool->Set_help(
+	        "Synchronize with display refresh rate if supported. This can\n"
+	        "reduce flickering and tearing, but may also impact performance.");
+
+	pint = sdl_sec->Add_int("vsync_skip", on_start, 7000);
+	pint->Set_help("Number of microseconds to allow rendering to block before skipping "
+	               "the next frame.");
+	pint->SetMinMax(1, 14000);
+
+	const char *outputs[] =
+	{ "surface",
+	  "texture",
+	  "texturenb",
+	  "texturepp",
 #if C_OPENGL
-		"opengl",
-		"openglnb",
-		"openglpp",
+	  "opengl",
+	  "openglnb",
+	  "openglpp",
 #endif
-		0
-	};
+	  0 };
 
 #if C_OPENGL
 	Pstring = sdl_sec->Add_string("output", Property::Changeable::Always, "opengl");

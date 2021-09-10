@@ -1176,9 +1176,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.mode = PART;
 		break;
 	}
-	
+
 	/* Calculate the FPS for this screen */
-	double fps;
 	uint32_t clock;
 	uint32_t htotal, hdend, hbstart, hbend, hrstart, hrend;
 	uint32_t vtotal, vdend, vbstart, vbend, vrstart, vrend;
@@ -1320,16 +1319,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	                         vtotal, vdend, vbstart, vbend, vrstart, vrend);
 #endif
 
-	// The screen refresh frequency
-	fps = static_cast<double>(clock) / static_cast<double>(vtotal * htotal);
-
+	// The screen refresh frequency and clock settings, per the DOS-mode
 	const auto f_clock = static_cast<double>(clock);
+	const auto fps = f_clock / static_cast<double>(vtotal * htotal);
+
 	// Horizontal total (that's how long a line takes with whistles and bells)
-	vga.draw.delay.htotal = static_cast<double>(htotal) * 1000.0 / f_clock; // in
-	                                                                        // milliseconds
+	vga.draw.delay.htotal = static_cast<double>(htotal) * 1000.0 / f_clock; //  milliseconds
 	// Start and End of horizontal blanking
-	vga.draw.delay.hblkstart = static_cast<double>(hbstart) * 1000.0 / f_clock; // in
-	                                                                            // milliseconds
+	vga.draw.delay.hblkstart = static_cast<double>(hbstart) * 1000.0 / f_clock; //  milliseconds
 	vga.draw.delay.hblkend = static_cast<double>(hbend) * 1000.0 / f_clock;
 	// Start and End of horizontal retrace
 	vga.draw.delay.hrstart = static_cast<double>(hrstart) * 1000.0 / f_clock;

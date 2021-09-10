@@ -19,11 +19,15 @@
 
 #include "dosbox.h"
 
+#include <algorithm>
+#include <cassert>
 #include <string>
+#include <map>
 
 #include "../ints/int10.h"
 #include "inout.h"
 #include "mem.h"
+#include "support.h"
 #include "vga.h"
 
 void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu /*iolen*/) {
@@ -521,7 +525,92 @@ bool SVGA_S3_AcceptsMode(Bitu mode) {
 	return VideoModeMemSize(mode) < vga.vmemsize;
 }
 
-void SVGA_Setup_S3Trio(void) {
+void filter_s3_modes_to_oem_only()
+{
+	enum dram_size_t {
+		kb_512 = 1 << 0,
+		mb_1 = 1 << 1,
+		mb_2 = 1 << 2,
+		mb_4 = 1 << 3,
+		mb_8 = 1 << 4,
+	};
+	auto hash = [](uint16_t w, uint16_t h, int d) -> uint32_t {
+		return check_cast<uint32_t>((w + h) * d);
+	};
+
+	const std::map<uint32_t, uint8_t> oem_modes = {
+	        { hash(640,  400, M_LIN32),          mb_1 | mb_2 | mb_4 | mb_8},
+
+	        { hash(640,  480,  M_LIN4), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
+	        { hash(640,  480,  M_LIN8), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
+	        { hash(640,  480, M_LIN15),          mb_1 | mb_2 | mb_4 | mb_8},
+	        { hash(640,  480, M_LIN16),          mb_1 | mb_2 | mb_4 | mb_8},
+	        { hash(640,  480, M_LIN24),          mb_1 | mb_2 | mb_4 | mb_8},
+	        { hash(640,  480, M_LIN32),                 mb_2 | mb_4 | mb_8},
+
+	        { hash(800,  600,  M_LIN4), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
+	        { hash(800,  600,  M_LIN8), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
+	        { hash(800,  600, M_LIN16),          mb_1 | mb_2 | mb_4 | mb_8},
+	        { hash(800,  600, M_LIN32),                 mb_2 | mb_4 | mb_8},
+
+	        {hash(1024,  768,  M_LIN4), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
+	        {hash(1024,  768,  M_LIN8),          mb_1 | mb_2 | mb_4 | mb_8},
+	        {hash(1024,  768, M_LIN16),                 mb_2 | mb_4 | mb_8},
+	        {hash(1024,  768, M_LIN32),                        mb_4 | mb_8},
+
+	        {hash(1152,  864,  M_LIN8),          mb_1 | mb_2 | mb_4 | mb_8},
+	        {hash(1152,  864, M_LIN15),                 mb_2 | mb_4 | mb_8},
+	        {hash(1152,  864, M_LIN16),                 mb_2 | mb_4 | mb_8},
+	        {hash(1152,  864, M_LIN24),                        mb_4 | mb_8},
+	        {hash(1152,  864, M_LIN32),                        mb_4 | mb_8},
+
+	        {hash(1280, 1024,  M_LIN4),          mb_1 | mb_2 | mb_4 | mb_8},
+	        {hash(1280, 1024,  M_LIN8),                 mb_2 | mb_4 | mb_8},
+	        {hash(1280, 1024, M_LIN16),                        mb_4 | mb_8},
+	        {hash(1280, 1024, M_LIN24),                        mb_4 | mb_8},
+	        {hash(1280, 1024, M_LIN32),                               mb_8},
+
+	        {hash(1600, 1200,  M_LIN4),          mb_1 | mb_2 | mb_4 | mb_8},
+	        {hash(1600, 1200,  M_LIN8),                 mb_2 | mb_4 | mb_8},
+	        {hash(1600, 1200, M_LIN16),                        mb_4 | mb_8},
+	        {hash(1600, 1200, M_LIN24),                               mb_8},
+	        {hash(1600, 1200, M_LIN32),                               mb_8},
+	};
+
+	dram_size_t dram_size = mb_1;
+	switch (vga.vmemsize) {
+	case 512 * 1024: dram_size = kb_512; break;
+	case 1024 * 1024: dram_size = mb_1; break;
+	case 2048 * 1024: dram_size = mb_2; break;
+	case 4096 * 1024: dram_size = mb_4; break;
+	case 8192 * 1024: dram_size = mb_8; break;
+	}
+	auto mode_not_allowed = [&](const VideoModeBlock &m) -> bool {
+		// Allows all the standard VESA modes, which start prior to 0x120
+		if (m.mode < 0x120)
+			return false;
+
+		// Allow all modes that aren't part of the VESA VGA set (CGA/EGA/Hercules/etc)
+		constexpr auto vesa_vga_modes = M_LIN4 | M_LIN8 | M_LIN15 | M_LIN16 | M_LIN24 | M_LIN32;
+		const bool is_a_vesa_vga_mode = m.type & vesa_vga_modes;
+		if (!is_a_vesa_vga_mode)
+			return false;
+
+		// Does the S3 OEM list have this mode for the given DRAM size?
+		const auto it = oem_modes.find(hash(m.swidth, m.sheight, m.type));
+		const bool is_an_oem_mode = (it != oem_modes.end()) && (it->second & dram_size);
+
+		// LOG_MSG("S3: %x: %ux%u - m.type=%d is_a_vesa_vga_mode=%d is_an_oem_mode=%d",
+		//         m.mode, m.swidth, m.sheight, m.type, is_a_vesa_vga_mode, is_an_oem_mode);
+
+		return !is_an_oem_mode;
+	};
+	// We don't need the return value
+	(void)std::remove_if(ModeList_VGA.begin(), ModeList_VGA.end(), mode_not_allowed);
+}
+
+void SVGA_Setup_S3Trio(void)
+{
 	svga.write_p3d5 = &SVGA_S3_WriteCRTC;
 	svga.read_p3d5 = &SVGA_S3_ReadCRTC;
 	svga.write_p3c5 = &SVGA_S3_WriteSEQ;
@@ -561,10 +650,19 @@ void SVGA_Setup_S3Trio(void) {
 		ram_type = "FP DRAM";
 	}
 
-	std::string description = "S3 Trio 64 ";
+	std::string description = "S3 Trio64 ";
+
 	description += int10.vesa_oldvbe ? "(VESA 1.2)" : "(VESA 2.0)";
+
+	if (int10.vesa_mode_preference == VESA_MODE_PREF::COMPATIBLE) {
+		filter_s3_modes_to_oem_only();
+		description += " compatible modes";
+	} else {
+		description += " all modes";
+	}
+
 	if (int10.vesa_nolfb)
-		description += " without linear framebuffer modes";
+		description += " and LFB disabled";
 
 	VGA_LogInitialization(description.c_str(), ram_type.c_str());
 }
