@@ -16,20 +16,28 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <string.h>
 #include "dosbox.h"
-#include "inout.h"
-#include "vga.h"
+
+#include <cassert>
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
+
 #include "callback.h"
 #include "cpu.h"		// for 0x3da delay
+#include "inout.h"
+#include "vga.h"
 
 #define XGA_SCREEN_WIDTH	vga.s3.xga_screen_width
 #define XGA_COLOR_MODE		vga.s3.xga_color_mode
 
 #define XGA_SHOW_COMMAND_TRACE 0
+
+// XGA-specific bit-depth constants that are used in bit-wise and switch operations
+constexpr uint16_t XGA_8_BIT = 0x0005;
+constexpr uint16_t XGA_15_BIT = 0x0006;
+constexpr uint16_t XGA_16_BIT = 0x0007;
+constexpr uint16_t XGA_32_BIT = 0x0008;
 
 struct XGAStatus {
 	struct scissorreg {
@@ -596,60 +604,63 @@ void XGA_DrawWait(Bitu val, Bitu len)
 						break;
 					}
 					switch(xga.waitcmd.buswidth) {
-						case M_LIN8: // 8 bit
+						case XGA_8_BIT: // 8 bit
 							DrawWaitSub(mixmode, val);
 							break;
-						case 0x20 | M_LIN8: // 16 bit 
+						case 0x20 | XGA_8_BIT: // 16 bit
 							for (Bitu i = 0; i < len; ++i) {
 								DrawWaitSub(mixmode, (val >> (8 * i)) & 0xff);
 								if (xga.waitcmd.newline)
 									break;
 							}
 							break;
-						case 0x40 | M_LIN8: // 32 bit
+						case 0x40 | XGA_8_BIT: // 32 bit
 							for (int i = 0; i < 4; ++i)
 								DrawWaitSub(mixmode, (val >> (8 * i)) & 0xff);
 							break;
-						case (0x20 | M_LIN32):
-							if(len!=4) { // Win 3.11 864 'hack?'
-								if(xga.waitcmd.datasize == 0) {
-									// set it up to wait for the next word
-									xga.waitcmd.data = val; 
+						case (0x20 | XGA_32_BIT):
+							if (len != 4) { // Win 3.11 864
+										// 'hack?'
+								if (xga.waitcmd.datasize == 0) {
+									// set it up to
+									// wait for the
+									// next word
+									xga.waitcmd.data = val;
 									xga.waitcmd.datasize = 2;
 									return;
 								} else {
-									srcval = (val<<16)|xga.waitcmd.data;
+									srcval = (val << 16) | xga.waitcmd.data;
 									xga.waitcmd.data = 0;
 									xga.waitcmd.datasize = 0;
 									DrawWaitSub(mixmode, srcval);
 								}
 								break;
-							} // fall-through
-						case 0x40 | M_LIN32: // 32 bit
+							}               // fall-through
+						case 0x40 | XGA_32_BIT: // 32 bit
 							DrawWaitSub(mixmode, val);
 							break;
-						case 0x20 | M_LIN15: // 16 bit 
-						case 0x20 | M_LIN16: // 16 bit 
+						case 0x20 | XGA_15_BIT: // 16 bit
+						case 0x20 | XGA_16_BIT: // 16 bit
 							DrawWaitSub(mixmode, val);
 							break;
-						case 0x40 | M_LIN15: // 32 bit 
-						case 0x40 | M_LIN16: // 32 bit 
+						case 0x40 | XGA_15_BIT: // 32 bit
+						case 0x40 | XGA_16_BIT: // 32 bit
 							DrawWaitSub(mixmode, val & 0xffff);
 							if (!xga.waitcmd.newline)
 								DrawWaitSub(mixmode, val >> 16);
 							break;
 						default:
 							// Let's hope they never show up ;)
-				                        LOG_MSG("XGA: "
-				                                "unsupported "
-				                                "bpp / "
-				                                "datawidth "
-				                                "combination "
-				                                "%#" PRIxPTR,
-				                                xga.waitcmd.buswidth);
-				                        break;
-			                        };
-			                        break;
+							LOG_MSG("XGA: "
+									"unsupported "
+									"bpp / "
+									"datawidth "
+									"combination "
+									"%#" PRIxPTR,
+									xga.waitcmd.buswidth);
+							break;
+						};
+						break;
 
 		                case 0x02: // Data from PIX_TRANS selects the mix
 			                switch (xga.waitcmd.buswidth & 0x60) {
@@ -923,21 +934,32 @@ static void XGA_DrawCmd(Bitu val)
 				XGA_DrawRectangle(val);
 
 			} else {
-				
-				xga.waitcmd.newline = true;
-				xga.waitcmd.wait = true;
-				xga.waitcmd.curx = xga.curx;
-				xga.waitcmd.cury = xga.cury;
-				xga.waitcmd.x1 = xga.curx;
-				xga.waitcmd.y1 = xga.cury;
-				xga.waitcmd.x2 = (Bit16u)((xga.curx + xga.MAPcount)&0x0fff);
+			        uint16_t xga_bit_depth = 0;
+			        switch (vga.mode) {
+			        case M_LIN8: xga_bit_depth = XGA_8_BIT; break;
+			        case M_LIN15: xga_bit_depth = XGA_15_BIT; break;
+			        case M_LIN16: xga_bit_depth = XGA_16_BIT; break;
+			        case M_LIN32: xga_bit_depth = XGA_32_BIT; break;
+					default:
+						LOG_MSG("XGA: Draw rectangle: No XGA bit-depth matching mode %x", vga.mode);
+						break;
+			        };
+			        assert(xga_bit_depth); // Unhandled bit-depth
+
+			        xga.waitcmd.newline = true;
+			        xga.waitcmd.wait = true;
+			        xga.waitcmd.curx = xga.curx;
+			        xga.waitcmd.cury = xga.cury;
+			        xga.waitcmd.x1 = xga.curx;
+			        xga.waitcmd.y1 = xga.cury;
+			        xga.waitcmd.x2 = (Bit16u)((xga.curx + xga.MAPcount)&0x0fff);
 				xga.waitcmd.y2 = (Bit16u)((xga.cury + xga.MIPcount + 1)&0x0fff);
 				xga.waitcmd.sizex = xga.MAPcount;
 				xga.waitcmd.sizey = xga.MIPcount + 1;
 				xga.waitcmd.cmd = 2;
-				xga.waitcmd.buswidth = vga.mode | ((val&0x600) >> 4);
-				xga.waitcmd.data = 0;
-				xga.waitcmd.datasize = 0;
+			        xga.waitcmd.buswidth = xga_bit_depth | ((val & 0x600) >> 4);
+			        xga.waitcmd.data = 0;
+			        xga.waitcmd.datasize = 0;
 
 #if XGA_SHOW_COMMAND_TRACE == 1
 				LOG_MSG("XGA: Draw wait rect, w/h(%3d/%3d), x/y1(%3d/%3d), x/y2(%3d/%3d), %4x",
