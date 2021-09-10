@@ -110,47 +110,57 @@ void VGA_StartResize(Bitu delay /*=50*/) {
 	}
 }
 
-void VGA_SetClock(const Bitu which, const uint32_t target)
+void VGA_SetClock(const Bitu which, const uint32_t desired_clock)
 {
 	if (svga.set_clock) {
-		svga.set_clock(which, target);
+		svga.set_clock(which, desired_clock);
 		return;
 	}
 
-	const auto max_target = clamp(static_cast<int>(target), S3_CLOCK_REF, S3_MAX_CLOCK);
-	auto best_error = max_target;
+	// Is this mode using a clock-doubling flag?
+	const auto mode_flags = CurMode ? CurMode->special : 0;
+	const auto has_doubler = mode_flags & (VGA_PIXEL_DOUBLE | VGA_DOUBLE_CLOCK);
+	const auto clock_scale = has_doubler ? 2 : 1;
 
-	// To-be-populated with the parameters (r, n, m) that produce a clock
-	// closest to the target.
+	// Ensure the target clock is within the S3's clock range
+	const auto clock = clamp(static_cast<int>(desired_clock * clock_scale),
+	                         S3_CLOCK_REF, S3_MAX_CLOCK);
+
+	// The clk parameters (r, n, m) will be populated with those that find a
+	// clock closest to the desired_clock clock.
 	VGA_S3::clk_t best_clk;
+	auto best_error = clock;
 
-	for (uint8_t n = 1; n <= 31; ++n) {
-		for (uint8_t r = 0; r <= 3; ++r) {
-			// Is r out of bounds?
-			const auto f_vco = max_target * (1 << r);
-			if (f_vco < MIN_VCO || f_vco > MAX_VCO)
-				continue;
-
-			// Is m out of bounds?
-			const auto m = (max_target * (n + 2) * (1 << r) +
-			                (S3_CLOCK_REF / 2)) / S3_CLOCK_REF - 2;
-			if (m > 127)
-				continue;
-
-			// Do the parameters produce a clock further away than
-			// the best combination?
-			const auto candidate_clock = S3_CLOCK(m, n, r);
-			const auto error = abs(candidate_clock - max_target);
-			if (error >= best_error)
-				continue;
-
-			// Save the improved clock paramaters
-			best_error = error;
-			best_clk.r = r;
-			best_clk.m = static_cast<uint8_t>(m);
-			best_clk.n = n;
-		}
+	uint8_t r = 0;
+	for (r = 0; r <= 3; ++r) {
+		// Is r out of bounds?
+		const auto f_vco = clock * (1 << r);
+		if (MIN_VCO <= f_vco && f_vco <= MAX_VCO)
+			break;
 	}
+	for (uint8_t n = 1; n <= 31; ++n) {
+		// Is m out of bounds?
+		const auto m = (clock * (n + 2) * (1 << r) + (S3_CLOCK_REF / 2)) /
+		                       S3_CLOCK_REF - 2;
+		if (m > 127)
+			continue;
+
+		// Do the parameters produce a clock further away than
+		// the best combination?
+		const auto candidate_clock = S3_CLOCK(m, n, r);
+		const auto error = abs(candidate_clock - clock);
+		if (error >= best_error)
+			continue;
+
+		// Save the improved clock paramaters
+		best_error = error;
+		best_clk.r = r;
+		best_clk.m = static_cast<uint8_t>(m);
+		best_clk.n = n;
+	}
+	// LOG_MSG("VGA: Clock[%lu] r=%u, n=%u, m=%u (desired_clock = %u, actual = %u KHz",
+	//         which, best_clk.r, best_clk.n, best_clk.m, desired_clock,
+	//         S3_CLOCK(best_clk.m, best_clk.n, best_clk.r));
 
 	// Save the best clock and then program the S3 chip.
 	assert(which < ARRAY_LEN(vga.s3.clk));
