@@ -314,7 +314,7 @@ void DOS_Shell::ParseLine(char * line) {
 void DOS_Shell::RunInternal()
 {
 	char input_line[CMD_MAXLINE] = {0};
-	while (bf) {
+	while (bf && !exit_requested) {
 		if (bf->ReadLine(input_line)) {
 			if (echo) {
 				if (input_line[0] != '@') {
