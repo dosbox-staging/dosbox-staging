@@ -129,6 +129,7 @@ git clone --recurse-submodules \
 If you have an existing source repository, update it with:
 
 ``` shell
+git submodule update --init
 git pull --recurse-submodules
 ```
 
