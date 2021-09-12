@@ -135,8 +135,6 @@ void INT10_Init(Section*);
 
 static LoopHandler * loop;
 
-bool SDLNetInited;
-
 static std::function<void(int)> delay_fn = Delay;
 static int ticksRemain;
 static int64_t ticksLast;
@@ -417,8 +415,6 @@ void DOSBOX_Init(void) {
 	constexpr auto deprecated = Property::Changeable::Deprecated;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
-
-	SDLNetInited = false;
 
 	// Some frequently used option sets
 	const char *rates[] = {"44100", "48000", "32000", "22050", "16000",

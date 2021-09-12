@@ -25,6 +25,7 @@
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
+
 #include "cross.h"
 #include "string_utils.h"
 #include "cpu.h"
@@ -1089,6 +1090,7 @@ Bitu IPX_ESRHandler(void) {
 }
 
 void VFILE_Remove(const char *name);
+bool NetWrapper_InitializeSDLNet(); // from misc_util.cpp
 
 class IPX final : public Module_base {
 private:
@@ -1101,20 +1103,18 @@ private:
 public:
 	IPX(Section *configuration) : Module_base(configuration)
 	{
-		Section_prop * section = static_cast<Section_prop *>(configuration);
-		if(!section->Get_bool("ipx")) return;
-		if(!SDLNetInited) {
-			if(SDLNet_Init() == -1){
-				LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
-				return;
-			}
-			SDLNetInited = true;
-		}
-
 		ECBList = NULL;
 		ESRList = NULL;
 		isIpxServer = false;
 		isIpxConnected = false;
+
+		Section_prop *section = static_cast<Section_prop *>(configuration);
+		if (section && !section->Get_bool("ipx"))
+			return;
+
+		if (!NetWrapper_InitializeSDLNet())
+			return;
+
 		IPX_NetworkInit();
 
 		DOS_AddMultiplexHandler(IPX_Multiplex);
