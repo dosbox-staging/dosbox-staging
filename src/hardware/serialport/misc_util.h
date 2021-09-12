@@ -55,7 +55,9 @@
 
 #include <SDL_net.h>
 
+// helper functions
 uint32_t Netwrapper_GetCapabilities();
+bool NetWrapper_InitializeSDLNet();
 
 struct _TCPsocketX {
 	int ready = 0;

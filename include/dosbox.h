@@ -71,7 +71,6 @@ enum SVGACards {
 
 extern SVGACards svgaCard;
 extern MachineType machine;
-extern bool SDLNetInited;
 extern bool mono_cga;
 
 #define IS_TANDY_ARCH ((machine==MCH_TANDY) || (machine==MCH_PCJR))

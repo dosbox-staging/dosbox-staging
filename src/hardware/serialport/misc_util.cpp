@@ -21,6 +21,9 @@
 #if C_MODEM
 
 #include "misc_util.h"
+
+#include <cassert>
+
 uint32_t Netwrapper_GetCapabilities()
 {
 	uint32_t retval = 0;
@@ -28,18 +31,54 @@ uint32_t Netwrapper_GetCapabilities()
 	return retval;
 }
 
+class sdl_net_manager_t {
+public:
+	sdl_net_manager_t()
+	{
+		if (already_tried_once)
+			return;
+		already_tried_once = true;
+
+		is_initialized = SDLNet_Init() != -1;
+		if (is_initialized)
+			LOG_INFO("NET: Initialized SDL network subsystem");
+		else
+			LOG_WARNING("NET: failed to initialize SDL network subsystem: %s\n",
+			            SDLNet_GetError());
+	}
+
+	~sdl_net_manager_t()
+	{
+		if (!is_initialized)
+			return;
+
+		assert(already_tried_once);
+		SDLNet_Quit();
+		LOG_INFO("NET: Shutdown SDL network subsystem");
+	}
+
+	bool IsInitialized() const { return is_initialized; }
+
+private:
+	bool already_tried_once = false;
+	bool is_initialized = false;
+};
+
+bool NetWrapper_InitializeSDLNet()
+{
+	static sdl_net_manager_t sdl_net_manager;
+	return sdl_net_manager.IsInitialized();
+}
+
 #ifdef NATIVESOCKETS
 TCPClientSocket::TCPClientSocket(int platformsocket)
 {
+	if (!NetWrapper_InitializeSDLNet())
+		return;
+
 	nativetcpstruct = new _TCPsocketX;
 	mysock = (TCPsocket)nativetcpstruct;
-	if (!SDLNetInited) {
-		if (SDLNet_Init() == -1) {
-			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
-			return;
-		}
-		SDLNetInited = true;
-	}
+
 	// fill the SDL socket manually
 	nativetcpstruct->ready = 0;
 	nativetcpstruct->sflag = 0;
@@ -77,14 +116,9 @@ TCPClientSocket::TCPClientSocket(int platformsocket)
 
 TCPClientSocket::TCPClientSocket(TCPsocket source)
 {
-	if (!SDLNetInited) {
-		if (SDLNet_Init() == -1) {
-			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
-			return;
-		}
-		SDLNetInited = true;
-	}
-	
+	if (!NetWrapper_InitializeSDLNet())
+		return;
+
 	if(source!=0) {
 		mysock = source;
 		listensocketset = SDLNet_AllocSocketSet(1);
@@ -97,14 +131,9 @@ TCPClientSocket::TCPClientSocket(TCPsocket source)
 
 TCPClientSocket::TCPClientSocket(const char *destination, uint16_t port)
 {
-	if (!SDLNetInited) {
-		if (SDLNet_Init() == -1) {
-			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
-			return;
-		}
-		SDLNetInited = true;
-	}
-	
+	if (!NetWrapper_InitializeSDLNet())
+		return;
+
 	IPaddress openip;
 	//Ancient versions of SDL_net had this as char*. People still appear to be using this one.
 	if (!SDLNet_ResolveHost(&openip,const_cast<char*>(destination),port)) {
@@ -242,21 +271,19 @@ TCPServerSocket::TCPServerSocket(const uint16_t port)
 {
 	isopen = false;
 	mysock = nullptr;
-	if(!SDLNetInited) {
-        if(SDLNet_Init()==-1) {
-			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
-			return;
-		}
-		SDLNetInited = true;
-	}
+
+	if (!NetWrapper_InitializeSDLNet())
+		return;
+
 	if (port) {
 		IPaddress listen_ip;
 		SDLNet_ResolveHost(&listen_ip, NULL, port);
 		mysock = SDLNet_TCP_Open(&listen_ip);
 		if (!mysock)
 			return;
+	} else {
+		return;
 	}
-	else return;
 	isopen = true;
 }
 
