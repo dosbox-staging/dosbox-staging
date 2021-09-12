@@ -249,8 +249,7 @@ private:
 	static struct imagePlayer {
 		// Objects, pointers, and then scalars; in descending size-order.
 		MixerObject              mixerChannel       = {};
-		std::weak_ptr<TrackFile> trackFile          = {};
-		SDL_mutex                *mutex             = nullptr;
+		std::weak_ptr<TrackFile> trackFile = {};
 		MixerChannel             *channel           = nullptr;
 		CDROM_Interface_Image    *cd                = nullptr;
 		void (MixerChannel::*addFrames) (Bitu, const Bit16s*) = nullptr;
