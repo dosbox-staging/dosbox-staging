@@ -325,6 +325,8 @@ void DOS_Shell::RunInternal()
 			}
 			ParseLine(input_line);
 			if (echo) WriteOut_NoParsing("\n");
+		} else {
+			bf.reset();
 		}
 	}
 }
