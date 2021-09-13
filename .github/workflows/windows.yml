@@ -44,8 +44,8 @@ jobs:
           mv c:\vcpkg-bak c:\vcpkg
           vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth gtest
           if (-not $?) { throw "vcpkg failed to install library dependencies" }
-          rm -R c:\vcpkg\buildtrees\fluidsynth\src\*.clean\sf2
-          rm -R c:\vcpkg\buildtrees\sdl2\src\*.clean\android-project-ant
+          rm -R c:\vcpkg\buildtrees
+          rm -R c:\vcpkg\packages
 
       - name:  Integrate packages
         shell: pwsh
