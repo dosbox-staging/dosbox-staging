@@ -509,6 +509,7 @@ static void FinishSetMode(bool clearmem) {
 		switch (CurMode->type) {
 		case M_TANDY16:
 		case M_CGA4:
+		case M_CGA16:
 			if ((machine==MCH_PCJR) && (CurMode->mode >= 9)) {
 				// PCJR cannot access the full 32k at 0xb800
 				for (Bit16u ct=0;ct<16*1024;ct++) {
@@ -937,6 +938,7 @@ bool INT10_SetVideoMode(Bit16u mode)
 		seq_data[2]|=0xf;				//Enable all planes for writing
 		seq_data[4]|=0xc;				//Graphics - odd/even - Chained
 		break;
+	case M_CGA16:              // only in MCH_TANDY, MCH_PCJR
 	case M_CGA2_COMPOSITE:     // only in MCH_CGA
 	case M_CGA4_COMPOSITE:     // only in MCH_CGA
 	case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
@@ -1199,6 +1201,7 @@ bool INT10_SetVideoMode(Bit16u mode)
 		if (CurMode->special & VGA_PIXEL_DOUBLE)
 			mode_control |= 0x08;
 		break;
+	case M_CGA16:              // only in MCH_TANDY, MCH_PCJR
 	case M_CGA2_COMPOSITE:     // only in MCH_CGA
 	case M_CGA4_COMPOSITE:     // only in MCH_CGA
 	case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
@@ -1308,6 +1311,7 @@ bool INT10_SetVideoMode(Bit16u mode)
 			gfx_data[0x6]|=0x0f;		//graphics mode at at 0xb800=0xbfff
 		}
 		break;
+	case M_CGA16:              // only in MCH_TANDY, MCH_PCJR
 	case M_CGA2_COMPOSITE:     // only in MCH_CGA
 	case M_CGA4_COMPOSITE:     // only in MCH_CGA
 	case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
@@ -1424,6 +1428,7 @@ att_text16:
 		for (Bit8u ct=0;ct<16;ct++) att_data[ct]=ct;
 		att_data[0x10]=0x41;		//Color Graphics 8-bit
 		break;
+	case M_CGA16:              // only in MCH_TANDY, MCH_PCJR
 	case M_CGA2_COMPOSITE:     // only in MCH_CGA
 	case M_CGA4_COMPOSITE:     // only in MCH_CGA
 	case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
@@ -1521,6 +1526,7 @@ dac_text16:
 				IO_Write(0x3c9,vga_palette[i][2]);
 			}
 			break;
+		case M_CGA16:              // only in MCH_TANDY, MCH_PCJR
 		case M_CGA2_COMPOSITE:     // only in MCH_CGA
 		case M_CGA4_COMPOSITE:     // only in MCH_CGA
 		case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
