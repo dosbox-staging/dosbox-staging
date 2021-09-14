@@ -209,8 +209,7 @@ static bool is_composite_new_era = false;
 
 // PCjr composite-specific
 static bool &new_cga = is_composite_new_era;
-static Bit8u cga16_val = 0;
-static void update_cga16_color_pcjr(void);
+static void update_cga16_color_pcjr(uint8_t color, bool should_update_color);
 
 static uint8_t herc_pal = 0;
 static uint8_t mono_cga_pal = 0;
@@ -370,14 +369,12 @@ constexpr uint8_t mono_cga_palettes[8][16][3] = {
                 {0x3f, 0x3f, 0x3b},
         }};
 
-static void cga16_color_select(Bit8u val)
+static void update_cga16_color_pcjr(const uint8_t color, const bool should_update_color)
 {
-	cga16_val = val;
-	update_cga16_color_pcjr();
-}
+	static uint8_t cga16_val = 0;
+	if (should_update_color)
+		cga16_val = color;
 
-static void update_cga16_color_pcjr(void)
-{
 	// New algorithm based on code by reenigne
 	// Works in all CGA graphics modes/color settings and can simulate older
 	// and newer CGA revisions
@@ -827,7 +824,7 @@ static void turn_crt_knob(bool pressed, const int amount)
 		break;
 	}
 	if (machine == MCH_PCJR)
-		update_cga16_color_pcjr();
+		update_cga16_color_pcjr(0, false);
 	else
 		update_cga16_color();
 
@@ -877,7 +874,7 @@ static void write_cga_color_select(uint8_t val)
 		VGA_SetCGA2Table(0,val & 0xf);
 		vga.attr.overscan_color = 0;
 		break;
-	case M_CGA16: cga16_color_select(val); break;
+	case M_CGA16: update_cga16_color_pcjr(val, true); break;
 	case M_TEXT:
 		vga.tandy.border_color = val & 0xf;
 		vga.attr.overscan_color = 0;
@@ -937,15 +934,6 @@ static void write_cga(io_port_t port, uint8_t val, io_width_t)
 		write_cga_color_select(val);
 		break;
 	}
-}
-
-static void CGAModel(bool pressed)
-{
-	if (!pressed)
-		return;
-	new_cga = !new_cga;
-	update_cga16_color_pcjr();
-	LOG_MSG("%s model CGA selected", new_cga ? "Late" : "Early");
 }
 
 static void PCJr_FindMode();
@@ -1016,7 +1004,7 @@ static void tandy_update_palette() {
 			break;
 		}
 		if (machine == MCH_PCJR)
-			update_cga16_color_pcjr();
+			update_cga16_color_pcjr(0, false);
 		else
 			update_cga16_color();
 	}
@@ -1461,10 +1449,7 @@ void VGA_SetupOther()
 		IO_RegisterWriteHandler(0x3de, write_tandy, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3df, write_tandy, io_width_t::byte);
 	}
-	if (machine==MCH_PCJR) {
-		// Start the PCjr composite huge almost 1/3rd into the CGA hue
-		hue_offset = 100;
-
+	if (machine == MCH_PCJR) {
 		//write_pcjr will setup base address
 		write_pcjr(0x3df, 0x7 | (0x7 << 3), io_width_t::byte);
 		IO_RegisterWriteHandler(0x3da, write_pcjr, io_width_t::byte);
