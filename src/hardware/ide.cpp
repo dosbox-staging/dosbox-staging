@@ -67,10 +67,10 @@ static const unsigned short IDE_default_alts[4] = {
     0x36E   /* quaternary */
 };
 
-static void ide_altio_w(io_port_t port,io_val_t val,uint8_t iolen);
-static uint32_t ide_altio_r(io_port_t port,uint8_t iolen);
-static void ide_baseio_w(io_port_t port,io_val_t val,uint8_t iolen);
-static uint32_t ide_baseio_r(io_port_t port,uint8_t iolen);
+static void ide_altio_w(io_port_t port,io_val_t val, io_width_t width);
+static uint32_t ide_altio_r(io_port_t port, io_width_t width);
+static void ide_baseio_w(io_port_t port,io_val_t val,io_width_t width);
+static uint32_t ide_baseio_r(io_port_t port,io_width_t width);
 bool GetMSCDEXDrive(unsigned char drive_letter,CDROM_Interface **_cdrom);
 
 enum IDEDeviceType {
@@ -170,8 +170,8 @@ public:
     virtual void abort_normal();
     virtual void interface_wakeup();
     virtual void writecommand(uint8_t cmd);
-    virtual uint32_t data_read(uint8_t iolen); /* read from 1F0h data port from IDE device */
-    virtual void data_write(uint32_t v,uint8_t iolen);/* write to 1F0h data port to IDE device */
+    virtual uint32_t data_read(io_width_t width); /* read from 1F0h data port from IDE device */
+    virtual void data_write(uint32_t v, io_width_t width);/* write to 1F0h data port to IDE device */
     virtual bool command_interruption_ok(uint8_t cmd);
     virtual void abort_silent();
 };
@@ -191,8 +191,8 @@ public:
     unsigned char bios_disk_index;
     std::shared_ptr<imageDisk> getBIOSdisk();
     void update_from_biosdisk();
-    virtual uint32_t data_read(uint8_t iolen); /* read from 1F0h data port from IDE device */
-    virtual void data_write(uint32_t v,uint8_t iolen);/* write to 1F0h data port to IDE device */
+    virtual uint32_t data_read(io_width_t width); /* read from 1F0h data port from IDE device */
+    virtual void data_write(uint32_t v,io_width_t width);/* write to 1F0h data port to IDE device */
     virtual void generate_identify_device();
     virtual void prepare_read(uint32_t offset,uint32_t size);
     virtual void prepare_write(uint32_t offset,uint32_t size);
@@ -231,8 +231,8 @@ public:
     unsigned char drive_index;
     CDROM_Interface *getMSCDEXDrive();
     void update_from_cdrom();
-    virtual uint32_t data_read(uint8_t iolen); /* read from 1F0h data port from IDE device */
-    virtual void data_write(uint32_t v,uint8_t iolen);/* write to 1F0h data port to IDE device */
+    virtual uint32_t data_read(io_width_t width); /* read from 1F0h data port from IDE device */
+    virtual void data_write(uint32_t v,io_width_t width);/* write to 1F0h data port to IDE device */
     virtual void generate_identify_device();
     virtual void generate_mmc_inquiry();
     virtual void prepare_read(uint32_t offset,uint32_t size);
@@ -1500,7 +1500,7 @@ void IDEATADevice::io_completion() {
     }
 }
 
-uint32_t IDEATAPICDROMDevice::data_read(uint8_t iolen) {
+uint32_t IDEATAPICDROMDevice::data_read(io_width_t width) {
     uint32_t w = ~0u;
 
     if (state != IDE_DEV_DATA_READ)
@@ -1514,16 +1514,16 @@ uint32_t IDEATAPICDROMDevice::data_read(uint8_t iolen) {
     if (sector_i >= sector_total)
         return 0xFFFFUL;
 
-    if (iolen >= 4) {
+    if (width == io_width_t::dword) {
         w = host_readd(sector+sector_i);
         sector_i += 4;
     }
-    else if (iolen >= 2) {
+    else if (width == io_width_t::word) {
         w = host_readw(sector+sector_i);
         sector_i += 2;
     }
     /* NTS: Some MS-DOS CD-ROM drivers like OAKCDROM.SYS use byte-wide I/O for the initial identification */
-    else if (iolen == 1) {
+    else if (width == io_width_t::byte) {
         w = sector[sector_i++];
     }
 
@@ -1759,13 +1759,13 @@ void IDEATAPICDROMDevice::atapi_cmd_completion() {
     }
 }
 
-void IDEATAPICDROMDevice::data_write(uint32_t v,uint8_t iolen) {
+void IDEATAPICDROMDevice::data_write(uint32_t v,io_width_t width) {
     if (state == IDE_DEV_ATAPI_PACKET_COMMAND) {
         if (atapi_cmd_i < atapi_cmd_total)
             atapi_cmd[atapi_cmd_i++] = v;
-        if (iolen >= 2 && atapi_cmd_i < atapi_cmd_total)
+        if ((width == io_width_t::word || width == io_width_t::dword) && atapi_cmd_i < atapi_cmd_total)
             atapi_cmd[atapi_cmd_i++] = v >> 8;
-        if (iolen >= 4 && atapi_cmd_i < atapi_cmd_total) {
+        if (width == io_width_t::dword && atapi_cmd_i < atapi_cmd_total) {
             atapi_cmd[atapi_cmd_i++] = v >> 16;
             atapi_cmd[atapi_cmd_i++] = v >> 24;
         }
@@ -1782,20 +1782,20 @@ void IDEATAPICDROMDevice::data_write(uint32_t v,uint8_t iolen) {
             LOG_MSG("IDE: ATAPI warning: data write with drq=0");
             return;
         }
-        if ((sector_i+iolen) > sector_total) {
+        if ((sector_i+ static_cast<int>(width)) > sector_total) {
             LOG_MSG("IDE: ATAPI warning: sector already full %lu / %lu",(unsigned long)sector_i,(unsigned long)sector_total);
             return;
         }
 
-        if (iolen >= 4) {
+        if (width == io_width_t::dword) {
             host_writed(sector+sector_i,v);
             sector_i += 4;
         }
-        else if (iolen >= 2) {
+        else if (width == io_width_t::word) {
             host_writew(sector+sector_i,v);
             sector_i += 2;
         }
-        else if (iolen == 1) {
+        else if (width == io_width_t::byte) {
             sector[sector_i++] = v;
         }
 
@@ -1804,7 +1804,7 @@ void IDEATAPICDROMDevice::data_write(uint32_t v,uint8_t iolen) {
     }
 }
 
-uint32_t IDEATADevice::data_read(uint8_t iolen) {
+uint32_t IDEATADevice::data_read(io_width_t width) {
     uint32_t w = ~0u;
 
     if (state != IDE_DEV_DATA_READ)
@@ -1815,21 +1815,21 @@ uint32_t IDEATADevice::data_read(uint8_t iolen) {
         return 0xFFFFUL;
     }
 
-    if ((sector_i+iolen) > sector_total) {
+    if ((sector_i+ static_cast<int>(width)) > sector_total) {
         LOG_MSG("IDE: ATA warning: sector already read %lu / %lu",(unsigned long)sector_i,(unsigned long)sector_total);
         return 0xFFFFUL;
     }
 
-    if (iolen >= 4) {
+    if (width == io_width_t::dword) {
         w = host_readd(sector+sector_i);
         sector_i += 4;
     }
-    else if (iolen >= 2) {
+    else if (width == io_width_t::word) {
         w = host_readw(sector+sector_i);
         sector_i += 2;
     }
     /* NTS: Some MS-DOS CD-ROM drivers like OAKCDROM.SYS use byte-wide I/O for the initial identification */
-    else if (iolen == 1) {
+    else if (width == io_width_t::byte) {
         w = sector[sector_i++];
     }
 
@@ -1839,7 +1839,7 @@ uint32_t IDEATADevice::data_read(uint8_t iolen) {
     return w;
 }
 
-void IDEATADevice::data_write(uint32_t v,uint8_t iolen) {
+void IDEATADevice::data_write(uint32_t v,io_width_t width) {
     if (state != IDE_DEV_DATA_WRITE) {
         LOG_MSG("IDE: ATA warning: data write when device not in data_write state");
         return;
@@ -1848,20 +1848,20 @@ void IDEATADevice::data_write(uint32_t v,uint8_t iolen) {
         LOG_MSG("IDE: ATA warning: data write with drq=0");
         return;
     }
-    if ((sector_i+iolen) > sector_total) {
+    if ((sector_i+ static_cast<int>(width)) > sector_total) {
         LOG_MSG("IDE: ATA warning: sector already full %lu / %lu",(unsigned long)sector_i,(unsigned long)sector_total);
         return;
     }
 
-    if (iolen >= 4) {
+    if (width == io_width_t::dword) {
         host_writed(sector+sector_i,v);
         sector_i += 4;
     }
-    else if (iolen >= 2) {
+    else if (width == io_width_t::word) {
         host_writew(sector+sector_i,v);
         sector_i += 2;
     }
-    else if (iolen == 1) {
+    else if (width == io_width_t::byte) {
         sector[sector_i++] = v;
     }
 
@@ -2381,14 +2381,14 @@ static bool IDE_CPU_Is_Vm86() {
     return (cpu.pmode && ((GETFLAG_IOPL<cpu.cpl) || GETFLAG(VM)));
 }
 
-static void ide_baseio_w(io_port_t port,io_val_t val,uint8_t iolen);
+static void ide_baseio_w(io_port_t port,io_val_t val,io_width_t width);
 
-static uint32_t IDE_SelfIO_In(IDEController * /* ide */,io_port_t port,uint32_t len) {
-    return ide_baseio_r(port,len);
+static uint32_t IDE_SelfIO_In(IDEController * /* ide */,io_port_t port, io_width_t width) {
+    return ide_baseio_r(port, width);
 }
 
-static void IDE_SelfIO_Out(IDEController * /* ide */,io_port_t port,io_val_t val,uint32_t len) {
-    ide_baseio_w(port,val,len);
+static void IDE_SelfIO_Out(IDEController * /* ide */,io_port_t port,io_val_t val, io_width_t width) {
+    ide_baseio_w(port,val, width);
 }
 
 /* INT 13h extensions */
@@ -2420,8 +2420,8 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(unsigned char disk,uint64_t lba) {
 
             /* Issue I/O to ourself to select drive */
             dev->faked_command = true;
-            IDE_SelfIO_In(ide,ide->base_io+7u,1);
-            IDE_SelfIO_Out(ide,ide->base_io+6u,0x00+(ms<<4u),1);
+            IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);
+            IDE_SelfIO_Out(ide,ide->base_io+6u,0x00+(ms<<4u),io_width_t::byte);
             dev->faked_command = false;
 
             if (dev->type == IDE_TYPE_HDD) {
@@ -2452,36 +2452,36 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(unsigned char disk,uint64_t lba) {
                          * drive. So to get 32-bit disk access to work in Windows 95,
                          * we have to put on a good show to convince Windows 95 we're
                          * a legitimate BIOS INT 13h call doing it's job. */
-                        IDE_SelfIO_In(ide,ide->base_io+7u,1);        /* dum de dum reading status */
-                        IDE_SelfIO_Out(ide,ide->base_io+6u,(ms<<4u)+0xE0u+(lba>>24u),1); /* drive and head */
-                        IDE_SelfIO_In(ide,ide->base_io+7u,1);        /* dum de dum reading status */
-                        IDE_SelfIO_Out(ide,ide->base_io+2u,0x01,1);  /* sector count */
-                        IDE_SelfIO_Out(ide,ide->base_io+3u,lba&0xFF,1);  /* sector number */
-                        IDE_SelfIO_Out(ide,ide->base_io+4u,(lba>>8u)&0xFF,1); /* cylinder lo */
-                        IDE_SelfIO_Out(ide,ide->base_io+5u,(lba>>16u)&0xFF,1); /* cylinder hi */
-                        IDE_SelfIO_Out(ide,ide->base_io+6u,(ms<<4u)+0xE0+(lba>>24u),1); /* drive and head */
-                        IDE_SelfIO_In(ide,ide->base_io+7u,1);        /* dum de dum reading status */
-                        IDE_SelfIO_Out(ide,ide->base_io+7u,0x20,1);  /* issue READ */
+                        IDE_SelfIO_In(ide,ide->base_io+7u,io_width_t::byte);        /* dum de dum reading status */
+                        IDE_SelfIO_Out(ide,ide->base_io+6u,(ms<<4u)+0xE0u+(lba>>24u),io_width_t::byte); /* drive and head */
+                        IDE_SelfIO_In(ide,ide->base_io+7u,io_width_t::byte);        /* dum de dum reading status */
+                        IDE_SelfIO_Out(ide,ide->base_io+2u,0x01,io_width_t::byte);  /* sector count */
+                        IDE_SelfIO_Out(ide,ide->base_io+3u,lba&0xFF,io_width_t::byte);  /* sector number */
+                        IDE_SelfIO_Out(ide,ide->base_io+4u,(lba>>8u)&0xFF,io_width_t::byte); /* cylinder lo */
+                        IDE_SelfIO_Out(ide,ide->base_io+5u,(lba>>16u)&0xFF,io_width_t::byte); /* cylinder hi */
+                        IDE_SelfIO_Out(ide,ide->base_io+6u,(ms<<4u)+0xE0+(lba>>24u),io_width_t::byte); /* drive and head */
+                        IDE_SelfIO_In(ide,ide->base_io+7u,io_width_t::byte);        /* dum de dum reading status */
+                        IDE_SelfIO_Out(ide,ide->base_io+7u,0x20,io_width_t::byte);  /* issue READ */
 
                         do {
                             /* TODO: Timeout needed */
-                            unsigned int i = IDE_SelfIO_In(ide,ide->alt_io,1);
+                            unsigned int i = IDE_SelfIO_In(ide,ide->alt_io,io_width_t::byte);
                             if ((i&0x80) == 0) break;
                         } while (1);
-                        IDE_SelfIO_In(ide,ide->base_io+7u,1);
+                        IDE_SelfIO_In(ide,ide->base_io+7u,io_width_t::byte);
 
                         /* for brevity assume it worked. we're here to bullshit Windows 95 after all */
                         for (unsigned int i=0;i < 256;i++)
-                            IDE_SelfIO_In(ide,ide->base_io+0u,2); /* 16-bit IDE data read */
+                            IDE_SelfIO_In(ide,ide->base_io+0u,io_width_t::word); /* 16-bit IDE data read */
 
                         /* one more */
-                        IDE_SelfIO_In(ide,ide->base_io+7u,1);        /* dum de dum reading status */
+                        IDE_SelfIO_In(ide,ide->base_io+7u,io_width_t::byte);        /* dum de dum reading status */
 
                         /* assume IRQ happened and clear it */
                         if (ide->IRQ >= 8)
-                            IDE_SelfIO_Out(ide,0xA0,0x60u+(unsigned int)ide->IRQ-8u,1);     /* specific EOI */
+                            IDE_SelfIO_Out(ide,0xA0,0x60u+(unsigned int)ide->IRQ-8u,io_width_t::byte);     /* specific EOI */
                         else
-                            IDE_SelfIO_Out(ide,0x20,0x60u+(unsigned int)ide->IRQ,1);       /* specific EOI */
+                            IDE_SelfIO_Out(ide,0x20,0x60u+(unsigned int)ide->IRQ,io_width_t::byte);       /* specific EOI */
 
                         ata->abort_normal();
                         dev->faked_command = false;
@@ -2547,8 +2547,8 @@ void IDE_EmuINT13DiskReadByBIOS(unsigned char disk,unsigned int cyl,unsigned int
 
             /* Issue I/O to ourself to select drive */
             dev->faked_command = true;
-            IDE_SelfIO_In(ide,ide->base_io+7u,1);
-            IDE_SelfIO_Out(ide,ide->base_io+6u,0x00u+(ms<<4u),1);
+            IDE_SelfIO_In(ide,ide->base_io+7u,io_width_t::byte);
+            IDE_SelfIO_Out(ide,ide->base_io+6u,0x00u+(ms<<4u),io_width_t::byte);
             dev->faked_command = false;
 
             if (dev->type == IDE_TYPE_HDD) {
@@ -2623,36 +2623,36 @@ void IDE_EmuINT13DiskReadByBIOS(unsigned char disk,unsigned int cyl,unsigned int
                          * drive. So to get 32-bit disk access to work in Windows 95,
                          * we have to put on a good show to convince Windows 95 we're
                          * a legitimate BIOS INT 13h call doing it's job. */
-                        IDE_SelfIO_In(ide,ide->base_io+7u,1);        /* dum de dum reading status */
-                        IDE_SelfIO_Out(ide,ide->base_io+6u,(ms<<4u)+0xA0u+head,1); /* drive and head */
-                        IDE_SelfIO_In(ide,ide->base_io+7u,1);        /* dum de dum reading status */
-                        IDE_SelfIO_Out(ide,ide->base_io+2u,0x01,1);  /* sector count */
-                        IDE_SelfIO_Out(ide,ide->base_io+3u,sect,1);  /* sector number */
-                        IDE_SelfIO_Out(ide,ide->base_io+4u,cyl&0xFF,1);  /* cylinder lo */
-                        IDE_SelfIO_Out(ide,ide->base_io+5u,(cyl>>8u)&0xFF,1); /* cylinder hi */
-                        IDE_SelfIO_Out(ide,ide->base_io+6u,(ms<<4u)+0xA0u+head,1); /* drive and head */
-                        IDE_SelfIO_In(ide,ide->base_io+7u,1);        /* dum de dum reading status */
-                        IDE_SelfIO_Out(ide,ide->base_io+7u,0x20u,1);  /* issue READ */
+                        IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);        /* dum de dum reading status */
+                        IDE_SelfIO_Out(ide,ide->base_io+6u,(ms<<4u)+0xA0u+head, io_width_t::byte); /* drive and head */
+                        IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);        /* dum de dum reading status */
+                        IDE_SelfIO_Out(ide,ide->base_io+2u,0x01, io_width_t::byte);  /* sector count */
+                        IDE_SelfIO_Out(ide,ide->base_io+3u,sect, io_width_t::byte);  /* sector number */
+                        IDE_SelfIO_Out(ide,ide->base_io+4u,cyl&0xFF, io_width_t::byte);  /* cylinder lo */
+                        IDE_SelfIO_Out(ide,ide->base_io+5u,(cyl>>8u)&0xFF, io_width_t::byte); /* cylinder hi */
+                        IDE_SelfIO_Out(ide,ide->base_io+6u,(ms<<4u)+0xA0u+head, io_width_t::byte); /* drive and head */
+                        IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);        /* dum de dum reading status */
+                        IDE_SelfIO_Out(ide,ide->base_io+7u,0x20u, io_width_t::byte);  /* issue READ */
 
                         do {
                             /* TODO: Timeout needed */
-                            unsigned int i = IDE_SelfIO_In(ide,ide->alt_io,1);
+                            unsigned int i = IDE_SelfIO_In(ide,ide->alt_io, io_width_t::byte);
                             if ((i&0x80) == 0) break;
                         } while (1);
-                        IDE_SelfIO_In(ide,ide->base_io+7u,1);
+                        IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);
 
                         /* for brevity assume it worked. we're here to bullshit Windows 95 after all */
                         for (unsigned int i=0;i < 256;i++)
-                            IDE_SelfIO_In(ide,ide->base_io+0,2); /* 16-bit IDE data read */
+                            IDE_SelfIO_In(ide,ide->base_io+0, io_width_t::word); /* 16-bit IDE data read */
 
                         /* one more */
-                        IDE_SelfIO_In(ide,ide->base_io+7u,1);        /* dum de dum reading status */
+                        IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);        /* dum de dum reading status */
 
                         /* assume IRQ happened and clear it */
                         if (ide->IRQ >= 8)
-                            IDE_SelfIO_Out(ide,0xA0,0x60u+(unsigned int)ide->IRQ-8u,1);     /* specific EOI */
+                            IDE_SelfIO_Out(ide,0xA0,0x60u+(unsigned int)ide->IRQ-8u, io_width_t::byte);     /* specific EOI */
                         else
-                            IDE_SelfIO_Out(ide,0x20,0x60u+(unsigned int)ide->IRQ,1);       /* specific EOI */
+                            IDE_SelfIO_Out(ide,0x20,0x60u+(unsigned int)ide->IRQ, io_width_t::byte);       /* specific EOI */
 
                         ata->abort_normal();
                         dev->faked_command = false;
@@ -2716,8 +2716,8 @@ void IDE_ResetDiskByBIOS(unsigned char disk) {
             /* TODO: Forcibly device-reset the IDE device */
 
             /* Issue I/O to ourself to select drive */
-            IDE_SelfIO_In(ide,ide->base_io+7u,1);
-            IDE_SelfIO_Out(ide,ide->base_io+6u,0x00+(ms<<4u),1);
+            IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);
+            IDE_SelfIO_Out(ide,ide->base_io+6u,0x00+(ms<<4u), io_width_t::byte);
 
             /* TODO: Forcibly device-reset the IDE device */
 
@@ -2732,16 +2732,16 @@ void IDE_ResetDiskByBIOS(unsigned char disk) {
 
                     if (ide->int13fakev86io && IDE_CPU_Is_Vm86()) {
                         /* issue the DEVICE RESET command */
-                        IDE_SelfIO_In(ide,ide->base_io+7u,1);
-                        IDE_SelfIO_Out(ide,ide->base_io+7u,0x08,1);
+                        IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);
+                        IDE_SelfIO_Out(ide,ide->base_io+7u,0x08, io_width_t::byte);
 
-                        IDE_SelfIO_In(ide,ide->base_io+7u,1);
+                        IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);
 
                         /* assume IRQ happened and clear it */
                         if (ide->IRQ >= 8)
-                            IDE_SelfIO_Out(ide,0xA0,0x60u+(unsigned int)ide->IRQ-8u,1);     /* specific EOI */
+                            IDE_SelfIO_Out(ide,0xA0,0x60u+(unsigned int)ide->IRQ-8u, io_width_t::byte);     /* specific EOI */
                         else
-                            IDE_SelfIO_Out(ide,0x20,0x60u+(unsigned int)ide->IRQ,1);       /* specific EOI */
+                            IDE_SelfIO_Out(ide,0x20,0x60u+(unsigned int)ide->IRQ, io_width_t::byte);       /* specific EOI */
                     }
                     else {
                         /* Windows 3.1 WDCTRL needs this, or else, it will read the
@@ -3232,14 +3232,11 @@ IDEController *match_ide_controller(io_port_t port) {
     return NULL;
 }
 
-uint32_t IDEDevice::data_read(uint8_t iolen) {
-    (void)iolen;//UNUSED
+uint32_t IDEDevice::data_read(io_width_t) {
     return 0xAAAAU;
 }
 
-void IDEDevice::data_write(uint32_t v,uint8_t iolen) {
-    (void)iolen;//UNUSED
-    (void)v;//UNUSED
+void IDEDevice::data_write(io_val_t,io_width_t) {
 }
 
 /* IDE controller -> upon writing bit 2 of alt (0x3F6) */
@@ -3645,17 +3642,17 @@ IDEController::IDEController(Section* configuration,unsigned char index):Module_
 void IDEController::install_io_port(){
     if (base_io != 0) {
         for (unsigned int i=0;i < 8;i++) {
-            WriteHandler[i].Install(base_io+i,ide_baseio_w,IO_MA);
-            ReadHandler[i].Install(base_io+i,ide_baseio_r,IO_MA);
+            WriteHandler[i].Install(base_io+i,ide_baseio_w, io_width_t::dword);
+            ReadHandler[i].Install(base_io+i,ide_baseio_r, io_width_t::dword);
         }
     }
 
     if (alt_io != 0) {
-        WriteHandlerAlt[0].Install(alt_io,ide_altio_w,IO_MA);
-        ReadHandlerAlt[0].Install(alt_io,ide_altio_r,IO_MA);
+        WriteHandlerAlt[0].Install(alt_io,ide_altio_w,io_width_t::dword);
+        ReadHandlerAlt[0].Install(alt_io,ide_altio_r,io_width_t::dword);
 
-        WriteHandlerAlt[1].Install(alt_io+1u,ide_altio_w,IO_MA);
-        ReadHandlerAlt[1].Install(alt_io+1u,ide_altio_r,IO_MA);
+        WriteHandlerAlt[1].Install(alt_io+1u,ide_altio_w,io_width_t::dword);
+        ReadHandlerAlt[1].Install(alt_io+1u,ide_altio_r,io_width_t::dword);
     }
 }
 
@@ -3670,19 +3667,19 @@ IDEController::~IDEController() {
     }
 }
 
-static void ide_altio_w(io_port_t port,io_val_t val,uint8_t iolen) {
+static void ide_altio_w(io_port_t port,io_val_t val,io_width_t width) {
     IDEController *ide = match_ide_controller(port);
     if (ide == NULL) {
         LOG_MSG("IDE: WARNING: port read from I/O port not registered to IDE, yet callback triggered");
         return;
     }
 
-    if (!ide->enable_pio32 && iolen == 4) {
-        ide_altio_w(port,val&0xFFFF,2);
-        ide_altio_w(port+2u,val>>16u,2);
+    if (!ide->enable_pio32 && width == io_width_t::dword) {
+        ide_altio_w(port,val&0xFFFF, io_width_t::word);
+        ide_altio_w(port+2u,val>>16u, io_width_t::word);
         return;
     }
-    else if (ide->ignore_pio32 && iolen == 4)
+    else if (ide->ignore_pio32 && width == io_width_t::dword)
         return;
 
     port &= 1;
@@ -3709,7 +3706,7 @@ static void ide_altio_w(io_port_t port,io_val_t val,uint8_t iolen) {
     }
 }
 
-static uint32_t ide_altio_r(io_port_t port,uint8_t iolen) {
+static uint32_t ide_altio_r(io_port_t port,io_width_t width) {
     IDEController *ide = match_ide_controller(port);
     IDEDevice *dev;
 
@@ -3718,9 +3715,9 @@ static uint32_t ide_altio_r(io_port_t port,uint8_t iolen) {
         return ~(0UL);
     }
 
-    if (!ide->enable_pio32 && iolen == 4)
-        return ide_altio_r(port,2) + (ide_altio_r(port+2u,2) << 16u);
-    else if (ide->ignore_pio32 && iolen == 4)
+    if (!ide->enable_pio32 && width == io_width_t::dword)
+        return ide_altio_r(port, io_width_t::word) + (ide_altio_r(port+2u, io_width_t::word) << 16u);
+    else if (ide->ignore_pio32 && width == io_width_t::dword)
         return ~0ul;
 
     dev = ide->device[ide->select];
@@ -3736,7 +3733,7 @@ static uint32_t ide_altio_r(io_port_t port,uint8_t iolen) {
     return ~(0UL);
 }
 
-static uint32_t ide_baseio_r(io_port_t port,uint8_t iolen) {
+static uint32_t ide_baseio_r(io_port_t port,io_width_t width) {
     IDEController *ide = match_ide_controller(port);
     IDEDevice *dev;
     uint32_t ret = ~0ul;
@@ -3746,9 +3743,9 @@ static uint32_t ide_baseio_r(io_port_t port,uint8_t iolen) {
         return ~(0UL);
     }
 
-    if (!ide->enable_pio32 && iolen == 4)
-        return ide_baseio_r(port,2) + (ide_baseio_r(port+2,2) << 16);
-    else if (ide->ignore_pio32 && iolen == 4)
+    if (!ide->enable_pio32 && width == io_width_t::dword)
+        return ide_baseio_r(port, io_width_t::word) + (ide_baseio_r(port+2, io_width_t::word) << 16);
+    else if (ide->ignore_pio32 && width == io_width_t::dword)
         return ~0ul;
 
     dev = ide->device[ide->select];
@@ -3757,7 +3754,7 @@ static uint32_t ide_baseio_r(io_port_t port,uint8_t iolen) {
 
     switch (port) {
         case 0: /* 1F0 */
-            ret = (dev != NULL) ? dev->data_read(iolen) : 0xFFFFFFFFUL;
+            ret = (dev != NULL) ? dev->data_read(width) : 0xFFFFFFFFUL;
             break;
         case 1: /* 1F1 */
             ret = (dev != NULL) ? dev->feature : 0x00;
@@ -3794,7 +3791,7 @@ static uint32_t ide_baseio_r(io_port_t port,uint8_t iolen) {
     return ret;
 }
 
-static void ide_baseio_w(io_port_t port,io_val_t val,uint8_t iolen) {
+static void ide_baseio_w(io_port_t port,io_val_t val,io_width_t width) {
     IDEController *ide = match_ide_controller(port);
     IDEDevice *dev;
 
@@ -3803,12 +3800,12 @@ static void ide_baseio_w(io_port_t port,io_val_t val,uint8_t iolen) {
         return;
     }
 
-    if (!ide->enable_pio32 && iolen == 4) {
-        ide_baseio_w(port,val&0xFFFF,2);
-        ide_baseio_w(port+2,val>>16,2);
+    if (!ide->enable_pio32 && width == io_width_t::dword) {
+        ide_baseio_w(port,val&0xFFFF, io_width_t::word);
+        ide_baseio_w(port+2,val>>16, io_width_t::word);
         return;
     }
-    else if (ide->ignore_pio32 && iolen == 4)
+    else if (ide->ignore_pio32 && width == io_width_t::dword)
         return;
 
     dev = ide->device[ide->select];
@@ -3851,7 +3848,7 @@ static void ide_baseio_w(io_port_t port,io_val_t val,uint8_t iolen) {
 
     switch (port) {
         case 0: /* 1F0 */
-            if (dev) dev->data_write(val,iolen); /* <- TODO: what about 32-bit PIO modes? */
+            if (dev) dev->data_write(val, width); /* <- TODO: what about 32-bit PIO modes? */
             break;
         case 1: /* 1F1 */
             if (dev && dev->allow_writing) /* TODO: LBA48 16-bit wide register */
