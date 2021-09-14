@@ -1696,11 +1696,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	case M_TANDY2:
 		aspect_ratio = 1.2;
-		doubleheight=true;
+		doubleheight = true;
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
 
 		if (machine == MCH_PCJR) {
-			doublewidth = (vga.tandy.gfx_control & 0x8) == 0x00;
+			doublewidth = (vga.tandy.gfx_control & 0x8) == 0;
 			vga.draw.blocks = width * (doublewidth ? 4 : 8);
 			width = vga.draw.blocks * 2;
 		} else {
