@@ -60,27 +60,6 @@ jobs:
             packages: meson
             max_warnings: 0
 
-          - name: Clang, +tests
-            host: [self-hosted, macOS, arm64, debug-builds]
-            arch: arm64
-            needs_deps: false
-            run_tests: true
-            max_warnings: -1
-
-          - name: Clang, +debugger
-            host: [self-hosted, macOS, arm64, debug-builds]
-            arch: arm64
-            needs_deps: false
-            build_flags: -Denable_debugger=normal
-            max_warnings: 44
-
-          - name: Clang, warning_level=3
-            host: [self-hosted, macOS, arm64, debug-builds]
-            arch: arm64
-            needs_deps: false
-            build_flags: -Dwarning_level=3
-            max_warnings: 149
-
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v2
