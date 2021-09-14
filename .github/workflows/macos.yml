@@ -22,7 +22,7 @@ jobs:
             arch: x86_64
             needs_deps: true
             packages: meson
-            max_warnings: 20
+            max_warnings: 0
 
           - name: GCC 11
             host: macos-latest
@@ -30,7 +30,7 @@ jobs:
             needs_deps: true
             packages: gcc@11
             build_flags: --native-file=.github/meson/native-gcc-11.ini
-            max_warnings: 70
+            max_warnings: 0
 
           - name: Clang, +tests
             host: macos-latest
@@ -44,21 +44,21 @@ jobs:
             arch: x86_64
             needs_deps: true
             build_flags: -Denable_debugger=normal
-            max_warnings: 104
+            max_warnings: 17
 
           - name: Clang, warning_level=3
             host: macos-latest
             arch: x86_64
             needs_deps: true
             build_flags: -Dwarning_level=3
-            max_warnings: 193
+            max_warnings: 133
 
           - name: Clang
             host: [self-hosted, macOS, arm64, debug-builds]
             arch: arm64
             needs_deps: false
             packages: meson
-            max_warnings: 20
+            max_warnings: 0
 
           - name: Clang, +tests
             host: [self-hosted, macOS, arm64, debug-builds]
@@ -72,14 +72,14 @@ jobs:
             arch: arm64
             needs_deps: false
             build_flags: -Denable_debugger=normal
-            max_warnings: 141
+            max_warnings: 44
 
           - name: Clang, warning_level=3
             host: [self-hosted, macOS, arm64, debug-builds]
             arch: arm64
             needs_deps: false
             build_flags: -Dwarning_level=3
-            max_warnings: 209
+            max_warnings: 149
 
     steps:
       - name: Checkout repository and submodules
