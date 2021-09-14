@@ -82,18 +82,55 @@ static Bit8u * VGA_Draw_2BPPHiRes_Line(Bitu vidstart, Bitu line) {
 	return TempLine;
 }
 
+static Bit8u *VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line)
+{
+	static Bitu temp[643] = {0};
+	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask)
+	                                           << vga.tandy.line_shift);
+#define CGA16_READER(OFF) (base[(vidstart + (OFF)) & (8 * 1024 - 1)])
+	Bit32u *draw = (Bit32u *)TempLine;
+	// There are 640 hdots in each line of the screen.
+	// The color of an even hdot always depends on only 4 bits of video RAM.
+	// The color of an odd hdot depends on 4 bits of video RAM in
+	// 1-hdot-per-pixel modes and 6 bits of video RAM in 2-hdot-per-pixel
+	// modes. We always assume 6 and use duplicate palette entries in
+	// 1-hdot-per-pixel modes so that we can use the same routine for all
+	// composite modes.
+	temp[1] = (CGA16_READER(0) >> 6) & 3;
+	for (Bitu x = 2; x < 640; x += 2) {
+		temp[x] = (temp[x - 1] & 0xf);
+		temp[x + 1] = (temp[x] << 2) |
+		              (((CGA16_READER(x >> 3)) >> (6 - (x & 6))) & 3);
+	}
+	temp[640] = temp[639] & 0xf;
+	temp[641] = temp[640] << 2;
+	temp[642] = temp[641] & 0xf;
+
+	Bitu i = 2;
+	for (Bitu x = 0; x < vga.draw.blocks; x++) {
+		*draw++ = 0xc0708030 | temp[i] | (temp[i + 1] << 8) |
+		          (temp[i + 2] << 16) | (temp[i + 3] << 24);
+		i += 4;
+		*draw++ = 0xc0708030 | temp[i] | (temp[i + 1] << 8) |
+		          (temp[i + 2] << 16) | (temp[i + 3] << 24);
+		i += 4;
+	}
+	return TempLine;
+#undef CGA16_READER
+}
+
 static uint8_t byte_clamp(int v)
 {
 	v >>= 13;
 	return v < 0 ? 0u : (v > 255 ? 255u : static_cast<uint8_t>(v));
 }
 
-static int temp[SCALER_MAXWIDTH + 10] = {0};
-static int atemp[SCALER_MAXWIDTH + 2] = {0};
-static int btemp[SCALER_MAXWIDTH + 2] = {0};
-
 static Bit8u *Composite_Process(Bit8u border, Bit32u blocks, bool doublewidth)
 {
+	static int temp[SCALER_MAXWIDTH + 10] = {0};
+	static int atemp[SCALER_MAXWIDTH + 2] = {0};
+	static int btemp[SCALER_MAXWIDTH + 2] = {0};
+
 	int w = blocks * 4;
 
 	if (doublewidth) {
@@ -1011,6 +1048,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	case M_HERC_GFX:
 	case M_CGA2:
 	case M_CGA4: vga.draw.address = (vga.draw.address * 2) & 0x1fff; break;
+	case M_CGA16:
 	case M_CGA2_COMPOSITE:
 	case M_CGA4_COMPOSITE:
 	case M_TANDY2:
@@ -1083,8 +1121,14 @@ void VGA_CheckScanLength(void) {
 		vga.draw.address_add=vga.config.scan_len*4;
 		break;
 	case M_CGA2:
-	case M_CGA4: vga.draw.address_add = 80; break;
+	case M_CGA4:
+	case M_CGA16: vga.draw.address_add = 80; break;
 	case M_TANDY2:
+		if (machine == MCH_PCJR) {
+			vga.draw.address_add = vga.draw.blocks / 4;
+			break;
+		}
+		FALLTHROUGH;
 	case M_CGA2_COMPOSITE: vga.draw.address_add = vga.draw.blocks; break;
 	case M_TANDY4:
 	case M_CGA4_COMPOSITE: vga.draw.address_add = vga.draw.blocks; break;
@@ -1549,6 +1593,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.linear_base = vga.fastmem;
 		vga.draw.linear_mask = (static_cast<uint64_t>(vga.vmemwrap) << 1) - 1;
 		break;
+	case M_CGA16:
+		aspect_ratio = 1.2;
+		doubleheight = true;
+		vga.draw.blocks = width * 2;
+		width <<= 4;
+		VGA_DrawLine = VGA_Draw_CGA16_Line;
+		break;
 	case M_CGA2_COMPOSITE:
 		aspect_ratio = 1.2;
 		doubleheight=true;
@@ -1640,14 +1691,17 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_TANDY2:
 		aspect_ratio = 1.2;
 		doubleheight=true;
-		if (machine == MCH_PCJR)
-			doublewidth = (vga.tandy.gfx_control & 0b1000) == 0b0000;
-		else
-			doublewidth = (vga.tandy.mode_control & 0b10000) == 0b00000;
-
-		vga.draw.blocks = width * (doublewidth ? 1 : 2);
-		width = vga.draw.blocks * 8;
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
+
+		if (machine == MCH_PCJR) {
+			doublewidth = (vga.tandy.gfx_control & 0x8) == 0x00;
+			vga.draw.blocks = width * (doublewidth ? 4 : 8);
+			width = vga.draw.blocks * 2;
+		} else {
+			doublewidth = (vga.tandy.mode_control & 0x10) == 0;
+			vga.draw.blocks = width * (doublewidth ? 1 : 2);
+			width = vga.draw.blocks * 8;
+		}
 		break;
 	case M_TANDY4:
 		aspect_ratio = 1.2;

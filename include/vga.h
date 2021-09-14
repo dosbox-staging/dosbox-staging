@@ -48,9 +48,10 @@ enum VGAModes {
 	M_TANDY4 = 1 << 14,
 	M_TANDY16 = 1 << 15,
 	M_TANDY_TEXT = 1 << 16,
-	M_CGA2_COMPOSITE = 1 << 17,
-	M_CGA4_COMPOSITE = 1 << 18,
-	M_CGA_TEXT_COMPOSITE = 1 << 19,
+	M_CGA16 = 1 << 17,
+	M_CGA2_COMPOSITE = 1 << 18,
+	M_CGA4_COMPOSITE = 1 << 19,
+	M_CGA_TEXT_COMPOSITE = 1 << 20,
 	// bits 20 through 30 for more modes
 	M_ERROR = 1 << 31,
 };
@@ -558,6 +559,7 @@ extern Bit32u FillTable[16];
 extern Bit32u CGA_2_Table[16];
 extern Bit32u CGA_4_Table[256];
 extern Bit32u CGA_4_HiRes_Table[256];
+extern Bit32u CGA_16_Table[256];
 extern int CGA_Composite_Table[1024];
 extern Bit32u TXT_Font_Table[16];
 extern Bit32u TXT_FG_Table[16];
