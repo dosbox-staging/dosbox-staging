@@ -82,13 +82,22 @@ static Bit8u * VGA_Draw_2BPPHiRes_Line(Bitu vidstart, Bitu line) {
 	return TempLine;
 }
 
-static Bit8u *VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line)
+static uint8_t *VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line)
 {
-	static Bitu temp[643] = {0};
-	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask)
-	                                           << vga.tandy.line_shift);
-#define CGA16_READER(OFF) (base[(vidstart + (OFF)) & (8 * 1024 - 1)])
-	Bit32u *draw = (Bit32u *)TempLine;
+	// TODO: De-Bitu the VGA API as line indexes are well-under 65k/16-bit
+	assert(vidstart <= UINT16_MAX);
+	assert(line <= UINT16_MAX);
+
+	static uint8_t temp[643] = {0};
+	const uint8_t *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask)
+	                                             << vga.tandy.line_shift);
+
+	auto read_cga16_offset = [=](uint16_t offset) -> uint8_t {
+		const auto index = static_cast<uint16_t>(vidstart) + offset;
+		constexpr auto index_mask = static_cast<uint16_t>(8 * 1024 - 1);
+		return base[index & index_mask];
+	};
+
 	// There are 640 hdots in each line of the screen.
 	// The color of an even hdot always depends on only 4 bits of video RAM.
 	// The color of an odd hdot depends on 4 bits of video RAM in
@@ -96,27 +105,24 @@ static Bit8u *VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line)
 	// modes. We always assume 6 and use duplicate palette entries in
 	// 1-hdot-per-pixel modes so that we can use the same routine for all
 	// composite modes.
-	temp[1] = (CGA16_READER(0) >> 6) & 3;
-	for (Bitu x = 2; x < 640; x += 2) {
+	temp[1] = (read_cga16_offset(0) >> 6) & 3;
+
+	for (uint16_t x = 2; x < 640; x += 2) {
 		temp[x] = (temp[x - 1] & 0xf);
 		temp[x + 1] = (temp[x] << 2) |
-		              (((CGA16_READER(x >> 3)) >> (6 - (x & 6))) & 3);
+		              (((read_cga16_offset(x >> 3)) >> (6 - (x & 6))) & 3);
 	}
 	temp[640] = temp[639] & 0xf;
 	temp[641] = temp[640] << 2;
 	temp[642] = temp[641] & 0xf;
 
-	Bitu i = 2;
-	for (Bitu x = 0; x < vga.draw.blocks; x++) {
-		*draw++ = 0xc0708030 | temp[i] | (temp[i + 1] << 8) |
-		          (temp[i + 2] << 16) | (temp[i + 3] << 24);
-		i += 4;
-		*draw++ = 0xc0708030 | temp[i] | (temp[i + 1] << 8) |
-		          (temp[i + 2] << 16) | (temp[i + 3] << 24);
-		i += 4;
+	for (uint32_t i = 2, j = 0, x = 0; x < vga.draw.blocks * 2; i += 4, ++j, ++x) {
+		constexpr uint32_t foundation = 0xc0708030; // colors are OR'd
+		                                            // on top of this
+		const uint32_t pixel = temp[i] | (temp[i + 1] << 8) | (temp[i + 2] << 16) | (temp[i + 3] << 24);
+		write_unaligned_uint32_at(TempLine, j, foundation | pixel);
 	}
 	return TempLine;
-#undef CGA16_READER
 }
 
 static uint8_t byte_clamp(int v)
