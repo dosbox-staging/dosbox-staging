@@ -207,6 +207,11 @@ static int16_t hue_offset = 0;
 static uint8_t cga_comp = 0;
 static bool is_composite_new_era = false;
 
+// PCjr composite-specific
+static bool &new_cga = is_composite_new_era;
+static Bit8u cga16_val = 0;
+static void update_cga16_color_pcjr(void);
+
 static uint8_t herc_pal = 0;
 static uint8_t mono_cga_pal = 0;
 static uint8_t mono_cga_bright = 0;
@@ -364,6 +369,270 @@ constexpr uint8_t mono_cga_palettes[8][16][3] = {
                 {0x3e, 0x3e, 0x3a},
                 {0x3f, 0x3f, 0x3b},
         }};
+
+static void cga16_color_select(Bit8u val)
+{
+	cga16_val = val;
+	update_cga16_color_pcjr();
+}
+
+static void update_cga16_color_pcjr(void)
+{
+	// New algorithm based on code by reenigne
+	// Works in all CGA graphics modes/color settings and can simulate older
+	// and newer CGA revisions
+	static const double tau = 6.28318531; // == 2*pi
+	static const double ns = 567.0 / 440; // degrees of hue shift per
+	                                      // nanosecond
+
+	double tv_brightness = 0.0; // hardcoded for simpler implementation
+	double tv_saturation = (new_cga ? 0.7 : 0.6);
+
+	// CGA properties that change based on PCjr or PC
+	bool bw = false;
+	bool color_sel = false;
+	bool background_i = false;
+	bool bpp1 = false;
+	uint8_t overscan = 0;
+
+	if (machine == MCH_PCJR) {
+		tv_saturation = 1.0;
+		bw = (vga.tandy.mode_control & 4) != 0;
+		color_sel = true;
+		// Really foreground intensity, but this is what the CGA
+		// schematic calls it.
+		background_i = true;
+		bpp1 = (vga.tandy.gfx_control & 0x08) != 0;
+		overscan = 15;
+	} else {
+		bw = (vga.tandy.mode_control & 4) != 0;
+		color_sel = (cga16_val & 0x20) != 0;
+		// Really foreground intensity, but this is what the CGA
+		// schematic calls it.
+		background_i = (cga16_val & 0x10) != 0;
+		bpp1 = (vga.tandy.mode_control & 0x10) != 0;
+		overscan = cga16_val & 0x0f; // aka foreground colour in 1bpp mode
+	}
+
+	double chroma_coefficient = new_cga ? 0.29 : 0.72;
+	double b_coefficient = new_cga ? 0.07 : 0;
+	double g_coefficient = new_cga ? 0.22 : 0;
+	double r_coefficient = new_cga ? 0.1 : 0;
+	double i_coefficient = new_cga ? 0.32 : 0.28;
+	double rgbi_coefficients[0x10];
+	for (int c = 0; c < 0x10; c++) {
+		double v = 0;
+		if ((c & 1) != 0)
+			v += b_coefficient;
+		if ((c & 2) != 0)
+			v += g_coefficient;
+		if ((c & 4) != 0)
+			v += r_coefficient;
+		if ((c & 8) != 0)
+			v += i_coefficient;
+		rgbi_coefficients[c] = v;
+	}
+
+	// The pixel clock delay calculation is not accurate for 2bpp, but the
+	// difference is small and a more accurate calculation would be too slow.
+	static const double rgbi_pixel_delay = 15.5 * ns;
+	static const double chroma_pixel_delays[8] = {
+	        0,          // Black:   no chroma
+	        35 * ns,    // Blue:    no XORs
+	        44.5 * ns,  // Green:   XOR on rising and falling edges
+	        39.5 * ns,  // Cyan:    XOR on falling but not rising edge
+	        44.5 * ns,  // Red:     XOR on rising and falling edges
+	        39.5 * ns,  // Magenta: XOR on falling but not rising edge
+	        44.5 * ns,  // Yellow:  XOR on rising and falling edges
+	        39.5 * ns}; // White:   XOR on falling but not rising edge
+	double pixel_clock_delay;
+	int o = overscan == 0 ? 15 : overscan;
+	if (overscan == 8)
+		pixel_clock_delay = rgbi_pixel_delay;
+	else {
+		double d = rgbi_coefficients[o];
+		pixel_clock_delay = (chroma_pixel_delays[o & 7] * chroma_coefficient +
+		                     rgbi_pixel_delay * d) /
+		                    (chroma_coefficient + d);
+	}
+
+	// Adjust pixel clock based on color burst timing (machine specific)
+	if (machine == MCH_PCJR) {
+		pixel_clock_delay += 60 * ns; // baseline burst delay
+		if (!bpp1) {
+			pixel_clock_delay += 25 * ns; // additional delay for color
+		}
+	} else { // PC has a short color burst
+		pixel_clock_delay -= 21.5 * ns;
+	}
+
+	double hue_adjust = (-(90 - 33) - hue_offset + pixel_clock_delay) * tau / 360.0;
+	double chroma_signals[8][4];
+	for (Bit8u i = 0; i < 4; i++) {
+		chroma_signals[0][i] = 0;
+		chroma_signals[7][i] = 1;
+		for (Bit8u j = 0; j < 6; j++) {
+			static const double phases[6] = {270 - 21.5 * ns, // blue
+			                                 135 - 29.5 * ns, // green
+			                                 180 - 21.5 * ns, // cyan
+			                                 0 - 21.5 * ns,   // red
+			                                 315 - 29.5 * ns, // magenta
+			                                 90 - 21.5 * ns}; // yellow/burst
+			// All the duty cycle fractions are the same, just under
+			// 0.5 as the rising edge is delayed 2ns more than the
+			// falling edge.
+			static const double duty = 0.5 - 2 * ns / 360.0;
+
+			// We have a rectangle wave with period 1 (in units of
+			// the reciprocal of the color burst frequency) and duty
+			// cycle fraction "duty" and phase "phase". We
+			// band-limit this wave to frequency 2 and sample it at
+			// intervals of 1/4. We model our band-limited wave with
+			// 4 frequency components:
+			//   f(x) = a + b*sin(x*tau) + c*cos(x*tau) +
+			//   d*sin(x*2*tau)
+			// Then:
+			//   a =   integral(0, 1, f(x)*dx) = duty
+			//   b = 2*integral(0, 1, f(x)*sin(x*tau)*dx) =
+			//   2*integral(0, duty, sin(x*tau)*dx) =
+			//   2*(1-cos(x*tau))/tau c = 2*integral(0, 1,
+			//   f(x)*cos(x*tau)*dx) = 2*integral(0, duty,
+			//   cos(x*tau)*dx) = 2*sin(duty*tau)/tau d =
+			//   2*integral(0, 1, f(x)*sin(x*2*tau)*dx) =
+			//   2*integral(0, duty, sin(x*4*pi)*dx) =
+			//   2*(1-cos(2*tau*duty))/(2*tau)
+			double a = duty;
+			double b = 2.0 * (1.0 - cos(duty * tau)) / tau;
+			double c = 2.0 * sin(duty * tau) / tau;
+			double d = 2.0 * (1.0 - cos(duty * 2 * tau)) / (2 * tau);
+
+			double x = (phases[j] + 21.5 * ns + pixel_clock_delay) / 360.0 +
+			           i / 4.0;
+
+			chroma_signals[j + 1][i] = a + b * sin(x * tau) +
+			                           c * cos(x * tau) +
+			                           d * sin(x * 2 * tau);
+		}
+	}
+	// PC CGA palette table
+	const auto cga_base_comp = (color_sel || bw) | (background_i << 3);
+	const auto cga_color_comp = (color_sel && !bw) | (background_i << 3);
+	const std::array<int, 4> CGApal = {
+	        overscan,
+	        2 | cga_base_comp,
+	        4 | cga_color_comp,
+	        6 | cga_base_comp,
+	};
+
+	// PCjr CGA palette table
+	const std::array<int, 4> PCJRpal = {
+	        vga.attr.palette[0],
+	        vga.attr.palette[1],
+	        vga.attr.palette[2],
+	        vga.attr.palette[3],
+	};
+
+	const auto machine_palette = (machine == MCH_PCJR) ? PCJRpal : CGApal;
+
+	for (Bit8u x = 0; x < 4; x++) { // Position of pixel in question
+		const bool even = !(x & 1);
+		for (Bit8u bits = 0; bits < (even ? 0x10 : 0x40); ++bits) {
+			double Y = 0, I = 0, Q = 0;
+			for (Bit8u p = 0; p < 4; p++) { // Position within color
+				                        // carrier cycle
+				// generate pixel pattern.
+				auto rgbi = 0;
+				if (bpp1) {
+					rgbi = ((bits >> (3 - p)) & (even ? 1 : 2)) != 0
+					               ? overscan
+					               : 0;
+				} else {
+					const size_t i =
+					        even ? (bits >> (2 - (p & 2))) & 3
+					             : (bits >> (4 - ((p + 1) & 6))) &
+					                        3;
+					assert(i < machine_palette.size());
+					rgbi = machine_palette[i];
+				}
+				Bit8u c = rgbi & 7;
+				if (bw && c != 0)
+					c = 7;
+
+				// calculate composite output
+				double chroma = chroma_signals[c][(p + x) & 3] *
+				                chroma_coefficient;
+				double composite = chroma + rgbi_coefficients[rgbi];
+
+				Y += composite;
+				if (!bw) { // burst on
+					I += composite * 2 *
+					     cos(hue_adjust + (p + x) * tau / 4.0);
+					Q += composite * 2 *
+					     sin(hue_adjust + (p + x) * tau / 4.0);
+				}
+			}
+
+			double contrast = 1 - tv_brightness;
+
+			Y = (contrast * Y / 4.0) + tv_brightness;
+			if (Y > 1.0)
+				Y = 1.0;
+			if (Y < 0.0)
+				Y = 0.0;
+			I = (contrast * I / 4.0) * tv_saturation;
+			if (I > 0.5957)
+				I = 0.5957;
+			if (I < -0.5957)
+				I = -0.5957;
+			Q = (contrast * Q / 4.0) * tv_saturation;
+			if (Q > 0.5226)
+				Q = 0.5226;
+			if (Q < -0.5226)
+				Q = -0.5226;
+
+			static const double gamma = 2.2;
+
+			double R = Y + 0.9563 * I + 0.6210 * Q;
+			R = (R - 0.075) / (1 - 0.075);
+			if (R < 0)
+				R = 0;
+			if (R > 1)
+				R = 1;
+			double G = Y - 0.2721 * I - 0.6474 * Q;
+			G = (G - 0.075) / (1 - 0.075);
+			if (G < 0)
+				G = 0;
+			if (G > 1)
+				G = 1;
+			double B = Y - 1.1069 * I + 1.7046 * Q;
+			B = (B - 0.075) / (1 - 0.075);
+			if (B < 0)
+				B = 0;
+			if (B > 1)
+				B = 1;
+			R = pow(R, gamma);
+			G = pow(G, gamma);
+			B = pow(B, gamma);
+
+			const auto r = static_cast<uint8_t>(
+			        clamp(255 * pow(1.5073 * R - 0.3725 * G - 0.0832 * B,
+			                        1 / gamma),
+			              0.0, 255.0));
+			const auto g = static_cast<uint8_t>(
+			        clamp(255 * pow(-0.0275 * R + 0.9350 * G + 0.0670 * B,
+			                        1 / gamma),
+			              0.0, 255.0));
+			const auto b = static_cast<uint8_t>(
+			        clamp(255 * pow(-0.0272 * R - 0.0401 * G + 1.1677 * B,
+			                        1 / gamma),
+			              0.0, 255.0));
+
+			const uint8_t index = bits | ((x & 1) == 0 ? 0x30 : 0x80) |
+			                      ((x & 2) == 0 ? 0x40 : 0);
+			RENDER_SetPal(index, r, g, b);
+		}
+	}
+}
 
 template <typename chroma_t>
 constexpr float new_cga_v(const chroma_t c,
@@ -557,7 +826,11 @@ static void turn_crt_knob(bool pressed, const int amount)
 		assertm(false, "Should not reach CRT knob end marker");
 		break;
 	}
-	update_cga16_color();
+	if (machine == MCH_PCJR)
+		update_cga16_color_pcjr();
+	else
+		update_cga16_color();
+
 	log_crt_knob_value();
 }
 
@@ -604,6 +877,7 @@ static void write_cga_color_select(uint8_t val)
 		VGA_SetCGA2Table(0,val & 0xf);
 		vga.attr.overscan_color = 0;
 		break;
+	case M_CGA16: cga16_color_select(val); break;
 	case M_TEXT:
 		vga.tandy.border_color = val & 0xf;
 		vga.attr.overscan_color = 0;
@@ -625,17 +899,25 @@ static void write_cga(io_port_t port, uint8_t val, io_width_t)
 				if (cga_comp==1 || ((cga_comp==0 && !(val&0x4)) && !mono_cga)) {	// composite display
 
 					// composite ntsc 640x200 16 color mode
-					VGA_SetMode(M_CGA2_COMPOSITE);
-					update_cga16_color();
+					if (machine == MCH_PCJR) {
+						VGA_SetMode(M_CGA16);
+					} else {
+						VGA_SetMode(M_CGA2_COMPOSITE);
+						update_cga16_color();
+					}
 				} else {
 					VGA_SetMode(M_TANDY2);
 				}
 			} else {							// lowres mode
 				if (cga_comp==1) {				// composite display
 					// composite ntsc 640x200 16 color mode
-					VGA_SetMode(M_CGA4_COMPOSITE);
-					update_cga16_color();
-				} else {
+					if (machine == MCH_PCJR) {
+						VGA_SetMode(M_CGA16);
+					} else {
+						VGA_SetMode(M_CGA4_COMPOSITE);
+						update_cga16_color();
+					}
+				} else if (machine != MCH_PCJR) {
 					VGA_SetMode(M_TANDY4);
 				}
 			}
@@ -657,6 +939,15 @@ static void write_cga(io_port_t port, uint8_t val, io_width_t)
 	}
 }
 
+static void CGAModel(bool pressed)
+{
+	if (!pressed)
+		return;
+	new_cga = !new_cga;
+	update_cga16_color_pcjr();
+	LOG_MSG("%s model CGA selected", new_cga ? "Late" : "Early");
+}
+
 static void PCJr_FindMode();
 
 static void Composite(bool pressed) {
@@ -664,10 +955,13 @@ static void Composite(bool pressed) {
 	if (++cga_comp>2) cga_comp=0;
 	LOG_MSG("Composite output: %s",(cga_comp==0)?"auto":((cga_comp==1)?"on":"off"));
 	// switch RGB and Composite if in graphics mode
-	if (vga.tandy.mode_control & 0x2 && machine == MCH_PCJR)
-		PCJr_FindMode();
-	else
-		write_cga(0x3d8, vga.tandy.mode_control, io_width_t::byte);
+	if (vga.tandy.mode_control & 0x2) {
+		if (machine == MCH_PCJR) {
+			PCJr_FindMode();
+		} else {
+			write_cga(0x3d8, vga.tandy.mode_control, io_width_t::byte);
+		}
+	}
 }
 
 static void tandy_update_palette() {
@@ -721,7 +1015,10 @@ static void tandy_update_palette() {
 		default:
 			break;
 		}
-		update_cga16_color();
+		if (machine == MCH_PCJR)
+			update_cga16_color_pcjr();
+		else
+			update_cga16_color();
 	}
 }
 
@@ -753,6 +1050,7 @@ static void TANDY_FindMode()
 
 static void PCJr_FindMode()
 {
+	assert(machine == MCH_PCJR);
 	is_composite_new_era = true;
 	if (vga.tandy.mode_control & 0x2) {
 		if (vga.tandy.mode_control & 0x10) {
@@ -765,14 +1063,13 @@ static void PCJr_FindMode()
 			// bit3 of mode control 2 signals 2 colour graphics mode
 			if (cga_comp == 1 ||
 			    (cga_comp == 0 && !(vga.tandy.mode_control & 0x4))) {
-				VGA_SetMode(M_CGA2_COMPOSITE);
+				VGA_SetMode(M_CGA16);
 			} else {
 				VGA_SetMode(M_TANDY2);
 			}
 		} else {
 			// otherwise some 4-colour graphics mode
-			const auto new_mode = (cga_comp == 1) ? M_CGA4_COMPOSITE
-			                                      : M_TANDY4;
+			const auto new_mode = (cga_comp == 1) ? M_CGA16 : M_TANDY4;
 			if (vga.mode == M_TANDY16) {
 				VGA_SetModeNow(new_mode);
 			} else {

@@ -390,15 +390,15 @@ void INT10_SetColorSelect(Bit8u val) {
 	else if (machine == MCH_PCJR) {
 		IO_Read(VGAREG_TDY_RESET); // reset the flipflop
 		switch (CurMode->mode) {
-		case 4:
-		case 5:
+		case 4: // CGA 4-color mode
+		case 5: // Also CGA 4-color mode
 			for (Bit8u i = 0x11; i < 0x14; i++) {
 				const Bit8u t4_table[] = {0,2,4,6, 0,3,5,0xf};
 				IO_Write(VGAREG_TDY_ADDRESS, i);
 				IO_Write(VGAREG_PCJR_DATA, t4_table[(i-0x10)+(val&1? 4:0)]);
 			}
 			break;
-		case 6:
+		case 6: // CGA 2-color mode
 			IO_Write(VGAREG_TDY_ADDRESS, 0x11);
 			IO_Write(VGAREG_PCJR_DATA, val & 1 ? 0xf : 0);
 			break;
