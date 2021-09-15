@@ -20,7 +20,7 @@ TabWidth: 8
 IndentWidth: 8
 ContinuationIndentWidth: 8
 
-ColumnLimit: 80
+ColumnLimit: 110
 
 # C/C++ Language specifics
 #
