@@ -283,6 +283,7 @@ struct SDL_Block {
 			uint16_t width = 0; // TODO convert to int
 			uint16_t height = 0; // TODO convert to int
 			bool resizable = false;
+			bool show_decorations = true;
 		} window = {};
 		struct {
 			int width = 0;
@@ -773,6 +774,9 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		if (screen_type == SCREEN_OPENGL)
 			flags |= SDL_WINDOW_OPENGL;
 #endif
+		if (!sdl.desktop.window.show_decorations) {
+			flags |= SDL_WINDOW_BORDERLESS;
+		}
 
 		// Using undefined position will take care of placing and
 		// restoring the window by WM.
@@ -2483,6 +2487,8 @@ static void GUI_StartUp(Section *sec)
 	        control->GetSection("render"));
 	assert(render_section);
 
+	sdl.desktop.window.show_decorations = section->Get_bool("windowdecorations");
+
 	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
 	                             sdl.scaling_mode,
 	                             render_section->Get_bool("aspect"));
@@ -3149,6 +3155,9 @@ void Config_Add_SDL() {
 	        "  <custom>:  Scale the window to the given dimensions in\n"
 	        "             WxH format. For example: 1024x768.\n"
 	        "             Scaling is not performed for output=surface.");
+
+	Pbool = sdl_sec->Add_bool("windowdecorations", always, true);
+	Pbool->Set_help("Controls whether to display window decorations in windowed mode.");
 
 	Pbool = sdl_sec->Add_bool("vsync", on_start, false);
 	Pbool->Set_help(
