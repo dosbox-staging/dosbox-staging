@@ -3319,9 +3319,9 @@ void Config_Add_SDL() {
 	  0 };
 
 #if C_OPENGL
-	Pstring = sdl_sec->Add_string("output", Property::Changeable::Always, "opengl");
+	Pstring = sdl_sec->Add_string("output", always, "opengl");
 #else
-	Pstring = sdl_sec->Add_string("output", Property::Changeable::Always, "texture");
+	Pstring = sdl_sec->Add_string("output", always, "texture");
 #endif
 	Pstring->Set_help("What video system to use for output.");
 	Pstring->Set_values(outputs);
@@ -3369,12 +3369,12 @@ void Config_Add_SDL() {
 	mouse_control_help += mouse_control_defaults;
 	Pmulti->Set_help(mouse_control_help);
 
-	Pmulti = sdl_sec->Add_multi("sensitivity",Property::Changeable::Always, ",");
+	Pmulti = sdl_sec->Add_multi("sensitivity", always, ",");
 	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).");
 	Pmulti->SetValue("100");
-	Pint = Pmulti->GetSection()->Add_int("xsens",Property::Changeable::Always,100);
+	Pint = Pmulti->GetSection()->Add_int("xsens", always,100);
 	Pint->SetMinMax(-1000,1000);
-	Pint = Pmulti->GetSection()->Add_int("ysens",Property::Changeable::Always,100);
+	Pint = Pmulti->GetSection()->Add_int("ysens", always,100);
 	Pint->SetMinMax(-1000,1000);
 
 	pbool = sdl_sec->Add_bool("raw_mouse_input", on_start, false);
@@ -3383,10 +3383,10 @@ void Config_Add_SDL() {
 	        "acceleration and sensitivity settings. This works in\n"
 	        "fullscreen or when the mouse is captured in window mode.");
 
-	Pbool = sdl_sec->Add_bool("waitonerror",Property::Changeable::Always, true);
+	Pbool = sdl_sec->Add_bool("waitonerror", always, true);
 	Pbool->Set_help("Wait before closing the console if dosbox has an error.");
 
-	Pmulti = sdl_sec->Add_multi("priority", Property::Changeable::Always, ",");
+	Pmulti = sdl_sec->Add_multi("priority", always, ",");
 	Pmulti->SetValue("auto,auto");
 	Pmulti->Set_help(
 	        "Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized.\n"
@@ -3394,16 +3394,12 @@ void Config_Add_SDL() {
 
 	const char *actt[] = {"auto",   "lowest",  "lower", "normal",
 	                      "higher", "highest", "pause", 0};
-	Pstring = Pmulti->GetSection()->Add_string("active",
-	                                           Property::Changeable::Always,
-	                                           "higher");
+	Pstring = Pmulti->GetSection()->Add_string("active", always, "higher");
 	Pstring->Set_values(actt);
 
 	const char *inactt[] = {"auto",   "lowest",  "lower", "normal",
 	                        "higher", "highest", "pause", 0};
-	Pstring = Pmulti->GetSection()->Add_string("inactive",
-	                                           Property::Changeable::Always,
-	                                           "normal");
+	Pstring = Pmulti->GetSection()->Add_string("inactive", always, "normal");
 	Pstring->Set_values(inactt);
 
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
