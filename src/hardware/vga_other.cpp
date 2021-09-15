@@ -203,7 +203,6 @@ static void write_lightpen(io_port_t port, uint8_t /*val*/, io_width_t)
 constexpr int16_t hue_min = 0;
 constexpr int16_t hue_mid = 0;
 constexpr int16_t hue_max = 360;
-constexpr int16_t hue_pcjr_rotation = 100;
 static int hue = hue_mid;
 
 constexpr int16_t saturation_min = 0;
@@ -715,7 +714,6 @@ static void set_hue_from_percent(int percent)
 
 	percent -= percent_mid;                // switch to zero-based
 	hue = percent * hue_max / percent_max; // to 360 degrees
-	hue += (machine == MCH_PCJR ? hue_pcjr_rotation : 0);
 	hue = wrap(hue, hue_min, hue_max); // stay in-bounds
 
 	assert(hue >= hue_min && hue <= hue_max);
@@ -726,8 +724,7 @@ static int get_percent_from_hue()
 {
 	assert(hue >= hue_min && hue <= hue_max);
 
-	const auto adjustment = (machine == MCH_PCJR ? hue_pcjr_rotation : 0);
-	auto percent = (hue - adjustment) * percent_max / hue_max;
+	auto percent = hue * percent_max / hue_max;
 	percent = wrap(percent + percent_mid, percent_min, percent_max);
 	assert(percent >= percent_min && percent <= percent_max);
 	return percent;
