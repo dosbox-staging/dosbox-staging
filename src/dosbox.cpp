@@ -515,7 +515,7 @@ void DOSBOX_Init(void) {
 	                                   "low",   "splash_only",
 	                                   "quiet", "auto",
 	                                   0};
-	Pstring = secprop->Add_string("startup_verbosity", only_at_start, "high");
+	Pstring = secprop->Add_string("startup_verbosity", only_at_start, "auto");
 	Pstring->Set_values(verbosity_choices);
 	Pstring->Set_help(
 	        "Controls verbosity prior to displaying the program:\n"
