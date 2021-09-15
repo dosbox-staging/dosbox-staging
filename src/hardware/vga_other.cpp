@@ -453,7 +453,8 @@ static void update_cga16_color_pcjr()
 	                                        (chroma_coefficient + rgbi_d) +
 	                                burst_delay + color_delay;
 
-	const float hue_adjust = (-(90 - 33) - hue_offset + pixel_clock_delay) * tau / 360.0f;
+	const float hue_adjust = (-(90.0f - 33.0f) - static_cast<float>(hue) +
+	                          pixel_clock_delay) * tau / 360.0f;
 	float chroma_signals[8][4];
 	for (uint8_t i = 0; i < 4; i++) {
 		chroma_signals[0][i] = 0;
@@ -540,21 +541,21 @@ static void update_cga16_color_pcjr()
 
 			constexpr auto gamma = 2.2f;
 
-			const auto r_raw = Y + 0.9563f * I + 0.6210f * Q;
-			const auto R = powf(clamp((r_raw - 0.075f) / (1 - 0.075f), 0.0f, 1.0f), gamma);
+			auto normalize_and_apply_gamma = [=](float v) -> float {
+				const auto normalized = clamp((v - 0.075f) / (1 - 0.075f), 0.0f, 1.0f);
+				return powf(normalized, gamma);
+			};
+			const auto R = normalize_and_apply_gamma(Y + 0.9563f * I + 0.6210f * Q);
+			const auto G = normalize_and_apply_gamma(Y - 0.2721f * I - 0.6474f * Q);
+			const auto B = normalize_and_apply_gamma(Y - 1.1069f * I + 1.7046f * Q);
 
-			const auto g_raw = Y - 0.2721f * I - 0.6474f * Q;
-			const auto G = powf(clamp((g_raw - 0.075f) / (1 - 0.075f), 0.0f, 1.0f), gamma);
-
-			const auto b_raw = Y - 1.1069f * I + 1.7046f * Q;
-			const auto B = powf(clamp((b_raw - 0.075f) / (1 - 0.075f), 0.0f, 1.0f), gamma);
-
-			const auto r = static_cast<uint8_t>(
-			        clamp(255 * powf(1.5073f * R - 0.3725f * G - 0.0832f * B, 1 / gamma), 0.0f, 255.0f));
-			const auto g = static_cast<uint8_t>(
-			        clamp(255 * powf(-0.0275f * R + 0.9350f * G + 0.0670f * B, 1 / gamma), 0.0f, 255.0f));
-			const auto b = static_cast<uint8_t>(
-			        clamp(255 * powf(-0.0272f * R - 0.0401f * G + 1.1677f * B, 1 / gamma), 0.0f, 255.0f));
+			auto to_8bit_without_gamma = [=](float v) -> uint8_t {
+				const auto without_gamma = clamp(powf(v, 1 / gamma), 0.0f, 1.0f);
+				return static_cast<uint8_t>(255 * without_gamma);
+			};
+			const auto r = to_8bit_without_gamma(1.5073f * R - 0.3725f * G - 0.0832f * B);
+			const auto g = to_8bit_without_gamma(-0.0275f * R + 0.9350f * G + 0.0670f * B);
+			const auto b = to_8bit_without_gamma(-0.0272f * R - 0.0401f * G + 1.1677f * B);
 
 			const uint8_t index = bits | ((x & 1) == 0 ? 0x30 : 0x80) | ((x & 2) == 0 ? 0x40 : 0);
 			RENDER_SetPal(index, r, g, b);
