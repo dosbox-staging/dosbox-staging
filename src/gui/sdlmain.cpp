@@ -284,6 +284,8 @@ struct SDL_Block {
 			uint16_t height = 0; // TODO convert to int
 			bool resizable = false;
 			bool show_decorations = true;
+			int initial_x_pos = -1;
+			int initial_y_pos = -1;
 		} window = {};
 		struct {
 			int width = 0;
@@ -744,6 +746,19 @@ static void log_display_properties(const int in_x,
 	        out_x, out_y, out_par);
 }
 
+static SDL_Point get_initial_window_position_or_default(int default_val)
+{
+	int x, y;
+	if (sdl.desktop.window.initial_x_pos >= 0 &&
+	    sdl.desktop.window.initial_y_pos >= 0) {
+		x = sdl.desktop.window.initial_x_pos;
+		y = sdl.desktop.window.initial_y_pos;
+	} else {
+		x = y = default_val;
+	}
+	return {x, y};
+}
+
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
                                  int height,
@@ -780,8 +795,9 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 
 		// Using undefined position will take care of placing and
 		// restoring the window by WM.
-		const int pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
-		sdl.window = SDL_CreateWindow("", pos, pos, width, height, flags);
+		const auto default_val = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
+		const auto pos = get_initial_window_position_or_default(default_val);
+		sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
 		if (!sdl.window) {
 			LOG_MSG("SDL: %s", SDL_GetError());
 			return nullptr;
@@ -2213,6 +2229,46 @@ static SDL_Point window_bounds_from_label(const std::string &pref,
 	return {w, h};
 }
 
+static SDL_Rect get_desktop_resolution()
+{
+	SDL_Rect desktop;
+	assert(sdl.display_number >= 0);
+	SDL_GetDisplayBounds(sdl.display_number, &desktop);
+	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
+	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
+	return desktop;
+}
+
+static void setup_initial_window_position_from_conf(const std::string &windowposition_val)
+{
+	sdl.desktop.window.initial_x_pos = -1;
+	sdl.desktop.window.initial_y_pos = -1;
+
+	if (windowposition_val == "auto")
+		return;
+
+	int x, y;
+	const auto was_parsed = sscanf(windowposition_val.c_str(), "%d,%d", &x, &y) == 2;
+	if (!was_parsed) {
+		LOG_MSG("DISPLAY: Requested windowposition '%s' is invalid, using 'auto' instead",
+		        windowposition_val.c_str());
+		return;
+	}
+
+	const auto desktop = get_desktop_resolution();	
+	const bool is_out_of_bounds = x <= 0 || x > desktop.w || y <= 0 ||
+	                              y > desktop.h;
+	if (is_out_of_bounds) {
+		LOG_MSG("DISPLAY: Requested window position '%d,%d' is outside the bounds of the desktop '%dx%d', "
+		        "using 'auto' instead",
+		        x, y, desktop.w, desktop.h);
+		return;
+	}
+
+	sdl.desktop.window.initial_x_pos = x;
+	sdl.desktop.window.initial_y_pos = y;
+}
+
 // Takes in:
 //  - The user's windowresolution: default, WxH, small, medium, large,
 //    desktop, or an invalid setting.
@@ -2488,6 +2544,8 @@ static void GUI_StartUp(Section *sec)
 	assert(render_section);
 
 	sdl.desktop.window.show_decorations = section->Get_bool("windowdecorations");
+
+	setup_initial_window_position_from_conf(section->Get_string("windowposition"));
 
 	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
 	                             sdl.scaling_mode,
@@ -2790,12 +2848,9 @@ static void FinalizeWindowState()
 	// switching to a window for the first time. This is happening on every
 	// OS, but only on Windows it's a really big problem (because window
 	// decorations are rendered off-screen).
-	//
-	// To work around this problem, tell SDL to center the window on current
-	// screen (we want center, as undefined position could still result in
-	// placing part of the window off-screen).
-	const int pos = SDL_WINDOWPOS_CENTERED_DISPLAY(sdl.display_number);
-	SDL_SetWindowPosition(sdl.window, pos, pos);
+	const auto default_val = SDL_WINDOWPOS_CENTERED_DISPLAY(sdl.display_number);
+	const auto pos = get_initial_window_position_or_default(default_val);
+	SDL_SetWindowPosition(sdl.window, pos.x, pos.y);
 
 	// In some cases (not always), leaving fullscreen breaks window content,
 	// screen reset restores rendering to the working state.
@@ -3155,6 +3210,13 @@ void Config_Add_SDL() {
 	        "  <custom>:  Scale the window to the given dimensions in\n"
 	        "             WxH format. For example: 1024x768.\n"
 	        "             Scaling is not performed for output=surface.");
+
+	pstring = sdl_sec->Add_string("windowposition", always, "auto");
+	pstring->Set_help(
+	        "Set initial window position when running in windowed mode:\n"
+	        "  auto:      Let the window manager decide the position.\n"
+	        "  <custom>:  Set window position in X,Y format. For example: 250,100\n"
+	        "             0,0 is the top-left corner of the screen.");
 
 	Pbool = sdl_sec->Add_bool("windowdecorations", always, true);
 	Pbool->Set_help("Controls whether to display window decorations in windowed mode.");
