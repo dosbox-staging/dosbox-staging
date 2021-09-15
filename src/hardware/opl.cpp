@@ -27,6 +27,7 @@
 
 #include "opl.h"
 
+#include <cassert>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -51,6 +52,12 @@ static Bit32s vibval_var2[BLOCKBUF_SIZE];
 static Bit32s *vibval1, *vibval2, *vibval3, *vibval4;
 static Bit32s *tremval1, *tremval2, *tremval3, *tremval4;
 
+// return a pointer to the requested operator, but only after ensuring it's valid
+op_type *get_op(const int64_t i)
+{
+	assert(i >= 0 && i < MAXOPERATORS);
+	return &op[i];
+}
 
 // key scale level lookup table
 static const fltype kslmul[4] = {
@@ -653,7 +660,7 @@ void adlib_write(io_port_t idx, Bit8u val) {
 			Bitu chanbase = second_set?(modop-18+ARC_SECONDSET):modop;
 
 			// change tremolo/vibrato and sustain keeping of this operator
-			op_type* op_ptr = &op[modop+((num<3) ? 0 : 9)];
+			op_type *op_ptr = get_op(modop + ((num < 3) ? 0 : 9));
 			change_keepsustain(regbase,op_ptr);
 			change_vibrato(regbase,op_ptr);
 
@@ -683,7 +690,7 @@ void adlib_write(io_port_t idx, Bit8u val) {
 
 			// change frequency calculations of this operator as
 			// key scale level and output rate can be changed
-			op_type* op_ptr = &op[modop+((num<3) ? 0 : 9)];
+			op_type *op_ptr = get_op(modop + ((num < 3) ? 0 : 9));
 #if defined(OPLTYPE_IS_OPL3)
 			Bitu regbase = base+second_set;
 			if ((adlibreg[0x105]&1) && (op[modop].is_4op_attached)) {
@@ -707,7 +714,7 @@ void adlib_write(io_port_t idx, Bit8u val) {
 			Bitu regbase = base+second_set;
 
 			// change attack rate and decay rate of this operator
-			op_type* op_ptr = &op[regbase2op[second_set?(base+22):base]];
+			op_type *op_ptr = get_op(regbase2op[second_set ? (base + 22) : base]);
 			change_attackrate(regbase,op_ptr);
 			change_decayrate(regbase,op_ptr);
 		}
@@ -722,7 +729,7 @@ void adlib_write(io_port_t idx, Bit8u val) {
 			Bitu regbase = base+second_set;
 
 			// change sustain level and release rate of this operator
-			op_type* op_ptr = &op[regbase2op[second_set?(base+22):base]];
+			op_type *op_ptr = get_op(regbase2op[second_set ? (base + 22) : base]);
 			change_releaserate(regbase,op_ptr);
 			change_sustainlevel(regbase,op_ptr);
 		}
@@ -741,13 +748,13 @@ void adlib_write(io_port_t idx, Bit8u val) {
 
 			Bitu chanbase = base+second_set;
 
-			change_frequency(chanbase,modbase,&op[opbase]);
-			change_frequency(chanbase,modbase+3,&op[opbase+9]);
+			change_frequency(chanbase, modbase, get_op(opbase));
+			change_frequency(chanbase, modbase + 3, get_op(opbase + 9));
 #if defined(OPLTYPE_IS_OPL3)
 			// for 4op channels all four operators are modified to the frequency of the channel
 			if ((adlibreg[0x105]&1) && op[second_set?(base+18):base].is_4op) {
-				change_frequency(chanbase,modbase+8,&op[opbase+3]);
-				change_frequency(chanbase,modbase+3+8,&op[opbase+3+9]);
+				change_frequency(chanbase, modbase + 8, get_op(opbase + 3));
+				change_frequency(chanbase, modbase + 3 + 8, get_op(opbase + 3 + 9));
 			}
 #endif
 		}
@@ -760,37 +767,37 @@ void adlib_write(io_port_t idx, Bit8u val) {
 #endif
 
 			if ((val&0x30) == 0x30) {		// BassDrum active
-				enable_operator(16,&op[6],OP_ACT_PERC);
-				change_frequency(6,16,&op[6]);
-				enable_operator(16+3,&op[6+9],OP_ACT_PERC);
-				change_frequency(6,16+3,&op[6+9]);
+				enable_operator(16, get_op(6), OP_ACT_PERC);
+				change_frequency(6, 16, get_op(6));
+				enable_operator(16 + 3, get_op(6 + 9), OP_ACT_PERC);
+				change_frequency(6, 16 + 3, get_op(6 + 9));
 			} else {
-				disable_operator(&op[6],OP_ACT_PERC);
-				disable_operator(&op[6+9],OP_ACT_PERC);
+				disable_operator(get_op(6), OP_ACT_PERC);
+				disable_operator(get_op(6 + 9), OP_ACT_PERC);
 			}
 			if ((val&0x28) == 0x28) {		// Snare active
-				enable_operator(17+3,&op[16],OP_ACT_PERC);
-				change_frequency(7,17+3,&op[16]);
+				enable_operator(17 + 3, get_op(16), OP_ACT_PERC);
+				change_frequency(7, 17 + 3, get_op(16));
 			} else {
-				disable_operator(&op[16],OP_ACT_PERC);
+				disable_operator(get_op(16), OP_ACT_PERC);
 			}
 			if ((val&0x24) == 0x24) {		// TomTom active
-				enable_operator(18,&op[8],OP_ACT_PERC);
-				change_frequency(8,18,&op[8]);
+				enable_operator(18, get_op(8), OP_ACT_PERC);
+				change_frequency(8, 18, get_op(8));
 			} else {
-				disable_operator(&op[8],OP_ACT_PERC);
+				disable_operator(get_op(8), OP_ACT_PERC);
 			}
 			if ((val&0x22) == 0x22) {		// Cymbal active
-				enable_operator(18+3,&op[8+9],OP_ACT_PERC);
-				change_frequency(8,18+3,&op[8+9]);
+				enable_operator(18 + 3, get_op(8 + 9), OP_ACT_PERC);
+				change_frequency(8, 18 + 3, get_op(8 + 9));
 			} else {
-				disable_operator(&op[8+9],OP_ACT_PERC);
+				disable_operator(get_op(8 + 9), OP_ACT_PERC);
 			}
 			if ((val&0x21) == 0x21) {		// Hihat active
-				enable_operator(17,&op[7],OP_ACT_PERC);
-				change_frequency(7,17,&op[7]);
+				enable_operator(17, get_op(7), OP_ACT_PERC);
+				change_frequency(7, 17, get_op(7));
 			} else {
-				disable_operator(&op[7],OP_ACT_PERC);
+				disable_operator(get_op(7), OP_ACT_PERC);
 			}
 
 			break;
@@ -807,26 +814,26 @@ void adlib_write(io_port_t idx, Bit8u val) {
 
 			if (val&32) {
 				// operator switched on
-				enable_operator(modbase,&op[opbase],OP_ACT_NORMAL);		// modulator (if 2op)
-				enable_operator(modbase+3,&op[opbase+9],OP_ACT_NORMAL);	// carrier (if 2op)
+				enable_operator(modbase, get_op(opbase), OP_ACT_NORMAL); // modulator (if 2op)
+				enable_operator(modbase + 3, get_op(opbase + 9), OP_ACT_NORMAL); // carrier (if 2op)
 #if defined(OPLTYPE_IS_OPL3)
 				// for 4op channels all four operators are switched on
 				if ((adlibreg[0x105]&1) && op[opbase].is_4op) {
 					// turn on chan+3 operators as well
-					enable_operator(modbase+8,&op[opbase+3],OP_ACT_NORMAL);
-					enable_operator(modbase+3+8,&op[opbase+3+9],OP_ACT_NORMAL);
+					enable_operator(modbase + 8, get_op(opbase + 3), OP_ACT_NORMAL);
+					enable_operator(modbase + 3 + 8, get_op(opbase + 3 + 9), OP_ACT_NORMAL);
 				}
 #endif
 			} else {
 				// operator switched off
-				disable_operator(&op[opbase],OP_ACT_NORMAL);
-				disable_operator(&op[opbase+9],OP_ACT_NORMAL);
+				disable_operator(get_op(opbase), OP_ACT_NORMAL);
+				disable_operator(get_op(opbase + 9), OP_ACT_NORMAL);
 #if defined(OPLTYPE_IS_OPL3)
 				// for 4op channels all four operators are switched off
 				if ((adlibreg[0x105]&1) && op[opbase].is_4op) {
 					// turn off chan+3 operators as well
-					disable_operator(&op[opbase+3],OP_ACT_NORMAL);
-					disable_operator(&op[opbase+3+9],OP_ACT_NORMAL);
+					disable_operator(get_op(opbase + 3), OP_ACT_NORMAL);
+					disable_operator(get_op(opbase + 3 + 9), OP_ACT_NORMAL);
 				}
 #endif
 			}
@@ -835,14 +842,14 @@ void adlib_write(io_port_t idx, Bit8u val) {
 
 			// change frequency calculations of modulator and carrier (2op) as
 			// the frequency of the channel has changed
-			change_frequency(chanbase,modbase,&op[opbase]);
-			change_frequency(chanbase,modbase+3,&op[opbase+9]);
+			change_frequency(chanbase, modbase, get_op(opbase));
+			change_frequency(chanbase, modbase + 3, get_op(opbase + 9));
 #if defined(OPLTYPE_IS_OPL3)
 			// for 4op channels all four operators are modified to the frequency of the channel
 			if ((adlibreg[0x105]&1) && op[second_set?(base+18):base].is_4op) {
 				// change frequency calculations of chan+3 operators as well
-				change_frequency(chanbase,modbase+8,&op[opbase+3]);
-				change_frequency(chanbase,modbase+3+8,&op[opbase+3+9]);
+				change_frequency(chanbase, modbase + 8, get_op(opbase + 3));
+				change_frequency(chanbase, modbase + 3 + 8, get_op(opbase + 3 + 9));
 			}
 #endif
 		}
@@ -854,7 +861,7 @@ void adlib_write(io_port_t idx, Bit8u val) {
 		if (base<9) {
 			Bits opbase = second_set?(base+18):base;
 			Bitu chanbase = base+second_set;
-			change_feedback(chanbase,&op[opbase]);
+			change_feedback(chanbase, get_op(opbase));
 #if defined(OPLTYPE_IS_OPL3)
 			// OPL3 panning
 			op[opbase].left_pan = ((val&0x10)>>4);
@@ -873,13 +880,13 @@ void adlib_write(io_port_t idx, Bit8u val) {
 			// change waveform
 			if (adlibreg[0x105]&1) wave_sel[wselbase] = val&7;	// opl3 mode enabled, all waveforms accessible
 			else wave_sel[wselbase] = val&3;
-			op_type* op_ptr = &op[regbase2modop[wselbase]+((num<3) ? 0 : 9)];
+			op_type *op_ptr = get_op(regbase2modop[wselbase] + ((num < 3) ? 0 : 9));
 			change_waveform(wselbase,op_ptr);
 #else
 			if (adlibreg[0x01]&0x20) {
 				// wave selection enabled, change waveform
 				wave_sel[base] = val&3;
-				op_type* op_ptr = &op[regbase2modop[base]+((num<3) ? 0 : 9)];
+				op_type *op_ptr = get_op(regbase2modop[base] + ((num < 3) ? 0 : 9));
 				change_waveform(base,op_ptr);
 			}
 #endif
@@ -991,7 +998,7 @@ void adlib_getsample(Bit16s* sndptr, Bits numsamples) {
 
 		if (adlibreg[ARC_PERC_MODE]&0x20) {
 			//BassDrum
-			cptr = &op[6];
+			cptr = get_op(6);
 			if (adlibreg[ARC_FEEDBACK+6]&1) {
 				// additive synthesis
 				if (cptr[9].op_state != OF_TYPE_OFF) {
@@ -1049,7 +1056,7 @@ void adlib_getsample(Bit16s* sndptr, Bits numsamples) {
 
 			//TomTom (j=8)
 			if (op[8].op_state != OF_TYPE_OFF) {
-				cptr = &op[8];
+				cptr = get_op(8);
 				if (cptr[0].vibrato) {
 					vibval3 = vibval_var1;
 					for (i=0;i<endsamples;i++)
@@ -1072,7 +1079,7 @@ void adlib_getsample(Bit16s* sndptr, Bits numsamples) {
 			//Snare/Hihat (j=7), Cymbal (j=8)
 			if ((op[7].op_state != OF_TYPE_OFF) || (op[16].op_state != OF_TYPE_OFF) ||
 				(op[17].op_state != OF_TYPE_OFF)) {
-				cptr = &op[7];
+				cptr = get_op(7);
 				if ((cptr[0].vibrato) && (cptr[0].op_state != OF_TYPE_OFF)) {
 					vibval1 = vibval_var1;
 					for (i=0;i<endsamples;i++)
@@ -1089,7 +1096,7 @@ void adlib_getsample(Bit16s* sndptr, Bits numsamples) {
 				if (cptr[9].tremolo) tremval2 = trem_lut;	// tremolo enabled, use table
 				else tremval2 = tremval_const;
 
-				cptr = &op[8];
+				cptr = get_op(8);
 				if ((cptr[9].vibrato) && (cptr[9].op_state == OF_TYPE_OFF)) {
 					vibval4 = vibval_var2;
 					for (i=0;i<endsamples;i++)
@@ -1101,16 +1108,17 @@ void adlib_getsample(Bit16s* sndptr, Bits numsamples) {
 
 				// calculate channel output
 				for (i=0;i<endsamples;i++) {
-					operator_advance_drums(&op[7],vibval1[i],&op[7+9],vibval2[i],&op[8+9],vibval4[i]);
+					operator_advance_drums(get_op(7), vibval1[i], get_op(7 + 9),
+					                       vibval2[i], get_op(8 + 9), vibval4[i]);
 
-					opfuncs[op[7].op_state](&op[7]);			//Hihat
-					operator_output(&op[7],0,tremval1[i]);
+					opfuncs[op[7].op_state](get_op(7)); // Hihat
+					operator_output(get_op(7), 0, tremval1[i]);
 
-					opfuncs[op[7+9].op_state](&op[7+9]);		//Snare
-					operator_output(&op[7+9],0,tremval2[i]);
+					opfuncs[op[7 + 9].op_state](get_op(7 + 9)); // Snare
+					operator_output(get_op(7 + 9), 0, tremval2[i]);
 
-					opfuncs[op[8+9].op_state](&op[8+9]);		//Cymbal
-					operator_output(&op[8+9],0,tremval4[i]);
+					opfuncs[op[8 + 9].op_state](get_op(8 + 9)); // Cymbal
+					operator_output(get_op(8 + 9), 0, tremval4[i]);
 
 					Bit32s chanval = (op[7].cval + op[7+9].cval + op[8+9].cval)*2;
 					CHANVAL_OUT
@@ -1129,15 +1137,15 @@ void adlib_getsample(Bit16s* sndptr, Bits numsamples) {
 			Bitu k = cur_ch;
 #if defined(OPLTYPE_IS_OPL3)
 			if (cur_ch < 9) {
-				cptr = &op[cur_ch];
+				cptr = get_op(cur_ch);
 			} else {
-				cptr = &op[cur_ch+9];	// second set is operator18-operator35
+				cptr = get_op(cur_ch + 9); // second set is operator18-operator35
 				k += (-9+256);		// second set uses registers 0x100 onwards
 			}
 			// check if this operator is part of a 4-op
 			if ((adlibreg[0x105]&1) && cptr->is_4op_attached) continue;
 #else
-			cptr = &op[cur_ch];
+			cptr = get_op(cur_ch);
 #endif
 
 			// check for FM/AM
