@@ -1194,9 +1194,9 @@ static void PCJr_FindMode()
 			} else {
 				VGA_SetMode(new_mode);
 			}
-			if (cga_comp == COMPOSITE_STATE::ON) {
-				update_cga16_color();
-			}
+		}
+		if (vga.mode == M_CGA16) {
+			update_cga16_color_pcjr();
 		}
 		tandy_update_palette();
 	} else {
