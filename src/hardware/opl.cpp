@@ -75,24 +75,18 @@ static const Bit8u modulatorbase[9]	= {
 };
 
 // map a register base to a modulator operator number or operator number
-#if defined(OPLTYPE_IS_OPL3)
-static const Bit8u regbase2modop[44] = {
-	0,1,2,0,1,2,0,0,3,4,5,3,4,5,0,0,6,7,8,6,7,8,					// first set
-	18,19,20,18,19,20,0,0,21,22,23,21,22,23,0,0,24,25,26,24,25,26	// second set
+constexpr uint8_t regbase2modop[44] = {
+        // first set: OPL2 and OPL3
+        0,  1,  2,  0,  1,  2,  0,  0,  3,  4,  5,  3,  4,  5,  0,  0,  6,  7,  8,  6,  7,  8,
+        // second set: OPL3-only
+        18, 19, 20, 18, 19, 20, 0,  0,  21, 22, 23, 21, 22, 23, 0,  0,  24, 25, 26, 24, 25, 26
 };
-static const Bit8u regbase2op[44] = {
-	0,1,2,9,10,11,0,0,3,4,5,12,13,14,0,0,6,7,8,15,16,17,			// first set
-	18,19,20,27,28,29,0,0,21,22,23,30,31,32,0,0,24,25,26,33,34,35	// second set
+constexpr uint8_t regbase2op[44] = {
+        // first set: OPL2 and OPL3
+        0,  1,  2,  9,  10, 11, 0,  0,  3,  4,  5,  12, 13, 14, 0,  0,  6,  7,  8,  15, 16, 17,
+        // second set: OPL3-only
+        18, 19, 20, 27, 28, 29, 0,  0,  21, 22, 23, 30, 31, 32, 0,  0,  24, 25, 26, 33, 34, 35
 };
-#else
-static const Bit8u regbase2modop[22] = {
-	0,1,2,0,1,2,0,0,3,4,5,3,4,5,0,0,6,7,8,6,7,8
-};
-static const Bit8u regbase2op[22] = {
-	0,1,2,9,10,11,0,0,3,4,5,12,13,14,0,0,6,7,8,15,16,17
-};
-#endif
-
 
 // start of the waveform
 static Bit32u waveform[8] = {
