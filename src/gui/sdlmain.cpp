@@ -2057,19 +2057,6 @@ static void DisplaySplash(int time_ms)
 	Delay(time_ms);
 }
 
-/* For some preference values, we can safely remove comment after # character
- */
-static std::string NormalizeConfValue(const char *val)
-{
-	std::string pref = val;
-	const auto comment_pos = pref.find('#');
-	if (comment_pos != std::string::npos)
-		pref.erase(comment_pos);
-	trim(pref);
-	lowcase(pref);
-	return pref;
-}
-
 MAYBE_UNUSED static std::string get_glshader_value()
 {
 #if C_OPENGL
@@ -2392,9 +2379,9 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	// Get the coarse resolution from the users setting, and adjust
 	// refined scaling mode if an exact resolution is desired.
+	const std::string pref = windowresolution_val;
 	SDL_Point coarse_size = FALLBACK_WINDOW_DIMENSIONS;
 
-	const std::string pref = NormalizeConfValue(windowresolution_val);
 	sdl.window_resolution_specified = pref.find('x') != std::string::npos;
 	if (sdl.window_resolution_specified) {
 		coarse_size = window_bounds_from_resolution(pref, desktop);
