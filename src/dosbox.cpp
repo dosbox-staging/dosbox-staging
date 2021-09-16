@@ -511,10 +511,9 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&TIMER_Init);//done
 	secprop->AddInitFunction(&CMOS_Init);//done
 
-	const char *verbosity_choices[] = {"high",  "medium",
-	                                   "low",   "splash_only",
-	                                   "quiet", "auto",
-	                                   0};
+	const char *verbosity_choices[] = {
+	        "auto", "high", "medium", "low", "splash_only", "quiet", 0,
+	};
 	Pstring = secprop->Add_string("startup_verbosity", only_at_start, "auto");
 	Pstring->Set_values(verbosity_choices);
 	Pstring->Set_help(
