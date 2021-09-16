@@ -119,27 +119,17 @@ Feature differences between release binaries (or unpatched sources):
 
 ## Get the source
 
-New users can clone the repository and submodules with:
+  - First, ensure git always updates your submodules when you pull (one-time step):
 
-``` shell
-git clone --recurse-submodules \
-          https://github.com/dosbox-staging/dosbox-staging.git
-```
+    ``` shell
+    git config --global submodule.recurse true
+    ```
 
-If you have an existing source repository, update it with:
+  - Clone the repository (one-time step):
 
-``` shell
-git submodule update --init
-git pull --recurse-submodules
-```
-
-We recommend applying this Git (2.15+) configuration to ensure
-project submodules are kept in-sync whenever you `git pull`:
-
-``` shell
-git config --global submodule.recurse true
-```
-
+    ``` shell
+    git clone --recurse-submodules https://github.com/dosbox-staging/dosbox-staging.git
+    ```
 
 ## Build instructions
 
@@ -188,23 +178,55 @@ xcode-select --install
 brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth
 ```
 
-Instructions for creating an optimised release build:
+### Build and stay up-to-date with the latest sources
 
-``` shell
-git clone --recurse-submodules https://github.com/dosbox-staging/dosbox-staging.git
-cd dosbox-staging
-meson setup -Dbuildtype=release build
-ninja -C build
-./build/dosbox
-```
+  - Checkout the master branch, which will include the submodules:
 
-To build and link the MT-32 and FluidSynth subprojects statically,
-add the `-Ddefault_library=static` option during setup.
+    ``` shell
+    # commit or stash any personal code changes
+    git checkout master -f
+    ```
 
-To see all of Meson's setup options, run:
-``` shell
-meson configure
-```
+  - Pull the latest updates. This is necessary every time you want a new build:
+
+    ``` shell
+    git pull
+    ```
+
+  - Optionally, you can clean your ccache and working directories. This is only
+    advised if you have unexpected build failures:
+
+    ``` shell
+    ccache -C
+    git clean -fdx
+    ```
+
+  - Setup the build. This is a one-time step either after cloning the repo or
+    cleaning your working directories:
+
+    ``` shell
+    meson setup \
+        -Dbuildtype=release \
+        -Ddefault_library=static \
+        -Db_asneeded=true \
+        -Dtry_static_libs=png \
+        -Dfluidsynth:enable-floats=true \
+        -Dfluidsynth:try-static-deps=true \
+      build/release
+    ```
+
+    The above enables all of DOSBox Staging's functional features. If you're
+    interested in seeing all of Meson's setup options, run: `meson configure`.
+
+
+  - Compile the sources. This is necessary every time you want a new build:
+
+    ``` shell
+    meson compile -C build/release
+    ```
+
+    Your binary is: `build/release/dosbox` -- have fun!
+
 
 ### Windows - Visual Studio (2019 or newer)
 
