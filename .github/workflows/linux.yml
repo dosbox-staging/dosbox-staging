@@ -45,7 +45,7 @@ jobs:
           - name: GCC, +debugger
             os: ubuntu-20.04
             build_flags: -Denable_debugger=normal
-            max_warnings: 17
+            max_warnings: 0
 
           - name: GCC, -dyn-x86
             os: ubuntu-20.04
@@ -55,7 +55,7 @@ jobs:
           - name: GCC, -dyn-x86, +debugger
             os: ubuntu-20.04
             build_flags: -Ddynamic_core=dynrec -Denable_debugger=normal
-            max_warnings: 53
+            max_warnings: 0
 
           - name: GCC, -network
             os: ubuntu-20.04
@@ -66,7 +66,7 @@ jobs:
             os: ubuntu-20.04
             build_flags: --wrap-mode=nofallback -Dunit_tests=disabled -Duse_fluidsynth=false -Duse_sdl2_net=false -Duse_opengl=false -Duse_fluidsynth=false -Duse_mt32emu=false -Duse_png=false -Duse_alsa=false
             min_dependencies: true
-            max_warnings: -1
+            max_warnings: 0
 
     steps:
       - name: Checkout repository and submodules

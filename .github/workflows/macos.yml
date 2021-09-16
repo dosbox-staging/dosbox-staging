@@ -44,7 +44,7 @@ jobs:
             arch: x86_64
             needs_deps: true
             build_flags: -Denable_debugger=normal
-            max_warnings: 17
+            max_warnings: 0
 
           - name: Clang
             host: [self-hosted, macOS, arm64, debug-builds]
