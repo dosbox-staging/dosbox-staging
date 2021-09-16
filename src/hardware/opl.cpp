@@ -915,7 +915,7 @@ uint8_t adlib_reg_read(io_port_t port) {
 #endif
 }
 
-void adlib_write_index(io_port_t port, uint8_t val) {
+void adlib_write_index(MAYBE_UNUSED io_port_t port, uint8_t val) {
 	opl_index = val;
 #if defined(OPLTYPE_IS_OPL3)
 	if ((port&3)!=0) {

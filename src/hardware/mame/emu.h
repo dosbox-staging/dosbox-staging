@@ -54,7 +54,7 @@ struct machine_config;
 #define DECLARE_READ8_MEMBER(name)      u8     name( int, int)
 #define DECLARE_WRITE8_MEMBER(name)     void   name( int, int, u8 data)
 #define READ8_MEMBER(name)              u8     name( int, int)
-#define WRITE8_MEMBER(name)				void   name( int offset, int space, u8 data)
+#define WRITE8_MEMBER(name)				void   name(MAYBE_UNUSED int offset, MAYBE_UNUSED int space, MAYBE_UNUSED u8 data)
 
 #define DECLARE_DEVICE_TYPE(Type, Class) \
 		extern const device_type Type; \
@@ -71,13 +71,13 @@ public:
 
 	sound_stream temp;
 
-	device_sound_interface(const machine_config &mconfig, device_t &_device)
+	device_sound_interface(MAYBE_UNUSED const machine_config &mconfig, MAYBE_UNUSED device_t &_device)
 	        : temp()
 	{}
 
 	virtual ~device_sound_interface() = default;
 
-	sound_stream *stream_alloc(int whatever, int channels, int size)
+	sound_stream *stream_alloc(MAYBE_UNUSED int whatever, MAYBE_UNUSED int channels, MAYBE_UNUSED int size)
 	{
 		return &temp;
 	}
@@ -91,7 +91,7 @@ public:
 struct attotime {
 	int whatever;
 
-	static attotime from_hz(int hz) {
+	static attotime from_hz(MAYBE_UNUSED int hz) {
 		return attotime();
 	}
 };
@@ -120,7 +120,7 @@ public:
 		return clockRate;
 	}
 
-	void logerror(const char* format, ...) {
+	void logerror(MAYBE_UNUSED const char* format, ...) {
 #if C_DEBUG
 		char buf[512*2];
 		va_list msg;
@@ -138,10 +138,10 @@ public:
 	virtual void device_start() {
 	}
 
-	void save_item(int wtf, int blah= 0) {
+	void save_item(int, MAYBE_UNUSED int blah= 0) {
 	}
 
-	device_t(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 _clock) : clockRate( _clock ) {
+	device_t(MAYBE_UNUSED const machine_config &mconfig, MAYBE_UNUSED device_type type, MAYBE_UNUSED const char *tag, MAYBE_UNUSED device_t *owner, u32 _clock) : clockRate( _clock ) {
 	}
 
 	virtual ~device_t() {

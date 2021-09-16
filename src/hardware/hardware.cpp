@@ -333,7 +333,15 @@ void CAPTURE_VideoStop() {
 #endif
 }
 
-void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags, float fps, Bit8u * data, Bit8u * pal) {
+void CAPTURE_AddImage(MAYBE_UNUSED Bitu width,
+                      MAYBE_UNUSED Bitu height,
+                      MAYBE_UNUSED Bitu bpp,
+                      MAYBE_UNUSED Bitu pitch,
+                      MAYBE_UNUSED Bitu flags,
+                      MAYBE_UNUSED float fps,
+                      MAYBE_UNUSED Bit8u *data,
+                      MAYBE_UNUSED Bit8u *pal)
+{
 #if (C_SSHOT)
 	Bitu i;
 	Bit8u doubleRow[SCALER_MAXWIDTH*4];
@@ -640,7 +648,6 @@ skip_video:
 	return;
 }
 
-
 #if (C_SSHOT)
 static void CAPTURE_ScreenShotEvent(bool pressed) {
 	if (!pressed)
@@ -842,7 +849,7 @@ public:
 
 static HARDWARE *hardware_module;
 
-void HARDWARE_Destroy(Section *sec)
+void HARDWARE_Destroy(MAYBE_UNUSED Section *sec)
 {
 	delete hardware_module;
 }

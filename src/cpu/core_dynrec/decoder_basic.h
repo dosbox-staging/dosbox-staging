@@ -1248,7 +1248,7 @@ static void InvalidateFlagsPartially(void* current_simple_function,const Bit8u* 
 }
 
 // the current function needs the condition flags thus reset the queue
-static void AcquireFlags(Bitu flags_mask) {
+static void AcquireFlags(MAYBE_UNUSED Bitu flags_mask) {
 #ifdef DRC_FLAGS_INVALIDATION
 	mf_functions_num=0;
 #endif

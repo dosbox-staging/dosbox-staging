@@ -708,6 +708,7 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 					} 
 					if (cs_dpl!=cpu.cpl)
 						E_Exit("Non-conforming intra privilege INT with DPL!=CPL");
+					FALLTHROUGH;
 				case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
 				case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
 					/* Prepare stack for gate to same priviledge */
@@ -1258,6 +1259,7 @@ call_code:
 						break;		
 					} else if (n_cs_dpl > cpu.cpl)
 						E_Exit("CALL:GATE:CS DPL>CPL");		// or #GP(sel)
+					FALLTHROUGH;
 				case DESC_CODE_N_C_A:case DESC_CODE_N_C_NA:
 				case DESC_CODE_R_C_A:case DESC_CODE_R_C_NA:
 					// zrdx extender
@@ -1309,7 +1311,7 @@ call_code:
 }
 
 
-void CPU_RET(bool use32,Bitu bytes,Bitu oldeip) {
+void CPU_RET(bool use32,Bitu bytes, MAYBE_UNUSED Bitu oldeip) {
 	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
 		Bitu new_ip,new_cs;
 		if (!use32) {
@@ -1787,6 +1789,7 @@ void CPU_LAR(Bitu selector,Bitu & ar) {
 				case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
 					if (desc.DPL()<cpu.cpl || desc.DPL()<rpl)
 						break;
+					FALLTHROUGH;
 
 				case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
 				case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
@@ -1824,7 +1827,7 @@ void CPU_LSL(Bitu selector,Bitu & limit) {
 				case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
 					if (desc.DPL()<cpu.cpl || desc.DPL()<rpl)
 						break;
-
+					FALLTHROUGH;
 				case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
 				case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
 					limit=desc.GetLimit();
@@ -2417,7 +2420,7 @@ public:
 
 static CPU * test;
 
-void CPU_ShutDown(Section* sec) {
+void CPU_ShutDown(MAYBE_UNUSED Section* sec) {
 #if (C_DYNAMIC_X86)
 	CPU_Core_Dyn_X86_Cache_Close();
 #elif (C_DYNREC)

@@ -522,7 +522,7 @@ bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
 	return false;
 }
 
-bool CBreakpoint::CheckIntBreakpoint(PhysPt adr, Bit8u intNr, Bit16u ahValue, Bit16u alValue)
+bool CBreakpoint::CheckIntBreakpoint(MAYBE_UNUSED PhysPt adr, Bit8u intNr, Bit16u ahValue, Bit16u alValue)
 // Checks if interrupt breakpoint is valid and should stop execution
 {
 	if (BPoints.empty()) return false;

@@ -371,7 +371,7 @@ static bool gen_mov_memval_to_reg(HostReg dest_reg, void *data, Bitu size) {
 }
 
 // helper function for gen_mov_word_to_reg
-static void gen_mov_word_to_reg_helper(HostReg dest_reg,void* data,bool dword,HostReg data_reg) {
+static void gen_mov_word_to_reg_helper(HostReg dest_reg, MAYBE_UNUSED void* data,bool dword,HostReg data_reg) {
 	// alignment....
 	if (dword) {
 #if !(defined(C_UNALIGNED_MEMORY) || (C_TARGETCPU == ARMV7LE))
@@ -475,7 +475,7 @@ static bool gen_mov_memval_from_reg(HostReg src_reg, void *dest, Bitu size) {
 }
 
 // helper function for gen_mov_word_from_reg
-static void gen_mov_word_from_reg_helper(HostReg src_reg,void* dest,bool dword, HostReg data_reg) {
+static void gen_mov_word_from_reg_helper(HostReg src_reg, MAYBE_UNUSED void* dest,bool dword, HostReg data_reg) {
 	// alignment....
 	if (dword) {
 #if !(defined(C_UNALIGNED_MEMORY) || (C_TARGETCPU == ARMV7LE))
@@ -554,7 +554,7 @@ static void INLINE gen_mov_byte_to_reg_low_imm_canuseword(HostReg dest_reg,Bit8u
 }
 
 // move the lowest 8bit of a register into memory
-static void gen_mov_byte_from_reg_low(HostReg src_reg,void* dest) {
+MAYBE_UNUSED static void gen_mov_byte_from_reg_low(HostReg src_reg,void* dest) {
 	if (!gen_mov_memval_from_reg(src_reg, dest, 1)) {
 		gen_mov_dword_to_reg_imm(temp1, (Bit32u)dest);
 		cache_addd( STRB_IMM(src_reg, temp1, 0) );      // strb src_reg, [temp1]
@@ -692,7 +692,7 @@ static void gen_add_direct_word(void* dest,Bit32u imm,bool dword) {
 }
 
 // add an 8bit constant value to a dword memory value
-static void gen_add_direct_byte(void* dest,Bit8s imm) {
+MAYBE_UNUSED static void gen_add_direct_byte(void* dest,Bit8s imm) {
 	gen_add_direct_word(dest, (Bit32s)imm, 1);
 }
 
@@ -739,7 +739,7 @@ static void gen_sub_direct_word(void* dest,Bit32u imm,bool dword) {
 }
 
 // subtract an 8bit constant value from a dword memory value
-static void gen_sub_direct_byte(void* dest,Bit8s imm) {
+MAYBE_UNUSED static void gen_sub_direct_byte(void* dest,Bit8s imm) {
 	gen_sub_direct_word(dest, (Bit32s)imm, 1);
 }
 
@@ -778,7 +778,7 @@ static void INLINE gen_call_function_raw(void * func) {
 // generate a call to a function with paramcount parameters
 // note: the parameters are loaded in the architecture specific way
 // using the gen_load_param_ functions below
-static INLINE const Bit8u* gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false) {
+static INLINE const Bit8u* gen_call_function_setup(void * func, MAYBE_UNUSED Bitu paramcount, MAYBE_UNUSED bool fastcall=false) {
 	const Bit8u* proc_addr = cache.pos;
 	gen_call_function_raw(func);
 	return proc_addr;
@@ -812,8 +812,6 @@ static void INLINE gen_load_param_mem(Bitu mem,Bitu param) {
 
 // jump to an address pointed at by ptr, offset is in imm
 static void gen_jmp_ptr(void * ptr,Bits imm=0) {
-	Bit32u scale;
-
 	gen_mov_word_to_reg(temp3, ptr, 1);
 
 #if !(defined(C_UNALIGNED_MEMORY) || (C_TARGETCPU == ARMV7LE))

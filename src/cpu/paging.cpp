@@ -521,7 +521,7 @@ public:
 		}
 		return true;
 	}
-	void InitPage(Bitu lin_addr,Bitu val) {
+	void InitPage(Bitu lin_addr, MAYBE_UNUSED Bitu val) {
 		Bitu lin_page=lin_addr >> 12;
 		Bitu phys_page;
 		if (paging.enabled) {
@@ -552,7 +552,7 @@ public:
 			PAGING_LinkPage(lin_page,phys_page);
 		}
 	}
-	Bitu InitPageCheckOnly(Bitu lin_addr,Bitu val) {
+	Bitu InitPageCheckOnly(Bitu lin_addr, MAYBE_UNUSED Bitu val) {
 		Bitu lin_page=lin_addr >> 12;
 		if (paging.enabled) {
 			if (!USERWRITE_PROHIBITED) return 2;
