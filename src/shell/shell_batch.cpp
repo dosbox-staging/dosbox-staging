@@ -97,8 +97,11 @@ emptyline:
 			 * international ASCII characters that are wrapped when
 			 * char is a signed type
 			 */
-			if (val < 0 || val > UNIT_SEPARATOR ||
-			    val == BACKSPACE || val == ESC || val == TAB) {
+			if (
+#if (CHAR_MIN < 0) // char is signed
+			    val < 0 ||
+#endif
+			    val > UNIT_SEPARATOR || val == BACKSPACE || val == ESC || val == TAB) {
 				// Only add it if room for it (and trailing zero)
 				// in the buffer, but do the check here instead
 				// at the end So we continue reading till EOL/EOF
@@ -157,7 +160,9 @@ emptyline:
 				next -= '0';
 				if (cmd->GetCount()<(unsigned int)next) continue;
 				std::string word;
+#if (CHAR_MIN < 0) // char is signed
 				assert(next >= 0);
+#endif
 				if (!cmd->FindCommand(static_cast<unsigned>(next), word))
 					continue;
 				append_cmd_write(word.c_str());
@@ -236,7 +241,12 @@ again:
 			// Note: the negative allowance permits high
 			// international ASCII characters that are wrapped when
 			// char is a signed type
-			if (val < 0 || val > UNIT_SEPARATOR) {
+
+			if (
+#if (CHAR_MIN < 0) // char is signed
+			    val < 0 ||
+#endif
+			    val > UNIT_SEPARATOR) {
 				if (cmd_write - cmd_buffer + 1 < CMD_MAXLINE - 1) {
 					*cmd_write++ = val;
 				}
