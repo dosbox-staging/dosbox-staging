@@ -62,11 +62,6 @@ jobs:
             build_flags: -Duse_sdl2_net=false
             max_warnings: 0
 
-          - name: GCC, warning_level=3
-            os: ubuntu-20.04
-            build_flags: -Dwarning_level=3
-            max_warnings: 44
-
           - name: GCC, minimum build
             os: ubuntu-20.04
             build_flags: --wrap-mode=nofallback -Dunit_tests=disabled -Duse_fluidsynth=false -Duse_sdl2_net=false -Duse_opengl=false -Duse_fluidsynth=false -Duse_mt32emu=false -Duse_png=false -Duse_alsa=false

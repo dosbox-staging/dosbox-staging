@@ -1,7 +1,7 @@
 project('dosbox-staging', 'c', 'cpp',
         version : '0.78.0',
         license : 'GPL-2.0-or-later',
-        default_options : ['cpp_std=c++17', 'b_ndebug=if-release', 'b_staticpic=false'],
+        default_options : ['cpp_std=c++17', 'warning_level=3', 'b_ndebug=if-release', 'b_staticpic=false'],
         meson_version : '>= 0.54.2')
 
 # After increasing the minimum-required meson version, make the following
@@ -14,9 +14,6 @@ project('dosbox-staging', 'c', 'cpp',
 
 
 # compiler flags
-#
-# Warnings enabled below are our baseline; use '-Dwarning_level=3' to
-# turn on more.  The default level is 1 (meson turns on -Wall).
 #
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
