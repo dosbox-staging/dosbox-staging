@@ -213,7 +213,7 @@ l_M_Ed:
 		case 0:
 			break;
 		default:
-			LOG(LOG_CPU,LOG_ERROR)("MODRM:Unhandled load %d entry %x",inst.code.extra,inst.entry);
+			LOG(LOG_CPU,LOG_ERROR)("MODRM:Unhandled load %d entry %x",inst.code.extra,static_cast<uint32_t>(inst.entry));
 			break;
 		}
 		break;
@@ -526,7 +526,7 @@ l_M_Ed:
 		break;
 	}
 	default:
-		LOG(LOG_CPU, LOG_ERROR)("LOAD:Unhandled code %d opcode %X", inst.code.load, inst.entry);
+		LOG(LOG_CPU, LOG_ERROR)("LOAD:Unhandled code %d opcode %X", inst.code.load, static_cast<uint32_t>(inst.entry));
 		goto illegalopcode;
 }
 

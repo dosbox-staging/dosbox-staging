@@ -393,7 +393,7 @@ void sn76496_base_device::countdown_cycles()
 	}
 }
 
-void sn76496_base_device::sound_stream_update(sound_stream &stream, stream_sample_t **inputs, stream_sample_t **outputs, int samples)
+void sn76496_base_device::sound_stream_update(MAYBE_UNUSED sound_stream &stream, MAYBE_UNUSED stream_sample_t **inputs, stream_sample_t **outputs, int samples)
 {
 	int i;
 	stream_sample_t *lbuffer = outputs[0];

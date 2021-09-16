@@ -380,7 +380,7 @@ static void INLINE gen_call_function_raw(void * func) {
 // generate a call to a function with paramcount parameters
 // note: the parameters are loaded in the architecture specific way
 // using the gen_load_param_ functions below
-static INLINE const Bit8u* gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false) {
+static INLINE const Bit8u* gen_call_function_setup(void * func, MAYBE_UNUSED Bitu paramcount, MAYBE_UNUSED bool fastcall=false) {
 	const Bit8u* proc_addr = cache.pos;
 	gen_call_function_raw(func);
 	return proc_addr;
@@ -693,6 +693,6 @@ static void gen_fill_function_ptr(const Bit8u * pos,void* fct_ptr,Bitu flags_typ
 }
 #endif
 
-static void cache_block_closing(const Bit8u* block_start,Bitu block_size) { }
+static void cache_block_closing(MAYBE_UNUSED const Bit8u* block_start, MAYBE_UNUSED Bitu block_size) { }
 
 static void cache_block_before_close(void) { }

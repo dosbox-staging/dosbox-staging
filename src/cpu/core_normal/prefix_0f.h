@@ -153,7 +153,7 @@
 			Bitu which=(rm >> 3) & 7;
 			if (rm < 0xc0 ) {
 				rm |= 0xc0;
-				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,CR%u with non-register",which);
+				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,CR%u with non-register", static_cast<uint32_t>(which));
 			}
 			GetEArd;
 			Bit32u crx_value;
@@ -167,7 +167,7 @@
 			Bitu which=(rm >> 3) & 7;
 			if (rm < 0xc0 ) {
 				rm |= 0xc0;
-				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,DR%u with non-register",which);
+				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,DR%u with non-register", static_cast<uint32_t>(which));
 			}
 			GetEArd;
 			Bit32u drx_value;
@@ -181,7 +181,7 @@
 			Bitu which=(rm >> 3) & 7;
 			if (rm < 0xc0 ) {
 				rm |= 0xc0;
-				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,CR%u with non-register",which);
+				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,CR%u with non-register", static_cast<uint32_t>(which));
 			}
 			GetEArd;
 			if (CPU_WRITE_CRX(which,*eard)) RUNEXCEPTION();
@@ -193,7 +193,7 @@
 			Bitu which=(rm >> 3) & 7;
 			if (rm < 0xc0 ) {
 				rm |= 0xc0;
-				LOG(LOG_CPU,LOG_ERROR)("MOV DR%u,XXX with non-register",which);
+				LOG(LOG_CPU,LOG_ERROR)("MOV DR%u,XXX with non-register", static_cast<uint32_t>(which));
 			}
 			GetEArd;
 			if (CPU_WRITE_DRX(which,*eard)) RUNEXCEPTION();
@@ -205,7 +205,7 @@
 			Bitu which=(rm >> 3) & 7;
 			if (rm < 0xc0 ) {
 				rm |= 0xc0;
-				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,TR%u with non-register",which);
+				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,TR%u with non-register", static_cast<uint32_t>(which));
 			}
 			GetEArd;
 			Bit32u trx_value;
@@ -219,7 +219,7 @@
 			Bitu which=(rm >> 3) & 7;
 			if (rm < 0xc0 ) {
 				rm |= 0xc0;
-				LOG(LOG_CPU,LOG_ERROR)("MOV TR%u,XXX with non-register",which);
+				LOG(LOG_CPU,LOG_ERROR)("MOV TR%u,XXX with non-register", static_cast<uint32_t>(which));
 			}
 			GetEArd;
 			if (CPU_WRITE_TRX(which,*eard)) RUNEXCEPTION();

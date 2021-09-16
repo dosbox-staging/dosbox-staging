@@ -1856,7 +1856,9 @@ static int codebook_decode_start(vorb *f, Codebook *c)
       error(f, VORBIS_invalid_stream);
    else {
       DECODE_VQ(z,f,c);
-      if (c->sparse) assert(z < c->sorted_entries);
+      if (c->sparse) {
+         assert(z < c->sorted_entries);
+      }
       if (z < 0) {  // check for EOP
          if (!f->bytes_in_seg)
             if (f->last_seg)
@@ -3214,8 +3216,9 @@ static int vorbis_decode_initial(vorb *f, int *p_left_start, int *p_left_end, in
       goto retry;
    }
 
-   if (f->alloc.alloc_buffer)
+   if (f->alloc.alloc_buffer) {
       assert(f->alloc.alloc_buffer_length_in_bytes == f->temp_offset);
+   }
 
    i = get_bits(f, ilog(f->mode_count-1));
    if (i == EOP) return FALSE;
@@ -3363,8 +3366,9 @@ static int vorbis_decode_packet_rest(vorb *f, int *len, Mode *m, int left_start,
    CHECK(f);
    // at this point we've decoded all floors
 
-   if (f->alloc.alloc_buffer)
+   if (f->alloc.alloc_buffer) {
       assert(f->alloc.alloc_buffer_length_in_bytes == f->temp_offset);
+   }
 
    // re-enable coupled channels if necessary
    memcpy(really_zero_channel, zero_channel, sizeof(really_zero_channel[0]) * f->channels);
@@ -3396,8 +3400,9 @@ static int vorbis_decode_packet_rest(vorb *f, int *len, Mode *m, int left_start,
       decode_residue(f, residue_buffers, ch, n2, r, do_not_decode);
    }
 
-   if (f->alloc.alloc_buffer)
+   if (f->alloc.alloc_buffer) {
       assert(f->alloc.alloc_buffer_length_in_bytes == f->temp_offset);
+   }
    CHECK(f);
 
 // INVERSE COUPLING
@@ -3512,8 +3517,9 @@ static int vorbis_decode_packet_rest(vorb *f, int *len, Mode *m, int left_start,
    if (f->current_loc_valid)
       f->current_loc += (right_start - left_start);
 
-   if (f->alloc.alloc_buffer)
+   if (f->alloc.alloc_buffer) {
       assert(f->alloc.alloc_buffer_length_in_bytes == f->temp_offset);
+   }
    *len = right_end;  // ignore samples after the window goes to 0
    CHECK(f);
 

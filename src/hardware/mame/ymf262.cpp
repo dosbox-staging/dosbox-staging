@@ -1633,7 +1633,7 @@ static inline void set_sl_rr(OPL3 *chip,int slot,int v)
 }
 
 
-static void update_channels(OPL3 *chip, OPL3_CH *CH)
+static void update_channels(MAYBE_UNUSED OPL3 *chip, OPL3_CH *CH)
 {
 	/* update channel passed as a parameter and a channel at CH+=3; */
 	if (CH->extended)
@@ -2442,7 +2442,7 @@ static int OPL3TimerOver(OPL3 *chip,int c)
 	return chip->status>>7;
 }
 
-static void OPL3_save_state(OPL3 *chip, device_t *device) {
+static void OPL3_save_state(MAYBE_UNUSED OPL3 *chip, MAYBE_UNUSED device_t *device) {
 #if 0 
 	for (int ch=0; ch<18; ch++) {
 		OPL3_CH *channel = &chip->P_CH[ch];
