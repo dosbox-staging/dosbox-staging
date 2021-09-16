@@ -109,9 +109,9 @@ jobs:
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.today }}
+          key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.today }}-1
           restore-keys: |
-            ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}
+            ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-1
 
       - name:  Cache subprojects
         uses:  actions/cache@v2
@@ -172,9 +172,9 @@ jobs:
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-linux-release-${{ steps.prep-ccache.outputs.today }}
+          key:  ccache-linux-release-${{ steps.prep-ccache.outputs.today }}-1
           restore-keys: |
-            ccache-linux-release-${{ steps.prep-ccache.outputs.yesterday }}
+            ccache-linux-release-${{ steps.prep-ccache.outputs.yesterday }}-1
 
       - name:  Cache subprojects
         uses:  actions/cache@v2
