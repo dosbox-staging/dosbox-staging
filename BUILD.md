@@ -1,10 +1,10 @@
 ## Minimum build requirements
 
-- C/C++ compiler with support for C++17
-- SDL >= 2.0.5
-- Opusfile
-- Meson >= 0.49.0 or Visual Studio Community Edition
-- OS that is mostly POSIX-compliant or up-to-date Windows system
+  - C/C++ compiler with support for C++17
+  - SDL >= 2.0.5
+  - Opusfile
+  - Meson >= 0.49.0 or Visual Studio Community Edition
+  - OS that is mostly POSIX-compliant or up-to-date Windows system
 
 All other dependencies are optional and can be disabled while configuring the
 build (in `meson setup` step).
