@@ -71,7 +71,7 @@ public:
 
 	sound_stream temp;
 
-	device_sound_interface(MAYBE_UNUSED const machine_config &mconfig, MAYBE_UNUSED device_t &_device)
+	device_sound_interface(const machine_config & /* mconfig */, MAYBE_UNUSED device_t &_device)
 	        : temp()
 	{}
 
@@ -141,7 +141,7 @@ public:
 	void save_item(int, MAYBE_UNUSED int blah= 0) {
 	}
 
-	device_t(MAYBE_UNUSED const machine_config &mconfig, MAYBE_UNUSED device_type type, MAYBE_UNUSED const char *tag, MAYBE_UNUSED device_t *owner, u32 _clock) : clockRate( _clock ) {
+	device_t(const machine_config & /* mconfig */, MAYBE_UNUSED device_type type, MAYBE_UNUSED const char *tag, MAYBE_UNUSED device_t *owner, u32 _clock) : clockRate( _clock ) {
 	}
 
 	virtual ~device_t() {
