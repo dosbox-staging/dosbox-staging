@@ -133,6 +133,14 @@ git submodule update --init
 git pull --recurse-submodules
 ```
 
+We recommend applying this Git (2.15+) configuration to ensure
+project submodules are kept in-sync whenever you `git pull`:
+
+``` shell
+git config --global submodule.recurse true
+```
+
+
 ## Build instructions
 
 Read [BUILD.md] for the comprehensive compilation guide.
