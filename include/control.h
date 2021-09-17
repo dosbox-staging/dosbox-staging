@@ -32,11 +32,11 @@
 
 enum class Verbosity : int8_t {
 	//                  Splash | Welcome | Early Stdout |
-	High = 4,       //   yes   |   yes   |    yes       |
-	Medium = 3,     //   no    |   yes   |    yes       |
-	Low = 2,        //   no    |   no    |    yes       |
+	Quiet = 0,      //   no    |   no    |    no        |
 	SplashOnly = 1, //   yes   |   no    |    no        |
-	Quiet = 0       //   no    |   no    |    no        |
+	Low = 2,        //   no    |   no    |    yes       |
+	Medium = 3,     //   no    |   yes   |    yes       |
+	High = 4,       //   yes   |   yes   |    yes       |
 };
 
 class Config {
