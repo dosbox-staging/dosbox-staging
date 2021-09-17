@@ -468,8 +468,15 @@ public:
 			autoexec[i++].Install(line);
 		}
 
-		/* Check for the -exit switch which causes dosbox to when the command on the commandline has finished */
-		bool addexit = control->cmdline->FindExist("-exit",true);
+		// Check for the -exit switch, which indicates they want to quit after the command has finished
+		const bool requested_exit_after_command = control->cmdline->FindExist("-exit", true);
+
+		// Check if instant-launch is active
+		const bool using_instant_launch = control->cmdline->HasExecutableName() &&
+		                                  control->GetStartupVerbosity() <= Verbosity::Low;
+
+		// Should we add an 'exit' call to the end of autoexec.bat?
+		const bool addexit = requested_exit_after_command || using_instant_launch;
 
 		/* Check for first command being a directory or file */
 		char buffer[CROSS_LEN + 1];
@@ -731,6 +738,7 @@ void SHELL_Init() {
 	        "               E  By extension (alphabetic)  D  By date & time (oldest first)\n");
 	MSG_Add("SHELL_CMD_ECHO_HELP","Display messages and enable/disable command echoing.\n");
 	MSG_Add("SHELL_CMD_EXIT_HELP","Exit from the shell.\n");
+	MSG_Add("SHELL_CMD_EXIT_TOO_SOON", "Preventing an early 'exit' call from terminating.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP","Show help.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP_LONG","HELP [command]\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP","Make Directory.\n");
