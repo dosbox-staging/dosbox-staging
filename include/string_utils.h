@@ -102,4 +102,6 @@ bool starts_with(const char (&pfx)[N], const std::string &str) noexcept
 
 bool ends_with(const std::string &str, const std::string &suffix) noexcept;
 
+bool find_in_case_insensitive(const std::string &needle, const std::string &haystack);
+
 #endif
