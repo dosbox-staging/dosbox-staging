@@ -414,44 +414,57 @@ public:
 	{
 		/* Register a virtual AUOEXEC.BAT file */
 		std::string line;
-		Section_line * section=static_cast<Section_line *>(configuration);
+		Section_line *section = static_cast<Section_line *>(configuration);
 
-		/* Check -securemode switch to disable mount/imgmount/boot after running autoexec.bat */
-		bool secure = control->cmdline->FindExist("-securemode",true);
+		/* Check -securemode switch to disable mount/imgmount/boot after
+		 * running autoexec.bat */
+		bool secure = control->cmdline->FindExist("-securemode", true);
 
-		/* add stuff from the configfile unless -noautexec or -securemode is specified. */
-		char * extra = const_cast<char*>(section->data.c_str());
-		if (extra && !secure && !control->cmdline->FindExist("-noautoexec",true)) {
+		/* add stuff from the configfile unless -noautexec or
+		 * -securemode is specified. */
+		char *extra = const_cast<char *>(section->data.c_str());
+		if (extra && !secure && !control->cmdline->FindExist("-noautoexec", true)) {
 			/* detect if "echo off" is the first line */
-			size_t firstline_length = strcspn(extra,"\r\n");
-			bool echo_off  = !strncasecmp(extra,"echo off",8);
-			if (echo_off && firstline_length == 8) extra += 8;
+			size_t firstline_length = strcspn(extra, "\r\n");
+			bool echo_off = !strncasecmp(extra, "echo off", 8);
+			if (echo_off && firstline_length == 8)
+				extra += 8;
 			else {
-				echo_off = !strncasecmp(extra,"@echo off",9);
-				if (echo_off && firstline_length == 9) extra += 9;
-				else echo_off = false;
+				echo_off = !strncasecmp(extra, "@echo off", 9);
+				if (echo_off && firstline_length == 9)
+					extra += 9;
+				else
+					echo_off = false;
 			}
 
 			/* if "echo off" move it to the front of autoexec.bat */
-			if (echo_off)  { 
+			if (echo_off) {
 				autoexec_echo.InstallBefore("@echo off");
-				if (*extra == '\r') extra++; //It can point to \0
-				if (*extra == '\n') extra++; //same
+				if (*extra == '\r')
+					extra++; // It can point to \0
+				if (*extra == '\n')
+					extra++; // same
 			}
 
-			/* Install the stuff from the configfile if anything left after moving echo off */
+			/* Install the stuff from the configfile if anything
+			 * left after moving echo off */
 
-			if (*extra) autoexec[0].Install(std::string(extra));
+			if (*extra)
+				autoexec[0].Install(std::string(extra));
 		}
 
-		/* Check to see for extra command line options to be added (before the command specified on commandline) */
+		/* Check to see for extra command line options to be added
+		 * (before the command specified on commandline) */
 		/* Maximum of extra commands: 10 */
 		Bitu i = 1;
-		while (control->cmdline->FindString("-c",line,true) && (i <= 11)) {
-#if defined (WIN32)
-			//replace single with double quotes so that mount commands can contain spaces
-			for(Bitu temp = 0;temp < line.size();++temp) if(line[temp] == '\'') line[temp]='\"';
-#endif //Linux users can simply use \" in their shell
+		while (control->cmdline->FindString("-c", line, true) && (i <= 11)) {
+#if defined(WIN32)
+			// replace single with double quotes so that mount
+			// commands can contain spaces
+			for (Bitu temp = 0; temp < line.size(); ++temp)
+				if (line[temp] == '\'')
+					line[temp] = '\"';
+#endif // Linux users can simply use \" in their shell
 			autoexec[i++].Install(line);
 		}
 
@@ -459,69 +472,85 @@ public:
 		bool addexit = control->cmdline->FindExist("-exit",true);
 
 		/* Check for first command being a directory or file */
-		char buffer[CROSS_LEN+1];
-		char orig[CROSS_LEN+1];
-		char cross_filesplit[2] = {CROSS_FILESPLIT , 0};
+		char buffer[CROSS_LEN + 1];
+		char orig[CROSS_LEN + 1];
+		char cross_filesplit[2] = {CROSS_FILESPLIT, 0};
 
 		unsigned int command_index = 1;
 		bool command_found = false;
 		while (control->cmdline->FindCommand(command_index++, line) &&
 		       !command_found) {
 			struct stat test;
-			if (line.length() > CROSS_LEN) continue;
+			if (line.length() > CROSS_LEN)
+				continue;
 			safe_strcpy(buffer, line.c_str());
-			if (stat(buffer,&test)) {
-				if (getcwd(buffer,CROSS_LEN) == NULL) continue;
-				if (strlen(buffer) + line.length() + 1 > CROSS_LEN) continue;
+			if (stat(buffer, &test)) {
+				if (getcwd(buffer, CROSS_LEN) == NULL)
+					continue;
+				if (strlen(buffer) + line.length() + 1 > CROSS_LEN)
+					continue;
 				safe_strcat(buffer, cross_filesplit);
 				safe_strcat(buffer, line.c_str());
-				if (stat(buffer,&test)) continue;
+				if (stat(buffer, &test))
+					continue;
 			}
 			if (test.st_mode & S_IFDIR) {
 				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
 				autoexec[13].Install("C:");
-				if(secure) autoexec[14].Install("z:\\config.com -securemode");
+				if (secure)
+					autoexec[14].Install("z:\\config.com -securemode");
 				command_found = true;
 			} else {
-				char* name = strrchr(buffer,CROSS_FILESPLIT);
-				if (!name) { //Only a filename
+				char *name = strrchr(buffer, CROSS_FILESPLIT);
+				if (!name) { // Only a filename
 					line = buffer;
-					if (getcwd(buffer,CROSS_LEN) == NULL) continue;
-					if (strlen(buffer) + line.length() + 1 > CROSS_LEN) continue;
+					if (getcwd(buffer, CROSS_LEN) == NULL)
+						continue;
+					if (strlen(buffer) + line.length() + 1 > CROSS_LEN)
+						continue;
 					safe_strcat(buffer, cross_filesplit);
 					safe_strcat(buffer, line.c_str());
-					if(stat(buffer,&test)) continue;
-					name = strrchr(buffer,CROSS_FILESPLIT);
-					if(!name) continue;
+					if (stat(buffer, &test))
+						continue;
+					name = strrchr(buffer, CROSS_FILESPLIT);
+					if (!name)
+						continue;
 				}
 				*name++ = 0;
 				if (!path_exists(buffer))
 					continue;
 				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
 				autoexec[13].Install("C:");
-				/* Save the non-modified filename (so boot and imgmount can use it (long filenames, case sensivitive)) */
+				/* Save the non-modified filename (so boot and
+				 * imgmount can use it (long filenames, case
+				 * sensivitive)) */
 				safe_strcpy(orig, name);
 				upcase(name);
-				if(strstr(name,".BAT") != 0) {
-					if(secure) autoexec[14].Install("z:\\config.com -securemode");
+				if (strstr(name, ".BAT") != 0) {
+					if (secure)
+						autoexec[14].Install("z:\\config.com -securemode");
 					/* BATch files are called else exit will not work */
 					autoexec[15].Install(std::string("CALL ") + name);
-					if(addexit) autoexec[16].Install("exit");
-				} else if((strstr(name,".IMG") != 0) || (strstr(name,".IMA") !=0 )) {
-					//No secure mode here as boot is destructive and enabling securemode disables boot
+					if (addexit)
+						autoexec[16].Install("exit");
+				} else if ((strstr(name, ".IMG") != 0) || (strstr(name, ".IMA") != 0)) {
+					// No secure mode here as boot is destructive and enabling securemode disables boot
 					/* Boot image files */
 					autoexec[15].Install(std::string("BOOT ") + orig);
-				} else if((strstr(name,".ISO") != 0) || (strstr(name,".CUE") !=0 )) {
+				} else if ((strstr(name, ".ISO") != 0) || (strstr(name, ".CUE") != 0)) {
 					/* imgmount CD image files */
 					/* securemode gets a different number from the previous branches! */
 					autoexec[14].Install(std::string("IMGMOUNT D \"") + orig + std::string("\" -t iso"));
-					//autoexec[16].Install("D:");
-					if(secure) autoexec[15].Install("z:\\config.com -securemode");
+					// autoexec[16].Install("D:");
+					if (secure)
+						autoexec[15].Install("z:\\config.com -securemode");
 					/* Makes no sense to exit here */
 				} else {
-					if(secure) autoexec[14].Install("z:\\config.com -securemode");
+					if (secure)
+						autoexec[14].Install("z:\\config.com -securemode");
 					autoexec[15].Install(name);
-					if(addexit) autoexec[16].Install("exit");
+					if (addexit)
+						autoexec[16].Install("exit");
 				}
 				command_found = true;
 			}
