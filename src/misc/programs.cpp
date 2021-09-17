@@ -153,7 +153,7 @@ bool Program::SuppressWriteOut(const char *format)
 	static bool encountered_executable = false;
 	if (encountered_executable)
 		return false;
-	if (control->GetStartupVerbosity() <= Verbosity::SplashOnly)
+	if (control->GetStartupVerbosity() >= Verbosity::SplashOnly)
 		return false;
 	if (!control->cmdline->HasExecutableName())
 		return false;
