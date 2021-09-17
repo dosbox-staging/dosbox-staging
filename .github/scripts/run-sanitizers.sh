@@ -38,7 +38,7 @@ export LSAN_OPTIONS="suppressions=.lsan-suppress:verbosity=0"
 # so we or-to-true to ensure our script doesn't end here.
 # We'll detect issues by analyzing logs instead.
 time xvfb-run "./${build_dir}/dosbox" \
-	-c "autotype -w 0.1 e x i t enter" \
+	-c "autotype -w 2 e x i t enter" \
 	&> "${logs}/EnterExit.log" || true
 
 # Compress the logs
