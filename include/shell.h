@@ -153,6 +153,7 @@ public:
 	{}
 	void Install(std::string const &in);
 	void InstallBefore(std::string const &in);
+	const std::string &GetLine() const { return buf; }
 	~AutoexecObject();
 private:
 	void CreateAutoexec();
