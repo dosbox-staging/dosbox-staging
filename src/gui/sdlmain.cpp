@@ -361,6 +361,9 @@ struct SDL_Block {
 	} mouse = {};
 	SDL_Point pp_scale = {1, 1};
 	SDL_Rect updateRects[1024];
+	bool window_resolution_specified = false;
+	bool use_max_resolution = false;
+	SDL_Point max_resolution = {-1, -1};
 #if defined (WIN32)
 	// Time when sdl regains focus (Alt+Tab) in windowed mode
 	int64_t focus_ticks = 0;
@@ -372,6 +375,7 @@ struct SDL_Block {
 
 static SDL_Block sdl;
 
+static SDL_Point restrict_to_max_resolution(int width, int height);
 static SDL_Point calc_pp_scale(int width, int heigth);
 static SDL_Rect calc_viewport(int width, int height);
 
@@ -884,9 +888,7 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 {
 	assert(sdl.window);
 
-	int w = 0;
-	int h = 0;
-
+	int w, h;
 	if (sdl.desktop.fullscreen) {
 		SDL_GetWindowSize(sdl.window, &w, &h);
 	} else {
@@ -895,83 +897,84 @@ static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
 	}
 	assert(w > 0 && h > 0);
 
-	sdl.pp_scale = calc_pp_scale(w, h);
+	const auto render_resolution = restrict_to_max_resolution(w, h);
 
-	const int imgw = sdl.pp_scale.x * sdl.draw.width;
-	const int imgh = sdl.pp_scale.y * sdl.draw.height;
+	sdl.pp_scale = calc_pp_scale(render_resolution.x, render_resolution.y);
 
-	const int wndw = (sdl.desktop.fullscreen ? w : imgw);
-	const int wndh = (sdl.desktop.fullscreen ? h : imgh);
+	const int img_width = sdl.pp_scale.x * sdl.draw.width;
+	const int img_height = sdl.pp_scale.y * sdl.draw.height;
 
-	sdl.clip.w = imgw;
-	sdl.clip.h = imgh;
-	sdl.clip.x = (wndw - imgw) / 2;
-	sdl.clip.y = (wndh - imgh) / 2;
+	int win_width, win_height;
+	if (sdl.window_resolution_specified && sdl.use_max_resolution) {
+		win_width = w;
+		win_height = h;
+	} else {
+		win_width = (sdl.desktop.fullscreen ? w : img_width);
+		win_height = (sdl.desktop.fullscreen ? h : img_height);
+	}
 
-	sdl.window = SetWindowMode(screen_type, wndw, wndh,
+	sdl.clip.w = img_width;
+	sdl.clip.h = img_height;
+	sdl.clip.x = (win_width - img_width) / 2;
+	sdl.clip.y = (win_height - img_height) / 2;
+
+	sdl.window = SetWindowMode(screen_type, win_width, win_height,
 	                           sdl.desktop.fullscreen, resizable);
 	return sdl.window;
 }
+
+
+static SDL_Point restrict_to_max_resolution(int width, int height)
+{
+	int w, h;
+	if (sdl.use_max_resolution) {
+		w = std::min(width, sdl.max_resolution.x);
+		h = std::min(height, sdl.max_resolution.y);
+	} else {
+		w = width;
+		h = height;
+	}
+	return {w, h};
+}
+
+static SDL_Rect calc_viewport_fit(int win_width, int win_height);
 
 static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 {
 	if (sdl.scaling_mode == SCALING_MODE::PERFECT)
 		return setup_window_pp(screen_type, resizable);
 
-	Bit16u fixedWidth;
-	Bit16u fixedHeight;
-
+	int w, h;
 	if (sdl.desktop.fullscreen) {
-		fixedWidth = sdl.desktop.full.fixed ? sdl.desktop.full.width : 0;
-		fixedHeight = sdl.desktop.full.fixed ? sdl.desktop.full.height : 0;
+		w = sdl.desktop.full.fixed ? sdl.desktop.full.width : 0;
+		h = sdl.desktop.full.fixed ? sdl.desktop.full.height : 0;
 	} else {
-		fixedWidth = sdl.desktop.window.width;
-		fixedHeight = sdl.desktop.window.height;
+		w = sdl.desktop.window.width;
+		h = sdl.desktop.window.height;
 	}
 
-	if (fixedWidth && fixedHeight) {
-		double ratio_w=(double)fixedWidth/(sdl.draw.width*sdl.draw.scalex);
-		double ratio_h=(double)fixedHeight/(sdl.draw.height*sdl.draw.scaley);
-		if ( ratio_w < ratio_h) {
-			sdl.clip.w = fixedWidth;
-			sdl.clip.h = (Bit16u)(sdl.draw.height * sdl.draw.scaley*ratio_w + 0.1); //possible rounding issues
-		} else {
-			/*
-			 * The 0.4 is there to correct for rounding issues.
-			 * (partly caused by the rounding issues fix in RENDER_SetSize)
-			 */
-			sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex*ratio_h + 0.4);
-			sdl.clip.h = fixedHeight;
-		}
+	if (w > 0 && h > 0) {
+		sdl.clip = calc_viewport_fit(w, h);
+		sdl.window = SetWindowMode(screen_type, w, h,
+		                           sdl.desktop.fullscreen, resizable);
 
-		if (sdl.desktop.fullscreen) {
-			sdl.window = SetWindowMode(screen_type, fixedWidth,
-			                           fixedHeight, sdl.desktop.fullscreen,
-			                           resizable);
-		} else {
-			sdl.window = SetWindowMode(screen_type, sdl.clip.w,
-			                           sdl.clip.h, sdl.desktop.fullscreen,
-			                           resizable);
+		const auto is_window_fullscreen = SDL_GetWindowFlags(sdl.window) &
+		                                  SDL_WINDOW_FULLSCREEN;
+		if (sdl.window && is_window_fullscreen) {
+			int win_width;
+			SDL_GetWindowSize(sdl.window, &win_width, NULL);
+			sdl.clip.x = (win_width - sdl.clip.w) / 2;
+			sdl.clip.y = (h - sdl.clip.h) / 2;
 		}
-
-		if (sdl.window && SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN) {
-			int windowWidth;
-			SDL_GetWindowSize(sdl.window, &windowWidth, NULL);
-			sdl.clip.x = (Sint16)((windowWidth - sdl.clip.w) / 2);
-			sdl.clip.y = (Sint16)((fixedHeight - sdl.clip.h) / 2);
-		} else {
-			sdl.clip.x = 0;
-			sdl.clip.y = 0;
-		}
-
 		return sdl.window;
 
 	} else {
-		sdl.clip.x = 0;
-		sdl.clip.y = 0;
-		sdl.clip.w = iround(sdl.draw.width * sdl.draw.scalex);
-		sdl.clip.h = iround(sdl.draw.height * sdl.draw.scaley);
-		sdl.window = SetWindowMode(screen_type, sdl.clip.w, sdl.clip.h,
+		const auto win_width = iround(sdl.draw.width * sdl.draw.scalex);
+		const auto win_height = iround(sdl.draw.height * sdl.draw.scaley);
+
+		sdl.clip = calc_viewport_fit(win_width, win_height);
+
+		sdl.window = SetWindowMode(screen_type, win_width, win_height,
 		                           sdl.desktop.fullscreen, resizable);
 		return sdl.window;
 	}
@@ -1366,14 +1369,14 @@ dosurface:
 
 		int windowWidth, windowHeight;
 		SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
+
 		if (sdl.clip.x == 0 && sdl.clip.y == 0 &&
 		    sdl.desktop.fullscreen &&
 		    !sdl.desktop.full.fixed &&
 		    (sdl.clip.w != windowWidth || sdl.clip.h != windowHeight)) {
 			// LOG_MSG("attempting to fix the centering to %d %d %d %d",(windowWidth-sdl.clip.w)/2,(windowHeight-sdl.clip.h)/2,sdl.clip.w,sdl.clip.h);
-			glViewport((windowWidth - sdl.clip.w) / 2,
-			           (windowHeight - sdl.clip.h) / 2, sdl.clip.w,
-			           sdl.clip.h);
+			sdl.clip = calc_viewport(windowWidth, windowHeight);
+			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		} else if (sdl.desktop.window.resizable) {
 			sdl.clip = calc_viewport(windowWidth, windowHeight);
 			glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
@@ -1381,6 +1384,7 @@ dosurface:
 			/* We don't just pass sdl.clip.y as-is, so we cover the case of non-vertical
 			 * centering on Android (in order to leave room for the on-screen keyboard)
 			 */
+			sdl.clip = calc_viewport(windowWidth, windowHeight);
 			glViewport(sdl.clip.x,
 			           windowHeight - (sdl.clip.y + sdl.clip.h),
 			           sdl.clip.w,
@@ -2078,8 +2082,6 @@ MAYBE_UNUSED static std::string get_glshader_value()
 #endif // C_OPENGL
 }
 
-
-
 static bool detect_resizable_window()
 {
 #if C_OPENGL
@@ -2099,6 +2101,15 @@ static bool detect_resizable_window()
 #else
 	return false;
 #endif // C_OPENGL
+}
+
+static bool wants_stretched_pixels()
+{
+	const auto render_section = static_cast<Section_prop *>(
+	        control->GetSection("render"));
+	assert(render_section);
+
+	return render_section->Get_bool("aspect");
 }
 
 static SDL_Point remove_stretched_aspect(const SDL_Point &size)
@@ -2123,10 +2134,12 @@ static SDL_Point refine_window_size(const SDL_Point &size,
 		if (window_aspect > game_aspect) {
 			const int x = ceil_sdivide(size.y * game_ratios.x, game_ratios.y);
 			return {x, size.y};
+		} else {
+			// screen is narrower than the game, so constrain vertical
+			const int y = ceil_sdivide(size.x * game_ratios.y,
+			                           game_ratios.x);
+			return {size.x, y};
 		}
-		// screen is narrower than the game, so constrain vertical
-		const int y = ceil_sdivide(size.x * game_ratios.y, game_ratios.x);
-		return {size.x, y};
 	}
 	case (SCALING_MODE::NEAREST): {
 		constexpr SDL_Point resolutions[] = {
@@ -2229,6 +2242,13 @@ static SDL_Point window_bounds_from_label(const std::string &pref,
 	return {w, h};
 }
 
+static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
+{
+	const auto w = std::max(size.x, FALLBACK_WINDOW_DIMENSIONS.x);
+	const auto h = std::max(size.y, FALLBACK_WINDOW_DIMENSIONS.y);
+	return {w, h};
+}
+
 static SDL_Rect get_desktop_resolution()
 {
 	SDL_Rect desktop;
@@ -2237,6 +2257,62 @@ static SDL_Rect get_desktop_resolution()
 	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
 	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
 	return desktop;
+}
+
+// Takes in:
+//  - The 'maxresolution' config value: 'auto', 'WxH', or an invalid setting.
+//
+// Except for SURFACE and TEXTURE rendering, the function populates the following struct members:
+//  - 'sdl.desktop.use_max_resolution', true if the maxresolution feature is enabled.
+//  - 'sdl.desktop.max_resolution', with the refined size.
+
+static void setup_max_resolution_from_conf(const std::string &max_resolution_val)
+{
+	sdl.use_max_resolution = false;
+	sdl.max_resolution = {-1, -1};
+
+	// TODO: Deprecate SURFACE output and remove this.
+	if (sdl.desktop.want_type == SCREEN_SURFACE)
+		return;
+
+	if (max_resolution_val == "auto")
+		return;
+
+	const auto desktop = get_desktop_resolution();
+	int w, h;
+	auto was_parsed = sscanf(max_resolution_val.c_str(), "%dx%d", &w, &h) == 2;
+	if (!was_parsed) {
+		LOG_WARNING("DISPLAY: Requested maxresolution '%s' is invalid, resolution restriction is disabled",
+		            max_resolution_val.c_str());
+		return;
+	}
+
+	const bool is_out_of_bounds = w <= 0 || w > desktop.w || h <= 0 ||
+	                              h > desktop.h;
+	if (is_out_of_bounds) {
+		LOG_WARNING("DISPLAY: Requested maxresolution '%dx%d' is outside the bounds of the desktop '%dx%d', "
+		            "resolution restriction is disabled",
+		            w, h, desktop.w, desktop.h);
+		return;
+	}
+
+	auto coarse_size = clamp_to_minimum_window_dimensions({w, h});
+
+	SDL_Point refined_size;
+	if (sdl.scaling_mode == SCALING_MODE::PERFECT) {
+		// Keep requested maxresolution in pixel-perfect modes; refining it
+		// would be too counterintuitive
+		refined_size = coarse_size;
+	} else {
+		refined_size = refine_window_size(coarse_size, sdl.scaling_mode,
+		                                  wants_stretched_pixels());
+	}
+
+	sdl.use_max_resolution = true;
+	sdl.max_resolution = refined_size;
+
+	LOG_MSG("DISPLAY: maxresolution set to %dx%d (refined from %dx%d)",
+			refined_size.x, refined_size.y, w, h);
 }
 
 static void setup_initial_window_position_from_conf(const std::string &windowposition_val)
@@ -2250,8 +2326,8 @@ static void setup_initial_window_position_from_conf(const std::string &windowpos
 	int x, y;
 	const auto was_parsed = sscanf(windowposition_val.c_str(), "%d,%d", &x, &y) == 2;
 	if (!was_parsed) {
-		LOG_MSG("DISPLAY: Requested windowposition '%s' is invalid, using 'auto' instead",
-		        windowposition_val.c_str());
+		LOG_WARNING("DISPLAY: Requested windowposition '%s' was not in X,Y format, using 'auto' instead",
+		            windowposition_val.c_str());
 		return;
 	}
 
@@ -2259,9 +2335,9 @@ static void setup_initial_window_position_from_conf(const std::string &windowpos
 	const bool is_out_of_bounds = x <= 0 || x > desktop.w || y <= 0 ||
 	                              y > desktop.h;
 	if (is_out_of_bounds) {
-		LOG_MSG("DISPLAY: Requested window position '%d,%d' is outside the bounds of the desktop '%dx%d', "
-		        "using 'auto' instead",
-		        x, y, desktop.w, desktop.h);
+		LOG_WARNING("DISPLAY: Requested windowposition '%d,%d' is outside the bounds of the desktop '%dx%d', "
+		            "using 'auto' instead",
+		            x, y, desktop.w, desktop.h);
 		return;
 	}
 
@@ -2304,12 +2380,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	// Can the window be resized?
 	sdl.desktop.want_resizable_window = detect_resizable_window();
 
-	// Get the total desktop resolution
-	SDL_Rect desktop;
-	assert(sdl.display_number >= 0);
-	SDL_GetDisplayBounds(sdl.display_number, &desktop);
-	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
-	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
+	const auto desktop = get_desktop_resolution();
 
 	// The refined scaling mode tell the refiner how it should adjust
 	// the coarse-resolution.
@@ -2321,9 +2392,11 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	// Get the coarse resolution from the users setting, and adjust
 	// refined scaling mode if an exact resolution is desired.
-	const std::string pref = NormalizeConfValue(windowresolution_val);
 	SDL_Point coarse_size = FALLBACK_WINDOW_DIMENSIONS;
-	if (pref.find('x') != std::string::npos) {
+
+	const std::string pref = NormalizeConfValue(windowresolution_val);
+	sdl.window_resolution_specified = pref.find('x') != std::string::npos;
+	if (sdl.window_resolution_specified) {
 		coarse_size = window_bounds_from_resolution(pref, desktop);
 		refined_scaling_mode = drop_nearest();
 	} else {
@@ -2335,9 +2408,16 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	// Save the coarse bounds in the SDL struct for future sizing events
 	sdl.desktop.requested_window_bounds = {coarse_size.x, coarse_size.y};
 
-	// Refine the coarse resolution and save it in the SDL struct
-	const auto refined_size = refine_window_size(coarse_size, refined_scaling_mode,
-	                                             wants_stretched_pixels);
+	// Refine the coarse resolution and save it in the SDL struct.
+	auto refined_size = coarse_size;
+	if (sdl.window_resolution_specified && sdl.use_max_resolution) {
+		// If maxresolution is enabled, the refinement is applied to
+		// maxresolution instead of the the window dimensions.
+		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
+	} else {
+		refined_size = refine_window_size(coarse_size, refined_scaling_mode,
+		                                  wants_stretched_pixels);
+	}
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
 	sdl.desktop.window.width = static_cast<uint16_t>(refined_size.x);
 	sdl.desktop.window.height = static_cast<uint16_t>(refined_size.y);
@@ -2357,30 +2437,33 @@ static SDL_Rect calc_viewport_fit(int win_width, int win_height)
 	assert(std::isfinite(sdl.draw.scalex));
 	assert(std::isfinite(sdl.draw.scaley));
 
-	const double prog_aspect_ratio = (sdl.draw.width * sdl.draw.scalex) /
-	                                 (sdl.draw.height * sdl.draw.scaley);
+	const double prog_aspect_ratio = (sdl.draw.width * sdl.draw.scalex) / (sdl.draw.height * sdl.draw.scaley);
 	const double win_aspect_ratio = double(win_width) / double(win_height);
 
+	const auto render_resolution = restrict_to_max_resolution(win_width, win_height);
+
+	int w, h;
 	if (prog_aspect_ratio > win_aspect_ratio) {
-		// match window width
-		const int w = win_width;
-		const int h = iround(win_width / prog_aspect_ratio);
-		assert(win_height >= h);
-		const int y = (win_height - h) / 2;
-		return {0, y, w, h};
+		w = render_resolution.x;
+		h = iround(w / prog_aspect_ratio);
 	} else {
-		// match window height
-		const int w = iround(win_height * prog_aspect_ratio);
-		const int h = win_height;
-		assert(win_width >= w);
-		const int x = (win_width - w) / 2;
-		return {x, 0, w, h};
+		h = render_resolution.y;
+		w = iround(h * prog_aspect_ratio);
 	}
+	assert(win_width >= w);
+	assert(win_height >= h);
+
+	const int x = (win_width - w) / 2;
+	const int y = (win_height - h) / 2;
+
+	return {x, y, w, h};
 }
 
 static SDL_Rect calc_viewport_pp(int win_width, int win_height)
 {
-	sdl.pp_scale = calc_pp_scale(win_width, win_height);
+	const auto render_resolution = restrict_to_max_resolution(win_width, win_height);
+	
+	sdl.pp_scale = calc_pp_scale(render_resolution.x, render_resolution.y);
 
 	const int w = sdl.pp_scale.x * sdl.draw.width;
 	const int h = sdl.pp_scale.y * sdl.draw.height;
@@ -2539,17 +2622,15 @@ static void GUI_StartUp(Section *sec)
 	sdl.render_driver = section->Get_string("texture_renderer");
 	lowcase(sdl.render_driver);
 
-	const auto render_section = static_cast<Section_prop *>(
-	        control->GetSection("render"));
-	assert(render_section);
-
 	sdl.desktop.window.show_decorations = section->Get_bool("windowdecorations");
 
 	setup_initial_window_position_from_conf(section->Get_string("windowposition"));
 
+	setup_max_resolution_from_conf(section->Get_string("maxresolution"));
+
 	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
 	                             sdl.scaling_mode,
-	                             render_section->Get_bool("aspect"));
+	                             wants_stretched_pixels());
 
 #if C_OPENGL
 	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
@@ -3230,6 +3311,13 @@ void Config_Add_SDL() {
 	pint->Set_help("Number of microseconds to allow rendering to block before skipping "
 	               "the next frame.");
 	pint->SetMinMax(1, 14000);
+
+	pstring = sdl_sec->Add_path("maxresolution", always, "auto");
+	pstring->Set_help(
+	        "Optionally restricts the viewport resolution within the window/screen:\n"
+	        "  auto:      The viewport fills the window/screen (default).\n"
+	        "  <custom>:  Set max viewport resolution in WxH format.\n"
+	        "             For example: 960x720");
 
 	const char *outputs[] =
 	{ "surface",
