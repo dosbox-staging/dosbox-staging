@@ -567,6 +567,11 @@ public:
 		if ( !command_found ) {
 			if ( secure ) autoexec[12].Install("z:\\config.com -securemode");
 		}
+
+		// Print the entire autoexec content, if needed:
+		// for (const auto &autoexec_line : autoexec)
+		// 	LOG_INFO("AUTOEXEC-LINE: %s", autoexec_line.GetLine().c_str());
+
 		VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,(Bit32u)strlen(autoexec_data));
 	}
 };
