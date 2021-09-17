@@ -367,8 +367,16 @@ dosbox -opencaptures program
         If "NAME" is an executable it will mount the directory of "NAME"
         as the C: drive and execute "NAME".
 
+        If "NAME" in an execuatble and the startup_verbosity configurable
+        setting is "auto" (or "low" or "quiet"), then the introductory
+        splash-screen and text help banner will not be shown.  This is known
+        as instant-launch.
+
   -exit
         DOSBox will close itself when the DOS application "name" ends.
+        If the above conditions for instant-launch are true, then the -exit
+        flag is implied, and DOSBox will quit as soon as the executable
+        "NAME" terminates.
 
   -c command
         Runs the specified command before running "name". Multiple commands
