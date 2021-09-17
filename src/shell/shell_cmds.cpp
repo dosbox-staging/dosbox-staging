@@ -41,6 +41,7 @@
 #include "regs.h"
 #include "string_utils.h"
 #include "support.h"
+#include "timer.h"
 #include "../ints/int10.h"
 
 // clang-format off
@@ -352,10 +353,16 @@ void DOS_Shell::CMD_ECHO(char * args){
 	} else WriteOut("%s\r\n",args);
 }
 
+static int64_t ticks_at_program_launch = GetTicks();
 void DOS_Shell::CMD_EXIT(char *args)
 {
 	HELP("EXIT");
-	exit_requested = true;
+	if (GetTicksSince(ticks_at_program_launch) <= 1500) {
+		WriteOut(MSG_Get("SHELL_CMD_EXIT_TOO_SOON"));
+		LOG_WARNING("SHELL: Caught a very early 'exit' attempt, which means something might have failed.");
+	} else {
+		exit_requested = true;
+	}
 }
 
 void DOS_Shell::CMD_CHDIR(char * args) {
