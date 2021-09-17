@@ -584,6 +584,13 @@ void DOSBOX_Init(void) {
 	                  "scan2x, scan3x, tv2x, tv3x, sharp (default).");
 #endif
 
+	pstring = secprop->Add_path("maxresolution", always, "auto");
+	pstring->Set_help(
+	        "Optionally restricts the viewport resolution within the window/screen:\n"
+	        "  auto:      The viewport fills the window/screen (default).\n"
+	        "  <custom>:  Set max viewport resolution in W,H format.\n"
+	        "             For example: 960,720");
+
 	// Add the [composite] conf block after [render]
 	assert(control);
 	VGA_AddCompositeSettings(*control);
