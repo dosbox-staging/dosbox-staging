@@ -34,6 +34,7 @@
 #include "fs_utils.h"
 #include "mixer.h"
 #include "programs.h"
+#include "string_utils.h"
 #include "support.h"
 #include "../ints/int10.h"
 
@@ -57,6 +58,29 @@ static void init_fluid_dosbox_settings(Section_prop &secprop)
 	        "An optional percentage will scale the SoundFont's volume.\n"
 	        "For example: 'soundfont.sf2 50' will attenuate it by 50 percent.\n"
 	        "The scaling percentage can range from 1 to 500.");
+
+	str_prop = secprop.Add_string("chorus", when_idle, "auto");
+	str_prop->Set_help("Chorus effect: 'auto', 'on', 'off', or custom values.\n"
+	                   "When using custom values:\n"
+	                   "  All five must be provided in-order and space-separated.\n"
+	                   "  They are: voice-count level speed depth modulation-wave, where:\n"
+	                   "  - voice-count is an integer from 0 to 99.\n"
+	                   "  - level is a decimal from 0.0 to 10.0\n"
+	                   "  - speed is a decimal, measured in Hz, from 0.1 to 5.0\n"
+	                   "  - depth is a decimal from 0.0 to 21.0\n"
+	                   "  - modulation-wave is either 'sine' or 'triangle'\n"
+	                   "  For example: chorus = 3 1.2 0.3 8.0 sine");
+
+	str_prop = secprop.Add_string("reverb", when_idle, "auto");
+	str_prop->Set_help("Reverb effect: 'auto', 'on', 'off', or custom values.\n"
+	                   "When using custom values:\n"
+	                   "  All four must be provided in-order and space-separated.\n"
+	                   "  They are: room-size damping width level, where:\n"
+	                   "  - room-size is a decimal from 0.0 to 1.0\n"
+	                   "  - damping is a decimal from 0.0 to 1.0\n"
+	                   "  - width is a decimal from 0.0 to 100.0\n"
+	                   "  - level is a decimal from 0.0 to 1.0\n"
+	                   "  For example: reverb = 0.61 0.23 0.76 0.56");
 }
 
 // SetMixerLevel is a callback that's given the user-desired mixer level,
@@ -258,26 +282,94 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 	                              FLUID_INTERP_HIGHEST);
 
 	// Use reasonable chorus and reverb settings matching ScummVM's defaults
-	constexpr int chorus_number = 3;
-	constexpr double chorus_level = 1.2;
-	constexpr double chorus_speed = 0.3;
-	constexpr double chorus_depth = 8.0;
-	constexpr auto sine = fluid_chorus_mod::FLUID_CHORUS_MOD_SINE;
-	constexpr double reverb_room_size = 0.61;
-	constexpr double reverb_damping = 0.23;
-	constexpr double reverb_width = 0.76;
-	constexpr double reverb_level = 0.56;
+
+	auto apply_setting = [=](const char *name, const std::string &str_val, const double &def_val,
+	                         const double &min_val, const double &max_val) {
+		// convert the string to a double
+		const auto val = atof(str_val.c_str());
+		if (val < min_val || val > max_val) {
+			LOG_WARNING("MIDI: Invalid %s setting (%s), needs to be between %.2f and %.2f: using default (%.2f)",
+			            name, str_val.c_str(), min_val, max_val, def_val);
+			return def_val;
+		}
+		return val;
+	};
+
+	// get the users chorus settings
+	const auto chorus = split(section->Get_string("chorus"));
+	bool chorus_enabled = !chorus.empty() && chorus[0] != "no";
+
+	// does the soundfont have known-issues with chorus?
+	const auto is_problematic_font = find_in_case_insensitive("FluidR3", soundfont) ||
+	                                 find_in_case_insensitive("zdoom", soundfont);
+	if (chorus_enabled && chorus[0] == "auto" && is_problematic_font) {
+		chorus_enabled = false;
+		LOG_INFO("MIDI: Chorus auto-disabled due to known issues with the %s soundfont",
+		         soundfont.c_str());
+	}
+
+	// default chorus settings
+	auto chorus_voice_count_f = 3.0;
+	auto chorus_level = 1.2;
+	auto chorus_speed = 0.3;
+	auto chorus_depth = 8.0;
+	auto chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_SINE;
+
+	// apply custom chorus settings if provided
+	if (chorus_enabled && chorus.size() > 1) {
+		if (chorus.size() == 5) {
+			apply_setting("chorus voice-count", chorus[0], chorus_voice_count_f, 0, 99);
+			apply_setting("chorus level", chorus[1], chorus_level, 0.0, 10.0);
+			apply_setting("chorus speed", chorus[2], chorus_speed, 0.1, 5.0);
+			apply_setting("chorus depth", chorus[3], chorus_depth, 0.0, 21.0);
+
+			if (chorus[4] == "triange")
+				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
+			else if (chorus[4] != "sine") // default is sine
+				LOG_WARNING("MIDI: Invalid chorus modulation wave type ('%s'), needs to be 'sine' or 'triangle'",
+				            chorus[4].c_str());
+
+		} else {
+			LOG_WARNING("MIDI: Invalid number of custom chorus settings (%d), should be five",
+			            static_cast<int>(chorus.size()));
+		}
+	}
+	// API accept an integer voice-count
+	const auto chorus_voice_count = static_cast<int>(round(chorus_voice_count_f));
+
+	// get the users reverb settings
+	const auto reverb = split(section->Get_string("reverb"));
+	const bool reverb_enabled = !reverb.empty() && reverb[0] != "no";
+
+	// default reverb settings
+	auto reverb_room_size = 0.61;
+	auto reverb_damping = 0.23;
+	auto reverb_width = 0.76;
+	auto reverb_level = 0.56;
+
+	// apply custom reverb settings if provided
+	if (reverb_enabled && reverb.size() > 1) {
+		if (reverb.size() == 4) {
+			apply_setting("reverb room-size", reverb[0], reverb_room_size, 0.0, 1.0);
+			apply_setting("reverb damping", reverb[1], reverb_damping, 0.0, 1.0);
+			apply_setting("reverb width", reverb[2], reverb_width, 0.0, 100.0);
+			apply_setting("reverb level", reverb[3], reverb_level, 0.0, 1.0);
+		} else {
+			LOG_WARNING("MIDI: Invalid number of custom reverb settings (%d), should be four",
+			            static_cast<int>(reverb.size()));
+		}
+	}
 
 // current API calls as of 2.2
 #if FLUIDSYNTH_VERSION_MINOR >= 2
-	fluid_synth_chorus_on(fluid_synth.get(), fx_group, 1);
-	fluid_synth_set_chorus_group_type(fluid_synth.get(), fx_group, sine);
-	fluid_synth_set_chorus_group_nr(fluid_synth.get(), fx_group, chorus_number);
+	fluid_synth_chorus_on(fluid_synth.get(), fx_group, chorus_enabled);
+	fluid_synth_set_chorus_group_nr(fluid_synth.get(), fx_group, chorus_voice_count);
 	fluid_synth_set_chorus_group_level(fluid_synth.get(), fx_group, chorus_level);
 	fluid_synth_set_chorus_group_speed(fluid_synth.get(), fx_group, chorus_speed);
 	fluid_synth_set_chorus_group_depth(fluid_synth.get(), fx_group, chorus_depth);
+	fluid_synth_set_chorus_group_type(fluid_synth.get(), fx_group, chorus_mod_wave);
 
-	fluid_synth_reverb_on(fluid_synth.get(), fx_group, 1);
+	fluid_synth_reverb_on(fluid_synth.get(), fx_group, reverb_enabled);
 	fluid_synth_set_reverb_group_roomsize(fluid_synth.get(), fx_group, reverb_room_size);
 	fluid_synth_set_reverb_group_damp(fluid_synth.get(), fx_group, reverb_damping);
 	fluid_synth_set_reverb_group_width(fluid_synth.get(), fx_group, reverb_width);
@@ -285,14 +377,23 @@ bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
 
 // deprecated API calls prior to 2.2
 #else
-	fluid_synth_set_chorus_on(fluid_synth.get(), 1);
-	fluid_synth_set_chorus(fluid_synth.get(), chorus_number, chorus_level,
-	                       chorus_speed, chorus_depth, sine);
+	fluid_synth_set_chorus_on(fluid_synth.get(), chorus_enabled);
+	fluid_synth_set_chorus(fluid_synth.get(), chorus_voice_count, chorus_level, chorus_speed,
+	                       chorus_depth, chorus_mod_wave);
 
-	fluid_synth_set_reverb_on(fluid_synth.get(), 1);
+	fluid_synth_set_reverb_on(fluid_synth.get(), reverb_enabled);
 	fluid_synth_set_reverb(fluid_synth.get(), reverb_room_size,
 	                       reverb_damping, reverb_width, reverb_level);
 #endif
+
+	if (chorus_enabled)
+		LOG_MSG("MIDI: Chorus enabled with %d voices at level %.2f, %.2f Hz speed, %.2f depth, and %s-wave modulation",
+		        chorus_voice_count, chorus_level, chorus_speed, chorus_depth,
+		        chorus_mod_wave == fluid_chorus_mod::FLUID_CHORUS_MOD_SINE ? "sine" : "triangle");
+
+	if (reverb_enabled)
+		LOG_MSG("MIDI: Reverb enabled with a %.2f room size, %.2f damping, %.2f width, and level %.2f",
+		        reverb_room_size, reverb_damping, reverb_width, reverb_level);
 
 	settings = std::move(fluid_settings);
 	synth = std::move(fluid_synth);
@@ -467,7 +568,8 @@ std::string format_sf2_line(size_t width, const std::string &name, const std::st
 	// the end to make it clear to the user.
 	const std::string cutoff = "...";
 	assert(line.size() > cutoff.size());
-	line.replace(line.end() - cutoff.size(), line.end(), cutoff);
+	const auto start = line.end() - static_cast<int>(cutoff.size());
+	line.replace(start, line.end(), cutoff);
 	return line;
 }
 
