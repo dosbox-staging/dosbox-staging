@@ -456,15 +456,14 @@ void DOSBOX_Init(void) {
 	                          "vesa_oldvbe",   0};
 
 	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
-	pstring = secprop->Add_path("language", Property::Changeable::Always, "");
+	pstring = secprop->Add_path("language", always, "");
 	pstring->Set_help("Select another language file.");
 
-	pstring = secprop->Add_string("machine", Property::Changeable::OnlyAtStart,
-	                              "svga_s3");
+	pstring = secprop->Add_string("machine", only_at_start, "svga_s3");
 	pstring->Set_values(machines);
 	pstring->Set_help("The type of machine DOSBox tries to emulate.");
-	pstring = secprop->Add_path("captures", Property::Changeable::Always,
-	                            "capture");
+
+	pstring = secprop->Add_path("captures", always, "capture");
 	pstring->Set_help(
 	        "Directory where things like wave, midi, screenshot get captured.");
 
@@ -476,7 +475,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&PAGING_Init);//done
 	secprop->AddInitFunction(&MEM_Init);//done
 	secprop->AddInitFunction(&HARDWARE_Init);//done
-	pint = secprop->Add_int("memsize", Property::Changeable::WhenIdle, 16);
+	pint = secprop->Add_int("memsize", when_idle, 16);
 	pint->SetMinMax(1, 63);
 	pint->Set_help(
 	        "Amount of memory DOSBox has in megabytes.\n"
@@ -527,11 +526,11 @@ void DOSBOX_Init(void) {
 	        "auto        | 'low' if exec or dir is passed, otherwise 'high'");
 
 	secprop = control->AddSection_prop("render", &RENDER_Init, true);
-	pint = secprop->Add_int("frameskip", Property::Changeable::Always, 0);
+	pint = secprop->Add_int("frameskip", always, 0);
 	pint->SetMinMax(0, 10);
 	pint->Set_help("How many frames DOSBox skips before drawing one.");
 
-	Pbool = secprop->Add_bool("aspect", Property::Changeable::Always, true);
+	Pbool = secprop->Add_bool("aspect", always, true);
 	Pbool->Set_help("Scales the vertical resolution to produce a 4:3 display aspect\n"
 	                "ratio, matching that of the original standard-definition monitors\n"
 	                "for which the majority of DOS games were designed. This setting\n"
@@ -594,18 +593,18 @@ void DOSBOX_Init(void) {
 		"dynamic",
 #endif
 		"normal", "simple",0 };
-	Pstring = secprop->Add_string("core",Property::Changeable::WhenIdle,"auto");
+	Pstring = secprop->Add_string("core", when_idle, "auto");
 	Pstring->Set_values(cores);
 	Pstring->Set_help("CPU Core used in emulation. auto will switch to dynamic if available and\n"
 		"appropriate.");
 
 	const char* cputype_values[] = { "auto", "386", "386_slow", "486_slow", "pentium_slow", "386_prefetch", 0};
-	Pstring = secprop->Add_string("cputype",Property::Changeable::Always,"auto");
+	Pstring = secprop->Add_string("cputype", always, "auto");
 	Pstring->Set_values(cputype_values);
 	Pstring->Set_help("CPU Type used in emulation. auto is the fastest choice.");
 
 
-	Pmulti_remain = secprop->Add_multiremain("cycles",Property::Changeable::Always," ");
+	Pmulti_remain = secprop->Add_multiremain("cycles", always, " ");
 	Pmulti_remain->Set_help(
 		"Number of instructions DOSBox tries to emulate each millisecond.\n"
 		"Setting this value too high results in sound dropouts and lags.\n"
@@ -618,18 +617,18 @@ void DOSBOX_Init(void) {
 		"                  handle.");
 
 	const char* cyclest[] = { "auto","fixed","max","%u",0 };
-	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::Always,"auto");
+	Pstring = Pmulti_remain->GetSection()->Add_string("type", always, "auto");
 	Pmulti_remain->SetValue("auto");
 	Pstring->Set_values(cyclest);
 
-	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::Always,"");
+	Pstring = Pmulti_remain->GetSection()->Add_string("parameters", always, "");
 
-	Pint = secprop->Add_int("cycleup",Property::Changeable::Always,10);
+	Pint = secprop->Add_int("cycleup", always, 10);
 	Pint->SetMinMax(1,1000000);
 	Pint->Set_help("Number of cycles added or subtracted with speed control hotkeys.\n"
 	               "Run INTRO and see Special Keys for list of hotkeys.");
 
-	Pint = secprop->Add_int("cycledown",Property::Changeable::Always,20);
+	Pint = secprop->Add_int("cycledown", always, 20);
 	Pint->SetMinMax(1,1000000);
 	Pint->Set_help("Setting it lower than 100 will be a percentage.");
 
@@ -647,7 +646,7 @@ void DOSBOX_Init(void) {
 
 
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
-	Pbool = secprop->Add_bool("nosound",Property::Changeable::OnlyAtStart,false);
+	Pbool = secprop->Add_bool("nosound", only_at_start, false);
 	Pbool->Set_help("Enable silent mode, sound is still emulated though.");
 
 	Pint = secprop->Add_int("rate", only_at_start, 48000);
@@ -756,30 +755,30 @@ void DOSBOX_Init(void) {
 	secprop = control->AddSection_prop("sblaster", &SBLASTER_Init, true);
 
 	const char* sbtypes[] = {"sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none", 0};
-	Pstring = secprop->Add_string("sbtype", Property::Changeable::WhenIdle, "sb16");
+	Pstring = secprop->Add_string("sbtype", when_idle, "sb16");
 	Pstring->Set_values(sbtypes);
 	Pstring->Set_help("Type of Sound Blaster to emulate. 'gb' is Game Blaster.");
 
 	const char *ios[] = {"220", "240", "260", "280", "2a0", "2c0", "2e0", "300", 0};
-	Phex = secprop->Add_hex("sbbase", Property::Changeable::WhenIdle, 0x220);
+	Phex = secprop->Add_hex("sbbase", when_idle, 0x220);
 	Phex->Set_values(ios);
 	Phex->Set_help("The IO address of the Sound Blaster.");
 
 	const char *irqssb[] = {"7", "5", "3", "9", "10", "11", "12", 0};
-	Pint = secprop->Add_int("irq", Property::Changeable::WhenIdle, 7);
+	Pint = secprop->Add_int("irq", when_idle, 7);
 	Pint->Set_values(irqssb);
 	Pint->Set_help("The IRQ number of the Sound Blaster.");
 
 	const char *dmassb[] = {"1", "5", "0", "3", "6", "7", 0};
-	Pint = secprop->Add_int("dma", Property::Changeable::WhenIdle, 1);
+	Pint = secprop->Add_int("dma", when_idle, 1);
 	Pint->Set_values(dmassb);
 	Pint->Set_help("The DMA number of the Sound Blaster.");
 
-	Pint = secprop->Add_int("hdma", Property::Changeable::WhenIdle, 5);
+	Pint = secprop->Add_int("hdma", when_idle, 5);
 	Pint->Set_values(dmassb);
 	Pint->Set_help("The High DMA number of the Sound Blaster.");
 
-	Pbool = secprop->Add_bool("sbmixer", Property::Changeable::WhenIdle, true);
+	Pbool = secprop->Add_bool("sbmixer", when_idle, true);
 	Pbool->Set_help("Allow the Sound Blaster mixer to modify the DOSBox mixer.");
 
 	pint = secprop->Add_int("oplrate", deprecated, false);
@@ -787,13 +786,13 @@ void DOSBOX_Init(void) {
 	               "        at the mixer's playback rate to avoid resampling.");
 
 	const char* oplmodes[] = {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none", 0};
-	Pstring = secprop->Add_string("oplmode", Property::Changeable::WhenIdle, "auto");
+	Pstring = secprop->Add_string("oplmode", when_idle, "auto");
 	Pstring->Set_values(oplmodes);
 	Pstring->Set_help("Type of OPL emulation. On 'auto' the mode is determined by 'sbtype'.\n"
 	                  "All OPL modes are AdLib-compatible, except for 'cms'.");
 
 	const char* oplemus[] = {"default", "compat", "fast", "mame", "nuked", 0};
-	Pstring = secprop->Add_string("oplemu", Property::Changeable::WhenIdle, "default");
+	Pstring = secprop->Add_string("oplemu", when_idle, "default");
 	Pstring->Set_values(oplemus);
 	Pstring->Set_help(
 	        "Provider for the OPL emulation. 'compat' provides better quality,\n"
@@ -806,7 +805,7 @@ void DOSBOX_Init(void) {
 	INNOVATION_AddConfigSection(control);
 
 	secprop = control->AddSection_prop("speaker",&PCSPEAKER_Init,true);//done
-	Pbool = secprop->Add_bool("pcspeaker",Property::Changeable::WhenIdle,true);
+	Pbool = secprop->Add_bool("pcspeaker", when_idle, true);
 	Pbool->Set_help("Enable PC-Speaker emulation.");
 
 	// Basis for the default PC-Speaker sample generation rate:
@@ -838,13 +837,13 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(tandys);
 	Pstring->Set_help("Enable Tandy Sound System emulation. For 'auto', emulation is present only if machine is set to 'tandy'.");
 
-	Pint = secprop->Add_int("tandyrate", Property::Changeable::WhenIdle, 44100);
+	Pint = secprop->Add_int("tandyrate", when_idle, 44100);
 	Pint->Set_values(rates);
 	Pint->Set_help("Sample rate of the Tandy 3-Voice generation.");
 
 	secprop->AddInitFunction(&DISNEY_Init,true);//done
 
-	Pbool = secprop->Add_bool("disney",Property::Changeable::WhenIdle,true);
+	Pbool = secprop->Add_bool("disney", when_idle, true);
 	Pbool->Set_help("Enable Disney Sound Source emulation. (Covox Voice Master and Speech Thing compatible).");
 
 	// IBM PS/1 Audio emulation
@@ -858,8 +857,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&JOYSTICK_Init,true);
 	const char *joytypes[] = {"auto", "2axis", "4axis",    "4axis_2", "fcs",
 	                          "ch",   "none",  "disabled", 0};
-	Pstring = secprop->Add_string("joysticktype",
-	                              Property::Changeable::WhenIdle, "auto");
+	Pstring = secprop->Add_string("joysticktype", when_idle, "auto");
 	Pstring->Set_values(joytypes);
 	Pstring->Set_help(
 	        "Type of joystick to emulate: auto (default),\n"
@@ -873,23 +871,23 @@ void DOSBOX_Init(void) {
 	        "disabled: Fully disable joysticks: won't be polled, mapped, or visible in DOS.\n"
 	        "(Remember to reset DOSBox's mapperfile if you saved it earlier)");
 
-	Pbool = secprop->Add_bool("timed",Property::Changeable::WhenIdle,true);
+	Pbool = secprop->Add_bool("timed", when_idle, true);
 	Pbool->Set_help("enable timed intervals for axis. Experiment with this option, if your joystick drifts (away).");
 
-	Pbool = secprop->Add_bool("autofire",Property::Changeable::WhenIdle,false);
+	Pbool = secprop->Add_bool("autofire", when_idle, false);
 	Pbool->Set_help("continuously fires as long as you keep the button pressed.");
 
-	Pbool = secprop->Add_bool("swap34",Property::Changeable::WhenIdle,false);
+	Pbool = secprop->Add_bool("swap34", when_idle, false);
 	Pbool->Set_help("swap the 3rd and the 4th axis. Can be useful for certain joysticks.");
 
-	Pbool = secprop->Add_bool("buttonwrap",Property::Changeable::WhenIdle,false);
+	Pbool = secprop->Add_bool("buttonwrap", when_idle, false);
 	Pbool->Set_help("enable button wrapping at the number of emulated buttons.");
 
-	Pbool = secprop->Add_bool("circularinput",Property::Changeable::WhenIdle,false);
+	Pbool = secprop->Add_bool("circularinput", when_idle, false);
 	Pbool->Set_help("enable translation of circular input to square output.\n"
 	                "Try enabling this if your left analog stick can only move in a circle.");
 
-	Pint = secprop->Add_int("deadzone",Property::Changeable::WhenIdle,10);
+	Pint = secprop->Add_int("deadzone", when_idle, 10);
 	Pint->SetMinMax(0,100);
 	Pint->Set_help("the percentage of motion to ignore. 100 turns the stick into a digital one.");
 
@@ -897,11 +895,11 @@ void DOSBOX_Init(void) {
 	const char* serials[] = { "dummy", "disabled", "modem", "nullmodem",
 	                          "directserial",0 };
 
-	Pmulti_remain = secprop->Add_multiremain("serial1",Property::Changeable::WhenIdle," ");
-	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::WhenIdle,"dummy");
+	Pmulti_remain = secprop->Add_multiremain("serial1", when_idle, " ");
+	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
 	Pmulti_remain->SetValue("dummy");
 	Pstring->Set_values(serials);
-	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::WhenIdle,"");
+	Pstring = Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	Pmulti_remain->Set_help(
 		"set type of device connected to com port.\n"
 		"Can be disabled, dummy, modem, nullmodem, directserial.\n"
@@ -914,25 +912,25 @@ void DOSBOX_Init(void) {
 		"               transparent, port, inhsocket (all optional).\n"
 		"Example: serial1=modem listenport:5000");
 
-	Pmulti_remain = secprop->Add_multiremain("serial2",Property::Changeable::WhenIdle," ");
-	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::WhenIdle,"dummy");
+	Pmulti_remain = secprop->Add_multiremain("serial2", when_idle, " ");
+	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
 	Pmulti_remain->SetValue("dummy");
 	Pstring->Set_values(serials);
-	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::WhenIdle,"");
+	Pstring = Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	Pmulti_remain->Set_help("see serial1");
 
-	Pmulti_remain = secprop->Add_multiremain("serial3",Property::Changeable::WhenIdle," ");
-	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::WhenIdle,"disabled");
+	Pmulti_remain = secprop->Add_multiremain("serial3", when_idle, " ");
+	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
 	Pmulti_remain->SetValue("disabled");
 	Pstring->Set_values(serials);
-	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::WhenIdle,"");
+	Pstring = Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	Pmulti_remain->Set_help("see serial1");
 
-	Pmulti_remain = secprop->Add_multiremain("serial4",Property::Changeable::WhenIdle," ");
-	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::WhenIdle,"disabled");
+	Pmulti_remain = secprop->Add_multiremain("serial4", when_idle, " ");
+	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
 	Pmulti_remain->SetValue("disabled");
 	Pstring->Set_values(serials);
-	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::WhenIdle,"");
+	Pstring = Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	Pmulti_remain->Set_help("see serial1");
 
 	pstring = secprop->Add_path("phonebookfile", only_at_start, "phonebook.txt");
@@ -941,19 +939,19 @@ void DOSBOX_Init(void) {
 	/* All the DOS Related stuff, which will eventually start up in the shell */
 	secprop=control->AddSection_prop("dos",&DOS_Init,false);//done
 	secprop->AddInitFunction(&XMS_Init,true);//done
-	Pbool = secprop->Add_bool("xms",Property::Changeable::WhenIdle,true);
+	Pbool = secprop->Add_bool("xms", when_idle, true);
 	Pbool->Set_help("Enable XMS support.");
 
 	secprop->AddInitFunction(&EMS_Init,true);//done
 	const char* ems_settings[] = { "true", "emsboard", "emm386", "false", 0};
-	Pstring = secprop->Add_string("ems",Property::Changeable::WhenIdle,"true");
+	Pstring = secprop->Add_string("ems", when_idle, "true");
 	Pstring->Set_values(ems_settings);
 	Pstring->Set_help("Enable EMS support. The default (=true) provides the best\n"
 		"compatibility but certain applications may run better with\n"
 		"other choices, or require EMS support to be disabled (=false)\n"
 		"to work at all.");
 
-	Pbool = secprop->Add_bool("umb",Property::Changeable::WhenIdle,true);
+	Pbool = secprop->Add_bool("umb", when_idle, true);
 	Pbool->Set_help("Enable UMB support.");
 
 	pstring = secprop->Add_string("ver", when_idle, "5.0");
@@ -962,7 +960,7 @@ void DOSBOX_Init(void) {
 	                  "Common settings are 3.3, 5.0, 6.22, and 7.1.");
 
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init,true);
-	Pstring = secprop->Add_string("keyboardlayout",Property::Changeable::WhenIdle, "auto");
+	Pstring = secprop->Add_string("keyboardlayout", when_idle,  "auto");
 	Pstring->Set_help("Language code of the keyboard layout (or none).");
 
 	// Mscdex
@@ -971,7 +969,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&CDROM_Image_Init);
 #if C_IPX
 	secprop=control->AddSection_prop("ipx",&IPX_Init,true);
-	Pbool = secprop->Add_bool("ipx",Property::Changeable::WhenIdle, false);
+	Pbool = secprop->Add_bool("ipx", when_idle,  false);
 	Pbool->Set_help("Enable ipx over UDP/IP emulation.");
 #endif
 
@@ -990,23 +988,23 @@ void DOSBOX_Init(void) {
 
 	);
 
-	Pbool = secprop->Add_bool("ne2000", Property::Changeable::WhenIdle, true);
+	Pbool = secprop->Add_bool("ne2000", when_idle,  true);
 	Pbool->Set_help("Enable Ethernet passthrough. Requires [Win]Pcap.");
 
-	Phex = secprop->Add_hex("nicbase", Property::Changeable::WhenIdle, 0x300);
+	Phex = secprop->Add_hex("nicbase", when_idle,  0x300);
 	Phex->Set_help("The base address of the NE2000 board.");
 
-	Pint = secprop->Add_int("nicirq", Property::Changeable::WhenIdle, 3);
+	Pint = secprop->Add_int("nicirq", when_idle,  3);
 	Pint->Set_help("The interrupt it uses. Note serial2 uses IRQ3 as default.");
 
-	Pstring = secprop->Add_string("macaddr", Property::Changeable::WhenIdle,"AC:DE:48:88:99:AA");
+	Pstring = secprop->Add_string("macaddr", when_idle, "AC:DE:48:88:99:AA");
 	Pstring->Set_help("The physical address the emulator will use on your network.\n"
 		"If you have multiple DOSBoxes running on your network,\n"
 		"this has to be changed for each. AC:DE:48 is an address range reserved for\n"
 		"private use, so modify the last three number blocks.\n"
 		"I.e. AC:DE:48:88:99:AB.");
 
-	Pstring = secprop->Add_string("realnic", Property::Changeable::WhenIdle,"list");
+	Pstring = secprop->Add_string("realnic", when_idle, "list");
 	Pstring->Set_help("Specifies which of your network interfaces is used.\n"
 		"Write \'list\' here to see the list of devices in the\n"
 		"Status Window. Then make your choice and put either the\n"
