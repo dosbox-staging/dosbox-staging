@@ -357,7 +357,7 @@ again:
 	uint16_t find_time;
 	uint32_t find_size;
 
-	if (strlen(dir_entcopy)<DOS_NAMELENGTH_ASCII) {
+	if (safe_strlen(dir_entcopy)<DOS_NAMELENGTH_ASCII) {
 		safe_strcpy(find_name, dir_entcopy);
 		upcase(find_name);
 	} 
@@ -420,7 +420,7 @@ bool localDrive::TestDir(char * dir) {
 	CROSS_FILENAME(newdir);
 	dirCache.ExpandName(newdir);
 	// Skip directory test, if "\"
-	size_t len = strlen(newdir);
+	size_t len = safe_strlen(newdir);
 	if (len && (newdir[len-1]!='\\')) {
 		// It has to be a directory !
 		struct stat test;
