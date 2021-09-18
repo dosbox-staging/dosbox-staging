@@ -3215,7 +3215,7 @@ void Config_Add_SDL() {
 	        "Choose a mouse control method:\n"
 	        "   onclick:        Capture the mouse when clicking inside the window.\n"
 	        "   onstart:        Capture the mouse immediately on start.\n"
-	        "   seamless:       Never cature the mouse; let it move seamlessly.\n"
+	        "   seamless:       Never capture the mouse; let it move seamlessly.\n"
 	        "   nomouse:        Hide the mouse and don't send input to the game.\n"
 	        "Choose how middle-clicks are handled (second parameter):\n"
 	        "   middlegame:     Middle-clicks are sent to the game.\n"

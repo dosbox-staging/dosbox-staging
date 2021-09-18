@@ -37,7 +37,7 @@ Use texture_renderer=auto for an automatic choice.
 Choose a mouse control method:
    onclick:        Capture the mouse when clicking inside the window.
    onstart:        Capture the mouse immediately on start.
-   seamless:       Never cature the mouse; let it move seamlessly.
+   seamless:       Never capture the mouse; let it move seamlessly.
    nomouse:        Hide the mouse and don't send input to the game.
 Choose how middle-clicks are handled (second parameter):
    middlegame:     Middle-clicks are sent to the game.
