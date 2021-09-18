@@ -216,7 +216,7 @@ bool DOS_ChangeDir(char const * const dir) {
 		return false;
 	}
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
-	if (strlen(fulldir) && testdir[len-1]=='\\') {
+	if (safe_strlen(fulldir) && testdir[len-1]=='\\') {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		return false;
 	}
