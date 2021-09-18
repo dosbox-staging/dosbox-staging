@@ -34,6 +34,7 @@
 #include "support.h"
 #include "bios_disk.h"
 #include "cpu.h"
+#include "string_utils.h"
 
 #define MSCDEX_LOG LOG(LOG_MISC,LOG_ERROR)
 //#define MSCDEX_LOG
@@ -694,7 +695,7 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 	char* searchPos = searchName;
 
 	//strip of tailing . (XCOM APOCALYPSE)
-	size_t searchlen = strlen(searchName);
+	size_t searchlen = safe_strlen(searchName);
 	if (searchlen > 1 && strcmp(searchName,".."))
 		if (searchName[searchlen-1] =='.')  searchName[searchlen-1] = 0;
 
@@ -741,7 +742,7 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 			char* separator = strchr(entryName,';');
 			if (separator) *separator = 0;
 			// strip trailing period
-			size_t entrylen = strlen(entryName);
+			size_t entrylen = safe_strlen(entryName);
 			if (entrylen>0 && entryName[entrylen-1]=='.') entryName[entrylen-1] = 0;
 
 			if (strcmp(entryName,useName)==0) {
