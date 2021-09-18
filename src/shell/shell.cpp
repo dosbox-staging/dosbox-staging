@@ -116,7 +116,7 @@ void AutoexecObject::CreateAutoexec()
 			offset = n + 2;
 		}
 
-		auto_len = strlen(autoexec_data);
+		auto_len = safe_strlen(autoexec_data);
 		if ((auto_len+linecopy.length() + 3) > AUTOEXEC_SIZE) {
 			E_Exit("SYSTEM:Autoexec.bat file overflow");
 		}
@@ -513,7 +513,7 @@ public:
 					line = buffer;
 					if (getcwd(buffer, CROSS_LEN) == NULL)
 						continue;
-					if (strlen(buffer) + line.length() + 1 > CROSS_LEN)
+					if (safe_strlen(buffer) + line.length() + 1 > CROSS_LEN)
 						continue;
 					safe_strcat(buffer, cross_filesplit);
 					safe_strcat(buffer, line.c_str());
@@ -605,7 +605,7 @@ static Bitu INT2E_Handler()
 	if (crlf) *crlf=0;
 
 	/* Execute command */
-	if (strlen(tail.buffer)) {
+	if (safe_strlen(tail.buffer)) {
 		DOS_Shell temp;
 		temp.ParseLine(tail.buffer);
 		temp.RunInternal();
