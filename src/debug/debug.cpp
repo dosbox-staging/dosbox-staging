@@ -874,7 +874,7 @@ static void DrawCode(void) {
 		char* res = empty_res;
 		if (showExtend) res = AnalyzeInstruction(dline, saveSel);
 		// Spacepad it up to 28 characters
-		size_t dline_len = strlen(dline);
+		size_t dline_len = safe_strlen(dline);
 		if (dline_len < 28) memset(dline + dline_len, ' ',28 - dline_len);
 		dline[28] = 0;
 		waddstr(dbg.win_code,dline);
@@ -1606,7 +1606,7 @@ Bit32u DEBUG_CheckKeys(void) {
 	bool skipDraw = false;
 	int key=getch();
 
-	if (key >='1' && key <='5' && strlen(codeViewData.inputStr) == 0) {
+	if (key >='1' && key <='5' && safe_strlen(codeViewData.inputStr) == 0) {
 		const Bit32s v[] ={5,500,1000,5000,10000};
 
 		ret = DEBUG_Run(v[key - '1'],true);
@@ -1745,7 +1745,7 @@ Bit32u DEBUG_CheckKeys(void) {
 				}
 				safe_strcpy(codeViewData.inputStr,
 				            (--histBuffPos)->c_str());
-				codeViewData.inputPos = strlen(codeViewData.inputStr);
+				codeViewData.inputPos = safe_strlen(codeViewData.inputStr);
 				break;
 		case KEY_F(7):	// next command (f1-f4 generate rubbish at my place)
 		case KEY_F(4):	// next command
@@ -1758,7 +1758,7 @@ Bit32u DEBUG_CheckKeys(void) {
 					safe_strcpy(codeViewData.inputStr,
 					            codeViewData.suspInputStr);
 				}
-				codeViewData.inputPos = strlen(codeViewData.inputStr);
+				codeViewData.inputPos = safe_strlen(codeViewData.inputStr);
 				break;
 		case KEY_F(5):	// Run Program
 				debugging=false;
@@ -1804,7 +1804,7 @@ Bit32u DEBUG_CheckKeys(void) {
 					histBuffPos = histBuff.end();
 					ClearInputLine();
 				} else {
-					codeViewData.inputPos = strlen(codeViewData.inputStr);
+					codeViewData.inputPos = safe_strlen(codeViewData.inputStr);
 				}
 				break;
 		case KEY_BACKSPACE: //backspace (linux)
@@ -1828,7 +1828,7 @@ Bit32u DEBUG_CheckKeys(void) {
 							codeViewData.inputStr[codeViewData.inputPos++] = char(key);
 							codeViewData.inputStr[codeViewData.inputPos] = '\0';
 					} else if (!codeViewData.ovrMode) {
-						int len = (int) strlen(codeViewData.inputStr);
+						int len = (int) safe_strlen(codeViewData.inputStr);
 						if (len < MAXCMDLEN) {
 							for(len++;len>codeViewData.inputPos;len--)
 								codeViewData.inputStr[len]=codeViewData.inputStr[len-1];
@@ -2095,11 +2095,11 @@ static void LogInstruction(uint16_t segValue, uint32_t eipValue, ofstream &out)
 	if (showExtend && (cpuLogType > 0) ) {
 		res = AnalyzeInstruction(dline,false);
 		if (!res || !(*res)) res = empty;
-		Bitu reslen = strlen(res);
+		Bitu reslen = safe_strlen(res);
 		if (reslen < 22) memset(res + reslen, ' ',22 - reslen);
 		res[22] = 0;
 	}
-	Bitu len = strlen(dline);
+	Bitu len = safe_strlen(dline);
 	if (len < 30) memset(dline + len,' ',30 - len);
 	dline[30] = 0;
 
@@ -2117,7 +2117,7 @@ static void LogInstruction(uint16_t segValue, uint32_t eipValue, ofstream &out)
 			else sprintf(tmpc,"%02X ",value);
 			strcat(ibytes,tmpc);
 		}
-		len = strlen(ibytes);
+		len = safe_strlen(ibytes);
 		if (len<21) { for (Bitu i=0; i<21-len; i++) ibytes[len + i] =' '; ibytes[21]=0;} //NOTE THE BRACKETS
 		out << setw(4) << SegValue(cs) << ":" << setw(8) << reg_eip << "  " << dline << "  " << res << "  " << ibytes;
 	}
@@ -2173,7 +2173,7 @@ public:
 		args[0]	= 0;
 		bool found = cmd->FindCommand(commandNr++,temp_line);
 		while (found) {
-			if (strlen(args)+temp_line.length()+1>256) break;
+			if (safe_strlen(args)+temp_line.length()+1>256) break;
 			strcat(args,temp_line.c_str());
 			found = cmd->FindCommand(commandNr++,temp_line);
 			if (found) strcat(args," ");
@@ -2518,12 +2518,12 @@ void DEBUG_HeavyLogInstruction()
 	if (showExtend) {
 		res = AnalyzeInstruction(dline,false);
 		if (!res || !(*res)) res = empty;
-		Bitu reslen = strlen(res);
+		Bitu reslen = safe_strlen(res);
 		if (reslen < 22) memset(res + reslen, ' ',22 - reslen);
 		res[22] = 0;
 	}
 
-	Bitu len = strlen(dline);
+	Bitu len = safe_strlen(dline);
 	if (len < 30) memset(dline + len,' ',30 - len);
 	dline[30] = 0;
 
