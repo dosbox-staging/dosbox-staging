@@ -1122,7 +1122,7 @@ public:
 			WORD cur_kb_subID  = 0;
 			char layoutID_string[KL_NAMELENGTH];
 			if (GetKeyboardLayoutName(layoutID_string)) {
-				if (strlen(layoutID_string) == 8) {
+				if (safe_strlen(layoutID_string) == 8) {
 					int cur_kb_layout_by_name = ConvHexWord((char*)&layoutID_string[4]);
 					layoutID_string[4] = 0;
 					int subID = ConvHexWord((char*)&layoutID_string[0]);
