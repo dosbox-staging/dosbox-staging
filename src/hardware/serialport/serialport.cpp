@@ -29,6 +29,7 @@
 #include "setup.h"
 #include "bios.h"					// SetComPorts(..)
 #include "callback.h"				// CALLBACK_Idle
+#include "string_utils.h"
 
 #include "serialport.h"
 #include "directserial.h"
@@ -192,7 +193,7 @@ void CSerial::log_ser(bool active, char const* format,...) {
 		vsprintf(buf+strlen(buf),format,msg);
 		va_end(msg);
 		// Add newline if not present
-		const uint32_t len = strlen(buf);
+		const uint32_t len = safe_strlen(buf);
 		if(buf[len-1]!='\n') strcat(buf,"\r\n");
 		fputs(buf,debugfp);
 	}
