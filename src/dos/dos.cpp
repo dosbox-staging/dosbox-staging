@@ -29,6 +29,7 @@
 #include "regs.h"
 #include "serialport.h"
 #include "setup.h"
+#include "string_utils.h"
 #include "support.h"
 
 DOS_Block dos;
@@ -799,7 +800,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x47:					/* CWD Get current directory */
 		if (DOS_GetCurrentDir(reg_dl,name1)) {
-			MEM_BlockWrite(SegPhys(ds)+reg_si,name1,(Bitu)(strlen(name1)+1));	
+			MEM_BlockWrite(SegPhys(ds)+reg_si,name1,(Bitu)(safe_strlen(name1)+1));	
 			reg_ax=0x0100;
 			CALLBACK_SCF(false);
 		} else {
@@ -981,7 +982,7 @@ static Bitu DOS_21Handler(void) {
 			MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 			if (DOS_CreateTempFile(name1,&handle)) {
 				reg_ax=handle;
-				MEM_BlockWrite(SegPhys(ds)+reg_dx,name1,(Bitu)(strlen(name1)+1));
+				MEM_BlockWrite(SegPhys(ds)+reg_dx,name1,(Bitu)(safe_strlen(name1)+1));
 				CALLBACK_SCF(false);
 			} else {
 				reg_ax=dos.errorcode;
@@ -1030,7 +1031,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x60:					/* Canonicalize filename or path */
 		MEM_StrCopy(SegPhys(ds)+reg_si,name1,DOSNAMEBUF);
 		if (DOS_Canonicalize(name1,name2)) {
-				MEM_BlockWrite(SegPhys(es)+reg_di,name2,(Bitu)(strlen(name2)+1));	
+				MEM_BlockWrite(SegPhys(es)+reg_di,name2,(Bitu)(safe_strlen(name2)+1));	
 				CALLBACK_SCF(false);
 			} else {
 				reg_ax=dos.errorcode;
