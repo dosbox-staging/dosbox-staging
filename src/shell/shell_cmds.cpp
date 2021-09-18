@@ -353,11 +353,11 @@ void DOS_Shell::CMD_ECHO(char * args){
 	} else WriteOut("%s\r\n",args);
 }
 
-static int64_t ticks_at_program_launch = GetTicks();
+int64_t ticks_at_program_launch = 0;
 void DOS_Shell::CMD_EXIT(char *args)
 {
 	HELP("EXIT");
-	if (GetTicksSince(ticks_at_program_launch) <= 1500) {
+	if (GetTicksSince(ticks_at_program_launch) <= 2000) {
 		WriteOut(MSG_Get("SHELL_CMD_EXIT_TOO_SOON"));
 		LOG_WARNING("SHELL: Caught a very early 'exit' attempt, which means something might have failed.");
 	} else {

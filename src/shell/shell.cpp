@@ -25,11 +25,11 @@
 
 #include "callback.h"
 #include "control.h"
-#include "dosbox.h"
 #include "fs_utils.h"
 #include "mapper.h"
 #include "regs.h"
 #include "string_utils.h"
+#include "timer.h"
 
 Bitu call_shellstop;
 /* Larger scope so shell_del autoexec can use it to
@@ -331,8 +331,14 @@ void DOS_Shell::RunInternal()
 	}
 }
 
+extern int64_t ticks_at_program_launch; // from shell_cmd
 void DOS_Shell::Run()
 {
+	// Initialize the tick-count only when the first shell has launched.
+	// This ensures that slow-performing configurable tasks (like loading MIDI SF2 files) have already
+	// been performed and won't affect this time.
+	ticks_at_program_launch = GetTicks();
+
 	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
 	if (cmd->FindStringRemainBegin("/C",line)) {
@@ -402,6 +408,8 @@ void DOS_Shell::SyntaxError()
 {
 	WriteOut(MSG_Get("SHELL_SYNTAXERROR"));
 }
+
+extern int64_t ticks_at_program_launch;
 
 class AUTOEXEC final : public Module_base {
 private:

@@ -3211,16 +3211,15 @@ void Config_Add_SDL() {
 	        ->Set_values(middle_controls);
 
 	// Construct and set the help block using defaults set above
-	std::string mouse_control_help(
-	        "Choose a mouse control method:\n"
-	        "   onclick:        Capture the mouse when clicking inside the window.\n"
-	        "   onstart:        Capture the mouse immediately on start.\n"
-	        "   seamless:       Never capture the mouse; let it move seamlessly.\n"
-	        "   nomouse:        Hide the mouse and don't send input to the game.\n"
-	        "Choose how middle-clicks are handled (second parameter):\n"
-	        "   middlegame:     Middle-clicks are sent to the game.\n"
-	        "   middlerelease:  Middle-click will release the captured mouse.\n"
-	        "Defaults (if not present or incorrect): ");
+	std::string mouse_control_help("Choose a mouse control method:\n"
+	                               "   onclick:        Capture the mouse when clicking inside the window.\n"
+	                               "   onstart:        Capture the mouse immediately on start.\n"
+	                               "   seamless:       Never capture the mouse; let it move seamlessly.\n"
+	                               "   nomouse:        Hide the mouse and don't send input to the game.\n"
+	                               "Choose how middle-clicks are handled (second parameter):\n"
+	                               "   middlegame:     Middle-clicks are sent to the game.\n"
+	                               "   middlerelease:  Middle-click will release the captured mouse.\n"
+	                               "Defaults (if not present or incorrect): ");
 	mouse_control_help += mouse_control_defaults;
 	Pmulti->Set_help(mouse_control_help);
 
