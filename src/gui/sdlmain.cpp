@@ -533,8 +533,8 @@ static void SetIcon()
 
 static void RequestExit(bool pressed)
 {
-	exit_requested = pressed;
-	if (exit_requested)
+	shutdown_requested = pressed;
+	if (shutdown_requested)
 		DEBUG_LOG_MSG("SDL: Exit requested");
 }
 
@@ -3060,7 +3060,7 @@ bool GFX_Events()
 		default: MAPPER_CheckEvent(&event);
 		}
 	}
-	return !exit_requested;
+	return !shutdown_requested;
 }
 
 #if defined (WIN32)

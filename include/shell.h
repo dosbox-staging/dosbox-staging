@@ -71,6 +71,7 @@ private:
 
 	char *completion_start = nullptr;
 	uint16_t completion_index = 0;
+	bool exit_cmd_called = false;
 
 public:
 

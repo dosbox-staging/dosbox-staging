@@ -361,7 +361,7 @@ void DOS_Shell::CMD_EXIT(char *args)
 		WriteOut(MSG_Get("SHELL_CMD_EXIT_TOO_SOON"));
 		LOG_WARNING("SHELL: Caught a very early 'exit' attempt, which means something might have failed.");
 	} else {
-		exit_requested = true;
+		exit_cmd_called = true;
 	}
 }
 
@@ -1598,7 +1598,7 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	Bit16u n=1;
 	do {
 		DOS_ReadFile(STDIN, &c, &n);
-		if (exit_requested)
+		if (shutdown_requested)
 			break;
 	} while (!c || !(ptr = strchr(rem, (optS ? c : toupper(c)))));
 	c = optS ? c : (Bit8u)toupper(c);
