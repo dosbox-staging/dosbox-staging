@@ -1432,7 +1432,7 @@ dosurface:
 			// Set shader variables
 			glUniform2f(sdl.opengl.ruby.texture_size, (float)texsize, (float)texsize);
 			glUniform2f(sdl.opengl.ruby.input_size, (float)width, (float)height);
-			glUniform2f(sdl.opengl.ruby.output_size, sdl.clip.w, sdl.clip.h);
+			glUniform2f(sdl.opengl.ruby.output_size, (GLfloat)sdl.clip.w, (GLfloat)sdl.clip.h);
 			// The following uniform is *not* set right now
 			sdl.opengl.actual_frame_count = 0;
 		} else {
