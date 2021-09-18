@@ -191,7 +191,7 @@ char* DOS_Drive_Cache::GetExpandName(const char* path) {
 	}
 
 	if (*work) {
-		size_t len = strlen(work);
+		size_t len = safe_strlen(work);
 #if defined (WIN32)
 		if((work[len-1] == CROSS_FILESPLIT ) && (len >= 2) && (work[len-2] != ':')) {
 #else
@@ -391,10 +391,10 @@ int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* short
 /* the following code is replaced as it's not safe when char* is 64 bits */
 /*		Bits compareCount1	= (int)cpos - (int)shortName;
 		char* endPos		= strchr(cpos,'.');
-		Bitu numberSize		= endPos ? int(endPos)-int(cpos) : strlen(cpos);
+		Bitu numberSize		= endPos ? int(endPos)-int(cpos) : safe_strlen(cpos);
 		
 		char* lpos			= strchr(compareName,'.');
-		Bits compareCount2	= lpos ? int(lpos)-int(compareName) : strlen(compareName);
+		Bits compareCount2	= lpos ? int(lpos)-int(compareName) : safe_strlen(compareName);
 		if (compareCount2>8) compareCount2 = 8;
 
 		compareCount2 -= numberSize;
@@ -615,7 +615,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 
 		// Copy first letters
 		Bits tocopy = 0;
-		size_t buflen = strlen(short_nr);
+		size_t buflen = safe_strlen(short_nr);
 		if (len + buflen + 1 > 8)
 			tocopy = (Bits)(8 - buflen - 1);
 		else
@@ -633,7 +633,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 			// Step to last extension...
 			pos = strrchr(tmpName, '.'); // extensions are at-most 3 chars (4 with terminator)
 			// add extension
-			unsigned int remaining_space = DOS_NAMELENGTH_ASCII - strlen(info->shortname) - 1;
+			unsigned int remaining_space = DOS_NAMELENGTH_ASCII - safe_strlen(info->shortname) - 1;
 			strncat(info->shortname, pos, 4 < remaining_space ? 4 : remaining_space);
 			info->shortname[DOS_NAMELENGTH] = 0;
 		}
@@ -686,7 +686,7 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 //	LOG_DEBUG("DIR: Find %s",path);
 
 	// Remove base dir path
-	start += strlen(basePath);
+	start += safe_strlen(basePath);
 	safe_strncpy(expandedPath, basePath, CROSS_LEN);
 
 	// hehe, baseDir should be cached in... 
@@ -773,7 +773,7 @@ bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, Bit16u& id) {
 	safe_strcpy(expandcopy, expand);
 	// Add "/"
 	char end[2]={CROSS_FILESPLIT,0};
-	const size_t expandcopylen = strlen(expandcopy);
+	const size_t expandcopylen = safe_strlen(expandcopy);
 	if (expandcopylen > 0 && expandcopy[expandcopylen - 1] != CROSS_FILESPLIT) {
 		safe_strcat(expandcopy, end);
 	}
