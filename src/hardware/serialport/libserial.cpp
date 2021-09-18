@@ -25,6 +25,8 @@
 #include <windows.h>
 #include <stdio.h>
 
+#include "string_utils.h"
+
 struct _COMPORT {
 	HANDLE porthandle;
 	bool breakstatus;
@@ -153,11 +155,11 @@ void SERIAL_getErrorString(char* buffer, size_t length) {
 	
 	// Go for length > so there will be bytes left afterwards.
 	// (which are 0 due to memset, thus the buffer is 0 terminated
-	if ( length > (sysmsg_offset + strlen((const char*)sysmessagebuffer)) ) {
+	if (length > (sysmsg_offset + strlen((const char *)sysmessagebuffer))) {
 		memcpy(buffer + sysmsg_offset, sysmessagebuffer,
-		       strlen((const char*)sysmessagebuffer));
+		       strlen((const char *)sysmessagebuffer));
 	}
-		
+
 	LocalFree(sysmessagebuffer);
 }
 
@@ -258,7 +260,7 @@ bool SERIAL_setCommParameters(COMPORT port,
 
 #if defined (LINUX) || defined (MACOSX) || defined (BSD)
 
-#include <string.h> // strlen
+#include <string.h> // safe_strlen
 #include <stdlib.h>
 
 #include <termios.h>
