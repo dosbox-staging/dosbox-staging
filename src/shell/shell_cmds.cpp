@@ -989,7 +989,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 			if (plus) *plus++ = 0;
 			safe_strcpy(source_x, source_p);
 			bool has_drive_spec = false;
-			size_t source_x_len = strlen(source_x);
+			size_t source_x_len = safe_strlen(source_x);
 			if (source_x_len>0) {
 				if (source_x[source_x_len-1] == ':') has_drive_spec = true;
 			}
