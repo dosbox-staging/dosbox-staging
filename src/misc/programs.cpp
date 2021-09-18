@@ -37,6 +37,7 @@
 #include "shell.h"
 #include "hardware.h"
 #include "mapper.h"
+#include "string_utils.h"
 
 Bitu call_program;
 
@@ -242,7 +243,7 @@ bool Program::GetEnvStr(const char *entry, std::string &result) const
 	do 	{
 		MEM_StrCopy(env_read,env_string,1024);
 		if (!env_string[0]) return false;
-		env_read += (PhysPt)(strlen(env_string)+1);
+		env_read += (PhysPt)(safe_strlen(env_string)+1);
 		char* equal = strchr(env_string,'=');
 		if (!equal) continue;
 		/* replace the = with \0 to get the length */
@@ -265,7 +266,7 @@ bool Program::GetEnvNum(Bitu num, std::string &result) const
 		MEM_StrCopy(env_read,env_string,1024);
 		if (!env_string[0]) break;
 		if (!num) { result=env_string;return true;}
-		env_read += (PhysPt)(strlen(env_string)+1);
+		env_read += (PhysPt)(safe_strlen(env_string)+1);
 		num--;
 	} while (1);
 	return false;
@@ -297,12 +298,12 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 	do 	{
 		MEM_StrCopy(env_read,env_string,1024);
 		if (!env_string[0]) break;
-		env_read += (PhysPt)(strlen(env_string)+1);
+		env_read += (PhysPt)(safe_strlen(env_string)+1);
 		if (!strchr(env_string,'=')) continue;		/* Remove corrupt entry? */
 		if ((strncasecmp(entry,env_string,strlen(entry))==0) && 
 			env_string[strlen(entry)]=='=') continue;
-		MEM_BlockWrite(env_write,env_string,(Bitu)(strlen(env_string)+1));
-		env_write += (PhysPt)(strlen(env_string)+1);
+		MEM_BlockWrite(env_write,env_string,(Bitu)(safe_strlen(env_string)+1));
+		env_write += (PhysPt)(safe_strlen(env_string)+1);
 	} while (1);
 /* TODO Maybe save the program name sometime. not really needed though */
 	/* Save the new entry */
@@ -314,8 +315,8 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 		std::string bigentry(entry);
 		for (std::string::iterator it = bigentry.begin(); it != bigentry.end(); ++it) *it = toupper(*it);
 		snprintf(env_string,1024+1,"%s=%s",bigentry.c_str(),new_string);
-		MEM_BlockWrite(env_write,env_string,(Bitu)(strlen(env_string)+1));
-		env_write += (PhysPt)(strlen(env_string)+1);
+		MEM_BlockWrite(env_write,env_string,(Bitu)(safe_strlen(env_string)+1));
+		env_write += (PhysPt)(safe_strlen(env_string)+1);
 	}
 	/* Clear out the final piece of the environment */
 	mem_writeb(env_write,0);
