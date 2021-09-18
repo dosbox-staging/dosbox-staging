@@ -314,7 +314,7 @@ void DOS_Shell::ParseLine(char * line) {
 void DOS_Shell::RunInternal()
 {
 	char input_line[CMD_MAXLINE] = {0};
-	while (bf && !exit_requested) {
+	while (bf && !shutdown_requested) {
 		if (bf->ReadLine(input_line)) {
 			if (echo) {
 				if (input_line[0] != '@') {
@@ -395,7 +395,7 @@ void DOS_Shell::Run()
 			InputCommand(input_line);
 			ParseLine(input_line);
 		}
-	} while (!exit_requested);
+	} while (!exit_cmd_called && !shutdown_requested);
 }
 
 void DOS_Shell::SyntaxError()

@@ -59,7 +59,7 @@ void NE2K_Init(Section* sec);
 #endif
 
 Config * control;
-bool exit_requested = false;
+bool shutdown_requested = false;
 MachineType machine;
 SVGACards svgaCard;
 
@@ -330,7 +330,7 @@ void DOSBOX_SetNormalLoop() {
 
 void DOSBOX_RunMachine()
 {
-	while ((*loop)() == 0 && !exit_requested)
+	while ((*loop)() == 0 && !shutdown_requested)
 		;
 }
 
