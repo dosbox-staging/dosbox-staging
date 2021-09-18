@@ -64,7 +64,7 @@ void DEBUG_ShowMsg(char const* format,...) {
 	buf[sizeof(buf) - 1] = '\0';
 
 	/* Add newline if not present */
-	size_t len = strlen(buf);
+	size_t len = safe_strlen(buf);
 	if(buf[len - 1] != '\n' && len + 1 < sizeof(buf) ) strcat(buf,"\n");
 
 	if (debuglog) {
