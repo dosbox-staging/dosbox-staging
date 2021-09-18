@@ -37,6 +37,7 @@
 #include "string_utils.h"
 #include "support.h"
 #include "../ints/int10.h"
+#include "string_utils.h"
 
 
 static constexpr int FRAMES_PER_BUFFER = 512; // synth granularity
@@ -609,7 +610,7 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program *caller)
 			if (is_directory)
 				continue;
 
-			const size_t name_len = strlen(dir_entry_name);
+			const size_t name_len = safe_strlen(dir_entry_name);
 			if (name_len < 4)
 				continue;
 			const char *ext = dir_entry_name + name_len - 4;
