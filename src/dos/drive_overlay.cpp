@@ -349,7 +349,7 @@ Overlay_Drive::Overlay_Drive(const char *startdir,
 	//Determine if overlaydir is part of the startdir.
 	convert_overlay_to_DOSname_in_base(dirname);
 
-	size_t dirlen = strlen(dirname);
+	size_t dirlen = safe_strlen(dirname);
 	if(dirlen && dirname[dirlen - 1] == '\\') dirname[dirlen - 1] = 0;
 			
 	//add_deleted_path(dirname); //update_cache will add the overlap_folder
@@ -361,7 +361,7 @@ Overlay_Drive::Overlay_Drive(const char *startdir,
 void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname ) 
 {
 	dirname[0] = 0;//ensure good return string
-	if (strlen(overlaydir) >= strlen(basedir) ) {
+	if (safe_strlen(overlaydir) >= safe_strlen(basedir) ) {
 		//Needs to be longer at least.
 #if defined (WIN32)
 		if (strncasecmp(overlaydir,basedir,strlen(basedir)) == 0) {
@@ -370,7 +370,7 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 #endif
 			//Beginning is the same.
 			char t[CROSS_LEN];
-			safe_strcpy(t, overlaydir + strlen(basedir));
+			safe_strcpy(t, overlaydir + safe_strlen(basedir));
 
 			char* p = t;
 			char* b = t;
@@ -597,11 +597,11 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 		char dir_name[CROSS_LEN];
 		bool is_directory;
 		if (read_directory_first(dirp, dir_name, is_directory)) {
-			if ((strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(dir_name);
+			if ((safe_strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(dir_name);
 			else if (is_directory) dirnames.push_back(dir_name);
 			else filenames.push_back(dir_name);
 			while (read_directory_next(dirp, dir_name, is_directory)) {
-				if ((strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(dir_name);
+				if ((safe_strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(dir_name);
 				else if (is_directory) dirnames.push_back(dir_name);
 				else filenames.push_back(dir_name);
 			}
@@ -647,11 +647,11 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 			char dir_name[CROSS_LEN];
 			bool is_directory; 
 			if (read_directory_first(dirp, dir_name, is_directory)) {
-				if ((strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(string(dirpush)+dir_name);
+				if ((safe_strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(string(dirpush)+dir_name);
 				else if (is_directory) dirnames.push_back(string(dirpush)+dir_name);
 				else filenames.push_back(string(dirpush)+dir_name);
 				while (read_directory_next(dirp, dir_name, is_directory)) {
-					if ((strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(string(dirpush)+dir_name);
+					if ((safe_strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(string(dirpush)+dir_name);
 					else if (is_directory) dirnames.push_back(string(dirpush)+dir_name);
 					else filenames.push_back(string(dirpush)+dir_name);
 				}
@@ -771,7 +771,7 @@ again:
 	safe_strcpy(relativename, srchInfo[id].srch_dir);
 	//strip off basedir: //TODO cleanup
 	safe_strcpy(ovname, overlaydir);
-	char* prel = full_name + strlen(basedir);
+	char* prel = full_name + safe_strlen(basedir);
 
 	
 
@@ -812,7 +812,7 @@ again:
 	/* file is okay, setup everything to be copied in DTA Block */
 	char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;
 
-	if(strlen(dir_entcopy)<DOS_NAMELENGTH_ASCII){
+	if(safe_strlen(dir_entcopy)<DOS_NAMELENGTH_ASCII){
 		safe_strcpy(find_name, dir_entcopy);
 		upcase(find_name);
 	} 
