@@ -61,7 +61,7 @@ void LOADFIX::Run(void)
 			args[0] = 0;
 			bool found = cmd->FindCommand(commandNr++,temp_line);
 			while (found) {
-				if (strlen(args)+temp_line.length()+1>256) break;
+				if (safe_strlen(args)+temp_line.length()+1>256) break;
 				safe_strcat(args, temp_line.c_str());
 				found = cmd->FindCommand(commandNr++,temp_line);
 				if (found)
