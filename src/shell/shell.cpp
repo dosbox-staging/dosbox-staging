@@ -494,7 +494,7 @@ public:
 			if (stat(buffer, &test)) {
 				if (getcwd(buffer, CROSS_LEN) == NULL)
 					continue;
-				if (strlen(buffer) + line.length() + 1 > CROSS_LEN)
+				if (safe_strlen(buffer) + line.length() + 1 > CROSS_LEN)
 					continue;
 				safe_strcat(buffer, cross_filesplit);
 				safe_strcat(buffer, line.c_str());
