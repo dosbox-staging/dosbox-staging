@@ -187,15 +187,14 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	        "'mt32_old' and 'mt32_new' are aliases for 1.07 and 2.04, respectively.");
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
-	str_prop->Set_help(
-	        "The directory containing ROMs for one or more models.\n"
-	        "The directory can be absolute or relative, or leave it blank to\n"
-	        "use the 'mt32-roms' directory in your DOSBox configuration\n"
-	        "directory. Other common system locations will be checked as well.\n"
-	        "ROM files inside this directory may include any of the following:\n"
-	        "  - MT32_CONTROL.ROM and MT32_PCM.ROM, for the 'mt32' model.\n"
-	        "  - CM32L_CONTROL.ROM and CM32L_PCM.ROM, for the 'cm32l' model.\n"
-	        "  - Unzipped MAME MT-32 and CM-32L ROMs, for the versioned models.\n");
+	str_prop->Set_help("The directory containing ROMs for one or more models.\n"
+	                   "The directory can be absolute or relative, or leave it blank to\n"
+	                   "use the 'mt32-roms' directory in your DOSBox configuration\n"
+	                   "directory. Other common system locations will be checked as well.\n"
+	                   "ROM files inside this directory may include any of the following:\n"
+	                   "  - MT32_CONTROL.ROM and MT32_PCM.ROM, for the 'mt32' model.\n"
+	                   "  - CM32L_CONTROL.ROM and CM32L_PCM.ROM, for the 'cm32l' model.\n"
+	                   "  - Unzipped MAME MT-32 and CM-32L ROMs, for the versioned models.");
 }
 
 #if defined(WIN32)
