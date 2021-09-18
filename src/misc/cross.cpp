@@ -133,7 +133,7 @@ static void W32_ConfDir(std::string& in,bool create) {
 		if(!windir) windir = "c:\\windows";
 		safe_strcpy(result, windir);
 		char const* appdata = "\\Application Data";
-		size_t len = strlen(result);
+		size_t len = safe_strlen(result);
 		if (len + strlen(appdata) < MAX_PATH)
 			safe_strcat(result, appdata);
 		if (create)
@@ -326,7 +326,7 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 	static char split[2] = { CROSS_FILESPLIT , 0 };
 	buffer[0] = 0;
 	safe_strcpy(buffer, dirp->base_path);
-	size_t buflen = strlen(buffer);
+	size_t buflen = safe_strlen(buffer);
 	if (buflen && buffer[buflen - 1] != CROSS_FILESPLIT)
 		safe_strcat(buffer, split);
 	safe_strcat(buffer, entry_name);
