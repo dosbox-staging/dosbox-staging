@@ -3260,6 +3260,14 @@ void Config_Add_SDL() {
 	                                           "normal");
 	Pstring->Set_values(inactt);
 
+	pstring = sdl_sec->Add_string("controllerdb", always, "auto");
+	pstring->Set_help(
+	        "Path to a 3rd party SDL controller database file.\n"
+	        "The default is 'auto', which loads 'gamecontrollerdb.txt' if found locally or in the the config path.\n"
+	        "If 'auto' doesn't find the file, it uses SDL's internal controller mappings.\n"
+	        "Note: 'gamecontrollerdb.txt' is bundled with the binary package or can be downloaded here:\n"
+	        "      https://github.com/gabomdq/SDL_GameControllerDB/archive/refs/heads/master.zip\n");
+
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
 	pstring->Set_help("File used to load/save the key/event mappings from.\n"
 	                  "Resetmapper only works with the default value.");

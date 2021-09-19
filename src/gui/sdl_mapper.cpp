@@ -39,6 +39,7 @@
 #include <SDL_thread.h>
 
 #include "control.h"
+#include "fs_utils.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
@@ -602,8 +603,15 @@ public:
 		if (button_wrap > MAXBUTTON)
 			button_wrap = MAXBUTTON;
 
-		LOG_MSG("MAPPER: Initialized %s with %d axes, %d buttons, and %d hat(s)",
+		LOG_MSG("JOYSTICK: Initialized %s with %d axes, %d buttons, and %d hat(s)",
 		        SDL_JoystickNameForIndex(stick), axes, buttons, hats);
+
+		if (SDL_IsGameController(_stick))
+			LOG_INFO("CONTROLLER: The %s game controller is supported",
+			         SDL_GameControllerNameForIndex(_stick));
+		else
+			LOG_INFO("CONTROLLER: The %s is not a game controller or is unsupported",
+			         SDL_JoystickNameForIndex(stick));
 	}
 
 	~CStickBindGroup()
@@ -2935,6 +2943,56 @@ static void MAPPER_Destroy(Section *sec) {
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 }
 
+static void load_controllerdb(const std::string &pref)
+{
+	// The following if/else's will (possibly) populate the db string with a path.
+	std::string db;
+
+	// User wants automatic loading
+	if (pref.empty() || pref == "auto") {
+		const std::string local_db = "gamecontrollerdb.txt";
+		const std::string conf_db  = CROSS_GetPlatformConfigDir() + local_db;
+		if (path_exists(local_db)) {
+			db = local_db;
+		} else if (path_exists(conf_db)) {
+			db = conf_db;
+		}
+	}
+	// User wants to load a custom controller database
+	else {
+		const auto fallback = CROSS_GetPlatformConfigDir() + pref;
+
+		if (path_exists(pref)) { // found it straight-away
+			db = pref;
+		} else if (path_exists(fallback)) { // try the fallback
+			db = fallback;
+		} else {
+			LOG_WARNING("JOYSTICK: Could not find controller database '%s'", pref.c_str());
+		}
+	}
+
+	// No database found, so carry on with SDL's internal database
+	if (db.empty()) {
+		LOG_MSG("JOYSTICK: Using internal controller database");
+		return;
+	}
+
+	// Is SDL new enough to use the current controller DB?
+	if (!SDL_VERSION_ATLEAST(2, 0, 10)) {
+		LOG_WARNING("JOYSTICK: SDL %d.%d.%d is too old to use the Controller DB; SDL 2.0.10 is needed",
+		            SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
+		return;
+	}
+
+	const auto num_mappings = SDL_GameControllerAddMappingsFromFile(db.c_str());
+	if (num_mappings < 0) {
+		LOG_MSG("SDL: Failed to load the controller database '%s'", db.c_str());
+		return;
+	}
+
+	LOG_MSG("SDL: Loaded %d controller mappings from database '%s'", num_mappings, db.c_str());
+}
+
 void MAPPER_BindKeys(Section *sec)
 {
 	// Release any keys pressed, or else they'll get stuck
@@ -2945,6 +3003,9 @@ void MAPPER_BindKeys(Section *sec)
 	const auto property = section->Get_path("mapperfile");
 	assert(property && !property->realpath.empty());
 	mapper.filename = property->realpath;
+
+	// get the controllerdb file set by the user
+	load_controllerdb(section->Get_string("controllerdb"));
 
 	QueryJoysticks();
 

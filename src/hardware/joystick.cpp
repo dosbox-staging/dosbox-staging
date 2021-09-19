@@ -24,6 +24,7 @@
 
 #include "control.h"
 #include "inout.h"
+#include "fs_utils.h"
 #include "pic.h"
 #include "support.h"
 
