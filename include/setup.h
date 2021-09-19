@@ -426,4 +426,6 @@ public:
 	virtual bool Change_Config(Section * /*newconfig*/) { return false; }
 };
 
+void SETUP_ParseConfigFiles(const std::string &config_path);
+
 #endif

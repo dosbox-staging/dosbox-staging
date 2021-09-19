@@ -344,9 +344,10 @@ To be able to use Command Line Parameters:
 The options are valid for all operating systems unless noted in the option
 description:
 
-dosbox [-fullscreen] [-startmapper] [-noautoexec] [-securemode] [-userconf]
-       [-scaler scaler | -forcescaler scaler] [-conf congfigfile]
-       [-lang langfile] [-machine machine-type] [-socket socketnumber]
+dosbox [-fullscreen] [-startmapper] [-noautoexec] [-securemode]
+       [-noprimaryconf] [-nolocalconf] [-conf congfigfile]
+       [-scaler scaler | -forcescaler scaler] [-lang langfile]
+       [-machine machine-type] [-socket socketnumber]
        [-c command] [-noconsole] [-exit] [NAME]
 
 dosbox --version
@@ -387,15 +388,31 @@ dosbox -opencaptures program
   -fullscreen
         Starts DOSBox in fullscreen mode.
 
-  -userconf
-        Start DOSBox with the users specific configuration file. Can be used
-        together with multiple -conf parameters, but -userconf will always be
-        loaded before them.
+  -noprimaryconf, -conf, and -nolocalconf:
 
-  -conf configfilelocation
-        Start DOSBox with the options specified in "configfilelocation".
-        Multiple -conf options may be present.
-        See Section 13: "The configuration (options) file" for more details.
+        DOSBox Staging uses a layered configuration approach, as follows:
+
+        1. The primary configuration file is loaded first, which comes
+           from the operating system's user configuration directory.
+           This can be thought of as your "global" configuration file.
+
+        2. Custom configurations can be layered on next using one
+           or more -conf <filename> command-line arguments. For example:
+           dosbox -conf myshader.conf -conf myaudio.conf
+
+        3. Finally, if the local directory contains a "dosbox.conf" file,
+           these settings will be layered on last and therefore have
+           the highest precedence.
+
+        This layered approach means you can start with the most general
+        settings (from your primary conf) and increasingly fine-tune them
+        for a specific game, which may only have a couple DOS-specific
+        settings inside its own local dosbox.conf file.
+
+        The -noprimaryconf and -nolocalconf affect this behavior:
+
+        -noprimaryconf avoids loading your primary conf file.
+        -nolocalconf avoids loading the local dosbox.conf file.
 
   -lang languagefilelocation
         Start DOSBox using the language specified in "languagefilelocation".

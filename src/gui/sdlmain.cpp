@@ -3602,69 +3602,8 @@ int sdl_main(int argc, char *argv[])
 	// Once initialized, ensure we clean up SDL for all exit conditions
 	atexit(QuitSDL);
 
-	/* Parse configuration files */
-	std::string config_file, config_combined;
-
-	std::string config_path = CROSS_GetPlatformConfigDir();
-
-	//First parse -userconf
-	if(control->cmdline->FindExist("-userconf",true)){
-		config_file.clear();
-		Cross::GetPlatformConfigDir(config_path);
-		Cross::GetPlatformConfigName(config_file);
-		config_combined = config_path + config_file;
-		control->ParseConfigFile(config_combined.c_str());
-		if(!control->configfiles.size()) {
-			//Try to create the userlevel configfile.
-			config_file.clear();
-			Cross::CreatePlatformConfigDir(config_path);
-			Cross::GetPlatformConfigName(config_file);
-			config_combined = config_path + config_file;
-			if (control->PrintConfig(config_combined)) {
-				LOG_MSG("CONFIG: Generating default configuration\n"
-					"CONFIG: Writing it to %s",
-					config_combined.c_str());
-				// Load them as well. Makes relative paths much easier
-				control->ParseConfigFile(config_combined.c_str());
-			}
-		}
-	}
-
-	//Second parse -conf switches
-	while(control->cmdline->FindString("-conf",config_file,true)) {
-		if (!control->ParseConfigFile(config_file.c_str())) {
-			// try to load it from the user directory
-			if (!control->ParseConfigFile((config_path + config_file).c_str())) {
-				LOG_MSG("CONFIG: Can't open specified config file: %s",config_file.c_str());
-			}
-		}
-	}
-	// if none found => parse localdir conf
-	if(!control->configfiles.size()) control->ParseConfigFile("dosbox.conf");
-
-	// if none found => parse userlevel conf
-	if(!control->configfiles.size()) {
-		config_file.clear();
-		Cross::GetPlatformConfigName(config_file);
-		control->ParseConfigFile((config_path + config_file).c_str());
-	}
-
-	if(!control->configfiles.size()) {
-		//Try to create the userlevel configfile.
-		config_file.clear();
-		Cross::CreatePlatformConfigDir(config_path);
-		Cross::GetPlatformConfigName(config_file);
-		config_combined = config_path + config_file;
-		if (control->PrintConfig(config_combined)) {
-			LOG_MSG("CONFIG: Generating default configuration\n"
-				"CONFIG: Writing it to %s",
-				config_combined.c_str());
-			// Load them as well. Makes relative paths much easier
-			control->ParseConfigFile(config_combined.c_str());
-		} else {
-			LOG_MSG("CONFIG: Using default settings. Create a configfile to change them");
-		}
-	}
+	const auto config_path = CROSS_GetPlatformConfigDir();
+	SETUP_ParseConfigFiles(config_path);
 
 #if C_OPENGL
 	const std::string glshaders_dir = config_path + "glshaders";
