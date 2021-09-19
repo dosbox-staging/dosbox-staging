@@ -951,15 +951,12 @@ Section *Config::GetSectionFromProperty(const char *prop) const
 	return nullptr;
 }
 
-bool Config::ParseConfigFile(char const * const configfilename) {
-	//static bool first_configfile = true;
+bool Config::ParseConfigFile(const std::string &type, const std::string &configfilename)
+{
+	// static bool first_configfile = true;
 	ifstream in(configfilename);
 	if (!in) return false;
 	configfiles.push_back(configfilename);
-
-	LOG_INFO("CONFIG: Loading %s file %s",
-	        configfiles.size() == 1 ? "primary" : "additional",
-	        configfilename);
 
 	//Get directory from configfilename, used with relative paths.
 	current_config_dir=configfilename;
@@ -1005,6 +1002,9 @@ bool Config::ParseConfigFile(char const * const configfilename) {
 		}
 	}
 	current_config_dir.clear();//So internal changes don't use the path information
+
+	LOG_INFO("CONFIG: Loaded %s conf file %s", type.c_str(), configfilename.c_str());
+
 	return true;
 }
 
