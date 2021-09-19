@@ -3596,7 +3596,7 @@ int sdl_main(int argc, char *argv[])
 	LOG_MSG("dosbox-staging version %s", DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
 
-	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0)
+	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
 		E_Exit("Can't init SDL %s", SDL_GetError());
 	sdl.initialized = true;
 	// Once initialized, ensure we clean up SDL for all exit conditions
