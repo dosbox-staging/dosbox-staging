@@ -275,6 +275,9 @@ jobs:
           install -m 644 "README"                            "$dst/SharedSupport/manual.txt"
           install -m 644 "docs/README.video"                 "$dst/SharedSupport/video.txt"
 
+          install -m 644 "submodules/SDL_GameControllerDB/gamecontrollerdb.txt" \
+                                                             "$dst/Resources/gamecontrollerdb.txt"
+
           # Fill README template file
           sed -i -e "s|%VERSION%|${{ env.VERSION }}|"           "$dst/Info.plist"
           sed -i -e "s|%GIT_COMMIT%|$GITHUB_SHA|"               "$dst/SharedSupport/README"

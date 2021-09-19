@@ -215,6 +215,8 @@ jobs:
           install -DT -m 644 COPYING              dest/COPYING
           install -DT -m 644 README               dest/doc/manual.txt
           install -DT -m 644 docs/dosbox.1        dest/man/dosbox.1
+          install -DT -m 644 submodules/SDL_GameControllerDB/gamecontrollerdb.txt \
+                                                  dest/gamecontrollerdb.txt
 
           # Install .desktop entry and icon files
           install -DT contrib/linux/dosbox-staging.desktop dest/desktop/dosbox-staging.desktop
