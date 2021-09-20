@@ -477,11 +477,10 @@ public:
 		}
 
 		// Check for the -exit switch, which indicates they want to quit after the command has finished
-		const bool requested_exit_after_command = control->cmdline->FindExist("-exit", true);
+		const bool requested_exit_after_command = control->cmdline->FindExist("-exit");
 
 		// Check if instant-launch is active
-		const bool using_instant_launch = control->cmdline->HasExecutableName() &&
-		                                  control->GetStartupVerbosity() <= Verbosity::Low;
+		const bool using_instant_launch = control->GetStartupVerbosity() == Verbosity::InstantLaunch;
 
 		// Should we add an 'exit' call to the end of autoexec.bat?
 		const bool addexit = requested_exit_after_command || using_instant_launch;
