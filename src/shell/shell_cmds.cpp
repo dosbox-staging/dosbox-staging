@@ -357,12 +357,19 @@ int64_t ticks_at_program_launch = 0;
 void DOS_Shell::CMD_EXIT(char *args)
 {
 	HELP("EXIT");
-	if (GetTicksSince(ticks_at_program_launch) <= 2000) {
-		WriteOut(MSG_Get("SHELL_CMD_EXIT_TOO_SOON"));
-		LOG_WARNING("SHELL: Caught a very early 'exit' attempt, which means something might have failed.");
-	} else {
+
+	const bool wants_force_exit = control->cmdline->FindExist("-exit");
+	const bool is_normal_launch = control->GetStartupVerbosity() != Verbosity::InstantLaunch;
+	const auto seconds_since_launch = GetTicksSince(ticks_at_program_launch) / 1000.0;
+
+	if (wants_force_exit || is_normal_launch || seconds_since_launch > 1.5) {
 		exit_cmd_called = true;
+		return;
 	}
+
+	WriteOut(MSG_Get("SHELL_CMD_EXIT_TOO_SOON"));
+	LOG_WARNING("SHELL: Exit blocked because program quit after only %.1f seconds",
+	            seconds_since_launch);
 }
 
 void DOS_Shell::CMD_CHDIR(char * args) {

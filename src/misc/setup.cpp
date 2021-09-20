@@ -1082,11 +1082,14 @@ Verbosity Config::GetStartupVerbosity() const
 		return Verbosity::SplashOnly;
 	if (user_choice == "quiet")
 		return Verbosity::Quiet;
-	// auto-mode
-	if (cmdline->HasDirectory() || cmdline->HasExecutableName())
-		return Verbosity::Low;
-	else
-		return Verbosity::High;
+	if (user_choice == "auto")
+		return (cmdline->HasDirectory() || cmdline->HasExecutableName())
+		               ? Verbosity::InstantLaunch
+		               : Verbosity::High;
+
+	LOG_WARNING("SETUP: Unknown verbosity mode '%s', defaulting to 'high'",
+	            user_choice.c_str());
+	return Verbosity::High;
 }
 
 bool CommandLine::FindExist(char const * const name,bool remove) {
