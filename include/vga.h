@@ -60,7 +60,6 @@ enum VGAModes {
 constexpr uint16_t EGA_HALF_CLOCK = 1 << 0;
 constexpr uint16_t EGA_LINE_DOUBLE = 1 << 1;
 constexpr uint16_t VGA_PIXEL_DOUBLE = 1 << 2;
-constexpr uint16_t VGA_DOUBLE_CLOCK = 1 << 3;
 
 #define CLK_25 25175
 #define CLK_28 28322

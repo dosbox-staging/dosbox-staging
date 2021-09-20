@@ -120,7 +120,7 @@ void VGA_SetClock(const Bitu which, const uint32_t desired_clock)
 
 	// Is this mode using a clock-doubling flag?
 	const auto mode_flags = CurMode ? CurMode->special : 0;
-	const auto has_doubler = mode_flags & (VGA_PIXEL_DOUBLE | VGA_DOUBLE_CLOCK);
+	const auto has_doubler = mode_flags & VGA_PIXEL_DOUBLE;
 	const auto clock_scale = has_doubler ? 2 : 1;
 
 	// Ensure the target clock is within the S3's clock range
