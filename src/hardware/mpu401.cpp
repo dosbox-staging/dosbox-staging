@@ -743,17 +743,15 @@ public:
 	        : Module_base(configuration),
 	          installed(false)
 	{
-		Section_prop *section = static_cast<Section_prop *>(configuration);
-		const char *s_mpu = section->Get_string("mpu401");
-		if (strcasecmp(s_mpu, "none") == 0)
-			return;
-		if (strcasecmp(s_mpu, "off") == 0)
-			return;
-		if (strcasecmp(s_mpu, "false") == 0)
-			return;
 		if (!MIDI_Available())
 			return;
-		/*Enabled and there is a Midi */
+
+		Section_prop *section = static_cast<Section_prop *>(configuration);
+		const auto mpu_type = std::string(section->Get_string("mpu401"));
+		if (mpu_type == "none" || mpu_type == "off" || mpu_type == "false")
+			return;
+
+		// Enabled and there is a Midi
 		installed = true;
 
 		WriteHandler[0].Install(0x330, &MPU401_WriteData, io_width_t::byte);
@@ -767,9 +765,7 @@ public:
 		mpu.mode = M_UART;
 		mpu.irq = 9; // Princess Maker 2 wants it on irq 9
 
-		mpu.intelligent = true; // Default is on
-		if (strcasecmp(s_mpu, "uart") == 0)
-			mpu.intelligent = false;
+		mpu.intelligent = (mpu_type == "intelligent");
 		if (!mpu.intelligent)
 			return;
 		// Set IRQ and unmask it(for timequest/princess maker 2)
