@@ -36,6 +36,7 @@ static void MPU401_EOIHandlerDispatch(void);
 constexpr uint8_t MPU401_VERSION = 0x15;
 constexpr uint8_t MPU401_REVISION = 0x01;
 constexpr uint8_t MPU401_QUEUE = 32;
+constexpr double MPU401_EIO_DELAY = 0.06; // real delay is possibly a bit longer
 constexpr double MPU401_TIMECONSTANT = (60000000 / 1000.0);
 constexpr double MPU401_RESETBUSY = 14.0;
 
@@ -626,7 +627,7 @@ next_event:
 static void MPU401_EOIHandlerDispatch(void) {
 	if (mpu.state.send_now) {
 		mpu.state.eoi_scheduled=true;
-		PIC_AddEvent(MPU401_EOIHandler,0.06f); //Possible a bit longer
+		PIC_AddEvent(MPU401_EOIHandler, MPU401_EIO_DELAY);
 	}
 	else if (!mpu.state.eoi_scheduled) MPU401_EOIHandler();
 }
