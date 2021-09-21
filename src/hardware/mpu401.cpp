@@ -594,7 +594,12 @@ static void MPU401_Event(uint32_t /*val*/)
 	if (mpu.mode == M_UART)
 		return;
 
-	if (mpu.state.irq_pending) goto next_event;
+	const auto event_delay = MPU401_TIMECONSTANT / (mpu.clock.tempo * mpu.clock.timebase);
+	if (mpu.state.irq_pending) {
+		PIC_AddEvent(MPU401_Event, event_delay);
+		return;
+	}
+
 	if (mpu.state.playing) {
 		/* Decrease counters */
 		for (uint8_t i = 0; i < 8; ++i) {
@@ -623,9 +628,10 @@ static void MPU401_Event(uint32_t /*val*/)
 			mpu.state.req_mask|=(1<<13);
 		}
 	}
-	if (!mpu.state.irq_pending && mpu.state.req_mask) MPU401_EOIHandler();
-next_event:
-	PIC_AddEvent(MPU401_Event,MPU401_TIMECONSTANT/(mpu.clock.tempo*mpu.clock.timebase));
+	if (!mpu.state.irq_pending && mpu.state.req_mask)
+		MPU401_EOIHandler();
+
+	PIC_AddEvent(MPU401_Event, event_delay);
 }
 
 static void MPU401_EOIHandlerDispatch(void) {
