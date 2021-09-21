@@ -62,14 +62,15 @@ static struct {
 	MpuMode mode;
 	uint8_t irq;
 	uint8_t queue[MPU401_QUEUE];
-	Bitu queue_pos,queue_used;
+	uint8_t queue_pos;
+	uint8_t queue_used;
 	struct track {
 		uint8_t counter;
 		uint8_t value[8];
 		uint8_t sys_val;
 		uint8_t vlength, length;
 		MpuDataType type;
-	} playbuf[8],condbuf;
+	} playbuf[8], condbuf;
 	struct {
 		bool conductor,cond_req,cond_set, block_ack;
 		bool playing,reset;
@@ -100,18 +101,24 @@ static void QueueByte(uint8_t data)
 		mpu.state.irq_pending=true;
 		PIC_ActivateIRQ(mpu.irq);
 	}
-	if (mpu.queue_used<MPU401_QUEUE) {
-		Bitu pos=mpu.queue_used+mpu.queue_pos;
-		if (mpu.queue_pos>=MPU401_QUEUE) mpu.queue_pos-=MPU401_QUEUE;
-		if (pos>=MPU401_QUEUE) pos-=MPU401_QUEUE;
+	if (mpu.queue_used < MPU401_QUEUE) {
+		assert(mpu.queue_used + mpu.queue_pos <= UINT8_MAX);
+		uint8_t pos = mpu.queue_used + mpu.queue_pos;
+		if (pos >= MPU401_QUEUE)
+			pos -= MPU401_QUEUE;
+		if (mpu.queue_pos >= MPU401_QUEUE)
+			mpu.queue_pos -= MPU401_QUEUE;
 		mpu.queue_used++;
-		mpu.queue[pos]=data;
-	} else LOG(LOG_MISC,LOG_NORMAL)("MPU401:Data queue full");
+		assert(pos < MPU401_QUEUE);
+		mpu.queue[pos] = data;
+	} else
+		LOG(LOG_MISC, LOG_NORMAL)("MPU401:Data queue full");
 }
 
-static void ClrQueue(void) {
-	mpu.queue_used=0;
-	mpu.queue_pos=0;
+static void ClrQueue()
+{
+	mpu.queue_used = 0;
+	mpu.queue_pos = 0;
 }
 
 static uint8_t MPU401_ReadStatus(io_port_t, io_width_t)
@@ -304,11 +311,14 @@ static uint8_t MPU401_ReadData(io_port_t, io_width_t)
 {
 	uint8_t ret = MSG_MPU_ACK;
 	if (mpu.queue_used) {
-		if (mpu.queue_pos>=MPU401_QUEUE) mpu.queue_pos-=MPU401_QUEUE;
-		ret=mpu.queue[mpu.queue_pos];
-		mpu.queue_pos++;mpu.queue_used--;
+		if (mpu.queue_pos >= MPU401_QUEUE)
+			mpu.queue_pos -= MPU401_QUEUE;
+		ret = mpu.queue[mpu.queue_pos];
+		mpu.queue_pos++;
+		mpu.queue_used--;
 	}
-	if (!mpu.intelligent) return ret;
+	if (!mpu.intelligent)
+		return ret;
 
 	if (mpu.queue_used == 0) PIC_DeActivateIRQ(mpu.irq);
 
@@ -733,8 +743,8 @@ public:
 		ReadHandler[0].Install(0x330, &MPU401_ReadData, io_width_t::byte);
 		ReadHandler[1].Install(0x331, &MPU401_ReadStatus, io_width_t::byte);
 
-		mpu.queue_used=0;
-		mpu.queue_pos=0;
+		mpu.queue_used = 0;
+		mpu.queue_pos = 0;
 		mpu.mode=M_UART;
 		mpu.irq=9;	/* Princess Maker 2 wants it on irq 9 */
 
