@@ -60,12 +60,13 @@ static struct {
 	bool intelligent;
 	MpuMode mode;
 	uint8_t irq;
-	Bit8u queue[MPU401_QUEUE];
+	uint8_t queue[MPU401_QUEUE];
 	Bitu queue_pos,queue_used;
 	struct track {
 		uint8_t counter;
-		Bit8u value[8],sys_val;
-		Bit8u vlength,length;
+		uint8_t value[8];
+		uint8_t sys_val;
+		uint8_t vlength, length;
 		MpuDataType type;
 	} playbuf[8],condbuf;
 	struct {
@@ -75,24 +76,24 @@ static struct {
 		bool irq_pending;
 		bool send_now;
 		bool eoi_scheduled;
-		Bits data_onoff;
+		int8_t data_onoff;
 		uint8_t command_byte;
 		uint8_t cmd_pending;
-		Bit8u tmask, cmask, amask;
-		Bit16u midi_mask;
-		Bit16u req_mask;
-		Bit8u channel,old_chan;
+		uint8_t tmask, cmask, amask;
+		uint16_t midi_mask;
+		uint16_t req_mask;
+		uint8_t channel, old_chan;
 	} state;
 	struct {
-		Bit8u timebase;
-		Bit8u tempo,tempo_rel,tempo_grad;
-		Bit8u cth_rate,cth_counter,cth_savecount;
+		uint8_t timebase;
+		uint8_t tempo, tempo_rel, tempo_grad;
+		uint8_t cth_rate, cth_counter, cth_savecount;
 		bool clock_to_host;
 	} clock;
 } mpu;
 
-
-static void QueueByte(Bit8u data) {
+static void QueueByte(uint8_t data)
+{
 	if (mpu.state.block_ack) {mpu.state.block_ack=false;return;}
 	if (mpu.queue_used==0 && mpu.intelligent) {
 		mpu.state.irq_pending=true;
@@ -114,7 +115,7 @@ static void ClrQueue(void) {
 
 static uint8_t MPU401_ReadStatus(io_port_t, io_width_t)
 {
-	Bit8u ret = 0x3f; /* Bits 6 and 7 clear */
+	uint8_t ret = 0x3f; /* Bits 6 and 7 clear */
 	if (mpu.state.cmd_pending) ret |= 0x40;
 	if (!mpu.queue_used) ret |= 0x80;
 	return ret;
@@ -300,7 +301,7 @@ static void MPU401_WriteCommand(io_port_t, const uint8_t val, io_width_t)
 
 static uint8_t MPU401_ReadData(io_port_t, io_width_t)
 {
-	Bit8u ret = MSG_MPU_ACK;
+	uint8_t ret = MSG_MPU_ACK;
 	if (mpu.queue_used) {
 		if (mpu.queue_pos>=MPU401_QUEUE) mpu.queue_pos-=MPU401_QUEUE;
 		ret=mpu.queue[mpu.queue_pos];
@@ -376,7 +377,7 @@ static void MPU401_WriteData(io_port_t, uint8_t val, io_width_t)
 	case 0xef: /* Set 9-16 MIDI channel mask */
 		mpu.state.command_byte = 0;
 		mpu.state.midi_mask &= 0x00ff;
-		mpu.state.midi_mask |= ((Bit16u)val) << 8;
+		mpu.state.midi_mask |= ((uint16_t)val) << 8;
 		return;
 	// case 0xe2:	/* Set graduation for relative tempo */
 	// case 0xe4:	/* Set metronome */
@@ -540,7 +541,7 @@ static void MPU401_WriteData(io_port_t, uint8_t val, io_width_t)
 	}
 }
 
-static void MPU401_IntelligentOut(Bit8u chan)
+static void MPU401_IntelligentOut(uint8_t chan)
 {
 	uint8_t val = 0;
 	switch (mpu.playbuf[chan].type) {
@@ -561,7 +562,8 @@ static void MPU401_IntelligentOut(Bit8u chan)
 	}
 }
 
-static void UpdateTrack(Bit8u chan) {
+static void UpdateTrack(uint8_t chan)
+{
 	MPU401_IntelligentOut(chan);
 	if (mpu.state.amask&(1<<chan)) {
 		mpu.playbuf[chan].vlength=0;
