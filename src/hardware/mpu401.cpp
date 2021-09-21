@@ -352,10 +352,8 @@ static void MPU401_WriteData(io_port_t, uint8_t val, io_width_t)
 	case 0x00: break;
 	case 0xe0: // Set tempo
 		mpu.state.command_byte = 0;
-		if (val > 250)
-			val = 250; // range clamp of true MPU-401
-		else if (val < 4)
-			val = 4;
+		// range clamp of true MPU-401 (always between 4 and 250)
+		val = clamp(val, static_cast<uint8_t>(4), static_cast<uint8_t>(250));
 		mpu.clock.tempo = val;
 		return;
 	case 0xe1: // Set relative tempo
