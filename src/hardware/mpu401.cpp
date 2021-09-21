@@ -161,9 +161,7 @@ static void MPU401_WriteCommand(io_port_t, const uint8_t val, io_width_t)
 		}
 
 		if (val & 0x20)
-			LOG(LOG_MISC, LOG_ERROR)
-
-		("MPU-401:Unhandled Recording Command %u", val);
+			LOG(LOG_MISC, LOG_ERROR)("MPU-401:Unhandled Recording Command %u", val);
 		switch (val & 0xc) {
 		case 0x4: /* Stop */
 			if (mpu.state.playing && !mpu.clock.clock_to_host)
@@ -177,8 +175,7 @@ static void MPU401_WriteCommand(io_port_t, const uint8_t val, io_width_t)
 			}
 			break;
 		case 0x8: /* Play */
-			LOG(LOG_MISC, LOG_NORMAL)
-			("MPU-401:Intelligent mode playback started");
+			LOG(LOG_MISC, LOG_NORMAL)("MPU-401:Intelligent mode playback started");
 			if (!mpu.state.playing && !mpu.clock.clock_to_host)
 				PIC_AddEvent(MPU401_Event,
 				             MPU401_TIMECONSTANT /
@@ -298,8 +295,7 @@ static void MPU401_WriteCommand(io_port_t, const uint8_t val, io_width_t)
 			MPU401_Reset();
 			break;
 		case 0x3f:	/* UART mode */
-			LOG(LOG_MISC, LOG_NORMAL)
-			("MPU-401:Set UART mode %u", val);
+			LOG(LOG_MISC, LOG_NORMAL)("MPU-401:Set UART mode %u", val);
 			mpu.mode = M_UART;
 			break;
 		default:;
@@ -365,8 +361,7 @@ static void MPU401_WriteData(io_port_t, uint8_t val, io_width_t)
 	case 0xe1: /* Set relative tempo */
 		mpu.state.command_byte = 0;
 		if (val != 0x40) // default value
-			LOG(LOG_MISC, LOG_ERROR)
-		("MPU-401:Relative tempo change not implemented");
+			LOG(LOG_MISC, LOG_ERROR)("MPU-401:Relative tempo change not implemented");
 		return;
 	case 0xe7: /* Set internal clock to host interval */
 		mpu.state.command_byte = 0;
@@ -415,8 +410,7 @@ static void MPU401_WriteData(io_port_t, uint8_t val, io_width_t)
 				length = 3;
 				break;
 			case 0xf0:
-				LOG(LOG_MISC, LOG_ERROR)
-				("MPU-401:Illegal WSD byte");
+				LOG(LOG_MISC, LOG_ERROR)("MPU-401:Illegal WSD byte");
 				mpu.state.wsd = 0;
 				mpu.state.channel = mpu.state.old_chan;
 				return;
@@ -517,8 +511,7 @@ static void MPU401_WriteData(io_port_t, uint8_t val, io_width_t)
 					mpu.playbuf[mpu.state.channel].sys_val = val;
 					length = 1;
 				} else {
-					LOG(LOG_MISC, LOG_ERROR)
-					("MPU-401:Illegal message");
+					LOG(LOG_MISC, LOG_ERROR)("MPU-401:Illegal message");
 					mpu.playbuf[mpu.state.channel].type = T_MIDI_SYS;
 					mpu.playbuf[mpu.state.channel].sys_val = val;
 					length = 1;
