@@ -568,6 +568,12 @@ void filter_s3_modes_to_oem_only()
 	        {hash(1152,  864, M_LIN24),                        mb_4 | mb_8},
 	        {hash(1152,  864, M_LIN32),                        mb_4 | mb_8},
 
+	        {hash(1280,  960,  M_LIN4),          mb_1 | mb_2 | mb_4 | mb_8},
+	        {hash(1280,  960,  M_LIN8),                 mb_2 | mb_4 | mb_8},
+	        {hash(1280,  960, M_LIN16),                        mb_4 | mb_8},
+	        {hash(1280,  960, M_LIN24),                        mb_4 | mb_8},
+	        {hash(1280,  960, M_LIN32),                               mb_8},
+
 	        {hash(1280, 1024,  M_LIN4),          mb_1 | mb_2 | mb_4 | mb_8},
 	        {hash(1280, 1024,  M_LIN8),                 mb_2 | mb_4 | mb_8},
 	        {hash(1280, 1024, M_LIN16),                        mb_4 | mb_8},
