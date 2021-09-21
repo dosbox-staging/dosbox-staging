@@ -33,11 +33,11 @@ static void MPU401_ResetDone(uint32_t);
 static void MPU401_EOIHandler(uint32_t val = 0);
 static void MPU401_EOIHandlerDispatch(void);
 
-#define MPU401_VERSION	0x15
-#define MPU401_REVISION	0x01
-#define MPU401_QUEUE 32
-#define MPU401_TIMECONSTANT (60000000/1000.0f)
-#define MPU401_RESETBUSY 14.0f
+constexpr uint8_t MPU401_VERSION = 0x15;
+constexpr uint8_t MPU401_REVISION = 0x01;
+constexpr uint8_t MPU401_QUEUE = 32;
+constexpr double MPU401_TIMECONSTANT = (60000000 / 1000.0);
+constexpr double MPU401_RESETBUSY = 14.0;
 
 enum MpuMode { M_UART,M_INTELLIGENT };
 enum MpuDataType {T_OVERFLOW,T_MARK,T_MIDI_SYS,T_MIDI_NORM,T_COMMAND};
@@ -45,16 +45,16 @@ enum MpuDataType {T_OVERFLOW,T_MARK,T_MIDI_SYS,T_MIDI_NORM,T_COMMAND};
 static void MPU401_WriteData(io_port_t port, uint8_t val, io_width_t);
 
 /* Messages sent to MPU-401 from host */
-#define MSG_EOX	                        0xf7
-#define MSG_OVERFLOW                    0xf8
-#define MSG_MARK                        0xfc
+constexpr uint8_t MSG_EOX = 0xf7;
+// constexpr uint8_t MSG_OVERFLOW = 0xf8; // unused
+// constexpr uint8_t MSG_MARK = 0xfc; // unused
 
 /* Messages sent to host from MPU-401 */
-#define MSG_MPU_OVERFLOW                0xf8
-#define MSG_MPU_COMMAND_REQ             0xf9
-#define MSG_MPU_END                     0xfc
-#define MSG_MPU_CLOCK                   0xfd
-#define MSG_MPU_ACK                     0xfe
+// constexpr uint8_t MSG_MPU_OVERFLOW = 0xf8; // unused
+constexpr uint8_t MSG_MPU_COMMAND_REQ = 0xf9;
+constexpr uint8_t MSG_MPU_END = 0xfc;
+constexpr uint8_t MSG_MPU_CLOCK = 0xfd;
+constexpr uint8_t MSG_MPU_ACK = 0xfe;
 
 static struct {
 	bool intelligent;
