@@ -96,18 +96,19 @@ static struct {
 
 static void QueueByte(uint8_t data)
 {
-	if (mpu.state.block_ack) {mpu.state.block_ack=false;return;}
-	if (mpu.queue_used==0 && mpu.intelligent) {
-		mpu.state.irq_pending=true;
+	if (mpu.state.block_ack) {
+		mpu.state.block_ack = false;
+		return;
+	}
+	if (!mpu.queue_used && mpu.intelligent) {
+		mpu.state.irq_pending = true;
 		PIC_ActivateIRQ(mpu.irq);
 	}
 	if (mpu.queue_used < MPU401_QUEUE) {
-		assert(mpu.queue_used + mpu.queue_pos <= UINT8_MAX);
+		assert(mpu.queue_pos <= MPU401_QUEUE);
 		uint8_t pos = mpu.queue_used + mpu.queue_pos;
-		if (pos >= MPU401_QUEUE)
-			pos -= MPU401_QUEUE;
-		if (mpu.queue_pos >= MPU401_QUEUE)
-			mpu.queue_pos -= MPU401_QUEUE;
+		pos -= (pos >= MPU401_QUEUE) ? MPU401_QUEUE : 0;
+		mpu.queue_pos -= (mpu.queue_pos >= MPU401_QUEUE) ? MPU401_QUEUE : 0;
 		mpu.queue_used++;
 		assert(pos < MPU401_QUEUE);
 		mpu.queue[pos] = data;
@@ -311,8 +312,7 @@ static uint8_t MPU401_ReadData(io_port_t, io_width_t)
 {
 	uint8_t ret = MSG_MPU_ACK;
 	if (mpu.queue_used) {
-		if (mpu.queue_pos >= MPU401_QUEUE)
-			mpu.queue_pos -= MPU401_QUEUE;
+		mpu.queue_pos -= (mpu.queue_pos >= MPU401_QUEUE) ? MPU401_QUEUE : 0;
 		ret = mpu.queue[mpu.queue_pos];
 		mpu.queue_pos++;
 		mpu.queue_used--;
