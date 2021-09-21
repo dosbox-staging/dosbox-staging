@@ -599,17 +599,21 @@ static void MPU401_Event(uint32_t /*val*/)
 		/* Decrease counters */
 		for (uint8_t i = 0; i < 8; ++i) {
 			if (mpu.state.amask & (1 << i)) {
-				if (mpu.playbuf[i].counter) {
-					mpu.playbuf[i].counter--;
-				} else {
-					// Maybe reload the track counter if it's runout
-					UpdateTrack(i);
+				auto &counter = mpu.playbuf[i].counter;
+				switch (counter) {
+				case 0: counter = 0xff; break;
+				case 1: UpdateTrack(i); break;
+				default: --counter; break;
 				}
 			}
 		}
 		if (mpu.state.conductor) {
-			mpu.condbuf.counter--;
-			if (mpu.condbuf.counter<=0) UpdateConductor();
+			auto &counter = mpu.condbuf.counter;
+			switch (counter) {
+			case 0: counter = 0xff; break;
+			case 1: UpdateConductor(); break;
+			default: --counter; break;
+			}
 		}
 	}
 	if (mpu.clock.clock_to_host) {
