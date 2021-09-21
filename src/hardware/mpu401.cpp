@@ -467,10 +467,8 @@ static void MPU401_WriteData(io_port_t, uint8_t val, io_width_t)
 				MPU401_EOIHandlerDispatch();
 				return;
 			}
-			if (val == 0)
-				mpu.state.send_now = true;
-			else
-				mpu.state.send_now = false;
+			// A timing value of 0 means send it now!
+			mpu.state.send_now = (val == 0);
 			mpu.condbuf.counter = val;
 			break;
 		case 1: // Command byte #1
@@ -505,10 +503,8 @@ static void MPU401_WriteData(io_port_t, uint8_t val, io_width_t)
 			MPU401_EOIHandlerDispatch();
 			return;
 		}
-		if (val == 0)
-			mpu.state.send_now = true;
-		else
-			mpu.state.send_now = false;
+		// A timing value of 0 means send it now!
+		mpu.state.send_now = (val == 0);
 		mpu.playbuf[mpu.state.channel].counter = val;
 		break;
 	case 1: // MIDI
