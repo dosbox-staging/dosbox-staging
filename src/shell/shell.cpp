@@ -801,8 +801,10 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_LS_PATH_ERR",
 	        "ls: cannot access '%s': No such file or directory\n");
 
-	MSG_Add("SHELL_CMD_CHOICE_HELP","Waits for a keypress and sets ERRORLEVEL.\n");
-	MSG_Add("SHELL_CMD_CHOICE_HELP_LONG","CHOICE [/C:choices] [/N] [/S] text\n"
+	MSG_Add("SHELL_CMD_CHOICE_HELP",
+	        "Waits for a keypress and sets ERRORLEVEL.\n");
+	MSG_Add("SHELL_CMD_CHOICE_HELP_LONG",
+	        "CHOICE [/C:choices] [/N] [/S] text\n"
 	        "  /C[:]choices  -  Specifies allowable keys.  Default is: yn.\n"
 	        "  /N  -  Do not display the choices at end of prompt.\n"
 	        "  /S  -  Enables case-sensitive choices to be selected.\n"
