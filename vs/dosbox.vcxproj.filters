@@ -424,6 +424,9 @@
     <ClCompile Include="..\src\dos\program_ls.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\program_placeholder.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\misc\fs_utils_win32.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>

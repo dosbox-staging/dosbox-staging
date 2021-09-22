@@ -32,6 +32,7 @@
 #include "program_ls.h"
 #include "program_mem.h"
 #include "program_mount.h"
+#include "program_placeholder.h"
 #include "program_rescan.h"
 
 #if C_DEBUG
@@ -40,7 +41,11 @@
 
 extern Bit32u floppytype;
 
-void DOS_SetupPrograms(void) {
+#define WIKI_URL                   "https://github.com/dosbox-staging/dosbox-staging/wiki"
+#define WIKI_ADD_UTILITIES_ARTICLE WIKI_URL "/Add-Utilities"
+
+void DOS_SetupPrograms(void)
+{
 	/*Add Messages */
 
 	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CDROMs found: %d\n");
@@ -93,17 +98,16 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
 
 	MSG_Add("PROGRAM_INTRO",
-		"\033[2J\033[32;1mWelcome to DOSBox Staging\033[0m, an x86 emulator with sound and graphics.\n"
-		"DOSBox creates a shell for you which looks like old plain DOS.\n"
-		"\n"
-		"For information about basic mount type \033[34;1mintro mount\033[0m\n"
-		"For information about CD-ROM support type \033[34;1mintro cdrom\033[0m\n"
-		"For information about special keys type \033[34;1mintro special\033[0m\n"
-		"For more imformation, visit DOSBox Staging wiki:\033[34;1m\n"
-		"https://github.com/dosbox-staging/dosbox-staging/wiki\033[0m\n"
-		"\n"
-		"\033[31;1mDOSBox will stop/exit without a warning if an error occurred!\033[0m\n"
-		);
+	        "\033[2J\033[32;1mWelcome to DOSBox Staging\033[0m, an x86 emulator with sound and graphics.\n"
+	        "DOSBox creates a shell for you which looks like old plain DOS.\n"
+	        "\n"
+	        "For information about basic mount type \033[34;1mintro mount\033[0m\n"
+	        "For information about CD-ROM support type \033[34;1mintro cdrom\033[0m\n"
+	        "For information about special keys type \033[34;1mintro special\033[0m\n"
+	        "For more imformation, visit DOSBox Staging wiki:\033[34;1m\n" WIKI_URL
+	        "\033[0m\n"
+	        "\n"
+	        "\033[31;1mDOSBox will stop/exit without a warning if an error occurred!\033[0m\n");
 	MSG_Add("PROGRAM_INTRO_MOUNT_START",
 		"\033[2J\033[32;1mHere are some commands to get you started:\033[0m\n"
 		"Before you can use the files located on your own filesystem,\n"
@@ -342,12 +346,34 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_KEYB_LAYOUTNOTFOUND","No layout in %s for codepage %i\n");
 	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n\n");
 
+	MSG_Add("PROGRAM_PLACEHOLDER_SHORT_HELP", "This program is a placeholder");
+	MSG_Add("PROGRAM_PLACEHOLDER_LONG_HELP",
+	        "%s is only a placeholder.\n"
+	        "\nInstall a 3rd-party and give its PATH precedence.\n"
+	        "\nFor example:");
+
+	MSG_Add("UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE",
+	        "\n   [autoexec]\n"
+#if defined(WIN32)
+	        "   mount u C:\\Users\\username\\dos\\utils\n"
+#else
+	        "   mount u ~/dos/utils\n"
+#endif
+	        "   set PATH=u:\\;%PATH%\n\n");
+
+	MSG_Add("VISIT_FOR_MORE_HELP", "Visit the following for more help:");
+	MSG_Add("WIKI_ADD_UTILITIES_ARTICLE", WIKI_ADD_UTILITIES_ARTICLE);
+	MSG_Add("WIKI_URL", WIKI_URL);
+
 	PROGRAMS_MakeFile("AUTOTYPE.COM", AUTOTYPE_ProgramStart);
 #if C_DEBUG
 	PROGRAMS_MakeFile("BIOSTEST.COM", BIOSTEST_ProgramStart);
 #endif
 	PROGRAMS_MakeFile("BOOT.COM", BOOT_ProgramStart);
 	PROGRAMS_MakeFile("CHOICE.COM", CHOICE_ProgramStart);
+#if !(C_DEBUG)
+	PROGRAMS_MakeFile("DEBUG.COM", PLACEHOLDER_ProgramStart);
+#endif
 	PROGRAMS_MakeFile("HELP.COM", HELP_ProgramStart);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
 	PROGRAMS_MakeFile("INTRO.COM", INTRO_ProgramStart);
