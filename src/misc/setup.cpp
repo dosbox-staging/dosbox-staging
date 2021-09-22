@@ -1386,22 +1386,8 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 	const bool wants_primary_conf = !control->cmdline->FindExist("-noprimaryconf", true);
 	if (wants_primary_conf) {
 		Cross::GetPlatformConfigName(config_file);
-		std::string config_combined = config_path + config_file;
+		const std::string config_combined = config_path + config_file;
 		control->ParseConfigFile("primary", config_combined);
-
-		// Primary doesn't exist, so let's create and load it
-		if (!control->configfiles.size()) {
-			std::string new_config_path = config_path;
-			Cross::CreatePlatformConfigDir(new_config_path);
-			config_combined = new_config_path + config_file;
-			if (control->PrintConfig(config_combined)) {
-				LOG_MSG("CONFIG: Wrote new primary conf file '%s'", config_combined.c_str());
-				control->ParseConfigFile("new primary", config_combined);
-			} else {
-				LOG_WARNING("CONFIG: Unable to write a new primary conf file '%s'",
-				            config_combined.c_str());
-			}
-		}
 	}
 
 	// Second: parse all intermediate -conf <files>
@@ -1419,5 +1405,20 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 	const bool wants_local_conf = !control->cmdline->FindExist("-nolocalconf", true);
 	if (wants_local_conf) {
 		control->ParseConfigFile("local", "dosbox.conf");
+	}
+
+	// Create a new primary if permitted and no other conf was loaded
+	if (wants_primary_conf && !control->configfiles.size()) {
+		std::string new_config_path = config_path;
+		Cross::CreatePlatformConfigDir(new_config_path);
+		Cross::GetPlatformConfigName(config_file);
+		const std::string config_combined = new_config_path + config_file;
+		if (control->PrintConfig(config_combined)) {
+			LOG_MSG("CONFIG: Wrote new primary conf file '%s'", config_combined.c_str());
+			control->ParseConfigFile("new primary", config_combined);
+		} else {
+			LOG_WARNING("CONFIG: Unable to write a new primary conf file '%s'",
+						config_combined.c_str());
+		}
 	}
 }
