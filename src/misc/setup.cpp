@@ -1390,7 +1390,13 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 		control->ParseConfigFile("primary", config_combined);
 	}
 
-	// Second: parse all intermediate -conf <files>
+	// Second: parse the local 'dosbox.conf', if present
+	const bool wants_local_conf = !control->cmdline->FindExist("-nolocalconf", true);
+	if (wants_local_conf) {
+		control->ParseConfigFile("local", "dosbox.conf");
+	}
+
+	// Finally: layer on custom -conf <files>
 	while (control->cmdline->FindString("-conf", config_file, true)) {
 		if (!control->ParseConfigFile("custom", config_file)) {
 			// try to load it from the user directory
@@ -1399,12 +1405,6 @@ void SETUP_ParseConfigFiles(const std::string &config_path)
 				        config_file.c_str());
 			}
 		}
-	}
-
-	// Third: parse the local 'dosbox.conf', if available
-	const bool wants_local_conf = !control->cmdline->FindExist("-nolocalconf", true);
-	if (wants_local_conf) {
-		control->ParseConfigFile("local", "dosbox.conf");
 	}
 
 	// Create a new primary if permitted and no other conf was loaded

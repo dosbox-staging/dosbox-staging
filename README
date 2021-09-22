@@ -388,31 +388,27 @@ dosbox -opencaptures program
   -fullscreen
         Starts DOSBox in fullscreen mode.
 
-  -noprimaryconf, -conf, and -nolocalconf:
+  -noprimaryconf, -nolocal, and -conf:
 
         DOSBox Staging uses a layered configuration approach, as follows:
 
         1. The primary configuration file is loaded first, which comes
            from the operating system's user configuration directory.
            This can be thought of as your "global" configuration file.
+           Adding -noprimaryconf avoids loading your primary conf file.
 
-        2. Custom configurations can be layered on next using one
-           or more -conf <filename> command-line arguments. For example:
+        3. Second, if the local directory contains a dosbox.conf file,
+           these settings are added.
+           Adding -nolocalconf avoids loading the local dosbox.conf file.
+
+        2. Finally, custom configurations are layered on, in order,
+           using one or more -conf <filename> arguments. For example:
            dosbox -conf myshader.conf -conf myaudio.conf
-
-        3. Finally, if the local directory contains a "dosbox.conf" file,
-           these settings will be layered on last and therefore have
-           the highest precedence.
 
         This layered approach means you can start with the most general
         settings (from your primary conf) and increasingly fine-tune them
-        for a specific game, which may only have a couple DOS-specific
-        settings inside its own local dosbox.conf file.
+        for a specific game.
 
-        The -noprimaryconf and -nolocalconf affect this behavior:
-
-        -noprimaryconf avoids loading your primary conf file.
-        -nolocalconf avoids loading the local dosbox.conf file.
 
   -lang languagefilelocation
         Start DOSBox using the language specified in "languagefilelocation".
