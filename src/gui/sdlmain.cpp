@@ -1183,7 +1183,7 @@ dosurface:
 		                                  (sdl.desktop.vsync ? SDL_RENDERER_PRESENTVSYNC : 0));
 		if (!sdl.renderer) {
 			LOG_ERR("%s\n", SDL_GetError());
-			LOG_WARNING("SDL:Can't create renderer, falling back to surface");
+			LOG_WARNING("SDL: Can't create renderer, falling back to surface");
 			goto dosurface;
 		}
 		/* Use renderer's default format */
@@ -1196,7 +1196,7 @@ dosurface:
 		if (!sdl.texture.texture) {
 			SDL_DestroyRenderer(sdl.renderer);
 			sdl.renderer = nullptr;
-			LOG_WARNING("SDL:Can't create texture, falling back to surface");
+			LOG_WARNING("SDL: Can't create texture, falling back to surface");
 			goto dosurface;
 		}
 
@@ -1255,12 +1255,12 @@ dosurface:
 		/* We may simply use SDL_BYTESPERPIXEL
 		here rather than SDL_BITSPERPIXEL   */
 		if (!sdl.window || SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window))<2) {
-			LOG_WARNING("SDL:OPENGL:Can't open drawing window, are you running in 16bpp(or higher) mode?");
+			LOG_WARNING("SDL:OPENGL: Can't open drawing window, are you running in 16bpp(or higher) mode?");
 			goto dosurface;
 		}
 		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 		if (sdl.opengl.context == NULL) {
-			LOG_WARNING("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
+			LOG_WARNING("SDL:OPENGL: Can't create OpenGL context, falling back to surface");
 			goto dosurface;
 		}
 		/* Sync to VBlank if desired */
@@ -1288,11 +1288,11 @@ dosurface:
 					GLuint vertexShader, fragmentShader;
 					const char *src = sdl.opengl.shader_src;
 					if (src && !LoadGLShaders(src, &vertexShader, &fragmentShader)) {
-						LOG_WARNING("SDL:OPENGL:Failed to compile shader, falling back to default");
+						LOG_WARNING("SDL:OPENGL: Failed to compile shader, falling back to default");
 						src = NULL;
 					}
 					if (src == NULL && !LoadGLShaders(shader_src_default, &vertexShader, &fragmentShader)) {
-						LOG_WARNING("SDL:OPENGL:Failed to compile default shader!");
+						LOG_WARNING("SDL:OPENGL: Failed to compile default shader!");
 						goto dosurface;
 					}
 
@@ -1300,7 +1300,7 @@ dosurface:
 					if (!sdl.opengl.program_object) {
 						glDeleteShader(vertexShader);
 						glDeleteShader(fragmentShader);
-						LOG_WARNING("SDL:OPENGL:Can't create program object, falling back to surface");
+						LOG_WARNING("SDL:OPENGL: Can't create program object, falling back to surface");
 						goto dosurface;
 					}
 					glAttachShader(sdl.opengl.program_object, vertexShader);
@@ -1321,7 +1321,7 @@ dosurface:
 						if (info_len > 1) {
 							std::vector<GLchar> info_log(info_len);
 							glGetProgramInfoLog(sdl.opengl.program_object, info_len, NULL, info_log.data());
-							LOG_ERR("SDL:OPENGL:Error link program:\n %s", info_log.data());
+							LOG_ERR("SDL:OPENGL: Error link program:\n %s", info_log.data());
 						}
 						glDeleteProgram(sdl.opengl.program_object);
 						sdl.opengl.program_object = 0;
