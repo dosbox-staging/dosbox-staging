@@ -2320,7 +2320,7 @@ static void setup_initial_window_position_from_conf(const std::string &window_po
 	}
 
 	const auto desktop = get_desktop_resolution();	
-	const bool is_out_of_bounds = x <= 0 || x > desktop.w || y <= 0 ||
+	const bool is_out_of_bounds = x < 0 || x > desktop.w || y < 0 ||
 	                              y > desktop.h;
 	if (is_out_of_bounds) {
 		LOG_WARNING("DISPLAY: Requested window_position '%d,%d' is outside the bounds of the desktop '%dx%d', "
