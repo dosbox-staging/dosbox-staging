@@ -293,8 +293,6 @@ static void InitializeSpeakerState()
 	// For SB16, the output channel starts active however subsequent
 	// requests to disable the speaker will be honored (see: SetSpeaker).
 	sb.chan->Enable(sb.type == SBT_16);
-	// Suppress the first small DMA transfer to avoid hearing it.
-	ProcessDMATransfer = &SuppressInitialDMATransfer;
 }
 
 static INLINE void SB_RaiseIRQ(SB_IRQS type) {
@@ -1762,7 +1760,11 @@ public:
 		ASP_regs[9] = 0xf8;
 
 		DSP_Reset();
+
 		CTMIXER_Reset();
+
+		// Suppress the first small DMA transfer to avoid hearing it.
+		ProcessDMATransfer = &SuppressInitialDMATransfer;
 
 		// Ensure our port and addresses will fit in our format widths.
 		// The config selection controls their actual values, so this is
