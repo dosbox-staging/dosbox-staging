@@ -2247,10 +2247,10 @@ static SDL_Rect get_desktop_resolution()
 }
 
 // Takes in:
-//  - The 'maxresolution' config value: 'auto', 'WxH', or an invalid setting.
+//  - The 'max_resolution' config value: 'auto', 'WxH', or an invalid setting.
 //
 // Except for SURFACE and TEXTURE rendering, the function populates the following struct members:
-//  - 'sdl.desktop.use_max_resolution', true if the maxresolution feature is enabled.
+//  - 'sdl.desktop.use_max_resolution', true if the max_resolution feature is enabled.
 //  - 'sdl.desktop.max_resolution', with the refined size.
 
 static void setup_max_resolution_from_conf(const std::string &max_resolution_val)
@@ -2269,7 +2269,7 @@ static void setup_max_resolution_from_conf(const std::string &max_resolution_val
 	int w, h;
 	auto was_parsed = sscanf(max_resolution_val.c_str(), "%dx%d", &w, &h) == 2;
 	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested maxresolution '%s' is invalid, resolution restriction is disabled",
+		LOG_WARNING("DISPLAY: Requested max_resolution '%s' is invalid, resolution restriction is disabled",
 		            max_resolution_val.c_str());
 		return;
 	}
@@ -2277,7 +2277,7 @@ static void setup_max_resolution_from_conf(const std::string &max_resolution_val
 	const bool is_out_of_bounds = w <= 0 || w > desktop.w || h <= 0 ||
 	                              h > desktop.h;
 	if (is_out_of_bounds) {
-		LOG_WARNING("DISPLAY: Requested maxresolution '%dx%d' is outside the bounds of the desktop '%dx%d', "
+		LOG_WARNING("DISPLAY: Requested max_resolution '%dx%d' is outside the bounds of the desktop '%dx%d', "
 		            "resolution restriction is disabled",
 		            w, h, desktop.w, desktop.h);
 		return;
@@ -2287,7 +2287,7 @@ static void setup_max_resolution_from_conf(const std::string &max_resolution_val
 
 	SDL_Point refined_size;
 	if (sdl.scaling_mode == SCALING_MODE::PERFECT) {
-		// Keep requested maxresolution in pixel-perfect modes; refining it
+		// Keep requested max_resolution in pixel-perfect modes; refining it
 		// would be too counterintuitive
 		refined_size = coarse_size;
 	} else {
@@ -2298,23 +2298,23 @@ static void setup_max_resolution_from_conf(const std::string &max_resolution_val
 	sdl.use_max_resolution = true;
 	sdl.max_resolution = refined_size;
 
-	LOG_MSG("DISPLAY: maxresolution set to %dx%d (refined from %dx%d)",
+	LOG_MSG("DISPLAY: max_resolution set to %dx%d (refined from %dx%d)",
 			refined_size.x, refined_size.y, w, h);
 }
 
-static void setup_initial_window_position_from_conf(const std::string &windowposition_val)
+static void setup_initial_window_position_from_conf(const std::string &window_position_val)
 {
 	sdl.desktop.window.initial_x_pos = -1;
 	sdl.desktop.window.initial_y_pos = -1;
 
-	if (windowposition_val == "auto")
+	if (window_position_val == "auto")
 		return;
 
 	int x, y;
-	const auto was_parsed = sscanf(windowposition_val.c_str(), "%d,%d", &x, &y) == 2;
+	const auto was_parsed = sscanf(window_position_val.c_str(), "%d,%d", &x, &y) == 2;
 	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested windowposition '%s' was not in X,Y format, using 'auto' instead",
-		            windowposition_val.c_str());
+		LOG_WARNING("DISPLAY: Requested window_position '%s' was not in X,Y format, using 'auto' instead",
+		            window_position_val.c_str());
 		return;
 	}
 
@@ -2322,7 +2322,7 @@ static void setup_initial_window_position_from_conf(const std::string &windowpos
 	const bool is_out_of_bounds = x <= 0 || x > desktop.w || y <= 0 ||
 	                              y > desktop.h;
 	if (is_out_of_bounds) {
-		LOG_WARNING("DISPLAY: Requested windowposition '%d,%d' is outside the bounds of the desktop '%dx%d', "
+		LOG_WARNING("DISPLAY: Requested window_position '%d,%d' is outside the bounds of the desktop '%dx%d', "
 		            "using 'auto' instead",
 		            x, y, desktop.w, desktop.h);
 		return;
@@ -2398,8 +2398,8 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	// Refine the coarse resolution and save it in the SDL struct.
 	auto refined_size = coarse_size;
 	if (sdl.window_resolution_specified && sdl.use_max_resolution) {
-		// If maxresolution is enabled, the refinement is applied to
-		// maxresolution instead of the the window dimensions.
+		// If max_resolution is enabled, the refinement is applied to
+		// max_resolution instead of the the window dimensions.
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
 	} else {
 		refined_size = refine_window_size(coarse_size, refined_scaling_mode,
@@ -2609,11 +2609,11 @@ static void GUI_StartUp(Section *sec)
 	sdl.render_driver = section->Get_string("texture_renderer");
 	lowcase(sdl.render_driver);
 
-	sdl.desktop.window.show_decorations = section->Get_bool("windowdecorations");
+	sdl.desktop.window.show_decorations = section->Get_bool("window_decorations");
 
-	setup_initial_window_position_from_conf(section->Get_string("windowposition"));
+	setup_initial_window_position_from_conf(section->Get_string("window_position"));
 
-	setup_max_resolution_from_conf(section->Get_string("maxresolution"));
+	setup_max_resolution_from_conf(section->Get_string("max_resolution"));
 
 	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
 	                             sdl.scaling_mode,
@@ -3279,14 +3279,14 @@ void Config_Add_SDL() {
 	        "             WxH format. For example: 1024x768.\n"
 	        "             Scaling is not performed for output=surface.");
 
-	pstring = sdl_sec->Add_string("windowposition", always, "auto");
+	pstring = sdl_sec->Add_string("window_position", always, "auto");
 	pstring->Set_help(
 	        "Set initial window position when running in windowed mode:\n"
 	        "  auto:      Let the window manager decide the position.\n"
 	        "  <custom>:  Set window position in X,Y format. For example: 250,100\n"
 	        "             0,0 is the top-left corner of the screen.");
 
-	Pbool = sdl_sec->Add_bool("windowdecorations", always, true);
+	Pbool = sdl_sec->Add_bool("window_decorations", always, true);
 	Pbool->Set_help("Controls whether to display window decorations in windowed mode.");
 
 	Pbool = sdl_sec->Add_bool("vsync", on_start, false);
@@ -3299,7 +3299,7 @@ void Config_Add_SDL() {
 	               "the next frame.");
 	pint->SetMinMax(1, 14000);
 
-	pstring = sdl_sec->Add_path("maxresolution", always, "auto");
+	pstring = sdl_sec->Add_path("max_resolution", always, "auto");
 	pstring->Set_help(
 	        "Optionally restricts the viewport resolution within the window/screen:\n"
 	        "  auto:      The viewport fills the window/screen (default).\n"
