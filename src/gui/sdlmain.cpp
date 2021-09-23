@@ -2270,7 +2270,7 @@ static void setup_max_resolution_from_conf(const std::string &max_resolution_val
 	int w, h;
 	auto was_parsed = sscanf(max_resolution_val.c_str(), "%dx%d", &w, &h) == 2;
 	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested max_resolution '%s' was not in W,H format, resolution restriction is disabled",
+		LOG_WARNING("DISPLAY: Requested max_resolution '%s' was not in WxH format, resolution restriction is disabled",
 		            max_resolution_val.c_str());
 		return;
 	}
