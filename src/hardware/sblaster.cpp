@@ -290,8 +290,9 @@ static void InitializeSpeakerState()
 	sb.chan->Enable(sb.type == SBT_16);
 }
 
-static INLINE void SB_RaiseIRQ(SB_IRQS type) {
-	LOG(LOG_SB,LOG_NORMAL)("Raising IRQ");
+static void SB_RaiseIRQ(SB_IRQS type)
+{
+	LOG(LOG_SB, LOG_NORMAL)("Raising IRQ");
 	switch (type) {
 	case SB_IRQ_8:
 		if (sb.irq.pending_8bit) {
@@ -314,9 +315,10 @@ static INLINE void SB_RaiseIRQ(SB_IRQS type) {
 	}
 }
 
-static INLINE void DSP_FlushData(void) {
-	sb.dsp.out.used=0;
-	sb.dsp.out.pos=0;
+static void DSP_FlushData()
+{
+	sb.dsp.out.used = 0;
+	sb.dsp.out.pos = 0;
 }
 
 static double last_dma_callback = 0.0;
@@ -810,7 +812,7 @@ static void DSP_FinishReset(uint32_t /*val*/)
 	sb.dsp.state=DSP_S_NORMAL;
 }
 
-static void DSP_Reset(void) {
+static void DSP_Reset() {
 	LOG(LOG_SB,LOG_ERROR)("DSP:Reset");
 	PIC_DeActivateIRQ(sb.hw.irq);
 
@@ -893,12 +895,12 @@ static void DSP_ChangeRate(uint32_t freq)
 	sb.freq=freq;
 }
 
-Bitu DEBUG_EnableDebugger(void);
+Bitu DEBUG_EnableDebugger();
 
 #define DSP_SB16_ONLY if (sb.type != SBT_16) { LOG(LOG_SB,LOG_ERROR)("DSP:Command %2X requires SB16",sb.dsp.cmd); break; }
 #define DSP_SB2_ABOVE if (sb.type <= SBT_1) { LOG(LOG_SB,LOG_ERROR)("DSP:Command %2X requires SB2 or above",sb.dsp.cmd); break; }
 
-static void DSP_DoCommand(void) {
+static void DSP_DoCommand() {
 //	LOG_MSG("DSP Command %X",sb.dsp.cmd);
 	switch (sb.dsp.cmd) {
 	case 0x04:
@@ -1219,7 +1221,7 @@ static void DSP_DoWrite(Bit8u val) {
 	}
 }
 
-static Bit8u DSP_ReadData(void) {
+static Bit8u DSP_ReadData() {
 /* Static so it repeats the last value on succesive reads (JANGLE DEMO) */
 	if (sb.dsp.out.used) {
 		sb.dsp.out.lastval=sb.dsp.out.data[sb.dsp.out.pos];
@@ -1246,7 +1248,7 @@ static float calc_vol(Bit8u amount) {
 	}
 	return powf(10.0f, -0.05f * db);
 }
-static void CTMIXER_UpdateVolumes(void) {
+static void CTMIXER_UpdateVolumes() {
 	if (!sb.mixer.enabled) return;
 	MixerChannel * chan;
 	float m0 = calc_vol(sb.mixer.master[0]);
@@ -1259,7 +1261,7 @@ static void CTMIXER_UpdateVolumes(void) {
 	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.cda[0]), m1 * calc_vol(sb.mixer.cda[1]));
 }
 
-static void CTMIXER_Reset(void) {
+static void CTMIXER_Reset() {
 	sb.mixer.fm[0]=
 	sb.mixer.fm[1]=
 	sb.mixer.cda[0]=
@@ -1434,7 +1436,7 @@ static void CTMIXER_Write(Bit8u val) {
 	}
 }
 
-static Bit8u CTMIXER_Read(void) {
+static Bit8u CTMIXER_Read() {
 	Bit8u ret;
 //	if ( sb.mixer.index< 0x80) LOG_MSG("Read mixer %x",sb.mixer.index);
 	switch (sb.mixer.index) {
