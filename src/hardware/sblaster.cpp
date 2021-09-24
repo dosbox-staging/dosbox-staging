@@ -1583,12 +1583,11 @@ static uint8_t read_sb(io_port_t port, io_width_t)
 
 static void write_sb(io_port_t port, uint8_t val, io_width_t)
 {
-	Bit8u val8 = (Bit8u)(val & 0xff);
 	switch (port - sb.hw.base) {
-	case DSP_RESET: DSP_DoReset(val8); break;
-	case DSP_WRITE_DATA: DSP_DoWrite(val8); break;
-	case MIXER_INDEX: sb.mixer.index = val8; break;
-	case MIXER_DATA: CTMIXER_Write(val8); break;
+	case DSP_RESET: DSP_DoReset(val); break;
+	case DSP_WRITE_DATA: DSP_DoWrite(val); break;
+	case MIXER_INDEX: sb.mixer.index = val; break;
+	case MIXER_DATA: CTMIXER_Write(val); break;
 	default: LOG(LOG_SB, LOG_NORMAL)("Unhandled write to SB Port %4X", port); break;
 	}
 }
