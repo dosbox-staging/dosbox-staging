@@ -152,7 +152,7 @@ struct SB_INFO {
 	} mixer = {};
 	struct {
 		uint8_t reference = 0;
-		Bits stepsize = 0;
+		uint16_t stepsize = 0;
 		bool haveref = false;
 	} adpcm = {};
 	struct {
@@ -363,11 +363,8 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	}
 }
 
-#define MIN_ADAPTIVE_STEP_SIZE 0
-#define MAX_ADAPTIVE_STEP_SIZE 32767
-#define DC_OFFSET_FADE 254
-
-static INLINE Bit8u decode_ADPCM_4_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
+static Bit8u decode_ADPCM_4_sample(Bit8u sample, Bit8u &reference, uint16_t &scale)
+{
 	static const Bit8s scaleMap[64] = {
 		0,  1,  2,  3,  4,  5,  6,  7,  0,  -1,  -2,  -3,  -4,  -5,  -6,  -7,
 		1,  3,  5,  7,  9, 11, 13, 15, -1,  -3,  -5,  -7,  -9, -11, -13, -15,
@@ -402,7 +399,7 @@ static INLINE Bit8u decode_ADPCM_4_sample(Bit8u sample,Bit8u & reference,Bits& s
 	return reference;
 }
 
-static INLINE Bit8u decode_ADPCM_2_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
+static Bit8u decode_ADPCM_2_sample(Bit8u sample,Bit8u & reference, uint16_t & scale) {
 	static const Bit8s scaleMap[24] = {
 		0,  1,  0,  -1, 1,  3,  -1,  -3,
 		2,  6, -2,  -6, 4, 12,  -4, -12,
@@ -431,7 +428,7 @@ static INLINE Bit8u decode_ADPCM_2_sample(Bit8u sample,Bit8u & reference,Bits& s
 	return reference;
 }
 
-INLINE Bit8u decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
+Bit8u decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference, uint16_t & scale) {
 	static const Bit8s scaleMap[40] = {
 		0,  1,  2,  3,  0,  -1,  -2,  -3,
 		1,  3,  5,  7, -1,  -3,  -5,  -7,
