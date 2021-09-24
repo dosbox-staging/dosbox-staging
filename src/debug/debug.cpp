@@ -2095,7 +2095,7 @@ static void LogInstruction(uint16_t segValue, uint32_t eipValue, ofstream &out)
 	if (showExtend && (cpuLogType > 0) ) {
 		res = AnalyzeInstruction(dline,false);
 		if (!res || !(*res)) res = empty;
-		Bitu reslen = safe_strlen(res);
+		Bitu reslen = strlen(res);
 		if (reslen < 22) memset(res + reslen, ' ',22 - reslen);
 		res[22] = 0;
 	}
@@ -2518,7 +2518,7 @@ void DEBUG_HeavyLogInstruction()
 	if (showExtend) {
 		res = AnalyzeInstruction(dline,false);
 		if (!res || !(*res)) res = empty;
-		Bitu reslen = safe_strlen(res);
+		Bitu reslen = strlen(res);
 		if (reslen < 22) memset(res + reslen, ' ',22 - reslen);
 		res[22] = 0;
 	}
