@@ -33,31 +33,26 @@
 #include "string_utils.h"
 #include "support.h"
 
-#define SB_PIC_EVENTS 0
+constexpr uint8_t MIXER_INDEX = 0x04;
+constexpr uint8_t MIXER_DATA = 0x05;
 
-#define DSP_MAJOR 3
-#define DSP_MINOR 1
+constexpr uint8_t DSP_RESET = 0x06;
+constexpr uint8_t DSP_READ_DATA = 0x0A;
+constexpr uint8_t DSP_WRITE_DATA = 0x0C;
+constexpr uint8_t DSP_WRITE_STATUS = 0x0C;
+constexpr uint8_t DSP_READ_STATUS = 0x0E;
+constexpr uint8_t DSP_ACK_16BIT = 0x0f;
 
-#define MIXER_INDEX 0x04
-#define MIXER_DATA 0x05
+constexpr uint8_t DSP_NO_COMMAND = 0;
 
-#define DSP_RESET 0x06
-#define DSP_READ_DATA 0x0A
-#define DSP_WRITE_DATA 0x0C
-#define DSP_WRITE_STATUS 0x0C
-#define DSP_READ_STATUS 0x0E
-#define DSP_ACK_16BIT 0x0f
+constexpr uint16_t DMA_BUFSIZE = 1024;
+constexpr uint8_t DSP_BUFSIZE = 64;
+constexpr uint16_t DSP_DACSIZE = 512;
 
-#define DSP_NO_COMMAND 0
+constexpr uint8_t SB_SH = 14;
+constexpr uint16_t SB_SH_MASK = ((1 << SB_SH) - 1);
 
-#define DMA_BUFSIZE 1024
-#define DSP_BUFSIZE 64
-#define DSP_DACSIZE 512
-
-//Should be enough for sound generated in millisecond blocks
-#define SB_BUF_SIZE 8096
-#define SB_SH	14
-#define SB_SH_MASK	((1 << SB_SH)-1)
+constexpr uint8_t MIN_ADAPTIVE_STEP_SIZE = 0; // max is 32767
 
 enum {DSP_S_RESET,DSP_S_RESET_WAIT,DSP_S_NORMAL,DSP_S_HIGHSPEED};
 
