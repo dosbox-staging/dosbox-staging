@@ -1,0 +1,136 @@
+name: Windows Meson MSYS2 builds
+
+on: [push, pull_request]
+
+jobs:
+  build_win_meson_msys2_release:
+    name: ${{ matrix.conf.name }}
+    runs-on: windows-latest
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,shermp', github.actor) == false
+    
+    strategy:
+      matrix:
+        conf:
+          - name: Meson MinGW 32-bit
+            arch: i686
+            sys: MINGW32
+          - name: Meson MinGW 64-bit
+            arch: x86_64
+            sys: MINGW64
+    
+    defaults:
+      run:
+        shell: msys2 {0}
+    
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{matrix.conf.sys}}
+          update: true
+          install: >-
+            git
+            mingw-w64-${{matrix.conf.arch}}-meson
+            mingw-w64-${{matrix.conf.arch}}-gcc
+            mingw-w64-${{matrix.conf.arch}}-ccache
+            mingw-w64-${{matrix.conf.arch}}-pkgconf
+            mingw-w64-${{matrix.conf.arch}}-ntldd
+            mingw-w64-${{matrix.conf.arch}}-ncurses
+            mingw-w64-${{matrix.conf.arch}}-glib2
+            mingw-w64-${{matrix.conf.arch}}-fluidsynth
+            mingw-w64-${{matrix.conf.arch}}-munt-mt32emu
+            mingw-w64-${{matrix.conf.arch}}-libpng
+            mingw-w64-${{matrix.conf.arch}}-opusfile
+            mingw-w64-${{matrix.conf.arch}}-SDL2
+            mingw-w64-${{matrix.conf.arch}}-SDL2_net
+            mingw-w64-${{matrix.conf.arch}}-zlib
+      
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+
+      - name: Inject version string
+        run: |
+          set -x
+          git fetch --prune --unshallow
+          export VERSION=$(git describe --abbrev=5)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      
+      - name: Setup release build
+        run: |
+          meson setup \
+            -Dbuildtype=release \
+            -Ddefault_library=static \
+            -Db_asneeded=true \
+            -Dtry_static_libs=png,opusfile \
+            build
+      
+      - name: Build
+        run: ninja -C build
+
+      - name: Strip binary
+        run: strip build/dosbox.exe
+      
+      - name: Package
+        run: |
+          set -x
+          mkdir -p dest/doc
+
+          cp build/dosbox.exe      dest/
+          cp COPYING               dest/COPYING.txt
+          cp docs/README.template  dest/README.txt
+          cp docs/README.video     dest/doc/video.txt
+          cp README                dest/doc/manual.txt
+
+
+          # The list of required dll files and their source paths can be found using ntldd
+          for lib in $(ntldd -R dest/dosbox.exe | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i 'mingw(32|64)' | sed -e 's|\\|/|g'); do 
+            cp "$lib" dest/
+          done
+
+          # Prepare translation files
+          #
+          # Note:
+          #   We conciously drop the dialect postfix because no dialects are available.
+          #   (US was the default DOS dialect and therefore is the default for 'en').
+          #   There users get the generic translation and benefit from simpler filenames.
+          #   Dialect translations will be added if/when they're available.
+          #
+          mkdir -p dest/translations
+          cp contrib/translations/de/de_DE.lng       dest/translations/de.lng
+          cp contrib/translations/en/en_US.lng       dest/translations/en.lng
+          cp contrib/translations/es/es_ES.lng       dest/translations/es.lng
+          cp contrib/translations/fr/fr_FR.lng       dest/translations/fr.lng
+          cp contrib/translations/it/it_IT.lng       dest/translations/it.lng
+          cp contrib/translations/pl/pl_PL.CP437.lng dest/translations/pl.cp437.lng
+          cp contrib/translations/pl/pl_PL.lng       dest/translations/pl.lng
+          cp contrib/translations/ru/ru_RU.lng       dest/translations/ru.lng
+
+          # Fill README template file
+          sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README.txt
+          sed -i "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" dest/README.txt
+          sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README.txt
+
+          # Create dir for zipping
+          mv dest dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}
+      
+      - name: Windows Defender AV Scan
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dosboxDir = "${{ github.workspace }}\dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}"
+          & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -DisableRemediation -File $dosboxDir
+          if( $LASTEXITCODE -ne 0 ) {
+              Get-Content -Path $env:TEMP\MpCmdRun.log
+              Throw "Exit $LASTEXITCODE : Windows Defender found an issue"
+          }
+
+      - name: Upload package
+        uses: actions/upload-artifact@v2
+        with:
+          name: dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}
+          path: dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}
