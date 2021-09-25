@@ -251,7 +251,7 @@ if get_option('use_slirp') # disabled by default
 endif
 
 if get_option('enable_debugger') != 'none'
-  curses_dep = dependency('ncurses') # or pdcurses on Windows
+  curses_dep = dependency('curses') # use the new 'curses' for msys2 compatibility
 endif
 
 # macOS-only dependencies
