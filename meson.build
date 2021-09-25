@@ -367,7 +367,16 @@ subdir('tests')
 # dosbox executable
 #
 version_file = vcs_tag(input : 'src/version.cpp.in', output : 'version.cpp')
-executable('dosbox', ['src/main.cpp', 'src/dosbox.cpp', version_file],
+dosbox_sources = ['src/main.cpp', 'src/dosbox.cpp', version_file]
+
+# Add Windows resources file if building on Windows
+if host_machine.system() == 'windows'
+  winmod = import('windows')
+  res_file = winmod.compile_resources('src/winres.rc')
+  dosbox_sources += res_file
+endif
+
+executable('dosbox', dosbox_sources,
            dependencies : [atomic_dep,
                            stdcppfs_dep,
                            sdl2_dep,
