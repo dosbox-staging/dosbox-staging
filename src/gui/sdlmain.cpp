@@ -194,7 +194,8 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 #define PRIO_TOTAL (PRIO_MAX - PRIO_MIN)
 #endif
 
-SDL_bool mouse_is_captured = SDL_FALSE; // global for mapper
+bool mouse_is_captured = false;       // the actual state of the mouse
+bool mouse_capture_requested = false; // if the user manually requested the capture
 
 // SDL allows pixels sizes (color-depth) from 1 to 4 bytes
 constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
@@ -1492,7 +1493,8 @@ void GFX_SetShader(MAYBE_UNUSED const char *src)
 #endif
 }
 
-void GFX_ToggleMouseCapture(void) {
+void GFX_ToggleMouseCapture()
+{
 	/*
 	 * Only process mouse events when we have focus.
 	 * This protects against out-of-order event issues such
@@ -1504,8 +1506,8 @@ void GFX_ToggleMouseCapture(void) {
 	assertm(sdl.mouse.control_choice != NoMouse,
 	        "SDL: Mouse capture is invalid when NoMouse is configured [Logic Bug]");
 
-	mouse_is_captured = mouse_is_captured ? SDL_FALSE : SDL_TRUE;
-	if (SDL_SetRelativeMouseMode(mouse_is_captured) != 0) {
+	mouse_is_captured = !mouse_is_captured; // flip state
+	if (SDL_SetRelativeMouseMode(mouse_is_captured ? SDL_TRUE : SDL_FALSE) != 0) {
 		SDL_ShowCursor(SDL_ENABLE);
 		E_Exit("SDL: failed to %s relative-mode [SDL Bug]",
 		       mouse_is_captured ? "put the mouse in"
@@ -1514,9 +1516,11 @@ void GFX_ToggleMouseCapture(void) {
 	LOG_MSG("SDL: %s the mouse", mouse_is_captured ? "captured" : "released");
 }
 
-static void ToggleMouseCapture(bool pressed) {
+static void toggle_mouse_capture_from_user(bool pressed)
+{
 	if (!pressed || sdl.desktop.fullscreen)
 		return;
+	mouse_capture_requested = !mouse_capture_requested;
 	GFX_ToggleMouseCapture();
 }
 
@@ -1553,8 +1557,8 @@ static void FocusInput()
  *  re-apply the same mouse capture state over and over again, so most
  *  of the time this function will (or should) decide to do nothing.
  */
-void GFX_UpdateMouseState(void) {
-
+void GFX_UpdateMouseState()
+{
 	// This function is only be run when the window is shown or has focus
 	sdl.mouse.has_focus = true;
 
@@ -1570,26 +1574,26 @@ void GFX_UpdateMouseState(void) {
 	    && sdl.mouse.control_choice != NoMouse) {
 		GFX_ToggleMouseCapture();
 
-	/*
-	 * If we've switched-back from fullscreen, then release the mouse
-	 * if it's captured and in seamless-mode.
-	 */
-	} else if (!sdl.desktop.fullscreen
-	           && mouse_is_captured
-	           && sdl.mouse.control_choice == Seamless) {
-			GFX_ToggleMouseCapture();
-			SDL_ShowCursor(SDL_DISABLE);
+		/*
+		 * If we've switched-back from fullscreen, then release the
+		 * mouse if it's auto-captured (but not manually requested) and
+		 * in seamless-mode.
+		 */
+	} else if (!sdl.desktop.fullscreen && mouse_is_captured &&
+	           !mouse_capture_requested && sdl.mouse.control_choice == Seamless) {
+		GFX_ToggleMouseCapture();
+		SDL_ShowCursor(SDL_DISABLE);
 
-	/*
-	 *  If none of the above are true /and/ we're starting
-	 *  up the first time, then:
-	 *  - Capture the mouse if configured onstart is set.
-	 *  - Hide the mouse if seamless or nomouse are set.
-	 */
+		/*
+		 *  If none of the above are true /and/ we're starting
+		 *  up the first time, then:
+		 *  - Capture the mouse if configured onstart is set.
+		 *  - Hide the mouse if seamless or nomouse are set.
+		 */
 	} else if (!has_run_once) {
 		if (sdl.mouse.control_choice == CaptureOnStart) {
 			SDL_RaiseWindow(sdl.window);
-			GFX_ToggleMouseCapture();
+			toggle_mouse_capture_from_user(true);
 		} else if (sdl.mouse.control_choice & (Seamless | NoMouse)) {
 			SDL_ShowCursor(SDL_DISABLE);
 		}
@@ -2746,8 +2750,8 @@ static void GUI_StartUp(Section *sec)
 		                             : " and middle-clicks will be sent to the game";
 
 		// Only setup the Ctrl/Cmd+F10 handler if the mouse is capturable
-		if (sdl.mouse.control_choice & (CaptureOnClick | CaptureOnStart))
-			MAPPER_AddHandler(ToggleMouseCapture, SDL_SCANCODE_F10,
+		if (sdl.mouse.control_choice != NoMouse)
+			MAPPER_AddHandler(toggle_mouse_capture_from_user, SDL_SCANCODE_F10,
 			                  PRIMARY_MOD, "capmouse", "Cap Mouse");
 
 		// Apply the user's mouse sensitivity settings
@@ -2795,12 +2799,12 @@ static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
 static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 	switch (button->state) {
 	case SDL_PRESSED:
-		if (!sdl.desktop.fullscreen
-		    && sdl.mouse.control_choice & (CaptureOnStart | CaptureOnClick)
-		    && ((sdl.mouse.middle_will_release && button->button == SDL_BUTTON_MIDDLE)
-		        || !mouse_is_captured)) {
-
-			GFX_ToggleMouseCapture();
+		if (!sdl.desktop.fullscreen &&
+		    ((sdl.mouse.control_choice & (CaptureOnStart | CaptureOnClick) &&
+		      !mouse_is_captured) ||
+		     (sdl.mouse.control_choice != NoMouse && sdl.mouse.middle_will_release &&
+		      button->button == SDL_BUTTON_MIDDLE))) {
+			toggle_mouse_capture_from_user(true);
 			break; // Don't pass click to mouse handler
 		}
 		switch (button->button) {
@@ -3358,15 +3362,16 @@ void Config_Add_SDL() {
 	        ->Set_values(middle_controls);
 
 	// Construct and set the help block using defaults set above
-	std::string mouse_control_help("Choose a mouse control method:\n"
-	                               "   onclick:        Capture the mouse when clicking inside the window.\n"
-	                               "   onstart:        Capture the mouse immediately on start.\n"
-	                               "   seamless:       Never capture the mouse; let it move seamlessly.\n"
-	                               "   nomouse:        Hide the mouse and don't send input to the game.\n"
-	                               "Choose how middle-clicks are handled (second parameter):\n"
-	                               "   middlegame:     Middle-clicks are sent to the game.\n"
-	                               "   middlerelease:  Middle-click will release the captured mouse.\n"
-	                               "Defaults (if not present or incorrect): ");
+	std::string mouse_control_help(
+	        "Choose a mouse control method:\n"
+	        "   onclick:        Capture the mouse when clicking any button in the window.\n"
+	        "   onstart:        Capture the mouse immediately on start.\n"
+	        "   seamless:       Let the mouse move seamlessly; captures only with middle-click or hotkey.\n"
+	        "   nomouse:        Hide the mouse and don't send input to the game.\n"
+	        "Choose how middle-clicks are handled (second parameter):\n"
+	        "   middlegame:     Middle-clicks are sent to the game.\n"
+	        "   middlerelease:  Middle-click will release the captured mouse, and also capture when seamless.\n"
+	        "Defaults (if not present or incorrect): ");
 	mouse_control_help += mouse_control_defaults;
 	Pmulti->Set_help(mouse_control_help);
 
