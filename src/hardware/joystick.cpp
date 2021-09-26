@@ -35,8 +35,13 @@
 constexpr int RANGE = 64;
 constexpr int TIMEOUT = 10;
 
+enum MovementType {
+	JOYMAP_SQUARE,
+	JOYMAP_CIRCLE,
+	JOYMAP_INBETWEEN,
+};
+
 struct JoyStick {
-	enum {JOYMAP_SQUARE,JOYMAP_CIRCLE,JOYMAP_INBETWEEN} mapstate;
 	double xpos = 0.0;
 	double ypos = 0.0; // position as set by SDL
 
@@ -363,9 +368,8 @@ public:
 		button_wrapping_enabled = section->Get_bool("buttonwrap");
 		stick[0].deadzone = section->Get_int("deadzone");
 		swap34 = section->Get_bool("swap34");
-		stick[0].mapstate = section->Get_bool("circularinput")
-		                            ? JoyStick::JOYMAP_CIRCLE
-		                            : JoyStick::JOYMAP_SQUARE;
+		stick[0].mapstate = section->Get_bool("circularinput") ? MovementType::JOYMAP_CIRCLE
+		                                                       : MovementType::JOYMAP_SQUARE;
 
 		// Set initial time and position states
 		const auto ticks = PIC_FullIndex();
