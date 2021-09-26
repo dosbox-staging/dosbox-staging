@@ -554,11 +554,12 @@ bool autofire = false;
 
 class CStickBindGroup : public CBindGroup {
 public:
-	CStickBindGroup(int _stick, Bitu _emustick, bool _dummy=false)
-		: CBindGroup(),
-		  stick(_stick), // the number of the physical device (SDL numbering)
-		  emustick(_emustick), // the number of the emulated device
-		  is_dummy(_dummy)
+	CStickBindGroup(int _stick, uint8_t _emustick, bool _dummy = false)
+	        : CBindGroup(),
+	          stick(_stick),       // the number of the physical device (SDL
+	                               // numbering)
+	          emustick(_emustick), // the number of the emulated device
+	          is_dummy(_dummy)
 	{
 		sprintf(configname, "stick_%u", static_cast<unsigned>(emustick));
 		if (is_dummy)
@@ -835,7 +836,7 @@ private:
 			return nullptr;
 		assert(hat_lists);
 
-		Bitu hat_dir;
+		uint8_t hat_dir;
 		if (value & SDL_HAT_UP)
 			hat_dir = 0;
 		else if (value & SDL_HAT_RIGHT)
@@ -877,7 +878,7 @@ protected:
 	int hats = 0;
 	int emulated_hats = 0;
 	int stick;
-	Bitu emustick;
+	uint8_t emustick;
 	SDL_Joystick *sdl_joystick = nullptr;
 	char configname[10];
 	unsigned button_autofire[MAXBUTTON] = {};
@@ -892,11 +893,13 @@ std::list<CStickBindGroup *> stickbindgroups;
 
 class C4AxisBindGroup final : public  CStickBindGroup {
 public:
-	C4AxisBindGroup(Bitu _stick,Bitu _emustick) : CStickBindGroup (_stick,_emustick){
-		emulated_axes=4;
-		emulated_buttons=4;
-		if (button_wrapping_enabled) button_wrap=emulated_buttons;
-		JOYSTICK_Enable(1,true);
+	C4AxisBindGroup(uint8_t _stick, uint8_t _emustick) : CStickBindGroup(_stick, _emustick)
+	{
+		emulated_axes = 4;
+		emulated_buttons = 4;
+		if (button_wrapping_enabled)
+			button_wrap = emulated_buttons;
+		JOYSTICK_Enable(1, true);
 	}
 
 	bool CheckEvent(SDL_Event * event) {
@@ -937,7 +940,7 @@ public:
 			if (virtual_joysticks[0].button_pressed[i])
 				button_pressed[i % button_wrap]=true;
 		}
-		for (int i = 0; i < emulated_buttons; i++) {
+		for (uint8_t i = 0; i < emulated_buttons; ++i) {
 			if (autofire && (button_pressed[i]))
 				JOYSTICK_Button(i>>1,i&1,(++button_autofire[i])&1);
 			else
@@ -953,15 +956,14 @@ public:
 
 class CFCSBindGroup final : public  CStickBindGroup {
 public:
-	CFCSBindGroup(Bitu _stick, Bitu _emustick)
-		: CStickBindGroup(_stick, _emustick)
+	CFCSBindGroup(uint8_t _stick, uint8_t _emustick) : CStickBindGroup(_stick, _emustick)
 	{
 		emulated_axes=4;
 		emulated_buttons=4;
 		emulated_hats=1;
 		if (button_wrapping_enabled) button_wrap=emulated_buttons;
 		JOYSTICK_Enable(1,true);
-		JOYSTICK_Move_Y(1,1.0);
+		JOYSTICK_Move_Y(1, INT16_MAX);
 	}
 
 	bool CheckEvent(SDL_Event * event) {
@@ -1005,13 +1007,13 @@ public:
 		ActivateJoystickBoundEvents();
 
 		bool button_pressed[MAXBUTTON];
-		for (int i = 0; i < MAXBUTTON; i++)
+		for (uint8_t i = 0; i < MAXBUTTON; i++)
 			button_pressed[i] = false;
-		for (int i = 0; i < MAX_VJOY_BUTTONS; i++) {
+		for (uint8_t i = 0; i < MAX_VJOY_BUTTONS; i++) {
 			if (virtual_joysticks[0].button_pressed[i])
 				button_pressed[i % button_wrap]=true;
 		}
-		for (int i = 0; i < emulated_buttons; i++) {
+		for (uint8_t i = 0; i < emulated_buttons; i++) {
 			if (autofire && (button_pressed[i]))
 				JOYSTICK_Button(i>>1,i&1,(++button_autofire[i])&1);
 			else
@@ -1081,8 +1083,7 @@ private:
 
 class CCHBindGroup final : public CStickBindGroup {
 public:
-	CCHBindGroup(Bitu _stick, Bitu _emustick)
-		: CStickBindGroup(_stick, _emustick)
+	CCHBindGroup(uint8_t _stick, uint8_t _emustick) : CStickBindGroup(_stick, _emustick)
 	{
 		emulated_axes=4;
 		emulated_buttons=6;
