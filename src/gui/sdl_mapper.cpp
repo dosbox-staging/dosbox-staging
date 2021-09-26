@@ -2682,12 +2682,6 @@ static void QueryJoysticks()
 	assert(num_joysticks >= 0);
 	mapper.sticks.num = static_cast<unsigned int>(num_joysticks);
 
-	std::string setup_postfix;
-	if (joytype == JOY_NONE) {
-		setup_postfix = " for mapping purposes only";
-		joytype = JOY_AUTO; // ensure we still setup and detect the joysticks
-	}
-
 	// If a specific joystick was requested, then use it as-is.
 	if (joytype != JOY_AUTO)
 		return;
@@ -2709,13 +2703,13 @@ static void QueryJoysticks()
 	const bool second_usable = useable[1];
 	if (first_usable && second_usable) {
 		joytype = JOY_2AXIS;
-		LOG_MSG("MAPPER: Found two or more joysticks%s", setup_postfix.c_str());
+		LOG_MSG("MAPPER: Found two or more joysticks");
 	} else if (first_usable) {
 		joytype = JOY_4AXIS;
-		LOG_MSG("MAPPER: Found one joystick%s", setup_postfix.c_str());
+		LOG_MSG("MAPPER: Found one joystick");
 	} else if (second_usable) {
 		joytype = JOY_4AXIS_2;
-		LOG_MSG("MAPPER: Found second joystick is usable%s", setup_postfix.c_str());
+		LOG_MSG("MAPPER: Found second joystick is usable");
 	} else {
 		joytype = JOY_NONE;
 		LOG_MSG("MAPPER: Found no joysticks");

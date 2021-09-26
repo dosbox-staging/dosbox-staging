@@ -370,8 +370,12 @@ public:
 		stick[0].transformed = false;
 
 		// Does the user want joysticks to be available for mapping, but hidden in DOS?
-		if (joytype == JOY_NONE)
+		// Then we switch it to auto, but skip setting up the joystick handlers to
+		// prevent DOS programs from seeing the joystick.
+		if (joytype == JOY_NONE) {
+			joytype = JOY_AUTO;
 			return;
+		}
 
 		// Setup the joystick IO port handlers, which lets DOS games
 		// detect and use them
