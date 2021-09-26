@@ -158,7 +158,7 @@ struct JoyStick {
 JoystickType joytype = JOY_UNSET;
 static JoyStick stick[2];
 
-static Bitu last_write = 0;
+static uint32_t last_write = 0;
 static bool write_active = false;
 static bool swap34 = false;
 bool button_wrapping_enabled = true;
