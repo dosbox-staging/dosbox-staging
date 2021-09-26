@@ -421,9 +421,10 @@ public:
 		stick[1].ypos = 0.0;
 		stick[0].transformed = false;
 
-		// Does the user want joysticks to be available for mapping, but hidden in DOS?
-		// Then we switch it to auto, but skip setting up the joystick handlers to
-		// prevent DOS programs from seeing the joystick.
+		// Does the user want joysticks to be available for mapping, but
+		// hidden in DOS? Then we switch it to auto, but skip setting up
+		// the joystick handlers to prevent DOS programs from seeing the
+		// joystick.
 		if (joytype == JOY_NONE) {
 			joytype = JOY_AUTO;
 			return;
