@@ -32,8 +32,8 @@
 //Set to true, to enable automated switching back to square on circle mode if the inputs are outside the cirle.
 #define SUPPORT_MAP_AUTO 0
 
-#define RANGE 64
-#define TIMEOUT 10
+constexpr int RANGE = 64;
+constexpr int TIMEOUT = 10;
 
 struct JoyStick {
 	enum {JOYMAP_SQUARE,JOYMAP_CIRCLE,JOYMAP_INBETWEEN} mapstate;
