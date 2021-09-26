@@ -275,49 +275,83 @@ static void write_p201_timed(io_port_t, io_val_t, io_width_t)
 	}
 }
 
-void JOYSTICK_Enable(Bitu which,bool enabled) {
-	if (which<2) stick[which].enabled = enabled;
+void JOYSTICK_Enable(uint8_t which, bool enabled)
+{
+	if (which < 2)
+		stick[which].enabled = enabled;
 }
 
-void JOYSTICK_Button(Bitu which,Bitu num,bool pressed) {
-	if ((which<2) && (num<2)) stick[which].button[num] = pressed;
+void JOYSTICK_Button(uint8_t which, int num, bool pressed)
+{
+	if ((which < 2) && (num < 2))
+		stick[which].button[num] = pressed;
 }
 
-void JOYSTICK_Move_X(Bitu which,float x) {
-	if (which > 1) return;
-	if (stick[which].xpos == x) return;
+constexpr double position_to_percent(int16_t val)
+{
+	// SDL's joystick axis value ranges from -32768 to 32767
+	return val / (val > 0 ? 32767.0 : 32768.0);
+}
+
+void JOYSTICK_Move_X(uint8_t which, int16_t x_val)
+{
+	if (which > 1)
+		return;
+
+	const auto x = position_to_percent(x_val);
+	if (stick[which].xpos == x)
+		return;
 	stick[which].xpos = x;
 	stick[which].transformed = false;
 //	if( which == 0 || joytype != JOY_FCS)  
-//		stick[which].applied_conversion; //todo 
+//		stick[which].applied_conversion; //todo
 }
 
-void JOYSTICK_Move_Y(Bitu which,float y) {
-	if (which > 1) return;
-	if (stick[which].ypos == y) return;
+void JOYSTICK_Move_Y(uint8_t which, int16_t y_val)
+{
+	if (which > 1)
+		return;
+
+	const auto y = position_to_percent(y_val);
+	if (stick[which].ypos == y)
+		return;
 	stick[which].ypos = y;
 	stick[which].transformed = false;
 }
 
-bool JOYSTICK_IsEnabled(Bitu which) {
-	if (which<2) return stick[which].enabled;
+bool JOYSTICK_IsEnabled(uint8_t which)
+{
+	if (which < 2)
+		return stick[which].enabled;
 	return false;
 }
 
-bool JOYSTICK_GetButton(Bitu which, Bitu num) {
-	if ((which<2) && (num<2)) return stick[which].button[num];
+bool JOYSTICK_GetButton(uint8_t which, int num)
+{
+	if ((which < 2) && (num < 2))
+		return stick[which].button[num];
 	return false;
 }
 
-float JOYSTICK_GetMove_X(Bitu which) {
-	if (which > 1) return 0.0f;
-	if (which == 0) { stick[0].transform_input(); return stick[0].xfinal;}
+double JOYSTICK_GetMove_X(uint8_t which)
+{
+	if (which > 1)
+		return 0.0;
+	if (which == 0) {
+		stick[0].transform_input();
+		return stick[0].xfinal;
+	}
 	return stick[1].xpos;
 }
 
-float JOYSTICK_GetMove_Y(Bitu which) {
-	if (which > 1) return 0.0f;
-	if (which == 0) { stick[0].transform_input(); return stick[0].yfinal;}
+double JOYSTICK_GetMove_Y(uint8_t which)
+{
+	if (which > 1)
+		return 0.0;
+	if (which == 0) {
+		stick[0].transform_input();
+		return stick[0].yfinal;
+	}
 	return stick[1].ypos;
 }
 

@@ -685,31 +685,30 @@ public:
 
 	virtual bool CheckEvent(SDL_Event * event) {
 		SDL_JoyAxisEvent * jaxis = NULL;
-		SDL_JoyButtonEvent * jbutton = NULL;
-		Bitu but = 0;
+		SDL_JoyButtonEvent *jbutton = NULL;
 
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
 				if(jaxis->which == stick) {
 					if(jaxis->axis == 0)
-						JOYSTICK_Move_X(emustick,(float)(jaxis->value/32768.0));
-					else if(jaxis->axis == 1)
-						JOYSTICK_Move_Y(emustick,(float)(jaxis->value/32768.0));
+						JOYSTICK_Move_X(emustick, jaxis->value);
+					else if (jaxis->axis == 1)
+						JOYSTICK_Move_Y(emustick, jaxis->value);
 				}
 				break;
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
 				jbutton = &event->jbutton;
 				bool state;
-				state=jbutton->type==SDL_JOYBUTTONDOWN;
-				but = jbutton->button % emulated_buttons;
+				state = jbutton->type == SDL_JOYBUTTONDOWN;
+				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
 				if (jbutton->which == stick) {
-					JOYSTICK_Button(emustick,but,state);
+					JOYSTICK_Button(emustick, but, state);
 				}
 				break;
-		}
-		return false;
+			}
+			return false;
 	}
 
 	virtual void UpdateJoystick() {
@@ -730,8 +729,8 @@ public:
 				JOYSTICK_Button(emustick,i,button_pressed[i]);
 		}
 
-		JOYSTICK_Move_X(emustick,((float)virtual_joysticks[emustick].axis_pos[0])/32768.0f);
-		JOYSTICK_Move_Y(emustick,((float)virtual_joysticks[emustick].axis_pos[1])/32768.0f);
+		JOYSTICK_Move_X(emustick, virtual_joysticks[emustick].axis_pos[0]);
+		JOYSTICK_Move_Y(emustick, virtual_joysticks[emustick].axis_pos[1]);
 	}
 
 	void ActivateJoystickBoundEvents() {
@@ -902,27 +901,26 @@ public:
 
 	bool CheckEvent(SDL_Event * event) {
 		SDL_JoyAxisEvent * jaxis = NULL;
-		SDL_JoyButtonEvent * jbutton = NULL;
-		Bitu but = 0;
+		SDL_JoyButtonEvent *jbutton = NULL;
 
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
 				if(jaxis->which == stick && jaxis->axis < 4) {
 					if(jaxis->axis & 1)
-						JOYSTICK_Move_Y(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
+						JOYSTICK_Move_Y(jaxis->axis >> 1 & 1, jaxis->value);
 					else
-						JOYSTICK_Move_X(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
-				}
-				break;
+						JOYSTICK_Move_X(jaxis->axis >> 1 & 1, jaxis->value);
+		        }
+		        break;
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
 				jbutton = &event->jbutton;
 				bool state;
-				state=jbutton->type==SDL_JOYBUTTONDOWN;
-				but = jbutton->button % emulated_buttons;
+				state = jbutton->type == SDL_JOYBUTTONDOWN;
+				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
 				if (jbutton->which == stick) {
-					JOYSTICK_Button((but >> 1),(but & 1),state);
+					JOYSTICK_Button((but >> 1), (but & 1), state);
 				}
 				break;
 		}
@@ -946,10 +944,10 @@ public:
 				JOYSTICK_Button(i>>1,i&1,button_pressed[i]);
 		}
 
-		JOYSTICK_Move_X(0,((float)virtual_joysticks[0].axis_pos[0])/32768.0f);
-		JOYSTICK_Move_Y(0,((float)virtual_joysticks[0].axis_pos[1])/32768.0f);
-		JOYSTICK_Move_X(1,((float)virtual_joysticks[0].axis_pos[2])/32768.0f);
-		JOYSTICK_Move_Y(1,((float)virtual_joysticks[0].axis_pos[3])/32768.0f);
+		JOYSTICK_Move_X(0, virtual_joysticks[0].axis_pos[0]);
+		JOYSTICK_Move_Y(0, virtual_joysticks[0].axis_pos[1]);
+		JOYSTICK_Move_X(1, virtual_joysticks[0].axis_pos[2]);
+		JOYSTICK_Move_Y(1, virtual_joysticks[0].axis_pos[3]);
 	}
 };
 
@@ -969,33 +967,33 @@ public:
 	bool CheckEvent(SDL_Event * event) {
 		SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent * jbutton = NULL;
-		SDL_JoyHatEvent * jhat = NULL;
-		Bitu but = 0;
+		SDL_JoyHatEvent *jhat = NULL;
 
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
 				if(jaxis->which == stick) {
 					if(jaxis->axis == 0)
-						JOYSTICK_Move_X(0,(float)(jaxis->value/32768.0));
-					else if(jaxis->axis == 1)
-						JOYSTICK_Move_Y(0,(float)(jaxis->value/32768.0));
-					else if(jaxis->axis == 2)
-						JOYSTICK_Move_X(1,(float)(jaxis->value/32768.0));
+						JOYSTICK_Move_X(0, jaxis->value);
+					else if (jaxis->axis == 1)
+						JOYSTICK_Move_Y(0, jaxis->value);
+					else if (jaxis->axis == 2)
+						JOYSTICK_Move_X(1, jaxis->value);
 				}
 				break;
 			case SDL_JOYHATMOTION:
 				jhat = &event->jhat;
-				if(jhat->which == stick) DecodeHatPosition(jhat->value);
+				if (jhat->which == stick)
+					DecodeHatPosition(jhat->value);
 				break;
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
 				jbutton = &event->jbutton;
-				bool state;
-				state=jbutton->type==SDL_JOYBUTTONDOWN;
-				but = jbutton->button % emulated_buttons;
+			bool state;
+			state=jbutton->type==SDL_JOYBUTTONDOWN;
+				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
 				if (jbutton->which == stick) {
-						JOYSTICK_Button((but >> 1),(but & 1),state);
+					JOYSTICK_Button((but >> 1), (but & 1), state);
 				}
 				break;
 		}
@@ -1020,9 +1018,9 @@ public:
 				JOYSTICK_Button(i>>1,i&1,button_pressed[i]);
 		}
 
-		JOYSTICK_Move_X(0,((float)virtual_joysticks[0].axis_pos[0])/32768.0f);
-		JOYSTICK_Move_Y(0,((float)virtual_joysticks[0].axis_pos[1])/32768.0f);
-		JOYSTICK_Move_X(1,((float)virtual_joysticks[0].axis_pos[2])/32768.0f);
+		JOYSTICK_Move_X(0, virtual_joysticks[0].axis_pos[0]);
+		JOYSTICK_Move_Y(0, virtual_joysticks[0].axis_pos[1]);
+		JOYSTICK_Move_X(1, virtual_joysticks[0].axis_pos[2]);
 
 		Uint8 hat_pos=0;
 		if (virtual_joysticks[0].hat_pressed[0]) hat_pos|=SDL_HAT_UP;
@@ -1040,46 +1038,43 @@ private:
 	uint8_t old_hat_position = 0;
 
 	void DecodeHatPosition(Uint8 hat_pos) {
-		switch(hat_pos) {
-			case SDL_HAT_CENTERED:
-				JOYSTICK_Move_Y(1,1.0);
-				break;
-			case SDL_HAT_UP:
-				JOYSTICK_Move_Y(1,-1.0);
-				break;
-			case SDL_HAT_RIGHT:
-				JOYSTICK_Move_Y(1,-0.5);
-				break;
-			case SDL_HAT_DOWN:
-				JOYSTICK_Move_Y(1,0.0);
-				break;
-			case SDL_HAT_LEFT:
-				JOYSTICK_Move_Y(1,0.5);
-				break;
-			case SDL_HAT_LEFTUP:
-				if(JOYSTICK_GetMove_Y(1) < 0)
-					JOYSTICK_Move_Y(1,0.5);
-				else
-					JOYSTICK_Move_Y(1,-1.0);
-				break;
-			case SDL_HAT_RIGHTUP:
-				if(JOYSTICK_GetMove_Y(1) < -0.7)
-					JOYSTICK_Move_Y(1,-0.5);
-				else
-					JOYSTICK_Move_Y(1,-1.0);
-				break;
-			case SDL_HAT_RIGHTDOWN:
-				if(JOYSTICK_GetMove_Y(1) < -0.2)
-					JOYSTICK_Move_Y(1,0.0);
-				else
-					JOYSTICK_Move_Y(1,-0.5);
-				break;
-			case SDL_HAT_LEFTDOWN:
-				if(JOYSTICK_GetMove_Y(1) > 0.2)
-					JOYSTICK_Move_Y(1,0.0);
-				else
-					JOYSTICK_Move_Y(1,0.5);
-				break;
+		// Common joystick positions
+		constexpr int16_t joy_centered = 0;
+		constexpr int16_t joy_full_negative = INT16_MIN;
+		constexpr int16_t joy_full_positive = INT16_MAX;
+		constexpr int16_t joy_50pct_negative = static_cast<int16_t>(INT16_MIN / 2);
+		constexpr int16_t joy_50pct_positive = static_cast<int16_t>(INT16_MAX / 2);
+
+		switch (hat_pos) {
+		case SDL_HAT_CENTERED: JOYSTICK_Move_Y(1, joy_full_positive); break;
+		case SDL_HAT_UP: JOYSTICK_Move_Y(1, joy_full_negative); break;
+		case SDL_HAT_RIGHT: JOYSTICK_Move_Y(1, joy_50pct_negative); break;
+		case SDL_HAT_DOWN: JOYSTICK_Move_Y(1, joy_centered); break;
+		case SDL_HAT_LEFT: JOYSTICK_Move_Y(1, joy_50pct_positive); break;
+		case SDL_HAT_LEFTUP:
+			if (JOYSTICK_GetMove_Y(1) < 0)
+				JOYSTICK_Move_Y(1, joy_50pct_positive);
+			else
+				JOYSTICK_Move_Y(1, joy_full_negative);
+			break;
+		case SDL_HAT_RIGHTUP:
+			if (JOYSTICK_GetMove_Y(1) < -0.7)
+				JOYSTICK_Move_Y(1, joy_50pct_negative);
+			else
+				JOYSTICK_Move_Y(1, joy_full_negative);
+			break;
+		case SDL_HAT_RIGHTDOWN:
+			if (JOYSTICK_GetMove_Y(1) < -0.2)
+				JOYSTICK_Move_Y(1, joy_centered);
+			else
+				JOYSTICK_Move_Y(1, joy_50pct_negative);
+			break;
+		case SDL_HAT_LEFTDOWN:
+			if (JOYSTICK_GetMove_Y(1) > 0.2)
+				JOYSTICK_Move_Y(1, joy_centered);
+			else
+				JOYSTICK_Move_Y(1, joy_50pct_positive);
+			break;
 		}
 	}
 };
@@ -1109,17 +1104,17 @@ public:
 				jaxis = &event->jaxis;
 				if(jaxis->which == stick && jaxis->axis < 4) {
 					if(jaxis->axis & 1)
-						JOYSTICK_Move_Y(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
+						JOYSTICK_Move_Y(jaxis->axis >> 1 & 1, jaxis->value);
 					else
-						JOYSTICK_Move_X(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
+						JOYSTICK_Move_X(jaxis->axis >> 1 & 1, jaxis->value);
 				}
 				break;
 			case SDL_JOYHATMOTION:
 				jhat = &event->jhat;
-				if(jhat->which == stick && jhat->hat < 2) {
-					if(jhat->value == SDL_HAT_CENTERED)
-						button_state&=~hat_magic[jhat->hat][0];
-					if(jhat->value & SDL_HAT_UP)
+				if (jhat->which == stick && jhat->hat < 2) {
+					if (jhat->value == SDL_HAT_CENTERED)
+						button_state &= ~hat_magic[jhat->hat][0];
+					if (jhat->value & SDL_HAT_UP)
 						button_state|=hat_magic[jhat->hat][1];
 					if(jhat->value & SDL_HAT_RIGHT)
 						button_state|=hat_magic[jhat->hat][2];
@@ -1161,10 +1156,10 @@ public:
 		/* query SDL joystick and activate bindings */
 		ActivateJoystickBoundEvents();
 
-		JOYSTICK_Move_X(0,((float)virtual_joysticks[0].axis_pos[0])/32768.0f);
-		JOYSTICK_Move_Y(0,((float)virtual_joysticks[0].axis_pos[1])/32768.0f);
-		JOYSTICK_Move_X(1,((float)virtual_joysticks[0].axis_pos[2])/32768.0f);
-		JOYSTICK_Move_Y(1,((float)virtual_joysticks[0].axis_pos[3])/32768.0f);
+		JOYSTICK_Move_X(0, virtual_joysticks[0].axis_pos[0]);
+		JOYSTICK_Move_Y(0, virtual_joysticks[0].axis_pos[1]);
+		JOYSTICK_Move_X(1, virtual_joysticks[0].axis_pos[2]);
+		JOYSTICK_Move_Y(1, virtual_joysticks[0].axis_pos[3]);
 
 		Bitu bt_state=15;
 

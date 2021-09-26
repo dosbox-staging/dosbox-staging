@@ -21,21 +21,21 @@
 
 #include "dosbox.h"
 
-void JOYSTICK_Enable(Bitu which,bool enabled);
+void JOYSTICK_Enable(uint8_t which, bool enabled);
 
-void JOYSTICK_Button(Bitu which,Bitu num,bool pressed);
+void JOYSTICK_Button(uint8_t which, int num, bool pressed);
 
-void JOYSTICK_Move_X(Bitu which,float x);
+// takes in the joystick axis absolute value from -32768 to 32767
+void JOYSTICK_Move_X(uint8_t which, int16_t x_val);
+void JOYSTICK_Move_Y(uint8_t which, int16_t y_val);
 
-void JOYSTICK_Move_Y(Bitu which,float y);
+bool JOYSTICK_IsEnabled(uint8_t which);
 
-bool JOYSTICK_IsEnabled(Bitu which);
+bool JOYSTICK_GetButton(uint8_t which, int num);
 
-bool JOYSTICK_GetButton(Bitu which, Bitu num);
-
-float JOYSTICK_GetMove_X(Bitu which);
-
-float JOYSTICK_GetMove_Y(Bitu which);
+// returns a percentage from -1.0 to +1.0 along the axis
+double JOYSTICK_GetMove_X(uint8_t which);
+double JOYSTICK_GetMove_Y(uint8_t which);
 
 void JOYSTICK_ParseConfiguredType();
 
