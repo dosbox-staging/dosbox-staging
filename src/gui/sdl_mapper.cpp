@@ -51,7 +51,7 @@
 
 /* Mouse related */
 void GFX_ToggleMouseCapture();
-extern SDL_bool mouse_is_captured; //true if mouse is confined to window
+extern bool mouse_is_captured; //true if mouse is confined to window
 
 enum {
 	CLR_BLACK=0,
