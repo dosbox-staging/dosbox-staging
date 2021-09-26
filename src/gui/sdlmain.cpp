@@ -1845,8 +1845,8 @@ void GFX_Start() {
 void GFX_ObtainDisplayDimensions() {
 	SDL_Rect displayDimensions;
 	SDL_GetDisplayBounds(sdl.display_number, &displayDimensions);
-	sdl.desktop.full.width = displayDimensions.w;
-	sdl.desktop.full.height = displayDimensions.h;
+	sdl.desktop.full.width = check_cast<uint16_t>(displayDimensions.w);
+	sdl.desktop.full.height = check_cast<uint16_t>(displayDimensions.h);
 }
 
 /* Manually update display dimensions in case of a window resize,
@@ -1861,8 +1861,8 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 		/* Note: We should not use GFX_ObtainDisplayDimensions
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
-		sdl.desktop.full.width = width;
-		sdl.desktop.full.height = height;
+		sdl.desktop.full.width = check_cast<uint16_t>(width);
+		sdl.desktop.full.height = check_cast<uint16_t>(height);
 	}
 }
 
@@ -2537,7 +2537,9 @@ static void GUI_StartUp(Section *sec)
 		fullresolution = lowcase (res);//so x and X are allowed
 		if (strcmp(fullresolution,"original")) {
 			sdl.desktop.full.fixed = true;
-			if (strcmp(fullresolution,"desktop")) { //desktop = 0x0
+			if (!strcmp(fullresolution,"desktop")) { // Populate sdl.full.width and height with Desktop size
+				GFX_ObtainDisplayDimensions();
+			} else { // Use a custom resolution in WxH format
 				char* height = const_cast<char*>(strchr(fullresolution,'x'));
 				if (height && * height) {
 					*height = 0;
@@ -2861,8 +2863,8 @@ static void HandleVideoResize(int width, int height)
 		/* Note: We should not use GFX_ObtainDisplayDimensions
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
-		sdl.desktop.full.width = width;
-		sdl.desktop.full.height = height;
+		sdl.desktop.full.width = check_cast<uint16_t>(width);
+		sdl.desktop.full.height = check_cast<uint16_t>(height);
 	}
 
 #if C_OPENGL
