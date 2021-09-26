@@ -233,12 +233,16 @@ static void write_p201(io_port_t, io_val_t, io_width_t)
 	last_write = PIC_Ticks;
 	if (stick[0].enabled) {
 		stick[0].transform_input();
-		stick[0].xcount=(Bitu)((stick[0].xfinal*RANGE)+RANGE);
-		stick[0].ycount=(Bitu)((stick[0].yfinal*RANGE)+RANGE);
+		stick[0].xcount = check_cast<uint32_t>(
+		        static_cast<int64_t>(stick[0].xfinal * RANGE + RANGE));
+		stick[0].ycount = check_cast<uint32_t>(
+		        static_cast<int64_t>(stick[0].yfinal * RANGE + RANGE));
 	}
 	if (stick[1].enabled) {
-		stick[1].xcount=(Bitu)(((swap34? stick[1].ypos : stick[1].xpos)*RANGE)+RANGE);
-		stick[1].ycount=(Bitu)(((swap34? stick[1].xpos : stick[1].ypos)*RANGE)+RANGE);
+		stick[1].xcount = check_cast<uint32_t>(static_cast<int64_t>(
+		        (swap34 ? stick[1].ypos : stick[1].xpos) * RANGE + RANGE));
+		stick[1].ycount = check_cast<uint32_t>(static_cast<int64_t>(
+		        (swap34 ? stick[1].xpos : stick[1].ypos) * RANGE + RANGE));
 	}
 }
 static void write_p201_timed(io_port_t, io_val_t, io_width_t)
