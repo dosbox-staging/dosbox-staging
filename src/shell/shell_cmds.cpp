@@ -46,7 +46,6 @@
 
 // clang-format off
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {
-	{ "ATTRIB",   {1, &DOS_Shell::CMD_ATTRIB,   "SHELL_CMD_ATTRIB_HELP",   nullptr } },
 	{ "CALL",     {1, &DOS_Shell::CMD_CALL,     "SHELL_CMD_CALL_HELP",     nullptr } },
 	{ "CD",       {0, &DOS_Shell::CMD_CHDIR,    "SHELL_CMD_CHDIR_HELP",    "SHELL_CMD_CHDIR_HELP_LONG" } },
 	{ "CHDIR",    {1, &DOS_Shell::CMD_CHDIR,    "SHELL_CMD_CHDIR_HELP",    "SHELL_CMD_CHDIR_HELP_LONG" } },
@@ -1612,11 +1611,6 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	DOS_WriteFile(STDOUT, &c, &n);
 	WriteOut_NoParsing("\n");
 	dos.return_code = (Bit8u)(ptr-rem+1);
-}
-
-void DOS_Shell::CMD_ATTRIB(char *args){
-	HELP("ATTRIB");
-	// No-Op for now.
 }
 
 void DOS_Shell::CMD_PATH(char *args){
