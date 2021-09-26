@@ -60,12 +60,18 @@ struct JoyStick {
 	}
 
 	void fake_digital() {
-		if (xpos > 0.5f) xfinal = 1.0f;
-		else if (xpos < -0.5f) xfinal = -1.0f;
-		else xfinal = 0.0f;
-		if (ypos > 0.5f) yfinal = 1.0f;
-		else if (ypos < -0.5f) yfinal = -1.0f;
-		else yfinal = 0.0f;
+		if (xpos > 0.5)
+			xfinal = 1.0;
+		else if (xpos < -0.5)
+			xfinal = -1.0;
+		else
+			xfinal = 0.0;
+		if (ypos > 0.5)
+			yfinal = 1.0;
+		else if (ypos < -0.5)
+			yfinal = -1.0;
+		else
+			yfinal = 0.0;
 	}
 
 	void transform_circular(){
