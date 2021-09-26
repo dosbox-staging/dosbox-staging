@@ -598,7 +598,6 @@ MAYBE_UNUSED static void PauseDOSBox(bool pressed)
 	}
 }
 
-/* Reset the screen with current values in the sdl structure */
 Bitu GFX_GetBestMode(Bitu flags)
 {
 	if (sdl.scaling_mode == SCALING_MODE::PERFECT)
@@ -640,7 +639,7 @@ check_surface:
 	return flags;
 }
 
-
+/* Reset the screen with current values in the sdl structure */
 void GFX_ResetScreen(void) {
 	GFX_Stop();
 	if (sdl.draw.callback)
