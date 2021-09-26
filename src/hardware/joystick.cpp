@@ -37,26 +37,29 @@ constexpr int TIMEOUT = 10;
 
 struct JoyStick {
 	enum {JOYMAP_SQUARE,JOYMAP_CIRCLE,JOYMAP_INBETWEEN} mapstate;
-	bool enabled;
-	float xpos;
-	float ypos; // position as set by SDL.
-	double xtick;
-	double ytick;
-	Bitu xcount, ycount;
-	bool button[2];
-	int deadzone; //Deadzone (value between 0 and 100) interpreted as percentage.
-	bool transformed; //Whether xpos,ypos have been converted to xfinal and yfinal. Cleared when new xpos orypos have been set
-	float xfinal, yfinal; //position returned to the game for stick 0. 
+	double xpos = 0.0;
+	double ypos = 0.0; // position as set by SDL
+
+	double xtick = 0.0;
+	double ytick = 0.0;
+
+	double xfinal = 0.0;
+	double yfinal = 0.0; // position returned to the game for stick 0
+
+	uint32_t xcount = 0;
+	uint32_t ycount = 0;
+
+	int deadzone = 0; // Deadzone (value between 0 and 100) interpreted as percentage
+	enum MovementType mapstate = JOYMAP_SQUARE;
+
+	bool button[2] = {false, false};
+	bool transformed = false; // Whether xpos,ypos have been converted to xfinal and yfinal
+	                          // Cleared when new xpos orypos have been set
+	bool enabled = false;
 
 	void clip() {
-		if (xfinal > 1.0f)
-			xfinal = 1.0f;
-		else if (xfinal < -1.0f)
-			xfinal = -1.0f;
-		if (yfinal > 1.0f)
-			yfinal = 1.0f;
-		else if (yfinal < -1.0f)
-			yfinal = -1.0f;
+		xfinal = clamp(xfinal, -1.0, 1.0);
+		yfinal = clamp(yfinal, -1.0, 1.0);
 	}
 
 	void fake_digital() {
@@ -75,41 +78,43 @@ struct JoyStick {
 	}
 
 	void transform_circular(){
-		const float r = sqrtf(xpos * xpos + ypos * ypos);
-		if (fabs(r) < FLT_EPSILON) {
+		const auto r = sqrt(xpos * xpos + ypos * ypos);
+		if (fabs(r) < DBL_EPSILON) {
 			xfinal = xpos;
 			yfinal = ypos;
 			return;
 		}
-		float deadzone_f = static_cast<float>(deadzone) / 100.0f;
-		float s = 1.0f - deadzone_f;
+		const auto deadzone_f = static_cast<double>(deadzone) / 100.0;
+		const auto s = 1.0 - deadzone_f;
 		if (r < deadzone_f) {
-			xfinal = yfinal = 0.0f;
+			xfinal = yfinal = 0.0;
 			return;
 		}
 
-		float deadzonescale = (r - deadzone_f) / s; //r if deadzone=0;
-		float xa = fabsf(xpos);
-		float ya = fabsf(ypos);
-		float maxpos = (ya>xa?ya:xa);
-		xfinal = xpos * deadzonescale/maxpos;
-		yfinal = ypos * deadzonescale/maxpos;
+		const auto deadzonescale = (r - deadzone_f) / s; // r if deadzone=0;
+		const auto xa = fabs(xpos);
+		const auto ya = fabs(ypos);
+		const auto maxpos = std::max(ya, xa);
+		xfinal = xpos * deadzonescale / maxpos;
+		yfinal = ypos * deadzonescale / maxpos;
 	}
 
 	void transform_square() {
-		float deadzone_f = static_cast<float>(deadzone) / 100.0f;
-		float s = 1.0f - deadzone_f;
+		const auto deadzone_f = static_cast<double>(deadzone) / 100.0;
+		const auto s = 1.0 - deadzone_f;
 
 		if (xpos > deadzone_f) {
 			xfinal = (xpos - deadzone_f)/ s;
 		} else if ( xpos < -deadzone_f) {
 			xfinal = (xpos + deadzone_f) / s;
-		} else xfinal = 0.0f;
+		} else
+			xfinal = 0.0;
 		if (ypos > deadzone_f) {
 			yfinal = (ypos - deadzone_f)/ s;
-		} else if ( ypos < - deadzone_f) {
+		} else if (ypos < -deadzone_f) {
 			yfinal = (ypos + deadzone_f) / s;
-		} else yfinal = 0.0f;
+		} else
+			yfinal = 0.0;
 	}
 
 #if SUPPORT_MAP_AUTO
@@ -120,9 +125,8 @@ struct JoyStick {
 		transform_circular();
 		clip();
 
-
-		float xrate = xpos / xfinal;
-		float yrate = ypos / yfinal;
+		const auto xrate = xpos / xfinal;
+		const auto yrate = ypos / yfinal;
 		if (xrate > 0.95 && yrate > 0.95) {
 			mapstate = JOYMAP_SQUARE; //TODO misschien xfinal=xpos...
 			//LOG_MSG("switched to square %f %f",xrate,yrate);
@@ -369,10 +373,10 @@ public:
 		stick[0].ytick = ticks;
 		stick[1].xtick = ticks;
 		stick[1].ytick = ticks;
-		stick[0].xpos = 0.0f;
-		stick[0].ypos = 0.0f;
-		stick[1].xpos = 0.0f;
-		stick[1].ypos = 0.0f;
+		stick[0].xpos = 0.0;
+		stick[0].ypos = 0.0;
+		stick[1].xpos = 0.0;
+		stick[1].ypos = 0.0;
 		stick[0].transformed = false;
 
 		// Does the user want joysticks to be available for mapping, but hidden in DOS?
