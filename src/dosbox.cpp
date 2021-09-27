@@ -856,19 +856,19 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
 	secprop->AddInitFunction(&JOYSTICK_Init,true);
 	const char *joytypes[] = {"auto", "2axis", "4axis",    "4axis_2", "fcs",
-	                          "ch",   "none",  "disabled", 0};
+	                          "ch",   "hidden",  "disabled", 0};
 	Pstring = secprop->Add_string("joysticktype", when_idle, "auto");
 	Pstring->Set_values(joytypes);
 	Pstring->Set_help(
 	        "Type of joystick to emulate: auto (default),\n"
-	        "auto    : Detect and use any joystick(s), if possible.,\n"
-	        "2axis   : Support up to two joysticks.\n"
-	        "4axis   : Support the first joystick only.\n"
-	        "4axis_2 : support the second joystick only.\n"
-	        "fcs     : support a Thrustmaster-type joystick.\n"
-	        "ch      : support a CH Flightstick-type joystick.\n"
-	        "none    : Prevent DOS from seeing the joystick(s), but enable them for mapping.\n"
-	        "disabled: Fully disable joysticks: won't be polled, mapped, or visible in DOS.\n"
+	        "auto     : Detect and use any joystick(s), if possible.,\n"
+	        "2axis    : Support up to two joysticks.\n"
+	        "4axis    : Support the first joystick only.\n"
+	        "4axis_2  : Support the second joystick only.\n"
+	        "fcs      : Support a Thrustmaster-type joystick.\n"
+	        "ch       : Support a CH Flightstick-type joystick.\n"
+	        "hidden   : Prevent DOS from seeing the joystick(s), but enable them for mapping.\n"
+	        "disabled : Fully disable joysticks: won't be polled, mapped, or visible in DOS.\n"
 	        "(Remember to reset DOSBox's mapperfile if you saved it earlier)");
 
 	Pbool = secprop->Add_bool("timed", when_idle, true);

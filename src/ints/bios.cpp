@@ -832,7 +832,7 @@ static Bitu INT15_Handler(void) {
 	case 0x84:	/* BIOS - JOYSTICK SUPPORT (XT after 11/8/82,AT,XT286,PS) */
 		if (reg_dx == 0x0000) {
 			// Get Joystick button status
-			if (JOYSTICK_IsEnabled(0) || JOYSTICK_IsEnabled(1)) {
+			if (JOYSTICK_IsAccessible(0) || JOYSTICK_IsAccessible(1)) {
 				reg_al = IO_ReadB(0x201)&0xf0;
 				CALLBACK_SCF(false);
 			} else {
@@ -841,10 +841,10 @@ static Bitu INT15_Handler(void) {
 				CALLBACK_SCF(true);
 			}
 		} else if (reg_dx == 0x0001) {
-			if (JOYSTICK_IsEnabled(0)) {
+			if (JOYSTICK_IsAccessible(0)) {
 				reg_ax = (Bit16u)(JOYSTICK_GetMove_X(0)*127+128);
 				reg_bx = (Bit16u)(JOYSTICK_GetMove_Y(0)*127+128);
-				if(JOYSTICK_IsEnabled(1)) {
+				if(JOYSTICK_IsAccessible(1)) {
 					reg_cx = (Bit16u)(JOYSTICK_GetMove_X(1)*127+128);
 					reg_dx = (Bit16u)(JOYSTICK_GetMove_Y(1)*127+128);
 				}
@@ -852,7 +852,7 @@ static Bitu INT15_Handler(void) {
 					reg_cx = reg_dx = 0;
 				}
 				CALLBACK_SCF(false);
-			} else if (JOYSTICK_IsEnabled(1)) {
+			} else if (JOYSTICK_IsAccessible(1)) {
 				reg_ax = reg_bx = 0;
 				reg_cx = (Bit16u)(JOYSTICK_GetMove_X(1)*127+128);
 				reg_dx = (Bit16u)(JOYSTICK_GetMove_Y(1)*127+128);

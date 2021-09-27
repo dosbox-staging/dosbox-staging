@@ -61,6 +61,7 @@ struct JoyStick {
 	bool transformed = false; // Whether xpos,ypos have been converted to xfinal and yfinal
 	                          // Cleared when new xpos orypos have been set
 	bool enabled = false;
+	bool is_visible_to_dos = false;
 
 	void clip() {
 		xfinal = clamp(xfinal, -1.0, 1.0);
@@ -254,7 +255,7 @@ static void write_p201_timed(io_port_t, io_val_t, io_width_t)
 		constexpr auto joystick_s_constant = 0.0000242;
 		constexpr auto ohms = 120000.0 / 2.0;
 		constexpr auto s_per_ohm = 0.000000011;
-		const auto resistance = static_cast<double>(position) + 1.0;
+		const auto resistance = position + 1.0;
 
 		// Axes take time = 24.2 microseconds + ( 0.011 microsecons/ohm * resistance) to reset to 0
 		const auto axis_time_us = joystick_s_constant + s_per_ohm * resistance * ohms;
@@ -319,11 +320,11 @@ void JOYSTICK_Move_Y(uint8_t which, int16_t y_val)
 	stick[which].transformed = false;
 }
 
-bool JOYSTICK_IsEnabled(uint8_t which)
+bool JOYSTICK_IsAccessible(uint8_t which)
 {
-	if (which < 2)
-		return stick[which].enabled;
-	return false;
+	assert(which < 2);
+	const auto& s = stick[which];
+	return s.is_visible_to_dos && s.enabled;
 }
 
 bool JOYSTICK_GetButton(uint8_t which, int num)
@@ -359,23 +360,23 @@ void JOYSTICK_ParseConfiguredType()
 {
 	const auto conf = control->GetSection("joystick");
 	const auto section = static_cast<Section_prop *>(conf);
-	const char *type = section->Get_string("joysticktype");
+	const auto type = std::string(section->Get_string("joysticktype"));
 
-	if (!strcasecmp(type, "disabled"))
+	if (type == "disabled")
 		joytype = JOY_DISABLED;
-	else if (!strcasecmp(type, "none"))
-		joytype = JOY_NONE;
-	else if (!strcasecmp(type, "auto"))
+	else if (type == "hidden")
+		joytype = JOY_ONLY_FOR_MAPPING;
+	else if (type == "auto")
 		joytype = JOY_AUTO;
-	else if (!strcasecmp(type, "2axis"))
+	else if (type == "2axis")
 		joytype = JOY_2AXIS;
-	else if (!strcasecmp(type, "4axis"))
+	else if (type == "4axis")
 		joytype = JOY_4AXIS;
-	else if (!strcasecmp(type, "4axis_2"))
+	else if (type == "4axis_2")
 		joytype = JOY_4AXIS_2;
-	else if (!strcasecmp(type, "fcs"))
+	else if (type == "fcs")
 		joytype = JOY_FCS;
-	else if (!strcasecmp(type, "ch"))
+	else if (type == "ch")
 		joytype = JOY_CH;
 	else
 		joytype = JOY_AUTO;
@@ -421,20 +422,23 @@ public:
 		stick[1].ypos = 0.0;
 		stick[0].transformed = false;
 
-		// Does the user want joysticks to be available for mapping, but
-		// hidden in DOS? Then we switch it to auto, but skip setting up
-		// the joystick handlers to prevent DOS programs from seeing the
-		// joystick.
-		if (joytype == JOY_NONE) {
-			joytype = JOY_AUTO;
-			return;
-		}
+		// Does the user want joysticks to visible and usable in DOS?
+		const bool is_visible = (joytype != JOY_ONLY_FOR_MAPPING &&
+		                         joytype != JOY_DISABLED);
+		stick[0].is_visible_to_dos = is_visible;
+		stick[1].is_visible_to_dos = is_visible;
 
 		// Setup the joystick IO port handlers, which lets DOS games
 		// detect and use them
-		const bool wants_timed = section->Get_bool("timed");
-		ReadHandler.Install(0x201, wants_timed ? read_p201_timed : read_p201, io_width_t::byte);
-		WriteHandler.Install(0x201, wants_timed ? write_p201_timed : write_p201, io_width_t::byte);
+		if (is_visible) {
+			const bool wants_timed = section->Get_bool("timed");
+			ReadHandler.Install(0x201,
+			                    wants_timed ? read_p201_timed : read_p201,
+			                    io_width_t::byte);
+			WriteHandler.Install(0x201,
+			                     wants_timed ? write_p201_timed : write_p201,
+			                     io_width_t::byte);
+		}
 	}
 	~JOYSTICK() {
 		// No-op if IO handlers were not installed
