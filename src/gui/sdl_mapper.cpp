@@ -723,7 +723,7 @@ public:
 			if (virtual_joysticks[emustick].button_pressed[i])
 				button_pressed[i % button_wrap]=true;
 		}
-		for (int i = 0; i < emulated_buttons; i++) {
+		for (uint8_t i = 0; i < emulated_buttons; i++) {
 			if (autofire && (button_pressed[i]))
 				JOYSTICK_Button(emustick,i,(++button_autofire[i])&1);
 			else
@@ -874,7 +874,7 @@ protected:
 	int buttons = 0;
 	int button_cap = 0;
 	int button_wrap = 0;
-	int emulated_buttons = 0;
+	uint8_t emulated_buttons = 0;
 	int hats = 0;
 	int emulated_hats = 0;
 	int stick;
