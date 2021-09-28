@@ -481,8 +481,15 @@ static const T *maybe_silence(const uint32_t num_samples, const T *buffer)
 
 static void PlayDMATransfer(uint32_t size)
 {
-	uint32_t read = 0;
-	uint32_t done = 0;
+	// How many bytes should we read from DMA?
+	const auto bytes_requested = size;
+	const auto lower_bound = sb.dma.autoinit ? bytes_requested : sb.dma.min;
+	const auto bytes_to_read =  sb.dma.left <= lower_bound ? sb.dma.left : bytes_requested;
+	uint32_t bytes_read = 0;
+	uint32_t samples = 0;
+
+	uint32_t & read = bytes_read;
+	uint32_t & done = samples;
 	uint32_t i = 0;
 	last_dma_callback = PIC_FullIndex();
 
@@ -494,6 +501,7 @@ static void PlayDMATransfer(uint32_t size)
 		if (sb.dma.left <= sb.dma.min)
 			size = sb.dma.left;
 	}
+	assert(size == bytes_to_read);
 
 	//Read the actual data, process it and send it off to the mixer
 	switch (sb.dma.mode) {
@@ -601,8 +609,8 @@ static void PlayDMATransfer(uint32_t size)
 		sb.mode=MODE_NONE;
 		return;
 	}
-	//Check how many bytes were actually read
-	sb.dma.left-=read;
+	// Check how many bytes were actually read from DMA
+	sb.dma.left -= bytes_read;
 	if (!sb.dma.left) {
 		PIC_RemoveEvents(ProcessDMATransfer);
 		if (sb.dma.mode >= DSP_DMA_16) 
