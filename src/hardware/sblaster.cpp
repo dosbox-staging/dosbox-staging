@@ -54,6 +54,13 @@ constexpr uint16_t SB_SH_MASK = ((1 << SB_SH) - 1);
 
 constexpr uint8_t MIN_ADAPTIVE_STEP_SIZE = 0; // max is 32767
 
+// time allowed to bring up a cold speaker
+constexpr uint32_t SPEAKER_WARMUP_MS = 100;
+
+// It was common for games perform some initial checks
+// and resets on startup, resulting a rapid susccession of resets.
+constexpr uint8_t DSP_INITIAL_RESET_LIMIT = 4; 
+
 enum {DSP_S_RESET,DSP_S_RESET_WAIT,DSP_S_NORMAL,DSP_S_HIGHSPEED};
 
 enum SB_TYPES {
@@ -109,6 +116,7 @@ struct SB_INFO {
 		uint32_t remain_size = 0;
 	} dma = {};
 	bool speaker = false;
+	uint16_t warmup_remaining_ms = SPEAKER_WARMUP_MS;
 	bool midi = false;
 	uint8_t time_constant = 0;
 	DSP_MODES mode = MODE_NONE;
@@ -131,6 +139,7 @@ struct SB_INFO {
 		} in = {}, out = {};
 		uint8_t test_register = 0;
 		uint32_t write_busy = 0;
+		uint8_t reset_tally = 0;
 	} dsp = {};
 	struct {
 		int16_t data[DSP_DACSIZE + 1] = {};
@@ -274,6 +283,8 @@ static void DSP_SetSpeaker(bool requested_state) {
 	if (requested_state) {
 		PIC_RemoveEvents(SuppressDMATransfer);
 		FlushRemainingDMATransfer();
+		// Speaker powered-on after cold-state, give it warmup time
+		sb.warmup_remaining_ms = SPEAKER_WARMUP_MS;
 	}
 	sb.chan->Enable(requested_state);
 	sb.speaker = requested_state;
@@ -283,11 +294,16 @@ static void DSP_SetSpeaker(bool requested_state) {
 
 static void InitializeSpeakerState()
 {
-	// Real SBPro2 hardware starts with the card's speaker-output disabled 
-	sb.speaker = false;
+	// Prior to the SB16, the ahrdware starts with the card's speaker-output disabled 
+	sb.speaker = (sb.type == SBT_16);
+
+	// Should we consider the DSP reset similar to speaker warmpup?
+	if (sb.speaker && sb.dsp.reset_tally <= DSP_INITIAL_RESET_LIMIT)
+		sb.warmup_remaining_ms = SPEAKER_WARMUP_MS;
+
 	// For SB16, the output channel starts active however subsequent
 	// requests to disable the speaker will be honored (see: SetSpeaker).
-	sb.chan->Enable(sb.type == SBT_16);
+	sb.chan->Enable(sb.speaker);
 }
 
 static void SB_RaiseIRQ(SB_IRQS type)
@@ -440,6 +456,27 @@ static uint8_t decode_ADPCM_3_sample(const int val)
 	auto &ref = sb.adpcm.reference;
 	ref = static_cast<uint8_t>(clamp(ref + scaleMap[i], 0, 255));
 	return ref;
+}
+
+template <typename T>
+static const T *maybe_silence(const uint32_t num_samples, const T *buffer)
+{
+	if (!sb.warmup_remaining_ms)
+		return buffer;
+
+	// Here we are mimicing DMA content provided by the DOS game, which is
+	// always little-endian. The mixer takes this into account, and converts
+	// multi-byte samples to host-endianness.
+	constexpr T silent = std::is_unsigned<T>::value
+	                     ? static_cast<T>(sizeof(T) == 2 ? host_to_le16(32767u) : 128u)
+	                     : 0;
+
+	static std::vector<T> quiet_buffer;
+	if (quiet_buffer.size() < num_samples)
+		quiet_buffer.resize(num_samples, silent);
+
+	sb.warmup_remaining_ms--;
+	return quiet_buffer.data();
 }
 
 static void PlayDMATransfer(uint32_t size)
@@ -800,6 +837,7 @@ static void DSP_Reset() {
 	sb.dsp.cmd_len=0;
 	sb.dsp.in.pos=0;
 	sb.dsp.write_busy=0;
+	sb.dsp.reset_tally++;
 	PIC_RemoveEvents(DSP_FinishReset);
 
 	sb.dma.left=0;
@@ -1782,6 +1820,7 @@ public:
 		}
 		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
 		DSP_Reset(); // Stop everything
+		sb.dsp.reset_tally = 0;
 	}
 }; //End of SBLASTER class
 
