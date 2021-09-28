@@ -302,14 +302,15 @@ static void write_p201_timed(io_port_t, io_val_t, io_width_t)
 
 void JOYSTICK_Enable(uint8_t which, bool enabled)
 {
-	if (which < 2)
-		stick[which].enabled = enabled;
+	assert(which < 2);
+	stick[which].enabled = enabled;
 }
 
 void JOYSTICK_Button(uint8_t which, int num, bool pressed)
 {
-	if ((which < 2) && (num < 2))
-		stick[which].button[num] = pressed;
+	assert(which < 2);
+	assert(num < 2);
+	stick[which].button[num] = pressed;
 }
 
 constexpr double position_to_percent(int16_t val)
@@ -320,8 +321,7 @@ constexpr double position_to_percent(int16_t val)
 
 void JOYSTICK_Move_X(uint8_t which, int16_t x_val)
 {
-	if (which > 1)
-		return;
+	assert(which < 2);
 
 	const auto x = position_to_percent(x_val);
 	if (stick[which].xpos == x)
@@ -334,9 +334,7 @@ void JOYSTICK_Move_X(uint8_t which, int16_t x_val)
 
 void JOYSTICK_Move_Y(uint8_t which, int16_t y_val)
 {
-	if (which > 1)
-		return;
-
+	assert(which < 2);
 	const auto y = position_to_percent(y_val);
 	if (stick[which].ypos == y)
 		return;
@@ -347,21 +345,20 @@ void JOYSTICK_Move_Y(uint8_t which, int16_t y_val)
 bool JOYSTICK_IsAccessible(uint8_t which)
 {
 	assert(which < 2);
-	const auto& s = stick[which];
+	const auto &s = stick[which];
 	return s.is_visible_to_dos && s.enabled;
 }
 
 bool JOYSTICK_GetButton(uint8_t which, int num)
 {
-	if ((which < 2) && (num < 2))
-		return stick[which].button[num];
-	return false;
+	assert(which < 2);
+	assert(num < 2);
+	return stick[which].button[num];
 }
 
 double JOYSTICK_GetMove_X(uint8_t which)
 {
-	if (which > 1)
-		return 0.0;
+	assert(which < 2);
 	if (which == 0) {
 		stick[0].transform_input();
 		return stick[0].xfinal;
@@ -371,8 +368,7 @@ double JOYSTICK_GetMove_X(uint8_t which)
 
 double JOYSTICK_GetMove_Y(uint8_t which)
 {
-	if (which > 1)
-		return 0.0;
+	assert(which < 2);
 	if (which == 0) {
 		stick[0].transform_input();
 		return stick[0].yfinal;
