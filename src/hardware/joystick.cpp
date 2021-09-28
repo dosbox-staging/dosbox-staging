@@ -51,8 +51,8 @@ struct JoyStick {
 	double xfinal = 0.0;
 	double yfinal = 0.0; // position returned to the game for stick 0
 
-	uint32_t xcount = 0;
-	uint32_t ycount = 0;
+	uint8_t xcount = 0;
+	uint8_t ycount = 0;
 
 	int deadzone = 0; // Deadzone (value between 0 and 100) interpreted as percentage
 	enum MovementType mapstate = JOYMAP_SQUARE;
@@ -232,18 +232,23 @@ static void write_p201(io_port_t, io_val_t, io_width_t)
 	/* Store writetime index */
 	write_active = true;
 	last_write = PIC_Ticks;
+
+	auto percent_to_count = [](auto percent) -> uint8_t {
+		const auto scaled = static_cast<int>(round(percent * RANGE));
+		const auto shifted = check_cast<uint8_t>(scaled + RANGE);
+		return shifted;
+	};
+
 	if (stick[0].enabled) {
 		stick[0].transform_input();
-		stick[0].xcount = check_cast<uint32_t>(
-		        static_cast<int64_t>(stick[0].xfinal * RANGE + RANGE));
-		stick[0].ycount = check_cast<uint32_t>(
-		        static_cast<int64_t>(stick[0].yfinal * RANGE + RANGE));
+		stick[0].xcount = percent_to_count(stick[0].xfinal);
+		stick[0].ycount = percent_to_count(stick[0].yfinal);
 	}
 	if (stick[1].enabled) {
-		stick[1].xcount = check_cast<uint32_t>(static_cast<int64_t>(
-		        (swap34 ? stick[1].ypos : stick[1].xpos) * RANGE + RANGE));
-		stick[1].ycount = check_cast<uint32_t>(static_cast<int64_t>(
-		        (swap34 ? stick[1].xpos : stick[1].ypos) * RANGE + RANGE));
+		stick[1].xcount = percent_to_count(swap34 ? stick[1].ypos
+		                                          : stick[1].xpos);
+		stick[1].ycount = percent_to_count(swap34 ? stick[1].xpos
+		                                          : stick[1].ypos);
 	}
 }
 static void write_p201_timed(io_port_t, io_val_t, io_width_t)
