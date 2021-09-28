@@ -653,18 +653,18 @@ void DOSBOX_Init(void) {
 	Pint->Set_values(rates);
 	Pint->Set_help("Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.");
 
-	Pint = secprop->Add_int("blocksize", deprecated, 1024);
-	Pint->Set_help("This property is deprecated, use latency instead.");
+	const char *blocksizes[] = {
+		 "1024", "2048", "4096", "8192", "512", "256", "128", 0};
+	Pint = secprop->Add_int("blocksize", only_at_start, 512);
+	Pint->Set_values(blocksizes);
+	Pint->Set_help("Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.");
 
-	Pint = secprop->Add_int("prebuffer", deprecated, 25);
-	Pint->Set_help("This property is deprecated, use latency instead.");
-
-	Pint = secprop->Add_int("latency", only_at_start, 15);
-	Pint->SetMinMax(1, 100);
-	Pint->Set_help("Desired audio latency in milliseconds. Range is 1-100.");
+	Pint = secprop->Add_int("prebuffer",only_at_start,20);
+	Pint->SetMinMax(0,100);
+	Pint->Set_help("How many milliseconds of data to keep on top of the blocksize.");
 
 	Pbool = secprop->Add_bool("negotiate", only_at_start, true);
-	Pbool->Set_help("Allow system audio driver to negotiate optimal rate and latency\n"
+	Pbool->Set_help("Allow system audio driver to negotiate optimal rate and blocksize\n"
 	                "as close to the specified values as possible.");
 
 	secprop = control->AddSection_prop("midi", &MIDI_Init, true);
