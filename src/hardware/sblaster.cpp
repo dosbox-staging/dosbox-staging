@@ -551,23 +551,34 @@ static void PlayDMATransfer(uint32_t size)
 		sb.chan->AddSamples_m8(samples, maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_8:
-		if (sb.dma.stereo) {
-			read=sb.dma.chan->Read(size,&sb.dma.buf.b8[sb.dma.remain_size]);
-			const uint32_t total = read + sb.dma.remain_size;
-			if (!sb.dma.sign)
-				sb.chan->AddSamples_s8(total >> 1, sb.dma.buf.b8);
-			else
-				sb.chan->AddSamples_s8s(total >> 1,
-				                        (Bit8s *)sb.dma.buf.b8);
+ 		if (sb.dma.stereo) {
+			bytes_read = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read, &sb.dma.buf.b8[sb.dma.remain_size]));
+			const auto total = bytes_read + sb.dma.remain_size;
+			samples = check_cast<uint16_t>(total / 2);
+			if (sb.dma.sign) {
+				sb.chan->AddSamples_s8s(samples,
+				         maybe_silence(samples, reinterpret_cast<int8_t *>(sb.dma.buf.b8)));
+			} else {
+				sb.chan->AddSamples_s8(samples,
+				         maybe_silence(samples, sb.dma.buf.b8));
+			}
+
 			if (total & 1) {
-				sb.dma.remain_size=1;
-				sb.dma.buf.b8[0]=sb.dma.buf.b8[total-1];
-			} else
+				sb.dma.remain_size = 1;
+				sb.dma.buf.b8[0] = sb.dma.buf.b8[total - 1];
+			} else {
 				sb.dma.remain_size = 0;
-		} else {
-			read=sb.dma.chan->Read(size,sb.dma.buf.b8);
-			if (!sb.dma.sign) sb.chan->AddSamples_m8(read,sb.dma.buf.b8);
-			else sb.chan->AddSamples_m8s(read,(Bit8s *)sb.dma.buf.b8);
+			}
+		} else { // Mono
+			samples = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read, sb.dma.buf.b8));
+			if (sb.dma.sign) {
+				sb.chan->AddSamples_m8s(samples,
+				         maybe_silence(samples, reinterpret_cast<int8_t *>(sb.dma.buf.b8)));
+			} else {
+				sb.chan->AddSamples_m8(samples,
+				         maybe_silence(samples, sb.dma.buf.b8)); 
+			}
+
 		}
 		break;
 	case DSP_DMA_16:
