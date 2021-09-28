@@ -51,8 +51,8 @@ struct JoyStick {
 	double xfinal = 0.0;
 	double yfinal = 0.0; // position returned to the game for stick 0
 
-	uint8_t xcount = 0;
-	uint8_t ycount = 0;
+	uint32_t xcount = 0;
+	uint32_t ycount = 0;
 
 	int deadzone = 0; // Deadzone (value between 0 and 100) interpreted as percentage
 	enum MovementType mapstate = JOYMAP_SQUARE;
@@ -253,31 +253,50 @@ static void write_p201(io_port_t, io_val_t, io_width_t)
 }
 static void write_p201_timed(io_port_t, io_val_t, io_width_t)
 {
-	const auto current_tick = PIC_FullIndex();
-
 	// Convert the the joystick's instantaneous position to activation duration in ticks
-	auto position_to_ticks = [current_tick](auto position) {
-		constexpr auto joystick_s_constant = 0.0000242;
-		constexpr auto ohms = 120000.0 / 2.0;
-		constexpr auto s_per_ohm = 0.000000011;
-		const auto resistance = position + 1.0;
 
-		// Axes take time = 24.2 microseconds + ( 0.011 microsecons/ohm * resistance) to reset to 0
-		const auto axis_time_us = joystick_s_constant + s_per_ohm * resistance * ohms;
-		const auto axis_time_ms = 1000.0 * axis_time_us;
+	/*
+	// Original calculation
+	auto position_to_ticks = [](auto position) {
+	        constexpr auto joystick_s_constant = 0.0000242;
+	        constexpr auto ohms = 120000.0 / 2.0;
+	        constexpr auto s_per_ohm = 0.000000011;
+	        const auto resistance = position + 1.0;
 
-		// finally, return the current tick plus the axis_time in milliseconds
-		return current_tick + axis_time_ms;
+	        // Axes take time = 24.2 microseconds + ( 0.011 microsecons/ohm
+	* resistance) to reset to 0 const auto axis_time_us =
+	joystick_s_constant + s_per_ohm * resistance * ohms; const auto
+	axis_time_ms = 1000.0 * axis_time_us;
+
+	        // finally, return the current tick plus the axis_time in
+	milliseconds return PIC_FullIndex() + axis_time_ms;
 	};
+	*/
+
+	// Newer calculation, derived from joycheck measurements
+	auto position_to_ticks = [](auto position, double scalar, double offset) {
+		return PIC_FullIndex() + (position + 1) * scalar + offset;
+	};
+	constexpr auto x_scalar = 1.112 / 2;
+	constexpr auto x_offset = 0.020;
+
+	constexpr auto y_scalar = 1.110 / 2;
+	constexpr auto y_offset = 0.020;
 
 	if (stick[0].enabled) {
 		stick[0].transform_input();
-		stick[0].xtick = position_to_ticks(stick[0].xfinal);
-		stick[0].ytick = position_to_ticks(stick[0].yfinal);
+		stick[0].xtick = position_to_ticks(stick[0].xfinal, x_scalar,
+		                                   x_offset);
+		stick[0].ytick = position_to_ticks(stick[0].yfinal, y_scalar,
+		                                   y_offset);
 	}
 	if (stick[1].enabled) {
-		stick[1].xtick = position_to_ticks(swap34 ? stick[1].ypos : stick[1].xpos);
-		stick[1].ytick = position_to_ticks(swap34 ? stick[1].xpos : stick[1].ypos);
+		stick[1].xtick = position_to_ticks(swap34 ? stick[1].ypos
+		                                          : stick[1].xpos,
+		                                   x_scalar, x_offset);
+		stick[1].ytick = position_to_ticks(swap34 ? stick[1].xpos
+		                                          : stick[1].ypos,
+		                                   y_scalar, y_offset);
 	}
 }
 
