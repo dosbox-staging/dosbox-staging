@@ -648,18 +648,16 @@ static void SuppressDMATransfer(uint32_t size)
 
 static void FlushRemainingDMATransfer()
 {
-	if (!sb.dma.left) return;
+	if (!sb.dma.left)
+		return;
 	if (!sb.speaker && sb.type!=SBT_16) {
-		const uint32_t bigger = (sb.dma.left > sb.dma.min) ? sb.dma.min
-		                                                   : sb.dma.left;
-		double delay = (bigger * 1000.0) / sb.dma.rate;
-		PIC_AddEvent(SuppressDMATransfer, delay, bigger);
-		LOG(LOG_SB,LOG_NORMAL)("%s: Silent DMA Transfer scheduling IRQ in %.3f milliseconds",
-		                       CardType(), delay);
-	} else if (sb.dma.left<sb.dma.min) {
-		double delay = (sb.dma.left * 1000.0) / sb.dma.rate;
-		LOG(LOG_SB,LOG_NORMAL)("%s: Short transfer scheduling IRQ in %.3f milliseconds",
-		                       CardType(), delay);
+		const auto num_bytes = std::min(sb.dma.min, sb.dma.left);
+		const double delay = (num_bytes * 1000.0) / sb.dma.rate;
+		PIC_AddEvent(SuppressDMATransfer, delay, num_bytes);
+		LOG(LOG_SB, LOG_NORMAL)("%s: Silent DMA Transfer scheduling IRQ in %.3f milliseconds", CardType(), delay);
+	} else if (sb.dma.left < sb.dma.min) {
+		const double delay = (sb.dma.left * 1000.0) / sb.dma.rate;
+		LOG(LOG_SB, LOG_NORMAL)("%s: Short transfer scheduling IRQ in %.3f milliseconds", CardType(), delay);
 		PIC_AddEvent(ProcessDMATransfer, delay, sb.dma.left);
 	}
 }
