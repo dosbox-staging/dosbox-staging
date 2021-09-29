@@ -537,18 +537,18 @@ static void PlayDMATransfer(uint32_t size)
 		sb.chan->AddSamples_m8(samples,maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_4:
-		read=sb.dma.chan->Read(size,sb.dma.buf.b8);
-		if (read && sb.adpcm.haveref) {
+		bytes_read = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read,sb.dma.buf.b8));
+		if (bytes_read && sb.adpcm.haveref) {
 			sb.adpcm.haveref=false;
 			sb.adpcm.reference=sb.dma.buf.b8[0];
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
 			i++;
 		}
-		for (;i<read;i++) {
-			MixTemp[done++]=decode_ADPCM_4_sample(sb.dma.buf.b8[i] >> 4);
-			MixTemp[done++]=decode_ADPCM_4_sample(sb.dma.buf.b8[i]& 0xf);
+		for (;i<bytes_read; ++i) {
+			MixTemp[samples++]=decode_ADPCM_4_sample(sb.dma.buf.b8[i] >> 4);
+			MixTemp[samples++]=decode_ADPCM_4_sample(sb.dma.buf.b8[i]& 0xf);
 		}
-		sb.chan->AddSamples_m8(done,MixTemp);
+		sb.chan->AddSamples_m8(samples, maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_8:
 		if (sb.dma.stereo) {
