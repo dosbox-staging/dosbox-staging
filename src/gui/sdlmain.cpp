@@ -2537,9 +2537,7 @@ static void GUI_StartUp(Section *sec)
 		fullresolution = lowcase (res);//so x and X are allowed
 		if (strcmp(fullresolution,"original")) {
 			sdl.desktop.full.fixed = true;
-			if (!strcmp(fullresolution,"desktop")) { // Populate sdl.full.width and height with Desktop size
-				GFX_ObtainDisplayDimensions();
-			} else { // Use a custom resolution in WxH format
+			if (strcmp(fullresolution,"desktop")) { // desktop uses 0x0, below sets a custom WxH
 				char* height = const_cast<char*>(strchr(fullresolution,'x'));
 				if (height && * height) {
 					*height = 0;
