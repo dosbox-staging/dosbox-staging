@@ -587,33 +587,57 @@ static void PlayDMATransfer(uint32_t size)
 			/* In DSP_DMA_16_ALIASED mode temporarily divide by 2 to get number of 16-bit
 			   samples, because 8-bit DMA Read returns byte size, while in DSP_DMA_16 mode
 			   16-bit DMA Read returns word size */
-			read=sb.dma.chan->Read(size,(Bit8u *)&sb.dma.buf.b16[sb.dma.remain_size])
-				>> (sb.dma.mode==DSP_DMA_16_ALIASED ? 1:0);
-			const uint32_t total = read + sb.dma.remain_size;
+			bytes_read = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read,reinterpret_cast<uint8_t *>(&sb.dma.buf.b16[sb.dma.remain_size])));
+			bytes_read /= (sb.dma.mode==DSP_DMA_16_ALIASED ? 2 :1);
+			const auto total = bytes_read + sb.dma.remain_size;
+			samples = check_cast<uint16_t>(total / 2);
 #if defined(WORDS_BIGENDIAN)
-			if (sb.dma.sign) sb.chan->AddSamples_s16_nonnative(total>>1,sb.dma.buf.b16);
-			else sb.chan->AddSamples_s16u_nonnative(total>>1,(Bit16u *)sb.dma.buf.b16);
+			if (sb.dma.sign) {
+				sb.chan->AddSamples_s16_nonnative(samples,
+				             maybe_silence(samples, sb.dma.buf.b16));
+			} else {
+				sb.chan->AddSamples_s16u_nonnative(samples,
+				             maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
+			}
 #else
-			if (sb.dma.sign) sb.chan->AddSamples_s16(total>>1,sb.dma.buf.b16);
-			else sb.chan->AddSamples_s16u(total>>1,(Bit16u *)sb.dma.buf.b16);
+			if (sb.dma.sign) {
+				sb.chan->AddSamples_s16(samples,
+				             maybe_silence(samples, sb.dma.buf.b16));
+			} else {
+				sb.chan->AddSamples_s16u(samples,
+				             maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
+			}
 #endif
-			if (total&1) {
-				sb.dma.remain_size=1;
-				sb.dma.buf.b16[0]=sb.dma.buf.b16[total-1];
-			} else sb.dma.remain_size=0;
+			if (total & 1) {
+				sb.dma.remain_size = 1;
+				sb.dma.buf.b16[0] = sb.dma.buf.b16[total - 1];
+			} else {
+			 sb.dma.remain_size=0;
+			}
 		} else {
-			read=sb.dma.chan->Read(size,(Bit8u *)sb.dma.buf.b16)
-				>> (sb.dma.mode==DSP_DMA_16_ALIASED ? 1:0);
+			bytes_read = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read,reinterpret_cast<uint8_t *>(sb.dma.buf.b16)));
+			bytes_read /= (sb.dma.mode==DSP_DMA_16_ALIASED ? 2 :1);
 #if defined(WORDS_BIGENDIAN)
-			if (sb.dma.sign) sb.chan->AddSamples_m16_nonnative(read,sb.dma.buf.b16);
-			else sb.chan->AddSamples_m16u_nonnative(read,(Bit16u *)sb.dma.buf.b16);
+			if (sb.dma.sign) {
+				sb.chan->AddSamples_m16_nonnative(bytes_read,
+				             maybe_silence(samples, sb.dma.buf.b16));
+			} else {
+				sb.chan->AddSamples_m16u_nonnative(bytes_read,
+				             maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
+			}
 #else
-			if (sb.dma.sign) sb.chan->AddSamples_m16(read,sb.dma.buf.b16);
-			else sb.chan->AddSamples_m16u(read,(Bit16u *)sb.dma.buf.b16);
+			if (sb.dma.sign) {
+				sb.chan->AddSamples_m16(bytes_read,
+				             maybe_silence(samples, sb.dma.buf.b16));
+			} else {
+				sb.chan->AddSamples_m16u(bytes_read,
+				             maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
+			}
 #endif
 		}
 		//restore buffer length value to byte size in aliased mode
-		if (sb.dma.mode==DSP_DMA_16_ALIASED) read=read<<1;
+		bytes_read *= (sb.dma.mode==DSP_DMA_16_ALIASED ? 2 : 1);
+
 		break;
 	default:
 		LOG_MSG("%s: Unhandled dma mode %d", CardType(), sb.dma.mode);
