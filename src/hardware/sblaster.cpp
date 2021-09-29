@@ -480,11 +480,26 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 	// How many bytes should we read from DMA?
 	const auto lower_bound = sb.dma.autoinit ? bytes_requested : sb.dma.min;
 	const auto bytes_to_read =  sb.dma.left <= lower_bound ? sb.dma.left : bytes_requested;
+
+	// All three of these must be populated during the DMA sequence to
+	// ensure the proper quantities and unit are being accounted for.
+	// For example: use the channel count to convert from samples to frames.
 	uint32_t bytes_read = 0;
 	uint32_t samples = 0;
-	uint32_t i = 0;
+	uint16_t frames = 0;
+
+	/* In DSP_DMA_16_ALIASED mode temporarily divide by 2 to get number of 16-bit
+	samples, because 8-bit DMA Read returns byte size, while in DSP_DMA_16 mode
+	16-bit DMA Read returns word size */
+	const uint8_t dma16_to_sample_divisor = sb.dma.mode == DSP_DMA_16_ALIASED ? 2 : 1;
+
+	// Used to convert from samples to frames (which is what AddSamples unintuitively uses.. )
+	const uint8_t channels = sb.dma.stereo ? 2 : 1;
 
 	last_dma_callback = PIC_FullIndex();
+
+	// Temporary counter for ADPCM modes
+	uint32_t i = 0;
 
 	//Read the actual data, process it and send it off to the mixer
 	switch (sb.dma.mode) {
@@ -502,7 +517,8 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 2) & 0x3);
 			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 0) & 0x3);
 		}
-		sb.chan->AddSamples_m8(samples, maybe_silence(samples, MixTemp));
+		frames = check_cast<uint16_t>(samples / channels);
+		sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_3:
 		bytes_read = ReadDMA8(bytes_to_read);
@@ -517,7 +533,8 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			MixTemp[samples++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 2) & 0x7);
 			MixTemp[samples++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] & 0x3) << 1);
 		}
-		sb.chan->AddSamples_m8(samples,maybe_silence(samples, MixTemp));
+		frames = check_cast<uint16_t>(samples / channels);
+		sb.chan->AddSamples_m8(frames,maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_4:
 		bytes_read = ReadDMA8(bytes_to_read);
@@ -531,103 +548,116 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			MixTemp[samples++]=decode_ADPCM_4_sample(sb.dma.buf.b8[i] >> 4);
 			MixTemp[samples++]=decode_ADPCM_4_sample(sb.dma.buf.b8[i]& 0xf);
 		}
-		sb.chan->AddSamples_m8(samples, maybe_silence(samples, MixTemp));
+		frames = check_cast<uint16_t>(samples / channels);
+		sb.chan->AddSamples_m8(frames, maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_8:
  		if (sb.dma.stereo) {
 			bytes_read = ReadDMA8(bytes_to_read, sb.dma.remain_size);
-			const auto total = bytes_read + sb.dma.remain_size;
-			samples = check_cast<uint16_t>(total / 2);
+			samples = bytes_read + sb.dma.remain_size;
+			frames = check_cast<uint16_t>(samples / channels);
 			if (sb.dma.sign) {
-				sb.chan->AddSamples_s8s(samples,
-				         maybe_silence(samples, reinterpret_cast<int8_t *>(sb.dma.buf.b8)));
+				sb.chan->AddSamples_s8s(frames,
+				         maybe_silence(samples,
+				                       reinterpret_cast<int8_t *>(sb.dma.buf.b8)));
 			} else {
-				sb.chan->AddSamples_s8(samples,
+				sb.chan->AddSamples_s8(frames,
 				         maybe_silence(samples, sb.dma.buf.b8));
 			}
-
-			if (total & 1) {
+			// Was there an unhandled dangling sample that we should handle next round?
+			if (samples & 1) {
 				sb.dma.remain_size = 1;
-				sb.dma.buf.b8[0] = sb.dma.buf.b8[total - 1];
+				sb.dma.buf.b8[0] = sb.dma.buf.b8[samples - 1];
 			} else {
 				sb.dma.remain_size = 0;
 			}
 		} else { // Mono
-			samples = ReadDMA8(bytes_to_read);
+			bytes_read = ReadDMA8(bytes_to_read);
+			samples = bytes_read;
+			frames = check_cast<uint16_t>(samples / channels);
 			if (sb.dma.sign) {
-				sb.chan->AddSamples_m8s(samples,
-				         maybe_silence(samples, reinterpret_cast<int8_t *>(sb.dma.buf.b8)));
+				sb.chan->AddSamples_m8s(frames,
+				         maybe_silence(samples,
+				                       reinterpret_cast<int8_t *>(sb.dma.buf.b8)));
 			} else {
-				sb.chan->AddSamples_m8(samples,
+				sb.chan->AddSamples_m8(frames,
 				         maybe_silence(samples, sb.dma.buf.b8)); 
 			}
 
 		}
 		break;
-	case DSP_DMA_16:
 	case DSP_DMA_16_ALIASED:
+		assert(dma16_to_sample_divisor == 2);
+		FALLTHROUGH;
+	case DSP_DMA_16:
 		if (sb.dma.stereo) {
-			/* In DSP_DMA_16_ALIASED mode temporarily divide by 2 to get number of 16-bit
-			   samples, because 8-bit DMA Read returns byte size, while in DSP_DMA_16 mode
-			   16-bit DMA Read returns word size */
 			bytes_read = ReadDMA16(bytes_to_read, sb.dma.remain_size);
-			bytes_read /= (sb.dma.mode==DSP_DMA_16_ALIASED ? 2 :1);
-			const auto total = bytes_read + sb.dma.remain_size;
-			samples = check_cast<uint16_t>(total / 2);
+			samples = bytes_read / dma16_to_sample_divisor + sb.dma.remain_size;
+			frames = check_cast<uint16_t>(samples / channels);
 #if defined(WORDS_BIGENDIAN)
 			if (sb.dma.sign) {
-				sb.chan->AddSamples_s16_nonnative(samples,
+				sb.chan->AddSamples_s16_nonnative(frames,
 				             maybe_silence(samples, sb.dma.buf.b16));
 			} else {
-				sb.chan->AddSamples_s16u_nonnative(samples,
-				             maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
+				sb.chan->AddSamples_s16u_nonnative(frames,
+				             maybe_silence(samples,
+				                           reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
 			}
 #else
 			if (sb.dma.sign) {
-				sb.chan->AddSamples_s16(samples,
+				sb.chan->AddSamples_s16(frames,
 				             maybe_silence(samples, sb.dma.buf.b16));
 			} else {
-				sb.chan->AddSamples_s16u(samples,
-				             maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
+				sb.chan->AddSamples_s16u(frames,
+				             maybe_silence(samples,
+				                           reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
 			}
 #endif
-			if (total & 1) {
+			if (samples & 1) {
 				sb.dma.remain_size = 1;
-				sb.dma.buf.b16[0] = sb.dma.buf.b16[total - 1];
+				sb.dma.buf.b16[0] = sb.dma.buf.b16[samples - 1];
 			} else {
 			 sb.dma.remain_size=0;
 			}
 		} else {
-			bytes_read = ReadDMA16(bytes_to_read);
-			bytes_read /= (sb.dma.mode==DSP_DMA_16_ALIASED ? 2 :1);
+			bytes_read = ReadDMA16(bytes_to_read, sb.dma.remain_size);
+			samples = bytes_read / dma16_to_sample_divisor;
+			frames = check_cast<uint16_t>(samples / channels);
 #if defined(WORDS_BIGENDIAN)
 			if (sb.dma.sign) {
-				sb.chan->AddSamples_m16_nonnative(bytes_read,
+				sb.chan->AddSamples_m16_nonnative(frames,
 				             maybe_silence(samples, sb.dma.buf.b16));
 			} else {
-				sb.chan->AddSamples_m16u_nonnative(bytes_read,
-				             maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
+				sb.chan->AddSamples_m16u_nonnative(frames,
+				             maybe_silence(samples,
+				                           reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
 			}
 #else
 			if (sb.dma.sign) {
-				sb.chan->AddSamples_m16(bytes_read,
+				sb.chan->AddSamples_m16(frames,
 				             maybe_silence(samples, sb.dma.buf.b16));
 			} else {
-				sb.chan->AddSamples_m16u(bytes_read,
-				             maybe_silence(samples, reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
+				sb.chan->AddSamples_m16u(frames,
+				             maybe_silence(samples,
+				                           reinterpret_cast<uint16_t *>(sb.dma.buf.b16)));
 			}
 #endif
 		}
-		//restore buffer length value to byte size in aliased mode
-		bytes_read *= (sb.dma.mode==DSP_DMA_16_ALIASED ? 2 : 1);
-
 		break;
 	default:
 		LOG_MSG("%s: Unhandled dma mode %d", CardType(), sb.dma.mode);
 		sb.mode=MODE_NONE;
 		return;
 	}
-	// Check how many bytes were actually read from DMA
+
+	// Sanity check the three unit types to make sure they were
+	// used and at least populated with expected quantities.
+	// This is a no-op, so keep it for maintainers.
+	assert(bytes_read);
+	assert(samples && samples <= bytes_read + 1);
+	assert(frames && frames <= samples + 1);
+
+	// Deduct the DMA bytes read from the remaining to still read
 	sb.dma.left -= bytes_read;
 	if (!sb.dma.left) {
 		PIC_RemoveEvents(ProcessDMATransfer);
