@@ -688,11 +688,11 @@ static void SuppressInitialDMATransfer(uint32_t size)
 	ProcessDMATransfer = &PlayDMATransfer;
 }
 
-static void SuppressDMATransfer(uint32_t size)
+static void SuppressDMATransfer(uint32_t bytes_to_read)
 {
-	if (sb.dma.left < size)
-		size = sb.dma.left;
-	const uint32_t read = sb.dma.chan->Read(size, sb.dma.buf.b8);
+	if (sb.dma.left < bytes_to_read)
+		bytes_to_read = sb.dma.left;
+	const auto read =check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read, sb.dma.buf.b8));
 	sb.dma.left-=read;
 	if (!sb.dma.left) {
 		if (sb.dma.mode >= DSP_DMA_16) SB_RaiseIRQ(SB_IRQ_16);
