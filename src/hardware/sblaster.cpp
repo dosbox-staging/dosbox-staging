@@ -249,20 +249,6 @@ static const char * CardType()
 	return types[type_id];
 }
 
-static const char *DmaModeName()
-{
-	switch (sb.dma.mode) {
-	case DSP_DMA_2: return "2-bit ADPCM"; break;
-	case DSP_DMA_3: return "3-bit ADPCM"; break;
-	case DSP_DMA_4: return "4-bit ADPCM"; break;
-	case DSP_DMA_8: return "8-bit PCM"; break;
-	case DSP_DMA_16: return "16-bit PCM"; break;
-	case DSP_DMA_16_ALIASED: return "16-bit (aliased) PCM"; break;
-	case DSP_DMA_NONE: return "non-DMA"; break;
-	};
-	return "Unknown DMA-mode";
-}
-
 static void DSP_ChangeMode(DSP_MODES mode);
 
 static void FlushRemainingDMATransfer();
@@ -726,6 +712,22 @@ static void DSP_RaiseIRQEvent(uint32_t /*val*/)
 {
 	SB_RaiseIRQ(SB_IRQ_8);
 }
+
+#if (C_DEBUG)
+static const char *DmaModeName()
+{
+	switch (sb.dma.mode) {
+	case DSP_DMA_2: return "2-bit ADPCM"; break;
+	case DSP_DMA_3: return "3-bit ADPCM"; break;
+	case DSP_DMA_4: return "4-bit ADPCM"; break;
+	case DSP_DMA_8: return "8-bit PCM"; break;
+	case DSP_DMA_16: return "16-bit PCM"; break;
+	case DSP_DMA_16_ALIASED: return "16-bit (aliased) PCM"; break;
+	case DSP_DMA_NONE: return "non-DMA"; break;
+	};
+	return "Unknown DMA-mode";
+}
+#endif
 
 static void DSP_DoDMATransfer(const DMA_MODES mode, uint32_t freq, bool autoinit, bool stereo)
 {
