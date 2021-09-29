@@ -479,13 +479,24 @@ static const T *maybe_silence(const uint32_t num_samples, const T *buffer)
 	return quiet_buffer.data();
 }
 
+static uint32_t ReadDMA8(uint32_t bytes_to_read, uint32_t i = 0) {
+	const auto read = sb.dma.chan->Read(bytes_to_read, sb.dma.buf.b8 + i);
+	return check_cast<uint32_t>(read);
+}
+
+static uint32_t ReadDMA16(uint32_t bytes_to_read, uint32_t i = 0) {
+	const auto read = sb.dma.chan->Read(bytes_to_read,
+	                      reinterpret_cast<uint8_t *>(sb.dma.buf.b16 + i));
+	return check_cast<uint32_t>(read);
+}
+
 static void PlayDMATransfer(uint32_t bytes_requested)
 {
 	// How many bytes should we read from DMA?
 	const auto lower_bound = sb.dma.autoinit ? bytes_requested : sb.dma.min;
 	const auto bytes_to_read =  sb.dma.left <= lower_bound ? sb.dma.left : bytes_requested;
 	uint32_t bytes_read = 0;
-	uint16_t samples = 0;
+	uint32_t samples = 0;
 	uint32_t i = 0;
 
 	last_dma_callback = PIC_FullIndex();
@@ -493,7 +504,7 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 	//Read the actual data, process it and send it off to the mixer
 	switch (sb.dma.mode) {
 	case DSP_DMA_2:
-		bytes_read = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read,sb.dma.buf.b8));
+		bytes_read = ReadDMA8(bytes_to_read);
 		if (bytes_read && sb.adpcm.haveref) {
 			sb.adpcm.haveref=false;
 			sb.adpcm.reference=sb.dma.buf.b8[0];
@@ -509,7 +520,7 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 		sb.chan->AddSamples_m8(samples, maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_3:
-		bytes_read = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read,sb.dma.buf.b8));
+		bytes_read = ReadDMA8(bytes_to_read);
 		if (bytes_read && sb.adpcm.haveref) {
 			sb.adpcm.haveref=false;
 			sb.adpcm.reference=sb.dma.buf.b8[0];
@@ -524,7 +535,7 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 		sb.chan->AddSamples_m8(samples,maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_4:
-		bytes_read = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read,sb.dma.buf.b8));
+		bytes_read = ReadDMA8(bytes_to_read);
 		if (bytes_read && sb.adpcm.haveref) {
 			sb.adpcm.haveref=false;
 			sb.adpcm.reference=sb.dma.buf.b8[0];
@@ -539,7 +550,7 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 		break;
 	case DSP_DMA_8:
  		if (sb.dma.stereo) {
-			bytes_read = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read, &sb.dma.buf.b8[sb.dma.remain_size]));
+			bytes_read = ReadDMA8(bytes_to_read, sb.dma.remain_size);
 			const auto total = bytes_read + sb.dma.remain_size;
 			samples = check_cast<uint16_t>(total / 2);
 			if (sb.dma.sign) {
@@ -557,7 +568,7 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 				sb.dma.remain_size = 0;
 			}
 		} else { // Mono
-			samples = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read, sb.dma.buf.b8));
+			samples = ReadDMA8(bytes_to_read);
 			if (sb.dma.sign) {
 				sb.chan->AddSamples_m8s(samples,
 				         maybe_silence(samples, reinterpret_cast<int8_t *>(sb.dma.buf.b8)));
@@ -574,7 +585,7 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			/* In DSP_DMA_16_ALIASED mode temporarily divide by 2 to get number of 16-bit
 			   samples, because 8-bit DMA Read returns byte size, while in DSP_DMA_16 mode
 			   16-bit DMA Read returns word size */
-			bytes_read = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read,reinterpret_cast<uint8_t *>(&sb.dma.buf.b16[sb.dma.remain_size])));
+			bytes_read = ReadDMA16(bytes_to_read, sb.dma.remain_size);
 			bytes_read /= (sb.dma.mode==DSP_DMA_16_ALIASED ? 2 :1);
 			const auto total = bytes_read + sb.dma.remain_size;
 			samples = check_cast<uint16_t>(total / 2);
@@ -602,7 +613,7 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			 sb.dma.remain_size=0;
 			}
 		} else {
-			bytes_read = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read,reinterpret_cast<uint8_t *>(sb.dma.buf.b16)));
+			bytes_read = ReadDMA16(bytes_to_read);
 			bytes_read /= (sb.dma.mode==DSP_DMA_16_ALIASED ? 2 :1);
 #if defined(WORDS_BIGENDIAN)
 			if (sb.dma.sign) {
@@ -692,7 +703,7 @@ static void SuppressDMATransfer(uint32_t bytes_to_read)
 {
 	if (sb.dma.left < bytes_to_read)
 		bytes_to_read = sb.dma.left;
-	const auto read =check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read, sb.dma.buf.b8));
+	const auto read = ReadDMA8(bytes_to_read);
 	sb.dma.left-=read;
 	if (!sb.dma.left) {
 		if (sb.dma.mode >= DSP_DMA_16) SB_RaiseIRQ(SB_IRQ_16);
