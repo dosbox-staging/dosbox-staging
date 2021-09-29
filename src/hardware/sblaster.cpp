@@ -506,20 +506,20 @@ static void PlayDMATransfer(uint32_t size)
 	//Read the actual data, process it and send it off to the mixer
 	switch (sb.dma.mode) {
 	case DSP_DMA_2:
-		read=sb.dma.chan->Read(size,sb.dma.buf.b8);
-		if (read && sb.adpcm.haveref) {
+		bytes_read = check_cast<uint16_t>(sb.dma.chan->Read(bytes_to_read,sb.dma.buf.b8));
+		if (bytes_read && sb.adpcm.haveref) {
 			sb.adpcm.haveref=false;
 			sb.adpcm.reference=sb.dma.buf.b8[0];
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
 			i++;
 		}
-		for (;i<read;i++) {
-			MixTemp[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 6) & 0x3);
-			MixTemp[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 4) & 0x3);
-			MixTemp[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 2) & 0x3);
-			MixTemp[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 0) & 0x3);
+		for (;i<bytes_read; ++i) {
+			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 6) & 0x3);
+			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 4) & 0x3);
+			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 2) & 0x3);
+			MixTemp[samples++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 0) & 0x3);
 		}
-		sb.chan->AddSamples_m8(done,MixTemp);
+		sb.chan->AddSamples_m8(samples, maybe_silence(samples, MixTemp));
 		break;
 	case DSP_DMA_3:
 		read=sb.dma.chan->Read(size,sb.dma.buf.b8);
