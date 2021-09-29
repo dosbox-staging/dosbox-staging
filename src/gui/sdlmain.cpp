@@ -2968,6 +2968,7 @@ bool GFX_Events()
 				 * Update surface while using X11.
 				 */
 				GFX_ResetScreen();
+				FocusInput();
 				continue;
 
 			case SDL_WINDOWEVENT_RESIZED:
@@ -3000,7 +3001,6 @@ bool GFX_Events()
 				if (sdl.draw.callback)
 					sdl.draw.callback(GFX_CallBackRedraw);
 				GFX_UpdateMouseState();
-				FocusInput();
 
 				// When we're fullscreen, the DOS program might
 				// change underlying draw resolutions, which can
@@ -3015,6 +3015,7 @@ bool GFX_Events()
 					sdl.desktop.last_size_event != SDL_WINDOWEVENT_RESIZED)
 					GFX_ResetScreen();
 
+				FocusInput();
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -3083,9 +3084,7 @@ bool GFX_Events()
 				break;
 
 			case SDL_WINDOWEVENT_TAKE_FOCUS:
-				// DEBUG_LOG_MSG("SDL: Window is being offered a focus");
-				// should SetWindowInputFocus() on itself or a
-				// subwindow, or ignore
+				FocusInput();
 				continue;
 
 			case SDL_WINDOWEVENT_HIT_TEST:
