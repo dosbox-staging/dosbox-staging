@@ -266,7 +266,6 @@ static const char *DmaModeName()
 static void DSP_ChangeMode(DSP_MODES mode);
 
 static void FlushRemainingDMATransfer();
-static void SuppressInitialDMATransfer(uint32_t size);
 static void SuppressDMATransfer(uint32_t size);
 static void PlayDMATransfer(uint32_t size);
 
@@ -674,29 +673,6 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 
 		}
 	}
-}
-
-/*
- *  This function intercepts the first DMA transfer and decides if it should
- *  suppress or play it.  The criteria is as follows:
- *   - Suppress DWORD-sized transfers (or less) in non-16-bit DMA modes
- *   - Suppress BYTE-sized transfers in 16-bit DMA modes
- */
-static void SuppressInitialDMATransfer(uint32_t size)
-{
-	const size_t size_limit = sb.dma.mode < DSP_DMA_16 ? sizeof(uint32_t)
-	                                                   : sizeof(uint8_t);
-	if (size <= size_limit) {
-		SuppressDMATransfer(size);
-		LOG_MSG("%s: Suppressed initial %u-byte %s transfer",
-		        CardType(), size, DmaModeName());
-	} else {
-		PlayDMATransfer(size);
-	}
-	// We only get one shot at suppressing the first transfer,
-	// so switch back to normal processing to deactivate this
-	// function from intercepting subsequent DMA transfers.
-	ProcessDMATransfer = &PlayDMATransfer;
 }
 
 static void SuppressDMATransfer(uint32_t bytes_to_read)
@@ -1813,8 +1789,7 @@ public:
 
 		CTMIXER_Reset();
 
-		// Suppress the first small DMA transfer to avoid hearing it.
-		ProcessDMATransfer = &SuppressInitialDMATransfer;
+		ProcessDMATransfer = &PlayDMATransfer;
 
 		// Ensure our port and addresses will fit in our format widths.
 		// The config selection controls their actual values, so this is
