@@ -649,13 +649,8 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 		sb.mode=MODE_NONE;
 		return;
 	}
-
-	// Sanity check the three unit types to make sure they were
-	// used and at least populated with expected quantities.
-	// This is a no-op, so keep it for maintainers.
-	assert(bytes_read);
-	assert(samples && samples <= bytes_read + 1);
-	assert(frames && frames <= samples + 1);
+	// Sanity check
+	assertm(frames <= samples, "Frames should never exceed samples");
 
 	// Deduct the DMA bytes read from the remaining to still read
 	sb.dma.left -= bytes_read;
