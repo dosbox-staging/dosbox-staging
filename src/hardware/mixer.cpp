@@ -81,13 +81,12 @@
 template <class T, size_t ROWS, size_t COLS>
 using matrix = std::array<std::array<T, COLS>, ROWS>;
 
-static constexpr int16_t MIXER_CLIP(Bits SAMP)
+static constexpr int16_t MIXER_CLIP(const Bits SAMP)
 {
-	if (SAMP < MAX_AUDIO) {
-		if (SAMP > MIN_AUDIO)
-			return static_cast<int16_t>(SAMP);
-		else return MIN_AUDIO;
-	} else return MAX_AUDIO;
+	if (SAMP <= MIN_AUDIO) return MIN_AUDIO;
+	if (SAMP >= MAX_AUDIO) return MAX_AUDIO;
+	
+	return static_cast<int16_t>(SAMP);
 }
 
 struct mixer_t {
@@ -105,7 +104,7 @@ struct mixer_t {
 	MixerChannel *channels;
 	bool nosound;
 	std::atomic<uint32_t> freq;
-	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
+	uint16_t blocksize; // matches SDL AudioSpec.samples type
 	// Note: As stated earlier, all sdl code shall rather be in sdlmain
 	SDL_AudioDeviceID sdldevice;
 	mixer_t()
