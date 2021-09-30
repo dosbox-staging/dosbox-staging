@@ -1459,13 +1459,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	//Base pixel width around 100 clocks horizontal
 	//For 9 pixel text modes this should be changed, but we don't support that anyway :)
 	//Seems regular vga only listens to the 9 char pixel mode with character mode enabled
-	const auto pwidth = (machine == MCH_EGA ? 114.0 : 100.0) / static_cast<double>(htotal);
+	const auto pwidth = 100.0 / static_cast<double>(htotal);
 	// Base pixel height around vertical totals of modes that have 100
 	// clocks horizontal Different sync values gives different scaling of
 	// the whole vertical range VGA monitor just seems to thighten or widen
 	// the whole vertical range
 	double pheight;
-	double target_total = (machine == MCH_EGA) ? 262.0 : 449.0;
+	double target_total = 449.0;
 	Bitu sync = vga.misc_output >> 6;
 	const auto f_vtotal = static_cast<double>(vtotal);
 	switch ( sync ) {
@@ -1490,7 +1490,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		break;
 	}
 
-	double aspect_ratio = pheight / pwidth;
+	double aspect_ratio;
+	if (machine == MCH_EGA)
+		aspect_ratio = (CurMode->swidth * 3.0) / (CurMode->sheight * 4.0);
+	else
+		aspect_ratio = pheight / pwidth;
 
 	vga.draw.delay.parts = vga.draw.delay.vdend / static_cast<double>(vga.draw.parts_total);
 	vga.draw.resizing = false;
