@@ -90,7 +90,7 @@ static constexpr int16_t MIXER_CLIP(const Bits SAMP)
 }
 
 struct mixer_t {
-	matrix<std::atomic<int32_t>, MIXER_BUFSIZE, 2> work;
+	matrix<int32_t, MIXER_BUFSIZE, 2> work;
 	//Write/Read pointers for the buffer
 	std::atomic<uint32_t> pos;
 	std::atomic<uint32_t> done;
@@ -103,7 +103,7 @@ struct mixer_t {
 	std::array<float, 2> mastervol;
 	MixerChannel *channels;
 	bool nosound;
-	std::atomic<uint32_t> freq;
+	uint32_t freq;
 	uint16_t blocksize; // matches SDL AudioSpec.samples type
 	// Note: As stated earlier, all sdl code shall rather be in sdlmain
 	SDL_AudioDeviceID sdldevice;
@@ -122,13 +122,7 @@ struct mixer_t {
 	          freq(0),
 			  blocksize(0),
 			  sdldevice(0)
-	{
-		for (uint32_t i = 0; i < MIXER_BUFSIZE; i++) {
-			work[i][0] = 0;
-			work[i][1] = 0;
-		}
-
-	}
+	{}
 };
 
 static struct mixer_t mixer;
@@ -154,7 +148,7 @@ MixerChannel * MIXER_AddChannel(MIXER_Handler handler, Bitu freq, const char * n
 	chan->Enable(false);
 	mixer.channels=chan;
 
-	const auto mix_rate = mixer.freq.load();
+	const auto mix_rate = mixer.freq;
 	const auto chan_rate = chan->GetSampleRate();
 	if (chan_rate == mix_rate)
 		LOG_MSG("MIXER: %s channel operating at %u Hz without resampling",
@@ -596,7 +590,6 @@ void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
 	Bitu index = 0;
 	Bitu index_add = (len << FREQ_SHIFT)/outlen;
 	Bitu mixpos = mixer.pos + done;
-	done = needed;
 	Bitu pos = 0;
 
 	while (outlen--) {
@@ -616,6 +609,8 @@ void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
 		mixer.work[mixpos][1] += static_cast<int32_t>(sample * volmul[1]);
 		mixpos++;
 	}
+
+	done = needed;
 	
 	MIXER_UnlockAudioDevice();
 }
@@ -983,17 +978,6 @@ void MIXER_Init(Section* sec) {
 	mixer.blocksize = static_cast<uint16_t>(section->Get_int("blocksize"));
 	const auto negotiate = static_cast<bool>(section->Get_bool("negotiate"));
 
-	/* Initialize the internal stuff */
-	mixer.channels=0;
-	mixer.pos=0;
-	mixer.done=0;
-	for (uint32_t i = 0; i < MIXER_BUFSIZE; i++) {
-		mixer.work[i][0] = 0;
-		mixer.work[i][1] = 0;
-	}
-	mixer.mastervol[0]=1.0f;
-	mixer.mastervol[1]=1.0f;
-
 	/* Start the Mixer using SDL Sound at 22 khz */
 	SDL_AudioSpec spec;
 	SDL_AudioSpec obtained;
@@ -1036,7 +1020,7 @@ void MIXER_Init(Section* sec) {
 		const auto obtained_freq = static_cast<uint32_t>(obtained.freq);
 		if (obtained_freq != mixer.freq) {
 			LOG_WARNING("MIXER: SDL changed the playback rate from %u to %u Hz",
-			        mixer.freq.load(), obtained_freq);
+			        mixer.freq, obtained_freq);
 			mixer.freq = obtained_freq;
 		}
 
@@ -1052,7 +1036,7 @@ void MIXER_Init(Section* sec) {
 		SDL_PauseAudioDevice(mixer.sdldevice, 0);
 
 		LOG_MSG("MIXER: Negotiated %u-channel %u-Hz audio in %u-frame blocks",
-		        obtained.channels, mixer.freq.load(), mixer.blocksize);
+		        obtained.channels, mixer.freq, mixer.blocksize);
 	}
 
 	//1000 = 8 *125
