@@ -139,7 +139,7 @@ struct SB_INFO {
 		} in = {}, out = {};
 		uint8_t test_register = 0;
 		uint32_t write_busy = 0;
-		uint8_t reset_tally = 0;
+		uint32_t reset_tally = 0;
 	} dsp = {};
 	struct {
 		int16_t data[DSP_DACSIZE + 1] = {};
@@ -282,13 +282,15 @@ static void InitializeSpeakerState()
 	// Real SBPro2 hardware starts with the card's speaker-output disabled
 	sb.speaker = false;
 
-	// Should we consider the DSP reset similar to speaker warmpup?
-	if (sb.speaker && sb.dsp.reset_tally <= DSP_INITIAL_RESET_LIMIT)
-		sb.warmup_remaining_ms = SPEAKER_WARMUP_MS;
-
 	// For SB16, the output channel starts active however subsequent
 	// requests to disable the speaker will be honored (see: SetSpeaker).
-	sb.chan->Enable(sb.speaker);
+	const bool is_sb16 = (sb.type == SBT_16);
+	sb.chan->Enable(is_sb16);
+
+	// Despite the fact that speaker is off, the SB16's output channel is
+	// now enabled so we treat this as speaker startup event.
+	if (is_sb16 && sb.dsp.reset_tally <= DSP_INITIAL_RESET_LIMIT)
+		sb.warmup_remaining_ms = SPEAKER_WARMUP_MS;
 }
 
 static void SB_RaiseIRQ(SB_IRQS type)
@@ -681,7 +683,7 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 	}
 	/*
 	LOG_MSG("%s: sb.dma.mode=%d, stereo=%d, signed=%d, bytes_requested=%u,"
-	        "bytes_to_read=%u, bytes_read = % u, samples = % u, frames = % u, dma.left = %u",
+	        "bytes_to_read=%u, bytes_read = %u, samples = %u, frames = %u, dma.left = %u",
 	        CardType(), sb.dma.mode, sb.dma.stereo, sb.dma.sign, bytes_requested,
 	        bytes_to_read, bytes_read, samples, frames, sb.dma.left);
 	*/
