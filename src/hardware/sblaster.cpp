@@ -569,15 +569,15 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			bytes_read = ReadDMA8(bytes_to_read);
 			samples = bytes_read;
 			frames = check_cast<uint16_t>(samples / channels);
+			assert(channels == 1 && frames == samples); // sanity-check mono
 			if (sb.dma.sign) {
 				sb.chan->AddSamples_m8s(frames,
 				         maybe_silence(samples,
 				                       reinterpret_cast<int8_t *>(sb.dma.buf.b8)));
 			} else {
 				sb.chan->AddSamples_m8(frames,
-				         maybe_silence(samples, sb.dma.buf.b8)); 
+				         maybe_silence(samples, sb.dma.buf.b8));
 			}
-
 		}
 		break;
 	case DSP_DMA_16_ALIASED:
@@ -617,6 +617,7 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			bytes_read = ReadDMA16(bytes_to_read);
 			samples = bytes_read / dma16_to_sample_divisor;
 			frames = check_cast<uint16_t>(samples / channels);
+			assert(channels == 1 && frames == samples); // sanity-check mono
 #if defined(WORDS_BIGENDIAN)
 			if (sb.dma.sign) {
 				sb.chan->AddSamples_m16_nonnative(frames,
@@ -678,6 +679,12 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 
 		}
 	}
+	/*
+	LOG_MSG("%s: sb.dma.mode=%d, stereo=%d, signed=%d, bytes_requested=%u,"
+	        "bytes_to_read=%u, bytes_read = % u, samples = % u, frames = % u, dma.left = %u",
+	        CardType(), sb.dma.mode, sb.dma.stereo, sb.dma.sign, bytes_requested,
+	        bytes_to_read, bytes_read, samples, frames, sb.dma.left);
+	*/
 }
 
 static void SuppressDMATransfer(uint32_t bytes_to_read)
