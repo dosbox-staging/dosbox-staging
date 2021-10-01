@@ -279,8 +279,8 @@ static void DSP_SetSpeaker(bool requested_state) {
 
 static void InitializeSpeakerState()
 {
-	// Prior to the SB16, the ahrdware starts with the card's speaker-output disabled 
-	sb.speaker = (sb.type == SBT_16);
+	// Real SBPro2 hardware starts with the card's speaker-output disabled
+	sb.speaker = false;
 
 	// Should we consider the DSP reset similar to speaker warmpup?
 	if (sb.speaker && sb.dsp.reset_tally <= DSP_INITIAL_RESET_LIMIT)
