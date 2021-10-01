@@ -613,8 +613,8 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 			} else {
 			 sb.dma.remain_size=0;
 			}
-		} else {
-			bytes_read = ReadDMA16(bytes_to_read, sb.dma.remain_size);
+		} else { // 16-bit mono
+			bytes_read = ReadDMA16(bytes_to_read);
 			samples = bytes_read / dma16_to_sample_divisor;
 			frames = check_cast<uint16_t>(samples / channels);
 #if defined(WORDS_BIGENDIAN)
