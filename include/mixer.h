@@ -65,9 +65,8 @@ extern Bit8u MixTemp[MIXER_BUFSIZE];
 template <typename T>
 constexpr T Mixer_GetSilentDOSSample()
 {
-	// signed 8-bit and 16-bit samples: silence is always 0
-	constexpr bool is_signed = std::is_unsigned<T>::value;
-	if (is_signed)
+	// All signed samples are silent at true zero
+	if (std::is_signed<T>::value)
 		return static_cast<T>(0);
 
 	// unsigned 8-bit samples: silence is always 128
