@@ -129,9 +129,7 @@ static inline void DelayPrecise(const int milliseconds)
 	// spin lock
 	const auto spin_start = GetTicksUs();
 	const auto spin_remain = lround(seconds * 1e6);
-	do {
-		std::this_thread::yield();
-	} while (GetTicksUsSince(spin_start) <= spin_remain);
+	while (GetTicksUsSince(spin_start) <= spin_remain);
 }
 
 static inline bool CanDelayPrecise()
