@@ -449,14 +449,8 @@ static const T *maybe_silence(const uint32_t num_samples, const T *buffer)
 	if (!sb.warmup_remaining_ms)
 		return buffer;
 
-	// Here we are mimicing DMA content provided by the DOS game, which is
-	// always little-endian. The mixer takes this into account, and converts
-	// multi-byte samples to host-endianness.
-	constexpr T silent = std::is_unsigned<T>::value
-	                     ? static_cast<T>(sizeof(T) == 2 ? host_to_le16(32767u) : 128u)
-	                     : 0;
-
 	static std::vector<T> quiet_buffer;
+	constexpr auto silent = Mixer_GetSilentDOSSample<T>();
 	if (quiet_buffer.size() < num_samples)
 		quiet_buffer.resize(num_samples, silent);
 

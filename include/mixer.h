@@ -60,6 +60,31 @@ extern Bit8u MixTemp[MIXER_BUFSIZE];
 #define MAX_AUDIO ((1<<(16-1))-1)
 #define MIN_AUDIO -(1<<(16-1))
 
+// Get a DOS-formatted silent-sample when there's a chance it will
+// be processed using AddSamples_nonnative()
+template <typename T>
+constexpr T Mixer_GetSilentDOSSample()
+{
+	// signed 8-bit and 16-bit samples: silence is always 0
+	constexpr bool is_signed = std::is_unsigned<T>::value;
+	if (is_signed)
+		return static_cast<T>(0);
+
+	// unsigned 8-bit samples: silence is always 128
+	constexpr bool is_multibyte = sizeof(T) > 1;
+	if (!is_multibyte)
+		return static_cast<T>(128);
+
+	// unsigned 16-bit samples: silence is always 32768 (little-endian)
+	if (sizeof(T) == 2u)
+#if defined(WORDS_BIGENDIAN)
+		return static_cast<T>(0x0080); // 32768 (little-endian)
+#else
+		return static_cast<T>(0x8000); // 32768
+#endif
+	static_assert(sizeof(T) <= 2, "DOS only produced 8 and 16-bit samples");
+}
+
 class MixerChannel {
 public:
 	MixerChannel(MIXER_Handler _handler, Bitu _freq, const char * _name);
