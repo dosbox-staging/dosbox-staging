@@ -29,7 +29,6 @@
 #include <unistd.h>
 
 #include <chrono>
-#include <functional>
 #include <thread>
 
 #include "debug.h"
@@ -138,7 +137,6 @@ void INT10_Init(Section*);
 
 static LoopHandler * loop;
 
-static std::function<void(int)> delay_fn = Delay;
 static int ticksRemain;
 static int64_t ticksLast;
 static int ticksAdded;
@@ -342,9 +340,6 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Initialize some dosbox internals */
-
-	delay_fn = CanDelayPrecise() ? DelayPrecise : Delay;
-
 	ticksRemain=0;
 	ticksLast=GetTicks();
 	ticksLocked = false;
