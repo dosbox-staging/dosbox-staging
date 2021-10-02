@@ -20,8 +20,6 @@
 #define DOSBOX_TIMER_H
 
 #include <cassert>
-#include <cmath>
-#include <cstdlib>
 
 #include <chrono>
 #include <limits>
@@ -91,64 +89,6 @@ static inline void Delay(const int milliseconds)
 static inline void DelayUs(const int microseconds)
 {
 	std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
-}
-
-// The duration to use for precise sleep
-static constexpr int precise_delay_duration_us = 100;
-
-// based on work from:
-// https://blat-blatnik.github.io/computerBear/making-accurate-sleep-function/
-static inline void DelayPrecise(const int milliseconds)
-{
-	// The estimate of how long the sleep should take (microseconds)
-	static auto estimate = 5e-5;
-	// Use the estimate value as the default mean time taken
-	static auto mean = 5e-5;
-	static auto m2 = 0.0;
-	static int64_t count = 1;
-
-	// Original code operated on seconds, convert
-	auto seconds = static_cast<double>(milliseconds) / 1e3;
-
-	// sleep as long as we can, then spinlock the rest
-	while (seconds > estimate) {
-		const auto start = GetTicksUs();
-		DelayUs(precise_delay_duration_us);
-		// Original code operated on seconds, convert
-		const auto observed = static_cast<double>(GetTicksUsSince(start)) / 1e6;
-		seconds -= observed;
-
-		++count;
-		const auto delta = observed - mean;
-		mean += delta / static_cast<double>(count);
-		m2 += delta * (observed - mean);
-		const auto stddev = std::sqrt(m2 / static_cast<double>(count - 1));
-		estimate = mean + stddev;
-	}
-
-	// spin lock
-	const auto spin_start = GetTicksUs();
-	const auto spin_remain = lround(seconds * 1e6);
-	while (GetTicksUsSince(spin_start) <= spin_remain);
-}
-
-static inline bool CanDelayPrecise()
-{
-	// The tolerance to allow for sleep variation
-	constexpr int precise_delay_tolerance_us = precise_delay_duration_us;
-
-	bool is_precise = true;
-
-	for (int i=0;i<10;i++) {
-		const auto start = GetTicksUs();
-		DelayUs(precise_delay_duration_us);
-		const auto elapsed = GetTicksUsSince(start);
-		if (std::abs(elapsed - precise_delay_duration_us) >
-		    precise_delay_tolerance_us)
-			is_precise = false;
-	}
-
-	return is_precise;
 }
 
 #endif
