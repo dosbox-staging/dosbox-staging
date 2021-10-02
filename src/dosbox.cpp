@@ -28,7 +28,9 @@
 #include <limits>
 #include <unistd.h>
 
+#include <chrono>
 #include <functional>
+#include <thread>
 
 #include "debug.h"
 #include "cpu.h"
@@ -189,9 +191,8 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 		ticksAdded = 0;
 
 		constexpr auto duration = std::chrono::milliseconds(1);
-		const auto start = std::chrono::steady_clock::now();
-		while(std::chrono::steady_clock::now() - start <= duration);	
-		
+		std::this_thread::sleep_for(duration);
+
 		const auto timeslept = GetTicksSince(ticksNew);
 
 		// Update ticksDone with the time spent sleeping
