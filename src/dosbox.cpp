@@ -188,7 +188,10 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	if (ticksNew <= ticksLast) { //lower should not be possible, only equal.
 		ticksAdded = 0;
 
-		delay_fn(1);		
+		constexpr auto duration = std::chrono::milliseconds(1);
+		const auto start = std::chrono::steady_clock::now();
+		while(std::chrono::steady_clock::now() - start <= duration);	
+		
 		const auto timeslept = GetTicksSince(ticksNew);
 
 		// Update ticksDone with the time spent sleeping
