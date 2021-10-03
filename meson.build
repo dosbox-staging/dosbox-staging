@@ -297,7 +297,7 @@ endif
 incdir = include_directories(
            'include',
            '.',
-           'submodules/loguru',
+           'src/libs/loguru',
          )
 
 

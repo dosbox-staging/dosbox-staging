@@ -110,7 +110,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>..\..\submodules\loguru</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\libs\loguru</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,7 +140,7 @@ $(TargetPath)
       <ConformanceMode>Default</ConformanceMode>
       <OmitFramePointers>true</OmitFramePointers>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <AdditionalIncludeDirectories>..\..\submodules\loguru</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\libs\loguru</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -169,7 +169,7 @@ $(TargetPath)
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OmitFramePointers>false</OmitFramePointers>
-      <AdditionalIncludeDirectories>..\..\submodules\loguru</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\libs\loguru</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -199,7 +199,7 @@ $(TargetPath)
       <OmitFramePointers>true</OmitFramePointers>
       <ConformanceMode>Default</ConformanceMode>
       <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
-      <AdditionalIncludeDirectories>..\..\submodules\loguru</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\libs\loguru</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -223,7 +223,7 @@ $(TargetPath)
     <ClCompile Include="..\..\src\misc\setup.cpp" />
     <ClCompile Include="..\..\src\misc\soft_limiter.cpp" />
     <ClCompile Include="..\..\src\misc\support.cpp" />
-    <ClCompile Include="..\..\submodules\loguru\loguru.cpp" />
+    <ClCompile Include="..\..\src\libs\loguru\loguru.cpp" />
     <ClCompile Include="..\fs_utils_tests.cpp" />
     <ClCompile Include="..\rwqueue_tests.cpp" />
     <ClCompile Include="..\setup_tests.cpp" />

@@ -9,11 +9,8 @@ jobs:
     env:
       debfile: pvs-studio-7.14.50353.142-amd64.deb
     steps:
-      - name: Checkout repository and submodules
+      - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
       - run:  sudo apt-get update
 
       - name: Log and setup environment
