@@ -8,7 +8,7 @@
 Настройка вертикальной синхронизации не реализована (настройка игнорируется).
 .
 :CONFIG_VSYNC_SKIP
-Number of microseconds to allow rendering to block before skipping the next frame.
+Количество микросекунд, в течение которых рендеринг должен блокироваться перед пропуском следующего кадра.
 .
 :CONFIG_FULLRESOLUTION
 Какое разрешение использовать для полноэкранного режима: 'original', 'desktop'
@@ -270,30 +270,30 @@ DOSBox, с последующей проверкой других мест в с
 используемые с Timidity должны работать хорошо.
 .
 :CONFIG_SIDMODEL
-Model of chip to emulate in the Innovation SSI-2001 card:
- - auto:  Selects the 6581 chip.
- - 6581:  The original chip, known for its bassy and rich character.
- - 8580:  A later revision that more closely matched the SID specification.
-          It fixed the 6581's DC bias and is less prone to distortion.
-          The 8580 is an option on reproduction cards, like the DuoSID.
- - none:  Disables the card.
+Модель чипа для эмуляции в карте Innovation SSI-2001:
+ - auto:  Выбирает чип 6581.
+ - 6581:  Оригинальный чип, известный своим басовитым и богатым звучанием.
+ - 8580:  Более поздняя модификация, более точно соответствующая спецификации SID.
+          В нём исправлено смещение постоянного тока 6581 и он менее подвержен искажениям.
+          8580 является опцией для репродуктивных карт, таких как DuoSID.
+ - none:  Отключает карту.
 .
 :CONFIG_SIDCLOCK
-The SID chip's clock frequency, which is jumperable on reproduction cards.
- - default: uses 0.895 MHz, per the original SSI-2001 card.
- - c64ntsc: uses 1.023 MHz, per NTSC Commodore PCs and the DuoSID.
- - c64pal:  uses 0.985 MHz, per PAL Commodore PCs and the DuoSID.
- - hardsid: uses 1.000 MHz, available on the DuoSID.
+Тактовая частота чипа SID, которая на картах устанавливается перемычкой.
+ - default: использует 0.895 МГц, для оригинальной карты SSI-2001.
+ - c64ntsc: использует 1.023 МГц, для NTSC Commodore PC и DuoSID.
+ - c64pal:  использует 0.985 МГц, для PAL Commodore PC и DuoSID.
+ - hardsid: использует 1.000 МГц, доступно на DuoSID.
 .
 :CONFIG_SIDPORT
-The IO port address of the Innovation SSI-2001.
+Адрес порта ввода-вывода SSI-2001.
 .
 :CONFIG_6581FILTER
-The SID's analog filtering meant that each chip was physically unique.
-Adjusts the 6581's filtering strength as a percent from 0 to 100.
+Аналоговая фильтрация SID означала, что каждый чип был физически уникален.
+Регулирует силу фильтрации 6581 в процентах от 0 до 100.
 .
 :CONFIG_8580FILTER
-Adjusts the 8580's filtering strength as a percent from 0 to 100.
+Регулирует силу фильтрации 8580 в процентах от 0 до 100.
 .
 :CONFIG_PCSPEAKER
 Включить эмуляцию PC-Speaker.
@@ -854,11 +854,11 @@ PCjr картридж найден, но машина не PCjr.
 
 .
 :SHELL_CMD_IMGMOUNT_HELP
-Монтировать образы компакт-дисков или дискет на указанную букву диска.
+Смонтировать образы компакт-дисков или дискет на указанную букву диска.
 
 .
 :SHELL_CMD_IMGMOUNT_HELP_LONG
-Монтировать CD-ROM, дискету или образ диска на указанную букву диска.
+Смонтировать CD-ROM, дискету или образ диска на указанную букву диска.
 
 Использование:
   [32;1mimgmount[0m [37;1mДИСК[0m [36;1mCDROM-SET[0m [CDROM-SET_2 [..]] [-fs iso] -t cdrom|iso
@@ -889,7 +889,7 @@ PCjr картридж найден, но машина не PCjr.
 
 .
 :SHELL_CMD_MOUNT_HELP_LONG
-Монтировать директорию из операционной системы на букву виртуального диска DOS.
+Смонтировать директорию из операционной системы на букву виртуального диска DOS.
 
 Использование:
   [32;1mmount[0m [37;1mДиск[0m [36;1mДиректория[0m [-t Тип] [-freesize Размер] [-label Метка]
@@ -1450,19 +1450,19 @@ choice [/c:клавиши] [/n] [/s] текст
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[2J[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:[0m
-DOSBox provides CD-ROM emulation on several levels.
+[2J[32;1mКак смонтировать виртуальный привод CD-ROM в DOSBox:[0m
+DOSBox обеспечивает эмуляцию CD-ROM на нескольких уровнях.
 
-This works on all normal directories, installs MSCDEX and marks the files
-read-only. Usually this is enough for most games:
+Это работает во всех обычных директориях, устанавливает MSCDEX и помечает
+файлы только для чтения. Обычно этого достаточно для большинства игр:
 
 [34;1mmount D C:\example -t cdrom[0m
 
-If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
+Если это не сработает, возможно, Вам придется сообщить DOSBox метку CD-ROM:
 
-[34;1mmount D C:\example -t cdrom -label CDLABEL[0m
+[34;1mmount D C:\example -t cdrom -label метка[0m
 
-Additionally, you can use imgmount to mount iso or cue/bin images:
+Также Вы можете использовать imgmount для монтирования образов iso или cue/bin:
 
 [34;1mimgmount D C:\cd.iso -t cdrom[0m
 
@@ -1470,19 +1470,19 @@ Additionally, you can use imgmount to mount iso or cue/bin images:
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:[0m
-DOSBox provides CD-ROM emulation on several levels.
+[2J[32;1mКак смонтировать виртуальный привод CD-ROM в DOSBox:[0m
+DOSBox обеспечивает эмуляцию CD-ROM на нескольких уровнях.
 
-This works on all normal directories, installs MSCDEX and marks the files
-read-only. Usually this is enough for most games:
+Это работает во всех обычных директориях, устанавливает MSCDEX и помечает
+файлы только для чтения. Обычно этого достаточно для большинства игр:
 
 [34;1mmount D ~/example -t cdrom[0m
 
-If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
+Если это не сработает, возможно, Вам придется сообщить DOSBox метку CD-ROM:
 
-[34;1mmount D ~/example -t cdrom -label CDLABEL[0m
+[34;1mmount D ~/example -t cdrom -label метка[0m
 
-Additionally, you can use imgmount to mount iso or cue/bin images:
+Также Вы можете использовать imgmount для монтирования образов iso или cue/bin:
 
 [34;1mimgmount D ~/cd.iso -t cdrom[0m
 
@@ -1490,25 +1490,25 @@ Additionally, you can use imgmount to mount iso or cue/bin images:
 
 .
 :SHELL_CMD_HELP_HELP_LONG
-HELP [command]
+HELP [команда]
 
 .
 :SHELL_CMD_DELETE_HELP_LONG
-Usage:
-  [32;1mdel[0m [36;1mPATTERN[0m
-  [32;1merase[0m [36;1mPATTERN[0m
+Использование:
+  [32;1mdel[0m [36;1mшаблон[0m
+  [32;1merase[0m [36;1mшаблон[0m
 
-Where:
-  [36;1mPATTERN[0m can be either an exact filename (such as [36;1mfile.txt[0m) or an inexact
-          filename using one or more wildcards, which are the asterisk (*)
-          representing any sequence of one or more characters, and the question
-          mark (?) representing any single character, such as [36;1m*.bat[0m and [36;1mc?.txt[0m.
+Где:
+  [36;1mшаблон[0m может быть как точным именем файла (например, [36;1mfile.txt[0m), так и неточным
+          именем файла с использованием одного или нескольких символов подстановки, которым является
+          звёздочка (*), обозначающая любую последовательность из одного или нескольких символов,
+          и вопросительный знак (?), обозначающий любой одиночный символ, например, [36;1m*.bat[0m и [36;1mc?.txt[0m.
 
-Warning:
-  Be careful when using a pattern with wildcards, especially [36;1m*.*[0m, as all files
-  matching the pattern will be deleted.
+Внимание:
+  Будьте осторожны при использовании шаблона с подстановочными знаками, особенно с
+  [36;1m*.*[0m, так как все файлы соответствующие шаблону, будут удалены.
 
-Examples:
+Примеры:
   [32;1mdel[0m [36;1mtest.bat[0m
   [32;1mdel[0m [36;1mc*.*[0m
   [32;1mdel[0m [36;1ma?b.c*[0m
