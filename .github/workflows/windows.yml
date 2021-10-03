@@ -53,10 +53,8 @@ jobs:
           vcpkg integrate install
           if (-not $?) { throw "vcpkg failed to integrate packages" }
 
-      - name: Checkout repository and submodules
+      - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - name:  Log environment
         shell: pwsh
@@ -126,10 +124,8 @@ jobs:
           vcpkg integrate install
           if (-not $?) { throw "vcpkg failed to integrate packages" }
 
-      - name: Checkout repository and submodules
+      - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - name:  Log environment
         shell: pwsh

@@ -22,11 +22,8 @@ jobs:
     name: Coverity static analyzer
     runs-on: ubuntu-20.04
     steps:
-      - name: Checkout repository and submodules
+      - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
       - run:  sudo apt-get update
 
       - name: Log and setup environment

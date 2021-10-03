@@ -8,11 +8,8 @@ jobs:
     name: Repository commit check
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository and submodules
+      - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
       - id: commit-check
         run: 'echo ::set-output name=has-commits::$(./scripts/has-commits-since.sh "24 hours ago")'
 
@@ -50,10 +47,8 @@ jobs:
       CHERE_INVOKING: yes
 
     steps:
-      - name: Checkout repository and submodules
+      - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - name:  Check repo for commits
         id:    repo-meta

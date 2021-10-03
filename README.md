@@ -119,16 +119,10 @@ Feature differences between release binaries (or unpatched sources):
 
 ## Get the source
 
-  - First, ensure git always updates your submodules when you pull (one-time step):
-
-    ``` shell
-    git config --global submodule.recurse true
-    ```
-
   - Clone the repository (one-time step):
 
     ``` shell
-    git clone --recurse-submodules https://github.com/dosbox-staging/dosbox-staging.git
+    git clone https://github.com/dosbox-staging/dosbox-staging.git
     ```
 
 ## Build instructions
@@ -180,7 +174,7 @@ brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth
 
 ### Build and stay up-to-date with the latest sources
 
-  - Checkout the master branch, which will include the submodules:
+  - Checkout the master branch:
 
     ``` shell
     # commit or stash any personal code changes

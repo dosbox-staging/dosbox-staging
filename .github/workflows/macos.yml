@@ -54,10 +54,8 @@ jobs:
             max_warnings: 0
 
     steps:
-      - name: Checkout repository and submodules
+      - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - name:  Prepare brew and compiler caches
         if:    matrix.conf.needs_deps
@@ -141,10 +139,8 @@ jobs:
             needs_deps: false
 
     steps:
-      - name: Checkout repository and submodules
+      - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - name:  Prepare brew and compiler caches
         if:    matrix.runner.needs_deps
@@ -226,10 +222,8 @@ jobs:
     needs: build_macos_release
     runs-on: macos-latest
     steps:
-      - name: Checkout repository and submodules
+      - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - name: Inject version string
         run: |

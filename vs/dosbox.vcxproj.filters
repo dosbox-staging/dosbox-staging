@@ -487,8 +487,8 @@
     <ClCompile Include="..\src\misc\pacer.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
-    <ClCompile Include="..\submodules\loguru\loguru.cpp">
-      <Filter>submodules\loguru</Filter>
+    <ClCompile Include="..\src\libs\loguru\loguru.cpp">
+      <Filter>src\libs\loguru</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -924,8 +924,8 @@
     <ClInclude Include="..\src\cpu\core_dyn_x86\risc_x64.h">
       <Filter>src\cpu\core_dyn_x86</Filter>
     </ClInclude>
-    <ClInclude Include="..\submodules\loguru\loguru.hpp">
-      <Filter>submodules\loguru</Filter>
+    <ClInclude Include="..\src\libs\loguru\loguru.hpp">
+      <Filter>src\libs\loguru</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
