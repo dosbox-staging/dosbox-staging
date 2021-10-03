@@ -37,17 +37,17 @@ foreach line : core_selection
   endif
 endforeach
 
+summary('Byte order', host_machine.endian() + '-endian')
 if conf_data.has('C_DYNAMIC_X86')
-  message('Building dynamic core optimized for x86/x86_64 (dyn-x86) ' +
-          'for ' + conf_data.get('C_TARGETCPU'))
+  summary('CPU dynamic core', 'optimized for x86/x86_64 (dyn-x86)')
+  summary('CPU core target arch', conf_data.get('C_TARGETCPU'))
 elif conf_data.has('C_DYNREC')
-  message('Building dynamic core (dynrec) ' +
-          'for ' + conf_data.get('C_TARGETCPU'))
+  summary('CPU dynamic core', 'generic (dynrec)')
+  summary('CPU core target arch', conf_data.get('C_TARGETCPU'))
 else
   warning('Building without dynamic core support')
+  summary('CPU core', 'disabled')
 endif
-
-message('Building for @0@-endian architecture'.format(host_machine.endian()))
 
 
 # cpu module sources

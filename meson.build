@@ -7,17 +7,19 @@ project('dosbox-staging', 'c', 'cpp',
 # After increasing the minimum-required meson version, make the following
 # improvements:
 #
-# - 0.53.0 - use summary() to communicate setup result
 # - 0.55.0 - subproject wraps are automatically promoted to fallbacks,
 #            stop using: "fallback : ['foo', 'foo_dep']" for dependencies
 # - 0.56.0 - use meson.current_source_dir() in unit tests
 
-
-# compiler flags
-#
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
 
+summary('Build type',     get_option('buildtype'), section : 'Build Summary')
+summary('Install prefix', get_option('prefix'),    section : 'Build Summary')
+
+
+# compiler flags
+#
 add_project_arguments('-Weffc++', language : 'cpp')
 if cxx.has_argument('-Wextra-semi')
     add_project_arguments('-Wextra-semi', language : 'cpp')
@@ -291,6 +293,9 @@ if host_machine.system() in ['windows', 'cygwin']
   winsock2_dep = cxx.find_library('ws2_32', required : true)
   winmm_dep = cxx.find_library('winmm', required : true)
 endif
+
+summary('OpenGL support', get_option('use_opengl'))
+
 
 # include directories
 #
