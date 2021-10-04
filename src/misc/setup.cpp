@@ -151,7 +151,7 @@ bool Value::SetValue(string const& in,Etype _type) {
 bool Value::set_hex(std::string const& in) {
 	istringstream input(in);
 	input.flags(ios::hex);
-	Bits result = INT_MIN;
+	int result = INT_MIN;
 	input >> result;
 	if(result == INT_MIN) return false;
 	_hex = result;
@@ -160,7 +160,7 @@ bool Value::set_hex(std::string const& in) {
 
 bool Value::set_int(string const &in) {
 	istringstream input(in);
-	Bits result = INT_MIN;
+	int result = INT_MIN;
 	input >> result;
 	if(result == INT_MIN) return false;
 	_int = result;
@@ -397,11 +397,12 @@ bool Prop_hex::SetValue(std::string const& input) {
 	return SetVal(val,false,true);
 }
 
-void Prop_multival::make_default_value() {
-	Bitu i = 1;
+void Prop_multival::make_default_value()
+{
 	Property *p = section->Get_prop(0);
 	if (!p) return;
 
+	int i = 1;
 	std::string result = p->Get_Default_Value().ToString();
 	while( (p = section->Get_prop(i++)) ) {
 		std::string props = p->Get_Default_Value().ToString();
@@ -773,14 +774,14 @@ bool Config::PrintConfig(const std::string &filename) const
 		Section_prop *sec = dynamic_cast<Section_prop *>(*tel);
 		if (sec) {
 			Property *p;
-			size_t i = 0, maxwidth = 0;
+			int i = 0;
+			size_t maxwidth = 0;
 			while ((p = sec->Get_prop(i++))) {
-				size_t w = strlen(p->propname.c_str());
-				if (w > maxwidth) maxwidth = w;
+				maxwidth = std::max(maxwidth, p->propname.length());
 			}
 			i=0;
 			char prefix[80];
-			int intmaxwidth = std::min<int>(60, maxwidth);
+			int intmaxwidth = std::min<int>(60, check_cast<int>(maxwidth));
 			snprintf(prefix, sizeof(prefix), "\n# %*s  ", intmaxwidth , "");
 			while ((p = sec->Get_prop(i++))) {
 
@@ -1252,7 +1253,7 @@ int CommandLine::GetParameterFromList(const char* const params[], std::vector<st
 	cmd_it it = cmds.begin();
 	while(it != cmds.end()) {
 		bool found = false;
-		for(Bitu i = 0; *params[i]!=0; i++) {
+		for (int i = 0; *params[i] != 0; ++i) {
 			if (!strcasecmp((*it).c_str(),params[i])) {
 				// found a parameter
 				found = true;
