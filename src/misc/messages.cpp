@@ -22,8 +22,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <deque>
-#include <unordered_map>
+#include <filesystem>
 #include <string>
+#include <unordered_map>
 
 #include "control.h"
 #include "cross.h"
@@ -57,16 +58,14 @@ void MSG_Replace(const char *name, const char *msg)
 		it->second = msg;
 }
 
-static bool LoadMessageFile(std::string filename)
+static bool LoadMessageFile(const std::filesystem::path & filename)
 {
 	if (filename.empty())
 		return false;
 
-	// Expand the filename and check if it exists -- returns empty if not found
-	filename = to_native_path(filename);
-
 	// Was the file not found?
-	if (filename.empty()) {
+	if (std::filesystem::status(filename).type() ==
+	    std::filesystem::file_type::not_found) {
 		LOG_MSG("LANG: Language file %s not found, skipping",
 		        filename.c_str());
 		return false;
@@ -143,17 +142,7 @@ bool MSG_Write(const char * location) {
 	return true;
 }
 
-// MSG_Init loads the requested language provided on the command line or
-// from the language = conf setting.
-
-// 1. The provided language can be an exact filename and path to the lng
-//    file, which is the traditionnal method to load a language file.
-
-// 2. It also supports the more convenient syntax without needing to provide a
-//    filename or path: `-lang ru`. In this case, it constructs a path into the
-//    platform's config path/translations/<lang>.lng. 
-
-void MSG_Init(Section_prop *section)
+static std::deque<std::string> get_language(const Section_prop *section)
 {
 	std::string lang = {};
 	std::deque<std::string> langs = {};
@@ -163,6 +152,8 @@ void MSG_Init(Section_prop *section)
 		langs.emplace_back(std::move(lang));
 
 	// Is a language provided in the conf file?
+	assert(section);
+	lang = section->Get_string("language");
 	const auto pathprop = section->Get_path("language");
 	if (pathprop) {
 		lang = pathprop->realpath;
@@ -171,36 +162,69 @@ void MSG_Init(Section_prop *section)
 		}
 	}
 
-	// No languages provided, so nothing more to do!
-	if (langs.empty())
-		return;
-
-	// Try load the user's language file(s)
-	for (const auto &l : langs) {
-		// If a short-hand name was provided then add the file extension
-		lang = l + (ends_with(l, ".lng") ? "" : ".lng");
-
-		// Can we load the filename from the current path?
-		if (path_exists(lang) && LoadMessageFile(lang)) {
-			return;
-		}
-		// If not, let's try getting it from the config/translations
-		// area. To do this we need to first get just the
-		// filename-portion from the possible /full/path/lang.lng
-		const auto path_elements = split(lang, CROSS_FILESPLIT);
-		if (path_elements.empty())
-			continue;
-
-		// the last element is the filename without the path
-		lang = path_elements.back();
-		LOG_MSG("LANG: Searching config path for: %s", lang.c_str());
-
-		// Construct a full path by prepending the config/translations path
-		lang = CROSS_GetPlatformConfigDir() + "translations" + CROSS_FILESPLIT + lang;
-
-		// Try loading it
-		if (LoadMessageFile(lang)) {
-			return;
+	// Was a language specified in the LANG environment variable?
+	const char *envlang = getenv("LANG");
+	if (envlang) {
+		lang = envlang;
+		if (lang.size() >= 2) {
+			lang = lang.substr(0, 2) + ".lng";
+			langs.emplace_back(std::move(lang));
 		}
 	}
+
+	return langs;
+}
+
+static std::deque<std::filesystem::path> get_paths()
+{
+	std::deque<std::filesystem::path> paths = {};
+
+	const auto exe_path = control->cmdline->GetExecutablePath();
+#if defined(MACOSX)
+	paths.emplace_back(exe_path / "../Resources/translations");
+#else
+	paths.emplace_back(exe_path / "translations");
+#endif
+
+	const std::filesystem::path config_path(CROSS_GetPlatformConfigDir());
+	paths.emplace_back(config_path / "translations");
+
+	// Possibly exists on macOS, POSIX, and even MSYS2 or Cygwin (Windows)
+	paths.emplace_back("/usr/share/dosbox/translations");
+
+	return paths;
+}
+
+// MSG_Init loads the requested language provided on the command line or
+// from the language = conf setting.
+
+// 1. The provided language can be an exact filename and path to the lng
+//    file, which is the traditionnal method to load a language file.
+
+// 2. It also supports the more convenient syntax without needing to provide a
+//    filename or path: `-lang ru`. In this case, it constructs a path into the
+//    platform's config path/translations/<lang>.lng.
+
+void MSG_Init(Section_prop *section)
+{
+	for (const auto &l : get_language(section)) {
+		// If the language is english, then always prefer the internal version
+		if (starts_with("en", l)) {
+			LOG_MSG("LANG: Using internal English language messages");
+			return;
+		}
+
+		// If a short-hand name was provided then add the file extension
+		const auto lang = l + (ends_with(l, ".lng") ? "" : ".lng");
+
+		// Otherwise let's try prefixes the paths
+		for (const auto &p : get_paths()) {
+			const auto lang_path = p / lang;
+			if (LoadMessageFile(lang_path)) {
+				return;
+			}
+		}
+	}
+	// If we got here, then the language was not found
+	LOG_MSG("LANG: No language could be loaded, using English messages");
 }

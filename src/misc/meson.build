@@ -16,6 +16,7 @@ libmisc = static_library('misc', libmisc_sources,
                          dependencies : [
                            sdl2_dep,
                            libloguru_dep,
+                           libwhereami_dep,
                          ])
 
 libmisc_dep = declare_dependency(link_with : libmisc)
