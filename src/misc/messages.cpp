@@ -22,7 +22,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <deque>
-#include <filesystem>
+
+#include "std_filesystem.h"
 #include <string>
 #include <unordered_map>
 
@@ -58,23 +59,24 @@ void MSG_Replace(const char *name, const char *msg)
 		it->second = msg;
 }
 
-static bool LoadMessageFile(const std::filesystem::path & filename)
+static bool LoadMessageFile(const std_fs::path &filename)
 {
 	if (filename.empty())
 		return false;
 
+	const auto filename_str = filename.string();
+
 	// Was the file not found?
-	if (std::filesystem::status(filename).type() ==
-	    std::filesystem::file_type::not_found) {
+	if (std_fs::status(filename).type() == std_fs::file_type::not_found) {
 		LOG_MSG("LANG: Language file %s not found, skipping",
-		        filename.c_str());
+		        filename_str.c_str());
 		return false;
 	}
 
-	FILE *mfile = fopen(filename.c_str(), "rt");
+	FILE *mfile = fopen(filename_str.c_str(), "rt");
 	if (!mfile) {
 		LOG_MSG("LANG: Failed opening language file: %s, skipping",
-		        filename.c_str());
+		        filename_str.c_str());
 		return false;
 	}
 
@@ -116,7 +118,7 @@ static bool LoadMessageFile(const std::filesystem::path & filename)
 		}
 	}
 	fclose(mfile);
-	LOG_MSG("LANG: Loaded language file: %s", filename.c_str());
+	LOG_MSG("LANG: Loaded language file: %s", filename_str.c_str());
 	return true;
 }
 
@@ -175,9 +177,9 @@ static std::deque<std::string> get_language(const Section_prop *section)
 	return langs;
 }
 
-static std::deque<std::filesystem::path> get_paths()
+static std::deque<std_fs::path> get_paths()
 {
-	std::deque<std::filesystem::path> paths = {};
+	std::deque<std_fs::path> paths = {};
 
 	const auto exe_path = control->cmdline->GetExecutablePath();
 #if defined(MACOSX)
@@ -186,7 +188,7 @@ static std::deque<std::filesystem::path> get_paths()
 	paths.emplace_back(exe_path / "translations");
 #endif
 
-	const std::filesystem::path config_path(CROSS_GetPlatformConfigDir());
+	const std_fs::path config_path(CROSS_GetPlatformConfigDir());
 	paths.emplace_back(config_path / "translations");
 
 	// Possibly exists on macOS, POSIX, and even MSYS2 or Cygwin (Windows)
@@ -208,7 +210,8 @@ static std::deque<std::filesystem::path> get_paths()
 void MSG_Init(Section_prop *section)
 {
 	for (const auto &l : get_language(section)) {
-		// If the language is english, then always prefer the internal version
+		// If the language is english, then always prefer the internal
+		// version
 		if (starts_with("en", l)) {
 			LOG_MSG("LANG: Using internal English language messages");
 			return;

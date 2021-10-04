@@ -1329,9 +1329,9 @@ CommandLine::CommandLine(int argc, char const *const argv[])
 	}
 }
 
-const std::filesystem::path & CommandLine::GetExecutablePath() const
+const std_fs::path &CommandLine::GetExecutablePath() const
 {
-	static std::filesystem::path exe_path;
+	static std_fs::path exe_path;
 	if (exe_path.empty()) {
 		int length = wai_getExecutablePath(nullptr, 0, nullptr);
 		// const auto length = wai_getExecutablePath(nullptr, 0, nullptr);
@@ -1344,8 +1344,10 @@ const std::filesystem::path & CommandLine::GetExecutablePath() const
 	return exe_path;
 }
 
-Bit16u CommandLine::Get_arglength() {
-	if (cmds.empty()) return 0;
+Bit16u CommandLine::Get_arglength()
+{
+	if (cmds.empty())
+		return 0;
 
 	size_t total_length = 0;
 	for (const auto &cmd : cmds)
