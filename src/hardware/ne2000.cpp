@@ -1455,7 +1455,7 @@ void bx_ne2k_c::init()
   reset(BX_RESET_HARDWARE);
 }
 
-static void NE2000_TX_Event(MAYBE_UNUSED uint32_t val)
+static void NE2000_TX_Event([[maybe_unused]] uint32_t val)
 {
 	theNE2kDevice->tx_timer();
 }

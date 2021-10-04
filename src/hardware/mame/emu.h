@@ -54,7 +54,7 @@ struct machine_config;
 #define DECLARE_READ8_MEMBER(name)      u8     name( int, int)
 #define DECLARE_WRITE8_MEMBER(name)     void   name( int, int, u8 data)
 #define READ8_MEMBER(name)              u8     name( int, int)
-#define WRITE8_MEMBER(name)				void   name(MAYBE_UNUSED int offset, MAYBE_UNUSED int space, MAYBE_UNUSED u8 data)
+#define WRITE8_MEMBER(name)				void   name([[maybe_unused]] int offset, [[maybe_unused]] int space, [[maybe_unused]] u8 data)
 
 #define DECLARE_DEVICE_TYPE(Type, Class) \
 		extern const device_type Type; \
@@ -71,13 +71,13 @@ public:
 
 	sound_stream temp;
 
-	device_sound_interface(const machine_config & /* mconfig */, MAYBE_UNUSED device_t &_device)
+	device_sound_interface(const machine_config & /* mconfig */, [[maybe_unused]] device_t &_device)
 	        : temp()
 	{}
 
 	virtual ~device_sound_interface() = default;
 
-	sound_stream *stream_alloc(MAYBE_UNUSED int whatever, MAYBE_UNUSED int channels, MAYBE_UNUSED int size)
+	sound_stream *stream_alloc([[maybe_unused]] int whatever, [[maybe_unused]] int channels, [[maybe_unused]] int size)
 	{
 		return &temp;
 	}
@@ -91,7 +91,7 @@ public:
 struct attotime {
 	int whatever;
 
-	static attotime from_hz(MAYBE_UNUSED int hz) {
+	static attotime from_hz([[maybe_unused]] int hz) {
 		return attotime();
 	}
 };
@@ -120,7 +120,7 @@ public:
 		return clockRate;
 	}
 
-	void logerror(MAYBE_UNUSED const char* format, ...) {
+	void logerror([[maybe_unused]] const char* format, ...) {
 #if C_DEBUG
 		char buf[512*2];
 		va_list msg;
@@ -138,10 +138,10 @@ public:
 	virtual void device_start() {
 	}
 
-	void save_item(int, MAYBE_UNUSED int blah= 0) {
+	void save_item(int, [[maybe_unused]] int blah= 0) {
 	}
 
-	device_t(const machine_config & /* mconfig */, MAYBE_UNUSED device_type type, MAYBE_UNUSED const char *tag, MAYBE_UNUSED device_t *owner, u32 _clock) : clockRate( _clock ) {
+	device_t(const machine_config & /* mconfig */, [[maybe_unused]] device_type type, [[maybe_unused]] const char *tag, [[maybe_unused]] device_t *owner, u32 _clock) : clockRate( _clock ) {
 	}
 
 	virtual ~device_t() {

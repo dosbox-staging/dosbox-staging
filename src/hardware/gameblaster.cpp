@@ -171,6 +171,6 @@ static CMS* test;
 void CMS_Init(Section* sec) {
 	test = new CMS(sec);
 }
-void CMS_ShutDown(MAYBE_UNUSED Section* sec) {
+void CMS_ShutDown([[maybe_unused]] Section* sec) {
 	delete test;	       
 }

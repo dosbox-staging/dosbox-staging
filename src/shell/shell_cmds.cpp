@@ -454,7 +454,7 @@ void DOS_Shell::CMD_RMDIR(char * args) {
 
 static std::string format_number(size_t num)
 {
-	MAYBE_UNUSED constexpr uint64_t petabyte_si = 1'000'000'000'000'000;
+	[[maybe_unused]] constexpr uint64_t petabyte_si = 1'000'000'000'000'000;
 	assert(num <= petabyte_si);
 	const auto b = static_cast<unsigned>(num % 1000);
 	num /= 1000;

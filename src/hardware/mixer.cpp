@@ -130,7 +130,7 @@ static struct mixer_t mixer;
 Bit8u MixTemp[MIXER_BUFSIZE];
 
 MixerChannel::MixerChannel(MIXER_Handler _handler,
-                           MAYBE_UNUSED Bitu _freq,
+                           [[maybe_unused]] Bitu _freq,
                            const char *_name)
         : name(_name),
           done(0),
@@ -754,7 +754,7 @@ static void MIXER_Mix_NoSound()
 
 #define INDEX_SHIFT_LOCAL 14
 
-static void SDLCALL MIXER_CallBack(MAYBE_UNUSED void *userdata, Uint8 *stream, int len)
+static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *stream, int len)
 {
 	memset(stream, 0, len);
 	auto need = static_cast<uint32_t>(len / MIXER_SSIZE);
@@ -876,7 +876,7 @@ static void SDLCALL MIXER_CallBack(MAYBE_UNUSED void *userdata, Uint8 *stream, i
 
 #undef INDEX_SHIFT_LOCAL
 
-static void MIXER_Stop(MAYBE_UNUSED Section *sec)
+static void MIXER_Stop([[maybe_unused]] Section *sec)
 {}
 
 class MIXER final : public Program {

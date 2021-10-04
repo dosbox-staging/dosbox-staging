@@ -410,7 +410,7 @@ Ps1Synth::~Ps1Synth()
 static std::unique_ptr<Ps1Dac> ps1_dac = {};
 static std::unique_ptr<Ps1Synth> ps1_synth = {};
 
-static void PS1AUDIO_ShutDown(MAYBE_UNUSED Section *sec)
+static void PS1AUDIO_ShutDown([[maybe_unused]] Section *sec)
 {
 	LOG_MSG("PS/1: Shutting down IBM PS/1 Audio card");
 	ps1_dac.reset();
@@ -425,7 +425,7 @@ bool PS1AUDIO_IsEnabled()
 	return properties->Get_bool("ps1audio");
 }
 
-void PS1AUDIO_Init(MAYBE_UNUSED Section *sec)
+void PS1AUDIO_Init([[maybe_unused]] Section *sec)
 {
 	if (!PS1AUDIO_IsEnabled())
 		return;

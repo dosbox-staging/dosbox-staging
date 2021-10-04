@@ -21,7 +21,7 @@ switch (inst.code.save) {
 /* Byte */
 	case S_C_Eb:
 		inst_op1_b=inst.cond ? 1 : 0;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case S_Eb:
 		if (inst.rm<0xc0) SaveMb(inst.rm_eaa,inst_op1_b);
 		else reg_8(inst.rm_eai)=inst_op1_b;
@@ -94,7 +94,7 @@ switch (inst.code.save) {
 
 	case S_C_AIPw:
 		if (!inst.cond) goto nextopcode;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case S_AIPw:
 		SaveIP();
 		reg_eip+=inst_op1_d;
@@ -102,14 +102,14 @@ switch (inst.code.save) {
 		continue;
 	case S_C_AIPd:
 		if (!inst.cond) goto nextopcode;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case S_AIPd:
 		SaveIP();
 		reg_eip+=inst_op1_d;
 		continue;
 	case S_IPIw:
 		reg_esp+=Fetchw();
-		FALLTHROUGH;
+		[[fallthrough]];
 	case S_IP:
 		SaveIP();
 		reg_eip=inst_op1_d;

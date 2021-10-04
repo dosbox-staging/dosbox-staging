@@ -27,7 +27,7 @@
 #include "setup.h"
 #include "support.h"
 
-static INLINE void BIN2BCD(Bit16u& val) {
+static inline void BIN2BCD(Bit16u& val) {
 	const auto b = ((val / 10) % 10) << 4;
 	const auto c = ((val / 100) % 10) << 8;
 	const auto d = ((val / 1000) % 10) << 12;
@@ -37,7 +37,7 @@ static INLINE void BIN2BCD(Bit16u& val) {
 	val = temp;
 }
 
-static INLINE void BCD2BIN(Bit16u& val) {
+static inline void BCD2BIN(Bit16u& val) {
 	Bit16u temp= (val&0x0f) +((val>>4)&0x0f) *10 +((val>>8)&0x0f) *100 +((val>>12)&0x0f) *1000;
 	val=temp;
 }

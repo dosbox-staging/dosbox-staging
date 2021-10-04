@@ -128,7 +128,7 @@ public:
 	bool PauseAudio         (bool /*resume*/) { return true; }
 	bool StopAudio          (void) { return true; }
 
-	void ChannelControl(MAYBE_UNUSED TCtrl ctrl) {}
+	void ChannelControl([[maybe_unused]] TCtrl ctrl) {}
 
 	bool ReadSectors        (PhysPt /*buffer*/, const bool /*raw*/, const uint32_t /*sector*/, const uint16_t /*num*/) { return true; }
 	bool LoadUnloadMedia    (bool /*unload*/) { return true; }
@@ -206,7 +206,7 @@ private:
 		int             getLength();
 		// This is a no-op because we track the audio position in all
 		// areas of this class.
-		void setAudioPosition(MAYBE_UNUSED uint32_t pos) {}
+		void setAudioPosition([[maybe_unused]] uint32_t pos) {}
 	private:
 		Sound_Sample *sample = nullptr;
 	};

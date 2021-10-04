@@ -209,7 +209,7 @@ MidiHandlerFluidsynth::MidiHandlerFluidsynth()
           keep_rendering(false)
 {}
 
-bool MidiHandlerFluidsynth::Open(MAYBE_UNUSED const char *conf)
+bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 {
 	Close();
 
@@ -633,7 +633,7 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program *caller)
 	return MIDI_RC::OK;
 }
 
-static void fluid_init(MAYBE_UNUSED Section *sec)
+static void fluid_init([[maybe_unused]] Section *sec)
 {}
 
 void FLUID_AddConfigSection(Config *conf)

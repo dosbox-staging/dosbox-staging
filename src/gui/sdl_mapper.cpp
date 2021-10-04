@@ -2558,7 +2558,7 @@ void BIND_MappingEvents() {
 		case SDL_MOUSEBUTTONDOWN:
 			isButtonPressed = true;
 			/* Further check where are we pointing at right now */
-			FALLTHROUGH;
+			[[fallthrough]];
 		case SDL_MOUSEMOTION:
 			if (!isButtonPressed)
 				break;

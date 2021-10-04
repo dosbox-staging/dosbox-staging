@@ -218,7 +218,7 @@ enum {
 };
 
 
-static INLINE Bit16u long2para(Bit32u size) {
+static inline Bit16u long2para(Bit32u size) {
 	if (size>0xFFFF0) return 0xffff;
 	if (size&0xf) return (Bit16u)((size>>4)+1);
 	else return (Bit16u)(size>>4);
@@ -746,7 +746,7 @@ struct DOS_Block {
 
 extern DOS_Block dos;
 
-static INLINE Bit8u RealHandle(Bit16u handle) {
+static inline Bit8u RealHandle(Bit16u handle) {
 	DOS_PSP psp(dos.psp());	
 	return psp.GetFileHandle(handle);
 }

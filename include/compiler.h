@@ -46,31 +46,6 @@
 #define __has_attribute(x) 0 // for compatibility with non-supporting compilers
 #endif
 
-// When passing the -Wunused flag to GCC or Clang, entities that are unused by
-// the program may be diagnosed.  The MAYBE_UNUSED attribute can be used to
-// silence such diagnostics when the entity cannot be removed.
-//
-// The attribute may be applied to the declaration of a class, a typedef,
-// a variable, a function or method, a function parameter, an enumeration,
-// an enumerator, a non-static data member, or a label.
-
-#if __has_cpp_attribute(maybe_unused)
-#define MAYBE_UNUSED [[maybe_unused]]
-#elif __has_cpp_attribute(gnu::unused)
-#define MAYBE_UNUSED [[gnu::unused]]
-#else
-#define MAYBE_UNUSED
-#endif
-
-// Wrapper for C++17 [[fallthrough]] null statement. Use this to avoid implicit
-// fallthrough in switch statements (-Wimplicit-fallthrough flag).
-
-#if __has_cpp_attribute(fallthrough)
-#define FALLTHROUGH [[fallthrough]]
-#else
-#define FALLTHROUGH
-#endif
-
 // The __attribute__ syntax is supported by GCC, Clang, and IBM compilers.
 //
 // Provided for backwards-compatibility with old code; to be gradually
@@ -81,9 +56,6 @@
 #else
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 #endif
-
-// Just use the standard C++ inline keyword
-#define INLINE inline
 
 // GCC_LIKELY macro is incorrectly named, because other compilers support
 // this feature as well (e.g. Clang, Intel); leave it be for now, at

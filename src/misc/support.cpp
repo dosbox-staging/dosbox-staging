@@ -316,11 +316,11 @@ void E_Exit(const char *format, ...)
 
 /* Overloaded function to handle different return types of POSIX and GNU
  * strerror_r variants */
-MAYBE_UNUSED static const char *strerror_result(int retval, const char *err_str)
+[[maybe_unused]] static const char *strerror_result(int retval, const char *err_str)
 {
 	return retval == 0 ? err_str : nullptr;
 }
-MAYBE_UNUSED static const char *strerror_result(const char *err_str, MAYBE_UNUSED const char *buf)
+[[maybe_unused]] static const char *strerror_result(const char *err_str, [[maybe_unused]] const char *buf)
 {
 	return err_str;
 }
@@ -337,7 +337,7 @@ std::string safe_strerror(int err) noexcept
 #endif
 }
 
-void set_thread_name(MAYBE_UNUSED std::thread& thread, MAYBE_UNUSED const char *name)
+void set_thread_name([[maybe_unused]] std::thread& thread, [[maybe_unused]] const char *name)
 {
 #if defined(HAVE_PTHREAD_SETNAME_NP) && defined(_GNU_SOURCE)
 	assert(strlen(name) < 16);

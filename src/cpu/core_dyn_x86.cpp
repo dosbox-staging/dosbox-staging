@@ -344,7 +344,7 @@ run_block:
 		// LOG_MSG("selfmodification of running block at %x:%x",
 		//         SegValue(cs), reg_eip);
 		cpu.exception.which=0;
-		FALLTHROUGH; // let the normal core handle the block-modifying
+		[[fallthrough]]; // let the normal core handle the block-modifying
 		             // instruction
 	case BR_Opcode:
 		CPU_CycleLeft+=CPU_Cycles;

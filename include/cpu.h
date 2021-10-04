@@ -142,13 +142,13 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level);
 #define CPU_INT_NOIOPLCHECK		0x8
 
 void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip);
-static INLINE void CPU_HW_Interrupt(Bitu num) {
+static inline void CPU_HW_Interrupt(Bitu num) {
 	CPU_Interrupt(num,0,reg_eip);
 }
-static INLINE void CPU_SW_Interrupt(Bitu num,Bitu oldeip) {
+static inline void CPU_SW_Interrupt(Bitu num,Bitu oldeip) {
 	CPU_Interrupt(num,CPU_INT_SOFTWARE,oldeip);
 }
-static INLINE void CPU_SW_Interrupt_NoIOPLCheck(Bitu num,Bitu oldeip) {
+static inline void CPU_SW_Interrupt_NoIOPLCheck(Bitu num,Bitu oldeip) {
 	CPU_Interrupt(num,CPU_INT_SOFTWARE|CPU_INT_NOIOPLCHECK,oldeip);
 }
 
@@ -485,12 +485,12 @@ struct CPUBlock {
 
 extern CPUBlock cpu;
 
-static INLINE void CPU_SetFlagsd(Bitu word) {
+static inline void CPU_SetFlagsd(Bitu word) {
 	Bitu mask=cpu.cpl ? FMASK_NORMAL : FMASK_ALL;
 	CPU_SetFlags(word,mask);
 }
 
-static INLINE void CPU_SetFlagsw(Bitu word) {
+static inline void CPU_SetFlagsw(Bitu word) {
 	Bitu mask=(cpu.cpl ? FMASK_NORMAL : FMASK_ALL) & 0xffff;
 	CPU_SetFlags(word,mask);
 }

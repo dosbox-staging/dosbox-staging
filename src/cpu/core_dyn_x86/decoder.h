@@ -163,7 +163,7 @@ static Bit32u decode_fetchd(void) {
 
 #define START_WMMEM 64
 
-static INLINE void decode_increase_wmapmask(Bitu size) {
+static inline void decode_increase_wmapmask(Bitu size) {
 	Bitu mapidx;
 	CacheBlock* activecb=decode.active_block; 
 	if (GCC_UNLIKELY(!activecb->cache.wmapmask)) {
@@ -294,19 +294,19 @@ static void dyn_set_eip_last_end(DynReg * endreg) {
 	gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),decode.op_start-decode.code_start);
 }
 
-static INLINE void dyn_set_eip_end(void) {
+static inline void dyn_set_eip_end(void) {
 	gen_protectflags();
 	gen_dop_word_imm(DOP_ADD,cpu.code.big,DREG(EIP),decode.code-decode.code_start);
 }
 
-static INLINE void dyn_set_eip_end(MAYBE_UNUSED DynReg * endreg) {
+static inline void dyn_set_eip_end([[maybe_unused]] DynReg * endreg) {
 	gen_protectflags();
 	if (cpu.code.big) gen_dop_word(DOP_MOV,true,DREG(TMPW),DREG(EIP));
 	else gen_extend_word(false,DREG(TMPW),DREG(EIP));
 	gen_dop_word_imm(DOP_ADD,cpu.code.big,DREG(TMPW),decode.code-decode.code_start);
 }
 
-static INLINE void dyn_set_eip_last(void) {
+static inline void dyn_set_eip_last(void) {
 	gen_protectflags();
 	gen_dop_word_imm(DOP_ADD,cpu.code.big,DREG(EIP),decode.op_start-decode.code_start);
 }
@@ -1055,7 +1055,7 @@ static void dyn_pop(DynReg * dynreg,bool checked=true) {
 	}
 }
 
-static INLINE void dyn_get_modrm(void) {
+static inline void dyn_get_modrm(void) {
 	decode.modrm.val=decode_fetchb();
 	decode.modrm.mod=(decode.modrm.val >> 6) & 3;
 	decode.modrm.reg=(decode.modrm.val >> 3) & 7;
@@ -2056,7 +2056,7 @@ static void dyn_iret(void) {
 	dyn_closeblock();
 }
 
-MAYBE_UNUSED static void dyn_interrupt(Bitu num)
+[[maybe_unused]] static void dyn_interrupt(Bitu num)
 {
 	gen_protectflags();
 	dyn_flags_gen_to_host();

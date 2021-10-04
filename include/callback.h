@@ -67,14 +67,14 @@ enum {
 
 extern Bit8u lastint;
 
-static INLINE RealPt CALLBACK_RealPointer(Bitu callback) {
+static inline RealPt CALLBACK_RealPointer(Bitu callback) {
 	return RealMake(CB_SEG,(Bit16u)(CB_SOFFSET+callback*CB_SIZE));
 }
-static INLINE PhysPt CALLBACK_PhysPointer(Bitu callback) {
+static inline PhysPt CALLBACK_PhysPointer(Bitu callback) {
 	return PhysMake(CB_SEG,(Bit16u)(CB_SOFFSET+callback*CB_SIZE));
 }
 
-static INLINE PhysPt CALLBACK_GetBase(void) {
+static inline PhysPt CALLBACK_GetBase(void) {
 	return (CB_SEG << 4) + CB_SOFFSET;
 }
 

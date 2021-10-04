@@ -80,4 +80,4 @@ typedef Bit8u HostReg;
 #define HOST_lr HOST_r14
 #define HOST_pc HOST_r15
 
-static void cache_block_closing(MAYBE_UNUSED const Bit8u *block_start, MAYBE_UNUSED Bitu block_size) { }
+static void cache_block_closing([[maybe_unused]] const Bit8u *block_start, [[maybe_unused]] Bitu block_size) { }

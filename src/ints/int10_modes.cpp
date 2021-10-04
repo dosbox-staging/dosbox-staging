@@ -599,7 +599,7 @@ static bool INT10_SetVideoMode_OTHER(Bit16u mode, bool clearmem)
 	case MCH_CGA:
 		if (mode > 6)
 			return false;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case TANDY_ARCH_CASE:
 		if (mode>0xa) return false;
 		if (mode==7) mode=0; // PCJR defaults to 0 on illegal mode 7
@@ -1502,7 +1502,7 @@ att_text16:
 				}
 				break;
 			}
-			FALLTHROUGH;
+			[[fallthrough]];
 		case M_LIN4: //Added for CAD Software
 dac_text16:
 			for (i=0;i<64;i++) {

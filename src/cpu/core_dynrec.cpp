@@ -306,7 +306,7 @@ run_block:
 			cpu.exception.which=0;
 			// let the normal core handle the block-modifying
 			// instruction
-			FALLTHROUGH;
+			[[fallthrough]];
 		case BR_Opcode:
 			// some instruction has been encountered that could not be translated
 			// (thus it is not part of the code block), the normal core will

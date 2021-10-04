@@ -103,7 +103,7 @@ void Envelope::Apply(const bool is_stereo,
 	// Should we deactivate the envelope?
 	if (++frames_done > expire_after_frames || edge >= edge_limit) {
 		process = &Envelope::Skip;
-		(void)channel_name; // MAYBE_UNUSED in release builds
+		(void)channel_name; // [[maybe_unused]] in release builds
 		DEBUG_LOG_MSG("ENVELOPE: %s done after %u frames, peak sample was %u",
 		              channel_name, frames_done, edge);
 	}

@@ -694,7 +694,7 @@ static uint8_t *VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line)
 }
 
 #ifdef VGA_KEEP_CHANGES
-static INLINE void VGA_ChangesEnd(void ) {
+static inline void VGA_ChangesEnd(void ) {
 	if ( vga.changes.active ) {
 //		vga.changes.active = false;
 		Bitu end = vga.draw.address >> VGA_CHANGE_SHIFT;
@@ -882,7 +882,7 @@ void VGA_SetBlinking(const uint8_t enabled)
 }
 
 #ifdef VGA_KEEP_CHANGES
-static void INLINE VGA_ChangesStart( void ) {
+static void inline VGA_ChangesStart( void ) {
 	vga.changes.start = vga.draw.address >> VGA_CHANGE_SHIFT;
 	vga.changes.last = vga.changes.start;
 	if ( vga.changes.lastAddress != vga.draw.address ) {
@@ -998,7 +998,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	case M_EGA:
 		if (!(vga.crtc.mode_control&0x1)) vga.draw.linear_mask &= ~0x10000;
 		else vga.draw.linear_mask |= 0x10000;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case M_LIN4:
 		vga.draw.byte_panning_shift = 8;
 		vga.draw.address += vga.draw.bytes_skip;
@@ -1016,7 +1016,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 			vga.draw.linear_base = vga.mem.linear;
 			vga.draw.linear_mask = vga.vmemwrap - 1;
 		}
-		FALLTHROUGH;
+		[[fallthrough]];
 	case M_LIN8:
 	case M_LIN15:
 	case M_LIN24:
@@ -1134,7 +1134,7 @@ void VGA_CheckScanLength(void) {
 			vga.draw.address_add = vga.draw.blocks / 4;
 			break;
 		}
-		FALLTHROUGH;
+		[[fallthrough]];
 	case M_CGA2_COMPOSITE: vga.draw.address_add = vga.draw.blocks; break;
 	case M_TANDY4:
 	case M_CGA4_COMPOSITE: vga.draw.address_add = vga.draw.blocks; break;

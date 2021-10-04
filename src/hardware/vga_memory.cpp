@@ -56,7 +56,7 @@
 #define TANDY_VIDBASE(_X_)  &MemBase[ 0x80000 + (_X_)]
 
 template <class Size>
-static INLINE void hostWrite(HostPt off, Bitu val) {
+static inline void hostWrite(HostPt off, Bitu val) {
 	if ( sizeof( Size ) == 1)
 		host_writeb( off, (Bit8u)val );
 	else if ( sizeof( Size ) == 2)
@@ -66,7 +66,7 @@ static INLINE void hostWrite(HostPt off, Bitu val) {
 }
 
 template <class Size>
-static INLINE Bitu  hostRead(HostPt off ) {
+static inline Bitu  hostRead(HostPt off ) {
 	if ( sizeof( Size ) == 1)
 		return host_readb( off );
 	else if ( sizeof( Size ) == 2)
@@ -79,7 +79,7 @@ static INLINE Bitu  hostRead(HostPt off ) {
 
 void VGA_MapMMIO(void);
 //Nice one from DosEmu
-INLINE static Bit32u RasterOp(Bit32u input,Bit32u mask) {
+inline static Bit32u RasterOp(Bit32u input,Bit32u mask) {
 	switch (vga.config.raster_op) {
 	case 0x00:	/* None */
 		return (input & mask) | (vga.latch.d & ~mask);
@@ -93,7 +93,7 @@ INLINE static Bit32u RasterOp(Bit32u input,Bit32u mask) {
 	return 0;
 }
 
-INLINE static Bit32u ModeOperation(Bit8u val) {
+inline static Bit32u ModeOperation(Bit8u val) {
 	Bit32u full;
 	switch (vga.config.write_mode) {
 	case 0x00:
@@ -328,11 +328,11 @@ public:
 		flags=PFLAG_NOCODE;
 	}
 	template <class Size>
-	static INLINE Bitu readHandler(PhysPt addr ) {
+	static inline Bitu readHandler(PhysPt addr ) {
 		return hostRead<Size>( &vga.mem.linear[((addr&~3)<<2)+(addr&3)] );
 	}
 	template <class Size>
-	static INLINE void writeCache(PhysPt addr, Bitu val) {
+	static inline void writeCache(PhysPt addr, Bitu val) {
 		hostWrite<Size>( &vga.fastmem[addr], val );
 		if (GCC_UNLIKELY(addr < 320)) {
 			// And replicate the first line
@@ -340,7 +340,7 @@ public:
 		}
 	}
 	template <class Size>
-	static INLINE void writeHandler(PhysPt addr, Bitu val) {
+	static inline void writeHandler(PhysPt addr, Bitu val) {
 		// No need to check for compatible chains here, this one is only enabled if that bit is set
 		hostWrite<Size>( &vga.mem.linear[((addr&~3)<<2)+(addr&3)], val );
 	}

@@ -110,49 +110,49 @@ extern FPU_rec fpu;
 Bit16u FPU_GetTag(void);
 void FPU_FLDCW(PhysPt addr);
 
-static INLINE void FPU_SetTag(Bit16u tag){
+static inline void FPU_SetTag(Bit16u tag){
 	for(Bitu i=0;i<8;i++)
 		fpu.tags[i] = static_cast<FPU_Tag>((tag >>(2*i))&3);
 }
 
-static INLINE void FPU_SetCW(Bitu word){
+static inline void FPU_SetCW(Bitu word){
 	fpu.cw = (Bit16u)word;
 	fpu.cw_mask_all = (Bit16u)(word | 0x3f);
 	fpu.round = (FPU_Round)((word >> 10) & 3);
 }
 
 
-static INLINE Bitu FPU_GET_TOP(void) {
+static inline Bitu FPU_GET_TOP(void) {
 	return (fpu.sw & 0x3800)>>11;
 }
 
-static INLINE void FPU_SET_TOP(Bitu val){
+static inline void FPU_SET_TOP(Bitu val){
 	fpu.sw &= ~0x3800;
 	fpu.sw |= (val&7)<<11;
 }
 
 
-static INLINE void FPU_SET_C0(Bitu C){
+static inline void FPU_SET_C0(Bitu C){
 	fpu.sw &= ~0x0100;
 	if(C) fpu.sw |=  0x0100;
 }
 
-static INLINE void FPU_SET_C1(Bitu C){
+static inline void FPU_SET_C1(Bitu C){
 	fpu.sw &= ~0x0200;
 	if(C) fpu.sw |=  0x0200;
 }
 
-static INLINE void FPU_SET_C2(Bitu C){
+static inline void FPU_SET_C2(Bitu C){
 	fpu.sw &= ~0x0400;
 	if(C) fpu.sw |=  0x0400;
 }
 
-static INLINE void FPU_SET_C3(Bitu C){
+static inline void FPU_SET_C3(Bitu C){
 	fpu.sw &= ~0x4000;
 	if(C) fpu.sw |= 0x4000;
 }
 
-static INLINE void FPU_LOG_WARN(unsigned tree, bool ea, uintptr_t group, uintptr_t sub)
+static inline void FPU_LOG_WARN(unsigned tree, bool ea, uintptr_t group, uintptr_t sub)
 {
 	LOG(LOG_FPU, LOG_WARN)("ESC %u%s: Unhandled group %" PRIuPTR " subfunction %" PRIuPTR,
 	                       tree, ea ? " EA" : "", group, sub);

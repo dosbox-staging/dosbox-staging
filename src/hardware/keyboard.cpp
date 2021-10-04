@@ -162,7 +162,7 @@ static void write_p60(io_port_t, uint8_t val, io_width_t)
 			keyb.repeat.rate = repeat[val&0x1f];
 			keyb.command=CMD_NONE;
 		}
-		FALLTHROUGH; // CMD_SETLEDS does what we want
+		[[fallthrough]]; // CMD_SETLEDS does what we want
 	case CMD_SETLEDS:
 		keyb.command=CMD_NONE;
 		KEYBOARD_ClrBuffer();

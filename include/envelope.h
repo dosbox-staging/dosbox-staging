@@ -86,10 +86,10 @@ private:
 	           intptr_t prev[],
 	           intptr_t next[]);
 
-	void Skip(MAYBE_UNUSED bool is_stereo,
-	          MAYBE_UNUSED bool is_interpolated,
-	          MAYBE_UNUSED intptr_t prev[],
-	          MAYBE_UNUSED intptr_t next[])
+	void Skip([[maybe_unused]] bool is_stereo,
+	          [[maybe_unused]] bool is_interpolated,
+	          [[maybe_unused]] intptr_t prev[],
+	          [[maybe_unused]] intptr_t next[])
 	{}
 
 	using process_f = std::function<void(Envelope &, bool, bool, intptr_t[], intptr_t[])>;
