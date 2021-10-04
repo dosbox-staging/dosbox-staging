@@ -52,14 +52,14 @@ static void FPU_FFREE(Bitu st) {
 #endif
 
 
-static INLINE void dyn_fpu_top() {
+static inline void dyn_fpu_top() {
 	gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
 	gen_add_imm(FC_OP2,decode.modrm.rm);
 	gen_and_imm(FC_OP2,7);
 	gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
 }
 
-static INLINE void dyn_fpu_top_swapped() {
+static inline void dyn_fpu_top_swapped() {
 	gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
 	gen_add_imm(FC_OP1,decode.modrm.rm);
 	gen_and_imm(FC_OP1,7);

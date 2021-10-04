@@ -43,7 +43,7 @@ public:
 
 	virtual const char *GetName() const { return "none"; }
 
-	virtual bool Open(MAYBE_UNUSED const char *conf)
+	virtual bool Open([[maybe_unused]] const char *conf)
 	{
 		LOG_MSG("MIDI: No working MIDI device found/selected.");
 		return true;
@@ -69,9 +69,9 @@ public:
 		}
 	}
 
-	virtual void PlayMsg(MAYBE_UNUSED const uint8_t *msg) {}
+	virtual void PlayMsg([[maybe_unused]] const uint8_t *msg) {}
 
-	virtual void PlaySysex(MAYBE_UNUSED uint8_t *sysex, MAYBE_UNUSED size_t len) {}
+	virtual void PlaySysex([[maybe_unused]] uint8_t *sysex, [[maybe_unused]] size_t len) {}
 
 	virtual MIDI_RC ListAll(Program *)
 	{

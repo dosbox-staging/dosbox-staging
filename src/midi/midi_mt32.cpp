@@ -315,7 +315,7 @@ static mt32emu_report_handler_i get_report_handler_interface()
 			return MT32EMU_REPORT_HANDLER_VERSION_0;
 		}
 
-		static void printDebug(MAYBE_UNUSED void *instance_data,
+		static void printDebug([[maybe_unused]] void *instance_data,
 		                       const char *fmt,
 		                       va_list list)
 		{
@@ -505,7 +505,7 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 	return MIDI_RC::OK;
 }
 
-bool MidiHandler_mt32::Open(MAYBE_UNUSED const char *conf)
+bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 {
 	Close();
 
@@ -720,7 +720,7 @@ void MidiHandler_mt32::Render()
 	}
 }
 
-static void mt32_init(MAYBE_UNUSED Section *sec)
+static void mt32_init([[maybe_unused]] Section *sec)
 {}
 
 void MT32_AddConfigSection(Config *conf)

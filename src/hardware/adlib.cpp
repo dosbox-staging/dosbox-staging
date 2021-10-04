@@ -615,7 +615,7 @@ void Module::PortWrite(io_port_t port, uint8_t val, io_width_t)
 					break;
 				}
 			}
-			FALLTHROUGH;
+			[[fallthrough]];
 		case MODE_OPL2:
 		case MODE_OPL3:
 			if ( !chip[0].Write( reg.normal, val ) ) {
@@ -655,7 +655,7 @@ void Module::PortWrite(io_port_t port, uint8_t val, io_width_t)
 					break;
 				}
 			}
-			FALLTHROUGH;
+			[[fallthrough]];
 		case MODE_OPL3:
 			reg.normal = handler->WriteAddr( port, val ) & 0x1ff;
 			break;
@@ -700,7 +700,7 @@ uint8_t Module::PortRead(io_port_t port, io_width_t)
 				return CtrlRead();
 			}
 		}
-		FALLTHROUGH;
+		[[fallthrough]];
 	case MODE_OPL3:
 		//We allocated 4 ports, so just return -1 for the higher ones
 		if ( !(port & 3 ) ) {

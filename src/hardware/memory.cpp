@@ -75,7 +75,7 @@ public:
 #endif
 		return 0xff;
 	}
-	void writeb(PhysPt addr, MAYBE_UNUSED Bitu val)
+	void writeb(PhysPt addr, [[maybe_unused]] Bitu val)
 	{
 #if C_DEBUG
 		LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
@@ -248,7 +248,7 @@ Bitu MEM_AllocatedPages(MemHandle handle)
 
 //TODO Maybe some protection for this whole allocation scheme
 
-INLINE Bitu BestMatch(Bitu size) {
+inline Bitu BestMatch(Bitu size) {
 	Bitu index=XMS_START;	
 	Bitu first=0;
 	Bitu best=0xfffffff;
@@ -645,7 +645,7 @@ public:
 
 static MEMORY* test;
 
-static void MEM_ShutDown(MAYBE_UNUSED Section *sec)
+static void MEM_ShutDown([[maybe_unused]] Section *sec)
 {
 	delete test;
 }

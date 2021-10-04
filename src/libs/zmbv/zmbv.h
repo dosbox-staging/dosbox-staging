@@ -20,11 +20,13 @@
 #define DOSBOX_ZMBV_H
 
 #ifndef DOSBOX_DOSBOX_H
-#ifdef _MSC_VER
-#define INLINE __forceinline
+	#ifdef _MSC_VER
+		#define INLINE __forceinline
+	#else
+		#define INLINE inline
+	#endif
 #else
-#define INLINE inline
-#endif
+	#define INLINE inline
 #endif
 
 #include <zlib.h>

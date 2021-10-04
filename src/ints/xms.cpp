@@ -119,7 +119,7 @@ static bool umb_available;
 
 static XMS_Block xms_handles[XMS_HANDLES];
 
-static INLINE bool InvalidHandle(Bitu handle) {
+static inline bool InvalidHandle(Bitu handle) {
 	return (!handle || (handle>=XMS_HANDLES) || xms_handles[handle].free);
 }
 
@@ -261,7 +261,7 @@ static bool multiplex_xms(void) {
 
 }
 
-INLINE void SET_RESULT(Bitu res,bool touch_bl_on_succes=true) {
+inline void SET_RESULT(Bitu res,bool touch_bl_on_succes=true) {
 	if(touch_bl_on_succes || res) reg_bl = (Bit8u)res;
 	reg_ax = (res==0);
 }
@@ -300,7 +300,7 @@ Bitu XMS_Handler(void) {
 		break;
 	case XMS_ALLOCATE_ANY_MEMORY:								/* 89 */
 		reg_edx &= 0xffff;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case XMS_ALLOCATE_EXTENDED_MEMORY:							/* 09 */
 		{
 		Bit16u handle = 0;
@@ -331,7 +331,7 @@ Bitu XMS_Handler(void) {
 		break;
 	case XMS_RESIZE_ANY_EXTENDED_MEMORY_BLOCK:					/* 0x8f */
 		if(reg_ebx > reg_bx) LOG_MSG("64MB memory limit!");
-		FALLTHROUGH;
+		[[fallthrough]];
 	case XMS_RESIZE_EXTENDED_MEMORY_BLOCK:						/* 0f */
 		SET_RESULT(XMS_ResizeMemory(reg_dx, reg_bx));
 		break;

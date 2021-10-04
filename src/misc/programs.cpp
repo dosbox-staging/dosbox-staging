@@ -459,7 +459,7 @@ void CONFIG::Run(void) {
 		case P_NOPARAMS:
 			if (!first)
 				break;
-			FALLTHROUGH;
+			[[fallthrough]];
 
 		case P_NOMATCH:
 			WriteOut(MSG_Get("PROGRAM_CONFIG_USAGE"));

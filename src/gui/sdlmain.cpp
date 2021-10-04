@@ -546,7 +546,7 @@ static void RequestExit(bool pressed)
 		DEBUG_LOG_MSG("SDL: Exit requested");
 }
 
-MAYBE_UNUSED static void PauseDOSBox(bool pressed)
+[[maybe_unused]] static void PauseDOSBox(bool pressed)
 {
 	if (!pressed)
 		return;
@@ -655,7 +655,7 @@ void GFX_ForceFullscreenExit()
 	GFX_ResetScreen();
 }
 
-MAYBE_UNUSED static int int_log2(int val)
+[[maybe_unused]] static int int_log2(int val)
 {
 	int log = 0;
 	while ((val >>= 1) != 0)
@@ -1070,7 +1070,7 @@ static SDL_Point calc_pp_scale(int avw, int avh)
 
 Bitu GFX_SetSize(Bitu width,
                  Bitu height,
-                 MAYBE_UNUSED Bitu flags,
+                 [[maybe_unused]] Bitu flags,
                  double scalex,
                  double scaley,
                  GFX_CallBack_t callback,
@@ -1479,7 +1479,7 @@ dosurface:
 	return retFlags;
 }
 
-void GFX_SetShader(MAYBE_UNUSED const char *src)
+void GFX_SetShader([[maybe_unused]] const char *src)
 {
 #if C_OPENGL
 	if (!sdl.opengl.use_shader || src == sdl.opengl.shader_src)
@@ -1714,7 +1714,7 @@ void GFX_EndUpdate(const Bit16u *changedLines)
 #endif
 	if ((!using_opengl || !RENDER_GetForceUpdate()) && !sdl.updating)
 		return;
-	MAYBE_UNUSED bool actually_updating = sdl.updating;
+	[[maybe_unused]] bool actually_updating = sdl.updating;
 	sdl.updating = false;
 	switch (sdl.desktop.type) {
 	case SCREEN_TEXTURE: {
@@ -2061,7 +2061,7 @@ static void DisplaySplash(int time_ms)
 	Delay(time_ms);
 }
 
-MAYBE_UNUSED static std::string get_glshader_value()
+[[maybe_unused]] static std::string get_glshader_value()
 {
 #if C_OPENGL
 	assert(control);
@@ -2464,7 +2464,7 @@ static SDL_Rect calc_viewport_pp(int win_width, int win_height)
 	return {x, y, w, h};
 }
 
-MAYBE_UNUSED static SDL_Rect calc_viewport(int width, int height)
+[[maybe_unused]] static SDL_Rect calc_viewport(int width, int height)
 {
 	if (sdl.scaling_mode == SCALING_MODE::PERFECT)
 		return calc_viewport_pp(width, height);
@@ -3177,7 +3177,7 @@ bool GFX_Events()
 			if ((event.key.keysym.sym == SDLK_TAB) &&
 			    (GetTicksSince(sdl.focus_ticks) < 2))
 				break;
-			FALLTHROUGH;
+			[[fallthrough]];
 #endif
 #if defined (MACOSX)
 		case SDL_KEYDOWN:
@@ -3188,7 +3188,7 @@ bool GFX_Events()
 				RequestExit(true);
 				break;
 			}
-			FALLTHROUGH;
+			[[fallthrough]];
 #endif
 		default: MAPPER_CheckEvent(&event);
 		}

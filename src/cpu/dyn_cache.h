@@ -668,7 +668,7 @@ static void cache_closeblock()
 
 // place an 8bit value into the cache
 
-static INLINE void cache_addb(uint8_t val, const uint8_t *pos)
+static inline void cache_addb(uint8_t val, const uint8_t *pos)
 {
 	*const_cast<uint8_t *>(pos) = val;
 }
@@ -681,7 +681,7 @@ static inline void cache_addb(uint8_t val)
 
 // place a 16bit value into the cache
 
-static INLINE void cache_addw(uint16_t val, const uint8_t *pos)
+static inline void cache_addw(uint16_t val, const uint8_t *pos)
 {
 	write_unaligned_uint16(const_cast<uint8_t *>(pos), val);
 }
@@ -694,7 +694,7 @@ static inline void cache_addw(uint16_t val)
 
 // place a 32bit value into the cache
 
-static INLINE void cache_addd(uint32_t val, const uint8_t *pos)
+static inline void cache_addd(uint32_t val, const uint8_t *pos)
 {
 	write_unaligned_uint32(const_cast<uint8_t *>(pos), val);
 }
@@ -707,7 +707,7 @@ static inline void cache_addd(uint32_t val)
 
 // place a 64bit value into the cache
 
-static INLINE void cache_addq(uint64_t val, const uint8_t *pos)
+static inline void cache_addq(uint64_t val, const uint8_t *pos)
 {
 	write_unaligned_uint64(const_cast<uint8_t *>(pos), val);
 }
@@ -758,12 +758,12 @@ static inline void dyn_mem_set_access(void *ptr, size_t size, const bool execute
 		pthread_jit_write_protect_np(execute);
 #elif defined(HAVE_MPROTECT)
 	const int flags = (execute ? PROT_EXEC : PROT_WRITE) | PROT_READ;
-	MAYBE_UNUSED const int mp_res = mprotect(ptr, size, flags);
+	[[maybe_unused]] const int mp_res = mprotect(ptr, size, flags);
 	assert(mp_res == 0);
 #elif defined(WIN32)
 	DWORD old_protect = 0;
 	const DWORD flags = (execute ? PAGE_EXECUTE_READ : PAGE_READWRITE);
-	MAYBE_UNUSED const BOOL vp_res = VirtualProtect(ptr, size, flags,
+	[[maybe_unused]] const BOOL vp_res = VirtualProtect(ptr, size, flags,
 	                                                &old_protect);
 	assert(vp_res != 0);
 #else
@@ -782,8 +782,8 @@ static inline void dyn_mem_write(void *ptr, size_t size)
 	dyn_mem_set_access(ptr, size, false);
 }
 
-static inline void dyn_cache_invalidate(MAYBE_UNUSED void *ptr,
-                                        MAYBE_UNUSED size_t size)
+static inline void dyn_cache_invalidate([[maybe_unused]] void *ptr,
+                                        [[maybe_unused]] size_t size)
 {
 #if defined(HAVE_BUILTIN_CLEAR_CACHE)
 	const auto start = static_cast<char *>(ptr);

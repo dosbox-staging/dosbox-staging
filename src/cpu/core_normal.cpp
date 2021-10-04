@@ -109,18 +109,18 @@ static struct {
 #define BaseDS		core.base_ds
 #define BaseSS		core.base_ss
 
-static INLINE Bit8u Fetchb() {
+static inline Bit8u Fetchb() {
 	Bit8u temp=LoadMb(core.cseip);
 	core.cseip+=1;
 	return temp;
 }
 
-static INLINE Bit16u Fetchw() {
+static inline Bit16u Fetchw() {
 	Bit16u temp=LoadMw(core.cseip);
 	core.cseip+=2;
 	return temp;
 }
-static INLINE Bit32u Fetchd() {
+static inline Bit32u Fetchd() {
 	Bit32u temp=LoadMd(core.cseip);
 	core.cseip+=4;
 	return temp;

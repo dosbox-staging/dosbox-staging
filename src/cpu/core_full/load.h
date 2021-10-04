@@ -50,7 +50,7 @@ l_MODRMswitch:
 			break;
 		case M_EbIb:
 			inst_op2_d=Fetchb();
-			FALLTHROUGH;
+			[[fallthrough]];
 		case M_Eb:
 			if (inst.rm<0xc0) inst_op1_d=LoadMb(inst.rm_eaa);
 			else inst_op1_d=reg_8(inst.rm_eai);
@@ -63,7 +63,7 @@ l_MODRMswitch:
 		case M_GbEb:
 			if (inst.rm<0xc0) inst_op2_d=LoadMb(inst.rm_eaa);
 			else inst_op2_d=reg_8(inst.rm_eai);
-			FALLTHROUGH;
+			[[fallthrough]];
 		case M_Gb:
 			inst_op1_d=reg_8(inst.rm_index);;
 			break;
@@ -79,7 +79,7 @@ l_MODRMswitch:
 			goto l_M_Ewx;
 		case M_EwxIwx:
 			inst_op2_ds=Fetchws();
-			FALLTHROUGH;
+			[[fallthrough]];
 		case M_Ewx:
 l_M_Ewx:
 			if (inst.rm<0xc0) inst_op1_ds=(Bit16s)LoadMw(inst.rm_eaa);
@@ -107,7 +107,7 @@ l_M_Ewx:
 		case M_EwGw:
 l_M_EwGw:
 			inst_op2_d=reg_16(inst.rm_index);
-			FALLTHROUGH;
+			[[fallthrough]];
 		case M_Ew:
 l_M_Ew:
 			if (inst.rm<0xc0) inst_op1_d=LoadMw(inst.rm_eaa);
@@ -116,7 +116,7 @@ l_M_Ew:
 		case M_GwEw:
 			if (inst.rm<0xc0) inst_op2_d=LoadMw(inst.rm_eaa);
 			else inst_op2_d=reg_16(inst.rm_eai);
-			FALLTHROUGH;
+			[[fallthrough]];
 		case M_Gw:
 			inst_op1_d=reg_16(inst.rm_index);;
 			break;
@@ -126,7 +126,7 @@ l_M_Ew:
 			break;
 		case M_EdxGdx:
 			inst_op2_ds=(Bit32s)reg_32(inst.rm_index);
-			FALLTHROUGH;
+			[[fallthrough]];
 		case M_Edx:
 			if (inst.rm<0xc0) inst_op1_d=(Bit32s)LoadMd(inst.rm_eaa);
 			else inst_op1_d=(Bit32s)reg_32(inst.rm_eai);
@@ -153,7 +153,7 @@ l_M_Ew:
 		case M_EdGd:
 l_M_EdGd:
 			inst_op2_d=reg_32(inst.rm_index);
-			FALLTHROUGH;
+			[[fallthrough]];
 		case M_Ed:
 l_M_Ed:
 			if (inst.rm<0xc0) inst_op1_d=LoadMd(inst.rm_eaa);
@@ -162,7 +162,7 @@ l_M_Ed:
 		case M_GdEd:
 			if (inst.rm<0xc0) inst_op2_d=LoadMd(inst.rm_eaa);
 			else inst_op2_d=reg_32(inst.rm_eai);
-			FALLTHROUGH;
+			[[fallthrough]];
 		case M_Gd:
 			inst_op1_d=reg_32(inst.rm_index);
 			break;
@@ -258,19 +258,19 @@ l_M_Ed:
 /* Direct load of registers */
 	case L_REGbIb:
 		inst_op2_d=Fetchb();
-		FALLTHROUGH;
+		[[fallthrough]];
 	case L_REGb:
 		inst_op1_d=reg_8(inst.code.extra);
 		break;
 	case L_REGwIw:
 		inst_op2_d=Fetchw();
-		FALLTHROUGH;
+		[[fallthrough]];
 	case L_REGw:
 		inst_op1_d=reg_16(inst.code.extra);
 		break;
 	case L_REGdId:
 		inst_op2_d=Fetchd();
-		FALLTHROUGH;
+		[[fallthrough]];
 	case L_REGd:
 		inst_op1_d=reg_32(inst.code.extra);
 		break;

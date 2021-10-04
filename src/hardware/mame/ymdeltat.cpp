@@ -460,7 +460,7 @@ void YM_DELTAT::postload(uint8_t *regs)
 		now_data = *(memory + (now_addr >> 1));
 
 }
-void YM_DELTAT::savestate(MAYBE_UNUSED device_t *device)
+void YM_DELTAT::savestate([[maybe_unused]] device_t *device)
 {
 #ifdef MAME_EMU_SAVE_H
 	YM_DELTAT *const DELTAT = this; // makes the save name sensible

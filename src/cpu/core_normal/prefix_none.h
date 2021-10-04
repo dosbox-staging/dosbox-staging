@@ -511,7 +511,7 @@
 			switch (which) {
 			case 0x02:					/* MOV SS,Ew */
 				CPU_Cycles++; //Always do another instruction
-				FALLTHROUGH;
+				[[fallthrough]];
 			case 0x00:					/* MOV ES,Ew */
 			case 0x03:					/* MOV DS,Ew */
 			case 0x05:					/* MOV GS,Ew */

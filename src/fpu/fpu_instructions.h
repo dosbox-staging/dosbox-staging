@@ -233,16 +233,16 @@ static void FPU_FBLD(PhysPt addr,Bitu store_to) {
 }
 
 
-static INLINE void FPU_FLD_F32_EA(PhysPt addr) {
+static inline void FPU_FLD_F32_EA(PhysPt addr) {
 	FPU_FLD_F32(addr,8);
 }
-static INLINE void FPU_FLD_F64_EA(PhysPt addr) {
+static inline void FPU_FLD_F64_EA(PhysPt addr) {
 	FPU_FLD_F64(addr,8);
 }
-static INLINE void FPU_FLD_I32_EA(PhysPt addr) {
+static inline void FPU_FLD_I32_EA(PhysPt addr) {
 	FPU_FLD_I32(addr,8);
 }
-static INLINE void FPU_FLD_I16_EA(PhysPt addr) {
+static inline void FPU_FLD_I16_EA(PhysPt addr) {
 	FPU_FLD_I16(addr,8);
 }
 
@@ -630,25 +630,25 @@ static void FPU_FLDZ(void){
 }
 
 
-static INLINE void FPU_FADD_EA(Bitu op1){
+static inline void FPU_FADD_EA(Bitu op1){
 	FPU_FADD(op1,8);
 }
-static INLINE void FPU_FMUL_EA(Bitu op1){
+static inline void FPU_FMUL_EA(Bitu op1){
 	FPU_FMUL(op1,8);
 }
-static INLINE void FPU_FSUB_EA(Bitu op1){
+static inline void FPU_FSUB_EA(Bitu op1){
 	FPU_FSUB(op1,8);
 }
-static INLINE void FPU_FSUBR_EA(Bitu op1){
+static inline void FPU_FSUBR_EA(Bitu op1){
 	FPU_FSUBR(op1,8);
 }
-static INLINE void FPU_FDIV_EA(Bitu op1){
+static inline void FPU_FDIV_EA(Bitu op1){
 	FPU_FDIV(op1,8);
 }
-static INLINE void FPU_FDIVR_EA(Bitu op1){
+static inline void FPU_FDIVR_EA(Bitu op1){
 	FPU_FDIVR(op1,8);
 }
-static INLINE void FPU_FCOM_EA(Bitu op1){
+static inline void FPU_FCOM_EA(Bitu op1){
 	FPU_FCOM(op1,8);
 }
 

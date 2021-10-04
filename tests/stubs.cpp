@@ -39,7 +39,7 @@ const char *MSG_Get(char const *)
 }
 
 #if C_DEBUG
-void LOG::operator()(MAYBE_UNUSED char const *buf, ...)
+void LOG::operator()([[maybe_unused]] char const *buf, ...)
 {
 	(void)d_type;     // Deliberately unused.
 	(void)d_severity; // Deliberately unused.

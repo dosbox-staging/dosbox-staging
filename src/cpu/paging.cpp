@@ -166,7 +166,7 @@ void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,uint32_t faultcode) {
 //	LOG_MSG("SS:%04x SP:%08X",SegValue(ss),reg_esp);
 }
 
-static INLINE void InitPageUpdateLink(Bitu relink,PhysPt addr) {
+static inline void InitPageUpdateLink(Bitu relink,PhysPt addr) {
 	if (relink==0) return;
 	if (paging.links.used) {
 		if (paging.links.entries[paging.links.used-1]==(addr>>12)) {
@@ -177,7 +177,7 @@ static INLINE void InitPageUpdateLink(Bitu relink,PhysPt addr) {
 	if (relink>1) PAGING_LinkPage_ReadOnly(addr>>12,relink);
 }
 
-static INLINE void InitPageCheckPresence(PhysPt lin_addr,bool writing,X86PageEntry& table,X86PageEntry& entry) {
+static inline void InitPageCheckPresence(PhysPt lin_addr,bool writing,X86PageEntry& table,X86PageEntry& entry) {
 	Bitu lin_page=lin_addr >> 12;
 	Bitu d_index=lin_page >> 10;
 	Bitu t_index=lin_page & 0x3ff;
@@ -203,7 +203,7 @@ static INLINE void InitPageCheckPresence(PhysPt lin_addr,bool writing,X86PageEnt
 	}
 }
 			
-static INLINE bool InitPageCheckPresence_CheckOnly(PhysPt lin_addr,bool writing,X86PageEntry& table,X86PageEntry& entry) {
+static inline bool InitPageCheckPresence_CheckOnly(PhysPt lin_addr,bool writing,X86PageEntry& table,X86PageEntry& entry) {
 	Bitu lin_page=lin_addr >> 12;
 	Bitu d_index=lin_page >> 10;
 	Bitu t_index=lin_page & 0x3ff;
@@ -227,7 +227,7 @@ static INLINE bool InitPageCheckPresence_CheckOnly(PhysPt lin_addr,bool writing,
 }
 
 // check if a user-level memory access would trigger a privilege page fault
-static INLINE bool InitPage_CheckUseraccess(Bitu u1,Bitu u2) {
+static inline bool InitPage_CheckUseraccess(Bitu u1,Bitu u2) {
 	switch (CPU_ArchitectureType) {
 	case CPU_ARCHTYPE_MIXED:
 	case CPU_ARCHTYPE_386SLOW:
@@ -521,7 +521,7 @@ public:
 		}
 		return true;
 	}
-	void InitPage(Bitu lin_addr, MAYBE_UNUSED Bitu val) {
+	void InitPage(Bitu lin_addr, [[maybe_unused]] Bitu val) {
 		Bitu lin_page=lin_addr >> 12;
 		Bitu phys_page;
 		if (paging.enabled) {
@@ -552,7 +552,7 @@ public:
 			PAGING_LinkPage(lin_page,phys_page);
 		}
 	}
-	Bitu InitPageCheckOnly(Bitu lin_addr, MAYBE_UNUSED Bitu val) {
+	Bitu InitPageCheckOnly(Bitu lin_addr, [[maybe_unused]] Bitu val) {
 		Bitu lin_page=lin_addr >> 12;
 		if (paging.enabled) {
 			if (!USERWRITE_PROHIBITED) return 2;
@@ -735,7 +735,7 @@ void PAGING_LinkPage_ReadOnly(Bitu lin_page,Bitu phys_page) {
 
 #else
 
-static INLINE void InitTLBInt(tlb_entry *bank) {
+static inline void InitTLBInt(tlb_entry *bank) {
  	for (Bitu i=0;i<TLB_SIZE;i++) {
 		bank[i].read=0;
 		bank[i].write=0;

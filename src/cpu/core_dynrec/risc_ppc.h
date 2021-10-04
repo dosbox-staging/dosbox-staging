@@ -155,7 +155,7 @@ static void gen_mov_word_to_reg_imm(HostReg dest_reg,Bit16u imm)
 DRC_PTR_SIZE_IM block_ptr;
 
 // Helper for loading addresses
-static HostReg INLINE gen_addr(Bit32s &addr, HostReg dest)
+static HostReg inline gen_addr(Bit32s &addr, HostReg dest)
 {
 	Bit32s off;
 
@@ -395,7 +395,7 @@ static void gen_mov_direct_dword(void* dest,Bit32u imm) {
 }
 
 // move an address into memory (assumes address != NULL)
-static void INLINE gen_mov_direct_ptr(void* dest,DRC_PTR_SIZE_IM imm)
+static void inline gen_mov_direct_ptr(void* dest,DRC_PTR_SIZE_IM imm)
 {
 	block_ptr = 0;
 	gen_mov_dword_to_reg_imm(HOST_R27, imm);
@@ -436,7 +436,7 @@ static void gen_sub_direct_word(void* dest,Bit32u imm,bool dword) {
 // effective address calculation, destination is dest_reg
 // scale_reg is scaled by scale (scale_reg*(2^scale)) and
 // added to dest_reg, then the immediate value is added
-static INLINE void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits imm)
+static inline void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits imm)
 {
 	if (scale)
 	{
@@ -451,7 +451,7 @@ static INLINE void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits im
 // effective address calculation, destination is dest_reg
 // dest_reg is scaled by scale (dest_reg*(2^scale)),
 // then the immediate value is added
-static INLINE void gen_lea(HostReg dest_reg,Bitu scale,Bits imm)
+static inline void gen_lea(HostReg dest_reg,Bitu scale,Bits imm)
 {
 	if (scale)
 	{
@@ -462,7 +462,7 @@ static INLINE void gen_lea(HostReg dest_reg,Bitu scale,Bits imm)
 }
 
 // helper function to choose direct or indirect call
-static int INLINE do_gen_call(void *func, Bit32u *pos, bool pad)
+static int inline do_gen_call(void *func, Bit32u *pos, bool pad)
 {
 	Bit32s f = (Bit32s)func;
 	Bit32s off = f - (Bit32s)pos;
@@ -488,7 +488,7 @@ static int INLINE do_gen_call(void *func, Bit32u *pos, bool pad)
 }
 
 // generate a call to a parameterless function
-static void INLINE gen_call_function_raw(void * func,bool fastcall=true)
+static void inline gen_call_function_raw(void * func,bool fastcall=true)
 {
 	cache.pos += do_gen_call(func, (Bit32u*)cache.pos, fastcall);
 }
@@ -496,7 +496,7 @@ static void INLINE gen_call_function_raw(void * func,bool fastcall=true)
 // generate a call to a function with paramcount parameters
 // note: the parameters are loaded in the architecture specific way
 // using the gen_load_param_ functions below
-static Bit32u INLINE gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false)
+static Bit32u inline gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false)
 {
 	Bit32u proc_addr=(Bit32u)cache.pos;
 	gen_call_function_raw(func,fastcall);
@@ -504,22 +504,22 @@ static Bit32u INLINE gen_call_function_setup(void * func,Bitu paramcount,bool fa
 }
 
 // load an immediate value as param'th function parameter
-static void INLINE gen_load_param_imm(Bitu imm,Bitu param) {
+static void inline gen_load_param_imm(Bitu imm,Bitu param) {
 	gen_mov_dword_to_reg_imm(RegParams[param], imm);
 }
 
 // load an address as param'th function parameter
-static void INLINE gen_load_param_addr(Bitu addr,Bitu param) {
+static void inline gen_load_param_addr(Bitu addr,Bitu param) {
 	gen_load_param_imm(addr, param);
 }
 
 // load a host-register as param'th function parameter
-static void INLINE gen_load_param_reg(Bitu reg,Bitu param) {
+static void inline gen_load_param_reg(Bitu reg,Bitu param) {
 	gen_mov_regs(RegParams[param], (HostReg)reg);
 }
 
 // load a value from memory as param'th function parameter
-static void INLINE gen_load_param_mem(Bitu mem,Bitu param) {
+static void inline gen_load_param_mem(Bitu mem,Bitu param) {
 	gen_mov_word_to_reg(RegParams[param], (void*)mem, true);
 }
 
@@ -860,7 +860,7 @@ static void gen_mov_regbyte_to_reg_low(HostReg dest_reg,Bitu index)
 // the upper 24bit of the destination register can be destroyed
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
-static void INLINE gen_mov_regbyte_to_reg_low_canuseword(HostReg dest_reg,Bitu index) {
+static void inline gen_mov_regbyte_to_reg_low_canuseword(HostReg dest_reg,Bitu index) {
 	gen_mov_byte_to_reg_low_canuseword(dest_reg, (Bit8u*)&cpu_regs + index);
 }
 

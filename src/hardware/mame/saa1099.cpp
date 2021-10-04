@@ -224,8 +224,8 @@ void saa1099_device::device_start()
 //  sound_stream_update - handle a stream update
 //-------------------------------------------------
 
-void saa1099_device::sound_stream_update(MAYBE_UNUSED sound_stream &stream,
-                                         MAYBE_UNUSED stream_sample_t **inputs,
+void saa1099_device::sound_stream_update([[maybe_unused]] sound_stream &stream,
+                                         [[maybe_unused]] stream_sample_t **inputs,
                                          stream_sample_t **outputs,
                                          int samples)
 {

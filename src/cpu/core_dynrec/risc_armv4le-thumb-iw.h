@@ -187,7 +187,7 @@ static Bit32u cache_dataindex = 0;		// used size of data pool = index of free da
 
 
 // forwarded function
-static void INLINE gen_create_branch_short(const Bit8u * func);
+static void inline gen_create_branch_short(const Bit8u * func);
 
 // function to check distance to data pool
 // if too close, then generate jump after data pool
@@ -471,7 +471,7 @@ static void gen_mov_word_to_reg(HostReg dest_reg,void* data,bool dword) {
 
 // move a 16bit constant value into dest_reg
 // the upper 16bit of the destination register may be destroyed
-static void INLINE gen_mov_word_to_reg_imm(HostReg dest_reg,Bit16u imm) {
+static void inline gen_mov_word_to_reg_imm(HostReg dest_reg,Bit16u imm) {
 	gen_mov_dword_to_reg_imm(dest_reg, (Bit32u)imm);
 }
 
@@ -597,7 +597,7 @@ static void gen_mov_byte_to_reg_low(HostReg dest_reg,void* data) {
 // the upper 24bit of the destination register can be destroyed
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
-static void INLINE gen_mov_byte_to_reg_low_canuseword(HostReg dest_reg,void* data) {
+static void inline gen_mov_byte_to_reg_low_canuseword(HostReg dest_reg,void* data) {
 	gen_mov_byte_to_reg_low(dest_reg, data);
 }
 
@@ -614,7 +614,7 @@ static void gen_mov_byte_to_reg_low_imm(HostReg dest_reg,Bit8u imm) {
 // the upper 24bit of the destination register can be destroyed
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
-static void INLINE gen_mov_byte_to_reg_low_imm_canuseword(HostReg dest_reg,Bit8u imm) {
+static void inline gen_mov_byte_to_reg_low_imm_canuseword(HostReg dest_reg,Bit8u imm) {
 	gen_mov_byte_to_reg_low_imm(dest_reg, imm);
 }
 
@@ -726,7 +726,7 @@ static void gen_mov_direct_dword(void* dest,Bit32u imm) {
 }
 
 // move an address into memory
-static void INLINE gen_mov_direct_ptr(void* dest,Bit32u imm) {
+static void inline gen_mov_direct_ptr(void* dest,Bit32u imm) {
 	gen_mov_direct_dword(dest,imm);
 }
 
@@ -798,7 +798,7 @@ static void gen_sub_direct_byte(void* dest,Bit8s imm) {
 // effective address calculation, destination is dest_reg
 // scale_reg is scaled by scale (scale_reg*(2^scale)) and
 // added to dest_reg, then the immediate value is added
-static INLINE void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits imm) {
+static inline void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits imm) {
 	if (scale) {
 		cache_checkinstr(4);
 		cache_addw( LSL_IMM(templo1, scale_reg, scale) );      // lsl templo1, scale_reg, #(scale)
@@ -813,7 +813,7 @@ static INLINE void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits im
 // effective address calculation, destination is dest_reg
 // dest_reg is scaled by scale (dest_reg*(2^scale)),
 // then the immediate value is added
-static INLINE void gen_lea(HostReg dest_reg,Bitu scale,Bits imm) {
+static inline void gen_lea(HostReg dest_reg,Bitu scale,Bits imm) {
 	if (scale) {
 		cache_checkinstr(2);
 		cache_addw( LSL_IMM(dest_reg, dest_reg, scale) );      // lsl dest_reg, dest_reg, #(scale)
@@ -848,7 +848,7 @@ static void gen_call_function_helper(void * func) {
 }
 
 // generate a call to a parameterless function
-static void INLINE gen_call_function_raw(void * func) {
+static void inline gen_call_function_raw(void * func) {
 	cache_checkinstr(12);
 	gen_call_function_helper(func);
 }
@@ -856,7 +856,7 @@ static void INLINE gen_call_function_raw(void * func) {
 // generate a call to a function with paramcount parameters
 // note: the parameters are loaded in the architecture specific way
 // using the gen_load_param_ functions below
-static INLINE const Bit8u* gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false) {
+static inline const Bit8u* gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false) {
 	cache_checkinstr(12);
 	const Bit8u* proc_addr = cache.pos;
 	gen_call_function_helper(func);
@@ -870,22 +870,22 @@ static INLINE const Bit8u* gen_call_function_setup(void * func,Bitu paramcount,b
 // max of 4 parameters in a1-a4
 
 // load an immediate value as param'th function parameter
-static void INLINE gen_load_param_imm(Bitu imm,Bitu param) {
+static void inline gen_load_param_imm(Bitu imm,Bitu param) {
 	gen_mov_dword_to_reg_imm(param, imm);
 }
 
 // load an address as param'th function parameter
-static void INLINE gen_load_param_addr(Bitu addr,Bitu param) {
+static void inline gen_load_param_addr(Bitu addr,Bitu param) {
 	gen_mov_dword_to_reg_imm(param, addr);
 }
 
 // load a host-register as param'th function parameter
-static void INLINE gen_load_param_reg(Bitu reg,Bitu param) {
+static void inline gen_load_param_reg(Bitu reg,Bitu param) {
 	gen_mov_regs(param, reg);
 }
 
 // load a value from memory as param'th function parameter
-static void INLINE gen_load_param_mem(Bitu mem,Bitu param) {
+static void inline gen_load_param_mem(Bitu mem,Bitu param) {
 	gen_mov_word_to_reg(param, (void *)mem, 1);
 }
 #else
@@ -959,7 +959,7 @@ static const Bit8u* gen_create_branch_on_nonzero(HostReg reg,bool dword) {
 }
 
 // calculate relative offset and fill it into the location pointed to by data
-static void INLINE gen_fill_branch(const Bit8u* data) {
+static void inline gen_fill_branch(const Bit8u* data) {
 #if C_DEBUG
 	Bits len=cache.pos-(data+4);
 	if (len<0) len=-len;
@@ -1014,7 +1014,7 @@ static const Bit8u* gen_create_branch_long_leqzero(HostReg reg) {
 }
 
 // calculate long relative offset and fill it into the location pointed to by data
-static void INLINE gen_fill_branch_long(const Bit8u* data) {
+static void inline gen_fill_branch_long(const Bit8u* data) {
 	// this is an absolute branch
 	cache_addd((Bit32u)cache.pos+1,data); // add 1 to keep processor in thumb state
 }
@@ -1079,7 +1079,7 @@ static void gen_return_function(void) {
 
 // short unconditional jump (over data pool)
 // must emit at most CACHE_DATA_JUMP bytes
-static void INLINE gen_create_branch_short(const Bit8u * func) {
+static void inline gen_create_branch_short(const Bit8u * func) {
 	cache_addw( B_FWD(func - (cache.pos + 4)) );      // b func
 }
 
@@ -1454,7 +1454,7 @@ static void gen_mov_regbyte_to_reg_low(HostReg dest_reg,Bitu index) {
 // the upper 24bit of the destination register can be destroyed
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
-static void INLINE gen_mov_regbyte_to_reg_low_canuseword(HostReg dest_reg,Bitu index) {
+static void inline gen_mov_regbyte_to_reg_low_canuseword(HostReg dest_reg,Bitu index) {
 	cache_checkinstr(4);
 	cache_addw( MOV_LO_HI(templo2, FC_REGS_ADDR) );      // mov templo2, FC_REGS_ADDR
 	cache_addw( LDRB_IMM(dest_reg, templo2, index) );      // ldrb dest_reg, [templo2, #index]

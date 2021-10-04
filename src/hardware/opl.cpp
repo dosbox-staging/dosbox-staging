@@ -915,7 +915,7 @@ uint8_t adlib_reg_read(io_port_t port) {
 #endif
 }
 
-void adlib_write_index(MAYBE_UNUSED io_port_t port, uint8_t val) {
+void adlib_write_index([[maybe_unused]] io_port_t port, uint8_t val) {
 	opl_index = val;
 #if defined(OPLTYPE_IS_OPL3)
 	if ((port&3)!=0) {
@@ -925,7 +925,7 @@ void adlib_write_index(MAYBE_UNUSED io_port_t port, uint8_t val) {
 #endif
 }
 
-static INLINE void clipit16(int32_t ival, int16_t *outval)
+static inline void clipit16(int32_t ival, int16_t *outval)
 {
 	if (ival<32768) {
 		if (ival>-32769) {

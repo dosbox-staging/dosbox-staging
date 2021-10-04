@@ -40,7 +40,7 @@ std::string to_native_path(const std::string &path) noexcept
 	return "";
 }
 
-int create_dir(const char *path, MAYBE_UNUSED uint32_t mode, uint32_t flags) noexcept
+int create_dir(const char *path, [[maybe_unused]] uint32_t mode, uint32_t flags) noexcept
 {
 	const int err = mkdir(path);
 	if ((errno == EEXIST) && (flags & OK_IF_EXISTS)) {

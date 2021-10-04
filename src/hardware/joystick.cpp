@@ -469,7 +469,7 @@ public:
 
 static JOYSTICK* test;
 
-void JOYSTICK_Destroy(MAYBE_UNUSED Section *sec)
+void JOYSTICK_Destroy([[maybe_unused]] Section *sec)
 {
 	delete test;
 }

@@ -1452,7 +1452,7 @@ Gus::~Gus()
 		wh.Uninstall();
 }
 
-static void gus_destroy(MAYBE_UNUSED Section *sec)
+static void gus_destroy([[maybe_unused]] Section *sec)
 {
 	// GUS destroy is run when the user wants to deactivate the GUS:
 	// C:\> config -set gus=false

@@ -23,11 +23,11 @@
 
 #define ACTL_MAX_REG   0x14
 
-static INLINE void ResetACTL(void) {
+static inline void ResetACTL(void) {
 	IO_Read(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6);
 }
 
-static INLINE void WriteTandyACTL(Bit8u creg,Bit8u val) {
+static inline void WriteTandyACTL(Bit8u creg,Bit8u val) {
 	IO_Write(VGAREG_TDY_ADDRESS,creg);
 	if (machine==MCH_TANDY) IO_Write(VGAREG_TDY_DATA,val);
 	else IO_Write(VGAREG_PCJR_DATA,val);

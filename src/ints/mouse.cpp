@@ -205,7 +205,7 @@ void MOUSE_Limit_Events(uint32_t /*val*/)
 	}
 }
 
-INLINE void Mouse_AddEvent(Bit8u type) {
+inline void Mouse_AddEvent(Bit8u type) {
 	if (mouse.events<QUEUE_SIZE) {
 		if (mouse.events>0) {
 			/* Skip duplicate events */
@@ -727,7 +727,7 @@ static Bitu INT33_Handler(void) {
 	switch (reg_ax) {
 	case 0x00:	/* Reset Driver and Read Status */
 		Mouse_ResetHardware();
-		FALLTHROUGH;
+		[[fallthrough]];
 	case 0x21:	/* Software Reset */
 		reg_ax=0xffff;
 		reg_bx=MOUSE_BUTTONS;
@@ -845,7 +845,7 @@ static Bitu INT33_Handler(void) {
 	case 0x27:	/* Get Screen/Cursor Masks and Mickey Counts */
 		reg_ax=mouse.textAndMask;
 		reg_bx=mouse.textXorMask;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case 0x0b:	/* Read Motion Data */
 		reg_cx=static_cast<Bit16s>(mouse.mickey_x);
 		reg_dx=static_cast<Bit16s>(mouse.mickey_y);

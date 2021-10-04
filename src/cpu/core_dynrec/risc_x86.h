@@ -205,7 +205,7 @@ static void gen_mov_direct_dword(void* dest,Bit32u imm) {
 }
 
 // move an address into memory
-static void INLINE gen_mov_direct_ptr(void* dest,Bitu imm) {
+static void inline gen_mov_direct_ptr(void* dest,Bitu imm) {
 	gen_mov_direct_dword(dest,(Bit32u)imm);
 }
 
@@ -255,7 +255,7 @@ static void gen_sub_direct_word(void* dest,Bit32u imm,bool dword) {
 // effective address calculation, destination is dest_reg
 // scale_reg is scaled by scale (scale_reg*(2^scale)) and
 // added to dest_reg, then the immediate value is added
-static INLINE void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits imm) {
+static inline void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits imm) {
 	Bit8u rm_base;
 	Bitu imm_size;
 	if (!imm) {
@@ -281,7 +281,7 @@ static INLINE void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits im
 // effective address calculation, destination is dest_reg
 // dest_reg is scaled by scale (dest_reg*(2^scale)),
 // then the immediate value is added
-static INLINE void gen_lea(HostReg dest_reg,Bitu scale,Bits imm) {
+static inline void gen_lea(HostReg dest_reg,Bitu scale,Bits imm) {
 	// ea_reg := ea_reg*(2^scale)+imm
 	// ea_reg :=   op2 *(2^scale)+imm
 	cache_addb(0x8d);			//LEA
@@ -294,7 +294,7 @@ static INLINE void gen_lea(HostReg dest_reg,Bitu scale,Bits imm) {
 
 
 // generate a call to a parameterless function
-static void INLINE gen_call_function_raw(void * func) {
+static void inline gen_call_function_raw(void * func) {
 	cache_addb(0xe8);
 	cache_addd((Bit32u)func - (Bit32u)cache.pos-4);
 }
@@ -302,7 +302,7 @@ static void INLINE gen_call_function_raw(void * func) {
 // generate a call to a function with paramcount parameters
 // note: the parameters are loaded in the architecture specific way
 // using the gen_load_param_ functions below
-static INLINE const Bit8u* gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false) {
+static inline const Bit8u* gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false) {
 	const Bit8u* proc_addr=cache.pos;
 	// Do the actual call to the procedure
 	cache_addb(0xe8);
@@ -318,24 +318,24 @@ static INLINE const Bit8u* gen_call_function_setup(void * func,Bitu paramcount,b
 
 
 // load an immediate value as param'th function parameter
-static void INLINE gen_load_param_imm(Bitu imm,Bitu param) {
+static void inline gen_load_param_imm(Bitu imm,Bitu param) {
 	cache_addb(0x68);			// push immediate
 	cache_addd(imm);
 }
 
 // load an address as param'th function parameter
-static void INLINE gen_load_param_addr(Bitu addr,Bitu param) {
+static void inline gen_load_param_addr(Bitu addr,Bitu param) {
 	cache_addb(0x68);			// push immediate (address)
 	cache_addd(addr);
 }
 
 // load a host-register as param'th function parameter
-static void INLINE gen_load_param_reg(Bitu reg,Bitu param) {
+static void inline gen_load_param_reg(Bitu reg,Bitu param) {
 	cache_addb(0x50+(reg&7));	// push reg
 }
 
 // load a value from memory as param'th function parameter
-static void INLINE gen_load_param_mem(Bitu mem,Bitu param) {
+static void inline gen_load_param_mem(Bitu mem,Bitu param) {
 	cache_addw(0x35ff);			// push []
 	cache_addd(mem);
 }

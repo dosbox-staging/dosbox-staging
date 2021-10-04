@@ -237,7 +237,7 @@ uint16_t Innovation::GetRemainingSamples()
 }
 
 Innovation innovation;
-static void innovation_destroy(MAYBE_UNUSED Section *sec)
+static void innovation_destroy([[maybe_unused]] Section *sec)
 {
 	innovation.Close();
 }

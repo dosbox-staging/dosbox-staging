@@ -97,12 +97,12 @@ public:
 	~IO_WriteHandleObject();
 };
 
-static INLINE void IO_Write(io_port_t port, Bit8u val)
+static inline void IO_Write(io_port_t port, Bit8u val)
 {
 	IO_WriteB(port,val);
 }
 
-static INLINE Bit8u IO_Read(io_port_t port){
+static inline Bit8u IO_Read(io_port_t port){
 	// cast to be dropped after deprecating the Bitu IO handler API
 	return (Bit8u)IO_ReadB(port);
 }

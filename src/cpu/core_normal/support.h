@@ -29,14 +29,14 @@
 #define SaveRw(reg,val)	reg=val
 #define SaveRd(reg,val)	reg=val
 
-static INLINE Bit8s Fetchbs() {
+static inline Bit8s Fetchbs() {
 	return Fetchb();
 }
-static INLINE Bit16s Fetchws() {
+static inline Bit16s Fetchws() {
 	return Fetchw();
 }
 
-static INLINE Bit32s Fetchds() {
+static inline Bit32s Fetchds() {
 	return Fetchd();
 }
 

@@ -135,7 +135,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 			LOG(LOG_INT10, LOG_ERROR)("PutPixel unhandled mode type %d", CurMode->type);
 			break;
 		}
-		FALLTHROUGH;
+		[[fallthrough]];
 	case M_EGA: {
 		/* Set the correct bitmask for the pixel position */
 		IO_Write(0x3ce, 0x8);

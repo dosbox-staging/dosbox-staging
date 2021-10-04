@@ -93,20 +93,20 @@ struct CPU_Regs {
 extern Segments Segs;
 extern CPU_Regs cpu_regs;
 
-static INLINE PhysPt SegPhys(SegNames index) {
+static inline PhysPt SegPhys(SegNames index) {
 	return Segs.phys[index];
 }
 
-static INLINE Bit16u SegValue(SegNames index) {
+static inline Bit16u SegValue(SegNames index) {
 	return (Bit16u)Segs.val[index];
 }
 	
-static INLINE RealPt RealMakeSeg(SegNames index,Bit16u off) {
+static inline RealPt RealMakeSeg(SegNames index,Bit16u off) {
 	return RealMake(SegValue(index),off);	
 }
 
 
-static INLINE void SegSet16(Bitu index,Bit16u val) {
+static inline void SegSet16(Bitu index,Bit16u val) {
 	Segs.val[index]=val;
 	Segs.phys[index]=val << 4;
 }

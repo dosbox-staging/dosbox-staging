@@ -522,7 +522,7 @@ bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
 	return false;
 }
 
-bool CBreakpoint::CheckIntBreakpoint(MAYBE_UNUSED PhysPt adr, Bit8u intNr, Bit16u ahValue, Bit16u alValue)
+bool CBreakpoint::CheckIntBreakpoint([[maybe_unused]] PhysPt adr, Bit8u intNr, Bit16u ahValue, Bit16u alValue)
 // Checks if interrupt breakpoint is valid and should stop execution
 {
 	if (BPoints.empty()) return false;
@@ -1789,7 +1789,7 @@ Bit32u DEBUG_CheckKeys(void) {
 					break;
 				}
 				// If we aren't stepping over something, do a normal step.
-				/* FALLTHROUGH */
+				[[fallthrough]];
 		case KEY_F(11):	// trace into
 				exitLoop = false;
 				ret = DEBUG_Run(1,true);
@@ -1812,7 +1812,7 @@ Bit32u DEBUG_CheckKeys(void) {
 		case 0x08:	// delete 
 				if (codeViewData.inputPos == 0) break;
 				codeViewData.inputPos--;
-				// fallthrough
+				[[fallthrough]];
 		case KEY_DC: // delete character
 				if ((codeViewData.inputPos<0) || (codeViewData.inputPos>=MAXCMDLEN)) break;
 				if (codeViewData.inputStr[codeViewData.inputPos] != 0) {

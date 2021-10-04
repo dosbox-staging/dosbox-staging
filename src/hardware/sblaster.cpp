@@ -584,7 +584,7 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 		break;
 	case DSP_DMA_16_ALIASED:
 		assert(dma16_to_sample_divisor == 2);
-		FALLTHROUGH;
+		[[fallthrough]];
 	case DSP_DMA_16:
 		if (sb.dma.stereo) {
 			bytes_read = ReadDMA16(bytes_to_read, sb.dma.remain_size);
@@ -1060,13 +1060,13 @@ static void DSP_DoCommand() {
 		break;
 	case 0x75:	/* 075h : Single Cycle 4-bit ADPCM Reference */
 		sb.adpcm.haveref = true;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case 0x74:	/* 074h : Single Cycle 4-bit ADPCM */
 		DSP_PrepareDMA_Old(DSP_DMA_4,false,false);
 		break;
 	case 0x77:	/* 077h : Single Cycle 3-bit(2.6bit) ADPCM Reference*/
 		sb.adpcm.haveref = true;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case 0x76:	/* 076h : Single Cycle 3-bit(2.6bit) ADPCM */
 		DSP_PrepareDMA_Old(DSP_DMA_3,false,false);
 		break;
@@ -1077,7 +1077,7 @@ static void DSP_DoCommand() {
 		break;
 	case 0x17:	/* 017h : Single Cycle 2-bit ADPCM Reference*/
 		sb.adpcm.haveref = true;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case 0x16:	/* 016h : Single Cycle 2-bit ADPCM */
 		DSP_PrepareDMA_Old(DSP_DMA_2,false,false);
 		break;
@@ -1101,7 +1101,7 @@ static void DSP_DoCommand() {
 		break;
 	case 0xd5:	/* Halt 16-bit DMA */
 		DSP_SB16_ONLY;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case 0xd0:	/* Halt 8-bit DMA */
 //		DSP_ChangeMode(MODE_NONE);
 		LOG(LOG_SB, LOG_NORMAL)("Halt DMA Command");
@@ -1126,7 +1126,7 @@ static void DSP_DoCommand() {
 		break;
 	case 0xd6:	/* Continue DMA 16-bit */
 		DSP_SB16_ONLY;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case 0xd4:	/* Continue DMA 8-bit*/
 		LOG(LOG_SB, LOG_NORMAL)("Continue DMA command");
 		if (sb.mode==MODE_DMA_PAUSE) {
@@ -1136,7 +1136,7 @@ static void DSP_DoCommand() {
 		break;
 	case 0xd9:  /* Exit Autoinitialize 16-bit */
 		DSP_SB16_ONLY;
-		FALLTHROUGH;
+		[[fallthrough]];
 	case 0xda:	/* Exit Autoinitialize 8-bit */
 		DSP_SB2_ABOVE;
 		LOG(LOG_SB, LOG_NORMAL)("Exit Autoinit command");
@@ -1787,7 +1787,7 @@ public:
 			break;
 		case OPL_opl2:
 			CMS_Init(section);
-			FALLTHROUGH;
+			[[fallthrough]];
 		case OPL_dualopl2:
 		case OPL_opl3:
 		case OPL_opl3gold:
@@ -1857,7 +1857,7 @@ public:
 			break;
 		case OPL_opl2:
 			CMS_ShutDown(m_configuration);
-			FALLTHROUGH;
+			[[fallthrough]];
 		case OPL_dualopl2:
 		case OPL_opl3:
 		case OPL_opl3gold:

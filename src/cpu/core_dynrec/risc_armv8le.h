@@ -447,7 +447,7 @@ static void gen_mov_qword_to_reg_imm(HostReg dest_reg,Bit64u imm) {
 }
 
 // helper function for gen_mov_word_to_reg
-static void gen_mov_word_to_reg_helper(HostReg dest_reg, MAYBE_UNUSED void* data,bool dword,HostReg data_reg) {
+static void gen_mov_word_to_reg_helper(HostReg dest_reg, [[maybe_unused]] void* data,bool dword,HostReg data_reg) {
 	if (dword) {
 		cache_addd( LDR_IMM(dest_reg, data_reg, 0) );       // ldr dest_reg, [data_reg]
 	} else {
@@ -466,7 +466,7 @@ static void gen_mov_word_to_reg(HostReg dest_reg,void* data,bool dword) {
 
 // move a 16bit constant value into dest_reg
 // the upper 16bit of the destination register may be destroyed
-static void INLINE gen_mov_word_to_reg_imm(HostReg dest_reg,Bit16u imm) {
+static void inline gen_mov_word_to_reg_imm(HostReg dest_reg,Bit16u imm) {
 	cache_addd( MOVZ(dest_reg, imm, 0) );   // movz dest_reg, #imm
 }
 
@@ -523,7 +523,7 @@ static bool gen_mov_memval_from_reg(HostReg src_reg, void *dest, Bitu size) {
 }
 
 // helper function for gen_mov_word_from_reg
-static void gen_mov_word_from_reg_helper(HostReg src_reg, MAYBE_UNUSED void* dest,bool dword, HostReg data_reg) {
+static void gen_mov_word_from_reg_helper(HostReg src_reg, [[maybe_unused]] void* dest,bool dword, HostReg data_reg) {
 	if (dword) {
 		cache_addd( STR_IMM(src_reg, data_reg, 0) );        // str src_reg, [data_reg]
 	} else {
@@ -554,7 +554,7 @@ static void gen_mov_byte_to_reg_low(HostReg dest_reg,void* data) {
 // the upper 24bit of the destination register can be destroyed
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
-static void INLINE gen_mov_byte_to_reg_low_canuseword(HostReg dest_reg,void* data) {
+static void inline gen_mov_byte_to_reg_low_canuseword(HostReg dest_reg,void* data) {
 	gen_mov_byte_to_reg_low(dest_reg, data);
 }
 
@@ -570,7 +570,7 @@ static void gen_mov_byte_to_reg_low_imm(HostReg dest_reg,Bit8u imm) {
 // the upper 24bit of the destination register can be destroyed
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
-static void INLINE gen_mov_byte_to_reg_low_imm_canuseword(HostReg dest_reg,Bit8u imm) {
+static void inline gen_mov_byte_to_reg_low_imm_canuseword(HostReg dest_reg,Bit8u imm) {
 	gen_mov_byte_to_reg_low_imm(dest_reg, imm);
 }
 
@@ -664,7 +664,7 @@ static void gen_mov_direct_dword(void* dest,Bit32u imm) {
 }
 
 // move an address into memory
-static void INLINE gen_mov_direct_ptr(void* dest,Bitu imm) {
+static void inline gen_mov_direct_ptr(void* dest,Bitu imm) {
 	gen_mov_qword_to_reg_imm(temp3, imm);
 	if (!gen_mov_memval_from_reg(temp3, dest, 8)) {
 		gen_mov_qword_to_reg_imm(temp1, (Bit64u)dest);
@@ -735,7 +735,7 @@ static void gen_sub_direct_word(void* dest,Bit32u imm,bool dword) {
 // effective address calculation, destination is dest_reg
 // scale_reg is scaled by scale (scale_reg*(2^scale)) and
 // added to dest_reg, then the immediate value is added
-static INLINE void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits imm) {
+static inline void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits imm) {
 	cache_addd( ADD_REG_LSL_IMM(dest_reg, dest_reg, scale_reg, scale) );      // add dest_reg, dest_reg, scale_reg, lsl #scale
 	gen_add_imm(dest_reg, imm);
 }
@@ -743,7 +743,7 @@ static INLINE void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits im
 // effective address calculation, destination is dest_reg
 // dest_reg is scaled by scale (dest_reg*(2^scale)),
 // then the immediate value is added
-static INLINE void gen_lea(HostReg dest_reg,Bitu scale,Bits imm) {
+static inline void gen_lea(HostReg dest_reg,Bitu scale,Bits imm) {
 	if (scale) {
 		cache_addd( MOV_REG_LSL_IMM(dest_reg, dest_reg, scale) );      // mov dest_reg, dest_reg, lsl #scale
 	}
@@ -751,7 +751,7 @@ static INLINE void gen_lea(HostReg dest_reg,Bitu scale,Bits imm) {
 }
 
 // generate a call to a parameterless function
-static void INLINE gen_call_function_raw(void * func) {
+static void inline gen_call_function_raw(void * func) {
 	cache_addd( MOVZ64(temp1, ((Bit64u)func) & 0xffff, 0) );            // movz dest_reg, #(func & 0xffff)
 	cache_addd( MOVK64(temp1, (((Bit64u)func) >> 16) & 0xffff, 16) );   // movk dest_reg, #((func >> 16) & 0xffff), lsl #16
 	cache_addd( MOVK64(temp1, (((Bit64u)func) >> 32) & 0xffff, 32) );   // movk dest_reg, #((func >> 32) & 0xffff), lsl #32
@@ -762,29 +762,29 @@ static void INLINE gen_call_function_raw(void * func) {
 // generate a call to a function with paramcount parameters
 // note: the parameters are loaded in the architecture specific way
 // using the gen_load_param_ functions below
-static INLINE const Bit8u* gen_call_function_setup(void * func, MAYBE_UNUSED Bitu paramcount, MAYBE_UNUSED bool fastcall=false) {
+static inline const Bit8u* gen_call_function_setup(void * func, [[maybe_unused]] Bitu paramcount, [[maybe_unused]] bool fastcall=false) {
 	const Bit8u* proc_addr = cache.pos;
 	gen_call_function_raw(func);
 	return proc_addr;
 }
 
 // load an immediate value as param'th function parameter
-static void INLINE gen_load_param_imm(Bitu imm,Bitu param) {
+static void inline gen_load_param_imm(Bitu imm,Bitu param) {
 	gen_mov_qword_to_reg_imm(param, imm);
 }
 
 // load an address as param'th function parameter
-static void INLINE gen_load_param_addr(Bitu addr,Bitu param) {
+static void inline gen_load_param_addr(Bitu addr,Bitu param) {
 	gen_mov_qword_to_reg_imm(param, addr);
 }
 
 // load a host-register as param'th function parameter
-static void INLINE gen_load_param_reg(Bitu reg,Bitu param) {
+static void inline gen_load_param_reg(Bitu reg,Bitu param) {
 	gen_mov_regs(param, reg);
 }
 
 // load a value from memory as param'th function parameter
-static void INLINE gen_load_param_mem(Bitu mem,Bitu param) {
+static void inline gen_load_param_mem(Bitu mem,Bitu param) {
 	gen_mov_word_to_reg(param, (void *)mem, 1);
 }
 
@@ -832,7 +832,7 @@ static const Bit8u* gen_create_branch_on_nonzero(HostReg reg,bool dword) {
 }
 
 // calculate relative offset and fill it into the location pointed to by data
-static void INLINE gen_fill_branch(const Bit8u* data) {
+static void inline gen_fill_branch(const Bit8u* data) {
 #if C_DEBUG
 	Bits len=cache.pos-data;
 	if (len<0) len=-len;
@@ -866,7 +866,7 @@ static const Bit8u* gen_create_branch_long_leqzero(HostReg reg) {
 }
 
 // calculate long relative offset and fill it into the location pointed to by data
-static void INLINE gen_fill_branch_long(const Bit8u* data) {
+static void inline gen_fill_branch_long(const Bit8u* data) {
 	// optimize for shorter branches ?
 	Bit32u offset = (Bit32u)(cache.pos-data) >> 2;
 	cache_addd(((data[3]<<24)&~0x03ffffff)|(offset&0x03ffffff),data);
@@ -1133,8 +1133,8 @@ static void gen_fill_function_ptr(const Bit8u * pos,void* fct_ptr,Bitu flags_typ
 }
 #endif
 
-static void cache_block_closing(MAYBE_UNUSED const Bit8u *block_start,
-                                MAYBE_UNUSED Bitu block_size) { }
+static void cache_block_closing([[maybe_unused]] const Bit8u *block_start,
+                                [[maybe_unused]] Bitu block_size) { }
 
 static void cache_block_before_close(void) { }
 

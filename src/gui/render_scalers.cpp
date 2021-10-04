@@ -54,7 +54,7 @@ scalerChangeCache_t scalerChangeCache;
 #define conc3d(A,B,C) _conc5(A,_,B,_,C)
 #define conc4d(A,B,C,D) _conc7(A,_,B,_,C,_,D)
 
-static INLINE void BituMove( void *_dst, const void * _src, Bitu size) {
+static inline void BituMove( void *_dst, const void * _src, Bitu size) {
 	Bitu * dst=(Bitu *)(_dst);
 	const Bitu * src=(Bitu *)(_src);
 	size/=sizeof(Bitu);
@@ -62,7 +62,7 @@ static INLINE void BituMove( void *_dst, const void * _src, Bitu size) {
 		dst[x] = src[x];
 }
 
-static INLINE void ScalerAddLines( Bitu changed, Bitu count ) {
+static inline void ScalerAddLines( Bitu changed, Bitu count ) {
 	if ((Scaler_ChangedLineIndex & 1) == changed ) {
 		Scaler_ChangedLines[Scaler_ChangedLineIndex] += count;
 	} else {

@@ -167,7 +167,7 @@
 		case 6: \
 			if (rm < 0x40) \
 				break; \
-			FALLTHROUGH; \
+			[[fallthrough]]; \
 		case 2: \
 		case 3: BaseDS = BaseSS; \
 		} \

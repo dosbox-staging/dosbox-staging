@@ -1194,7 +1194,7 @@ public:
 
 static IPX* test;
 
-void IPX_ShutDown(MAYBE_UNUSED Section* sec) {
+void IPX_ShutDown([[maybe_unused]] Section* sec) {
 	delete test;    
 }
 

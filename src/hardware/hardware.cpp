@@ -333,14 +333,14 @@ void CAPTURE_VideoStop() {
 #endif
 }
 
-void CAPTURE_AddImage(MAYBE_UNUSED Bitu width,
-                      MAYBE_UNUSED Bitu height,
-                      MAYBE_UNUSED Bitu bpp,
-                      MAYBE_UNUSED Bitu pitch,
-                      MAYBE_UNUSED Bitu flags,
-                      MAYBE_UNUSED float fps,
-                      MAYBE_UNUSED Bit8u *data,
-                      MAYBE_UNUSED Bit8u *pal)
+void CAPTURE_AddImage([[maybe_unused]] Bitu width,
+                      [[maybe_unused]] Bitu height,
+                      [[maybe_unused]] Bitu bpp,
+                      [[maybe_unused]] Bitu pitch,
+                      [[maybe_unused]] Bitu flags,
+                      [[maybe_unused]] float fps,
+                      [[maybe_unused]] Bit8u *data,
+                      [[maybe_unused]] Bit8u *pal)
 {
 #if (C_SSHOT)
 	Bitu i;
@@ -849,7 +849,7 @@ public:
 
 static HARDWARE *hardware_module;
 
-void HARDWARE_Destroy(MAYBE_UNUSED Section *sec)
+void HARDWARE_Destroy([[maybe_unused]] Section *sec)
 {
 	delete hardware_module;
 }
