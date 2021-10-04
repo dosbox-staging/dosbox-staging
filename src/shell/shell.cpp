@@ -101,16 +101,18 @@ void AutoexecObject::CreateAutoexec()
 	//Create a new autoexec.bat
 	autoexec_data[0] = 0;
 	size_t auto_len;
-	for(auto_it it = autoexec_strings.begin(); it != autoexec_strings.end(); it++) {
-
-		std::string linecopy = (*it);
+	for (std::string linecopy : autoexec_strings) {
 		std::string::size_type offset = 0;
-		//Lets have \r\n as line ends in autoexec.bat.
+		// Lets have \r\n as line ends in autoexec.bat.
 		while(offset < linecopy.length()) {
-			std::string::size_type  n = linecopy.find("\n",offset);
-			if ( n == std::string::npos ) break;
-			std::string::size_type rn = linecopy.find("\r\n",offset);
-			if ( rn != std::string::npos && rn + 1 == n) {offset = n + 1; continue;}
+			const auto n = linecopy.find('\n', offset);
+			if (n == std::string::npos)
+				break;
+			const auto rn = linecopy.find("\r\n", offset);
+			if (rn != std::string::npos && rn + 1 == n) {
+				offset = n + 1;
+				continue;
+			}
 			// \n found without matching \r
 			linecopy.replace(n,1,"\r\n");
 			offset = n + 2;
