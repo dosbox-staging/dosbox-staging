@@ -26,6 +26,8 @@
 #include <regex>
 #include <sstream>
 
+#include "whereami.h"
+
 #include "control.h"
 #include "string_utils.h"
 #include "support.h"
@@ -1325,6 +1327,21 @@ CommandLine::CommandLine(int argc, char const *const argv[])
 		cmds.push_back(argv[i]);
 		i++;
 	}
+}
+
+const std::filesystem::path & CommandLine::GetExecutablePath() const
+{
+	static std::filesystem::path exe_path;
+	if (exe_path.empty()) {
+		int length = wai_getExecutablePath(nullptr, 0, nullptr);
+		// const auto length = wai_getExecutablePath(nullptr, 0, nullptr);
+		std::string s;
+		s.resize(check_cast<uint16_t>(length));
+		wai_getExecutablePath(&s[0], length, nullptr);
+		exe_path = s;
+		assert(!exe_path.empty());
+	}
+	return exe_path;
 }
 
 Bit16u CommandLine::Get_arglength() {
