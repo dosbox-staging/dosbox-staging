@@ -21,9 +21,9 @@
 
 #include "dosbox.h"
 
-#include <filesystem>
 #include <list>
 #include <string>
+#include "std_filesystem.h"
 
 #include "dos_inc.h"
 
@@ -41,7 +41,7 @@ public:
 	bool FindStringBegin(char const * const begin,std::string & value, bool remove=false);
 	bool FindStringRemain(char const * const name,std::string & value);
 	bool FindStringRemainBegin(char const * const name,std::string & value);
-	const std::filesystem::path & GetExecutablePath() const;
+	const std_fs::path &GetExecutablePath() const;
 	bool GetStringRemain(std::string & value);
 	int GetParameterFromList(const char* const params[], std::vector<std::string> & output);
 	void FillVector(std::vector<std::string> & vector);

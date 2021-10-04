@@ -47,7 +47,7 @@ unit_tests = [
   {'name' : 'rwqueue',              'deps' : [libmisc_dep]},
   {'name' : 'soft_limiter',         'deps' : [atomic_dep, sdl2_dep, libmisc_dep]},
   {'name' : 'string_utils',         'deps' : []},
-  {'name' : 'setup',                'deps' : [sdl2_dep, libmisc_dep]},
+  {'name' : 'setup',                'deps' : [stdcppfs_dep, sdl2_dep, libmisc_dep]},
   {'name' : 'support',              'deps' : [sdl2_dep, libmisc_dep]},
 ]
 
