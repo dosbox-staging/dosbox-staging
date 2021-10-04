@@ -174,11 +174,11 @@ brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth
 
 ### Build and stay up-to-date with the latest sources
 
-  - Checkout the master branch:
+  - Checkout the main branch:
 
     ``` shell
     # commit or stash any personal code changes
-    git checkout master -f
+    git checkout main -f
     ```
 
   - Pull the latest updates. This is necessary every time you want a new build:
