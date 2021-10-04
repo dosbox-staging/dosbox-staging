@@ -28,13 +28,13 @@ endif
 # - fs_utils - depends on files in: tests/files/
 #
 example = executable('example', ['example_tests.cpp', 'stubs.cpp'],
-                     dependencies : [gtest_dep, sdl2_dep, libmisc_dep],
+                     dependencies : [gtest_dep, sdl2_dep, libmisc_dep, libloguru_dep],
                      include_directories : incdir)
 test('gtest example', example, 
      should_fail : true)
 
 fs_utils = executable('fs_utils', ['fs_utils_tests.cpp', 'stubs.cpp'],
-                      dependencies : [gtest_dep, libmisc_dep],
+                      dependencies : [gtest_dep, libmisc_dep, libloguru_dep],
                       include_directories : incdir)
 test('gtest fs_utils', fs_utils,
      workdir : project_source_root, is_parallel : false)
@@ -54,7 +54,7 @@ unit_tests = [
 foreach ut : unit_tests
   name = ut.get('name')
   exe = executable(name, [name + '_tests.cpp', 'stubs.cpp'],
-                   dependencies : [gtest_dep] + ut.get('deps'),
+                   dependencies : [gtest_dep, libloguru_dep] + ut.get('deps'),
                    include_directories : incdir)
   test('gtest ' + name, exe)
 endforeach

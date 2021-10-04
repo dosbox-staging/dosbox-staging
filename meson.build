@@ -299,27 +299,17 @@ summary('OpenGL support', get_option('use_opengl'))
 
 # include directories
 #
-incdir = include_directories(
-           'include',
-           '.',
-           'src/libs/loguru',
-         )
+incdir = include_directories('include', '.')
 
 
 # bundled dependencies, in dependency-order
 #
 subdir('src/libs/loguru')
-libloguru_dep = declare_dependency(link_with : libloguru)
-
-subdir('src/libs/decoders') # depends on libloguru_dep
+subdir('src/libs/decoders')
 subdir('src/libs/nuked')
 subdir('src/libs/ppscale')
 subdir('src/libs/residfp')
 
-libdecoders_dep = declare_dependency(link_with : libdecoders)
-libnuked_dep    = declare_dependency(link_with : libnuked)
-libppscale_dep  = declare_dependency(link_with : libppscale)
-libresidfp_dep  = declare_dependency(link_with : libresidfp)
 
 # internal libs
 #
@@ -354,7 +344,7 @@ subdir('tests')
 #
 version_file = vcs_tag(input : 'src/version.cpp.in', output : 'version.cpp')
 executable('dosbox', ['src/main.cpp', 'src/dosbox.cpp', version_file],
-           dependencies : [atomic_dep, threads_dep, sdl2_dep] + internal_deps,
+           dependencies : [atomic_dep, threads_dep, sdl2_dep, libloguru_dep] + internal_deps,
            include_directories : incdir,
            install : true)
 

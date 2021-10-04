@@ -15,3 +15,5 @@ libdecoders = static_library('decoders', libdecoders_sources,
                                opus_dep,
                                libloguru_dep,
                              ])
+
+libdecoders_dep = declare_dependency(link_with : libdecoders)
