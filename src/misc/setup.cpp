@@ -713,8 +713,10 @@ void Section_prop::PrintData(FILE* outfile) const {
 
 	// Determine maximum length of the props in this section
 	int len = 0;
-	for (const auto &tel : properties)
-		len = std::max<int>(len, tel->propname.length());
+	for (const auto &tel : properties) {
+		const auto prop_length = check_cast<int>(tel->propname.length());
+		len = std::max<int>(len, prop_length);
+	}
 
 	for (const auto &tel : properties) {
 
