@@ -79,6 +79,18 @@ for development or `plain` for packaging.
 ``` shell
 meson setup -Dbuildtype=release build
 ```
+
+For those interested in performing many different build types, separate
+build/ directories (or subdirectories) can be used. This allows builds to
+be organized by type as well as allows easy side-by-side comparison of
+builds.
+
+One thing to note: If you use the VSCode editor with the clangd plugin,
+this plugin assumes Meson setup's "compile_commands.json" output file
+always resides in the hardcoded build/ directory. To work-around this bug,
+feel free to symlink this file from your active build directory into
+the hardcoded build/ location.
+
 Detailed documentation: [Meson: Core options][meson-core]
 
 [meson-core]: https://mesonbuild.com/Builtin-options.html#core-options

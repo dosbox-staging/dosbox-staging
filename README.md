@@ -206,7 +206,7 @@ brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth
         -Dtry_static_libs=png \
         -Dfluidsynth:enable-floats=true \
         -Dfluidsynth:try-static-deps=true \
-      build/release
+      build
     ```
 
     The above enables all of DOSBox Staging's functional features. If you're
@@ -216,10 +216,10 @@ brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth
   - Compile the sources. This is necessary every time you want a new build:
 
     ``` shell
-    meson compile -C build/release
+    meson compile -C build
     ```
 
-    Your binary is: `build/release/dosbox` -- have fun!
+    Your binary is: `build/dosbox` -- have fun!
 
 
 ### Windows - Visual Studio (2019 or newer)
