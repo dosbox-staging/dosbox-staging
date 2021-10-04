@@ -68,7 +68,7 @@ libcpu_sources = files([
 
 libcpu = static_library('cpu', libcpu_sources,
                         include_directories : incdir,
-                        dependencies : sdl2_dep)
+                        dependencies : [sdl2_dep, libloguru_dep])
 
 libcpu_dep = declare_dependency(link_with : libcpu)
 

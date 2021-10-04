@@ -19,3 +19,4 @@ libresidfp_sources = files([
 
 libresidfp = static_library('residfp', libresidfp_sources)
 
+libresidfp_dep  = declare_dependency(link_with : libresidfp)

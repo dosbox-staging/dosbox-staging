@@ -1,4 +1,6 @@
-libfpu = static_library('fpu', ['fpu.cpp'], include_directories : incdir)
+libfpu = static_library('fpu', ['fpu.cpp'],
+                        include_directories : incdir,
+                        dependencies: libloguru_dep)
 
 libfpu_dep = declare_dependency(link_with : libfpu)
 
