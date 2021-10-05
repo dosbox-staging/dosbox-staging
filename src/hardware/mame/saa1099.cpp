@@ -71,8 +71,10 @@
 #include "emu.h"
 #include "saa1099.h"
 
+#include <cassert>
 #include <cfloat>
 #include <cmath>
+#include <climits>
 
 #define LEFT    0x00
 #define RIGHT   0x01
@@ -185,7 +187,8 @@ void saa1099_device::device_start()
 	m_sample_rate = clock() / 256;
 
 	/* for each chip allocate one stream */
-	m_stream = stream_alloc(0, 2, m_sample_rate);
+	assert(m_sample_rate >= 0 && m_sample_rate <= INT_MAX);
+	m_stream = stream_alloc(0, 2, static_cast<int>(m_sample_rate));
 
 	save_item(NAME(m_noise_params));
 	save_item(NAME(m_env_enable));
