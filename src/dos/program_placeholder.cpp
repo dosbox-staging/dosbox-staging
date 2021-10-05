@@ -20,8 +20,6 @@
 
 #include "program_placeholder.h"
 
-#include "shell.h"
-
 extern unsigned int result_errorcode;
 
 void PLACEHOLDER::Run()
@@ -35,7 +33,6 @@ void PLACEHOLDER::Run()
 	WriteOut(MSG_Get("PROGRAM_PLACEHOLDER_LONG_HELP"), command);
 	WriteOut_NoParsing(MSG_Get("UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE"));
 
-	first_shell->CMD_PAUSE(nullptr);
 	result_errorcode = dos.return_code;
 }
 
