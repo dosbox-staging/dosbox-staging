@@ -306,7 +306,6 @@ summary('OpenGL support', get_option('use_opengl'))
 #
 incdir = include_directories('include', '.')
 
-
 # bundled dependencies, in dependency-order
 #
 subdir('src/libs/loguru')
@@ -314,7 +313,7 @@ subdir('src/libs/decoders')
 subdir('src/libs/nuked')
 subdir('src/libs/ppscale')
 subdir('src/libs/residfp')
-
+subdir('src/libs/whereami')
 
 # internal libs
 #
@@ -349,7 +348,7 @@ subdir('tests')
 #
 version_file = vcs_tag(input : 'src/version.cpp.in', output : 'version.cpp')
 executable('dosbox', ['src/main.cpp', 'src/dosbox.cpp', version_file],
-           dependencies : [atomic_dep, threads_dep, sdl2_dep, libloguru_dep] + internal_deps,
+           dependencies : [atomic_dep, threads_dep, sdl2_dep, libloguru_dep, libwhereami_dep] + internal_deps,
            include_directories : incdir,
            install : true)
 

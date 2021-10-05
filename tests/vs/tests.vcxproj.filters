@@ -60,6 +60,9 @@
     <ClCompile Include="..\..\src\libs\loguru\loguru.cpp">
       <Filter>dosbox_sources</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\libs\whereami\whereami.c">
+      <Filter>dosbox_sources</Filter>
+    </ClCompile>
     <ClCompile Include="..\support_tests.cpp">
       <Filter>tests</Filter>
     </ClCompile>
