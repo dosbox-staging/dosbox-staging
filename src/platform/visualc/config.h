@@ -81,3 +81,24 @@
 // Microsoft-specific names and functions instead of POSIX conformant ones.
 // https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-3-c4996?view=vs-2019#posix-function-names
 #define _CRT_NONSTDC_NO_WARNINGS
+
+// MSVC issues warnings on what it considers "unsafe" C-calls for
+// which "safer" (_s-equivalent) calls.
+//
+// To date, no effort has been made to transition toward these _s
+// calls, in part because no static analyzer (Coverity, PVS Studio,
+// or Clang) has flagged the project's use of the existing non-_s
+// calls as having security implications.
+//
+// Likewise, if there is going to be work put into altering the use
+// of these calls, it will involve transitioning toward modern C++
+// constructs as mentioned in #1314 (Ref:
+// https://github.com/dosbox-staging/dosbox-staging/issues/1314)
+//
+// Because the recommendations in these warnings will not be acted
+// upon given the planned direction of the the project, they
+// therefore provide no value and are being silenced.
+
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
