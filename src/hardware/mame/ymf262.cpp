@@ -55,10 +55,13 @@ differences between OPL2 and OPL3 shown in datasheets:
 
 
 */
-#include "support.h"
-
 #include "emu.h"
 #include "ymf262.h"
+
+#include <cassert>
+#include <cstdint>
+
+#include "support.h"
 
 /* output final shift */
 #if (OPL3_SAMPLE_BITS==16)
@@ -1393,7 +1396,8 @@ static void OPL3_initalize(OPL3 *chip)
 	/* Noise generator: a step takes 1 sample */
 	chip->noise_f = static_cast<uint32_t>((1.0 / 1.0) * (1<<FREQ_SH) * chip->freqbase);
 
-	chip->eg_timer_add  = (1<<EG_SH)  * chip->freqbase;
+        assert(chip->freqbase >= 0 && chip->freqbase <= UINT32_MAX);
+	chip->eg_timer_add  = (1<<EG_SH)  * static_cast<uint32_t>(chip->freqbase);
 	chip->eg_timer_overflow = (1) * (1<<EG_SH);
 	/*logerror("YMF262init eg_timer_add=%8x eg_timer_overflow=%8x\n", chip->eg_timer_add, chip->eg_timer_overflow);*/
 
