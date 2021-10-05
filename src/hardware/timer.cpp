@@ -27,6 +27,8 @@
 #include "setup.h"
 #include "support.h"
 
+const std::chrono::steady_clock::time_point system_start_time = std::chrono::steady_clock::now();
+
 static inline void BIN2BCD(Bit16u& val) {
 	const auto b = ((val / 10) % 10) << 4;
 	const auto c = ((val / 100) % 10) << 8;
