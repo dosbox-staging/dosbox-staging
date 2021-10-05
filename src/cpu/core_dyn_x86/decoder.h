@@ -61,7 +61,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 		if (handler->flags & cflag) return false;
 		cph->ClearRelease();
 		cph=0;
-		handler=get_tlb_readhandler(lin_addr);
+		handler=get_tlb_readhandler(static_cast<PhysPt>(lin_addr));
 	}
 	if (handler->flags & PFLAG_NOCODE) {
 		if (PAGING_ForcePageInit(lin_addr)) {
