@@ -46,17 +46,19 @@ void TIMER_DelTickHandler(TIMER_TickHandler handler);
 /* This will add 1 milliscond to all timers */
 void TIMER_AddTick(void);
 
+extern const std::chrono::steady_clock::time_point system_start_time;
+
 static inline int64_t GetTicks()
 {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(
-	               std::chrono::steady_clock::now().time_since_epoch())
+	               std::chrono::steady_clock::now() - system_start_time)
 	        .count();
 }
 
 static inline int64_t GetTicksUs()
 {
 	return std::chrono::duration_cast<std::chrono::microseconds>(
-	               std::chrono::steady_clock::now().time_since_epoch())
+	               std::chrono::steady_clock::now() - system_start_time)
 	        .count();
 }
 
