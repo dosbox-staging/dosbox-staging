@@ -27,19 +27,10 @@
 
 #include "../src/dos/cdrom.h"
 
-#if defined(_MSC_VER)
-# pragma warning(disable:4244) /* const fmath::local::uint64_t to double possible loss of data */
-# pragma warning(disable:4305) /* truncation from double to float */
-#endif
-
 #ifdef _MSC_VER
 # define MIN(a,b) ((a) < (b) ? (a) : (b))
 #else
 # define MIN(a,b) std::min(a,b)
-#endif
-
-#if defined(_MSC_VER)
-# pragma warning(disable:4065) /* switch statement no case labels */
 #endif
 
 extern int bootdrive;
