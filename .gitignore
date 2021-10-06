@@ -16,9 +16,17 @@ missed.txt
 build
 builddir
 
-# Visual Studio
+# Visual Studio / Code
 .vs
-.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
 
 # GNU Global tags, used by some VSCode/Codium plugins
 GPATH
