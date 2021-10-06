@@ -9,6 +9,7 @@
 
 #include "dosbox.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cassert>
 
@@ -26,12 +27,6 @@
 #include "timer.h"
 
 #include "../src/dos/cdrom.h"
-
-#ifdef _MSC_VER
-# define MIN(a,b) ((a) < (b) ? (a) : (b))
-#else
-# define MIN(a,b) std::min(a,b)
-#endif
 
 extern int bootdrive;
 extern bool bootguest, bootvm, use_quick_reboot;
@@ -527,7 +522,8 @@ void IDEATAPICDROMDevice::read_subchannel() {
         sector[3] = x;
     }
 
-    prepare_read(0,MIN((unsigned int)(write-sector),(unsigned int)host_maximum_byte_count));
+    prepare_read(0, std::min((unsigned int)(write - sector),
+	                     (unsigned int)host_maximum_byte_count));
 #if 0
     for (size_t i=0;i < sector_total;i++) LOG_MSG("IDE: Subchannel %02x ",sector[i]);
 #endif
@@ -646,7 +642,8 @@ void IDEATAPICDROMDevice::mode_sense() {
     /* page length */
     sector[8+1] = (unsigned int)(write-sector) - 2 - 8;
 
-    prepare_read(0,MIN((unsigned int)(write-sector),(unsigned int)host_maximum_byte_count));
+    prepare_read(0, std::min((unsigned int)(write - sector),
+	                     (unsigned int)host_maximum_byte_count));
 #if 0
     for (size_t i=0;i < sector_total;i++) printf("IDE: Sense %02x ",sector[i]);
 #endif
@@ -907,7 +904,9 @@ void IDEATAPICDROMDevice::read_toc() {
         sector[1] = x & 0xFF;
     }
 
-    prepare_read(0,MIN(MIN((unsigned int)(write-sector),(unsigned int)host_maximum_byte_count),AllocationLength));
+    prepare_read(0, std::min(std::min((unsigned int)(write - sector),
+	                              (unsigned int)host_maximum_byte_count),
+	                     AllocationLength));
 }
 
 /* when the ATAPI command has been accepted, and the timeout has passed */
@@ -946,20 +945,23 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
 
     switch (atapi_cmd[0]) {
         case 0x03: /* REQUEST SENSE */
-            prepare_read(0,MIN((unsigned int)sense_length,(unsigned int)host_maximum_byte_count));
-            memcpy(sector,sense,sense_length);
+		prepare_read(0, std::min((unsigned int)sense_length,
+		                         (unsigned int)host_maximum_byte_count));
+		memcpy(sector, sense, sense_length);
 
-            feature = 0x00;
-            state = IDE_DEV_DATA_READ;
-            status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRQ|IDE_STATUS_DRIVE_SEEK_COMPLETE;
+		feature = 0x00;
+		state = IDE_DEV_DATA_READ;
+		status = IDE_STATUS_DRIVE_READY | IDE_STATUS_DRQ |
+		         IDE_STATUS_DRIVE_SEEK_COMPLETE;
 
-            /* ATAPI protocol also says we write back into LBA 23:8 what we're going to transfer in the block */
-            lba[2] = sector_total >> 8;
-            lba[1] = sector_total;
+		/* ATAPI protocol also says we write back into LBA 23:8 what
+		 * we're going to transfer in the block */
+		lba[2] = sector_total >> 8;
+		lba[1] = sector_total;
 
-            controller->raise_irq();
-            allow_writing = true;
-            break;
+		controller->raise_irq();
+		allow_writing = true;
+		break;
         case 0x1E: /* PREVENT ALLOW MEDIUM REMOVAL */
             count = 0x03;
             feature = 0x00;
@@ -988,8 +990,9 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
 
             uint32_t sec = (leadOut.min*60u*75u)+(leadOut.sec*75u)+leadOut.fr - 150u;
 
-            prepare_read(0,MIN((unsigned int)8,(unsigned int)host_maximum_byte_count));
-            sector[0] = sec >> 24u;
+	    prepare_read(0, std::min((unsigned int)8,
+		                     (unsigned int)host_maximum_byte_count));
+	    sector[0] = sec >> 24u;
             sector[1] = sec >> 16u;
             sector[2] = sec >> 8u;
             sector[3] = sec & 0xFF;
@@ -1047,9 +1050,10 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
         case 0x12: /* INQUIRY */
             /* NTS: the state of atapi_to_host doesn't seem to matter. */
             generate_mmc_inquiry();
-            prepare_read(0,MIN((unsigned int)36,(unsigned int)host_maximum_byte_count));
+	    prepare_read(0, std::min((unsigned int)36,
+		                     (unsigned int)host_maximum_byte_count));
 
-            feature = 0x00;
+	    feature = 0x00;
             state = IDE_DEV_DATA_READ;
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRQ|IDE_STATUS_DRIVE_SEEK_COMPLETE;
 
@@ -1077,10 +1081,13 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
                 CDROM_Interface *cdrom = getMSCDEXDrive();
                 bool res = (cdrom != NULL ? cdrom->ReadSectorsHost(/*buffer*/sector,false,LBA,TransferLength) : false);
                 if (res) {
-                    prepare_read(0,MIN((unsigned int)(TransferLength*2048),(unsigned int)host_maximum_byte_count));
-                    feature = 0x00;
-                    state = IDE_DEV_DATA_READ;
-                    status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRQ|IDE_STATUS_DRIVE_SEEK_COMPLETE;
+			prepare_read(0,
+				     std::min((unsigned int)(TransferLength * 2048),
+				              (unsigned int)host_maximum_byte_count));
+			feature = 0x00;
+			state = IDE_DEV_DATA_READ;
+			status = IDE_STATUS_DRIVE_READY | IDE_STATUS_DRQ |
+				 IDE_STATUS_DRIVE_SEEK_COMPLETE;
                 }
                 else {
                     feature = 0xF4; /* abort sense=0xF */
@@ -1292,7 +1299,8 @@ void IDEATAPICDROMDevice::on_mode_select_io_complete() {
      * pages */
 
     scan = sector + 8;
-    fence = sector + MIN((unsigned int)sector_total,(unsigned int)AllocationLength);
+    fence = sector +
+	    std::min((unsigned int)sector_total, (unsigned int)AllocationLength);
 
     while ((scan+2) < fence) {
         unsigned char PAGE = *scan++;
@@ -3031,25 +3039,31 @@ static void IDE_DelayedCommand(uint32_t idx/*which IDE controller*/) {
                 if ((512*ata->multiple_sector_count) > sizeof(ata->sector))
                     E_Exit("SECTOR OVERFLOW");
 
-                for (unsigned int cc=0;cc < MIN((uint32_t)ata->multiple_sector_count,(uint32_t)sectcount);cc++) {
-                    /* it would be great if the disk object had a "read multiple sectors" member function */
-                    if (disk->Read_AbsoluteSector(sectorn+cc, ata->sector+(cc*512)) != 0) {
-                        LOG_MSG("IDE: ATA read failed");
-                        ata->abort_error();
-                        dev->controller->raise_irq();
-                        return;
-                    }
-                }
+		for (unsigned int cc = 0;
+		     cc < std::min((uint32_t)ata->multiple_sector_count,
+			           (uint32_t)sectcount);
+		     cc++) {
+			/* it would be great if the disk object had a "read
+			 * multiple sectors" member function */
+			if (disk->Read_AbsoluteSector(sectorn + cc,
+				                      ata->sector + (cc * 512)) != 0) {
+				LOG_MSG("IDE: ATA read failed");
+				ata->abort_error();
+				dev->controller->raise_irq();
+				return;
+			}
+		}
 
-                /* NTS: the way this command works is that the drive reads ONE sector, then fires the IRQ
+		/* NTS: the way this command works is that the drive reads ONE sector, then fires the IRQ
                         and lets the host read it, then reads another sector, fires the IRQ, etc. One
                     IRQ signal per sector. We emulate that here by adding another event to trigger this
                     call unless the sector count has just dwindled to zero, then we let it stop. */
                 /* NTS: The sector advance + count decrement is done in the I/O completion function */
                 dev->state = IDE_DEV_DATA_READ;
                 dev->status = IDE_STATUS_DRQ|IDE_STATUS_DRIVE_READY|IDE_STATUS_DRIVE_SEEK_COMPLETE;
-                ata->prepare_read(0,512*MIN((uint32_t)ata->multiple_sector_count,(uint32_t)sectcount));
-                dev->controller->raise_irq();
+		ata->prepare_read(0, 512 * std::min((uint32_t)ata->multiple_sector_count,
+			                            (uint32_t)sectcount));
+		dev->controller->raise_irq();
                 break;
 
             case 0xC5:/* WRITE MULTIPLE */
@@ -3097,44 +3111,55 @@ static void IDE_DelayedCommand(uint32_t idx/*which IDE controller*/) {
                         ((unsigned int)ata->lba[0] - 1);
                 }
 
-                for (unsigned int cc=0;cc < MIN((uint32_t)ata->multiple_sector_count,(uint32_t)sectcount);cc++) {
-                    /* it would be great if the disk object had a "write multiple sectors" member function */
-                    if (disk->Write_AbsoluteSector(sectorn+cc, ata->sector+(cc*512)) != 0) {
-                        LOG_MSG("Failed to write sector");
-                        ata->abort_error();
-                        dev->controller->raise_irq();
-                        return;
-                    }
-                }
+		for (unsigned int cc = 0;
+		     cc < std::min((uint32_t)ata->multiple_sector_count,
+			           (uint32_t)sectcount);
+		     cc++) {
+			/* it would be great if the disk object had a "write
+			 * multiple sectors" member function */
+			if (disk->Write_AbsoluteSector(sectorn + cc,
+				                       ata->sector + (cc * 512)) != 0) {
+				LOG_MSG("Failed to write sector");
+				ata->abort_error();
+				dev->controller->raise_irq();
+				return;
+			}
+		}
 
-                for (unsigned int cc=0;cc < MIN((uint32_t)ata->multiple_sector_count,(uint32_t)sectcount);cc++) {
-                    if ((ata->count&0xFF) == 1) {
-                        /* end of the transfer */
-                        ata->count = 0;
-                        ata->status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRIVE_SEEK_COMPLETE;
-                        dev->controller->raise_irq();
-                        ata->state = IDE_DEV_READY;
-                        ata->allow_writing = true;
-                        return;
-                    }
-                    else if ((ata->count&0xFF) == 0) ata->count = 255;
-                    else ata->count--;
-                    ata->progress_count++;
+		for (unsigned int cc = 0;
+		     cc < std::min((uint32_t)ata->multiple_sector_count,
+			           (uint32_t)sectcount);
+		     cc++) {
+			if ((ata->count & 0xFF) == 1) {
+				/* end of the transfer */
+				ata->count = 0;
+				ata->status = IDE_STATUS_DRIVE_READY |
+					      IDE_STATUS_DRIVE_SEEK_COMPLETE;
+				dev->controller->raise_irq();
+				ata->state = IDE_DEV_READY;
+				ata->allow_writing = true;
+				return;
+			} else if ((ata->count & 0xFF) == 0)
+				ata->count = 255;
+			else
+				ata->count--;
+			ata->progress_count++;
 
-                    if (!ata->increment_current_address()) {
-                        LOG_MSG("READ advance error");
-                        ata->abort_error();
-                        return;
-                    }
-                }
+			if (!ata->increment_current_address()) {
+				LOG_MSG("READ advance error");
+				ata->abort_error();
+				return;
+			}
+		}
 
-                /* begin another sector */
+		/* begin another sector */
                 sectcount = ata->count & 0xFF;
                 if (sectcount == 0) sectcount = 256;
                 dev->state = IDE_DEV_DATA_WRITE;
                 dev->status = IDE_STATUS_DRQ|IDE_STATUS_DRIVE_READY|IDE_STATUS_DRIVE_SEEK_COMPLETE;
-                ata->prepare_write(0,512*MIN((uint32_t)ata->multiple_sector_count,(uint32_t)sectcount));
-                dev->controller->raise_irq();
+		ata->prepare_write(0, 512 * std::min((uint32_t)ata->multiple_sector_count,
+			                             (uint32_t)sectcount));
+		dev->controller->raise_irq();
                 break;
 
             case 0xEC:/*IDENTIFY DEVICE (CONTINUED) */
@@ -3522,8 +3547,10 @@ void IDEATADevice::writecommand(uint8_t cmd) {
             progress_count = 0;
             state = IDE_DEV_DATA_WRITE;
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRQ;
-            prepare_write(0UL,512UL*MIN((unsigned long)multiple_sector_count,(unsigned long)(count == 0 ? 256 : count)));
-            break;
+	    prepare_write(0UL,
+		          512UL * std::min((unsigned long)multiple_sector_count,
+		                           (unsigned long)(count == 0 ? 256 : count)));
+	    break;
         case 0xC6: /* SET MULTIPLE MODE */
             /* only sector counts 1, 2, 4, 8, 16, 32, 64, and 128 are legal by standard.
              * NTS: There's a bug in VirtualBox that makes 0 legal too! */
