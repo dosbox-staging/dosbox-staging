@@ -20,6 +20,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <utility>
 
 #include "logging.h"
 #include "../ints/int10.h"
@@ -42,6 +43,35 @@ Bit32u ExpandTable[256];
 Bit32u Expand16Table[4][16];
 Bit32u FillTable[16];
 Bit32u ColorTable[16];
+
+std::pair<const char *, const char *> VGA_DescribeType(const VGAModes type)
+{
+	switch (type) {
+	case M_TEXT:
+	case M_HERC_TEXT:
+	case M_TANDY_TEXT:
+	case M_CGA_TEXT_COMPOSITE: return std::pair(    "Text", "B&W");
+	case M_HERC_GFX:           return std::pair("Hercules", "2c");
+	case M_CGA2:               return std::pair(     "CGA", "2c");
+	case M_CGA2_COMPOSITE:     return std::pair(     "CGA", "2c-comp");
+	case M_CGA4:               return std::pair(     "CGA", "4c");
+	case M_CGA4_COMPOSITE:     return std::pair(     "CGA", "4c-comp");
+	case M_CGA16:              return std::pair(     "CGA", "16c");
+	case M_TANDY2:             return std::pair(   "Tandy", "2c");
+	case M_TANDY4:             return std::pair(   "Tandy", "4c");
+	case M_TANDY16:            return std::pair(   "Tandy", "16c");
+	case M_EGA:                return std::pair(     "EGA", "16c");
+	case M_VGA:                return std::pair(     "VGA", "256c");
+	case M_LIN4:               return std::pair(    "VESA", "16c");
+	case M_LIN8:               return std::pair(    "VESA", "256c");
+	case M_LIN15:              return std::pair(    "VESA", "32K");
+	case M_LIN16:              return std::pair(    "VESA", "64K");
+	case M_LIN24:              return std::pair(    "VESA", "16.8M");
+	case M_LIN32:              return std::pair(    "VESA", "16.8M+Alpha");
+	case M_ERROR:
+	default:                   return std::pair( "Unknown", "N/A");
+	};
+}
 
 void VGA_LogInitialization(const char* adapter_name, const char* ram_type) {
 	const auto mem_in_kib = vga.vmemsize / 1024;

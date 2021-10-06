@@ -745,9 +745,11 @@ static void log_display_properties(const int in_x,
 		return "Unknown mode!";
 	};
 
-	LOG_MSG("DISPLAY: %s scaling source %dx%d (PAR %#.3g) by %.1fx%.1f -> %dx%d (PAR %#.3g)",
-	        describe_scaling_mode(), in_x, in_y, in_par, scale_x, scale_y,
-	        out_x, out_y, out_par);
+	const auto [type_name, type_colours] = VGA_DescribeType(CurMode->type);
+
+	LOG_MSG("DISPLAY: %s scaling %s-%dx%d,%s #%xh PAR-%#.3g by %.1fx%.1f -> %dx%d PAR-%#.3g",
+	        describe_scaling_mode(), type_name, in_x, in_y, type_colours,
+	        CurMode->mode, in_par, scale_x, scale_y, out_x, out_y, out_par);
 }
 
 static SDL_Point get_initial_window_position_or_default(int default_val)

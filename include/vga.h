@@ -21,6 +21,8 @@
 
 #include "dosbox.h"
 
+#include <utility>
+
 #include "inout.h"
 #include "control.h"
 
@@ -481,6 +483,7 @@ void VGA_SetupXGA(void);
 void VGA_AddCompositeSettings(Config &conf);
 
 /* Some Support Functions */
+std::pair<const char *, const char *> VGA_DescribeType(VGAModes type);
 void VGA_SetClock(Bitu which, uint32_t target);
 void VGA_DACSetEntirePalette(void);
 void VGA_StartRetrace(void);
