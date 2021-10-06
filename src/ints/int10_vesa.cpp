@@ -126,7 +126,20 @@ Bit8u VESA_GetSVGAInformation(Bit16u seg,Bit16u off) {
 	return VESA_SUCCESS;
 }
 
-bool can_triple_buffer_8bit(const VideoModeBlock &m)
+// Build-engine games have problem timing some non-standard,
+// low-resolution, 8-bit, linear-framebuffer VESA modes
+static bool on_build_engine_denylist(const VideoModeBlock &m)
+{
+	if (m.type != M_LIN8)
+		return false;
+
+	const bool is_denied = (m.swidth == 320 && m.sheight == 240) ||
+	                       (m.swidth == 400 && m.sheight == 300) ||
+	                       (m.swidth == 512 && m.sheight == 384);
+	return is_denied;
+}
+
+static bool can_triple_buffer_8bit(const VideoModeBlock &m)
 {
 	assert(m.type == M_LIN8);
 	const auto padding = m.htotal;
@@ -183,10 +196,13 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 		minfo.MemoryModel = 4u; // packed pixel
 		modeAttributes = 0x1b; // Color, graphics
 
-		ok_per_mode_pref = (int10.vesa_mode_preference == VESA_MODE_PREF::ALL ||
-		                     (int10.vesa_mode_preference == VESA_MODE_PREF::COMPATIBLE &&
-		                      can_triple_buffer_8bit(mblock)));
-
+		if (int10.vesa_mode_preference == VESA_MODE_PREF::ALL)
+			ok_per_mode_pref = true;
+		else {
+			assert(int10.vesa_mode_preference == VESA_MODE_PREF::COMPATIBLE);
+			ok_per_mode_pref = can_triple_buffer_8bit(mblock) &&
+			                   !on_build_engine_denylist(mblock);
+		}
 		if (!int10.vesa_nolfb && ok_per_mode_pref)
 			modeAttributes |= 0x80; // linear framebuffer
 		break;
