@@ -187,14 +187,6 @@ brew install ccache meson libpng sdl2 sdl2_net opusfile fluid-synth
     git pull
     ```
 
-  - Optionally, you can clean your ccache and working directories. This is only
-    advised if you have unexpected build failures:
-
-    ``` shell
-    ccache -C
-    git clean -fdx
-    ```
-
   - Setup the build. This is a one-time step either after cloning the repo or
     cleaning your working directories:
 
