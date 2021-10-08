@@ -354,13 +354,13 @@ bool Prop_string::SetValue(std::string const& input) {
 }
 bool Prop_string::CheckValue(Value const& in, bool warn) {
 	if (suggested_values.empty()) return true;
-	for(const_iter it = suggested_values.begin();it != suggested_values.end();++it) {
-		if ( (*it) == in) { //Match!
+	for (const auto &val : suggested_values) {
+		if (val == in) { // Match!
 			return true;
 		}
-		if ((*it).ToString() == "%u") {
-			unsigned int value;
-			if(sscanf(in.ToString().c_str(),"%u",&value) == 1) {
+		if (val.ToString() == "%u") {
+			unsigned int v;
+			if (sscanf(in.ToString().c_str(), "%u", &v) == 1) {
 				return true;
 			}
 		}
