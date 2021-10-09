@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   COVERITY_EMAIL: ${{ secrets.CoverityEmail }}
   COVERITY_TOKEN: ${{ secrets.CoverityToken }}

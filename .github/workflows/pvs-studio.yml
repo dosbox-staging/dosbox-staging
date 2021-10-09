@@ -2,6 +2,10 @@ name: PVS-Studio analysis
 
 on: push
 
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pvs_studio_analyzer:
     name: PVS-Studio static analyzer
