@@ -994,9 +994,7 @@ bool Config::ParseConfigFile(const std::string &type, const std::string &configf
 	current_config_dir.erase(split_pos);
 
 	string gegevens;
-	Section* currentsection = NULL;
-	Section* testsec = NULL;
-	while (getline(in,gegevens)) {
+	Section *currentsection = nullptr;
 
 	while (getline(in, gegevens)) {
 		/* strip leading/trailing whitespace */
@@ -1020,11 +1018,17 @@ bool Config::ParseConfigFile(const std::string &type, const std::string &configf
 				currentsection = sec;
 		} break;
 		default:
-			try {
-				if(currentsection) currentsection->HandleInputline(gegevens);
-			} catch(const char* message) {
-				message=0;
-				//EXIT with message
+			if (currentsection) {
+				currentsection->HandleInputline(gegevens);
+
+				// If this is an autoexec section, the above takes care of the joining
+				// while this handles the overwrriten mode.
+				// We need to be prepared for either scenario to play out because we
+				// won't know the users final preferance until the very last configuration
+				// file is processed.
+				if (std::string_view(currentsection->GetName()) == "autoexec") {
+					OverwriteAutoexec(configfilename, gegevens);
+				}
 			}
 			break;
 		}
