@@ -239,7 +239,7 @@ constexpr int SMALL_WINDOW_PERCENT = 50;
 constexpr int MEDIUM_WINDOW_PERCENT = 70;
 constexpr int LARGE_WINDOW_PERCENT = 90;
 constexpr int DEFAULT_WINDOW_PERCENT = MEDIUM_WINDOW_PERCENT;
-constexpr SDL_Point FALLBACK_WINDOW_DIMENSIONS = {640, 480};
+static SDL_Point FALLBACK_WINDOW_DIMENSIONS = {640, 480};
 constexpr SDL_Point RATIOS_FOR_STRETCHED_PIXELS = {4, 3};
 constexpr SDL_Point RATIOS_FOR_SQUARE_PIXELS = {8, 5};
 
@@ -2185,10 +2185,7 @@ static SDL_Point refine_window_size(const SDL_Point &size,
 	}
 	}; // end-switch
 
-	// Fallback
-	return (wants_stretched_pixels
-	                ? FALLBACK_WINDOW_DIMENSIONS
-	                : remove_stretched_aspect(FALLBACK_WINDOW_DIMENSIONS));
+	return FALLBACK_WINDOW_DIMENSIONS;
 }
 
 static SDL_Point window_bounds_from_resolution(const std::string &pref,
@@ -2528,7 +2525,12 @@ static void GUI_StartUp(Section *sec)
 			sdl.priority.nofocus = PRIORITY_LEVEL_PAUSE;
 	}
 
-	SetPriority(sdl.priority.focus); //Assume focus on startup
+	// Adjust the fallback resolution based on the user's aspect-correction
+	const auto should_stretch_pixels = wants_stretched_pixels();
+	FALLBACK_WINDOW_DIMENSIONS = should_stretch_pixels ? SDL_Point{640, 480}
+	                                                   : SDL_Point{640, 400};
+
+	SetPriority(sdl.priority.focus); // Assume focus on startup
 	sdl.desktop.full.fixed=false;
 	const char* fullresolution=section->Get_string("fullresolution");
 	sdl.desktop.full.width  = 0;
