@@ -3,6 +3,10 @@ name: Platform builds
 on:
   schedule: [cron: '0 14 * * *']
 
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   repo-check:
     name: Repository commit check
