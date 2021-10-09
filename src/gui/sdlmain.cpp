@@ -1370,12 +1370,21 @@ dosurface:
 		}
 		sdl.opengl.pitch=width*4;
 
-		int windowWidth, windowHeight;
+		int windowWidth = 0;
+		int windowHeight = 0;
 		SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
 
+		// Adjust the window size if needed
+		const auto &desired_w = sdl.desktop.window.width;
+		const auto &desired_h = sdl.desktop.window.height;
+		if (desired_w && desired_h &&
+		    (desired_w != windowWidth || desired_h != windowHeight)) {
+			SDL_SetWindowSize(sdl.window, desired_w, desired_h);
+			SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
+		}
+
 		if (sdl.clip.x == 0 && sdl.clip.y == 0 &&
-		    sdl.desktop.fullscreen &&
-		    !sdl.desktop.full.fixed &&
+		    sdl.desktop.fullscreen && !sdl.desktop.full.fixed &&
 		    (sdl.clip.w != windowWidth || sdl.clip.h != windowHeight)) {
 			// LOG_MSG("attempting to fix the centering to %d %d %d %d",(windowWidth-sdl.clip.w)/2,(windowHeight-sdl.clip.h)/2,sdl.clip.w,sdl.clip.h);
 			sdl.clip = calc_viewport(windowWidth, windowHeight);
