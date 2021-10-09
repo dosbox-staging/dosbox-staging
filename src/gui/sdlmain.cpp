@@ -696,7 +696,7 @@ static uint32_t opengl_driver_crash_workaround(SCREEN_TYPES type)
 
 static SDL_Point refine_window_size(const SDL_Point &size,
                                     const SCALING_MODE scaling_mode,
-                                    const bool wants_stretched_pixels);
+                                    const bool should_stretch_pixels);
 
 // Logs the source and target resolution including describing scaling method
 // and pixel-aspect ratios. Note that this function deliberately doesn't use
@@ -2112,11 +2112,11 @@ static SDL_Point remove_stretched_aspect(const SDL_Point &size)
 
 static SDL_Point refine_window_size(const SDL_Point &size,
                                     const SCALING_MODE scaling_mode,
-                                    const bool wants_stretched_pixels)
+                                    const bool should_stretch_pixels)
 {
 	switch (scaling_mode) {
 	case (SCALING_MODE::NONE): {
-		const auto game_ratios = wants_stretched_pixels
+		const auto game_ratios = should_stretch_pixels
 		                                 ? RATIOS_FOR_STRETCHED_PIXELS
 		                                 : RATIOS_FOR_SQUARE_PIXELS;
 
@@ -2163,7 +2163,7 @@ static SDL_Point refine_window_size(const SDL_Point &size,
 		// Pick the biggest window size that fits inside the bounds.
 		for (const auto &candidate : resolutions)
 			if (candidate.x <= size.x && candidate.y <= size.y)
-				return (wants_stretched_pixels
+				return (should_stretch_pixels
 				                ? candidate
 				                : remove_stretched_aspect(candidate));
 		break;
@@ -2171,7 +2171,7 @@ static SDL_Point refine_window_size(const SDL_Point &size,
 	case (SCALING_MODE::PERFECT): {
 		constexpr double aspect_weight = 1.14;
 		constexpr SDL_Point pre_draw_size = {320, 200};
-		const double pixel_aspect_ratio = wants_stretched_pixels ? 1.2 : 1;
+		const double pixel_aspect_ratio = should_stretch_pixels ? 1.2 : 1;
 
 		int scale_x = 0;
 		int scale_y = 0;
@@ -2360,7 +2360,7 @@ static void setup_initial_window_position_from_conf(const std::string &window_po
 
 static void setup_window_sizes_from_conf(const char *windowresolution_val,
                                          const SCALING_MODE scaling_mode,
-                                         const bool wants_stretched_pixels)
+                                         const bool should_stretch_pixels)
 {
 	// TODO: Deprecate SURFACE output and remove this.
 	// For now, let the DOS-side determine the window's resolution.
@@ -2406,7 +2406,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
 	} else {
 		refined_size = refine_window_size(coarse_size, refined_scaling_mode,
-		                                  wants_stretched_pixels);
+		                                  should_stretch_pixels);
 	}
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
 	sdl.desktop.window.width = static_cast<uint16_t>(refined_size.x);
@@ -2625,8 +2625,7 @@ static void GUI_StartUp(Section *sec)
 	setup_max_resolution_from_conf(section->Get_string("max_resolution"));
 
 	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
-	                             sdl.scaling_mode,
-	                             wants_stretched_pixels());
+	                             sdl.scaling_mode, should_stretch_pixels);
 
 #if C_OPENGL
 	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
