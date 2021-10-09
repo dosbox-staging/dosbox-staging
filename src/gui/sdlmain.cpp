@@ -285,6 +285,7 @@ struct SDL_Block {
 			uint16_t height = 0; // TODO convert to int
 			bool resizable = false;
 			bool show_decorations = true;
+			bool adjusted_initial_size = false;
 			int initial_x_pos = -1;
 			int initial_y_pos = -1;
 		} window = {};
@@ -1374,13 +1375,18 @@ dosurface:
 		int windowHeight = 0;
 		SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
 
-		// Adjust the window size if needed
 		const auto &desired_w = sdl.desktop.window.width;
 		const auto &desired_h = sdl.desktop.window.height;
-		if (desired_w && desired_h &&
-		    (desired_w != windowWidth || desired_h != windowHeight)) {
+		const bool window_doesnt_match_desired = (desired_w != windowWidth ||
+		                                          desired_h != windowHeight);
+		const bool desired_size_is_valid = (desired_w > 0 && desired_h > 0);
+
+		// Adjust the window size if needed and permitted
+		if (window_doesnt_match_desired && desired_size_is_valid &&
+		    !sdl.desktop.window.adjusted_initial_size) {
 			SDL_SetWindowSize(sdl.window, desired_w, desired_h);
 			SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
+			sdl.desktop.window.adjusted_initial_size = true;
 		}
 
 		if (sdl.clip.x == 0 && sdl.clip.y == 0 &&
@@ -2726,6 +2732,8 @@ static void GUI_StartUp(Section *sec)
 		GFX_Start();
 		DisplaySplash(1000);
 		GFX_Stop();
+		// don't count the splash screen as our initial size
+		sdl.desktop.window.adjusted_initial_size = false;
 	}
 
 	// Apply the user's mouse settings
