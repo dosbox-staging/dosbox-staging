@@ -418,56 +418,46 @@ class AUTOEXEC final : public Module_base {
 private:
 	AutoexecObject autoexec[17];
 	AutoexecObject autoexec_echo;
+	void ProcessConfigFileAutoexec(const Section_line &section,
+	                               const std::string &source_name);
+
 public:
 	AUTOEXEC(Section* configuration)
 		: Module_base(configuration),
 		  autoexec_echo()
 	{
-		/* Register a virtual AUOEXEC.BAT file */
-		std::string line;
-		Section_line *section = static_cast<Section_line *>(configuration);
+		// Initialize configurable states that control autoexec-related
+		// behavior
 
 		/* Check -securemode switch to disable mount/imgmount/boot after
 		 * running autoexec.bat */
-		bool secure = control->cmdline->FindExist("-securemode", true);
+		const bool secure = control->cmdline->FindExist("-securemode", true);
 
-		/* add stuff from the configfile unless -noautexec or
-		 * -securemode is specified. */
-		char *extra = const_cast<char *>(section->data.c_str());
-		if (extra && !secure && !control->cmdline->FindExist("-noautoexec", true)) {
-			/* detect if "echo off" is the first line */
-			size_t firstline_length = strcspn(extra, "\r\n");
-			bool echo_off = !strncasecmp(extra, "echo off", 8);
-			if (echo_off && firstline_length == 8)
-				extra += 8;
-			else {
-				echo_off = !strncasecmp(extra, "@echo off", 9);
-				if (echo_off && firstline_length == 9)
-					extra += 9;
-				else
-					echo_off = false;
-			}
+		// Are autoexec sections permitted?
+		const bool autoexec_is_allowed = !secure &&
+		                              !control->cmdline->FindExist("-noautoexec", true);
 
-			/* if "echo off" move it to the front of autoexec.bat */
-			if (echo_off) {
-				autoexec_echo.InstallBefore("@echo off");
-				if (*extra == '\r')
-					extra++; // It can point to \0
-				if (*extra == '\n')
-					extra++; // same
-			}
+		// Should autoexec sections be joined or overwritten?
+		const auto ds = control->GetSection("dosbox");
+		assert(ds);
+		const bool should_join_autoexecs = ds->GetPropValue("autoexec_section") == "join";
 
-			/* Install the stuff from the configfile if anything
-			 * left after moving echo off */
+		// Check for the -exit switch, which indicates they want to quit
+		// after the command has finished
+		const bool requested_exit_after_command = control->cmdline->FindExist("-exit");
 
-			if (*extra)
-				autoexec[0].Install(std::string(extra));
-		}
+		// Check if instant-launch is active
+		const bool using_instant_launch = control->GetStartupVerbosity() ==
+		                                  Verbosity::InstantLaunch;
+
+		// Should we add an 'exit' call to the end of autoexec.bat?
+		const bool addexit = requested_exit_after_command || using_instant_launch;
 
 		/* Check to see for extra command line options to be added
 		 * (before the command specified on commandline) */
 		/* Maximum of extra commands: 10 */
-		Bitu i = 1;
+		uint8_t i = 1;
+		std::string line;
 		while (control->cmdline->FindString("-c", line, true) && (i <= 11)) {
 #if defined(WIN32)
 			// replace single with double quotes so that mount
@@ -479,24 +469,15 @@ public:
 			autoexec[i++].Install(line);
 		}
 
-		// Check for the -exit switch, which indicates they want to quit after the command has finished
-		const bool requested_exit_after_command = control->cmdline->FindExist("-exit");
-
-		// Check if instant-launch is active
-		const bool using_instant_launch = control->GetStartupVerbosity() == Verbosity::InstantLaunch;
-
-		// Should we add an 'exit' call to the end of autoexec.bat?
-		const bool addexit = requested_exit_after_command || using_instant_launch;
-
 		/* Check for first command being a directory or file */
 		char buffer[CROSS_LEN + 1];
 		char orig[CROSS_LEN + 1];
 		char cross_filesplit[2] = {CROSS_FILESPLIT, 0};
 
 		unsigned int command_index = 1;
-		bool command_found = false;
+		bool found_dir_or_command = false;
 		while (control->cmdline->FindCommand(command_index++, line) &&
-		       !command_found) {
+		       !found_dir_or_command) {
 			struct stat test;
 			if (line.length() > CROSS_LEN)
 				continue;
@@ -516,7 +497,6 @@ public:
 				autoexec[13].Install("C:");
 				if (secure)
 					autoexec[14].Install("z:\\config.com -securemode");
-				command_found = true;
 			} else {
 				char *name = strrchr(buffer, CROSS_FILESPLIT);
 				if (!name) { // Only a filename
@@ -569,13 +549,24 @@ public:
 					if (addexit)
 						autoexec[16].Install("exit");
 				}
-				command_found = true;
 			}
+			found_dir_or_command = true;
 		}
 
-		/* Combining -securemode, noautoexec and no parameters leaves you with a lovely Z:\. */
-		if ( !command_found ) {
-			if ( secure ) autoexec[12].Install("z:\\config.com -securemode");
+		if (autoexec_is_allowed) {
+			if (should_join_autoexecs) {
+				ProcessConfigFileAutoexec(*static_cast<const Section_line *>(configuration),
+				                          "one or more joined sections");
+			} else if (found_dir_or_command) {
+				LOG_MSG("AUTOEXEC: Using commands provided on the command line");
+			} else {
+				ProcessConfigFileAutoexec(
+				        control->GetOverwrittenAutoexecSection(),
+				        control->GetOverwrittenAutoexecConf());
+			}
+		} else if (secure && !found_dir_or_command) {
+			// If we're in secure mode without command line executabls, then seal off the configuration
+			autoexec[12].Install("z:\\config.com -securemode");
 		}
 
 		// Print the entire autoexec content, if needed:
@@ -585,6 +576,45 @@ public:
 		VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,(Bit32u)strlen(autoexec_data));
 	}
 };
+
+void AUTOEXEC::ProcessConfigFileAutoexec(const Section_line &section,
+                                         const std::string &source_name)
+{
+	if (section.data.empty())
+		return;
+
+	auto extra = &section.data[0];
+	if (extra) {
+		/* detect if "echo off" is the first line */
+		size_t firstline_length = strcspn(extra, "\r\n");
+		bool echo_off = !strncasecmp(extra, "echo off", 8);
+		if (echo_off && firstline_length == 8)
+			extra += 8;
+		else {
+			echo_off = !strncasecmp(extra, "@echo off", 9);
+			if (echo_off && firstline_length == 9)
+				extra += 9;
+			else
+				echo_off = false;
+		}
+
+		/* if "echo off" move it to the front of autoexec.bat */
+		if (echo_off) {
+			autoexec_echo.InstallBefore("@echo off");
+			if (*extra == '\r')
+				extra++; // It can point to \0
+			if (*extra == '\n')
+				extra++; // same
+		}
+
+		/* Install the stuff from the configfile if anything
+		 * left after moving echo off */
+		if (*extra) {
+			autoexec[0].Install(std::string(extra));
+			LOG_MSG("AUTOEXEC: Using autoexec from %s", source_name.c_str());
+		}
+	}
+}
 
 static std::unique_ptr<AUTOEXEC> autoexec_module{};
 
