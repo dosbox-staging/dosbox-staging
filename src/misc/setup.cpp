@@ -982,42 +982,43 @@ bool Config::ParseConfigFile(const std::string &type, const std::string &configf
 {
 	// static bool first_configfile = true;
 	ifstream in(configfilename);
-	if (!in) return false;
+	if (!in)
+		return false;
 	configfiles.push_back(configfilename);
 
-	//Get directory from configfilename, used with relative paths.
-	current_config_dir=configfilename;
-	std::string::size_type pos = current_config_dir.rfind(CROSS_FILESPLIT);
-	if(pos == std::string::npos) pos = 0; //No directory then erase string
-	current_config_dir.erase(pos);
+	// Get directory from configfilename, used with relative paths.
+	current_config_dir = configfilename;
+	auto split_pos = current_config_dir.rfind(CROSS_FILESPLIT);
+	if (split_pos == std::string::npos)
+		split_pos = 0; // No directory then erase string
+	current_config_dir.erase(split_pos);
 
 	string gegevens;
 	Section* currentsection = NULL;
 	Section* testsec = NULL;
 	while (getline(in,gegevens)) {
 
+	while (getline(in, gegevens)) {
 		/* strip leading/trailing whitespace */
 		trim(gegevens);
-		if(!gegevens.size()) continue;
+		if (gegevens.empty())
+			continue;
 
-		switch(gegevens[0]){
+		switch (gegevens[0]) {
 		case '%':
 		case '\0':
 		case '#':
 		case ' ':
-		case '\n':
-			continue;
-			break;
-		case '[':
-		{
-			string::size_type loc = gegevens.find(']');
-			if(loc == string::npos) continue;
-			gegevens.erase(loc);
-			testsec = GetSection(gegevens.substr(1));
-			if(testsec != NULL ) currentsection = testsec;
-			testsec = NULL;
-		}
-			break;
+		case '\n': continue; break;
+		case '[': {
+			const auto bracket_pos = gegevens.find(']');
+			if (bracket_pos == string::npos)
+				continue;
+			gegevens.erase(bracket_pos);
+			const auto section_name = gegevens.substr(1);
+			if (const auto sec = GetSection(section_name); sec)
+				currentsection = sec;
+		} break;
 		default:
 			try {
 				if(currentsection) currentsection->HandleInputline(gegevens);
