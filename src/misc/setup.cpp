@@ -25,6 +25,7 @@
 #include <limits>
 #include <regex>
 #include <sstream>
+#include <string_view>
 
 #include "whereami.h"
 
@@ -954,6 +955,27 @@ Section *Config::GetSectionFromProperty(const char *prop) const
 			return el;
 	}
 	return nullptr;
+}
+
+void Config::OverwriteAutoexec(const std::string &conf, const std::string &line)
+{
+	// If we're in a new config file, then record that filename and reset
+	// the section
+	if (overwritten_autoexec_conf != conf) {
+		overwritten_autoexec_conf = conf;
+		overwritten_autoexec_section.data.clear();
+	}
+	overwritten_autoexec_section.HandleInputline(line);
+}
+
+const std::string &Config::GetOverwrittenAutoexecConf() const
+{
+	return overwritten_autoexec_conf;
+}
+
+const Section_line &Config::GetOverwrittenAutoexecSection() const
+{
+	return overwritten_autoexec_section;
 }
 
 bool Config::ParseConfigFile(const std::string &type, const std::string &configfilename)
