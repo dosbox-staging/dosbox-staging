@@ -489,6 +489,18 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&TIMER_Init);//done
 	secprop->AddInitFunction(&CMOS_Init);//done
 
+	const char *autoexec_section_choices[] = {
+	        "join",
+	        "overwrite",
+	        0,
+	};
+	Pstring = secprop->Add_string("autoexec_section", only_at_start, "join");
+	Pstring->Set_values(autoexec_section_choices);
+	Pstring->Set_help(
+	        "How autoexec sections are handled from multiple config files.\n"
+	        "join      : combines them into one big section (legacy behavior).\n"
+	        "overwrite : use the last one encountered, like other conf settings.");
+
 	const char *verbosity_choices[] = {
 	        "auto", "high", "medium", "low", "splash_only", "quiet", 0,
 	};
