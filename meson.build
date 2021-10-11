@@ -356,13 +356,6 @@ configure_file(input : 'src/config.h.in', output : 'config.h',
                configuration : conf_data)
 
 
-# tests
-#
-# Some tests use relative paths; in meson 0.56.0 this can be replaced
-# with meson.project_source_root().
-project_source_root = meson.current_source_dir()
-subdir('tests')
-
 
 # dosbox executable
 #
@@ -386,6 +379,21 @@ executable('dosbox', dosbox_sources,
                           + internal_deps,
            include_directories : incdir,
            install : true)
+# create a library so we can test things inside DOSBOX dep path
+libdosbox = static_library('dosbox', ['src/main.cpp', 'src/dosbox.cpp', version_file],
+                        include_directories : incdir,
+                        dependencies : [atomic_dep, threads_dep, sdl2_dep] + internal_deps)
+dosbox_dep = declare_dependency(link_with : libdosbox)
+
+
+
+# tests
+#
+# Some tests use relative paths; in meson 0.56.0 this can be replaced
+# with meson.project_source_root().
+project_source_root = meson.current_source_dir()
+subdir('tests')
+
 
 
 # additional files for installation

@@ -46,6 +46,10 @@ fs_utils = executable('fs_utils', ['fs_utils_tests.cpp', 'stubs.cpp'],
 test('gtest fs_utils', fs_utils,
      workdir : project_source_root, is_parallel : false)
 
+drives = executable('drives', ['drives_tests.cpp'],
+                      dependencies : [gtest_dep, dosbox_dep],
+                      include_directories : incdir)
+test('gtest drives', drives, workdir : project_source_root, is_parallel : false)
 
 # other unit tests
 #
