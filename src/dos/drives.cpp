@@ -20,6 +20,7 @@
 
 #include "string_utils.h"
 
+
 bool WildFileCmp(const char *file, const char *wild)
 {
 	char file_name[9];
@@ -45,6 +46,7 @@ bool WildFileCmp(const char *file, const char *wild)
 		memcpy(file_name, file, strnlen(file, 8));
 	}
 	upcase(file_name);upcase(file_ext);
+
 	find_ext=strrchr(wild,'.');
 	if (find_ext) {
 		Bitu size=(Bitu)(find_ext-wild);
