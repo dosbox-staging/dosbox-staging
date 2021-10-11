@@ -2215,7 +2215,8 @@ static SDL_Point window_bounds_from_resolution(const std::string &pref,
 		LOG_WARNING("DISPLAY: Requested windowresolution '%dx%d' is larger than the desktop '%dx%d'",
 		            w, h, desktop.w, desktop.h);
 
-	const bool is_valid = (w > 0 && h > 0);
+	const bool is_valid = (w >= FALLBACK_WINDOW_DIMENSIONS.x &&
+	                       h >= FALLBACK_WINDOW_DIMENSIONS.y);
 	if (was_parsed && is_valid)
 		return {w, h};
 
