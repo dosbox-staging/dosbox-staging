@@ -1418,10 +1418,10 @@ dosurface:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-		const bool use_nearest = (sdl.scaling_mode != SCALING_MODE::NONE) ||
-		                         ((sdl.clip.h % height == 0) &&
-		                          (sdl.clip.w % width == 0));
-		const GLint filter = (use_nearest ? GL_NEAREST : GL_LINEAR);
+		const bool use_nearest_neighbour =
+		        (sdl.scaling_mode == SCALING_MODE::NEAREST ||
+		         sdl.scaling_mode == SCALING_MODE::PERFECT);
+		const GLint filter = (use_nearest_neighbour ? GL_NEAREST : GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
 
