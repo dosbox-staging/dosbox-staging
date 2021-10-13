@@ -68,8 +68,6 @@
 #define MAPPERFILE "mapper-sdl2-" VERSION ".map"
 
 #if C_OPENGL
-//Define to disable the usage of the pixel buffer object
-//#define DB_DISABLE_DBO
 //Define to report opengl errors
 //#define DB_OPENGL_ERROR
 
@@ -322,8 +320,6 @@ struct SDL_Block {
 		GLuint displaylist;
 		GLint max_texsize;
 		bool bilinear;
-		bool packed_pixel;
-		bool paletted_texture;
 		bool pixel_buffer_object = false;
 		bool use_shader;
 		GLuint program_object;
@@ -2687,35 +2683,29 @@ static void GUI_StartUp(Section *sec)
 			sdl.opengl.texture=0;
 			sdl.opengl.displaylist=0;
 			glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
+
 			glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
 			glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
 			glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
 			glBufferDataARB = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress("glBufferDataARB");
 			glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
 			glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
+			const bool have_arb_buffers = glGenBuffersARB &&
+			                              glBindBufferARB &&
+			                              glDeleteBuffersARB &&
+			                              glBufferDataARB &&
+			                              glMapBufferARB &&
+			                              glUnmapBufferARB;
 
-			// TODO According to Khronos documentation, the correct
-			// way to query GL_EXTENSIONS is using glGetStringi from
-			// OpenGL 3.0; replace with OpenGL loading library (such
-			// as GLEW or libepoxy)
-			const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
-			if(gl_ext && *gl_ext){
-				sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") != NULL);
-				sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") != NULL);
-				sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") != NULL ) &&
-				    glGenBuffersARB && glBindBufferARB && glDeleteBuffersARB && glBufferDataARB &&
-				    glMapBufferARB && glUnmapBufferARB;
-			} else {
-				sdl.opengl.packed_pixel = false;
-				sdl.opengl.paletted_texture = false;
-				sdl.opengl.pixel_buffer_object = false;
-			}
-#ifdef DB_DISABLE_DBO
-			sdl.opengl.pixel_buffer_object = false;
-#endif
-			LOG_MSG("OPENGL: Pixel buffer object extension: %s",
-			        sdl.opengl.pixel_buffer_object ? "available"
-			                                       : "missing");
+			sdl.opengl.pixel_buffer_object = have_arb_buffers &&
+			        SDL_GL_ExtensionSupported("GL_ARB_pixel_buffer_object");
+
+			LOG_INFO("OPENGL: Vendor: %s", glGetString(GL_VENDOR));
+			LOG_INFO("OPENGL: Version: %s", glGetString(GL_VERSION));
+			LOG_INFO("OPENGL: GLSL version: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+			LOG_INFO("OPENGL: Pixel buffer object: %s",
+			         sdl.opengl.pixel_buffer_object ? "available"
+			                                        : "missing");
 		}
 	} /* OPENGL is requested end */
 #endif	//OPENGL
