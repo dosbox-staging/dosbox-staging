@@ -1382,7 +1382,8 @@ dosurface:
 		const bool desired_size_is_valid = (desired_w > 0 && desired_h > 0);
 
 		// Adjust the window size if needed and permitted
-		if (window_doesnt_match_desired && desired_size_is_valid &&
+		if (sdl.scaling_mode != SCALING_MODE::PERFECT &&
+		    window_doesnt_match_desired && desired_size_is_valid &&
 		    !sdl.desktop.window.adjusted_initial_size) {
 			SDL_SetWindowSize(sdl.window, desired_w, desired_h);
 			SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
