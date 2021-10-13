@@ -1242,10 +1242,12 @@ dosurface:
 		sdl.opengl.framebuf=0;
 		if (!(flags & GFX_CAN_32))
 			goto dosurface;
-		int texsize = 2 << int_log2(width > height ? width : height);
-		if (texsize>sdl.opengl.max_texsize) {
-			LOG_WARNING("SDL:OPENGL: No support for texturesize of %d, falling back to surface",
-			            texsize);
+		int texsize_w = 2 << int_log2(width);
+		int texsize_h = 2 << int_log2(height);
+		if (texsize_w > sdl.opengl.max_texsize ||
+		    texsize_h > sdl.opengl.max_texsize) {
+			LOG_WARNING("SDL:OPENGL: No support for texture size of %dx%d, falling back to surface",
+			            texsize_w, texsize_h);
 			goto dosurface;
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -1254,7 +1256,7 @@ dosurface:
 		/* We may simply use SDL_BYTESPERPIXEL
 		here rather than SDL_BITSPERPIXEL   */
 		if (!sdl.window || SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window))<2) {
-			LOG_WARNING("SDL:OPENGL: Can't open drawing window, are you running in 16bpp(or higher) mode?");
+			LOG_WARNING("SDL:OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
 			goto dosurface;
 		}
 		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
@@ -1422,14 +1424,14 @@ dosurface:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
 
-		const auto texture_area_bytes = static_cast<size_t>(texsize) *
-		                                texsize * MAX_BYTES_PER_PIXEL;
+		const auto texture_area_bytes = static_cast<size_t>(texsize_w) *
+		                                texsize_h * MAX_BYTES_PER_PIXEL;
 		uint8_t *emptytex = new uint8_t[texture_area_bytes];
 		assert(emptytex);
 
 		memset(emptytex, 0, texture_area_bytes);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0,
-		             GL_BGRA_EXT, GL_UNSIGNED_BYTE, emptytex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize_w, texsize_h,
+		             0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, emptytex);
 		delete[] emptytex;
 
 		glClearColor (0.0f, 0.0f, 0.0f, 1.0f);
@@ -1438,21 +1440,22 @@ dosurface:
 		SDL_GL_SwapWindow(sdl.window);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glDisable (GL_DEPTH_TEST);
-		glDisable (GL_LIGHTING);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_LIGHTING);
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_TEXTURE_2D);
 
 		if (sdl.opengl.program_object) {
 			// Set shader variables
-			glUniform2f(sdl.opengl.ruby.texture_size, (float)texsize, (float)texsize);
+			glUniform2f(sdl.opengl.ruby.texture_size,
+			            (float)texsize_w, (float)texsize_h);
 			glUniform2f(sdl.opengl.ruby.input_size, (float)width, (float)height);
 			glUniform2f(sdl.opengl.ruby.output_size, (GLfloat)sdl.clip.w, (GLfloat)sdl.clip.h);
 			// The following uniform is *not* set right now
 			sdl.opengl.actual_frame_count = 0;
 		} else {
-			GLfloat tex_width=((GLfloat)(width)/(GLfloat)texsize);
-			GLfloat tex_height=((GLfloat)(height)/(GLfloat)texsize);
+			GLfloat tex_width = ((GLfloat)(width) / (GLfloat)texsize_w);
+			GLfloat tex_height = ((GLfloat)(height) / (GLfloat)texsize_h);
 
 			glShadeModel(GL_FLAT);
 			glMatrixMode(GL_MODELVIEW);
