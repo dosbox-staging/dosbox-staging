@@ -80,4 +80,42 @@ TEST(WildFileCmp, QuestionMark)
     EXPECT_EQ(true, WildFileCmp("TEST", "???T.???"));
 }
 
+TEST(Set_Label, Daggerfall)
+{
+    std::string input = "Daggerfall";
+    char output[9] = { 0 };
+    bool cdrom = false;
+    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
+    Set_Label(input.c_str(), output, cdrom);
+    EXPECT_EQ(0, std::string("DAGGERFA.LL").compare(output));
+}
+TEST(Set_Label, DaggerfallCD)
+{
+    std::string input = "Daggerfall";
+    char output[9] = { 0 };
+    bool cdrom = true;
+    Set_Label(input.c_str(), output, cdrom);
+    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
+    EXPECT_EQ(0, std::string("Daggerfa.ll").compare(output));
+}
+
+TEST(Set_Label, LongerThan11)
+{
+    std::string input = "a123456789AAA";
+    char output[9] = { 0 };
+    bool cdrom = false;
+    Set_Label(input.c_str(), output, cdrom);
+    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
+    EXPECT_EQ(0, std::string("A1234567.89A").compare(output));
+}
+TEST(Set_Label, LongerThan11CD)
+{
+    std::string input = "a123456789AAA";
+    char output[9] = { 0 };
+    bool cdrom = true;
+    Set_Label(input.c_str(), output, cdrom);
+    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
+    EXPECT_EQ(0, std::string("a1234567.89A").compare(output));
+}
+
 } // namespace
