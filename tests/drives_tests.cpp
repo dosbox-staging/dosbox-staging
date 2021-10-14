@@ -118,4 +118,42 @@ TEST(Set_Label, LongerThan11CD)
     EXPECT_EQ(0, std::string("a1234567.89A").compare(output));
 }
 
+TEST(Set_Label, ShorterThan8)
+{
+    std::string input = "a123456";
+    char output[9] = { 0 };
+    bool cdrom = false;
+    Set_Label(input.c_str(), output, cdrom);
+    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
+    EXPECT_EQ(0, std::string("A123456").compare(output));
+}
+TEST(Set_Label, ShorterThan8CD)
+{
+    std::string input = "a123456";
+    char output[9] = { 0 };
+    bool cdrom = true;
+    Set_Label(input.c_str(), output, cdrom);
+    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
+    EXPECT_EQ(0, std::string("a123456").compare(output));
+}
+
+TEST(Set_Label, EqualTo8)
+{
+    std::string input = "a1234567";
+    char output[9] = { 0 };
+    bool cdrom = false;
+    Set_Label(input.c_str(), output, cdrom);
+    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
+    EXPECT_EQ(0, std::string("A1234567").compare(output));
+}
+TEST(Set_Label, EqualTo8CD)
+{
+    std::string input = "a1234567";
+    char output[9] = { 0 };
+    bool cdrom = true;
+    Set_Label(input.c_str(), output, cdrom);
+    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
+    EXPECT_EQ(0, std::string("a1234567.").compare(output));
+}
+
 } // namespace
