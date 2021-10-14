@@ -321,6 +321,7 @@ struct SDL_Block {
 		GLint max_texsize;
 		bool bilinear;
 		bool pixel_buffer_object = false;
+		bool npot_textures_supported = false;
 		bool use_shader;
 		GLuint program_object;
 		const char *shader_src;
@@ -1242,8 +1243,16 @@ dosurface:
 		sdl.opengl.framebuf=0;
 		if (!(flags & GFX_CAN_32))
 			goto dosurface;
-		int texsize_w = 2 << int_log2(width);
-		int texsize_h = 2 << int_log2(height);
+
+		int texsize_w, texsize_h;
+		if (sdl.opengl.npot_textures_supported) {
+			texsize_w = check_cast<int>(width);
+			texsize_h = check_cast<int>(height);
+		} else {
+			texsize_w = 2 << int_log2(check_cast<int>(width));
+			texsize_h = 2 << int_log2(check_cast<int>(height));
+		}
+
 		if (texsize_w > sdl.opengl.max_texsize ||
 		    texsize_h > sdl.opengl.max_texsize) {
 			LOG_WARNING("SDL:OPENGL: No support for texture size of %dx%d, falling back to surface",
@@ -2700,15 +2709,28 @@ static void GUI_StartUp(Section *sec)
 			                              glMapBufferARB &&
 			                              glUnmapBufferARB;
 
+			const auto gl_version_string = reinterpret_cast<const char *>(
+			        glGetString(GL_VERSION));
+			assert(gl_version_string);
+			const int gl_version_major = gl_version_string[0] - '0';
+
 			sdl.opengl.pixel_buffer_object = have_arb_buffers &&
 			        SDL_GL_ExtensionSupported("GL_ARB_pixel_buffer_object");
 
+			sdl.opengl.npot_textures_supported = gl_version_major >= 2 ||
+			        SDL_GL_ExtensionSupported("GL_ARB_texture_non_power_of_two");
+
 			LOG_INFO("OPENGL: Vendor: %s", glGetString(GL_VENDOR));
-			LOG_INFO("OPENGL: Version: %s", glGetString(GL_VERSION));
-			LOG_INFO("OPENGL: GLSL version: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+			LOG_INFO("OPENGL: Version: %s", gl_version_string);
+			LOG_INFO("OPENGL: GLSL version: %s",
+			         glGetString(GL_SHADING_LANGUAGE_VERSION));
 			LOG_INFO("OPENGL: Pixel buffer object: %s",
 			         sdl.opengl.pixel_buffer_object ? "available"
 			                                        : "missing");
+			LOG_INFO("OPENGL: NPOT textures: %s",
+			         sdl.opengl.npot_textures_supported
+			                 ? "supported"
+			                 : "not supported");
 		}
 	} /* OPENGL is requested end */
 #endif	//OPENGL
