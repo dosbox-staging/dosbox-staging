@@ -60,7 +60,7 @@ Bitu GFX_GetBestMode(Bitu flags);
 int GFX_GetDisplayRefreshRate();
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
 void GFX_SetShader(const char* src);
-Bitu GFX_SetSize(Bitu width, Bitu height, Bitu flags,
+Bitu GFX_SetSize(int width, int height, Bitu flags,
                  double scalex, double scaley,
                  GFX_CallBack_t callback,
                  double pixel_aspect);

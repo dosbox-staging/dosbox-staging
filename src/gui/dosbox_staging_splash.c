@@ -23,9 +23,9 @@
                __ip += __l; __rd += __l; } } \
   } } while (0)
 static constexpr struct {
-  unsigned int          width;
-  unsigned int          height;
-  unsigned int          bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */
+  int          width;
+  int          height;
+  int          bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */
   unsigned char         rle_pixel_data[37520 + 1];
 } splash_image = {
   640, 400, 3,
