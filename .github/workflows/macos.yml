@@ -201,11 +201,9 @@ jobs:
         run: |
           arch -arch=${{ matrix.runner.arch }} meson setup \
             --wrap-mode=forcefallback \
-            -Ddebug=false \
-            -Db_ndebug=true \
+            -Dbuildtype=release \
             -Ddefault_library=static \
             -Db_asneeded=true \
-            -Doptimization=s \
             -Db_lto=true \
             -Dtry_static_libs=opusfile,png,sdl2,sdl2_net \
             -Dfluidsynth:enable-floats=true \
