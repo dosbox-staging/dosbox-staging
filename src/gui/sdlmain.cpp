@@ -273,14 +273,14 @@ struct SDL_Block {
 	} draw = {};
 	struct {
 		struct {
-			Bit16u width = 0;
-			Bit16u height = 0;
+			int width = 0;
+			int height = 0;
 			bool fixed = false;
 			bool display_res = false;
 		} full = {};
 		struct {
-			uint16_t width = 0; // TODO convert to int
-			uint16_t height = 0; // TODO convert to int
+			int width = 0;
+			int height = 0;
 			bool resizable = false;
 			bool show_decorations = true;
 			bool adjusted_initial_size = false;
@@ -1068,8 +1068,8 @@ static SDL_Point calc_pp_scale(int avw, int avh)
 		return {1, 1};
 }
 
-Bitu GFX_SetSize(Bitu width,
-                 Bitu height,
+Bitu GFX_SetSize(int width,
+                 int height,
                  [[maybe_unused]] Bitu flags,
                  double scalex,
                  double scaley,
@@ -1080,14 +1080,14 @@ Bitu GFX_SetSize(Bitu width,
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
-	sdl.draw.has_changed = (sdl.draw.width != static_cast<int>(width) ||
-	                        sdl.draw.height != static_cast<int>(height) ||
+	sdl.draw.has_changed = (sdl.draw.width != width ||
+	                        sdl.draw.height != height ||
 	                        sdl.draw.scalex != scalex ||
 	                        sdl.draw.scaley != scaley ||
 	                        sdl.draw.pixel_aspect != pixel_aspect);
 
-	sdl.draw.width = static_cast<int>(width);
-	sdl.draw.height = static_cast<int>(height);
+	sdl.draw.width = width;
+	sdl.draw.height = height;
 	sdl.draw.scalex = scalex;
 	sdl.draw.scaley = scaley;
 	sdl.draw.pixel_aspect = pixel_aspect;
@@ -1128,8 +1128,8 @@ dosurface:
 				                           FIXED_SIZE);
 				if (sdl.window == NULL)
 					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",
-					       (int)width,
-					       (int)height,
+					       width,
+					       height,
 					       sdl.desktop.bpp,
 					       SDL_GetError());
 			}
@@ -1141,8 +1141,8 @@ dosurface:
 			                           FIXED_SIZE);
 			if (sdl.window == NULL)
 				E_Exit("Could not set windowed video mode %ix%i-%i: %s",
-				       (int)width,
-				       (int)height,
+				       width,
+				       height,
 				       sdl.desktop.bpp,
 				       SDL_GetError());
 		}
@@ -1246,11 +1246,11 @@ dosurface:
 
 		int texsize_w, texsize_h;
 		if (sdl.opengl.npot_textures_supported) {
-			texsize_w = check_cast<int>(width);
-			texsize_h = check_cast<int>(height);
+			texsize_w = width;
+			texsize_h = height;
 		} else {
-			texsize_w = 2 << int_log2(check_cast<int>(width));
-			texsize_h = 2 << int_log2(check_cast<int>(height));
+			texsize_w = 2 << int_log2(width);
+			texsize_h = 2 << int_log2(height);
 		}
 
 		if (texsize_w > sdl.opengl.max_texsize ||
@@ -1368,13 +1368,14 @@ dosurface:
 		}
 
 		/* Create the texture and display list */
+		const auto framebuffer_bytes = static_cast<size_t>(width) *  height * MAX_BYTES_PER_PIXEL;
 		if (sdl.opengl.pixel_buffer_object) {
 			glGenBuffersARB(1, &sdl.opengl.buffer);
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-			glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW_ARB);
+			glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, framebuffer_bytes, NULL, GL_STREAM_DRAW_ARB);
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 		} else {
-			sdl.opengl.framebuf = malloc(width * height * 4); // 32 bit color
+			sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit color
 		}
 		sdl.opengl.pitch=width*4;
 
@@ -1457,14 +1458,14 @@ dosurface:
 		if (sdl.opengl.program_object) {
 			// Set shader variables
 			glUniform2f(sdl.opengl.ruby.texture_size,
-			            (float)texsize_w, (float)texsize_h);
-			glUniform2f(sdl.opengl.ruby.input_size, (float)width, (float)height);
+			            (GLfloat)texsize_w, (GLfloat)texsize_h);
+			glUniform2f(sdl.opengl.ruby.input_size, (GLfloat)width, (GLfloat)height);
 			glUniform2f(sdl.opengl.ruby.output_size, (GLfloat)sdl.clip.w, (GLfloat)sdl.clip.h);
 			// The following uniform is *not* set right now
 			sdl.opengl.actual_frame_count = 0;
 		} else {
-			GLfloat tex_width = ((GLfloat)(width) / (GLfloat)texsize_w);
-			GLfloat tex_height = ((GLfloat)(height) / (GLfloat)texsize_h);
+			GLfloat tex_width = ((GLfloat)width / (GLfloat)texsize_w);
+			GLfloat tex_height = ((GLfloat)height / (GLfloat)texsize_h);
 
 			glShadeModel(GL_FLAT);
 			glMatrixMode(GL_MODELVIEW);
@@ -1871,8 +1872,8 @@ void GFX_Start() {
 void GFX_ObtainDisplayDimensions() {
 	SDL_Rect displayDimensions;
 	SDL_GetDisplayBounds(sdl.display_number, &displayDimensions);
-	sdl.desktop.full.width = check_cast<uint16_t>(displayDimensions.w);
-	sdl.desktop.full.height = check_cast<uint16_t>(displayDimensions.h);
+	sdl.desktop.full.width = displayDimensions.w;
+	sdl.desktop.full.height = displayDimensions.h;
 }
 
 /* Manually update display dimensions in case of a window resize,
@@ -1887,8 +1888,8 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 		/* Note: We should not use GFX_ObtainDisplayDimensions
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
-		sdl.desktop.full.width = check_cast<uint16_t>(width);
-		sdl.desktop.full.height = check_cast<uint16_t>(height);
+		sdl.desktop.full.width = width;
+		sdl.desktop.full.height = height;
 	}
 }
 
@@ -2434,8 +2435,8 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 		                                  should_stretch_pixels);
 	}
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
-	sdl.desktop.window.width = static_cast<uint16_t>(refined_size.x);
-	sdl.desktop.window.height = static_cast<uint16_t>(refined_size.y);
+	sdl.desktop.window.width = refined_size.x;
+	sdl.desktop.window.height = refined_size.y;
 
 	// Let the user know the resulting window properties
 	LOG_MSG("DISPLAY: Initialized %dx%d window-mode on %dx%d display-%d",
@@ -2570,8 +2571,8 @@ static void GUI_StartUp(Section *sec)
 				char* height = const_cast<char*>(strchr(fullresolution,'x'));
 				if (height && * height) {
 					*height = 0;
-					sdl.desktop.full.height = (Bit16u)atoi(height+1);
-					sdl.desktop.full.width  = (Bit16u)atoi(res);
+					sdl.desktop.full.height = atoi(height + 1);
+					sdl.desktop.full.width  = atoi(res);
 				}
 			}
 		}
@@ -2898,8 +2899,8 @@ static void HandleVideoResize(int width, int height)
 		/* Note: We should not use GFX_ObtainDisplayDimensions
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
-		sdl.desktop.full.width = check_cast<uint16_t>(width);
-		sdl.desktop.full.height = check_cast<uint16_t>(height);
+		sdl.desktop.full.width = width;
+		sdl.desktop.full.height = height;
 	}
 
 #if C_OPENGL
