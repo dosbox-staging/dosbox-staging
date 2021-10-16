@@ -1351,7 +1351,9 @@ dosurface:
 					sdl.opengl.ruby.output_size = glGetUniformLocation(sdl.opengl.program_object, "rubyOutputSize");
 					sdl.opengl.ruby.frame_count = glGetUniformLocation(sdl.opengl.program_object, "rubyFrameCount");
 					// Don't force updating unless a shader depends on frame_count
-					RENDER_SetForceUpdate(sdl.opengl.ruby.frame_count != -1);
+					if (GCC_LIKELY(!RENDER_GetForceUpdate())) {
+						RENDER_SetForceUpdate(sdl.opengl.ruby.frame_count != -1);
+					}
 				}
 			}
 		}
@@ -1728,6 +1730,7 @@ void GFX_EndUpdate(const Bit16u *changedLines)
 #endif
 	if ((!using_opengl || !RENDER_GetForceUpdate()) && !sdl.updating)
 		return;
+	render.forceUpdate = false;
 	[[maybe_unused]] bool actually_updating = sdl.updating;
 	sdl.updating = false;
 	switch (sdl.desktop.type) {

@@ -547,6 +547,9 @@ void DOSBOX_Init(void) {
 	                 "fullresolution output.");
 
 	pstring = pmulti->GetSection()->Add_string("type", always, "none");
+	pint = secprop->Add_int("force_update_ticks", always, 0);
+	pint->Set_help("Forces the rendering to be performed for at least the number of ticks\n"
+	               "indicated. The game can still render faster than this if needed.");
 
 	const char *scalers[] = {
 		"none", "normal2x", "normal3x",

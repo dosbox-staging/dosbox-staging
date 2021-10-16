@@ -155,6 +155,7 @@ static void RENDER_ClearCacheHandler(const void * src) {
 	render.scale.lineHandler( src );
 }
 
+extern uint32_t PIC_Ticks;
 bool RENDER_StartUpdate(void) {
 	if (GCC_UNLIKELY(render.updating))
 		return false;
@@ -199,6 +200,18 @@ bool RENDER_StartUpdate(void) {
 				render.fullFrame = false;
 		}
 	}
+	if (GCC_UNLIKELY(!render.fullFrame &&
+	                 render.forceUpdateTicks > 0 &&
+	                 PIC_Ticks >= render.nextForceUpdateTicks)) {
+		if (GCC_UNLIKELY(!GFX_StartUpdate(render.scale.outWrite,
+		                                  render.scale.outPitch)))
+			return false;
+		RENDER_DrawLine = RENDER_EmptyLineHandler;
+		render.fullFrame = true;
+		RENDER_SetForceUpdate(true);
+
+		render.nextForceUpdateTicks = PIC_Ticks + render.forceUpdateTicks;
+	}
 	render.updating = true;
 	return true;
 }
@@ -210,7 +223,6 @@ static void RENDER_Halt( void ) {
 	render.active=false;
 }
 
-extern uint32_t PIC_Ticks;
 void RENDER_EndUpdate( bool abort ) {
 	if (GCC_UNLIKELY(!render.updating))
 		return;
@@ -714,6 +726,8 @@ void RENDER_Init(Section * sec) {
 	render.aspect=section->Get_bool("aspect");
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
+	render.forceUpdateTicks = section->Get_int("force_update_ticks");
+	render.nextForceUpdateTicks=0;
 	VGA_SetMonoPalette(section->Get_string("monochrome_palette"));
 	std::string cline;
 	std::string scaler;

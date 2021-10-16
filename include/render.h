@@ -89,6 +89,8 @@ typedef struct {
 	bool aspect;
 	bool fullFrame;
 	bool forceUpdate;
+	int forceUpdateTicks;
+	uint32_t nextForceUpdateTicks;
 } Render_t;
 
 extern Render_t render;
