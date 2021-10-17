@@ -41,6 +41,14 @@
 
 #include <string>
 
+std::string run_Set_Label(char const * const input, bool cdrom) {
+    char output[32] = { 0 };
+    Set_Label(input, output, cdrom);
+    std::cout << "Set_Label " << "CD-ROM? " << (cdrom ? 'y' : 'n') << \
+        " Input: " << input << " Output: " << output << '\n';
+    return std::string(output);
+}
+
 // Open anonymous namespace (this is Google Test requirement)
 
 namespace {
@@ -80,122 +88,78 @@ TEST(WildFileCmp, QuestionMark)
     EXPECT_EQ(true, WildFileCmp("TEST", "???T.???"));
 }
 
+/**
+ * Set_Labels tests. These test the conversion of a FAT/CD-ROM volume
+ * label to an MS-DOS 8.3 label with a variety of edge cases & oddities.
+ */
 TEST(Set_Label, Daggerfall)
 {
-    std::string input = "Daggerfall";
-    char output[9] = { 0 };
-    bool cdrom = false;
-    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
-    Set_Label(input.c_str(), output, cdrom);
-    EXPECT_EQ("DAGGERFA.LL",std::string(output));
+    std::string output = run_Set_Label("Daggerfall", false);
+    EXPECT_EQ("DAGGERFA.LL", output);
 }
 TEST(Set_Label, DaggerfallCD)
 {
-    std::string input = "Daggerfall";
-    char output[9] = { 0 };
-    bool cdrom = true;
-    Set_Label(input.c_str(), output, cdrom);
-    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
-    EXPECT_EQ("Daggerfa.ll",std::string(output));
+    std::string output = run_Set_Label("Daggerfall", true);
+    EXPECT_EQ("Daggerfa.ll", output);
 }
 
 TEST(Set_Label, LongerThan11)
 {
-    std::string input = "a123456789AAA";
-    char output[9] = { 0 };
-    bool cdrom = false;
-    Set_Label(input.c_str(), output, cdrom);
-    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
-    EXPECT_EQ("A1234567.89A",std::string(output));
+    std::string output = run_Set_Label("a123456789AAA", false);
+    EXPECT_EQ("A1234567.89A", output);
 }
 TEST(Set_Label, LongerThan11CD)
 {
-    std::string input = "a123456789AAA";
-    char output[9] = { 0 };
-    bool cdrom = true;
-    Set_Label(input.c_str(), output, cdrom);
-    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
-    EXPECT_EQ("a1234567.89A",std::string(output));
+    std::string output = run_Set_Label("a123456789AAA", true);
+    EXPECT_EQ("a1234567.89A", output);
 }
 
 TEST(Set_Label, ShorterThan8)
 {
-    std::string input = "a123456";
-    char output[9] = { 0 };
-    bool cdrom = false;
-    Set_Label(input.c_str(), output, cdrom);
-    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
-    EXPECT_EQ("A123456",std::string(output));
+    std::string output = run_Set_Label("a123456", false);
+    EXPECT_EQ("A123456", output);
 }
 TEST(Set_Label, ShorterThan8CD)
 {
-    std::string input = "a123456";
-    char output[9] = { 0 };
-    bool cdrom = true;
-    Set_Label(input.c_str(), output, cdrom);
-    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
-    EXPECT_EQ("a123456",std::string(output));
+    std::string output = run_Set_Label("a123456", true);
+    EXPECT_EQ("a123456", output);
 }
 
 // Tests that the CD-ROM version adds a trailing dot when
 // input is 8 chars plus one dot (9 chars total)
 TEST(Set_Label, EqualTo8)
 {
-    std::string input = "a1234567";
-    char output[9] = { 0 };
-    bool cdrom = false;
-    Set_Label(input.c_str(), output, cdrom);
-    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
-    EXPECT_EQ("A1234567",std::string(output));
+    std::string output = run_Set_Label("a1234567", false);
+    EXPECT_EQ("A1234567", output);
 }
 TEST(Set_Label, EqualTo8CD)
 {
-    std::string input = "a1234567";
-    char output[9] = { 0 };
-    bool cdrom = true;
-    Set_Label(input.c_str(), output, cdrom);
-    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
-    EXPECT_EQ("a1234567.",std::string(output));
+    std::string output = run_Set_Label("a1234567", true);
+    EXPECT_EQ("a1234567.", output);
 }
 
 // A test to ensure non-CD-ROM function strips trailing dot
 TEST(Set_Label, StripEndingDot)
 {
-    std::string input = "a1234567.";
-    char output[9] = { 0 };
-    bool cdrom = false;
-    Set_Label(input.c_str(), output, cdrom);
-    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
-    EXPECT_EQ("A1234567",std::string(output));
+    std::string output = run_Set_Label("a1234567.", false);
+    EXPECT_EQ("A1234567", output);
 }
 TEST(Set_Label, NoStripEndingDotCD)
 {
-    std::string input = "a1234567.";
-    char output[9] = { 0 };
-    bool cdrom = true;
-    Set_Label(input.c_str(), output, cdrom);
-    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
-    EXPECT_EQ("a1234567.",std::string(output));
+    std::string output = run_Set_Label("a1234567.", true);
+    EXPECT_EQ("a1234567.", output);
 }
 
 // Just to make sure this function doesn't clean invalid DOS labels
 TEST(Set_Label, InvalidCharsEndingDot)
 {
-    std::string input = "?*':&@(..";
-    char output[9] = { 0 };
-    bool cdrom = false;
-    Set_Label(input.c_str(), output, cdrom);
-    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
-    EXPECT_EQ("?*':&@(.",std::string(output));
+    std::string output = run_Set_Label("?*':&@(..", false);
+    EXPECT_EQ("?*':&@(.", output);
 }
 TEST(Set_Label, InvalidCharsEndingDotCD)
 {
-    std::string input = "?*':&@(..";
-    char output[9] = { 0 };
-    bool cdrom = true;
-    Set_Label(input.c_str(), output, cdrom);
-    std::cout << "CD-ROM? " << cdrom << " Input: " << input << " Output: " << output << '\n';
-    EXPECT_EQ("?*':&@(..",std::string(output));
+    std::string output = run_Set_Label("?*':&@(..", true);
+    EXPECT_EQ("?*':&@(..", output);
 }
 
 } // namespace
