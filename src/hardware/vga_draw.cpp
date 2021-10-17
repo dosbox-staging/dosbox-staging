@@ -1534,10 +1534,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_VGA:
 		doublewidth=true;
 		width<<=2;
-		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) {
+		if (IS_VGA_ARCH && (CurMode->type == M_VGA || svgaCard == SVGA_None)) {
 			bpp = 16;
 			VGA_DrawLine = VGA_Draw_Xlat16_Linear_Line;
-		} else VGA_DrawLine = VGA_Draw_Linear_Line;
+		} else {
+			VGA_DrawLine = VGA_Draw_Linear_Line;
+		}
 		break;
 	case M_LIN8:
 		if (vga.crtc.mode_control & 0x8) {
