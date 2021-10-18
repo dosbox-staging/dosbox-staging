@@ -67,9 +67,15 @@ static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
 	// Set it in the (little endian) 16bit output lookup table
 	var_write(&vga.dac.xlat16[index], check_cast<uint16_t>(rgb565));
 
-	RENDER_SetPal(index, static_cast<uint8_t>((red << 2) | (red >> 4)),
-	              static_cast<uint8_t>((green << 2) | (green >> 4)),
-	              static_cast<uint8_t>((blue << 2) | (blue >> 4)));
+	// Scale the DAC's 6-bit colors to 8-bit to set the VGA palette
+	auto scale_6_to_8 = [](const uint8_t color_6) -> uint8_t {
+		const auto color_8 = (color_6 * 255 + 31) / 63;
+		return check_cast<uint8_t>(color_8);
+	};
+	RENDER_SetPal(index,
+	              scale_6_to_8(red),
+	              scale_6_to_8(green),
+	              scale_6_to_8(blue));
 }
 
 static void VGA_DAC_UpdateColor(uint16_t index)
