@@ -307,21 +307,20 @@ static Bit8u * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
 #endif
 
 static Bit8u * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
-	const auto offset = vidstart & vga.draw.linear_mask;
-	uint8_t *ret = &vga.draw.linear_base[offset];
-
+	Bitu offset = vidstart & vga.draw.linear_mask;
+	Bit8u* ret = &vga.draw.linear_base[offset];
+	
 	// in case (vga.draw.line_length + offset) has bits set that
 	// are not set in the mask: ((x|y)!=y) equals (x&~y)
 	if (GCC_UNLIKELY((vga.draw.line_length + offset)& ~vga.draw.linear_mask)) {
 		// this happens, if at all, only once per frame (1 of 480 lines)
 		// in some obscure games
-		const auto end = (offset + vga.draw.line_length) &
-		                 vga.draw.linear_mask;
-
+		Bitu end = (offset + vga.draw.line_length) & vga.draw.linear_mask;
+		
 		// assuming lines not longer than 4096 pixels
-		const auto wrapped_len = end & 0xFFF;
-		const auto unwrapped_len = vga.draw.line_length - wrapped_len;
-
+		Bitu wrapped_len = end & 0xFFF;
+		Bitu unwrapped_len = vga.draw.line_length-wrapped_len;
+		
 		// unwrapped chunk: to top of memory block
 		memcpy(TempLine, &vga.draw.linear_base[offset], unwrapped_len);
 		// wrapped chunk: from base of memory block
@@ -339,32 +338,33 @@ static Bit8u * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 	return ret;
 }
 
-static Bit8u * VGA_Draw_Xlat16_Linear_Line(Bitu vidstart, Bitu /*line*/) {
-	Bitu offset = vidstart & vga.draw.linear_mask;
-	Bit8u *ret = &vga.draw.linear_base[offset];
+static uint8_t *VGA_Draw_Xlat16_Linear_Line(Bitu vidstart, Bitu /*line*/)
+{
+	const auto offset = vidstart & vga.draw.linear_mask;
+	const uint8_t *ret = &vga.draw.linear_base[offset];
+	const uint16_t *xlat16 = vga.dac.xlat16;
 
 	// see VGA_Draw_Linear_Line
 	if (GCC_UNLIKELY((vga.draw.line_length + offset)& ~vga.draw.linear_mask)) {
-		Bitu end = (offset + vga.draw.line_length) & vga.draw.linear_mask;
-		
+		const auto end = (offset + vga.draw.line_length) &
+		                 vga.draw.linear_mask;
+
 		// assuming lines not longer than 4096 pixels
-		Bitu wrapped_len = end & 0xFFF;
-		Bitu unwrapped_len = vga.draw.line_length-wrapped_len;
-		
+		const auto wrapped_len = end & 0xFFF;
+		const auto unwrapped_len = vga.draw.line_length - wrapped_len;
+
 		// unwrapped chunk: to top of memory block
-		for (Bitu i = 0; i < unwrapped_len; ++i)
-			write_unaligned_uint16_at(TempLine, i,
-			                          vga.dac.xlat16[ret[i]]);
+		for (uintptr_t i = 0; i < unwrapped_len; ++i)
+			write_unaligned_uint16_at(TempLine, i, xlat16[ret[i]]);
 
 		// wrapped chunk: from base of memory block
-		for (Bitu i = 0; i < wrapped_len; ++i)
+		for (uintptr_t i = 0; i < wrapped_len; ++i)
 			write_unaligned_uint16_at(TempLine, i + unwrapped_len,
-			                          vga.dac.xlat16[vga.draw.linear_base[i]]);
+			                          xlat16[vga.draw.linear_base[i]]);
 
 	} else {
-		for (Bitu i = 0; i < vga.draw.line_length; ++i) {
-			write_unaligned_uint16_at(TempLine, i,
-			                          vga.dac.xlat16[ret[i]]);
+		for (uintptr_t i = 0; i < vga.draw.line_length; ++i) {
+			write_unaligned_uint16_at(TempLine, i, xlat16[ret[i]]);
 		}
 	}
 	return TempLine;
