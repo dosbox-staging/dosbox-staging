@@ -56,13 +56,16 @@ enum {DAC_READ,DAC_WRITE};
 
 static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
 {
-	const Bit8u red = vga.dac.rgb[src].red;
-	const Bit8u green = vga.dac.rgb[src].green;
-	const Bit8u blue = vga.dac.rgb[src].blue;
-	//Set entry in (little endian) 16bit output lookup table
-	const auto pixel = static_cast<uint16_t>(((blue >> 1) & 0x1f) | (((green)&0x3f) << 5) |
-	                                         (((red >> 1) & 0x1f) << 11));
-	var_write(&vga.dac.xlat16[index], pixel);
+	// 6-bit DAC color values (0 to 63)
+	const auto red = vga.dac.rgb[src].red;
+	const auto green = vga.dac.rgb[src].green;
+	const auto blue = vga.dac.rgb[src].blue;
+
+	// Scale the DAC's combined 18-bit color into 16-bit color
+	const auto rgb565 = ((red >> 1) << 11 | green << 5 | (blue >> 1));
+
+	// Set it in the (little endian) 16bit output lookup table
+	var_write(&vga.dac.xlat16[index], check_cast<uint16_t>(rgb565));
 
 	RENDER_SetPal(index, static_cast<uint8_t>((red << 2) | (red >> 4)),
 	              static_cast<uint8_t>((green << 2) | (green >> 4)),
