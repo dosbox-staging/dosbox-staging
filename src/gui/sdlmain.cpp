@@ -267,8 +267,9 @@ struct SDL_Block {
 		int height = 0;
 		double scalex = 1.0;
 		double scaley = 1.0;
-		bool has_changed = false;
 		double pixel_aspect = 1.0;
+		uint16_t previous_mode = 0;
+		bool has_changed = false;
 		GFX_CallBack_t callback = nullptr;
 	} draw = {};
 	struct {
@@ -1080,11 +1081,13 @@ Bitu GFX_SetSize(int width,
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
+	const uint16_t current_mode = CurMode ? CurMode->mode : 0;
 	sdl.draw.has_changed = (sdl.draw.width != width ||
 	                        sdl.draw.height != height ||
 	                        sdl.draw.scalex != scalex ||
 	                        sdl.draw.scaley != scaley ||
-	                        sdl.draw.pixel_aspect != pixel_aspect);
+	                        sdl.draw.pixel_aspect != pixel_aspect ||
+	                        sdl.draw.previous_mode != current_mode);
 
 	sdl.draw.width = width;
 	sdl.draw.height = height;
@@ -1092,6 +1095,7 @@ Bitu GFX_SetSize(int width,
 	sdl.draw.scaley = scaley;
 	sdl.draw.pixel_aspect = pixel_aspect;
 	sdl.draw.callback = callback;
+	sdl.draw.previous_mode = current_mode;
 
 	switch (sdl.desktop.want_type) {
 dosurface:
