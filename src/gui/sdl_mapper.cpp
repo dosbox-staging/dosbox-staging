@@ -31,6 +31,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <atomic>
 #include <list>
 #include <thread>
 #include <vector>
@@ -1292,7 +1293,7 @@ class Typer {
 		std::vector<CEvent*>     *m_events = nullptr;
 		uint32_t                 m_wait_ms = 0;
 		uint32_t                 m_pace_ms = 0;
-		bool                     m_stop_requested = false;
+		std::atomic_bool         m_stop_requested{false};
 };
 
 static struct CMapper {
