@@ -33,7 +33,7 @@ meson setup -Dbuildtype=release -Denable_debugger=heavy build/debugger
 ninja -C build/debugger
 ```
 
-If using Visual Studio, install `libcurses` using vcpkg and change
+If using Visual Studio, install `pdcurses` using vcpkg and change
 the `C_DEBUG` and optionally the `C_HEAVY_DEBUG` lines inside
 `src/platform/visualc/config.h`.
 

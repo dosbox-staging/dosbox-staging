@@ -38,7 +38,7 @@ jobs:
         id:   cache-vcpkg
         with:
           path: c:\vcpkg
-          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-2
+          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-3
 
       - name:  Install new packages using vcpkg
         if:    steps.cache-vcpkg.outputs.cache-hit != 'true'
@@ -46,7 +46,7 @@ jobs:
         run: |
           rm -R c:\vcpkg
           mv c:\vcpkg-bak c:\vcpkg
-          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth gtest
+          vcpkg install --triplet ${{ matrix.conf.arch }}-windows libpng sdl2 sdl2-net libmt32emu opusfile fluidsynth pdcurses gtest
           if (-not $?) { throw "vcpkg failed to install library dependencies" }
           rm -R c:\vcpkg\buildtrees
           rm -R c:\vcpkg\packages
@@ -120,7 +120,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: c:\vcpkg
-          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-2
+          key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-3
 
       - name:  Integrate packages
         shell: pwsh
@@ -147,7 +147,7 @@ jobs:
           # overwrite .conf file branding for release build
           sed -i "s|CONF_SUFFIX \"-staging-git\"|CONF_SUFFIX \"-staging\"|" src/platform/visualc/config.h
 
-      - name:  Build
+      - name:  Build release
         shell: pwsh
         env:
           PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
@@ -219,6 +219,30 @@ jobs:
           sed -i "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" dest/README.txt
           sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README.txt
 
+      - name:  Enable the debugger in config.h
+        shell: bash
+        run: |
+          set -x
+          sed -i "s|C_DEBUG.*|C_DEBUG 1|"             src/platform/visualc/config.h
+          sed -i "s|C_HEAVY_DEBUG.*|C_HEAVY_DEBUG 1|" src/platform/visualc/config.h
+
+      - name:  Build release with the debugger
+        shell: pwsh
+        env:
+          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+        run: |
+          cd vs
+          MSBuild -m dosbox.sln -t:dosbox:"Clean;Rebuild" -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
+
+      - name:  Package the debugger
+        shell: bash
+        run: |
+          set -x
+          # Move the debugger build into the release area
+          readonly RELEASE_DIR=${{ matrix.conf.vs-release-dirname }}/Release
+          ls "vs/$RELEASE_DIR"
+          cp vs/$RELEASE_DIR/dosbox.exe   dest/dosbox_with_debugger.exe
+          cp vs/$RELEASE_DIR/pdcurses.dll dest/
           # Create dir for zipping
           mv dest dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}
 
