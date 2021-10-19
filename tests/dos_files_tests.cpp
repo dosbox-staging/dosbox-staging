@@ -37,6 +37,8 @@
 
 #include "dos_inc.h"
 
+#include "control.h"
+
 #include <gtest/gtest.h>
 
 #include <string>
@@ -52,5 +54,26 @@ TEST(DOS_MakeName, FailOnNull)
     bool result = DOS_MakeName("\0",fulldir,&drive);
     EXPECT_EQ(false, result);
 }
+
+TEST(DOS_MakeName, DriveNotFound)
+{
+    char arg_c_str[] = "-conf tests/files/dosbox-staging-tests.conf";
+    char *argv[1] = {arg_c_str};
+
+    CommandLine com_line(1,argv);
+    Config myconf(&com_line);
+    control=&myconf;
+    DOSBOX_Init();
+
+    std::cout << "Running control->GetSection('dosbox')...\n";
+    Section *sec = control->GetSection("dosbox");
+    sec->ExecuteInit();
+
+	Bit8u drive;
+    char fulldir[DOS_PATHLENGTH];
+    bool result = DOS_MakeName("N:\\AUTOEXEC.BAT",fulldir,&drive);
+    EXPECT_EQ(false, result);
+}
+
 
 } // namespace
