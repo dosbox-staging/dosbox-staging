@@ -372,7 +372,7 @@ void DOS_SetupPrograms(void)
 #endif
 	PROGRAMS_MakeFile("BOOT.COM", BOOT_ProgramStart);
 	PROGRAMS_MakeFile("CHOICE.COM", CHOICE_ProgramStart);
-#if !(C_DEBUG)
+#if (C_DEBUG == 0) && (C_HEAVY_DEBUG == 0)
 	PROGRAMS_MakeFile("DEBUG.COM", PLACEHOLDER_ProgramStart);
 #endif
 	PROGRAMS_MakeFile("HELP.COM", HELP_ProgramStart);
