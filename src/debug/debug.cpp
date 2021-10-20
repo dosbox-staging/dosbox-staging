@@ -2266,6 +2266,7 @@ void DEBUG_Init(Section* sec) {
 	memset((void*)&codeViewData,0,sizeof(codeViewData));
 	/* setup debug.com */
 	PROGRAMS_MakeFile("DEBUG.COM",DEBUG_ProgramStart);
+	PROGRAMS_MakeFile("DBXDEBUG.COM",DEBUG_ProgramStart);
 	/* Setup callback */
 	debugCallback=CALLBACK_Allocate();
 	CALLBACK_Setup(debugCallback,DEBUG_EnableDebugger,CB_RETF,"debugger");
