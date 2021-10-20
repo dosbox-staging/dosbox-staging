@@ -1,11 +1,11 @@
 [wrap-file]
-directory = munt-libmt32emu_2_5_0
-source_url = https://github.com/munt/munt/archive/libmt32emu_2_5_0.tar.gz
-source_filename = libmt32emu_2_5_0.tar.gz
-source_hash = eb43864c002acedc42b304e1500f682c871ef8dabd8b5cbe492ec314a226f231
-patch_url = https://wrapdb.mesonbuild.com/v1/projects/mt32emu/2.5.0/1/get_zip
-patch_filename = mt32emu-2.5.0-1-wrap.zip
-patch_hash = c41bf6e09a912a08a4b340a706230ad80fb31a7b96af0532201579ec88b0ae48
+directory = munt-libmt32emu_2_5_3
+source_url = https://github.com/munt/munt/archive/libmt32emu_2_5_3.tar.gz
+source_filename = libmt32emu_2_5_3.tar.gz
+source_hash = 062d110bbdd7253d01ef291f57e89efc3ee35fd087587458381f054bac49a8f5
+patch_filename = mt32emu_2.5.3-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/mt32emu_2.5.3-1/get_patch
+patch_hash = 8a94e820920800a80a811cf468109cb770f87cba164ddf36aa99c3c049f80db0
 
 [provide]
 mt32emu = mt32emu_dep
