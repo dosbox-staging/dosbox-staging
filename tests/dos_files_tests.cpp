@@ -38,11 +38,13 @@
 #include "dos_inc.h"
 
 #include <iostream>
+#include <iterator>
 #include <string>
 
 #include <gtest/gtest.h>
 
 #include "control.h"
+#include "dos_system.h"
 
 // Open anonymous namespace (this is Google Test requirement)
 namespace {
@@ -60,9 +62,28 @@ public:
 
 	void SetUp() override
 	{
+		// This will register all the init functions, but won't run them
 		DOSBOX_Init();
-		_sec = control->GetSection("dosbox");
-		_sec->ExecuteInit();
+
+		for (auto section_name : sections) {
+			_sec = control->GetSection(section_name);
+			// NOTE: Some of the sections will return null pointers,
+			// if you add a section below, make sure to test for
+			// nullptr before executing early init.
+			_sec->ExecuteEarlyInit();
+		}
+
+		for (auto section_name : sections) {
+			_sec = control->GetSection(section_name);
+			_sec->ExecuteInit();
+		}
+	}
+
+	void TearDown() override
+	{
+		std::vector<std::string>::reverse_iterator r = sections.rbegin();
+		for (; r != sections.rend(); ++r)
+			control->GetSection(*r)->ExecuteDestroy();
 	}
 
 private:
@@ -71,6 +92,10 @@ private:
 	CommandLine com_line;
 	Config config;
 	Section *_sec;
+	// Only init these sections for our tests
+	std::vector<std::string> sections{"dosbox", "cpu",      "mixer",
+	                                  "midi",   "sblaster", "speaker",
+	                                  "serial", "dos",      "autoexec"};
 };
 
 TEST_F(DOS_FilesTest, DOS_MakeName_FailOnNull)
@@ -86,6 +111,13 @@ TEST_F(DOS_FilesTest, DOS_MakeName_DriveNotFound)
 	Bit8u drive;
 	char fulldir[DOS_PATHLENGTH];
 	EXPECT_EQ(false, DOS_MakeName("B:\\AUTOEXEC.BAT", fulldir, &drive));
+}
+
+TEST_F(DOS_FilesTest, DOS_MakeName_Z_AUTOEXEC_BAT_exists)
+{
+	Bit8u drive;
+	char fulldir[DOS_PATHLENGTH];
+	EXPECT_EQ(true, DOS_MakeName("Z:\\AUTOEXEC.BAT", fulldir, &drive));
 }
 
 } // namespace
