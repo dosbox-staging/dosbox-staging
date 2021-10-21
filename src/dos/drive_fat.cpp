@@ -426,7 +426,10 @@ bool fatDrive::getEntryName(char *fullname, char *entname) {
 		findFile = findDir;
 		findDir = strtok(NULL,"\\");
 	}
-	strncpy(entname, findFile, DOS_NAMELENGTH_ASCII);
+
+	assert(entname);
+	entname[0] = '\0';
+	strncat(entname, findFile, DOS_NAMELENGTH_ASCII - 1);
 	return true;
 }
 
