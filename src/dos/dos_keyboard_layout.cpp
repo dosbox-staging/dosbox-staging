@@ -185,12 +185,16 @@ static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id, bo
 		fseek(tempfile, -2, SEEK_CUR);
 		// get all language codes for this layout
 		for (Bitu i=0; i<data_len;) {
-			fread(rbuf, sizeof(Bit8u), 2, tempfile);
-			Bit16u lcnum=host_readw(&rbuf[0]);
+			if (fread(rbuf, sizeof(Bit8u), 2, tempfile) != 2) {
+				break;
+			}
+			Bit16u lcnum = host_readw(&rbuf[0]);
 			i+=2;
 			Bitu lcpos=0;
 			for (;i<data_len;) {
-				fread(rbuf, sizeof(Bit8u), 1, tempfile);
+				if (fread(rbuf, sizeof(Bit8u), 1, tempfile) != 1) {
+					break;
+				}
 				i++;
 				if (((char)rbuf[0])==',') break;
 				lng_codes[lcpos++]=(char)rbuf[0];
