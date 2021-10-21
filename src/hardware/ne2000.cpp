@@ -37,6 +37,7 @@
 #include "inout.h"
 #include "pic.h"
 #include "setup.h"
+#include "string_utils.h"
 #include "support.h"
 #include "timer.h"
 
@@ -79,48 +80,51 @@ int (*PacketFindALlDevsEx)(char *, struct pcap_rmtauth *, pcap_if_t **, char *) 
 
 static char bxtmp[1024];
 
-static inline void BX_INFO(const char *msg,...) {
-    va_list va;
+static inline void BX_INFO(const char *msg, ...)
+{
+	va_list va;
 
-    va_start(va,msg);
-    vsnprintf(bxtmp,sizeof(bxtmp)-1,msg,va);
-    va_end(va);
+	va_start(va, msg);
+	safe_sprintf(bxtmp, msg, va);
+	va_end(va);
 
-    LOG(LOG_MISC,LOG_NORMAL)("BX_INFO: %s",bxtmp);
+	LOG(LOG_MISC, LOG_NORMAL)("BX_INFO: %s", bxtmp);
 }
 
-static inline void BX_DEBUG(const char *msg,...) {
+static inline void BX_DEBUG(const char *msg, ...)
+{
+	if (false /*TOO MUCH DEBUG INFO*/) {
+		va_list va;
 
-    if (false/*TOO MUCH DEBUG INFO*/) {
-        va_list va;
+		va_start(va, msg);
+		safe_sprintf(bxtmp, msg, va);
+		va_end(va);
 
-        va_start(va,msg);
-        vsnprintf(bxtmp,sizeof(bxtmp)-1,msg,va);
-        va_end(va);
-
-        // LOG(LOG_MISC,LOG_DEBUG)("BX_DEBUG: %s",bxtmp);
-    }
+		// LOG(LOG_MISC,LOG_DEBUG)("BX_DEBUG: %s",bxtmp);
+	}
 }
 
-static inline void BX_ERROR(const char *msg,...) {
-    va_list va;
+static inline void BX_ERROR(const char *msg, ...)
+{
+	va_list va;
 
-    va_start(va,msg);
-    vsnprintf(bxtmp,sizeof(bxtmp)-1,msg,va);
-    va_end(va);
+	va_start(va, msg);
+	safe_sprintf(bxtmp, msg, va);
+	va_end(va);
 
-    LOG_MSG("BX_ERROR: %s",bxtmp);
+	LOG_MSG("BX_ERROR: %s", bxtmp);
 }
 
-static inline void BX_PANIC(const char *msg,...) {
-    va_list va;
+static inline void BX_PANIC(const char *msg, ...)
+{
+	va_list va;
 
-    va_start(va,msg);
-    vsnprintf(bxtmp,sizeof(bxtmp)-1,msg,va);
-    va_end(va);
+	va_start(va, msg);
+	safe_sprintf(bxtmp, msg, va);
+	va_end(va);
 
-    LOG_MSG("BX_PANIC: %s",bxtmp);
-    E_Exit("BX_PANIC condition");
+	LOG_MSG("BX_PANIC: %s", bxtmp);
+	E_Exit("BX_PANIC condition");
 }
 
 bx_ne2k_c* theNE2kDevice = NULL;

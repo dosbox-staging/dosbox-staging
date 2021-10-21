@@ -703,7 +703,7 @@ bool localFile::Close() {
 		ftim.actime = ftim.modtime = mktime(&tim);
 
 		char fullname[CROSS_LEN];
-		snprintf(fullname, sizeof(fullname), "%s%s", basedir, name.c_str());
+		safe_sprintf(fullname, "%s%s", basedir, name.c_str());
 		CROSS_FILENAME(fullname);
 
 		// FIXME: utime is deprecated, need a modern cross-platform

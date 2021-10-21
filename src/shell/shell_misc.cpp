@@ -477,7 +477,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		// Try to add .COM, .EXE and .BAT extensions to the filename
 		char temp_name[DOS_PATHLENGTH + 4];
 		for (const char *ext : {".COM", ".EXE", ".BAT"}) {
-			snprintf(temp_name, sizeof(temp_name), "%s%s", fullname, ext);
+			safe_sprintf(temp_name, "%s%s", fullname, ext);
 			const char *temp_fullname = Which(temp_name);
 			if (temp_fullname) {
 				extension = ext;
@@ -620,7 +620,7 @@ const char *DOS_Shell::Which(const char *name) const
 
 	/* try to find .com .exe .bat */
 	for (const char *ext_fmt : {"%s.COM", "%s.EXE", "%s.BAT"}) {
-		snprintf(which_ret, sizeof(which_ret), ext_fmt, name);
+		safe_sprintf(which_ret, ext_fmt, name);
 		if (DOS_FileExists(which_ret))
 			return which_ret;
 	}
@@ -670,7 +670,7 @@ const char *DOS_Shell::Which(const char *name) const
 				return which_ret;
 
 			for (const char *ext_fmt : {"%s.COM", "%s.EXE", "%s.BAT"}) {
-				snprintf(which_ret, sizeof(which_ret), ext_fmt, path);
+				safe_sprintf(which_ret, ext_fmt, path);
 				if (DOS_FileExists(which_ret))
 					return which_ret;
 			}

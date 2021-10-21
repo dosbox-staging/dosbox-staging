@@ -611,7 +611,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 		// a directory having more than 65534 files, which is FAT32's limit.
 		char short_nr[8] = {'\0'};
 		if (GCC_UNLIKELY(info->shortNr > 9999999)) E_Exit("~9999999 same name files overflow");
-		snprintf(short_nr, sizeof(short_nr), "%u", info->shortNr);
+		safe_sprintf(short_nr, "%u", info->shortNr);
 
 		// Copy first letters
 		Bits tocopy = 0;

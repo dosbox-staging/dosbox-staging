@@ -463,8 +463,8 @@ public:
 	std::string GetBindName() const override
 	{
 		char buf[30];
-		snprintf(buf, sizeof(buf), "%s Axis %d%s", group->BindStart(),
-		         axis, positive ? "+" : "-");
+		safe_sprintf(buf, "%s Axis %d%s", group->BindStart(), axis,
+		             positive ? "+" : "-");
 		return buf;
 	}
 
@@ -493,7 +493,7 @@ public:
 	std::string GetBindName() const override
 	{
 		char buf[30];
-		snprintf(buf, sizeof(buf), "%s Button %d", group->BindStart(), button);
+		safe_sprintf(buf, "%s Button %d", group->BindStart(), button);
 		return buf;
 	}
 
@@ -536,12 +536,11 @@ public:
 	std::string GetBindName() const override
 	{
 		char buf[30];
-		snprintf(buf, sizeof(buf), "%s Hat %" PRIu8 " %s",
-		         group->BindStart(), hat,
-		         ((dir == SDL_HAT_UP)    ? "up" :
-		          (dir == SDL_HAT_RIGHT) ? "right" :
-		          (dir == SDL_HAT_DOWN)  ? "down" :
-		                                   "left"));
+		safe_sprintf(buf, "%s Hat %" PRIu8 " %s", group->BindStart(), hat,
+		             ((dir == SDL_HAT_UP)      ? "up"
+		              : (dir == SDL_HAT_RIGHT) ? "right"
+		              : (dir == SDL_HAT_DOWN)  ? "down"
+		                                       : "left"));
 		return buf;
 	}
 

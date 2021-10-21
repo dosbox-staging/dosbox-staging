@@ -787,7 +787,7 @@ bool Config::PrintConfig(const std::string &filename) const
 			i=0;
 			char prefix[80];
 			int intmaxwidth = std::min<int>(60, check_cast<int>(maxwidth));
-			snprintf(prefix, sizeof(prefix), "\n# %*s  ", intmaxwidth , "");
+			safe_sprintf(prefix, "\n# %*s  ", intmaxwidth, "");
 			while ((p = sec->Get_prop(i++))) {
 
 				if (p->IsDeprecated())

@@ -446,8 +446,8 @@ void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
 	const char *msg = CPU_CycleAutoAdjust
 	                          ? "%8s - max %d%% - DOSBox Staging%s%s"
 	                          : "%8s - %d cycles/ms - DOSBox Staging%s%s";
-	snprintf(title, sizeof(title), msg, RunningProgram, internal_cycles,
-	         build_type, paused ? " (PAUSED)" : "");
+	safe_sprintf(title, msg, RunningProgram, internal_cycles, build_type,
+	             paused ? " (PAUSED)" : "");
 	SDL_SetWindowTitle(sdl.window, title);
 }
 
@@ -3263,7 +3263,7 @@ void GFX_ShowMsg(char const* format,...) {
 
 	va_list msg;
 	va_start(msg,format);
-	vsnprintf(buf,sizeof(buf),format,msg);
+	safe_sprintf(buf, format, msg);
 	va_end(msg);
 
 	buf[sizeof(buf) - 1] = '\0';
