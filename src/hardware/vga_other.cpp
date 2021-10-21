@@ -1273,7 +1273,7 @@ void Herc_Palette()
 	}
 }
 
-static void write_hercules(Bitu port, uint8_t val, io_width_t)
+static void write_hercules(io_port_t port, uint8_t val, io_width_t)
 {
 	switch (port) {
 	case 0x3b8: {
