@@ -1370,7 +1370,11 @@ public:
 		}
 	}
 	~DOS(){
-		for (Bit16u i=0;i<DOS_DRIVES;i++) delete Drives[i];
+		for (Bit16u i = 0; i < DOS_DRIVES; i++)	delete Drives[i];
+		// de-init devices, this allows DOSBox to cleanly re-initialize
+		// without throwing an inevitable `DOS: Too many devices added`
+		// exception
+		for (auto& device : Devices) device = nullptr;
 	}
 };
 
