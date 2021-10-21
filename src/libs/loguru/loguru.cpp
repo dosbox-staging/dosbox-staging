@@ -1286,14 +1286,9 @@ namespace loguru
 			}
 		}
 		if (g_preamble_pipe && pos < out_buff_size) {
-			(void)snprintf(out_buff + pos, out_buff_size - pos, "| ");
-
 			// Because this is the last if-statement, we avoid incrementing the
-			//  position to clarify it's unused. If more cases are added, then:
-			// int bytes = snprintf(...)
-			// if (bytes > 0) {
-			// 	pos += bytes;
-			// }
+			// position to clarify it's unused.
+			(void)snprintf(out_buff + pos, out_buff_size - pos, "| ");
 		}
 	}
 
@@ -1322,7 +1317,7 @@ namespace loguru
 		if (custom_level_name) {
 			snprintf(level_buff, sizeof(level_buff) - 1, "%s", custom_level_name);
 		} else {
-			snprintf(level_buff, sizeof(level_buff) - 1, "% 4d", verbosity);
+			snprintf(level_buff, sizeof(level_buff) - 1, "%4d", static_cast<int>(verbosity) % 9999);
 		}
 
 		size_t pos = 0;
@@ -1372,13 +1367,8 @@ namespace loguru
 			}
 		}
 		if (g_preamble_pipe && pos < out_buff_size) {
-			(void)snprintf(out_buff + pos, out_buff_size - pos, "| ");
-
 			// Avoid incrementing the position to clarify it's unused
-			// int bytes = snprintf(...)
-			// if (bytes > 0) {
-			// 	pos += bytes;
-			// }
+			(void)snprintf(out_buff + pos, out_buff_size - pos, "| ");
 		}
 	}
 
