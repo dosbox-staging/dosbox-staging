@@ -541,8 +541,9 @@ static void SetIcon()
 static void RequestExit(bool pressed)
 {
 	shutdown_requested = pressed;
-	if (shutdown_requested)
+	if (shutdown_requested) {
 		DEBUG_LOG_MSG("SDL: Exit requested");
+	}
 }
 
 [[maybe_unused]] static void PauseDOSBox(bool pressed)

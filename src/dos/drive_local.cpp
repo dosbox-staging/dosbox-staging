@@ -626,9 +626,10 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	// Otherwise we have some data to write
 	const auto requested = *size;
 	const auto actual = static_cast<uint16_t>(fwrite(data, 1, requested, fhandle));
-	if (actual != requested)
+	if (actual != requested) {
 		DEBUG_LOG_MSG("FS: Only wrote %u of %u requested bytes to file %s",
 		              actual, requested, name.c_str());
+	}
 	*size = actual; // always save the actual
 	return true;    // always return true, even if partially written
 }
