@@ -137,10 +137,8 @@ bool DOS_Shell::CheckConfig(char *cmd_in, char *line) {
 		return true;
 	}
 	char newcom[1024];
-	snprintf(newcom, sizeof(newcom), "z:\\config -set %s %s%s",
-	         test->GetName(),
-	         cmd_in,
-	         line ? line : "");
+	safe_sprintf(newcom, "z:\\config -set %s %s%s", test->GetName(), cmd_in,
+	             line ? line : "");
 	DoCommand(newcom);
 	return true;
 }
@@ -1619,7 +1617,7 @@ void DOS_Shell::CMD_PATH(char *args){
 		char set_path[DOS_PATHLENGTH + CROSS_LEN + 20] = {0};
 		while (args && *args && (*args == '='|| *args == ' '))
 			args++;
-		snprintf(set_path, sizeof(set_path), "set PATH=%s", args);
+		safe_sprintf(set_path, "set PATH=%s", args);
 		this->ParseLine(set_path);
 		return;
 	} else {

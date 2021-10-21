@@ -58,7 +58,7 @@ void DEBUG_ShowMsg(char const* format,...) {
 	char buf[512];
 	va_list msg;
 	va_start(msg,format);
-	vsnprintf(buf,sizeof(buf),format,msg);
+	safe_sprintf(buf, format, msg);
 	va_end(msg);
 
 	buf[sizeof(buf) - 1] = '\0';
