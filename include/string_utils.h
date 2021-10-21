@@ -28,6 +28,20 @@
 #include <cstring>
 #include <string>
 
+template <size_t N>
+int safe_sprintf(char (&dst)[N], const char *fmt, ...)
+        GCC_ATTRIBUTE(format(printf, 2, 3));
+
+template <size_t N>
+int safe_sprintf(char (&dst)[N], const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	const int ret = vsnprintf(dst, N, fmt, args);
+	va_end(args);
+	return ret;
+}
+
 /* Copy a string into C array
  *
  * This function copies string pointed by src to a fixed-size buffer dst.
@@ -56,8 +70,8 @@ char *safe_strcpy(char (&dst)[N], const char *src) noexcept
 {
 	assert(src != nullptr);
 	assert(src < &dst[0] || src > &dst[N - 1]);
-	snprintf(dst, N, "%s", src);
-	return &dst[0];
+	const auto rcode = safe_sprintf(dst, "%s", src);
+	return (rcode >= 0) ? &dst[0] : nullptr;
 }
 
 template <size_t N>
@@ -72,20 +86,6 @@ size_t safe_strlen(char (&str)[N]) noexcept
 {
 	static_assert(N != 0, "zero-length arrays are not supported");
 	return strnlen(str, N - 1);
-}
-
-template <size_t N>
-int safe_sprintf(char (&dst)[N], const char *fmt, ...)
-        GCC_ATTRIBUTE(format(printf, 2, 3));
-
-template <size_t N>
-int safe_sprintf(char (&dst)[N], const char *fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	const int ret = vsnprintf(dst, N, fmt, args);
-	va_end(args);
-	return ret;
 }
 
 template <size_t N>
