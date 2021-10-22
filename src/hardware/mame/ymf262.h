@@ -28,6 +28,8 @@ void ymf262_post_load(void *chip);
 void ymf262_shutdown(void *chip);
 void ymf262_reset_chip(void *chip);
 int  ymf262_write(void *chip, int a, int v);
+void YMF_SaveState( void *chip, std::ostream& stream );
+void YMF_LoadState( void *chip, std::istream& stream );
 unsigned char ymf262_read(void *chip, int a);
 int  ymf262_timer_over(void *chip, int c);
 void ymf262_update_one(void *chip, OPL3SAMPLE **buffers, int length);

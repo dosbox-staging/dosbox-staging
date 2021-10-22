@@ -461,6 +461,10 @@ void CPU_Core_Dyn_X86_Cache_Close(void) {
 	cache_close();
 }
 
+void CPU_Core_Dyn_X86_Cache_Reset(void) {
+	cache_reset();
+}
+
 void CPU_Core_Dyn_X86_SetFPUMode(bool dh_fpu) {
 #if defined(X86_DYNFPU_DH_ENABLED)
 	dyn_dh_fpu.dh_fpu_enabled=dh_fpu;

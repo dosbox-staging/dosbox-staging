@@ -20,6 +20,8 @@
 #ifndef DOSBOX_MIXER_H
 #define DOSBOX_MIXER_H
 
+#include <sstream>
+
 #ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
 #endif
@@ -77,6 +79,10 @@ public:
 
 	void FillUp(void);
 	void Enable(bool _yesno);
+
+	void SaveState( std::ostream& stream );
+	void LoadState( std::istream& stream );
+
 	MIXER_Handler handler;
 	float volmain[2];
 	float scale;

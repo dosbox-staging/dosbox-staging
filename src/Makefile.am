@@ -11,7 +11,7 @@ endif
 .rc.o:
 	$(WINDRES) -o $@ $<
 
-dosbox_SOURCES = dosbox.cpp $(ico_stuff)
+dosbox_SOURCES = dosbox.cpp save_state.cpp save_state.h miniunz.c minizip.c unzip.c zip.c ioapi.c mztools.c $(ico_stuff)
 dosbox_LDADD = cpu/libcpu.a debug/libdebug.a dos/libdos.a fpu/libfpu.a  hardware/libhardware.a gui/libgui.a \
                ints/libints.a misc/libmisc.a shell/libshell.a hardware/mame/libmame.a \
                hardware/serialport/libserial.a libs/gui_tk/libgui_tk.a

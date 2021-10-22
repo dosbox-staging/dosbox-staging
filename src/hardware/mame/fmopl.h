@@ -36,6 +36,8 @@ typedef void (*OPL_UPDATEHANDLER)(device_t *device,int min_interval_us);
 typedef void (*OPL_PORTHANDLER_W)(device_t *device,unsigned char data);
 typedef unsigned char (*OPL_PORTHANDLER_R)(device_t *device);
 
+#include "../../save_state.h"
+#include <sstream>
 
 #if BUILD_YM3812
 
@@ -44,6 +46,8 @@ void ym3812_clock_changed(void *chip, uint32_t clock, uint32_t rate);
 void ym3812_shutdown(void *chip);
 void ym3812_reset_chip(void *chip);
 int  ym3812_write(void *chip, int a, int v);
+void FMOPL_SaveState( void *chip, std::ostream& stream );
+void FMOPL_LoadState( void *chip, std::istream& stream );
 unsigned char ym3812_read(void *chip, int a);
 int  ym3812_timer_over(void *chip, int c);
 void ym3812_update_one(void *chip, OPLSAMPLE *buffer, int length);

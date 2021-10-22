@@ -24,6 +24,8 @@
 #include "setup.h"
 #include "pic.h"
 
+#include "../save_state.h"
+
 
 #ifndef PI
 #define PI 3.14159265358979323846
@@ -357,4 +359,75 @@ void PCSPEAKER_ShutDown(Section* sec){
 void PCSPEAKER_Init(Section* sec) {
 	test = new PCSPEAKER(sec);
 	sec->AddDestroyFunction(&PCSPEAKER_ShutDown,true);
+}
+
+// save state support
+void POD_Save_PCSpeaker( std::ostream& stream )
+{
+	const char pod_name[32] = "PCSpeaker";
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+	if( !spkr.chan ) return;
+
+
+	WRITE_POD( &pod_name, pod_name );
+
+	//*******************************************
+	//*******************************************
+	//*******************************************
+
+	// - near-pure data
+	WRITE_POD( &spkr, spkr );
+
+	//*******************************************
+	//*******************************************
+	//*******************************************
+
+	spkr.chan->SaveState(stream);
+}
+
+
+void POD_Load_PCSpeaker( std::istream& stream )
+{
+	char pod_name[32] = {0};
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+	if( !spkr.chan ) return;
+
+
+	// error checking
+	READ_POD( &pod_name, pod_name );
+	if( strcmp( pod_name, "PCSpeaker" ) ) {
+		stream.clear( std::istream::failbit | std::istream::badbit );
+		return;
+	}
+
+	//************************************************
+	//************************************************
+	//************************************************
+
+	MixerChannel *chan_old;
+
+
+	// - save static ptrs
+	chan_old = spkr.chan;
+
+	//*******************************************
+	//*******************************************
+	//*******************************************
+
+	// - near-pure data
+	READ_POD( &spkr, spkr );
+
+	//*******************************************
+	//*******************************************
+	//*******************************************
+
+	// - restore static ptrs
+	spkr.chan = chan_old;
+
+
+	spkr.chan->LoadState(stream);
 }

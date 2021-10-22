@@ -1197,4 +1197,10 @@ void IPX_Init(Section* sec) {
 //Initialize static members;
 Bit16u IPX::dospage = 0;
 
+// save state support
+#if C_IPX
+void *IPX_AES_EventHandler_PIC_Event = (void*)IPX_AES_EventHandler;
+void *IPX_ClientLoop_PIC_Timer = (void*)IPX_ClientLoop;
+#endif
+
 #endif
