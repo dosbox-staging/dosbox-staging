@@ -39,10 +39,16 @@ uint32_t IO_ReadD(io_port_t port);
 
 // type-sized IO handler API
 enum class io_width_t : uint8_t {
-	byte = sizeof(uint8_t),
-	word = sizeof(uint16_t),
-	dword = sizeof(uint32_t),
+	byte = 1, // bytes
+	word = 2, // bytes
+	dword = 4, // bytes
 };
+
+// Sanity check the IO sizes
+static_assert(static_cast<size_t>(io_width_t::byte) == sizeof(uint8_t), "io_width_t::byte must be 1 byte");
+static_assert(static_cast<size_t>(io_width_t::word) == sizeof(uint16_t), "io_width_t::word must be 2 bytes");
+static_assert(static_cast<size_t>(io_width_t::dword) == sizeof(uint32_t), "io_width_t::dword must be 4 bytes");
+
 constexpr int io_widths = 3; // byte, word, and dword
 
 using io_read_f = std::function<io_val_t(io_port_t port, io_width_t width)>;

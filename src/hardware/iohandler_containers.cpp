@@ -125,8 +125,8 @@ void write_word_to_port(const io_port_t port, const uint16_t val)
 	if (writer != io_write_word_handler.end()) {
 		writer->second(port, val, io_width_t::word);
 	} else {
-		write_byte_to_port(port, val & 0xff);
-		write_byte_to_port(port + 1, val >> 8);
+		write_byte_to_port(port, static_cast<uint8_t>(val & 0xff));
+		write_byte_to_port(port + 1, static_cast<uint8_t>(val >> 8));
 	}
 }
 
@@ -136,8 +136,8 @@ void write_dword_to_port(const io_port_t port, const uint32_t val)
 	if (writer != io_write_dword_handler.end()) {
 		writer->second(port, val, io_width_t::dword);
 	} else {
-		write_word_to_port(port, val & 0xffff);
-		write_word_to_port(port + 2, val >> 16);
+		write_word_to_port(port, static_cast<uint16_t>(val & 0xffff));
+		write_word_to_port(port + 2, static_cast<uint16_t>(val >> 16));
 	}
 }
 
