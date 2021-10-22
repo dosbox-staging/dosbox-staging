@@ -15,6 +15,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+#include <cassert>
 
 enum STRING_OP {
 	STR_OUTSB=0,STR_OUTSW,STR_OUTSD,
@@ -79,12 +80,13 @@ static void dyn_string(STRING_OP op) {
 	DynState rep_state;
 	dyn_savestate(&rep_state);
 	const Bit8u * rep_start=cache.pos;
-	const Bit8u * rep_ecx_jmp;
+
 	/* Check if ECX!=zero */
 	if (decode.rep) {
-		gen_dop_word(DOP_TEST,decode.big_addr,DREG(ECX),DREG(ECX));
-		rep_ecx_jmp=gen_create_branch_long(BR_Z);
+		gen_dop_word(DOP_TEST, decode.big_addr, DREG(ECX), DREG(ECX));
 	}
+	const uint8_t *rep_ecx_jmp = decode.rep ? gen_create_branch_long(BR_Z)
+	                                        : nullptr;
 	if (usesi) {
 		if (!decode.big_addr) {
 			gen_extend_word(false,DREG(EA),DREG(ESI));
@@ -163,6 +165,7 @@ static void dyn_string(STRING_OP op) {
 		gen_create_jump(rep_start);
 
 		dyn_loadstate(&rep_state);
+		assert(rep_ecx_jmp);
 		gen_fill_branch_long(rep_ecx_jmp);
 	}
 	gen_releasereg(DREG(TMPW));
