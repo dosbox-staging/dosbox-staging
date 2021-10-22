@@ -393,16 +393,16 @@ restart_prefix:
 //		case 0xa6 to 0xaf string operations, some missing
 
 		// movsb/w/d
-		case 0xa4:dyn_string(STR_MOVSB);break;
-		case 0xa5:dyn_string(decode.big_op ? STR_MOVSD : STR_MOVSW);break;
+		case 0xa4:dyn_string(R_MOVSB);break;
+		case 0xa5:dyn_string(decode.big_op ? R_MOVSD : R_MOVSW);break;
 
 		// stosb/w/d
-		case 0xaa:dyn_string(STR_STOSB);break;
-		case 0xab:dyn_string(decode.big_op ? STR_STOSD : STR_STOSW);break;
+		case 0xaa:dyn_string(R_STOSB);break;
+		case 0xab:dyn_string(decode.big_op ? R_STOSD : R_STOSW);break;
 
 		// lodsb/w/d
-		case 0xac:dyn_string(STR_LODSB);break;
-		case 0xad:dyn_string(decode.big_op ? STR_LODSD : STR_LODSW);break;
+		case 0xac:dyn_string(R_LODSB);break;
+		case 0xad:dyn_string(decode.big_op ? R_LODSD : R_LODSW);break;
 
 
 		// 'test reg8/16/32,imm8/16/32'
