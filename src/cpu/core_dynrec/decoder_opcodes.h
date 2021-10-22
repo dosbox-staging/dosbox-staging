@@ -28,6 +28,7 @@
 */
 
 #include "compiler.h"
+#include "../string_ops.h"
 
 static void dyn_dop_ebgb(DualOps op) {
 	dyn_get_modrm();
@@ -1259,47 +1260,47 @@ static void dyn_iret(void) {
 	dyn_closeblock();
 }
 
-static void dyn_string(StringOps op) {
+static void dyn_string(STRING_OP op) {
 	if (decode.rep) MOV_REG_WORD_TO_HOST_REG(FC_OP1,DRC_REG_ECX,decode.big_addr);
 	else gen_mov_dword_to_reg_imm(FC_OP1,1);
 	gen_mov_word_to_reg(FC_OP2,&cpu.direction,true);
 	Bit8u di_base_addr=decode.seg_prefix_used ? decode.seg_prefix : DRC_SEG_DS;
 	switch (op) {
-		case STR_MOVSB:
+		case R_MOVSB:
 			if (decode.big_addr) gen_call_function_mm((void*)&dynrec_movsb_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr),(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
 			else gen_call_function_mm((void*)&dynrec_movsb_word,(Bitu)DRCD_SEG_PHYS(di_base_addr),(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
 			break;
-		case STR_MOVSW:
+		case R_MOVSW:
 			if (decode.big_addr) gen_call_function_mm((void*)&dynrec_movsw_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr),(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
 			else gen_call_function_mm((void*)&dynrec_movsw_word,(Bitu)DRCD_SEG_PHYS(di_base_addr),(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
 			break;
-		case STR_MOVSD:
+		case R_MOVSD:
 			if (decode.big_addr) gen_call_function_mm((void*)&dynrec_movsd_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr),(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
 			else gen_call_function_mm((void*)&dynrec_movsd_word,(Bitu)DRCD_SEG_PHYS(di_base_addr),(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
 			break;
 
-		case STR_LODSB:
+		case R_LODSB:
 			if (decode.big_addr) gen_call_function_m((void*)&dynrec_lodsb_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr));
 			else gen_call_function_m((void*)&dynrec_lodsb_word,(Bitu)DRCD_SEG_PHYS(di_base_addr));
 			break;
-		case STR_LODSW:
+		case R_LODSW:
 			if (decode.big_addr) gen_call_function_m((void*)&dynrec_lodsw_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr));
 			else gen_call_function_m((void*)&dynrec_lodsw_word,(Bitu)DRCD_SEG_PHYS(di_base_addr));
 			break;
-		case STR_LODSD:
+		case R_LODSD:
 			if (decode.big_addr) gen_call_function_m((void*)&dynrec_lodsd_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr));
 			else gen_call_function_m((void*)&dynrec_lodsd_word,(Bitu)DRCD_SEG_PHYS(di_base_addr));
 			break;
 
-		case STR_STOSB:
+		case R_STOSB:
 			if (decode.big_addr) gen_call_function_m((void*)&dynrec_stosb_dword,(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
 			else gen_call_function_m((void*)&dynrec_stosb_word,(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
 			break;
-		case STR_STOSW:
+		case R_STOSW:
 			if (decode.big_addr) gen_call_function_m((void*)&dynrec_stosw_dword,(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
 			else gen_call_function_m((void*)&dynrec_stosw_word,(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
 			break;
-		case STR_STOSD:
+		case R_STOSD:
 			if (decode.big_addr) gen_call_function_m((void*)&dynrec_stosd_dword,(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
 			else gen_call_function_m((void*)&dynrec_stosd_word,(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
 			break;
@@ -1307,7 +1308,7 @@ static void dyn_string(StringOps op) {
 	}
 	if (decode.rep) MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,DRC_REG_ECX,decode.big_addr);
 
-	if (op<STR_SCASB) {
+	if (op<R_SCASB) {
 		// those string operations are allowed for premature termination
 		// when not enough cycles left
 		if (!decode.big_addr) gen_extend_word(false,FC_RETOP);

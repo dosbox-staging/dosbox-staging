@@ -16,6 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "../string_ops.h"
+
 enum {
 	L_N=0,
 	L_SKIP,
@@ -138,16 +140,6 @@ enum {
 	S_AIPd,S_C_AIPd,
 
 	S_IP,S_IPIw
-};
-
-enum {
-	R_OUTSB,R_OUTSW,R_OUTSD,
-	R_INSB,R_INSW,R_INSD,
-	R_MOVSB,R_MOVSW,R_MOVSD,
-	R_LODSB,R_LODSW,R_LODSD,
-	R_STOSB,R_STOSW,R_STOSD,
-	R_SCASB,R_SCASW,R_SCASD,
-	R_CMPSB,R_CMPSW,R_CMPSD
 };
 
 enum {
