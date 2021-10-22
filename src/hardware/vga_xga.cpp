@@ -699,7 +699,10 @@ void XGA_DrawWait(uint32_t val, io_width_t width)
 				xga.waitcmd.newline = false;
 				for (Bitu n = 0; n < chunksize; ++n) { // pixels
 					// This formula can rule the world ;)
-					Bitu mask = 1 << ((((n&0xF8)+(8-(n&0x7)))-1)+chunksize*k);
+					const auto lshift = (((n & 0xF8) +
+					                      (8 - (n & 0x7))) -
+					                     1) + chunksize * k;
+					const auto mask = static_cast<uint64_t>(1) << lshift;
 
 					const uint32_t mixmode = (val & mask)
 					                                 ? xga.foremix
