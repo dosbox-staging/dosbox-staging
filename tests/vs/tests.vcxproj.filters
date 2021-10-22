@@ -21,6 +21,9 @@
     <ClCompile Include="..\fs_utils_tests.cpp">
       <Filter>tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\iohandler_containers_tests.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\rwqueue_tests.cpp">
       <Filter>tests</Filter>
     </ClCompile>
