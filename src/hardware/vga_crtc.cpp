@@ -33,7 +33,6 @@ void VGA_MapMMIO(void);
 void VGA_UnmapMMIO(void);
 
 void vga_write_p3d5(io_port_t port, uint8_t val, io_width_t);
-Bitu DEBUG_EnableDebugger(void);
 
 void vga_write_p3d4(io_port_t, uint8_t val, io_width_t)
 {
