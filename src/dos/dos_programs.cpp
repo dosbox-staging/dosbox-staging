@@ -36,7 +36,6 @@
 #include "program_rescan.h"
 
 #if C_DEBUG
-Bitu DEBUG_EnableDebugger();
 #include "program_biostest.h"
 #endif
 

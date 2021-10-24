@@ -31,7 +31,6 @@
 #include "lazyflags.h"
 #include "support.h"
 
-Bitu DEBUG_EnableDebugger(void);
 extern void GFX_SetTitle(Bit32s cycles ,int frameskip,bool paused);
 
 #if 1

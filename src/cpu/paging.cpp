@@ -130,9 +130,6 @@ static Bits PageFaultCore(void) {
 	}
 	return 0;
 }
-#if C_DEBUG
-Bitu DEBUG_EnableDebugger(void);
-#endif
 
 bool first=false;
 
@@ -155,9 +152,6 @@ void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,uint32_t faultcode) {
 	cpu.mpl=3;
 
 	CPU_Exception(EXCEPTION_PF,faultcode);
-#if C_DEBUG
-//	DEBUG_EnableDebugger();
-#endif
 	DOSBOX_RunMachine();
 	pf_queue.used--;
 	LOG(LOG_PAGING, LOG_NORMAL)("Left PageFault for %x queue %u", lin_addr, pf_queue.used);

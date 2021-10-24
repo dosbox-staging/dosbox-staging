@@ -958,8 +958,6 @@ static void DSP_ChangeRate(uint32_t freq)
 	sb.freq=freq;
 }
 
-Bitu DEBUG_EnableDebugger();
-
 #define DSP_SB16_ONLY if (sb.type != SBT_16) { LOG(LOG_SB,LOG_ERROR)("DSP:Command %2X requires SB16",sb.dsp.cmd); break; }
 #define DSP_SB2_ABOVE if (sb.type <= SBT_1) { LOG(LOG_SB,LOG_ERROR)("DSP:Command %2X requires SB2 or above",sb.dsp.cmd); break; }
 
