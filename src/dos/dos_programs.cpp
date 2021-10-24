@@ -36,7 +36,8 @@
 #include "program_rescan.h"
 
 #if C_DEBUG
-	#include "program_biostest.h"
+Bitu DEBUG_EnableDebugger();
+#include "program_biostest.h"
 #endif
 
 extern Bit32u floppytype;
@@ -372,9 +373,6 @@ void DOS_SetupPrograms(void)
 #endif
 	PROGRAMS_MakeFile("BOOT.COM", BOOT_ProgramStart);
 	PROGRAMS_MakeFile("CHOICE.COM", CHOICE_ProgramStart);
-#if (C_DEBUG == 0) && (C_HEAVY_DEBUG == 0)
-	PROGRAMS_MakeFile("DEBUG.COM", PLACEHOLDER_ProgramStart);
-#endif
 	PROGRAMS_MakeFile("HELP.COM", HELP_ProgramStart);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
 	PROGRAMS_MakeFile("INTRO.COM", INTRO_ProgramStart);

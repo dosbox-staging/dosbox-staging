@@ -29,7 +29,6 @@ class BIOSTEST final : public Program {
         void Run(void);
 };
 
-Bitu DEBUG_EnableDebugger(void);
 void BIOSTEST_ProgramStart(Program **make);
 
 #endif // DOSBOX_PROGRAM_BIOSTEST_H
