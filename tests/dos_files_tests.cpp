@@ -265,8 +265,10 @@ TEST_F(DOS_FilesTest, DOS_MakeName_Dot_Handling)
 	assert_DOS_MakeName("......\\AUTOEXEC.BAT", true, "AUTOEXEC.BAT", 25);
 	assert_DOS_MakeName("...........\\AUTOEXEC.BAT", true, "AUTOEXEC.BAT", 25);
 	// make sure we have arbitrary expansion
-	assert_DOS_MakeName("...\\FOLDER\\...\\AUTOEXEC.BAT", true, "WINDOWS\\AUTOEXEC.BAT", 25);
-	assert_DOS_MakeName("...\\FOLDER\\....\\.\\AUTOEXEC.BAT", true, "AUTOEXEC.BAT", 25);
+	assert_DOS_MakeName("...\\FOLDER\\...\\AUTOEXEC.BAT", true,
+	                    "WINDOWS\\AUTOEXEC.BAT", 25);
+	assert_DOS_MakeName("...\\FOLDER\\....\\.\\AUTOEXEC.BAT", true,
+	                    "AUTOEXEC.BAT", 25);
 }
 
 TEST_F(DOS_FilesTest, DOS_MakeName_No_SlashSlash)
@@ -307,6 +309,64 @@ TEST_F(DOS_FilesTest, DOS_MakeName_Colon_Illegal_Paths)
 	assert_DOS_MakeName(" :..\\tmp.txt", false);
 	assert_DOS_MakeName(": \\tmp.txt", false);
 	assert_DOS_MakeName(":", false);
+}
+
+// ensures a fix for dark forces installer
+TEST_F(DOS_FilesTest, DOS_FindFirst_Ending_Slash)
+{
+	// `dos` comes from dos_inc.h
+	dos.errorcode = DOSERR_NONE;
+	EXPECT_FALSE(DOS_FindFirst("Z:\\DARK\\LFD\\", DOS_ATTR_VOLUME, false));
+	EXPECT_EQ(dos.errorcode, DOSERR_NO_MORE_FILES);
+
+	dos.errorcode = DOSERR_NONE;
+	EXPECT_FALSE(DOS_FindFirst("Z:\\DARK\\", DOS_ATTR_VOLUME, false));
+	EXPECT_EQ(dos.errorcode, DOSERR_NO_MORE_FILES);
+
+	// volume names alone don't trigger the failure
+	dos.errorcode = DOSERR_NONE;
+	EXPECT_TRUE(DOS_FindFirst("Z:\\", DOS_ATTR_VOLUME, false));
+	EXPECT_NE(dos.errorcode, DOSERR_NO_MORE_FILES);
+
+	// volume attr NOT required
+	dos.errorcode = DOSERR_NONE;
+	EXPECT_FALSE(DOS_FindFirst("Z:\\NOMATCH\\", 0, false));
+	EXPECT_EQ(dos.errorcode, DOSERR_NO_MORE_FILES);
+}
+
+TEST_F(DOS_FilesTest, DOS_FindFirst_Rejects_Invalid_Names)
+{
+	// triggers failures via DOS_FindFirst
+	EXPECT_FALSE(DOS_FindFirst("Z:\\BAD\nDIR\\HI.TXT", 0, false));
+	EXPECT_EQ(dos.errorcode, DOSERR_PATH_NOT_FOUND);
+}
+
+TEST_F(DOS_FilesTest, DOS_FindFirst_FindVolume)
+{
+	dos.errorcode = DOSERR_NONE;
+	EXPECT_TRUE(DOS_FindFirst("Z", DOS_ATTR_VOLUME, false));
+	EXPECT_EQ(dos.errorcode, DOSERR_NONE);
+}
+
+TEST_F(DOS_FilesTest, DOS_FindFirst_FindDevice)
+{
+	dos.errorcode = DOSERR_NONE;
+	EXPECT_TRUE(DOS_FindFirst("COM1", DOS_ATTR_DEVICE, false));
+	EXPECT_EQ(dos.errorcode, DOSERR_NONE);
+}
+
+TEST_F(DOS_FilesTest, DOS_FindFirst_FindFile)
+{
+	dos.errorcode = DOSERR_NONE;
+	EXPECT_TRUE(DOS_FindFirst("Z:\\AUTOEXEC.BAT", 0, false));
+	EXPECT_EQ(dos.errorcode, DOSERR_NONE);
+}
+
+TEST_F(DOS_FilesTest, DOS_FindFirst_FindFile_Nonexistant)
+{
+	dos.errorcode = DOSERR_NONE;
+	EXPECT_FALSE(DOS_FindFirst("Z:\\AUTOEXEC.NO", 0, false));
+	EXPECT_EQ(dos.errorcode, DOSERR_NO_MORE_FILES);
 }
 
 } // namespace
