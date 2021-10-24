@@ -47,6 +47,8 @@
 #include "shell.h"
 #include "string_utils.h"
 
+#include "../src/dos/dos_files.cpp"
+
 // Open anonymous namespace (this is Google Test requirement)
 namespace {
 
@@ -98,6 +100,25 @@ private:
 	                                  "midi",   "sblaster", "speaker",
 	                                  "serial", "dos",      "autoexec"};
 };
+
+void assert_DTAExtendName(std::string input,
+                          std::string expected_name,
+                          std::string expected_ext)
+{
+	char *const input_str = const_cast<char *const>(&input.c_str()[0]);
+	// char * const input_name = &input[0];
+	// needs to be minimum length of the input up to the dot + 1 (null)
+	char output_filename[DOS_PATHLENGTH];
+	char *const filename = &output_filename[0];
+	char output_ext[DOS_PATHLENGTH];
+	char *const ext = &output_ext[0];
+
+	DTAExtendName(input_str, filename, ext);
+
+	// mutates input up to dot
+	EXPECT_EQ(filename, expected_name);
+	EXPECT_EQ(ext, expected_ext);
+}
 
 void assert_DOS_MakeName(char const *const input,
                          bool exp_result,
@@ -228,9 +249,11 @@ TEST_F(DOS_FilesTest, DOS_MakeName_DOS_PATHLENGTH_checks)
 {
 	// Right on the line ...
 	safe_strcpy(Drives[25]->curdir,
-	            "aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaaa");
+	            "aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\"
+	            "aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaaa");
 	assert_DOS_MakeName("BBBBB.BB", true,
-	                    "aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaaa\\BBBBB.BB",
+	                    "aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaa\\"
+	                    "aaaaaaaaa\\aaaaaaaaa\\aaaaaaaaaa\\BBBBB.BB",
 	                    25);
 	// Equal to...
 	assert_DOS_MakeName("BBBBBB.BB", false);
@@ -367,6 +390,34 @@ TEST_F(DOS_FilesTest, DOS_FindFirst_FindFile_Nonexistant)
 	dos.errorcode = DOSERR_NONE;
 	EXPECT_FALSE(DOS_FindFirst("Z:\\AUTOEXEC.NO", 0, false));
 	EXPECT_EQ(dos.errorcode, DOSERR_NO_MORE_FILES);
+}
+
+// this probably isn't a desirable quality, but figure that out later
+TEST_F(DOS_FilesTest, DOS_DTAExtendName_Mutates_Input)
+{
+	char input_str[] = "123456789AAAA.EXT\0";
+	int initial_input_name = strlen(input_str);
+	char *const input_name = &input_str[0];
+	// needs to be minimum length of the input up to the dot + 1 (null)
+	char output_filename[14];
+	char *const filename = &output_filename[0];
+	char output_ext[4];
+	char *const ext = &output_ext[0];
+
+	DTAExtendName(input_name, filename, ext);
+
+	EXPECT_EQ(strlen(input_name), 13);
+	EXPECT_NE(initial_input_name, strlen(input_str));
+}
+
+TEST_F(DOS_FilesTest, DOS_DTAExtendName_Space_Pads)
+{
+	assert_DTAExtendName("1234.E  ", "1234    ", "E  ");
+}
+
+TEST_F(DOS_FilesTest, DOS_DTAExtendName_Enforces_8_3)
+{
+	assert_DTAExtendName("12345678ABCDEF.123ABCDE", "12345678", "123");
 }
 
 } // namespace
