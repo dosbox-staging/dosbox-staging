@@ -56,6 +56,7 @@ constexpr uint8_t MIN_ADAPTIVE_STEP_SIZE = 0; // max is 32767
 
 // time allowed to bring up a cold speaker
 constexpr uint32_t SPEAKER_WARMUP_MS = 100;
+constexpr uint32_t DSP_RESET_WARMUP_MS = 2;
 
 // It was common for games perform some initial checks
 // and resets on startup, resulting a rapid susccession of resets.
@@ -282,15 +283,17 @@ static void InitializeSpeakerState()
 	// Real SBPro2 hardware starts with the card's speaker-output disabled
 	sb.speaker = false;
 
-	// For SB16, the output channel starts active however subsequent
+	// The SB16's output channel starts active however subsequent
 	// requests to disable the speaker will be honored (see: SetSpeaker).
-	const bool is_sb16 = (sb.type == SBT_16);
-	sb.chan->Enable(is_sb16);
-
-	// Despite the fact that speaker is off, the SB16's output channel is
-	// now enabled so we treat this as speaker startup event.
-	if (is_sb16 && sb.dsp.reset_tally <= DSP_INITIAL_RESET_LIMIT)
-		sb.warmup_remaining_ms = SPEAKER_WARMUP_MS;
+	// Also, because the channel is active, we treat this as startup event.
+	if (sb.type == SBT_16) {
+		const bool is_cold_start = sb.dsp.reset_tally <= DSP_INITIAL_RESET_LIMIT;
+		sb.warmup_remaining_ms = is_cold_start ? SPEAKER_WARMUP_MS
+		                                       : DSP_RESET_WARMUP_MS;
+		sb.chan->Enable(true);
+	} else {
+		sb.chan->Enable(false);
+	}
 }
 
 static void SB_RaiseIRQ(SB_IRQS type)
