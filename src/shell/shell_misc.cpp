@@ -471,8 +471,11 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	const char *extension = strrchr(fullname, '.');
 	if (!extension) {
 		// Check if the result will fit in the parameters.
-		if (safe_strlen(fullname) > (DOS_PATHLENGTH - 1))
+		if (safe_strlen(fullname) > (DOS_PATHLENGTH - 1)) {
+			WriteOut(MSG_Get("PROGRAM_PATH_TOO_LONG"), fullname,
+			         DOS_PATHLENGTH);
 			return false;
+		}
 
 		// Try to add .COM, .EXE and .BAT extensions to the filename
 		char temp_name[DOS_PATHLENGTH + 4];
