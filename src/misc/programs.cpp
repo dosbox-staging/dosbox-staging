@@ -925,4 +925,7 @@ void PROGRAMS_Init(Section* /*sec*/) {
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX","Correct syntax: config -get \"section property\".\n");
 	MSG_Add("PROGRAM_CONFIG_PRINT_STARTUP", "\nDOSBox was started with the following command line parameters:\n%s\n");
 	MSG_Add("PROGRAM_CONFIG_MISSINGPARAM", "Missing parameter.\n");
+	MSG_Add("PROGRAM_PATH_TOO_LONG",
+	        "The path \"%s\" exceeds the DOS maximum length of %d characters\n");
+	MSG_Add("PROGRAM_EXECUTABLE_MISSING", "Executable file not found: %s\n");
 }
