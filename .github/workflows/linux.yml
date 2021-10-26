@@ -137,7 +137,7 @@ jobs:
         run:  ./scripts/count-warnings.py -lf build.log
 
 
-  build_linux_release_dynamic:
+  build_linux_release:
     name: Release build
     runs-on: ubuntu-18.04
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
@@ -173,7 +173,7 @@ jobs:
         uses:  actions/cache@v2
         with:
           path: subprojects/packagecache
-          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
 
       - name: Log environment
         run:  ./scripts/log-env.sh
@@ -188,11 +188,12 @@ jobs:
       - name: Setup release build
         run: |
           meson setup \
+            --wrap-mode=forcefallback \
             -Dbuildtype=release \
             -Ddefault_library=static \
             -Db_asneeded=true \
             -Db_lto=true \
-            -Dtry_static_libs=png \
+            -Dtry_static_libs=fluidsynth,png \
             -Dfluidsynth:enable-floats=true \
             -Dfluidsynth:try-static-deps=true \
             build
@@ -288,7 +289,7 @@ jobs:
   #
   publish_additional_artifacts:
     name: Publish additional artifacts
-    needs: build_linux_release_dynamic
+    needs: build_linux_release
     runs-on: ubuntu-18.04
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
