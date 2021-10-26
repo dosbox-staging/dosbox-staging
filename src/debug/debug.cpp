@@ -2188,7 +2188,8 @@ public:
 
 		// Start shell
 		DOS_Shell shell;
-		shell.Execute(filename,args);
+		if (!shell.Execute(filename, args))
+			WriteOut(MSG_Get("PROGRAM_EXECUTABLE_MISSING"), filename);
 
 		// set old reg values
 		SegSet16(ss,oldss);
