@@ -193,7 +193,7 @@ jobs:
             -Ddefault_library=static \
             -Db_asneeded=true \
             -Db_lto=true \
-            -Dtry_static_libs=fluidsynth,png \
+            -Dtry_static_libs=fluidsynth,mt32emu,png \
             -Dfluidsynth:enable-floats=true \
             -Dfluidsynth:try-static-deps=true \
             build
