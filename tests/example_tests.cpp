@@ -30,7 +30,8 @@
 /* Include necessary header files; order of headers should be as follows:
  *
  * 1. Header declaring functions/classes being tested
- * 2. <gtest/gtest.h>, which declares the testing framework
+ * 2. <gtest/gtest.h>, which declares the testing framework and
+      <gmock/gmock.h>, which declares the mock framework.
  * 3. Additional system headers (if needed)
  * 4. Additional dosbox-staging headers (if needed)
  */
@@ -38,6 +39,7 @@
 #include "support.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <cstdint>
 
