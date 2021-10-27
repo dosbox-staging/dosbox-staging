@@ -9,6 +9,7 @@ project('dosbox-staging', 'c', 'cpp',
 	  'b_staticpic=false',
 	  'mt32emu:warning_level=0',
 	  'fluidsynth:warning_level=0',
+          'gtest:warning_level=0',
 	])
 
 # After increasing the minimum-required meson version, make the following
