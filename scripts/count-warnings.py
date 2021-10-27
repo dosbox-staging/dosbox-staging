@@ -45,6 +45,8 @@ MSVC_WARN_PATTERN = re.compile(r'.+>([^\(]+)\((\d+),\d+\): warning ([^:]+): .*')
 #
 ANSI_COLOR_PATTERN = re.compile(r'\x1b\[[0-9;]*[mGKH]')
 
+# For recognizing warnings from usr/* or subprojects files
+USR_OR_SUBPROJECTS_PATTERN = re.compile(r'^/usr/.*|.*/subprojects/.*')
 
 class warning_summaries:
 
@@ -85,6 +87,11 @@ def count_warning(gcc_format, line_no, line, warnings):
     if not match:
         return 0
 
+    # Ignore out-of-scope warnings from system and subprojects.
+    file = match.group(1)
+    if USR_OR_SUBPROJECTS_PATTERN.match(file):
+        return 0
+
     # Some warnings (e.g. effc++) are reported multiple times, once
     # for every usage; ignore duplicates.
     line = line.strip()
@@ -92,7 +99,6 @@ def count_warning(gcc_format, line_no, line, warnings):
         return 0
     warnings.lines.add(line)
 
-    file = match.group(1)
     # wline = match.group(2)
     wtype = match.group(3)
 
