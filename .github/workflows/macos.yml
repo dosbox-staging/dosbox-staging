@@ -205,7 +205,7 @@ jobs:
             -Ddefault_library=static \
             -Db_asneeded=true \
             -Db_lto=true \
-            -Dtry_static_libs=opusfile,png,sdl2,sdl2_net \
+            -Dtry_static_libs=fluidsynth,mt32emu,opusfile,png,sdl2,sdl2_net \
             -Dfluidsynth:enable-floats=true \
             -Dfluidsynth:try-static-deps=true \
             build
