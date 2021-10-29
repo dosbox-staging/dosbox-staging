@@ -454,23 +454,45 @@ void SVGA_S3_WriteSEQ(io_port_t reg, uint8_t val, io_width_t)
 {
 	if (reg > 0x8 && vga.s3.pll.lock != 0x6)
 		return;
+
+	// The PLL M value can be programmed with any integer value from 1 to
+	// 127. The binary equivalent of this value is programmed in bits 6-0 of
+	// SR11 for the MCLK and in bits 6-0 of SR13 for the DCLK.
+	auto to_ppl_m = [](const uint8_t val) -> uint8_t {
+		return val & 0b0111'1111;
+	};
+
+	// The PLL N value can be programmed with any integer value from 1
+	// to 31. The binary equivalent of this value is programmed in bits
+	// 4-0 of SR10 for the MCLK and in bits 4-0 of SR12 for the DCLK.
+	auto to_ppl_n = [](const uint8_t val) -> uint8_t {
+		return val & 0b0001'1111;
+	};
+
+	// The PLL R value is a 2-bit range value that can be programmed with
+	// any integer value from 0 to 3. The R value is programmed in bits 6-5
+	// of SR 10 for MCLK and bits 6-5 of SR12 for DCLK.
+	auto to_ppl_r = [](const uint8_t val) -> uint8_t {
+		return (val & 0b0110'0000) >> 5;
+	};
+
 	switch (reg) {
-	case 0x08:
+	case 0x08: // Register lock / unlock
 		vga.s3.pll.lock=val;
 		break;
-	case 0x10:		/* Memory PLL Data Low */
-		vga.s3.mclk.n = (val & 0b000'11111);
-		vga.s3.mclk.r = (val & 0b111'00000) >> 5;
+	case 0x10: // Memory PLL Data Low
+		vga.s3.mclk.n = to_ppl_n(val);
+		vga.s3.mclk.r = to_ppl_r(val);
 		break;
-	case 0x11:		/* Memory PLL Data High */
-		vga.s3.mclk.m=val & 0x7f;
+	case 0x11: // Memory PLL Data High
+		vga.s3.mclk.m = to_ppl_m(val);
 		break;
-	case 0x12:		/* Video PLL Data Low */
-		vga.s3.clk[3].n = (val & 0b000'11111);
-		vga.s3.clk[3].r = (val & 0b111'00000) >> 5;
+	case 0x12: // Video PLL Data Low
+		vga.s3.clk[3].n = to_ppl_n(val);
+		vga.s3.clk[3].r = to_ppl_r(val);
 		break;
-	case 0x13:		/* Video PLL Data High */
-		vga.s3.clk[3].m=val & 0x7f;
+	case 0x13: // Video PLL Data High
+		vga.s3.clk[3].m = to_ppl_m(val);
 		break;
 	case 0x15:
 		vga.s3.pll.control_2 = val;
@@ -489,15 +511,15 @@ uint8_t SVGA_S3_ReadSEQ(io_port_t reg, io_width_t)
 		return (reg < 0x1b) ? 0 : static_cast<uint8_t>(reg);
 
 	switch (reg) {
-	case 0x08:		/* PLL Unlock */
+	case 0x08: // PLL Unlock
 		return vga.s3.pll.lock;
-	case 0x10:		/* Memory PLL Data Low */
+	case 0x10: // Memory PLL Data Low
 		return (vga.s3.mclk.r << 5) | vga.s3.mclk.n;
-	case 0x11:		/* Memory PLL Data High */
+	case 0x11: // Memory PLL Data High
 		return vga.s3.mclk.m;
-	case 0x12:		/* Video PLL Data Low */
+	case 0x12: // Video PLL Data Low
 		return (vga.s3.clk[3].r << 5) | vga.s3.clk[3].n;
-	case 0x13:		/* Video Data High */
+	case 0x13: // Video Data High
 		return vga.s3.clk[3].m;
 	case 0x15: // CLKSYN Control 2 Register
 		return vga.s3.pll.control_2;
