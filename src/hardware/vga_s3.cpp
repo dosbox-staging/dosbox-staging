@@ -494,9 +494,83 @@ void SVGA_S3_WriteSEQ(io_port_t reg, uint8_t val, io_width_t)
 	case 0x13: // Video PLL Data High
 		vga.s3.clk[3].m = to_ppl_m(val);
 		break;
-	case 0x15:
+	case 0x15: // CLKSYN Control 2 Register
 		vga.s3.pll.control_2 = val;
-		VGA_StartResize();
+
+		/*
+		CLKSYN Control 2 (SR15), pp 130
+		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		Bit 0 MFRQ EN - Enable new MCLK frequency load
+		0 = Register bit clear
+		1 = Load new MCLK frequency
+
+		When new MCLK PLL values are programmed, this bit can be set to
+		1 to load these values in the PLL. The loading may be delayed a
+		small but variable amount of time. This bit should be cleared to
+		0 after loading to prevent repeated loading. Alternately, use
+		bit 5 of this register to produce an immediate load.
+
+		Bit 1 DFRQ EN - Enable new DCLK frequency load
+		0 = Register bit clear
+		1 - Load new DCLK frequency
+
+		When new DCLK PLL values are programmed, this bit can be set to
+		1 to load these values in the PLL. Bits 3-2 of 3C2H must also be
+		set to 11b if they are not already at this value. The loading
+		may be delayed a small but variable amount of time. This bit
+		should be programmed to 1 at power-up to allow loading of the
+		VGA DCLK value and then left at this setting. Use bit 5 of this
+		register to produce an immediate load.
+
+		Bit 2 MCLK OUT - Output internally generated MCLK
+		0 = Pin 147 acts as the STWR strobe
+		1 = Pin 147 outputs the internally generated MCLK
+
+		This is used only for testing.
+
+		Bit 3 VCLK OUT - VCLK direction determined by EVCLK
+
+		0 = Pin 148 outputs the internally generated VCLK regardless of
+		the state of EVCLK
+
+		1 = VCLK direction is determined by the EVCLK signal
+
+		Bit 4 DCLK/2 - Divide DCLK by 2
+		0 = DCLK unchanged
+		1 = Divide DCLK by 2
+
+		Either this bit or bit 6 of this register must be set to 1 for
+		clock doubled RAMDAC op- eration (mode 0001).
+
+		Bit 5 CLK LOAD - MCLK, DCLK load
+		0 = Clock loading is controlled by bits 0 and 1 of this register
+		1 = Load MCLK and DCLK PLL values immediately
+
+		To produce an immediate MCLK and DCLK load, program this bit to
+		1 and then to 0. Bits 3-2 of 3C2H must also then be programmed
+		to 11b to load the DCLK values if they are not already
+		programmed to this value. This register must never be left set
+		to 1.
+
+		Bit 6 DCLK INV - Invert DCLK
+		0 = DCLK unchanged
+		1 = Invert DCLK
+
+		Either this bit or bit 4 of this register must be set to 1 for
+		clock doubled RAMDAC op- eration (mode 0001).
+
+		Bit 7 2 CYC MWR - Enable 2 cycle memory write
+		0 = 3 MCLK memory write
+		1 = 2 MCLK memory write
+
+		Setting this bit to 1 bypasses the VGA logic for linear
+		addressing when bit 7 of SRA is set to 1. This can allow 2 MCLK
+		operation for MCLK frequencies between 55 and 57 MHz.
+		*/
+
+		// Only initiate a mode change if bit 0, 1, or 5 are set
+		if (val & 0b0010'0011)
+			VGA_StartResize();
 		break;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:S3:SEQ:Write to illegal index %2X", static_cast<uint32_t>(reg));
