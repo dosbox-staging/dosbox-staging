@@ -39,7 +39,6 @@ jobs:
           - configure_flags:  -Duse_sdl2_net=false
           - configure_flags:  -Duse_opengl=false         # TODO opengl is always disabled on msys2
           - configure_flags:  -Duse_fluidsynth=false
-          - configure_flags:  -Duse_opusfile=false
           - configure_flags:  -Duse_png=false
           # - configure_flags:  -Denable_debugger=normal # TODO broken on msys2
           # - configure_flags:  -Denable_debugger=heavy  # TODO broken on msys2
