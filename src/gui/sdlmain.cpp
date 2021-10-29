@@ -736,20 +736,11 @@ static void log_display_properties(const int in_x,
 	const auto scale_y = static_cast<double>(out_y) / in_y;
 	const auto out_par = scale_y / scale_x;
 
-	auto describe_scaling_mode = [scaling_mode]() {
-		switch (scaling_mode) {
-		case SCALING_MODE::NONE: return "Bilinear";
-		case SCALING_MODE::NEAREST: return "Nearest-neighbour";
-		case SCALING_MODE::PERFECT: return "Pixel-perfect";
-		}
-		return "Unknown mode!";
-	};
-
 	const auto [type_name, type_colours] = VGA_DescribeType(CurMode->type);
 
-	LOG_MSG("DISPLAY: %s scaling %s-%dx%d,%s #%xh PAR-%#.3g by %.1fx%.1f -> %dx%d PAR-%#.3g",
-	        describe_scaling_mode(), type_name, in_x, in_y, type_colours,
-	        CurMode->mode, in_par, scale_x, scale_y, out_x, out_y, out_par);
+	LOG_MSG("DISPLAY: %s %dx%d%s (mode %X) PAR-%#.3g by %.1fx%.1f -> %dx%d PAR-%#.3g",
+	        type_name, in_x, in_y, type_colours, CurMode->mode, in_par,
+	        scale_x, scale_y, out_x, out_y, out_par);
 }
 
 static SDL_Point get_initial_window_position_or_default(int default_val)
@@ -2443,9 +2434,18 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	sdl.desktop.window.width = refined_size.x;
 	sdl.desktop.window.height = refined_size.y;
 
+	auto describe_scaling_mode = [scaling_mode]() -> const char * {
+		switch (scaling_mode) {
+		case SCALING_MODE::NONE: return "Bilinear";
+		case SCALING_MODE::NEAREST: return "Nearest-neighbour";
+		case SCALING_MODE::PERFECT: return "Pixel-perfect";
+		}
+		return "Unknown mode!";
+	};
+
 	// Let the user know the resulting window properties
-	LOG_MSG("DISPLAY: Initialized %dx%d window-mode on %dx%d display-%d",
-	        refined_size.x, refined_size.y, desktop.w, desktop.h,
+	LOG_MSG("DISPLAY: Initialized %dx%d window-mode using %s scaling on %dp display-%d",
+	        refined_size.x, refined_size.y, describe_scaling_mode(), desktop.h,
 	        sdl.display_number);
 }
 
