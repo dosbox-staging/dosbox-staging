@@ -473,7 +473,7 @@ void SVGA_S3_WriteSEQ(io_port_t reg, uint8_t val, io_width_t)
 		vga.s3.clk[3].m=val & 0x7f;
 		break;
 	case 0x15:
-		vga.s3.pll.cmd=val;
+		vga.s3.pll.control_2 = val;
 		VGA_StartResize();
 		break;
 	default:
@@ -499,8 +499,8 @@ uint8_t SVGA_S3_ReadSEQ(io_port_t reg, io_width_t)
 		return (vga.s3.clk[3].r << 5) | vga.s3.clk[3].n;
 	case 0x13:		/* Video Data High */
 		return vga.s3.clk[3].m;
-	case 0x15:
-		return vga.s3.pll.cmd;
+	case 0x15: // CLKSYN Control 2 Register
+		return vga.s3.pll.control_2;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:S3:SEQ:Read from illegal index %2X", static_cast<uint32_t>(reg));
 		return 0;
@@ -517,7 +517,8 @@ uint32_t SVGA_S3_GetClock(void)
 	else
 		clock=1000*S3_CLOCK(vga.s3.clk[clock].m,vga.s3.clk[clock].n,vga.s3.clk[clock].r);
 	/* Check for dual transfer, clock/2 */
-	if (vga.s3.pll.cmd & 0x10) clock/=2;
+	if (vga.s3.pll.control_2 & 0x10)
+		clock /= 2;
 	return clock;
 }
 
