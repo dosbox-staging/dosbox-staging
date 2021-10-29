@@ -572,6 +572,9 @@ void SVGA_S3_WriteSEQ(io_port_t reg, uint8_t val, io_width_t)
 		if (val & 0b0010'0011)
 			VGA_StartResize();
 		break;
+	case 0x18: // RADAC/CLKSYN Control Register (SR18)
+		vga.s3.pll.control = val;
+		break;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:S3:SEQ:Write to illegal index %2X", static_cast<uint32_t>(reg));
 		break;
@@ -597,6 +600,8 @@ uint8_t SVGA_S3_ReadSEQ(io_port_t reg, io_width_t)
 		return vga.s3.clk[3].m;
 	case 0x15: // CLKSYN Control 2 Register
 		return vga.s3.pll.control_2;
+	case 0x18: // RADAC/CLKSYN Control Register (SR18)
+		return vga.s3.pll.control;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:S3:SEQ:Read from illegal index %2X", static_cast<uint32_t>(reg));
 		return 0;
