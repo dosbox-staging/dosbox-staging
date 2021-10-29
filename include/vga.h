@@ -240,6 +240,7 @@ struct VGA_S3 {
 	struct pll_t {
 		uint8_t lock = 0; // Extended Sequencer Access Rgister SR8 (pp. 124)
 		uint8_t control_2 = 0; // CLKSYN Control 2 Register SR15 (pp. 130)
+		uint8_t control = 0; // RAMDAC/CLKSYN Control Register SRI8 (pp. 132)
 	};
 	pll_t pll = {};
 	VGA_HWCURSOR hgc = {};
