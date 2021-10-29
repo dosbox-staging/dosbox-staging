@@ -28,8 +28,8 @@
 #include "inout.h"
 #include "vga.h"
 
-#define XGA_SCREEN_WIDTH	vga.s3.xga_screen_width
-#define XGA_COLOR_MODE		vga.s3.xga_color_mode
+constexpr auto &XGA_SCREEN_WIDTH = vga.s3.xga_screen_width;
+constexpr auto &XGA_COLOR_MODE = vga.s3.xga_color_mode;
 
 #define XGA_SHOW_COMMAND_TRACE 0
 
@@ -147,7 +147,7 @@ void XGA_DrawPoint(Bitu x, Bitu y, Bitu c) {
 	if(y < xga.scissors.y1) return;
 	if(y > xga.scissors.y2) return;
 
-	Bit32u memaddr = (y * XGA_SCREEN_WIDTH) + x;
+	const auto memaddr = (y * XGA_SCREEN_WIDTH) + x;
 	/* Need to zero out all unused bits in modes that have any (15-bit or "32"-bit -- the last
 	   one is actually 24-bit. Without this step there may be some graphics corruption (mainly,
 	   during windows dragging. */
@@ -175,7 +175,7 @@ void XGA_DrawPoint(Bitu x, Bitu y, Bitu c) {
 }
 
 Bitu XGA_GetPoint(Bitu x, Bitu y) {
-	Bit32u memaddr = (y * XGA_SCREEN_WIDTH) + x;
+	const auto memaddr = (y * XGA_SCREEN_WIDTH) + x;
 
 	switch(XGA_COLOR_MODE) {
 	case M_LIN8:
@@ -1150,6 +1150,7 @@ void XGA_Write(io_port_t port, uint32_t val, io_width_t width)
 		if (width == io_width_t::byte)
 			vga_write_p3d4(0, val, io_width_t::byte);
 		else if (width == io_width_t::word) {
+			LOG_WARNING("XGA 16-bit write to vga_write_p3d4, vga_write_p3d5");
 			vga_write_p3d4(0, val & 0xff, io_width_t::byte);
 			vga_write_p3d5(0, val >> 8, io_width_t::byte);
 		} else
