@@ -1576,7 +1576,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		// tall VESA modes
 		maybe_aspect_correct_tall_modes(aspect_ratio);
 		if ((vga.crtc.mode_control & 0x8) ||
-		    (svgaCard == SVGA_S3Trio && (vga.s3.pll.cmd & 0x10)))
+		    (svgaCard == SVGA_S3Trio && (vga.s3.pll.control_2 & 0x10)))
 			doublewidth = true;
 		else {
 			// vesa modes 165/175
