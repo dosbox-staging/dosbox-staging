@@ -1575,13 +1575,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		width<<=2;
 		// tall VESA modes
 		maybe_aspect_correct_tall_modes(aspect_ratio);
-		if ((vga.crtc.mode_control & 0x8) ||
-		    (svgaCard == SVGA_S3Trio && (vga.s3.pll.control_2 & 0x10)))
+		if ((vga.crtc.mode_control & 0x8))
 			doublewidth = true;
-		else {
-			// vesa modes 165/175
+		else
 			aspect_ratio /= 2.0;
-		}
 		/* Use HW mouse cursor drawer if enabled */
 		VGA_ActivateHardwareCursor();
 		break;
