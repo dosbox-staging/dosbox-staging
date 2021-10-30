@@ -57,6 +57,7 @@ unit_tests = [
   {'name' : 'support',              'deps' : [libmisc_dep]},
   {'name' : 'drives',               'deps' : [dosbox_dep], 'extra_cpp': []},
   {'name' : 'dos_files',            'deps' : [dosbox_dep], 'extra_cpp': []},
+  {'name' : 'shell_cmds',           'deps' : [dosbox_dep], 'extra_cpp': []},
 ]
 
 foreach ut : unit_tests
