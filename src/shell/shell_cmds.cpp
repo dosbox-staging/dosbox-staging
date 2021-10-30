@@ -143,19 +143,19 @@ bool DOS_Shell::CheckConfig(char *cmd_in, char *line) {
 	return true;
 }
 
+bool DOS_Shell::execute_shell_cmd(char *name, char *arguments) {
+	SHELL_Cmd shell_cmd = {};
+	if (!lookup_shell_cmd(name, shell_cmd))
+		return false; // name isn't a shell command!
+	(this->*(shell_cmd.handler))(arguments);
+	return true;
+}
+
 void DOS_Shell::DoCommand(char * line) {
 /* First split the line into command and arguments */
 	line=trim(line);
 	char cmd_buffer[CMD_MAXLINE];
 	char * cmd_write=cmd_buffer;
-
-	auto execute_shell_cmd = [this](char *name, char *arguments) {
-		SHELL_Cmd shell_cmd = {};
-		if (!lookup_shell_cmd(name, shell_cmd))
-			return false; // name isn't a shell command!
-		(this->*(shell_cmd.handler))(arguments);
-		return true;
-	};
 
 	while (*line) {
 		if (*line == 32) break;
