@@ -1936,6 +1936,9 @@ static void GUI_ShutDown(Section *)
 	if (mouse_is_captured)
 		GFX_ToggleMouseCapture();
 	CleanupSDLResources();
+
+	SDL_DestroyWindow(sdl.window);
+	sdl.window = nullptr;
 }
 
 static void SetPriority(PRIORITY_LEVELS level)
