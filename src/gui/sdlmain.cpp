@@ -780,6 +780,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 
 		if (sdl.window) {
 			SDL_DestroyWindow(sdl.window);
+			sdl.window = nullptr;
 		}
 
 		uint32_t flags = opengl_driver_crash_workaround(screen_type);
