@@ -2658,8 +2658,6 @@ static void GUI_StartUp(Section *sec)
 	if (screensaver == "block")
 		SDL_DisableScreenSaver();
 
-	sdl.texture.texture = 0;
-	sdl.texture.pixelFormat = 0;
 	sdl.render_driver = section->Get_string("texture_renderer");
 	lowcase(sdl.render_driver);
 
