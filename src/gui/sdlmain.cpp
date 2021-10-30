@@ -532,6 +532,7 @@ static void SetIcon()
 	SDL_Surface *s = SDL_CreateRGBSurfaceFrom(icon.data(), src_w, src_h,
 	                                          src_bpp * 8, src_w * src_bpp,
 	                                          RMASK, GMASK, BMASK, AMASK);
+	assert(s);
 	SDL_SetWindowIcon(sdl.window, s);
 	SDL_FreeSurface(s);
 }
@@ -794,6 +795,8 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		// restoring the window by WM.
 		const auto default_val = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
 		const auto pos = get_initial_window_position_or_default(default_val);
+
+		assert(sdl.window == nullptr); // enusre we don't leak
 		sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
 		if (!sdl.window) {
 			LOG_ERR("SDL: %s", SDL_GetError());
@@ -1174,6 +1177,8 @@ dosurface:
 
 		if (sdl.render_driver != "auto")
 			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.render_driver.c_str());
+
+		assert(sdl.renderer == nullptr); // ensure we don't leak
 		sdl.renderer = SDL_CreateRenderer(sdl.window, -1,
 		                                  SDL_RENDERER_ACCELERATED |
 		                                  (sdl.desktop.vsync ? SDL_RENDERER_PRESENTVSYNC : 0));
@@ -1196,6 +1201,7 @@ dosurface:
 			goto dosurface;
 		}
 
+		assert(sdl.texture.input_surface == nullptr); // ensure we don't leak
 		sdl.texture.input_surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, texture_format);
 		if (!sdl.texture.input_surface) {
 			LOG_WARNING("SDL: Error while preparing texture input");
@@ -1204,7 +1210,10 @@ dosurface:
 
 		SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 		uint32_t pixel_format;
+		assert(sdl.texture.texture);
 		SDL_QueryTexture(sdl.texture.texture, &pixel_format, NULL, NULL, NULL);
+
+		assert(sdl.texture.pixelFormat == nullptr); // ensure we don't leak
 		sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
 		switch (SDL_BITSPERPIXEL(pixel_format)) {
 			case 8:  retFlags = GFX_CAN_8;  break;
@@ -1741,6 +1750,7 @@ void GFX_EndUpdate(const Bit16u *changedLines)
 	sdl.updating = false;
 	switch (sdl.desktop.type) {
 	case SCREEN_TEXTURE: {
+		assert(sdl.texture.texture);
 		assert(sdl.texture.input_surface);
 		if (render_pacer.CanRun()) {
 			SDL_UpdateTexture(sdl.texture.texture,
@@ -1846,6 +1856,7 @@ Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
 	case SCREEN_SURFACE:
 		return SDL_MapRGB(sdl.surface->format,red,green,blue);
 	case SCREEN_TEXTURE:
+		assert(sdl.texture.pixelFormat);
 		return SDL_MapRGB(sdl.texture.pixelFormat, red, green, blue);
 #if C_OPENGL
 	case SCREEN_OPENGL:
