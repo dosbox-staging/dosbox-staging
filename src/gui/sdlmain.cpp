@@ -3515,6 +3515,10 @@ static void show_warning(char const * const message) {
 
 	SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
 	SDL_UpdateWindowSurface(sdl.window);
+
+	SDL_FreeSurface(splash_surf);
+	splash_surf = nullptr;
+
 	Delay(12000);
 #endif // WIN32
 }
