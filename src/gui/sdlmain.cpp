@@ -763,17 +763,16 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  bool fullscreen,
                                  bool resizable)
 {
-	static SCREEN_TYPES last_type = SCREEN_SURFACE;
-
 	CleanupSDLResources();
 
-	int currWidth, currHeight;
 	if (sdl.window && sdl.resizing_window) {
+		int currWidth, currHeight;
 		SDL_GetWindowSize(sdl.window, &currWidth, &currHeight);
 		sdl.update_display_contents = ((width <= currWidth) && (height <= currHeight));
 		return sdl.window;
 	}
 
+	static SCREEN_TYPES last_type = SCREEN_SURFACE;
 	if (!sdl.window || (last_type != screen_type)) {
 
 		last_type = screen_type;
