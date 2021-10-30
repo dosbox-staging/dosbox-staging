@@ -52,44 +52,60 @@ using namespace testing;
 class DOS_Shell_CMDSTest : public DOSBoxTestFixture {};
 
 class MockDOS_Shell : public DOS_Shell {
-	public:
-		/*
-		 * NOTE: If we need to call the actual object, we use this
-		MockDOS_Shell() {
-			// delegate call to the real object.
-			ON_CALL(*this, execute_shell_cmd).WillByDefault([this](char *name, char *arguments) {
-				std::cout << "CALLING REAL execute_shell_cmd!\n";
-				return real_.execute_shell_cmd(name, arguments);
-			});
-		}
-		*/
-		MOCK_METHOD(bool, execute_shell_cmd, (char *name, char *arguments), (override));
+public:
+	/**
+	 * NOTE: If we need to call the actual object, we use this. By
+	 * default, the mocked functions return whatever we tell it to
+	 * (if given a .WillOnce(Return(...)), or a default value
+	 * (false).
+	 *
+	 * MockDOS_Shell()
+	 * {
+	 * 	// delegate call to the real object.
+	 * 	ON_CALL(*this, execute_shell_cmd)
+	 * 	        .WillByDefault([this](char *name, char *arguments) {
+	 * 		        return real_.execute_shell_cmd(name, arguments);
+	 * 	        });
+	 * }
+	 */
+	MOCK_METHOD(bool, execute_shell_cmd, (char *name, char *arguments), (override));
 
-	private:
-		DOS_Shell real_;  // Keeps an instance of the real in the mock.
+private:
+	DOS_Shell real_; // Keeps an instance of the real in the mock.
 };
 
-TEST_F(DOS_Shell_CMDSTest, DoCommand_Basic_Rejections)
+void assert_DoCommand(std::string input, std::string expected_name, std::string expected_args)
 {
 	MockDOS_Shell shell;
-	std::string line = "\t";
-	char * line_c_str = const_cast<char *>(line.c_str());
-	EXPECT_NO_THROW({
-		shell.DoCommand(line_c_str);
-	});
-	EXPECT_CALL(shell, execute_shell_cmd(_, _)).Times(0);
+	char *input_c_str = const_cast<char *>(input.c_str());
+	EXPECT_CALL(shell,
+	            execute_shell_cmd(StrEq(expected_name), StrEq(expected_args)))
+	        .Times(1)
+	        .WillOnce(Return(true));
+	EXPECT_NO_THROW({ shell.DoCommand(input_c_str); });
 }
 
-TEST_F(DOS_Shell_CMDSTest, DoCommand_Splits_Cmd_and_Args)
+// Tests chars that separate command name from arguments
+TEST_F(DOS_Shell_CMDSTest, DoCommand_Separating_Chars)
 {
-	std::string input = "DIR *.*";
-	char * input_c_str = const_cast<char *>(input.c_str());
-
-	MockDOS_Shell shell;
-	EXPECT_CALL(shell, execute_shell_cmd(StrEq("DIR"), StrEq(" *.*"))).Times(1);
-	EXPECT_NO_THROW({
-		shell.DoCommand(input_c_str);
-	});
+	// These should all cause the parser to stop
+	std::vector<char> end_chars{
+	        32,
+	        '/',
+	        '\t',
+	        '=',
+	};
+	for (auto end_chr : end_chars) {
+		MockDOS_Shell shell;
+		std::string name = "PATH";
+		std::string args = "";
+		std::string input = name;
+		input += end_chr;
+		input += "ARG";
+		args += end_chr;
+		args += "ARG";
+		assert_DoCommand(input, name, args);
+	}
 }
 
 TEST_F(DOS_Shell_CMDSTest, DoCommand_All_Cmds_Do_Valid_Execute)
@@ -97,14 +113,40 @@ TEST_F(DOS_Shell_CMDSTest, DoCommand_All_Cmds_Do_Valid_Execute)
 	MockDOS_Shell shell;
 	for (std::pair<std::string, SHELL_Cmd> cmd : shell_cmds) {
 		std::string input = cmd.first;
-		char * input_c_str = const_cast<char *>(input.c_str());
-
-		MockDOS_Shell shell;
-		EXPECT_CALL(shell, execute_shell_cmd(StrEq(input), StrEq(""))).Times(1);
-		EXPECT_NO_THROW({
-			shell.DoCommand(input_c_str);
-		});
+		assert_DoCommand(input, input, "");
 	}
+}
+
+TEST_F(DOS_Shell_CMDSTest, DoCommand_Trim_Space)
+{
+	assert_DoCommand(" PATH ", "PATH", "");
+}
+
+TEST_F(DOS_Shell_CMDSTest, DoCommand_Splits_Cmd_and_Args)
+{
+	// NOTE: It does not strip the arguments!
+	assert_DoCommand("DIR *.*", "DIR", " *.*");
+}
+
+TEST_F(DOS_Shell_CMDSTest, DoCommand_Doesnt_Split_Colon)
+{
+	// ensure we don't split on colon ...
+	assert_DoCommand("C:", "C:", "");
+	// ... but it does split on slash
+	assert_DoCommand("C:\\", "C:", "\\");
+}
+
+TEST_F(DOS_Shell_CMDSTest, DoCommand_Nospace_Dot_Handling)
+{
+	assert_DoCommand("DIR.EXE", "DIR", ".EXE");
+	assert_DoCommand("CD..", "CD", "..");
+	assert_DoCommand("CD....", "CD", "....");
+}
+
+TEST_F(DOS_Shell_CMDSTest, DoCommand_Nospace_Slash_Handling)
+{
+	assert_DoCommand("CD\\DIRECTORY", "CD", "\\DIRECTORY");
+	assert_DoCommand("CD\\", "CD", "\\");
 }
 
 } // namespace
