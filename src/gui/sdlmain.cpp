@@ -1921,7 +1921,7 @@ static void CleanupSDLResources()
 #if C_OPENGL
 	if (sdl.opengl.context) {
 		SDL_GL_DeleteContext(sdl.opengl.context);
-		sdl.opengl.context = 0;
+		sdl.opengl.context = nullptr;
 	}
 #endif
 }
