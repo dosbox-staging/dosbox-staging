@@ -833,16 +833,30 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		                        sdl.desktop.full.display_res
 		                                ? SDL_WINDOW_FULLSCREEN_DESKTOP
 		                                : SDL_WINDOW_FULLSCREEN);
-	} else {
-		// If you feel inclined to remove this SDL_SetWindowSize call
-		// (or further modify when it is being invoked), then make sure
-		// window size is updated AND content is correctly clipped when
-		// emulated program changes resolution with various
-		// windowresolution settings (!).
-		if (!sdl.desktop.window.resizable && !sdl.desktop.switching_fullscreen)
+	} else { // Windowd mode
+
+		// Does our window still need sizing?
+		int current_w, current_h;
+		SDL_GetWindowSize(sdl.window, &current_w, &current_h);
+
+		const bool window_is_too_small = (current_w < width ||
+		                                  current_h < height);
+
+		const bool window_dimensions_not_exact = (current_w != width ||
+		                                          current_h != height);
+
+		// Adjust the window dimensions if our window isn't sized yet or
+		// we're in PP mode
+		if (window_is_too_small || (sdl.scaling_mode == SCALING_MODE::PERFECT &&
+		                            window_dimensions_not_exact)) {
 			SDL_SetWindowSize(sdl.window, width, height);
-		SDL_SetWindowFullscreen(sdl.window, 0);
+		}
+		// If we're switching down from fullscreen, then it will use the set window size
+		if (sdl.desktop.switching_fullscreen) {
+			SDL_SetWindowFullscreen(sdl.window, 0);
+		}
 	}
+
 	// Maybe some requested fullscreen resolution is unsupported?
 finish:
 
