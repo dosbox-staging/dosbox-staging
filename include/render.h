@@ -31,70 +31,75 @@
 //Enable this for scalers to support 0 input for empty lines
 //#define RENDER_NULL_INPUT
 
-typedef struct {
-	struct { 
-		Bit8u red;
-		Bit8u green;
-		Bit8u blue;
-		Bit8u unused;
-	} rgb[256];
+struct RenderPal_t {
+	struct {
+		uint8_t red = 0;
+		uint8_t green = 0;
+		uint8_t blue = 0;
+		uint8_t unused = 0;
+	} rgb[256] = {};
 	union {
-		Bit16u b16[256];
-		Bit32u b32[256];
-	} lut;
-	bool changed;
-	Bit8u modified[256];
-	Bitu first;
-	Bitu last;
-} RenderPal_t;
+		uint16_t b16[256];
+		uint32_t b32[256] = {};
+	} lut = {};
+	bool changed = false;
+	uint8_t modified[256] = {};
+	uint32_t first = 0;
+	uint32_t last = 0;
+};
 
-typedef struct {
+struct Render_t {
 	struct {
-		Bitu width, start;
-		Bitu height;
-		unsigned bpp;
-		bool dblw,dblh;
-		double ratio;
-		double fps;
-	} src;
+		uint32_t width = 0;
+		uint32_t start = 0;
+		uint32_t height = 0;
+		unsigned bpp = 0;
+		bool dblw = false;
+		bool dblh = false;
+		double ratio = 0;
+		double fps = 0;
+	} src = {};
 	struct {
-		int count;
-		int max;
-		Bitu index;
-		Bit8u hadSkip[RENDER_SKIP_CACHE];
-	} frameskip;
+		int count = 0;
+		int max = 0;
+		uint32_t index = 0;
+		uint8_t hadSkip[RENDER_SKIP_CACHE] = {};
+	} frameskip = {};
 	struct {
-		Bitu size;
-		scalerMode_t inMode;
-		scalerMode_t outMode;
-		scalerOperation_t op;
-		bool clearCache;
-		bool forced;
-		ScalerLineHandler_t lineHandler;
-		ScalerLineHandler_t linePalHandler;
-		ScalerComplexHandler_t complexHandler;
-		Bitu blocks, lastBlock;
-		int outPitch;
-		Bit8u *outWrite;
-		Bitu cachePitch;
-		Bit8u *cacheRead;
-		Bitu inHeight, inLine, outLine;
-	} scale;
+		uint32_t size = 0;
+		scalerMode_t inMode = {};
+		scalerMode_t outMode = {};
+		scalerOperation_t op = {};
+		bool clearCache = false;
+		bool forced = false;
+		ScalerLineHandler_t lineHandler = nullptr;
+		ScalerLineHandler_t linePalHandler = nullptr;
+		ScalerComplexHandler_t complexHandler = nullptr;
+		uint32_t blocks = 0;
+		uint32_t lastBlock = 0;
+		int outPitch = 0;
+		uint8_t *outWrite = nullptr;
+		uint32_t cachePitch = 0;
+		uint8_t *cacheRead = nullptr;
+		uint32_t inHeight = 0;
+		uint32_t inLine = 0;
+		uint32_t outLine = 0;
+	} scale = {};
 #if C_OPENGL
-	char* shader_src;
+	char *shader_src = nullptr;
 #endif
-	RenderPal_t pal;
-	bool updating;
-	bool active;
-	bool aspect;
-	bool fullFrame;
-	bool forceUpdate;
-} Render_t;
+	RenderPal_t pal = {};
+	bool updating = false;
+	bool active = false;
+	bool aspect = true;
+	bool fullFrame = true;
+	bool forceUpdate = false;
+};
 
 extern Render_t render;
 extern ScalerLineHandler_t RENDER_DrawLine;
-void RENDER_SetSize(Bitu width,
-                    Bitu height,
+void RENDER_SetSize(uint32_t width,
+                    uint32_t height,
                     unsigned bpp,
                     double fps,
                     double ratio,

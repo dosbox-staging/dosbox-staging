@@ -308,8 +308,8 @@ struct SDL_Block {
 		int vsync_skip = 0;
 		bool want_resizable_window = false;
 		SDL_WindowEventID last_size_event = {};
-		SCREEN_TYPES type;
-		SCREEN_TYPES want_type;
+		SCREEN_TYPES type = SCREEN_SURFACE;
+		SCREEN_TYPES want_type = SCREEN_SURFACE;
 	} desktop = {};
 #if C_OPENGL
 	struct {
