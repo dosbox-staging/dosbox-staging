@@ -565,8 +565,8 @@ static void RENDER_CallBack( GFX_CallBackFunctions_t function ) {
 	}
 }
 
-void RENDER_SetSize(Bitu width,
-                    Bitu height,
+void RENDER_SetSize(uint32_t width,
+                    uint32_t height,
                     unsigned bpp,
                     double fps,
                     double ratio,
