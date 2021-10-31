@@ -871,6 +871,9 @@ finish:
 		                       sdl.draw.pixel_aspect, sdl.scaling_mode,
 		                       sdl.pp_scale, fullscreen, width, height);
 
+	if (sdl.draw.callback)
+		sdl.draw.callback(GFX_CallBackRedraw);
+
 	sdl.update_display_contents = true;
 	return sdl.window;
 }
