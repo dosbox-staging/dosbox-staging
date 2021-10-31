@@ -82,7 +82,8 @@ public:
 	bool GetEnvNum(Bitu num, std::string &result) const;
 	Bitu GetEnvCount() const;
 	bool SetEnv(const char * entry,const char * new_string);
-	void WriteOut(const char *format, ...);	// printf to DOS stdout
+	virtual void WriteOut(const char *format, const char * arguments);
+	virtual void WriteOut(const char *format, ...);	// printf to DOS stdout
 	void WriteOut_NoParsing(const char *str); // write string to DOS stdout
 	bool SuppressWriteOut(const char *format); // prevent writing to DOS stdout
 	void InjectMissingNewline();
