@@ -40,16 +40,31 @@ static constexpr bool log_checkpoints = false;
 
 void Pacer::Checkpoint()
 {
-	if (can_run) {
+	if (was_reset) {
+		if (log_checkpoints)
+			LOG_MSG("PACER: %s reset ignored %dus of latency",
+			        pacer_name.c_str(),
+			        GetTicksUsSince(iteration_start));
+		was_reset = false;
+	}
+	else if (can_run) {
 		const auto iteration_took = GetTicksUsSince(iteration_start);
 		can_run = iteration_took < skip_timeout;
 
 		if (log_checkpoints)
-			LOG_MSG("%s took %5dus, can_run = %s", pacer_name.c_str(),
-			        iteration_took, can_run ? "true" : "false");
-	} else {
+			LOG_MSG("PACER: %s took %5dus, can_run = %s",
+			        pacer_name.c_str(), iteration_took,
+			        can_run ? "true" : "false");
+	}
+	else {
 		can_run = true;
 	}
+}
+
+void Pacer::Reset()
+{
+	can_run = true;
+	was_reset = true;
 }
 
 void Pacer::SetTimeout(const int timeout)
