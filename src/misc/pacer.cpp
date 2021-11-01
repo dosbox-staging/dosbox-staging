@@ -31,6 +31,9 @@ Pacer::Pacer(const std::string &name, const int timeout)
 
 bool Pacer::CanRun()
 {
+	if (!skip_timeout)
+		return true;
+
 	if (can_run)
 		iteration_start = GetTicksUs();
 	return can_run;
@@ -40,14 +43,16 @@ static constexpr bool log_checkpoints = false;
 
 void Pacer::Checkpoint()
 {
+	if (!skip_timeout)
+		return;
+
 	if (was_reset) {
 		if (log_checkpoints)
 			LOG_MSG("PACER: %s reset ignored %dus of latency",
 			        pacer_name.c_str(),
 			        GetTicksUsSince(iteration_start));
 		was_reset = false;
-	}
-	else if (can_run) {
+	} else if (can_run) {
 		const auto iteration_took = GetTicksUsSince(iteration_start);
 		can_run = iteration_took < skip_timeout;
 
@@ -55,8 +60,7 @@ void Pacer::Checkpoint()
 			LOG_MSG("PACER: %s took %5dus, can_run = %s",
 			        pacer_name.c_str(), iteration_took,
 			        can_run ? "true" : "false");
-	}
-	else {
+	} else {
 		can_run = true;
 	}
 }
@@ -69,6 +73,6 @@ void Pacer::Reset()
 
 void Pacer::SetTimeout(const int timeout)
 {
-	assert(timeout > 0);
+	assert(timeout >= 0);
 	skip_timeout = timeout;
 }

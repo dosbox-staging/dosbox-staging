@@ -3381,8 +3381,8 @@ void Config_Add_SDL() {
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 7000);
 	pint->Set_help("Number of microseconds to allow rendering to block before skipping "
-	               "the next frame.");
-	pint->SetMinMax(1, 14000);
+	               "the next frame. 0 disables this and will always render.");
+	pint->SetMinMax(0, 14000);
 
 	pstring = sdl_sec->Add_path("max_resolution", always, "auto");
 	pstring->Set_help(
