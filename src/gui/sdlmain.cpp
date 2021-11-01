@@ -757,6 +757,8 @@ static SDL_Point get_initial_window_position_or_default(int default_val)
 	return {x, y};
 }
 
+static Pacer render_pacer("Render", 7000);
+
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
                                  int height,
@@ -871,8 +873,14 @@ finish:
 		                       sdl.draw.pixel_aspect, sdl.scaling_mode,
 		                       sdl.pp_scale, fullscreen, width, height);
 
+	// Force redraw after changing the window
 	if (sdl.draw.callback)
 		sdl.draw.callback(GFX_CallBackRedraw);
+
+	// Ensure the time to change window modes isn't counted against
+	// our paced timing. This is a rare event that depends on host
+	// latency (and not the rendering pipeline).
+	render_pacer.Reset();
 
 	sdl.update_display_contents = true;
 	return sdl.window;
@@ -1752,8 +1760,6 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 	}
 	return false;
 }
-
-static Pacer render_pacer("Render", 7000);
 
 void GFX_EndUpdate(const Bit16u *changedLines)
 {
