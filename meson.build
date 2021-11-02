@@ -28,10 +28,11 @@ summary('Install prefix', get_option('prefix'),    section : 'Build Summary')
 
 # compiler flags
 #
-add_project_arguments('-Weffc++', language : 'cpp')
-if cxx.has_argument('-Wextra-semi')
-    add_project_arguments('-Wextra-semi', language : 'cpp')
-endif
+foreach cxx_warning : ['-Wmaybe-uninitialized', '-Weffc++', '-Wextra-semi']
+  if cxx.has_argument(cxx_warning)
+    add_project_arguments(cxx_warning, language : 'cpp')
+  endif
+endforeach
 
 # gather data for config file
 #
