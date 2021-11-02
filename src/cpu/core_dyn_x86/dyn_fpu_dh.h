@@ -73,12 +73,12 @@ static void FPU_FNINIT_DH(void){
 
 static void FPU_FSTENV_DH(PhysPt addr){
 	if(!cpu.code.big) {
-		mem_writew(addr+0,(Bit16u)dyn_dh_fpu.cw);
+		mem_writew(addr+0,dyn_dh_fpu.cw);
 		mem_writew(addr+2,(Bit16u)dyn_dh_fpu.temp.m2);
 		mem_writew(addr+4,dyn_dh_fpu.temp.m3);
 	} else { 
 		mem_writed(addr+0,dyn_dh_fpu.temp.m1);
-		mem_writew(addr+0,(Bit16u)dyn_dh_fpu.cw);
+		mem_writew(addr+0,dyn_dh_fpu.cw);
 		mem_writed(addr+4,dyn_dh_fpu.temp.m2);
 		mem_writed(addr+8,dyn_dh_fpu.temp.m3);
 	}
@@ -101,7 +101,7 @@ static void FPU_FLDENV_DH(PhysPt addr){
 
 static void FPU_FSAVE_DH(PhysPt addr){
 	if (!cpu.code.big) {
-		mem_writew(addr,(Bit16u)dyn_dh_fpu.cw);
+		mem_writew(addr,dyn_dh_fpu.cw);
 		addr+=2;
 		mem_writeb(addr++,dyn_dh_fpu.temp_state[0x04]);
 		mem_writeb(addr++,dyn_dh_fpu.temp_state[0x05]);
@@ -117,7 +117,7 @@ static void FPU_FSAVE_DH(PhysPt addr){
 		mem_writeb(addr++,dyn_dh_fpu.temp_state[0x19]);
 		for(Bitu i=28;i<108;i++) mem_writeb(addr++,dyn_dh_fpu.temp_state[i]);
 	} else {
-		mem_writew(addr,(Bit16u)dyn_dh_fpu.cw);
+		mem_writew(addr,dyn_dh_fpu.cw);
 		addr+=2;
 		for(Bitu i=2;i<108;i++) mem_writeb(addr++,dyn_dh_fpu.temp_state[i]);
 	}
