@@ -52,42 +52,50 @@
 #define GETFLAG_IOPL ((reg_flags & FLAG_IOPL) >> 12)
 
 struct Segment {
-	Bit16u val;
-	PhysPt phys;							/* The physical address start in emulated machine */
+	uint16_t val = 0;
+	PhysPt phys = 0; /* The physical address start in emulated machine */
 };
 
-enum SegNames { es=0,cs,ss,ds,fs,gs};
+enum SegNames {
+	es = 0,
+	cs,
+	ss,
+	ds,
+	fs,
+	gs,
+};
 
 struct Segments {
-	Bit16u val[8];
-	PhysPt phys[8];
+	uint16_t val[8] = {};
+	PhysPt phys[8] = {};
 };
 
 union GenReg32 {
-	Bit32u dword[1];
-	Bit16u word[2];
-	Bit8u byte[4];
+	uint32_t dword[1] = {};
+	uint16_t word[2];
+	uint8_t byte[4];
 };
 
 #ifdef WORDS_BIGENDIAN
 
-#define DW_INDEX 0
-#define W_INDEX 1
-#define BH_INDEX 2
-#define BL_INDEX 3
+constexpr auto DW_INDEX = 0;
+constexpr auto W_INDEX = 1;
+constexpr auto BH_INDEX = 2;
+constexpr auto BL_INDEX = 3;
 
 #else
 
-#define DW_INDEX 0
-#define W_INDEX 0
-#define BH_INDEX 1
-#define BL_INDEX 0
+constexpr auto DW_INDEX = 0;
+constexpr auto W_INDEX = 0;
+constexpr auto BH_INDEX = 1;
+constexpr auto BL_INDEX = 0;
 
 #endif
 
 struct CPU_Regs {
-	GenReg32 regs[8],ip;
-	Bitu flags;
+	GenReg32 regs[8] = {};
+	GenReg32 ip = {};
+	uint32_t flags = 0;
 };
 
 extern Segments Segs;
