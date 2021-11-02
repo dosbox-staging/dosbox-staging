@@ -167,15 +167,29 @@ PhysPt SelBase(Bitu sel) {
 	}
 }
 
-
-void CPU_SetFlags(Bitu word,Bitu mask) {
-	mask|=CPU_extflags_toggle;	// ID-flag and AC-flag can be toggled on CPUID-supporting CPUs
+void CPU_SetFlags(const uint32_t word, uint32_t mask)
+{
+	mask |= CPU_extflags_toggle; // ID-flag and AC-flag can be toggled on
+	                             // CPUID-supporting CPUs
 	reg_flags=(reg_flags & ~mask)|(word & mask)|2;
 	cpu.direction=1-((reg_flags & FLAG_DF) >> 9);
 }
 
-bool CPU_PrepareException(Bitu which,Bitu error) {
-	cpu.exception.which=which;
+void CPU_SetFlagsd(const uint32_t word)
+{
+	const auto mask = cpu.cpl ? FMASK_NORMAL : FMASK_ALL;
+	CPU_SetFlags(word, mask);
+}
+
+void CPU_SetFlagsw(const uint32_t word)
+{
+	const auto mask = (cpu.cpl ? FMASK_NORMAL : FMASK_ALL) & 0xffff;
+	CPU_SetFlags(word, mask);
+}
+
+bool CPU_PrepareException(Bitu which, Bitu error)
+{
+	cpu.exception.which = which;
 	cpu.exception.error=error;
 	return true;
 }

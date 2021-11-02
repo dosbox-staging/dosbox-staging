@@ -165,8 +165,6 @@ Bitu CPU_Pop32(void);
 void CPU_Push16(Bitu value);
 void CPU_Push32(Bitu value);
 
-void CPU_SetFlags(Bitu word,Bitu mask);
-
 #define EXCEPTION_DB			1
 #define EXCEPTION_UD			6
 #define EXCEPTION_TS			10
@@ -485,14 +483,8 @@ struct CPUBlock {
 
 extern CPUBlock cpu;
 
-static inline void CPU_SetFlagsd(Bitu word) {
-	Bitu mask=cpu.cpl ? FMASK_NORMAL : FMASK_ALL;
-	CPU_SetFlags(word,mask);
-}
-
-static inline void CPU_SetFlagsw(Bitu word) {
-	Bitu mask=(cpu.cpl ? FMASK_NORMAL : FMASK_ALL) & 0xffff;
-	CPU_SetFlags(word,mask);
-}
+void CPU_SetFlags(const uint32_t word, uint32_t mask);
+void CPU_SetFlagsd(const uint32_t word);
+void CPU_SetFlagsw(const uint32_t word);
 
 #endif
