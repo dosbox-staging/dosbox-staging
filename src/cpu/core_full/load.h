@@ -390,17 +390,19 @@ l_M_Ed:
 	case D_XLAT:
 		if (inst.prefix & PREFIX_SEG) {
 			if (inst.prefix & PREFIX_ADDR) {
-				reg_al=LoadMb(inst.seg.base+(Bit32u)(reg_ebx+reg_al));
-			} else {
-				reg_al=LoadMb(inst.seg.base+(Bit16u)(reg_bx+reg_al));
-			}
-		} else {
+			        reg_al = LoadMb(inst.seg.base + (reg_ebx + reg_al));
+		        } else {
+			        reg_al = LoadMb(inst.seg.base +
+			                        (Bit16u)(reg_bx + reg_al));
+		        }
+	        } else {
 			if (inst.prefix & PREFIX_ADDR) {
-				reg_al=LoadMb(SegBase(ds)+(Bit32u)(reg_ebx+reg_al));
-			} else {
-				reg_al=LoadMb(SegBase(ds)+(Bit16u)(reg_bx+reg_al));
-			}
-		}
+			        reg_al = LoadMb(SegBase(ds) + (reg_ebx + reg_al));
+		        } else {
+			        reg_al = LoadMb(SegBase(ds) +
+			                        (Bit16u)(reg_bx + reg_al));
+		        }
+	        }
 		goto nextopcode;
 	case D_CBW:
 		reg_ax=(Bit8s)reg_al;
