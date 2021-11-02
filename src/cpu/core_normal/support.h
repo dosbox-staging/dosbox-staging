@@ -29,17 +29,19 @@
 #define SaveRw(reg,val)	reg=val
 #define SaveRd(reg,val)	reg=val
 
-static inline Bit8s Fetchbs() {
-	return Fetchb();
+static inline int8_t Fetchbs()
+{
+	return static_cast<int8_t>(Fetchb());
 }
-static inline Bit16s Fetchws() {
-	return Fetchw();
-}
-
-static inline Bit32s Fetchds() {
-	return Fetchd();
+static inline int16_t Fetchws()
+{
+	return static_cast<int16_t>(Fetchw());
 }
 
+static inline int32_t Fetchds()
+{
+	return static_cast<int32_t>(Fetchd());
+}
 
 #define RUNEXCEPTION() {										\
 	CPU_Exception(cpu.exception.which,cpu.exception.error);		\
