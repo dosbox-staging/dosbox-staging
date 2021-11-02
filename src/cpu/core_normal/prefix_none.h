@@ -808,11 +808,11 @@
 		break;
 	CASE_B(0xd7)												/* XLAT */
 		if (TEST_PREFIX_ADDR) {
-			reg_al=LoadMb(BaseDS+(Bit32u)(reg_ebx+reg_al));
-		} else {
-			reg_al=LoadMb(BaseDS+(Bit16u)(reg_bx+reg_al));
-		}
-		break;
+	                reg_al = LoadMb(BaseDS + (reg_ebx + reg_al));
+                } else {
+	                reg_al = LoadMb(BaseDS + (Bit16u)(reg_bx + reg_al));
+                }
+                break;
 #ifdef CPU_FPU
 	CASE_B(0xd8)												/* FPU ESC 0 */
 		 FPU_ESC(0);break;
