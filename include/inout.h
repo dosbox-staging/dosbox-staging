@@ -103,14 +103,15 @@ public:
 	~IO_WriteHandleObject();
 };
 
-static inline void IO_Write(io_port_t port, Bit8u val)
+static inline void IO_Write(io_port_t port, uint8_t val)
 {
 	IO_WriteB(port,val);
 }
 
-static inline Bit8u IO_Read(io_port_t port){
+static inline uint8_t IO_Read(io_port_t port)
+{
 	// cast to be dropped after deprecating the Bitu IO handler API
-	return (Bit8u)IO_ReadB(port);
+	return IO_ReadB(port);
 }
 
 #endif
