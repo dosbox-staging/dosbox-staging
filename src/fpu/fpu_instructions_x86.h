@@ -1260,9 +1260,9 @@ static void FPU_FSCALE(void){
 static void FPU_FSTENV(PhysPt addr){
 	FPU_SET_TOP(TOP);
 	if(!cpu.code.big) {
-		mem_writew(addr+0,static_cast<Bit16u>(fpu.cw));
-		mem_writew(addr+2,static_cast<Bit16u>(fpu.sw));
-		mem_writew(addr+4,static_cast<Bit16u>(FPU_GetTag()));
+		mem_writew(addr+0,fpu.cw);
+		mem_writew(addr+2,fpu.sw);
+		mem_writew(addr+4,FPU_GetTag());
 	} else { 
 		mem_writed(addr+0,static_cast<Bit32u>(fpu.cw));
 		mem_writed(addr+4,static_cast<Bit32u>(fpu.sw));
