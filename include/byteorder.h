@@ -43,10 +43,18 @@
 /* Aside of MSVC, every C++14-capable compiler provides __builtin_bswap*
  * as compiler intrinsics or builtin functions.
  */
-
-#define bswap_u16(x) __builtin_bswap16(x)
-#define bswap_u32(x) __builtin_bswap32(x)
-#define bswap_u64(x) __builtin_bswap64(x)
+constexpr uint16_t bswap_u16(const uint16_t x)
+{
+	return __builtin_bswap16(x);
+}
+constexpr uint32_t bswap_u32(const uint32_t x)
+{
+	return __builtin_bswap32(x);
+}
+constexpr uint64_t bswap_u64(const uint64_t x)
+{
+	return __builtin_bswap64(x);
+}
 
 #else
 
@@ -57,31 +65,76 @@
  * https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/byteswap-uint64-byteswap-ulong-byteswap-ushort
  */
 
-#define bswap_u16(x) _byteswap_ushort(x)
-#define bswap_u32(x) _byteswap_ulong(x)
-#define bswap_u64(x) _byteswap_uint64(x)
+inline uint16_t bswap_u16(const uint16_t x)
+{
+	return _byteswap_ushort(x);
+}
+inline uint32_t bswap_u32(const uint32_t x)
+{
+	return _byteswap_ulong(x);
+}
+inline uint64_t bswap_u64(const uint64_t x)
+{
+	return _byteswap_uint64(x);
+}
 
 #endif // MSC_VER
 
 #ifdef WORDS_BIGENDIAN
 
-#define host_to_le16(x) bswap_u16(static_cast<uint16_t>(x))
-#define host_to_le32(x) bswap_u32(static_cast<uint32_t>(x))
-#define host_to_le64(x) bswap_u64(static_cast<uint64_t>(x))
+constexpr uint16_t host_to_le16(const uint16_t x)
+{
+	return bswap_u16(x);
+}
+constexpr uint32_t host_to_le32(const uint32_t x)
+{
+	return bswap_u32(x);
+}
+constexpr uint64_t host_to_le64(const uint64_t x)
+{
+	return bswap_u64(x);
+}
 
-#define le16_to_host(x) bswap_u16(static_cast<uint16_t>(x))
-#define le32_to_host(x) bswap_u32(static_cast<uint32_t>(x))
-#define le64_to_host(x) bswap_u64(static_cast<uint64_t>(x))
+constexpr uint16_t le16_to_host(const uint16_t x)
+{
+	return bswap_u16(x);
+}
+constexpr uint32_t le32_to_host(const uint32_t x)
+{
+	return bswap_u32(x);
+}
+constexpr uint64_t le64_to_host(const uint64_t x)
+{
+	return bswap_u64(x);
+}
 
 #else
 
-#define host_to_le16(x) static_cast<uint16_t>(x)
-#define host_to_le32(x) static_cast<uint32_t>(x)
-#define host_to_le64(x) static_cast<uint64_t>(x)
+constexpr uint16_t host_to_le16(const uint16_t x)
+{
+	return x;
+}
+constexpr uint32_t host_to_le32(const uint32_t x)
+{
+	return x;
+}
+constexpr uint64_t host_to_le64(const uint64_t x)
+{
+	return x;
+}
 
-#define le16_to_host(x) static_cast<uint16_t>(x)
-#define le32_to_host(x) static_cast<uint32_t>(x)
-#define le64_to_host(x) static_cast<uint64_t>(x)
+constexpr uint16_t le16_to_host(const uint16_t x)
+{
+	return x;
+}
+constexpr uint32_t le32_to_host(const uint32_t x)
+{
+	return x;
+}
+constexpr uint64_t le64_to_host(const uint64_t x)
+{
+	return x;
+}
 
 #endif
 
@@ -116,6 +169,9 @@ constexpr uint64_t host_to_le(uint64_t x) noexcept { return x; }
  * intent might be different.
  */
 
-#define le_to_host(x) host_to_le(x)
+constexpr uint8_t le_to_host(const uint8_t x)
+{
+	return host_to_le(x);
+}
 
 #endif
