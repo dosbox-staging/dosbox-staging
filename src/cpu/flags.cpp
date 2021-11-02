@@ -463,7 +463,7 @@ Bit32u get_PF(void) {
 
 #if 0
 
-Bitu FillFlags(void) {
+uint32_t FillFlags(void) {
 //	if (lflags.type==t_UNKNOWN) return reg_flags;
 	Bitu new_word=(reg_flags & ~FLAG_MASK);
 	if (get_CF()) new_word|=FLAG_CF;
@@ -495,7 +495,7 @@ Bitu FillFlags(void) {
 
 #define SET_FLAG SETFLAGBIT
 
-Bitu FillFlags(void) {
+uint32_t FillFlags(void) {
 	switch (lflags.type) {
 	case t_UNKNOWN:
 		break;

@@ -19,15 +19,17 @@
 #ifndef DOSBOX_LAZYFLAGS_H
 #define DOSBOX_LAZYFLAGS_H
 
-//Flag Handling
-Bit32u get_CF(void);
-Bit32u get_AF(void);
-Bit32u get_ZF(void);
-Bit32u get_SF(void);
-Bit32u get_OF(void);
-Bit32u get_PF(void);
+#include "cpu.h"
 
-Bitu FillFlags(void);
+// Flag Handling
+uint32_t get_CF();
+uint32_t get_AF();
+uint32_t get_ZF();
+uint32_t get_SF();
+uint32_t get_OF();
+uint32_t get_PF();
+
+uint32_t FillFlags(void);
 void FillFlagsNoCFOF(void);
 void DestroyConditionFlags(void);
 
@@ -36,70 +38,27 @@ void DestroyConditionFlags(void);
 #endif
 
 struct LazyFlags {
-    GenReg32 var1,var2,res;
-	Bitu type;
-	Bitu prev_type;
-	Bitu oldcf;
+	GenReg32 var1 = {};
+	GenReg32 var2 = {};
+	GenReg32 res = {};
+	Bitu type = 0;
+	Bitu prev_type = 0;
+	Bitu oldcf = 0;
 };
-
-extern LazyFlags lfags;
-
-#define lf_var1b lflags.var1.byte[BL_INDEX]
-#define lf_var2b lflags.var2.byte[BL_INDEX]
-#define lf_resb lflags.res.byte[BL_INDEX]
-
-#define lf_var1w lflags.var1.word[W_INDEX]
-#define lf_var2w lflags.var2.word[W_INDEX]
-#define lf_resw lflags.res.word[W_INDEX]
-
-#define lf_var1d lflags.var1.dword[DW_INDEX]
-#define lf_var2d lflags.var2.dword[DW_INDEX]
-#define lf_resd lflags.res.dword[DW_INDEX]
-
 
 extern LazyFlags lflags;
 
-#define SETFLAGSb(FLAGB)													\
-{																			\
-	SETFLAGBIT(OF,get_OF());												\
-	lflags.type=t_UNKNOWN;													\
-	CPU_SetFlags(FLAGB,FMASK_NORMAL & 0xff);								\
-}
+inline constexpr uint8_t &lf_var1b = lflags.var1.byte[BL_INDEX];
+inline constexpr uint8_t &lf_var2b = lflags.var2.byte[BL_INDEX];
+inline constexpr uint8_t &lf_resb = lflags.res.byte[BL_INDEX];
 
-#define SETFLAGSw(FLAGW)													\
-{																			\
-	lflags.type=t_UNKNOWN;													\
-	CPU_SetFlagsw(FLAGW);													\
-}
+inline constexpr uint16_t &lf_var1w = lflags.var1.word[W_INDEX];
+inline constexpr uint16_t &lf_var2w = lflags.var2.word[W_INDEX];
+inline constexpr uint16_t &lf_resw = lflags.res.word[W_INDEX];
 
-#define SETFLAGSd(FLAGD)													\
-{																			\
-	lflags.type=t_UNKNOWN;													\
-	CPU_SetFlagsd(FLAGD);													\
-}
-
-#define LoadCF SETFLAGBIT(CF,get_CF());
-#define LoadZF SETFLAGBIT(ZF,get_ZF());
-#define LoadSF SETFLAGBIT(SF,get_SF());
-#define LoadOF SETFLAGBIT(OF,get_OF());
-#define LoadAF SETFLAGBIT(AF,get_AF());
-
-#define TFLG_O		(get_OF())
-#define TFLG_NO		(!get_OF())
-#define TFLG_B		(get_CF())
-#define TFLG_NB		(!get_CF())
-#define TFLG_Z		(get_ZF())
-#define TFLG_NZ		(!get_ZF())
-#define TFLG_BE		(get_CF() || get_ZF())
-#define TFLG_NBE	(!get_CF() && !get_ZF())
-#define TFLG_S		(get_SF())
-#define TFLG_NS		(!get_SF())
-#define TFLG_P		(get_PF())
-#define TFLG_NP		(!get_PF())
-#define TFLG_L		((get_SF()!=0) != (get_OF()!=0))
-#define TFLG_NL		((get_SF()!=0) == (get_OF()!=0))
-#define TFLG_LE		(get_ZF()  || ((get_SF()!=0) != (get_OF()!=0)))
-#define TFLG_NLE	(!get_ZF() && ((get_SF()!=0) == (get_OF()!=0)))
+inline constexpr uint32_t &lf_var1d = lflags.var1.dword[DW_INDEX];
+inline constexpr uint32_t &lf_var2d = lflags.var2.dword[DW_INDEX];
+inline constexpr uint32_t &lf_resd = lflags.res.dword[DW_INDEX];
 
 //Types of Flag changing instructions
 enum {
@@ -130,5 +89,47 @@ enum {
 	t_NOTDONE,
 	t_LASTFLAG
 };
+
+inline void SETFLAGSb(const uint8_t FLAGB)
+{
+	SETFLAGBIT(OF, get_OF());
+	lflags.type = t_UNKNOWN;
+	CPU_SetFlags(FLAGB, FMASK_NORMAL & 0xff);
+}
+
+inline void SETFLAGSw(const uint16_t FLAGW)
+{
+	lflags.type = t_UNKNOWN;
+	CPU_SetFlagsw(FLAGW);
+}
+
+inline void SETFLAGSd(const uint32_t FLAGD)
+{
+	lflags.type = t_UNKNOWN;
+	CPU_SetFlagsd(FLAGD);
+}
+
+#define LoadCF SETFLAGBIT(CF, get_CF());
+#define LoadZF SETFLAGBIT(ZF, get_ZF());
+#define LoadSF SETFLAGBIT(SF, get_SF());
+#define LoadOF SETFLAGBIT(OF, get_OF());
+#define LoadAF SETFLAGBIT(AF, get_AF());
+
+#define TFLG_O   (get_OF())
+#define TFLG_NO  (!get_OF())
+#define TFLG_B   (get_CF())
+#define TFLG_NB  (!get_CF())
+#define TFLG_Z   (get_ZF())
+#define TFLG_NZ  (!get_ZF())
+#define TFLG_BE  (get_CF() || get_ZF())
+#define TFLG_NBE (!get_CF() && !get_ZF())
+#define TFLG_S   (get_SF())
+#define TFLG_NS  (!get_SF())
+#define TFLG_P   (get_PF())
+#define TFLG_NP  (!get_PF())
+#define TFLG_L   ((get_SF() != 0) != (get_OF() != 0))
+#define TFLG_NL  ((get_SF() != 0) == (get_OF() != 0))
+#define TFLG_LE  (get_ZF() || ((get_SF() != 0) != (get_OF() != 0)))
+#define TFLG_NLE (!get_ZF() && ((get_SF() != 0) == (get_OF() != 0)))
 
 #endif
