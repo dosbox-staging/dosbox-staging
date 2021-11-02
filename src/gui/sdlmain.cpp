@@ -739,9 +739,9 @@ static void log_display_properties(const int in_x,
 
 	const auto [type_name, type_colours] = VGA_DescribeType(CurMode->type);
 
-	LOG_MSG("DISPLAY: %s %dx%d%s (mode %X) PAR-%#.3g by %.1fx%.1f -> %dx%d PAR-%#.3g",
-	        type_name, in_x, in_y, type_colours, CurMode->mode, in_par,
-	        scale_x, scale_y, out_x, out_y, out_par);
+	LOG_MSG("DISPLAY: %s %dx%d%s (mode %Xh) scaling by %.1fx%.1f to %dx%d with %#.3g pixel-aspect",
+	        type_name, in_x, in_y, type_colours, CurMode->mode, scale_x,
+	        scale_y, out_x, out_y, out_par);
 }
 
 static SDL_Point get_initial_window_position_or_default(int default_val)
@@ -757,7 +757,7 @@ static SDL_Point get_initial_window_position_or_default(int default_val)
 	return {x, y};
 }
 
-static Pacer render_pacer("Render", 7000);
+static Pacer render_pacer("Render", 7000, Pacer::LogLevel::NOTHING);
 
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
@@ -3865,6 +3865,11 @@ int sdl_main(int argc, char *argv[])
 		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
 
 		render_pacer.SetTimeout(sdl.desktop.vsync_skip);
+
+		const auto pacer_log_level = sdl.desktop.vsync
+		                                     ? Pacer::LogLevel::NOTHING
+		                                     : Pacer::LogLevel::TIMEOUTS;
+		render_pacer.SetLogLevel(pacer_log_level);
 
 		if (control->cmdline->FindExist("-fullscreen") ||
 		    sdl_sec->Get_bool("fullscreen")) {
