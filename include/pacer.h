@@ -50,17 +50,24 @@ SDL window.
 
 class Pacer {
 public:
-	Pacer(const std::string &name, const int timeout);
+	enum class LogLevel {
+		NOTHING,
+		CHECKPOINTS,
+		TIMEOUTS,
+	};
+	Pacer(const std::string &name, const int timeout, const LogLevel level);
 	Pacer() = delete;
 
 	bool CanRun();
 	void Checkpoint();
+	void SetLogLevel(const LogLevel level);
 	void SetTimeout(const int timeout);
 	void Reset();
 
 private:
 	const std::string pacer_name{};
 	int64_t iteration_start = 0;
+	LogLevel log_level = LogLevel::NOTHING;
 	int skip_timeout = 0;
 	bool can_run = true;
 	bool was_reset = false;

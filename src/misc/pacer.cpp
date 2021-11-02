@@ -21,17 +21,18 @@
 
 #include "pacer.h"
 
-Pacer::Pacer(const std::string &name, const int timeout)
+Pacer::Pacer(const std::string &name, const int timeout, const LogLevel level)
         : pacer_name(name),
           iteration_start(GetTicksUs())
 {
 	assert(pacer_name.size() > 0);
 	SetTimeout(timeout);
+	SetLogLevel(level);
 }
 
 bool Pacer::CanRun()
 {
-	if (!skip_timeout)
+	if (skip_timeout == 0)
 		return true;
 
 	if (can_run)
@@ -39,36 +40,53 @@ bool Pacer::CanRun()
 	return can_run;
 }
 
-static constexpr bool log_checkpoints = false;
-
 void Pacer::Checkpoint()
 {
-	if (!skip_timeout)
+	// Pacer is disabled
+	if (skip_timeout == 0)
 		return;
 
+	// Pacer is reset
 	if (was_reset) {
-		if (log_checkpoints)
+		if (log_level == LogLevel::CHECKPOINTS)
 			LOG_MSG("PACER: %s reset ignored %dus of latency",
 			        pacer_name.c_str(),
 			        GetTicksUsSince(iteration_start));
 		was_reset = false;
-	} else if (can_run) {
-		const auto iteration_took = GetTicksUsSince(iteration_start);
-		can_run = iteration_took < skip_timeout;
-
-		if (log_checkpoints)
-			LOG_MSG("PACER: %s took %5dus, can_run = %s",
-			        pacer_name.c_str(), iteration_took,
-			        can_run ? "true" : "false");
-	} else {
-		can_run = true;
+		return;
 	}
+
+	// Pacer was run, so compare the runtime against the timeout
+	if (can_run) {
+		const auto iteration_took = GetTicksUsSince(iteration_start);
+		can_run = (iteration_took < skip_timeout);
+
+		if (log_level != LogLevel::NOTHING) {
+			if (!can_run) {
+				LOG_WARNING("PACER: %s took %dus, skipping next",
+				            pacer_name.c_str(), iteration_took);
+			} else if (log_level == LogLevel::CHECKPOINTS) {
+				LOG_MSG("PACER: %s took %dus, can run next",
+				        pacer_name.c_str(), iteration_took);
+			}
+		}
+		return;
+	}
+
+	// Otherwise we didn't run the previous time, so allow the next.
+	assert(!can_run);
+	can_run = true;
 }
 
 void Pacer::Reset()
 {
 	can_run = true;
 	was_reset = true;
+}
+
+void Pacer::SetLogLevel(const LogLevel level)
+{
+	log_level = level;
 }
 
 void Pacer::SetTimeout(const int timeout)
