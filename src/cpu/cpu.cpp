@@ -43,9 +43,9 @@ extern void GFX_SetTitle(Bit32s cycles ,int frameskip,bool paused);
 #endif
 #endif
 
-CPU_Regs cpu_regs;
-CPUBlock cpu;
-Segments Segs;
+CPU_Regs cpu_regs = {};
+CPUBlock cpu = {};
+Segments Segs = {};
 
 Bit32s CPU_Cycles = 0;
 Bit32s CPU_CycleLeft = 3000;
