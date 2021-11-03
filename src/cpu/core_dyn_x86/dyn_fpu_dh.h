@@ -188,9 +188,6 @@ static void dh_fpu_esc1(){
 			FPU_LOG_WARN(1,true,group,sub);
 			break;
 		case 0x02: /* FST float*/
-			dh_fpu_mem(0xd9);
-			gen_call_function((void*)&FPU_FST_32,"%Drd",DREG(EA));
-			break;
 		case 0x03: /* FSTP float*/
 			dh_fpu_mem(0xd9);
 			gen_call_function((void*)&FPU_FST_32,"%Drd",DREG(EA));
@@ -273,9 +270,6 @@ static void dh_fpu_esc3(){
 			FPU_LOG_WARN(3, true, 1, sub);
 			break;
 		case 0x02:	/* FIST */
-			dh_fpu_mem(0xdb);
-			gen_call_function((void*)&FPU_FST_32,"%Drd",DREG(EA));
-			break;
 		case 0x03:	/* FISTP */
 			dh_fpu_mem(0xdb);
 			gen_call_function((void*)&FPU_FST_32,"%Drd",DREG(EA));
@@ -325,9 +319,6 @@ static void dh_fpu_esc5(){
 			FPU_LOG_WARN(5,true,1,sub);
 			break;
 		case 0x02:   /* FST double real*/
-			dh_fpu_mem(0xdd);
-			gen_call_function((void*)&FPU_FST_64,"%Drd",DREG(EA));
-			break;
 		case 0x03:	/* FSTP double real*/
 			dh_fpu_mem(0xdd);
 			gen_call_function((void*)&FPU_FST_64,"%Drd",DREG(EA));
@@ -371,13 +362,7 @@ static void dh_fpu_esc7(){
 	if (decode.modrm.val >= 0xc0) { 
 		switch (group){
 		case 0x00: /* FFREEP STi*/
-			cache_addb(0xdf);
-			cache_addb(decode.modrm.val);
-			break;
 		case 0x01: /* FXCH STi*/
-			cache_addb(0xdf);
-			cache_addb(decode.modrm.val);
-			break;
 		case 0x02:  /* FSTP STi*/
 		case 0x03:  /* FSTP STi*/
 			cache_addb(0xdf);
@@ -411,9 +396,6 @@ static void dh_fpu_esc7(){
 			FPU_LOG_WARN(7,true,1,sub);
 			break;
 		case 0x02:   /* FIST Bit16s */
-			dh_fpu_mem(0xdf);
-			gen_call_function((void*)&FPU_FST_16,"%Drd",DREG(EA));
-			break;
 		case 0x03:	/* FISTP Bit16s */
 			dh_fpu_mem(0xdf);
 			gen_call_function((void*)&FPU_FST_16,"%Drd",DREG(EA));
