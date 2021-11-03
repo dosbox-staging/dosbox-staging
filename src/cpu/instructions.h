@@ -16,6 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "lazyflags.h"
+
 /* Jumps */
 
 /* All Byte general instructions */
@@ -326,7 +328,7 @@
 			lf_resd = (lf_var1d << 1) | cf; \
 		} else { \
 			lf_resd = (lf_var1d << lf_var2b) | \
-			          (cf << (lf_var2b - 1)) | \
+			          (cf << lf_var2b_minus_one()) | \
 			          (lf_var1d >> (33 - lf_var2b)); \
 		} \
 		save(op1, lf_resd); \
@@ -334,30 +336,28 @@
 		SETFLAGBIT(OF, (reg_flags & 1) ^ (lf_resd >> 31)); \
 	}
 
-#define RCRB(op1,op2,load,save)								\
-	if (op2%9) {											\
-		Bit8u cf=(Bit8u)FillFlags()&0x1;					\
-		lf_var1b=load(op1);									\
-		lf_var2b=op2%9;										\
-	 	lf_resb=(lf_var1b >> lf_var2b) |					\
-				(cf << (8-lf_var2b)) |						\
-				(lf_var1b << (9-lf_var2b));					\
-		save(op1,lf_resb);									\
-		SETFLAGBIT(CF,(lf_var1b >> (lf_var2b - 1)) & 1);	\
-		SETFLAGBIT(OF,(lf_resb ^ (lf_resb<<1)) & 0x80);		\
+#define RCRB(op1, op2, load, save) \
+	if (op2 % 9) { \
+		Bit8u cf = (Bit8u)FillFlags() & 0x1; \
+		lf_var1b = load(op1); \
+		lf_var2b = op2 % 9; \
+		lf_resb = (lf_var1b >> lf_var2b) | (cf << (8 - lf_var2b)) | \
+		          (lf_var1b << (9 - lf_var2b)); \
+		save(op1, lf_resb); \
+		SETFLAGBIT(CF, (lf_var1b >> lf_var2b_minus_one()) & 1); \
+		SETFLAGBIT(OF, (lf_resb ^ (lf_resb << 1)) & 0x80); \
 	}
 
-#define RCRW(op1,op2,load,save)								\
-	if (op2%17) {											\
-		Bit16u cf=(Bit16u)FillFlags()&0x1;					\
-		lf_var1w=load(op1);									\
-		lf_var2b=op2%17;									\
-	 	lf_resw=(lf_var1w >> lf_var2b) |					\
-				(cf << (16-lf_var2b)) |						\
-				(lf_var1w << (17-lf_var2b));				\
-		save(op1,lf_resw);									\
-		SETFLAGBIT(CF,(lf_var1w >> (lf_var2b - 1)) & 1);	\
-		SETFLAGBIT(OF,(lf_resw ^ (lf_resw<<1)) & 0x8000);	\
+#define RCRW(op1, op2, load, save) \
+	if (op2 % 17) { \
+		Bit16u cf = (Bit16u)FillFlags() & 0x1; \
+		lf_var1w = load(op1); \
+		lf_var2b = op2 % 17; \
+		lf_resw = (lf_var1w >> lf_var2b) | (cf << (16 - lf_var2b)) | \
+		          (lf_var1w << (17 - lf_var2b)); \
+		save(op1, lf_resw); \
+		SETFLAGBIT(CF, (lf_var1w >> lf_var2b_minus_one()) & 1); \
+		SETFLAGBIT(OF, (lf_resw ^ (lf_resw << 1)) & 0x8000); \
 	}
 
 #define RCRD(op1, op2, load, save) \
@@ -373,7 +373,7 @@
 			          (lf_var1d << (33 - lf_var2b)); \
 		} \
 		save(op1, lf_resd); \
-		SETFLAGBIT(CF, (lf_var1d >> (lf_var2b - 1)) & 1); \
+		SETFLAGBIT(CF, (lf_var1d >> lf_var2b_minus_one()) & 1); \
 		SETFLAGBIT(OF, (lf_resd ^ (lf_resd << 1)) & 0x80000000); \
 	}
 

@@ -21,6 +21,8 @@
 
 #include "cpu.h"
 
+#include <cassert>
+
 // Flag Handling
 uint32_t get_CF();
 uint32_t get_AF();
@@ -60,7 +62,15 @@ inline constexpr uint32_t &lf_var1d = lflags.var1.dword[DW_INDEX];
 inline constexpr uint32_t &lf_var2d = lflags.var2.dword[DW_INDEX];
 inline constexpr uint32_t &lf_resd = lflags.res.dword[DW_INDEX];
 
-//Types of Flag changing instructions
+// many places in the code want to shift by "lf_var2b - 1", so this wrapper
+// catches potential negative shifts.
+inline uint8_t lf_var2b_minus_one()
+{
+	assert(lf_var2b > 0);
+	return lf_var2b - 1;
+}
+
+// Types of Flag changing instructions
 enum {
 	t_UNKNOWN=0,
 	t_ADDb,t_ADDw,t_ADDd, 

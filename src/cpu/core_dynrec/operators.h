@@ -796,9 +796,10 @@ static Bit8u DRC_CALL_CONV dynrec_rcr_byte(Bit8u op1,Bit8u op2) {
 		Bit8u cf=(Bit8u)FillFlags()&0x1;
 		lf_var1b=op1;
 		lf_var2b=op2%9;
-	 	lf_resb=(lf_var1b >> lf_var2b) | (cf << (8-lf_var2b)) | (lf_var1b << (9-lf_var2b));					\
-		SETFLAGBIT(CF,(lf_var1b >> (lf_var2b - 1)) & 1);
-		SETFLAGBIT(OF,(lf_resb ^ (lf_resb<<1)) & 0x80);
+		lf_resb = (lf_var1b >> lf_var2b) | (cf << (8 - lf_var2b)) |
+		          (lf_var1b << (9 - lf_var2b));
+		SETFLAGBIT(CF, (lf_var1b >> lf_var2b_minus_one()) & 1);
+		SETFLAGBIT(OF, (lf_resb ^ (lf_resb << 1)) & 0x80);
 		return lf_resb;
 	} else return op1;
 }
@@ -928,7 +929,7 @@ static Bit16u DRC_CALL_CONV dynrec_rcr_word(Bit16u op1,Bit8u op2) {
 		lf_var1w=op1;
 		lf_var2b=op2%17;
 	 	lf_resw=(lf_var1w >> lf_var2b) | (cf << (16-lf_var2b)) | (lf_var1w << (17-lf_var2b));
-		SETFLAGBIT(CF,(lf_var1w >> (lf_var2b - 1)) & 1);
+		SETFLAGBIT(CF, (lf_var1w >> lf_var2b_minus_one()) & 1);
 		SETFLAGBIT(OF,(lf_resw ^ (lf_resw<<1)) & 0x8000);
 		return lf_resw;
 	} else return op1;
@@ -1052,7 +1053,7 @@ static Bit32u DRC_CALL_CONV dynrec_rcr_dword(Bit32u op1,Bit8u op2) {
 		} else {
  			lf_resd=(lf_var1d >> lf_var2b) | (cf << (32-lf_var2b)) | (lf_var1d << (33-lf_var2b));
 		}
-		SETFLAGBIT(CF,(lf_var1d >> (lf_var2b - 1)) & 1);
+		SETFLAGBIT(CF, (lf_var1d >> lf_var2b_minus_one()) & 1);
 		SETFLAGBIT(OF,(lf_resd ^ (lf_resd<<1)) & 0x80000000);
 		return lf_resd;
 	} else return op1;
