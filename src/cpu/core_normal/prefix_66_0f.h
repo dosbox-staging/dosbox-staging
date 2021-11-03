@@ -99,8 +99,6 @@
 				GetEArd;
 				switch (which) {
 				case 0x02:										/* LGDT */
-					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
-					goto illegal_opcode;
 				case 0x03:										/* LIDT */
 					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 					goto illegal_opcode;
