@@ -33,7 +33,6 @@ if cxx.has_argument('-Wextra-semi')
     add_project_arguments('-Wextra-semi', language : 'cpp')
 endif
 
-
 # gather data for config file
 #
 # Actual config.h file will be generated after all interpreting build files 
@@ -257,20 +256,36 @@ endif
 # macOS-only dependencies
 #
 if host_machine.system() == 'darwin'
+
+  # ObjectiveC parsing, if possible
+  if cxx.has_argument('-lobjc')
+    add_project_arguments('-lobjc', language : 'cpp')
+  endif
+
+  # Core Audio
   coreaudio_dep = dependency('appleframeworks',
                              modules : ['CoreAudio', 'AudioUnit', 'AudioToolbox'],
                              required : false)
   if coreaudio_dep.found()
-    conf_data.set('C_COREAUDIO', 1)
+    if cxx.check_header('AudioToolbox/AUGraph.h')
+      conf_data.set('C_COREAUDIO', 1)
+    else
+      warning('''Core Audio support disabled: header is unsable''')
+    endif
   else
     warning('''Core Audio support disabled: compiler can't detect/use Apple Frameworks''')
   endif
 
+  # Core MIDI
   coremidi_dep = dependency('appleframeworks',
                              modules : ['CoreMIDI', 'CoreFoundation'],
                              required : false)
   if coremidi_dep.found()
-    conf_data.set('C_COREMIDI', 1)
+    if cxx.check_header('CoreMIDI/MIDIServices.h')
+      conf_data.set('C_COREMIDI', 1)
+    else
+      warning('''Core Audio support disabled: header is unsable''')
+    endif
   else
     warning('''Core MIDI support disabled: compiler can't detect/use Apple Frameworks''')
   endif
