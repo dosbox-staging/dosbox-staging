@@ -315,22 +315,24 @@
 	SETFLAGBIT(OF,(reg_flags & 1) ^ (lf_resw >> 15));	\
 }
 
-#define RCLD(op1,op2,load,save)							\
-	if (!op2) break;									\
-{	Bit32u cf=(Bit32u)FillFlags()&0x1;					\
-	lf_var1d=load(op1);									\
-	lf_var2b=op2;										\
-	if (lf_var2b==1)	{								\
-		lf_resd=(lf_var1d << 1) | cf;					\
-	} else 	{											\
-		lf_resd=(lf_var1d << lf_var2b) |				\
-		(cf << (lf_var2b-1)) |							\
-		(lf_var1d >> (33-lf_var2b));					\
-	}													\
-	save(op1,lf_resd);									\
-	SETFLAGBIT(CF,((lf_var1d >> (32-lf_var2b)) & 1));	\
-	SETFLAGBIT(OF,(reg_flags & 1) ^ (lf_resd >> 31));	\
-}
+#define RCLD(op1, op2, load, save) \
+	if (!op2) \
+		break; \
+	{ \
+		const uint32_t cf = FillFlags() & 0x1; \
+		lf_var1d = load(op1); \
+		lf_var2b = op2; \
+		if (lf_var2b == 1) { \
+			lf_resd = (lf_var1d << 1) | cf; \
+		} else { \
+			lf_resd = (lf_var1d << lf_var2b) | \
+			          (cf << (lf_var2b - 1)) | \
+			          (lf_var1d >> (33 - lf_var2b)); \
+		} \
+		save(op1, lf_resd); \
+		SETFLAGBIT(CF, ((lf_var1d >> (32 - lf_var2b)) & 1)); \
+		SETFLAGBIT(OF, (reg_flags & 1) ^ (lf_resd >> 31)); \
+	}
 
 #define RCRB(op1,op2,load,save)								\
 	if (op2%9) {											\
