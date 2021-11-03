@@ -1494,7 +1494,6 @@ RET_same_level:
 		LOG(LOG_CPU,LOG_NORMAL)("Prot ret %X:%X",selector,offset);
 		return;
 	}
-	assert(1);
 }
 
 
