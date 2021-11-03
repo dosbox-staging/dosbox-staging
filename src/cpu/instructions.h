@@ -680,20 +680,21 @@
 	SETFLAGBIT(OF,false);									\
 }
 
-
-#define IDIVW(op1,load,save)								\
-{															\
-	Bits val=(Bit16s)(load(op1));							\
-	if (val==0) EXCEPTION(0);									\
-	Bits num=(Bit32s)((reg_dx<<16)|reg_ax);					\
-	Bits quo=num/val;										\
-	Bit16s rem=(Bit16s)(num % val);							\
-	Bit16s quo16s=(Bit16s)quo;								\
-	if (quo!=(Bit32s)quo16s) EXCEPTION(0);					\
-	reg_dx=rem;												\
-	reg_ax=quo16s;											\
-	SETFLAGBIT(OF,false);									\
-}
+#define IDIVW(op1, load, save) \
+	{ \
+		const auto val = static_cast<int16_t>(load(op1)); \
+		if (val == 0) \
+			EXCEPTION(0); \
+		const auto num = (reg_dx << 16) | reg_ax; \
+		const auto quo = num / val; \
+		const auto rem = num % val; \
+		const auto quo16s = static_cast<int16_t>(quo); \
+		if (quo != quo16s) \
+			EXCEPTION(0); \
+		reg_ax = quo16s; \
+		reg_dx = static_cast<int16_t>(rem); \
+		SETFLAGBIT(OF, false); \
+	}
 
 #define IDIVD(op1,load,save)								\
 {															\
