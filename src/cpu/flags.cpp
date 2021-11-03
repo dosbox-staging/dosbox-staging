@@ -595,63 +595,10 @@ uint32_t FillFlags(void) {
 		SET_FLAG(OF,(lf_var1d ^ lf_var2d) & (lf_var1d ^ lf_resd) & 0x80000000);
 		DOFLAG_PF;
 		break;
-
-
+	
 	case t_ORb:
-		SET_FLAG(CF,false);
-		SET_FLAG(AF,false);
-		DOFLAG_ZFb;
-		DOFLAG_SFb;
-		SET_FLAG(OF,false);
-		DOFLAG_PF;
-		break;
-	case t_ORw:
-		SET_FLAG(CF,false);
-		SET_FLAG(AF,false);
-		DOFLAG_ZFw;
-		DOFLAG_SFw;
-		SET_FLAG(OF,false);
-		DOFLAG_PF;
-		break;
-	case t_ORd:
-		SET_FLAG(CF,false);
-		SET_FLAG(AF,false);
-		DOFLAG_ZFd;
-		DOFLAG_SFd;
-		SET_FLAG(OF,false);
-		DOFLAG_PF;
-		break;
-	
-	
 	case t_TESTb:
 	case t_ANDb:
-		SET_FLAG(CF,false);
-		SET_FLAG(AF,false);
-		DOFLAG_ZFb;
-		DOFLAG_SFb;
-		SET_FLAG(OF,false);
-		DOFLAG_PF;
-		break;
-	case t_TESTw:
-	case t_ANDw:
-		SET_FLAG(CF,false);
-		SET_FLAG(AF,false);
-		DOFLAG_ZFw;
-		DOFLAG_SFw;
-		SET_FLAG(OF,false);
-		DOFLAG_PF;
-		break;
-	case t_TESTd:
-	case t_ANDd:
-		SET_FLAG(CF,false);
-		SET_FLAG(AF,false);
-		DOFLAG_ZFd;
-		DOFLAG_SFd;
-		SET_FLAG(OF,false);
-		DOFLAG_PF;
-		break;
-
-	
 	case t_XORb:
 		SET_FLAG(CF,false);
 		SET_FLAG(AF,false);
@@ -660,6 +607,10 @@ uint32_t FillFlags(void) {
 		SET_FLAG(OF,false);
 		DOFLAG_PF;
 		break;
+
+	case t_ORw:
+	case t_TESTw:
+	case t_ANDw:
 	case t_XORw:
 		SET_FLAG(CF,false);
 		SET_FLAG(AF,false);
@@ -668,6 +619,10 @@ uint32_t FillFlags(void) {
 		SET_FLAG(OF,false);
 		DOFLAG_PF;
 		break;
+
+	case t_ORd:
+	case t_TESTd:
+	case t_ANDd:
 	case t_XORd:
 		SET_FLAG(CF,false);
 		SET_FLAG(AF,false);
@@ -676,7 +631,6 @@ uint32_t FillFlags(void) {
 		SET_FLAG(OF,false);
 		DOFLAG_PF;
 		break;
-
 
 	case t_SHLb:
 		if (lf_var2b>8) SET_FLAG(CF,false);
@@ -957,147 +911,71 @@ void FillFlagsNoCFOF(void) {
 		DOFLAG_SFd;
 		DOFLAG_PF;
 		break;
-
-
+	
 	case t_ORb:
-		SET_FLAG(AF,false);
-		DOFLAG_ZFb;
-		DOFLAG_SFb;
-		DOFLAG_PF;
-		break;
-	case t_ORw:
-		SET_FLAG(AF,false);
-		DOFLAG_ZFw;
-		DOFLAG_SFw;
-		DOFLAG_PF;
-		break;
-	case t_ORd:
-		SET_FLAG(AF,false);
-		DOFLAG_ZFd;
-		DOFLAG_SFd;
-		DOFLAG_PF;
-		break;
-	
-	
 	case t_TESTb:
 	case t_ANDb:
-		SET_FLAG(AF,false);
-		DOFLAG_ZFb;
-		DOFLAG_SFb;
-		DOFLAG_PF;
-		break;
-	case t_TESTw:
-	case t_ANDw:
-		SET_FLAG(AF,false);
-		DOFLAG_ZFw;
-		DOFLAG_SFw;
-		DOFLAG_PF;
-		break;
-	case t_TESTd:
-	case t_ANDd:
-		SET_FLAG(AF,false);
-		DOFLAG_ZFd;
-		DOFLAG_SFd;
-		DOFLAG_PF;
-		break;
-
-	
 	case t_XORb:
 		SET_FLAG(AF,false);
 		DOFLAG_ZFb;
 		DOFLAG_SFb;
 		DOFLAG_PF;
 		break;
+
+	case t_ORw:
+	case t_TESTw:
+	case t_ANDw:
 	case t_XORw:
 		SET_FLAG(AF,false);
 		DOFLAG_ZFw;
 		DOFLAG_SFw;
 		DOFLAG_PF;
 		break;
+
+	case t_ORd:
+	case t_TESTd:
+	case t_ANDd:
 	case t_XORd:
 		SET_FLAG(AF,false);
 		DOFLAG_ZFd;
 		DOFLAG_SFd;
 		DOFLAG_PF;
 		break;
-
-
-	case t_SHLb:
-		DOFLAG_ZFb;
-		DOFLAG_SFb;
-		DOFLAG_PF;
-		SET_FLAG(AF,(lf_var2b&0x1f));
-		break;
-	case t_SHLw:
-		DOFLAG_ZFw;
-		DOFLAG_SFw;
-		DOFLAG_PF;
-		SET_FLAG(AF,(lf_var2w&0x1f));
-		break;
-	case t_SHLd:
-		DOFLAG_ZFd;
-		DOFLAG_SFd;
-		DOFLAG_PF;
-		SET_FLAG(AF,(lf_var2d&0x1f));
-		break;
-
-
-	case t_DSHLw:
-		DOFLAG_ZFw;
-		DOFLAG_SFw;
-		DOFLAG_PF;
-		break;
-	case t_DSHLd:
-		DOFLAG_ZFd;
-		DOFLAG_SFd;
-		DOFLAG_PF;
-		break;
-
-
-	case t_SHRb:
-		DOFLAG_ZFb;
-		DOFLAG_SFb;
-		DOFLAG_PF;
-		SET_FLAG(AF,(lf_var2b&0x1f));
-		break;
-	case t_SHRw:
-		DOFLAG_ZFw;
-		DOFLAG_SFw;
-		DOFLAG_PF;
-		SET_FLAG(AF,(lf_var2w&0x1f));
-		break;
-	case t_SHRd:
-		DOFLAG_ZFd;
-		DOFLAG_SFd;
-		DOFLAG_PF;
-		SET_FLAG(AF,(lf_var2d&0x1f));
-		break;
-
 	
+	case t_DSHLw:
 	case t_DSHRw:	/* Hmm this is not correct for shift higher than 16 */
 		DOFLAG_ZFw;
 		DOFLAG_SFw;
 		DOFLAG_PF;
 		break;
+
+	case t_DSHLd:
 	case t_DSHRd:
 		DOFLAG_ZFd;
 		DOFLAG_SFd;
 		DOFLAG_PF;
 		break;
 
-
+	case t_SHLb:
+	case t_SHRb:
 	case t_SARb:
 		DOFLAG_ZFb;
 		DOFLAG_SFb;
 		DOFLAG_PF;
 		SET_FLAG(AF,(lf_var2b&0x1f));
 		break;
+
+	case t_SHLw:
+	case t_SHRw:
 	case t_SARw:
 		DOFLAG_ZFw;
 		DOFLAG_SFw;
 		DOFLAG_PF;
 		SET_FLAG(AF,(lf_var2w&0x1f));
 		break;
+
+	case t_SHLd:
+	case t_SHRd:
 	case t_SARd:
 		DOFLAG_ZFd;
 		DOFLAG_SFd;
