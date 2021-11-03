@@ -340,12 +340,16 @@ public:
 		return (saved.seg.base_24_31<<24) | (saved.seg.base_16_23<<16) | saved.seg.base_0_15; 
 	}
 	Bitu GetLimit (void) {
-		Bitu limit = (saved.seg.limit_16_19<<16) | saved.seg.limit_0_15;
-		if (saved.seg.g)	return (limit<<12) | 0xFFF;
-		return limit;
+		const auto limit_16_19 = static_cast<uint64_t>(saved.seg.limit_16_19);
+		const auto limit = (limit_16_19 << 16) | saved.seg.limit_0_15;
+		if (saved.seg.g)
+			return static_cast<Bitu>((limit << 12) | 0xFFF);
+		return static_cast<Bitu>(limit);
 	}
 	Bitu GetOffset(void) {
-		return (saved.gate.offset_16_31 << 16) | saved.gate.offset_0_15;
+		const auto offset_16_31 = static_cast<uint64_t>(saved.gate.offset_16_31);
+		const auto offset = (offset_16_31 << 16) | saved.gate.offset_0_15;
+		return static_cast<Bitu>(offset);
 	}
 	Bitu GetSelector(void) {
 		return saved.gate.selector;
