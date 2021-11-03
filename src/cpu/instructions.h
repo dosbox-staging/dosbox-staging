@@ -762,17 +762,19 @@
 	}														\
 }
 
-#define DIMULW(op1,op2,op3,load,save)						\
-{															\
-	Bits res=((Bit16s)op2) * ((Bit16s)op3);					\
-	save(op1,res & 0xffff);									\
-	FillFlagsNoCFOF();										\
-	if ((res>= -32768)  && (res<=32767)) {					\
-		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
-	} else {												\
-		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
-	}														\
-}
+#define DIMULW(op1, op2, op3, load, save) \
+	{ \
+		const auto res = op2 * op3; \
+		save(op1, res & 0xffff); \
+		FillFlagsNoCFOF(); \
+		if ((res >= -32768) && (res <= 32767)) { \
+			SETFLAGBIT(CF, false); \
+			SETFLAGBIT(OF, false); \
+		} else { \
+			SETFLAGBIT(CF, true); \
+			SETFLAGBIT(OF, true); \
+		} \
+	}
 
 #define DIMULD(op1, op2, op3, load, save) \
 	{ \
