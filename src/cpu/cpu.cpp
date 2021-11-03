@@ -2399,7 +2399,7 @@ public:
 		} else if (cputype == "386_slow") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_386SLOW;
 		} else if (cputype == "486_slow") {
-			CPU_ArchitectureType = CPU_ARCHTYPE_486NEWSLOW;
+			CPU_ArchitectureType = CPU_ARCHTYPE_486OLDSLOW;
 		} else if (cputype == "486_prefetch") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_486NEWSLOW;
 			if (core == "normal") {
