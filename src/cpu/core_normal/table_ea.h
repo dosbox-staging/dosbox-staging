@@ -23,10 +23,10 @@ static PhysPt EA_16_00_n(void) { return BaseDS+(Bit16u)(reg_bx+(Bit16s)reg_si); 
 static PhysPt EA_16_01_n(void) { return BaseDS+(Bit16u)(reg_bx+(Bit16s)reg_di); }
 static PhysPt EA_16_02_n(void) { return BaseSS+(Bit16u)(reg_bp+(Bit16s)reg_si); }
 static PhysPt EA_16_03_n(void) { return BaseSS+(Bit16u)(reg_bp+(Bit16s)reg_di); }
-static PhysPt EA_16_04_n(void) { return BaseDS+(Bit16u)(reg_si); }
-static PhysPt EA_16_05_n(void) { return BaseDS+(Bit16u)(reg_di); }
-static PhysPt EA_16_06_n(void) { return BaseDS+(Bit16u)(Fetchw());}
-static PhysPt EA_16_07_n(void) { return BaseDS+(Bit16u)(reg_bx); }
+static PhysPt EA_16_04_n() { return BaseDS + reg_si; }
+static PhysPt EA_16_05_n() { return BaseDS + reg_di; }
+static PhysPt EA_16_06_n() { return BaseDS + Fetchw(); }
+static PhysPt EA_16_07_n() { return BaseDS + reg_bx; }
 
 static PhysPt EA_16_40_n(void) { return BaseDS+(Bit16u)(reg_bx+(Bit16s)reg_si+Fetchbs()); }
 static PhysPt EA_16_41_n(void) { return BaseDS+(Bit16u)(reg_bx+(Bit16s)reg_di+Fetchbs()); }
