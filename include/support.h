@@ -74,8 +74,9 @@ T to_finite(const std::string& input) {
 			result = static_cast<T>(interim);
 	}
 	// Capture expected exceptions stod may throw
-	catch ([[maybe_unused]] std::invalid_argument &e) {
-	} catch ([[maybe_unused]] std::out_of_range &e) {
+	catch (...) {
+		// Do nothing, the return value provides
+		// the success or failure indication.
 	}
 	return result;
 }
