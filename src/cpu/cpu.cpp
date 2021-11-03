@@ -395,14 +395,18 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 		new_ldt=mem_readw(new_tss.base+offsetof(TSS_32,ldt));
 	} else {
 		E_Exit("286 task switch");
+		/*
+		Dead code after exit
+		--------------------
 		new_cr3=0;
 		new_eip=0;
 		new_eflags=0;
 		new_eax=0;	new_ecx=0;	new_edx=0;	new_ebx=0;
 		new_esp=0;	new_ebp=0;	new_edi=0;	new_esi=0;
 
-		new_es=0;	new_cs=0;	new_ss=0;	new_ds=0;	new_fs=0;	new_gs=0;
-		new_ldt=0;
+		new_es=0;	new_cs=0;	new_ss=0;	new_ds=0;
+		new_fs=0;	new_gs=0; new_ldt=0;
+		*/
 	}
 
 	/* Check if we need to clear busy bit of old TASK */
@@ -439,11 +443,9 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 
 	/* Setup a back link to the old TSS in new TSS */
 	if (tstype==TSwitch_CALL_INT) {
-		if (new_tss.is386) {
-			mem_writed(new_tss.base+offsetof(TSS_32,back),cpu_tss.selector);
-		} else {
-			mem_writew(new_tss.base+offsetof(TSS_16,back),cpu_tss.selector);
-		}
+		assert(new_tss.is386);
+		mem_writed(new_tss.base + offsetof(TSS_32, back), cpu_tss.selector);
+
 		/* And make the new task's eflag have the nested task bit */
 		new_eflags|=FLAG_NT;
 	}
@@ -468,22 +470,17 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 		PAGING_SetDirBase(new_cr3);
 
 		/* Load new context */
-		if (new_tss.is386) {
-			reg_eip=new_eip;
-			CPU_SetFlags(new_eflags,FMASK_ALL | FLAG_VM);
-			reg_eax=new_eax;
-			reg_ecx=new_ecx;
-			reg_edx=new_edx;
-			reg_ebx=new_ebx;
-			reg_esp=new_esp;
-			reg_ebp=new_ebp;
-			reg_edi=new_edi;
-			reg_esi=new_esi;
-
-//			new_cs=mem_readw(new_tss.base+offsetof(TSS_32,cs));
-		} else {
-			E_Exit("286 task switch");
-		}
+		assert(new_tss.is386);
+		reg_eip = new_eip;
+		CPU_SetFlags(new_eflags, FMASK_ALL | FLAG_VM);
+		reg_eax = new_eax;
+		reg_ecx = new_ecx;
+		reg_edx = new_edx;
+		reg_ebx = new_ebx;
+		reg_esp = new_esp;
+		reg_ebp = new_ebp;
+		reg_edi = new_edi;
+		reg_esi = new_esi;
 	}
 	/* Load the new selectors */
 	if (reg_flags & FLAG_VM) {
