@@ -742,25 +742,26 @@
 	}														\
 }
 
-#define IMULD(op1,load,save)								\
-{															\
-	Bit64s temps=((Bit64s)((Bit32s)reg_eax))*				\
-				 ((Bit64s)((Bit32s)(load(op1))));			\
-	reg_eax=(Bit32u)(temps);								\
-	reg_edx=(Bit32u)(temps >> 32);							\
-	FillFlagsNoCFOF();										\
-	SETFLAGBIT(ZF,reg_eax == 0);							\
-	SETFLAGBIT(SF,reg_eax & 0x80000000);					\
-	if ((reg_edx==0xffffffff) &&							\
-		(reg_eax & 0x80000000) ) {							\
-		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
-	} else if ( (reg_edx==0x00000000) &&					\
-				(reg_eax< 0x80000000) ) {					\
-		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
-	} else {												\
-		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
-	}														\
-}
+#define IMULD(op1, load, save) \
+	{ \
+		Bit64s temps = ((Bit64s)((Bit32s)reg_eax)) * \
+		               ((Bit64s)((Bit32s)(load(op1)))); \
+		reg_eax = (Bit32s)(temps); \
+		reg_edx = (Bit32s)(temps >> 32); \
+		FillFlagsNoCFOF(); \
+		SETFLAGBIT(ZF, reg_eax == 0); \
+		SETFLAGBIT(SF, reg_eax & 0x80000000); \
+		if ((reg_edx == 0xffffffff) && (reg_eax & 0x80000000)) { \
+			SETFLAGBIT(CF, false); \
+			SETFLAGBIT(OF, false); \
+		} else if ((reg_edx == 0x00000000) && (reg_eax < 0x80000000)) { \
+			SETFLAGBIT(CF, false); \
+			SETFLAGBIT(OF, false); \
+		} else { \
+			SETFLAGBIT(CF, true); \
+			SETFLAGBIT(OF, true); \
+		} \
+	}
 
 #define DIMULW(op1, op2, op3, load, save) \
 	{ \
