@@ -774,18 +774,21 @@
 	}														\
 }
 
-#define DIMULD(op1,op2,op3,load,save)						\
-{															\
-	Bit64s res=((Bit64s)((Bit32s)op2))*((Bit64s)((Bit32s)op3));	\
-	save(op1,(Bit32s)res);									\
-	FillFlagsNoCFOF();										\
-	if ((res>=-((Bit64s)(2147483647)+1)) &&					\
-		(res<=(Bit64s)2147483647)) {						\
-		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
-	} else {												\
-		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
-	}														\
-}
+#define DIMULD(op1, op2, op3, load, save) \
+	{ \
+		const auto res = static_cast<int64_t>(op2) * \
+		                 static_cast<int64_t>(op3); \
+		save(op1, (Bit32s)res); \
+		FillFlagsNoCFOF(); \
+		if ((res >= -((Bit64s)(2147483647) + 1)) && \
+		    (res <= (Bit64s)2147483647)) { \
+			SETFLAGBIT(CF, false); \
+			SETFLAGBIT(OF, false); \
+		} else { \
+			SETFLAGBIT(CF, true); \
+			SETFLAGBIT(OF, true); \
+		} \
+	}
 
 #define GRP2B(blah)											\
 {															\
