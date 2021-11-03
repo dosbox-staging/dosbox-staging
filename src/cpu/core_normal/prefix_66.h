@@ -344,12 +344,12 @@
 			//Little hack to always use segprefixed version
 			BaseDS=BaseSS=0;
 			if (TEST_PREFIX_ADDR) {
-				*rmrd=(Bit32u)(*EATable[256+rm])();
-			} else {
-				*rmrd=(Bit32u)(*EATable[rm])();
-			}
-			break;
-		}
+		                *rmrd = (*EATable[256 + rm])();
+	                } else {
+		                *rmrd = (*EATable[rm])();
+	                }
+	                break;
+                }
 	CASE_D(0x8f)												/* POP Ed */
 		{
 			Bit32u val=Pop_32();
