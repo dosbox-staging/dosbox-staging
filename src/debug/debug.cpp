@@ -2058,7 +2058,8 @@ static void LogCPUInfo(void) {
 	char out1[512];
 	sprintf(out1,"cr0:%08" sBitfs(X) " cr2:%08" sBitfs(X) " cr3:%08" sBitfs(X) "  cpl=%" sBitfs(x),cpu.cr0,paging.cr2,paging.cr3,cpu.cpl);
 	LOG(LOG_MISC,LOG_ERROR)("%s",out1);
-	sprintf(out1,"eflags:%08" sBitfs(X) " [vm=%" sBitfs(x) " iopl=%" sBitfs(x) " nt=%" sBitfs(x) "]",reg_flags,GETFLAG(VM)>>17,GETFLAG(IOPL)>>12,GETFLAG(NT)>>14);
+	sprintf(out1, "eflags:%08x [vm=%x iopl=%x nt=%x]", reg_flags,
+	        GETFLAG(VM) >> 17, GETFLAG(IOPL) >> 12, GETFLAG(NT) >> 14);
 	LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 	sprintf(out1,"GDT base=%08X limit=%08" sBitfs(X),cpu.gdt.GetBase(),cpu.gdt.GetLimit());
 	LOG(LOG_MISC,LOG_ERROR)("%s",out1);
