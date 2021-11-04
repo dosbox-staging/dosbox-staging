@@ -18,6 +18,8 @@
 
 #include "compiler.h"
 
+#include "inout.h"
+
 #define X86_INLINED_MEMACCESS
 
 enum REP_Type {
@@ -2071,38 +2073,44 @@ static void dyn_iret(void) {
 	dyn_closeblock();
 }
 
-static bool dyn_io_writeB(Bitu port,Bit8u val) {
-	bool ex = CPU_IO_Exception(port,1);
+static bool dyn_io_writeB(const io_port_t port, const uint8_t val)
+{
+	bool ex = CPU_IO_Exception(port, 1);
 	if (!ex) IO_WriteB(port,val);
 	return ex;
 }
 
-static bool dyn_io_writeW(Bitu port,Bit16u val) {
-	bool ex = CPU_IO_Exception(port,2);
+static bool dyn_io_writeW(const io_port_t port, const uint16_t val)
+{
+	bool ex = CPU_IO_Exception(port, 2);
 	if (!ex) IO_WriteW(port,val);
 	return ex;
 }
 
-static bool dyn_io_writeD(Bitu port,Bit32u val) {
-	bool ex = CPU_IO_Exception(port,4);
+static bool dyn_io_writeD(const io_port_t port, const uint32_t val)
+{
+	bool ex = CPU_IO_Exception(port, 4);
 	if (!ex) IO_WriteD(port,val);
 	return ex;
 }
 
-static bool dyn_io_readB(Bitu port) {
-	bool ex = CPU_IO_Exception(port,1);
+static bool dyn_io_readB(const io_port_t port)
+{
+	bool ex = CPU_IO_Exception(port, 1);
 	if (!ex) core_dyn.readdata = IO_ReadB(port);
 	return ex;
 }
 
-static bool dyn_io_readW(Bitu port) {
-	bool ex = CPU_IO_Exception(port,2);
+static bool dyn_io_readW(const io_port_t port)
+{
+	bool ex = CPU_IO_Exception(port, 2);
 	if (!ex) core_dyn.readdata = IO_ReadW(port);
 	return ex;
 }
 
-static bool dyn_io_readD(Bitu port) {
-	bool ex = CPU_IO_Exception(port,4);
+static bool dyn_io_readD(const io_port_t port)
+{
+	bool ex = CPU_IO_Exception(port, 4);
 	if (!ex) core_dyn.readdata = IO_ReadD(port);
 	return ex;
 }
