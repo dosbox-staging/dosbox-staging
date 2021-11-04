@@ -2125,9 +2125,11 @@ static void CPU_CycleIncrease(bool pressed) {
 	} else {
 		Bit32s old_cycles=CPU_CycleMax;
 		if (CPU_CycleUp < 100) {
-			CPU_CycleMax = (Bit32s)(CPU_CycleMax * (1 + (float)CPU_CycleUp / 100.0));
+			CPU_CycleMax = (Bit32s)(CPU_CycleMax *
+			                        (1 + static_cast<float>(CPU_CycleUp) /
+			                                     100.0f));
 		} else {
-			CPU_CycleMax = (Bit32s)(CPU_CycleMax + CPU_CycleUp);
+			CPU_CycleMax = CPU_CycleMax + CPU_CycleUp;
 		}
 	    
 		CPU_CycleLeft=0;CPU_Cycles=0;
@@ -2152,9 +2154,11 @@ static void CPU_CycleDecrease(bool pressed) {
 		GFX_SetTitle(CPU_CyclePercUsed,-1,false);
 	} else {
 		if (CPU_CycleDown < 100) {
-			CPU_CycleMax = (Bit32s)(CPU_CycleMax / (1 + (float)CPU_CycleDown / 100.0));
+			CPU_CycleMax = (Bit32s)(CPU_CycleMax /
+			                        (1 + static_cast<float>(CPU_CycleDown) /
+			                                     100.0f));
 		} else {
-			CPU_CycleMax = (Bit32s)(CPU_CycleMax - CPU_CycleDown);
+			CPU_CycleMax = CPU_CycleMax - CPU_CycleDown;
 		}
 		CPU_CycleLeft=0;CPU_Cycles=0;
 		if (CPU_CycleMax <= 0) CPU_CycleMax=1;
@@ -2278,7 +2282,8 @@ public:
 						int percval=0;
 						std::istringstream stream(str);
 						stream >> percval;
-						if ((percval>0) && (percval<=105)) CPU_CyclePercUsed=(Bit32s)percval;
+						if ((percval > 0) && (percval <= 105))
+							CPU_CyclePercUsed = percval;
 					} else if (str=="limit") {
 						cmdnum++;
 						if (cmd.FindCommand(cmdnum,str)) {
@@ -2303,7 +2308,9 @@ public:
 							int percval=0;
 							std::istringstream stream(str);
 							stream >> percval;
-							if ((percval>0) && (percval<=105)) CPU_CyclePercUsed=(Bit32s)percval;
+							if ((percval > 0) &&
+							    (percval <= 105))
+								CPU_CyclePercUsed = percval;
 						} else if (str=="limit") {
 							cmdnum++;
 							if (cmd.FindCommand(cmdnum,str)) {
@@ -2317,8 +2324,8 @@ public:
 							std::istringstream stream(str);
 							stream >> rmdval;
 							if (rmdval>0) {
-								CPU_CycleMax=(Bit32s)rmdval;
-								CPU_OldCycleMax=(Bit32s)rmdval;
+								CPU_CycleMax = rmdval;
+								CPU_OldCycleMax = rmdval;
 							}
 						}
 					}
@@ -2328,12 +2335,13 @@ public:
 				int rmdval=0;
 				std::istringstream stream(str);
 				stream >> rmdval;
-				CPU_CycleMax=(Bit32s)rmdval;
+				CPU_CycleMax = rmdval;
 			} else {
 				std::istringstream stream(type);
 				int rmdval=0;
 				stream >> rmdval;
-				if(rmdval) CPU_CycleMax=(Bit32s)rmdval;
+				if (rmdval)
+					CPU_CycleMax = rmdval;
 			}
 			CPU_CycleAutoAdjust=false;
 		}
