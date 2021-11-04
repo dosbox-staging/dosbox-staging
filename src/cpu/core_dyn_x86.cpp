@@ -163,7 +163,7 @@ static struct {
 
 static struct {
 	Bitu callback;
-	Bitu readdata;
+	uint32_t readdata;
 } core_dyn;
 
 #if defined(X86_DYNFPU_DH_ENABLED)
