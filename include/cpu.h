@@ -343,7 +343,7 @@ public:
 		const auto limit_16_19 = static_cast<uint64_t>(saved.seg.limit_16_19);
 		const auto limit = (limit_16_19 << 16) | saved.seg.limit_0_15;
 		if (saved.seg.g)
-			return static_cast<Bitu>((limit << 12) | 0xFFF);
+			return (limit << 12) | 0xFFF;
 		return static_cast<Bitu>(limit);
 	}
 	Bitu GetOffset(void) {
