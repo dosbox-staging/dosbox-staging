@@ -206,7 +206,7 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
 		switch (desc.Type()) {
 			case DESC_TASK_GATE:
-				sprintf(out1,"%s: s:%08" sBitfs(X) " type:%02X p",selname,desc.GetSelector(),desc.saved.gate.type);
+				sprintf(out1,"%s: s:%08X type:%02X p",selname,desc.GetSelector(),desc.saved.gate.type);
 				sprintf(out2,"    TaskGate   dpl : %01X %1X",desc.saved.gate.dpl,desc.saved.gate.p);
 				return true;
 			case DESC_LDT:
@@ -215,23 +215,23 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 			case DESC_386_TSS_A:
 			case DESC_386_TSS_B:
 				sprintf(out1,"%s: b:%08X type:%02X pag",selname,desc.GetBase(),desc.saved.seg.type);
-				sprintf(out2,"    l:%08" sBitfs(X) " dpl : %01X %1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.g);
+				sprintf(out2,"    l:%08X dpl : %01X %1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.g);
 				return true;
 			case DESC_286_CALL_GATE:
 			case DESC_386_CALL_GATE:
-				sprintf(out1,"%s: s:%08" sBitfs(X) " type:%02X p params: %02X",selname,desc.GetSelector(),desc.saved.gate.type,desc.saved.gate.paramcount);
-				sprintf(out2,"    o:%08" sBitfs(X) " dpl : %01X %1X",desc.GetOffset(),desc.saved.gate.dpl,desc.saved.gate.p);
+				sprintf(out1,"%s: s:%08X type:%02X p params: %02X",selname,desc.GetSelector(),desc.saved.gate.type,desc.saved.gate.paramcount);
+				sprintf(out2,"    o:%08X dpl : %01X %1X",desc.GetOffset(),desc.saved.gate.dpl,desc.saved.gate.p);
 				return true;
 			case DESC_286_INT_GATE:
 			case DESC_286_TRAP_GATE:
 			case DESC_386_INT_GATE:
 			case DESC_386_TRAP_GATE:
-				sprintf(out1,"%s: s:%08" sBitfs(X) " type:%02X p",selname,desc.GetSelector(),desc.saved.gate.type);
-				sprintf(out2,"    o:%08" sBitfs(X) " dpl : %01X %1X",desc.GetOffset(),desc.saved.gate.dpl,desc.saved.gate.p);
+				sprintf(out1,"%s: s:%08X type:%02X p",selname,desc.GetSelector(),desc.saved.gate.type);
+				sprintf(out2,"    o:%08X dpl : %01X %1X",desc.GetOffset(),desc.saved.gate.dpl,desc.saved.gate.p);
 				return true;
 		}
 		sprintf(out1,"%s: b:%08X type:%02X parbg",selname,desc.GetBase(),desc.saved.seg.type);
-		sprintf(out2,"    l:%08" sBitfs(X) " dpl : %01X %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
+		sprintf(out2,"    l:%08X dpl : %01X %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
 		return true;
 	} else {
 		strcpy(out1,"                                     ");
@@ -1976,7 +1976,7 @@ static void LogGDT(void) {
 		desc.Load(address);
 		sprintf(out1,"%04" sBitfs(X) ": b:%08X type: %02X parbg",(i<<3),desc.GetBase(),desc.saved.seg.type);
 		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
-		sprintf(out1,"      l:%08" sBitfs(X) " dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
+		sprintf(out1,"      l:%08X dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
 		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 		address+=8; i++;
 	}
@@ -1996,7 +1996,7 @@ static void LogLDT(void) {
 		desc.Load(address);
 		sprintf(out1,"%04" sBitfs(X) ": b:%08X type: %02X parbg",(i<<3)|4,desc.GetBase(),desc.saved.seg.type);
 		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
-		sprintf(out1,"      l:%08" sBitfs(X) " dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
+		sprintf(out1,"      l:%08X dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
 		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 		address+=8; i++;
 	}
@@ -2005,10 +2005,10 @@ static void LogLDT(void) {
 static void LogIDT(void) {
 	char out1[512];
 	Descriptor desc;
-	Bitu address = 0;
+	uint32_t address = 0;
 	while (address<256*8) {
 		if (cpu.idt.GetDescriptor(address,desc)) {
-			sprintf(out1,"%04" sBitfs(X) ": sel:%04" sBitfs(X) " off:%02" sBitfs(X),address/8,desc.GetSelector(),desc.GetOffset());
+			sprintf(out1,"%04X: sel:%04X off:%02X",address/8,desc.GetSelector(),desc.GetOffset());
 			LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 		}
 		address+=8;
@@ -2069,12 +2069,12 @@ static void LogCPUInfo(void) {
 	Bitu sel=CPU_STR();
 	Descriptor desc;
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
-		sprintf(out1,"TR selector=%04" sBitfs(X) ", base=%08X limit=%08" sBitfs(X) "*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
+		sprintf(out1,"TR selector=%04" sBitfs(X) ", base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
 		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 	}
 	sel=CPU_SLDT();
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
-		sprintf(out1,"LDT selector=%04" sBitfs(X) ", base=%08X limit=%08" sBitfs(X) "*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
+		sprintf(out1,"LDT selector=%04" sBitfs(X) ", base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
 		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 	}
 }
