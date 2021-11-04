@@ -170,8 +170,10 @@ public:
 		                               // as soon as possible
 
 		Bit32u ip_point=SegPhys(cs)+reg_eip;
-		ip_point=(PAGING_GetPhysicalPage(ip_point)-(phys_page<<12))+(ip_point&0xfff);
-		while (index>=0) {
+		ip_point = (PAGING_GetPhysicalPage(ip_point) -
+		            check_cast<uint32_t>(phys_page << 12)) +
+		           (ip_point & 0xfff);
+		while (index >= 0) {
 			Bitu map=0;
 			// see if there is still some code in the range
 			for (Bitu count=start;count<=end;count++) map+=write_map[count];
