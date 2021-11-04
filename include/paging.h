@@ -59,20 +59,20 @@ class PageHandler {
 public:
 	virtual ~PageHandler() = default;
 
-	virtual Bitu readb(PhysPt addr);
-	virtual Bitu readw(PhysPt addr);
-	virtual Bitu readd(PhysPt addr);
-	virtual void writeb(PhysPt addr,Bitu val);
-	virtual void writew(PhysPt addr,Bitu val);
-	virtual void writed(PhysPt addr,Bitu val);
+	virtual uint8_t readb(PhysPt addr);
+	virtual uint16_t readw(PhysPt addr);
+	virtual uint32_t readd(PhysPt addr);
+	virtual void writeb(PhysPt addr, uint8_t val);
+	virtual void writew(PhysPt addr, uint16_t val);
+	virtual void writed(PhysPt addr, uint32_t val);
 	virtual HostPt GetHostReadPt(Bitu phys_page);
 	virtual HostPt GetHostWritePt(Bitu phys_page);
-	virtual bool readb_checked(PhysPt addr,Bit8u * val);
-	virtual bool readw_checked(PhysPt addr,Bit16u * val);
-	virtual bool readd_checked(PhysPt addr,Bit32u * val);
-	virtual bool writeb_checked(PhysPt addr,Bitu val);
-	virtual bool writew_checked(PhysPt addr,Bitu val);
-	virtual bool writed_checked(PhysPt addr,Bitu val);
+	virtual bool readb_checked(PhysPt addr,uint8_t * val);
+	virtual bool readw_checked(PhysPt addr,uint16_t * val);
+	virtual bool readd_checked(PhysPt addr,uint32_t * val);
+	virtual bool writeb_checked(PhysPt addr, uint8_t val);
+	virtual bool writew_checked(PhysPt addr, uint16_t val);
+	virtual bool writed_checked(PhysPt addr, uint32_t val);
 
 	Bitu flags = 0x0;
 };
@@ -263,14 +263,16 @@ static inline PhysPt PAGING_GetPhysicalAddress(PhysPt linAddr) {
 static inline Bit8u mem_readb_inline(PhysPt address) {
 	HostPt tlb_addr=get_tlb_read(address);
 	if (tlb_addr) return host_readb(tlb_addr+address);
-	else return (Bit8u)(get_tlb_readhandler(address))->readb(address);
+	else
+		return (get_tlb_readhandler(address))->readb(address);
 }
 
 static inline Bit16u mem_readw_inline(PhysPt address) {
 	if ((address & 0xfff)<0xfff) {
 		HostPt tlb_addr=get_tlb_read(address);
 		if (tlb_addr) return host_readw(tlb_addr+address);
-		else return (Bit16u)(get_tlb_readhandler(address))->readw(address);
+		else
+			return (get_tlb_readhandler(address))->readw(address);
 	} else return mem_unalignedreadw(address);
 }
 
@@ -281,7 +283,7 @@ static inline uint32_t mem_readd_inline(PhysPt address)
 		if (tlb_addr)
 			return host_readd(tlb_addr + address);
 		else
-			return static_cast<uint32_t>((get_tlb_readhandler(address))->readd(address));
+			return get_tlb_readhandler(address)->readd(address);
 	} else {
 		return mem_unalignedreadd(address);
 	}
