@@ -37,33 +37,38 @@
 
 PagingBlock paging;
 
-
-Bitu PageHandler::readb(PhysPt addr) {
+uint8_t PageHandler::readb(PhysPt addr)
+{
 	E_Exit("No byte handler for read from %d",addr);	
 	return 0;
 }
-Bitu PageHandler::readw(PhysPt addr) {
-	Bitu ret = (readb(addr+0) << 0);
+uint16_t PageHandler::readw(PhysPt addr)
+{
+	uint16_t ret = (readb(addr+0) << 0);
 	ret     |= (readb(addr+1) << 8);
 	return ret;
 }
-Bitu PageHandler::readd(PhysPt addr) {
-	Bitu ret = (readb(addr+0) << 0);
+uint32_t PageHandler::readd(PhysPt addr)
+{
+	uint32_t ret = (readb(addr+0) << 0);
 	ret     |= (readb(addr+1) << 8);
 	ret     |= (readb(addr+2) << 16);
 	ret     |= (readb(addr+3) << 24);
 	return ret;
 }
 
-void PageHandler::writeb(PhysPt addr,Bitu /*val*/) {
-	E_Exit("No byte handler for write to %d",addr);	
+void PageHandler::writeb(PhysPt addr, uint8_t /*val*/)
+{
+	E_Exit("No byte handler for write to %d",addr);
 }
 
-void PageHandler::writew(PhysPt addr,Bitu val) {
+void PageHandler::writew(PhysPt addr, uint16_t val)
+{
 	writeb(addr+0,(Bit8u) (val >> 0));
 	writeb(addr+1,(Bit8u) (val >> 8));
 }
-void PageHandler::writed(PhysPt addr,Bitu val) {
+void PageHandler::writed(PhysPt addr, uint32_t val)
+{
 	writeb(addr+0,(Bit8u) (val >> 0));
 	writeb(addr+1,(Bit8u) (val >> 8));
 	writeb(addr+2,(Bit8u) (val >> 16));
@@ -78,26 +83,33 @@ HostPt PageHandler::GetHostWritePt(Bitu /*phys_page*/) {
 	return 0;
 }
 
-bool PageHandler::readb_checked(PhysPt addr, Bit8u * val) {
-	*val=(Bit8u)readb(addr);	return false;
+bool PageHandler::readb_checked(PhysPt addr, uint8_t *val)
+{
+	*val = readb(addr);
+	return false;
 }
-bool PageHandler::readw_checked(PhysPt addr, Bit16u * val) {
-	*val=(Bit16u)readw(addr);	return false;
+bool PageHandler::readw_checked(PhysPt addr, uint16_t *val)
+{
+	*val = readw(addr);
+	return false;
 }
-bool PageHandler::readd_checked(PhysPt addr, Bit32u * val) {
-	*val=(Bit32u)readd(addr);	return false;
+bool PageHandler::readd_checked(PhysPt addr, uint32_t *val)
+{
+	*val = readd(addr);
+	return false;
 }
-bool PageHandler::writeb_checked(PhysPt addr,Bitu val) {
+bool PageHandler::writeb_checked(PhysPt addr, uint8_t val)
+{
 	writeb(addr,val);	return false;
 }
-bool PageHandler::writew_checked(PhysPt addr,Bitu val) {
+bool PageHandler::writew_checked(PhysPt addr, uint16_t val)
+{
 	writew(addr,val);	return false;
 }
-bool PageHandler::writed_checked(PhysPt addr,Bitu val) {
+bool PageHandler::writed_checked(PhysPt addr, uint32_t val)
+{
 	writed(addr,val);	return false;
 }
-
-
 
 struct PF_Entry {
 	Bitu cs;
@@ -241,70 +253,82 @@ public:
 	InitPageHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
 	}
-	Bitu readb(PhysPt addr) {
-		Bitu needs_reset=InitPage(addr,false);
-		Bit8u val=mem_readb(addr);
-		InitPageUpdateLink(needs_reset,addr);
+	uint8_t readb(PhysPt addr)
+	{
+		const auto needs_reset = InitPage(addr, false);
+		const auto val = mem_readb(addr);
+		InitPageUpdateLink(needs_reset, addr);
 		return val;
 	}
-	Bitu readw(PhysPt addr) {
-		Bitu needs_reset=InitPage(addr,false);
-		Bit16u val=mem_readw(addr);
-		InitPageUpdateLink(needs_reset,addr);
+	uint16_t readw(PhysPt addr)
+	{
+		const auto needs_reset = InitPage(addr, false);
+		const auto val = mem_readw(addr);
+		InitPageUpdateLink(needs_reset, addr);
 		return val;
 	}
-	Bitu readd(PhysPt addr) {
-		Bitu needs_reset=InitPage(addr,false);
-		Bit32u val=mem_readd(addr);
-		InitPageUpdateLink(needs_reset,addr);
+	uint32_t readd(PhysPt addr)
+	{
+		const auto needs_reset = InitPage(addr, false);
+		const auto val = mem_readd(addr);
+		InitPageUpdateLink(needs_reset, addr);
 		return val;
 	}
-	void writeb(PhysPt addr,Bitu val) {
-		Bitu needs_reset=InitPage(addr,true);
-		mem_writeb(addr,val);
+	void writeb(PhysPt addr, uint8_t val)
+	{
+		const auto needs_reset = InitPage(addr, true);
+		mem_writeb(addr, val);
 		InitPageUpdateLink(needs_reset,addr);
 	}
-	void writew(PhysPt addr,Bitu val) {
-		Bitu needs_reset=InitPage(addr,true);
-		mem_writew(addr,val);
+	void writew(PhysPt addr, uint16_t val)
+	{
+		const auto needs_reset = InitPage(addr, true);
+		mem_writew(addr, val);
 		InitPageUpdateLink(needs_reset,addr);
 	}
-	void writed(PhysPt addr,Bitu val) {
-		Bitu needs_reset=InitPage(addr,true);
-		mem_writed(addr,val);
+	void writed(PhysPt addr, uint32_t val)
+	{
+		const auto needs_reset = InitPage(addr, true);
+		mem_writed(addr, val);
 		InitPageUpdateLink(needs_reset,addr);
 	}
-	bool readb_checked(PhysPt addr, Bit8u * val) {
+	bool readb_checked(PhysPt addr, uint8_t *val)
+	{
 		if (InitPageCheckOnly(addr,false)) {
 			*val=mem_readb(addr);
 			return false;
 		} else return true;
 	}
-	bool readw_checked(PhysPt addr, Bit16u * val) {
+	bool readw_checked(PhysPt addr, uint16_t *val)
+	{
 		if (InitPageCheckOnly(addr,false)){
 			*val=mem_readw(addr);
 			return false;
 		} else return true;
 	}
-	bool readd_checked(PhysPt addr, Bit32u * val) {
+	bool readd_checked(PhysPt addr, uint32_t *val)
+	{
 		if (InitPageCheckOnly(addr,false)) {
 			*val=mem_readd(addr);
 			return false;
 		} else return true;
 	}
-	bool writeb_checked(PhysPt addr,Bitu val) {
+	bool writeb_checked(PhysPt addr, uint8_t val)
+	{
 		if (InitPageCheckOnly(addr,true)) {
 			mem_writeb(addr,val);
 			return false;
 		} else return true;
 	}
-	bool writew_checked(PhysPt addr,Bitu val) {
+	bool writew_checked(PhysPt addr, uint16_t val)
+	{
 		if (InitPageCheckOnly(addr,true)) {
 			mem_writew(addr,val);
 			return false;
 		} else return true;
 	}
-	bool writed_checked(PhysPt addr,Bitu val) {
+	bool writed_checked(PhysPt addr, uint32_t val)
+	{
 		if (InitPageCheckOnly(addr,true)) {
 			mem_writed(addr,val);
 			return false;
@@ -470,47 +494,53 @@ public:
 	InitPageUserROHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
 	}
-	void writeb(PhysPt addr,Bitu val) {
-		InitPage(addr,(Bit8u)(val&0xff));
-		host_writeb(get_tlb_read(addr)+addr,(Bit8u)(val&0xff));
+	void writeb(PhysPt addr, uint8_t val)
+	{
+		InitPage(addr, val);
+		host_writeb(get_tlb_read(addr) + addr, val);
 	}
-	void writew(PhysPt addr,Bitu val) {
-		InitPage(addr,(Bit16u)(val&0xffff));
-		host_writew(get_tlb_read(addr)+addr,(Bit16u)(val&0xffff));
+	void writew(PhysPt addr, uint16_t val)
+	{
+		InitPage(addr, val);
+		host_writew(get_tlb_read(addr) + addr, val);
 	}
-	void writed(PhysPt addr,Bitu val) {
-		InitPage(addr,(Bit32u)val);
-		host_writed(get_tlb_read(addr)+addr,(Bit32u)val);
+	void writed(PhysPt addr, uint32_t val)
+	{
+		InitPage(addr, val);
+		host_writed(get_tlb_read(addr) + addr, val);
 	}
-	bool writeb_checked(PhysPt addr,Bitu val) {
-		Bitu writecode=InitPageCheckOnly(addr,(Bit8u)(val&0xff));
+	bool writeb_checked(PhysPt addr, uint8_t val)
+	{
+		Bitu writecode = InitPageCheckOnly(addr, val);
 		if (writecode) {
 			HostPt tlb_addr;
 			if (writecode>1) tlb_addr=get_tlb_read(addr);
 			else tlb_addr=get_tlb_write(addr);
-			host_writeb(tlb_addr+addr,(Bit8u)(val&0xff));
+			host_writeb(tlb_addr + addr, val);
 			return false;
 		}
 		return true;
 	}
-	bool writew_checked(PhysPt addr,Bitu val) {
-		Bitu writecode=InitPageCheckOnly(addr,(Bit16u)(val&0xffff));
+	bool writew_checked(PhysPt addr, uint16_t val)
+	{
+		Bitu writecode = InitPageCheckOnly(addr, val);
 		if (writecode) {
 			HostPt tlb_addr;
 			if (writecode>1) tlb_addr=get_tlb_read(addr);
 			else tlb_addr=get_tlb_write(addr);
-			host_writew(tlb_addr+addr,(Bit16u)(val&0xffff));
+			host_writew(tlb_addr + addr, val);
 			return false;
 		}
 		return true;
 	}
-	bool writed_checked(PhysPt addr,Bitu val) {
-		Bitu writecode=InitPageCheckOnly(addr,(Bit32u)val);
+	bool writed_checked(PhysPt addr, uint32_t val)
+	{
+		Bitu writecode = InitPageCheckOnly(addr, val);
 		if (writecode) {
 			HostPt tlb_addr;
 			if (writecode>1) tlb_addr=get_tlb_read(addr);
 			else tlb_addr=get_tlb_write(addr);
-			host_writed(tlb_addr+addr,(Bit32u)val);
+			host_writed(tlb_addr + addr, val);
 			return false;
 		}
 		return true;

@@ -63,7 +63,8 @@ public:
 	IllegalPageHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
 	}
-	Bitu readb(PhysPt addr) {
+	uint8_t readb(PhysPt addr)
+	{
 #if C_DEBUG
 		LOG_MSG("Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 #else
@@ -75,7 +76,7 @@ public:
 #endif
 		return 0xff;
 	}
-	void writeb(PhysPt addr, [[maybe_unused]] Bitu val)
+	void writeb(PhysPt addr, [[maybe_unused]] uint8_t val)
 	{
 #if C_DEBUG
 		LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
@@ -107,14 +108,14 @@ public:
 	ROMPageHandler() {
 		flags=PFLAG_READABLE|PFLAG_HASROM;
 	}
-	void writeb(PhysPt addr,Bitu val){
-		LOG(LOG_CPU,LOG_ERROR)("Write %" sBitfs(x) " to rom at %x",val,addr);
+	void writeb(PhysPt addr,uint8_t val){
+		LOG(LOG_CPU, LOG_ERROR)("Write 0x%x to rom at %x", val, addr);
 	}
-	void writew(PhysPt addr,Bitu val){
-		LOG(LOG_CPU,LOG_ERROR)("Write %" sBitfs(x) " to rom at %x",val,addr);
+	void writew(PhysPt addr,uint16_t val){
+		LOG(LOG_CPU, LOG_ERROR)("Write 0x%x to rom at %x", val, addr);
 	}
-	void writed(PhysPt addr,Bitu val){
-		LOG(LOG_CPU,LOG_ERROR)("Write %" sBitfs(x) " to rom at %x",val,addr);
+	void writed(PhysPt addr,uint32_t val){
+		LOG(LOG_CPU, LOG_ERROR)("Write 0x%x to rom at %x", val, addr);
 	}
 };
 

@@ -208,15 +208,16 @@ public:
 	// the following functions will clean all cache blocks that are invalid
 	// now due to the write
 
-	void writeb(PhysPt addr, Bitu val) override
+	void writeb(PhysPt addr, const uint8_t val) override
 	{
 		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
 		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
 			E_Exit("wb:non-readable code page found that is no ROM page");
 		}
 		addr&=4095;
-		if (host_readb(hostmem+addr)==(Bit8u)val) return;
-		host_writeb(hostmem+addr,val);
+		if (host_readb(hostmem + addr) == val)
+			return;
+		host_writeb(hostmem + addr, val);
 		// see if there's code where we are writing to
 		if (!write_map[addr]) {
 			if (active_blocks)
@@ -233,15 +234,16 @@ public:
 		InvalidateRange(addr,addr);
 	}
 
-	void writew(PhysPt addr, Bitu val) override
+	void writew(PhysPt addr, const uint16_t val) override
 	{
 		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
 		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
 			E_Exit("ww:non-readable code page found that is no ROM page");
 		}
 		addr&=4095;
-		if (host_readw(hostmem+addr)==(Bit16u)val) return;
-		host_writew(hostmem+addr,val);
+		if (host_readw(hostmem + addr) == val)
+			return;
+		host_writew(hostmem + addr, val);
 		// see if there's code where we are writing to
 		if (!read_unaligned_uint16(&write_map[addr])) {
 			if (active_blocks)
@@ -258,15 +260,16 @@ public:
 		InvalidateRange(addr,addr+1);
 	}
 
-	void writed(PhysPt addr, Bitu val) override
+	void writed(PhysPt addr, const uint32_t val) override
 	{
 		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
 		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
 			E_Exit("wd:non-readable code page found that is no ROM page");
 		}
 		addr&=4095;
-		if (host_readd(hostmem+addr)==(Bit32u)val) return;
-		host_writed(hostmem+addr,val);
+		if (host_readd(hostmem + addr) == val)
+			return;
+		host_writed(hostmem + addr, val);
 		// see if there's code where we are writing to
 		if (!read_unaligned_uint32(&write_map[addr])) {
 			if (active_blocks)
@@ -283,14 +286,15 @@ public:
 		InvalidateRange(addr,addr+3);
 	}
 
-	bool writeb_checked(PhysPt addr, Bitu val) override
+	bool writeb_checked(PhysPt addr, const uint8_t val) override
 	{
 		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return false;
 		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
 			E_Exit("cb:non-readable code page found that is no ROM page");
 		}
 		addr&=4095;
-		if (host_readb(hostmem+addr)==(Bit8u)val) return false;
+		if (host_readb(hostmem + addr) == val)
+			return false;
 		// see if there's code where we are writing to
 		if (!write_map[addr]) {
 			if (!active_blocks) {
@@ -313,14 +317,15 @@ public:
 		return false;
 	}
 
-	bool writew_checked(PhysPt addr, Bitu val) override
+	bool writew_checked(PhysPt addr, const uint16_t val) override
 	{
 		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return false;
 		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
 			E_Exit("cw:non-readable code page found that is no ROM page");
 		}
 		addr&=4095;
-		if (host_readw(hostmem+addr)==(Bit16u)val) return false;
+		if (host_readw(hostmem + addr) == val)
+			return false;
 		// see if there's code where we are writing to
 		if (!read_unaligned_uint16(&write_map[addr])) {
 			if (!active_blocks) {
@@ -343,14 +348,15 @@ public:
 		return false;
 	}
 
-	bool writed_checked(PhysPt addr, Bitu val) override
+	bool writed_checked(PhysPt addr, const uint32_t val) override
 	{
 		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return false;
 		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
 			E_Exit("cd:non-readable code page found that is no ROM page");
 		}
 		addr&=4095;
-		if (host_readd(hostmem+addr)==(Bit32u)val) return false;
+		if (host_readd(hostmem + addr) == val)
+			return false;
 		// see if there's code where we are writing to
 		if (!read_unaligned_uint32(&write_map[addr])) {
 			if (!active_blocks) {
