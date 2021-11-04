@@ -56,24 +56,26 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 	Bit8u rdval;
 	const Bitu cflag = cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16;
 	//Ensure page contains memory:
-	if (GCC_UNLIKELY(mem_readb_checked(lin_addr,&rdval))) return true;
-	PageHandler * handler=get_tlb_readhandler(lin_addr);
+	const auto lin_addr_as_physpt = check_cast<PhysPt>(lin_addr);
+	if (GCC_UNLIKELY(mem_readb_checked(lin_addr_as_physpt, &rdval)))
+		return true;
+	PageHandler *handler = get_tlb_readhandler(lin_addr_as_physpt);
 	if (handler->flags & PFLAG_HASCODE) {
 		cph=( CodePageHandler *)handler;
 		if (handler->flags & cflag) return false;
 		cph->ClearRelease();
 		cph=0;
-		handler=get_tlb_readhandler(static_cast<PhysPt>(lin_addr));
+		handler = get_tlb_readhandler(lin_addr_as_physpt);
 	}
 	if (handler->flags & PFLAG_NOCODE) {
 		if (PAGING_ForcePageInit(lin_addr)) {
-			handler=get_tlb_readhandler(lin_addr);
+			handler = get_tlb_readhandler(lin_addr_as_physpt);
 			if (handler->flags & PFLAG_HASCODE) {
 				cph=( CodePageHandler *)handler;
 				if (handler->flags & cflag) return false;
 				cph->ClearRelease();
 				cph=0;
-				handler=get_tlb_readhandler(lin_addr);
+				handler = get_tlb_readhandler(lin_addr_as_physpt);
 			}
 		}
 		if (handler->flags & PFLAG_NOCODE) {
