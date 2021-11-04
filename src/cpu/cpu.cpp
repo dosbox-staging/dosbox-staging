@@ -510,8 +510,7 @@ doconforming:
 			cpu.code.big=cs_desc.Big()>0;
 			Segs.val[cs]=new_cs;
 			break;
-		default:
-			E_Exit("Task switch CS Type %" sBitfs(u),cs_desc.Type());
+		default: E_Exit("Task switch CS Type 0x%x", cs_desc.Type());
 		}
 	}
 	CPU_SetSegGeneral(es,new_es);
@@ -743,8 +742,9 @@ do_interrupt:
 					}
 					break;		
 				default:
-					E_Exit("INT:Gate Selector points to illegal descriptor with type %" sBitfs(x),cs_desc.Type());
-				}
+				        E_Exit("INT:Gate Selector points to illegal descriptor with type 0x%x",
+				               cs_desc.Type());
+			        }
 
 				Segs.val[cs]=(gate_sel&0xfffc) | cpu.cpl;
 				Segs.phys[cs]=cs_desc.GetBase();
@@ -773,7 +773,8 @@ do_interrupt:
 			}
 			return;
 		default:
-			E_Exit("Illegal descriptor type %" sBitfs(X) " for int %" sBitfs(X),gate.Type(),num);
+			E_Exit("Illegal descriptor type 0x%x for int %" sBitfs(X),
+			       gate.Type(), num);
 		}
 	}
 	assert(1);
@@ -920,7 +921,8 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 				EXCEPTION_GP,n_cs_sel & 0xfffc)
 			break;
 		default:
-			E_Exit("IRET:Illegal descriptor type %" sBitfs(X), n_cs_desc.Type());
+			E_Exit("IRET:Illegal descriptor type 0x%x",
+			       n_cs_desc.Type());
 		}
 		CPU_CHECK_COND(!n_cs_desc.saved.seg.p,
 			"IRET with nonpresent code segment",
@@ -1077,7 +1079,7 @@ CODE_jmp:
 			CPU_SwitchTask(selector,TSwitch_JMP,oldeip);
 			break;
 		default:
-			E_Exit("JMP Illegal descriptor type %" sBitfs(X),desc.Type());
+			E_Exit("JMP Illegal descriptor type 0x%x", desc.Type());
 		}
 	}
 	assert(1);
@@ -1314,7 +1316,7 @@ call_code:
 			CPU_Exception(EXCEPTION_GP,selector & 0xfffc);
 			return;
 		default:
-			E_Exit("CALL:Descriptor type %" sBitfs(x) " unsupported",call.Type());
+			E_Exit("CALL:Descriptor type 0x%x unsupported", call.Type());
 		}
 	}
 	assert(1);
@@ -1372,7 +1374,8 @@ void CPU_RET(bool use32,Bitu bytes, [[maybe_unused]] Bitu oldeip) {
 					EXCEPTION_GP,selector & 0xfffc)
 				break;
 			default:
-				E_Exit("RET from illegal descriptor type %" sBitfs(X),desc.Type());
+				E_Exit("RET from illegal descriptor type 0x%x",
+				       desc.Type());
 			}
 RET_same_level:
 			if (!desc.saved.seg.p) {
@@ -1417,7 +1420,8 @@ RET_same_level:
 					EXCEPTION_GP,selector & 0xfffc)
 				break;
 			default:
-				E_Exit("RET from illegal descriptor type %" sBitfs(X),desc.Type());		// or #GP(selector)
+				E_Exit("RET from illegal descriptor type 0x%x",
+				       desc.Type()); // or #GP(selector)
 			}
 
 			CPU_CHECK_COND(!desc.saved.seg.p,
