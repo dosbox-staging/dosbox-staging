@@ -1391,7 +1391,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 
 //uint8_t macaddr[6] = { 0xAC, 0xDE, 0x48, 0x8E, 0x89, 0x19 };
 
-uint16_t dosbox_read(io_port_t port, , io_width_t width)
+uint16_t dosbox_read(io_port_t port, io_width_t width)
 {
 	const uint8_t bytes_to_read = width == io_width_t::byte ? 1 : 2;
 	Bitu retval = theNE2kDevice->read(port, bytes_to_read);
