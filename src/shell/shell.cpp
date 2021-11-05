@@ -842,8 +842,24 @@ void SHELL_Init() {
 	        "  /N  -  Do not display the choices at end of prompt.\n"
 	        "  /S  -  Enables case-sensitive choices to be selected.\n"
 	        "  text  -  The text to display as a prompt.\n");
-	MSG_Add("SHELL_CMD_PATH_HELP","Provided for compatibility.\n");
-
+	MSG_Add("SHELL_CMD_PATH_HELP",
+	        "Displays or sets a search path for executable files.\n");
+	MSG_Add("SHELL_CMD_PATH_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mpath\033[0m\n"
+	        "  \033[32;1mpath\033[0m \033[36;1m[[drive:]path[;...]\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1m[[drive:]path[;...]\033[0m is a path containing a drive and directory.\n"
+	        "  More than one path can be specified, separated by a semi-colon (;).\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Parameter with a semi-colon (;) only clears all search path settings.\n"
+	        "  The path can also be set using \033[32;1mset\033[0m command, e.g. \033[32;1mset\033[0m \033[37;1mpath\033[0m=\033[36;1mZ:\\\033[0m\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mpath\033[0m\n"
+	        "  \033[32;1mpath\033[0m \033[36;1mZ:\\;C:\\DOS\033[0m\n");
 	MSG_Add("SHELL_CMD_VER_HELP", "View or set the reported DOS version.\n");
 	MSG_Add("SHELL_CMD_VER_HELP_LONG", "Usage:\n"
 	        "  \033[32;1mver\033[0m\n"

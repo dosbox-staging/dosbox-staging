@@ -1617,6 +1617,8 @@ void DOS_Shell::CMD_PATH(char *args){
 		char set_path[DOS_PATHLENGTH + CROSS_LEN + 20] = {0};
 		while (args && *args && (*args == '='|| *args == ' '))
 			args++;
+		if (strlen(args) == 1 && *args == ';')
+			*args = 0;
 		safe_sprintf(set_path, "set PATH=%s", args);
 		this->ParseLine(set_path);
 		return;
