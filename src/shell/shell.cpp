@@ -792,7 +792,23 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_RMDIR_HELP","Remove Directory.\n");
 	MSG_Add("SHELL_CMD_RMDIR_HELP_LONG","RMDIR [drive:][path]\n"
 	        "RD [drive:][path]\n");
-	MSG_Add("SHELL_CMD_SET_HELP","Change environment variables.\n");
+	MSG_Add("SHELL_CMD_SET_HELP", "Displays or changes environment variables.\n");
+	MSG_Add("SHELL_CMD_SET_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mset\033[0m\n"
+	        "  \033[32;1mset\033[0m \033[37;1mVARIABLE\033[0m=\033[36;1m[STRING]\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[37;1mVARIABLE\033[0m The name of the environment variable.\n"
+	        "  \033[36;1mSTRING\033[0m   A series of characters to assign to the variable.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - Assigning an empty string to the variable removes the variable.\n"
+	        "  - The command without a parameter displays current environment variables.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mset\033[0m\n"
+	        "  \033[32;1mset\033[0m \033[37;1mname\033[0m=\033[36;1mvalue\033[0m\n");
 	MSG_Add("SHELL_CMD_IF_HELP","Performs conditional processing in batch programs.\n");
 	MSG_Add("SHELL_CMD_GOTO_HELP","Jump to a labeled line in a batch script.\n");
 	MSG_Add("SHELL_CMD_SHIFT_HELP","Leftshift commandline parameters in a batch script.\n");
