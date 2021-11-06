@@ -840,7 +840,25 @@ void SHELL_Init() {
 	        "  \033[32;1mdel\033[0m \033[36;1mtest.bat\033[0m\n"
 	        "  \033[32;1mdel\033[0m \033[36;1mc*.*\033[0m\n"
 	        "  \033[32;1mdel\033[0m \033[36;1ma?b.c*\033[0m\n");
-	MSG_Add("SHELL_CMD_COPY_HELP","Copy files.\n");
+	MSG_Add("SHELL_CMD_COPY_HELP", "Copies one or more files.\n");
+	MSG_Add("SHELL_CMD_COPY_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mcopy\033[0m \033[37;1mSOURCE\033[0m \033[36;1m[DESTIONATION]\033[0m\n"
+	        "  \033[32;1mcopy\033[0m \033[37;1mSOURCE1+SOURCE2[+...]\033[0m \033[36;1m[DESTIONATION]\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[37;1mSOURCE\033[0m       can be either an exact filename or an inexact filename with\n"
+	        "               wildcards, which are the asterisk (*) and the question mark (?).\n"
+	        "  \033[36;1mDESTIONATION\033[0m An exact filename or directory, not containing any wildcards.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  By using \033[37;1m+\033[0m operator, you can combine multiple source files to a single file.\n"
+	        "  If no destination provided, source files will be copied to the current path.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mcopy\033[0m \033[37;1msource.bat\033[0m \033[36;1mnew.bat\033[0m\n"
+	        "  \033[32;1mcopy\033[0m \033[37;1mfile1.txt+file2.txt\033[0m \033[36;1mfile3.txt\033[0m\n"
+	        "  \033[32;1mcopy\033[0m \033[37;1m..\\c*.*\033[0m\n");
 	MSG_Add("SHELL_CMD_CALL_HELP","Start a batch file from within another batch file.\n");
 	MSG_Add("SHELL_CMD_SUBST_HELP","Assign an internal directory to a drive.\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP","Loads a program into upper memory (requires xms=true,umb=true).\n");
