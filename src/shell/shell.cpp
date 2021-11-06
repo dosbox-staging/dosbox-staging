@@ -781,7 +781,24 @@ void SHELL_Init() {
 	        "               -  Prefix to reverse order\n"
 	        "  sortorder    N  By name (alphabetic)       S  By size (smallest first)\n"
 	        "               E  By extension (alphabetic)  D  By date & time (oldest first)\n");
-	MSG_Add("SHELL_CMD_ECHO_HELP","Display messages and enable/disable command echoing.\n");
+	MSG_Add("SHELL_CMD_ECHO_HELP",
+	        "Displays messages and enables/disables command echoing.\n");
+	MSG_Add("SHELL_CMD_ECHO_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mecho\033[0m \033[36;1m[on|off]\033[0m\n"
+	        "  \033[32;1mecho\033[0m \033[36;1m[MESSAGE]\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mon|off\033[0m  Turns on/off command echoing.\n"
+	        "  \033[36;1mMESSAGE\033[0m The message to display.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - The command without a parameter displays current command echoing status.\n"
+	        "  - This command is especially useful for batch files.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mecho\033[0m \033[36;1moff\033[0m\n"
+	        "  \033[32;1mecho\033[0m \033[36;1mHello world!\033[0m\n");
 	MSG_Add("SHELL_CMD_EXIT_HELP","Exit from the shell.\n");
 	MSG_Add("SHELL_CMD_EXIT_TOO_SOON", "Preventing an early 'exit' call from terminating.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP","Show help.\n");
