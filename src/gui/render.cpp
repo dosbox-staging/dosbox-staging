@@ -243,7 +243,7 @@ void RENDER_EndUpdate( bool abort ) {
 			total += render.frameskip.hadSkip[i];
 		LOG_MSG( "Skipped frame %d %d", PIC_Ticks, (total * 100) / RENDER_SKIP_CACHE );
 #endif
-		if (RENDER_GetForceUpdate()) GFX_EndUpdate(0);
+		GFX_EndUpdate(0);
 	}
 	render.frameskip.index = (render.frameskip.index + 1) & (RENDER_SKIP_CACHE - 1);
 	render.updating=false;
@@ -621,14 +621,6 @@ static void ChangeScaler(bool pressed) {
 	}
 	RENDER_CallBack( GFX_CallBackReset );
 } */
-
-bool RENDER_GetForceUpdate(void) {
-	return render.forceUpdate;
-}
-
-void RENDER_SetForceUpdate(bool f) {
-	render.forceUpdate = f;
-}
 
 #if C_OPENGL
 static bool RENDER_GetShader(std::string &shader_path, char *old_src)
