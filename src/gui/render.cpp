@@ -48,7 +48,8 @@ ScalerLineHandler_t RENDER_DrawLine;
 
 static void RENDER_CallBack( GFX_CallBackFunctions_t function );
 
-static void Check_Palette(void) {
+static void Check_Palette(void)
+{
 	/* Clean up any previous changed palette data */
 	if (render.pal.changed) {
 		memset(render.pal.modified, 0, sizeof(render.pal.modified));
@@ -781,7 +782,8 @@ void RENDER_Init(Section * sec) {
 				   render.scale.forced))
 		RENDER_CallBack( GFX_CallBackReset );
 
-	if(!running) render.updating=true;
+	if (!running)
+		render.updating = true;
 	running = true;
 
 	MAPPER_AddHandler(DecreaseFrameSkip, SDL_SCANCODE_UNKNOWN, 0,
