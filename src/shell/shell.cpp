@@ -806,9 +806,20 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_MKDIR_HELP","Make Directory.\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP_LONG","MKDIR [drive:][path]\n"
 	        "MD [drive:][path]\n");
-	MSG_Add("SHELL_CMD_RMDIR_HELP","Remove Directory.\n");
-	MSG_Add("SHELL_CMD_RMDIR_HELP_LONG","RMDIR [drive:][path]\n"
-	        "RD [drive:][path]\n");
+	MSG_Add("SHELL_CMD_RMDIR_HELP", "Removes a directory.\n");
+	MSG_Add("SHELL_CMD_RMDIR_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mrd\033[0m \033[36;1mDIRECTORY\033[0m\n"
+	        "  \033[32;1mrmdir\033[0m \033[36;1mDIRECTORY\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mDIRECTORY\033[0m is the name of the directory to remove.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  The directory must be empty with no files or subdirectories.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mrd\033[0m \033[36;1memptydir\033[0m\n");
 	MSG_Add("SHELL_CMD_SET_HELP", "Displays or changes environment variables.\n");
 	MSG_Add("SHELL_CMD_SET_HELP_LONG",
 	        "Usage:\n"
