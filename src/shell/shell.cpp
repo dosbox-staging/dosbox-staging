@@ -845,7 +845,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_REM_HELP","Add comments in a batch file.\n");
 	MSG_Add("SHELL_CMD_REM_HELP_LONG","REM [comment]\n");
 	MSG_Add("SHELL_CMD_NO_WILD","This is a simple version of the command, no wildcards allowed!\n");
-	MSG_Add("SHELL_CMD_RENAME_HELP","Renames one or more files.\n");
+	MSG_Add("SHELL_CMD_RENAME_HELP", "Renames one or more files.\n");
 	MSG_Add("SHELL_CMD_RENAME_HELP_LONG",
 	        "Usage:\n"
 	        "  \033[32;1mren\033[0m \033[37;1mSOURCE\033[0m \033[36;1mDESTINATION\033[0m\n"
@@ -901,7 +901,23 @@ void SHELL_Init() {
 	        "  \033[32;1mcopy\033[0m \033[37;1mfile1.txt+file2.txt\033[0m \033[36;1mfile3.txt\033[0m\n"
 	        "  \033[32;1mcopy\033[0m \033[37;1m..\\c*.*\033[0m\n");
 	MSG_Add("SHELL_CMD_CALL_HELP","Start a batch file from within another batch file.\n");
-	MSG_Add("SHELL_CMD_SUBST_HELP","Assign an internal directory to a drive.\n");
+	MSG_Add("SHELL_CMD_SUBST_HELP", "Assign an internal directory to a drive.\n");
+	MSG_Add("SHELL_CMD_SUBST_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1msubst\033[0m \033[37;1mDRIVE\033[0m \033[36;1mPATH\033[0m\n"
+	        "  \033[32;1msubst\033[0m \033[37;1mDRIVE\033[0m /d\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[37;1mDRIVE\033[0m is a drive to which you want to assign a path.\n"
+	        "  \033[36;1mPATH\033[0m  is a mounted DOS path you want to assign to.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  The path must be on a drive mounted by the \033[32;1mmount\033[0m command.\n"
+	        "  You can remove an assigned drive with the /d option.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1msubst\033[0m \033[37;1md:\033[0m \033[36;1mc:\\games\033[0m\n"
+	        "  \033[32;1msubst\033[0m \033[37;1me:\033[0m \033[36;1m/d\033[0m\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP","Loads a program into upper memory (requires xms=true,umb=true).\n");
 
 	MSG_Add("SHELL_CMD_LS_HELP", "List directory contents.\n");
