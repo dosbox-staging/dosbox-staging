@@ -840,8 +840,21 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_IF_HELP","Performs conditional processing in batch programs.\n");
 	MSG_Add("SHELL_CMD_GOTO_HELP","Jump to a labeled line in a batch script.\n");
 	MSG_Add("SHELL_CMD_SHIFT_HELP","Leftshift commandline parameters in a batch script.\n");
-	MSG_Add("SHELL_CMD_TYPE_HELP","Display the contents of a text-file.\n");
-	MSG_Add("SHELL_CMD_TYPE_HELP_LONG","TYPE [drive:][path][filename]\n");
+	MSG_Add("SHELL_CMD_TYPE_HELP", "Display the contents of a text file.\n");
+	MSG_Add("SHELL_CMD_TYPE_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mtype\033[0m \033[36;1mFILE\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mFILE\033[0m is the name of the file to display.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  The file must be an exact file name, optionally with a path.\n"
+	        "  This command is only for viewing text files, not binary files.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mtype\033[0m \033[36;1mtext.txt\033[0m\n"
+	        "  \033[32;1mtype\033[0m \033[36;1mc:\\dos\\readme.txt\033[0m\n");
 	MSG_Add("SHELL_CMD_REM_HELP","Add comments in a batch file.\n");
 	MSG_Add("SHELL_CMD_REM_HELP_LONG","REM [comment]\n");
 	MSG_Add("SHELL_CMD_NO_WILD","This is a simple version of the command, no wildcards allowed!\n");
