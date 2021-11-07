@@ -451,27 +451,31 @@ void GFX_SetTitle(Bit32s cycles, int /*frameskip*/, bool paused)
 	SDL_SetWindowTitle(sdl.window, title);
 }
 
-int GFX_GetDisplayRefreshRate()
+int8_t GFX_GetDisplayRefreshRate()
 {
-	constexpr auto invalid_refresh = -1;
 	assert(sdl.window);
-	const int display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
-	if (display_in_use < 0) {
-		LOG_ERR("SDL: Could not get the current window index: %s", SDL_GetError());
-		return invalid_refresh;
+
+	SDL_DisplayMode mode = {};
+	const auto display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
+	if (display_in_use < 0)
+		LOG_ERR("SDL: Could not get the current window index: %s",
+		        SDL_GetError());
+	else if (SDL_GetCurrentDisplayMode(display_in_use, &mode) != 0)
+		LOG_ERR("SDL: Could not get the current display mode: %s",
+		        SDL_GetError());
+
+	if (mode.refresh_rate < 23) {
+		LOG_WARNING("VIDEO: Got a strange refresh rate of %d Hz; using 60 Hz instead",
+		            mode.refresh_rate);
+		mode.refresh_rate = 60;
 	}
 
-	SDL_DisplayMode mode;
-	if (SDL_GetCurrentDisplayMode(display_in_use, &mode) != 0) {
-		LOG_ERR("SDL: Could not get the current display mode: %s", SDL_GetError());
-		return invalid_refresh;
+	static int8_t stored_rate = 0;
+	const auto rate = static_cast<int8_t>(std::min(mode.refresh_rate, 120));
+	if (stored_rate != rate) {
+		stored_rate = rate;
 	}
-	if (mode.refresh_rate < 23 || mode.refresh_rate > 500) {
-		LOG_ERR("SDL: Got an unexpected refresh rate of %d Hz; not using it", mode.refresh_rate);
-		return invalid_refresh;
-	}
-
-	return mode.refresh_rate;
+	return stored_rate;
 }
 
 /* This function is SDL_EventFilter which is being called when event is
