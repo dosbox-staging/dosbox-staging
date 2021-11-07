@@ -846,9 +846,22 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_REM_HELP_LONG","REM [comment]\n");
 	MSG_Add("SHELL_CMD_NO_WILD","This is a simple version of the command, no wildcards allowed!\n");
 	MSG_Add("SHELL_CMD_RENAME_HELP","Renames one or more files.\n");
-	MSG_Add("SHELL_CMD_RENAME_HELP_LONG","RENAME [drive:][path]filename1 filename2.\n"
-	        "REN [drive:][path]filename1 filename2.\n\n"
-	        "Note that you can not specify a new drive or path for your destination file.\n");
+	MSG_Add("SHELL_CMD_RENAME_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mren\033[0m \033[37;1mSOURCE\033[0m \033[36;1mDESTINATION\033[0m\n"
+	        "  \033[32;1mrename\033[0m \033[37;1mSOURCE\033[0m \033[36;1mDESTINATION\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[37;1mSOURCE\033[0m      is the name of the file to rename.\n"
+	        "  \033[36;1mDESTINATION\033[0m is the new name for the renamed file.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - The source file must be an exact file name, optionally with a path.\n"
+	        "  - The destination file must be an exact file name without a path.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mren\033[0m \033[37;1moldname\033[0m \033[36;1mnewname\033[0m\n"
+	        "  \033[32;1mren\033[0m \033[37;1mc:\\dos\\file.txt\033[0m \033[36;1mf.txt\033[0m\n");
 	MSG_Add("SHELL_CMD_DELETE_HELP","Removes one or more files.\n");
 	MSG_Add("SHELL_CMD_DELETE_HELP_LONG", "Usage:\n"
 	        "  \033[32;1mdel\033[0m \033[36;1mPATTERN\033[0m\n"
