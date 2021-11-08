@@ -26,6 +26,12 @@ void RESCAN::Run(void)
 
 	Bit8u drive = DOS_GetDefaultDrive();
 
+	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false) ||
+	    cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {
+		WriteOut(MSG_Get("SHELL_CMD_RESCAN_HELP_LONG"));
+		return;
+	}
+
 	if (cmd->FindCommand(1,temp_line)) {
 		//-A -All /A /All
 		if (temp_line.size() >= 2 &&
