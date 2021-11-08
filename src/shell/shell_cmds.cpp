@@ -272,7 +272,7 @@ void DOS_Shell::CMD_HELP(char * args){
 		WriteOut("%s\n", MSG_Get(shell_cmd.help));
 		WriteOut("%s\n", shell_cmd.long_help ? MSG_Get(shell_cmd.long_help)
 		                                     : args);
-	} else if (ScanCMDBool(args, "ALL")) {
+	} else if (ScanCMDBool(args, "A") || ScanCMDBool(args, "ALL")) {
 		// Print help for all the commands
 		PrintHelpForCommands(HELP_LIST::ALL);
 	} else {

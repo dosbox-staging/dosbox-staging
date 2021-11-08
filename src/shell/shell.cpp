@@ -801,8 +801,25 @@ void SHELL_Init() {
 	        "  \033[32;1mecho\033[0m \033[36;1mHello world!\033[0m\n");
 	MSG_Add("SHELL_CMD_EXIT_HELP","Exit from the shell.\n");
 	MSG_Add("SHELL_CMD_EXIT_TOO_SOON", "Preventing an early 'exit' call from terminating.\n");
-	MSG_Add("SHELL_CMD_HELP_HELP","Show help.\n");
-	MSG_Add("SHELL_CMD_HELP_HELP_LONG","HELP [command]\n");
+	MSG_Add("SHELL_CMD_HELP_HELP",
+	        "Displays help information for DOS commands.\n");
+	MSG_Add("SHELL_CMD_HELP_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mhelp\033[0m\n"
+	        "  \033[32;1mhelp\033[0m /a[ll]\n"
+	        "  \033[32;1mhelp\033[0m \033[36;1mCOMMAND\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mCOMMAND\033[0m is the name of an internal DOS command, such as \033[36;1mdir\033[0m.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - Running \033[32;1mecho\033[0m without an argument displays a DOS command list.\n"
+	        "  - You can view a full list of internal commands with the /a or /all option.\n"
+	        "  - Instead of \033[32;1mhelp\033[0m \033[36;1mCOMMAND\033[0m, you can also get command help with \033[36;1mCOMMAND\033[0m /?.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mhelp\033[0m \033[36;1mdir\033[0m\n"
+	        "  \033[32;1mhelp\033[0m /all\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP", "Creates a directory.\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP_LONG",
 	        "Usage:\n"
