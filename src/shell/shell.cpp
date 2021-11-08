@@ -803,9 +803,22 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_EXIT_TOO_SOON", "Preventing an early 'exit' call from terminating.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP","Show help.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP_LONG","HELP [command]\n");
-	MSG_Add("SHELL_CMD_MKDIR_HELP","Make Directory.\n");
-	MSG_Add("SHELL_CMD_MKDIR_HELP_LONG","MKDIR [drive:][path]\n"
-	        "MD [drive:][path]\n");
+	MSG_Add("SHELL_CMD_MKDIR_HELP", "Creates a directory.\n");
+	MSG_Add("SHELL_CMD_MKDIR_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mmd\033[0m \033[36;1mDIRECTORY\033[0m\n"
+	        "  \033[32;1mmkdir\033[0m \033[36;1mDIRECTORY\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mDIRECTORY\033[0m is the name of the directory to create.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - The directory must be an exact name and does not yet exist.\n"
+	        "  - You can specify a path where the directory will be created.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mmd\033[0m \033[36;1mnewdir\033[0m\n"
+	        "  \033[32;1mmd\033[0m \033[36;1mc:\\games\\dir\033[0m\n");
 	MSG_Add("SHELL_CMD_RMDIR_HELP", "Removes a directory.\n");
 	MSG_Add("SHELL_CMD_RMDIR_HELP_LONG",
 	        "Usage:\n"

@@ -100,18 +100,18 @@ void DOS_SetupPrograms(void)
 	        "\n"
 	        "Usage:\n"
 	        "  \033[32;1mrescan\033[0m \033[36;1mDRIVE\033[0m\n"
-	        "  \033[32;1mrescan\033[0m [/A]\n"
+	        "  \033[32;1mrescan\033[0m [/a]\n"
 	        "\n"
 	        "Where:\n"
 	        "  \033[36;1mDRIVE\033[0m is the drive to clear caches.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - Running \033[32;1mrecan\033[0m without an argument clears the caches of the current drive.\n"
-	        "  - You can also clear the caches of all mounted drives with the /A option.\n"
+	        "  - Running \033[32;1mrescan\033[0m without an argument clears the caches of the current drive.\n"
+	        "  - You can also clear the caches of all mounted drives with the /a option.\n"
 	        "\n"
 	        "Examples:\n"
 	        "  \033[32;1mrescan\033[0m \033[36;1mc:\033[0m\n"
-	        "  \033[32;1mrescan\033[0m /A\n");
+	        "  \033[32;1mrescan\033[0m /a\n");
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
 
 	MSG_Add("PROGRAM_INTRO",
