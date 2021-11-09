@@ -729,9 +729,9 @@ typedef struct
 
 typedef struct
 {
+   uint8 order;
    uint16 rate;
    uint16 bark_map_size;
-   uint8 order;
    uint8 amplitude_bits;
    uint8 amplitude_offset;
    uint8 number_of_books;
@@ -3749,6 +3749,7 @@ static int start_decoder(vorb *f)
       len = get32_packet(f);
       f->comment_list[i] = (char*)setup_malloc(f, sizeof(char) * (len+1));
       if (f->comment_list[i] == NULL)               return error(f, VORBIS_outofmem);
+
       for(j=0; j < len; ++j) {
          f->comment_list[i][j] = get8_packet(f);
       }
@@ -4612,6 +4613,7 @@ stb_vorbis *stb_vorbis_open_pushdata(
          *error = VORBIS_need_more_data;
       else
          *error = p.error;
+      vorbis_deinit(&p);
       return NULL;
    }
    f = vorbis_alloc(&p);
