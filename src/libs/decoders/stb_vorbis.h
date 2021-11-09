@@ -3410,21 +3410,21 @@ static int vorbis_decode_packet_rest(vorb *f, int *len, Mode *m, int left_start,
 // INVERSE COUPLING
    for (i = map->coupling_steps-1; i >= 0; --i) {
       int n2 = n >> 1;
-      float *m = f->channel_buffers[map->chan[i].magnitude];
+      float *magnitude = f->channel_buffers[map->chan[i].magnitude];
       float *a = f->channel_buffers[map->chan[i].angle    ];
       for (j=0; j < n2; ++j) {
          float a2,m2;
-         if (m[j] > 0)
+         if (magnitude[j] > 0)
             if (a[j] > 0)
-               m2 = m[j], a2 = m[j] - a[j];
+               m2 = magnitude[j], a2 = magnitude[j] - a[j];
             else
-               a2 = m[j], m2 = m[j] + a[j];
+               a2 = magnitude[j], m2 = magnitude[j] + a[j];
          else
             if (a[j] > 0)
-               m2 = m[j], a2 = m[j] + a[j];
+               m2 = magnitude[j], a2 = magnitude[j] + a[j];
             else
-               a2 = m[j], m2 = m[j] - a[j];
-         m[j] = m2;
+               a2 = magnitude[j], m2 = magnitude[j] - a[j];
+         magnitude[j] = m2;
          a[j] = a2;
       }
    }
