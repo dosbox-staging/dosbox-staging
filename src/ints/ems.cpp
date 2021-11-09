@@ -161,14 +161,18 @@ bool device_EMM::ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retco
 				mem_writeb(GEMMIS_addr+0x0e + frnr,(Bit8u)(frct&0xff));		// physical EMS page number
 				mem_writeb(GEMMIS_addr+0x0f+frnr,0x00);		// EMS frame
 			}
-			/* build non-EMS ROM frames (0xf000-0x10000) */
-			for (Bitu frct=(EMM_PAGEFRAME4K+0x10)/4; frct<0xf0/4; frct++) {
+			/*
+			build non-EMS ROM frames (0xf000-0x10000)
+			Note: This is dead code, because frct is always >= 60
+
+ 			for (Bitu frct=(EMM_PAGEFRAME4K+0x10)/4; frct<0xf0/4; frct++) {
 				mem_writeb(GEMMIS_addr+0x0a+frct*6,0x00);	// frame type: NONE
 				mem_writeb(GEMMIS_addr+0x0b+frct*6,0xff);	// owner: NONE
 				mem_writew(GEMMIS_addr+0x0c+frct*6,0xffff);	// non-EMS frame
 				mem_writeb(GEMMIS_addr+0x0e + frct*6,0xff);	// EMS page number (NONE)
 				mem_writeb(GEMMIS_addr+0x0f+frct*6,0xaa);	// flags: direct mapping
 			}
+			*/
 
 			mem_writeb(GEMMIS_addr+0x18a,0x74);			// ???
 			mem_writeb(GEMMIS_addr+0x18b,0x00);			// no UMB descriptors following
