@@ -379,7 +379,9 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 				char directoryname[CROSS_LEN]={0};
 				char dosboxdirname[CROSS_LEN]={0};
 				safe_strcpy(directoryname, dirname);
-				strncat(directoryname,b,p-b);
+				assert(p >= b);
+				strncat(directoryname, b,
+				        static_cast<size_t>(p - b));
 
 				char d[CROSS_LEN];
 				safe_strcpy(d, basedir);
@@ -388,7 +390,9 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 				//Try to find the corresponding directoryname in DOSBox.
 				if(!dirCache.GetShortName(d,dosboxdirname) ) {
 					//Not a long name, assume it is a short name instead
-					strncpy(dosboxdirname,b,p-b);
+					assert(p >= b);
+					strncpy(dosboxdirname, b,
+					        static_cast<size_t>(p - b));
 					upcase(dosboxdirname);
 				}
 
@@ -520,7 +524,10 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 	const char* leaddir = dos_filename;
 	while ( (leaddir=strchr(leaddir,'\\')) != 0) {
 		char dirname[CROSS_LEN] = {0};
-		strncpy(dirname,dos_filename,leaddir-dos_filename);
+
+		assert(leaddir >= dos_filename);
+		strncpy(dirname, dos_filename,
+		        static_cast<size_t>(leaddir - dos_filename));
 
 		if (logoverlay) LOG_MSG("syncdir: %s",dirname);
 		//Test if directory exist in base.
@@ -1078,7 +1085,9 @@ bool Overlay_Drive::check_if_leading_is_deleted(const char* name){
 	const char* dname = strrchr(name,'\\');
 	if (dname != NULL) {
 		char dirname[CROSS_LEN];
-		strncpy(dirname,name,dname - name);
+
+		assert(dname >= name);
+		strncpy(dirname, name, static_cast<size_t>(dname - name));
 		dirname[dname - name] = 0;
 		if (is_deleted_path(dirname)) return true;
 	}
