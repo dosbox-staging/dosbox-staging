@@ -32,6 +32,7 @@
 #include "inout.h"
 #include "timer.h"
 #include "fs_utils.h"
+#include "std_filesystem.h"
 
 #define OVERLAY_DIR 1
 bool logoverlay = false;
@@ -909,11 +910,15 @@ bool Overlay_Drive::FileUnlink(char * name) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
 			return false;
 		}
-		if (unlink(overlayname) == 0) { //Overlay file removed
-			//Mark basefile as deleted if it exists:
-			if (localDrive::FileExists(name)) add_deleted_file(name,true);
-			remove_DOSname_from_cache(name); //Should be an else ? although better safe than sorry.
-			//Handle this better
+		if (std_fs::remove(overlayname)) {
+			// Overlay file removed, mark basefile as deleted if it
+			// exists:
+			if (localDrive::FileExists(name))
+				add_deleted_file(name, true);
+			remove_DOSname_from_cache(name); // Should be an else ?
+			                                 // although better safe
+			                                 // than sorry.
+			// Handle this better
 			dirCache.DeleteEntry(basename);
 			update_cache(false);
 			//Check if it exists in the base dir as well
@@ -1146,14 +1151,17 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 
 	//No need to check if the original is marked as deleted, as GetFileAttr would fail if it did.
 
-	//Check if overlay source file exists
-	struct stat tempstat;
-	int temp = -1; 
-	if (stat(overlaynameold,&tempstat) == 0) {
-		//Simple rename
-		temp = rename(overlaynameold,overlaynamenew);
-		//TODO CHECK if base has a file with same oldname!!!!! if it does mark it as deleted!!
-		if (localDrive::FileExists(oldname)) add_deleted_file(oldname,true);
+	bool result = false;
+
+	// check if overlaynameold exista and if so rename it to overlaynamenew
+	if (std_fs::exists(overlaynameold)) {
+		std_fs::rename(overlaynameold, overlaynamenew);
+		result = true; // indicate that the rename succeeded
+
+		// Overlay file renamed: mark the old base file as deleted.
+		if (localDrive::FileExists(oldname)) {
+			add_deleted_file(oldname, true);
+		}
 	} else {
 		const auto aa = logoverlay ? GetTicks() : 0;
 		//File exists in the basedrive. Make a copy and mark old one as deleted.
@@ -1174,12 +1182,12 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		//File copied.
 		//Mark old file as deleted
 		add_deleted_file(oldname,true);
-		temp =0; //success
+		result = true; //success
 		if (logoverlay)
 			LOG_MSG("OPTIMISE: update rename with copy took %d",
 			        GetTicksSince(aa));
 	}
-	if (temp ==0) {
+	if (result) {
 		//handle the drive_cache (a bit better)
 		//Ensure that the file is not marked as deleted anymore.
 		if (is_deleted_file(newname)) remove_deleted_file(newname,true);
@@ -1188,7 +1196,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		if (logoverlay)
 			LOG_MSG("OPTIMISE: rename took %d", GetTicksSince(a));
 	}
-	return (temp==0);
+	return result;
 
 }
 #endif
