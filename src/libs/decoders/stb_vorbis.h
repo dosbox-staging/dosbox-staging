@@ -2338,10 +2338,10 @@ static void decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int
                   int b = r->residue_books[c][pass];
                   if (b >= 0) {
                      float *target = residue_buffers[j];
-                     int offset = r->begin + pcount * r->part_size;
-                     int n = r->part_size;
+                     const int part_size = r->part_size;
+                     int offset = r->begin + pcount * part_size;
                      Codebook *book = f->codebooks + b;
-                     if (!residue_decode(f, book, target, offset, n, rtype))
+                     if (!residue_decode(f, book, target, offset, part_size, rtype))
                         goto done;
                   }
                }
