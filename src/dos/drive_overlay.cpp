@@ -614,6 +614,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 			}
 		}
 		close_directory(dirp);
+		dirp = nullptr;
 		//parse directories to add them.
 
 
@@ -641,7 +642,9 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 			safe_strcpy(dirpush, (*i).c_str());
 			static char end[2] = {CROSS_FILESPLIT,0};
 			safe_strcat(dirpush, end); // Linux ?
-			dir_information* dirp = open_directory(dir);
+
+			assert(dirp == nullptr);
+			dirp = open_directory(dir);
 			if (dirp == NULL) continue;
 
 #if OVERLAY_DIR
@@ -651,8 +654,6 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 
 			std::string backupi(*i);
 			// Read complete directory
-			char dir_name[CROSS_LEN];
-			bool is_directory; 
 			if (read_directory_first(dirp, dir_name, is_directory)) {
 				if ((safe_strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(string(dirpush)+dir_name);
 				else if (is_directory) dirnames.push_back(string(dirpush)+dir_name);
@@ -664,8 +665,12 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 				}
 			}
 			close_directory(dirp);
-			for(i = dirnames.begin(); i != dirnames.end(); ++i) {
-				if ( (*i) == backupi) break; //find current directory again, for the next round.
+			dirp = nullptr;
+
+			for (i = dirnames.begin(); i != dirnames.end(); ++i) {
+				if ((*i) == backupi)
+					break; // find current directory again,
+					       // for the next round.
 			}
 		}
 	}
