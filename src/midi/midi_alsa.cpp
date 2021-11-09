@@ -176,11 +176,11 @@ void MidiHandler_alsa::PlayMsg(const uint8_t *msg)
 
 void MidiHandler_alsa::Close()
 {
-	seq = {-1, -1};
 	if (seq_handle) {
 		HaltSequence();
 		snd_seq_close(seq_handle);
 	}
+	seq = {-1, -1};
 }
 
 static bool port_name_matches(const std::string &pattern,
