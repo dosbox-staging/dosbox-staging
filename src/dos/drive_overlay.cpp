@@ -264,7 +264,7 @@ bool OverlayFile::create_copy() {
 
 	FILE* lhandle = this->fhandle;
 	fseek(lhandle,ftell(lhandle),SEEK_SET);
-	int location_in_old_file = ftell(lhandle);
+	const auto location_in_old_file = ftell(lhandle);
 	fseek(lhandle,0L,SEEK_SET);
 	
 	FILE* newhandle = NULL;
