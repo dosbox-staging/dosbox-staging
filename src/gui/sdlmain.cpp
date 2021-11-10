@@ -904,6 +904,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 	 * although it has its own issues.
 	 */
 	if (fullscreen) {
+		SaveWindowPosition();
 		SDL_DisplayMode displayMode;
 		SDL_GetWindowDisplayMode(sdl.window, &displayMode);
 		displayMode.w = width;
@@ -939,6 +940,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		// If we're switching down from fullscreen, then it will use the set window size
 		if (sdl.desktop.switching_fullscreen) {
 			SDL_SetWindowFullscreen(sdl.window, 0);
+			RestoreWindowPosition();
 		}
 	}
 
