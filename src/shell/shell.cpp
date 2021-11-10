@@ -979,8 +979,25 @@ void SHELL_Init() {
 	        "  \033[32;1msubst\033[0m \033[37;1me:\033[0m \033[36;1m/d\033[0m\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP","Loads a program into upper memory (requires xms=true,umb=true).\n");
 
-	MSG_Add("SHELL_CMD_LS_HELP", "List directory contents.\n");
-	MSG_Add("SHELL_CMD_LS_HELP_LONG", "ls [/?] [PATTERN]\n");
+	MSG_Add("SHELL_CMD_LS_HELP",
+	        "Displays directory contents in the wide list format.\n");
+	MSG_Add("SHELL_CMD_LS_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mls\033[0m \033[36;1mPATTERN\033[0m\n"
+	        "  \033[32;1mls\033[0m \033[36;1mPATH\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mPATTERN\033[0m can be either an exact filename or an inexact filename with\n"
+	        "          wildcards, which are the asterisk (*) and the question mark (?).\n"
+	        "  \033[36;1mPATH\033[0m    is an exact path in a mounted DOS drive to list contents.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  The command will list directories in \033[34;1mblue\033[0m, executable DOS programs\n"
+	        "   (*.com, *.exe, *.bat) in \033[32;1mgreen\033[0m, and other files in the normal color.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mls\033[0m \033[36;1mfile.txt\033[0m\n"
+	        "  \033[32;1mls\033[0m \033[36;1mc*.ba?\033[0m\n");
 	MSG_Add("SHELL_CMD_LS_PATH_ERR",
 	        "ls: cannot access '%s': No such file or directory\n");
 
