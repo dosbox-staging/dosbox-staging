@@ -71,7 +71,7 @@ void GFX_Stop(void);
 void GFX_SwitchFullScreen(void);
 bool GFX_StartUpdate(uint8_t * &pixels, int &pitch);
 void GFX_EndUpdate( const Bit16u *changedLines );
-void GFX_PresentFrame();
+void GFX_MaybePresentFrameAtHostRate();
 void GFX_GetSize(int &width, int &height, bool &fullscreen);
 void GFX_LosingFocus(void);
 
