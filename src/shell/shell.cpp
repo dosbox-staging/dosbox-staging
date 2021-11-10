@@ -799,7 +799,20 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  \033[32;1mecho\033[0m \033[36;1moff\033[0m\n"
 	        "  \033[32;1mecho\033[0m \033[36;1mHello world!\033[0m\n");
-	MSG_Add("SHELL_CMD_EXIT_HELP","Exit from the shell.\n");
+	MSG_Add("SHELL_CMD_EXIT_HELP", "Exits from the DOS shell.\n");
+	MSG_Add("SHELL_CMD_EXIT_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mexit\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  This command has no parameters.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  If you start a DOS shell from a program, running \033[32;1mexit\033[0m returns to the program.\n"
+	        "  If there is no DOS program running, the command quits from DOSBox Staging.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mexit\033[0m\n");
 	MSG_Add("SHELL_CMD_EXIT_TOO_SOON", "Preventing an early 'exit' call from terminating.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP",
 	        "Displays help information for DOS commands.\n");
