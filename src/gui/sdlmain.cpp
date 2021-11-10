@@ -299,6 +299,11 @@ struct SDL_Block {
 			bool adjusted_initial_size = false;
 			int initial_x_pos = -1;
 			int initial_y_pos = -1;
+			// The window position is saved before switching to
+			// fullscreen mode
+			int saved_x_position = SDL_WINDOWPOS_CENTERED;
+			int saved_y_position = SDL_WINDOWPOS_CENTERED;
+			bool position_is_saved = false;
 		} window = {};
 		struct {
 			int width = 0;
@@ -797,6 +802,43 @@ static void safe_set_window_size(const int w, const int h)
 }
 
 static Pacer render_pacer("Render", 7000, Pacer::LogLevel::NOTHING);
+
+static void SaveWindowPosition()
+{
+	if (sdl.desktop.window.position_is_saved)
+		return;
+	
+	SDL_GetWindowPosition(sdl.window, &sdl.desktop.window.saved_x_position,
+	                      &sdl.desktop.window.saved_y_position);
+	sdl.desktop.window.position_is_saved = true;
+}
+
+static void RestoreWindowPosition()
+{
+	if (!sdl.desktop.window.position_is_saved)
+		return;
+
+	// SDL has a problem where repeated fullscreen and window-mode transitions will steadily "move" the window.
+	// This is a workaround for that problem by measuring this bias once, and then always applying it.
+	static int x_bias = 0;
+	static int y_bias = 0;
+	static bool bias_is_set = false;
+
+	int desired_x = sdl.desktop.window.saved_x_position - x_bias;
+	int desired_y = sdl.desktop.window.saved_y_position - y_bias;
+	SDL_SetWindowPosition(sdl.window, desired_x, desired_y);
+
+	sdl.desktop.window.position_is_saved = false;
+
+	if (!bias_is_set) {
+		int actual_x = 0;
+		int actual_y = 0;
+		SDL_GetWindowPosition(sdl.window, &actual_x, &actual_y);
+		x_bias = desired_x - actual_x;
+		y_bias = desired_y - actual_y;
+		bias_is_set = true;
+	}
+}
 
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
                                  int width,
