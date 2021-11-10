@@ -943,7 +943,23 @@ void SHELL_Init() {
 	        "  \033[32;1mcopy\033[0m \033[37;1msource.bat\033[0m \033[36;1mnew.bat\033[0m\n"
 	        "  \033[32;1mcopy\033[0m \033[37;1mfile1.txt+file2.txt\033[0m \033[36;1mfile3.txt\033[0m\n"
 	        "  \033[32;1mcopy\033[0m \033[37;1m..\\c*.*\033[0m\n");
-	MSG_Add("SHELL_CMD_CALL_HELP","Start a batch file from within another batch file.\n");
+	MSG_Add("SHELL_CMD_CALL_HELP",
+	        "Starts a batch program from within another batch program.\n");
+	MSG_Add("SHELL_CMD_CALL_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mcall\033[0m \033[37;1mBATCH\033[0m \033[36;1m[PARAMETERS]\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[37;1mBATCH\033[0m      is a batch program to launch.\n"
+	        "  \033[36;1mPARAMETERS\033[0m are optional parameters for the batch program.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  After calling another batch program, the original batch program will\n"
+	        "  resume running after the other batch program ends.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mcall\033[0m \033[37;1mmybatch.bat\033[0m\n"
+	        "  \033[32;1mcall\033[0m \033[37;1mfile.bat\033[0m \033[36;1mHello world!\033[0m\n");
 	MSG_Add("SHELL_CMD_SUBST_HELP", "Assign an internal directory to a drive.\n");
 	MSG_Add("SHELL_CMD_SUBST_HELP_LONG",
 	        "Usage:\n"
