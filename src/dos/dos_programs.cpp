@@ -96,23 +96,24 @@ void DOS_SetupPrograms(void)
 	MSG_Add("MSCDEX_WARNING_NO_OPTION", "MSCDEX: Warning: Ignoring unsupported option '%s'.\n");
 
 	MSG_Add("SHELL_CMD_RESCAN_HELP_LONG",
-	        "Clears the caches of a mounted drive.\n"
+	        "Scans for changes on mounted DOS drives.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  \033[32;1mrescan\033[0m \033[36;1mDRIVE\033[0m\n"
 	        "  \033[32;1mrescan\033[0m [/a]\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mDRIVE\033[0m is the drive to clear caches.\n"
+	        "  \033[36;1mDRIVE\033[0m is the drive to scan for changes.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - Running \033[32;1mrescan\033[0m without an argument clears the caches of the current drive.\n"
-	        "  - You can also clear the caches of all mounted drives with the /a option.\n"
+	        "  - Running \033[32;1mrescan\033[0m without an argument scans for changes of the current drive.\n"
+	        "  - Changes to this drive made on the host will then be reflected inside DOS.\n"
+	        "  - You can also scan for changes on all mounted drives with the /a option.\n"
 	        "\n"
 	        "Examples:\n"
 	        "  \033[32;1mrescan\033[0m \033[36;1mc:\033[0m\n"
 	        "  \033[32;1mrescan\033[0m /a\n");
-	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
+	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive re-scanned.\n");
 
 	MSG_Add("PROGRAM_INTRO",
 	        "\033[2J\033[32;1mWelcome to DOSBox Staging\033[0m, an x86 emulator with sound and graphics.\n"
@@ -121,7 +122,7 @@ void DOS_SetupPrograms(void)
 	        "For information about basic mount type \033[34;1mintro mount\033[0m\n"
 	        "For information about CD-ROM support type \033[34;1mintro cdrom\033[0m\n"
 	        "For information about special keys type \033[34;1mintro special\033[0m\n"
-	        "For more imformation, visit DOSBox Staging wiki:\033[34;1m\n" WIKI_URL
+	        "For more information, visit DOSBox Staging wiki:\033[34;1m\n" WIKI_URL
 	        "\033[0m\n"
 	        "\n"
 	        "\033[31;1mDOSBox will stop/exit without a warning if an error occurred!\033[0m\n");
@@ -204,7 +205,7 @@ void DOS_SetupPrograms(void)
 	        "\033[33;1m%s+Enter\033[0m  Switch between fullscreen and window mode.\n"
 	        "\033[33;1m%s+Pause\033[0m  Pause/Unpause emulator.\n"
 	        "\033[33;1m%s+F1\033[0m   %s Start the \033[33mkeymapper\033[0m.\n"
-	        "\033[33;1m%s+F4\033[0m   %s Swap mounted disk image, update directory cache for all drives.\n"
+	        "\033[33;1m%s+F4\033[0m   %s Swap mounted disk image, scan for changes on all drives.\n"
 	        "\033[33;1m%s+F5\033[0m   %s Save a screenshot.\n"
 	        "\033[33;1m%s+F6\033[0m   %s Start/Stop recording sound output to a wave file.\n"
 	        "\033[33;1m%s+F7\033[0m   %s Start/Stop recording video output to a zmbv file.\n"
