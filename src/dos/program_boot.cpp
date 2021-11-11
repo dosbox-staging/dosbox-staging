@@ -148,6 +148,24 @@ void BOOT::Run(void) {
         printError();
         return;
     }
+
+    if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false) ||
+	cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {
+	    WriteOut(MSG_Get("SHELL_CMD_BOOT_HELP_LONG"));
+	    return;
+    }
+    if (cmd->GetCount() == 1) {
+	    cmd->FindCommand(1, temp_line);
+	    if (temp_line.length() == 2 && toupper(temp_line[0]) >= 'A' &&
+		toupper(temp_line[0]) <= 'Z' && temp_line[1] == ':') {
+		    drive = toupper(temp_line[0]);
+		    if ((drive != 'A') && (drive != 'C') && (drive != 'D')) {
+			    printError();
+			    return;
+		    }
+		    i++;
+	    }
+    }
     while (i<cmd->GetCount()) {
         if (cmd->FindCommand(i+1, temp_line)) {
             if ((temp_line == "-l") || (temp_line == "-L")) {

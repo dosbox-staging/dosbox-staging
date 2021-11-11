@@ -215,19 +215,37 @@ void DOS_SetupPrograms(void)
 	        "\033[33;1m%s+F12\033[0m  %s Speed up emulation.\n"
 	        "\033[33;1m%s+F12\033[0m    Unlock speed (turbo button/fast forward).\n");
 
+	MSG_Add("SHELL_CMD_BOOT_HELP_LONG",
+	        "Boots DOSBox Staging from a DOS drive or disk image.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  \033[32;1mboot\033[0m \033[37;1mDRIVE\033[0m\n"
+	        "  \033[32;1mboot\033[0m \033[36;1mIMAGEFILE\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[37;1mDRIVE\033[0m is a drive to boot from, must be \033[37;1mA:\033[0m, \033[37;1mC:\033[0m, or \033[37;1mD:\033[0m.\n"
+	        "  \033[36;1mIMAGEFILE\033[0m is one or more floppy images, separated by spaces.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  A DOS drive letter must have been mounted previously with \033[32;1mimgmount\033[0m command.\n"
+	        "  The DOS drive or disk image must be bootable, containing DOS system files.\n"
+	        "  If more than one disk images are specified, you can swap them with a hotkey.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mboot\033[0m \033[37;1mc:\033[0m\n"
+	        "  \033[32;1mboot\033[0m \033[36;1mdisk1.ima disk2.ima\033[0m\n");
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_WRITE_PROTECTED","Image file is read-only! Might create problems.\n");
 	MSG_Add("PROGRAM_BOOT_PRINT_ERROR",
-	        "This command boots DOSBox from either a floppy or hard disk image.\n\n"
+	        "This command boots DOSBox Staging from either a floppy or hard disk image.\n\n"
 	        "For this command, one can specify a succession of floppy disks swappable\n"
 	        "by pressing %s+F4, and -l specifies the mounted drive to boot from.  If\n"
 	        "no drive letter is specified, this defaults to booting from the A drive.\n"
 	        "The only bootable drive letters are A, C, and D.  For booting from a hard\n"
 	        "drive (C or D), the image should have already been mounted using the\n"
 	        "\033[34;1mIMGMOUNT\033[0m command.\n\n"
-	        "The syntax of this command is:\n\n"
-	        "\033[34;1mBOOT [diskimg1.img diskimg2.img] [-l driveletter]\033[0m\n");
+	        "Type \033[34;1mBOOT /?\033[0m for the syntax of this command.\033[0m\n");
 	MSG_Add("PROGRAM_BOOT_UNABLE","Unable to boot off of drive %c");
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s");
