@@ -96,10 +96,10 @@ static inline void DelayUs(const int microseconds)
 }
 
 static inline void DelayPrecise(double seconds) {
-    static double estimate = 5e-3;
-    static double mean = 5e-3;
-    static double m2 = 0;
-    static int64_t count = 1;
+    thread_local double estimate = 5e-3;
+    thread_local double mean = 5e-3;
+    thread_local double m2 = 0;
+    thread_local int64_t count = 1;
 
     while (seconds > estimate) {
         const auto start = std::chrono::steady_clock::now();
