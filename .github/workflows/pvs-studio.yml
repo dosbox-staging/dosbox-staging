@@ -11,7 +11,7 @@ jobs:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-20.04
     env:
-      debfile: pvs-studio-7.15.53844.169-amd64.deb
+      debfile: pvs-studio-7.15.53844.172-amd64.deb
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -30,7 +30,7 @@ jobs:
 
       - name:  Fetch PVS-Studio package
         if:    steps.cache-pvs.outputs.cache-hit != 'true'
-        run:   wget "https://files.viva64.com/${debfile}" -O "pvs-package/pvs.deb"
+        run:   wget "https://cdn.pvs-studio.com/${debfile}" -O "pvs-package/pvs.deb"
 
       - name: Install dependencies
         run: |
