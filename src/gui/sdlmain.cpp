@@ -362,6 +362,7 @@ struct SDL_Block {
 	SDL_Window *window = nullptr;
 	SDL_Renderer *renderer = nullptr;
 	std::atomic_bool is_frame_due = false;
+	std::atomic_int remaining_burst_frames = 0;
 	update_texture_f *update_texture = UpdateAndPresentSurface;
 	present_frame_f *present_frame = DoNothing;
 	present_frame_f *maybe_present_frame_on_change = DoNothing;
@@ -1237,6 +1238,17 @@ static bool IsFrameDue()
 	return sdl.is_frame_due.exchange(false);
 }
 
+static bool IsBurstFrameAllowed()
+{
+	const bool burst_allowed = sdl.remaining_burst_frames.load() > 0;
+	if (burst_allowed)
+		--sdl.remaining_burst_frames;
+	else
+		LOG_WARNING("Out of burst frames");
+
+	return burst_allowed;
+}
+
 // Updates SDL surface texture with the current changed lines (if any) and also
 // draws the content to the screen if the host can handle a frame.
 static void UpdateAndPresentSurface([[maybe_unused]] const uint16_t *changedLines)
@@ -2047,7 +2059,9 @@ static void update_frame_tempo()
 
 	rate.store(current_rate);
 	auto &is_due = sdl.is_frame_due;
+	auto &remaining_burst_frames = sdl.remaining_burst_frames;
 	std::thread t([&]() {
+		constexpr int max_burst_frames = 2;
 		const auto rounded_us = (1000000 + rate - 1) / rate;
 		const auto tempo = rounded_us * 1e-6;
 		while (true) {
@@ -2057,6 +2071,8 @@ static void update_frame_tempo()
 			//const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 			//LOG_INFO("SDL: Frame tempo wanted %dus, got: %lldus", rounded_us, elapsed);
 			is_due.store(true);
+			if (remaining_burst_frames.load() < max_burst_frames)
+				++remaining_burst_frames;
 		}
 	});
 	set_thread_name(t, "dosbox:fpstempo");
@@ -2087,9 +2103,9 @@ static inline void MaybePresentFrameOnChange()
 		render_pacer.Reset();
 }
 
-static inline void MaybePresentFrameOnChangeIfFrameIsDue()
+static inline void MaybePresentFrameOnChangeIfBurstAllowed()
 {
-	if (sdl.updating && IsFrameDue())
+	if (sdl.updating && IsBurstFrameAllowed())
 		sdl.present_frame();
 	else
 		render_pacer.Reset();
@@ -2875,7 +2891,7 @@ static void GUI_StartUp(Section *sec)
 		sdl.maybe_present_frame_on_change = MaybePresentFrameOnChange;
 		sdl.maybe_present_frame_at_host_rate = DoNothing;
 	} else if (frame_rate_choice == "capped") {
-		sdl.maybe_present_frame_on_change = MaybePresentFrameOnChangeIfFrameIsDue;
+		sdl.maybe_present_frame_on_change = MaybePresentFrameOnChangeIfBurstAllowed;
 		sdl.maybe_present_frame_at_host_rate = DoNothing;
 	} else if (frame_rate_choice == "host") {
 		sdl.maybe_present_frame_on_change = DoNothing;
