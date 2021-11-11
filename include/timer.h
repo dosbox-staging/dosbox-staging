@@ -20,6 +20,7 @@
 #define DOSBOX_TIMER_H
 
 #include <cassert>
+#include <cmath>
 
 #include <chrono>
 #include <limits>
@@ -94,56 +95,31 @@ static inline void DelayUs(const int microseconds)
 	std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
 }
 
-// The duration to use for precise sleep
-static constexpr int precise_delay_duration_us = 50;
-// based on work from:
-// https://blat-blatnik.github.io/computerBear/making-accurate-sleep-function/
-static inline void DelayPrecise(const int microseconds)
-{
-	// The estimate of how long the sleep should take (microseconds)
-	static double estimate = 5e-5;
-	// Use the estimate value as the default mean time taken
-	static double mean = 5e-5;
-	static double m2 = 0;
-	static int64_t count = 1;
-	// Original code operated on seconds, convert
-	double seconds = microseconds / 1e6;
-	// sleep as long as we can, then spinlock the rest
-	while (seconds > estimate) {
-		const auto start = GetTicksUs();
-		DelayUs(precise_delay_duration_us);
-		// Original code operated on seconds, convert
-		const double observed = GetTicksUsSince(start) / 1e6;
-		seconds -= observed;
-		++count;
-		const double delta = observed - mean;
-		mean += delta / static_cast<double>(count);
-		m2 += delta * (observed - mean);
-		const double stddev = std::sqrt(m2 / static_cast<double>(count - 1));
-		estimate = mean + stddev;
-	}
-	// spin lock
-	const auto spin_start = GetTicksUs();
-	const auto spin_remain = static_cast<int>(seconds * 1e6);
-	do {
-		std::this_thread::yield();
-	} while (GetTicksUsSince(spin_start) <= spin_remain);
-}
+static inline void DelayPrecise(double seconds) {
+    static double estimate = 5e-3;
+    static double mean = 5e-3;
+    static double m2 = 0;
+    static int64_t count = 1;
 
-static inline bool CanDelayPrecise()
-{
-	// The tolerance to allow for sleep variation
-	constexpr int precise_delay_tolerance_us = precise_delay_duration_us;
-	bool is_precise = true;
-	for (int i = 0; i < 10; i++) {
-		const auto start = GetTicksUs();
-		DelayUs(precise_delay_duration_us);
-		const auto elapsed = GetTicksUsSince(start);
-		if (std::abs(elapsed - precise_delay_duration_us) >
-		    precise_delay_tolerance_us)
-			is_precise = false;
-	}
-	return is_precise;
+    while (seconds > estimate) {
+        const auto start = std::chrono::steady_clock::now();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        const auto end = std::chrono::steady_clock::now();
+
+        const auto observed = (end - start).count() * 1e-9;
+        seconds -= observed;
+
+        ++count;
+        const auto delta = observed - mean;
+        mean += delta / count;
+        m2   += delta * (observed - mean);
+        const auto stddev = std::sqrt(m2 / (count - 1));
+        estimate = mean + stddev;
+    }
+
+    // spin lock
+    const auto start = std::chrono::steady_clock::now();
+    while ((std::chrono::steady_clock::now() - start).count() * 1e-9 < seconds);
 }
 
 #endif
