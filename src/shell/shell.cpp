@@ -881,7 +881,21 @@ void SHELL_Init() {
 	        "  \033[32;1mset\033[0m\n"
 	        "  \033[32;1mset\033[0m \033[37;1mname\033[0m=\033[36;1mvalue\033[0m\n");
 	MSG_Add("SHELL_CMD_IF_HELP","Performs conditional processing in batch programs.\n");
-	MSG_Add("SHELL_CMD_GOTO_HELP","Jump to a labeled line in a batch script.\n");
+	MSG_Add("SHELL_CMD_GOTO_HELP",
+	        "Jumps to a labeled line in a batch program.\n");
+	MSG_Add("SHELL_CMD_GOTO_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mgoto\033[0m \033[36;1mLABEL\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mLABEL\033[0m is text string used in the batch program as a label.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  A label is on a line by itself, beginning with a colon (:).\n"
+	        "  The label must be unique, and can be anywhere within the batch program.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mgoto\033[0m \033[36;1mmylabel\033[0m\n");
 	MSG_Add("SHELL_CMD_SHIFT_HELP","Leftshift commandline parameters in a batch script.\n");
 	MSG_Add("SHELL_CMD_TYPE_HELP", "Display the contents of a text file.\n");
 	MSG_Add("SHELL_CMD_TYPE_HELP_LONG",
