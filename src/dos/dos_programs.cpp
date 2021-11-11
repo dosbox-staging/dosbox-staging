@@ -73,6 +73,21 @@ void DOS_SetupPrograms(void)
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS","Overlay %s on drive %c mounted.\n");
 	MSG_Add("PROGRAM_MOUNT_MOVE_Z_ERROR_1", "Can't move drive Z. Drive %c is mounted already.\n");
 
+	MSG_Add("SHELL_CMD_MEM_HELP_LONG",
+	        "Displays the DOS memory information.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  \033[32;1mmem\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  This command has no parameters.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  This command shows the DOS memory status, including the free conventional\n"
+	        "  memory, UMB (upper) memory, XMS (extended) memory, and EMS (expanded) memory.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mmem\033[0m\n");
 	MSG_Add("PROGRAM_MEM_CONVEN", "%10d kB free conventional memory\n");
 	MSG_Add("PROGRAM_MEM_EXTEND", "%10d kB free extended memory\n");
 	MSG_Add("PROGRAM_MEM_EXPAND", "%10d kB free expanded memory\n");
