@@ -597,19 +597,22 @@
 		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
 	}
 
-#define MULW(op1,load,save)									\
-{															\
-	Bitu tempu=(Bitu)reg_ax*(Bitu)(load(op1));				\
-	reg_ax=(Bit16u)(tempu);									\
-	reg_dx=(Bit16u)(tempu >> 16);							\
-	FillFlagsNoCFOF();										\
-	SETFLAGBIT(ZF,reg_ax == 0);								\
-	if (reg_dx) {											\
-		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
-	} else {												\
-		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
-	}														\
-}
+#define MULW(op1, load, save) \
+	{ \
+		const uint32_t res = static_cast<uint32_t>(reg_ax) * \
+		                     static_cast<uint32_t>(load(op1)); \
+		reg_ax = static_cast<uint16_t>(res); \
+		reg_dx = static_cast<uint16_t>(res >> 16); \
+		FillFlagsNoCFOF(); \
+		SETFLAGBIT(ZF, reg_ax == 0); \
+		if (reg_dx) { \
+			SETFLAGBIT(CF, true); \
+			SETFLAGBIT(OF, true); \
+		} else { \
+			SETFLAGBIT(CF, false); \
+			SETFLAGBIT(OF, false); \
+		} \
+	}
 
 #define MULD(op1,load,save)									\
 {															\
