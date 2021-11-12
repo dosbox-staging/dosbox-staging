@@ -762,9 +762,20 @@ void SHELL_Init() {
 	        "  ..   Specifies that you want to change to the parent directory.\n\n"
 	        "Type CD drive: to display the current directory in the specified drive.\n"
 	        "Type CD without parameters to display the current drive and directory.\n");
-
-	MSG_Add("SHELL_CMD_CLS_HELP", "Clear the screen.\n");
-
+	MSG_Add("SHELL_CMD_CLS_HELP", "Clears the DOS screen.\n");
+	MSG_Add("SHELL_CMD_CLS_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mcls\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  This command has no parameters.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running \033[32;1mcls\033[0m clears all texts on the DOS screen, except for the command\n"
+	        "  prompt (e.g. \033[32;1mZ:\\>\033[0m or \033[32;1mC:\\GAMES>\033[0m) on the top-left corner of the screen.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mcls\033[0m\n");
 	MSG_Add("SHELL_CMD_DIR_HELP",
 	        "Displays a list of files and subdirectories in a directory.\n");
 	MSG_Add("SHELL_CMD_DIR_HELP_LONG",
