@@ -891,7 +891,30 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  \033[32;1mset\033[0m\n"
 	        "  \033[32;1mset\033[0m \033[37;1mname\033[0m=\033[36;1mvalue\033[0m\n");
-	MSG_Add("SHELL_CMD_IF_HELP","Performs conditional processing in batch programs.\n");
+	MSG_Add("SHELL_CMD_IF_HELP",
+	        "Performs conditional processing in batch programs.\n");
+	MSG_Add("SHELL_CMD_IF_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mif\033[0m \033[35;1m[not]\033[0m \033[36;1merrorlevel\033[0m \033[37;1mNUMBER\033[0m COMMAND\n"
+	        "  \033[32;1mif\033[0m \033[35;1m[not]\033[0m \033[37;1mSTR1==STR2\033[0m COMMAND\n"
+	        "  \033[32;1mif\033[0m \033[35;1m[not]\033[0m \033[36;1mexist\033[0m \033[37;1mFILE\033[0m COMMAND\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[37;1mNUMBER\033[0m     is a positive integer less or equal to the desired value.\n"
+	        "  \033[37;1mSTR1==STR2\033[0m compares two text strings (case sensivitive).\n"
+	        "  \033[37;1mFILE\033[0m       is an exact file name to check for existence.\n"
+	        "  COMMAND    is a DOS command/program to run, optionally with parameters.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  The COMMAND will only run if any of the three conditions is true.\n"
+	        "  If \033[38;1mnot\033[0m is specified, then the command runs only with the false condition.\n"
+	        "  The \033[36;1merrorlevel\033[0m condition is useful for checking if a programs ran correctly.\n"
+	        "  If either \033[37;1mSTR1\033[0m or \033[37;1mSTR2\033[0m may be empty, you can enclose them in quotes (\").\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mif\033[0m \033[36;1merrorlevel\033[0m \033[37;1m2\033[0m dir\n"
+	        "  \033[32;1mif\033[0m \033[37;1m\"%%myvar%%\"==\"mystring\"\033[0m echo Hello world!\n"
+	        "  \033[32;1mif\033[0m \033[35;1mnot\033[0m \033[36;1mexist\033[0m \033[37;1mfile.txt\033[0m exit\n");
 	MSG_Add("SHELL_CMD_GOTO_HELP",
 	        "Jumps to a labeled line in a batch program.\n");
 	MSG_Add("SHELL_CMD_GOTO_HELP_LONG",
