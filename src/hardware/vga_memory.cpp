@@ -144,9 +144,8 @@ public:
 		addr = PAGING_GetPhysicalAddress(addr) & vgapages.mask;
 		addr += vga.svga.bank_read_full;
 		addr = CHECKED2(addr);
-		uint16_t ret = (readHandler(addr + 0) << 0);
-		ret     |= (readHandler(addr+1) << 8);
-		return  ret;
+		return static_cast<uint16_t>((readHandler(addr + 0) << 0) |
+		                             (readHandler(addr + 1) << 8));
 	}
 
 	uint32_t readd(PhysPt addr)
@@ -154,11 +153,10 @@ public:
 		addr = PAGING_GetPhysicalAddress(addr) & vgapages.mask;
 		addr += vga.svga.bank_read_full;
 		addr = CHECKED2(addr);
-		uint32_t ret = (readHandler(addr + 0) << 0);
-		ret     |= (readHandler(addr+1) << 8);
-		ret     |= (readHandler(addr+2) << 16);
-		ret     |= (readHandler(addr+3) << 24);
-		return ret;
+		return static_cast<uint32_t>((readHandler(addr + 0) << 0) |
+		                             (readHandler(addr + 1) << 8) |
+		                             (readHandler(addr + 2) << 16) |
+		                             (readHandler(addr + 3) << 24));
 	}
 };
 
@@ -240,9 +238,8 @@ public:
 		addr = PAGING_GetPhysicalAddress(addr) & vgapages.mask;
 		addr += vga.svga.bank_read_full;
 		addr = CHECKED(addr);
-		uint16_t ret = (readHandler(addr + 0) << 0);
-		ret     |= (readHandler(addr+1) << 8);
-		return ret;
+		return static_cast<uint16_t>((readHandler(addr + 0) << 0) |
+		                             (readHandler(addr + 1) << 8));
 	}
 
 	uint32_t readd(PhysPt addr)
@@ -250,11 +247,10 @@ public:
 		addr = PAGING_GetPhysicalAddress(addr) & vgapages.mask;
 		addr += vga.svga.bank_read_full;
 		addr = CHECKED(addr);
-		uint32_t ret = (readHandler(addr + 0) << 0);
-		ret     |= (readHandler(addr+1) << 8);
-		ret     |= (readHandler(addr+2) << 16);
-		ret     |= (readHandler(addr+3) << 24);
-		return ret;
+		return static_cast<uint32_t>((readHandler(addr + 0) << 0) |
+		                             (readHandler(addr + 1) << 8) |
+		                             (readHandler(addr + 2) << 16) |
+		                             (readHandler(addr + 3) << 24));
 	}
 };
 
@@ -405,9 +401,9 @@ public:
 		addr += vga.svga.bank_read_full;
 		addr = CHECKED(addr);
 		if (GCC_UNLIKELY(addr & 1)) {
-			uint16_t ret = (readHandler_byte(addr + 0) << 0);
-			ret |= (readHandler_byte(addr + 1) << 8);
-			return ret;
+			return static_cast<uint16_t>(
+			        (readHandler_byte(addr + 0) << 0) |
+			        (readHandler_byte(addr + 1) << 8));
 		} else
 			return readHandler_word(addr);
 	}
@@ -418,11 +414,12 @@ public:
 		addr += vga.svga.bank_read_full;
 		addr = CHECKED(addr);
 		if (GCC_UNLIKELY(addr & 3)) {
-			uint32_t ret = (readHandler_byte(addr + 0) << 0);
-			ret |= (readHandler_byte(addr + 1) << 8);
-			ret |= (readHandler_byte(addr + 2) << 16);
-			ret |= (readHandler_byte(addr + 3) << 24);
-			return ret;
+			return static_cast<uint32_t>(
+			        (readHandler_byte(addr + 0) << 0) |
+			        (readHandler_byte(addr + 1) << 8) |
+			        (readHandler_byte(addr + 2) << 16) |
+			        (readHandler_byte(addr + 3) << 24));
+
 		} else
 			return readHandler_dword(addr);
 	}
@@ -676,20 +673,18 @@ public:
 	{
 		addr = vga.svga.bank_read_full + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr = CHECKED4(addr);
-		Bitu ret = (readHandler(addr+0) << 0);
-		ret     |= (readHandler(addr+1) << 8);
-		return ret;
+		return static_cast<uint16_t>((readHandler(addr + 0) << 0) |
+		                             (readHandler(addr + 1) << 8));
 	}
 
 	uint32_t readd(PhysPt addr)
 	{
 		addr = vga.svga.bank_read_full + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr = CHECKED4(addr);
-		Bitu ret = (readHandler(addr+0) << 0);
-		ret     |= (readHandler(addr+1) << 8);
-		ret     |= (readHandler(addr+2) << 16);
-		ret     |= (readHandler(addr+3) << 24);
-		return ret;
+		return static_cast<uint32_t>((readHandler(addr + 0) << 0) |
+		                             (readHandler(addr + 1) << 8) |
+		                             (readHandler(addr + 2) << 16) |
+		                             (readHandler(addr + 3) << 24));
 	}
 };
 
