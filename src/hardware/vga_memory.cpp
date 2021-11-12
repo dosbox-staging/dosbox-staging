@@ -21,6 +21,7 @@
 #include <string.h>
 #include "dosbox.h"
 #include "mem.h"
+#include "mem_host.h"
 #include "vga.h"
 #include "paging.h"
 #include "pic.h"
@@ -592,7 +593,7 @@ public:
 		addr = PAGING_GetPhysicalAddress(addr) & vgapages.mask;
 		addr += vga.svga.bank_read_full;
 		addr = CHECKED(addr);
-		return host_readw(&vga.mem.linear[addr]);
+		return host_readw_at(vga.mem.linear, addr);
 	}
 
 	uint32_t readd(PhysPt addr)
@@ -600,7 +601,7 @@ public:
 		addr = PAGING_GetPhysicalAddress(addr) & vgapages.mask;
 		addr += vga.svga.bank_read_full;
 		addr = CHECKED(addr);
-		return host_readd(&vga.mem.linear[addr]);
+		return host_readd_at(vga.mem.linear, addr);
 	}
 
 	void writeb(PhysPt addr, uint8_t val)
@@ -617,8 +618,8 @@ public:
 		addr = PAGING_GetPhysicalAddress(addr) & vgapages.mask;
 		addr += vga.svga.bank_write_full;
 		addr = CHECKED(addr);
-		MEM_CHANGED( addr );
-		host_writew(&vga.mem.linear[addr], val);
+		MEM_CHANGED(addr);
+		host_writew_at(vga.mem.linear, addr, val);
 	}
 
 	void writed(PhysPt addr, uint32_t val)
@@ -626,8 +627,8 @@ public:
 		addr = PAGING_GetPhysicalAddress(addr) & vgapages.mask;
 		addr += vga.svga.bank_write_full;
 		addr = CHECKED(addr);
-		MEM_CHANGED( addr );
-		host_writed(&vga.mem.linear[addr], val);
+		MEM_CHANGED(addr);
+		host_writed_at(vga.mem.linear, addr, val);
 	}
 };
 
@@ -710,14 +711,14 @@ public:
 	{
 		addr = PAGING_GetPhysicalAddress(addr) - vga.lfb.addr;
 		addr = CHECKED(addr);
-		return host_readw(&vga.mem.linear[addr]);
+		return host_readw_at(vga.mem.linear, addr);
 	}
 
 	uint32_t readd(PhysPt addr)
 	{
 		addr = PAGING_GetPhysicalAddress(addr) - vga.lfb.addr;
 		addr = CHECKED(addr);
-		return host_readd(&vga.mem.linear[addr]);
+		return host_readd_at(vga.mem.linear, addr);
 	}
 
 	void writeb(PhysPt addr, uint8_t val)
@@ -732,7 +733,7 @@ public:
 	{
 		addr = PAGING_GetPhysicalAddress(addr) - vga.lfb.addr;
 		addr = CHECKED(addr);
-		host_writew(&vga.mem.linear[addr], val);
+		host_writew_at(vga.mem.linear, addr, val);
 		MEM_CHANGED( addr );
 	}
 
@@ -740,7 +741,7 @@ public:
 	{
 		addr = PAGING_GetPhysicalAddress(addr) - vga.lfb.addr;
 		addr = CHECKED(addr);
-		host_writed(&vga.mem.linear[addr], val);
+		host_writed_at(vga.mem.linear, addr, val);
 		MEM_CHANGED( addr );
 	}
 };
