@@ -395,6 +395,7 @@ void change_waveform(Bitu regbase, op_type* op_pt) {
 	if (regbase>=ARC_SECONDSET) regbase -= (ARC_SECONDSET-22);	// second set starts at 22
 #endif
 	// waveform selection
+	assert(regbase < sizeof(wave_sel));
 	op_pt->cur_wmask = wavemask[wave_sel[regbase]];
 	op_pt->cur_wform = &wavtable[waveform[wave_sel[regbase]]];
 	// (might need to be adapted to waveform type here...)
@@ -456,6 +457,8 @@ void enable_operator(Bitu regbase, op_type* op_pt, Bit32u act_type) {
 		Bits wselbase = regbase;
 		if (wselbase>=ARC_SECONDSET) wselbase -= (ARC_SECONDSET-22);	// second set starts at 22
 
+		assert(wselbase >= 0 &&
+		       static_cast<size_t>(wselbase) < sizeof(wave_sel));
 		op_pt->tcount = wavestart[wave_sel[wselbase]]*FIXEDPT;
 
 		// start with attack mode
