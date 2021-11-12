@@ -1133,6 +1133,8 @@ Bit8u DOS_FCBWrite(Bit16u seg,Bit16u offset,Bit16u recno) {
 	Bit16u min = (Bit16u)((seconds % 3600)/60);
 	Bit16u sec = (Bit16u)(seconds % 60);
 	time = DOS_PackTime(hour,min,sec);
+
+	assert(fhandle < DOS_FILES);
 	Files[fhandle]->time = time;
 	Files[fhandle]->date = date;
 	fcb.SetSizeDateTime(size,date,time);
