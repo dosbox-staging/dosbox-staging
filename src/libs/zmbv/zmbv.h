@@ -112,6 +112,11 @@ private:
 		INLINE void CopyBlock(int vx, int vy,FrameBlock * block);
 public:
 	VideoCodec();
+	~VideoCodec();
+
+	VideoCodec(const VideoCodec&) = delete; // prevent copy
+	VideoCodec &operator=(const VideoCodec&) = delete; // prevent assignment
+
 	bool SetupCompress( int _width, int _height);
 	bool SetupDecompress( int _width, int _height);
 	zmbv_format_t BPPFormat( int bpp );
