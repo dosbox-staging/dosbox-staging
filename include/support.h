@@ -293,4 +293,13 @@ constexpr int wrap(int val, int const lower_bound, int const upper_bound)
 	return lower_bound + (val - lower_bound) % range_size;
 }
 
+struct FILE_closer {
+	void operator()(FILE *f) noexcept;
+};
+using FILE_unique_ptr = std::unique_ptr<FILE, FILE_closer>;
+
+// Opens and returns a std::unique_ptr to a FILE, which automatically closes
+// itself when it goes out of scope
+FILE_unique_ptr make_fopen(const char *fname, const char *mode);
+
 #endif

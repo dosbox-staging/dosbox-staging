@@ -363,3 +363,17 @@ bool find_in_case_insensitive(const std::string &needle, const std::string &hays
 	                            });
 	return (it != haystack.end());
 }
+
+void FILE_closer::operator()(FILE *f) noexcept
+{
+	if (f) {
+		fclose(f);
+	}
+}
+
+FILE_unique_ptr make_fopen(const char *fname, const char *mode)
+{
+	FILE *f = fopen(fname, mode);
+	return f ? FILE_unique_ptr(f) : nullptr;
+}
+
