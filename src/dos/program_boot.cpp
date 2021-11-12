@@ -155,15 +155,16 @@ void BOOT::Run(void) {
 	    return;
     }
     if (cmd->GetCount() == 1) {
-	    cmd->FindCommand(1, temp_line);
-	    if (temp_line.length() == 2 && toupper(temp_line[0]) >= 'A' &&
-		toupper(temp_line[0]) <= 'Z' && temp_line[1] == ':') {
-		    drive = toupper(temp_line[0]);
-		    if ((drive != 'A') && (drive != 'C') && (drive != 'D')) {
-			    printError();
-			    return;
+	    if (cmd->FindCommand(1, temp_line)) {
+		    if (temp_line.length() == 2 && toupper(temp_line[0]) >= 'A' &&
+			toupper(temp_line[0]) <= 'Z' && temp_line[1] == ':') {
+			    drive = toupper(temp_line[0]);
+			    if ((drive != 'A') && (drive != 'C') && (drive != 'D')) {
+				    printError();
+				    return;
+			    }
+			    i++;
 		    }
-		    i++;
 	    }
     }
     while (i<cmd->GetCount()) {
