@@ -772,7 +772,7 @@ void SHELL_Init() {
 	        "\n"
 	        "Notes:\n"
 	        "  Running \033[32;1mcls\033[0m clears all texts on the DOS screen, except for the command\n"
-	        "  prompt (e.g. \033[32;1mZ:\\>\033[0m or \033[32;1mC:\\GAMES>\033[0m) on the top-left corner of the screen.\n"
+	        "  prompt (e.g. \033[37;1mZ:\\>\033[0m or \033[37;1mC:\\GAMES>\033[0m) on the top-left corner of the screen.\n"
 	        "\n"
 	        "Examples:\n"
 	        "  \033[32;1mcls\033[0m\n");
@@ -901,12 +901,12 @@ void SHELL_Init() {
 	        "\n"
 	        "Where:\n"
 	        "  \033[37;1mNUMBER\033[0m     is a positive integer less or equal to the desired value.\n"
-	        "  \033[37;1mSTR1==STR2\033[0m compares two text strings (case sensivitive).\n"
+	        "  \033[37;1mSTR1==STR2\033[0m compares two text strings (case-sensitive).\n"
 	        "  \033[37;1mFILE\033[0m       is an exact file name to check for existence.\n"
-	        "  COMMAND    is a DOS command/program to run, optionally with parameters.\n"
+	        "  COMMAND    is a DOS command or program to run, optionally with parameters.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  The COMMAND will only run if any of the three conditions is true.\n"
+	        "  The COMMAND is run if any of the three conditions in the usage are met.\n"
 	        "  If \033[38;1mnot\033[0m is specified, then the command runs only with the false condition.\n"
 	        "  The \033[36;1merrorlevel\033[0m condition is useful for checking if a programs ran correctly.\n"
 	        "  If either \033[37;1mSTR1\033[0m or \033[37;1mSTR2\033[0m may be empty, you can enclose them in quotes (\").\n"
@@ -930,7 +930,20 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  \033[32;1mgoto\033[0m \033[36;1mmylabel\033[0m\n");
-	MSG_Add("SHELL_CMD_SHIFT_HELP","Leftshift commandline parameters in a batch script.\n");
+	MSG_Add("SHELL_CMD_SHIFT_HELP","Left-shifts command-line parameters in a batch program.\n");
+	MSG_Add("SHELL_CMD_SHIFT_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mshift\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  This command has no parameters.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  This command allows a DOS batch program to accept more than 9 parameters.\n"
+	        "  Running \033[32;1mshift\033[0m left-shifts the batch program variable %%1 to %%0, %%2 to %%1, etc.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mshift\033[0m\n");
 	MSG_Add("SHELL_CMD_TYPE_HELP", "Display the contents of a text file.\n");
 	MSG_Add("SHELL_CMD_TYPE_HELP_LONG",
 	        "Usage:\n"
