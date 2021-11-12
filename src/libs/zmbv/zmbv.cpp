@@ -565,3 +565,8 @@ VideoCodec::VideoCodec()
 	CreateVectorTable();
 	memset(&zstream, 0, sizeof(zstream));
 }
+
+VideoCodec::~VideoCodec() {
+	FreeBuffers();
+}
+
