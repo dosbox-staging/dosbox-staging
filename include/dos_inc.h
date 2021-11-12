@@ -34,8 +34,8 @@
 #pragma pack (1)
 #endif
 struct CommandTail{
-  Bit8u count;				/* number of bytes returned */
-  char buffer[127];			 /* the buffer itself */
+	uint8_t count = 0;     /* number of bytes returned */
+	char buffer[127] = {}; /* the buffer itself */
 } GCC_ATTRIBUTE(packed);
 #ifdef _MSC_VER
 #pragma pack ()

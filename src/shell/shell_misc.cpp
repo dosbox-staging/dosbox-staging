@@ -523,14 +523,17 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		full_arguments.assign(line);
 
 		/* Fill the command line */
-		CommandTail cmdtail;
-		cmdtail.count = 0;
-		memset(&cmdtail.buffer,0,127); //Else some part of the string is unitialized (valgrind)
-		if (safe_strlen(line) > 126)
-			line[126] = 0;
-		cmdtail.count=(Bit8u)strlen(line);
-		memcpy(cmdtail.buffer,line,strlen(line));
-		cmdtail.buffer[strlen(line)]=0xd;
+		CommandTail cmdtail = {};
+
+		// copy at-most 126 chracters plus the terminating zero
+		safe_strcpy(cmdtail.buffer, line);
+
+		cmdtail.count = check_cast<uint8_t>(safe_strlen(cmdtail.buffer));
+		line[cmdtail.count] = 0;
+
+		assert(cmdtail.count < sizeof(cmdtail.buffer));
+		cmdtail.buffer[cmdtail.count] = 0xd;
+
 		/* Copy command line in stack block too */
 		MEM_BlockWrite(SegPhys(ss)+reg_sp+0x100,&cmdtail,128);
 
