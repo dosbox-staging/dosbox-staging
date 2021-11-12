@@ -1749,6 +1749,6 @@ uint32_t VideoModeMemSize(uint16_t mode) {
 		// Return 0 for all other types, those always fit in memory
 		mem_bytes = 0;
 	}
-	assert(mem_bytes >= 0 && mem_bytes <= INT32_MAX);
+	assert(mem_bytes >= 0);
 	return static_cast<uint32_t>(mem_bytes);
 }
