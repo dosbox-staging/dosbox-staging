@@ -152,6 +152,7 @@ int Sound_Quit(void)
     {
         Sound_Sample *sample = sample_list;
         Sound_FreeSample(sample); /* Updates sample_list. */
+        sample = NULL;
     }
 
     initialized = 0;
