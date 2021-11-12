@@ -730,23 +730,25 @@
 		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
 	}														\
 }
-	
 
-#define IMULW(op1,load,save)								\
-{															\
-	Bits temps=((Bit16s)reg_ax)*((Bit16s)(load(op1)));		\
-	reg_ax=(Bit16s)(temps);									\
-	reg_dx=(Bit16s)(temps >> 16);							\
-	FillFlagsNoCFOF();										\
-	SETFLAGBIT(ZF,reg_ax == 0);								\
-	SETFLAGBIT(SF,reg_ax & 0x8000);							\
-	if (((temps & 0xffff8000)==0xffff8000 ||				\
-		(temps & 0xffff8000)==0x0000)) {					\
-		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
-	} else {												\
-		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
-	}														\
-}
+#define IMULW(op1, load, save) \
+	{ \
+		const auto res = static_cast<int16_t>(reg_ax) * \
+		                 static_cast<int16_t>(load(op1)); \
+		reg_ax = static_cast<int16_t>(res); \
+		reg_dx = static_cast<int16_t>(res >> 16); \
+		FillFlagsNoCFOF(); \
+		SETFLAGBIT(ZF, reg_ax == 0); \
+		SETFLAGBIT(SF, reg_ax & 0x8000); \
+		if (((res & 0xffff8000) == 0xffff8000 || \
+		     (res & 0xffff8000) == 0x0000)) { \
+			SETFLAGBIT(CF, false); \
+			SETFLAGBIT(OF, false); \
+		} else { \
+			SETFLAGBIT(CF, true); \
+			SETFLAGBIT(OF, true); \
+		} \
+	}
 
 #define IMULD(op1, load, save) \
 	{ \
