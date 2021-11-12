@@ -614,19 +614,22 @@
 		} \
 	}
 
-#define MULD(op1,load,save)									\
-{															\
-	Bit64u tempu=(Bit64u)reg_eax*(Bit64u)(load(op1));		\
-	reg_eax=(Bit32u)(tempu);								\
-	reg_edx=(Bit32u)(tempu >> 32);							\
-	FillFlagsNoCFOF();										\
-	SETFLAGBIT(ZF,reg_eax == 0);							\
-	if (reg_edx) {											\
-		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
-	} else {												\
-		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
-	}														\
-}
+#define MULD(op1, load, save) \
+	{ \
+		const uint64_t res = static_cast<uint64_t>(reg_eax) * \
+		                     static_cast<uint64_t>(load(op1)); \
+		reg_eax = static_cast<uint32_t>(res); \
+		reg_edx = static_cast<uint32_t>(res >> 32); \
+		FillFlagsNoCFOF(); \
+		SETFLAGBIT(ZF, reg_eax == 0); \
+		if (reg_edx) { \
+			SETFLAGBIT(CF, true); \
+			SETFLAGBIT(OF, true); \
+		} else { \
+			SETFLAGBIT(CF, false); \
+			SETFLAGBIT(OF, false); \
+		} \
+	}
 
 #define DIVB(op1,load,save)									\
 {															\
