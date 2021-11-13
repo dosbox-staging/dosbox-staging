@@ -1127,9 +1127,9 @@ public:
 
 		const char * layoutname=section->Get_string("keyboardlayout");
 
-		Bits wants_dos_codepage = -1;
-		if (!strncmp(layoutname,"auto",4)) {
 #if defined (WIN32)
+		Bits wants_dos_codepage = -1;
+		if (!strncmp(layoutname, "auto", 4)) {
 			WORD cur_kb_layout = LOWORD(GetKeyboardLayout(0));
 			WORD cur_kb_subID  = 0;
 			char layoutID_string[KL_NAMELENGTH];
@@ -1272,21 +1272,22 @@ public:
 				default:
 					break;
 			}
-#endif
 		}
-
-		bool extract_codepage = true;
-		if (wants_dos_codepage>0) {
+		// this condition may only occur on Windows
+		if (wants_dos_codepage > 0) {
 			if ((loaded_layout->read_codepage_file("auto", (Bitu)wants_dos_codepage)) == KEYB_NOERROR) {
-				// preselected codepage was successfully loaded
-				extract_codepage = false;
+				// preselected codepage was successfully loaded, so do nothing
+			} else {
+				// try to find a good codepage for the requested layout
+				const auto req_codepage = loaded_layout->extract_codepage(layoutname);
+				loaded_layout->read_codepage_file("auto", req_codepage);
 			}
 		}
-		if (extract_codepage) {
-			// try to find a good codepage for the requested layout
-			Bitu req_codepage = loaded_layout->extract_codepage(layoutname);
-			loaded_layout->read_codepage_file("auto", req_codepage);
-		}
+#else
+		// On non-Windows systems, alwaays find a good codepage for the requested layout
+		const auto req_codepage = loaded_layout->extract_codepage(layoutname);
+		loaded_layout->read_codepage_file("auto", req_codepage);
+#endif
 
 /*		if (strncmp(layoutname,"auto",4) && strncmp(layoutname,"none",4)) {
 			LOG_MSG("Loading DOS keyboard layout %s ...",layoutname);
