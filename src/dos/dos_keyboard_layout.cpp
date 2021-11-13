@@ -442,7 +442,9 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 			Bit8u scan_length=(read_buf[read_buf_pos]&7)+1;		// length of data struct
 			read_buf_pos+=2;
 			i+=3;
-			if (((scan&0x7f)<=MAX_SCAN_CODE) && (scan_length>0)) {
+
+			assert(scan_length > 0);
+			if ((scan & 0x7f) <= MAX_SCAN_CODE) {
 				// add all available mappings
 				for (Bit16u addmap=0; addmap<scan_length; addmap++) {
 					if (addmap>additional_planes+2) break;
