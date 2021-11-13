@@ -557,11 +557,11 @@ bool keyboard_layout::layout_key(Bitu key, Bit8u flags1, Bit8u flags2, Bit8u fla
 			case 0x46:			/* Scroll Lock */
 				break;
 			default:
-				if (diacritics_character-200>=diacritics_entries) {
-					diacritics_character=0;
+			        if (diacritics_character >= diacritics_entries + 200) {
+				        diacritics_character=0;
 					return true;
-				}
-				Bit16u diacritics_start=0;
+			        }
+			        Bit16u diacritics_start=0;
 				// search start of subtable
 				for (Bit16u i=0; i<diacritics_character-200; i++)
 					diacritics_start+=diacritics[diacritics_start+1]*2+2;
@@ -581,7 +581,8 @@ bool keyboard_layout::map_key(Bitu key, Bit16u layouted_key, bool is_command, bo
 		if ((key_command>=200) && (key_command<235)) {
 			// diacritics command
 			diacritics_character=key_command;
-			if (diacritics_character-200>=diacritics_entries) diacritics_character=0;
+			if (diacritics_character >= diacritics_entries + 200)
+				diacritics_character = 0;
 			return true;
 		} else if ((key_command>=120) && (key_command<140)) {
 			// switch layout command
