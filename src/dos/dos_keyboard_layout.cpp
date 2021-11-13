@@ -643,7 +643,7 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 	char nbuf[512];
 	sprintf(nbuf, "%s.kl", keyboard_file_name);
 	auto tempfile = OpenDosboxFile(nbuf);
-	if (tempfile==NULL) {
+	if (!tempfile) {
 		// try keyboard layout libraries next
 		if ((start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,true))) {
 			tempfile = OpenDosboxFile("keyboard.sys");
@@ -676,7 +676,6 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
 		} else {
-			start_pos=0;
 			LOG(LOG_BIOS,LOG_ERROR)("Keyboard layout file %s not found",keyboard_file_name);
 			return 437;
 		}
