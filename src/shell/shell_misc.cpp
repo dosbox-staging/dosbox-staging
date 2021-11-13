@@ -635,7 +635,8 @@ const char *DOS_Shell::Which(const char *name) const
 	char path[DOS_PATHLENGTH];std::string temp;
 	if (!GetEnvStr("PATH",temp)) return 0;
 	const char * pathenv=temp.c_str();
-	if (!pathenv) return 0;
+
+	assert(pathenv);
 	pathenv = strchr(pathenv,'=');
 	if (!pathenv) return 0;
 	pathenv++;
