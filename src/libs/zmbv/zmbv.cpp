@@ -273,7 +273,7 @@ bool VideoCodec::PrepareCompressFrame(int flags,  zmbv_format_t _format, char * 
 		header->high_version = DBZV_VERSION_HIGH;
 		header->low_version = DBZV_VERSION_LOW;
 		header->compression = COMPRESSION_ZLIB;
-		header->format = format;
+		header->format = static_cast<unsigned char>(format);
 		header->blockwidth = 16;
 		header->blockheight = 16;
 		compress.writeDone += sizeof(KeyframeHeader);
