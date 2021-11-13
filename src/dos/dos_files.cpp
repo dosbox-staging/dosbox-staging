@@ -332,8 +332,13 @@ bool DOS_FindFirst(const char *search, uint16_t attr, bool fcb_findfirst)
 	Bit8u drive;char fullsearch[DOS_PATHLENGTH];
 	char dir[DOS_PATHLENGTH];char pattern[DOS_PATHLENGTH];
 	size_t len = strlen(search);
-	if(len && search[len - 1] == '\\' && !( (len > 2) && (search[len - 2] == ':') && (attr == DOS_ATTR_VOLUME) )) { 
-		//Dark Forces installer, but c:\ is allright for volume labels(exclusively set)
+
+	const bool is_root = (len > 2) && (search[len - 2] == ':') &&
+	                     (attr == DOS_ATTR_VOLUME);
+	const bool is_directory = len && search[len - 1] == '\\';
+	if (!is_root && is_directory) {
+		// Dark Forces installer, but c:\ is allright for volume
+		// labels(exclusively set)
 		DOS_SetError(DOSERR_NO_MORE_FILES);
 		return false;
 	}
