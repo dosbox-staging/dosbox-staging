@@ -72,7 +72,6 @@ struct Handler : public Adlib::Handler {
 	virtual Bit32u WriteAddr(io_port_t port, Bit8u val)
 	{
 		adlib_write_index(port, val);
-		adlib_write_index(port, val);
 		return opl_index;
 	}
 	virtual void Generate(MixerChannel *chan, const uint16_t samples)
