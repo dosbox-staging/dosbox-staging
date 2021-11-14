@@ -74,7 +74,6 @@ namespace OPL3 {
 		}
 		virtual Bit32u WriteAddr( Bit32u port, Bit8u val ) {
 			adlib_write_index(port, val);
-			adlib_write_index(port, val);
 			return opl_index;
 		}
 		virtual void Generate( MixerChannel* chan, Bitu samples ) {
