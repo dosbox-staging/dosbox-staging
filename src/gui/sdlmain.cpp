@@ -2047,6 +2047,9 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 	return false;
 }
 
+static auto frame_start = 0;
+static auto frame_tempo_us = 16666;
+
 static void update_frame_tempo()
 {
 	static std::thread tempo_thread = {};
@@ -2054,6 +2057,10 @@ static void update_frame_tempo()
 	// Record the current refresh rate
 	static std::atomic<int8_t> rate(0);
 	const auto current_rate = GFX_GetDisplayRefreshRate();
+
+
+	frame_tempo_us = (1000000 + rate - 1) / current_rate;
+
 	if (rate.load() == current_rate)
 		return;
 
@@ -2089,10 +2096,16 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 
 static inline void MaybePresentFrameAtHostRate()
 {
-	if (IsFrameDue())
+	const auto elapsed = GetTicksUsSince(frame_start);
+	if (elapsed > frame_tempo_us) {
 		sdl.present_frame();
-	else
+		frame_start = GetTicksUs();
+		LOG_MSG("rendered frame");
+	}
+	else {
+		LOG_MSG("skipped frame");
 		render_pacer.Reset();
+	}
 }
 
 static inline void MaybePresentFrameOnChange()
