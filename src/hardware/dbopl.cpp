@@ -1019,8 +1019,10 @@ inline Bit32u Chip::ForwardNoise() {
 inline Bit32u Chip::ForwardLFO(const uint16_t samples)
 {
 	// Current vibrato value, runs 4x slower than tremolo
-	vibratoSign = (VibratoTable[vibratoIndex >> 2]) >> 7;
-	vibratoShift = (VibratoTable[vibratoIndex >> 2] & 7) + vibratoStrength;
+	const auto vibrato = VibratoTable[vibratoIndex >> 2];
+
+	vibratoSign = (vibrato < 0) ? -1 : 0;
+	vibratoShift = (vibrato & 7) + vibratoStrength;
 	tremoloValue = TremoloTable[tremoloIndex] >> tremoloStrength;
 
 	//Check hom many samples there can be done before the value changes
