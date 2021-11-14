@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2020-2021  Kevin R. Croft <krcroft@gmail.com>
+# Copyright (C) 2020-2021  kcgen <kcgen@users.noreply.github.com>
 
 # This script captures pre-processor #define statements
 # matching the as-compiled state of the source file.

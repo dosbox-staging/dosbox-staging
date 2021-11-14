@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2019-2021  Kevin R. Croft <krcroft@gmail.com>
+# Copyright (C) 2019-2021  kcgen <kcgen@users.noreply.github.com>
 
 # This script downloads and builds MacPorts from source.
 # Usage: ./download-and-build-macports.sh

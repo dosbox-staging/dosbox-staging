@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2019-2021  Kevin R. Croft <krcroft@gmail.com>
+# Copyright (C) 2019-2021  kcgen <kcgen@users.noreply.github.com>
 
 # This script reduces the size of an MSYS2 and MinGW installation
 # under Windows. Its main use is to shrink these areas to fit within

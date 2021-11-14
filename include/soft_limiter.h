@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2021  Kevin R. Croft <krcroft@gmail.com>
+ *  Copyright (C) 2020-2021  kcgen <kcgen@users.noreply.github.com>
  *  Copyright (C) 2020-2021  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
