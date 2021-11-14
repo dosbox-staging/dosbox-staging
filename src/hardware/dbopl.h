@@ -198,7 +198,6 @@ struct Chip {
 	//This is used as the base counter for vibrato and tremolo
 	Bit32u lfoCounter;
 	Bit32u lfoAdd;
-	
 
 	Bit32u noiseCounter;
 	Bit32u noiseAdd;
@@ -226,6 +225,8 @@ struct Chip {
 	Bit8u waveFormMask;
 	//0 or -1 when enabled
 	Bit8s opl3Active;
+	//Running in opl3 mode
+	const bool opl3Mode;
 
 	//Return the maximum amount of samples before and LFO change
 	Bit32u ForwardLFO( Bit32u samples );
@@ -244,7 +245,7 @@ struct Chip {
 	void Generate( Bit32u samples );
 	void Setup( Bit32u r );
 
-	Chip();
+	Chip( bool opl3Mode );
 };
 
 struct Handler : public Adlib::Handler {
@@ -253,6 +254,9 @@ struct Handler : public Adlib::Handler {
 	virtual void WriteReg( Bit32u addr, Bit8u val );
 	virtual void Generate( MixerChannel* chan, Bitu samples );
 	virtual void Init( Bitu rate );
+
+	Handler(bool opl3Mode) : chip(opl3Mode) {
+	}
 };
 
 

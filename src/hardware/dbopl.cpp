@@ -511,7 +511,7 @@ void Operator::WriteE0( const Chip* chip, Bit8u val ) {
 	if ( !(regE0 ^ val) ) 
 		return;
 	//in opl3 mode you can always selet 7 waveforms regardless of waveformselect
-	Bit8u waveForm = val & ( ( 0x3 & chip->waveFormMask ) | (0x7 & chip->opl3Active ) );
+	const Bit8u waveForm = val & ( ( 0x3 & chip->waveFormMask ) | (0x7 & chip->opl3Active ) );
 	regE0 = val;
 #if ( DBOPL_WAVE == WAVE_HANDLER )
 	waveHandler = WaveHandlerTable[ waveForm ];
@@ -973,7 +973,7 @@ Channel* Channel::BlockTemplate( Chip* chip, Bit32u samples, Bit32s* output ) {
 	Chip
 */
 
-Chip::Chip() {
+Chip::Chip( bool _opl3Mode ) : opl3Mode( _opl3Mode ) {
 	reg08 = 0;
 	reg04 = 0;
 	regBD = 0;
@@ -1111,7 +1111,8 @@ void Chip::WriteReg( Bit32u reg, Bit8u val ) {
 	switch ( (reg & 0xf0) >> 4 ) {
 	case 0x00 >> 4:
 		if ( reg == 0x01 ) {
-			waveFormMask = ( val & 0x20 ) ? 0x7 : 0x0; 
+			//When the chip is running in opl3 compatible mode, you can't actually disable the waveforms
+			waveFormMask = ( (val & 0x20) || opl3Mode ) ? 0x7 : 0x0; 
 		} else if ( reg == 0x104 ) {
 			//Only detect changes in lowest 6 bits
 			if ( !((reg104 ^ val) & 0x3f) )
