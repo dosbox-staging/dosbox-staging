@@ -959,8 +959,20 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  \033[32;1mtype\033[0m \033[36;1mtext.txt\033[0m\n"
 	        "  \033[32;1mtype\033[0m \033[36;1mc:\\dos\\readme.txt\033[0m\n");
-	MSG_Add("SHELL_CMD_REM_HELP","Add comments in a batch file.\n");
-	MSG_Add("SHELL_CMD_REM_HELP_LONG","REM [comment]\n");
+	MSG_Add("SHELL_CMD_REM_HELP", "Adds comments in a batch program.\n");
+	MSG_Add("SHELL_CMD_REM_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mrem\033[0m \033[36;1mCOMMENT\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mCOMMENT\033[0m is any comment you want to add.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Adding comments to a batch program can make it easier to understand.\n"
+	        "  You can also temporarily comment out some commands with this command.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mrem\033[0m \033[36;1mThis is my test batch program.\033[0m\n");
 	MSG_Add("SHELL_CMD_NO_WILD","This is a simple version of the command, no wildcards allowed!\n");
 	MSG_Add("SHELL_CMD_RENAME_HELP", "Renames one or more files.\n");
 	MSG_Add("SHELL_CMD_RENAME_HELP_LONG",
