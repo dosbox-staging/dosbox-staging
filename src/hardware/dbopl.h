@@ -226,6 +226,8 @@ struct Chip {
 	uint8_t tremoloStrength = 0;
 	uint8_t waveFormMask = 0x0; // Mask for allowed wave forms
 	int8_t opl3Active = 0; // 0 or -1 when enabled
+	//Running in opl3 mode
+	const bool opl3Mode;
 
 	//Return the maximum amount of samples before and LFO change
 	Bit32u ForwardLFO(uint16_t samples);
@@ -244,15 +246,18 @@ struct Chip {
 	void Generate(uint16_t samples);
 	void Setup( Bit32u r );
 
-	Chip() = default; // can't be placed on top because of offset math
+	Chip( bool opl3Mode );
 };
 
 struct Handler : public Adlib::Handler {
-	DBOPL::Chip chip = {};
+	DBOPL::Chip chip;
 	virtual Bit32u WriteAddr(io_port_t port, Bit8u val);
 	virtual void WriteReg( Bit32u addr, Bit8u val );
 	virtual void Generate(MixerChannel *chan, uint16_t samples);
 	virtual void Init(uint32_t rate);
+
+	Handler(bool opl3Mode) : chip(opl3Mode) {
+	}
 };
 
 } // namespace DBOPL
