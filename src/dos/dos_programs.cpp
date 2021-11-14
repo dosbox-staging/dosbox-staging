@@ -94,6 +94,25 @@ void DOS_SetupPrograms(void)
 	MSG_Add("PROGRAM_MEM_UPPER",
 	        "%10d kB free upper memory in %d blocks (largest UMB %d kB)\n");
 
+	MSG_Add("SHELL_CMD_LOADFIX_HELP_LONG",
+	        "Loads a program in the specific memory region and then runs it.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  \033[32;1mloadfix\033[0m \033[36;1mPROGRAM\033[0m \033[37;1m[PARAMETERS]\033[0m\n"
+	        "  \033[32;1mloadfix\033[0m [/d] (or [/f])\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mPROGRAM\033[0m is a program to be loaded, optionally with parameters.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  The most common use case of this command is to fix programs which show the\n"
+	        "  \"\033[37;1mPacked File Corrupt\033[0m\" error message when run. Running \033[32;1mloadfix\033[0m without an\n"
+	        "  argument just allocates memory for a program to run; you can free the\n"
+	        "  memory with either /d or /f option when the program finishes.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mloadfix\033[0m \033[36;1mmyapp\033[0m\n"
+	        "  \033[32;1mloadfix\033[0m /d\n");
 	MSG_Add("PROGRAM_LOADFIX_ALLOC", "%d kB allocated.\n");
 	MSG_Add("PROGRAM_LOADFIX_DEALLOC", "%d kB freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL","Used memory freed.\n");
