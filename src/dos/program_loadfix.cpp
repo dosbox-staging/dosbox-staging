@@ -26,10 +26,15 @@
 
 void LOADFIX::Run(void)
 {
+	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false) ||
+	    cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {
+		WriteOut(MSG_Get("SHELL_CMD_LOADFIX_HELP_LONG"));
+		return;
+	}
 	Bit16u commandNr = 1;
 	Bit16u kb = 64;
 	if (cmd->FindCommand(commandNr, temp_line)) {
-		if (temp_line[0] == '-') {
+		if (temp_line[0] == '-' || temp_line[0] == '/') {
 			const auto ch = std::toupper(temp_line[1]);
 			if ((ch == 'D') || (ch == 'F')) {
 				// Deallocate all
