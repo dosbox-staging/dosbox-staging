@@ -1002,13 +1002,7 @@ Channel *Channel::BlockTemplate(Chip *chip, const uint16_t samples, Bit32s *outp
         Chip
 */
 Chip::Chip(bool _opl3Mode) : opl3Mode(_opl3Mode)
-{
-	reg08 = 0;
-	reg04 = 0;
-	regBD = 0;
-	reg104 = 0;
-	opl3Active = 0;
-}
+{}
 
 inline Bit32u Chip::ForwardNoise() {
 	noiseCounter += noiseAdd;
