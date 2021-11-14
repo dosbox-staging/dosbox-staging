@@ -909,6 +909,11 @@ public:
 
 	void Run()
 	{
+		if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false) ||
+		    cmd->FindExist("-h", false) || cmd->FindExist("--help", false)) {
+			WriteOut(MSG_Get("SHELL_CMD_MIXER_HELP_LONG"));
+			return;
+		}
 		if(cmd->FindExist("/LISTMIDI")) {
 			ListMidi();
 			return;
