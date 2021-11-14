@@ -98,25 +98,48 @@ void DOS_SetupPrograms(void)
 	        "Loads a program in the specific memory region and then runs it.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  \033[32;1mloadfix\033[0m \033[36;1mPROGRAM\033[0m \033[37;1m[PARAMETERS]\033[0m\n"
+	        "  \033[32;1mloadfix\033[0m \033[36;1mGAME\033[0m \033[37;1m[PARAMETERS]\033[0m\n"
 	        "  \033[32;1mloadfix\033[0m [/d] (or [/f])\033[0m\n"
 	        "\n"
 	        "Where:\n"
-	        "  \033[36;1mPROGRAM\033[0m is a program to be loaded, optionally with parameters.\n"
+	        "  \033[36;1mGAME\033[0m is a game or program to be loaded, optionally with parameters.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  The most common use case of this command is to fix programs which show the\n"
-	        "  \"\033[37;1mPacked File Corrupt\033[0m\" error message when run. Running \033[32;1mloadfix\033[0m without an\n"
-	        "  argument just allocates memory for a program to run; you can free the\n"
-	        "  memory with either /d or /f option when the program finishes.\n"
+	        "  The most common use cases of this command are to fix DOS games or programs\n"
+	        "  which show either the \"\033[37;1mPacked File Corrupt\033[0m\" or \"\033[37;1mNot enough memory\"\033[0m (e.g.,\n"
+	        "  from some 1980's games such as California Games II) error message when run.\n"
+	        "  Running \033[32;1mloadfix\033[0m without an argument simply allocates memory for your game\n"
+	        "  to run; you can free the memory with either /d or /f option when it finishes.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  \033[32;1mloadfix\033[0m \033[36;1mmyapp\033[0m\n"
+	        "  \033[32;1mloadfix\033[0m \033[36;1mmygame\033[0m \033[37;1margs\033[0m\n"
 	        "  \033[32;1mloadfix\033[0m /d\n");
 	MSG_Add("PROGRAM_LOADFIX_ALLOC", "%d kB allocated.\n");
 	MSG_Add("PROGRAM_LOADFIX_DEALLOC", "%d kB freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL","Used memory freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_ERROR","Memory allocation error.\n");
+
+	MSG_Add("SHELL_CMD_MIXER_HELP_LONG",
+	        "Displays or changes the current sound mixer volumes.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  \033[32;1mmixer\033[0m \033[36;1mCHANNEL\033[0m \033[37;1mVOLUME\033[0m [/noshow]\n"
+	        "  \033[32;1mmixer\033[0m [/listmidi]\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mCHANNEL\033[0m is the sound channel you want to change the volume.\n"
+	        "  \033[37;1mVOLUME\033[0m  is an integer between 0 and 100 representing the volume.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running \033[32;1mmixer\033[0m without an argument shows the volumes of all sound channels.\n"
+	        "  You can view available MIDI devices and user options with /listmidi option.\n"
+	        "  You may change the volumes of more than one sound channels in one command.\n"
+	        "  The /noshow option causes mixer not to show the volumes when making a change.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mmixer\033[0m\n"
+	        "  \033[32;1mmixer\033[0m \033[36;1mmaster\033[0m \033[37;1m50\033[0m \033[36;1mrecord\033[0m \033[37;1m60\033[0m /noshow\n"
+	        "  \033[32;1mmixer\033[0m /listmidi");
 
 	MSG_Add("MSCDEX_SUCCESS","MSCDEX installed.\n");
 	MSG_Add("MSCDEX_ERROR_MULTIPLE_CDROMS","MSCDEX: Failure: Drive-letters of multiple CD-ROM drives have to be continuous.\n");
