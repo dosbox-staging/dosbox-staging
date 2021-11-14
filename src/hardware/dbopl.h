@@ -207,11 +207,11 @@ struct Chip {
 	uint32_t noiseValue = 0;
 
 	// Frequency scales for the different multiplications
-	uint32_t freqMul[16];
+	uint32_t freqMul[16] = {};
 	// Rates for decay and release for rate of this chip
-	uint32_t linearRates[76];
+	uint32_t linearRates[76] = {};
 	// Best match attack rates for the rate of this chip
-	uint32_t attackRates[76];
+	uint32_t attackRates[76] = {};
 
 	uint8_t reg104 = 0;
 	uint8_t reg08 = 0;

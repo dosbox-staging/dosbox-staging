@@ -1004,13 +1004,7 @@ Channel *Channel::BlockTemplate(Chip *chip, const uint16_t samples, Bit32s *outp
 */
 
 Chip::Chip(bool _opl3Mode) : opl3Mode(_opl3Mode)
-{
-	reg08 = 0;
-	reg04 = 0;
-	regBD = 0;
-	reg104 = 0;
-	opl3Active = 0;
-}
+{}
 
 inline Bit32u Chip::ForwardNoise()
 {
@@ -1147,7 +1141,7 @@ void Chip::WriteReg( Bit32u reg, Bit8u val ) {
 			waveFormMask = ((val & 0x20) || opl3Mode) ? 0x7 : 0x0;
 		} else if (reg == 0x104) {
 			// Only detect changes in lowest 6 bits
-			if ( !((reg104 ^ val) & 0x3f) )
+			if (!((reg104 ^ val) & 0x3f))
 				return;
 			//Always keep the highest bit enabled, for checking > 0x80
 			reg104 = 0x80 | ( val & 0x3f );
