@@ -45,15 +45,15 @@ public:
 	void updateMSR();
 	void transmitByte(uint8_t val, bool first);
 	void setBreak(bool value);
-	
+
 	void setRTSDTR(bool rts, bool dtr);
 	void setRTS(bool val);
 	void setDTR(bool val);
 	void handleUpperEvent(uint16_t type);
 
 private:
-	TCPServerSocket *serversocket = nullptr;
-	TCPClientSocket *clientsocket = nullptr;
+	NETServerSocket *serversocket = nullptr;
+	NETClientSocket *clientsocket = nullptr;
 
 	uint16_t serverport = 0; // we are a server if this is nonzero
 	uint16_t clientport = 0;
@@ -71,34 +71,34 @@ private:
 	bool ClientConnect(TCPClientSocket* newsocket);
 	bool ServerListen();
 	bool ServerConnect();
-    void Disconnect();
-    SocketState readChar(uint8_t &val);
-    void WriteChar(uint8_t data);
+	void Disconnect();
+	SocketState readChar(uint8_t &val);
+	void WriteChar(uint8_t data);
 
 	bool DTR_delta = false; // with dtrrespect, we try to establish a
-	                        // connection whenever DTR switches to 1. This
-	                        // variable is used to remember the old state.
+							// connection whenever DTR switches to 1. This
+							// variable is used to remember the old state.
 
 	bool tx_block = false; // true while the SERIAL_TX_REDUCTION event
-	                       // is pending
+						   // is pending
 
 	uint32_t rx_retry = 0; // counter of retries
 
 	uint32_t rx_retry_max = 0; // how many POLL_EVENTS to wait before
-	                           // causing a overrun error.
+							   // causing a overrun error.
 
 	uint32_t tx_gather = 0; // how long to gather tx data before
-	                        // sending all of them [milliseconds]
+							// sending all of them [milliseconds]
 
 	bool dtrrespect = false; // dtr behavior - only send data to the serial
-	                         // port when DTR is on
+							 // port when DTR is on
 
 	bool transparent = false; // if true, don't send 0xff 0xXX to toggle
-	                          // DSR/CTS.
+							  // DSR/CTS.
 
 	bool telnet = false; // Do Telnet parsing.
 
-    // Telnet's brain
+	// Telnet's brain
 #define TEL_CLIENT 0
 #define TEL_SERVER 1
 

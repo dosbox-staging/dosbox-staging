@@ -99,7 +99,7 @@ public:
 			if (lcount < 1000) {
 				lcount++;
 				LOG_MSG("MODEM: FIFO Overflow! (adds len %u)",
-				        static_cast<unsigned>(len));
+						static_cast<unsigned>(len));
 			}
 			return;
 		}
@@ -140,7 +140,7 @@ public:
 			if (lcount < 1000) {
 				lcount++;
 				LOG_MSG("MODEM: FIFO UNDERFLOW! (gets len %u)",
-				        static_cast<unsigned>(len));
+						static_cast<unsigned>(len));
 			}
 			return;
 		}
@@ -224,9 +224,9 @@ protected:
 	bool oldDTRstate = false;
 	bool ringing = false;
 	bool numericresponse = false; // true: send control response as number.
-	                              // false: send text (i.e. NO DIALTONE)
+								  // false: send text (i.e. NO DIALTONE)
 	bool telnet_mode = false; // Default to direct null modem connection;
-	                         // Telnet mode interprets IAC
+							 // Telnet mode interprets IAC
 	bool connected = false;
 	uint32_t doresponse = 0;
 	uint8_t waiting_tx_character = 0;
@@ -241,9 +241,10 @@ protected:
 	uint8_t tmpbuf[MODEM_BUFFER_QUEUE_SIZE] = {0};
 	uint16_t listenport = 23; // 23 is the default telnet TCP/IP port
 	uint8_t reg[SREGS] = {0};
-	std::unique_ptr<TCPServerSocket> serversocket = nullptr;
-	std::unique_ptr<TCPClientSocket> clientsocket = nullptr;
-	std::unique_ptr<TCPClientSocket> waitingclientsocket = nullptr;
+	SocketTypesE socketType = SOCKET_TYPE_TCP;
+	std::unique_ptr<NETServerSocket> serversocket = nullptr;
+	std::unique_ptr<NETClientSocket> clientsocket = nullptr;
+	std::unique_ptr<NETClientSocket> waitingclientsocket = nullptr;
 
 	struct {
 		bool binary[2] = {false};
