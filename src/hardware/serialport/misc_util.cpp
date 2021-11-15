@@ -20,16 +20,359 @@
 
 #if C_MODEM
 
+#define ENET_IMPLEMENTATION
+#include "enet.h" // Must be included before misc_util.h
+
 #include "misc_util.h"
 
 #include <cassert>
 
-uint32_t Netwrapper_GetCapabilities()
+// --- GENERIC NET INTERFACE -------------------------------------------------
+
+NETClientSocket::NETClientSocket()
+{}
+
+NETClientSocket::~NETClientSocket()
 {
-	uint32_t retval = 0;
-	retval = CAPWORD;
-	return retval;
+	delete[] sendbuffer;
 }
+
+NETClientSocket *NETClientSocket::NETClientFactory(SocketTypesE socketType,
+                                                   const char *destination,
+                                                   uint16_t port)
+{
+	switch (socketType) {
+	case SOCKET_TYPE_TCP: return new TCPClientSocket(destination, port);
+
+	case SOCKET_TYPE_ENET: return new ENETClientSocket(destination, port);
+
+	default: return NULL;
+	}
+	return NULL;
+}
+
+void NETClientSocket::FlushBuffer()
+{
+	if (sendbufferindex) {
+		if (!SendArray(sendbuffer, sendbufferindex))
+			return;
+		sendbufferindex = 0;
+	}
+}
+
+void NETClientSocket::SetSendBufferSize(size_t n)
+{
+	// Only resize the buffer if needed
+	if (!sendbuffer || sendbuffersize != n) {
+		delete[] sendbuffer;
+		sendbuffer = new uint8_t[n];
+		sendbuffersize = n;
+	}
+	sendbufferindex = 0;
+}
+
+bool NETClientSocket::SendByteBuffered(uint8_t val)
+{
+	if (sendbuffersize == 0)
+		return false;
+
+	if (sendbufferindex < (sendbuffersize - 1)) {
+		sendbuffer[sendbufferindex] = val;
+		sendbufferindex++;
+		return true;
+	}
+	// buffer is full, get rid of it
+	sendbuffer[sendbufferindex] = val;
+	sendbufferindex = 0;
+	return SendArray(sendbuffer, sendbuffersize);
+}
+
+NETServerSocket::NETServerSocket()
+{}
+
+NETServerSocket::~NETServerSocket()
+{}
+
+NETServerSocket *NETServerSocket::NETServerFactory(SocketTypesE socketType,
+                                                   uint16_t port)
+{
+	switch (socketType) {
+	case SOCKET_TYPE_TCP: return new TCPServerSocket(port);
+
+	case SOCKET_TYPE_ENET: return new ENETServerSocket(port);
+
+	default: return NULL;
+	}
+	return NULL;
+}
+
+// --- ENET UDP NET INTERFACE ------------------------------------------------
+
+class enet_manager_t {
+public:
+	enet_manager_t()
+	{
+		if (already_tried_once)
+			return;
+		already_tried_once = true;
+
+		is_initialized = enet_initialize() == 0;
+		if (is_initialized)
+			LOG_INFO("NET: Initialized ENET network subsystem");
+		else
+			LOG_WARNING("NET: failed to initialize ENET network subsystem\n");
+	}
+
+	~enet_manager_t()
+	{
+		if (!is_initialized)
+			return;
+
+		assert(already_tried_once);
+		enet_deinitialize();
+		LOG_INFO("NET: Shutdown ENET network subsystem");
+	}
+
+	bool IsInitialized() const { return is_initialized; }
+
+private:
+	bool already_tried_once = false;
+	bool is_initialized = false;
+};
+
+bool NetWrapper_InitializeENET()
+{
+	static enet_manager_t enet_manager;
+	return enet_manager.IsInitialized();
+}
+
+ENETServerSocket::ENETServerSocket(uint16_t port)
+{
+	if (!NetWrapper_InitializeENET())
+		return;
+
+	address.host = ENET_HOST_ANY;
+	address.port = port;
+
+	host = enet_host_create(&address, // create a host
+	                        1, // only allow 1 client to connect
+	                        1, // allow 1 channel to be used, 0
+	                        0, // assume any amount of incoming bandwidth
+	                        0  // assume any amount of outgoing bandwidth
+	);
+	if (host == NULL) {
+		LOG_INFO("Unable to create server ENET listening socket");
+		return;
+	}
+
+	isopen = true;
+}
+
+ENETServerSocket::~ENETServerSocket()
+{
+	// We don't destroy 'host' after passing it to a client, it needs to live.
+	if (host && !nowClient) {
+		enet_host_destroy(host);
+		LOG_INFO("Closed server ENET listening socket");
+	}
+	isopen = false;
+}
+
+NETClientSocket *ENETServerSocket::Accept()
+{
+	ENetEvent event;
+	while (enet_host_service(host, &event, 1) > 0) {
+		switch (event.type) {
+		case ENET_EVENT_TYPE_CONNECT:
+			LOG_INFO("NET:  ENET client connect");
+			nowClient = true;
+			return new ENETClientSocket(host);
+			break;
+
+		case ENET_EVENT_TYPE_RECEIVE:
+			enet_packet_destroy(event.packet);
+			break;
+
+		case ENET_EVENT_TYPE_DISCONNECT:
+		case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT: isopen = false; break;
+
+		default: break;
+		}
+	}
+
+	return NULL;
+}
+
+ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
+{
+	ENetEvent event;
+
+	if (!NetWrapper_InitializeENET())
+		return;
+
+	client = enet_host_create(NULL, // create a client host
+	                          1, // only allow 1 outgoing connection
+	                          1, // allow 1 channel to be used, 0
+	                          0, // assume any amount of incoming bandwidth
+	                          0  // assume any amount of outgoing bandwidth
+	);
+	if (client == NULL) {
+		LOG_INFO("Unable to create client ENET socket");
+		return;
+	}
+
+	enet_address_set_host(&address, destination);
+	address.port = port;
+	peer = enet_host_connect(client, &address, 1, 0);
+	if (peer == NULL) {
+		enet_host_destroy(client);
+		LOG_INFO("Unable to create client ENET peer");
+		return;
+	}
+
+	// Wait up to 5 seconds for the connection attempt to succeed.
+	//***FIX*** This needs to be handled in the general updateState method.
+	//We can't freeze DOSBox for 5 seconds!
+	if (enet_host_service(client, &event, 5000) > 0 &&
+	    event.type == ENET_EVENT_TYPE_CONNECT) {
+		LOG_INFO("NET:  ENET connect");
+	} else {
+		LOG_INFO("NET:  ENET connected failed");
+		enet_peer_reset(peer);
+		enet_host_destroy(client);
+		return;
+	}
+
+	isopen = true;
+}
+
+ENETClientSocket::ENETClientSocket(ENetHost *host)
+{
+	client  = host;
+	address = client->address;
+	peer    = &client->peers[0];
+	isopen  = true;
+	LOG_INFO("ENETClientSocket created from server socket");
+}
+
+ENETClientSocket::~ENETClientSocket()
+{
+	if (isopen) {
+		enet_peer_reset(peer);
+		enet_host_destroy(client);
+		isopen = false;
+		LOG_INFO("Closed client ENET listening socket");
+	}
+}
+
+SocketState ENETClientSocket::GetcharNonBlock(uint8_t &val)
+{
+	updateState();
+
+	if (!receiveBuffer.empty()) {
+		val = receiveBuffer.front();
+		receiveBuffer.pop();
+		return SocketState::Good;
+	}
+
+	return SocketState::Empty;
+}
+
+bool ENETClientSocket::Putchar(uint8_t val)
+{
+	ENetPacket *packet;
+
+	updateState();
+	packet = enet_packet_create(&val, 1, ENET_PACKET_FLAG_RELIABLE);
+	enet_peer_send(peer, 0, packet);
+	updateState();
+
+	return isopen;
+}
+
+bool ENETClientSocket::SendArray(uint8_t *data, size_t n)
+{
+	ENetPacket *packet = NULL;
+
+	updateState();
+	packet = enet_packet_create(data, n, ENET_PACKET_FLAG_RELIABLE);
+	if (packet) {
+		enet_peer_send(peer, 0, packet);
+	} else {
+		LOG_INFO("ENETClientSocket::SendArray unable to create packet size %ld", n);
+	}
+	updateState();
+
+	return isopen;
+}
+
+bool ENETClientSocket::ReceiveArray(uint8_t *data, size_t &n)
+{
+	size_t x = 0;
+
+	// Prime the pump.
+	updateState();
+
+	/*
+	// The SDL TCP code doesn't wait if there is no pending data.
+	if (receiveBuffer.empty()) {
+	        n = 0;
+	        return isopen;
+	}
+
+	// SDLNet_TCP_Recv says it blocks until it receives "n" bytes.
+	// Based on the softmodem code, I'm not sure this is true.
+	while (isopen && x < n) {
+	        if (!receiveBuffer.empty()) {
+	                data[x++] = receiveBuffer.front();
+	                receiveBuffer.pop();
+	        }
+	        updateState();
+	}
+	*/
+
+	while (isopen && x < n && !receiveBuffer.empty()) {
+		data[x++] = receiveBuffer.front();
+		receiveBuffer.pop();
+		updateState();
+	}
+
+	n = x;
+
+	return isopen;
+}
+
+bool ENETClientSocket::GetRemoteAddressString(uint8_t *buffer)
+{
+	updateState();
+	enet_address_get_host_ip(&address, (char *)buffer, 16);
+	return true;
+}
+
+void ENETClientSocket::updateState()
+{
+	ENetEvent event;
+
+	while (enet_host_service(client, &event, 1) > 0) {
+		switch (event.type) {
+		case ENET_EVENT_TYPE_RECEIVE:
+			for (size_t x = 0; x < event.packet->dataLength; x++) {
+				receiveBuffer.push(event.packet->data[x]);
+				LOG_INFO("ENET IN:  '%c' %d", event.packet->data[x],
+				         event.packet->data[x]);
+			}
+			enet_packet_destroy(event.packet);
+			break;
+
+		case ENET_EVENT_TYPE_DISCONNECT:
+		case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT: isopen = false; break;
+
+		default: break;
+		}
+	}
+}
+
+// --- TCP NET INTERFACE -----------------------------------------------------
 
 class sdl_net_manager_t {
 public:
@@ -149,7 +492,6 @@ TCPClientSocket::TCPClientSocket(const char *destination, uint16_t port)
 
 TCPClientSocket::~TCPClientSocket()
 {
-	delete [] sendbuffer;
 #ifdef NATIVESOCKETS
 	delete nativetcpstruct;
 #endif
@@ -157,6 +499,7 @@ TCPClientSocket::~TCPClientSocket()
 		if(listensocketset)
 			SDLNet_TCP_DelSocket(listensocketset, mysock);
 		SDLNet_TCP_Close(mysock);
+		LOG_INFO("Closed client TCP listening socket");
 	}
 
 	if(listensocketset) SDLNet_FreeSocketSet(listensocketset);
@@ -231,42 +574,6 @@ bool TCPClientSocket::SendArray(uint8_t *data, const size_t n)
 	return true;
 }
 
-bool TCPClientSocket::SendByteBuffered(const uint8_t val)
-{
-	if (sendbuffersize == 0)
-		return false;
-
-	if (sendbufferindex < (sendbuffersize - 1)) {
-		sendbuffer[sendbufferindex] = val;
-		sendbufferindex++;
-		return true;
-	}
-	// buffer is full, get rid of it
-	sendbuffer[sendbufferindex] = val;
-	sendbufferindex = 0;
-	return SendArray(sendbuffer, sendbuffersize);
-}
-
-void TCPClientSocket::FlushBuffer()
-{
-	if (sendbufferindex) {
-		if (!SendArray(sendbuffer, sendbufferindex))
-			return;
-		sendbufferindex = 0;
-	}
-}
-
-void TCPClientSocket::SetSendBufferSize(const size_t n)
-{
-	// Only resize the buffer if needed
-	if (!sendbuffer || sendbuffersize != n) {
-		delete [] sendbuffer;
-		sendbuffer = new uint8_t[n];
-		sendbuffersize = n;
-	}
-	sendbufferindex = 0;
-}
-
 TCPServerSocket::TCPServerSocket(const uint16_t port)
 {
 	isopen = false;
@@ -289,12 +596,14 @@ TCPServerSocket::TCPServerSocket(const uint16_t port)
 
 TCPServerSocket::~TCPServerSocket()
 {
-	if (mysock)
+	if (mysock) {
 		SDLNet_TCP_Close(mysock);
+		LOG_INFO("Closed server TCP listening socket");
+	}
 }
 
-TCPClientSocket* TCPServerSocket::Accept() {
-
+NETClientSocket *TCPServerSocket::Accept()
+{
 	TCPsocket new_tcpsock;
 
 	new_tcpsock=SDLNet_TCP_Accept(mysock);
