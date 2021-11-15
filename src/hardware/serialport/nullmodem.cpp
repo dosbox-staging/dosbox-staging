@@ -82,23 +82,21 @@ CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
 	// socket inheritance (client-alike)
 	if (getUintFromString("inhsocket:", bool_temp, cmd)) {
 #ifdef NATIVESOCKETS
-		if (Netwrapper_GetCapabilities()&NETWRAPPER_TCP_NATIVESOCKET) {
-			if (bool_temp==1) {
-				int sock;
-				if (control->cmdline->FindInt("-socket",sock,true)) {
-					dtrrespect=false;
-					transparent=true;
-					LOG_MSG("SERIAL: Port %" PRIu8 " inheritance "
-					        "socket handle: %d",
-					        GetPortNumber(), sock);
-					if (!ClientConnect(new TCPClientSocket(sock)))
-						return;
-				} else {
-					LOG_MSG("SERIAL: Port %" PRIu8 " missing "
-					        "\"-socket\" parameter.",
-					        GetPortNumber());
+		if (bool_temp == 1) {
+			int sock;
+			if (control->cmdline->FindInt("-socket", sock, true)) {
+				dtrrespect = false;
+				transparent = true;
+				LOG_MSG("SERIAL: Port %" PRIu8 " inheritance "
+				        "socket handle: %d",
+				        GetPortNumber(), sock);
+				if (!ClientConnect(new TCPClientSocket(sock)))
 					return;
-				}
+			} else {
+				LOG_MSG("SERIAL: Port %" PRIu8 " missing "
+				        "\"-socket\" parameter.",
+				        GetPortNumber());
+				return;
 			}
 		} else {
 			LOG_MSG("SERIAL: Port %" PRIu8 " socket inheritance not "

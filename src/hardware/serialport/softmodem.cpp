@@ -280,9 +280,10 @@ bool CSerialModem::Dial(const char * host) {
 	}
 
 	// Resolve host we're gonna dial
-	LOG_MSG("SERIAL: Port %" PRIu8 " connecting to host %s port %" PRIu16
-	        ".", GetPortNumber(), destination, port);
-	clientsocket.reset(new TCPClientSocket(destination, port));
+	LOG_MSG("SERIAL: Port %" PRIu8 " connecting to host %s port %" PRIu16 ".",
+	        GetPortNumber(), destination, port);
+	clientsocket.reset(NETClientSocket::NETClientFactory(socketType,
+	                                                     destination, port));
 	if (!clientsocket->isopen) {
 		clientsocket.reset(nullptr);
 		LOG_MSG("SERIAL: Port %" PRIu8 " failed to connect.", GetPortNumber());
@@ -363,17 +364,19 @@ void CSerialModem::EnterIdleState(){
 		while (waitingclientsocket) {
 			waitingclientsocket.reset(serversocket->Accept());
 		}
-	} else if (listenport) {
-
-		serversocket.reset(new TCPServerSocket(listenport));
+	}
+	if (listenport) {
+		serversocket.reset(nullptr);
+		serversocket.reset(NETServerSocket::NETServerFactory(socketType,
+		                                                     listenport));
 		if (!serversocket->isopen) {
-			LOG_MSG("SERIAL: Port %" PRIu8 " modem could not open TCP port "
+			LOG_MSG("SERIAL: Port %" PRIu8 " modem could not open port "
 			        "%" PRIu16 ".",
 			        GetPortNumber(), listenport);
 
 			serversocket.reset(nullptr);
 		} else
-			LOG_MSG("SERIAL: Port %" PRIu8 " modem listening on TCP port "
+			LOG_MSG("SERIAL: Port %" PRIu8 " modem listening on port "
 			        "%" PRIu16 " ...",
 			        GetPortNumber(), listenport);
 	}
@@ -468,6 +471,24 @@ void CSerialModem::DoCommand()
 					        GetPortNumber(),
 					        telnet_mode ? "enabled" : "disabled");
 				}
+				break;
+			}
+			// +SOCK1 enables enet.  +SOCK0 is TCP.
+			if (is_next_token("SOCK", scanbuf)) {
+				scanbuf += 4;
+				const uint32_t requested_mode = ScanNumber(scanbuf);
+				if (requested_mode >= SOCKET_TYPE_COUNT) {
+					SendRes(ResERROR);
+					return;
+				}
+				socketType = (SocketTypesE)requested_mode;
+				// This will break when there's more than two
+				// socket types.
+				LOG_MSG("SERIAL: Port %" PRIu8 " socket type %s",
+				        GetPortNumber(),
+				        socketType ? "ENET" : "TCP");
+				// Reset port state.
+				EnterIdleState();
 				break;
 			}
 			// If the command wasn't recognized then stop parsing
@@ -882,14 +903,17 @@ void CSerialModem::Timer2() {
 		// down here it saves a lot of network traffic
 		if (!clientsocket->SendArray(tmpbuf,txbuffersize)) {
 			SendRes(ResNOCARRIER);
+			LOG_INFO("SERIAL: No carrier on send");
 			EnterIdleState();
 		}
 	}
 	// Handle incoming to the serial port
 	if (!commandmode && clientsocket && rqueue->left()) {
 		size_t usesize = rqueue->left() >= 16 ? 16 : rqueue->left();
+		// size_t usesize = 1;
 		if (!clientsocket->ReceiveArray(tmpbuf, usesize)) {
 			SendRes(ResNOCARRIER);
+			LOG_INFO("SERIAL: No carrier on receive");
 			EnterIdleState();
 		} else if (usesize) {
 			// Filter telnet commands

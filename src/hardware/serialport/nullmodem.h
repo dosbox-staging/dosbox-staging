@@ -52,8 +52,8 @@ public:
 	void handleUpperEvent(uint16_t type);
 
 private:
-	TCPServerSocket *serversocket = nullptr;
-	TCPClientSocket *clientsocket = nullptr;
+	NETServerSocket *serversocket = nullptr;
+	NETClientSocket *clientsocket = nullptr;
 
 	uint16_t serverport = 0; // we are a server if this is nonzero
 	uint16_t clientport = 0;
