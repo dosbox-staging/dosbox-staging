@@ -712,8 +712,22 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%17d dir(s)  %21s bytes free\n");
 	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must \033[31mmount\033[0m it first. Type \033[1;33mintro\033[0m or \033[1;33mintro mount\033[0m for more information.\n");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
-	MSG_Add("SHELL_CMD_PAUSE","Press any key to continue...");
-	MSG_Add("SHELL_CMD_PAUSE_HELP","Waits for 1 keystroke to continue.\n");
+	MSG_Add("SHELL_CMD_PAUSE", "Press a key to continue...");
+	MSG_Add("SHELL_CMD_PAUSE_HELP", "Waits for a keystroke to continue.\n");
+	MSG_Add("SHELL_CMD_PAUSE_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mpause\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  This command has no parameters.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  This command is especially useful in batch programs to allow a user to\n"
+	        "  continue the batch program execution with a key press. The user can press\n"
+	        "  any key on the keyboard (except for certain control keys) to continue.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mpause\033[0m\n");
 	MSG_Add("SHELL_CMD_COPY_FAILURE","Copy failure : %s.\n");
 	MSG_Add("SHELL_CMD_COPY_SUCCESS","   %d File(s) copied.\n");
 	MSG_Add("SHELL_CMD_SUBST_NO_REMOVE","Unable to remove, drive not in use.\n");
