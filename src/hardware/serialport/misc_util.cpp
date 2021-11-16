@@ -21,7 +21,7 @@
 #if C_MODEM
 
 #define ENET_IMPLEMENTATION
-#include "enet.h" // Must be included before misc_util.h
+#include "../../libs/enet/include/enet.h" // Must be included before misc_util.h
 
 #include "misc_util.h"
 
@@ -181,7 +181,7 @@ ENETServerSocket::~ENETServerSocket()
 NETClientSocket *ENETServerSocket::Accept()
 {
 	ENetEvent event;
-	while (enet_host_service(host, &event, 1) > 0) {
+	while (enet_host_service(host, &event, 0) > 0) {
 		switch (event.type) {
 		case ENET_EVENT_TYPE_CONNECT:
 			LOG_INFO("NET:  ENET client connect");
@@ -361,7 +361,7 @@ void ENETClientSocket::updateState()
 {
 	ENetEvent event;
 
-	while (enet_host_service(client, &event, 1) > 0) {
+	while (enet_host_service(client, &event, 0) > 0) {
 		switch (event.type) {
 #ifndef ENET_BLOCKING_CONNECT
 		case ENET_EVENT_TYPE_CONNECT:
