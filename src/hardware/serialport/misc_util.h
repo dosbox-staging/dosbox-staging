@@ -44,6 +44,8 @@
 #endif
 
 #include <queue>
+#include <ctime>
+
 #include <SDL_net.h>
 
 #include "enet.h"
@@ -89,9 +91,9 @@ class NETClientSocket {
 		bool isopen = false;
 
 	private:
-		size_t sendbuffersize = 0;
-		size_t sendbufferindex = 0;
-		uint8_t *sendbuffer = nullptr;
+		size_t   sendbuffersize = 0;
+		size_t   sendbufferindex = 0;
+		uint8_t *sendbuffer      = nullptr;
 };
 
 
@@ -105,12 +107,18 @@ class NETServerSocket {
 
 		static NETServerSocket *NETServerFactory(SocketTypesE socketType, uint16_t port);
 
-		virtual NETClientSocket* Accept() = 0;
+		virtual NETClientSocket *Accept() = 0;
 
 		bool isopen = false;
 };
 
 // --- ENET UDP NET INTERFACE ------------------------------------------------
+
+// Using a non-blocking connection routine really should
+// require changes to softmodem to prevent bogus CONNECT
+// messages.  By default, we use the old blocking one.
+// This is basically how TCP behaves anyway.
+#define ENET_BLOCKING_CONNECT
 
 class ENETServerSocket : public NETServerSocket {
 	public:
@@ -122,9 +130,10 @@ class ENETServerSocket : public NETServerSocket {
 
 		NETClientSocket *Accept();
 
+	private:
+		ENetHost    *host      = nullptr;
+		ENetAddress  address   = {};
 		bool         nowClient = false;
-		ENetHost    *host      = NULL;
-		ENetAddress  address;
 };
 
 class ENETClientSocket : public NETClientSocket {
@@ -142,10 +151,14 @@ class ENETClientSocket : public NETClientSocket {
 	private:
 		void updateState();
 
-		ENetHost            *client          = NULL;
-		ENetPeer            *peer            = NULL;
-		ENetAddress          address;
-		std::queue<uint8_t>  receiveBuffer;
+#ifndef ENET_BLOCKING_CONNECT
+		std::clock_t         connectStart    = 0;
+		bool                 connecting      = false;
+#endif
+		ENetHost            *client          = nullptr;
+		ENetPeer            *peer            = nullptr;
+		ENetAddress          address         = {};
+		std::queue<uint8_t>  receiveBuffer   = {};
 };
 
 // --- TCP NET INTERFACE -----------------------------------------------------
@@ -198,7 +211,7 @@ public:
 
 	~TCPServerSocket();
 
-	NETClientSocket* Accept();
+	NETClientSocket *Accept();
 };
 
 #endif // C_MODEM
