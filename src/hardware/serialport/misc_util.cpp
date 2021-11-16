@@ -205,8 +205,6 @@ NETClientSocket *ENETServerSocket::Accept()
 
 ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 {
-	ENetEvent event;
-
 	if (!NetWrapper_InitializeENET())
 		return;
 
@@ -230,9 +228,13 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 		return;
 	}
 
+#ifndef ENET_BLOCKING_CONNECT
+	// Start connection timeout clock.
+	connectStart = std::clock();
+	connecting   = true;
+#else
+	ENetEvent event;
 	// Wait up to 5 seconds for the connection attempt to succeed.
-	//***FIX*** This needs to be handled in the general updateState method.
-	//We can't freeze DOSBox for 5 seconds!
 	if (enet_host_service(client, &event, 5000) > 0 &&
 	    event.type == ENET_EVENT_TYPE_CONNECT) {
 		LOG_INFO("NET:  ENET connect");
@@ -242,6 +244,7 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 		enet_host_destroy(client);
 		return;
 	}
+#endif
 
 	isopen = true;
 }
@@ -313,7 +316,9 @@ bool ENETClientSocket::ReceiveArray(uint8_t *data, size_t &n)
 	// Prime the pump.
 	updateState();
 
-	/*
+#if 0
+	// This block is how the SDLNet documentation says the TCP code should behave.
+
 	// The SDL TCP code doesn't wait if there is no pending data.
 	if (receiveBuffer.empty()) {
 	        n = 0;
@@ -329,7 +334,9 @@ bool ENETClientSocket::ReceiveArray(uint8_t *data, size_t &n)
 	        }
 	        updateState();
 	}
-	*/
+#else
+	// This block is how softmodem.cpp seems to expect the code to behave.
+	// Needless to say, not following the docs seems to work better.  :-)
 
 	while (isopen && x < n && !receiveBuffer.empty()) {
 		data[x++] = receiveBuffer.front();
@@ -338,6 +345,7 @@ bool ENETClientSocket::ReceiveArray(uint8_t *data, size_t &n)
 	}
 
 	n = x;
+#endif
 
 	return isopen;
 }
@@ -355,11 +363,15 @@ void ENETClientSocket::updateState()
 
 	while (enet_host_service(client, &event, 1) > 0) {
 		switch (event.type) {
+#ifndef ENET_BLOCKING_CONNECT
+		case ENET_EVENT_TYPE_CONNECT:
+			connecting = false;
+			LOG_INFO("NET:  ENET connect");
+			break;
+#endif
 		case ENET_EVENT_TYPE_RECEIVE:
 			for (size_t x = 0; x < event.packet->dataLength; x++) {
 				receiveBuffer.push(event.packet->data[x]);
-				LOG_INFO("ENET IN:  '%c' %d", event.packet->data[x],
-				         event.packet->data[x]);
 			}
 			enet_packet_destroy(event.packet);
 			break;
@@ -370,6 +382,19 @@ void ENETClientSocket::updateState()
 		default: break;
 		}
 	}
+
+#ifndef ENET_BLOCKING_CONNECT
+	if (connecting) {
+		// Check for timeout.  Five seconds.
+		if (((std::clock() - connectStart) / (double)CLOCKS_PER_SEC) > 5) {
+			LOG_INFO("NET:  ENET connected failed");
+			enet_peer_reset(peer);
+			enet_host_destroy(client);
+			connecting = false;
+			isopen     = false;
+		}
+	}
+#endif
 }
 
 // --- TCP NET INTERFACE -----------------------------------------------------
