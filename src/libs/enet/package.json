@@ -1,0 +1,34 @@
+{
+  "name": "enet.c",
+  "version": "2.3.0",
+  "description": "ENet - Simple, lightweight and reliable UDP networking library written on pure C.",
+  "main": "include/enet.h",
+  "directories": {
+    "doc": "misc/docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zpl-c/enet-c.git"
+  },
+  "keywords": [
+    "udp",
+    "networking",
+    "c",
+    "cpp",
+    "c++"
+  ],
+  "author": "Lee Salzman",
+  "contributors": [
+    "Vladyslav Hrytsenko",
+    "Dominik Madarász"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zpl-c/enet-c/issues"
+  },
+  "homepage": "https://github.com/zpl-c/enet-c#readme",
+  "dependencies": {}
+}

@@ -1,0 +1,30 @@
+image: Visual Studio 2017
+
+platform:
+  - x64
+
+configuration:
+  - Release
+
+before_build:
+  - cmake . -G "Visual Studio 15 2017 Win64" -DENET_SHARED=1 -DENET_TEST=1
+
+build:
+  project: $(APPVEYOR_BUILD_FOLDER)\$(APPVEYOR_PROJECT_NAME).sln
+
+test_script:
+  - '%APPVEYOR_BUILD_FOLDER%\%CONFIGURATION%\enet_test.exe'
+
+artifacts:
+  - path: 'Release\*.dll'
+    name: Releases
+
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: "tYm5oXMHHaO3oR5xd93zvnG95eqNZWw065Z9Qo6CAN3+2G7IlWbcmbsYlsl2XDFc"
+  artifact: /.*\.dll/
+  draft: false
+  prerelease: false
+  on:
+    appveyor_repo_tag: true
