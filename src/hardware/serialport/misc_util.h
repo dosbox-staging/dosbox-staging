@@ -43,12 +43,20 @@
  //socklen_t should be handled by configure
 #endif
 
+// Using a non-blocking connection routine really should
+// require changes to softmodem to prevent bogus CONNECT
+// messages.  By default, we use the old blocking one.
+// This is basically how TCP behaves anyway.
+//#define ENET_BLOCKING_CONNECT
+
 #include <queue>
+#ifndef ENET_BLOCKING_CONNECT
 #include <ctime>
+#endif
 
 #include <SDL_net.h>
 
-#include "enet.h"
+#include "../../libs/enet/include/enet.h"
 
 enum SocketTypesE { SOCKET_TYPE_TCP = 0, SOCKET_TYPE_ENET, SOCKET_TYPE_COUNT };
 
@@ -112,12 +120,6 @@ public:
 
 // --- ENET UDP NET INTERFACE ------------------------------------------------
 
-// Using a non-blocking connection routine really should
-// require changes to softmodem to prevent bogus CONNECT
-// messages.  By default, we use the old blocking one.
-// This is basically how TCP behaves anyway.
-#define ENET_BLOCKING_CONNECT
-
 class ENETServerSocket : public NETServerSocket {
 public:
 	ENETServerSocket(uint16_t port);
@@ -136,8 +138,11 @@ private:
 
 class ENETClientSocket : public NETClientSocket {
 public:
-	ENETClientSocket(const char *destination, uint16_t port);
 	ENETClientSocket(ENetHost *host);
+	ENETClientSocket(const char *destination, uint16_t port);
+	ENETClientSocket(const ENETClientSocket &) = delete; // prevent copying
+	ENETClientSocket &operator=(const ENETClientSocket &) = delete; // prevent assignment
+
 	~ENETClientSocket();
 
 	SocketState GetcharNonBlock(uint8_t &val);
