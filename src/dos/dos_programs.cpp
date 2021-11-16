@@ -310,7 +310,21 @@ void DOS_SetupPrograms(void)
 	MSG_Add("PROGRAM_BOOT_CART_WO_PCJR","PCjr cartridge found, but machine is not PCjr");
 	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS", "Available PCjr cartridge commands: %s");
 	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS", "No PCjr cartridge commands found");
-
+	MSG_Add("SHELL_CMD_LOADROM_HELP_LONG",
+	        "Loads a ROM image of the video BIOS or IBM BASIC.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  \033[32;1mloadrom \033[36;1mIMAGEFILE\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mIMAGEFILE\033[0m is a video BIOS or IBM BASIC ROM image.\n"
+	        "\n"
+	        "Notes:\n"
+	        "   After loading an IBM BASIC ROM image into the emulated ROM with the command,\n"
+	        "   you can run the original IBM BASIC interpreter program in DOSBox Staging.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mloadrom\033[0m \033[36;1mbios.rom\033[0m\n");
 	MSG_Add("PROGRAM_LOADROM_SPECIFY_FILE","Must specify ROM file to load.\n");
 	MSG_Add("PROGRAM_LOADROM_CANT_OPEN","ROM file not accessible.\n");
 	MSG_Add("PROGRAM_LOADROM_TOO_LARGE","ROM file too large.\n");

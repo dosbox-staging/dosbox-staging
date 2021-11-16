@@ -33,7 +33,10 @@ void LOADROM::Run(void) {
         WriteOut(MSG_Get("PROGRAM_LOADROM_SPECIFY_FILE"));
         return;
     }
-
+    if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false)) {
+	    WriteOut(MSG_Get("SHELL_CMD_LOADROM_HELP_LONG"));
+	    return;
+    }
     Bit8u drive;
     char fullname[DOS_PATHLENGTH];
     localDrive* ldp=0;
