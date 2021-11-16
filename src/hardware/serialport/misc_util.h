@@ -44,6 +44,8 @@
 #endif
 
 #include <queue>
+#include <ctime>
+
 #include <SDL_net.h>
 
 #include "enet.h"
@@ -110,6 +112,12 @@ public:
 
 // --- ENET UDP NET INTERFACE ------------------------------------------------
 
+// Using a non-blocking connection routine really should
+// require changes to softmodem to prevent bogus CONNECT
+// messages.  By default, we use the old blocking one.
+// This is basically how TCP behaves anyway.
+#define ENET_BLOCKING_CONNECT
+
 class ENETServerSocket : public NETServerSocket {
 public:
 	ENETServerSocket(uint16_t port);
@@ -120,9 +128,10 @@ public:
 
 	NETClientSocket *Accept();
 
-	bool nowClient = false;
-	ENetHost *host = NULL;
-	ENetAddress address;
+private:
+	ENetHost    *host      = nullptr;
+	ENetAddress  address   = {};
+	bool         nowClient = false;
 };
 
 class ENETClientSocket : public NETClientSocket {
@@ -140,10 +149,14 @@ public:
 private:
 	void updateState();
 
-	ENetHost *client = NULL;
-	ENetPeer *peer = NULL;
-	ENetAddress address;
-	std::queue<uint8_t> receiveBuffer;
+#ifndef ENET_BLOCKING_CONNECT
+	std::clock_t         connectStart  = 0;
+	bool                 connecting    = false;
+#endif
+	ENetHost            *client        = nullptr;
+	ENetPeer            *peer          = nullptr;
+	ENetAddress          address       = {};
+	std::queue<uint8_t>  receiveBuffer = {};
 };
 
 // --- TCP NET INTERFACE -----------------------------------------------------
