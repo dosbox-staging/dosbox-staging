@@ -344,6 +344,10 @@ void DOS_Shell::Run()
 
 	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
+	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false)) {
+		WriteOut(MSG_Get("SHELL_CMD_COMMAND_HELP_LONG"));
+		return;
+	}
 	if (cmd->FindStringRemainBegin("/C",line)) {
 		safe_strcpy(input_line, line.c_str());
 		char* sep = strpbrk(input_line,"\r\n"); //GTA installer
@@ -668,6 +672,26 @@ void SHELL_Init() {
 	/* Add messages */
 	MSG_Add("SHELL_ILLEGAL_PATH","Illegal Path.\n");
 	MSG_Add("SHELL_CMD_HELP","If you want a list of all supported commands type \033[33;1mhelp /all\033[0m .\nA short list of the most often used commands:\n");
+	MSG_Add("SHELL_CMD_COMMAND_HELP_LONG",
+	        "Starts the DOSBox Staging command shell.\n"
+	        "Usage:\n"
+	        "  \033[32;1mcommand\033[0m\n"
+	        "  \033[32;1mcommand\033[0m /c (or /init) \033[36;1mCOMMAND\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mCOMMAND\033[0m is a DOS command, game, or program to run.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  DOSBox Staging automatically starts a DOS command shell by invoking this\n"
+	        "  command with /init option when it starts, which shows the welcome banner.\n"
+	        "  You can load a new instance of the command shell by running \033[32;1mcommand\033[0m.\n"
+	        "  Adding a /c option along with \033[36;1mCOMMAND\033[0m allows this command to run the\n"
+	        "  specified command (optionally with parameters) and then exit automatically.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mcommand\033[0m\n"
+	        "  \033[32;1mcommand\033[0m /c \033[36;1mecho\033[0m \033[37mHello world!\033[0m\n"
+	        "  \033[32;1mcommand\033[0m /init \033[36;1mdir\033[0m\n");
 	MSG_Add("SHELL_CMD_ECHO_ON","ECHO is on.\n");
 	MSG_Add("SHELL_CMD_ECHO_OFF", "ECHO is off.\n");
 	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s.\n");
