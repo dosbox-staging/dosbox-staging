@@ -86,7 +86,7 @@ constexpr T Mixer_GetSilentDOSSample()
 
 class MixerChannel {
 public:
-	MixerChannel(MIXER_Handler _handler, Bitu _freq, const char * _name);
+	MixerChannel(MIXER_Handler _handler, const uint32_t _freq, const char *name);
 	uint32_t GetSampleRate() const;
 	bool IsInterpolated() const;
 	using apply_level_callback_f = std::function<void(const AudioFrame &level)>;
@@ -172,7 +172,7 @@ private:
 	bool last_samples_were_silence = true;
 };
 
-MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,const char * name);
+MixerChannel * MIXER_AddChannel(MIXER_Handler handler,uint32_t freq,const char * name);
 MixerChannel * MIXER_FindChannel(const char * name);
 /* Find the device you want to delete with findchannel "delchan gets deleted" */
 void MIXER_DelChannel(MixerChannel* delchan); 

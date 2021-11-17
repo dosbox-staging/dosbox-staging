@@ -130,7 +130,7 @@ static struct mixer_t mixer;
 Bit8u MixTemp[MIXER_BUFSIZE];
 
 MixerChannel::MixerChannel(MIXER_Handler _handler,
-                           [[maybe_unused]] Bitu _freq,
+                           [[maybe_unused]] uint32_t _freq,
                            const char *_name)
         : name(_name),
           done(0),
@@ -138,7 +138,7 @@ MixerChannel::MixerChannel(MIXER_Handler _handler,
           handler(_handler)
 {}
 
-MixerChannel * MIXER_AddChannel(MIXER_Handler handler, Bitu freq, const char * name) {
+MixerChannel * MIXER_AddChannel(MIXER_Handler handler, uint32_t freq, const char * name) {
 	MixerChannel * chan=new MixerChannel(handler, freq, name);
 	chan->next=mixer.channels;
 	chan->SetFreq(freq); // also enables 'interpolate' if needed
