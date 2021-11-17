@@ -1101,8 +1101,23 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  \033[32;1msubst\033[0m \033[37;1md:\033[0m \033[36;1mc:\\games\033[0m\n"
 	        "  \033[32;1msubst\033[0m \033[37;1me:\033[0m \033[36;1m/d\033[0m\n");
-	MSG_Add("SHELL_CMD_LOADHIGH_HELP","Loads a program into upper memory (requires xms=true,umb=true).\n");
-
+	MSG_Add("SHELL_CMD_LOADHIGH_HELP", "Loads a DOS program into upper memory.\n");
+	MSG_Add("SHELL_CMD_LOADHIGH_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mlh\033[0m \033[36;1mPROGRAM\033[0m \033[37;1m[PARAMETERS]\033[0m\n"
+	        "  \033[32;1mloadhigh\033[0m \033[36;1mPROGRAM\033[0m \033[37;1m[PARAMETERS]\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mPROGRAM\033[0m is a DOS TSR program to be loaded, optionally with parameters.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  This command intends to save the conventional memory by loading specified DOS\n"
+	        "  TSR programs into upper memory if possible. Such programs may be required for\n"
+	        "  some DOS games; XMS and UMB memory must be enabled (xms=true and umb=true).\n"
+	        "  Not all DOS TSR programs can be loaded into upper memory with this command.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mlh\033[0m \033[36;1mtsrapp\033[0m \033[37;1margs\033[0m\n");
 	MSG_Add("SHELL_CMD_LS_HELP",
 	        "Displays directory contents in the wide list format.\n");
 	MSG_Add("SHELL_CMD_LS_HELP_LONG",
