@@ -44,9 +44,6 @@ static_assert(MT32EMU_VERSION_MAJOR > 2 ||
               "libmt32emu >= 2.5.0 required (using " MT32EMU_VERSION ")");
 
 class MidiHandler_mt32 final : public MidiHandler {
-private:
-	using channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
-
 public:
 	using service_t = std::unique_ptr<MT32Emu::Service>;
 
@@ -69,7 +66,7 @@ private:
 	void Render();
 
 	// Managed objects
-	channel_t channel{nullptr, MIXER_DelChannel};
+	mixer_channel_t channel = nullptr;
 
 	std::vector<int16_t> play_buffer = {};
 	static constexpr auto num_buffers = 4;

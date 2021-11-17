@@ -35,7 +35,7 @@ constexpr uint32_t GAMEBLASTER_CLOCK_HZ = 7159090;
 
 
 //My mixer channel
-static MixerChannel * cms_chan;
+static mixer_channel_t cms_chan;
 //Timer to disable the channel after a while
 static Bit32u lastWriteTicks;
 static uint16_t cmsBase;
@@ -128,7 +128,6 @@ private:
 	IO_WriteHandleObject WriteHandler = {};
 	IO_WriteHandleObject DetWriteHandler = {};
 	IO_ReadHandleObject DetReadHandler = {};
-	MixerObject MixerChan = {};
 
 public:
 	CMS(Section *configuration) : Module_base(configuration)
@@ -147,7 +146,7 @@ public:
 		}
 
 		/* Register the Mixer CallBack */
-		cms_chan = MixerChan.Install(CMS_CallBack,sampleRate,"CMS");
+		cms_chan = MIXER_AddChannel(CMS_CallBack, sampleRate, "CMS");
 
 		lastWriteTicks = PIC_Ticks;
 

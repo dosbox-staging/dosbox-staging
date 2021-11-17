@@ -58,11 +58,10 @@ private:
 	using fluid_settings_ptr_t =
 	        std::unique_ptr<fluid_settings_t, decltype(&delete_fluid_settings)>;
 	using fsynth_ptr_t = std::unique_ptr<fluid_synth_t, decltype(&delete_fluid_synth)>;
-	using channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
 	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
-	channel_t channel{nullptr, MIXER_DelChannel};
+	mixer_channel_t channel = nullptr;
 	std::string selected_font = "";
 
 	std::vector<int16_t> play_buffer = {};

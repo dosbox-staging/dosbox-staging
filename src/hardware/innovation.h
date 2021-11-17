@@ -48,8 +48,6 @@ public:
 	~Innovation() { Close(); }
 
 private:
-	using channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
-
 	void Render();
 	uint16_t GetRemainingSamples();
 	void MixerCallBack(uint16_t requested_samples);
@@ -57,7 +55,7 @@ private:
 	void WriteToPort(io_port_t port, uint8_t data, io_width_t width);
 
 	// Managed objects
-	channel_t channel{nullptr, MIXER_DelChannel};
+	mixer_channel_t channel = nullptr;
 
 	IO_ReadHandleObject read_handler = {};
 	IO_WriteHandleObject write_handler = {};

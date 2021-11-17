@@ -36,7 +36,6 @@
 #include "mame/sn76496.h"
 
 using namespace std::placeholders;
-using mixer_channel_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
 struct Ps1Registers {
 	uint8_t status = 0;     // Read via port 0x202 control status
@@ -81,7 +80,7 @@ private:
 	static constexpr auto bytes_pending_limit =  fifo_size << frac_shift;
 
 	// Managed objects
-	mixer_channel_t channel{nullptr, MIXER_DelChannel};
+	mixer_channel_t channel = nullptr;
 	IO_ReadHandleObject read_handlers[5] = {};
 	IO_WriteHandleObject write_handlers[4] = {};
 	Ps1Registers regs = {};
@@ -120,9 +119,7 @@ static void maybe_suspend_channel(const size_t last_used_on, mixer_channel_t &ch
 Ps1Dac::Ps1Dac()
 {
 	const auto callback = std::bind(&Ps1Dac::Update, this, _1);
-	channel = mixer_channel_t(MIXER_AddChannel(callback, 0, "PS1DAC"),
-	                          MIXER_DelChannel);
-	assert(channel);
+	channel = MIXER_AddChannel(callback, 0, "PS1DAC");
 
 	// Register DAC per-port read handlers
 	read_handlers[0].Install(0x02F, std::bind(&Ps1Dac::ReadPresencePort02F, this, _1, _2), io_width_t::byte);
@@ -348,7 +345,7 @@ private:
 	void Update(uint16_t samples);
 	void WriteSoundGeneratorPort205(io_port_t port, uint8_t data, io_width_t);
 
-	mixer_channel_t channel{nullptr, MIXER_DelChannel};
+	mixer_channel_t channel = nullptr;
 	IO_WriteHandleObject write_handler = {};
 	static constexpr auto clock_rate_hz = 4000000;
 	sn76496_device device;
@@ -360,9 +357,7 @@ private:
 Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate_hz)
 {
 	const auto callback = std::bind(&Ps1Synth::Update, this, _1);
-	channel = mixer_channel_t(MIXER_AddChannel(callback, 0, "PS1"),
-	                          MIXER_DelChannel);
-	assert(channel);
+	channel = MIXER_AddChannel(callback, 0, "PS1");
 
 	const auto generate_sound = std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
 	write_handler.Install(0x205, generate_sound, io_width_t::byte);

@@ -75,8 +75,7 @@ void Innovation::Open(const std::string &model_choice,
 	// Setup the mixer and get it's sampling rate
 	using namespace std::placeholders;
 	const auto mixer_callback = std::bind(&Innovation::MixerCallBack, this, _1);
-	channel_t mixer_channel(MIXER_AddChannel(mixer_callback, 0, "INNOVATION"),
-	                        MIXER_DelChannel);
+	const auto mixer_channel = MIXER_AddChannel(mixer_callback, 0, "INNOVATION");
 	sid_sample_rate = mixer_channel->GetSampleRate();
 
 	// Determine the passband frequency, which is capped at 90% of Nyquist.

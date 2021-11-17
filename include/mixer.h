@@ -26,6 +26,7 @@
 
 #include <atomic>
 #include <functional>
+#include <memory>
 
 #include "envelope.h"
 
@@ -169,23 +170,10 @@ private:
 	bool last_samples_were_stereo = false;
 	bool last_samples_were_silence = true;
 };
+using mixer_channel_t = std::shared_ptr<MixerChannel>;
 
-MixerChannel * MIXER_AddChannel(MIXER_Handler handler,uint32_t freq,const char * name);
-MixerChannel * MIXER_FindChannel(const char * name);
-/* Find the device you want to delete with findchannel "delchan gets deleted" */
-void MIXER_DelChannel(MixerChannel* delchan); 
-
-/* Object to maintain a mixerchannel; As all objects it registers itself with create
- * and removes itself when destroyed. */
-class MixerObject{
-private:
-	bool installed = false;
-	char m_name[32] = "";
-
-public:
-	MixerChannel* Install(MIXER_Handler handler,Bitu freq,const char * name);
-	~MixerObject();
-};
+mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const uint32_t freq, const char *name);
+mixer_channel_t MIXER_FindChannel(const char *name);
 
 /* PC Speakers functions, tightly related to the timer functions */
 void PCSPEAKER_SetCounter(uint32_t cntr, uint32_t mode);

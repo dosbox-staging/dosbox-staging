@@ -175,7 +175,7 @@ struct SB_INFO {
 		int value = 0;
 		uint32_t count = 0;
 	} e2 = {};
-	MixerChannel *chan = nullptr;
+	mixer_channel_t chan = nullptr;
 };
 
 static SB_INFO sb = {};
@@ -1314,10 +1314,10 @@ static float calc_vol(Bit8u amount) {
 }
 static void CTMIXER_UpdateVolumes() {
 	if (!sb.mixer.enabled) return;
-	MixerChannel * chan;
+
 	float m0 = calc_vol(sb.mixer.master[0]);
 	float m1 = calc_vol(sb.mixer.master[1]);
-	chan = MIXER_FindChannel("SB");
+	auto chan = MIXER_FindChannel("SB");
 	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.dac[0]), m1 * calc_vol(sb.mixer.dac[1]));
 	chan = MIXER_FindChannel("FM");
 	if (chan) chan->SetVolume(m0 * calc_vol(sb.mixer.fm[0]) , m1 * calc_vol(sb.mixer.fm[1]) );
@@ -1709,7 +1709,6 @@ private:
 	IO_ReadHandleObject ReadHandler[0x10];
 	IO_WriteHandleObject WriteHandler[0x10];
 	AutoexecObject autoexecline;
-	MixerObject MixerChan;
 	OPL_Mode oplmode;
 
 	/* Support Functions */
@@ -1764,7 +1763,6 @@ public:
 	SBLASTER(Section *configuration)
 	        : Module_base(configuration),
 	          autoexecline{},
-	          MixerChan{},
 	          oplmode(OPL_none)
 	{
 		Section_prop * section=static_cast<Section_prop *>(configuration);
@@ -1797,7 +1795,7 @@ public:
 		}
 		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
 
-		sb.chan=MixerChan.Install(&SBLASTER_CallBack,22050,"SB");
+		sb.chan = MIXER_AddChannel(&SBLASTER_CallBack, 22050, "SB");
 		sb.dsp.state=DSP_S_NORMAL;
 		sb.dsp.out.lastval=0xaa;
 		sb.dma.chan=NULL;

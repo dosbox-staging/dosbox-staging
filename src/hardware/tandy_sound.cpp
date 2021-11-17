@@ -93,11 +93,11 @@ constexpr int SOUND_CLOCK = 14318180 / 4;
 constexpr uint16_t TDAC_DMA_BUFSIZE = 1024;
 
 static struct {
-	MixerChannel *chan = nullptr;
+	mixer_channel_t chan = nullptr;
 	bool enabled = false;
 	Bitu last_write = 0u;
 	struct {
-		MixerChannel *chan = nullptr;
+		mixer_channel_t chan = nullptr;
 		bool enabled = false;
 		struct {
 			Bitu base = 0u;
@@ -332,13 +332,9 @@ class TANDYSOUND final : public Module_base {
 private:
 	IO_WriteHandleObject WriteHandler[4];
 	IO_ReadHandleObject ReadHandler[4];
-	MixerObject MixerChan;
-	MixerObject MixerChanDAC;
+
 public:
-	TANDYSOUND(Section *configuration)
-	        : Module_base(configuration),
-	          MixerChan(),
-	          MixerChanDAC()
+	TANDYSOUND(Section *configuration) : Module_base(configuration)
 	{
 		Section_prop *section = static_cast<Section_prop *>(configuration);
 
@@ -376,7 +372,7 @@ public:
 		}
 
 		const auto sample_rate = static_cast<uint32_t>(section->Get_int("tandyrate"));
-		tandy.chan=MixerChan.Install(&SN76496Update,sample_rate,"TANDY");
+		tandy.chan = MIXER_AddChannel(&SN76496Update, sample_rate, "TANDY");
 
 		WriteHandler[0].Install(0xc0, SN76496Write, io_width_t::byte, 2);
 
@@ -386,7 +382,7 @@ public:
 			ReadHandler[1].Install(0xc4, TandyDACRead, io_width_t::byte, 4);
 
 			tandy.dac.enabled=true;
-			tandy.dac.chan=MixerChanDAC.Install(&TandyDACUpdate,sample_rate,"TANDYDAC");
+			tandy.dac.chan = MIXER_AddChannel(&TandyDACUpdate, sample_rate, "TANDYDAC");
 
 			tandy.dac.hw.base=0xc4;
 			tandy.dac.hw.irq =7;

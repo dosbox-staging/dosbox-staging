@@ -23,14 +23,15 @@
 
 #include "mixer.h"
 
-#include <cstdint>
-#include <cmath>
-#include <cstring>
-#include <sys/types.h>
-
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cmath>
+#include <cstdint>
+#include <cstring>
+#include <map>
+#include <mutex>
+#include <sys/types.h>
 
 #if defined (WIN32)
 //Midi listing
@@ -101,7 +102,8 @@ struct mixer_t {
 	std::atomic<uint32_t> tick_add = 0;
 	uint32_t tick_counter = 0;
 	std::array<float, 2> mastervol = {1.0f, 1.0f};
-	MixerChannel *channels;
+	std::map<std::string, mixer_channel_t> channels = {};
+	std::mutex channel_mutex = {}; // use whenever accessing channels
 	bool nosound = false;
 	uint32_t freq = 0;
 	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
@@ -113,24 +115,19 @@ static struct mixer_t mixer = {};
 
 Bit8u MixTemp[MIXER_BUFSIZE] = {};
 
-MixerChannel::MixerChannel(MIXER_Handler _handler,
-                           [[maybe_unused]] uint32_t _freq,
-                           const char *_name)
-        : name(_name),
-          done(0),
-          envelope(name),
+MixerChannel::MixerChannel(MIXER_Handler _handler, [[maybe_unused]] uint32_t _freq, const char *_name)
+        : envelope(_name),
           handler(_handler)
 {}
 
-MixerChannel * MIXER_AddChannel(MIXER_Handler handler, uint32_t freq, const char * name) {
-	MixerChannel * chan=new MixerChannel(handler, freq, name);
-	chan->next=mixer.channels;
+mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const uint32_t freq, const char *name)
+{
+	auto chan = std::make_shared<MixerChannel>(handler, freq, name);
 	chan->SetFreq(freq); // also enables 'interpolate' if needed
 	chan->SetScale(1.0);
 	chan->SetVolume(1, 1);
 	chan->MapChannels(0, 1);
 	chan->Enable(false);
-	mixer.channels=chan;
 
 	const auto mix_rate = mixer.freq;
 	const auto chan_rate = chan->GetSampleRate();
@@ -138,33 +135,18 @@ MixerChannel * MIXER_AddChannel(MIXER_Handler handler, uint32_t freq, const char
 		LOG_MSG("MIXER: %s channel operating at %u Hz without resampling",
 		        name, chan_rate);
 	else
-		LOG_MSG("MIXER: %s channel operating at %u Hz and %s to the output rate",
-		        name, chan_rate,
-		        chan_rate > mix_rate ? "downsampling" : "upsampling");
+		LOG_MSG("MIXER: %s channel operating at %u Hz and %s to the output rate", name,
+		        chan_rate, chan_rate > mix_rate ? "downsampling" : "upsampling");
+	std::lock_guard lock(mixer.channel_mutex);
+	mixer.channels[name] = chan; // replace the old, if it exists
 	return chan;
 }
 
-MixerChannel * MIXER_FindChannel(const char * name) {
-	MixerChannel * chan=mixer.channels;
-	while (chan) {
-		if (!strcasecmp(chan->name,name)) break;
-		chan=chan->next;
-	}
-	return chan;
-}
-
-void MIXER_DelChannel(MixerChannel* delchan) {
-	MixerChannel * chan=mixer.channels;
-	MixerChannel * * where=&mixer.channels;
-	while (chan) {
-		if (chan==delchan) {
-			*where=chan->next;
-			delete delchan;
-			return;
-		}
-		where=&chan->next;
-		chan=chan->next;
-	}
+mixer_channel_t MIXER_FindChannel(const char *name)
+{
+	std::lock_guard lock(mixer.channel_mutex);
+	auto it = mixer.channels.find(name);
+	return (it != mixer.channels.end()) ? it->second : nullptr;
 }
 
 static void MIXER_LockAudioDevice()
@@ -679,12 +661,12 @@ static constexpr Bit32u calc_tickadd(Bit32u freq) {
 
 /* Mix a certain amount of new samples */
 static void MIXER_MixData(Bitu needed) {
-	MixerChannel * chan=mixer.channels;
-	while (chan) {
-		chan->Mix(needed);
-		chan=chan->next;
-	}
-	if (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)) {
+	std::unique_lock lock(mixer.channel_mutex);
+	for (auto &it : mixer.channels)
+		it.second->Mix(needed);
+	lock.unlock();
+
+	if (CaptureState & (CAPTURE_WAVE | CAPTURE_VIDEO)) {
 		int16_t convert[1024][2];
 		const size_t added = std::min<size_t>(needed - mixer.done, 1024);
 		size_t readpos = (mixer.pos + mixer.done) & MIXER_BUFMASK;
@@ -715,6 +697,13 @@ static void MIXER_Mix()
 	MIXER_UnlockAudioDevice();
 }
 
+static void MIXER_ReduceChannelsDoneCounts(const uint32_t at_most)
+{
+	std::lock_guard lock(mixer.channel_mutex);
+	for (auto &it : mixer.channels)
+		it.second->done -= std::min(it.second->done.load(), at_most);
+}
+
 static void MIXER_Mix_NoSound()
 {
 	MIXER_MixData(mixer.needed);
@@ -724,11 +713,8 @@ static void MIXER_Mix_NoSound()
 		mixer.work[mixer.pos][1]=0;
 		mixer.pos=(mixer.pos+1)&MIXER_BUFMASK;
 	}
-	/* Reduce count in channels */
-	for (MixerChannel * chan=mixer.channels;chan;chan=chan->next) {
-		if (chan->done>mixer.needed) chan->done-=mixer.needed;
-		else chan->done=0;
-	}
+	MIXER_ReduceChannelsDoneCounts(mixer.needed);
+
 	/* Set values for next tick */
 	mixer.tick_counter += mixer.tick_add;
 	mixer.needed = (mixer.tick_counter >> TICK_SHIFT);
@@ -814,11 +800,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata, Uint8 *strea
 		reduce = mixer.done - 2 * mixer.min_needed;
 		mixer.tick_add = calc_tickadd(mixer.freq - (mixer.min_needed / 5));
 	}
-	/* Reduce done count in all channels */
-	for (MixerChannel * chan=mixer.channels;chan;chan=chan->next) {
-		if (chan->done>reduce) chan->done-=reduce;
-		else chan->done=0;
-	}
+	MIXER_ReduceChannelsDoneCounts(reduce);
 
 	// Reset mixer.tick_add when irqs are important
 	if( Mixer_irq_important() )
@@ -905,22 +887,28 @@ public:
 		if (cmd->FindString("MASTER",temp_line,false)) {
 			MakeVolume((char *)temp_line.c_str(),mixer.mastervol[0],mixer.mastervol[1]);
 		}
-		MixerChannel * chan = mixer.channels;
-		while (chan) {
-			if (cmd->FindString(chan->name,temp_line,false)) {
+
+		std::unique_lock lock(mixer.channel_mutex);
+		for (auto &[name, channel] : mixer.channels) {
+			if (cmd->FindString(name.c_str(), temp_line, false)) {
 				float left_vol = 0;
 				float right_vol = 0;
 				MakeVolume(&temp_line[0], left_vol, right_vol);
-				chan->SetVolume(left_vol, right_vol);
+				channel->SetVolume(left_vol, right_vol);
 			}
-			chan->UpdateVolume();
-			chan = chan->next;
+			channel->UpdateVolume();
 		}
-		if (cmd->FindExist("/NOSHOW")) return;
+		lock.unlock();
+
+		if (cmd->FindExist("/NOSHOW"))
+			return;
 		WriteOut("Channel  Main    Main(dB)\n");
 		ShowVolume("MASTER",mixer.mastervol[0],mixer.mastervol[1]);
-		for (chan = mixer.channels;chan;chan = chan->next)
-			ShowVolume(chan->name,chan->volmain[0],chan->volmain[1]);
+
+		lock.lock();
+		for (auto &[name, channel] : mixer.channels)
+			ShowVolume(name.c_str(), channel->volmain[0], channel->volmain[1]);
+		lock.unlock();
 	}
 
 private:
@@ -939,23 +927,6 @@ static void MIXER_ProgramStart(Program * * make) {
 	*make=new MIXER;
 }
 
-MixerChannel* MixerObject::Install(MIXER_Handler handler,Bitu freq,const char * name){
-	if(!installed) {
-		if(strlen(name) > 31) E_Exit("Too long mixer channel name");
-		safe_strcpy(m_name, name);
-		installed = true;
-		return MIXER_AddChannel(handler,freq,name);
-	} else {
-		E_Exit("already added mixer channel.");
-		return 0; //Compiler happy
-	}
-}
-
-MixerObject::~MixerObject(){
-	if(!installed) return;
-	MIXER_DelChannel(MIXER_FindChannel(m_name));
-}
-
 void MIXER_Init(Section* sec) {
 	sec->AddDestroyFunction(&MIXER_Stop);
 
@@ -965,7 +936,7 @@ void MIXER_Init(Section* sec) {
 	mixer.nosound=section->Get_bool("nosound");
 	mixer.freq = static_cast<uint32_t>(section->Get_int("rate"));
 	mixer.blocksize = static_cast<uint16_t>(section->Get_int("blocksize"));
-	const auto negotiate = static_cast<bool>(section->Get_bool("negotiate"));
+	const auto negotiate = section->Get_bool("negotiate");
 
 	/* Start the Mixer using SDL Sound at 22 khz */
 	SDL_AudioSpec spec;
@@ -1044,6 +1015,10 @@ void MIXER_Init(Section* sec) {
 
 void MIXER_CloseAudioDevice()
 {
+	std::lock_guard lock(mixer.channel_mutex);
+	for (auto &it : mixer.channels)
+		it.second->Enable(false);
+
 	if (!mixer.nosound) {
 		if (mixer.sdldevice != 0) {
 			SDL_CloseAudioDevice(mixer.sdldevice);
