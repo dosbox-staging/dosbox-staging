@@ -1450,6 +1450,21 @@ void DOS_Shell::CMD_TIME(char * args) {
 		mem_writed(BIOS_TIMER, static_cast<uint32_t>(ticks_now));
 		return;
 	}
+	uint32_t newhour, newminute, newsecond;
+	if (sscanf(args, "%u:%u:%u", &newhour, &newminute, &newsecond) == 3) {
+		if (newhour > 23 || newminute > 59 || newsecond > 59)
+			WriteOut(MSG_Get("SHELL_CMD_TIME_ERROR"));
+		else {
+			reg_ch = static_cast<Bit8u>(newhour);
+			reg_cl = static_cast<Bit8u>(newminute);
+			reg_dh = static_cast<Bit8u>(newsecond);
+
+			reg_ah=0x2d; // set system time
+			CALLBACK_RunRealInt(0x21);
+			if (reg_al == 0xff) WriteOut(MSG_Get("SHELL_CMD_TIME_ERROR"));
+		}
+		return;
+	}
 	bool timeonly = ScanCMDBool(args,"T");
 
 	reg_ah=0x2c; // get system time
@@ -1465,6 +1480,7 @@ void DOS_Shell::CMD_TIME(char * args) {
 	} else {
 		WriteOut(MSG_Get("SHELL_CMD_TIME_NOW"));
 		WriteOut("%2u:%02u:%02u,%02u\n",reg_ch,reg_cl,reg_dh,reg_dl);
+		WriteOut(MSG_Get("SHELL_CMD_TIME_SETHLP"));
 	}
 }
 

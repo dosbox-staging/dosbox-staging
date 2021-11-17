@@ -504,13 +504,15 @@ static Bitu DOS_21Handler(void) {
 		break;
 	}
 	case 0x2d:		/* Set System Time */
-		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Set System Time not supported");
-		//Check input parameters nonetheless
 		if( reg_ch > 23 || reg_cl > 59 || reg_dh > 59 || reg_dl > 99 )
 			reg_al = 0xff; 
 		else { //Allow time to be set to zero. Restore the orginal time for all other parameters. (QuickBasic)
 			if (reg_cx == 0 && reg_dx == 0) {time_start = mem_readd(BIOS_TIMER);LOG_MSG("Warning: game messes with DOS time!");}
 			else time_start = 0;
+			uint32_t ticks = (uint32_t)(
+			        ((double)(reg_ch * 3600 + reg_cl * 60 + reg_dh)) *
+			        18.206481481);
+			mem_writed(BIOS_TIMER, ticks);
 			reg_al = 0;
 		}
 		break;
