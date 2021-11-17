@@ -712,11 +712,28 @@ void SHELL_Init() {
                                     "  /F:         Switch back to DOSBox internal time (opposite of /S)\n"\
 									"  /T:         Only display date\n"\
 									"  /H:         Synchronize with host\n");
-	MSG_Add("SHELL_CMD_TIME_HELP","Displays the internal time.\n");
-	MSG_Add("SHELL_CMD_TIME_NOW","Current time: ");
-	MSG_Add("SHELL_CMD_TIME_HELP_LONG","TIME [/T] [/H]\n"\
-									"  /T:         Display simple time\n"\
-									"  /H:         Synchronize with host\n");
+	MSG_Add("SHELL_CMD_TIME_HELP", "Displays or changes the internal time.\n");
+	MSG_Add("SHELL_CMD_TIME_ERROR", "The specified time is not correct.\n");
+	MSG_Add("SHELL_CMD_TIME_NOW", "Current time: ");
+	MSG_Add("SHELL_CMD_TIME_SETHLP", "Type 'time hh:mm:ss' to change.\n");
+	MSG_Add("SHELL_CMD_TIME_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mtime\033[0m [/t]\n"
+	        "  \033[32;1mtime\033[0m /h\n"
+	        "  \033[32;1mtime\033[0m \033[36;1mTIME\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mTIME\033[0m is the new time to set to, in the format of \033[36;1mhh:mm:ss\033[0m.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running \033[32;1mtime\033[0m without an argument shows the current time, or a simple time\n"
+	        "  with the /t option. You can force a time synchronization of with the host\n"
+	        "  system with the /h option, or manually specify a new time to set to.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mtime\033[0m\n"
+	        "  \033[32;1mtime\033[0m /h\n"
+	        "  \033[32;1mtime\033[0m \033[36;1m13:14:15\033[0m\n");
 	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s.\n");
 	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %s.\n");
 	MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s.\n");
