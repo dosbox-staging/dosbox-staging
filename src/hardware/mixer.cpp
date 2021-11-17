@@ -90,44 +90,28 @@ static constexpr int16_t MIXER_CLIP(const Bits SAMP)
 }
 
 struct mixer_t {
-	matrix<int32_t, MIXER_BUFSIZE, 2> work;
+	matrix<int32_t, MIXER_BUFSIZE, 2> work = {};
 	//Write/Read pointers for the buffer
-	std::atomic<uint32_t> pos;
-	std::atomic<uint32_t> done;
-	std::atomic<uint32_t> needed;
-	std::atomic<uint32_t> min_needed;
-	std::atomic<uint32_t> max_needed;
+	std::atomic<uint32_t> pos = 0;
+	std::atomic<uint32_t> done = 0;
+	std::atomic<uint32_t> needed = 0;
+	std::atomic<uint32_t> min_needed = 0;
+	std::atomic<uint32_t> max_needed = 0;
 	// For every millisecond tick how many samples need to be generated
-	std::atomic<uint32_t> tick_add;
-	uint32_t tick_counter;
-	std::array<float, 2> mastervol;
+	std::atomic<uint32_t> tick_add = 0;
+	uint32_t tick_counter = 0;
+	std::array<float, 2> mastervol = {1.0f, 1.0f};
 	MixerChannel *channels;
-	bool nosound;
-	uint32_t freq;
-	uint16_t blocksize; // matches SDL AudioSpec.samples type
+	bool nosound = false;
+	uint32_t freq = 0;
+	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
 	// Note: As stated earlier, all sdl code shall rather be in sdlmain
-	SDL_AudioDeviceID sdldevice;
-	mixer_t()
-	        : work(),
-			  pos(0),
-	          done(0),
-	          needed(0),
-	          min_needed(0),
-	          max_needed(0),
-	          tick_add(0),
-			  tick_counter(0),
-			  mastervol{1.0f, 1.0f},
-			  channels(nullptr),
-			  nosound(false),
-	          freq(0),
-			  blocksize(0),
-			  sdldevice(0)
-	{}
+	SDL_AudioDeviceID sdldevice = 0;
 };
 
-static struct mixer_t mixer;
+static struct mixer_t mixer = {};
 
-Bit8u MixTemp[MIXER_BUFSIZE];
+Bit8u MixTemp[MIXER_BUFSIZE] = {};
 
 MixerChannel::MixerChannel(MIXER_Handler _handler,
                            [[maybe_unused]] uint32_t _freq,
