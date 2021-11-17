@@ -700,18 +700,30 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_CHDIR_HINT","Hint: To change to different drive type \033[31m%c:\033[0m\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT_2","directoryname is longer than 8 characters and/or contains spaces.\nTry \033[31mcd %s\033[0m\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT_3","You are still on drive Z:, change to a mounted drive with \033[31mC:\033[0m.\n");
-	MSG_Add("SHELL_CMD_DATE_HELP","Displays or changes the internal date.\n");
-	MSG_Add("SHELL_CMD_DATE_ERROR","The specified date is not correct.\n");
-	MSG_Add("SHELL_CMD_DATE_DAYS","3SunMonTueWedThuFriSat"); // "2SoMoDiMiDoFrSa"
-	MSG_Add("SHELL_CMD_DATE_NOW","Current date: ");
-	MSG_Add("SHELL_CMD_DATE_SETHLP","Type 'date MM-DD-YYYY' to change.\n");
-	MSG_Add("SHELL_CMD_DATE_FORMAT","M/D/Y");
-	MSG_Add("SHELL_CMD_DATE_HELP_LONG","DATE [[/T] [/H] [/S] | MM-DD-YYYY]\n"\
-									"  MM-DD-YYYY: new date to set\n"\
-									"  /S:         Permanently use host time and date as DOS time\n"\
-                                    "  /F:         Switch back to DOSBox internal time (opposite of /S)\n"\
-									"  /T:         Only display date\n"\
-									"  /H:         Synchronize with host\n");
+	MSG_Add("SHELL_CMD_DATE_HELP", "Displays or changes the internal date.\n");
+	MSG_Add("SHELL_CMD_DATE_ERROR", "The specified date is not correct.\n");
+	MSG_Add("SHELL_CMD_DATE_DAYS", "3SunMonTueWedThuFriSat"); // "2SoMoDiMiDoFrSa"
+	MSG_Add("SHELL_CMD_DATE_NOW", "Current date: ");
+	MSG_Add("SHELL_CMD_DATE_SETHLP", "Type 'date MM-DD-YYYY' to change.\n");
+	MSG_Add("SHELL_CMD_DATE_FORMAT", "M/D/Y");
+	MSG_Add("SHELL_CMD_DATE_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mdate\033[0m [/t]\n"
+	        "  \033[32;1mdate\033[0m /h\n"
+	        "  \033[32;1mdate\033[0m \033[36;1mDATE\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mDATE\033[0m is the new date to set to, in the format of \033[36;1mMM-DD-YYYY\033[0m.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running \033[32;1mdate\033[0m without an argument shows the current date, or only a date\n"
+	        "  with the /t option. You can force a date synchronization of with the host\n"
+	        "  system with the /h option, or manually specify a new date to set to.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mdate\033[0m\n"
+	        "  \033[32;1mdate\033[0m /h\n"
+	        "  \033[32;1mdate\033[0m \033[36;1m10-11-2012\033[0m\n");
 	MSG_Add("SHELL_CMD_TIME_HELP", "Displays or changes the internal time.\n");
 	MSG_Add("SHELL_CMD_TIME_ERROR", "The specified time is not correct.\n");
 	MSG_Add("SHELL_CMD_TIME_NOW", "Current time: ");
