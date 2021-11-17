@@ -531,8 +531,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
 	                                      this, std::placeholders::_1);
-	channel_t mixer_channel(MIXER_AddChannel(mixer_callback, 0, "MT32"),
-	                        MIXER_DelChannel);
+	const auto mixer_channel = MIXER_AddChannel(mixer_callback, 0, "MT32");
 
 	// Let the mixer command adjust the MT32's services gain-level
 	const auto set_mixer_level = std::bind(&MidiHandler_mt32::SetMixerLevel,

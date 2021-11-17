@@ -248,9 +248,8 @@ public:
 private:
 	static struct imagePlayer {
 		// Objects, pointers, and then scalars; in descending size-order.
-		MixerObject              mixerChannel       = {};
 		std::weak_ptr<TrackFile> trackFile = {};
-		MixerChannel             *channel           = nullptr;
+		mixer_channel_t channel = nullptr;
 		CDROM_Interface_Image    *cd                = nullptr;
 		void (MixerChannel::*addFrames) (Bitu, const Bit16s*) = nullptr;
 		uint32_t                 playedTrackFrames  = 0;
@@ -268,7 +267,7 @@ private:
 	                 const uint16_t sectorSize,
 	                 const bool mode2);
 	std::vector<Track>::iterator GetTrack(const uint32_t sector);
-	static void CDAudioCallBack (Bitu desired_frames);
+	void CDAudioCallBack(uint16_t desired_frames);
 
 	// Private functions for cue sheet processing
 	bool  LoadCueSheet(char *cuefile);

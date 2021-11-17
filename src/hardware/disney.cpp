@@ -43,8 +43,6 @@ struct dac_channel {
 	bool speedcheck_init = false;
 };
 
-using mixer_channel_ptr_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
-
 struct Disney {
 	IO_ReadHandleObject read_handler{};
 	IO_WriteHandleObject write_handler{};
@@ -57,7 +55,7 @@ struct Disney {
 	dac_channel da[2] = {};
 
 	Bitu last_used = 0;
-	mixer_channel_ptr_t chan{nullptr, MIXER_DelChannel};
+	mixer_channel_t chan = nullptr;
 	bool stereo = false;
 
 	// For mono-output, the analysis step points the leader to the channel
@@ -159,11 +157,12 @@ static void DISNEY_analyze(Bitu channel){
 			cch->speedcheck_last = current;
 			break;
 		}
-		cch->speedcheck_sum += current - cch->speedcheck_last;
+		const auto speed_delta = current - cch->speedcheck_last;
+		cch->speedcheck_sum += speed_delta;
 		// LOG_MSG("t=%f",current - cch->speedcheck_last);
 
 		// sanity checks (printer...)
-		if ((current - cch->speedcheck_last) < 0.01f || (current - cch->speedcheck_last) > 2)
+		if (speed_delta < 0.01 || speed_delta > 2)
 			cch->speedcheck_failed = true;
 
 		// if both are failed we are back at start
@@ -394,10 +393,7 @@ void DISNEY_Init(Section* sec) {
 		return;
 
 	// Setup the mixer callback
-	disney.chan = mixer_channel_ptr_t(MIXER_AddChannel(DISNEY_CallBack,
-	                                                   10000, "DISNEY"),
-	                                  MIXER_DelChannel);
-	assert(disney.chan);
+	disney.chan = MIXER_AddChannel(DISNEY_CallBack, 10000, "DISNEY");
 
 	// Register port handlers for 8-bit IO
 	disney.write_handler.Install(DISNEY_BASE, disney_write, io_width_t::byte, 3);

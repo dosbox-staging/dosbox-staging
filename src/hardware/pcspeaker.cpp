@@ -70,7 +70,7 @@ struct DelayEntry {
 static struct {
 	DelayEntry entries[SPKR_ENTRIES] = {};
 	DCSilencer dc_silencer = {};
-	MixerChannel *chan = nullptr;
+	mixer_channel_t chan = nullptr;
 	SPKR_MODES prev_mode = SPKR_OFF;
 	SPKR_MODES mode = SPKR_OFF;
 	uint32_t prev_pit_mode = 3;
@@ -465,8 +465,6 @@ static void PCSPEAKER_CallBack(uint16_t len)
 		spkr.chan->AddSamples_m16(len, buffer);
 }
 class PCSPEAKER final : public Module_base {
-private:
-	MixerObject MixerChan = {};
 public:
 	PCSPEAKER(Section *configuration) : Module_base(configuration)
 	{
@@ -490,7 +488,7 @@ public:
 
 		spkr.min_tr = (PIT_TICK_RATE + spkr.rate / 2 - 1) / (spkr.rate / 2);
 		/* Register the sound channel */
-		spkr.chan = MixerChan.Install(&PCSPEAKER_CallBack, spkr.rate, "SPKR");
+		spkr.chan = MIXER_AddChannel(&PCSPEAKER_CallBack, spkr.rate, "SPKR");
 		spkr.chan->SetPeakAmplitude(
 		        static_cast<uint32_t>(AMPLITUDE_POSITIVE));
 	}

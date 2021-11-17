@@ -1541,7 +1541,7 @@ void Handler::WriteReg( Bit32u addr, Bit8u val ) {
 	chip.WriteReg( addr, val );
 }
 
-void Handler::Generate(MixerChannel *chan, uint16_t samples)
+void Handler::Generate(mixer_channel_t &chan, uint16_t samples)
 {
 	Bit32s buffer[512 * 2];
 	if (GCC_UNLIKELY(samples > 512))

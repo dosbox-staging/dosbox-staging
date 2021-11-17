@@ -46,7 +46,7 @@ struct Handler : public Adlib::Handler {
 	virtual void WriteReg(Bit32u reg, Bit8u val) { adlib_write(reg, val); }
 	virtual Bit32u WriteAddr(io_port_t, Bit8u val) { return val; }
 
-	virtual void Generate(MixerChannel *chan, const uint16_t samples)
+	virtual void Generate(mixer_channel_t &chan, const uint16_t samples)
 	{
 		Bit16s buf[1024];
 		int remaining = samples;
@@ -74,7 +74,7 @@ struct Handler : public Adlib::Handler {
 		adlib_write_index(port, val);
 		return opl_index;
 	}
-	virtual void Generate(MixerChannel *chan, const uint16_t samples)
+	virtual void Generate(mixer_channel_t &chan, const uint16_t samples)
 	{
 		Bit16s buf[1024 * 2];
 		int remaining = samples;
@@ -101,7 +101,7 @@ struct Handler : public Adlib::Handler {
 		ym3812_write(chip, 1, val);
 	}
 	virtual Bit32u WriteAddr(io_port_t, Bit8u val) { return val; }
-	virtual void Generate(MixerChannel *chan, const uint16_t samples)
+	virtual void Generate(mixer_channel_t &chan, const uint16_t samples)
 	{
 		Bit16s buf[1024 * 2];
 		int remaining = samples;
@@ -134,7 +134,7 @@ struct Handler : public Adlib::Handler {
 		ymf262_write(chip, 1, val);
 	}
 	virtual Bit32u WriteAddr(io_port_t, Bit8u val) { return val; }
-	virtual void Generate(MixerChannel *chan, const uint16_t samples)
+	virtual void Generate(mixer_channel_t &chan, const uint16_t samples)
 	{
 		// We generate data for 4 channels, but only the first 2 are
 		// connected on a pc
@@ -189,7 +189,7 @@ struct Handler : public Adlib::Handler {
 		return addr;
 	}
 
-	void Generate(MixerChannel *chan, uint16_t samples) override
+	void Generate(mixer_channel_t &chan, uint16_t samples) override
 	{
 		int16_t buf[1024 * 2];
 		while (samples > 0) {
@@ -838,22 +838,21 @@ static Handler * make_opl_handler(const std::string &oplemu, OPL_Mode mode)
 }
 
 Module::Module(Section *configuration)
-	: Module_base(configuration),
-	  mixerObject(),
-	  mode(MODE_OPL2), // TODO this is set in Init and there's no good default
-	  reg{0}, // union
-	  ctrl{false, 0, 0xff, 0xff, false},
-	  mixerChan(nullptr),
-	  lastUsed(0),
-	  handler(nullptr),
-	  capture(nullptr)
+        : Module_base(configuration),
+          mode(MODE_OPL2), // TODO this is set in Init and there's no good default
+          reg{0},          // union
+          ctrl{false, 0, 0xff, 0xff, false},
+          mixerChan(nullptr),
+          lastUsed(0),
+          handler(nullptr),
+          capture(nullptr)
 {
 	Section_prop * section=static_cast<Section_prop *>(configuration);
 	const auto base = static_cast<uint16_t>(section->Get_hex("sbbase"));
 
 	ctrl.mixer = section->Get_bool("sbmixer");
 
-	mixerChan = mixerObject.Install(OPL_CallBack, 0, "FM");
+	mixerChan = MIXER_AddChannel(OPL_CallBack, 0, "FM");
 	//Used to be 2.0, which was measured to be too high. Exact value depends on card/clone.
 	mixerChan->SetScale( 1.5f );  
 

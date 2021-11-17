@@ -117,7 +117,6 @@ using ram_array_t = std::array<uint8_t, RAM_SIZE>;
 using read_io_array_t = std::array<IO_ReadHandleObject, READ_HANDLERS>;
 using vol_scalars_array_t = std::array<float, VOLUME_LEVELS>;
 using write_io_array_t = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
-using mixer_channel_ptr_t = std::unique_ptr<MixerChannel, decltype(&MIXER_DelChannel)>;
 
 // A Voice is used by the Gus class and instantiates 32 of these.
 // Each voice represents a single "mono" render_buffer of audio having its own
@@ -275,7 +274,7 @@ private:
 	SoftLimiter soft_limiter;
 	Voice *target_voice = nullptr;
 	DmaChannel *dma_channel = nullptr;
-	mixer_channel_ptr_t audio_channel{nullptr, MIXER_DelChannel};
+	mixer_channel_t audio_channel = nullptr;
 	uint8_t &adlib_command_reg = adlib_commandreg;
 
 	// Port address
@@ -602,9 +601,8 @@ Gus::Gus(uint16_t port, uint8_t dma, uint8_t irq, const std::string &ultradir)
 	// Register the Audio and DMA channels
 	const auto mixer_callback = std::bind(&Gus::AudioCallback, this,
 	                                      std::placeholders::_1);
-	audio_channel = mixer_channel_ptr_t(MIXER_AddChannel(mixer_callback, 1, "GUS"),
-	                                    MIXER_DelChannel);
-	assert(audio_channel);
+	audio_channel = MIXER_AddChannel(mixer_callback, 1, "GUS");
+
 	// Let the mixer command adjust the GUS's internal amplitude level's
 	const auto set_level_callback = std::bind(&Gus::SetLevelCallback, this, _1);
 	audio_channel->RegisterLevelCallBack(set_level_callback);

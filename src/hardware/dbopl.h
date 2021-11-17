@@ -253,7 +253,7 @@ struct Handler : public Adlib::Handler {
 	DBOPL::Chip chip;
 	virtual Bit32u WriteAddr(io_port_t port, Bit8u val);
 	virtual void WriteReg( Bit32u addr, Bit8u val );
-	virtual void Generate(MixerChannel *chan, uint16_t samples);
+	virtual void Generate(mixer_channel_t &chan, uint16_t samples);
 	virtual void Init(uint32_t rate);
 
 	Handler(bool opl3Mode) : chip(opl3Mode) {
