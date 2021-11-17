@@ -127,10 +127,8 @@ public:
 	void Enable(bool should_enable);
 	void FlushSamples();
 
-	float volmain[2] = {0.0f, 0.0f};
-	MixerChannel *next = nullptr;
-	const char *name = nullptr;
-	std::atomic<Bitu> done; // Timing on how many samples have been done by the mixer
+	float volmain[2] = {1.0f, 1.0f};
+	std::atomic<uint32_t> done = 0; // Timing on how many samples have been done by the mixer
 	bool is_enabled = false;
 
 private:
@@ -146,21 +144,21 @@ private:
 	Bitu freq_counter = 0u; // When this flows over a new sample needs to be
 	                        // read from the device
 	Bitu needed = 0u; // Timing on how many samples were needed by the mixer
-	Bits prev_sample[2] = {0}; // Previous and next samples
-	Bits next_sample[2] = {0};
+	Bits prev_sample[2] = {0, 0}; // Previous and next samples
+	Bits next_sample[2] = {0, 0};
 	// Simple way to lower the impact of DC offset. if MIXER_UPRAMP_STEPS is >0.
 	// Still work in progress and thus disabled for now.
-	Bits offset[2] = {0};
+	Bits offset[2] = {0, 0};
 	uint32_t sample_rate = 0u;
-	int32_t volmul[2] = {0};
-	float scale[2] = {0.0f, 0.0f};
+	int32_t volmul[2] = {1, 1};
+	float scale[2] = {1.0f, 1.0f};
 
 	// Defines the peak sample amplitude we can expect in this channel.
 	// Default to signed 16bit max, however channel's that know their own
 	// peak, like the PCSpeaker, should update it with: SetPeakAmplitude()
 	uint32_t peak_amplitude = MAX_AUDIO;
 
-	uint8_t channel_map[2] = {0u, 0u}; // Output channel mapping
+	uint8_t channel_map[2] = {0, 1}; // Output channel mapping
 
 	// The RegisterLevelCallBack() assigns this callback that can be used by
 	// the channel's source to manage the stream's level prior to mixing,
