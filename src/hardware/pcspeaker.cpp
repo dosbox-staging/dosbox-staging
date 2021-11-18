@@ -27,9 +27,10 @@
 #include <limits>
 
 #include "dc_silencer.h"
-#include "timer.h"
-#include "setup.h"
 #include "pic.h"
+#include "setup.h"
+#include "support.h"
+#include "timer.h"
 
 #define SPKR_ENTRIES 1024
 
@@ -388,7 +389,7 @@ static void PlayOrFadeout(const uint16_t speaker_movements,
 		spkr.chan->Enable(false);
 	}
 
-	spkr.chan->AddSamples_m16(requested_samples, buffer);
+	spkr.chan->AddSamples_m16(check_cast<uint16_t>(requested_samples), buffer);
 }
 
 static void PCSPEAKER_CallBack(uint16_t len)
