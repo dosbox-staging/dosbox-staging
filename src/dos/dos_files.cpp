@@ -205,29 +205,17 @@ bool DOS_GetCurrentDir(Bit8u drive,char * const buffer) {
 	strcpy(buffer,Drives[drive]->curdir);
 	return true;
 }
+static bool PathExists(const char *name);
 
 bool DOS_ChangeDir(char const * const dir) {
-	Bit8u drive;char fulldir[DOS_PATHLENGTH];
-	const char * testdir=dir;
-	if (strlen(testdir) && testdir[1]==':') testdir+=2;
-	size_t len=strlen(testdir);
-	if (!len) {
+	uint8_t drive;
+	char fulldir[DOS_PATHLENGTH];
+	const auto exists_and_set = DOS_MakeName(dir, fulldir, &drive) &&
+	                            Drives[drive]->TestDir(fulldir) &&
+	                            safe_strcpy(Drives[drive]->curdir, fulldir);
+	if (!exists_and_set)
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
-		return false;
-	}
-	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
-	if (safe_strlen(fulldir) && testdir[len-1]=='\\') {
-		DOS_SetError(DOSERR_PATH_NOT_FOUND);
-		return false;
-	}
-	
-	if (Drives[drive]->TestDir(fulldir)) {
-		safe_strcpy(Drives[drive]->curdir, fulldir);
-		return true;
-	} else {
-		DOS_SetError(DOSERR_PATH_NOT_FOUND);
-	}
-	return false;
+	return exists_and_set;
 }
 
 bool DOS_MakeDir(char const * const dir) {
