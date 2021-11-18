@@ -63,13 +63,10 @@ class Envelope {
 public:
 	Envelope(const char* name);
 
-	void Process(bool is_stereo,
-	             bool is_interpolated,
-	             intptr_t prev[],
-	             intptr_t next[]);
+	void Process(bool is_stereo, bool is_interpolated, int prev[], int next[]);
 
-	void Update(uint32_t frame_rate,
-	            uint32_t peak_amplitude,
+	void Update(int frame_rate,
+	            int peak_amplitude,
 	            uint8_t expansion_phase_ms,
 	            uint8_t expire_after_seconds);
 
@@ -79,32 +76,29 @@ private:
 	Envelope(const Envelope &) = delete;            // prevent copying
 	Envelope &operator=(const Envelope &) = delete; // prevent assignment
 
-	bool ClampSample(intptr_t &sample, intptr_t next_edge);
+	bool ClampSample(int &sample, int next_edge);
 
-	void Apply(bool is_stereo,
-	           bool is_interpolated,
-	           intptr_t prev[],
-	           intptr_t next[]);
+	void Apply(bool is_stereo, bool is_interpolated, int prev[], int next[]);
 
 	void Skip([[maybe_unused]] bool is_stereo,
 	          [[maybe_unused]] bool is_interpolated,
-	          [[maybe_unused]] intptr_t prev[],
-	          [[maybe_unused]] intptr_t next[])
+	          [[maybe_unused]] int prev[],
+	          [[maybe_unused]] int next[])
 	{}
 
-	using process_f = std::function<void(Envelope &, bool, bool, intptr_t[], intptr_t[])>;
+	using process_f = std::function<void(Envelope &, bool, bool, int[], int[])>;
 	process_f process = &Envelope::Apply;
 
 	const char *channel_name = nullptr;
-	uint32_t expire_after_frames = 0u; // Stop enveloping when this many
-	                                   // frames have been processed.
-	uint32_t frames_done = 0u; // A tally of processed frames.
-	uint16_t edge = 0u; // The current edge of the envelope, which
-	                    // increments outward when samples press against it.
-	uint16_t edge_increment = 0u; // The amount the edge grows by once a
-	                              // sample is found to be beyond it.
-	uint16_t edge_limit = 0u; // Stop enveloping when the current edge is
-	                          // hits or exceeds this limit.
+	int expire_after_frames = 0; // Stop enveloping when this many
+	                             // frames have been processed.
+	int frames_done = 0;         // A tally of processed frames.
+	int edge = 0;                // The current edge of the envelope, which
+	              // increments outward when samples press against it.
+	int edge_increment = 0; // The amount the edge grows by once a
+	                        // sample is found to be beyond it.
+	int edge_limit = 0;     // Stop enveloping when the current edge is
+	                        // hits or exceeds this limit.
 };
 
 #endif

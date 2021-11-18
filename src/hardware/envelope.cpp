@@ -28,13 +28,13 @@ Envelope::Envelope(const char *name) : channel_name(name)
 
 void Envelope::Reactivate()
 {
-	edge = 0u;
-	frames_done = 0u;
+	edge = 0;
+	frames_done = 0;
 	process = &Envelope::Apply;
 }
 
-void Envelope::Update(const uint32_t frame_rate,
-                      const uint32_t peak_amplitude,
+void Envelope::Update(const int frame_rate,
+                      const int peak_amplitude,
                       const uint8_t expansion_phase_ms,
                       const uint8_t expire_after_seconds)
 {
@@ -50,20 +50,20 @@ void Envelope::Update(const uint32_t frame_rate,
 
 	// Permit the envelop to achieve peak volume within the expansion_phase
 	// (in ms) if the samples happen to constantly press on the edges.
-	const uint32_t expansion_phase_frames = ceil_udivide(frame_rate * expansion_phase_ms,
-	                                                     1000u);
+	const auto expansion_phase_frames = ceil_sdivide(frame_rate * expansion_phase_ms,
+	                                                 1000);
 
 	// Calculate how much the envelope's edge will grow after a frame
 	// presses against it.
 	assert(expansion_phase_frames);
-	edge_increment = ceil_udivide(peak_amplitude, expansion_phase_frames);
-	
+	edge_increment = ceil_sdivide(peak_amplitude, expansion_phase_frames);
+
 	// DEBUG_LOG_MSG("ENVELOPE: %s grows by %-3u to %-5u across %-3u frames (%u ms)",
 	//               channel_name, edge_increment, edge_limit, expansion_phase_frames,
 	//               expansion_phase_ms);
 }
 
-bool Envelope::ClampSample(intptr_t &sample, const intptr_t lip)
+bool Envelope::ClampSample(int &sample, const int lip)
 {
 	if (std::abs(sample) > edge) {
 		sample = clamp(sample, -lip, lip);
@@ -74,23 +74,23 @@ bool Envelope::ClampSample(intptr_t &sample, const intptr_t lip)
 
 void Envelope::Process(const bool is_stereo,
                        const bool is_interpolated,
-                       intptr_t prev[],
-                       intptr_t next[])
+                       int prev[],
+                       int next[])
 {
 	process(*this, is_stereo, is_interpolated, prev, next);
 }
 
 void Envelope::Apply(const bool is_stereo,
                      const bool is_interpolated,
-                     intptr_t prev[],
-                     intptr_t next[])
+                     int prev[],
+                     int next[])
 {
 	// Only start the envelope once our samples have actual values
 	if (prev[0] == 0 && frames_done == 0u)
 		return;
 
 	// beyond the edge is the lip. Do any samples walk out onto the lip?
-	const intptr_t lip = edge + edge_increment;
+	const int lip = edge + edge_increment;
 	const bool on_lip = (ClampSample(prev[0], lip)) || (is_stereo &&
 	                     ClampSample(prev[1], lip)) || (is_interpolated &&
 	                     (ClampSample(next[0], lip) || (is_stereo &&
