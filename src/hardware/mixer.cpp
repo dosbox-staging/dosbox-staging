@@ -565,7 +565,7 @@ void MixerChannel::AddStretched(uint16_t len, int16_t *data)
 		const auto diff_mul = index & FREQ_MASK;
 		index += index_add;
 		mixpos &= MIXER_BUFMASK;
-		Bits sample = prev_sample[0] + ((diff * diff_mul) >> FREQ_SHIFT);
+		const auto sample = prev_sample[0] + ((diff * diff_mul) >> FREQ_SHIFT);
 		mixer.work[mixpos][0] += sample * volmul[0];
 		mixer.work[mixpos][1] += sample * volmul[1];
 		mixpos++;
