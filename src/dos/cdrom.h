@@ -251,7 +251,7 @@ private:
 		std::weak_ptr<TrackFile> trackFile = {};
 		mixer_channel_t channel = nullptr;
 		CDROM_Interface_Image    *cd                = nullptr;
-		void (MixerChannel::*addFrames) (Bitu, const Bit16s*) = nullptr;
+		void (MixerChannel::*addFrames)(uint16_t, const int16_t *) = nullptr;
 		uint32_t                 playedTrackFrames  = 0;
 		uint32_t                 totalTrackFrames   = 0;
 		uint32_t                 startSector        = 0;
