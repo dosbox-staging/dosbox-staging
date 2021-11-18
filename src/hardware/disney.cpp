@@ -302,7 +302,7 @@ static void DISNEY_CallBack(uint16_t len) {
 		return;
 
 	// get the smaller used
-	Bitu real_used;
+	uint16_t real_used;
 	if (disney.stereo) {
 		real_used = disney.da[0].used;
 		if(disney.da[1].used < real_used) real_used = disney.da[1].used;
