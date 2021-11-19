@@ -884,12 +884,19 @@ static void CONFIG_ProgramStart(Program * * make) {
 	*make=new CONFIG;
 }
 
+void PROGRAMS_Destroy(Section*) {
+	internal_progs_comdata.clear();
+	internal_progs.clear();
+}
 
-void PROGRAMS_Init(Section* /*sec*/) {
+void PROGRAMS_Init(Section* sec) {
 	/* Setup a special callback to start virtual programs */
 	call_program=CALLBACK_Allocate();
 	CALLBACK_Setup(call_program,&PROGRAMS_Handler,CB_RETF,"internal program");
 	PROGRAMS_MakeFile("CONFIG.COM",CONFIG_ProgramStart);
+
+	// Cleanup -- allows unit tests to run indefinitely & cleanly
+	sec->AddDestroyFunction(&PROGRAMS_Destroy,false);
 
 	// listconf
 	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE","No config file loaded!\n");
