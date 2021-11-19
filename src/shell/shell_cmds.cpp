@@ -1382,15 +1382,17 @@ void DOS_Shell::CMD_DATE(char * args) {
 		return;
 	}
 	// check if a date was passed in command line
-	Bit32u newday,newmonth,newyear;
-	if (sscanf(args,"%u-%u-%u",&newmonth,&newday,&newyear) == 3) {
-		reg_cx = static_cast<Bit16u>(newyear);
-		reg_dh = static_cast<Bit8u>(newmonth);
-		reg_dl = static_cast<Bit8u>(newday);
+	uint32_t newday, newmonth, newyear;
+	if (sscanf(args, "%u-%u-%u", &newmonth, &newday, &newyear) == 3) {
+		reg_cx = static_cast<uint16_t>(newyear);
+		reg_dh = static_cast<uint8_t>(newmonth);
+		reg_dl = static_cast<uint8_t>(newday);
 
-		reg_ah=0x2b; // set system date
+		reg_ah = 0x2b; // set system date
 		CALLBACK_RunRealInt(0x21);
-		if (reg_al == 0xff) WriteOut(MSG_Get("SHELL_CMD_DATE_ERROR"));
+		if (reg_al == 0xff) {
+			WriteOut(MSG_Get("SHELL_CMD_DATE_ERROR"));
+		}
 		return;
 	}
 	// display the current date
@@ -1432,22 +1434,11 @@ void DOS_Shell::CMD_TIME(char * args) {
 		const time_t curtime = time(NULL);
 		struct tm datetime;
 		cross::localtime_r(&curtime, &datetime);
-
-		// Original IBM PC used ~1.19MHz crystal for timer, because at
-		// 1.19MHz, 2^16 ticks is ~1 hour, making it easy to count
-		// hours and days. More precisely:
-		//
-		// clock updates at 1193180/65536 ticks per second.
-		// ticks per second ≈ 18.2
-		// ticks per hour   ≈ 65543
-		// ticks per day    ≈ 1573040
-		//
-		constexpr uint64_t ticks_per_day = 1573040;
-		const auto seconds_now = (datetime.tm_hour * 3600 +
-		                          datetime.tm_min * 60 +
-		                          datetime.tm_sec);
-		const auto ticks_now = ticks_per_day * seconds_now / (24 * 3600);
-		mem_writed(BIOS_TIMER, static_cast<uint32_t>(ticks_now));
+		reg_ah = 0x2d; // set system time
+		reg_ch = static_cast<uint8_t>(datetime.tm_hour);
+		reg_cl = static_cast<uint8_t>(datetime.tm_min);
+		reg_dh = static_cast<uint8_t>(datetime.tm_sec);
+		CALLBACK_RunRealInt(0x21);
 		return;
 	}
 	uint32_t newhour, newminute, newsecond;
@@ -1455,13 +1446,15 @@ void DOS_Shell::CMD_TIME(char * args) {
 		if (newhour > 23 || newminute > 59 || newsecond > 59)
 			WriteOut(MSG_Get("SHELL_CMD_TIME_ERROR"));
 		else {
-			reg_ch = static_cast<Bit8u>(newhour);
-			reg_cl = static_cast<Bit8u>(newminute);
-			reg_dh = static_cast<Bit8u>(newsecond);
+			reg_ch = static_cast<uint8_t>(newhour);
+			reg_cl = static_cast<uint8_t>(newminute);
+			reg_dh = static_cast<uint8_t>(newsecond);
 
-			reg_ah=0x2d; // set system time
+			reg_ah = 0x2d; // set system time
 			CALLBACK_RunRealInt(0x21);
-			if (reg_al == 0xff) WriteOut(MSG_Get("SHELL_CMD_TIME_ERROR"));
+			if (reg_al == 0xff) {
+				WriteOut(MSG_Get("SHELL_CMD_TIME_ERROR"));
+			}
 		}
 		return;
 	}

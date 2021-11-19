@@ -509,10 +509,18 @@ static Bitu DOS_21Handler(void) {
 		else { //Allow time to be set to zero. Restore the orginal time for all other parameters. (QuickBasic)
 			if (reg_cx == 0 && reg_dx == 0) {time_start = mem_readd(BIOS_TIMER);LOG_MSG("Warning: game messes with DOS time!");}
 			else time_start = 0;
-			uint32_t ticks = (uint32_t)(
-			        ((double)(reg_ch * 3600 + reg_cl * 60 + reg_dh)) *
-			        18.206481481);
-			mem_writed(BIOS_TIMER, ticks);
+			// Original IBM PC used ~1.19MHz crystal for timer,
+			// because at 1.19MHz, 2^16 ticks is ~1 hour, making it
+			// easy to count hours and days. More precisely:
+			//
+			// clock updates at 1193180/65536 ticks per second.
+			// ticks per second ≈ 18.2
+			// ticks per hour   ≈ 65543
+			// ticks per day    ≈ 1573040
+			constexpr uint64_t ticks_per_day = 1573040;
+			const auto seconds = reg_ch * 3600 + reg_cl * 60 + reg_dh;
+			const auto ticks = ticks_per_day * seconds / (24 * 3600);
+			mem_writed(BIOS_TIMER, check_cast<uint32_t>(ticks));
 			reg_al = 0;
 		}
 		break;
