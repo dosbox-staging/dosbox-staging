@@ -119,6 +119,31 @@ void DOS_SetupPrograms(void)
 	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL","Used memory freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_ERROR","Memory allocation error.\n");
 
+	MSG_Add("SHELL_CMD_AUTOTYPE_HELP_LONG",
+	        "Performs scripted keyboard entry into a running DOS game.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  \033[32;1mautotype\033[0m -list\n"
+	        "  \033[32;1mautotype\033[0m [-w \033[37;1mWAIT\033[0m] [-p \033[37;1mPACE\033[0m] \033[36;1mBUTTONS\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[37;1mWAIT\033[0m    is the number of seconds to wait before typing begins (max of 30).\n"
+	        "  \033[37;1mPACE\033[0m    is the number of seconds before each keystroke (max of 10).\n"
+	        "  \033[36;1mBUTTONS\033[0m is one or more space-separated buttons.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  The \033[36;1mBUTTONS\033[0m supplied in the command will be autotyped into running DOS games\n"
+	        "  after they start. Autotyping begins after \033[36;1mWAIT\033[0m seconds, and each button is\n"
+	        "  entered every \033[37;1mPACE\033[0m seconds. The \033[36;1m,\033[0m character inserts an extra \033[37;1mPACE\033[0m delay.\n"
+	        "  \033[37;1mWAIT\033[0m and \033[37;1mPACE\033[0m default to 2 and 0.5 seconds respectively if not specified.\n"
+	        "  A list of all available button names can be obtained using the -list option.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mautotype\033[0m -list\n"
+	        "  \033[32;1mautotype\033[0m -w \033[37;1m1\033[0m -p \033[37;1m0.3\033[0m \033[36;1mup enter , right enter\033[0m\n"
+	        "  \033[32;1mautotype\033[0m -p \033[37;1m0.2\033[0m \033[36;1mf1 kp_8 , , enter\033[0m\n"
+	        "  \033[32;1mautotype\033[0m -w \033[37;1m1.3\033[0m \033[36;1mesc enter , p l a y e r enter\n\033[0m");
+
 	MSG_Add("SHELL_CMD_MIXER_HELP_LONG",
 	        "Displays or changes the current sound mixer volumes.\n"
 	        "\n"

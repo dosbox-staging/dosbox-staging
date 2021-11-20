@@ -33,34 +33,6 @@
 #include "dosbox.h"
 #include "programs.h"
 
-void AUTOTYPE::PrintUsage()
-{
-	constexpr const char *msg =
-	        "\033[32;1mAUTOTYPE\033[0m [-list] [-w WAIT] [-p PACE] "
-	        "button_1 [button_2 [...]] \n\n"
-	        "Where:\n"
-	        "  -list:   prints all available button names.\n"
-	        "  -w WAIT: seconds before typing begins. Two second default; "
-	        "max of 30.\n"
-	        "  -p PACE: seconds between each keystroke. Half-second "
-	        "default; max of 10.\n"
-	        "\n"
-	        "  The sequence is comprised of one or more space-separated "
-	        "buttons.\n"
-	        "  Autotyping begins after WAIT seconds, and each button is "
-	        "entered \n"
-	        "  every PACE seconds. The , character inserts an extra PACE "
-	        "delay.\n"
-	        "\n"
-	        "Some examples:\n"
-	        "  \033[32;1mAUTOTYPE\033[0m -w 1 -p 0.3 up enter , right "
-	        "enter\n"
-	        "  \033[32;1mAUTOTYPE\033[0m -p 0.2 f1 kp_8 , , enter\n"
-	        "  \033[32;1mAUTOTYPE\033[0m -w 1.3 esc enter , p l a y e r "
-	        "enter\n";
-	WriteOut_NoParsing(msg);
-}
-
 // Prints the key-names for the mapper's currently-bound events.
 void AUTOTYPE::PrintKeys()
 {
@@ -148,9 +120,9 @@ void AUTOTYPE::Run()
 	ChangeToLongCmd();
 
 	// Usage
-	if (!cmd->GetCount() || cmd->FindExist("-?", false) ||
-	    cmd->FindExist("-help", false)) {
-		PrintUsage();
+	if (!cmd->GetCount() || cmd->FindExist("/?", false) ||
+	    cmd->FindExist("-?", false) || cmd->FindExist("-help", false)) {
+		WriteOut(MSG_Get("SHELL_CMD_AUTOTYPE_HELP_LONG"));
 		return;
 	}
 
