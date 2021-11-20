@@ -18,7 +18,7 @@ extraction:
     - meson --version
     configure:
       command:
-      - meson setup -Duse_fluidsynth=false -Duse_mt32emu=false build
+      - meson setup -Duse_fluidsynth=false -Duse_mt32emu=false -Dunit_tests=disabled build
     index:
       build_command:
       - ninja -C build
