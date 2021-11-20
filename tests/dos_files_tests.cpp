@@ -58,7 +58,7 @@ void assert_DTAExtendName(std::string input,
                           std::string expected_name,
                           std::string expected_ext)
 {
-	char *const input_str = const_cast<char *const>(&input.c_str()[0]);
+	char *const input_str = const_cast<char *>(&input.c_str()[0]);
 	// char * const input_name = &input[0];
 	// needs to be minimum length of the input up to the dot + 1 (null)
 	char output_filename[DOS_PATHLENGTH];
