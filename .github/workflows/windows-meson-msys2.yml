@@ -11,10 +11,10 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: Meson MinGW 32-bit
+          - name: GCC (MinGW) x86
             arch: i686
             sys: MINGW32
-          - name: Meson MinGW 64-bit
+          - name: GCC (MinGW) x86_64
             arch: x86_64
             sys: MINGW64
     
@@ -88,9 +88,12 @@ jobs:
 
 
           # The list of required dll files and their source paths can be found using ntldd
-          for lib in $(ntldd -R dest/dosbox.exe | sed -e 's/^[[:blank:]]*//g' | cut -d ' ' -f 3 | grep -E -i 'mingw(32|64)' | sed -e 's|\\|/|g'); do 
-            cp "$lib" dest/
-          done
+          ntldd -R dest/dosbox.exe \
+            | sed -e 's/^[[:blank:]]*//g' \
+            | cut -d ' ' -f 3 \
+            | grep -E -i 'mingw(32|64)' \
+            | sed -e 's|\\|/|g' \
+            | xargs cp --target-directory=dest/
 
           # Prepare translation files
           #
