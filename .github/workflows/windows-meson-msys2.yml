@@ -6,6 +6,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CCACHE_DIR:      "/tmp/.ccache"
+  CCACHE_MAXSIZE:  "64M"
+  CCACHE_COMPRESS: "true"
+
 jobs:
   build_win_meson_msys2_release:
     name: ${{ matrix.conf.name }}
@@ -53,6 +58,28 @@ jobs:
             mingw-w64-${{matrix.conf.arch}}-SDL2
             mingw-w64-${{matrix.conf.arch}}-SDL2_net
             mingw-w64-${{matrix.conf.arch}}-zlib
+      
+      - name:  Prepare compiler cache
+        id:    prep-ccache
+        run: |
+          mkdir -p "${CCACHE_DIR}"
+          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date -I)"
+          echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+
+      - uses:  actions/cache@v2
+        id:    cache-ccache
+        with:
+          path: ${{ steps.prep-ccache.outputs.dir }}
+          key:  ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.today }}-1
+          restore-keys: |
+            ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.yesterday }}-1
+
+      - name:  Cache subprojects
+        uses:  actions/cache@v2
+        with:
+          path: subprojects/packagecache
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
       
       - name: Log environment
         run:  ./scripts/log-env.sh
