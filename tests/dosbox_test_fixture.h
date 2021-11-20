@@ -23,6 +23,14 @@ public:
 
 	void SetUp() override
 	{
+		// Create DOSBox Staging's config directory, which is a
+		// pre-requisite that's asserted during the Init process.
+		//
+		CROSS_DetermineConfigPaths();
+		const auto config_path = CROSS_GetPlatformConfigDir();
+		SETUP_ParseConfigFiles(config_path);
+
+		Section *_sec;
 		// This will register all the init functions, but won't run them
 		DOSBOX_Init();
 
@@ -52,7 +60,6 @@ private:
 	const char *argv[1];
 	CommandLine com_line;
 	Config config;
-	Section *_sec;
 	// Only init these sections for our tests
 	std::vector<std::string> sections{"dosbox", "cpu",      "mixer",
 	                                  "midi",   "sblaster", "speaker",
