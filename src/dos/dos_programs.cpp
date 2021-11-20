@@ -440,13 +440,31 @@ void DOS_SetupPrograms(void)
 
 	MSG_Add("PROGRAM_KEYB_INFO","Codepage %i has been loaded\n");
 	MSG_Add("PROGRAM_KEYB_INFO_LAYOUT","Codepage %i has been loaded for layout %s\n");
-	MSG_Add("PROGRAM_KEYB_SHOWHELP",
-		"\033[32;1mKEYB\033[0m [keyboard layout ID[ codepage number[ codepage file]]]\n\n"
-		"Some examples:\n"
-		"  \033[32;1mKEYB\033[0m: Display currently loaded codepage.\n"
-		"  \033[32;1mKEYB\033[0m sp: Load the spanish (SP) layout, use an appropriate codepage.\n"
-		"  \033[32;1mKEYB\033[0m sp 850: Load the spanish (SP) layout, use codepage 850.\n"
-		"  \033[32;1mKEYB\033[0m sp 850 mycp.cpi: Same as above, but use file mycp.cpi.\n");
+	MSG_Add("PROGRAM_KEYB_HELP_LONG",
+	        "Configures a keyboard for a specific language.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  \033[32;1mkeyb\033[0m \033[36;1m[LANGCODE]\033[0m\n"
+	        "  \033[32;1mkeyb\033[0m \033[36;1mLANGCODE\033[0m \033[37;1mCODEPAGE\033[0m [CODEPAGEFILE]\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mLANGCODE\033[0m     is a language code or keyboard layout ID.\n"
+	        "  \033[37;1mCODEPAGE\033[0m     is a code page number, such as \033[37;1m437\033[0m and \033[37;1m850\033[0m.\n"
+	        "  CODEPAGEFILE is a file containing information for a code page.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running \033[32;1mkeyb\033[0m without an argument shows the currently loaded keyboard layout\n"
+	        "  and code page. It will change to \033[36;1mLANGCODE\033[0m if provided, optionally with a\n"
+	        "  \033[37;1mCODEPAGE\033[0m and an additional CODEPAGEFILE to load the specified code page\n"
+	        "  number and code page file if provided. This command is especially useful if\n"
+	        "  you use a non-US keyboard, and \033[36;1mLANGCODE\033[0m can also be set in the configuration\n"
+	        "  file under the [dos] section using the \"keyboardlayout = \033[36;1mLANGCODE\033[0m\" setting.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mKEYB\033[0m\n"
+	        "  \033[32;1mKEYB\033[0m \033[36;1muk\033[0m\n"
+	        "  \033[32;1mKEYB\033[0m \033[36;1msp\033[0m \033[37;1m850\033[0m\n"
+	        "  \033[32;1mKEYB\033[0m \033[36;1mde\033[0m \033[37;1m858\033[0m mycp.cpi\n");
 	MSG_Add("PROGRAM_KEYB_NOERROR","Keyboard layout %s loaded for codepage %i\n");
 	MSG_Add("PROGRAM_KEYB_FILENOTFOUND","Keyboard file %s not found\n\n");
 	MSG_Add("PROGRAM_KEYB_INVALIDFILE","Keyboard file %s invalid\n");
