@@ -1,4 +1,4 @@
-name: Windows Meson MSYS2 builds
+name: MSYS2 builds
 
 on: [push, pull_request]
 
