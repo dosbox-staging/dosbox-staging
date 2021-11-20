@@ -846,19 +846,28 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DIR_HELP",
 	        "Displays a list of files and subdirectories in a directory.\n");
 	MSG_Add("SHELL_CMD_DIR_HELP_LONG",
-	        "DIR [drive:][path][filename] [/[W|B]] [/P] [/[AD]|[A-D]] [/O[-][N|E|S|D]]\n"
+	        "Usage:\n"
+	        "  \033[32;1mdir\033[0m \033[36;1m[PATTERN]\033[0m [/w] [/b] [/p] [ad] [a-d] [/o\033[37;1mORDER\033[0m]\n"
 	        "\n"
-	        "  [drive:][path][filename]\n"
-	        "              Specifies drive, directory, and/or files to list.\n"
-	        "  /W          Uses wide list format.\n"
-	        "  /B          Uses bare format (no heading information or summary).\n"
-	        "  /P          Pauses after each screenful of information.\n"
-	        "  /AD         Displays all directories.\n"
-	        "  /A-D        Displays all files.\n"
-	        "  /O          List by files in sorted order.\n"
-	        "               -  Prefix to reverse order\n"
-	        "  sortorder    N  By name (alphabetic)       S  By size (smallest first)\n"
-	        "               E  By extension (alphabetic)  D  By date & time (oldest first)\n");
+	        "Where:\n"
+	        "  \033[36;1mPATTERN\033[0m is either an exact filename or an inexact filename with wildcards,\n"
+	        "          which are the asterisk (*) and the question mark (?). A path can be\n"
+	        "          specified in the pattern to list contents in the specified directory.\n"
+	        "  \033[37;1mORDER\033[0m   is a listing order, including \033[37;1mn\033[0m (by name, alphabetic), \033[37;1ms\033[0m (by size,\n"
+	        "          smallest first), \033[37;1me\033[0m (by extension, alphabetic), \033[37;1md\033[0m (by date/time,\n"
+	        "          oldest first), with an optional \033[37;1m-\033[0m prefix to reverse order.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running \033[32;1mdir\033[0m without an argument lists all files and subdirectories in the\n"
+	        "  current directory. The /w option lists 5 files/directories in a row, and\n"
+	        "  the /b option lists only the names of files and directories. The options /ad\n"
+	        "  and /a-d list only directories and files respectively. The /p option causes\n"
+	        "  the command to pause after each screenful of information.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mdir\033[0m \033[36;1m\033[0m\n"
+	        "  \033[32;1mdir\033[0m \033[36;1mgames.*\033[0m /p\n"
+	        "  \033[32;1mdir\033[0m \033[36;1mc:\\games\\*.exe\033[0m /b /o\033[37;1m-d\033[0m\n");
 	MSG_Add("SHELL_CMD_ECHO_HELP",
 	        "Displays messages and enables/disables command echoing.\n");
 	MSG_Add("SHELL_CMD_ECHO_HELP_LONG",
