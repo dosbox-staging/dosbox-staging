@@ -6,6 +6,8 @@
 
 #include <gtest/gtest.h>
 
+#define SDL_MAIN_HANDLED
+
 #include "control.h"
 
 class DOSBoxTestFixture : public ::testing::Test {
