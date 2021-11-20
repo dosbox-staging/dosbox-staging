@@ -20,7 +20,7 @@ if not (get_option('buildtype') == 'release' and get_option('unit_tests').auto()
                          required : get_option('unit_tests'),
                          fallback : ['gtest', 'gtest_main_dep'])
 
-  gmock_dep = dependency('gmock',
+  gmock_dep = dependency('gmock', main : true,
                          required : get_option('unit_tests'),
                          fallback : ['gtest', 'gmock_dep'])
 endif
