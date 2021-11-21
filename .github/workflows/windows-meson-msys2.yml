@@ -30,11 +30,11 @@ jobs:
             arch: x86_64
             sys: MINGW64
             max_warnings: 19
-          - name: Clang x86
-            toolchain: clang-
-            arch: i686
-            sys: CLANG32
-            max_warnings: 19
+          # - name: Clang x86
+          #   toolchain: clang-
+          #   arch: i686
+          #   sys: CLANG32
+          #   max_warnings: 19
           - name: Clang x86_64
             toolchain: clang-
             arch: x86_64
