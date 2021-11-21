@@ -11,7 +11,126 @@ env:
   CCACHE_MAXSIZE:  "64M"
   CCACHE_COMPRESS: "true"
 
-jobs:          
+jobs:
+  build_msys2:
+    name: ${{ matrix.conf.name }}
+    runs-on: windows-latest
+    if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,shermp', github.actor) == false
+
+    strategy:
+      matrix:
+        conf:
+          - name: GCC (MinGW) x86
+            toolchain: ""
+            arch: i686
+            sys: MINGW32
+            max_warnings: 19
+          - name: GCC (MinGW) x86_64
+            toolchain: ""
+            arch: x86_64
+            sys: MINGW64
+            max_warnings: 19
+          - name: Clang x86
+            toolchain: clang-
+            arch: i686
+            sys: CLANG32
+            max_warnings: 19
+          - name: Clang x86_64
+            toolchain: clang-
+            arch: x86_64
+            sys: CLANG64
+            max_warnings: 19
+          - name: GCC +tests
+            toolchain: ""
+            arch: x86_64
+            sys: MINGW64
+            run_tests: true
+            max_warnings: -1
+          - name: GCC +debugger
+            toolchain: ""
+            arch: x86_64
+            sys: MINGW64
+            max_warnings: 21
+            build_flags: -Denable_debugger=normal
+    
+    defaults:
+      run:
+        shell: msys2 {0}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{matrix.conf.sys}}
+          update: true
+          install: >-
+            git
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-meson
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-gcc
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ccache
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-pkgconf
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-python
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ntldd
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ncurses
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-glib2
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-fluidsynth
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-munt-mt32emu
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libpng
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-opusfile
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2_net
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-zlib
+      
+      - name:  Prepare compiler cache
+        id:    prep-ccache
+        shell: bash
+        run: |
+          mkdir -p "${CCACHE_DIR}"
+          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=today::$(date -I)"
+          echo "::set-output name=yesterday::$(date --date=yesterday -I)"
+          echo "::set-output name=name_hash::$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)"
+
+      - uses:  actions/cache@v2
+        id:    cache-ccache
+        with:
+          path: ${{ steps.prep-ccache.outputs.dir }}
+          key:  ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.today }}-1
+          restore-keys: |
+            ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-1
+
+      - name:  Cache subprojects
+        uses:  actions/cache@v2
+        with:
+          path: subprojects/packagecache
+          key:  subprojects-${{ hashFiles('subprojects/*.wrap') }}
+
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+
+      - name: Setup build
+        run: |
+          meson setup ${{ matrix.conf.build_flags }} build
+      
+      - name: Build
+        run: |
+          set -xo pipefail
+          ninja -C build |& tee build.log
+          ccache -s
+      
+      - name: Run tests
+        if:   matrix.conf.run_tests
+        run:  meson test -C build --print-errorlogs
+
+      - name: Summarize warnings
+        if:   matrix.conf.run_tests != true
+        env:
+          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
+        run:  python ./scripts/count-warnings.py -lf build.log
+
   build_msys2_release:
     name: ${{ matrix.conf.name }}
     runs-on: windows-latest
