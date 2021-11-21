@@ -11,8 +11,8 @@ env:
   CCACHE_MAXSIZE:  "64M"
   CCACHE_COMPRESS: "true"
 
-jobs:
-  build_win_meson_msys2_release:
+jobs:          
+  build_msys2_release:
     name: ${{ matrix.conf.name }}
     runs-on: windows-latest
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,shermp', github.actor) == false
@@ -30,7 +30,7 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-    
+   
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v2
@@ -91,6 +91,12 @@ jobs:
           export VERSION=$(git describe --abbrev=5)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       
+      - name: Set dest dir names
+        run: |
+          set -x
+          echo PKG_DEST_DIR=dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }} >> $GITHUB_ENV
+          echo PKG_DEST_DIR_DEBUGGER=dosbox-staging-windows-msys2-debugger-${{ matrix.conf.arch }}-${{ env.VERSION }} >> $GITHUB_ENV
+      
       - name: Setup release build
         run: |
           meson setup \
@@ -106,25 +112,50 @@ jobs:
       - name: Strip binary
         run: strip build/dosbox.exe
       
-      - name: Package
+      - name: Stage release binary
+        run: |
+          set -x
+          mkdir -p ${{ env.PKG_DEST_DIR }}/
+          cp build/dosbox.exe ${{ env.PKG_DEST_DIR }}/
+          ntldd -R ${{ env.PKG_DEST_DIR }}/dosbox.exe \
+            | sed -e 's/^[[:blank:]]*//g' \
+            | cut -d ' ' -f 3 \
+            | grep -E -i '(mingw|clang)(32|64)' \
+            | sed -e 's|\\|/|g' \
+            | xargs cp --target-directory=${{ env.PKG_DEST_DIR }}/
+      
+      - name: Setup release build w/ debugger
+        run: |
+          meson configure \
+            -Denable_debugger=normal \
+            build
+      
+      - name: Build w/ debugger
+        run: ninja -C build
+
+      - name: Strip debugger binary
+        run: strip build/dosbox.exe
+      
+      - name: Stage release binary w/ debugger
+        run: |
+          set -x
+          mkdir -p ${{ env.PKG_DEST_DIR_DEBUGGER }}/
+          cp build/dosbox.exe ${{ env.PKG_DEST_DIR_DEBUGGER }}/
+          ntldd -R ${{ env.PKG_DEST_DIR_DEBUGGER }}/dosbox.exe \
+            | sed -e 's/^[[:blank:]]*//g' \
+            | cut -d ' ' -f 3 \
+            | grep -E -i '(mingw|clang)(32|64)' \
+            | sed -e 's|\\|/|g' \
+            | xargs cp --target-directory=${{ env.PKG_DEST_DIR_DEBUGGER }}/
+      
+      - name: Setup common package dir
         run: |
           set -x
           mkdir -p dest/doc
-
-          cp build/dosbox.exe      dest/
           cp COPYING               dest/COPYING.txt
           cp docs/README.template  dest/README.txt
           cp docs/README.video     dest/doc/video.txt
           cp README                dest/doc/manual.txt
-
-
-          # The list of required dll files and their source paths can be found using ntldd
-          ntldd -R dest/dosbox.exe \
-            | sed -e 's/^[[:blank:]]*//g' \
-            | cut -d ' ' -f 3 \
-            | grep -E -i 'mingw(32|64)' \
-            | sed -e 's|\\|/|g' \
-            | xargs cp --target-directory=dest/
 
           # Prepare translation files
           #
@@ -150,21 +181,40 @@ jobs:
           sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README.txt
 
           # Create dir for zipping
-          mv dest dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}
+      
+      - name: Package release
+        run: |
+            set -x
+            cp -r dest/. ${PKG_DEST_DIR}/
+      
+      - name: Package release w/ debugger
+        run: |
+            set -x
+            cp -r dest/. ${{ env.PKG_DEST_DIR_DEBUGGER }}/
+          
       
       - name: Windows Defender AV Scan
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          $dosboxDir = "${{ github.workspace }}\dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}"
-          & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -DisableRemediation -File $dosboxDir
-          if( $LASTEXITCODE -ne 0 ) {
-              Get-Content -Path $env:TEMP\MpCmdRun.log
-              Throw "Exit $LASTEXITCODE : Windows Defender found an issue"
+          $dosboxDirs = "${{ github.workspace }}\${{ env.PKG_DEST_DIR }}", "${{ github.workspace }}\${{ env.PKG_DEST_DIR_DEBUGGER }}"
+          foreach ($dosboxDir in $dosboxDirs)
+          {
+            & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -DisableRemediation -File $dosboxDir
+            if( $LASTEXITCODE -ne 0 ) {
+                Get-Content -Path $env:TEMP\MpCmdRun.log
+                Throw "Exit $LASTEXITCODE : Windows Defender found an issue"
+            }
           }
 
-      - name: Upload package
+      - name: Upload release package
         uses: actions/upload-artifact@v2
         with:
-          name: dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}
-          path: dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}
+          name: ${{ env.PKG_DEST_DIR }}
+          path: ${{ env.PKG_DEST_DIR }}
+
+      - name: Upload debugger package
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.PKG_DEST_DIR_DEBUGGER }}
+          path: ${{ env.PKG_DEST_DIR_DEBUGGER }}
