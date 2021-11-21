@@ -7,7 +7,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CCACHE_DIR:      "/tmp/.ccache"
+  CCACHE_DIR:      "/c/ccache"
   CCACHE_MAXSIZE:  "64M"
   CCACHE_COMPRESS: "true"
 
@@ -92,10 +92,9 @@ jobs:
       
       - name:  Prepare compiler cache
         id:    prep-ccache
-        shell: bash
         run: |
           mkdir -p "${CCACHE_DIR}"
-          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=dir::C:\ccache"
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
           echo "::set-output name=name_hash::$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)"
@@ -104,9 +103,9 @@ jobs:
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.today }}-1
+          key:  ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.today }}-2
           restore-keys: |
-            ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-1
+            ccache-msys2-${{ matrix.conf.sys }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-2
 
       - name:  Cache subprojects
         uses:  actions/cache@v2
@@ -194,7 +193,7 @@ jobs:
         id:    prep-ccache
         run: |
           mkdir -p "${CCACHE_DIR}"
-          echo "::set-output name=dir::$CCACHE_DIR"
+          echo "::set-output name=dir::C:\ccache"
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
 
@@ -202,9 +201,9 @@ jobs:
         id:    cache-ccache
         with:
           path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.today }}-1
+          key:  ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.today }}-2
           restore-keys: |
-            ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.yesterday }}-1
+            ccache-msys2-${{matrix.conf.sys}}-release-${{ steps.prep-ccache.outputs.yesterday }}-2
 
       - name:  Cache subprojects
         uses:  actions/cache@v2
