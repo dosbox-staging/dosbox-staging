@@ -132,7 +132,7 @@ jobs:
         run:  python ./scripts/count-warnings.py -lf build.log
 
   build_msys2_release:
-    name: ${{ matrix.conf.name }}
+    name: ${{ matrix.conf.name }} Release
     runs-on: windows-latest
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,shermp', github.actor) == false
     
