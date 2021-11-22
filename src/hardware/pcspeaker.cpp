@@ -58,6 +58,8 @@ constexpr double AMPLITUDE_NEGATIVE = std::numeric_limits<int16_t>::min() *
 constexpr double AMPLITUDE_NEUTRAL = (AMPLITUDE_POSITIVE + AMPLITUDE_NEGATIVE) / 2.0;
 constexpr double AMPLITUDE_SQUARE_WAVE_REDUCER = AMPLITUDE_MINUS_5DB / 2.0;
 
+constexpr int IDLE_GRACE_TIME_MS = 100;
+
 #define DC_SILENCER_WAVES   5u
 #define DC_SILENCER_WAVE_HZ 30u
 
@@ -90,7 +92,7 @@ static struct {
 	double last_index = 0.0;
 	int16_t last_played_sample = 0;
 	uint16_t prev_pos = 0u;
-	uint8_t idle_countdown = 0u;
+	int idle_countdown = IDLE_GRACE_TIME_MS;
 	bool neutralize_dc_offset = true;
 } spkr;
 
@@ -374,14 +376,12 @@ static void PlayOrFadeout(const uint16_t speaker_movements,
                           size_t requested_samples,
                           int16_t *buffer)
 {
-	constexpr uint8_t grace_time_ms = 100u;
-	static_assert(grace_time_ms > 0,
-	              "Algorithm depends on a non-zero grace time");
-
 	if (speaker_movements && requested_samples) {
-		spkr.idle_countdown = grace_time_ms;
+		static_assert(IDLE_GRACE_TIME_MS > 0,
+		              "Algorithm depends on a non-zero grace time");
+		spkr.idle_countdown = IDLE_GRACE_TIME_MS;
 		spkr.dc_silencer.Reset();
-	} else if (spkr.idle_countdown) {
+	} else if (spkr.idle_countdown > 0) {
 		spkr.idle_countdown--;
 		spkr.last_played_sample = buffer[requested_samples - 1];
 	} else if (!spkr.dc_silencer.Generate(spkr.last_played_sample,
