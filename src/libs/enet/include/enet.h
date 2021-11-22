@@ -3498,7 +3498,7 @@ extern "C" {
     }
 
     void * enet_peer_get_data(ENetPeer *peer) {
-        return (void *) peer->data;
+        return peer->data;
     }
 
     void enet_peer_set_data(ENetPeer *peer, const void *data) {
@@ -3851,7 +3851,7 @@ extern "C" {
      *  @param pingInterval the interval at which to send pings; defaults to ENET_PEER_PING_INTERVAL if 0
      */
     void enet_peer_ping_interval(ENetPeer *peer, enet_uint32 pingInterval) {
-        peer->pingInterval = pingInterval ? pingInterval : ENET_PEER_PING_INTERVAL;
+        peer->pingInterval = pingInterval ? pingInterval : static_cast<enet_uint32>(ENET_PEER_PING_INTERVAL);
     }
 
     /** Sets the timeout parameters for a peer.
@@ -3872,9 +3872,9 @@ extern "C" {
      */
 
     void enet_peer_timeout(ENetPeer *peer, enet_uint32 timeoutLimit, enet_uint32 timeoutMinimum, enet_uint32 timeoutMaximum) {
-        peer->timeoutLimit   = timeoutLimit ? timeoutLimit : ENET_PEER_TIMEOUT_LIMIT;
-        peer->timeoutMinimum = timeoutMinimum ? timeoutMinimum : ENET_PEER_TIMEOUT_MINIMUM;
-        peer->timeoutMaximum = timeoutMaximum ? timeoutMaximum : ENET_PEER_TIMEOUT_MAXIMUM;
+        peer->timeoutLimit   = timeoutLimit ? timeoutLimit :  static_cast<enet_uint32>(ENET_PEER_TIMEOUT_LIMIT);
+        peer->timeoutMinimum = timeoutMinimum ? timeoutMinimum :  static_cast<enet_uint32>(ENET_PEER_TIMEOUT_MINIMUM);
+        peer->timeoutMaximum = timeoutMaximum ? timeoutMaximum :  static_cast<enet_uint32>(ENET_PEER_TIMEOUT_MAXIMUM);
     }
 
     /** Force an immediate disconnection from a peer.
@@ -4998,7 +4998,10 @@ extern "C" {
             // Set the value of the start_time_ns, such that the first timestamp
             // is at 1ms. This ensures 0 remains a special value.
             uint64_t want_value = current_time_ns - 1 * ns_in_ms;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
             uint64_t old_value = ENET_ATOMIC_CAS(&start_time_ns, 0, want_value);
+#pragma GCC diagnostic pop
             offset_ns = old_value == 0 ? want_value : old_value;
         }
 

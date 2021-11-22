@@ -36,6 +36,7 @@ libdos_sources = files([
   'program_mount.cpp',
   'program_placeholder.cpp',
   'program_rescan.cpp',
+  'program_serial.cpp',
 ])
 
 libdos = static_library('dos', libdos_sources,

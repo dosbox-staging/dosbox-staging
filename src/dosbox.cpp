@@ -902,9 +902,9 @@ void DOSBOX_Init() {
 		"parameter:value. Parameter for all types is irq (optional).\n"
 		"for directserial: realport (required), rxdelay (optional).\n"
 		"                 (realport:COM1 realport:ttyS0).\n"
-		"for modem: listenport (optional).\n"
+		"for modem: listenport enet (all optional).\n"
 		"for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
-		"               transparent, port, inhsocket (all optional).\n"
+		"               transparent, port, inhsocket, enet (all optional).\n"
 		"Example: serial1=modem listenport:5000");
 
 	Pmulti_remain = secprop->Add_multiremain("serial2", when_idle, " ");
