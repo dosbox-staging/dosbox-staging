@@ -9,7 +9,7 @@ concurrency:
 jobs:
   build_windows_vs:
     name: ${{ matrix.conf.name }}
-    runs-on: windows-latest
+    runs-on: windows-2022
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier', github.actor) == false
     strategy:
       matrix:
@@ -91,7 +91,7 @@ jobs:
   build_windows_vs_release:
     name: ${{ matrix.conf.name }}
     needs: build_windows_vs
-    runs-on: windows-latest
+    runs-on: windows-2022
     strategy:
       matrix:
         conf:
@@ -158,8 +158,7 @@ jobs:
       - name: Package
         shell: bash
         env:
-          # This should probably be in the matrix somewhere
-          VC_REDIST_DIR: C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Redist/MSVC/14.29.30133/${{ matrix.conf.arch }}/Microsoft.VC142.CRT
+          VC_REDIST_PATH: 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Redist/MSVC'
         run: |
           ./scripts/create-package.sh \
             -p msvc \
@@ -218,7 +217,7 @@ jobs:
   publish_additional_artifacts:
     name: Publish additional artifacts
     needs: build_windows_vs_release
-    runs-on: windows-latest
+    runs-on: windows-2022
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v2
