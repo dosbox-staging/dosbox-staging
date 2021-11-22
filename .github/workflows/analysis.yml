@@ -81,7 +81,7 @@ jobs:
       - name: Log environment
         run:  ./scripts/log-env.sh
 
-      - run:  meson setup build
+      - run:  meson setup -Dunit_tests=disabled build
 
       - name: Build and run scan-build
         run: |
@@ -174,7 +174,7 @@ jobs:
       - name: Log environment
         run:  ./scripts/log-env.sh
 
-      - run:  meson setup ${{ matrix.conf.build_flags }} build
+      - run:  meson setup -Dunit_tests=disabled ${{ matrix.conf.build_flags }} build
 
       - run:  ninja -C build
 
