@@ -143,6 +143,17 @@ private:
 	size_t used = 0;
 };
 
+
+enum SerialTypesE {  // Also change src/dos/program_serial.cpp if you change this.
+	SERIAL_TYPE_DISABLED = 0,
+	SERIAL_TYPE_DUMMY,
+	SERIAL_TYPE_DIRECT_SERIAL,
+	SERIAL_TYPE_MODEM,
+	SERIAL_TYPE_NULL_MODEM,
+	SERIAL_TYPE_COUNT
+};
+
+
 class CSerial {
 public:
 	CSerial(const CSerial &) = delete;            // prevent copying
@@ -159,12 +170,12 @@ public:
 #endif
 
 	static bool getUintFromString(const char *name,
-	                              uint32_t &data,
-	                              CommandLine *cmd);
+								  uint32_t &data,
+								  CommandLine *cmd);
 
 	bool InstallationSuccessful = false; // check after constructing. If
-	                                     // something was wrong, delete it
-	                                     // right away.
+										 // something was wrong, delete it
+										 // right away.
 
 	/*
 	 * Communication port index is typically 0-3, but logically limited
@@ -177,7 +188,7 @@ public:
 	IO_WriteHandleObject WriteHandler[SERIAL_IO_HANDLERS];
 
 	float bytetime = 0.0f; // how long a byte takes to transmit/receive in
-	                       // milliseconds
+						   // milliseconds
 	void changeLineProperties();
 	const uint8_t port_index = 0;
 
@@ -258,10 +269,10 @@ public:
 	// depratched
 	// connected device checks, if port can receive data:
 	bool CanReceiveByte();
-	
+
 	// when THR was shifted to TX
 	void ByteTransmitting();
-	
+
 	// When done sending, notify here
 	void ByteTransmitted();
 
@@ -270,7 +281,7 @@ public:
 
 	// switch break state to the passed value
 	virtual void setBreak(bool value)=0;
-	
+
 	// change baudrate, number of bits, parity, word length al at once
 	virtual void updatePortConfig(uint16_t divider, uint8_t lcr) = 0;
 
@@ -280,13 +291,19 @@ public:
 	bool Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeout);
 	uint8_t GetPortNumber() const { return port_index + 1; }
 
+	// What type of port is this?
+	SerialTypesE serialType = SERIAL_TYPE_DISABLED;
+
+	// How was it created?
+	std::string commandLineString = "";
+
 private:
 	DOS_Device *mydosdevice = nullptr;
 
 	// I used this spec: st16c450v420.pdf
 
 	void ComputeInterrupts();
-	
+
 	// a sub-interrupt is triggered
 	void rise(uint8_t priority);
 
@@ -296,7 +313,7 @@ private:
 #define ERROR_PRIORITY   4    // overrun, parity error, frame error, break
 #define RX_PRIORITY      1    // a byte has been received
 #define TX_PRIORITY      2    // tx buffer has become empty
-#define MSR_PRIORITY     8    // CRS, DSR, RI, DCD change 
+#define MSR_PRIORITY     8    // CRS, DSR, RI, DCD change
 #define TIMEOUT_PRIORITY 0x10
 #define NONE_PRIORITY    0
 
@@ -307,12 +324,12 @@ private:
 
 	uint16_t baud_divider = 0;
 
- 	#define RHR_OFFSET 0	// r Receive Holding Register, also LSB of Divisor Latch (r/w)
+	#define RHR_OFFSET 0	// r Receive Holding Register, also LSB of Divisor Latch (r/w)
 							// Data: whole byte
 	#define THR_OFFSET 0	// w Transmit Holding Register
 							// Data: whole byte
 	uint8_t IER = 0; //	r/w		Interrupt Enable Register, also
-	                 // MSB of Divisor Latch
+					 // MSB of Divisor Latch
 #define IER_OFFSET 1
 
 	bool irq_active = false;
@@ -323,7 +340,7 @@ private:
 #define Modem_Status_INT_Enable_MASK 0x8
 
 	uint8_t ISR = 0; //	r				Interrupt Status
-	                 // Register
+					 // Register
 #define ISR_OFFSET 2
 
 #define ISR_CLEAR_VAL       0x1
@@ -334,7 +351,7 @@ private:
 #define ISR_MSR_VAL         0x0
 public:
 	uint8_t LCR = 0; //	r/w				Line Control
-	                 // Register
+					 // Register
 private:
 #define LCR_OFFSET 3
 	// bit0: word length bit0
@@ -380,7 +397,7 @@ private:
 #define MCR_LOOPBACK_Enable_MASK 0x10
 public:
 	uint8_t LSR = 0; //	r				Line Status
-	                 // Register
+					 // Register
 private:
 #define LSR_OFFSET 5
 

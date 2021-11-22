@@ -131,11 +131,11 @@ static uint8_t SERIAL_Read(io_port_t port, io_width_t)
 		{"RHR","IER","ISR","LCR","MCR","LSR","MSR","SPR","DLL","DLM"};
 	if(serialports[i]->dbg_register) {
 		if ((offset_type < 2) &&
-		    ((serialports[i]->LCR) & LCR_DIVISOR_Enable_MASK))
+			((serialports[i]->LCR) & LCR_DIVISOR_Enable_MASK))
 			offset_type += 8;
 		serialports[i]->log_ser(serialports[i]->dbg_register,
-		                        "read  0x%2x from %s.", retval,
-		                        dbgtext[offset_type]);
+								"read  0x%2x from %s.", retval,
+								dbgtext[offset_type]);
 	}
 #endif
 	return retval;
@@ -152,34 +152,34 @@ static void SERIAL_Write(io_port_t port, uint8_t val, io_width_t)
 		default: return;
 	}
 	if(serialports[i]==0) return;
-	
+
 #if SERIAL_DEBUG
 		const char* const dbgtext[]={"THR","IER","FCR",
 			"LCR","MCR","!LSR","MSR","SPR","DLL","DLM"};
 		if(serialports[i]->dbg_register) {
 			uint32_t debugindex = offset_type;
 			if ((offset_type < 2) &&
-			    ((serialports[i]->LCR) & LCR_DIVISOR_Enable_MASK)) {
+				((serialports[i]->LCR) & LCR_DIVISOR_Enable_MASK)) {
 				debugindex += 8;
 			}
 			serialports[i]->log_ser(serialports[i]->dbg_register,
-			                        "write 0x%2x to %s.", val,
-			                        dbgtext[debugindex]);
-	        }
+									"write 0x%2x to %s.", val,
+									dbgtext[debugindex]);
+			}
 #endif
-	        switch (offset_type) {
-	        case THR_OFFSET: serialports[i]->Write_THR(val); return;
-	        case IER_OFFSET: serialports[i]->Write_IER(val); return;
-	        case FCR_OFFSET: serialports[i]->Write_FCR(val); return;
-	        case LCR_OFFSET: serialports[i]->Write_LCR(val); return;
-	        case MCR_OFFSET: serialports[i]->Write_MCR(val); return;
-	        case MSR_OFFSET: serialports[i]->Write_MSR(val); return;
-	        case SPR_OFFSET:
+			switch (offset_type) {
+			case THR_OFFSET: serialports[i]->Write_THR(val); return;
+			case IER_OFFSET: serialports[i]->Write_IER(val); return;
+			case FCR_OFFSET: serialports[i]->Write_FCR(val); return;
+			case LCR_OFFSET: serialports[i]->Write_LCR(val); return;
+			case MCR_OFFSET: serialports[i]->Write_MCR(val); return;
+			case MSR_OFFSET: serialports[i]->Write_MSR(val); return;
+			case SPR_OFFSET:
 			serialports[i]->Write_SPR (val);
 			return;
 		default:
 			serialports[i]->Write_reserved (val, port & 0x7);
-	        }
+			}
 }
 #if SERIAL_DEBUG
 void CSerial::log_ser(bool active, char const* format,...) {
@@ -215,7 +215,7 @@ void CSerial::changeLineProperties() {
 	const char* const dbgtext[]={"none","odd","none","even","none","mark","none","space"};
 	log_ser(dbg_serialtraffic,"New COM parameters: baudrate %5.0f, parity %s, wordlen %d, stopbits %d",
 		1.0/bitlen*1000.0f,dbgtext[(LCR&0x38)>>3],(LCR&0x3)+5,((LCR&0x4)>>2)+1);
-#endif	
+#endif
 	updatePortConfig (baud_divider, LCR);
 }
 
@@ -231,25 +231,25 @@ static void Serial_EventHandler(uint32_t val)
 void CSerial::setEvent(uint16_t type, float duration)
 {
 	PIC_AddEvent(Serial_EventHandler, static_cast<double>(duration),
-	             static_cast<Bitu>((type << 2) | port_index));
+				 static_cast<Bitu>((type << 2) | port_index));
 }
 
 void CSerial::removeEvent(uint16_t type)
 {
 	// TODO
 	PIC_RemoveSpecificEvents(Serial_EventHandler,
-	                         static_cast<Bitu>((type << 2) | port_index));
+							 static_cast<Bitu>((type << 2) | port_index));
 }
 
 void CSerial::handleEvent(uint16_t type)
 {
-	switch (type) { 
-	case SERIAL_TX_LOOPBACK_EVENT: 
+	switch (type) {
+	case SERIAL_TX_LOOPBACK_EVENT:
 #if SERIAL_DEBUG
 		log_ser(dbg_serialtraffic,
-		        loopback_data < 0x10 ? "tx 0x%02x (%" PRIu8 ") (loopback)"
-		                             : "tx 0x%02x (%c) (loopback)",
-		        loopback_data, loopback_data);
+				loopback_data < 0x10 ? "tx 0x%02x (%" PRIu8 ") (loopback)"
+									 : "tx 0x%02x (%c) (loopback)",
+				loopback_data, loopback_data);
 #endif
 		receiveByte(loopback_data);
 		ByteTransmitted();
@@ -263,14 +263,14 @@ void CSerial::handleEvent(uint16_t type)
 
 	case SERIAL_ERRMSG_EVENT:
 		LOG_MSG("SERIAL: Port %" PRIu8 " errors:\n"
-		        "  - framing %" PRIu32 "\n"
-		        "  - parity %" PRIu32 "\n"
-		        "  - RX overruns %" PRIu32 "\n"
-		        "  - IF0 overruns: %" PRIu32 "\n"
-		        "  - TX overruns: %" PRIu32 "\n"
-		        "  - break %" PRIu32,
-		        GetPortNumber(), framingErrors, parityErrors,
-		        overrunErrors, overrunIF0, txOverrunErrors, breakErrors);
+				"  - framing %" PRIu32 "\n"
+				"  - parity %" PRIu32 "\n"
+				"  - RX overruns %" PRIu32 "\n"
+				"  - IF0 overruns: %" PRIu32 "\n"
+				"  - TX overruns: %" PRIu32 "\n"
+				"  - break %" PRIu32,
+				GetPortNumber(), framingErrors, parityErrors,
+				overrunErrors, overrunIF0, txOverrunErrors, breakErrors);
 		errormsg_pending = false;
 		framingErrors = 0;
 		parityErrors = 0;
@@ -304,7 +304,7 @@ void CSerial::rise(uint8_t priority)
 	if(priority&TIMEOUT_PRIORITY && !(waiting_interrupts&TIMEOUT_PRIORITY))
 		log_ser(dbg_interrupt,"fifo rx timeout interrupt on.");
 #endif
-	
+
 	waiting_interrupts |= priority;
 	ComputeInterrupts();
 }
@@ -336,7 +336,7 @@ void CSerial::ComputeInterrupts () {
 	else if (val & MSR_PRIORITY)		ISR = ISR_MSR_VAL;
 	else ISR = ISR_CLEAR_VAL;
 
-	if(val && !irq_active) 
+	if(val && !irq_active)
 	{
 		irq_active=true;
 		if(op2) {
@@ -347,7 +347,7 @@ void CSerial::ComputeInterrupts () {
 		}
 	} else if((!val) && irq_active) {
 		irq_active=false;
-		if(op2) { 
+		if(op2) {
 			PIC_DeActivateIRQ(irq);
 #if SERIAL_DEBUG
 			log_ser(dbg_interrupt,"IRQ%d off.",irq);
@@ -370,8 +370,8 @@ void CSerial::receiveByteEx(uint8_t data, uint8_t error)
 {
 #if SERIAL_DEBUG
 	log_ser(dbg_serialtraffic,
-	        data < 0x10 ? "\t\t\t\trx 0x%02x (%" PRIu8 ")" : "\t\t\t\trx 0x%02x (%c)",
-	        data, data);
+			data < 0x10 ? "\t\t\t\trx 0x%02x (%" PRIu8 ")" : "\t\t\t\trx 0x%02x (%c)",
+			data, data);
 #endif
 	if (!(rxfifo->addb(data))) {
 		// Overrun error ;o
@@ -410,7 +410,7 @@ void CSerial::receiveByteEx(uint8_t data, uint8_t error)
 			rise (ERROR_PRIORITY);
 			LSR |= error;
 		}
-        if(error&LSR_PARITY_ERROR_MASK) {
+		if(error&LSR_PARITY_ERROR_MASK) {
 			parityErrors++;
 		}
 		if(error&LSR_OVERRUN_ERROR_MASK) {
@@ -502,7 +502,7 @@ void CSerial::Write_THR(uint8_t data)
 		changeLineProperties();
 	} else {
 		// write to THR
-        clear (TX_PRIORITY);
+		clear (TX_PRIORITY);
 
 		if((LSR & LSR_TX_EMPTY_MASK))
 		{	// we were idle before
@@ -510,20 +510,20 @@ void CSerial::Write_THR(uint8_t data)
 			// if(sync_guardtime) LOG_MSG("SERIAL: Port %" PRIu8 " internal error 1", GetPortNumber());
 			// if(!(LSR & LSR_TX_EMPTY_MASK)) LOG_MSG("SERIAL: Port %" PRIu8 " internal error 2", GetPortNumber());
 			// if(txfifo->getUsage()) LOG_MSG("SERIAL: Port %" PRIu8 " internal error 3", GetPortNumber());
-			
+
 			// need "warming up" time
 			sync_guardtime=true;
 			// block the fifo so it returns THR full (or not in case of FIFO on)
-			txfifo->addb(data); 
+			txfifo->addb(data);
 			// transmit shift register is busy
 			LSR &= (~LSR_TX_EMPTY_MASK);
 			if(loopback) setEvent(SERIAL_THR_LOOPBACK_EVENT, bytetime/10);
 			else {
 #if SERIAL_DEBUG
 				log_ser(dbg_serialtraffic, data < 0x10 ?
-				        "\t\t\t\t\ttx 0x%02x (%" PRIu8 ") [FIFO=%2zu]":
-				        "\t\t\t\t\ttx 0x%02x (%c) [FIFO=%2zu]",
-				        data, data, txfifo->getUsage());
+						"\t\t\t\t\ttx 0x%02x (%" PRIu8 ") [FIFO=%2zu]":
+						"\t\t\t\t\ttx 0x%02x (%c) [FIFO=%2zu]",
+						data, data, txfifo->getUsage());
 #endif
 				transmitByte (data,true);
 			}
@@ -602,9 +602,9 @@ void CSerial::Write_IER(uint8_t data)
 		// Retrigger TX interrupt
 		if (txfifo->isEmpty()&& (data&TX_PRIORITY))
 			waiting_interrupts |= TX_PRIORITY;
-		
+
 		IER = data&0xF;
-		if((FCR&FCR_ACTIVATE)&&data&RX_PRIORITY) IER |= TIMEOUT_PRIORITY; 
+		if((FCR&FCR_ACTIVATE)&&data&RX_PRIORITY) IER |= TIMEOUT_PRIORITY;
 		ComputeInterrupts();
 	}
 }
@@ -715,7 +715,7 @@ void CSerial::Write_LCR(uint8_t data)
 /* Modem Control Register (r/w)                                             **/
 /*****************************************************************************/
 // Set levels of RTS and DTR, as well as loopback-mode.
-// Modified by: 
+// Modified by:
 // - writing to it.
 uint32_t CSerial::Read_MCR()
 {
@@ -740,8 +740,8 @@ void CSerial::Write_MCR(uint8_t data)
 	// still wrong.
 	if (data & FIFO_FLOWCONTROL)
 		LOG_MSG("SERIAL: Port %" PRIu8 " warning, tried to activate hardware "
-		        "handshake.",
-		        GetPortNumber());
+				"handshake.",
+				GetPortNumber());
 	bool new_dtr = data & MCR_DTR_MASK? true:false;
 	bool new_rts = data & MCR_RTS_MASK? true:false;
 	bool new_op1 = data & MCR_OP1_MASK? true:false;
@@ -811,9 +811,9 @@ void CSerial::Write_MCR(uint8_t data)
 		// Generate one if ComputeInterrupts has set irq_active to true
 		if (irq_active) PIC_ActivateIRQ(irq);
 	} else if (op2 && (!new_op2)) {
-		// irq has been disabled (irq level -> tristate) 
+		// irq has been disabled (irq level -> tristate)
 		// Remove the IRQ signal if the irq was being generated before
-		if (irq_active) PIC_DeActivateIRQ(irq); 
+		if (irq_active) PIC_DeActivateIRQ(irq);
 	}
 
 	dtr=new_dtr;
@@ -882,12 +882,12 @@ uint32_t CSerial::Read_MSR()
 	if(d_ri) retval|=MSR_dRI_MASK;
 	if(d_cts) retval|=MSR_dCTS_MASK;
 	if(d_dsr) retval|=MSR_dDSR_MASK;
-	
+
 	d_cd = false;
 	d_ri = false;
 	d_cts = false;
 	d_dsr = false;
-	
+
 	clear (MSR_PRIORITY);
 	return retval;
 }
@@ -960,7 +960,7 @@ void CSerial::setRI (bool value) {
 		// don't change delta when in loopback mode
 		ri=value;
 		if(!loopback) {
-            if(value==false) d_ri=true;
+			if(value==false) d_ri=true;
 			rise (MSR_PRIORITY);
 		}
 	}
@@ -974,7 +974,7 @@ void CSerial::setDSR (bool value) {
 		// don't change delta when in loopback mode
 		dsr=value;
 		if(!loopback) {
-            d_dsr=true;
+			d_dsr=true;
 			rise (MSR_PRIORITY);
 		}
 	}
@@ -988,7 +988,7 @@ void CSerial::setCD (bool value) {
 		// don't change delta when in loopback mode
 		cd=value;
 		if(!loopback) {
-            d_cd=true;
+			d_cd=true;
 			rise (MSR_PRIORITY);
 		}
 	}
@@ -1002,7 +1002,7 @@ void CSerial::setCTS (bool value) {
 		// don't change delta when in loopback mode
 		cts=value;
 		if(!loopback) {
-            d_cts=true;
+			d_cts=true;
 			rise (MSR_PRIORITY);
 		}
 	}
@@ -1025,8 +1025,8 @@ static constexpr std::tuple<uint8_t, uint8_t> baud_to_regs(uint32_t baud_rate)
 }
 
 static uint8_t line_control_to_reg(const uint8_t data_bits,
-                                   const char parity_type,
-                                   const uint8_t stop_bits)
+								   const char parity_type,
+								   const uint8_t stop_bits)
 {
 	uint8_t reg = 0;
 
@@ -1090,14 +1090,14 @@ void CSerial::Init_Registers () {
 
 
 	LSR = 0x60;
-	d_cts = true;	
-	d_dsr = true;	
+	d_cts = true;
+	d_dsr = true;
 	d_ri = true;
-	d_cd = true;	
-	cts = true;	
-	dsr = true;	
-	ri = true;	
-	cd = true;	
+	d_cd = true;
+	cts = true;
+	dsr = true;
+	ri = true;
+	cd = true;
 
 	SPR = 0xFF;
 
@@ -1114,7 +1114,7 @@ void CSerial::Init_Registers () {
 }
 
 CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
-        : port_index(port_idx)
+		: port_index(port_idx)
 {
 	const uint16_t base = serial_baseaddr[port_index];
 
@@ -1131,10 +1131,10 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 	dbg_register      = cmd->FindExist("dbgreg", false);
 	dbg_interrupt     = cmd->FindExist("dbgirq", false);
 	dbg_aux			  = cmd->FindExist("dbgaux", false);
-	
+
 	if(cmd->FindExist("dbgall", false)) {
-		dbg_serialtraffic= 
-		dbg_modemcontrol= 
+		dbg_serialtraffic=
+		dbg_modemcontrol=
 		dbg_register=
 		dbg_interrupt=
 		dbg_aux= true;
@@ -1146,8 +1146,8 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 	else debugfp=0;
 
 	if(debugfp == 0) {
-		dbg_serialtraffic= 
-		dbg_modemcontrol= 
+		dbg_serialtraffic=
+		dbg_modemcontrol=
 		dbg_register=
 		dbg_interrupt=
 		dbg_aux= false;
@@ -1156,8 +1156,8 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 		cmd->GetStringRemain(cleft);
 
 		log_ser(true, "SERIAL: Port %" PRIu8 " base %3x, IRQ %" PRIu32
-		        ", initstring \"%s\"\r\n\r\n",
-		        GetPortNumber(), base, irq, cleft.c_str());
+				", initstring \"%s\"\r\n\r\n",
+				GetPortNumber(), base, irq, cleft.c_str());
 	}
 #endif
 	fifosize=16;
@@ -1267,7 +1267,7 @@ bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeo
 
 	// Wait until the receiver is ready (or we've timed out)
 	const uint32_t ready_flags = (wait_dsr ? MSR_DSR_MASK : 0x0) |
-	                             (wait_cts ? MSR_CTS_MASK : 0x0);
+								 (wait_cts ? MSR_CTS_MASK : 0x0);
 	while ((Read_MSR() & ready_flags) != ready_flags && !timed_out)
 		timed_out = idle(start_time, timeout);
 
@@ -1303,14 +1303,18 @@ public:
 			Prop_multival* p = section->Get_multival(s_property);
 			std::string type = p->GetSection()->Get_string("type");
 			CommandLine cmd(0,p->GetSection()->Get_string("parameters"));
-			
+
 			// detect the type
 			if (type=="dummy") {
 				serialports[i] = new CSerialDummy (i, &cmd);
+				serialports[i]->serialType = SERIAL_TYPE_DUMMY;
+				cmd.GetStringRemain(serialports[i]->commandLineString);
 			}
 #ifdef DIRECTSERIAL_AVAILIBLE
 			else if (type=="directserial") {
 				serialports[i] = new CDirectSerial (i, &cmd);
+				serialports[i]->serialType = SERIAL_TYPE_DIRECT_SERIAL;
+				cmd.GetStringRemain(serialports[i]->commandLineString);
 				if (!serialports[i]->InstallationSuccessful)  {
 					// serial port name was wrong or already in use
 					delete serialports[i];
@@ -1321,6 +1325,8 @@ public:
 #if C_MODEM
 			else if(type=="modem") {
 				serialports[i] = new CSerialModem (i, &cmd);
+				serialports[i]->serialType = SERIAL_TYPE_MODEM;
+				cmd.GetStringRemain(serialports[i]->commandLineString);
 				if (!serialports[i]->InstallationSuccessful)  {
 					delete serialports[i];
 					serialports[i] = NULL;
@@ -1328,6 +1334,8 @@ public:
 			}
 			else if(type=="nullmodem") {
 				serialports[i] = new CNullModem (i, &cmd);
+				serialports[i]->serialType = SERIAL_TYPE_NULL_MODEM;
+				cmd.GetStringRemain(serialports[i]->commandLineString);
 				if (!serialports[i]->InstallationSuccessful)  {
 					delete serialports[i];
 					serialports[i] = NULL;
@@ -1339,7 +1347,7 @@ public:
 			} else {
 				serialports[i] = NULL;
 				LOG_MSG("SERIAL: Port %" PRIu8 " invalid type \"%s\".",
-				        static_cast<uint8_t>(i + 1), type.c_str());
+						static_cast<uint8_t>(i + 1), type.c_str());
 			}
 			if(serialports[i]) biosParameter[i] = serial_baseaddr[i];
 		} // for 1-4

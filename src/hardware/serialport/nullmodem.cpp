@@ -36,6 +36,12 @@ CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
 	tx_gather = 12;
 	uint32_t bool_temp = 0;
 
+	// enet: Setting to 1 enables enet on the port, otherwise TCP.
+	if (getUintFromString("enet:", bool_temp, cmd)) {
+		if (bool_temp==1) {
+			socketType = SOCKET_TYPE_ENET;
+		}
+	}
 	// usedtr: The nullmodem will
 	// 1) when it is client connect to the server not immediately but
 	//    as soon as a modem-aware application is started (DTR is switched on).
@@ -126,8 +132,7 @@ CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
 				setEvent(SERIAL_NULLMODEM_DTR_EVENT, 50);
 				LOG_MSG("SERIAL: Port %" PRIu8 " waiting for DTR ...",
 						GetPortNumber());
-			} else if (!ClientConnect(new TCPClientSocket((char *)hostnamebuffer,
-														  clientport))) {
+			} else if (!ClientConnect(NETClientSocket::NETClientFactory(socketType, (char *)hostnamebuffer, clientport))) {
 				return;
 			}
 		} else {
@@ -190,7 +195,7 @@ SocketState CNullModem::readChar(uint8_t &val)
 	return SocketState::Good;
 }
 
-bool CNullModem::ClientConnect(TCPClientSocket* newsocket) {
+bool CNullModem::ClientConnect(NETClientSocket *newsocket) {
 	uint8_t peernamebuf[16];
 	clientsocket = newsocket;
 
@@ -214,11 +219,11 @@ bool CNullModem::ClientConnect(TCPClientSocket* newsocket) {
 
 bool CNullModem::ServerListen() {
 	// Start the server listen port.
-	serversocket = new TCPServerSocket(serverport);
+	serversocket = NETServerSocket::NETServerFactory(socketType, serverport);
 	if (!serversocket->isopen) return false;
 	LOG_MSG("SERIAL: Port %" PRIu8 " nullmodem server waiting for connection on "
-			"TCP port %" PRIu16 " ...",
-			GetPortNumber(), serverport);
+			"%s port %" PRIu16 " ...",
+			GetPortNumber(), (socketType == SOCKET_TYPE_ENET ? "ENET" : "TCP"), serverport);
 	setEvent(SERIAL_SERVER_POLLING_EVENT, 50);
 	setCD(false);
 	return true;
@@ -263,7 +268,7 @@ void CNullModem::Disconnect() {
 	setCD(false);
 
 	if (serverport) {
-		serversocket = new TCPServerSocket(serverport);
+		serversocket = NETServerSocket::NETServerFactory(socketType, serverport);
 		if (serversocket->isopen)
 			setEvent(SERIAL_SERVER_POLLING_EVENT, 50);
 		else delete serversocket;
@@ -417,8 +422,7 @@ void CNullModem::handleUpperEvent(uint16_t type)
 		case SERIAL_NULLMODEM_DTR_EVENT: {
 			if ((!DTR_delta) && getDTR()) {
 				// DTR went positive. Try to connect.
-					if (ClientConnect(new TCPClientSocket((char *)hostnamebuffer,
-														  clientport)))
+					if (ClientConnect(NETClientSocket::NETClientFactory(socketType, (char *)hostnamebuffer, clientport)))
 						break; // no more DTR wait event when
 							   // connected
 				}
