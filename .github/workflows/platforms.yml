@@ -57,11 +57,12 @@ jobs:
             export PATH="$HOME/.local/bin:$PATH"
             pip3 install --user --upgrade meson ninja
             ./scripts/log-env.sh
-            meson build \
+            meson setup \
               -Duse_fluidsynth=false \
               -Duse_mt32emu=false \
-              --wrap-mode=nofallback
+              --wrap-mode=nofallback build
             meson compile -C build |& tee build.log
+            meson test -C build
 
       - name: Summarize warnings
         run:  ./scripts/count-warnings.py --max-warnings -1 build.log

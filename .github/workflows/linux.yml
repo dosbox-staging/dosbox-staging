@@ -23,16 +23,17 @@ jobs:
           - name: Clang, Ubuntu 20.04
             os: ubuntu-20.04
             packages: clang
-            build_flags: --native-file=.github/meson/native-clang.ini
+            build_flags: -Dunit_tests=disabled --native-file=.github/meson/native-clang.ini
             max_warnings: 0
 
           - name: GCC, Ubuntu 20.04
             os: ubuntu-20.04
+            build_flags: -Dunit_tests=disabled
             max_warnings: 0
 
           - name: GCC, Ubuntu 18.04
             os: ubuntu-18.04
-            build_flags: -Duse_fluidsynth=false
+            build_flags: -Dunit_tests=disabled -Duse_fluidsynth=false
             max_warnings: 0
 
           - name: GCC 7, Ubuntu 18.04
@@ -48,22 +49,22 @@ jobs:
 
           - name: GCC, +debugger
             os: ubuntu-20.04
-            build_flags: -Denable_debugger=normal
+            build_flags: -Dunit_tests=disabled -Denable_debugger=normal
             max_warnings: 0
 
           - name: GCC, -dyn-x86
             os: ubuntu-20.04
-            build_flags: -Ddynamic_core=dynrec
+            build_flags: -Dunit_tests=disabled -Ddynamic_core=dynrec
             max_warnings: 0
 
           - name: GCC, -dyn-x86, +debugger
             os: ubuntu-20.04
-            build_flags: -Ddynamic_core=dynrec -Denable_debugger=normal
+            build_flags: -Dunit_tests=disabled -Ddynamic_core=dynrec -Denable_debugger=normal
             max_warnings: 0
 
           - name: GCC, -network
             os: ubuntu-20.04
-            build_flags: -Duse_sdl2_net=false
+            build_flags: -Dunit_tests=disabled -Duse_sdl2_net=false
             max_warnings: 0
 
           - name: GCC, minimum build
