@@ -16,10 +16,10 @@ jobs:
         conf:
           - name: MSVC 32-bit
             arch: x86
-            max_warnings: 0
+            max_warnings: -1
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 1125
+            max_warnings: -1
     steps:
       - name:  Backup existing vcpkg installation
         shell: pwsh
@@ -39,6 +39,12 @@ jobs:
         with:
           path: c:\vcpkg
           key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-2
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+            vs-prerelease: true
+            msbuild-architecture: ${{ matrix.conf.arch }}
 
       - name:  Install new packages using vcpkg
         if:    steps.cache-vcpkg.outputs.cache-hit != 'true'
@@ -66,8 +72,6 @@ jobs:
 
       - name:  Run tests
         shell: pwsh
-        env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
           # TODO: get unit tests working in Debug-mode; for now use release flags (better than nothing)
@@ -75,8 +79,6 @@ jobs:
 
       - name:  Build
         shell: pwsh
-        env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
           MSBuild -m dosbox.sln -t:dosbox:Rebuild -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }} | Tee-Object build.log
@@ -122,6 +124,12 @@ jobs:
           path: c:\vcpkg
           key: vcpkg-${{ matrix.conf.arch }}-${{ steps.prep-vcpkg.outputs.year_and_week }}-2
 
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+            vs-prerelease: true
+            msbuild-architecture: ${{ matrix.conf.arch }}
+
       - name:  Integrate packages
         shell: pwsh
         run: |
@@ -149,8 +157,6 @@ jobs:
 
       - name:  Build release
         shell: pwsh
-        env:
-          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
         run: |
           cd vs
           MSBuild -m dosbox.sln -t:dosbox:Rebuild -p:Configuration=Release -p:Platform=${{ matrix.conf.arch }}
