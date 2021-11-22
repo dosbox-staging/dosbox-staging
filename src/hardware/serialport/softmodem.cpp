@@ -117,7 +117,16 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
           telClient({}),
           dial({})
 {
+	uint32_t bool_temp = 0;
+
 	InstallationSuccessful=false;
+
+	// enet: Setting to 1 enables enet on the port, otherwise TCP.
+	if (getUintFromString("enet:", bool_temp, cmd)) {
+		if (bool_temp == 1) {
+			socketType = SOCKET_TYPE_ENET;
+		}
+	}
 
 	// Setup the listening port
 	uint32_t val;

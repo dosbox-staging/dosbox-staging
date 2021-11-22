@@ -34,6 +34,7 @@
 #include "program_mount.h"
 #include "program_placeholder.h"
 #include "program_rescan.h"
+#include "program_serial.h"
 
 #if C_DEBUG
 #include "program_biostest.h"
@@ -499,6 +500,14 @@ void DOS_SetupPrograms(void)
 	MSG_Add("PROGRAM_KEYB_LAYOUTNOTFOUND","No layout in %s for codepage %i\n");
 	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n\n");
 
+	MSG_Add("PROGRAM_SERIAL_HELP",
+	        "SERIAL {[/l | /list] | [port#] [type] [options]}\n");
+	MSG_Add("PROGRAM_SERIAL_SHOW_PORT", "COM%d: %s %s\n");
+	MSG_Add("PROGRAM_SERIAL_BAD_PORT",
+	        "Must specify a numeric port value between 1 and %d, inclusive.\n");
+	MSG_Add("PROGRAM_SERIAL_BAD_MODE", "Mode must be one of the following:\n");
+	MSG_Add("PROGRAM_SERIAL_INDENTED_LIST", "  %s\n");
+
 	MSG_Add("PROGRAM_PLACEHOLDER_SHORT_HELP", "This program is a placeholder");
 	MSG_Add("PROGRAM_PLACEHOLDER_LONG_HELP",
 	        "%s is only a placeholder.\n"
@@ -535,4 +544,5 @@ void DOS_SetupPrograms(void)
 	PROGRAMS_MakeFile("MEM.COM", MEM_ProgramStart);
 	PROGRAMS_MakeFile("MOUNT.COM", MOUNT_ProgramStart);
 	PROGRAMS_MakeFile("RESCAN.COM", RESCAN_ProgramStart);
+	PROGRAMS_MakeFile("SERIAL.COM", SERIAL_ProgramStart);
 }
