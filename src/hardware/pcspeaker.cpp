@@ -76,11 +76,11 @@ static struct {
 	mixer_channel_t chan = nullptr;
 	SPKR_MODES prev_mode = SPKR_OFF;
 	SPKR_MODES mode = SPKR_OFF;
-	uint32_t prev_pit_mode = 3;
-	uint32_t pit_mode = 3;
-	uint32_t rate = 0u;
-	uint32_t min_tr = 0u;
-	uint32_t used = 0u;
+	int prev_pit_mode = 3;
+	int pit_mode = 3;
+	int rate = 0;
+	int min_tr = 0;
+	int used = 0;
 	double pit_last = 0.0;
 	double pit_max = PERIOD_OF_1K_PIT_TICKS * 1320.0;
 	double pit_half = pit_max / 2.0;
@@ -261,7 +261,7 @@ static void ForwardPIT(double newindex)
 }
 
 // PIT-mode activation
-void PCSPEAKER_SetCounter(uint32_t cntr, uint32_t mode)
+void PCSPEAKER_SetCounter(int cntr, int mode)
 {
 	if (!SpeakerExists())
 		return;
@@ -337,7 +337,7 @@ static double NeutralLastPitOr(double fallback)
 }
 
 // PWM-mode activation
-void PCSPEAKER_SetType(uint32_t mode)
+void PCSPEAKER_SetType(int mode)
 {
 	if (!SpeakerExists())
 		return;
@@ -484,8 +484,8 @@ public:
 		else
 			spkr.neutralize_dc_offset = (dc_offset_pref == "true");
 
-		spkr.dc_silencer.Configure(spkr.rate, DC_SILENCER_WAVES,
-		                           DC_SILENCER_WAVE_HZ);
+		spkr.dc_silencer.Configure(static_cast<uint32_t>(spkr.rate),
+		                           DC_SILENCER_WAVES, DC_SILENCER_WAVE_HZ);
 
 		spkr.min_tr = (PIT_TICK_RATE + spkr.rate / 2 - 1) / (spkr.rate / 2);
 		/* Register the sound channel */
