@@ -612,7 +612,7 @@ void DOSBOX_Init(void) {
 	Pmulti_remain->SetValue("auto");
 	Pstring->Set_values(cyclest);
 
-	Pstring = Pmulti_remain->GetSection()->Add_string("parameters", always, "");
+	Pmulti_remain->GetSection()->Add_string("parameters", always, "");
 
 	Pint = secprop->Add_int("cycleup", always, 10);
 	Pint->SetMinMax(1,1000000);
@@ -890,7 +890,7 @@ void DOSBOX_Init(void) {
 	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
 	Pmulti_remain->SetValue("dummy");
 	Pstring->Set_values(serials);
-	Pstring = Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
+	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	Pmulti_remain->Set_help(
 		"set type of device connected to com port.\n"
 		"Can be disabled, dummy, modem, nullmodem, directserial.\n"
@@ -907,21 +907,21 @@ void DOSBOX_Init(void) {
 	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
 	Pmulti_remain->SetValue("dummy");
 	Pstring->Set_values(serials);
-	Pstring = Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
+	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	Pmulti_remain->Set_help("see serial1");
 
 	Pmulti_remain = secprop->Add_multiremain("serial3", when_idle, " ");
 	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
 	Pmulti_remain->SetValue("disabled");
 	Pstring->Set_values(serials);
-	Pstring = Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
+	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	Pmulti_remain->Set_help("see serial1");
 
 	Pmulti_remain = secprop->Add_multiremain("serial4", when_idle, " ");
 	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
 	Pmulti_remain->SetValue("disabled");
 	Pstring->Set_values(serials);
-	Pstring = Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
+	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	Pmulti_remain->Set_help("see serial1");
 
 	pstring = secprop->Add_path("phonebookfile", only_at_start, "phonebook.txt");
