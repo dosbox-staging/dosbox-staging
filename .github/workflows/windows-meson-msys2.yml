@@ -10,6 +10,9 @@ env:
   CCACHE_DIR:      "/c/ccache"
   CCACHE_MAXSIZE:  "64M"
   CCACHE_COMPRESS: "true"
+  BUILD_FLAGS: "-Dbuildtype=release -Ddefault_library=static -Db_asneeded=true -Dtry_static_libs=png,opusfile"
+  BUILD_RELEASE_DIR: build/release
+  BUILD_DEBUGGER_DIR: build/debugger
 
 jobs:
   build_msys2:
@@ -94,7 +97,7 @@ jobs:
         id:    prep-ccache
         run: |
           mkdir -p "${CCACHE_DIR}"
-          echo "::set-output name=dir::C:\ccache"
+          echo "::set-output name=dir::$(cygpath -w $CCACHE_DIR)"
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
           echo "::set-output name=name_hash::$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)"
@@ -193,7 +196,7 @@ jobs:
         id:    prep-ccache
         run: |
           mkdir -p "${CCACHE_DIR}"
-          echo "::set-output name=dir::C:\ccache"
+          echo "::set-output name=dir::$(cygpath -w $CCACHE_DIR)"
           echo "::set-output name=today::$(date -I)"
           echo "::set-output name=yesterday::$(date --date=yesterday -I)"
 
@@ -220,64 +223,39 @@ jobs:
           git fetch --prune --unshallow
           export VERSION=$(git describe --abbrev=5)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-      
-      - name: Set dest dir names
-        run: |
-          set -x
-          echo PKG_DEST_DIR=dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }} >> $GITHUB_ENV
-          echo PKG_DEST_DIR_DEBUGGER=dosbox-staging-windows-msys2-debugger-${{ matrix.conf.arch }}-${{ env.VERSION }} >> $GITHUB_ENV
-      
+           
       - name: Setup release build
-        run: |
-          meson setup \
-            -Dbuildtype=release \
-            -Ddefault_library=static \
-            -Db_asneeded=true \
-            -Dtry_static_libs=png,opusfile \
-            build
+        run: meson setup $BUILD_FLAGS $BUILD_RELEASE_DIR
+
+      - name: Setup release w/ debugger build
+        run: meson setup $BUILD_FLAGS -Denable_debugger=normal $BUILD_DEBUGGER_DIR
       
       - name: Build
-        run: ninja -C build
-
-      - name: Strip binary
-        run: strip build/dosbox.exe
-      
-      - name: Stage release binary
-        run: |
-          set -x
-          mkdir -p ${{ env.PKG_DEST_DIR }}/
-          cp build/dosbox.exe ${{ env.PKG_DEST_DIR }}/
-          ntldd -R ${{ env.PKG_DEST_DIR }}/dosbox.exe \
-            | sed -e 's/^[[:blank:]]*//g' \
-            | cut -d ' ' -f 3 \
-            | grep -E -i '(mingw|clang)(32|64)' \
-            | sed -e 's|\\|/|g' \
-            | xargs cp --target-directory=${{ env.PKG_DEST_DIR }}/
-      
-      - name: Setup release build w/ debugger
-        run: |
-          meson configure \
-            -Denable_debugger=normal \
-            build
+        run: ninja -C $BUILD_RELEASE_DIR
       
       - name: Build w/ debugger
-        run: ninja -C build
-
-      - name: Strip debugger binary
-        run: strip build/dosbox.exe
+        run: ninja -C $BUILD_DEBUGGER_DIR
       
-      - name: Stage release binary w/ debugger
+      - name: Stage binaries
         run: |
           set -x
-          mkdir -p ${{ env.PKG_DEST_DIR_DEBUGGER }}/
-          cp build/dosbox.exe ${{ env.PKG_DEST_DIR_DEBUGGER }}/
-          ntldd -R ${{ env.PKG_DEST_DIR_DEBUGGER }}/dosbox.exe \
-            | sed -e 's/^[[:blank:]]*//g' \
-            | cut -d ' ' -f 3 \
-            | grep -E -i '(mingw|clang)(32|64)' \
-            | sed -e 's|\\|/|g' \
-            | xargs cp --target-directory=${{ env.PKG_DEST_DIR_DEBUGGER }}/
-      
+          for bin_dir in $BUILD_RELEASE_DIR $BUILD_DEBUGGER_DIR; do
+            mkdir -p stage/${bin_dir}
+            cp ${bin_dir}/dosbox.exe stage/${bin_dir}/
+            ntldd -R stage/${bin_dir}/dosbox.exe \
+              | sed -e 's/^[[:blank:]]*//g' \
+              | cut -d ' ' -f 3 \
+              | grep -E -i '(mingw|clang)(32|64)' \
+              | sed -e 's|\\|/|g' \
+              | xargs cp --target-directory=stage/${bin_dir}/
+          done
+
+      - name: Strip binaries
+        run: |
+          for bin_dir in $BUILD_RELEASE_DIR $BUILD_DEBUGGER_DIR; do
+            strip stage/${bin_dir}/dosbox.exe
+          done
+            
       - name: Setup common package dir
         run: |
           set -x
@@ -312,22 +290,17 @@ jobs:
 
           # Create dir for zipping
       
-      - name: Package release
+      - name: Package binaries
         run: |
-            set -x
-            cp -r dest/. ${PKG_DEST_DIR}/
-      
-      - name: Package release w/ debugger
-        run: |
-            set -x
-            cp -r dest/. ${{ env.PKG_DEST_DIR_DEBUGGER }}/
-          
+          for bin_dir in $BUILD_RELEASE_DIR $BUILD_DEBUGGER_DIR; do
+            cp -r dest/. stage/${bin_dir}/
+          done
       
       - name: Windows Defender AV Scan
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          $dosboxDirs = "${{ github.workspace }}\${{ env.PKG_DEST_DIR }}", "${{ github.workspace }}\${{ env.PKG_DEST_DIR_DEBUGGER }}"
+          $dosboxDirs = "${{ github.workspace }}\stage\${{ env.BUILD_RELEASE_DIR }}", "${{ github.workspace }}\stage\${{ env.BUILD_DEBUGGER_DIR }}"
           foreach ($dosboxDir in $dosboxDirs)
           {
             & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -DisableRemediation -File $dosboxDir
@@ -340,11 +313,11 @@ jobs:
       - name: Upload release package
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.PKG_DEST_DIR }}
-          path: ${{ env.PKG_DEST_DIR }}
+          name: dosbox-staging-windows-msys2-${{ matrix.conf.arch }}-${{ env.VERSION }}
+          path: stage/${{ env.BUILD_RELEASE_DIR }}
 
       - name: Upload debugger package
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.PKG_DEST_DIR_DEBUGGER }}
-          path: ${{ env.PKG_DEST_DIR_DEBUGGER }}
+          name: dosbox-staging-windows-msys2-debugger-${{ matrix.conf.arch }}-${{ env.VERSION }}
+          path: stage/${{ env.BUILD_DEBUGGER_DIR }}
