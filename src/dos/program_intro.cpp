@@ -47,6 +47,11 @@ void INTRO::DisplayMount(void) {
 }
 
 void INTRO::Run(void) {
+	// Usage
+	if (cmd->FindExist("/?", false) || cmd->FindExist("-?", false)) {
+		WriteOut(MSG_Get("SHELL_CMD_INTRO_HELP_LONG"));
+		return;
+	}
     /* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */
     if (DOS_PSP(dos.psp()).GetParent() != DOS_PSP(DOS_PSP(dos.psp()).GetParent()).GetParent()) return;
     if (cmd->FindExist("cdrom",false)) {

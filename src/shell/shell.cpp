@@ -920,6 +920,24 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  \033[32;1mhelp\033[0m \033[36;1mdir\033[0m\n"
 	        "  \033[32;1mhelp\033[0m /all\n");
+	MSG_Add("SHELL_CMD_INTRO_HELP",
+	        "Displays an full-screen introduction to DOSBox Staging.\n");
+	MSG_Add("SHELL_CMD_INTRO_HELP_LONG",
+	        "Usage:\n"
+	        "  \033[32;1mintro\033[0m\n"
+	        "  \033[32;1mintro\033[0m \033[37;1mPAGE\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[37;1mPAGE\033[0m is the page name to display, including \033[37;1mcdrom\033[0m, \033[37;1mmount\033[0m, and \033[37;1mspecial\033[0m.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running \033[32;1mintro\033[0m without an argument displays one information page at a time;\n"
+	        "  press any key to move to the next page. If a page name is provided, then the\n"
+	        "  specified page will be displayed directly.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mintro\033[0m\n"
+	        "  \033[32;1mintro\033[0m \033[37;1mcdrom\033[0m\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP", "Creates a directory.\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP_LONG",
 	        "Usage:\n"
