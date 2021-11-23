@@ -164,11 +164,9 @@ pkg_msvc()
     cp "${build_dir}"/*.dll                  "${pkg_dir}/"
     cp "src/libs/zmbv/${release_dir}"/*.dll  "${pkg_dir}/"
 
-    # Copy VC redistributable files
-    cp docs/vc_redist.txt                  "${pkg_dir}/doc/vc_redist.txt"
-    cp "$VC_REDIST_DIR/msvcp140.dll"       "${pkg_dir}/"
-    cp "$VC_REDIST_DIR/vcruntime140.dll"   "${pkg_dir}/"
-    cp "$VC_REDIST_DIR/vcruntime140_1.dll" "${pkg_dir}/" || true # might be missing, depending on arch
+    # Copy MSVC C++ redistributable files
+    cp docs/vc_redist.txt                    "${pkg_dir}/doc/vc_redist.txt"
+    cp "$VC_REDIST_DIR"/*.dll                "${pkg_dir}/"
 }
 
 # Get GitHub CI environment variables if available. The CLI options
