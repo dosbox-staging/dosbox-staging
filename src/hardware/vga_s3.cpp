@@ -718,7 +718,9 @@ void filter_s3_modes_to_oem_only()
 		return !is_an_oem_mode;
 	};
 	// We don't need the return value
-	(void)std::remove_if(ModeList_VGA.begin(), ModeList_VGA.end(), mode_not_allowed);
+	ModeList_VGA.erase(std::remove_if(ModeList_VGA.begin(),
+	                                  ModeList_VGA.end(), mode_not_allowed),
+	                   ModeList_VGA.end());
 }
 
 void SVGA_Setup_S3Trio(void)

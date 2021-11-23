@@ -129,7 +129,9 @@ struct VideoModeBlock {
 };
 
 extern std::vector<VideoModeBlock> ModeList_VGA;
-extern VideoModeBlock * CurMode;
+extern std::vector<VideoModeBlock> ModeList_VGA_Paradise;
+extern std::vector<VideoModeBlock> ModeList_VGA_Tseng;
+extern std::vector<VideoModeBlock>::const_iterator CurMode;
 
 enum class VESA_MODE_PREF {
 	COMPATIBLE, // optimizes out-of-the-box compatibility with games

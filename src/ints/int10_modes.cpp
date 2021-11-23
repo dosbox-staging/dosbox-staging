@@ -186,7 +186,7 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         {0xFFFF, M_ERROR,    0,    0,   0,  0, 0,  0, 0, 0x00000,  0x0000,   0,    0,   0,    0,                                  0},
 };
 
-VideoModeBlock ModeList_VGA_Text_200lines[] = {
+std::vector<VideoModeBlock> ModeList_VGA_Text_200lines = {
   //     mode     type  sw   sh   tw  th  cw ch pt pstart   plength htot vtot hde vde  special flags
         {0x000, M_TEXT, 320, 200, 40, 25, 8, 8, 8, 0xB8000, 0x0800,  50, 449, 40, 400, EGA_HALF_CLOCK | EGA_LINE_DOUBLE},
         {0x001, M_TEXT, 320, 200, 40, 25, 8, 8, 8, 0xB8000, 0x0800,  50, 449, 40, 400, EGA_HALF_CLOCK | EGA_LINE_DOUBLE},
@@ -194,7 +194,7 @@ VideoModeBlock ModeList_VGA_Text_200lines[] = {
         {0x003, M_TEXT, 640, 200, 80, 25, 8, 8, 8, 0xB8000, 0x1000, 100, 449, 80, 400,                  EGA_LINE_DOUBLE}
 };
 
-VideoModeBlock ModeList_VGA_Text_350lines[] = {
+std::vector<VideoModeBlock> ModeList_VGA_Text_350lines = {
   //     mode     type  sw   sh   tw th   cw ch  pt pstart   plength htot vtot hde vde    special flags
         {0x000, M_TEXT, 320, 350, 40, 25, 8, 14, 8, 0xB8000, 0x0800,  50, 449, 40, 350, EGA_HALF_CLOCK},
         {0x001, M_TEXT, 320, 350, 40, 25, 8, 14, 8, 0xB8000, 0x0800,  50, 449, 40, 350, EGA_HALF_CLOCK},
@@ -203,7 +203,7 @@ VideoModeBlock ModeList_VGA_Text_350lines[] = {
         {0x007, M_TEXT, 720, 350, 80, 25, 9, 14, 8, 0xB0000, 0x1000, 100, 449, 80, 350,              0}
 };
 
-VideoModeBlock ModeList_VGA_Tseng[] = {
+std::vector<VideoModeBlock> ModeList_VGA_Tseng = {
   //     mode     type     sw    sh    tw  th  cw ch  pt pstart    plength htot  vtot  hde  vde    special flags
         { 0x000,  M_TEXT,  360,  400,  40, 25, 9, 16, 8, 0xB8000,  0x0800,  50,  449,  40,  400,                     EGA_HALF_CLOCK},
         { 0x001,  M_TEXT,  360,  400,  40, 25, 9, 16, 8, 0xB8000,  0x0800,  50,  449,  40,  400,                     EGA_HALF_CLOCK},
@@ -251,7 +251,7 @@ VideoModeBlock ModeList_VGA_Tseng[] = {
         {0xFFFF, M_ERROR,    0,    0,   0,  0, 0,  0, 0, 0x00000,  0x0000,   0,    0,   0,    0,                                  0},
 };
 
-VideoModeBlock ModeList_VGA_Paradise[] = {
+std::vector<VideoModeBlock> ModeList_VGA_Paradise = {
   //     mode     type     sw    sh   tw  th  cw ch  pt pstart    plength htot vtot  hde  vde    special flags
         { 0x000,  M_TEXT,  360, 400,  40, 25, 9, 16, 8, 0xB8000,  0x0800,  50, 449,  40, 400,                   EGA_HALF_CLOCK},
         { 0x001,  M_TEXT,  360, 400,  40, 25, 9, 16, 8, 0xB8000,  0x0800,  50, 449,  40, 400,                   EGA_HALF_CLOCK},
@@ -285,7 +285,7 @@ VideoModeBlock ModeList_VGA_Paradise[] = {
         {0xFFFF, M_ERROR,    0,   0,   0,  0, 0,  0, 0, 0x00000,  0x0000,   0,   0,   0,   0,                                0},
 };
 
-VideoModeBlock ModeList_EGA[] = {
+std::vector<VideoModeBlock> ModeList_EGA = {
   //     mode     type    sw   sh   tw th  cw ch  pt  pstart   plength htot vtot hde vde    special flags
         { 0x000,  M_TEXT, 320, 350, 40, 25, 8, 14, 8, 0xB8000, 0x0800,  50, 366, 40, 350,                  EGA_LINE_DOUBLE},
         { 0x001,  M_TEXT, 320, 350, 40, 25, 8, 14, 8, 0xB8000, 0x0800,  50, 366, 40, 350,                  EGA_LINE_DOUBLE},
@@ -304,7 +304,7 @@ VideoModeBlock ModeList_EGA[] = {
         {0xFFFF, M_ERROR,   0,   0,  0,  0, 0,  0, 0, 0x00000, 0x0000,   0,   0,  0,   0,                                0},
 };
 
-VideoModeBlock ModeList_OTHER[] = {
+std::vector<VideoModeBlock> ModeList_OTHER = {
   //     mode       type    sw   sh   tw th  cw ch  pt pstart   plength htot vtot hde vde  special flags
         { 0x000,    M_TEXT, 320, 400, 40, 25, 8, 8, 8, 0xB8000, 0x0800,  56,  31, 40,  25, 0},
         { 0x001,    M_TEXT, 320, 400, 40, 25, 8, 8, 8, 0xB8000, 0x0800,  56,  31, 40,  25, 0},
@@ -320,7 +320,9 @@ VideoModeBlock ModeList_OTHER[] = {
         {0xFFFF,   M_ERROR,   0,   0,  0,  0, 0, 0, 0, 0x00000, 0x0000,   0,   0,  0,   0, 0},
 };
 
-VideoModeBlock Hercules_Mode = {0x007, M_TEXT, 640, 350, 80, 25, 8, 14, 1, 0xB0000, 0x1000, 97, 25, 80, 25, 0};
+std::vector<VideoModeBlock> Hercules_Mode = {
+	{0x007, M_TEXT, 640, 350, 80, 25, 8, 14, 1, 0xB0000, 0x1000, 97, 25, 80, 25, 0},
+};
 
 static Bit8u text_palette[64][3]=
 {
@@ -425,15 +427,16 @@ static Bit8u vga_palette[248][3]=
   {0x10,0x0b,0x0b},{0x10,0x0c,0x0b},{0x10,0x0d,0x0b},{0x10,0x0f,0x0b},{0x10,0x10,0x0b},{0x0f,0x10,0x0b},{0x0d,0x10,0x0b},{0x0c,0x10,0x0b},
   {0x0b,0x10,0x0b},{0x0b,0x10,0x0c},{0x0b,0x10,0x0d},{0x0b,0x10,0x0f},{0x0b,0x10,0x10},{0x0b,0x0f,0x10},{0x0b,0x0d,0x10},{0x0b,0x0c,0x10}
 };
-VideoModeBlock *CurMode = nullptr;
+std::vector<VideoModeBlock>::const_iterator CurMode = std::prev(ModeList_VGA.end());
 
-static bool SetCurMode(VideoModeBlock modeblock[],Bit16u mode) {
-	Bitu i=0;
-	while (modeblock[i].mode!=0xffff) {
+static bool SetCurMode(const std::vector<VideoModeBlock> &modeblock, Bit16u mode)
+{
+	size_t i = 0;
+	while (modeblock[i].mode != 0xffff) {
 		if (modeblock[i].mode!=mode) i++;
 		else {
 			if (!int10.vesa_oldvbe || ModeList_VGA[i].mode < 0x120) {
-				CurMode=&modeblock[i];
+				CurMode = modeblock.begin() + i;
 				return true;
 			}
 			return false;
@@ -447,16 +450,16 @@ static void SetTextLines(void) {
 	switch (real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x90) {
 	case 0x80: // 200 lines emulation
 		if (CurMode->mode <= 3) {
-			CurMode = &ModeList_VGA_Text_200lines[CurMode->mode];
+			CurMode = ModeList_VGA_Text_200lines.begin() + CurMode->mode;
 		} else if (CurMode->mode == 7) {
-			CurMode = &ModeList_VGA_Text_350lines[4];
+			CurMode = ModeList_VGA_Text_350lines.begin() + 4;
 		}
 		break;
 	case 0x00: // 350 lines emulation
 		if (CurMode->mode <= 3) {
-			CurMode = &ModeList_VGA_Text_350lines[CurMode->mode];
+			CurMode = ModeList_VGA_Text_350lines.begin() + CurMode->mode;
 		} else if (CurMode->mode == 7) {
-			CurMode = &ModeList_VGA_Text_350lines[4];
+			CurMode = ModeList_VGA_Text_350lines.begin() + 4;
 		}
 		break;
 	}
@@ -475,7 +478,10 @@ void INT10_SetCurMode(void) {
 			break;
 		case MCH_HERC:
 			if (bios_mode<7) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
-			else if (bios_mode==7) {mode_changed=true;CurMode=&Hercules_Mode;}
+			else if (bios_mode == 7) {
+				mode_changed = true;
+				CurMode = Hercules_Mode.begin();
+			}
 			break;
 		case MCH_EGA:
 			mode_changed=SetCurMode(ModeList_EGA,bios_mode);
@@ -493,7 +499,7 @@ void INT10_SetCurMode(void) {
 				if (bios_mode>=0x68 && CurMode->mode==(bios_mode+0x98)) break;
 				// fall-through
 			default:
-				mode_changed=SetCurMode(ModeList_VGA.data(),bios_mode);
+				mode_changed = SetCurMode(ModeList_VGA, bios_mode);
 				break;
 			}
 			if (mode_changed && CurMode->type==M_TEXT) SetTextLines();
@@ -615,7 +621,7 @@ static bool INT10_SetVideoMode_OTHER(Bit16u mode, bool clearmem)
 			FinishSetMode(clearmem);
 			return true;
 		}
-		CurMode=&Hercules_Mode;
+		CurMode = Hercules_Mode.begin();
 		mode=7; // in case the video parameter table is modified
 		break;
 	case MCH_EGA:
@@ -847,7 +853,7 @@ bool INT10_SetVideoMode(Bit16u mode)
 			}
 			break;
 		default:
-			if (!SetCurMode(ModeList_VGA.data(),mode)){
+			if (!SetCurMode(ModeList_VGA, mode)) {
 				LOG(LOG_INT10,LOG_ERROR)("VGA:Trying to set illegal mode %X",mode);
 				return false;
 			}
@@ -1697,31 +1703,27 @@ uint32_t VideoModeMemSize(uint16_t mode) {
 	if (!IS_VGA_ARCH)
 		return 0;
 
-	VideoModeBlock* modelist = NULL;
+	// lanmda function to return a reference to the modelist based on the
+	// svgaCard switch
+	auto get_mode_list = [](SVGACards card) -> const std::vector<VideoModeBlock> & {
+		switch (card) {
+		case SVGA_TsengET4K:
+		case SVGA_TsengET3K: return ModeList_VGA_Tseng;
+		case SVGA_ParadisePVGA1A: return ModeList_VGA_Paradise;
+		default: return ModeList_VGA;
+		}
 
-	switch (svgaCard) {
-	case SVGA_TsengET4K:
-	case SVGA_TsengET3K:
-		modelist = ModeList_VGA_Tseng;
-		break;
-	case SVGA_ParadisePVGA1A:
-		modelist = ModeList_VGA_Paradise;
-		break;
-	default:
-		modelist = ModeList_VGA.data();
-		break;
-	}
+	};
+	const auto &modelist = get_mode_list(svgaCard);
+	auto vmodeBlock = modelist.end();
 
-	VideoModeBlock* vmodeBlock = NULL;
-	Bitu i=0;
-	while (modelist[i].mode!=0xffff) {
-		if (modelist[i].mode==mode) {
-			vmodeBlock = &modelist[i];
+	for (auto it = modelist.begin(); it != modelist.end(); ++it) {
+		if (it->mode == mode) {
+			vmodeBlock = it;
 			break;
 		}
-		i++;
 	}
-	if (!vmodeBlock)
+	if (vmodeBlock == modelist.end())
 		return 0;
 
 	int mem_bytes;

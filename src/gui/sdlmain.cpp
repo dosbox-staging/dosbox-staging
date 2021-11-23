@@ -1101,13 +1101,11 @@ Bitu GFX_SetSize(int width,
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
-	const uint16_t current_mode = CurMode ? CurMode->mode : 0;
-	sdl.draw.has_changed = (sdl.draw.width != width ||
-	                        sdl.draw.height != height ||
+	sdl.draw.has_changed = (sdl.draw.width != width || sdl.draw.height != height ||
 	                        sdl.draw.scalex != scalex ||
 	                        sdl.draw.scaley != scaley ||
 	                        sdl.draw.pixel_aspect != pixel_aspect ||
-	                        sdl.draw.previous_mode != current_mode);
+	                        sdl.draw.previous_mode != CurMode->type);
 
 	sdl.draw.width = width;
 	sdl.draw.height = height;
@@ -1115,7 +1113,7 @@ Bitu GFX_SetSize(int width,
 	sdl.draw.scaley = scaley;
 	sdl.draw.pixel_aspect = pixel_aspect;
 	sdl.draw.callback = callback;
-	sdl.draw.previous_mode = current_mode;
+	sdl.draw.previous_mode = CurMode->type;
 
 	switch (sdl.desktop.want_type) {
 dosurface:
