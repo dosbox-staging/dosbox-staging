@@ -204,50 +204,16 @@ jobs:
 
       - name: Package
         run: |
-          set -x
+          ./scripts/create-package.sh \
+            -p linux \
+            -c "$GITHUB_SHA" \
+            -b "${GITHUB_REF#refs/heads/}" \
+            -r "$GITHUB_REPOSITORY" \
+            build \
+            "dosbox-staging-linux-$VERSION"
 
-          # Print shared object dependencies
-          ldd build/dosbox
-
-          # Prepare content
-          install -DT        build/dosbox         dest/dosbox
-          install -DT -m 644 docs/README.template dest/README
-          install -DT -m 644 COPYING              dest/COPYING
-          install -DT -m 644 README               dest/doc/manual.txt
-          install -DT -m 644 docs/dosbox.1        dest/man/dosbox.1
-
-          # Install .desktop entry and icon files
-          install -DT contrib/linux/dosbox-staging.desktop dest/desktop/dosbox-staging.desktop
-          DESTDIR="$PWD" make -C contrib/icons/ install datadir=dest
-
-          # Fill README template file
-          sed -i "s|%GIT_COMMIT%|$GITHUB_SHA|"               dest/README
-          sed -i "s|%GIT_BRANCH%|${GITHUB_REF#refs/heads/}|" dest/README
-          sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README
-
-          # Prepare translation files
-          #
-          # Note:
-          #   We conciously drop the dialect postfix because no dialects are available.
-          #   (US was the default DOS dialect and therefore is the default for 'en').
-          #   There users get the generic translation and benefit from simpler filenames.
-          #   Dialect translations will be added if/when they're available.
-          #
-          install -DT -m 644 contrib/translations/de/de_DE.lng       dest/translations/de.lng
-          install -DT -m 644 contrib/translations/en/en_US.lng       dest/translations/en.lng
-          install -DT -m 644 contrib/translations/es/es_ES.lng       dest/translations/es.lng
-          install -DT -m 644 contrib/translations/fr/fr_FR.lng       dest/translations/fr.lng
-          install -DT -m 644 contrib/translations/it/it_IT.lng       dest/translations/it.lng
-          install -DT -m 644 contrib/translations/pl/pl_PL.CP437.lng dest/translations/pl.cp437.lng
-          install -DT -m 644 contrib/translations/pl/pl_PL.lng       dest/translations/pl.lng
-          install -DT -m 644 contrib/translations/ru/ru_RU.lng       dest/translations/ru.lng
-
-          # Finalize directory for tar'ing
-          mv dest "dosbox-staging-linux-$VERSION"
-          tree --si -p "dosbox-staging-linux-$VERSION"
-
-          # Create tarball
-          tar -cJf "dosbox-staging-linux-$VERSION.tar.xz" "dosbox-staging-linux-$VERSION"
+      - name: Create tarball
+        run: tar -cJf "dosbox-staging-linux-$VERSION.tar.xz" "dosbox-staging-linux-$VERSION"
 
       - name:  Prepare Clam AV DB cache
         id:    prep-clamdb
