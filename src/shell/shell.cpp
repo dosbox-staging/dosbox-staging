@@ -1197,13 +1197,25 @@ void SHELL_Init() {
 	        "ls: cannot access '%s': No such file or directory\n");
 
 	MSG_Add("SHELL_CMD_CHOICE_HELP",
-	        "Waits for a keypress and sets ERRORLEVEL.\n");
+	        "Waits for a keypress and sets an ERRORLEVEL value.\n");
 	MSG_Add("SHELL_CMD_CHOICE_HELP_LONG",
-	        "CHOICE [/C:choices] [/N] [/S] text\n"
-	        "  /C[:]choices  -  Specifies allowable keys.  Default is: yn.\n"
-	        "  /N  -  Do not display the choices at end of prompt.\n"
-	        "  /S  -  Enables case-sensitive choices to be selected.\n"
-	        "  text  -  The text to display as a prompt.\n");
+	        "Usage:\n"
+	        "  \033[32;1mchoice\033[0m \033[36;1m[TEXT]\033[0m\n"
+	        "  \033[32;1mchoice\033[0m /c[:]\033[37;1mCHOICES\033[0m [/n] [/s] \033[36;1m[TEXT]\033[0m\n"
+	        "\n"
+	        "Where:\n"
+	        "  \033[36;1mTEXT\033[0m    is the text to display as a prompt, or empty.\n"
+	        "  \033[37;1mCHOICES\033[0m specifies allowable keys (default to \033[37;1myn\033[0m).\n"
+	        "\n"
+	        "Notes:\n"
+	        "  This command sets an ERRORLEVEL value starting from 1 according to the\n"
+	        "  allowable keys specified in /c option, and the user input can then be \n"
+	        "  checked with \033[32;1mif\033[0m command. The following options are also supported:\n"
+	        "  /n to not display choices at the end; /b makes the choices case-sensitive.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  \033[32;1mchoice\033[0m \033[36;1mContinue?\033[0m\n"
+	        "  \033[32;1mchoice\033[0m /c:\033[37;1mabc\033[0m /s \033[36;1mType the letter a, b, or c\033[0m\n");
 	MSG_Add("SHELL_CMD_PATH_HELP",
 	        "Displays or sets a search path for executable files.\n");
 	MSG_Add("SHELL_CMD_PATH_HELP_LONG",
