@@ -766,17 +766,15 @@ void SVGA_Setup_S3Trio(void)
 
 	std::string description = "S3 Trio64 ";
 
-	description += int10.vesa_oldvbe ? "(VESA 1.2)" : "(VESA 2.0)";
+	description += int10.vesa_oldvbe ? "VESA 1.2" : "VESA 2.0";
 
 	if (int10.vesa_mode_preference == VESA_MODE_PREF::COMPATIBLE) {
 		filter_s3_modes_to_oem_only();
-		description += " compatible modes";
-	} else {
-		description += " all modes";
+		description += " compatible";
 	}
-
 	if (int10.vesa_nolfb)
-		description += " and LFB disabled";
+		description += " without LFB";
 
-	VGA_LogInitialization(description.c_str(), ram_type.c_str());
+	const auto num_modes = ModeList_VGA.size();
+	VGA_LogInitialization(description.c_str(), ram_type.c_str(), num_modes);
 }
