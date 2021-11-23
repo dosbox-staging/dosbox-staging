@@ -22,6 +22,7 @@
 #include "vga.h"
 #include "inout.h"
 #include "mem.h"
+#include "../ints/int10.h"
 
 struct SVGA_PVGA1A_DATA {
 	uint8_t PR0A = 0;
@@ -235,5 +236,7 @@ void SVGA_Setup_ParadisePVGA1A(void) {
 	}
 
 	IO_Write(0x3cf, 0x05); // Enable!
-	VGA_LogInitialization("Paradise VGA 1A", "DRAM");
+
+	const auto num_modes = ModeList_VGA_Paradise.size();
+	VGA_LogInitialization("Paradise VGA 1A", "DRAM", num_modes);
 }

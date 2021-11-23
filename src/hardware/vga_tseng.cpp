@@ -19,11 +19,14 @@
 
 
 #include "dosbox.h"
+
+#include <cstdlib>
+
 #include "setup.h"
 #include "vga.h"
 #include "inout.h"
 #include "mem.h"
-#include <cstdlib>
+#include "../ints/int10.h"
 
 // Tseng ET4K data
 typedef struct {
@@ -460,9 +463,9 @@ void SVGA_Setup_TsengET4K(void) {
 	else
 		vga.vmemsize = 1024 * 1024;
 
-	VGA_LogInitialization("Tseng Labs ET4000", "DRAM");
+	const auto num_modes = ModeList_VGA_Tseng.size();
+	VGA_LogInitialization("Tseng Labs ET4000", "DRAM", num_modes);
 }
-
 
 // Tseng ET3K implementation
 typedef struct {
@@ -806,5 +809,6 @@ void SVGA_Setup_TsengET3K(void) {
 	// The ET3000AX/BX had a fixed 512 KiB of DRAM
 	vga.vmemsize = 512*1024;
 
-	VGA_LogInitialization("Tseng Labs ET3000", "DRAM");
+	const auto num_modes = ModeList_VGA_Tseng.size();
+	VGA_LogInitialization("Tseng Labs ET3000", "DRAM", num_modes);
 }
