@@ -1311,7 +1311,7 @@ public:
 				serialports[i]->serialType = SERIAL_TYPE_DUMMY;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
 			}
-#ifdef DIRECTSERIAL_AVAILIBLE
+#ifdef C_DIRECTSERIAL
 			else if (type=="directserial") {
 				serialports[i] = new CDirectSerial (i, &cmd);
 				serialports[i]->serialType = SERIAL_TYPE_DIRECT_SERIAL;
