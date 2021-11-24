@@ -302,7 +302,7 @@ bool ENETClientSocket::SendArray(uint8_t *data, size_t n)
 	if (packet) {
 		enet_peer_send(peer, 0, packet);
 	} else {
-		LOG_INFO("ENETClientSocket::SendArray unable to create packet size %ld", n);
+		LOG_INFO("ENETClientSocket::SendArray unable to create packet size %zu", n);
 	}
 	updateState();
 
