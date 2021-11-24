@@ -25,9 +25,17 @@
 #include "../hardware/serialport/nullmodem.h"
 #include "program_serial.h"
 
-static const char *serialTypes[SERIAL_TYPE_COUNT] = {"disabled", "dummy",
-                                                     "directserial", "modem",
-                                                     "nullmodem"};
+static const char *serialTypes[SERIAL_TYPE_COUNT] = {
+	"disabled",
+	"dummy",
+#ifdef C_DIRECTSERIAL
+	"directserial",
+#endif
+#if C_MODEM
+	"modem",
+	"nullmodem"
+#endif
+};
 
 void SERIAL::showPort(int port)
 {
@@ -102,10 +110,13 @@ void SERIAL::Run()
 			serialports[port - 1] = new CSerialDummy(port - 1,
 			                                         commandLine);
 			break;
+#ifdef C_DIRECTSERIAL
 		case SERIAL_TYPE_DIRECT_SERIAL:
 			serialports[port - 1] = new CDirectSerial(port - 1,
 			                                          commandLine);
 			break;
+#endif
+#if C_MODEM
 		case SERIAL_TYPE_MODEM:
 			serialports[port - 1] = new CSerialModem(port - 1,
 			                                         commandLine);
@@ -113,6 +124,7 @@ void SERIAL::Run()
 		case SERIAL_TYPE_NULL_MODEM:
 			serialports[port - 1] = new CNullModem(port - 1, commandLine);
 			break;
+#endif
 		}
 		if (serialports[port - 1] != nullptr) {
 			serialports[port - 1]->serialType = (SerialTypesE)mode;
@@ -125,80 +137,6 @@ void SERIAL::Run()
 
 	// Show help.
 	WriteOut(MSG_Get("PROGRAM_SERIAL_HELP"));
-
-	/*
-	//bool  found              = false;
-	//SocketTypesE socketType = SOCKET_TYPE_COUNT;  // Just need an invalid
-	value here.
-
-	// Select COM mode.
-	if (cmd->GetCount() == 2) {
-	        // Which COM did they want to change?
-	        cmd->FindCommand(1, temp_line);
-	        try {
-	                port = stoi(temp_line);
-	        } catch (...) {
-	        }
-	        if (port > 0 && port < SERIAL_MAX_PORTS) {
-	                // Is this a null-modem port?
-	                if (serialports[port-1] != nullptr &&
-	serialports[port-1]->serialType == SERIAL_TYPE_NULL_MODEM) { CNullModem
-	*nullModem = static_cast<CNullModem*>(serialports[port-1]);
-	                        // What mode?
-	                        cmd->FindCommand(2, temp_line);
-	                        if (!strcasecmp("E", temp_line.c_str()) ||
-	!strcasecmp("ENET", temp_line.c_str())) { socketType = SOCKET_TYPE_ENET;
-	                        }
-	                        if (!strcasecmp("T", temp_line.c_str()) ||
-	!strcasecmp("TCP", temp_line.c_str())) { socketType = SOCKET_TYPE_TCP;
-	                        }
-	                        if (socketType != SOCKET_TYPE_COUNT) {  // Our
-	invalid value.
-	                                // Is this a different mode from what
-	we're in now? if (nullModem->socketType != socketType) {
-	                                        // Get a copy of the original
-	command line. CommandLine *newCmd = new CommandLine("NULMODEM.COM",
-	nullModem->commandLineString.c_str());
-	                                        // Remove any enet setting it
-	included. newCmd->FindExist("enet:1", true); newCmd->FindExist("enet:0",
-	true);
-	                                        // Create new command line
-	string with the updated enet setting. std::string newCmdString;
-	                                        newCmd->GetStringRemain(newCmdString);
-	                                        newCmdString.append(" enet:");
-	                                        newCmdString.append((socketType
-	== SOCKET_TYPE_ENET) ? "1" : "0");
-	                                        // Make a new CommandLine
-	object. delete newCmd; newCmd = new CommandLine("NULMODEM.COM",
-	newCmdString.c_str());
-	                                        // Recreate the port with the
-	new mode. delete serialports[port-1]; serialports[port-1] = new
-	CNullModem (port-1, newCmd); serialports[port-1]->serialType =
-	SERIAL_TYPE_NULL_MODEM; serialports[port-1]->commandLineString =
-	newCmdString; WriteOut(MSG_Get("PROGRAM_NULMODEM_CHANGED"), port,
-	(socketType == SOCKET_TYPE_ENET) ? "ENET" : "TCP"); delete newCmd; }
-	else {
-	                                        // Same mode - no change.
-	                                        WriteOut(MSG_Get("PROGRAM_NULMODEM_UNCHANGED"),
-	port, (socketType == SOCKET_TYPE_ENET) ? "ENET" : "TCP");
-	                                }
-	                        } else {
-	                                // No idea what mode they asked for.
-	                                WriteOut(MSG_Get("PROGRAM_NULMODEM_BAD_MODE"));
-	                        }
-	                } else {
-	                        // Not a null-modem.
-	                        WriteOut(MSG_Get("PROGRAM_NULMODEM_NOT_NULL_MODEM"),
-	port);
-	                }
-	        } else {
-	                // Didn't understand the port number.
-	                WriteOut(MSG_Get("PROGRAM_NULMODEM_BAD_PORT"),
-	SERIAL_MAX_PORTS);
-	        }
-	        showHelp = false;
-	}
-	*/
 }
 
 void SERIAL_ProgramStart(Program **make)
