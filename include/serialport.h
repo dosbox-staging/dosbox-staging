@@ -146,9 +146,13 @@ private:
 enum SerialTypesE { // Also change src/dos/program_serial.cpp if you change this.
 	SERIAL_TYPE_DISABLED = 0,
 	SERIAL_TYPE_DUMMY,
+#ifdef C_DIRECTSERIAL
 	SERIAL_TYPE_DIRECT_SERIAL,
+#endif
+#if C_MODEM
 	SERIAL_TYPE_MODEM,
 	SERIAL_TYPE_NULL_MODEM,
+#endif
 	SERIAL_TYPE_COUNT
 };
 
