@@ -248,9 +248,6 @@ jobs:
           for b in "${!builds[@]}"; do
             ./scripts/create-package.sh \
               -p msys2 \
-              -c "$GITHUB_SHA" \
-              -b "${GITHUB_REF#refs/heads/}" \
-              -r "$GITHUB_REPOSITORY" \
               "$b" \
               "${builds[$b]}"
           done

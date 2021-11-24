@@ -246,9 +246,6 @@ jobs:
         run: |
           ./scripts/create-package.sh \
             -p macos \
-            -c "$GITHUB_SHA" \
-            -b "${GITHUB_REF#refs/heads/}" \
-            -r "$GITHUB_REPOSITORY" \
             -v "${{ env.VERSION }}" \
             "$(pwd)" \
             "$(pwd)"

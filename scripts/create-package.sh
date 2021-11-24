@@ -168,6 +168,12 @@ pkg_msvc()
     cp "$VC_REDIST_DIR/vcruntime140_1.dll" "${pkg_dir}/" || true # might be missing, depending on arch
 }
 
+# Get GitHub CI environment variables if available. The CLI options
+# '-c', '-b', '-r' will override these if set.
+git_commit=$GITHUB_SHA
+git_branch=${GITHUB_REF#refs/heads/}
+git_repo=$GITHUB_REPOSITORY
+
 while getopts 'p:c:b:r:v:h' c
 do
     case $c in
