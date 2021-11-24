@@ -163,9 +163,6 @@ jobs:
         run: |
           ./scripts/create-package.sh \
             -p msvc \
-            -c "$GITHUB_SHA" \
-            -b "${GITHUB_REF#refs/heads/}" \
-            -r "$GITHUB_REPOSITORY" \
             vs/${{ matrix.conf.vs-release-dirname }}/Release \
             "dest"
 
