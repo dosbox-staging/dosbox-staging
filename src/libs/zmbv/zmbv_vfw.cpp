@@ -272,7 +272,7 @@ DWORD CodecInst::CompressGetSize(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER l
 
 DWORD CodecInst::Compress(ICCOMPRESS* icinfo, DWORD dwSize) {
 	int i, pitch;
-	zmbv_format_t format;
+	ZMBV_FORMAT format;
 	LPBITMAPINFOHEADER lpbiIn=icinfo->lpbiInput;
 	LPBITMAPINFOHEADER lpbiOut=icinfo->lpbiOutput;
 	if (!CanCompress(lpbiIn, lpbiOut, true))
@@ -281,19 +281,19 @@ DWORD CodecInst::Compress(ICCOMPRESS* icinfo, DWORD dwSize) {
 		return ICERR_ABORT;
 	switch (GetInputBitDepth(lpbiIn)) {
 	case 8:
-		format = ZMBV_FORMAT_8BPP;
+		format = ZMBV_FORMAT::BPP_8;
 		pitch = lpbiIn->biWidth;
 		break;
 	case 15:
-		format = ZMBV_FORMAT_15BPP;
+		format = ZMBV_FORMAT::BPP_15;
 		pitch = lpbiIn->biWidth * 2;
 		break;
 	case 16:
-		format = ZMBV_FORMAT_16BPP;
+		format = ZMBV_FORMAT::BPP_16;
 		pitch = lpbiIn->biWidth * 2;
 		break;
 	case 32:
-		format = ZMBV_FORMAT_32BPP;
+		format = ZMBV_FORMAT::BPP_32;
 		pitch = lpbiIn->biWidth * 4;
 		break;
 	}

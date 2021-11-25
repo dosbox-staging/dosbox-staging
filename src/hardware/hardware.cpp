@@ -515,7 +515,7 @@ void CAPTURE_AddImage([[maybe_unused]] Bitu width,
 	}
 skip_shot:
 	if (CaptureState & CAPTURE_VIDEO) {
-		zmbv_format_t format;
+		ZMBV_FORMAT format;
 		/* Disable capturing if any of the test fails */
 		if (capture.video.handle && (
 			capture.video.width != width ||
@@ -527,17 +527,17 @@ skip_shot:
 		}
 		CaptureState &= ~CAPTURE_VIDEO;
 		switch (bpp) {
-		case 8:format = ZMBV_FORMAT_8BPP;break;
-		case 15:format = ZMBV_FORMAT_15BPP;break;
-		case 16:format = ZMBV_FORMAT_16BPP;break;
+		case 8: format = ZMBV_FORMAT::BPP_8; break;
+		case 15: format = ZMBV_FORMAT::BPP_15; break;
+		case 16: format = ZMBV_FORMAT::BPP_16; break;
 
 		// ZMBV is "the DOSBox capture format" supported by external
 		// tools such as VLC, MPV, and ffmpeg. Because DOSBox originally
 		// didn't have 24-bit color, the format itself doesn't support
 		// it. I this case we tell ZMBV the data is 32-bit and let the
 		// rgb24's int() cast operator up-convert.
-		case 24: format = ZMBV_FORMAT_32BPP; break;
-		case 32: format = ZMBV_FORMAT_32BPP; break;
+		case 24: format = ZMBV_FORMAT::BPP_32; break;
+		case 32: format = ZMBV_FORMAT::BPP_32; break;
 		default: goto skip_video;
 		}
 		if (!capture.video.handle) {

@@ -35,26 +35,26 @@
 #define Mask_KeyFrame			0x01
 #define	Mask_DeltaPalette		0x02
 
-zmbv_format_t BPPFormat( int bpp ) {
+ZMBV_FORMAT BPPFormat( int bpp ) {
 	switch (bpp) {
 	case 8:
-		return ZMBV_FORMAT_8BPP;
+		return ZMBV_FORMAT::BPP_8;
 	case 15:
-		return ZMBV_FORMAT_15BPP;
+		return ZMBV_FORMAT::BPP_15;
 	case 16:
-		return ZMBV_FORMAT_16BPP;
+		return ZMBV_FORMAT::BPP_16;
 	case 32:
-		return ZMBV_FORMAT_32BPP;
+		return ZMBV_FORMAT::BPP_32;
 	}
-	return ZMBV_FORMAT_NONE;
+	return ZMBV_FORMAT::NONE;
 }
-int VideoCodec::NeededSize( int _width, int _height, zmbv_format_t _format) {
+int VideoCodec::NeededSize( int _width, int _height, ZMBV_FORMAT _format) {
 	int f;
 	switch (_format) {
-	case ZMBV_FORMAT_8BPP:f = 1;break;
-	case ZMBV_FORMAT_15BPP:f = 2;break;
-	case ZMBV_FORMAT_16BPP:f = 2;break;
-	case ZMBV_FORMAT_32BPP:f = 4;break;
+	case ZMBV_FORMAT::BPP_8:f = 1;break;
+	case ZMBV_FORMAT::BPP_15:f = 2;break;
+	case ZMBV_FORMAT::BPP_16:f = 2;break;
+	case ZMBV_FORMAT::BPP_32:f = 4;break;
 	default:
 		return -1;
 	}
@@ -62,21 +62,21 @@ int VideoCodec::NeededSize( int _width, int _height, zmbv_format_t _format) {
 	return f + f/1000;
 }
 
-bool VideoCodec::SetupBuffers(zmbv_format_t _format, int blockwidth, int blockheight) {
+bool VideoCodec::SetupBuffers(ZMBV_FORMAT _format, int blockwidth, int blockheight) {
 	FreeBuffers();
 	palsize = 0;
 	switch (_format) {
-	case ZMBV_FORMAT_8BPP:
+	case ZMBV_FORMAT::BPP_8:
 		pixelsize = 1;
 		palsize = 256;
 		break;
-	case ZMBV_FORMAT_15BPP:
+	case ZMBV_FORMAT::BPP_15:
 		pixelsize = 2;
 		break;
-	case ZMBV_FORMAT_16BPP:
+	case ZMBV_FORMAT::BPP_16:
 		pixelsize = 2;
 		break;
-	case ZMBV_FORMAT_32BPP:
+	case ZMBV_FORMAT::BPP_32:
 		pixelsize = 4;
 		break;
 	default:
@@ -227,7 +227,7 @@ bool VideoCodec::SetupCompress( int _width, int _height ) {
 	width = _width;
 	height = _height;
 	pitch = _width + 2*MAX_VECTOR;
-	format = ZMBV_FORMAT_NONE;
+	format = ZMBV_FORMAT::NONE;
 	if (deflateInit (&zstream, 4) != Z_OK)
 		return false;
 	return true;
@@ -237,13 +237,13 @@ bool VideoCodec::SetupDecompress( int _width, int _height) {
 	width = _width;
 	height = _height;
 	pitch = _width + 2*MAX_VECTOR;
-	format = ZMBV_FORMAT_NONE;
+	format = ZMBV_FORMAT::NONE;
 	if (inflateInit (&zstream) != Z_OK)
 		return false;
 	return true;
 }
 
-bool VideoCodec::PrepareCompressFrame(int flags,  zmbv_format_t _format, char * pal, void *writeBuf, int writeSize) {
+bool VideoCodec::PrepareCompressFrame(int flags,  ZMBV_FORMAT _format, char * pal, void *writeBuf, int writeSize) {
 	int i;
 	unsigned char *firstByte;
 
@@ -334,14 +334,14 @@ int VideoCodec::FinishCompressFrame( void ) {
 	} else {
 		/* Add the delta frame data */
 		switch (format) {
-		case ZMBV_FORMAT_8BPP:
+		case ZMBV_FORMAT::BPP_8:
 			AddXorFrame<char>();
 			break;
-		case ZMBV_FORMAT_15BPP:
-		case ZMBV_FORMAT_16BPP:
+		case ZMBV_FORMAT::BPP_15:
+		case ZMBV_FORMAT::BPP_16:
 			AddXorFrame<short>();
 			break;
-		case ZMBV_FORMAT_32BPP:
+		case ZMBV_FORMAT::BPP_32:
 			AddXorFrame<long>();
 			break;
 		default:
@@ -415,7 +415,7 @@ bool VideoCodec::DecompressFrame(void * framedata, int size) {
             return false;
 		if (header->low_version != DBZV_VERSION_LOW || header->high_version != DBZV_VERSION_HIGH) 
 			return false;
-		if (format != (zmbv_format_t)header->format && !SetupBuffers((zmbv_format_t)header->format, header->blockwidth, header->blockheight))
+		if (format != (ZMBV_FORMAT)header->format && !SetupBuffers((ZMBV_FORMAT)header->format, header->blockwidth, header->blockheight))
 			return false;
 		inflateReset(&zstream);
 	} 
@@ -460,14 +460,14 @@ bool VideoCodec::DecompressFrame(void * framedata, int size) {
 			}
 		}
 		switch (format) {
-		case ZMBV_FORMAT_8BPP:
+		case ZMBV_FORMAT::BPP_8:
 			UnXorFrame<char>();
 			break;
-		case ZMBV_FORMAT_15BPP:
-		case ZMBV_FORMAT_16BPP:
+		case ZMBV_FORMAT::BPP_15:
+		case ZMBV_FORMAT::BPP_16:
 			UnXorFrame<short>();
 			break;
-		case ZMBV_FORMAT_32BPP:
+		case ZMBV_FORMAT::BPP_32:
 			UnXorFrame<long>();
 			break;
 		default:
@@ -486,7 +486,7 @@ void VideoCodec::Output_UpsideDown_24(void *output) {
 	for (i=height-1;i>=0;i--) {
 		r = newframe + pixelsize*(MAX_VECTOR+(i+MAX_VECTOR)*pitch);
 		switch (format) {
-		case ZMBV_FORMAT_8BPP:
+		case ZMBV_FORMAT::BPP_8:
 			for (int j=0;j<width;j++) {
 				int c=r[j];
 				*w++=palette[c*4+2];
@@ -494,7 +494,7 @@ void VideoCodec::Output_UpsideDown_24(void *output) {
 				*w++=palette[c*4+0];
 			}
 			break;
-		case ZMBV_FORMAT_15BPP:
+		case ZMBV_FORMAT::BPP_15:
 			for (int j=0;j<width;j++) {
 				unsigned short c = *(unsigned short *)&r[j*2];
 				*w++ = (unsigned char)(((c & 0x001f) * 0x21) >>  2);
@@ -502,7 +502,7 @@ void VideoCodec::Output_UpsideDown_24(void *output) {
 				*w++ = (unsigned char)(((c & 0x7c00) * 0x21) >> 12);
 			}
 			break;
-		case ZMBV_FORMAT_16BPP:
+		case ZMBV_FORMAT::BPP_16:
 			for (int j=0;j<width;j++) {
 				unsigned short c = *(unsigned short *)&r[j*2];
 				*w++ = (unsigned char)(((c & 0x001f) * 0x21) >>  2);
@@ -510,7 +510,7 @@ void VideoCodec::Output_UpsideDown_24(void *output) {
 				*w++ = (unsigned char)(((c & 0xf800) * 0x21) >> 13);
 			}
 			break;
-		case ZMBV_FORMAT_32BPP:
+		case ZMBV_FORMAT::BPP_32:
 			for (int j=0;j<width;j++) {
 				*w++ = r[j*4+0];
 				*w++ = r[j*4+1];
@@ -526,7 +526,7 @@ void VideoCodec::Output_UpsideDown_24(void *output) {
 	}
 }
 
-void VideoCodec::FreeBuffers(void) {
+void VideoCodec::FreeBuffers() {
 	if (blocks) {
 		delete[] blocks;blocks=0;
 	}
@@ -558,7 +558,7 @@ VideoCodec::VideoCodec()
           height(0),
           width(0),
           pitch(0),
-          format(ZMBV_FORMAT_NONE),
+          format(ZMBV_FORMAT::NONE),
           pixelsize(0),
           zstream{}
 {
