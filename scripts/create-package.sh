@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -x
+set -e
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
@@ -73,9 +73,15 @@ install_doc()
             ;;
     esac
     # Fill template variables in README.template
-    [ -n "$git_commit" ] && sed -i -e "s|%GIT_COMMIT%|$git_commit|" "$readme_tmpl"
-    [ -n "$git_branch" ] && sed -i -e "s|%GIT_BRANCH%|$git_branch|" "$readme_tmpl"
-    [ -n "$git_repo" ]   && sed -i -e "s|%GITHUB_REPO%|$git_repo|"  "$readme_tmpl"
+    if [ -n "$git_commit" ]; then 
+        sed -i -e "s|%GIT_COMMIT%|$git_commit|" "$readme_tmpl"
+    fi
+    if [ -n "$git_branch" ]; then 
+        sed -i -e "s|%GIT_BRANCH%|$git_branch|" "$readme_tmpl"
+    fi
+    if [ -n "$git_repo" ]; then
+        sed -i -e "s|%GITHUB_REPO%|$git_repo|"  "$readme_tmpl"
+    fi
 }
 
 install_translation()
@@ -235,6 +241,7 @@ if [ "$platform" = "msvc" ] && [ -z "$VC_REDIST_DIR" ]; then
     usage
     exit 1
 fi
+set -x
 
 mkdir -p "$pkg_dir"
 install_doc
