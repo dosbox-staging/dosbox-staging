@@ -95,17 +95,12 @@ install_translation()
     # Note:
     #   We conciously drop the dialect postfix because no dialects are available.
     #   (US was the default DOS dialect and therefore is the default for 'en').
-    #   There users get the generic translation and benefit from simpler filenames.
     #   Dialect translations will be added if/when they're available.
     #
-    install_file contrib/translations/de/de_DE.lng       "$lng_dir/de.lng"
-    install_file contrib/translations/en/en_US.lng       "$lng_dir/en.lng"
-    install_file contrib/translations/es/es_ES.lng       "$lng_dir/es.lng"
-    install_file contrib/translations/fr/fr_FR.lng       "$lng_dir/fr.lng"
-    install_file contrib/translations/it/it_IT.lng       "$lng_dir/it.lng"
-    install_file contrib/translations/pl/pl_PL.CP437.lng "$lng_dir/pl.cp437.lng"
-    install_file contrib/translations/pl/pl_PL.lng       "$lng_dir/pl.lng"
-    install_file contrib/translations/ru/ru_RU.lng       "$lng_dir/ru.lng"
+    for source in $(find contrib/translations -name '*.lng'); do
+        target=$(basename "$source" | tr '[:upper:]' '[:lower:]')
+        install_file "$source" "$lng_dir/${target#??_}"
+    done
 }
 
 pkg_linux()
