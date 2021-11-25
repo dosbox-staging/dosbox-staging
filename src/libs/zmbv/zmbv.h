@@ -33,17 +33,17 @@
 
 #define CODEC_4CC "ZMBV"
 
-typedef enum {
-	ZMBV_FORMAT_NONE		= 0x00,
-	ZMBV_FORMAT_1BPP		= 0x01,
-	ZMBV_FORMAT_2BPP		= 0x02,
-	ZMBV_FORMAT_4BPP		= 0x03,
-	ZMBV_FORMAT_8BPP		= 0x04,
-	ZMBV_FORMAT_15BPP	= 0x05,
-	ZMBV_FORMAT_16BPP	= 0x06,
-	ZMBV_FORMAT_24BPP	= 0x07,
-	ZMBV_FORMAT_32BPP	= 0x08
-} zmbv_format_t;
+enum class ZMBV_FORMAT {
+	NONE = 0x00,
+	BPP_1 = 0x01,
+	BPP_2 = 0x02,
+	BPP_4 = 0x03,
+	BPP_8 = 0x04,
+	BPP_15 = 0x05,
+	BPP_16 = 0x06,
+	BPP_24 = 0x07,
+	BPP_32 = 0x08,
+};
 
 void Msg(const char fmt[], ...);
 class VideoCodec {
@@ -86,7 +86,7 @@ private:
 	int palsize;
 	char palette[256*4];
 	int height, width, pitch;
-	zmbv_format_t format;
+	ZMBV_FORMAT format;
 	int pixelsize;
 
 	z_stream zstream;
@@ -94,7 +94,7 @@ private:
 	// methods
 	void FreeBuffers(void);
 	void CreateVectorTable(void);
-	bool SetupBuffers(zmbv_format_t format, int blockwidth, int blockheight);
+	bool SetupBuffers(ZMBV_FORMAT format, int blockwidth, int blockheight);
 
 	template<class P>
 		void AddXorFrame(void);
@@ -119,11 +119,11 @@ public:
 
 	bool SetupCompress( int _width, int _height);
 	bool SetupDecompress( int _width, int _height);
-	zmbv_format_t BPPFormat( int bpp );
-	int NeededSize( int _width, int _height, zmbv_format_t _format);
+	ZMBV_FORMAT BPPFormat( int bpp );
+	int NeededSize( int _width, int _height, ZMBV_FORMAT _format);
 
 	void CompressLines(int lineCount, void *lineData[]);
-	bool PrepareCompressFrame(int flags,  zmbv_format_t _format, char * pal, void *writeBuf, int writeSize);
+	bool PrepareCompressFrame(int flags,  ZMBV_FORMAT _format, char * pal, void *writeBuf, int writeSize);
 	int FinishCompressFrame( void );
 	bool DecompressFrame(void * framedata, int size);
 	void Output_UpsideDown_24(void * output);
