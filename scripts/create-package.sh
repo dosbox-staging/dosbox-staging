@@ -98,10 +98,11 @@ install_translation()
     #   (US was the default DOS dialect and therefore is the default for 'en').
     #   Dialect translations will be added if/when they're available.
     #
-    for source in $(find contrib/translations -name '*.lng'); do
-        target=$(basename "$source" | tr '[:upper:]' '[:lower:]')
-        install_file "$source" "$lng_dir/${target#??_}"
-    done
+    find contrib/translations -name '*.lng' |
+        while IFS= read -r src; do
+            target=$(basename "$src" | tr '[:upper:]' '[:lower:]')
+            install_file "$src" "$lng_dir/${target#??_}"
+        done
 }
 
 pkg_linux()
@@ -247,8 +248,8 @@ fi
 
 mkdir -p "$pkg_dir"
 
-if [ -z "$(find ${pkg_dir} -maxdepth 0 -empty)" ] && [ "$force_pkg" != "true" ]; then
-    echo "PACKAGE_DIR must be empty. Use '-f' to foce creation anyway"
+if [ -z "$(find "${pkg_dir}" -maxdepth 0 -empty)" ] && [ "$force_pkg" != "true" ]; then
+    echo "PACKAGE_DIR must be empty. Use '-f' to force creation anyway"
     usage
     exit 1
 fi
