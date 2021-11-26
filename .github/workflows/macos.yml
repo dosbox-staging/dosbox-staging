@@ -247,6 +247,7 @@ jobs:
           ./scripts/create-package.sh \
             -p macos \
             -v "${{ env.VERSION }}" \
+            -f \
             "$(pwd)" \
             "$(pwd)"
           
