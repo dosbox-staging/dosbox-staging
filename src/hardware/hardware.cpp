@@ -333,14 +333,14 @@ void CAPTURE_VideoStop() {
 #endif
 }
 
-void CAPTURE_AddImage([[maybe_unused]] Bitu width,
-                      [[maybe_unused]] Bitu height,
-                      [[maybe_unused]] Bitu bpp,
-                      [[maybe_unused]] Bitu pitch,
-                      [[maybe_unused]] Bitu flags,
+void CAPTURE_AddImage([[maybe_unused]] int width,
+                      [[maybe_unused]] int height,
+                      [[maybe_unused]] int bpp,
+                      [[maybe_unused]] int pitch,
+                      [[maybe_unused]] uint8_t flags,
                       [[maybe_unused]] float fps,
-                      [[maybe_unused]] Bit8u *data,
-                      [[maybe_unused]] Bit8u *pal)
+                      [[maybe_unused]] uint8_t *data,
+                      [[maybe_unused]] uint8_t *pal)
 {
 #if (C_SSHOT)
 	Bitu i;
@@ -574,7 +574,9 @@ skip_shot:
 		if (capture.video.frames % 300 == 0)
 			codecFlags = 1;
 		else codecFlags = 0;
-		if (!capture.video.codec->PrepareCompressFrame( codecFlags, format, (char *)pal, capture.video.buf, capture.video.bufSize))
+		if (!capture.video.codec->PrepareCompressFrame(codecFlags, format, pal,
+		                                               capture.video.buf,
+		                                               capture.video.bufSize))
 			goto skip_video;
 
 		for (i=0;i<height;i++) {
