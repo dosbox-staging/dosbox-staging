@@ -154,7 +154,7 @@ pkg_msys2()
 pkg_msvc()
 {
     # Get the release dir name from $build_dir
-    release_dir=$(basename "${build_dir}")
+    release_dir=$(basename -- "$(dirname -- "${build_dir}")")/$(basename -- "${build_dir}")
 
     # Copy binary
     cp "${build_dir}/dosbox.exe"  "${pkg_dir}/dosbox.exe"
