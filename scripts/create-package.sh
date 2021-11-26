@@ -9,7 +9,7 @@ set -e
 usage()
 {
     printf "%s\n" "\
-    Usage: -p <platform> [-h -c <commit> -b <branch> -r <repo> -v <version>] BUILD_DIR PACKAGE_DIR
+    Usage: -p <platform> [-h -c <commit> -b <branch> -r <repo> -v <version> -f] BUILD_DIR PACKAGE_DIR
     Where:
         -h          : Show this help message
         -p          : Buld platform. Can be one of linux, macos, msys2, msvc
@@ -17,6 +17,7 @@ usage()
         -b          : Git branch
         -r          : Git repository
         -v          : dosbox-staging version
+        -f          : force creation if PACKAGE_DIR is not empty
         BUILD_DIR   : Meson build directory
         PACKAGE_DIR : Package directory
     
@@ -175,10 +176,11 @@ git_commit=$GITHUB_SHA
 git_branch=${GITHUB_REF#refs/heads/}
 git_repo=$GITHUB_REPOSITORY
 
-while getopts 'p:c:b:r:v:h' c
+while getopts 'p:c:b:r:v:hf' c
 do
     case $c in
         h) print_usage="true" ;;
+        f) force_pkg="true" ;;
         p) platform=$OPTARG ;;
         c) git_commit=$OPTARG ;;
         b) git_branch=$OPTARG ;;
@@ -236,9 +238,23 @@ if [ "$platform" = "msvc" ] && [ -z "$VC_REDIST_DIR" ]; then
     usage
     exit 1
 fi
-set -x
+
+if [ -f "$pkg_dir" ]; then
+    echo "PACKAGE_DIR must not be a file"
+    usage
+    exit 1
+fi
 
 mkdir -p "$pkg_dir"
+
+if [ -z "$(find ${pkg_dir} -maxdepth 0 -empty)" ] && [ "$force_pkg" != "true" ]; then
+    echo "PACKAGE_DIR must be empty. Use '-f' to foce creation anyway"
+    usage
+    exit 1
+fi
+
+set -x
+
 install_doc
 install_translation
 
