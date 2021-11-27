@@ -19,21 +19,13 @@
 #ifndef DOSBOX_ZMBV_H
 #define DOSBOX_ZMBV_H
 
-#ifndef DOSBOX_DOSBOX_H
-	#ifdef _MSC_VER
-		#define INLINE __forceinline
-	#else
-		#define INLINE inline
-	#endif
-#else
-	#define INLINE inline
-#endif
+#include <vector>
 
 #include <zlib.h>
 
 #define CODEC_4CC "ZMBV"
 
-enum class ZMBV_FORMAT {
+enum class ZMBV_FORMAT : uint8_t {
 	NONE = 0x00,
 	BPP_1 = 0x01,
 	BPP_2 = 0x02,
@@ -46,73 +38,75 @@ enum class ZMBV_FORMAT {
 };
 
 void Msg(const char fmt[], ...);
+
 class VideoCodec {
 private:
 	struct FrameBlock {
-		int start;
-		int dx,dy;
+		int start = 0;
+		int dx = 0;
+		int dy = 0;
 	};
 	struct CodecVector {
-		int x,y;
-		int slot;
+		int x = 0;
+		int y = 0;
+		int slot = 0;
 	};
 	struct KeyframeHeader {
-		unsigned char high_version;
-		unsigned char low_version;
-		unsigned char compression;
-		unsigned char format;
-		unsigned char blockwidth,blockheight;
+		uint8_t high_version = 0;
+		uint8_t low_version = 0;
+		uint8_t compression = 0;
+		uint8_t format = 0;
+		uint8_t blockwidth = 0;
+		uint8_t blockheight = 0;
 	};
 
-	struct {
-		int		linesDone;
-		int		writeSize;
-		int		writeDone;
-		unsigned char	*writeBuf;
-	} compress;
+	struct Compress {
+		int		linesDone = 0;
+		int		writeSize = 0;
+		int		writeDone = 0;
+		uint8_t	*writeBuf = nullptr;
+	} ;
 
-	CodecVector VectorTable[512];
-	int VectorCount;
+	CodecVector VectorTable[512] = {};
+	int VectorCount = 0;
 
-	unsigned char *oldframe, *newframe;
-	unsigned char *buf1, *buf2, *work;
-	int bufsize;
+	uint8_t *oldframe = nullptr;
+	uint8_t *newframe = nullptr;
+	std::vector<uint8_t> buf1 = {};
+	std::vector<uint8_t> buf2 = {};
+	std::vector<uint8_t> work = {};
+	int bufsize = 0;
 
-	int blockcount; 
-	FrameBlock * blocks;
+	int blockcount = 0; 
+	std::vector<FrameBlock> blocks = {};
+	using FrameBlock_it = std::vector<FrameBlock>::const_iterator;
+	int workUsed = 0;
+	int workPos = 0;
 
-	int workUsed, workPos;
+	int palsize = 0;
+	uint8_t palette[256*4] = {0};
+	int height = 0;
+	int width = 0;
+	int pitch = 0;
+	ZMBV_FORMAT format = ZMBV_FORMAT::NONE;
+	int pixelsize = 0;
 
-	int palsize;
-	char palette[256*4];
-	int height, width, pitch;
-	ZMBV_FORMAT format;
-	int pixelsize;
-
-	z_stream zstream;
+	Compress compress = {};
+	z_stream zstream = {};
 
 	// methods
-	void FreeBuffers(void);
-	void CreateVectorTable(void);
+	void CreateVectorTable();
 	bool SetupBuffers(ZMBV_FORMAT format, int blockwidth, int blockheight);
 
-	template<class P>
-		void AddXorFrame(void);
-	template<class P>
-		void UnXorFrame(void);
-	template<class P>
-		INLINE int PossibleBlock(int vx,int vy,FrameBlock * block);
-	template<class P>
-		INLINE int CompareBlock(int vx,int vy,FrameBlock * block);
-	template<class P>
-		INLINE void AddXorBlock(int vx,int vy,FrameBlock * block);
-	template<class P>
-		INLINE void UnXorBlock(int vx,int vy,FrameBlock * block);
-	template<class P>
-		INLINE void CopyBlock(int vx, int vy,FrameBlock * block);
+	template<class P> void AddXorFrame();
+	template<class P> void UnXorFrame();
+	template<class P> int PossibleBlock(int vx,int vy, FrameBlock_it block);
+	template<class P> int CompareBlock(int vx,int vy, FrameBlock_it block);
+	template<class P> void AddXorBlock(int vx,int vy, FrameBlock_it block);
+	template<class P> void UnXorBlock(int vx,int vy, FrameBlock_it block);
+	template<class P> void CopyBlock(int vx, int vy, FrameBlock_it block);
 public:
 	VideoCodec();
-	~VideoCodec();
 
 	VideoCodec(const VideoCodec&) = delete; // prevent copy
 	VideoCodec &operator=(const VideoCodec&) = delete; // prevent assignment

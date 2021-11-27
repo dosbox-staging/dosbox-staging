@@ -65,7 +65,6 @@ int VideoCodec::NeededSize( int _width, int _height, ZMBV_FORMAT _format) {
 }
 
 bool VideoCodec::SetupBuffers(ZMBV_FORMAT _format, int blockwidth, int blockheight) {
-	FreeBuffers();
 	palsize = 0;
 	switch (_format) {
 	case ZMBV_FORMAT::BPP_8:
@@ -87,9 +86,9 @@ bool VideoCodec::SetupBuffers(ZMBV_FORMAT _format, int blockwidth, int blockheig
 	};
 	bufsize = (height+2*MAX_VECTOR)*pitch*pixelsize+2048;
 
-	buf1 = new unsigned char[bufsize];
-	buf2 = new unsigned char[bufsize];
-	work = new unsigned char[bufsize];
+	buf1 = std::vector<uint8_t>(bufsize, 0);
+	buf2 = std::vector<uint8_t>(bufsize, 0);
+	work = std::vector<uint8_t>(bufsize, 0);
 
 	int xblocks = (width/blockwidth);
 	int xleft = width % blockwidth;
@@ -98,7 +97,7 @@ bool VideoCodec::SetupBuffers(ZMBV_FORMAT _format, int blockwidth, int blockheig
 	int yleft = height % blockheight;
 	if (yleft) yblocks++;
 	blockcount=yblocks*xblocks;
-	blocks=new FrameBlock[blockcount];
+	blocks.resize(blockcount);
 
 	int y,x,i;
 	i=0;
@@ -120,11 +119,8 @@ bool VideoCodec::SetupBuffers(ZMBV_FORMAT _format, int blockwidth, int blockheig
 		}
 	}
 
-	memset(buf1,0,bufsize);
-	memset(buf2,0,bufsize);
-	memset(work,0,bufsize);
-	oldframe=buf1;
-	newframe=buf2;
+	oldframe=buf1.data();
+	newframe=buf2.data();
 	format = _format;
 	return true;
 }
@@ -146,7 +142,7 @@ void VideoCodec::CreateVectorTable(void) {
 }
 
 template<class P>
-INLINE int VideoCodec::PossibleBlock(int vx,int vy,FrameBlock * block) {
+int VideoCodec::PossibleBlock(int vx,int vy, FrameBlock_it block) {
 	int ret=0;
 	P * pold=((P*)oldframe)+block->start+(vy*pitch)+vx;
 	P * pnew=((P*)newframe)+block->start;;	
@@ -162,7 +158,7 @@ INLINE int VideoCodec::PossibleBlock(int vx,int vy,FrameBlock * block) {
 }
 
 template<class P>
-INLINE int VideoCodec::CompareBlock(int vx,int vy,FrameBlock * block) {
+int VideoCodec::CompareBlock(int vx,int vy, FrameBlock_it block) {
 	int ret=0;
 	P * pold=((P*)oldframe)+block->start+(vy*pitch)+vx;
 	P * pnew=((P*)newframe)+block->start;;	
@@ -178,7 +174,7 @@ INLINE int VideoCodec::CompareBlock(int vx,int vy,FrameBlock * block) {
 }
 
 template<class P>
-INLINE void VideoCodec::AddXorBlock(int vx,int vy,FrameBlock * block) {
+void VideoCodec::AddXorBlock(int vx,int vy, FrameBlock_it block) {
 	P * pold=((P*)oldframe)+block->start+(vy*pitch)+vx;
 	P * pnew=((P*)newframe)+block->start;
 	for (int y=0;y<block->dy;y++) {
@@ -196,8 +192,10 @@ void VideoCodec::AddXorFrame(void) {
 	signed char * vectors=(signed char*)&work[workUsed];
 	/* Align the following xor data on 4 byte boundary*/
 	workUsed=(workUsed + blockcount*2 +3) & ~3;
+	
+	assert(blockcount == blocks.size());
 	for (int b=0;b<blockcount;b++) {
-		FrameBlock * block=&blocks[b];
+		const auto block = blocks.begin() + b;
 		int bestvx = 0;
 		int bestvy = 0;
 		int bestchange=CompareBlock<P>(0,0, block);
@@ -246,7 +244,7 @@ bool VideoCodec::SetupDecompress( int _width, int _height) {
 	return true;
 }
 
-bool VideoCodec::PrepareCompressFrame(int flags,  ZMBV_FORMAT _format, char * pal, void *writeBuf, int writeSize) {
+bool VideoCodec::PrepareCompressFrame(int flags,  ZMBV_FORMAT _format, uint8_t * pal, void *writeBuf, int writeSize) {
 	int i;
 	unsigned char *firstByte;
 
@@ -358,7 +356,7 @@ int VideoCodec::FinishCompressFrame( void ) {
 		}
 	}
 	/* Create the actual frame with compression */
-	zstream.next_in = (Bytef *)work;
+	zstream.next_in = work.data();
 	zstream.avail_in = workUsed;
 	zstream.total_in = 0;
 
@@ -370,7 +368,7 @@ int VideoCodec::FinishCompressFrame( void ) {
 }
 
 template<class P>
-INLINE void VideoCodec::UnXorBlock(int vx,int vy,FrameBlock * block) {
+void VideoCodec::UnXorBlock(int vx,int vy, FrameBlock_it block) {
 	P * pold=((P*)oldframe)+block->start+(vy*pitch)+vx;
 	P * pnew=((P*)newframe)+block->start;
 	for (int y=0;y<block->dy;y++) {
@@ -384,7 +382,7 @@ INLINE void VideoCodec::UnXorBlock(int vx,int vy,FrameBlock * block) {
 }
 
 template<class P>
-INLINE void VideoCodec::CopyBlock(int vx,int vy,FrameBlock * block) {
+void VideoCodec::CopyBlock(int vx,int vy, FrameBlock_it block) {
 	P * pold=((P*)oldframe)+block->start+(vy*pitch)+vx;
 	P * pnew=((P*)newframe)+block->start;
 	for (int y=0;y<block->dy;y++) {
@@ -400,8 +398,10 @@ template<class P>
 void VideoCodec::UnXorFrame(void) {
 	signed char * vectors=(signed char *)&work[workPos];
 	workPos=(workPos + blockcount*2 + 3) & ~3;
+
+	assert(blockcount == blocks.size());
 	for (int b=0;b<blockcount;b++) {
-		FrameBlock * block=&blocks[b];
+		const auto block = blocks.begin() + b;
 		int delta = vectors[b*2+0] & 1;
 		int vx = vectors[b*2+0] >> 1;
 		int vy = vectors[b*2+1] >> 1;
@@ -432,7 +432,7 @@ bool VideoCodec::DecompressFrame(void * framedata, int size) {
 	zstream.avail_in = size;
 	zstream.total_in = 0;
 
-	zstream.next_out = (Bytef *)work;
+	zstream.next_out = work.data();
 	zstream.avail_out = bufsize;
 	zstream.total_out = 0;
 	inflate(&zstream, Z_FINISH);
@@ -446,8 +446,8 @@ bool VideoCodec::DecompressFrame(void * framedata, int size) {
 				palette[i*4+2] = work[workPos++];
 			}
 		}
-		newframe = buf1;
-		oldframe = buf2;
+		newframe = buf1.data();
+		oldframe = buf2.data();
 
 		unsigned char * writeframe = newframe + pixelsize*(MAX_VECTOR+MAX_VECTOR*pitch);	
 		const int line_width = width * pixelsize;
@@ -537,47 +537,8 @@ void VideoCodec::Output_UpsideDown_24(void *output) {
 	}
 }
 
-void VideoCodec::FreeBuffers() {
-	if (blocks) {
-		delete[] blocks;blocks=0;
-	}
-	if (buf1) {
-		delete[] buf1;buf1=0;
-	}
-	if (buf2) {
-		delete[] buf2;buf2=0;
-	}
-	if (work) {
-		delete[] work;work=0;
-	}
-}
-
 VideoCodec::VideoCodec()
-        : compress{},
-          VectorCount(0),
-          oldframe(nullptr),
-          newframe(nullptr),
-          buf1(nullptr),
-          buf2(nullptr),
-          work(nullptr),
-          bufsize(0),
-          blockcount(0),
-          blocks(nullptr),
-          workUsed(0),
-          workPos(0),
-          palsize(0),
-          height(0),
-          width(0),
-          pitch(0),
-          format(ZMBV_FORMAT::NONE),
-          pixelsize(0),
-          zstream{}
 {
 	CreateVectorTable();
 	memset(&zstream, 0, sizeof(zstream));
 }
-
-VideoCodec::~VideoCodec() {
-	FreeBuffers();
-}
-
