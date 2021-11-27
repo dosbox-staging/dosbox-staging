@@ -43,6 +43,7 @@ ZMBV_FORMAT BPPFormat( int bpp ) {
 		return ZMBV_FORMAT::BPP_15;
 	case 16:
 		return ZMBV_FORMAT::BPP_16;
+	case 24:
 	case 32:
 		return ZMBV_FORMAT::BPP_32;
 	}
@@ -51,10 +52,11 @@ ZMBV_FORMAT BPPFormat( int bpp ) {
 int VideoCodec::NeededSize( int _width, int _height, ZMBV_FORMAT _format) {
 	int f;
 	switch (_format) {
-	case ZMBV_FORMAT::BPP_8:f = 1;break;
-	case ZMBV_FORMAT::BPP_15:f = 2;break;
-	case ZMBV_FORMAT::BPP_16:f = 2;break;
-	case ZMBV_FORMAT::BPP_32:f = 4;break;
+	case ZMBV_FORMAT::BPP_8: f = 1; break;
+	case ZMBV_FORMAT::BPP_15:
+	case ZMBV_FORMAT::BPP_16: f = 2; break;
+	case ZMBV_FORMAT::BPP_24:
+	case ZMBV_FORMAT::BPP_32: f = 4; break;
 	default:
 		return -1;
 	}
@@ -76,6 +78,7 @@ bool VideoCodec::SetupBuffers(ZMBV_FORMAT _format, int blockwidth, int blockheig
 	case ZMBV_FORMAT::BPP_16:
 		pixelsize = 2;
 		break;
+	case ZMBV_FORMAT::BPP_24:
 	case ZMBV_FORMAT::BPP_32:
 		pixelsize = 4;
 		break;
@@ -273,7 +276,12 @@ bool VideoCodec::PrepareCompressFrame(int flags,  ZMBV_FORMAT _format, char * pa
 		header->high_version = DBZV_VERSION_HIGH;
 		header->low_version = DBZV_VERSION_LOW;
 		header->compression = COMPRESSION_ZLIB;
-		header->format = static_cast<unsigned char>(format);
+
+		// The public codec can't handle 24 bit content, so we convert
+		// it to 32bit and indicate it in this format field.
+		header->format = static_cast<uint8_t>(format == ZMBV_FORMAT::BPP_24
+		                                              ? ZMBV_FORMAT::BPP_32
+		                                              : format);
 		header->blockwidth = 16;
 		header->blockheight = 16;
 		compress.writeDone += sizeof(KeyframeHeader);
@@ -341,6 +349,7 @@ int VideoCodec::FinishCompressFrame( void ) {
 		case ZMBV_FORMAT::BPP_16:
 			AddXorFrame<short>();
 			break;
+		case ZMBV_FORMAT::BPP_24:
 		case ZMBV_FORMAT::BPP_32:
 			AddXorFrame<long>();
 			break;
@@ -467,6 +476,7 @@ bool VideoCodec::DecompressFrame(void * framedata, int size) {
 		case ZMBV_FORMAT::BPP_16:
 			UnXorFrame<short>();
 			break;
+		case ZMBV_FORMAT::BPP_24:
 		case ZMBV_FORMAT::BPP_32:
 			UnXorFrame<long>();
 			break;
@@ -510,6 +520,7 @@ void VideoCodec::Output_UpsideDown_24(void *output) {
 				*w++ = (unsigned char)(((c & 0xf800) * 0x21) >> 13);
 			}
 			break;
+		case ZMBV_FORMAT::BPP_24:
 		case ZMBV_FORMAT::BPP_32:
 			for (int j=0;j<width;j++) {
 				*w++ = r[j*4+0];

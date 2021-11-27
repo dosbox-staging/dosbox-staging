@@ -292,6 +292,7 @@ DWORD CodecInst::Compress(ICCOMPRESS* icinfo, DWORD dwSize) {
 		format = ZMBV_FORMAT::BPP_16;
 		pitch = lpbiIn->biWidth * 2;
 		break;
+	case 24:
 	case 32:
 		format = ZMBV_FORMAT::BPP_32;
 		pitch = lpbiIn->biWidth * 4;
