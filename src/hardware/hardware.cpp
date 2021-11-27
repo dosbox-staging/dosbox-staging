@@ -50,40 +50,45 @@ Bitu CaptureState;
 
 static struct {
 	struct {
-		FILE * handle;
-		Bit16s buf[WAVE_BUF][2];
-		Bitu used;
-		Bit32u length;
-		Bit32u freq;
-	} wave; 
+		FILE *handle = nullptr;
+		uint16_t buf[WAVE_BUF][2] = {};
+		int used = 0;
+		int length = 0;
+		int freq = 0;
+	} wave = {};
+	;
 	struct {
-		FILE * handle;
-		Bit8u buffer[MIDI_BUF];
-		Bitu used,done;
-		Bit32u last;
-	} midi;
+		FILE *handle = nullptr;
+		uint8_t buffer[MIDI_BUF] = {0};
+		int used = 0;
+		int done = 0;
+		int last = 0;
+	} midi = {};
 	struct {
-		Bitu rowlen;
-	} image;
+		int rowlen = 0;
+	} image = {};
 #if (C_SSHOT)
 	struct {
-		FILE		*handle;
-		Bitu		frames;
-		Bit16s		audiobuf[WAVE_BUF][2];
-		Bitu		audioused;
-		Bitu		audiorate;
-		Bitu		audiowritten;
-		VideoCodec	*codec;
-		Bitu		width, height, bpp;
-		Bitu		written;
-		float		fps;
-		int			bufSize;
-		void		*buf;
-		Bit8u		*index;
-		Bitu		indexsize, indexused;
-	} video;
+		FILE *handle = nullptr;
+		int frames = 0;
+		int16_t audiobuf[WAVE_BUF][2] = {};
+		int audioused = 0;
+		int audiorate = 0;
+		int audiowritten = 0;
+		VideoCodec *codec = nullptr;
+		int width = 0;
+		int height = 0;
+		int bpp = 0;
+		int written = 0;
+		float fps = 0.0f;
+		int bufSize = 0;
+		void *buf = nullptr;
+		uint8_t *index = nullptr;
+		int indexsize = 0;
+		int indexused = 0;
+	} video = {};
 #endif
-} capture;
+} capture = {};
 
 FILE * OpenCaptureFile(const char * type,const char * ext) {
 	if(capturedir.empty()) {
