@@ -27,6 +27,7 @@
 #include "zmbv_vfw.h"
 #include "resource.h"
 
+#include <cstdint>
 #include <crtdbg.h>
 #include <string.h>
 
@@ -307,13 +308,13 @@ DWORD CodecInst::Compress(ICCOMPRESS* icinfo, DWORD dwSize) {
 	if (icinfo->dwFlags & ICCOMPRESS_KEYFRAME)
 		flags |= 1;
 
-	char palette[256 * 4];
-	char *pal = NULL;
+	uint8_t palette[256 * 4];
+	uint8_t *pal = NULL;
 
 	if (lpbiIn->biBitCount == 8) {
 		const int entries = icinfo->lpbiInput->biClrUsed ? icinfo->lpbiInput->biClrUsed : 256;
 		const char* srcpal = (char *)icinfo->lpbiInput + icinfo->lpbiInput->biSize;
-		char* dstpal = palette;
+		uint8_t * dstpal = palette;
 
 		memset(palette, 0, sizeof palette);
 
@@ -329,10 +330,10 @@ DWORD CodecInst::Compress(ICCOMPRESS* icinfo, DWORD dwSize) {
 		pal = palette;
 	}
 
-	codec->PrepareCompressFrame( flags, format, pal, icinfo->lpOutput, 99999999);
+	codec->PrepareCompressFrame( flags, format, pal, reinterpret_cast<uint8_t*>(icinfo->lpOutput), 99999999);
 	char *readPt = (char *)icinfo->lpInput + pitch*(lpbiIn->biHeight - 1);
 	for(i = 0;i<lpbiIn->biHeight;i++) {
-		codec->CompressLines(1, (void **)&readPt );
+		codec->CompressLines(1, reinterpret_cast<uint8_t **>(&readPt));
 		readPt -= pitch;
 	}
 	lpbiOut->biSizeImage = codec->FinishCompressFrame();
@@ -407,8 +408,8 @@ DWORD CodecInst::DecompressBegin(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER l
 DWORD CodecInst::Decompress(ICDECOMPRESS* icinfo, DWORD dwSize) {
 	if (!codec || !icinfo)
 		return ICERR_ABORT;
-	if (codec->DecompressFrame( icinfo->lpInput, icinfo->lpbiInput->biSizeImage)) {
-		codec->Output_UpsideDown_24(icinfo->lpOutput);
+	if (codec->DecompressFrame(reinterpret_cast<uint8_t*>(icinfo->lpInput), icinfo->lpbiInput->biSizeImage)) {
+		codec->Output_UpsideDown_24(reinterpret_cast<uint8_t*>(icinfo->lpOutput));
 	} else return ICERR_DONTDRAW;
 	return ICERR_OK;
 }
