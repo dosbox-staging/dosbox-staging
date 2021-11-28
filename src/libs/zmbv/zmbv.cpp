@@ -94,7 +94,7 @@ bool VideoCodec::SetupBuffers(const ZMBV_FORMAT _format, const int blockwidth, c
 	const auto yleft = height % blockheight;
 	if (yleft)
 		yblocks++;
-	blockcount = yblocks * xblocks;
+	blockcount = static_cast<FrameBlock_offset>(yblocks) * xblocks;
 	blocks.resize(blockcount);
 
 	size_t i = 0;
