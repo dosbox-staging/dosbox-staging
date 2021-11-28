@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "mem_unaligned.h"
 #include "support.h"
 
 constexpr uint8_t DBZV_VERSION_HIGH = 0;
@@ -142,8 +143,8 @@ template <class P>
 int VideoCodec::PossibleBlock(const int vx, const int vy, const FrameBlock_it block)
 {
 	int ret = 0;
-	P *pold = ((P *)oldframe) + block->start + (vy * pitch) + vx;
-	P *pnew = ((P *)newframe) + block->start;
+	P *pold = reinterpret_cast<P *>(oldframe) + block->start + (vy * pitch) + vx;
+	P *pnew = reinterpret_cast<P *>(newframe) + block->start;
 	;
 	for (auto y = 0; y < block->dy; y += 4) {
 		for (auto x = 0; x < block->dx; x += 4) {
@@ -160,8 +161,8 @@ template <class P>
 int VideoCodec::CompareBlock(const int vx, const int vy, const FrameBlock_it block)
 {
 	int ret = 0;
-	P *pold = ((P *)oldframe) + block->start + (vy * pitch) + vx;
-	P *pnew = ((P *)newframe) + block->start;
+	P *pold =  reinterpret_cast<P *>(oldframe) + block->start + (vy * pitch) + vx;
+	P *pnew = reinterpret_cast<P *>(newframe) + block->start;
 	;
 	for (auto y = 0; y < block->dy; y++) {
 		for (auto x = 0; x < block->dx; x++) {
@@ -177,11 +178,11 @@ int VideoCodec::CompareBlock(const int vx, const int vy, const FrameBlock_it blo
 template <class P>
 void VideoCodec::AddXorBlock(const int vx, const int vy, const FrameBlock_it block)
 {
-	P *pold = ((P *)oldframe) + block->start + (vy * pitch) + vx;
-	P *pnew = ((P *)newframe) + block->start;
+	P *pold = reinterpret_cast<P *>(oldframe) + block->start + (vy * pitch) + vx;
+	P *pnew = reinterpret_cast<P *>(newframe) + block->start;
 	for (auto y = 0; y < block->dy; ++y) {
 		for (auto x = 0; x < block->dx; ++x) {
-			*((P *)&work[workUsed]) = pnew[x] ^ pold[x];
+			*reinterpret_cast<P *>(&work[workUsed]) = pnew[x] ^ pold[x];
 			workUsed += sizeof(P);
 		}
 		pold += pitch;
@@ -377,11 +378,11 @@ void VideoCodec::FinishVideo()
 template <class P>
 void VideoCodec::UnXorBlock(const int vx, const int vy, const FrameBlock_it block)
 {
-	P *pold = ((P *)oldframe) + block->start + (vy * pitch) + vx;
-	P *pnew = ((P *)newframe) + block->start;
+	P *pold = reinterpret_cast<P *>(oldframe) + block->start + (vy * pitch) + vx;
+	P *pnew = reinterpret_cast<P *>(newframe) + block->start;
 	for (auto y = 0; y < block->dy; ++y) {
 		for (auto x = 0; x < block->dx; ++x) {
-			pnew[x] = pold[x] ^ *((P *)&work[workPos]);
+			pnew[x] = pold[x] ^ *reinterpret_cast<P *>(&work[workPos]);
 			workPos += sizeof(P);
 		}
 		pold += pitch;
@@ -392,8 +393,8 @@ void VideoCodec::UnXorBlock(const int vx, const int vy, const FrameBlock_it bloc
 template <class P>
 void VideoCodec::CopyBlock(const int vx, const int vy, const FrameBlock_it block)
 {
-	P *pold = ((P *)oldframe) + block->start + (vy * pitch) + vx;
-	P *pnew = ((P *)newframe) + block->start;
+	P *pold = reinterpret_cast<P *>(oldframe) + block->start + (vy * pitch) + vx;
+	P *pnew = reinterpret_cast<P *>(newframe) + block->start;
 	for (auto y = 0; y < block->dy; ++y) {
 		for (auto x = 0; x < block->dx; ++x) {
 			pnew[x] = pold[x];
@@ -512,18 +513,18 @@ void VideoCodec::Output_UpsideDown_24(uint8_t *output)
 			break;
 		case ZMBV_FORMAT::BPP_15:
 			for (auto j = 0; j < width; ++j) {
-				const uint16_t c = *(uint16_t *)&r[j * 2];
-				*w++ = (uint8_t)(((c & 0x001f) * 0x21) >> 2);
-				*w++ = (uint8_t)(((c & 0x03e0) * 0x21) >> 7);
-				*w++ = (uint8_t)(((c & 0x7c00) * 0x21) >> 12);
+				const auto c = read_unaligned_uint16_at(r, j);
+				*w++ = check_cast<uint8_t>(((c & 0x001f) * 0x21) >> 2);
+				*w++ = check_cast<uint8_t>(((c & 0x03e0) * 0x21) >> 7);
+				*w++ = check_cast<uint8_t>(((c & 0x7c00) * 0x21) >> 12);
 			}
 			break;
 		case ZMBV_FORMAT::BPP_16:
 			for (auto j = 0; j < width; ++j) {
-				const uint16_t c = *(uint16_t *)&r[j * 2];
-				*w++ = (uint8_t)(((c & 0x001f) * 0x21) >> 2);
-				*w++ = (uint8_t)(((c & 0x07e0) * 0x41) >> 9);
-				*w++ = (uint8_t)(((c & 0xf800) * 0x21) >> 13);
+				const auto c = read_unaligned_uint16_at(r, j);
+				*w++ = check_cast<uint8_t>(((c & 0x001f) * 0x21) >> 2);
+				*w++ = check_cast<uint8_t>(((c & 0x07e0) * 0x41) >> 9);
+				*w++ = check_cast<uint8_t>(((c & 0xf800) * 0x21) >> 13);
 			}
 			break;
 		case ZMBV_FORMAT::BPP_24:
