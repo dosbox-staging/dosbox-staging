@@ -27,7 +27,7 @@ jobs:
             toolchain: ""
             arch: i686
             sys: MINGW32
-            max_warnings: 19
+            max_warnings: 17
           - name: GCC (MinGW) x86_64
             toolchain: ""
             arch: x86_64
@@ -42,7 +42,7 @@ jobs:
             toolchain: clang-
             arch: x86_64
             sys: CLANG64
-            max_warnings: 19
+            max_warnings: 2
           - name: GCC +tests
             toolchain: ""
             arch: x86_64
