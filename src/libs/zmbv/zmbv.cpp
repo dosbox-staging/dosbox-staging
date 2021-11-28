@@ -200,8 +200,8 @@ void VideoCodec::AddXorFrame()
 	assert(static_cast<size_t>(blockcount) == blocks.size());
 	for (FrameBlock_offset b = 0; b < blockcount; ++b) {
 		const auto block = blocks.begin() + b;
-		auto bestvx = 0;
-		auto bestvy = 0;
+		int8_t bestvx = 0;
+		int8_t bestvy = 0;
 		auto bestchange = CompareBlock<P>(0, 0, block);
 		auto possibles = 64;
 		for (auto v = 0; v < VectorCount && possibles; v++) {
@@ -215,13 +215,13 @@ void VideoCodec::AddXorFrame()
 				auto testchange = CompareBlock<P>(vx, vy, block);
 				if (testchange < bestchange) {
 					bestchange = testchange;
-					bestvx = vx;
-					bestvy = vy;
+					bestvx = check_cast<int8_t>(vx);
+					bestvy = check_cast<int8_t>(vy);
 				}
 			}
 		}
-		vectors[b * 2 + 0] = (bestvx << 1);
-		vectors[b * 2 + 1] = (bestvy << 1);
+		vectors[b * 2 + 0] = static_cast<uint8_t>(left_shift_signed(bestvx, 1));
+		vectors[b * 2 + 1] = static_cast<uint8_t>(left_shift_signed(bestvy, 1));
 		if (bestchange) {
 			vectors[b * 2 + 0] |= 1;
 			AddXorBlock<P>(bestvx, bestvy, block);
