@@ -82,9 +82,8 @@ static struct {
 		int written = 0;
 		float fps = 0.0f;
 		int bufSize = 0;
-		void *buf = nullptr;
-		uint8_t *index = nullptr;
-		int indexsize = 0;
+		std::vector<uint8_t> buf = {};
+		std::vector<uint8_t> index = {};
 		int indexused = 0;
 	} video = {};
 #endif
@@ -157,13 +156,10 @@ static void CAPTURE_AddAviChunk(const char * tag, Bit32u size, void * data, Bit3
 	fwrite(data,1,writesize,capture.video.handle);
 	pos = capture.video.written + 4;
 	capture.video.written += writesize + 8;
-	if (capture.video.indexused + 16 >= capture.video.indexsize ) {
-		capture.video.index = (Bit8u*)realloc( capture.video.index, capture.video.indexsize + 16 * 4096);
-		if (!capture.video.index)
-			E_Exit("Ran out of memory during AVI capturing");
-		capture.video.indexsize += 16*4096;
-	}
-	index = capture.video.index+capture.video.indexused;
+	if (capture.video.indexused + 16 >= capture.video.index.size())
+		capture.video.index.resize(capture.video.index.size() + 16 * 4096);
+
+	index = capture.video.index.data() + capture.video.indexused;
 	capture.video.indexused += 16;
 	index[0] = tag[0];
 	index[1] = tag[1];
@@ -298,16 +294,14 @@ static void CAPTURE_VideoEvent(bool pressed) {
 		AVIOUTd(capture.video.written+4); /* Length of list in bytes */
 		AVIOUT4("movi");
 		/* First add the index table to the end */
-		memcpy(capture.video.index, "idx1", 4);
-		host_writed( capture.video.index+4, capture.video.indexused - 8 );
-		fwrite( capture.video.index, 1, capture.video.indexused, capture.video.handle);
+		memcpy(capture.video.index.data(), "idx1", 4);
+		host_writed(capture.video.index.data() + 4, capture.video.indexused - 8);
+		fwrite(capture.video.index.data(), 1, capture.video.indexused, capture.video.handle);
 		fseek(capture.video.handle, 0, SEEK_SET);
 		fwrite(&avi_header, 1, AVI_HEADER_SIZE, capture.video.handle);
-		fclose( capture.video.handle );
-		free( capture.video.index );
-		free( capture.video.buf );
+		fclose(capture.video.handle);
 		delete capture.video.codec;
-		capture.video.handle = 0;
+		capture.video.handle = nullptr;
 	} else {
 		CaptureState |= CAPTURE_VIDEO;
 	}
@@ -554,13 +548,8 @@ skip_shot:
 			if (!capture.video.codec->SetupCompress( width, height)) 
 				goto skip_video;
 			capture.video.bufSize = capture.video.codec->NeededSize(width, height, format);
-			capture.video.buf = malloc( capture.video.bufSize );
-			if (!capture.video.buf)
-				goto skip_video;
-			capture.video.index = (Bit8u*)malloc( 16*4096 );
-			if (!capture.video.index)
-				goto skip_video;
-			capture.video.indexsize = 16*4096;
+			capture.video.buf.resize(capture.video.bufSize);
+			capture.video.index.resize(16 * 4096);
 			capture.video.indexused = 8;
 
 			capture.video.width = width;
@@ -579,7 +568,7 @@ skip_shot:
 			codecFlags = 1;
 		else codecFlags = 0;
 		if (!capture.video.codec->PrepareCompressFrame(codecFlags, format, pal,
-		                                               capture.video.buf,
+		                                               capture.video.buf.data(),
 		                                               capture.video.bufSize))
 			goto skip_video;
 
@@ -634,7 +623,7 @@ skip_shot:
 		int written = capture.video.codec->FinishCompressFrame();
 		if (written < 0)
 			goto skip_video;
-		CAPTURE_AddAviChunk( "00dc", written, capture.video.buf, codecFlags & 1 ? 0x10 : 0x0);
+		CAPTURE_AddAviChunk("00dc", written, capture.video.buf.data(), codecFlags & 1 ? 0x10 : 0x0);
 		capture.video.frames++;
 //		LOG_MSG("Frame %d video %d audio %d",capture.video.frames, written, capture.video.audioused *4 );
 		if ( capture.video.audioused ) {
