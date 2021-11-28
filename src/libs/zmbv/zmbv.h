@@ -61,11 +61,11 @@ private:
 	};
 
 	struct Compress {
-		int		linesDone = 0;
-		int		writeSize = 0;
-		int		writeDone = 0;
-		uint8_t	*writeBuf = nullptr;
-	} ;
+		int linesDone = 0;
+		int writeSize = 0;
+		int writeDone = 0;
+		uint8_t *writeBuf = nullptr;
+	};
 
 	CodecVector VectorTable[512] = {};
 	int VectorCount = 0;
@@ -77,14 +77,14 @@ private:
 	std::vector<uint8_t> work = {};
 	int bufsize = 0;
 
-	int blockcount = 0; 
+	int blockcount = 0;
 	std::vector<FrameBlock> blocks = {};
 	using FrameBlock_it = std::vector<FrameBlock>::const_iterator;
 	int workUsed = 0;
 	int workPos = 0;
 
 	int palsize = 0;
-	uint8_t palette[256*4] = {0};
+	uint8_t palette[256 * 4] = {0};
 	int height = 0;
 	int width = 0;
 	int pitch = 0;
@@ -98,30 +98,38 @@ private:
 	void CreateVectorTable();
 	bool SetupBuffers(ZMBV_FORMAT format, int blockwidth, int blockheight);
 
-	template<class P> void AddXorFrame();
-	template<class P> void UnXorFrame();
-	template<class P> int PossibleBlock(int vx,int vy, FrameBlock_it block);
-	template<class P> int CompareBlock(int vx,int vy, FrameBlock_it block);
-	template<class P> void AddXorBlock(int vx,int vy, FrameBlock_it block);
-	template<class P> void UnXorBlock(int vx,int vy, FrameBlock_it block);
-	template<class P> void CopyBlock(int vx, int vy, FrameBlock_it block);
+	template <class P>
+	void AddXorFrame();
+	template <class P>
+	void UnXorFrame();
+	template <class P>
+	int PossibleBlock(int vx, int vy, FrameBlock_it block);
+	template <class P>
+	int CompareBlock(int vx, int vy, FrameBlock_it block);
+	template <class P>
+	void AddXorBlock(int vx, int vy, FrameBlock_it block);
+	template <class P>
+	void UnXorBlock(int vx, int vy, FrameBlock_it block);
+	template <class P>
+	void CopyBlock(int vx, int vy, FrameBlock_it block);
+
 public:
 	VideoCodec();
 
-	VideoCodec(const VideoCodec&) = delete; // prevent copy
-	VideoCodec &operator=(const VideoCodec&) = delete; // prevent assignment
+	VideoCodec(const VideoCodec &) = delete;            // prevent copy
+	VideoCodec &operator=(const VideoCodec &) = delete; // prevent assignment
 
-	bool SetupCompress( int _width, int _height);
-	bool SetupDecompress( int _width, int _height);
-	ZMBV_FORMAT BPPFormat( int bpp );
-	int NeededSize( int _width, int _height, ZMBV_FORMAT _format);
+	bool SetupCompress(int _width, int _height);
+	bool SetupDecompress(int _width, int _height);
+	ZMBV_FORMAT BPPFormat(int bpp);
+	int NeededSize(int _width, int _height, ZMBV_FORMAT _format);
 
-	void CompressLines(int lineCount, void *lineData[]);
-	bool PrepareCompressFrame(int flags,  ZMBV_FORMAT _format, char * pal, void *writeBuf, int writeSize);
-	int FinishCompressFrame( void );
-	bool DecompressFrame(void * framedata, int size);
-	void Output_UpsideDown_24(void * output);
+	void CompressLines(int lineCount, uint8_t *lineData[]);
+	bool PrepareCompressFrame(int flags, ZMBV_FORMAT _format, const uint8_t *pal, uint8_t *writeBuf, int writeSize);
+	int FinishCompressFrame();
+	void FinishVideo();
+	bool DecompressFrame(uint8_t *framedata, int size);
+	void Output_UpsideDown_24(uint8_t *output);
 };
 
 #endif
-
