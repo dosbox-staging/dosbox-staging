@@ -621,7 +621,7 @@ skip_shot:
 					rowPointer = srcLine;
 				}
 			}
-			capture.video.codec->CompressLines( 1, &rowPointer );
+			capture.video.codec->CompressLines( 1, &rowPointer);
 		}
 		int written = capture.video.codec->FinishCompressFrame();
 		if (written < 0)

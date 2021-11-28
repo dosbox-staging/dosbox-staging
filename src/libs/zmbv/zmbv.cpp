@@ -251,7 +251,7 @@ bool VideoCodec::SetupDecompress(const int _width, const int _height)
 	return true;
 }
 
-bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, const uint8_t *pal, uint8_t *writeBuf, const uint32_t writeSize)
+bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, uint8_t *pal, uint8_t *writeBuf, const uint32_t writeSize)
 {
 	if (_format != format) {
 		if (!SetupBuffers(_format, 16, 16))
