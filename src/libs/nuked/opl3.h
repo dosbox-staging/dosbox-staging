@@ -39,6 +39,10 @@ extern "C" {
 
 #include <inttypes.h>
 
+#ifndef OPL_ENABLE_STEREOEXT
+#define OPL_ENABLE_STEREOEXT 0
+#endif
+
 #define OPL_WRITEBUF_SIZE   1024
 #define OPL_WRITEBUF_DELAY  2
 
@@ -53,8 +57,8 @@ struct _opl3_slot {
     int16_t fbmod;
     int16_t *mod;
     int16_t prout;
-    int16_t eg_rout;
-    int16_t eg_out;
+    uint16_t eg_rout;
+    uint16_t eg_out;
     uint8_t eg_inc;
     uint8_t eg_gen;
     uint8_t eg_rate;
@@ -83,6 +87,12 @@ struct _opl3_channel {
     opl3_channel *pair;
     opl3_chip *chip;
     int16_t *out[4];
+
+#if OPL_ENABLE_STEREOEXT
+    int32_t leftpan;
+    int32_t rightpan;
+#endif
+
     uint8_t chtype;
     uint16_t f_num;
     uint8_t block;
@@ -125,7 +135,12 @@ struct _opl3_chip {
     uint8_t rm_hh_bit8;
     uint8_t rm_tc_bit3;
     uint8_t rm_tc_bit5;
-    //OPL3L
+
+#if OPL_ENABLE_STEREOEXT
+    uint8_t stereoext;
+#endif
+
+    /* OPL3L */
     int32_t rateratio;
     int32_t samplecnt;
     int16_t oldsamples[2];
