@@ -62,8 +62,8 @@ private:
 
 	struct Compress {
 		int linesDone = 0;
-		int writeSize = 0;
-		int writeDone = 0;
+		uint32_t writeSize = 0;
+		uint32_t writeDone = 0;
 		uint8_t *writeBuf = nullptr;
 	};
 
@@ -75,15 +75,16 @@ private:
 	std::vector<uint8_t> buf1 = {};
 	std::vector<uint8_t> buf2 = {};
 	std::vector<uint8_t> work = {};
-	int bufsize = 0;
+	uint32_t bufsize = 0;
 
-	int blockcount = 0;
 	std::vector<FrameBlock> blocks = {};
 	using FrameBlock_it = std::vector<FrameBlock>::const_iterator;
-	int workUsed = 0;
-	int workPos = 0;
+	using FrameBlock_offset = std::vector<FrameBlock>::difference_type;
+	FrameBlock_offset blockcount = 0;
+	uint32_t workUsed = 0;
+	uint32_t workPos = 0;
 
-	int palsize = 0;
+	uint32_t palsize = 0;
 	uint8_t palette[256 * 4] = {0};
 	int height = 0;
 	int width = 0;
@@ -125,7 +126,7 @@ public:
 	int NeededSize(int _width, int _height, ZMBV_FORMAT _format);
 
 	void CompressLines(int lineCount, uint8_t *lineData[]);
-	bool PrepareCompressFrame(int flags, ZMBV_FORMAT _format, const uint8_t *pal, uint8_t *writeBuf, int writeSize);
+	bool PrepareCompressFrame(int flags, ZMBV_FORMAT _format, const uint8_t *pal, uint8_t *writeBuf, uint32_t writeSize);
 	int FinishCompressFrame();
 	void FinishVideo();
 	bool DecompressFrame(uint8_t *framedata, int size);

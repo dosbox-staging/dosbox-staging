@@ -52,41 +52,44 @@ static struct {
 	struct {
 		FILE *handle = nullptr;
 		uint16_t buf[WAVE_BUF][2] = {};
-		int used = 0;
-		int length = 0;
-		int freq = 0;
+		uint32_t used = 0;
+		uint32_t length = 0;
+		uint32_t freq = 0;
 	} wave = {};
-	;
+
 	struct {
 		FILE *handle = nullptr;
 		uint8_t buffer[MIDI_BUF] = {0};
-		int used = 0;
-		int done = 0;
-		int last = 0;
+		uint32_t used = 0;
+		uint32_t done = 0;
+		uint32_t last = 0;
 	} midi = {};
+
 	struct {
-		int rowlen = 0;
+		uint32_t rowlen = 0;
 	} image = {};
+
 #if (C_SSHOT)
 	struct {
 		FILE *handle = nullptr;
-		int frames = 0;
+		uint32_t frames = 0;
 		int16_t audiobuf[WAVE_BUF][2] = {};
-		int audioused = 0;
-		int audiorate = 0;
-		int audiowritten = 0;
+		uint32_t audioused = 0;
+		uint32_t audiorate = 0;
+		uint32_t audiowritten = 0;
 		VideoCodec *codec = nullptr;
 		int width = 0;
 		int height = 0;
 		int bpp = 0;
-		int written = 0;
+		uint32_t written = 0;
 		float fps = 0.0f;
-		int bufSize = 0;
+		uint32_t bufSize = 0;
 		std::vector<uint8_t> buf = {};
 		std::vector<uint8_t> index = {};
-		int indexused = 0;
+		uint32_t indexused = 0;
 	} video = {};
 #endif
+
 } capture = {};
 
 FILE * OpenCaptureFile(const char * type,const char * ext) {
@@ -207,12 +210,12 @@ static void CAPTURE_VideoEvent(bool pressed) {
 		AVIOUTd(0);                         /* InitialFrames */
 		AVIOUTd(2);                         /* Stream count */
 		AVIOUTd(0);                         /* SuggestedBufferSize */
-		AVIOUTd(capture.video.width);       /* Width */
-		AVIOUTd(capture.video.height);      /* Height */
-		AVIOUTd(0);                         /* TimeScale:  Unit used to measure time */
-		AVIOUTd(0);                         /* DataRate:   Data rate of playback     */
-		AVIOUTd(0);                         /* StartTime:  Starting time of AVI data */
-		AVIOUTd(0);                         /* DataLength: Size of AVI data chunk    */
+		AVIOUTd(static_cast<uint32_t>(capture.video.width));  /* Width */
+		AVIOUTd(static_cast<uint32_t>(capture.video.height)); /* Height */
+		AVIOUTd(0);                                           /* TimeScale:  Unit used to measure time */
+		AVIOUTd(0);                                           /* DataRate:   Data rate of playback     */
+		AVIOUTd(0);                                           /* StartTime:  Starting time of AVI data */
+		AVIOUTd(0);                                           /* DataLength: Size of AVI data chunk    */
 
 		/* Video stream list */
 		AVIOUT4("LIST");
@@ -239,9 +242,9 @@ static void CAPTURE_VideoEvent(bool pressed) {
 		AVIOUT4("strf");
 		AVIOUTd(40);                 /* # of bytes to follow */
 		AVIOUTd(40);                 /* Size */
-		AVIOUTd(capture.video.width);         /* Width */
-		AVIOUTd(capture.video.height);        /* Height */
-//		OUTSHRT(1); OUTSHRT(24);     /* Planes, Count */
+		AVIOUTd(static_cast<uint32_t>(capture.video.width));  /* Width */
+		AVIOUTd(static_cast<uint32_t>(capture.video.height)); /* Height */
+		//		OUTSHRT(1); OUTSHRT(24);     /* Planes, Count */
 		AVIOUTd(0);
 		AVIOUT4(CODEC_4CC);          /* Compression */
 		AVIOUTd(capture.video.width * capture.video.height*4);  /* SizeImage (in bytes?) */
@@ -769,7 +772,7 @@ void CAPTURE_AddMidi(bool sysex, Bitu len, Bit8u * data) {
 	RawMidiAddNumber(delta);
 	if (sysex) {
 		RawMidiAdd( 0xf0 );
-		RawMidiAddNumber( len );
+		RawMidiAddNumber(static_cast<uint32_t>(len));
 	}
 	for (Bitu i=0;i<len;i++) 
 		RawMidiAdd(data[i]);

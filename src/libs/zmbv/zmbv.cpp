@@ -24,13 +24,15 @@
 #include <cstdlib>
 #include <cstring>
 
-constexpr auto DBZV_VERSION_HIGH = 0;
-constexpr auto DBZV_VERSION_LOW = 1;
+#include "support.h"
 
-constexpr auto COMPRESSION_NONE = 0;
-constexpr auto COMPRESSION_ZLIB = 1;
+constexpr uint8_t DBZV_VERSION_HIGH = 0;
+constexpr uint8_t DBZV_VERSION_LOW = 1;
 
-constexpr auto MAX_VECTOR = 16;
+constexpr uint8_t COMPRESSION_NONE = 0;
+constexpr uint8_t COMPRESSION_ZLIB = 1;
+
+constexpr uint8_t MAX_VECTOR = 16;
 
 constexpr uint8_t Mask_KeyFrame = 0x01;
 constexpr uint8_t Mask_DeltaPalette = 0x02;
@@ -75,7 +77,7 @@ bool VideoCodec::SetupBuffers(const ZMBV_FORMAT _format, const int blockwidth, c
 	case ZMBV_FORMAT::BPP_32: pixelsize = 4; break;
 	default: return false;
 	};
-	bufsize = (height + 2 * MAX_VECTOR) * pitch * pixelsize + 2048;
+	bufsize = static_cast<uint32_t>((height + 2 * MAX_VECTOR) * pitch * pixelsize + 2048);
 
 	assert(bufsize > 0);
 	const auto buf_sizes = static_cast<size_t>(bufsize);
@@ -94,7 +96,7 @@ bool VideoCodec::SetupBuffers(const ZMBV_FORMAT _format, const int blockwidth, c
 	blockcount = yblocks * xblocks;
 	blocks.resize(blockcount);
 
-	auto i = 0;
+	size_t i = 0;
 	for (auto y = 0; y < yblocks; ++y) {
 		for (auto x = 0; x < xblocks; ++x) {
 			blocks[i].start = ((y * blockheight) + MAX_VECTOR) * pitch + (x * blockwidth) + MAX_VECTOR;
@@ -190,12 +192,12 @@ void VideoCodec::AddXorBlock(const int vx, const int vy, const FrameBlock_it blo
 template <class P>
 void VideoCodec::AddXorFrame()
 {
-	int8_t *vectors = (int8_t *)&work[workUsed];
+	auto vectors = &work[workUsed];
 	/* Align the following xor data on 4 byte boundary*/
 	workUsed = (workUsed + blockcount * 2 + 3) & ~3;
 
-	assert(blockcount == blocks.size());
-	for (auto b = 0; b < blockcount; ++b) {
+	assert(static_cast<size_t>(blockcount) == blocks.size());
+	for (FrameBlock_offset b = 0; b < blockcount; ++b) {
 		const auto block = blocks.begin() + b;
 		auto bestvx = 0;
 		auto bestvy = 0;
@@ -248,7 +250,7 @@ bool VideoCodec::SetupDecompress(const int _width, const int _height)
 	return true;
 }
 
-bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, const uint8_t *pal, uint8_t *writeBuf, const int writeSize)
+bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, const uint8_t *pal, uint8_t *writeBuf, const uint32_t writeSize)
 {
 	if (_format != format) {
 		if (!SetupBuffers(_format, 16, 16))
@@ -291,7 +293,7 @@ bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, cons
 			else
 				memset(&palette, 0, sizeof(palette));
 			/* keyframes get the full palette */
-			for (auto i = 0; i < palsize; i++) {
+			for (size_t i = 0; i < palsize; i++) {
 				work[workUsed++] = palette[i * 4 + 0];
 				work[workUsed++] = palette[i * 4 + 1];
 				work[workUsed++] = palette[i * 4 + 2];
@@ -300,14 +302,15 @@ bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, cons
 		/* Restart deflate */
 		deflateReset(&zstream);
 	} else {
-		if (palsize && pal && memcmp(pal, palette, palsize * 4)) {
+		const auto palette_bytes = palsize * 4;
+		if (palsize && pal && memcmp(pal, palette, palette_bytes)) {
 			firstByte |= Mask_DeltaPalette;
-			for (auto i = 0; i < palsize; i++) {
+			for (size_t i = 0; i < palsize; i++) {
 				work[workUsed++] = palette[i * 4 + 0] ^ pal[i * 4 + 0];
 				work[workUsed++] = palette[i * 4 + 1] ^ pal[i * 4 + 1];
 				work[workUsed++] = palette[i * 4 + 2] ^ pal[i * 4 + 2];
 			}
-			memcpy(&palette, pal, palsize * 4);
+			memcpy(&palette, pal, palette_bytes);
 		}
 	}
 	return true;
@@ -318,10 +321,9 @@ void VideoCodec::CompressLines(const int lineCount, uint8_t *lineData[])
 	const auto linePitch = pitch * pixelsize;
 	const auto lineWidth = width * pixelsize;
 	auto destStart = newframe + pixelsize * (MAX_VECTOR + (compress.linesDone + MAX_VECTOR) * pitch);
-
 	auto i = 0;
 	while (i < lineCount && (compress.linesDone < height)) {
-		memcpy(destStart, lineData[i], lineWidth);
+		memcpy(destStart, lineData[i], static_cast<size_t>(lineWidth));
 		destStart += linePitch;
 		i++;
 		compress.linesDone++;
@@ -338,9 +340,9 @@ int VideoCodec::FinishCompressFrame()
 		const int line_width = width * pixelsize;
 		assert(line_width > 0);
 		for (auto i = 0; i < height; ++i) {
-			memcpy(&work[workUsed], readFrame, line_width);
+			memcpy(&work[workUsed], readFrame, static_cast<size_t>(line_width));
 			readFrame += pitch * pixelsize;
-			workUsed += line_width;
+			workUsed += static_cast<size_t>(line_width);
 		}
 	} else {
 		/* Add the delta frame data */
@@ -362,7 +364,7 @@ int VideoCodec::FinishCompressFrame()
 	zstream.avail_out = compress.writeSize - compress.writeDone;
 	zstream.total_out = 0;
 	deflate(&zstream, Z_SYNC_FLUSH);
-	const auto bytes_processed = compress.writeDone + zstream.total_out;
+	const auto bytes_processed = static_cast<int>(compress.writeDone + zstream.total_out);
 	return bytes_processed;
 }
 
@@ -407,8 +409,8 @@ void VideoCodec::UnXorFrame()
 	int8_t *vectors = (int8_t *)&work[workPos];
 	workPos = (workPos + blockcount * 2 + 3) & ~3;
 
-	assert(blockcount == blocks.size());
-	for (auto b = 0; b < blockcount; ++b) {
+	assert(static_cast<size_t>(blockcount) == blocks.size());
+	for (FrameBlock_offset b = 0; b < blockcount; ++b) {
 		const auto block = blocks.begin() + b;
 		const auto delta = vectors[b * 2 + 0] & 1;
 		const auto vx = vectors[b * 2 + 0] >> 1;
@@ -448,11 +450,11 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 	zstream.avail_out = bufsize;
 	zstream.total_out = 0;
 	inflate(&zstream, Z_FINISH);
-	workUsed = zstream.total_out;
+	workUsed = check_cast<uint32_t>(zstream.total_out);
 	workPos = 0;
 	if (tag & Mask_KeyFrame) {
 		if (palsize) {
-			for (auto i = 0; i < palsize; ++i) {
+			for (size_t i = 0; i < palsize; ++i) {
 				palette[i * 4 + 0] = work[workPos++];
 				palette[i * 4 + 1] = work[workPos++];
 				palette[i * 4 + 2] = work[workPos++];
@@ -474,7 +476,7 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 		oldframe = newframe;
 		newframe = data;
 		if (tag & Mask_DeltaPalette) {
-			for (auto i = 0; i < palsize; ++i) {
+			for (size_t i = 0; i < palsize; ++i) {
 				palette[i * 4 + 0] ^= work[workPos++];
 				palette[i * 4 + 1] ^= work[workPos++];
 				palette[i * 4 + 2] ^= work[workPos++];
