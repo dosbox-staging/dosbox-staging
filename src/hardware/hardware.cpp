@@ -437,17 +437,17 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 			case 15:
 				if (is_double_width) {
 					for (auto x = 0; x < countWidth; ++x) {
-						const Bitu pixel = host_to_le(static_cast<uint16_t *>(srcLine)[x]);
-						doubleRow[x*6+0] = doubleRow[x*6+3] = ((pixel& 0x001f) * 0x21) >>  2;
-						doubleRow[x*6+1] = doubleRow[x*6+4] = ((pixel& 0x03e0) * 0x21) >>  7;
-						doubleRow[x*6+2] = doubleRow[x*6+5] = ((pixel& 0x7c00) * 0x21) >>  12;
+						const auto pixel = host_to_le(reinterpret_cast<uint16_t *>(srcLine)[x]);
+						doubleRow[x * 6 + 0] = doubleRow[x * 6 + 3] = ((pixel & 0x001f) * 0x21) >> 2;
+						doubleRow[x * 6 + 1] = doubleRow[x * 6 + 4] = ((pixel & 0x03e0) * 0x21) >> 7;
+						doubleRow[x * 6 + 2] = doubleRow[x * 6 + 5] = ((pixel & 0x7c00) * 0x21) >> 12;
 					}
 				} else {
 					for (auto x = 0; x < countWidth; ++x) {
-						const Bitu pixel = host_to_le(static_cast<uint16_t *>(srcLine)[x]);
-						doubleRow[x*3+0] = ((pixel& 0x001f) * 0x21) >>  2;
-						doubleRow[x*3+1] = ((pixel& 0x03e0) * 0x21) >>  7;
-						doubleRow[x*3+2] = ((pixel& 0x7c00) * 0x21) >>  12;
+						const auto pixel = host_to_le(reinterpret_cast<uint16_t *>(srcLine)[x]);
+						doubleRow[x * 3 + 0] = ((pixel & 0x001f) * 0x21) >> 2;
+						doubleRow[x * 3 + 1] = ((pixel & 0x03e0) * 0x21) >> 7;
+						doubleRow[x * 3 + 2] = ((pixel & 0x7c00) * 0x21) >> 12;
 					}
 				}
 				rowPointer = doubleRow;
@@ -455,17 +455,17 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 			case 16:
 				if (is_double_width) {
 					for (auto x = 0; x < countWidth; ++x) {
-						const Bitu pixel = host_to_le(static_cast<uint16_t *>(srcLine)[x]);
-						doubleRow[x*6+0] = doubleRow[x*6+3] = ((pixel& 0x001f) * 0x21) >> 2;
-						doubleRow[x*6+1] = doubleRow[x*6+4] = ((pixel& 0x07e0) * 0x41) >> 9;
-						doubleRow[x*6+2] = doubleRow[x*6+5] = ((pixel& 0xf800) * 0x21) >> 13;
+						const auto pixel = host_to_le(reinterpret_cast<uint16_t *>(srcLine)[x]);
+						doubleRow[x * 6 + 0] = doubleRow[x * 6 + 3] = ((pixel & 0x001f) * 0x21) >> 2;
+						doubleRow[x * 6 + 1] = doubleRow[x * 6 + 4] = ((pixel & 0x07e0) * 0x41) >> 9;
+						doubleRow[x * 6 + 2] = doubleRow[x * 6 + 5] = ((pixel & 0xf800) * 0x21) >> 13;
 					}
 				} else {
 					for (auto x = 0; x < countWidth; ++x) {
-						const Bitu pixel = host_to_le(static_cast<uint16_t *>(srcLine)[x]);
-						doubleRow[x*3+0] = ((pixel& 0x001f) * 0x21) >>  2;
-						doubleRow[x*3+1] = ((pixel& 0x07e0) * 0x41) >>  9;
-						doubleRow[x*3+2] = ((pixel& 0xf800) * 0x21) >>  13;
+						const auto pixel = host_to_le(reinterpret_cast<uint16_t *>(srcLine)[x]);
+						doubleRow[x * 3 + 0] = ((pixel & 0x001f) * 0x21) >> 2;
+						doubleRow[x * 3 + 1] = ((pixel & 0x07e0) * 0x41) >> 9;
+						doubleRow[x * 3 + 2] = ((pixel & 0xf800) * 0x21) >> 13;
 					}
 				}
 				rowPointer = doubleRow;
@@ -473,7 +473,7 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 			case 24:
 				if (is_double_width) {
 					for (auto x = 0; x < countWidth; ++x) {
-						const auto pixel = host_to_le(static_cast<rgb24 *>(srcLine)[x]);
+						const auto pixel = host_to_le(reinterpret_cast<rgb24 *>(srcLine)[x]);
 						reinterpret_cast<rgb24 *>(doubleRow)[x * 2 + 0] = pixel;
 						reinterpret_cast<rgb24 *>(doubleRow)[x * 2 + 1] = pixel;
 						rowPointer = doubleRow;
@@ -583,8 +583,7 @@ skip_shot:
 				switch ( bpp) {
 				case 8:
 					for (auto x = 0; x < countWidth; ++x)
-						((Bit8u *)doubleRow)[x*2+0] =
-						((Bit8u *)doubleRow)[x*2+1] = ((Bit8u *)srcLine)[x];
+						doubleRow[x * 2 + 0] = doubleRow[x * 2 + 1] = srcLine[x];
 					break;
 				case 15:
 				case 16:
