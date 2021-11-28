@@ -2860,10 +2860,12 @@ static void GUI_StartUp(Section *sec)
 #endif
 	/* Get Keyboard state of numlock and capslock */
 	SDL_Keymod keystate = SDL_GetModState();
-	if (keystate & KMOD_NUM)
-		startup_state_numlock = true;
-	if (keystate & KMOD_CAPS)
-		startup_state_capslock = true;
+
+	// A long-standing SDL1 and SDL2 bug prevents it from detecting the
+	// numlock and capslock states on startup. Instead, these states must
+	// be toggled by the user /after/ starting DOSBox.
+	startup_state_numlock = keystate & KMOD_NUM;
+	startup_state_capslock = keystate & KMOD_CAPS;
 }
 
 static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
