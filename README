@@ -271,6 +271,12 @@ KEYBOARD: Common key-presses conflict with system actions on macOS
      - "Move left a space" to deconflict Control+Left
      - "Move right a space" to deconflict Control+Right
 
+KEYBOARD: The numlock and capslock state isn't correct.
+    A known issue prevents SDL from reading the numlock and capslock
+    states on startup. Until this is resolved, we recommend toggling these
+    off prior to starting DOSBox. After startup, you may use numlock and
+    capslock as desired.
+
 KEYBOARD: I can't type \ or : in DOSBox.
     This can happen in various cases, like your host keyboard layout does not
     have a matching DOS layout representation (or it was not correctly
