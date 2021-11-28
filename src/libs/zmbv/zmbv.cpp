@@ -77,9 +77,11 @@ bool VideoCodec::SetupBuffers(const ZMBV_FORMAT _format, const int blockwidth, c
 	};
 	bufsize = (height + 2 * MAX_VECTOR) * pitch * pixelsize + 2048;
 
-	buf1 = std::vector<uint8_t>(bufsize, 0);
-	buf2 = std::vector<uint8_t>(bufsize, 0);
-	work = std::vector<uint8_t>(bufsize, 0);
+	assert(bufsize > 0);
+	const auto buf_sizes = static_cast<size_t>(bufsize);
+	buf1 = std::vector<uint8_t>(buf_sizes, 0);
+	buf2 = std::vector<uint8_t>(buf_sizes, 0);
+	work = std::vector<uint8_t>(buf_sizes, 0);
 
 	auto xblocks = (width / blockwidth);
 	const auto xleft = width % blockwidth;
