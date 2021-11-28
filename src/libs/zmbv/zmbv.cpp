@@ -442,7 +442,7 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 			return false;
 		inflateReset(&zstream);
 	}
-	zstream.next_in = reinterpret_cast<Bytef *>(data);
+	zstream.next_in = data;
 	zstream.avail_in = size;
 	zstream.total_in = 0;
 

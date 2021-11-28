@@ -434,8 +434,7 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 			case 8:
 				if (is_double_width) {
 					for (auto x = 0; x < countWidth; ++x)
-						doubleRow[x*2+0] =
-						doubleRow[x*2+1] = ((Bit8u *)srcLine)[x];
+						doubleRow[x * 2 + 0] = doubleRow[x * 2 + 1] = srcLine[x];
 					rowPointer = doubleRow;
 				}
 				break;
@@ -492,21 +491,21 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 			case 32:
 				if (is_double_width) {
 					for (auto x = 0; x < countWidth; ++x) {
-						doubleRow[x*6+0] = doubleRow[x*6+3] = ((Bit8u *)srcLine)[x*4+0];
-						doubleRow[x*6+1] = doubleRow[x*6+4] = ((Bit8u *)srcLine)[x*4+1];
-						doubleRow[x*6+2] = doubleRow[x*6+5] = ((Bit8u *)srcLine)[x*4+2];
+						doubleRow[x * 6 + 0] = doubleRow[x * 6 + 3] = srcLine[x * 4 + 0];
+						doubleRow[x * 6 + 1] = doubleRow[x * 6 + 4] = srcLine[x * 4 + 1];
+						doubleRow[x * 6 + 2] = doubleRow[x * 6 + 5] = srcLine[x * 4 + 2];
 					}
 				} else {
 					for (auto x = 0; x < countWidth; ++x) {
-						doubleRow[x*3+0] = ((Bit8u *)srcLine)[x*4+0];
-						doubleRow[x*3+1] = ((Bit8u *)srcLine)[x*4+1];
-						doubleRow[x*3+2] = ((Bit8u *)srcLine)[x*4+2];
+						doubleRow[x * 3 + 0] = srcLine[x * 4 + 0];
+						doubleRow[x * 3 + 1] = srcLine[x * 4 + 1];
+						doubleRow[x * 3 + 2] = srcLine[x * 4 + 2];
 					}
 				}
 				rowPointer = doubleRow;
 				break;
 			}
-			png_write_row(png_ptr, (png_bytep)rowPointer);
+			png_write_row(png_ptr, rowPointer);
 		}
 		/* Finish writing */
 		png_write_end(png_ptr, 0);
