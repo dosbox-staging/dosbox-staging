@@ -177,6 +177,8 @@ static void CAPTURE_VideoEvent(bool pressed) {
 		return;
 	if (CaptureState & CAPTURE_VIDEO) {
 		/* Close the video */
+		if (capture.video.codec)
+			capture.video.codec->FinishVideo();
 		CaptureState &= ~CAPTURE_VIDEO;
 		LOG_MSG("Stopped capturing video.");	
 
