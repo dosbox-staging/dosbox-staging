@@ -38,6 +38,14 @@ constexpr uint8_t MAX_VECTOR = 16;
 constexpr uint8_t Mask_KeyFrame = 0x01;
 constexpr uint8_t Mask_DeltaPalette = 0x02;
 
+// Compression flags
+constexpr int ZLIB_COMPRESSION_LEVEL = 6; // 0 to 9 (0 = no compression)
+constexpr auto ZLIB_COMPRESSION_METHOD = Z_DEFLATED; // currently the only option
+constexpr int ZLIB_WINDOW_BITS = 15;                 // 8 to 15 (default 15)
+constexpr int ZLIB_MEM_LEVEL = 9;                    // 1 to 9 (default 8)
+constexpr auto ZLIB_STRATEGY = Z_FILTERED; // Z_DEFAULT_STRATEGY, Z_FILTERED,
+                                           // Z_HUFFMAN_ONLY, Z_RLE, Z_FIXED
+
 ZMBV_FORMAT BPPFormat(const int bpp)
 {
 	switch (bpp) {
@@ -235,7 +243,8 @@ bool VideoCodec::SetupCompress(const int _width, const int _height)
 	height = _height;
 	pitch = _width + 2 * MAX_VECTOR;
 	format = ZMBV_FORMAT::NONE;
-	if (deflateInit(&zstream, 4) != Z_OK)
+	if (deflateInit2(&zstream, ZLIB_COMPRESSION_LEVEL, ZLIB_COMPRESSION_METHOD,
+	                 ZLIB_MEM_LEVEL, ZLIB_MEM_LEVEL, ZLIB_STRATEGY) != Z_OK)
 		return false;
 	return true;
 }
