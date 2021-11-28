@@ -418,17 +418,16 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 		png_set_text(png_ptr, info_ptr, texts, num_text);
 #endif
 		png_write_info(png_ptr, info_ptr);
+
+		const bool is_double_width = (flags & CAPTURE_FLAG_DBLW);
+		const auto row_divisor = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
+
 		for (auto i = 0; i < height; ++i) {
-			void *rowPointer;
-			void *srcLine;
-			if (flags & CAPTURE_FLAG_DBLH)
-				srcLine=(data+(i >> 1)*pitch);
-			else
-				srcLine=(data+(i >> 0)*pitch);
-			rowPointer=srcLine;
+			auto srcLine = data + (i >> row_divisor) * pitch;
+			auto rowPointer = srcLine;
 			switch (bpp) {
 			case 8:
-				if (flags & CAPTURE_FLAG_DBLW) {
+				if (is_double_width) {
 					for (auto x = 0; x < countWidth; ++x)
 						doubleRow[x*2+0] =
 						doubleRow[x*2+1] = ((Bit8u *)srcLine)[x];
@@ -436,7 +435,7 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 				}
 				break;
 			case 15:
-				if (flags & CAPTURE_FLAG_DBLW) {
+				if (is_double_width) {
 					for (auto x = 0; x < countWidth; ++x) {
 						const Bitu pixel = host_to_le(static_cast<uint16_t *>(srcLine)[x]);
 						doubleRow[x*6+0] = doubleRow[x*6+3] = ((pixel& 0x001f) * 0x21) >>  2;
@@ -454,7 +453,7 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 				rowPointer = doubleRow;
 				break;
 			case 16:
-				if (flags & CAPTURE_FLAG_DBLW) {
+				if (is_double_width) {
 					for (auto x = 0; x < countWidth; ++x) {
 						const Bitu pixel = host_to_le(static_cast<uint16_t *>(srcLine)[x]);
 						doubleRow[x*6+0] = doubleRow[x*6+3] = ((pixel& 0x001f) * 0x21) >> 2;
@@ -472,7 +471,7 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 				rowPointer = doubleRow;
 				break;
 			case 24:
-				if (flags & CAPTURE_FLAG_DBLW) {
+				if (is_double_width) {
 					for (auto x = 0; x < countWidth; ++x) {
 						const auto pixel = host_to_le(static_cast<rgb24 *>(srcLine)[x]);
 						reinterpret_cast<rgb24 *>(doubleRow)[x * 2 + 0] = pixel;
@@ -486,7 +485,7 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 
 				break;
 			case 32:
-				if (flags & CAPTURE_FLAG_DBLW) {
+				if (is_double_width) {
 					for (auto x = 0; x < countWidth; ++x) {
 						doubleRow[x*6+0] = doubleRow[x*6+3] = ((Bit8u *)srcLine)[x*4+0];
 						doubleRow[x*6+1] = doubleRow[x*6+4] = ((Bit8u *)srcLine)[x*4+1];
@@ -572,13 +571,14 @@ skip_shot:
 		                                               capture.video.bufSize))
 			goto skip_video;
 
+		const bool is_double_width = flags & CAPTURE_FLAG_DBLW;
+		const auto height_divisor = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
+
 		for (auto i = 0; i < height; ++i) {
 			auto rowPointer = doubleRow;
-
-			const auto height_divisor = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
 			const auto srcLine = data + (i >> height_divisor) * pitch;
 
-			if (flags & CAPTURE_FLAG_DBLW) {
+			if (is_double_width) {
 				countWidth = width >> 1;
 				switch ( bpp) {
 				case 8:
