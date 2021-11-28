@@ -450,7 +450,8 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 		if (format != (ZMBV_FORMAT)header->format &&
 		    !SetupBuffers((ZMBV_FORMAT)header->format, header->blockwidth, header->blockheight))
 			return false;
-		inflateReset(&zstream);
+		if (inflateReset(&zstream) != Z_OK)
+			return false;
 	}
 	zstream.next_in = data;
 	zstream.avail_in = size;
@@ -459,7 +460,13 @@ bool VideoCodec::DecompressFrame(uint8_t *framedata, int size)
 	zstream.next_out = work.data();
 	zstream.avail_out = bufsize;
 	zstream.total_out = 0;
-	inflate(&zstream, Z_FINISH);
+
+	// decompress all the pending data. Note that if Z_FINISH isn't used,
+	// then inflate can also return Z_OK, which indicates multiple inflation
+	// passes are needed.
+	if (inflate(&zstream, Z_FINISH) != Z_STREAM_END)
+		return false;
+
 	workUsed = check_cast<uint32_t>(zstream.total_out);
 	workPos = 0;
 	if (tag & Mask_KeyFrame) {
