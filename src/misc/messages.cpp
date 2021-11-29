@@ -181,7 +181,7 @@ static std::deque<std_fs::path> get_paths()
 {
 	std::deque<std_fs::path> paths = {};
 
-	const auto exe_path = control->cmdline->GetExecutablePath();
+	const auto exe_path = GetExecutablePath();
 #if defined(MACOSX)
 	paths.emplace_back(exe_path / "../Resources/translations");
 #else
