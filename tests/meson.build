@@ -63,11 +63,11 @@ unit_tests = [
   {'name' : 'rwqueue',              'deps' : [libmisc_dep]},
   {'name' : 'soft_limiter',         'deps' : [atomic_dep, libmisc_dep]},
   {'name' : 'string_utils',         'deps' : []},
-  {'name' : 'setup',                'deps' : [stdcppfs_dep, libmisc_dep]},
+  {'name' : 'setup',                'deps' : [libmisc_dep]},
   {'name' : 'support',              'deps' : [libmisc_dep]},
-  {'name' : 'drives',               'deps' : [dosbox_dep, stdcppfs_dep], 'extra_cpp': []},
-  {'name' : 'dos_files',            'deps' : [dosbox_dep, stdcppfs_dep], 'extra_cpp': []},
-  {'name' : 'shell_cmds',           'deps' : [dosbox_dep, stdcppfs_dep], 'extra_cpp': []},
+  {'name' : 'drives',               'deps' : [dosbox_dep], 'extra_cpp': []},
+  {'name' : 'dos_files',            'deps' : [dosbox_dep], 'extra_cpp': []},
+  {'name' : 'shell_cmds',           'deps' : [dosbox_dep], 'extra_cpp': []},
 ]
 
 foreach ut : unit_tests

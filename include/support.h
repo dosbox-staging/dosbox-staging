@@ -39,6 +39,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "std_filesystem.h"
+
 #ifdef _MSC_VER
 #define strcasecmp(a, b) _stricmp(a, b)
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
@@ -301,5 +303,7 @@ using FILE_unique_ptr = std::unique_ptr<FILE, FILE_closer>;
 // Opens and returns a std::unique_ptr to a FILE, which automatically closes
 // itself when it goes out of scope
 FILE_unique_ptr make_fopen(const char *fname, const char *mode);
+
+const std_fs::path &GetExecutablePath();
 
 #endif

@@ -15,6 +15,7 @@ libmisc = static_library('misc', libmisc_sources,
                          include_directories : incdir,
                          dependencies : [
                            sdl2_dep,
+                           stdcppfs_dep,
                            libloguru_dep,
                            libwhereami_dep,
                          ])
