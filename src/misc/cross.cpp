@@ -145,7 +145,24 @@ static void W32_ConfDir(std::string& in,bool create) {
 
 std::string CROSS_GetPlatformConfigDir()
 {
-	std::string conf_dir = "";
+	// Cache the result, as this doesn't change
+	static std::string conf_dir = {};
+	if (conf_dir.length())
+		return conf_dir;
+
+	// Check if a portable layout exists
+	std::string config_file;
+	Cross::GetPlatformConfigName(config_file);
+	const auto portable_conf_path = GetExecutablePath() / config_file;
+	if (std_fs::is_regular_file(portable_conf_path)) {
+		conf_dir = portable_conf_path.parent_path().string();
+		LOG_MSG("CONFIG: Using portable configuration layout in %s",
+		        conf_dir.c_str());
+		conf_dir += CROSS_FILESPLIT;
+		return conf_dir;
+	}
+
+	// Otherwise get the OS-specific configuration directory
 #ifdef WIN32
 	W32_ConfDir(conf_dir, false);
 	conf_dir += "\\DOSBox\\";

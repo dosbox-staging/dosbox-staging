@@ -90,13 +90,17 @@ AUTOMATION: Do I always have to type these commands?
     setting to "overwrite", in the [dosbox] section.  When in this mode, the
     the overwrite-order is as follows:
 
-    1. Highest priority are those command(s) provided on the command line
+    1. Highest priority are those command(s) provided on the command line.
     2. Second is the [autoexec] section from the last processed custom conf file.
-       This would be custom2, if: dosbox -conf custom1.conf -conf custom2.conf
+       This would be custom2 if: dosbox -conf custom1.conf -conf custom2.conf
     3. Third is the [autoexec] section from the local conf, ie: when
        dosbox.conf is present in the current directory
-    4. Last is the [autoexec] section from the users primary conf,
-       ie: /user/config/dosbox/dosbox-staging.conf.
+    4. Last is the [autoexec] section from the user's portable or primary conf,
+       where:
+        - The portable conf is dosbox-staging.conf that (may) reside along-side
+          the DOSBox executable.
+        - The primary conf is dosbox-staging.conf that (may) reside in the
+          user's configuration directory, which varies by operating system.
 
     This ordering of configuration files is also discussed in Section 3:
     "Command Line Parameters", and specific configuration file settings are
@@ -419,16 +423,23 @@ dosbox -opencaptures program
 
         DOSBox Staging uses a layered configuration approach, as follows:
 
-        1. The primary configuration file is loaded first, which comes
-           from the operating system's user configuration directory.
-           This can be thought of as your "global" configuration file,
-           The -noprimaryconf flag can be used in cases where you want
-           to avoid loading your primary conf file.
+        1. If a dosbox-staging.conf file is found along-side the
+           DOSBox executable, known as a portable layout, then this
+           configuration file is loaded first. In this case, the
+           executable's directory is used to load other assets such as
+           glshaders, mt32-roms, and soundfonts.
+
+           If a portable layout isn't found, the user's primary
+           configuration file is loaded from the operating system's
+           user configuration directory. This can be thought of as
+           your "global" configuration file, The -noprimaryconf flag
+           can be used in cases where you want to avoid loading your
+           primary conf file.
 
         2. Second, if the local directory contains a dosbox.conf file,
-           its settings override those previously set by your Primary file.
-           The -nolocalconf flag can be used in cases where you want to
-           avoid loading the local dosbox.conf file.
+           its settings override those previously set by your portable
+           or primary file. The -nolocalconf flag can be used in cases
+           where you want to avoid loading the local dosbox.conf file.
 
         3. Finally, custom configurations are layered on, in order,
            using one or more -conf <filename> arguments. For example:
