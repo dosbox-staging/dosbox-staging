@@ -755,7 +755,7 @@ public:
 	}
 };
 
-extern void XGA_Write(io_port_t port, uint32_t val, io_width_t width);
+extern void XGA_Write(io_port_t port, io_val_t value, io_width_t width);
 extern uint32_t XGA_Read(io_port_t port, io_width_t width);
 
 class VGA_MMIO_Handler final : public PageHandler {

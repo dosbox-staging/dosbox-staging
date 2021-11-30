@@ -123,7 +123,7 @@ public:
 			return nullptr;
 	}
 
-	void WriteControllerReg(io_port_t reg, uint16_t val, io_width_t width);
+	void WriteControllerReg(io_port_t reg, io_val_t value, io_width_t width);
 	uint16_t ReadControllerReg(io_port_t reg, io_width_t width);
 };
 

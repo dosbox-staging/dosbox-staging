@@ -1040,13 +1040,14 @@ uint32_t XGA_GetDualReg(Bit32u reg) {
 
 extern uint8_t vga_read_p3da(io_port_t port, io_width_t width);
 
-extern void vga_write_p3d4(io_port_t port, uint8_t val, io_width_t width);
+extern void vga_write_p3d4(io_port_t port, io_val_t value, io_width_t width);
 extern uint8_t vga_read_p3d4(io_port_t port, io_width_t width);
 
-extern void vga_write_p3d5(io_port_t port, uint8_t val, io_width_t width);
+extern void vga_write_p3d5(io_port_t port, io_val_t value, io_width_t width);
 extern uint8_t vga_read_p3d5(io_port_t port, io_width_t width);
 
-void XGA_Write(io_port_t port, uint32_t val, io_width_t width)
+// Writes can range from 8bit to 32bit
+void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 {
 	//	LOG_MSG("XGA: Write to port %x, val %8x, len %x", port,val, len);
 

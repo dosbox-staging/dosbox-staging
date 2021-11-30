@@ -1399,8 +1399,9 @@ uint16_t dosbox_read(io_port_t port, io_width_t width)
 	//	port, retval, len, theNE2kDevice->s.CR.pgsel,SegValue(cs),reg_eip);
 	return retval;
 }
-void dosbox_write(io_port_t port, uint16_t val, io_width_t width)
+void dosbox_write(io_port_t port, io_val_t value, io_width_t width)
 {
+  const auto val = check_cast<uint16_t>(value);
 	// LOG_MSG("ne2k wr port %x val %4x len %d page %d, CS:IP %8x:%8x",
 	//	port, val, len,theNE2kDevice->s.CR.pgsel,SegValue(cs),reg_eip);
 	const uint8_t bytes_to_write = width == io_width_t::byte ? 1 : 2;

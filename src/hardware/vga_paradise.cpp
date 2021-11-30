@@ -58,8 +58,9 @@ static void bank_setup_pvga1a() {
 	}
 }
 
-void write_p3cf_pvga1a(io_port_t reg, uint8_t val, io_width_t)
+void write_p3cf_pvga1a(io_port_t reg, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	if (pvga1a.locked() && reg >= 0x09 && reg <= 0x0e)
 		return;
 

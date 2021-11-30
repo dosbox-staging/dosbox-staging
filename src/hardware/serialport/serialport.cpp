@@ -140,8 +140,9 @@ static uint8_t SERIAL_Read(io_port_t port, io_width_t)
 #endif
 	return retval;
 }
-static void SERIAL_Write(io_port_t port, uint8_t val, io_width_t)
+static void SERIAL_Write(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	uint32_t i;
 	const uint8_t offset_type = static_cast<uint8_t>(port) & 0x7;
 	switch(port&0xff8) {

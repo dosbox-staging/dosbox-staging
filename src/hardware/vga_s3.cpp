@@ -30,8 +30,9 @@
 #include "support.h"
 #include "vga.h"
 
-void SVGA_S3_WriteCRTC(io_port_t reg, uint8_t val, io_width_t)
+void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	switch (reg) {
 	case 0x31:	/* CR31 Memory Configuration */
 //TODO Base address
@@ -450,8 +451,9 @@ uint8_t SVGA_S3_ReadCRTC(io_port_t reg, io_width_t)
 	}
 }
 
-void SVGA_S3_WriteSEQ(io_port_t reg, uint8_t val, io_width_t)
+void SVGA_S3_WriteSEQ(io_port_t reg, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	if (reg > 0x8 && vga.s3.pll.lock != 0x6)
 		return;
 

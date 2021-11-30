@@ -1645,8 +1645,9 @@ static uint8_t read_sb(io_port_t port, io_width_t)
 	return 0xff;
 }
 
-static void write_sb(io_port_t port, uint8_t val, io_width_t)
+static void write_sb(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	switch (port - sb.hw.base) {
 	case DSP_RESET: DSP_DoReset(val); break;
 	case DSP_WRITE_DATA: DSP_DoWrite(val); break;
@@ -1656,8 +1657,9 @@ static void write_sb(io_port_t port, uint8_t val, io_width_t)
 	}
 }
 
-static void adlib_gusforward(io_port_t, uint8_t val, io_width_t)
+static void adlib_gusforward(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	adlib_commandreg = (Bit8u)(val & 0xff);
 }
 

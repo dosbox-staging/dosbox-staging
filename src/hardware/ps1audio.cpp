@@ -59,10 +59,10 @@ private:
 	uint8_t ReadTimingPort203(io_port_t port, io_width_t);
 	uint8_t ReadJoystickPorts204To207(io_port_t port, io_width_t);
 
-	void WriteDataPort200(io_port_t port, uint8_t data, io_width_t);
-	void WriteControlPort202(io_port_t port, uint8_t data, io_width_t);
-	void WriteTimingPort203(io_port_t port, uint8_t data, io_width_t);
-	void WriteFifoLevelPort204(io_port_t port, uint8_t data, io_width_t);
+	void WriteDataPort200(io_port_t port, io_val_t value, io_width_t);
+	void WriteControlPort202(io_port_t port, io_val_t value, io_width_t);
+	void WriteTimingPort203(io_port_t port, io_val_t value, io_width_t);
+	void WriteFifoLevelPort204(io_port_t port, io_val_t value, io_width_t);
 
 	// Constants
 	static constexpr auto clock_rate_hz = 1000000;
@@ -177,8 +177,9 @@ void Ps1Dac::Reset(bool should_clear_adder)
 	is_new_transfer = true;
 }
 
-void Ps1Dac::WriteDataPort200(io_port_t, uint8_t data, io_width_t)
+void Ps1Dac::WriteDataPort200(io_port_t, io_val_t value, io_width_t)
 {
+	const auto data = check_cast<uint8_t>(value);
 	keep_alive_channel(last_write, channel);
 	if (is_new_transfer) {
 		is_new_transfer = false;
@@ -199,16 +200,18 @@ void Ps1Dac::WriteDataPort200(io_port_t, uint8_t data, io_width_t)
 	}
 }
 
-void Ps1Dac::WriteControlPort202(io_port_t, uint8_t data, io_width_t)
+void Ps1Dac::WriteControlPort202(io_port_t, io_val_t value, io_width_t)
 {
+	const auto data = check_cast<uint8_t>(value);
 	keep_alive_channel(last_write, channel);
 	regs.command = data;
 	if (data & 3)
 		can_trigger_irq = true;
 }
 
-void Ps1Dac::WriteTimingPort203(io_port_t, uint8_t data, io_width_t)
+void Ps1Dac::WriteTimingPort203(io_port_t, io_val_t value, io_width_t)
 {
+	auto data = check_cast<uint8_t>(value);
 	keep_alive_channel(last_write, channel);
 	// Clock divisor (maybe trigger first IRQ here).
 	regs.divisor = data;
@@ -227,8 +230,9 @@ void Ps1Dac::WriteTimingPort203(io_port_t, uint8_t data, io_width_t)
 	}
 }
 
-void Ps1Dac::WriteFifoLevelPort204(io_port_t, uint8_t data, io_width_t)
+void Ps1Dac::WriteFifoLevelPort204(io_port_t, io_val_t value, io_width_t)
 {
+	const auto data = check_cast<uint8_t>(value);
 	keep_alive_channel(last_write, channel);
 	regs.fifo_level = data;
 	if (!data)
@@ -343,7 +347,7 @@ public:
 
 private:
 	void Update(uint16_t samples);
-	void WriteSoundGeneratorPort205(io_port_t port, uint8_t data, io_width_t);
+	void WriteSoundGeneratorPort205(io_port_t port, io_val_t, io_width_t);
 
 	mixer_channel_t channel = nullptr;
 	IO_WriteHandleObject write_handler = {};
@@ -368,8 +372,9 @@ Ps1Synth::Ps1Synth() : device(machine_config(), 0, 0, clock_rate_hz)
 	last_write = 0;
 }
 
-void Ps1Synth::WriteSoundGeneratorPort205(io_port_t, uint8_t data, io_width_t)
+void Ps1Synth::WriteSoundGeneratorPort205(io_port_t, io_val_t value, io_width_t)
 {
+	const auto data = check_cast<uint8_t>(value);
 	keep_alive_channel(last_write, channel);
 	device.write(data);
 }

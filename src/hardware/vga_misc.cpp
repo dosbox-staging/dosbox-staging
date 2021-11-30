@@ -23,9 +23,9 @@
 #include "vga.h"
 #include <math.h>
 
-void vga_write_p3d4(io_port_t port, uint8_t val, io_width_t);
+void vga_write_p3d4(io_port_t port, io_val_t value, io_width_t);
 uint8_t vga_read_p3d4(io_port_t port, io_width_t);
-void vga_write_p3d5(io_port_t port, uint8_t val, io_width_t);
+void vga_write_p3d5(io_port_t port, io_val_t value, io_width_t);
 uint8_t vga_read_p3d5(io_port_t port, io_width_t);
 
 uint8_t vga_read_p3da(io_port_t, io_width_t)
@@ -55,8 +55,9 @@ uint8_t vga_read_p3da(io_port_t, io_width_t)
 	return retval;
 }
 
-static void write_p3c2(io_port_t, uint8_t val, io_width_t)
+static void write_p3c2(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	vga.misc_output = val;
 
 	const io_port_t base = (val & 0x1) ? 0x3d0 : 0x3b0;

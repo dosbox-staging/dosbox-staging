@@ -598,8 +598,9 @@ uint8_t Module::CtrlRead(void)
 	return 0xff;
 }
 
-void Module::PortWrite(io_port_t port, uint8_t val, io_width_t)
+void Module::PortWrite(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	// Keep track of last write time
 	lastUsed = PIC_Ticks;
 	//Maybe only enable with a keyon?
@@ -884,8 +885,9 @@ Module::Module(Section *configuration)
 	const auto write_to = std::bind(&Module::PortWrite, this, _1, _2, _3);
 
 	// 0x388 range
-	WriteHandler[0].Install(0x388, write_to, io_width_t::byte, 4);
-	ReadHandler[0].Install(0x388, read_from, io_width_t::byte, 4);
+	constexpr io_port_t port_0x388 = 0x388;
+	WriteHandler[0].Install(port_0x388, write_to, io_width_t::byte, 4);
+	ReadHandler[0].Install(port_0x388, read_from, io_width_t::byte, 4);
 	// 0x220 range
 	if (!single) {
 		WriteHandler[1].Install(base, write_to, io_width_t::byte, 4);

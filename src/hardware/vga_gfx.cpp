@@ -24,8 +24,9 @@
 #define gfx(blah) vga.gfx.blah
 static bool index9warned=false;
 
-static void write_p3ce(io_port_t, uint8_t val, io_width_t)
+static void write_p3ce(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	gfx(index) = val & 0x0f;
 }
 
@@ -34,8 +35,9 @@ static uint8_t read_p3ce(io_port_t, io_width_t)
 	return gfx(index);
 }
 
-static void write_p3cf(io_port_t, uint8_t val, io_width_t)
+static void write_p3cf(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	switch (gfx(index)) {
 	case 0:	/* Set/Reset Register */
 		gfx(set_reset)=val & 0x0f;

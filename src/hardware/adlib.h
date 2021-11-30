@@ -186,7 +186,7 @@ public:
 	Chip	chip[2];
 
 	//Handle port writes
-	void PortWrite(io_port_t port, uint8_t val, io_width_t width);
+	void PortWrite(io_port_t port, io_val_t value, io_width_t width);
 	uint8_t PortRead(io_port_t port, io_width_t width);
 	void Init(Mode m);
 

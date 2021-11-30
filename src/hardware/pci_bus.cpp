@@ -44,7 +44,7 @@ static PCI_Device* pci_devices[PCI_MAX_PCIDEVICES];		// registered PCI devices
 // 10- 8 - subfunction number	(0x00000700)
 //  7- 2 - config register #	(0x000000fc)
 
-static void write_pci_addr(io_port_t port, uint32_t val, io_width_t)
+static void write_pci_addr(io_port_t port, io_val_t val, io_width_t)
 {
 	LOG(LOG_PCI, LOG_NORMAL)("Write PCI address :=%x", val);
 	pci_caddress = val;
@@ -71,10 +71,11 @@ static void write_pci_register(PCI_Device* dev,Bit8u regnum,Bit8u value) {
 		pci_cfg_data[dev->PCIId()][dev->PCISubfunction()][regnum]=(Bit8u)(parsed_register&0xff);
 }
 
-static void write_pci(io_port_t port, uint8_t val, io_width_t width)
+static void write_pci(io_port_t port, io_val_t value, io_width_t width)
 {
 	// write_pci is only ever registered as an 8-bit handler, despite appearing to handle up to 32-bit
 	// requests. Let's check that.
+	const auto val = check_cast<uint8_t>(value);
 	assert(width == io_width_t::byte);
 
 	LOG(LOG_PCI, LOG_NORMAL)("Write PCI data :=%x (io_width=%d)", port, val, static_cast<int>(width));

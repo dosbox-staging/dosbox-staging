@@ -32,10 +32,11 @@
 void VGA_MapMMIO(void);
 void VGA_UnmapMMIO(void);
 
-void vga_write_p3d5(io_port_t port, uint8_t val, io_width_t);
+void vga_write_p3d5(io_port_t port, io_val_t value, io_width_t);
 
-void vga_write_p3d4(io_port_t, uint8_t val, io_width_t)
+void vga_write_p3d4(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	crtc(index) = val;
 }
 
@@ -44,8 +45,9 @@ uint8_t vga_read_p3d4(io_port_t, io_width_t)
 	return crtc(index);
 }
 
-void vga_write_p3d5(io_port_t, uint8_t val, io_width_t)
+void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	//	if (crtc(index) > 0x18) LOG_MSG("VGA CRCT write %" sBitfs(X) " to reg %X",val,crtc(index));
 	switch (crtc(index)) {
 	case 0x00: /* Horizontal Total Register */

@@ -66,8 +66,9 @@ static SVGA_ET4K_DATA et4k = { 1,0,0,0,0,0,0,0,0, 0,0, 0,0,
 		return et4k.store_##port##_##index;
 
 // Tseng ET4K implementation
-void write_p3d5_et4k(io_port_t reg, uint8_t val, io_width_t)
+void write_p3d5_et4k(io_port_t reg, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	if (!et4k.extensionsEnabled && reg != 0x33)
 		return;
 
@@ -201,8 +202,9 @@ uint8_t read_p3d5_et4k(io_port_t reg, io_width_t)
 	return 0x0;
 }
 
-void write_p3c5_et4k(io_port_t reg, uint8_t val, io_width_t)
+void write_p3c5_et4k(io_port_t reg, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	switch (reg) {
 		/*
 		3C4h index  6  (R/W): TS State Control
@@ -239,8 +241,9 @@ uint8_t read_p3c5_et4k(io_port_t reg, io_width_t)
 bit 0-3  64k Write bank number (0..15)
     4-7  64k Read bank number (0..15)
 */
-void write_p3cd_et4k(io_port_t, uint8_t val, io_width_t)
+void write_p3cd_et4k(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	vga.svga.bank_write = val & 0x0f;
 	vga.svga.bank_read = (val >> 4) & 0x0f;
 	VGA_SetupHandlers();
@@ -251,8 +254,9 @@ uint8_t read_p3cd_et4k(io_port_t, io_width_t)
 	return (vga.svga.bank_read << 4) | vga.svga.bank_write;
 }
 
-void write_p3c0_et4k(io_port_t reg, uint8_t val, io_width_t)
+void write_p3c0_et4k(io_port_t reg, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	switch (reg) {
 		// 3c0 index 16h: ATC Miscellaneous
 		// VGADOC provides a lot of information, Ferarro documents only two bits
@@ -503,8 +507,9 @@ static SVGA_ET3K_DATA et3k = { 0,0,0,0,0,0,0,0,0,0, 0,0, 0,0, {0,0,0,0,0,0,0,0},
 	case 0x##index: \
 		return et3k.store_##port##_##index;
 
-void write_p3d5_et3k(io_port_t reg, uint8_t val, io_width_t)
+void write_p3d5_et3k(io_port_t reg, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	switch (reg) {
 		// 3d4 index 1bh-21h: Hardware zoom control registers
 		// I am not sure if there was a piece of software that used these.
@@ -602,8 +607,9 @@ uint8_t read_p3d5_et3k(io_port_t reg, io_width_t)
 	return 0x0;
 }
 
-void write_p3c5_et3k(io_port_t reg, uint8_t val, io_width_t)
+void write_p3c5_et3k(io_port_t reg, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	switch (reg) {
 		// Both registers deal mostly with hardware zoom which is not implemented. Other bits
 		// seem to be useless for emulation with the exception of index 7 bit 4 (font select)
@@ -635,8 +641,9 @@ bit 0-2  64k Write bank number
            2  1M linear memory
 NOTES: 1M linear memory is not supported
 */
-void write_p3cd_et3k(io_port_t, uint8_t val, io_width_t)
+void write_p3cd_et3k(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	vga.svga.bank_write = val & 0x07;
 	vga.svga.bank_read = (val>>3) & 0x07;
 	vga.svga.bank_size = (val&0x40)?64*1024:128*1024;
@@ -648,8 +655,9 @@ uint8_t read_p3cd_et3k(io_port_t, io_width_t)
 	return (vga.svga.bank_read << 3) | vga.svga.bank_write | ((vga.svga.bank_size == 128 * 1024) ? 0 : 0x40);
 }
 
-void write_p3c0_et3k(io_port_t reg, uint8_t val, io_width_t)
+void write_p3c0_et3k(io_port_t reg, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	// See ET4K notes.
 	switch (reg) {
 		STORE_ET3K(3c0, 16);
