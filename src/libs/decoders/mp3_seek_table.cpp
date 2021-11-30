@@ -85,7 +85,12 @@
 // Local headers
 #include "support.h"
 
-#define XXH_INLINE_ALL
+#define XXH_INLINE_ALL 1
+#define XXH_NO_INLINE_HINTS 1
+#define XXH_STATIC_LINKING_ONLY 1
+#if !defined(NDEBUG)
+    #define XXH_DEBUGLEVEL 1
+#endif
 #include "xxhash.h"
 
 // C++ scope modifiers
