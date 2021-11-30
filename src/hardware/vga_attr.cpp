@@ -99,8 +99,9 @@ uint8_t read_p3c0(io_port_t, io_width_t)
 	return retval;
 }
 
-void write_p3c0(io_port_t, uint8_t val, io_width_t)
+void write_p3c0(io_port_t, io_val_t value, io_width_t)
 {
+	auto val = check_cast<uint8_t>(value);
 	if (!vga.internal.attrindex) {
 		attr(index)=val & 0x1F;
 		vga.internal.attrindex=true;

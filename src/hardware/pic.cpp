@@ -203,9 +203,11 @@ static struct {
 	PICEntry * next_entry;
 } pic_queue;
 
-static void write_command(io_port_t port, uint8_t val, io_width_t)
+static void write_command(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	PIC_Controller *pic = &pics[port == 0x20 ? 0 : 1];
+
 
 	if (GCC_UNLIKELY(val&0x10)) {		// ICW1 issued
 		if (val&0x04) E_Exit("PIC: 4 byte interval not handled");
@@ -256,8 +258,9 @@ static void write_command(io_port_t port, uint8_t val, io_width_t)
 	}	// end OCW2
 }
 
-static void write_data(io_port_t port, uint8_t val, io_width_t)
+static void write_data(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	PIC_Controller *pic = &pics[port == 0x21 ? 0 : 1];
 	switch (pic->icw_index) {
 	case 0: /* mask register */ pic->set_imr(val); break;

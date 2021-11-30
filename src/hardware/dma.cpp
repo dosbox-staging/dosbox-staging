@@ -108,8 +108,9 @@ bool SecondDMAControllerAvailable(void) {
 	else return false;
 }
 
-static void DMA_Write_Port(io_port_t port, uint16_t val, io_width_t)
+static void DMA_Write_Port(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint16_t>(value);
 	// LOG(LOG_DMACONTROL,LOG_ERROR)("Write %" sBitfs(X) " %" sBitfs(X),port,val);
 	if (port < 0x10) {
 		/* write to the first DMA controller (channels 0-3) */
@@ -157,8 +158,9 @@ static uint16_t DMA_Read_Port(io_port_t port, io_width_t width)
 	return 0;
 }
 
-void DmaController::WriteControllerReg(io_port_t reg, uint16_t val, io_width_t)
+void DmaController::WriteControllerReg(io_port_t reg, io_val_t value, io_width_t)
 {
+	auto val = check_cast<uint16_t>(value);
 	DmaChannel *chan = nullptr;
 	switch (reg) {
 	/* set base address of DMA transfer (1st byte low part, 2nd byte high part) */
@@ -377,15 +379,18 @@ public:
 		else
 			DmaControllers[1] = nullptr;
 
-		for (uint8_t i = 0; i < 0x10; ++i) {
+		for (io_port_t i = 0; i < 0x10; ++i) {
 			const io_width_t width = (i < 8) ? io_width_t::word : io_width_t::byte;
 			/* install handler for first DMA controller ports */
 			DmaControllers[0]->DMA_WriteHandler[i].Install(i, DMA_Write_Port, width);
 			DmaControllers[0]->DMA_ReadHandler[i].Install(i, DMA_Read_Port, width);
 			if (IS_EGAVGA_ARCH) {
 				/* install handler for second DMA controller ports */
-				DmaControllers[1]->DMA_WriteHandler[i].Install(0xc0 + i * 2, DMA_Write_Port, width);
-				DmaControllers[1]->DMA_ReadHandler[i].Install(0xc0 + i * 2, DMA_Read_Port, width);
+				const auto dma_port = static_cast<io_port_t>(0xc0 + i * 2);
+				DmaControllers[1]->DMA_WriteHandler[i].Install(dma_port,
+				                                               DMA_Write_Port, width);
+				DmaControllers[1]->DMA_ReadHandler[i].Install(dma_port,
+				                                              DMA_Read_Port, width);
 			}
 		}
 		/* install handlers for ports 0x81-0x83,0x87 (on the first DMA controller) */

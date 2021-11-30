@@ -74,14 +74,16 @@ static void cmos_checktimer(void) {
 	// Status reg A reading with this (and with other delays actually)
 }
 
-void cmos_selreg(io_port_t, uint8_t val, io_width_t)
+void cmos_selreg(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	cmos.reg = val & 0x3f;
 	cmos.nmi = (val & 0x80) > 0;
 }
 
-static void cmos_writereg(io_port_t, uint8_t val, io_width_t)
+static void cmos_writereg(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	switch (cmos.reg) {
 	case 0x00:		/* Seconds */
 	case 0x02:		/* Minutes */
@@ -294,17 +296,24 @@ private:
 	IO_WriteHandleObject WriteHandler[2];
 public:
 	CMOS(Section* configuration):Module_base(configuration){
-		WriteHandler[0].Install(0x70, cmos_selreg, io_width_t::byte);
-		WriteHandler[1].Install(0x71, cmos_writereg, io_width_t::byte);
-		ReadHandler[0].Install(0x71, cmos_readreg, io_width_t::byte);
+		constexpr io_port_t port_0x70 = 0x70;
+		constexpr io_port_t port_0x71 = 0x71;
+
+		WriteHandler[0].Install(port_0x70, cmos_selreg, io_width_t::byte);
+		WriteHandler[1].Install(port_0x71, cmos_writereg, io_width_t::byte);
+		ReadHandler[0].Install(port_0x71, cmos_readreg, io_width_t::byte);
 		cmos.timer.enabled = false;
 		cmos.timer.acknowledged = true;
 		cmos.reg = 0xa;
-		cmos_writereg(0x71, 0x26, io_width_t::byte);
+		cmos_writereg(port_0x71, 0x26, io_width_t::byte);
 		cmos.reg = 0xb;
-		cmos_writereg(0x71, 0x2, io_width_t::byte); // Struct tm *loctime is of 24 hour format,
+		cmos_writereg(port_0x71, 0x2, io_width_t::byte); // Struct tm
+		                                                 // *loctime is
+		                                                 // of 24 hour
+		                                                 // format,
 		cmos.reg = 0xd;
-		cmos_writereg(0x71, 0x80, io_width_t::byte); /* RTC power on */
+		cmos_writereg(port_0x71, 0x80, io_width_t::byte); /* RTC power
+		                                                     on */
 		// Equipment is updated from bios.cpp and bios_disk.cpp
 		/* Fill in base memory size, it is 640K always */
 		cmos.regs[0x15]=(Bit8u)0x80;

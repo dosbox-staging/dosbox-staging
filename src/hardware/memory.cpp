@@ -17,14 +17,15 @@
  */
 
 
-#include "dosbox.h"
 #include "mem.h"
+
+#include <string.h>
+
 #include "inout.h"
 #include "setup.h"
 #include "paging.h"
 #include "regs.h"
-
-#include <string.h>
+#include "support.h"
 
 #define PAGES_IN_BLOCK	((1024*1024)/MEM_PAGE_SIZE)
 #define SAFE_MEMORY	32
@@ -532,8 +533,9 @@ void mem_writed(PhysPt address,Bit32u val) {
 	mem_writed_inline(address,val);
 }
 
-static void write_p92(io_port_t, uint8_t val, io_width_t)
+static void write_p92(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	// Bit 0 = system reset (switch back to real mode)
 	if (val&1) E_Exit("XMS: CPU reset via port 0x92 not supported.");
 	memory.a20.controlport = val & ~2;

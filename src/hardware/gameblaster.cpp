@@ -38,11 +38,13 @@ constexpr uint32_t GAMEBLASTER_CLOCK_HZ = 7159090;
 static mixer_channel_t cms_chan;
 //Timer to disable the channel after a while
 static Bit32u lastWriteTicks;
-static uint16_t cmsBase;
+static io_port_t cmsBase;
 static saa1099_device* device[2];
 
-static void write_cms(io_port_t port, uint8_t val, io_width_t)
+static void write_cms(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
+
 	if (cms_chan && (!cms_chan->is_enabled))
 		cms_chan->Enable(true);
 	lastWriteTicks = PIC_Ticks;
@@ -98,8 +100,9 @@ static void CMS_CallBack(Bitu len) {
 // The Gameblaster detection
 static Bit8u cms_detect_register = 0xff;
 
-static void write_cms_detect(io_port_t port, uint8_t val, io_width_t)
+static void write_cms_detect(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	switch (port - cmsBase) {
 	case 0x6:
 	case 0x7:
@@ -134,7 +137,7 @@ public:
 	{
 		Section_prop * section = static_cast<Section_prop *>(configuration);
 		Bitu sampleRate = section->Get_int( "oplrate" );
-		cmsBase = static_cast<uint16_t>(section->Get_hex("sbbase"));
+		cmsBase = static_cast<io_port_t>(section->Get_hex("sbbase"));
 		WriteHandler.Install(cmsBase, write_cms, io_width_t::byte, 4);
 
 		// A standalone Gameblaster has a magic chip on it which is

@@ -86,8 +86,9 @@ static void VGA_DAC_UpdateColor(uint16_t index)
 	VGA_DAC_SendColor(static_cast<uint8_t>(index), static_cast<uint8_t>(maskIndex));
 }
 
-static void write_p3c6(io_port_t, uint8_t val, io_width_t)
+static void write_p3c6(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	if (vga.dac.pel_mask != val) {
 		LOG(LOG_VGAMISC, LOG_NORMAL)("VGA:DCA:Pel Mask set to %X", val);
 		vga.dac.pel_mask = val;
@@ -101,8 +102,9 @@ static uint8_t read_p3c6(io_port_t, io_width_t)
 	return vga.dac.pel_mask;
 }
 
-static void write_p3c7(io_port_t, uint8_t val, io_width_t)
+static void write_p3c7(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	vga.dac.read_index = val;
 	vga.dac.pel_index = 0;
 	vga.dac.state = DAC_READ;
@@ -117,8 +119,9 @@ static uint8_t read_p3c7(io_port_t, io_width_t)
 		return 0x0;
 }
 
-static void write_p3c8(io_port_t, uint8_t val, io_width_t)
+static void write_p3c8(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	vga.dac.write_index = val;
 	vga.dac.pel_index = 0;
 	vga.dac.state = DAC_WRITE;
@@ -130,8 +133,9 @@ static uint8_t read_p3c8(Bitu, io_width_t)
 	return vga.dac.write_index;
 }
 
-static void write_p3c9(io_port_t, uint8_t val, io_width_t)
+static void write_p3c9(io_port_t, io_val_t value, io_width_t)
 {
+	auto val = check_cast<uint8_t>(value);
 	val &= 0x3f;
 	switch (vga.dac.pel_index) {
 	case 0:

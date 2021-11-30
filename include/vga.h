@@ -525,7 +525,7 @@ struct VGA_ModeExtraData {
 };
 
 // Vector function prototypes
-typedef void (*tWritePort)(io_port_t reg, uint8_t val, io_width_t width);
+typedef void (*tWritePort)(io_port_t reg, io_val_t value, io_width_t width);
 typedef uint8_t (*tReadPort)(io_port_t reg, io_width_t width);
 typedef void (*tFinishSetMode)(io_port_t crtc_base, VGA_ModeExtraData *modeData);
 typedef void (*tDetermineMode)();

@@ -124,8 +124,9 @@ static ncr8496_device device_ncr8496(machine_config(), 0, 0, SOUND_CLOCK);
 static sn76496_base_device* activeDevice = &device_ncr8496;
 #define device (*activeDevice)
 
-static void SN76496Write(io_port_t, uint8_t data, io_width_t)
+static void SN76496Write(io_port_t, io_val_t value, io_width_t)
 {
+	const auto data = check_cast<uint8_t>(value);
 	tandy.last_write = PIC_Ticks;
 	if (!tandy.enabled && tandy.chan) {
 		tandy.chan->Enable(true);
@@ -227,8 +228,9 @@ static void TandyDACDMAEnabled()
 static void TandyDACDMADisabled()
 {}
 
-static void TandyDACWrite(io_port_t port, uint8_t data, io_width_t)
+static void TandyDACWrite(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto data = check_cast<uint8_t>(value);
 	switch (port) {
 	case 0xc4: {
 		Bitu oldmode = tandy.dac.mode;

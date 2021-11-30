@@ -32,8 +32,9 @@
 #include "support.h"
 #include "vga.h"
 
-static void write_crtc_index_other(io_port_t, uint8_t val, io_width_t)
+static void write_crtc_index_other(io_port_t, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	// only receives 8-bit data per its IO port registration
 	vga.other.index = val;
 }
@@ -44,9 +45,10 @@ static uint8_t read_crtc_index_other(io_port_t, io_width_t)
 	return vga.other.index;
 }
 
-static void write_crtc_data_other(io_port_t, uint8_t val, io_width_t)
+static void write_crtc_data_other(io_port_t, io_val_t value, io_width_t)
 {
 	// only receives 8-bit data per its IO port registration
+	auto val = check_cast<uint8_t>(value);
 
 	switch (vga.other.index) {
 	case 0x00:		//Horizontal total
@@ -176,7 +178,7 @@ static uint8_t read_crtc_data_other(io_port_t, io_width_t)
 	return static_cast<uint8_t>(~0);
 }
 
-static void write_lightpen(io_port_t port, uint8_t /*val*/, io_width_t)
+static void write_lightpen(io_port_t port, io_val_t, io_width_t)
 {
 	// only receives 8-bit data per its IO port registration
 	switch (port) {
@@ -797,8 +799,9 @@ static void write_cga_color_select(uint8_t val)
 	}
 }
 
-static void write_cga(io_port_t port, uint8_t val, io_width_t)
+static void write_cga(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	// only receives 8-bit data per its IO port registration
 	switch (port) {
 	case 0x3d8:
@@ -1087,8 +1090,9 @@ static void write_tandy_reg(uint8_t val)
 	}
 }
 
-static void write_tandy(io_port_t port, uint8_t val, io_width_t)
+static void write_tandy(io_port_t port, io_val_t value, io_width_t)
 {
+	auto val = check_cast<uint8_t>(value);
 	// only receives 8-bit data per its IO port registration
 	switch (port) {
 	case 0x3d8:
@@ -1137,9 +1141,10 @@ static void write_tandy(io_port_t port, uint8_t val, io_width_t)
 	}
 }
 
-static void write_pcjr(io_port_t port, uint8_t val, io_width_t)
+static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 {
 	// only receives 8-bit data per its IO port registration
+	const auto val = check_cast<uint8_t>(value);
 	switch (port) {
 	case 0x3da:
 		if (vga.tandy.pcjr_flipflop)
@@ -1273,8 +1278,9 @@ void Herc_Palette()
 	}
 }
 
-static void write_hercules(io_port_t port, uint8_t val, io_width_t)
+static void write_hercules(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	switch (port) {
 	case 0x3b8: {
 		// the protected bits can always be cleared but only be set if the

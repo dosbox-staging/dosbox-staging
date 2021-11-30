@@ -250,7 +250,7 @@ private:
 	void UpdateDmaAddress(uint8_t new_address);
 	void UpdateWaveMsw(int32_t &addr) const noexcept;
 	void UpdateWaveLsw(int32_t &addr) const noexcept;
-	void WriteToPort(io_port_t port, uint16_t val, io_width_t width);
+	void WriteToPort(io_port_t port, io_val_t value, io_width_t width);
 
 	void WriteToRegister();
 
@@ -278,7 +278,7 @@ private:
 	uint8_t &adlib_command_reg = adlib_commandreg;
 
 	// Port address
-	uint16_t port_base = 0u;
+	io_port_t port_base = 0u;
 
 	// Voice states
 	uint32_t active_voice_mask = 0u;
@@ -1190,8 +1190,10 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 #endif
 }
 
-void Gus::WriteToPort(io_port_t port, uint16_t val, io_width_t width)
+void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 {
+	const auto val = check_cast<uint16_t>(value);
+
 	//	LOG_MSG("GUS: Write to port %x val %x", port, val);
 	switch (port - port_base) {
 	case 0x200:

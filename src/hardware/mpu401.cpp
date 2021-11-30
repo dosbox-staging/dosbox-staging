@@ -43,7 +43,7 @@ constexpr double MPU401_RESETBUSY = 14.0;
 enum MpuMode { M_UART, M_INTELLIGENT };
 enum MpuDataType { T_OVERFLOW, T_MARK, T_MIDI_SYS, T_MIDI_NORM, T_COMMAND };
 
-static void MPU401_WriteData(io_port_t port, uint8_t val, io_width_t);
+static void MPU401_WriteData(io_port_t port, io_val_t value, io_width_t);
 
 // Messages sent to MPU-401 from host
 constexpr uint8_t MSG_EOX = 0xf7;
@@ -132,8 +132,9 @@ static uint8_t MPU401_ReadStatus(io_port_t, io_width_t)
 	return ret;
 }
 
-static void MPU401_WriteCommand(io_port_t, const uint8_t val, io_width_t)
+static void MPU401_WriteCommand(io_port_t, const io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
 	if (mpu.mode == M_UART && val != 0xff)
 		return;
 	if (mpu.state.reset) {
@@ -341,8 +342,9 @@ static uint8_t MPU401_ReadData(io_port_t, io_width_t)
 	return ret;
 }
 
-static void MPU401_WriteData(io_port_t, uint8_t val, io_width_t)
+static void MPU401_WriteData(io_port_t, io_val_t value, io_width_t)
 {
+	auto val = check_cast<uint8_t>(value);
 	if (mpu.mode == M_UART) {
 		MIDI_RawOutByte(val);
 		return;
@@ -748,11 +750,13 @@ public:
 		// Enabled and there is a Midi
 		installed = true;
 
-		WriteHandler[0].Install(0x330, &MPU401_WriteData, io_width_t::byte);
-		WriteHandler[1].Install(0x331, &MPU401_WriteCommand,
-		                        io_width_t::byte);
-		ReadHandler[0].Install(0x330, &MPU401_ReadData, io_width_t::byte);
-		ReadHandler[1].Install(0x331, &MPU401_ReadStatus, io_width_t::byte);
+		constexpr io_port_t port_0x330 = 0x330;
+		constexpr io_port_t port_0x331 = 0x331;
+
+		WriteHandler[0].Install(port_0x330, &MPU401_WriteData, io_width_t::byte);
+		WriteHandler[1].Install(port_0x331, &MPU401_WriteCommand, io_width_t::byte);
+		ReadHandler[0].Install(port_0x330, &MPU401_ReadData, io_width_t::byte);
+		ReadHandler[1].Install(port_0x331, &MPU401_ReadStatus, io_width_t::byte);
 
 		mpu.queue_used = 0;
 		mpu.queue_pos = 0;

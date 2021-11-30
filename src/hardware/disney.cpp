@@ -26,6 +26,7 @@
 #include "mixer.h"
 #include "pic.h"
 #include "setup.h"
+#include "support.h"
 
 // Disney Sound Source Constants
 constexpr uint16_t DISNEY_BASE = 0x0378;
@@ -180,8 +181,10 @@ static void DISNEY_analyze(Bitu channel){
 	}
 }
 
-static void disney_write(io_port_t port, uint8_t val, io_width_t)
+static void disney_write(io_port_t port, io_val_t value, io_width_t)
 {
+	const auto val = check_cast<uint8_t>(value);
+
 	// LOG_MSG("write disney time %f addr%x val %x",PIC_FullIndex(),port,val);
 	disney.last_used = PIC_Ticks;
 	switch (port - DISNEY_BASE) {

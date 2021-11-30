@@ -52,7 +52,7 @@ private:
 	uint16_t GetRemainingSamples();
 	void MixerCallBack(uint16_t requested_samples);
 	uint8_t ReadFromPort(io_port_t port, io_width_t width);
-	void WriteToPort(io_port_t port, uint8_t data, io_width_t width);
+	void WriteToPort(io_port_t port, io_val_t value, io_width_t width);
 
 	// Managed objects
 	mixer_channel_t channel = nullptr;
@@ -70,7 +70,7 @@ private:
 	std::atomic_bool keep_rendering = {};
 
 	// Scalar members
-	uint16_t base_port = 0;
+	io_port_t base_port = 0;
 	double chip_clock = 0;
 	double sid_sample_rate = 0;
 	size_t last_used = 0;
