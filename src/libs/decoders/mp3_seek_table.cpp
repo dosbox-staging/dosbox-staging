@@ -138,46 +138,57 @@ uint64_t calculate_stream_hash(struct SDL_RWops* const context) {
 
     // Seek to the end of the file so we can calculate the stream size.
     SDL_RWseek(context, 0, RW_SEEK_END);
-    const auto stream_size = SDL_RWtell(context);
-    if (stream_size <= 0) {
-        // LOG_MSG("MP3: get_stream_size returned %d, but should be positive", stream_size);
+    const auto end_pos = SDL_RWtell(context);
+    SDL_RWseek(context, original_pos, RW_SEEK_SET); // restore position
+
+    // Check if we can trust the end position as the stream size
+    if (end_pos <= 0)
+        return 0;
+    const auto stream_size = static_cast<size_t>(end_pos);
+
+    // create a hash state
+    const auto state = XXH64_createState();
+    if (!state)
+        return 0;
+
+    // Initialize state seeded with our total stream size
+    const auto seed = static_cast<XXH64_hash_t>(stream_size);
+    if (XXH64_reset(state, seed) == XXH_ERROR) {
+        XXH64_freeState(state);
         return 0;
     }
 
-    // Seek prior to the last 32 KiB (or less) in the file
-    const auto bytes_to_hash = std::min(stream_size, static_cast<Sint64>(32768));
-    SDL_RWseek(context, stream_size - bytes_to_hash, RW_SEEK_SET);
-
-    // Prepare our read buffer and counter:
+    // Setup counters and read buffer
+    XXH64_hash_t hash = 0;
+    size_t current_bytes_read = 0;
+    size_t total_bytes_read = 0;
+    auto hash_state = XXH_OK;
     vector<char> buffer(1024, 0);
-    int total_bytes_read = 0;
 
-    // Initialize xxHash's state using the stream_size as our seed.  Seeding with the
-    // stream_size provides a second level of uniqueness in the unlikely scenario that
-    // two files of different length happen to have the same trailing data. The different
-    // seeds will produce unique hashes.
-    XXH64_state_t* const state = XXH64_createState();
-    assert(state);
-    XXH64_reset(state, static_cast<XXH64_hash_t>(stream_size));
+    // Seek prior to the last 32 KiB (or less) in the file, which is what we'll hash
+    const auto bytes_to_hash = std::min(static_cast<size_t>(32768u), stream_size);
+    const auto pos_to_hash_from = static_cast<Sint64>(stream_size - bytes_to_hash);
+    SDL_RWseek(context, pos_to_hash_from, RW_SEEK_SET);
+    assert(SDL_RWtell(context) == pos_to_hash_from);
 
-    while (total_bytes_read < bytes_to_hash) {
-        // Read a chunk of data.
-        const auto bytes_read = SDL_RWread(context, buffer.data(), 1, buffer.size());
-
-        if (bytes_read != 0) {
-            // Update our hash if we read data.
-            XXH64_update(state, buffer.data(), bytes_read);
-            total_bytes_read += bytes_read;
-        } else {
-            break;
-        }
+    // Feed the state with input data, any size, any number of times
+    do {
+        current_bytes_read = SDL_RWread(context, buffer.data(), 1, buffer.size());
+        total_bytes_read += current_bytes_read;
+        hash_state = XXH64_update(state, buffer.data(), current_bytes_read);
     }
+    while (current_bytes_read
+           && total_bytes_read < bytes_to_hash
+           && hash_state == XXH_OK);
 
-    // restore the stream position
-    SDL_RWseek(context, original_pos, RW_SEEK_SET);
-
-    const auto hash = XXH64_digest(state);
+    // Finalize the hash and clean it up
+    hash = XXH64_digest(state);
     XXH64_freeState(state);
+
+    // restore the stream position and cleanup the hash
+    SDL_RWseek(context, original_pos, RW_SEEK_SET);
+    assert(SDL_RWtell(context) == original_pos);
+
     return hash;
 }
 
