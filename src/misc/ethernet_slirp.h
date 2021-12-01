@@ -50,9 +50,10 @@
  * time is right.
  */
 struct slirp_timer {
-	int64_t expires; /*!< When to fire the callback, in nanoseconds */
-	SlirpTimerCb cb; /*!< The callback to fire */
-	void *cb_opaque; /*!< Data libslirp wants us to pass to the callback */
+	int64_t expires = 0;  /*!< When to fire the callback, in nanoseconds */
+	SlirpTimerCb cb = {}; /*!< The callback to fire */
+	void *cb_opaque = nullptr; /*!< Data libslirp wants us to pass to the
+	                              callback */
 };
 
 /** A libslirp-based Ethernet connection
@@ -98,9 +99,9 @@ private:
 	bool PollsPoll(uint32_t timeout_ms);
 
 	Slirp *slirp = nullptr;        /*!< Handle to libslirp */
-	SlirpConfig config = {0};      /*!< Configuration passed to libslirp */
-	SlirpCb slirp_callbacks = {0}; /*!< Callbacks used by libslirp */
-	std::list<struct slirp_timer *> timers; /*!< Stored timers */
+	SlirpConfig config = {};       /*!< Configuration passed to libslirp */
+	SlirpCb slirp_callbacks = {};  /*!< Callbacks used by libslirp */
+	std::list<struct slirp_timer *> timers = {}; /*!< Stored timers */
 
 	/** The GetPacket callback
 	 * When libslirp has a new packet for us it calls ReceivePacket,
@@ -110,16 +111,16 @@ private:
 	 * This might seem racy, but keep in mind we control when
 	 * libslirp sends us packets via our polling system.
 	 */
-	std::function<void(const uint8_t *, int)> get_packet_callback;
+	std::function<void(const uint8_t *, int)> get_packet_callback = nullptr;
 
-	std::list<int> registered_fds; /*!< File descriptors to watch */
+	std::list<int> registered_fds = {}; /*!< File descriptors to watch */
 
 #ifndef WIN32
-	std::vector<struct pollfd> polls; /*!< Descriptors for poll() */
+	std::vector<struct pollfd> polls = {}; /*!< Descriptors for poll() */
 #else
-	fd_set readfds;   /*!< Read descriptors for select() */
-	fd_set writefds;  /*!< Write descriptors for select() */
-	fd_set exceptfds; /*!< Exceptional descriptors for select() */
+	fd_set readfds = {};   /*!< Read descriptors for select() */
+	fd_set writefds = {};  /*!< Write descriptors for select() */
+	fd_set exceptfds = {}; /*!< Exceptional descriptors for select() */
 #endif
 };
 
