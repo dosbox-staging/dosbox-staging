@@ -8,6 +8,8 @@ set -euo pipefail
 
 VERSION="0.78.0-alpha"
 
+PACKAGED_BUILD="build/lang"
+
 LNG_DIR="contrib/translations"
 
 EN_LANG_PATH="$LNG_DIR/en/en_US.lng"
@@ -15,6 +17,31 @@ EN_LANG_PATH="$LNG_DIR/en/en_US.lng"
 OUTPUT_DIR="$LNG_DIR/utf-8"
 
 cd "$(git rev-parse --show-toplevel)" || exit
+
+check_package() {
+	if [[ -d "$PACKAGED_BUILD" ]]; then
+		return 0
+	fi
+	echo "Perform the following steps to build Staging statically"
+	echo "and package it into the 'build/lang' directory:"
+	echo ""
+	echo "  1. cd $(git rev-parse --show-toplevel)"
+	echo ""
+	echo "  2. meson setup --wrap-mode=forcefallback -Db_asneeded=true \\"
+	echo "                 -Ddefault_library=static -Dtry_static_libs=fluidsynth,mt32emu,png \\"
+	echo "                 -Dfluidsynth:enable-floats=true -Dfluidsynth:try-static-deps=true \\"
+	echo "                 -Db_asneeded=true -Dunit_tests=disabled -Dstrip=true \\"
+	echo "                 -Dwarning_level=0 -Dc_args=-w -Dcpp_args=-w build/full-static"
+	echo ""
+	echo "  3. meson compile -C build/full-static"
+	echo ""
+	echo "  4. ./scripts/create-package.sh -f -p linux build/full-static build/lang"
+	echo ""
+	echo "  5. cd contrib/translations"
+	echo ""
+	echo "  6. ./update-sources.sh"
+	exit 1
+}
 
 update() {
 	local -r lang="$1"
@@ -38,8 +65,8 @@ update() {
 	fi
 
 	# Dump the messages from source into the .lng file
-	./build/dosbox \
-		-lang "$lng_path" \
+	./build/lang/dosbox \
+		-lang "$lang" \
 		-c "config -wl $lng_path" \
 		-c 'exit' \
 		&> /dev/null
@@ -60,6 +87,10 @@ update() {
 		git restore "$lng_path"
 	fi
 }
+
+# Staging needs to be packaged up (using the create-pacakge.sh) script
+# to use the simpler -lang loader format supported by 0.78.
+check_package
 
 # Because English is the source language from which others are
 # translated, we first dump the latest english translations.
