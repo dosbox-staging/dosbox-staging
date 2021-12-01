@@ -4,12 +4,6 @@
 :CONFIG_DISPLAY
 Количество используемых дисплеев. Значение зависит от ОС и настроек пользователя.
 .
-:CONFIG_VSYNC
-Настройка вертикальной синхронизации не реализована (настройка игнорируется).
-.
-:CONFIG_VSYNC_SKIP
-Количество микросекунд, в течение которых рендеринг должен блокироваться перед пропуском следующего кадра.
-.
 :CONFIG_FULLRESOLUTION
 Какое разрешение использовать для полноэкранного режима: 'original', 'desktop'
 или фиксированный размер (например, '1024x768').
@@ -26,6 +20,27 @@
   'ШxВ':     Масштабировать содержимое окна до указанного размера,
              в формате ШxВ. Например: '1024x768'.
              Масштабирование не выполняется для output=surface.
+.
+:CONFIG_WINDOW_POSITION
+Set initial window position when running in windowed mode:
+  auto:      Let the window manager decide the position.
+  <custom>:  Set window position in X,Y format. For example: 250,100
+             0,0 is the top-left corner of the screen.
+.
+:CONFIG_WINDOW_DECORATIONS
+Controls whether to display window decorations in windowed mode.
+.
+:CONFIG_VSYNC
+Настройка вертикальной синхронизации не реализована (настройка игнорируется).
+.
+:CONFIG_VSYNC_SKIP
+Number of microseconds to allow rendering to block before skipping the next frame. 0 disables this and will always render.
+.
+:CONFIG_MAX_RESOLUTION
+Optionally restricts the viewport resolution within the window/screen:
+  auto:      The viewport fills the window/screen (default).
+  <custom>:  Set max viewport resolution in WxH format.
+             For example: 960x720
 .
 :CONFIG_OUTPUT
 Какую видеосистему использовать для вывода изображения.
@@ -91,6 +106,22 @@
 хотя несколько игр могут потребовать более высоких значений.
 Как правило, нет никакого преимущества в скорости при повышении этой величины.
 .
+:CONFIG_VMEMSIZE
+Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per video adapter.
+.
+:CONFIG_VESA_MODES
+Controls the selection of VESA 1.2 and 2.0 modes offered:
+  compatible   A tailored selection that maximizes game compatibility.
+               This is recommended along with 4 or 8 MB of video memory.
+  all          Offers all modes for a given video memory size, however
+               some games may not use them properly (flickering) or may need
+               more system memory (mem = ) to use them.
+.
+:CONFIG_AUTOEXEC_SECTION
+How autoexec sections are handled from multiple config files.
+join      : combines them into one big section (legacy behavior).
+overwrite : use the last one encountered, like other conf settings.
+.
 :CONFIG_STARTUP_VERBOSITY
 Управляет количеством информации перед отображением программы:
             | Заставка | Приветствие | Ранний вывод
@@ -135,6 +166,29 @@ auto        | 'low', если передан исполняемый файл и�
 'crt-easymode-flat', 'crt-fakelottes-flat', 'rgb2x', 'rgb3x',
 'scan2x', 'scan3x', 'tv2x', 'tv3x', 'sharp' ('default').
 .
+:CONFIG_COMPOSITE
+Enable composite mode on start. 'auto' lets the program decide.
+Note: Fine-tune the settings below (ie: hue) using the composite hotkeys.
+      Then read the new settings from your console and enter them here.
+.
+:CONFIG_ERA
+Era of composite technology. When 'auto', PCjr uses new and CGA/Tandy use old.
+.
+:CONFIG_HUE
+Appearance of RGB palette. For example, adjust until sky is blue.
+.
+:CONFIG_SATURATION
+Intensity of colors, from washed out to vivid.
+.
+:CONFIG_CONTRAST
+Ratio between the dark and light area.
+.
+:CONFIG_BRIGHTNESS
+Luminosity of the image, from dark to light.
+.
+:CONFIG_CONVERGENCE
+Convergence of subpixel elements, from blurry to sharp (CGA and Tandy-only).
+.
 :CONFIG_CORE
 Ядро процессора, используемое в эмуляции.
 Значение 'auto' переключит в динамический режим, если это доступно и целесообразно.
@@ -169,6 +223,10 @@ auto        | 'low', если передан исполняемый файл и�
 .
 :CONFIG_PREBUFFER
 Сколько миллисекунд нужно удерживать данные на вершине блока.
+.
+:CONFIG_NEGOTIATE
+Allow system audio driver to negotiate optimal rate and blocksize
+as close to the specified values as possible.
 .
 :CONFIG_MIDIDEVICE
 Устройство, которое будет принимать MIDI-данные (от эмулированного MIDI
@@ -205,6 +263,29 @@ auto        | 'low', если передан исполняемый файл и�
 Необязательный процент будет изменять громкость SoundFont.
 Например: 'FluidR3_GM.sf2 50' ослабит её на 50 процентов.
 Изменение в процентах может быть в пределах от 1 до 500.
+.
+:CONFIG_CHORUS
+Chorus effect: 'auto', 'on', 'off', or custom values.
+When using custom values:
+  All five must be provided in-order and space-separated.
+  They are: voice-count level speed depth modulation-wave, where:
+  - voice-count is an integer from 0 to 99.
+  - level is a decimal from 0.0 to 10.0
+  - speed is a decimal, measured in Hz, from 0.1 to 5.0
+  - depth is a decimal from 0.0 to 21.0
+  - modulation-wave is either 'sine' or 'triangle'
+  For example: chorus = 3 1.2 0.3 8.0 sine
+.
+:CONFIG_REVERB
+Reverb effect: 'auto', 'on', 'off', or custom values.
+When using custom values:
+  All four must be provided in-order and space-separated.
+  They are: room-size damping width level, where:
+  - room-size is a decimal from 0.0 to 1.0
+  - damping is a decimal from 0.0 to 1.0
+  - width is a decimal from 0.0 to 100.0
+  - level is a decimal from 0.0 to 1.0
+  For example: reverb = 0.61 0.23 0.76 0.56
 .
 :CONFIG_MODEL
 Модель синтезатора для использования. По умолчанию 'auto' предпочитает CM-32L,
@@ -270,30 +351,30 @@ DOSBox, с последующей проверкой других мест в с
 используемые с Timidity должны работать хорошо.
 .
 :CONFIG_SIDMODEL
-Модель чипа для эмуляции в карте Innovation SSI-2001:
- - auto:  Выбирает чип 6581.
- - 6581:  Оригинальный чип, известный своим басовитым и богатым звучанием.
- - 8580:  Более поздняя модификация, более точно соответствующая спецификации SID.
-          В нём исправлено смещение постоянного тока 6581 и он менее подвержен искажениям.
-          8580 является опцией для репродуктивных карт, таких как DuoSID.
- - none:  Отключает карту.
+Model of chip to emulate in the Innovation SSI-2001 card:
+ - auto:  Selects the 6581 chip.
+ - 6581:  The original chip, known for its bassy and rich character.
+ - 8580:  A later revision that more closely matched the SID specification.
+          It fixed the 6581's DC bias and is less prone to distortion.
+          The 8580 is an option on reproduction cards, like the DuoSID.
+ - none:  Disables the card.
 .
 :CONFIG_SIDCLOCK
-Тактовая частота чипа SID, которая на картах устанавливается перемычкой.
- - default: использует 0.895 МГц, для оригинальной карты SSI-2001.
- - c64ntsc: использует 1.023 МГц, для NTSC Commodore PC и DuoSID.
- - c64pal:  использует 0.985 МГц, для PAL Commodore PC и DuoSID.
- - hardsid: использует 1.000 МГц, доступно на DuoSID.
+The SID chip's clock frequency, which is jumperable on reproduction cards.
+ - default: uses 0.895 MHz, per the original SSI-2001 card.
+ - c64ntsc: uses 1.023 MHz, per NTSC Commodore PCs and the DuoSID.
+ - c64pal:  uses 0.985 MHz, per PAL Commodore PCs and the DuoSID.
+ - hardsid: uses 1.000 MHz, available on the DuoSID.
 .
 :CONFIG_SIDPORT
-Адрес порта ввода-вывода SSI-2001.
+The IO port address of the Innovation SSI-2001.
 .
 :CONFIG_6581FILTER
-Аналоговая фильтрация SID означала, что каждый чип был физически уникален.
-Регулирует силу фильтрации 6581 в процентах от 0 до 100.
+The SID's analog filtering meant that each chip was physically unique.
+Adjusts the 6581's filtering strength as a percent from 0 to 100.
 .
 :CONFIG_8580FILTER
-Регулирует силу фильтрации 8580 в процентах от 0 до 100.
+Adjusts the 8580's filtering strength as a percent from 0 to 100.
 .
 :CONFIG_PCSPEAKER
 Включить эмуляцию PC-Speaker.
@@ -854,11 +935,11 @@ PCjr картридж найден, но машина не PCjr.
 
 .
 :SHELL_CMD_IMGMOUNT_HELP
-Смонтировать образы компакт-дисков или дискет на указанную букву диска.
+Монтировать образы компакт-дисков или дискет на указанную букву диска.
 
 .
 :SHELL_CMD_IMGMOUNT_HELP_LONG
-Смонтировать CD-ROM, дискету или образ диска на указанную букву диска.
+Монтировать CD-ROM, дискету или образ диска на указанную букву диска.
 
 Использование:
   [32;1mimgmount[0m [37;1mДИСК[0m [36;1mCDROM-SET[0m [CDROM-SET_2 [..]] [-fs iso] -t cdrom|iso
@@ -889,7 +970,7 @@ PCjr картридж найден, но машина не PCjr.
 
 .
 :SHELL_CMD_MOUNT_HELP_LONG
-Смонтировать директорию из операционной системы на букву виртуального диска DOS.
+Монтировать директорию из операционной системы на букву виртуального диска DOS.
 
 Использование:
   [32;1mmount[0m [37;1mДиск[0m [36;1mДиректория[0m [-t Тип] [-freesize Размер] [-label Метка]
@@ -1449,20 +1530,135 @@ choice [/c:клавиши] [/n] [/s] текст
 Неправильная версия DOS.
 
 .
-:PROGRAM_INTRO_CDROM_WINDOWS
-[2J[32;1mКак смонтировать виртуальный привод CD-ROM в DOSBox:[0m
-DOSBox обеспечивает эмуляцию CD-ROM на нескольких уровнях.
+:PROGRAM_PATH_TOO_LONG
+The path "%s" exceeds the DOS maximum length of %d characters
 
-Это работает во всех обычных директориях, устанавливает MSCDEX и помечает
-файлы только для чтения. Обычно этого достаточно для большинства игр:
+.
+:PROGRAM_EXECUTABLE_MISSING
+Executable file not found: %s
+
+.
+:SHELL_CMD_MEM_HELP_LONG
+Displays the DOS memory information.
+
+Usage:
+  [32;1mmem[0m
+
+Where:
+  This command has no parameters.
+
+Notes:
+  This command shows the DOS memory status, including the free conventional
+  memory, UMB (upper) memory, XMS (extended) memory, and EMS (expanded) memory.
+
+Examples:
+  [32;1mmem[0m
+
+.
+:SHELL_CMD_LOADFIX_HELP_LONG
+Loads a program in the specific memory region and then runs it.
+
+Usage:
+  [32;1mloadfix[0m [36;1mGAME[0m [37;1m[PARAMETERS][0m
+  [32;1mloadfix[0m [/d] (or [/f])[0m
+
+Where:
+  [36;1mGAME[0m is a game or program to be loaded, optionally with parameters.
+
+Notes:
+  The most common use cases of this command are to fix DOS games or programs
+  which show either the "[37;1mPacked File Corrupt[0m" or "[37;1mNot enough memory"[0m (e.g.,
+  from some 1980's games such as California Games II) error message when run.
+  Running [32;1mloadfix[0m without an argument simply allocates memory for your game
+  to run; you can free the memory with either /d or /f option when it finishes.
+
+Examples:
+  [32;1mloadfix[0m [36;1mmygame[0m [37;1margs[0m
+  [32;1mloadfix[0m /d
+
+.
+:SHELL_CMD_AUTOTYPE_HELP_LONG
+Performs scripted keyboard entry into a running DOS game.
+
+Usage:
+  [32;1mautotype[0m -list
+  [32;1mautotype[0m [-w [37;1mWAIT[0m] [-p [37;1mPACE[0m] [36;1mBUTTONS[0m
+
+Where:
+  [37;1mWAIT[0m    is the number of seconds to wait before typing begins (max of 30).
+  [37;1mPACE[0m    is the number of seconds before each keystroke (max of 10).
+  [36;1mBUTTONS[0m is one or more space-separated buttons.
+
+Notes:
+  The [36;1mBUTTONS[0m supplied in the command will be autotyped into running DOS games
+  after they start. Autotyping begins after [36;1mWAIT[0m seconds, and each button is
+  entered every [37;1mPACE[0m seconds. The [36;1m,[0m character inserts an extra [37;1mPACE[0m delay.
+  [37;1mWAIT[0m and [37;1mPACE[0m default to 2 and 0.5 seconds respectively if not specified.
+  A list of all available button names can be obtained using the -list option.
+
+Examples:
+  [32;1mautotype[0m -list
+  [32;1mautotype[0m -w [37;1m1[0m -p [37;1m0.3[0m [36;1mup enter , right enter[0m
+  [32;1mautotype[0m -p [37;1m0.2[0m [36;1mf1 kp_8 , , enter[0m
+  [32;1mautotype[0m -w [37;1m1.3[0m [36;1mesc enter , p l a y e r enter
+[0m
+.
+:SHELL_CMD_MIXER_HELP_LONG
+Displays or changes the current sound mixer volumes.
+
+Usage:
+  [32;1mmixer[0m [36;1mCHANNEL[0m [37;1mVOLUME[0m [/noshow]
+  [32;1mmixer[0m [/listmidi][0m
+
+Where:
+  [36;1mCHANNEL[0m is the sound channel you want to change the volume.
+  [37;1mVOLUME[0m  is an integer between 0 and 100 representing the volume.
+
+Notes:
+  Running [32;1mmixer[0m without an argument shows the volumes of all sound channels.
+  You can view available MIDI devices and user options with /listmidi option.
+  You may change the volumes of more than one sound channels in one command.
+  The /noshow option causes mixer not to show the volumes when making a change.
+
+Examples:
+  [32;1mmixer[0m
+  [32;1mmixer[0m [36;1mmaster[0m [37;1m50[0m [36;1mrecord[0m [37;1m60[0m /noshow
+  [32;1mmixer[0m /listmidi
+.
+:SHELL_CMD_RESCAN_HELP_LONG
+Scans for changes on mounted DOS drives.
+
+Usage:
+  [32;1mrescan[0m [36;1mDRIVE[0m
+  [32;1mrescan[0m [/a]
+
+Where:
+  [36;1mDRIVE[0m is the drive to scan for changes.
+
+Notes:
+  - Running [32;1mrescan[0m without an argument scans for changes of the current drive.
+  - Changes to this drive made on the host will then be reflected inside DOS.
+  - You can also scan for changes on all mounted drives with the /a option.
+
+Examples:
+  [32;1mrescan[0m [36;1mc:[0m
+  [32;1mrescan[0m /a
+
+.
+:PROGRAM_INTRO_CDROM_WINDOWS
+[2J[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:[0m
+DOSBox provides CD-ROM emulation on several levels.
+
+This works on all normal directories, installs MSCDEX and marks the files
+read-only. Usually this is enough for most games:
 
 [34;1mmount D C:\example -t cdrom[0m
 
-Если это не сработает, возможно, Вам придется сообщить DOSBox метку CD-ROM:
+If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
 
-[34;1mmount D C:\example -t cdrom -label метка[0m
+[34;1mmount D C:\example -t cdrom -label CDLABEL[0m
 
-Также Вы можете использовать imgmount для монтирования образов iso или cue/bin:
+Additionally, you can use imgmount to mount iso or cue/bin images:
 
 [34;1mimgmount D C:\cd.iso -t cdrom[0m
 
@@ -1470,47 +1666,437 @@ DOSBox обеспечивает эмуляцию CD-ROM на нескольки�
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[32;1mКак смонтировать виртуальный привод CD-ROM в DOSBox:[0m
-DOSBox обеспечивает эмуляцию CD-ROM на нескольких уровнях.
+[2J[32;1mHow to mount a virtual CD-ROM Drive in DOSBox:[0m
+DOSBox provides CD-ROM emulation on several levels.
 
-Это работает во всех обычных директориях, устанавливает MSCDEX и помечает
-файлы только для чтения. Обычно этого достаточно для большинства игр:
+This works on all normal directories, installs MSCDEX and marks the files
+read-only. Usually this is enough for most games:
 
 [34;1mmount D ~/example -t cdrom[0m
 
-Если это не сработает, возможно, Вам придется сообщить DOSBox метку CD-ROM:
+If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
 
-[34;1mmount D ~/example -t cdrom -label метка[0m
+[34;1mmount D ~/example -t cdrom -label CDLABEL[0m
 
-Также Вы можете использовать imgmount для монтирования образов iso или cue/bin:
+Additionally, you can use imgmount to mount iso or cue/bin images:
 
 [34;1mimgmount D ~/cd.iso -t cdrom[0m
 
 [34;1mimgmount D ~/cd.cue -t cdrom[0m
 
 .
+:SHELL_CMD_BOOT_HELP_LONG
+Boots DOSBox Staging from a DOS drive or disk image.
+
+Usage:
+  [32;1mboot[0m [37;1mDRIVE[0m
+  [32;1mboot[0m [36;1mIMAGEFILE[0m
+
+Where:
+  [37;1mDRIVE[0m is a drive to boot from, must be [37;1mA:[0m, [37;1mC:[0m, or [37;1mD:[0m.
+  [36;1mIMAGEFILE[0m is one or more floppy images, separated by spaces.
+
+Notes:
+  A DOS drive letter must have been mounted previously with [32;1mimgmount[0m command.
+  The DOS drive or disk image must be bootable, containing DOS system files.
+  If more than one disk images are specified, you can swap them with a hotkey.
+
+Examples:
+  [32;1mboot[0m [37;1mc:[0m
+  [32;1mboot[0m [36;1mdisk1.ima disk2.ima[0m
+
+.
+:SHELL_CMD_LOADROM_HELP_LONG
+Loads a ROM image of the video BIOS or IBM BASIC.
+
+Usage:
+  [32;1mloadrom [36;1mIMAGEFILE[0m
+
+Where:
+  [36;1mIMAGEFILE[0m is a video BIOS or IBM BASIC ROM image.
+
+Notes:
+   After loading an IBM BASIC ROM image into the emulated ROM with the command,
+   you can run the original IBM BASIC interpreter program in DOSBox Staging.
+
+Examples:
+  [32;1mloadrom[0m [36;1mbios.rom[0m
+
+.
+:PROGRAM_KEYB_HELP_LONG
+Configures a keyboard for a specific language.
+
+Usage:
+  [32;1mkeyb[0m [36;1m[LANGCODE][0m
+  [32;1mkeyb[0m [36;1mLANGCODE[0m [37;1mCODEPAGE[0m [CODEPAGEFILE]
+
+Where:
+  [36;1mLANGCODE[0m     is a language code or keyboard layout ID.
+  [37;1mCODEPAGE[0m     is a code page number, such as [37;1m437[0m and [37;1m850[0m.
+  CODEPAGEFILE is a file containing information for a code page.
+
+Notes:
+  Running [32;1mkeyb[0m without an argument shows the currently loaded keyboard layout
+  and code page. It will change to [36;1mLANGCODE[0m if provided, optionally with a
+  [37;1mCODEPAGE[0m and an additional CODEPAGEFILE to load the specified code page
+  number and code page file if provided. This command is especially useful if
+  you use a non-US keyboard, and [36;1mLANGCODE[0m can also be set in the configuration
+  file under the [dos] section using the "keyboardlayout = [36;1mLANGCODE[0m" setting.
+
+Examples:
+  [32;1mKEYB[0m
+  [32;1mKEYB[0m [36;1muk[0m
+  [32;1mKEYB[0m [36;1msp[0m [37;1m850[0m
+  [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
+
+.
+:PROGRAM_PLACEHOLDER_SHORT_HELP
+This program is a placeholder
+.
+:PROGRAM_PLACEHOLDER_LONG_HELP
+%s is only a placeholder.
+
+Install a 3rd-party and give its PATH precedence.
+
+For example:
+.
+:UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE
+
+   [autoexec]
+   mount u ~/dos/utils
+   set PATH=u:\;%PATH%
+
+
+.
+:VISIT_FOR_MORE_HELP
+Visit the following for more help:
+.
+:WIKI_ADD_UTILITIES_ARTICLE
+https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
+.
+:WIKI_URL
+https://github.com/dosbox-staging/dosbox-staging/wiki
+.
+:SHELL_CMD_COMMAND_HELP_LONG
+Starts the DOSBox Staging command shell.
+Usage:
+  [32;1mcommand[0m
+  [32;1mcommand[0m /c (or /init) [36;1mCOMMAND[0m
+
+Where:
+  [36;1mCOMMAND[0m is a DOS command, game, or program to run.
+
+Notes:
+  DOSBox Staging automatically starts a DOS command shell by invoking this
+  command with /init option when it starts, which shows the welcome banner.
+  You can load a new instance of the command shell by running [32;1mcommand[0m.
+  Adding a /c option along with [36;1mCOMMAND[0m allows this command to run the
+  specified command (optionally with parameters) and then exit automatically.
+
+Examples:
+  [32;1mcommand[0m
+  [32;1mcommand[0m /c [36;1mecho[0m [37mHello world![0m
+  [32;1mcommand[0m /init [36;1mdir[0m
+
+.
+:SHELL_CMD_TIME_ERROR
+The specified time is not correct.
+
+.
+:SHELL_CMD_TIME_SETHLP
+Type 'time hh:mm:ss' to change.
+
+.
+:SHELL_CMD_PAUSE_HELP_LONG
+Usage:
+  [32;1mpause[0m
+
+Where:
+  This command has no parameters.
+
+Notes:
+  This command is especially useful in batch programs to allow a user to
+  continue the batch program execution with a key press. The user can press
+  any key on the keyboard (except for certain control keys) to continue.
+
+Examples:
+  [32;1mpause[0m
+
+.
+:SHELL_CMD_CLS_HELP_LONG
+Usage:
+  [32;1mcls[0m
+
+Where:
+  This command has no parameters.
+
+Notes:
+  Running [32;1mcls[0m clears all texts on the DOS screen, except for the command
+  prompt (e.g. [37;1mZ:\>[0m or [37;1mC:\GAMES>[0m) on the top-left corner of the screen.
+
+Examples:
+  [32;1mcls[0m
+
+.
+:SHELL_CMD_ECHO_HELP_LONG
+Usage:
+  [32;1mecho[0m [36;1m[on|off][0m
+  [32;1mecho[0m [36;1m[MESSAGE][0m
+
+Where:
+  [36;1mon|off[0m  Turns on/off command echoing.
+  [36;1mMESSAGE[0m The message to display.
+
+Notes:
+  - Running [32;1mecho[0m without an argument shows the current on or off status.
+  - Echo is especially useful when writing or debugging batch files.
+
+Examples:
+  [32;1mecho[0m [36;1moff[0m
+  [32;1mecho[0m [36;1mHello world![0m
+
+.
+:SHELL_CMD_EXIT_HELP_LONG
+Usage:
+  [32;1mexit[0m
+
+Where:
+  This command has no parameters.
+
+Notes:
+  If you start a DOS shell from a program, running [32;1mexit[0m returns to the program.
+  If there is no DOS program running, the command quits from DOSBox Staging.
+
+Examples:
+  [32;1mexit[0m
+
+.
+:SHELL_CMD_EXIT_TOO_SOON
+Preventing an early 'exit' call from terminating.
+
+.
 :SHELL_CMD_HELP_HELP_LONG
-HELP [команда]
+Usage:
+  [32;1mhelp[0m
+  [32;1mhelp[0m /a[ll]
+  [32;1mhelp[0m [36;1mCOMMAND[0m
+
+Where:
+  [36;1mCOMMAND[0m is the name of an internal DOS command, such as [36;1mdir[0m.
+
+Notes:
+  - Running [32;1mecho[0m without an argument displays a DOS command list.
+  - You can view a full list of internal commands with the /a or /all option.
+  - Instead of [32;1mhelp[0m [36;1mCOMMAND[0m, you can also get command help with [36;1mCOMMAND[0m /?.
+
+Examples:
+  [32;1mhelp[0m [36;1mdir[0m
+  [32;1mhelp[0m /all
+
+.
+:SHELL_CMD_INTRO_HELP
+Displays a full-screen introduction to DOSBox Staging.
+
+.
+:SHELL_CMD_INTRO_HELP_LONG
+Usage:
+  [32;1mintro[0m
+  [32;1mintro[0m [37;1mPAGE[0m
+
+Where:
+  [37;1mPAGE[0m is the page name to display, including [37;1mcdrom[0m, [37;1mmount[0m, and [37;1mspecial[0m.
+
+Notes:
+  Running [32;1mintro[0m without an argument displays one information page at a time;
+  press any key to move to the next page. If a page name is provided, then the
+  specified page will be displayed directly.
+
+Examples:
+  [32;1mintro[0m
+  [32;1mintro[0m [37;1mcdrom[0m
+
+.
+:SHELL_CMD_SET_HELP_LONG
+Usage:
+  [32;1mset[0m
+  [32;1mset[0m [37;1mVARIABLE[0m=[36;1m[STRING][0m
+
+Where:
+  [37;1mVARIABLE[0m The name of the environment variable.
+  [36;1mSTRING[0m   A series of characters to assign to the variable.
+
+Notes:
+  - Assigning an empty string to the variable removes the variable.
+  - The command without a parameter displays current environment variables.
+
+Examples:
+  [32;1mset[0m
+  [32;1mset[0m [37;1mname[0m=[36;1mvalue[0m
+
+.
+:SHELL_CMD_IF_HELP_LONG
+Usage:
+  [32;1mif[0m [35;1m[not][0m [36;1merrorlevel[0m [37;1mNUMBER[0m COMMAND
+  [32;1mif[0m [35;1m[not][0m [37;1mSTR1==STR2[0m COMMAND
+  [32;1mif[0m [35;1m[not][0m [36;1mexist[0m [37;1mFILE[0m COMMAND
+
+Where:
+  [37;1mNUMBER[0m     is a positive integer less or equal to the desired value.
+  [37;1mSTR1==STR2[0m compares two text strings (case-sensitive).
+  [37;1mFILE[0m       is an exact file name to check for existence.
+  COMMAND    is a DOS command or program to run, optionally with parameters.
+
+Notes:
+  The COMMAND is run if any of the three conditions in the usage are met.
+  If [38;1mnot[0m is specified, then the command runs only with the false condition.
+  The [36;1merrorlevel[0m condition is useful for checking if a programs ran correctly.
+  If either [37;1mSTR1[0m or [37;1mSTR2[0m may be empty, you can enclose them in quotes (").
+
+Examples:
+  [32;1mif[0m [36;1merrorlevel[0m [37;1m2[0m dir
+  [32;1mif[0m [37;1m"%%myvar%%"=="mystring"[0m echo Hello world!
+  [32;1mif[0m [35;1mnot[0m [36;1mexist[0m [37;1mfile.txt[0m exit
+
+.
+:SHELL_CMD_GOTO_HELP_LONG
+Usage:
+  [32;1mgoto[0m [36;1mLABEL[0m
+
+Where:
+  [36;1mLABEL[0m is text string used in the batch program as a label.
+
+Notes:
+  A label is on a line by itself, beginning with a colon (:).
+  The label must be unique, and can be anywhere within the batch program.
+
+Examples:
+  [32;1mgoto[0m [36;1mmylabel[0m
+
+.
+:SHELL_CMD_SHIFT_HELP_LONG
+Usage:
+  [32;1mshift[0m
+
+Where:
+  This command has no parameters.
+
+Notes:
+  This command allows a DOS batch program to accept more than 9 parameters.
+  Running [32;1mshift[0m left-shifts the batch program variable %%1 to %%0, %%2 to %%1, etc.
+
+Examples:
+  [32;1mshift[0m
 
 .
 :SHELL_CMD_DELETE_HELP_LONG
-Использование:
-  [32;1mdel[0m [36;1mшаблон[0m
-  [32;1merase[0m [36;1mшаблон[0m
+Usage:
+  [32;1mdel[0m [36;1mPATTERN[0m
+  [32;1merase[0m [36;1mPATTERN[0m
 
-Где:
-  [36;1mшаблон[0m может быть как точным именем файла (например, [36;1mfile.txt[0m), так и неточным
-          именем файла с использованием одного или нескольких символов подстановки, которым является
-          звёздочка (*), обозначающая любую последовательность из одного или нескольких символов,
-          и вопросительный знак (?), обозначающий любой одиночный символ, например, [36;1m*.bat[0m и [36;1mc?.txt[0m.
+Where:
+  [36;1mPATTERN[0m can be either an exact filename (such as [36;1mfile.txt[0m) or an inexact
+          filename using one or more wildcards, which are the asterisk (*)
+          representing any sequence of one or more characters, and the question
+          mark (?) representing any single character, such as [36;1m*.bat[0m and [36;1mc?.txt[0m.
 
-Внимание:
-  Будьте осторожны при использовании шаблона с подстановочными знаками, особенно с
-  [36;1m*.*[0m, так как все файлы соответствующие шаблону, будут удалены.
+Warning:
+  Be careful when using a pattern with wildcards, especially [36;1m*.*[0m, as all files
+  matching the pattern will be deleted.
 
-Примеры:
+Examples:
   [32;1mdel[0m [36;1mtest.bat[0m
   [32;1mdel[0m [36;1mc*.*[0m
   [32;1mdel[0m [36;1ma?b.c*[0m
+
+.
+:SHELL_CMD_COPY_HELP_LONG
+Usage:
+  [32;1mcopy[0m [37;1mSOURCE[0m [36;1m[DESTINATION][0m
+  [32;1mcopy[0m [37;1mSOURCE1+SOURCE2[+...][0m [36;1m[DESTINATION][0m
+
+Where:
+  [37;1mSOURCE[0m      Can be either an exact filename or an inexact filename with
+              wildcards, which are the asterisk (*) and the question mark (?).
+  [36;1mDESTINATION[0m An exact filename or directory, not containing any wildcards.
+
+Notes:
+  The [37;1m+[0m operator combines multiple source files provided to a single file.
+  Destination is optional: if omitted, files are copied to the current path.
+
+Examples:
+  [32;1mcopy[0m [37;1msource.bat[0m [36;1mnew.bat[0m
+  [32;1mcopy[0m [37;1mfile1.txt+file2.txt[0m [36;1mfile3.txt[0m
+  [32;1mcopy[0m [37;1m..\c*.*[0m
+
+.
+:SHELL_CMD_CALL_HELP_LONG
+Usage:
+  [32;1mcall[0m [37;1mBATCH[0m [36;1m[PARAMETERS][0m
+
+Where:
+  [37;1mBATCH[0m      is a batch program to launch.
+  [36;1mPARAMETERS[0m are optional parameters for the batch program.
+
+Notes:
+  After calling another batch program, the original batch program will
+  resume running after the other batch program ends.
+
+Examples:
+  [32;1mcall[0m [37;1mmybatch.bat[0m
+  [32;1mcall[0m [37;1mfile.bat[0m [36;1mHello world![0m
+
+.
+:SHELL_CMD_SUBST_HELP_LONG
+Usage:
+  [32;1msubst[0m [37;1mDRIVE[0m [36;1mPATH[0m
+  [32;1msubst[0m [37;1mDRIVE[0m /d
+
+Where:
+  [37;1mDRIVE[0m is a drive to which you want to assign a path.
+  [36;1mPATH[0m  is a mounted DOS path you want to assign to.
+
+Notes:
+  The path must be on a drive mounted by the [32;1mmount[0m command.
+  You can remove an assigned drive with the /d option.
+
+Examples:
+  [32;1msubst[0m [37;1md:[0m [36;1mc:\games[0m
+  [32;1msubst[0m [37;1me:[0m [36;1m/d[0m
+
+.
+:SHELL_CMD_LOADHIGH_HELP_LONG
+Usage:
+  [32;1mlh[0m [36;1mPROGRAM[0m [37;1m[PARAMETERS][0m
+  [32;1mloadhigh[0m [36;1mPROGRAM[0m [37;1m[PARAMETERS][0m
+
+Where:
+  [36;1mPROGRAM[0m is a DOS TSR program to be loaded, optionally with parameters.
+
+Notes:
+  This command intends to save the conventional memory by loading specified DOS
+  TSR programs into upper memory if possible. Such programs may be required for
+  some DOS games; XMS and UMB memory must be enabled (xms=true and umb=true).
+  Not all DOS TSR programs can be loaded into upper memory with this command.
+
+Examples:
+  [32;1mlh[0m [36;1mtsrapp[0m [37;1margs[0m
+
+.
+:SHELL_CMD_PATH_HELP_LONG
+Usage:
+  [32;1mpath[0m
+  [32;1mpath[0m [36;1m[[drive:]path[;...][0m
+
+Where:
+  [36;1m[[drive:]path[;...][0m is a path containing a drive and directory.
+  More than one path can be specified, separated by a semi-colon (;).
+
+Notes:
+  Parameter with a semi-colon (;) only clears all search path settings.
+  The path can also be set using [32;1mset[0m command, e.g. [32;1mset[0m [37;1mpath[0m=[36;1mZ:\[0m
+
+Examples:
+  [32;1mpath[0m
+  [32;1mpath[0m [36;1mZ:\;C:\DOS[0m
 
 .
