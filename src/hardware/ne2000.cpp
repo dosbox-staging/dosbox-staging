@@ -1451,7 +1451,7 @@ static void NE2000_Poller(void) {
 		// don't receive in loopback modes
 		if((theNE2kDevice->s.DCR.loop == 0) || (theNE2kDevice->s.TCR.loop_cntl != 0))
 			return;
-		theNE2kDevice->rx_frame(packet, len);
+		theNE2kDevice->rx_frame(packet, check_cast<uint16_t>(len));
 	});
 }
 
