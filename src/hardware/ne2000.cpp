@@ -1504,9 +1504,12 @@ public:
 			mac[0]=0xac;mac[1]=0xde;mac[2]=0x48;
 			mac[3]=0x88;mac[4]=0xbb;mac[5]=0xaa;
 		} else {
-			mac[0]=macint[0]; mac[1]=macint[1];
-			mac[2]=macint[2]; mac[3]=macint[3];
-			mac[4]=macint[4]; mac[5]=macint[5];
+			mac[0] = check_cast<uint8_t>(macint[0]);
+      mac[1] = check_cast<uint8_t>(macint[1]);
+			mac[2] = check_cast<uint8_t>(macint[2]);
+      mac[3] = check_cast<uint8_t>(macint[3]);
+			mac[4] = check_cast<uint8_t>(macint[4]);
+      mac[5] = check_cast<uint8_t>(macint[5]);
 		}
 
 		// create the bochs NIC class
