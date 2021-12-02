@@ -28,6 +28,7 @@
 #include "dosbox.h"
 #include "ethernet_slirp.h"
 #include "setup.h"
+#include "support.h"
 
 #ifdef WIN32
 #include <ws2tcpip.h>
@@ -36,79 +37,77 @@
 #endif /* WIN32 */
 
 /* Begin boilerplate to map libslirp's C-based callbacks to our C++
- * object. This is done by passing our SlirpEthernetConnection as user data.
+ * object. The user data is provided inside the 'opaque' pointer.
  */
 
 ssize_t slirp_receive_packet(const void *buf, size_t len, void *opaque)
 {
-	SlirpEthernetConnection *conn = (SlirpEthernetConnection *)opaque;
-	conn->ReceivePacket((const uint8_t *)buf, len);
-	return len;
+	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
+	const auto packets = check_cast<uint16_t>(len);
+	conn->ReceivePacket(static_cast<const uint8_t *>(buf), packets);
+	return packets;
 }
 
-void slirp_guest_error(const char *msg, void *opaque)
+void slirp_guest_error(const char *msg, [[maybe_unused]] void *opaque)
 {
-	(void)opaque;
 	LOG_MSG("SLIRP: Slirp error: %s", msg);
 }
 
-int64_t slirp_clock_get_ns(void *opaque)
+int64_t slirp_clock_get_ns([[maybe_unused]] void *opaque)
 {
-	(void)opaque;
 	struct timespec ts;
 	clock_gettime(CLOCK_REALTIME, &ts);
 	/* if clock_gettime fails we have more serious problems */
-	return ts.tv_nsec + (ts.tv_sec * 1e9);
+	return ts.tv_nsec + (ts.tv_sec * 1'000'000'000LL);
 }
 
 void *slirp_timer_new(SlirpTimerCb cb, void *cb_opaque, void *opaque)
 {
-	SlirpEthernetConnection *conn = (SlirpEthernetConnection *)opaque;
+	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	return conn->TimerNew(cb, cb_opaque);
 }
 
 void slirp_timer_free(void *timer, void *opaque)
 {
-	SlirpEthernetConnection *conn = (SlirpEthernetConnection *)opaque;
+	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	struct slirp_timer *real_timer = (struct slirp_timer *)timer;
 	conn->TimerFree(real_timer);
 }
 
 void slirp_timer_mod(void *timer, int64_t expire_time, void *opaque)
 {
-	SlirpEthernetConnection *conn = (SlirpEthernetConnection *)opaque;
+	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	struct slirp_timer *real_timer = (struct slirp_timer *)timer;
 	conn->TimerMod(real_timer, expire_time);
 }
 
 int slirp_add_poll(int fd, int events, void *opaque)
 {
-	SlirpEthernetConnection *conn = (SlirpEthernetConnection *)opaque;
+	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	return conn->PollAdd(fd, events);
 }
 
 int slirp_get_revents(int idx, void *opaque)
 {
-	SlirpEthernetConnection *conn = (SlirpEthernetConnection *)opaque;
+	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	return conn->PollGetSlirpRevents(idx);
 }
 
 void slirp_register_poll_fd(int fd, void *opaque)
 {
-	SlirpEthernetConnection *conn = (SlirpEthernetConnection *)opaque;
+	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	conn->PollRegister(fd);
 }
 
 void slirp_unregister_poll_fd(int fd, void *opaque)
 {
-	SlirpEthernetConnection *conn = (SlirpEthernetConnection *)opaque;
+	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	conn->PollUnregister(fd);
 }
 
-void slirp_notify(void *opaque)
+void slirp_notify([[maybe_unused]] void *opaque)
 {
-	(void)opaque;
-	return;
+	// empty, function is provided for API compliance
 }
 
 /* End boilerplate */
@@ -144,28 +143,41 @@ SlirpEthernetConnection::~SlirpEthernetConnection()
 		slirp_cleanup(slirp);
 }
 
-bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
+bool SlirpEthernetConnection::Initialize([[maybe_unused]] Section *dosbox_config)
 {
-	Section_prop *section = static_cast<Section_prop *>(dosbox_config);
-
 	LOG_MSG("SLIRP: Slirp version: %s", slirp_version_string());
 
 	/* Config */
 	config.version = 1;
-	config.restricted = section->Get_bool("restricted");
-	config.disable_host_loopback = section->Get_bool("disable_host_loopback");
-	config.if_mtu = section->Get_int("mtu"); /* 0 = IF_MTU_DEFAULT */
-	config.if_mru = section->Get_int("mru"); /* 0 = IF_MRU_DEFAULT */
-	config.enable_emu = 0;                   /* Buggy, don't use */
-	/* IPv4 */
+
+	// If true, prevents the guest from accessing the host, which will cause
+	// libslrip's internal DHCP server to fail.
+	config.restricted = false;
+
+	// If true, prevent the guest access from accessing the host's loopback
+	// interfaces.
+	config.disable_host_loopback = false;
+
+	// The maximum transmission unit for Ethernet packets transmitted from
+	// the guest. 0 is default.
+	config.if_mtu = 0;
+
+	// The maximum recieve unit for Ethernet packets transmitted to the
+	// guest. 0 is default.
+	config.if_mru = 0;
+
+	config.enable_emu = 0; // buggy - keep this at 0
 	config.in_enabled = 1;
-	inet_pton(AF_INET, section->Get_string("ipv4_network"), &config.vnetwork);
-	inet_pton(AF_INET, section->Get_string("ipv4_netmask"), &config.vnetmask);
-	inet_pton(AF_INET, section->Get_string("ipv4_host"), &config.vhost);
-	inet_pton(AF_INET, section->Get_string("ipv4_nameserver"),
-	          &config.vnameserver);
-	inet_pton(AF_INET, section->Get_string("ipv4_dhcp_start"),
-	          &config.vdhcp_start);
+
+	// The IPv4 network the guest and host services are on
+	inet_pton(AF_INET, "10.0.2.0", &config.vnetwork);
+
+	// The netmask for the IPv4 network.
+	inet_pton(AF_INET, "255.255.255.0", &config.vnetmask);
+	inet_pton(AF_INET, "10.0.2.2", &config.vhost);
+	inet_pton(AF_INET, "10.0.2.3", &config.vnameserver);
+	inet_pton(AF_INET, "10.0.2.15", &config.vdhcp_start);
+
 	/* IPv6 code is left here as reference but disabled as no DOS-era
 	 * software supports it and might get confused by it */
 	config.in6_enabled = 0;
@@ -173,8 +185,9 @@ bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 	config.vprefix_len = 64;
 	inet_pton(AF_INET6, "fec0::2", &config.vhost6);
 	inet_pton(AF_INET6, "fec0::3", &config.vnameserver6);
+
 	/* DHCPv4, BOOTP, TFTP */
-	config.vhostname = "DOSBox-X";
+	config.vhostname = "dosbox-staging";
 	config.vdnssearch = NULL;
 	config.vdomainname = NULL;
 	config.tftp_server_name = NULL;
@@ -216,7 +229,7 @@ void SlirpEthernetConnection::ReceivePacket(const uint8_t *packet, int len)
 struct slirp_timer *SlirpEthernetConnection::TimerNew(SlirpTimerCb cb, void *cb_opaque)
 {
 	struct slirp_timer *timer = new struct slirp_timer;
-	timer->expires = 0;
+	timer->expires_ns = 0;
 	timer->cb = cb;
 	timer->cb_opaque = cb_opaque;
 	timers.push_back(timer);
@@ -229,28 +242,28 @@ void SlirpEthernetConnection::TimerFree(struct slirp_timer *timer)
 	delete timer;
 }
 
-void SlirpEthernetConnection::TimerMod(struct slirp_timer *timer, int64_t expire_time)
+void SlirpEthernetConnection::TimerMod(struct slirp_timer *timer, int64_t expire_time_ms)
 {
 	/* expire_time is in milliseconds despite slirp wanting a nanosecond
 	 * clock */
-	timer->expires = expire_time * 1e6;
+	timer->expires_ns = expire_time_ms * 1'000'000;
 }
 
 void SlirpEthernetConnection::TimersRun()
 {
 	int64_t now = slirp_clock_get_ns(NULL);
-	std::for_each(timers.begin(), timers.end(), [now](struct slirp_timer *&timer) {
-		if (timer->expires && timer->expires < now) {
-			timer->expires = 0;
+	for (struct slirp_timer *timer : timers) {
+		if (timer->expires_ns && timer->expires_ns < now) {
+			timer->expires_ns = 0;
 			timer->cb(timer->cb_opaque);
 		}
-	});
+	}
 }
 
 void SlirpEthernetConnection::TimersClear()
 {
-	std::for_each(timers.begin(), timers.end(),
-	              [](struct slirp_timer *&timer) { delete timer; });
+	for (auto *timer : timers)
+		delete timer;
 	timers.clear();
 }
 
@@ -271,9 +284,9 @@ void SlirpEthernetConnection::PollUnregister(int fd)
 
 void SlirpEthernetConnection::PollsAddRegistered()
 {
-	std::for_each(registered_fds.begin(), registered_fds.end(), [this](int fd) {
+	for (int fd : registered_fds) {
 		PollAdd(fd, SLIRP_POLL_IN | SLIRP_POLL_OUT);
-	});
+	}
 }
 
 /* Begin the bulk of the platform-specific code.
@@ -294,7 +307,7 @@ void SlirpEthernetConnection::PollsClear()
 
 int SlirpEthernetConnection::PollAdd(int fd, int slirp_events)
 {
-	int real_events = 0;
+	int16_t real_events = 0;
 	if (slirp_events & SLIRP_POLL_IN)
 		real_events |= POLLIN;
 	if (slirp_events & SLIRP_POLL_OUT)
@@ -305,18 +318,19 @@ int SlirpEthernetConnection::PollAdd(int fd, int slirp_events)
 	new_poll.fd = fd;
 	new_poll.events = real_events;
 	polls.push_back(new_poll);
-	return (polls.size() - 1);
+	return (check_cast<int>(polls.size() - 1));
 }
 
 bool SlirpEthernetConnection::PollsPoll(uint32_t timeout_ms)
 {
-	int ret = poll(polls.data(), polls.size(), timeout_ms);
+	const auto ret = poll(polls.data(), polls.size(), static_cast<int>(timeout_ms));
 	return (ret > -1);
 }
 
 int SlirpEthernetConnection::PollGetSlirpRevents(int idx)
 {
-	int real_revents = polls.at(idx).revents;
+	assert(idx >= 0 && idx < static_cast<int>(polls.size()));
+	const auto real_revents = polls.at(static_cast<size_t>(idx)).revents;
 	int slirp_revents = 0;
 	if (real_revents & POLLIN)
 		slirp_revents |= SLIRP_POLL_IN;

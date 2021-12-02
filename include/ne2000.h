@@ -33,6 +33,8 @@
 
 #include "dosbox.h"
 
+#if C_NE2000
+
 #include "inout.h"
 
 #define bx_bool int
@@ -247,5 +249,7 @@ public:
 };
 
 void NE2K_Init(Section* sec);
+
+#endif // C_NE2000
 
 #endif

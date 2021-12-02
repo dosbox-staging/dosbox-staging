@@ -21,6 +21,8 @@
 #ifndef DOSBOX_ETHERNET_H
 #define DOSBOX_ETHERNET_H
 
+#include "dosbox.h"
+
 #include <functional>
 #include <string>
 
@@ -88,6 +90,6 @@ public:
  * @param backend The name of the connection backend
  * @return An initialized Ethernet connection, nullptr otherwise
  */
-EthernetConnection *OpenEthernetConnection(const std::string &backend);
+EthernetConnection *ETHERNET_OpenConnection(const std::string &backend);
 
 #endif

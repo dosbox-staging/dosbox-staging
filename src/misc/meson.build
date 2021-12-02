@@ -22,6 +22,7 @@ libmisc = static_library('misc', libmisc_sources,
                            stdcppfs_dep,
                            libloguru_dep,
                            libwhereami_dep,
+                           winsock2_dep,
                          ])
 
 libmisc_dep = declare_dependency(link_with : libmisc)

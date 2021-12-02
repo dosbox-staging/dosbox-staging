@@ -968,10 +968,18 @@ void DOSBOX_Init(void) {
 	Pbool->Set_help("Enable ipx over UDP/IP emulation.");
 #endif
 
-	secprop=control->AddSection_prop("ne2000",&NE2K_Init,true);
+#if C_SLIRP
+	secprop = control->AddSection_prop("ethernet", &NE2K_Init, true);
 
 	Pbool = secprop->Add_bool("ne2000", when_idle,  true);
-	Pbool->Set_help("Enable Ethernet passthrough. Requires [Win]Pcap.");
+	Pbool->Set_help(
+	        "Emulate a Novell NE2000 network card on a software-based\n"
+	        "network (using libSLIRP) with properties as follows:\n"
+	        " - 10.0.2.0/24 : Virtual LAN\n"
+	        " - 10.0.2.2    : Virtual DHCP server\n"
+	        " - 10.0.2.3    : Virtual DNS server\n"
+	        " - 10.0.2.15   : First IP provided by DHCP (your IP)\n"
+	        "Setting this up requires DOS or Win3.1 network drivers and tools.");
 
 	Phex = secprop->Add_hex("nicbase", when_idle,  0x300);
 	Phex->Set_help("The base address of the NE2000 board.");
@@ -993,42 +1001,9 @@ void DOSBOX_Init(void) {
 		"interface number (2 or something) or a part of your adapters\n"
 		"name, e.g. VIA here.");
 
-	Pstring = secprop->Add_string("backend", Property::Changeable::WhenIdle,"slirp");
-	Pstring->Set_help("The backend used for Ethernet emulation.");
+#endif
 
-	secprop = control->AddSection_prop("ethernet, slirp", &Null_Init, true);
-
-	Pbool = secprop->Add_bool("restricted", Property::Changeable::WhenIdle, false);
-	Pbool->Set_help("Disables access to the host from the guest.\n"
-		"Services such as libslirp's DHCP server will no longer work.\n");
-
-	Pbool = secprop->Add_bool("disable_host_loopback", Property::Changeable::WhenIdle, false);
-	Pbool->Set_help("Disables guest access to the host's loopback interfaces.\n");
-
-	Pint = secprop->Add_int("mtu", Property::Changeable::WhenIdle, 0);
-	Pint->Set_help("The maximum transmission unit for Ethernet packets transmitted from the guest.\n"
-		"Specifying 0 will use libslirp's default MTU.");
-
-	Pint = secprop->Add_int("mru", Property::Changeable::WhenIdle, 0);
-	Pint->Set_help("The maximum recieve unit for Ethernet packets transmitted to the guest.\n"
-		"Specifying 0 will use libslirp's default MRU.");
-
-	Pstring = secprop->Add_string("ipv4_network", Property::Changeable::WhenIdle, "10.0.2.0");
-	Pstring->Set_help("The IPv4 network the guest and host services are on.");
-
-	Pstring = secprop->Add_string("ipv4_netmask", Property::Changeable::WhenIdle, "255.255.255.0");
-	Pstring->Set_help("The netmask for the IPv4 network.");
-
-	Pstring = secprop->Add_string("ipv4_host", Property::Changeable::WhenIdle, "10.0.2.2");
-	Pstring->Set_help("The address of the guest on the IPv4 network.");
-
-	Pstring = secprop->Add_string("ipv4_nameserver", Property::Changeable::WhenIdle, "10.0.2.3");
-	Pstring->Set_help("The address of the nameserver service provided by the host on the IPv4 network.");
-
-	Pstring = secprop->Add_string("ipv4_dhcp_start", Property::Changeable::WhenIdle, "10.0.2.15");
-	Pstring->Set_help("The start address used for DHCP by the host services on the IPv4 network.");
-
-//	secprop->AddInitFunction(&CREDITS_Init);
+	//	secprop->AddInitFunction(&CREDITS_Init);
 
 	//TODO ?
 	control->AddSection_line("autoexec", &AUTOEXEC_Init);

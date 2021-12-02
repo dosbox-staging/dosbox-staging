@@ -21,14 +21,15 @@
 #ifndef DOSBOX_ETHERNET_SLIRP_H
 #define DOSBOX_ETHERNET_SLIRP_H
 
-#include "config.h"
+#include "dosbox.h"
 
 #if C_SLIRP
 
-#include <list>
+#include <deque>
 #include <vector>
 #include <slirp/libslirp.h>
 
+#include "config.h"
 #include "ethernet.h"
 
 /*
@@ -50,7 +51,7 @@
  * time is right.
  */
 struct slirp_timer {
-	int64_t expires = 0;  /*!< When to fire the callback, in nanoseconds */
+	int64_t expires_ns = 0; /*!< When to fire the callback, in nanoseconds */
 	SlirpTimerCb cb = {}; /*!< The callback to fire */
 	void *cb_opaque = nullptr; /*!< Data libslirp wants us to pass to the
 	                              callback */
@@ -66,6 +67,11 @@ public:
 	/* Boilerplate EthernetConnection interface */
 	SlirpEthernetConnection();
 	~SlirpEthernetConnection();
+
+	/* We can't copy this */
+	SlirpEthernetConnection(const SlirpEthernetConnection &) = delete;
+	SlirpEthernetConnection &operator=(const SlirpEthernetConnection &) = delete;
+
 	bool Initialize(Section *config);
 	void SendPacket(const uint8_t *packet, int len);
 	void GetPackets(std::function<void(const uint8_t *, int)> callback);
@@ -85,10 +91,6 @@ public:
 	void PollUnregister(int fd);
 
 private:
-	/* We can't copy this */
-	SlirpEthernetConnection(const SlirpEthernetConnection &) = delete;
-	SlirpEthernetConnection &operator=(const SlirpEthernetConnection &) = delete;
-
 	/* Runs and clears all the timers*/
 	void TimersRun();
 	void TimersClear();
@@ -101,7 +103,7 @@ private:
 	Slirp *slirp = nullptr;        /*!< Handle to libslirp */
 	SlirpConfig config = {};       /*!< Configuration passed to libslirp */
 	SlirpCb slirp_callbacks = {};  /*!< Callbacks used by libslirp */
-	std::list<struct slirp_timer *> timers = {}; /*!< Stored timers */
+	std::deque<struct slirp_timer *> timers = {}; /*!< Stored timers */
 
 	/** The GetPacket callback
 	 * When libslirp has a new packet for us it calls ReceivePacket,
@@ -113,7 +115,7 @@ private:
 	 */
 	std::function<void(const uint8_t *, int)> get_packet_callback = nullptr;
 
-	std::list<int> registered_fds = {}; /*!< File descriptors to watch */
+	std::deque<int> registered_fds = {}; /*!< File descriptors to watch */
 
 #ifndef WIN32
 	std::vector<struct pollfd> polls = {}; /*!< Descriptors for poll() */
