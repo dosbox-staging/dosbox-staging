@@ -168,7 +168,7 @@ bx_ne2k_c::reset(unsigned type)
     BX_NE2K_THIS s.CR.rdma_cmd  = 4;
   BX_NE2K_THIS s.ISR.reset    = 1;
   BX_NE2K_THIS s.DCR.longaddr = 1;
-  PIC_DeActivateIRQ((unsigned int)s.base_irq);
+  PIC_DeActivateIRQ(s.base_irq);
   //DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
 }
 
@@ -246,7 +246,7 @@ bx_ne2k_c::write_cr(uint32_t value)
 			// Generate an interrupt if not masked and not one in progress
 			if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
 				//LOG_MSG("tx complete interrupt");
-				PIC_ActivateIRQ((unsigned int)s.base_irq);
+				PIC_ActivateIRQ(s.base_irq);
 			}
 			BX_NE2K_THIS s.ISR.pkt_tx = 1;
 		}
@@ -306,7 +306,7 @@ bx_ne2k_c::write_cr(uint32_t value)
       BX_NE2K_THIS s.remote_bytes == 0) {
     BX_NE2K_THIS s.ISR.rdma_done = 1;
     if (BX_NE2K_THIS s.IMR.rdma_inte) {
-		PIC_ActivateIRQ((unsigned int)s.base_irq);
+		PIC_ActivateIRQ(s.base_irq);
       //DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
     }
   }
@@ -420,7 +420,7 @@ bx_ne2k_c::asic_read(uint32_t offset, unsigned int io_len)
 	if (BX_NE2K_THIS s.remote_bytes == 0) {
 	    BX_NE2K_THIS s.ISR.rdma_done = 1;
 	    if (BX_NE2K_THIS s.IMR.rdma_inte) {
-			PIC_ActivateIRQ((unsigned int)s.base_irq);
+			PIC_ActivateIRQ(s.base_irq);
 		//DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
 		}
 	}
@@ -469,7 +469,7 @@ bx_ne2k_c::asic_write(uint32_t offset, uint32_t value, unsigned io_len)
     if (BX_NE2K_THIS s.remote_bytes == 0) {
       BX_NE2K_THIS s.ISR.rdma_done = 1;
       if (BX_NE2K_THIS s.IMR.rdma_inte) {
-	  PIC_ActivateIRQ((unsigned int)s.base_irq);
+	  PIC_ActivateIRQ(s.base_irq);
 	  //DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
       }
     }
@@ -666,7 +666,7 @@ bx_ne2k_c::page0_write(uint32_t offset, uint32_t value, unsigned io_len)
               (unsigned int)(BX_NE2K_THIS s.IMR.tx_inte    << 1u) |
               (unsigned int)(BX_NE2K_THIS s.IMR.rx_inte));
     if (value == 0)
-	  PIC_DeActivateIRQ((unsigned int)s.base_irq);
+	  PIC_DeActivateIRQ(s.base_irq);
       //DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
     break;
 
@@ -775,7 +775,7 @@ bx_ne2k_c::page0_write(uint32_t offset, uint32_t value, unsigned io_len)
     BX_NE2K_THIS s.IMR.rdma_inte  = ((value & 0x40) == 0x40);
 	if(BX_NE2K_THIS s.ISR.pkt_tx && BX_NE2K_THIS s.IMR.tx_inte) {
 	  LOG_MSG("tx irq retrigger");
-	  PIC_ActivateIRQ((unsigned int)s.base_irq);
+	  PIC_ActivateIRQ(s.base_irq);
 	}
     break;
   default:
@@ -1064,7 +1064,7 @@ bx_ne2k_c::tx_timer(void)
   // Generate an interrupt if not masked and not one in progress
   if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
 		//LOG_MSG("tx complete interrupt");
-	  PIC_ActivateIRQ((unsigned int)s.base_irq);
+	  PIC_ActivateIRQ(s.base_irq);
     //DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
   } //else 	  LOG_MSG("no tx complete interrupt");
   BX_NE2K_THIS s.ISR.pkt_tx = 1;
@@ -1362,7 +1362,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 
   if (BX_NE2K_THIS s.IMR.rx_inte) {
 	//LOG_MSG("packet rx interrupt");
-	  PIC_ActivateIRQ((unsigned int)s.base_irq);
+	  PIC_ActivateIRQ(s.base_irq);
     //DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
   } //else LOG_MSG("no packet rx interrupt");
 
