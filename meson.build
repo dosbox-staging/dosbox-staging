@@ -129,11 +129,20 @@ if cc.has_member('struct dirent', 'd_type', prefix : '#include <dirent.h>')
   conf_data.set10('HAVE_STRUCT_DIRENT_D_TYPE', true)
 endif
 
-foreach header : ['pwd.h', 'strings.h', 'netinet/in.h', 'sys/socket.h']
+foreach header : ['pwd.h', 'strings.h', 'netinet/in.h']
   if cc.has_header(header)
     conf_data.set('HAVE_' + header.underscorify().to_upper(), 1)
   endif
 endforeach
+
+# Check for the actual calls we need in socket.h, because some systems
+# have socket.h but are missing some calls.
+if cc.has_header('sys/socket.h')
+  if cc.has_function('getpeername', prefix : '#include <sys/socket.h>') and \
+     cc.has_function('getsockname', prefix : '#include <sys/socket.h>')
+    conf_data.set10('HAVE_SYS_SOCKET_H', true)
+  endif
+endif
 
 # Header windows.h defines old min/max macros, that conflict with C++11
 # std::min/std::max.  Defining NOMINMAX prevents these macros from appearing.
