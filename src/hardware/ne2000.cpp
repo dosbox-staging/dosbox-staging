@@ -1333,7 +1333,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   }
   pkthdr[1] = nextpage;	// ptr to next packet
   pkthdr[2] = (io_len + 4) & 0xff;	// length-low
-  pkthdr[3] = (io_len + 4) >> 8;	// length-hi
+  pkthdr[3] = check_cast<uint8_t>((io_len + 4) >> 8);	// length-hi
 
   // copy into buffer, update curpage, and signal interrupt if config'd
   startptr = & BX_NE2K_THIS s.mem[BX_NE2K_THIS s.curr_page * 256 -
