@@ -603,6 +603,8 @@ void
 bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 {
   auto value = check_cast<uint8_t>(data);
+  unsigned int new_value = 0;
+
   BX_DEBUG("page 0 write to port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len);
 
@@ -655,23 +657,24 @@ bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
     BX_NE2K_THIS s.ISR.overwrite &= ~((bx_bool)((value & 0x10) == 0x10));
     BX_NE2K_THIS s.ISR.cnt_oflow &= ~((bx_bool)((value & 0x20) == 0x20));
     BX_NE2K_THIS s.ISR.rdma_done &= ~((bx_bool)((value & 0x40) == 0x40));
-    value = ((unsigned int)(BX_NE2K_THIS s.ISR.rdma_done << 6u) |
+    new_value = ((unsigned int)(BX_NE2K_THIS s.ISR.rdma_done << 6u) |
              (unsigned int)(BX_NE2K_THIS s.ISR.cnt_oflow << 5u) |
              (unsigned int)(BX_NE2K_THIS s.ISR.overwrite << 4u) |
              (unsigned int)(BX_NE2K_THIS s.ISR.tx_err    << 3u) |
              (unsigned int)(BX_NE2K_THIS s.ISR.rx_err    << 2u) |
              (unsigned int)(BX_NE2K_THIS s.ISR.pkt_tx    << 1u) |
              (unsigned int)(BX_NE2K_THIS s.ISR.pkt_rx));
-    value &= ((unsigned int)(BX_NE2K_THIS s.IMR.rdma_inte  << 6u) |
+    new_value &= ((unsigned int)(BX_NE2K_THIS s.IMR.rdma_inte  << 6u) |
               (unsigned int)(BX_NE2K_THIS s.IMR.cofl_inte  << 5u) |
               (unsigned int)(BX_NE2K_THIS s.IMR.overw_inte << 4u) |
               (unsigned int)(BX_NE2K_THIS s.IMR.txerr_inte << 3u) |
               (unsigned int)(BX_NE2K_THIS s.IMR.rxerr_inte << 2u) |
               (unsigned int)(BX_NE2K_THIS s.IMR.tx_inte    << 1u) |
               (unsigned int)(BX_NE2K_THIS s.IMR.rx_inte));
-    if (value == 0)
+    if (new_value == 0)
 	    PIC_DeActivateIRQ(s.base_irq);
       //DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
+    value = check_cast<uint8_t>(new_value);
     break;
 
   case 0x8:  // RSAR0
