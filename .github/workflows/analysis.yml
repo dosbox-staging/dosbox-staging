@@ -33,7 +33,6 @@ jobs:
           sudo apt-get install ruby-full
           ruby --version
           sudo gem install mdl
-          sudo chmod go-w /usr/share/rust/.cargo/bin
       - name: Run markdownlint
         run:  ./scripts/verify-markdown.sh
       - name: Install appstream-util
