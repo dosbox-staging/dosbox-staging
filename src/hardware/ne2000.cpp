@@ -227,7 +227,7 @@ bx_ne2k_c::write_cr(io_val_t data)
 	// Set up DMA read from receive ring
 		BX_NE2K_THIS s.remote_start = BX_NE2K_THIS s.remote_dma =
 			BX_NE2K_THIS s.bound_ptr * 256;
-		BX_NE2K_THIS s.remote_bytes = *((uint16_t*) &
+		BX_NE2K_THIS s.remote_bytes = * reinterpret_cast<uint16_t*>( &
 			BX_NE2K_THIS s.mem[BX_NE2K_THIS s.bound_ptr * 256 + 2 - BX_NE2K_MEMSTART]);
 		BX_INFO("Sending buffer #x%x length %d",
 			BX_NE2K_THIS s.remote_start,
