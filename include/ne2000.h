@@ -33,6 +33,8 @@
 
 #include "dosbox.h"
 
+#include "inout.h"
+
 #define bx_bool int
 #define bx_param_c uint8_t
 
@@ -208,22 +210,22 @@ public:
   /* TODO: Setup SDL */
   //eth_pktmover_c *ethdev;
 
-  BX_NE2K_SMF uint32_t read_cr(void);
-  BX_NE2K_SMF void   write_cr(uint32_t value);
+  BX_NE2K_SMF uint32_t read_cr();
+  BX_NE2K_SMF void   write_cr(io_val_t value);
 
-  BX_NE2K_SMF uint32_t chipmem_read(uint32_t address, unsigned int io_len);
-  BX_NE2K_SMF uint32_t asic_read(uint32_t offset, unsigned int io_len);
-  BX_NE2K_SMF uint32_t page0_read(uint32_t offset, unsigned int io_len);
-  BX_NE2K_SMF uint32_t page1_read(uint32_t offset, unsigned int io_len);
-  BX_NE2K_SMF uint32_t page2_read(uint32_t offset, unsigned int io_len);
-  BX_NE2K_SMF uint32_t page3_read(uint32_t offset, unsigned int io_len);
+  BX_NE2K_SMF uint32_t chipmem_read(io_port_t address, io_width_t io_len);
+  BX_NE2K_SMF uint32_t asic_read(io_port_t offset, io_width_t io_len);
+  BX_NE2K_SMF uint32_t page0_read(io_port_t offset, io_width_t io_len);
+  BX_NE2K_SMF uint32_t page1_read(io_port_t offset, io_width_t io_len);
+  BX_NE2K_SMF uint32_t page2_read(io_port_t offset, io_width_t io_len);
+  BX_NE2K_SMF uint32_t page3_read(io_port_t offset, io_width_t io_len);
 
-  BX_NE2K_SMF void chipmem_write(uint32_t address, uint32_t value, unsigned io_len);
-  BX_NE2K_SMF void asic_write(uint32_t address, uint32_t value, unsigned io_len);
-  BX_NE2K_SMF void page0_write(uint32_t address, uint32_t value, unsigned io_len);
-  BX_NE2K_SMF void page1_write(uint32_t address, uint32_t value, unsigned io_len);
-  BX_NE2K_SMF void page2_write(uint32_t address, uint32_t value, unsigned io_len);
-  BX_NE2K_SMF void page3_write(uint32_t address, uint32_t value, unsigned io_len);
+  BX_NE2K_SMF void chipmem_write(io_port_t address, io_val_t value, io_width_t io_len);
+  BX_NE2K_SMF void asic_write(io_port_t address, io_val_t value, io_width_t io_len);
+  BX_NE2K_SMF void page0_write(io_port_t address, io_val_t value, io_width_t io_len);
+  BX_NE2K_SMF void page1_write(io_port_t address, io_val_t value, io_width_t io_len);
+  BX_NE2K_SMF void page2_write(io_port_t address, io_val_t value, io_width_t io_len);
+  BX_NE2K_SMF void page3_write(io_port_t address, io_val_t value, io_width_t io_len);
 
 public:
   static void tx_timer_handler(void *);
@@ -234,11 +236,11 @@ public:
   BX_NE2K_SMF void rx_frame(const void *buf, unsigned io_len);
 
 
-  static uint32_t read_handler(void *this_ptr, uint32_t address, unsigned io_len);
-  static void   write_handler(void *this_ptr, uint32_t address, uint32_t value, unsigned io_len);
+  static uint32_t read_handler(void *this_ptr, io_port_t address, io_width_t io_len);
+  static void   write_handler(void *this_ptr, io_port_t address, io_val_t value, io_width_t io_len);
 #if !BX_USE_NE2K_SMF
-  uint32_t read(uint32_t address, unsigned io_len);
-  void   write(uint32_t address, uint32_t value, unsigned io_len);
+  uint32_t read(io_port_t address, io_width_t io_len);
+  void   write(io_port_t address, io_val_t value, io_width_t io_len);
 #endif
 
 
