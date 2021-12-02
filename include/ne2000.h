@@ -187,7 +187,7 @@ typedef struct {
   uint8_t  mem[BX_NE2K_MEMSIZ];  // on-chip packet memory
 
     // ne2k internal state
-  uint32_t base_address;
+  io_port_t base_address;
   uint8_t  base_irq;
   int    tx_timer_index;
   int    tx_timer_active;

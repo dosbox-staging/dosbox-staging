@@ -1092,7 +1092,7 @@ uint32_t bx_ne2k_c::read(uint32_t address, unsigned io_len)
 #endif  // !BX_USE_NE2K_SMF
   BX_DEBUG("read addr %x, len %d", address, io_len);
   uint32_t retval = 0;
-  unsigned int offset = (unsigned int)address - (unsigned int)(BX_NE2K_THIS s.base_address);
+  const io_port_t offset = address - (BX_NE2K_THIS s.base_address);
 
   if (offset >= 0x10) {
     retval = asic_read(offset - 0x10, io_len);
@@ -1147,7 +1147,7 @@ bx_ne2k_c::write(uint32_t address, uint32_t value, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_NE2K_SMF
   BX_DEBUG("write with length %d", io_len);
-  unsigned int offset = (unsigned int)address - (unsigned int)(BX_NE2K_THIS s.base_address);
+  const io_port_t offset = address - (BX_NE2K_THIS s.base_address);
 
   //
   // The high 16 bytes of i/o space are for the ne2000 asic -
@@ -1408,7 +1408,7 @@ void bx_ne2k_c::init()
 
 
   BX_INFO("port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
-           (unsigned int)(BX_NE2K_THIS s.base_address),
+           (BX_NE2K_THIS s.base_address),
            (int)(BX_NE2K_THIS s.base_irq),
            BX_NE2K_THIS s.physaddr[0],
            BX_NE2K_THIS s.physaddr[1],
@@ -1483,17 +1483,17 @@ public:
 		}
 
 		// get irq and base
-		Bitu irq = (Bitu)section->Get_int("nicirq");
+		auto irq = check_cast<uint8_t>(section->Get_int("nicirq"));
 		if(!(irq==3 || irq==4  || irq==5  || irq==6 ||irq==7 ||
 			irq==9 || irq==10 || irq==11 || irq==12 ||irq==14 ||irq==15)) {
 			irq=3;
 		}
-		Bitu base = (Bitu)section->Get_hex("nicbase");
+		auto base = static_cast<io_port_t>(section->Get_hex("nicbase"));
 		if(!(base==0x260||base==0x280||base==0x300||base==0x320||base==0x340||base==0x380)) {
 			base=0x300;
 		}
 
-        LOG_MSG("NE2000: Base=0x%x irq=%u",(unsigned int)base,(unsigned int)irq);
+        LOG_MSG("NE2000: Base=0x%x irq=%u", base, irq);
 
 		// mac address
 		const char* macstring=section->Get_string("macaddr");
@@ -1513,8 +1513,8 @@ public:
 		theNE2kDevice = new bx_ne2k_c ();
 		memcpy(theNE2kDevice->s.physaddr, mac, 6);
 
-		theNE2kDevice->s.base_address=(uint32_t)base;
-		theNE2kDevice->s.base_irq=(int)irq;
+		theNE2kDevice->s.base_address = base;
+		theNE2kDevice->s.base_irq = irq;
 
 		theNE2kDevice->init();
 
