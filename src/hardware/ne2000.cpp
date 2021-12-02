@@ -284,7 +284,7 @@ bx_ne2k_c::write_cr(io_val_t data)
 	//LOG_MSG("send packet command");
 	//s.tx_timer_index = (64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10;
 	s.tx_timer_active = 1;
-	PIC_AddEvent(NE2000_TX_Event,(float)((64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10000.0),0);
+	PIC_AddEvent(NE2000_TX_Event,(64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10000.0,0);
     // Schedule a timer to trigger a tx-complete interrupt
     // The number of microseconds is the bit-time / 10.
     // The bit-time is the preamble+sfd (64 bits), the
