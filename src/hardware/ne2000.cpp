@@ -411,7 +411,7 @@ bx_ne2k_c::asic_read(io_port_t offset, io_width_t io_len)
     //
     BX_NE2K_THIS s.remote_dma += (BX_NE2K_THIS s.DCR.wdsize + 1);
     if (BX_NE2K_THIS s.remote_dma == BX_NE2K_THIS s.page_stop << 8) {
-      BX_NE2K_THIS s.remote_dma = BX_NE2K_THIS s.page_start << 8;
+      BX_NE2K_THIS s.remote_dma = check_cast<uint16_t>(BX_NE2K_THIS s.page_start << 8);
     }
     // keep s.remote_bytes from underflowing
     if (BX_NE2K_THIS s.remote_bytes > 1)
@@ -461,7 +461,7 @@ bx_ne2k_c::asic_write(io_port_t offset, io_val_t value, io_width_t io_len)
     // is this right ??? asic_read uses DCR.wordsize
     BX_NE2K_THIS s.remote_dma   += static_cast<uint8_t>(io_len);
     if (BX_NE2K_THIS s.remote_dma == BX_NE2K_THIS s.page_stop << 8) {
-      BX_NE2K_THIS s.remote_dma = BX_NE2K_THIS s.page_start << 8;
+      BX_NE2K_THIS s.remote_dma = check_cast<uint16_t>(BX_NE2K_THIS s.page_start << 8);
     }
 
     BX_NE2K_THIS s.remote_bytes -= static_cast<uint8_t>(io_len);
