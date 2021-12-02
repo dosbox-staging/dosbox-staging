@@ -233,7 +233,7 @@ public:
 
   //static void rx_handler(void *arg, const void *buf, unsigned len);
   BX_NE2K_SMF unsigned mcast_index(const void *dst);
-  BX_NE2K_SMF void rx_frame(const void *buf, unsigned io_len);
+  BX_NE2K_SMF void rx_frame(const void *buf, unsigned bytes);
 
 
   static uint32_t read_handler(void *this_ptr, io_port_t address, io_width_t io_len);
