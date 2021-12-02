@@ -18,29 +18,23 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "ethernet.h"
+
 #include <cstring>
 
-#include "dosbox.h"
 #include "control.h"
-#include "ethernet.h"
 #include "ethernet_slirp.h"
 
-EthernetConnection *OpenEthernetConnection(const std::string &backend)
+EthernetConnection *ETHERNET_OpenConnection(const std::string &backend)
 {
 	EthernetConnection *conn = nullptr;
-	Section *settings = nullptr;
 #if C_SLIRP
 	if (backend == "slirp") {
-		conn = ((EthernetConnection *)new SlirpEthernetConnection);
-		settings = control->GetSection("ethernet, slirp");
+		conn = new SlirpEthernetConnection;
 	}
 #endif
-	assert(settings);
-	if (!conn) {
-		LOG_MSG("ETHERNET: Unknown ethernet backend: %s", backend.c_str());
-		return nullptr;
-	}
-	if (conn->Initialize(settings)) {
+	assert(conn);
+	if (conn->Initialize(nullptr)) {
 		return conn;
 	} else {
 		delete conn;

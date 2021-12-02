@@ -95,8 +95,11 @@
 // Define to 1 to enable FluidSynth integration (built-in MIDI synth)
 #mesondefine C_FLUIDSYNTH
 
-// Define to 1 to enable libslirp Ethernet emulation
+// Define to 1 to enable libslirp Ethernet support
 #mesondefine C_SLIRP
+
+// Define to 1 to enable Novell NE 2000 NIC emulation
+#mesondefine C_NE2000
 
 // Define to 1 to enable screenshots in .png format
 #mesondefine C_SSHOT

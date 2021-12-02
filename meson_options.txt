@@ -14,7 +14,7 @@ option('use_png', type : 'boolean', value : true,
        description : 'Enable saving screenshots in .png format')
 
 option('use_slirp', type : 'boolean', value : true,
-       description : 'Enable ethernet emulation using libslirp')
+       description : 'Enable Ethernet emulation using Libslirp')
 
 # This option exists only for rare situations when Linux developer cannot
 # install ALSA library headers on their machine.

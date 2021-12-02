@@ -24,6 +24,8 @@
 
 #include "ne2000.h"
 
+#if C_NE2000
+
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
@@ -605,8 +607,7 @@ bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
   auto value = check_cast<uint8_t>(data);
   unsigned int new_value = 0;
 
-  BX_DEBUG("page 0 write to port %04x, len=%u", (unsigned) offset,
-	   (unsigned) io_len);
+  BX_DEBUG("page 0 write to port %04x, len=%u", (unsigned)offset, (unsigned)io_len);
 
   // It appears to be a common practice to use outw on page0 regs...
 
@@ -658,22 +659,22 @@ bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
     BX_NE2K_THIS s.ISR.cnt_oflow &= ~((bx_bool)((value & 0x20) == 0x20));
     BX_NE2K_THIS s.ISR.rdma_done &= ~((bx_bool)((value & 0x40) == 0x40));
     new_value = ((unsigned int)(BX_NE2K_THIS s.ISR.rdma_done << 6u) |
-             (unsigned int)(BX_NE2K_THIS s.ISR.cnt_oflow << 5u) |
-             (unsigned int)(BX_NE2K_THIS s.ISR.overwrite << 4u) |
-             (unsigned int)(BX_NE2K_THIS s.ISR.tx_err    << 3u) |
-             (unsigned int)(BX_NE2K_THIS s.ISR.rx_err    << 2u) |
-             (unsigned int)(BX_NE2K_THIS s.ISR.pkt_tx    << 1u) |
-             (unsigned int)(BX_NE2K_THIS s.ISR.pkt_rx));
-    new_value &= ((unsigned int)(BX_NE2K_THIS s.IMR.rdma_inte  << 6u) |
-              (unsigned int)(BX_NE2K_THIS s.IMR.cofl_inte  << 5u) |
-              (unsigned int)(BX_NE2K_THIS s.IMR.overw_inte << 4u) |
-              (unsigned int)(BX_NE2K_THIS s.IMR.txerr_inte << 3u) |
-              (unsigned int)(BX_NE2K_THIS s.IMR.rxerr_inte << 2u) |
-              (unsigned int)(BX_NE2K_THIS s.IMR.tx_inte    << 1u) |
-              (unsigned int)(BX_NE2K_THIS s.IMR.rx_inte));
+		 (unsigned int)(BX_NE2K_THIS s.ISR.cnt_oflow << 5u) |
+		 (unsigned int)(BX_NE2K_THIS s.ISR.overwrite << 4u) |
+		 (unsigned int)(BX_NE2K_THIS s.ISR.tx_err << 3u) |
+		 (unsigned int)(BX_NE2K_THIS s.ISR.rx_err << 2u) |
+		 (unsigned int)(BX_NE2K_THIS s.ISR.pkt_tx << 1u) |
+		 (unsigned int)(BX_NE2K_THIS s.ISR.pkt_rx));
+    new_value &= ((unsigned int)(BX_NE2K_THIS s.IMR.rdma_inte << 6u) |
+		  (unsigned int)(BX_NE2K_THIS s.IMR.cofl_inte << 5u) |
+		  (unsigned int)(BX_NE2K_THIS s.IMR.overw_inte << 4u) |
+		  (unsigned int)(BX_NE2K_THIS s.IMR.txerr_inte << 3u) |
+		  (unsigned int)(BX_NE2K_THIS s.IMR.rxerr_inte << 2u) |
+		  (unsigned int)(BX_NE2K_THIS s.IMR.tx_inte << 1u) |
+		  (unsigned int)(BX_NE2K_THIS s.IMR.rx_inte));
     if (new_value == 0)
 	    PIC_DeActivateIRQ(s.base_irq);
-      //DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
+    // DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
     value = check_cast<uint8_t>(new_value);
     break;
 
@@ -1469,18 +1470,18 @@ private:
 public:
 	bool load_success;
 	NE2K(Section* configuration)
-	: Module_base(configuration), load_success(true) {
+	: Module_base(configuration),
+    load_success(true) {
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		if(!section->Get_bool("ne2000")) {
 			load_success = false;
 			return;
 		}
 
-		const char* backendstring = section->Get_string("backend");
-		ethernet = OpenEthernetConnection(backendstring);
+		ethernet = ETHERNET_OpenConnection("slirp");
 		if(!ethernet)
 		{
-			LOG_MSG("NE2000: Failed to open Ethernet backend %s", backendstring);
+			LOG_MSG("NE2000: Failed to open Ethernet slirp backend");
 			load_success = false;
 			return;
 		}
@@ -1534,10 +1535,10 @@ public:
 	}	
 	
 	~NE2K() {
-		if(ethernet != 0) delete ethernet;
-		ethernet=0;
-		if(theNE2kDevice != 0) delete theNE2kDevice;
-		theNE2kDevice=0;
+		delete ethernet;
+		ethernet = nullptr;
+		delete theNE2kDevice;
+		theNE2kDevice = nullptr;
 		TIMER_DelTickHandler(NE2000_Poller);
 		PIC_RemoveEvents(NE2000_TX_Event);
 	}	
@@ -1561,3 +1562,5 @@ void NE2K_Init(Section *sec)
 		test=0;
 	}
 }
+
+#endif // C_NE2000

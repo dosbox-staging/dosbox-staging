@@ -10,7 +10,7 @@ env:
   CCACHE_DIR:      "/c/ccache"
   CCACHE_MAXSIZE:  "64M"
   CCACHE_COMPRESS: "true"
-  BUILD_FLAGS: "-Dbuildtype=release -Ddefault_library=static -Db_asneeded=true -Dtry_static_libs=png,opusfile"
+  BUILD_FLAGS: "-Dbuildtype=release -Ddefault_library=static -Db_asneeded=true -Dtry_static_libs=png,opusfile,slirp"
   BUILD_RELEASE_DIR: build/release
   BUILD_DEBUGGER_DIR: build/debugger
 
@@ -88,6 +88,7 @@ jobs:
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-fluidsynth
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-munt-mt32emu
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libpng
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libslirp
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-opusfile
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2_net
@@ -187,6 +188,7 @@ jobs:
             mingw-w64-${{matrix.conf.arch}}-fluidsynth
             mingw-w64-${{matrix.conf.arch}}-munt-mt32emu
             mingw-w64-${{matrix.conf.arch}}-libpng
+            mingw-w64-${{matrix.conf.arch}}-libslirp
             mingw-w64-${{matrix.conf.arch}}-opusfile
             mingw-w64-${{matrix.conf.arch}}-SDL2
             mingw-w64-${{matrix.conf.arch}}-SDL2_net
