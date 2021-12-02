@@ -188,7 +188,7 @@ typedef struct {
 
     // ne2k internal state
   uint32_t base_address;
-  int    base_irq;
+  uint8_t  base_irq;
   int    tx_timer_index;
   int    tx_timer_active;
 } bx_ne2k_t;
