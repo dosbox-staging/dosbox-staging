@@ -1242,7 +1242,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   int avail;
   unsigned idx;
 //  int wrapped;
-  int nextpage;
+  uint8_t nextpage;
   unsigned char pkthdr[4];
   unsigned char *pktbuf = (unsigned char *) buf;
   unsigned char *startptr;
@@ -1319,9 +1319,9 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   	   pktbuf[0], pktbuf[1], pktbuf[2], pktbuf[3], pktbuf[4], pktbuf[5],
   	   pktbuf[6], pktbuf[7], pktbuf[8], pktbuf[9], pktbuf[10], pktbuf[11]);
 
-  nextpage = BX_NE2K_THIS s.curr_page + pages;
+  nextpage = check_cast<uint8_t>(BX_NE2K_THIS s.curr_page + pages);
   if (nextpage >= BX_NE2K_THIS s.page_stop) {
-    nextpage -= BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.page_start;
+    nextpage -= check_cast<uint8_t>(BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.page_start);
   }
 
   // Setup packet header
