@@ -649,7 +649,7 @@ bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
     value &= 0x7f;  // clear RST bit - status-only bit
     // All other values are cleared iff the ISR bit is 1
     BX_NE2K_THIS s.ISR.pkt_rx    &= ~((bx_bool)((value & 0x01) == 0x01));
-	BX_NE2K_THIS s.ISR.pkt_tx    &= ~((bx_bool)((value & 0x02) == 0x02));
+    BX_NE2K_THIS s.ISR.pkt_tx    &= ~((bx_bool)((value & 0x02) == 0x02));
     BX_NE2K_THIS s.ISR.rx_err    &= ~((bx_bool)((value & 0x04) == 0x04));
     BX_NE2K_THIS s.ISR.tx_err    &= ~((bx_bool)((value & 0x08) == 0x08));
     BX_NE2K_THIS s.ISR.overwrite &= ~((bx_bool)((value & 0x10) == 0x10));
@@ -670,7 +670,7 @@ bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
               (unsigned int)(BX_NE2K_THIS s.IMR.tx_inte    << 1u) |
               (unsigned int)(BX_NE2K_THIS s.IMR.rx_inte));
     if (value == 0)
-	  PIC_DeActivateIRQ(s.base_irq);
+	    PIC_DeActivateIRQ(s.base_irq);
       //DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
     break;
 
