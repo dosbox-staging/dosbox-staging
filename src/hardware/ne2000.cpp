@@ -1197,8 +1197,8 @@ bx_ne2k_c::mcast_index(const void *dst)
 #define POLYNOMIAL 0x04c11db6
   unsigned long crc = 0xffffffffL;
   int carry, i, j;
-  unsigned char b;
-  unsigned char *ep = (unsigned char *) dst;
+  uint8_t b;
+  uint8_t *ep = (uint8_t *) dst;
 
   for (i = 6; --i >= 0;) {
       b = *ep++;
@@ -1243,10 +1243,10 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   unsigned idx;
 //  int wrapped;
   uint8_t nextpage;
-  unsigned char pkthdr[4];
-  unsigned char *pktbuf = (unsigned char *) buf;
-  unsigned char *startptr;
-  static unsigned char bcast_addr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
+  uint8_t pkthdr[4];
+  uint8_t *pktbuf = (uint8_t *) buf;
+  uint8_t *startptr;
+  static uint8_t bcast_addr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
   if(io_len != 60) {
 	BX_DEBUG("rx_frame with length %d", io_len);
