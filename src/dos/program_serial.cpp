@@ -67,7 +67,7 @@ void SERIAL::Run()
 			port = stoi(temp_line);
 		} catch (...) {
 		}
-		if (port < 1 || port >= SERIAL_MAX_PORTS) {
+		if (port < 1 || port > SERIAL_MAX_PORTS) {
 			// Didn't understand the port number.
 			WriteOut(MSG_Get("PROGRAM_SERIAL_BAD_PORT"), SERIAL_MAX_PORTS);
 			return;
