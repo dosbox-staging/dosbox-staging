@@ -21,6 +21,14 @@ jobs:
       fail-fast: false
       matrix:
         conf:
+          - name: Clang (macos-10.15)
+            host: macos-10.15
+            arch: x86_64
+            needs_deps: true
+            packages: meson
+            build_flags: -Dunit_tests=disabled
+            max_warnings: 0
+
           - name: Clang
             host: macos-latest
             arch: x86_64
@@ -132,16 +140,21 @@ jobs:
     name: Release build (${{ matrix.runner.arch }})
     runs-on: ${{ matrix.runner.host }}
     if: github.event_name != 'pull_request' || contains('dreamer,kcgen,ant-222,Wengier,kklobe', github.actor) == false
+    env:
+      MIN_SUPPORTED_MACOSX_DEPLOYMENT_TARGET: ${{ matrix.runner.minimum_deployment }}
 
     strategy:
       matrix:
         runner:
-          - host: macos-latest
+          - host: macos-10.15
             arch: x86_64
+            build_flags: --native-file=.github/meson/macos-10.15-deployment-target.ini
+            minimum_deployment: '10.15'
             needs_deps: true
 
           - host: [self-hosted, macOS, arm64, release-builds]
             arch: arm64
+            minimum_deployment: '11.0'
             needs_deps: false
 
     steps:
@@ -202,6 +215,7 @@ jobs:
       - name: Setup release build
         run: |
           arch -arch=${{ matrix.runner.arch }} meson setup \
+            ${{ matrix.conf.build_flags }} \
             --wrap-mode=forcefallback \
             -Dbuildtype=release \
             -Ddefault_library=static \
@@ -224,7 +238,7 @@ jobs:
   publish_universal_build:
     name: Publish universal build
     needs: build_macos_release
-    runs-on: macos-latest
+    runs-on: macos-10.15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
