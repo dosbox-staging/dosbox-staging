@@ -37,7 +37,7 @@ CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
 	uint32_t bool_temp = 0;
 
 	// enet: Setting to 1 enables enet on the port, otherwise TCP.
-	if (getUintFromString("enet:", bool_temp, cmd)) {
+	if (getUintFromString("sock:", bool_temp, cmd)) {
 		if (bool_temp == 1) {
 			socketType = SOCKET_TYPE_ENET;
 		}
