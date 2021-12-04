@@ -782,7 +782,7 @@ static void DSP_DoDMATransfer(const DMA_MODES mode, uint32_t freq, bool autoinit
 		return;
 	}
 
-	//Going from an active autoinit into a single cycle
+	// Going from an active autoinit into a single cycle
 	if (sb.mode >= MODE_DMA && sb.dma.autoinit && !autoinit) {
 		//Don't do anything, the total will flip over on the next transfer
 	}
@@ -790,11 +790,13 @@ static void DSP_DoDMATransfer(const DMA_MODES mode, uint32_t freq, bool autoinit
 	else if (!autoinit) {
 		sb.dma.left = sb.dma.singlesize;
 		sb.dma.singlesize = 0;
+		sb.dma.remain_size = 0;
 	}
-	//Going into an autoinit transfer
+	// Going into an autoinit transfer
 	else {
 		//Transfer full cycle again
 		sb.dma.left = sb.dma.autosize;
+		sb.dma.remain_size = 0;
 	}
 	sb.dma.autoinit = autoinit;
 	sb.dma.mode = mode;
