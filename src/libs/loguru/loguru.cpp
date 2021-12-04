@@ -420,18 +420,27 @@ namespace loguru
 	LOGURU_PRINTF_LIKE(1, 0)
 	static Text vtextprintf(const char* format, va_list vlist)
 	{
-#ifdef _WIN32
-		int bytes_needed = _vscprintf(format, vlist);
+		// Determine the required length of the string
+		int bytes_needed = 0;
+
+		// Calling vsnprintf is assumed to 'consume' the vlist, therefore we need a copy
+		// of the args to avoid corrupting the stack in the second call to vsnprintf.
+		va_list argcopy;
+		va_copy(argcopy, vlist);
+		bytes_needed = vsnprintf(NULL, 0, format, argcopy);
+		va_end(argcopy);
 		CHECK_F(bytes_needed >= 0, "Bad string format: '%s'", format);
-		char* buff = (char*)malloc(bytes_needed+1);
-		vsnprintf(buff, bytes_needed+1, format, vlist);
+
+		// Allocate the string's buffer
+		++bytes_needed; // Add space for null terminator
+		auto buff = static_cast<char*>(malloc(bytes_needed));
+		CHECK_F(buff != nullptr, "Out of memory");
+
+		// Construct the string and check the result
+		const auto written = vsnprintf(buff, bytes_needed, format, vlist);
+		CHECK_F(written <= bytes_needed, "Bad string format: '%s'", format);
+
 		return Text(buff);
-#else
-		char* buff = nullptr;
-		int result = vasprintf(&buff, format, vlist);
-		CHECK_F(result >= 0, "Bad string format: '" LOGURU_FMT(s) "'", format);
-		return Text(buff);
-#endif
 	}
 
 	Text textprintf(const char* format, ...)
@@ -582,6 +591,7 @@ namespace loguru
 		return Text(STRDUP(buff));
 	#else
 		// Not thread-safe.
+		(void)buff; // unused parameter
 		return Text(STRDUP(strerror(errno)));
 	#endif
 	}
@@ -630,6 +640,9 @@ namespace loguru
 						pthread_set_name_np(this_thread, main_thread_name);
 					#elif defined(__linux__) || defined(__sun)
 						pthread_setname_np(this_thread, main_thread_name);
+					#else
+						// platforms that we don't know how to set the name on
+						(void)this_thread; // unused
 					#endif
 				}
 			#endif // LOGURU_PTHREADS
@@ -1046,6 +1059,9 @@ namespace loguru
 				pthread_set_name_np(pthread_self(), name);
 			#elif defined(__linux__) || defined(__sun)
 				pthread_setname_np(pthread_self(), name);
+			#else
+				// Platforms that may not support setting a thread name
+				(void)name; // unused
 			#endif
 		#elif LOGURU_WINTHREADS
 			// Store thread name in a thread-local storage:
@@ -1073,7 +1089,12 @@ namespace loguru
 			// Ask the OS about the thread name.
 			// This is what we *want* to do on all platforms, but
 			// only some platforms support it (currently).
-			pthread_getname_np(pthread_self(), buffer, length);
+			#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__linux__) || defined(__sun)
+				pthread_getname_np(pthread_self(), buffer, length);
+			#else
+				// Other platforms that don't support thread names
+				buffer[0] = 0;
+			#endif
 		#elif LOGURU_WINTHREADS
 			snprintf(buffer, static_cast<size_t>(length), "%s", thread_name_buffer());
 		#else
@@ -1094,7 +1115,7 @@ namespace loguru
 				long thread_id;
 				(void)thr_self(&thread_id);
 			#elif LOGURU_PTHREADS
-				uint64_t thread_id = pthread_self();
+				const auto thread_id = reinterpret_cast<uintptr_t>(pthread_self());
 			#else
 				// This ID does not correllate to anything we can get from the OS,
 				// so this is the worst way to get the ID.
@@ -1286,9 +1307,14 @@ namespace loguru
 			}
 		}
 		if (g_preamble_pipe && pos < out_buff_size) {
-			// Because this is the last if-statement, we avoid incrementing the
-			// position to clarify it's unused.
 			(void)snprintf(out_buff + pos, out_buff_size - pos, "| ");
+
+			// Because this is the last if-statement, we avoid incrementing the
+			//  position to clarify it's unused. If more cases are added, then:
+			// int bytes = snprintf(...)
+			// if (bytes > 0) {
+			// 	pos += bytes;
+			// }
 		}
 	}
 
@@ -1367,8 +1393,13 @@ namespace loguru
 			}
 		}
 		if (g_preamble_pipe && pos < out_buff_size) {
-			// Avoid incrementing the position to clarify it's unused
 			(void)snprintf(out_buff + pos, out_buff_size - pos, "| ");
+
+			// Avoid incrementing the position to clarify it's unused
+			// int bytes = snprintf(...)
+			// if (bytes > 0) {
+			// 	pos += bytes;
+			// }
 		}
 	}
 
