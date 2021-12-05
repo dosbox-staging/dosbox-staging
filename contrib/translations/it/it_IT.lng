@@ -1,18 +1,11 @@
 :CONFIG_FULLSCREEN
 Avvia direttamente a schermo intero.
-Digita INTRO e osserva la sezione Tasti Speciali per visualizzare la lista dei
-tasti di scelta rapida per il controllo della finestra.
+Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
+scelta rapida per il controllo della finestra.
 .
 :CONFIG_DISPLAY
 Numero dello schermo da utilizzare; Il valore dipende dal sistema operativo
 e dalle impostazioni dell'utente.
-.
-:CONFIG_VSYNC
-Impostazione Sincronizzazione Verticale non implementata (parametro ignorato).
-.
-:CONFIG_VSYNC_SKIP
-Numero di microsecondi per consentire il blocco del rendering prima di saltare
-il fotogramma successivo.
 .
 :CONFIG_FULLRESOLUTION
 Risoluzione da usare a schermo intero: 'original', 'desktop' o
@@ -29,23 +22,55 @@ in modalit… finestra:
              nel formato WxH. Per esempio: 1024x768.
              Il ridimensionamento non viene eseguito con output=surface.
 .
+:CONFIG_WINDOW_POSITION
+Imposta la posizione iniziale della finestra durante l'esecuzione in modalit…
+finestra:
+  auto:      Lascia che sia il gestore delle finestre a decidere la posizione.
+  <custom>:  Imposta la posizione della finestra nel formato X,Y.
+             Per esempio: 250,100
+             0,0 Š l'angolo in alto a sinistra dello schermo.
+.
+:CONFIG_WINDOW_DECORATIONS
+Controlla se visualizzare le decorazioni delle finestre in modalit… finestra.
+.
+:CONFIG_VSYNC
+Sincronizza con la frequenza di aggiornamento dello schermo, se supportata.
+Questo pu• ridurre il tremolio e lo strappo, ma pu• anche influire sulle
+prestazioni.
+.
+:CONFIG_VSYNC_SKIP
+Numero di microsecondi per consentire il blocco del rendering prima di saltare
+al fotogramma successivo. Impostando un valore di 0, disabiliter… questa
+funzione.
+.
+:CONFIG_MAX_RESOLUTION
+Limita facoltativamente la risoluzione dell'area di visualizzazione all'interno
+della finestra/schermo:
+  auto:     L'area di visualizzazione riempie la finestra/schermo (predefinito)
+  <custom>: Imposta la risoluzione massima dell'area di visualizzazione nel
+            formato WxH. Per esempio: 960x720
+.
 :CONFIG_OUTPUT
-Sistema video da usare per l'output.
+Sistema video da utilizzare per l'output.
 .
 :CONFIG_TEXTURE_RENDERER
-Scegli un driver di rendering da utilizzare nella modalit… di rendering
-texture. Usa texture_renderer=auto per una scelta automatica.
+Scegli un driver di rendering da utilizzare nella modalit… di uscita texture.
+Usa texture_renderer=auto per una scelta automatica.
 .
 :CONFIG_CAPTURE_MOUSE
 Metodo di controllo del mouse:
-   onclick:       Cattura il mouse al primo clic all'interno della finestra.
+   onclick:       Cattura il mouse alla pressione di qualsiasi tasto
+                  all'interno della finestra.
    onstart:       Cattura il mouse immediatamente all'avvio.
-   seamless:      Il mouse non viene catturato; pu• muoversi liberamente.
-   nomouse:       Nasconde il mouse e non invia alcun segnale al gioco.
+   seamless:      Il mouse pu• muoversi liberamente; Ô possibile catturarlo con
+                  un clic centrale o con l'apposito tasto di scelta rapida.
+   nomouse:       Nasconde il mouse e non viene inviato alcun segnale al gioco.
 Gestione del clic centrale (secondo parametro):
    middlegame:    I clic centrali vengono inviati al gioco.
-   middlerelease: I clic centrali rilasciano il mouse precedentemente catturato
-Defaults (se non presente o incorretto): seamless middlerelease
+   middlerelease: Il clic centrale rilascia il mouse precedentemente catturato.
+                  Nel caso in cui si utilizzi il metodo di controllo seamless,
+                  esso si occuper… anche di catturarlo.
+Predefiniti (se non presenti o incorretti): seamless middlerelease
 .
 :CONFIG_SENSITIVITY
 Sensibilit… del mouse. Il secondo parametro opzionale specifica la sensibilit…
@@ -57,11 +82,11 @@ e accelerazione del mouse del tuo sistema operativo. Funziona in modalit…
 schermo intero o quando il mouse viene catturato in modalit… finestra.
 .
 :CONFIG_WAITONERROR
-Aspetta prima di chiudere la console in caso di errore di DOSBox.
+Attende prima di chiudere la console in caso di errore di DOSBox.
 .
 :CONFIG_PRIORITY
 Livelli di priorit… per DOSBox. La seconda voce dopo la virgola Š per quando
-DOSBox Š minimizzato o non in primo piano.
+DOSBox Š minimizzato o non in primo piano. 
 'pause' pu• essere usato solo per la seconda voce.
 'auto' disabilita i livelli di priorit… e utilizza le impostazioni predefinite
 del sistema operativo.
@@ -90,15 +115,35 @@ Si consiglia di non modificare questo valore per evitare problemi con alcuni
 giochi, anche se potrebbe essere necessario aumentarlo per farne funzionare
 alcuni. Di solito non vi Š nessun guadagno in velocit… alzando questo valore.
 .
+:CONFIG_VMEMSIZE
+Memoria video in MiB (1-8) o KiB (da 256 a 8192). 
+'auto' usa il valore predefinito in base all'adattatore video scelto.
+.
+:CONFIG_VESA_MODES
+Controlla la selezione delle modalit… VESA 1.2 e 2.0 offerte:
+  compatible   Una selezione su misura che massimizza la compatibilit… con i
+               giochi. Ô consigliato insieme a 4 o 8 MB di memoria video.
+  all          Offre tutte le modalit… per una data dimensione della memoria
+               video, tuttavia alcuni giochi potrebbero non utilizzarle
+               correttamente (sfarfallio) o potrebbe essere necessaria pi—
+               memoria di sistema (mem = ).
+.
+:CONFIG_AUTOEXEC_SECTION
+Indica come vengono gestite le sezioni autoexec da pi— file di configurazione.
+join      : le combina in un'unica grande sezione (comportamento legacy).
+overwrite : usa l'ultima incontrata, come le altre impostazioni di
+            configurazione.
+.
 :CONFIG_STARTUP_VERBOSITY
-Determina il livello di verbosit… prima di visualizzare il programma: 
-Verbosit…   |Schermata iniziale|Schermata di benvenuto|Output DOSBox
-high        |        s        |          s          |      s
-medium      |        no        |          s          |      s
-low         |        no        |          no          |      s
-quiet       |        no        |          no          |      no
-splash_only |        s        |          no          |      no
-auto        | 'low' se exec o dir vengono passati, altrimenti 'high'
+Determina il livello di verbosit… prima di visualizzare il programma:
+Verbosit…   | Schermata iniziale | Schermata di benvenuto | Registro di DOSBox
+high        |          s        |           s           |         s
+medium      |          no        |           s           |         s
+low         |          no        |           no           |         s
+quiet       |          no        |           no           |         no
+splash_only |          s        |           no           |         no
+auto        | 'low' se viene fornito un'eseguibile, un batch o una cartella,
+               (es. dosbox run.bat), altrimenti sar… impostato su 'high'
 .
 :CONFIG_FRAMESKIP
 Determina il numero di fotogrammi saltati da DOSBox prima di disegnarne uno.
@@ -114,29 +159,53 @@ come 640x480 e 800x600, verranno visualizzate cos come sono.
 :CONFIG_MONOCHROME_PALETTE
 Seleziona la tavolozza predefinita per la visualizzazione monocromatica.
 Funziona solo quando si emula hercules o cga_mono.
-Puoi anche scorrere i colori disponibili usando il tasto F11.
+Ô possibile scorrere i colori disponibili usando il tasto F11.
 .
 :CONFIG_SCALER
 Scaler usato per ingrandire/migliorare le modalit… a bassa risoluzione.
 Se viene aggiunto 'forced', lo scaler sar… usato anche se i risultati
-potrebbero essere indesiderati.
+potrebbero non essere come desiderati.
 Nota che alcuni scaler possono utilizzare bordi neri per adattare l'immagine
 alla risoluzione dello schermo configurata. Se questo non Š l'effetto
-desiderato, prova uno scaler diverso o attiva la modalit… a schermo intero.
+desiderato, prova uno scaler diverso o attiva l'uscita a piena risoluzione.
 .
 :CONFIG_GLSHADER
 Imposta 'none' (nessuno) o il nome di uno shader GLSL. Funziona solo con
-l'output OpenGL. Pu• essere un percorso assoluto, un file nella sottocartella
+l'uscita OpenGL. Pu• essere un percorso assoluto, un file nella sottocartella
 'glshaders' della cartella di configurazione di DOSBox, o uno degli shader
 incorporati:
 advinterp2x, advinterp3x, advmame2x, advmame3x,
-crt-easymode-flat, crt-fakelottes-flat, rgb2x,
-rgb3x, scan2x, scan3x, tv2x, tv3x, sharp (predefinito).
+crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
+scan2x, scan3x, tv2x, tv3x, sharp (predefinito).
+.
+:CONFIG_COMPOSITE
+Abilita la modalit… composita all'avvio. 'auto' lascia decidere al programma.
+Nota: Regola le impostazioni di seguito (es: tonalit…) usando gli appositi
+      tasti di scelta rapida.
+      Quindi leggi le nuove impostazioni dalla tua console e inseriscile qui.
+.
+:CONFIG_ERA
+Era della tecnologia composita. Quando impostato su 'auto', PCjr usa 'new' e
+CGA/Tandy usa 'old'.
+.
+:CONFIG_HUE
+Aspetto della tavolozza RGB. Ad esempio, regola finch‚ il cielo non diventa blu
+.
+:CONFIG_SATURATION
+Intensit… dei colori, da sbiaditi a vividi.
+.
+:CONFIG_CONTRAST
+Rapporto tra l'area scura e quella chiara.
+.
+:CONFIG_BRIGHTNESS
+Luminosit… dell'immagine, da scura a chiara.
+.
+:CONFIG_CONVERGENCE
+Convergenza degli elementi del subpixel, da sfocati a nitidi (solo CGA e Tandy)
 .
 :CONFIG_CORE
 Core CPU usato nell'emulazione. 'auto' diventer… 'dynamic' quando possibile e
 appropriato.
-
 .
 :CONFIG_CPUTYPE
 Tipo di CPU usata nell'emulazione. 'auto' Š la scelta pi— veloce.
@@ -146,31 +215,31 @@ Numero di istruzioni che DOSBox prova ad emulare ogni millisecondo.
 Un valore troppo alto produrr… perdite nell'audio e ritardi.
 I cicli possono essere impostati in 3 modi:
   'auto'          prova a indovinare le necessit… del gioco.
-                  Di solito funziona, ma pu• fallire con certi giochi.
-  'fixed #number' imposta un numero fisso di cicli. Questo Š ci• che ti serve
-                  quando 'auto' non funziona. (Esempio: fixed 4000)
+                  Di solito funziona, ma pu• fallire con alcuni giochi.
+  'fixed #number' imposta un numero fisso di cicli. Questo Š ci• di cui hai
+                  bisogno di solito se 'auto' fallisce. (Esempio: fixed 4000)
   'max'           allocher… tanti cicli quanti il tuo computer Š in grado di
                   gestire.
 .
 :CONFIG_CYCLEUP
 Numero di cicli di cui aumentare usando i tasti di scelta rapida per il
 controllo della velocit….
-Digita INTRO e osserva la sezione Tasti Speciali per visualizzare la lista dei
-tasti di scelta rapida.
+Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
+scelta rapida.
 .
 :CONFIG_CYCLEDOWN
 Numero di cicli di cui diminuire usando i tasti di scelta rapida per il
 controllo della velocit….
 Un valore pi— basso di 100 indica una percentuale.
-Digita INTRO e osserva la sezione Tasti Speciali per visualizzare la lista dei
-tasti di scelta rapida.
+Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
+scelta rapida.
 .
 :CONFIG_NOSOUND
 Attiva la modalit… silenziosa, ma il suono viene comunque emulato.
 .
 :CONFIG_RATE
-Frequenza del mixer. Impostare la frequenza di qualsiasi dispositivo
-ad un valore pi— alto di questo, ne peggiorer… la qualit… sonora.
+Frequenza di campionamento del mixer. Impostare la frequenza di qualsiasi
+dispositivo ad un valore pi— alto di questo, ne peggiorer… la qualit… sonora.
 .
 :CONFIG_BLOCKSIZE
 Dimensione blocchi mixer. Blocchi pi— grandi riducono l'audio a singhiozzo,
@@ -179,6 +248,10 @@ ma possono introdurre ritardi.
 :CONFIG_PREBUFFER
 Quantit… di dati, in millisecondi, da tenere in cima alla dimensione dei 
 blocchi.
+.
+:CONFIG_NEGOTIATE
+Consenti al driver audio di sistema di negoziare la frequenza e la dimensione
+dei blocchi ottimali il pi— vicino possibile ai valori specificati.
 .
 :CONFIG_MIDIDEVICE
 Dispositivo che ricever… i dati MIDI (dall'interfaccia MIDI emulata - MPU-401).
@@ -196,8 +269,8 @@ Di solito Š l'ID o il nome del sintetizzatore MIDI che desideri utilizzare
 (trova l'id/nome con il comando DOS 'mixer /listmidi').
 - Questa opzione non ha effetto quando si utilizzano sintetizzatori intergrati.
   (mididevice = fluidsynth o mt32)
-- Quando si utilizza ALSA, utilizzare il comando Linux 'aconnect -l' per
-  elencare le porte MIDI aperte, e selezionarne una.
+- Quando usi ALSA, utilizza il comando Linux 'aconnect -l' per elencare le
+  porte MIDI aperte, e selezionane una.
   (ad esempio 'midiconfig=14:0' per il client sequencer 14, porta 0)
 - Se stai usando un vero Roland MT-32 con revisione 0 del PCB, l'hardware
   potrebbe richiedere un ritardo per evitare che il suo buffer
@@ -215,6 +288,29 @@ assoluto o relativo, o il nome di un file .sf2 all'interno della cartella
 Una percentuale opzionale regoler… il volume del SoundFont.
 Ad esempio: 'soundfont.sf2 50' lo attenuer… del 50 percento.
 La percentuale del volume pu• variare da 1 a 500.
+.
+:CONFIG_CHORUS
+Effetto coro (Chorus): 'auto', 'on', 'off', o valori personalizzati.
+Quando si utilizzano valori personalizzati:
+  Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
+  Essi sono: conteggio-voci livello velocit… intensit… modulazione-onda, dove:
+  - conteggio-voci Š un numero intero compreso tra 0 e 99
+  - livello Š un numero decimale compreso tra 0.0 e 10.0
+  - velocit… Š un numero decimale, misurato in Hz, compreso tra 0.1 e 5.0
+  - intensit… Š un numero decimale compreso tra 0.0 e 21.0
+  - modulazione-onda Š 'sine' o 'triangle'
+  Per esempio: chorus = 3 1.2 0.3 8.0 sine
+.
+:CONFIG_REVERB
+Effetto riverbero: 'auto', 'on', 'off', o valori personalizzati.
+Quando si utilizzano valori personalizzati:
+  Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
+  Essi sono: dimensione-stanza smorzamento ampiezza livello, dove:
+  - dimensione-stanza Š un numero decimale compreso tra 0.0 e 1.0
+  - smorzamento Š un numero decimale compreso tra 0.0 e 1.0
+  - ampiezza Š un numero decimale compreso tra 0.0 e 100.0
+  - livello Š un numero decimale compreso tra 0.0 e 1.0
+  Per esempio: reverb = 0.61 0.23 0.76 0.56
 .
 :CONFIG_MODEL
 Modello di sintetizzatore da utilizzare. 
@@ -252,8 +348,8 @@ Canale High DMA della scheda audio Sound Blaster.
 Permetti al mixer della scheda Sound Blaster di modificare il mixer di DOSBox.
 .
 :CONFIG_OPLRATE
-oplrate Š deprecato. La forma d'onda OPL viene ora campionata
-alla frequenza di campionamento del mixer per evitare il ricampionamento.
+oplrate Š deprecato. La forma d'onda OPL viene ora campionata alla velocit… di
+riproduzione del mixer per evitare il ricampionamento.
 .
 :CONFIG_OPLMODE
 Tipo di emulazione OPL. Se 'auto', la modalit… Š determinata da 'sbtype'.
@@ -285,7 +381,7 @@ Modello di chip da emulare nella scheda Innovation SSI-2001:
  - auto:  Seleziona il chip 6581.
  - 6581:  Il chip originale, noto per il suo suono basso e ricco.
  - 8580:  Una revisione successiva che corrispondeva pi— da vicino alla
-          specifica SID.
+          specifica SID. 
           Ha corretto il bias DC del 6581 ed Š meno incline alla distorsione.
           L'8580 Š un'opzione sulle schede di riproduzione, come il DuoSID.
  - none:  Disabilita la scheda.
@@ -318,10 +414,10 @@ Frequenza di campionamento della generazione del suono del PC-Speaker.
 Neutralizza e impedisce che il DC-offset dell'altoparlante del PC danneggi
 altre sorgenti. 'auto' lo abilita per i sistemi non Windows e lo disabilita
 su Windows. Se il tuo sistema operativo esegue la propria correzione del
-DC-offset, impostalo su "false".
+DC-offset, impostalo su 'false'.
 .
 :CONFIG_TANDY
-Attiva l'emulazione di Tandy Sound System.
+Attiva l'emulazione del sistema audio Tandy.
 Se 'auto', l'emulazione Š presente solo se la macchina Š impostata su 'tandy'.
 .
 :CONFIG_TANDYRATE
@@ -336,12 +432,16 @@ Abilita l'emulazione audio IBM PS/1.
 .
 :CONFIG_JOYSTICKTYPE
 Tipo di joystick da emulare: auto (predefinito),
-none (disattiva l'emulazione joystick),
-2axis (supporta due joystick),
-4axis (supporta un joystick, viene usato il primo),
-4axis_2 (supporta un joystick, viene usato il secondo),
-fcs (Thrustmaster), ch (CH Flightstick).
-auto sceglie l'emulazione in base ai joystick reali.
+auto     : Rileva e usa qualsiasi joystick, se possibile.
+2axis    : Supporta fino a due joystick.
+4axis    : Supporta solo il primo joystick.
+4axis_2  : Supporta solo il secondo joystick.
+fcs      : Supporta un joystick di tipo Thrustmaster.
+ch       : Supporta un joystick di tipo CH Flightstick.
+hidden   : Impedisce a DOS di vedere i joystick, ma sono abilitali per la
+           mappatura.
+disabled : Disabilita completamente i joystick: non saranno interrogati,
+           mappati o visibili in DOS.
 (Ricorda di resettare il mapperfile di DOSBox se l'hai salvato in precedenza)
 .
 :CONFIG_TIMED
@@ -364,13 +464,13 @@ cerchio.
 .
 :CONFIG_DEADZONE
 Percentuale di movimento da ignorare.
-100 trasforma la levetta analogica in digitale. 
+100 trasforma la levetta analogica in digitale.
 .
 :CONFIG_SERIAL1
 Imposta il tipo di dispositivo connesso alla porta com.
-Pu• essere disabled, dummy, modem, nullmodem, directserial.
+Pu• essere: disabled, dummy, modem, nullmodem, directserial.
 Eventuali parametri aggiuntivi devono essere sulla stessa riga nella forma di
-[parametro:valore]. Un parametro per tutti i tipi Š 'irq' (facoltativo).
+parametro:valore. Un parametro per tutti i tipi Š 'irq' (facoltativo).
 per directserial: realport (richiesto), rxdelay (facoltativo).
                  (realport:COM1 realport:ttyS0).
 per modem: listenport (facoltativo).
@@ -409,10 +509,10 @@ Un singolo numero viene considerato come la versione principale.
 I parametri riconosciuti sono 3.3, 5.0, 6.22, e 7.1.
 .
 :CONFIG_KEYBOARDLAYOUT
-Codice linguaggio del layout tastiera (o 'none').
+Codice linguaggio del layout della tastiera (o 'none').
 .
 :CONFIG_IPX
-Abilita l'emulazione di ipx attraverso UDP/IP.
+Abilita l'emulazione ipx attraverso UDP/IP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Le righe in questa sezione verranno eseguite ad ogni avvio.
@@ -421,7 +521,7 @@ Puoi inserire i tuoi comandi MOUNT qui.
 .
 :CONFIGFILE_INTRO
 # Questo Š il file di configurazione di dosbox-staging (%s).
-# Le righe che iniziano con '#' sono commenti e sono ignorati da DOSBox.
+# Le righe che iniziano con il carattere '#' sono commenti e saranno ignorate.
 
 .
 :CONFIG_SUGGESTED_VALUES
@@ -461,10 +561,10 @@ Strumento di configurazione:
 -writeconf o -wc [nomefile]: scrive il file nella cartella di configurazione.
 Usa -writelang o -wl [nomefile] per scrivere le stringhe della lingua corrente.
 -r [parametri]
- Riavvia DOSBox, utilizzando le impostazioni precedenti o quelle aggiunte.
+ Riavvia DOSBox, utilizzando i parametri precedenti o quelli aggiunti.
 -wcp [nomefile]
  Scrive il file di config. nella cartella del programma, col nome dosbox.conf
- o il nome del file specificato.
+ o con il nome del file specificato.
 -wcd
  Scrive nel file di config. predefinito nella cartella di configurazione.
 -l elenca i parametri di configurazione.
@@ -556,6 +656,15 @@ DOSBox Š stato avviato con i seguenti parametri della riga di comando:
 Parametro mancante.
 
 .
+:PROGRAM_PATH_TOO_LONG
+Il percorso "%s" supera la lunghezza massima DOS di %d carattere/i.
+
+
+.
+:PROGRAM_EXECUTABLE_MISSING
+File eseguibile non trovato: %s
+
+.
 :PROGRAM_MOUNT_CDROMS_FOUND
 CDROM trovati: %d
 
@@ -590,7 +699,7 @@ Tipo non valido %s
 
 .
 :PROGRAM_MOUNT_ALREADY_MOUNTED
-Unit… %c gi… montata con %s
+Unit… %c gi… montata come %s
 
 .
 :PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED
@@ -610,7 +719,7 @@ Le unit… virtuali non possono essere smontate.
 
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[31;1mMontare c:\ Ô sconsigliato. Si raccomanda di montare una sottocartella.[0m
+[31;1mMontare C:\ Ô sconsigliato. Si raccomanda di montare una sottocartella.[0m
 
 .
 :PROGRAM_MOUNT_WARNING_OTHER
@@ -618,25 +727,25 @@ Le unit… virtuali non possono essere smontate.
 
 .
 :PROGRAM_MOUNT_NO_OPTION
-Attenzione: opzione '%s' non supportata e ignorata.
+Attenzione: l'opzione '%s' non Š supportata e sar… ignorata.
 
 .
 :PROGRAM_MOUNT_OVERLAY_NO_BASE
-Prima che sia possibile un reindirizzamento, Š necessario montare una
-directory normale.
+Deve essere montata una directory normale prima di poter aggiungere una
+sovrapposizione in cima.
 
 .
 :PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE
-Il reindirizzamento NON Š compatibile con l'unit… specificata.
+La sovrapposizione NON Š compatibile con l'unit… specificata.
 
 .
 :PROGRAM_MOUNT_OVERLAY_MIXED_BASE
-Il reindirizzamento deve essere specificato utilizzando lo stesso
-indirizzamento dell'unit… sottostante.
-Nessuna mescolanza di percorsi relativi e assoluti.
+La sovrapposizione deve essere specificata utilizzando la stessa tipologia di
+percorso, relativo o assoluto, dell'unit… sottostante.
+Non mescolare percorsi relativi e assoluti.
 .
 :PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE
-La cartella di reindirizzamento non pu• essere la stessa dell'unit… sottostante
+La cartella di sovrapposizione non pu• essere la stessa dell'unit… sottostante.
 
 .
 :PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR
@@ -644,11 +753,29 @@ Qualcosa Š andato storto.
 
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
-Reindirizzamento %s nell'unit… %c montato.
+Sovrapposizione %s nell'unit… %c montata.
 
 .
 :PROGRAM_MOUNT_MOVE_Z_ERROR_1
 Impossibile spostare l'unit… Z. L'unit… %c Š gi… montata.
+
+.
+:SHELL_CMD_MEM_HELP_LONG
+Visualizza le informazioni sulla memoria DOS.
+
+Utilizzo:
+  [32;1mmem[0m
+
+Dove:
+  Questo comando non ha parametri.
+
+Note:
+  Questo comando mostra lo stato della memoria DOS, inclusa la memoria 
+  convenzionale libera, la memoria superiore (UMB), la memoria estesa (XMS),
+  e la memoria espansa (EMS).
+
+Esempi:
+  [32;1mmem[0m
 
 .
 :PROGRAM_MEM_CONVEN
@@ -656,16 +783,39 @@ Impossibile spostare l'unit… Z. L'unit… %c Š gi… montata.
 
 .
 :PROGRAM_MEM_EXTEND
-%10d kB di memoria estesa (XMS) libera
+%10d kB di memoria estesa libera
 
 .
 :PROGRAM_MEM_EXPAND
-%10d kB di memoria espansa (EMS) libera
+%10d kB di memoria espansa libera
 
 .
 :PROGRAM_MEM_UPPER
-%10d kB di memoria superiore (UMB) libera in %d blocchi
-(blocco UMB pi— grande %d kB)
+%10d kB di memoria superiore libera in %d blocchi (UMB pi— grande %d kB)
+
+.
+:SHELL_CMD_LOADFIX_HELP_LONG
+Carica un programma nella regione di memoria specifica e poi lo esegue.
+
+Utilizzo:
+  [32;1mloadfix[0m [36;1mGIOCO[0m [37;1m[PARAMETRI][0m
+  [32;1mloadfix[0m [/d] (o [/f])[0m
+
+Dove:
+  [36;1mGIOCO[0m Š un gioco o un programma da caricare, facoltativamente con parametri.
+
+Note:
+  I casi d'uso pi— comuni di questo comando sono per correggere giochi o
+  programmi DOS che mostrano il messaggio di errore "[37;1mPacked File Corrupt[0m" o
+  "[37;1mNot enough memory"[0m (ad esempio alcuni giochi degli anni '80 come California
+  Games II) durante l'esecuzione.
+  L'esecuzione di [32;1mloadfix[0m senza un argomento, alloca semplicemente memoria per
+  l'esecuzione del gioco; 
+  Puoi liberare la memoria con l'opzione /d o /f al termine.
+
+Esempi:
+  [32;1mloadfix[0m [36;1mgioco[0m [37;1margomenti[0m
+  [32;1mloadfix[0m /d
 
 .
 :PROGRAM_LOADFIX_ALLOC
@@ -684,6 +834,56 @@ Memoria in uso liberata.
 Errore allocazione di memoria.
 
 .
+:SHELL_CMD_AUTOTYPE_HELP_LONG
+Esegue l'immissione da tastiera tramite script in un gioco DOS in esecuzione.
+
+Utilizzo:
+  [32;1mautotype[0m -list
+  [32;1mautotype[0m [-w [37;1mATTESA[0m] [-p [37;1mANDATURA[0m] [36;1mPULSANTI[0m
+
+Dove:
+  [37;1mATTESA[0m   Š il numero di secondi da attendere prima della digitazione (max 30)
+  [37;1mANDATURA[0m Š il numero di secondi prima di ogni pressione di un tasto (max 10).
+  [36;1mPULSANTI[0m Š uno o pi— pulsanti separati da spazi.
+
+Note:
+  I [36;1mPULSANTI[0m forniti in questo comando verranno digitati automaticamente nei
+  giochi DOS dopo il loro avvio. La digitazione automatica inizia dopo i
+  secondi di [36;1mATTESA[0m, e ogni pulsante viene inserito in base all'[37;1mANDATURA[0m in
+  secondi. Il carattere [36;1m,[0m inserisce un ritardo di [37;1mANDATURA[0m extra. I valori
+  predefiniti di [37;1mATTESA[0m e [37;1mANDATURA[0m sono rispettivamente 2 e 0.5 secondi, se non
+  specificati. Ô possibile ottenere un elenco di tutti i nomi dei pulsanti
+  disponibili utilizzando l'opzione -list.
+
+Esempi:
+  [32;1mautotype[0m -list
+  [32;1mautotype[0m -w [37;1m1[0m -p [37;1m0.3[0m [36;1mup enter , right enter[0m
+  [32;1mautotype[0m -p [37;1m0.2[0m [36;1mf1 kp_8 , , enter[0m
+.
+:SHELL_CMD_MIXER_HELP_LONG
+Visualizza o modifica i volumi del mixer audio corrente.
+
+Utilizzo:
+  [32;1mmixer[0m [36;1mCANALE[0m [37;1mVOLUME[0m [/noshow]
+  [32;1mmixer[0m [/listmidi][0m
+
+Dove:
+  [36;1mCANALE[0m Š il canale audio di cui si vuole cambiare il volume.
+  [37;1mVOLUME[0m Š un numero intero compreso tra 0 e 100 che rappresenta il volume.
+
+Note:
+  L'esecuzione di [32;1mmixer[0m senza argomenti mostra i volumi di tutti i canali audio
+  Ô possibile visualizzare i dispositivi MIDI disponibili e le opzioni utente
+  con l'opzione /listmidi.
+  Ô possibile modificare i volumi di pi— di un canale audio con un solo comando
+  L'opzione /noshow fa s che il mixer non mostri i volumi quando si apporta
+  una modifica.
+
+Esempi:
+  [32;1mmixer[0m
+  [32;1mmixer[0m [36;1mmaster[0m [37;1m50[0m [36;1mrecord[0m [37;1m60[0m /noshow
+  [32;1mmixer[0m /listmidi
+.
 :MSCDEX_SUCCESS
 MSCDEX installato.
 
@@ -701,7 +901,7 @@ MSCDEX: Il percorso specificato non Š un'unit… CD-ROM.
 
 .
 :MSCDEX_ERROR_OPEN
-MSCDEX: Fallimento: file non valido o impossibile aprirlo.
+MSCDEX: Fallimento: File non valido o impossibile da aprire.
 
 .
 :MSCDEX_TOO_MANY_DRIVES
@@ -725,17 +925,40 @@ MSCDEX: Fallimento: Errore sconosciuto.
 MSCDEX: Avviso: si ignora l'opzione non supportata '%s'.
 
 .
+:SHELL_CMD_RESCAN_HELP_LONG
+Scansiona le modifiche sulle unit… DOS montate.
+
+Utilizzo:
+  [32;1mrescan[0m [36;1mUNIT·[0m
+  [32;1mrescan[0m [/a]
+
+Dove:
+  [36;1mUNIT·[0m Š l'unit… da scansionare per rilevare le modifiche.
+
+Note:
+  - L'esecuzione di [32;1mrescan[0m senza un argomento esegue la scansione delle
+    modifiche dell'unit… corrente.
+  - Le modifiche a questa unit… apportate sull'host verranno quindi riflesse
+    all'interno di DOS.
+  - Ô possibile anche scansionare le modifiche su tutte le unit… montate con
+    l'opzione /a.
+
+Esempi:
+  [32;1mrescan[0m [36;1mc:[0m
+  [32;1mrescan[0m /a
+
+.
 :PROGRAM_RESCAN_SUCCESS
-La cache dell'unit… Š stata cancellata.
+l'unit… Š stata nuovamente scansionata.
 
 .
 :PROGRAM_INTRO
-[2J[32;1mBenvenuto in DOSBox Staging[0m, un emulatore di x86 con suono e grafica.
+[2J[32;1mBenvenuto in DOSBox Staging[0m, un emulatore di x86 con audio e grafica.
 DOSBox crea una shell simile al vecchio DOS.
 
-Per informazioni sul montaggio delle unit… digita [34;1mintro mount[0m
-Per informazioni sul supporto CD-ROM digita [34;1mintro cdrom[0m
-Per informazioni sui tasti speciali digita [34;1mintro special[0m
+Per informazioni sul montaggio delle unit…, digita [34;1mintro mount[0m
+Per informazioni sul supporto CD-ROM, digita [34;1mintro cdrom[0m
+Per informazioni sui tasti speciali, digita [34;1mintro special[0m
 Per ulteriori informazioni su DOSBox Staging, visita:[34;1m
 https://github.com/dosbox-staging/dosbox-staging/wiki[0m
 
@@ -744,33 +967,32 @@ https://github.com/dosbox-staging/dosbox-staging/wiki[0m
 .
 :PROGRAM_INTRO_MOUNT_START
 [2J[32;1mEcco alcuni comandi utili per iniziare:[0m
-Prima di poter usare i file nel tuo filesystem,
-Devi montare la directory che contiene i file.
+Prima di poter utilizzare i file che si trovano sul tuo filesystem,
+Devi montare la directory contenente i file.
 
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
 [44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [32mmount c c:\giochidos\[37m crea un'unit… C con i contenuti di c:\giochidos.   º
+º [32mmount c c:\giochi\[37m crea un'unit… C con il contenuto di c:\giochi.        º
 º                                                                          º
-º [32mc:\giochidos\[37m Š un esempio. Sostituiscilo con la tua cartella dei giochi.[37mº
+º [32mc:\giochi\[37m Š un esempio. Sostituiscilo con la tua cartella dei giochi.[37m   º
 ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
 [44;1mÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»
-º [32mmount c ~/giochidos[37m crea un'unit… C con i contenuti di ~/giochidos.    º
+º [32mmount c ~/giochi[37m crea un'unit… C con il contenuto di ~/giochi.         º
 º                                                                        º
-º [32m~/giochidos[37m Š un esempio. Sostituiscilo con la tua cartella dei giochi.[37mº
+º [32m~/giochi[37m Š un esempio. Sostituiscilo con la tua cartella dei giochi.[37m   º
 ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼[0m
 
 .
 :PROGRAM_INTRO_MOUNT_END
-Dopo aver montato con successo il disco Š possibile digitare [34;1mc:[0m per spostarti
-nella tua nuova unit… C. 
+Dopo aver montato con successo il disco, puoi digitare [34;1mc:[0m per spostarti
+nella tua nuova unit… C.
 Una volta qui, digita [34;1mdir[0m per visualizzarne il contenuto.
-[34;1mcd[0m ti permette di spostarti all'interno di in una cartella 
-(riconoscibile dalle [33;1m[][0m nell'elenco delle cartelle).
+[34;1mcd[0m ti permette di spostarti all'interno di una cartella (riconoscibile da [33;1m[][0m).
 Puoi eseguire programmi/file con estensione [31m.exe[0m, [31m.bat[0m e [31m.com[0m.
 
 .
@@ -818,18 +1040,18 @@ Inoltre, puoi usare imgmount per montare immagini iso o cue/bin:
 .
 :PROGRAM_INTRO_SPECIAL
 [2J[32;1mTasti speciali:[0m
-Questi sono i tasti predefiniti.
-Possono essere modificati nel [33mkeymapper[0m.
+Queste sono le combinazioni di tasti predefinite.
+Possono essere modificate nel [33mkeymapper[0m.
 
 [33;1m%s+Enter[0m  Passa dalla modalit… a schermo intero a quella a finestra
            e viceversa.
 [33;1m%s+Pause[0m  Mette in pausa/riavvia l'emulatore.
 [33;1m%s+F1[0m   %s Avvia il [33mkeymapper[0m.
-[33;1m%s+F4[0m   %s Passa tra le immagini disco montate, aggiorna la cache della
-           cartella per tutte le unit….
+[33;1m%s+F4[0m   %s Passa tra le immagini disco montate, scansiona tutte le unit… per
+                     rilevare modifiche.               
 [33;1m%s+F5[0m   %s Scatta un'istantanea dello schermo (screenshot).
-[33;1m%s+F6[0m   %s Avvia/ferma la registrazione dell'output audio su un file wave.
-[33;1m%s+F7[0m   %s Avvia/ferma la registrazione dell'output video su un file zmbv.
+[33;1m%s+F6[0m   %s Avvia/Ferma la registrazione dell'output audio in un file wave.
+[33;1m%s+F7[0m   %s Avvia/Ferma la registrazione dell'output video in un file zmbv.
 [33;1m%s+F9[0m   %s Chiude l'emulatore.
 [33;1m%s+F10[0m  %s Cattura/Rilascia il mouse.
 [33;1m%s+F11[0m  %s Rallenta l'emulazione (Decrementa i Cicli DOSBox).
@@ -837,12 +1059,36 @@ Possono essere modificati nel [33mkeymapper[0m.
 [33;1m%s+F12[0m    Sblocca la velocit… (pulsante turbo/avanzamento rapido).
 
 .
+:SHELL_CMD_BOOT_HELP_LONG
+Avvia DOSBox Staging da un'unit… DOS o da un'immagine disco.
+
+Utilizzo:
+  [32;1mboot[0m [37;1mUNIT·[0m
+  [32;1mboot[0m [36;1mIMMAGINE[0m
+
+Dove:
+  [37;1mUNIT·[0m    Š un'unit… da cui vuoi effettuare l'avvio, deve essere [37;1mA[0m, [37;1mC[0m, o [37;1mD[0m.
+  [36;1mIMMAGINE[0m Š una o pi— immagini floppy, separate da spazi.
+
+Note:
+  Una lettera di unit… DOS deve essere stata montata precedentemente con il
+  comando [32;1mimgmount[0m.
+  L'unit… DOS o l'immagine del disco deve essere avviabile, contenendo i file
+  di sistema DOS.
+  Se vengono specificate pi— di un'immagine disco, Š possibile scambiarle con
+  il tasto di scelta rapida apposito.
+
+Esempi:
+  [32;1mboot[0m [37;1mc:[0m
+  [32;1mboot[0m [36;1mdisco1.ima disco2.ima[0m
+
+.
 :PROGRAM_BOOT_NOT_EXIST
-Il file bootdisk non esiste.  Fallimento.
+Il file del disco di avvio non esiste.  Fallimento.
 
 .
 :PROGRAM_BOOT_NOT_OPEN
-Impossibile aprire il file bootdisk.  Fallimento.
+Impossibile aprire il file del disco di avvio.  Fallimento.
 
 .
 :PROGRAM_BOOT_WRITE_PROTECTED
@@ -850,7 +1096,7 @@ Il file immagine Š di sola lettura! Potrebbe creare dei problemi.
 
 .
 :PROGRAM_BOOT_PRINT_ERROR
-Questo comando avvia DOSBox da un'immagine floppy o disco rigido.
+Questo comando avvia DOSBox Staging da un'immagine floppy o disco rigido.
 
 Per questo comando, si pu• specificare una successione di floppy disk
 selezionabili premendo %s+F4, e -l specifica l'unit… montata da cui eseguire
@@ -860,16 +1106,14 @@ Le uniche lettere di unit… avviabili sono A, C, e D. Per l'avvio da un disco
 rigido (C o D), l'immagine dovrebbe essere gi… stata montata utilizzando il
 comando [34;1mIMGMOUNT[0m.
 
-La sintassi di questo comando Š:
-
-[34;1mBOOT [imgdisco1.img imgdisco2.img] [-l letteraUnit…][0m
+Digita [34;1mBOOT /?[0m per avere informazioni sulla sintassi di questo comando.
 
 .
 :PROGRAM_BOOT_UNABLE
 Impossibile avviare dall'unit… %c
 .
 :PROGRAM_BOOT_IMAGE_OPEN
-Apertura file immagine: %s
+Apertura del file immagine: %s
 
 .
 :PROGRAM_BOOT_IMAGE_NOT_OPEN
@@ -887,6 +1131,24 @@ Comandi della cartuccia PCjr disponibili: %s
 .
 :PROGRAM_BOOT_CART_NO_CMDS
 Nessun comando della cartuccia PCjr trovato.
+.
+:SHELL_CMD_LOADROM_HELP_LONG
+Carica un'immagine ROM del BIOS video o IBM BASIC.
+
+Utilizzo:
+  [32;1mloadrom [36;1mIMMAGINE[0m
+
+Dove:
+  [36;1mIMMAGINE[0m Š un BIOS video o un'immagine ROM IBM BASIC.
+
+Note:
+   Dopo aver caricato un'immagine ROM IBM BASIC nella ROM emulata con il
+   comando 'loadrom', Š possibile eseguire il programma interprete IBM BASIC
+   originale in DOSBox Staging.
+
+Esempi:
+  [32;1mloadrom[0m [36;1mbios.rom[0m
+
 .
 :PROGRAM_LOADROM_SPECIFY_FILE
 Ô necessario specificare il file ROM da caricare.
@@ -921,21 +1183,21 @@ Monta un'immagine CD-ROM, floppy o disco su una lettera di unit….
 
 Utilizzo:
   [32;1mimgmount[0m [37;1mUNIT·[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso
-  [32;1mimgmount[0m [37;1mUNIT·[0m [36;1mFILEIMMAGINE[0m [FILEIMMAGINE2 [..]] [-fs fat] -t hdd|floppy
+  [32;1mimgmount[0m [37;1mUNIT·[0m [36;1mIMMAGINE[0m [IMMAGINE2 [..]] [-fs fat] -t hdd|floppy
   [32;1mimgmount[0m [37;1mUNIT·[0m [36;1mAVVIABILE[0m [-fs fat|none] -t hdd -size GEOMETRIA
   [32;1mimgmount[0m -u [37;1mUNIT·[0m  (smonta le immagini)
 
 Dove:
-  [37;1mUNIT·[0m        Š la lettera dell'unit… in cui verr… montata l'immagine: es. D
-  [36;1mCDROM-SET[0m    Š un file ISO, CUE+BIN, CUE+ISO, o CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [36;1mFILEIMMAGINE[0m Š un'immagine disco rigido o floppy in formato FAT16 o FAT12
-  [36;1mAVVIABILE[0m    Š un'immagine disco avviabile con GEOMETRIA -size specificata:
+  [37;1mUNIT·[0m     Š la lettera dell'unit… in cui verr… montata l'immagine: a, c, d ..
+  [36;1mCDROM-SET[0m Š un file ISO, CUE+BIN, CUE+ISO, o CUE+ISO+FLAC/OPUS/OGG/MP3/WAV.
+  [36;1mIMMAGINE[0m  Š un'immagine disco rigido o floppy in formato FAT16 o FAT12.
+  [36;1mAVVIABILE[0m Š un'immagine disco avviabile con -size GEOMETRIA specificata:
             bytes-per-sector,sectors-per-head,heads,cylinders
 Note:
-  - %s+F4 scambia e monta il CDROM-SET o FILEIMMAGINE successivo se fornito.
+  - %s+F4 scambia e monta il CDROM-SET o l'IMMAGINE successiva, se fornita.
 
 Esempi:
-  [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/giochi/doom.iso[0m -t cdrom
+  [32;1mimgmount[0m [37;1mD[0m [36;1m/home/NOMEUTENTE/giochi/doom.iso[0m -t cdrom
   [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
   [32;1mimgmount[0m [37;1mA[0m [36;1mfloppy1.img floppy2.img floppy3.img[0m -t floppy
   [32;1mimgmount[0m [37;1mC[0m [36;1m~/dos/disco_c.img[0m -t hdd
@@ -951,23 +1213,25 @@ Monta una cartella del sistema operativo host su una lettera di unit….
 
 Utilizzo:
   [32;1mmount[0m [37;1mUNIT·[0m [36;1mCARTELLA[0m [-t TIPO] [-freesize DIMENSIONE] [-label ETICHETTA]
-  [32;1mmount[0m -u [37;1mUNIT·[0m  (smonta le unit…)
+  [32;1mmount[0m -u [37;1mUNIT·[0m  (smonta l'unit…)
 
 Dove:
-  [37;1mUNIT·[0m      Š la lettera dell' unit… in cui verr… montata la cartella: es. C
-  [36;1mCARTELLA[0m   Š la cartella sul sistema operativo host da montare
-  TIPO       tipo di directory da montare: 'dir', 'floppy', 'cdrom' o 'overlay'
-  DIMENSIONE spazio libero per l'unit… virtuale (KiB per floppy altrimenti MiB)
-  ETICHETTA  nome etichetta dell'unit… da utilizzare
+  [37;1mUNIT·[0m      Š la lettera dell'unit… in cui verr… montata la cartella: es. C
+  [36;1mCARTELLA[0m   Š la cartella sul sistema operativo host da montare.
+  TIPO       Š il tipo di directory da montare: 'dir', 'floppy', 'cdrom' o
+             'overlay'.
+  DIMENSIONE Š lo spazio libero per l'unit… virtuale (KiB per floppy, 
+             altrimenti MiB).
+  ETICHETTA  Š il nome dell'etichetta dell'unit… da utilizzare.
 
 Note:
-  - '-t overlay' reindirizza le scritture per l'unit… montata in un'altra 
+  - '-t overlay' reindirizza le scritture per l'unit… montata in un'altra
     cartella.
   - Ulteriori opzioni sono descritte nel manuale (file README, capitolo 4).
 
 Esempi:
-  [32;1mmount[0m [37;1mC[0m [36;1m~/giochidos[0m
-  [32;1mmount[0m [37;1mD[0m [36;1m"/media/USERNAME/Gioco CD"[0m -t cdrom
+  [32;1mmount[0m [37;1mC[0m [36;1m~/giochi[0m
+  [32;1mmount[0m [37;1mD[0m [36;1m"/media/NOMEUTENTE/Gioco CD"[0m -t cdrom
   [32;1mmount[0m [37;1mC[0m [36;1mfile_di_salvataggio[0m -t overlay
 
 .
@@ -1039,25 +1303,42 @@ L'uso di file multipli Š supportato solo per le immagini cue/iso.
 
 .
 :PROGRAM_KEYB_INFO
-Tabella codici %i caricata
+Tabella codici %i caricata.
 
 .
 :PROGRAM_KEYB_INFO_LAYOUT
 Tabella codici %i caricata per il layout %s
 
 .
-:PROGRAM_KEYB_SHOWHELP
-[32;1mKEYB[0m [ID layout tastiera[ numero tabella codici[ file tabella codici]]]
+:PROGRAM_KEYB_HELP_LONG
+Configura una tastiera per una lingua specifica.
 
-Alcuni esempi:
-  [32;1mKEYB[0m: Visualizza la tabella codici attualmente caricata.
-  [32;1mKEYB[0m sp: Carica il layout spagnolo (SP) usando una tabella codici appropriata.
-  [32;1mKEYB[0m sp 850: Carica il layout spagnolo (SP) usando la tabella codici 850.
-  [32;1mKEYB[0m sp 850 mycp.cpi: Come sopra, ma usa il file mycp.cpi.
+Utilizzo:
+  [32;1mkeyb[0m [36;1m[CODICELINGUA][0m
+  [32;1mkeyb[0m [36;1mCODICELINGUA[0m [37;1mTABELLACODICI[0m [FILETABELLACODICI]
+
+Dove:
+  [36;1mCODICELINGUA[0m      Š un codice lingua o un layout ID della tastiera.
+  [37;1mTABELLACODICI[0m     Š un numero di una tabella codici, come [37;1m437[0m e [37;1m850[0m.
+  FILETABELLACODICI Š un file contenente informazioni per una tabella codici.
+
+Note:
+  L'esecuzione di [32;1mkeyb[0m senza un argomento, mostra il layout della tastiera e la
+  tabella codici attulamente caricati. Per modificarli, fornire un [36;1mCODICELINGUA[0m
+  e, facoltativamente, una [37;1mTABELLACODICI[0m e un FILETABELLACODICI.
+  Questo comando Š particolarmente utile se si utilizza una tastiera non US.
+  Il [36;1mCODICELINGUA[0m pu• anche essere impostato nel file di configurazione nella
+  sezione [dos] utilizzando l'impostazione "keyboardlayout = [36;1mCODICELINGUA[0m".
+
+Esempi:
+  [32;1mKEYB[0m
+  [32;1mKEYB[0m [36;1muk[0m
+  [32;1mKEYB[0m [36;1mit[0m [37;1m850[0m
+  [32;1mKEYB[0m [36;1mde[0m [37;1m858[0m mycp.cpi
 
 .
 :PROGRAM_KEYB_NOERROR
-Layout tastiera %s caricato con tabella codici %i
+Layout tastiera %s caricato per la tabella codici %i
 
 .
 :PROGRAM_KEYB_FILENOTFOUND
@@ -1078,13 +1359,65 @@ File tabella codici mancante o non valido per il layout %s.
 
 
 .
+:PROGRAM_PLACEHOLDER_SHORT_HELP
+Questo programma Š un segnaposto.
+.
+:PROGRAM_PLACEHOLDER_LONG_HELP
+%s Š solo un segnaposto.
+
+Installa un software di terze parti e aggiungi il suo percorso nella variabile
+d'ambiente PATH.
+
+Per esempio:
+.
+:UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE
+
+   [autoexec]
+   mount u ~/dos/utils
+   set PATH=u:\;%PATH%
+
+
+.
+:VISIT_FOR_MORE_HELP
+Per ulteriore assistenza, visita i seguenti siti:
+.
+:WIKI_ADD_UTILITIES_ARTICLE
+https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
+.
+:WIKI_URL
+https://github.com/dosbox-staging/dosbox-staging/wiki
+.
 :SHELL_ILLEGAL_PATH
 Percorso non valido.
 
 .
 :SHELL_CMD_HELP
-Per una lista di tutti i comandi supportati digita [33;1mhelp /all[0m .
+Per una lista di tutti i comandi supportati, digita [33;1mhelp /all[0m.
 Segue una breve lista dei comandi pi— comuni:
+
+.
+:SHELL_CMD_COMMAND_HELP_LONG
+Avvia la shell dei comandi di DOSBox Staging.
+
+Utilizzo:
+  [32;1mcommand[0m
+  [32;1mcommand[0m /c (o /init) [36;1mCOMANDO[0m
+
+Dove:
+  [36;1mCOMANDO[0m Š un comando, gioco o programma DOS da eseguire.
+
+Note:
+  DOSBox Staging avvia automaticamente una shell di comandi DOS invocando questo
+  comando con l'opzione /init all'avvio, mostrando la schermata di benvenuto.
+  Puoi caricare una nuova istanza della shell dei comandi eseguendo [32;1mcommand[0m.
+  L'aggiunta dell'opzione /c insieme a un [36;1mCOMANDO[0m (facoltativamente con
+  parametri), consente di chiudere il programma automaticamente al concludersi
+  dell'esecuzione del comando specificato.
+
+Esempi:
+  [32;1mcommand[0m
+  [32;1mcommand[0m /c [36;1mecho[0m [37mHello world![0m
+  [32;1mcommand[0m /init [36;1mdir[0m
 
 .
 :SHELL_CMD_ECHO_ON
@@ -1142,25 +1475,60 @@ Digita 'date MM-GG-AAAA' per cambiare.
 M/G/A
 .
 :SHELL_CMD_DATE_HELP_LONG
-DATE [[/T] [/H] [/S] | MM-GG-AAAA]
-  MM-GG-AAAA: nuova data da impostare
-  /S:         Usa l'ora e la data dell'host
-  /F:         Torna all'ora interna di DOSBox (contrario di /S)
-  /T:         Visualizza solo la data
-  /H:         Sincronizza con l'host
+Utilizzo:
+  [32;1mdate[0m [/t]
+  [32;1mdate[0m /h
+  [32;1mdate[0m [36;1mDATA[0m
+
+Dove:
+  [36;1mDATA[0m Š la nuova data da impostare, nel formato [36;1mMM-GG-AAAA[0m.
+
+Note:
+  L'esecuzione di [32;1mdate[0m senza un argomento, mostra la data corrente e permette
+  l'immissione di una nuova. Aggiungendo l'opzione /t, sar… mostrata solo la
+  data corrente. Ô possibile forzare la sincronizzazione della data con il
+  sistema host tramite l'opzione /h.
+
+Esempi:
+  [32;1mdate[0m
+  [32;1mdate[0m /h
+  [32;1mdate[0m [36;1m10-11-2012[0m
 
 .
 :SHELL_CMD_TIME_HELP
-Visualizza o imposta l'ora di sistema.
+Visualizza o modifica l'ora interna.
+
+.
+:SHELL_CMD_TIME_ERROR
+L'ora specificata non Š corretta.
 
 .
 :SHELL_CMD_TIME_NOW
 Ora attuale: 
 .
+:SHELL_CMD_TIME_SETHLP
+Digita 'time hh:mm:ss' per cambiare l'orario.
+
+.
 :SHELL_CMD_TIME_HELP_LONG
-TIME [/T] [/H]
-  /T:         Visualizza solo l'ora
-  /H:         Sincronizza con l'host
+Utilizzo:
+  [32;1mtime[0m [/t]
+  [32;1mtime[0m /h
+  [32;1mtime[0m [36;1mORA[0m
+
+Dove:
+  [36;1mORA[0m Š il nuovo orario da impostare, nel formato [36;1mhh:mm:ss[0m.
+
+Note:
+  L'esecuzione di [32;1mtime[0m senza un argomento, mostra l'orario corrente e permette
+  l'immissione di uno nuovo. Aggiungendo l'opzione /t, sar… mostrato solo
+  l'orario corrente. Ô possibile forzare la sincronizzazione dell'orario con il
+  sistema host tramite l'opzione /h.
+
+Esempi:
+  [32;1mtime[0m
+  [32;1mtime[0m /h
+  [32;1mtime[0m [36;1m13:14:15[0m
 
 .
 :SHELL_CMD_MKDIR_ERROR
@@ -1200,15 +1568,15 @@ IF ERRORLEVEL: Numero non valido.
 
 .
 :SHELL_CMD_GOTO_MISSING_LABEL
-Non Š stata fornita una etichetta al comando GOTO.
+Nessuna etichetta fornita al comando GOTO.
 
 .
 :SHELL_CMD_GOTO_LABEL_NOT_FOUND
-GOTO: Impossibile trovare l'etichetta %s.
+GOTO: Etichetta %s non trovata.
 
 .
 :SHELL_CMD_FILE_NOT_FOUND
-File %s non trovato.
+File non trovato: %s 
 
 .
 :SHELL_CMD_FILE_EXISTS
@@ -1233,7 +1601,8 @@ File %s gi… esistente.
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Unit… %c inesistente!
-Prima devi montarla [31mmount[0m. Digita [1;33mintro[0m o [1;33mintro mount[0m per altre informazioni.
+Ô necessario montare l'unit… con il comando [31mmount[0m. 
+Per maggiori informazioni, digita [1;33mintro[0m o [1;33mintro mount[0m.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
@@ -1244,7 +1613,24 @@ Comando non valido: %s.
 Premere un tasto per continuare...
 .
 :SHELL_CMD_PAUSE_HELP
-Aspetta la pressione di un tasto per continuare.
+Attende la pressione di un tasto per continuare.
+
+.
+:SHELL_CMD_PAUSE_HELP_LONG
+Utilizzo:
+  [32;1mpause[0m
+
+Dove:
+  Questo comando non ha parametri.
+
+Note:
+  Questo comando Š particolarmente utile nei programmi batch per consentire a
+  un utente di continuare l'esecuzione del programma batch con la pressione
+  di un tasto. L'utente pu• premere qualsiasi tasto della tastiera (tranne
+  alcuni tasti di controllo) per continuare.
+
+Esempi:
+  [32;1mpause[0m
 
 .
 :SHELL_CMD_COPY_FAILURE
@@ -1260,7 +1646,7 @@ Impossibile rimuovere, unit… non in uso.
 
 .
 :SHELL_CMD_SUBST_FAILURE
-SUBST fallito. Hai commesso un errore nella riga di comando o l'unit… di
+SUBST fallito. Ô stato commesso un errore nella riga di comando o l'unit… di
 destinazione Š gi… in uso. Ô possibile utilizzare SUBST solo su unit… locali.
 .
 :SHELL_STARTUP_BEGIN
@@ -1279,14 +1665,14 @@ destinazione Š gi… in uso. Ô possibile utilizzare SUBST solo su unit… locali.
 :SHELL_STARTUP_CGA
 º DOSBox supporta la modalit… CGA Composita.                           º
 º Usa [31mF12[37m per impostare l'uscita composita su ON, OFF o AUTO           º
-º (impostazione predefinita).                                          º
-º [31m(%s+)F11[37m cambia tonalit…; [31m%s+%s+F11[37m seleziona il modello CGA.%s    º
-º                                                                      º
+º (predefinito).                                                       º
+º Usa [31mF10[37m per selezionare le impostazioni CGA da modificare e [31m%s+F11[37m   º
+º per effettuare le modifiche.                                         º
 
 .
 :SHELL_STARTUP_CGA_MONO
 º Usa [31mF11[37m per scorrere le modalit… verde, ambra, bianco e bianco-carta,º
-º e [31m%s+F11[37m per modificare le impostazioni di contrasto/luminosit….    º
+º e [31m%s+F11[37m per modificare le impostazioni di contrasto/luminosit….     º
 
 .
 :SHELL_STARTUP_HERC
@@ -1295,7 +1681,7 @@ destinazione Š gi… in uso. Ô possibile utilizzare SUBST solo su unit… locali.
 
 .
 :SHELL_STARTUP_DEBUG
-º Premi [31m%s+Pause[37m per avviare il debugger o avvia l'exe con [33mDEBUG[37m.     º
+º Premi [31m%s+Pause[37m per avviare il debugger o avvia l'exe con [33mDEBUG[37m.      º
 º                                                                      º
 
 .
@@ -1326,43 +1712,149 @@ Scrivi CD senza parametri per visualizzare l'unit… e la directory correnti.
 
 .
 :SHELL_CMD_CLS_HELP
-Cancella lo schermo.
+Cancella lo schermo DOS.
+
+.
+:SHELL_CMD_CLS_HELP_LONG
+Utilizzo:
+  [32;1mcls[0m
+
+Dove:
+  Questo comando non ha parametri.
+
+Note:
+  L'esecuzione di [32;1mcls[0m cancella tutto il testo sullo schermo DOS, ad eccezione
+  del prompt dei comandi (es. [37;1mZ:\>[0m o [37;1mC:\GIOCHI>[0m) nell'angolo in alto a sinistra
+  dello schermo. 
+
+Esempi:
+  [32;1mcls[0m
 
 .
 :SHELL_CMD_DIR_HELP
-Visualizza un elenco di file e sottodirectory in una directory.
+Visualizza un elenco di file e sottocartelle in una directory.
 
 .
 :SHELL_CMD_DIR_HELP_LONG
-DIR [unit…:][percorso][nomefile] [/[W|B]] [/P] [/[AD]|[A-D]] [/O[-][N|E|S|D]]
+Utilizzo:
+  [32;1mdir[0m [36;1m[MODELLO][0m [/w] [/b] [/p] [ad] [a-d] [/o[37;1mORDINAMENTO[0m]
 
-  [unit…:][percorso][nomefile]
-              Specifica unit…, directory e/o file da elencare.
-  /W          Visualizza in formato ampio.
-  /B          Utilizza un formato semplice (no intestazione o riepilogo).
-  /P          Mostra elenco una schermata per volta.
-  /AD         Visualizza tutte le directory.
-  /A-D        Visualizza tutti i file.
-  /O          Elenca file ordinandoli.
-               -  Prefisso per invertire l'ordinamento
-  ordinamento  N  Per nome, alfabetico        S  Per dimensione, dal minore
-               E  Per estensione, alfabetico  D  Per data e ora dal pi— vecchio
+Dove:
+  [36;1mMODELLO[0m     Š un nome file specifico o con caratteri jolly, cioŠ asterisco(*)
+              o punto di domanda (?). Ô possibile specificare il percorso di
+              una cartella per elencarne il contenuto.
+  [37;1mORDINAMENTO[0m Š il tipo di ordinamento scelto per visualizzare l'elenco, cioŠ:
+              [37;1mn[0m (per nome, alfabetico), [37;1ms[0m (per dimensione, dal minore),
+              [37;1me[0m (per estensione, alfabetico), [37;1md[0m (per data/ora dal pi— vecchio),
+              con un prefisso opzionale [37;1m-[0m per invertire l'ordinamento.
+  /w  elenca 5 file/directory in una riga;    /b   elenca solo i nomi.
+  /o  elenca i file ordinandoli. (vedi sopra) /p   mostra schermata per volta.
+  /ad visualizza tutte le cartelle;           /a-d visualizza tutti i file.
+
+Note:
+  L'esecuzione di [32;1mdir[0m senza un argomento elenca tutti i file e le
+  sottocartelle nella directory corrente. [32;1mdir[0m [36;1m*.*[0m effettua la stessa operazione.
+
+Esempi:
+  [32;1mdir[0m [36;1m[0m
+  [32;1mdir[0m [36;1mgiochi.*[0m /p
+  [32;1mdir[0m [36;1mc:\giochi\*.exe[0m /b /o[37;1m-d[0m
 
 .
 :SHELL_CMD_ECHO_HELP
 Visualizza messaggi e attiva/disattiva la ripetizione dei comandi.
 
 .
+:SHELL_CMD_ECHO_HELP_LONG
+Utilizzo:
+  [32;1mecho[0m [36;1m[on|off][0m
+  [32;1mecho[0m [36;1m[MESSAGGIO][0m
+
+Dove:
+  [36;1mon|off[0m    attiva/disattiva la ripetizione dei comandi.
+  [36;1mMESSAGGIO[0m Š il messaggio da visualizzare.
+
+Note:
+  - L'esecuzione di [32;1mecho[0m senza un argomento mostra lo stato di attivazione o
+    disattivazione corrente.
+  - Il comando [32;1mecho[0m Š particolarmente utile durante la scrittura o il debug
+    di file batch.
+
+Esempi:
+  [32;1mecho[0m [36;1moff[0m
+  [32;1mecho[0m [36;1mHello world![0m
+
+.
 :SHELL_CMD_EXIT_HELP
-Esci dalla shell.
+Permette l'uscita dalla shell DOS.
+
+.
+:SHELL_CMD_EXIT_HELP_LONG
+Utilizzo:
+  [32;1mexit[0m
+
+Dove:
+  Questo comando non ha parametri.
+
+Note:
+  Se avvii una shell DOS da un programma, l'esecuzione di [32;1mexit[0m provocher… la
+  chiusura di tale shell e il ritorno al programma.
+  Se nessun programma DOS Š in esecuzione, il comando chiuder… DOSBox Staging.
+
+Esempi:
+  [32;1mexit[0m
+
+.
+:SHELL_CMD_EXIT_TOO_SOON
+Impedisce ad una chiamata di uscita anticipata di terminare il programma.
 
 .
 :SHELL_CMD_HELP_HELP
-Visualizza la guida.
+Visualizza la guida per i comandi DOS.
 
 .
 :SHELL_CMD_HELP_HELP_LONG
-HELP [comando]
+Utilizzo:
+  [32;1mhelp[0m
+  [32;1mhelp[0m /a[ll]
+  [32;1mhelp[0m [36;1mCOMANDO[0m
+
+Dove:
+  [36;1mCOMANDO[0m Š il nome di un comando DOS interno, ad esempio [36;1mdir[0m.
+
+Note:
+  - L'esecuzione di [32;1mhelp[0m senza un argomento, permette di visualizzare un elenco
+    di comandi DOS.
+  - Ô possibile visualizzare un elenco completo di comandi interni con
+    l'opzione /a o /all.
+  - Al posto di [32;1mhelp[0m [36;1mCOMANDO[0m, Š possibile digitare [36;1mCOMANDO[0m /?.
+
+Esempi:
+  [32;1mhelp[0m [36;1mdir[0m
+  [32;1mhelp[0m /all
+
+.
+:SHELL_CMD_INTRO_HELP
+Visualizza un'introduzione a schermo intero di DOSBox Staging.
+
+.
+:SHELL_CMD_INTRO_HELP_LONG
+Utilizzo:
+  [32;1mintro[0m
+  [32;1mintro[0m [37;1mPAGINA[0m
+
+Dove:
+  [37;1mPAGINA[0m Š il nome della pagina da visualizzare, incluso [37;1mcdrom[0m, [37;1mmount[0m, e [37;1mspecial[0m
+
+Note:
+  L'esecuzione di [32;1mintro[0m senza un argomento, permette di visualizzare una pagina
+  di informazioni alla volta; premere un tasto qualsiasi per passare alla pagina
+  successiva. Se viene fornito il nome della pagina, verr… visualizzata
+  direttamente quella specificata.
+
+Esempi:
+  [32;1mintro[0m
+  [32;1mintro[0m [37;1mcdrom[0m
 
 .
 :SHELL_CMD_MKDIR_HELP
@@ -1370,8 +1862,20 @@ Crea una cartella.
 
 .
 :SHELL_CMD_MKDIR_HELP_LONG
-MKDIR [unit…:][percorso]
-MD [unit…:][percorso]
+Utilizzo:
+  [32;1mmd[0m [36;1mCARTELLA[0m
+  [32;1mmkdir[0m [36;1mCARTELLA[0m
+
+Dove:
+  [36;1mCARTELLA[0m Š il nome della cartella da creare.
+
+Note:
+  - Alla cartella deve essere assegnato un nome specifico e non gi… utilizzato.
+  - Ô possibile specificare il percorso in cui verr… creata la cartella.
+
+Esempi:
+  [32;1mmd[0m [36;1mnuovacartella[0m
+  [32;1mmd[0m [36;1mc:\giochi\nuovacartella[0m
 
 .
 :SHELL_CMD_RMDIR_HELP
@@ -1379,24 +1883,110 @@ Rimuove una cartella.
 
 .
 :SHELL_CMD_RMDIR_HELP_LONG
-RMDIR [unit…:][percorso]
-RD [unit…:][percorso]
+Utilizzo:
+  [32;1mrd[0m [36;1mCARTELLA[0m
+  [32;1mrmdir[0m [36;1mCARTELLA[0m
+
+Dove:
+  [36;1mCARTELLA[0m Š il nome della cartella da rimuovere.
+
+Note:
+  La cartella deve essere vuota, senza file o sottocartelle.
+
+Esempi:
+  [32;1mrd[0m [36;1mcartellavuota[0m
 
 .
 :SHELL_CMD_SET_HELP
 Visualizza, imposta o rimuove le variabili d'ambiente.
 
 .
+:SHELL_CMD_SET_HELP_LONG
+Utilizzo:
+  [32;1mset[0m
+  [32;1mset[0m [37;1mVARIABILE[0m=[36;1m[STRINGA][0m
+
+Dove:
+  [37;1mVARIABILE[0m Š il nome della variabile d'ambiente.
+  [36;1mSTRINGA[0m   Š una serie di caratteri da assegnare alla variabile.
+
+Note:
+  - L'assegnazione di una stringa vuota alla variabile rimuove la variabile.
+  - Il comando senza un parametro visualizza le variabili di ambiente correnti.
+
+Esempi:
+  [32;1mset[0m
+  [32;1mset[0m [37;1mnome[0m=[36;1mvalore[0m
+
+.
 :SHELL_CMD_IF_HELP
 Esegue un'elaborazione condizionale in programmi batch.
 
 .
+:SHELL_CMD_IF_HELP_LONG
+Utilizzo:
+  [32;1mif[0m [35;1m[not][0m [36;1merrorlevel[0m [37;1mNUMERO[0m COMANDO
+  [32;1mif[0m [35;1m[not][0m [37;1mSTR1==STR2[0m COMANDO
+  [32;1mif[0m [35;1m[not][0m [36;1mexist[0m [37;1mFILE[0m COMANDO
+
+Dove:
+  [37;1mNUMERO[0m     Š un numero intero positivo minore o uguale al valore desiderato.
+  [37;1mSTR1==STR2[0m confronta due stringhe di testo (case-sensitive).
+  [37;1mFILE[0m       Š un nome file di cui verificare l'esistenza.
+  COMANDO    Š un comando o programma DOS da eseguire, facolt. con parametri.
+
+Note:
+  Il COMANDO viene eseguito se una delle tre condizioni Š soddisfatta.
+  Se [38;1mnot[0m Š specificato, il comando viene eseguito solo se la condizione Š falsa
+  La condizione [36;1merrorlevel[0m Š utile per verificare se un programma Š stato
+  eseguito correttamente. Si consiglia di inserire le virgolette "" in entrambe
+  le stringhe nel caso in cui [37;1mSTR1[0m o [37;1mSTR2[0m (o entrambe) possano essere vuote.
+
+Esempi:
+  [32;1mif[0m [36;1merrorlevel[0m [37;1m2[0m dir
+  [32;1mif[0m [37;1m"%%variabile%%"=="stringa"[0m echo Hello world!
+  [32;1mif[0m [35;1mnot[0m [36;1mexist[0m [37;1mfile.txt[0m exit
+
+.
 :SHELL_CMD_GOTO_HELP
-Salta a una riga etichettata in uno script batch.
+Salta a una riga etichettata in un programma batch.
+
+.
+:SHELL_CMD_GOTO_HELP_LONG
+Utilizzo:
+  [32;1mgoto[0m [36;1mETICHETTA[0m
+
+Dove:
+  [36;1mETICHETTA[0m Š una stringa di testo utilizzata nel programma batch come
+            etichetta.
+
+Note:
+  Un'etichetta si trova su una riga a s‚ stante, che inizia con i due punti (:)
+  L'etichetta deve essere univoca e pu• trovarsi ovunque all'interno del
+  programma batch.
+
+Esempi:
+  [32;1mgoto[0m [36;1metichetta[0m
 
 .
 :SHELL_CMD_SHIFT_HELP
-Cambia la posizione dei parametri sostituibili in un file batch.
+Cambia la posizione dei parametri sostituibili in un programma batch.
+
+.
+:SHELL_CMD_SHIFT_HELP_LONG
+Utilizzo:
+  [32;1mshift[0m
+
+Dove:
+  Questo comando non ha parametri.
+
+Note:
+  Questo comando consente a un programma batch DOS di accettare pi— di 9
+  parametri. L'esecuzione di [32;1mshift[0m sposta a sinistra la variabile
+  del programma batch da %%1 a %%0, da %%2 a %%1, ecc.
+
+Esempi:
+  [32;1mshift[0m
 
 .
 :SHELL_CMD_TYPE_HELP
@@ -1404,15 +1994,39 @@ Visualizza il contenuto di uno o pi— file di testo.
 
 .
 :SHELL_CMD_TYPE_HELP_LONG
-TYPE [unit…:][percorso]nomefile
+Utilizzo:
+  [32;1mtype[0m [36;1mFILE[0m
+
+Dove:
+  [36;1mFILE[0m Š il nome del file di testo da visualizzare.
+
+Note:
+  Il file deve avere un nome specifico, facoltativamente con un percorso.
+  Questo comando serve solo per visualizzare file di testo, non file binari.
+
+Esempi:
+  [32;1mtype[0m [36;1mtesto.txt[0m
+  [32;1mtype[0m [36;1mc:\dos\leggimi.txt[0m
+
 
 .
 :SHELL_CMD_REM_HELP
-Registra dei commenti (note) in un file batch.
+Aggiunge commenti in un programma batch.
 
 .
 :SHELL_CMD_REM_HELP_LONG
-REM [commento]
+Utilizzo:
+  [32;1mrem[0m [36;1mCOMMENTO[0m
+
+Dove:
+  [36;1mCOMMENTO[0m Š una nota che si vuole aggiungere.
+
+Note:
+  L'aggiunta di commenti a un programma batch pu• semplificarne la comprensione.
+  Puoi anche commentare temporaneamente alcuni comandi con questo comando.
+
+Esempi:
+  [32;1mrem[0m [36;1mQuesto Š il mio programma batch di prova.[0m
 
 .
 :SHELL_CMD_NO_WILD
@@ -1424,10 +2038,22 @@ Rinomina uno o pi— file.
 
 .
 :SHELL_CMD_RENAME_HELP_LONG
-RENAME [unit…:][percorso]nomefile1 nomefile2.
-REN [unit…:][percorso]nomefile1 nomefile2.
+Utilizzo:
+  [32;1mren[0m [37;1mSORGENTE[0m [36;1mDESTINAZIONE[0m
+  [32;1mrename[0m [37;1mSORGENTE[0m [36;1mDESTINAZIONE[0m
 
-Non puoi specificare una nuova unit… o percorso per il file di destinazione.
+Dove:
+  [37;1mSORGENTE[0m     Š il nome del file da rinominare.
+  [36;1mDESTINAZIONE[0m Š il nuovo nome del file.
+
+Note:
+  - Il file di origine deve essere un nome file specifico, facoltativamente con
+    un percorso.
+  - Il file di destinazione deve essere un nome file specifico senza percorso.
+
+Esempi:
+  [32;1mren[0m [37;1mvecchio_nome[0m [36;1mnuovo_nome[0m
+  [32;1mren[0m [37;1mc:\dos\file.txt[0m [36;1mf.txt[0m
 
 .
 :SHELL_CMD_DELETE_HELP
@@ -1436,11 +2062,11 @@ Elimina uno o pi— file.
 .
 :SHELL_CMD_DELETE_HELP_LONG
 Utilizzo:
-  [32;1mdel[0m [36;1mNOMEFILE[0m
-  [32;1merase[0m [36;1mNOMEFILE[0m
+  [32;1mdel[0m [36;1mMODELLO[0m
+  [32;1merase[0m [36;1mMODELLO[0m
 
 Dove:
-  [36;1mNOMEFILE[0m pu• essere un nome di uno file specifico (come [36;1mfile.txt[0m) oppure
+  [36;1mMODELLO[0m pu• essere un nome di uno file specifico (come [36;1mfile.txt[0m) oppure
            un nome file contenente uno o pi— caratteri jolly, cioŠ:
            asterisco (*), che rappresenta una qualsiasi sequenza di uno o pi—
            caratteri, o punto di domanda (?) che rappresenta un singolo
@@ -1460,24 +2086,115 @@ Esempi:
 Copia uno o pi— file in un'altra posizione.
 
 .
+:SHELL_CMD_COPY_HELP_LONG
+Utilizzo:
+  [32;1mcopy[0m [37;1mSORGENTE[0m [36;1m[DESTINAZIONE][0m
+  [32;1mcopy[0m [37;1mSORGENTE1+SORGENTE2[+...][0m [36;1m[DESTINAZIONE][0m
+
+Dove:
+  [37;1mSORGENTE[0m     Š un nome file specifico o con caratteri jolly, cioŠ asterisco(*)
+               o punto di domanda (?).
+  [36;1mDESTINAZIONE[0m Š un nome file specifico che non contiene caratteri
+               jolly o una cartella.
+
+Note:
+  L'operatore [37;1m+[0m combina pi— file sorgente forniti in un unico file.
+  La destinazione Š facoltativa: se omessa, i file vengono copiati nel percorso
+  corrente.
+
+Esempi:
+  [32;1mcopy[0m [37;1msorgente.bat[0m [36;1mnuovo.bat[0m
+  [32;1mcopy[0m [37;1mfile1.txt+file2.txt[0m [36;1mfile3.txt[0m
+  [32;1mcopy[0m [37;1m..\c*.*[0m
+
+.
 :SHELL_CMD_CALL_HELP
 Richiama un programma batch da un altro programma batch.
+
+.
+:SHELL_CMD_CALL_HELP_LONG
+Utilizzo:
+  [32;1mcall[0m [37;1mBATCH[0m [36;1m[PARAMETRI][0m
+
+Dove:
+  [37;1mBATCH[0m     Š un programma batch da avviare.
+  [36;1mPARAMETRI[0m sono parametri facoltativi per il programma batch.
+
+Note:
+  Dopo aver richiamato un altro programma batch, il programma batch originale
+  riprender… a funzionare quando quello richiamato sar… terminato.
+
+Esempi:
+  [32;1mcall[0m [37;1mbatch.bat[0m
+  [32;1mcall[0m [37;1mfile.bat[0m [36;1mHello world![0m
 
 .
 :SHELL_CMD_SUBST_HELP
 Associa un percorso ad una lettera di unit….
 
 .
+:SHELL_CMD_SUBST_HELP_LONG
+Utilizzo:
+  [32;1msubst[0m [37;1mUNIT·[0m [36;1mPERCORSO[0m
+  [32;1msubst[0m [37;1mUNIT·[0m /d
+
+Dove:
+  [37;1mUNIT·[0m     Š un'unit… a cui si desidera assegnare un percorso.
+  [36;1mPERCORSO[0m  Š un percorso DOS montato che si desidera assegnare.
+
+Note:
+  Il percorso deve trovarsi su un'unit… montata con il comando [32;1mmount[0m.
+  Ô possibile rimuovere un'unit… assegnata con l'opzione /d.
+
+Esempi:
+  [32;1msubst[0m [37;1md:[0m [36;1mc:\giochi[0m
+  [32;1msubst[0m [37;1me:[0m [36;1m/d[0m
+
+.
 :SHELL_CMD_LOADHIGH_HELP
 Carica un programma in memoria superiore (xms=true, umb=true).
 
 .
+:SHELL_CMD_LOADHIGH_HELP_LONG
+Utilizzo:
+  [32;1mlh[0m [36;1mPROGRAMMA[0m [37;1m[PARAMETRI][0m
+  [32;1mloadhigh[0m [36;1mPROGRAMMA[0m [37;1m[PARAMETRI][0m
+
+Dove:
+  [36;1mPROGRAMMA[0m Š un programma DOS TSR da caricare, facoltativamente con parametri.
+
+Note:
+  Se possibile, questo comando intende salvare la memoria convenzionale
+  caricando i programmi TSR DOS specificati nella memoria superiore. Tali
+  programmi potrebbero essere necessari per alcuni giochi DOS; Le memorie XMS
+  e UMB devono essere abilitate (xms=true e umb=true). Non tutti i programmi
+  DOS TSR possono essere caricati nella memoria superiore con questo comando.
+
+Esempi:
+  [32;1mlh[0m [36;1mapptsr[0m [37;1margomenti[0m
+
+.
 :SHELL_CMD_LS_HELP
-Elenca il contenuto della cartella.
+Visualizza il contenuto della cartella nel formato elenco ampio.
 
 .
 :SHELL_CMD_LS_HELP_LONG
-ls [/?] [MODELLO]
+Utilizzo:
+  [32;1mls[0m [36;1mMODELLO[0m
+  [32;1mls[0m [36;1mPERCORSO[0m
+
+Dove:
+  [36;1mMODELLO[0m  Š un nome file specifico o con caratteri jolly, cioŠ asterisco (*)
+           o punto di domanda (?).
+  [36;1mPERCORSO[0m Š un percorso di un'unit… DOS montata da cui elencare i contenuti.
+
+Note:
+  Il comando elencher… le cartelle in [34;1mblu[0m, programmi eseguibili DOS
+   (*.com, *.exe, *.bat) in [32;1mverde[0m, e altri file nel colore normale.
+
+Esempi:
+  [32;1mls[0m [36;1mfile.txt[0m
+  [32;1mls[0m [36;1mc*.ba?[0m
 
 .
 :SHELL_CMD_LS_PATH_ERR
@@ -1485,23 +2202,53 @@ ls: impossibile accedere a '%s': Percorso o file non trovato.
 
 .
 :SHELL_CMD_CHOICE_HELP
-Attende la pressione di un tasto e imposta ERRORLEVEL.
+Attende la pressione di un tasto e imposta un valore ERRORLEVEL.
 
 .
 :SHELL_CMD_CHOICE_HELP_LONG
-CHOICE [/C:scelte] [/N] [/S] testo
-  /C[:]scelte  -  Specifica le scelte consentite. L'elenco predefinito Š: YN.
-  /N  -  Nasconde l'elenco delle scelte nel prompt.
-  /S  -  Abilita le scelte con distinzione tra maiuscole e minuscole
-  text  -  Specifica il messaggio da visualizzare prima del prompt.
+Utilizzo:
+  [32;1mchoice[0m [36;1m[TESTO][0m
+  [32;1mchoice[0m /c[:][37;1mSCELTE[0m [/n] [/s] [36;1m[TESTO][0m
 
-.
-:SHELL_CMD_ATTRIB_HELP
-Non fa nulla. Fornito per compatibilit….
+Dove:
+  [36;1mTESTO[0m       Š il testo da visualizzare come prompt (pu• rimanere vuoto).
+  /c[:][37;1mSCELTE[0m indica le scelte consentite (predefinito [37;1myn[0m).
+  /n          consente di non visualizzare le scelte alla fine del prompt.
+  /s          consente di selezionare le scelte con distinzione tra maiuscole
+              e minuscole.
+
+Note:
+  Questo comando imposta un valore ERRORLEVEL a partire da 1 in base alle
+  scelte specificate con l'opzione /c, e l'input dell'utente pu• quindi essere
+  verificato con il comando [32;1mif[0m. Con l'opzione /n verr… visualizzato solo il
+  testo specificato, ma non le scelte effettive alla fine (predefinito [37;1m[Y,N]?[0m).
+
+Esempi:
+  [32;1mchoice[0m [36;1mContinuare?[0m
+  [32;1mchoice[0m /c:[37;1mabc[0m /s [36;1mDigita la lettera a, b, o c[0m
 
 .
 :SHELL_CMD_PATH_HELP
-Fornito per compatibilit….
+Visualizza o imposta un percorso di ricerca per i file eseguibili.
+
+.
+:SHELL_CMD_PATH_HELP_LONG
+Utilizzo:
+  [32;1mpath[0m
+  [32;1mpath[0m [36;1m[unit…:]percorso[;...][0m
+
+Dove:
+  [36;1m[unit…:]percorso[;...][0m Š un percorso contenente un'unit… e una directory.
+  Ô possibile specificare pi— di un percorso, separati da un punto e virgola(;)
+
+Note:
+  Il parametro con solo un punto e virgola (;), cancella tutte le impostazioni
+  del percorso di ricerca. La variabile d'ambiente path pu• essere impostata
+  utilizzando anche il comando [32;1mset[0m, per esempio [32;1mset[0m [37;1mpath[0m=[36;1mZ:\[0m
+
+Esempi:
+  [32;1mpath[0m
+  [32;1mpath[0m [36;1mZ:\;C:\DOS[0m
 
 .
 :SHELL_CMD_VER_HELP
