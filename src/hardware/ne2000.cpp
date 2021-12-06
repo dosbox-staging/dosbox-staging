@@ -254,53 +254,54 @@ bx_ne2k_c::write_cr(io_val_t data)
 			}
 			BX_NE2K_THIS s.ISR.pkt_tx = 1;
 		}
-    } else if (value & 0x04) {
-		// start-tx and no loopback
-		if (BX_NE2K_THIS s.CR.stop || !BX_NE2K_THIS s.CR.start)
-			BX_PANIC(("CR write - tx start, dev in reset"));
-	    
-		if (BX_NE2K_THIS s.tx_bytes == 0)
-			BX_PANIC(("CR write - tx start, tx bytes == 0"));
+    }
+    else if (value & 0x04) {
+      // start-tx and no loopback
+      if (BX_NE2K_THIS s.CR.stop || !BX_NE2K_THIS s.CR.start)
+        BX_PANIC(("CR write - tx start, dev in reset"));
+        
+      if (BX_NE2K_THIS s.tx_bytes == 0)
+        BX_PANIC(("CR write - tx start, tx bytes == 0"));
 
 #ifdef notdef    
-    // XXX debug stuff
-    printf("packet tx (%d bytes):\t", BX_NE2K_THIS s.tx_bytes);
-    for (int i = 0; i < BX_NE2K_THIS s.tx_bytes; i++) {
-      printf("%02x ", BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - 
-				BX_NE2K_MEMSTART + i]);
-      if (i && (((i+1) % 16) == 0)) 
-	printf("\t");
-    }
-    printf("");
+      // XXX debug stuff
+      printf("packet tx (%d bytes):\t", BX_NE2K_THIS s.tx_bytes);
+      for (int i = 0; i < BX_NE2K_THIS s.tx_bytes; i++) {
+        printf("%02x ", BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - 
+          BX_NE2K_MEMSTART + i]);
+        if (i && (((i+1) % 16) == 0)) 
+          printf("\t");
+      }
+      printf("");
 #endif    
 
-    // Send the packet to the system driver
-	/* TODO: Transmit packet */
-    //BX_NE2K_THIS ethdev->sendpkt(& BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - BX_NE2K_MEMSTART], BX_NE2K_THIS s.tx_bytes);
-	ethernet->SendPacket(&s.mem[s.tx_page_start*256 - BX_NE2K_MEMSTART], s.tx_bytes);
-	// some more debug
-	if (BX_NE2K_THIS s.tx_timer_active) {
-      BX_PANIC(("CR write, tx timer still active"));
-	  PIC_RemoveEvents(NE2000_TX_Event);
-	}
-	//LOG_MSG("send packet command");
-	//s.tx_timer_index = (64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10;
-	s.tx_timer_active = 1;
-	PIC_AddEvent(NE2000_TX_Event,(64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10000.0,0);
-    // Schedule a timer to trigger a tx-complete interrupt
-    // The number of microseconds is the bit-time / 10.
-    // The bit-time is the preamble+sfd (64 bits), the
-    // inter-frame gap (96 bits), the CRC (4 bytes), and the
-    // the number of bits in the frame (s.tx_bytes * 8).
-    //
+      // Send the packet to the system driver
+      /* TODO: Transmit packet */
+      //BX_NE2K_THIS ethdev->sendpkt(& BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - BX_NE2K_MEMSTART], BX_NE2K_THIS s.tx_bytes);
+      ethernet->SendPacket(&s.mem[s.tx_page_start*256 - BX_NE2K_MEMSTART], s.tx_bytes);
+      // some more debug
+      if (BX_NE2K_THIS s.tx_timer_active) {
+        BX_PANIC(("CR write, tx timer still active"));
+        PIC_RemoveEvents(NE2000_TX_Event);
+      }
+      //LOG_MSG("send packet command");
+      //s.tx_timer_index = (64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10;
+      s.tx_timer_active = 1;
+      PIC_AddEvent(NE2000_TX_Event,(64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10000.0,0);
+      // Schedule a timer to trigger a tx-complete interrupt
+      // The number of microseconds is the bit-time / 10.
+      // The bit-time is the preamble+sfd (64 bits), the
+      // inter-frame gap (96 bits), the CRC (4 bytes), and the
+      // the number of bits in the frame (s.tx_bytes * 8).
+      //
 
-	/* TODO: Code transmit timer */
-	/*
-    bx_pc_system.activate_timer(BX_NE2K_THIS s.tx_timer_index,
-				(64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10,
-				0); // not continuous
-	*/
-  } // end transmit-start branch
+      /* TODO: Code transmit timer */
+      /*
+      bx_pc_system.activate_timer(BX_NE2K_THIS s.tx_timer_index,
+        (64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10,
+        0); // not continuous
+      */
+    } // end transmit-start branch
 
   // Linux probes for an interrupt by setting up a remote-DMA read
   // of 0 bytes with remote-DMA completion interrupts enabled.
@@ -310,7 +311,7 @@ bx_ne2k_c::write_cr(io_val_t data)
       BX_NE2K_THIS s.remote_bytes == 0) {
     BX_NE2K_THIS s.ISR.rdma_done = 1;
     if (BX_NE2K_THIS s.IMR.rdma_inte) {
-		PIC_ActivateIRQ(s.base_irq);
+  		PIC_ActivateIRQ(s.base_irq);
       //DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
     }
   }
@@ -1469,11 +1470,12 @@ private:
 
 public:
 	bool load_success;
-	NE2K(Section* configuration)
-	: Module_base(configuration),
-    load_success(true) {
-		Section_prop * section=static_cast<Section_prop *>(configuration);
-		if(!section->Get_bool("ne2000")) {
+	NE2K(Section *configuration)
+	        : Module_base(configuration),
+	          load_success(true)
+	{
+		Section_prop *section = static_cast<Section_prop *>(configuration);
+		if (!section->Get_bool("ne2000")) {
 			load_success = false;
 			return;
 		}
@@ -1532,8 +1534,8 @@ public:
 			WriteHandler8[i].Install(port_num, dosbox_write, io_width_t::word);
 		}
 		TIMER_AddTickHandler(NE2000_Poller);
-	}	
-	
+	}
+
 	~NE2K() {
 		delete ethernet;
 		ethernet = nullptr;
