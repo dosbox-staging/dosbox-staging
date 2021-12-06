@@ -34,7 +34,8 @@ EthernetConnection *ETHERNET_OpenConnection(const std::string &backend)
 	}
 #endif
 	assert(conn);
-	if (conn->Initialize(nullptr)) {
+	const auto settings = control->GetSection("ethernet");
+	if (conn->Initialize(settings)) {
 		return conn;
 	} else {
 		delete conn;
