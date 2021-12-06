@@ -25,6 +25,7 @@
 
 #if C_SLIRP
 
+#include <map>
 #include <deque>
 #include <vector>
 #include <slirp/libslirp.h>
@@ -95,6 +96,9 @@ private:
 	void TimersRun();
 	void TimersClear();
 
+	void ClearPortForwards(const bool is_udp, std::map<int, int> &existing_port_forwards);
+	std::map<int, int> SetupPortForwards(const bool is_udp, const std::string &port_forward_rules);
+
 	/* Builds a list of descriptors and polls them */
 	void PollsAddRegistered();
 	void PollsClear();
@@ -116,6 +120,10 @@ private:
 	std::function<void(const uint8_t *, int)> get_packet_callback = nullptr;
 
 	std::deque<int> registered_fds = {}; /*!< File descriptors to watch */
+
+	// keep track of the ports fowarded
+	std::map<int, int> forwarded_tcp_ports = {};
+	std::map<int, int> forwarded_udp_ports = {};
 
 #ifndef WIN32
 	std::vector<struct pollfd> polls = {}; /*!< Descriptors for poll() */
