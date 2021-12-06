@@ -273,35 +273,33 @@ bx_ne2k_c::write_cr(io_val_t data)
           printf("\t");
       }
       printf("");
-#endif    
+#endif
+
+      // If a scheduled transmission is still queued, then
+      // send it now to ensure order is maintained.
+      if (BX_NE2K_THIS s.tx_timer_active) {
+	      PIC_RemoveEvents(NE2000_TX_Event);
+	      NE2000_TX_Event(0);
+	      LOG_MSG("NE2000: Preemptive transmit to retain packet order");
+      }
 
       // Send the packet to the system driver
-      /* TODO: Transmit packet */
-      //BX_NE2K_THIS ethdev->sendpkt(& BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - BX_NE2K_MEMSTART], BX_NE2K_THIS s.tx_bytes);
-      ethernet->SendPacket(&s.mem[s.tx_page_start*256 - BX_NE2K_MEMSTART], s.tx_bytes);
-      // some more debug
-      if (BX_NE2K_THIS s.tx_timer_active) {
-        BX_PANIC(("CR write, tx timer still active"));
-        PIC_RemoveEvents(NE2000_TX_Event);
-      }
-      //LOG_MSG("send packet command");
-      //s.tx_timer_index = (64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10;
+      // BX_NE2K_THIS ethdev->sendpkt(& BX_NE2K_THIS s.mem[BX_NE2K_THIS
+      // s.tx_page_start*256 - BX_NE2K_MEMSTART], BX_NE2K_THIS s.tx_bytes);
+      ethernet->SendPacket(&s.mem[s.tx_page_start * 256 - BX_NE2K_MEMSTART], s.tx_bytes);
+      // s.tx_timer_index = (64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10;
       s.tx_timer_active = 1;
-      PIC_AddEvent(NE2000_TX_Event,(64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10000.0,0);
+
       // Schedule a timer to trigger a tx-complete interrupt
-      // The number of microseconds is the bit-time / 10.
+      // The number of microseconds is the bit-time / 100.
       // The bit-time is the preamble+sfd (64 bits), the
       // inter-frame gap (96 bits), the CRC (4 bytes), and the
       // the number of bits in the frame (s.tx_bytes * 8).
       //
-
-      /* TODO: Code transmit timer */
-      /*
-      bx_pc_system.activate_timer(BX_NE2K_THIS s.tx_timer_index,
-        (64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10,
-        0); // not continuous
-      */
-    } // end transmit-start branch
+      const auto tx_bits = 64 + 96 + 4 * 8 + s.tx_bytes * 8;
+      const auto tx_usec = tx_bits / (100 * 1000.0);
+      PIC_AddEvent(NE2000_TX_Event, tx_usec, 0);
+    }
 
   // Linux probes for an interrupt by setting up a remote-DMA read
   // of 0 bytes with remote-DMA completion interrupts enabled.
