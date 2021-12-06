@@ -30,6 +30,7 @@
 #include "ethernet_slirp.h"
 #include "setup.h"
 #include "support.h"
+#include "timer.h"
 
 #ifdef WIN32
 #include <ws2tcpip.h>
@@ -56,10 +57,7 @@ void slirp_guest_error(const char *msg, [[maybe_unused]] void *opaque)
 
 int64_t slirp_clock_get_ns([[maybe_unused]] void *opaque)
 {
-	struct timespec ts;
-	clock_gettime(CLOCK_REALTIME, &ts);
-	/* if clock_gettime fails we have more serious problems */
-	return ts.tv_nsec + (ts.tv_sec * 1'000'000'000LL);
+	return GetTicksUs() * 1000;
 }
 
 void *slirp_timer_new(SlirpTimerCb cb, void *cb_opaque, void *opaque)
