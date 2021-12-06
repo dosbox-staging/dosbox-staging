@@ -994,13 +994,6 @@ void DOSBOX_Init(void) {
 		"private use, so modify the last three number blocks.\n"
 		"I.e. AC:DE:48:88:99:AB.");
 
-	Pstring = secprop->Add_string("realnic", when_idle, "list");
-	Pstring->Set_help("Specifies which of your network interfaces is used.\n"
-		"Write \'list\' here to see the list of devices in the\n"
-		"Status Window. Then make your choice and put either the\n"
-		"interface number (2 or something) or a part of your adapters\n"
-		"name, e.g. VIA here.");
-
 	Pstring = secprop->Add_string("tcp_port_forwards", when_idle, "");
 	Pstring->Set_help("Forwards one or more TCP ports from the host into the DOS guest.\n"
 	                  "The format is:\n"
