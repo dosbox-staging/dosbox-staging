@@ -143,7 +143,7 @@ SlirpEthernetConnection::~SlirpEthernetConnection()
 		slirp_cleanup(slirp);
 }
 
-bool SlirpEthernetConnection::Initialize([[maybe_unused]] Section *dosbox_config)
+bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 {
 	LOG_MSG("SLIRP: Slirp version: %s", slirp_version_string());
 
