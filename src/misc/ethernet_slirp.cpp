@@ -44,10 +44,20 @@
 
 ssize_t slirp_receive_packet(const void *buf, size_t len, void *opaque)
 {
+	// sentinels
+	if (!len)
+		return 0;
+
 	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
-	const auto packets = check_cast<uint16_t>(len);
-	conn->ReceivePacket(static_cast<const uint8_t *>(buf), packets);
-	return packets;
+	const auto bytes_to_receive = check_cast<int>(len);
+
+	if (bytes_to_receive > conn->GetMRU()) {
+		LOG_MSG("SLIRP: refusing to receive packet with length %d exceeding MRU %d",
+		        bytes_to_receive, conn->GetMRU());
+		return -1;
+	}
+	return conn->ReceivePacket(static_cast<const uint8_t *>(buf),
+	                           bytes_to_receive);
 }
 
 void slirp_guest_error(const char *msg, [[maybe_unused]] void *opaque)
@@ -83,23 +93,29 @@ void slirp_timer_mod(void *timer, int64_t expire_time, void *opaque)
 int slirp_add_poll(int fd, int events, void *opaque)
 {
 	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
-	return conn->PollAdd(fd, events);
+	return (fd < 0) ? fd : conn->PollAdd(fd, events);
 }
 
 int slirp_get_revents(int idx, void *opaque)
 {
 	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
-	return conn->PollGetSlirpRevents(idx);
+	return (idx < 0) ? idx : conn->PollGetSlirpRevents(idx);
 }
 
 void slirp_register_poll_fd(int fd, void *opaque)
 {
+	// sentinel
+	if (fd < 0)
+		return;
 	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	conn->PollRegister(fd);
 }
 
 void slirp_unregister_poll_fd(int fd, void *opaque)
 {
+	// sentinel
+	if (fd < 0)
+		return;
 	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	conn->PollUnregister(fd);
 }
@@ -342,10 +358,18 @@ std::map<int, int> SlirpEthernetConnection::SetupPortForwards(const bool is_udp,
 
 void SlirpEthernetConnection::SendPacket(const uint8_t *packet, int len)
 {
+	// sentinels
+	if (len <= 0)
+		return;
+	if (len > GetMTU()) {
+		LOG_WARNING("SLIRP: refusing to send packet with length %d exceeding MTU %d",
+		            len, GetMTU());
+		return;
+	}
 	slirp_input(slirp, packet, len);
 }
 
-void SlirpEthernetConnection::GetPackets(std::function<void(const uint8_t *, int)> callback)
+void SlirpEthernetConnection::GetPackets(std::function<int(const uint8_t *, int)> callback)
 {
 	get_packet_callback = callback;
 	uint32_t timeout_ms = 0;
@@ -359,6 +383,14 @@ void SlirpEthernetConnection::GetPackets(std::function<void(const uint8_t *, int
 
 int SlirpEthernetConnection::ReceivePacket(const uint8_t *packet, int len)
 {
+	// sentinels
+	if (len <= 0)
+		return len;
+	if (len > GetMRU()) {
+		LOG_WARNING("SLIRP: refusing to receive packet with length %d exceeding MRU %d",
+		            len, GetMRU());
+		return -1;
+	}
 	return get_packet_callback(packet, len);
 }
 
@@ -405,6 +437,9 @@ void SlirpEthernetConnection::TimersClear()
 
 void SlirpEthernetConnection::PollRegister(int fd)
 {
+	// sentinel
+	if (fd < 0)
+		return;
 #ifdef WIN32
 	/* BUG: Skip this entirely on Win32 as libslirp gives us invalid fds. */
 	return;
@@ -415,14 +450,17 @@ void SlirpEthernetConnection::PollRegister(int fd)
 
 void SlirpEthernetConnection::PollUnregister(int fd)
 {
+	// sentinels
+	if (fd < 0 || registered_fds.empty())
+		return;
 	std::remove(registered_fds.begin(), registered_fds.end(), fd);
 }
 
 void SlirpEthernetConnection::PollsAddRegistered()
 {
-	for (int fd : registered_fds) {
-		PollAdd(fd, SLIRP_POLL_IN | SLIRP_POLL_OUT);
-	}
+	for (int fd : registered_fds)
+		if (fd >= 0)
+			PollAdd(fd, SLIRP_POLL_IN | SLIRP_POLL_OUT);
 }
 
 /* Begin the bulk of the platform-specific code.
@@ -443,6 +481,9 @@ void SlirpEthernetConnection::PollsClear()
 
 int SlirpEthernetConnection::PollAdd(int fd, int slirp_events)
 {
+	// sentinel
+	if (fd < 0)
+		return fd;
 	int16_t real_events = 0;
 	if (slirp_events & SLIRP_POLL_IN)
 		real_events |= POLLIN;
@@ -459,7 +500,11 @@ int SlirpEthernetConnection::PollAdd(int fd, int slirp_events)
 
 bool SlirpEthernetConnection::PollsPoll(uint32_t timeout_ms)
 {
-	const auto ret = poll(polls.data(), polls.size(), static_cast<int>(timeout_ms));
+	// sentinel
+	if (polls.empty())
+		return false;
+	const auto ret = poll(polls.data(), polls.size(),
+	                      static_cast<int>(timeout_ms));
 	return (ret > -1);
 }
 
@@ -492,6 +537,9 @@ void SlirpEthernetConnection::PollsClear()
 
 int SlirpEthernetConnection::PollAdd(int fd, int slirp_events)
 {
+	// sentinel
+	if (fd < 0)
+		return fd;
 	if (slirp_events & SLIRP_POLL_IN)
 		FD_SET(fd, &readfds);
 	if (slirp_events & SLIRP_POLL_OUT)
@@ -512,6 +560,9 @@ bool SlirpEthernetConnection::PollsPoll(uint32_t timeout_ms)
 
 int SlirpEthernetConnection::PollGetSlirpRevents(int idx)
 {
+	// sentinel
+	if (idx < 0)
+		return idx;
 	/* Windows does not support poll(). It has WSAPoll() but this is
 	 * reported as broken by libcurl and other projects, and Microsoft
 	 * doesn't seem to want to fix this any time soon.
