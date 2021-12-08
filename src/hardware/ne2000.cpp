@@ -168,7 +168,7 @@ bx_ne2k_c::reset(unsigned type)
   
   // Set power-up conditions
   BX_NE2K_THIS s.CR.stop      = 1;
-    BX_NE2K_THIS s.CR.rdma_cmd  = 4;
+  BX_NE2K_THIS s.CR.rdma_cmd = 4;
   BX_NE2K_THIS s.ISR.reset    = 1;
   BX_NE2K_THIS s.DCR.longaddr = 1;
   PIC_DeActivateIRQ(s.base_irq);
@@ -449,47 +449,48 @@ bx_ne2k_c::asic_read(io_port_t offset, io_width_t io_len)
 void
 bx_ne2k_c::asic_write(io_port_t offset, io_val_t value, io_width_t io_len)
 {
-  BX_DEBUG("asic write addr=0x%02x, value=0x%04x", (unsigned) offset, (unsigned) value);
-  switch (offset) {
-  case 0x0:  // Data register - see asic_read for a description
+	BX_DEBUG("asic write addr=0x%02x, value=0x%04x", offset, value);
+	switch (offset) {
+	case 0x0: // Data register - see asic_read for a description
 
-    if ((io_len == io_width_t::word) && (BX_NE2K_THIS s.DCR.wdsize == 0)) {
-      BX_PANIC(("dma write length 2 on byte mode operation"));
-      break;
-    }
+		if ((io_len == io_width_t::word) && (BX_NE2K_THIS s.DCR.wdsize == 0)) {
+			BX_PANIC(("dma write length 2 on byte mode operation"));
+			break;
+		}
 
-    if (BX_NE2K_THIS s.remote_bytes == 0)
-      BX_PANIC(("ne2K: dma write, byte count 0"));
+		if (BX_NE2K_THIS s.remote_bytes == 0)
+			BX_PANIC(("ne2K: dma write, byte count 0"));
 
-    chipmem_write(BX_NE2K_THIS s.remote_dma, value, io_len);
-    // is this right ??? asic_read uses DCR.wordsize
-    BX_NE2K_THIS s.remote_dma   += static_cast<uint8_t>(io_len);
-    if (BX_NE2K_THIS s.remote_dma == BX_NE2K_THIS s.page_stop << 8) {
-      BX_NE2K_THIS s.remote_dma = check_cast<uint16_t>(BX_NE2K_THIS s.page_start << 8);
-    }
+		chipmem_write(BX_NE2K_THIS s.remote_dma, value, io_len);
+		// is this right ??? asic_read uses DCR.wordsize
+		BX_NE2K_THIS s.remote_dma += static_cast<uint8_t>(io_len);
+		if (BX_NE2K_THIS s.remote_dma == BX_NE2K_THIS s.page_stop << 8) {
+			BX_NE2K_THIS s.remote_dma = check_cast<uint16_t>(
+			        BX_NE2K_THIS s.page_start << 8);
+		}
 
-    BX_NE2K_THIS s.remote_bytes -= static_cast<uint8_t>(io_len);
-    if (BX_NE2K_THIS s.remote_bytes > BX_NE2K_MEMSIZ)
-      BX_NE2K_THIS s.remote_bytes = 0;
+		BX_NE2K_THIS s.remote_bytes -= static_cast<uint8_t>(io_len);
+		if (BX_NE2K_THIS s.remote_bytes > BX_NE2K_MEMSIZ)
+			BX_NE2K_THIS s.remote_bytes = 0;
 
-    // If all bytes have been written, signal remote-DMA complete
-    if (BX_NE2K_THIS s.remote_bytes == 0) {
-      BX_NE2K_THIS s.ISR.rdma_done = 1;
-      if (BX_NE2K_THIS s.IMR.rdma_inte) {
-	  PIC_ActivateIRQ(s.base_irq);
-	  //DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
-      }
-    }
-    break;
+		// If all bytes have been written, signal remote-DMA complete
+		if (BX_NE2K_THIS s.remote_bytes == 0) {
+			BX_NE2K_THIS s.ISR.rdma_done = 1;
+			if (BX_NE2K_THIS s.IMR.rdma_inte) {
+				PIC_ActivateIRQ(s.base_irq);
+				// DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
+			}
+		}
+		break;
 
-  case 0xf:  // Reset register
-    theNE2kDevice->reset(BX_RESET_SOFTWARE);
-    break;
+	case 0xf: // Reset register
+		theNE2kDevice->reset(BX_RESET_SOFTWARE);
+		break;
 
-  default: // this is invalid, but happens under win95 device detection
-    BX_INFO("asic write invalid address %04x, ignoring", (unsigned) offset);
-    break ;
-  }
+	default: // this is invalid, but happens under win95 device detection
+		BX_INFO("asic write invalid address %04x, ignoring", (unsigned)offset);
+		break;
+	}
 }
 
 //
