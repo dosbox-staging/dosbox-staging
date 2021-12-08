@@ -1238,8 +1238,7 @@ bx_ne2k_c::rx_handler(void *arg, const void *buf, unsigned len)
  * rx ring has enough room, it is copied into it and
  * the receive process is updated
  */
-void
-bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
+int bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 {
   int pages;
   int avail;
@@ -1262,7 +1261,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
       (BX_NE2K_THIS s.page_start == 0) /*||
       ((BX_NE2K_THIS s.DCR.loop == 0) &&
        (BX_NE2K_THIS s.TCR.loop_cntl != 0))*/) {
-    return;
+	  return -1;
   }
 
   // Add the pkt header + CRC to the length, and work
@@ -1286,12 +1285,12 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 #endif
       ) {
 	BX_DEBUG("no space");
-    return;
+	return -1;
   }
 
   if ((io_len < 40/*60*/) && !BX_NE2K_THIS s.RCR.runts_ok) {
     BX_DEBUG("rejected small packet, length %d", io_len);
-    return;
+    return -1;
   }
   // some computers don't care...
   if (io_len < 60) io_len=60;
@@ -1300,18 +1299,18 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   if (! BX_NE2K_THIS s.RCR.promisc) {
     if (!memcmp(buf, bcast_addr, 6)) {
       if (!BX_NE2K_THIS s.RCR.broadcast) {
-	return;
+	      return -1;
       }
     } else if (pktbuf[0] & 0x01) {
 	if (! BX_NE2K_THIS s.RCR.multicast) {
-	    return;
+		return -1;
 	}
       idx = mcast_index(buf);
       if (!(BX_NE2K_THIS s.mchash[idx >> 3] & (1 << (idx & 0x7)))) {
-	return;
+	      return -1;
       }
     } else if (0 != memcmp(buf, BX_NE2K_THIS s.physaddr, 6)) {
-      return;
+	    return -1;
     }
   } else {
       BX_DEBUG(("rx_frame promiscuous receive"));
@@ -1370,7 +1369,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 	  PIC_ActivateIRQ(s.base_irq);
     //DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
   } //else LOG_MSG("no packet rx interrupt");
-
+  return static_cast<int>(io_len);
 }
 
 //uint8_t macaddr[6] = { 0xAC, 0xDE, 0x48, 0x8E, 0x89, 0x19 };
@@ -1448,13 +1447,13 @@ static void NE2000_TX_Event([[maybe_unused]] uint32_t val)
 }
 
 static void NE2000_Poller(void) {
-	ethernet->GetPackets([](const uint8_t* packet, int len) {
+	ethernet->GetPackets([](const uint8_t *packet, int len) {
 		//LOG_MSG("NE2000: Received %d bytes", header->len);
 		
 		// don't receive in loopback modes
 		if((theNE2kDevice->s.DCR.loop == 0) || (theNE2kDevice->s.TCR.loop_cntl != 0))
-			return;
-		theNE2kDevice->rx_frame(packet, check_cast<uint16_t>(len));
+			return -1;
+		return theNE2kDevice->rx_frame(packet, check_cast<uint16_t>(len));
 	});
 }
 

@@ -75,10 +75,10 @@ public:
 
 	bool Initialize(Section *config);
 	void SendPacket(const uint8_t *packet, int len);
-	void GetPackets(std::function<void(const uint8_t *, int)> callback);
+	void GetPackets(std::function<int(const uint8_t *, int)> callback);
 
 	/* Called by libslirp when it has a packet for us */
-	void ReceivePacket(const uint8_t *packet, int len);
+	int ReceivePacket(const uint8_t *packet, int len);
 
 	/* Called by libslirp to create, free and modify timers */
 	struct slirp_timer *TimerNew(SlirpTimerCb cb, void *cb_opaque);
@@ -117,7 +117,7 @@ private:
 	 * This might seem racy, but keep in mind we control when
 	 * libslirp sends us packets via our polling system.
 	 */
-	std::function<void(const uint8_t *, int)> get_packet_callback = nullptr;
+	std::function<int(const uint8_t *, int)> get_packet_callback = nullptr;
 
 	std::deque<int> registered_fds = {}; /*!< File descriptors to watch */
 

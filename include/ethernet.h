@@ -76,7 +76,7 @@ public:
 	 * the callback. Copy the packet data if you need to use it later.
 	 * @param callback The function called for each pending packet
 	 */
-	virtual void GetPackets(std::function<void(const uint8_t *, int)> callback) = 0;
+	virtual void GetPackets(std::function<int(const uint8_t *, int)> callback) = 0;
 };
 
 /** Opens a virtual Ethernet connection to a backend.
