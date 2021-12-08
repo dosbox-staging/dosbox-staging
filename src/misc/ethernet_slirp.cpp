@@ -157,13 +157,10 @@ bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 	// interfaces.
 	config.disable_host_loopback = false;
 
-	// The maximum transmission unit for Ethernet packets transmitted from
-	// the guest. 0 is default.
-	config.if_mtu = 0;
-
-	// The maximum recieve unit for Ethernet packets transmitted to the
-	// guest. 0 is default.
-	config.if_mru = 0;
+	// The maximum transmission and receive unit sizes.
+	constexpr auto ethernet_frame_size = 14 + 1500; // header + payload
+	config.if_mtu = ethernet_frame_size;
+	config.if_mru = ethernet_frame_size;
 
 	config.enable_emu = 0; // buggy - keep this at 0
 	config.in_enabled = 1;
