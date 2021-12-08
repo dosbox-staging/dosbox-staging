@@ -144,37 +144,35 @@ bool MSG_Write(const char * location) {
 	return true;
 }
 
-static std::deque<std::string> get_language(const Section_prop *section)
+static std::string get_language(const Section_prop *section)
 {
 	std::string lang = {};
-	std::deque<std::string> langs = {};
 
 	// Did the user provide a language on the command line?
-	if (control->cmdline->FindString("-lang", lang, true))
-		langs.emplace_back(std::move(lang));
+	(void)control->cmdline->FindString("-lang", lang, true);
 
 	// Is a language provided in the conf file?
-	assert(section);
-	lang = section->Get_string("language");
-	const auto pathprop = section->Get_path("language");
-	if (pathprop) {
-		lang = pathprop->realpath;
-		if (lang.size()) {
-			langs.emplace_back(std::move(lang));
-		}
+	if (lang.empty()) {
+		assert(section);
+		lang = section->Get_string("language");
 	}
 
 	// Was a language specified in the LANG environment variable?
-	const char *envlang = getenv("LANG");
-	if (envlang) {
-		lang = envlang;
-		if (lang.size() >= 2) {
-			lang = lang.substr(0, 2) + ".lng";
-			langs.emplace_back(std::move(lang));
+	if (lang.empty()) {
+		const char *envlang = getenv("LANG");
+		if (envlang) {
+			lang = envlang;
 		}
 	}
 
-	return langs;
+	// Drop the dialect part of the language
+	if (lang.size() >= 2) {
+		lang = lang.substr(0, 2);
+	}
+
+	// return it as lowercase
+	lowcase(lang);
+	return lang;
 }
 
 static std::deque<std_fs::path> get_paths()
@@ -209,25 +207,25 @@ static std::deque<std_fs::path> get_paths()
 
 void MSG_Init(Section_prop *section)
 {
-	for (const auto &l : get_language(section)) {
-		// If the language is english, then always prefer the internal
-		// version
-		if (starts_with("en", l)) {
-			LOG_MSG("LANG: Using internal English language messages");
+	const auto l = get_language(section);
+	// If the language is english, then always prefer the internal
+	// version
+	if (starts_with("en", l)) {
+		LOG_MSG("LANG: Using internal English language messages");
+		return;
+	}
+
+	// If a short-hand name was provided then add the file extension
+	const auto lang = l + (ends_with(l, ".lng") ? "" : ".lng");
+
+	// Otherwise let's try prefixes the paths
+	for (const auto &p : get_paths()) {
+		const auto lang_path = p / lang;
+		if (LoadMessageFile(lang_path)) {
 			return;
 		}
-
-		// If a short-hand name was provided then add the file extension
-		const auto lang = l + (ends_with(l, ".lng") ? "" : ".lng");
-
-		// Otherwise let's try prefixes the paths
-		for (const auto &p : get_paths()) {
-			const auto lang_path = p / lang;
-			if (LoadMessageFile(lang_path)) {
-				return;
-			}
-		}
 	}
+
 	// If we got here, then the language was not found
 	LOG_MSG("LANG: No language could be loaded, using English messages");
 }
