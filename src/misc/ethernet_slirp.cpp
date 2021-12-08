@@ -360,9 +360,9 @@ void SlirpEthernetConnection::GetPackets(std::function<void(const uint8_t *, int
 	TimersRun();
 }
 
-void SlirpEthernetConnection::ReceivePacket(const uint8_t *packet, int len)
+int SlirpEthernetConnection::ReceivePacket(const uint8_t *packet, int len)
 {
-	get_packet_callback(packet, len);
+	return get_packet_callback(packet, len);
 }
 
 struct slirp_timer *SlirpEthernetConnection::TimerNew(SlirpTimerCb cb, void *cb_opaque)
