@@ -398,13 +398,15 @@ bx_ne2k_c::asic_read(io_port_t offset, io_width_t io_len)
     // and the source-address and length registers must  
     // have been initialised.
     //
-    if (static_cast<uint8_t>(io_len) > BX_NE2K_THIS s.remote_bytes)
-      {
-       BX_ERROR("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes);
-       //return 0;
-      }
+    if (!s.remote_bytes) {
+	    LOG_WARNING("Empty ASIC read from port=0x%02x of length %d and %u remote_bytes",
+			offset, static_cast<int>(io_len), s.remote_bytes);
+	    break;
+    }
 
     //BX_INFO(("ne2k read DMA: addr=%4x remote_bytes=%d",BX_NE2K_THIS s.remote_dma,BX_NE2K_THIS s.remote_bytes));
+    if (s.remote_bytes == 1)
+	    io_len = io_width_t::byte;
     retval = chipmem_read(BX_NE2K_THIS s.remote_dma, io_len);
     //
     // The 8390 bumps the address and decreases the byte count
