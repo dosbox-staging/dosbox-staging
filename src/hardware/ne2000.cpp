@@ -182,14 +182,13 @@ bx_ne2k_c::reset(unsigned type)
 uint32_t
 bx_ne2k_c::read_cr(void)
 {
-  uint32_t val = 
-    (((unsigned int)(BX_NE2K_THIS s.CR.pgsel    & 0x03u) << 6u) |
-	 ((unsigned int)(BX_NE2K_THIS s.CR.rdma_cmd & 0x07u) << 3u) |
-	  (unsigned int)(BX_NE2K_THIS s.CR.tx_packet << 2u) |
-	  (unsigned int)(BX_NE2K_THIS s.CR.start     << 1u) |
-	  (unsigned int)(BX_NE2K_THIS s.CR.stop));
-  BX_DEBUG("read CR returns 0x%08x", val);
-  return val;
+	const uint32_t val = (             ((BX_NE2K_THIS s.CR.pgsel & 0x03u) << 6u) |
+	                                   ((BX_NE2K_THIS s.CR.rdma_cmd & 0x07u) << 3u) |
+	                      (unsigned int)(BX_NE2K_THIS s.CR.tx_packet << 2u) |
+	                      (unsigned int)(BX_NE2K_THIS s.CR.start << 1u) |
+	                      (unsigned int)(BX_NE2K_THIS s.CR.stop));
+	BX_DEBUG("read CR returns 0x%08x", val);
+	return val;
 }
 
 void
@@ -937,12 +936,12 @@ bx_ne2k_c::page2_read(io_port_t offset, io_width_t io_len)
     break;
 
   case 0xd:  // TCR
-    return
-       ((unsigned int)(BX_NE2K_THIS s.TCR.coll_prio         << 4u) |
-	    (unsigned int)(BX_NE2K_THIS s.TCR.ext_stoptx        << 3u) |
-	   ((unsigned int)(BX_NE2K_THIS s.TCR.loop_cntl & 0x3u) << 1u) |
-	    (unsigned int)(BX_NE2K_THIS s.TCR.crc_disable));
-    break;
+	  return
+     ((unsigned int)(BX_NE2K_THIS s.TCR.coll_prio << 4u) |
+		  (unsigned int)(BX_NE2K_THIS s.TCR.ext_stoptx << 3u) |
+		               ((BX_NE2K_THIS s.TCR.loop_cntl & 0x3u) << 1u) |
+		  (unsigned int)(BX_NE2K_THIS s.TCR.crc_disable));
+	  break;
 
   case 0xe:  // DCR
     return
