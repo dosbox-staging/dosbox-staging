@@ -50,15 +50,16 @@ static void NE2000_TX_Event(uint32_t val);
 #define BX_NE2K_NEVER_FULL_RING (1)
 
 #define LOG_THIS theNE2kDevice->
-//#define BX_DEBUG 
-//#define BX_INFO 
+// #define BX_DEBUG
+// #define BX_INFO 
 #define BX_NULL_TIMER_HANDLE 0
-//#define BX_PANIC 
-//#define BX_ERROR 
+#define BX_ERROR LOG_WARNING
+#define BX_PANIC LOG_WARNING
 #define BX_RESET_HARDWARE 0
 #define BX_RESET_SOFTWARE 1
 
 static char bxtmp[1024];
+
 
 static inline void BX_INFO(const char *msg, ...)
 {
@@ -68,7 +69,7 @@ static inline void BX_INFO(const char *msg, ...)
 	safe_sprintf(bxtmp, msg, va);
 	va_end(va);
 
-	LOG(LOG_MISC, LOG_NORMAL)("BX_INFO: %s", bxtmp);
+	LOG(LOG_MISC, LOG_NORMAL)("NE2000: Info: %s", bxtmp);
 }
 
 static inline void BX_DEBUG(const char *msg, ...)
@@ -82,29 +83,6 @@ static inline void BX_DEBUG(const char *msg, ...)
 
 		// LOG(LOG_MISC,LOG_DEBUG)("BX_DEBUG: %s",bxtmp);
 	}
-}
-
-static inline void BX_ERROR(const char *msg, ...)
-{
-	va_list va;
-
-	va_start(va, msg);
-	safe_sprintf(bxtmp, msg, va);
-	va_end(va);
-
-	LOG_MSG("BX_ERROR: %s", bxtmp);
-}
-
-static inline void BX_PANIC(const char *msg, ...)
-{
-	va_list va;
-
-	va_start(va, msg);
-	safe_sprintf(bxtmp, msg, va);
-	va_end(va);
-
-	LOG_MSG("BX_PANIC: %s", bxtmp);
-	E_Exit("BX_PANIC condition");
 }
 
 bx_ne2k_c* theNE2kDevice = NULL;
