@@ -80,6 +80,10 @@ public:
 	/* Called by libslirp when it has a packet for us */
 	int ReceivePacket(const uint8_t *packet, int len);
 
+	// Used in callbacks to bounds-check packet lengths
+	int GetMTU() const { return static_cast<int>(config.if_mtu); }
+	int GetMRU() const { return static_cast<int>(config.if_mru); }
+
 	/* Called by libslirp to create, free and modify timers */
 	struct slirp_timer *TimerNew(SlirpTimerCb cb, void *cb_opaque);
 	void TimerFree(struct slirp_timer *timer);
