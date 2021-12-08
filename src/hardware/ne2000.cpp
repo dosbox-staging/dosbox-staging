@@ -130,15 +130,16 @@ bx_ne2k_c::reset(unsigned type)
 {
     (void)type;//UNUSED
   BX_DEBUG ("reset");
-  // Zero out registers and memory
-  memset( & BX_NE2K_THIS s.CR,  0, sizeof(BX_NE2K_THIS s.CR) );
-  memset( & BX_NE2K_THIS s.ISR, 0, sizeof(BX_NE2K_THIS s.ISR));
-  memset( & BX_NE2K_THIS s.IMR, 0, sizeof(BX_NE2K_THIS s.IMR));
-  memset( & BX_NE2K_THIS s.DCR, 0, sizeof(BX_NE2K_THIS s.DCR));
-  memset( & BX_NE2K_THIS s.TCR, 0, sizeof(BX_NE2K_THIS s.TCR));
-  memset( & BX_NE2K_THIS s.TSR, 0, sizeof(BX_NE2K_THIS s.TSR));
-  //memset( & BX_NE2K_THIS s.RCR, 0, sizeof(BX_NE2K_THIS s.RCR));
-  memset( & BX_NE2K_THIS s.RSR, 0, sizeof(BX_NE2K_THIS s.RSR));
+  // Assign register and memory states with initial values
+  s.CR = bx_ne2k_t::CR_t{};
+  s.ISR = bx_ne2k_t::ISR_t{};
+  s.IMR = bx_ne2k_t::IMR_t{};
+  s.DCR = bx_ne2k_t::DCR_t{};
+  s.TCR = bx_ne2k_t::TCR_t{};
+  s.TSR = bx_ne2k_t::TSR_t{};
+  // s.RCR = bx_ne2k_t::RCR_t{};
+  s.RSR = bx_ne2k_t::RSR_t{};
+
   BX_NE2K_THIS s.tx_timer_active = 0;
   BX_NE2K_THIS s.local_dma  = 0;
   BX_NE2K_THIS s.page_start = 0;
