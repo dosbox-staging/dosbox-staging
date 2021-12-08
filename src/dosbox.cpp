@@ -435,8 +435,12 @@ void DOSBOX_Init(void) {
 	                          "vesa_oldvbe",   0};
 
 	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
-	pstring = secprop->Add_path("language", always, "");
-	pstring->Set_help("Select another language file.");
+	pstring = secprop->Add_string("language", always, "");
+	pstring->Set_help(
+	        "Select a language to use: de, en, es, fr, it, pl, and ru\n"
+	        "Notes: This setting will override the 'LANG' environment, if set.\n"
+	        "       The 'translations' directory bundled with the executable holds these data\n"
+	        "       files. Please keep it along-side the executable to support this feature.");
 
 	pstring = secprop->Add_string("machine", only_at_start, "svga_s3");
 	pstring->Set_values(machines);
