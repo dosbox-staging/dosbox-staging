@@ -232,7 +232,7 @@ std::map<int, int> SlirpEthernetConnection::SetupPortForwards(const bool is_udp,
 {
 	std::map<int, int> forwarded_ports;
 	const auto protocol = is_udp ? "UDP" : "TCP";
-	const in_addr host_addr = {htonl(INADDR_ANY)};
+	constexpr in_addr bind_addr = {INADDR_ANY};
 
 	// Split the rules first by spaces
 	for (auto &forward_rule : split(port_forward_rules, ' ')) {
@@ -329,7 +329,7 @@ std::map<int, int> SlirpEthernetConnection::SetupPortForwards(const bool is_udp,
 		LOG_MSG("SLIRP: Processing %s port forward rule: %s", protocol, forward_rule.c_str());
 		while (n--) {
 			// Add the port forward rule
-			if (slirp_add_hostfwd(slirp, is_udp, host_addr, host_port, config.vhost, guest_port) >= 0) {
+			if (slirp_add_hostfwd(slirp, is_udp, bind_addr, host_port, bind_addr, guest_port) == 0) {
 				forwarded_ports[host_port] = guest_port;
 				LOG_MSG("SLIRP: Setup %s port %d:%d forward", protocol, host_port, guest_port);
 			} else {
