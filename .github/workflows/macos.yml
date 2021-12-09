@@ -218,11 +218,10 @@ jobs:
             ${{ matrix.conf.build_flags }} \
             --wrap-mode=forcefallback \
             -Dbuildtype=release \
-            -Ddefault_library=static \
-            -Db_asneeded=true \
             -Db_lto=true \
-            -Dtry_static_libs=fluidsynth,mt32emu,opusfile,png,sdl2,sdl2_net,slirp \
-            -Dfluidsynth:enable-floats=true \
+            -Db_asneeded=true \
+            -Ddefault_library=static \
+            -Dtry_static_libs=sdl2,sdl2_net \
             -Dfluidsynth:try-static-deps=true \
             build
 

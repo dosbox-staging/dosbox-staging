@@ -1,4 +1,9 @@
-googletest-release-*
-munt-libmt32emu*
 fluidsynth-*
+glib-*
+googletest-release-*
+libffi*
+libslirp-*
+munt-libmt32emu*
 packagecache
+pcre*
+zlib*
