@@ -49,17 +49,7 @@ jobs:
       - name: Build
         run: |
           set -xeu
-
-          CC=clang CXX=clang++ \
-          meson setup \
-            -Dbuildtype=debug \
-            -Dunit_tests=disabled \
-            -Duse_slirp=false \
-            -Ddefault_library=static \
-            -Dfluidsynth:enable-floats=true \
-            -Dfluidsynth:try-static-deps=true \
-            build
-
+          meson setup -Dunit_tests=disabled --native-file=.github/meson/native-clang.ini build
           pvs-studio-analyzer trace -- ninja -C build
 
       - name: Analyze
@@ -113,7 +103,7 @@ jobs:
 
       - name: Summarize report
         env:
-          MAX_BUGS: 237
+          MAX_BUGS: 249
         run: |
           echo "Full report is included in build Artifacts"
           echo

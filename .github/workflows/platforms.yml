@@ -57,11 +57,7 @@ jobs:
             export PATH="$HOME/.local/bin:$PATH"
             pip3 install --user --upgrade meson ninja
             ./scripts/log-env.sh
-            meson setup \
-              -Duse_slirp=false \
-              -Duse_fluidsynth=false \
-              -Duse_mt32emu=false \
-              --wrap-mode=nofallback build
+            meson setup build
             meson compile -C build |& tee build.log
             meson test -C build
 

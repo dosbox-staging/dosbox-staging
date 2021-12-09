@@ -17,11 +17,11 @@ libmisc = static_library('misc', libmisc_sources,
                          include_directories : incdir,
                          dependencies : [
                            corefoundation_dep,
-                           sdl2_dep,
-                           slirp_dep,
-                           stdcppfs_dep,
                            libloguru_dep,
+                           libslirp_dep,
                            libwhereami_dep,
+                           sdl2_dep,
+                           stdcppfs_dep,
                            winsock2_dep,
                          ])
 

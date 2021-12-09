@@ -7,9 +7,20 @@ project('dosbox-staging', 'c', 'cpp',
 	  'warning_level=3',
 	  'b_ndebug=if-release',
 	  'b_staticpic=false',
-	  'mt32emu:warning_level=0',
 	  'fluidsynth:warning_level=0',
+          'fluidsynth:try-static-deps=true',
+          'glib:glib_assert=false',
+          'glib:glib_checks=false',
+          'glib:glib_debug=disabled',
+          'glib:libelf=disabled',
+          'glib:libmount=disabled',
+          'glib:nls=disabled',
+          'glib:tests=false',
+          'glib:warning_level=0',
+          'glib:xattr=false',
           'gtest:warning_level=0',
+	  'mt32emu:warning_level=0',
+	  'slirp:warning_level=0',
 	])
 
 # After increasing the minimum-required meson version, make the following
@@ -202,9 +213,9 @@ endif
 
 # external dependencies
 #
+prefers_static_libs = (get_option('default_library') == 'static')
 static_libs_list = get_option('try_static_libs')
 msg = 'You can disable this dependency with: -D@0@=false'
-
 optional_dep       = dependency('', required : false)
 dl_dep             = cc.find_library('dl', required : false)
 atomic_dep         = cxx.find_library('atomic', required : false)
@@ -217,6 +228,7 @@ sdl2_dep           = dependency('sdl2', version : '>= 2.0.5',
 sdl2_net_dep       = optional_dep
 opengl_dep         = optional_dep
 fluid_dep          = optional_dep
+libslirp_dep       = optional_dep
 mt32emu_dep        = optional_dep
 png_dep            = optional_dep
 slirp_dep          = optional_dep
@@ -239,28 +251,39 @@ if get_option('use_opengl')
   opengl_dep = dependency('gl', not_found_message : msg.format('use_opengl'))
 endif
 
+# Use a single static setting for the pool of libraries that use glib
+is_glib_realm_static = prefers_static_libs
+foreach l : ['fluidsynth', 'slirp']
+  if l in static_libs_list
+    is_glib_realm_static = true
+  endif
+endforeach
+
 if get_option('use_fluidsynth')
-  fluid_dep = dependency('fluidsynth', version : '>= 2.0.0',
-                         static : ('fluidsynth' in static_libs_list),
+  fluid_dep = dependency('fluidsynth', version : '>= 2.2.3',
+                         static : is_glib_realm_static,
                          fallback : ['fluidsynth', 'fluidsynth_dep'],
                          not_found_message : msg.format('use_fluidsynth'))
 endif
 
+if get_option('use_slirp')
+  libslirp_dep = dependency('slirp', version : '>= 4.6.1',
+                            static : is_glib_realm_static,
+                            fallback : ['slirp', 'libslirp_dep'],
+                            not_found_message : msg.format('use_slirp'))
+endif
+
 if get_option('use_mt32emu')
-  mt32emu_dep = dependency('mt32emu', version : '>= 2.5.0',
-                           static : ('mt32emu' in static_libs_list),
+  mt32emu_dep = dependency('mt32emu', version : '>= 2.5.3',
+                           static : prefers_static_libs or ('mt32emu' in static_libs_list),
                            fallback : ['mt32emu', 'mt32emu_dep'],
                            not_found_message : msg.format('use_mt32emu'))
 endif
 
 if get_option('use_png')
-  png_dep = dependency('libpng', static : ('png' in static_libs_list),
+  png_dep = dependency('libpng',
+                       static : prefers_static_libs or ('png' in static_libs_list),
                        not_found_message : msg.format('use_png'))
-endif
-
-if get_option('use_slirp')
-  slirp_dep = dependency('slirp', static : ('slirp' in static_libs_list),
-                         not_found_message : msg.format('use_slirp'))
 endif
 
 if get_option('enable_debugger') != 'none'

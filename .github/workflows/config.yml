@@ -41,8 +41,8 @@ jobs:
           - configure_flags:  -Duse_opengl=false         # TODO opengl is always disabled on msys2
           - configure_flags:  -Duse_fluidsynth=false
           - configure_flags:  -Duse_png=false
-          # - configure_flags:  -Denable_debugger=normal # TODO broken on msys2
-          # - configure_flags:  -Denable_debugger=heavy  # TODO broken on msys2
+          - configure_flags:  -Denable_debugger=normal
+          - configure_flags:  -Denable_debugger=heavy
           - configure_flags:  -Ddynamic_core=dyn-x86
           - configure_flags:  -Ddynamic_core=dynrec
           - configure_flags:  -Ddynamic_core=none
@@ -105,33 +105,18 @@ jobs:
         run: |
           export PATH="/mingw64/bin:$PATH"
           meson setup \
-            --wrap-mode=nofallback \
-            -Duse_slirp=false \
-            -Duse_mt32emu=false \
+            -Dunit_tests=disabled \
             -Duse_opengl=false \
             ${{ matrix.conf.configure_flags }} \
             build
           cat build/meson-logs/meson-log.txt
           ninja -C build
 
-      - name:  Build ${{ matrix.conf.configure_flags }} (macOS)
-        if:    matrix.system.name == 'macOS'
+      - name:  Build ${{ matrix.conf.configure_flags }} (${{ matrix.system.name }})
+        if:    matrix.system.name == 'macOS' || matrix.system.name == 'Linux'
         run: |
           meson setup \
-            --wrap-mode=nofallback \
-            -Duse_slirp=false \
-            -Duse_mt32emu=false \
-            ${{ matrix.conf.configure_flags }} \
-            build
-          ninja -C build
-
-      - name:  Build ${{ matrix.conf.configure_flags }} (Linux)
-        if:    matrix.system.name == 'Linux'
-        run: |
-          meson setup \
-            --wrap-mode=nofallback \
-            -Duse_slirp=false \
-            -Duse_mt32emu=false \
+            -Dunit_tests=disabled \
             ${{ matrix.conf.configure_flags }} \
             build
           ninja -C build

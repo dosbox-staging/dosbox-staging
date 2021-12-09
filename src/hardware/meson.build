@@ -58,15 +58,14 @@ libhardware_sources = files([
 libhardware = static_library('hardware', libhardware_sources,
                              include_directories : incdir,
                              dependencies : [
-                               libnuked_dep,
-                               png_dep,
-                               sdl2_dep,
-                               sdl2_net_dep,
-                               slirp_dep,
-                               winsock2_dep,
                                libloguru_dep,
                                libnuked_dep,
                                libresidfp_dep,
+                               libslirp_dep,
+                               png_dep,
+                               sdl2_dep,
+                               sdl2_net_dep,
+                               winsock2_dep,
                              ])
 
 libhardware_dep = declare_dependency(link_with : libhardware)

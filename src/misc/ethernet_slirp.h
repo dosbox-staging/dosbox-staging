@@ -28,7 +28,7 @@
 #include <map>
 #include <deque>
 #include <vector>
-#include <slirp/libslirp.h>
+#include <libslirp.h>
 
 #include "config.h"
 #include "ethernet.h"
