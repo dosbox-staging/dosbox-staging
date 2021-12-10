@@ -74,7 +74,7 @@ void main()
 {
 	vec2 coord = v_texCoord;
 #if defined(OPENGLNB)
-	gl_FragColor = getadvinterp2xtexel(coord);
+	gl_FragColor = vec4(getadvinterp2xtexel(coord), 1.0);
 #else
 	coord -= 0.5;
 	vec3 c0 = getadvinterp2xtexel(coord);
@@ -154,7 +154,7 @@ void main()
 {
 	vec2 coord = v_texCoord;
 #if defined(OPENGLNB)
-	gl_FragColor = getadvinterp3xtexel(coord);
+	gl_FragColor = vec4(getadvinterp3xtexel(coord), 1.0);
 #else
 	coord -= 0.5;
 	vec3 c0 = getadvinterp3xtexel(coord);
@@ -219,7 +219,7 @@ void main()
 {
 	vec2 coord = v_texCoord;
 #if defined(OPENGLNB)
-	gl_FragColor = getadvmame2xtexel(coord);
+	gl_FragColor = vec4(getadvmame2xtexel(coord), 1.0);
 #else
 	coord -= 0.5;
 	vec3 c0 = getadvmame2xtexel(coord);
@@ -287,7 +287,7 @@ void main()
 {
 	vec2 coord = v_texCoord;
 #if defined(OPENGLNB)
-	gl_FragColor = getadvmame3xtexel(coord);
+	gl_FragColor = vec4(getadvmame3xtexel(coord), 1.0);
 #else
 	coord -= 0.5;
 	vec3 c0 = getadvmame3xtexel(coord);
