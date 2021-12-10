@@ -32,12 +32,6 @@
 #include "support.h"
 #include "timer.h"
 
-#ifdef WIN32
-#include <ws2tcpip.h>
-#else /* !WIN32 */
-#include <arpa/inet.h>
-#endif /* WIN32 */
-
 /* Begin boilerplate to map libslirp's C-based callbacks to our C++
  * object. The user data is provided inside the 'opaque' pointer.
  */
