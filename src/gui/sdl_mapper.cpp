@@ -25,9 +25,7 @@
 #include <cassert>
 #include <cctype>
 #include <chrono>
-#include <cinttypes>
 #include <cstdarg>
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -1852,7 +1850,7 @@ static void update_active_bind_ui()
 
 	// Format "Bind: " description
 	const auto mods = mapper.abind->mods;
-	bind_but.bind_title->Change("Bind %zu/%zu: %s%s%s%s",
+	bind_but.bind_title->Change("Bind %" PRIuPTR "/%" PRIuPTR ": %s%s%s%s",
 	                            active_bind_pos + 1, active_event_binds_num,
 	                            (mods & BMOD_Mod1 ? mod_1_desc.c_str() : ""),
 	                            (mods & BMOD_Mod2 ? mod_2_desc.c_str() : ""),
