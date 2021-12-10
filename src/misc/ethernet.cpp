@@ -25,20 +25,22 @@
 #include "control.h"
 #include "ethernet_slirp.h"
 
-EthernetConnection *ETHERNET_OpenConnection(const std::string &backend)
+EthernetConnection *ETHERNET_OpenConnection([[maybe_unused]] const std::string &backend)
 {
 	EthernetConnection *conn = nullptr;
 #if C_SLIRP
+	// Currently only slirp is supported
 	if (backend == "slirp") {
 		conn = new SlirpEthernetConnection;
+		assert(control);
+		const auto settings = control->GetSection("ethernet");
+		if (!conn->Initialize(settings)) {
+			LOG_WARNING("Failed to initialize the slirp Ethernet backend");
+			delete conn;
+			conn = nullptr;
+		}
 	}
 #endif
-	assert(conn);
-	const auto settings = control->GetSection("ethernet");
-	if (conn->Initialize(settings)) {
-		return conn;
-	} else {
-		delete conn;
-		return nullptr;
-	}
+
+	return conn;
 }
