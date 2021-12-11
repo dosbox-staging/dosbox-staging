@@ -39,14 +39,12 @@ static struct {
 
 class GenReg {
 public:
-	GenReg(Bit8u _index) {
-		index=_index;
-		notusable=false;dynreg=0;
-	}
-	DynReg  * dynreg;
-	Bitu last_used;			//Keeps track of last assigned regs 
-    Bit8u index;
-	bool notusable;
+	Bit8u index = 0;
+	DynReg  * dynreg = nullptr;
+	Bitu last_used = 0;			//Keeps track of last assigned regs 
+	bool notusable = false;
+
+	GenReg(Bit8u _index) : index(_index) {}
 	void Load(DynReg * _dynreg,bool stale=false) {
 		if (!_dynreg) return;
 		if (GCC_UNLIKELY((Bitu)dynreg)) Clear();
@@ -318,6 +316,7 @@ static void gen_mov_host(void * data,DynReg * dr1,Bitu size,Bitu di1=0) {
 	switch (size) {
 	case 1:cache_addb(0x8a);break;	//mov byte
 	case 2:cache_addb(0x66);		//mov word
+	[[fallthrough]];
 	case 4:cache_addb(0x8b);break;	//mov
 	default:
 		IllegalOption("gen_mov_host");
