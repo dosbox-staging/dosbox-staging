@@ -224,10 +224,12 @@ bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 void SlirpEthernetConnection::ClearPortForwards(const bool is_udp, std::map<int, int> &existing_port_forwards)
 {
 	const auto protocol = is_udp ? "UDP" : "TCP";
-	const in_addr host_addr = {htonl(INADDR_ANY)};
+
+	in_addr bind_addr;
+	inet_pton(AF_INET, "0.0.0.0", &bind_addr);
 
 	for (const auto &[host_port, guest_port] : existing_port_forwards)
-		if (slirp_remove_hostfwd(slirp, is_udp, host_addr, host_port) >= 0)
+		if (slirp_remove_hostfwd(slirp, is_udp, bind_addr, host_port) >= 0)
 			LOG_INFO("SLIRP: Removed old %s port %d:%d forward", protocol, host_port, guest_port);
 		else
 			LOG_WARNING("SLIRP: Failed removing old %s port %d:%d foward", protocol, host_port, guest_port);
@@ -239,7 +241,9 @@ std::map<int, int> SlirpEthernetConnection::SetupPortForwards(const bool is_udp,
 {
 	std::map<int, int> forwarded_ports;
 	const auto protocol = is_udp ? "UDP" : "TCP";
-	constexpr in_addr bind_addr = {INADDR_ANY};
+
+	in_addr bind_addr;
+	inet_pton(AF_INET, "0.0.0.0", &bind_addr);
 
 	// Split the rules first by spaces
 	for (auto &forward_rule : split(port_forward_rules, ' ')) {
@@ -429,7 +433,7 @@ void SlirpEthernetConnection::TimersClear()
 	timers.clear();
 }
 
-void SlirpEthernetConnection::PollRegister(int fd)
+void SlirpEthernetConnection::PollRegister(const int fd)
 {
 	// sentinel
 	if (fd < 0)
@@ -442,7 +446,7 @@ void SlirpEthernetConnection::PollRegister(int fd)
 	registered_fds.push_back(fd);
 }
 
-void SlirpEthernetConnection::PollUnregister(int fd)
+void SlirpEthernetConnection::PollUnregister(const int fd)
 {
 	// sentinels
 	if (fd < 0 || registered_fds.empty())
@@ -452,7 +456,7 @@ void SlirpEthernetConnection::PollUnregister(int fd)
 
 void SlirpEthernetConnection::PollsAddRegistered()
 {
-	for (int fd : registered_fds)
+	for (const auto fd : registered_fds)
 		if (fd >= 0)
 			PollAdd(fd, SLIRP_POLL_IN | SLIRP_POLL_OUT);
 }
@@ -473,7 +477,7 @@ void SlirpEthernetConnection::PollsClear()
 	polls.clear();
 }
 
-int SlirpEthernetConnection::PollAdd(int fd, int slirp_events)
+int SlirpEthernetConnection::PollAdd(const int fd, int slirp_events)
 {
 	// sentinel
 	if (fd < 0)
@@ -534,12 +538,26 @@ int SlirpEthernetConnection::PollAdd(int fd, int slirp_events)
 	// sentinel
 	if (fd < 0)
 		return fd;
+
+	// compiler-specific implementation of FD_SET uses a SOCKET type
+	// under MSYS2
+#ifdef WIN32
+	auto fd_socket = static_cast<SOCKET>(fd);
+	if (slirp_events & SLIRP_POLL_IN)
+		FD_SET(fd_socket, &readfds);
+	if (slirp_events & SLIRP_POLL_OUT)
+		FD_SET(fd_socket, &writefds);
+	if (slirp_events & SLIRP_POLL_PRI)
+		FD_SET(fd_socket, &exceptfds);
+	fd = check_cast<int>(fd_socket);
+#else
 	if (slirp_events & SLIRP_POLL_IN)
 		FD_SET(fd, &readfds);
 	if (slirp_events & SLIRP_POLL_OUT)
 		FD_SET(fd, &writefds);
 	if (slirp_events & SLIRP_POLL_PRI)
 		FD_SET(fd, &exceptfds);
+#endif
 	return fd;
 }
 
