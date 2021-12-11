@@ -166,7 +166,8 @@ static std::string get_language(const Section_prop *section)
 	}
 
 	// Drop the dialect part of the language
-	if (lang.size() >= 2) {
+	// (e.g. "en_GB.UTF8" -> "en")
+	if (lang.size() > 2) {
 		lang = lang.substr(0, 2);
 	}
 
@@ -179,6 +180,7 @@ static std::deque<std_fs::path> get_paths()
 {
 	std::deque<std_fs::path> paths = {};
 
+	// Try finding bundled translations first
 	const auto exe_path = GetExecutablePath();
 #if defined(MACOSX)
 	paths.emplace_back(exe_path / "../Resources/translations");
@@ -186,11 +188,14 @@ static std::deque<std_fs::path> get_paths()
 	paths.emplace_back(exe_path / "translations");
 #endif
 
+	// fallback to any system-installed translations, which
+	// may be installed by package managers. This might exist
+	// on macOS, POSIX, and even MinGW/MSYS2/Cygwin.
+	paths.emplace_back("/usr/share/dosbox-staging/translations");
+
+	// Worst-cast: fallback to the user's config directory
 	const std_fs::path config_path(CROSS_GetPlatformConfigDir());
 	paths.emplace_back(config_path / "translations");
-
-	// Possibly exists on macOS, POSIX, and even MSYS2 or Cygwin (Windows)
-	paths.emplace_back("/usr/share/dosbox/translations");
 
 	return paths;
 }
@@ -207,21 +212,21 @@ static std::deque<std_fs::path> get_paths()
 
 void MSG_Init(Section_prop *section)
 {
-	const auto l = get_language(section);
-	// If the language is english, then always prefer the internal
-	// version
-	if (starts_with("en", l)) {
+	const auto lang = get_language(section);
+
+	// If the language is english, then use the internal message
+	if (lang.empty() || starts_with("en", lang)) {
 		LOG_MSG("LANG: Using internal English language messages");
 		return;
 	}
 
 	// If a short-hand name was provided then add the file extension
-	const auto lang = l + (ends_with(l, ".lng") ? "" : ".lng");
+	const auto lng_file = lang + (ends_with(lang, ".lng") ? "" : ".lng");
 
 	// Otherwise let's try prefixes the paths
 	for (const auto &p : get_paths()) {
-		const auto lang_path = p / lang;
-		if (LoadMessageFile(lang_path)) {
+		const auto lng_path = p / lng_file;
+		if (LoadMessageFile(lng_path)) {
 			return;
 		}
 	}
