@@ -796,7 +796,7 @@ static void DrawRegisters(void) {
 
 
 	SetColor(cpu.cpl ^ oldcpucpl);
-	mvwprintw (dbg.win_reg,2,78,"%01X",cpu.cpl);
+	mvwprintw (dbg.win_reg,2,78,"%01" PRIXPTR ,cpu.cpl);
 	oldcpucpl=cpu.cpl;
 
 	if (cpu.pmode) {
@@ -815,7 +815,7 @@ static void DrawRegisters(void) {
 	}
 
 	wattrset(dbg.win_reg,0);
-	mvwprintw(dbg.win_reg,3,60,"%u       ",cycle_count);
+	mvwprintw(dbg.win_reg,3,60,"%" PRIuPTR "       ",cycle_count);
 	wrefresh(dbg.win_reg);
 }
 
