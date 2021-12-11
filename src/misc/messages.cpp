@@ -188,9 +188,9 @@ static std::deque<std_fs::path> get_paths()
 	paths.emplace_back(exe_path / "translations");
 #endif
 
-	// fallback to any system-installed translations, which
-	// may be installed by package managers. This might exist
-	// on macOS, POSIX, and even MinGW/MSYS2/Cygwin.
+	// Try the user-installed and then repo-installed paths, which
+	// can exist on macOS, POSIX, and even MinGW/MSYS2/Cygwin.
+	paths.emplace_back("/usr/local/share/dosbox-staging/translations");
 	paths.emplace_back("/usr/share/dosbox-staging/translations");
 
 	// Worst-cast: fallback to the user's config directory

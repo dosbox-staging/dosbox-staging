@@ -365,7 +365,6 @@ configure_file(input : 'src/config.h.in', output : 'config.h',
                configuration : conf_data)
 
 
-
 # dosbox executable
 #
 version_file = vcs_tag(input : 'src/version.cpp.in', output : 'version.cpp')
@@ -417,3 +416,4 @@ install_data('AUTHORS', 'README', 'THANKS', install_dir : doc_dir)
 
 subdir('contrib/linux')
 subdir('contrib/icons')
+subdir('contrib/translations')
