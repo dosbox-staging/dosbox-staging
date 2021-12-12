@@ -1011,8 +1011,8 @@ void CSerialModem::RXBufferEmpty() {
 	// see if rqueue has some more bytes
 	if (rqueue->inuse() && (CSerial::getRTS() || (flowcontrol != 3))){
 		uint8_t rbyte = rqueue->getb();
-		// LOG_MSG("SERIAL: Port %" PRIu8 " modem sending byte %2x back to UART1.",
-		//         GetPortNumber(), rbyte);
+		// LOG_MSG("SERIAL: Port %" PRIu8 " modem sending byte %2x back
+		// to UART1.", 		GetPortNumber(), rbyte);
 		CSerial::receiveByte(rbyte);
 	}
 }
@@ -1023,8 +1023,8 @@ void CSerialModem::transmitByte(uint8_t val, bool first)
 	setEvent(MODEM_TX_EVENT, bytetime); // TX event
 	if (first)
 		ByteTransmitting();
-	// LOG_MSG("SERIAL: Port %" PRIu8 " modem byte %x to be transmitted.",
-	// GetPortNumber(), val);
+	// LOG_MSG("SERIAL: Port %" PRIu8 " modem byte %x '%c' to be
+	// transmitted.", 		GetPortNumber(), val, val);
 }
 
 void CSerialModem::updatePortConfig(uint16_t, uint8_t lcr)
