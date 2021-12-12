@@ -34,6 +34,25 @@
 #include "setup.h"
 #include "support.h"
 
+#if C_COREFOUNDATION
+#include <CoreFoundation/CoreFoundation.h>
+static std::string get_locale_from_os()
+{
+	auto cflocale = CFLocaleCopyCurrent();
+	auto locale = CFLocaleGetValue(cflocale, kCFLocaleLanguageCode);
+	auto locale_str_ref = reinterpret_cast<CFStringRef>(locale);
+	const std::string locale_string = CFStringGetCStringPtr(locale_str_ref,
+	                                                        kCFStringEncodingUTF8);
+	CFRelease(cflocale);
+	return locale_string;
+}
+#else
+static std::string get_locale_from_os()
+{
+	return "";
+}
+#endif
+
 #define LINE_IN_MAXLEN 2048
 
 static std::unordered_map<std::string, std::string> messages;
@@ -163,6 +182,11 @@ static std::string get_language(const Section_prop *section)
 		if (envlang) {
 			lang = envlang;
 		}
+	}
+
+	// Was a language specified in the OS locale?
+	if (lang.empty()) {
+		lang = get_locale_from_os();
 	}
 
 	// Drop the dialect part of the language

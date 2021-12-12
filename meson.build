@@ -204,28 +204,29 @@ endif
 static_libs_list = get_option('try_static_libs')
 msg = 'You can disable this dependency with: -D@0@=false'
 
-optional_dep  = dependency('', required : false)
-dl_dep        = cc.find_library('dl', required : false)
-atomic_dep    = cxx.find_library('atomic', required : false)
-stdcppfs_dep  = cxx.find_library('stdc++fs', required : false)
-opus_dep      = dependency('opusfile',
-                           static : ('opusfile' in static_libs_list))
-threads_dep   = dependency('threads')
-sdl2_dep      = dependency('sdl2', version : '>= 2.0.5',
-                           static : ('sdl2' in static_libs_list))
-sdl2_net_dep  = optional_dep
-opengl_dep    = optional_dep
-fluid_dep     = optional_dep
-mt32emu_dep   = optional_dep
-png_dep       = optional_dep
-pcap_dep      = optional_dep
-slirp_dep     = optional_dep
-curses_dep    = optional_dep # necessary for debugger builds
-alsa_dep      = optional_dep # Linux-only
-coreaudio_dep = optional_dep # macOS-only
-coremidi_dep  = optional_dep # macOS-only
-winsock2_dep  = optional_dep # Windows-only
-winmm_dep     = optional_dep # Windows-only
+optional_dep       = dependency('', required : false)
+dl_dep             = cc.find_library('dl', required : false)
+atomic_dep         = cxx.find_library('atomic', required : false)
+stdcppfs_dep       = cxx.find_library('stdc++fs', required : false)
+opus_dep           = dependency('opusfile',
+                                static : ('opusfile' in static_libs_list))
+threads_dep        = dependency('threads')
+sdl2_dep           = dependency('sdl2', version : '>= 2.0.5',
+                                static : ('sdl2' in static_libs_list))
+sdl2_net_dep       = optional_dep
+opengl_dep         = optional_dep
+fluid_dep          = optional_dep
+mt32emu_dep        = optional_dep
+png_dep            = optional_dep
+pcap_dep           = optional_dep
+slirp_dep          = optional_dep
+curses_dep         = optional_dep # necessary for debugger builds
+alsa_dep           = optional_dep # Linux-only
+coreaudio_dep      = optional_dep # macOS-only
+corefoundation_dep = optional_dep # macOS-only
+coremidi_dep       = optional_dep # macOS-only
+winsock2_dep       = optional_dep # Windows-only
+winmm_dep          = optional_dep # Windows-only
 
 
 if get_option('use_sdl2_net')
@@ -304,6 +305,20 @@ if host_machine.system() == 'darwin'
     endif
   else
     warning('''Core MIDI support disabled: compiler can't detect/use Apple Frameworks''')
+  endif
+
+  # Locale discovery
+  corefoundation_dep = dependency('appleframeworks',
+                                  modules : ['CoreFoundation'],
+                                  required : false)
+  if corefoundation_dep.found()
+    if cxx.check_header('CoreFoundation/CoreFoundation.h')
+      conf_data.set('C_COREFOUNDATION', 1)
+    else
+      warning('''Core Foundation support disabled: header is unsable''')
+    endif
+  else
+    warning('''Core Foundation support disabled: compiler can't detect/use Apple Frameworks''')
   endif
 
   # Apple Silicon has 16k pages
