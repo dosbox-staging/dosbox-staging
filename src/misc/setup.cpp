@@ -32,7 +32,7 @@
 #include "support.h"
 #include "cross.h"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || (defined(__MINGW32__) && defined(__clang__))
 _CRTIMP extern char **_environ;
 #else
 extern char **environ;
@@ -1069,7 +1069,7 @@ parse_environ_result_t parse_environ(const char * const * envp) noexcept
 
 void Config::ParseEnv()
 {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || (defined(__MINGW32__) && defined(__clang__))
 	const char *const *envp = _environ;
 #else
 	const char *const *envp = environ;
