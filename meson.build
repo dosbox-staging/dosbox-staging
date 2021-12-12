@@ -25,12 +25,18 @@ cxx = meson.get_compiler('cpp')
 summary('Build type',     get_option('buildtype'), section : 'Build Summary')
 summary('Install prefix', get_option('prefix'),    section : 'Build Summary')
 
-
 # compiler flags
 #
-foreach cxx_warning : ['-Wmaybe-uninitialized', '-Weffc++', '-Wextra-semi']
-  if cxx.has_argument(cxx_warning)
-    add_project_arguments(cxx_warning, language : 'cpp')
+extra_flags = ['-Wmaybe-uninitialized', '-Weffc++', '-Wextra-semi']
+if host_machine.system() == 'windows'
+  extra_flags += '-Wno-pedantic-ms-format'
+endif
+foreach flag : extra_flags
+  if cc.has_argument(flag)
+    add_project_arguments(flag, language : 'c')
+  endif
+  if cxx.has_argument(flag)
+    add_project_arguments(flag, language : 'cpp')
   endif
 endforeach
 
