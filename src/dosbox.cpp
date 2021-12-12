@@ -973,13 +973,15 @@ void DOSBOX_Init() {
 
 	Pbool = secprop->Add_bool("ne2000", when_idle,  true);
 	Pbool->Set_help("Emulate a Novell NE2000 network card on a software-based\n"
-	                "network (using libSLIRP) with properties as follows:\n"
-	                " - 10.0.2.0/24   : Virtual LAN\n"
+	                "network (using libslirp) with properties as follows:\n"
+	                " - 255.255.255.0 : Subnet mask for 10.0.2.0 virtual LAN\n"
 	                " - 10.0.2.2      : Gateway and DHCP service\n"
 	                " - 10.0.2.3      : Virtual DNS server\n"
-	                " - 10.0.2.15     : First IP provided by DHCP (your IP)\n"
-	                " - 255.255.255.0 : Subnet mask\n"
-	                "Using this requires an NE2000 packet driver and TCP/IP stack.");
+	                " - 10.0.2.15     : First IP provided by DHCP, your IP!\n"
+	                "Note: Inside DOS, setting this up requires an NE2000 packet driver,\n"
+					"      DHCP client, and TCP/IP stack. You might need port-forwarding\n"
+					"      from the host into the DOS guest, and from your router to your\n"
+					"      host for multiplayer games across the Internet.");
 
 	Phex = secprop->Add_hex("nicbase", when_idle,  0x300);
 	Phex->Set_help("The base address of the NE2000 board.");
