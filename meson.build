@@ -36,6 +36,7 @@ project('dosbox-staging', 'c', 'cpp',
 
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
+prefers_static_libs = (get_option('default_library') == 'static')
 
 summary('Build type',     get_option('buildtype'), section : 'Build Summary')
 summary('Install prefix', get_option('prefix'),    section : 'Build Summary')
@@ -45,6 +46,11 @@ summary('Install prefix', get_option('prefix'),    section : 'Build Summary')
 extra_flags = ['-Wmaybe-uninitialized', '-Weffc++', '-Wextra-semi']
 if host_machine.system() == 'windows'
   extra_flags += '-Wno-pedantic-ms-format'
+endif
+if prefers_static_libs
+  extra_flags += ['-static-libstdc++', '-static-libgcc']
+else
+  extra_flags += ['-shared-libstdc++', '-shared-libgcc', '-fPIC']
 endif
 foreach flag : extra_flags
   if cc.has_argument(flag)
@@ -217,7 +223,6 @@ endif
 
 # external dependencies
 #
-prefers_static_libs = (get_option('default_library') == 'static')
 static_libs_list = get_option('try_static_libs')
 msg = 'You can disable this dependency with: -D@0@=false'
 optional_dep       = dependency('', required : false)
