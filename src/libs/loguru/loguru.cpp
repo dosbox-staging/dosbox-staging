@@ -128,7 +128,9 @@
 		#define _WIN32_WINNT 0x0502
 	#endif
 	#define WIN32_LEAN_AND_MEAN
-	#define NOMINMAX
+	#ifndef NOMINMAX
+		#define NOMINMAX
+	#endif
 	#include <windows.h>
 #endif
 
@@ -1040,7 +1042,7 @@ namespace loguru
 	// Where we store the custom thread name set by `set_thread_name`
 	char* thread_name_buffer()
 	{
-		__declspec( thread ) static char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
+		static char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
 		return &thread_name[0];
 	}
 #endif // LOGURU_WINTHREADS
@@ -1089,6 +1091,7 @@ namespace loguru
 			// Ask the OS about the thread name.
 			// This is what we *want* to do on all platforms, but
 			// only some platforms support it (currently).
+
 			#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__linux__) || defined(__sun)
 				pthread_getname_np(pthread_self(), buffer, length);
 			#else
