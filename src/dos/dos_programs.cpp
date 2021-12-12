@@ -501,7 +501,36 @@ void DOS_SetupPrograms(void)
 	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n\n");
 
 	MSG_Add("PROGRAM_SERIAL_HELP",
-	        "SERIAL {[/l | /list] | [port#] [type] [options]}\n");
+	        "Allows on-the-fly serial port reconfiguration.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  SERIAL [[/l | /list] | [port#] [type] {options}]\n"
+	        "\n"
+	        "Where:\n"
+	        "  /l or /list displays the current serial port configuration.\n"
+	        "  [port#] [type] {options} specifies a new configuration.\n"
+	        "\n"
+	        "Port # (required):\n"
+	        "  1 through %d\n"
+	        "\n"
+	        "Type (required):\n"
+	        "\n"
+	        "  Can be one of:  DISABLED, DUMMY, DIRECTSERIAL, MODEM, or NULLMODEM."
+	        "\n"
+	        "Options (mostly optional, depends on port type):\n"
+	        "  For DISABLED: none.\n"
+	        "  For DUMMY: IRQ\n"
+	        "  For DIRECTSERIAL: IRQ, REALPORT (required), RXDELAY\n"
+	        "  For MODEM: IRQ, LISTENPORT, SOCK\n"
+	        "  For NULLMODEM: IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR,\n"
+	        "                 TRANSPARENT, PORT, INHSOCKET, SOCK\n"
+	        "\n"
+	        "Examples:\n"
+	        "  SERIAL /l\n"
+	        "  SERIAL 1 DISABLED\n"
+	        "  SERIAL 2 MODEM LISTENPORT:5000 SOCK:1\n"
+	        "  SERIAL 1 DIRECTSERIAL REALPORT:COM1\n"
+	        "  SERIAL 1 DIRECTSERIAL REALPORT:tty50\n");
 	MSG_Add("PROGRAM_SERIAL_SHOW_PORT", "COM%d: %s %s\n");
 	MSG_Add("PROGRAM_SERIAL_BAD_PORT",
 	        "Must specify a numeric port value between 1 and %d, inclusive.\n");

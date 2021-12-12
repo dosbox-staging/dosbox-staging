@@ -1026,8 +1026,8 @@ void CSerialModem::transmitByte(uint8_t val, bool first)
 	setEvent(MODEM_TX_EVENT, bytetime); // TX event
 	if (first)
 		ByteTransmitting();
-	// LOG_MSG("SERIAL: Port %" PRIu8 " modem byte %x to be transmitted.",
-	// GetPortNumber(), val);
+	// LOG_MSG("SERIAL: Port %" PRIu8 " modem byte %x '%c' to be
+	// transmitted.", 		GetPortNumber(), val, val);
 }
 
 void CSerialModem::updatePortConfig(uint16_t, uint8_t lcr)

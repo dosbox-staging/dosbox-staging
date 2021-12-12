@@ -896,16 +896,17 @@ void DOSBOX_Init() {
 	Pstring->Set_values(serials);
 	Pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	Pmulti_remain->Set_help(
-		"set type of device connected to com port.\n"
-		"Can be disabled, dummy, modem, nullmodem, directserial.\n"
-		"Additional parameters must be in the same line in the form of\n"
-		"parameter:value. Parameter for all types is irq (optional).\n"
-		"for directserial: realport (required), rxdelay (optional).\n"
-		"                 (realport:COM1 realport:ttyS0).\n"
-		"for modem: listenport sock (all optional).\n"
-		"for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
-		"               transparent, port, inhsocket, sock (all optional).\n"
-		"Example: serial1=modem listenport:5000");
+	        "set type of device connected to com port.\n"
+	        "Can be disabled, dummy, modem, nullmodem, directserial.\n"
+	        "Additional parameters must be in the same line in the form of\n"
+	        "parameter:value. Parameter for all types is irq (optional).\n"
+	        "for directserial: realport (required), rxdelay (optional).\n"
+	        "                 (realport:COM1 realport:ttyS0).\n"
+	        "for modem: listenport sock (all optional).\n"
+	        "for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
+	        "               transparent, port, inhsocket, sock (all optional).\n"
+	        "SOCK parameters are 0 for TCP and 1 for ENET reliable UDP.\n"
+	        "Example: serial1=modem listenport:5000");
 
 	Pmulti_remain = secprop->Add_multiremain("serial2", when_idle, " ");
 	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
