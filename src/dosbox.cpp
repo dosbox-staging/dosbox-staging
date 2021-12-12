@@ -62,7 +62,7 @@ SVGACards svgaCard;
 
 /* The whole load of startups for all the subfunctions */
 void MSG_Init(Section_prop *);
-void LOG_StartUp(void);
+void LOG_StartUp();
 void MEM_Init(Section *);
 void PAGING_Init(Section *);
 void IO_Init(Section * );
@@ -127,7 +127,7 @@ void XMS_Init(Section*);
 void DOS_KeyboardLayout_Init(Section*);
 
 void AUTOEXEC_Init(Section*);
-void SHELL_Init(void);
+void SHELL_Init();
 
 void INT10_Init(Section*);
 
@@ -143,11 +143,11 @@ void increaseticks();
 
 bool mono_cga=false;
 
-void Null_Init(Section *sec) {
-	(void)sec;
+void Null_Init([[maybe_unused]] Section *sec) {
+	// do nothing
 }
 
-static Bitu Normal_Loop(void) {
+static Bitu Normal_Loop() {
 	Bits ret;
 	while (1) {
 		if (PIC_RunQueue()) {
@@ -404,7 +404,7 @@ static void DOSBOX_RealInit(Section * sec) {
 		int10.vesa_mode_preference = VESA_MODE_PREF::COMPATIBLE;
 }
 
-void DOSBOX_Init(void) {
+void DOSBOX_Init() {
 	Section_prop * secprop;
 	Prop_int* Pint;
 	Prop_int *pint = nullptr;
