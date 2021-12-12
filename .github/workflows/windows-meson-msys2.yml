@@ -49,6 +49,12 @@ jobs:
             sys: MINGW64
             run_tests: true
             max_warnings: -1
+          - name: GCC +debugger
+            toolchain: ""
+            arch: x86_64
+            sys: MINGW64
+            max_warnings: 21
+            build_flags: -Denable_debugger=normal
     
     defaults:
       run:
@@ -226,16 +232,23 @@ jobs:
       - name: Setup release build
         run: meson setup $BUILD_FLAGS $BUILD_RELEASE_DIR
 
+      - name: Setup debugger build
+        run: meson setup $BUILD_FLAGS -Denable_debugger=normal $BUILD_DEBUGGER_DIR
+      
       - name: Build release
         run: ninja -C $BUILD_RELEASE_DIR
-
+      
+      - name: Build debugger
+        run: ninja -C $BUILD_DEBUGGER_DIR
+            
       - name: Package
         run: |
           # Package the debug build to bring in required dependencies such as ncurses
           ./scripts/create-package.sh \
             -p msys2 \
-            "$BUILD_RELEASE_DIR" \
+            "$BUILD_DEBUGGER_DIR" \
             "$PKG_RELEASE"
+          mv "${PKG_RELEASE}/dosbox.exe" "${PKG_RELEASE}/dosbox_with_debugger.exe"
           install -DT "${BUILD_RELEASE_DIR}/dosbox.exe" "${PKG_RELEASE}/dosbox.exe"
       
       - name: Windows Defender AV Scan
