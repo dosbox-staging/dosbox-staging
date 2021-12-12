@@ -136,7 +136,7 @@ void SERIAL::Run()
 	}
 
 	// Show help.
-	WriteOut(MSG_Get("PROGRAM_SERIAL_HELP"));
+	WriteOut(MSG_Get("PROGRAM_SERIAL_HELP"), SERIAL_MAX_PORTS);
 }
 
 void SERIAL_ProgramStart(Program **make)
