@@ -40,9 +40,9 @@ static std::string get_locale_from_os()
 {
 	auto cflocale = CFLocaleCopyCurrent();
 	auto locale = CFLocaleGetValue(cflocale, kCFLocaleLanguageCode);
-	auto locale_str_ref = reinterpret_cast<CFStringRef>(locale);
-	const std::string locale_string = CFStringGetCStringPtr(locale_str_ref,
-	                                                        kCFStringEncodingUTF8);
+	auto locale_str_ref = static_cast<CFStringRef>(locale);
+	const auto cstr = CFStringGetCStringPtr(locale_str_ref, kCFStringEncodingUTF8);
+	std::string locale_string(cstr ? cstr : "");
 	CFRelease(cflocale);
 	return locale_string;
 }
