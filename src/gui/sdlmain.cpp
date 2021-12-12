@@ -3709,9 +3709,7 @@ static void erasemapperfile() {
 
 void Disable_OS_Scaling() {
 #if defined (WIN32)
-	typedef BOOL (*function_set_dpi_pointer)();
-	function_set_dpi_pointer function_set_dpi;
-	function_set_dpi = (function_set_dpi_pointer) GetProcAddress(LoadLibrary("user32.dll"), "SetProcessDPIAware");
+	FARPROC function_set_dpi = GetProcAddress(LoadLibrary("user32.dll"), "SetProcessDPIAware");
 	if (function_set_dpi) {
 		function_set_dpi();
 	}
