@@ -542,6 +542,7 @@ int SlirpEthernetConnection::PollAdd(int fd, int slirp_events)
 	// compiler-specific implementation of FD_SET uses a SOCKET type
 	// under MSYS2
 #ifdef WIN32
+	assert(fd >= 0);
 	auto fd_socket = static_cast<SOCKET>(fd);
 	if (slirp_events & SLIRP_POLL_IN)
 		FD_SET(fd_socket, &readfds);
