@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <deque>
+#include <clocale>
 
 #include "std_filesystem.h"
 #include <string>
@@ -36,7 +37,7 @@
 
 #if C_COREFOUNDATION
 #include <CoreFoundation/CoreFoundation.h>
-static std::string get_locale_from_os()
+static std::string get_language_from_os()
 {
 	auto cflocale = CFLocaleCopyCurrent();
 	auto locale = CFLocaleGetValue(cflocale, kCFLocaleLanguageCode);
@@ -47,7 +48,7 @@ static std::string get_locale_from_os()
 	return locale_string;
 }
 #else
-static std::string get_locale_from_os()
+static std::string get_language_from_os()
 {
 	return "";
 }
@@ -176,17 +177,36 @@ static std::string get_language(const Section_prop *section)
 		lang = section->Get_string("language");
 	}
 
-	// Was a language specified in the LANG environment variable?
+	// Clear the language if it's set to the POSIX default
+	auto clear_if_default = [](std::string &l) {
+		lowcase(l);
+		if (l.size() < 2 || starts_with("c.", l) || l == "posix") {
+			l.clear();
+		}
+	};
+
+	// Check the LANG environment variable
 	if (lang.empty()) {
 		const char *envlang = getenv("LANG");
 		if (envlang) {
 			lang = envlang;
+			clear_if_default(lang);
 		}
 	}
 
-	// Was a language specified in the OS locale?
+	// Check if the locale is set
 	if (lang.empty()) {
-		lang = get_locale_from_os();
+		const auto envlang = setlocale(LC_ALL, "");
+		if (envlang) {
+			lang = envlang;
+			clear_if_default(lang);
+		}
+	}
+
+	// Query the OS using OS-specific calls
+	if (lang.empty()) {
+		lang = get_language_from_os();
+		clear_if_default(lang);
 	}
 
 	// Drop the dialect part of the language
