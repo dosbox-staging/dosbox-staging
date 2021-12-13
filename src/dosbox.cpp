@@ -972,29 +972,37 @@ void DOSBOX_Init() {
 	secprop = control->AddSection_prop("ethernet", &NE2K_Init, true);
 
 	Pbool = secprop->Add_bool("ne2000", when_idle,  true);
-	Pbool->Set_help("Emulate a Novell NE2000 network card on a software-based\n"
-	                "network (using libslirp) with properties as follows:\n"
-	                " - 255.255.255.0 : Subnet mask for 10.0.2.0 virtual LAN\n"
-	                " - 10.0.2.2      : Gateway and DHCP service\n"
-	                " - 10.0.2.3      : Virtual DNS server\n"
-	                " - 10.0.2.15     : First IP provided by DHCP, your IP!\n"
-	                "Note: Inside DOS, setting this up requires an NE2000 packet driver,\n"
-					"      DHCP client, and TCP/IP stack. You might need port-forwarding\n"
-					"      from the host into the DOS guest, and from your router to your\n"
-					"      host for multiplayer games across the Internet.");
+	Pbool->Set_help(
+	        "Enable emulation of a Novell NE2000 network card on a software-based\n"
+	        "network (using libslirp) with properties as follows:\n"
+	        " - 255.255.255.0 : Subnet mask of the 10.0.2.0 virtual LAN.\n"
+	        " - 10.0.2.2      : IP of the gateway and DHCP service.\n"
+	        " - 10.0.2.3      : IP of the virtual DNS server.\n"
+	        " - 10.0.2.15     : First IP provided by DHCP, your IP!\n"
+	        "Note: Inside DOS, setting this up requires an NE2000 packet driver,\n"
+	        "      DHCP client, and TCP/IP stack. You might need port-forwarding\n"
+	        "      from the host into the DOS guest, and from your router to your\n"
+	        "      host when acting as the server for multiplayer games.");
 
-	Phex = secprop->Add_hex("nicbase", when_idle,  0x300);
-	Phex->Set_help("The base address of the NE2000 board.");
+	const char *nic_addresses[] = {"200", "220", "240", "260", "280", "2c0",
+	                               "300", "320", "340", "360", 0};
+	Phex = secprop->Add_hex("nicbase", when_idle, 0x300);
+	Phex->Set_values(nic_addresses);
+	Phex->Set_help(
+	        "The base address of the NE2000 card.\n"
+	        "Note: Addresses 220 and 240 might not be available as they're assigned\n"
+	        "      to the Sound Blaster and Gravis UltraSound by default.");
 
-	Pint = secprop->Add_int("nicirq", when_idle,  3);
-	Pint->Set_help("The interrupt it uses. Note serial2 uses IRQ3 as default.");
+	const char *nic_irqs[] = {"3",  "4",  "5",  "9",  "10",
+	                          "11", "12", "14", "15", 0};
+	Pint = secprop->Add_int("nicirq", when_idle, 3);
+	Pint->Set_values(nic_irqs);
+	Pint->Set_help("The interrupt used by the NE2000 card.\n"
+	               "Note: IRQs 3 and 5 might not be available as they're assigned\n"
+	               "      to 'serial2' and the Sound Blaster by default.");
 
 	Pstring = secprop->Add_string("macaddr", when_idle, "AC:DE:48:88:99:AA");
-	Pstring->Set_help("The physical address the emulator will use on your network.\n"
-		"If you have multiple DOSBoxes running on your network,\n"
-		"this has to be changed for each. AC:DE:48 is an address range reserved for\n"
-		"private use, so modify the last three number blocks.\n"
-		"I.e. AC:DE:48:88:99:AB.");
+	Pstring->Set_help("The MAC address of the NE2000 card.");
 
 	Pstring = secprop->Add_string("tcp_port_forwards", when_idle, "");
 	Pstring->Set_help("Forwards one or more TCP ports from the host into the DOS guest.\n"
