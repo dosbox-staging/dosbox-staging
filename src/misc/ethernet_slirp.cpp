@@ -42,7 +42,7 @@ ssize_t slirp_receive_packet(const void *buf, size_t len, void *opaque)
 	if (!len)
 		return 0;
 
-	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
+	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	const auto bytes_to_receive = check_cast<int>(len);
 
 	if (bytes_to_receive > conn->GetMRU()) {
@@ -66,33 +66,33 @@ int64_t slirp_clock_get_ns([[maybe_unused]] void *opaque)
 
 void *slirp_timer_new(SlirpTimerCb cb, void *cb_opaque, void *opaque)
 {
-	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
+	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	return conn->TimerNew(cb, cb_opaque);
 }
 
 void slirp_timer_free(void *timer, void *opaque)
 {
-	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
+	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	struct slirp_timer *real_timer = (struct slirp_timer *)timer;
 	conn->TimerFree(real_timer);
 }
 
 void slirp_timer_mod(void *timer, int64_t expire_time, void *opaque)
 {
-	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
+	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	struct slirp_timer *real_timer = (struct slirp_timer *)timer;
 	conn->TimerMod(real_timer, expire_time);
 }
 
 int slirp_add_poll(int fd, int events, void *opaque)
 {
-	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
+	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	return (fd < 0) ? fd : conn->PollAdd(fd, events);
 }
 
 int slirp_get_revents(int idx, void *opaque)
 {
-	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
+	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	return (idx < 0) ? idx : conn->PollGetSlirpRevents(idx);
 }
 
@@ -101,7 +101,7 @@ void slirp_register_poll_fd(int fd, void *opaque)
 	// sentinel
 	if (fd < 0)
 		return;
-	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
+	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	conn->PollRegister(fd);
 }
 
@@ -110,7 +110,7 @@ void slirp_unregister_poll_fd(int fd, void *opaque)
 	// sentinel
 	if (fd < 0)
 		return;
-	auto conn = static_cast<SlirpEthernetConnection *>(opaque);
+	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	conn->PollUnregister(fd);
 }
 
@@ -374,7 +374,7 @@ void SlirpEthernetConnection::GetPackets(std::function<int(const uint8_t *, int)
 	PollsClear();
 	PollsAddRegistered();
 	slirp_pollfds_fill(slirp, &timeout_ms, slirp_add_poll, this);
-	bool poll_failed = !PollsPoll(timeout_ms);
+	const bool poll_failed = !PollsPoll(timeout_ms);
 	slirp_pollfds_poll(slirp, poll_failed, slirp_get_revents, this);
 	TimersRun();
 }
@@ -567,7 +567,7 @@ bool SlirpEthernetConnection::PollsPoll(uint32_t timeout_ms)
 	struct timeval timeout;
 	timeout.tv_sec = timeout_ms / 1000;
 	timeout.tv_usec = (timeout_ms % 1000) * 1000;
-	int ret = select(0, &readfds, &writefds, &exceptfds, &timeout);
+	const auto ret = select(0, &readfds, &writefds, &exceptfds, &timeout);
 	return (ret > -1);
 }
 
@@ -594,8 +594,8 @@ int SlirpEthernetConnection::PollGetSlirpRevents(int idx)
 		 * will cause the next recv() to fail instead of acting
 		 * normally. See CORE-17425 on their JIRA */
 		char buf[8];
-		int read = recv(idx, buf, sizeof(buf), MSG_PEEK);
-		int error = (read == SOCKET_ERROR) ? WSAGetLastError() : 0;
+		const int read = recv(idx, buf, sizeof(buf), MSG_PEEK);
+		const int error = (read == SOCKET_ERROR) ? WSAGetLastError() : 0;
 		if (read > 0 || error == WSAEMSGSIZE) {
 			slirp_revents |= SLIRP_POLL_IN;
 		} else if (read == 0) {
