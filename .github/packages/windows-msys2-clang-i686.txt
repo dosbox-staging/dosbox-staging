@@ -1,0 +1,16 @@
+mingw-w64-clang-i686-meson
+mingw-w64-clang-i686-gcc
+mingw-w64-clang-i686-ccache
+mingw-w64-clang-i686-pkgconf
+mingw-w64-clang-i686-python
+mingw-w64-clang-i686-ntldd
+mingw-w64-clang-i686-ncurses
+mingw-w64-clang-i686-glib2
+mingw-w64-clang-i686-fluidsynth
+mingw-w64-clang-i686-munt-mt32emu
+mingw-w64-clang-i686-libpng
+mingw-w64-clang-i686-libslirp
+mingw-w64-clang-i686-opusfile
+mingw-w64-clang-i686-SDL2
+mingw-w64-clang-i686-SDL2_net
+mingw-w64-clang-i686-zlib
