@@ -221,7 +221,7 @@ jobs:
             -Db_lto=true \
             -Db_asneeded=true \
             -Ddefault_library=static \
-            -Dtry_static_libs=sdl2,sdl2_net \
+            -Dtry_static_libs=opusfile,sdl2,sdl2_net \
             -Dfluidsynth:try-static-deps=true \
             build
 
