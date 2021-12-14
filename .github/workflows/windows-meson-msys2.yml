@@ -10,7 +10,7 @@ env:
   CCACHE_DIR:      "/c/ccache"
   CCACHE_MAXSIZE:  "64M"
   CCACHE_COMPRESS: "true"
-  BUILD_FLAGS: "-Dbuildtype=release -Db_asneeded=true --force-fallback-for=fluidsynth,mt32emu,slirp -Dtry_static_libs=fluidsynth,mt32emu,opusfile,png,slirp"
+  BUILD_FLAGS: "-Dbuildtype=release -Db_asneeded=true --force-fallback-for=fluidsynth,mt32emu,slirp -Dtry_static_libs=fluidsynth,mt32emu,opusfile,png,slirp -Dfluidsynth:try-static-deps=true"
   BUILD_RELEASE_DIR: build/release
   BUILD_DEBUGGER_DIR: build/debugger
 
@@ -27,38 +27,32 @@ jobs:
             toolchain: ""
             arch: i686
             sys: MINGW32
-            cc: gcc
             max_warnings: 0
           - name: GCC (MinGW) x86_64
             toolchain: ""
             arch: x86_64
             sys: MINGW64
-            cc: gcc
             max_warnings: 0
           - name: Clang x86
             toolchain: clang-
             arch: i686
             sys: CLANG32
-            cc: clang
             max_warnings: 0
           - name: Clang x86_64
             toolchain: clang-
             arch: x86_64
             sys: CLANG64
-            cc: clang
             max_warnings: 0
           - name: GCC +tests
             toolchain: ""
             arch: x86_64
             sys: MINGW64
-            cc: gcc
             run_tests: true
             max_warnings: -0
           - name: GCC +debugger
             toolchain: ""
             arch: x86_64
             sys: MINGW64
-            cc: gcc
             max_warnings: 2
             build_flags: -Denable_debugger=normal
     
@@ -92,7 +86,7 @@ jobs:
       - name: Install packages
         run: |
           pacman --noconfirm -S --needed --overwrite \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-${{matrix.conf.cc}} \
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-toolchain \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-meson \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ccache \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-pkgconf \
@@ -100,7 +94,6 @@ jobs:
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ntldd \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ncurses \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-glib2 \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-fluidsynth \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-munt-mt32emu \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libpng \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libslirp \
@@ -202,7 +195,8 @@ jobs:
       - name: Install packages
         run: |
           pacman --noconfirm -S --needed --overwrite \
-            mingw-w64-clang-${{matrix.conf.arch}}-clang \
+            git \
+            mingw-w64-clang-${{matrix.conf.arch}}-toolchain \
             mingw-w64-clang-${{matrix.conf.arch}}-meson \
             mingw-w64-clang-${{matrix.conf.arch}}-ccache \
             mingw-w64-clang-${{matrix.conf.arch}}-pkgconf \
@@ -210,7 +204,6 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-ntldd \
             mingw-w64-clang-${{matrix.conf.arch}}-ncurses \
             mingw-w64-clang-${{matrix.conf.arch}}-glib2 \
-            mingw-w64-clang-${{matrix.conf.arch}}-fluidsynth \
             mingw-w64-clang-${{matrix.conf.arch}}-munt-mt32emu \
             mingw-w64-clang-${{matrix.conf.arch}}-libpng \
             mingw-w64-clang-${{matrix.conf.arch}}-libslirp \
