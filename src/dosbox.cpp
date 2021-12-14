@@ -999,7 +999,7 @@ void DOSBOX_Init() {
 	Pint->Set_values(nic_irqs);
 	Pint->Set_help("The interrupt used by the NE2000 card.\n"
 	               "Note: IRQs 3 and 5 might not be available as they're assigned\n"
-	               "      to 'serial2' and the Sound Blaster by default.");
+	               "      to 'serial2' and the Gravis UltraSound by default.");
 
 	Pstring = secprop->Add_string("macaddr", when_idle, "AC:DE:48:88:99:AA");
 	Pstring->Set_help("The MAC address of the NE2000 card.");
