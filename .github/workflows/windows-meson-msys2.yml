@@ -92,13 +92,10 @@ jobs:
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-meson \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ccache \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-pkgconf \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-python \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ntldd \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ncurses \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-glib2 \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-munt-mt32emu \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libpng \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libslirp \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-opusfile \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2 \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2_net \
@@ -205,13 +202,10 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-meson \
             mingw-w64-clang-${{matrix.conf.arch}}-ccache \
             mingw-w64-clang-${{matrix.conf.arch}}-pkgconf \
-            mingw-w64-clang-${{matrix.conf.arch}}-python \
             mingw-w64-clang-${{matrix.conf.arch}}-ntldd \
             mingw-w64-clang-${{matrix.conf.arch}}-ncurses \
             mingw-w64-clang-${{matrix.conf.arch}}-glib2 \
-            mingw-w64-clang-${{matrix.conf.arch}}-munt-mt32emu \
             mingw-w64-clang-${{matrix.conf.arch}}-libpng \
-            mingw-w64-clang-${{matrix.conf.arch}}-libslirp \
             mingw-w64-clang-${{matrix.conf.arch}}-opusfile \
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2 \
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2_net \
