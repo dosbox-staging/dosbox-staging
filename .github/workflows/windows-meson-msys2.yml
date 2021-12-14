@@ -85,8 +85,10 @@ jobs:
       
       - name: Install packages
         run: |
+          toolchain_pkg=$(pacman -Sg mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-toolchain \
+            | sed -e 's/mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-toolchain //g' | tr '\n' ' ')
           pacman --noconfirm -S --needed --overwrite \
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-toolchain \
+            $toolchain_pkg \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-meson \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ccache \
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-pkgconf \
@@ -194,9 +196,11 @@ jobs:
       
       - name: Install packages
         run: |
+          toolchain_pkg=$(pacman -Sg mingw-w64-clang-${{matrix.conf.arch}}-toolchain \
+            | sed -e 's/mingw-w64-clang-${{matrix.conf.arch}}-toolchain //g' | tr '\n' ' ')
           pacman --noconfirm -S --needed --overwrite \
             git \
-            mingw-w64-clang-${{matrix.conf.arch}}-toolchain \
+            $toolchain_pkg \
             mingw-w64-clang-${{matrix.conf.arch}}-meson \
             mingw-w64-clang-${{matrix.conf.arch}}-ccache \
             mingw-w64-clang-${{matrix.conf.arch}}-pkgconf \
