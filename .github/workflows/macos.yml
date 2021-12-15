@@ -151,6 +151,7 @@ jobs:
             build_flags: --native-file=.github/meson/macos-10.15-deployment-target.ini
             minimum_deployment: '10.15'
             needs_deps: true
+            needs_libintl_workaround: true
 
           - host: [self-hosted, macOS, arm64, release-builds]
             arch: arm64
@@ -185,9 +186,9 @@ jobs:
 
       - name: Install C++ compiler and libraries
         if:   matrix.runner.needs_deps
-        run: |
-          arch -arch=${{ matrix.runner.arch }} brew install librsvg tree \
-            $(cat ./.github/packages/macos-latest-brew.txt)
+        run: >-
+          arch -arch=${{ matrix.runner.arch }} brew install librsvg tree
+          ccache libpng meson opusfile sdl2 sdl2_net
 
       - uses:  actions/cache@v2
         if:    matrix.runner.needs_deps
@@ -212,21 +213,41 @@ jobs:
           export VERSION=$(git describe --abbrev=5)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
+      # KLUDGE: Work-around for the scenario where glib's wrap links with libintl 
+      # dynamically, which adds a dependency into a brew dynlib package (in /usr/local/..), 
+      # which some users won't have. So we knockout libintl.dynlib (by removing gettext 
+      # removal), however this also breaks git: so we do a mock-meson setup to fetch all the 
+      # git wraps before knocking it. then we re-add gettext after the build, so git can work 
+      # for subsequent steps.
+      #
+      - name: Fetch subprojects then remove libintl.8.dylib
+        if:   matrix.runner.needs_libintl_workaround
+        run:  |
+          set -ex
+          meson setup -Ddefault_library=static --wrap-mode=forcefallback -Dfluidsynth:try-static-deps=true build
+          git clone --depth 1 --branch "0.2" https://github.com/frida/proxy-libintl.git subprojects/proxy-libintl
+          brew uninstall -f --ignore-dependencies gettext
+          rm -rf build
+
       - name: Setup release build
-        run: |
-          arch -arch=${{ matrix.runner.arch }} meson setup \
-            ${{ matrix.conf.build_flags }} \
-            --wrap-mode=forcefallback \
-            -Dbuildtype=release \
-            -Db_lto=true \
-            -Db_asneeded=true \
-            -Ddefault_library=static \
-            -Dtry_static_libs=opusfile,sdl2,sdl2_net \
-            -Dfluidsynth:try-static-deps=true \
-            build
+        run: >-
+          arch -arch=${{ matrix.runner.arch }} meson setup
+          ${{ matrix.conf.build_flags }}
+          --wrap-mode=forcefallback
+          -Dbuildtype=release
+          -Db_lto=true
+          -Db_asneeded=true
+          -Ddefault_library=static
+          -Dtry_static_libs=opusfile,sdl2,sdl2_net
+          -Dfluidsynth:try-static-deps=true
+          build
 
       - name: Build
         run:  arch -arch=${{ matrix.runner.arch }} ninja -C build
+
+      - name: Reinstate libintl.8.dylib
+        if:   matrix.runner.needs_libintl_workaround
+        run:  brew install gettext
 
       - name: Upload binary
         uses: actions/upload-artifact@v2
