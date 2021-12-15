@@ -306,4 +306,8 @@ FILE_unique_ptr make_fopen(const char *fname, const char *mode);
 
 const std_fs::path &GetExecutablePath();
 
+// Tests if the provided path is a system root path.
+// The root_path argument is overwritten with the system root path.
+bool is_path_a_root_path(const std_fs::path &test_path, std_fs::path &root_path);
+
 #endif

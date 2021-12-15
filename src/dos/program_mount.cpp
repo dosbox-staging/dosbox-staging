@@ -23,12 +23,16 @@
 
 #include "dosbox.h"
 
+#include "std_filesystem.h"
+#include <system_error>
+
 #include "bios_disk.h"
 #include "control.h"
 #include "drives.h"
 #include "fs_utils.h"
 #include "shell.h"
 #include "string_utils.h"
+#include "support.h"
 #include "../ints/int10.h"
 
 void MOUNT::Move_Z(char new_z)
@@ -136,8 +140,7 @@ void MOUNT::Run(void) {
 		WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
 		return;
 	}
-	bool path_relative_to_last_config = false;
-	if (cmd->FindExist("-pr",true)) path_relative_to_last_config = true;
+	const bool path_relative_to_last_config = cmd->FindExist("-pr", true);
 
 	/* Check for unmounting */
 	if (cmd->FindString("-u",umount,false)) {
@@ -237,62 +240,54 @@ void MOUNT::Run(void) {
 			return;
 		}
 
-		if (!cmd->FindCommand(2,temp_line)) {
+		if (!cmd->FindCommand(2, temp_line) || temp_line.empty()) {
 			goto showusage;
 		}
-		if (!temp_line.size()) {
-			goto showusage;
-		}
-		if (path_relative_to_last_config && control->configfiles.size() && !Cross::IsPathAbsolute(temp_line)) {
-			std::string lastconfigdir(control->configfiles[control->configfiles.size() - 1]);
-			std::string::size_type pos = lastconfigdir.rfind(CROSS_FILESPLIT);
-			if (pos == std::string::npos) {
-				pos = 0; //No directory then erase string
-			}
-			lastconfigdir.erase(pos);
-			if (lastconfigdir.length()) {
-				temp_line = lastconfigdir + CROSS_FILESPLIT + temp_line;
-			}
+		std::error_code ec;
+		std_fs::path host_path = temp_line;
+
+		// Check if the path is relative to the last config file
+		if (path_relative_to_last_config && control->configfiles.size()) {
+			std_fs::path config_path = control->configfiles.back();
+			config_path = config_path.parent_path();
+			host_path = std::string("./") + host_path.string(); // make relative
+			host_path = std_fs::canonical(config_path / host_path, ec);
+			LOG_INFO("MOUNT: Will try mounting '%s' relative to last config path '%s'",
+			         host_path.string().c_str(), config_path.string().c_str());
 		}
 
-#if defined(WIN32)
-		/* Removing trailing backslash if not root dir so stat
-			* will succeed */
-		if (temp_line.size() > 3 && temp_line.back() == '\\')
-			temp_line.pop_back();
-#endif
-
-		const std::string real_path = to_native_path(temp_line);
-		if (real_path.empty()) {
-			LOG_MSG("MOUNT: Path '%s' not found", temp_line.c_str());
-		} else {
-			std::string home_resolve = temp_line;
-			Cross::ResolveHomedir(home_resolve);
-			if (home_resolve == real_path) {
-				LOG_MSG("MOUNT: Path '%s' found",
-						temp_line.c_str());
+		// If the path doesn't exist, try it in native-form
+		if (!std_fs::is_directory(host_path, ec)) {
+			const std_fs::path native_path = to_native_path(host_path.string());
+			if (std_fs::is_directory(native_path, ec)) {
+				LOG_INFO("MOUNT: Will try mounting host path '%s' in native form '%s'",
+				         host_path.string().c_str(), native_path.string().c_str());
+				host_path = native_path;
 			} else {
-				LOG_MSG("MOUNT: Path '%s' found, while looking for '%s'",
-						real_path.c_str(),
-						temp_line.c_str());
+				// If the native_path doesn't exist, try
+				// expanding the home directory
+				std::string home_resolve = temp_line;
+				Cross::ResolveHomedir(home_resolve);
+				std_fs::path home_path = home_resolve;
+				if (std_fs::is_directory(home_path, ec)) {
+					LOG_INFO("MOUNT: Will try mounting host path '%s' a home directory '%s'",
+					         host_path.string().c_str(), home_path.string().c_str());
+					host_path = home_path;
+				}
 			}
-			temp_line = real_path;
 		}
 
-		struct stat test;
-		if (stat(temp_line.c_str(),&test)) {
+		if (!std_fs::exists(host_path, ec)) {
 			WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_1"),temp_line.c_str());
 			return;
 		}
-		/* Not a switch so a normal directory/file */
-		if (!S_ISDIR(test.st_mode)) {
-			WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
+
+		if (!std_fs::is_directory(host_path, ec)) {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"), temp_line.c_str());
 			return;
 		}
 
-		if (temp_line[temp_line.size() - 1] != CROSS_FILESPLIT) temp_line += CROSS_FILESPLIT;
-		Bit8u bit8size=(Bit8u) sizes[1];
-
+		Bit8u bit8size = (Bit8u)sizes[1];
 		if (type == "cdrom") {
 			// Following options were relevant only for physical CD-ROM support:
 			for (auto opt : {"-usecd", "-noioctl", "-ioctl", "-ioctl_dx", "-ioctl_mci", "-ioctl_dio"}) {
@@ -301,7 +296,8 @@ void MOUNT::Run(void) {
 			}
 
 			int error = 0;
-			newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
+			newdrive = new cdromDrive(drive, host_path.string().c_str(), sizes[0], bit8size,
+			                          sizes[2], 0, mediaid, error);
 			// Check Mscdex, if it worked out...
 			switch (error) {
 				case 0  :	WriteOut(MSG_Get("MSCDEX_SUCCESS"));				break;
@@ -317,14 +313,11 @@ void MOUNT::Run(void) {
 				return;
 			}
 		} else {
-			/* Give a warning when mount c:\ or the / */
-#if defined (WIN32)
-			if ( (temp_line == "c:\\") || (temp_line == "C:\\") ||
-				(temp_line == "c:/") || (temp_line == "C:/")    )
-				WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_WIN"));
-#else
-			if (temp_line == "/") WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
-#endif
+			std_fs::path root_path = {};
+			if (is_path_a_root_path(host_path, root_path))
+				WriteOut(MSG_Get("PROGRAM_MOUNT_ROOT_PATH_WARNING"), host_path.string().c_str(),
+				         root_path.string().c_str());
+
 			if (type == "overlay") {
 				localDrive *ldp = dynamic_cast<localDrive *>(
 						Drives[drive_index(drive)]);
@@ -336,8 +329,9 @@ void MOUNT::Run(void) {
 				}
 				std::string base = ldp->GetBasedir();
 				Bit8u o_error = 0;
-				newdrive = new Overlay_Drive(base.c_str(),temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid,o_error);
-				//Erase old drive on success
+				newdrive = new Overlay_Drive(base.c_str(), host_path.string().c_str(), sizes[0],
+				                             bit8size, sizes[2], sizes[3], mediaid, o_error);
+				// Erase old drive on success
 				if (o_error) {
 					if (o_error == 1) WriteOut("No mixing of relative and absolute paths. Overlay failed.");
 					else if (o_error == 2) WriteOut("overlay directory can not be the same as underlying file system.");
@@ -354,7 +348,8 @@ void MOUNT::Run(void) {
 				delete Drives[drive_index(drive)];
 				Drives[drive_index(drive)] = nullptr;
 			} else {
-				newdrive = new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
+				newdrive = new localDrive(host_path.string().c_str(), sizes[0], bit8size,
+				                          sizes[2], sizes[3], mediaid);
 			}
 		}
 	} else {
