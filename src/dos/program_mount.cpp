@@ -243,7 +243,55 @@ void MOUNT::Run(void) {
 		if (!cmd->FindCommand(2, temp_line) || temp_line.empty()) {
 			goto showusage;
 		}
+
+		// Error-code to be used in throw-free std::filesystem calls
 		std::error_code ec;
+
+// Extra handling for MinGW GCC build handles the following:
+//        - mount c ./   -> should behave like mount c .
+//        - mount c /    -> should behave like mount c c:/
+//        - mount c c:   -> should behave like mount c c:/
+//
+// Note: MSVC and Clang do not need this extra babysitting.
+//       Remove this block when MinGW's GCC std::filesystem is fixed.
+//
+#if defined(WIN32) && defined(__GNUC__) && !defined(__clang__)
+		const auto saved_line = temp_line;
+
+		// GCC on Windows has problems with traling slashes, so strip them
+		const bool has_drive_spec = (temp_line.size() > 1 && temp_line[1] == ':');
+		const size_t strip_slashes_up_to = has_drive_spec ? 3 : 1;
+		while (temp_line.size() > strip_slashes_up_to &&
+		       (temp_line.back() == '/' || temp_line.back() == '\\'))
+			temp_line.pop_back();
+
+		// GCC on Windows doesn't upgrade drive-specs (d:) to absolute (d:\)
+		if (temp_line.size() == 2 && temp_line[1] == ':')
+			temp_line += '\\';
+
+		// GCC on Windows doesn't map absolute paths (/) to the current drive
+		const bool is_absolute = (temp_line.size() &&
+		                          (temp_line.front() == '/' ||
+		                           temp_line.front() == '\\'));
+
+		if (is_absolute) {
+			// Try to prepend the current-working drive
+			auto cp = std_fs::current_path(ec);
+			if (cp.has_root_name()) {
+				temp_line = cp.root_name().string() + temp_line;
+			} else {
+				WriteOut(MSG_Get("PROGRAM_MOUNT_NO_DRIVE_PREFIX"),
+				         saved_line.c_str(), saved_line.c_str());
+				return;
+			}
+		}
+
+		// if we made it here, the path is relative or has a drive
+		// prefix, which is sufficient for GCC to handle properly
+		assert(temp_line.size());
+#endif
+
+		// Construct a std::filesystem path from the string
 		std_fs::path host_path = temp_line;
 
 		// Check if the path is relative to the last config file
