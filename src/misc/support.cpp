@@ -396,6 +396,14 @@ const std_fs::path &GetExecutablePath()
 
 bool is_path_a_root_path(const std_fs::path &test_path, std_fs::path &root_path)
 {
+
+// Special handling for GCC on Windows
+#if defined(WIN32) && defined(__GNUC__) && !defined(__clang__)
+	const bool is_root_path = (test_path.string().length() == 3 && test_path.string()[1] == ':');
+	root_path = is_root_path ? test_path : std_fs::path("");
+	return is_root_path;
+#endif
+
 	// Try to discover the root path dynamically, which means we can handle
 	// all variety of filesystems like MorphOS, AmigaOS, etc.
 	std::error_code ec;
@@ -408,6 +416,8 @@ bool is_path_a_root_path(const std_fs::path &test_path, std_fs::path &root_path)
 		root_path = test_path.root_directory();
 	else if (test_path.has_root_path())
 		root_path = test_path.root_path();
+	else if (std_fs::current_path(ec).has_root_path())
+		root_path = std_fs::current_path(ec).root_path();
 
 	// Otherwise fallback to our best guess of the root path
 	if (root_path.empty())
