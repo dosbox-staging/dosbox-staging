@@ -23,6 +23,8 @@
 
 #if C_MODEM
 
+#include <vector>
+
 #include "support.h"
 
 #if defined WIN32
@@ -86,7 +88,7 @@ public:
 
 	virtual SocketState GetcharNonBlock(uint8_t &val) = 0;
 	virtual bool Putchar(uint8_t val) = 0;
-	virtual bool SendArray(uint8_t *data, size_t n) = 0;
+	virtual bool SendArray(const uint8_t *data, size_t n) = 0;
 	virtual bool ReceiveArray(uint8_t *data, size_t &n) = 0;
 	virtual bool GetRemoteAddressString(uint8_t *buffer) = 0;
 
@@ -97,9 +99,8 @@ public:
 	bool isopen = false;
 
 private:
-	size_t sendbuffersize = 0;
 	size_t sendbufferindex = 0;
-	uint8_t *sendbuffer = nullptr;
+	std::vector<uint8_t> sendbuffer = {};
 };
 
 class NETServerSocket {
@@ -147,7 +148,7 @@ public:
 
 	SocketState GetcharNonBlock(uint8_t &val);
 	bool Putchar(uint8_t val);
-	bool SendArray(uint8_t *data, size_t n);
+	bool SendArray(const uint8_t *data, size_t n);
 	bool ReceiveArray(uint8_t *data, size_t &n);
 	bool GetRemoteAddressString(uint8_t *buffer);
 
@@ -190,7 +191,7 @@ public:
 
 	SocketState GetcharNonBlock(uint8_t &val);
 	bool Putchar(uint8_t val);
-	bool SendArray(uint8_t *data, size_t n);
+	bool SendArray(const uint8_t *data, size_t n);
 	bool ReceiveArray(uint8_t *data, size_t &n);
 	bool GetRemoteAddressString(uint8_t *buffer);
 

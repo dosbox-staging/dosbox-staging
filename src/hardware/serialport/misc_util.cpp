@@ -35,11 +35,13 @@ constexpr int connection_timeout_ms = 5000;
 // --- GENERIC NET INTERFACE -------------------------------------------------
 
 NETClientSocket::NETClientSocket()
-{}
+{
+	// nothing
+}
 
 NETClientSocket::~NETClientSocket()
 {
-	delete[] sendbuffer;
+	// nothing
 }
 
 NETClientSocket *NETClientSocket::NETClientFactory(SocketTypesE socketType,
@@ -59,7 +61,7 @@ NETClientSocket *NETClientSocket::NETClientFactory(SocketTypesE socketType,
 void NETClientSocket::FlushBuffer()
 {
 	if (sendbufferindex) {
-		if (!SendArray(sendbuffer, sendbufferindex))
+		if (!SendArray(sendbuffer.data(), sendbufferindex))
 			return;
 		sendbufferindex = 0;
 	}
@@ -67,29 +69,31 @@ void NETClientSocket::FlushBuffer()
 
 void NETClientSocket::SetSendBufferSize(size_t n)
 {
-	// Only resize the buffer if needed
-	if (!sendbuffer || sendbuffersize != n) {
-		delete[] sendbuffer;
-		sendbuffer = new uint8_t[n];
-		sendbuffersize = n;
-	}
+	sendbuffer.resize(n);
+	assert(sendbuffer.size() == n);
 	sendbufferindex = 0;
 }
 
 bool NETClientSocket::SendByteBuffered(uint8_t val)
 {
-	if (sendbuffersize == 0)
+	if (sendbuffer.empty())
 		return false;
 
-	if (sendbufferindex < (sendbuffersize - 1)) {
+	// sanity check to prevent empty unsigned wrap-around
+	assert(sendbuffer.size());
+	if (sendbufferindex < (sendbuffer.size() - 1)) {
 		sendbuffer[sendbufferindex] = val;
 		sendbufferindex++;
 		return true;
 	}
+
+	// sanity check to prevent index underflow
+	assert(sendbufferindex < sendbuffer.size());
+
 	// buffer is full, get rid of it
 	sendbuffer[sendbufferindex] = val;
 	sendbufferindex = 0;
-	return SendArray(sendbuffer, sendbuffersize);
+	return SendArray(sendbuffer.data(), sendbuffer.size());
 }
 
 NETServerSocket::NETServerSocket()
@@ -298,7 +302,7 @@ bool ENETClientSocket::Putchar(uint8_t val)
 	return isopen;
 }
 
-bool ENETClientSocket::SendArray(uint8_t *data, size_t n)
+bool ENETClientSocket::SendArray(const uint8_t *data, size_t n)
 {
 	ENetPacket *packet = nullptr;
 
@@ -591,7 +595,7 @@ bool TCPClientSocket::Putchar(uint8_t val)
 	return SendArray(&val, 1);
 }
 
-bool TCPClientSocket::SendArray(uint8_t *data, const size_t n)
+bool TCPClientSocket::SendArray(const uint8_t *data, const size_t n)
 {
 	assertm(n <= static_cast<size_t>(std::numeric_limits<int>::max()),
 	        "SDL_net can't handle more bytes at a time.");
