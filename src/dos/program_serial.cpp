@@ -131,6 +131,10 @@ void SERIAL::Run()
 			serialports[port_index] = new CNullModem(port_index, commandLine);
 			break;
 #endif
+		default:
+			serialports[port_index] = nullptr;
+			LOG_WARNING("SERIAL: Unknown serial port type %d", mode);
+			break;
 		}
 		if (serialports[port_index] != nullptr) {
 			serialports[port_index]->serialType =
