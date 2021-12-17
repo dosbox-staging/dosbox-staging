@@ -170,7 +170,7 @@ ENETServerSocket::ENETServerSocket(uint16_t port)
 	                        0  // assume any amount of outgoing bandwidth
 	);
 	if (host == nullptr) {
-		LOG_INFO("Unable to create server ENET listening socket");
+		LOG_INFO("NET: Unable to create server ENET listening socket");
 		return;
 	}
 
@@ -182,7 +182,7 @@ ENETServerSocket::~ENETServerSocket()
 	// We don't destroy 'host' after passing it to a client, it needs to live.
 	if (host && !nowClient) {
 		enet_host_destroy(host);
-		LOG_INFO("Closed server ENET listening socket");
+		LOG_INFO("NET: Closed server ENET listening socket");
 	}
 	isopen = false;
 }
@@ -193,7 +193,7 @@ NETClientSocket *ENETServerSocket::Accept()
 	while (enet_host_service(host, &event, 0) > 0) {
 		switch (event.type) {
 		case ENET_EVENT_TYPE_CONNECT:
-			LOG_INFO("NET:  ENET client connect");
+			LOG_INFO("NET: ENET client connect");
 			nowClient = true;
 			return new ENETClientSocket(host);
 			break;
@@ -224,7 +224,7 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 	                          0        // assume any amount of outgoing bandwidth
 	);
 	if (client == nullptr) {
-		LOG_INFO("Unable to create client ENET socket");
+		LOG_INFO("NET: Unable to create client ENET socket");
 		return;
 	}
 
@@ -233,7 +233,7 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 	peer = enet_host_connect(client, &address, 1, 0);
 	if (peer == nullptr) {
 		enet_host_destroy(client);
-		LOG_INFO("Unable to create client ENET peer");
+		LOG_INFO("NET: Unable to create client ENET peer");
 		return;
 	}
 
@@ -246,9 +246,9 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 	// Wait up to 5 seconds for the connection attempt to succeed.
 	if (enet_host_service(client, &event, connection_timeout_ms) > 0 &&
 	    event.type == ENET_EVENT_TYPE_CONNECT) {
-		LOG_INFO("NET:  ENET connect");
+		LOG_INFO("NET: ENET connect");
 	} else {
-		LOG_INFO("NET:  ENET connected failed");
+		LOG_INFO("NET: ENET connected failed");
 		enet_peer_reset(peer);
 		enet_host_destroy(client);
 		return;
@@ -264,7 +264,7 @@ ENETClientSocket::ENETClientSocket(ENetHost *host)
 	address = client->address;
 	peer    = &client->peers[0];
 	isopen  = true;
-	LOG_INFO("ENETClientSocket created from server socket");
+	LOG_INFO("NET: ENETClientSocket created from server socket");
 }
 
 ENETClientSocket::~ENETClientSocket()
@@ -273,7 +273,7 @@ ENETClientSocket::~ENETClientSocket()
 		enet_peer_reset(peer);
 		enet_host_destroy(client);
 		isopen = false;
-		LOG_INFO("Closed client ENET listening socket");
+		LOG_INFO("NET: Closed client ENET listening socket");
 	}
 }
 
@@ -311,7 +311,7 @@ bool ENETClientSocket::SendArray(const uint8_t *data, size_t n)
 	if (packet) {
 		enet_peer_send(peer, 0, packet);
 	} else {
-		LOG_INFO("ENETClientSocket::SendArray unable to create packet size %zu", n);
+		LOG_INFO("NET: ENETClientSocket::SendArray unable to create packet size %zu", n);
 	}
 	updateState();
 
@@ -375,7 +375,7 @@ void ENETClientSocket::updateState()
 #ifndef ENET_BLOCKING_CONNECT
 		case ENET_EVENT_TYPE_CONNECT:
 			connecting = false;
-			LOG_INFO("NET:  ENET connect");
+			LOG_INFO("NET: ENET connect");
 			break;
 #endif
 		case ENET_EVENT_TYPE_RECEIVE:
@@ -533,7 +533,7 @@ TCPClientSocket::~TCPClientSocket()
 		if(listensocketset)
 			SDLNet_TCP_DelSocket(listensocketset, mysock);
 		SDLNet_TCP_Close(mysock);
-		LOG_INFO("Closed client TCP listening socket");
+		LOG_INFO("NET: Closed client TCP listening socket");
 	}
 
 	if(listensocketset) SDLNet_FreeSocketSet(listensocketset);
@@ -632,7 +632,7 @@ TCPServerSocket::~TCPServerSocket()
 {
 	if (mysock) {
 		SDLNet_TCP_Close(mysock);
-		LOG_INFO("Closed server TCP listening socket");
+		LOG_INFO("NET: closed server TCP listening socket");
 	}
 }
 
