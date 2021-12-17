@@ -324,17 +324,25 @@ bool ENETClientSocket::Putchar(uint8_t val)
 
 bool ENETClientSocket::SendArray(const uint8_t *data, size_t n)
 {
-	ENetPacket *packet = nullptr;
-
 	updateState();
-	packet = enet_packet_create(data, n, ENET_PACKET_FLAG_RELIABLE);
-	if (packet) {
-		enet_peer_send(peer, 0, packet);
-	} else {
+
+	const auto packet = enet_packet_create(data, n, ENET_PACKET_FLAG_RELIABLE);
+
+	// Is the packet OK?
+	if (packet == nullptr) {
 		LOG_INFO("NET: ENETClientSocket::SendArray unable to create packet size %zu", n);
+		return false;
 	}
-	updateState();
 
+	// Did the packet send successfully?
+	assert(peer);
+	if (enet_peer_send(peer, 0, packet) < 0) {
+		LOG_INFO("NET: Unable to send ENET packet");
+		enet_packet_destroy(packet);
+		return false;
+	}
+
+	updateState();
 	return isopen;
 }
 
