@@ -325,6 +325,7 @@
     <ClCompile Include="..\src\dos\program_mount.cpp" />
     <ClCompile Include="..\src\dos\program_placeholder.cpp" />
     <ClCompile Include="..\src\dos\program_rescan.cpp" />
+    <ClCompile Include="..\src\dos\program_serial.cpp" />
     <ClCompile Include="..\src\fpu\fpu.cpp" />
     <ClCompile Include="..\src\gui\render.cpp" />
     <ClCompile Include="..\src\gui\render_scalers.cpp" />
@@ -537,6 +538,7 @@
     <ClInclude Include="..\src\dos\dos_mscdex.h" />
     <ClInclude Include="..\src\dos\program_autotype.h" />
     <ClInclude Include="..\src\dos\program_ls.h" />
+    <ClInclude Include="..\src\dos\program_serial.h" />
     <ClInclude Include="..\src\fpu\fpu_instructions.h" />
     <ClInclude Include="..\src\fpu\fpu_instructions_x86.h" />
     <ClInclude Include="..\src\gui\gui_msgs.h" />
