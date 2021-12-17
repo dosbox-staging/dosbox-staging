@@ -495,7 +495,7 @@ void CSerialModem::DoCommand()
 				// socket types.
 				LOG_MSG("SERIAL: Port %" PRIu8 " socket type %s",
 				        GetPortNumber(),
-				        socketType ? "ENET" : "TCP");
+				        socketType ? "ENet" : "TCP");
 				// Reset port state.
 				EnterIdleState();
 				break;

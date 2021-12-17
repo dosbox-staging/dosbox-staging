@@ -90,7 +90,7 @@ public:
 	virtual bool Putchar(uint8_t val) = 0;
 	virtual bool SendArray(const uint8_t *data, size_t n) = 0;
 	virtual bool ReceiveArray(uint8_t *data, size_t &n) = 0;
-	virtual bool GetRemoteAddressString(uint8_t *buffer) = 0;
+	virtual bool GetRemoteAddressString(char *buffer) = 0;
 
 	void FlushBuffer();
 	void SetSendBufferSize(size_t n);
@@ -150,7 +150,7 @@ public:
 	bool Putchar(uint8_t val);
 	bool SendArray(const uint8_t *data, size_t n);
 	bool ReceiveArray(uint8_t *data, size_t &n);
-	bool GetRemoteAddressString(uint8_t *buffer);
+	bool GetRemoteAddressString(char *buffer);
 
 private:
 	void updateState();
@@ -193,7 +193,7 @@ public:
 	bool Putchar(uint8_t val);
 	bool SendArray(const uint8_t *data, size_t n);
 	bool ReceiveArray(uint8_t *data, size_t &n);
-	bool GetRemoteAddressString(uint8_t *buffer);
+	bool GetRemoteAddressString(char *buffer);
 
 private:
 

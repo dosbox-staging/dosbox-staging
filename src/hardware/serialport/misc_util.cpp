@@ -115,7 +115,7 @@ NETServerSocket *NETServerSocket::NETServerFactory(SocketTypesE socketType,
 	return nullptr;
 }
 
-// --- ENET UDP NET INTERFACE ------------------------------------------------
+// --- ENet UDP NET INTERFACE ------------------------------------------------
 
 class enet_manager_t {
 public:
@@ -124,12 +124,13 @@ public:
 		if (already_tried_once)
 			return;
 		already_tried_once = true;
-
+		LOG_INFO("ENET: The reliable UDP networking substem version: %d.%d.%d",
+		         ENET_VERSION_MAJOR, ENET_VERSION_MINOR, ENET_VERSION_PATCH);
 		is_initialized = enet_initialize() == 0;
 		if (is_initialized)
-			LOG_INFO("NET: Initialized ENET network subsystem");
+			LOG_INFO("ENET: Initialized successfully");
 		else
-			LOG_WARNING("NET: failed to initialize ENET network subsystem\n");
+			LOG_WARNING("ENET: failed to initialize ENet\n");
 	}
 
 	~enet_manager_t()
@@ -140,7 +141,7 @@ public:
 		assert(already_tried_once);
 		enet_deinitialize();
 		is_initialized = false;
-		LOG_INFO("NET: Shutdown ENET network subsystem");
+		LOG_INFO("ENET: Shutting down the ENet subsystem");
 	}
 
 	bool IsInitialized() const { return is_initialized; }
@@ -170,12 +171,13 @@ ENETServerSocket::ENETServerSocket(uint16_t port)
 	                        0, // assume any amount of incoming bandwidth
 	                        0  // assume any amount of outgoing bandwidth
 	);
-	if (host == nullptr) {
-		LOG_INFO("NET: Unable to create server ENET listening socket");
+	if (host) {
+		LOG_INFO("ENET: Server listening on port %d", port);
+	} else {
+		LOG_WARNING("ENET: Failed to create server on port %d", port);
 		assert(!isopen);
 		return;
 	}
-
 	isopen = true;
 }
 
@@ -186,9 +188,17 @@ ENETServerSocket::~ENETServerSocket()
 		assert(isopen);
 		enet_host_destroy(host);
 		host = nullptr;
-		LOG_INFO("NET: Closed server ENET listening socket");
+		LOG_INFO("ENET: Stopping the server on port %u", address.port);
 	}
 	isopen = false;
+}
+
+// covert an ENet address to a string
+static char *enet_address_to_string(const ENetAddress &address)
+{
+	static char ip_buf[INET_ADDRSTRLEN];
+	enet_address_get_host_ip_new(&address, ip_buf, sizeof(ip_buf));
+	return ip_buf;
 }
 
 NETClientSocket *ENETServerSocket::Accept()
@@ -197,7 +207,10 @@ NETClientSocket *ENETServerSocket::Accept()
 	while (enet_host_service(host, &event, 0) > 0) {
 		switch (event.type) {
 		case ENET_EVENT_TYPE_CONNECT:
-			LOG_INFO("NET: ENET client connect");
+			// Log the connection's IP address and port
+			LOG_INFO("ENET: Incoming connection from client %s:%u",
+			         enet_address_to_string(event.peer->address),
+			         event.peer->address.port);
 			nowClient = true;
 			return new ENETClientSocket(host);
 			break;
@@ -228,17 +241,22 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 	                          0        // assume any amount of outgoing bandwidth
 	);
 	if (client == nullptr) {
-		LOG_INFO("NET: Unable to create client ENET socket");
+		LOG_WARNING("ENET: Unable to create socket to %s:%u",
+		            destination, port);
 		return;
 	}
 
 	enet_address_set_host(&address, destination);
 	address.port = port;
 	peer = enet_host_connect(client, &address, 1, 0);
-	if (peer == nullptr) {
+	if (peer) {
+		LOG_INFO("ENET: Initiating connection to server %s:%u",
+		         destination, port);
+	} else {
 		enet_host_destroy(client);
 		client = nullptr;
-		LOG_INFO("NET: Unable to create client ENET peer");
+		LOG_WARNING("ENET: Unable to connect to server %s:%u",
+		            destination, port);
 		return;
 	}
 
@@ -251,9 +269,11 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 	// Wait up to 5 seconds for the connection attempt to succeed.
 	if (enet_host_service(client, &event, connection_timeout_ms) > 0 &&
 	    event.type == ENET_EVENT_TYPE_CONNECT) {
-		LOG_INFO("NET: ENET connect");
+		LOG_INFO("ENET: Established connection to server %s:%u",
+		         destination, port);
 	} else {
-		LOG_INFO("NET: ENET connected failed");
+		LOG_WARNING("ENET: Failed connecting to server %s:%u",
+		            destination, port);
 		enet_peer_reset(peer);
 		enet_host_destroy(client);
 		client = nullptr;
@@ -271,17 +291,20 @@ ENETClientSocket::ENETClientSocket(ENetHost *host)
 	address = client->address;
 	peer    = &client->peers[0];
 	isopen  = true;
-	LOG_INFO("NET: Opened ENET client from server socket");
+	LOG_INFO("ENET: Established connection to client %s:%u",
+	         enet_address_to_string(peer->address), peer->address.port);
 }
 
 ENETClientSocket::~ENETClientSocket()
 {
 	if (isopen) {
+		assert(peer);
 		enet_peer_reset(peer);
 		enet_host_destroy(client);
+		LOG_INFO("ENET: Closed connection to client %s:%u",
+		         enet_address_to_string(peer->address), peer->address.port);
 		client = nullptr;
 		isopen = false;
-		LOG_INFO("NET: Closed client ENET listening socket");
 	}
 }
 
@@ -306,14 +329,16 @@ bool ENETClientSocket::Putchar(uint8_t val)
 
 	// Is the packet OK?
 	if (packet == nullptr) {
-		LOG_INFO("NET: Unable to create ENET packet");
+		LOG_WARNING("ENET: Failed creating packet");
 		return false;
 	}
 
 	// Did the packet send successfully?
 	assert(peer);
 	if (enet_peer_send(peer, 0, packet) < 0) {
-		LOG_INFO("NET: Unable to send ENET packet");
+		LOG_WARNING("ENET: Failed sending packet to peer %s:%u",
+		            enet_address_to_string(peer->address),
+		            peer->address.port);
 		enet_packet_destroy(packet);
 		return false;
 	}
@@ -335,15 +360,16 @@ bool ENETClientSocket::SendArray(const uint8_t *data, size_t n)
 
 	// Is the packet OK?
 	if (packet == nullptr) {
-		LOG_INFO("NET: ENETClientSocket::SendArray unable to create packet size %u",
-		         packet_bytes);
+		LOG_WARNING("ENET: Failed creating %u-byte packet", packet_bytes);
 		return false;
 	}
 
 	// Did the packet send successfully?
 	assert(peer);
 	if (enet_peer_send(peer, 0, packet) < 0) {
-		LOG_INFO("NET: Unable to send ENET packet");
+		LOG_WARNING("ENET: Failed sending %u-byte packet to peer %s:%u",
+		            packet_bytes, enet_address_to_string(peer->address),
+		            peer->address.port);
 		enet_packet_destroy(packet);
 		return false;
 	}
@@ -393,11 +419,11 @@ bool ENETClientSocket::ReceiveArray(uint8_t *data, size_t &n)
 	return isopen;
 }
 
-bool ENETClientSocket::GetRemoteAddressString(uint8_t *buffer)
+bool ENETClientSocket::GetRemoteAddressString(char *buffer)
 {
 	updateState();
 	assert(buffer);
-	enet_address_get_host_ip(&address, reinterpret_cast<char *>(buffer), 16);
+	enet_address_get_host_ip(&address, buffer, 16);
 	return true;
 }
 
@@ -412,7 +438,10 @@ void ENETClientSocket::updateState()
 #ifndef ENET_BLOCKING_CONNECT
 		case ENET_EVENT_TYPE_CONNECT:
 			connecting = false;
-			LOG_INFO("NET: ENET connect");
+			assert(event.peer);
+			LOG_INFO("ENET: Established connection to server %s:%u",
+			         enet_address_to_string(event.peer->address),
+			         event.peer->address.port);
 			break;
 #endif
 		case ENET_EVENT_TYPE_RECEIVE:
@@ -434,7 +463,11 @@ void ENETClientSocket::updateState()
 	if (connecting) {
 		// Check for timeout.
 		if (GetTicksSince(connectStart) > connection_timeout_ms) {
-			LOG_INFO("NET: ENET connected failed");
+			assert(peer);
+			LOG_WARNING("ENET: Timed out after %.1f seconds waiting for server %s:%u",
+			            connection_timeout_ms / 1000.0,
+			            enet_address_to_string(peer->address),
+			            peer->address.port);
 			enet_peer_reset(peer);
 			enet_host_destroy(client);
 			client = nullptr;
@@ -457,9 +490,9 @@ public:
 
 		is_initialized = SDLNet_Init() != -1;
 		if (is_initialized)
-			LOG_INFO("NET: Initialized SDL network subsystem");
+			LOG_INFO("SDLNET: Initialized SDL network subsystem");
 		else
-			LOG_WARNING("NET: failed to initialize SDL network subsystem: %s\n",
+			LOG_WARNING("SDLNET: failed to initialize SDL network subsystem: %s\n",
 			            SDLNet_GetError());
 	}
 
@@ -470,7 +503,7 @@ public:
 
 		assert(already_tried_once);
 		SDLNet_Quit();
-		LOG_INFO("NET: Shutdown SDL network subsystem");
+		LOG_INFO("SDLNET: Shutdown SDL network subsystem");
 	}
 
 	bool IsInitialized() const { return is_initialized; }
@@ -572,13 +605,13 @@ TCPClientSocket::~TCPClientSocket()
 		if(listensocketset)
 			SDLNet_TCP_DelSocket(listensocketset, mysock);
 		SDLNet_TCP_Close(mysock);
-		LOG_INFO("NET: Closed client TCP listening socket");
+		LOG_INFO("SDLNET: Closed client TCP listening socket");
 	}
 
 	if(listensocketset) SDLNet_FreeSocketSet(listensocketset);
 }
 
-bool TCPClientSocket::GetRemoteAddressString(uint8_t *buffer)
+bool TCPClientSocket::GetRemoteAddressString(char *buffer)
 {
 	IPaddress *remote_ip;
 	uint8_t b1, b2, b3, b4;
@@ -588,8 +621,7 @@ bool TCPClientSocket::GetRemoteAddressString(uint8_t *buffer)
 	b3=(remote_ip->host>>16)&0xff;
 	b2=(remote_ip->host>>8)&0xff;
 	b1=remote_ip->host&0xff;
-	sprintf((char*)buffer,"%" PRIu8 ".%" PRIu8 ".%" PRIu8 ".%" PRIu8,
-	        b1, b2, b3, b4);
+	sprintf(buffer, "%" PRIu8 ".%" PRIu8 ".%" PRIu8 ".%" PRIu8, b1, b2, b3, b4);
 	return true;
 }
 
@@ -671,7 +703,7 @@ TCPServerSocket::~TCPServerSocket()
 {
 	if (mysock) {
 		SDLNet_TCP_Close(mysock);
-		LOG_INFO("NET: closed server TCP listening socket");
+		LOG_INFO("SDLNET: closed server TCP listening socket");
 	}
 }
 

@@ -199,7 +199,7 @@ SocketState CNullModem::readChar(uint8_t &val)
 
 bool CNullModem::ClientConnect(NETClientSocket *newsocket)
 {
-	uint8_t peernamebuf[16];
+	char peernamebuf[INET_ADDRSTRLEN];
 	clientsocket = newsocket;
  
 	if (!clientsocket->isopen) {
@@ -227,7 +227,7 @@ bool CNullModem::ServerListen() {
 	LOG_MSG("SERIAL: Port %" PRIu8 " nullmodem server waiting for connection on "
 	        "%s port %" PRIu16 " ...",
 	        GetPortNumber(),
-	        (socketType == SOCKET_TYPE_ENET ? "ENET" : "TCP"), serverport);
+	        (socketType == SOCKET_TYPE_ENET ? "ENet" : "TCP"), serverport);
 	setEvent(SERIAL_SERVER_POLLING_EVENT, 50);
 	setCD(false);
 	return true;
@@ -238,7 +238,7 @@ bool CNullModem::ServerConnect() {
 	clientsocket=serversocket->Accept();
 	if (!clientsocket) return false;
 
-	uint8_t peeripbuf[16];
+	char peeripbuf[INET_ADDRSTRLEN];
 	clientsocket->GetRemoteAddressString(peeripbuf);
 	LOG_MSG("SERIAL: Port %" PRIu8 " a client (%s) has connected.",
 	        GetPortNumber(), peeripbuf);
