@@ -185,6 +185,7 @@ ENETServerSocket::~ENETServerSocket()
 	if (host && !nowClient) {
 		assert(isopen);
 		enet_host_destroy(host);
+		host = nullptr;
 		LOG_INFO("NET: Closed server ENET listening socket");
 	}
 	isopen = false;
