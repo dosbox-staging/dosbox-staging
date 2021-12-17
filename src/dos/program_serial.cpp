@@ -18,22 +18,25 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "setup.h"
+#include "program_serial.h"
+
+#include <map>
+
 #include "../hardware/serialport/directserial.h"
 #include "../hardware/serialport/serialdummy.h"
 #include "../hardware/serialport/softmodem.h"
 #include "../hardware/serialport/nullmodem.h"
-#include "program_serial.h"
 
-static const char *serialTypes[SERIAL_TYPE_COUNT] = {
-	"disabled",
-	"dummy",
+// Map the serial port type enums to printable names
+static std::map<SERIAL_PORT_TYPE, const std::string> serial_type_names = {
+        {SERIAL_PORT_TYPE::DISABLED, "disabled"},
+        {SERIAL_PORT_TYPE::DUMMY, "dummy"},
 #ifdef C_DIRECTSERIAL
-	"directserial",
+        {SERIAL_PORT_TYPE::DIRECT_SERIAL, "directserial"},
 #endif
 #if C_MODEM
-	"modem",
-	"nullmodem"
+        {SERIAL_PORT_TYPE::MODEM, "modem"},
+        {SERIAL_PORT_TYPE::NULL_MODEM, "nullmodem"},
 #endif
 };
 
@@ -41,11 +44,11 @@ void SERIAL::showPort(int port)
 {
 	if (serialports[port] != nullptr) {
 		WriteOut(MSG_Get("PROGRAM_SERIAL_SHOW_PORT"), port + 1,
-		         serialTypes[serialports[port]->serialType],
+		         serial_type_names[serialports[port]->serialType].c_str(),
 		         serialports[port]->commandLineString.c_str());
 	} else {
 		WriteOut(MSG_Get("PROGRAM_SERIAL_SHOW_PORT"), port + 1,
-		         serialTypes[SERIAL_TYPE_DISABLED], "");
+		         serial_type_names[SERIAL_PORT_TYPE::DISABLED].c_str(), "");
 	}
 }
 
@@ -75,18 +78,18 @@ void SERIAL::Run()
 		// Which mode do they want?
 		int mode = -1;
 		cmd->FindCommand(2, temp_line);
-		for (int x = 0; x < SERIAL_TYPE_COUNT; x++) {
-			if (!strcasecmp(temp_line.c_str(), serialTypes[x])) {
-				mode = x;
+		for (const auto &[type, name] : serial_type_names) {
+			if (temp_line == name) {
+				mode = type;
 				break;
 			}
 		}
 		if (mode < 0) {
 			// No idea what they asked for.
 			WriteOut(MSG_Get("PROGRAM_SERIAL_BAD_MODE"));
-			for (int x = 0; x < SERIAL_TYPE_COUNT; x++) {
+			for (const auto &type_name : serial_type_names) {
 				WriteOut(MSG_Get("PROGRAM_SERIAL_INDENTED_LIST"),
-				         serialTypes[x]);
+				         type_name.second.c_str());
 			}
 			return;
 		}
@@ -103,31 +106,32 @@ void SERIAL::Run()
 		delete serialports[port - 1];
 		// Recreate the port with the new mode.
 		switch (mode) {
-		case SERIAL_TYPE_DISABLED:
+		case SERIAL_PORT_TYPE::DISABLED:
 			serialports[port - 1] = nullptr;
 			break;
-		case SERIAL_TYPE_DUMMY:
+		case SERIAL_PORT_TYPE::DUMMY:
 			serialports[port - 1] = new CSerialDummy(port - 1,
 			                                         commandLine);
 			break;
 #ifdef C_DIRECTSERIAL
-		case SERIAL_TYPE_DIRECT_SERIAL:
+		case SERIAL_PORT_TYPE::DIRECT_SERIAL:
 			serialports[port - 1] = new CDirectSerial(port - 1,
 			                                          commandLine);
 			break;
 #endif
 #if C_MODEM
-		case SERIAL_TYPE_MODEM:
+		case SERIAL_PORT_TYPE::MODEM:
 			serialports[port - 1] = new CSerialModem(port - 1,
 			                                         commandLine);
 			break;
-		case SERIAL_TYPE_NULL_MODEM:
+		case SERIAL_PORT_TYPE::NULL_MODEM:
 			serialports[port - 1] = new CNullModem(port - 1, commandLine);
 			break;
 #endif
 		}
 		if (serialports[port - 1] != nullptr) {
-			serialports[port - 1]->serialType = (SerialTypesE)mode;
+			serialports[port - 1]->serialType =
+			        static_cast<SERIAL_PORT_TYPE>(mode);
 			serialports[port - 1]->commandLineString = commandLineString;
 		}
 		delete commandLine;

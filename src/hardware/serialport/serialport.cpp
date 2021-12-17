@@ -1308,13 +1308,13 @@ public:
 			// detect the type
 			if (type=="dummy") {
 				serialports[i] = new CSerialDummy (i, &cmd);
-				serialports[i]->serialType = SERIAL_TYPE_DUMMY;
+				serialports[i]->serialType = SERIAL_PORT_TYPE::DUMMY;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
 			}
 #ifdef C_DIRECTSERIAL
 			else if (type=="directserial") {
 				serialports[i] = new CDirectSerial (i, &cmd);
-				serialports[i]->serialType = SERIAL_TYPE_DIRECT_SERIAL;
+				serialports[i]->serialType = SERIAL_PORT_TYPE::DIRECT_SERIAL;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
 				if (!serialports[i]->InstallationSuccessful)  {
 					// serial port name was wrong or already in use
@@ -1326,7 +1326,7 @@ public:
 #if C_MODEM
 			else if(type=="modem") {
 				serialports[i] = new CSerialModem (i, &cmd);
-				serialports[i]->serialType = SERIAL_TYPE_MODEM;
+				serialports[i]->serialType = SERIAL_PORT_TYPE::MODEM;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
 				if (!serialports[i]->InstallationSuccessful)  {
 					delete serialports[i];
@@ -1335,7 +1335,7 @@ public:
 			}
 			else if(type=="nullmodem") {
 				serialports[i] = new CNullModem (i, &cmd);
-				serialports[i]->serialType = SERIAL_TYPE_NULL_MODEM;
+				serialports[i]->serialType = SERIAL_PORT_TYPE::NULL_MODEM;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
 				if (!serialports[i]->InstallationSuccessful)  {
 					delete serialports[i];

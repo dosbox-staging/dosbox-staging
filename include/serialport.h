@@ -143,17 +143,13 @@ private:
 	size_t used = 0;
 };
 
-enum SerialTypesE { // Also change src/dos/program_serial.cpp if you change this.
-	SERIAL_TYPE_DISABLED = 0,
-	SERIAL_TYPE_DUMMY,
-#ifdef C_DIRECTSERIAL
-	SERIAL_TYPE_DIRECT_SERIAL,
-#endif
-#if C_MODEM
-	SERIAL_TYPE_MODEM,
-	SERIAL_TYPE_NULL_MODEM,
-#endif
-	SERIAL_TYPE_COUNT
+enum SERIAL_PORT_TYPE { // Also change src/dos/program_serial.cpp if you change
+	                // this.
+	DISABLED = 0,
+	DUMMY,
+	DIRECT_SERIAL,
+	MODEM,
+	NULL_MODEM,
 };
 
 class CSerial {
@@ -294,7 +290,7 @@ public:
 	uint8_t GetPortNumber() const { return port_index + 1; }
 
 	// What type of port is this?
-	SerialTypesE serialType = SERIAL_TYPE_DISABLED;
+	SERIAL_PORT_TYPE serialType = SERIAL_PORT_TYPE::DISABLED;
 
 	// How was it created?
 	std::string commandLineString = "";
