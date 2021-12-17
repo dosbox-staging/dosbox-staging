@@ -27,6 +27,11 @@
 
 #include <cassert>
 
+#include "timer.h"
+
+// Constants
+constexpr int connection_timeout_ms = 5000;
+
 // --- GENERIC NET INTERFACE -------------------------------------------------
 
 NETClientSocket::NETClientSocket()
@@ -230,12 +235,12 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 
 #ifndef ENET_BLOCKING_CONNECT
 	// Start connection timeout clock.
-	connectStart = std::clock();
+	connectStart = GetTicks();
 	connecting   = true;
 #else
 	ENetEvent event;
 	// Wait up to 5 seconds for the connection attempt to succeed.
-	if (enet_host_service(client, &event, 5000) > 0 &&
+	if (enet_host_service(client, &event, connection_timeout_ms) > 0 &&
 	    event.type == ENET_EVENT_TYPE_CONNECT) {
 		LOG_INFO("NET:  ENET connect");
 	} else {
@@ -385,9 +390,9 @@ void ENETClientSocket::updateState()
 
 #ifndef ENET_BLOCKING_CONNECT
 	if (connecting) {
-		// Check for timeout.  Five seconds.
-		if (((std::clock() - connectStart) / (double)CLOCKS_PER_SEC) > 5) {
-			LOG_INFO("NET:  ENET connected failed");
+		// Check for timeout.
+		if (GetTicksSince(connectStart) > connection_timeout_ms) {
+			LOG_INFO("NET: ENET connected failed");
 			enet_peer_reset(peer);
 			enet_host_destroy(client);
 			connecting = false;
