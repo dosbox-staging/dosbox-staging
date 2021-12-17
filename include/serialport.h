@@ -143,13 +143,13 @@ private:
 	size_t used = 0;
 };
 
-enum SERIAL_PORT_TYPE { // Also change src/dos/program_serial.cpp if you change
-	                // this.
+enum SERIAL_PORT_TYPE { // Also change src/dos/program_serial.cpp
 	DISABLED = 0,
 	DUMMY,
 	DIRECT_SERIAL,
 	MODEM,
 	NULL_MODEM,
+	INVALID,
 };
 
 class CSerial {

@@ -38,6 +38,7 @@ static std::map<SERIAL_PORT_TYPE, const std::string> serial_type_names = {
         {SERIAL_PORT_TYPE::MODEM, "modem"},
         {SERIAL_PORT_TYPE::NULL_MODEM, "nullmodem"},
 #endif
+        {SERIAL_PORT_TYPE::INVALID, "invalid"},
 };
 
 void SERIAL::showPort(int port)
@@ -61,7 +62,7 @@ void SERIAL::Run()
 		return;
 	}
 
-	// Select COM mode.
+	// Select COM port type.
 	if (cmd->GetCount() >= 2) {
 		// Which COM did they want to change?
 		int port = -1;
@@ -78,19 +79,21 @@ void SERIAL::Run()
 		const auto port_index = port - 1;
 		assert(port_index >= 0 && port_index < SERIAL_MAX_PORTS);
 
-		// Which mode do they want?
-		int mode = -1;
+		// Which type of device do they want?
+		SERIAL_PORT_TYPE desired_type = SERIAL_PORT_TYPE::INVALID;
 		cmd->FindCommand(2, temp_line);
 		for (const auto &[type, name] : serial_type_names) {
 			if (temp_line == name) {
-				mode = type;
+				desired_type = type;
 				break;
 			}
 		}
-		if (mode < 0) {
+		if (desired_type == SERIAL_PORT_TYPE::INVALID) {
 			// No idea what they asked for.
 			WriteOut(MSG_Get("PROGRAM_SERIAL_BAD_MODE"));
 			for (const auto &type_name : serial_type_names) {
+				if (type_name.first == SERIAL_PORT_TYPE::DISABLED)
+					continue; // Don't show the invalid placeholder.
 				WriteOut(MSG_Get("PROGRAM_SERIAL_INDENTED_LIST"),
 				         type_name.second.c_str());
 			}
@@ -108,7 +111,8 @@ void SERIAL::Run()
 		// Remove existing port.
 		delete serialports[port_index];
 		// Recreate the port with the new mode.
-		switch (mode) {
+		switch (desired_type) {
+		case SERIAL_PORT_TYPE::INVALID:
 		case SERIAL_PORT_TYPE::DISABLED:
 			serialports[port_index] = nullptr;
 			break;
@@ -133,12 +137,11 @@ void SERIAL::Run()
 #endif
 		default:
 			serialports[port_index] = nullptr;
-			LOG_WARNING("SERIAL: Unknown serial port type %d", mode);
+			LOG_WARNING("SERIAL: Unknown serial port type %d", desired_type);
 			break;
 		}
 		if (serialports[port_index] != nullptr) {
-			serialports[port_index]->serialType =
-			        static_cast<SERIAL_PORT_TYPE>(mode);
+			serialports[port_index]->serialType = desired_type;
 			serialports[port_index]->commandLineString = commandLineString;
 		}
 		delete commandLine;
