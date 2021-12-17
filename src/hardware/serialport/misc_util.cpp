@@ -172,6 +172,7 @@ ENETServerSocket::ENETServerSocket(uint16_t port)
 	);
 	if (host == nullptr) {
 		LOG_INFO("NET: Unable to create server ENET listening socket");
+		assert(!isopen);
 		return;
 	}
 
