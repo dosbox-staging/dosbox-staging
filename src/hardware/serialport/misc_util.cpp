@@ -271,7 +271,7 @@ ENETClientSocket::ENETClientSocket(ENetHost *host)
 	address = client->address;
 	peer    = &client->peers[0];
 	isopen  = true;
-	LOG_INFO("NET: ENETClientSocket created from server socket");
+	LOG_INFO("NET: Opened ENET client from server socket");
 }
 
 ENETClientSocket::~ENETClientSocket()
