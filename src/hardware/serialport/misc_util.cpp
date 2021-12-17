@@ -300,13 +300,25 @@ SocketState ENETClientSocket::GetcharNonBlock(uint8_t &val)
 
 bool ENETClientSocket::Putchar(uint8_t val)
 {
-	ENetPacket *packet;
-
-	updateState();
-	packet = enet_packet_create(&val, 1, ENET_PACKET_FLAG_RELIABLE);
-	enet_peer_send(peer, 0, packet);
 	updateState();
 
+	const auto packet = enet_packet_create(&val, 1, ENET_PACKET_FLAG_RELIABLE);
+
+	// Is the packet OK?
+	if (packet == nullptr) {
+		LOG_INFO("NET: Unable to create ENET packet");
+		return false;
+	}
+
+	// Did the packet send successfully?
+	assert(peer);
+	if (enet_peer_send(peer, 0, packet) < 0) {
+		LOG_INFO("NET: Unable to send ENET packet");
+		enet_packet_destroy(packet);
+		return false;
+	}
+
+	updateState();
 	return isopen;
 }
 
