@@ -410,6 +410,7 @@ void ENETClientSocket::updateState()
 			break;
 #endif
 		case ENET_EVENT_TYPE_RECEIVE:
+			assert(event.packet);
 			for (size_t x = 0; x < event.packet->dataLength; x++) {
 				receiveBuffer.push(event.packet->data[x]);
 			}
