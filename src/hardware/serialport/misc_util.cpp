@@ -46,9 +46,9 @@ NETClientSocket *NETClientSocket::NETClientFactory(SocketTypesE socketType,
 
 	case SOCKET_TYPE_ENET: return new ENETClientSocket(destination, port);
 
-	default: return NULL;
+	default: return nullptr;
 	}
-	return NULL;
+	return nullptr;
 }
 
 void NETClientSocket::FlushBuffer()
@@ -101,9 +101,9 @@ NETServerSocket *NETServerSocket::NETServerFactory(SocketTypesE socketType,
 
 	case SOCKET_TYPE_ENET: return new ENETServerSocket(port);
 
-	default: return NULL;
+	default: return nullptr;
 	}
-	return NULL;
+	return nullptr;
 }
 
 // --- ENET UDP NET INTERFACE ------------------------------------------------
@@ -160,7 +160,7 @@ ENETServerSocket::ENETServerSocket(uint16_t port)
 	                        0, // assume any amount of incoming bandwidth
 	                        0  // assume any amount of outgoing bandwidth
 	);
-	if (host == NULL) {
+	if (host == nullptr) {
 		LOG_INFO("Unable to create server ENET listening socket");
 		return;
 	}
@@ -200,7 +200,7 @@ NETClientSocket *ENETServerSocket::Accept()
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
@@ -208,13 +208,13 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 	if (!NetWrapper_InitializeENET())
 		return;
 
-	client = enet_host_create(NULL, // create a client host
-	                          1, // only allow 1 outgoing connection
-	                          1, // allow 1 channel to be used, 0
-	                          0, // assume any amount of incoming bandwidth
-	                          0  // assume any amount of outgoing bandwidth
+	client = enet_host_create(nullptr, // create a client host
+	                          1,       // only allow 1 outgoing connection
+	                          1,       // allow 1 channel to be used, 0
+	                          0,       // assume any amount of incoming bandwidth
+	                          0        // assume any amount of outgoing bandwidth
 	);
-	if (client == NULL) {
+	if (client == nullptr) {
 		LOG_INFO("Unable to create client ENET socket");
 		return;
 	}
@@ -222,7 +222,7 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 	enet_address_set_host(&address, destination);
 	address.port = port;
 	peer = enet_host_connect(client, &address, 1, 0);
-	if (peer == NULL) {
+	if (peer == nullptr) {
 		enet_host_destroy(client);
 		LOG_INFO("Unable to create client ENET peer");
 		return;
@@ -295,7 +295,7 @@ bool ENETClientSocket::Putchar(uint8_t val)
 
 bool ENETClientSocket::SendArray(uint8_t *data, size_t n)
 {
-	ENetPacket *packet = NULL;
+	ENetPacket *packet = nullptr;
 
 	updateState();
 	packet = enet_packet_create(data, n, ENET_PACKET_FLAG_RELIABLE);
@@ -609,7 +609,7 @@ TCPServerSocket::TCPServerSocket(const uint16_t port)
 
 	if (port) {
 		IPaddress listen_ip;
-		SDLNet_ResolveHost(&listen_ip, NULL, port);
+		SDLNet_ResolveHost(&listen_ip, nullptr, port);
 		mysock = SDLNet_TCP_Open(&listen_ip);
 		if (!mysock)
 			return;
