@@ -905,8 +905,9 @@ void DOSBOX_Init() {
 	        "for modem: listenport sock (all optional).\n"
 	        "for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
 	        "               transparent, port, inhsocket, sock (all optional).\n"
-	        "SOCK parameters are 0 for TCP and 1 for ENET reliable UDP.\n"
-	        "Example: serial1=modem listenport:5000");
+	        "SOCK parameter specifies the protocol to be used by both sides\n"
+	        "     of the conection. 0 for TCP and 1 for ENet reliable UDP.\n"
+	        "Example: serial1=modem listenport:5000 sock:1");
 
 	Pmulti_remain = secprop->Add_multiremain("serial2", when_idle, " ");
 	Pstring = Pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
