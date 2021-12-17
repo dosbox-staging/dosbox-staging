@@ -266,6 +266,7 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 
 ENETClientSocket::ENETClientSocket(ENetHost *host)
 {
+	assert(host);
 	client  = host;
 	address = client->address;
 	peer    = &client->peers[0];
