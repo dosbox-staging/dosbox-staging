@@ -183,6 +183,7 @@ ENETServerSocket::~ENETServerSocket()
 {
 	// We don't destroy 'host' after passing it to a client, it needs to live.
 	if (host && !nowClient) {
+		assert(isopen);
 		enet_host_destroy(host);
 		LOG_INFO("NET: Closed server ENET listening socket");
 	}
