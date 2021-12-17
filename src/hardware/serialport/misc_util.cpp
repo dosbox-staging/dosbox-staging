@@ -234,6 +234,7 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 	peer = enet_host_connect(client, &address, 1, 0);
 	if (peer == nullptr) {
 		enet_host_destroy(client);
+		client = nullptr;
 		LOG_INFO("NET: Unable to create client ENET peer");
 		return;
 	}
@@ -252,6 +253,7 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 		LOG_INFO("NET: ENET connected failed");
 		enet_peer_reset(peer);
 		enet_host_destroy(client);
+		client = nullptr;
 		return;
 	}
 #endif
@@ -273,6 +275,7 @@ ENETClientSocket::~ENETClientSocket()
 	if (isopen) {
 		enet_peer_reset(peer);
 		enet_host_destroy(client);
+		client = nullptr;
 		isopen = false;
 		LOG_INFO("NET: Closed client ENET listening socket");
 	}
@@ -400,6 +403,7 @@ void ENETClientSocket::updateState()
 			LOG_INFO("NET: ENET connected failed");
 			enet_peer_reset(peer);
 			enet_host_destroy(client);
+			client = nullptr;
 			connecting = false;
 			isopen     = false;
 		}
