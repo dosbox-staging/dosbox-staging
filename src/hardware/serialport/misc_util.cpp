@@ -326,11 +326,17 @@ bool ENETClientSocket::SendArray(const uint8_t *data, size_t n)
 {
 	updateState();
 
-	const auto packet = enet_packet_create(data, n, ENET_PACKET_FLAG_RELIABLE);
+	// The UDP protocol sets a maximum packt size of 65535 bytes:
+	// an 8-byte header and 65,527-byte payload.
+	const auto packet_bytes = check_cast<uint16_t>(n);
+
+	const auto packet = enet_packet_create(data, packet_bytes,
+	                                       ENET_PACKET_FLAG_RELIABLE);
 
 	// Is the packet OK?
 	if (packet == nullptr) {
-		LOG_INFO("NET: ENETClientSocket::SendArray unable to create packet size %zu", n);
+		LOG_INFO("NET: ENETClientSocket::SendArray unable to create packet size %u",
+		         packet_bytes);
 		return false;
 	}
 
