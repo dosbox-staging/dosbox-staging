@@ -335,6 +335,8 @@ void MOUNT::Run(void) {
 			return;
 		}
 
+		// Ensure the host path ends with a slash
+		host_path /= "/";
 		Bit8u bit8size = (Bit8u)sizes[1];
 		if (type == "cdrom") {
 			// Following options were relevant only for physical CD-ROM support:
