@@ -155,7 +155,7 @@ private:
 	void updateState();
 
 #ifndef ENET_BLOCKING_CONNECT
-	std::clock_t         connectStart  = 0;
+	int64_t              connectStart  = 0;
 	bool                 connecting    = false;
 #endif
 	ENetHost            *client        = nullptr;
