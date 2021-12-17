@@ -139,6 +139,7 @@ public:
 
 		assert(already_tried_once);
 		enet_deinitialize();
+		is_initialized = false;
 		LOG_INFO("NET: Shutdown ENET network subsystem");
 	}
 
