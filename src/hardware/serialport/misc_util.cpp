@@ -397,8 +397,10 @@ bool ENETClientSocket::GetRemoteAddressString(uint8_t *buffer)
 
 void ENETClientSocket::updateState()
 {
-	ENetEvent event;
+	if (!isopen || !client)
+		return;
 
+	ENetEvent event;
 	while (enet_host_service(client, &event, 0) > 0) {
 		switch (event.type) {
 #ifndef ENET_BLOCKING_CONNECT
