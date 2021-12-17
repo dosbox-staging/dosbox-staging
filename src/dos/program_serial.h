@@ -21,6 +21,8 @@
 #ifndef DOSBOX_PROGRAM_SERIAL_H
 #define DOSBOX_PROGRAM_SERIAL_H
 
+#include "dosbox.h"
+
 #include "programs.h"
 
 class SERIAL final : public Program {
