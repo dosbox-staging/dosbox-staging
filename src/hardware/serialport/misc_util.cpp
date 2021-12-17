@@ -390,7 +390,8 @@ bool ENETClientSocket::ReceiveArray(uint8_t *data, size_t &n)
 bool ENETClientSocket::GetRemoteAddressString(uint8_t *buffer)
 {
 	updateState();
-	enet_address_get_host_ip(&address, (char *)buffer, 16);
+	assert(buffer);
+	enet_address_get_host_ip(&address, reinterpret_cast<char *>(buffer), 16);
 	return true;
 }
 
