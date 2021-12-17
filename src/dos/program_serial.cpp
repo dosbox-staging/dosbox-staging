@@ -75,6 +75,9 @@ void SERIAL::Run()
 			WriteOut(MSG_Get("PROGRAM_SERIAL_BAD_PORT"), SERIAL_MAX_PORTS);
 			return;
 		}
+		const auto port_index = port - 1;
+		assert(port_index >= 0 && port_index < SERIAL_MAX_PORTS);
+
 		// Which mode do they want?
 		int mode = -1;
 		cmd->FindCommand(2, temp_line);
@@ -103,39 +106,39 @@ void SERIAL::Run()
 		CommandLine *commandLine = new CommandLine("SERIAL.COM",
 		                                           commandLineString.c_str());
 		// Remove existing port.
-		delete serialports[port - 1];
+		delete serialports[port_index];
 		// Recreate the port with the new mode.
 		switch (mode) {
 		case SERIAL_PORT_TYPE::DISABLED:
-			serialports[port - 1] = nullptr;
+			serialports[port_index] = nullptr;
 			break;
 		case SERIAL_PORT_TYPE::DUMMY:
-			serialports[port - 1] = new CSerialDummy(port - 1,
+			serialports[port_index] = new CSerialDummy(port_index,
 			                                         commandLine);
 			break;
 #ifdef C_DIRECTSERIAL
 		case SERIAL_PORT_TYPE::DIRECT_SERIAL:
-			serialports[port - 1] = new CDirectSerial(port - 1,
+			serialports[port_index] = new CDirectSerial(port_index,
 			                                          commandLine);
 			break;
 #endif
 #if C_MODEM
 		case SERIAL_PORT_TYPE::MODEM:
-			serialports[port - 1] = new CSerialModem(port - 1,
+			serialports[port_index] = new CSerialModem(port_index,
 			                                         commandLine);
 			break;
 		case SERIAL_PORT_TYPE::NULL_MODEM:
-			serialports[port - 1] = new CNullModem(port - 1, commandLine);
+			serialports[port_index] = new CNullModem(port_index, commandLine);
 			break;
 #endif
 		}
-		if (serialports[port - 1] != nullptr) {
-			serialports[port - 1]->serialType =
+		if (serialports[port_index] != nullptr) {
+			serialports[port_index]->serialType =
 			        static_cast<SERIAL_PORT_TYPE>(mode);
-			serialports[port - 1]->commandLineString = commandLineString;
+			serialports[port_index]->commandLineString = commandLineString;
 		}
 		delete commandLine;
-		showPort(port - 1);
+		showPort(port_index);
 		return;
 	}
 
