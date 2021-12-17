@@ -289,7 +289,7 @@ SocketState ENETClientSocket::GetcharNonBlock(uint8_t &val)
 {
 	updateState();
 
-	if (!receiveBuffer.empty()) {
+	if (receiveBuffer.size()) {
 		val = receiveBuffer.front();
 		receiveBuffer.pop();
 		return SocketState::Good;
