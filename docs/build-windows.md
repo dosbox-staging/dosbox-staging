@@ -33,15 +33,26 @@ you build a binary optimized for gaming.
 ## Build using MSYS2
 
 1. Install MSYS2: <https://www.msys2.org/>
-2. Install dependencies:
+2. Update packages: <https://www.msys2.org/wiki/MSYS2-installation/>
+3. Install dependencies:
 
     ``` shell
-    pacman -S meson mingw-w64-x86_64-ccache mingw-w64-x86_64-fluidsynth \
-              mingw-w64-x86_64-gcc mingw-w64-x86_64-libpng \
-              mingw-w64-x86_64-opusfile mingw-w64-x86_64-pkg-config \
-              mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_net \
-              mingw-w64-x86_64-zlib mingw-w64-x86_64-libslirp
+    pacman -S git \
+      mingw-w64-x86_64-meson \
+      mingw-w64-x86_64-toolchain \
+      mingw-w64-x86_64-ccache \
+      mingw-w64-x86_64-pkgconf \
+      mingw-w64-x86_64-ntldd \
+      mingw-w64-x86_64-ncurses \
+      mingw-w64-x86_64-glib2 \
+      mingw-w64-x86_64-libpng \
+      mingw-w64-x86_64-opusfile \
+      mingw-w64-x86_64-SDL2 \
+      mingw-w64-x86_64-SDL2_net \
+      mingw-w64-x86_64-zlib
     ```
+    The above dependencies install the MinGW-w64 64 bit dependencies. Replace `x86_64` with `i686` 
+    for MinGW-w64 32 bit dependencies. Prefix `clang-` to `x86_64` for clang 64 bit dependencies.
 
 3. Clone and enter the repository's directory:
 
@@ -49,6 +60,28 @@ you build a binary optimized for gaming.
     git clone https://github.com/dosbox-staging/dosbox-staging.git
     cd dosbox-staging
     ```
+4. If you haven't already done so, switch to `MSYS2 MinGW 64-bit`, `MSYS2 MinGW 64-bit` shells 
+   (available in Start menu), or for Clang, you can launch from the command line with 
+   `C:\msys64\msys2_shell.cmd -clang64`. Your shell should show `MINGW64 ~`, `MINGW32 ~` or
+   `CLANG64 ~` before proceeding to the next step.
 
-4. Follow instructions in [BUILD.md](/BUILD.md). Disable the dependencies
-   that are problematic on your system.
+5. Setup the build:
+   
+   ``` shell
+   meson setup build/release -Dbuildtype=release -Db_asneeded=true \
+     --force-fallback-for=fluidsynth,mt32emu,slirp \
+     -Dtry_static_libs=fluidsynth,mt32emu,opusfile,png,slirp \
+     -Dfluidsynth:try-static-deps=true
+   ```
+
+6. Compile dosbox-staging:
+
+   ``` shell
+   meson compile -C build/release
+   ```
+   
+7. Copy binary and required DLL files to destination directory:
+
+   ``` shell
+   ./scripts/create-package.sh -p msys2 build/release ../dosbox-staging-pkg
+   ```
