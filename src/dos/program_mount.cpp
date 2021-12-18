@@ -23,16 +23,12 @@
 
 #include "dosbox.h"
 
-#include "std_filesystem.h"
-#include <system_error>
-
 #include "bios_disk.h"
 #include "control.h"
 #include "drives.h"
 #include "fs_utils.h"
 #include "shell.h"
 #include "string_utils.h"
-#include "support.h"
 #include "../ints/int10.h"
 
 void MOUNT::Move_Z(char new_z)
@@ -140,7 +136,8 @@ void MOUNT::Run(void) {
 		WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
 		return;
 	}
-	const bool path_relative_to_last_config = cmd->FindExist("-pr", true);
+	bool path_relative_to_last_config = false;
+	if (cmd->FindExist("-pr",true)) path_relative_to_last_config = true;
 
 	/* Check for unmounting */
 	if (cmd->FindString("-u",umount,false)) {
@@ -240,104 +237,62 @@ void MOUNT::Run(void) {
 			return;
 		}
 
-		if (!cmd->FindCommand(2, temp_line) || temp_line.empty()) {
+		if (!cmd->FindCommand(2,temp_line)) {
 			goto showusage;
 		}
-
-		// Error-code to be used in throw-free std::filesystem calls
-		std::error_code ec;
-
-// Extra handling for MinGW GCC build handles the following:
-//        - mount c ./   -> should behave like mount c .
-//        - mount c /    -> should behave like mount c c:/
-//        - mount c c:   -> should behave like mount c c:/
-//
-// Note: MSVC and Clang do not need this extra babysitting.
-//       Remove this block when MinGW's GCC std::filesystem is fixed.
-//
-#if defined(WIN32) && defined(__GNUC__) && !defined(__clang__)
-		const auto saved_line = temp_line;
-
-		// GCC on Windows has problems with traling slashes, so strip them
-		const bool has_drive_spec = (temp_line.size() > 1 && temp_line[1] == ':');
-		const size_t strip_slashes_up_to = has_drive_spec ? 3 : 1;
-		while (temp_line.size() > strip_slashes_up_to &&
-		       (temp_line.back() == '/' || temp_line.back() == '\\'))
-			temp_line.pop_back();
-
-		// GCC on Windows doesn't upgrade drive-specs (d:) to absolute (d:\)
-		if (temp_line.size() == 2 && temp_line[1] == ':')
-			temp_line += '\\';
-
-		// GCC on Windows doesn't map absolute paths (/) to the current drive
-		const bool is_absolute = (temp_line.size() &&
-		                          (temp_line.front() == '/' ||
-		                           temp_line.front() == '\\'));
-
-		if (is_absolute) {
-			// Try to prepend the current-working drive
-			auto cp = std_fs::current_path(ec);
-			if (cp.has_root_name()) {
-				temp_line = cp.root_name().string() + temp_line;
-			} else {
-				WriteOut(MSG_Get("PROGRAM_MOUNT_NO_DRIVE_PREFIX"),
-				         saved_line.c_str(), saved_line.c_str());
-				return;
+		if (!temp_line.size()) {
+			goto showusage;
+		}
+		if (path_relative_to_last_config && control->configfiles.size() && !Cross::IsPathAbsolute(temp_line)) {
+			std::string lastconfigdir(control->configfiles[control->configfiles.size() - 1]);
+			std::string::size_type pos = lastconfigdir.rfind(CROSS_FILESPLIT);
+			if (pos == std::string::npos) {
+				pos = 0; //No directory then erase string
+			}
+			lastconfigdir.erase(pos);
+			if (lastconfigdir.length()) {
+				temp_line = lastconfigdir + CROSS_FILESPLIT + temp_line;
 			}
 		}
 
-		// if we made it here, the path is relative or has a drive
-		// prefix, which is sufficient for GCC to handle properly
-		assert(temp_line.size());
+#if defined(WIN32)
+		/* Removing trailing backslash if not root dir so stat
+			* will succeed */
+		if (temp_line.size() > 3 && temp_line.back() == '\\')
+			temp_line.pop_back();
 #endif
 
-		// Construct a std::filesystem path from the string
-		std_fs::path host_path = temp_line;
-
-		// Check if the path is relative to the last config file
-		if (path_relative_to_last_config && control->configfiles.size()) {
-			std_fs::path config_path = control->configfiles.back();
-			config_path = config_path.parent_path();
-			host_path = std::string("./") + host_path.string(); // make relative
-			host_path = std_fs::canonical(config_path / host_path, ec);
-			LOG_INFO("MOUNT: Will try mounting '%s' relative to last config path '%s'",
-			         host_path.string().c_str(), config_path.string().c_str());
-		}
-
-		// If the path doesn't exist, try it in native-form
-		if (!std_fs::is_directory(host_path, ec)) {
-			const std_fs::path native_path = to_native_path(host_path.string());
-			if (std_fs::is_directory(native_path, ec)) {
-				LOG_INFO("MOUNT: Will try mounting host path '%s' in native form '%s'",
-				         host_path.string().c_str(), native_path.string().c_str());
-				host_path = native_path;
+		const std::string real_path = to_native_path(temp_line);
+		if (real_path.empty()) {
+			LOG_MSG("MOUNT: Path '%s' not found", temp_line.c_str());
+		} else {
+			std::string home_resolve = temp_line;
+			Cross::ResolveHomedir(home_resolve);
+			if (home_resolve == real_path) {
+				LOG_MSG("MOUNT: Path '%s' found",
+						temp_line.c_str());
 			} else {
-				// If the native_path doesn't exist, try
-				// expanding the home directory
-				std::string home_resolve = temp_line;
-				Cross::ResolveHomedir(home_resolve);
-				std_fs::path home_path = home_resolve;
-				if (std_fs::is_directory(home_path, ec)) {
-					LOG_INFO("MOUNT: Will try mounting host path '%s' a home directory '%s'",
-					         host_path.string().c_str(), home_path.string().c_str());
-					host_path = home_path;
-				}
+				LOG_MSG("MOUNT: Path '%s' found, while looking for '%s'",
+						real_path.c_str(),
+						temp_line.c_str());
 			}
+			temp_line = real_path;
 		}
 
-		if (!std_fs::exists(host_path, ec)) {
+		struct stat test;
+		if (stat(temp_line.c_str(),&test)) {
 			WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_1"),temp_line.c_str());
 			return;
 		}
-
-		if (!std_fs::is_directory(host_path, ec)) {
-			WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"), temp_line.c_str());
+		/* Not a switch so a normal directory/file */
+		if (!S_ISDIR(test.st_mode)) {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
 			return;
 		}
 
-		// Ensure the host path ends with a slash
-		host_path /= "/";
+		if (temp_line[temp_line.size() - 1] != CROSS_FILESPLIT) temp_line += CROSS_FILESPLIT;
 		Bit8u bit8size = (Bit8u)sizes[1];
+
 		if (type == "cdrom") {
 			// Following options were relevant only for physical CD-ROM support:
 			for (auto opt : {"-usecd", "-noioctl", "-ioctl", "-ioctl_dx", "-ioctl_mci", "-ioctl_dio"}) {
@@ -346,8 +301,7 @@ void MOUNT::Run(void) {
 			}
 
 			int error = 0;
-			newdrive = new cdromDrive(drive, host_path.string().c_str(), sizes[0], bit8size,
-			                          sizes[2], 0, mediaid, error);
+			newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
 			// Check Mscdex, if it worked out...
 			switch (error) {
 				case 0  :	WriteOut(MSG_Get("MSCDEX_SUCCESS"));				break;
@@ -363,11 +317,14 @@ void MOUNT::Run(void) {
 				return;
 			}
 		} else {
-			std_fs::path root_path = {};
-			if (is_path_a_root_path(host_path, root_path))
-				WriteOut(MSG_Get("PROGRAM_MOUNT_ROOT_PATH_WARNING"), host_path.string().c_str(),
-				         root_path.string().c_str());
-
+			/* Give a warning when mount c:\ or the / */
+#if defined (WIN32)
+			if ( (temp_line == "c:\\") || (temp_line == "C:\\") ||
+				(temp_line == "c:/") || (temp_line == "C:/")    )
+				WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_WIN"));
+#else
+			if (temp_line == "/") WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
+#endif
 			if (type == "overlay") {
 				localDrive *ldp = dynamic_cast<localDrive *>(
 						Drives[drive_index(drive)]);
@@ -379,9 +336,8 @@ void MOUNT::Run(void) {
 				}
 				std::string base = ldp->GetBasedir();
 				Bit8u o_error = 0;
-				newdrive = new Overlay_Drive(base.c_str(), host_path.string().c_str(), sizes[0],
-				                             bit8size, sizes[2], sizes[3], mediaid, o_error);
-				// Erase old drive on success
+				newdrive = new Overlay_Drive(base.c_str(),temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid,o_error);
+				//Erase old drive on success
 				if (o_error) {
 					if (o_error == 1) WriteOut("No mixing of relative and absolute paths. Overlay failed.");
 					else if (o_error == 2) WriteOut("overlay directory can not be the same as underlying file system.");
@@ -398,8 +354,7 @@ void MOUNT::Run(void) {
 				delete Drives[drive_index(drive)];
 				Drives[drive_index(drive)] = nullptr;
 			} else {
-				newdrive = new localDrive(host_path.string().c_str(), sizes[0], bit8size,
-				                          sizes[2], sizes[3], mediaid);
+				newdrive = new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
 			}
 		}
 	} else {
