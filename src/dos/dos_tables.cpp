@@ -157,6 +157,9 @@ void DOS_SetupTables(void) {
 		mem_writew(Real2Phys(dos.tables.mediaid)+i*9,0);
 	}
 
+	/* Create Device command packet area */
+	dos.dcp = DOS_GetMemory(3);
+
 	/* Create a fake disk buffer head */
 	seg=DOS_GetMemory(6);
 	for (Bitu ct=0; ct<0x20; ct++) real_writeb(seg,ct,0);

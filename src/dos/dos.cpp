@@ -1034,8 +1034,23 @@ static Bitu DOS_21Handler(void) {
 			LOG(LOG_DOSMISC,LOG_ERROR)("Get SDA, Let's hope for the best!");
 		}
 		break;
-	case 0x5f:					/* Network redirection */
-		reg_ax=0x0001;		//Failing it
+	case 0x5e:             /* Network and printer functions */
+		if (!reg_al) { // Get machine name
+			int result = gethostname(name1, DOSNAMEBUF);
+			if (!result) {
+				strcat(name1, "               ");
+				name1[15] = 0;
+				MEM_BlockWrite(SegPhys(ds) + reg_dx, name1, 16);
+				reg_cx = 0x1ff;
+				CALLBACK_SCF(false);
+				break;
+			}
+		}
+		reg_al = 1;
+		CALLBACK_SCF(true);
+		break;
+	case 0x5f:               /* Network redirection */
+		reg_ax = 0x0001; // Failing it
 		CALLBACK_SCF(true);
 		break; 
 	case 0x60:					/* Canonicalize filename or path */
@@ -1211,7 +1226,6 @@ static Bitu DOS_21Handler(void) {
 	case 0x6b:		            /* NULL Function */
 	case 0x61:		            /* UNUSED */
 	case 0xEF:                  /* Used in Ancient Art Of War CGA */
-	case 0x5e:					/* More Network Functions */
 	default:
 		if (reg_ah < 0x6d) LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Unhandled call %02X al=%02X. Set al to default of 0",reg_ah,reg_al); //Less errors. above 0x6c the functions are simply always skipped, only al is zeroed, all other registers untouched
 		reg_al=0x00; /* default value */

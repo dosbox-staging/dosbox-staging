@@ -55,7 +55,7 @@ bool DOS_IOCTL(void) {
 	switch(reg_al) {
 	case 0x00:		/* Get Device Information */
 		if (Files[handle]->GetInformation() & 0x8000) {	//Check for device
-			reg_dx=Files[handle]->GetInformation();
+			reg_dx = Files[handle]->GetInformation() & ~EXT_DEVICE_BIT;
 		} else {
 			Bit8u hdrive=Files[handle]->GetDrive();
 			if (hdrive==0xff) {
@@ -73,7 +73,7 @@ bool DOS_IOCTL(void) {
 			return false;
 		} else {
 			if (Files[handle]->GetInformation() & 0x8000) {	//Check for device
-				reg_al=(Bit8u)(Files[handle]->GetInformation() & 0xff);
+				reg_al = ((DOS_Device*)(Files[handle]))->GetStatus(true);
 			} else {
 				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 				return false;
@@ -122,8 +122,12 @@ bool DOS_IOCTL(void) {
 		}
 		return true;
 	case 0x07:		/* Get Output Status */
-		LOG(LOG_IOCTL,LOG_NORMAL)("07:Fakes output status is ready for handle %u",handle);
-		reg_al=0xff;
+		if (Files[handle]->GetInformation() & EXT_DEVICE_BIT) {
+			reg_al = ((DOS_Device*)(Files[handle]))->GetStatus(false);
+			return true;
+		}
+		LOG(LOG_IOCTL, LOG_NORMAL)("07:Fakes output status is ready for handle %u", handle);
+		reg_al = 0xff;
 		return true;
 	case 0x08:		/* Check if block device removable */
 		/* cdrom drives and drive a&b are removable */

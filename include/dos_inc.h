@@ -30,6 +30,8 @@
 #include "dos_system.h"
 #include "mem.h"
 
+#define EXT_DEVICE_BIT 0x0200
+
 #ifdef _MSC_VER
 #pragma pack (1)
 #endif
@@ -742,6 +744,7 @@ struct DOS_Block {
 		Bit16u dpb; //Fake Disk parameter system using only the first entry so the drive letter matches
 	} tables;
 	Bit16u loaded_codepage;
+	uint16_t dcp;
 };
 
 extern DOS_Block dos;
