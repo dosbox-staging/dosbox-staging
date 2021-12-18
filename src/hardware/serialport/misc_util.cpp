@@ -165,6 +165,13 @@ ENETServerSocket::ENETServerSocket(uint16_t port)
 	address.host = ENET_HOST_ANY;
 	address.port = port;
 
+	if (host) {
+		LOG_MSG("ENET: Resetting server socket");
+		enet_host_destroy(host);
+		host = nullptr;
+	}
+
+	assert(!host);
 	host = enet_host_create(&address, // create a host
 	                        1, // only allow 1 client to connect
 	                        1, // allow 1 channel to be used, 0
@@ -234,6 +241,12 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 	if (!NetWrapper_InitializeENET())
 		return;
 
+	if (client) {
+		LOG_MSG("ENET: Resetting connection");
+		enet_host_destroy(client);
+		client = nullptr;
+	}
+	assert(!client);
 	client = enet_host_create(nullptr, // create a client host
 	                          1,       // only allow 1 outgoing connection
 	                          1,       // allow 1 channel to be used, 0
