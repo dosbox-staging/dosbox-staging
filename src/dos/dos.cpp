@@ -32,6 +32,10 @@
 #include "string_utils.h"
 #include "support.h"
 
+#if defined(WIN32)
+#include <winsock2.h> // for gethostname
+#endif
+
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
 
