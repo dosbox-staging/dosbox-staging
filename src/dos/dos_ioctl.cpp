@@ -73,7 +73,7 @@ bool DOS_IOCTL(void) {
 			return false;
 		} else {
 			if (Files[handle]->GetInformation() & 0x8000) {	//Check for device
-				reg_al = ((DOS_Device*)(Files[handle]))->GetStatus(true);
+				reg_al = reinterpret_cast<DOS_Device *>(Files[handle])->GetStatus(true);
 			} else {
 				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 				return false;
@@ -123,7 +123,7 @@ bool DOS_IOCTL(void) {
 		return true;
 	case 0x07:		/* Get Output Status */
 		if (Files[handle]->GetInformation() & EXT_DEVICE_BIT) {
-			reg_al = ((DOS_Device*)(Files[handle]))->GetStatus(false);
+			reg_al = reinterpret_cast<DOS_Device *>(Files[handle])->GetStatus(false);
 			return true;
 		}
 		LOG(LOG_IOCTL, LOG_NORMAL)("07:Fakes output status is ready for handle %u", handle);
