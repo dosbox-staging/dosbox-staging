@@ -51,8 +51,9 @@ you build a binary optimized for gaming.
       mingw-w64-x86_64-SDL2_net \
       mingw-w64-x86_64-zlib
     ```
-    The above dependencies install the MinGW-w64 64 bit dependencies. Replace `x86_64` with `i686` 
-    for MinGW-w64 32 bit dependencies. Prefix `clang-` to `x86_64` for clang 64 bit dependencies.
+    The above dependencies install the MinGW-w64 64 bit dependencies. 
+    Replace `x86_64` with `i686` for MinGW-w64 32 bit dependencies. 
+    Prefix `clang-` to `x86_64` for clang 64 bit dependencies.
 
 3. Clone and enter the repository's directory:
 
@@ -60,10 +61,12 @@ you build a binary optimized for gaming.
     git clone https://github.com/dosbox-staging/dosbox-staging.git
     cd dosbox-staging
     ```
-4. If you haven't already done so, switch to `MSYS2 MinGW 64-bit`, `MSYS2 MinGW 64-bit` shells 
-   (available in Start menu), or for Clang, you can launch from the command line with 
-   `C:\msys64\msys2_shell.cmd -clang64`. Your shell should show `MINGW64 ~`, `MINGW32 ~` or
-   `CLANG64 ~` before proceeding to the next step.
+4. If you haven't already done so, switch to `MSYS2 MinGW 64-bit`, 
+   `MSYS2 MinGW 64-bit` shells (available in Start menu), or for 
+   Clang, you can launch from the command line with 
+   `C:\msys64\msys2_shell.cmd -clang64`. Your shell should show 
+   `MINGW64 ~`, `MINGW32 ~` or `CLANG64 ~` before proceeding to the 
+   next step.
 
 5. Setup the build:
    
