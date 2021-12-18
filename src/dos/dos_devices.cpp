@@ -60,7 +60,7 @@ public:
 	bool CheckSameDevice(uint16_t seg, uint16_t s_off, uint16_t i_off);
 
 private:
-	struct ExtDeviceData ext;
+	struct ExtDeviceData ext = {};
 
 	uint16_t CallDeviceFunction(uint8_t command, uint8_t length, PhysPt bufptr, uint16_t size);
 };
