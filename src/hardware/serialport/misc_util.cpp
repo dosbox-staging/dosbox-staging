@@ -124,7 +124,7 @@ public:
 		if (already_tried_once)
 			return;
 		already_tried_once = true;
-		LOG_INFO("ENET: The reliable UDP networking substem version: %d.%d.%d",
+		LOG_INFO("ENET: The reliable UDP networking subsystem version: %d.%d.%d",
 		         ENET_VERSION_MAJOR, ENET_VERSION_MINOR, ENET_VERSION_PATCH);
 		is_initialized = enet_initialize() == 0;
 		if (is_initialized)
