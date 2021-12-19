@@ -1362,8 +1362,8 @@ void IDEATAPICDROMDevice::io_completion() {
     }
 }
 
-bool IDEATADevice::increment_current_address(uint32_t count) {
-    if (count == 0) return false;
+bool IDEATADevice::increment_current_address(uint32_t n) {
+    if (n == 0) return false;
 
     if (drivehead_is_lba(drivehead)) {
         /* 28-bit LBA:
@@ -1385,7 +1385,7 @@ bool IDEATADevice::increment_current_address(uint32_t count) {
                     }
                 }
             }
-        } while ((--count) != 0);
+        } while ((--n) != 0);
     }
     else {
         /* C/H/S increment with rollover */
@@ -1406,7 +1406,7 @@ bool IDEATADevice::increment_current_address(uint32_t count) {
                 }
 
             }
-        } while ((--count) != 0);
+        } while ((--n) != 0);
     }
 
     return true;
