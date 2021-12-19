@@ -171,11 +171,13 @@ public:
 
     virtual void writecommand(uint8_t cmd);
 public:
-    std::string id_serial;
-    std::string id_firmware_rev;
-    std::string id_model;
+    std::string id_serial = "8086";
+    std::string id_firmware_rev = "8086";
+    std::string id_model = "DOSBox IDE disk";
     unsigned char bios_disk_index;
+
     std::shared_ptr<imageDisk> getBIOSdisk();
+
     void update_from_biosdisk();
     virtual uint32_t data_read(io_width_t width); /* read from 1F0h data port from IDE device */
     virtual void data_write(uint32_t v,io_width_t width);/* write to 1F0h data port to IDE device */
@@ -185,12 +187,26 @@ public:
     virtual void io_completion();
     virtual bool increment_current_address(uint32_t count=1);
 public:
-    uint32_t multiple_sector_max,multiple_sector_count;
-    uint32_t heads,sects,cyls,headshr,progress_count;
-    uint32_t phys_heads,phys_sects,phys_cyls;
     unsigned char sector[512 * 128] = {};
-    uint32_t sector_i,sector_total;
-    bool geo_translate;
+    uint32_t sector_i = 0;
+    uint32_t sector_total = 0;
+
+    uint32_t multiple_sector_max = sizeof(sector) / 512;
+    uint32_t multiple_sector_count = 1;
+
+    uint32_t heads = 0;
+    uint32_t sects = 0;
+    uint32_t cyls = 0;
+
+    uint32_t headshr = 0;
+    uint32_t progress_count = 0;
+
+    uint32_t phys_heads = 0;
+    uint32_t phys_sects = 0;
+    uint32_t phys_cyls = 0;
+
+
+    bool geo_translate = false;
 };
 
 enum {
@@ -2074,22 +2090,9 @@ void IDEATADevice::generate_identify_device() {
     sector[511] = 0 - csum;
 }
 
-IDEATADevice::IDEATADevice(IDEController *c,unsigned char disk_index)
-    : IDEDevice(c, IDE_TYPE_HDD), id_serial("8086"), id_firmware_rev("8086"), id_model("DOSBox IDE disk"), bios_disk_index(disk_index) {
-    sector_i = sector_total = 0;
-
-    headshr = 0;
-    multiple_sector_max = sizeof(sector) / 512;
-    multiple_sector_count = 1;
-    geo_translate = false;
-    heads = 0;
-    sects = 0;
-    cyls = 0;
-    progress_count = 0;
-    phys_heads = 0;
-    phys_sects = 0;
-    phys_cyls = 0;
-}
+IDEATADevice::IDEATADevice(IDEController *c, unsigned char disk_index)
+    : IDEDevice(c, IDE_TYPE_HDD),
+      bios_disk_index(disk_index) { }
 
 IDEATADevice::~IDEATADevice() {
 }
