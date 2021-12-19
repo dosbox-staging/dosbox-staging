@@ -1314,7 +1314,7 @@ void IDEATAPICDROMDevice::on_mode_select_io_complete() {
         LOG_MSG("IDE: ATAPI MODE SELECT, PAGE 0x%02x len=%u",PAGE,LEN);
         LOG_MSG("  ");
         for (i=0;i < LEN;i++) LOG_MSG("%02x ",scan[i]);
-        LOG_MSG("");
+        LOG_MSG(" ");
 
         scan += LEN;
     }
