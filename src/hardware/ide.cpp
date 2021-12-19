@@ -292,27 +292,31 @@ public:
 
 class IDEController:public Module_base{
 public:
-    int IRQ;
-    bool int13fakeio;       /* on certain INT 13h calls, force IDE state as if BIOS had carried them out */
-    bool int13fakev86io;        /* on certain INT 13h calls in virtual 8086 mode, trigger fake CPU I/O traps */
-    bool enable_pio32;      /* enable 32-bit PIO (if disabled, attempts at 32-bit PIO are handled as if two 16-bit I/O) */
-    bool ignore_pio32;      /* if 32-bit PIO enabled, but ignored, writes do nothing, reads return 0xFFFFFFFF */
-    bool register_pnp;
-    unsigned short alt_io;
-    unsigned short base_io;
-    unsigned char interface_index;
-    IO_ReadHandleObject ReadHandler[8],ReadHandlerAlt[2];
-    IO_WriteHandleObject WriteHandler[8],WriteHandlerAlt[2];
+    int IRQ = -1;
+    bool int13fakeio = false;       /* on certain INT 13h calls, force IDE state as if BIOS had carried them out */
+    bool int13fakev86io = false;        /* on certain INT 13h calls in virtual 8086 mode, trigger fake CPU I/O traps */
+    bool enable_pio32 = false;      /* enable 32-bit PIO (if disabled, attempts at 32-bit PIO are handled as if two 16-bit I/O) */
+    bool ignore_pio32 = false;      /* if 32-bit PIO enabled, but ignored, writes do nothing, reads return 0xFFFFFFFF */
+    bool register_pnp = false;
+    unsigned short alt_io = 0;
+    unsigned short base_io = 0;
+    unsigned char interface_index = 0;
+    IO_ReadHandleObject ReadHandler[8] = {};
+    IO_ReadHandleObject ReadHandlerAlt[2] = {};
+    IO_WriteHandleObject WriteHandler[8] = {};
+    IO_WriteHandleObject WriteHandlerAlt[2] = {};
 public:
-    IDEDevice* device[2];       /* IDE devices (master, slave) */
-    uint32_t select,status,drivehead;   /* which is selected, status register (0x1F7) but ONLY if no device exists at selection, drive/head register (0x1F6) */
-    bool interrupt_enable;      /* bit 1 of alt (0x3F6) */
-    bool host_reset;        /* bit 2 of alt */
-    bool irq_pending;
+    IDEDevice* device[2] = {};       /* IDE devices (master, slave) */
+    uint32_t select = 0;             /* selected device (0 or 1) */
+    uint32_t status = 0;             /* status register */
+    uint32_t drivehead = 0;   /* which is selected, status register (0x1F7) but ONLY if no device exists at selection, drive/head register (0x1F6) */
+    bool interrupt_enable = true;      /* bit 1 of alt (0x3F6) */
+    bool host_reset = false;        /* bit 2 of alt */
+    bool irq_pending = false;
     /* defaults for CD-ROM emulation */
-    double spinup_time;
-    double spindown_timeout;
-    double cd_insertion_time;
+    double spinup_time = 0.0;
+    double spindown_timeout = 0.0;
+    double cd_insertion_time = 0.0;
 public:
     IDEController(Section* configuration,unsigned char index);
     IDEController(const IDEController& other) = delete; // prevent copying
@@ -3608,28 +3612,10 @@ void IDEDevice::select(uint8_t ndh,bool switched_to) {
 //  state = IDE_DEV_READY;
 }
 
-IDEController::IDEController(Section* configuration,unsigned char index):Module_base(configuration){
+IDEController::IDEController(Section* configuration,unsigned char index):Module_base(configuration), interface_index(index) {
     Section_prop * section=static_cast<Section_prop *>(configuration);
-    int i;
 
-    spinup_time = 0;
-    spindown_timeout = 0;
-    cd_insertion_time = 0;
-
-    status = 0x00;
-    host_reset = false;
-    irq_pending = false;
-    interrupt_enable = true;
-    interface_index = index;
-    device[0] = NULL;
-    device[1] = NULL;
-    base_io = 0;
-    select = 0;
-    alt_io = 0;
-    IRQ = -1;
-    drivehead = 0;
-
-    i = section->Get_int("irq");
+    int i = section->Get_int("irq");
     if (i > 0 && i <= 15) IRQ = i;
 
     i = section->Get_hex("io");
