@@ -477,10 +477,10 @@ bx_ne2k_c::asic_write(io_port_t offset, io_val_t value, io_width_t io_len)
 uint32_t
 bx_ne2k_c::page0_read(io_port_t offset, io_width_t io_len)
 {
-  BX_DEBUG("page 0 read from port %04x, len=%u", (unsigned) offset,
+  BX_DEBUG("NE2000: page 0 read from port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len);
   if (static_cast<uint8_t>(io_len) > 1) {
-    BX_ERROR("bad length! page 0 read from port %04x, len=%u", (unsigned) offset,
+    BX_ERROR("NE2000: bad length! page 0 read from port %04x, len=%u", (unsigned) offset,
              (unsigned) io_len); /* encountered with win98 hardware probe */
 	return 0;
   }
@@ -699,13 +699,13 @@ bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 
     // Monitor bit is a little suspicious...
     if (value & 0x20)
-      BX_INFO(("RCR write, monitor bit set!"));
+      BX_INFO(("NE2000: RCR write, monitor bit set!"));
     break;
 
   case 0xd:  // TCR
     // Check reserved bits
     if (value & 0xe0)
-      BX_ERROR(("TCR write, reserved bits set"));
+      BX_ERROR(("NE2000: TCR write, reserved bits set"));
 
     // Test loop mode (not supported)
     if (value & 0x06) {
@@ -730,7 +730,7 @@ bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
   case 0xe:  // DCR
     // the loopback mode is not suppported yet
     if (!(value & 0x08)) {
-      BX_ERROR(("DCR write, loopback mode selected"));
+      BX_ERROR(("NE2000: DCR write, loopback mode selected"));
     }
     // It is questionable to set longaddr and auto_rx, since they
     // aren't supported on the ne2000. Print a warning and continue
@@ -762,7 +762,6 @@ bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
     BX_NE2K_THIS s.IMR.cofl_inte  = ((value & 0x20) == 0x20);
     BX_NE2K_THIS s.IMR.rdma_inte  = ((value & 0x40) == 0x40);
 	if(BX_NE2K_THIS s.ISR.pkt_tx && BX_NE2K_THIS s.IMR.tx_inte) {
-	  LOG_MSG("tx irq retrigger");
 	  PIC_ActivateIRQ(s.base_irq);
 	}
     break;
@@ -899,7 +898,7 @@ bx_ne2k_c::page2_read(io_port_t offset, io_width_t io_len)
   case 0x9:
   case 0xa:
   case 0xb:
-    BX_ERROR("reserved read - page 2, 0x%02x", (unsigned) offset);
+    BX_ERROR("NE2000: reserved read - page 2, 0x%02x", (unsigned) offset);
     return (0xff);
     break;
 
@@ -959,7 +958,7 @@ bx_ne2k_c::page2_write(io_port_t offset, io_val_t data, io_width_t io_len)
   // affect internal operation, but let them through for now
   // and print a warning.
   if (offset != 0)
-    BX_ERROR(("page 2 write ?"));
+    BX_ERROR(("NE2000: page 2 write ?"));
 
   switch (offset) {
   case 0x1:  // CLDA0
