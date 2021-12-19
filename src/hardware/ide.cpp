@@ -39,14 +39,14 @@ static const uint8_t IDE_default_IRQs[4] = {
     10  /* quaternary */
 };
 
-static const unsigned short IDE_default_bases[4] = {
+static const uint16_t IDE_default_bases[4] = {
     0x1F0,  /* primary */
     0x170,  /* secondary */
     0x1E8,  /* tertiary */
     0x168   /* quaternary */
 };
 
-static const unsigned short IDE_default_alts[4] = {
+static const uint16_t IDE_default_alts[4] = {
     0x3F6,  /* primary */
     0x376,  /* secondary */
     0x3EE,  /* tertiary */
@@ -298,8 +298,8 @@ public:
     bool enable_pio32 = false;      /* enable 32-bit PIO (if disabled, attempts at 32-bit PIO are handled as if two 16-bit I/O) */
     bool ignore_pio32 = false;      /* if 32-bit PIO enabled, but ignored, writes do nothing, reads return 0xFFFFFFFF */
     bool register_pnp = false;
-    unsigned short alt_io = 0;
-    unsigned short base_io = 0;
+    uint16_t alt_io = 0;
+    uint16_t base_io = 0;
     uint8_t interface_index = 0;
     IO_ReadHandleObject ReadHandler[8] = {};
     IO_ReadHandleObject ReadHandlerAlt[2] = {};
