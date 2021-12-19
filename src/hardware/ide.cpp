@@ -3708,13 +3708,13 @@ static uint32_t ide_altio_r(io_port_t port,io_width_t width) {
 
     if (ide == NULL) {
         LOG_MSG("IDE: WARNING: port read from I/O port not registered to IDE, yet callback triggered");
-        return ~(0UL);
+        return UINT32_MAX;
     }
 
     if (!ide->enable_pio32 && width == io_width_t::dword)
         return ide_altio_r(port, io_width_t::word) + (ide_altio_r(port+2u, io_width_t::word) << 16u);
     else if (ide->ignore_pio32 && width == io_width_t::dword)
-        return ~0ul;
+        return UINT32_MAX;
 
     dev = ide->device[ide->select];
 
@@ -3726,23 +3726,23 @@ static uint32_t ide_altio_r(io_port_t port,io_width_t width) {
         return 0x80u|(ide->select==0?0u:1u)|(ide->select==1?0u:2u)|
             ((dev != NULL) ? (((dev->drivehead&0xFu)^0xFu) << 2u) : 0x3Cu);
 
-    return ~(0UL);
+    return UINT32_MAX;
 }
 
 static uint32_t ide_baseio_r(io_port_t port,io_width_t width) {
     IDEController *ide = match_ide_controller(port);
     IDEDevice *dev;
-    uint32_t ret = ~0ul;
+    uint32_t ret = UINT32_MAX;
 
     if (ide == NULL) {
         LOG_MSG("IDE: WARNING: port read from I/O port not registered to IDE, yet callback triggered");
-        return ~(0UL);
+        return UINT32_MAX;
     }
 
     if (!ide->enable_pio32 && width == io_width_t::dword)
         return ide_baseio_r(port, io_width_t::word) + (ide_baseio_r(port+2, io_width_t::word) << 16);
     else if (ide->ignore_pio32 && width == io_width_t::dword)
-        return ~0ul;
+        return UINT32_MAX;
 
     dev = ide->device[ide->select];
 
