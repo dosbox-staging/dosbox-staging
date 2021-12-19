@@ -30,9 +30,9 @@
 
 extern int bootdrive;
 extern bool bootguest, bootvm, use_quick_reboot;
-static unsigned char init_ide = 0;
+static uint8_t init_ide = 0;
 
-static const unsigned char IDE_default_IRQs[4] = {
+static const uint8_t IDE_default_IRQs[4] = {
     14, /* primary */
     15, /* secondary */
     11, /* tertiary */
@@ -57,7 +57,7 @@ static void ide_altio_w(io_port_t port,io_val_t val, io_width_t width);
 static uint32_t ide_altio_r(io_port_t port, io_width_t width);
 static void ide_baseio_w(io_port_t port,io_val_t val,io_width_t width);
 static uint32_t ide_baseio_r(io_port_t port,io_width_t width);
-bool GetMSCDEXDrive(unsigned char drive_letter,CDROM_Interface **_cdrom);
+bool GetMSCDEXDrive(uint8_t drive_letter,CDROM_Interface **_cdrom);
 
 enum IDEDeviceType {
     IDE_TYPE_NONE,
@@ -164,7 +164,7 @@ public:
 
 class IDEATADevice:public IDEDevice {
 public:
-    IDEATADevice(IDEController *c,unsigned char disk_index);
+    IDEATADevice(IDEController *c,uint8_t disk_index);
     IDEATADevice(const IDEATADevice& other) = delete; // prevent copying
     IDEATADevice & operator=(const IDEATADevice& other) = delete; // prevent assignment
     virtual ~IDEATADevice();
@@ -174,7 +174,7 @@ public:
     std::string id_serial = "8086";
     std::string id_firmware_rev = "8086";
     std::string id_model = "DOSBox IDE disk";
-    unsigned char bios_disk_index;
+    uint8_t bios_disk_index;
 
     std::shared_ptr<imageDisk> getBIOSdisk();
 
@@ -187,7 +187,7 @@ public:
     virtual void io_completion();
     virtual bool increment_current_address(uint32_t count=1);
 public:
-    unsigned char sector[512 * 128] = {};
+    uint8_t sector[512 * 128] = {};
     uint32_t sector_i = 0;
     uint32_t sector_total = 0;
 
@@ -220,7 +220,7 @@ enum {
 
 class IDEATAPICDROMDevice:public IDEDevice {
 public:
-    IDEATAPICDROMDevice(IDEController *c,unsigned char requested_drive_index);
+    IDEATAPICDROMDevice(IDEController *c,uint8_t requested_drive_index);
     IDEATAPICDROMDevice(const IDEATAPICDROMDevice& other) = delete; // prevent copying
     IDEATAPICDROMDevice & operator=(const IDEATAPICDROMDevice& other) = delete; // prevent assignment
     virtual ~IDEATAPICDROMDevice();
@@ -231,7 +231,7 @@ public:
     std::string id_serial = "123456789";
     std::string id_firmware_rev = "0.83-X";
     std::string id_model = "DOSBox-X Virtual CD-ROM";
-    unsigned char drive_index = 0;
+    uint8_t drive_index = 0;
 
     CDROM_Interface *getMSCDEXDrive();
     void update_from_cdrom();
@@ -241,7 +241,7 @@ public:
     virtual void generate_mmc_inquiry();
     virtual void prepare_read(uint32_t offset,uint32_t size);
     virtual void prepare_write(uint32_t offset,uint32_t size);
-    virtual void set_sense(unsigned char SK,unsigned char ASC=0,unsigned char ASCQ=0,unsigned int len=0);
+    virtual void set_sense(uint8_t SK,uint8_t ASC=0,uint8_t ASCQ=0,unsigned int len=0);
     virtual bool common_spinup_response(bool trigger,bool wait);
     virtual void on_mode_select_io_complete();
     virtual void atapi_io_completion();
@@ -280,12 +280,12 @@ public:
     int loading_mode = LOAD_IDLE;
     bool has_changed = false;
 public:
-    unsigned char sense[256] = {};
+    uint8_t sense[256] = {};
     uint32_t sense_length = 0;
-    unsigned char atapi_cmd[12] = {};
-    unsigned char atapi_cmd_i = 0;
-    unsigned char atapi_cmd_total = 0;
-    unsigned char sector[512*128] = {};
+    uint8_t atapi_cmd[12] = {};
+    uint8_t atapi_cmd_i = 0;
+    uint8_t atapi_cmd_total = 0;
+    uint8_t sector[512*128] = {};
     uint32_t sector_i = 0;
     uint32_t sector_total = 0;
 };
@@ -300,7 +300,7 @@ public:
     bool register_pnp = false;
     unsigned short alt_io = 0;
     unsigned short base_io = 0;
-    unsigned char interface_index = 0;
+    uint8_t interface_index = 0;
     IO_ReadHandleObject ReadHandler[8] = {};
     IO_ReadHandleObject ReadHandlerAlt[2] = {};
     IO_WriteHandleObject WriteHandler[8] = {};
@@ -318,7 +318,7 @@ public:
     double spindown_timeout = 0.0;
     double cd_insertion_time = 0.0;
 public:
-    IDEController(Section* configuration,unsigned char index);
+    IDEController(Section* configuration,uint8_t index);
     IDEController(const IDEController& other) = delete; // prevent copying
     IDEController & operator=(const IDEController& other) = delete; // prevent assignment
     ~IDEController();
@@ -465,14 +465,14 @@ bool IDEATAPICDROMDevice::common_spinup_response(bool trigger,bool wait) {
 }
 
 void IDEATAPICDROMDevice::read_subchannel() {
-//  unsigned char Format = atapi_cmd[2] & 0xF;
-//  unsigned char Track = atapi_cmd[6];
-    unsigned char paramList = atapi_cmd[3];
-    unsigned char attr,track,index;
+//  uint8_t Format = atapi_cmd[2] & 0xF;
+//  uint8_t Track = atapi_cmd[6];
+    uint8_t paramList = atapi_cmd[3];
+    uint8_t attr,track,index;
     bool SUBQ = !!(atapi_cmd[2] & 0x40);
     bool TIME = !!(atapi_cmd[1] & 2);
-    unsigned char *write;
-    unsigned char astat;
+    uint8_t *write;
+    uint8_t astat;
     bool playing,pause;
     TMSF rel,abs;
 
@@ -540,16 +540,16 @@ void IDEATAPICDROMDevice::read_subchannel() {
             uint32_t sec;
 
             sec = (abs.min*60u*75u)+(abs.sec*75u)+abs.fr - 150u;
-            *write++ = (unsigned char)(sec >> 24u);
-            *write++ = (unsigned char)(sec >> 16u);
-            *write++ = (unsigned char)(sec >> 8u);
-            *write++ = (unsigned char)(sec >> 0u);
+            *write++ = (uint8_t)(sec >> 24u);
+            *write++ = (uint8_t)(sec >> 16u);
+            *write++ = (uint8_t)(sec >> 8u);
+            *write++ = (uint8_t)(sec >> 0u);
 
             sec = (rel.min*60u*75u)+(rel.sec*75u)+rel.fr - 150u;
-            *write++ = (unsigned char)(sec >> 24u);
-            *write++ = (unsigned char)(sec >> 16u);
-            *write++ = (unsigned char)(sec >> 8u);
-            *write++ = (unsigned char)(sec >> 0u);
+            *write++ = (uint8_t)(sec >> 24u);
+            *write++ = (uint8_t)(sec >> 16u);
+            *write++ = (uint8_t)(sec >> 8u);
+            *write++ = (uint8_t)(sec >> 0u);
         }
     }
 
@@ -567,9 +567,9 @@ void IDEATAPICDROMDevice::read_subchannel() {
 }
 
 void IDEATAPICDROMDevice::mode_sense() {
-    unsigned char PAGE = atapi_cmd[2] & 0x3F;
-//  unsigned char SUBPAGE = atapi_cmd[3];
-    unsigned char *write;
+    uint8_t PAGE = atapi_cmd[2] & 0x3F;
+//  uint8_t SUBPAGE = atapi_cmd[3];
+    uint8_t *write;
     unsigned int x;
 
     write = sector;
@@ -674,8 +674,8 @@ void IDEATAPICDROMDevice::mode_sense() {
 
     /* mode param header, data length */
     x = (unsigned int)(write-sector) - 2;
-    sector[0] = (unsigned char)(x >> 8u);
-    sector[1] = (unsigned char)x;
+    sector[0] = (uint8_t)(x >> 8u);
+    sector[1] = (uint8_t)x;
     /* page length */
     sector[8+1] = (unsigned int)(write-sector) - 2 - 8;
 
@@ -790,7 +790,7 @@ void IDEATAPICDROMDevice::play_audio10() {
 }
 
 #if 0 /* TODO move to library */
-static unsigned char dec2bcd(unsigned char c) {
+static uint8_t dec2bcd(uint8_t c) {
     return ((c / 10) << 4) + (c % 10);
 }
 #endif
@@ -804,10 +804,10 @@ void IDEATAPICDROMDevice::read_toc() {
      *      this emulation work, we have to cut our response short to the driver's
      *      allocation length */
     unsigned int AllocationLength = ((unsigned int)atapi_cmd[7] << 8) + atapi_cmd[8];
-    unsigned char Format = atapi_cmd[2] & 0xF;
-    unsigned char Track = atapi_cmd[6];
+    uint8_t Format = atapi_cmd[2] & 0xF;
+    uint8_t Track = atapi_cmd[6];
     bool TIME = !!(atapi_cmd[1] & 2);
-    unsigned char *write;
+    uint8_t *write;
     uint8_t first,last,track;
     TMSF leadOut;
 
@@ -830,11 +830,11 @@ void IDEATAPICDROMDevice::read_toc() {
     write = sector + 2;
 
     if (Format == 1) { /* Read multisession info */
-        unsigned char attr;
+        uint8_t attr;
         TMSF start;
 
-        *write++ = (unsigned char)1;        /* @+2 first complete session */
-        *write++ = (unsigned char)1;        /* @+3 last complete session */
+        *write++ = (uint8_t)1;        /* @+2 first complete session */
+        *write++ = (uint8_t)1;        /* @+3 last complete session */
 
         if (!cdrom->GetAudioTrackInfo(first,start,attr)) {
             LOG_MSG("IDE: WARNING: ATAPI READ TOC unable to read track %u information",first);
@@ -860,10 +860,10 @@ void IDEATAPICDROMDevice::read_toc() {
         }
         else {
             uint32_t sec = (start.min*60u*75u)+(start.sec*75u)+start.fr - 150u;
-            *write++ = (unsigned char)(sec >> 24u);
-            *write++ = (unsigned char)(sec >> 16u);
-            *write++ = (unsigned char)(sec >> 8u);
-            *write++ = (unsigned char)(sec >> 0u);
+            *write++ = (uint8_t)(sec >> 24u);
+            *write++ = (uint8_t)(sec >> 16u);
+            *write++ = (uint8_t)(sec >> 8u);
+            *write++ = (uint8_t)(sec >> 0u);
         }
     }
     else if (Format == 0) { /* Read table of contents */
@@ -871,7 +871,7 @@ void IDEATAPICDROMDevice::read_toc() {
         *write++ = last;     /* @+3 */
 
         for (track=first;track <= last;track++) {
-            unsigned char attr;
+            uint8_t attr;
             TMSF start;
 
             if (!cdrom->GetAudioTrackInfo(track,start,attr)) {
@@ -901,10 +901,10 @@ void IDEATAPICDROMDevice::read_toc() {
             }
             else {
                 uint32_t sec = (start.min*60u*75u)+(start.sec*75u)+start.fr - 150u;
-                *write++ = (unsigned char)(sec >> 24u);
-                *write++ = (unsigned char)(sec >> 16u);
-                *write++ = (unsigned char)(sec >> 8u);
-                *write++ = (unsigned char)(sec >> 0u);
+                *write++ = (uint8_t)(sec >> 24u);
+                *write++ = (uint8_t)(sec >> 16u);
+                *write++ = (uint8_t)(sec >> 8u);
+                *write++ = (uint8_t)(sec >> 0u);
             }
         }
 
@@ -921,10 +921,10 @@ void IDEATAPICDROMDevice::read_toc() {
             }
             else {
                 uint32_t sec = (leadOut.min*60u*75u)+(leadOut.sec*75u)+leadOut.fr - 150u;
-                *write++ = (unsigned char)(sec >> 24u);
-                *write++ = (unsigned char)(sec >> 16u);
-                *write++ = (unsigned char)(sec >> 8u);
-                *write++ = (unsigned char)(sec >> 0u);
+                *write++ = (uint8_t)(sec >> 24u);
+                *write++ = (uint8_t)(sec >> 16u);
+                *write++ = (uint8_t)(sec >> 8u);
+                *write++ = (uint8_t)(sec >> 0u);
             }
         }
     }
@@ -1268,7 +1268,7 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
 
 }
 
-void IDEATAPICDROMDevice::set_sense(unsigned char SK,unsigned char ASC,unsigned char ASCQ,unsigned int len) {
+void IDEATAPICDROMDevice::set_sense(uint8_t SK,uint8_t ASC,uint8_t ASCQ,unsigned int len) {
     if (len < 18) len = 18;
     memset(sense,0,len);
     sense_length = len;
@@ -1280,7 +1280,7 @@ void IDEATAPICDROMDevice::set_sense(unsigned char SK,unsigned char ASC,unsigned 
     sense[13] = ASCQ;
 }
 
-IDEATAPICDROMDevice::IDEATAPICDROMDevice(IDEController *c,unsigned char requested_drive_index) :  IDEDevice(c, IDE_TYPE_CDROM), drive_index(requested_drive_index) {
+IDEATAPICDROMDevice::IDEATAPICDROMDevice(IDEController *c,uint8_t requested_drive_index) :  IDEDevice(c, IDE_TYPE_CDROM), drive_index(requested_drive_index) {
 
     IDEATAPICDROMDevice::set_sense(/*SK=*/0);
 
@@ -1298,7 +1298,7 @@ IDEATAPICDROMDevice::~IDEATAPICDROMDevice() {
 
 void IDEATAPICDROMDevice::on_mode_select_io_complete() {
     unsigned int AllocationLength = ((unsigned int)atapi_cmd[7] << 8) + atapi_cmd[8];
-    unsigned char *scan,*fence;
+    uint8_t *scan,*fence;
     size_t i;
 
     /* the first 8 bytes are a mode parameter header.
@@ -1313,7 +1313,7 @@ void IDEATAPICDROMDevice::on_mode_select_io_complete() {
 	    std::min(sector_total, AllocationLength);
 
     while ((scan+2) < fence) {
-        unsigned char PAGE = *scan++;
+        uint8_t PAGE = *scan++;
         unsigned int LEN = (unsigned int)(*scan++);
 
         if ((scan+LEN) > fence) {
@@ -1933,23 +1933,23 @@ void IDEATAPICDROMDevice::generate_mmc_inquiry() {
     sector[4] = 36 - 5;     /* additional length */
 
     for (i=0;i < 8 && i < id_mmc_vendor_id.length();i++)
-        sector[i+8] = (unsigned char)id_mmc_vendor_id[i];
+        sector[i+8] = (uint8_t)id_mmc_vendor_id[i];
     for (;i < 8;i++)
         sector[i+8] = ' ';
 
     for (i=0;i < 16 && i < id_mmc_product_id.length();i++)
-        sector[i+16] = (unsigned char)id_mmc_product_id[i];
+        sector[i+16] = (uint8_t)id_mmc_product_id[i];
     for (;i < 16;i++)
         sector[i+16] = ' ';
 
     for (i=0;i < 4 && i < id_mmc_product_rev.length();i++)
-        sector[i+32] = (unsigned char)id_mmc_product_rev[i];
+        sector[i+32] = (uint8_t)id_mmc_product_rev[i];
     for (;i < 4;i++)
         sector[i+32] = ' ';
 }
 
 void IDEATAPICDROMDevice::generate_identify_device() {
-    unsigned char csum;
+    uint8_t csum;
     uint32_t i;
 
     /* IN RESPONSE TO IDENTIFY DEVICE (0xA1)
@@ -1959,17 +1959,17 @@ void IDEATAPICDROMDevice::generate_identify_device() {
     host_writew(sector+(0*2),0x85C0U);  /* ATAPI device, command set #5 (what the fuck does that mean?), removable, */
 
     for (i=0;i < 20 && i < id_serial.length();i++)
-        sector[(i^1)+(10*2)] = (unsigned char)id_serial[i];
+        sector[(i^1)+(10*2)] = (uint8_t)id_serial[i];
     for (;i < 20;i++)
         sector[(i^1)+(10*2)] = ' ';
 
     for (i=0;i < 8 && i < id_firmware_rev.length();i++)
-        sector[(i^1)+(23*2)] = (unsigned char)id_firmware_rev[i];
+        sector[(i^1)+(23*2)] = (uint8_t)id_firmware_rev[i];
     for (;i < 8;i++)
         sector[(i^1)+(23*2)] = ' ';
 
     for (i=0;i < 40 && i < id_model.length();i++)
-        sector[(i^1)+(27*2)] = (unsigned char)id_model[i];
+        sector[(i^1)+(27*2)] = (uint8_t)id_model[i];
     for (;i < 40;i++)
         sector[(i^1)+(27*2)] = ' ';
 
@@ -2006,7 +2006,7 @@ void IDEATAPICDROMDevice::generate_identify_device() {
 
 void IDEATADevice::generate_identify_device() {
 //  imageDisk *disk = getBIOSdisk();
-    unsigned char csum;
+    uint8_t csum;
     uint64_t ptotal;
     uint64_t total;
     uint32_t i;
@@ -2027,7 +2027,7 @@ void IDEATADevice::generate_identify_device() {
     host_writew(sector+(6*2),phys_sects);
 
     for (i=0;i < 20 && i < id_serial.length();i++)
-        sector[(i^1)+(10*2)] = (unsigned char)id_serial[i];
+        sector[(i^1)+(10*2)] = (uint8_t)id_serial[i];
     for (;i < 20;i++)
         sector[(i^1)+(10*2)] = ' ';
 
@@ -2035,12 +2035,12 @@ void IDEATADevice::generate_identify_device() {
     host_writew(sector+(21*2),4);       /* ATA-1: ECC bytes on read/write long */
 
     for (i=0;i < 8 && i < id_firmware_rev.length();i++)
-        sector[(i^1)+(23*2)] = (unsigned char)id_firmware_rev[i];
+        sector[(i^1)+(23*2)] = (uint8_t)id_firmware_rev[i];
     for (;i < 8;i++)
         sector[(i^1)+(23*2)] = ' ';
 
     for (i=0;i < 40 && i < id_model.length();i++)
-        sector[(i^1)+(27*2)] = (unsigned char)id_model[i];
+        sector[(i^1)+(27*2)] = (uint8_t)id_model[i];
     for (;i < 40;i++)
         sector[(i^1)+(27*2)] = ' ';
 
@@ -2094,7 +2094,7 @@ void IDEATADevice::generate_identify_device() {
     sector[511] = 0 - csum;
 }
 
-IDEATADevice::IDEATADevice(IDEController *c, unsigned char disk_index)
+IDEATADevice::IDEATADevice(IDEController *c, uint8_t disk_index)
     : IDEDevice(c, IDE_TYPE_HDD),
       bios_disk_index(disk_index) { }
 
@@ -2187,7 +2187,7 @@ void IDEATADevice::update_from_biosdisk() {
     phys_cyls = cyls;
 }
 
-void IDE_Auto(signed char &index,bool &slave) {
+void IDE_Auto(int8_t &index,bool &slave) {
     unsigned int i;
 
     index = -1;
@@ -2195,7 +2195,7 @@ void IDE_Auto(signed char &index,bool &slave) {
     for (i=0;i < MAX_IDE_CONTROLLERS;i++) {
         IDEController* c;
         if ((c=idecontroller[i]) == NULL) continue;
-        index = (signed char)i;
+        index = (int8_t)i;
 
         if (c->device[0] == NULL) {
             slave = false;
@@ -2209,7 +2209,7 @@ void IDE_Auto(signed char &index,bool &slave) {
 }
 
 /* drive_index = drive letter 0...A to 25...Z */
-void IDE_ATAPI_MediaChangeNotify(unsigned char requested_drive_index) {
+void IDE_ATAPI_MediaChangeNotify(uint8_t requested_drive_index) {
     for (unsigned int ide=0;ide < MAX_IDE_CONTROLLERS;ide++) {
         IDEController *c = idecontroller[ide];
         if (c == NULL) continue;
@@ -2233,7 +2233,7 @@ void IDE_ATAPI_MediaChangeNotify(unsigned char requested_drive_index) {
 }
 
 /* drive_index = drive letter 0...A to 25...Z */
-void IDE_CDROM_Attach(signed char index,bool slave,unsigned char requested_drive_index) {
+void IDE_CDROM_Attach(int8_t index,bool slave,uint8_t requested_drive_index) {
     IDEController *c;
     IDEATAPICDROMDevice *dev;
 
@@ -2258,7 +2258,7 @@ void IDE_CDROM_Attach(signed char index,bool slave,unsigned char requested_drive
 }
 
 /* drive_index = drive letter 0...A to 25...Z */
-void IDE_CDROM_Detach(unsigned char requested_drive_index) {
+void IDE_CDROM_Detach(uint8_t requested_drive_index) {
     for (int index = 0; index < MAX_IDE_CONTROLLERS; index++) {
         IDEController *c = idecontroller[index];
         if (c)
@@ -2289,7 +2289,7 @@ void IDE_CDROM_DetachAll() {
 }
 
 /* bios_disk_index = index into BIOS INT 13h disk array: imageDisk *imageDiskList[MAX_DISK_IMAGES]; */
-void IDE_Hard_Disk_Attach(signed char index,bool slave,unsigned char bios_disk_index/*not INT13h, the index into DOSBox's BIOS drive emulation*/) {
+void IDE_Hard_Disk_Attach(int8_t index,bool slave,uint8_t bios_disk_index/*not INT13h, the index into DOSBox's BIOS drive emulation*/) {
     IDEController *c;
     IDEATADevice *dev;
 
@@ -2314,7 +2314,7 @@ void IDE_Hard_Disk_Attach(signed char index,bool slave,unsigned char bios_disk_i
 }
 
 /* bios_disk_index = index into BIOS INT 13h disk array: imageDisk *imageDiskList[MAX_DISK_IMAGES]; */
-void IDE_Hard_Disk_Detach(unsigned char bios_disk_index) {
+void IDE_Hard_Disk_Detach(uint8_t bios_disk_index) {
     for (int index = 0; index < MAX_IDE_CONTROLLERS; index++) {
         IDEController *c = idecontroller[index];
         if (c)
@@ -2330,7 +2330,7 @@ void IDE_Hard_Disk_Detach(unsigned char bios_disk_index) {
 }
 
 char idepos[4];
-char * GetIDEPosition(unsigned char bios_disk_index) {
+char * GetIDEPosition(uint8_t bios_disk_index) {
     for (int index = 0; index < MAX_IDE_CONTROLLERS; index++) {
         IDEController *c = GetIDEController(index);
         if (c)
@@ -2387,7 +2387,7 @@ static void IDE_SelfIO_Out(IDEController * /* ide */,io_port_t port,io_val_t val
 }
 
 /* INT 13h extensions */
-void IDE_EmuINT13DiskReadByBIOS_LBA(unsigned char disk,uint64_t lba) {
+void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk,uint64_t lba) {
     IDEController *ide;
     IDEDevice *dev;
     uint8_t idx,ms;
@@ -2515,7 +2515,7 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(unsigned char disk,uint64_t lba) {
 /* this is called after INT 13h AH=0x02 READ DISK to change IDE state to simulate the BIOS in action.
  * this is needed for old "32-bit disk drivers" like WDCTRL in Windows 3.11 Windows for Workgroups,
  * which issues INT 13h to read-test and then reads IDE registers to see if they match expectations */
-void IDE_EmuINT13DiskReadByBIOS(unsigned char disk,unsigned int cyl,unsigned int head,unsigned sect) {
+void IDE_EmuINT13DiskReadByBIOS(uint8_t disk,unsigned int cyl,unsigned int head,unsigned sect) {
     IDEController *ide;
     IDEDevice *dev;
     uint8_t idx,ms;
@@ -2685,7 +2685,7 @@ void IDE_EmuINT13DiskReadByBIOS(unsigned char disk,unsigned int cyl,unsigned int
 
 /* this is called by src/ints/bios_disk.cpp whenever INT 13h AH=0x00 is called on a hard disk.
  * this gives us a chance to update IDE state as if the BIOS had gone through with a full disk reset as requested. */
-void IDE_ResetDiskByBIOS(unsigned char disk) {
+void IDE_ResetDiskByBIOS(uint8_t disk) {
     IDEController *ide;
     IDEDevice *dev;
     uint8_t idx,ms;
@@ -3612,7 +3612,7 @@ void IDEDevice::select(uint8_t ndh,bool switched_to) {
 //  state = IDE_DEV_READY;
 }
 
-IDEController::IDEController(Section* configuration,unsigned char index):Module_base(configuration), interface_index(index) {
+IDEController::IDEController(Section* configuration,uint8_t index):Module_base(configuration), interface_index(index) {
     Section_prop * section=static_cast<Section_prop *>(configuration);
 
     int i = section->Get_int("irq");
@@ -3904,7 +3904,7 @@ static void IDE_Destroy(Section* sec) {
     init_ide = 0;
 }
 
-static void IDE_Init(Section* sec,unsigned char ide_interface) {
+static void IDE_Init(Section* sec,uint8_t ide_interface) {
     Section_prop *section=static_cast<Section_prop *>(sec);
     IDEController *ide;
 
