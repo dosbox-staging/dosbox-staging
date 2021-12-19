@@ -143,7 +143,7 @@ public:
     double ide_spindown_delay = 1000;  /* 1 second. time it takes for hard disk motor to spin down */
     double ide_identify_command_delay = 0.01; /* 10us */
 public:
-    IDEDevice(IDEController *c) : controller(c) {}
+    IDEDevice(IDEController *c, const IDEDeviceType device_type) : controller(c),  type(device_type) {}
     IDEDevice(const IDEDevice& other) = delete; // prevent copying
     IDEDevice & operator=(const IDEDevice& other) = delete; // prevent assignment
     virtual ~IDEDevice();
@@ -210,11 +210,13 @@ public:
     virtual ~IDEATAPICDROMDevice();
 
     virtual void writecommand(uint8_t cmd);
+
 public:
-    std::string id_serial;
-    std::string id_firmware_rev;
-    std::string id_model;
-    unsigned char drive_index;
+    std::string id_serial = "123456789";
+    std::string id_firmware_rev = "0.83-X";
+    std::string id_model = "DOSBox-X Virtual CD-ROM";
+    unsigned char drive_index = 0;
+
     CDROM_Interface *getMSCDEXDrive();
     void update_from_cdrom();
     virtual uint32_t data_read(io_width_t width); /* read from 1F0h data port from IDE device */
@@ -236,25 +238,40 @@ public:
     virtual void play_audio10();
     virtual void mode_sense();
     virtual void read_toc();
+
 public:
-    bool atapi_to_host;         /* if set, PACKET data transfer is to be read by host */
-    double spinup_time;
-    double spindown_timeout;
-    double cd_insertion_time;
-    uint32_t host_maximum_byte_count;       /* host maximum byte count during PACKET transfer */
-    std::string id_mmc_vendor_id;
-    std::string id_mmc_product_id;
-    std::string id_mmc_product_rev;
-    uint32_t LBA,TransferLength;
-    int loading_mode;
-    bool has_changed;
+    /* if set, PACKET data transfer is to be read by host */
+    bool atapi_to_host = false;         
+
+    /* drive takes 1 second to spin up from idle */
+    double spinup_time = 1000;
+
+    /* drive spins down automatically after 10 seconds */
+    double spindown_timeout = 10000;
+    
+    /* a quick user that can switch CDs in 4 seconds */
+    double cd_insertion_time = 4000;
+
+    /* host maximum byte count during PACKET transfer */
+    uint32_t host_maximum_byte_count = 0;
+
+    /* INQUIRY strings */
+    std::string id_mmc_vendor_id = "DOSBox-X";
+    std::string id_mmc_product_id = "Virtual CD-ROM";
+    std::string id_mmc_product_rev = "0.83-X";
+    uint32_t LBA = 0;
+    uint32_t TransferLength = 0;
+    int loading_mode = LOAD_IDLE;
+    bool has_changed = false;
 public:
-    unsigned char sense[256];
-    uint32_t sense_length;
-    unsigned char atapi_cmd[12];
-    unsigned char atapi_cmd_i,atapi_cmd_total;
-    unsigned char sector[512*128];
-    uint32_t sector_i,sector_total;
+    unsigned char sense[256] = {};
+    uint32_t sense_length = 0;
+    unsigned char atapi_cmd[12] = {};
+    unsigned char atapi_cmd_i = 0;
+    unsigned char atapi_cmd_total = 0;
+    unsigned char sector[512*128] = {};
+    uint32_t sector_i = 0;
+    uint32_t sector_total = 0;
 };
 
 class IDEController:public Module_base{
@@ -1243,44 +1260,17 @@ void IDEATAPICDROMDevice::set_sense(unsigned char SK,unsigned char ASC,unsigned 
     sense[13] = ASCQ;
 }
 
-IDEATAPICDROMDevice::IDEATAPICDROMDevice(IDEController *c,unsigned char requested_drive_index) : IDEDevice(c) {
-    this->drive_index = requested_drive_index;
-    sector_i = sector_total = 0;
-    atapi_to_host = false;
-    host_maximum_byte_count = 0;
-    LBA = 0;
-    TransferLength = 0;
-    memset(atapi_cmd, 0, sizeof(atapi_cmd));
-    atapi_cmd_i = 0;
-    atapi_cmd_total = 0;
-    memset(sector, 0, sizeof(sector));
+IDEATAPICDROMDevice::IDEATAPICDROMDevice(IDEController *c,unsigned char requested_drive_index) :  IDEDevice(c, IDE_TYPE_CDROM), drive_index(requested_drive_index) {
 
-    memset(sense,0,sizeof(sense));
     IDEATAPICDROMDevice::set_sense(/*SK=*/0);
 
     /* FIXME: Spinup/down times should be dosbox.conf configurable, if the DOSBox gamers
      *        care more about loading times than emulation accuracy. */
-    cd_insertion_time = 4000; /* a quick user that can switch CDs in 4 seconds */
     if (c->cd_insertion_time > 0) cd_insertion_time = c->cd_insertion_time;
 
-    spinup_time = 1000; /* drive takes 1 second to spin up from idle */
     if (c->spinup_time > 0) spinup_time = c->spinup_time;
 
-    spindown_timeout = 10000; /* drive spins down automatically after 10 seconds */
     if (c->spindown_timeout > 0) spindown_timeout = c->spindown_timeout;
-
-    loading_mode = LOAD_IDLE;
-    has_changed = false;
-
-    type = IDE_TYPE_CDROM;
-    id_serial = "123456789";
-    id_firmware_rev = "0.83-X";
-    id_model = "DOSBox-X Virtual CD-ROM";
-
-    /* INQUIRY strings */
-    id_mmc_vendor_id = "DOSBox-X";
-    id_mmc_product_id = "Virtual CD-ROM";
-    id_mmc_product_rev = "0.83-X";
 }
 
 IDEATAPICDROMDevice::~IDEATAPICDROMDevice() {
@@ -2085,11 +2075,10 @@ void IDEATADevice::generate_identify_device() {
 }
 
 IDEATADevice::IDEATADevice(IDEController *c,unsigned char disk_index)
-    : IDEDevice(c), id_serial("8086"), id_firmware_rev("8086"), id_model("DOSBox IDE disk"), bios_disk_index(disk_index) {
+    : IDEDevice(c, IDE_TYPE_HDD), id_serial("8086"), id_firmware_rev("8086"), id_model("DOSBox IDE disk"), bios_disk_index(disk_index) {
     sector_i = sector_total = 0;
 
     headshr = 0;
-    type = IDE_TYPE_HDD;
     multiple_sector_max = sizeof(sector) / 512;
     multiple_sector_count = 1;
     geo_translate = false;
