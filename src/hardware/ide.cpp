@@ -555,8 +555,8 @@ void IDEATAPICDROMDevice::read_subchannel() {
 
     {
         uint32_t x = (uint32_t)(write-sector) - 4;
-        sector[2] = x >> 8;
-        sector[3] = x;
+        sector[2] = check_cast<uint8_t>(x >> 8);
+        sector[3] = check_cast<uint8_t>(x);
     }
 
     prepare_read(0, std::min((uint32_t)(write - sector),
@@ -640,31 +640,31 @@ void IDEATAPICDROMDevice::mode_sense() {
             *write++ = 0x03;    /* +7 Reserved       |Reserved     |R-W in leadin|Side chg cap |S/W slot sel  |Changer disc pr|Sep. ch. mute |Sep. volume levels */
 
             x = 176 * 8;        /* +8 maximum speed supported in kB: 8X  (obsolete in MMC-3) */
-            *write++ = x>>8;
-            *write++ = x;
+            *write++ = check_cast<uint8_t>(x>>8);
+            *write++ = check_cast<uint8_t>(x);
 
             x = 256;            /* +10 Number of volume levels supported */
-            *write++ = x>>8;
-            *write++ = x;
+            *write++ = check_cast<uint8_t>(x>>8);
+            *write++ = check_cast<uint8_t>(x);
 
             x = 6 * 256;        /* +12 buffer size supported by drive in kB */
-            *write++ = x>>8;
-            *write++ = x;
+            *write++ = check_cast<uint8_t>(x>>8);
+            *write++ = check_cast<uint8_t>(x);
 
             x = 176 * 8;        /* +14 current read speed selected in kB: 8X  (obsolete in MMC-3) */
-            *write++ = x>>8;
-            *write++ = x;
+            *write++ = check_cast<uint8_t>(x>>8);
+            *write++ = check_cast<uint8_t>(x);
 
             *write++ = 0;       /* +16 Reserved */
             *write++ = 0x00;    /* +17 Reserved | Reserved | Length | Length | LSBF | RCK | BCK | Reserved */
 
             x = 0;              /* +18 maximum write speed supported in kB: 0  (obsolete in MMC-3) */
-            *write++ = x>>8;
-            *write++ = x;
+            *write++ = check_cast<uint8_t>(x>>8);
+            *write++ = check_cast<uint8_t>(x);
 
             x = 0;              /* +20 current write speed in kB: 0  (obsolete in MMC-3) */
-            *write++ = x>>8;
-            *write++ = x;
+            *write++ = check_cast<uint8_t>(x>>8);
+            *write++ = check_cast<uint8_t>(x);
             break;
         default:
             memset(write,0,6); write += 6;
@@ -677,7 +677,7 @@ void IDEATAPICDROMDevice::mode_sense() {
     sector[0] = (uint8_t)(x >> 8u);
     sector[1] = (uint8_t)x;
     /* page length */
-    sector[8+1] = (uint32_t)(write-sector) - 2 - 8;
+    sector[8+1] = check_cast<uint8_t>((uint32_t)(write-sector) - 2 - 8);
 
     prepare_read(0, std::min((uint32_t)(write - sector),
 	                     host_maximum_byte_count));
@@ -937,7 +937,7 @@ void IDEATAPICDROMDevice::read_toc() {
     /* update the TOC data length field */
     {
         uint32_t x = (uint32_t)(write-sector) - 2;
-        sector[0] = x >> 8;
+        sector[0] = check_cast<uint8_t>(x >> 8);
         sector[1] = x & 0xFF;
     }
 
@@ -1030,8 +1030,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
 	    prepare_read(0, std::min((uint32_t)8,
 		                     host_maximum_byte_count));
 	    sector[0] = sec >> 24u;
-            sector[1] = sec >> 16u;
-            sector[2] = sec >> 8u;
+            sector[1] = check_cast<uint8_t>(sec >> 16u);
+            sector[2] = check_cast<uint8_t>(sec >> 8u);
             sector[3] = sec & 0xFF;
             sector[4] = secsize >> 24u;
             sector[5] = secsize >> 16u;
@@ -1275,7 +1275,7 @@ void IDEATAPICDROMDevice::set_sense(uint8_t SK,uint8_t ASC,uint8_t ASCQ,uint32_t
 
     sense[0] = 0x70;    /* RESPONSE CODE */
     sense[2] = SK&0xF;  /* SENSE KEY */
-    sense[7] = len - 18;    /* additional sense length */
+    sense[7] = check_cast<uint8_t>(len - 18);    /* additional sense length */
     sense[12] = ASC;
     sense[13] = ASCQ;
 }
@@ -1771,12 +1771,12 @@ void IDEATAPICDROMDevice::atapi_cmd_completion() {
 void IDEATAPICDROMDevice::data_write(uint32_t v,io_width_t width) {
     if (state == IDE_DEV_ATAPI_PACKET_COMMAND) {
         if (atapi_cmd_i < atapi_cmd_total)
-            atapi_cmd[atapi_cmd_i++] = v;
+            atapi_cmd[atapi_cmd_i++] = check_cast<uint8_t>(v);
         if ((width == io_width_t::word || width == io_width_t::dword) && atapi_cmd_i < atapi_cmd_total)
-            atapi_cmd[atapi_cmd_i++] = v >> 8;
+            atapi_cmd[atapi_cmd_i++] = check_cast<uint8_t>(v >> 8);
         if (width == io_width_t::dword && atapi_cmd_i < atapi_cmd_total) {
-            atapi_cmd[atapi_cmd_i++] = v >> 16;
-            atapi_cmd[atapi_cmd_i++] = v >> 24;
+            atapi_cmd[atapi_cmd_i++] = check_cast<uint8_t>(v >> 16);
+            atapi_cmd[atapi_cmd_i++] = check_cast<uint8_t>(v >> 24);
         }
 
         if (atapi_cmd_i >= atapi_cmd_total)
@@ -1791,7 +1791,7 @@ void IDEATAPICDROMDevice::data_write(uint32_t v,io_width_t width) {
             LOG_MSG("IDE: ATAPI warning: data write with drq=0");
             return;
         }
-        if ((sector_i+ static_cast<int>(width)) > sector_total) {
+        if ((sector_i+ static_cast<uint8_t>(width)) > sector_total) {
             LOG_MSG("IDE: ATAPI warning: sector already full %lu / %lu",(unsigned long)sector_i,(unsigned long)sector_total);
             return;
         }
@@ -1805,7 +1805,7 @@ void IDEATAPICDROMDevice::data_write(uint32_t v,io_width_t width) {
             sector_i += 2;
         }
         else if (width == io_width_t::byte) {
-            sector[sector_i++] = v;
+            sector[sector_i++] = check_cast<uint8_t>(v);
         }
 
         if (sector_i >= sector_total)
@@ -1824,7 +1824,7 @@ uint32_t IDEATADevice::data_read(io_width_t width) {
         return 0xFFFFUL;
     }
 
-    if ((sector_i+ static_cast<int>(width)) > sector_total) {
+    if ((sector_i+ static_cast<uint8_t>(width)) > sector_total) {
         LOG_MSG("IDE: ATA warning: sector already read %lu / %lu",(unsigned long)sector_i,(unsigned long)sector_total);
         return 0xFFFFUL;
     }
@@ -1857,7 +1857,7 @@ void IDEATADevice::data_write(uint32_t v,io_width_t width) {
         LOG_MSG("IDE: ATA warning: data write with drq=0");
         return;
     }
-    if ((sector_i+ static_cast<int>(width)) > sector_total) {
+    if ((sector_i+ static_cast<uint8_t>(width)) > sector_total) {
         LOG_MSG("IDE: ATA warning: sector already full %lu / %lu",(unsigned long)sector_i,(unsigned long)sector_total);
         return;
     }
@@ -1871,7 +1871,7 @@ void IDEATADevice::data_write(uint32_t v,io_width_t width) {
         sector_i += 2;
     }
     else if (width == io_width_t::byte) {
-        sector[sector_i++] = v;
+        sector[sector_i++] = check_cast<uint8_t>(v);
     }
 
     if (sector_i >= sector_total)
@@ -2491,7 +2491,8 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk,uint64_t lba) {
                         dev->lba[0] = lba&0xFF;     /* leave sector number the same (WDCTRL test phase 7/E/15) */
                         dev->lba[1] = (lba>>8u)&0xFF;    /* leave cylinder the same (WDCTRL test phase 8/F/16) */
                         dev->lba[2] = (lba>>16u)&0xFF;   /* ...ditto */
-                        ide->drivehead = dev->drivehead = 0xE0u | (ms<<4u) | (lba>>24u); /* drive head and master/slave (WDCTRL test phase 9/10/17) */
+                        dev->drivehead = check_cast<uint8_t>(0xE0u | (ms<<4u) | (lba>>24u)); /* drive head and master/slave (WDCTRL test phase 9/10/17) */
+                        ide->drivehead = dev->drivehead;
                         dev->status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRIVE_SEEK_COMPLETE; /* status (WDCTRL test phase A/11/18) */
                         dev->allow_writing = true;
                         static bool vm86_warned = false;
@@ -2662,7 +2663,8 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk,uint32_t cyl,uint32_t head,unsigned
                         dev->lba[0] = sect;     /* leave sector number the same (WDCTRL test phase 7/E/15) */
                         dev->lba[1] = cyl;      /* leave cylinder the same (WDCTRL test phase 8/F/16) */
                         dev->lba[2] = cyl >> 8u;     /* ...ditto */
-                        ide->drivehead = dev->drivehead = 0xA0u | (ms<<4u) | head; /* drive head and master/slave (WDCTRL test phase 9/10/17) */
+                        dev->drivehead = check_cast<uint8_t>(0xA0u | (ms<<4u) | head); /* drive head and master/slave (WDCTRL test phase 9/10/17) */
+                        ide->drivehead = dev->drivehead;
                         dev->status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRIVE_SEEK_COMPLETE; /* status (WDCTRL test phase A/11/18) */
                         dev->allow_writing = true;
                         static bool vm86_warned = false;
@@ -3225,12 +3227,12 @@ static void IDE_DelayedCommand(uint32_t idx/*which IDE controller*/) {
 
 void IDEController::raise_irq() {
     irq_pending = true;
-    if (IRQ >= 0 && interrupt_enable) PIC_ActivateIRQ((uint32_t)IRQ);
+    if (IRQ >= 0 && interrupt_enable) PIC_ActivateIRQ(check_cast<uint8_t>(IRQ));
 }
 
 void IDEController::lower_irq() {
     irq_pending = false;
-    if (IRQ >= 0) PIC_DeActivateIRQ((uint32_t)IRQ);
+    if (IRQ >= 0) PIC_DeActivateIRQ(check_cast<uint8_t>(IRQ));
 }
 
 IDEController *match_ide_controller(io_port_t port) {
@@ -3686,7 +3688,7 @@ static void ide_altio_w(io_port_t port,io_val_t val,io_width_t width) {
             if (ide->irq_pending) ide->raise_irq();
         }
         else {
-            if (ide->IRQ >= 0) PIC_DeActivateIRQ((uint32_t)ide->IRQ);
+            if (ide->IRQ >= 0) PIC_DeActivateIRQ(check_cast<uint8_t>(ide->IRQ));
         }
 
         if ((val&4) && !ide->host_reset) {
@@ -3874,20 +3876,20 @@ static void ide_baseio_w(io_port_t port,io_val_t val,io_width_t width) {
                 if (dev) dev->deselect();
                 ide->select = (val>>4)&1;
                 dev = ide->device[ide->select];
-                if (dev) dev->select(val,1);
+                if (dev) dev->select(check_cast<uint8_t>(val),1);
                 else ide->status = 0; /* NTS: if there is no drive there you're supposed to not have anything set */
             }
             else if (dev) {
-                dev->select(val,0);
+                dev->select(check_cast<uint8_t>(val),0);
             }
             else {
                 ide->status = 0; /* NTS: if there is no drive there you're supposed to not have anything set */
             }
 
-            ide->drivehead = val;
+            ide->drivehead = check_cast<uint8_t>(val);
             break;
         case 7: /* 1F7 */
-            if (dev) dev->writecommand(val);
+            if (dev) dev->writecommand(check_cast<uint8_t>(val));
             break;
     }
 }
