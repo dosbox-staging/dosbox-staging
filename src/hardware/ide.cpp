@@ -204,7 +204,7 @@ enum {
 
 class IDEATAPICDROMDevice:public IDEDevice {
 public:
-    IDEATAPICDROMDevice(IDEController *c,unsigned char drive_index);
+    IDEATAPICDROMDevice(IDEController *c,unsigned char requested_drive_index);
     IDEATAPICDROMDevice(const IDEATAPICDROMDevice& other) = delete; // prevent copying
     IDEATAPICDROMDevice & operator=(const IDEATAPICDROMDevice& other) = delete; // prevent assignment
     virtual ~IDEATAPICDROMDevice();
@@ -1243,8 +1243,8 @@ void IDEATAPICDROMDevice::set_sense(unsigned char SK,unsigned char ASC,unsigned 
     sense[13] = ASCQ;
 }
 
-IDEATAPICDROMDevice::IDEATAPICDROMDevice(IDEController *c,unsigned char drive_index) : IDEDevice(c) {
-    this->drive_index = drive_index;
+IDEATAPICDROMDevice::IDEATAPICDROMDevice(IDEController *c,unsigned char requested_drive_index) : IDEDevice(c) {
+    this->drive_index = requested_drive_index;
     sector_i = sector_total = 0;
     atapi_to_host = false;
     host_maximum_byte_count = 0;
@@ -2213,7 +2213,7 @@ void IDE_Auto(signed char &index,bool &slave) {
 }
 
 /* drive_index = drive letter 0...A to 25...Z */
-void IDE_ATAPI_MediaChangeNotify(unsigned char drive_index) {
+void IDE_ATAPI_MediaChangeNotify(unsigned char requested_drive_index) {
     for (unsigned int ide=0;ide < MAX_IDE_CONTROLLERS;ide++) {
         IDEController *c = idecontroller[ide];
         if (c == NULL) continue;
@@ -2222,8 +2222,8 @@ void IDE_ATAPI_MediaChangeNotify(unsigned char drive_index) {
             if (dev == NULL) continue;
             if (dev->type == IDE_TYPE_CDROM) {
                 IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice*)dev;
-                if (drive_index == atapi->drive_index) {
-                    LOG_MSG("IDE: ATAPI acknowledge media change for drive %c",drive_index+'A');
+                if (requested_drive_index == atapi->drive_index) {
+                    LOG_MSG("IDE: ATAPI acknowledge media change for drive %c",requested_drive_index+'A');
                     atapi->has_changed = true;
                     atapi->loading_mode = LOAD_INSERT_CD;
                     PIC_RemoveSpecificEvents(IDE_ATAPI_SpinDown,c->interface_index);
@@ -2237,7 +2237,7 @@ void IDE_ATAPI_MediaChangeNotify(unsigned char drive_index) {
 }
 
 /* drive_index = drive letter 0...A to 25...Z */
-void IDE_CDROM_Attach(signed char index,bool slave,unsigned char drive_index) {
+void IDE_CDROM_Attach(signed char index,bool slave,unsigned char requested_drive_index) {
     IDEController *c;
     IDEATAPICDROMDevice *dev;
 
@@ -2250,26 +2250,26 @@ void IDE_CDROM_Attach(signed char index,bool slave,unsigned char drive_index) {
         return;
     }
 
-    if (!GetMSCDEXDrive(drive_index,NULL)) {
+    if (!GetMSCDEXDrive(requested_drive_index,NULL)) {
         LOG_MSG("IDE: Asked to attach CD-ROM that does not exist");
         return;
     }
 
-    dev = new IDEATAPICDROMDevice(c,drive_index);
+    dev = new IDEATAPICDROMDevice(c,requested_drive_index);
     if (dev == NULL) return;
     dev->update_from_cdrom();
     c->device[slave?1:0] = (IDEDevice*)dev;
 }
 
 /* drive_index = drive letter 0...A to 25...Z */
-void IDE_CDROM_Detach(unsigned char drive_index) {
+void IDE_CDROM_Detach(unsigned char requested_drive_index) {
     for (int index = 0; index < MAX_IDE_CONTROLLERS; index++) {
         IDEController *c = idecontroller[index];
         if (c)
         for (int slave = 0; slave < 2; slave++) {
             IDEATAPICDROMDevice *dev;
             dev = dynamic_cast<IDEATAPICDROMDevice*>(c->device[slave]);
-            if (dev && dev->drive_index == drive_index) {
+            if (dev && dev->drive_index == requested_drive_index) {
                 delete dev;
                 c->device[slave] = NULL;
             }
