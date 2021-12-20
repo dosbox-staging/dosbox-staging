@@ -3546,8 +3546,8 @@ void IDEATADevice::writecommand(uint8_t cmd) {
             state = IDE_DEV_DATA_WRITE;
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRQ;
 	    prepare_write(0UL,
-		          512UL * std::min((unsigned long)multiple_sector_count,
-		                           (unsigned long)(count == 0 ? 256 : count)));
+		          512UL * std::min(multiple_sector_count,
+		                           (count == 0 ? 256u : count)));
 	    break;
         case 0xC6: /* SET MULTIPLE MODE */
             /* only sector counts 1, 2, 4, 8, 16, 32, 64, and 128 are legal by standard.
