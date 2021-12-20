@@ -767,8 +767,8 @@ void IDEATAPICDROMDevice::play_audio10() {
         ((uint32_t)atapi_cmd[4] << 8) +
         ((uint32_t)atapi_cmd[5] << 0);
 
-    play_length = ((uint16_t)atapi_cmd[7] << 8) +
-        ((uint16_t)atapi_cmd[8] << 0);
+    play_length = check_cast<uint16_t>(((uint16_t)atapi_cmd[7] << 8) +
+        ((uint16_t)atapi_cmd[8] << 0));
 
     if (play_length == 0) {
         /* The play length field specifies the number of contiguous logical blocks that shall
@@ -970,7 +970,7 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
                 if (!common_spinup_response(/*spin up*/true,/*wait*/false)) {
                     count = 0x03;
                     state = IDE_DEV_READY;
-                    feature = ((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00);
+                    feature = check_cast<uint16_t>(((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00));
                     status = IDE_STATUS_DRIVE_READY|((sense[2]&0xF) ? IDE_STATUS_ERROR:IDE_STATUS_DRIVE_SEEK_COMPLETE);
                     controller->raise_irq();
                     allow_writing = true;
@@ -993,8 +993,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
 
 		/* ATAPI protocol also says we write back into LBA 23:8 what
 		 * we're going to transfer in the block */
-		lba[2] = sector_total >> 8;
-		lba[1] = sector_total;
+		lba[2] = check_cast<uint16_t>(sector_total >> 8);
+		lba[1] = check_cast<uint16_t>(sector_total);
 
 		controller->raise_irq();
 		allow_writing = true;
@@ -1009,8 +1009,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
             /* Don't care. Do nothing. */
 
             /* ATAPI protocol also says we write back into LBA 23:8 what we're going to transfer in the block */
-            lba[2] = sector_total >> 8;
-            lba[1] = sector_total;
+            lba[2] = check_cast<uint16_t>(sector_total >> 8);
+            lba[1] = check_cast<uint16_t>(sector_total);
 
             controller->raise_irq();
             allow_writing = true;
@@ -1044,8 +1044,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRQ|IDE_STATUS_DRIVE_SEEK_COMPLETE;
 
             /* ATAPI protocol also says we write back into LBA 23:8 what we're going to transfer in the block */
-            lba[2] = sector_total >> 8;
-            lba[1] = sector_total;
+            lba[2] = check_cast<uint16_t>(sector_total >> 8);
+            lba[1] = check_cast<uint16_t>(sector_total);
 
             controller->raise_irq();
             allow_writing = true;
@@ -1078,8 +1078,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
             }
 
             /* ATAPI protocol also says we write back into LBA 23:8 what we're going to transfer in the block */
-            lba[2] = sector_total >> 8;
-            lba[1] = sector_total;
+            lba[2] = check_cast<uint16_t>(sector_total >> 8);
+            lba[1] = check_cast<uint16_t>(sector_total);
 
             controller->raise_irq();
             allow_writing = true;
@@ -1095,8 +1095,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRQ|IDE_STATUS_DRIVE_SEEK_COMPLETE;
 
             /* ATAPI protocol also says we write back into LBA 23:8 what we're going to transfer in the block */
-            lba[2] = sector_total >> 8;
-            lba[1] = sector_total;
+            lba[2] = check_cast<uint16_t>(sector_total >> 8);
+            lba[1] = check_cast<uint16_t>(sector_total);
 
             controller->raise_irq();
             allow_writing = true;
@@ -1139,8 +1139,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
             }
 
             /* ATAPI protocol also says we write back into LBA 23:8 what we're going to transfer in the block */
-            lba[2] = sector_total >> 8;
-            lba[1] = sector_total;
+            lba[2] = check_cast<uint16_t>(sector_total >> 8);
+            lba[1] = check_cast<uint16_t>(sector_total);
 
             controller->raise_irq();
             allow_writing = true;
@@ -1153,8 +1153,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRQ|IDE_STATUS_DRIVE_SEEK_COMPLETE;
 
             /* ATAPI protocol also says we write back into LBA 23:8 what we're going to transfer in the block */
-            lba[2] = sector_total >> 8;
-            lba[1] = sector_total;
+            lba[2] = check_cast<uint16_t>(sector_total >> 8);
+            lba[1] = check_cast<uint16_t>(sector_total);
 
             controller->raise_irq();
             allow_writing = true;
@@ -1167,8 +1167,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRQ|IDE_STATUS_DRIVE_SEEK_COMPLETE;
 
             /* ATAPI protocol also says we write back into LBA 23:8 what we're going to transfer in the block */
-            lba[2] = sector_total >> 8;
-            lba[1] = sector_total;
+            lba[2] = check_cast<uint16_t>(sector_total >> 8);
+            lba[1] = check_cast<uint16_t>(sector_total);
 
             controller->raise_irq();
             allow_writing = true;
@@ -1183,8 +1183,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRIVE_SEEK_COMPLETE;
 
             /* ATAPI protocol also says we write back into LBA 23:8 what we're going to transfer in the block */
-            lba[2] = sector_total >> 8;
-            lba[1] = sector_total;
+            lba[2] = check_cast<uint16_t>(sector_total >> 8);
+            lba[1] = check_cast<uint16_t>(sector_total);
 
             controller->raise_irq();
             allow_writing = true;
@@ -1199,8 +1199,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRIVE_SEEK_COMPLETE;
 
             /* ATAPI protocol also says we write back into LBA 23:8 what we're going to transfer in the block */
-            lba[2] = sector_total >> 8;
-            lba[1] = sector_total;
+            lba[2] = check_cast<uint16_t>(sector_total >> 8);
+            lba[1] = check_cast<uint16_t>(sector_total);
 
             controller->raise_irq();
             allow_writing = true;
@@ -1215,8 +1215,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRIVE_SEEK_COMPLETE;
 
             /* ATAPI protocol also says we write back into LBA 23:8 what we're going to transfer in the block */
-            lba[2] = sector_total >> 8;
-            lba[1] = sector_total;
+            lba[2] = check_cast<uint16_t>(sector_total >> 8);
+            lba[1] = check_cast<uint16_t>(sector_total);
 
             controller->raise_irq();
             allow_writing = true;
@@ -1231,8 +1231,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
                 /* Windows 95 likes to set 0xFFFF here for whatever reason.
                  * Negotiate it down to a maximum of 512 for sanity's sake */
                 if (x > 512) x = 512;
-                lba[2] = x >> 8u;
-                lba[1] = x;
+                lba[2] = check_cast<uint16_t>(x >> 8u);
+                lba[1] = check_cast<uint16_t>(x);
 
 //              LOG_MSG("MODE SELECT expecting %u bytes",x);
                 prepare_write(0,(x+1u)&(~1u));
@@ -1252,8 +1252,8 @@ void IDEATAPICDROMDevice::on_atapi_busy_time() {
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRQ|IDE_STATUS_DRIVE_SEEK_COMPLETE;
 
             /* ATAPI protocol also says we write back into LBA 23:8 what we're going to transfer in the block */
-            lba[2] = sector_total >> 8;
-            lba[1] = sector_total;
+            lba[2] = check_cast<uint16_t>(sector_total >> 8);
+            lba[1] = check_cast<uint16_t>(sector_total);
 
             controller->raise_irq();
             allow_writing = true;
@@ -1559,7 +1559,7 @@ void IDEATAPICDROMDevice::atapi_cmd_completion() {
 
             count = 0x03;
             state = IDE_DEV_READY;
-            feature = ((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00);
+            feature = check_cast<uint16_t>(((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00));
             status = IDE_STATUS_DRIVE_READY|((sense[2]&0xF) ? IDE_STATUS_ERROR:IDE_STATUS_DRIVE_SEEK_COMPLETE);
             controller->raise_irq();
             allow_writing = true;
@@ -1593,7 +1593,7 @@ void IDEATAPICDROMDevice::atapi_cmd_completion() {
             else {
                 count = 0x03;
                 state = IDE_DEV_READY;
-                feature = ((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00);
+                feature = check_cast<uint16_t>(((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00));
                 status = IDE_STATUS_DRIVE_READY|((sense[2]&0xF) ? IDE_STATUS_ERROR:IDE_STATUS_DRIVE_SEEK_COMPLETE);
                 controller->raise_irq();
                 allow_writing = true;
@@ -1640,7 +1640,7 @@ void IDEATAPICDROMDevice::atapi_cmd_completion() {
             else {
                 count = 0x03;
                 state = IDE_DEV_READY;
-                feature = ((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00);
+                feature = check_cast<uint16_t>(((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00));
                 status = IDE_STATUS_DRIVE_READY|((sense[2]&0xF) ? IDE_STATUS_ERROR:IDE_STATUS_DRIVE_SEEK_COMPLETE);
                 controller->raise_irq();
                 allow_writing = true;
@@ -1679,7 +1679,7 @@ void IDEATAPICDROMDevice::atapi_cmd_completion() {
             else {
                 count = 0x03;
                 state = IDE_DEV_READY;
-                feature = ((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00);
+                feature = check_cast<uint16_t>(((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00));
                 status = IDE_STATUS_DRIVE_READY|((sense[2]&0xF) ? IDE_STATUS_ERROR:IDE_STATUS_DRIVE_SEEK_COMPLETE);
                 controller->raise_irq();
                 allow_writing = true;
@@ -1697,7 +1697,7 @@ void IDEATAPICDROMDevice::atapi_cmd_completion() {
             else {
                 count = 0x03;
                 state = IDE_DEV_READY;
-                feature = ((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00);
+                feature = check_cast<uint16_t>(((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00));
                 status = IDE_STATUS_DRIVE_READY|((sense[2]&0xF) ? IDE_STATUS_ERROR:IDE_STATUS_DRIVE_SEEK_COMPLETE);
                 controller->raise_irq();
                 allow_writing = true;
@@ -1715,7 +1715,7 @@ void IDEATAPICDROMDevice::atapi_cmd_completion() {
             else {
                 count = 0x03;
                 state = IDE_DEV_READY;
-                feature = ((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00);
+                feature = check_cast<uint16_t>(((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00));
                 status = IDE_STATUS_DRIVE_READY|((sense[2]&0xF) ? IDE_STATUS_ERROR:IDE_STATUS_DRIVE_SEEK_COMPLETE);
                 controller->raise_irq();
                 allow_writing = true;
@@ -1735,7 +1735,7 @@ void IDEATAPICDROMDevice::atapi_cmd_completion() {
             else {
                 count = 0x03;
                 state = IDE_DEV_READY;
-                feature = ((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00);
+                feature = check_cast<uint16_t>(((sense[2]&0xF) << 4) | ((sense[2]&0xF) ? 0x04/*abort*/ : 0x00));
                 status = IDE_STATUS_DRIVE_READY|((sense[2]&0xF) ? IDE_STATUS_ERROR:IDE_STATUS_DRIVE_SEEK_COMPLETE);
                 controller->raise_irq();
                 allow_writing = true;
@@ -1801,7 +1801,7 @@ void IDEATAPICDROMDevice::data_write(uint32_t v,io_width_t width) {
             sector_i += 4;
         }
         else if (width == io_width_t::word) {
-            host_writew(sector+sector_i,v);
+            host_writew(sector+sector_i,check_cast<uint16_t>(v));
             sector_i += 2;
         }
         else if (width == io_width_t::byte) {
@@ -1867,7 +1867,7 @@ void IDEATADevice::data_write(uint32_t v,io_width_t width) {
         sector_i += 4;
     }
     else if (width == io_width_t::word) {
-        host_writew(sector+sector_i,v);
+        host_writew(sector+sector_i,check_cast<uint16_t>(v));
         sector_i += 2;
     }
     else if (width == io_width_t::byte) {
@@ -2020,11 +2020,11 @@ void IDEATADevice::generate_identify_device() {
     ptotal = phys_sects * phys_cyls * phys_heads;
 
     host_writew(sector+(0*2),0x0040);   /* bit 6: 1=fixed disk */
-    host_writew(sector+(1*2),phys_cyls);
-    host_writew(sector+(3*2),phys_heads);
-    host_writew(sector+(4*2),phys_sects * 512); /* unformatted bytes per track */
+    host_writew(sector+(1*2),check_cast<uint16_t>(phys_cyls));
+    host_writew(sector+(3*2),check_cast<uint16_t>(phys_heads));
+    host_writew(sector+(4*2),check_cast<uint16_t>(phys_sects * 512)); /* unformatted bytes per track */
     host_writew(sector+(5*2),512);      /* unformatted bytes per sector */
-    host_writew(sector+(6*2),phys_sects);
+    host_writew(sector+(6*2),check_cast<uint16_t>(phys_sects));
 
     for (i=0;i < 20 && i < id_serial.length();i++)
         sector[(i^1)+(10*2)] = (uint8_t)id_serial[i];
@@ -2045,7 +2045,7 @@ void IDEATADevice::generate_identify_device() {
         sector[(i^1)+(27*2)] = ' ';
 
     if (multiple_sector_max != 0)
-        host_writew(sector+(47*2),0x80|multiple_sector_max); /* <- READ/WRITE MULTIPLE MAX SECTORS */
+        host_writew(sector+(47*2), check_cast<uint16_t>(0x80|multiple_sector_max)); /* <- READ/WRITE MULTIPLE MAX SECTORS */
 
     host_writew(sector+(48*2),0x0000);  /* :0  0=we do not support doubleword (32-bit) PIO */
     host_writew(sector+(49*2),0x0A00);  /* :13 0=Standby timer values managed by device */
@@ -2059,16 +2059,16 @@ void IDEATADevice::generate_identify_device() {
     host_writew(sector+(53*2),0x0007);  /* :2  1=the fields in word 88 are valid */
                         /* :1  1=the fields in word (70:64) are valid */
                         /* :0  1= ??? */
-    host_writew(sector+(54*2),cyls);    /* current cylinders */
-    host_writew(sector+(55*2),heads);   /* current heads */
-    host_writew(sector+(56*2),sects);   /* current sectors per track */
-    host_writed(sector+(57*2),total);   /* current capacity in sectors */
+    host_writew(sector+(54*2),check_cast<uint16_t>(cyls));    /* current cylinders */
+    host_writew(sector+(55*2),check_cast<uint16_t>(heads));   /* current heads */
+    host_writew(sector+(56*2),check_cast<uint16_t>(sects));   /* current sectors per track */
+    host_writed(sector+(57*2),check_cast<uint16_t>(total));   /* current capacity in sectors */
 
     if (multiple_sector_count != 0)
-        host_writew(sector+(59*2),0x0100|multiple_sector_count); /* :8  multiple sector setting is valid */
+        host_writew(sector+(59*2),check_cast<uint16_t>(0x0100|multiple_sector_count)); /* :8  multiple sector setting is valid */
                         /* 7:0 current setting for number of log. sectors per DRQ of READ/WRITE MULTIPLE */
 
-    host_writed(sector+(60*2),ptotal);  /* total user addressable sectors (LBA) */
+    host_writed(sector+(60*2),check_cast<uint16_t>(ptotal));  /* total user addressable sectors (LBA) */
     host_writew(sector+(62*2),0x0000);  /* FIXME: ??? */
     host_writew(sector+(63*2),0x0000);  /* :10 0=Multiword DMA mode 2 not selected */
                         /* TODO: Basically, we don't do DMA. Fill out this comment */
@@ -2660,9 +2660,9 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk,uint32_t cyl,uint32_t head,unsigned
                          * they match the C/H/S it requested */
                         dev->feature = 0x00;        /* clear error (WDCTRL test phase 5/C/13) */
                         dev->count = 0x00;      /* clear sector count (WDCTRL test phase 6/D/14) */
-                        dev->lba[0] = sect;     /* leave sector number the same (WDCTRL test phase 7/E/15) */
-                        dev->lba[1] = cyl;      /* leave cylinder the same (WDCTRL test phase 8/F/16) */
-                        dev->lba[2] = cyl >> 8u;     /* ...ditto */
+                        dev->lba[0] = check_cast<uint16_t>(sect);     /* leave sector number the same (WDCTRL test phase 7/E/15) */
+                        dev->lba[1] = check_cast<uint16_t>(cyl);      /* leave cylinder the same (WDCTRL test phase 8/F/16) */
+                        dev->lba[2] = check_cast<uint16_t>(cyl >> 8u);     /* ...ditto */
                         dev->drivehead = check_cast<uint8_t>(0xA0u | (ms<<4u) | head); /* drive head and master/slave (WDCTRL test phase 9/10/17) */
                         ide->drivehead = dev->drivehead;
                         dev->status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRIVE_SEEK_COMPLETE; /* status (WDCTRL test phase A/11/18) */
@@ -3621,10 +3621,10 @@ IDEController::IDEController(Section* configuration,uint8_t index):Module_base(c
     if (i > 0 && i <= 15) IRQ = i;
 
     i = section->Get_hex("io");
-    if (i >= 0x100 && i <= 0x3FF) base_io = (uint32_t)(i & ~7);
+    if (i >= 0x100 && i <= 0x3FF) base_io = check_cast<uint16_t>(i & ~7);
 
     i = section->Get_hex("altio");
-    if (i >= 0x100 && i <= 0x3FF) alt_io = (uint32_t)(i & ~1);
+    if (i >= 0x100 && i <= 0x3FF) alt_io = check_cast<uint16_t>(i & ~1);
 
     if (index < sizeof(IDE_default_IRQs)) {
         if (IRQ < 0) IRQ = IDE_default_IRQs[index];
@@ -3850,23 +3850,23 @@ static void ide_baseio_w(io_port_t port,io_val_t val,io_width_t width) {
             break;
         case 1: /* 1F1 */
             if (dev && dev->allow_writing) /* TODO: LBA48 16-bit wide register */
-                dev->feature = val;
+                dev->feature = check_cast<uint16_t>(val);
             break;
         case 2: /* 1F2 */
             if (dev && dev->allow_writing) /* TODO: LBA48 16-bit wide register */
-                dev->count = val;
+                dev->count = check_cast<uint16_t>(val);
             break;
         case 3: /* 1F3 */
             if (dev && dev->allow_writing) /* TODO: LBA48 16-bit wide register */
-                dev->lba[0] = val;
+                dev->lba[0] = check_cast<uint16_t>(val);
             break;
         case 4: /* 1F4 */
             if (dev && dev->allow_writing) /* TODO: LBA48 16-bit wide register */
-                dev->lba[1] = val;
+                dev->lba[1] = check_cast<uint16_t>(val);
             break;
         case 5: /* 1F5 */
             if (dev && dev->allow_writing) /* TODO: LBA48 16-bit wide register */
-                dev->lba[2] = val;
+                dev->lba[2] = check_cast<uint16_t>(val);
             break;
         case 6: /* 1F6 */
             if (((val>>4)&1) != ide->select) {
