@@ -2346,9 +2346,8 @@ char * GetIDEPosition(uint8_t bios_disk_index) {
     return (char*)("");
 }
 
-std::string info="";
 std::string GetIDEInfo() {
-    info="";
+    std::string info = {};
     for (uint8_t index = 0; index < MAX_IDE_CONTROLLERS; index++) {
         IDEController *c = GetIDEController(index);
         if (c)
@@ -2357,7 +2356,6 @@ std::string GetIDEInfo() {
             if (dynamic_cast<IDEATADevice*>(c->device[slave])) info+="disk image";
             else if (dynamic_cast<IDEATAPICDROMDevice*>(c->device[slave])) info+="CD image";
             else info+="none";
-            info+="";
         }
     }
     return info;
