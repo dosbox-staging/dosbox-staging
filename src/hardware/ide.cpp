@@ -667,7 +667,8 @@ void IDEATAPICDROMDevice::mode_sense() {
             *write++ = check_cast<uint8_t>(x & 0xff);
             break;
         default:
-            memset(write,0,6); write += 6;
+            std::fill_n(write, 6, 0);
+            write += 6;
             LOG_MSG("IDE: WARNING: MODE SENSE on page 0x%02x not supported",PAGE);
             break;
     }
@@ -818,7 +819,7 @@ void IDEATAPICDROMDevice::read_toc() {
         return;
     }
 
-    memset(sector,0,8);
+    std::fill_n(sector, 8, 0);
 
     if (!cdrom->GetAudioTracks(first,last,leadOut)) {
         LOG_MSG("IDE: WARNING: ATAPI READ TOC failed to get track info");
@@ -1926,7 +1927,7 @@ void IDEATAPICDROMDevice::generate_mmc_inquiry() {
     uint32_t i;
 
     /* IN RESPONSE TO ATAPI COMMAND 0x12: INQUIRY */
-    memset(sector,0,36);
+    std::fill_n(sector, 36, 0);
     sector[0] = (0 << 5) | 5;   /* Peripheral qualifier=0   device type=5 (CDROM) */
     sector[1] = 0x80;       /* RMB=1 removable media */
     sector[3] = 0x21;
@@ -1954,7 +1955,7 @@ void IDEATAPICDROMDevice::generate_identify_device() {
 
     /* IN RESPONSE TO IDENTIFY DEVICE (0xA1)
        GENERATE 512-BYTE REPLY */
-    memset(sector,0,512);
+    std::fill_n(sector, 512, 0);
 
     host_writew(sector+(0*2),0x85C0U);  /* ATAPI device, command set #5 (what the fuck does that mean?), removable, */
 
@@ -2013,7 +2014,7 @@ void IDEATADevice::generate_identify_device() {
 
     /* IN RESPONSE TO IDENTIFY DEVICE (0xEC)
        GENERATE 512-BYTE REPLY */
-    memset(sector,0,512);
+    std::fill_n(sector, 512, 0);
 
     /* total disk capacity in sectors */
     total = sects * cyls * heads;
