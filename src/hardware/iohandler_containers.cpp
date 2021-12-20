@@ -76,8 +76,7 @@ uint8_t read_byte_from_port(const io_port_t port)
 	const auto [it, was_blocked] = io_read_byte_handler.emplace(port, blocked_read);
 	if (was_blocked)
 		LOG(LOG_IO, LOG_WARN)("Unhandled read from port %04Xh; blocking", port);
-	const auto value = it->second(port, io_width_t::byte);
-	return check_cast<uint8_t>(value);
+	return it->second(port, io_width_t::byte) & 0xff;
 }
 
 uint16_t read_word_from_port(const io_port_t port)
