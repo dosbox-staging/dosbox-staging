@@ -662,7 +662,7 @@ void IDEATAPICDROMDevice::mode_sense() {
             *write++ = check_cast<uint8_t>(x>>8);
             *write++ = check_cast<uint8_t>(x & 0xff);
 
-            x = 0;              /* +20 current write speed in kB: 0  (obsolete in MMC-3) */
+            assert(x == 0);              /* +20 current write speed in kB: 0  (obsolete in MMC-3) */
             *write++ = check_cast<uint8_t>(x>>8);
             *write++ = check_cast<uint8_t>(x & 0xff);
             break;
