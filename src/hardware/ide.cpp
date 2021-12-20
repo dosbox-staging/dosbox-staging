@@ -3477,12 +3477,6 @@ void IDEATADevice::writecommand(uint8_t cmd) {
             controller->raise_irq();
             allow_writing = true;
             break;
-        case 0x20: /* READ SECTOR */
-            progress_count = 0;
-            state = IDE_DEV_BUSY;
-            status = IDE_STATUS_BUSY;
-            PIC_AddEvent(IDE_DelayedCommand,(faked_command ? 0.000001 : 0.1)/*ms*/,controller->interface_index);
-            break;
         case 0x30: /* WRITE SECTOR */
             /* the drive does NOT signal an interrupt. it sets DRQ and waits for a sector
              * to be transferred to it before executing the command */
@@ -3491,8 +3485,10 @@ void IDEATADevice::writecommand(uint8_t cmd) {
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRQ;
             prepare_write(0,512);
             break;
+        case 0x20: /* READ SECTOR */
         case 0x40: /* READ SECTOR VERIFY WITH RETRY */
         case 0x41: /* READ SECTOR VERIFY WITHOUT RETRY */
+        case 0xC4: /* READ MULTIPLE */
             progress_count = 0;
             state = IDE_DEV_BUSY;
             status = IDE_STATUS_BUSY;
@@ -3528,12 +3524,6 @@ void IDEATADevice::writecommand(uint8_t cmd) {
 
             status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRIVE_SEEK_COMPLETE;
             allow_writing = true;
-            break;
-        case 0xC4: /* READ MULTIPLE */
-            progress_count = 0;
-            state = IDE_DEV_BUSY;
-            status = IDE_STATUS_BUSY;
-            PIC_AddEvent(IDE_DelayedCommand,(faked_command ? 0.000001 : 0.1)/*ms*/,controller->interface_index);
             break;
         case 0xC5: /* WRITE MULTIPLE */
             /* the drive does NOT signal an interrupt. it sets DRQ and waits for a sector
