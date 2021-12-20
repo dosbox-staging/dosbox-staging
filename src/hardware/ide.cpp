@@ -3639,7 +3639,7 @@ IDEController::IDEController(Section* configuration,uint8_t index):Module_base(c
 
 void IDEController::install_io_port(){
     if (base_io != 0) {
-        for (uint32_t i=0;i < 8;i++) {
+        for (io_port_t i=0;i < 8;i++) {
             WriteHandler[i].Install(base_io+i,ide_baseio_w, io_width_t::dword);
             ReadHandler[i].Install(base_io+i,ide_baseio_r, io_width_t::dword);
         }
