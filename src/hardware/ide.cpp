@@ -3360,6 +3360,11 @@ void IDEATAPICDROMDevice::writecommand(uint8_t cmd) {
             /* NTS: Testing suggests that ATAPI devices do NOT trigger an IRQ on receipt of this command */
             allow_writing = true;
             break;
+        case 0xEC: /* IDENTIFY DEVICE */
+            /* "devices that implement the PACKET command set shall post command aborted and place PACKET command feature
+               set in the appropriate fields". We have to do this. Unlike OAKCDROM.SYS Windows 95 appears to autodetect
+               IDE devices by what they do when they're sent command 0xEC out of the blue---Microsoft didn't write their
+               IDE drivers to use command 0x08 DEVICE RESET. */
         case 0x20: /* READ SECTOR */
             abort_normal();
             status = IDE_STATUS_ERROR|IDE_STATUS_DRIVE_READY;
@@ -3394,22 +3399,6 @@ void IDEATAPICDROMDevice::writecommand(uint8_t cmd) {
             state = IDE_DEV_BUSY;
             status = IDE_STATUS_BUSY;
             PIC_AddEvent(IDE_DelayedCommand,(faked_command ? 0.000001 : ide_identify_command_delay),controller->interface_index);
-            break;
-        case 0xEC: /* IDENTIFY DEVICE */
-            /* "devices that implement the PACKET command set shall post command aborted and place PACKET command feature
-               set in the appropriate fields". We have to do this. Unlike OAKCDROM.SYS Windows 95 appears to autodetect
-               IDE devices by what they do when they're sent command 0xEC out of the blue---Microsoft didn't write their
-               IDE drivers to use command 0x08 DEVICE RESET. */
-            abort_normal();
-            status = IDE_STATUS_ERROR|IDE_STATUS_DRIVE_READY;
-            drivehead &= 0x30; controller->drivehead = drivehead;
-            count = 0x01;
-            lba[0] = 0x01;
-            feature = 0x04; /* abort */
-            lba[1] = 0x14;  /* <- magic ATAPI identification */
-            lba[2] = 0xEB;
-            controller->raise_irq();
-            allow_writing = true;
             break;
         default:
             LOG_MSG("Unknown IDE/ATAPI command %02X",cmd);
