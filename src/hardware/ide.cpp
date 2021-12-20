@@ -641,30 +641,30 @@ void IDEATAPICDROMDevice::mode_sense() {
 
             x = 176 * 8;        /* +8 maximum speed supported in kB: 8X  (obsolete in MMC-3) */
             *write++ = check_cast<uint8_t>(x>>8);
-            *write++ = check_cast<uint8_t>(x);
+            *write++ = check_cast<uint8_t>(x & 0xff);
 
             x = 256;            /* +10 Number of volume levels supported */
             *write++ = check_cast<uint8_t>(x>>8);
-            *write++ = check_cast<uint8_t>(x);
+            *write++ = check_cast<uint8_t>(x & 0xff);
 
             x = 6 * 256;        /* +12 buffer size supported by drive in kB */
             *write++ = check_cast<uint8_t>(x>>8);
-            *write++ = check_cast<uint8_t>(x);
+            *write++ = check_cast<uint8_t>(x & 0xff);
 
             x = 176 * 8;        /* +14 current read speed selected in kB: 8X  (obsolete in MMC-3) */
             *write++ = check_cast<uint8_t>(x>>8);
-            *write++ = check_cast<uint8_t>(x);
+            *write++ = check_cast<uint8_t>(x & 0xff);
 
             *write++ = 0;       /* +16 Reserved */
             *write++ = 0x00;    /* +17 Reserved | Reserved | Length | Length | LSBF | RCK | BCK | Reserved */
 
             x = 0;              /* +18 maximum write speed supported in kB: 0  (obsolete in MMC-3) */
             *write++ = check_cast<uint8_t>(x>>8);
-            *write++ = check_cast<uint8_t>(x);
+            *write++ = check_cast<uint8_t>(x & 0xff);
 
             x = 0;              /* +20 current write speed in kB: 0  (obsolete in MMC-3) */
             *write++ = check_cast<uint8_t>(x>>8);
-            *write++ = check_cast<uint8_t>(x);
+            *write++ = check_cast<uint8_t>(x & 0xff);
             break;
         default:
             memset(write,0,6); write += 6;
