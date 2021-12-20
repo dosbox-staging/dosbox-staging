@@ -3334,12 +3334,8 @@ void IDEDevice::writecommand(uint8_t cmd) {
     interface_wakeup();
 
     /* drive is ready to accept command */
-    switch (cmd) {
-        default:
-            LOG_MSG("Unknown IDE command %02X",cmd);
-            abort_error();
-            break;
-    }
+    LOG_MSG("Unknown IDE command %02X",cmd);
+    abort_error();
 }
 
 void IDEATAPICDROMDevice::writecommand(uint8_t cmd) {
