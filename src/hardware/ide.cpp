@@ -1771,12 +1771,12 @@ void IDEATAPICDROMDevice::atapi_cmd_completion() {
 void IDEATAPICDROMDevice::data_write(uint32_t v,io_width_t width) {
     if (state == IDE_DEV_ATAPI_PACKET_COMMAND) {
         if (atapi_cmd_i < atapi_cmd_total)
-            atapi_cmd[atapi_cmd_i++] = check_cast<uint8_t>(v);
+            atapi_cmd[atapi_cmd_i++] = check_cast<uint8_t>(v & 0xFF);
         if ((width == io_width_t::word || width == io_width_t::dword) && atapi_cmd_i < atapi_cmd_total)
-            atapi_cmd[atapi_cmd_i++] = check_cast<uint8_t>(v >> 8);
+            atapi_cmd[atapi_cmd_i++] = check_cast<uint8_t>(v >> 8) & 0xFF;
         if (width == io_width_t::dword && atapi_cmd_i < atapi_cmd_total) {
-            atapi_cmd[atapi_cmd_i++] = check_cast<uint8_t>(v >> 16);
-            atapi_cmd[atapi_cmd_i++] = check_cast<uint8_t>(v >> 24);
+            atapi_cmd[atapi_cmd_i++] = check_cast<uint8_t>(v >> 16) & 0xFF;
+            atapi_cmd[atapi_cmd_i++] = check_cast<uint8_t>(v >> 24) & 0xFF;
         }
 
         if (atapi_cmd_i >= atapi_cmd_total)
