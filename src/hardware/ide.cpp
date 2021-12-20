@@ -2416,7 +2416,7 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk,uint64_t lba) {
             /* Issue I/O to ourself to select drive */
             dev->faked_command = true;
             IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);
-            IDE_SelfIO_Out(ide,ide->base_io+6u,0x00+(ms<<4u),io_width_t::byte);
+            IDE_SelfIO_Out(ide,ide->base_io+6u, static_cast<uint16_t>(ms<<4u),io_width_t::byte);
             dev->faked_command = false;
 
             if (dev->type == IDE_TYPE_HDD) {
@@ -2448,13 +2448,13 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk,uint64_t lba) {
                          * we have to put on a good show to convince Windows 95 we're
                          * a legitimate BIOS INT 13h call doing it's job. */
                         IDE_SelfIO_In(ide,ide->base_io+7u,io_width_t::byte);        /* dum de dum reading status */
-                        IDE_SelfIO_Out(ide,ide->base_io+6u,(ms<<4u)+0xE0u+(lba>>24u),io_width_t::byte); /* drive and head */
+                        IDE_SelfIO_Out(ide,ide->base_io+6u,static_cast<uint16_t>(ms<<4u)+0xE0u+ check_cast<uint32_t>(lba>>24u),io_width_t::byte); /* drive and head */
                         IDE_SelfIO_In(ide,ide->base_io+7u,io_width_t::byte);        /* dum de dum reading status */
                         IDE_SelfIO_Out(ide,ide->base_io+2u,0x01,io_width_t::byte);  /* sector count */
                         IDE_SelfIO_Out(ide,ide->base_io+3u,lba&0xFF,io_width_t::byte);  /* sector number */
                         IDE_SelfIO_Out(ide,ide->base_io+4u,(lba>>8u)&0xFF,io_width_t::byte); /* cylinder lo */
                         IDE_SelfIO_Out(ide,ide->base_io+5u,(lba>>16u)&0xFF,io_width_t::byte); /* cylinder hi */
-                        IDE_SelfIO_Out(ide,ide->base_io+6u,(ms<<4u)+0xE0+(lba>>24u),io_width_t::byte); /* drive and head */
+                        IDE_SelfIO_Out(ide,ide->base_io+6u,static_cast<uint16_t>(ms<<4u)+0xE0+ check_cast<uint32_t>(lba>>24u),io_width_t::byte); /* drive and head */
                         IDE_SelfIO_In(ide,ide->base_io+7u,io_width_t::byte);        /* dum de dum reading status */
                         IDE_SelfIO_Out(ide,ide->base_io+7u,0x20,io_width_t::byte);  /* issue READ */
 
@@ -2491,7 +2491,7 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk,uint64_t lba) {
                         dev->lba[0] = lba&0xFF;     /* leave sector number the same (WDCTRL test phase 7/E/15) */
                         dev->lba[1] = (lba>>8u)&0xFF;    /* leave cylinder the same (WDCTRL test phase 8/F/16) */
                         dev->lba[2] = (lba>>16u)&0xFF;   /* ...ditto */
-                        dev->drivehead = check_cast<uint8_t>(0xE0u | (ms<<4u) | (lba>>24u)); /* drive head and master/slave (WDCTRL test phase 9/10/17) */
+                        dev->drivehead = check_cast<uint8_t>(0xE0u | static_cast<uint16_t>(ms<<4u) | (lba>>24u)); /* drive head and master/slave (WDCTRL test phase 9/10/17) */
                         ide->drivehead = dev->drivehead;
                         dev->status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRIVE_SEEK_COMPLETE; /* status (WDCTRL test phase A/11/18) */
                         dev->allow_writing = true;
@@ -2544,7 +2544,7 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk,uint32_t cyl,uint32_t head,unsigned
             /* Issue I/O to ourself to select drive */
             dev->faked_command = true;
             IDE_SelfIO_In(ide,ide->base_io+7u,io_width_t::byte);
-            IDE_SelfIO_Out(ide,ide->base_io+6u,0x00u+(ms<<4u),io_width_t::byte);
+            IDE_SelfIO_Out(ide,ide->base_io+6u, static_cast<uint16_t>(ms<<4u),io_width_t::byte);
             dev->faked_command = false;
 
             if (dev->type == IDE_TYPE_HDD) {
@@ -2620,13 +2620,13 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk,uint32_t cyl,uint32_t head,unsigned
                          * we have to put on a good show to convince Windows 95 we're
                          * a legitimate BIOS INT 13h call doing it's job. */
                         IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);        /* dum de dum reading status */
-                        IDE_SelfIO_Out(ide,ide->base_io+6u,(ms<<4u)+0xA0u+head, io_width_t::byte); /* drive and head */
+                        IDE_SelfIO_Out(ide,ide->base_io+6u, static_cast<uint16_t>(ms<<4u)+0xA0u+head, io_width_t::byte); /* drive and head */
                         IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);        /* dum de dum reading status */
                         IDE_SelfIO_Out(ide,ide->base_io+2u,0x01, io_width_t::byte);  /* sector count */
                         IDE_SelfIO_Out(ide,ide->base_io+3u,sect, io_width_t::byte);  /* sector number */
                         IDE_SelfIO_Out(ide,ide->base_io+4u,cyl&0xFF, io_width_t::byte);  /* cylinder lo */
                         IDE_SelfIO_Out(ide,ide->base_io+5u,(cyl>>8u)&0xFF, io_width_t::byte); /* cylinder hi */
-                        IDE_SelfIO_Out(ide,ide->base_io+6u,(ms<<4u)+0xA0u+head, io_width_t::byte); /* drive and head */
+                        IDE_SelfIO_Out(ide,ide->base_io+6u, static_cast<uint16_t>(ms<<4u)+0xA0u+head, io_width_t::byte); /* drive and head */
                         IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);        /* dum de dum reading status */
                         IDE_SelfIO_Out(ide,ide->base_io+7u,0x20u, io_width_t::byte);  /* issue READ */
 
@@ -2663,7 +2663,7 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk,uint32_t cyl,uint32_t head,unsigned
                         dev->lba[0] = check_cast<uint16_t>(sect);     /* leave sector number the same (WDCTRL test phase 7/E/15) */
                         dev->lba[1] = check_cast<uint16_t>(cyl);      /* leave cylinder the same (WDCTRL test phase 8/F/16) */
                         dev->lba[2] = check_cast<uint16_t>(cyl >> 8u);     /* ...ditto */
-                        dev->drivehead = check_cast<uint8_t>(0xA0u | (ms<<4u) | head); /* drive head and master/slave (WDCTRL test phase 9/10/17) */
+                        dev->drivehead = check_cast<uint8_t>(0xA0u | static_cast<uint16_t>(ms<<4u) | head); /* drive head and master/slave (WDCTRL test phase 9/10/17) */
                         ide->drivehead = dev->drivehead;
                         dev->status = IDE_STATUS_DRIVE_READY|IDE_STATUS_DRIVE_SEEK_COMPLETE; /* status (WDCTRL test phase A/11/18) */
                         dev->allow_writing = true;
@@ -2714,7 +2714,7 @@ void IDE_ResetDiskByBIOS(uint8_t disk) {
 
             /* Issue I/O to ourself to select drive */
             IDE_SelfIO_In(ide,ide->base_io+7u, io_width_t::byte);
-            IDE_SelfIO_Out(ide,ide->base_io+6u,0x00+(ms<<4u), io_width_t::byte);
+            IDE_SelfIO_Out(ide,ide->base_io+6u,static_cast<uint16_t>(ms<<4u), io_width_t::byte);
 
             /* TODO: Forcibly device-reset the IDE device */
 
