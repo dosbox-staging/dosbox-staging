@@ -2158,7 +2158,7 @@ void IDEATADevice::update_from_biosdisk() {
         tmp = heads * cyls * sects;
         sects = 63;
         heads = 16;
-        cyls = (tmp + ((63 * 16) - 1)) / (63 * 16);
+        cyls = static_cast<uint32_t>((tmp + ((63 * 16) - 1)) / (63 * 16));
         LOG_MSG("IDE: WARNING: Unable to reduce heads to 16 and below");
         LOG_MSG("If at all possible, please consider using INT 13h geometry with a head");
         LOG_MSG("count that is easier to map to the BIOS, like 240 heads or 128 heads/track.");
@@ -2596,7 +2596,7 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk,uint32_t cyl,uint32_t head,unsigned
                         lba = (head * dsk->sectors) + (cyl * dsk->sectors * dsk->heads) + sect - 1;
                         sect = (lba % ata->sects) + 1;
                         head = (lba / ata->sects) % ata->heads;
-                        cyl = (lba / ata->sects / ata->heads);
+                        cyl = check_cast<uint32_t>(lba / ata->sects / ata->heads);
                     }
 
                     if (ide->int13fakev86io && vm86) {
