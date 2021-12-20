@@ -2248,7 +2248,6 @@ void IDE_CDROM_Attach(int8_t index,bool slave,uint8_t requested_drive_index) {
     }
 
     dev = new IDEATAPICDROMDevice(c,requested_drive_index);
-    if (dev == NULL) return;
     dev->update_from_cdrom();
     c->device[slave?1:0] = (IDEDevice*)dev;
 }
@@ -2304,7 +2303,6 @@ void IDE_Hard_Disk_Attach(int8_t index,bool slave,uint8_t bios_disk_index/*not I
     }
 
     dev = new IDEATADevice(c,bios_disk_index);
-    if (dev == NULL) return;
     dev->update_from_biosdisk();
     c->device[slave?1:0] = (IDEDevice*)dev;
 }
