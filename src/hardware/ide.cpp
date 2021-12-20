@@ -2274,7 +2274,7 @@ void IDE_CDROM_Detach(uint8_t requested_drive_index) {
 }
 
 void IDE_CDROM_DetachAll() {
-    for (int index = 0; index < MAX_IDE_CONTROLLERS; index++) {
+    for (uint8_t index = 0; index < MAX_IDE_CONTROLLERS; index++) {
         IDEController *c = idecontroller[index];
         if (c)
         for (int slave = 0; slave < 2; slave++) {
@@ -2315,7 +2315,7 @@ void IDE_Hard_Disk_Attach(int8_t index,bool slave,uint8_t bios_disk_index/*not I
 
 /* bios_disk_index = index into BIOS INT 13h disk array: imageDisk *imageDiskList[MAX_DISK_IMAGES]; */
 void IDE_Hard_Disk_Detach(uint8_t bios_disk_index) {
-    for (int index = 0; index < MAX_IDE_CONTROLLERS; index++) {
+    for (uint8_t index = 0; index < MAX_IDE_CONTROLLERS; index++) {
         IDEController *c = idecontroller[index];
         if (c)
         for (int slave = 0; slave < 2; slave++) {
@@ -2331,7 +2331,7 @@ void IDE_Hard_Disk_Detach(uint8_t bios_disk_index) {
 
 char idepos[4];
 char * GetIDEPosition(uint8_t bios_disk_index) {
-    for (int index = 0; index < MAX_IDE_CONTROLLERS; index++) {
+    for (uint8_t index = 0; index < MAX_IDE_CONTROLLERS; index++) {
         IDEController *c = GetIDEController(index);
         if (c)
         for (int slave = 0; slave < 2; slave++) {
@@ -2348,7 +2348,7 @@ char * GetIDEPosition(uint8_t bios_disk_index) {
 std::string info="";
 std::string GetIDEInfo() {
     info="";
-    for (int index = 0; index < MAX_IDE_CONTROLLERS; index++) {
+    for (uint8_t index = 0; index < MAX_IDE_CONTROLLERS; index++) {
         IDEController *c = GetIDEController(index);
         if (c)
         for (int slave = 0; slave < 2; slave++) {
