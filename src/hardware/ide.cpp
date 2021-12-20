@@ -1455,6 +1455,7 @@ void IDEATADevice::io_completion() {
             status = IDE_STATUS_BUSY;
             PIC_AddEvent(IDE_DelayedCommand,0.00001/*ms*/,controller->interface_index);
             break;
+        case 0xC5:/* WRITE MULTIPLE */
         case 0x30:/* WRITE SECTOR */
             /* this is where the drive has accepted the sector, lowers DRQ, and begins executing the command */
             state = IDE_DEV_BUSY;
@@ -1488,12 +1489,6 @@ void IDEATADevice::io_completion() {
             state = IDE_DEV_BUSY;
             status = IDE_STATUS_BUSY;
             PIC_AddEvent(IDE_DelayedCommand,0.00001/*ms*/,controller->interface_index);
-            break;
-        case 0xC5:/* WRITE MULTIPLE */
-            /* this is where the drive has accepted the sector, lowers DRQ, and begins executing the command */
-            state = IDE_DEV_BUSY;
-            status = IDE_STATUS_BUSY;
-            PIC_AddEvent(IDE_DelayedCommand,((progress_count == 0 && !faked_command) ? 0.1 : 0.00001)/*ms*/,controller->interface_index);
             break;
         default: /* most commands: signal drive ready, return to ready state */
             /* NTS: Some MS-DOS CD-ROM drivers will loop endlessly if we never set "drive seek complete"
