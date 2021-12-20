@@ -520,7 +520,7 @@ void IDEATAPICDROMDevice::read_subchannel()
 	else
 		astat = 0x13;
 
-	memset(sector, 0, 8);
+	std::fill_n(sector, 8, 0);
 	write = sector;
 	*write++ = 0x00;
 	*write++ = astat; /* AUDIO STATUS */
