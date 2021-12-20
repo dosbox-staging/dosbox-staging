@@ -360,7 +360,7 @@ static void IDE_ATAPI_SpinDown(uint32_t idx /*which IDE controller*/)
 				LOG_MSG("IDE: ATAPI CD-ROM spinning down");
 			}
 		} else {
-			LOG_MSG("IDE: Unknown ATAPI spinup callback");
+			LOG_WARNING("IDE: Unknown ATAPI spinup callback");
 		}
 	}
 }
@@ -390,7 +390,7 @@ static void IDE_ATAPI_CDInsertion(uint32_t idx /*which IDE controller*/)
 				PIC_AddEvent(IDE_ATAPI_SpinUpComplete, atapi->spinup_time /*ms*/, idx);
 			}
 		} else {
-			LOG_MSG("IDE: Unknown ATAPI spinup callback");
+			LOG_WARNING("IDE: Unknown ATAPI spinup callback");
 		}
 	}
 }
@@ -418,7 +418,7 @@ static void IDE_ATAPI_SpinUpComplete(uint32_t idx /*which IDE controller*/)
 				PIC_AddEvent(IDE_ATAPI_SpinDown, atapi->spindown_timeout /*ms*/, idx);
 			}
 		} else {
-			LOG_MSG("Unknown ATAPI spinup callback");
+			LOG_WARNING("IDE: Unknown ATAPI spinup callback");
 		}
 	}
 }
@@ -486,28 +486,28 @@ void IDEATAPICDROMDevice::read_subchannel()
 
 	CDROM_Interface *cdrom = getMSCDEXDrive();
 	if (cdrom == NULL) {
-		LOG_MSG("IDE: WARNING: ATAPI READ TOC unable to get CDROM drive");
+		LOG_WARNING("IDE: WARNING: ATAPI READ TOC unable to get CDROM drive");
 		prepare_read(0, 8);
 		return;
 	}
 
 	if (paramList == 0 || paramList > 3) {
-		LOG_MSG("IDE: ATAPI READ SUBCHANNEL unknown param list");
+		LOG_WARNING("IDE: ATAPI READ SUBCHANNEL unknown param list");
 		prepare_read(0, 8);
 		return;
 	} else if (paramList == 2) {
-		LOG_MSG("IDE: ATAPI READ SUBCHANNEL Media Catalog Number not supported");
+		LOG_WARNING("IDE: ATAPI READ SUBCHANNEL Media Catalog Number not supported");
 		prepare_read(0, 8);
 		return;
 	} else if (paramList == 3) {
-		LOG_MSG("IDE: ATAPI READ SUBCHANNEL ISRC not supported");
+		LOG_WARNING("IDE: ATAPI READ SUBCHANNEL ISRC not supported");
 		prepare_read(0, 8);
 		return;
 	}
 
 	/* get current subchannel position */
 	if (!cdrom->GetAudioSub(attr, track, index, rel, abs)) {
-		LOG_MSG("IDE: ATAPI READ SUBCHANNEL unable to read current pos");
+		LOG_WARNING("IDE: ATAPI READ SUBCHANNEL unable to read current pos");
 		prepare_read(0, 8);
 		return;
 	}
@@ -680,7 +680,7 @@ void IDEATAPICDROMDevice::mode_sense()
 	default:
 		std::fill_n(write, 6, 0);
 		write += 6;
-		LOG_MSG("IDE: WARNING: MODE SENSE on page 0x%02x not supported", PAGE);
+		LOG_WARNING("IDE: MODE SENSE on page 0x%02x not supported", PAGE);
 		break;
 	}
 
@@ -703,7 +703,7 @@ void IDEATAPICDROMDevice::pause_resume()
 
 	CDROM_Interface *cdrom = getMSCDEXDrive();
 	if (cdrom == NULL) {
-		LOG_MSG("IDE: WARNING: ATAPI READ TOC unable to get CDROM drive");
+		LOG_WARNING("IDE: ATAPI READ TOC unable to get CDROM drive");
 		sector_total = 0;
 		return;
 	}
@@ -718,7 +718,7 @@ void IDEATAPICDROMDevice::play_audio_msf()
 
 	CDROM_Interface *cdrom = getMSCDEXDrive();
 	if (cdrom == NULL) {
-		LOG_MSG("IDE: WARNING: ATAPI READ TOC unable to get CDROM drive");
+		LOG_WARNING("IDE: ATAPI READ TOC unable to get CDROM drive");
 		sector_total = 0;
 		return;
 	}
@@ -771,7 +771,7 @@ void IDEATAPICDROMDevice::play_audio10()
 
 	CDROM_Interface *cdrom = getMSCDEXDrive();
 	if (cdrom == NULL) {
-		LOG_MSG("IDE: WARNING: ATAPI READ TOC unable to get CDROM drive");
+		LOG_WARNING("IDE: ATAPI READ TOC unable to get CDROM drive");
 		sector_total = 0;
 		return;
 	}
@@ -825,7 +825,7 @@ void IDEATAPICDROMDevice::read_toc()
 
 	CDROM_Interface *cdrom = getMSCDEXDrive();
 	if (cdrom == NULL) {
-		LOG_MSG("IDE: WARNING: ATAPI READ TOC unable to get CDROM drive");
+		LOG_WARNING("IDE: ATAPI READ TOC unable to get CDROM drive");
 		prepare_read(0, 8);
 		return;
 	}
@@ -833,7 +833,7 @@ void IDEATAPICDROMDevice::read_toc()
 	std::fill_n(sector, 8, 0);
 
 	if (!cdrom->GetAudioTracks(first, last, leadOut)) {
-		LOG_MSG("IDE: WARNING: ATAPI READ TOC failed to get track info");
+		LOG_WARNING("IDE: ATAPI READ TOC failed to get track info");
 		prepare_read(0, 8);
 		return;
 	}
@@ -849,7 +849,7 @@ void IDEATAPICDROMDevice::read_toc()
 		*write++ = (uint8_t)1; /* @+3 last complete session */
 
 		if (!cdrom->GetAudioTrackInfo(first, start, attr)) {
-			LOG_MSG("IDE: WARNING: ATAPI READ TOC unable to read track %u information", first);
+			LOG_WARNING("IDE: ATAPI READ TOC unable to read track %u information", first);
 			attr = 0x41; /* ADR=1 CONTROL=4 */
 			start.min = 0;
 			start.sec = 0;
@@ -886,7 +886,7 @@ void IDEATAPICDROMDevice::read_toc()
 			TMSF start;
 
 			if (!cdrom->GetAudioTrackInfo(track, start, attr)) {
-				LOG_MSG("IDE: WARNING: ATAPI READ TOC unable to read track %u information", track);
+				LOG_WARNING("IDE: ATAPI READ TOC unable to read track %u information", track);
 				attr = 0x41; /* ADR=1 CONTROL=4 */
 				start.min = 0;
 				start.sec = 0;
@@ -938,7 +938,7 @@ void IDEATAPICDROMDevice::read_toc()
 			}
 		}
 	} else {
-		LOG_MSG("IDE: WARNING: ATAPI READ TOC Format=%u not supported", Format);
+		LOG_WARNING("IDE: ATAPI READ TOC Format=%u not supported", Format);
 		prepare_read(0, 8);
 		return;
 	}
@@ -1024,7 +1024,7 @@ void IDEATAPICDROMDevice::on_atapi_busy_time()
 		CDROM_Interface *cdrom = getMSCDEXDrive();
 
 		if (!cdrom->GetAudioTracks(first, last, leadOut))
-			LOG_MSG("IDE: WARNING: ATAPI READ TOC failed to get track info");
+			LOG_WARNING("IDE: ATAPI READ TOC failed to get track info");
 
 		uint32_t sec = (leadOut.min * 60u * 75u) + (leadOut.sec * 75u) + leadOut.fr - 150u;
 
@@ -1127,7 +1127,7 @@ void IDEATAPICDROMDevice::on_atapi_busy_time()
 				sector_total = 0; /*nothing to transfer */
 				state = IDE_DEV_READY;
 				status = IDE_STATUS_DRIVE_READY | IDE_STATUS_ERROR;
-				LOG_MSG("IDE: ATAPI: Failed to read %lu sectors at %lu",
+				LOG_WARNING("IDE: ATAPI: Failed to read %lu sectors at %lu",
 				        (unsigned long)TransferLength, (unsigned long)LBA);
 				/* TODO: write sense data */
 			}
@@ -1255,7 +1255,7 @@ void IDEATAPICDROMDevice::on_atapi_busy_time()
 		allow_writing = true;
 		break;
 	default:
-		LOG_MSG("IDE: Unknown ATAPI command after busy wait. Why?");
+		LOG_WARNING("IDE: Unknown ATAPI command after busy wait. Why?");
 		abort_error();
 		controller->raise_irq();
 		allow_writing = true;
@@ -1319,7 +1319,7 @@ void IDEATAPICDROMDevice::on_mode_select_io_complete()
 		uint32_t LEN = (uint32_t)(*scan++);
 
 		if ((scan + LEN) > fence) {
-			LOG_MSG("IDE: ATAPI MODE SELECT warning, page_0 length extends %u bytes past buffer",
+			LOG_WARNING("IDE: ATAPI MODE SELECT warning, page_0 length extends %u bytes past buffer",
 			        (uint32_t)(scan + LEN - fence));
 			break;
 		}
@@ -1449,7 +1449,7 @@ void IDEATADevice::io_completion()
 			count--;
 
 		if (!increment_current_address()) {
-			LOG_MSG("IDE: READ advance error");
+			LOG_WARNING("IDE: READ advance error");
 			abort_error();
 			return;
 		}
@@ -1485,7 +1485,7 @@ void IDEATADevice::io_completion()
 				count--;
 
 			if (!increment_current_address()) {
-				LOG_MSG("IDE: READ advance error");
+				LOG_WARNING("IDE: READ advance error");
 				abort_error();
 				return;
 			}
@@ -1765,7 +1765,7 @@ void IDEATAPICDROMDevice::atapi_cmd_completion()
 		break;
 	default:
 		/* we don't know the command, immediately return an error */
-		LOG_MSG("Unknown ATAPI command %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+		LOG_WARNING("IDE: Unknown ATAPI command %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
 		        atapi_cmd[0], atapi_cmd[1], atapi_cmd[2], atapi_cmd[3], atapi_cmd[4], atapi_cmd[5],
 		        atapi_cmd[6], atapi_cmd[7], atapi_cmd[8], atapi_cmd[9], atapi_cmd[10], atapi_cmd[11]);
 
@@ -1794,15 +1794,15 @@ void IDEATAPICDROMDevice::data_write(uint32_t v, io_width_t width)
 			atapi_cmd_completion();
 	} else {
 		if (state != IDE_DEV_DATA_WRITE) {
-			LOG_MSG("IDE: ATAPI warning: data write when device not in data_write state");
+			LOG_WARNING("IDE: ATAPI data write when device not in data_write state");
 			return;
 		}
 		if (!(status & IDE_STATUS_DRQ)) {
-			LOG_MSG("IDE: ATAPI warning: data write with drq=0");
+			LOG_WARNING("IDE: ATAPI data write with drq=0");
 			return;
 		}
 		if ((sector_i + static_cast<uint8_t>(width)) > sector_total) {
-			LOG_MSG("IDE: ATAPI warning: sector already full %lu / %lu", (unsigned long)sector_i,
+			LOG_WARNING("IDE: ATAPI sector already full %lu / %lu", (unsigned long)sector_i,
 			        (unsigned long)sector_total);
 			return;
 		}
@@ -1835,7 +1835,7 @@ uint32_t IDEATADevice::data_read(io_width_t width)
 	}
 
 	if ((sector_i + static_cast<uint8_t>(width)) > sector_total) {
-		LOG_MSG("IDE: ATA warning: sector already read %lu / %lu", (unsigned long)sector_i,
+		LOG_WARNING("IDE: ATA: sector already read %lu / %lu", (unsigned long)sector_i,
 		        (unsigned long)sector_total);
 		return 0xFFFFUL;
 	}
@@ -1861,15 +1861,15 @@ uint32_t IDEATADevice::data_read(io_width_t width)
 void IDEATADevice::data_write(uint32_t v, io_width_t width)
 {
 	if (state != IDE_DEV_DATA_WRITE) {
-		LOG_MSG("IDE: ATA warning: data write when device not in data_write state");
+		LOG_WARNING("IDE: ATA: data write when device not in data_write state");
 		return;
 	}
 	if (!(status & IDE_STATUS_DRQ)) {
-		LOG_MSG("IDE: ATA warning: data write with drq=0");
+		LOG_WARNING("IDE: ATA: data write with drq=0");
 		return;
 	}
 	if ((sector_i + static_cast<uint8_t>(width)) > sector_total) {
-		LOG_MSG("IDE: ATA warning: sector already full %lu / %lu", (unsigned long)sector_i,
+		LOG_WARNING("IDE: ATA: sector already full %lu / %lu", (unsigned long)sector_i,
 		        (unsigned long)sector_total);
 		return;
 	}
@@ -2143,7 +2143,7 @@ void IDEATAPICDROMDevice::update_from_cdrom()
 {
 	CDROM_Interface *cdrom = getMSCDEXDrive();
 	if (cdrom == NULL) {
-		LOG_MSG("IDE: WARNING: IDE update from CD-ROM failed, disk not available");
+		LOG_WARNING("IDE: IDE update from CD-ROM failed, disk not available");
 		return;
 	}
 }
@@ -2152,7 +2152,7 @@ void IDEATADevice::update_from_biosdisk()
 {
 	std::shared_ptr<imageDisk> dsk = getBIOSdisk();
 	if (dsk == NULL) {
-		LOG_MSG("IDE: WARNING: IDE update from BIOS disk failed, disk not available");
+		LOG_WARNING("IDE: IDE update from BIOS disk failed, disk not available");
 		return;
 	}
 
@@ -2185,15 +2185,15 @@ void IDEATADevice::update_from_biosdisk()
 		sects = 63;
 		heads = 16;
 		cyls = static_cast<uint32_t>((tmp + ((63 * 16) - 1)) / (63 * 16));
-		LOG_MSG("IDE: WARNING: Unable to reduce heads to 16 and below");
-		LOG_MSG("If at all possible, please consider using INT 13h geometry with a head");
-		LOG_MSG("count that is easier to map to the BIOS, like 240 heads or 128 heads/track.");
-		LOG_MSG("Some OSes, such as Windows 95, will not enable their 32-bit IDE driver if");
-		LOG_MSG("a clean mapping does not exist between IDE and BIOS geometry.");
-		LOG_MSG("Mapping BIOS DISK C/H/S %u/%u/%u as IDE %u/%u/%u (non-straightforward mapping)",
+		LOG_WARNING("IDE: Unable to reduce heads to 16 and below");
+		LOG_MSG("    If at all possible, please consider using INT 13h geometry with a head");
+		LOG_MSG("    count that is easier to map to the BIOS, like 240 heads or 128 heads/track.");
+		LOG_MSG("    Some OSes, such as Windows 95, will not enable their 32-bit IDE driver if");
+		LOG_MSG("    a clean mapping does not exist between IDE and BIOS geometry.");
+		LOG_MSG("    Mapping BIOS DISK C/H/S %u/%u/%u as IDE %u/%u/%u (non-straightforward mapping)",
 		        dsk->cylinders, dsk->heads, dsk->sectors, cyls, heads, sects);
 	} else {
-		LOG_MSG("Mapping BIOS DISK C/H/S %u/%u/%u as IDE %u/%u/%u", dsk->cylinders, dsk->heads,
+		LOG_MSG("IDE: Mapping BIOS DISK C/H/S %u/%u/%u as IDE %u/%u/%u", dsk->cylinders, dsk->heads,
 		        dsk->sectors, cyls, heads, sects);
 	}
 
@@ -2267,12 +2267,12 @@ void IDE_CDROM_Attach(int8_t index, bool slave, uint8_t requested_drive_index)
 		return;
 
 	if (c->device[slave ? 1 : 0] != NULL) {
-		LOG_MSG("IDE: Controller %u %s already taken", index, slave ? "slave" : "master");
+		LOG_WARNING("IDE: Controller %u %s already taken", index, slave ? "slave" : "master");
 		return;
 	}
 
 	if (!GetMSCDEXDrive(requested_drive_index, NULL)) {
-		LOG_MSG("IDE: Asked to attach CD-ROM that does not exist");
+		LOG_WARNING("IDE: Asked to attach CD-ROM that does not exist");
 		return;
 	}
 
@@ -2329,12 +2329,12 @@ void IDE_Hard_Disk_Attach(int8_t index,
 		return;
 
 	if (c->device[slave ? 1 : 0] != NULL) {
-		LOG_MSG("IDE: Controller %u %s already taken", index, slave ? "slave" : "master");
+		LOG_WARNING("IDE: Controller %u %s already taken", index, slave ? "slave" : "master");
 		return;
 	}
 
 	if (imageDiskList[bios_disk_index] == NULL) {
-		LOG_MSG("IDE: Asked to attach bios disk that does not exist");
+		LOG_WARNING("IDE: Asked to attach bios disk that does not exist");
 		return;
 	}
 
@@ -2574,8 +2574,8 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk, uint64_t lba)
 						static bool vm86_warned = false;
 
 						if (vm86 && !vm86_warned) {
-							LOG_MSG("IDE warning: INT 13h extensions read from virtual 8086 mode.");
-							LOG_MSG("             If using Windows 95 OSR2, please set int13fakev86io=true for proper 32-bit disk access");
+							LOG_WARNING("IDE: INT 13h extensions read from virtual 8086 mode.");
+							LOG_WARNING("     If using Windows 95 OSR2, please set int13fakev86io=true for proper 32-bit disk access");
 							vm86_warned = true;
 						}
 					}
@@ -2639,7 +2639,7 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 					 * logical geometry */
 					if (ata->sects != ata->phys_sects || ata->heads != ata->phys_heads ||
 					    ata->cyls != ata->phys_cyls)
-						LOG_MSG("INT 13 WARNING: I/O issued on drive attached to IDE emulation with changed logical geometry!");
+						LOG_WARNING("IDE: INT 13h I/O issued on drive attached to IDE emulation with changed logical geometry!");
 
 					/* HACK: src/ints/bios_disk.cpp implementation doesn't correctly
 					 *       wrap sector numbers across tracks. it fullfills the read
@@ -2655,9 +2655,9 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 #if 0 /* this warning is pointless */
                         static bool int13_fix_wrap_warned = false;
                         if (!int13_fix_wrap_warned) {
-                            LOG_MSG("INT 13h implementation warning: we were given over-large sector number.");
-                            LOG_MSG("This is normally the fault of DOSBox INT 13h emulation that counts sectors");
-                            LOG_MSG("IDE: Without consideration of track boundaries");
+                            LOG_WARNING("IDE: INT 13h implementation warning: we were given over-large sector number.");
+                            LOG_WARNING("     This is normally the fault of DOSBox INT 13h emulation that counts sectors");
+                            LOG_WARNING("     Without consideration of track boundaries");
                             int13_fix_wrap_warned = true;
                         }
 #endif
@@ -2781,8 +2781,8 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 						static bool vm86_warned = false;
 
 						if (vm86 && !vm86_warned) {
-							LOG_MSG("IDE warning: INT 13h read from virtual 8086 mode.");
-							LOG_MSG("             If using Windows 95, please set int13fakev86io=true for proper 32-bit disk access");
+							LOG_WARNING("IDE: INT 13h read from virtual 8086 mode.");
+							LOG_WARNING("     If using Windows 95, please set int13fakev86io=true for proper 32-bit disk access");
 							vm86_warned = true;
 						}
 					}
@@ -2838,7 +2838,7 @@ void IDE_ResetDiskByBIOS(uint8_t disk)
 				IDEATADevice *ata = (IDEATADevice *)dev;
 
 				if ((ata->bios_disk_index - 2) == (disk - 0x80)) {
-					LOG_MSG("IDE %d%c reset by BIOS disk 0x%02x", (uint32_t)(idx + 1),
+					LOG_MSG("IDE: %d%c reset by BIOS disk 0x%02x", (uint32_t)(idx + 1),
 					        ms ? 's' : 'm', (uint32_t)disk);
 
 					if (ide->int13fakev86io && IDE_CPU_Is_Vm86()) {
@@ -2887,7 +2887,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 		case 0x30: /* WRITE SECTOR */
 			disk = ata->getBIOSdisk();
 			if (disk == NULL) {
-				LOG_MSG("IDE: ATA READ fail, bios disk N/A");
+				LOG_WARNING("IDE: ATA READ fail, bios disk N/A");
 				ata->abort_error();
 				dev->controller->raise_irq();
 				return;
@@ -2903,14 +2903,14 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			} else {
 				/* C/H/S */
 				if (ata->lba[0] == 0) {
-					LOG_MSG("IDE: ATA sector 0 does not exist");
+					LOG_WARNING("IDE: ATA sector 0 does not exist");
 					ata->abort_error();
 					dev->controller->raise_irq();
 					return;
 				} else if ((ata->drivehead & 0xFu) >= ata->heads ||
 				           (uint32_t)ata->lba[0] > ata->sects ||
 				           (uint32_t)(ata->lba[1] | (ata->lba[2] << 8u)) >= ata->cyls) {
-					LOG_MSG("C/H/S %u/%u/%u out of bounds %u/%u/%u",
+					LOG_WARNING("IDE: C/H/S %u/%u/%u out of bounds %u/%u/%u",
 					        (uint32_t)(ata->lba[1] | (ata->lba[2] << 8u)),
 					        (ata->drivehead & 0xFu), (uint32_t)(ata->lba[0]), ata->cyls,
 					        ata->heads, ata->sects);
@@ -2926,7 +2926,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			}
 
 			if (disk->Write_AbsoluteSector(sectorn, ata->sector) != 0) {
-				LOG_MSG("Failed to write sector");
+				LOG_WARNING("IDE: Failed to write sector");
 				ata->abort_error();
 				dev->controller->raise_irq();
 				return;
@@ -2951,7 +2951,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			ata->progress_count++;
 
 			if (!ata->increment_current_address()) {
-				LOG_MSG("READ advance error");
+				LOG_WARNING("IDE: READ advance error");
 				ata->abort_error();
 				return;
 			}
@@ -2981,14 +2981,14 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			} else {
 				/* C/H/S */
 				if (ata->lba[0] == 0) {
-					LOG_MSG("IDE: WARNING C/H/S access mode and sector==0");
+					LOG_MSG("IDE: C/H/S access mode and sector==0");
 					ata->abort_error();
 					dev->controller->raise_irq();
 					return;
 				} else if ((uint32_t)(ata->drivehead & 0xF) >= ata->heads ||
 				           (uint32_t)ata->lba[0] > ata->sects ||
 				           (ata->lba[1] | ((uint32_t)ata->lba[2] << 8u)) >= ata->cyls) {
-					LOG_MSG("C/H/S %u/%u/%u out of bounds %u/%u/%u",
+					LOG_WARNING("IDE: C/H/S %u/%u/%u out of bounds %u/%u/%u",
 					        (ata->lba[1] | ((uint32_t)ata->lba[2] << 8u)),
 					        (uint32_t)(ata->drivehead & 0xF), (uint32_t)ata->lba[0],
 					        ata->cyls, ata->heads, ata->sects);
@@ -3003,7 +3003,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			}
 
 			if (disk->Read_AbsoluteSector(sectorn, ata->sector) != 0) {
-				LOG_MSG("IDE: ATA read failed");
+				LOG_WARNING("IDE: ATA read failed");
 				ata->abort_error();
 				dev->controller->raise_irq();
 				return;
@@ -3024,7 +3024,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 		case 0x41: /* READ SECTOR VERIFY WITHOUT RETRY */
 			disk = ata->getBIOSdisk();
 			if (disk == NULL) {
-				LOG_MSG("IDE: ATA READ fail, bios disk N/A");
+				LOG_WARNING("IDE: ATA READ fail, bios disk N/A");
 				ata->abort_error();
 				dev->controller->raise_irq();
 				return;
@@ -3039,14 +3039,14 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			} else {
 				/* C/H/S */
 				if (ata->lba[0] == 0) {
-					LOG_MSG("IDE: WARNING C/H/S access mode and sector==0");
+					LOG_WARNING("IDE: C/H/S access mode and sector==0");
 					ata->abort_error();
 					dev->controller->raise_irq();
 					return;
 				} else if ((uint32_t)(ata->drivehead & 0xF) >= ata->heads ||
 				           (uint32_t)ata->lba[0] > ata->sects ||
 				           (ata->lba[1] | ((uint32_t)ata->lba[2] << 8u)) >= ata->cyls) {
-					LOG_MSG("C/H/S %u/%u/%u out of bounds %u/%u/%u",
+					LOG_WARNING("IDE: C/H/S %u/%u/%u out of bounds %u/%u/%u",
 					        ata->lba[1] | ((uint32_t)ata->lba[2] << 8u), ata->drivehead & 0xFu,
 					        (uint32_t)ata->lba[0], ata->cyls, ata->heads, ata->sects);
 					ata->abort_error();
@@ -3061,7 +3061,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			}
 
 			if (disk->Read_AbsoluteSector(sectorn, ata->sector) != 0) {
-				LOG_MSG("IDE: ATA read failed");
+				LOG_WARNING("IDE: ATA read failed");
 				ata->abort_error();
 				dev->controller->raise_irq();
 				return;
@@ -3082,7 +3082,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			ata->progress_count++;
 
 			if (!ata->increment_current_address()) {
-				LOG_MSG("READ advance error");
+				LOG_WARNING("IDE: READ advance error");
 				ata->abort_error();
 				return;
 			}
@@ -3095,7 +3095,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 		case 0xC4: /* READ MULTIPLE */
 			disk = ata->getBIOSdisk();
 			if (disk == NULL) {
-				LOG_MSG("IDE: ATA READ fail, bios disk N/A");
+				LOG_WARNING("IDE: ATA READ fail, bios disk N/A");
 				ata->abort_error();
 				dev->controller->raise_irq();
 				return;
@@ -3111,14 +3111,14 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			} else {
 				/* C/H/S */
 				if (ata->lba[0] == 0) {
-					LOG_MSG("IDE: WARNING C/H/S access mode and sector==0");
+					LOG_WARNING("IDE: C/H/S access mode and sector==0");
 					ata->abort_error();
 					dev->controller->raise_irq();
 					return;
 				} else if ((uint32_t)(ata->drivehead & 0xF) >= ata->heads ||
 				           (uint32_t)ata->lba[0] > ata->sects ||
 				           (ata->lba[1] | ((uint32_t)ata->lba[2] << 8u)) >= ata->cyls) {
-					LOG_MSG("C/H/S %u/%u/%u out of bounds %u/%u/%u",
+					LOG_WARNING("IDE: C/H/S %u/%u/%u out of bounds %u/%u/%u",
 					        (ata->lba[1] | ((uint32_t)ata->lba[2] << 8u)),
 					        (uint32_t)(ata->drivehead & 0xF), (uint32_t)ata->lba[0],
 					        ata->cyls, ata->heads, ata->sects);
@@ -3140,7 +3140,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 				/* it would be great if the disk object had a "read
 				 * multiple sectors" member function */
 				if (disk->Read_AbsoluteSector(sectorn + cc, ata->sector + (cc * 512)) != 0) {
-					LOG_MSG("IDE: ATA read failed");
+					LOG_WARNING("IDE: ATA read failed");
 					ata->abort_error();
 					dev->controller->raise_irq();
 					return;
@@ -3161,7 +3161,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 		case 0xC5: /* WRITE MULTIPLE */
 			disk = ata->getBIOSdisk();
 			if (disk == NULL) {
-				LOG_MSG("IDE: ATA READ fail, bios disk N/A");
+				LOG_WARNING("IDE: ATA READ fail, bios disk N/A");
 				ata->abort_error();
 				dev->controller->raise_irq();
 				return;
@@ -3177,14 +3177,14 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			} else {
 				/* C/H/S */
 				if (ata->lba[0] == 0) {
-					LOG_MSG("IDE: ATA sector 0 does not exist");
+					LOG_WARNING("IDE: ATA sector 0 does not exist");
 					ata->abort_error();
 					dev->controller->raise_irq();
 					return;
 				} else if ((uint32_t)(ata->drivehead & 0xF) >= ata->heads ||
 				           (uint32_t)ata->lba[0] > ata->sects ||
 				           (ata->lba[1] | ((uint32_t)ata->lba[2] << 8)) >= ata->cyls) {
-					LOG_MSG("C/H/S %u/%u/%u out of bounds %u/%u/%u",
+					LOG_WARNING("IDE: C/H/S %u/%u/%u out of bounds %u/%u/%u",
 					        (ata->lba[1] | ((uint32_t)ata->lba[2] << 8)),
 					        (uint32_t)(ata->drivehead & 0xF), (uint32_t)ata->lba[0],
 					        ata->cyls, ata->heads, ata->sects);
@@ -3203,7 +3203,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 				/* it would be great if the disk object had a "write
 				 * multiple sectors" member function */
 				if (disk->Write_AbsoluteSector(sectorn + cc, ata->sector + (cc * 512)) != 0) {
-					LOG_MSG("Failed to write sector");
+					LOG_WARNING("IDE: Failed to write sector");
 					ata->abort_error();
 					dev->controller->raise_irq();
 					return;
@@ -3226,7 +3226,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 				ata->progress_count++;
 
 				if (!ata->increment_current_address()) {
-					LOG_MSG("READ advance error");
+					LOG_WARNING("IDE: READ advance error");
 					ata->abort_error();
 					return;
 				}
@@ -3255,7 +3255,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			dev->controller->raise_irq();
 			break;
 		default:
-			LOG_MSG("Unknown delayed IDE/ATA command");
+			LOG_WARNING("IDE: Unknown delayed IDE/ATA command");
 			dev->abort_error();
 			dev->controller->raise_irq();
 			break;
@@ -3267,7 +3267,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			switch (dev->command) {
 			case 0xA0: /*ATAPI PACKET*/ atapi->on_atapi_busy_time(); break;
 			default:
-				LOG_MSG("Unknown delayed IDE/ATAPI busy wait command");
+				LOG_WARNING("IDE: Unknown delayed IDE/ATAPI busy wait command");
 				dev->abort_error();
 				dev->controller->raise_irq();
 				break;
@@ -3291,14 +3291,14 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 				dev->controller->raise_irq();
 				break;
 			default:
-				LOG_MSG("Unknown delayed IDE/ATAPI command");
+				LOG_WARNING("IDE: Unknown delayed IDE/ATAPI command");
 				dev->abort_error();
 				dev->controller->raise_irq();
 				break;
 			}
 		}
 	} else {
-		LOG_MSG("Unknown delayed command");
+		LOG_WARNING("IDE: delayed command");
 		dev->abort_error();
 		dev->controller->raise_irq();
 	}
@@ -3375,7 +3375,7 @@ void IDEDevice::abort_silent()
 void IDEDevice::abort_error()
 {
 	assert(controller != NULL);
-	LOG_MSG("IDE abort dh=0x%02x with error on 0x%03x", drivehead, controller->base_io);
+	LOG_WARNING("IDE: abort dh=0x%02x with error on 0x%03x", drivehead, controller->base_io);
 
 	/* a command was written while another is in progress */
 	state = IDE_DEV_READY;
@@ -3408,14 +3408,14 @@ bool IDEDevice::command_interruption_ok(uint8_t cmd)
 	if (cmd == command)
 		return true;
 	if (state != IDE_DEV_READY && state != IDE_DEV_BUSY && cmd == 0x08) {
-		LOG_MSG("Device reset while another (%02x) is in progress (state=%u). Aborting current command to begin another",
+		LOG_WARNING("IDE: Device reset while another (%02x) is in progress (state=%u). Aborting current command to begin another",
 		        command, state);
 		abort_silent();
 		return true;
 	}
 
 	if (state != IDE_DEV_READY) {
-		LOG_MSG("Command %02x written while another (%02x) is in progress (state=%u). Aborting current command",
+		LOG_WARNING("IDE: Command %02x written while another (%02x) is in progress (state=%u). Aborting current command",
 		        cmd, command, state);
 		abort_error();
 		return false;
@@ -3433,7 +3433,7 @@ void IDEDevice::writecommand(uint8_t cmd)
 	interface_wakeup();
 
 	/* drive is ready to accept command */
-	LOG_MSG("Unknown IDE command %02X", cmd);
+	LOG_WARNING("IDE: IDE command %02X", cmd);
 	abort_error();
 }
 
@@ -3483,7 +3483,7 @@ void IDEATAPICDROMDevice::writecommand(uint8_t cmd)
 	case 0xA0: /* ATAPI PACKET */
 		if (feature & 1) {
 			/* this code does not support DMA packet commands */
-			LOG_MSG("Attempted DMA transfer");
+			LOG_MSG("IDE: Attempted DMA transfer");
 			abort_error();
 			count = 0x03; /* no more data (command/data=1, input/output=1) */
 			feature = 0xF4;
@@ -3507,7 +3507,7 @@ void IDEATAPICDROMDevice::writecommand(uint8_t cmd)
 		             controller->interface_index);
 		break;
 	default:
-		LOG_MSG("Unknown IDE/ATAPI command %02X", cmd);
+		LOG_WARNING("IDE: IDE/ATAPI command %02X", cmd);
 		abort_error();
 		allow_writing = true;
 		count = 0x03; /* no more data (command/data=1, input/output=1) */
@@ -3616,7 +3616,7 @@ void IDEATADevice::writecommand(uint8_t cmd)
 	case 0x91: /* INITIALIZE DEVICE PARAMETERS */
 		if ((uint32_t)count != sects || (uint32_t)((drivehead & 0xF) + 1) != heads) {
 			if (count == 0) {
-				LOG_MSG("IDE warning: OS attempted to change geometry to invalid H/S %u/%u",
+				LOG_WARNING("IDE: OS attempted to change geometry to invalid H/S %u/%u",
 				        count, (drivehead & 0xF) + 1);
 				abort_error();
 				allow_writing = true;
@@ -3630,10 +3630,10 @@ void IDEATADevice::writecommand(uint8_t cmd)
 
 				/* the OS is changing logical disk geometry, so update our head/sector count
 				 * (needed for Windows ME) */
-				LOG_MSG("IDE warning: OS is changing logical geometry from C/H/S %u/%u/%u to logical H/S %u/%u/%u",
+				LOG_WARNING("IDE: OS is changing logical geometry from C/H/S %u/%u/%u to logical H/S %u/%u/%u",
 				        (int)cyls, (int)heads, (int)sects, (int)ncyls, (drivehead & 0xF) + 1,
 				        (int)count);
-				LOG_MSG("             Compatibility issues may occur if the OS tries to use INT 13 at the same time!");
+				LOG_WARNING("     Compatibility issues may occur if the OS tries to use INT 13 at the same time!");
 
 				cyls = ncyls;
 				sects = count;
@@ -3694,7 +3694,7 @@ void IDEATADevice::writecommand(uint8_t cmd)
 		             controller->interface_index);
 		break;
 	default:
-		LOG_MSG("Unknown IDE/ATA command %02X", cmd);
+		LOG_WARNING("IDE: IDE/ATA command %02X", cmd);
 		abort_error();
 		allow_writing = true;
 		controller->raise_irq();
@@ -3747,7 +3747,7 @@ IDEController::IDEController(Section *configuration, uint8_t index)
 			base_io = IDE_default_bases[index];
 	} else {
 		if (IRQ < 0 || alt_io == 0 || base_io == 0)
-			LOG_MSG("IDE: WARNING: IDE interface %u: Insufficient resources assigned by dosbox.conf, and no appropriate default resources for this interface.",
+			LOG_WARNING("IDE: IDE interface %u: Insufficient resources assigned by dosbox.conf, and no appropriate default resources for this interface.",
 			        index);
 	}
 }
@@ -3786,7 +3786,7 @@ static void ide_altio_w(io_port_t port, io_val_t val, io_width_t width)
 {
 	IDEController *ide = match_ide_controller(port);
 	if (ide == NULL) {
-		LOG_MSG("IDE: WARNING: port read from I/O port not registered to IDE, yet callback triggered");
+		LOG_WARNING("IDE: port read from I/O port not registered to IDE, yet callback triggered");
 		return;
 	}
 
@@ -3831,7 +3831,7 @@ static uint32_t ide_altio_r(io_port_t port, io_width_t width)
 	IDEDevice *dev;
 
 	if (ide == NULL) {
-		LOG_MSG("IDE: WARNING: port read from I/O port not registered to IDE, yet callback triggered");
+		LOG_WARNING("IDE: port read from I/O port not registered to IDE, yet callback triggered");
 		return UINT32_MAX;
 	}
 
@@ -3860,7 +3860,7 @@ static uint32_t ide_baseio_r(io_port_t port, io_width_t width)
 	uint32_t ret = UINT32_MAX;
 
 	if (ide == NULL) {
-		LOG_MSG("IDE: WARNING: port read from I/O port not registered to IDE, yet callback triggered");
+		LOG_WARNING("IDE: port read from I/O port not registered to IDE, yet callback triggered");
 		return UINT32_MAX;
 	}
 
@@ -3902,7 +3902,7 @@ static void ide_baseio_w(io_port_t port, io_val_t val, io_width_t width)
 	IDEDevice *dev;
 
 	if (ide == NULL) {
-		LOG_MSG("IDE: WARNING: port read from I/O port not registered to IDE, yet callback triggered");
+		LOG_WARNING("IDE: port read from I/O port not registered to IDE, yet callback triggered");
 		return;
 	}
 
@@ -3925,7 +3925,7 @@ static void ide_baseio_w(io_port_t port, io_val_t val, io_width_t width)
 				 * to port +6 to ensure the right drive is selected */
 				return;
 			} else {
-				LOG_MSG("IDE: W-%03X %02X BUSY DROP [DEV]", port + ide->base_io, (int)val);
+				LOG_WARNING("IDE: W-%03X %02X BUSY DROP [DEV]", port + ide->base_io, (int)val);
 				return;
 			}
 		}
@@ -3935,7 +3935,7 @@ static void ide_baseio_w(io_port_t port, io_val_t val, io_width_t width)
 			 * +6 to ensure the right drive is selected */
 			return;
 		} else {
-			LOG_MSG("IDE: W-%03X %02X BUSY DROP [IDE]", port + ide->base_io, (int)val);
+			LOG_WARNING("IDE: W-%03X %02X BUSY DROP [IDE]", port + ide->base_io, (int)val);
 			return;
 		}
 	}
@@ -3946,7 +3946,7 @@ static void ide_baseio_w(io_port_t port, io_val_t val, io_width_t width)
 #endif
 
 	if (port >= 1 && port <= 5 && dev && !dev->allow_writing) {
-		LOG_MSG("IDE WARNING: Write to port %u val %02x when device not ready to accept writing",
+		LOG_WARNING("IDE: Write to port %u val %02x when device not ready to accept writing",
 		        (uint32_t)port, val);
 	}
 
